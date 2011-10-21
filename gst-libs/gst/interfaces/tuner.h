@@ -35,20 +35,16 @@ G_BEGIN_DECLS
   (gst_tuner_get_type ())
 #define GST_TUNER(obj) \
   (G_TYPE_CHECK_INSTANCE_CAST ((obj), GST_TYPE_TUNER, GstTuner))
-#define GST_TUNER_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_CAST ((klass), GST_TYPE_TUNER, GstTunerClass))
 #define GST_IS_TUNER(obj) \
   (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_TUNER))
-#define GST_IS_TUNER_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_TYPE ((klass), GST_TYPE_TUNER))
-#define GST_TUNER_GET_CLASS(inst) \
-  (G_TYPE_INSTANCE_GET_INTERFACE ((inst), GST_TYPE_TUNER, GstTunerClass))
+#define GST_TUNER_GET_INTERFACE(inst) \
+  (G_TYPE_INSTANCE_GET_INTERFACE ((inst), GST_TYPE_TUNER, GstTunerInterface))
 
 typedef struct _GstTuner GstTuner;
-typedef struct _GstTunerClass GstTunerClass;
+typedef struct _GstTunerInterface GstTunerInterface;
 
 /**
- * GstTunerClass:
+ * GstTunerInterface:
  * @klass: the parent interface
  * @list_channels: list available channels
  * @set_channel: set to a channel
@@ -66,7 +62,7 @@ typedef struct _GstTunerClass GstTunerClass;
  *
  * Tuner interface.
  */
-struct _GstTunerClass {
+struct _GstTunerInterface {
   GTypeInterface klass;
 
   /* virtual functions */

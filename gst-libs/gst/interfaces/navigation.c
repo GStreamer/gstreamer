@@ -111,7 +111,7 @@ gst_navigation_class_init (GstNavigationInterface * iface)
 void
 gst_navigation_send_event (GstNavigation * navigation, GstStructure * structure)
 {
-  GstNavigationInterface *iface = GST_NAVIGATION_GET_IFACE (navigation);
+  GstNavigationInterface *iface = GST_NAVIGATION_GET_INTERFACE (navigation);
 
   if (iface->send_event) {
     iface->send_event (navigation, structure);

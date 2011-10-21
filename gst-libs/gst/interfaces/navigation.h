@@ -33,7 +33,7 @@ G_BEGIN_DECLS
     (G_TYPE_CHECK_INSTANCE_CAST ((obj), GST_TYPE_NAVIGATION, GstNavigation))
 #define GST_IS_NAVIGATION(obj) \
       (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_NAVIGATION))
-#define GST_NAVIGATION_GET_IFACE(obj) \
+#define GST_NAVIGATION_GET_INTERFACE(obj) \
     (G_TYPE_INSTANCE_GET_INTERFACE ((obj), GST_TYPE_NAVIGATION, GstNavigationInterface))
 
 typedef struct _GstNavigation GstNavigation;

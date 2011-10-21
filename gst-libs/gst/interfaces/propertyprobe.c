@@ -116,7 +116,7 @@ gst_property_probe_get_properties (GstPropertyProbe * probe)
   g_return_val_if_fail (probe != NULL, NULL);
   g_return_val_if_fail (GST_IS_PROPERTY_PROBE (probe), NULL);
 
-  iface = GST_PROPERTY_PROBE_GET_IFACE (probe);
+  iface = GST_PROPERTY_PROBE_GET_INTERFACE (probe);
 
   if (iface->get_properties)
     return iface->get_properties (probe);
@@ -177,7 +177,7 @@ gst_property_probe_probe_property (GstPropertyProbe * probe,
   g_return_if_fail (GST_IS_PROPERTY_PROBE (probe));
   g_return_if_fail (pspec != NULL);
 
-  iface = GST_PROPERTY_PROBE_GET_IFACE (probe);
+  iface = GST_PROPERTY_PROBE_GET_INTERFACE (probe);
 
   if (iface->probe_property)
     iface->probe_property (probe, pspec->param_id, pspec);
@@ -232,7 +232,7 @@ gst_property_probe_needs_probe (GstPropertyProbe * probe,
   g_return_val_if_fail (GST_IS_PROPERTY_PROBE (probe), FALSE);
   g_return_val_if_fail (pspec != NULL, FALSE);
 
-  iface = GST_PROPERTY_PROBE_GET_IFACE (probe);
+  iface = GST_PROPERTY_PROBE_GET_INTERFACE (probe);
 
   if (iface->needs_probe)
     return iface->needs_probe (probe, pspec->param_id, pspec);
@@ -288,7 +288,7 @@ gst_property_probe_get_values (GstPropertyProbe * probe,
   g_return_val_if_fail (GST_IS_PROPERTY_PROBE (probe), NULL);
   g_return_val_if_fail (pspec != NULL, NULL);
 
-  iface = GST_PROPERTY_PROBE_GET_IFACE (probe);
+  iface = GST_PROPERTY_PROBE_GET_INTERFACE (probe);
 
   if (iface->get_values)
     return iface->get_values (probe, pspec->param_id, pspec);

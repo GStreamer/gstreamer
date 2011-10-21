@@ -168,8 +168,9 @@ enum
 /*          Object typing & Creation           */
 /*                                             */
 /* =========================================== */
-static void gst_ximagesink_navigation_init (GstNavigationInterface * klass);
-static void gst_ximagesink_video_overlay_init (GstVideoOverlayIface * iface);
+static void gst_ximagesink_navigation_init (GstNavigationInterface * iface);
+static void gst_ximagesink_video_overlay_init (GstVideoOverlayInterface *
+    iface);
 #define gst_ximagesink_parent_class parent_class
 G_DEFINE_TYPE_WITH_CODE (GstXImageSink, gst_ximagesink, GST_TYPE_VIDEO_SINK,
     G_IMPLEMENT_INTERFACE (GST_TYPE_NAVIGATION, gst_ximagesink_navigation_init);
@@ -1679,7 +1680,7 @@ gst_ximagesink_set_event_handling (GstVideoOverlay * overlay,
 }
 
 static void
-gst_ximagesink_video_overlay_init (GstVideoOverlayIface * iface)
+gst_ximagesink_video_overlay_init (GstVideoOverlayInterface * iface)
 {
   iface->set_window_handle = gst_ximagesink_set_window_handle;
   iface->expose = gst_ximagesink_expose;

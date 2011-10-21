@@ -52,7 +52,7 @@ enum
   LAST_SIGNAL
 };
 
-static void gst_color_balance_class_init (GstColorBalanceClass * klass);
+static void gst_color_balance_class_init (GstColorBalanceInterface * iface);
 
 static guint gst_color_balance_signals[LAST_SIGNAL] = { 0 };
 
@@ -63,7 +63,7 @@ gst_color_balance_get_type (void)
 
   if (!gst_color_balance_type) {
     static const GTypeInfo gst_color_balance_info = {
-      sizeof (GstColorBalanceClass),
+      sizeof (GstColorBalanceInterface),
       (GBaseInitFunc) gst_color_balance_class_init,
       NULL,
       NULL,
@@ -82,7 +82,7 @@ gst_color_balance_get_type (void)
 }
 
 static void
-gst_color_balance_class_init (GstColorBalanceClass * klass)
+gst_color_balance_class_init (GstColorBalanceInterface * iface)
 {
   static gboolean initialized = FALSE;
 
@@ -98,7 +98,7 @@ gst_color_balance_class_init (GstColorBalanceClass * klass)
     gst_color_balance_signals[VALUE_CHANGED] =
         g_signal_new ("value-changed",
         GST_TYPE_COLOR_BALANCE, G_SIGNAL_RUN_LAST,
-        G_STRUCT_OFFSET (GstColorBalanceClass, value_changed),
+        G_STRUCT_OFFSET (GstColorBalanceInterface, value_changed),
         NULL, NULL,
         gst_interfaces_marshal_VOID__OBJECT_INT,
         G_TYPE_NONE, 2, GST_TYPE_COLOR_BALANCE_CHANNEL, G_TYPE_INT);
@@ -106,12 +106,12 @@ gst_color_balance_class_init (GstColorBalanceClass * klass)
     initialized = TRUE;
   }
 
-  klass->balance_type = GST_COLOR_BALANCE_SOFTWARE;
+  iface->balance_type = GST_COLOR_BALANCE_SOFTWARE;
 
   /* default virtual functions */
-  klass->list_channels = NULL;
-  klass->set_value = NULL;
-  klass->get_value = NULL;
+  iface->list_channels = NULL;
+  iface->set_value = NULL;
+  iface->get_value = NULL;
 }
 
 /**
@@ -127,14 +127,14 @@ gst_color_balance_class_init (GstColorBalanceClass * klass)
 const GList *
 gst_color_balance_list_channels (GstColorBalance * balance)
 {
-  GstColorBalanceClass *klass;
+  GstColorBalanceInterface *iface;
 
   g_return_val_if_fail (GST_IS_COLOR_BALANCE (balance), NULL);
 
-  klass = GST_COLOR_BALANCE_GET_CLASS (balance);
+  iface = GST_COLOR_BALANCE_GET_INTERFACE (balance);
 
-  if (klass->list_channels) {
-    return klass->list_channels (balance);
+  if (iface->list_channels) {
+    return iface->list_channels (balance);
   }
 
   return NULL;
@@ -157,10 +157,10 @@ void
 gst_color_balance_set_value (GstColorBalance * balance,
     GstColorBalanceChannel * channel, gint value)
 {
-  GstColorBalanceClass *klass = GST_COLOR_BALANCE_GET_CLASS (balance);
+  GstColorBalanceInterface *iface = GST_COLOR_BALANCE_GET_INTERFACE (balance);
 
-  if (klass->set_value) {
-    klass->set_value (balance, channel, value);
+  if (iface->set_value) {
+    iface->set_value (balance, channel, value);
   }
 }
 
@@ -182,14 +182,14 @@ gint
 gst_color_balance_get_value (GstColorBalance * balance,
     GstColorBalanceChannel * channel)
 {
-  GstColorBalanceClass *klass;
+  GstColorBalanceInterface *iface;
 
   g_return_val_if_fail (GST_IS_COLOR_BALANCE (balance), 0);
 
-  klass = GST_COLOR_BALANCE_GET_CLASS (balance);
+  iface = GST_COLOR_BALANCE_GET_INTERFACE (balance);
 
-  if (klass->get_value) {
-    return klass->get_value (balance, channel);
+  if (iface->get_value) {
+    return iface->get_value (balance, channel);
   }
 
   return channel->min_value;
@@ -208,14 +208,14 @@ gst_color_balance_get_value (GstColorBalance * balance,
 GstColorBalanceType
 gst_color_balance_get_balance_type (GstColorBalance * balance)
 {
-  GstColorBalanceClass *klass;
+  GstColorBalanceInterface *iface;
 
   g_return_val_if_fail (GST_IS_COLOR_BALANCE (balance),
       GST_COLOR_BALANCE_SOFTWARE);
 
-  klass = GST_COLOR_BALANCE_GET_CLASS (balance);
+  iface = GST_COLOR_BALANCE_GET_INTERFACE (balance);
 
-  return klass->balance_type;
+  return iface->balance_type;
 }
 
 /**

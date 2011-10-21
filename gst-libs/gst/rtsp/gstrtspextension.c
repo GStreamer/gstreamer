@@ -96,7 +96,7 @@ gst_rtsp_extension_detect_server (GstRTSPExtension * ext, GstRTSPMessage * resp)
   GstRTSPExtensionInterface *iface;
   gboolean res = TRUE;
 
-  iface = GST_RTSP_EXTENSION_GET_IFACE (ext);
+  iface = GST_RTSP_EXTENSION_GET_INTERFACE (ext);
   if (iface->detect_server)
     res = iface->detect_server (ext, resp);
 
@@ -109,7 +109,7 @@ gst_rtsp_extension_before_send (GstRTSPExtension * ext, GstRTSPMessage * req)
   GstRTSPExtensionInterface *iface;
   GstRTSPResult res = GST_RTSP_OK;
 
-  iface = GST_RTSP_EXTENSION_GET_IFACE (ext);
+  iface = GST_RTSP_EXTENSION_GET_INTERFACE (ext);
   if (iface->before_send)
     res = iface->before_send (ext, req);
 
@@ -123,7 +123,7 @@ gst_rtsp_extension_after_send (GstRTSPExtension * ext, GstRTSPMessage * req,
   GstRTSPExtensionInterface *iface;
   GstRTSPResult res = GST_RTSP_OK;
 
-  iface = GST_RTSP_EXTENSION_GET_IFACE (ext);
+  iface = GST_RTSP_EXTENSION_GET_INTERFACE (ext);
   if (iface->after_send)
     res = iface->after_send (ext, req, resp);
 
@@ -137,7 +137,7 @@ gst_rtsp_extension_parse_sdp (GstRTSPExtension * ext, GstSDPMessage * sdp,
   GstRTSPExtensionInterface *iface;
   GstRTSPResult res = GST_RTSP_OK;
 
-  iface = GST_RTSP_EXTENSION_GET_IFACE (ext);
+  iface = GST_RTSP_EXTENSION_GET_INTERFACE (ext);
   if (iface->parse_sdp)
     res = iface->parse_sdp (ext, sdp, s);
 
@@ -150,7 +150,7 @@ gst_rtsp_extension_setup_media (GstRTSPExtension * ext, GstSDPMedia * media)
   GstRTSPExtensionInterface *iface;
   GstRTSPResult res = GST_RTSP_OK;
 
-  iface = GST_RTSP_EXTENSION_GET_IFACE (ext);
+  iface = GST_RTSP_EXTENSION_GET_INTERFACE (ext);
   if (iface->setup_media)
     res = iface->setup_media (ext, media);
 
@@ -163,7 +163,7 @@ gst_rtsp_extension_configure_stream (GstRTSPExtension * ext, GstCaps * caps)
   GstRTSPExtensionInterface *iface;
   gboolean res = TRUE;
 
-  iface = GST_RTSP_EXTENSION_GET_IFACE (ext);
+  iface = GST_RTSP_EXTENSION_GET_INTERFACE (ext);
   if (iface->configure_stream)
     res = iface->configure_stream (ext, caps);
 
@@ -177,7 +177,7 @@ gst_rtsp_extension_get_transports (GstRTSPExtension * ext,
   GstRTSPExtensionInterface *iface;
   GstRTSPResult res = GST_RTSP_OK;
 
-  iface = GST_RTSP_EXTENSION_GET_IFACE (ext);
+  iface = GST_RTSP_EXTENSION_GET_INTERFACE (ext);
   if (iface->get_transports)
     res = iface->get_transports (ext, protocols, transport);
 
@@ -190,7 +190,7 @@ gst_rtsp_extension_stream_select (GstRTSPExtension * ext, GstRTSPUrl * url)
   GstRTSPExtensionInterface *iface;
   GstRTSPResult res = GST_RTSP_OK;
 
-  iface = GST_RTSP_EXTENSION_GET_IFACE (ext);
+  iface = GST_RTSP_EXTENSION_GET_INTERFACE (ext);
   if (iface->stream_select)
     res = iface->stream_select (ext, url);
 
@@ -204,7 +204,7 @@ gst_rtsp_extension_receive_request (GstRTSPExtension * ext,
   GstRTSPExtensionInterface *iface;
   GstRTSPResult res = GST_RTSP_ENOTIMPL;
 
-  iface = GST_RTSP_EXTENSION_GET_IFACE (ext);
+  iface = GST_RTSP_EXTENSION_GET_INTERFACE (ext);
   if (iface->receive_request)
     res = iface->receive_request (ext, msg);
 

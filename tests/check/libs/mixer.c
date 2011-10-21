@@ -55,7 +55,7 @@ G_DEFINE_TYPE_WITH_CODE (TestElement, test_element, GST_TYPE_ELEMENT,
     init_interface (g_define_type_id));
 
 static void
-test_element_mixer_interface_init (GstMixerClass * klass)
+test_element_mixer_interface_init (GstMixerInterface * iface)
 {
   /* Not actually implementing any interfaces for this test atm */
 }

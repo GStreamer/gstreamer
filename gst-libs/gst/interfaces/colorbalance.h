@@ -33,20 +33,15 @@ G_BEGIN_DECLS
   (gst_color_balance_get_type ())
 #define GST_COLOR_BALANCE(obj) \
   (G_TYPE_CHECK_INSTANCE_CAST ((obj), GST_TYPE_COLOR_BALANCE, GstColorBalance))
-#define GST_COLOR_BALANCE_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_CAST ((klass), GST_TYPE_COLOR_BALANCE, \
-                            GstColorBalanceClass))
 #define GST_IS_COLOR_BALANCE(obj) \
   (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_COLOR_BALANCE))
-#define GST_IS_COLOR_BALANCE_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_TYPE ((klass), GST_TYPE_COLOR_BALANCE))
-#define GST_COLOR_BALANCE_GET_CLASS(inst) \
-  (G_TYPE_INSTANCE_GET_INTERFACE ((inst), GST_TYPE_COLOR_BALANCE, GstColorBalanceClass))
+#define GST_COLOR_BALANCE_GET_INTERFACE(inst) \
+  (G_TYPE_INSTANCE_GET_INTERFACE ((inst), GST_TYPE_COLOR_BALANCE, GstColorBalanceInterface))
 
 #define GST_COLOR_BALANCE_TYPE(klass) (klass->balance_type)
 
 typedef struct _GstColorBalance GstColorBalance;
-typedef struct _GstColorBalanceClass GstColorBalanceClass;
+typedef struct _GstColorBalanceInterface GstColorBalanceInterface;
 
 /**
  * GstColorBalanceType:
@@ -67,7 +62,7 @@ typedef enum
 } GstColorBalanceType;
 
 /**
- * GstColorBalanceClass:
+ * GstColorBalanceInterface:
  * @klass: the parent interface
  * @balance_type: implementation type
  * @list_channels: list handled channels
@@ -77,7 +72,7 @@ typedef enum
  *
  * Color-balance interface.
  */
-struct _GstColorBalanceClass {
+struct _GstColorBalanceInterface {
   GTypeInterface klass;
 
   GstColorBalanceType balance_type;

@@ -101,7 +101,7 @@ gst_video_orientation_get_hflip (GstVideoOrientation * video_orientation,
     gboolean * flip)
 {
   GstVideoOrientationInterface *iface =
-      GST_VIDEO_ORIENTATION_GET_IFACE (video_orientation);
+      GST_VIDEO_ORIENTATION_GET_INTERFACE (video_orientation);
 
   if (iface->get_hflip) {
     return iface->get_hflip (video_orientation, flip);
@@ -124,7 +124,7 @@ gst_video_orientation_get_vflip (GstVideoOrientation * video_orientation,
     gboolean * flip)
 {
   GstVideoOrientationInterface *iface =
-      GST_VIDEO_ORIENTATION_GET_IFACE (video_orientation);
+      GST_VIDEO_ORIENTATION_GET_INTERFACE (video_orientation);
 
   if (iface->get_vflip) {
     return iface->get_vflip (video_orientation, flip);
@@ -147,7 +147,7 @@ gst_video_orientation_get_hcenter (GstVideoOrientation * video_orientation,
     gint * center)
 {
   GstVideoOrientationInterface *iface =
-      GST_VIDEO_ORIENTATION_GET_IFACE (video_orientation);
+      GST_VIDEO_ORIENTATION_GET_INTERFACE (video_orientation);
 
   if (iface->get_hcenter) {
     return iface->get_hcenter (video_orientation, center);
@@ -170,7 +170,7 @@ gst_video_orientation_get_vcenter (GstVideoOrientation * video_orientation,
     gint * center)
 {
   GstVideoOrientationInterface *iface =
-      GST_VIDEO_ORIENTATION_GET_IFACE (video_orientation);
+      GST_VIDEO_ORIENTATION_GET_INTERFACE (video_orientation);
 
   if (iface->get_vcenter) {
     return iface->get_vcenter (video_orientation, center);
@@ -193,7 +193,7 @@ gst_video_orientation_set_hflip (GstVideoOrientation * video_orientation,
     gboolean flip)
 {
   GstVideoOrientationInterface *iface =
-      GST_VIDEO_ORIENTATION_GET_IFACE (video_orientation);
+      GST_VIDEO_ORIENTATION_GET_INTERFACE (video_orientation);
 
   if (iface->set_hflip) {
     return iface->set_hflip (video_orientation, flip);
@@ -216,7 +216,7 @@ gst_video_orientation_set_vflip (GstVideoOrientation * video_orientation,
     gboolean flip)
 {
   GstVideoOrientationInterface *iface =
-      GST_VIDEO_ORIENTATION_GET_IFACE (video_orientation);
+      GST_VIDEO_ORIENTATION_GET_INTERFACE (video_orientation);
 
   if (iface->set_vflip) {
     return iface->set_vflip (video_orientation, flip);
@@ -239,7 +239,7 @@ gst_video_orientation_set_hcenter (GstVideoOrientation * video_orientation,
     gint center)
 {
   GstVideoOrientationInterface *iface =
-      GST_VIDEO_ORIENTATION_GET_IFACE (video_orientation);
+      GST_VIDEO_ORIENTATION_GET_INTERFACE (video_orientation);
 
   if (iface->set_hcenter) {
     return iface->set_hcenter (video_orientation, center);
@@ -262,7 +262,7 @@ gst_video_orientation_set_vcenter (GstVideoOrientation * video_orientation,
     gint center)
 {
   GstVideoOrientationInterface *iface =
-      GST_VIDEO_ORIENTATION_GET_IFACE (video_orientation);
+      GST_VIDEO_ORIENTATION_GET_INTERFACE (video_orientation);
 
   if (iface->set_vcenter) {
     return iface->set_vcenter (video_orientation, center);

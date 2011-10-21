@@ -194,8 +194,10 @@ enum
 /*                                             */
 /* =========================================== */
 static void gst_xvimagesink_navigation_init (GstNavigationInterface * iface);
-static void gst_xvimagesink_video_overlay_init (GstVideoOverlayIface * iface);
-static void gst_xvimagesink_colorbalance_init (GstColorBalanceClass * iface);
+static void gst_xvimagesink_video_overlay_init (GstVideoOverlayInterface *
+    iface);
+static void gst_xvimagesink_colorbalance_init (GstColorBalanceInterface *
+    iface);
 static void
 gst_xvimagesink_property_probe_interface_init (GstPropertyProbeInterface *
     iface);
@@ -2240,7 +2242,7 @@ gst_xvimagesink_set_render_rectangle (GstVideoOverlay * overlay, gint x, gint y,
 }
 
 static void
-gst_xvimagesink_video_overlay_init (GstVideoOverlayIface * iface)
+gst_xvimagesink_video_overlay_init (GstVideoOverlayInterface * iface)
 {
   iface->set_window_handle = gst_xvimagesink_set_window_handle;
   iface->expose = gst_xvimagesink_expose;
@@ -2322,7 +2324,7 @@ gst_xvimagesink_colorbalance_get_value (GstColorBalance * balance,
 }
 
 static void
-gst_xvimagesink_colorbalance_init (GstColorBalanceClass * iface)
+gst_xvimagesink_colorbalance_init (GstColorBalanceInterface * iface)
 {
   GST_COLOR_BALANCE_TYPE (iface) = GST_COLOR_BALANCE_HARDWARE;
   iface->list_channels = gst_xvimagesink_colorbalance_list_channels;

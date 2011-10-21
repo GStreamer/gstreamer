@@ -67,7 +67,7 @@ static guint gst_mixer_signals[LAST_SIGNAL] = { 0 };
 
 #endif
 
-static void gst_mixer_class_init (GstMixerClass * klass);
+static void gst_mixer_class_init (GstMixerInterface * iface);
 
 GType
 gst_mixer_get_type (void)
@@ -76,7 +76,7 @@ gst_mixer_get_type (void)
 
   if (!gst_mixer_type) {
     static const GTypeInfo gst_mixer_info = {
-      sizeof (GstMixerClass),
+      sizeof (GstMixerInterface),
       (GBaseInitFunc) gst_mixer_class_init,
       NULL,
       NULL,
@@ -95,7 +95,7 @@ gst_mixer_get_type (void)
 }
 
 static void
-gst_mixer_class_init (GstMixerClass * klass)
+gst_mixer_class_init (GstMixerInterface * iface)
 {
 #ifndef GST_DISABLE_DEPRECATED
   static gboolean initialized = FALSE;
@@ -105,28 +105,28 @@ gst_mixer_class_init (GstMixerClass * klass)
     gst_mixer_signals[SIGNAL_RECORD_TOGGLED] =
         g_signal_new ("record-toggled",
         GST_TYPE_MIXER, G_SIGNAL_RUN_LAST,
-        G_STRUCT_OFFSET (GstMixerClass, record_toggled),
+        G_STRUCT_OFFSET (GstMixerInterface, record_toggled),
         NULL, NULL,
         gst_interfaces_marshal_VOID__OBJECT_BOOLEAN, G_TYPE_NONE, 2,
         GST_TYPE_MIXER_TRACK, G_TYPE_BOOLEAN);
     gst_mixer_signals[SIGNAL_MUTE_TOGGLED] =
         g_signal_new ("mute-toggled",
         GST_TYPE_MIXER, G_SIGNAL_RUN_LAST,
-        G_STRUCT_OFFSET (GstMixerClass, mute_toggled),
+        G_STRUCT_OFFSET (GstMixerInterface, mute_toggled),
         NULL, NULL,
         gst_interfaces_marshal_VOID__OBJECT_BOOLEAN, G_TYPE_NONE, 2,
         GST_TYPE_MIXER_TRACK, G_TYPE_BOOLEAN);
     gst_mixer_signals[SIGNAL_VOLUME_CHANGED] =
         g_signal_new ("volume-changed",
         GST_TYPE_MIXER, G_SIGNAL_RUN_LAST,
-        G_STRUCT_OFFSET (GstMixerClass, volume_changed),
+        G_STRUCT_OFFSET (GstMixerInterface, volume_changed),
         NULL, NULL,
         gst_interfaces_marshal_VOID__OBJECT_POINTER, G_TYPE_NONE, 2,
         GST_TYPE_MIXER_TRACK, G_TYPE_POINTER);
     gst_mixer_signals[SIGNAL_OPTION_CHANGED] =
         g_signal_new ("option-changed",
         GST_TYPE_MIXER, G_SIGNAL_RUN_LAST,
-        G_STRUCT_OFFSET (GstMixerClass, option_changed),
+        G_STRUCT_OFFSET (GstMixerInterface, option_changed),
         NULL, NULL,
         gst_interfaces_marshal_VOID__OBJECT_STRING, G_TYPE_NONE, 2,
         GST_TYPE_MIXER_OPTIONS, G_TYPE_STRING);
@@ -135,16 +135,16 @@ gst_mixer_class_init (GstMixerClass * klass)
   }
 #endif
 
-  klass->mixer_type = GST_MIXER_SOFTWARE;
+  iface->mixer_type = GST_MIXER_SOFTWARE;
 
   /* default virtual functions */
-  klass->list_tracks = NULL;
-  klass->set_volume = NULL;
-  klass->get_volume = NULL;
-  klass->set_mute = NULL;
-  klass->set_record = NULL;
-  klass->set_option = NULL;
-  klass->get_option = NULL;
+  iface->list_tracks = NULL;
+  iface->set_volume = NULL;
+  iface->get_volume = NULL;
+  iface->set_mute = NULL;
+  iface->set_record = NULL;
+  iface->set_option = NULL;
+  iface->get_option = NULL;
 }
 
 /**
@@ -164,14 +164,14 @@ gst_mixer_class_init (GstMixerClass * klass)
 const GList *
 gst_mixer_list_tracks (GstMixer * mixer)
 {
-  GstMixerClass *klass;
+  GstMixerInterface *iface;
 
   g_return_val_if_fail (mixer != NULL, NULL);
 
-  klass = GST_MIXER_GET_CLASS (mixer);
+  iface = GST_MIXER_GET_INTERFACE (mixer);
 
-  if (klass->list_tracks) {
-    return klass->list_tracks (mixer);
+  if (iface->list_tracks) {
+    return iface->list_tracks (mixer);
   }
 
   return NULL;
@@ -195,16 +195,16 @@ gst_mixer_list_tracks (GstMixer * mixer)
 void
 gst_mixer_set_volume (GstMixer * mixer, GstMixerTrack * track, gint * volumes)
 {
-  GstMixerClass *klass;
+  GstMixerInterface *iface;
 
   g_return_if_fail (mixer != NULL);
   g_return_if_fail (track != NULL);
   g_return_if_fail (volumes != NULL);
 
-  klass = GST_MIXER_GET_CLASS (mixer);
+  iface = GST_MIXER_GET_INTERFACE (mixer);
 
-  if (klass->set_volume) {
-    klass->set_volume (mixer, track, volumes);
+  if (iface->set_volume) {
+    iface->set_volume (mixer, track, volumes);
   }
 }
 
@@ -222,16 +222,16 @@ gst_mixer_set_volume (GstMixer * mixer, GstMixerTrack * track, gint * volumes)
 void
 gst_mixer_get_volume (GstMixer * mixer, GstMixerTrack * track, gint * volumes)
 {
-  GstMixerClass *klass;
+  GstMixerInterface *iface;
 
   g_return_if_fail (mixer != NULL);
   g_return_if_fail (track != NULL);
   g_return_if_fail (volumes != NULL);
 
-  klass = GST_MIXER_GET_CLASS (mixer);
+  iface = GST_MIXER_GET_INTERFACE (mixer);
 
-  if (klass->get_volume) {
-    klass->get_volume (mixer, track, volumes);
+  if (iface->get_volume) {
+    iface->get_volume (mixer, track, volumes);
   } else {
     gint i;
 
@@ -255,15 +255,15 @@ gst_mixer_get_volume (GstMixer * mixer, GstMixerTrack * track, gint * volumes)
 void
 gst_mixer_set_mute (GstMixer * mixer, GstMixerTrack * track, gboolean mute)
 {
-  GstMixerClass *klass;
+  GstMixerInterface *iface;
 
   g_return_if_fail (mixer != NULL);
   g_return_if_fail (track != NULL);
 
-  klass = GST_MIXER_GET_CLASS (mixer);
+  iface = GST_MIXER_GET_INTERFACE (mixer);
 
-  if (klass->set_mute) {
-    klass->set_mute (mixer, track, mute);
+  if (iface->set_mute) {
+    iface->set_mute (mixer, track, mute);
   }
 }
 
@@ -283,10 +283,10 @@ gst_mixer_set_mute (GstMixer * mixer, GstMixerTrack * track, gboolean mute)
 void
 gst_mixer_set_record (GstMixer * mixer, GstMixerTrack * track, gboolean record)
 {
-  GstMixerClass *klass = GST_MIXER_GET_CLASS (mixer);
+  GstMixerInterface *iface = GST_MIXER_GET_INTERFACE (mixer);
 
-  if (klass->set_record) {
-    klass->set_record (mixer, track, record);
+  if (iface->set_record) {
+    iface->set_record (mixer, track, record);
   }
 }
 
@@ -302,15 +302,15 @@ gst_mixer_set_record (GstMixer * mixer, GstMixerTrack * track, gboolean record)
 void
 gst_mixer_set_option (GstMixer * mixer, GstMixerOptions * opts, gchar * value)
 {
-  GstMixerClass *klass;
+  GstMixerInterface *iface;
 
   g_return_if_fail (mixer != NULL);
   g_return_if_fail (opts != NULL);
 
-  klass = GST_MIXER_GET_CLASS (mixer);
+  iface = GST_MIXER_GET_INTERFACE (mixer);
 
-  if (klass->set_option) {
-    klass->set_option (mixer, opts, value);
+  if (iface->set_option) {
+    iface->set_option (mixer, opts, value);
   }
 }
 
@@ -327,15 +327,15 @@ gst_mixer_set_option (GstMixer * mixer, GstMixerOptions * opts, gchar * value)
 const gchar *
 gst_mixer_get_option (GstMixer * mixer, GstMixerOptions * opts)
 {
-  GstMixerClass *klass;
+  GstMixerInterface *iface;
 
   g_return_val_if_fail (mixer != NULL, NULL);
   g_return_val_if_fail (opts != NULL, NULL);
 
-  klass = GST_MIXER_GET_CLASS (mixer);
+  iface = GST_MIXER_GET_INTERFACE (mixer);
 
-  if (klass->get_option) {
-    return klass->get_option (mixer, opts);
+  if (iface->get_option) {
+    return iface->get_option (mixer, opts);
   }
 
   return NULL;
@@ -354,9 +354,9 @@ gst_mixer_get_option (GstMixer * mixer, GstMixerOptions * opts)
 GstMixerType
 gst_mixer_get_mixer_type (GstMixer * mixer)
 {
-  GstMixerClass *klass = GST_MIXER_GET_CLASS (mixer);
+  GstMixerInterface *iface = GST_MIXER_GET_INTERFACE (mixer);
 
-  return klass->mixer_type;
+  return iface->mixer_type;
 }
 
 /**
@@ -370,13 +370,13 @@ gst_mixer_get_mixer_type (GstMixer * mixer)
 GstMixerFlags
 gst_mixer_get_mixer_flags (GstMixer * mixer)
 {
-  GstMixerClass *klass;
+  GstMixerInterface *iface;
 
   g_return_val_if_fail (mixer != NULL, FALSE);
-  klass = GST_MIXER_GET_CLASS (mixer);
+  iface = GST_MIXER_GET_INTERFACE (mixer);
 
-  if (klass->get_mixer_flags) {
-    return klass->get_mixer_flags (mixer);
+  if (iface->get_mixer_flags) {
+    return iface->get_mixer_flags (mixer);
   }
   return GST_MIXER_FLAG_NONE;
 }

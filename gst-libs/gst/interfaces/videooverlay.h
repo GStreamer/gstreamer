@@ -32,8 +32,8 @@ G_BEGIN_DECLS
     (G_TYPE_CHECK_INSTANCE_CAST ((obj), GST_TYPE_VIDEO_OVERLAY, GstVideoOverlay))
 #define GST_IS_VIDEO_OVERLAY(obj) \
     (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_VIDEO_OVERLAY))
-#define GST_VIDEO_OVERLAY_GET_IFACE(inst) \
-    (G_TYPE_INSTANCE_GET_INTERFACE ((inst), GST_TYPE_VIDEO_OVERLAY, GstVideoOverlayIface))
+#define GST_VIDEO_OVERLAY_GET_INTERFACE(inst) \
+    (G_TYPE_INSTANCE_GET_INTERFACE ((inst), GST_TYPE_VIDEO_OVERLAY, GstVideoOverlayInterface))
 
 /**
  * GstVideoOverlay:
@@ -41,10 +41,10 @@ G_BEGIN_DECLS
  * Opaque #GstVideoOverlay interface structure
  */
 typedef struct _GstVideoOverlay GstVideoOverlay;
-typedef struct _GstVideoOverlayIface GstVideoOverlayIface;
+typedef struct _GstVideoOverlayInterface GstVideoOverlayInterface;
 
 /**
- * GstVideoOverlayIface:
+ * GstVideoOverlayInterface:
  * @interface: parent interface type.
  * @expose: virtual method to handle expose events
  * @handle_events: virtual method to handle events
@@ -53,7 +53,7 @@ typedef struct _GstVideoOverlayIface GstVideoOverlayIface;
  *
  * #GstVideoOverlay interface
  */
-struct _GstVideoOverlayIface {
+struct _GstVideoOverlayInterface {
   GTypeInterface interface;
 
   /* virtual functions */

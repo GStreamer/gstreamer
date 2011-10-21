@@ -112,7 +112,7 @@ enum
     GST_AUDIO_CAPS_MAKE ("{ F32BE, F64BE, S8, S16BE, S24BE, S32BE }")
 #endif
 
-static void gst_volume_mixer_init (GstMixerClass * iface);
+static void gst_volume_mixer_init (GstMixerInterface * iface);
 
 #define gst_volume_parent_class parent_class
 G_DEFINE_TYPE_WITH_CODE (GstVolume, gst_volume,
@@ -335,15 +335,15 @@ gst_volume_set_mute (GstMixer * mixer, GstMixerTrack * track, gboolean mute)
 }
 
 static void
-gst_volume_mixer_init (GstMixerClass * klass)
+gst_volume_mixer_init (GstMixerInterface * iface)
 {
-  GST_MIXER_TYPE (klass) = GST_MIXER_SOFTWARE;
+  GST_MIXER_TYPE (iface) = GST_MIXER_SOFTWARE;
 
   /* default virtual functions */
-  klass->list_tracks = gst_volume_list_tracks;
-  klass->set_volume = gst_volume_set_volume;
-  klass->get_volume = gst_volume_get_volume;
-  klass->set_mute = gst_volume_set_mute;
+  iface->list_tracks = gst_volume_list_tracks;
+  iface->set_volume = gst_volume_set_volume;
+  iface->get_volume = gst_volume_get_volume;
+  iface->set_mute = gst_volume_set_mute;
 }
 
 /* Element class */

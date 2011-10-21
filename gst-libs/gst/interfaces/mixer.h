@@ -35,19 +35,15 @@ G_BEGIN_DECLS
   (gst_mixer_get_type ())
 #define GST_MIXER(obj) \
   (G_TYPE_CHECK_INSTANCE_CAST ((obj), GST_TYPE_MIXER, GstMixer))
-#define GST_MIXER_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_CAST ((klass), GST_TYPE_MIXER, GstMixerClass))
 #define GST_IS_MIXER(obj) \
   (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_MIXER))
-#define GST_IS_MIXER_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_TYPE ((klass), GST_TYPE_MIXER))
-#define GST_MIXER_GET_CLASS(inst) \
-  (G_TYPE_INSTANCE_GET_INTERFACE ((inst), GST_TYPE_MIXER, GstMixerClass))
+#define GST_MIXER_GET_INTERFACE(inst) \
+  (G_TYPE_INSTANCE_GET_INTERFACE ((inst), GST_TYPE_MIXER, GstMixerInterface))
 
 #define GST_MIXER_TYPE(klass) (klass->mixer_type)
 
 typedef struct _GstMixer GstMixer;
-typedef struct _GstMixerClass GstMixerClass;
+typedef struct _GstMixerInterface GstMixerInterface;
 
 /**
  * GstMixerType:
@@ -116,7 +112,7 @@ typedef enum
   GST_MIXER_FLAG_GROUPING            = (1<<2),
 } GstMixerFlags;
 
-struct _GstMixerClass {
+struct _GstMixerInterface {
   GTypeInterface klass;
 
   GstMixerType mixer_type;

@@ -298,7 +298,7 @@ gst_video_overlay_get_type (void)
 
   if (!gst_video_overlay_type) {
     static const GTypeInfo gst_video_overlay_info = {
-      sizeof (GstVideoOverlayIface),
+      sizeof (GstVideoOverlayInterface),
       NULL,
       NULL,
       NULL,
@@ -331,12 +331,12 @@ gst_video_overlay_get_type (void)
 void
 gst_video_overlay_set_window_handle (GstVideoOverlay * overlay, guintptr handle)
 {
-  GstVideoOverlayIface *iface;
+  GstVideoOverlayInterface *iface;
 
   g_return_if_fail (overlay != NULL);
   g_return_if_fail (GST_IS_VIDEO_OVERLAY (overlay));
 
-  iface = GST_VIDEO_OVERLAY_GET_IFACE (overlay);
+  iface = GST_VIDEO_OVERLAY_GET_INTERFACE (overlay);
 
   if (iface->set_window_handle) {
     iface->set_window_handle (overlay, handle);
@@ -405,12 +405,12 @@ gst_video_overlay_prepare_window_handle (GstVideoOverlay * overlay)
 void
 gst_video_overlay_expose (GstVideoOverlay * overlay)
 {
-  GstVideoOverlayIface *iface;
+  GstVideoOverlayInterface *iface;
 
   g_return_if_fail (overlay != NULL);
   g_return_if_fail (GST_IS_VIDEO_OVERLAY (overlay));
 
-  iface = GST_VIDEO_OVERLAY_GET_IFACE (overlay);
+  iface = GST_VIDEO_OVERLAY_GET_INTERFACE (overlay);
 
   if (iface->expose) {
     iface->expose (overlay);
@@ -434,12 +434,12 @@ void
 gst_video_overlay_handle_events (GstVideoOverlay * overlay,
     gboolean handle_events)
 {
-  GstVideoOverlayIface *iface;
+  GstVideoOverlayInterface *iface;
 
   g_return_if_fail (overlay != NULL);
   g_return_if_fail (GST_IS_VIDEO_OVERLAY (overlay));
 
-  iface = GST_VIDEO_OVERLAY_GET_IFACE (overlay);
+  iface = GST_VIDEO_OVERLAY_GET_INTERFACE (overlay);
 
   if (iface->handle_events) {
     iface->handle_events (overlay, handle_events);
@@ -473,14 +473,14 @@ gboolean
 gst_video_overlay_set_render_rectangle (GstVideoOverlay * overlay,
     gint x, gint y, gint width, gint height)
 {
-  GstVideoOverlayIface *iface;
+  GstVideoOverlayInterface *iface;
 
   g_return_val_if_fail (overlay != NULL, FALSE);
   g_return_val_if_fail (GST_IS_VIDEO_OVERLAY (overlay), FALSE);
   g_return_val_if_fail ((width == -1 && height == -1) ||
       (width > 0 && height > 0), FALSE);
 
-  iface = GST_VIDEO_OVERLAY_GET_IFACE (overlay);
+  iface = GST_VIDEO_OVERLAY_GET_INTERFACE (overlay);
 
   if (iface->set_render_rectangle) {
     iface->set_render_rectangle (overlay, x, y, width, height);
