@@ -1397,7 +1397,7 @@ parse_frame_header (GstBitReader * br, GstVC1FrameHdr * framehdr,
 
   pic->rangeredfrm = 0;
   if (structc->rangered) {
-    READ_UINT8 (br, pic->rangeredfrm, 2);
+    READ_UINT8 (br, pic->rangeredfrm, 1);
   }
 
   /*  Figuring out the picture type */
