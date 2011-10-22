@@ -1333,6 +1333,25 @@ gst_ogg_demux_estimate_seek_quality (GstOggDemux * ogg)
   return seek_quality;
 }
 
+static void
+gst_ogg_demux_update_bisection_stats (GstOggDemux * ogg)
+{
+  GST_INFO_OBJECT (ogg, "Bisection needed %d + %d steps",
+      ogg->push_bisection_steps[0], ogg->push_bisection_steps[1]);
+  ogg->stats_bisection_steps[0] += ogg->push_bisection_steps[0];
+  ogg->stats_bisection_steps[1] += ogg->push_bisection_steps[1];
+  if (ogg->stats_bisection_max_steps[0] < ogg->push_bisection_steps[0])
+    ogg->stats_bisection_max_steps[0] = ogg->push_bisection_steps[0];
+  if (ogg->stats_bisection_max_steps[1] < ogg->push_bisection_steps[1])
+    ogg->stats_bisection_max_steps[1] = ogg->push_bisection_steps[1];
+  ogg->stats_nbisections++;
+  GST_INFO_OBJECT (ogg,
+      "So far, %.2f + %.2f bisections needed per seek (max %d + %d)",
+      ogg->stats_bisection_steps[0] / (float) ogg->stats_nbisections,
+      ogg->stats_bisection_steps[1] / (float) ogg->stats_nbisections,
+      ogg->stats_bisection_max_steps[0], ogg->stats_bisection_max_steps[1]);
+}
+
 static gboolean
 gst_ogg_pad_handle_push_mode_state (GstOggPad * pad, ogg_page * page)
 {
@@ -1533,21 +1552,7 @@ gst_ogg_pad_handle_push_mode_state (GstOggPad * pad, ogg_page * page)
                any queued pages into the stream so we start decoding there */
             ogg->push_state = PUSH_PLAYING;
           }
-          GST_INFO_OBJECT (ogg, "Bisection needed %d + %d steps",
-              ogg->push_bisection_steps[0], ogg->push_bisection_steps[1]);
-          ogg->stats_bisection_steps[0] += ogg->push_bisection_steps[0];
-          ogg->stats_bisection_steps[1] += ogg->push_bisection_steps[1];
-          if (ogg->stats_bisection_max_steps[0] < ogg->push_bisection_steps[0])
-            ogg->stats_bisection_max_steps[0] = ogg->push_bisection_steps[0];
-          if (ogg->stats_bisection_max_steps[1] < ogg->push_bisection_steps[1])
-            ogg->stats_bisection_max_steps[1] = ogg->push_bisection_steps[1];
-          ogg->stats_nbisections++;
-          GST_INFO_OBJECT (ogg,
-              "So far, %.2f + %.2f bisections needed per seek (max %d + %d)",
-              ogg->stats_bisection_steps[0] / (float) ogg->stats_nbisections,
-              ogg->stats_bisection_steps[1] / (float) ogg->stats_nbisections,
-              ogg->stats_bisection_max_steps[0],
-              ogg->stats_bisection_max_steps[1]);
+          gst_ogg_demux_update_bisection_stats (ogg);
         }
       }
     } else if (ogg->push_state == PUSH_LINEAR1) {
@@ -1561,22 +1566,30 @@ gst_ogg_pad_handle_push_mode_state (GstOggPad * pad, ogg_page * page)
             GST_TIME_ARGS (pad->push_kf_time));
         earliest_keyframe_time = gst_ogg_demux_get_earliest_keyframe_time (ogg);
         if (earliest_keyframe_time != GST_CLOCK_TIME_NONE) {
-          GST_INFO_OBJECT (ogg,
-              "All non sparse streams now have a previous keyframe time,"
-              "bisecting again to %" GST_TIME_FORMAT,
-              GST_TIME_ARGS (earliest_keyframe_time));
+          if (earliest_keyframe_time > ogg->push_last_seek_time) {
+            GST_INFO_OBJECT (ogg,
+                "All non sparse streams now have a previous keyframe time, "
+                "and we already decoded it, switching to playing");
+            ogg->push_state = PUSH_PLAYING;
+            gst_ogg_demux_update_bisection_stats (ogg);
+          } else {
+            GST_INFO_OBJECT (ogg,
+                "All non sparse streams now have a previous keyframe time, "
+                "bisecting again to %" GST_TIME_FORMAT,
+                GST_TIME_ARGS (earliest_keyframe_time));
 
-          ogg->push_seek_time_target = earliest_keyframe_time;
-          ogg->push_offset0 = 0;
-          ogg->push_time0 = ogg->push_start_time;
-          ogg->push_offset1 = ogg->push_last_seek_offset;
-          ogg->push_time1 = ogg->push_last_seek_time;
-          ogg->push_prev_seek_time = GST_CLOCK_TIME_NONE;
-          ogg->seek_secant = FALSE;
-          ogg->seek_undershot = FALSE;
+            ogg->push_seek_time_target = earliest_keyframe_time;
+            ogg->push_offset0 = 0;
+            ogg->push_time0 = ogg->push_start_time;
+            ogg->push_offset1 = ogg->push_last_seek_offset;
+            ogg->push_time1 = ogg->push_last_seek_time;
+            ogg->push_prev_seek_time = GST_CLOCK_TIME_NONE;
+            ogg->seek_secant = FALSE;
+            ogg->seek_undershot = FALSE;
 
-          ogg->push_state = PUSH_BISECT2;
-          best = gst_ogg_demux_estimate_bisection_target (ogg, 1.0f);
+            ogg->push_state = PUSH_BISECT2;
+            best = gst_ogg_demux_estimate_bisection_target (ogg, 1.0f);
+          }
         }
       }
     }
