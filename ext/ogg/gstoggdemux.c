@@ -1066,6 +1066,8 @@ gst_ogg_pad_stream_out (GstOggPad * pad, gint npackets)
         break;
       case 1:
         GST_LOG_OBJECT (ogg, "packetout gave packet of size %ld", packet.bytes);
+        if (packet.bytes > ogg->max_packet_size)
+          ogg->max_packet_size = packet.bytes;
         result = gst_ogg_pad_submit_packet (pad, &packet);
         /* not linked is not a problem, it's possible that we are still
          * collecting headers and that we don't have exposed the pads yet */
@@ -1107,19 +1109,22 @@ gst_ogg_demux_setup_bisection_bounds (GstOggDemux * ogg)
         GST_TIME_ARGS (ogg->push_last_seek_time - ogg->push_seek_time_target));
     ogg->push_offset1 = ogg->push_last_seek_offset;
     ogg->push_time1 = ogg->push_last_seek_time;
+    ogg->seek_undershot = FALSE;
   } else {
     GST_DEBUG_OBJECT (ogg, "We undershot by %" GST_TIME_FORMAT,
         GST_TIME_ARGS (ogg->push_seek_time_target - ogg->push_last_seek_time));
     ogg->push_offset0 = ogg->push_last_seek_offset;
     ogg->push_time0 = ogg->push_last_seek_time;
+    ogg->seek_undershot = TRUE;
   }
 }
 
 static gint64
-gst_ogg_demux_estimate_bisection_target (GstOggDemux * ogg)
+gst_ogg_demux_estimate_bisection_target (GstOggDemux * ogg, float seek_quality)
 {
   gint64 best;
   gint64 segment_bitrate;
+  gint64 skew;
 
   /* we might not know the length of the stream in time,
      so push_time1 might not be set */
@@ -1146,6 +1151,7 @@ gst_ogg_demux_estimate_bisection_target (GstOggDemux * ogg)
         ogg->push_offset0 +
         gst_util_uint64_scale (ogg->push_seek_time_target - ogg->push_time0,
         segment_bitrate, 8 * GST_SECOND);
+    ogg->seek_secant = TRUE;
   } else {
     GST_DEBUG_OBJECT (ogg,
         "New segment to consider: bytes %" G_GINT64_FORMAT " %" G_GINT64_FORMAT
@@ -1162,20 +1168,63 @@ gst_ogg_demux_estimate_bisection_target (GstOggDemux * ogg)
           "Local bitrate on the %" GST_TIME_FORMAT " - %" GST_TIME_FORMAT
           " segment: %" G_GINT64_FORMAT, GST_TIME_ARGS (ogg->push_time0),
           GST_TIME_ARGS (ogg->push_time1), segment_bitrate);
+
       best =
           ogg->push_offset0 +
           gst_util_uint64_scale (ogg->push_seek_time_target - ogg->push_time0,
           segment_bitrate, 8 * GST_SECOND);
+      if (seek_quality < 0.5f && ogg->seek_secant) {
+        gint64 new_best, best2 = (ogg->push_offset0 + ogg->push_offset1) / 2;
+        /* if dire result, give as much as 25% weight to a dumb bisection guess */
+        float secant_weight = 1.0f - ((0.5 - seek_quality) / 0.5f) * 0.25;
+        new_best = (best * secant_weight + best2 * (1.0f - secant_weight));
+        GST_DEBUG_OBJECT (ogg,
+            "Secant says %" G_GINT64_FORMAT ", straight is %" G_GINT64_FORMAT
+            ", new best %" G_GINT64_FORMAT " with secant_weight %f", best,
+            best2, new_best, secant_weight);
+        best = new_best;
+        ogg->seek_secant = FALSE;
+      } else {
+        ogg->seek_secant = TRUE;
+      }
     }
   }
 
-  /* offset by typical page size */
-  best -= CHUNKSIZE;
+  GST_DEBUG_OBJECT (ogg, "Raw best guess: %" G_GINT64_FORMAT, best);
+
+  /* offset the guess down as we need to capture the start of the
+     page we are targetting - but only do so if we did not undershoot
+     last time, as we're likely to still do this time */
+  if (!ogg->seek_undershot) {
+    /* very small packets are packed on pages, so offset by at least
+       a value which is likely to get us at least one page where the
+       packet starts */
+    skew =
+        ogg->max_packet_size >
+        ogg->max_page_size ? ogg->max_packet_size : ogg->max_page_size;
+    GST_DEBUG_OBJECT (ogg, "Offsetting by %" G_GINT64_FORMAT, skew);
+    best -= skew;
+  }
+
+  /* do not seek too close to the bounds, as we stop seeking
+     when we get to within max_packet_size before the target */
+  if (best > ogg->push_offset1 - ogg->max_packet_size) {
+    best = ogg->push_offset1 - ogg->max_packet_size;
+    GST_DEBUG_OBJECT (ogg,
+        "Too close to high bound, pushing back to %" G_GINT64_FORMAT, best);
+  } else if (best < ogg->push_offset0 + ogg->max_packet_size) {
+    best = ogg->push_offset0 + ogg->max_packet_size;
+    GST_DEBUG_OBJECT (ogg,
+        "Too close to low bound, pushing forth to %" G_GINT64_FORMAT, best);
+  }
+
+  /* keep within bounds */
+  if (best > ogg->push_offset1)
+    best = ogg->push_offset1;
   if (best < ogg->push_offset0)
     best = ogg->push_offset0;
-  if (best < 0)
-    best = 0;
 
+  GST_DEBUG_OBJECT (ogg, "Choosing target %" G_GINT64_FORMAT, best);
   return best;
 }
 
@@ -1250,6 +1299,38 @@ gst_ogg_demux_seek_back_after_push_duration_check_unlock (GstOggDemux * ogg)
   }
 
   return GST_FLOW_OK;
+}
+
+static float
+gst_ogg_demux_estimate_seek_quality (GstOggDemux * ogg)
+{
+  gint64 diff;                  /* how far from the goal we ended up */
+  gint64 dist;                  /* how far we moved this iteration */
+  float seek_quality;
+
+  if (ogg->push_prev_seek_time == GST_CLOCK_TIME_NONE) {
+    /* for the first seek, we pretend we got a good seek,
+       as we don't have a previous seek yet */
+    return 1.0f;
+  }
+
+  /* We take a guess at how good the last seek was at guessing
+     the byte target by comparing the amplitude of the last
+     seek to the error */
+  diff = ogg->push_seek_time_target - ogg->push_last_seek_time;
+  if (diff < 0)
+    diff = -diff;
+  dist = ogg->push_last_seek_time - ogg->push_prev_seek_time;
+  if (dist < 0)
+    dist = -dist;
+
+  seek_quality = (dist == 0) ? 0.0f : 1.0f / (1.0f + diff / (float) dist);
+
+  GST_DEBUG_OBJECT (ogg,
+      "We moved %" GST_TIME_FORMAT ", we're off by %" GST_TIME_FORMAT
+      ", seek quality %f", GST_TIME_ARGS (dist), GST_TIME_ARGS (diff),
+      seek_quality);
+  return seek_quality;
 }
 
 static gboolean
@@ -1327,6 +1408,7 @@ gst_ogg_pad_handle_push_mode_state (GstOggPad * pad, ogg_page * page)
     GstEvent *sevent;
     int res;
     gboolean close_enough;
+    float seek_quality;
 
     /* ignore -1 granpos when seeking, we want to sync on a real granpos */
     if (granpos < 0) {
@@ -1364,14 +1446,18 @@ gst_ogg_pad_handle_push_mode_state (GstOggPad * pad, ogg_page * page)
           GST_TIME_ARGS (ogg->push_seek_time_target));
 
       if (ogg->push_time1 != GST_CLOCK_TIME_NONE) {
+        seek_quality = gst_ogg_demux_estimate_seek_quality (ogg);
         GST_DEBUG_OBJECT (ogg,
             "Interval was %" G_GINT64_FORMAT " - %" G_GINT64_FORMAT " (%"
             G_GINT64_FORMAT "), time %" GST_TIME_FORMAT " - %" GST_TIME_FORMAT
-            " (%" GST_TIME_FORMAT ")", ogg->push_offset0, ogg->push_offset1,
-            ogg->push_offset1 - ogg->push_offset0,
+            " (%" GST_TIME_FORMAT "), seek quality %f", ogg->push_offset0,
+            ogg->push_offset1, ogg->push_offset1 - ogg->push_offset0,
             GST_TIME_ARGS (ogg->push_time0), GST_TIME_ARGS (ogg->push_time1),
-            GST_TIME_ARGS (ogg->push_time1 - ogg->push_time0));
+            GST_TIME_ARGS (ogg->push_time1 - ogg->push_time0), seek_quality);
       } else {
+        /* in a open ended seek, we can't do bisection, so we pretend
+           we like our result so far */
+        seek_quality = 1.0f;
         GST_DEBUG_OBJECT (ogg,
             "Interval was %" G_GINT64_FORMAT " - %" G_GINT64_FORMAT " (%"
             G_GINT64_FORMAT "), time %" GST_TIME_FORMAT " - unknown",
@@ -1379,30 +1465,39 @@ gst_ogg_pad_handle_push_mode_state (GstOggPad * pad, ogg_page * page)
             ogg->push_offset1 - ogg->push_offset0,
             GST_TIME_ARGS (ogg->push_time0));
       }
+      ogg->push_prev_seek_time = ogg->push_last_seek_time;
 
       gst_ogg_demux_setup_bisection_bounds (ogg);
 
-      best = gst_ogg_demux_estimate_bisection_target (ogg);
+      best = gst_ogg_demux_estimate_bisection_target (ogg, seek_quality);
 
       if (ogg->push_seek_time_target == 0) {
         GST_DEBUG_OBJECT (ogg, "Seeking to 0, deemed close enough");
         close_enough = (ogg->push_last_seek_time == 0);
       } else {
         /* TODO: make this dependent on framerate ? */
-        GstClockTime threshold = GST_SECOND / 2;
+        GstClockTime time_threshold = GST_SECOND / 2;
+        guint64 byte_threshold =
+            (ogg->max_packet_size >
+            64 * 1024 ? ogg->max_packet_size : 64 * 1024);
 
-        /* We want to be within half a second before the target */
-        if (threshold > ogg->push_seek_time_target)
-          threshold = ogg->push_seek_time_target;
+        /* We want to be within half a second before the target,
+           or before the target and half less or equal to the max
+           packet size left to search in */
+        if (time_threshold > ogg->push_seek_time_target)
+          time_threshold = ogg->push_seek_time_target;
         close_enough = ogg->push_last_seek_time < ogg->push_seek_time_target
-            && ogg->push_last_seek_time >=
-            ogg->push_seek_time_target - threshold;
+            && (ogg->push_last_seek_time >=
+            ogg->push_seek_time_target - time_threshold
+            || ogg->push_offset1 <= ogg->push_offset0 + byte_threshold);
         GST_DEBUG_OBJECT (ogg,
             "testing if we're close enough: %" GST_TIME_FORMAT " <= %"
-            GST_TIME_FORMAT " < %" GST_TIME_FORMAT " ? %s",
-            GST_TIME_ARGS (ogg->push_seek_time_target - threshold),
+            GST_TIME_FORMAT " < %" GST_TIME_FORMAT ", or %" G_GUINT64_FORMAT
+            " <= %" G_GUINT64_FORMAT " ? %s",
+            GST_TIME_ARGS (ogg->push_seek_time_target - time_threshold),
             GST_TIME_ARGS (ogg->push_last_seek_time),
             GST_TIME_ARGS (ogg->push_seek_time_target),
+            ogg->push_offset1 - ogg->push_offset0, byte_threshold,
             close_enough ? "Yes" : "No");
       }
 
@@ -1432,7 +1527,7 @@ gst_ogg_pad_handle_push_mode_state (GstOggPad * pad, ogg_page * page)
                 GST_TIME_ARGS (ogg->push_seek_time_original_target));
             ogg->push_state = PUSH_LINEAR2;
           } else {
-            GST_DEBUG_OBJECT (ogg, "Seek to keyframe done, playing");
+            GST_INFO_OBJECT (ogg, "Seek to keyframe done, playing");
 
             /* we're synced to the seek target, so flush stream and stuff
                any queued pages into the stream so we start decoding there */
@@ -1466,14 +1561,22 @@ gst_ogg_pad_handle_push_mode_state (GstOggPad * pad, ogg_page * page)
             GST_TIME_ARGS (pad->push_kf_time));
         earliest_keyframe_time = gst_ogg_demux_get_earliest_keyframe_time (ogg);
         if (earliest_keyframe_time != GST_CLOCK_TIME_NONE) {
-          GST_DEBUG_OBJECT (ogg,
+          GST_INFO_OBJECT (ogg,
               "All non sparse streams now have a previous keyframe time,"
               "bisecting again to %" GST_TIME_FORMAT,
               GST_TIME_ARGS (earliest_keyframe_time));
+
           ogg->push_seek_time_target = earliest_keyframe_time;
+          ogg->push_offset0 = 0;
+          ogg->push_time0 = ogg->push_start_time;
+          ogg->push_offset1 = ogg->push_last_seek_offset;
+          ogg->push_time1 = ogg->push_last_seek_time;
+          ogg->push_prev_seek_time = GST_CLOCK_TIME_NONE;
+          ogg->seek_secant = FALSE;
+          ogg->seek_undershot = FALSE;
 
           ogg->push_state = PUSH_BISECT2;
-          best = gst_ogg_demux_estimate_bisection_target (ogg);
+          best = gst_ogg_demux_estimate_bisection_target (ogg, 1.0f);
         }
       }
     }
@@ -1577,6 +1680,9 @@ gst_ogg_pad_submit_page (GstOggPad * pad, ogg_page * page)
     if (result != GST_FLOW_OK)
       return result;
   }
+
+  if (page->header_len + page->body_len > ogg->max_page_size)
+    ogg->max_page_size = page->header_len + page->body_len;
 
   if (ogg_stream_pagein (&pad->map.stream, page) != 0)
     goto choked;
@@ -3289,8 +3395,11 @@ gst_ogg_demux_perform_seek_push (GstOggDemux * ogg, GstEvent * event)
   ogg->push_time0 = ogg->push_start_time;
   ogg->push_time1 = ogg->push_time_length;
   ogg->push_seek_time_target = start;
+  ogg->push_prev_seek_time = GST_CLOCK_TIME_NONE;
   ogg->push_seek_time_original_target = start;
   ogg->push_state = PUSH_BISECT1;
+  ogg->seek_secant = FALSE;
+  ogg->seek_undershot = FALSE;
 
   /* reset pad push mode seeking state */
   for (i = 0; i < chain->streams->len; i++) {
