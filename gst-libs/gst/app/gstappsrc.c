@@ -219,6 +219,7 @@ static void gst_app_src_get_property (GObject * object, guint prop_id,
 static void gst_app_src_set_latencies (GstAppSrc * appsrc,
     gboolean do_min, guint64 min, gboolean do_max, guint64 max);
 
+static GstCaps *gst_app_src_internal_get_caps (GstBaseSrc * bsrc);
 static GstFlowReturn gst_app_src_create (GstBaseSrc * bsrc,
     guint64 offset, guint size, GstBuffer ** buf);
 static gboolean gst_app_src_start (GstBaseSrc * bsrc);
@@ -485,6 +486,7 @@ gst_app_src_class_init (GstAppSrcClass * klass)
           end_of_stream), NULL, NULL, __gst_app_marshal_ENUM__VOID,
       GST_TYPE_FLOW_RETURN, 0, G_TYPE_NONE);
 
+  basesrc_class->get_caps = gst_app_src_internal_get_caps;
   basesrc_class->create = gst_app_src_create;
   basesrc_class->start = gst_app_src_start;
   basesrc_class->stop = gst_app_src_stop;
@@ -565,6 +567,12 @@ gst_app_src_finalize (GObject * obj)
   g_queue_free (priv->queue);
 
   G_OBJECT_CLASS (parent_class)->finalize (obj);
+}
+
+static GstCaps *
+gst_app_src_internal_get_caps (GstBaseSrc * bsrc)
+{
+  return gst_app_src_get_caps (GST_APP_SRC_CAST (bsrc));
 }
 
 static void
