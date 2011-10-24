@@ -484,6 +484,9 @@ gst_ogg_demux_chain_peer (GstOggPad * pad, ogg_packet * packet,
 
   cret = GST_FLOW_OK;
 
+  GST_DEBUG_OBJECT (pad, "Chaining %d %d %" GST_TIME_FORMAT " %d %p",
+      ogg->pullmode, ogg->push_state, GST_TIME_ARGS (ogg->push_time_length),
+      ogg->push_disable_seeking, ogg->building_chain);
   GST_PUSH_LOCK (ogg);
   if (!ogg->pullmode && ogg->push_state == PUSH_PLAYING
       && ogg->push_time_length == GST_CLOCK_TIME_NONE
@@ -1336,15 +1339,18 @@ gst_ogg_demux_estimate_seek_quality (GstOggDemux * ogg)
 static void
 gst_ogg_demux_update_bisection_stats (GstOggDemux * ogg)
 {
+  int n;
+
   GST_INFO_OBJECT (ogg, "Bisection needed %d + %d steps",
       ogg->push_bisection_steps[0], ogg->push_bisection_steps[1]);
-  ogg->stats_bisection_steps[0] += ogg->push_bisection_steps[0];
-  ogg->stats_bisection_steps[1] += ogg->push_bisection_steps[1];
-  if (ogg->stats_bisection_max_steps[0] < ogg->push_bisection_steps[0])
-    ogg->stats_bisection_max_steps[0] = ogg->push_bisection_steps[0];
-  if (ogg->stats_bisection_max_steps[1] < ogg->push_bisection_steps[1])
-    ogg->stats_bisection_max_steps[1] = ogg->push_bisection_steps[1];
+
+  for (n = 0; n < 2; ++n) {
+    ogg->stats_bisection_steps[n] += ogg->push_bisection_steps[n];
+    if (ogg->stats_bisection_max_steps[n] < ogg->push_bisection_steps[n])
+      ogg->stats_bisection_max_steps[n] = ogg->push_bisection_steps[n];
+  }
   ogg->stats_nbisections++;
+
   GST_INFO_OBJECT (ogg,
       "So far, %.2f + %.2f bisections needed per seek (max %d + %d)",
       ogg->stats_bisection_steps[0] / (float) ogg->stats_nbisections,
