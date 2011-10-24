@@ -781,6 +781,6 @@ GST_PLUGIN_DEFINE(
     GST_PLUGIN_DESC,
     plugin_init,
     PACKAGE_VERSION,
-    "GPL",
+    "LGPL",
     PACKAGE,
     PACKAGE_BUGREPORT);
