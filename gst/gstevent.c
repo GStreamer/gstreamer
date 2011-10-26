@@ -1174,8 +1174,9 @@ gst_event_parse_latency (GstEvent * event, GstClockTime * latency)
  * to skip @amount (expressed in @format) of media. It can be used to implement
  * stepping through the video frame by frame or for doing fast trick modes.
  *
- * A rate of <= 0.0 is not allowed, pause the pipeline or reverse the playback
- * direction of the pipeline to get the same effect.
+ * A rate of <= 0.0 is not allowed. Pause the pipeline, for the effect of rate
+ * = 0.0 or first reverse the direction of playback using a seek event to get
+ * the same effect as rate < 0.0.
  *
  * The @flush flag will clear any pending data in the pipeline before starting
  * the step operation.
