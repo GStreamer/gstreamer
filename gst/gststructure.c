@@ -3137,13 +3137,14 @@ gst_caps_structure_is_subset_field (GQuark field_id, const GValue * value,
    *
    *  First caps subtraction needs to return a non-empty set, second
    *  subtractions needs to give en empty set.
+   *  Both substractions are switched below, as it's faster that way.
    */
-  if (gst_value_subtract (&subtraction, other, value)) {
-    g_value_unset (&subtraction);
-    /* !empty result, swapping must be empty */
-    if (!gst_value_subtract (&subtraction, value, other))
+  if (!gst_value_subtract (&subtraction, value, other)) {
+    if (gst_value_subtract (&subtraction, other, value)) {
+      g_value_unset (&subtraction);
       return TRUE;
-
+    }
+  } else {
     g_value_unset (&subtraction);
   }
   return FALSE;
