@@ -637,7 +637,7 @@ gst_nuv_demux_stream_extend_header (GstNuvDemux * nuv)
     nuv->state = GST_NUV_DEMUX_INVALID_DATA;
     GST_ELEMENT_ERROR (nuv, STREAM, DEMUX, (NULL),
         ("Unsupported extended header (0x%02x)", buf->data[0]));
-    g_object_unref (buf);
+    gst_buffer_unref (buf);
     return GST_FLOW_ERROR;
   }
   return res;
