@@ -2542,7 +2542,7 @@ wait_for_text_buf:
   if (overlay->video_eos)
     goto have_eos;
 
-  if (overlay->silent) {
+  if (overlay->silent && !overlay->text_linked) {
     GST_OBJECT_UNLOCK (overlay);
     ret = gst_pad_push (overlay->srcpad, buffer);
 
@@ -2629,6 +2629,11 @@ wait_for_text_buf:
         goto wait_for_text_buf;
       } else if (valid_text_time && vid_running_time_end <= text_running_time) {
         GST_LOG_OBJECT (overlay, "text in future, pushing video buf");
+        GST_OBJECT_UNLOCK (overlay);
+        /* Push the video frame */
+        ret = gst_pad_push (overlay->srcpad, buffer);
+      } else if (overlay->silent) {
+        GST_LOG_OBJECT (overlay, "silent enabled, pushing video buf");
         GST_OBJECT_UNLOCK (overlay);
         /* Push the video frame */
         ret = gst_pad_push (overlay->srcpad, buffer);
