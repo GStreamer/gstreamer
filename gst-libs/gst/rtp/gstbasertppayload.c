@@ -657,7 +657,7 @@ gst_basertppayload_set_outcaps (GstBaseRTPPayload * payload,
 
     /* make the target caps by copying over all the fixed caps, removing the
      * unfixed caps. */
-    srccaps = gst_caps_new_simple (gst_structure_get_name (s), NULL);
+    srccaps = gst_caps_new_empty_simple (gst_structure_get_name (s));
     d = gst_caps_get_structure (srccaps, 0);
 
     gst_structure_foreach (s, (GstStructureForeachFunc) copy_fixed, d);

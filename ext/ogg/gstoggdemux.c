@@ -789,7 +789,7 @@ gst_ogg_pad_submit_packet (GstOggPad * pad, ogg_packet * packet)
   if (!pad->have_type) {
     pad->have_type = gst_ogg_stream_setup_map (&pad->map, packet);
     if (!pad->have_type) {
-      pad->map.caps = gst_caps_new_simple ("application/x-unknown", NULL);
+      pad->map.caps = gst_caps_new_empty_simple ("application/x-unknown");
     }
     if (pad->map.is_skeleton) {
       GST_DEBUG_OBJECT (ogg, "we have a fishead");

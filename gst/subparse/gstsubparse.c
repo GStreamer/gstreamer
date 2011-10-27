@@ -1339,36 +1339,36 @@ gst_sub_parse_format_autodetect (GstSubParse * self)
   switch (format) {
     case GST_SUB_PARSE_FORMAT_MDVDSUB:
       self->parse_line = parse_mdvdsub;
-      return gst_caps_new_simple ("text/x-pango-markup", NULL);
+      return gst_caps_new_empty_simple ("text/x-pango-markup");
     case GST_SUB_PARSE_FORMAT_SUBRIP:
       self->parse_line = parse_subrip;
-      return gst_caps_new_simple ("text/x-pango-markup", NULL);
+      return gst_caps_new_empty_simple ("text/x-pango-markup");
     case GST_SUB_PARSE_FORMAT_MPSUB:
       self->parse_line = parse_mpsub;
-      return gst_caps_new_simple ("text/plain", NULL);
+      return gst_caps_new_empty_simple ("text/plain");
 #ifndef GST_DISABLE_XML
     case GST_SUB_PARSE_FORMAT_SAMI:
       self->parse_line = parse_sami;
       sami_context_init (&self->state);
-      return gst_caps_new_simple ("text/x-pango-markup", NULL);
+      return gst_caps_new_empty_simple ("text/x-pango-markup");
 #endif
     case GST_SUB_PARSE_FORMAT_TMPLAYER:
       self->parse_line = parse_tmplayer;
       self->state.max_duration = 5 * GST_SECOND;
-      return gst_caps_new_simple ("text/plain", NULL);
+      return gst_caps_new_empty_simple ("text/plain");
     case GST_SUB_PARSE_FORMAT_MPL2:
       self->parse_line = parse_mpl2;
-      return gst_caps_new_simple ("text/x-pango-markup", NULL);
+      return gst_caps_new_empty_simple ("text/x-pango-markup");
     case GST_SUB_PARSE_FORMAT_DKS:
       self->parse_line = parse_dks;
-      return gst_caps_new_simple ("text/plain", NULL);
+      return gst_caps_new_empty_simple ("text/plain");
     case GST_SUB_PARSE_FORMAT_SUBVIEWER:
       self->parse_line = parse_subviewer;
-      return gst_caps_new_simple ("text/plain", NULL);
+      return gst_caps_new_empty_simple ("text/plain");
     case GST_SUB_PARSE_FORMAT_QTTEXT:
       self->parse_line = parse_qttext;
       qttext_context_init (&self->state);
-      return gst_caps_new_simple ("text/x-pango-markup", NULL);
+      return gst_caps_new_empty_simple ("text/x-pango-markup");
     case GST_SUB_PARSE_FORMAT_UNKNOWN:
     default:
       GST_DEBUG ("no subtitle format detected");

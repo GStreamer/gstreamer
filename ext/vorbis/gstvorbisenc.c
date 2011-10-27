@@ -719,7 +719,7 @@ gst_vorbis_enc_handle_frame (GstAudioEncoder * enc, GstBuffer * buffer)
     buf3 = gst_vorbis_enc_buffer_from_header_packet (vorbisenc, &header_code);
 
     /* mark and put on caps */
-    caps = gst_caps_new_simple ("audio/x-vorbis", NULL);
+    caps = gst_caps_new_empty_simple ("audio/x-vorbis");
     caps = _gst_caps_set_buffer_array (caps, "streamheader",
         buf1, buf2, buf3, NULL);
 

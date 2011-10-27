@@ -614,7 +614,7 @@ gst_ogm_parse_stream_header (GstOgmParse * ogm, const guint8 * data, guint size)
       GST_LOG_OBJECT (ogm, "Type: %s, s/u: %" G_GINT64_FORMAT
           ", timeunit=%" G_GINT64_FORMAT,
           ogm->hdr.streamtype, ogm->hdr.samples_per_unit, ogm->hdr.time_unit);
-      caps = gst_caps_new_simple ("text/plain", NULL);
+      caps = gst_caps_new_empty_simple ("text/plain");
       break;
     }
     default:

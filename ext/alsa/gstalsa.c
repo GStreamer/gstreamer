@@ -446,7 +446,7 @@ gst_alsa_probe_supported_formats (GstObject * obj, snd_pcm_t * handle,
     snd_pcm_t *pcm = gst_alsa_open_iec958_pcm (obj);
 
     if (G_LIKELY (pcm)) {
-      gst_caps_append (caps, gst_caps_new_simple ("audio/x-iec958", NULL));
+      gst_caps_append (caps, gst_caps_new_empty_simple ("audio/x-iec958"));
       snd_pcm_close (pcm);
     }
   }

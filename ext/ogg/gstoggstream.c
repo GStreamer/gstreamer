@@ -398,7 +398,7 @@ setup_theora_mapper (GstOggStream * pad, ogg_packet * packet)
   pad->theora_has_zero_keyoffset =
       ((vmaj << 16) | (vmin << 8) | vrev) < 0x030201;
 
-  pad->caps = gst_caps_new_simple ("video/x-theora", NULL);
+  pad->caps = gst_caps_new_empty_simple ("video/x-theora");
 
   if (w > 0 && h > 0) {
     gst_caps_set_simple (pad->caps, "width", G_TYPE_INT, w, "height",
@@ -886,7 +886,7 @@ setup_fLaC_mapper (GstOggStream * pad, ogg_packet * packet)
 
   pad->n_header_packets = 3;
 
-  pad->caps = gst_caps_new_simple ("audio/x-flac", NULL);
+  pad->caps = gst_caps_new_empty_simple ("audio/x-flac");
 
   return TRUE;
 }
@@ -1092,7 +1092,7 @@ setup_fishead_mapper (GstOggStream * pad, ogg_packet * packet)
   pad->is_skeleton = TRUE;
   pad->is_sparse = TRUE;
 
-  pad->caps = gst_caps_new_simple ("application/x-ogg-skeleton", NULL);
+  pad->caps = gst_caps_new_empty_simple ("application/x-ogg-skeleton");
 
   return TRUE;
 }
@@ -1537,7 +1537,7 @@ setup_ogmtext_mapper (GstOggStream * pad, ogg_packet * packet)
   if (pad->granulerate_d <= 0)
     return FALSE;
 
-  pad->caps = gst_caps_new_simple ("text/plain", NULL);
+  pad->caps = gst_caps_new_empty_simple ("text/plain");
 
   pad->n_header_packets = 1;
   pad->is_ogm = TRUE;
@@ -1621,10 +1621,10 @@ setup_pcm_mapper (GstOggStream * pad, ogg_packet * packet)
           "format", G_TYPE_STRING, "S32BE", NULL);
       break;
     case OGGPCM_FMT_ULAW:
-      caps = gst_caps_new_simple ("audio/x-mulaw", NULL);
+      caps = gst_caps_new_empty_simple ("audio/x-mulaw");
       break;
     case OGGPCM_FMT_ALAW:
-      caps = gst_caps_new_simple ("audio/x-alaw", NULL);
+      caps = gst_caps_new_empty_simple ("audio/x-alaw");
       break;
     case OGGPCM_FMT_FLT32_LE:
       caps = gst_caps_new_simple ("audio/x-raw",
@@ -1675,7 +1675,7 @@ setup_cmml_mapper (GstOggStream * pad, ogg_packet * packet)
   GST_DEBUG ("blocksize0: %u", 1 << (data[0] >> 4));
   GST_DEBUG ("blocksize1: %u", 1 << (data[0] & 0x0F));
 
-  pad->caps = gst_caps_new_simple ("text/x-cmml", NULL);
+  pad->caps = gst_caps_new_empty_simple ("text/x-cmml");
   pad->always_flush_page = TRUE;
   pad->is_sparse = TRUE;
 
@@ -1732,9 +1732,9 @@ setup_kate_mapper (GstOggStream * pad, ogg_packet * packet)
   if (strcmp (category, "subtitles") == 0 || strcmp (category, "SUB") == 0 ||
       strcmp (category, "spu-subtitles") == 0 ||
       strcmp (category, "K-SPU") == 0) {
-    pad->caps = gst_caps_new_simple ("subtitle/x-kate", NULL);
+    pad->caps = gst_caps_new_empty_simple ("subtitle/x-kate");
   } else {
-    pad->caps = gst_caps_new_simple ("application/x-kate", NULL);
+    pad->caps = gst_caps_new_empty_simple ("application/x-kate");
   }
 
   pad->is_sparse = TRUE;

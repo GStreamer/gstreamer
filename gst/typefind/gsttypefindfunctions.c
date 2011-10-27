@@ -4170,7 +4170,7 @@ G_BEGIN_DECLS{                                                          \
   sw_data->data = (const guint8 *)_data;                                \
   sw_data->size = _size;                                                \
   sw_data->probability = _probability;                                  \
-  sw_data->caps = gst_caps_new_simple (name, NULL);                     \
+  sw_data->caps = gst_caps_new_empty_simple (name);                     \
   if (!gst_type_find_register (plugin, name, rank, start_with_type_find,\
                       (char **) ext, sw_data->caps, sw_data,            \
                      (GDestroyNotify) (sw_data_destroy))) {             \
@@ -4200,7 +4200,7 @@ G_BEGIN_DECLS{                                                          \
   sw_data->data = (gpointer)_data;                                      \
   sw_data->size = 4;                                                    \
   sw_data->probability = GST_TYPE_FIND_MAXIMUM;                         \
-  sw_data->caps = gst_caps_new_simple (name, NULL);                     \
+  sw_data->caps = gst_caps_new_empty_simple (name);                     \
   if (!gst_type_find_register (plugin, name, rank, riff_type_find,      \
                       (char **) ext, sw_data->caps, sw_data,            \
                       (GDestroyNotify) (sw_data_destroy))) {            \
