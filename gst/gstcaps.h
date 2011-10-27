@@ -342,8 +342,9 @@ GstCaps *         gst_caps_new_empty               (void);
 GstCaps *         gst_caps_new_any                 (void);
 GstCaps *         gst_caps_new_simple              (const char    *media_type,
                                                     const char    *fieldname,
-                                                    ...);
-GstCaps *         gst_caps_new_full                (GstStructure  *struct1, ...);
+                                                    ...) G_GNUC_NULL_TERMINATED;
+GstCaps *         gst_caps_new_full                (GstStructure  *struct1,
+                                                    ...) G_GNUC_NULL_TERMINATED;
 GstCaps *         gst_caps_new_full_valist         (GstStructure  *structure,
                                                     va_list        var_args);
 
