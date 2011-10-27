@@ -76,6 +76,7 @@ struct _GstCairoTextOverlay {
     gint                  slant;
     gint                  weight;
     gdouble               scale;
+    gboolean              silent;
 };
 
 struct _GstCairoTextOverlayClass {

@@ -65,12 +65,14 @@ enum
   ARG_YPAD,
   ARG_DELTAX,
   ARG_DELTAY,
+  ARG_SILENT,
   ARG_FONT_DESC
 };
 
 #define DEFAULT_YPAD 25
 #define DEFAULT_XPAD 25
 #define DEFAULT_FONT "sans"
+#define DEFAULT_SILENT FALSE
 
 #define GST_CAIRO_TEXT_OVERLAY_DEFAULT_SCALE   20.0
 
@@ -201,6 +203,11 @@ gst_text_overlay_class_init (GstCairoTextOverlayClass * klass)
           "See documentation of "
           "pango_font_description_from_string"
           " for syntax.", "", G_PARAM_WRITABLE | G_PARAM_STATIC_STRINGS));
+  /* FIXME 0.11: rename to "visible" or "text-visible" or "render-text" */
+  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_SILENT,
+      g_param_spec_boolean ("silent", "silent",
+          "Whether to render the text string",
+          DEFAULT_SILENT, G_PARAM_WRITABLE | G_PARAM_STATIC_STRINGS));
 }
 
 static void
@@ -266,6 +273,8 @@ gst_text_overlay_init (GstCairoTextOverlay * overlay,
 
   overlay->font = g_strdup (DEFAULT_FONT);
   gst_text_overlay_font_init (overlay);
+
+  overlay->silent = DEFAULT_SILENT;
 
   overlay->fps_n = 0;
   overlay->fps_d = 1;
@@ -410,6 +419,9 @@ gst_text_overlay_set_property (GObject * object, guint prop_id,
       gst_text_overlay_font_init (overlay);
       break;
     }
+    case ARG_SILENT:
+      overlay->silent = g_value_get_boolean (value);
+      break;
     default:{
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -430,6 +442,11 @@ gst_text_overlay_render_text (GstCairoTextOverlay * overlay,
   cairo_t *cr;
   gchar *string;
   double x, y;
+
+  if (overlay->silent) {
+    GST_DEBUG_OBJECT (overlay, "Silent mode, not rendering");
+    return;
+  }
 
   if (textlen < 0)
     textlen = strlen (text);
