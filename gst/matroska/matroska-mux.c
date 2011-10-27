@@ -2594,7 +2594,7 @@ gst_matroska_mux_handle_dirac_packet (GstMatroskaMux * mux,
 
     next_parse_offset = GST_READ_UINT32_BE (data + 5);
 
-    if (G_UNLIKELY (next_parse_offset == 0))
+    if (G_UNLIKELY (next_parse_offset == 0 || next_parse_offset > size))
       break;
 
     data += next_parse_offset;

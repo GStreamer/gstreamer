@@ -1547,11 +1547,15 @@ gst_matroska_read_common_parse_metadata (GstMatroskaReadCommon * common,
   return ret;
 }
 
-static const guint8 *
+static GstFlowReturn
 gst_matroska_read_common_peek_adapter (GstMatroskaReadCommon * common, guint
-    peek)
+    peek, const guint8 ** data)
 {
-  return gst_adapter_peek (common->adapter, peek);
+  *data = gst_adapter_peek (common->adapter, peek);
+  if (*data == NULL)
+    return GST_FLOW_UNEXPECTED;
+
+  return GST_FLOW_OK;
 }
 
 /*
