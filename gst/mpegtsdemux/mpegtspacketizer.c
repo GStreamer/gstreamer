@@ -469,7 +469,7 @@ mpegts_packetizer_parse_pat (MpegTSPacketizer2 * packetizer,
     data += 2;
 
     struct_name = g_strdup_printf ("program-%d", program_number);
-    entry = gst_structure_new (struct_name, NULL);
+    entry = gst_structure_empty_new (struct_name);
     g_free (struct_name);
     gst_structure_id_set (entry, QUARK_PROGRAM_NUMBER, G_TYPE_UINT,
         program_number, QUARK_PID, G_TYPE_UINT, pmt_pid, NULL);
@@ -593,7 +593,7 @@ mpegts_packetizer_parse_pmt (MpegTSPacketizer2 * packetizer,
     }
 
     struct_name = g_strdup_printf ("pid-%d", pid);
-    stream_info = gst_structure_new (struct_name, NULL);
+    stream_info = gst_structure_empty_new (struct_name);
     g_free (struct_name);
     gst_structure_id_set (stream_info,
         QUARK_PID, G_TYPE_UINT, pid, QUARK_STREAM_TYPE, G_TYPE_UINT,
@@ -837,7 +837,7 @@ mpegts_packetizer_parse_nit (MpegTSPacketizer2 * packetizer,
     data += 2;
 
     transport_name = g_strdup_printf ("transport-%d", transport_stream_id);
-    transport = gst_structure_new (transport_name, NULL);
+    transport = gst_structure_empty_new (transport_name);
     g_free (transport_name);
     gst_structure_id_set (transport,
         QUARK_TRANSPORT_STREAM_ID, G_TYPE_UINT, transport_stream_id,
@@ -1443,7 +1443,7 @@ mpegts_packetizer_parse_sdt (MpegTSPacketizer2 * packetizer,
 
     /* TODO send tag event down relevant pad for channel name and provider */
     service_name = g_strdup_printf ("service-%d", service_id);
-    service = gst_structure_new (service_name, NULL);
+    service = gst_structure_empty_new (service_name);
     g_free (service_name);
 
     if (descriptors_loop_length) {
