@@ -340,6 +340,7 @@ GType             gst_caps_get_type                (void);
 
 GstCaps *         gst_caps_new_empty               (void);
 GstCaps *         gst_caps_new_any                 (void);
+GstCaps *         gst_caps_new_empty_simple        (const char    *media_type);
 GstCaps *         gst_caps_new_simple              (const char    *media_type,
                                                     const char    *fieldname,
                                                     ...) G_GNUC_NULL_TERMINATED;

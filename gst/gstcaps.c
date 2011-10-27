@@ -233,6 +233,30 @@ gst_caps_new_any (void)
 }
 
 /**
+ * gst_caps_new_empty_simple:
+ * @media_type: the media type of the structure
+ *
+ * Creates a new #GstCaps that contains one #GstStructure with name
+ * @media_type.
+ * Caller is responsible for unreffing the returned caps.
+ *
+ * Returns: (transfer full): the new #GstCaps
+ */
+GstCaps *
+gst_caps_new_empty_simple (const char *media_type)
+{
+  GstCaps *caps;
+  GstStructure *structure;
+
+  caps = gst_caps_new_empty ();
+  structure = gst_structure_empty_new (media_type);
+  if (structure)
+    gst_caps_append_structure_unchecked (caps, structure);
+
+  return caps;
+}
+
+/**
  * gst_caps_new_simple:
  * @media_type: the media type of the structure
  * @fieldname: first field to set
