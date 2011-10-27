@@ -121,7 +121,8 @@ enum
   ARG_DEFAULT_BACKGROUND_RED,
   ARG_DEFAULT_BACKGROUND_GREEN,
   ARG_DEFAULT_BACKGROUND_BLUE,
-  ARG_DEFAULT_BACKGROUND_ALPHA
+  ARG_DEFAULT_BACKGROUND_ALPHA,
+  ARG_SILENT
 };
 
 static GstStaticPadTemplate kate_sink_factory =
@@ -294,6 +295,12 @@ gst_kate_tiger_class_init (GstKateTigerClass * klass)
           "Default background color (alpha component, between 0 and 255) to render text with",
           0, 255, 255, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
+  /* FIXME 0.11: rename to "visible" or "text-visible" or "render-text" */
+  g_object_class_install_property (gobject_class, ARG_SILENT,
+      g_param_spec_boolean ("silent", "silent",
+          "Whether to render the stream",
+          FALSE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
   gstelement_class->change_state =
       GST_DEBUG_FUNCPTR (gst_kate_tiger_change_state);
 }
@@ -353,6 +360,7 @@ gst_kate_tiger_init (GstKateTiger * tiger, GstKateTigerClass * gclass)
   tiger->default_background_g = 0;
   tiger->default_background_b = 0;
   tiger->default_background_a = 0;
+  tiger->silent = FALSE;
 
   tiger->video_width = 0;
   tiger->video_height = 0;
@@ -488,6 +496,9 @@ gst_kate_tiger_set_property (GObject * object, guint prop_id,
       tiger->default_background_a = g_value_get_int (value);
       gst_kate_tiger_update_default_background_color (tiger);
       break;
+    case ARG_SILENT:
+      tiger->silent = g_value_get_boolean (value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -541,6 +552,9 @@ gst_kate_tiger_get_property (GObject * object, guint prop_id,
       break;
     case ARG_DEFAULT_BACKGROUND_ALPHA:
       g_value_set_int (value, tiger->default_background_a);
+      break;
+    case ARG_SILENT:
+      g_value_set_boolean (value, tiger->silent);
       break;
     default:
       if (!gst_kate_util_decoder_base_get_property (&tiger->decoder, object,
@@ -767,7 +781,7 @@ gst_kate_tiger_video_chain (GstPad * pad, GstBuffer * buf)
   }
 
   /* if there nothing to draw, we can just push the video buffer as is */
-  if (ret > 0)
+  if (ret > 0 || tiger->silent)
     goto pass;
 
   /* there is something to draw, so first make the buffer writable */
