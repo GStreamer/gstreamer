@@ -346,7 +346,7 @@ gst_ffmpegenc_get_possible_sizes (GstFFMpegEnc * ffmpegenc, GstPad * pad,
     width = gst_structure_get_value (s, "width");
     framerate = gst_structure_get_value (s, "framerate");
 
-    tmps = gst_structure_new ("video/x-raw", NULL);
+    tmps = gst_structure_empty_new ("video/x-raw");
     if (width)
       gst_structure_set_value (tmps, "width", width);
     if (height)
