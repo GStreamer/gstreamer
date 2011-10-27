@@ -239,8 +239,8 @@ static void
 got_handoff (GstElement * sink, GstBuffer * buf, GstPad * pad, gpointer unused)
 {
   gst_element_post_message
-      (sink, gst_message_new_application (NULL, gst_structure_new ("foo",
-              NULL)));
+      (sink, gst_message_new_application (NULL,
+          gst_structure_empty_new ("foo")));
 }
 
 static void

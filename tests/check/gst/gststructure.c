@@ -183,12 +183,12 @@ GST_START_TEST (test_to_string)
 {
   GstStructure *st1;
 
-  ASSERT_CRITICAL (st1 = gst_structure_new ("Foo\nwith-newline", NULL));
+  ASSERT_CRITICAL (st1 = gst_structure_empty_new ("Foo\nwith-newline"));
   fail_unless (st1 == NULL);
 
-  ASSERT_CRITICAL (st1 = gst_structure_new ("Foo with whitespace", NULL));
+  ASSERT_CRITICAL (st1 = gst_structure_empty_new ("Foo with whitespace"));
   fail_unless (st1 == NULL);
-  ASSERT_CRITICAL (st1 = gst_structure_new ("1st", NULL));
+  ASSERT_CRITICAL (st1 = gst_structure_empty_new ("1st"));
   fail_unless (st1 == NULL);
 }
 
@@ -321,8 +321,8 @@ GST_START_TEST (test_structure_new)
   g_error_free (e);
   gst_structure_free (s);
 
-  ASSERT_CRITICAL (gst_structure_free (gst_structure_new
-          ("0.10:decoder-video/mpeg", NULL)));
+  ASSERT_CRITICAL (gst_structure_free (gst_structure_empty_new
+          ("0.10:decoder-video/mpeg")));
 
   /* make sure we bail out correctly in case of an error or if parsing fails */
   ASSERT_CRITICAL (s = gst_structure_new ("^joo\nba\ndoo^",
@@ -369,7 +369,7 @@ GST_START_TEST (test_fixate_frac_list)
   gst_value_set_fraction (&frac, 10, 1);
   gst_value_list_append_value (&list, &frac);
 
-  s = gst_structure_new ("name", NULL);
+  s = gst_structure_empty_new ("name");
   gst_structure_set_value (s, "frac", &list);
   g_value_unset (&frac);
   g_value_unset (&list);
