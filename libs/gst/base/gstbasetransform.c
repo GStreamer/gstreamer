@@ -722,8 +722,7 @@ gst_base_transform_getcaps (GstPad * pad)
     }
   } else {
     caps = gst_caps_ref (trans->priv->cached_transformed_caps[cache_index]);
-    GST_OBJECT_UNLOCK (trans);
-    return caps;
+    goto done;
   }
   GST_OBJECT_UNLOCK (trans);
 
@@ -747,7 +746,7 @@ gst_base_transform_getcaps (GstPad * pad)
   GST_DEBUG_OBJECT (pad, "transformed  %" GST_PTR_FORMAT, caps);
   gst_caps_unref (temp);
   if (caps == NULL)
-    goto done;
+    goto done_update_cache;
 
   /* and filter against the template of this pad */
   templ = gst_pad_get_pad_template_caps (pad);
@@ -769,7 +768,7 @@ gst_base_transform_getcaps (GstPad * pad)
     }
   }
 
-done:
+done_update_cache:
   GST_DEBUG_OBJECT (trans, "returning  %" GST_PTR_FORMAT, caps);
 
   GST_OBJECT_LOCK (trans);
@@ -779,6 +778,8 @@ done:
   if (caps) {
     trans->priv->cached_transformed_caps[cache_index] = gst_caps_ref (caps);
   }
+
+done:
   GST_OBJECT_UNLOCK (trans);
 
   if (peercaps)
