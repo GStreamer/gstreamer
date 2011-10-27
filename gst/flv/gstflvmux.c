@@ -39,6 +39,7 @@
 #include <string.h>
 
 #include "gstflvmux.h"
+#include "amfdefs.h"
 
 GST_DEBUG_CATEGORY_STATIC (flvmux_debug);
 #define GST_CAT_DEFAULT flvmux_debug
@@ -648,7 +649,7 @@ gst_flv_mux_preallocate_index (GstFlvMux * mux)
   /* prefill the space with a gstfiller: <spaces> script tag variable */
   GST_WRITE_UINT16_BE (data, 9);        /* 9 characters */
   memcpy (data + 2, "gstfiller", 9);
-  GST_WRITE_UINT8 (data + 11, 2);       /* a string value */
+  GST_WRITE_UINT8 (data + 11, AMF0_STRING_MARKER);      /* a string value */
   GST_WRITE_UINT16_BE (data + 12, preallocate_size - 14);
   memset (data + 14, ' ', preallocate_size - 14);       /* the rest is spaces */
   return tmp;
@@ -659,13 +660,16 @@ gst_flv_mux_create_number_script_value (const gchar * name, gdouble value)
 {
   GstBuffer *tmp;
   guint8 *data;
+  gsize len = strlen (name);
 
-  _gst_buffer_new_and_alloc (2 + strlen (name) + 1 + 8, &tmp, &data);
+  _gst_buffer_new_and_alloc (2 + len + 1 + 8, &tmp, &data);
 
-  GST_WRITE_UINT16_BE (data, strlen (name));    /* name length */
-  memcpy (&data[2], name, strlen (name));
-  data[2 + strlen (name)] = 0;  /* double */
-  GST_WRITE_DOUBLE_BE (data + 2 + strlen (name) + 1, value);
+  GST_WRITE_UINT16_BE (data, len);
+  data += 2;                    /* name length */
+  memcpy (data, name, len);
+  data += len;
+  *data++ = AMF0_NUMBER_MARKER; /* double type */
+  GST_WRITE_DOUBLE_BE (data, value);
 
   return tmp;
 }
@@ -700,7 +704,7 @@ gst_flv_mux_create_metadata (GstFlvMux * mux)
   data[8] = data[9] = data[10] = 0;
 
   _gst_buffer_new_and_alloc (13, &tmp, &data);
-  data[0] = 2;                  /* string */
+  data[0] = AMF0_STRING_MARKER; /* string */
   data[1] = 0;
   data[2] = 10;                 /* length 10 */
   memcpy (&data[3], "onMetaData", 10);
@@ -719,17 +723,14 @@ gst_flv_mux_create_metadata (GstFlvMux * mux)
     tmp = gst_flv_mux_create_number_script_value ("duration", 86400);
     script_tag = gst_buffer_join (script_tag, tmp);
     tags_written++;
-  }
 
-  /* Sometimes the information about the total file size is useful for the
-     player. It will be filled later, after getting EOS */
-  if (!mux->streamable) {
+    /* Sometimes the information about the total file size is useful for the
+       player. It will be filled later, after getting EOS */
     tmp = gst_flv_mux_create_number_script_value ("filesize", 0);
     script_tag = gst_buffer_join (script_tag, tmp);
     tags_written++;
-  }
 
-  if (!mux->streamable) {
+    /* Preallocate space for the index to be written at EOS */
     tmp = gst_flv_mux_preallocate_index (mux);
     script_tag = gst_buffer_join (script_tag, tmp);
   } else {
