@@ -197,6 +197,7 @@ EXPORTS
 	gst_caps_merge_structure
 	gst_caps_new_any
 	gst_caps_new_empty
+	gst_caps_new_empty_simple
 	gst_caps_new_full
 	gst_caps_new_full_valist
 	gst_caps_new_simple
