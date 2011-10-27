@@ -3059,10 +3059,7 @@ gst_caps_structure_can_intersect_field (GQuark id, const GValue * val1,
 
       if (eq == GST_VALUE_UNORDERED) {
         /* we need to try interseting */
-        GValue dest_value = { 0 };
-        if (gst_value_intersect (&dest_value, val1, val2)) {
-          g_value_unset (&dest_value);
-        } else {
+        if (!gst_value_intersect (NULL, val1, val2)) {
           return FALSE;
         }
       } else if (eq != GST_VALUE_EQUAL) {

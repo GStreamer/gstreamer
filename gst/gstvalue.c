@@ -2602,7 +2602,8 @@ gst_value_intersect_int_int_range (GValue * dest, const GValue * src1,
 {
   if (src2->data[0].v_int <= src1->data[0].v_int &&
       src2->data[1].v_int >= src1->data[0].v_int) {
-    gst_value_init_and_copy (dest, src1);
+    if (dest)
+      gst_value_init_and_copy (dest, src1);
     return TRUE;
   }
 
@@ -2620,13 +2621,17 @@ gst_value_intersect_int_range_int_range (GValue * dest, const GValue * src1,
   max = MIN (src1->data[1].v_int, src2->data[1].v_int);
 
   if (min < max) {
-    g_value_init (dest, GST_TYPE_INT_RANGE);
-    gst_value_set_int_range (dest, min, max);
+    if (dest) {
+      g_value_init (dest, GST_TYPE_INT_RANGE);
+      gst_value_set_int_range (dest, min, max);
+    }
     return TRUE;
   }
   if (min == max) {
-    g_value_init (dest, G_TYPE_INT);
-    g_value_set_int (dest, min);
+    if (dest) {
+      g_value_init (dest, G_TYPE_INT);
+      g_value_set_int (dest, min);
+    }
     return TRUE;
   }
 
@@ -2639,7 +2644,8 @@ gst_value_intersect_int64_int64_range (GValue * dest, const GValue * src1,
 {
   if (src2->data[0].v_int64 <= src1->data[0].v_int64 &&
       src2->data[1].v_int64 >= src1->data[0].v_int64) {
-    gst_value_init_and_copy (dest, src1);
+    if (dest)
+      gst_value_init_and_copy (dest, src1);
     return TRUE;
   }
 
@@ -2657,13 +2663,17 @@ gst_value_intersect_int64_range_int64_range (GValue * dest, const GValue * src1,
   max = MIN (src1->data[1].v_int64, src2->data[1].v_int64);
 
   if (min < max) {
-    g_value_init (dest, GST_TYPE_INT64_RANGE);
-    gst_value_set_int64_range (dest, min, max);
+    if (dest) {
+      g_value_init (dest, GST_TYPE_INT64_RANGE);
+      gst_value_set_int64_range (dest, min, max);
+    }
     return TRUE;
   }
   if (min == max) {
-    g_value_init (dest, G_TYPE_INT64);
-    g_value_set_int64 (dest, min);
+    if (dest) {
+      g_value_init (dest, G_TYPE_INT64);
+      g_value_set_int64 (dest, min);
+    }
     return TRUE;
   }
 
@@ -2676,7 +2686,8 @@ gst_value_intersect_double_double_range (GValue * dest, const GValue * src1,
 {
   if (src2->data[0].v_double <= src1->data[0].v_double &&
       src2->data[1].v_double >= src1->data[0].v_double) {
-    gst_value_init_and_copy (dest, src1);
+    if (dest)
+      gst_value_init_and_copy (dest, src1);
     return TRUE;
   }
 
@@ -2694,13 +2705,17 @@ gst_value_intersect_double_range_double_range (GValue * dest,
   max = MIN (src1->data[1].v_double, src2->data[1].v_double);
 
   if (min < max) {
-    g_value_init (dest, GST_TYPE_DOUBLE_RANGE);
-    gst_value_set_double_range (dest, min, max);
+    if (dest) {
+      g_value_init (dest, GST_TYPE_DOUBLE_RANGE);
+      gst_value_set_double_range (dest, min, max);
+    }
     return TRUE;
   }
   if (min == max) {
-    g_value_init (dest, G_TYPE_DOUBLE);
-    g_value_set_int (dest, (int) min);
+    if (dest) {
+      g_value_init (dest, G_TYPE_DOUBLE);
+      g_value_set_int (dest, (int) min);
+    }
     return TRUE;
   }
 
@@ -2718,6 +2733,15 @@ gst_value_intersect_list (GValue * dest, const GValue * value1,
   size = VALUE_LIST_SIZE (value1);
   for (i = 0; i < size; i++) {
     const GValue *cur = VALUE_LIST_GET_VALUE (value1, i);
+
+    /* quicker version when we don't need the resulting set */
+    if (!dest) {
+      if (gst_value_intersect (NULL, cur, value2)) {
+        ret = TRUE;
+        break;
+      }
+      continue;
+    }
 
     if (gst_value_intersect (&intersection, cur, value2)) {
       /* append value */
@@ -2753,6 +2777,18 @@ gst_value_intersect_array (GValue * dest, const GValue * src1,
   size = gst_value_array_get_size (src1);
   if (size != gst_value_array_get_size (src2))
     return FALSE;
+
+  /* quicker value when we don't need the resulting set */
+  if (!dest) {
+    for (n = 0; n < size; n++) {
+      if (!gst_value_intersect (NULL, gst_value_array_get_value (src1, n),
+              gst_value_array_get_value (src2, n))) {
+        return FALSE;
+      }
+    }
+    return TRUE;
+  }
+
   g_value_init (dest, GST_TYPE_ARRAY);
 
   for (n = 0; n < size; n++) {
@@ -2787,7 +2823,8 @@ gst_value_intersect_fraction_fraction_range (GValue * dest, const GValue * src1,
 
     if ((res1 == GST_VALUE_EQUAL || res1 == GST_VALUE_LESS_THAN) &&
         (res2 == GST_VALUE_EQUAL || res2 == GST_VALUE_GREATER_THAN)) {
-      gst_value_init_and_copy (dest, src1);
+      if (dest)
+        gst_value_init_and_copy (dest, src1);
       return TRUE;
     }
   }
@@ -2829,14 +2866,17 @@ gst_value_intersect_fraction_range_fraction_range (GValue * dest,
     res = gst_value_compare_with_func (min, max, compare);
     g_return_val_if_fail (res != GST_VALUE_UNORDERED, FALSE);
     if (res == GST_VALUE_LESS_THAN) {
-      g_value_init (dest, GST_TYPE_FRACTION_RANGE);
-      vals1 = dest->data[0].v_pointer;
-      g_value_copy (min, &vals1[0]);
-      g_value_copy (max, &vals1[1]);
+      if (dest) {
+        g_value_init (dest, GST_TYPE_FRACTION_RANGE);
+        vals1 = dest->data[0].v_pointer;
+        g_value_copy (min, &vals1[0]);
+        g_value_copy (max, &vals1[1]);
+      }
       return TRUE;
     }
     if (res == GST_VALUE_EQUAL) {
-      gst_value_init_and_copy (dest, min);
+      if (dest)
+        gst_value_init_and_copy (dest, min);
       return TRUE;
     }
   }
@@ -3649,14 +3689,14 @@ gst_value_can_intersect (const GValue * value1, const GValue * value2)
 /**
  * gst_value_intersect:
  * @dest: (out caller-allocates): a uninitialized #GValue that will hold the calculated
- * intersection value
+ * intersection value. May be NULL if the resulting set if not needed.
  * @value1: a value to intersect
  * @value2: another value to intersect
  *
  * Calculates the intersection of two values.  If the values have
  * a non-empty intersection, the value representing the intersection
- * is placed in @dest.  If the intersection is non-empty, @dest is
- * not modified.
+ * is placed in @dest, unless NULL.  If the intersection is non-empty,
+ * @dest is not modified.
  *
  * Returns: TRUE if the intersection is non-empty
  */
@@ -3668,7 +3708,6 @@ gst_value_intersect (GValue * dest, const GValue * value1,
   guint i, len;
   GType ltype, type1, type2;
 
-  g_return_val_if_fail (dest != NULL, FALSE);
   g_return_val_if_fail (G_IS_VALUE (value1), FALSE);
   g_return_val_if_fail (G_IS_VALUE (value2), FALSE);
 
@@ -3681,7 +3720,8 @@ gst_value_intersect (GValue * dest, const GValue * value1,
     return gst_value_intersect_list (dest, value2, value1);
 
   if (gst_value_compare (value1, value2) == GST_VALUE_EQUAL) {
-    gst_value_init_and_copy (dest, value1);
+    if (dest)
+      gst_value_init_and_copy (dest, value1);
     return TRUE;
   }
 
@@ -3701,6 +3741,8 @@ gst_value_intersect (GValue * dest, const GValue * value1,
   }
   return FALSE;
 }
+
+
 
 /**
  * gst_value_register_intersect_func:
