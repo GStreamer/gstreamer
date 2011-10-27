@@ -558,8 +558,8 @@ gst_basertppayload_set_outcaps (GstBaseRTPPayload * payload,
     gst_caps_set_simple (srccaps,
         "payload", G_TYPE_INT, GST_BASE_RTP_PAYLOAD_PT (payload),
         "ssrc", G_TYPE_UINT, payload->current_ssrc,
-        "clock-base", G_TYPE_UINT, payload->ts_base,
-        "seqnum-base", G_TYPE_UINT, payload->seqnum_base, NULL);
+        "timestamp-offset", G_TYPE_UINT, payload->ts_base,
+        "seqnum-offset", G_TYPE_UINT, payload->seqnum_base, NULL);
 
     GST_DEBUG_OBJECT (payload, "no peer caps: %" GST_PTR_FORMAT, srccaps);
   } else {
@@ -621,26 +621,28 @@ gst_basertppayload_set_outcaps (GstBaseRTPPayload * payload,
           payload->current_ssrc);
     }
 
-    if (gst_structure_has_field_typed (s, "clock-base", G_TYPE_UINT)) {
-      value = gst_structure_get_value (s, "clock-base");
+    if (gst_structure_has_field_typed (s, "timestamp-offset", G_TYPE_UINT)) {
+      value = gst_structure_get_value (s, "timestamp-offset");
       payload->ts_base = g_value_get_uint (value);
-      GST_LOG_OBJECT (payload, "using peer clock-base %u", payload->ts_base);
+      GST_LOG_OBJECT (payload, "using peer timestamp-offset %u",
+          payload->ts_base);
     } else {
       /* FIXME, fixate_nearest_uint would be even better */
-      gst_structure_set (s, "clock-base", G_TYPE_UINT, payload->ts_base, NULL);
-      GST_LOG_OBJECT (payload, "using internal clock-base %u",
+      gst_structure_set (s, "timestamp-offset", G_TYPE_UINT, payload->ts_base,
+          NULL);
+      GST_LOG_OBJECT (payload, "using internal timestamp-offset %u",
           payload->ts_base);
     }
-    if (gst_structure_has_field_typed (s, "seqnum-base", G_TYPE_UINT)) {
-      value = gst_structure_get_value (s, "seqnum-base");
+    if (gst_structure_has_field_typed (s, "seqnum-offset", G_TYPE_UINT)) {
+      value = gst_structure_get_value (s, "seqnum-offset");
       payload->seqnum_base = g_value_get_uint (value);
-      GST_LOG_OBJECT (payload, "using peer seqnum-base %u",
+      GST_LOG_OBJECT (payload, "using peer seqnum-offset %u",
           payload->seqnum_base);
     } else {
       /* FIXME, fixate_nearest_uint would be even better */
-      gst_structure_set (s, "seqnum-base", G_TYPE_UINT, payload->seqnum_base,
+      gst_structure_set (s, "seqnum-offset", G_TYPE_UINT, payload->seqnum_base,
           NULL);
-      GST_LOG_OBJECT (payload, "using internal seqnum-base %u",
+      GST_LOG_OBJECT (payload, "using internal seqnum-offset %u",
           payload->seqnum_base);
     }
 
