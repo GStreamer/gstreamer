@@ -3108,7 +3108,6 @@ gst_caps_structure_is_subset_field (GQuark field_id, const GValue * value,
     gpointer user_data)
 {
   GstStructure *superset = user_data;
-  GValue subtraction = { 0, };
   const GValue *other;
 
   if (!(other = gst_structure_id_get_value (superset, field_id)))
@@ -3139,13 +3138,10 @@ gst_caps_structure_is_subset_field (GQuark field_id, const GValue * value,
    *  subtractions needs to give en empty set.
    *  Both substractions are switched below, as it's faster that way.
    */
-  if (!gst_value_subtract (&subtraction, value, other)) {
-    if (gst_value_subtract (&subtraction, other, value)) {
-      g_value_unset (&subtraction);
+  if (!gst_value_subtract (NULL, value, other)) {
+    if (gst_value_subtract (NULL, other, value)) {
       return TRUE;
     }
-  } else {
-    g_value_unset (&subtraction);
   }
   return FALSE;
 }
