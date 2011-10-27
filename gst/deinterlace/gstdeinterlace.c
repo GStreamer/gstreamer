@@ -2091,8 +2091,6 @@ gst_deinterlace_getcaps (GstPad * pad)
   const GstCaps *ourcaps;
   GstCaps *peercaps;
 
-  GST_OBJECT_LOCK (self);
-
   otherpad = (pad == self->srcpad) ? self->sinkpad : self->srcpad;
 
   ourcaps = gst_pad_get_pad_template_caps (pad);
@@ -2105,8 +2103,6 @@ gst_deinterlace_getcaps (GstPad * pad)
   } else {
     ret = gst_caps_copy (ourcaps);
   }
-
-  GST_OBJECT_UNLOCK (self);
 
   for (len = gst_caps_get_size (ret); len > 0; len--) {
     GstStructure *s = gst_caps_get_structure (ret, len - 1);
