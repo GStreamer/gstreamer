@@ -87,6 +87,8 @@ static GstStaticPadTemplate src_templ = GST_STATIC_PAD_TEMPLATE ("src",
         "rate = (int) [ 8000, 48000 ], " "channels = (int) [ 1, 2 ]")
     );
 
+GST_DEBUG_CATEGORY_STATIC (gst_siddec_debug);
+#define GST_CAT_DEFAULT gst_siddec_debug
 
 #define GST_TYPE_SID_CLOCK (gst_sid_clock_get_type())
 static GType
@@ -123,9 +125,6 @@ gst_sid_memory_get_type (void)
   return sid_memory_type;
 }
 
-static void gst_siddec_base_init (gpointer g_class);
-static void gst_siddec_class_init (GstSidDec * klass);
-static void gst_siddec_init (GstSidDec * siddec);
 static void gst_siddec_finalize (GObject * object);
 
 static GstFlowReturn gst_siddec_chain (GstPad * pad, GstBuffer * buffer);
@@ -141,34 +140,11 @@ static void gst_siddec_get_property (GObject * object, guint prop_id,
 static void gst_siddec_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
 
-static GstElementClass *parent_class = NULL;
+#define _do_init(bla) \
+    GST_DEBUG_CATEGORY_INIT (gst_siddec_debug, "siddec", 0, "C64 sid song player");
 
-GType
-gst_siddec_get_type (void)
-{
-  static GType siddec_type = 0;
-
-  if (G_UNLIKELY (siddec_type == 0)) {
-    static const GTypeInfo siddec_info = {
-      sizeof (GstSidDecClass),
-      gst_siddec_base_init,
-      NULL,
-      (GClassInitFunc) gst_siddec_class_init,
-      NULL,
-      NULL,
-      sizeof (GstSidDec),
-      0,
-      (GInstanceInitFunc) gst_siddec_init,
-      NULL
-    };
-
-    siddec_type =
-        g_type_register_static (GST_TYPE_ELEMENT, "GstSidDec", &siddec_info,
-        (GTypeFlags) 0);
-  }
-
-  return siddec_type;
-}
+GST_BOILERPLATE_FULL (GstSidDec, gst_siddec, GstElement, GST_TYPE_ELEMENT, 
+    _do_init);
 
 static void
 gst_siddec_base_init (gpointer g_class)
@@ -186,13 +162,11 @@ gst_siddec_base_init (gpointer g_class)
 }
 
 static void
-gst_siddec_class_init (GstSidDec * klass)
+gst_siddec_class_init (GstSidDecClass * klass)
 {
   GObjectClass *gobject_class;
 
   gobject_class = (GObjectClass *) klass;
-
-  parent_class = GST_ELEMENT_CLASS (g_type_class_peek_parent (klass));
 
   gobject_class->finalize = gst_siddec_finalize;
   gobject_class->set_property = gst_siddec_set_property;
@@ -235,10 +209,9 @@ gst_siddec_class_init (GstSidDec * klass)
 }
 
 static void
-gst_siddec_init (GstSidDec * siddec)
+gst_siddec_init (GstSidDec * siddec, GstSidDecClass * klass)
 {
   siddec->sinkpad = gst_pad_new_from_static_template (&sink_templ, "sink");
-  gst_pad_set_query_function (siddec->sinkpad, NULL);
   gst_pad_set_event_function (siddec->sinkpad, gst_siddec_sink_event);
   gst_pad_set_chain_function (siddec->sinkpad, gst_siddec_chain);
   gst_element_add_pad (GST_ELEMENT (siddec), siddec->sinkpad);
@@ -685,9 +658,7 @@ static void
 gst_siddec_set_property (GObject * object, guint prop_id, const GValue * value,
     GParamSpec * pspec)
 {
-  GstSidDec *siddec;
-
-  siddec = GST_SIDDEC (object);
+  GstSidDec *siddec = GST_SIDDEC (object);
 
   switch (prop_id) {
     case PROP_TUNE:
@@ -715,7 +686,7 @@ gst_siddec_set_property (GObject * object, guint prop_id, const GValue * value,
       siddec->config->forceSongSpeed = g_value_get_boolean (value);
       break;
     default:
-      /* G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec); */
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       return;
   }
   siddec->engine->setConfig (*siddec->config);
@@ -725,9 +696,7 @@ static void
 gst_siddec_get_property (GObject * object, guint prop_id, GValue * value,
     GParamSpec * pspec)
 {
-  GstSidDec *siddec;
-
-  siddec = GST_SIDDEC (object);
+  GstSidDec *siddec = GST_SIDDEC (object);
 
   switch (prop_id) {
     case PROP_TUNE:
@@ -758,7 +727,7 @@ gst_siddec_get_property (GObject * object, guint prop_id, GValue * value,
       g_value_set_boxed (value, NULL);
       break;
     default:
-      /* G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec); */
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
   }
 }
@@ -770,9 +739,8 @@ plugin_init (GstPlugin * plugin)
       GST_TYPE_SIDDEC);
 }
 
-/* FIXME: remove cast to gchar once we depend on core >= 0.10.14.1 */
 GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
     GST_VERSION_MINOR,
     "siddec",
-    (gchar *) "Uses libsidplay to decode .sid files",
+    "Uses libsidplay to decode .sid files",
     plugin_init, VERSION, "GPL", GST_PACKAGE_NAME, GST_PACKAGE_ORIGIN);
