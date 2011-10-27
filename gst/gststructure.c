@@ -3109,14 +3109,21 @@ gst_caps_structure_is_subset_field (GQuark field_id, const GValue * value,
 {
   GstStructure *superset = user_data;
   const GValue *other;
+  int comparison;
 
   if (!(other = gst_structure_id_get_value (superset, field_id)))
     /* field is missing in the superset => is subset */
     return TRUE;
 
+  comparison = gst_value_compare (other, value);
+
   /* equal values are subset */
-  if (gst_value_compare (other, value) == GST_VALUE_EQUAL)
+  if (comparison == GST_VALUE_EQUAL)
     return TRUE;
+
+  /* ordered, but unequal, values are not */
+  if (comparison != GST_VALUE_UNORDERED)
+    return FALSE;
 
   /*
    * 1 - [1,2] = empty
