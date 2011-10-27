@@ -301,20 +301,19 @@ static gboolean
 gst_audio_panorama_get_unit_size (GstBaseTransform * base, GstCaps * caps,
     gsize * size)
 {
+  GstAudioInfo info;
   gint width, channels;
-  GstStructure *structure;
-  gboolean ret;
 
   g_assert (size);
 
-  /* this works for both float and int */
-  structure = gst_caps_get_structure (caps, 0);
-  ret = gst_structure_get_int (structure, "width", &width);
-  ret &= gst_structure_get_int (structure, "channels", &channels);
+  if (!gst_audio_info_from_caps (&info, caps))
+    return FALSE;
 
+  width = GST_AUDIO_INFO_WIDTH (&info);
+  channels = GST_AUDIO_INFO_CHANNELS (&info);
   *size = width * channels / 8;
 
-  return ret;
+  return TRUE;
 }
 
 static GstCaps *
