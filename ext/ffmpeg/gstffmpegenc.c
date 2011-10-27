@@ -896,7 +896,7 @@ gst_ffmpegenc_encode_audio (GstFFMpegEnc * ffmpegenc, guint8 * audio_in,
   if (ffmpegenc->buffer_size != max_size)
     ffmpegenc->buffer_size = max_size;
 
-  res = avcodec_encode_audio (ctx, audio_out, in_size, (short *) audio_in);
+  res = avcodec_encode_audio (ctx, audio_out, max_size, (short *) audio_in);
 
   if (res < 0) {
     gst_buffer_unmap (outbuf, audio_out, 0);
