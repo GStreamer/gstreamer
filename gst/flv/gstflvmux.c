@@ -1172,8 +1172,7 @@ gst_flv_mux_write_header (GstFlvMux * mux)
     gst_flv_mux_put_buffer_in_streamheader (&streamheader, audio_codec_data);
 
   /* create the caps and put the streamheader in them */
-  caps = gst_caps_new_simple ("video/x-flv", NULL);
-  caps = gst_caps_make_writable (caps);
+  caps = gst_caps_new_empty_simple ("video/x-flv");
   structure = gst_caps_get_structure (caps, 0);
   gst_structure_set_value (structure, "streamheader", &streamheader);
   g_value_unset (&streamheader);

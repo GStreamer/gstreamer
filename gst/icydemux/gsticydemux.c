@@ -414,7 +414,7 @@ gst_icydemux_typefind_or_forward (GstICYDemux * icydemux, GstBuffer * buf)
     if (G_UNLIKELY (icydemux->content_type)) {
       if (!g_ascii_strcasecmp (icydemux->content_type, "video/nsv")) {
         GST_DEBUG ("We have a NSV stream");
-        caps = gst_caps_new_simple ("video/x-nsv", NULL);
+        caps = gst_caps_new_empty_simple ("video/x-nsv");
       } else {
         GST_DEBUG ("Upstream Content-Type isn't supported");
         g_free (icydemux->content_type);

@@ -37,11 +37,11 @@ The following fields can or must (*) be specified in the structure:
     The ssrc value currently in use. (default = the SSRC of the first RTP
     packet)
 
-   clock-base: (uint) [0 - MAXINT]
+   timestamp-offset: (uint) [0 - MAXINT]
     The RTP time representing time npt-start. (default = rtptime of first RTP
     packet).
 
-   seqnum-base: (uint) [0 - MAXINT]
+   seqnum-offset: (uint) [0 - MAXINT]
     The RTP sequence number representing the first rtp packet. When this
     parameter is given, all sequence numbers below this seqnum should be
     ignored. (default = seqnum of first RTP packet).

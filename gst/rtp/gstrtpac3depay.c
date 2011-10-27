@@ -100,7 +100,7 @@ gst_rtp_ac3_depay_setcaps (GstBaseRTPDepayload * depayload, GstCaps * caps)
     clock_rate = 90000;         /* default */
   depayload->clock_rate = clock_rate;
 
-  srccaps = gst_caps_new_simple ("audio/ac3", NULL);
+  srccaps = gst_caps_new_empty_simple ("audio/ac3");
   res = gst_pad_set_caps (depayload->srcpad, srccaps);
   gst_caps_unref (srccaps);
 

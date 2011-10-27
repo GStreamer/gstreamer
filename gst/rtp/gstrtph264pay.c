@@ -358,7 +358,7 @@ gst_rtp_h264_pay_getcaps (GstBaseRTPPayload * payload, GstPad * pad,
   }
 
 any:
-  return gst_caps_new_simple ("video/x-h264", NULL);
+  return gst_caps_new_empty_simple ("video/x-h264");
 }
 
 /* take the currently configured SPS and PPS lists and set them on the caps as

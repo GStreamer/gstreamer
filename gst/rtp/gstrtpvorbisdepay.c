@@ -377,7 +377,7 @@ gst_rtp_vorbis_depay_setcaps (GstBaseRTPDepayload * depayload, GstCaps * caps)
   depayload->clock_rate = clock_rate;
 
   /* set caps on pad and on header */
-  srccaps = gst_caps_new_simple ("audio/x-vorbis", NULL);
+  srccaps = gst_caps_new_empty_simple ("audio/x-vorbis");
   res = gst_pad_set_caps (depayload->srcpad, srccaps);
   gst_caps_unref (srccaps);
 

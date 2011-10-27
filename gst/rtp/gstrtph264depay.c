@@ -299,7 +299,7 @@ gst_rtp_h264_depay_setcaps (GstBaseRTPDepayload * depayload, GstCaps * caps)
     clock_rate = 90000;
   depayload->clock_rate = clock_rate;
 
-  srccaps = gst_caps_new_simple ("video/x-h264", NULL);
+  srccaps = gst_caps_new_empty_simple ("video/x-h264");
 
   /* Base64 encoded, comma separated config NALs */
   ps = gst_structure_get_string (structure, "sprop-parameter-sets");

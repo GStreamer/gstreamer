@@ -172,7 +172,7 @@ gst_aac_parse_set_src_caps (GstAacParse * aacparse, GstCaps * sink_caps)
   if (sink_caps)
     src_caps = gst_caps_copy (sink_caps);
   else
-    src_caps = gst_caps_new_simple ("audio/mpeg", NULL);
+    src_caps = gst_caps_new_empty_simple ("audio/mpeg");
 
   gst_caps_set_simple (src_caps, "framed", G_TYPE_BOOLEAN, TRUE,
       "mpegversion", G_TYPE_INT, aacparse->mpegversion, NULL);

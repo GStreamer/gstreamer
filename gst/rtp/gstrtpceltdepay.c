@@ -171,7 +171,7 @@ gst_rtp_celt_depay_setcaps (GstBaseRTPDepayload * depayload, GstCaps * caps)
   GST_WRITE_UINT32_LE (ptr, 0); /* extra headers */
   gst_buffer_unmap (buf, data, size);
 
-  srccaps = gst_caps_new_simple ("audio/x-celt", NULL);
+  srccaps = gst_caps_new_empty_simple ("audio/x-celt");
   res = gst_pad_set_caps (depayload->srcpad, srccaps);
   gst_caps_unref (srccaps);
 

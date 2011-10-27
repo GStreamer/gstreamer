@@ -659,7 +659,7 @@ gst_flv_demux_audio_negotiate (GstFlvDemux * demux, guint32 codec_tag,
     case 4:
     case 5:
     case 6:
-      caps = gst_caps_new_simple ("audio/x-nellymoser", NULL);
+      caps = gst_caps_new_empty_simple ("audio/x-nellymoser");
       break;
     case 10:
     {
@@ -693,13 +693,13 @@ gst_flv_demux_audio_negotiate (GstFlvDemux * demux, guint32 codec_tag,
       break;
     }
     case 7:
-      caps = gst_caps_new_simple ("audio/x-alaw", NULL);
+      caps = gst_caps_new_empty_simple ("audio/x-alaw");
       break;
     case 8:
-      caps = gst_caps_new_simple ("audio/x-mulaw", NULL);
+      caps = gst_caps_new_empty_simple ("audio/x-mulaw");
       break;
     case 11:
-      caps = gst_caps_new_simple ("audio/x-speex", NULL);
+      caps = gst_caps_new_empty_simple ("audio/x-speex");
       break;
     default:
       GST_WARNING_OBJECT (demux, "unsupported audio codec tag %u", codec_tag);
@@ -1075,16 +1075,16 @@ gst_flv_demux_video_negotiate (GstFlvDemux * demux, guint32 codec_tag)
   /* Generate caps for that pad */
   switch (codec_tag) {
     case 2:
-      caps = gst_caps_new_simple ("video/x-flash-video", NULL);
+      caps = gst_caps_new_empty_simple ("video/x-flash-video");
       break;
     case 3:
-      caps = gst_caps_new_simple ("video/x-flash-screen", NULL);
+      caps = gst_caps_new_empty_simple ("video/x-flash-screen");
       break;
     case 4:
-      caps = gst_caps_new_simple ("video/x-vp6-flash", NULL);
+      caps = gst_caps_new_empty_simple ("video/x-vp6-flash");
       break;
     case 5:
-      caps = gst_caps_new_simple ("video/x-vp6-alpha", NULL);
+      caps = gst_caps_new_empty_simple ("video/x-vp6-alpha");
       break;
     case 7:
       caps =

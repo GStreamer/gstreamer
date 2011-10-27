@@ -171,7 +171,7 @@ gst_rtp_speex_depay_setcaps (GstBaseRTPDepayload * depayload, GstCaps * caps)
   GST_WRITE_UINT32_LE (data, 0);        /* reserved2 */
   gst_buffer_unmap (buf, bdata, -1);
 
-  srccaps = gst_caps_new_simple ("audio/x-speex", NULL);
+  srccaps = gst_caps_new_empty_simple ("audio/x-speex");
   res = gst_pad_set_caps (depayload->srcpad, srccaps);
   gst_caps_unref (srccaps);
 

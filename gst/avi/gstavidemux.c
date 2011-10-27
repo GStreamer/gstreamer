@@ -139,17 +139,17 @@ gst_avi_demux_class_init (GstAviDemuxClass * klass)
   gstelement_class->get_index = GST_DEBUG_FUNCPTR (gst_avi_demux_get_index);
 
   audcaps = gst_riff_create_audio_template_caps ();
-  gst_caps_append (audcaps, gst_caps_new_simple ("audio/x-avi-unknown", NULL));
+  gst_caps_append (audcaps, gst_caps_new_empty_simple ("audio/x-avi-unknown"));
   audiosrctempl = gst_pad_template_new ("audio_%02d",
       GST_PAD_SRC, GST_PAD_SOMETIMES, audcaps);
 
   vidcaps = gst_riff_create_video_template_caps ();
   gst_caps_append (vidcaps, gst_riff_create_iavs_template_caps ());
-  gst_caps_append (vidcaps, gst_caps_new_simple ("video/x-avi-unknown", NULL));
+  gst_caps_append (vidcaps, gst_caps_new_empty_simple ("video/x-avi-unknown"));
   videosrctempl = gst_pad_template_new ("video_%02d",
       GST_PAD_SRC, GST_PAD_SOMETIMES, vidcaps);
 
-  subcaps = gst_caps_new_simple ("application/x-subtitle-avi", NULL);
+  subcaps = gst_caps_new_empty_simple ("application/x-subtitle-avi");
   subsrctempl = gst_pad_template_new ("subtitle_%02d",
       GST_PAD_SRC, GST_PAD_SOMETIMES, subcaps);
   gst_element_class_add_pad_template (gstelement_class, audiosrctempl);
@@ -2221,7 +2221,7 @@ gst_avi_demux_parse_stream (GstAviDemux * avi, GstBuffer * buf)
     case GST_RIFF_FCC_txts:{
       padname = g_strdup_printf ("subtitle_%02d", avi->num_t_streams);
       templ = gst_element_class_get_pad_template (klass, "subtitle_%02d");
-      caps = gst_caps_new_simple ("application/x-subtitle-avi", NULL);
+      caps = gst_caps_new_empty_simple ("application/x-subtitle-avi");
       tag_name = NULL;
       avi->num_t_streams++;
       break;

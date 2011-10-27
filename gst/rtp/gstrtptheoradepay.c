@@ -339,7 +339,7 @@ gst_rtp_theora_depay_setcaps (GstBaseRTPDepayload * depayload, GstCaps * caps)
   }
 
   /* set caps on pad and on header */
-  srccaps = gst_caps_new_simple ("video/x-theora", NULL);
+  srccaps = gst_caps_new_empty_simple ("video/x-theora");
   res = gst_pad_set_caps (depayload->srcpad, srccaps);
   gst_caps_unref (srccaps);
 
