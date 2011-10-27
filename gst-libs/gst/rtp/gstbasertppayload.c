@@ -279,10 +279,6 @@ gst_basertppayload_init (GstBaseRTPPayload * basertppayload, gpointer g_class)
       gst_basertppayload_chain);
   gst_element_add_pad (GST_ELEMENT (basertppayload), basertppayload->sinkpad);
 
-  basertppayload->seq_rand = g_rand_new_with_seed (g_random_int ());
-  basertppayload->ssrc_rand = g_rand_new_with_seed (g_random_int ());
-  basertppayload->ts_rand = g_rand_new_with_seed (g_random_int ());
-
   basertppayload->mtu = DEFAULT_MTU;
   basertppayload->pt = DEFAULT_PT;
   basertppayload->seqnum_offset = DEFAULT_SEQNUM_OFFSET;
@@ -314,13 +310,6 @@ gst_basertppayload_finalize (GObject * object)
   GstBaseRTPPayload *basertppayload;
 
   basertppayload = GST_BASE_RTP_PAYLOAD (object);
-
-  g_rand_free (basertppayload->seq_rand);
-  basertppayload->seq_rand = NULL;
-  g_rand_free (basertppayload->ssrc_rand);
-  basertppayload->ssrc_rand = NULL;
-  g_rand_free (basertppayload->ts_rand);
-  basertppayload->ts_rand = NULL;
 
   g_free (basertppayload->media);
   basertppayload->media = NULL;
@@ -831,8 +820,8 @@ gst_basertppayload_prepare_push (GstBaseRTPPayload * payload,
       (is_list) ? -1 : gst_buffer_get_size (GST_BUFFER (obj)),
       payload->seqnum, data.rtptime, GST_TIME_ARGS (data.timestamp));
 
-  if (g_atomic_int_compare_and_exchange (&payload->priv->
-          notified_first_timestamp, 1, 0)) {
+  if (g_atomic_int_compare_and_exchange (&payload->
+          priv->notified_first_timestamp, 1, 0)) {
     g_object_notify (G_OBJECT (payload), "timestamp");
     g_object_notify (G_OBJECT (payload), "seqnum");
   }

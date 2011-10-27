@@ -81,11 +81,6 @@ struct _GstBaseRTPPayload
   GstPad  *sinkpad;
   GstPad  *srcpad;
 
-  /* FIXME 0.11: none of these GRands are used anymore, remove them */
-  GRand   *seq_rand;
-  GRand   *ssrc_rand;
-  GRand   *ts_rand;
-
   guint32  ts_base;
   guint16  seqnum_base;
 
