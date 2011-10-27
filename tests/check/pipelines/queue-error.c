@@ -37,7 +37,7 @@ modify_caps (GstObject * pad, GstProbeType type, GstEvent * event,
     return GST_PROBE_OK;
 
   /* trigger caps negotiation error */
-  caps = gst_caps_new_simple ("video/x-raw-rgb", NULL);
+  caps = gst_caps_new_empty_simple ("video/x-raw-rgb");
   g_object_set (filter, "caps", caps, NULL);
   gst_caps_unref (caps);
 

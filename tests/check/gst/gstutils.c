@@ -1003,12 +1003,12 @@ GST_START_TEST (test_pad_proxy_getcaps_aggregation)
   gst_caps_unref (caps);
 
   /* these don't intersect we should get empty caps */
-  caps = gst_caps_new_simple ("foo/bar", NULL);
+  caps = gst_caps_new_empty_simple ("foo/bar");
   fail_unless (gst_pad_set_caps (sink1_sink, caps));
   gst_pad_use_fixed_caps (sink1_sink);
   gst_caps_unref (caps);
 
-  caps = gst_caps_new_simple ("bar/ter", NULL);
+  caps = gst_caps_new_empty_simple ("bar/ter");
   fail_unless (gst_pad_set_caps (sink2_sink, caps));
   gst_pad_use_fixed_caps (sink2_sink);
   gst_caps_unref (caps);

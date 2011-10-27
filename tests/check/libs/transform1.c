@@ -119,7 +119,7 @@ GST_START_TEST (basetransform_chain_pt1)
   /* with caps buffer */
   GST_DEBUG_OBJECT (trans, "alloc with caps, size 10");
 
-  caps = gst_caps_new_simple ("foo/x-bar", NULL);
+  caps = gst_caps_new_empty_simple ("foo/x-bar");
   buffer_alloc_pt1_called = FALSE;
   set_caps_pt1_called = FALSE;
   res = gst_pad_alloc_buffer (trans->srcpad, 0, 10, caps, &buffer);
@@ -172,7 +172,7 @@ GST_START_TEST (basetransform_chain_pt2)
   trans = gst_test_trans_new ();
 
   /* first buffer */
-  caps = gst_caps_new_simple ("foo/x-bar", NULL);
+  caps = gst_caps_new_empty_simple ("foo/x-bar");
 
   GST_DEBUG_OBJECT (trans, "buffer with caps, size 20");
 
@@ -256,7 +256,7 @@ GST_START_TEST (basetransform_chain_pt2)
   gst_caps_unref (caps);
 
   /* with caps that is a superset */
-  caps = gst_caps_new_simple ("foo/x-bar", NULL);
+  caps = gst_caps_new_empty_simple ("foo/x-bar");
 
 #if 0
   GST_DEBUG_OBJECT (trans, "alloc with superset caps, size 20");
@@ -378,7 +378,7 @@ set_caps_1 (GstBaseTransform * trans, GstCaps * incaps, GstCaps * outcaps)
 
   set_caps_1_called = TRUE;
 
-  caps = gst_caps_new_simple ("foo/x-bar", NULL);
+  caps = gst_caps_new_empty_simple ("foo/x-bar");
 
   fail_unless (gst_caps_is_equal (incaps, caps));
   fail_unless (gst_caps_is_equal (outcaps, caps));
@@ -415,7 +415,7 @@ GST_START_TEST (basetransform_chain_ip2)
   gst_buffer_unref (buffer);
 #endif
 
-  caps = gst_caps_new_simple ("foo/x-bar", NULL);
+  caps = gst_caps_new_empty_simple ("foo/x-bar");
 
 #if 0
   /* with caps buffer */
@@ -551,8 +551,8 @@ set_caps_ct1 (GstBaseTransform * trans, GstCaps * incaps, GstCaps * outcaps)
 
   GST_DEBUG_OBJECT (trans, "set_caps called");
 
-  caps1 = gst_caps_new_simple ("baz/x-foo", NULL);
-  caps2 = gst_caps_new_simple ("foo/x-bar", NULL);
+  caps1 = gst_caps_new_empty_simple ("baz/x-foo");
+  caps2 = gst_caps_new_empty_simple ("foo/x-bar");
 
   fail_unless (gst_caps_is_equal (incaps, caps1));
   fail_unless (gst_caps_is_equal (outcaps, caps2));
@@ -586,9 +586,9 @@ transform_caps_ct1 (GstBaseTransform * trans, GstPadDirection dir,
   GstCaps *res;
 
   if (dir == GST_PAD_SINK) {
-    res = gst_caps_new_simple ("foo/x-bar", NULL);
+    res = gst_caps_new_empty_simple ("foo/x-bar");
   } else {
-    res = gst_caps_new_simple ("baz/x-foo", NULL);
+    res = gst_caps_new_empty_simple ("baz/x-foo");
   }
 
   if (filter) {
@@ -628,7 +628,7 @@ buffer_alloc_ct1 (GstPad * pad, guint64 offset, guint size, GstCaps * caps,
 
   buffer_alloc_ct1_called = TRUE;
 
-  outcaps = gst_caps_new_simple ("foo/x-bar", NULL);
+  outcaps = gst_caps_new_empty_simple ("foo/x-bar");
   fail_unless (gst_caps_is_equal (outcaps, caps));
   gst_caps_unref (outcaps);
 
@@ -657,8 +657,8 @@ GST_START_TEST (basetransform_chain_ct1)
 
   trans = gst_test_trans_new ();
 
-  incaps = gst_caps_new_simple ("baz/x-foo", NULL);
-  outcaps = gst_caps_new_simple ("foo/x-bar", NULL);
+  incaps = gst_caps_new_empty_simple ("baz/x-foo");
+  outcaps = gst_caps_new_empty_simple ("foo/x-bar");
 
 #if 0
   /* without caps buffer, I think this should fail */
@@ -823,12 +823,12 @@ set_caps_ct2 (GstBaseTransform * trans, GstCaps * incaps, GstCaps * outcaps)
 
   GST_DEBUG_OBJECT (trans, "set_caps called");
 
-  caps1 = gst_caps_new_simple ("foo/x-bar", NULL);
+  caps1 = gst_caps_new_empty_simple ("foo/x-bar");
 
   if (set_caps_ct2_case == 1)
     caps2 = gst_caps_copy (caps1);
   else
-    caps2 = gst_caps_new_simple ("baz/x-foo", NULL);
+    caps2 = gst_caps_new_empty_simple ("baz/x-foo");
 
   fail_unless (gst_caps_is_equal (incaps, caps1));
   fail_unless (gst_caps_is_equal (outcaps, caps2));
@@ -866,7 +866,7 @@ transform_caps_ct2 (GstBaseTransform * trans, GstPadDirection dir,
     res = gst_caps_from_string ("foo/x-bar;baz/x-foo");
   } else {
     /* all on the srcpad can be transformed to the format of the sinkpad */
-    res = gst_caps_new_simple ("foo/x-bar", NULL);
+    res = gst_caps_new_empty_simple ("foo/x-bar");
   }
 
   if (filter) {
@@ -913,16 +913,16 @@ buffer_alloc_ct2 (GstPad * pad, guint64 offset, guint size, GstCaps * caps,
   buffer_alloc_ct2_called = TRUE;
 
   if (buffer_alloc_ct2_case == 1) {
-    incaps = gst_caps_new_simple ("foo/x-bar", NULL);
+    incaps = gst_caps_new_empty_simple ("foo/x-bar");
     if (buffer_alloc_ct2_suggest) {
-      outcaps = gst_caps_new_simple ("baz/x-foo", NULL);
+      outcaps = gst_caps_new_empty_simple ("baz/x-foo");
       size *= 2;
     } else
       outcaps = gst_caps_ref (incaps);
   } else {
-    incaps = gst_caps_new_simple ("baz/x-foo", NULL);
+    incaps = gst_caps_new_empty_simple ("baz/x-foo");
     if (buffer_alloc_ct2_suggest) {
-      outcaps = gst_caps_new_simple ("foo/x-bar", NULL);
+      outcaps = gst_caps_new_empty_simple ("foo/x-bar");
       size /= 2;
     } else
       outcaps = gst_caps_ref (incaps);
@@ -962,8 +962,8 @@ GST_START_TEST (basetransform_chain_ct2)
 
   trans = gst_test_trans_new ();
 
-  incaps = gst_caps_new_simple ("foo/x-bar", NULL);
-  outcaps = gst_caps_new_simple ("baz/x-foo", NULL);
+  incaps = gst_caps_new_empty_simple ("foo/x-bar");
+  outcaps = gst_caps_new_empty_simple ("baz/x-foo");
 
 #if 0
   /* without caps buffer, I think this should fail */
@@ -1132,8 +1132,8 @@ GST_START_TEST (basetransform_chain_ct3)
 
   trans = gst_test_trans_new ();
 
-  incaps = gst_caps_new_simple ("foo/x-bar", NULL);
-  outcaps = gst_caps_new_simple ("baz/x-foo", NULL);
+  incaps = gst_caps_new_empty_simple ("foo/x-bar");
+  outcaps = gst_caps_new_empty_simple ("baz/x-foo");
 
 #if 0
   /* without caps buffer, I think this should fail */

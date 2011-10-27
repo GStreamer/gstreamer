@@ -86,7 +86,7 @@ GST_START_TEST (test_can_sink_any_caps)
   factory = setup_factory ();
   fail_if (factory == NULL);
 
-  caps = gst_caps_new_simple ("audio/x-raw-int", NULL);
+  caps = gst_caps_new_empty_simple ("audio/x-raw-int");
   fail_if (caps == NULL);
   res = gst_element_factory_can_sink_any_caps (factory, caps);
   fail_if (!res);
@@ -107,7 +107,7 @@ GST_START_TEST (test_can_sink_all_caps)
   factory = setup_factory ();
   fail_if (factory == NULL);
 
-  caps = gst_caps_new_simple ("audio/x-raw-int", NULL);
+  caps = gst_caps_new_empty_simple ("audio/x-raw-int");
   fail_if (caps == NULL);
   res = gst_element_factory_can_sink_all_caps (factory, caps);
   fail_if (res);

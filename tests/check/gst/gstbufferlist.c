@@ -34,7 +34,7 @@ static void
 setup (void)
 {
   list = gst_buffer_list_new ();
-  caps = gst_caps_new_simple ("text/plain", NULL);
+  caps = gst_caps_new_empty_simple ("text/plain");
 }
 
 static void

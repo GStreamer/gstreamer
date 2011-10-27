@@ -36,7 +36,7 @@ struct TestData
 static void
 setup_test_objects (struct TestData *td, GstPadChainFunction chain_func)
 {
-  td->mycaps = gst_caps_new_simple ("test/test", NULL);
+  td->mycaps = gst_caps_new_empty_simple ("test/test");
 
   td->funnel = gst_element_factory_make ("funnel", NULL);
 

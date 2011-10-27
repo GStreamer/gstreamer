@@ -501,7 +501,7 @@ GST_START_TEST (test_vararg_getters)
   data[2] = 0x0d;
   gst_buffer_unmap (buf, data, 3);
 
-  caps = gst_caps_new_simple ("video/x-foo", NULL);
+  caps = gst_caps_new_empty_simple ("video/x-foo");
 
   s = gst_structure_new ("test", "int", G_TYPE_INT, 12345678, "string",
       G_TYPE_STRING, "Hello World!", "buf", GST_TYPE_BUFFER, buf, "caps",

@@ -193,7 +193,7 @@ buffer_alloc_harness_setup (BufferAllocHarness * h, gint countdown)
   fail_unless_equals_int (gst_element_set_state (h->tee, GST_STATE_PLAYING),
       TRUE);
 
-  h->caps = gst_caps_new_simple ("video/x-raw-yuv", NULL);
+  h->caps = gst_caps_new_empty_simple ("video/x-raw-yuv");
 
   h->start_srcpad = gst_pad_new ("src", GST_PAD_SRC);
   fail_if (h->start_srcpad == NULL);
@@ -462,7 +462,7 @@ GST_START_TEST (test_flow_aggregation)
   GstBuffer *buffer;
   GstCaps *caps;
 
-  caps = gst_caps_new_simple ("test/test", NULL);
+  caps = gst_caps_new_empty_simple ("test/test");
 
   tee = gst_element_factory_make ("tee", NULL);
   fail_unless (tee != NULL);

@@ -402,7 +402,7 @@ GST_START_TEST (test_output_selector_no_srcpad_negotiation);
 
     gst_caps_unref (caps);
 
-    caps = gst_caps_new_simple ("mymedia/mycaps", NULL);
+    caps = gst_caps_new_empty_simple ("mymedia/mycaps");
     fail_unless (gst_pad_set_caps (pad, caps));
     gst_caps_unref (caps);
   }
@@ -504,7 +504,7 @@ GST_START_TEST (test_output_selector_getcaps_all);
 
   /* in 'all' mode, the intersection of the srcpad caps should be returned on
    * the sinkpad's getcaps */
-  expected = gst_caps_new_simple ("format/abc", NULL);
+  expected = gst_caps_new_empty_simple ("format/abc");
 
   for (walker = output_pads; walker; walker = g_list_next (walker)) {
     GstCaps *caps;
