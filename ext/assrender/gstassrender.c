@@ -1147,9 +1147,9 @@ gst_ass_render_handle_tags (GstAssRender * render, GstTagList * taglist)
 
   tag_size = gst_tag_list_get_tag_size (taglist, GST_TAG_ATTACHMENT);
   if (tag_size > 0 && render->embeddedfonts) {
+#if 0
     const GValue *value;
     GstBuffer *buf;
-#if 0
     GstCaps *caps;
     GstStructure *structure;
     gboolean valid_mimetype, valid_extension;
@@ -1161,9 +1161,9 @@ gst_ass_render_handle_tags (GstAssRender * render, GstTagList * taglist)
     GST_DEBUG_OBJECT (render, "TAG event has attachments");
 
     for (index = 0; index < tag_size; index++) {
+#if 0
       value = gst_tag_list_get_value_index (taglist, GST_TAG_ATTACHMENT, index);
       buf = gst_value_get_buffer (value);
-#if 0
       if (!buf || !GST_BUFFER_CAPS (buf))
         continue;
 
