@@ -1031,7 +1031,7 @@ gst_audio_decoder_drain (GstAudioDecoder * dec)
 {
   GstFlowReturn ret;
 
-  if (dec->priv->drained)
+  if (dec->priv->drained && !dec->priv->gather)
     return GST_FLOW_OK;
   else {
     /* dispatch reverse pending buffers */

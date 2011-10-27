@@ -26,15 +26,6 @@ noinst_HEADERS = \
 	gstfastrandom.h \
 	plugin.h
 
-#TESTS = channelmixtest
-#noinst_PROGRAMS = channelmixtest
-
-#channelmixtest_CFLAGS = $(GST_CFLAGS)
-#channelmixtest_LDADD = libgstaudioconvert.la \
-#	$(top_builddir)/gst-libs/gst/audio/libgstaudio-@GST_MAJORMINOR@.la \
-#	$(GST_LIBS)
-
-
 Android.mk: Makefile.am $(BUILT_SOURCES)
 	androgenizer \
 	-:PROJECT libgstaudioconvert -:SHARED libgstaudioconvert \

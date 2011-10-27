@@ -30,8 +30,8 @@
 #include <gtk/gtk.h>
 
 /* global pointer for the scale widget */
-GtkWidget *elapsed;
-GtkWidget *scale;
+static GtkWidget *elapsed;
+static GtkWidget *scale;
 
 #ifndef M_LN10
 #define M_LN10 (log(10.0))

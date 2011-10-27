@@ -428,9 +428,6 @@ vorbis_handle_header_packet (GstVorbisDec * vd, ogg_packet * packet)
       break;
   }
 
-  /* consumer header packet/frame */
-  gst_audio_decoder_finish_frame (GST_AUDIO_DECODER (vd), NULL, 1);
-
   return res;
 
   /* ERRORS */
@@ -482,7 +479,7 @@ vorbis_dec_handle_header_caps (GstVorbisDec * vd)
     GstBuffer *buf = NULL;
     gint i = 0;
 
-    while (result == GST_FLOW_OK) {
+    while (result == GST_FLOW_OK && i < gst_value_array_get_size (array)) {
       value = gst_value_array_get_value (array, i);
       buf = gst_value_get_buffer (value);
       if (!buf)
@@ -668,6 +665,8 @@ vorbis_dec_handle_frame (GstAudioDecoder * dec, GstBuffer * buffer)
       goto done;
     }
     result = vorbis_handle_header_packet (vd, packet);
+    /* consumer header packet/frame */
+    gst_audio_decoder_finish_frame (GST_AUDIO_DECODER (vd), NULL, 1);
   } else {
     GstClockTime timestamp, duration;
 
