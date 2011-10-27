@@ -89,7 +89,7 @@ GstStructure *          gst_structure_empty_new            (const gchar *       
 GstStructure *          gst_structure_id_empty_new         (GQuark                   quark);
 GstStructure *          gst_structure_new                  (const gchar *            name,
 					                    const gchar *            firstfield,
-							    ...);
+							    ...) G_GNUC_NULL_TERMINATED;
 GstStructure *          gst_structure_new_valist           (const gchar *            name,
 						            const gchar *            firstfield,
 							    va_list                  varargs);
