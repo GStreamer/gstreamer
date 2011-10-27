@@ -32,6 +32,7 @@
 #include <string.h>
 #include "gstwavenc.h"
 
+#include <gst/audio/audio.h>
 #include <gst/riff/riff-media.h>
 
 GST_DEBUG_CATEGORY_STATIC (wavenc_debug);
@@ -72,42 +73,11 @@ struct wave_header
 /* Max. of two channels, more channels need WAVFORMATEX with
  * channel layout, which we do not support yet */
 #define SINK_CAPS \
-    "audio/x-raw-int, "                  \
+    "audio/x-raw, "                      \
     "rate = (int) [ 1, MAX ], "          \
     "channels = (int) [ 1, 2 ], "        \
-    "endianness = (int) LITTLE_ENDIAN, " \
-    "width = (int) 32, "                 \
-    "depth = (int) 32, "                 \
-    "signed = (boolean) true"            \
+    "format = (string) { S32LE, S24LE, S16LE, U8, F32LE, F64LE } " \
     "; "                                 \
-    "audio/x-raw-int, "                  \
-    "rate = (int) [ 1, MAX ], "          \
-    "channels = (int) [ 1, 2 ], "        \
-    "endianness = (int) LITTLE_ENDIAN, " \
-    "width = (int) 24, "                 \
-    "depth = (int) 24, "                 \
-    "signed = (boolean) true"            \
-    "; "                                 \
-    "audio/x-raw-int, "                  \
-    "rate = (int) [ 1, MAX ], "          \
-    "channels = (int) [ 1, 2 ], "        \
-    "endianness = (int) LITTLE_ENDIAN, " \
-    "width = (int) 16, "                 \
-    "depth = (int) 16, "                 \
-    "signed = (boolean) true"            \
-    "; "                                 \
-    "audio/x-raw-int, "                  \
-    "rate = (int) [ 1, MAX ], "          \
-    "channels = (int) [ 1, 2 ], "        \
-    "width = (int) 8, "                  \
-    "depth = (int) 8, "                  \
-    "signed = (boolean) false"           \
-    "; "                                 \
-    "audio/x-raw-float, "                \
-    "rate = (int) [ 1, MAX ], "          \
-    "channels = (int) [ 1, 2 ], "        \
-    "endianness = (int) LITTLE_ENDIAN, " \
-    "width = (int) { 32, 64 }; "         \
     "audio/x-alaw, "                     \
     "rate = (int) [ 8000, 192000 ], "    \
     "channels = (int) [ 1, 2 ], "        \
@@ -266,7 +236,7 @@ gst_wavenc_sink_setcaps (GstPad * pad, GstCaps * caps)
   GstWavEnc *wavenc;
   GstStructure *structure;
   const gchar *name;
-  gint chans, rate, width;
+  gint chans, rate;
   GstCaps *ccaps;
 
   wavenc = GST_WAVENC (gst_pad_get_parent (pad));
@@ -291,20 +261,20 @@ gst_wavenc_sink_setcaps (GstPad * pad, GstCaps * caps)
     goto fail;
   }
 
-  if (strcmp (name, "audio/x-raw-int") == 0) {
-    if (!gst_structure_get_int (structure, "width", &width)) {
-      GST_WARNING_OBJECT (wavenc, "caps incomplete");
+  if (strcmp (name, "audio/x-raw") == 0) {
+    GstAudioInfo info;
+
+    if (!gst_audio_info_from_caps (&info, caps))
       goto fail;
-    }
-    wavenc->format = GST_RIFF_WAVE_FORMAT_PCM;
-    wavenc->width = width;
-  } else if (strcmp (name, "audio/x-raw-float") == 0) {
-    if (!gst_structure_get_int (structure, "width", &width)) {
-      GST_WARNING_OBJECT (wavenc, "caps incomplete");
+
+    if (GST_AUDIO_INFO_IS_INTEGER (&info))
+      wavenc->format = GST_RIFF_WAVE_FORMAT_PCM;
+    else if (GST_AUDIO_INFO_IS_FLOAT (&info))
+      wavenc->format = GST_RIFF_WAVE_FORMAT_IEEE_FLOAT;
+    else
       goto fail;
-    }
-    wavenc->format = GST_RIFF_WAVE_FORMAT_IEEE_FLOAT;
-    wavenc->width = width;
+
+    wavenc->width = GST_AUDIO_INFO_WIDTH (&info);
   } else if (strcmp (name, "audio/x-alaw") == 0) {
     wavenc->format = GST_RIFF_WAVE_FORMAT_ALAW;
     wavenc->width = 8;
