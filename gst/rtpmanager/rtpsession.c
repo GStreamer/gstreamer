@@ -2009,7 +2009,7 @@ rtp_session_process_sdes (RTPSession * sess, GstRTCPPacket * packet,
     if (!source)
       return;
 
-    sdes = gst_structure_new ("application/x-rtp-source-sdes", NULL);
+    sdes = gst_structure_empty_new ("application/x-rtp-source-sdes");
 
     more_entries = gst_rtcp_packet_sdes_first_entry (packet);
     j = 0;

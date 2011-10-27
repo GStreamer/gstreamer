@@ -288,7 +288,7 @@ gst_rtp_h264_pay_getcaps (GstBaseRTPPayload * payload, GstPad * pad,
 
     for (i = 0; i < gst_caps_get_size (allowed_caps); i++) {
       GstStructure *s = gst_caps_get_structure (allowed_caps, i);
-      GstStructure *new_s = gst_structure_new ("video/x-h264", NULL);
+      GstStructure *new_s = gst_structure_empty_new ("video/x-h264");
       const gchar *profile_level_id;
 
       profile_level_id = gst_structure_get_string (s, "profile-level-id");

@@ -230,7 +230,7 @@ rtp_source_init (RTPSource * src)
   src->probation = RTP_DEFAULT_PROBATION;
   src->closing = FALSE;
 
-  src->sdes = gst_structure_new ("application/x-rtp-source-sdes", NULL);
+  src->sdes = gst_structure_empty_new ("application/x-rtp-source-sdes");
 
   src->payload = -1;
   src->clock_rate = -1;

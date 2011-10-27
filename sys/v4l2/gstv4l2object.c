@@ -1185,7 +1185,7 @@ gst_v4l2_object_v4l2fourcc_to_structure (guint32 fourcc)
     case V4L2_PIX_FMT_PJPG:    /* Progressive-JPEG */
 #endif
     case V4L2_PIX_FMT_JPEG:    /* JFIF JPEG */
-      structure = gst_structure_new ("image/jpeg", NULL);
+      structure = gst_structure_empty_new ("image/jpeg");
       break;
     case V4L2_PIX_FMT_YYUV:    /* 16  YUV 4:2:2     */
     case V4L2_PIX_FMT_HI240:   /*  8  8-bit color   */
@@ -1297,28 +1297,28 @@ gst_v4l2_object_v4l2fourcc_to_structure (guint32 fourcc)
           NULL);
       break;
     case V4L2_PIX_FMT_MPEG:    /* MPEG          */
-      structure = gst_structure_new ("video/mpegts", NULL);
+      structure = gst_structure_empty_new ("video/mpegts");
       break;
     case V4L2_PIX_FMT_WNVA:    /* Winnov hw compres */
       break;
 #ifdef V4L2_PIX_FMT_SBGGR8
     case V4L2_PIX_FMT_SBGGR8:
-      structure = gst_structure_new ("video/x-raw-bayer", NULL);
+      structure = gst_structure_empty_new ("video/x-raw-bayer");
       break;
 #endif
 #ifdef V4L2_PIX_FMT_SN9C10X
     case V4L2_PIX_FMT_SN9C10X:
-      structure = gst_structure_new ("video/x-sonix", NULL);
+      structure = gst_structure_empty_new ("video/x-sonix");
       break;
 #endif
 #ifdef V4L2_PIX_FMT_PWC1
     case V4L2_PIX_FMT_PWC1:
-      structure = gst_structure_new ("video/x-pwc1", NULL);
+      structure = gst_structure_empty_new ("video/x-pwc1");
       break;
 #endif
 #ifdef V4L2_PIX_FMT_PWC2
     case V4L2_PIX_FMT_PWC2:
-      structure = gst_structure_new ("video/x-pwc2", NULL);
+      structure = gst_structure_empty_new ("video/x-pwc2");
       break;
 #endif
     default:
