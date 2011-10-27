@@ -3096,11 +3096,8 @@ gst_structure_can_intersect (const GstStructure * struct1,
     return FALSE;
 
   /* tries to intersect if we have the field in both */
-  if (G_UNLIKELY (!gst_structure_foreach ((GstStructure *) struct1,
-              gst_caps_structure_can_intersect_field, (gpointer) struct2)))
-    return FALSE;
-
-  return TRUE;
+  return gst_structure_foreach ((GstStructure *) struct1,
+      gst_caps_structure_can_intersect_field, (gpointer) struct2);
 }
 
 static gboolean
