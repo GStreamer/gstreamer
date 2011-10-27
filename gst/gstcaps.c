@@ -479,7 +479,8 @@ gst_caps_append (GstCaps * caps1, GstCaps * caps2)
   g_return_if_fail (GST_IS_CAPS (caps1));
   g_return_if_fail (GST_IS_CAPS (caps2));
   g_return_if_fail (IS_WRITABLE (caps1));
-  g_return_if_fail (IS_WRITABLE (caps2));
+
+  caps2 = gst_caps_make_writable (caps2);
 
   if (G_UNLIKELY (CAPS_IS_ANY (caps1) || CAPS_IS_ANY (caps2))) {
     /* FIXME: this leaks */
@@ -518,7 +519,8 @@ gst_caps_merge (GstCaps * caps1, GstCaps * caps2)
   g_return_if_fail (GST_IS_CAPS (caps1));
   g_return_if_fail (GST_IS_CAPS (caps2));
   g_return_if_fail (IS_WRITABLE (caps1));
-  g_return_if_fail (IS_WRITABLE (caps2));
+
+  caps2 = gst_caps_make_writable (caps2);
 
   if (G_UNLIKELY (CAPS_IS_ANY (caps1))) {
     for (i = GST_CAPS_LEN (caps2) - 1; i >= 0; i--) {

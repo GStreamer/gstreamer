@@ -106,7 +106,7 @@
  *     <listitem><para>
  *       Finally the buffer can be pushed downstream and the parsing loop starts
  *       over again.  Just prior to actually pushing the buffer in question,
- *       it is passed to @pre_push_buffer which gives subclass yet one
+ *       it is passed to @pre_push_frame which gives subclass yet one
  *       last chance to examine buffer metadata, or to send some custom (tag)
  *       events, or to perform custom (segment) filtering.
  *     </para></listitem>
@@ -3205,9 +3205,9 @@ gst_base_parse_set_syncable (GstBaseParse * parse, gboolean syncable)
  * parsing, and the parser should operate in passthrough mode (which only
  * applies when operating in push mode). That is, incoming buffers are
  * pushed through unmodified, i.e. no @check_valid_frame or @parse_frame
- * callbacks will be invoked, but @pre_push_buffer will still be invoked,
+ * callbacks will be invoked, but @pre_push_frame will still be invoked,
  * so subclass can perform as much or as little is appropriate for
- * passthrough semantics in @pre_push_buffer.
+ * passthrough semantics in @pre_push_frame.
  *
  * Since: 0.10.33
  */

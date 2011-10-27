@@ -53,15 +53,18 @@
  *     controller = gst_object_control_properties (object, "prop1", "prop2",...);
  *   </para></listitem>
  *   <listitem><para>
- *     Get a #GstControlSource for the property and set it up.
+ *     create a #GstControlSource.
  *     csource = gst_interpolation_control_source_new ();
  *     gst_interpolation_control_source_set_interpolation_mode(csource, mode);
- *     gst_interpolation_control_source_set (csource,0 * GST_SECOND, value1);
- *     gst_interpolation_control_source_set (csource,1 * GST_SECOND, value2);
  *   </para></listitem>
  *   <listitem><para>
- *     Set the #GstControlSource in the controller.
+ *     Attach the #GstControlSource on the controller to a property.
  *     gst_controller_set_control_source (controller, "prop1", csource);
+ *   </para></listitem>
+ *   <listitem><para>
+ *     Set the control values
+ *     gst_interpolation_control_source_set (csource,0 * GST_SECOND, value1);
+ *     gst_interpolation_control_source_set (csource,1 * GST_SECOND, value2);
  *   </para></listitem>
  *   <listitem><para>
  *     start your pipeline
