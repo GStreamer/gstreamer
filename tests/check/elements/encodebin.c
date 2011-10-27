@@ -33,13 +33,13 @@ create_ogg_vorbis_profile (guint presence, gchar * preset)
   GstEncodingContainerProfile *cprof;
   GstCaps *ogg, *vorbis;
 
-  ogg = gst_caps_new_simple ("application/ogg", NULL);
+  ogg = gst_caps_new_empty_simple ("application/ogg");
   cprof =
       gst_encoding_container_profile_new ((gchar *) "myprofile", NULL, ogg,
       NULL);
   gst_caps_unref (ogg);
 
-  vorbis = gst_caps_new_simple ("audio/x-vorbis", NULL);
+  vorbis = gst_caps_new_empty_simple ("audio/x-vorbis");
   fail_unless (gst_encoding_container_profile_add_profile (cprof,
           (GstEncodingProfile *) gst_encoding_audio_profile_new (vorbis, preset,
               NULL, presence)));
@@ -54,19 +54,19 @@ create_ogg_theora_vorbis_profile (guint theorapresence, guint vorbispresence)
   GstEncodingContainerProfile *prof;
   GstCaps *ogg, *vorbis, *theora;
 
-  ogg = gst_caps_new_simple ("application/ogg", NULL);
+  ogg = gst_caps_new_empty_simple ("application/ogg");
   prof =
       gst_encoding_container_profile_new ((gchar *) "myprofile", NULL, ogg,
       NULL);
   gst_caps_unref (ogg);
 
-  vorbis = gst_caps_new_simple ("audio/x-vorbis", NULL);
+  vorbis = gst_caps_new_empty_simple ("audio/x-vorbis");
   fail_unless (gst_encoding_container_profile_add_profile (prof,
           (GstEncodingProfile *) gst_encoding_audio_profile_new (vorbis, NULL,
               NULL, vorbispresence)));
   gst_caps_unref (vorbis);
 
-  theora = gst_caps_new_simple ("video/x-theora", NULL);
+  theora = gst_caps_new_empty_simple ("video/x-theora");
   fail_unless (gst_encoding_container_profile_add_profile (prof,
           (GstEncodingProfile *) gst_encoding_video_profile_new (theora, NULL,
               NULL, theorapresence)));
@@ -81,7 +81,7 @@ create_vorbis_only_profile (void)
   GstEncodingProfile *prof;
   GstCaps *vorbis;
 
-  vorbis = gst_caps_new_simple ("audio/x-vorbis", NULL);
+  vorbis = gst_caps_new_empty_simple ("audio/x-vorbis");
   prof =
       (GstEncodingProfile *) gst_encoding_audio_profile_new (vorbis, NULL, NULL,
       0);
@@ -122,7 +122,7 @@ GST_START_TEST (test_encodebin_states)
       GST_STATE_CHANGE_FAILURE);
 
   /* Set a profile on encodebin... */
-  ogg = gst_caps_new_simple ("application/ogg", NULL);
+  ogg = gst_caps_new_empty_simple ("application/ogg");
   prof = (GstEncodingProfile *) gst_encoding_container_profile_new ((gchar *)
       "myprofile", NULL, ogg, NULL);
   gst_caps_unref (ogg);
@@ -261,7 +261,7 @@ GST_START_TEST (test_encodebin_sink_pads_dynamic)
   sinkpad = NULL;
 
   /* Check again with the 'request-pad' signal */
-  sinkcaps = gst_caps_new_simple ("audio/x-raw", NULL);
+  sinkcaps = gst_caps_new_empty_simple ("audio/x-raw");
   g_signal_emit_by_name (ebin, "request-pad", sinkcaps, &sinkpad);
   gst_caps_unref (sinkcaps);
   fail_unless (sinkpad != NULL);
@@ -506,7 +506,7 @@ GST_START_TEST (test_encodebin_render_audio_only_static)
   /* Requesting a new pad should fail */
   ASSERT_CRITICAL (gst_element_get_request_pad (ebin, "audio_0"));
 
-  sinkcaps = gst_caps_new_simple ("audio/x-raw", NULL);
+  sinkcaps = gst_caps_new_empty_simple ("audio/x-raw");
   g_signal_emit_by_name (ebin, "request-pad", sinkcaps, &sinkpad);
   gst_caps_unref (sinkcaps);
   fail_if (sinkpad != NULL);
@@ -782,12 +782,12 @@ GST_START_TEST (test_encodebin_impossible_element_combination)
 
   ebin = gst_element_factory_make ("encodebin", NULL);
 
-  ogg = gst_caps_new_simple ("application/ogg", NULL);
+  ogg = gst_caps_new_empty_simple ("application/ogg");
   prof = (GstEncodingProfile *) gst_encoding_container_profile_new ((gchar *)
       "myprofile", NULL, ogg, NULL);
   gst_caps_unref (ogg);
 
-  x264 = gst_caps_new_simple ("video/x-h264", NULL);
+  x264 = gst_caps_new_empty_simple ("video/x-h264");
   fail_unless (gst_encoding_container_profile_add_profile
       (GST_ENCODING_CONTAINER_PROFILE (prof),
           (GstEncodingProfile *) gst_encoding_video_profile_new (x264, NULL,
@@ -851,7 +851,7 @@ GST_START_TEST (test_encodebin_reuse)
   GstEncodingProfile *prof3;
   GstCaps *caps;
 
-  caps = gst_caps_new_simple ("application/ogg", NULL);
+  caps = gst_caps_new_empty_simple ("application/ogg");
   prof1 = (GstEncodingProfile *) gst_encoding_container_profile_new ((gchar *)
       "myprofile", NULL, caps, NULL);
   gst_caps_unref (caps);

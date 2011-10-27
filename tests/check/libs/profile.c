@@ -50,9 +50,9 @@ GST_START_TEST (test_profile_creation)
   GstCaps *ogg, *vorbis, *theora;
   GstCaps *test1, *test2;
 
-  ogg = gst_caps_new_simple ("application/ogg", NULL);
-  vorbis = gst_caps_new_simple ("audio/x-vorbis", NULL);
-  theora = gst_caps_new_simple ("video/x-theora", NULL);
+  ogg = gst_caps_new_empty_simple ("application/ogg");
+  vorbis = gst_caps_new_empty_simple ("audio/x-vorbis");
+  theora = gst_caps_new_empty_simple ("video/x-theora");
 
   encprof = (GstEncodingProfile *) gst_encoding_container_profile_new ((gchar *)
       "ogg-theora-vorbis", "dumb-profile", ogg, (gchar *) "dumb-preset");
@@ -96,7 +96,7 @@ GST_START_TEST (test_profile_input_caps)
   GstCaps *vorbis;
   GstCaps *out, *restriction, *test1;
 
-  vorbis = gst_caps_new_simple ("audio/x-vorbis", NULL);
+  vorbis = gst_caps_new_empty_simple ("audio/x-vorbis");
 
   /* Simple case, no restriction */
   sprof = (GstEncodingProfile *)
