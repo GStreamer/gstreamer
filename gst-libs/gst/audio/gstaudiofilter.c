@@ -146,15 +146,11 @@ gst_audio_filter_get_unit_size (GstBaseTransform * btrans, GstCaps * caps,
     gsize * size)
 {
   GstAudioInfo info;
-  gint width, channels;
 
   if (!gst_audio_info_from_caps (&info, caps))
     return FALSE;
 
-  width = GST_AUDIO_INFO_WIDTH (&info);
-  channels = GST_AUDIO_INFO_CHANNELS (&info);
-
-  *size = (width / 8) * channels;
+  *size = GST_AUDIO_INFO_BPF (&info);
 
   return TRUE;
 }
