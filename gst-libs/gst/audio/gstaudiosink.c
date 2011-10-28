@@ -265,6 +265,11 @@ audioringbuffer_thread_func (GstRingBuffer * buf)
       GST_OBJECT_LOCK (abuf);
       if (!abuf->running)
         goto stop_running;
+      if (G_UNLIKELY (g_atomic_int_get (&buf->state) ==
+              GST_RING_BUFFER_STATE_STARTED)) {
+        GST_OBJECT_UNLOCK (abuf);
+        continue;
+      }
       GST_DEBUG_OBJECT (sink, "signal wait");
       GST_AUDIORING_BUFFER_SIGNAL (buf);
       GST_DEBUG_OBJECT (sink, "wait for action");
