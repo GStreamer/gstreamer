@@ -185,6 +185,9 @@ gst_audio_dynamic_set_process_function (GstAudioDynamic * filter)
 {
   gint func_index;
 
+  if (GST_AUDIO_FILTER_FORMAT (filter) == GST_AUDIO_FORMAT_UNKNOWN)
+    return FALSE;
+
   func_index = (filter->mode == MODE_COMPRESSOR) ? 0 : 4;
   func_index += (filter->characteristics == CHARACTERISTICS_HARD_KNEE) ? 0 : 2;
   func_index +=
