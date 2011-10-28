@@ -187,7 +187,7 @@ typedef struct _GstBufferPool GstBufferPool;
  * @GST_BUFFER_FLAG_DISCONT:     the buffer marks a data discontinuity in the stream.
  *                               This typically occurs after a seek or a dropped buffer
  *                               from a live or network source.
- * @GST_BUFFER_FLAG_RESYNC:      the buffer timestamp might have a discontinuity
+ * @GST_BUFFER_FLAG_RESYNC:      the buffer timestamps might have a discontinuity
  *                               and this buffer is a good point to resynchronize.
  * @GST_BUFFER_FLAG_CORRUPTED:   the buffer data is corrupted.
  * @GST_BUFFER_FLAG_MARKER:      the buffer contains a media specific marker. for
@@ -228,8 +228,12 @@ typedef enum {
  * GstBuffer:
  * @mini_object: the parent structure
  * @pool: pointer to the pool owner of the buffer
- * @timestamp: timestamp of the buffer, can be #GST_CLOCK_TIME_NONE when the
- *     timestamp is not known or relevant.
+ * @pts: presentation timestamp of the buffer, can be #GST_CLOCK_TIME_NONE when the
+ *     pts is not known or relevant. The pts contains the timestamp when the
+ *     media should be presented to the user.
+ * @pts: presentation timestamp of the buffer, can be #GST_CLOCK_TIME_NONE when the
+ *     pts is not known or relevant. The dts contains the timestamp when the
+ *     media should be processed.
  * @duration: duration in time of the buffer data, can be #GST_CLOCK_TIME_NONE
  *     when the duration is not known or relevant.
  * @offset: a media specific offset for the buffer data.
