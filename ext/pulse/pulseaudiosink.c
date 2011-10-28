@@ -806,7 +806,7 @@ gst_pulse_audio_sink_sink_acceptcaps (GstPad * pad, GstCaps * caps)
   gboolean ret = FALSE;
 
   pad_caps = gst_pad_get_caps (pad, caps);
-  if (!pad_caps || !gst_caps_is_empty (pad_caps))
+  if (!pad_caps || gst_caps_is_empty (pad_caps))
     goto out;
 
   /* If we've not got fixed caps, creating a stream might fail, so let's just
