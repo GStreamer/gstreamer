@@ -302,16 +302,13 @@ gst_audio_panorama_get_unit_size (GstBaseTransform * base, GstCaps * caps,
     gsize * size)
 {
   GstAudioInfo info;
-  gint width, channels;
 
   g_assert (size);
 
   if (!gst_audio_info_from_caps (&info, caps))
     return FALSE;
 
-  width = GST_AUDIO_INFO_WIDTH (&info);
-  channels = GST_AUDIO_INFO_CHANNELS (&info);
-  *size = width * channels / 8;
+  *size = GST_AUDIO_INFO_BPF (&info);
 
   return TRUE;
 }
