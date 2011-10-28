@@ -231,8 +231,8 @@ typedef enum {
  * @pts: presentation timestamp of the buffer, can be #GST_CLOCK_TIME_NONE when the
  *     pts is not known or relevant. The pts contains the timestamp when the
  *     media should be presented to the user.
- * @pts: presentation timestamp of the buffer, can be #GST_CLOCK_TIME_NONE when the
- *     pts is not known or relevant. The dts contains the timestamp when the
+ * @dts: decoding timestamp of the buffer, can be #GST_CLOCK_TIME_NONE when the
+ *     dts is not known or relevant. The dts contains the timestamp when the
  *     media should be processed.
  * @duration: duration in time of the buffer data, can be #GST_CLOCK_TIME_NONE
  *     when the duration is not known or relevant.
