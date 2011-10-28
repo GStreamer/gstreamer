@@ -9,7 +9,8 @@ EXPORTS
 	gst_adapter_masked_scan_uint32
 	gst_adapter_masked_scan_uint32_peek
 	gst_adapter_new
-	gst_adapter_prev_timestamp
+	gst_adapter_prev_dts
+	gst_adapter_prev_pts
 	gst_adapter_push
 	gst_adapter_take
 	gst_adapter_take_buffer
@@ -214,7 +215,6 @@ EXPORTS
 	gst_collect_pads2_new
 	gst_collect_pads2_peek
 	gst_collect_pads2_pop
-	gst_collect_pads2_read
 	gst_collect_pads2_read_buffer
 	gst_collect_pads2_remove_pad
 	gst_collect_pads2_set_buffer_function
