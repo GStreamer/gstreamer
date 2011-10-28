@@ -77,7 +77,7 @@
  *   </para></listitem>
  * </itemizedlist>
  *
- * Last reviewed on 2008-03-14 (0.10.17)
+ * Last reviewed on 2011-10-28 (0.10.36)
  *
  * Since: 0.10.36
  */
@@ -87,8 +87,8 @@
 GST_DEBUG_CATEGORY_STATIC (collect_pads2_debug);
 #define GST_CAT_DEFAULT collect_pads2_debug
 
-GST_BOILERPLATE (GstCollectPads2, gst_collect_pads2, GstObject,
-    GST_TYPE_OBJECT);
+#define parent_class gst_collect_pads2_parent_class
+G_DEFINE_TYPE (GstCollectPads2, gst_collect_pads2, GST_TYPE_OBJECT);
 
 static void gst_collect_pads2_clear (GstCollectPads2 * pads,
     GstCollectData2 * data);
@@ -149,12 +149,6 @@ static void unref_data (GstCollectData2 * data);
 } G_STMT_END
 
 static void
-gst_collect_pads2_base_init (gpointer g_class)
-{
-  /* Do nothing here */
-}
-
-static void
 gst_collect_pads2_class_init (GstCollectPads2Class * klass)
 {
   GObjectClass *gobject_class = (GObjectClass *) klass;
@@ -166,7 +160,7 @@ gst_collect_pads2_class_init (GstCollectPads2Class * klass)
 }
 
 static void
-gst_collect_pads2_init (GstCollectPads2 * pads, GstCollectPads2Class * g_class)
+gst_collect_pads2_init (GstCollectPads2 * pads)
 {
   pads->data = NULL;
   pads->cookie = 0;
