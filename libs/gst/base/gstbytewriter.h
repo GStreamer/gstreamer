@@ -46,6 +46,9 @@ typedef struct {
 
   gboolean fixed;
   gboolean owned;
+
+  /* < private > */
+  gpointer _gst_reserved[GST_PADDING];
 } GstByteWriter;
 
 GstByteWriter * gst_byte_writer_new (void);
