@@ -212,6 +212,10 @@ The 0.11 porting guide
     on the pads where the buffer is pushed on. Likewise GST_BUFFER_COPY_CAPS is
     not needed anymore. gst_buffer_get/set_caps() are gone too.
 
+    GST_BUFFER_TIMESTAMP is gone, use GST_BUFFER_PTS or GST_BUFFER_DTS instead.
+    Likewise GST_BUFFER_TIMESTAMP_IS_VALID() was changed to
+    GST_BUFFER_PTS_IS_VALID and GST_BUFFER_DTS_IS_VALID
+
 * GstBufferList
     The GstBufferList object is much simplified because most of the
     functionality in the groups is now part of the GstMemory in buffers.
@@ -314,6 +318,9 @@ The 0.11 porting guide
     to get access to raw data from the adapter.
 
     Arguments changed from guint to gsize.
+
+    gst_adapter_prev_timestamp() is removed and should be replaced with
+    gst_adapter_prev_pts() and gst_adapter_prev_dts().
 
 * GstBitReader, GstByteReader, GstByteWriter
     gst_*_reader_new_from_buffer(), gst_*_reader_init_from_buffer() removed, get
