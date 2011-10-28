@@ -60,6 +60,13 @@
   gst_interpolation_control_source_set_interpolation_mode(csource, GST_INTERPOLATE_LINEAR);
     </programlisting>
     <para>
+      Now we need to assign the control-source to the gobject property. One 
+      control source can only be assigned to one property.
+    </para>
+    <programlisting>
+      gst_controller_set_control_source (controller, "prop1", csource);
+    </programlisting>
+    <para>
       This control-source takes new property values from a list of time-stamped
       parameter changes. The source can e.g. fill gaps by smoothing parameter
       changes. This behaviour can be configured by setting the 
@@ -75,13 +82,6 @@
     <programlisting>
   gst_interpolation_control_source_set (csource, 0 * GST_SECOND, value1);
   gst_interpolation_control_source_set (csource, 1 * GST_SECOND, value2);
-    </programlisting>
-    <para>
-      Finally we need to assign the control-source to the gobject property. One 
-      control source can only be assigned to one property.
-    </para>
-    <programlisting>
-      gst_controller_set_control_source (controller, "prop1", csource);
     </programlisting>
     <para>
       Now everything is ready to play. One final note - the controller subsystem
