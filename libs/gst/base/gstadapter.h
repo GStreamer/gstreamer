@@ -90,7 +90,8 @@ GList*                  gst_adapter_take_list           (GstAdapter *adapter, gs
 gsize                   gst_adapter_available           (GstAdapter *adapter);
 gsize                   gst_adapter_available_fast      (GstAdapter *adapter);
 
-GstClockTime            gst_adapter_prev_timestamp      (GstAdapter *adapter, guint64 *distance);
+GstClockTime            gst_adapter_prev_pts            (GstAdapter *adapter, guint64 *distance);
+GstClockTime            gst_adapter_prev_dts            (GstAdapter *adapter, guint64 *distance);
 
 gsize                   gst_adapter_masked_scan_uint32  (GstAdapter * adapter, guint32 mask,
                                                          guint32 pattern, gsize offset, gsize size);

@@ -128,8 +128,10 @@ GST_DEBUG_CATEGORY_STATIC (gst_adapter_debug);
 
 struct _GstAdapterPrivate
 {
-  GstClockTime timestamp;
-  guint64 distance;
+  GstClockTime pts;
+  guint64 pts_distance;
+  GstClockTime dts;
+  guint64 dts_distance;
 
   gsize scan_offset;
   GSList *scan_entry;
@@ -163,8 +165,10 @@ gst_adapter_init (GstAdapter * adapter)
   adapter->priv = GST_ADAPTER_GET_PRIVATE (adapter);
   adapter->assembled_data = g_malloc (DEFAULT_SIZE);
   adapter->assembled_size = DEFAULT_SIZE;
-  adapter->priv->timestamp = GST_CLOCK_TIME_NONE;
-  adapter->priv->distance = 0;
+  adapter->priv->pts = GST_CLOCK_TIME_NONE;
+  adapter->priv->pts_distance = 0;
+  adapter->priv->dts = GST_CLOCK_TIME_NONE;
+  adapter->priv->dts_distance = 0;
 }
 
 static void
@@ -218,23 +222,30 @@ gst_adapter_clear (GstAdapter * adapter)
   adapter->size = 0;
   adapter->skip = 0;
   adapter->assembled_len = 0;
-  adapter->priv->timestamp = GST_CLOCK_TIME_NONE;
-  adapter->priv->distance = 0;
+  adapter->priv->pts = GST_CLOCK_TIME_NONE;
+  adapter->priv->pts_distance = 0;
+  adapter->priv->dts = GST_CLOCK_TIME_NONE;
+  adapter->priv->dts_distance = 0;
   adapter->priv->scan_offset = 0;
   adapter->priv->scan_entry = NULL;
 }
 
 static inline void
-update_timestamp (GstAdapter * adapter, GstBuffer * buf)
+update_timestamps (GstAdapter * adapter, GstBuffer * buf)
 {
-  GstClockTime timestamp;
+  GstClockTime pts, dts;
 
-  timestamp = GST_BUFFER_TIMESTAMP (buf);
-  if (GST_CLOCK_TIME_IS_VALID (timestamp)) {
-    GST_LOG_OBJECT (adapter, "new timestamp %" GST_TIME_FORMAT,
-        GST_TIME_ARGS (timestamp));
-    adapter->priv->timestamp = timestamp;
-    adapter->priv->distance = 0;
+  pts = GST_BUFFER_PTS (buf);
+  if (GST_CLOCK_TIME_IS_VALID (pts)) {
+    GST_LOG_OBJECT (adapter, "new pts %" GST_TIME_FORMAT, GST_TIME_ARGS (pts));
+    adapter->priv->pts = pts;
+    adapter->priv->pts_distance = 0;
+  }
+  dts = GST_BUFFER_DTS (buf);
+  if (GST_CLOCK_TIME_IS_VALID (dts)) {
+    GST_LOG_OBJECT (adapter, "new dts %" GST_TIME_FORMAT, GST_TIME_ARGS (dts));
+    adapter->priv->dts = dts;
+    adapter->priv->dts_distance = 0;
   }
 }
 
@@ -308,7 +319,7 @@ gst_adapter_push (GstAdapter * adapter, GstBuffer * buf)
   if (G_UNLIKELY (adapter->buflist == NULL)) {
     GST_LOG_OBJECT (adapter, "pushing first %" G_GSIZE_FORMAT " bytes", size);
     adapter->buflist = adapter->buflist_end = g_slist_append (NULL, buf);
-    update_timestamp (adapter, buf);
+    update_timestamps (adapter, buf);
   } else {
     /* Otherwise append to the end, and advance our end pointer */
     GST_LOG_OBJECT (adapter, "pushing %" G_GSIZE_FORMAT " bytes at end, "
@@ -542,7 +553,8 @@ gst_adapter_flush_unchecked (GstAdapter * adapter, gsize flush)
   /* take skip into account */
   flush += adapter->skip;
   /* distance is always at least the amount of skipped bytes */
-  priv->distance -= adapter->skip;
+  priv->pts_distance -= adapter->skip;
+  priv->dts_distance -= adapter->skip;
 
   g = adapter->buflist;
   cur = g->data;
@@ -550,7 +562,8 @@ gst_adapter_flush_unchecked (GstAdapter * adapter, gsize flush)
   while (flush >= size) {
     /* can skip whole buffer */
     GST_LOG_OBJECT (adapter, "flushing out head buffer");
-    priv->distance += size;
+    priv->pts_distance += size;
+    priv->dts_distance += size;
     flush -= size;
 
     gst_buffer_unref (cur);
@@ -561,15 +574,16 @@ gst_adapter_flush_unchecked (GstAdapter * adapter, gsize flush)
       adapter->buflist_end = NULL;
       break;
     }
-    /* there is a new head buffer, update the timestamp */
+    /* there is a new head buffer, update the timestamps */
     cur = g->data;
-    update_timestamp (adapter, cur);
+    update_timestamps (adapter, cur);
     size = gst_buffer_get_size (cur);
   }
   adapter->buflist = g;
   /* account for the remaining bytes */
   adapter->skip = flush;
-  adapter->priv->distance += flush;
+  adapter->priv->pts_distance += flush;
+  adapter->priv->dts_distance += flush;
   /* invalidate scan position */
   priv->scan_offset = 0;
   priv->scan_entry = NULL;
@@ -855,32 +869,57 @@ gst_adapter_available_fast (GstAdapter * adapter)
 }
 
 /**
- * gst_adapter_prev_timestamp:
+ * gst_adapter_prev_pts:
  * @adapter: a #GstAdapter
  * @distance: (out) (allow-none): pointer to location for distance, or NULL
  *
- * Get the timestamp that was before the current byte in the adapter. When
- * @distance is given, the amount of bytes between the timestamp and the current
+ * Get the pts that was before the current byte in the adapter. When
+ * @distance is given, the amount of bytes between the pts and the current
  * position is returned.
  *
- * The timestamp is reset to GST_CLOCK_TIME_NONE and the distance is set to 0 when
+ * The pts is reset to GST_CLOCK_TIME_NONE and the distance is set to 0 when
  * the adapter is first created or when it is cleared. This also means that before
- * the first byte with a timestamp is removed from the adapter, the timestamp
+ * the first byte with a pts is removed from the adapter, the pts
  * and distance returned are GST_CLOCK_TIME_NONE and 0 respectively.
  *
- * Returns: The previously seen timestamp.
- *
- * Since: 0.10.24
+ * Returns: The previously seen pts.
  */
 GstClockTime
-gst_adapter_prev_timestamp (GstAdapter * adapter, guint64 * distance)
+gst_adapter_prev_pts (GstAdapter * adapter, guint64 * distance)
 {
   g_return_val_if_fail (GST_IS_ADAPTER (adapter), GST_CLOCK_TIME_NONE);
 
   if (distance)
-    *distance = adapter->priv->distance;
+    *distance = adapter->priv->pts_distance;
 
-  return adapter->priv->timestamp;
+  return adapter->priv->pts;
+}
+
+/**
+ * gst_adapter_prev_dts:
+ * @adapter: a #GstAdapter
+ * @distance: (out) (allow-none): pointer to location for distance, or NULL
+ *
+ * Get the dts that was before the current byte in the adapter. When
+ * @distance is given, the amount of bytes between the dts and the current
+ * position is returned.
+ *
+ * The dts is reset to GST_CLOCK_TIME_NONE and the distance is set to 0 when
+ * the adapter is first created or when it is cleared. This also means that before
+ * the first byte with a dts is removed from the adapter, the dts
+ * and distance returned are GST_CLOCK_TIME_NONE and 0 respectively.
+ *
+ * Returns: The previously seen dts.
+ */
+GstClockTime
+gst_adapter_prev_dts (GstAdapter * adapter, guint64 * distance)
+{
+  g_return_val_if_fail (GST_IS_ADAPTER (adapter), GST_CLOCK_TIME_NONE);
+
+  if (distance)
+    *distance = adapter->priv->dts_distance;
+
+  return adapter->priv->dts;
 }
 
 /**
