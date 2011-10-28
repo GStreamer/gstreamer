@@ -275,6 +275,8 @@ gst_audio_info_init (GstAudioInfo * info)
   g_return_if_fail (info != NULL);
 
   memset (info, 0, sizeof (GstAudioInfo));
+
+  info->finfo = &formats[GST_AUDIO_FORMAT_UNKNOWN];
 }
 
 /**

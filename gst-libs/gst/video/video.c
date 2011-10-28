@@ -608,6 +608,9 @@ gst_video_info_init (GstVideoInfo * info)
   g_return_if_fail (info != NULL);
 
   memset (info, 0, sizeof (GstVideoInfo));
+
+  info->finfo = &formats[GST_VIDEO_FORMAT_UNKNOWN].info;
+
   info->views = 1;
   /* arrange for sensible defaults, e.g. if turned into caps */
   info->fps_n = 0;
