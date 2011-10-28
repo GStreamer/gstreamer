@@ -265,16 +265,6 @@ gst_segment_do_seek (GstSegment * segment, gdouble rate,
       if (start == -1)
         start = 0;
       break;
-    case GST_SEEK_TYPE_CUR:
-    {
-      gint64 sstart = (gint64) start;
-      /* add start to currently configured segment */
-      if (sstart > 0 || segment->start > -sstart)
-        start = segment->start + start;
-      else
-        start = 0;
-      break;
-    }
     case GST_SEEK_TYPE_END:
       if (segment->duration != -1) {
         /* add start to total length */
@@ -300,16 +290,6 @@ gst_segment_do_seek (GstSegment * segment, gdouble rate,
       break;
     case GST_SEEK_TYPE_SET:
       /* stop holds required value */
-      break;
-    case GST_SEEK_TYPE_CUR:
-      if (segment->stop != -1) {
-        gint64 sstop = (gint64) stop;
-        if (sstop > 0 || segment->stop > -sstop)
-          stop = segment->stop + stop;
-        else
-          stop = 0;
-      } else
-        stop = -1;
       break;
     case GST_SEEK_TYPE_END:
       if (segment->duration != -1) {
