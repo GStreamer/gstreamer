@@ -41,6 +41,9 @@ typedef struct {
   guint size;
 
   guint byte;  /* Byte position */
+
+  /* < private > */
+  gpointer _gst_reserved[GST_PADDING];
 } GstByteReader;
 
 GstByteReader * gst_byte_reader_new (const guint8 *data, guint size);
