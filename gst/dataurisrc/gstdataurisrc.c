@@ -389,7 +389,7 @@ gst_data_uri_src_set_uri (GstURIHandler * handler, const gchar * uri)
 
   caps = gst_type_find_helper_for_buffer (GST_OBJECT (src), buffer, NULL);
   if (!caps)
-    caps = gst_caps_new_simple (mimetype, NULL);
+    caps = gst_caps_new_empty_simple (mimetype);
   gst_base_src_set_caps (GST_BASE_SRC_CAST (src), caps);
   gst_caps_unref (caps);
 

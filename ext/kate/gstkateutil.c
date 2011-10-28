@@ -295,11 +295,11 @@ gst_kate_util_decoder_base_chain_kate_packet (GstKateDecoderBase * decoder,
           }
           if (strcmp (decoder->k.ki->category, "K-SPU") == 0 ||
               strcmp (decoder->k.ki->category, "spu-subtitles") == 0) {
-            *src_caps = gst_caps_new_simple ("video/x-dvd-subpicture", NULL);
+            *src_caps = gst_caps_new_empty_simple ("video/x-dvd-subpicture");
           } else if (decoder->k.ki->text_markup_type == kate_markup_none) {
-            *src_caps = gst_caps_new_simple ("text/plain", NULL);
+            *src_caps = gst_caps_new_empty_simple ("text/plain");
           } else {
-            *src_caps = gst_caps_new_simple ("text/x-pango-markup", NULL);
+            *src_caps = gst_caps_new_empty_simple ("text/x-pango-markup");
           }
           GST_INFO_OBJECT (srcpad, "Setting caps: %" GST_PTR_FORMAT, *src_caps);
           if (!gst_pad_set_caps (srcpad, *src_caps)) {

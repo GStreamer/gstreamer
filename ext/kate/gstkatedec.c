@@ -289,7 +289,7 @@ gst_kate_dec_chain (GstPad * pad, GstBuffer * buf)
         buffer = gst_buffer_new_and_alloc (len + 1);
         if (G_LIKELY (buffer)) {
           const char *mime = plain ? "text/plain" : "text/x-pango-markup";
-          GstCaps *caps = gst_caps_new_simple (mime, NULL);
+          GstCaps *caps = gst_caps_new_empty_simple (mime);
           gst_caps_unref (caps);
           /* allocate and copy the NULs, but don't include them in passed size */
           gst_buffer_fill (buffer, 0, escaped, len + 1);

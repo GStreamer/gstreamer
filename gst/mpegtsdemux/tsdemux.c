@@ -989,7 +989,7 @@ create_pad_for_stream (MpegTSBase * base, MpegTSBaseStream * bstream,
         GST_LOG ("ac3 audio");
         template = gst_static_pad_template_get (&audio_template);
         name = g_strdup_printf ("audio_%04x", bstream->pid);
-        caps = gst_caps_new_simple ("audio/x-ac3", NULL);
+        caps = gst_caps_new_empty_simple ("audio/x-ac3");
         g_free (desc);
         break;
       }
@@ -1000,7 +1000,7 @@ create_pad_for_stream (MpegTSBase * base, MpegTSBaseStream * bstream,
         GST_LOG ("ac3 audio");
         template = gst_static_pad_template_get (&audio_template);
         name = g_strdup_printf ("audio_%04x", bstream->pid);
-        caps = gst_caps_new_simple ("audio/x-eac3", NULL);
+        caps = gst_caps_new_empty_simple ("audio/x-eac3");
         g_free (desc);
         break;
       }
@@ -1011,7 +1011,7 @@ create_pad_for_stream (MpegTSBase * base, MpegTSBaseStream * bstream,
         GST_LOG ("teletext");
         template = gst_static_pad_template_get (&private_template);
         name = g_strdup_printf ("private_%04x", bstream->pid);
-        caps = gst_caps_new_simple ("private/teletext", NULL);
+        caps = gst_caps_new_empty_simple ("private/teletext");
         g_free (desc);
         break;
       }
@@ -1022,7 +1022,7 @@ create_pad_for_stream (MpegTSBase * base, MpegTSBaseStream * bstream,
         GST_LOG ("subtitling");
         template = gst_static_pad_template_get (&private_template);
         name = g_strdup_printf ("private_%04x", bstream->pid);
-        caps = gst_caps_new_simple ("subpicture/x-dvb", NULL);
+        caps = gst_caps_new_empty_simple ("subpicture/x-dvb");
         g_free (desc);
       }
       /* hack for itv hd (sid 10510, video pid 3401 */
@@ -1086,7 +1086,7 @@ create_pad_for_stream (MpegTSBase * base, MpegTSBaseStream * bstream,
             /* dirac in hex */
             template = gst_static_pad_template_get (&video_template);
             name = g_strdup_printf ("video_%04x", bstream->pid);
-            caps = gst_caps_new_simple ("video/x-dirac", NULL);
+            caps = gst_caps_new_empty_simple ("video/x-dirac");
           }
         }
         g_free (desc);
@@ -1121,7 +1121,7 @@ create_pad_for_stream (MpegTSBase * base, MpegTSBaseStream * bstream,
         if (DESC_REGISTRATION_format_identifier (desc) == DRF_ID_HDMV) {
           template = gst_static_pad_template_get (&audio_template);
           name = g_strdup_printf ("audio_%04x", bstream->pid);
-          caps = gst_caps_new_simple ("audio/x-eac3", NULL);
+          caps = gst_caps_new_empty_simple ("audio/x-eac3");
         }
         g_free (desc);
       }
@@ -1135,7 +1135,7 @@ create_pad_for_stream (MpegTSBase * base, MpegTSBaseStream * bstream,
       if (desc) {
         template = gst_static_pad_template_get (&audio_template);
         name = g_strdup_printf ("audio_%04x", bstream->pid);
-        caps = gst_caps_new_simple ("audio/x-eac3", NULL);
+        caps = gst_caps_new_empty_simple ("audio/x-eac3");
         g_free (desc);
         break;
       }
@@ -1152,38 +1152,38 @@ create_pad_for_stream (MpegTSBase * base, MpegTSBaseStream * bstream,
         g_free (desc);
       template = gst_static_pad_template_get (&audio_template);
       name = g_strdup_printf ("audio_%04x", bstream->pid);
-      caps = gst_caps_new_simple ("audio/x-ac3", NULL);
+      caps = gst_caps_new_empty_simple ("audio/x-ac3");
       break;
     }
     case ST_BD_AUDIO_EAC3:
       template = gst_static_pad_template_get (&audio_template);
       name = g_strdup_printf ("audio_%04x", bstream->pid);
-      caps = gst_caps_new_simple ("audio/x-eac3", NULL);
+      caps = gst_caps_new_empty_simple ("audio/x-eac3");
       break;
     case ST_PS_AUDIO_DTS:
       template = gst_static_pad_template_get (&audio_template);
       name = g_strdup_printf ("audio_%04x", bstream->pid);
-      caps = gst_caps_new_simple ("audio/x-dts", NULL);
+      caps = gst_caps_new_empty_simple ("audio/x-dts");
       break;
     case ST_PS_AUDIO_LPCM:
       template = gst_static_pad_template_get (&audio_template);
       name = g_strdup_printf ("audio_%04x", bstream->pid);
-      caps = gst_caps_new_simple ("audio/x-lpcm", NULL);
+      caps = gst_caps_new_empty_simple ("audio/x-lpcm");
       break;
     case ST_BD_AUDIO_LPCM:
       template = gst_static_pad_template_get (&audio_template);
       name = g_strdup_printf ("audio_%04x", bstream->pid);
-      caps = gst_caps_new_simple ("audio/x-private-ts-lpcm", NULL);
+      caps = gst_caps_new_empty_simple ("audio/x-private-ts-lpcm");
       break;
     case ST_PS_DVD_SUBPICTURE:
       template = gst_static_pad_template_get (&subpicture_template);
       name = g_strdup_printf ("subpicture_%04x", bstream->pid);
-      caps = gst_caps_new_simple ("video/x-dvd-subpicture", NULL);
+      caps = gst_caps_new_empty_simple ("video/x-dvd-subpicture");
       break;
     case ST_BD_PGS_SUBPICTURE:
       template = gst_static_pad_template_get (&subpicture_template);
       name = g_strdup_printf ("subpicture_%04x", bstream->pid);
-      caps = gst_caps_new_simple ("subpicture/x-pgs", NULL);
+      caps = gst_caps_new_empty_simple ("subpicture/x-pgs");
       break;
     default:
       GST_WARNING ("Non-media stream (stream_type:0x%x). Not creating pad",
