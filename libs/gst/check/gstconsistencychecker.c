@@ -46,8 +46,10 @@ source_pad_data_cb (GstPad * pad, GstProbeType type, GstMiniObject * data,
     GstStreamConsistency * consist)
 {
   if (GST_IS_BUFFER (data)) {
-    GST_DEBUG_OBJECT (pad, "Buffer %" GST_TIME_FORMAT,
-        GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (GST_BUFFER (data))));
+    GST_DEBUG_OBJECT (pad,
+        "Buffer pts %" GST_TIME_FORMAT ", dts %" GST_TIME_FORMAT,
+        GST_TIME_ARGS (GST_BUFFER_PTS (GST_BUFFER_CAST (data))),
+        GST_TIME_ARGS (GST_BUFFER_DTS (GST_BUFFER_CAST (data))));
     /* If an EOS went through, a buffer would be invalid */
     fail_if (consist->eos, "Buffer received after EOS");
     /* Buffers need to be preceded by a segment event */
