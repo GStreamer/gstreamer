@@ -171,7 +171,7 @@ gst_rtp_asf_depay_setcaps (GstBaseRTPDepayload * depayload, GstCaps * caps)
       || memcmp (headers, asf_marker, 16) != 0)
     goto invalid_headers;
 
-  src_caps = gst_caps_new_simple ("video/x-ms-asf", NULL);
+  src_caps = gst_caps_new_empty_simple ("video/x-ms-asf");
   gst_pad_set_caps (depayload->srcpad, src_caps);
   gst_caps_unref (src_caps);
 
