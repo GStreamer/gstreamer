@@ -113,8 +113,6 @@ typedef enum {
  */
 #define GST_COLLECT_PADS2_STATE_UNSET(data,flag)      (GST_COLLECT_PADS2_STATE (data) &= ~(flag))
 
-#define GST_COLLECT_PADS2_FLOW_DROP GST_FLOW_CUSTOM_SUCCESS
-
 /**
  * GstCollectData2:
  * @collect: owner #GstCollectPads2
@@ -222,24 +220,26 @@ typedef gboolean (*GstCollectPads2EventFunction)	(GstCollectPads2 *pads, GstColl
  * GstCollectPads2ClipFunction:
  * @pads: a #GstCollectPads2 
  * @data: a #GstCollectData2
- * @buffer: a #GstBuffer 
+ * @inbuffer: the input #GstBuffer 
+ * @outbuffer: the output #GstBuffer
  * @user_data: user data 
  *
- * A function that will be called when @buffer is received on the pad managed
+ * A function that will be called when @inbuffer is received on the pad managed
  * by @data in the collecpad object @pads.
  *
  * The function should use the segment of @data and the negotiated media type on
- * the pad to perform clipping of @buffer. 
+ * the pad to perform clipping of @inbuffer. 
  *
- * This function takes ownership of @buffer.
+ * This function takes ownership of @inbuffer and should output a buffer in
+ * @outbuffer or return %NULL in @outbuffer if the buffer should be dropped.
  *
- * Returns: a #GstBuffer that contains the clipped data of @buffer or NULL when
- * the buffer has been clipped completely.
+ * Returns: a #GstFlowReturn that corresponds to the result of clipping.
  *
  * Since: 0.10.36
  */
-typedef GstBuffer * (*GstCollectPads2ClipFunction) (GstCollectPads2 *pads, GstCollectData2 *data,
-                                                   GstBuffer *buffer, gpointer user_data);
+typedef GstFlowReturn (*GstCollectPads2ClipFunction) (GstCollectPads2 *pads, GstCollectData2 *data,
+                                                   GstBuffer *inbuffer, GstBuffer **outbuffer,
+                                                   gpointer user_data);
 
 /**
  * GST_COLLECT_PADS2_GET_STREAM_LOCK:
@@ -304,8 +304,6 @@ struct _GstCollectPads2 {
 
   GstCollectPads2Function func;		/* function and user_data for callback */
   gpointer	 user_data;
-  GstCollectPads2BufferFunction prepare_buffer_func;	/* function and user_data for prepare buffer callback */
-  gpointer       prepare_buffer_user_data;
   GstCollectPads2BufferFunction buffer_func;	/* function and user_data for buffer callback */
   gpointer       buffer_user_data;
   GstCollectPads2CompareFunction compare_func;
@@ -339,8 +337,6 @@ GstCollectPads2*	gst_collect_pads2_new	 	(void);
 /* set the callbacks */
 void		gst_collect_pads2_set_function 	(GstCollectPads2 *pads, GstCollectPads2Function func,
 						 gpointer user_data);
-void		gst_collect_pads2_set_prepare_buffer_function (GstCollectPads2 *pads,
-     						 GstCollectPads2BufferFunction func, gpointer user_data);
 void		gst_collect_pads2_set_buffer_function (GstCollectPads2 *pads,
      						 GstCollectPads2BufferFunction func, gpointer user_data);
 void            gst_collect_pads2_set_event_function (GstCollectPads2 *pads,

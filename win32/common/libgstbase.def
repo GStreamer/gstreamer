@@ -222,11 +222,11 @@ EXPORTS
 	gst_collect_pads2_read_buffer
 	gst_collect_pads2_remove_pad
 	gst_collect_pads2_set_buffer_function
+	gst_collect_pads2_set_clip_function
 	gst_collect_pads2_set_compare_function
 	gst_collect_pads2_set_event_function
 	gst_collect_pads2_set_flushing
 	gst_collect_pads2_set_function
-	gst_collect_pads2_set_prepare_buffer_function
 	gst_collect_pads2_set_waiting
 	gst_collect_pads2_start
 	gst_collect_pads2_stop

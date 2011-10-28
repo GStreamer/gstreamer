@@ -754,10 +754,9 @@ GstCollectData2DestroyNotify
 GstCollectPads2BufferFunction
 GstCollectPads2CompareFunction
 GstCollectPads2EventFunction
+GstCollectPads2ClipFunction
 GstCollectPads2Function
 GstCollectPads2StateFlags
-
-GST_COLLECT_PADS2_FLOW_DROP
 
 GST_COLLECT_PADS2_STATE
 GST_COLLECT_PADS2_STATE_IS_SET
@@ -794,9 +793,9 @@ gst_collect_pads2_take_buffer
 gst_collect_pads2_set_buffer_function
 gst_collect_pads2_set_compare_function
 gst_collect_pads2_set_event_function
+gst_collect_pads2_set_clip_function
 gst_collect_pads2_set_flushing
 gst_collect_pads2_set_function
-gst_collect_pads2_set_prepare_buffer_function
 gst_collect_pads2_set_waiting
 <SUBSECTION Standard>
 GstCollectPads2Class

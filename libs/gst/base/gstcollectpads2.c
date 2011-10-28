@@ -176,9 +176,6 @@ gst_collect_pads2_init (GstCollectPads2 * pads)
   pads->event_func = NULL;
   pads->event_user_data = NULL;
 
-  pads->prepare_buffer_func = NULL;
-  pads->prepare_buffer_user_data = NULL;
-
   /* members for default muxing */
   pads->buffer_func = NULL;
   pads->buffer_user_data = NULL;
@@ -237,32 +234,6 @@ gst_collect_pads2_new (void)
   newcoll = g_object_new (GST_TYPE_COLLECT_PADS2, NULL);
 
   return newcoll;
-}
-
-/**
- * gst_collect_pads2_set_prepare_buffer_function:
- * @pads: the collectpads to use
- * @func: the function to set
- * @user_data: user data passed to the function
- *
- * Set the callback function and user data that will be called
- * for every buffer that arrives.
- *
- * MT safe.
- *
- * Since: 0.10.36
- */
-void
-gst_collect_pads2_set_prepare_buffer_function (GstCollectPads2 * pads,
-    GstCollectPads2BufferFunction func, gpointer user_data)
-{
-  g_return_if_fail (pads != NULL);
-  g_return_if_fail (GST_IS_COLLECT_PADS2 (pads));
-
-  GST_OBJECT_LOCK (pads);
-  pads->prepare_buffer_func = func;
-  pads->prepare_buffer_user_data = user_data;
-  GST_OBJECT_UNLOCK (pads);
 }
 
 /* Must be called with GstObject lock! */
@@ -1826,8 +1797,6 @@ gst_collect_pads2_chain (GstPad * pad, GstBuffer * buffer)
   GstFlowReturn ret;
   GstBuffer **buffer_p;
   guint32 cookie;
-  GstCollectPads2BufferFunction prepare_buffer_func;
-  gpointer prepare_buffer_user_data;
 
   GST_DEBUG ("Got buffer for pad %s:%s", GST_DEBUG_PAD_NAME (pad));
 
@@ -1840,10 +1809,6 @@ gst_collect_pads2_chain (GstPad * pad, GstBuffer * buffer)
   GST_OBJECT_UNLOCK (pad);
 
   pads = data->collect;
-  GST_OBJECT_LOCK (pads);
-  prepare_buffer_func = pads->prepare_buffer_func;
-  prepare_buffer_user_data = pads->prepare_buffer_user_data;
-  GST_OBJECT_UNLOCK (pads);
 
   GST_COLLECT_PADS2_STREAM_LOCK (pads);
   /* if not started, bail out */
@@ -1860,27 +1825,21 @@ gst_collect_pads2_chain (GstPad * pad, GstBuffer * buffer)
 
   /* see if we need to clip */
   if (pads->clip_func) {
-    buffer = pads->clip_func (pads, data, buffer, pads->clip_user_data);
+    GstBuffer *outbuf = NULL;
+    ret = pads->clip_func (pads, data, buffer, &outbuf, pads->clip_user_data);
 
-    if (G_UNLIKELY (buffer == NULL))
+    if (G_UNLIKELY (outbuf == NULL))
       goto clipped;
+
+    buffer = outbuf;
+    if (G_UNLIKELY (ret == GST_FLOW_UNEXPECTED))
+      goto unexpected;
+    else if (G_UNLIKELY (ret != GST_FLOW_OK))
+      goto error;
   }
 
   GST_DEBUG_OBJECT (pads, "Queuing buffer %p for pad %s:%s", buffer,
       GST_DEBUG_PAD_NAME (pad));
-
-  if (prepare_buffer_func) {
-    ret = prepare_buffer_func (pads, data, buffer, prepare_buffer_user_data);
-    if (ret == GST_COLLECT_PADS2_FLOW_DROP) {
-      GST_DEBUG_OBJECT (pads, "Dropping buffer as requested");
-      ret = GST_FLOW_OK;
-      goto unlock_done;
-    } else if (ret == GST_FLOW_UNEXPECTED) {
-      goto unexpected;
-    } else if (ret != GST_FLOW_OK) {
-      goto error;
-    }
-  }
 
   /* One more pad has data queued */
   if (GST_COLLECT_PADS2_STATE_IS_SET (data, GST_COLLECT_PADS2_STATE_WAITING))
@@ -1996,9 +1955,8 @@ unexpected:
 clipped:
   {
     GST_DEBUG ("clipped buffer on pad %s:%s", GST_DEBUG_PAD_NAME (pad));
-    GST_OBJECT_UNLOCK (pads);
-    unref_data (data);
-    return GST_FLOW_OK;
+    ret = GST_FLOW_OK;
+    goto unlock_done;
   }
 error:
   {
