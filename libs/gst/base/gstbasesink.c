@@ -562,6 +562,7 @@ gst_base_sink_class_init (GstBaseSinkClass * klass)
   GST_DEBUG_REGISTER_FUNCPTR (gst_base_sink_event);
   GST_DEBUG_REGISTER_FUNCPTR (gst_base_sink_chain);
   GST_DEBUG_REGISTER_FUNCPTR (gst_base_sink_chain_list);
+  GST_DEBUG_REGISTER_FUNCPTR (gst_base_sink_sink_query);
 }
 
 static GstCaps *
