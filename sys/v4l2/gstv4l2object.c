@@ -1791,7 +1791,7 @@ gst_v4l2_object_probe_caps_for_format (GstV4l2Object * v4l2object,
   guint32 w, h;
 
   if (pixelformat == GST_MAKE_FOURCC ('M', 'P', 'E', 'G'))
-    return gst_caps_new_simple ("video/mpegts", NULL);
+    return gst_caps_new_empty_simple ("video/mpegts");
 
   memset (&size, 0, sizeof (struct v4l2_frmsizeenum));
   size.index = 0;
