@@ -274,7 +274,7 @@ gst_audio_fx_base_iir_filter_setup (GstAudioFilter * base,
     }
 
     filter->channels = g_new0 (GstAudioFXBaseIIRFilterChannelCtx, channels);
-    for (i = 0; i < filter->nchannels; i++) {
+    for (i = 0; i < channels; i++) {
       ctx = &filter->channels[i];
 
       ctx->x = g_new0 (gdouble, filter->na);
