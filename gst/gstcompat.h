@@ -53,6 +53,11 @@ G_BEGIN_DECLS
 
 #define GST_FLOW_UNEXPECTED           GST_FLOW_EOS
 
+#define GST_BUFFER_TIMESTAMP          GST_BUFFER_PTS
+#define GST_BUFFER_TIMESTAMP_IS_VALID GST_BUFFER_PTS_IS_VALID
+
+#define gst_adapter_prev_timestamp    gst_adapter_prev_pts
+
 #ifndef GST_DISABLE_DEPRECATED
 
 #endif /* not GST_DISABLE_DEPRECATED */
