@@ -25,7 +25,7 @@
 #include <gst/video/video.h>
 
 #include "blend.h"
-#include "gstcollectpads2.h"
+#include <gst/base/gstcollectpads2.h>
 
 G_BEGIN_DECLS
 

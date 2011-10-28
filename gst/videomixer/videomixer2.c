@@ -1577,8 +1577,9 @@ done:
 }
 
 static GstFlowReturn
-gst_videomixer2_sink_prepare_buffer (GstCollectPads2 * pads,
-    GstCollectData2 * data, GstBuffer * buf, GstVideoMixer2 * mix)
+gst_videomixer2_sink_clip (GstCollectPads2 * pads,
+    GstCollectData2 * data, GstBuffer * buf, GstBuffer ** outbuf,
+    GstVideoMixer2 * mix)
 {
   GstVideoMixer2Pad *pad = GST_VIDEO_MIXER2_PAD (data->pad);
   GstVideoMixer2Collect *mixcol = pad->mixcol;
@@ -1587,14 +1588,17 @@ gst_videomixer2_sink_prepare_buffer (GstCollectPads2 * pads,
   start_time = GST_BUFFER_TIMESTAMP (buf);
   if (start_time == -1) {
     GST_ERROR_OBJECT (pad, "Timestamped buffers required!");
+    gst_buffer_unref (buf);
     return GST_FLOW_ERROR;
   }
 
   end_time = GST_BUFFER_DURATION (buf);
   if (end_time == -1)
     end_time = gst_util_uint64_scale_int (GST_SECOND, pad->fps_d, pad->fps_n);
-  if (end_time == -1)
+  if (end_time == -1) {
+    *outbuf = buf;
     return GST_FLOW_OK;
+  }
 
   start_time = MAX (start_time, mixcol->collect.segment.start);
   start_time =
@@ -1615,9 +1619,12 @@ gst_videomixer2_sink_prepare_buffer (GstCollectPads2 * pads,
   }
 
   if (mixcol->buffer != NULL && end_time < mixcol->end_time) {
-    return GST_COLLECT_PADS2_FLOW_DROP;
+    gst_buffer_unref (buf);
+    *outbuf = NULL;
+    return GST_FLOW_OK;
   }
 
+  *outbuf = buf;
   return GST_FLOW_OK;
 }
 
@@ -1988,8 +1995,8 @@ gst_videomixer2_init (GstVideoMixer2 * mix, GstVideoMixer2Class * g_class)
       mix);
   gst_collect_pads2_set_event_function (mix->collect,
       (GstCollectPads2EventFunction) gst_videomixer2_sink_event, mix);
-  gst_collect_pads2_set_prepare_buffer_function (mix->collect,
-      (GstCollectPads2BufferFunction) gst_videomixer2_sink_prepare_buffer, mix);
+  gst_collect_pads2_set_clip_function (mix->collect,
+      (GstCollectPads2ClipFunction) gst_videomixer2_sink_clip, mix);
 
   mix->lock = g_mutex_new ();
   /* initialize variables */
