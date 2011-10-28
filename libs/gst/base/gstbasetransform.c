@@ -721,6 +721,8 @@ gst_base_transform_getcaps (GstPad * pad)
       trans->priv->cached_transformed_caps[cache_index] = NULL;
     }
   } else {
+    GST_DEBUG_OBJECT (trans,
+        "Returning cached transformed caps (index = %d)", cache_index);
     caps = gst_caps_ref (trans->priv->cached_transformed_caps[cache_index]);
     goto done;
   }
