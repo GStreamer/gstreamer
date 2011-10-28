@@ -66,9 +66,9 @@
  * is typically done before pushing out a buffer using gst_pad_push() so that
  * the downstream element knows the type of the buffer.
  *
- * A buffer will usually have a timestamp, and a duration, but neither of these
+ * A buffer will usually have timestamps, and a duration, but neither of these
  * are guaranteed (they may be set to #GST_CLOCK_TIME_NONE). Whenever a
- * meaningful value can be given for these, they should be set. The timestamp
+ * meaningful value can be given for these, they should be set. The timestamps
  * and duration are measured in nanoseconds (they are #GstClockTime values).
  *
  * A buffer can also have one or both of a start and an end offset. These are
@@ -276,14 +276,16 @@ gst_buffer_copy_into (GstBuffer * dest, GstBuffer * src,
 
   if (flags & GST_BUFFER_COPY_TIMESTAMPS) {
     if (offset == 0) {
-      GST_BUFFER_TIMESTAMP (dest) = GST_BUFFER_TIMESTAMP (src);
+      GST_BUFFER_PTS (dest) = GST_BUFFER_PTS (src);
+      GST_BUFFER_DTS (dest) = GST_BUFFER_DTS (src);
       GST_BUFFER_OFFSET (dest) = GST_BUFFER_OFFSET (src);
       if (size == bufsize) {
         GST_BUFFER_DURATION (dest) = GST_BUFFER_DURATION (src);
         GST_BUFFER_OFFSET_END (dest) = GST_BUFFER_OFFSET_END (src);
       }
     } else {
-      GST_BUFFER_TIMESTAMP (dest) = GST_CLOCK_TIME_NONE;
+      GST_BUFFER_PTS (dest) = GST_CLOCK_TIME_NONE;
+      GST_BUFFER_DTS (dest) = GST_CLOCK_TIME_NONE;
       GST_BUFFER_DURATION (dest) = GST_CLOCK_TIME_NONE;
       GST_BUFFER_OFFSET (dest) = GST_BUFFER_OFFSET_NONE;
       GST_BUFFER_OFFSET_END (dest) = GST_BUFFER_OFFSET_NONE;
@@ -429,7 +431,8 @@ gst_buffer_init (GstBufferImpl * buffer, gsize size)
       (GstMiniObjectFreeFunction) _gst_buffer_free;
 
   GST_BUFFER (buffer)->pool = NULL;
-  GST_BUFFER_TIMESTAMP (buffer) = GST_CLOCK_TIME_NONE;
+  GST_BUFFER_PTS (buffer) = GST_CLOCK_TIME_NONE;
+  GST_BUFFER_DTS (buffer) = GST_CLOCK_TIME_NONE;
   GST_BUFFER_DURATION (buffer) = GST_CLOCK_TIME_NONE;
   GST_BUFFER_OFFSET (buffer) = GST_BUFFER_OFFSET_NONE;
   GST_BUFFER_OFFSET_END (buffer) = GST_BUFFER_OFFSET_NONE;
@@ -1438,7 +1441,8 @@ gst_buffer_span (GstBuffer * buf1, gsize offset, GstBuffer * buf2, gsize size)
   /* if the offset is 0, the new buffer has the same timestamp as buf1 */
   if (offset == 0) {
     GST_BUFFER_OFFSET (newbuf) = GST_BUFFER_OFFSET (buf1);
-    GST_BUFFER_TIMESTAMP (newbuf) = GST_BUFFER_TIMESTAMP (buf1);
+    GST_BUFFER_PTS (newbuf) = GST_BUFFER_PTS (buf1);
+    GST_BUFFER_DTS (newbuf) = GST_BUFFER_DTS (buf1);
 
     /* if we completely merged the two buffers (appended), we can
      * calculate the duration too. Also make sure we's not messing with

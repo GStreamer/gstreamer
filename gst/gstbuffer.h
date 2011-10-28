@@ -80,15 +80,27 @@ typedef struct _GstBufferPool GstBufferPool;
  */
 #define GST_BUFFER_FLAG_UNSET(buf,flag)         GST_MINI_OBJECT_FLAG_UNSET (buf, flag)
 
+
 /**
- * GST_BUFFER_TIMESTAMP:
+ * GST_BUFFER_PTS:
  * @buf: a #GstBuffer.:
  *
- * The timestamp in nanoseconds (as a #GstClockTime) of the data in the buffer.
- * Value will be %GST_CLOCK_TIME_NONE if the timestamp is unknown.
- *
+ * The presentation timestamp (pts) in nanoseconds (as a #GstClockTime)
+ * of the data in the buffer. This is the timestamp when the media should be
+ * presented to the user.
+ * Value will be %GST_CLOCK_TIME_NONE if the pts is unknown.
  */
-#define GST_BUFFER_TIMESTAMP(buf)               (GST_BUFFER_CAST(buf)->timestamp)
+#define GST_BUFFER_PTS(buf)                     (GST_BUFFER_CAST(buf)->pts)
+/**
+ * GST_BUFFER_DTS:
+ * @buf: a #GstBuffer.:
+ *
+ * The decoding timestamp (dts) in nanoseconds (as a #GstClockTime)
+ * of the data in the buffer. This is the timestamp when the media should be
+ * decoded or processed otherwise.
+ * Value will be %GST_CLOCK_TIME_NONE if the dts is unknown.
+ */
+#define GST_BUFFER_DTS(buf)                     (GST_BUFFER_CAST(buf)->dts)
 /**
  * GST_BUFFER_DURATION:
  * @buf: a #GstBuffer.
@@ -127,12 +139,19 @@ typedef struct _GstBufferPool GstBufferPool;
  */
 #define GST_BUFFER_DURATION_IS_VALID(buffer)    (GST_CLOCK_TIME_IS_VALID (GST_BUFFER_DURATION (buffer)))
 /**
- * GST_BUFFER_TIMESTAMP_IS_VALID:
+ * GST_BUFFER_PTS_IS_VALID:
  * @buffer: a #GstBuffer
  *
- * Tests if the timestamp is known.
+ * Tests if the pts is known.
  */
-#define GST_BUFFER_TIMESTAMP_IS_VALID(buffer)   (GST_CLOCK_TIME_IS_VALID (GST_BUFFER_TIMESTAMP (buffer)))
+#define GST_BUFFER_PTS_IS_VALID(buffer)   (GST_CLOCK_TIME_IS_VALID (GST_BUFFER_PTS (buffer)))
+/**
+ * GST_BUFFER_DTS_IS_VALID:
+ * @buffer: a #GstBuffer
+ *
+ * Tests if the dts is known.
+ */
+#define GST_BUFFER_DTS_IS_VALID(buffer)   (GST_CLOCK_TIME_IS_VALID (GST_BUFFER_DTS (buffer)))
 /**
  * GST_BUFFER_OFFSET_IS_VALID:
  * @buffer: a #GstBuffer
@@ -231,7 +250,8 @@ struct _GstBuffer {
   GstBufferPool         *pool;
 
   /* timestamp */
-  GstClockTime           timestamp;
+  GstClockTime           pts;
+  GstClockTime           dts;
   GstClockTime           duration;
 
   /* media specific offset */
@@ -365,8 +385,8 @@ gst_buffer_copy (const GstBuffer * buf)
  * GstBufferCopyFlags:
  * @GST_BUFFER_COPY_NONE: copy nothing
  * @GST_BUFFER_COPY_FLAGS: flag indicating that buffer flags should be copied
- * @GST_BUFFER_COPY_TIMESTAMPS: flag indicating that buffer timestamp, duration,
- * offset and offset_end should be copied
+ * @GST_BUFFER_COPY_TIMESTAMPS: flag indicating that buffer pts, dts,
+ * duration, offset and offset_end should be copied
  * @GST_BUFFER_COPY_MEMORY: flag indicating that buffer memory should be copied
  * and appended to already existing memory
  * @GST_BUFFER_COPY_MERGE: flag indicating that buffer memory should be

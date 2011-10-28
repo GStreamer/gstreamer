@@ -629,10 +629,11 @@ gst_debug_print_object (gpointer ptr)
     gchar *ret;
 
     ret =
-        g_strdup_printf ("%p, ts %" GST_TIME_FORMAT
+        g_strdup_printf ("%p, pts %" GST_TIME_FORMAT ", dts %" GST_TIME_FORMAT
         ", dur %" GST_TIME_FORMAT ", size %" G_GSIZE_FORMAT ", offset %"
         G_GUINT64_FORMAT ", offset_end %" G_GUINT64_FORMAT, buf,
-        GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buf)),
+        GST_TIME_ARGS (GST_BUFFER_PTS (buf)),
+        GST_TIME_ARGS (GST_BUFFER_DTS (buf)),
         GST_TIME_ARGS (GST_BUFFER_DURATION (buf)), gst_buffer_get_size (buf),
         GST_BUFFER_OFFSET (buf), GST_BUFFER_OFFSET_END (buf));
     return ret;

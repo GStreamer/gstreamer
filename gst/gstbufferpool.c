@@ -854,7 +854,8 @@ default_reset_buffer (GstBufferPool * pool, GstBuffer * buffer,
 {
   GST_BUFFER_FLAGS (buffer) = 0;
 
-  GST_BUFFER_TIMESTAMP (buffer) = GST_CLOCK_TIME_NONE;
+  GST_BUFFER_PTS (buffer) = GST_CLOCK_TIME_NONE;
+  GST_BUFFER_DTS (buffer) = GST_CLOCK_TIME_NONE;
   GST_BUFFER_DURATION (buffer) = GST_CLOCK_TIME_NONE;
   GST_BUFFER_OFFSET (buffer) = GST_BUFFER_OFFSET_NONE;
   GST_BUFFER_OFFSET_END (buffer) = GST_BUFFER_OFFSET_NONE;
