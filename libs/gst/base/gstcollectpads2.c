@@ -1827,11 +1827,11 @@ gst_collect_pads2_chain (GstPad * pad, GstBuffer * buffer)
   if (pads->clip_func) {
     GstBuffer *outbuf = NULL;
     ret = pads->clip_func (pads, data, buffer, &outbuf, pads->clip_user_data);
+    buffer = outbuf;
 
     if (G_UNLIKELY (outbuf == NULL))
       goto clipped;
 
-    buffer = outbuf;
     if (G_UNLIKELY (ret == GST_FLOW_UNEXPECTED))
       goto unexpected;
     else if (G_UNLIKELY (ret != GST_FLOW_OK))
@@ -1912,7 +1912,8 @@ gst_collect_pads2_chain (GstPad * pad, GstBuffer * buffer)
 unlock_done:
   GST_COLLECT_PADS2_STREAM_UNLOCK (pads);
   unref_data (data);
-  gst_buffer_unref (buffer);
+  if (buffer)
+    gst_buffer_unref (buffer);
   return ret;
 
 pad_removed:
