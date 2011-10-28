@@ -72,6 +72,7 @@ GST_STATIC_PAD_TEMPLATE ("src",
 
 /* *INDENT-ON* */
 
+/* FIXME: sof-marker is for IJG libjpeg 8, should be different for 6.2 */
 static GstStaticPadTemplate gst_jpeg_dec_sink_pad_template =
 GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
@@ -79,7 +80,8 @@ GST_STATIC_PAD_TEMPLATE ("sink",
     GST_STATIC_CAPS ("image/jpeg, "
         "width = (int) [ " G_STRINGIFY (MIN_WIDTH) ", " G_STRINGIFY (MAX_WIDTH)
         " ], " "height = (int) [ " G_STRINGIFY (MIN_HEIGHT) ", "
-        G_STRINGIFY (MAX_HEIGHT) " ], " "framerate = (fraction) [ 0/1, MAX ]")
+        G_STRINGIFY (MAX_HEIGHT) " ], framerate = (fraction) [ 0/1, MAX ], "
+        "sof-marker = (int) { 0, 1, 2, 5, 6, 7, 9, 10, 13, 14 }")
     );
 
 GST_DEBUG_CATEGORY_STATIC (jpeg_dec_debug);

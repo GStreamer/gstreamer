@@ -1138,8 +1138,9 @@ gst_qtdemux_adjust_seek (GstQTDemux * qtdemux, gint64 desired_time,
 
     /* get the index of the sample with media time */
     index = gst_qtdemux_find_index_linear (qtdemux, str, media_start);
-    GST_DEBUG_OBJECT (qtdemux, "sample for %" GST_TIME_FORMAT " at %u",
-        GST_TIME_ARGS (media_start), index);
+    GST_DEBUG_OBJECT (qtdemux, "sample for %" GST_TIME_FORMAT " at %u"
+        " at offset %" G_GUINT64_FORMAT,
+        GST_TIME_ARGS (media_start), index, str->samples[index].offset);
 
     /* find previous keyframe */
     kindex = gst_qtdemux_find_keyframe (qtdemux, str, index);
@@ -1153,8 +1154,9 @@ gst_qtdemux_adjust_seek (GstQTDemux * qtdemux, gint64 desired_time,
       media_time =
           gst_util_uint64_scale (str->samples[kindex].timestamp, GST_SECOND,
           str->timescale);
-      GST_DEBUG_OBJECT (qtdemux, "keyframe at %u with time %" GST_TIME_FORMAT,
-          kindex, GST_TIME_ARGS (media_time));
+      GST_DEBUG_OBJECT (qtdemux, "keyframe at %u with time %" GST_TIME_FORMAT
+          " at offset %" G_GUINT64_FORMAT,
+          kindex, GST_TIME_ARGS (media_time), str->samples[kindex].offset);
 
       /* keyframes in the segment get a chance to change the
        * desired_offset. keyframes out of the segment are

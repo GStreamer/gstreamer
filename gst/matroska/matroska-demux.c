@@ -1904,7 +1904,7 @@ gst_matroska_demux_handle_seek_event (GstMatroskaDemux * demux,
   gint64 cur, stop;
   GstMatroskaTrackContext *track = NULL;
   GstSegment seeksegment = { 0, };
-  gboolean update;
+  gboolean update = TRUE;
 
   if (pad)
     track = gst_pad_get_element_private (pad);
@@ -1936,7 +1936,18 @@ gst_matroska_demux_handle_seek_event (GstMatroskaDemux * demux,
     }
   }
 
+  flush = !!(flags & GST_SEEK_FLAG_FLUSH);
+  keyunit = !!(flags & GST_SEEK_FLAG_KEY_UNIT);
+
   GST_DEBUG_OBJECT (demux, "New segment %" GST_SEGMENT_FORMAT, &seeksegment);
+
+  if (!update) {
+    /* only have to update some segment,
+     * but also still have to honour flush and so on */
+    GST_DEBUG_OBJECT (demux, "... no update");
+    /* bad goto, bad ... */
+    goto next;
+  }
 
   /* check sanity before we start flushing and all that */
   GST_OBJECT_LOCK (demux);
@@ -1962,9 +1973,7 @@ gst_matroska_demux_handle_seek_event (GstMatroskaDemux * demux,
         entry->pos + demux->common.ebml_segment_start);
   }
 
-  flush = ! !(flags & GST_SEEK_FLAG_FLUSH);
-  keyunit = ! !(flags & GST_SEEK_FLAG_KEY_UNIT);
-
+next:
   if (flush) {
     GST_DEBUG_OBJECT (demux, "Starting flush");
     gst_pad_push_event (demux->common.sinkpad, gst_event_new_flush_start ());
@@ -1973,6 +1982,9 @@ gst_matroska_demux_handle_seek_event (GstMatroskaDemux * demux,
     GST_DEBUG_OBJECT (demux, "Non-flushing seek, pausing task");
     gst_pad_pause_task (demux->common.sinkpad);
   }
+  /* ouch */
+  if (!update)
+    goto exit;
 
   /* now grab the stream lock so that streaming cannot continue, for
    * non flushing seeks when the element is in PAUSED this could block
@@ -2007,11 +2019,12 @@ gst_matroska_demux_handle_seek_event (GstMatroskaDemux * demux,
     seeksegment.time = entry->time - demux->stream_start_time;
   }
 
+exit:
   if (flush) {
     GST_DEBUG_OBJECT (demux, "Stopping flush");
     gst_pad_push_event (demux->common.sinkpad, gst_event_new_flush_stop ());
     gst_matroska_demux_send_event (demux, gst_event_new_flush_stop ());
-  } else if (demux->segment_running) {
+  } else if (demux->segment_running && update) {
     GST_DEBUG_OBJECT (demux, "Closing currently running segment");
 
     GST_OBJECT_LOCK (demux);
@@ -2032,7 +2045,7 @@ gst_matroska_demux_handle_seek_event (GstMatroskaDemux * demux,
   GST_OBJECT_UNLOCK (demux);
 
   /* update some (segment) state */
-  if (!gst_matroska_demux_move_to_entry (demux, entry, TRUE))
+  if (update && !gst_matroska_demux_move_to_entry (demux, entry, TRUE))
     goto seek_error;
 
   /* notify start of new segment */
@@ -2047,7 +2060,7 @@ gst_matroska_demux_handle_seek_event (GstMatroskaDemux * demux,
   GST_OBJECT_LOCK (demux);
   if (demux->new_segment)
     gst_event_unref (demux->new_segment);
-  demux->new_segment = gst_event_new_new_segment_full (FALSE,
+  demux->new_segment = gst_event_new_new_segment_full (!update,
       demux->common.segment.rate, demux->common.segment.applied_rate,
       demux->common.segment.format, demux->common.segment.start,
       demux->common.segment.stop, demux->common.segment.time);
