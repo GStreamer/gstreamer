@@ -375,7 +375,7 @@ gst_audio_echo_transform_ip (GstBaseTransform * base, GstBuffer * buf)
   if (self->buffer == NULL) {
     guint bpf, rate;
 
-    bpf = GST_AUDIO_FILTER_BPS (self);
+    bpf = GST_AUDIO_FILTER_BPF (self);
     rate = GST_AUDIO_FILTER_RATE (self);
 
     self->delay_frames =
