@@ -953,7 +953,6 @@ tests/examples/overlay/Makefile
 tests/examples/seek/Makefile
 tests/examples/snapshot/Makefile
 tests/examples/playrec/Makefile
-tests/examples/volume/Makefile
 tests/files/Makefile
 tests/icles/Makefile
 tests/icles/playback/Makefile
