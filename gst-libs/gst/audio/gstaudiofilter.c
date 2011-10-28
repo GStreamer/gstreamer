@@ -145,19 +145,18 @@ static gboolean
 gst_audio_filter_get_unit_size (GstBaseTransform * btrans, GstCaps * caps,
     gsize * size)
 {
-  GstStructure *structure;
-  gboolean ret = TRUE;
+  GstAudioInfo info;
   gint width, channels;
 
-  structure = gst_caps_get_structure (caps, 0);
+  if (!gst_audio_info_from_caps (&info, caps))
+    return FALSE;
 
-  ret &= gst_structure_get_int (structure, "width", &width);
-  ret &= gst_structure_get_int (structure, "channels", &channels);
+  width = GST_AUDIO_INFO_WIDTH (&info);
+  channels = GST_AUDIO_INFO_CHANNELS (&info);
 
-  if (ret)
-    *size = (width / 8) * channels;
+  *size = (width / 8) * channels;
 
-  return ret;
+  return TRUE;
 }
 
 /**
