@@ -149,7 +149,7 @@ gst_ffmpegenc_base_init (GstFFMpegEncClass * klass)
 
   if (!(srccaps = gst_ffmpeg_codecid_to_caps (in_plugin->id, NULL, TRUE))) {
     GST_DEBUG ("Couldn't get source caps for encoder '%s'", in_plugin->name);
-    srccaps = gst_caps_new_simple ("unknown/unknown", NULL);
+    srccaps = gst_caps_new_empty_simple ("unknown/unknown");
   }
 
   if (in_plugin->type == AVMEDIA_TYPE_VIDEO) {
@@ -160,7 +160,7 @@ gst_ffmpegenc_base_init (GstFFMpegEncClass * klass)
   }
   if (!sinkcaps) {
     GST_DEBUG ("Couldn't get sink caps for encoder '%s'", in_plugin->name);
-    sinkcaps = gst_caps_new_simple ("unknown/unknown", NULL);
+    sinkcaps = gst_caps_new_empty_simple ("unknown/unknown");
   }
 
   /* pad templates */

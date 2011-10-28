@@ -1584,7 +1584,7 @@ gst_ffmpeg_codecid_to_caps (enum CodecID codec_id,
       break;
 
     case CODEC_ID_SHORTEN:
-      caps = gst_caps_new_simple ("audio/x-shorten", NULL);
+      caps = gst_caps_new_empty_simple ("audio/x-shorten");
       break;
 
     case CODEC_ID_ALAC:
@@ -1599,7 +1599,7 @@ gst_ffmpeg_codecid_to_caps (enum CodecID codec_id,
       /* Note that ffmpeg has no encoder yet, but just for safety. In the
        * encoder case, we want to add things like samplerate, channels... */
       if (!encode) {
-        caps = gst_caps_new_simple ("audio/x-flac", NULL);
+        caps = gst_caps_new_empty_simple ("audio/x-flac");
       }
       break;
 
@@ -1608,7 +1608,7 @@ gst_ffmpeg_codecid_to_caps (enum CodecID codec_id,
       caps = NULL;
       break;
     case CODEC_ID_BMP:
-      caps = gst_caps_new_simple ("image/bmp", NULL);
+      caps = gst_caps_new_empty_simple ("image/bmp");
       break;
     case CODEC_ID_TTA:
       caps = gst_ff_aud_caps_new (context, codec_id, "audio/x-tta", NULL);
@@ -2495,34 +2495,34 @@ gst_ffmpeg_formatid_to_caps (const gchar * format_name)
     caps = gst_caps_new_simple ("application/x-pn-realmedia",
         "systemstream", G_TYPE_BOOLEAN, TRUE, NULL);
   } else if (!strcmp (format_name, "asf")) {
-    caps = gst_caps_new_simple ("video/x-ms-asf", NULL);
+    caps = gst_caps_new_empty_simple ("video/x-ms-asf");
   } else if (!strcmp (format_name, "avi")) {
-    caps = gst_caps_new_simple ("video/x-msvideo", NULL);
+    caps = gst_caps_new_empty_simple ("video/x-msvideo");
   } else if (!strcmp (format_name, "wav")) {
-    caps = gst_caps_new_simple ("audio/x-wav", NULL);
+    caps = gst_caps_new_empty_simple ("audio/x-wav");
   } else if (!strcmp (format_name, "ape")) {
-    caps = gst_caps_new_simple ("application/x-ape", NULL);
+    caps = gst_caps_new_empty_simple ("application/x-ape");
   } else if (!strcmp (format_name, "swf")) {
-    caps = gst_caps_new_simple ("application/x-shockwave-flash", NULL);
+    caps = gst_caps_new_empty_simple ("application/x-shockwave-flash");
   } else if (!strcmp (format_name, "au")) {
-    caps = gst_caps_new_simple ("audio/x-au", NULL);
+    caps = gst_caps_new_empty_simple ("audio/x-au");
   } else if (!strcmp (format_name, "dv")) {
     caps = gst_caps_new_simple ("video/x-dv",
         "systemstream", G_TYPE_BOOLEAN, TRUE, NULL);
   } else if (!strcmp (format_name, "4xm")) {
-    caps = gst_caps_new_simple ("video/x-4xm", NULL);
+    caps = gst_caps_new_empty_simple ("video/x-4xm");
   } else if (!strcmp (format_name, "matroska")) {
-    caps = gst_caps_new_simple ("video/x-matroska", NULL);
+    caps = gst_caps_new_empty_simple ("video/x-matroska");
   } else if (!strcmp (format_name, "mp3")) {
-    caps = gst_caps_new_simple ("application/x-id3", NULL);
+    caps = gst_caps_new_empty_simple ("application/x-id3");
   } else if (!strcmp (format_name, "flic")) {
-    caps = gst_caps_new_simple ("video/x-fli", NULL);
+    caps = gst_caps_new_empty_simple ("video/x-fli");
   } else if (!strcmp (format_name, "flv")) {
-    caps = gst_caps_new_simple ("video/x-flv", NULL);
+    caps = gst_caps_new_empty_simple ("video/x-flv");
   } else if (!strcmp (format_name, "tta")) {
-    caps = gst_caps_new_simple ("audio/x-ttafile", NULL);
+    caps = gst_caps_new_empty_simple ("audio/x-ttafile");
   } else if (!strcmp (format_name, "aiff")) {
-    caps = gst_caps_new_simple ("audio/x-aiff", NULL);
+    caps = gst_caps_new_empty_simple ("audio/x-aiff");
   } else if (!strcmp (format_name, "mov_mp4_m4a_3gp_3g2")) {
     caps =
         gst_caps_from_string
@@ -2568,7 +2568,7 @@ gst_ffmpeg_formatid_to_caps (const gchar * format_name)
 
     GST_LOG ("Could not create stream format caps for %s", format_name);
     name = g_strdup_printf ("application/x-gst_ff-%s", format_name);
-    caps = gst_caps_new_simple (name, NULL);
+    caps = gst_caps_new_empty_simple (name);
     g_free (name);
   }
 
