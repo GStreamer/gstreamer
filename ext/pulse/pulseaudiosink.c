@@ -94,6 +94,7 @@ typedef struct
 
   guint event_probe_id;
   gulong pad_added_id;
+  guint block_probe_id;
 
   gboolean format_lost;
 } GstPulseAudioSink;
@@ -628,14 +629,6 @@ proxypad_blocked_cb (GstPad * pad, GstProbeType ptype, gpointer type_data,
   GstCaps *caps;
   GstPad *sinkpad = NULL;
 
-#if 0
-  if (!blocked) {
-    /* Unblocked, don't need to do anything */
-    GST_DEBUG_OBJECT (pbin, "unblocked");
-    return;
-  }
-#endif
-
   GST_DEBUG_OBJECT (pbin, "blocked");
 
   GST_PULSE_AUDIO_SINK_LOCK (pbin);
@@ -683,8 +676,10 @@ proxypad_blocked_cb (GstPad * pad, GstProbeType ptype, gpointer type_data,
 done:
   update_eac3_alignment (pbin);
 
+  pbin->block_probe_id = 0;
   GST_PULSE_AUDIO_SINK_UNLOCK (pbin);
-  return GST_PROBE_PASS;
+
+  return GST_PROBE_REMOVE;
 }
 
 static gboolean
@@ -715,8 +710,9 @@ gst_pulse_audio_sink_src_event (GstPad * pad, GstEvent * event)
     if (gst_event_has_name (event, "pulse-format-lost"))
       pbin->format_lost = TRUE;
 
-    if (!gst_pad_is_blocked (pad))
-      gst_pad_add_probe (pad, GST_PROBE_TYPE_BLOCK, proxypad_blocked_cb,
+    if (pbin->block_probe_id == 0)
+      pbin->block_probe_id =
+          gst_pad_add_probe (pad, GST_PROBE_TYPE_BLOCK, proxypad_blocked_cb,
           gst_object_ref (pbin), (GDestroyNotify) gst_object_unref);
     GST_PULSE_AUDIO_SINK_UNLOCK (pbin);
 
@@ -849,8 +845,9 @@ gst_pulse_audio_sink_set_caps (GstPulseAudioSink * pbin, GstCaps * caps)
 
   GST_PULSE_AUDIO_SINK_LOCK (pbin);
 
-  if (!gst_pad_is_blocked (pbin->sinkpad))
-    gst_pad_add_probe (pbin->sink_proxypad, GST_PROBE_TYPE_BLOCK,
+  if (pbin->block_probe_id == 0)
+    pbin->block_probe_id =
+        gst_pad_add_probe (pbin->sink_proxypad, GST_PROBE_TYPE_BLOCK,
         proxypad_blocked_cb, gst_object_ref (pbin),
         (GDestroyNotify) gst_object_unref);
 
@@ -870,10 +867,9 @@ gst_pulse_audio_sink_change_state (GstElement * element,
   switch (transition) {
     case GST_STATE_CHANGE_PAUSED_TO_READY:
       GST_PULSE_AUDIO_SINK_LOCK (pbin);
-      if (gst_pad_is_blocked (pbin->sinkpad)) {
-        gst_pad_add_probe (pbin->sink_proxypad, GST_PROBE_TYPE_BLOCK,
-            proxypad_blocked_cb, gst_object_ref (pbin),
-            (GDestroyNotify) gst_object_unref);
+      if (pbin->block_probe_id) {
+        gst_pad_remove_probe (pbin->sink_proxypad, pbin->block_probe_id);
+        pbin->block_probe_id = 0;
       }
       GST_PULSE_AUDIO_SINK_UNLOCK (pbin);
       break;
