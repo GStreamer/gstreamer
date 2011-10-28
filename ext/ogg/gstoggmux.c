@@ -114,7 +114,7 @@ static GstStaticPadTemplate sink_factory = GST_STATIC_PAD_TEMPLATE ("sink_%d",
 static void gst_ogg_mux_finalize (GObject * object);
 
 static GstFlowReturn
-gst_ogg_mux_collected (GstCollectPads * pads, GstOggMux * ogg_mux);
+gst_ogg_mux_collected (GstCollectPads2 * pads, GstOggMux * ogg_mux);
 static gboolean gst_ogg_mux_handle_src_event (GstPad * pad, GstEvent * event);
 static GstPad *gst_ogg_mux_request_new_pad (GstElement * element,
     GstPadTemplate * templ, const gchar * name, const GstCaps * caps);
@@ -224,9 +224,9 @@ gst_ogg_mux_init (GstOggMux * ogg_mux)
   /* seed random number generator for creation of serial numbers */
   srand (time (NULL));
 
-  ogg_mux->collect = gst_collect_pads_new ();
-  gst_collect_pads_set_function (ogg_mux->collect,
-      (GstCollectPadsFunction) GST_DEBUG_FUNCPTR (gst_ogg_mux_collected),
+  ogg_mux->collect = gst_collect_pads2_new ();
+  gst_collect_pads2_set_function (ogg_mux->collect,
+      (GstCollectPads2Function) GST_DEBUG_FUNCPTR (gst_ogg_mux_collected),
       ogg_mux);
 
   ogg_mux->max_delay = DEFAULT_MAX_DELAY;
@@ -252,7 +252,7 @@ gst_ogg_mux_finalize (GObject * object)
 }
 
 static void
-gst_ogg_mux_ogg_pad_destroy_notify (GstCollectData * data)
+gst_ogg_mux_ogg_pad_destroy_notify (GstCollectData2 * data)
 {
   GstOggPadData *oggpad = (GstOggPadData *) data;
   GstBuffer *buf;
@@ -417,8 +417,8 @@ gst_ogg_mux_request_new_pad (GstElement * element,
       GstOggPadData *oggpad;
 
       oggpad = (GstOggPadData *)
-          gst_collect_pads_add_pad_full (ogg_mux->collect, newpad,
-          sizeof (GstOggPadData), gst_ogg_mux_ogg_pad_destroy_notify);
+          gst_collect_pads2_add_pad_full (ogg_mux->collect, newpad,
+          sizeof (GstOggPadData), gst_ogg_mux_ogg_pad_destroy_notify, TRUE);
       ogg_mux->active_pads++;
 
       oggpad->map.serialno = serial;
@@ -474,7 +474,7 @@ gst_ogg_mux_release_pad (GstElement * element, GstPad * pad)
 
   ogg_mux = GST_OGG_MUX (gst_pad_get_parent (pad));
 
-  gst_collect_pads_remove_pad (ogg_mux->collect, pad);
+  gst_collect_pads2_remove_pad (ogg_mux->collect, pad);
   gst_element_remove_pad (element, pad);
 
   gst_object_unref (ogg_mux);
@@ -881,9 +881,9 @@ gst_ogg_mux_queue_pads (GstOggMux * ogg_mux, gboolean * popped)
   walk = ogg_mux->collect->data;
   while (walk) {
     GstOggPadData *pad;
-    GstCollectData *data;
+    GstCollectData2 *data;
 
-    data = (GstCollectData *) walk->data;
+    data = (GstCollectData2 *) walk->data;
     pad = (GstOggPadData *) data;
 
     walk = g_slist_next (walk);
@@ -894,7 +894,7 @@ gst_ogg_mux_queue_pads (GstOggMux * ogg_mux, gboolean * popped)
     if (pad->buffer == NULL) {
       GstBuffer *buf;
 
-      buf = gst_collect_pads_pop (ogg_mux->collect, data);
+      buf = gst_collect_pads2_pop (ogg_mux->collect, data);
       GST_LOG_OBJECT (data->pad, "popped buffer %" GST_PTR_FORMAT, buf);
 
       /* On EOS we get a NULL buffer */
@@ -1523,7 +1523,7 @@ gst_ogg_mux_process_best_pad (GstOggMux * ogg_mux, GstOggPadData * best)
       ogg_mux->pulling ? ogg_mux->pulling->collect.pad : NULL);
 
   if (ogg_mux->pulling) {
-    next_buf = gst_collect_pads_peek (ogg_mux->collect,
+    next_buf = gst_collect_pads2_peek (ogg_mux->collect,
         &ogg_mux->pulling->collect);
     if (next_buf) {
       ogg_mux->pulling->eos = FALSE;
@@ -1537,7 +1537,7 @@ gst_ogg_mux_process_best_pad (GstOggMux * ogg_mux, GstOggPadData * best)
   /* We could end up pushing from the best pad instead, so check that
    * as well */
   if (best && best != ogg_mux->pulling) {
-    next_buf = gst_collect_pads_peek (ogg_mux->collect, &best->collect);
+    next_buf = gst_collect_pads2_peek (ogg_mux->collect, &best->collect);
     if (next_buf) {
       best->eos = FALSE;
       gst_buffer_unref (next_buf);
@@ -1831,7 +1831,7 @@ gst_ogg_mux_process_best_pad (GstOggMux * ogg_mux, GstOggPadData * best)
  * Returns TRUE if all pads are EOS.
  */
 static gboolean
-all_pads_eos (GstCollectPads * pads)
+all_pads_eos (GstCollectPads2 * pads)
 {
   GSList *walk;
 
@@ -1862,7 +1862,7 @@ all_pads_eos (GstCollectPads * pads)
  * are all empty, and then sends EOS.
  */
 static GstFlowReturn
-gst_ogg_mux_collected (GstCollectPads * pads, GstOggMux * ogg_mux)
+gst_ogg_mux_collected (GstCollectPads2 * pads, GstOggMux * ogg_mux)
 {
   GstOggPadData *best;
   GstFlowReturn ret;
@@ -1947,7 +1947,7 @@ gst_ogg_mux_set_property (GObject * object,
 
 /* reset all variables in the ogg pads. */
 static void
-gst_ogg_mux_init_collectpads (GstCollectPads * collect)
+gst_ogg_mux_init_collectpads (GstCollectPads2 * collect)
 {
   GSList *walk;
 
@@ -1975,7 +1975,7 @@ gst_ogg_mux_init_collectpads (GstCollectPads * collect)
 
 /* Clear all buffers from the collectpads object */
 static void
-gst_ogg_mux_clear_collectpads (GstCollectPads * collect)
+gst_ogg_mux_clear_collectpads (GstCollectPads2 * collect)
 {
   GSList *walk;
 
@@ -2019,12 +2019,12 @@ gst_ogg_mux_change_state (GstElement * element, GstStateChange transition)
     case GST_STATE_CHANGE_READY_TO_PAUSED:
       gst_ogg_mux_clear (ogg_mux);
       gst_ogg_mux_init_collectpads (ogg_mux->collect);
-      gst_collect_pads_start (ogg_mux->collect);
+      gst_collect_pads2_start (ogg_mux->collect);
       break;
     case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
       break;
     case GST_STATE_CHANGE_PAUSED_TO_READY:
-      gst_collect_pads_stop (ogg_mux->collect);
+      gst_collect_pads2_stop (ogg_mux->collect);
       break;
     default:
       break;
