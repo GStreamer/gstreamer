@@ -3027,6 +3027,7 @@ gst_base_transform_suggest (GstBaseTransform * trans, GstCaps * caps,
   trans->priv->sink_suggest = caps;
   trans->priv->size_suggest = size;
   trans->priv->suggest_pending = TRUE;
+  gst_base_transform_clear_transformed_caps_cache (trans);
   GST_DEBUG_OBJECT (trans, "new suggest %" GST_PTR_FORMAT, caps);
   GST_OBJECT_UNLOCK (trans->sinkpad);
 }
