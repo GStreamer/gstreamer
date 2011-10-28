@@ -83,7 +83,7 @@ gst_audio_filter_class_init (GstAudioFilterClass * klass)
 static void
 gst_audio_filter_init (GstAudioFilter * self)
 {
-  /* nothing to do here */
+  gst_audio_info_init (&self->info);
 }
 
 /* we override the state change vfunc here instead of GstBaseTransform's stop
@@ -94,14 +94,6 @@ gst_audio_filter_change_state (GstElement * element, GstStateChange transition)
 {
   GstStateChangeReturn ret;
   GstAudioFilter *filter = GST_AUDIO_FILTER (element);
-
-  switch (transition) {
-    case GST_STATE_CHANGE_NULL_TO_READY:
-      gst_audio_info_init (&filter->info);
-      break;
-    default:
-      break;
-  }
 
   ret =
       GST_ELEMENT_CLASS (gst_audio_filter_parent_class)->change_state (element,
