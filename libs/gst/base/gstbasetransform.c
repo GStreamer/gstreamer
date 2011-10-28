@@ -822,7 +822,6 @@ gst_base_transform_do_bufferpool (GstBaseTransform * trans, GstCaps * outcaps)
   /* we got configuration from our peer, parse them */
   gst_query_parse_allocation_params (query, &size, &min, &max, &prefix,
       &alignment, &pool);
-  gst_query_unref (query);
 
   if (size == 0) {
     const gchar *mem = NULL;
@@ -845,6 +844,8 @@ gst_base_transform_do_bufferpool (GstBaseTransform * trans, GstCaps * outcaps)
         alignment);
     gst_buffer_pool_set_config (pool, config);
   }
+
+  gst_query_unref (query);
 
   /* and store */
   result =
