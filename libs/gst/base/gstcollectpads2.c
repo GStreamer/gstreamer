@@ -419,6 +419,28 @@ gst_collect_pads2_set_event_function (GstCollectPads2 * pads,
   GST_OBJECT_UNLOCK (pads);
 }
 
+ /**
+ * gst_collect_pads2_set_clip_function:
+ * @pads: the collectspads to use
+ * @clipfunc: clip function to install
+ * @user_data: user data to pass to @clip_func
+ *
+ * Install a clipping function that is called right after a buffer is received
+ * on a pad managed by @pads. See #GstCollectPad2ClipFunction for more info.
+ *
+ * Since: 0.10.36
+ */
+void
+gst_collect_pads2_set_clip_function (GstCollectPads2 * pads,
+    GstCollectPads2ClipFunction clipfunc, gpointer user_data)
+{
+  g_return_if_fail (pads != NULL);
+  g_return_if_fail (GST_IS_COLLECT_PADS2 (pads));
+
+  pads->clip_func = clipfunc;
+  pads->clip_user_data = user_data;
+}
+
 /**
  * gst_collect_pads2_add_pad:
  * @pads: the collectspads to use
@@ -1836,6 +1858,14 @@ gst_collect_pads2_chain (GstPad * pad, GstBuffer * buffer)
               GST_COLLECT_PADS2_STATE_EOS)))
     goto unexpected;
 
+  /* see if we need to clip */
+  if (pads->clip_func) {
+    buffer = pads->clip_func (pads, data, buffer, pads->clip_user_data);
+
+    if (G_UNLIKELY (buffer == NULL))
+      goto clipped;
+  }
+
   GST_DEBUG_OBJECT (pads, "Queuing buffer %p for pad %s:%s", buffer,
       GST_DEBUG_PAD_NAME (pad));
 
@@ -1962,6 +1992,13 @@ unexpected:
     GST_DEBUG ("pad %s:%s is eos", GST_DEBUG_PAD_NAME (pad));
     ret = GST_FLOW_UNEXPECTED;
     goto unlock_done;
+  }
+clipped:
+  {
+    GST_DEBUG ("clipped buffer on pad %s:%s", GST_DEBUG_PAD_NAME (pad));
+    GST_OBJECT_UNLOCK (pads);
+    unref_data (data);
+    return GST_FLOW_OK;
   }
 error:
   {

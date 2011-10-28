@@ -217,6 +217,30 @@ typedef gint (*GstCollectPads2CompareFunction) (GstCollectPads2 *pads,
 typedef gboolean (*GstCollectPads2EventFunction)	(GstCollectPads2 *pads, GstCollectData2 * pad,
 							 GstEvent * event, gpointer user_data);
 
+
+/**
+ * GstCollectPads2ClipFunction:
+ * @pads: a #GstCollectPads2 
+ * @data: a #GstCollectData2
+ * @buffer: a #GstBuffer 
+ * @user_data: user data 
+ *
+ * A function that will be called when @buffer is received on the pad managed
+ * by @data in the collecpad object @pads.
+ *
+ * The function should use the segment of @data and the negotiated media type on
+ * the pad to perform clipping of @buffer. 
+ *
+ * This function takes ownership of @buffer.
+ *
+ * Returns: a #GstBuffer that contains the clipped data of @buffer or NULL when
+ * the buffer has been clipped completely.
+ *
+ * Since: 0.10.36
+ */
+typedef GstBuffer * (*GstCollectPads2ClipFunction) (GstCollectPads2 *pads, GstCollectData2 *data,
+                                                   GstBuffer *buffer, gpointer user_data);
+
 /**
  * GST_COLLECT_PADS2_GET_STREAM_LOCK:
  * @pads: a #GstCollectPads2
@@ -288,6 +312,8 @@ struct _GstCollectPads2 {
   gpointer       compare_user_data;
   GstCollectPads2EventFunction event_func; /* function and data for event callback */
   gpointer       event_user_data;
+  GstCollectPads2ClipFunction clip_func;
+  gpointer       clip_user_data;
 
   /* no other lock needed */
   GMutex        *evt_lock;		/* these make up sort of poor man's event signaling */
@@ -321,6 +347,8 @@ void            gst_collect_pads2_set_event_function (GstCollectPads2 *pads,
     						 GstCollectPads2EventFunction func, gpointer user_data);
 void		gst_collect_pads2_set_compare_function (GstCollectPads2 *pads,
     						 GstCollectPads2CompareFunction func, gpointer user_data);
+void            gst_collect_pads2_set_clip_function (GstCollectPads2 *pads, GstCollectPads2ClipFunction clipfunc,
+                                                 gpointer user_data);
 
 /* pad management */
 GstCollectData2* gst_collect_pads2_add_pad	(GstCollectPads2 *pads, GstPad *pad, guint size);
