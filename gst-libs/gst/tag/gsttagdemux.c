@@ -817,8 +817,6 @@ gst_tag_demux_srcpad_event (GstPad * pad, GstEvent * event)
               cur = 0;
             cur += tagdemux->priv->strip_start;
             break;
-          case GST_SEEK_TYPE_CUR:
-            break;
           case GST_SEEK_TYPE_END:
             /* Adjust the seek to be relative to the start of any end tag
              * (note: 10 bytes before end is represented by stop=-10) */
@@ -836,8 +834,6 @@ gst_tag_demux_srcpad_event (GstPad * pad, GstEvent * event)
               /* -1 means the end of the file, pass it upstream intact */
               stop += tagdemux->priv->strip_start;
             }
-            break;
-          case GST_SEEK_TYPE_CUR:
             break;
           case GST_SEEK_TYPE_END:
             /* Adjust the seek to be relative to the start of any end tag
