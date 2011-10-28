@@ -1014,7 +1014,7 @@ gst_collect_pads2_available (GstCollectPads2 * pads)
     }
 
     /* this is the size left of the buffer */
-    size = GST_BUFFER_SIZE (buffer) - pdata->pos;
+    size = gst_buffer_get_size (buffer) - pdata->pos;
     GST_DEBUG_OBJECT (pads, "pad %p has %d bytes left", pdata, size);
 
     /* need to return the min of all available data */
@@ -1031,50 +1031,6 @@ not_filled:
   {
     return 0;
   }
-}
-
-/**
- * gst_collect_pads2_read:
- * @pads: the collectspads to query
- * @data: the data to use
- * @bytes: a pointer to a byte array
- * @size: the number of bytes to read
- *
- * Get a pointer in @bytes where @size bytes can be read from the
- * given pad data.
- *
- * This function should be called with @pads STREAM_LOCK held, such as
- * in the callback.
- *
- * Returns: The number of bytes available for consumption in the
- * memory pointed to by @bytes. This can be less than @size and
- * is 0 if the pad is end-of-stream.
- *
- * MT safe.
- *
- * Since: 0.10.36
- */
-guint
-gst_collect_pads2_read (GstCollectPads2 * pads, GstCollectData2 * data,
-    guint8 ** bytes, guint size)
-{
-  guint readsize;
-  GstBuffer *buffer;
-
-  g_return_val_if_fail (pads != NULL, 0);
-  g_return_val_if_fail (GST_IS_COLLECT_PADS2 (pads), 0);
-  g_return_val_if_fail (data != NULL, 0);
-  g_return_val_if_fail (bytes != NULL, 0);
-
-  /* no buffer, must be EOS */
-  if ((buffer = data->buffer) == NULL)
-    return 0;
-
-  readsize = MIN (size, GST_BUFFER_SIZE (buffer) - data->pos);
-
-  *bytes = GST_BUFFER_DATA (buffer) + data->pos;
-
-  return readsize;
 }
 
 /**
@@ -1100,6 +1056,7 @@ gst_collect_pads2_flush (GstCollectPads2 * pads, GstCollectData2 * data,
     guint size)
 {
   guint flushsize;
+  gsize bsize;
   GstBuffer *buffer;
 
   g_return_val_if_fail (pads != NULL, 0);
@@ -1110,12 +1067,14 @@ gst_collect_pads2_flush (GstCollectPads2 * pads, GstCollectData2 * data,
   if ((buffer = data->buffer) == NULL)
     return 0;
 
+  bsize = gst_buffer_get_size (buffer);
+
   /* this is what we can flush at max */
-  flushsize = MIN (size, GST_BUFFER_SIZE (buffer) - data->pos);
+  flushsize = MIN (size, bsize - data->pos);
 
   data->pos += size;
 
-  if (data->pos >= GST_BUFFER_SIZE (buffer))
+  if (data->pos >= bsize)
     /* _clear will also reset data->pos to 0 */
     gst_collect_pads2_clear (pads, data);
 
@@ -1156,9 +1115,10 @@ gst_collect_pads2_read_buffer (GstCollectPads2 * pads, GstCollectData2 * data,
   if ((buffer = data->buffer) == NULL)
     return NULL;
 
-  readsize = MIN (size, GST_BUFFER_SIZE (buffer) - data->pos);
+  readsize = MIN (size, gst_buffer_get_size (buffer) - data->pos);
 
-  return gst_buffer_create_sub (buffer, data->pos, readsize);
+  return gst_buffer_copy_region (buffer, GST_BUFFER_COPY_ALL, data->pos,
+      readsize);
 }
 
 /**
@@ -1188,7 +1148,7 @@ gst_collect_pads2_take_buffer (GstCollectPads2 * pads, GstCollectData2 * data,
   GstBuffer *buffer = gst_collect_pads2_read_buffer (pads, data, size);
 
   if (buffer) {
-    gst_collect_pads2_flush (pads, data, GST_BUFFER_SIZE (buffer));
+    gst_collect_pads2_flush (pads, data, gst_buffer_get_size (buffer));
   }
   return buffer;
 }
@@ -1683,26 +1643,18 @@ gst_collect_pads2_event (GstPad * pad, GstEvent * event)
 
       goto forward_or_eat;
     }
-    case GST_EVENT_NEWSEGMENT:
+    case GST_EVENT_SEGMENT:
     {
-      gint64 start, stop, time;
-      gdouble rate, arate;
-      GstFormat format;
-      gboolean update;
+      GstSegment seg;
       gint cmp_res;
 
       GST_COLLECT_PADS2_STREAM_LOCK (pads);
 
-      gst_event_parse_new_segment_full (event, &update, &rate, &arate, &format,
-          &start, &stop, &time);
+      gst_event_copy_segment (event, &seg);
 
-      GST_DEBUG_OBJECT (data->pad, "got newsegment, start %" GST_TIME_FORMAT
-          ", stop %" GST_TIME_FORMAT, GST_TIME_ARGS (start),
-          GST_TIME_ARGS (stop));
+      GST_DEBUG_OBJECT (data->pad, "got segment %" GST_SEGMENT_FORMAT, &seg);
 
-      gst_segment_set_newsegment_full (&data->segment, update, rate, arate,
-          format, start, stop, time);
-
+      data->segment = seg;
       GST_COLLECT_PADS2_STATE_SET (data, GST_COLLECT_PADS2_STATE_NEW_SEGMENT);
 
       /* default muxing functionality */
@@ -1710,7 +1662,7 @@ gst_collect_pads2_event (GstPad * pad, GstEvent * event)
         goto newsegment_done;
 
       /* default collection can not handle other segment formats than time */
-      if (format != GST_FORMAT_TIME) {
+      if (seg.format != GST_FORMAT_TIME) {
         GST_ERROR_OBJECT (pads, "GstCollectPads2 default collecting "
             "can only handle time segments.");
         goto newsegment_done;
@@ -1724,7 +1676,7 @@ gst_collect_pads2_event (GstPad * pad, GstEvent * event)
       }
 
       /* Check if the waiting state of the pad should change. */
-      cmp_res = pads->compare_func (pads, data, start, pads->earliest_data,
+      cmp_res = pads->compare_func (pads, data, seg.start, pads->earliest_data,
           pads->earliest_time, pads->compare_user_data);
 
       if (cmp_res > 0)
@@ -1852,7 +1804,7 @@ gst_collect_pads2_chain (GstPad * pad, GstBuffer * buffer)
     GstClockTime timestamp = GST_BUFFER_TIMESTAMP (buffer);
 
     if (GST_CLOCK_TIME_IS_VALID (timestamp))
-      gst_segment_set_last_stop (&data->segment, GST_FORMAT_TIME, timestamp);
+      data->segment.position = timestamp;
   }
 
   /* While we have data queued on this pad try to collect stuff */

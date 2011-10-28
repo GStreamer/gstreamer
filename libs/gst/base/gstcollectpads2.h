@@ -367,8 +367,6 @@ GstBuffer*	gst_collect_pads2_pop		(GstCollectPads2 *pads, GstCollectData2 *data)
 
 /* get collected bytes */
 guint 		gst_collect_pads2_available 	(GstCollectPads2 *pads);
-guint		gst_collect_pads2_read		(GstCollectPads2 *pads, GstCollectData2 *data,
-						 guint8 **bytes, guint size);
 guint 		gst_collect_pads2_flush 	(GstCollectPads2 *pads, GstCollectData2 *data,
 						 guint size);
 GstBuffer*	gst_collect_pads2_read_buffer	(GstCollectPads2 * pads, GstCollectData2 * data,
