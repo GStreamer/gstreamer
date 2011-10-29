@@ -991,7 +991,7 @@ get_running_time (GstSegment * segment, GstMiniObject * object, gboolean end)
     gint i, n;
     GstBuffer *buf;
 
-    n = gst_buffer_list_len (list);
+    n = gst_buffer_list_length (list);
     for (i = 0; i < n; i++) {
       buf = gst_buffer_list_get (list, i);
       if (GST_BUFFER_TIMESTAMP_IS_VALID (buf)) {

@@ -69,7 +69,7 @@ _gst_buffer_list_copy (GstBufferList * list)
   guint i, len;
 
   len = list->array->len;
-  copy = gst_buffer_list_sized_new (len);
+  copy = gst_buffer_list_new_sized (len);
 
   /* add and ref all buffers in the array */
   for (i = 0; i < len; i++) {
@@ -110,7 +110,7 @@ gst_buffer_list_init (GstBufferList * list, gsize size, guint asize)
 }
 
 /**
- * gst_buffer_list_sized_new:
+ * gst_buffer_list_new_sized:
  * @size: an initial reserved size
  *
  * Creates a new, empty #GstBufferList. The caller is responsible for unreffing
@@ -125,7 +125,7 @@ gst_buffer_list_init (GstBufferList * list, gsize size, guint asize)
  * Since: 0.10.24
  */
 GstBufferList *
-gst_buffer_list_sized_new (guint size)
+gst_buffer_list_new_sized (guint size)
 {
   GstBufferList *list;
 
@@ -154,11 +154,11 @@ gst_buffer_list_sized_new (guint size)
 GstBufferList *
 gst_buffer_list_new (void)
 {
-  return gst_buffer_list_sized_new (8);
+  return gst_buffer_list_new_sized (8);
 }
 
 /**
- * gst_buffer_list_len:
+ * gst_buffer_list_length:
  * @list: a #GstBufferList
  *
  * Returns the number of buffers in @list.
@@ -168,7 +168,7 @@ gst_buffer_list_new (void)
  * Since: 0.10.24
  */
 guint
-gst_buffer_list_len (GstBufferList * list)
+gst_buffer_list_length (GstBufferList * list)
 {
   g_return_val_if_fail (GST_IS_BUFFER_LIST (list), 0);
 

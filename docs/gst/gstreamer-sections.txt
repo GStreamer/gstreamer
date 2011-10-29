@@ -310,8 +310,8 @@ GST_BUFFER_POOL_GET_CLASS
 GstBufferList
 
 gst_buffer_list_new
-gst_buffer_list_sized_new
-gst_buffer_list_len
+gst_buffer_list_new_sized
+gst_buffer_list_length
 gst_buffer_list_add
 gst_buffer_list_insert
 gst_buffer_list_remove

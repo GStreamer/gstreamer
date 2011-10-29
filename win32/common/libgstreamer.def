@@ -108,10 +108,10 @@ EXPORTS
 	gst_buffer_list_get
 	gst_buffer_list_get_type
 	gst_buffer_list_insert
-	gst_buffer_list_len
+	gst_buffer_list_length
 	gst_buffer_list_new
+	gst_buffer_list_new_sized
 	gst_buffer_list_remove
-	gst_buffer_list_sized_new
 	gst_buffer_map
 	gst_buffer_memcmp
 	gst_buffer_memset

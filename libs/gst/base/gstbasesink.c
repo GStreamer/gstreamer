@@ -3661,7 +3661,7 @@ gst_base_sink_chain_list (GstPad * pad, GstBufferList * list)
 
     GST_INFO_OBJECT (pad, "chaining each group in list as a merged buffer");
 
-    len = gst_buffer_list_len (list);
+    len = gst_buffer_list_length (list);
 
     result = GST_FLOW_OK;
     for (i = 0; i < len; i++) {

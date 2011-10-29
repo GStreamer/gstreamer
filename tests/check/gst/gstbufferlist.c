@@ -85,7 +85,7 @@ GST_START_TEST (test_add_and_iterate)
   GstBuffer *buf2;
 
   /* buffer list is initially empty */
-  fail_unless (gst_buffer_list_len (list) == 0);
+  fail_unless (gst_buffer_list_length (list) == 0);
 
   ASSERT_CRITICAL (gst_buffer_list_insert (list, 0, NULL));
   ASSERT_CRITICAL (gst_buffer_list_insert (NULL, 0, NULL));
@@ -93,16 +93,16 @@ GST_START_TEST (test_add_and_iterate)
   buf1 = gst_buffer_new ();
 
   /* add a group of 2 buffers */
-  fail_unless (gst_buffer_list_len (list) == 0);
+  fail_unless (gst_buffer_list_length (list) == 0);
   ASSERT_CRITICAL (gst_buffer_list_insert (list, -1, NULL));
   ASSERT_BUFFER_REFCOUNT (buf1, "buf1", 1);
   gst_buffer_list_add (list, buf1);
   ASSERT_BUFFER_REFCOUNT (buf1, "buf1", 1);     /* list takes ownership */
-  fail_unless (gst_buffer_list_len (list) == 1);
+  fail_unless (gst_buffer_list_length (list) == 1);
   buf2 = gst_buffer_new ();
   gst_buffer_list_add (list, buf2);
   ASSERT_BUFFER_REFCOUNT (buf2, "buf2", 1);
-  fail_unless (gst_buffer_list_len (list) == 2);
+  fail_unless (gst_buffer_list_length (list) == 2);
 }
 
 GST_END_TEST;

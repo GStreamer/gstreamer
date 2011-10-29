@@ -157,9 +157,9 @@ GType                    gst_buffer_list_get_type              (void);
 
 /* allocation */
 GstBufferList *          gst_buffer_list_new                   (void);
-GstBufferList *          gst_buffer_list_sized_new             (guint size);
+GstBufferList *          gst_buffer_list_new_sized             (guint size);
 
-guint                    gst_buffer_list_len                   (GstBufferList *list);
+guint                    gst_buffer_list_length                (GstBufferList *list);
 
 GstBuffer *              gst_buffer_list_get                   (GstBufferList *list, guint idx);
 void                     gst_buffer_list_insert                (GstBufferList *list, guint idx, GstBuffer *buffer);

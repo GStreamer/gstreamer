@@ -3748,7 +3748,7 @@ gst_pad_chain_list_default (GstPad * pad, GstBufferList * list)
 
   GST_INFO_OBJECT (pad, "chaining each group in list as a merged buffer");
 
-  len = gst_buffer_list_len (list);
+  len = gst_buffer_list_length (list);
 
   ret = GST_FLOW_OK;
   for (i = 0; i < len; i++) {
