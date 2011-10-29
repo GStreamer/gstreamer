@@ -2946,6 +2946,9 @@ gst_structure_is_equal (const GstStructure * structure1,
   g_return_val_if_fail (GST_IS_STRUCTURE (structure1), FALSE);
   g_return_val_if_fail (GST_IS_STRUCTURE (structure2), FALSE);
 
+  if (G_UNLIKELY (structure1 == structure2))
+    return TRUE;
+
   if (structure1->name != structure2->name) {
     return FALSE;
   }
