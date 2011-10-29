@@ -98,11 +98,6 @@ GstElement*             gst_element_factory_create              (GstElementFacto
                                                                  const gchar *name);
 GstElement*             gst_element_factory_make                (const gchar *factoryname, const gchar *name);
 
-/* FIXME 0.11: move these two into our private headers */
-void                    __gst_element_factory_add_static_pad_template (GstElementFactory *elementfactory,
-                                                                 GstStaticPadTemplate *templ);
-void                    __gst_element_factory_add_interface     (GstElementFactory *elementfactory,
-                                                                 const gchar *interfacename);
 gboolean                gst_element_register                    (GstPlugin *plugin, const gchar *name,
                                                                  guint rank, GType type);
 

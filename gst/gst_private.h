@@ -127,6 +127,12 @@ gboolean  priv_gst_structure_append_to_gstring (const GstStructure * structure,
 gboolean		priv_gst_registry_binary_read_cache	(GstRegistry * registry, const char *location);
 gboolean		priv_gst_registry_binary_write_cache	(GstRegistry * registry, const char *location);
 
+void      __gst_element_factory_add_static_pad_template (GstElementFactory    * elementfactory,
+                                                         GstStaticPadTemplate * templ);
+
+void      __gst_element_factory_add_interface           (GstElementFactory    * elementfactory,
+                                                         const gchar          * interfacename);
+
 /* used in gstvalue.c and gststructure.c */
 #define GST_ASCII_IS_STRING(c) (g_ascii_isalnum((c)) || ((c) == '_') || \
     ((c) == '-') || ((c) == '+') || ((c) == '/') || ((c) == ':') || \
