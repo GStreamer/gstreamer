@@ -516,7 +516,7 @@ gst_base_rtp_audio_payload_push_buffer (GstBaseRTPAudioPayload *
     guint i, len;
 
     list = gst_buffer_list_new ();
-    len = gst_buffer_list_len (list);
+    len = gst_buffer_list_length (list);
 
     for (i = 0; i < len; i++) {
       /* FIXME */

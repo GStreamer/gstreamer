@@ -816,7 +816,7 @@ gst_app_sink_render_list (GstBaseSink * sink, GstBufferList * list)
    * then and push them one-by-one */
   GST_INFO_OBJECT (sink, "chaining each group in list as a merged buffer");
 
-  len = gst_buffer_list_len (list);
+  len = gst_buffer_list_length (list);
 
   flow = GST_FLOW_OK;
   for (i = 0; i < len; i++) {
