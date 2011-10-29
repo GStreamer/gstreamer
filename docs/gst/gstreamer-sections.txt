@@ -163,8 +163,6 @@ GST_BUFFER_FLAGS
 GST_BUFFER_FLAG_IS_SET
 GST_BUFFER_FLAG_SET
 GST_BUFFER_FLAG_UNSET
-GST_META_TIMING_INFO
-GstMetaTiming
 
 GST_BUFFER_PTS
 GST_BUFFER_DTS
@@ -229,9 +227,6 @@ gst_buffer_add_meta
 gst_buffer_remove_meta
 gst_buffer_iterate_meta
 
-gst_buffer_add_meta_timing
-gst_buffer_get_meta_timing
-gst_meta_timing_get_info
 <SUBSECTION Standard>
 GstBufferClass
 GST_BUFFER
