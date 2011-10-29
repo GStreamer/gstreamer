@@ -1234,7 +1234,7 @@ rtp_source_send_rtp (RTPSource * src, gpointer data, gboolean is_list,
     gint i;
 
     /* Each group makes up a network packet. */
-    packets = gst_buffer_list_len (list);
+    packets = gst_buffer_list_length (list);
     for (i = 0, len = 0; i < packets; i++) {
       gst_rtp_buffer_map (gst_buffer_list_get (list, i), GST_MAP_READ, &rtp);
       len += gst_rtp_buffer_get_payload_len (&rtp);

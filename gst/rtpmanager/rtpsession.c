@@ -2427,7 +2427,7 @@ rtp_session_send_rtp (RTPSession * sess, gpointer data, gboolean is_list,
 
   if (is_list) {
     GstBufferList *blist = GST_BUFFER_LIST_CAST (data);
-    gint i, len = gst_buffer_list_len (blist);
+    gint i, len = gst_buffer_list_length (blist);
 
     valid_packet = TRUE;
     for (i = 0; i < len; i++)
