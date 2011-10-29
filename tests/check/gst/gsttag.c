@@ -281,6 +281,7 @@ GST_START_TEST (test_date_tags)
   tag_list2 = gst_structure_from_string (str, NULL);
   fail_if (tag_list2 == NULL);
   fail_if (!gst_tag_list_get_date (tag_list2, GST_TAG_DATE, &date2));
+  fail_unless (gst_tag_list_is_equal (tag_list2, tag_list));
   gst_tag_list_free (tag_list2);
   g_free (str);
 
@@ -452,6 +453,43 @@ GST_START_TEST (test_merge_strings_with_comma)
 
 GST_END_TEST;
 
+GST_START_TEST (test_equal)
+{
+  GstTagList *tags, *tags2;
+
+  tags = gst_tag_list_new ();
+  gst_tag_list_add (tags, GST_TAG_MERGE_APPEND, GST_TAG_ARTIST, "Foo", NULL);
+  gst_tag_list_add (tags, GST_TAG_MERGE_APPEND, GST_TAG_ARTIST, "Bar", NULL);
+  gst_tag_list_add (tags, GST_TAG_MERGE_APPEND, GST_TAG_ARTIST, "Yay", NULL);
+
+  tags2 = gst_tag_list_new ();
+  fail_unless (!gst_tag_list_is_equal (tags2, tags));
+  gst_tag_list_add (tags2, GST_TAG_MERGE_APPEND, GST_TAG_ARTIST, "Yay", NULL);
+  fail_unless (!gst_tag_list_is_equal (tags2, tags));
+  gst_tag_list_add (tags2, GST_TAG_MERGE_APPEND, GST_TAG_ARTIST, "Bar", NULL);
+  fail_unless (!gst_tag_list_is_equal (tags2, tags));
+  gst_tag_list_add (tags2, GST_TAG_MERGE_APPEND, GST_TAG_ARTIST, "Foo", NULL);
+  fail_unless (gst_tag_list_is_equal (tags2, tags));
+
+  gst_tag_list_add (tags, GST_TAG_MERGE_APPEND, GST_TAG_REFERENCE_LEVEL,
+      9.87654321, NULL);
+  fail_unless (!gst_tag_list_is_equal (tags2, tags));
+  gst_tag_list_add (tags2, GST_TAG_MERGE_APPEND, GST_TAG_REFERENCE_LEVEL,
+      9.87654320, NULL);
+  /* want these two double values to be equal despite minor differences */
+  fail_unless (gst_tag_list_is_equal (tags2, tags));
+
+  /* want this to be unequal though, difference too large */
+  gst_tag_list_add (tags2, GST_TAG_MERGE_REPLACE, GST_TAG_REFERENCE_LEVEL,
+      9.87654310, NULL);
+  fail_unless (!gst_tag_list_is_equal (tags2, tags));
+
+  gst_tag_list_free (tags);
+  gst_tag_list_free (tags2);
+}
+
+GST_END_TEST;
+
 static Suite *
 gst_tag_suite (void)
 {
@@ -469,6 +507,7 @@ gst_tag_suite (void)
   tcase_add_test (tc_chain, test_buffer_tags);
   tcase_add_test (tc_chain, test_empty_tags);
   tcase_add_test (tc_chain, test_new_full);
+  tcase_add_test (tc_chain, test_equal);
 
   return s;
 }

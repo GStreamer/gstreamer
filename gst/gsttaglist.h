@@ -218,6 +218,8 @@ GstTagList * gst_tag_list_new_full_valist   (va_list var_args);
 gboolean     gst_is_tag_list                (gconstpointer p);
 GstTagList * gst_tag_list_copy              (const GstTagList * list);
 gboolean     gst_tag_list_is_empty          (const GstTagList * list);
+gboolean     gst_tag_list_is_equal          (const GstTagList * list1,
+                                             const GstTagList * list2);
 void         gst_tag_list_insert            (GstTagList       * into,
                                              const GstTagList * from,
                                              GstTagMergeMode    mode);

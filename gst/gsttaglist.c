@@ -35,6 +35,7 @@
 #endif
 
 #include "gst_private.h"
+#include "math-compat.h"
 #include "gst-i18n-lib.h"
 #include "gsttaglist.h"
 #include "gstinfo.h"
@@ -707,6 +708,77 @@ gst_tag_list_is_empty (const GstTagList * list)
   g_return_val_if_fail (GST_IS_TAG_LIST (list), FALSE);
 
   return (gst_structure_n_fields ((GstStructure *) list) == 0);
+}
+
+static gboolean
+gst_tag_list_fields_equal (const GValue * value1, const GValue * value2)
+{
+  gdouble d1, d2;
+
+  if (gst_value_compare (value1, value2) == GST_VALUE_EQUAL)
+    return TRUE;
+
+  /* fields not equal: add some tolerance for doubles, otherwise bail out */
+  if (!G_VALUE_HOLDS_DOUBLE (value1) || !G_VALUE_HOLDS_DOUBLE (value2))
+    return FALSE;
+
+  d1 = g_value_get_double (value1);
+  d2 = g_value_get_double (value2);
+
+  /* This will only work for 'normal' values and values around 0,
+   * which should be good enough for our purposes here
+   * FIXME: maybe add this to gst_value_compare_double() ? */
+  return (fabs (d1 - d2) < 0.0000001);
+}
+
+/**
+ * gst_tag_list_is_equal:
+ * @list1: a #GstTagList.
+ * @list2: a #GstTagList.
+ *
+ * Checks if the two given taglists are equal.
+ *
+ * Returns: TRUE if the taglists are equal, otherwise FALSE
+ *
+ * Since: 0.10.36
+ */
+gboolean
+gst_tag_list_is_equal (const GstTagList * list1, const GstTagList * list2)
+{
+  const GstStructure *s1, *s2;
+  gint num_fields1, num_fields2, i;
+
+  g_return_val_if_fail (GST_IS_TAG_LIST (list1), FALSE);
+  g_return_val_if_fail (GST_IS_TAG_LIST (list2), FALSE);
+
+  /* we don't just use gst_structure_is_equal() here so we can add some
+   * tolerance for doubles, though maybe we should just add that to
+   * gst_value_compare_double() as well? */
+  s1 = (const GstStructure *) list1;
+  s2 = (const GstStructure *) list2;
+
+  num_fields1 = gst_structure_n_fields (s1);
+  num_fields2 = gst_structure_n_fields (s2);
+
+  if (num_fields1 != num_fields2)
+    return FALSE;
+
+  for (i = 0; i < num_fields1; i++) {
+    const GValue *value1, *value2;
+    const gchar *tag_name;
+
+    tag_name = gst_structure_nth_field_name (s1, i);
+    value1 = gst_structure_get_value (s1, tag_name);
+    value2 = gst_structure_get_value (s2, tag_name);
+
+    if (value2 == NULL)
+      return FALSE;
+
+    if (!gst_tag_list_fields_equal (value1, value2))
+      return FALSE;
+  }
+
+  return TRUE;
 }
 
 /**
