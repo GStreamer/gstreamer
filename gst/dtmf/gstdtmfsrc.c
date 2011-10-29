@@ -110,6 +110,12 @@
  * gst_element_send_event (pipeline, event);
  * </programlisting>
  *
+ * When a DTMF tone actually starts or stop, a "dtmf-event-processed"
+ * element #GstMessage with the same fields as the "dtmf-event"
+ * #GstEvent that was used to request the event. Also, if any event
+ * has not been processed when the element goes from the PAUSED to the
+ * READY state, then a "dtmf-event-dropped" message is posted on the
+ * #GstBus in the order that they were received.
  */
 
 #ifdef HAVE_CONFIG_H
@@ -625,6 +631,34 @@ gst_dtmf_src_create_next_tone_packet (GstDTMFSrc * dtmfsrc,
   return buf;
 }
 
+static void
+gst_dtmf_src_post_message (GstDTMFSrc * dtmfsrc, const gchar * message_name,
+    GstDTMFSrcEvent * event)
+{
+  GstStructure *s;
+
+  switch (event->event_type) {
+    case DTMF_EVENT_TYPE_START:
+      s = gst_structure_new (message_name,
+          "type", G_TYPE_INT, 1,
+          "method", G_TYPE_INT, 2,
+          "start", G_TYPE_BOOLEAN, TRUE,
+          "number", G_TYPE_INT, event->event_number,
+          "volume", G_TYPE_INT, event->volume, NULL);
+      break;
+    case DTMF_EVENT_TYPE_STOP:
+      s = gst_structure_new (message_name,
+          "type", G_TYPE_INT, 1, "method", G_TYPE_INT, 2,
+          "start", G_TYPE_BOOLEAN, FALSE, NULL);
+      break;
+    case DTMF_EVENT_TYPE_PAUSE_TASK:
+      return;
+  }
+
+  gst_element_post_message (GST_ELEMENT (dtmfsrc),
+      gst_message_new_element (GST_OBJECT (dtmfsrc), s));
+}
+
 static GstFlowReturn
 gst_dtmf_src_create (GstBaseSrc * basesrc, guint64 offset,
     guint length, GstBuffer ** buffer)
@@ -650,6 +684,7 @@ gst_dtmf_src_create (GstBaseSrc * basesrc, guint64 offset,
         case DTMF_EVENT_TYPE_STOP:
           GST_WARNING_OBJECT (dtmfsrc,
               "Received a DTMF stop event when already stopped");
+          gst_dtmf_src_post_message (dtmfsrc, "dtmf-event-dropped", event);
           break;
         case DTMF_EVENT_TYPE_START:
           gst_dtmf_prepare_timestamps (dtmfsrc);
@@ -657,6 +692,8 @@ gst_dtmf_src_create (GstBaseSrc * basesrc, guint64 offset,
           event->packet_count = 0;
           dtmfsrc->last_event = event;
           event = NULL;
+          gst_dtmf_src_post_message (dtmfsrc, "dtmf-event-processed",
+              dtmfsrc->last_event);
           break;
         case DTMF_EVENT_TYPE_PAUSE_TASK:
           /*
@@ -684,10 +721,12 @@ gst_dtmf_src_create (GstBaseSrc * basesrc, guint64 offset,
           case DTMF_EVENT_TYPE_START:
             GST_WARNING_OBJECT (dtmfsrc,
                 "Received two consecutive DTMF start events");
+            gst_dtmf_src_post_message (dtmfsrc, "dtmf-event-dropped", event);
             break;
           case DTMF_EVENT_TYPE_STOP:
             g_slice_free (GstDTMFSrcEvent, dtmfsrc->last_event);
             dtmfsrc->last_event = NULL;
+            gst_dtmf_src_post_message (dtmfsrc, "dtmf-event-processed", event);
             break;
           case DTMF_EVENT_TYPE_PAUSE_TASK:
             /*
@@ -853,6 +892,7 @@ gst_dtmf_src_change_state (GstElement * element, GstStateChange transition)
       event = g_async_queue_try_pop (dtmfsrc->event_queue);
 
       while (event != NULL) {
+        gst_dtmf_src_post_message (dtmfsrc, "dtmf-event-dropped", event);
         g_slice_free (GstDTMFSrcEvent, event);
         event = g_async_queue_try_pop (dtmfsrc->event_queue);
       }
@@ -878,6 +918,7 @@ gst_dtmf_src_change_state (GstElement * element, GstStateChange transition)
       event = g_async_queue_try_pop (dtmfsrc->event_queue);
 
       while (event != NULL) {
+        gst_dtmf_src_post_message (dtmfsrc, "dtmf-event-dropped", event);
         g_slice_free (GstDTMFSrcEvent, event);
         event = g_async_queue_try_pop (dtmfsrc->event_queue);
       }
