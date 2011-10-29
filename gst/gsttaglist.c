@@ -637,7 +637,7 @@ gst_tag_is_fixed (const gchar * tag)
 GstTagList *
 gst_tag_list_new_empty (void)
 {
-  return GST_TAG_LIST (gst_structure_id_empty_new (GST_QUARK (TAGLIST)));
+  return GST_TAG_LIST (gst_structure_new_id_empty (GST_QUARK (TAGLIST)));
 }
 
 /**

@@ -36,7 +36,7 @@
  * provides a means to enforce mutability using the refcount of the parent
  * with the gst_structure_set_parent_refcount() method.
  *
- * A #GstStructure can be created with gst_structure_empty_new() or
+ * A #GstStructure can be created with gst_structure_new_empty() or
  * gst_structure_new(), which both take a name and an optional set of
  * key/value pairs along with the types of the values.
  *
@@ -127,7 +127,7 @@ _priv_gst_structure_initialize (void)
 }
 
 static GstStructure *
-gst_structure_id_empty_new_with_size (GQuark quark, guint prealloc)
+gst_structure_new_id_empty_with_size (GQuark quark, guint prealloc)
 {
   GstStructureImpl *structure;
 
@@ -142,7 +142,7 @@ gst_structure_id_empty_new_with_size (GQuark quark, guint prealloc)
 }
 
 /**
- * gst_structure_id_empty_new:
+ * gst_structure_new_id_empty:
  * @quark: name of new structure
  *
  * Creates a new, empty #GstStructure with the given name as a GQuark.
@@ -152,11 +152,11 @@ gst_structure_id_empty_new_with_size (GQuark quark, guint prealloc)
  * Returns: (transfer full): a new, empty #GstStructure
  */
 GstStructure *
-gst_structure_id_empty_new (GQuark quark)
+gst_structure_new_id_empty (GQuark quark)
 {
   g_return_val_if_fail (quark != 0, NULL);
 
-  return gst_structure_id_empty_new_with_size (quark, 0);
+  return gst_structure_new_id_empty_with_size (quark, 0);
 }
 
 #ifndef G_DISABLE_CHECKS
@@ -188,7 +188,7 @@ gst_structure_validate_name (const gchar * name)
 #endif
 
 /**
- * gst_structure_empty_new:
+ * gst_structure_new_empty:
  * @name: name of new structure
  *
  * Creates a new, empty #GstStructure with the given @name.
@@ -200,11 +200,11 @@ gst_structure_validate_name (const gchar * name)
  * Returns: (transfer full): a new, empty #GstStructure
  */
 GstStructure *
-gst_structure_empty_new (const gchar * name)
+gst_structure_new_empty (const gchar * name)
 {
   g_return_val_if_fail (gst_structure_validate_name (name), NULL);
 
-  return gst_structure_id_empty_new_with_size (g_quark_from_string (name), 0);
+  return gst_structure_new_id_empty_with_size (g_quark_from_string (name), 0);
 }
 
 /**
@@ -257,7 +257,7 @@ gst_structure_new_valist (const gchar * name,
 {
   GstStructure *structure;
 
-  structure = gst_structure_empty_new (name);
+  structure = gst_structure_new_empty (name);
 
   if (structure)
     gst_structure_set_valist (structure, firstfield, varargs);
@@ -321,7 +321,7 @@ gst_structure_copy (const GstStructure * structure)
   g_return_val_if_fail (structure != NULL, NULL);
 
   len = GST_STRUCTURE_FIELDS (structure)->len;
-  new_structure = gst_structure_id_empty_new_with_size (structure->name, len);
+  new_structure = gst_structure_new_id_empty_with_size (structure->name, len);
 
   for (i = 0; i < len; i++) {
     GstStructureField new_field = { 0 };
@@ -718,7 +718,7 @@ gst_structure_id_set_valist (GstStructure * structure,
 }
 
 /**
- * gst_structure_id_new:
+ * gst_structure_new_id:
  * @name_quark: name of new structure
  * @field_quark: the GQuark for the name of the field to set
  * @...: variable arguments
@@ -726,7 +726,7 @@ gst_structure_id_set_valist (GstStructure * structure,
  * Creates a new #GstStructure with the given name as a GQuark, followed by
  * fieldname quark, GType, argument(s) "triplets" in the same format as
  * gst_structure_id_set(). Basically a convenience wrapper around
- * gst_structure_id_empty_new() and gst_structure_id_set().
+ * gst_structure_new_id_empty() and gst_structure_id_set().
  *
  * The last variable argument must be NULL (or 0).
  *
@@ -737,7 +737,7 @@ gst_structure_id_set_valist (GstStructure * structure,
  * Since: 0.10.24
  */
 GstStructure *
-gst_structure_id_new (GQuark name_quark, GQuark field_quark, ...)
+gst_structure_new_id (GQuark name_quark, GQuark field_quark, ...)
 {
   GstStructure *s;
   va_list varargs;
@@ -745,7 +745,7 @@ gst_structure_id_new (GQuark name_quark, GQuark field_quark, ...)
   g_return_val_if_fail (name_quark != 0, NULL);
   g_return_val_if_fail (field_quark != 0, NULL);
 
-  s = gst_structure_id_empty_new (name_quark);
+  s = gst_structure_new_id_empty (name_quark);
 
   va_start (varargs, field_quark);
   gst_structure_id_set_valist_internal (s, field_quark, varargs);
@@ -2242,7 +2242,7 @@ gst_structure_from_string (const gchar * string, gchar ** end)
 
   save = *w;
   *w = '\0';
-  structure = gst_structure_empty_new (name);
+  structure = gst_structure_new_empty (name);
   *w = save;
 
   if (G_UNLIKELY (structure == NULL))
@@ -3044,7 +3044,7 @@ gst_structure_intersect (const GstStructure * struct1,
 
   /* copy fields from struct1 which we have not in struct2 to target
    * intersect if we have the field in both */
-  data.dest = gst_structure_id_empty_new (struct1->name);
+  data.dest = gst_structure_new_id_empty (struct1->name);
   data.intersect = struct2;
   if (G_UNLIKELY (!gst_structure_foreach ((GstStructure *) struct1,
               gst_structure_intersect_field1, &data)))

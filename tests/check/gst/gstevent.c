@@ -198,7 +198,7 @@ GST_START_TEST (create_events)
 
   /* Custom event types */
   {
-    structure = gst_structure_empty_new ("application/x-custom");
+    structure = gst_structure_new_empty ("application/x-custom");
     fail_if (structure == NULL);
     event = gst_event_new_custom (GST_EVENT_CUSTOM_UPSTREAM, structure);
     fail_if (event == NULL);
@@ -217,7 +217,7 @@ GST_START_TEST (create_events)
 
   /* Event copying */
   {
-    structure = gst_structure_empty_new ("application/x-custom");
+    structure = gst_structure_new_empty ("application/x-custom");
     fail_if (structure == NULL);
     event = gst_event_new_custom (GST_EVENT_CUSTOM_BOTH, structure);
 
@@ -237,7 +237,7 @@ GST_START_TEST (create_events)
 
   /* Make events writable */
   {
-    structure = gst_structure_empty_new ("application/x-custom");
+    structure = gst_structure_new_empty ("application/x-custom");
     fail_if (structure == NULL);
     event = gst_event_new_custom (GST_EVENT_CUSTOM_BOTH, structure);
     /* ref the event so that it becomes non-writable */
@@ -392,7 +392,7 @@ static void test_event
   GST_DEBUG ("test event called");
 
   event = gst_event_new_custom (type,
-      gst_structure_empty_new ("application/x-custom"));
+      gst_structure_new_empty ("application/x-custom"));
   g_get_current_time (&sent_event_time);
   got_event_time.tv_sec = 0;
   got_event_time.tv_usec = 0;

@@ -246,7 +246,7 @@ gst_element_base_class_init (gpointer g_class)
    * the details in class_init instead of base_init */
   element_class->metadata =
       element_class->metadata ? gst_structure_copy (element_class->metadata) :
-      gst_structure_empty_new ("metadata");
+      gst_structure_new_empty ("metadata");
 
   /* Copy the pad templates so elements inherit them
    * from their base class but elements can add pad templates in class_init

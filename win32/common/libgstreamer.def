@@ -614,7 +614,6 @@ EXPORTS
 	gst_message_type_to_quark
 	gst_meta_get_info
 	gst_meta_register
-	gst_meta_timing_get_info
 	gst_mini_object_copy
 	gst_mini_object_flags_get_type
 	gst_mini_object_init
@@ -965,7 +964,6 @@ EXPORTS
 	gst_structure_can_intersect
 	gst_structure_change_type_get_type
 	gst_structure_copy
-	gst_structure_empty_new
 	gst_structure_fixate
 	gst_structure_fixate_field
 	gst_structure_fixate_field_boolean
@@ -996,13 +994,11 @@ EXPORTS
 	gst_structure_has_field
 	gst_structure_has_field_typed
 	gst_structure_has_name
-	gst_structure_id_empty_new
 	gst_structure_id_get
 	gst_structure_id_get_valist
 	gst_structure_id_get_value
 	gst_structure_id_has_field
 	gst_structure_id_has_field_typed
-	gst_structure_id_new
 	gst_structure_id_set
 	gst_structure_id_set_valist
 	gst_structure_id_set_value
@@ -1013,6 +1009,9 @@ EXPORTS
 	gst_structure_map_in_place
 	gst_structure_n_fields
 	gst_structure_new
+	gst_structure_new_empty
+	gst_structure_new_id
+	gst_structure_new_id_empty
 	gst_structure_new_valist
 	gst_structure_nth_field_name
 	gst_structure_remove_all_fields

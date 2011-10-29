@@ -117,7 +117,7 @@ gst_buffer_pool_init (GstBufferPool * pool)
   pool->active = FALSE;
   pool->configured = FALSE;
   pool->started = FALSE;
-  pool->config = gst_structure_id_empty_new (GST_QUARK (BUFFER_POOL_CONFIG));
+  pool->config = gst_structure_new_id_empty (GST_QUARK (BUFFER_POOL_CONFIG));
   gst_buffer_pool_config_set (pool->config, NULL, 0, 0, 0, 0, 0);
   gst_poll_write_control (pool->poll);
 

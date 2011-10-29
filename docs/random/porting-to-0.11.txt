@@ -239,6 +239,10 @@ The 0.11 porting guide
     accessible from the application anymore. Use the methods to retrieve and
     modify fields from the array.
 
+    gst_structure_empty_new() -> gst_structure_new_empty()
+    gst_structure_id_empty_new() -> gst_structure_new_id_empty()
+    gst_structure_id_new() -> gst_structure_new_id()
+
 * GstEvent
     GST_EVENT_SRC is removed. Don't use this anymore.
 

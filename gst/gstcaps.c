@@ -249,7 +249,7 @@ gst_caps_new_empty_simple (const char *media_type)
   GstStructure *structure;
 
   caps = gst_caps_new_empty ();
-  structure = gst_structure_empty_new (media_type);
+  structure = gst_structure_new_empty (media_type);
   if (structure)
     gst_caps_append_structure_unchecked (caps, structure);
 
@@ -1496,7 +1496,7 @@ gst_caps_structure_union (const GstStructure * struct1,
   if (struct1->name != struct2->name)
     return NULL;
 
-  dest = gst_structure_id_empty_new (struct1->name);
+  dest = gst_structure_new_id_empty (struct1->name);
 
   for (i = 0; i < struct1->fields->len; i++) {
     GValue dest_value = { 0 };

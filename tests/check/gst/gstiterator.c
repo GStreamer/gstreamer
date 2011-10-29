@@ -176,7 +176,7 @@ GST_END_TEST;
 GST_START_TEST (test_single)
 {
   GstIterator *it;
-  GstStructure *s = gst_structure_empty_new ("test");
+  GstStructure *s = gst_structure_new_empty ("test");
   GValue v = { 0, };
   GstStructure *i;
 

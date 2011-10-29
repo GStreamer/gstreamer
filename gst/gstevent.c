@@ -366,7 +366,7 @@ gst_event_writable_structure (GstEvent * event)
 
   if (structure == NULL) {
     structure =
-        gst_structure_id_empty_new (gst_event_type_to_quark (GST_EVENT_TYPE
+        gst_structure_new_id_empty (gst_event_type_to_quark (GST_EVENT_TYPE
             (event)));
     gst_structure_set_parent_refcount (structure, &event->mini_object.refcount);
     GST_EVENT_STRUCTURE (event) = structure;
@@ -506,7 +506,7 @@ gst_event_new_flush_stop (gboolean reset_time)
   GST_CAT_INFO (GST_CAT_EVENT, "creating flush stop %d", reset_time);
 
   event = gst_event_new_custom (GST_EVENT_FLUSH_STOP,
-      gst_structure_id_new (GST_QUARK (EVENT_FLUSH_STOP),
+      gst_structure_new_id (GST_QUARK (EVENT_FLUSH_STOP),
           GST_QUARK (RESET_TIME), G_TYPE_BOOLEAN, reset_time, NULL));
 
   return event;
@@ -580,7 +580,7 @@ gst_event_new_caps (GstCaps * caps)
   GST_CAT_INFO (GST_CAT_EVENT, "creating caps event %" GST_PTR_FORMAT, caps);
 
   event = gst_event_new_custom (GST_EVENT_CAPS,
-      gst_structure_id_new (GST_QUARK (EVENT_CAPS),
+      gst_structure_new_id (GST_QUARK (EVENT_CAPS),
           GST_QUARK (CAPS), GST_TYPE_CAPS, caps, NULL));
 
   return event;
@@ -658,7 +658,7 @@ gst_event_new_segment (GstSegment * segment)
       segment);
 
   event = gst_event_new_custom (GST_EVENT_SEGMENT,
-      gst_structure_id_new (GST_QUARK (EVENT_SEGMENT),
+      gst_structure_new_id (GST_QUARK (EVENT_SEGMENT),
           GST_QUARK (SEGMENT), GST_TYPE_SEGMENT, segment, NULL));
 
   return event;
@@ -774,7 +774,7 @@ gst_event_new_buffer_size (GstFormat format, gint64 minsize,
       ", maxsize %" G_GINT64_FORMAT ", async %d", gst_format_get_name (format),
       minsize, maxsize, async);
 
-  structure = gst_structure_id_new (GST_QUARK (EVENT_BUFFER_SIZE),
+  structure = gst_structure_new_id (GST_QUARK (EVENT_BUFFER_SIZE),
       GST_QUARK (FORMAT), GST_TYPE_FORMAT, format,
       GST_QUARK (MINSIZE), G_TYPE_INT64, minsize,
       GST_QUARK (MAXSIZE), G_TYPE_INT64, maxsize,
@@ -889,7 +889,7 @@ gst_event_new_qos (GstQOSType type, gdouble proportion,
       ", timestamp %" GST_TIME_FORMAT, type, proportion,
       diff, GST_TIME_ARGS (timestamp));
 
-  structure = gst_structure_id_new (GST_QUARK (EVENT_QOS),
+  structure = gst_structure_new_id (GST_QUARK (EVENT_QOS),
       GST_QUARK (TYPE), GST_TYPE_QOS_TYPE, type,
       GST_QUARK (PROPORTION), G_TYPE_DOUBLE, proportion,
       GST_QUARK (DIFF), G_TYPE_INT64, diff,
@@ -1007,7 +1007,7 @@ gst_event_new_seek (gdouble rate, GstFormat format, GstSeekFlags flags,
         stop);
   }
 
-  structure = gst_structure_id_new (GST_QUARK (EVENT_SEEK),
+  structure = gst_structure_new_id (GST_QUARK (EVENT_SEEK),
       GST_QUARK (RATE), G_TYPE_DOUBLE, rate,
       GST_QUARK (FORMAT), GST_TYPE_FORMAT, format,
       GST_QUARK (FLAGS), GST_TYPE_SEEK_FLAGS, flags,
@@ -1115,7 +1115,7 @@ gst_event_new_latency (GstClockTime latency)
   GST_CAT_INFO (GST_CAT_EVENT,
       "creating latency event %" GST_TIME_FORMAT, GST_TIME_ARGS (latency));
 
-  structure = gst_structure_id_new (GST_QUARK (EVENT_LATENCY),
+  structure = gst_structure_new_id (GST_QUARK (EVENT_LATENCY),
       GST_QUARK (LATENCY), G_TYPE_UINT64, latency, NULL);
   event = gst_event_new_custom (GST_EVENT_LATENCY, structure);
 
@@ -1180,7 +1180,7 @@ gst_event_new_step (GstFormat format, guint64 amount, gdouble rate,
 
   GST_CAT_INFO (GST_CAT_EVENT, "creating step event");
 
-  structure = gst_structure_id_new (GST_QUARK (EVENT_STEP),
+  structure = gst_structure_new_id (GST_QUARK (EVENT_STEP),
       GST_QUARK (FORMAT), GST_TYPE_FORMAT, format,
       GST_QUARK (AMOUNT), G_TYPE_UINT64, amount,
       GST_QUARK (RATE), G_TYPE_DOUBLE, rate,
@@ -1280,7 +1280,7 @@ gst_event_new_sink_message (GstMessage * msg)
 
   GST_CAT_INFO (GST_CAT_EVENT, "creating sink-message event");
 
-  structure = gst_structure_id_new (GST_QUARK (EVENT_SINK_MESSAGE),
+  structure = gst_structure_new_id (GST_QUARK (EVENT_SINK_MESSAGE),
       GST_QUARK (MESSAGE), GST_TYPE_MESSAGE, msg, NULL);
   event = gst_event_new_custom (GST_EVENT_SINK_MESSAGE, structure);
 
