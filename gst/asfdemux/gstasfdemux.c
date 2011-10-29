@@ -156,6 +156,16 @@ gst_asf_demux_free_stream (GstASFDemux * demux, AsfStream * stream)
       gst_object_unref (stream->pad);
     stream->pad = NULL;
   }
+
+  while (stream->payloads->len > 0) {
+    AsfPayload *payload;
+    guint last;
+
+    last = stream->payloads->len - 1;
+    payload = &g_array_index (stream->payloads, AsfPayload, last);
+    gst_buffer_replace (&payload->buf, NULL);
+    g_array_remove_index (stream->payloads, last);
+  }
   if (stream->payloads) {
     g_array_free (stream->payloads, TRUE);
     stream->payloads = NULL;
