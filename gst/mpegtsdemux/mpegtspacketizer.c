@@ -454,7 +454,7 @@ mpegts_packetizer_parse_pat (MpegTSPacketizer2 * packetizer,
   /* skip section_number and last_section_number */
   data += 2;
 
-  pat_info = gst_structure_id_new (QUARK_PAT,
+  pat_info = gst_structure_new_id (QUARK_PAT,
       QUARK_TRANSPORT_STREAM_ID, G_TYPE_UINT, transport_stream_id, NULL);
   g_value_init (&entries, GST_TYPE_LIST);
 
@@ -469,7 +469,7 @@ mpegts_packetizer_parse_pat (MpegTSPacketizer2 * packetizer,
     data += 2;
 
     struct_name = g_strdup_printf ("program-%d", program_number);
-    entry = gst_structure_empty_new (struct_name);
+    entry = gst_structure_new_empty (struct_name);
     g_free (struct_name);
     gst_structure_id_set (entry, QUARK_PROGRAM_NUMBER, G_TYPE_UINT,
         program_number, QUARK_PID, G_TYPE_UINT, pmt_pid, NULL);
@@ -547,7 +547,7 @@ mpegts_packetizer_parse_pmt (MpegTSPacketizer2 * packetizer,
   program_info_length = GST_READ_UINT16_BE (data) & 0x0FFF;
   data += 2;
 
-  pmt = gst_structure_id_new (QUARK_PMT,
+  pmt = gst_structure_new_id (QUARK_PMT,
       QUARK_PROGRAM_NUMBER, G_TYPE_UINT, program_number,
       QUARK_PCR_PID, G_TYPE_UINT, pcr_pid,
       QUARK_VERSION_NUMBER, G_TYPE_UINT, section->version_number, NULL);
@@ -593,7 +593,7 @@ mpegts_packetizer_parse_pmt (MpegTSPacketizer2 * packetizer,
     }
 
     struct_name = g_strdup_printf ("pid-%d", pid);
-    stream_info = gst_structure_empty_new (struct_name);
+    stream_info = gst_structure_new_empty (struct_name);
     g_free (struct_name);
     gst_structure_id_set (stream_info,
         QUARK_PID, G_TYPE_UINT, pid, QUARK_STREAM_TYPE, G_TYPE_UINT,
@@ -759,7 +759,7 @@ mpegts_packetizer_parse_nit (MpegTSPacketizer2 * packetizer,
   descriptors_loop_length = GST_READ_UINT16_BE (data) & 0x0FFF;
   data += 2;
 
-  nit = gst_structure_id_new (QUARK_NIT,
+  nit = gst_structure_new_id (QUARK_NIT,
       QUARK_NETWORK_ID, G_TYPE_UINT, network_id,
       QUARK_VERSION_NUMBER, G_TYPE_UINT, section->version_number,
       QUARK_CURRENT_NEXT_INDICATOR, G_TYPE_UINT,
@@ -837,7 +837,7 @@ mpegts_packetizer_parse_nit (MpegTSPacketizer2 * packetizer,
     data += 2;
 
     transport_name = g_strdup_printf ("transport-%d", transport_stream_id);
-    transport = gst_structure_empty_new (transport_name);
+    transport = gst_structure_new_empty (transport_name);
     g_free (transport_name);
     gst_structure_id_set (transport,
         QUARK_TRANSPORT_STREAM_ID, G_TYPE_UINT, transport_stream_id,
@@ -1404,7 +1404,7 @@ mpegts_packetizer_parse_sdt (MpegTSPacketizer2 * packetizer,
   /* skip reserved byte */
   data += 1;
 
-  sdt = gst_structure_id_new (QUARK_SDT,
+  sdt = gst_structure_new_id (QUARK_SDT,
       QUARK_TRANSPORT_STREAM_ID, G_TYPE_UINT, transport_stream_id,
       QUARK_VERSION_NUMBER, G_TYPE_UINT, section->version_number,
       QUARK_CURRENT_NEXT_INDICATOR, G_TYPE_UINT,
@@ -1443,7 +1443,7 @@ mpegts_packetizer_parse_sdt (MpegTSPacketizer2 * packetizer,
 
     /* TODO send tag event down relevant pad for channel name and provider */
     service_name = g_strdup_printf ("service-%d", service_id);
-    service = gst_structure_empty_new (service_name);
+    service = gst_structure_new_empty (service_name);
     g_free (service_name);
 
     if (descriptors_loop_length) {
@@ -1618,7 +1618,7 @@ mpegts_packetizer_parse_eit (MpegTSPacketizer2 * packetizer,
   last_table_id = *data;
   data += 1;
 
-  eit = gst_structure_id_new (QUARK_EIT,
+  eit = gst_structure_new_id (QUARK_EIT,
       QUARK_VERSION_NUMBER, G_TYPE_UINT, section->version_number,
       QUARK_CURRENT_NEXT_INDICATOR, G_TYPE_UINT,
       section->current_next_indicator, QUARK_SERVICE_ID, G_TYPE_UINT,

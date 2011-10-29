@@ -921,7 +921,7 @@ gst_dvbsrc_read_device (GstDvbSrc * object, int size)
       /* timeout, post element message */
       gst_element_post_message (GST_ELEMENT_CAST (object),
           gst_message_new_element (GST_OBJECT (object),
-              gst_structure_empty_new ("dvb-read-failure")));
+              gst_structure_new_empty ("dvb-read-failure")));
     } else {
       int nread = read (object->fd_dvr, data + count, size - count);
 
@@ -932,7 +932,7 @@ gst_dvbsrc_read_device (GstDvbSrc * object, int size)
             object->adapter_number, object->frontend_number, errno);
         gst_element_post_message (GST_ELEMENT_CAST (object),
             gst_message_new_element (GST_OBJECT (object),
-                gst_structure_empty_new ("dvb-read-failure")));
+                gst_structure_new_empty ("dvb-read-failure")));
       } else
         count = count + nread;
     }

@@ -1824,7 +1824,7 @@ gst_ts_demux_record_pcr (GstTSDemux * demux, TSDemuxStream * stream,
 
   if (G_UNLIKELY (demux->emit_statistics)) {
     GstStructure *st;
-    st = gst_structure_id_empty_new (QUARK_TSDEMUX);
+    st = gst_structure_new_id_empty (QUARK_TSDEMUX);
     gst_structure_id_set (st,
         QUARK_PID, G_TYPE_UINT, bs->pid,
         QUARK_OFFSET, G_TYPE_UINT64, offset, QUARK_PCR, G_TYPE_UINT64, pcr,
@@ -1846,7 +1846,7 @@ gst_ts_demux_record_opcr (GstTSDemux * demux, TSDemuxStream * stream,
 
   if (G_UNLIKELY (demux->emit_statistics)) {
     GstStructure *st;
-    st = gst_structure_id_empty_new (QUARK_TSDEMUX);
+    st = gst_structure_new_id_empty (QUARK_TSDEMUX);
     gst_structure_id_set (st,
         QUARK_PID, G_TYPE_UINT, bs->pid,
         QUARK_OFFSET, G_TYPE_UINT64, offset,
@@ -1868,7 +1868,7 @@ gst_ts_demux_record_pts (GstTSDemux * demux, TSDemuxStream * stream,
 
   if (G_UNLIKELY (demux->emit_statistics)) {
     GstStructure *st;
-    st = gst_structure_id_empty_new (QUARK_TSDEMUX);
+    st = gst_structure_new_id_empty (QUARK_TSDEMUX);
     gst_structure_id_set (st,
         QUARK_PID, G_TYPE_UINT, bs->pid,
         QUARK_OFFSET, G_TYPE_UINT64, offset, QUARK_PTS, G_TYPE_UINT64, pts,
@@ -1890,7 +1890,7 @@ gst_ts_demux_record_dts (GstTSDemux * demux, TSDemuxStream * stream,
 
   if (G_UNLIKELY (demux->emit_statistics)) {
     GstStructure *st;
-    st = gst_structure_id_empty_new (QUARK_TSDEMUX);
+    st = gst_structure_new_id_empty (QUARK_TSDEMUX);
     gst_structure_id_set (st,
         QUARK_PID, G_TYPE_UINT, bs->pid,
         QUARK_OFFSET, G_TYPE_UINT64, offset, QUARK_DTS, G_TYPE_UINT64, dts,
