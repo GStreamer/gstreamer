@@ -136,9 +136,9 @@ gst_rgb2bayer_transform_caps (GstBaseTransform * trans,
   structure = gst_caps_get_structure (caps, 0);
 
   if (direction == GST_PAD_SRC) {
-    newcaps = gst_caps_new_simple ("video/x-raw", NULL);
+    newcaps = gst_caps_new_empty_simple ("video/x-raw");
   } else {
-    newcaps = gst_caps_new_simple ("video/x-raw-bayer", NULL);
+    newcaps = gst_caps_new_empty_simple ("video/x-raw-bayer");
   }
   new_structure = gst_caps_get_structure (newcaps, 0);
 
