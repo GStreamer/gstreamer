@@ -3414,11 +3414,11 @@ gst_decode_chain_get_topology (GstDecodeChain * chain)
     return NULL;
   }
 
-  u = gst_structure_id_empty_new (topology_structure_name);
+  u = gst_structure_new_id_empty (topology_structure_name);
 
   /* Now at the last element */
   if (chain->elements && (chain->endpad || chain->deadend)) {
-    s = gst_structure_id_empty_new (topology_structure_name);
+    s = gst_structure_new_id_empty (topology_structure_name);
     gst_structure_id_set (u, topology_caps, GST_TYPE_CAPS, chain->endcaps,
         NULL);
 
@@ -3462,7 +3462,7 @@ gst_decode_chain_get_topology (GstDecodeChain * chain)
     caps = _gst_element_get_linked_caps (elem_next, elem);
 
     if (caps) {
-      s = gst_structure_id_empty_new (topology_structure_name);
+      s = gst_structure_new_id_empty (topology_structure_name);
       gst_structure_id_set (u, topology_caps, GST_TYPE_CAPS, caps, NULL);
       gst_caps_unref (caps);
 

@@ -584,7 +584,7 @@ collect_stream_information (GstDiscoverer * dc, PrivateStream * ps, guint idx)
   gchar *stname;
 
   stname = g_strdup_printf ("stream-%02d", idx);
-  st = gst_structure_empty_new (stname);
+  st = gst_structure_new_empty (stname);
   g_free (stname);
 
   /* Get caps */

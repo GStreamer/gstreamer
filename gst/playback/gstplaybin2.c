@@ -1780,7 +1780,7 @@ gst_play_bin_set_current_text_stream (GstPlayBin * playbin, gint stream)
            * currently displayed subtitles. This event will
            * never travel outside subtitleoverlay!
            */
-          s = gst_structure_empty_new ("subtitleoverlay-flush-subtitle");
+          s = gst_structure_new_empty ("subtitleoverlay-flush-subtitle");
           event = gst_event_new_custom (GST_EVENT_CUSTOM_DOWNSTREAM_OOB, s);
           gst_pad_send_event (peer, event);
           gst_object_unref (peer);

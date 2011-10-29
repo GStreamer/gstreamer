@@ -180,7 +180,7 @@ gst_stream_splitter_sink_event (GstPad * pad, GstEvent * event)
       gst_event_unref (event);
       event =
           gst_event_new_custom (GST_EVENT_CUSTOM_DOWNSTREAM,
-          gst_structure_empty_new ("stream-switching-eos"));
+          gst_structure_new_empty ("stream-switching-eos"));
       toall = TRUE;
       eos = TRUE;
       break;

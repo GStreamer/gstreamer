@@ -1161,7 +1161,7 @@ gst_audio_encoder_proxy_getcaps (GstAudioEncoder * enc, GstCaps * caps)
       const GValue *val;
       GstStructure *s;
 
-      s = gst_structure_id_empty_new (q_name);
+      s = gst_structure_new_id_empty (q_name);
       if ((val = gst_structure_get_value (allowed_s, "rate")))
         gst_structure_set_value (s, "rate", val);
       if ((val = gst_structure_get_value (allowed_s, "channels")))
