@@ -621,8 +621,8 @@ gst_ffmpegdemux_perform_seek (GstFFMpegDemux * demux, GstEvent * event)
     }
 
     /* now send the newsegment, FIXME, do this from the streaming thread */
-    GST_DEBUG_OBJECT (demux, "Sending newsegment from %" G_GINT64_FORMAT
-        " to %" G_GINT64_FORMAT, demux->segment.position, demux->segment.stop);
+    GST_DEBUG_OBJECT (demux, "Sending newsegment %" GST_SEGMENT_FORMAT,
+        &demux->segment);
 
     gst_ffmpegdemux_push_event (demux, gst_event_new_segment (&demux->segment));
   }
@@ -1204,6 +1204,8 @@ gst_ffmpegdemux_open (GstFFMpegDemux * demux)
     gst_ffmpegdemux_perform_seek (demux, event);
     gst_event_unref (event);
   } else {
+    GST_DEBUG_OBJECT (demux, "Sending segment %" GST_SEGMENT_FORMAT,
+        &demux->segment);
     gst_ffmpegdemux_push_event (demux, gst_event_new_segment (&demux->segment));
   }
 
@@ -1371,8 +1373,10 @@ gst_ffmpegdemux_loop (GstFFMpegDemux * demux)
       pkt.stream_index, pkt.flags, GST_TIME_ARGS (duration), (gint64) pkt.pos);
 
   /* check start_time */
+#if 0
   if (demux->start_time != -1 && demux->start_time > timestamp)
     goto drop;
+#endif
 
   if (GST_CLOCK_TIME_IS_VALID (timestamp))
     timestamp -= demux->start_time;
@@ -1974,7 +1978,8 @@ gst_ffmpegdemux_register (GstPlugin * plugin)
       rank = GST_RANK_MARGINAL;
     else {
       GST_DEBUG ("ignoring %s", in_plugin->name);
-      goto next;
+      rank = GST_RANK_MARGINAL;
+      //goto next;
     }
 
     p = name = g_strdup (in_plugin->name);
