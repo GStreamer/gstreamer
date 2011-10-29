@@ -268,7 +268,7 @@ gst_ffmpegdemux_init (GstFFMpegDemux * demux)
   gst_pad_set_chain_function (demux->sinkpad,
       GST_DEBUG_FUNCPTR (gst_ffmpegdemux_chain));
   /* task for driving ffmpeg in loop function */
-  demux->task = gst_task_create ((GstTaskFunction) gst_ffmpegdemux_loop, demux);
+  demux->task = gst_task_new ((GstTaskFunction) gst_ffmpegdemux_loop, demux);
   demux->task_lock = g_new (GStaticRecMutex, 1);
   g_static_rec_mutex_init (demux->task_lock);
   gst_task_set_lock (demux->task, demux->task_lock);
