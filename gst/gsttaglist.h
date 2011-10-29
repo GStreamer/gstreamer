@@ -417,8 +417,7 @@ gboolean     gst_tag_list_get_buffer_index  (const GstTagList * list,
  *
  * Since: 0.10.15
  */
-/* FIXME 0.11: change to "artist-sortname" */
-#define GST_TAG_ARTIST_SORTNAME        "musicbrainz-sortname"
+#define GST_TAG_ARTIST_SORTNAME        "artist-sortname"
 /**
  * GST_TAG_ALBUM:
  *
