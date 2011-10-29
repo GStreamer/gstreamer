@@ -257,7 +257,7 @@ gst_asf_demux_reset (GstASFDemux * demux, gboolean chain_reset)
     demux->segment_running = FALSE;
     demux->accurate = FALSE;
     demux->metadata = gst_caps_new_empty ();
-    demux->global_metadata = gst_structure_empty_new ("metadata");
+    demux->global_metadata = gst_structure_new_empty ("metadata");
     demux->data_size = 0;
     demux->data_offset = 0;
     demux->index_offset = 0;
@@ -2348,7 +2348,7 @@ gst_asf_demux_parse_stream_object (GstASFDemux * demux, guint8 * data,
 
   flags = gst_asf_demux_get_uint16 (&data, &size);
   stream_id = flags & 0x7f;
-  is_encrypted = !!((flags & 0x8000) << 15);
+  is_encrypted = ! !((flags & 0x8000) << 15);
   unknown = gst_asf_demux_get_uint32 (&data, &size);
 
   GST_DEBUG_OBJECT (demux, "Found stream %u, time_offset=%" GST_TIME_FORMAT,
@@ -2811,7 +2811,7 @@ gst_asf_demux_get_metadata_for_stream (GstASFDemux * demux, guint stream_num)
       return s;
   }
 
-  gst_caps_append_structure (demux->metadata, gst_structure_empty_new (sname));
+  gst_caps_append_structure (demux->metadata, gst_structure_new_empty (sname));
 
   /* try lookup again; demux->metadata took ownership of the structure, so we
    * can't really make any assumptions about what happened to it, so we can't
@@ -2956,8 +2956,8 @@ gst_asf_demux_process_file (GstASFDemux * demux, guint8 * data, guint64 size)
   max_pktsize = gst_asf_demux_get_uint32 (&data, &size);
   min_bitrate = gst_asf_demux_get_uint32 (&data, &size);
 
-  demux->broadcast = !!(flags & 0x01);
-  demux->seekable = !!(flags & 0x02);
+  demux->broadcast = ! !(flags & 0x01);
+  demux->seekable = ! !(flags & 0x02);
 
   GST_DEBUG_OBJECT (demux, "min_pktsize = %u", min_pktsize);
   GST_DEBUG_OBJECT (demux, "flags::broadcast = %d", demux->broadcast);
@@ -4032,7 +4032,7 @@ gst_asf_demux_change_state (GstElement * element, GstStateChange transition)
       demux->accurate = FALSE;
       demux->adapter = gst_adapter_new ();
       demux->metadata = gst_caps_new_empty ();
-      demux->global_metadata = gst_structure_empty_new ("metadata");
+      demux->global_metadata = gst_structure_new_empty ("metadata");
       demux->data_size = 0;
       demux->data_offset = 0;
       demux->index_offset = 0;
