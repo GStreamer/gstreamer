@@ -648,7 +648,7 @@ gst_event_parse_caps (GstEvent * event, GstCaps ** caps)
  * Returns: (transfer full): the new SEGMENT event.
  */
 GstEvent *
-gst_event_new_segment (GstSegment * segment)
+gst_event_new_segment (const GstSegment * segment)
 {
   GstEvent *event;
 
