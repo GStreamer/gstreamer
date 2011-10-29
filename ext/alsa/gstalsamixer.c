@@ -497,7 +497,7 @@ gst_alsa_mixer_new (const char *device, GstAlsaMixerDirection dir)
   ret->task_mutex = g_new (GStaticRecMutex, 1);
   g_static_rec_mutex_init (ret->task_mutex);
 
-  ret->task = gst_task_create (task_monitor_alsa, ret);
+  ret->task = gst_task_new (task_monitor_alsa, ret);
   gst_task_set_lock (ret->task, ret->task_mutex);
 
   ret->device = g_strdup (device);
