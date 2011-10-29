@@ -116,36 +116,6 @@ const GstMetaInfo *  gst_meta_register        (const gchar *api, const gchar *im
                                                GstMetaTransformFunction   transform_func);
 const GstMetaInfo *  gst_meta_get_info        (const gchar * impl);
 
-/* default metadata */
-
-/* timing metadata */
-typedef struct _GstMetaTiming GstMetaTiming;
-
-const GstMetaInfo *gst_meta_timing_get_info(void);
-#define GST_META_TIMING_INFO (gst_meta_timing_get_info())
-
-/**
- * GstMetaTiming:
- * @meta: parent metadata
- * @dts: the decoding timestamp
- * @pts: the presentation timestamp
- * @duration: the duration
- * @clock_rate: the clock rate of the dts, pts and duration values
- *
- * Extra timing metadata
- */
-struct _GstMetaTiming {
-  GstMeta        meta;        /* common meta header */
-
-  GstClockTime   dts;         /* decoding timestamp */
-  GstClockTime   pts;         /* presentation timestamp */
-  GstClockTime   duration;    /* duration of the data */
-  GstClockTime   clock_rate;  /* clock rate for the above values */
-};
-
-#define gst_buffer_get_meta_timing(b)  ((GstMetaTiming*)gst_buffer_get_meta((b),GST_META_TIMING_INFO))
-#define gst_buffer_add_meta_timing(b)  ((GstMetaTiming*)gst_buffer_add_meta((b),GST_META_TIMING_INFO,NULL))
-
 G_END_DECLS
 
 #endif /* __GST_META_H__ */
