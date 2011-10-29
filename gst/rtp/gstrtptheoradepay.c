@@ -645,7 +645,7 @@ request_keyframe:
     rtptheoradepay->needs_keyframe = TRUE;
     gst_pad_push_event (GST_BASE_RTP_DEPAYLOAD_SINKPAD (depayload),
         gst_event_new_custom (GST_EVENT_CUSTOM_UPSTREAM,
-            gst_structure_empty_new ("GstForceKeyUnit")));
+            gst_structure_new_empty ("GstForceKeyUnit")));
     gst_rtp_buffer_unmap (&rtp);
     return NULL;
   }
@@ -672,7 +672,7 @@ gst_rtp_theora_depay_packet_lost (GstBaseRTPDepayload * depayload,
 
   gst_pad_push_event (GST_BASE_RTP_DEPAYLOAD_SINKPAD (depayload),
       gst_event_new_custom (GST_EVENT_CUSTOM_UPSTREAM,
-          gst_structure_empty_new ("GstForceKeyUnit")));
+          gst_structure_new_empty ("GstForceKeyUnit")));
 
   return TRUE;
 }

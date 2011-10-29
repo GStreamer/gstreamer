@@ -5423,7 +5423,7 @@ gst_rtspsrc_open_from_sdp (GstRTSPSrc * src, GstSDPMessage * sdp,
   if (src->props)
     gst_structure_remove_all_fields (src->props);
   else
-    src->props = gst_structure_empty_new ("RTSPProperties");
+    src->props = gst_structure_new_empty ("RTSPProperties");
 
   if (src->debug)
     gst_sdp_message_dump (sdp);

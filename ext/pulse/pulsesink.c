@@ -437,7 +437,7 @@ gst_pulsering_context_subscribe_cb (pa_context * c,
       GST_INFO_OBJECT (psink, "emitting sink-changed");
 
       renego = gst_event_new_custom (GST_EVENT_CUSTOM_UPSTREAM,
-          gst_structure_empty_new ("pulse-sink-changed"));
+          gst_structure_new_empty ("pulse-sink-changed"));
 
       if (!gst_pad_push_event (GST_BASE_SINK (psink)->sinkpad, renego))
         GST_DEBUG_OBJECT (psink, "Emitted sink-changed - nobody was listening");
@@ -755,7 +755,7 @@ gst_pulsering_stream_event_cb (pa_stream * p, const char *name,
     psink->device = g_strdup (pa_proplist_gets (pl, "device"));
 
     renego = gst_event_new_custom (GST_EVENT_CUSTOM_UPSTREAM,
-        gst_structure_empty_new ("pulse-format-lost"));
+        gst_structure_new_empty ("pulse-format-lost"));
 
     if (!gst_pad_push_event (GST_BASE_SINK (psink)->sinkpad, renego)) {
       /* Nobody handled the format change - emit an error */

@@ -1750,7 +1750,7 @@ gst_rtp_session_getcaps_send_rtp (GstPad * pad, GstCaps * filter)
    * internal SSRC so that we don't have to patch it. Create a structure with
    * the SSRC and another one without. */
   s1 = gst_structure_new ("application/x-rtp", "ssrc", G_TYPE_UINT, ssrc, NULL);
-  s2 = gst_structure_empty_new ("application/x-rtp");
+  s2 = gst_structure_new_empty ("application/x-rtp");
 
   result = gst_caps_new_full (s1, s2, NULL);
 
