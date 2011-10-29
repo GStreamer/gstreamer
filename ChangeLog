@@ -1,9 +1,305 @@
-=== release 0.10.21 ===
+=== release 0.10.22 ===
 
-2011-01-20  Edward Hervey <bilboed@bilboed.com>
+2011-10-29  Tim-Philipp Müller <tim.muller@collabora.co.uk>
 
 	* configure.ac:
-	  releasing 0.10.21, "She used to be an ironhorse, twenty years ago"
+	  releasing 0.10.22, "Ninety Tons of Thunder"
+
+2011-10-29 16:01:24 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* configure.ac:
+	  configure: use AG_GST_SET_PACKAGE_RELEASE_DATETIME_WITH_NANO
+	  For python plugin, but also to ensure there's an entry in the
+	  doap file for releases.
+
+2011-10-20 13:24:59 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* configure.ac:
+	  0.10.21.2 pre-release
+
+2011-08-26 15:22:16 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* pkgconfig/gst-python-uninstalled.pc.in:
+	* pkgconfig/gst-python.pc.in:
+	  pkgconfig: Add Cflags with the include path for the headers
+	  https://bugzilla.gnome.org/show_bug.cgi?id=657435
+
+2011-10-11 23:33:21 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* gst/Makefile.am:
+	* gst/audio.override:
+	* gst/common.h:
+	* gst/interfaces.override:
+	* gst/pbutils.override:
+	* gst/pygst-private.h:
+	* gst/pygst.h:
+	* gst/pygstminiobject.c:
+	* gst/pygstminiobject.h:
+	* gst/pygstvalue.h:
+	* gst/tag.override:
+	* gst/video.override:
+	  Don't install common.h and remove from public headers
+	  Doesn't seem to be needed anyway. Also remove duplicate
+	  pygobject.h include in common.h while at it.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=657435
+
+2011-10-11 22:59:05 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* gst/Makefile.am:
+	  Install headers into $includedir/gstreamer-0.10/gst not .../pygst/
+	  This matches the directory layout in the source tree and makes it
+	  possible to find the headers (e.g. from g-e-s) in an uninstalled
+	  setup.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=657435
+
+2011-10-11 22:57:30 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* gst/Makefile.am:
+	  Keep pygst-private.h in noinst_HEADERS
+	  Makes sure it gets disted.
+
+2011-01-13 14:59:16 +0000  Vincent Penquerc'h <vincent.penquerch@collabora.co.uk>
+
+	* examples/remuxer.py:
+	  remuxer.py: allow more than one stream of the same type
+	  Queue names would collide otherwise, so just pass None for now. Also
+	  guarantees that we don't get silly names like "queue_audio/x-foobar".
+	  https://bugzilla.gnome.org/show_bug.cgi?id=639427
+
+2011-01-13 14:15:34 +0000  Vincent Penquerc'h <vincent.penquerch@collabora.co.uk>
+
+	* examples/remuxer.py:
+	  remuxer.py: do not crash when clicking open without having selected a file
+	  https://bugzilla.gnome.org/show_bug.cgi?id=639421
+
+2011-01-13 14:19:05 +0000  Vincent Penquerc'h <vincent.penquerch@collabora.co.uk>
+
+	* examples/remuxer.py:
+	  remuxer.py: list files named *.og[gvax], not only *.ogg
+	  These are all recommended extensions for Ogg streams.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=639423
+
+2011-09-06 21:53:08 +0200  Stefan Sauer <ensonic@users.sf.net>
+
+	* common:
+	  Automatic update of common submodule
+	  From a39eb83 to 11f0cd5
+
+2011-09-06 19:13:44 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* gst/gstcaps.override:
+	  caps.override: fix compiler warning
+	  Re-use the already-extracted caps and structure pointers, instead
+	  of getting them again, thus fixing:
+	  gstcaps.override: In function 'pygst_caps_sq_item':
+	  gstcaps.override:361:16: error: variable 'structure' set but not used
+
+2011-09-06 19:07:35 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* gst/gstpad.override:
+	  pad.override: fix pad probe return value handling
+	  Don't forget to return the return value, makes buffer and event probes
+	  work much better.
+
+2011-09-06 16:06:39 +0200  Stefan Sauer <ensonic@users.sf.net>
+
+	* common:
+	  Automatic update of common submodule
+	  From 605cd9a to a39eb83
+
+2011-08-10 17:10:01 +0200  Thibault Saunier <thibault.saunier@collabora.com>
+
+	* configure.ac:
+	* gst/Makefile.am:
+	* pkgconfig/gst-python.pc.in:
+	  Install pygst.h so it can be reused by other bindings
+	  Also add a PYGST_CFLAGS
+	  https://bugzilla.gnome.org/show_bug.cgi?id=656289
+
+2011-08-10 17:13:17 +0200  Thibault Saunier <thibault.saunier@collabora.com>
+
+	* gst/pygst.h:
+	* gst/pygstminiobject.c:
+	* gst/pygstminiobject.h:
+	  gst: Move PyGstMiniObject to public API.
+	  Allows it to be reused from 3rd party modules.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=656289
+
+2011-06-23 11:29:46 -0700  David Schleef <ds@schleef.org>
+
+	* common:
+	  Automatic update of common submodule
+	  From 69b981f to 605cd9a
+
+2011-05-25 09:38:22 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* gst/gstpad.override:
+	  gst: Don't use private GstPad API to add data/buffer/event probes
+	  This does not work anymore with latest core because of the
+	  pad cache that enables use of a fast path during data passing
+	  in many situations.
+	  Fixes bug #650987.
+
+2011-05-24 19:20:44 +0200  Andoni Morales Alastruey <amorales@flumotion.com>
+
+	* gst/gstpad.override:
+	  gst: Fix override of pad probes
+	  Fixes bug #650986.
+
+2011-05-19 22:59:28 +0300  Stefan Kost <ensonic@users.sf.net>
+
+	* common:
+	  Automatic update of common submodule
+	  From 9e5bbd5 to 69b981f
+
+2011-05-18 16:13:11 +0300  Stefan Kost <ensonic@users.sf.net>
+
+	* common:
+	  Automatic update of common submodule
+	  From fd35073 to 9e5bbd5
+
+2011-05-18 12:26:36 +0300  Stefan Kost <ensonic@users.sf.net>
+
+	* common:
+	  Automatic update of common submodule
+	  From 46dfcea to fd35073
+
+2011-05-03 09:37:36 -0300  Thiago Santos <thiago.sousa.santos@collabora.co.uk>
+
+	* gst/pbutils.defs:
+	  pbutils: Encoding profiles accept null caps restrictions
+	  Add 'null-ok' for encoding video/audio profiles constructor
+	  so they accept None as caps restriction parameter
+
+2011-05-02 16:59:30 -0300  Thiago Santos <thiago.sousa.santos@collabora.co.uk>
+
+	* gst/gstmodule.c:
+	  gstmodule: Check for Py_None when setting a miniobject
+	  Check if we got a None value before trying to use it as a
+	  PyGstMiniObject.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=649227
+
+2011-04-24 14:05:55 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* common:
+	  Automatic update of common submodule
+	  From c3cafe1 to 46dfcea
+
+2011-04-04 15:58:52 +0300  Stefan Kost <ensonic@users.sf.net>
+
+	* common:
+	  Automatic update of common submodule
+	  From 1ccbe09 to c3cafe1
+
+2011-03-25 22:35:52 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* common:
+	  Automatic update of common submodule
+	  From 193b717 to 1ccbe09
+
+2011-03-25 14:57:27 +0200  Stefan Kost <ensonic@users.sf.net>
+
+	* common:
+	  Automatic update of common submodule
+	  From b77e2bf to 193b717
+
+2011-03-25 09:34:04 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* common:
+	  Automatic update of common submodule
+	  From d8814b6 to b77e2bf
+
+2011-03-25 09:10:14 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* common:
+	  Automatic update of common submodule
+	  From 6aaa286 to d8814b6
+
+2011-03-24 18:50:52 +0200  Stefan Kost <ensonic@users.sf.net>
+
+	* common:
+	  Automatic update of common submodule
+	  From 6aec6b9 to 6aaa286
+
+2011-03-22 13:04:02 +0100  Luis de Bethencourt <luis@debethencourt.com>
+
+	* configure.ac:
+	  configure.ac: redundant uses of AC_MSG_RESULT()
+	  cleaned the redundant uses of AC_MSG_RESULT() in configure.ac
+
+2011-03-18 19:34:57 +0100  Luis de Bethencourt <luis@debethencourt.com>
+
+	* autogen.sh:
+	  autogen: wingo signed comment
+
+2011-02-28 18:34:03 +0100  Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>
+
+	* common:
+	  Automatic update of common submodule
+	  From 1de7f6a to 6aec6b9
+
+2011-02-14 12:54:46 +0200  Stefan Kost <ensonic@users.sf.net>
+
+	* common:
+	  Automatic update of common submodule
+	  From f94d739 to 1de7f6a
+
+2011-02-09 09:40:17 +0000  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* gst/gst-0.10.31.ignore:
+	  gst-0.10.31.ignore: fix build against core 0.10.30
+
+2011-01-24 17:55:55 +0530  Arun Raghavan <arun.raghavan@collabora.co.uk>
+
+	* codegen/codegen.py:
+	  codegen: Respect ignore-type for miniobjects
+	  https://bugzilla.gnome.org/show_bug.cgi?id=640410
+
+2011-01-24 17:56:16 +0530  Arun Raghavan <arun.raghavan@collabora.co.uk>
+
+	* codegen/override.py:
+	  codegen: Handle empty lines in overrides gracefully
+	  Without this, having an empty line in an override will cause codegen to
+	  unceremoniously choke to death.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=640341
+
+2011-02-06 12:08:14 +0100  Edward Hervey <bilboed@bilboed.com>
+
+	* gst/pbutils.defs:
+	  pbutils: Specify which string variables can be NULL
+	  Without this you can't pass None to the various methods/constructors
+
+2011-01-28 16:59:11 +0000  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* gst/gstmodule.c:
+	  gstmodule: remove unused label to fix compiler warning
+	  gstmodule.c: In function 'pygst_fraction_to_value':
+	  gstmodule.c:129:1: error: label 'out' defined but not used
+	  https://bugzilla.gnome.org/show_bug.cgi?id=640837
+
+2011-01-21 18:13:57 +0100  Andoni Morales Alastruey <amorales@flumotion.com>
+
+	* testsuite/runtests.py:
+	  tests: fix checks when the locale is not the default one
+	  Some tests (test_pbutils.py) checks against strings for the
+	  english locale, so we should force it before running any test
+	  https://bugzilla.gnome.org/show_bug.cgi?id=640207
+
+2011-01-25 11:17:12 +0100  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* configure.ac:
+	  configure.ac: And back to development we go
+
+=== release 0.10.21 ===
+
+2011-01-20 21:16:38 +0100  Edward Hervey <bilboed@bilboed.com>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	* gst-python.doap:
+	  Release 0.10.21
 
 2011-01-06 17:40:28 +0000  christian schaller <christian.schaller@collabora.co.uk>
 

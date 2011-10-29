@@ -1,6 +1,31 @@
-This is GStreamer Python Bindings 0.10.21, "She used to be an ironhorse, twenty years ago"
+This is GStreamer Python Bindings 0.10.22, "Ninety Tons of Thunder"
 
 Changes since 0.10.21:
+
+      * pad probes working properly with recent GStreamer
+      * fixes for encoding profiles and encodebin
+      * build fixes
+      * install pygst.h, pygstminiobject.h and other headers
+        so they can be used by other python bindings such the
+        ones for gstreamer-editing-services
+
+Bugs fixed since 0.10.21:
+
+      * 587432 : Update .defs for changed API
+      * 639421 : remuxer.py: do not crash when clicking open without having selected a file
+      * 639423 : remuxer.py: list files named *.og[gvax], not only *.ogg
+      * 639427 : remuxer.py: allow more than one stream of the same type
+      * 640207 : Fix make check when locale is not the default one
+      * 640341 : gst-python 0.10.21 does not compile
+      * 640410 : codegen: Respect ignore-type for miniobjects
+      * 640837 : GStreamer-python fails to build
+      * 649227 : Check for Py_None when setting a miniobject
+      * 650986 : Fix overrides of pad probes
+      * 650987 : 0.10.34 gstreamer has pad_probe counting issues
+      * 656289 : We should be able to reuse (Py)GstMiniObject and its subclasses from outside of pygst
+      * 657435 : Does not add the include path to the pkg-config file, needed in an uninstalled setup by g-e-s
+
+Changes since 0.10.20:
 
       * gstreamer core/base 0.10.32 API additions
       * Fix GstDiscover methods
