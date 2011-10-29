@@ -4836,7 +4836,7 @@ gst_pad_start_task (GstPad * pad, GstTaskFunction func, gpointer data)
   GST_OBJECT_LOCK (pad);
   task = GST_PAD_TASK (pad);
   if (task == NULL) {
-    task = gst_task_create (func, data);
+    task = gst_task_new (func, data);
     gst_task_set_lock (task, GST_PAD_GET_STREAM_LOCK (pad));
     gst_task_set_thread_callbacks (task, &thr_callbacks, pad, NULL);
     GST_DEBUG_OBJECT (pad, "created task");

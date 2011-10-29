@@ -322,6 +322,10 @@ The 0.11 porting guide
 * GstTypeFind
     gst_type_find_peek() returns a const guint8 * now.
 
+* GstTask
+
+    gst_task_create() -> gst_task_new()
+
 * GstAdapter
     gst_adapter_peek() is removed, use gst_adapter_map() and gst_adapter_unmap()
     to get access to raw data from the adapter.

@@ -2560,7 +2560,7 @@ GST_TASK_SIGNAL
 GST_TASK_STATE
 GST_TASK_WAIT
 
-gst_task_create
+gst_task_new
 gst_task_set_lock
 gst_task_set_priority
 

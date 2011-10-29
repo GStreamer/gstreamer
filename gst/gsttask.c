@@ -45,7 +45,7 @@
  * and gst_task_stop() respectively or with the gst_task_set_state() function.
  *
  * A #GstTask will repeatedly call the #GstTaskFunction with the user data
- * that was provided when creating the task with gst_task_create(). While calling
+ * that was provided when creating the task with gst_task_new(). While calling
  * the function it will acquire the provided lock. The provided lock is released
  * when the task pauses or stops.
  *
@@ -377,7 +377,7 @@ gst_task_cleanup_all (void)
 }
 
 /**
- * gst_task_create:
+ * gst_task_new:
  * @func: The #GstTaskFunction to use
  * @data: (closure): User data to pass to @func
  *
@@ -400,7 +400,7 @@ gst_task_cleanup_all (void)
  * MT safe.
  */
 GstTask *
-gst_task_create (GstTaskFunction func, gpointer data)
+gst_task_new (GstTaskFunction func, gpointer data)
 {
   GstTask *task;
 

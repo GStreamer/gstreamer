@@ -1101,11 +1101,11 @@ EXPORTS
 	gst_tag_setter_reset_tags
 	gst_tag_setter_set_tag_merge_mode
 	gst_task_cleanup_all
-	gst_task_create
 	gst_task_get_pool
 	gst_task_get_state
 	gst_task_get_type
 	gst_task_join
+	gst_task_new
 	gst_task_pause
 	gst_task_pool_cleanup
 	gst_task_pool_get_type

@@ -46,7 +46,7 @@ GST_START_TEST (test_join)
   GstTask *t;
   gboolean ret;
 
-  t = gst_task_create (task_func2, &t);
+  t = gst_task_new (task_func2, &t);
   fail_if (t == NULL);
 
   gst_task_set_lock (t, &task_mutex);
@@ -89,7 +89,7 @@ GST_START_TEST (test_lock_start)
   GstTask *t;
   gboolean ret;
 
-  t = gst_task_create (task_func, NULL);
+  t = gst_task_new (task_func, NULL);
   fail_if (t == NULL);
 
   gst_task_set_lock (t, &task_mutex);
@@ -126,7 +126,7 @@ GST_START_TEST (test_lock)
   GstTask *t;
   gboolean ret;
 
-  t = gst_task_create (task_func, NULL);
+  t = gst_task_new (task_func, NULL);
   fail_if (t == NULL);
 
   gst_task_set_lock (t, &task_mutex);
@@ -153,7 +153,7 @@ GST_START_TEST (test_no_lock)
   GstTask *t;
   gboolean ret;
 
-  t = gst_task_create (task_func, NULL);
+  t = gst_task_new (task_func, NULL);
   fail_if (t == NULL);
 
   /* stop should be possible without lock */
@@ -179,7 +179,7 @@ GST_START_TEST (test_create)
 {
   GstTask *t;
 
-  t = gst_task_create (task_func, NULL);
+  t = gst_task_new (task_func, NULL);
   fail_if (t == NULL);
 
   gst_object_unref (t);
