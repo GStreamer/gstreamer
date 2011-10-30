@@ -61,11 +61,13 @@ typedef struct
 
   GstTagMergeFunc merge_func;   /* functions to merge the values */
   GstTagFlag flag;              /* type of tag */
+  GQuark name_quark;            /* quark for the name */
 }
 GstTagInfo;
 
 static GMutex *__tag_mutex;
 
+/* tags hash table: maps tag name string => GstTagInfo */
 static GHashTable *__tags;
 
 #define TAG_LOCK g_mutex_lock (__tag_mutex)
@@ -93,7 +95,7 @@ void
 _gst_tag_initialize (void)
 {
   __tag_mutex = g_mutex_new ();
-  __tags = g_hash_table_new (g_direct_hash, g_direct_equal);
+  __tags = g_hash_table_new (g_str_hash, g_str_equal);
   gst_tag_register (GST_TAG_TITLE, GST_TAG_FLAG_META,
       G_TYPE_STRING,
       _("title"), _("commonly used title"), gst_tag_merge_strings_with_comma);
@@ -418,12 +420,12 @@ gst_tag_merge_strings_with_comma (GValue * dest, const GValue * src)
 }
 
 static GstTagInfo *
-gst_tag_lookup (GQuark entry)
+gst_tag_lookup (const gchar * tag_name)
 {
   GstTagInfo *ret;
 
   TAG_LOCK;
-  ret = g_hash_table_lookup (__tags, GUINT_TO_POINTER (entry));
+  ret = g_hash_table_lookup (__tags, (gpointer) tag_name);
   TAG_UNLOCK;
 
   return ret;
@@ -464,16 +466,15 @@ void
 gst_tag_register (const gchar * name, GstTagFlag flag, GType type,
     const gchar * nick, const gchar * blurb, GstTagMergeFunc func)
 {
-  GQuark key;
   GstTagInfo *info;
+  gchar *name_dup;
 
   g_return_if_fail (name != NULL);
   g_return_if_fail (nick != NULL);
   g_return_if_fail (blurb != NULL);
   g_return_if_fail (type != 0 && type != GST_TYPE_LIST);
 
-  key = g_quark_from_string (name);
-  info = gst_tag_lookup (key);
+  info = gst_tag_lookup (name);
 
   if (info) {
     g_return_if_fail (info->type == type);
@@ -487,8 +488,13 @@ gst_tag_register (const gchar * name, GstTagFlag flag, GType type,
   info->blurb = g_strdup (blurb);
   info->merge_func = func;
 
+  /* we make a copy for the hash table anyway, which will stay around, so
+   * can use that for the quark table too */
+  name_dup = g_strdup (name);
+  info->name_quark = g_quark_from_static_string (name_dup);
+
   TAG_LOCK;
-  g_hash_table_insert (__tags, GUINT_TO_POINTER (key), info);
+  g_hash_table_insert (__tags, (gpointer) name_dup, info);
   TAG_UNLOCK;
 }
 
@@ -505,7 +511,7 @@ gst_tag_exists (const gchar * tag)
 {
   g_return_val_if_fail (tag != NULL, FALSE);
 
-  return gst_tag_lookup (g_quark_from_string (tag)) != NULL;
+  return gst_tag_lookup (tag) != NULL;
 }
 
 /**
@@ -522,7 +528,7 @@ gst_tag_get_type (const gchar * tag)
   GstTagInfo *info;
 
   g_return_val_if_fail (tag != NULL, 0);
-  info = gst_tag_lookup (g_quark_from_string (tag));
+  info = gst_tag_lookup (tag);
   g_return_val_if_fail (info != NULL, 0);
 
   return info->type;
@@ -543,7 +549,7 @@ gst_tag_get_nick (const gchar * tag)
   GstTagInfo *info;
 
   g_return_val_if_fail (tag != NULL, NULL);
-  info = gst_tag_lookup (g_quark_from_string (tag));
+  info = gst_tag_lookup (tag);
   g_return_val_if_fail (info != NULL, NULL);
 
   return info->nick;
@@ -564,7 +570,7 @@ gst_tag_get_description (const gchar * tag)
   GstTagInfo *info;
 
   g_return_val_if_fail (tag != NULL, NULL);
-  info = gst_tag_lookup (g_quark_from_string (tag));
+  info = gst_tag_lookup (tag);
   g_return_val_if_fail (info != NULL, NULL);
 
   return info->blurb;
@@ -584,7 +590,7 @@ gst_tag_get_flag (const gchar * tag)
   GstTagInfo *info;
 
   g_return_val_if_fail (tag != NULL, GST_TAG_FLAG_UNDEFINED);
-  info = gst_tag_lookup (g_quark_from_string (tag));
+  info = gst_tag_lookup (tag);
   g_return_val_if_fail (info != NULL, GST_TAG_FLAG_UNDEFINED);
 
   return info->flag;
@@ -605,7 +611,7 @@ gst_tag_is_fixed (const gchar * tag)
   GstTagInfo *info;
 
   g_return_val_if_fail (tag != NULL, FALSE);
-  info = gst_tag_lookup (g_quark_from_string (tag));
+  info = gst_tag_lookup (tag);
   g_return_val_if_fail (info != NULL, FALSE);
 
   return info->merge_func == NULL;
@@ -808,35 +814,38 @@ GstTagCopyData;
 
 static void
 gst_tag_list_add_value_internal (GstStructure * list, GstTagMergeMode mode,
-    GQuark tag, const GValue * value, GstTagInfo * info)
+    const gchar * tag, const GValue * value, GstTagInfo * info)
 {
   const GValue *value2;
+  GQuark tag_quark;
 
   if (info == NULL) {
     info = gst_tag_lookup (tag);
     if (G_UNLIKELY (info == NULL)) {
-      g_warning ("unknown tag '%s'", g_quark_to_string (tag));
+      g_warning ("unknown tag '%s'", tag);
       return;
     }
   }
 
+  tag_quark = info->name_quark;
+
   if (info->merge_func
-      && (value2 = gst_structure_id_get_value (list, tag)) != NULL) {
+      && (value2 = gst_structure_id_get_value (list, tag_quark)) != NULL) {
     GValue dest = { 0, };
 
     switch (mode) {
       case GST_TAG_MERGE_REPLACE_ALL:
       case GST_TAG_MERGE_REPLACE:
-        gst_structure_id_set_value (list, tag, value);
+        gst_structure_id_set_value (list, tag_quark, value);
         break;
       case GST_TAG_MERGE_PREPEND:
         gst_value_list_merge (&dest, value, value2);
-        gst_structure_id_set_value (list, tag, &dest);
+        gst_structure_id_set_value (list, tag_quark, &dest);
         g_value_unset (&dest);
         break;
       case GST_TAG_MERGE_APPEND:
         gst_value_list_merge (&dest, value2, value);
-        gst_structure_id_set_value (list, tag, &dest);
+        gst_structure_id_set_value (list, tag_quark, &dest);
         g_value_unset (&dest);
         break;
       case GST_TAG_MERGE_KEEP:
@@ -850,13 +859,13 @@ gst_tag_list_add_value_internal (GstStructure * list, GstTagMergeMode mode,
     switch (mode) {
       case GST_TAG_MERGE_APPEND:
       case GST_TAG_MERGE_KEEP:
-        if (gst_structure_id_get_value (list, tag) != NULL)
+        if (gst_structure_id_get_value (list, tag_quark) != NULL)
           break;
         /* fall through */
       case GST_TAG_MERGE_REPLACE_ALL:
       case GST_TAG_MERGE_REPLACE:
       case GST_TAG_MERGE_PREPEND:
-        gst_structure_id_set_value (list, tag, value);
+        gst_structure_id_set_value (list, tag_quark, value);
         break;
       case GST_TAG_MERGE_KEEP_ALL:
         break;
@@ -868,10 +877,13 @@ gst_tag_list_add_value_internal (GstStructure * list, GstTagMergeMode mode,
 }
 
 static gboolean
-gst_tag_list_copy_foreach (GQuark tag, const GValue * value, gpointer user_data)
+gst_tag_list_copy_foreach (GQuark tag_quark, const GValue * value,
+    gpointer user_data)
 {
   GstTagCopyData *copy = (GstTagCopyData *) user_data;
+  const gchar *tag;
 
+  tag = g_quark_to_string (tag_quark);
   gst_tag_list_add_value_internal (copy->list, copy->mode, tag, value, NULL);
 
   return TRUE;
@@ -1063,7 +1075,6 @@ gst_tag_list_add_valist (GstTagList * list, GstTagMergeMode mode,
     const gchar * tag, va_list var_args)
 {
   GstTagInfo *info;
-  GQuark quark;
   gchar *error = NULL;
 
   g_return_if_fail (GST_IS_TAG_LIST (list));
@@ -1077,8 +1088,7 @@ gst_tag_list_add_valist (GstTagList * list, GstTagMergeMode mode,
   while (tag != NULL) {
     GValue value = { 0, };
 
-    quark = g_quark_from_string (tag);
-    info = gst_tag_lookup (quark);
+    info = gst_tag_lookup (tag);
     if (G_UNLIKELY (info == NULL)) {
       g_warning ("unknown tag '%s'", tag);
       return;
@@ -1092,7 +1102,7 @@ gst_tag_list_add_valist (GstTagList * list, GstTagMergeMode mode,
        */
       return;
     }
-    gst_tag_list_add_value_internal (list, mode, quark, &value, info);
+    gst_tag_list_add_value_internal (list, mode, tag, &value, info);
     g_value_unset (&value);
     tag = va_arg (var_args, gchar *);
   }
@@ -1111,8 +1121,6 @@ void
 gst_tag_list_add_valist_values (GstTagList * list, GstTagMergeMode mode,
     const gchar * tag, va_list var_args)
 {
-  GQuark quark;
-
   g_return_if_fail (GST_IS_TAG_LIST (list));
   g_return_if_fail (GST_TAG_MODE_IS_VALID (mode));
   g_return_if_fail (tag != NULL);
@@ -1122,10 +1130,15 @@ gst_tag_list_add_valist_values (GstTagList * list, GstTagMergeMode mode,
   }
 
   while (tag != NULL) {
-    quark = g_quark_from_string (tag);
-    g_return_if_fail (gst_tag_lookup (quark) != NULL);
-    gst_tag_list_add_value_internal (list, mode, quark, va_arg (var_args,
-            GValue *), NULL);
+    GstTagInfo *info;
+
+    info = gst_tag_lookup (tag);
+    if (G_UNLIKELY (info == NULL)) {
+      g_warning ("unknown tag '%s'", tag);
+      return;
+    }
+    gst_tag_list_add_value_internal (list, mode, tag, va_arg (var_args,
+            GValue *), info);
     tag = va_arg (var_args, gchar *);
   }
 }
@@ -1149,8 +1162,7 @@ gst_tag_list_add_value (GstTagList * list, GstTagMergeMode mode,
   g_return_if_fail (GST_TAG_MODE_IS_VALID (mode));
   g_return_if_fail (tag != NULL);
 
-  gst_tag_list_add_value_internal (list, mode, g_quark_from_string (tag),
-      value, NULL);
+  gst_tag_list_add_value_internal (list, mode, tag, value, NULL);
 }
 
 /**
@@ -1278,7 +1290,7 @@ gst_tag_list_copy_value (GValue * dest, const GstTagList * list,
     return FALSE;
 
   if (G_VALUE_TYPE (src) == GST_TYPE_LIST) {
-    GstTagInfo *info = gst_tag_lookup (g_quark_from_string (tag));
+    GstTagInfo *info = gst_tag_lookup (tag);
 
     if (!info)
       return FALSE;
