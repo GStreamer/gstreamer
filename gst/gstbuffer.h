@@ -26,7 +26,6 @@
 
 #include <gst/gstminiobject.h>
 #include <gst/gstclock.h>
-#include <gst/gstcaps.h>
 #include <gst/gstmemory.h>
 
 G_BEGIN_DECLS
@@ -351,8 +350,7 @@ gst_buffer_ref (GstBuffer * buf)
  * @buf: (transfer full): a #GstBuffer.
  *
  * Decreases the refcount of the buffer. If the refcount reaches 0, the buffer
- * will be freed. If GST_BUFFER_MALLOCDATA() is non-NULL, this pointer will
- * also be freed at this time.
+ * with the associated metadata and memoty will be freed.
  */
 #ifdef _FOOL_GTK_DOC_
 G_INLINE_FUNC void gst_buffer_unref (GstBuffer * buf);
