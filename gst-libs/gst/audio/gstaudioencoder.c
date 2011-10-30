@@ -1081,6 +1081,9 @@ gst_audio_encoder_sink_setcaps (GstAudioEncoder * enc, GstCaps * caps)
     if (klass->set_format)
       res = klass->set_format (enc, &state);
 
+    if (res)
+      ctx->info = state;
+
     /* notify if new latency */
     GST_OBJECT_LOCK (enc);
     if ((ctx->min_latency > 0 && ctx->min_latency != old_min_latency) ||
