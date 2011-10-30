@@ -626,16 +626,24 @@ GList *
 gst_registry_plugin_filter (GstRegistry * registry,
     GstPluginFilter filter, gboolean first, gpointer user_data)
 {
-  GList *list;
-  GList *g;
+  GList *list = NULL;
 
   g_return_val_if_fail (GST_IS_REGISTRY (registry), NULL);
 
   GST_OBJECT_LOCK (registry);
-  list = gst_filter_run (registry->plugins, (GstFilterFunc) filter, first,
-      user_data);
-  for (g = list; g; g = g->next) {
-    gst_object_ref (GST_PLUGIN_CAST (g->data));
+  {
+    const GList *walk;
+
+    for (walk = registry->plugins; walk != NULL; walk = walk->next) {
+      GstPlugin *plugin = walk->data;
+
+      if (filter == NULL || filter (plugin, user_data)) {
+        list = g_list_prepend (list, gst_object_ref (plugin));
+
+        if (first)
+          break;
+      }
+    }
   }
   GST_OBJECT_UNLOCK (registry);
 
@@ -672,16 +680,24 @@ gst_registry_get_feature_list_or_create (GstRegistry * registry,
 
   if (G_UNLIKELY (!*previous || priv->cookie != *cookie)) {
     GstTypeNameData data;
+    const GList *walk;
 
-    if (*previous)
+    if (*previous) {
       gst_plugin_feature_list_free (*previous);
+      *previous = NULL;
+    }
 
     data.type = type;
     data.name = NULL;
-    *previous =
-        gst_filter_run (registry->features,
-        (GstFilterFunc) gst_plugin_feature_type_name_filter, FALSE, &data);
-    g_list_foreach (*previous, (GFunc) gst_object_ref, NULL);
+
+    for (walk = registry->features; walk != NULL; walk = walk->next) {
+      GstPluginFeature *feature = walk->data;
+
+      if (gst_plugin_feature_type_name_filter (feature, &data)) {
+        *previous = g_list_prepend (*previous, gst_object_ref (feature));
+      }
+    }
+
     *cookie = priv->cookie;
     res = TRUE;
   }
@@ -763,16 +779,24 @@ GList *
 gst_registry_feature_filter (GstRegistry * registry,
     GstPluginFeatureFilter filter, gboolean first, gpointer user_data)
 {
-  GList *list;
-  GList *g;
+  GList *list = NULL;
 
   g_return_val_if_fail (GST_IS_REGISTRY (registry), NULL);
 
   GST_OBJECT_LOCK (registry);
-  list = gst_filter_run (registry->features, (GstFilterFunc) filter, first,
-      user_data);
-  for (g = list; g; g = g->next) {
-    gst_object_ref (GST_PLUGIN_FEATURE_CAST (g->data));
+  {
+    const GList *walk;
+
+    for (walk = registry->features; walk != NULL; walk = walk->next) {
+      GstPluginFeature *feature = walk->data;
+
+      if (filter == NULL || filter (feature, user_data)) {
+        list = g_list_prepend (list, gst_object_ref (feature));
+
+        if (first)
+          break;
+      }
+    }
   }
   GST_OBJECT_UNLOCK (registry);
 
