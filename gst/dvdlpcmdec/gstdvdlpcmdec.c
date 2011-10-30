@@ -219,10 +219,8 @@ gst_dvdlpcmdec_send_tags (GstDvdLpcmDec * dvdlpcmdec)
 
   bitrate = bpf * 8 * rate;
 
-  taglist = gst_tag_list_new ();
-
-  gst_tag_list_add (taglist, GST_TAG_MERGE_APPEND,
-      GST_TAG_AUDIO_CODEC, "LPCM Audio", GST_TAG_BITRATE, bitrate, NULL);
+  taglist = gst_tag_list_new (GST_TAG_AUDIO_CODEC, "LPCM Audio",
+      GST_TAG_BITRATE, bitrate, NULL);
 
   gst_element_found_tags_for_pad (GST_ELEMENT (dvdlpcmdec), dvdlpcmdec->srcpad,
       taglist);

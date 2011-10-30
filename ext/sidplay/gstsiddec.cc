@@ -257,7 +257,7 @@ update_tags (GstSidDec * siddec)
   GstTagList *list;
 
   if (siddec->tune->getInfo (info)) {
-    list = gst_tag_list_new ();
+    list = gst_tag_list_new_empty ();
 
     if (info.nameString) {
       gst_tag_list_add (list, GST_TAG_MERGE_REPLACE,

@@ -1390,7 +1390,7 @@ gst_asf_demux_push_complete_payloads (GstASFDemux * demux, gboolean force)
 
       /* now post any global tags we may have found */
       if (demux->taglist == NULL)
-        demux->taglist = gst_tag_list_new ();
+        demux->taglist = gst_tag_list_new_empty ();
 
       gst_tag_list_add (demux->taglist, GST_TAG_MERGE_REPLACE,
           GST_TAG_CONTAINER_FORMAT, "ASF", NULL);
@@ -2195,9 +2195,7 @@ gst_asf_demux_add_audio_stream (GstASFDemux * demux,
 
   /* Informing about that audio format we just added */
   if (codec_name) {
-    tags = gst_tag_list_new ();
-    gst_tag_list_add (tags, GST_TAG_MERGE_APPEND, GST_TAG_AUDIO_CODEC,
-        codec_name, NULL);
+    tags = gst_tag_list_new (GST_TAG_AUDIO_CODEC, codec_name, NULL);
     g_free (codec_name);
   }
 
@@ -2279,9 +2277,7 @@ gst_asf_demux_add_video_stream (GstASFDemux * demux,
   gst_caps_set_simple (caps, "format", G_TYPE_UINT, video->tag, NULL);
 
   if (codec_name) {
-    tags = gst_tag_list_new ();
-    gst_tag_list_add (tags, GST_TAG_MERGE_APPEND, GST_TAG_VIDEO_CODEC,
-        codec_name, NULL);
+    tags = gst_tag_list_new (GST_TAG_VIDEO_CODEC, codec_name, NULL);
     g_free (codec_name);
   }
 
@@ -2601,7 +2597,7 @@ gst_asf_demux_process_ext_content_desc (GstASFDemux * demux, guint8 * data,
 
   GST_INFO_OBJECT (demux, "object is an extended content description");
 
-  taglist = gst_tag_list_new ();
+  taglist = gst_tag_list_new_empty ();
 
   /* Content Descriptor Count */
   if (size < 2)
@@ -3063,7 +3059,7 @@ gst_asf_demux_process_comment (GstASFDemux * demux, guint8 * data, guint64 size)
   }
 
   /* parse metadata into taglist */
-  taglist = gst_tag_list_new ();
+  taglist = gst_tag_list_new_empty ();
   g_value_init (&value, G_TYPE_STRING);
   for (i = 0; i < G_N_ELEMENTS (tags); ++i) {
     if (tags[i].val_utf8 && strlen (tags[i].val_utf8) > 0 && tags[i].gst_tag) {
@@ -3120,10 +3116,10 @@ gst_asf_demux_process_bitrate_props_object (GstASFDemux * demux, guint8 * data,
       GST_DEBUG_OBJECT (demux, "bitrate of stream %u = %u", stream_id, bitrate);
       stream = gst_asf_demux_get_stream (demux, stream_id);
       if (stream) {
-        if (stream->pending_tags == NULL)
-          stream->pending_tags = gst_tag_list_new ();
-        gst_tag_list_add (stream->pending_tags, GST_TAG_MERGE_REPLACE,
-            GST_TAG_BITRATE, bitrate, NULL);
+        if (stream->pending_tags == NULL) {
+          stream->pending_tags =
+              gst_tag_list_new (GST_TAG_BITRATE, bitrate, NULL);
+        }
       } else {
         GST_WARNING_OBJECT (demux, "Stream id %u wasn't found", stream_id);
       }
@@ -3479,7 +3475,7 @@ done:
     /* add language info now if we have it */
     if (stream->ext_props.lang_idx < demux->num_languages) {
       if (stream->pending_tags == NULL)
-        stream->pending_tags = gst_tag_list_new ();
+        stream->pending_tags = gst_tag_list_new_empty ();
       GST_LOG_OBJECT (demux, "stream %u has language '%s'", stream->id,
           demux->languages[stream->ext_props.lang_idx]);
       gst_tag_list_add (stream->pending_tags, GST_TAG_MERGE_APPEND,

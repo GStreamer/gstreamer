@@ -26,7 +26,7 @@
  * <refsect2>
  * <title>Example pipelines</title>
  * |[
- * gst-launch filesrc location=music.mp3 ! mad ! audioconvert ! audioresample ! autoaudiosink
+ * gst-launch filesrc location=music.mp3 ! mpegaudioparse ! mad ! audioconvert ! audioresample ! autoaudiosink
  * ]| Decode the mp3 file and play
  * </refsect2>
  */
@@ -906,9 +906,7 @@ G_STMT_START{                                                   \
     emphasis =
         g_enum_get_value (g_type_class_peek (GST_TYPE_MAD_EMPHASIS),
         mad->header.emphasis);
-    list = gst_tag_list_new ();
-    gst_tag_list_add (list, GST_TAG_MERGE_REPLACE,
-        GST_TAG_LAYER, mad->header.layer,
+    list = gst_tag_list_new (GST_TAG_LAYER, mad->header.layer,
         GST_TAG_MODE, mode->value_nick,
         GST_TAG_EMPHASIS, emphasis->value_nick, NULL);
     if (!mad->framed) {
@@ -925,7 +923,7 @@ G_STMT_START{                                                   \
   CHECK_HEADER (bitrate, "bitrate");
   if (!mad->xing_found && changed) {
     if (!list)
-      list = gst_tag_list_new ();
+      list = gst_tag_list_new_empty ();
     gst_tag_list_add (list, GST_TAG_MERGE_REPLACE,
         GST_TAG_BITRATE, mad->header.bitrate, NULL);
   }
@@ -1547,9 +1545,8 @@ gst_mad_chain (GstPad * pad, GstBuffer * buffer)
         if (mpg123_parse_xing_header (&mad->frame.header,
                 mad->stream.this_frame, frame_len, &bitrate, &time)) {
           mad->xing_found = TRUE;
-          list = gst_tag_list_new ();
-          gst_tag_list_add (list, GST_TAG_MERGE_REPLACE,
-              GST_TAG_DURATION, (gint64) time * 1000 * 1000 * 1000,
+          list = gst_tag_list_new (GST_TAG_DURATION,
+              (gint64) time * 1000 * 1000 * 1000,
               GST_TAG_BITRATE, bitrate, NULL);
           gst_element_post_message (GST_ELEMENT (mad),
               gst_message_new_tag (GST_OBJECT (mad), gst_tag_list_copy (list)));
@@ -1852,6 +1849,8 @@ plugin_init (GstPlugin * plugin)
 {
   GST_DEBUG_CATEGORY_INIT (mad_debug, "mad", 0, "mad mp3 decoding");
 
+  /* FIXME 0.11: rename to something better like madmp3dec or madmpegaudiodec
+   * or so? */
   return gst_element_register (plugin, "mad", GST_RANK_SECONDARY,
       gst_mad_get_type ());
 }
