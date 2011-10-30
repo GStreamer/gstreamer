@@ -105,10 +105,12 @@ struct _GstPluginFeatureClass {
  *
  * Structure used for filtering based on @name and @type.
  */
+#ifndef GST_DISABLE_DEPRECATED
 typedef struct {
   const gchar   *name;
   GType          type;
 } GstTypeNameData;
+#endif
 
 /**
  * GstPluginFeatureFilter:
@@ -130,8 +132,10 @@ GType           gst_plugin_feature_get_type             (void);
 GstPluginFeature *
                 gst_plugin_feature_load                 (GstPluginFeature *feature);
 
+#ifndef GST_DISABLE_DEPRECATED
 gboolean        gst_plugin_feature_type_name_filter     (GstPluginFeature *feature,
                                                          GstTypeNameData *data);
+#endif
 
 void            gst_plugin_feature_set_rank             (GstPluginFeature *feature, guint rank);
 void            gst_plugin_feature_set_name             (GstPluginFeature *feature, const gchar *name);
