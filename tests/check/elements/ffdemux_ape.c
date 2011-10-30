@@ -51,17 +51,24 @@ error_cb (GstBus * bus, GstMessage * msg, gpointer user_data)
   return GST_BUS_PASS;
 }
 
-static gboolean
-event_probe (GstPad * pad, GstEvent * event, GstTagList ** p_tags)
+static GstProbeReturn
+event_probe (GstPad * pad, GstProbeType type, gpointer type_data,
+    gpointer user_data)
 {
+  GstTagList **p_tags = user_data;
+  GstEvent *event = type_data;
+
   if (GST_EVENT_TYPE (event) == GST_EVENT_TAG) {
-    GST_INFO ("tag event: %" GST_PTR_FORMAT, event->structure);
+    GST_INFO ("tag event: %" GST_PTR_FORMAT, event);
     if (*p_tags == NULL) {
+      GstTagList *event_tags;
+
       GST_INFO ("first tag, saving");
-      *p_tags = gst_tag_list_copy ((GstTagList *) event->structure);
+      gst_event_parse_tag (event, &event_tags);
+      *p_tags = gst_tag_list_copy (event_tags);
     }
   }
-  return TRUE;                  /* keep the data */
+  return GST_PROBE_OK;          /* keep the data */
 }
 
 /* FIXME: push_mode not used currently */
@@ -81,8 +88,8 @@ read_tags_from_file (const gchar * file, gboolean push_mode)
   src = gst_element_factory_make ("filesrc", "filesrc");
   fail_unless (src != NULL, "Failed to create filesrc!");
 
-  dec = gst_element_factory_make ("decodebin2", "decodebin2");
-  fail_unless (dec != NULL, "Failed to create decodebin2!");
+  dec = gst_element_factory_make ("decodebin", "decodebin");
+  fail_unless (dec != NULL, "Failed to create decodebin!");
 
   sink = gst_element_factory_make ("fakesink", "fakesink");
   fail_unless (sink != NULL, "Failed to create fakesink!");
@@ -106,7 +113,7 @@ read_tags_from_file (const gchar * file, gboolean push_mode)
   /* we want to make sure there's a tag event coming out of ffdemux_ape
    * (ie. the one apedemux generated) */
   pad = gst_element_get_static_pad (sink, "sink");
-  gst_pad_add_event_probe (pad, G_CALLBACK (event_probe), &tags);
+  gst_pad_add_probe (pad, GST_PROBE_TYPE_EVENT, event_probe, &tags, NULL);
   gst_object_unref (pad);
 
   state_ret = gst_element_set_state (pipeline, GST_STATE_PAUSED);
@@ -168,10 +175,12 @@ check_for_apedemux_tags (const GstTagList * tags, const gchar * file)
 
 GST_START_TEST (test_tag_caching)
 {
-  if (!gst_default_registry_check_feature_version ("apedemux", 0, 10, 0) ||
-      !gst_default_registry_check_feature_version ("decodebin2", 0, 10, 0)) {
+#define MIN_VERSION GST_VERSION_MAJOR, GST_VERSION_MINOR, 0
+
+  if (!gst_default_registry_check_feature_version ("apedemux", MIN_VERSION) ||
+      !gst_default_registry_check_feature_version ("decodebin", MIN_VERSION)) {
     g_printerr ("Skipping test_tag_caching: required element apedemux or "
-        "decodebin2 element not found\n");
+        "decodebin element not found\n");
     return;
   }
 

@@ -111,7 +111,7 @@ GST_START_TEST (test_libavcodec_locks)
   sinks = g_strjoinv (" ", sink);
 
   s = g_strdup_printf
-      ("videotestsrc ! video/x-raw-yuv,format=(fourcc)I420,width=320,height=240,framerate=(fraction)10/1 ! tee name=t %s",
+      ("videotestsrc ! video/x-raw,format=(string)I420,width=320,height=240,framerate=(fraction)10/1 ! tee name=t %s",
       sinks);
 
   run_pipeline (setup_pipeline (s), s,

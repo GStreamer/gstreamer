@@ -52,16 +52,10 @@ error_cb (GstBus * bus, GstMessage * msg, gpointer user_data)
 }
 
 static gboolean
-pad_check_get_range (GstPad * pad)
-{
-  return FALSE;
-}
-
-static gboolean
 decode_file (const gchar * file, gboolean push_mode)
 {
   GstStateChangeReturn state_ret;
-  GstElement *sink, *src, *dec, *pipeline;
+  GstElement *sink, *src, *dec, *queue, *pipeline;
   GstMessage *msg;
   GstBus *bus;
   gchar *path;
@@ -73,15 +67,13 @@ decode_file (const gchar * file, gboolean push_mode)
   fail_unless (src != NULL, "Failed to create filesrc!");
 
   if (push_mode) {
-    GstPad *pad = gst_element_get_static_pad (src, "src");
-
-    /* KIDS: don't do this at home! */
-    gst_pad_set_checkgetrange_function (pad, pad_check_get_range);
-    gst_object_unref (pad);
+    queue = gst_element_factory_make ("queue", "queue");
+  } else {
+    queue = gst_element_factory_make ("identity", "identity");
   }
 
-  dec = gst_element_factory_make ("decodebin2", "decodebin2");
-  fail_unless (dec != NULL, "Failed to create decodebin2!");
+  dec = gst_element_factory_make ("decodebin", "decodebin");
+  fail_unless (dec != NULL, "Failed to create decodebin!");
 
   sink = gst_element_factory_make ("fakesink", "fakesink");
   fail_unless (sink != NULL, "Failed to create fakesink!");
@@ -92,8 +84,8 @@ decode_file (const gchar * file, gboolean push_mode)
    * we just want to abort and nothing else */
   gst_bus_set_sync_handler (bus, error_cb, (gpointer) file);
 
-  gst_bin_add_many (GST_BIN (pipeline), src, dec, sink, NULL);
-  gst_element_link_many (src, dec, NULL);
+  gst_bin_add_many (GST_BIN (pipeline), src, queue, dec, sink, NULL);
+  gst_element_link_many (src, queue, dec, NULL);
 
   path = g_build_filename (GST_TEST_FILES_PATH, file, NULL);
   GST_LOG ("reading file '%s'", path);
@@ -139,17 +131,18 @@ run_check_for_file (const gchar * filename)
   ret = decode_file (filename, FALSE);
   fail_unless (ret == TRUE, "Failed to decode '%s' (pull mode)", filename);
 
-  /* first, pull-based */
+  /* second, push-based */
   ret = decode_file (filename, TRUE);
   fail_unless (ret == TRUE, "Failed to decode '%s' (push mode)", filename);
 }
 
 GST_START_TEST (test_low_sample_rate_adpcm)
 {
-  if (!gst_default_registry_check_feature_version ("wavparse", 0, 10, 0) ||
-      !gst_default_registry_check_feature_version ("decodebin2", 0, 10, 0)) {
+#define MIN_VERSION GST_VERSION_MAJOR, GST_VERSION_MINOR, 0
+  if (!gst_default_registry_check_feature_version ("wavparse", MIN_VERSION) ||
+      !gst_default_registry_check_feature_version ("decodebin", MIN_VERSION)) {
     g_printerr ("skipping test_low_sample_rate_adpcm: required element "
-        "wavparse or element decodebin2 not found\n");
+        "wavparse or element decodebin not found\n");
     return;
   }
 
