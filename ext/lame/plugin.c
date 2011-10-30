@@ -24,7 +24,6 @@
 #include <gst/gst.h>
 #include <gst/gst-i18n-plugin.h>
 
-#include "gstlame.h"
 #include "gstlamemp3enc.h"
 
 static gboolean
@@ -35,10 +34,7 @@ plugin_init (GstPlugin * plugin)
   bind_textdomain_codeset (GETTEXT_PACKAGE, "UTF-8");
 #endif /* ENABLE_NLS */
 
-  if (!gst_lamemp3enc_register (plugin) || !gst_lame_register (plugin))
-    return FALSE;
-
-  return TRUE;
+  return gst_lamemp3enc_register (plugin);
 }
 
 GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
