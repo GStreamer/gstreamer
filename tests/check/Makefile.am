@@ -58,7 +58,8 @@ noinst_PROGRAMS =
 noinst_HEADERS = elements/xingmux_testdata.h
 
 AM_CFLAGS = $(GST_OBJ_CFLAGS) $(GST_CHECK_CFLAGS) $(CHECK_CFLAGS) \
-		-UG_DISABLE_ASSERT -UG_DISABLE_CAST_CHECKS
+		-UG_DISABLE_ASSERT -UG_DISABLE_CAST_CHECKS \
+		-DGST_USE_UNSTABLE_API
 LDADD = $(GST_OBJ_LIBS) $(GST_CHECK_LIBS) $(CHECK_LIBS)
 
 # valgrind testing
@@ -67,6 +68,9 @@ VALGRIND_TESTS_DISABLE = \
 	elements/x264enc
 
 SUPPRESSIONS = $(top_srcdir)/common/gst.supp $(srcdir)/gst-plugins-ugly.supp
+
+elements_amrnbenc_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(AM_CFLAGS)
+elements_amrnbenc_LDADD = $(GST_PLUGINS_BASE_LIBS) -lgstaudio-$(GST_MAJORMINOR) $(LDADD)
 
 elements_cmmldec_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(AM_CFLAGS)
 elements_cmmlenc_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(AM_CFLAGS)
