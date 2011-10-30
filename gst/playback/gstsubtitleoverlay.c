@@ -383,7 +383,7 @@ gst_subtitle_overlay_create_factory_caps (void)
 }
 
 static gboolean
-_filter_factories_for_caps (GstElementFactory * factory, const GstCaps * caps)
+check_factory_for_caps (GstElementFactory * factory, const GstCaps * caps)
 {
   GstCaps *fcaps = _get_sub_caps (factory);
   gboolean ret = (fcaps) ? gst_caps_can_intersect (fcaps, caps) : FALSE;
@@ -394,6 +394,26 @@ _filter_factories_for_caps (GstElementFactory * factory, const GstCaps * caps)
   if (ret)
     gst_object_ref (factory);
   return ret;
+}
+
+static GList *
+gst_subtitle_overlay_get_factories_for_caps (const GList * list,
+    const GstCaps * caps)
+{
+  const GList *walk = list;
+  GList *result = NULL;
+
+  while (walk) {
+    GstElementFactory *factory = walk->data;
+
+    walk = g_list_next (walk);
+
+    if (check_factory_for_caps (factory, caps)) {
+      result = g_list_prepend (result, factory);
+    }
+  }
+
+  return result;
 }
 
 static gint
@@ -813,8 +833,8 @@ _pad_blocked_cb (GstPad * pad, gboolean blocked, gpointer user_data)
   g_mutex_lock (self->factories_lock);
   gst_subtitle_overlay_update_factory_list (self);
   if (subcaps) {
-    factories = gst_filter_run (self->factories,
-        (GstFilterFunc) _filter_factories_for_caps, FALSE, subcaps);
+    factories =
+        gst_subtitle_overlay_get_factories_for_caps (self->factories, subcaps);
     if (!factories) {
       GstMessage *msg;
 
