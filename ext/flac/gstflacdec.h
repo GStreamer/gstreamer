@@ -44,9 +44,8 @@ struct _GstFlacDec {
   /*< private >*/
   FLAC__StreamDecoder         *decoder;
   GstAdapter                  *adapter;
-  gboolean                     framed; // FIXME
 
-  gboolean       got_headers; /* if we've parsed the headers */
+  gboolean       got_headers; /* have we received all the header buffers yet? */
 
   GstTagList    *tags;
 

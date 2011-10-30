@@ -247,6 +247,19 @@ static gboolean
 gst_flac_dec_set_format (GstAudioDecoder * dec, GstCaps * caps)
 {
   /* if stream headers are present we could process them here already */
+#if 0
+  ///gst_adapter_push (dec->adapter, gst_buffer_ref (buf)); // for all stream headers
+  /* The first time we get audio data, we know we got all the headers.
+   * We then loop until all the metadata is processed, then do an extra
+   * "process_single" step for the audio frame. */
+  GST_DEBUG_OBJECT (dec,
+      "First audio frame, ensuring all metadata is processed");
+  if (!FLAC__stream_decoder_process_until_end_of_metadata (dec->decoder)) {
+    GST_DEBUG_OBJECT (dec, "process_until_end_of_metadata failed");
+  }
+  GST_DEBUG_OBJECT (dec, "All headers and metadata are now processed");
+#endif
+  /* FIXME: refuse caps is there are no stream headers */
   GST_LOG_OBJECT (dec, "sink caps: %" GST_PTR_FORMAT, caps);
   return TRUE;
 }
@@ -335,6 +348,8 @@ gst_flac_calculate_crc8 (guint8 * data, guint length)
   return crc;
 }
 
+/* FIXME: for our purposes it's probably enough to just check for the sync
+ * marker - we just want to know if it's a header frame or not */
 static gboolean
 gst_flac_dec_scan_got_frame (GstFlacDec * flacdec, guint8 * data, guint size,
     gint64 * last_sample_num)
@@ -684,11 +699,7 @@ gst_flac_dec_write (GstFlacDec * flacdec, const FLAC__Frame * frame,
   }
   gst_buffer_unmap (outbuf, data, size);
 
-  GST_DEBUG_OBJECT (flacdec, "pushing %d samples at offset %" G_GINT64_FORMAT
-      " (%" GST_TIME_FORMAT " + %" GST_TIME_FORMAT ")",
-      samples, GST_BUFFER_OFFSET (outbuf),
-      GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (outbuf)),
-      GST_TIME_ARGS (GST_BUFFER_DURATION (outbuf)));
+  GST_DEBUG_OBJECT (flacdec, "pushing %d samples", samples);
 
   ret = gst_audio_decoder_finish_frame (GST_AUDIO_DECODER (flacdec), outbuf, 1);
 
@@ -733,58 +744,10 @@ gst_flac_dec_flush (GstAudioDecoder * audio_dec, gboolean hard)
   gst_adapter_clear (dec->adapter);
 }
 
-static gboolean
-gst_flac_dec_chain_parse_headers (GstFlacDec * dec)
-{
-  guint8 marker[4];
-  guint avail, off;
-
-  avail = gst_adapter_available (dec->adapter);
-  if (avail < 4)
-    return FALSE;
-
-  gst_adapter_copy (dec->adapter, marker, 0, 4);
-  if (strncmp ((const gchar *) marker, "fLaC", 4) != 0) {
-    GST_ERROR_OBJECT (dec, "Unexpected header, expected fLaC header");
-    return TRUE;                /* abort header parsing */
-  }
-
-  GST_DEBUG_OBJECT (dec, "fLaC header          : len           4 @ %7u", 0);
-
-  off = 4;
-  while (avail > (off + 1 + 3)) {
-    gboolean is_last;
-    guint8 mb_hdr[4];
-    guint len, block_type;
-
-    gst_adapter_copy (dec->adapter, mb_hdr, off, 4);
-
-    is_last = ((mb_hdr[0] & 0x80) == 0x80);
-    block_type = mb_hdr[0] & 0x7f;
-    len = GST_READ_UINT24_BE (mb_hdr + 1);
-    GST_DEBUG_OBJECT (dec, "Metadata block type %u: len %7u + 4 @ %7u%s",
-        block_type, len, off, (is_last) ? " (last)" : "");
-    off += 4 + len;
-
-    if (is_last)
-      break;
-
-    if (off >= avail) {
-      GST_LOG_OBJECT (dec, "Need more data: next offset %u > avail %u", off,
-          avail);
-      return FALSE;
-    }
-  }
-
-  /* want metadata blocks plus at least one frame */
-  return (off + FLAC__MAX_BLOCK_SIZE >= avail);
-}
-
 static GstFlowReturn
 gst_flac_dec_handle_frame (GstAudioDecoder * audio_dec, GstBuffer * buf)
 {
   GstFlacDec *dec;
-  gboolean got_audio_frame;
 
   dec = GST_FLAC_DEC (audio_dec);
 
@@ -798,13 +761,9 @@ gst_flac_dec_handle_frame (GstAudioDecoder * audio_dec, GstBuffer * buf)
       GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buf)), GST_BUFFER_FLAGS (buf),
       gst_buffer_get_size (buf));
 
+  /* drop any in-stream headers, we've processed those in set_format already */
   if (G_UNLIKELY (!dec->got_headers)) {
-// FIXME
-  }
-
-  /* FIXME: should always be framed */
-  dec->framed = TRUE;
-  if (dec->framed) {
+    gboolean got_audio_frame;
     gint64 unused;
     guint8 *data;
     gsize size;
@@ -813,8 +772,14 @@ gst_flac_dec_handle_frame (GstAudioDecoder * audio_dec, GstBuffer * buf)
     data = gst_buffer_map (buf, &size, NULL, GST_MAP_READ);
     got_audio_frame = gst_flac_dec_scan_got_frame (dec, data, size, &unused);
     gst_buffer_unmap (buf, data, size);
-  } else {
-    got_audio_frame = TRUE;
+
+    if (!got_audio_frame) {
+      GST_INFO_OBJECT (dec, "dropping in-stream header, %d bytes", size);
+      return GST_FLOW_OK;
+    }
+
+    GST_INFO_OBJECT (dec, "first audio frame, got all in-stream headers now");
+    dec->got_headers = TRUE;
   }
 
   gst_adapter_push (dec->adapter, gst_buffer_ref (buf));
@@ -822,65 +787,13 @@ gst_flac_dec_handle_frame (GstAudioDecoder * audio_dec, GstBuffer * buf)
 
   dec->last_flow = GST_FLOW_OK;
 
-  if (!dec->framed) {
-    if (G_UNLIKELY (!dec->got_headers)) {
-      if (!gst_flac_dec_chain_parse_headers (dec)) {
-        GST_LOG_OBJECT (dec, "don't have metadata blocks yet, need more data");
-        goto out;
-      }
-      GST_INFO_OBJECT (dec, "have all metadata blocks now");
-      dec->got_headers = TRUE;
-    }
+  /* framed - there should always be enough data to decode something */
+  GST_LOG_OBJECT (dec, "%u bytes available",
+      gst_adapter_available (dec->adapter));
 
-    /* wait until we have at least 64kB because libflac's StreamDecoder
-     * interface is a bit dumb it seems (if we don't have as much data as
-     * it wants it will call our read callback repeatedly and the only
-     * way to stop that is to error out or EOS, which will affect the
-     * decoder state). And the decoder seems to always ask for MAX_BLOCK_SIZE
-     * bytes rather than the max. block size from the header). Requiring
-     * MAX_BLOCK_SIZE bytes here should make sure it always gets enough data
-     * to decode at least one block */
-    while (gst_adapter_available (dec->adapter) >= FLAC__MAX_BLOCK_SIZE &&
-        dec->last_flow == GST_FLOW_OK) {
-      GST_LOG_OBJECT (dec, "%u bytes available",
-          gst_adapter_available (dec->adapter));
-      if (!FLAC__stream_decoder_process_single (dec->decoder)) {
-        GST_DEBUG_OBJECT (dec, "process_single failed");
-        break;
-      }
-
-      if (FLAC__stream_decoder_get_state (dec->decoder) ==
-          FLAC__STREAM_DECODER_ABORTED) {
-        GST_WARNING_OBJECT (dec, "Read callback caused internal abort");
-        dec->last_flow = GST_FLOW_ERROR;
-        break;
-      }
-    }
-  } else if (dec->framed && got_audio_frame) {
-    /* framed - there should always be enough data to decode something */
-    GST_LOG_OBJECT (dec, "%u bytes available",
-        gst_adapter_available (dec->adapter));
-    if (G_UNLIKELY (!dec->got_headers)) {
-      /* The first time we get audio data, we know we got all the headers.
-       * We then loop until all the metadata is processed, then do an extra
-       * "process_single" step for the audio frame. */
-      GST_DEBUG_OBJECT (dec,
-          "First audio frame, ensuring all metadata is processed");
-      if (!FLAC__stream_decoder_process_until_end_of_metadata (dec->decoder)) {
-        GST_DEBUG_OBJECT (dec, "process_until_end_of_metadata failed");
-      }
-      GST_DEBUG_OBJECT (dec,
-          "All metadata is now processed, reading to process audio data");
-      dec->got_headers = TRUE;
-    }
-    if (!FLAC__stream_decoder_process_single (dec->decoder)) {
-      GST_DEBUG_OBJECT (dec, "process_single failed");
-    }
-  } else {
-    GST_DEBUG_OBJECT (dec, "don't have all headers yet");
+  if (!FLAC__stream_decoder_process_single (dec->decoder)) {
+    GST_INFO_OBJECT (dec, "process_single failed");
   }
-
-out:
 
   return dec->last_flow;
 }
