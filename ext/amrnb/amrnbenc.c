@@ -75,11 +75,7 @@ enum
 static GstStaticPadTemplate sink_template = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("audio/x-raw-int, "
-        "width = (int) 16, "
-        "depth = (int) 16, "
-        "signed = (boolean) TRUE, "
-        "endianness = (int) BYTE_ORDER, "
+    GST_STATIC_CAPS ("audio/x-raw, format = (string) " GST_AUDIO_NE (S16) ", "
         "rate = (int) 8000," "channels = (int) 1")
     );
 
