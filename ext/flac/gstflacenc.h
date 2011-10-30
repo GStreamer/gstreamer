@@ -56,11 +56,8 @@ struct _GstFlacEnc {
   guint           padding;
   gint            seekpoints;
 
-#if !defined(FLAC_API_VERSION_CURRENT) || FLAC_API_VERSION_CURRENT < 8
-  FLAC__SeekableStreamEncoder *encoder;
-#else
   FLAC__StreamEncoder *encoder;
-#endif
+
   FLAC__StreamMetadata **meta;
 
   GstTagList *     tags;
