@@ -189,19 +189,12 @@ gst_flac_dec_start (GstAudioDecoder * audio_dec)
 
   dec = GST_FLAC_DEC (audio_dec);
 
-  ///////////// FIXME:
-  dec->tags = gst_tag_list_new (GST_TAG_AUDIO_CODEC, "FLAC", NULL);
-
   dec->adapter = gst_adapter_new ();
 
   dec->decoder = FLAC__stream_decoder_new ();
 
   /* no point calculating MD5 since it's never checked here */
   FLAC__stream_decoder_set_md5_checking (dec->decoder, false);
-  FLAC__stream_decoder_set_metadata_respond (dec->decoder,
-      FLAC__METADATA_TYPE_VORBIS_COMMENT);
-  FLAC__stream_decoder_set_metadata_respond (dec->decoder,
-      FLAC__METADATA_TYPE_PICTURE);
 
   GST_DEBUG_OBJECT (dec, "initializing decoder");
   s = FLAC__stream_decoder_init_stream (dec->decoder,
@@ -235,11 +228,6 @@ gst_flac_dec_stop (GstAudioDecoder * dec)
     flacdec->adapter = NULL;
   }
 
-  if (flacdec->tags) {
-    gst_tag_list_free (flacdec->tags);
-    flacdec->tags = NULL;
-  }
-
   return TRUE;
 }
 
@@ -261,41 +249,6 @@ gst_flac_dec_set_format (GstAudioDecoder * dec, GstCaps * caps)
 #endif
   /* FIXME: refuse caps is there are no stream headers */
   GST_LOG_OBJECT (dec, "sink caps: %" GST_PTR_FORMAT, caps);
-  return TRUE;
-}
-
-static gboolean
-gst_flac_dec_update_metadata (GstFlacDec * flacdec,
-    const FLAC__StreamMetadata * metadata)
-{
-  GstTagList *list;
-  guint num, i;
-
-  if (flacdec->tags)
-    list = flacdec->tags;
-  else
-    flacdec->tags = list = gst_tag_list_new_empty ();
-
-  num = metadata->data.vorbis_comment.num_comments;
-  GST_DEBUG_OBJECT (flacdec, "%u tag(s) found", num);
-
-  for (i = 0; i < num; ++i) {
-    gchar *vc, *name, *value;
-
-    vc = g_strndup ((gchar *) metadata->data.vorbis_comment.comments[i].entry,
-        metadata->data.vorbis_comment.comments[i].length);
-
-    if (gst_tag_parse_extended_comment (vc, &name, NULL, &value, TRUE)) {
-      GST_DEBUG_OBJECT (flacdec, "%s : %s", name, value);
-      if (value && strlen (value))
-        gst_vorbis_tag_add (list, name, value);
-      g_free (name);
-      g_free (value);
-    }
-
-    g_free (vc);
-  }
-
   return TRUE;
 }
 
@@ -434,37 +387,6 @@ gst_flac_dec_scan_got_frame (GstFlacDec * flacdec, guint8 * data, guint size,
   return TRUE;
 }
 
-/* FIXME: let parser extract tags */
-static void
-gst_flac_extract_picture_buffer (GstFlacDec * dec,
-    const FLAC__StreamMetadata * metadata)
-{
-  FLAC__StreamMetadata_Picture picture;
-  GstTagList *tags;
-
-  g_return_if_fail (metadata->type == FLAC__METADATA_TYPE_PICTURE);
-
-  GST_LOG_OBJECT (dec, "Got PICTURE block");
-  picture = metadata->data.picture;
-
-  GST_DEBUG_OBJECT (dec, "declared MIME type is: '%s'",
-      GST_STR_NULL (picture.mime_type));
-  GST_DEBUG_OBJECT (dec, "image data is %u bytes", picture.data_length);
-
-  tags = gst_tag_list_new_empty ();
-
-  gst_tag_list_add_id3_image (tags, (guint8 *) picture.data,
-      picture.data_length, picture.type);
-
-  if (!gst_tag_list_is_empty (tags)) {
-    gst_element_found_tags_for_pad (GST_ELEMENT (dec),
-        GST_AUDIO_DECODER_SRC_PAD (dec), tags);
-  } else {
-    GST_DEBUG_OBJECT (dec, "problem parsing PICTURE block, skipping");
-    gst_tag_list_free (tags);
-  }
-}
-
 static void
 gst_flac_dec_metadata_cb (const FLAC__StreamDecoder * decoder,
     const FLAC__StreamMetadata * metadata, void *client_data)
@@ -503,13 +425,6 @@ gst_flac_dec_metadata_cb (const FLAC__StreamDecoder * decoder,
       GST_DEBUG_OBJECT (flacdec, "total samples = %" G_GINT64_FORMAT, samples);
       break;
     }
-    case FLAC__METADATA_TYPE_PICTURE:{
-      gst_flac_extract_picture_buffer (flacdec, metadata);
-      break;
-    }
-    case FLAC__METADATA_TYPE_VORBIS_COMMENT:
-      gst_flac_dec_update_metadata (flacdec, metadata);
-      break;
     default:
       break;
   }
@@ -658,12 +573,6 @@ gst_flac_dec_write (GstFlacDec * flacdec, const FLAC__Frame * frame,
 
     gst_audio_decoder_set_outcaps (GST_AUDIO_DECODER (flacdec), caps);
     gst_caps_unref (caps);
-  }
-
-  if (flacdec->tags) {
-    gst_element_found_tags_for_pad (GST_ELEMENT (flacdec),
-        GST_AUDIO_DECODER_SRC_PAD (flacdec), flacdec->tags);
-    flacdec->tags = NULL;
   }
 
   GST_LOG_OBJECT (flacdec, "alloc_buffer_and_set_caps");

@@ -47,8 +47,6 @@ struct _GstFlacDec {
 
   gboolean       got_headers; /* have we received all the header buffers yet? */
 
-  GstTagList    *tags;
-
   GstFlowReturn  last_flow;   /* to marshal flow return from finis_frame to
                                * handle_frame via flac callbacks */
 
