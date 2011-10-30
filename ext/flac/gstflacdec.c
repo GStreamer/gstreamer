@@ -234,21 +234,48 @@ gst_flac_dec_stop (GstAudioDecoder * dec)
 static gboolean
 gst_flac_dec_set_format (GstAudioDecoder * dec, GstCaps * caps)
 {
-  /* if stream headers are present we could process them here already */
-#if 0
-  ///gst_adapter_push (dec->adapter, gst_buffer_ref (buf)); // for all stream headers
-  /* The first time we get audio data, we know we got all the headers.
-   * We then loop until all the metadata is processed, then do an extra
-   * "process_single" step for the audio frame. */
-  GST_DEBUG_OBJECT (dec,
-      "First audio frame, ensuring all metadata is processed");
-  if (!FLAC__stream_decoder_process_until_end_of_metadata (dec->decoder)) {
-    GST_DEBUG_OBJECT (dec, "process_until_end_of_metadata failed");
-  }
-  GST_DEBUG_OBJECT (dec, "All headers and metadata are now processed");
-#endif
-  /* FIXME: refuse caps is there are no stream headers */
+  const GValue *headers;
+  GstFlacDec *flacdec;
+  GstStructure *s;
+  guint i, num;
+
+  flacdec = GST_FLAC_DEC (dec);
+
   GST_LOG_OBJECT (dec, "sink caps: %" GST_PTR_FORMAT, caps);
+
+  s = gst_caps_get_structure (caps, 0);
+  headers = gst_structure_get_value (s, "streamheader");
+  if (headers == NULL || !GST_VALUE_HOLDS_ARRAY (headers)) {
+    GST_WARNING_OBJECT (dec, "no 'streamheader' field in input caps, try "
+        "adding a flacparse element upstream");
+    return FALSE;
+  }
+
+  if (gst_adapter_available (flacdec->adapter) > 0) {
+    GST_WARNING_OBJECT (dec, "unexpected data left in adapter");
+    gst_adapter_clear (flacdec->adapter);
+  }
+
+  num = gst_value_array_get_size (headers);
+  for (i = 0; i < num; ++i) {
+    const GValue *header_val;
+    GstBuffer *header_buf;
+
+    header_val = gst_value_array_get_value (headers, i);
+    if (header_val == NULL || !GST_VALUE_HOLDS_BUFFER (header_val))
+      return FALSE;
+
+    header_buf = g_value_dup_boxed (header_val);
+    GST_INFO_OBJECT (dec, "pushing header buffer of %d bytes into adapter",
+        gst_buffer_get_size (header_buf));
+    gst_adapter_push (flacdec->adapter, header_buf);
+  }
+
+  GST_DEBUG_OBJECT (dec, "Processing headers and metadata");
+  if (!FLAC__stream_decoder_process_until_end_of_metadata (flacdec->decoder)) {
+    GST_WARNING_OBJECT (dec, "process_until_end_of_metadata failed");
+  }
+  GST_INFO_OBJECT (dec, "headers and metadata are now processed");
   return TRUE;
 }
 
