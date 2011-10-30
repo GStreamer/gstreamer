@@ -215,6 +215,9 @@ GstTagList * gst_tag_list_new               (void);
 GstTagList * gst_tag_list_new_full          (const gchar * tag, ...);
 GstTagList * gst_tag_list_new_full_valist   (va_list var_args);
 
+gchar      * gst_tag_list_to_string         (const GstTagList * list);
+GstTagList * gst_tag_list_new_from_string   (const gchar      * str);
+
 gboolean     gst_is_tag_list                (gconstpointer p);
 GstTagList * gst_tag_list_copy              (const GstTagList * list);
 gboolean     gst_tag_list_is_empty          (const GstTagList * list);

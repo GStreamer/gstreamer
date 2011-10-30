@@ -698,6 +698,44 @@ gst_tag_list_new_full_valist (va_list var_args)
 }
 
 /**
+ * gst_tag_list_to_string:
+ * @list: a #GstTagList
+ *
+ * Serializes a tag list to a string.
+ *
+ * Returns: a newly-allocated string, or NULL in case of an error. The
+ *    string must be freed with g_free() when no longer needed.
+ *
+ * Since: 0.10.36
+ */
+gchar *
+gst_tag_list_to_string (const GstTagList * list)
+{
+  g_return_val_if_fail (GST_IS_TAG_LIST (list), NULL);
+
+  return gst_structure_to_string (GST_STRUCTURE (list));
+}
+
+/**
+ * gst_tag_list_new_from_string:
+ * @str: a string created with gst_tag_list_to_string()
+ *
+ * Deserializes a tag list.
+ *
+ * Returns: a new #GstTagList, or NULL in case of an error.
+ *
+ * Since: 0.10.36
+ */
+GstTagList *
+gst_tag_list_new_from_string (const gchar * str)
+{
+  g_return_val_if_fail (str != NULL, NULL);
+  g_return_val_if_fail (g_str_has_prefix (str, "taglist"), NULL);
+
+  return GST_TAG_LIST (gst_structure_from_string (str, NULL));
+}
+
+/**
  * gst_tag_list_is_empty:
  * @list: A #GstTagList.
  *
