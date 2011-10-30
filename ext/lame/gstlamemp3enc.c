@@ -602,7 +602,7 @@ gst_lamemp3enc_setup (GstLameMP3Enc * lame, GstTagList ** tags)
   if (lame->lgf == NULL)
     return FALSE;
 
-  *tags = gst_tag_list_new ();
+  *tags = gst_tag_list_new_empty ();
 
   /* copy the parameters over */
   lame_set_in_samplerate (lame->lgf, lame->samplerate);
