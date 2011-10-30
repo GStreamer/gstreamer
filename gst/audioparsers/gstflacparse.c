@@ -910,7 +910,7 @@ gst_flac_parse_handle_picture (GstFlacParse * flacparse, GstBuffer * buffer)
     goto error;
 
   if (!flacparse->tags)
-    flacparse->tags = gst_tag_list_new ();
+    flacparse->tags = gst_tag_list_new_empty ();
 
   gst_tag_list_add_id3_image (flacparse->tags,
       data + gst_byte_reader_get_pos (&reader), img_len, img_type);
@@ -1207,7 +1207,7 @@ gst_flac_parse_generate_headers (GstFlacParse * flacparse)
 
   /* empty vorbiscomment */
   {
-    GstTagList *taglist = gst_tag_list_new ();
+    GstTagList *taglist = gst_tag_list_new_empty ();
     guchar header[4];
     guint size;
 

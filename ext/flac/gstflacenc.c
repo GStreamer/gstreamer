@@ -428,7 +428,7 @@ gst_flac_enc_start (GstAudioEncoder * enc)
   flacenc->depth = 0;
   flacenc->sample_rate = 0;
   flacenc->eos = FALSE;
-  flacenc->tags = gst_tag_list_new ();
+  flacenc->tags = gst_tag_list_new_empty ();
 
   return TRUE;
 }

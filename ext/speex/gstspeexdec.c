@@ -280,7 +280,7 @@ gst_speex_dec_parse_comments (GstSpeexDec * dec, GstBuffer * buf)
 
   if (!list) {
     GST_WARNING_OBJECT (dec, "couldn't decode comments");
-    list = gst_tag_list_new ();
+    list = gst_tag_list_new_empty ();
   }
 
   if (encoder) {

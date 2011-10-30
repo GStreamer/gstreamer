@@ -6494,7 +6494,7 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
     stream->caps =
         qtdemux_video_caps (qtdemux, stream, fourcc, stsd_data, &codec);
     if (codec) {
-      list = gst_tag_list_new ();
+      list = gst_tag_list_new_empty ();
       gst_tag_list_add (list, GST_TAG_MERGE_REPLACE,
           GST_TAG_VIDEO_CODEC, codec, NULL);
       g_free (codec);
@@ -6588,7 +6588,7 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
                 }
 
                 if (!list)
-                  list = gst_tag_list_new ();
+                  list = gst_tag_list_new_empty ();
 
                 if (max_bitrate > 0 && max_bitrate < G_MAXUINT32) {
                   gst_tag_list_add (list, GST_TAG_MERGE_REPLACE,
@@ -7151,7 +7151,7 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
       GstStructure *s;
       gint bitrate = 0;
 
-      list = gst_tag_list_new ();
+      list = gst_tag_list_new_empty ();
       gst_tag_list_add (list, GST_TAG_MERGE_REPLACE,
           GST_TAG_AUDIO_CODEC, codec, NULL);
       g_free (codec);
@@ -7313,7 +7313,7 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
             if ((len - 0x34) > 8 &&
                 (bitrate = qtdemux_parse_amr_bitrate (buf, amrwb))) {
               if (!list)
-                list = gst_tag_list_new ();
+                list = gst_tag_list_new_empty ();
               gst_tag_list_add (list, GST_TAG_MERGE_REPLACE,
                   GST_TAG_MAXIMUM_BITRATE, bitrate, NULL);
             }
@@ -7350,7 +7350,7 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
     stream->caps =
         qtdemux_sub_caps (qtdemux, stream, fourcc, stsd_data, &codec);
     if (codec) {
-      list = gst_tag_list_new ();
+      list = gst_tag_list_new_empty ();
       gst_tag_list_add (list, GST_TAG_MERGE_REPLACE,
           GST_TAG_SUBTITLE_CODEC, codec, NULL);
       g_free (codec);
@@ -7462,7 +7462,7 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
     const gchar *lang_code;
 
     if (!list)
-      list = gst_tag_list_new ();
+      list = gst_tag_list_new_empty ();
 
     /* convert ISO 639-2 code to ISO 639-1 */
     lang_code = gst_tag_get_language_code (stream->lang_id);
@@ -7605,7 +7605,7 @@ gst_qtdemux_guess_bitrate (GstQTDemux * qtdemux)
       ", Stream bitrate = %u", sys_bitrate, bitrate);
 
   if (!stream->pending_tags)
-    stream->pending_tags = gst_tag_list_new ();
+    stream->pending_tags = gst_tag_list_new_empty ();
 
   gst_tag_list_add (stream->pending_tags, GST_TAG_MERGE_REPLACE,
       GST_TAG_BITRATE, bitrate, NULL);
@@ -8569,7 +8569,7 @@ qtdemux_parse_udta (GstQTDemux * qtdemux, GNode * udta)
 
   GST_DEBUG_OBJECT (qtdemux, "new tag list");
   if (!qtdemux->tag_list)
-    qtdemux->tag_list = gst_tag_list_new ();
+    qtdemux->tag_list = gst_tag_list_new_empty ();
 
   i = 0;
   while (i < G_N_ELEMENTS (add_funcs)) {
@@ -8787,7 +8787,7 @@ qtdemux_add_container_format (GstQTDemux * qtdemux, GstTagList * tags)
   const gchar *fmt;
 
   if (tags == NULL)
-    tags = gst_tag_list_new ();
+    tags = gst_tag_list_new_empty ();
 
   if (qtdemux->major_brand == FOURCC_mjp2)
     fmt = "Motion JPEG 2000";
@@ -8857,7 +8857,7 @@ qtdemux_parse_tree (GstQTDemux * qtdemux)
   }
   if (datetime) {
     if (!qtdemux->tag_list)
-      qtdemux->tag_list = gst_tag_list_new ();
+      qtdemux->tag_list = gst_tag_list_new_empty ();
 
     /* Use KEEP as explicit tags should have a higher priority than mvhd tag */
     gst_tag_list_add (qtdemux->tag_list, GST_TAG_MERGE_KEEP, GST_TAG_DATE_TIME,

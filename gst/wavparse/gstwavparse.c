@@ -1266,7 +1266,7 @@ gst_wavparse_stream_headers (GstWavParse * wav)
     wav->got_fmt = TRUE;
 
     if (codec_name) {
-      wav->tags = gst_tag_list_new ();
+      wav->tags = gst_tag_list_new_empty ();
 
       gst_tag_list_add (wav->tags, GST_TAG_MERGE_REPLACE,
           GST_TAG_AUDIO_CODEC, codec_name, NULL);
@@ -1419,7 +1419,7 @@ gst_wavparse_stream_headers (GstWavParse * wav)
         }
         /* send data as tags */
         if (!wav->tags)
-          wav->tags = gst_tag_list_new ();
+          wav->tags = gst_tag_list_new_empty ();
         gst_tag_list_add (wav->tags, GST_TAG_MERGE_REPLACE,
             GST_TAG_BEATS_PER_MINUTE, tempo, NULL);
 

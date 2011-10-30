@@ -1232,9 +1232,7 @@ gst_mpeg_audio_parse_pre_push_frame (GstBaseParse * parse,
       codec = g_strdup_printf ("MPEG %d Audio, Layer %d",
           mp3parse->version, mp3parse->layer);
     }
-    taglist = gst_tag_list_new ();
-    gst_tag_list_add (taglist, GST_TAG_MERGE_REPLACE,
-        GST_TAG_AUDIO_CODEC, codec, NULL);
+    taglist = gst_tag_list_new (GST_TAG_AUDIO_CODEC, codec, NULL);
     if (mp3parse->hdr_bitrate > 0 && mp3parse->xing_bitrate == 0 &&
         mp3parse->vbri_bitrate == 0) {
       /* We don't have a VBR bitrate, so post the available bitrate as
@@ -1257,7 +1255,7 @@ gst_mpeg_audio_parse_pre_push_frame (GstBaseParse * parse,
     gboolean using_crc;
 
     if (!taglist) {
-      taglist = gst_tag_list_new ();
+      taglist = gst_tag_list_new_empty ();
     }
     mp3parse->last_posted_crc = mp3parse->last_crc;
     if (mp3parse->last_posted_crc == CRC_PROTECTED) {
@@ -1271,7 +1269,7 @@ gst_mpeg_audio_parse_pre_push_frame (GstBaseParse * parse,
 
   if (mp3parse->last_posted_channel_mode != mp3parse->last_mode) {
     if (!taglist) {
-      taglist = gst_tag_list_new ();
+      taglist = gst_tag_list_new_empty ();
     }
     mp3parse->last_posted_channel_mode = mp3parse->last_mode;
 

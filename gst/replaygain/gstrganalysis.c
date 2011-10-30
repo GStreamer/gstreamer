@@ -664,7 +664,7 @@ gst_rg_analysis_track_result (GstRgAnalysis * filter, GstTagList ** tag_list)
 
   if (track_success) {
     if (*tag_list == NULL)
-      *tag_list = gst_tag_list_new ();
+      *tag_list = gst_tag_list_new_empty ();
     gst_tag_list_add (*tag_list, GST_TAG_MERGE_APPEND,
         GST_TAG_TRACK_PEAK, track_peak, GST_TAG_TRACK_GAIN, track_gain, NULL);
   }
@@ -691,7 +691,7 @@ gst_rg_analysis_album_result (GstRgAnalysis * filter, GstTagList ** tag_list)
 
   if (album_success) {
     if (*tag_list == NULL)
-      *tag_list = gst_tag_list_new ();
+      *tag_list = gst_tag_list_new_empty ();
     gst_tag_list_add (*tag_list, GST_TAG_MERGE_APPEND,
         GST_TAG_ALBUM_PEAK, album_peak, GST_TAG_ALBUM_GAIN, album_gain, NULL);
   }

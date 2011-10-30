@@ -306,7 +306,7 @@ gst_icydemux_parse_and_send_tags (GstICYDemux * icydemux)
    * a bit easier, then do that parsing. */
   buffer = g_strndup ((const gchar *) data, length);
 
-  tags = gst_tag_list_new ();
+  tags = gst_tag_list_new_empty ();
   strings = g_strsplit (buffer, "';", 0);
 
   for (i = 0; strings[i]; i++) {

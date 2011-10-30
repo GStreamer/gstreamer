@@ -175,11 +175,8 @@ done:
 static void
 gst_avi_subtitle_title_tag (GstAviSubtitle * sub, gchar * title)
 {
-  GstTagList *temp_list = gst_tag_list_new ();
-
-  gst_tag_list_add (temp_list, GST_TAG_MERGE_APPEND, GST_TAG_TITLE, title,
-      NULL);
-  gst_pad_push_event (sub->src, gst_event_new_tag (temp_list));
+  gst_pad_push_event (sub->src,
+      gst_event_new_tag (gst_tag_list_new (GST_TAG_TITLE, title, NULL)));
 }
 
 static GstFlowReturn

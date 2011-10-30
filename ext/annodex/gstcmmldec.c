@@ -573,13 +573,14 @@ gst_cmml_dec_parse_head (GstCmmlDec * dec, GstCmmlTagHead * head)
   GST_DEBUG_OBJECT (dec, "found CMML head (title: %s base: %s)",
       head->title, head->base);
 
+  /* FIXME: what's the point of all this GValue transform crack? */
   /* create the GST_TAG_TITLE tag */
   g_value_init (&str_val, G_TYPE_STRING);
   g_value_init (&title_val, gst_tag_get_type (GST_TAG_TITLE));
   g_value_set_string (&str_val, (gchar *) head->title);
   g_value_transform (&str_val, &title_val);
 
-  tags = gst_tag_list_new ();
+  tags = gst_tag_list_new_empty ();
   gst_tag_list_add_values (tags, GST_TAG_MERGE_APPEND,
       GST_TAG_TITLE, &title_val, NULL);
   gst_tag_list_add (tags, GST_TAG_MERGE_APPEND, GST_TAG_CMML_HEAD, head, NULL);
@@ -607,8 +608,7 @@ gst_cmml_dec_send_clip_tag (GstCmmlDec * dec, GstCmmlTagClip * clip)
 
   GST_DEBUG_OBJECT (dec, "sending clip tag %s", clip->id);
 
-  tags = gst_tag_list_new ();
-  gst_tag_list_add (tags, GST_TAG_MERGE_APPEND, GST_TAG_CMML_CLIP, clip, NULL);
+  tags = gst_tag_list_new (GST_TAG_CMML_CLIP, clip, NULL);
   gst_element_found_tags_for_pad (GST_ELEMENT (dec), dec->srcpad, tags);
 }
 

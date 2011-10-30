@@ -242,9 +242,7 @@ gst_flac_dec_setup_decoder (GstFlacDec * dec)
 {
   gst_flac_dec_reset_decoders (dec);
 
-  dec->tags = gst_tag_list_new ();
-  gst_tag_list_add (dec->tags, GST_TAG_MERGE_REPLACE,
-      GST_TAG_AUDIO_CODEC, "FLAC", NULL);
+  dec->tags = gst_tag_list_new (GST_TAG_AUDIO_CODEC, "FLAC", NULL);
 
   dec->adapter = gst_adapter_new ();
 
@@ -281,7 +279,7 @@ gst_flac_dec_update_metadata (GstFlacDec * flacdec,
   if (flacdec->tags)
     list = flacdec->tags;
   else
-    flacdec->tags = list = gst_tag_list_new ();
+    flacdec->tags = list = gst_tag_list_new_empty ();
 
   num = metadata->data.vorbis_comment.num_comments;
   GST_DEBUG_OBJECT (flacdec, "%u tag(s) found", num);
@@ -455,7 +453,7 @@ gst_flac_extract_picture_buffer (GstFlacDec * dec,
       GST_STR_NULL (picture.mime_type));
   GST_DEBUG_OBJECT (dec, "image data is %u bytes", picture.data_length);
 
-  tags = gst_tag_list_new ();
+  tags = gst_tag_list_new_empty ();
 
   gst_tag_list_add_id3_image (tags, (guint8 *) picture.data,
       picture.data_length, picture.type);

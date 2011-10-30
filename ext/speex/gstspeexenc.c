@@ -247,7 +247,7 @@ gst_speex_enc_start (GstAudioEncoder * benc)
 
   GST_DEBUG_OBJECT (enc, "start");
   speex_bits_init (&enc->bits);
-  enc->tags = gst_tag_list_new ();
+  enc->tags = gst_tag_list_new_empty ();
   enc->header_sent = FALSE;
 
   return TRUE;
@@ -341,7 +341,7 @@ gst_speex_enc_create_metadata_buffer (GstSpeexEnc * enc)
       gst_tag_setter_get_tag_merge_mode (GST_TAG_SETTER (enc)));
 
   if (merged_tags == NULL)
-    merged_tags = gst_tag_list_new ();
+    merged_tags = gst_tag_list_new_empty ();
 
   GST_DEBUG_OBJECT (enc, "merged   tags = %" GST_PTR_FORMAT, merged_tags);
   comments = gst_tag_list_to_vorbiscomment_buffer (merged_tags, NULL,

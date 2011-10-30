@@ -731,7 +731,7 @@ gst_flv_demux_audio_negotiate (GstFlvDemux * demux, guint32 codec_tag,
 
     if (codec_name) {
       if (demux->taglist == NULL)
-        demux->taglist = gst_tag_list_new ();
+        demux->taglist = gst_tag_list_new_empty ();
       gst_tag_list_add (demux->taglist, GST_TAG_MERGE_REPLACE,
           GST_TAG_AUDIO_CODEC, codec_name, NULL);
       g_free (codec_name);
@@ -767,7 +767,7 @@ gst_flv_demux_push_tags (GstFlvDemux * demux)
     GST_DEBUG_OBJECT (demux, "pushing tags out %" GST_PTR_FORMAT,
         demux->taglist);
     gst_element_found_tags (GST_ELEMENT (demux), demux->taglist);
-    demux->taglist = gst_tag_list_new ();
+    demux->taglist = gst_tag_list_new_empty ();
     demux->push_tags = FALSE;
   }
 }
@@ -1137,7 +1137,7 @@ gst_flv_demux_video_negotiate (GstFlvDemux * demux, guint32 codec_tag)
 
     if (codec_name) {
       if (demux->taglist == NULL)
-        demux->taglist = gst_tag_list_new ();
+        demux->taglist = gst_tag_list_new_empty ();
       gst_tag_list_add (demux->taglist, GST_TAG_MERGE_REPLACE,
           GST_TAG_VIDEO_CODEC, codec_name, NULL);
       g_free (codec_name);
@@ -3256,7 +3256,7 @@ gst_flv_demux_init (GstFlvDemux * demux)
   gst_element_add_pad (GST_ELEMENT (demux), demux->sinkpad);
 
   demux->adapter = gst_adapter_new ();
-  demux->taglist = gst_tag_list_new ();
+  demux->taglist = gst_tag_list_new_empty ();
   gst_segment_init (&demux->segment, GST_FORMAT_TIME);
 
   demux->own_index = FALSE;

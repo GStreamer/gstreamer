@@ -2293,7 +2293,7 @@ gst_avi_demux_parse_stream (GstAviDemux * avi, GstBuffer * buf)
   /* make tags */
   if (codec_name) {
     if (!stream->taglist)
-      stream->taglist = gst_tag_list_new ();
+      stream->taglist = gst_tag_list_new_empty ();
 
     avi->got_tags = TRUE;
 
@@ -3423,7 +3423,7 @@ gst_avi_demux_add_date_tag (GstAviDemux * avi, gint y, gint m, gint d,
   dt = gst_date_time_new_local_time (y, m, d, h, min, s);
 
   if (avi->globaltags == NULL)
-    avi->globaltags = gst_tag_list_new ();
+    avi->globaltags = gst_tag_list_new_empty ();
 
   gst_tag_list_add (avi->globaltags, GST_TAG_MERGE_REPLACE, GST_TAG_DATE, date,
       NULL);
@@ -5058,7 +5058,7 @@ push_tag_lists (GstAviDemux * avi)
   }
 
   if (!(tags = avi->globaltags))
-    tags = gst_tag_list_new ();
+    tags = gst_tag_list_new_empty ();
 
   gst_tag_list_add (tags, GST_TAG_MERGE_REPLACE,
       GST_TAG_CONTAINER_FORMAT, "AVI", NULL);

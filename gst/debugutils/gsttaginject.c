@@ -161,7 +161,7 @@ gst_tag_inject_set_property (GObject * object, guint prop_id,
     case PROP_TAGS:{
       gchar *structure =
           g_strdup_printf ("taglist,%s", g_value_get_string (value));
-      if (!(self->tags = gst_structure_from_string (structure, NULL))) {
+      if (!(self->tags = gst_tag_list_new_from_string (structure))) {
         GST_WARNING ("unparsable taglist = '%s'", structure);
       }
 

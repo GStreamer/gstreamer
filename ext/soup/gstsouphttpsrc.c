@@ -754,7 +754,7 @@ gst_soup_http_src_got_headers_cb (SoupMessage * msg, GstSoupHTTPSrc * src)
   }
 
   /* Icecast stuff */
-  tag_list = gst_tag_list_new ();
+  tag_list = gst_tag_list_new_empty ();
 
   if ((value =
           soup_message_headers_get (msg->response_headers,
