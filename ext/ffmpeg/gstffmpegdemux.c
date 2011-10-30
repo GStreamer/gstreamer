@@ -1022,7 +1022,7 @@ gst_ffmpegdemux_get_stream (GstFFMpegDemux * demux, AVStream * avstream)
 
   /* metadata */
   if ((codec = gst_ffmpeg_get_codecid_longname (ctx->codec_id))) {
-    stream->tags = gst_tag_list_new ();
+    stream->tags = gst_tag_list_new_empty ();
 
     gst_tag_list_add (stream->tags, GST_TAG_MERGE_REPLACE,
         (ctx->codec_type == AVMEDIA_TYPE_VIDEO) ?
