@@ -2448,6 +2448,7 @@ gst_tag_list_new_full
 gst_tag_list_new_full_valist
 gst_is_tag_list
 gst_tag_list_is_empty
+gst_tag_list_is_equal
 gst_tag_list_copy
 gst_tag_list_insert
 gst_tag_list_merge
