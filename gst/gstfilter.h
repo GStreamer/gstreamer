@@ -35,9 +35,13 @@ G_BEGIN_DECLS
  *
  * Returns: %TRUE for success.
  */
+#ifndef GST_DISABLE_DEPRECATED
 typedef gboolean (*GstFilterFunc)	(gpointer obj, gpointer user_data);
+#endif
 
+#ifndef GST_DISABLE_DEPRECATED
 GList*	gst_filter_run 	(const GList *list, GstFilterFunc func, gboolean first, gpointer user_data);
+#endif
 
 G_END_DECLS
 
