@@ -274,11 +274,11 @@ GST_START_TEST (test_date_tags)
   tag_list = gst_tag_list_new ();
   gst_tag_list_add (tag_list, GST_TAG_MERGE_APPEND, GST_TAG_DATE, date, NULL);
 
-  str = gst_structure_to_string (tag_list);
+  str = gst_tag_list_to_string (tag_list);
   fail_if (str == NULL);
   fail_if (strstr (str, "2005-10-14") == NULL);
 
-  tag_list2 = gst_structure_from_string (str, NULL);
+  tag_list2 = gst_tag_list_new_from_string (str);
   fail_if (tag_list2 == NULL);
   fail_if (!gst_tag_list_get_date (tag_list2, GST_TAG_DATE, &date2));
   fail_unless (gst_tag_list_is_equal (tag_list2, tag_list));
