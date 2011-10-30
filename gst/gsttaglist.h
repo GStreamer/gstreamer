@@ -25,7 +25,6 @@
 
 #include <gst/gstdatetime.h>
 #include <gst/gstbuffer.h>
-#include <gst/gststructure.h>
 #include <gst/glib-compat.h>
 
 G_BEGIN_DECLS
@@ -142,24 +141,12 @@ typedef enum {
 
 #define GST_TAG_FLAG_IS_VALID(flag)     (((flag) > GST_TAG_FLAG_UNDEFINED) && ((flag) < GST_TAG_FLAG_COUNT))
 
-/* FIXME 0.11: Don't typedef GstTagList to be a GstStructure, they're
- *             internally the same but not from an API point of view.
- *             See bug #518934.
- */
 /**
  * GstTagList:
  *
  * Opaque #GstTagList data structure.
  */
-#ifdef _FOOL_GTK_DOC_
 typedef struct _GstTagList GstTagList;
-#else
-#ifdef IN_GOBJECT_INTROSPECTION
-typedef struct _GstTagList GstTagList;
-#else
-typedef GstStructure GstTagList;
-#endif
-#endif
 
 #define GST_TAG_LIST(x)       ((GstTagList *) (x))
 #define GST_IS_TAG_LIST(x)    ((x) != NULL && gst_is_tag_list (GST_TAG_LIST (x)))

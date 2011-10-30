@@ -42,11 +42,19 @@
 #include "gstvalue.h"
 #include "gstbuffer.h"
 #include "gstquark.h"
+#include "gststructure.h"
 
 #include <gobject/gvaluecollector.h>
 #include <string.h>
 
 #define GST_TAG_IS_VALID(tag)           (gst_tag_get_info (tag) != NULL)
+
+/* FIXME 0.11: make taglists refcounted maybe? */
+/* a tag list is basically a structure, but we don't make this fact public */
+struct _GstTagList
+{
+  GstStructure structure;
+};
 
 /* FIXME 0.11: use GParamSpecs or something similar for tag registrations,
  * possibly even gst_tag_register(). Especially value ranges might be
@@ -845,15 +853,16 @@ gst_is_tag_list (gconstpointer p)
 
 typedef struct
 {
-  GstStructure *list;
+  GstTagList *list;
   GstTagMergeMode mode;
 }
 GstTagCopyData;
 
 static void
-gst_tag_list_add_value_internal (GstStructure * list, GstTagMergeMode mode,
+gst_tag_list_add_value_internal (GstTagList * tag_list, GstTagMergeMode mode,
     const gchar * tag, const GValue * value, GstTagInfo * info)
 {
+  GstStructure *list = GST_STRUCTURE (tag_list);
   const GValue *value2;
   GQuark tag_quark;
 
@@ -945,10 +954,10 @@ gst_tag_list_insert (GstTagList * into, const GstTagList * from,
   g_return_if_fail (GST_IS_TAG_LIST (from));
   g_return_if_fail (GST_TAG_MODE_IS_VALID (mode));
 
-  data.list = (GstStructure *) into;
+  data.list = into;
   data.mode = mode;
   if (mode == GST_TAG_MERGE_REPLACE_ALL) {
-    gst_structure_remove_all_fields (data.list);
+    gst_structure_remove_all_fields (GST_STRUCTURE (data.list));
   }
   gst_structure_foreach ((GstStructure *) from, gst_tag_list_copy_foreach,
       &data);
@@ -1120,7 +1129,7 @@ gst_tag_list_add_valist (GstTagList * list, GstTagMergeMode mode,
   g_return_if_fail (tag != NULL);
 
   if (mode == GST_TAG_MERGE_REPLACE_ALL) {
-    gst_structure_remove_all_fields (list);
+    gst_structure_remove_all_fields (GST_STRUCTURE (list));
   }
 
   while (tag != NULL) {
@@ -1164,7 +1173,7 @@ gst_tag_list_add_valist_values (GstTagList * list, GstTagMergeMode mode,
   g_return_if_fail (tag != NULL);
 
   if (mode == GST_TAG_MERGE_REPLACE_ALL) {
-    gst_structure_remove_all_fields (list);
+    gst_structure_remove_all_fields (GST_STRUCTURE (list));
   }
 
   while (tag != NULL) {
