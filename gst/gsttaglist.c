@@ -626,7 +626,7 @@ gst_tag_is_fixed (const gchar * tag)
 }
 
 /**
- * gst_tag_list_new:
+ * gst_tag_list_new_empty:
  *
  * Creates a new empty GstTagList.
  *
@@ -635,13 +635,13 @@ gst_tag_is_fixed (const gchar * tag)
  * Returns: (transfer full): An empty tag list
  */
 GstTagList *
-gst_tag_list_new (void)
+gst_tag_list_new_empty (void)
 {
   return GST_TAG_LIST (gst_structure_id_empty_new (GST_QUARK (TAGLIST)));
 }
 
 /**
- * gst_tag_list_new_full:
+ * gst_tag_list_new:
  * @tag: tag
  * @...: NULL-terminated list of values to set
  *
@@ -660,16 +660,15 @@ gst_tag_list_new (void)
  *
  * Since: 0.10.24
  */
-/* FIXME 0.11: rename gst_tag_list_new_full to _new and _new to _new_empty */
 GstTagList *
-gst_tag_list_new_full (const gchar * tag, ...)
+gst_tag_list_new (const gchar * tag, ...)
 {
   GstTagList *list;
   va_list args;
 
   g_return_val_if_fail (tag != NULL, NULL);
 
-  list = gst_tag_list_new ();
+  list = gst_tag_list_new_empty ();
   va_start (args, tag);
   gst_tag_list_add_valist (list, GST_TAG_MERGE_APPEND, tag, args);
   va_end (args);
@@ -678,10 +677,10 @@ gst_tag_list_new_full (const gchar * tag, ...)
 }
 
 /**
- * gst_tag_list_new_full_valist:
+ * gst_tag_list_new_valist:
  * @var_args: tag / value pairs to set
  *
- * Just like gst_tag_list_new_full(), only that it takes a va_list argument.
+ * Just like gst_tag_list_new(), only that it takes a va_list argument.
  * Useful mostly for language bindings.
  *
  * Free-function: gst_tag_list_free
@@ -692,12 +691,12 @@ gst_tag_list_new_full (const gchar * tag, ...)
  * Since: 0.10.24
  */
 GstTagList *
-gst_tag_list_new_full_valist (va_list var_args)
+gst_tag_list_new_valist (va_list var_args)
 {
   GstTagList *list;
   const gchar *tag;
 
-  list = gst_tag_list_new ();
+  list = gst_tag_list_new_empty ();
 
   tag = va_arg (var_args, gchar *);
   gst_tag_list_add_valist (list, GST_TAG_MERGE_APPEND, tag, var_args);
@@ -1011,8 +1010,8 @@ gst_tag_list_merge (const GstTagList * list1, const GstTagList * list2,
   }
 
   /* create empty list, we need to do this to correctly handling merge modes */
-  list1_cp = (list1) ? gst_tag_list_copy (list1) : gst_tag_list_new ();
-  list2_cp = (list2) ? list2 : gst_tag_list_new ();
+  list1_cp = (list1) ? gst_tag_list_copy (list1) : gst_tag_list_new_empty ();
+  list2_cp = (list2) ? list2 : gst_tag_list_new_empty ();
 
   gst_tag_list_insert (list1_cp, list2_cp, mode);
 

@@ -93,7 +93,7 @@ GST_START_TEST (create_events)
 
   /* TAGS */
   {
-    GstTagList *taglist = gst_tag_list_new ();
+    GstTagList *taglist = gst_tag_list_new_empty ();
     GstTagList *tl2 = NULL;
 
     event = gst_event_new_tag (taglist);

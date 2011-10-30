@@ -283,7 +283,7 @@ gst_tag_setter_add_tag_valist (GstTagSetter * setter, GstTagMergeMode mode,
 
   g_static_mutex_lock (&data->lock);
   if (!data->list)
-    data->list = gst_tag_list_new ();
+    data->list = gst_tag_list_new_empty ();
 
   gst_tag_list_add_valist (data->list, mode, tag, var_args);
 
@@ -314,7 +314,7 @@ gst_tag_setter_add_tag_valist_values (GstTagSetter * setter,
   g_static_mutex_lock (&data->lock);
 
   if (!data->list)
-    data->list = gst_tag_list_new ();
+    data->list = gst_tag_list_new_empty ();
 
   gst_tag_list_add_valist_values (data->list, mode, tag, var_args);
 
@@ -346,7 +346,7 @@ gst_tag_setter_add_tag_value (GstTagSetter * setter,
   g_static_mutex_lock (&data->lock);
 
   if (!data->list)
-    data->list = gst_tag_list_new ();
+    data->list = gst_tag_list_new_empty ();
 
   gst_tag_list_add_value (data->list, mode, tag, value);
 

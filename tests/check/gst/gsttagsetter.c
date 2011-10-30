@@ -90,13 +90,13 @@ GST_START_TEST (test_merge)
 
   setter = GST_TAG_SETTER (enc);
 
-  list1 = gst_tag_list_new ();
+  list1 = gst_tag_list_new_empty ();
   gst_tag_list_add (list1, GST_TAG_MERGE_APPEND, GST_TAG_ARTIST, "artist1",
       NULL);
   gst_tag_setter_merge_tags (setter, list1, GST_TAG_MERGE_APPEND);
   assert_tag_setter_list_length (setter, 1);
 
-  list2 = gst_tag_list_new ();
+  list2 = gst_tag_list_new_empty ();
   gst_tag_list_add (list2, GST_TAG_MERGE_APPEND, GST_TAG_ARTIST, "artist2",
       GST_TAG_TITLE, "title1", NULL);
   gst_tag_setter_merge_tags (setter, list2, GST_TAG_MERGE_APPEND);
@@ -135,8 +135,8 @@ GST_START_TEST (test_merge_modes)
       fail_unless (enc != NULL);
 
       setter = GST_TAG_SETTER (enc);
-      list1 = gst_tag_list_new ();
-      list2 = gst_tag_list_new ();
+      list1 = gst_tag_list_new_empty ();
+      list2 = gst_tag_list_new_empty ();
 
       /* i = 0: -     -
        * i = 1: list1 -
@@ -185,8 +185,8 @@ GST_START_TEST (test_merge_modes_skip_empty)
       fail_unless (enc != NULL);
 
       setter = GST_TAG_SETTER (enc);
-      list1 = gst_tag_list_new ();
-      list2 = gst_tag_list_new ();
+      list1 = gst_tag_list_new_empty ();
+      list2 = gst_tag_list_new_empty ();
 
       if (i == 1) {
         gst_tag_list_add (list2, GST_TAG_MERGE_APPEND, GST_TAG_ARTIST,

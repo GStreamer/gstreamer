@@ -102,7 +102,7 @@ GST_START_TEST (test_parsing)
     GstTagList *tag;
 
     /* FIXME, do some more tag adding */
-    tag = gst_tag_list_new ();
+    tag = gst_tag_list_new_empty ();
     fail_if (tag == NULL);
     message = gst_message_new_tag (NULL, tag);
     fail_if (message == NULL);

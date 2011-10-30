@@ -2444,8 +2444,8 @@ gst_tag_get_description
 gst_tag_get_flag
 gst_tag_is_fixed
 gst_tag_list_new
-gst_tag_list_new_full
-gst_tag_list_new_full_valist
+gst_tag_list_new_empty
+gst_tag_list_new_valist
 gst_tag_list_new_from_string
 gst_tag_list_to_string
 gst_is_tag_list
@@ -2517,7 +2517,7 @@ gst_tag_merge_mode_get_type
 <FILE>gsttagsetter</FILE>
 <TITLE>GstTagSetter</TITLE>
 GstTagSetter
-GstTagSetterIFace
+GstTagSetterInterface
 gst_tag_setter_reset_tags
 gst_tag_setter_merge_tags
 gst_tag_setter_add_tags

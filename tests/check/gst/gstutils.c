@@ -491,7 +491,7 @@ GST_START_TEST (test_element_found_tags)
   pipeline = gst_element_factory_make ("pipeline", NULL);
   fakesrc = gst_element_factory_make ("fakesrc", NULL);
   fakesink = gst_element_factory_make ("fakesink", NULL);
-  list = gst_tag_list_new ();
+  list = gst_tag_list_new_empty ();
 
   g_object_set (fakesrc, "num-buffers", (int) 10, NULL);
 

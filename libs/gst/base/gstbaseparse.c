@@ -1316,7 +1316,7 @@ gst_base_parse_post_bitrates (GstBaseParse * parse, gboolean post_min,
   GstTagList *taglist = NULL;
 
   if (post_min && parse->priv->post_min_bitrate) {
-    taglist = gst_tag_list_new ();
+    taglist = gst_tag_list_new_empty ();
 
     gst_tag_list_add (taglist, GST_TAG_MERGE_REPLACE,
         GST_TAG_MINIMUM_BITRATE, parse->priv->min_bitrate, NULL);
@@ -1324,7 +1324,7 @@ gst_base_parse_post_bitrates (GstBaseParse * parse, gboolean post_min,
 
   if (post_avg && parse->priv->post_avg_bitrate) {
     if (taglist == NULL)
-      taglist = gst_tag_list_new ();
+      taglist = gst_tag_list_new_empty ();
 
     parse->priv->posted_avg_bitrate = parse->priv->avg_bitrate;
     gst_tag_list_add (taglist, GST_TAG_MERGE_REPLACE, GST_TAG_BITRATE,
@@ -1333,7 +1333,7 @@ gst_base_parse_post_bitrates (GstBaseParse * parse, gboolean post_min,
 
   if (post_max && parse->priv->post_max_bitrate) {
     if (taglist == NULL)
-      taglist = gst_tag_list_new ();
+      taglist = gst_tag_list_new_empty ();
 
     gst_tag_list_add (taglist, GST_TAG_MERGE_REPLACE,
         GST_TAG_MAXIMUM_BITRATE, parse->priv->max_bitrate, NULL);
