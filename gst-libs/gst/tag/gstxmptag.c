@@ -1343,7 +1343,7 @@ gst_tag_list_from_xmp_buffer (GstBuffer * buffer)
 
   /* no tag can be longer that the whole buffer */
   part = g_malloc (xp2 - xp1);
-  list = gst_tag_list_new ();
+  list = gst_tag_list_new_empty ();
 
   /* parse data into a list of nodes */
   /* data is between xp1..xp2 */

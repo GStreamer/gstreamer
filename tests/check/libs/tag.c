@@ -185,7 +185,7 @@ GST_START_TEST (test_musicbrainz_tag_registration)
 
   gst_tag_register_musicbrainz_tags ();
 
-  list = gst_tag_list_new ();
+  list = gst_tag_list_new_empty ();
 
   /* musicbrainz tags aren't registered yet */
   gst_vorbis_tag_add (list, "MUSICBRAINZ_TRACKID", "123456");
@@ -234,7 +234,7 @@ GST_START_TEST (test_vorbis_tags)
 {
   GstTagList *list;
 
-  list = gst_tag_list_new ();
+  list = gst_tag_list_new_empty ();
 
   /* NULL pointers aren't allowed */
   ASSERT_CRITICAL (gst_vorbis_tag_add (NULL, "key", "value"));
@@ -370,38 +370,38 @@ GST_START_TEST (test_vorbis_tags)
 
   /* there can only be one language per taglist ... */
   gst_tag_list_free (list);
-  list = gst_tag_list_new ();
+  list = gst_tag_list_new_empty ();
   gst_vorbis_tag_add (list, "LANGUAGE", "fr");
   ASSERT_TAG_LIST_HAS_STRING (list, GST_TAG_LANGUAGE_CODE, "fr");
 
   gst_tag_list_free (list);
-  list = gst_tag_list_new ();
+  list = gst_tag_list_new_empty ();
   gst_vorbis_tag_add (list, "LANGUAGE", "[fr]");
   ASSERT_TAG_LIST_HAS_STRING (list, GST_TAG_LANGUAGE_CODE, "fr");
 
   gst_tag_list_free (list);
-  list = gst_tag_list_new ();
+  list = gst_tag_list_new_empty ();
   gst_vorbis_tag_add (list, "LANGUAGE", "French [fr]");
   ASSERT_TAG_LIST_HAS_STRING (list, GST_TAG_LANGUAGE_CODE, "fr");
 
   gst_tag_list_free (list);
-  list = gst_tag_list_new ();
+  list = gst_tag_list_new_empty ();
   gst_vorbis_tag_add (list, "LANGUAGE", "[eng] English");
   ASSERT_TAG_LIST_HAS_STRING (list, GST_TAG_LANGUAGE_CODE, "eng");
 
   gst_tag_list_free (list);
-  list = gst_tag_list_new ();
+  list = gst_tag_list_new_empty ();
   gst_vorbis_tag_add (list, "LANGUAGE", "eng");
   ASSERT_TAG_LIST_HAS_STRING (list, GST_TAG_LANGUAGE_CODE, "eng");
 
   gst_tag_list_free (list);
-  list = gst_tag_list_new ();
+  list = gst_tag_list_new_empty ();
   gst_vorbis_tag_add (list, "LANGUAGE", "[eng]");
   ASSERT_TAG_LIST_HAS_STRING (list, GST_TAG_LANGUAGE_CODE, "eng");
 
   /* free-form *sigh* */
   gst_tag_list_free (list);
-  list = gst_tag_list_new ();
+  list = gst_tag_list_new_empty ();
   gst_vorbis_tag_add (list, "LANGUAGE", "English");
   ASSERT_TAG_LIST_HAS_STRING (list, GST_TAG_LANGUAGE_CODE, "English");
 
@@ -532,7 +532,7 @@ GST_START_TEST (test_vorbis_tags)
   {
     GDate *date = NULL;
 
-    list = gst_tag_list_new ();
+    list = gst_tag_list_new_empty ();
     gst_vorbis_tag_add (list, "DATE", "2006-09-25 22:02:38");
 
     fail_unless (gst_tag_list_get_date_index (list, GST_TAG_DATE, 0, &date));
@@ -549,7 +549,7 @@ GST_START_TEST (test_vorbis_tags)
   {
     GDate *date = NULL;
 
-    list = gst_tag_list_new ();
+    list = gst_tag_list_new_empty ();
     gst_vorbis_tag_add (list, "DATE", "1992-00-00");
 
     fail_unless (gst_tag_list_get_date_index (list, GST_TAG_DATE, 0, &date));
@@ -564,7 +564,7 @@ GST_START_TEST (test_vorbis_tags)
   {
     GDate *date = NULL;
 
-    list = gst_tag_list_new ();
+    list = gst_tag_list_new_empty ();
     gst_vorbis_tag_add (list, "DATE", "1992-05-00");
 
     fail_unless (gst_tag_list_get_date_index (list, GST_TAG_DATE, 0, &date));
@@ -957,7 +957,7 @@ GST_START_TEST (test_xmp_formatting)
   gsize len;
 
   /* test data */
-  list = gst_tag_list_new_full (GST_TAG_TITLE, "test title",
+  list = gst_tag_list_new (GST_TAG_TITLE, "test title",
       GST_TAG_DESCRIPTION, "test decription",
       GST_TAG_KEYWORDS, "keyword1", GST_TAG_KEYWORDS, "keyword2", NULL);
 
@@ -1053,65 +1053,6 @@ GST_START_TEST (test_xmp_parsing)
 GST_END_TEST;
 
 static void
-tag_list_equals (GstTagList * taglist, GstTagList * taglist2)
-{
-  const gchar *name_sent, *name_recv;
-  const GValue *value_sent, *value_recv;
-  gboolean found;
-  gint comparison;
-  gint n_recv;
-  gint n_sent;
-  gint i, j;
-
-  /* verify tags */
-  fail_unless (taglist2 != NULL);
-  n_recv = gst_structure_n_fields (taglist2);
-  n_sent = gst_structure_n_fields (taglist);
-  fail_unless (n_recv == n_sent);
-  fail_unless (n_sent > 0);
-
-  /* FIXME: compare taglist values */
-  for (i = 0; i < n_sent; i++) {
-    name_sent = gst_structure_nth_field_name (taglist, i);
-    value_sent = gst_structure_get_value (taglist, name_sent);
-    found = FALSE;
-    for (j = 0; j < n_recv; j++) {
-      name_recv = gst_structure_nth_field_name (taglist2, j);
-      if (!strcmp (name_sent, name_recv)) {
-        value_recv = gst_structure_get_value (taglist2, name_recv);
-        comparison = gst_value_compare (value_sent, value_recv);
-        if (comparison != GST_VALUE_EQUAL) {
-          gchar *vs = g_strdup_value_contents (value_sent);
-          gchar *vr = g_strdup_value_contents (value_recv);
-          GST_DEBUG ("sent = %s:'%s', recv = %s:'%s'",
-              G_VALUE_TYPE_NAME (value_sent), vs,
-              G_VALUE_TYPE_NAME (value_recv), vr);
-          g_free (vs);
-          g_free (vr);
-        }
-        if (comparison != GST_VALUE_EQUAL &&
-            G_VALUE_HOLDS (value_sent, G_TYPE_DOUBLE)) {
-          gdouble vs;
-          gdouble vr;
-
-          /* add some tolerance for doubles */
-          vs = g_value_get_double (value_sent);
-          vr = g_value_get_double (value_recv);
-          if (vr >= vs - 0.001 && vr <= vs + 0.001)
-            comparison = GST_VALUE_EQUAL;
-        }
-        fail_unless (comparison == GST_VALUE_EQUAL,
-            "tag item %s has been received with different type or value",
-            name_sent);
-        found = TRUE;
-        break;
-      }
-    }
-    fail_unless (found, "tag item %s is lost", name_sent);
-  }
-}
-
-static void
 do_xmp_tag_serialization_deserialization (GstTagList * taglist,
     const gchar ** schemas)
 {
@@ -1121,7 +1062,7 @@ do_xmp_tag_serialization_deserialization (GstTagList * taglist,
   buf = gst_tag_list_to_xmp_buffer_full (taglist, TRUE, schemas);
   taglist2 = gst_tag_list_from_xmp_buffer (buf);
 
-  tag_list_equals (taglist, taglist2);
+  fail_unless (gst_tag_list_is_equal (taglist, taglist2));
 
   gst_buffer_unref (buf);
   gst_tag_list_free (taglist2);
@@ -1131,7 +1072,7 @@ static void
 do_simple_xmp_tag_serialization_deserialization (const gchar * gsttag,
     GValue * value)
 {
-  GstTagList *taglist = gst_tag_list_new ();
+  GstTagList *taglist = gst_tag_list_new_empty ();
 
   gst_tag_list_add_value (taglist, GST_TAG_MERGE_REPLACE, gsttag, value);
 
@@ -1323,7 +1264,7 @@ GST_END_TEST;
 GST_START_TEST (test_xmp_compound_tags)
 {
   const gchar *schemas[] = { "Iptc4xmpExt", NULL };
-  GstTagList *taglist = gst_tag_list_new ();
+  GstTagList *taglist = gst_tag_list_new_empty ();
 
   gst_tag_list_add (taglist, GST_TAG_MERGE_APPEND, GST_TAG_KEYWORDS, "k1",
       GST_TAG_KEYWORDS, "k2", GST_TAG_TITLE, "title", GST_TAG_KEYWORDS, "k3",
@@ -1331,7 +1272,7 @@ GST_START_TEST (test_xmp_compound_tags)
   do_xmp_tag_serialization_deserialization (taglist, NULL);
   gst_tag_list_free (taglist);
 
-  taglist = gst_tag_list_new ();
+  taglist = gst_tag_list_new_empty ();
   gst_tag_list_add (taglist, GST_TAG_MERGE_APPEND, GST_TAG_GEO_LOCATION_COUNTRY,
       "Brazil", GST_TAG_GEO_LOCATION_CITY, "Campina Grande", NULL);
   do_xmp_tag_serialization_deserialization (taglist, schemas);
@@ -1346,7 +1287,7 @@ GST_START_TEST (test_exif_parsing)
   GstTagList *taglist;
   GstBuffer *buf;
   GstByteWriter writer;
-  const gchar *str;
+  const gchar *str = NULL;
 
   gst_byte_writer_init (&writer);
 
@@ -1371,11 +1312,9 @@ GST_START_TEST (test_exif_parsing)
 
   taglist = gst_tag_list_from_exif_buffer (buf, G_LITTLE_ENDIAN, 8);
 
-  fail_unless (gst_structure_n_fields (taglist) == 1);
-  fail_unless (gst_structure_has_field_typed (taglist, GST_TAG_COPYRIGHT,
-          G_TYPE_STRING));
-  str = gst_structure_get_string (taglist, GST_TAG_COPYRIGHT);
-  fail_unless (strcmp (str, "my copyright") == 0);
+  fail_unless (gst_tag_list_get_tag_size (taglist, GST_TAG_COPYRIGHT) == 1);
+  gst_tag_list_peek_string_index (taglist, GST_TAG_COPYRIGHT, 0, &str);
+  fail_unless_equals_string (str, "my copyright");
 
   gst_tag_list_free (taglist);
   gst_buffer_unref (buf);
@@ -1395,7 +1334,7 @@ do_exif_tag_serialization_deserialization (GstTagList * taglist)
   taglist2 = gst_tag_list_from_exif_buffer (buf, G_LITTLE_ENDIAN, 0);
   gst_buffer_unref (buf);
 
-  tag_list_equals (taglist, taglist2);
+  fail_unless (gst_tag_list_is_equal (taglist, taglist2));
   gst_tag_list_free (taglist2);
 
   /* BE */
@@ -1403,7 +1342,7 @@ do_exif_tag_serialization_deserialization (GstTagList * taglist)
   taglist2 = gst_tag_list_from_exif_buffer (buf, G_BIG_ENDIAN, 0);
   gst_buffer_unref (buf);
 
-  tag_list_equals (taglist, taglist2);
+  fail_unless (gst_tag_list_is_equal (taglist, taglist2));
   gst_tag_list_free (taglist2);
 
   /* APP1 */
@@ -1411,7 +1350,7 @@ do_exif_tag_serialization_deserialization (GstTagList * taglist)
   taglist2 = gst_tag_list_from_exif_buffer_with_tiff_header (buf);
   gst_buffer_unref (buf);
 
-  tag_list_equals (taglist, taglist2);
+  fail_unless (gst_tag_list_is_equal (taglist, taglist2));
   gst_tag_list_free (taglist2);
 }
 
@@ -1419,7 +1358,7 @@ static void
 do_simple_exif_tag_serialization_deserialization (const gchar * gsttag,
     GValue * value)
 {
-  GstTagList *taglist = gst_tag_list_new ();
+  GstTagList *taglist = gst_tag_list_new_empty ();
 
   gst_tag_list_add_value (taglist, GST_TAG_MERGE_REPLACE, gsttag, value);
   do_exif_tag_serialization_deserialization (taglist);
@@ -1438,7 +1377,7 @@ GST_START_TEST (test_exif_multiple_tags)
 
   gst_tag_register_musicbrainz_tags ();
 
-  taglist = gst_tag_list_new_full (GST_TAG_ARTIST, "artist",
+  taglist = gst_tag_list_new (GST_TAG_ARTIST, "artist",
       GST_TAG_DEVICE_MANUFACTURER, "make",
       GST_TAG_DEVICE_MODEL, "model", GST_TAG_GEO_LOCATION_LATITUDE, 45.5,
       GST_TAG_GEO_LOCATION_LONGITUDE, -10.25,
@@ -1806,22 +1745,22 @@ GST_START_TEST (test_exif_tags_serialization_deserialization)
 
   /* flash is a little bit more tricky, because 2 tags are merged into 1 in
    * exif */
-  taglist = gst_tag_list_new_full (GST_TAG_CAPTURING_FLASH_FIRED, FALSE,
+  taglist = gst_tag_list_new (GST_TAG_CAPTURING_FLASH_FIRED, FALSE,
       GST_TAG_CAPTURING_FLASH_MODE, "auto", NULL);
   do_exif_tag_serialization_deserialization (taglist);
   gst_tag_list_free (taglist);
 
-  taglist = gst_tag_list_new_full (GST_TAG_CAPTURING_FLASH_FIRED, TRUE,
+  taglist = gst_tag_list_new (GST_TAG_CAPTURING_FLASH_FIRED, TRUE,
       GST_TAG_CAPTURING_FLASH_MODE, "auto", NULL);
   do_exif_tag_serialization_deserialization (taglist);
   gst_tag_list_free (taglist);
 
-  taglist = gst_tag_list_new_full (GST_TAG_CAPTURING_FLASH_FIRED, FALSE,
+  taglist = gst_tag_list_new (GST_TAG_CAPTURING_FLASH_FIRED, FALSE,
       GST_TAG_CAPTURING_FLASH_MODE, "never", NULL);
   do_exif_tag_serialization_deserialization (taglist);
   gst_tag_list_free (taglist);
 
-  taglist = gst_tag_list_new_full (GST_TAG_CAPTURING_FLASH_FIRED, TRUE,
+  taglist = gst_tag_list_new (GST_TAG_CAPTURING_FLASH_FIRED, TRUE,
       GST_TAG_CAPTURING_FLASH_MODE, "always", NULL);
   do_exif_tag_serialization_deserialization (taglist);
   gst_tag_list_free (taglist);

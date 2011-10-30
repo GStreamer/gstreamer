@@ -226,7 +226,7 @@ gst_vorbis_enc_start (GstAudioEncoder * enc)
   GstVorbisEnc *vorbisenc = GST_VORBISENC (enc);
 
   GST_DEBUG_OBJECT (enc, "start");
-  vorbisenc->tags = gst_tag_list_new ();
+  vorbisenc->tags = gst_tag_list_new_empty ();
   vorbisenc->header_sent = FALSE;
 
   return TRUE;

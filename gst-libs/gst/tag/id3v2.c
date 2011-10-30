@@ -479,7 +479,7 @@ id3v2_frames_to_tag_list (ID3TagsWorking * work, guint size)
     return FALSE;               /* Must have at least one frame */
   }
 
-  work->tags = gst_tag_list_new ();
+  work->tags = gst_tag_list_new_empty ();
 
   while (work->hdr.frame_data_size > frame_hdr_size) {
     guint frame_size = 0;

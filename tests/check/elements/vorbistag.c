@@ -234,7 +234,7 @@ GST_START_TEST (test_empty_tags_set)
 
   vorbistag = setup_vorbistag ();
 
-  tags = gst_tag_list_new ();
+  tags = gst_tag_list_new_empty ();
   gst_tag_list_add (tags, GST_TAG_MERGE_REPLACE, GST_TAG_TITLE, "foobar", NULL);
   gst_tag_setter_merge_tags (GST_TAG_SETTER (vorbistag), tags,
       GST_TAG_MERGE_REPLACE);
@@ -290,7 +290,7 @@ GST_START_TEST (test_filled_tags_unset)
 
   vorbistag = setup_vorbistag ();
 
-  tags = gst_tag_list_new ();
+  tags = gst_tag_list_new_empty ();
   gst_tag_setter_merge_tags (GST_TAG_SETTER (vorbistag), tags,
       GST_TAG_MERGE_REPLACE);
   gst_tag_setter_set_tag_merge_mode (GST_TAG_SETTER (vorbistag),
@@ -345,7 +345,7 @@ GST_START_TEST (test_filled_tags_change)
 
   vorbistag = setup_vorbistag ();
 
-  tags = gst_tag_list_new ();
+  tags = gst_tag_list_new_empty ();
   gst_tag_list_add (tags, GST_TAG_MERGE_REPLACE, GST_TAG_TITLE, "foobar", NULL);
   gst_tag_setter_merge_tags (GST_TAG_SETTER (vorbistag), tags,
       GST_TAG_MERGE_REPLACE);

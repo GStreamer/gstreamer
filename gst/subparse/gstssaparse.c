@@ -319,7 +319,7 @@ gst_ssa_parse_chain (GstPad * sinkpad, GstBuffer * buf)
   if (G_UNLIKELY (parse->send_tags)) {
     GstTagList *tags;
 
-    tags = gst_tag_list_new ();
+    tags = gst_tag_list_new_empty ();
     gst_tag_list_add (tags, GST_TAG_MERGE_APPEND, GST_TAG_SUBTITLE_CODEC,
         "SubStation Alpha", NULL);
     gst_element_found_tags_for_pad (GST_ELEMENT (parse), parse->srcpad, tags);

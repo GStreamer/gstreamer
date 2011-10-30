@@ -459,7 +459,7 @@ gst_tag_list_from_vorbiscomment (const guint8 * data, gsize size,
   g_return_val_if_fail (data != NULL, NULL);
   g_return_val_if_fail (id_data != NULL || id_data_length == 0, NULL);
 
-  list = gst_tag_list_new ();
+  list = gst_tag_list_new_empty ();
 
   if (size < 11 || size <= id_data_length + 4)
     goto error;

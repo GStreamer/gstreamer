@@ -261,7 +261,7 @@ gst_tag_list_new_from_id3v1 (const guint8 * data)
 
   if (data[0] != 'T' || data[1] != 'A' || data[2] != 'G')
     return NULL;
-  list = gst_tag_list_new ();
+  list = gst_tag_list_new_empty ();
   gst_tag_extract_id3v1_string (list, GST_TAG_TITLE, (gchar *) & data[3], 30);
   gst_tag_extract_id3v1_string (list, GST_TAG_ARTIST, (gchar *) & data[33], 30);
   gst_tag_extract_id3v1_string (list, GST_TAG_ALBUM, (gchar *) & data[63], 30);

@@ -668,9 +668,7 @@ gst_ogm_parse_stream_header (GstOgmParse * ogm, const guint8 * data, guint size)
     {
       GstTagList *tags;
 
-      tags = gst_tag_list_new ();
-      gst_tag_list_add (tags, GST_TAG_MERGE_APPEND, GST_TAG_SUBTITLE_CODEC,
-          "Ogm", NULL);
+      tags = gst_tag_list_new (GST_TAG_SUBTITLE_CODEC, "Ogm", NULL);
       gst_element_found_tags_for_pad (GST_ELEMENT (ogm), ogm->srcpad, tags);
     }
   }

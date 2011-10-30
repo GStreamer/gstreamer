@@ -76,65 +76,6 @@ test_element_init (TestElement * this)
 {
 }
 
-static void
-tag_list_equals (GstTagList * taglist, GstTagList * taglist2)
-{
-  const gchar *name_sent, *name_recv;
-  const GValue *value_sent, *value_recv;
-  gboolean found;
-  gint comparison;
-  gint n_recv;
-  gint n_sent;
-  gint i, j;
-
-  /* verify tags */
-  fail_unless (taglist2 != NULL);
-  n_recv = gst_structure_n_fields (taglist2);
-  n_sent = gst_structure_n_fields (taglist);
-  fail_unless (n_recv == n_sent);
-  fail_unless (n_sent > 0);
-
-  /* FIXME: compare taglist values */
-  for (i = 0; i < n_sent; i++) {
-    name_sent = gst_structure_nth_field_name (taglist, i);
-    value_sent = gst_structure_get_value (taglist, name_sent);
-    found = FALSE;
-    for (j = 0; j < n_recv; j++) {
-      name_recv = gst_structure_nth_field_name (taglist2, j);
-      if (!strcmp (name_sent, name_recv)) {
-        value_recv = gst_structure_get_value (taglist2, name_recv);
-        comparison = gst_value_compare (value_sent, value_recv);
-        if (comparison != GST_VALUE_EQUAL) {
-          gchar *vs = g_strdup_value_contents (value_sent);
-          gchar *vr = g_strdup_value_contents (value_recv);
-          GST_DEBUG ("sent = %s:'%s', recv = %s:'%s'",
-              G_VALUE_TYPE_NAME (value_sent), vs,
-              G_VALUE_TYPE_NAME (value_recv), vr);
-          g_free (vs);
-          g_free (vr);
-        }
-        if (comparison != GST_VALUE_EQUAL &&
-            G_VALUE_HOLDS (value_sent, G_TYPE_DOUBLE)) {
-          gdouble vs;
-          gdouble vr;
-
-          /* add some tolerance for doubles */
-          vs = g_value_get_double (value_sent);
-          vr = g_value_get_double (value_recv);
-          if (vr >= vs - 0.001 && vr <= vs + 0.001)
-            comparison = GST_VALUE_EQUAL;
-        }
-        fail_unless (comparison == GST_VALUE_EQUAL,
-            "tag item %s has been received with different type or value",
-            name_sent);
-        found = TRUE;
-        break;
-      }
-    }
-    fail_unless (found, "tag item %s is lost", name_sent);
-  }
-}
-
 static gboolean
 gst_buffer_equals (GstBuffer * buf_a, GstBuffer * buf_b)
 {
@@ -159,7 +100,7 @@ gst_buffer_equals (GstBuffer * buf_a, GstBuffer * buf_b)
 static GstTagList *
 create_taglist (void)
 {
-  return gst_tag_list_new_full (GST_TAG_ARTIST, "artist",
+  return gst_tag_list_new (GST_TAG_ARTIST, "artist",
       GST_TAG_TITLE, "title", GST_TAG_COPYRIGHT, "copyright", NULL);
 }
 
@@ -213,7 +154,7 @@ GST_START_TEST (test_disable)
   GstBuffer *buf;
   const gchar *str;
 
-  taglist = gst_tag_list_new_full (GST_TAG_ARTIST, "artist", NULL);
+  taglist = gst_tag_list_new (GST_TAG_ARTIST, "artist", NULL);
 
   /* add a tag that is mapped on xmp schema (as of Mar, 21th 2011) */
   gst_tag_list_add (taglist, GST_TAG_MERGE_REPLACE, GST_TAG_USER_RATING, 5,
@@ -223,7 +164,7 @@ GST_START_TEST (test_disable)
       gst_tag_xmp_writer_tag_list_to_xmp_buffer (GST_TAG_XMP_WRITER
       (test_element), taglist, TRUE);
   taglist2 = gst_tag_list_from_xmp_buffer (buf);
-  tag_list_equals (taglist, taglist2);
+  fail_unless (gst_tag_list_is_equal (taglist, taglist2));
   gst_tag_list_free (taglist2);
   gst_buffer_unref (buf);
 

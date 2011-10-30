@@ -458,7 +458,7 @@ gst_exif_reader_init (GstExifReader * reader, gint byte_order,
 {
   ensure_exif_tags ();
 
-  reader->taglist = gst_tag_list_new ();
+  reader->taglist = gst_tag_list_new_empty ();
   reader->buffer = buf;
   reader->base_offset = base_offset;
   reader->byte_order = byte_order;

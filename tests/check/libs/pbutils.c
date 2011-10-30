@@ -428,7 +428,7 @@ GST_START_TEST (test_pb_utils_taglist_add_codec_info)
   GstCaps *caps;
 
   gst_pb_utils_init ();
-  list = gst_tag_list_new ();
+  list = gst_tag_list_new_empty ();
   caps = gst_caps_new_empty_simple ("video/x-theora");
   ASSERT_CRITICAL (fail_if
       (gst_pb_utils_add_codec_description_to_tag_list (NULL,

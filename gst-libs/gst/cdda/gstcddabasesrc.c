@@ -1294,7 +1294,7 @@ gst_cdda_base_src_add_tags (GstCddaBaseSrc * src)
     guint num_sectors;
 
     if (src->tracks[i].tags == NULL)
-      src->tracks[i].tags = gst_tag_list_new ();
+      src->tracks[i].tags = gst_tag_list_new_empty ();
 
     num_sectors = src->tracks[i].end - src->tracks[i].start + 1;
     gst_cdda_base_src_convert (src, sector_format, num_sectors,
@@ -1428,7 +1428,7 @@ gst_cdda_base_src_start (GstBaseSrc * basesrc)
 
   GST_LOG_OBJECT (basesrc, "opening device %s", device);
 
-  src->tags = gst_tag_list_new ();
+  src->tags = gst_tag_list_new_empty ();
 
   ret = klass->open (src, device);
   g_free (device);

@@ -1714,7 +1714,7 @@ gst_ogg_chain_new_stream (GstOggChain * chain, guint32 serialno)
     goto init_failed;
 
   /* FIXME: either do something with it or remove it */
-  list = gst_tag_list_new ();
+  list = gst_tag_list_new_empty ();
   gst_tag_list_add (list, GST_TAG_MERGE_REPLACE, GST_TAG_SERIAL, serialno,
       NULL);
   gst_tag_list_free (list);
@@ -2406,7 +2406,7 @@ gst_ogg_demux_activate_chain (GstOggDemux * ogg, GstOggChain * chain,
     gst_ogg_demux_send_event (ogg, event);
 
     gst_element_found_tags (GST_ELEMENT_CAST (ogg),
-        gst_tag_list_new_full (GST_TAG_CONTAINER_FORMAT, "Ogg", NULL));
+        gst_tag_list_new (GST_TAG_CONTAINER_FORMAT, "Ogg", NULL));
   }
 
   GST_DEBUG_OBJECT (ogg, "starting chain");

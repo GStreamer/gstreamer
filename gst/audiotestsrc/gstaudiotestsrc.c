@@ -1113,10 +1113,7 @@ gst_audio_test_src_fill (GstBaseSrc * basesrc, guint64 offset,
   if (!src->tags_pushed) {
     GstTagList *taglist;
 
-    taglist = gst_tag_list_new ();
-
-    gst_tag_list_add (taglist, GST_TAG_MERGE_APPEND,
-        GST_TAG_DESCRIPTION, "audiotest wave", NULL);
+    taglist = gst_tag_list_new (GST_TAG_DESCRIPTION, "audiotest wave", NULL);
 
     eclass = GST_ELEMENT_CLASS (parent_class);
     if (eclass->send_event)

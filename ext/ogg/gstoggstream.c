@@ -461,7 +461,7 @@ extract_tags_theora (GstOggStream * pad, ogg_packet * packet)
         (const guint8 *) "\201theora", 7, &pad->taglist);
 
     if (!pad->taglist)
-      pad->taglist = gst_tag_list_new ();
+      pad->taglist = gst_tag_list_new_empty ();
 
     if (pad->bitrate)
       gst_tag_list_add (pad->taglist, GST_TAG_MERGE_REPLACE,
@@ -775,7 +775,7 @@ extract_tags_vorbis (GstOggStream * pad, ogg_packet * packet)
         (const guint8 *) "\003vorbis", 7, &pad->taglist);
 
     if (!pad->taglist)
-      pad->taglist = gst_tag_list_new ();
+      pad->taglist = gst_tag_list_new_empty ();
 
     gst_tag_list_add (pad->taglist, GST_TAG_MERGE_REPLACE,
         GST_TAG_ENCODER_VERSION, pad->version, NULL);
@@ -866,7 +866,7 @@ extract_tags_count (GstOggStream * pad, ogg_packet * packet)
     tag_list_from_vorbiscomment_packet (packet, NULL, 0, &pad->taglist);
 
     if (!pad->taglist)
-      pad->taglist = gst_tag_list_new ();
+      pad->taglist = gst_tag_list_new_empty ();
 
     if (pad->bitrate)
       gst_tag_list_add (pad->taglist, GST_TAG_MERGE_REPLACE,
@@ -1796,7 +1796,7 @@ extract_tags_kate (GstOggStream * pad, ogg_packet * packet)
       g_strdelimit (language, NULL, '\0');
       canonical = gst_tag_get_language_code_iso_639_1 (language);
       if (canonical) {
-        list = gst_tag_list_new_full (GST_TAG_LANGUAGE_CODE, canonical, NULL);
+        list = gst_tag_list_new (GST_TAG_LANGUAGE_CODE, canonical, NULL);
       } else {
         GST_WARNING ("Unknown or invalid language code %s, ignored", language);
       }

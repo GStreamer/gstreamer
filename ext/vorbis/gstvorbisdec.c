@@ -276,6 +276,7 @@ vorbis_handle_identification_packet (GstVorbisDec * vd)
   return GST_FLOW_OK;
 }
 
+/* FIXME 0.11: remove tag handling and let container take care of that? */
 static GstFlowReturn
 vorbis_handle_comment_packet (GstVorbisDec * vd, ogg_packet * packet)
 {
@@ -303,7 +304,7 @@ vorbis_handle_comment_packet (GstVorbisDec * vd, ogg_packet * packet)
 
   if (!vd->taglist) {
     GST_ERROR_OBJECT (vd, "couldn't decode comments");
-    vd->taglist = gst_tag_list_new ();
+    vd->taglist = gst_tag_list_new_empty ();
   }
   if (encoder) {
     if (encoder[0])

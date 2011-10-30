@@ -1686,7 +1686,7 @@ gst_audio_encoder_activate (GstAudioEncoder * enc, gboolean active)
 
     if (enc->priv->tags)
       gst_tag_list_free (enc->priv->tags);
-    enc->priv->tags = gst_tag_list_new ();
+    enc->priv->tags = gst_tag_list_new_empty ();
 
     if (!enc->priv->active && klass->start)
       result = klass->start (enc);

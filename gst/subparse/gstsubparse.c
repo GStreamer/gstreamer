@@ -1461,12 +1461,9 @@ handle_buffer (GstSubParse * self, GstBuffer * buf)
 
     /* push tags */
     if (self->subtitle_codec != NULL) {
-      GstTagList *tags;
-
-      tags = gst_tag_list_new ();
-      gst_tag_list_add (tags, GST_TAG_MERGE_APPEND, GST_TAG_SUBTITLE_CODEC,
-          self->subtitle_codec, NULL);
-      gst_element_found_tags_for_pad (GST_ELEMENT (self), self->srcpad, tags);
+      gst_element_found_tags_for_pad (GST_ELEMENT (self), self->srcpad,
+          gst_tag_list_new (GST_TAG_SUBTITLE_CODEC, self->subtitle_codec,
+              NULL));
     }
   }
 

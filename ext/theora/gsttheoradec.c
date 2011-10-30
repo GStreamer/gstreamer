@@ -769,7 +769,7 @@ theora_handle_comment_packet (GstTheoraDec * dec, ogg_packet * packet)
 
   if (!list) {
     GST_ERROR_OBJECT (dec, "couldn't decode comments");
-    list = gst_tag_list_new ();
+    list = gst_tag_list_new_empty ();
   }
   if (encoder) {
     gst_tag_list_add (list, GST_TAG_MERGE_REPLACE,

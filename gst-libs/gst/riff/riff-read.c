@@ -650,7 +650,7 @@ gst_riff_parse_info (GstElement * element,
   }
   data = gst_buffer_map (buf, &size, NULL, GST_MAP_READ);
 
-  taglist = gst_tag_list_new ();
+  taglist = gst_tag_list_new_empty ();
 
   ptr = data;
   left = size;
