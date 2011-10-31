@@ -77,7 +77,6 @@ struct _GstBaseCameraSrc
   gboolean post_preview;
   GstElement *preview_filter;
   GstCameraBinPreviewPipelineData *preview_pipeline;
-  gboolean preview_filter_changed;
 
   /* Resolution of the buffers configured to camerabin */
   gint width;

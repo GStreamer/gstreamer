@@ -350,7 +350,11 @@ gst_base_camera_src_set_property (GObject * object,
       if (self->preview_filter)
         gst_object_unref (self->preview_filter);
       self->preview_filter = g_value_dup_object (value);
-      self->preview_filter_changed = TRUE;
+      if (!gst_camerabin_preview_set_filter (self->preview_pipeline,
+              self->preview_filter)) {
+        GST_WARNING_OBJECT (self,
+            "Cannot change preview filter, is element in NULL state?");
+      }
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (self, prop_id, pspec);
@@ -434,23 +438,11 @@ gst_base_camera_src_change_state (GstElement * element,
       if (!construct_pipeline (self))
         return GST_STATE_CHANGE_FAILURE;
 
-      /* recreate the preview pipeline */
-      if (self->preview_pipeline && self->preview_filter_changed) {
-        gst_camerabin_destroy_preview_pipeline (self->preview_pipeline);
-        self->preview_pipeline = NULL;
-      }
-
-      if (self->preview_pipeline == NULL)
-        self->preview_pipeline =
-            gst_camerabin_create_preview_pipeline (GST_ELEMENT_CAST (self),
-            self->preview_filter);
-
       if (self->preview_pipeline == NULL) {
         /* failed to create preview pipeline, fail state change */
         return GST_STATE_CHANGE_FAILURE;
       }
 
-      self->preview_filter_changed = FALSE;
       if (self->preview_caps) {
         GST_DEBUG_OBJECT (self,
             "Setting preview pipeline caps %" GST_PTR_FORMAT,
@@ -610,6 +602,9 @@ gst_base_camera_src_init (GstBaseCameraSrc * self,
   self->capturing_mutex = g_mutex_new ();
 
   self->post_preview = DEFAULT_POST_PREVIEW;
+
+  self->preview_pipeline =
+      gst_camerabin_create_preview_pipeline (GST_ELEMENT_CAST (self), NULL);
 }
 
 void

@@ -31,6 +31,9 @@
 #include "gstcamerabinpreview.h"
 #include "gstbasecamerasrc.h"
 
+GST_DEBUG_CATEGORY_EXTERN (base_camera_src_debug);
+#define GST_CAT_DEFAULT base_camera_src_debug
+
 static void _gst_camerabin_preview_set_caps (GstCameraBinPreviewPipelineData *
     preview, GstCaps * caps);
 
@@ -190,6 +193,7 @@ gst_camerabin_create_preview_pipeline (GstElement * element,
 
   data->element = element;
   data->filter = filter;
+  data->vscale = vscale;
 
   data->processing_lock = g_mutex_new ();
   data->processing_cond = g_cond_new ();
@@ -326,4 +330,75 @@ gst_camerabin_preview_set_caps (GstCameraBinPreviewPipelineData * preview,
     gst_caps_replace (&preview->pending_preview_caps, caps);
   }
   g_mutex_unlock (preview->processing_lock);
+}
+
+/**
+ * gst_camerabin_preview_set_filter:
+ * @preview: the #GstCameraBinPreviewPipelineData
+ * @filter: Custom filter to process preview data (an extra ref is taken)
+ *
+ * Set the filter element into preview pipeline.
+ *
+ * Returns: %TRUE on success
+ */
+gboolean
+gst_camerabin_preview_set_filter (GstCameraBinPreviewPipelineData * preview,
+    GstElement * filter)
+{
+  gboolean ret = TRUE;
+  GstState current;
+
+  g_return_val_if_fail (preview != NULL, FALSE);
+
+  GST_DEBUG ("Preview pipeline setting new filter %p", filter);
+
+  g_mutex_lock (preview->processing_lock);
+
+  gst_element_get_state (preview->pipeline, &current, NULL, 0);
+
+  if (preview->processing == 0 && current == GST_STATE_NULL) {
+    gboolean linkfail = FALSE;
+
+    if (preview->filter) {
+      /* Unlink and remove old filter */
+      gst_element_unlink (preview->appsrc, preview->filter);
+      gst_element_unlink (preview->filter, preview->vscale);
+      gst_bin_remove (GST_BIN (preview->pipeline), preview->filter);
+    } else {
+      /* Make room for filter by breaking the link between appsrc and vcale */
+      gst_element_unlink (preview->appsrc, preview->vscale);
+    }
+
+    if (filter) {
+      /* Add and link the new filter between appsrc and vscale */
+      gst_bin_add (GST_BIN (preview->pipeline), gst_object_ref (filter));
+
+      linkfail |=
+          GST_PAD_LINK_FAILED (gst_element_link_pads_full (preview->appsrc,
+              "src", filter, NULL, GST_PAD_LINK_CHECK_NOTHING));
+
+      linkfail |=
+          GST_PAD_LINK_FAILED (gst_element_link_pads_full (filter, NULL,
+              preview->vscale, "sink", GST_PAD_LINK_CHECK_CAPS));
+    } else {
+      /* No filter was given. Just link the appsrc to vscale directly */
+      linkfail |=
+          GST_PAD_LINK_FAILED (gst_element_link_pads_full (preview->appsrc,
+              "src", preview->vscale, "sink", GST_PAD_LINK_CHECK_NOTHING));
+    }
+
+    if (linkfail) {
+      GST_WARNING ("Linking the filter to pipeline failed");
+      ret = FALSE;
+    } else {
+      GST_DEBUG ("Linking the filter to pipeline successful");
+      preview->filter = filter;
+    }
+  } else {
+    GST_WARNING ("Cannot change filter when pipeline is running");
+    ret = FALSE;
+  }
+  g_mutex_unlock (preview->processing_lock);
+
+  return ret;
 }
