@@ -148,36 +148,6 @@ not_found:
 }
 
 /**
- * gst_plugin_feature_type_name_filter:
- * @feature: the #GstPluginFeature
- * @data: (in): the type and name to check against
- *
- * Compares type and name of plugin feature. Can be used with gst_filter_run().
- *
- * Returns: TRUE if equal.
- */
-#ifndef GST_REMOVE_DEPRECATED
-#ifdef GST_DISABLE_DEPRECATED
-typedef struct
-{
-  const gchar *name;
-  GType type;
-} GstTypeNameData;
-gboolean gst_plugin_feature_type_name_filter (GstPluginFeature * feature,
-    GstTypeNameData * data);
-#endif
-gboolean
-gst_plugin_feature_type_name_filter (GstPluginFeature * feature,
-    GstTypeNameData * data)
-{
-  g_return_val_if_fail (GST_IS_PLUGIN_FEATURE (feature), FALSE);
-
-  return ((data->type == 0 || data->type == G_OBJECT_TYPE (feature)) &&
-      (data->name == NULL || !strcmp (data->name, GST_OBJECT_NAME (feature))));
-}
-#endif /* GST_REMOVE_DEPRECATED */
-
-/**
  * gst_plugin_feature_set_rank:
  * @feature: feature to rank
  * @rank: rank value - higher number means more priority rank

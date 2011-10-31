@@ -111,20 +111,6 @@ struct _GstPluginFeatureClass {
 };
 
 /**
- * GstTypeNameData:
- * @name: a name
- * @type: a GType
- *
- * Structure used for filtering based on @name and @type.
- */
-#ifndef GST_DISABLE_DEPRECATED
-typedef struct {
-  const gchar   *name;
-  GType          type;
-} GstTypeNameData;
-#endif
-
-/**
  * GstPluginFeatureFilter:
  * @feature: the pluginfeature to check
  * @user_data: the user_data that has been passed on e.g.
@@ -143,11 +129,6 @@ GType           gst_plugin_feature_get_type             (void);
 
 GstPluginFeature *
                 gst_plugin_feature_load                 (GstPluginFeature *feature);
-
-#ifndef GST_DISABLE_DEPRECATED
-gboolean        gst_plugin_feature_type_name_filter     (GstPluginFeature *feature,
-                                                         GstTypeNameData *data);
-#endif
 
 void            gst_plugin_feature_set_rank             (GstPluginFeature *feature, guint rank);
 guint           gst_plugin_feature_get_rank             (GstPluginFeature *feature);

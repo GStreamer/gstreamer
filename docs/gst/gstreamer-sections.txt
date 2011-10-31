@@ -943,15 +943,6 @@ gst_qos_type_get_type
 gst_event_type_flags_get_type
 </SECTION>
 
-
-<SECTION>
-<FILE>gstfilter</FILE>
-<TITLE>GstFilter</TITLE>
-GstFilterFunc
-gst_filter_run
-</SECTION>
-
-
 <SECTION>
 <FILE>gstformat</FILE>
 <TITLE>GstFormat</TITLE>
@@ -1984,11 +1975,9 @@ gst_plugin_flags_get_type
 <FILE>gstpluginfeature</FILE>
 <TITLE>GstPluginFeature</TITLE>
 GstPluginFeature
-GstTypeNameData
 GstPluginFeatureFilter
 GstRank
 
-gst_plugin_feature_type_name_filter
 gst_plugin_feature_set_rank
 gst_plugin_feature_set_name
 gst_plugin_feature_get_rank

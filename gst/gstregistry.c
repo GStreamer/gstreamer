@@ -128,7 +128,6 @@
 #include "gsterror.h"
 #include "gstregistry.h"
 #include "gstmarshal.h"
-#include "gstfilter.h"
 
 #include "gstpluginloader.h"
 
@@ -652,12 +651,12 @@ gst_registry_plugin_filter (GstRegistry * registry,
   return list;
 }
 
-#ifdef GST_DISABLE_DEPRECATED
 typedef struct
 {
   const gchar *name;
   GType type;
 } GstTypeNameData;
+
 static gboolean
 gst_plugin_feature_type_name_filter (GstPluginFeature * feature,
     GstTypeNameData * data)
@@ -667,7 +666,6 @@ gst_plugin_feature_type_name_filter (GstPluginFeature * feature,
   return ((data->type == 0 || data->type == G_OBJECT_TYPE (feature)) &&
       (data->name == NULL || !strcmp (data->name, GST_OBJECT_NAME (feature))));
 }
-#endif
 
 /* returns TRUE if the list was changed
  *
