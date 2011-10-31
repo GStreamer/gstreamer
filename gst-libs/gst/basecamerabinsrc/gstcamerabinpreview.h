@@ -36,6 +36,7 @@ typedef struct
   GstElement *appsrc;
   GstElement *filter;
   GstElement *appsink;
+  GstElement *vscale;
 
   GstElement *element;
 
@@ -50,5 +51,6 @@ GstCameraBinPreviewPipelineData *gst_camerabin_create_preview_pipeline (GstEleme
 void gst_camerabin_destroy_preview_pipeline (GstCameraBinPreviewPipelineData * preview);
 gboolean gst_camerabin_preview_pipeline_post (GstCameraBinPreviewPipelineData * preview, GstBuffer * buffer);
 void gst_camerabin_preview_set_caps (GstCameraBinPreviewPipelineData * preview, GstCaps * caps);
+gboolean gst_camerabin_preview_set_filter (GstCameraBinPreviewPipelineData * preview, GstElement * filter);
 
 #endif /* #ifndef __CAMERABIN_PREVIEW_H_ */
