@@ -799,7 +799,8 @@ gst_base_video_encoder_change_state (GstElement * element,
       gst_base_video_encoder_reset (base_video_encoder);
       gst_base_video_encoder_reset (base_video_encoder);
       if (base_video_encoder_class->start) {
-        base_video_encoder_class->start (base_video_encoder);
+        if (!base_video_encoder_class->start (base_video_encoder))
+          goto start_error;
       }
       break;
     default:
@@ -812,7 +813,8 @@ gst_base_video_encoder_change_state (GstElement * element,
     case GST_STATE_CHANGE_PAUSED_TO_READY:
       gst_base_video_encoder_reset (base_video_encoder);
       if (base_video_encoder_class->stop) {
-        base_video_encoder_class->stop (base_video_encoder);
+        if (!base_video_encoder_class->stop (base_video_encoder))
+          goto stop_error;
       }
       break;
     default:
@@ -820,6 +822,14 @@ gst_base_video_encoder_change_state (GstElement * element,
   }
 
   return ret;
+
+start_error:
+  GST_WARNING_OBJECT (base_video_encoder, "failed to start");
+  return GST_STATE_CHANGE_FAILURE;
+
+stop_error:
+  GST_WARNING_OBJECT (base_video_encoder, "failed to stop");
+  return GST_STATE_CHANGE_FAILURE;
 }
 
 /**
