@@ -178,14 +178,14 @@ gst_dynudpsink_render (GstBaseSink * bsink, GstBuffer * buffer)
   gint ret;
   gsize size;
   guint8 *data;
-  GstMetaNetAddress *meta;
+  GstNetAddressMeta *meta;
   struct sockaddr_in theiraddr;
   guint16 destport;
   guint32 destaddr;
 
   memset (&theiraddr, 0, sizeof (theiraddr));
 
-  meta = gst_buffer_get_meta_net_address (buffer);
+  meta = gst_buffer_get_net_address_meta (buffer);
 
   if (meta == NULL) {
     GST_DEBUG ("Received buffer is not a GstNetBuffer, skipping");

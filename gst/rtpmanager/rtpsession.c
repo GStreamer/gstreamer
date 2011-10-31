@@ -1699,7 +1699,7 @@ update_arrival_stats (RTPSession * sess, RTPArrivalStats * arrival,
     gboolean rtp, GstBuffer * buffer, GstClockTime current_time,
     GstClockTime running_time, guint64 ntpnstime)
 {
-  GstMetaNetAddress *meta;
+  GstNetAddressMeta *meta;
   GstRTPBuffer rtpb;
 
   /* get time of arrival */
@@ -1719,7 +1719,7 @@ update_arrival_stats (RTPSession * sess, RTPArrivalStats * arrival,
   }
 
   /* for netbuffer we can store the IP address to check for collisions */
-  meta = gst_buffer_get_meta_net_address (buffer);
+  meta = gst_buffer_get_net_address_meta (buffer);
   if (meta) {
     arrival->have_address = TRUE;
     memcpy (&arrival->address, &meta->naddr, sizeof (GstNetAddress));

@@ -394,7 +394,7 @@ static GstFlowReturn
 gst_udpsrc_create (GstPushSrc * psrc, GstBuffer ** buf)
 {
   GstUDPSrc *udpsrc;
-  GstMetaNetAddress *meta;
+  GstNetAddressMeta *meta;
   GstBuffer *outbuf;
   union gst_sockaddr
   {
@@ -529,7 +529,7 @@ no_select:
       gst_memory_new_wrapped (0, pktdata, g_free, pktsize, offset, ret));
 
   /* use buffer metadata so receivers can also track the address */
-  meta = gst_buffer_add_meta_net_address (outbuf);
+  meta = gst_buffer_add_net_address_meta (outbuf);
 
   switch (sa.sa.sa_family) {
     case AF_INET:
