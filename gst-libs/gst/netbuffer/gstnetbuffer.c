@@ -61,7 +61,7 @@ gst_net_address_meta_get_info (void)
 }
 
 /**
- * gst_netaddress_set_ip4_address:
+ * gst_net_address_set_ip4_address:
  * @naddr: a network address
  * @address: an IPv4 network address.
  * @port: a port number to set.
@@ -72,7 +72,7 @@ gst_net_address_meta_get_info (void)
  * use g_htons() and g_htonl() to convert them to network byte order.
  */
 void
-gst_netaddress_set_ip4_address (GstNetAddress * naddr, guint32 address,
+gst_net_address_set_ip4_address (GstNetAddress * naddr, guint32 address,
     guint16 port)
 {
   g_return_if_fail (naddr != NULL);
@@ -83,7 +83,7 @@ gst_netaddress_set_ip4_address (GstNetAddress * naddr, guint32 address,
 }
 
 /**
- * gst_netaddress_set_ip6_address:
+ * gst_net_address_set_ip6_address:
  * @naddr: a network address
  * @address: an IPv6 network address.
  * @port: a port number to set.
@@ -94,7 +94,7 @@ gst_netaddress_set_ip4_address (GstNetAddress * naddr, guint32 address,
  * it to network byte order.
  */
 void
-gst_netaddress_set_ip6_address (GstNetAddress * naddr, guint8 address[16],
+gst_net_address_set_ip6_address (GstNetAddress * naddr, guint8 address[16],
     guint16 port)
 {
   g_return_if_fail (naddr != NULL);
@@ -105,7 +105,7 @@ gst_netaddress_set_ip6_address (GstNetAddress * naddr, guint8 address[16],
 }
 
 /**
- * gst_netaddress_get_net_type:
+ * gst_net_address_get_net_type:
  * @naddr: a network address
  *
  * Get the type of address stored in @naddr.
@@ -113,7 +113,7 @@ gst_netaddress_set_ip6_address (GstNetAddress * naddr, guint8 address[16],
  * Returns: the network type stored in @naddr.
  */
 GstNetType
-gst_netaddress_get_net_type (const GstNetAddress * naddr)
+gst_net_address_get_net_type (const GstNetAddress * naddr)
 {
   g_return_val_if_fail (naddr != NULL, GST_NET_TYPE_UNKNOWN);
 
@@ -121,7 +121,7 @@ gst_netaddress_get_net_type (const GstNetAddress * naddr)
 }
 
 /**
- * gst_netaddress_get_ip4_address:
+ * gst_net_address_get_ip4_address:
  * @naddr: a network address
  * @address: a location to store the address.
  * @port: a location to store the port.
@@ -135,7 +135,7 @@ gst_netaddress_get_net_type (const GstNetAddress * naddr)
  * Returns: TRUE if the address could be retrieved.
  */
 gboolean
-gst_netaddress_get_ip4_address (const GstNetAddress * naddr, guint32 * address,
+gst_net_address_get_ip4_address (const GstNetAddress * naddr, guint32 * address,
     guint16 * port)
 {
   g_return_val_if_fail (naddr != NULL, FALSE);
@@ -152,7 +152,7 @@ gst_netaddress_get_ip4_address (const GstNetAddress * naddr, guint32 * address,
 }
 
 /**
- * gst_netaddress_get_ip6_address:
+ * gst_net_address_get_ip6_address:
  * @naddr: a network address
  * @address: a location to store the result.
  * @port: a location to store the port.
@@ -168,8 +168,8 @@ gst_netaddress_get_ip4_address (const GstNetAddress * naddr, guint32 * address,
  * Returns: TRUE if the address could be retrieved.
  */
 gboolean
-gst_netaddress_get_ip6_address (const GstNetAddress * naddr, guint8 address[16],
-    guint16 * port)
+gst_net_address_get_ip6_address (const GstNetAddress * naddr,
+    guint8 address[16], guint16 * port)
 {
   static guint8 ip4_transition[16] =
       { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0xFF, 0xFF };
@@ -193,7 +193,7 @@ gst_netaddress_get_ip6_address (const GstNetAddress * naddr, guint8 address[16],
 }
 
 /**
- * gst_netaddress_get_address_bytes:
+ * gst_net_address_get_address_bytes:
  * @naddr: a network address
  * @address: a location to store the result.
  * @port: a location to store the port.
@@ -208,7 +208,7 @@ gst_netaddress_get_ip6_address (const GstNetAddress * naddr, guint8 address[16],
  * Since: 0.10.22
  */
 gint
-gst_netaddress_get_address_bytes (const GstNetAddress * naddr,
+gst_net_address_get_address_bytes (const GstNetAddress * naddr,
     guint8 address[16], guint16 * port)
 {
   gint ret = 0;
@@ -234,7 +234,7 @@ gst_netaddress_get_address_bytes (const GstNetAddress * naddr,
 }
 
 /**
- * gst_netaddress_set_address_bytes:
+ * gst_net_address_set_address_bytes:
  * @naddr: a network address
  * @type: the address type (IPv4 or IPV6)
  * @address: a location to store the result.
@@ -251,7 +251,7 @@ gst_netaddress_get_address_bytes (const GstNetAddress * naddr,
  * Since: 0.10.22
  */
 gint
-gst_netaddress_set_address_bytes (GstNetAddress * naddr, GstNetType type,
+gst_net_address_set_address_bytes (GstNetAddress * naddr, GstNetType type,
     guint8 address[16], guint16 port)
 {
   gint len = 0;
@@ -278,7 +278,7 @@ gst_netaddress_set_address_bytes (GstNetAddress * naddr, GstNetType type,
 }
 
 /**
- * gst_netaddress_equal:
+ * gst_net_address_equal:
  * @naddr1: The first #GstNetAddress
  * @naddr2: The second #GstNetAddress
  *
@@ -289,7 +289,7 @@ gst_netaddress_set_address_bytes (GstNetAddress * naddr, GstNetType type,
  * Since: 0.10.18
  */
 gboolean
-gst_netaddress_equal (const GstNetAddress * naddr1,
+gst_net_address_equal (const GstNetAddress * naddr1,
     const GstNetAddress * naddr2)
 {
   g_return_val_if_fail (naddr1 != NULL, FALSE);
@@ -318,7 +318,7 @@ gst_netaddress_equal (const GstNetAddress * naddr1,
 }
 
 /**
- * gst_netaddress_to_string:
+ * gst_net_address_to_string:
  * @naddr: a #GstNetAddress
  * @dest: destination
  * @len: len of @dest
@@ -332,7 +332,8 @@ gst_netaddress_equal (const GstNetAddress * naddr1,
  * Since: 0.10.24
  */
 gint
-gst_netaddress_to_string (const GstNetAddress * naddr, gchar * dest, gulong len)
+gst_net_address_to_string (const GstNetAddress * naddr, gchar * dest,
+    gulong len)
 {
   gint result;
 
@@ -345,7 +346,7 @@ gst_netaddress_to_string (const GstNetAddress * naddr, gchar * dest, gulong len)
       guint32 address;
       guint16 port;
 
-      gst_netaddress_get_ip4_address (naddr, &address, &port);
+      gst_net_address_get_ip4_address (naddr, &address, &port);
       address = g_ntohl (address);
 
       result = g_snprintf (dest, len, "%d.%d.%d.%d:%d", (address >> 24) & 0xff,
@@ -358,7 +359,7 @@ gst_netaddress_to_string (const GstNetAddress * naddr, gchar * dest, gulong len)
       guint8 address[16];
       guint16 port;
 
-      gst_netaddress_get_ip6_address (naddr, address, &port);
+      gst_net_address_get_ip6_address (naddr, address, &port);
 
       result =
           g_snprintf (dest, len, "[%04x:%04x:%04x:%04x:%04x:%04x:%04x:%04x]:%d",
