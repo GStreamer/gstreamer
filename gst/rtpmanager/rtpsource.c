@@ -307,12 +307,12 @@ rtp_source_create_stats (RTPSource * src)
 
   /* add address and port */
   if (src->have_rtp_from) {
-    gst_netaddress_to_string (&src->rtp_from, address_str,
+    gst_net_address_to_string (&src->rtp_from, address_str,
         sizeof (address_str));
     gst_structure_set (s, "rtp-from", G_TYPE_STRING, address_str, NULL);
   }
   if (src->have_rtcp_from) {
-    gst_netaddress_to_string (&src->rtcp_from, address_str,
+    gst_net_address_to_string (&src->rtcp_from, address_str,
         sizeof (address_str));
     gst_structure_set (s, "rtcp-from", G_TYPE_STRING, address_str, NULL);
   }
@@ -1718,7 +1718,7 @@ rtp_source_find_conflicting_address (RTPSource * src, GstNetAddress * address,
       item; item = g_list_next (item)) {
     RTPConflictingAddress *known_conflict = item->data;
 
-    if (gst_netaddress_equal (address, &known_conflict->address)) {
+    if (gst_net_address_equal (address, &known_conflict->address)) {
       known_conflict->time = time;
       return TRUE;
     }
@@ -1778,7 +1778,7 @@ rtp_source_timeout (RTPSource * src, GstClockTime current_time,
 
       src->conflicting_addresses =
           g_list_delete_link (src->conflicting_addresses, item);
-      gst_netaddress_to_string (&known_conflict->address, buf, 40);
+      gst_net_address_to_string (&known_conflict->address, buf, 40);
       GST_DEBUG ("collision %p timed out: %s", known_conflict, buf);
       g_free (known_conflict);
     }

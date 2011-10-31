@@ -199,7 +199,7 @@ gst_dynudpsink_render (GstBaseSink * bsink, GstBuffer * buffer)
   GST_DEBUG ("about to send %d bytes", size);
 
   /* let's get the address from the metaata */
-  gst_netaddress_get_ip4_address (&meta->naddr, &destaddr, &destport);
+  gst_net_address_get_ip4_address (&meta->naddr, &destaddr, &destport);
 
   GST_DEBUG ("sending %d bytes to client %d port %d", size, destaddr, destport);
 

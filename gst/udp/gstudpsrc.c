@@ -534,7 +534,7 @@ no_select:
   switch (sa.sa.sa_family) {
     case AF_INET:
     {
-      gst_netaddress_set_ip4_address (&meta->naddr, sa.sa_in.sin_addr.s_addr,
+      gst_net_address_set_ip4_address (&meta->naddr, sa.sa_in.sin_addr.s_addr,
           sa.sa_in.sin_port);
     }
       break;
@@ -543,7 +543,7 @@ no_select:
       guint8 ip6[16];
 
       memcpy (ip6, &sa.sa_in6.sin6_addr, sizeof (ip6));
-      gst_netaddress_set_ip6_address (&meta->naddr, ip6, sa.sa_in6.sin6_port);
+      gst_net_address_set_ip6_address (&meta->naddr, ip6, sa.sa_in6.sin6_port);
     }
       break;
     default:

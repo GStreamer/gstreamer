@@ -1280,7 +1280,7 @@ check_collision (RTPSession * sess, RTPSource * source,
     }
 
     if (have_from) {
-      if (gst_netaddress_equal (from, &arrival->address)) {
+      if (gst_net_address_equal (from, &arrival->address)) {
         /* Address is the same */
         return FALSE;
       } else {
@@ -1290,7 +1290,7 @@ check_collision (RTPSession * sess, RTPSource * source,
           if (rtp_source_find_conflicting_address (source,
                   &arrival->address, arrival->current_time)) {
             gchar buf1[40];
-            gst_netaddress_to_string (&arrival->address, buf1, 40);
+            gst_net_address_to_string (&arrival->address, buf1, 40);
             GST_LOG ("Known conflict on %x for %s, dropping packet",
                 rtp_source_get_ssrc (source), buf1);
             return TRUE;
@@ -1303,8 +1303,8 @@ check_collision (RTPSession * sess, RTPSource * source,
             rtp_source_add_conflicting_address (source, from,
                 arrival->current_time);
 
-            gst_netaddress_to_string (from, buf1, 40);
-            gst_netaddress_to_string (&arrival->address, buf2, 40);
+            gst_net_address_to_string (from, buf1, 40);
+            gst_net_address_to_string (&arrival->address, buf2, 40);
             GST_DEBUG ("New conflict for ssrc %x, replacing %s with %s,"
                 " saving old as known conflict",
                 rtp_source_get_ssrc (source), buf1, buf2);
