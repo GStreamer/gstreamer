@@ -189,8 +189,12 @@ gst_edgetv_transform (GstBaseTransform * trans, GstBuffer * in, GstBuffer * out)
       dest[width + 3] = v3;
       dest[width * 2] = v2;
       dest[width * 2 + 1] = v2;
+      dest[width * 2 + 2] = 0;
+      dest[width * 2 + 3] = 0;
       dest[width * 3] = v2;
       dest[width * 3 + 1] = v2;
+      dest[width * 3 + 2] = 0;
+      dest[width * 3 + 3] = 0;
 
       src += 4;
       dest += 4;
