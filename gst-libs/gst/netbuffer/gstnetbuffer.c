@@ -35,26 +35,26 @@
 #include "gstnetbuffer.h"
 
 static void
-meta_net_address_copy (GstBuffer * copybuf, GstMetaNetAddress * meta,
+net_address_meta_copy (GstBuffer * copybuf, GstNetAddressMeta * meta,
     GstBuffer * buffer, gsize offset, gsize size)
 {
-  GstMetaNetAddress *naddr;
+  GstNetAddressMeta *naddr;
 
-  naddr = gst_buffer_add_meta_net_address (copybuf);
+  naddr = gst_buffer_add_net_address_meta (copybuf);
   memcpy (&naddr->naddr, &meta->naddr, sizeof (meta->naddr));
 }
 
 const GstMetaInfo *
-gst_meta_net_address_get_info (void)
+gst_net_address_meta_get_info (void)
 {
   static const GstMetaInfo *meta_info = NULL;
 
   if (meta_info == NULL) {
-    meta_info = gst_meta_register ("GstMetaNetAddress", "GstMetaNetAddress",
-        sizeof (GstMetaNetAddress),
+    meta_info = gst_meta_register ("GstNetAddressMeta", "GstNetAddressMeta",
+        sizeof (GstNetAddressMeta),
         (GstMetaInitFunction) NULL,
         (GstMetaFreeFunction) NULL,
-        (GstMetaCopyFunction) meta_net_address_copy,
+        (GstMetaCopyFunction) net_address_meta_copy,
         (GstMetaTransformFunction) NULL);
   }
   return meta_info;

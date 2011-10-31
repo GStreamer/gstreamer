@@ -24,20 +24,7 @@
 
 G_BEGIN_DECLS
 
-#if 0
-typedef struct _GstNetBuffer GstNetBuffer;
-typedef struct _GstNetBufferClass GstNetBufferClass;
-#endif
 typedef struct _GstNetAddress GstNetAddress;
-
-#if 0
-#define GST_TYPE_NETBUFFER            (gst_netbuffer_get_type())
-#define GST_IS_NETBUFFER(obj)         (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_NETBUFFER))
-#define GST_IS_NETBUFFER_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE ((klass), GST_TYPE_NETBUFFER))
-#define GST_NETBUFFER_GET_CLASS(obj)  (G_TYPE_INSTANCE_GET_CLASS ((obj), GST_TYPE_NETBUFFER, GstNetBufferClass))
-#define GST_NETBUFFER(obj)            (G_TYPE_CHECK_INSTANCE_CAST ((obj), GST_TYPE_NETBUFFER, GstNetBuffer))
-#define GST_NETBUFFER_CLASS(klass)    (G_TYPE_CHECK_CLASS_CAST ((klass), GST_TYPE_NETBUFFER, GstNetBufferClass))
-#endif
 
 /**
  * GstNetType:
@@ -66,7 +53,7 @@ typedef enum {
 /**
  * GstNetAddress:
  *
- * An opaque network address as used in #GstMetaNetAddress.
+ * An opaque network address as used in #GstNetAddressMeta.
  */
 struct _GstNetAddress {
   /*< private >*/
@@ -80,26 +67,26 @@ struct _GstNetAddress {
   gpointer _gst_reserved[GST_PADDING];
 };
 
-typedef struct _GstMetaNetAddress GstMetaNetAddress;
+typedef struct _GstNetAddressMeta GstNetAddressMeta;
 
 /**
- * GstMetaNetAddress:
+ * GstNetAddressMeta:
  *
  * Buffer metadata for network addresses.
  */
-struct _GstMetaNetAddress {
+struct _GstNetAddressMeta {
   GstMeta       meta;
 
   GstNetAddress naddr;
 };
 
-const GstMetaInfo *gst_meta_net_address_get_info (void);
-#define GST_META_NET_ADDRESS_INFO (gst_meta_net_address_get_info())
+const GstMetaInfo *gst_net_address_meta_get_info (void);
+#define GST_NET_ADDRESS_META_INFO (gst_net_address_meta_get_info())
 
-#define gst_buffer_get_meta_net_address(b) \
-  ((GstMetaNetAddress*)gst_buffer_get_meta((b),GST_META_NET_ADDRESS_INFO))
-#define gst_buffer_add_meta_net_address(b) \
-  ((GstMetaNetAddress*)gst_buffer_add_meta((b),GST_META_NET_ADDRESS_INFO,NULL))
+#define gst_buffer_get_net_address_meta(b) \
+  ((GstNetAddressMeta*)gst_buffer_get_meta((b),GST_NET_ADDRESS_META_INFO))
+#define gst_buffer_add_net_address_meta(b) \
+  ((GstNetAddressMeta*)gst_buffer_add_meta((b),GST_NET_ADDRESS_META_INFO,NULL))
 
 /* address operations */
 void            gst_netaddress_set_ip4_address   (GstNetAddress *naddr, guint32 address, guint16 port);
