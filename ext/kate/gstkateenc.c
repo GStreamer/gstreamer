@@ -1025,7 +1025,7 @@ gst_kate_enc_change_state (GstElement * element, GstStateChange transition)
 
   switch (transition) {
     case GST_STATE_CHANGE_NULL_TO_READY:
-      ke->tags = gst_tag_list_new ();
+      ke->tags = gst_tag_list_new_empty ();
       break;
     case GST_STATE_CHANGE_READY_TO_PAUSED:
       GST_DEBUG_OBJECT (ke, "READY -> PAUSED, initializing kate state");

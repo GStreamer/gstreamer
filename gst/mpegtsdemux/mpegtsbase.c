@@ -1098,7 +1098,7 @@ mpegts_base_get_tags_from_sdt (MpegTSBase * base, GstStructure * sdt_info)
 
     program = mpegts_base_get_program (base, program_number);
     if (program && !program->tags) {
-      program->tags = gst_tag_list_new_full (GST_TAG_ARTIST,
+      program->tags = gst_tag_list_new (GST_TAG_ARTIST,
           gst_structure_get_string (service, "name"), NULL);
     }
   }
@@ -1139,7 +1139,7 @@ mpegts_base_get_tags_from_eit (MpegTSBase * base, GstStructure * eit_info)
         gst_structure_get_uint (event, "duration", &duration);
 
         program->event_id = event_id;
-        program->tags = gst_tag_list_new_full (GST_TAG_TITLE,
+        program->tags = gst_tag_list_new (GST_TAG_TITLE,
             title, GST_TAG_DURATION, duration * GST_SECOND, NULL);
       }
     }

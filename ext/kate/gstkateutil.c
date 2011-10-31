@@ -308,7 +308,7 @@ gst_kate_util_decoder_base_chain_kate_packet (GstKateDecoderBase * decoder,
           }
         }
         if (decoder->k.ki->language && *decoder->k.ki->language) {
-          GstTagList *old = decoder->tags, *tags = gst_tag_list_new ();
+          GstTagList *old = decoder->tags, *tags = gst_tag_list_new_empty ();
           if (tags) {
             gchar *lang_code;
 
@@ -357,7 +357,7 @@ gst_kate_util_decoder_base_chain_kate_packet (GstKateDecoderBase * decoder,
 
           if (!decoder->tags) {
             GST_ERROR_OBJECT (element, "failed to decode comment header");
-            decoder->tags = gst_tag_list_new ();
+            decoder->tags = gst_tag_list_new_empty ();
           }
           if (encoder) {
             gst_tag_list_add (decoder->tags, GST_TAG_MERGE_REPLACE,
@@ -394,7 +394,7 @@ gst_kate_util_decoder_base_chain_kate_packet (GstKateDecoderBase * decoder,
   else if (*ev && (*ev)->meta) {
     int count = kate_meta_query_count ((*ev)->meta);
     if (count > 0) {
-      GstTagList *evtags = gst_tag_list_new ();
+      GstTagList *evtags = gst_tag_list_new_empty ();
       int idx;
       GST_DEBUG_OBJECT (decoder, "Kate event has %d attached metadata", count);
       for (idx = 0; idx < count; ++idx) {

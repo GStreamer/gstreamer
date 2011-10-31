@@ -294,7 +294,7 @@ gst_bayer2rgb_transform_caps (GstBaseTransform * base,
     newcaps = gst_caps_from_string ("video/x-raw-bayer,"
         "format=(string){bggr,grbg,gbrg,rggb}");
   } else {
-    newcaps = gst_caps_new_simple ("video/x-raw", NULL);
+    newcaps = gst_caps_new_empty_simple ("video/x-raw");
   }
   newstruct = gst_caps_get_structure (newcaps, 0);
 
