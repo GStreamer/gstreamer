@@ -8288,6 +8288,15 @@
   )
 )
 
+(define-function filename_to_uri
+  (c-name "gst_filename_to_uri")
+  (return-type "gchar*")
+  (parameters
+    '("const-gchar*" "uri")
+    '("GError**" "error")
+  )
+)
+
 (define-function element_make_from_uri
   (c-name "gst_element_make_from_uri")
   (return-type "GstElement*")
