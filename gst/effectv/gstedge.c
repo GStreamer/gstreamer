@@ -130,7 +130,7 @@ gst_edgetv_transform (GstBaseTransform * trans, GstBuffer * in, GstBuffer * out)
       p = *src;
       q = *(src - 4);
 
-      /* difference between the current pixel and right neighbor. */
+      /* difference between the current pixel and left neighbor. */
       r = ((p & 0xff0000) - (q & 0xff0000)) >> 16;
       g = ((p & 0xff00) - (q & 0xff00)) >> 8;
       b = (p & 0xff) - (q & 0xff);
