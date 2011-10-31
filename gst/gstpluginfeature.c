@@ -156,6 +156,16 @@ not_found:
  *
  * Returns: TRUE if equal.
  */
+#ifndef GST_REMOVE_DEPRECATED
+#ifdef GST_DISABLE_DEPRECATED
+typedef struct
+{
+  const gchar *name;
+  GType type;
+} GstTypeNameData;
+gboolean gst_plugin_feature_type_name_filter (GstPluginFeature * feature,
+    GstTypeNameData * data);
+#endif
 gboolean
 gst_plugin_feature_type_name_filter (GstPluginFeature * feature,
     GstTypeNameData * data)
@@ -165,6 +175,7 @@ gst_plugin_feature_type_name_filter (GstPluginFeature * feature,
   return ((data->type == 0 || data->type == G_OBJECT_TYPE (feature)) &&
       (data->name == NULL || !strcmp (data->name, GST_OBJECT_NAME (feature))));
 }
+#endif /* GST_REMOVE_DEPRECATED */
 
 /**
  * gst_plugin_feature_set_rank:

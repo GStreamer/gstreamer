@@ -60,6 +60,12 @@
  *     when no longer needed (the data contained in the list is a flat copy
  *     and does need to be unreferenced or freed).
  */
+#ifndef GST_REMOVE_DEPRECATED
+#ifdef GST_DISABLE_DEPRECATED
+typedef gboolean (*GstFilterFunc) (gpointer obj, gpointer user_data);
+GList *gst_filter_run (const GList * list, GstFilterFunc func, gboolean first,
+    gpointer user_data);
+#endif
 GList *
 gst_filter_run (const GList * list, GstFilterFunc func, gboolean first,
     gpointer user_data)
@@ -86,3 +92,4 @@ gst_filter_run (const GList * list, GstFilterFunc func, gboolean first,
 
   return result;
 }
+#endif /* GST_REMOVE_DEPRECATED */
