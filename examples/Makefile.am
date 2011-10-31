@@ -10,6 +10,7 @@ examples_DATA = 	\
 	fvumeter.py	\
 	gst-discover	\
 	gstfile.py	\
+	helloworld.py	\
 	mixer.py	\
 	play.py		\
 	pipeline-tester \
