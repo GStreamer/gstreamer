@@ -433,7 +433,6 @@ EXPORTS
 	gst_event_type_to_quark
 	gst_event_writable_structure
 	gst_filename_to_uri
-	gst_filter_run
 	gst_flow_get_name
 	gst_flow_return_get_type
 	gst_flow_to_quark
@@ -778,7 +777,6 @@ EXPORTS
 	gst_plugin_feature_load
 	gst_plugin_feature_rank_compare_func
 	gst_plugin_feature_set_rank
-	gst_plugin_feature_type_name_filter
 	gst_plugin_flags_get_type
 	gst_plugin_get_cache_data
 	gst_plugin_get_description
@@ -1086,9 +1084,9 @@ EXPORTS
 	gst_tag_list_is_equal
 	gst_tag_list_merge
 	gst_tag_list_new
+	gst_tag_list_new_empty
 	gst_tag_list_new_from_string
-	gst_tag_list_new_full
-	gst_tag_list_new_full_valist
+	gst_tag_list_new_valist
 	gst_tag_list_peek_string_index
 	gst_tag_list_remove_tag
 	gst_tag_list_to_string
