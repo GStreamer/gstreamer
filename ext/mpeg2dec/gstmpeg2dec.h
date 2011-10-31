@@ -25,7 +25,7 @@
 #include <gst/gst.h>
 #include <gst/video/video.h>
 #include <gst/video/gstvideopool.h>
-#include <gst/video/gstmetavideo.h>
+#include <gst/video/gstvideometa.h>
 #include <mpeg2.h>
 
 G_BEGIN_DECLS

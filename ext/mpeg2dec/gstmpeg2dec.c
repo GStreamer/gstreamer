@@ -377,11 +377,11 @@ gst_mpeg2dec_negotiate_pool (GstMpeg2dec * dec, GstCaps * caps,
   /* just set the option, if the pool can support it we will transparently use
    * it through the video info API. We could also see if the pool support this
    * option and only activate it then. */
-  gst_buffer_pool_config_add_option (config, GST_BUFFER_POOL_OPTION_META_VIDEO);
+  gst_buffer_pool_config_add_option (config, GST_BUFFER_POOL_OPTION_VIDEO_META);
 
   /* check if downstream supports cropping */
   dec->use_cropping =
-      gst_query_has_allocation_meta (query, GST_META_API_VIDEO_CROP);
+      gst_query_has_allocation_meta (query, GST_VIDEO_CROP_META_API);
 
   gst_buffer_pool_set_config (pool, config);
   /* and activate */
