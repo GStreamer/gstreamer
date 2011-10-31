@@ -17,47 +17,47 @@
  * Boston, MA 02111-1307, USA.
  */
 
-#include "gstmetavideo.h"
+#include "gstvideometa.h"
 
 /* video metadata */
 const GstMetaInfo *
-gst_meta_video_get_info (void)
+gst_video_meta_get_info (void)
 {
-  static const GstMetaInfo *meta_video_info = NULL;
+  static const GstMetaInfo *video_meta_info = NULL;
 
-  if (meta_video_info == NULL) {
-    meta_video_info = gst_meta_register (GST_META_API_VIDEO, "GstMetaVideo",
-        sizeof (GstMetaVideo),
+  if (video_meta_info == NULL) {
+    video_meta_info = gst_meta_register (GST_VIDEO_META_API, "GstVideoMeta",
+        sizeof (GstVideoMeta),
         (GstMetaInitFunction) NULL,
         (GstMetaFreeFunction) NULL,
         (GstMetaCopyFunction) NULL, (GstMetaTransformFunction) NULL);
   }
-  return meta_video_info;
+  return video_meta_info;
 }
 
 /**
- * gst_buffer_get_meta_video_id:
+ * gst_buffer_get_video_meta_id:
  * @buffer: a #GstBuffer
  * @id: a metadata id
  *
- * Find the #GstMetaVideo on @buffer with the given @id.
+ * Find the #GstVideoMeta on @buffer with the given @id.
  *
- * Buffers can contain multiple #GstMetaVideo metadata items when dealing with
+ * Buffers can contain multiple #GstVideoMeta metadata items when dealing with
  * multiview buffers.
  *
- * Returns: the #GstMetaVideo with @id or %NULL when there is no such metadata
+ * Returns: the #GstVideoMeta with @id or %NULL when there is no such metadata
  * on @buffer.
  */
-GstMetaVideo *
-gst_buffer_get_meta_video_id (GstBuffer * buffer, gint id)
+GstVideoMeta *
+gst_buffer_get_video_meta_id (GstBuffer * buffer, gint id)
 {
   gpointer state = NULL;
   GstMeta *meta;
-  const GstMetaInfo *info = GST_META_INFO_VIDEO;
+  const GstMetaInfo *info = GST_VIDEO_META_INFO;
 
   while ((meta = gst_buffer_iterate_meta (buffer, &state))) {
     if (meta->info->api == info->api) {
-      GstMetaVideo *vmeta = (GstMetaVideo *) meta;
+      GstVideoMeta *vmeta = (GstVideoMeta *) meta;
       if (vmeta->id == id)
         return vmeta;
     }
@@ -66,7 +66,7 @@ gst_buffer_get_meta_video_id (GstBuffer * buffer, gint id)
 }
 
 /**
- * gst_buffer_add_meta_video:
+ * gst_buffer_add_video_meta:
  * @buffer: a #GstBuffer
  * @flags: #GstVideoFlags
  * @format: a #GstVideoFormat
@@ -77,27 +77,27 @@ gst_buffer_get_meta_video_id (GstBuffer * buffer, gint id)
  * default offsets and strides for @format and @width x @height.
  *
  * This function calculates the default offsets and strides and then calls
- * gst_buffer_add_meta_video_full() with them.
+ * gst_buffer_add_video_meta_full() with them.
  *
- * Returns: the #GstMetaVideo on @buffer.
+ * Returns: the #GstVideoMeta on @buffer.
  */
-GstMetaVideo *
-gst_buffer_add_meta_video (GstBuffer * buffer, GstVideoFlags flags,
+GstVideoMeta *
+gst_buffer_add_video_meta (GstBuffer * buffer, GstVideoFlags flags,
     GstVideoFormat format, guint width, guint height)
 {
-  GstMetaVideo *meta;
+  GstVideoMeta *meta;
   GstVideoInfo info;
 
   gst_video_info_set_format (&info, format, width, height);
 
-  meta = gst_buffer_add_meta_video_full (buffer, flags, format, width, height,
+  meta = gst_buffer_add_video_meta_full (buffer, flags, format, width, height,
       info.finfo->n_planes, info.offset, info.stride);
 
   return meta;
 }
 
 /**
- * gst_buffer_add_meta_video_full:
+ * gst_buffer_add_video_meta_full:
  * @buffer: a #GstBuffer
  * @flags: #GstVideoFlags
  * @format: a #GstVideoFormat
@@ -109,19 +109,19 @@ gst_buffer_add_meta_video (GstBuffer * buffer, GstVideoFlags flags,
  *
  * Attaches GstVideoMeta metadata to @buffer with the given parameters.
  *
- * Returns: the #GstMetaVideo on @buffer.
+ * Returns: the #GstVideoMeta on @buffer.
  */
-GstMetaVideo *
-gst_buffer_add_meta_video_full (GstBuffer * buffer, GstVideoFlags flags,
+GstVideoMeta *
+gst_buffer_add_video_meta_full (GstBuffer * buffer, GstVideoFlags flags,
     GstVideoFormat format, guint width, guint height,
     guint n_planes, gsize offset[GST_VIDEO_MAX_PLANES],
     gint stride[GST_VIDEO_MAX_PLANES])
 {
-  GstMetaVideo *meta;
+  GstVideoMeta *meta;
   guint i;
 
   meta =
-      (GstMetaVideo *) gst_buffer_add_meta (buffer, GST_META_INFO_VIDEO, NULL);
+      (GstVideoMeta *) gst_buffer_add_meta (buffer, GST_VIDEO_META_INFO, NULL);
 
   meta->flags = flags;
   meta->format = format;
@@ -162,7 +162,7 @@ find_mem_for_offset (GstBuffer * buffer, guint * offset, GstMapFlags flags)
 }
 
 /**
- * gst_meta_video_map:
+ * gst_video_meta_map:
  * @meta: a #GstVideoMeta
  * @plane: a plane
  * @stride: result stride
@@ -174,7 +174,7 @@ find_mem_for_offset (GstBuffer * buffer, guint * offset, GstMapFlags flags)
  * Returns: a pointer to the first byte of the plane data
  */
 gpointer
-gst_meta_video_map (GstMetaVideo * meta, guint plane, gint * stride,
+gst_video_meta_map (GstVideoMeta * meta, guint plane, gint * stride,
     GstMapFlags flags)
 {
   guint offset;
@@ -206,7 +206,7 @@ gst_meta_video_map (GstMetaVideo * meta, guint plane, gint * stride,
 }
 
 /**
- * gst_meta_video_unmap:
+ * gst_video_meta_unmap:
  * @meta: a #GstVideoMeta
  * @plane: a plane
  * @data: the data to unmap
@@ -216,7 +216,7 @@ gst_meta_video_map (GstMetaVideo * meta, guint plane, gint * stride,
  * Returns: TRUE if the memory was successfully unmapped.
  */
 gboolean
-gst_meta_video_unmap (GstMetaVideo * meta, guint plane, gpointer data)
+gst_video_meta_unmap (GstVideoMeta * meta, guint plane, gpointer data)
 {
   guint offset;
   GstBuffer *buffer;
@@ -239,16 +239,16 @@ gst_meta_video_unmap (GstMetaVideo * meta, guint plane, gpointer data)
 }
 
 const GstMetaInfo *
-gst_meta_video_crop_get_info (void)
+gst_video_crop_meta_get_info (void)
 {
-  static const GstMetaInfo *meta_video_crop_info = NULL;
+  static const GstMetaInfo *video_crop_meta_info = NULL;
 
-  if (meta_video_crop_info == NULL) {
-    meta_video_crop_info =
-        gst_meta_register (GST_META_API_VIDEO_CROP, "GstMetaVideoCrop",
-        sizeof (GstMetaVideoCrop), (GstMetaInitFunction) NULL,
+  if (video_crop_meta_info == NULL) {
+    video_crop_meta_info =
+        gst_meta_register (GST_VIDEO_CROP_META_API, "GstVideoCropMeta",
+        sizeof (GstVideoCropMeta), (GstMetaInitFunction) NULL,
         (GstMetaFreeFunction) NULL, (GstMetaCopyFunction) NULL,
         (GstMetaTransformFunction) NULL);
   }
-  return meta_video_crop_info;
+  return video_crop_meta_info;
 }

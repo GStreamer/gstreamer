@@ -44,7 +44,7 @@
 #include "gsttheoradec.h"
 #include <gst/tag/tag.h>
 #include <gst/video/video.h>
-#include <gst/video/gstmetavideo.h>
+#include <gst/video/gstvideometa.h>
 #include <gst/video/gstvideopool.h>
 
 #define GST_CAT_DEFAULT theoradec_debug
@@ -830,11 +830,11 @@ theora_negotiate_pool (GstTheoraDec * dec, GstCaps * caps, GstVideoInfo * info)
   /* just set the option, if the pool can support it we will transparently use
    * it through the video info API. We could also see if the pool support this
    * option and only activate it then. */
-  gst_buffer_pool_config_add_option (config, GST_BUFFER_POOL_OPTION_META_VIDEO);
+  gst_buffer_pool_config_add_option (config, GST_BUFFER_POOL_OPTION_VIDEO_META);
 
   /* check if downstream supports cropping */
   dec->use_cropping =
-      gst_query_has_allocation_meta (query, GST_META_API_VIDEO_CROP);
+      gst_query_has_allocation_meta (query, GST_VIDEO_CROP_META_API);
 
   gst_buffer_pool_set_config (pool, config);
   /* and activate */
@@ -1132,7 +1132,7 @@ theora_handle_image (GstTheoraDec * dec, th_ycbcr_buffer buf, GstBuffer ** out)
   int i, comp;
   guint8 *dest, *src;
   GstVideoFrame frame;
-  GstMetaVideoCrop *crop;
+  GstVideoCropMeta *crop;
   gint offset_x, offset_y;
 
   if (gst_pad_check_reconfigure (dec->srcpad)) {
@@ -1171,7 +1171,7 @@ theora_handle_image (GstTheoraDec * dec, th_ycbcr_buffer buf, GstBuffer ** out)
     pic_height = dec->info.frame_height;
 
     if (dec->use_cropping) {
-      crop = gst_buffer_add_meta_video_crop (*out);
+      crop = gst_buffer_add_video_crop_meta (*out);
       /* we can do things slightly more efficient when we know that
        * downstream understands clipping */
       crop->x = dec->info.pic_x;

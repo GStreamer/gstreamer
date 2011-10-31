@@ -39,7 +39,7 @@
 
 G_BEGIN_DECLS
 
-typedef struct _GstMetaXvImage GstMetaXvImage;
+typedef struct _GstXvImageMeta GstXvImageMeta;
 
 typedef struct _GstXvImageBufferPool GstXvImageBufferPool;
 typedef struct _GstXvImageBufferPoolClass GstXvImageBufferPoolClass;
@@ -47,13 +47,13 @@ typedef struct _GstXvImageBufferPoolPrivate GstXvImageBufferPoolPrivate;
 
 #include "xvimagesink.h"
 
-const GstMetaInfo * gst_meta_xvimage_get_info (void);
-#define GST_META_INFO_XVIMAGE  (gst_meta_xvimage_get_info())
+const GstMetaInfo * gst_xvimage_meta_get_info (void);
+#define GST_XVIMAGE_META_INFO  (gst_xvimage_meta_get_info())
 
-#define gst_buffer_get_meta_xvimage(b) ((GstMetaXvImage*)gst_buffer_get_meta((b),GST_META_INFO_XVIMAGE))
+#define gst_buffer_get_xvimage_meta(b) ((GstXvImageMeta*)gst_buffer_get_meta((b),GST_XVIMAGE_META_INFO))
 
 /**
- * GstMetaXvImage:
+ * GstXvImageMeta:
  * @sink: a reference to the our #GstXvImageSink
  * @xvimage: the XvImage of this buffer
  * @width: the width in pixels of XvImage @xvimage
@@ -63,7 +63,7 @@ const GstMetaInfo * gst_meta_xvimage_get_info (void);
  *
  * Subclass of #GstMeta containing additional information about an XvImage.
  */
-struct _GstMetaXvImage
+struct _GstXvImageMeta
 {
   GstMeta meta;
 

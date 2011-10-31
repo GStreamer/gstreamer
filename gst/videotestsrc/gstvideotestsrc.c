@@ -620,7 +620,7 @@ gst_video_test_src_decide_allocation (GstBaseSrc * bsrc, GstQuery * query)
 
     config = gst_buffer_pool_get_config (pool);
     gst_buffer_pool_config_add_option (config,
-        GST_BUFFER_POOL_OPTION_META_VIDEO);
+        GST_BUFFER_POOL_OPTION_VIDEO_META);
     gst_buffer_pool_set_config (pool, config);
   }
   gst_query_set_allocation_params (query, size, min, max, prefix,

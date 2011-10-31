@@ -29,7 +29,7 @@
 
 /* Helper functions */
 #include <gst/video/video.h>
-#include <gst/video/gstmetavideo.h>
+#include <gst/video/gstvideometa.h>
 #include <gst/video/gstvideopool.h>
 
 
@@ -49,22 +49,22 @@ struct _GstXvImageBufferPoolPrivate
   gboolean need_alignment;
 };
 
-static void gst_meta_xvimage_free (GstMetaXvImage * meta, GstBuffer * buffer);
+static void gst_xvimage_meta_free (GstXvImageMeta * meta, GstBuffer * buffer);
 
 /* xvimage metadata */
 const GstMetaInfo *
-gst_meta_xvimage_get_info (void)
+gst_xvimage_meta_get_info (void)
 {
-  static const GstMetaInfo *meta_xvimage_info = NULL;
+  static const GstMetaInfo *xvimage_meta_info = NULL;
 
-  if (meta_xvimage_info == NULL) {
-    meta_xvimage_info = gst_meta_register ("GstMetaXvImage", "GstMetaXvImage",
-        sizeof (GstMetaXvImage),
+  if (xvimage_meta_info == NULL) {
+    xvimage_meta_info = gst_meta_register ("GstXvImageMeta", "GstXvImageMeta",
+        sizeof (GstXvImageMeta),
         (GstMetaInitFunction) NULL,
-        (GstMetaFreeFunction) gst_meta_xvimage_free,
+        (GstMetaFreeFunction) gst_xvimage_meta_free,
         (GstMetaCopyFunction) NULL, (GstMetaTransformFunction) NULL);
   }
-  return meta_xvimage_info;
+  return xvimage_meta_info;
 }
 
 /* X11 stuff */
@@ -81,14 +81,14 @@ gst_xvimagesink_handle_xerror (Display * display, XErrorEvent * xevent)
   return 0;
 }
 
-static GstMetaXvImage *
-gst_buffer_add_meta_xvimage (GstBuffer * buffer, GstXvImageBufferPool * xvpool)
+static GstXvImageMeta *
+gst_buffer_add_xvimage_meta (GstBuffer * buffer, GstXvImageBufferPool * xvpool)
 {
   GstXvImageSink *xvimagesink;
   int (*handler) (Display *, XErrorEvent *);
   gboolean success = FALSE;
   GstXContext *xcontext;
-  GstMetaXvImage *meta;
+  GstXvImageMeta *meta;
   gint width, height, im_format;
   GstXvImageBufferPoolPrivate *priv;
 
@@ -101,7 +101,7 @@ gst_buffer_add_meta_xvimage (GstBuffer * buffer, GstXvImageBufferPool * xvpool)
   im_format = priv->im_format;
 
   meta =
-      (GstMetaXvImage *) gst_buffer_add_meta (buffer, GST_META_INFO_XVIMAGE,
+      (GstXvImageMeta *) gst_buffer_add_meta (buffer, GST_XVIMAGE_META_INFO,
       NULL);
 #ifdef HAVE_XSHM
   meta->SHMInfo.shmaddr = ((void *) -1);
@@ -313,7 +313,7 @@ xattach_failed:
 }
 
 static void
-gst_meta_xvimage_free (GstMetaXvImage * meta, GstBuffer * buffer)
+gst_xvimage_meta_free (GstXvImageMeta * meta, GstBuffer * buffer)
 {
   GstXvImageSink *xvimagesink;
 
@@ -488,7 +488,7 @@ G_DEFINE_TYPE (GstXvImageBufferPool, gst_xvimage_buffer_pool,
 static const gchar **
 xvimage_buffer_pool_get_options (GstBufferPool * pool)
 {
-  static const gchar *options[] = { GST_BUFFER_POOL_OPTION_META_VIDEO,
+  static const gchar *options[] = { GST_BUFFER_POOL_OPTION_VIDEO_META,
     GST_BUFFER_POOL_OPTION_VIDEO_ALIGNMENT, NULL
   };
 
@@ -528,7 +528,7 @@ xvimage_buffer_pool_set_config (GstBufferPool * pool, GstStructure * config)
   /* enable metadata based on config of the pool */
   priv->add_metavideo =
       gst_buffer_pool_config_has_option (config,
-      GST_BUFFER_POOL_OPTION_META_VIDEO);
+      GST_BUFFER_POOL_OPTION_VIDEO_META);
 
   /* parse extra alignment info */
   priv->need_alignment = gst_buffer_pool_config_has_option (config,
@@ -592,25 +592,25 @@ xvimage_buffer_pool_alloc (GstBufferPool * pool, GstBuffer ** buffer,
   GstXvImageBufferPoolPrivate *priv = xvpool->priv;
   GstVideoInfo *info;
   GstBuffer *xvimage;
-  GstMetaXvImage *meta;
+  GstXvImageMeta *meta;
 
   info = &priv->info;
 
   xvimage = gst_buffer_new ();
-  meta = gst_buffer_add_meta_xvimage (xvimage, xvpool);
+  meta = gst_buffer_add_xvimage_meta (xvimage, xvpool);
   if (meta == NULL) {
     gst_buffer_unref (xvimage);
     goto no_buffer;
   }
 
   if (priv->add_metavideo) {
-    GstMetaVideo *meta;
+    GstVideoMeta *meta;
     const GstVideoFormatInfo *vinfo = info->finfo;
     gint i;
 
-    GST_DEBUG_OBJECT (pool, "adding GstMetaVideo");
+    GST_DEBUG_OBJECT (pool, "adding GstVideoMeta");
     /* these are just the defaults for now */
-    meta = gst_buffer_add_meta_video (xvimage, 0, GST_VIDEO_INFO_FORMAT (info),
+    meta = gst_buffer_add_video_meta (xvimage, 0, GST_VIDEO_INFO_FORMAT (info),
         priv->padded_width, priv->padded_height);
 
     if (priv->need_alignment) {

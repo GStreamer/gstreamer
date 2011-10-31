@@ -39,7 +39,7 @@
 
 G_BEGIN_DECLS
 
-typedef struct _GstMetaXImage GstMetaXImage;
+typedef struct _GstXImageMeta GstXImageMeta;
 
 typedef struct _GstXImageBufferPool GstXImageBufferPool;
 typedef struct _GstXImageBufferPoolClass GstXImageBufferPoolClass;
@@ -47,13 +47,13 @@ typedef struct _GstXImageBufferPoolPrivate GstXImageBufferPoolPrivate;
 
 #include "ximagesink.h"
 
-const GstMetaInfo * gst_meta_ximage_get_info (void);
-#define GST_META_INFO_XIMAGE  (gst_meta_ximage_get_info())
+const GstMetaInfo * gst_ximage_meta_get_info (void);
+#define GST_XIMAGE_META_INFO  (gst_ximage_meta_get_info())
 
-#define gst_buffer_get_meta_ximage(b) ((GstMetaXImage*)gst_buffer_get_meta((b),GST_META_INFO_XIMAGE))
+#define gst_buffer_get_ximage_meta(b) ((GstXImageMeta*)gst_buffer_get_meta((b),GST_XIMAGE_META_INFO))
 
 /**
- * GstMetaXImage:
+ * GstXImageMeta:
  * @simagesink: a reference to the our #GstXImageSink
  * @ximage: the XImage of this buffer
  * @width: the width in pixels of XImage @ximage
@@ -62,7 +62,7 @@ const GstMetaInfo * gst_meta_ximage_get_info (void);
  *
  * Subclass of #GstMeta containing additional information about an XImage.
  */
-struct _GstMetaXImage
+struct _GstXImageMeta
 {
   GstMeta meta;
 

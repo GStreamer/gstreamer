@@ -119,7 +119,7 @@
 #include <gst/interfaces/colorbalance.h>
 #include <gst/interfaces/propertyprobe.h>
 /* Helper functions */
-#include <gst/video/gstmetavideo.h>
+#include <gst/video/gstvideometa.h>
 
 /* Object header */
 #include "xvimagesink.h"
@@ -269,8 +269,8 @@ gst_xvimagesink_xwindow_draw_borders (GstXvImageSink * xvimagesink,
 static gboolean
 gst_xvimagesink_xvimage_put (GstXvImageSink * xvimagesink, GstBuffer * xvimage)
 {
-  GstMetaXvImage *meta;
-  GstMetaVideoCrop *crop;
+  GstXvImageMeta *meta;
+  GstVideoCropMeta *crop;
   GstVideoRectangle result;
   gboolean draw_border = FALSE;
   GstVideoRectangle src, dst;
@@ -311,9 +311,9 @@ gst_xvimagesink_xvimage_put (GstXvImageSink * xvimagesink, GstBuffer * xvimage)
     }
   }
 
-  meta = gst_buffer_get_meta_xvimage (xvimage);
+  meta = gst_buffer_get_xvimage_meta (xvimage);
 
-  crop = gst_buffer_get_meta_video_crop (xvimage);
+  crop = gst_buffer_get_video_crop_meta (xvimage);
 
   if (crop) {
     src.x = crop->x + meta->x;
@@ -1803,12 +1803,12 @@ gst_xvimagesink_show_frame (GstVideoSink * vsink, GstBuffer * buf)
 {
   GstFlowReturn res;
   GstXvImageSink *xvimagesink;
-  GstMetaXvImage *meta;
+  GstXvImageMeta *meta;
   GstBuffer *to_put;
 
   xvimagesink = GST_XVIMAGESINK (vsink);
 
-  meta = gst_buffer_get_meta_xvimage (buf);
+  meta = gst_buffer_get_xvimage_meta (buf);
 
   if (meta && meta->sink == xvimagesink) {
     /* If this buffer has been allocated using our buffer management we simply
@@ -1998,8 +1998,8 @@ gst_xvimagesink_propose_allocation (GstBaseSink * bsink, GstQuery * query)
   gst_query_set_allocation_params (query, size, 2, 0, 0, 0, pool);
 
   /* we also support various metadata */
-  gst_query_add_allocation_meta (query, GST_META_API_VIDEO);
-  gst_query_add_allocation_meta (query, GST_META_API_VIDEO_CROP);
+  gst_query_add_allocation_meta (query, GST_VIDEO_META_API);
+  gst_query_add_allocation_meta (query, GST_VIDEO_CROP_META_API);
 
   gst_object_unref (pool);
 

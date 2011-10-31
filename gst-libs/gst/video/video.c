@@ -26,7 +26,7 @@
 #include <string.h>
 
 #include "video.h"
-#include "gstmetavideo.h"
+#include "gstvideometa.h"
 
 static int fill_planes (GstVideoInfo * info);
 
@@ -944,7 +944,7 @@ gst_video_info_to_caps (GstVideoInfo * info)
  * information of frame @id.
  *
  * When @id is -1, the default frame is mapped. When @id != -1, this function
- * will return %FALSE when there is no GstMetaVideo with that id.
+ * will return %FALSE when there is no GstVideoMeta with that id.
  *
  * All video planes of @buffer will be mapped and the pointers will be set in
  * @frame->data.
@@ -955,7 +955,7 @@ gboolean
 gst_video_frame_map_id (GstVideoFrame * frame, GstVideoInfo * info,
     GstBuffer * buffer, gint id, GstMapFlags flags)
 {
-  GstMetaVideo *meta;
+  GstVideoMeta *meta;
   guint8 *data;
   gsize size;
   gint i;
@@ -965,9 +965,9 @@ gst_video_frame_map_id (GstVideoFrame * frame, GstVideoInfo * info,
   g_return_val_if_fail (GST_IS_BUFFER (buffer), FALSE);
 
   if (id == -1)
-    meta = gst_buffer_get_meta_video (buffer);
+    meta = gst_buffer_get_video_meta (buffer);
   else
-    meta = gst_buffer_get_meta_video_id (buffer, id);
+    meta = gst_buffer_get_video_meta_id (buffer, id);
 
   frame->buffer = buffer;
   frame->meta = meta;
@@ -981,7 +981,7 @@ gst_video_frame_map_id (GstVideoFrame * frame, GstVideoInfo * info,
 
     for (i = 0; i < info->finfo->n_planes; i++) {
       frame->data[i] =
-          gst_meta_video_map (meta, i, &frame->info.stride[i], flags);
+          gst_video_meta_map (meta, i, &frame->info.stride[i], flags);
     }
   } else {
     /* no metadata, we really need to have the metadata when the id is
@@ -1009,7 +1009,7 @@ gst_video_frame_map_id (GstVideoFrame * frame, GstVideoInfo * info,
   /* ERRORS */
 no_metadata:
   {
-    GST_ERROR ("no GstMetaVideo for id", id);
+    GST_ERROR ("no GstVideoMeta for id", id);
     return FALSE;
   }
 invalid_size:
@@ -1052,7 +1052,7 @@ void
 gst_video_frame_unmap (GstVideoFrame * frame)
 {
   GstBuffer *buffer;
-  GstMetaVideo *meta;
+  GstVideoMeta *meta;
   gint i;
 
   g_return_if_fail (frame != NULL);
@@ -1062,7 +1062,7 @@ gst_video_frame_unmap (GstVideoFrame * frame)
 
   if (meta) {
     for (i = 0; i < frame->info.finfo->n_planes; i++) {
-      gst_meta_video_unmap (meta, i, frame->data[i]);
+      gst_video_meta_unmap (meta, i, frame->data[i]);
     }
   } else {
     guint8 *data;

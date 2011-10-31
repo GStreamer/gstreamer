@@ -17,8 +17,8 @@
  * Boston, MA 02111-1307, USA.
  */
 
-#ifndef __GST_META_VIDEO_H__
-#define __GST_META_VIDEO_H__
+#ifndef __GST_VIDEO_META_H__
+#define __GST_VIDEO_META_H__
 
 #include <gst/gst.h>
 
@@ -26,16 +26,16 @@
 
 G_BEGIN_DECLS
 
-#define GST_META_API_VIDEO   "GstMetaVideo"
-#define GST_META_INFO_VIDEO  (gst_meta_video_get_info())
-typedef struct _GstMetaVideo GstMetaVideo;
+#define GST_VIDEO_META_API   "GstVideoMeta"
+#define GST_VIDEO_META_INFO  (gst_video_meta_get_info())
+typedef struct _GstVideoMeta GstVideoMeta;
 
-#define GST_META_API_VIDEO_CROP   "GstMetaVideoCrop"
-#define GST_META_INFO_VIDEO_CROP  (gst_meta_video_crop_get_info())
-typedef struct _GstMetaVideoCrop GstMetaVideoCrop;
+#define GST_VIDEO_CROP_META_API   "GstVideoCropMeta"
+#define GST_VIDEO_CROP_META_INFO  (gst_video_crop_meta_get_info())
+typedef struct _GstVideoCropMeta GstVideoCropMeta;
 
 /**
- * GstMetaVideo:
+ * GstVideoMeta:
  * @meta: parent #GstMeta
  * @buffer: the buffer this metadata belongs to
  * @flags: additional video flags
@@ -51,7 +51,7 @@ typedef struct _GstMetaVideoCrop GstMetaVideoCrop;
  *
  * Extra buffer metadata describing image properties
  */
-struct _GstMetaVideo {
+struct _GstVideoMeta {
   GstMeta            meta;
 
   GstBuffer         *buffer;
@@ -66,29 +66,29 @@ struct _GstMetaVideo {
   gsize              offset[GST_VIDEO_MAX_PLANES];
   gint               stride[GST_VIDEO_MAX_PLANES];
 
-  gpointer (*map)    (GstMetaVideo *meta, guint plane, gint *stride,
+  gpointer (*map)    (GstVideoMeta *meta, guint plane, gint *stride,
                       GstMapFlags flags);
-  gboolean (*unmap)  (GstMetaVideo *meta, guint plane, gpointer data);
+  gboolean (*unmap)  (GstVideoMeta *meta, guint plane, gpointer data);
 };
 
-const GstMetaInfo * gst_meta_video_get_info (void);
+const GstMetaInfo * gst_video_meta_get_info (void);
 
-#define gst_buffer_get_meta_video(b) ((GstMetaVideo*)gst_buffer_get_meta((b),GST_META_INFO_VIDEO))
-GstMetaVideo * gst_buffer_get_meta_video_id    (GstBuffer *buffer, gint id);
+#define gst_buffer_get_video_meta(b) ((GstVideoMeta*)gst_buffer_get_meta((b),GST_VIDEO_META_INFO))
+GstVideoMeta * gst_buffer_get_video_meta_id    (GstBuffer *buffer, gint id);
 
-GstMetaVideo * gst_buffer_add_meta_video       (GstBuffer *buffer, GstVideoFlags flags,
+GstVideoMeta * gst_buffer_add_video_meta       (GstBuffer *buffer, GstVideoFlags flags,
                                                 GstVideoFormat format, guint width, guint height);
-GstMetaVideo * gst_buffer_add_meta_video_full  (GstBuffer *buffer, GstVideoFlags flags,
+GstVideoMeta * gst_buffer_add_video_meta_full  (GstBuffer *buffer, GstVideoFlags flags,
                                                 GstVideoFormat format, guint width, guint height,
                                                 guint n_planes, gsize offset[GST_VIDEO_MAX_PLANES],
                                                 gint stride[GST_VIDEO_MAX_PLANES]);
 
-gpointer       gst_meta_video_map        (GstMetaVideo *meta, guint plane, gint *stride,
+gpointer       gst_video_meta_map        (GstVideoMeta *meta, guint plane, gint *stride,
                                           GstMapFlags flags);
-gboolean       gst_meta_video_unmap      (GstMetaVideo *meta, guint plane, gpointer data);
+gboolean       gst_video_meta_unmap      (GstVideoMeta *meta, guint plane, gpointer data);
 
 /**
- * GstMetaVideoCrop:
+ * GstVideoCropMeta:
  * @meta: parent #GstMeta
  * @x: the horizontal offset
  * @y: the vertical offset
@@ -97,7 +97,7 @@ gboolean       gst_meta_video_unmap      (GstMetaVideo *meta, guint plane, gpoin
  *
  * Extra buffer metadata describing image cropping.
  */
-struct _GstMetaVideoCrop {
+struct _GstVideoCropMeta {
   GstMeta       meta;
 
   guint         x;
@@ -106,11 +106,11 @@ struct _GstMetaVideoCrop {
   guint         height;
 };
 
-const GstMetaInfo * gst_meta_video_crop_get_info (void);
+const GstMetaInfo * gst_video_crop_meta_get_info (void);
 
-#define gst_buffer_get_meta_video_crop(b) ((GstMetaVideoCrop*)gst_buffer_get_meta((b),GST_META_INFO_VIDEO_CROP))
-#define gst_buffer_add_meta_video_crop(b) ((GstMetaVideoCrop*)gst_buffer_add_meta((b),GST_META_INFO_VIDEO_CROP, NULL))
+#define gst_buffer_get_video_crop_meta(b) ((GstVideoCropMeta*)gst_buffer_get_meta((b),GST_VIDEO_CROP_META_INFO))
+#define gst_buffer_add_video_crop_meta(b) ((GstVideoCropMeta*)gst_buffer_add_meta((b),GST_VIDEO_CROP_META_INFO, NULL))
 
 G_END_DECLS
 
-#endif /* __GST_META_VIDEO_H__ */
+#endif /* __GST_VIDEO_META_H__ */

@@ -27,12 +27,12 @@
 G_BEGIN_DECLS
 
 /**
- * GST_BUFFER_POOL_OPTION_META_VIDEO:
+ * GST_BUFFER_POOL_OPTION_VIDEO_META:
  *
  * An option that can be activated on bufferpool to request video metadata
  * on buffers from the pool.
  */
-#define GST_BUFFER_POOL_OPTION_META_VIDEO "GstBufferPoolOptionMetaVideo"
+#define GST_BUFFER_POOL_OPTION_VIDEO_META "GstBufferPoolOptionVideoMeta"
 
 /**
  * GST_BUFFER_POOL_OPTION_VIDEO_LAYOUT:
