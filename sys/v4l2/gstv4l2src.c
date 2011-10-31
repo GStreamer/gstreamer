@@ -50,7 +50,7 @@
 #include <sys/time.h>
 #include <unistd.h>
 
-#include "gst/video/gstmetavideo.h"
+#include "gst/video/gstvideometa.h"
 #include "gst/video/gstvideopool.h"
 
 #include "gstv4l2src.h"
@@ -573,9 +573,9 @@ gst_v4l2src_decide_allocation (GstBaseSrc * bsrc, GstQuery * query)
         alignment);
 
     /* if downstream supports video metadata, add this to the pool config */
-    if (gst_query_has_allocation_meta (query, GST_META_API_VIDEO))
+    if (gst_query_has_allocation_meta (query, GST_VIDEO_META_API))
       gst_buffer_pool_config_add_option (config,
-          GST_BUFFER_POOL_OPTION_META_VIDEO);
+          GST_BUFFER_POOL_OPTION_VIDEO_META);
 
     gst_buffer_pool_set_config (pool, config);
   }

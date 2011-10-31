@@ -29,7 +29,7 @@
 
 typedef struct _GstV4l2BufferPool GstV4l2BufferPool;
 typedef struct _GstV4l2BufferPoolClass GstV4l2BufferPoolClass;
-typedef struct _GstMetaV4l2 GstMetaV4l2;
+typedef struct _GstV4l2Meta GstV4l2Meta;
 
 #include "gstv4l2object.h"
 //#include "v4l2_calls.h"
@@ -72,16 +72,16 @@ struct _GstV4l2BufferPoolClass
   GstBufferPoolClass parent_class;
 };
 
-struct _GstMetaV4l2 {
+struct _GstV4l2Meta {
   GstMeta meta;
 
   gpointer mem;
   struct v4l2_buffer vbuffer;
 };
 
-const GstMetaInfo * gst_meta_v4l2_get_info (void);
-#define GST_META_V4L2_GET(buf) ((GstMetaV4l2 *)gst_buffer_get_meta(buf,gst_meta_v4l2_get_info()))
-#define GST_META_V4L2_ADD(buf) ((GstMetaV4l2 *)gst_buffer_add_meta(buf,gst_meta_v4l2_get_info(),NULL))
+const GstMetaInfo * gst_v4l2_meta_get_info (void);
+#define GST_V4L2_META_GET(buf) ((GstV4l2Meta *)gst_buffer_get_meta(buf,gst_v4l2_meta_get_info()))
+#define GST_V4L2_META_ADD(buf) ((GstV4l2Meta *)gst_buffer_add_meta(buf,gst_v4l2_meta_get_info(),NULL))
 
 GType gst_v4l2_buffer_pool_get_type (void);
 

@@ -31,7 +31,7 @@
 #include <unistd.h>
 
 #include "gst/video/video.h"
-#include "gst/video/gstmetavideo.h"
+#include "gst/video/gstvideometa.h"
 #include "gst/video/gstvideopool.h"
 
 #include <gstv4l2bufferpool.h>
@@ -57,14 +57,14 @@ GST_DEBUG_CATEGORY_EXTERN (v4l2_debug);
  * GstV4l2Buffer:
  */
 const GstMetaInfo *
-gst_meta_v4l2_get_info (void)
+gst_v4l2_meta_get_info (void)
 {
   static const GstMetaInfo *meta_info = NULL;
 
   if (meta_info == NULL) {
     meta_info =
-        gst_meta_register ("GstMetaV4l2", "GstMetaV4l2",
-        sizeof (GstMetaV4l2), (GstMetaInitFunction) NULL,
+        gst_meta_register ("GstV4l2Meta", "GstV4l2Meta",
+        sizeof (GstV4l2Meta), (GstMetaInitFunction) NULL,
         (GstMetaFreeFunction) NULL, (GstMetaCopyFunction) NULL,
         (GstMetaTransformFunction) NULL);
   }
@@ -93,10 +93,10 @@ gst_v4l2_buffer_pool_free_buffer (GstBufferPool * bpool, GstBuffer * buffer)
       break;
     case GST_V4L2_IO_MMAP:
     {
-      GstMetaV4l2 *meta;
+      GstV4l2Meta *meta;
       gint index;
 
-      meta = GST_META_V4L2_GET (buffer);
+      meta = GST_V4L2_META_GET (buffer);
       g_assert (meta != NULL);
 
       index = meta->vbuffer.index;
@@ -122,7 +122,7 @@ gst_v4l2_buffer_pool_alloc_buffer (GstBufferPool * bpool, GstBuffer ** buffer,
 {
   GstV4l2BufferPool *pool = GST_V4L2_BUFFER_POOL (bpool);
   GstBuffer *newbuf;
-  GstMetaV4l2 *meta;
+  GstV4l2Meta *meta;
   GstV4l2Object *obj;
   GstVideoInfo *info;
   guint index;
@@ -140,7 +140,7 @@ gst_v4l2_buffer_pool_alloc_buffer (GstBufferPool * bpool, GstBuffer ** buffer,
     case GST_V4L2_IO_MMAP:
     {
       newbuf = gst_buffer_new ();
-      meta = GST_META_V4L2_ADD (newbuf);
+      meta = GST_V4L2_META_ADD (newbuf);
 
       index = pool->num_allocated;
 
@@ -183,7 +183,7 @@ gst_v4l2_buffer_pool_alloc_buffer (GstBufferPool * bpool, GstBuffer ** buffer,
         stride[0] = obj->bytesperline;
 
         GST_DEBUG_OBJECT (pool, "adding video meta, stride %d", stride[0]);
-        gst_buffer_add_meta_video_full (newbuf, info->flags,
+        gst_buffer_add_video_meta_full (newbuf, info->flags,
             GST_VIDEO_INFO_FORMAT (info), GST_VIDEO_INFO_WIDTH (info),
             GST_VIDEO_INFO_HEIGHT (info), GST_VIDEO_INFO_N_PLANES (info),
             offset, stride);
@@ -236,7 +236,7 @@ gst_v4l2_buffer_pool_set_config (GstBufferPool * bpool, GstStructure * config)
 
   pool->add_videometa =
       gst_buffer_pool_config_has_option (config,
-      GST_BUFFER_POOL_OPTION_META_VIDEO);
+      GST_BUFFER_POOL_OPTION_VIDEO_META);
 
   if (!pool->add_videometa) {
     gint stride;
@@ -513,10 +513,10 @@ select_error:
 static GstFlowReturn
 gst_v4l2_buffer_pool_qbuf (GstV4l2BufferPool * pool, GstBuffer * buf)
 {
-  GstMetaV4l2 *meta;
+  GstV4l2Meta *meta;
   gint index;
 
-  meta = GST_META_V4L2_GET (buf);
+  meta = GST_V4L2_META_GET (buf);
   g_assert (meta != NULL);
 
   index = meta->vbuffer.index;
@@ -779,9 +779,9 @@ gst_v4l2_buffer_pool_release_buffer (GstBufferPool * bpool, GstBuffer * buffer)
 
         case GST_V4L2_IO_MMAP:
         {
-          GstMetaV4l2 *meta;
+          GstV4l2Meta *meta;
 
-          meta = GST_META_V4L2_GET (buffer);
+          meta = GST_V4L2_META_GET (buffer);
           g_assert (meta != NULL);
 
           if (pool->buffers[meta->vbuffer.index] == NULL) {
@@ -1024,7 +1024,7 @@ gst_v4l2_buffer_pool_process (GstV4l2BufferPool * pool, GstBuffer * buf)
 
               config = gst_buffer_pool_get_config (bpool);
               gst_buffer_pool_config_add_option (config,
-                  GST_BUFFER_POOL_OPTION_META_VIDEO);
+                  GST_BUFFER_POOL_OPTION_VIDEO_META);
               gst_buffer_pool_set_config (bpool, config);
 
               if (!gst_buffer_pool_set_active (bpool, TRUE))
