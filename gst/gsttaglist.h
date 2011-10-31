@@ -289,20 +289,6 @@ gboolean     gst_tag_list_get_uint_index    (const GstTagList * list,
                                              const gchar      * tag,
                                              guint              index,
                                              guint            * value);
-gboolean     gst_tag_list_get_long          (const GstTagList * list,
-                                             const gchar      * tag,
-                                             glong            * value);
-gboolean     gst_tag_list_get_long_index    (const GstTagList * list,
-                                             const gchar      * tag,
-                                             guint              index,
-                                             glong            * value);
-gboolean     gst_tag_list_get_ulong         (const GstTagList * list,
-                                             const gchar      * tag,
-                                             gulong           * value);
-gboolean     gst_tag_list_get_ulong_index   (const GstTagList * list,
-                                             const gchar      * tag,
-                                             guint              index,
-                                             gulong           * value);
 gboolean     gst_tag_list_get_int64         (const GstTagList * list,
                                              const gchar      * tag,
                                              gint64           * value);
