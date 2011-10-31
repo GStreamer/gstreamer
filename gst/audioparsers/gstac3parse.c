@@ -500,6 +500,7 @@ gst_ac3_parse_check_valid_frame (GstBaseParse * parse,
   if (G_UNLIKELY (size < 6))
     goto cleanup;
 
+  gst_byte_reader_init (&reader, data, size);
   off = gst_byte_reader_masked_scan_uint32 (&reader, 0xffff0000, 0x0b770000,
       0, size);
 
