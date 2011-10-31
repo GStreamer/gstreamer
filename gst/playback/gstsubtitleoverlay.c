@@ -40,7 +40,6 @@
 
 #include "gstsubtitleoverlay.h"
 
-#include <gst/gstfilter.h>
 #include <gst/pbutils/missing-plugins.h>
 #include <gst/video/video.h>
 #include <string.h>
