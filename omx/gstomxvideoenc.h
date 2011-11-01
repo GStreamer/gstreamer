@@ -64,6 +64,8 @@ struct _GstOMXVideoEnc
   guint32 quant_i_frames;
   guint32 quant_p_frames;
   guint32 quant_b_frames;
+
+  GstFlowReturn downstream_flow_ret;
 };
 
 struct _GstOMXVideoEncClass
