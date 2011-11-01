@@ -58,6 +58,12 @@ struct _GstOMXVideoEnc
    * the first buffer */
   gboolean started;
 
+  /* Draining state */
+  GMutex *drain_lock;
+  GCond *drain_cond;
+  /* TRUE if EOS buffers shouldn't be forwarded */
+  gboolean draining;
+
   /* properties */
   OMX_VIDEO_CONTROLRATETYPE control_rate;
   guint32 target_bitrate;

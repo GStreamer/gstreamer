@@ -86,6 +86,8 @@ static GstFlowReturn gst_omx_video_enc_handle_frame (GstBaseVideoEncoder *
     encoder, GstVideoFrame * frame);
 static gboolean gst_omx_video_enc_finish (GstBaseVideoEncoder * encoder);
 
+static GstFlowReturn gst_omx_video_enc_drain (GstOMXVideoEnc * self);
+
 enum
 {
   PROP_0,
@@ -321,6 +323,9 @@ gst_omx_video_enc_init (GstOMXVideoEnc * self, GstOMXVideoEncClass * klass)
   self->quant_i_frames = GST_OMX_VIDEO_ENC_QUANT_I_FRAMES_DEFAULT;
   self->quant_p_frames = GST_OMX_VIDEO_ENC_QUANT_P_FRAMES_DEFAULT;
   self->quant_b_frames = GST_OMX_VIDEO_ENC_QUANT_B_FRAMES_DEFAULT;
+
+  self->drain_lock = g_mutex_new ();
+  self->drain_cond = g_cond_new ();
 }
 
 static gboolean
@@ -424,7 +429,10 @@ gst_omx_video_enc_close (GstOMXVideoEnc * self)
 static void
 gst_omx_video_enc_finalize (GObject * object)
 {
-  /* GstOMXVideoEnc *self = GST_OMX_VIDEO_ENC (object); */
+  GstOMXVideoEnc *self = GST_OMX_VIDEO_ENC (object);
+
+  g_mutex_free (self->drain_lock);
+  g_cond_free (self->drain_cond);
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
@@ -521,6 +529,11 @@ gst_omx_video_enc_change_state (GstElement * element, GstStateChange transition)
       if (self->out_port)
         gst_omx_port_set_flushing (self->out_port, FALSE);
       self->downstream_flow_ret = GST_FLOW_OK;
+
+      g_mutex_lock (self->drain_lock);
+      self->draining = FALSE;
+      g_cond_broadcast (self->drain_cond);
+      g_mutex_unlock (self->drain_lock);
       break;
     case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
       break;
@@ -529,6 +542,11 @@ gst_omx_video_enc_change_state (GstElement * element, GstStateChange transition)
         gst_omx_port_set_flushing (self->in_port, TRUE);
       if (self->out_port)
         gst_omx_port_set_flushing (self->out_port, TRUE);
+
+      g_mutex_lock (self->drain_lock);
+      self->draining = FALSE;
+      g_cond_broadcast (self->drain_cond);
+      g_mutex_unlock (self->drain_lock);
       break;
     default:
       break;
@@ -769,8 +787,16 @@ gst_omx_video_enc_loop (GstOMXVideoEnc * self)
         frame);
   }
 
-  if (flow_ret == GST_FLOW_OK && (buf->omx_buf->nFlags & OMX_BUFFERFLAG_EOS))
-    flow_ret = GST_FLOW_UNEXPECTED;
+  if (flow_ret == GST_FLOW_OK && (buf->omx_buf->nFlags & OMX_BUFFERFLAG_EOS)) {
+    g_mutex_lock (self->drain_lock);
+    if (self->draining) {
+      self->draining = FALSE;
+      g_cond_broadcast (self->drain_cond);
+    } else {
+      flow_ret = GST_FLOW_UNEXPECTED;
+    }
+    g_mutex_unlock (self->drain_lock);
+  }
 
   gst_omx_port_release_buffer (port, buf);
 
@@ -870,6 +896,11 @@ gst_omx_video_enc_stop (GstBaseVideoEncoder * encoder)
 
   self->downstream_flow_ret = GST_FLOW_WRONG_STATE;
 
+  g_mutex_lock (self->drain_lock);
+  self->draining = FALSE;
+  g_cond_broadcast (self->drain_cond);
+  g_mutex_unlock (self->drain_lock);
+
   gst_omx_port_set_flushing (self->in_port, TRUE);
   gst_omx_port_set_flushing (self->out_port, TRUE);
 
@@ -902,6 +933,7 @@ gst_omx_video_enc_set_format (GstBaseVideoEncoder * encoder,
    * format change happened we can just exit here.
    */
   if (needs_disable) {
+    gst_omx_video_enc_drain (self);
     if (gst_omx_port_manual_reconfigure (self->in_port, TRUE) != OMX_ErrorNone)
       return FALSE;
     if (gst_omx_port_set_enabled (self->in_port, FALSE) != OMX_ErrorNone)
@@ -1011,6 +1043,8 @@ gst_omx_video_enc_reset (GstBaseVideoEncoder * encoder)
   GST_BASE_VIDEO_CODEC (self)->frames = NULL;
 
   if (self->started) {
+    gst_omx_video_enc_drain (self);
+
     gst_omx_port_set_flushing (self->in_port, TRUE);
     gst_omx_port_set_flushing (self->out_port, TRUE);
 
@@ -1350,4 +1384,33 @@ gst_omx_video_enc_finish (GstBaseVideoEncoder * encoder)
   }
 
   return TRUE;
+}
+
+static GstFlowReturn
+gst_omx_video_enc_drain (GstOMXVideoEnc * self)
+{
+  GstOMXBuffer *buf;
+  GstOMXAcquireBufferReturn acq_ret;
+
+  GST_DEBUG_OBJECT (self, "Draining component");
+
+  /* Send an EOS buffer to the component and let the base
+   * class drop the EOS event. We will send it later when
+   * the EOS buffer arrives on the output port. */
+  acq_ret = gst_omx_port_acquire_buffer (self->in_port, &buf);
+  if (acq_ret != GST_OMX_ACQUIRE_BUFFER_OK)
+    return GST_FLOW_ERROR;
+
+  GST_BASE_VIDEO_CODEC_STREAM_UNLOCK (self);
+  g_mutex_lock (self->drain_lock);
+  self->draining = TRUE;
+  buf->omx_buf->nFlags |= OMX_BUFFERFLAG_EOS;
+  gst_omx_port_release_buffer (self->in_port, buf);
+  GST_DEBUG_OBJECT (self, "Waiting until component is drained");
+  g_cond_wait (self->drain_cond, self->drain_lock);
+  GST_DEBUG_OBJECT (self, "Drained component");
+  g_mutex_unlock (self->drain_lock);
+  GST_BASE_VIDEO_CODEC_STREAM_LOCK (self);
+
+  return GST_FLOW_OK;
 }
