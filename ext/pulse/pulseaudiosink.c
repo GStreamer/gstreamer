@@ -513,8 +513,8 @@ distribute_running_time (GstElement * element, const GstSegment * segment)
   gst_object_unref (pad);
 }
 
-static GstProbeReturn
-dbin2_event_probe (GstPad * pad, GstProbeType ptype, GstEvent * event,
+static GstPadProbeReturn
+dbin2_event_probe (GstPad * pad, GstPadProbeType ptype, GstEvent * event,
     gpointer data)
 {
   GstPulseAudioSink *pbin = GST_PULSE_AUDIO_SINK (data);
@@ -523,10 +523,10 @@ dbin2_event_probe (GstPad * pad, GstProbeType ptype, GstEvent * event,
     GST_DEBUG_OBJECT (pbin, "Got newsegment - dropping");
     gst_pad_remove_probe (pad, pbin->event_probe_id);
     gst_object_unref (pbin);
-    return GST_PROBE_DROP;
+    return GST_PAD_PROBE_DROP;
   }
 
-  return GST_PROBE_OK;
+  return GST_PAD_PROBE_OK;
 }
 
 static void
@@ -581,7 +581,7 @@ gst_pulse_audio_sink_add_dbin2 (GstPulseAudioSink * pbin)
 
   /* Trap the newsegment events that we feed the decodebin and discard them */
   sinkpad = gst_element_get_static_pad (GST_ELEMENT (pbin->psink), "sink");
-  pbin->event_probe_id = gst_pad_add_probe (sinkpad, GST_PROBE_TYPE_EVENT,
+  pbin->event_probe_id = gst_pad_add_probe (sinkpad, GST_PAD_PROBE_TYPE_EVENT,
       (GstPadProbeCallback) dbin2_event_probe, gst_object_ref (pbin), NULL);
   gst_object_unref (sinkpad);
   sinkpad = NULL;
@@ -621,8 +621,8 @@ update_eac3_alignment (GstPulseAudioSink * pbin)
   gst_caps_unref (caps);
 }
 
-static GstProbeReturn
-proxypad_blocked_cb (GstPad * pad, GstProbeType ptype, gpointer type_data,
+static GstPadProbeReturn
+proxypad_blocked_cb (GstPad * pad, GstPadProbeType ptype, gpointer type_data,
     gpointer data)
 {
   GstPulseAudioSink *pbin = GST_PULSE_AUDIO_SINK (data);
@@ -679,7 +679,7 @@ done:
   pbin->block_probe_id = 0;
   GST_PULSE_AUDIO_SINK_UNLOCK (pbin);
 
-  return GST_PROBE_REMOVE;
+  return GST_PAD_PROBE_REMOVE;
 }
 
 static gboolean
@@ -704,7 +704,7 @@ gst_pulse_audio_sink_src_event (GstPad * pad, GstEvent * event)
   if (G_UNLIKELY (GST_EVENT_TYPE (event) == GST_EVENT_CUSTOM_UPSTREAM) &&
       (gst_event_has_name (event, "pulse-format-lost") ||
           gst_event_has_name (event, "pulse-sink-changed"))) {
-    g_return_val_if_fail (pad->mode != GST_ACTIVATE_PULL, FALSE);
+    g_return_val_if_fail (pad->mode != GST_PAD_ACTIVATE_PULL, FALSE);
 
     GST_PULSE_AUDIO_SINK_LOCK (pbin);
     if (gst_event_has_name (event, "pulse-format-lost"))
@@ -712,7 +712,7 @@ gst_pulse_audio_sink_src_event (GstPad * pad, GstEvent * event)
 
     if (pbin->block_probe_id == 0)
       pbin->block_probe_id =
-          gst_pad_add_probe (pad, GST_PROBE_TYPE_BLOCK, proxypad_blocked_cb,
+          gst_pad_add_probe (pad, GST_PAD_PROBE_TYPE_BLOCK, proxypad_blocked_cb,
           gst_object_ref (pbin), (GDestroyNotify) gst_object_unref);
     GST_PULSE_AUDIO_SINK_UNLOCK (pbin);
 
@@ -847,7 +847,7 @@ gst_pulse_audio_sink_set_caps (GstPulseAudioSink * pbin, GstCaps * caps)
 
   if (pbin->block_probe_id == 0)
     pbin->block_probe_id =
-        gst_pad_add_probe (pbin->sink_proxypad, GST_PROBE_TYPE_BLOCK,
+        gst_pad_add_probe (pbin->sink_proxypad, GST_PAD_PROBE_TYPE_BLOCK,
         proxypad_blocked_cb, gst_object_ref (pbin),
         (GDestroyNotify) gst_object_unref);
 

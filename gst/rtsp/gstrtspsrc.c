@@ -2152,8 +2152,8 @@ gst_rtspsrc_sink_chain (GstPad * pad, GstBuffer * buffer)
   return res;
 }
 
-static GstProbeReturn
-pad_blocked (GstPad * pad, GstProbeType type, gpointer type_data,
+static GstPadProbeReturn
+pad_blocked (GstPad * pad, GstPadProbeType type, gpointer type_data,
     gpointer user_data)
 {
   GstRTSPSrc *src = user_data;
@@ -2171,12 +2171,12 @@ pad_blocked (GstPad * pad, GstProbeType type, gpointer type_data,
 
   gst_rtspsrc_activate_streams (src);
 
-  return GST_PROBE_OK;
+  return GST_PAD_PROBE_OK;
 
 was_ok:
   {
     GST_OBJECT_UNLOCK (src);
-    return GST_PROBE_OK;
+    return GST_PAD_PROBE_OK;
   }
 }
 
@@ -2768,7 +2768,7 @@ gst_rtspsrc_stream_configure_udp (GstRTSPSrc * src, GstRTSPStream * stream,
      * UDP source, we know that UDP is not blocked by a firewall and we can
      * configure all the streams to let the application autoplug decoders. */
     stream->blockid =
-        gst_pad_add_probe (stream->blockedpad, GST_PROBE_TYPE_BLOCK,
+        gst_pad_add_probe (stream->blockedpad, GST_PAD_PROBE_TYPE_BLOCK,
         pad_blocked, src, NULL);
 
     if (stream->channelpad[0]) {
