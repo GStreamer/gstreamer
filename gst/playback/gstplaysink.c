@@ -2867,6 +2867,7 @@ gst_play_sink_convert_frame (GstPlaySink * playsink, GstCaps * caps)
        * on the bus or not. It's not like it's a critical issue regarding
        * playsink behaviour. */
       GST_ERROR ("Error converting frame: %s", err->message);
+      g_error_free (err);
     }
     result = temp;
   }
