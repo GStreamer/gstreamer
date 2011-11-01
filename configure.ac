@@ -1186,7 +1186,7 @@ AG_GST_CHECK_FEATURE(MPEG2ENC, [mpeg2enc], mpeg2enc, [
           if test "x$mpeg2enc_headers_ok" = "xyes"; then
             HAVE_MPEG2ENC="yes"
           fi
-          CPP_FLAGS="$CPPFLAGS_GOOD"
+          CPPFLAGS="$CPPFLAGS_GOOD"
           AC_SUBST(MPEG2ENC_CFLAGS)
           AC_SUBST(MPEG2ENC_LIBS)
         ], [
