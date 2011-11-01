@@ -377,6 +377,11 @@ gst_camera_bin_start_capture (GstCameraBin2 * camerabin)
 
   GST_CAMERA_BIN2_PROCESSING_INC (camerabin);
 
+  if (camerabin->post_previews) {
+    /* Count processing of preview images too */
+    GST_CAMERA_BIN2_PROCESSING_INC (camerabin);
+  }
+
   if (camerabin->location)
     location = g_strdup_printf (camerabin->location, capture_index);
 
@@ -974,6 +979,9 @@ gst_camera_bin_handle_message (GstBin * bin, GstMessage * message)
           gst_structure_take_value ((GstStructure *) structure, "location",
               value);
         }
+
+        GST_LOG_OBJECT (bin, "received preview-image message");
+        GST_CAMERA_BIN2_PROCESSING_DEC (GST_CAMERA_BIN2_CAST (bin));
       }
     }
       break;
