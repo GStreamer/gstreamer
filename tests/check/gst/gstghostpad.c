@@ -479,8 +479,8 @@ typedef struct
   GCond *cond;
 } BlockData;
 
-static GstProbeReturn
-block_callback (GstPad * pad, GstProbeType type, gpointer type_data,
+static GstPadProbeReturn
+block_callback (GstPad * pad, GstPadProbeType type, gpointer type_data,
     gpointer user_data)
 {
   BlockData *block_data = (BlockData *) user_data;
@@ -490,7 +490,7 @@ block_callback (GstPad * pad, GstProbeType type, gpointer type_data,
   g_cond_signal (block_data->cond);
   g_mutex_unlock (block_data->mutex);
 
-  return GST_PROBE_OK;
+  return GST_PAD_PROBE_OK;
 }
 
 GST_START_TEST (test_ghost_pads_block)
@@ -518,7 +518,7 @@ GST_START_TEST (test_ghost_pads_block)
   block_data.cond = g_cond_new ();
 
   g_mutex_lock (block_data.mutex);
-  gst_pad_add_probe (srcghost, GST_PROBE_TYPE_BLOCK, block_callback,
+  gst_pad_add_probe (srcghost, GST_PAD_PROBE_TYPE_BLOCK, block_callback,
       &block_data, NULL);
   gst_element_set_state (GST_ELEMENT (pipeline), GST_STATE_PLAYING);
   /* and wait now */
@@ -560,7 +560,7 @@ GST_START_TEST (test_ghost_pads_probes)
   block_data.cond = g_cond_new ();
 
   g_mutex_lock (block_data.mutex);
-  gst_pad_add_probe (srcghost, GST_PROBE_TYPE_BLOCK, block_callback,
+  gst_pad_add_probe (srcghost, GST_PAD_PROBE_TYPE_BLOCK, block_callback,
       &block_data, NULL);
   gst_element_set_state (GST_ELEMENT (pipeline), GST_STATE_PLAYING);
   /* and wait now */

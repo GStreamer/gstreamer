@@ -269,8 +269,8 @@ static GTimeVal sent_event_time;
 static GstEvent *got_event_before_q, *got_event_after_q;
 static GTimeVal got_event_time;
 
-static GstProbeReturn
-event_probe (GstPad * pad, GstProbeType type, gpointer type_data,
+static GstPadProbeReturn
+event_probe (GstPad * pad, GstPadProbeType type, gpointer type_data,
     gpointer user_data)
 {
   GstMiniObject *data = type_data;
@@ -311,7 +311,7 @@ event_probe (GstPad * pad, GstProbeType type, gpointer type_data,
     }
   }
 
-  return GST_PROBE_OK;
+  return GST_PAD_PROBE_OK;
 }
 
 
@@ -360,8 +360,8 @@ signal_data_wait (SignalData * data)
   g_mutex_unlock (data->lock);
 }
 
-static GstProbeReturn
-signal_blocked (GstPad * pad, GstProbeType type, gpointer type_data,
+static GstPadProbeReturn
+signal_blocked (GstPad * pad, GstPadProbeType type, gpointer type_data,
     gpointer user_data)
 {
   SignalData *data = (SignalData *) user_data;
@@ -370,7 +370,7 @@ signal_blocked (GstPad * pad, GstProbeType type, gpointer type_data,
   signal_data_signal (data);
   GST_DEBUG ("signal done %p", data);
 
-  return GST_PROBE_OK;
+  return GST_PAD_PROBE_OK;
 }
 
 static void test_event
@@ -400,7 +400,7 @@ static void test_event
   signal_data_init (&data);
 
   /* We block the pad so the stream lock is released and we can send the event */
-  id = gst_pad_add_probe (fake_srcpad, GST_PROBE_TYPE_BLOCK,
+  id = gst_pad_add_probe (fake_srcpad, GST_PAD_PROBE_TYPE_BLOCK,
       signal_blocked, &data, NULL);
   fail_unless (id != 0);
 
@@ -485,11 +485,11 @@ GST_START_TEST (send_custom_events)
 
   /* add pad-probes to faksrc.src and fakesink.sink */
   fail_if ((srcpad = gst_element_get_static_pad (fakesrc, "src")) == NULL);
-  gst_pad_add_probe (srcpad, GST_PROBE_TYPE_EVENT,
+  gst_pad_add_probe (srcpad, GST_PAD_PROBE_TYPE_EVENT,
       event_probe, GINT_TO_POINTER (TRUE), NULL);
 
   fail_if ((sinkpad = gst_element_get_static_pad (fakesink, "sink")) == NULL);
-  gst_pad_add_probe (sinkpad, GST_PROBE_TYPE_EVENT,
+  gst_pad_add_probe (sinkpad, GST_PAD_PROBE_TYPE_EVENT,
       event_probe, GINT_TO_POINTER (FALSE), NULL);
 
   /* Upstream events */

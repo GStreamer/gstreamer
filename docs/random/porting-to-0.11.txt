@@ -104,7 +104,7 @@ The 0.11 porting guide
 
     gst_pad_set_blocked(), gst_pad_set_blocked_async(),
     gst_pad_set_blocked_async_full() are removed, use the gst_pad_add_probe()
-    method with the GST_PROBE_TYPE_BLOCK to get the same result as the async
+    method with the GST_PAD_PROBE_TYPE_BLOCK to get the same result as the async
     blocking version. There is no more sync version of blocking, this is in
     general dangerous and can be implemented using the callbacks if needed.
 

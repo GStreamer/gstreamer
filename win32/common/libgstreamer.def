@@ -692,6 +692,8 @@ EXPORTS
 	gst_pad_peer_get_caps
 	gst_pad_peer_query
 	gst_pad_presence_get_type
+	gst_pad_probe_return_get_type
+	gst_pad_probe_type_get_type
 	gst_pad_proxy_getcaps
 	gst_pad_pull_range
 	gst_pad_push
@@ -829,8 +831,6 @@ EXPORTS
 	gst_preset_set_meta
 	gst_print_element_args
 	gst_print_pad_caps
-	gst_probe_return_get_type
-	gst_probe_type_get_type
 	gst_progress_type_get_type
 	gst_proxy_pad_acceptcaps_default
 	gst_proxy_pad_chain_default

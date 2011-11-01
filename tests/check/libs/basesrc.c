@@ -27,8 +27,8 @@
 #include <gst/check/gstcheck.h>
 #include <gst/base/gstbasesrc.h>
 
-static GstProbeReturn
-eos_event_counter (GstObject * pad, GstProbeType type, GstEvent * event,
+static GstPadProbeReturn
+eos_event_counter (GstObject * pad, GstPadProbeType type, GstEvent * event,
     guint * p_num_eos)
 {
   fail_unless (event != NULL);
@@ -37,7 +37,7 @@ eos_event_counter (GstObject * pad, GstProbeType type, GstEvent * event,
   if (GST_EVENT_TYPE (event) == GST_EVENT_EOS)
     *p_num_eos += 1;
 
-  return GST_PROBE_OK;
+  return GST_PAD_PROBE_OK;
 }
 
 /* basesrc_eos_events_push_live_op:
@@ -77,7 +77,7 @@ GST_START_TEST (basesrc_eos_events_push_live_op)
   srcpad = gst_element_get_static_pad (src, "src");
   fail_unless (srcpad != NULL);
 
-  probe = gst_pad_add_probe (srcpad, GST_PROBE_TYPE_EVENT,
+  probe = gst_pad_add_probe (srcpad, GST_PAD_PROBE_TYPE_EVENT,
       (GstPadProbeCallback) eos_event_counter, &num_eos, NULL);
 
   bus = gst_element_get_bus (pipe);
@@ -155,7 +155,7 @@ GST_START_TEST (basesrc_eos_events_push)
   srcpad = gst_element_get_static_pad (src, "src");
   fail_unless (srcpad != NULL);
 
-  probe = gst_pad_add_probe (srcpad, GST_PROBE_TYPE_EVENT,
+  probe = gst_pad_add_probe (srcpad, GST_PAD_PROBE_TYPE_EVENT,
       (GstPadProbeCallback) eos_event_counter, &num_eos, NULL);
 
   bus = gst_element_get_bus (pipe);
@@ -222,7 +222,7 @@ GST_START_TEST (basesrc_eos_events_pull_live_op)
   srcpad = gst_element_get_static_pad (src, "src");
   fail_unless (srcpad != NULL);
 
-  probe = gst_pad_add_probe (srcpad, GST_PROBE_TYPE_EVENT,
+  probe = gst_pad_add_probe (srcpad, GST_PAD_PROBE_TYPE_EVENT,
       (GstPadProbeCallback) eos_event_counter, &num_eos, NULL);
 
   gst_element_set_state (pipe, GST_STATE_PLAYING);
@@ -294,7 +294,7 @@ GST_START_TEST (basesrc_eos_events_pull)
   srcpad = gst_element_get_static_pad (src, "src");
   fail_unless (srcpad != NULL);
 
-  probe = gst_pad_add_probe (srcpad, GST_PROBE_TYPE_EVENT,
+  probe = gst_pad_add_probe (srcpad, GST_PAD_PROBE_TYPE_EVENT,
       (GstPadProbeCallback) eos_event_counter, &num_eos, NULL);
 
   bus = gst_element_get_bus (pipe);
@@ -364,7 +364,7 @@ GST_START_TEST (basesrc_eos_events_push_live_eos)
   srcpad = gst_element_get_static_pad (src, "src");
   fail_unless (srcpad != NULL);
 
-  probe = gst_pad_add_probe (srcpad, GST_PROBE_TYPE_EVENT,
+  probe = gst_pad_add_probe (srcpad, GST_PAD_PROBE_TYPE_EVENT,
       (GstPadProbeCallback) eos_event_counter, &num_eos, NULL);
 
   bus = gst_element_get_bus (pipe);
@@ -441,7 +441,7 @@ GST_START_TEST (basesrc_eos_events_pull_live_eos)
   srcpad = gst_element_get_static_pad (src, "src");
   fail_unless (srcpad != NULL);
 
-  probe = gst_pad_add_probe (srcpad, GST_PROBE_TYPE_EVENT,
+  probe = gst_pad_add_probe (srcpad, GST_PAD_PROBE_TYPE_EVENT,
       (GstPadProbeCallback) eos_event_counter, &num_eos, NULL);
 
   bus = gst_element_get_bus (pipe);
@@ -482,8 +482,8 @@ GST_START_TEST (basesrc_eos_events_pull_live_eos)
 GST_END_TEST;
 
 
-static GstProbeReturn
-segment_event_catcher (GstObject * pad, GstProbeType type, GstEvent * event,
+static GstPadProbeReturn
+segment_event_catcher (GstObject * pad, GstPadProbeType type, GstEvent * event,
     gpointer * user_data)
 {
   GstEvent **last_event = (GstEvent **) user_data;
@@ -497,7 +497,7 @@ segment_event_catcher (GstObject * pad, GstProbeType type, GstEvent * event,
     *last_event = gst_event_copy (event);
   }
 
-  return GST_PROBE_OK;
+  return GST_PAD_PROBE_OK;
 }
 
 /* basesrc_seek_events_rate_update:
@@ -535,7 +535,7 @@ GST_START_TEST (basesrc_seek_events_rate_update)
   probe_pad = gst_element_get_static_pad (sink, "sink");
   fail_unless (probe_pad != NULL);
 
-  probe = gst_pad_add_probe (probe_pad, GST_PROBE_TYPE_EVENT,
+  probe = gst_pad_add_probe (probe_pad, GST_PAD_PROBE_TYPE_EVENT,
       (GstPadProbeCallback) segment_event_catcher, &seg_event, NULL);
 
   /* prepare the seek */

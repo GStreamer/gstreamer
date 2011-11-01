@@ -34,8 +34,8 @@ static GstStaticPadTemplate srctemplate = GST_STATIC_PAD_TEMPLATE ("src",
     GST_STATIC_CAPS_ANY);
 
 /* Data probe cb to drop everything but count buffers and events */
-static GstProbeReturn
-probe_cb (GstPad * pad, GstProbeType type, GstMiniObject * obj,
+static GstPadProbeReturn
+probe_cb (GstPad * pad, GstPadProbeType type, GstMiniObject * obj,
     gpointer user_data)
 {
   gint count = 0;
@@ -57,7 +57,7 @@ probe_cb (GstPad * pad, GstProbeType type, GstMiniObject * obj,
   g_object_set_data (G_OBJECT (pad), count_type, GINT_TO_POINTER (count));
 
   /* drop everything */
-  return GST_PROBE_DROP;
+  return GST_PAD_PROBE_DROP;
 }
 
 /* Create and link output pad: selector:src%d ! output_pad */
@@ -76,7 +76,7 @@ setup_output_pad (GstElement * element, GstStaticPadTemplate * tmpl)
 
   /* add probe */
   probe_id =
-      gst_pad_add_probe (output_pad, GST_PROBE_TYPE_DATA,
+      gst_pad_add_probe (output_pad, GST_PAD_PROBE_TYPE_DATA,
       (GstPadProbeCallback) probe_cb, NULL, NULL);
   g_object_set_data (G_OBJECT (output_pad), "probe_id",
       GINT_TO_POINTER (probe_id));
@@ -317,7 +317,7 @@ run_input_selector_buffer_count (gint num_input_pads,
   }
   /* add probe */
   probe_id =
-      gst_pad_add_probe (output_pad, GST_PROBE_TYPE_DATA,
+      gst_pad_add_probe (output_pad, GST_PAD_PROBE_TYPE_DATA,
       (GstPadProbeCallback) probe_cb, NULL, NULL);
   g_object_set_data (G_OBJECT (output_pad), "probe_id",
       GINT_TO_POINTER (probe_id));

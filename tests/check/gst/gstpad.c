@@ -250,16 +250,16 @@ GST_START_TEST (test_name_is_valid)
 
 GST_END_TEST;
 
-static GstProbeReturn
-_probe_handler (GstPad * pad, GstProbeType type, GstBuffer * buffer,
+static GstPadProbeReturn
+_probe_handler (GstPad * pad, GstPadProbeType type, GstBuffer * buffer,
     gpointer userdata)
 {
   gint ret = GPOINTER_TO_INT (userdata);
 
   if (ret == 1)
-    return GST_PROBE_OK;
+    return GST_PAD_PROBE_OK;
 
-  return GST_PROBE_DROP;
+  return GST_PAD_PROBE_DROP;
 }
 
 GST_START_TEST (test_push_unlinked)
@@ -297,7 +297,7 @@ GST_START_TEST (test_push_unlinked)
 
   /* adding a probe that returns FALSE will drop the buffer without trying
    * to chain */
-  id = gst_pad_add_probe (src, GST_PROBE_TYPE_BUFFER,
+  id = gst_pad_add_probe (src, GST_PAD_PROBE_TYPE_BUFFER,
       (GstPadProbeCallback) _probe_handler, GINT_TO_POINTER (0), NULL);
   buffer = gst_buffer_new ();
   gst_buffer_ref (buffer);
@@ -308,7 +308,7 @@ GST_START_TEST (test_push_unlinked)
 
   /* adding a probe that returns TRUE will still chain the buffer,
    * and hence drop because pad is unlinked */
-  id = gst_pad_add_probe (src, GST_PROBE_TYPE_BUFFER,
+  id = gst_pad_add_probe (src, GST_PAD_PROBE_TYPE_BUFFER,
       (GstPadProbeCallback) _probe_handler, GINT_TO_POINTER (1), NULL);
   buffer = gst_buffer_new ();
   gst_buffer_ref (buffer);
@@ -388,7 +388,7 @@ GST_START_TEST (test_push_linked)
 
   /* adding a probe that returns FALSE will drop the buffer without trying
    * to chain */
-  id = gst_pad_add_probe (src, GST_PROBE_TYPE_BUFFER,
+  id = gst_pad_add_probe (src, GST_PAD_PROBE_TYPE_BUFFER,
       (GstPadProbeCallback) _probe_handler, GINT_TO_POINTER (0), NULL);
   buffer = gst_buffer_new ();
   gst_buffer_ref (buffer);
@@ -399,7 +399,7 @@ GST_START_TEST (test_push_linked)
   fail_unless_equals_int (g_list_length (buffers), 0);
 
   /* adding a probe that returns TRUE will still chain the buffer */
-  id = gst_pad_add_probe (src, GST_PROBE_TYPE_BUFFER,
+  id = gst_pad_add_probe (src, GST_PAD_PROBE_TYPE_BUFFER,
       (GstPadProbeCallback) _probe_handler, GINT_TO_POINTER (1), NULL);
   buffer = gst_buffer_new ();
   gst_buffer_ref (buffer);
@@ -689,13 +689,13 @@ GST_END_TEST;
 
 static gulong id;
 
-static GstProbeReturn
-block_async_cb (GstPad * pad, GstProbeType type, gpointer type_data,
+static GstPadProbeReturn
+block_async_cb (GstPad * pad, GstPadProbeType type, gpointer type_data,
     gpointer user_data)
 {
   gboolean *bool_user_data = (gboolean *) user_data;
 
-  fail_unless ((type & GST_PROBE_TYPE_BLOCK) != 0);
+  fail_unless ((type & GST_PAD_PROBE_TYPE_BLOCK) != 0);
 
   /* here we should have blocked == 0 unblocked == 0 */
   fail_unless (bool_user_data[0] == FALSE);
@@ -706,7 +706,7 @@ block_async_cb (GstPad * pad, GstProbeType type, gpointer type_data,
   gst_pad_remove_probe (pad, id);
   bool_user_data[1] = TRUE;
 
-  return GST_PROBE_OK;
+  return GST_PAD_PROBE_OK;
 }
 
 GST_START_TEST (test_block_async)
@@ -720,7 +720,7 @@ GST_START_TEST (test_block_async)
   fail_unless (pad != NULL);
 
   gst_pad_set_active (pad, TRUE);
-  id = gst_pad_add_probe (pad, GST_PROBE_TYPE_BLOCK, block_async_cb, &data,
+  id = gst_pad_add_probe (pad, GST_PAD_PROBE_TYPE_BLOCK, block_async_cb, &data,
       NULL);
 
   fail_unless (data[0] == FALSE);
@@ -798,8 +798,8 @@ block_async_full_destroy (gpointer user_data)
   *state = 2;
 }
 
-static GstProbeReturn
-block_async_full_cb (GstPad * pad, GstProbeType type, gpointer type_data,
+static GstPadProbeReturn
+block_async_full_cb (GstPad * pad, GstPadProbeType type, gpointer type_data,
     gpointer user_data)
 {
   *(gint *) user_data = (gint) TRUE;
@@ -807,7 +807,7 @@ block_async_full_cb (GstPad * pad, GstProbeType type, gpointer type_data,
   gst_pad_push_event (pad, gst_event_new_flush_start ());
   GST_DEBUG ("setting state to 1");
 
-  return GST_PROBE_OK;
+  return GST_PAD_PROBE_OK;
 }
 
 GST_START_TEST (test_block_async_full_destroy)
@@ -821,7 +821,7 @@ GST_START_TEST (test_block_async_full_destroy)
   fail_unless (pad != NULL);
   gst_pad_set_active (pad, TRUE);
 
-  id = gst_pad_add_probe (pad, GST_PROBE_TYPE_BLOCK, block_async_full_cb,
+  id = gst_pad_add_probe (pad, GST_PAD_PROBE_TYPE_BLOCK, block_async_full_cb,
       &state, block_async_full_destroy);
   fail_unless (state == 0);
 
@@ -850,7 +850,7 @@ GST_START_TEST (test_block_async_full_destroy_dispose)
   fail_unless (pad != NULL);
   gst_pad_set_active (pad, TRUE);
 
-  (void) gst_pad_add_probe (pad, GST_PROBE_TYPE_BLOCK, block_async_full_cb,
+  (void) gst_pad_add_probe (pad, GST_PAD_PROBE_TYPE_BLOCK, block_async_full_cb,
       &state, block_async_full_destroy);
 
   gst_pad_push (pad, gst_buffer_new ());
@@ -895,15 +895,15 @@ unblock_async_not_called (GstPad * pad, gboolean blocked, gpointer user_data)
 }
 #endif
 
-static GstProbeReturn
-block_async_second_no_flush (GstPad * pad, GstProbeType type,
+static GstPadProbeReturn
+block_async_second_no_flush (GstPad * pad, GstPadProbeType type,
     gpointer type_data, gpointer user_data)
 {
   gboolean *bool_user_data = (gboolean *) user_data;
 
   GST_DEBUG ("second probe called");
 
-  fail_unless (type & GST_PROBE_TYPE_BLOCK);
+  fail_unless (type & GST_PAD_PROBE_TYPE_BLOCK);
 
   fail_unless (bool_user_data[0] == TRUE);
   fail_unless (bool_user_data[1] == FALSE);
@@ -914,17 +914,17 @@ block_async_second_no_flush (GstPad * pad, GstProbeType type,
   GST_DEBUG ("removing second probe with id %lu", id);
   gst_pad_remove_probe (pad, id);
 
-  return GST_PROBE_OK;
+  return GST_PAD_PROBE_OK;
 }
 
-static GstProbeReturn
-block_async_first_no_flush (GstPad * pad, GstProbeType type, gpointer type_data,
-    gpointer user_data)
+static GstPadProbeReturn
+block_async_first_no_flush (GstPad * pad, GstPadProbeType type,
+    gpointer type_data, gpointer user_data)
 {
   static int n_calls = 0;
   gboolean *bool_user_data = (gboolean *) user_data;
 
-  fail_unless (type & GST_PROBE_TYPE_BLOCK);
+  fail_unless (type & GST_PAD_PROBE_TYPE_BLOCK);
 
   GST_DEBUG ("first probe called");
 
@@ -944,11 +944,11 @@ block_async_first_no_flush (GstPad * pad, GstProbeType type, gpointer type_data,
   GST_DEBUG ("adding second probe");
   /* replace block_async_first with block_async_second so next time the pad is
    * blocked the latter should be called */
-  id = gst_pad_add_probe (pad, GST_PROBE_TYPE_BLOCK,
+  id = gst_pad_add_probe (pad, GST_PAD_PROBE_TYPE_BLOCK,
       block_async_second_no_flush, user_data, NULL);
   GST_DEBUG ("added probe with id %lu", id);
 
-  return GST_PROBE_OK;
+  return GST_PAD_PROBE_OK;
 }
 
 GST_START_TEST (test_block_async_replace_callback_no_flush)
@@ -961,7 +961,7 @@ GST_START_TEST (test_block_async_replace_callback_no_flush)
   gst_pad_set_active (pad, TRUE);
 
   GST_DEBUG ("adding probe");
-  id = gst_pad_add_probe (pad, GST_PROBE_TYPE_BLOCK,
+  id = gst_pad_add_probe (pad, GST_PAD_PROBE_TYPE_BLOCK,
       block_async_first_no_flush, bool_user_data, NULL);
   GST_DEBUG ("added probe with id %lu", id);
   fail_if (id == 0);

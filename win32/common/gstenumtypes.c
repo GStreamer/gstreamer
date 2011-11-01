@@ -1172,20 +1172,22 @@ gst_probe_type_get_type (void)
 {
   static gsize id = 0;
   static const GFlagsValue values[] = {
-    {C_FLAGS (GST_PROBE_TYPE_INVALID), "GST_PROBE_TYPE_INVALID", "invalid"},
-    {C_FLAGS (GST_PROBE_TYPE_IDLE), "GST_PROBE_TYPE_IDLE", "idle"},
-    {C_FLAGS (GST_PROBE_TYPE_BLOCK), "GST_PROBE_TYPE_BLOCK", "block"},
-    {C_FLAGS (GST_PROBE_TYPE_BUFFER), "GST_PROBE_TYPE_BUFFER", "buffer"},
-    {C_FLAGS (GST_PROBE_TYPE_BUFFER_LIST), "GST_PROBE_TYPE_BUFFER_LIST",
+    {C_FLAGS (GST_PAD_PROBE_TYPE_INVALID), "GST_PAD_PROBE_TYPE_INVALID",
+        "invalid"},
+    {C_FLAGS (GST_PAD_PROBE_TYPE_IDLE), "GST_PAD_PROBE_TYPE_IDLE", "idle"},
+    {C_FLAGS (GST_PAD_PROBE_TYPE_BLOCK), "GST_PAD_PROBE_TYPE_BLOCK", "block"},
+    {C_FLAGS (GST_PAD_PROBE_TYPE_BUFFER), "GST_PAD_PROBE_TYPE_BUFFER",
+        "buffer"},
+    {C_FLAGS (GST_PAD_PROBE_TYPE_BUFFER_LIST), "GST_PAD_PROBE_TYPE_BUFFER_LIST",
         "buffer-list"},
-    {C_FLAGS (GST_PROBE_TYPE_EVENT), "GST_PROBE_TYPE_EVENT", "event"},
-    {C_FLAGS (GST_PROBE_TYPE_PUSH), "GST_PROBE_TYPE_PUSH", "push"},
-    {C_FLAGS (GST_PROBE_TYPE_PULL), "GST_PROBE_TYPE_PULL", "pull"},
+    {C_FLAGS (GST_PAD_PROBE_TYPE_EVENT), "GST_PAD_PROBE_TYPE_EVENT", "event"},
+    {C_FLAGS (GST_PAD_PROBE_TYPE_PUSH), "GST_PAD_PROBE_TYPE_PUSH", "push"},
+    {C_FLAGS (GST_PAD_PROBE_TYPE_PULL), "GST_PAD_PROBE_TYPE_PULL", "pull"},
     {0, NULL, NULL}
   };
 
   if (g_once_init_enter (&id)) {
-    GType tmp = g_flags_register_static ("GstProbeType", values);
+    GType tmp = g_flags_register_static ("GstPadProbeType", values);
     g_once_init_leave (&id, tmp);
   }
 
@@ -1197,15 +1199,15 @@ gst_probe_return_get_type (void)
 {
   static gsize id = 0;
   static const GEnumValue values[] = {
-    {C_ENUM (GST_PROBE_DROP), "GST_PROBE_DROP", "drop"},
-    {C_ENUM (GST_PROBE_OK), "GST_PROBE_OK", "ok"},
-    {C_ENUM (GST_PROBE_REMOVE), "GST_PROBE_REMOVE", "remove"},
-    {C_ENUM (GST_PROBE_PASS), "GST_PROBE_PASS", "pass"},
+    {C_ENUM (GST_PAD_PROBE_DROP), "GST_PAD_PROBE_DROP", "drop"},
+    {C_ENUM (GST_PAD_PROBE_OK), "GST_PAD_PROBE_OK", "ok"},
+    {C_ENUM (GST_PAD_PROBE_REMOVE), "GST_PAD_PROBE_REMOVE", "remove"},
+    {C_ENUM (GST_PAD_PROBE_PASS), "GST_PAD_PROBE_PASS", "pass"},
     {0, NULL, NULL}
   };
 
   if (g_once_init_enter (&id)) {
-    GType tmp = g_enum_register_static ("GstProbeReturn", values);
+    GType tmp = g_enum_register_static ("GstPadProbeReturn", values);
     g_once_init_leave (&id, tmp);
   }
 

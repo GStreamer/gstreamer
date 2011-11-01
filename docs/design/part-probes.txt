@@ -31,7 +31,7 @@ Overview
  probe type mask and a callback.
 
    gulong  gst_pad_add_probe    (GstPad *pad,
-                                 GstProbeType mask,
+                                 GstPadProbeType mask,
                                  GstPadProbeCallback callback,
                                  gpointer user_data,
                                  GDestroyNotify destroy_data);
@@ -45,21 +45,21 @@ Overview
   
     typedef enum
     {
-      GST_PROBE_TYPE_INVALID      = 0,
+      GST_PAD_PROBE_TYPE_INVALID      = 0,
 
       /* flags to control blocking */
-      GST_PROBE_TYPE_IDLE         = (1 << 0),
-      GST_PROBE_TYPE_BLOCK        = (1 << 1),
+      GST_PAD_PROBE_TYPE_IDLE         = (1 << 0),
+      GST_PAD_PROBE_TYPE_BLOCK        = (1 << 1),
 
       /* flags to select datatypes */
-      GST_PROBE_TYPE_BUFFER       = (1 << 2),
-      GST_PROBE_TYPE_BUFFER_LIST  = (1 << 3),
-      GST_PROBE_TYPE_EVENT        = (1 << 4),
+      GST_PAD_PROBE_TYPE_BUFFER       = (1 << 2),
+      GST_PAD_PROBE_TYPE_BUFFER_LIST  = (1 << 3),
+      GST_PAD_PROBE_TYPE_EVENT        = (1 << 4),
 
       /* flags to select scheduling mode */
-      GST_PROBE_TYPE_PUSH         = (1 << 5),
-      GST_PROBE_TYPE_PULL         = (1 << 6),
-    } GstProbeType;
+      GST_PAD_PROBE_TYPE_PUSH         = (1 << 5),
+      GST_PAD_PROBE_TYPE_PULL         = (1 << 6),
+    } GstPadProbeType;
 
  When adding a probe with the IDLE or BLOCK flag, the probe will become a
  blocking probe (see below). Otherwise the probe will be a DATA probe.
@@ -71,7 +71,7 @@ Overview
 
  The probe callback is defined as:
 
-   GstProbeReturn (*GstPadProbeCallback) (GstPad *pad, GstProbeType type,
+   GstPadProbeReturn (*GstPadProbeCallback) (GstPad *pad, GstPadProbeType type,
                                           gpointer type_data,
                                           gpointer user_data);
 
@@ -84,17 +84,17 @@ Overview
 
    typedef enum
    {
-     GST_PROBE_DROP,
-     GST_PROBE_OK,
-     GST_PROBE_REMOVE,
-     GST_PROBE_PASS,
-   } GstProbeReturn;
+     GST_PAD_PROBE_DROP,
+     GST_PAD_PROBE_OK,
+     GST_PAD_PROBE_REMOVE,
+     GST_PAD_PROBE_PASS,
+   } GstPadProbeReturn;
 
- GST_PROBE_OK is the normal return value.  DROP will drop the item that is
- currently being probed. GST_PROBE_REMOVE the currently executing probe from the
+ GST_PAD_PROBE_OK is the normal return value.  DROP will drop the item that is
+ currently being probed. GST_PAD_PROBE_REMOVE the currently executing probe from the
  list of probes. 
  
- GST_PROBE_PASS is relevant for blocking probes and will temporarily unblock the
+ GST_PAD_PROBE_PASS is relevant for blocking probes and will temporarily unblock the
  pad and let the item trough, it will then block again on the next item.
 
 
@@ -120,7 +120,7 @@ Blocking probes
   callback is thus only called when there is new data on the pad.
 
   The blocking probe is removed with gst_pad_remove_probe() or when the probe
-  callback return GST_PROBE_REMOVE. In both cases, and if this was the last
+  callback return GST_PAD_PROBE_REMOVE. In both cases, and if this was the last
   blocking probe on the pad, the pad is unblocked and dataflow can continue.
 
 
@@ -135,7 +135,7 @@ Non-Blocking probes
 Push dataflow
 -------------
 
-All probes have the GST_PROBE_TYPE_PUSH flag set in the callbacks.
+All probes have the GST_PAD_PROBE_TYPE_PUSH flag set in the callbacks.
 
 In push based scheduling, the blocking probe is called first with the data item.
 Then the data probes are called before the peer pad chain or event function is
@@ -189,7 +189,7 @@ The push dataflow probe behavior is the same for buffers and biderectional event
 Pull dataflow
 -------------
 
-All probes have the GST_PROBE_TYPE_PULL flag set in the callbacks.
+All probes have the GST_PAD_PROBE_TYPE_PULL flag set in the callbacks.
 
 The gst_pad_pull_range() call will first trigger the BLOCK probes without a DATA
 item. This allows the pad to be linked before the peer pad is resolved.

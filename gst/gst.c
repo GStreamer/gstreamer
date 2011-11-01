@@ -757,8 +757,8 @@ init_post (GOptionContext * context, GOptionGroup * group, gpointer data,
   g_type_class_ref (gst_memory_flags_get_type ());
   g_type_class_ref (gst_map_flags_get_type ());
   g_type_class_ref (gst_caps_intersect_mode_get_type ());
-  g_type_class_ref (gst_probe_type_get_type ());
-  g_type_class_ref (gst_probe_return_get_type ());
+  g_type_class_ref (gst_pad_probe_type_get_type ());
+  g_type_class_ref (gst_pad_probe_return_get_type ());
   g_type_class_ref (gst_segment_flags_get_type ());
 
   _priv_gst_event_initialize ();
@@ -1127,8 +1127,8 @@ gst_deinit (void)
   g_type_class_unref (g_type_class_peek (gst_memory_flags_get_type ()));
   g_type_class_unref (g_type_class_peek (gst_map_flags_get_type ()));
   g_type_class_unref (g_type_class_peek (gst_caps_intersect_mode_get_type ()));
-  g_type_class_unref (g_type_class_peek (gst_probe_type_get_type ()));
-  g_type_class_unref (g_type_class_peek (gst_probe_return_get_type ()));
+  g_type_class_unref (g_type_class_peek (gst_pad_probe_type_get_type ()));
+  g_type_class_unref (g_type_class_peek (gst_pad_probe_return_get_type ()));
   g_type_class_unref (g_type_class_peek (gst_segment_flags_get_type ()));
 
   gst_deinitialized = TRUE;

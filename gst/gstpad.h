@@ -466,57 +466,57 @@ typedef void			(*GstPadFixateCapsFunction)	(GstPad *pad, GstCaps *caps);
 typedef gboolean		(*GstPadForwardFunction)	(GstPad *pad, gpointer user_data);
 
 /**
- * GstProbeType:
- * @GST_PROBE_TYPE_INVALID: invalid probe type
- * @GST_PROBE_TYPE_IDLE: probe idle pads and block
- * @GST_PROBE_TYPE_BLOCK: probe and block pads
- * @GST_PROBE_TYPE_BUFFER: probe buffers
- * @GST_PROBE_TYPE_BUFFER_LIST: probe buffer lists
- * @GST_PROBE_TYPE_EVENT: probe events
- * @GST_PROBE_TYPE_PUSH: probe push
- * @GST_PROBE_TYPE_PULL: probe pull
+ * GstPadProbeType:
+ * @GST_PAD_PROBE_TYPE_INVALID: invalid probe type
+ * @GST_PAD_PROBE_TYPE_IDLE: probe idle pads and block
+ * @GST_PAD_PROBE_TYPE_BLOCK: probe and block pads
+ * @GST_PAD_PROBE_TYPE_BUFFER: probe buffers
+ * @GST_PAD_PROBE_TYPE_BUFFER_LIST: probe buffer lists
+ * @GST_PAD_PROBE_TYPE_EVENT: probe events
+ * @GST_PAD_PROBE_TYPE_PUSH: probe push
+ * @GST_PAD_PROBE_TYPE_PULL: probe pull
  *
  * The different probing types that can occur. When either one of
- * @GST_PROBE_TYPE_IDLE or @GST_PROBE_TYPE_BLOCK is used, the probe will be a
+ * @GST_PAD_PROBE_TYPE_IDLE or @GST_PAD_PROBE_TYPE_BLOCK is used, the probe will be a
  * blocking probe.
  */
 typedef enum
 {
-  GST_PROBE_TYPE_INVALID      = 0,
+  GST_PAD_PROBE_TYPE_INVALID      = 0,
   /* flags to control blocking */
-  GST_PROBE_TYPE_IDLE         = (1 << 0),
-  GST_PROBE_TYPE_BLOCK        = (1 << 1),
+  GST_PAD_PROBE_TYPE_IDLE         = (1 << 0),
+  GST_PAD_PROBE_TYPE_BLOCK        = (1 << 1),
   /* flags to select datatypes */
-  GST_PROBE_TYPE_BUFFER       = (1 << 2),
-  GST_PROBE_TYPE_BUFFER_LIST  = (1 << 3),
-  GST_PROBE_TYPE_EVENT        = (1 << 4),
+  GST_PAD_PROBE_TYPE_BUFFER       = (1 << 2),
+  GST_PAD_PROBE_TYPE_BUFFER_LIST  = (1 << 3),
+  GST_PAD_PROBE_TYPE_EVENT        = (1 << 4),
   /* flags to select scheduling mode */
-  GST_PROBE_TYPE_PUSH         = (1 << 5),
-  GST_PROBE_TYPE_PULL         = (1 << 6),
-} GstProbeType;
+  GST_PAD_PROBE_TYPE_PUSH         = (1 << 5),
+  GST_PAD_PROBE_TYPE_PULL         = (1 << 6),
+} GstPadProbeType;
 
-#define GST_PROBE_TYPE_BLOCKING   (GST_PROBE_TYPE_IDLE | GST_PROBE_TYPE_BLOCK)
-#define GST_PROBE_TYPE_DATA       (GST_PROBE_TYPE_BUFFER | GST_PROBE_TYPE_EVENT | \
-                                   GST_PROBE_TYPE_BUFFER_LIST)
-#define GST_PROBE_TYPE_SCHEDULING (GST_PROBE_TYPE_PUSH | GST_PROBE_TYPE_PULL)
+#define GST_PAD_PROBE_TYPE_BLOCKING   (GST_PAD_PROBE_TYPE_IDLE | GST_PAD_PROBE_TYPE_BLOCK)
+#define GST_PAD_PROBE_TYPE_DATA       (GST_PAD_PROBE_TYPE_BUFFER | GST_PAD_PROBE_TYPE_EVENT | \
+                                   GST_PAD_PROBE_TYPE_BUFFER_LIST)
+#define GST_PAD_PROBE_TYPE_SCHEDULING (GST_PAD_PROBE_TYPE_PUSH | GST_PAD_PROBE_TYPE_PULL)
 
 /**
- * GstProbeReturn:
- * @GST_PROBE_OK: normal probe return value
- * @GST_PROBE_DROP: drop data in data probes
- * @GST_PROBE_REMOVE: remove probe
- * @GST_PROBE_PASS: pass the data item in the block probe and block on
+ * GstPadProbeReturn:
+ * @GST_PAD_PROBE_OK: normal probe return value
+ * @GST_PAD_PROBE_DROP: drop data in data probes
+ * @GST_PAD_PROBE_REMOVE: remove probe
+ * @GST_PAD_PROBE_PASS: pass the data item in the block probe and block on
  *                         the next item
  *
  * Different return values for the #GstPadProbeCallback.
  */
 typedef enum
 {
-  GST_PROBE_DROP,
-  GST_PROBE_OK,
-  GST_PROBE_REMOVE,
-  GST_PROBE_PASS,
-} GstProbeReturn;
+  GST_PAD_PROBE_DROP,
+  GST_PAD_PROBE_OK,
+  GST_PAD_PROBE_REMOVE,
+  GST_PAD_PROBE_PASS,
+} GstPadProbeReturn;
 
 /**
  * GstPadProbeCallback
@@ -528,7 +528,7 @@ typedef enum
  * Callback used by gst_pad_add_probe(). Gets called to notify about the current
  * blocking type.
  */
-typedef GstProbeReturn      (*GstPadProbeCallback)              (GstPad *pad, GstProbeType type,
+typedef GstPadProbeReturn      (*GstPadProbeCallback)              (GstPad *pad, GstPadProbeType type,
                                                                  gpointer type_data, gpointer user_data);
 
 /**
@@ -814,7 +814,7 @@ gboolean		gst_pad_activate_pull			(GstPad *pad, gboolean active);
 gboolean		gst_pad_activate_push			(GstPad *pad, gboolean active);
 
 gulong                  gst_pad_add_probe                       (GstPad *pad,
-								 GstProbeType mask,
+								 GstPadProbeType mask,
 								 GstPadProbeCallback callback,
                                                                  gpointer user_data,
                                                                  GDestroyNotify destroy_data);

@@ -23,8 +23,8 @@
 
 #include <gst/gst.h>
 
-static GstProbeReturn
-modify_caps (GstObject * pad, GstProbeType type, GstEvent * event,
+static GstPadProbeReturn
+modify_caps (GstObject * pad, GstPadProbeType type, GstEvent * event,
     gpointer data)
 {
   GstElement *filter = GST_ELEMENT (data);
@@ -34,14 +34,14 @@ modify_caps (GstObject * pad, GstProbeType type, GstEvent * event,
   fail_unless (GST_IS_EVENT (event));
 
   if (GST_EVENT_TYPE (event) != GST_EVENT_EOS)
-    return GST_PROBE_OK;
+    return GST_PAD_PROBE_OK;
 
   /* trigger caps negotiation error */
   caps = gst_caps_new_empty_simple ("video/x-raw-rgb");
   g_object_set (filter, "caps", caps, NULL);
   gst_caps_unref (caps);
 
-  return GST_PROBE_OK;
+  return GST_PAD_PROBE_OK;
 }
 
 GST_START_TEST (test_queue)
@@ -71,7 +71,7 @@ GST_START_TEST (test_queue)
   pad = gst_element_get_static_pad (queue, "sink");
   fail_unless (pad != NULL);
   probe =
-      gst_pad_add_probe (pad, GST_PROBE_TYPE_EVENT,
+      gst_pad_add_probe (pad, GST_PAD_PROBE_TYPE_EVENT,
       (GstPadProbeCallback) modify_caps, filter, NULL);
 
   bus = gst_element_get_bus (pipeline);
