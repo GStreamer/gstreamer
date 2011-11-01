@@ -436,10 +436,10 @@ static gboolean
 gst_raw_parse_sink_activate (GstPad * sinkpad)
 {
   if (gst_pad_check_pull_range (sinkpad)) {
-    GST_RAW_PARSE (GST_PAD_PARENT (sinkpad))->mode = GST_ACTIVATE_PULL;
+    GST_RAW_PARSE (GST_PAD_PARENT (sinkpad))->mode = GST_PAD_ACTIVATE_PULL;
     return gst_pad_activate_pull (sinkpad, TRUE);
   } else {
-    GST_RAW_PARSE (GST_PAD_PARENT (sinkpad))->mode = GST_ACTIVATE_PUSH;
+    GST_RAW_PARSE (GST_PAD_PARENT (sinkpad))->mode = GST_PAD_ACTIVATE_PUSH;
     return gst_pad_activate_push (sinkpad, TRUE);
   }
 }
@@ -887,7 +887,7 @@ gst_raw_parse_src_event (GstPad * pad, GstEvent * event)
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_SEEK:
-      if (rp->mode == GST_ACTIVATE_PUSH)
+      if (rp->mode == GST_PAD_ACTIVATE_PUSH)
         ret = gst_raw_parse_handle_seek_push (rp, event);
       else
         ret = gst_raw_parse_handle_seek_pull (rp, event);
@@ -996,7 +996,7 @@ gst_raw_parse_src_query (GstPad * pad, GstQuery * query)
       if (fmt != GST_FORMAT_TIME && fmt != GST_FORMAT_DEFAULT
           && fmt != GST_FORMAT_BYTES) {
         gst_query_set_seeking (query, fmt, FALSE, -1, -1);
-      } else if (rp->mode == GST_ACTIVATE_PUSH) {
+      } else if (rp->mode == GST_PAD_ACTIVATE_PUSH) {
         GstQuery *peerquery = gst_query_new_seeking (GST_FORMAT_BYTES);
         gboolean seekable;
 

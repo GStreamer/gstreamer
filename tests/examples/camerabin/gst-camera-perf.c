@@ -178,8 +178,8 @@ static gboolean setup_add_pad_probe (GstElement * elem, const gchar * pad_name,
  * Callbacks
  */
 
-static GstProbeReturn
-pad_has_buffer (GstPad * pad, GstProbeType type, gpointer type_data,
+static GstPadProbeReturn
+pad_has_buffer (GstPad * pad, GstPadProbeType type, gpointer type_data,
     gpointer user_data)
 {
   gboolean *signal_sink = (gboolean *) user_data;
@@ -210,7 +210,7 @@ pad_has_buffer (GstPad * pad, GstProbeType type, gpointer type_data,
     print_result ();
     g_idle_add ((GSourceFunc) run_test, NULL);
   }
-  return GST_PROBE_OK;
+  return GST_PAD_PROBE_OK;
 }
 
 static void
@@ -488,8 +488,8 @@ setup_add_pad_probe (GstElement * elem, const gchar * pad_name,
     return FALSE;
   }
 
-  gst_pad_add_probe (pad, GST_PROBE_TYPE_BLOCK | GST_PROBE_TYPE_BUFFER, handler,
-      data, NULL);
+  gst_pad_add_probe (pad, GST_PAD_PROBE_TYPE_BLOCK | GST_PAD_PROBE_TYPE_BUFFER,
+      handler, data, NULL);
   gst_object_unref (pad);
 
   return TRUE;

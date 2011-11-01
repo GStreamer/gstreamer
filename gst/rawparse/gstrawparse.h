@@ -52,7 +52,7 @@ struct _GstRawParse
   GstPad *sinkpad;
   GstPad *srcpad;
 
-  GstActivateMode mode;
+  GstPadActivateMode mode;
   GstAdapter *adapter;
 
   gint framesize;

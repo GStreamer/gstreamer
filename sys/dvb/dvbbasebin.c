@@ -99,8 +99,8 @@ static void dvb_base_bin_get_property (GObject * object, guint prop_id,
 static void dvb_base_bin_dispose (GObject * object);
 static void dvb_base_bin_finalize (GObject * object);
 
-static GstProbeReturn dvb_base_bin_ts_pad_probe_cb (GstPad * pad,
-    GstProbeType type, gpointer data, gpointer user_data);
+static GstPadProbeReturn dvb_base_bin_ts_pad_probe_cb (GstPad * pad,
+    GstPadProbeType type, gpointer data, gpointer user_data);
 static GstStateChangeReturn dvb_base_bin_change_state (GstElement * element,
     GstStateChange transition);
 static void dvb_base_bin_handle_message (GstBin * bin, GstMessage * message);
@@ -527,8 +527,8 @@ dvb_base_bin_reset_pmtlist (DvbBaseBin * dvbbasebin)
   dvbbasebin->pmtlist_changed = FALSE;
 }
 
-static GstProbeReturn
-dvb_base_bin_ts_pad_probe_cb (GstPad * pad, GstProbeType type,
+static GstPadProbeReturn
+dvb_base_bin_ts_pad_probe_cb (GstPad * pad, GstPadProbeType type,
     gpointer data, gpointer user_data)
 {
   DvbBaseBin *dvbbasebin = GST_DVB_BASE_BIN (user_data);
@@ -546,7 +546,7 @@ dvb_base_bin_ts_pad_probe_cb (GstPad * pad, GstProbeType type,
     }
   }
 
-  return GST_PROBE_OK;
+  return GST_PAD_PROBE_OK;
 }
 
 static void
@@ -564,7 +564,7 @@ dvb_base_bin_init_cam (DvbBaseBin * dvbbasebin)
       /* HACK: poll the cam in a buffer probe */
       dvbbasebin->ts_pad =
           gst_element_get_request_pad (dvbbasebin->mpegtsparse, "src%d");
-      gst_pad_add_probe (dvbbasebin->ts_pad, GST_PROBE_TYPE_BLOCK,
+      gst_pad_add_probe (dvbbasebin->ts_pad, GST_PAD_PROBE_TYPE_BLOCK,
           dvb_base_bin_ts_pad_probe_cb, dvbbasebin, NULL);
     } else {
       GST_ERROR_OBJECT (dvbbasebin, "could not open %s", ca_file);

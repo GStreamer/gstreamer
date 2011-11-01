@@ -488,7 +488,8 @@ gst_signal_processor_setcaps (GstPad * pad, GstCaps * caps)
 
   self = GST_SIGNAL_PROCESSOR (gst_pad_get_parent (pad));
 
-  if (self->mode == GST_ACTIVATE_PULL && !gst_caps_is_equal (caps, self->caps)
+  if (self->mode == GST_PAD_ACTIVATE_PULL
+      && !gst_caps_is_equal (caps, self->caps)
       && !gst_signal_processor_setcaps_pull (self, pad, caps))
     goto setcaps_pull_failed;
 
@@ -1076,20 +1077,20 @@ gst_signal_processor_sink_activate_push (GstPad * pad, gboolean active)
   self = GST_SIGNAL_PROCESSOR (gst_pad_get_parent (pad));
 
   if (active) {
-    if (self->mode == GST_ACTIVATE_NONE) {
-      self->mode = GST_ACTIVATE_PUSH;
+    if (self->mode == GST_PAD_ACTIVATE_NONE) {
+      self->mode = GST_PAD_ACTIVATE_PUSH;
       result = TRUE;
-    } else if (self->mode == GST_ACTIVATE_PUSH) {
+    } else if (self->mode == GST_PAD_ACTIVATE_PUSH) {
       result = TRUE;
     } else {
       g_warning ("foo");
       result = FALSE;
     }
   } else {
-    if (self->mode == GST_ACTIVATE_NONE) {
+    if (self->mode == GST_PAD_ACTIVATE_NONE) {
       result = TRUE;
-    } else if (self->mode == GST_ACTIVATE_PUSH) {
-      self->mode = GST_ACTIVATE_NONE;
+    } else if (self->mode == GST_PAD_ACTIVATE_PUSH) {
+      self->mode = GST_PAD_ACTIVATE_NONE;
       result = TRUE;
     } else {
       g_warning ("foo");
@@ -1113,29 +1114,29 @@ gst_signal_processor_src_activate_pull (GstPad * pad, gboolean active)
   self = GST_SIGNAL_PROCESSOR (gst_pad_get_parent (pad));
 
   if (active) {
-    if (self->mode == GST_ACTIVATE_NONE) {
+    if (self->mode == GST_PAD_ACTIVATE_NONE) {
       GList *l;
 
       for (l = GST_ELEMENT (self)->sinkpads; l; l = l->next)
         result &= gst_pad_activate_pull (pad, active);
       if (result)
-        self->mode = GST_ACTIVATE_PULL;
-    } else if (self->mode == GST_ACTIVATE_PULL) {
+        self->mode = GST_PAD_ACTIVATE_PULL;
+    } else if (self->mode == GST_PAD_ACTIVATE_PULL) {
       result = TRUE;
     } else {
       g_warning ("foo");
       result = FALSE;
     }
   } else {
-    if (self->mode == GST_ACTIVATE_NONE) {
+    if (self->mode == GST_PAD_ACTIVATE_NONE) {
       result = TRUE;
-    } else if (self->mode == GST_ACTIVATE_PULL) {
+    } else if (self->mode == GST_PAD_ACTIVATE_PULL) {
       GList *l;
 
       for (l = GST_ELEMENT (self)->sinkpads; l; l = l->next)
         result &= gst_pad_activate_pull (pad, active);
       if (result)
-        self->mode = GST_ACTIVATE_NONE;
+        self->mode = GST_PAD_ACTIVATE_NONE;
       result = TRUE;
     } else {
       g_warning ("foo");
