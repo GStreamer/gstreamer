@@ -1269,8 +1269,12 @@ gst_decklink_src_task (void *priv)
   gst_buffer_set_caps (buffer, decklinksrc->video_caps);
 
   ret = gst_pad_push (decklinksrc->videosrcpad, buffer);
-  if (ret != GST_FLOW_OK) {
-    GST_ELEMENT_ERROR (decklinksrc, CORE, NEGOTIATION, (NULL), (NULL));
+  if (! (ret == GST_FLOW_OK || ret == GST_FLOW_NOT_LINKED ||
+         ret == GST_FLOW_WRONG_STATE)) {
+    GST_ELEMENT_ERROR (decklinksrc, STREAM, FAILED,
+                       ("Internal data stream error."),
+                       ("stream stopped, reason %s",
+                        gst_flow_get_name (ret)));
   }
 
   if (gst_pad_is_linked (decklinksrc->audiosrcpad)) {
@@ -1299,8 +1303,12 @@ gst_decklink_src_task (void *priv)
     gst_buffer_set_caps (audio_buffer, decklinksrc->audio_caps);
 
     ret = gst_pad_push (decklinksrc->audiosrcpad, audio_buffer);
-    if (ret != GST_FLOW_OK) {
-      GST_ELEMENT_ERROR (decklinksrc, CORE, NEGOTIATION, (NULL), (NULL));
+    if (! (ret == GST_FLOW_OK || ret == GST_FLOW_NOT_LINKED ||
+           ret == GST_FLOW_WRONG_STATE)) {
+      GST_ELEMENT_ERROR (decklinksrc, STREAM, FAILED,
+                         ("Internal data stream error."),
+                         ("stream stopped, reason %s",
+                          gst_flow_get_name (ret)));
     }
   }
   audio_frame->Release ();
