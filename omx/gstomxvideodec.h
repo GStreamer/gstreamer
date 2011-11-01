@@ -59,6 +59,12 @@ struct _GstOMXVideoDec
    * the first buffer */
   gboolean started;
 
+  /* Draining state */
+  GMutex *drain_lock;
+  GCond *drain_cond;
+  /* TRUE if EOS buffers shouldn't be forwarded */
+  gboolean draining;
+
   GstFlowReturn downstream_flow_ret;
 };
 
