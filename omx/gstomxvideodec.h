@@ -58,6 +58,8 @@ struct _GstOMXVideoDec
   /* TRUE if the component is configured and saw
    * the first buffer */
   gboolean started;
+
+  GstFlowReturn downstream_flow_ret;
 };
 
 struct _GstOMXVideoDecClass
