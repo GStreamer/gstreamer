@@ -328,7 +328,7 @@ h264parse_packetized_suite (void)
 int
 main (int argc, char **argv)
 {
-  int nf;
+  int nf = 0;
 
   Suite *s;
   SRunner *sr;
@@ -354,7 +354,7 @@ main (int argc, char **argv)
   s = h264parse_suite ();
   sr = srunner_create (s);
   srunner_run_all (sr, CK_NORMAL);
-  nf = srunner_ntests_failed (sr);
+  nf += srunner_ntests_failed (sr);
   srunner_free (sr);
 
   /* setup and tweak to handle avc au output */
@@ -366,7 +366,7 @@ main (int argc, char **argv)
   s = h264parse_suite ();
   sr = srunner_create (s);
   srunner_run_all (sr, CK_NORMAL);
-  nf = srunner_ntests_failed (sr);
+  nf += srunner_ntests_failed (sr);
   srunner_free (sr);
 
   /* setup and tweak to handle avc packetized input */
@@ -386,7 +386,7 @@ main (int argc, char **argv)
   s = h264parse_packetized_suite ();
   sr = srunner_create (s);
   srunner_run_all (sr, CK_NORMAL);
-  nf = srunner_ntests_failed (sr);
+  nf += srunner_ntests_failed (sr);
   srunner_free (sr);
 
   return nf;
