@@ -501,6 +501,7 @@ gst_tag_freeform_string_to_utf8 (const gchar * data, gint size,
       /* fallback in case iconv implementation doesn't support windows-1252
        * for some reason */
       if (err->code == G_CONVERT_ERROR_NO_CONVERSION) {
+        g_free (utf8);
         utf8 = g_convert (data, size, "UTF-8", "ISO-8859-1", &bytes_read,
             NULL, NULL);
       }

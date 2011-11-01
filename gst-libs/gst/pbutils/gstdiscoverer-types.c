@@ -372,10 +372,12 @@ GstDiscovererInfo *
 gst_discoverer_info_copy (GstDiscovererInfo * ptr)
 {
   GstDiscovererInfo *ret;
-  GHashTable *stream_map = g_hash_table_new (g_direct_hash, NULL);
+  GHashTable *stream_map;
   GList *tmp;
 
   g_return_val_if_fail (ptr != NULL, NULL);
+
+  stream_map = g_hash_table_new (g_direct_hash, NULL);
 
   ret = gst_discoverer_info_new ();
 

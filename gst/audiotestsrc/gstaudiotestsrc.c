@@ -1166,6 +1166,8 @@ gst_audio_test_src_create (GstBaseSrc * basesrc, guint64 offset,
     if (eclass->send_event)
       eclass->send_event (GST_ELEMENT_CAST (basesrc),
           gst_event_new_tag (taglist));
+    else
+      gst_tag_list_free (taglist);
     src->tags_pushed = TRUE;
   }
 
