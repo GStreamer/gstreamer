@@ -240,7 +240,7 @@ struct _GstBaseTransformPrivate
   /* previous buffer had a discont */
   gboolean discont;
 
-  GstActivateMode pad_mode;
+  GstPadActivateMode pad_mode;
 
   gboolean gap_aware;
 
@@ -438,7 +438,7 @@ gst_base_transform_init (GstBaseTransform * trans,
   trans->priv->qos_enabled = DEFAULT_PROP_QOS;
   trans->cache_caps1 = NULL;
   trans->cache_caps2 = NULL;
-  trans->priv->pad_mode = GST_ACTIVATE_NONE;
+  trans->priv->pad_mode = GST_PAD_ACTIVATE_NONE;
   trans->priv->gap_aware = FALSE;
 
   trans->passthrough = FALSE;
@@ -1261,7 +1261,7 @@ gst_base_transform_setcaps (GstBaseTransform * trans, GstPad * pad,
   /* we know this will work, we implement the setcaps */
   gst_pad_push_event (otherpad, gst_event_new_caps (othercaps));
 
-  if (pad == trans->srcpad && trans->priv->pad_mode == GST_ACTIVATE_PULL) {
+  if (pad == trans->srcpad && trans->priv->pad_mode == GST_PAD_ACTIVATE_PULL) {
     /* FIXME hm? */
     ret &= gst_pad_push_event (otherpeer, gst_event_new_caps (othercaps));
     if (!ret) {
@@ -2129,7 +2129,7 @@ gst_base_transform_activate (GstBaseTransform * trans, gboolean active)
   if (active) {
     GstCaps *incaps, *outcaps;
 
-    if (trans->priv->pad_mode == GST_ACTIVATE_NONE && bclass->start)
+    if (trans->priv->pad_mode == GST_PAD_ACTIVATE_NONE && bclass->start)
       result &= bclass->start (trans);
 
     incaps = gst_pad_get_current_caps (trans->sinkpad);
@@ -2172,7 +2172,7 @@ gst_base_transform_activate (GstBaseTransform * trans, gboolean active)
     gst_caps_replace (&trans->cache_caps1, NULL);
     gst_caps_replace (&trans->cache_caps2, NULL);
 
-    if (trans->priv->pad_mode != GST_ACTIVATE_NONE && bclass->stop)
+    if (trans->priv->pad_mode != GST_PAD_ACTIVATE_NONE && bclass->stop)
       result &= bclass->stop (trans);
 
     gst_base_transform_set_allocation (trans, NULL, NULL, 0, 0);
@@ -2192,7 +2192,8 @@ gst_base_transform_sink_activate_push (GstPad * pad, gboolean active)
   result = gst_base_transform_activate (trans, active);
 
   if (result)
-    trans->priv->pad_mode = active ? GST_ACTIVATE_PUSH : GST_ACTIVATE_NONE;
+    trans->priv->pad_mode =
+        active ? GST_PAD_ACTIVATE_PUSH : GST_PAD_ACTIVATE_NONE;
 
   gst_object_unref (trans);
 
@@ -2213,7 +2214,8 @@ gst_base_transform_src_activate_pull (GstPad * pad, gboolean active)
     result &= gst_base_transform_activate (trans, active);
 
   if (result)
-    trans->priv->pad_mode = active ? GST_ACTIVATE_PULL : GST_ACTIVATE_NONE;
+    trans->priv->pad_mode =
+        active ? GST_PAD_ACTIVATE_PULL : GST_PAD_ACTIVATE_NONE;
 
   gst_object_unref (trans);
 

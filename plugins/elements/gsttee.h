@@ -78,7 +78,7 @@ struct _GstTee {
   gboolean        silent;
   gchar          *last_message;
 
-  GstActivateMode sink_mode;
+  GstPadActivateMode sink_mode;
   GstTeePullMode  pull_mode;
   GstPad         *pull_pad;
 };

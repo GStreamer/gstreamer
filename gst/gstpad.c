@@ -625,11 +625,11 @@ gst_pad_activate_default (GstPad * pad)
 }
 
 static void
-pre_activate (GstPad * pad, GstActivateMode new_mode)
+pre_activate (GstPad * pad, GstPadActivateMode new_mode)
 {
   switch (new_mode) {
-    case GST_ACTIVATE_PUSH:
-    case GST_ACTIVATE_PULL:
+    case GST_PAD_ACTIVATE_PUSH:
+    case GST_PAD_ACTIVATE_PULL:
       GST_OBJECT_LOCK (pad);
       GST_DEBUG_OBJECT (pad, "setting ACTIVATE_MODE %d, unset flushing",
           new_mode);
@@ -637,7 +637,7 @@ pre_activate (GstPad * pad, GstActivateMode new_mode)
       GST_PAD_ACTIVATE_MODE (pad) = new_mode;
       GST_OBJECT_UNLOCK (pad);
       break;
-    case GST_ACTIVATE_NONE:
+    case GST_PAD_ACTIVATE_NONE:
       GST_OBJECT_LOCK (pad);
       GST_DEBUG_OBJECT (pad, "setting ACTIVATE_MODE NONE, set flushing");
       GST_PAD_SET_FLUSHING (pad);
@@ -650,14 +650,14 @@ pre_activate (GstPad * pad, GstActivateMode new_mode)
 }
 
 static void
-post_activate (GstPad * pad, GstActivateMode new_mode)
+post_activate (GstPad * pad, GstPadActivateMode new_mode)
 {
   switch (new_mode) {
-    case GST_ACTIVATE_PUSH:
-    case GST_ACTIVATE_PULL:
+    case GST_PAD_ACTIVATE_PUSH:
+    case GST_PAD_ACTIVATE_PULL:
       /* nop */
       break;
-    case GST_ACTIVATE_NONE:
+    case GST_PAD_ACTIVATE_NONE:
       /* ensures that streaming stops */
       GST_PAD_STREAM_LOCK (pad);
       GST_DEBUG_OBJECT (pad, "stopped streaming");
@@ -692,7 +692,7 @@ post_activate (GstPad * pad, GstActivateMode new_mode)
 gboolean
 gst_pad_set_active (GstPad * pad, gboolean active)
 {
-  GstActivateMode old;
+  GstPadActivateMode old;
   gboolean ret = FALSE;
 
   g_return_val_if_fail (GST_IS_PAD (pad), FALSE);
@@ -703,15 +703,15 @@ gst_pad_set_active (GstPad * pad, gboolean active)
 
   if (active) {
     switch (old) {
-      case GST_ACTIVATE_PUSH:
+      case GST_PAD_ACTIVATE_PUSH:
         GST_DEBUG_OBJECT (pad, "activating pad from push");
         ret = TRUE;
         break;
-      case GST_ACTIVATE_PULL:
+      case GST_PAD_ACTIVATE_PULL:
         GST_DEBUG_OBJECT (pad, "activating pad from pull");
         ret = TRUE;
         break;
-      case GST_ACTIVATE_NONE:
+      case GST_PAD_ACTIVATE_NONE:
         GST_DEBUG_OBJECT (pad, "activating pad from none");
         ret = (GST_PAD_ACTIVATEFUNC (pad)) (pad);
         break;
@@ -721,15 +721,15 @@ gst_pad_set_active (GstPad * pad, gboolean active)
     }
   } else {
     switch (old) {
-      case GST_ACTIVATE_PUSH:
+      case GST_PAD_ACTIVATE_PUSH:
         GST_DEBUG_OBJECT (pad, "deactivating pad from push");
         ret = gst_pad_activate_push (pad, FALSE);
         break;
-      case GST_ACTIVATE_PULL:
+      case GST_PAD_ACTIVATE_PULL:
         GST_DEBUG_OBJECT (pad, "deactivating pad from pull");
         ret = gst_pad_activate_pull (pad, FALSE);
         break;
-      case GST_ACTIVATE_NONE:
+      case GST_PAD_ACTIVATE_NONE:
         GST_DEBUG_OBJECT (pad, "deactivating pad from none");
         ret = TRUE;
         break;
@@ -779,7 +779,7 @@ gst_pad_set_active (GstPad * pad, gboolean active)
 gboolean
 gst_pad_activate_pull (GstPad * pad, gboolean active)
 {
-  GstActivateMode old, new;
+  GstPadActivateMode old, new;
   GstPad *peer;
 
   g_return_val_if_fail (GST_IS_PAD (pad), FALSE);
@@ -790,10 +790,10 @@ gst_pad_activate_pull (GstPad * pad, gboolean active)
 
   if (active) {
     switch (old) {
-      case GST_ACTIVATE_PULL:
+      case GST_PAD_ACTIVATE_PULL:
         GST_DEBUG_OBJECT (pad, "activating pad from pull, was ok");
         goto was_ok;
-      case GST_ACTIVATE_PUSH:
+      case GST_PAD_ACTIVATE_PUSH:
         GST_DEBUG_OBJECT (pad,
             "activating pad from push, deactivate push first");
         /* pad was activate in the wrong direction, deactivate it
@@ -801,16 +801,16 @@ gst_pad_activate_pull (GstPad * pad, gboolean active)
         if (G_UNLIKELY (!gst_pad_activate_push (pad, FALSE)))
           goto deactivate_failed;
         /* fallthrough, pad is deactivated now. */
-      case GST_ACTIVATE_NONE:
+      case GST_PAD_ACTIVATE_NONE:
         GST_DEBUG_OBJECT (pad, "activating pad from none");
         break;
     }
   } else {
     switch (old) {
-      case GST_ACTIVATE_NONE:
+      case GST_PAD_ACTIVATE_NONE:
         GST_DEBUG_OBJECT (pad, "deactivating pad from none, was ok");
         goto was_ok;
-      case GST_ACTIVATE_PUSH:
+      case GST_PAD_ACTIVATE_PUSH:
         GST_DEBUG_OBJECT (pad, "deactivating pad from push, weird");
         /* pad was activated in the other direction, deactivate it
          * in push mode, this should not happen... */
@@ -818,7 +818,7 @@ gst_pad_activate_pull (GstPad * pad, gboolean active)
           goto deactivate_failed;
         /* everything is fine now */
         goto was_ok;
-      case GST_ACTIVATE_PULL:
+      case GST_PAD_ACTIVATE_PULL:
         GST_DEBUG_OBJECT (pad, "deactivating pad from pull");
         break;
     }
@@ -845,7 +845,7 @@ gst_pad_activate_pull (GstPad * pad, gboolean active)
                                    getrange function */
   }
 
-  new = active ? GST_ACTIVATE_PULL : GST_ACTIVATE_NONE;
+  new = active ? GST_PAD_ACTIVATE_PULL : GST_PAD_ACTIVATE_NONE;
   pre_activate (pad, new);
 
   if (GST_PAD_ACTIVATEPULLFUNC (pad)) {
@@ -919,7 +919,7 @@ failure:
 gboolean
 gst_pad_activate_push (GstPad * pad, gboolean active)
 {
-  GstActivateMode old, new;
+  GstPadActivateMode old, new;
 
   g_return_val_if_fail (GST_IS_PAD (pad), FALSE);
   GST_CAT_DEBUG_OBJECT (GST_CAT_PADS, pad, "trying to set %s in push mode",
@@ -931,10 +931,10 @@ gst_pad_activate_push (GstPad * pad, gboolean active)
 
   if (active) {
     switch (old) {
-      case GST_ACTIVATE_PUSH:
+      case GST_PAD_ACTIVATE_PUSH:
         GST_DEBUG_OBJECT (pad, "activating pad from push, was ok");
         goto was_ok;
-      case GST_ACTIVATE_PULL:
+      case GST_PAD_ACTIVATE_PULL:
         GST_DEBUG_OBJECT (pad,
             "activating pad from push, deactivating pull first");
         /* pad was activate in the wrong direction, deactivate it
@@ -942,16 +942,16 @@ gst_pad_activate_push (GstPad * pad, gboolean active)
         if (G_UNLIKELY (!gst_pad_activate_pull (pad, FALSE)))
           goto deactivate_failed;
         /* fallthrough, pad is deactivated now. */
-      case GST_ACTIVATE_NONE:
+      case GST_PAD_ACTIVATE_NONE:
         GST_DEBUG_OBJECT (pad, "activating pad from none");
         break;
     }
   } else {
     switch (old) {
-      case GST_ACTIVATE_NONE:
+      case GST_PAD_ACTIVATE_NONE:
         GST_DEBUG_OBJECT (pad, "deactivating pad from none, was ok");
         goto was_ok;
-      case GST_ACTIVATE_PULL:
+      case GST_PAD_ACTIVATE_PULL:
         GST_DEBUG_OBJECT (pad, "deactivating pad from pull, weird");
         /* pad was activated in the other direction, deactivate it
          * in pull mode, this should not happen... */
@@ -959,13 +959,13 @@ gst_pad_activate_push (GstPad * pad, gboolean active)
           goto deactivate_failed;
         /* everything is fine now */
         goto was_ok;
-      case GST_ACTIVATE_PUSH:
+      case GST_PAD_ACTIVATE_PUSH:
         GST_DEBUG_OBJECT (pad, "deactivating pad from push");
         break;
     }
   }
 
-  new = active ? GST_ACTIVATE_PUSH : GST_ACTIVATE_NONE;
+  new = active ? GST_PAD_ACTIVATE_PUSH : GST_PAD_ACTIVATE_NONE;
   pre_activate (pad, new);
 
   if (GST_PAD_ACTIVATEPUSHFUNC (pad)) {
@@ -1066,16 +1066,16 @@ gst_pad_add_probe (GstPad * pad, GstPadProbeType mask,
 
   GST_OBJECT_LOCK (pad);
 
-  /* FIXME : I'm not checking for != GST_ACTIVATE_correct_direction
+  /* FIXME : I'm not checking for != GST_PAD_ACTIVATE_correct_direction
    * because the pad might not be activated yet.
    * This means that _add_probe() might return a valid probeid ...
    * which will potentially never be called if the pad
    * is activated in the wrong direction */
   if (G_UNLIKELY ((mask & GST_PAD_PROBE_TYPE_PUSH) &&
-          (GST_PAD_ACTIVATE_MODE (pad) == GST_ACTIVATE_PULL)))
+          (GST_PAD_ACTIVATE_MODE (pad) == GST_PAD_ACTIVATE_PULL)))
     goto wrong_direction;
   if (G_UNLIKELY ((mask & GST_PAD_PROBE_TYPE_PULL) &&
-          (GST_PAD_ACTIVATE_MODE (pad) == GST_ACTIVATE_PUSH)))
+          (GST_PAD_ACTIVATE_MODE (pad) == GST_PAD_ACTIVATE_PUSH)))
     goto wrong_direction;
 
   /* make a new probe */
@@ -4451,7 +4451,7 @@ gst_pad_send_event (GstPad * pad, GstEvent * event)
       needs_events = FALSE;
       break;
     case GST_EVENT_FLUSH_STOP:
-      if (G_LIKELY (GST_PAD_ACTIVATE_MODE (pad) != GST_ACTIVATE_NONE)) {
+      if (G_LIKELY (GST_PAD_ACTIVATE_MODE (pad) != GST_PAD_ACTIVATE_NONE)) {
         GST_PAD_UNSET_FLUSHING (pad);
         GST_CAT_DEBUG_OBJECT (GST_CAT_EVENT, pad, "cleared flush flag");
       }

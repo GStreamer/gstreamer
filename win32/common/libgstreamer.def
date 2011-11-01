@@ -51,7 +51,6 @@ EXPORTS
 	_gst_trace_add_entry
 	_gst_trace_mutex DATA
 	_gst_trace_on DATA
-	gst_activate_mode_get_type
 	gst_alloc_trace_available
 	gst_alloc_trace_flags_get_type
 	gst_alloc_trace_get
@@ -645,6 +644,7 @@ EXPORTS
 	gst_object_unparent
 	gst_object_unref
 	gst_pad_accept_caps
+	gst_pad_activate_mode_get_type
 	gst_pad_activate_pull
 	gst_pad_activate_push
 	gst_pad_add_probe

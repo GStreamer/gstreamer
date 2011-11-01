@@ -728,7 +728,7 @@ init_post (GOptionContext * context, GOptionGroup * group, gpointer data,
   g_type_class_ref (gst_pad_link_return_get_type ());
   g_type_class_ref (gst_pad_link_check_get_type ());
   g_type_class_ref (gst_flow_return_get_type ());
-  g_type_class_ref (gst_activate_mode_get_type ());
+  g_type_class_ref (gst_pad_activate_mode_get_type ());
   g_type_class_ref (gst_pad_direction_get_type ());
   g_type_class_ref (gst_pad_flags_get_type ());
   g_type_class_ref (gst_pad_presence_get_type ());
@@ -1102,7 +1102,7 @@ gst_deinit (void)
   g_type_class_unref (g_type_class_peek (gst_pad_link_return_get_type ()));
   g_type_class_unref (g_type_class_peek (gst_pad_link_check_get_type ()));
   g_type_class_unref (g_type_class_peek (gst_flow_return_get_type ()));
-  g_type_class_unref (g_type_class_peek (gst_activate_mode_get_type ()));
+  g_type_class_unref (g_type_class_peek (gst_pad_activate_mode_get_type ()));
   g_type_class_unref (g_type_class_peek (gst_pad_direction_get_type ()));
   g_type_class_unref (g_type_class_peek (gst_pad_flags_get_type ()));
   g_type_class_unref (g_type_class_peek (gst_pad_presence_get_type ()));

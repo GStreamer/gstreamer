@@ -1696,9 +1696,9 @@ gst_base_src_send_event (GstElement * element, GstEvent * event)
       gboolean started;
 
       GST_OBJECT_LOCK (src->srcpad);
-      if (GST_PAD_ACTIVATE_MODE (src->srcpad) == GST_ACTIVATE_PULL)
+      if (GST_PAD_ACTIVATE_MODE (src->srcpad) == GST_PAD_ACTIVATE_PULL)
         goto wrong_mode;
-      started = GST_PAD_ACTIVATE_MODE (src->srcpad) == GST_ACTIVATE_PUSH;
+      started = GST_PAD_ACTIVATE_MODE (src->srcpad) == GST_PAD_ACTIVATE_PUSH;
       GST_OBJECT_UNLOCK (src->srcpad);
 
       if (started) {
@@ -3070,7 +3070,7 @@ gst_base_src_set_playing (GstBaseSrc * basesrc, gboolean live_play)
     /* have to restart the task in case it stopped because of the unlock when
      * we went to PAUSED. Only do this if we operating in push mode. */
     GST_OBJECT_LOCK (basesrc->srcpad);
-    start = (GST_PAD_ACTIVATE_MODE (basesrc->srcpad) == GST_ACTIVATE_PUSH);
+    start = (GST_PAD_ACTIVATE_MODE (basesrc->srcpad) == GST_PAD_ACTIVATE_PUSH);
     GST_OBJECT_UNLOCK (basesrc->srcpad);
     if (start)
       gst_pad_start_task (basesrc->srcpad, (GstTaskFunction) gst_base_src_loop,

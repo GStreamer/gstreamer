@@ -1153,14 +1153,14 @@ gst_activate_mode_get_type (void)
 {
   static gsize id = 0;
   static const GEnumValue values[] = {
-    {C_ENUM (GST_ACTIVATE_NONE), "GST_ACTIVATE_NONE", "none"},
-    {C_ENUM (GST_ACTIVATE_PUSH), "GST_ACTIVATE_PUSH", "push"},
-    {C_ENUM (GST_ACTIVATE_PULL), "GST_ACTIVATE_PULL", "pull"},
+    {C_ENUM (GST_PAD_ACTIVATE_NONE), "GST_PAD_ACTIVATE_NONE", "none"},
+    {C_ENUM (GST_PAD_ACTIVATE_PUSH), "GST_PAD_ACTIVATE_PUSH", "push"},
+    {C_ENUM (GST_PAD_ACTIVATE_PULL), "GST_PAD_ACTIVATE_PULL", "pull"},
     {0, NULL, NULL}
   };
 
   if (g_once_init_enter (&id)) {
-    GType tmp = g_enum_register_static ("GstActivateMode", values);
+    GType tmp = g_enum_register_static ("GstPadActivateMode", values);
     g_once_init_leave (&id, tmp);
   }
 

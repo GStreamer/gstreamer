@@ -244,7 +244,7 @@ gst_tee_init (GstTee * tee)
   tee->dyn_lock = g_mutex_new ();
 
   tee->sinkpad = gst_pad_new_from_static_template (&sinktemplate, "sink");
-  tee->sink_mode = GST_ACTIVATE_NONE;
+  tee->sink_mode = GST_PAD_ACTIVATE_NONE;
 
   gst_pad_set_event_function (tee->sinkpad,
       GST_DEBUG_FUNCPTR (gst_tee_sink_event));
@@ -289,7 +289,7 @@ gst_tee_request_new_pad (GstElement * element, GstPadTemplate * templ,
   gchar *name;
   GstPad *srcpad;
   GstTee *tee;
-  GstActivateMode mode;
+  GstPadActivateMode mode;
   gboolean res;
   PushData *data;
 
@@ -316,10 +316,10 @@ gst_tee_request_new_pad (GstElement * element, GstPadTemplate * templ,
   GST_OBJECT_UNLOCK (tee);
 
   switch (mode) {
-    case GST_ACTIVATE_PULL:
+    case GST_PAD_ACTIVATE_PULL:
       /* we already have a src pad in pull mode, and our pull mode can only be
          SINGLE, so fall through to activate this new pad in push mode */
-    case GST_ACTIVATE_PUSH:
+    case GST_PAD_ACTIVATE_PUSH:
       res = gst_pad_activate_push (srcpad, TRUE);
       break;
     default:
@@ -757,7 +757,7 @@ gst_tee_sink_activate_push (GstPad * pad, gboolean active)
   tee = GST_TEE (GST_OBJECT_PARENT (pad));
 
   GST_OBJECT_LOCK (tee);
-  tee->sink_mode = active && GST_ACTIVATE_PUSH;
+  tee->sink_mode = active && GST_PAD_ACTIVATE_PUSH;
 
   if (active && !tee->has_chain)
     goto no_chain;
@@ -810,7 +810,7 @@ gst_tee_src_activate_pull (GstPad * pad, gboolean active)
     if (pad == tee->pull_pad)
       tee->pull_pad = NULL;
   }
-  tee->sink_mode = active & GST_ACTIVATE_PULL;
+  tee->sink_mode = active & GST_PAD_ACTIVATE_PULL;
   GST_OBJECT_UNLOCK (tee);
 
   gst_object_unref (tee);

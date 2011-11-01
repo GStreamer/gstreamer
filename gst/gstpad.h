@@ -212,20 +212,20 @@ typedef enum {
 #define GST_PAD_LINK_CHECK_DEFAULT ((GstPadLinkCheck) (GST_PAD_LINK_CHECK_HIERARCHY | GST_PAD_LINK_CHECK_CAPS))
 
 /**
- * GstActivateMode:
- * @GST_ACTIVATE_NONE:	  	 Pad will not handle dataflow
- * @GST_ACTIVATE_PUSH:		 Pad handles dataflow in downstream push mode
- * @GST_ACTIVATE_PULL:     	 Pad handles dataflow in upstream pull mode
+ * GstPadActivateMode:
+ * @GST_PAD_ACTIVATE_NONE:	  	 Pad will not handle dataflow
+ * @GST_PAD_ACTIVATE_PUSH:		 Pad handles dataflow in downstream push mode
+ * @GST_PAD_ACTIVATE_PULL:     	 Pad handles dataflow in upstream pull mode
  *
  * The status of a GstPad. After activating a pad, which usually happens when the
- * parent element goes from READY to PAUSED, the GstActivateMode defines if the
+ * parent element goes from READY to PAUSED, the GstPadActivateMode defines if the
  * pad operates in push or pull mode.
  */
 typedef enum {
-  GST_ACTIVATE_NONE,
-  GST_ACTIVATE_PUSH,
-  GST_ACTIVATE_PULL
-} GstActivateMode;
+  GST_PAD_ACTIVATE_NONE,
+  GST_PAD_ACTIVATE_PUSH,
+  GST_PAD_ACTIVATE_PULL
+} GstPadActivateMode;
 
 /* pad states */
 /**
@@ -630,7 +630,7 @@ struct _GstPad {
   GstPadAcceptCapsFunction	 acceptcapsfunc;
   GstPadFixateCapsFunction	 fixatecapsfunc;
 
-  GstActivateMode		 mode;
+  GstPadActivateMode		 mode;
   GstPadActivateFunction	 activatefunc;
   GstPadActivateModeFunction	 activatepushfunc;
   GstPadActivateModeFunction	 activatepullfunc;
@@ -712,7 +712,7 @@ struct _GstPadClass {
 
 #define GST_PAD_IS_LINKED(pad)		(GST_PAD_PEER(pad) != NULL)
 
-#define GST_PAD_IS_ACTIVE(pad)          (GST_PAD_ACTIVATE_MODE(pad) != GST_ACTIVATE_NONE)
+#define GST_PAD_IS_ACTIVE(pad)          (GST_PAD_ACTIVATE_MODE(pad) != GST_PAD_ACTIVATE_NONE)
 
 #define GST_PAD_IS_BLOCKED(pad)		(GST_OBJECT_FLAG_IS_SET (pad, GST_PAD_BLOCKED))
 #define GST_PAD_IS_BLOCKING(pad)	(GST_OBJECT_FLAG_IS_SET (pad, GST_PAD_BLOCKING))

@@ -1543,7 +1543,7 @@ GST_PAD_LINK_SUCCESSFUL
 GstPadLinkCheck
 GST_PAD_LINK_CHECK_DEFAULT
 GstFlowReturn
-GstActivateMode
+GstPadActivateMode
 GstPadProbeReturn
 GstPadProbeType
 GST_PAD_PROBE_TYPE_BLOCKING
