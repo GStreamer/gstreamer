@@ -819,28 +819,39 @@ static gboolean
 gst_decklink_src_audio_src_setcaps (GstPad * pad, GstCaps * caps)
 {
   GstDecklinkSrc *decklinksrc;
+  GstCaps *pad_caps;
+  gboolean can_intersect;
 
   decklinksrc = GST_DECKLINK_SRC (gst_pad_get_parent (pad));
+
+  pad_caps = gst_pad_get_caps_reffed (pad);
+  can_intersect = gst_caps_can_intersect (pad_caps, caps);
+  gst_caps_unref (pad_caps);
 
   GST_DEBUG_OBJECT (decklinksrc, "setcaps");
 
 
   gst_object_unref (decklinksrc);
-  return TRUE;
+  return can_intersect;
 }
 
 static gboolean
 gst_decklink_src_audio_src_acceptcaps (GstPad * pad, GstCaps * caps)
 {
   GstDecklinkSrc *decklinksrc;
+  GstCaps *pad_caps;
+  gboolean can_intersect;
 
   decklinksrc = GST_DECKLINK_SRC (gst_pad_get_parent (pad));
 
+  pad_caps = gst_pad_get_caps_reffed (pad);
+  can_intersect = gst_caps_can_intersect (pad_caps, caps);
+  gst_caps_unref (pad_caps);
+
   GST_DEBUG_OBJECT (decklinksrc, "acceptcaps");
 
-
   gst_object_unref (decklinksrc);
-  return TRUE;
+  return can_intersect;
 }
 
 static void
@@ -1011,28 +1022,39 @@ static gboolean
 gst_decklink_src_video_src_setcaps (GstPad * pad, GstCaps * caps)
 {
   GstDecklinkSrc *decklinksrc;
+  GstCaps *mode_caps;
+  gboolean can_intersect;
 
   decklinksrc = GST_DECKLINK_SRC (gst_pad_get_parent (pad));
 
   GST_DEBUG_OBJECT (decklinksrc, "setcaps");
 
+  mode_caps = gst_decklink_mode_get_caps (decklinksrc->mode);
+  can_intersect = gst_caps_can_intersect (mode_caps, caps);
+  gst_caps_unref (mode_caps);
 
   gst_object_unref (decklinksrc);
-  return TRUE;
+  return can_intersect;
 }
 
 static gboolean
 gst_decklink_src_video_src_acceptcaps (GstPad * pad, GstCaps * caps)
 {
   GstDecklinkSrc *decklinksrc;
+  GstCaps *mode_caps;
+  gboolean can_intersect;
+
 
   decklinksrc = GST_DECKLINK_SRC (gst_pad_get_parent (pad));
 
   GST_DEBUG_OBJECT (decklinksrc, "acceptcaps");
 
+  mode_caps = gst_decklink_mode_get_caps (decklinksrc->mode);
+  can_intersect = gst_caps_can_intersect (mode_caps, caps);
+  gst_caps_unref (mode_caps);
 
   gst_object_unref (decklinksrc);
-  return TRUE;
+  return can_intersect;
 }
 
 static void
