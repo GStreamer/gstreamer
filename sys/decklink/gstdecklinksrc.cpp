@@ -901,9 +901,8 @@ gst_decklink_src_audio_src_activatepull (GstPad * pad, gboolean active)
 
   GST_DEBUG_OBJECT (decklinksrc, "activatepull");
 
-
   gst_object_unref (decklinksrc);
-  return TRUE;
+  return FALSE;
 }
 
 static GstPadLinkReturn
@@ -1096,7 +1095,7 @@ gst_decklink_src_video_src_activatepull (GstPad * pad, gboolean active)
 
 
   gst_object_unref (decklinksrc);
-  return TRUE;
+  return FALSE;
 }
 
 static GstPadLinkReturn
