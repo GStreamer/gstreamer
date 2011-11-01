@@ -934,6 +934,26 @@ gst_video_capture_bin_post_video_done (GstCameraBin2 * camera)
 }
 
 static void
+gst_camera_bin_skip_next_preview (GstCameraBin2 * camerabin)
+{
+  gchar *location;
+
+  g_mutex_lock (camerabin->preview_list_mutex);
+  if (camerabin->preview_location_list) {
+    location = camerabin->preview_location_list->data;
+    GST_DEBUG_OBJECT (camerabin, "Skipping preview for %s", location);
+    g_free (location);
+    camerabin->preview_location_list =
+        g_slist_delete_link (camerabin->preview_location_list,
+        camerabin->preview_location_list);
+    GST_CAMERA_BIN2_PROCESSING_DEC (camerabin);
+  } else {
+    GST_WARNING_OBJECT (camerabin, "No previews to skip");
+  }
+  g_mutex_unlock (camerabin->preview_list_mutex);
+}
+
+static void
 gst_camera_bin_handle_message (GstBin * bin, GstMessage * message)
 {
   GstCameraBin2 *camerabin = GST_CAMERA_BIN2_CAST (bin);
@@ -995,6 +1015,9 @@ gst_camera_bin_handle_message (GstBin * bin, GstMessage * message)
         GST_WARNING_OBJECT (bin, "Capture failed, reason: %s - %s",
             err->message, debug);
         GST_CAMERA_BIN2_PROCESSING_DEC (GST_CAMERA_BIN2_CAST (bin));
+        if (camerabin->post_previews) {
+          gst_camera_bin_skip_next_preview (camerabin);
+        }
       }
     }
       break;
