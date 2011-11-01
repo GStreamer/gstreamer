@@ -465,7 +465,7 @@ gst_ogg_mux_request_new_pad (GstElement * element,
 
       oggpad = (GstOggPadData *)
           gst_collect_pads2_add_pad_full (ogg_mux->collect, newpad,
-          sizeof (GstOggPadData), gst_ogg_mux_ogg_pad_destroy_notify, TRUE);
+          sizeof (GstOggPadData), gst_ogg_mux_ogg_pad_destroy_notify, FALSE);
       ogg_mux->active_pads++;
 
       oggpad->map.serialno = serial;
@@ -987,6 +987,12 @@ gst_ogg_mux_queue_pads (GstOggMux * ogg_mux, gboolean * popped)
             } else {
               GST_DEBUG_OBJECT (pad, "caps detected: %" GST_PTR_FORMAT,
                   pad->map.caps);
+
+              if (pad->map.is_sparse) {
+                GST_DEBUG_OBJECT (pad, "Pad is sparse, marking as such");
+                gst_collect_pads2_set_waiting (ogg_mux->collect,
+                    (GstCollectData2 *) pad, FALSE);
+              }
             }
           }
 
@@ -1339,8 +1345,8 @@ gst_ogg_mux_send_headers (GstOggMux * mux)
 
     GST_LOG_OBJECT (mux, "looking at pad %s:%s", GST_DEBUG_PAD_NAME (thepad));
 
-    /* if the pad has no buffer, we don't care */
-    if (pad->buffer == NULL)
+    /* if the pad has no buffer and is not sparse, we don't care */
+    if (pad->buffer == NULL && !pad->map.is_sparse)
       continue;
 
     /* now figure out the headers */
