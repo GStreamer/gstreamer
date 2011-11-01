@@ -118,18 +118,18 @@ cleanup_vorbistag (GstElement * vorbistag)
 }
 
 
-static GstProbeReturn
-buffer_probe (GstPad * pad, GstProbeType type, GstBuffer * buffer,
+static GstPadProbeReturn
+buffer_probe (GstPad * pad, GstPadProbeType type, GstBuffer * buffer,
     gpointer unused)
 {
   g_async_queue_push (pending_buffers, gst_buffer_ref (buffer));
-  return GST_PROBE_OK;
+  return GST_PAD_PROBE_OK;
 }
 
 static void
 start_pipeline (GstElement * element)
 {
-  id = gst_pad_add_probe (mysinkpad, GST_PROBE_TYPE_BUFFER,
+  id = gst_pad_add_probe (mysinkpad, GST_PAD_PROBE_TYPE_BUFFER,
       (GstPadProbeCallback) buffer_probe, NULL, NULL);
 
   pending_buffers = g_async_queue_new ();

@@ -410,8 +410,8 @@ gst_discoverer_set_timeout (GstDiscoverer * dc, GstClockTime timeout)
   DISCO_UNLOCK (dc);
 }
 
-static GstProbeReturn
-_event_probe (GstPad * pad, GstProbeType type, GstEvent * event,
+static GstPadProbeReturn
+_event_probe (GstPad * pad, GstPadProbeType type, GstEvent * event,
     PrivateStream * ps)
 {
   if (GST_EVENT_TYPE (event) == GST_EVENT_TAG) {
@@ -436,7 +436,7 @@ _event_probe (GstPad * pad, GstProbeType type, GstEvent * event,
     DISCO_UNLOCK (ps->dc);
   }
 
-  return GST_PROBE_OK;
+  return GST_PAD_PROBE_OK;
 }
 
 static gboolean
@@ -506,7 +506,7 @@ uridecodebin_pad_added_cb (GstElement * uridecodebin, GstPad * pad,
   gst_object_unref (sinkpad);
 
   /* Add an event probe */
-  gst_pad_add_probe (pad, GST_PROBE_TYPE_EVENT,
+  gst_pad_add_probe (pad, GST_PAD_PROBE_TYPE_EVENT,
       (GstPadProbeCallback) _event_probe, ps, NULL);
 
   DISCO_LOCK (dc);

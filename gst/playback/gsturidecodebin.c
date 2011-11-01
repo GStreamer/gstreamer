@@ -987,8 +987,8 @@ configure_stream_buffering (GstURIDecodeBin * decoder)
   gst_object_unref (queue);
 }
 
-static GstProbeReturn
-decoded_pad_event_probe (GstPad * pad, GstProbeType type, gpointer type_data,
+static GstPadProbeReturn
+decoded_pad_event_probe (GstPad * pad, GstPadProbeType type, gpointer type_data,
     gpointer user_data)
 {
   GstEvent *event = type_data;
@@ -1029,7 +1029,7 @@ decoded_pad_event_probe (GstPad * pad, GstProbeType type, gpointer type_data,
   }
 
   /* never drop */
-  return GST_PROBE_OK;
+  return GST_PAD_PROBE_OK;
 }
 
 /* Called by the signal handlers when a decodebin has found a new raw pad */
@@ -1060,7 +1060,7 @@ new_decoded_pad_added_cb (GstElement * element, GstPad * pad,
   /* add event probe to monitor tags */
   stream = g_slice_alloc0 (sizeof (GstURIDecodeBinStream));
   stream->probe_id =
-      gst_pad_add_probe (pad, GST_PROBE_TYPE_EVENT, decoded_pad_event_probe,
+      gst_pad_add_probe (pad, GST_PAD_PROBE_TYPE_EVENT, decoded_pad_event_probe,
       decoder, NULL);
   GST_URI_DECODE_BIN_LOCK (decoder);
   g_hash_table_insert (decoder->streams, pad, stream);
@@ -1070,8 +1070,8 @@ new_decoded_pad_added_cb (GstElement * element, GstPad * pad,
   gst_element_add_pad (GST_ELEMENT_CAST (decoder), newpad);
 }
 
-static GstProbeReturn
-source_pad_event_probe (GstPad * pad, GstProbeType type, gpointer type_data,
+static GstPadProbeReturn
+source_pad_event_probe (GstPad * pad, GstPadProbeType type, gpointer type_data,
     gpointer user_data)
 {
   GstEvent *event = type_data;
@@ -1086,7 +1086,7 @@ source_pad_event_probe (GstPad * pad, GstProbeType type, gpointer type_data,
         gst_uri_decode_bin_signals[SIGNAL_DRAINED], 0, NULL);
   }
   /* never drop events */
-  return GST_PROBE_OK;
+  return GST_PAD_PROBE_OK;
 }
 
 /* called when we found a raw pad on the source element. We need to set up a
@@ -1095,8 +1095,8 @@ static void
 expose_decoded_pad (GstElement * element, GstPad * pad,
     GstURIDecodeBin * decoder)
 {
-  gst_pad_add_probe (pad, GST_PROBE_TYPE_EVENT, source_pad_event_probe, decoder,
-      NULL);
+  gst_pad_add_probe (pad, GST_PAD_PROBE_TYPE_EVENT, source_pad_event_probe,
+      decoder, NULL);
 
   new_decoded_pad_added_cb (element, pad, decoder);
 }

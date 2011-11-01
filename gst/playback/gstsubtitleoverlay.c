@@ -108,8 +108,8 @@ do_async_done (GstSubtitleOverlay * self)
   }
 }
 
-static GstProbeReturn
-_pad_blocked_cb (GstPad * pad, GstProbeType type, gpointer type_data,
+static GstPadProbeReturn
+_pad_blocked_cb (GstPad * pad, GstPadProbeType type, gpointer type_data,
     gpointer user_data);
 
 static void
@@ -120,7 +120,7 @@ block_video (GstSubtitleOverlay * self)
 
   if (self->video_block_pad) {
     self->video_block_id =
-        gst_pad_add_probe (self->video_block_pad, GST_PROBE_TYPE_BLOCK,
+        gst_pad_add_probe (self->video_block_pad, GST_PAD_PROBE_TYPE_BLOCK,
         _pad_blocked_cb, self, NULL);
   }
 }
@@ -143,7 +143,7 @@ block_subtitle (GstSubtitleOverlay * self)
 
   if (self->subtitle_block_pad) {
     self->subtitle_block_id =
-        gst_pad_add_probe (self->subtitle_block_pad, GST_PROBE_TYPE_BLOCK,
+        gst_pad_add_probe (self->subtitle_block_pad, GST_PAD_PROBE_TYPE_BLOCK,
         _pad_blocked_cb, self, NULL);
   }
 }
@@ -753,8 +753,8 @@ _has_font_desc_property (GstElement * element)
   return (pspec && pspec->value_type == G_TYPE_STRING);
 }
 
-static GstProbeReturn
-_pad_blocked_cb (GstPad * pad, GstProbeType type, gpointer type_data,
+static GstPadProbeReturn
+_pad_blocked_cb (GstPad * pad, GstPadProbeType type, gpointer type_data,
     gpointer user_data)
 {
   GstSubtitleOverlay *self = GST_SUBTITLE_OVERLAY_CAST (user_data);
@@ -1357,7 +1357,7 @@ out:
     gst_plugin_feature_list_free (factories);
   GST_SUBTITLE_OVERLAY_UNLOCK (self);
 
-  return GST_PROBE_OK;
+  return GST_PAD_PROBE_OK;
 }
 
 static GstStateChangeReturn

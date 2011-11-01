@@ -157,8 +157,8 @@ check_chain_final_state (gpointer key, ChainState * state, gpointer data)
   return TRUE;
 }
 
-static GstProbeReturn
-eos_buffer_probe (GstPad * pad, GstProbeType type, GstBuffer * buffer,
+static GstPadProbeReturn
+eos_buffer_probe (GstPad * pad, GstPadProbeType type, GstBuffer * buffer,
     gpointer unused)
 {
   gint ret;
@@ -196,7 +196,7 @@ eos_buffer_probe (GstPad * pad, GstProbeType type, GstBuffer * buffer,
     }
   }
 
-  return GST_PROBE_OK;
+  return GST_PAD_PROBE_OK;
 }
 
 static void
@@ -209,7 +209,7 @@ start_pipeline (GstElement * bin, GstPad * pad)
   eos_chain_states =
       g_hash_table_new_full (g_direct_hash, g_direct_equal, NULL, g_free);
   probe_id =
-      gst_pad_add_probe (pad, GST_PROBE_TYPE_BUFFER,
+      gst_pad_add_probe (pad, GST_PAD_PROBE_TYPE_BUFFER,
       (GstPadProbeCallback) eos_buffer_probe, NULL, NULL);
 
   ret = gst_element_set_state (bin, GST_STATE_PLAYING);

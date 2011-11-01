@@ -31,8 +31,8 @@ check_position (GstElement * elem, GstQuery * pos, const gchar * info)
   }
 }
 
-static GstProbeReturn
-print_buffer_ts (GstPad * pad, GstProbeType type, gpointer type_data,
+static GstPadProbeReturn
+print_buffer_ts (GstPad * pad, GstPadProbeType type, gpointer type_data,
     gpointer user_data)
 {
   GstBuffer *buffer = type_data;
@@ -40,7 +40,7 @@ print_buffer_ts (GstPad * pad, GstProbeType type, gpointer type_data,
   GST_DEBUG_OBJECT (pad, "  ts: %" GST_TIME_FORMAT,
       GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buffer)));
 
-  return GST_PROBE_OK;
+  return GST_PAD_PROBE_OK;
 }
 
 gint
@@ -123,7 +123,7 @@ main (gint argc, gchar ** argv)
   }
 
   src_pad = gst_element_get_static_pad (src, "src");
-  gst_pad_add_probe (src_pad, GST_PROBE_TYPE_BUFFER, print_buffer_ts, NULL,
+  gst_pad_add_probe (src_pad, GST_PAD_PROBE_TYPE_BUFFER, print_buffer_ts, NULL,
       NULL);
   gst_object_unref (src_pad);
 

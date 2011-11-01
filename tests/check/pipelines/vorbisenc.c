@@ -261,14 +261,14 @@ GST_START_TEST (test_timestamps)
 
 GST_END_TEST;
 
-static GstProbeReturn
-drop_second_data_buffer (GstPad * droppad, GstProbeType type,
+static GstPadProbeReturn
+drop_second_data_buffer (GstPad * droppad, GstPadProbeType type,
     GstBuffer * buffer, gpointer unused)
 {
-  GstProbeReturn res = GST_PROBE_OK;
+  GstPadProbeReturn res = GST_PAD_PROBE_OK;
 
   if (GST_BUFFER_OFFSET (buffer) == 4096)
-    res = GST_PROBE_DROP;
+    res = GST_PAD_PROBE_DROP;
 
   GST_DEBUG ("dropping %d", res);
 
@@ -317,7 +317,7 @@ GST_START_TEST (test_discontinuity)
     gst_object_unref (sink);
   }
 
-  drop_id = gst_pad_add_probe (droppad, GST_PROBE_TYPE_BUFFER,
+  drop_id = gst_pad_add_probe (droppad, GST_PAD_PROBE_TYPE_BUFFER,
       (GstPadProbeCallback) drop_second_data_buffer, NULL, NULL);
   gst_buffer_straw_start_pipeline (bin, pad);
 

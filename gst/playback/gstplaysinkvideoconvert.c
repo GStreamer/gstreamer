@@ -72,8 +72,8 @@ post_missing_element_message (GstPlaySinkVideoConvert * self,
   gst_element_post_message (GST_ELEMENT_CAST (self), msg);
 }
 
-static GstProbeReturn
-pad_blocked_cb (GstPad * pad, GstProbeType type, gpointer type_data,
+static GstPadProbeReturn
+pad_blocked_cb (GstPad * pad, GstPadProbeType type, gpointer type_data,
     gpointer user_data)
 {
   GstPlaySinkVideoConvert *self = user_data;
@@ -189,7 +189,7 @@ unblock:
   self->sink_proxypad_block_id = 0;
   GST_PLAY_SINK_VIDEO_CONVERT_UNLOCK (self);
 
-  return GST_PROBE_REMOVE;
+  return GST_PAD_PROBE_REMOVE;
 
 link_failed:
   {
@@ -200,7 +200,7 @@ link_failed:
     self->sink_proxypad_block_id = 0;
     GST_PLAY_SINK_VIDEO_CONVERT_UNLOCK (self);
 
-    return GST_PROBE_REMOVE;
+    return GST_PAD_PROBE_REMOVE;
   }
 }
 
@@ -209,7 +209,7 @@ block_proxypad (GstPlaySinkVideoConvert * self)
 {
   if (self->sink_proxypad_block_id == 0) {
     self->sink_proxypad_block_id =
-        gst_pad_add_probe (self->sink_proxypad, GST_PROBE_TYPE_BLOCK,
+        gst_pad_add_probe (self->sink_proxypad, GST_PAD_PROBE_TYPE_BLOCK,
         pad_blocked_cb, gst_object_ref (self),
         (GDestroyNotify) gst_object_unref);
   }

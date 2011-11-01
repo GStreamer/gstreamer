@@ -1671,7 +1671,7 @@ gst_play_bin_suburidecodebin_block (GstSourceGroup * group,
         sinkpad = g_value_get_object (&item);
         if (block) {
           group->block_id =
-              gst_pad_add_probe (sinkpad, GST_PROBE_TYPE_BLOCK, NULL, NULL,
+              gst_pad_add_probe (sinkpad, GST_PAD_PROBE_TYPE_BLOCK, NULL, NULL,
               NULL);
         } else if (group->block_id) {
           gst_pad_remove_probe (sinkpad, group->block_id);
@@ -2410,8 +2410,8 @@ selector_active_pad_changed (GObject * selector, GParamSpec * pspec,
 }
 
 /* this callback sends a delayed event once the pad becomes unblocked */
-static GstProbeReturn
-stream_changed_data_probe (GstPad * pad, GstProbeType type,
+static GstPadProbeReturn
+stream_changed_data_probe (GstPad * pad, GstPadProbeType type,
     GstMiniObject * object, gpointer data)
 {
   GstSourceSelect *select = (GstSourceSelect *) data;
@@ -2426,7 +2426,7 @@ stream_changed_data_probe (GstPad * pad, GstProbeType type,
   /* really, this should not happen */
   if (!e) {
     GST_WARNING ("Data probed called, but no delayed event");
-    return GST_PROBE_OK;
+    return GST_PAD_PROBE_OK;
   }
 
   if (GST_IS_EVENT (object)
@@ -2435,11 +2435,11 @@ stream_changed_data_probe (GstPad * pad, GstProbeType type,
     gst_event_ref (GST_EVENT_CAST (object));
     gst_pad_send_event (pad, GST_EVENT_CAST (object));
     gst_pad_send_event (pad, e);
-    return GST_PROBE_DROP;
+    return GST_PAD_PROBE_DROP;
   } else {
     /* send delayed event, then allow the caller to go on */
     gst_pad_send_event (pad, e);
-    return GST_PROBE_OK;
+    return GST_PAD_PROBE_OK;
   }
 }
 
@@ -2589,7 +2589,7 @@ pad_added_cb (GstElement * decodebin, GstPad * pad, GstSourceGroup * group)
      * configured the sinks we will unblock them all. */
     GST_DEBUG_OBJECT (playbin, "blocking %" GST_PTR_FORMAT, select->srcpad);
     select->block_id =
-        gst_pad_add_probe (select->srcpad, GST_PROBE_TYPE_BLOCK, NULL, NULL,
+        gst_pad_add_probe (select->srcpad, GST_PAD_PROBE_TYPE_BLOCK, NULL, NULL,
         NULL);
   }
 
@@ -2899,7 +2899,7 @@ no_more_pads_cb (GstElement * decodebin, GstSourceGroup * group)
            pad might not be linked yet. Additionally, sending it here
            apparently would be on the wrong thread */
         select->sinkpad_data_probe =
-            gst_pad_add_probe (select->sinkpad, GST_PROBE_TYPE_DATA,
+            gst_pad_add_probe (select->sinkpad, GST_PAD_PROBE_TYPE_DATA,
             (GstPadProbeCallback) stream_changed_data_probe, (gpointer) select,
             NULL);
 
