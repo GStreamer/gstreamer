@@ -1468,7 +1468,10 @@ gst_h264_parse_sps (GstH264NalUnit * nalu, GstH264SPS * sps,
   sps->width = width;
   sps->height = height;
 
-  if (vui) {
+  sps->fps_num = 0;
+  sps->fps_den = 1;
+
+  if (vui && vui->timing_info_present_flag) {
     /* derive framerate */
     /* FIXME verify / also handle other cases */
     GST_LOG ("Framerate: %u %u %u %u", parse_vui_params,
@@ -1484,8 +1487,6 @@ gst_h264_parse_sps (GstH264NalUnit * nalu, GstH264SPS * sps,
       GST_LOG ("framerate %d/%d", sps->fps_num, sps->fps_den);
     }
   } else {
-    sps->fps_num = 0;
-    sps->fps_den = 1;
     GST_LOG ("No VUI, unknown framerate");
   }
 
