@@ -375,25 +375,25 @@ struct _GstMpegVideoTypeOffsetSize
   gint   size;
 };
 
-GList   *gst_mpeg_video_parse                         (guint8 * data, gsize size, guint offset);
+GList   *gst_mpeg_video_parse                         (const guint8 * data, gsize size, guint offset);
 
 gboolean gst_mpeg_video_parse_sequence_header         (GstMpegVideoSequenceHdr * params,
-                                                       guint8 * data, gsize size, guint offset);
+                                                       const guint8 * data, gsize size, guint offset);
 
 gboolean gst_mpeg_video_parse_picture_header          (GstMpegVideoPictureHdr* hdr,
-                                                       guint8 * data, gsize size, guint offset);
+                                                       const guint8 * data, gsize size, guint offset);
 
 gboolean gst_mpeg_video_parse_picture_extension       (GstMpegVideoPictureExt *ext,
-                                                       guint8 * data, gsize size, guint offset);
+                                                       const guint8 * data, gsize size, guint offset);
 
 gboolean gst_mpeg_video_parse_gop                     (GstMpegVideoGop * gop,
-                                                       guint8 * data, gsize size, guint offset);
+                                                       const guint8 * data, gsize size, guint offset);
 
 gboolean gst_mpeg_video_parse_sequence_extension      (GstMpegVideoSequenceExt * seqext,
-                                                       guint8 * data, gsize size, guint offset);
+                                                       const guint8 * data, gsize size, guint offset);
 
 gboolean gst_mpeg_video_parse_quant_matrix_extension  (GstMpegVideoQuantMatrixExt * quant,
-                                                       guint8 * data, gsize size, guint offset);
+                                                       const guint8 * data, gsize size, guint offset);
 
 G_END_DECLS
 
