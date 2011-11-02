@@ -88,7 +88,7 @@ ensure_debug_category (void)
     goto failed; \
 } G_STMT_END
 
-const guint8 default_intra_quant_mat[64] = {
+static const guint8 default_intra_quant_mat[64] = {
   8, 17, 18, 19, 21, 23, 25, 27,
   17, 18, 19, 21, 23, 25, 27, 28,
   20, 21, 22, 23, 24, 26, 28, 30,
@@ -99,7 +99,7 @@ const guint8 default_intra_quant_mat[64] = {
   27, 28, 30, 32, 35, 38, 41, 45
 };
 
-const guint8 default_non_intra_quant_mat[64] = {
+static const guint8 default_non_intra_quant_mat[64] = {
   16, 17, 18, 19, 20, 21, 22, 23,
   17, 18, 19, 20, 21, 22, 23, 24,
   18, 19, 20, 21, 22, 23, 24, 25,
@@ -110,7 +110,7 @@ const guint8 default_non_intra_quant_mat[64] = {
   23, 24, 25, 27, 28, 30, 31, 33,
 };
 
-const guint8 mpeg4_zigzag_8x8[64] = {
+static const guint8 mpeg4_zigzag_8x8[64] = {
   0, 1, 8, 16, 9, 2, 3, 10,
   17, 24, 32, 25, 18, 11, 4, 5,
   12, 19, 26, 33, 40, 48, 41, 34,

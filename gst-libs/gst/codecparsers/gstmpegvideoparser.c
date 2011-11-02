@@ -49,7 +49,7 @@
 #define MARKER_BIT 0x1
 
 /* default intra quant matrix, in zig-zag order */
-const guint8 default_intra_quantizer_matrix[64] = {
+static const guint8 default_intra_quantizer_matrix[64] = {
   8,
   16, 16,
   19, 16, 19,
@@ -67,7 +67,7 @@ const guint8 default_intra_quantizer_matrix[64] = {
   83
 };
 
-const guint8 mpeg_zigzag_8x8[64] = {
+static const guint8 mpeg_zigzag_8x8[64] = {
   0, 1, 8, 16, 9, 2, 3, 10,
   17, 24, 32, 25, 18, 11, 4, 5,
   12, 19, 26, 33, 40, 48, 41, 34,

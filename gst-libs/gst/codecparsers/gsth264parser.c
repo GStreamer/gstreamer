@@ -94,31 +94,31 @@ GST_DEBUG_CATEGORY (h264_parser_debug);
 #define GST_CAT_DEFAULT h264_parser_debug
 
 /**** Default scaling_lists according to Table 7-2 *****/
-const guint8 default_4x4_intra[16] = {
+static const guint8 default_4x4_intra[16] = {
   6, 13, 13, 20, 20, 20, 28, 28, 28, 28, 32, 32,
   32, 37, 37, 42
 };
 
-const guint8 default_4x4_inter[16] = {
+static const guint8 default_4x4_inter[16] = {
   10, 14, 14, 20, 20, 20, 24, 24, 24, 24, 27, 27,
   27, 30, 30, 34
 };
 
-const guint8 default_8x8_intra[64] = {
+static const guint8 default_8x8_intra[64] = {
   6, 10, 10, 13, 11, 13, 16, 16, 16, 16, 18, 18,
   18, 18, 18, 23, 23, 23, 23, 23, 23, 25, 25, 25, 25, 25, 25, 25, 27, 27, 27,
   27, 27, 27, 27, 27, 29, 29, 29, 29, 29, 29, 29, 31, 31, 31, 31, 31, 31, 33,
   33, 33, 33, 33, 36, 36, 36, 36, 38, 38, 38, 40, 40, 42
 };
 
-const guint8 default_8x8_inter[64] = {
+static const guint8 default_8x8_inter[64] = {
   9, 13, 13, 15, 13, 15, 17, 17, 17, 17, 19, 19,
   19, 19, 19, 21, 21, 21, 21, 21, 21, 22, 22, 22, 22, 22, 22, 22, 24, 24, 24,
   24, 24, 24, 24, 24, 25, 25, 25, 25, 25, 25, 25, 27, 27, 27, 27, 27, 27, 28,
   28, 28, 28, 28, 30, 30, 30, 30, 32, 32, 32, 33, 33, 35
 };
 
-const guint8 zigzag_8x8[64] = {
+static const guint8 zigzag_8x8[64] = {
   0, 1, 8, 16, 9, 2, 3, 10,
   17, 24, 32, 25, 18, 11, 4, 5,
   12, 19, 26, 33, 40, 48, 41, 34,
@@ -129,7 +129,7 @@ const guint8 zigzag_8x8[64] = {
   53, 60, 61, 54, 47, 55, 62, 63
 };
 
-const guint8 zigzag_4x4[16] = {
+static const guint8 zigzag_4x4[16] = {
   0, 1, 4, 8,
   5, 2, 3, 6,
   9, 12, 13, 10,
