@@ -45,6 +45,7 @@ gst_omx_video_enc_control_rate_get_type (void)
           "variable-skip-frames"},
       {OMX_Video_ControlRateConstantSkipFrames, "Constant Skip Frames",
           "constant-skip-frames"},
+      {0xffffffff, "Component Default", "default"},
       {0, NULL, NULL}
     };
 
@@ -99,11 +100,11 @@ enum
 };
 
 /* FIXME: Better defaults */
-#define GST_OMX_VIDEO_ENC_CONTROL_RATE_DEFAULT (OMX_Video_ControlRateConstant)
-#define GST_OMX_VIDEO_ENC_TARGET_BITRATE_DEFAULT (64000)
-#define GST_OMX_VIDEO_ENC_QUANT_I_FRAMES_DEFAULT (9)
-#define GST_OMX_VIDEO_ENC_QUANT_P_FRAMES_DEFAULT (6)
-#define GST_OMX_VIDEO_ENC_QUANT_B_FRAMES_DEFAULT (2)
+#define GST_OMX_VIDEO_ENC_CONTROL_RATE_DEFAULT (0xffffffff)
+#define GST_OMX_VIDEO_ENC_TARGET_BITRATE_DEFAULT (0xffffffff)
+#define GST_OMX_VIDEO_ENC_QUANT_I_FRAMES_DEFAULT (0xffffffff)
+#define GST_OMX_VIDEO_ENC_QUANT_P_FRAMES_DEFAULT (0xffffffff)
+#define GST_OMX_VIDEO_ENC_QUANT_B_FRAMES_DEFAULT (0xffffffff)
 
 /* class initialization */
 
@@ -271,28 +272,28 @@ gst_omx_video_enc_class_init (GstOMXVideoEncClass * klass)
 
   g_object_class_install_property (gobject_class, PROP_TARGET_BITRATE,
       g_param_spec_uint ("target-bitrate", "Target Bitrate",
-          "Target bitrate",
+          "Target bitrate (0xffffffff=component default)",
           0, G_MAXUINT, GST_OMX_VIDEO_ENC_TARGET_BITRATE_DEFAULT,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS |
           GST_PARAM_MUTABLE_PLAYING));
 
   g_object_class_install_property (gobject_class, PROP_QUANT_I_FRAMES,
       g_param_spec_uint ("quant-i-frames", "I-Frame Quantization",
-          "Quantization parameter for I-frames",
+          "Quantization parameter for I-frames (0xffffffff=component default)",
           0, G_MAXUINT, GST_OMX_VIDEO_ENC_QUANT_I_FRAMES_DEFAULT,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS |
           GST_PARAM_MUTABLE_READY));
 
   g_object_class_install_property (gobject_class, PROP_QUANT_P_FRAMES,
       g_param_spec_uint ("quant-p-frames", "P-Frame Quantization",
-          "Quantization parameter for P-frames",
+          "Quantization parameter for P-frames (0xffffffff=component default)",
           0, G_MAXUINT, GST_OMX_VIDEO_ENC_QUANT_P_FRAMES_DEFAULT,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS |
           GST_PARAM_MUTABLE_READY));
 
   g_object_class_install_property (gobject_class, PROP_QUANT_B_FRAMES,
       g_param_spec_uint ("quant-b-frames", "B-Frame Quantization",
-          "Quantization parameter for B-frames",
+          "Quantization parameter for B-frames (0xffffffff=component default)",
           0, G_MAXUINT, GST_OMX_VIDEO_ENC_QUANT_B_FRAMES_DEFAULT,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS |
           GST_PARAM_MUTABLE_READY));
@@ -355,52 +356,87 @@ gst_omx_video_enc_open (GstOMXVideoEnc * self)
 
   /* Set properties */
   {
-    OMX_VIDEO_PARAM_BITRATETYPE bitrate_param;
-    OMX_VIDEO_PARAM_QUANTIZATIONTYPE quant_param;
     OMX_ERRORTYPE err;
 
-    GST_OMX_INIT_STRUCT (&bitrate_param);
-    bitrate_param.nPortIndex = self->out_port->index;
-    bitrate_param.eControlRate = self->control_rate;
-    bitrate_param.nTargetBitrate = self->target_bitrate;
+    if (self->control_rate != 0xffffffff || self->target_bitrate != 0xffffffff) {
+      OMX_VIDEO_PARAM_BITRATETYPE bitrate_param;
 
-    err =
-        gst_omx_component_set_parameter (self->component,
-        OMX_IndexParamVideoBitrate, &bitrate_param);
-    if (err == OMX_ErrorUnsupportedIndex) {
-      GST_WARNING_OBJECT (self,
-          "Setting a bitrate not supported by the component");
-    } else if (err == OMX_ErrorUnsupportedSetting) {
-      GST_WARNING_OBJECT (self,
-          "Setting bitrate settings %u %u not supported by the component",
-          self->control_rate, self->target_bitrate);
-    } else if (err != OMX_ErrorNone) {
-      GST_ERROR_OBJECT (self, "Failed to set bitrate parameters: %s (0x%08x)",
-          gst_omx_error_to_string (err), err);
-      return FALSE;
+      GST_OMX_INIT_STRUCT (&bitrate_param);
+      bitrate_param.nPortIndex = self->out_port->index;
+
+      err = gst_omx_component_get_parameter (self->component,
+          OMX_IndexParamVideoBitrate, &bitrate_param);
+
+      if (err == OMX_ErrorNone) {
+        if (self->control_rate != 0xffffffff)
+          bitrate_param.eControlRate = self->control_rate;
+        if (self->target_bitrate != 0xffffffff)
+          bitrate_param.nTargetBitrate = self->target_bitrate;
+
+        err =
+            gst_omx_component_set_parameter (self->component,
+            OMX_IndexParamVideoBitrate, &bitrate_param);
+        if (err == OMX_ErrorUnsupportedIndex) {
+          GST_WARNING_OBJECT (self,
+              "Setting a bitrate not supported by the component");
+        } else if (err == OMX_ErrorUnsupportedSetting) {
+          GST_WARNING_OBJECT (self,
+              "Setting bitrate settings %u %u not supported by the component",
+              self->control_rate, self->target_bitrate);
+        } else if (err != OMX_ErrorNone) {
+          GST_ERROR_OBJECT (self,
+              "Failed to set bitrate parameters: %s (0x%08x)",
+              gst_omx_error_to_string (err), err);
+          return FALSE;
+        }
+      } else {
+        GST_ERROR_OBJECT (self, "Failed to get bitrate parameters: %s (0x%08x)",
+            gst_omx_error_to_string (err), err);
+      }
     }
 
-    GST_OMX_INIT_STRUCT (&quant_param);
-    quant_param.nPortIndex = self->out_port->index;
-    quant_param.nQpI = self->quant_i_frames;
-    quant_param.nQpP = self->quant_p_frames;
-    quant_param.nQpB = self->quant_b_frames;
+    if (self->quant_i_frames != 0xffffffff ||
+        self->quant_p_frames != 0xffffffff ||
+        self->quant_b_frames != 0xffffffff) {
+      OMX_VIDEO_PARAM_QUANTIZATIONTYPE quant_param;
 
-    err =
-        gst_omx_component_set_parameter (self->component,
-        OMX_IndexParamVideoQuantization, &quant_param);
-    if (err == OMX_ErrorUnsupportedIndex) {
-      GST_WARNING_OBJECT (self,
-          "Setting quantization parameters not supported by the component");
-    } else if (err == OMX_ErrorUnsupportedSetting) {
-      GST_WARNING_OBJECT (self,
-          "Setting quantization parameters %u %u %u not supported by the component",
-          self->quant_i_frames, self->quant_p_frames, self->quant_b_frames);
-    } else if (err != OMX_ErrorNone) {
-      GST_ERROR_OBJECT (self,
-          "Failed to set quantization parameters: %s (0x%08x)",
-          gst_omx_error_to_string (err), err);
-      return FALSE;
+      GST_OMX_INIT_STRUCT (&quant_param);
+      quant_param.nPortIndex = self->out_port->index;
+
+      err = gst_omx_component_get_parameter (self->component,
+          OMX_IndexParamVideoQuantization, &quant_param);
+
+      if (err == OMX_ErrorNone) {
+
+        if (self->quant_i_frames != 0xffffffff)
+          quant_param.nQpI = self->quant_i_frames;
+        if (self->quant_p_frames != 0xffffffff)
+          quant_param.nQpP = self->quant_p_frames;
+        if (self->quant_b_frames != 0xffffffff)
+          quant_param.nQpB = self->quant_b_frames;
+
+        err =
+            gst_omx_component_set_parameter (self->component,
+            OMX_IndexParamVideoQuantization, &quant_param);
+        if (err == OMX_ErrorUnsupportedIndex) {
+          GST_WARNING_OBJECT (self,
+              "Setting quantization parameters not supported by the component");
+        } else if (err == OMX_ErrorUnsupportedSetting) {
+          GST_WARNING_OBJECT (self,
+              "Setting quantization parameters %u %u %u not supported by the component",
+              self->quant_i_frames, self->quant_p_frames, self->quant_b_frames);
+        } else if (err != OMX_ErrorNone) {
+          GST_ERROR_OBJECT (self,
+              "Failed to set quantization parameters: %s (0x%08x)",
+              gst_omx_error_to_string (err), err);
+          return FALSE;
+        }
+      } else {
+        GST_ERROR_OBJECT (self,
+            "Failed to get quantization parameters: %s (0x%08x)",
+            gst_omx_error_to_string (err), err);
+
+      }
     }
   }
 

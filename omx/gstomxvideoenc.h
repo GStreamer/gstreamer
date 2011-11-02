@@ -65,7 +65,7 @@ struct _GstOMXVideoEnc
   gboolean draining;
 
   /* properties */
-  OMX_VIDEO_CONTROLRATETYPE control_rate;
+  guint32 control_rate;
   guint32 target_bitrate;
   guint32 quant_i_frames;
   guint32 quant_p_frames;
