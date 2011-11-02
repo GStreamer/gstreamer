@@ -781,7 +781,7 @@ done:
 GList *
 gst_adapter_take_list (GstAdapter * adapter, gsize nbytes)
 {
-  GList *result = NULL, *tail = NULL;
+  GQueue queue = G_QUEUE_INIT;
   GstBuffer *cur;
   gsize hsize, skip;
 
@@ -797,15 +797,11 @@ gst_adapter_take_list (GstAdapter * adapter, gsize nbytes)
 
     cur = gst_adapter_take_buffer (adapter, hsize);
 
-    if (result == NULL) {
-      result = tail = g_list_append (result, cur);
-    } else {
-      tail = g_list_append (tail, cur);
-      tail = g_list_next (tail);
-    }
+    g_queue_push_tail (&queue, cur);
+
     nbytes -= hsize;
   }
-  return result;
+  return queue.head;
 }
 
 /**
