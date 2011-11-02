@@ -316,7 +316,7 @@ else
 
   # Enable pic and static so that we get .a files, but with PIC code.
   embffmpeg_configure_args="$embffmpeg_configure_args --disable-avserver --disable-avplay\
-        --disable-ffmpeg --disable-avprobe --enable-postproc --enable-static --enable-pic \
+        --disable-ffmpeg --disable-avprobe --enable-static --enable-pic \
 	--disable-encoder=flac --disable-decoder=cavs --disable-protocols --disable-devices\
 	--disable-network --disable-hwaccels --disable-filters --disable-doc\
 	--enable-optimizations"
