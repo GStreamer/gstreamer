@@ -85,7 +85,8 @@ GST_START_TEST (test_mpeg_parse)
       assert_equals_int (ordercode[i], typeoffsz->type);
   }
 
-  g_list_free_full (list, (GDestroyNotify) g_free);
+  g_list_foreach (list, (GFunc) g_free, NULL);
+  g_list_free (list);
 }
 
 GST_END_TEST;
@@ -115,7 +116,8 @@ GST_START_TEST (test_mpeg_parse_sequence_header)
   assert_equals_int (seqhdr.vbv_buffer_size_value, 512);
   fail_unless (seqhdr.constrained_parameters_flag == FALSE);
 
-  g_list_free_full (list, (GDestroyNotify) g_free);
+  g_list_foreach (list, (GFunc) g_free, NULL);
+  g_list_free (list);
 }
 
 GST_END_TEST;
@@ -145,7 +147,8 @@ GST_START_TEST (test_mpeg_parse_sequence_extension)
   assert_equals_int (seqext.fps_n_ext, 3);
   assert_equals_int (seqext.fps_d_ext, 2);
 
-  g_list_free_full (list, (GDestroyNotify) g_free);
+  g_list_foreach (list, (GFunc) g_free, NULL);
+  g_list_free (list);
 }
 
 GST_END_TEST;
@@ -168,7 +171,8 @@ GST_START_TEST (test_mis_identified_datas)
     assert_equals_int (data[typeoffsz->offset - 2], 1);
   }
 
-  g_list_free_full (list, (GDestroyNotify) g_free);
+  g_list_foreach (list, (GFunc) g_free, NULL);
+  g_list_free (list);
 }
 
 GST_END_TEST;
