@@ -1236,8 +1236,8 @@ gst_ffmpegdemux_open (GstFFMpegDemux * demux)
     if (stream->tags != NULL && stream->pad != NULL) {
       GST_INFO_OBJECT (stream->pad, "stream tags: %" GST_PTR_FORMAT,
           stream->tags);
-      gst_element_found_tags_for_pad (GST_ELEMENT (demux), stream->pad,
-          gst_tag_list_copy (stream->tags));
+      gst_pad_push_event (stream->pad,
+          gst_event_new_tag (gst_tag_list_copy (stream->tags)));
     }
   }
 
