@@ -7,7 +7,7 @@ libgstflv_la_LDFLAGS = ${GST_PLUGIN_LDFLAGS}
 libgstflv_la_SOURCES = gstflvdemux.c gstflvmux.c
 libgstflv_la_LIBTOOLFLAGS = --tag=disable-static
 
-noinst_HEADERS = gstflvdemux.h gstflvmux.h
+noinst_HEADERS = gstflvdemux.h gstflvmux.h amfdefs.h
 
 Android.mk: Makefile.am $(BUILT_SOURCES)
 	androgenizer \
