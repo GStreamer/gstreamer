@@ -1406,7 +1406,8 @@ gst_asf_demux_push_complete_payloads (GstASFDemux * demux, gboolean force)
           GST_TAG_CONTAINER_FORMAT, "ASF", NULL);
 
       GST_DEBUG_OBJECT (demux, "global tags: %" GST_PTR_FORMAT, demux->taglist);
-      gst_element_found_tags (GST_ELEMENT (demux), demux->taglist);
+      gst_asf_demux_send_event_unlocked (demux,
+          gst_event_new_tag (demux->taglist));
       demux->taglist = NULL;
 
       demux->need_newsegment = FALSE;
@@ -1416,8 +1417,8 @@ gst_asf_demux_push_complete_payloads (GstASFDemux * demux, gboolean force)
     /* Do we have tags pending for this stream? */
     if (G_UNLIKELY (stream->pending_tags)) {
       GST_LOG_OBJECT (stream->pad, "%" GST_PTR_FORMAT, stream->pending_tags);
-      gst_element_found_tags_for_pad (GST_ELEMENT (demux), stream->pad,
-          stream->pending_tags);
+      gst_pad_push_event (stream->pad,
+          gst_event_new_tag (stream->pending_tags));
       stream->pending_tags = NULL;
     }
 
@@ -2348,7 +2349,7 @@ gst_asf_demux_parse_stream_object (GstASFDemux * demux, guint8 * data,
 
   flags = gst_asf_demux_get_uint16 (&data, &size);
   stream_id = flags & 0x7f;
-  is_encrypted = ! !((flags & 0x8000) << 15);
+  is_encrypted = !!((flags & 0x8000) << 15);
   unknown = gst_asf_demux_get_uint32 (&data, &size);
 
   GST_DEBUG_OBJECT (demux, "Found stream %u, time_offset=%" GST_TIME_FORMAT,
@@ -2956,8 +2957,8 @@ gst_asf_demux_process_file (GstASFDemux * demux, guint8 * data, guint64 size)
   max_pktsize = gst_asf_demux_get_uint32 (&data, &size);
   min_bitrate = gst_asf_demux_get_uint32 (&data, &size);
 
-  demux->broadcast = ! !(flags & 0x01);
-  demux->seekable = ! !(flags & 0x02);
+  demux->broadcast = !!(flags & 0x01);
+  demux->seekable = !!(flags & 0x02);
 
   GST_DEBUG_OBJECT (demux, "min_pktsize = %u", min_pktsize);
   GST_DEBUG_OBJECT (demux, "flags::broadcast = %d", demux->broadcast);

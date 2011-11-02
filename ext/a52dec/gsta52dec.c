@@ -548,8 +548,7 @@ gst_a52dec_update_streaminfo (GstA52Dec * a52dec)
   taglist = gst_tag_list_new (GST_TAG_AUDIO_CODEC, "Dolby Digital (AC-3)",
       GST_TAG_BITRATE, (guint) a52dec->bit_rate, NULL);
 
-  gst_element_found_tags_for_pad (GST_ELEMENT (a52dec),
-      GST_PAD (a52dec->srcpad), taglist);
+  gst_pad_push_event (GST_PAD (a52dec->srcpad), gst_event_new_tag (taglist));
 }
 
 static GstFlowReturn

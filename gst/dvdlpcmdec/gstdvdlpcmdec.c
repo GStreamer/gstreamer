@@ -222,8 +222,7 @@ gst_dvdlpcmdec_send_tags (GstDvdLpcmDec * dvdlpcmdec)
   taglist = gst_tag_list_new (GST_TAG_AUDIO_CODEC, "LPCM Audio",
       GST_TAG_BITRATE, bitrate, NULL);
 
-  gst_element_found_tags_for_pad (GST_ELEMENT (dvdlpcmdec), dvdlpcmdec->srcpad,
-      taglist);
+  gst_pad_push_event (dvdlpcmdec->srcpad, gst_event_new_tag (taglist));
 }
 
 static gboolean
