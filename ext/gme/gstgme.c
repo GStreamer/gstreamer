@@ -457,7 +457,7 @@ gme_setup (GstGmeDec * gme)
 
   gme_err = gme_track_info (gme->player, &info, 0);
 
-  taglist = gst_tag_list_new ();
+  taglist = gst_tag_list_new_empty ();
 
   if (info->song && *info->song)
     gst_tag_list_add (taglist, GST_TAG_MERGE_REPLACE, GST_TAG_TITLE,
