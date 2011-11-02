@@ -332,6 +332,13 @@ gst_pad_init (GstPad * pad)
   g_hook_list_init (&pad->probes, sizeof (GstProbe));
 }
 
+static void
+clear_event (PadEvent events[], guint idx)
+{
+  gst_event_replace (&events[idx].event, NULL);
+  gst_event_replace (&events[idx].pending, NULL);
+}
+
 /* called when setting the pad inactive. It removes all sticky events from
  * the pad */
 static void
@@ -339,10 +346,8 @@ clear_events (PadEvent events[])
 {
   guint i;
 
-  for (i = 0; i < GST_EVENT_MAX_STICKY; i++) {
-    gst_event_replace (&events[i].event, NULL);
-    gst_event_replace (&events[i].pending, NULL);
-  }
+  for (i = 0; i < GST_EVENT_MAX_STICKY; i++)
+    clear_event (events, i);
 }
 
 /* The sticky event with @idx from the srcpad is copied to the
@@ -4244,10 +4249,8 @@ gst_pad_push_event (GstPad * pad, GstEvent * event)
 
       /* Remove sticky EOS events */
       GST_LOG_OBJECT (pad, "Removing pending EOS events");
-      gst_event_replace (&pad->priv->
-          events[GST_EVENT_STICKY_IDX_TYPE (GST_EVENT_EOS)].pending, NULL);
-      gst_event_replace (&pad->priv->
-          events[GST_EVENT_STICKY_IDX_TYPE (GST_EVENT_EOS)].event, NULL);
+      clear_event (pad->priv->events,
+          GST_EVENT_STICKY_IDX_TYPE (GST_EVENT_EOS));
 
       if (G_UNLIKELY (GST_PAD_IS_BLOCKED (pad))) {
         GST_LOG_OBJECT (pad, "Pad is blocked, not forwarding flush-stop");
@@ -4457,10 +4460,8 @@ gst_pad_send_event (GstPad * pad, GstEvent * event)
       }
       /* Remove pending EOS events */
       GST_LOG_OBJECT (pad, "Removing pending EOS events");
-      gst_event_replace (&pad->priv->
-          events[GST_EVENT_STICKY_IDX_TYPE (GST_EVENT_EOS)].pending, NULL);
-      gst_event_replace (&pad->priv->
-          events[GST_EVENT_STICKY_IDX_TYPE (GST_EVENT_EOS)].event, NULL);
+      clear_event (pad->priv->events,
+          GST_EVENT_STICKY_IDX_TYPE (GST_EVENT_EOS));
 
       GST_OBJECT_UNLOCK (pad);
       /* grab stream lock */
