@@ -20,13 +20,7 @@
  */
 
 
-/* The waylandsink is currently just a prototype . It creates its own window and render the decoded video frames to that.*/
-
-/* FixMe: Needs to add more synchronization stuffs */
-/* FixMe: Remove the extra memcopy by giving buffer to decoder with buffer_alloc*/
-/* FixMe: Add signals so that the application/compositor is responsible for rendering */
-/* FixMe: Add h/w decoding support: buffers/libva surface */
-/* FixMe: Add the interfaces */
+/* The waylandsink is creating its own window and render the decoded video frames to that.*/
 
 #ifdef HAVE_CONFIG_H
 #include <config.h>
@@ -48,7 +42,6 @@
 #include "gstwaylandsink.h"
 
 #include <wayland-client.h>
-#include <wayland-egl.h>
 
 /* signals */
 enum
@@ -79,12 +72,14 @@ static GstStaticPadTemplate sink_template = GST_STATIC_PAD_TEMPLATE ("sink",
         "green_mask = (int) 16711680, "
         "blue_mask = (int) -16777216,"
         "width = (int) [ 1, MAX ], " "height = (int) [ 1, MAX ] "));
-
-GType gst_wayland_sink_get_type (void);
+GType gst_wlbuffer_get_type (void);
 
 /*Fixme: Add more interfaces */
-GST_BOILERPLATE (GstWayLandSink, gst_wayland_sink, GstVideoSink,
+GST_BOILERPLATE (GstWaylandSink, gst_wayland_sink, GstVideoSink,
     GST_TYPE_VIDEO_SINK);
+
+static void gst_wlbuffer_finalize (GstWlBuffer * wbuffer);
+static GstBufferClass *wlbuffer_parent_class = NULL;
 
 static void gst_wayland_sink_get_property (GObject * object,
     guint prop_id, GValue * value, GParamSpec * pspec);
@@ -92,19 +87,21 @@ static void gst_wayland_sink_set_property (GObject * object,
     guint prop_id, const GValue * value, GParamSpec * pspec);
 static void gst_wayland_sink_dispose (GObject * object);
 static void gst_wayland_sink_finalize (GObject * object);
-
 static GstCaps *gst_wayland_sink_get_caps (GstBaseSink * bsink);
 static gboolean gst_wayland_sink_set_caps (GstBaseSink * bsink, GstCaps * caps);
 static gboolean gst_wayland_sink_start (GstBaseSink * bsink);
 static gboolean gst_wayland_sink_stop (GstBaseSink * bsink);
-static gboolean gst_wayland_sink_unlock (GstBaseSink * bsink);
-static gboolean gst_wayland_sink_unlock_stop (GstBaseSink * bsink);
+static GstFlowReturn
+gst_wayland_sink_buffer_alloc (GstBaseSink * bsink, guint64 offset, guint size,
+    GstCaps * caps, GstBuffer ** buf);
 static gboolean gst_wayland_sink_preroll (GstBaseSink * bsink,
     GstBuffer * buffer);
 static gboolean gst_wayland_sink_render (GstBaseSink * bsink,
     GstBuffer * buffer);
+static void gst_wayland_bufferpool_clear (GstWaylandSink * sink);
+static void
+gst_wayland_buffer_destroy (GstWaylandSink * sink, GstWlBuffer * buffer);
 
-static gboolean create_shm_buffer (GstWayLandSink * sink);
 static int event_mask_update (uint32_t mask, void *data);
 static void sync_callback (void *data);
 static struct display *create_display (void);
@@ -113,10 +110,75 @@ static void display_handle_global (struct wl_display *display, uint32_t id,
 static void compositor_handle_visual (void *data,
     struct wl_compositor *compositor, uint32_t id, uint32_t token);
 static void redraw (struct wl_surface *surface, void *data, uint32_t time);
-static struct window *create_window (GstWayLandSink * sink,
+static struct window *create_window (GstWaylandSink * sink,
     struct display *display, int width, int height);
 
-static guint gst_wayland_sink_signals[LAST_SIGNAL] = { 0 };
+static void
+gst_wlbuffer_init (GstWlBuffer * buffer, gpointer g_class)
+{
+  buffer->wbuffer = NULL;
+  buffer->wlsink = NULL;
+}
+
+static void
+gst_wlbuffer_class_init (gpointer g_class, gpointer class_data)
+{
+  GstMiniObjectClass *mini_object_class = GST_MINI_OBJECT_CLASS (g_class);
+
+  wlbuffer_parent_class = g_type_class_peek_parent (g_class);
+
+  mini_object_class->finalize = (GstMiniObjectFinalizeFunction)
+      gst_wlbuffer_finalize;
+}
+
+GType
+gst_wlbuffer_get_type (void)
+{
+  static GType _gst_wlbuffer_type;
+
+  if (G_UNLIKELY (_gst_wlbuffer_type == 0)) {
+    static const GTypeInfo wlbuffer_info = {
+      sizeof (GstBufferClass),
+      NULL,
+      NULL,
+      gst_wlbuffer_class_init,
+      NULL,
+      NULL,
+      sizeof (GstWlBuffer),
+      0,
+      (GInstanceInitFunc) gst_wlbuffer_init,
+      NULL
+    };
+    _gst_wlbuffer_type = g_type_register_static (GST_TYPE_BUFFER,
+        "GstWlBuffer", &wlbuffer_info, 0);
+  }
+  return _gst_wlbuffer_type;
+}
+
+static void
+gst_wlbuffer_finalize (GstWlBuffer * wbuffer)
+{
+  GstWaylandSink *sink = NULL;
+
+  g_return_if_fail (wbuffer != NULL);
+
+  GST_DEBUG_OBJECT (sink, "Finalizing the WlBuffer");
+  sink = wbuffer->wlsink;
+  if (!sink) {
+    GST_WARNING_OBJECT (wbuffer, "No sink..");
+    goto beach;
+  }
+
+  GST_DEBUG_OBJECT (sink, "recycling buffer %p in pool", wbuffer);
+  /* need to increment the refcount again to recycle */
+  gst_buffer_ref (GST_BUFFER (wbuffer));
+  g_mutex_lock (sink->pool_lock);
+  sink->buffer_pool = g_slist_prepend (sink->buffer_pool, wbuffer);
+  g_mutex_unlock (sink->pool_lock);
+
+beach:
+  return;
+}
 
 static void
 gst_wayland_sink_base_init (gpointer gclass)
@@ -134,7 +196,7 @@ gst_wayland_sink_base_init (gpointer gclass)
 }
 
 static void
-gst_wayland_sink_class_init (GstWayLandSinkClass * klass)
+gst_wayland_sink_class_init (GstWaylandSinkClass * klass)
 {
   GObjectClass *gobject_class;
   GstElementClass *gstelement_class;
@@ -152,50 +214,39 @@ gst_wayland_sink_class_init (GstWayLandSinkClass * klass)
   gstbasesink_class->get_caps = GST_DEBUG_FUNCPTR (gst_wayland_sink_get_caps);
   gstbasesink_class->set_caps = GST_DEBUG_FUNCPTR (gst_wayland_sink_set_caps);
   gstbasesink_class->start = GST_DEBUG_FUNCPTR (gst_wayland_sink_start);
-  gstbasesink_class->unlock = GST_DEBUG_FUNCPTR (gst_wayland_sink_unlock);
-  gstbasesink_class->unlock_stop =
-      GST_DEBUG_FUNCPTR (gst_wayland_sink_unlock_stop);
+  gstbasesink_class->buffer_alloc =
+      GST_DEBUG_FUNCPTR (gst_wayland_sink_buffer_alloc);
   gstbasesink_class->stop = GST_DEBUG_FUNCPTR (gst_wayland_sink_stop);
   gstbasesink_class->preroll = GST_DEBUG_FUNCPTR (gst_wayland_sink_preroll);
   gstbasesink_class->render = GST_DEBUG_FUNCPTR (gst_wayland_sink_render);
 
   g_object_class_install_property (gobject_class, PROP_WAYLAND_DISPLAY,
-      g_param_spec_pointer ("wayland-display", "WayLand Display",
-          "WayLand  Display id created by the application ",
+      g_param_spec_pointer ("wayland-display", "Wayland Display",
+          "Wayland  Display id created by the application ",
           G_PARAM_READWRITE));
-
-  /*Fixme: not using now */
-  gst_wayland_sink_signals[SIGNAL_FRAME_READY] =
-      g_signal_new ("frame-ready",
-      G_TYPE_FROM_CLASS (klass),
-      G_SIGNAL_RUN_LAST,
-      0, NULL, NULL,
-      g_cclosure_marshal_VOID__POINTER, G_TYPE_NONE, 1, G_TYPE_POINTER);
 
   parent_class = g_type_class_peek_parent (klass);
 }
 
 static void
-gst_wayland_sink_init (GstWayLandSink * sink,
-    GstWayLandSinkClass * wayland_sink_class)
+gst_wayland_sink_init (GstWaylandSink * sink,
+    GstWaylandSinkClass * wayland_sink_class)
 {
 
   sink->caps = NULL;
 
-  sink->buffer_cond = g_cond_new ();
-  sink->buffer_lock = g_mutex_new ();
+  sink->pool_lock = g_mutex_new ();
+  sink->buffer_pool = NULL;
 
-  sink->wayland_cond = g_cond_new ();
   sink->wayland_lock = g_mutex_new ();
 
-  sink->render_finish = TRUE;
 }
 
 static void
 gst_wayland_sink_get_property (GObject * object,
     guint prop_id, GValue * value, GParamSpec * pspec)
 {
-  GstWayLandSink *sink = GST_WAYLAND_SINK (object);
+  GstWaylandSink *sink = GST_WAYLAND_SINK (object);
 
   switch (prop_id) {
     case PROP_WAYLAND_DISPLAY:
@@ -211,7 +262,7 @@ static void
 gst_wayland_sink_set_property (GObject * object,
     guint prop_id, const GValue * value, GParamSpec * pspec)
 {
-  GstWayLandSink *sink = GST_WAYLAND_SINK (object);
+  GstWaylandSink *sink = GST_WAYLAND_SINK (object);
 
   switch (prop_id) {
     case PROP_WAYLAND_DISPLAY:
@@ -226,24 +277,29 @@ gst_wayland_sink_set_property (GObject * object,
 static void
 gst_wayland_sink_dispose (GObject * object)
 {
-  GstWayLandSink *sink = GST_WAYLAND_SINK (object);
-
   G_OBJECT_CLASS (parent_class)->dispose (object);
 }
 
 static void
 gst_wayland_sink_finalize (GObject * object)
 {
-  GstWayLandSink *sink = GST_WAYLAND_SINK (object);
+  GstWaylandSink *sink = GST_WAYLAND_SINK (object);
 
+  GST_DEBUG_OBJECT (sink, "Finalizing the sink..");
   gst_caps_replace (&sink->caps, NULL);
-  
+
   free (sink->display);
   free (sink->window);
-  
-  g_cond_free (sink->buffer_cond);
-  g_cond_free (sink->wayland_cond);
-  g_mutex_free (sink->buffer_lock);
+
+  if (sink->pool_lock) {
+    g_mutex_free (sink->pool_lock);
+    sink->pool_lock = NULL;
+  }
+
+  if (sink->buffer_pool) {
+    gst_wayland_bufferpool_clear (sink);
+  }
+
   g_mutex_free (sink->wayland_lock);
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
@@ -306,6 +362,7 @@ create_display (void)
 
   wl_display_add_global_listener (display->display,
       display_handle_global, display);
+
   wl_display_iterate (display->display, WL_DISPLAY_READABLE);
 
   wl_display_get_fd (display->display, event_mask_update, display);
@@ -319,29 +376,38 @@ create_display (void)
   return display;
 }
 
-static gboolean
-create_shm_buffer (GstWayLandSink * sink)
+static GstWlBuffer *
+wayland_buffer_create (GstWaylandSink * sink)
 {
-  char filename[] = "/tmp/wayland-shm-XXXXXX";
-  struct wl_buffer *wbuffer;
-  int i, fd, size, stride;
+  char filename[1024];
+  int fd, size, stride;
   static void *data;
+  static int init = 0;
+  GstWlBuffer *wbuffer;
 
   GST_DEBUG_OBJECT (sink, "Creating wayland-shm buffers");
 
-  wl_display_iterate (sink->display->display, sink->display->mask);
+  wbuffer = (GstWlBuffer *) gst_mini_object_new (GST_TYPE_WLBUFFER);
+  wbuffer->wlsink = gst_object_ref (sink);
+
+  if (!init) {
+    wl_display_iterate (sink->display->display, sink->display->mask);
+    init++;
+  }
+
+  snprintf (filename, 256, "%s-%d-%s", "/tmp/wayland-shm", init, "XXXXXX");
 
   fd = mkstemp (filename);
   if (fd < 0) {
-    fprintf (stderr, "open %s failed: %m\n", filename);
+    GST_ERROR_OBJECT (sink, "open %s failed:", filename);
     exit (0);
   }
 
-  stride = sink->width * 4;
-  size = stride * sink->height;
+  stride = sink->video_width * 4;
+  size = stride * sink->video_height;
 
   if (ftruncate (fd, size) < 0) {
-    fprintf (stderr, "ftruncate failed: %m\n");
+    GST_ERROR_OBJECT (sink, "ftruncate failed:");
     close (fd);
     exit (0);
   }
@@ -354,28 +420,102 @@ create_shm_buffer (GstWayLandSink * sink)
     exit (0);
   }
 
-  wbuffer = wl_shm_create_buffer (sink->display->shm, fd,
-      sink->width, sink->height, stride, sink->display->xrgb_visual);
+  wbuffer->wbuffer = wl_shm_create_buffer (sink->display->shm, fd,
+      sink->video_width, sink->video_height, stride,
+      sink->display->xrgb_visual);
 
   close (fd);
 
-  sink->window->buffer = wbuffer;
-  wl_surface_attach (sink->window->surface, sink->window->buffer, 0, 0);
-  sink->MapAddr = data;
+  GST_BUFFER_DATA (wbuffer) = data;
+  GST_BUFFER_SIZE (wbuffer) = size;
 
-  return TRUE;
+  return wbuffer;
+
+}
+
+static void
+gst_wayland_buffer_destroy (GstWaylandSink * sink, GstWlBuffer * buffer)
+{
+  if (buffer->wlsink) {
+    buffer->wlsink = NULL;
+    gst_object_unref (sink);
+  }
+
+  GST_MINI_OBJECT_CLASS (wlbuffer_parent_class)->finalize (GST_MINI_OBJECT
+      (buffer));
+}
+
+static void
+gst_wayland_bufferpool_clear (GstWaylandSink * sink)
+{
+  g_mutex_lock (sink->pool_lock);
+  while (sink->buffer_pool) {
+    GstWlBuffer *buffer = sink->buffer_pool->data;
+
+    sink->buffer_pool = g_slist_delete_link (sink->buffer_pool,
+        sink->buffer_pool);
+    gst_wayland_buffer_destroy (sink, buffer);
+  }
+  g_mutex_unlock (sink->pool_lock);
+}
+
+static GstFlowReturn
+gst_wayland_sink_buffer_alloc (GstBaseSink * bsink, guint64 offset, guint size,
+    GstCaps * caps, GstBuffer ** buf)
+{
+  GstWaylandSink *sink = GST_WAYLAND_SINK (bsink);
+  GstWlBuffer *buffer = NULL;
+  GstFlowReturn ret = GST_FLOW_OK;
+  GstStructure *structure = NULL;
+  GstCaps *desired_caps = NULL;
+
+  GST_LOG_OBJECT (sink, "a buffer of %u bytes was requested with caps "
+      "%" GST_PTR_FORMAT " and offset %" G_GUINT64_FORMAT, size, caps, offset);
+
+  desired_caps = gst_caps_copy (caps);
+  structure = gst_caps_get_structure (desired_caps, 0);
+
+  if (gst_structure_get_int (structure, "width", &sink->video_width) &&
+      gst_structure_get_int (structure, "height", &sink->video_height)) {
+    sink->bpp = size / sink->video_width / sink->video_height;
+  }
+
+  g_mutex_lock (sink->pool_lock);
+  while (sink->buffer_pool) {
+    buffer = (GstWlBuffer *) sink->buffer_pool->data;
+
+    if (buffer) {
+      sink->buffer_pool =
+          g_slist_delete_link (sink->buffer_pool, sink->buffer_pool);
+    } else {
+      break;
+    }
+  }
+
+  g_mutex_unlock (sink->pool_lock);
+
+  if (!buffer)
+    buffer = wayland_buffer_create (sink);
+
+  if (buffer)
+    gst_buffer_set_caps (GST_BUFFER (buffer), caps);
+
+  *buf = GST_BUFFER (buffer);
+
+  gst_caps_unref (desired_caps);
+
+  return ret;
+
 }
 
 static gboolean
 gst_wayland_sink_set_caps (GstBaseSink * bsink, GstCaps * caps)
 {
-  GstWayLandSink *sink = GST_WAYLAND_SINK (bsink);
+  GstWaylandSink *sink = GST_WAYLAND_SINK (bsink);
   const GstStructure *structure;
-  GstFlowReturn result = GST_FLOW_OK;
   GstCaps *allowed_caps;
   gboolean ret = TRUE;
   GstCaps *intersection;
-  const GValue *fps;
 
   GST_LOG_OBJECT (sink, "set caps %" GST_PTR_FORMAT, caps);
 
@@ -394,8 +534,8 @@ gst_wayland_sink_set_caps (GstBaseSink * bsink, GstCaps * caps)
 
   structure = gst_caps_get_structure (caps, 0);
 
-  ret &= gst_structure_get_int (structure, "width", &sink->width);
-  ret &= gst_structure_get_int (structure, "height", &sink->height);
+  ret &= gst_structure_get_int (structure, "width", &sink->video_width);
+  ret &= gst_structure_get_int (structure, "height", &sink->video_height);
 
   if (!ret)
     return FALSE;
@@ -403,11 +543,6 @@ gst_wayland_sink_set_caps (GstBaseSink * bsink, GstCaps * caps)
   gst_caps_replace (&sink->caps, caps);
 
   gst_caps_unref (intersection);
-
-  if (!create_shm_buffer (sink)) {
-    GST_ERROR_OBJECT (sink, "Failed to create the wayland buffers..");
-    return FALSE;
-  }
 
   return TRUE;
 }
@@ -429,7 +564,7 @@ static void
 redraw (struct wl_surface *surface, void *data, uint32_t time)
 {
 
-  GstWayLandSink *sink = (GstWayLandSink *) data;
+  GstWaylandSink *sink = (GstWaylandSink *) data;
   g_mutex_lock (sink->wayland_lock);
 
   sink->render_finish = TRUE;
@@ -438,12 +573,10 @@ redraw (struct wl_surface *surface, void *data, uint32_t time)
 }
 
 static struct window *
-create_window (GstWayLandSink * sink, struct display *display, int width,
+create_window (GstWaylandSink * sink, struct display *display, int width,
     int height)
 {
   struct window *window;
-  struct wl_visual *visual;
-  void *data;
 
   g_mutex_lock (sink->wayland_lock);
 
@@ -453,7 +586,7 @@ create_window (GstWayLandSink * sink, struct display *display, int width,
   window->height = height;
   window->surface = wl_compositor_create_surface (display->compositor);
 
-  wl_shell_set_toplevel (display->shell, window->surface);
+  //wl_shell_set_toplevel (display->shell, window->surface);
 
   g_mutex_unlock (sink->wayland_lock);
   return window;
@@ -463,7 +596,7 @@ create_window (GstWayLandSink * sink, struct display *display, int width,
 static gboolean
 gst_wayland_sink_start (GstBaseSink * bsink)
 {
-  GstWayLandSink *sink = (GstWayLandSink *) bsink;
+  GstWaylandSink *sink = (GstWaylandSink *) bsink;
   gboolean result = TRUE;
 
   GST_DEBUG_OBJECT (sink, "start");
@@ -477,42 +610,9 @@ gst_wayland_sink_start (GstBaseSink * bsink)
 }
 
 static gboolean
-gst_wayland_sink_unlock (GstBaseSink * bsink)
-{
-  GstWayLandSink *sink = (GstWayLandSink *) bsink;
-
-  GST_DEBUG_OBJECT (sink, "unlock");
-
-  g_mutex_lock (sink->buffer_lock);
-
-  sink->unlock = TRUE;
-
-  g_mutex_unlock (sink->buffer_lock);
-
-  return TRUE;
-}
-
-static gboolean
-gst_wayland_sink_unlock_stop (GstBaseSink * bsink)
-{
-  GstWayLandSink *sink = (GstWayLandSink *) bsink;
-
-  GST_DEBUG_OBJECT (sink, "unlock_stop");
-
-  g_mutex_lock (sink->buffer_lock);
-
-  sink->unlock = FALSE;
-
-  g_mutex_unlock (sink->buffer_lock);
-
-  return TRUE;
-}
-
-
-static gboolean
 gst_wayland_sink_stop (GstBaseSink * bsink)
 {
-  GstWayLandSink *sink = (GstWayLandSink *) bsink;
+  GstWaylandSink *sink = (GstWaylandSink *) bsink;
 
   GST_DEBUG_OBJECT (sink, "stop");
 
@@ -530,31 +630,67 @@ gst_wayland_sink_preroll (GstBaseSink * bsink, GstBuffer * buffer)
 static GstFlowReturn
 gst_wayland_sink_render (GstBaseSink * bsink, GstBuffer * buffer)
 {
-  GstWayLandSink *sink = GST_WAYLAND_SINK (bsink);
+  GstWaylandSink *sink = GST_WAYLAND_SINK (bsink);
+  gboolean mem_cpy = TRUE;
+  GstVideoRectangle src, dst, res;
+
+  GST_LOG_OBJECT (sink,
+      "render buffer %p, data = %p, timestamp = %" GST_TIME_FORMAT, buffer,
+      GST_BUFFER_DATA (buffer), GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buffer)));
 
   if (sink->render_finish) {
-    GST_LOG_OBJECT (sink,
-        "render buffer %p, data = %p, timestamp = %" GST_TIME_FORMAT, buffer,
-        GST_BUFFER_DATA (buffer),
-        GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buffer)));
+    if (GST_IS_WLBUFFER (buffer)) {
+      GstWlBuffer *tmp_buffer = (GstWlBuffer *) buffer;
 
-    /*Fixme: remove the memcpy and add memory allocation stuffs to buff_alloc */
-    guint8 *src = GST_BUFFER_DATA (buffer);
-    guint len = GST_BUFFER_SIZE (buffer) / sink->height;
+      /* Does it have a waylandbuffer ? */
+      if (tmp_buffer->wbuffer) {
+        mem_cpy = FALSE;
+        GST_DEBUG_OBJECT (sink, "we have a buffer (%p) we allocated "
+            "ourselves and it has a wayland buffer, no memcpy then", buffer);
+        sink->window->buffer = tmp_buffer->wbuffer;
+      } else {
+        /* No wayland buffer, that's a malloc */
+        GST_DEBUG_OBJECT (sink, "we have a buffer (%p) we allocated "
+            "ourselves but it does not hold a wayland buffer", buffer);
+      }
+    } else {
+      /* Not our baby! */
+      GST_DEBUG_OBJECT (sink, "we have a buffer (%p) we did not allocate",
+          buffer);
+    }
 
-    /*for (i = 0; i < sink->height; i++) {
-       memcpy (data, src, len);
-       src += len;
-       data += len;
-       } */
+    if (mem_cpy) {
 
-    memcpy (sink->MapAddr, src, GST_BUFFER_SIZE (buffer));
+      GstWlBuffer *wlbuf = wayland_buffer_create (sink);
+      /*Fixme: remove the memcpy and add memory allocation stuffs to buff_alloc */
+      /*guint8 *src = GST_BUFFER_DATA (buffer);
+         guint len = GST_BUFFER_SIZE (buffer) / sink->height;
+
+         for (i = 0; i < sink->height; i++) {
+         memcpy (data, src, len);
+         src += len;
+         data += len;
+         } */
+
+      memcpy (GST_BUFFER_DATA (wlbuf), GST_BUFFER_DATA (buffer),
+          GST_BUFFER_SIZE (buffer));
+      sink->window->buffer = wlbuf->wbuffer;
+    }
+
+    src.w = sink->video_width;
+    src.h = sink->video_height;
+    dst.w = sink->window->width;
+    dst.h = sink->window->height;
+
+    gst_video_sink_center_rect (src, dst, &res, FALSE);
 
     sink->render_finish = FALSE;
 
-    wl_buffer_damage (sink->window->buffer, 0, 0, sink->width, sink->height);
+    wl_buffer_damage (sink->window->buffer, 0, 0, res.w, res.h);
 
-    wl_surface_damage (sink->window->surface, 0, 0, sink->width, sink->height);
+    wl_surface_attach (sink->window->surface, sink->window->buffer, 0, 0);
+
+    wl_surface_damage (sink->window->surface, 0, 0, res.w, res.h);
 
     wl_display_frame_callback (sink->display->display,
         sink->window->surface, redraw, sink);
@@ -583,4 +719,4 @@ plugin_init (GstPlugin * plugin)
 GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
     GST_VERSION_MINOR,
     "waylandsink",
-    "WayLand Video Sink", plugin_init, VERSION, "LGPL", "gst-wayland", "")
+    "Wayland Video Sink", plugin_init, VERSION, "LGPL", "gst-wayland", "")
