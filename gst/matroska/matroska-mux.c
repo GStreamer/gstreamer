@@ -796,15 +796,14 @@ skip_details:
   if (!strcmp (mimetype, "video/x-raw-yuv")) {
     context->codec_id = g_strdup (GST_MATROSKA_CODEC_ID_VIDEO_UNCOMPRESSED);
     gst_structure_get_fourcc (structure, "format", &videocontext->fourcc);
-  } else if (!strcmp (mimetype, "image/jpeg")) {
-    context->codec_id = g_strdup (GST_MATROSKA_CODEC_ID_VIDEO_MJPEG);
   } else if (!strcmp (mimetype, "video/x-xvid") /* MS/VfW compatibility cases */
       ||!strcmp (mimetype, "video/x-huffyuv")
       || !strcmp (mimetype, "video/x-divx")
       || !strcmp (mimetype, "video/x-dv")
       || !strcmp (mimetype, "video/x-h263")
       || !strcmp (mimetype, "video/x-msmpeg")
-      || !strcmp (mimetype, "video/x-wmv")) {
+      || !strcmp (mimetype, "video/x-wmv")
+      || !strcmp (mimetype, "image/jpeg")) {
     gst_riff_strf_vids *bih;
     gint size = sizeof (gst_riff_strf_vids);
     guint32 fourcc = 0;
@@ -861,6 +860,8 @@ skip_details:
           fourcc = GST_MAKE_FOURCC ('W', 'M', 'V', '3');
         }
       }
+    } else if (!strcmp (mimetype, "image/jpeg")) {
+      fourcc = GST_MAKE_FOURCC ('M', 'J', 'P', 'G');
     }
 
     if (!fourcc)
