@@ -538,6 +538,11 @@ struct _GstVideoInfo {
 #define GST_VIDEO_INFO_FPS_N(i)          ((i)->fps_n)
 #define GST_VIDEO_INFO_FPS_D(i)          ((i)->fps_d)
 
+/* dealing with GstVideoInfo flags */
+#define GST_VIDEO_INFO_FLAG_IS_SET(i,flag) ((GST_VIDEO_INFO_FLAGS(i) & (flag)) == (flag))
+#define GST_VIDEO_INFO_FLAG_SET(i,flag)    (GST_VIDEO_INFO_FLAGS(i) |= (flag))
+#define GST_VIDEO_INFO_FLAG_UNSET(i,flag)  (GST_VIDEO_INFO_FLAGS(i) &= ~(flag))
+
 /* dealing with planes */
 #define GST_VIDEO_INFO_N_PLANES(i)       (GST_VIDEO_FORMAT_INFO_N_PLANES((i)->finfo))
 #define GST_VIDEO_INFO_PLANE_OFFSET(i,p) ((i)->offset[p])
