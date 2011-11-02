@@ -1203,7 +1203,7 @@ AG_GST_CHECK_FEATURE(MPEG2ENC, [mpeg2enc], mpeg2enc, [
           if test "x$mpeg2enc_headers_ok" = "xyes"; then
             HAVE_MPEG2ENC="yes"
           fi
-          CPP_FLAGS="$CPPFLAGS_GOOD"
+          CPPFLAGS="$CPPFLAGS_GOOD"
           AC_SUBST(MPEG2ENC_CFLAGS)
           AC_SUBST(MPEG2ENC_LIBS)
         ], [
@@ -1231,10 +1231,14 @@ AG_GST_CHECK_FEATURE(MPLEX, [mplex], mplex, [
     dnl and mpeg2enc, we check for mplex on its own, too.
     dnl libmplex < 1.9rc? has fuzzy ABI, valgrind and other problems
     PKG_CHECK_MODULES(MPLEX, mjpegtools >= 1.9.0, [
+      dnl HACK because mplex 2.0.0 header files have a spurious 'include config.h'
+      touch config.h
       dnl switch over to c++ to test things
       AC_LANG_CPLUSPLUS
       OLD_CPPFLAGS="$CPPFLAGS"
-      CPPFLAGS="$CPPFLAGS $MPLEX_CFLAGS"
+      dnl HACK as above
+      CPPFLAGS_GOOD="$CPPFLAGS $MPLEX_CFLAGS"
+      CPPFLAGS="$CPPFLAGS_GOOD -I."
       AC_CHECK_HEADER(interact.hpp, [
         MPLEX_LIBS="$MPLEX_LIBS -lmplex2 $LIBM"
         OLD_LIBS="$LIBS"
@@ -1271,6 +1275,7 @@ main (int   argc,
 }
         ],[
           HAVE_MPLEX="yes"
+          CPPFLAGS="$CPPFLAGS_GOOD"
           AC_SUBST(MPLEX_CFLAGS)
           AC_SUBST(MPLEX_LIBS)
           AC_SUBST(MPLEX_LDFLAGS)

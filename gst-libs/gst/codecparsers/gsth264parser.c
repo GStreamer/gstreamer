@@ -953,7 +953,7 @@ gst_h264_parser_parse_buffering_period (GstH264NalParser * nalparser,
 
   GST_DEBUG ("parsing \"Buffering period\"");
 
-  READ_UE_ALLOWED (nr, sps_id, 0, GST_H264_MAX_SPS_COUNT);
+  READ_UE_ALLOWED (nr, sps_id, 0, GST_H264_MAX_SPS_COUNT - 1);
   sps = gst_h264_parser_get_sps (nalparser, sps_id);
   if (!sps) {
     GST_WARNING ("couldn't find associated sequence parameter set with id: %d",
@@ -1372,7 +1372,7 @@ gst_h264_parse_sps (GstH264NalUnit * nalu, GstH264SPS * sps,
 
   READ_UINT8 (&nr, sps->level_idc, 8);
 
-  READ_UE_ALLOWED (&nr, sps->id, 0, GST_H264_MAX_SPS_COUNT);
+  READ_UE_ALLOWED (&nr, sps->id, 0, GST_H264_MAX_SPS_COUNT - 1);
 
   if (sps->profile_idc == 100 || sps->profile_idc == 110 ||
       sps->profile_idc == 122 || sps->profile_idc == 244 ||
@@ -1468,7 +1468,10 @@ gst_h264_parse_sps (GstH264NalUnit * nalu, GstH264SPS * sps,
   sps->width = width;
   sps->height = height;
 
-  if (vui) {
+  sps->fps_num = 0;
+  sps->fps_den = 1;
+
+  if (vui && vui->timing_info_present_flag) {
     /* derive framerate */
     /* FIXME verify / also handle other cases */
     GST_LOG ("Framerate: %u %u %u %u", parse_vui_params,
@@ -1484,8 +1487,6 @@ gst_h264_parse_sps (GstH264NalUnit * nalu, GstH264SPS * sps,
       GST_LOG ("framerate %d/%d", sps->fps_num, sps->fps_den);
     }
   } else {
-    sps->fps_num = 0;
-    sps->fps_den = 1;
     GST_LOG ("No VUI, unknown framerate");
   }
 
@@ -1523,8 +1524,8 @@ gst_h264_parse_pps (GstH264NalParser * nalparser, GstH264NalUnit * nalu,
 
   nal_reader_init (&nr, nalu->data + nalu->offset + 1, nalu->size - 1);
 
-  READ_UE_ALLOWED (&nr, pps->id, 0, GST_H264_MAX_PPS_COUNT);
-  READ_UE_ALLOWED (&nr, sps_id, 0, GST_H264_MAX_SPS_COUNT);
+  READ_UE_ALLOWED (&nr, pps->id, 0, GST_H264_MAX_PPS_COUNT - 1);
+  READ_UE_ALLOWED (&nr, sps_id, 0, GST_H264_MAX_SPS_COUNT - 1);
 
   sps = gst_h264_parser_get_sps (nalparser, sps_id);
   if (!sps) {

@@ -313,9 +313,8 @@ static guint64 block_score_for_row_5_tap (GstFieldAnalysis * filter,
 static gfloat opposite_parity_windowed_comb (GstFieldAnalysis * filter,
     FieldAnalysisFields * fields);
 
-
 static void
-gst_field_analysis_reset (GstFieldAnalysis * filter)
+gst_field_analysis_empty_queue (GstFieldAnalysis * filter)
 {
   if (filter->frames) {
     guint length = g_queue_get_length (filter->frames);
@@ -327,6 +326,12 @@ gst_field_analysis_reset (GstFieldAnalysis * filter)
       length--;
     }
   }
+}
+
+static void
+gst_field_analysis_reset (GstFieldAnalysis * filter)
+{
+  gst_field_analysis_empty_queue (filter);
   GST_DEBUG_OBJECT (filter, "Resetting context");
   memset (filter->results, 0, 2 * sizeof (FieldAnalysis));
   filter->is_telecine = FALSE;
@@ -1711,7 +1716,7 @@ gst_field_analysis_chain (GstPad * pad, GstBuffer * buf)
       }
     }
 
-    gst_field_analysis_reset (filter);
+    gst_field_analysis_empty_queue (filter);
 
     if (ret != GST_FLOW_OK) {
       GST_DEBUG_OBJECT (filter,
