@@ -992,8 +992,7 @@ theora_handle_type_packet (GstTheoraDec * dec, ogg_packet * packet)
   }
 
   if (dec->tags) {
-    gst_element_found_tags_for_pad (GST_ELEMENT_CAST (dec), dec->srcpad,
-        dec->tags);
+    gst_pad_push_event (dec->srcpad, gst_event_new_tag (dec->tags));
     dec->tags = NULL;
   }
 

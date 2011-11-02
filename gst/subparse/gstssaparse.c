@@ -322,7 +322,7 @@ gst_ssa_parse_chain (GstPad * sinkpad, GstBuffer * buf)
     tags = gst_tag_list_new_empty ();
     gst_tag_list_add (tags, GST_TAG_MERGE_APPEND, GST_TAG_SUBTITLE_CODEC,
         "SubStation Alpha", NULL);
-    gst_element_found_tags_for_pad (GST_ELEMENT (parse), parse->srcpad, tags);
+    gst_pad_push_event (parse->srcpad, gst_event_new_tag (tags));
     parse->send_tags = FALSE;
   }
 

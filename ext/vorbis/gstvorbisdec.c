@@ -338,8 +338,8 @@ vorbis_handle_comment_packet (GstVorbisDec * vd, ogg_packet * packet)
   }
 
   if (vd->initialized) {
-    gst_element_found_tags_for_pad (GST_ELEMENT_CAST (vd),
-        GST_AUDIO_DECODER_SRC_PAD (vd), vd->taglist);
+    gst_pad_push_event (GST_AUDIO_DECODER_SRC_PAD (vd),
+        gst_event_new_tag (vd->taglist));
     vd->taglist = NULL;
   } else {
     /* Only post them as messages for the time being. *

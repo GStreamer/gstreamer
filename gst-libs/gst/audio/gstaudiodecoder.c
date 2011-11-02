@@ -580,7 +580,7 @@ gst_audio_decoder_setup (GstAudioDecoder * dec)
   gst_query_unref (query);
 
   /* normalize to bool */
-  dec->priv->agg = ! !res;
+  dec->priv->agg = !!res;
 }
 
 /* mini aggregator combining output buffers into fewer larger ones,
@@ -845,7 +845,7 @@ gst_audio_decoder_finish_frame (GstAudioDecoder * dec, GstBuffer * buf,
     if (gst_tag_list_is_empty (priv->taglist)) {
       gst_tag_list_free (priv->taglist);
     } else {
-      gst_element_found_tags (GST_ELEMENT (dec), priv->taglist);
+      gst_pad_push_event (dec->srcpad, gst_event_new_tag (priv->taglist));
     }
     priv->taglist = NULL;
   }

@@ -2403,10 +2403,12 @@ gst_ogg_demux_activate_chain (GstOggDemux * ogg, GstOggChain * chain,
 
   /* FIXME, must be sent from the streaming thread */
   if (event) {
+    GstTagList *tags;
+
     gst_ogg_demux_send_event (ogg, event);
 
-    gst_element_found_tags (GST_ELEMENT_CAST (ogg),
-        gst_tag_list_new (GST_TAG_CONTAINER_FORMAT, "Ogg", NULL));
+    tags = gst_tag_list_new (GST_TAG_CONTAINER_FORMAT, "Ogg", NULL);
+    gst_ogg_demux_send_event (ogg, gst_event_new_tag (tags));
   }
 
   GST_DEBUG_OBJECT (ogg, "starting chain");
@@ -2421,8 +2423,8 @@ gst_ogg_demux_activate_chain (GstOggDemux * ogg, GstOggChain * chain,
     /* FIXME also streaming thread */
     if (pad->map.taglist) {
       GST_DEBUG_OBJECT (ogg, "pushing tags");
-      gst_element_found_tags_for_pad (GST_ELEMENT_CAST (ogg),
-          GST_PAD_CAST (pad), pad->map.taglist);
+      gst_pad_push_event (GST_PAD_CAST (pad),
+          gst_event_new_tag (pad->map.taglist));
       pad->map.taglist = NULL;
     }
 

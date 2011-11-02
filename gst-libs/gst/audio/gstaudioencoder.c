@@ -524,7 +524,7 @@ gst_audio_encoder_finish_frame (GstAudioEncoder * enc, GstBuffer * buf,
         caps);
 #endif
     GST_DEBUG_OBJECT (enc, "sending tags %" GST_PTR_FORMAT, tags);
-    gst_element_found_tags_for_pad (GST_ELEMENT (enc), enc->srcpad, tags);
+    gst_pad_push_event (enc->srcpad, gst_event_new_tag (tags));
   }
 
   /* remove corresponding samples from input */

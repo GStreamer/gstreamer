@@ -1588,8 +1588,7 @@ gst_cdda_base_src_create (GstPushSrc * pushsrc, GstBuffer ** buffer)
     tags = gst_tag_list_merge (src->tags, src->tracks[src->cur_track].tags,
         GST_TAG_MERGE_REPLACE);
     GST_LOG_OBJECT (src, "announcing tags: %" GST_PTR_FORMAT, tags);
-    gst_element_found_tags_for_pad (GST_ELEMENT (src),
-        GST_BASE_SRC_PAD (src), tags);
+    gst_pad_push_event (GST_BASE_SRC_PAD (src), gst_event_new_tag (tags));
     src->prev_track = src->cur_track;
 
     gst_cdda_base_src_update_duration (src);
