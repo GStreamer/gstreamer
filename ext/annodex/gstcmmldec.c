@@ -584,7 +584,7 @@ gst_cmml_dec_parse_head (GstCmmlDec * dec, GstCmmlTagHead * head)
   gst_tag_list_add_values (tags, GST_TAG_MERGE_APPEND,
       GST_TAG_TITLE, &title_val, NULL);
   gst_tag_list_add (tags, GST_TAG_MERGE_APPEND, GST_TAG_CMML_HEAD, head, NULL);
-  gst_element_found_tags_for_pad (GST_ELEMENT (dec), dec->srcpad, tags);
+  gst_pad_push_event (dec->srcpad, gst_event_new_tag (tags));
 
   g_value_unset (&str_val);
   g_value_unset (&title_val);
@@ -609,7 +609,7 @@ gst_cmml_dec_send_clip_tag (GstCmmlDec * dec, GstCmmlTagClip * clip)
   GST_DEBUG_OBJECT (dec, "sending clip tag %s", clip->id);
 
   tags = gst_tag_list_new (GST_TAG_CMML_CLIP, clip, NULL);
-  gst_element_found_tags_for_pad (GST_ELEMENT (dec), dec->srcpad, tags);
+  gst_pad_push_event (dec->srcpad, gst_event_new_tag (tags));
 }
 
 /* push the string representation of a clip */

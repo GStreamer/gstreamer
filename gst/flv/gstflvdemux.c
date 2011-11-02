@@ -119,11 +119,11 @@ gst_flv_demux_parse_and_add_index_entry (GstFlvDemux * demux, GstClockTime ts,
     gboolean key;
 
     gst_index_entry_assoc_map (entry, GST_FORMAT_TIME, &time);
-    key = ! !(GST_INDEX_ASSOC_FLAGS (entry) & GST_ASSOCIATION_FLAG_KEY_UNIT);
+    key = !!(GST_INDEX_ASSOC_FLAGS (entry) & GST_ASSOCIATION_FLAG_KEY_UNIT);
     GST_LOG_OBJECT (demux, "position already mapped to time %" GST_TIME_FORMAT
         ", keyframe %d", GST_TIME_ARGS (time), key);
     /* there is not really a way to delete the existing one */
-    if (time != ts || key != ! !keyframe)
+    if (time != ts || key != !!keyframe)
       GST_DEBUG_OBJECT (demux, "metadata mismatch");
 #endif
     return;
@@ -750,6 +750,22 @@ beach:
   return ret;
 }
 
+static gboolean
+gst_flv_demux_push_src_event (GstFlvDemux * demux, GstEvent * event)
+{
+  gboolean ret = TRUE;
+
+  if (demux->audio_pad)
+    ret |= gst_pad_push_event (demux->audio_pad, gst_event_ref (event));
+
+  if (demux->video_pad)
+    ret |= gst_pad_push_event (demux->video_pad, gst_event_ref (event));
+
+  gst_event_unref (event);
+
+  return ret;
+}
+
 static void
 gst_flv_demux_push_tags (GstFlvDemux * demux)
 {
@@ -766,7 +782,7 @@ gst_flv_demux_push_tags (GstFlvDemux * demux)
   if (demux->taglist) {
     GST_DEBUG_OBJECT (demux, "pushing tags out %" GST_PTR_FORMAT,
         demux->taglist);
-    gst_element_found_tags (GST_ELEMENT (demux), demux->taglist);
+    gst_flv_demux_push_src_event (demux, gst_event_new_tag (demux->taglist));
     demux->taglist = gst_tag_list_new_empty ();
     demux->push_tags = FALSE;
   }
@@ -2174,22 +2190,6 @@ done:
   return ret;
 }
 
-static gboolean
-gst_flv_demux_push_src_event (GstFlvDemux * demux, GstEvent * event)
-{
-  gboolean ret = TRUE;
-
-  if (demux->audio_pad)
-    ret |= gst_pad_push_event (demux->audio_pad, gst_event_ref (event));
-
-  if (demux->video_pad)
-    ret |= gst_pad_push_event (demux->video_pad, gst_event_ref (event));
-
-  gst_event_unref (event);
-
-  return ret;
-}
-
 static GstFlowReturn
 gst_flv_demux_create_index (GstFlvDemux * demux, gint64 pos, GstClockTime ts)
 {
@@ -2493,7 +2493,7 @@ flv_demux_handle_seek_push (GstFlvDemux * demux, GstEvent * event)
   if (format != GST_FORMAT_TIME)
     goto wrong_format;
 
-  flush = ! !(flags & GST_SEEK_FLAG_FLUSH);
+  flush = !!(flags & GST_SEEK_FLAG_FLUSH);
   /* FIXME : the keyframe flag is never used ! */
 
   /* Work on a copy until we are sure the seek succeeded. */
@@ -2654,7 +2654,7 @@ gst_flv_demux_handle_seek_pull (GstFlvDemux * demux, GstEvent * event,
     demux->seeking = seeking;
   GST_OBJECT_UNLOCK (demux);
 
-  flush = ! !(flags & GST_SEEK_FLAG_FLUSH);
+  flush = !!(flags & GST_SEEK_FLAG_FLUSH);
   /* FIXME : the keyframe flag is never used */
 
   if (flush) {

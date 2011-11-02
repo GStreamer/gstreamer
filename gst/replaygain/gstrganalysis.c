@@ -625,8 +625,8 @@ gst_rg_analysis_handle_eos (GstRgAnalysis * filter)
       gst_tag_list_add (tag_list, GST_TAG_MERGE_APPEND,
           GST_TAG_REFERENCE_LEVEL, filter->reference_level, NULL);
       /* This steals our reference to the list: */
-      gst_element_found_tags_for_pad (GST_ELEMENT (filter),
-          GST_BASE_TRANSFORM_SRC_PAD (GST_BASE_TRANSFORM (filter)), tag_list);
+      gst_pad_push_event (GST_BASE_TRANSFORM_SRC_PAD (GST_BASE_TRANSFORM
+              (filter)), gst_event_new_tag (tag_list));
     }
   }
 
