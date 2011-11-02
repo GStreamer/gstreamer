@@ -520,10 +520,18 @@ gst_omx_video_dec_fill_buffer (GstOMXVideoDec * self, GstOMXBuffer * inbuf,
           src_stride = port_def->format.video.nStride;
           dest_stride =
               gst_video_format_get_row_stride (state->format, 0, state->width);
+
+          /* XXX: Try this if no stride was set */
+          if (src_stride == 0)
+            src_stride = dest_stride;
         } else {
           src_stride = port_def->format.video.nStride / 2;
           dest_stride =
               gst_video_format_get_row_stride (state->format, 1, state->width);
+
+          /* XXX: Try this if no stride was set */
+          if (src_stride == 0)
+            src_stride = dest_stride;
         }
 
         src = inbuf->omx_buf->pBuffer + inbuf->omx_buf->nOffset;
@@ -564,10 +572,18 @@ gst_omx_video_dec_fill_buffer (GstOMXVideoDec * self, GstOMXBuffer * inbuf,
           src_stride = port_def->format.video.nStride;
           dest_stride =
               gst_video_format_get_row_stride (state->format, 0, state->width);
+
+          /* XXX: Try this if no stride was set */
+          if (src_stride == 0)
+            src_stride = dest_stride;
         } else {
           src_stride = port_def->format.video.nStride;
           dest_stride =
               gst_video_format_get_row_stride (state->format, 1, state->width);
+
+          /* XXX: Try this if no stride was set */
+          if (src_stride == 0)
+            src_stride = dest_stride;
         }
 
         src = inbuf->omx_buf->pBuffer + inbuf->omx_buf->nOffset;
