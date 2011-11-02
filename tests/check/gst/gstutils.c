@@ -490,6 +490,7 @@ GST_START_TEST (test_element_found_tags)
   GstTagList *list;
   GstBus *bus;
   GstMessage *message;
+  GstPad *srcpad;
 
   pipeline = gst_element_factory_make ("pipeline", NULL);
   fakesrc = gst_element_factory_make ("fakesrc", NULL);
@@ -503,8 +504,9 @@ GST_START_TEST (test_element_found_tags)
 
   gst_element_set_state (pipeline, GST_STATE_PLAYING);
 
-  gst_element_found_tags (GST_ELEMENT (fakesrc), list);
-  gst_tag_list_free (list);
+  srcpad = gst_element_get_static_pad (fakesrc, "src");
+  gst_pad_push_event (srcpad, gst_event_new_tag (list));
+  gst_object_unref (srcpad);
 
   bus = gst_element_get_bus (pipeline);
   message = gst_bus_poll (bus, GST_MESSAGE_EOS, -1);

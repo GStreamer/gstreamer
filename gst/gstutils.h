@@ -915,13 +915,6 @@ GstPad *                gst_bin_find_unlinked_pad       (GstBin *bin, GstPadDire
 GstBuffer *		gst_buffer_merge		(GstBuffer * buf1, GstBuffer * buf2);
 GstBuffer *		gst_buffer_join			(GstBuffer * buf1, GstBuffer * buf2);
 
-/* tag emission utility functions */
-void			gst_element_found_tags_for_pad	(GstElement * element,
-							 GstPad * pad,
-							 GstTagList * list);
-void			gst_element_found_tags		(GstElement * element,
-							 GstTagList * list);
-
 /* parse utility functions */
 GstElement *            gst_parse_bin_from_description      (const gchar     * bin_description,
                                                              gboolean          ghost_unlinked_pads,

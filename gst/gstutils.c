@@ -3021,64 +3021,6 @@ gst_pad_query_peer_convert (GstPad * pad, GstFormat src_format, gint64 src_val,
   return ret;
 }
 
-/**
- * gst_element_found_tags_for_pad:
- * @element: element for which to post taglist to bus.
- * @pad: (transfer none): pad on which to push tag-event
- * @list: (transfer full): the taglist to post on the bus and create event from
- *
- * Posts a message to the bus that new tags were found and pushes the
- * tags as event. Takes ownership of the @list.
- *
- * This is a utility method for elements. Applications should use the
- * #GstTagSetter interface.
- */
-void
-gst_element_found_tags_for_pad (GstElement * element,
-    GstPad * pad, GstTagList * list)
-{
-  g_return_if_fail (element != NULL);
-  g_return_if_fail (pad != NULL);
-  g_return_if_fail (list != NULL);
-
-  gst_pad_push_event (pad, gst_event_new_tag (gst_tag_list_copy (list)));
-}
-
-static void
-push_and_ref (const GValue * vpad, GstEvent * event)
-{
-  GstPad *pad = g_value_get_object (vpad);
-
-  gst_pad_push_event (pad, gst_event_ref (event));
-}
-
-/**
- * gst_element_found_tags:
- * @element: element for which we found the tags.
- * @list: (transfer full): list of tags.
- *
- * Posts a message to the bus that new tags were found, and pushes an event
- * to all sourcepads. Takes ownership of the @list.
- *
- * This is a utility method for elements. Applications should use the
- * #GstTagSetter interface.
- */
-void
-gst_element_found_tags (GstElement * element, GstTagList * list)
-{
-  GstIterator *iter;
-  GstEvent *event;
-
-  g_return_if_fail (element != NULL);
-  g_return_if_fail (list != NULL);
-
-  iter = gst_element_iterate_src_pads (element);
-  event = gst_event_new_tag (gst_tag_list_copy (list));
-  gst_iterator_foreach (iter, (GstIteratorForeachFunction) push_and_ref, event);
-  gst_iterator_free (iter);
-  gst_event_unref (event);
-}
-
 static GstPad *
 element_find_unlinked_pad (GstElement * element, GstPadDirection direction)
 {
