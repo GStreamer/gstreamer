@@ -506,8 +506,7 @@ mpegts_parse_tspad_push (MpegTSParse2 * parse, MpegTSParsePad * tspad,
       MpegTSBaseProgram *bp = (MpegTSBaseProgram *) tspad->program;
       pad_pids = bp->streams;
       if (bp->tags) {
-        gst_element_found_tags_for_pad (GST_ELEMENT_CAST (parse), tspad->pad,
-            bp->tags);
+        gst_pad_push_event (tspad->pad, gst_event_new_tag (bp->tags));
         bp->tags = NULL;
       }
     } else {
