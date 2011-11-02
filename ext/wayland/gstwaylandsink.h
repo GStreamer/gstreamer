@@ -43,7 +43,6 @@
 struct  display
 {
   struct wl_display *display;
-  struct wl_visual *xrgb_visual;
   struct wl_compositor *compositor;
   struct wl_shell *shell;
   struct wl_shm *shm;
@@ -84,6 +83,7 @@ struct _GstWaylandSink
   
   struct display *display;
   struct window *window;
+  struct wl_callback *callback;
 
   GMutex *pool_lock;
   GSList *buffer_pool;
