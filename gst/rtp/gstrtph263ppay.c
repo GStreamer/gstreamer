@@ -247,7 +247,7 @@ gst_rtp_h263p_pay_sink_getcaps (GstBaseRTPPayload * payload, GstPad * pad)
   if (!peercaps)
     return
         gst_caps_copy (gst_pad_get_pad_template_caps
-        (GST_BASE_RTP_PAYLOAD_SRCPAD (payload)));
+        (GST_BASE_RTP_PAYLOAD_SINKPAD (payload)));
 
   intersect = gst_caps_intersect (peercaps,
       gst_pad_get_pad_template_caps (GST_BASE_RTP_PAYLOAD_SRCPAD (payload)));
