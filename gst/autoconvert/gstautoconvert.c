@@ -1277,14 +1277,10 @@ gst_auto_convert_sink_getcaps (GstPad * pad)
       if (element_caps) {
         if (!gst_caps_is_any (element_caps) &&
             !gst_caps_is_empty (element_caps)) {
-          GstCaps *tmpcaps = NULL;
-
-          tmpcaps = gst_caps_union (caps, element_caps);
-          gst_caps_unref (caps);
-          caps = tmpcaps;
-
+          gst_caps_merge (caps, element_caps);
+        } else {
+          gst_caps_unref (element_caps);
         }
-        gst_caps_unref (element_caps);
       }
 
       gst_object_unref (element);
@@ -1298,11 +1294,7 @@ gst_auto_convert_sink_getcaps (GstPad * pad)
 
         if (static_caps && !gst_caps_is_any (static_caps) &&
             !gst_caps_is_empty (static_caps)) {
-          GstCaps *tmpcaps = NULL;
-
-          tmpcaps = gst_caps_union (caps, static_caps);
-          gst_caps_unref (caps);
-          caps = tmpcaps;
+          gst_caps_merge (caps, static_caps);
         }
       }
     }
