@@ -137,7 +137,7 @@ struct _GstCollectData2
   /*< private >*/
   /* state: bitfield for easier extension;
    * eos, flushing, new_segment, waiting */
-  guint                  state;
+  GstCollectPads2StateFlags    state;
 
   /* refcounting for struct, and destroy callback */
   GstCollectData2DestroyNotify destroy_notify;
