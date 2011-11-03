@@ -105,7 +105,7 @@ struct _GstQueue {
   gboolean      eos;
 
   /* the queue of data we're keeping our grubby hands on */
-  GQueue *queue;
+  GQueue queue;
 
   GstQueueSize
     cur_level,          /* currently in the queue */
