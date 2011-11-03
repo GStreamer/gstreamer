@@ -255,6 +255,12 @@ static gboolean gst_queue2_is_filled (GstQueue2 * queue);
 
 static void update_cur_level (GstQueue2 * queue, GstQueue2Range * range);
 
+typedef enum
+{
+  GST_QUEUE2_ITEM_TYPE_UNKNOWN = 0,
+  GST_QUEUE2_ITEM_TYPE_BUFFER,
+  GST_QUEUE2_ITEM_TYPE_EVENT
+} GstQueue2ItemType;
 
 /* static guint gst_queue2_signals[LAST_SIGNAL] = { 0 }; */
 
@@ -1809,9 +1815,10 @@ handle_error:
 
 /* enqueue an item an update the level stats */
 static void
-gst_queue2_locked_enqueue (GstQueue2 * queue, gpointer item, gboolean isbuffer)
+gst_queue2_locked_enqueue (GstQueue2 * queue, gpointer item,
+    GstQueue2ItemType item_type)
 {
-  if (isbuffer) {
+  if (item_type == GST_QUEUE2_ITEM_TYPE_BUFFER) {
     GstBuffer *buffer;
     guint size;
 
@@ -1834,7 +1841,7 @@ gst_queue2_locked_enqueue (GstQueue2 * queue, gpointer item, gboolean isbuffer)
       /* FIXME - check return value? */
       gst_queue2_create_write (queue, buffer);
     }
-  } else if (GST_IS_EVENT (item)) {
+  } else if (item_type == GST_QUEUE2_ITEM_TYPE_EVENT) {
     GstEvent *event;
 
     event = GST_EVENT_CAST (item);
@@ -1906,7 +1913,7 @@ unexpected_event:
 
 /* dequeue an item from the queue and update level stats */
 static GstMiniObject *
-gst_queue2_locked_dequeue (GstQueue2 * queue, gboolean * is_buffer)
+gst_queue2_locked_dequeue (GstQueue2 * queue, GstQueue2ItemType * item_type)
 {
   GstMiniObject *item;
 
@@ -1924,7 +1931,7 @@ gst_queue2_locked_dequeue (GstQueue2 * queue, gboolean * is_buffer)
 
     buffer = GST_BUFFER_CAST (item);
     size = GST_BUFFER_SIZE (buffer);
-    *is_buffer = TRUE;
+    *item_type = GST_QUEUE2_ITEM_TYPE_BUFFER;
 
     GST_CAT_LOG_OBJECT (queue_dataflow, queue,
         "retrieved buffer %p from queue", buffer);
@@ -1945,7 +1952,7 @@ gst_queue2_locked_dequeue (GstQueue2 * queue, gboolean * is_buffer)
   } else if (GST_IS_EVENT (item)) {
     GstEvent *event = GST_EVENT_CAST (item);
 
-    *is_buffer = FALSE;
+    *item_type = GST_QUEUE2_ITEM_TYPE_EVENT;
 
     GST_CAT_LOG_OBJECT (queue_dataflow, queue,
         "retrieved event %p from queue", event);
@@ -1966,6 +1973,7 @@ gst_queue2_locked_dequeue (GstQueue2 * queue, gboolean * is_buffer)
         ("Unexpected item %p dequeued from queue %s (refcounting problem?)",
         item, GST_OBJECT_NAME (queue));
     item = NULL;
+    *item_type = GST_QUEUE2_ITEM_TYPE_UNKNOWN;
   }
   GST_QUEUE2_SIGNAL_DEL (queue);
 
@@ -2056,7 +2064,7 @@ gst_queue2_handle_sink_event (GstPad * pad, GstEvent * event)
         /* refuse more events on EOS */
         if (queue->is_eos)
           goto out_eos;
-        gst_queue2_locked_enqueue (queue, event, FALSE);
+        gst_queue2_locked_enqueue (queue, event, GST_QUEUE2_ITEM_TYPE_EVENT);
         GST_QUEUE2_MUTEX_UNLOCK (queue);
       } else {
         /* non-serialized events are passed upstream. */
@@ -2171,7 +2179,7 @@ gst_queue2_chain (GstPad * pad, GstBuffer * buffer)
     goto out_flushing;
 
   /* put buffer in queue now */
-  gst_queue2_locked_enqueue (queue, buffer, TRUE);
+  gst_queue2_locked_enqueue (queue, buffer, GST_QUEUE2_ITEM_TYPE_BUFFER);
   GST_QUEUE2_MUTEX_UNLOCK (queue);
 
   return GST_FLOW_OK;
@@ -2214,16 +2222,16 @@ gst_queue2_push_one (GstQueue2 * queue)
 {
   GstFlowReturn result = GST_FLOW_OK;
   GstMiniObject *data;
-  gboolean is_buffer = FALSE;
+  GstQueue2ItemType item_type;
 
-  data = gst_queue2_locked_dequeue (queue, &is_buffer);
+  data = gst_queue2_locked_dequeue (queue, &item_type);
   if (data == NULL)
     goto no_item;
 
 next:
   GST_QUEUE2_MUTEX_UNLOCK (queue);
 
-  if (is_buffer) {
+  if (item_type == GST_QUEUE2_ITEM_TYPE_BUFFER) {
     GstBuffer *buffer;
     GstCaps *caps;
 
@@ -2247,12 +2255,12 @@ next:
        * queue we can push, we set a flag to make the sinkpad refuse more
        * buffers with an UNEXPECTED return value until we receive something
        * pushable again or we get flushed. */
-      while ((data = gst_queue2_locked_dequeue (queue, &is_buffer))) {
-        if (is_buffer) {
+      while ((data = gst_queue2_locked_dequeue (queue, &item_type))) {
+        if (item_type == GST_QUEUE2_ITEM_TYPE_BUFFER) {
           GST_CAT_LOG_OBJECT (queue_dataflow, queue,
               "dropping UNEXPECTED buffer %p", data);
           gst_buffer_unref (GST_BUFFER_CAST (data));
-        } else if (GST_IS_EVENT (data)) {
+        } else if (item_type == GST_QUEUE2_ITEM_TYPE_EVENT) {
           GstEvent *event = GST_EVENT_CAST (data);
           GstEventType type = GST_EVENT_TYPE (event);
 
@@ -2275,7 +2283,7 @@ next:
       queue->unexpected = TRUE;
       result = GST_FLOW_OK;
     }
-  } else if (GST_IS_EVENT (data)) {
+  } else if (item_type == GST_QUEUE2_ITEM_TYPE_EVENT) {
     GstEvent *event = GST_EVENT_CAST (data);
     GstEventType type = GST_EVENT_TYPE (event);
 
