@@ -222,12 +222,12 @@ static void gst_vp8_enc_get_property (GObject * object, guint prop_id,
 static gboolean gst_vp8_enc_start (GstBaseVideoEncoder * encoder);
 static gboolean gst_vp8_enc_stop (GstBaseVideoEncoder * encoder);
 static gboolean gst_vp8_enc_set_format (GstBaseVideoEncoder *
-    base_video_encoder, GstVideoState * state);
+    base_video_encoder, GstVideoInfo * info);
 static gboolean gst_vp8_enc_finish (GstBaseVideoEncoder * base_video_encoder);
 static GstFlowReturn gst_vp8_enc_handle_frame (GstBaseVideoEncoder *
-    base_video_encoder, GstVideoFrame * frame);
+    base_video_encoder, GstVideoFrameState * frame);
 static GstFlowReturn gst_vp8_enc_shape_output (GstBaseVideoEncoder * encoder,
-    GstVideoFrame * frame);
+    GstVideoFrameState * frame);
 static gboolean gst_vp8_enc_sink_event (GstBaseVideoEncoder *
     base_video_encoder, GstEvent * event);
 
@@ -235,7 +235,7 @@ static GstStaticPadTemplate gst_vp8_enc_sink_template =
 GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (GST_VIDEO_CAPS_YUV ("I420"))
+    GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE ("I420"))
     );
 
 static GstStaticPadTemplate gst_vp8_enc_src_template =
@@ -245,29 +245,27 @@ GST_STATIC_PAD_TEMPLATE ("src",
     GST_STATIC_CAPS ("video/x-vp8")
     );
 
-static void
-do_init (GType vp8enc_type)
-{
-  static const GInterfaceInfo tag_setter_info = { NULL, NULL, NULL };
-  const GInterfaceInfo preset_interface_info = {
-    NULL,                       /* interface_init */
-    NULL,                       /* interface_finalize */
-    NULL                        /* interface_data */
-  };
+#define gst_vp8_enc_parent_class parent_class
+G_DEFINE_TYPE_WITH_CODE (GstVP8Enc, gst_vp8_enc, GST_TYPE_BASE_VIDEO_ENCODER,
+    G_IMPLEMENT_INTERFACE (GST_TYPE_TAG_SETTER, NULL);
+    G_IMPLEMENT_INTERFACE (GST_TYPE_PRESET, NULL););
 
-  g_type_add_interface_static (vp8enc_type, GST_TYPE_TAG_SETTER,
-      &tag_setter_info);
-  g_type_add_interface_static (vp8enc_type, GST_TYPE_PRESET,
-      &preset_interface_info);
-}
-
-GST_BOILERPLATE_FULL (GstVP8Enc, gst_vp8_enc, GstBaseVideoEncoder,
-    GST_TYPE_BASE_VIDEO_ENCODER, do_init);
 
 static void
-gst_vp8_enc_base_init (gpointer g_class)
+gst_vp8_enc_class_init (GstVP8EncClass * klass)
 {
-  GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
+  GObjectClass *gobject_class;
+  GstElementClass *element_class;
+  GstBaseVideoEncoderClass *base_video_encoder_class;
+
+
+  gobject_class = G_OBJECT_CLASS (klass);
+  element_class = GST_ELEMENT_CLASS (klass);
+  base_video_encoder_class = GST_BASE_VIDEO_ENCODER_CLASS (klass);
+
+  gobject_class->set_property = gst_vp8_enc_set_property;
+  gobject_class->get_property = gst_vp8_enc_get_property;
+  gobject_class->finalize = gst_vp8_enc_finalize;
 
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&gst_vp8_enc_src_template));
@@ -278,20 +276,6 @@ gst_vp8_enc_base_init (gpointer g_class)
       "On2 VP8 Encoder",
       "Codec/Encoder/Video",
       "Encode VP8 video streams", "David Schleef <ds@entropywave.com>");
-}
-
-static void
-gst_vp8_enc_class_init (GstVP8EncClass * klass)
-{
-  GObjectClass *gobject_class;
-  GstBaseVideoEncoderClass *base_video_encoder_class;
-
-  gobject_class = G_OBJECT_CLASS (klass);
-  base_video_encoder_class = GST_BASE_VIDEO_ENCODER_CLASS (klass);
-
-  gobject_class->set_property = gst_vp8_enc_set_property;
-  gobject_class->get_property = gst_vp8_enc_get_property;
-  gobject_class->finalize = gst_vp8_enc_finalize;
 
   base_video_encoder_class->start = gst_vp8_enc_start;
   base_video_encoder_class->stop = gst_vp8_enc_stop;
@@ -446,7 +430,7 @@ gst_vp8_enc_class_init (GstVP8EncClass * klass)
 }
 
 static void
-gst_vp8_enc_init (GstVP8Enc * gst_vp8_enc, GstVP8EncClass * klass)
+gst_vp8_enc_init (GstVP8Enc * gst_vp8_enc)
 {
 
   GST_DEBUG_OBJECT (gst_vp8_enc, "init");
@@ -706,7 +690,7 @@ gst_vp8_enc_stop (GstBaseVideoEncoder * base_video_encoder)
 
 static gboolean
 gst_vp8_enc_set_format (GstBaseVideoEncoder * base_video_encoder,
-    GstVideoState * state)
+    GstVideoInfo * info)
 {
   GstVP8Enc *encoder;
   vpx_codec_enc_cfg_t cfg;
@@ -732,10 +716,10 @@ gst_vp8_enc_set_format (GstBaseVideoEncoder * base_video_encoder,
     return FALSE;
   }
 
-  cfg.g_w = state->width;
-  cfg.g_h = state->height;
-  cfg.g_timebase.num = state->fps_d;
-  cfg.g_timebase.den = state->fps_n;
+  cfg.g_w = info->width;
+  cfg.g_h = info->height;
+  cfg.g_timebase.num = info->fps_d;
+  cfg.g_timebase.den = info->fps_n;
 
   cfg.g_error_resilient = encoder->error_resilient;
   cfg.g_lag_in_frames = encoder->max_latency;
@@ -838,7 +822,7 @@ gst_vp8_enc_set_format (GstBaseVideoEncoder * base_video_encoder,
 
   gst_base_video_encoder_set_latency (base_video_encoder, 0,
       gst_util_uint64_scale (encoder->max_latency,
-          state->fps_d * GST_SECOND, state->fps_n));
+          info->fps_d * GST_SECOND, info->fps_n));
   encoder->inited = TRUE;
 
   /* prepare cached image buffer setup */
@@ -848,39 +832,29 @@ gst_vp8_enc_set_format (GstBaseVideoEncoder * base_video_encoder,
   image->fmt = VPX_IMG_FMT_I420;
   image->bps = 12;
   image->x_chroma_shift = image->y_chroma_shift = 1;
-  image->w = image->d_w = state->width;
-  image->h = image->d_h = state->height;
+  image->w = image->d_w = info->width;
+  image->h = image->d_h = info->height;
 
-  image->stride[VPX_PLANE_Y] =
-      gst_video_format_get_row_stride (state->format, 0, state->width);
-  image->stride[VPX_PLANE_U] =
-      gst_video_format_get_row_stride (state->format, 1, state->width);
-  image->stride[VPX_PLANE_V] =
-      gst_video_format_get_row_stride (state->format, 2, state->width);
-  image->planes[VPX_PLANE_Y] =
-      data + gst_video_format_get_component_offset (state->format, 0,
-      state->width, state->height);
-  image->planes[VPX_PLANE_U] =
-      data + gst_video_format_get_component_offset (state->format, 1,
-      state->width, state->height);
-  image->planes[VPX_PLANE_V] =
-      data + gst_video_format_get_component_offset (state->format, 2,
-      state->width, state->height);
-
+  image->stride[VPX_PLANE_Y] = GST_VIDEO_INFO_COMP_STRIDE (info, 0);
+  image->stride[VPX_PLANE_U] = GST_VIDEO_INFO_COMP_STRIDE (info, 1);
+  image->stride[VPX_PLANE_V] = GST_VIDEO_INFO_COMP_STRIDE (info, 2);
+  image->planes[VPX_PLANE_Y] = data + GST_VIDEO_INFO_COMP_OFFSET (info, 0);
+  image->planes[VPX_PLANE_U] = data + GST_VIDEO_INFO_COMP_OFFSET (info, 1);
+  image->planes[VPX_PLANE_V] = data + GST_VIDEO_INFO_COMP_OFFSET (info, 2);
 
   caps = gst_caps_new_simple ("video/x-vp8",
-      "width", G_TYPE_INT, state->width,
-      "height", G_TYPE_INT, state->height,
-      "framerate", GST_TYPE_FRACTION, state->fps_n,
-      state->fps_d,
-      "pixel-aspect-ratio", GST_TYPE_FRACTION, state->par_n,
-      state->par_d, NULL);
+      "width", G_TYPE_INT, info->width,
+      "height", G_TYPE_INT, info->height,
+      "framerate", GST_TYPE_FRACTION, info->fps_n,
+      info->fps_d,
+      "pixel-aspect-ratio", GST_TYPE_FRACTION, info->par_n, info->par_d, NULL);
   {
     GstStructure *s;
     GstBuffer *stream_hdr, *vorbiscomment;
     const GstTagList *iface_tags;
     GValue array = { 0, };
     GValue value = { 0, };
+    gsize size;
     s = gst_caps_get_structure (caps, 0);
 
     /* put buffers in a fixed list */
@@ -889,19 +863,21 @@ gst_vp8_enc_set_format (GstBaseVideoEncoder * base_video_encoder,
 
     /* Create Ogg stream-info */
     stream_hdr = gst_buffer_new_and_alloc (26);
-    data = GST_BUFFER_DATA (stream_hdr);
+    data = gst_buffer_map (stream_hdr, &size, NULL, GST_MAP_WRITE);
 
     GST_WRITE_UINT8 (data, 0x4F);
     GST_WRITE_UINT32_BE (data + 1, 0x56503830); /* "VP80" */
     GST_WRITE_UINT8 (data + 5, 0x01);   /* stream info header */
     GST_WRITE_UINT8 (data + 6, 1);      /* Major version 1 */
     GST_WRITE_UINT8 (data + 7, 0);      /* Minor version 0 */
-    GST_WRITE_UINT16_BE (data + 8, state->width);
-    GST_WRITE_UINT16_BE (data + 10, state->height);
-    GST_WRITE_UINT24_BE (data + 12, state->par_n);
-    GST_WRITE_UINT24_BE (data + 15, state->par_d);
-    GST_WRITE_UINT32_BE (data + 18, state->fps_n);
-    GST_WRITE_UINT32_BE (data + 22, state->fps_d);
+    GST_WRITE_UINT16_BE (data + 8, info->width);
+    GST_WRITE_UINT16_BE (data + 10, info->height);
+    GST_WRITE_UINT24_BE (data + 12, info->par_n);
+    GST_WRITE_UINT24_BE (data + 15, info->par_d);
+    GST_WRITE_UINT32_BE (data + 18, info->fps_n);
+    GST_WRITE_UINT32_BE (data + 22, info->fps_d);
+
+    gst_buffer_unmap (stream_hdr, data, size);
 
     GST_BUFFER_FLAG_SET (stream_hdr, GST_BUFFER_FLAG_IN_CAPS);
     gst_value_set_buffer (&value, stream_hdr);
@@ -943,7 +919,7 @@ gst_vp8_enc_process (GstVP8Enc * encoder)
   const vpx_codec_cx_pkt_t *pkt;
   GstBaseVideoEncoder *base_video_encoder;
   GstVP8EncCoderHook *hook;
-  GstVideoFrame *frame;
+  GstVideoFrameState *frame;
   GstFlowReturn ret = GST_FLOW_OK;
 
   base_video_encoder = GST_BASE_VIDEO_ENCODER (encoder);
@@ -966,7 +942,7 @@ gst_vp8_enc_process (GstVP8Enc * encoder)
       frame = gst_base_video_encoder_get_oldest_frame (base_video_encoder);
       if (frame != NULL) {
         buffer = gst_buffer_new ();
-        GST_BUFFER_FLAG_SET (buffer, GST_BUFFER_FLAG_PREROLL);
+        GST_BUFFER_FLAG_SET (buffer, GST_BUFFER_FLAG_LIVE);
         frame->src_buffer = buffer;
         gst_base_video_encoder_finish_frame (base_video_encoder, frame);
       }
@@ -985,9 +961,10 @@ gst_vp8_enc_process (GstVP8Enc * encoder)
     frame->is_sync_point = (pkt->data.frame.flags & VPX_FRAME_IS_KEY) != 0;
     hook = frame->coder_hook;
 
-    buffer = gst_buffer_new_and_alloc (pkt->data.frame.sz);
-
-    memcpy (GST_BUFFER_DATA (buffer), pkt->data.frame.buf, pkt->data.frame.sz);
+    /* FIXME : It would be nice to avoid the memory copy ... */
+    buffer =
+        gst_buffer_new_wrapped (g_memdup (pkt->data.frame.buf,
+            pkt->data.frame.sz), pkt->data.frame.sz);
 
     if (hook->image)
       g_slice_free (vpx_image_t, hook->image);
@@ -1049,21 +1026,28 @@ static vpx_image_t *
 gst_vp8_enc_buffer_to_image (GstVP8Enc * enc, GstBuffer * buffer)
 {
   vpx_image_t *image = g_slice_new (vpx_image_t);
-  guint8 *data = GST_BUFFER_DATA (buffer);
+  GstVideoFrame frame;
 
   memcpy (image, &enc->image, sizeof (*image));
 
-  image->img_data = data;
-  image->planes[VPX_PLANE_Y] += (data - (guint8 *) NULL);
-  image->planes[VPX_PLANE_U] += (data - (guint8 *) NULL);
-  image->planes[VPX_PLANE_V] += (data - (guint8 *) NULL);
+  gst_video_frame_map (&frame, &GST_BASE_VIDEO_CODEC (enc)->info,
+      buffer, GST_MAP_READ);
+
+  image->img_data = frame.data[0];
+  image->planes[VPX_PLANE_Y] = frame.data[0];
+  image->planes[VPX_PLANE_U] = frame.data[1];
+  image->planes[VPX_PLANE_V] = frame.data[2];
+
+  /* FIXME : We should only unmap when we're done with it */
+
+  gst_video_frame_unmap (&frame);
 
   return image;
 }
 
 static GstFlowReturn
 gst_vp8_enc_handle_frame (GstBaseVideoEncoder * base_video_encoder,
-    GstVideoFrame * frame)
+    GstVideoFrameState * frame)
 {
   GstVP8Enc *encoder;
   const GstVideoState *state;
@@ -1125,7 +1109,7 @@ _to_granulepos (guint64 frame_end_number, guint inv_count, guint keyframe_dist)
 
 static GstFlowReturn
 gst_vp8_enc_shape_output (GstBaseVideoEncoder * base_video_encoder,
-    GstVideoFrame * frame)
+    GstVideoFrameState * frame)
 {
   GstVP8Enc *encoder;
   GstBuffer *buf;
@@ -1164,8 +1148,6 @@ gst_vp8_enc_shape_output (GstBaseVideoEncoder * base_video_encoder,
         gst_util_uint64_scale (frame->presentation_frame_number + 1,
         GST_SECOND * state->fps_d, state->fps_n);
 
-    gst_buffer_set_caps (buf,
-        GST_PAD_CAPS (GST_BASE_VIDEO_CODEC_SRC_PAD (base_video_encoder)));
     ret = gst_pad_push (GST_BASE_VIDEO_CODEC_SRC_PAD (base_video_encoder), buf);
 
     if (ret != GST_FLOW_OK) {

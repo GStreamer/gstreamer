@@ -104,7 +104,7 @@ static gboolean gst_vp8_dec_reset (GstBaseVideoDecoder * decoder);
 static GstFlowReturn gst_vp8_dec_parse_data (GstBaseVideoDecoder * decoder,
     gboolean at_eos);
 static GstFlowReturn gst_vp8_dec_handle_frame (GstBaseVideoDecoder * decoder,
-    GstVideoFrame * frame);
+    GstVideoFrameState * frame);
 
 static GstStaticPadTemplate gst_vp8_dec_sink_template =
 GST_STATIC_PAD_TEMPLATE ("sink",
@@ -117,36 +117,22 @@ static GstStaticPadTemplate gst_vp8_dec_src_template =
 GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (GST_VIDEO_CAPS_YUV ("I420"))
+    GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE ("I420"))
     );
 
-GST_BOILERPLATE (GstVP8Dec, gst_vp8_dec, GstBaseVideoDecoder,
-    GST_TYPE_BASE_VIDEO_DECODER);
-
-static void
-gst_vp8_dec_base_init (gpointer g_class)
-{
-  GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
-
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&gst_vp8_dec_src_template));
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&gst_vp8_dec_sink_template));
-
-  gst_element_class_set_details_simple (element_class,
-      "On2 VP8 Decoder",
-      "Codec/Decoder/Video",
-      "Decode VP8 video streams", "David Schleef <ds@entropywave.com>");
-}
+#define gst_vp8_dec_parent_class parent_class
+G_DEFINE_TYPE (GstVP8Dec, gst_vp8_dec, GST_TYPE_BASE_VIDEO_DECODER);
 
 static void
 gst_vp8_dec_class_init (GstVP8DecClass * klass)
 {
   GObjectClass *gobject_class;
+  GstElementClass *element_class;
   GstBaseVideoDecoderClass *base_video_decoder_class;
 
   gobject_class = G_OBJECT_CLASS (klass);
   base_video_decoder_class = GST_BASE_VIDEO_DECODER_CLASS (klass);
+  element_class = GST_ELEMENT_CLASS (klass);
 
   gobject_class->set_property = gst_vp8_dec_set_property;
   gobject_class->get_property = gst_vp8_dec_get_property;
@@ -174,6 +160,16 @@ gst_vp8_dec_class_init (GstVP8DecClass * klass)
           0, 16, DEFAULT_NOISE_LEVEL,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
+  gst_element_class_add_pad_template (element_class,
+      gst_static_pad_template_get (&gst_vp8_dec_src_template));
+  gst_element_class_add_pad_template (element_class,
+      gst_static_pad_template_get (&gst_vp8_dec_sink_template));
+
+  gst_element_class_set_details_simple (element_class,
+      "On2 VP8 Decoder",
+      "Codec/Decoder/Video",
+      "Decode VP8 video streams", "David Schleef <ds@entropywave.com>");
+
   base_video_decoder_class->start = GST_DEBUG_FUNCPTR (gst_vp8_dec_start);
   base_video_decoder_class->stop = GST_DEBUG_FUNCPTR (gst_vp8_dec_stop);
   base_video_decoder_class->reset = GST_DEBUG_FUNCPTR (gst_vp8_dec_reset);
@@ -188,7 +184,7 @@ gst_vp8_dec_class_init (GstVP8DecClass * klass)
 }
 
 static void
-gst_vp8_dec_init (GstVP8Dec * gst_vp8_dec, GstVP8DecClass * klass)
+gst_vp8_dec_init (GstVP8Dec * gst_vp8_dec)
 {
   GstBaseVideoDecoder *decoder = (GstBaseVideoDecoder *) gst_vp8_dec;
 
@@ -318,58 +314,50 @@ gst_vp8_dec_send_tags (GstVP8Dec * dec)
 {
   GstTagList *list;
 
-  list = gst_tag_list_new ();
+  list = gst_tag_list_new_empty ();
   gst_tag_list_add (list, GST_TAG_MERGE_REPLACE,
       GST_TAG_VIDEO_CODEC, "VP8 video", NULL);
 
-  gst_element_found_tags_for_pad (GST_ELEMENT (dec),
-      GST_BASE_VIDEO_CODEC_SRC_PAD (dec), list);
+  gst_pad_push_event (GST_BASE_VIDEO_CODEC_SRC_PAD (dec),
+      gst_event_new_tag (list));
 }
 
 static void
 gst_vp8_dec_image_to_buffer (GstVP8Dec * dec, const vpx_image_t * img,
     GstBuffer * buffer)
 {
-  int stride, w, h, i;
-  guint8 *d;
-  GstVideoState *state = &GST_BASE_VIDEO_CODEC (dec)->state;
+  int deststride, srcstride, height, width, line, comp;
+  guint8 *dest, *src;
+  GstVideoFrame frame;
+  GstVideoInfo *info = &GST_BASE_VIDEO_CODEC (dec)->info;
 
-  d = GST_BUFFER_DATA (buffer) +
-      gst_video_format_get_component_offset (state->format, 0,
-      state->width, state->height);
-  stride = gst_video_format_get_row_stride (state->format, 0, state->width);
-  h = gst_video_format_get_component_height (state->format, 0, state->height);
-  h = MIN (h, img->h);
-  w = gst_video_format_get_component_width (state->format, 0, state->width);
-  w = MIN (w, img->w);
+  if (!gst_video_frame_map (&frame, info, buffer, GST_MAP_WRITE)) {
+    GST_ERROR_OBJECT (dec, "Could not map video buffer");
+  }
 
-  for (i = 0; i < h; i++)
-    memcpy (d + i * stride,
-        img->planes[VPX_PLANE_Y] + i * img->stride[VPX_PLANE_Y], w);
+  for (comp = 0; comp < 3; comp++) {
+    dest = GST_VIDEO_FRAME_COMP_DATA (&frame, comp);
+    src = img->planes[comp];
+    width = GST_VIDEO_FRAME_COMP_WIDTH (&frame, comp);
+    height = GST_VIDEO_FRAME_COMP_HEIGHT (&frame, comp);
+    deststride = GST_VIDEO_FRAME_COMP_STRIDE (&frame, comp);
+    srcstride = img->stride[comp];
 
-  d = GST_BUFFER_DATA (buffer) +
-      gst_video_format_get_component_offset (state->format, 1,
-      state->width, state->height);
-  stride = gst_video_format_get_row_stride (state->format, 1, state->width);
-  h = gst_video_format_get_component_height (state->format, 1, state->height);
-  h = MIN (h, img->h >> img->y_chroma_shift);
-  w = gst_video_format_get_component_width (state->format, 1, state->width);
-  w = MIN (w, img->w >> img->x_chroma_shift);
-  for (i = 0; i < h; i++)
-    memcpy (d + i * stride,
-        img->planes[VPX_PLANE_U] + i * img->stride[VPX_PLANE_U], w);
+    /* FIXME (Edward) : Do a plane memcpy is srcstride == deststride instead
+     * of copying line by line */
+    for (line = 0; line < height; line++) {
+      memcpy (dest, src, width);
+      dest += deststride;
+      src += srcstride;
+    }
+  }
 
-  d = GST_BUFFER_DATA (buffer) +
-      gst_video_format_get_component_offset (state->format, 2,
-      state->width, state->height);
-  /* Same stride, height, width as above */
-  for (i = 0; i < h; i++)
-    memcpy (d + i * stride,
-        img->planes[VPX_PLANE_V] + i * img->stride[VPX_PLANE_V], w);
+  gst_video_frame_unmap (&frame);
 }
 
 static GstFlowReturn
-gst_vp8_dec_handle_frame (GstBaseVideoDecoder * decoder, GstVideoFrame * frame)
+gst_vp8_dec_handle_frame (GstBaseVideoDecoder * decoder,
+    GstVideoFrameState * frame)
 {
   GstVP8Dec *dec;
   GstFlowReturn ret = GST_FLOW_OK;
@@ -378,11 +366,14 @@ gst_vp8_dec_handle_frame (GstBaseVideoDecoder * decoder, GstVideoFrame * frame)
   vpx_image_t *img;
   long decoder_deadline = 0;
   GstClockTimeDiff deadline;
+  gsize size;
+  gpointer data;
 
   GST_DEBUG_OBJECT (decoder, "handle_frame");
 
   dec = GST_VP8_DEC (decoder);
 
+  /* FIXME : Move this to a separate function for clarity */
   if (!dec->decoder_inited) {
     int flags = 0;
     vpx_codec_stream_info_t stream_info;
@@ -392,9 +383,13 @@ gst_vp8_dec_handle_frame (GstBaseVideoDecoder * decoder, GstVideoFrame * frame)
     memset (&stream_info, 0, sizeof (stream_info));
     stream_info.sz = sizeof (stream_info);
 
-    status = vpx_codec_peek_stream_info (&vpx_codec_vp8_dx_algo,
-        GST_BUFFER_DATA (frame->sink_buffer),
-        GST_BUFFER_SIZE (frame->sink_buffer), &stream_info);
+    data = gst_buffer_map (frame->sink_buffer, &size, NULL, GST_MAP_READ);
+
+    status =
+        vpx_codec_peek_stream_info (&vpx_codec_vp8_dx_algo, data, size,
+        &stream_info);
+
+    gst_buffer_unmap (frame->sink_buffer, data, size);
 
     if (status != VPX_CODEC_OK || !stream_info.is_kf) {
       GST_WARNING_OBJECT (decoder, "No keyframe, skipping");
@@ -461,9 +456,12 @@ gst_vp8_dec_handle_frame (GstBaseVideoDecoder * decoder, GstVideoFrame * frame)
     decoder_deadline = MAX (1, deadline / GST_MSECOND);
   }
 
-  status = vpx_codec_decode (&dec->decoder,
-      GST_BUFFER_DATA (frame->sink_buffer),
-      GST_BUFFER_SIZE (frame->sink_buffer), NULL, decoder_deadline);
+  data = gst_buffer_map (frame->sink_buffer, &size, NULL, GST_MAP_READ);
+
+  status = vpx_codec_decode (&dec->decoder, data, size, NULL, decoder_deadline);
+
+  gst_buffer_unmap (frame->sink_buffer, data, size);
+
   if (status) {
     GST_ELEMENT_ERROR (decoder, LIBRARY, ENCODE,
         ("Failed to decode frame"), ("%s", gst_vpx_error_name (status)));
