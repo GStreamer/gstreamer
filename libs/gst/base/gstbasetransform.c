@@ -709,7 +709,7 @@ gst_base_transform_getcaps (GstPad * pad)
   peercaps = gst_pad_peer_get_caps_reffed (otherpad);
   GST_OBJECT_LOCK (trans);
   samecaps = (peercaps && trans->priv->cached_peer_caps[cache_index]
-      && gst_caps_is_equal (peercaps,
+      && gst_caps_is_strictly_equal (peercaps,
           trans->priv->cached_peer_caps[cache_index]));
   if (!samecaps) {
     if (trans->priv->cached_peer_caps[cache_index]) {
