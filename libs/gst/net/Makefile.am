@@ -3,11 +3,13 @@ lib_LTLIBRARIES = libgstnet-@GST_MAJORMINOR@.la
 libgstnet_@GST_MAJORMINOR@_includedir = $(includedir)/gstreamer-@GST_MAJORMINOR@/gst/net
 libgstnet_@GST_MAJORMINOR@_include_HEADERS = \
     gstnet.h \
+    gstnetaddressmeta.h \
     gstnetclientclock.h \
     gstnettimepacket.h \
     gstnettimeprovider.h
 
 libgstnet_@GST_MAJORMINOR@_la_SOURCES = \
+    gstnetaddressmeta.c \
     gstnetclientclock.c \
     gstnettimepacket.c \
     gstnettimeprovider.c
