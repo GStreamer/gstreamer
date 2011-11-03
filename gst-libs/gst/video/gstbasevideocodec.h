@@ -29,7 +29,7 @@
 #include <gst/base/gstadapter.h>
 #include <gst/video/video.h>
 #include <gst/video/gstvideopool.h>
-#include <gst/video/gstmetavideo.h>
+#include <gst/video/gstvideometa.h>
 
 G_BEGIN_DECLS
 
