@@ -179,6 +179,7 @@ typedef enum {
  * @source: the bus watch for pipeline messages.
  * @id: the id of the watch
  * @is_live: if the pipeline is live
+ * @seekable: if the pipeline can perform a seek
  * @buffering: if the pipeline is buffering
  * @target_state: the desired target state of the pipeline
  * @rtpbin: the rtpbin
@@ -220,6 +221,7 @@ struct _GstRTSPMedia {
   guint              id;
 
   gboolean           is_live;
+  gboolean           seekable;
   gboolean           buffering;
   GstState           target_state;
 

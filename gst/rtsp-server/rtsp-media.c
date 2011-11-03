@@ -720,8 +720,8 @@ gst_rtsp_media_seek (GstRTSPMedia * media, GstRTSPTimeRange * range)
   g_return_val_if_fail (GST_IS_RTSP_MEDIA (media), FALSE);
   g_return_val_if_fail (range != NULL, FALSE);
 
-  if (media->is_live) {
-    GST_INFO ("no seek in live media");
+  if (media->seekable) {
+    GST_INFO ("pipeline is not seekable");
     return TRUE;
   }
 
@@ -1711,6 +1711,7 @@ gst_rtsp_media_prepare (GstRTSPMedia * media)
 
   /* reset some variables */
   media->is_live = FALSE;
+  media->seekable = FALSE;
   media->buffering = FALSE;
   /* we're preparing now */
   media->status = GST_RTSP_MEDIA_STATUS_PREPARING;
@@ -1764,13 +1765,18 @@ gst_rtsp_media_prepare (GstRTSPMedia * media)
   switch (ret) {
     case GST_STATE_CHANGE_SUCCESS:
       GST_INFO ("SUCCESS state change for media %p", media);
+      media->seekable = TRUE;
       break;
     case GST_STATE_CHANGE_ASYNC:
       GST_INFO ("ASYNC state change for media %p", media);
+      media->seekable = TRUE;
       break;
     case GST_STATE_CHANGE_NO_PREROLL:
       /* we need to go to PLAYING */
       GST_INFO ("NO_PREROLL state change: live media %p", media);
+      /* FIXME we disable seeking for live streams for now. We should perform a
+       * seeking query in preroll instead and do a seeking query. */
+      media->seekable = FALSE;
       media->is_live = TRUE;
       ret = gst_element_set_state (media->pipeline, GST_STATE_PLAYING);
       if (ret == GST_STATE_CHANGE_FAILURE)
