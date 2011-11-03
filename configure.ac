@@ -902,7 +902,6 @@ gst-libs/gst/app/Makefile
 gst-libs/gst/cdda/Makefile
 gst-libs/gst/fft/Makefile
 gst-libs/gst/interfaces/Makefile
-gst-libs/gst/netbuffer/Makefile
 gst-libs/gst/riff/Makefile
 gst-libs/gst/rtp/Makefile
 gst-libs/gst/rtsp/Makefile
@@ -923,8 +922,6 @@ pkgconfig/gstreamer-fft.pc
 pkgconfig/gstreamer-fft-uninstalled.pc
 pkgconfig/gstreamer-interfaces.pc
 pkgconfig/gstreamer-interfaces-uninstalled.pc
-pkgconfig/gstreamer-netbuffer.pc
-pkgconfig/gstreamer-netbuffer-uninstalled.pc
 pkgconfig/gstreamer-pbutils.pc
 pkgconfig/gstreamer-pbutils-uninstalled.pc
 pkgconfig/gstreamer-riff.pc
