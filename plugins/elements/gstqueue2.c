@@ -155,7 +155,7 @@ enum
                       queue->max_level.time, \
                       (guint64) (!QUEUE_IS_USING_QUEUE(queue) ? \
                         queue->current->writing_pos - queue->current->max_reading_pos : \
-                        queue->queue->length))
+                        queue->queue.length))
 
 #define GST_QUEUE2_MUTEX_LOCK(q) G_STMT_START {                          \
   g_mutex_lock (q->qlock);                                              \
@@ -448,7 +448,7 @@ gst_queue2_init (GstQueue2 * queue, GstQueue2Class * g_class)
   queue->item_add = g_cond_new ();
   queue->waiting_del = FALSE;
   queue->item_del = g_cond_new ();
-  queue->queue = g_queue_new ();
+  g_queue_init (&queue->queue);
 
   queue->buffering_percent = 100;
 
@@ -473,13 +473,13 @@ gst_queue2_finalize (GObject * object)
 
   GST_DEBUG_OBJECT (queue, "finalizing queue");
 
-  while (!g_queue_is_empty (queue->queue)) {
-    GstMiniObject *data = g_queue_pop_head (queue->queue);
+  while (!g_queue_is_empty (&queue->queue)) {
+    GstMiniObject *data = g_queue_pop_head (&queue->queue);
 
     gst_mini_object_unref (data);
   }
 
-  g_queue_free (queue->queue);
+  g_queue_clear (&queue->queue);
   g_mutex_free (queue->qlock);
   g_cond_free (queue->item_add);
   g_cond_free (queue->item_del);
@@ -1479,8 +1479,8 @@ gst_queue2_locked_flush (GstQueue2 * queue)
       gst_queue2_flush_temp_file (queue);
     init_ranges (queue);
   } else {
-    while (!g_queue_is_empty (queue->queue)) {
-      GstMiniObject *data = g_queue_pop_head (queue->queue);
+    while (!g_queue_is_empty (&queue->queue)) {
+      GstMiniObject *data = g_queue_pop_head (&queue->queue);
 
       /* Then lose another reference because we are supposed to destroy that
          data when flushing */
@@ -1882,7 +1882,7 @@ gst_queue2_locked_enqueue (GstQueue2 * queue, gpointer item, gboolean isbuffer)
       update_buffering (queue);
 
     if (QUEUE_IS_USING_QUEUE (queue)) {
-      g_queue_push_tail (queue->queue, item);
+      g_queue_push_tail (&queue->queue, item);
     } else {
       gst_mini_object_unref (GST_MINI_OBJECT_CAST (item));
     }
@@ -1913,7 +1913,7 @@ gst_queue2_locked_dequeue (GstQueue2 * queue, gboolean * is_buffer)
   if (!QUEUE_IS_USING_QUEUE (queue))
     item = gst_queue2_read_item_from_file (queue);
   else
-    item = g_queue_pop_head (queue->queue);
+    item = g_queue_pop_head (&queue->queue);
 
   if (item == NULL)
     goto no_item;
@@ -2094,7 +2094,7 @@ gst_queue2_is_empty (GstQueue2 * queue)
   if (!QUEUE_IS_USING_QUEUE (queue) && queue->current) {
     return queue->current->writing_pos <= queue->current->max_reading_pos;
   } else {
-    if (queue->queue->length == 0)
+    if (queue->queue.length == 0)
       return TRUE;
   }
 
