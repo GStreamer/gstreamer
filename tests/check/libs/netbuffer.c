@@ -38,16 +38,16 @@ GST_START_TEST (test_netbuffer_copy)
   guint16 ipv6_port = 3490;
   guint16 ipv4_port = 5678;
   guint16 port;
-  GstMetaNetAddress *meta, *cmeta;
+  GstNetAddressMeta *meta, *cmeta;
   gsize len;
   guint8 *data1, *data2;
   gsize size1, size2;
 
   netbuf = gst_buffer_new ();
   fail_unless (netbuf != NULL, "failed to create net buffer");
-  meta = gst_buffer_add_meta_net_address (netbuf);
+  meta = gst_buffer_add_net_address_meta (netbuf);
 
-  gst_netaddress_set_ip4_address (&meta->naddr, ipv4_addr, ipv4_port);
+  gst_net_address_set_ip4_address (&meta->naddr, ipv4_addr, ipv4_port);
 
   len = strlen (DATA_STRING);
   gst_buffer_take_memory (netbuf, -1,
@@ -59,7 +59,7 @@ GST_START_TEST (test_netbuffer_copy)
   copy = gst_buffer_copy (netbuf);
   fail_unless (copy != NULL, "failed to copy net buffer");
 
-  cmeta = gst_buffer_get_meta_net_address (copy);
+  cmeta = gst_buffer_get_net_address_meta (copy);
   fail_unless (cmeta != NULL, "copied buffer is not a GstNetBuffer!");
 
   fail_unless_equals_int (GST_MINI_OBJECT_REFCOUNT_VALUE (copy), 1);
@@ -73,7 +73,7 @@ GST_START_TEST (test_netbuffer_copy)
 
   fail_unless (GST_BUFFER_FLAG_IS_SET (copy, GST_BUFFER_FLAG_DISCONT));
 
-  fail_unless (gst_netaddress_get_ip4_address (&cmeta->naddr, &ipv4_copy,
+  fail_unless (gst_net_address_get_ip4_address (&cmeta->naddr, &ipv4_copy,
           &port));
   fail_unless (ipv4_copy == ipv4_addr,
       "Copied buffer has wrong IPV4 from address");
@@ -83,9 +83,9 @@ GST_START_TEST (test_netbuffer_copy)
 
   netbuf = gst_buffer_new ();
   fail_unless (netbuf != NULL, "failed to create net buffer");
-  meta = gst_buffer_add_meta_net_address (netbuf);
+  meta = gst_buffer_add_net_address_meta (netbuf);
 
-  gst_netaddress_set_ip6_address (&meta->naddr, ipv6_addr, ipv6_port);
+  gst_net_address_set_ip6_address (&meta->naddr, ipv6_addr, ipv6_port);
 
   len = strlen (DATA_STRING);
   gst_buffer_take_memory (netbuf, -1,
@@ -97,7 +97,7 @@ GST_START_TEST (test_netbuffer_copy)
   copy = gst_buffer_copy (netbuf);
   fail_unless (copy != NULL, "failed to copy net buffer");
 
-  cmeta = gst_buffer_get_meta_net_address (copy);
+  cmeta = gst_buffer_get_net_address_meta (copy);
   fail_unless (cmeta != NULL, "copied buffer is not a GstNetBuffer!");
 
   fail_unless_equals_int (GST_MINI_OBJECT_REFCOUNT_VALUE (copy), 1);
@@ -111,7 +111,7 @@ GST_START_TEST (test_netbuffer_copy)
 
   fail_unless (GST_BUFFER_FLAG_IS_SET (copy, GST_BUFFER_FLAG_DISCONT));
 
-  fail_unless (gst_netaddress_get_ip6_address (&cmeta->naddr, ipv6_copy,
+  fail_unless (gst_net_address_get_ip6_address (&cmeta->naddr, ipv6_copy,
           &port));
   fail_unless (memcmp (ipv6_copy, ipv6_addr, 16) == 0,
       "Copied buffer has wrong IPv6 destination address");
