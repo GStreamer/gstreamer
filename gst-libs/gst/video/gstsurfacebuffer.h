@@ -49,7 +49,6 @@ G_BEGIN_DECLS
  */
 #define GST_VIDEO_CAPS_SURFACE "video/x-surface"
 
-typedef struct _GstSurfaceBuffer GstSurfaceBuffer;
 typedef struct _GstSurfaceBufferClass GstSurfaceBufferClass;
 
 /**
