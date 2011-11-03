@@ -3352,7 +3352,8 @@ sort_end_pads (GstDecodePad * da, GstDecodePad * db)
 }
 
 static GstCaps *
-_gst_element_get_linked_caps (GstElement * src, GstElement * sink)
+_gst_element_get_linked_caps (GstElement * src, GstElement * sink,
+    GstPad ** srcpad)
 {
   GstIterator *it;
   GstElement *parent;
@@ -3369,6 +3370,10 @@ _gst_element_get_linked_caps (GstElement * src, GstElement * sink)
           parent = gst_pad_get_parent_element (peer);
           if (parent == sink) {
             caps = gst_pad_get_negotiated_caps (pad);
+            if (srcpad) {
+              gst_object_ref (pad);
+              *srcpad = pad;
+            }
             done = TRUE;
           }
 
@@ -3397,6 +3402,7 @@ static GQuark topology_structure_name = 0;
 static GQuark topology_caps = 0;
 static GQuark topology_next = 0;
 static GQuark topology_pad = 0;
+static GQuark topology_element_srcpad = 0;
 
 /* FIXME: Invent gst_structure_take_structure() to prevent all the
  * structure copying for nothing
@@ -3422,8 +3428,11 @@ gst_decode_chain_get_topology (GstDecodeChain * chain)
     gst_structure_id_set (u, topology_caps, GST_TYPE_CAPS, chain->endcaps,
         NULL);
 
-    if (chain->endpad)
+    if (chain->endpad) {
       gst_structure_id_set (u, topology_pad, GST_TYPE_PAD, chain->endpad, NULL);
+      gst_structure_id_set (u, topology_element_srcpad, GST_TYPE_PAD,
+          chain->endpad, NULL);
+    }
     gst_structure_id_set (s, topology_next, GST_TYPE_STRUCTURE, u, NULL);
     gst_structure_free (u);
     u = s;
@@ -3453,13 +3462,15 @@ gst_decode_chain_get_topology (GstDecodeChain * chain)
     GstDecodeElement *delem, *delem_next;
     GstElement *elem, *elem_next;
     GstCaps *caps;
+    GstPad *srcpad;
 
     delem = l->data;
     elem = delem->element;
     delem_next = l->next->data;
     elem_next = delem_next->element;
+    srcpad = NULL;
 
-    caps = _gst_element_get_linked_caps (elem_next, elem);
+    caps = _gst_element_get_linked_caps (elem_next, elem, &srcpad);
 
     if (caps) {
       s = gst_structure_id_empty_new (topology_structure_name);
@@ -3469,6 +3480,12 @@ gst_decode_chain_get_topology (GstDecodeChain * chain)
       gst_structure_id_set (s, topology_next, GST_TYPE_STRUCTURE, u, NULL);
       gst_structure_free (u);
       u = s;
+    }
+
+    if (srcpad) {
+      gst_structure_id_set (u, topology_element_srcpad, GST_TYPE_PAD, srcpad,
+          NULL);
+      gst_object_unref (srcpad);
     }
   }
 
@@ -3484,6 +3501,8 @@ gst_decode_chain_get_topology (GstDecodeChain * chain)
     }
   }
   gst_structure_id_set (u, topology_caps, GST_TYPE_CAPS, caps, NULL);
+  gst_structure_id_set (u, topology_element_srcpad, GST_TYPE_PAD, chain->pad,
+      NULL);
   gst_caps_unref (caps);
 
   return u;
@@ -4059,6 +4078,7 @@ gst_decode_bin_plugin_init (GstPlugin * plugin)
   topology_caps = g_quark_from_static_string ("caps");
   topology_next = g_quark_from_static_string ("next");
   topology_pad = g_quark_from_static_string ("pad");
+  topology_element_srcpad = g_quark_from_static_string ("element-srcpad");
 
   return gst_element_register (plugin, "decodebin2", GST_RANK_NONE,
       GST_TYPE_DECODE_BIN);
