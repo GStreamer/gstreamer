@@ -21,7 +21,7 @@
 #include "config.h"
 #endif
 
-#include <gst/netbuffer/gstnetbuffer.h>
+#include <gst/net/gstnetaddressmeta.h>
 
 #include "gstudpsrc.h"
 #include "gstmultiudpsink.h"

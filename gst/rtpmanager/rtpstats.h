@@ -21,7 +21,7 @@
 #define __RTP_STATS_H__
 
 #include <gst/gst.h>
-#include <gst/netbuffer/gstnetbuffer.h>
+#include <gst/net/gstnetaddressmeta.h>
 
 /**
  * RTPSenderReport:

@@ -21,7 +21,6 @@
 #define __RTP_SESSION_H__
 
 #include <gst/gst.h>
-#include <gst/netbuffer/gstnetbuffer.h>
 
 #include "rtpsource.h"
 

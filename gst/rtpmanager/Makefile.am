@@ -36,9 +36,9 @@ noinst_HEADERS = gstrtpbin.h \
 		 gstrtpsession.h
 
 libgstrtpmanager_la_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(GST_CFLAGS) \
-	$(WARNING_CFLAGS) $(ERROR_CFLAGS)
+	$(GST_NET_CFLAGS) $(WARNING_CFLAGS) $(ERROR_CFLAGS)
 libgstrtpmanager_la_LIBADD = $(GST_PLUGINS_BASE_LIBS) \
-	-lgstnetbuffer-@GST_MAJORMINOR@ -lgstrtp-@GST_MAJORMINOR@ \
+	$(GST_NET_LIBS) -lgstrtp-@GST_MAJORMINOR@ \
 	$(GST_BASE_LIBS) $(GST_LIBS_LIBS)
 libgstrtpmanager_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 libgstrtpmanager_la_LIBTOOLFLAGS = --tag=disable-static

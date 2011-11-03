@@ -36,7 +36,7 @@
 #include <sys/time.h>
 #endif
 #include <sys/types.h>
-#include <gst/netbuffer/gstnetbuffer.h>
+#include <gst/net/gstnetaddressmeta.h>
 
 GST_DEBUG_CATEGORY_STATIC (dynudpsink_debug);
 #define GST_CAT_DEFAULT (dynudpsink_debug)

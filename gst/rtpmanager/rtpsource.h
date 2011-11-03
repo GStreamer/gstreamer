@@ -22,7 +22,7 @@
 
 #include <gst/gst.h>
 #include <gst/rtp/gstrtcpbuffer.h>
-#include <gst/netbuffer/gstnetbuffer.h>
+#include <gst/net/gstnetaddressmeta.h>
 
 #include "rtpstats.h"
 
