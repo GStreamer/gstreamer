@@ -348,18 +348,13 @@ gst_play_sink_audio_convert_getcaps (GstPad * pad)
   GstPlaySinkAudioConvert *self =
       GST_PLAY_SINK_AUDIO_CONVERT (gst_pad_get_parent (pad));
   GstCaps *ret;
-  GstPad *otherpad, *peer = NULL;
+  GstPad *otherpad, *peer;
 
   GST_PLAY_SINK_AUDIO_CONVERT_LOCK (self);
   otherpad = gst_ghost_pad_get_target (GST_GHOST_PAD_CAST (pad));
   GST_PLAY_SINK_AUDIO_CONVERT_UNLOCK (self);
 
-  if (otherpad) {
-    peer = gst_pad_get_peer (otherpad);
-    gst_object_unref (otherpad);
-    otherpad = NULL;
-  }
-
+  peer = gst_pad_get_peer (otherpad);
   if (peer) {
     ret = gst_pad_get_caps_reffed (peer);
     gst_object_unref (peer);
@@ -367,6 +362,7 @@ gst_play_sink_audio_convert_getcaps (GstPad * pad)
     ret = gst_caps_new_any ();
   }
 
+  gst_object_unref (otherpad);
   gst_object_unref (self);
 
   return ret;
