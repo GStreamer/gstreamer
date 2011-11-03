@@ -681,8 +681,8 @@ gst_mpeg_video_parse_picture_header (GstMpegVideoPictureHdr * hdr,
   if (hdr->pic_type == 0 || hdr->pic_type > 4)
     goto failed;                /* Corrupted picture packet */
 
-  /* skype VBV delay */
-  if (!gst_bit_reader_skip (&br, 8))
+  /* skip VBV delay */
+  if (!gst_bit_reader_skip (&br, 16))
     goto failed;
 
   if (hdr->pic_type == GST_MPEG_VIDEO_PICTURE_TYPE_P

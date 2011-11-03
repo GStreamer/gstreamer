@@ -38,7 +38,7 @@ G_BEGIN_DECLS
 /**
  * GstMpegVideoPacketTypeCode:
  * @GST_MPEG_VIDEO_PACKET_PICTURE: Picture packet starting code
- * @GST_MPEG_VIDEO_PACKET_SLICE_MIN: Picture packet starting code
+ * @GST_MPEG_VIDEO_PACKET_SLICE_MIN: Slice min packet starting code
  * @GST_MPEG_VIDEO_PACKET_SLICE_MAX: Slice max packet starting code
  * @GST_MPEG_VIDEO_PACKET_USER_DATA: User data packet starting code
  * @GST_MPEG_VIDEO_PACKET_SEQUENCE : Sequence packet starting code
@@ -186,7 +186,7 @@ typedef struct _GstMpegVideoTypeOffsetSize  GstMpegVideoTypeOffsetSize;
  * @width: Width of each frame
  * @height: Height of each frame
  * @par_w: Calculated Pixel Aspect Ratio width
- * @par_h: Pixel Aspect Ratio height
+ * @par_h: Calculated Pixel Aspect Ratio height
  * @fps_n: Calculated Framrate nominator
  * @fps_d: Calculated Framerate denominator
  * @bitrate_value: Value of the bitrate as is in the stream (400bps unit)
