@@ -1802,7 +1802,7 @@ gst_bin_get_state_func (GstElement * element, GstState * state,
 typedef struct _GstBinSortIterator
 {
   GstIterator it;
-  GQueue *queue;                /* elements queued for state change */
+  GQueue queue;                 /* elements queued for state change */
   GstBin *bin;                  /* bin we iterate */
   gint mode;                    /* adding or removing dependency */
   GstElement *best;             /* next element with least dependencies */
@@ -1826,7 +1826,7 @@ add_to_queue (GstBinSortIterator * bit, GstElement * element)
   GST_DEBUG_OBJECT (bit->bin, "adding '%s' to queue",
       GST_ELEMENT_NAME (element));
   gst_object_ref (element);
-  g_queue_push_tail (bit->queue, element);
+  g_queue_push_tail (&bit->queue, element);
   HASH_SET_DEGREE (bit, element, -1);
 }
 
@@ -1835,11 +1835,11 @@ remove_from_queue (GstBinSortIterator * bit, GstElement * element)
 {
   GList *find;
 
-  if ((find = g_queue_find (bit->queue, element))) {
+  if ((find = g_queue_find (&bit->queue, element))) {
     GST_DEBUG_OBJECT (bit->bin, "removing '%s' from queue",
         GST_ELEMENT_NAME (element));
 
-    g_queue_delete_link (bit->queue, find);
+    g_queue_delete_link (&bit->queue, find);
     gst_object_unref (element);
   } else {
     GST_DEBUG_OBJECT (bit->bin, "unable to remove '%s' from queue",
@@ -1995,7 +1995,7 @@ gst_bin_sort_iterator_next (GstBinSortIterator * bit, gpointer * result)
   GstBin *bin = bit->bin;
 
   /* empty queue, we have to find a next best element */
-  if (g_queue_is_empty (bit->queue)) {
+  if (g_queue_is_empty (&bit->queue)) {
     GstElement *best;
 
     bit->best = NULL;
@@ -2023,7 +2023,7 @@ gst_bin_sort_iterator_next (GstBinSortIterator * bit, gpointer * result)
     }
   } else {
     /* everything added to the queue got reffed */
-    *result = g_queue_pop_head (bit->queue);
+    *result = g_queue_pop_head (&bit->queue);
   }
 
   GST_DEBUG_OBJECT (bin, "queue head gives %s", GST_ELEMENT_NAME (*result));
@@ -2041,7 +2041,7 @@ gst_bin_sort_iterator_resync (GstBinSortIterator * bit)
 
   GST_DEBUG_OBJECT (bin, "resync");
   bit->dirty = FALSE;
-  clear_queue (bit->queue);
+  clear_queue (&bit->queue);
   /* reset degrees */
   g_list_foreach (bin->children, (GFunc) reset_degree, bit);
   /* calc degrees, incrementing */
@@ -2058,8 +2058,7 @@ gst_bin_sort_iterator_free (GstBinSortIterator * bit)
   GstBin *bin = bit->bin;
 
   GST_DEBUG_OBJECT (bin, "free");
-  clear_queue (bit->queue);
-  g_queue_free (bit->queue);
+  clear_queue (&bit->queue);
   g_hash_table_destroy (bit->hash);
   gst_object_unref (bin);
   g_free (bit);
@@ -2082,7 +2081,7 @@ gst_bin_sort_iterator_new (GstBin * bin)
       (GstIteratorItemFunction) NULL,
       (GstIteratorResyncFunction) gst_bin_sort_iterator_resync,
       (GstIteratorFreeFunction) gst_bin_sort_iterator_free);
-  result->queue = g_queue_new ();
+  g_queue_init (&result->queue);
   result->hash = g_hash_table_new (NULL, NULL);
   gst_object_ref (bin);
   result->bin = bin;
