@@ -83,16 +83,13 @@ struct _GstNetTimeProvider {
 
   GstClock *clock;
 
-  union {
-    gpointer _gst_reserved1;
-    /* has to be a gint, we use atomic ops here */
-    gint active;
-  } active;
+  /* has to be a gint, we use atomic ops here */
+  gint active;
 
   /*< private >*/
   GstNetTimeProviderPrivate *priv;
 
-  gpointer _gst_reserved[GST_PADDING - 2];
+  gpointer _gst_reserved[GST_PADDING];
 };
 
 struct _GstNetTimeProviderClass {

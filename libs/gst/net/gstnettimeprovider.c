@@ -70,7 +70,7 @@ GST_DEBUG_CATEGORY_STATIC (ntp_debug);
 #define DEFAULT_ADDRESS         "0.0.0.0"
 #define DEFAULT_PORT            5637
 
-#define IS_ACTIVE(self) (g_atomic_int_get (&((self)->active.active)))
+#define IS_ACTIVE(self) (g_atomic_int_get (&((self)->active)))
 
 #ifdef G_OS_WIN32
 #define setsockopt(sock, sol_flags, reuse_flags, ru, sizeofru) setsockopt (sock, sol_flags, reuse_flags, (char *)ru, sizeofru)
@@ -177,7 +177,7 @@ gst_net_time_provider_init (GstNetTimeProvider * self)
   self->priv->sock.fd = -1;
   self->address = g_strdup (DEFAULT_ADDRESS);
   self->thread = NULL;
-  self->active.active = TRUE;
+  self->active = TRUE;
 }
 
 static void
@@ -308,7 +308,7 @@ gst_net_time_provider_set_property (GObject * object, guint prop_id,
           (GstObject *) g_value_get_object (value));
       break;
     case PROP_ACTIVE:
-      g_atomic_int_set (&self->active.active, g_value_get_boolean (value));
+      g_atomic_int_set (&self->active, g_value_get_boolean (value));
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
