@@ -2511,7 +2511,7 @@ gst_tag_setter_get_tag_merge_mode
 <SUBSECTION Standard>
 GST_TAG_SETTER
 GST_IS_TAG_SETTER
-GST_TAG_SETTER_GET_IFACE
+GST_TAG_SETTER_GET_INTERFACE
 GST_TYPE_TAG_SETTER
 <SUBSECTION Private>
 gst_tag_setter_get_type
