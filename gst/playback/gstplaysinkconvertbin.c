@@ -129,6 +129,9 @@ gst_play_sink_convert_bin_add_conversion_element_factory (GstPlaySinkConvertBin
 void
 gst_play_sink_convert_bin_add_identity (GstPlaySinkConvertBin * self)
 {
+  if (self->identity)
+    return;
+
   self->identity = gst_element_factory_make ("identity", "identity");
   if (self->identity == NULL) {
     gst_play_sink_convert_bin_post_missing_element_message (self, "identity");
