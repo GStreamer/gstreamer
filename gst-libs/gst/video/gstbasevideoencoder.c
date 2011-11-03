@@ -255,7 +255,7 @@ gst_base_video_encoder_sink_setcaps (GstBaseVideoEncoder * base_video_encoder,
   GstBaseVideoCodec *codec = GST_BASE_VIDEO_CODEC (base_video_encoder);
   GstVideoInfo *info, tmp_info;
   GstVideoState *state, tmp_state;
-  gboolean ret;
+  gboolean ret = FALSE;
   gboolean changed = TRUE;
 
   GST_DEBUG_OBJECT (base_video_encoder, "setcaps %" GST_PTR_FORMAT, caps);
