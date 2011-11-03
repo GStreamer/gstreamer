@@ -293,18 +293,13 @@ gst_task_func (GstTask * task)
     if (G_UNLIKELY (GET_TASK_STATE (task) == GST_TASK_PAUSED)) {
       GST_OBJECT_LOCK (task);
       while (G_UNLIKELY (GST_TASK_STATE (task) == GST_TASK_PAUSED)) {
-        gint t;
+        g_static_rec_mutex_unlock (lock);
 
-        t = g_static_rec_mutex_unlock_full (lock);
-        if (t <= 0) {
-          g_warning ("wrong STREAM_LOCK count %d", t);
-        }
         GST_TASK_SIGNAL (task);
         GST_TASK_WAIT (task);
         GST_OBJECT_UNLOCK (task);
         /* locking order.. */
-        if (t > 0)
-          g_static_rec_mutex_lock_full (lock, t);
+        g_static_rec_mutex_lock (lock);
 
         GST_OBJECT_LOCK (task);
         if (G_UNLIKELY (GET_TASK_STATE (task) == GST_TASK_STOPPED)) {
