@@ -2968,7 +2968,7 @@ gst_decode_group_control_demuxer_pad (GstDecodeGroup * group, GstPad * pad)
   if (G_UNLIKELY (!group->multiqueue))
     return NULL;
 
-  if (!(sinkpad = gst_element_get_request_pad (group->multiqueue, "sink%d"))) {
+  if (!(sinkpad = gst_element_get_request_pad (group->multiqueue, "sink_%u"))) {
     GST_ERROR_OBJECT (dbin, "Couldn't get sinkpad from multiqueue");
     return NULL;
   }

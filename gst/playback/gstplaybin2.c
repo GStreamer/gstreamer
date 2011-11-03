@@ -2595,7 +2595,7 @@ pad_added_cb (GstElement * decodebin, GstPad * pad, GstSourceGroup * group)
 
   /* get sinkpad for the new stream */
   if (select->selector) {
-    if ((sinkpad = gst_element_get_request_pad (select->selector, "sink%d"))) {
+    if ((sinkpad = gst_element_get_request_pad (select->selector, "sink_%u"))) {
       gulong notify_tags_handler = 0;
       NotifyTagsData *ntdata;
 

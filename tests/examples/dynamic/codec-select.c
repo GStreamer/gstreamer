@@ -180,14 +180,14 @@ make_pipeline (void)
 
     gst_bin_add (GST_BIN (result), encoder);
 
-    srcpad = gst_element_get_request_pad (outputselect, "src%d");
+    srcpad = gst_element_get_request_pad (outputselect, "src_%u");
     sinkpad = gst_element_get_static_pad (encoder, "sink");
     gst_pad_link (srcpad, sinkpad);
     gst_object_unref (srcpad);
     gst_object_unref (sinkpad);
 
     srcpad = gst_element_get_static_pad (encoder, "src");
-    sinkpad = gst_element_get_request_pad (inputselect, "sink%d");
+    sinkpad = gst_element_get_request_pad (inputselect, "sink_%u");
     gst_pad_link (srcpad, sinkpad);
     gst_object_unref (srcpad);
     gst_object_unref (sinkpad);
@@ -212,7 +212,7 @@ do_switch (GstElement * pipeline)
   select = gst_bin_get_by_name (GST_BIN (pipeline), "select");
 
   /* get the named pad */
-  name = g_strdup_printf ("src%d", rand);
+  name = g_strdup_printf ("src_%u", rand);
   pad = gst_element_get_static_pad (select, name);
   g_free (name);
 

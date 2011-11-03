@@ -2435,7 +2435,7 @@ gst_play_sink_reconfigure (GstPlaySink * playsink)
       GST_DEBUG_OBJECT (playsink, "adding audio chain");
       if (playsink->audio_tee_asrc == NULL) {
         playsink->audio_tee_asrc =
-            gst_element_get_request_pad (playsink->audio_tee, "src%d");
+            gst_element_get_request_pad (playsink->audio_tee, "src_%u");
       }
       add_chain (GST_PLAY_CHAIN (playsink->audiochain), TRUE);
       activate_chain (GST_PLAY_CHAIN (playsink->audiochain), TRUE);
@@ -2497,7 +2497,7 @@ gst_play_sink_reconfigure (GstPlaySink * playsink)
       activate_chain (GST_PLAY_CHAIN (playsink->vischain), TRUE);
       if (playsink->audio_tee_vissrc == NULL) {
         playsink->audio_tee_vissrc =
-            gst_element_get_request_pad (playsink->audio_tee, "src%d");
+            gst_element_get_request_pad (playsink->audio_tee, "src_%u");
       }
       gst_pad_link_full (playsink->audio_tee_vissrc,
           playsink->vischain->sinkpad, GST_PAD_LINK_CHECK_NOTHING);
