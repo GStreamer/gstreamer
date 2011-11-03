@@ -28,6 +28,8 @@
 #include <gst/gst.h>
 #include <gst/base/gstadapter.h>
 #include <gst/video/video.h>
+#include <gst/video/gstvideopool.h>
+#include <gst/video/gstmetavideo.h>
 
 G_BEGIN_DECLS
 
@@ -156,7 +158,8 @@ struct _GstBaseVideoCodec
   guint64 system_frame_number;
 
   GList *frames;  /* Protected with OBJECT_LOCK */
-  GstVideoState state;
+  GstVideoState state;		/* Compressed video pad */
+  GstVideoInfo info;		/* Raw video pad */
   GstSegment segment;
 
   gdouble proportion;

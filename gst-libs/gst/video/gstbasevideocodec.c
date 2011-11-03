@@ -47,6 +47,9 @@ static GstStateChangeReturn gst_base_video_codec_change_state (GstElement *
 
 static GstElementClass *parent_class = NULL;
 
+/* NOTE (Edward): Do not use G_DEFINE_* because we need to have
+ * a GClassInitFunc called with the target class (which the macros
+ * don't handle). */
 static void gst_base_video_codec_class_init (GstBaseVideoCodecClass * klass);
 static void gst_base_video_codec_init (GstBaseVideoCodec * dec,
     GstBaseVideoCodecClass * klass);
@@ -85,6 +88,8 @@ gst_base_video_codec_class_init (GstBaseVideoCodecClass * klass)
 
   gobject_class = G_OBJECT_CLASS (klass);
   element_class = GST_ELEMENT_CLASS (klass);
+
+  parent_class = g_type_class_peek_parent (klass);
 
   gobject_class->finalize = gst_base_video_codec_finalize;
 
@@ -203,6 +208,9 @@ gst_base_video_codec_new_frame (GstBaseVideoCodec * base_video_codec)
   base_video_codec->system_frame_number++;
   GST_BASE_VIDEO_CODEC_STREAM_UNLOCK (base_video_codec);
 
+  GST_LOG_OBJECT (base_video_codec, "Created new frame %p (sfn:%d)",
+      frame, frame->system_frame_number);
+
   return frame;
 }
 
@@ -210,6 +218,8 @@ void
 gst_base_video_codec_free_frame (GstVideoFrameState * frame)
 {
   g_return_if_fail (frame != NULL);
+
+  GST_LOG ("Freeing frame %p (sfn:%d)", frame, frame->system_frame_number);
 
   if (frame->sink_buffer) {
     gst_buffer_unref (frame->sink_buffer);

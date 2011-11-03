@@ -116,7 +116,7 @@ struct _GstBaseVideoEncoder
  *                  Allows closing external resources.
  * @set_format:     Optional.
  *                  Notifies subclass of incoming data format.
- *                  GstVideoState fields have already been
+ *                  GstVideoInfo fields have already been
  *                  set according to provided caps.
  * @handle_frame:   Provides input frame to subclass.
  * @finish:         Optional.
@@ -147,7 +147,7 @@ struct _GstBaseVideoEncoderClass
   gboolean      (*stop)               (GstBaseVideoEncoder *coder);
 
   gboolean      (*set_format)         (GstBaseVideoEncoder *coder,
-                                       GstVideoState *state);
+                                       GstVideoInfo *info);
 
   GstFlowReturn (*handle_frame)       (GstBaseVideoEncoder *coder,
                                        GstVideoFrameState *frame);

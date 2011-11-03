@@ -95,7 +95,7 @@ GstFlowReturn _gst_base_video_decoder_error (GstBaseVideoDecoder *dec, gint weig
  *          enclosed in parentheses)
  * @ret:    variable to receive return value
  *
- * Utility function that audio decoder elements can use in case they encountered
+ * Utility function that video decoder elements can use in case they encountered
  * a data processing error that may be fatal for the current "data unit" but
  * need not prevent subsequent decoding.  Such errors are counted and if there
  * are too many, as configured in the context's max_errors, the pipeline will
@@ -104,7 +104,7 @@ GstFlowReturn _gst_base_video_decoder_error (GstBaseVideoDecoder *dec, gint weig
  * is logged. In either case, @ret is set to the proper value to
  * return to upstream/caller (indicating either GST_FLOW_ERROR or GST_FLOW_OK).
  */
-#define GST_BASE_AUDIO_DECODER_ERROR(el, w, domain, code, text, debug, ret) \
+#define GST_BASE_VIDEO_DECODER_ERROR(el, w, domain, code, text, debug, ret) \
 G_STMT_START {                                                              \
   gchar *__txt = _gst_element_error_printf text;                            \
   gchar *__dbg = _gst_element_error_printf debug;                           \
@@ -182,12 +182,18 @@ struct _GstBaseVideoDecoder
   int               reorder_depth;
   int               distance_from_sync;
 
+  /* Raw video bufferpool */
+  GstBufferPool *pool;
+  /* Indicates whether downstream can handle
+   * GST_META_API_VIDEO_CROP */
+  gboolean use_cropping;
+
   /* FIXME before moving to base */
   void             *padding[GST_PADDING_LARGE];
 };
 
 /**
- * GstBaseAudioDecoderClass:
+ * GstBaseVideoDecoderClass:
  * @start:          Optional.
  *                  Called when the element starts processing.
  *                  Allows opening external resources.

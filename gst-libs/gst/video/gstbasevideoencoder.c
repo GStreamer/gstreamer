@@ -115,9 +115,8 @@ GST_DEBUG_CATEGORY (basevideoencoder_debug);
 
 static void gst_base_video_encoder_finalize (GObject * object);
 
-static gboolean gst_base_video_encoder_sink_setcaps (GstPad * pad,
-    GstCaps * caps);
-static GstCaps *gst_base_video_encoder_sink_getcaps (GstPad * pad);
+static GstCaps *gst_base_video_encoder_sink_getcaps (GstPad * pad,
+    GstCaps * filter);
 static gboolean gst_base_video_encoder_src_event (GstPad * pad,
     GstEvent * event);
 static gboolean gst_base_video_encoder_sink_event (GstPad * pad,
@@ -131,36 +130,19 @@ static const GstQueryType *gst_base_video_encoder_get_query_types (GstPad *
 static gboolean gst_base_video_encoder_src_query (GstPad * pad,
     GstQuery * query);
 
-
-static void
-_do_init (GType object_type)
-{
-  const GInterfaceInfo preset_interface_info = {
-    NULL,                       /* interface_init */
-    NULL,                       /* interface_finalize */
-    NULL                        /* interface_data */
-  };
-
-  g_type_add_interface_static (object_type, GST_TYPE_PRESET,
-      &preset_interface_info);
-}
-
-GST_BOILERPLATE_FULL (GstBaseVideoEncoder, gst_base_video_encoder,
-    GstBaseVideoCodec, GST_TYPE_BASE_VIDEO_CODEC, _do_init);
-
-static void
-gst_base_video_encoder_base_init (gpointer g_class)
-{
-  GST_DEBUG_CATEGORY_INIT (basevideoencoder_debug, "basevideoencoder", 0,
-      "Base Video Encoder");
-
-}
+#define gst_base_video_encoder_parent_class parent_class
+G_DEFINE_TYPE_WITH_CODE (GstBaseVideoEncoder, gst_base_video_encoder,
+    GST_TYPE_BASE_VIDEO_CODEC, G_IMPLEMENT_INTERFACE (GST_TYPE_PRESET, NULL);
+    );
 
 static void
 gst_base_video_encoder_class_init (GstBaseVideoEncoderClass * klass)
 {
   GObjectClass *gobject_class;
   GstElementClass *gstelement_class;
+
+  GST_DEBUG_CATEGORY_INIT (basevideoencoder_debug, "basevideoencoder", 0,
+      "Base Video Encoder");
 
   gobject_class = G_OBJECT_CLASS (klass);
   gstelement_class = GST_ELEMENT_CLASS (klass);
@@ -198,8 +180,7 @@ gst_base_video_encoder_reset (GstBaseVideoEncoder * base_video_encoder)
 }
 
 static void
-gst_base_video_encoder_init (GstBaseVideoEncoder * base_video_encoder,
-    GstBaseVideoEncoderClass * klass)
+gst_base_video_encoder_init (GstBaseVideoEncoder * base_video_encoder)
 {
   GstPad *pad;
 
@@ -211,8 +192,6 @@ gst_base_video_encoder_init (GstBaseVideoEncoder * base_video_encoder,
       GST_DEBUG_FUNCPTR (gst_base_video_encoder_chain));
   gst_pad_set_event_function (pad,
       GST_DEBUG_FUNCPTR (gst_base_video_encoder_sink_event));
-  gst_pad_set_setcaps_function (pad,
-      GST_DEBUG_FUNCPTR (gst_base_video_encoder_sink_setcaps));
   gst_pad_set_getcaps_function (pad,
       GST_DEBUG_FUNCPTR (gst_base_video_encoder_sink_getcaps));
 
@@ -269,70 +248,71 @@ gst_base_video_encoder_drain (GstBaseVideoEncoder * enc)
 }
 
 static gboolean
-gst_base_video_encoder_sink_setcaps (GstPad * pad, GstCaps * caps)
+gst_base_video_encoder_sink_setcaps (GstBaseVideoEncoder * base_video_encoder,
+    GstCaps * caps)
 {
-  GstBaseVideoEncoder *base_video_encoder;
   GstBaseVideoEncoderClass *base_video_encoder_class;
-  GstStructure *structure;
+  GstBaseVideoCodec *codec = GST_BASE_VIDEO_CODEC (base_video_encoder);
+  GstVideoInfo *info, tmp_info;
   GstVideoState *state, tmp_state;
   gboolean ret;
-  gboolean changed = FALSE;
+  gboolean changed = TRUE;
 
-  base_video_encoder = GST_BASE_VIDEO_ENCODER (gst_pad_get_parent (pad));
+  GST_DEBUG_OBJECT (base_video_encoder, "setcaps %" GST_PTR_FORMAT, caps);
+
   base_video_encoder_class =
       GST_BASE_VIDEO_ENCODER_GET_CLASS (base_video_encoder);
 
   /* subclass should do something here ... */
   g_return_val_if_fail (base_video_encoder_class->set_format != NULL, FALSE);
 
-  GST_DEBUG_OBJECT (base_video_encoder, "setcaps %" GST_PTR_FORMAT, caps);
-
   GST_BASE_VIDEO_CODEC_STREAM_LOCK (base_video_encoder);
 
-  state = &GST_BASE_VIDEO_CODEC (base_video_encoder)->state;
+  /* Get GstVideoInfo from upstream caps */
+  info = &codec->info;
+  if (!gst_video_info_from_caps (&tmp_info, caps))
+    goto exit;
+
+  state = &codec->state;
   memset (&tmp_state, 0, sizeof (tmp_state));
 
   tmp_state.caps = gst_caps_ref (caps);
-  structure = gst_caps_get_structure (caps, 0);
 
-  ret =
-      gst_video_format_parse_caps (caps, &tmp_state.format, &tmp_state.width,
-      &tmp_state.height);
-  if (!ret)
-    goto exit;
-
-  changed = (tmp_state.format != state->format
-      || tmp_state.width != state->width || tmp_state.height != state->height);
-
-  if (!gst_video_parse_caps_framerate (caps, &tmp_state.fps_n,
-          &tmp_state.fps_d)) {
-    tmp_state.fps_n = 0;
-    tmp_state.fps_d = 1;
+  /* Check if input caps changed */
+  if (info->finfo) {
+    /* Check if anything changed */
+    changed = GST_VIDEO_INFO_FORMAT (&tmp_info) != GST_VIDEO_INFO_FORMAT (info);
+    changed |= GST_VIDEO_INFO_FLAGS (&tmp_info) != GST_VIDEO_INFO_FLAGS (info);
+    changed |= GST_VIDEO_INFO_WIDTH (&tmp_info) != GST_VIDEO_INFO_WIDTH (info);
+    changed |=
+        GST_VIDEO_INFO_HEIGHT (&tmp_info) != GST_VIDEO_INFO_HEIGHT (info);
+    changed |= GST_VIDEO_INFO_SIZE (&tmp_info) != GST_VIDEO_INFO_SIZE (info);
+    changed |= GST_VIDEO_INFO_VIEWS (&tmp_info) != GST_VIDEO_INFO_VIEWS (info);
+    changed |= GST_VIDEO_INFO_FPS_N (&tmp_info) != GST_VIDEO_INFO_FPS_N (info);
+    changed |= GST_VIDEO_INFO_FPS_D (&tmp_info) != GST_VIDEO_INFO_FPS_D (info);
+    changed |= GST_VIDEO_INFO_PAR_N (&tmp_info) != GST_VIDEO_INFO_PAR_N (info);
+    changed |= GST_VIDEO_INFO_PAR_D (&tmp_info) != GST_VIDEO_INFO_PAR_D (info);
   }
-  changed = changed || (tmp_state.fps_n != state->fps_n
-      || tmp_state.fps_d != state->fps_d);
 
-  if (!gst_video_parse_caps_pixel_aspect_ratio (caps, &tmp_state.par_n,
-          &tmp_state.par_d)) {
-    tmp_state.par_n = 1;
-    tmp_state.par_d = 1;
-  }
-  changed = changed || (tmp_state.par_n != state->par_n
-      || tmp_state.par_d != state->par_d);
-
-  tmp_state.have_interlaced =
-      gst_structure_get_boolean (structure, "interlaced",
-      &tmp_state.interlaced);
-  changed = changed || (tmp_state.have_interlaced != state->have_interlaced
-      || tmp_state.interlaced != state->interlaced);
-
-  tmp_state.bytes_per_picture =
-      gst_video_format_get_size (tmp_state.format, tmp_state.width,
-      tmp_state.height);
-  tmp_state.clean_width = tmp_state.width;
-  tmp_state.clean_height = tmp_state.height;
+  /* Copy over info from input GstVideoInfo into output GstVideoFrameState */
+  tmp_state.format = GST_VIDEO_INFO_FORMAT (&tmp_info);
+  tmp_state.bytes_per_picture = tmp_info.size;
+  tmp_state.width = tmp_info.width;
+  tmp_state.height = tmp_info.height;
+  tmp_state.fps_n = tmp_info.fps_n;
+  tmp_state.fps_d = tmp_info.fps_d;
+  tmp_state.par_n = tmp_info.par_n;
+  tmp_state.par_d = tmp_info.par_d;
+  tmp_state.clean_width = tmp_info.width;
+  tmp_state.clean_height = tmp_info.height;
   tmp_state.clean_offset_left = 0;
   tmp_state.clean_offset_top = 0;
+  /* FIXME (Edward): We need flags in GstVideoInfo to know whether
+   * interlaced field was present in input caps */
+  tmp_state.have_interlaced = tmp_state.interlaced =
+      GST_VIDEO_INFO_FLAG_IS_SET (&tmp_info, GST_VIDEO_FLAG_INTERLACED);
+  tmp_state.top_field_first =
+      GST_VIDEO_INFO_FLAG_IS_SET (&tmp_info, GST_VIDEO_FLAG_TFF);
 
   if (changed) {
     /* arrange draining pending frames */
@@ -341,10 +321,11 @@ gst_base_video_encoder_sink_setcaps (GstPad * pad, GstCaps * caps)
     /* and subclass should be ready to configure format at any time around */
     if (base_video_encoder_class->set_format)
       ret =
-          base_video_encoder_class->set_format (base_video_encoder, &tmp_state);
+          base_video_encoder_class->set_format (base_video_encoder, &tmp_info);
     if (ret) {
       gst_caps_replace (&state->caps, NULL);
       *state = tmp_state;
+      *info = tmp_info;
     }
   } else {
     /* no need to stir things up */
@@ -362,13 +343,11 @@ exit:
         caps);
   }
 
-  g_object_unref (base_video_encoder);
-
   return ret;
 }
 
 static GstCaps *
-gst_base_video_encoder_sink_getcaps (GstPad * pad)
+gst_base_video_encoder_sink_getcaps (GstPad * pad, GstCaps * filter)
 {
   GstBaseVideoEncoder *base_video_encoder;
   const GstCaps *templ_caps;
@@ -409,7 +388,7 @@ gst_base_video_encoder_sink_getcaps (GstPad * pad)
       const GValue *val;
       GstStructure *s;
 
-      s = gst_structure_id_empty_new (q_name);
+      s = gst_structure_new_id_empty (q_name);
       if ((val = gst_structure_get_value (allowed_s, "width")))
         gst_structure_set_value (s, "width", val);
       if ((val = gst_structure_get_value (allowed_s, "height")))
@@ -423,8 +402,19 @@ gst_base_video_encoder_sink_getcaps (GstPad * pad)
     }
   }
 
+  GST_LOG_OBJECT (base_video_encoder, "filtered caps (first) %" GST_PTR_FORMAT,
+      filter_caps);
+
   fcaps = gst_caps_intersect (filter_caps, templ_caps);
   gst_caps_unref (filter_caps);
+
+  if (filter) {
+    GST_LOG_OBJECT (base_video_encoder, "intersecting with %" GST_PTR_FORMAT,
+        filter);
+    filter_caps = gst_caps_intersect (fcaps, filter);
+    gst_caps_unref (fcaps);
+    fcaps = filter_caps;
+  }
 
 done:
 
@@ -455,6 +445,15 @@ gst_base_video_encoder_sink_eventfunc (GstBaseVideoEncoder * base_video_encoder,
       GST_BASE_VIDEO_ENCODER_GET_CLASS (base_video_encoder);
 
   switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_CAPS:
+    {
+      GstCaps *caps;
+
+      gst_event_parse_caps (event, &caps);
+      ret = gst_base_video_encoder_sink_setcaps (base_video_encoder, caps);
+      gst_event_unref (event);
+    }
+      break;
     case GST_EVENT_EOS:
     {
       GstFlowReturn flow_ret;
@@ -472,27 +471,20 @@ gst_base_video_encoder_sink_eventfunc (GstBaseVideoEncoder * base_video_encoder,
       GST_BASE_VIDEO_CODEC_STREAM_UNLOCK (base_video_encoder);
       break;
     }
-    case GST_EVENT_NEWSEGMENT:
+    case GST_EVENT_SEGMENT:
     {
-      gboolean update;
-      double rate;
-      double applied_rate;
-      GstFormat format;
-      gint64 start;
-      gint64 stop;
-      gint64 position;
+      const GstSegment *segment;
 
       GST_BASE_VIDEO_CODEC_STREAM_LOCK (base_video_encoder);
-      gst_event_parse_new_segment_full (event, &update, &rate, &applied_rate,
-          &format, &start, &stop, &position);
+      gst_event_parse_segment (event, &segment);
 
       GST_DEBUG_OBJECT (base_video_encoder, "newseg rate %g, applied rate %g, "
           "format %d, start = %" GST_TIME_FORMAT ", stop = %" GST_TIME_FORMAT
-          ", pos = %" GST_TIME_FORMAT, rate, applied_rate, format,
-          GST_TIME_ARGS (start), GST_TIME_ARGS (stop),
-          GST_TIME_ARGS (position));
+          ", pos = %" GST_TIME_FORMAT, segment->rate, segment->applied_rate,
+          segment->format, GST_TIME_ARGS (segment->start),
+          GST_TIME_ARGS (segment->stop), GST_TIME_ARGS (segment->position));
 
-      if (format != GST_FORMAT_TIME) {
+      if (segment->format != GST_FORMAT_TIME) {
         GST_DEBUG_OBJECT (base_video_encoder, "received non TIME newsegment");
         GST_BASE_VIDEO_CODEC_STREAM_UNLOCK (base_video_encoder);
         break;
@@ -500,9 +492,8 @@ gst_base_video_encoder_sink_eventfunc (GstBaseVideoEncoder * base_video_encoder,
 
       base_video_encoder->a.at_eos = FALSE;
 
-      gst_segment_set_newsegment_full (&GST_BASE_VIDEO_CODEC
-          (base_video_encoder)->segment, update, rate, applied_rate, format,
-          start, stop, position);
+      gst_segment_copy_into (segment, &GST_BASE_VIDEO_CODEC
+          (base_video_encoder)->segment);
       GST_BASE_VIDEO_CODEC_STREAM_UNLOCK (base_video_encoder);
       break;
     }
@@ -715,14 +706,9 @@ gst_base_video_encoder_chain (GstPad * pad, GstBuffer * buf)
 
   GST_BASE_VIDEO_CODEC_STREAM_LOCK (base_video_encoder);
 
-  if (!GST_PAD_CAPS (pad)) {
-    ret = GST_FLOW_NOT_NEGOTIATED;
-    goto done;
-  }
-
   GST_LOG_OBJECT (base_video_encoder,
       "received buffer of size %d with ts %" GST_TIME_FORMAT
-      ", duration %" GST_TIME_FORMAT, GST_BUFFER_SIZE (buf),
+      ", duration %" GST_TIME_FORMAT, gst_buffer_get_size (buf),
       GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buf)),
       GST_TIME_ARGS (GST_BUFFER_DURATION (buf)));
 
@@ -732,10 +718,10 @@ gst_base_video_encoder_chain (GstPad * pad, GstBuffer * buf)
   }
 
   if (base_video_encoder->sink_clipping) {
-    gint64 start = GST_BUFFER_TIMESTAMP (buf);
-    gint64 stop = start + GST_BUFFER_DURATION (buf);
-    gint64 clip_start;
-    gint64 clip_stop;
+    guint64 start = GST_BUFFER_TIMESTAMP (buf);
+    guint64 stop = start + GST_BUFFER_DURATION (buf);
+    guint64 clip_start;
+    guint64 clip_stop;
 
     if (!gst_segment_clip (&GST_BASE_VIDEO_CODEC (base_video_encoder)->segment,
             GST_FORMAT_TIME, start, stop, &clip_start, &clip_stop)) {
@@ -901,11 +887,11 @@ gst_base_video_encoder_finish_frame (GstBaseVideoEncoder * base_video_encoder,
       base_video_encoder->force_keyunit_event = NULL;
     } else {
       ev = gst_event_new_custom (GST_EVENT_CUSTOM_DOWNSTREAM,
-          gst_structure_new ("GstForceKeyUnit", NULL));
+          gst_structure_new_empty ("GstForceKeyUnit"));
     }
     GST_OBJECT_UNLOCK (base_video_encoder);
 
-    gst_structure_set (ev->structure,
+    gst_structure_set (gst_event_writable_structure (ev),
         "timestamp", G_TYPE_UINT64, frame->presentation_timestamp,
         "stream-time", G_TYPE_UINT64, stream_time,
         "running-time", G_TYPE_UINT64, running_time, NULL);
@@ -946,7 +932,7 @@ gst_base_video_encoder_finish_frame (GstBaseVideoEncoder * base_video_encoder,
 
   /* update rate estimate */
   GST_BASE_VIDEO_CODEC (base_video_encoder)->bytes +=
-      GST_BUFFER_SIZE (frame->src_buffer);
+      gst_buffer_get_size (frame->src_buffer);
   if (GST_CLOCK_TIME_IS_VALID (frame->presentation_duration)) {
     GST_BASE_VIDEO_CODEC (base_video_encoder)->time +=
         frame->presentation_duration;
@@ -960,9 +946,6 @@ gst_base_video_encoder_finish_frame (GstBaseVideoEncoder * base_video_encoder,
     GST_BUFFER_FLAG_SET (frame->src_buffer, GST_BUFFER_FLAG_DISCONT);
     GST_BASE_VIDEO_CODEC (base_video_encoder)->discont = FALSE;
   }
-
-  gst_buffer_set_caps (GST_BUFFER (frame->src_buffer),
-      GST_PAD_CAPS (GST_BASE_VIDEO_CODEC_SRC_PAD (base_video_encoder)));
 
   if (base_video_encoder_class->shape_output) {
     ret = base_video_encoder_class->shape_output (base_video_encoder, frame);
