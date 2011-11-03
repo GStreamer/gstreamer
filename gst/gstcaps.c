@@ -1180,6 +1180,47 @@ gst_caps_is_equal (const GstCaps * caps1, const GstCaps * caps2)
   return gst_caps_is_subset (caps1, caps2) && gst_caps_is_subset (caps2, caps1);
 }
 
+/**
+ * gst_caps_is_strictly_equal:
+ * @caps1: a #GstCaps
+ * @caps2: another #GstCaps
+ *
+ * Checks if the given caps are exactly the same set of caps.
+ *
+ * This function deals correctly with passing NULL for any of the caps.
+ *
+ * Returns: TRUE if both caps are strictly equal.
+ *
+ * Since: 0.10.36
+ */
+gboolean
+gst_caps_is_strictly_equal (const GstCaps * caps1, const GstCaps * caps2)
+{
+  int i;
+  /* FIXME 0.11: NULL pointers are no valid Caps but indicate an error
+   * So there should be an assertion that caps1 and caps2 != NULL */
+
+  /* NULL <-> NULL is allowed here */
+  if (G_UNLIKELY (caps1 == caps2))
+    return TRUE;
+
+  /* one of them NULL => they are different (can't be both NULL because
+   * we checked that above) */
+  if (G_UNLIKELY (caps1 == NULL || caps2 == NULL))
+    return FALSE;
+
+  if (caps1->structs->len != caps2->structs->len)
+    return FALSE;
+
+  for (i = 0; i < caps1->structs->len; i++) {
+    if (!gst_structure_is_equal (gst_caps_get_structure_unchecked (caps1, i),
+            gst_caps_get_structure_unchecked (caps2, i)))
+      return FALSE;
+  }
+
+  return TRUE;
+}
+
 /* intersect operation */
 
 /**
