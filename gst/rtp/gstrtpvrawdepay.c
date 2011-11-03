@@ -261,7 +261,7 @@ gst_rtp_vraw_depay_setcaps (GstBaseRTPDepayload * depayload, GstCaps * caps)
 
   if (!strcmp (type, "video/x-raw-rgb")) {
     gst_caps_set_simple (srccaps,
-        "endianness", G_TYPE_INT, BIG_ENDIAN,
+        "endianness", G_TYPE_INT, G_BIG_ENDIAN,
         "red_mask", G_TYPE_INT, rmask,
         "green_mask", G_TYPE_INT, gmask,
         "blue_mask", G_TYPE_INT, bmask,
