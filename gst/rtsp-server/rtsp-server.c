@@ -650,7 +650,11 @@ gst_rtsp_server_get_io_channel (GstRTSPServer * server)
       "listened on server socket %d, returning from connection setup", sockfd);
 
   /* create IO channel for the socket */
+#ifdef G_OS_WIN32
+  channel = g_io_channel_win32_new_socket (sockfd);
+#else
   channel = g_io_channel_unix_new (sockfd);
+#endif
   g_io_channel_set_close_on_unref (channel, TRUE);
 
   GST_INFO_OBJECT (server, "listening on service %s", server->service);
