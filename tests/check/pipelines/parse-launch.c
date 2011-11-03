@@ -135,7 +135,7 @@ GST_END_TEST;
 #define PIPELINE4  "fakesrc num-buffers=4 .src ! identity silent=true !.sink identity silent=true .src ! .sink fakesink silent=true"
 #define PIPELINE5  "fakesrc num-buffers=4 name=src identity silent=true name=id1 identity silent=true name = id2 fakesink silent=true name =sink src. ! id1. id1.! id2.sink id2.src!sink.sink"
 #define PIPELINE6  "pipeline.(name=\"john\" fakesrc num-buffers=4 ( bin. ( ! queue ! identity silent=true !( queue ! fakesink silent=true )) ))"
-#define PIPELINE7  "fakesrc num-buffers=4 ! tee name=tee .src%d! queue ! fakesink silent=true tee.src%d ! queue ! fakesink silent=true queue name =\"foo\" ! fakesink silent=true tee.src%d ! foo."
+#define PIPELINE7  "fakesrc num-buffers=4 ! tee name=tee .src_%u! queue ! fakesink silent=true tee.src_%u ! queue ! fakesink silent=true queue name =\"foo\" ! fakesink silent=true tee.src_%u ! foo."
 /* aggregator is borked
  * #define PIPELINE8  "fakesrc num-buffers=4 ! tee name=tee1 .src0,src1 ! .sink0, sink1 aggregator ! fakesink silent=true"
  * */

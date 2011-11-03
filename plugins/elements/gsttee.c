@@ -100,7 +100,8 @@ enum
   PROP_ALLOC_PAD,
 };
 
-static GstStaticPadTemplate tee_src_template = GST_STATIC_PAD_TEMPLATE ("src%d",
+static GstStaticPadTemplate tee_src_template =
+GST_STATIC_PAD_TEMPLATE ("src_%u",
     GST_PAD_SRC,
     GST_PAD_REQUEST,
     GST_STATIC_CAPS_ANY);
@@ -298,7 +299,7 @@ gst_tee_request_new_pad (GstElement * element, GstPadTemplate * templ,
   GST_DEBUG_OBJECT (tee, "requesting pad");
 
   GST_OBJECT_LOCK (tee);
-  name = g_strdup_printf ("src%d", tee->pad_counter++);
+  name = g_strdup_printf ("src_%u", tee->pad_counter++);
 
   srcpad = gst_pad_new_from_template (templ, name);
   g_free (name);

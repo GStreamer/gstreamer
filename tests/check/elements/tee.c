@@ -78,7 +78,7 @@ GST_START_TEST (test_num_buffers)
     g_object_set (sinks[i], "signal-handoffs", TRUE, NULL);
     g_signal_connect (sinks[i], "handoff", (GCallback) handoff, &counts[i]);
 
-    req_pads[i] = gst_element_get_request_pad (tee, "src%d");
+    req_pads[i] = gst_element_get_request_pad (tee, "src_%u");
     fail_unless (req_pads[i] != NULL);
 
     qpad = gst_element_get_static_pad (queues[i], "sink");
@@ -144,7 +144,7 @@ GST_START_TEST (test_stress)
   for (i = 0; i < 50000; i++) {
     GstPad *pad;
 
-    pad = gst_element_get_request_pad (tee, "src%d");
+    pad = gst_element_get_request_pad (tee, "src_%u");
     gst_element_release_request_pad (tee, pad);
     gst_object_unref (pad);
 
@@ -203,7 +203,7 @@ buffer_alloc_harness_setup (BufferAllocHarness * h, gint countdown)
   h->tee_sinkpad = gst_element_get_static_pad (h->tee, "sink");
   fail_if (h->tee_sinkpad == NULL);
 
-  h->tee_srcpad = gst_element_get_request_pad (h->tee, "src%d");
+  h->tee_srcpad = gst_element_get_request_pad (h->tee, "src_%u");
   fail_if (h->tee_srcpad == NULL);
 
   h->final_sinkpad = gst_pad_new ("sink", GST_PAD_SINK);
@@ -355,7 +355,7 @@ GST_START_TEST (test_internal_links)
   fail_unless (res == GST_ITERATOR_DONE);
   fail_unless (g_value_get_object (&val1) == NULL);
 
-  srcpad1 = gst_element_get_request_pad (tee, "src%d");
+  srcpad1 = gst_element_get_request_pad (tee, "src_%u");
   fail_unless (srcpad1 != NULL);
 
   /* iterator should resync */
@@ -375,7 +375,7 @@ GST_START_TEST (test_internal_links)
   fail_unless (res == GST_ITERATOR_DONE);
   fail_unless (g_value_get_object (&val1) == NULL);
 
-  srcpad2 = gst_element_get_request_pad (tee, "src%d");
+  srcpad2 = gst_element_get_request_pad (tee, "src_%u");
   fail_unless (srcpad2 != NULL);
 
   /* iterator should resync */
@@ -468,9 +468,9 @@ GST_START_TEST (test_flow_aggregation)
   fail_unless (tee != NULL);
   teesink = gst_element_get_static_pad (tee, "sink");
   fail_unless (teesink != NULL);
-  teesrc1 = gst_element_get_request_pad (tee, "src%d");
+  teesrc1 = gst_element_get_request_pad (tee, "src_%u");
   fail_unless (teesrc1 != NULL);
-  teesrc2 = gst_element_get_request_pad (tee, "src%d");
+  teesrc2 = gst_element_get_request_pad (tee, "src_%u");
   fail_unless (teesrc2 != NULL);
 
   GST_DEBUG ("Creating mysink1");

@@ -43,13 +43,13 @@ setup_test_objects (struct TestData *td, GstPadChainFunction chain_func)
   td->funnelsrc = gst_element_get_static_pad (td->funnel, "src");
   fail_unless (td->funnelsrc != NULL);
 
-  td->funnelsink11 = gst_element_get_request_pad (td->funnel, "sink11");
+  td->funnelsink11 = gst_element_get_request_pad (td->funnel, "sink_11");
   fail_unless (td->funnelsink11 != NULL);
-  fail_unless (!strcmp (GST_OBJECT_NAME (td->funnelsink11), "sink11"));
+  fail_unless (!strcmp (GST_OBJECT_NAME (td->funnelsink11), "sink_11"));
 
-  td->funnelsink22 = gst_element_get_request_pad (td->funnel, "sink22");
+  td->funnelsink22 = gst_element_get_request_pad (td->funnel, "sink_22");
   fail_unless (td->funnelsink22 != NULL);
-  fail_unless (!strcmp (GST_OBJECT_NAME (td->funnelsink22), "sink22"));
+  fail_unless (!strcmp (GST_OBJECT_NAME (td->funnelsink22), "sink_22"));
 
   fail_unless (gst_element_set_state (td->funnel, GST_STATE_PLAYING) ==
       GST_STATE_CHANGE_SUCCESS);

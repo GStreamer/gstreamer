@@ -71,7 +71,7 @@ struct _GstTee {
 
   GstPad         *sinkpad;
   GstPad         *allocpad;
-  gint            pad_counter;
+  guint           pad_counter;
 
   gboolean        has_chain;
   gboolean        has_sink_loop;

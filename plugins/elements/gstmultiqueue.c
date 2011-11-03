@@ -177,7 +177,7 @@ struct _GstMultiQueueItem
   guint32 posid;
 };
 
-static GstSingleQueue *gst_single_queue_new (GstMultiQueue * mqueue, gint id);
+static GstSingleQueue *gst_single_queue_new (GstMultiQueue * mqueue, guint id);
 static void gst_single_queue_free (GstSingleQueue * squeue);
 
 static void wake_up_next_non_linked (GstMultiQueue * mq);
@@ -186,12 +186,12 @@ static void compute_high_time (GstMultiQueue * mq);
 static void single_queue_overrun_cb (GstDataQueue * dq, GstSingleQueue * sq);
 static void single_queue_underrun_cb (GstDataQueue * dq, GstSingleQueue * sq);
 
-static GstStaticPadTemplate sinktemplate = GST_STATIC_PAD_TEMPLATE ("sink%d",
+static GstStaticPadTemplate sinktemplate = GST_STATIC_PAD_TEMPLATE ("sink_%u",
     GST_PAD_SINK,
     GST_PAD_REQUEST,
     GST_STATIC_CAPS_ANY);
 
-static GstStaticPadTemplate srctemplate = GST_STATIC_PAD_TEMPLATE ("src%d",
+static GstStaticPadTemplate srctemplate = GST_STATIC_PAD_TEMPLATE ("src_%u",
     GST_PAD_SRC,
     GST_PAD_SOMETIMES,
     GST_STATIC_CAPS_ANY);
@@ -620,10 +620,10 @@ gst_multi_queue_request_new_pad (GstElement * element, GstPadTemplate * temp,
 {
   GstMultiQueue *mqueue = GST_MULTI_QUEUE (element);
   GstSingleQueue *squeue;
-  gint temp_id = -1;
+  guint temp_id = -1;
 
   if (name) {
-    sscanf (name + 4, "%d", &temp_id);
+    sscanf (name + 4, "_%u", &temp_id);
     GST_LOG_OBJECT (element, "name : %s (id %d)", GST_STR_NULL (name), temp_id);
   }
 
@@ -1871,12 +1871,12 @@ gst_single_queue_free (GstSingleQueue * sq)
 }
 
 static GstSingleQueue *
-gst_single_queue_new (GstMultiQueue * mqueue, gint id)
+gst_single_queue_new (GstMultiQueue * mqueue, guint id)
 {
   GstSingleQueue *sq;
   gchar *name;
   GList *tmp;
-  gint temp_id = (id == -1) ? 0 : id;
+  guint temp_id = (id == -1) ? 0 : id;
 
   GST_MULTI_QUEUE_MUTEX_LOCK (mqueue);
 
@@ -1937,7 +1937,7 @@ gst_single_queue_new (GstMultiQueue * mqueue, gint id)
   sq->sink_tainted = TRUE;
   sq->src_tainted = TRUE;
 
-  name = g_strdup_printf ("sink%d", sq->id);
+  name = g_strdup_printf ("sink_%u", sq->id);
   sq->sinkpad = gst_pad_new_from_static_template (&sinktemplate, name);
   g_free (name);
 
@@ -1954,7 +1954,7 @@ gst_single_queue_new (GstMultiQueue * mqueue, gint id)
   gst_pad_set_iterate_internal_links_function (sq->sinkpad,
       GST_DEBUG_FUNCPTR (gst_multi_queue_iterate_internal_links));
 
-  name = g_strdup_printf ("src%d", sq->id);
+  name = g_strdup_printf ("src_%u", sq->id);
   sq->srcpad = gst_pad_new_from_static_template (&srctemplate, name);
   g_free (name);
 

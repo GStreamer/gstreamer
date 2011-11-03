@@ -80,7 +80,7 @@ static GStaticRecMutex notify_mutex = G_STATIC_REC_MUTEX_INIT;
 #define GST_INPUT_SELECTOR_BROADCAST(sel) (g_cond_broadcast (GST_INPUT_SELECTOR_GET_COND(sel)))
 
 static GstStaticPadTemplate gst_input_selector_sink_factory =
-GST_STATIC_PAD_TEMPLATE ("sink%d",
+GST_STATIC_PAD_TEMPLATE ("sink_%u",
     GST_PAD_SINK,
     GST_PAD_REQUEST,
     GST_STATIC_CAPS_ANY);
@@ -1286,7 +1286,7 @@ gst_input_selector_request_new_pad (GstElement * element,
   GST_INPUT_SELECTOR_LOCK (sel);
 
   GST_LOG_OBJECT (sel, "Creating new pad %d", sel->padcount);
-  name = g_strdup_printf ("sink%d", sel->padcount++);
+  name = g_strdup_printf ("sink_%u", sel->padcount++);
   sinkpad = g_object_new (GST_TYPE_SELECTOR_PAD,
       "name", name, "direction", templ->direction, "template", templ, NULL);
   g_free (name);

@@ -44,7 +44,7 @@ GST_STATIC_PAD_TEMPLATE ("sink",
     GST_STATIC_CAPS_ANY);
 
 static GstStaticPadTemplate gst_output_selector_src_factory =
-GST_STATIC_PAD_TEMPLATE ("src%d",
+GST_STATIC_PAD_TEMPLATE ("src_%u",
     GST_PAD_SRC,
     GST_PAD_REQUEST,
     GST_STATIC_CAPS_ANY);
@@ -347,7 +347,7 @@ gst_output_selector_request_new_pad (GstElement * element,
   GST_DEBUG_OBJECT (osel, "requesting pad");
 
   GST_OBJECT_LOCK (osel);
-  padname = g_strdup_printf ("src%d", osel->nb_srcpads++);
+  padname = g_strdup_printf ("src_%u", osel->nb_srcpads++);
   srcpad = gst_pad_new_from_template (templ, padname);
   GST_OBJECT_UNLOCK (osel);
 

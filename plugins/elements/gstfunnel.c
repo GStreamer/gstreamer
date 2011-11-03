@@ -94,7 +94,7 @@ gst_funnel_pad_init (GstFunnelPad * pad)
 }
 
 static GstStaticPadTemplate funnel_sink_template =
-GST_STATIC_PAD_TEMPLATE ("sink%d",
+GST_STATIC_PAD_TEMPLATE ("sink_%u",
     GST_PAD_SINK,
     GST_PAD_REQUEST,
     GST_STATIC_CAPS_ANY);
