@@ -1697,7 +1697,7 @@ gst_ogg_chain_new_stream (GstOggChain * chain, guint32 serialno)
   GST_DEBUG_OBJECT (chain->ogg,
       "creating new stream %08x in chain %p", serialno, chain);
 
-  name = g_strdup_printf ("serial_%08x", serialno);
+  name = g_strdup_printf ("src_%08x", serialno);
   ret = g_object_new (GST_TYPE_OGG_PAD, "name", name, NULL);
   g_free (name);
   /* we own this one */
@@ -1771,7 +1771,7 @@ enum
 };
 
 static GstStaticPadTemplate ogg_demux_src_template_factory =
-GST_STATIC_PAD_TEMPLATE ("src_%d",
+GST_STATIC_PAD_TEMPLATE ("src_%08x",
     GST_PAD_SRC,
     GST_PAD_SOMETIMES,
     GST_STATIC_CAPS_ANY);
