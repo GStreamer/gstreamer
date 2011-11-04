@@ -671,8 +671,9 @@ gst_rtp_buffer_get_extension_data (GstRTPBuffer * rtp, guint16 * bits,
     *bits = GST_READ_UINT16_BE (pdata);
   if (wordlen)
     *wordlen = GST_READ_UINT16_BE (pdata + 2);
+  pdata += 4;
   if (data)
-    *data = pdata + 4;
+    *data = (gpointer *) pdata;
 
   return TRUE;
 }
@@ -1216,13 +1217,13 @@ gst_rtp_buffer_get_extension_twobytes_header (GstRTPBuffer * rtp,
     guint8 * appbits, guint8 id, guint nth, gpointer * data, guint * size)
 {
   guint16 bits;
-  guint8 *pdata;
+  guint8 *pdata = NULL;
   guint wordlen;
   guint bytelen;
   gulong offset = 0;
   guint count = 0;
 
-  if (!gst_rtp_buffer_get_extension_data (rtp, &bits, (gpointer) & pdata,
+  if (!gst_rtp_buffer_get_extension_data (rtp, &bits, (gpointer *) & pdata,
           &wordlen))
     return FALSE;
 
@@ -1333,7 +1334,7 @@ gst_rtp_buffer_add_extension_onebyte_header (GstRTPBuffer * rtp, guint8 id,
     gpointer data, guint size)
 {
   guint16 bits;
-  guint8 *pdata;
+  guint8 *pdata = 0;
   guint wordlen;
   gboolean has_bit;
 
@@ -1454,7 +1455,7 @@ gst_rtp_buffer_add_extension_twobytes_header (GstRTPBuffer * rtp,
     guint8 appbits, guint8 id, gpointer data, guint size)
 {
   guint16 bits;
-  guint8 *pdata;
+  guint8 *pdata = 0;
   guint wordlen;
   gboolean has_bit;
 
