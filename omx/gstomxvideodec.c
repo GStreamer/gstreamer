@@ -1054,7 +1054,11 @@ gst_omx_video_dec_set_format (GstBaseVideoDecoder * decoder,
   }
 
   if (needs_disable && is_format_change) {
-    gst_omx_video_dec_drain (self);
+    if (self->started) {
+      gst_omx_video_dec_drain (self);
+      self->started = FALSE;
+    }
+
     if (klass->hacks & GST_OMX_HACK_NO_COMPONENT_RECONFIGURE) {
       GST_BASE_VIDEO_CODEC_STREAM_UNLOCK (self);
       gst_omx_video_dec_stop (GST_BASE_VIDEO_DECODER (self));
@@ -1174,6 +1178,7 @@ gst_omx_video_dec_reset (GstBaseVideoDecoder * decoder)
 
   if (self->started) {
     gst_omx_video_dec_drain (self);
+    self->started = FALSE;
 
     gst_omx_port_set_flushing (self->in_port, TRUE);
     gst_omx_port_set_flushing (self->out_port, TRUE);
@@ -1425,6 +1430,8 @@ gst_omx_video_dec_drain (GstOMXVideoDec * self)
   GstOMXAcquireBufferReturn acq_ret;
 
   GST_DEBUG_OBJECT (self, "Draining component");
+
+  g_assert (self->started);
 
   /* Send an EOS buffer to the component and let the base
    * class drop the EOS event. We will send it later when
