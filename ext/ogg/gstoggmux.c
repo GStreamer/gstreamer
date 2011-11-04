@@ -101,7 +101,7 @@ static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",
     GST_STATIC_CAPS ("application/ogg")
     );
 
-static GstStaticPadTemplate sink_factory = GST_STATIC_PAD_TEMPLATE ("sink_%d",
+static GstStaticPadTemplate sink_factory = GST_STATIC_PAD_TEMPLATE ("sink_%u",
     GST_PAD_SINK,
     GST_PAD_REQUEST,
     GST_STATIC_CAPS ("video/x-theora; "
@@ -383,7 +383,7 @@ gst_ogg_mux_request_new_pad (GstElement * element,
 
   klass = GST_ELEMENT_GET_CLASS (element);
 
-  if (templ != gst_element_class_get_pad_template (klass, "sink_%d"))
+  if (templ != gst_element_class_get_pad_template (klass, "sink_%u"))
     goto wrong_template;
 
   {
@@ -407,7 +407,7 @@ gst_ogg_mux_request_new_pad (GstElement * element,
     }
     /* create new pad with the name */
     GST_DEBUG_OBJECT (ogg_mux, "Creating new pad for serial %d", serial);
-    name = g_strdup_printf ("sink_%d", serial);
+    name = g_strdup_printf ("sink_%u", serial);
     newpad = gst_pad_new_from_template (templ, name);
     g_free (name);
 

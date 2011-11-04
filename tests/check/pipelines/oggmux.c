@@ -392,10 +392,10 @@ GST_START_TEST (test_request_pad_cleanup)
   GstPad *pad;
 
   oggmux = gst_element_factory_make ("oggmux", NULL);
-  pad = gst_element_get_request_pad (oggmux, "sink_%d");
+  pad = gst_element_get_request_pad (oggmux, "sink_%u");
   fail_unless (pad != NULL);
   gst_object_unref (pad);
-  pad = gst_element_get_request_pad (oggmux, "sink_%d");
+  pad = gst_element_get_request_pad (oggmux, "sink_%u");
   fail_unless (pad != NULL);
   gst_object_unref (pad);
   gst_object_unref (oggmux);

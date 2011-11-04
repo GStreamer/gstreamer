@@ -675,7 +675,7 @@ GST_START_TEST (test_remove_pad)
   fail_unless (res == TRUE, NULL);
 
   /* create an unconnected sinkpad in adder */
-  pad = gst_element_get_request_pad (adder, "sink%d");
+  pad = gst_element_get_request_pad (adder, "sink_%u");
   fail_if (pad == NULL, NULL);
 
   srcpad = gst_element_get_static_pad (adder, "src");
@@ -777,7 +777,7 @@ GST_START_TEST (test_clip)
 
   /* create an unconnected sinkpad in adder, should also automatically activate
    * the pad */
-  sinkpad = gst_element_get_request_pad (adder, "sink%d");
+  sinkpad = gst_element_get_request_pad (adder, "sink_%u");
   fail_if (sinkpad == NULL, NULL);
 
   /* send segment to adder */

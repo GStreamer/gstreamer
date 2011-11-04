@@ -89,7 +89,7 @@ GST_STATIC_PAD_TEMPLATE ("src",
     );
 
 static GstStaticPadTemplate gst_adder_sink_template =
-GST_STATIC_PAD_TEMPLATE ("sink%d",
+GST_STATIC_PAD_TEMPLATE ("sink_%u",
     GST_PAD_SINK,
     GST_PAD_REQUEST,
     GST_STATIC_CAPS (CAPS)
@@ -945,7 +945,7 @@ gst_adder_request_new_pad (GstElement * element, GstPadTemplate * templ,
   padcount = g_atomic_int_exchange_and_add (&adder->padcount, 1);
 #endif
 
-  name = g_strdup_printf ("sink%d", padcount);
+  name = g_strdup_printf ("sink_%u", padcount);
   newpad = gst_pad_new_from_template (templ, name);
   GST_DEBUG_OBJECT (adder, "request new pad %s", name);
   g_free (name);

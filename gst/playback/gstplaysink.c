@@ -198,7 +198,7 @@ struct _GstPlaySink
   gchar *font_desc;             /* font description */
   gchar *subtitle_encoding;     /* subtitle encoding */
   guint connection_speed;       /* connection speed in bits/sec (0 = unknown) */
-  gint count;
+  guint count;
   gboolean volume_changed;      /* volume/mute changed while no audiochain */
   gboolean mute_changed;        /* ... has been created yet */
   gint64 av_offset;
@@ -2258,7 +2258,7 @@ gst_play_sink_reconfigure (GstPlaySink * playsink)
 
       playsink->video_sinkpad_stream_synchronizer =
           gst_element_get_request_pad (GST_ELEMENT_CAST
-          (playsink->stream_synchronizer), "sink_%d");
+          (playsink->stream_synchronizer), "sink_%u");
       it = gst_pad_iterate_internal_links
           (playsink->video_sinkpad_stream_synchronizer);
       g_assert (it);
@@ -2420,7 +2420,7 @@ gst_play_sink_reconfigure (GstPlaySink * playsink)
 
       playsink->audio_sinkpad_stream_synchronizer =
           gst_element_get_request_pad (GST_ELEMENT_CAST
-          (playsink->stream_synchronizer), "sink_%d");
+          (playsink->stream_synchronizer), "sink_%u");
       it = gst_pad_iterate_internal_links
           (playsink->audio_sinkpad_stream_synchronizer);
       g_assert (it);
@@ -2542,7 +2542,7 @@ gst_play_sink_reconfigure (GstPlaySink * playsink)
 
         playsink->text_sinkpad_stream_synchronizer =
             gst_element_get_request_pad (GST_ELEMENT_CAST
-            (playsink->stream_synchronizer), "sink_%d");
+            (playsink->stream_synchronizer), "sink_%u");
         it = gst_pad_iterate_internal_links
             (playsink->text_sinkpad_stream_synchronizer);
         g_assert (it);
@@ -3181,7 +3181,7 @@ gst_play_sink_request_pad (GstPlaySink * playsink, GstPlaySinkType type)
       gchar *padname;
 
       /* we need a unique padname for the flushing pad. */
-      padname = g_strdup_printf ("flushing_%d", playsink->count);
+      padname = g_strdup_printf ("flushing_%u", playsink->count);
       res = gst_ghost_pad_new_no_target (padname, GST_PAD_SINK);
       g_free (padname);
       playsink->count++;

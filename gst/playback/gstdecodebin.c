@@ -56,7 +56,7 @@ GST_STATIC_PAD_TEMPLATE ("sink",
     GST_STATIC_CAPS_ANY);
 
 static GstStaticPadTemplate decoder_bin_src_template =
-GST_STATIC_PAD_TEMPLATE ("src%d",
+GST_STATIC_PAD_TEMPLATE ("src_%u",
     GST_PAD_SRC,
     GST_PAD_SOMETIMES,
     GST_STATIC_CAPS_ANY);
@@ -92,7 +92,7 @@ struct _GstDecodeBin
   GList *probes;                /* list of PadProbeData */
 
   GList *factories;             /* factories we can use for selecting elements */
-  gint numpads;
+  guint numpads;
   gint numwaiting;
 
   gboolean have_type;
@@ -917,7 +917,7 @@ close_pad_link (GstElement * element, GstPad * pad, GstCaps * caps,
     }
 
     /* make a unique name for this new pad */
-    padname = g_strdup_printf ("src%d", decode_bin->numpads);
+    padname = g_strdup_printf ("src_%u", decode_bin->numpads);
     decode_bin->numpads++;
 
     /* make it a ghostpad */

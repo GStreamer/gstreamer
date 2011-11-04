@@ -104,7 +104,7 @@ GST_STATIC_PAD_TEMPLATE ("sink",
     GST_STATIC_CAPS_ANY);
 
 static GstStaticPadTemplate decoder_bin_src_template =
-GST_STATIC_PAD_TEMPLATE ("src%d",
+GST_STATIC_PAD_TEMPLATE ("src_%u",
     GST_PAD_SRC,
     GST_PAD_SOMETIMES,
     GST_STATIC_CAPS_ANY);
@@ -152,7 +152,7 @@ struct _GstDecodeBin
 
   GMutex *expose_lock;          /* Protects exposal and removal of groups */
   GstDecodeChain *decode_chain; /* Top level decode chain */
-  gint nbpads;                  /* unique identifier for source pads */
+  guint nbpads;                 /* unique identifier for source pads */
 
   GMutex *factories_lock;
   guint32 factories_cookie;     /* Cookie from last time when factories was updated */
@@ -3578,7 +3578,7 @@ gst_decode_bin_expose (GstDecodeBin * dbin)
     gchar *padname;
 
     /* 1. rewrite name */
-    padname = g_strdup_printf ("src%d", dbin->nbpads);
+    padname = g_strdup_printf ("src_%u", dbin->nbpads);
     dbin->nbpads++;
     GST_DEBUG_OBJECT (dbin, "About to expose dpad %s as %s",
         GST_OBJECT_NAME (dpad), padname);

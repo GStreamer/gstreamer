@@ -133,22 +133,22 @@ GST_STATIC_PAD_TEMPLATE ("src", GST_PAD_SRC, GST_PAD_ALWAYS,
     GST_STATIC_CAPS_ANY);
 
 static GstStaticPadTemplate video_sink_template =
-GST_STATIC_PAD_TEMPLATE ("video_%d",
+GST_STATIC_PAD_TEMPLATE ("video_%u",
     GST_PAD_SINK,
     GST_PAD_REQUEST,
     GST_STATIC_CAPS_ANY);
 static GstStaticPadTemplate audio_sink_template =
-GST_STATIC_PAD_TEMPLATE ("audio_%d",
+GST_STATIC_PAD_TEMPLATE ("audio_%u",
     GST_PAD_SINK,
     GST_PAD_REQUEST,
     GST_STATIC_CAPS_ANY);
 /* static GstStaticPadTemplate text_sink_template = */
-/* GST_STATIC_PAD_TEMPLATE ("text_%d", */
+/* GST_STATIC_PAD_TEMPLATE ("text_%u", */
 /*     GST_PAD_SINK, */
 /*     GST_PAD_REQUEST, */
 /*     GST_STATIC_CAPS_ANY); */
 static GstStaticPadTemplate private_sink_template =
-GST_STATIC_PAD_TEMPLATE ("private_%d",
+GST_STATIC_PAD_TEMPLATE ("private_%u",
     GST_PAD_SINK,
     GST_PAD_REQUEST,
     GST_STATIC_CAPS_ANY);
@@ -706,11 +706,11 @@ gst_encode_bin_request_new_pad (GstElement * element,
   if (res == NULL) {
     GType ptype = G_TYPE_NONE;
 
-    if (!strcmp (templ->name_template, "video_%d"))
+    if (!strcmp (templ->name_template, "video_%u"))
       ptype = GST_TYPE_ENCODING_VIDEO_PROFILE;
-    else if (!strcmp (templ->name_template, "audio_%d"))
+    else if (!strcmp (templ->name_template, "audio_%u"))
       ptype = GST_TYPE_ENCODING_AUDIO_PROFILE;
-    /* else if (!strcmp (templ->name_template, "text_%d")) */
+    /* else if (!strcmp (templ->name_template, "text_%u")) */
     /*   ptype = GST_TYPE_ENCODING_TEXT_PROFILE; */
 
     /* FIXME : Check uniqueness of pad */
@@ -1133,7 +1133,7 @@ _create_stream_group (GstEncodeBin * ebin, GstEncodingProfile * sprof,
   sinkpad = gst_element_get_static_pad (sgroup->inqueue, "sink");
   if (sinkpadname == NULL) {
     gchar *pname =
-        g_strdup_printf ("%s_%d", gst_encoding_profile_get_type_nick (sprof),
+        g_strdup_printf ("%s_%u", gst_encoding_profile_get_type_nick (sprof),
         ebin->last_pad_id++);
     GST_DEBUG ("Adding ghost pad %s", pname);
     sgroup->ghostpad = gst_ghost_pad_new (pname, sinkpad);

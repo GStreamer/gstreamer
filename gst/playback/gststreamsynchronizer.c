@@ -43,11 +43,11 @@ GST_DEBUG_CATEGORY_STATIC (stream_synchronizer_debug);
     g_mutex_unlock (GST_STREAM_SYNCHRONIZER_CAST(obj)->lock);              \
 } G_STMT_END
 
-static GstStaticPadTemplate srctemplate = GST_STATIC_PAD_TEMPLATE ("src_%d",
+static GstStaticPadTemplate srctemplate = GST_STATIC_PAD_TEMPLATE ("src_%u",
     GST_PAD_SRC,
     GST_PAD_SOMETIMES,
     GST_STATIC_CAPS_ANY);
-static GstStaticPadTemplate sinktemplate = GST_STATIC_PAD_TEMPLATE ("sink_%d",
+static GstStaticPadTemplate sinktemplate = GST_STATIC_PAD_TEMPLATE ("sink_%u",
     GST_PAD_SINK,
     GST_PAD_REQUEST,
     GST_STATIC_CAPS_ANY);
@@ -677,7 +677,7 @@ gst_stream_synchronizer_request_new_pad (GstElement * element,
   stream->transform = self;
   stream->stream_number = self->current_stream_number;
 
-  tmp = g_strdup_printf ("sink_%d", self->current_stream_number);
+  tmp = g_strdup_printf ("sink_%u", self->current_stream_number);
   stream->sinkpad = gst_pad_new_from_static_template (&sinktemplate, tmp);
   g_free (tmp);
   gst_pad_set_element_private (stream->sinkpad, stream);
@@ -694,7 +694,7 @@ gst_stream_synchronizer_request_new_pad (GstElement * element,
   gst_pad_set_chain_function (stream->sinkpad,
       GST_DEBUG_FUNCPTR (gst_stream_synchronizer_sink_chain));
 
-  tmp = g_strdup_printf ("src_%d", self->current_stream_number);
+  tmp = g_strdup_printf ("src_%u", self->current_stream_number);
   stream->srcpad = gst_pad_new_from_static_template (&srctemplate, tmp);
   g_free (tmp);
   gst_pad_set_element_private (stream->srcpad, stream);

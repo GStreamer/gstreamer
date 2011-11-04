@@ -32,7 +32,7 @@ GST_DEBUG_CATEGORY_STATIC (stream_selector_debug);
 #define GST_CAT_DEFAULT stream_selector_debug
 
 static GstStaticPadTemplate gst_stream_selector_sink_factory =
-GST_STATIC_PAD_TEMPLATE ("sink%d",
+GST_STATIC_PAD_TEMPLATE ("sink_%u",
     GST_PAD_SINK,
     GST_PAD_REQUEST,
     GST_STATIC_CAPS_ANY);
@@ -647,7 +647,7 @@ gst_stream_selector_request_new_pad (GstElement * element,
   g_return_val_if_fail (templ->direction == GST_PAD_SINK, NULL);
   GST_LOG_OBJECT (sel, "Creating new pad %d", sel->padcount);
   GST_OBJECT_LOCK (sel);
-  name = g_strdup_printf ("sink%d", sel->padcount++);
+  name = g_strdup_printf ("sink_%u", sel->padcount++);
   sinkpad = g_object_new (GST_TYPE_SELECTOR_PAD,
       "name", name, "direction", templ->direction, "template", templ, NULL);
   g_free (name);
