@@ -31,8 +31,8 @@
  *
  * The RTP "DTMF" Muxer muxes multiple RTP streams into a valid RTP
  * stream. It does exactly what it's parent (#rtpmux) does, except
- * that it prevent buffers coming over a regular sink_%%d pad from going through
- * for the duration of buffers that came in a priority_sink_%%d pad.
+ * that it prevent buffers coming over a regular sink_%%u pad from going through
+ * for the duration of buffers that came in a priority_sink_%%u pad.
  *
  * This is especially useful if a discontinuous source like dtmfsrc or
  * rtpdtmfsrc are connected to the priority sink pads. This way, the generated
@@ -52,7 +52,7 @@ GST_DEBUG_CATEGORY_STATIC (gst_rtp_dtmf_mux_debug);
 #define GST_CAT_DEFAULT gst_rtp_dtmf_mux_debug
 
 static GstStaticPadTemplate priority_sink_factory =
-GST_STATIC_PAD_TEMPLATE ("priority_sink_%d",
+GST_STATIC_PAD_TEMPLATE ("priority_sink_%u",
     GST_PAD_SINK,
     GST_PAD_REQUEST,
     GST_STATIC_CAPS ("application/x-rtp"));
@@ -168,7 +168,7 @@ gst_rtp_dtmf_mux_request_new_pad (GstElement * element, GstPadTemplate * templ,
     padpriv = gst_pad_get_element_private (pad);
 
     if (gst_element_class_get_pad_template (GST_ELEMENT_GET_CLASS (element),
-            "priority_sink_%d") == gst_pad_get_pad_template (pad))
+            "priority_sink_%u") == gst_pad_get_pad_template (pad))
       padpriv->priority = TRUE;
     GST_OBJECT_UNLOCK (element);
   }
