@@ -509,7 +509,7 @@ gst_camerabin_video_create_elements (GstCameraBinVideo * vid)
   gst_object_unref (vid_sinkpad);
 
   /* Add queue element for video */
-  vid->tee_video_srcpad = gst_element_get_request_pad (vid->tee, "src%d");
+  vid->tee_video_srcpad = gst_element_get_request_pad (vid->tee, "src_%u");
 
   vid->video_queue = gst_element_factory_make ("queue", "video-queue");
   if (!gst_camerabin_add_element (vidbin, vid->video_queue)) {
@@ -620,7 +620,7 @@ gst_camerabin_video_create_elements (GstCameraBinVideo * vid)
     }
   }
   /* Add queue leading out of the video bin and to view finder */
-  vid->tee_vf_srcpad = gst_element_get_request_pad (vid->tee, "src%d");
+  vid->tee_vf_srcpad = gst_element_get_request_pad (vid->tee, "src_%u");
   queue = gst_element_factory_make ("queue", "viewfinder-queue");
   if (!gst_camerabin_add_element (vidbin, queue)) {
     goto error;

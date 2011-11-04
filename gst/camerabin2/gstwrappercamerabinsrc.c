@@ -470,13 +470,13 @@ gst_wrapper_camera_bin_src_construct_pipeline (GstBaseCameraSrc * bcamsrc)
       goto done;
 
     /* viewfinder pad */
-    vf_pad = gst_element_get_request_pad (tee, "src%d");
+    vf_pad = gst_element_get_request_pad (tee, "src_%u");
     g_object_set (tee, "alloc-pad", vf_pad, NULL);
     gst_ghost_pad_set_target (GST_GHOST_PAD (self->vfsrc), vf_pad);
     gst_object_unref (vf_pad);
 
     /* image/video pad from tee */
-    tee_capture_pad = gst_element_get_request_pad (tee, "src%d");
+    tee_capture_pad = gst_element_get_request_pad (tee, "src_%u");
 
     self->output_selector =
         gst_element_factory_make ("output-selector", "outsel");
@@ -493,9 +493,9 @@ gst_wrapper_camera_bin_src_construct_pipeline (GstBaseCameraSrc * bcamsrc)
 
     /* Create the 2 output pads for video and image */
     self->outsel_vidpad =
-        gst_element_get_request_pad (self->output_selector, "src%d");
+        gst_element_get_request_pad (self->output_selector, "src_%u");
     self->outsel_imgpad =
-        gst_element_get_request_pad (self->output_selector, "src%d");
+        gst_element_get_request_pad (self->output_selector, "src_%u");
 
     g_assert (self->outsel_vidpad != NULL);
     g_assert (self->outsel_imgpad != NULL);

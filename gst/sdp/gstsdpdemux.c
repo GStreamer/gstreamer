@@ -755,7 +755,7 @@ new_session_pad (GstElement * session, GstPad * pad, GstSDPDemux * demux)
   GST_SDP_STREAM_LOCK (demux);
   /* find stream */
   name = gst_object_get_name (GST_OBJECT_CAST (pad));
-  if (sscanf (name, "recv_rtp_src_%d_%d_%d", &id, &ssrc, &pt) != 3)
+  if (sscanf (name, "recv_rtp_src_%u_%u_%u", &id, &ssrc, &pt) != 3)
     goto unknown_stream;
 
   GST_DEBUG_OBJECT (demux, "stream: %u, SSRC %d, PT %d", id, ssrc, pt);
@@ -1017,7 +1017,7 @@ gst_sdp_demux_stream_configure_udp (GstSDPDemux * demux, GstSDPStream * stream)
     /* get output pad of the UDP source. */
     pad = gst_element_get_static_pad (stream->udpsrc[0], "src");
 
-    name = g_strdup_printf ("recv_rtp_sink_%d", stream->id);
+    name = g_strdup_printf ("recv_rtp_sink_%u", stream->id);
     stream->channelpad[0] = gst_element_get_request_pad (demux->session, name);
     g_free (name);
 
@@ -1046,7 +1046,7 @@ gst_sdp_demux_stream_configure_udp (GstSDPDemux * demux, GstSDPStream * stream)
 
     GST_DEBUG_OBJECT (demux, "connecting RTCP source to manager");
 
-    name = g_strdup_printf ("recv_rtcp_sink_%d", stream->id);
+    name = g_strdup_printf ("recv_rtcp_sink_%u", stream->id);
     stream->channelpad[1] = gst_element_get_request_pad (demux->session, name);
     g_free (name);
 
@@ -1120,7 +1120,7 @@ gst_sdp_demux_stream_configure_udp_sink (GstSDPDemux * demux,
   gst_bin_add (GST_BIN_CAST (demux), stream->udpsink);
 
   /* get session RTCP pad */
-  name = g_strdup_printf ("send_rtcp_src_%d", stream->id);
+  name = g_strdup_printf ("send_rtcp_src_%u", stream->id);
   pad = gst_element_get_request_pad (demux->session, name);
   g_free (name);
 

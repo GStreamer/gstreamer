@@ -92,9 +92,7 @@ teardown_src_pad (GstElement * element, const gchar * sinkname)
   gchar *padname;
 
   /* clean up floating src pad */
-  /* hm, asfmux uses _01 as suffixes for padnames */
-  padname = g_strdup (sinkname);
-  memcpy (strchr (padname, '%'), "01", 2);
+  padname = g_strdup_printf (sinkname, 1);
   if (!(sinkpad = gst_element_get_static_pad (element, padname)))
     sinkpad = gst_element_get_request_pad (element, padname);
   g_free (padname);
@@ -181,14 +179,14 @@ check_asfmux_pad (GstStaticPadTemplate * srctemplate,
 
 GST_START_TEST (test_video_pad)
 {
-  check_asfmux_pad (&srcvideotemplate, VIDEO_CAPS_STRING, "video_%d");
+  check_asfmux_pad (&srcvideotemplate, VIDEO_CAPS_STRING, "video_%u");
 }
 
 GST_END_TEST;
 
 GST_START_TEST (test_audio_pad)
 {
-  check_asfmux_pad (&srcaudiotemplate, AUDIO_CAPS_STRING, "audio_%d");
+  check_asfmux_pad (&srcaudiotemplate, AUDIO_CAPS_STRING, "audio_%u");
 }
 
 GST_END_TEST;

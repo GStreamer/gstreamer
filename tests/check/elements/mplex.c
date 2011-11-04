@@ -182,7 +182,7 @@ setup_mplex (void)
 
   GST_DEBUG ("setup_mplex");
   mplex = gst_check_setup_element ("mplex");
-  mysrcpad = setup_src_pad (mplex, &srctemplate, NULL, "audio_%d");
+  mysrcpad = setup_src_pad (mplex, &srctemplate, NULL, "audio_%u");
   mysinkpad = gst_check_setup_sink_pad (mplex, &sinktemplate, NULL);
   gst_pad_set_active (mysrcpad, TRUE);
   gst_pad_set_active (mysinkpad, TRUE);
@@ -205,7 +205,7 @@ cleanup_mplex (GstElement * mplex)
 
   gst_pad_set_active (mysrcpad, FALSE);
   gst_pad_set_active (mysinkpad, FALSE);
-  teardown_src_pad (mplex, "audio_%d");
+  teardown_src_pad (mplex, "audio_%u");
   gst_check_teardown_sink_pad (mplex);
   gst_check_teardown_element (mplex);
 

@@ -625,7 +625,7 @@ connect_thru_mq (RsnDvdBin * dvdbin, GstPad * pad)
   /* Request a pad from multiqueue, then connect this one, then
    * discover the corresponding output pad and return it */
   mq_sink = gst_element_get_request_pad (dvdbin->pieces[DVD_ELEM_MQUEUE],
-      "sink%d");
+      "sink_%u");
   if (mq_sink == NULL)
     return FALSE;
   dvdbin->mq_req_pads = g_list_prepend (dvdbin->mq_req_pads, mq_sink);
@@ -635,7 +635,7 @@ connect_thru_mq (RsnDvdBin * dvdbin, GstPad * pad)
 
   sinkname = gst_pad_get_name (mq_sink);
   tmp = sinkname + 4;
-  srcname = g_strdup_printf ("src%s", tmp);
+  srcname = g_strdup_printf ("src_%s", tmp);
 
   mq_src = gst_element_get_static_pad (dvdbin->pieces[DVD_ELEM_MQUEUE],
       srcname);
@@ -699,13 +699,13 @@ demux_pad_added (GstElement * element, GstPad * pad, RsnDvdBin * dvdbin)
   } else if (g_str_equal (gst_structure_get_name (s), "video/x-dvd-subpicture")) {
     dest_pad =
         gst_element_get_request_pad (dvdbin->pieces[DVD_ELEM_SPU_SELECT],
-        "sink%d");
+        "sink_%u");
     skip_mq = TRUE;
   } else if (can_sink_caps (dvdbin->pieces[DVD_ELEM_AUDDEC], caps)) {
     GST_LOG_OBJECT (dvdbin, "Found audio pad w/ caps %" GST_PTR_FORMAT, caps);
     dest_pad =
         gst_element_get_request_pad (dvdbin->pieces[DVD_ELEM_AUD_SELECT],
-        "sink%d");
+        "sink_%u");
   } else {
     GstStructure *s;
 

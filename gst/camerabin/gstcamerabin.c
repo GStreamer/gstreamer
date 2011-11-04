@@ -766,7 +766,7 @@ camerabin_create_elements (GstCameraBin * camera)
   }
 
   camera->pad_src_img =
-      gst_element_get_request_pad (camera->src_out_sel, "src%d");
+      gst_element_get_request_pad (camera->src_out_sel, "src_%u");
 
   gst_pad_add_data_probe (camera->pad_src_img,
       G_CALLBACK (gst_camerabin_have_img_buffer), camera);
@@ -795,7 +795,7 @@ camerabin_create_elements (GstCameraBin * camera)
   }
 
   camera->pad_src_view =
-      gst_element_get_request_pad (camera->src_out_sel, "src%d");
+      gst_element_get_request_pad (camera->src_out_sel, "src_%u");
 
   /* Create view finder elements */
   if (!camerabin_create_view_elements (camera)) {
@@ -809,7 +809,7 @@ camerabin_create_elements (GstCameraBin * camera)
 
   /* Add video bin */
   camera->pad_src_vid =
-      gst_element_get_request_pad (camera->src_out_sel, "src%d");
+      gst_element_get_request_pad (camera->src_out_sel, "src_%u");
   if (!gst_camerabin_add_element (GST_BIN (camera), camera->vidbin)) {
     goto done;
   }
@@ -819,7 +819,7 @@ camerabin_create_elements (GstCameraBin * camera)
   /* Link video bin ! view finder */
   unconnected_pad = gst_bin_find_unlinked_pad (GST_BIN (camera), GST_PAD_SRC);
   camera->pad_view_vid =
-      gst_element_get_request_pad (camera->view_in_sel, "sink%d");
+      gst_element_get_request_pad (camera->view_in_sel, "sink_%u");
   link_ret =
       gst_pad_link_full (unconnected_pad, camera->pad_view_vid,
       GST_PAD_LINK_CHECK_CAPS);
