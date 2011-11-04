@@ -1500,6 +1500,8 @@ theora_enc_set_property (GObject * object, guint prop_id,
     case PROP_NOISE_SENSITIVITY:
     case PROP_SHARPNESS:
       /* kept for API compat, but ignored */
+      GST_WARNING_OBJECT (object, "Obsolete property '%s' ignored",
+          pspec->name);
       break;
     case PROP_BITRATE:
       GST_OBJECT_LOCK (enc);
