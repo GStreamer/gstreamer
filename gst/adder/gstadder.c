@@ -155,7 +155,7 @@ gst_adder_sink_getcaps (GstPad * pad, GstCaps * filter)
     else
       gst_caps_ref (filter_caps);
   } else {
-    filter_caps = gst_caps_ref (filter);
+    filter_caps = filter ? gst_caps_ref (filter) : NULL;
   }
   GST_OBJECT_UNLOCK (adder);
 
