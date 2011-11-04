@@ -222,12 +222,14 @@ gst_controller_add_property (GstController * self, const gchar * name)
     GstControlledProperty *prop;
 
     /* create GstControlledProperty and add to self->properties list */
-    if ((prop = gst_controlled_property_new (self->object, name)))
+    if ((prop = gst_controlled_property_new (self->object, name))) {
       self->properties = g_list_prepend (self->properties, prop);
-    else
+      GST_DEBUG_OBJECT (self->object, "property %s added", name);
+    } else
       res = FALSE;
   } else {
-    GST_WARNING ("trying to control property %s again", name);
+    GST_WARNING_OBJECT (self->object, "trying to control property %s again",
+        name);
   }
   return res;
 }
@@ -251,6 +253,7 @@ gst_controller_remove_property (GstController * self, const gchar * name)
     self->properties = g_list_remove (self->properties, prop);
     //g_signal_handler_disconnect (self->object, prop->notify_handler_id);
     gst_controlled_property_free (prop);
+    GST_DEBUG_OBJECT (self->object, "property %s removed", name);
   } else {
     res = FALSE;
   }
@@ -275,8 +278,6 @@ gst_controller_new_valist (GstObject * object, va_list var_args)
   gchar *name;
 
   g_return_val_if_fail (G_IS_OBJECT (object), NULL);
-
-  GST_INFO ("setting up a new controller");
 
   self = g_object_newv (GST_TYPE_CONTROLLER, 0, NULL);
   self->object = g_object_ref (object);
@@ -310,8 +311,6 @@ gst_controller_new_list (GstObject * object, GList * list)
   GList *node;
 
   g_return_val_if_fail (G_IS_OBJECT (object), NULL);
-
-  GST_INFO ("setting up a new controller");
 
   self = g_object_newv (GST_TYPE_CONTROLLER, 0, NULL);
   self->object = g_object_ref (object);
