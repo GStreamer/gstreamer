@@ -55,11 +55,8 @@
         element properties over time.
       </para>
 
-      <xi:include href="xml/gstcontroller.xml" />
-      <xi:include href="xml/gstcontrolsource.xml" />
       <xi:include href="xml/gstinterpolationcontrolsource.xml" />
       <xi:include href="xml/gstlfocontrolsource.xml" />
-      <xi:include href="xml/gstcontrollergobject.xml" />
     </chapter>
 
     <chapter id="gstreamer-dataprotocol">

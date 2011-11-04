@@ -535,6 +535,7 @@ gst_element_factory_get_longname
 <SUBSECTION Private>
 </SECTION>
 
+
 <SECTION>
 <FILE>gstconfig</FILE>
 GST_DISABLE_GST_DEBUG
@@ -554,6 +555,66 @@ GST_PADDING_LARGE
 GST_PADDING_INIT
 GST_USING_PRINTF_EXTENSION
 </SECTION>
+
+<SECTION>
+<FILE>gstcontroller</FILE>
+<TITLE>GstController</TITLE>
+GstController
+gst_controller_new
+gst_controller_new_list
+gst_controller_new_valist
+gst_controller_add_properties
+gst_controller_add_properties_list
+gst_controller_add_properties_valist
+gst_controller_remove_properties
+gst_controller_remove_properties_list
+gst_controller_remove_properties_valist
+gst_controller_set_disabled
+gst_controller_set_property_disabled
+gst_controller_suggest_next_sync
+gst_controller_sync_values
+gst_controller_get_control_source
+gst_controller_set_control_source
+gst_controller_get
+gst_controller_get_value_arrays
+gst_controller_get_value_array
+<SUBSECTION Standard>
+GstControllerClass
+GstControllerPrivate
+GST_CONTROLLER
+GST_IS_CONTROLLER
+GST_CONTROLLER_CLASS
+GST_IS_CONTROLLER_CLASS
+GST_CONTROLLER_GET_CLASS
+GST_TYPE_CONTROLLER
+<SUBSECTION Private>
+gst_controller_get_type
+</SECTION>
+
+<SECTION>
+<FILE>gstcontrolsource</FILE>
+<TITLE>GstControlSource</TITLE>
+GstControlSource
+GstControlSourceClass
+GstControlSourceBind
+GstControlSourceGetValue
+GstControlSourceGetValueArray
+GstTimedValue
+GstValueArray
+gst_control_source_bind
+gst_control_source_get_value
+gst_control_source_get_value_array
+<SUBSECTION Standard>
+GST_CONTROL_SOURCE
+GST_IS_CONTROL_SOURCE
+GST_CONTROL_SOURCE_CLASS
+GST_IS_CONTROL_SOURCE_CLASS
+GST_CONTROL_SOURCE_GET_CLASS
+GST_TYPE_CONTROL_SOURCE
+<SUBSECTION Private>
+gst_control_source_get_type
+</SECTION>
+
 
 <SECTION>
 <FILE>gstelement</FILE>
@@ -1509,6 +1570,21 @@ gst_object_unref
 gst_object_ref_sink
 gst_object_replace
 gst_object_get_path_string
+
+gst_object_control_properties
+gst_object_uncontrol_properties
+gst_object_suggest_next_sync
+gst_object_sync_values
+gst_object_set_automation_disabled
+gst_object_set_property_automation_disabled
+gst_object_get_control_source
+gst_object_set_control_source
+gst_object_get_value
+gst_object_get_value_arrays
+gst_object_get_value_array
+gst_object_get_control_rate
+gst_object_set_control_rate
+
 <SUBSECTION Standard>
 GST_OBJECT
 GST_IS_OBJECT

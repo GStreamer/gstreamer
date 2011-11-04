@@ -43,7 +43,6 @@ SCANOBJ_OPTIONS=--type-init-func="g_type_init();gst_init(&argc,&argv)"
 IGNORE_HFILES = \
 	gstinterpolationcontrolsourceprivate.h \
 	gstlfocontrolsourceprivate.h \
-	gstcontrollerprivate.h \
 	gstgetbits_inl.h \
 	dp-private.h
 
