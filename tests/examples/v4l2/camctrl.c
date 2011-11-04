@@ -31,7 +31,6 @@
  */
 
 #include <gst/gst.h>
-#include <gst/controller/gstcontroller.h>
 #include <gst/controller/gstinterpolationcontrolsource.h>
 
 static void
@@ -130,7 +129,6 @@ main (gint argc, gchar ** argv)
 
   /* init gstreamer */
   gst_init (&argc, &argv);
-  gst_controller_init (&argc, &argv);
 
   /* create a new bin to hold the elements */
   bin = gst_pipeline_new ("camera");
@@ -172,7 +170,7 @@ main (gint argc, gchar ** argv)
   }
 
   /* get the controller */
-  if (!(ctrl = gst_controller_new (G_OBJECT (src), "brightness", "contrast",
+  if (!(ctrl = gst_controller_new (GST_OBJECT (src), "brightness", "contrast",
               "saturation", NULL))) {
     GST_WARNING ("can't control source element");
     return -1;

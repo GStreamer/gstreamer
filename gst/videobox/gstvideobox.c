@@ -64,8 +64,6 @@
 #include <math.h>
 #include <string.h>
 
-#include <gst/controller/gstcontroller.h>
-
 GST_DEBUG_CATEGORY_STATIC (videobox_debug);
 #define GST_CAT_DEFAULT videobox_debug
 
@@ -3365,7 +3363,7 @@ gst_video_box_before_transform (GstBaseTransform * trans, GstBuffer * in)
       GST_TIME_ARGS (timestamp));
 
   if (GST_CLOCK_TIME_IS_VALID (stream_time))
-    gst_object_sync_values (G_OBJECT (video_box), stream_time);
+    gst_object_sync_values (GST_OBJECT (video_box), stream_time);
 }
 
 static GstFlowReturn
@@ -3389,8 +3387,6 @@ gst_video_box_transform (GstBaseTransform * trans, GstBuffer * in,
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
-  gst_controller_init (NULL, NULL);
-
   GST_DEBUG_CATEGORY_INIT (videobox_debug, "videobox", 0,
       "Resizes a video by adding borders or cropping");
 

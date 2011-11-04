@@ -53,8 +53,6 @@
 #endif
 #include <string.h>
 
-#include <gst/controller/gstcontroller.h>
-
 #include "gstsmptealpha.h"
 #include "paint.h"
 
@@ -441,7 +439,7 @@ gst_smpte_alpha_before_transform (GstBaseTransform * trans, GstBuffer * buf)
       GST_TIME_ARGS (timestamp));
 
   if (GST_CLOCK_TIME_IS_VALID (stream_time))
-    gst_object_sync_values (G_OBJECT (smpte), stream_time);
+    gst_object_sync_values (GST_OBJECT (smpte), stream_time);
 }
 
 static GstFlowReturn
@@ -744,9 +742,6 @@ gst_smpte_alpha_plugin_init (GstPlugin * plugin)
 {
   GST_DEBUG_CATEGORY_INIT (gst_smpte_alpha_debug, "smptealpha", 0,
       "SMPTE alpha effect");
-
-  /* initialize gst controller library */
-  gst_controller_init (NULL, NULL);
 
   return gst_element_register (plugin, "smptealpha", GST_RANK_NONE,
       GST_TYPE_SMPTE_ALPHA);

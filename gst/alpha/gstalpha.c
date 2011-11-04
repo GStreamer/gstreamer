@@ -2570,7 +2570,7 @@ gst_alpha_before_transform (GstBaseTransform * btrans, GstBuffer * buf)
       GST_BUFFER_TIMESTAMP (buf));
   GST_LOG ("Got stream time of %" GST_TIME_FORMAT, GST_TIME_ARGS (timestamp));
   if (GST_CLOCK_TIME_IS_VALID (timestamp))
-    gst_object_sync_values (G_OBJECT (alpha), timestamp);
+    gst_object_sync_values (GST_OBJECT (alpha), timestamp);
 }
 
 static GstFlowReturn
@@ -2624,8 +2624,6 @@ invalid_out:
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
-  gst_controller_init (NULL, NULL);
-
   return gst_element_register (plugin, "alpha", GST_RANK_NONE, GST_TYPE_ALPHA);
 }
 

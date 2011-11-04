@@ -53,8 +53,6 @@
 #include "gstdice.h"
 #include "gsteffectv.h"
 
-#include <gst/controller/gstcontroller.h>
-
 #define DEFAULT_CUBE_BITS   4
 #define MAX_CUBE_BITS       5
 #define MIN_CUBE_BITS       0
@@ -140,7 +138,7 @@ gst_dicetv_transform (GstBaseTransform * trans, GstBuffer * in, GstBuffer * out)
       GST_TIME_ARGS (timestamp));
 
   if (GST_CLOCK_TIME_IS_VALID (stream_time))
-    gst_object_sync_values (G_OBJECT (filter), stream_time);
+    gst_object_sync_values (GST_OBJECT (filter), stream_time);
 
   gst_video_frame_map (&in_frame, &filter->info, in, GST_MAP_READ);
   gst_video_frame_map (&out_frame, &filter->info, out, GST_MAP_WRITE);

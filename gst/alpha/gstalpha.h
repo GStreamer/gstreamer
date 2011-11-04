@@ -26,7 +26,6 @@
 #include <gst/gst.h>
 #include <gst/video/video.h>
 #include <gst/video/gstvideofilter.h>
-#include <gst/controller/gstcontroller.h>
 
 G_BEGIN_DECLS
 

@@ -48,8 +48,6 @@
 #include "gstaging.h"
 #include "gsteffectv.h"
 
-#include <gst/controller/gstcontroller.h>
-
 static const gint dx[8] = { 1, 1, 0, -1, -1, -1, 0, 1 };
 static const gint dy[8] = { 0, -1, -1, -1, 0, 1, 1, 1 };
 
@@ -341,7 +339,7 @@ gst_agingtv_transform (GstBaseTransform * trans, GstBuffer * in,
       GST_TIME_ARGS (timestamp));
 
   if (GST_CLOCK_TIME_IS_VALID (stream_time))
-    gst_object_sync_values (G_OBJECT (agingtv), stream_time);
+    gst_object_sync_values (GST_OBJECT (agingtv), stream_time);
 
   if (!gst_video_frame_map (&in_frame, &agingtv->info, in, GST_MAP_READ))
     goto invalid_in;

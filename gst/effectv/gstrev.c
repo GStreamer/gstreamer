@@ -64,8 +64,6 @@
 
 #include "gstrev.h"
 
-#include <gst/controller/gstcontroller.h>
-
 #define THE_COLOR 0xffffffff
 
 enum
@@ -141,7 +139,7 @@ gst_revtv_transform (GstBaseTransform * trans, GstBuffer * in, GstBuffer * out)
       GST_TIME_ARGS (timestamp));
 
   if (GST_CLOCK_TIME_IS_VALID (stream_time))
-    gst_object_sync_values (G_OBJECT (filter), stream_time);
+    gst_object_sync_values (GST_OBJECT (filter), stream_time);
 
   if (!gst_video_frame_map (&in_frame, &filter->info, in, GST_MAP_READ))
     goto invalid_in;

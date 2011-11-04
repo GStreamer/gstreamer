@@ -26,7 +26,6 @@
 #include <gst/base/gstbasetransform.h>
 #include <gst/audio/audio.h>
 #include <gst/audio/gstaudiofilter.h>
-#include <gst/controller/gstcontroller.h>
 
 #include <math.h>
 
@@ -364,7 +363,7 @@ gst_audio_fx_base_iir_filter_transform_ip (GstBaseTransform * base,
       GST_TIME_ARGS (timestamp));
 
   if (GST_CLOCK_TIME_IS_VALID (stream_time))
-    gst_object_sync_values (G_OBJECT (filter), stream_time);
+    gst_object_sync_values (GST_OBJECT (filter), stream_time);
 
   if (gst_base_transform_is_passthrough (base))
     return GST_FLOW_OK;

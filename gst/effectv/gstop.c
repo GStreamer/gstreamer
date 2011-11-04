@@ -50,7 +50,6 @@
 #include "gsteffectv.h"
 
 #include <gst/video/video.h>
-#include <gst/controller/gstcontroller.h>
 
 enum
 {
@@ -219,7 +218,7 @@ gst_optv_transform (GstBaseTransform * trans, GstBuffer * in, GstBuffer * out)
       GST_TIME_ARGS (timestamp));
 
   if (GST_CLOCK_TIME_IS_VALID (stream_time))
-    gst_object_sync_values (G_OBJECT (filter), stream_time);
+    gst_object_sync_values (GST_OBJECT (filter), stream_time);
 
   if (G_UNLIKELY (filter->opmap[0] == NULL))
     return GST_FLOW_NOT_NEGOTIATED;

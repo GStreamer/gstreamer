@@ -43,8 +43,6 @@
 
 #include "gstvertigo.h"
 
-#include <gst/controller/gstcontroller.h>
-
 #define gst_vertigotv_parent_class parent_class
 G_DEFINE_TYPE (GstVertigoTV, gst_vertigotv, GST_TYPE_VIDEO_FILTER);
 
@@ -182,7 +180,7 @@ gst_vertigotv_transform (GstBaseTransform * trans, GstBuffer * in,
       GST_TIME_ARGS (timestamp));
 
   if (GST_CLOCK_TIME_IS_VALID (stream_time))
-    gst_object_sync_values (G_OBJECT (filter), stream_time);
+    gst_object_sync_values (GST_OBJECT (filter), stream_time);
 
   if (!gst_video_frame_map (&in_frame, &filter->info, in, GST_MAP_READ))
     goto invalid_in;

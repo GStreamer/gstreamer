@@ -91,8 +91,6 @@
 #include "videomixer2.h"
 #include "videomixer2pad.h"
 
-#include <gst/controller/gstcontroller.h>
-
 #ifdef DISABLE_ORC
 #define orc_memset memset
 #else
@@ -869,7 +867,7 @@ gst_videomixer2_blend_buffers (GstVideoMixer2 * mix,
 
       /* sync object properties on stream time */
       if (GST_CLOCK_TIME_IS_VALID (stream_time))
-        gst_object_sync_values (G_OBJECT (pad), stream_time);
+        gst_object_sync_values (GST_OBJECT (pad), stream_time);
 
       composite (GST_BUFFER_DATA (mixcol->buffer),
           pad->xpos, pad->ypos, pad->width, pad->height, pad->alpha,

@@ -42,7 +42,6 @@
 
 #include <gst/gst.h>
 #include <gst/base/gstbasetransform.h>
-#include <gst/controller/gstcontroller.h>
 
 #include "audiopanorama.h"
 
@@ -630,7 +629,7 @@ gst_audio_panorama_transform (GstBaseTransform * base, GstBuffer * inbuf,
       GST_TIME_ARGS (timestamp));
 
   if (GST_CLOCK_TIME_IS_VALID (stream_time))
-    gst_object_sync_values (G_OBJECT (filter), stream_time);
+    gst_object_sync_values (GST_OBJECT (filter), stream_time);
 
   indata = gst_buffer_map (inbuf, &insize, NULL, GST_MAP_READ);
   outdata = gst_buffer_map (outbuf, &outsize, NULL, GST_MAP_WRITE);

@@ -30,7 +30,6 @@
 #include <math.h>
 #include <gst/gst.h>
 #include <gst/audio/gstaudiofilter.h>
-#include <gst/controller/gstcontroller.h>
 
 #include "audiofxbasefirfilter.h"
 
@@ -829,7 +828,7 @@ gst_audio_fx_base_fir_filter_transform (GstBaseTransform * base,
       GST_TIME_ARGS (timestamp));
 
   if (GST_CLOCK_TIME_IS_VALID (stream_time))
-    gst_object_sync_values (G_OBJECT (self), stream_time);
+    gst_object_sync_values (GST_OBJECT (self), stream_time);
 
   g_return_val_if_fail (self->kernel != NULL, GST_FLOW_ERROR);
   g_return_val_if_fail (channels != 0, GST_FLOW_ERROR);

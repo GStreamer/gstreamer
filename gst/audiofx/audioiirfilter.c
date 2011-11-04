@@ -49,7 +49,6 @@
 #include <math.h>
 #include <gst/gst.h>
 #include <gst/audio/gstaudiofilter.h>
-#include <gst/controller/gstcontroller.h>
 
 #include "audioiirfilter.h"
 

@@ -48,7 +48,6 @@
 
 #include <string.h>
 #include <gst/gst.h>
-#include <gst/controller/gstcontroller.h>
 #include <gst/video/video.h>
 
 /* GstVideoFlip properties */
@@ -869,7 +868,7 @@ gst_video_flip_before_transform (GstBaseTransform * trans, GstBuffer * in)
       GST_TIME_ARGS (timestamp));
 
   if (GST_CLOCK_TIME_IS_VALID (stream_time))
-    gst_object_sync_values (G_OBJECT (videoflip), stream_time);
+    gst_object_sync_values (GST_OBJECT (videoflip), stream_time);
 }
 
 static GstFlowReturn

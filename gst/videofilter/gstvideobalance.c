@@ -49,7 +49,6 @@
 #include "gstvideobalance.h"
 #include <string.h>
 
-#include <gst/controller/gstcontroller.h>
 #include <gst/interfaces/colorbalance.h>
 
 GST_DEBUG_CATEGORY_STATIC (videobalance_debug);
@@ -430,7 +429,7 @@ gst_video_balance_before_transform (GstBaseTransform * base, GstBuffer * buf)
       GST_TIME_ARGS (timestamp));
 
   if (GST_CLOCK_TIME_IS_VALID (stream_time))
-    gst_object_sync_values (G_OBJECT (balance), stream_time);
+    gst_object_sync_values (GST_OBJECT (balance), stream_time);
 }
 
 static GstFlowReturn

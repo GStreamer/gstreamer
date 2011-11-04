@@ -659,7 +659,7 @@ gst_v4l2src_start (GstBaseSrc * src)
 
   /* activate settings for first frame */
   v4l2src->ctrl_time = 0;
-  gst_object_sync_values (G_OBJECT (src), v4l2src->ctrl_time);
+  gst_object_sync_values (GST_OBJECT (src), v4l2src->ctrl_time);
 
   return TRUE;
 }
@@ -797,7 +797,7 @@ gst_v4l2src_fill (GstPushSrc * src, GstBuffer * buf)
      */
     v4l2src->ctrl_time = timestamp;
   }
-  gst_object_sync_values (G_OBJECT (src), v4l2src->ctrl_time);
+  gst_object_sync_values (GST_OBJECT (src), v4l2src->ctrl_time);
   GST_INFO_OBJECT (src, "sync to %" GST_TIME_FORMAT,
       GST_TIME_ARGS (v4l2src->ctrl_time));
 

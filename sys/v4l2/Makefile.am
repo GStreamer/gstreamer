@@ -22,7 +22,6 @@ libgstvideo4linux2_la_SOURCES += gstv4l2sink.c
 
 libgstvideo4linux2_la_CFLAGS =   $(GST_PLUGINS_BASE_CFLAGS) \
 				 $(GST_BASE_CFLAGS) \
-				 $(GST_CONTROLLER_CFLAGS) \
 				 $(GST_CFLAGS) \
 				 $(X_CFLAGS) \
 				 $(LIBV4L2_CFLAGS) \
@@ -33,7 +32,6 @@ libgstvideo4linux2_la_LIBTOOLFLAGS = --tag=disable-static
 
 libgstvideo4linux2_la_LIBADD =   $(GST_PLUGINS_BASE_LIBS) \
 				 $(GST_BASE_LIBS) \
-				 $(GST_CONTROLLER_LIBS) \
 				 $(GST_PLUGINS_BASE_LIBS) \
 				 -lgstvideo-$(GST_MAJORMINOR) \
 				 -lgstinterfaces-$(GST_MAJORMINOR) \

@@ -838,7 +838,7 @@ gst_iir_equalizer_transform_ip (GstBaseTransform * btrans, GstBuffer * buf)
       gst_segment_to_stream_time (&btrans->segment, GST_FORMAT_TIME, timestamp);
 
   if (GST_CLOCK_TIME_IS_VALID (timestamp))
-    gst_object_sync_values (G_OBJECT (equ), timestamp);
+    gst_object_sync_values (GST_OBJECT (equ), timestamp);
 
   data = gst_buffer_map (buf, &size, NULL, GST_MAP_WRITE);
   equ->process (equ, data, size, channels);

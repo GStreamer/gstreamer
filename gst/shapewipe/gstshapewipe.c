@@ -45,7 +45,6 @@
 #include <string.h>
 
 #include <gst/gst.h>
-#include <gst/controller/gstcontroller.h>
 
 #include "gstshapewipe.h"
 
@@ -821,7 +820,7 @@ gst_shape_wipe_video_sink_chain (GstPad * pad, GstBuffer * buffer)
       gst_segment_to_stream_time (&self->segment, GST_FORMAT_TIME, timestamp);
 
   if (GST_CLOCK_TIME_IS_VALID (timestamp))
-    gst_object_sync_values (G_OBJECT (self), timestamp);
+    gst_object_sync_values (GST_OBJECT (self), timestamp);
 
   GST_LOG_OBJECT (self,
       "Blending buffer with timestamp %" GST_TIME_FORMAT " at position %f",
@@ -1084,8 +1083,6 @@ plugin_init (GstPlugin * plugin)
 {
   GST_DEBUG_CATEGORY_INIT (gst_shape_wipe_debug, "shapewipe", 0,
       "shapewipe element");
-
-  gst_controller_init (NULL, NULL);
 
   if (!gst_element_register (plugin, "shapewipe", GST_RANK_NONE,
           GST_TYPE_SHAPE_WIPE))

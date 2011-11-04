@@ -49,7 +49,6 @@
 
 #include <gst/gst.h>
 #include <gst/base/gstpushsrc.h>
-#include <gst/controller/gstcontroller.h>
 
 #include <gst/video/video.h>
 #include <gst/interfaces/propertyprobe.h>

@@ -23,7 +23,6 @@
 #endif
 
 #include <gst/gst.h>
-#include <gst/controller/gstcontroller.h>
 
 #include "audiopanorama.h"
 #include "audioinvert.h"
@@ -46,9 +45,6 @@
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
-  /* initialize gst controller library */
-  gst_controller_init (NULL, NULL);
-
   return (gst_element_register (plugin, "audiopanorama", GST_RANK_NONE,
           GST_TYPE_AUDIO_PANORAMA) &&
       gst_element_register (plugin, "audioinvert", GST_RANK_NONE,

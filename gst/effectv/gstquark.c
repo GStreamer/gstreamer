@@ -48,8 +48,6 @@
 #include "gstquark.h"
 #include "gsteffectv.h"
 
-#include <gst/controller/gstcontroller.h>
-
 /* number of frames of time-buffer. It should be as a configurable paramater */
 /* This number also must be 2^n just for the speed. */
 #define PLANES 16
@@ -128,7 +126,7 @@ gst_quarktv_transform (GstBaseTransform * trans, GstBuffer * in,
       GST_TIME_ARGS (timestamp));
 
   if (GST_CLOCK_TIME_IS_VALID (timestamp))
-    gst_object_sync_values (G_OBJECT (filter), timestamp);
+    gst_object_sync_values (GST_OBJECT (filter), timestamp);
 
   if (G_UNLIKELY (filter->planetable == NULL))
     return GST_FLOW_WRONG_STATE;

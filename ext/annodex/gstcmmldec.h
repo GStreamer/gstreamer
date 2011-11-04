@@ -26,7 +26,6 @@
 
 #include <gst/gst.h>
 #include <gst/gstformat.h>
-#include <gst/controller/gstcontroller.h>
 
 #include "gstcmmlparser.h"
 

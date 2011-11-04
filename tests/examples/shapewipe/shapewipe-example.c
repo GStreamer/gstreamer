@@ -18,7 +18,6 @@
  */
 
 #include <gst/gst.h>
-#include <gst/controller/gstcontroller.h>
 #include <gst/controller/gstlfocontrolsource.h>
 
 #include <stdlib.h>
@@ -78,7 +77,6 @@ main (gint argc, gchar ** argv)
   }
 
   gst_init (&argc, &argv);
-  gst_controller_init (&argc, &argv);
 
   if (argc > 2) {
     border = atof (argv[2]);
@@ -99,7 +97,7 @@ main (gint argc, gchar ** argv)
 
   shapewipe = gst_bin_get_by_name (GST_BIN (pipeline), "shape");
 
-  if (!(ctrl = gst_controller_new (G_OBJECT (shapewipe), "position", NULL))) {
+  if (!(ctrl = gst_controller_new (GST_OBJECT (shapewipe), "position", NULL))) {
     g_print ("can't control shapewipe element\n");
     return -3;
   }

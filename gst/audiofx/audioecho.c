@@ -50,7 +50,6 @@
 #include <gst/base/gstbasetransform.h>
 #include <gst/audio/audio.h>
 #include <gst/audio/gstaudiofilter.h>
-#include <gst/controller/gstcontroller.h>
 
 #include "audioecho.h"
 
@@ -370,7 +369,7 @@ gst_audio_echo_transform_ip (GstBaseTransform * base, GstBuffer * buf)
       GST_TIME_ARGS (timestamp));
 
   if (GST_CLOCK_TIME_IS_VALID (stream_time))
-    gst_object_sync_values (G_OBJECT (self), stream_time);
+    gst_object_sync_values (GST_OBJECT (self), stream_time);
 
   if (self->buffer == NULL) {
     guint bpf, rate;

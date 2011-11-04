@@ -76,7 +76,6 @@
 
 #include <gst/gst.h>
 #include <gst/base/gstcollectpads.h>
-#include <gst/controller/gstcontroller.h>
 #include <gst/video/video.h>
 
 #ifdef HAVE_STDLIB_H
@@ -1444,7 +1443,7 @@ gst_videomixer_blend_buffers (GstVideoMixer * mix, GstBuffer * outbuf)
 
       /* sync object properties on stream time */
       if (GST_CLOCK_TIME_IS_VALID (stream_time))
-        gst_object_sync_values (G_OBJECT (pad), stream_time);
+        gst_object_sync_values (GST_OBJECT (pad), stream_time);
 
       blend (GST_BUFFER_DATA (mixcol->buffer),
           pad->xpos, pad->ypos, pad->in_width, pad->in_height, pad->alpha,

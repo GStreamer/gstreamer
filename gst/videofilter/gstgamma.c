@@ -55,7 +55,6 @@
 #include <math.h>
 
 #include <gst/video/video.h>
-#include <gst/controller/gstcontroller.h>
 
 GST_DEBUG_CATEGORY_STATIC (gamma_debug);
 #define GST_CAT_DEFAULT gamma_debug
@@ -390,7 +389,7 @@ gst_gamma_before_transform (GstBaseTransform * base, GstBuffer * outbuf)
       GST_TIME_ARGS (timestamp));
 
   if (GST_CLOCK_TIME_IS_VALID (stream_time))
-    gst_object_sync_values (G_OBJECT (gamma), stream_time);
+    gst_object_sync_values (GST_OBJECT (gamma), stream_time);
 }
 
 static GstFlowReturn

@@ -28,7 +28,6 @@
 #include "gst/gst-i18n-plugin.h"
 
 #include <gst/gst.h>
-#include <gst/controller/gstcontroller.h>
 
 #include "gstv4l2object.h"
 #include "gstv4l2src.h"
@@ -47,9 +46,6 @@ plugin_init (GstPlugin * plugin)
 {
   GST_DEBUG_CATEGORY_INIT (v4l2_debug, "v4l2", 0, "V4L2 API calls");
   GST_DEBUG_CATEGORY_GET (GST_CAT_PERFORMANCE, "GST_PERFORMANCE");
-
-  /* initialize gst controller library */
-  gst_controller_init (NULL, NULL);
 
   if (!gst_element_register (plugin, "v4l2src", GST_RANK_PRIMARY,
           GST_TYPE_V4L2SRC) ||
