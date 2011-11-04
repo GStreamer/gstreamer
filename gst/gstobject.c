@@ -982,7 +982,12 @@ gst_object_control_properties (GstObject * object, ...)
 
   va_start (var_args, object);
   if (object->ctrl) {
-    object->ctrl = gst_controller_new_valist (object, var_args);
+    GstController *ctrl = gst_controller_new_valist (object, var_args);
+
+    /* FIXME: see gst_controller_new_*() */
+    g_object_unref (object->ctrl);
+    object->ctrl = ctrl;
+
     res = (object->ctrl != NULL);
   } else {
     res = gst_controller_add_properties_valist ((GstController *) object->ctrl,

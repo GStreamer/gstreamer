@@ -279,8 +279,12 @@ gst_controller_new_valist (GstObject * object, va_list var_args)
 
   g_return_val_if_fail (G_IS_OBJECT (object), NULL);
 
+  /* FIXME: storing the controller into the object is ugly
+   * we'd like to make the controller object completely internal
+   */
   self = g_object_newv (GST_TYPE_CONTROLLER, 0, NULL);
   self->object = g_object_ref (object);
+  object->ctrl = g_object_ref (self);
 
   /* create GstControlledProperty for each property */
   while ((name = va_arg (var_args, gchar *))) {
@@ -314,6 +318,7 @@ gst_controller_new_list (GstObject * object, GList * list)
 
   self = g_object_newv (GST_TYPE_CONTROLLER, 0, NULL);
   self->object = g_object_ref (object);
+  object->ctrl = g_object_ref (self);
 
   /* create GstControlledProperty for each property */
   for (node = list; node; node = g_list_next (node)) {
