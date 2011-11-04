@@ -1239,7 +1239,7 @@ theora_enc_chain (GstPad * pad, GstBuffer * buffer)
   enc = GST_THEORA_ENC (GST_PAD_PARENT (pad));
 
   /* we keep track of two timelines.
-   * - The timestamps from the incomming buffers, which we copy to the outgoing
+   * - The timestamps from the incoming buffers, which we copy to the outgoing
    *   encoded buffers as-is. We need to do this as we simply forward the
    *   newsegment events.
    * - The running_time of the buffers, which we use to construct the granulepos
@@ -1298,7 +1298,7 @@ theora_enc_chain (GstPad * pad, GstBuffer * buffer)
   }
 
   /* make sure we copy the discont flag to the next outgoing buffer when it's
-   * set on the incomming buffer */
+   * set on the incoming buffer */
   if (GST_BUFFER_IS_DISCONT (buffer)) {
     enc->next_discont = TRUE;
   }
