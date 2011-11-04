@@ -93,6 +93,7 @@ struct _GstRTPDTMFSrc
   guint16 ptime;
   guint16 packet_redundancy;
   guint32 clock_rate;
+  gboolean last_event_was_start;
 
   GstClockTime last_stop;
 
