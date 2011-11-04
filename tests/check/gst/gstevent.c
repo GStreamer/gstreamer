@@ -370,6 +370,9 @@ signal_blocked (GstPad * pad, GstPadProbeType type, gpointer type_data,
   signal_data_signal (data);
   GST_DEBUG ("signal done %p", data);
 
+  if (GST_IS_EVENT (type_data) && GST_EVENT_IS_UPSTREAM (type_data))
+    return GST_PAD_PROBE_PASS;
+
   return GST_PAD_PROBE_OK;
 }
 

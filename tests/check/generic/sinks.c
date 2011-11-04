@@ -772,6 +772,9 @@ pad_blocked_cb (GstPad * pad, GstPadProbeType type, gpointer type_data,
   g_cond_signal (blocked_cond);
   g_mutex_unlock (blocked_lock);
 
+  if (GST_IS_EVENT (type_data) && GST_EVENT_IS_UPSTREAM (type_data))
+    return GST_PAD_PROBE_PASS;
+
   return GST_PAD_PROBE_OK;
 }
 
