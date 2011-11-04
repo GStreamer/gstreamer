@@ -127,7 +127,7 @@ gst_webvtt_enc_chain (GstPad * pad, GstBuffer * buf)
     webvttenc->pushed_header = TRUE;
   }
 
-  gst_object_sync_values (G_OBJECT (webvttenc), GST_BUFFER_TIMESTAMP (buf));
+  gst_object_sync_values (GST_OBJECT (webvttenc), GST_BUFFER_TIMESTAMP (buf));
 
   timing = gst_webvtt_enc_timeconvertion (webvttenc, buf);
   new_buffer =

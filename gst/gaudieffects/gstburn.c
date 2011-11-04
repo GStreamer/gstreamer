@@ -265,7 +265,7 @@ gst_burn_transform (GstBaseTransform * btrans,
       GST_TIME_ARGS (timestamp));
 
   if (GST_CLOCK_TIME_IS_VALID (stream_time))
-    gst_object_sync_values (G_OBJECT (filter), stream_time);
+    gst_object_sync_values (GST_OBJECT (filter), stream_time);
 
   GST_OBJECT_LOCK (filter);
   adjustment = filter->adjustment;

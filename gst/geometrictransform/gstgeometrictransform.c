@@ -246,7 +246,7 @@ gst_geometric_transform_before_transform (GstBaseTransform * trans,
   GST_DEBUG_OBJECT (gt, "sync to %" GST_TIME_FORMAT, GST_TIME_ARGS (timestamp));
 
   if (GST_CLOCK_TIME_IS_VALID (stream_time))
-    gst_object_sync_values (G_OBJECT (gt), stream_time);
+    gst_object_sync_values (GST_OBJECT (gt), stream_time);
 }
 
 static GstFlowReturn

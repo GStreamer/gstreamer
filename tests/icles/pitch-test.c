@@ -25,7 +25,6 @@
 #include <string.h>
 #include <unistd.h>
 #include <gst/gst.h>
-#include <gst/controller/gstcontroller.h>
 
 int
 main (int argc, char **argv)
@@ -49,7 +48,6 @@ main (int argc, char **argv)
 
   /* initialize GStreamer */
   gst_init (&argc, &argv);
-  gst_controller_init (&argc, &argv);
 
   loop = g_main_loop_new (NULL, FALSE);
 

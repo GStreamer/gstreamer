@@ -783,7 +783,7 @@ gst_base_audio_visualizer_chain (GstPad * pad, GstBuffer * buffer)
       break;
 
     /* sync controlled properties */
-    gst_object_sync_values (G_OBJECT (scope), scope->next_ts);
+    gst_object_sync_values (GST_OBJECT (scope), scope->next_ts);
 
     GST_BUFFER_TIMESTAMP (outbuf) = scope->next_ts;
     GST_BUFFER_DURATION (outbuf) = scope->frame_duration;

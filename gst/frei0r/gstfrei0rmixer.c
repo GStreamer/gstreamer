@@ -598,7 +598,7 @@ gst_frei0r_mixer_collected (GstCollectPads * pads, GstFrei0rMixer * self)
       GST_TIME_ARGS (timestamp));
 
   if (GST_CLOCK_TIME_IS_VALID (timestamp))
-    gst_object_sync_values (G_OBJECT (self), timestamp);
+    gst_object_sync_values (GST_OBJECT (self), timestamp);
 
   gst_buffer_copy_metadata (outbuf, inbuf0,
       GST_BUFFER_COPY_FLAGS | GST_BUFFER_COPY_TIMESTAMPS);

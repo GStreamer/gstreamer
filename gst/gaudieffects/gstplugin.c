@@ -48,7 +48,6 @@
 #endif
 
 #include <gst/gst.h>
-#include <gst/controller/gstcontroller.h>
 
 #include "gstplugin.h"
 
@@ -65,8 +64,6 @@ static gboolean
 plugin_init (GstPlugin * plugin)
 {
   gboolean ret = TRUE;
-
-  gst_controller_init (NULL, NULL);
 
   ret &= gst_burn_plugin_init (plugin);
   ret &= gst_chromium_plugin_init (plugin);

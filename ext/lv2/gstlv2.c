@@ -39,7 +39,6 @@
 #include <math.h>
 #include <glib.h>
 #include <gst/audio/audio.h>
-#include <gst/controller/gstcontroller.h>
 #include <gst/audio/multichannel.h>
 
 #include "gstlv2.h"
@@ -893,9 +892,6 @@ plugin_init (GstPlugin * plugin)
   center_right_role = slv2_value_new_uri (world, NS_PG "centerRightChannel");
   side_left_role = slv2_value_new_uri (world, NS_PG "sideLeftChannel");
   side_right_role = slv2_value_new_uri (world, NS_PG "sideRightChannel");
-
-  /* initialize gst controller library */
-  gst_controller_init (NULL, NULL);
 
   gst_plugin_add_dependency_simple (plugin,
       "LV2_PATH", GST_LV2_DEFAULT_PATH, NULL, GST_PLUGIN_DEPENDENCY_FLAG_NONE);

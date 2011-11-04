@@ -145,7 +145,7 @@ gst_stereo_transform_ip (GstBaseTransform * base, GstBuffer * outbuf)
     return GST_FLOW_OK;
 
   if (GST_CLOCK_TIME_IS_VALID (GST_BUFFER_TIMESTAMP (outbuf)))
-    gst_object_sync_values (G_OBJECT (stereo), GST_BUFFER_TIMESTAMP (outbuf));
+    gst_object_sync_values (GST_OBJECT (stereo), GST_BUFFER_TIMESTAMP (outbuf));
 
   if (stereo->active) {
     for (i = 0; i < samples / 2; i += 2) {

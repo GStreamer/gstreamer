@@ -44,7 +44,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include <gst/controller/gstcontroller.h>
 #include <gst/audio/audio.h>
 #include "gstsignalprocessor.h"
 
@@ -780,7 +779,7 @@ gst_signal_processor_prepare (GstSignalProcessor * self, guint nframes)
 
   /* update controlled parameters */
   if (samples_avail && GST_CLOCK_TIME_IS_VALID (ts)) {
-    gst_object_sync_values ((GObject *) self, ts);
+    gst_object_sync_values ((GstObject *) self, ts);
   }
 
   return samples_avail;

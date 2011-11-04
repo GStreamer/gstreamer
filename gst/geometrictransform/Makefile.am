@@ -21,12 +21,10 @@ libgstgeometrictransform_la_SOURCES = plugin.c \
                                       gstfisheye.c
 
 libgstgeometrictransform_la_CFLAGS = $(GST_CFLAGS) $(GST_BASE_CFLAGS) \
-			    $(GST_PLUGINS_BASE_CFLAGS) \
-                            $(GST_CONTROLLER_CFLAGS)
+			    $(GST_PLUGINS_BASE_CFLAGS)
 libgstgeometrictransform_la_LIBADD = $(GST_PLUGINS_BASE_LIBS) \
                             -lgstvideo-@GST_MAJORMINOR@ \
                             -lgstinterfaces-@GST_MAJORMINOR@ \
-                            $(GST_CONTROLLER_LIBS) \
                             $(GST_BASE_LIBS) \
                             $(GST_LIBS) $(LIBM)
 libgstgeometrictransform_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)

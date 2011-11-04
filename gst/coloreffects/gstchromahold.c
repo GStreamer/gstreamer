@@ -437,7 +437,7 @@ gst_chroma_hold_before_transform (GstBaseTransform * btrans, GstBuffer * buf)
       GST_BUFFER_TIMESTAMP (buf));
   GST_LOG ("Got stream time of %" GST_TIME_FORMAT, GST_TIME_ARGS (timestamp));
   if (GST_CLOCK_TIME_IS_VALID (timestamp))
-    gst_object_sync_values (G_OBJECT (self), timestamp);
+    gst_object_sync_values (GST_OBJECT (self), timestamp);
 }
 
 static GstFlowReturn

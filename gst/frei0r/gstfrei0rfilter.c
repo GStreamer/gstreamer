@@ -81,7 +81,7 @@ gst_frei0r_filter_before_transform (GstBaseTransform * trans,
       GST_TIME_ARGS (timestamp));
 
   if (GST_CLOCK_TIME_IS_VALID (timestamp))
-    gst_object_sync_values (G_OBJECT (self), timestamp);
+    gst_object_sync_values (GST_OBJECT (self), timestamp);
 }
 
 static GstFlowReturn

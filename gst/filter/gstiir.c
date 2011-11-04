@@ -189,7 +189,7 @@ iir_transform_ip (GstBaseTransform * base, GstBuffer * outbuf)
   timestamp = GST_BUFFER_TIMESTAMP (outbuf);
 
   if (GST_CLOCK_TIME_IS_VALID (timestamp))
-    gst_object_sync_values (G_OBJECT (this), timestamp);
+    gst_object_sync_values (GST_OBJECT (this), timestamp);
 
   src = (gfloat *) GST_BUFFER_DATA (outbuf);
 

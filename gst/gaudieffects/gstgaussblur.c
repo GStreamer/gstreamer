@@ -169,7 +169,7 @@ gauss_blur_process_frame (GstBaseTransform * btrans,
   stream_time =
       gst_segment_to_stream_time (&btrans->segment, GST_FORMAT_TIME, timestamp);
   if (GST_CLOCK_TIME_IS_VALID (stream_time))
-    gst_object_sync_values (G_OBJECT (gb), stream_time);
+    gst_object_sync_values (GST_OBJECT (gb), stream_time);
 
   GST_OBJECT_LOCK (gb);
   sigma = gb->sigma;

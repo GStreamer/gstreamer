@@ -28,7 +28,6 @@
 #endif
 #include "gstfilter.h"
 #include <gst/audio/audio.h>
-#include <gst/controller/gstcontroller.h>
 
 struct _elements_entry
 {
@@ -45,9 +44,6 @@ static gboolean
 plugin_init (GstPlugin * plugin)
 {
   gint i = 0;
-
-  /* initialize gst controller library */
-  gst_controller_init (NULL, NULL);
 
   while (_elements[i].name) {
     if (!gst_element_register (plugin, _elements[i].name, GST_RANK_NONE,

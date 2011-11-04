@@ -100,7 +100,7 @@ gst_srt_enc_chain (GstPad * pad, GstBuffer * buf)
   gchar *string;
 
   srtenc = GST_SRT_ENC (gst_pad_get_parent_element (pad));
-  gst_object_sync_values (G_OBJECT (srtenc), GST_BUFFER_TIMESTAMP (buf));
+  gst_object_sync_values (GST_OBJECT (srtenc), GST_BUFFER_TIMESTAMP (buf));
   timing = gst_srt_enc_timeconvertion (srtenc, buf);
   string = g_strdup_printf ("%d\n%s", srtenc->counter++, timing);
   g_free (timing);

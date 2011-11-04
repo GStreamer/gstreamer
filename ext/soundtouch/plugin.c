@@ -22,15 +22,12 @@
 #endif
 
 #include <gst/gst.h>
-#include <gst/controller/gstcontroller.h>
 #include "gstpitch.hh"
 #include "gstbpmdetect.hh"
 
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
-  gst_controller_init (NULL, NULL);
-
   return gst_element_register (plugin, "pitch", GST_RANK_NONE, GST_TYPE_PITCH)
       && gst_element_register (plugin, "bpmdetect", GST_RANK_NONE,
       GST_TYPE_BPM_DETECT);

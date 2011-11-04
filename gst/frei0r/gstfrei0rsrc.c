@@ -122,7 +122,7 @@ gst_frei0r_src_create (GstPushSrc * src, GstBuffer ** buf)
       GST_TIME_ARGS (timestamp));
 
   if (GST_CLOCK_TIME_IS_VALID (timestamp))
-    gst_object_sync_values (G_OBJECT (self), timestamp);
+    gst_object_sync_values (GST_OBJECT (self), timestamp);
 
   time = ((gdouble) GST_BUFFER_TIMESTAMP (outbuf)) / GST_SECOND;
 
