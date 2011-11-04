@@ -88,7 +88,7 @@ typedef struct
   GstPadEventFunction proxypad_old_eventfunc;
 
   GstPulseSink *psink;
-  GstElement *dbin2;
+  GstElement *dbin;
 
   GstSegment segment;
 
@@ -439,14 +439,14 @@ gst_pulse_audio_sink_get_property (GObject * object, guint prop_id,
 }
 
 static void
-gst_pulse_audio_sink_free_dbin2 (GstPulseAudioSink * pbin)
+gst_pulse_audio_sink_free_dbin (GstPulseAudioSink * pbin)
 {
-  g_signal_handler_disconnect (pbin->dbin2, pbin->pad_added_id);
-  gst_element_set_state (pbin->dbin2, GST_STATE_NULL);
+  g_signal_handler_disconnect (pbin->dbin, pbin->pad_added_id);
+  gst_element_set_state (pbin->dbin, GST_STATE_NULL);
 
-  gst_bin_remove (GST_BIN (pbin), pbin->dbin2);
+  gst_bin_remove (GST_BIN (pbin), pbin->dbin);
 
-  pbin->dbin2 = NULL;
+  pbin->dbin = NULL;
 }
 
 static void
@@ -464,9 +464,9 @@ gst_pulse_audio_sink_dispose (GObject * object)
     pbin->sink_proxypad = NULL;
   }
 
-  if (pbin->dbin2) {
-    g_signal_handler_disconnect (pbin->dbin2, pbin->pad_added_id);
-    pbin->dbin2 = NULL;
+  if (pbin->dbin) {
+    g_signal_handler_disconnect (pbin->dbin, pbin->pad_added_id);
+    pbin->dbin = NULL;
   }
 
   pbin->sinkpad = NULL;
@@ -495,7 +495,7 @@ distribute_running_time (GstElement * element, const GstSegment * segment)
   pad = gst_element_get_static_pad (element, "sink");
 
   /* FIXME: Some decoders collect newsegments and send them out at once, making
-   * them lose accumulator events (and thus making dbin2_event_probe() hard to
+   * them lose accumulator events (and thus making dbin_event_probe() hard to
    * do right if we're sending these as well. We can get away with not sending
    * these at the moment, but this should be fixed! */
 #if 0
@@ -514,7 +514,7 @@ distribute_running_time (GstElement * element, const GstSegment * segment)
 }
 
 static GstPadProbeReturn
-dbin2_event_probe (GstPad * pad, GstPadProbeType ptype, GstEvent * event,
+dbin_event_probe (GstPad * pad, GstPadProbeType ptype, GstEvent * event,
     gpointer data)
 {
   GstPulseAudioSink *pbin = GST_PULSE_AUDIO_SINK (data);
@@ -530,7 +530,7 @@ dbin2_event_probe (GstPad * pad, GstPadProbeType ptype, GstEvent * event,
 }
 
 static void
-pad_added_cb (GstElement * dbin2, GstPad * pad, gpointer * data)
+pad_added_cb (GstElement * dbin, GstPad * pad, gpointer * data)
 {
   GstPulseAudioSink *pbin = GST_PULSE_AUDIO_SINK (data);
   GstPad *sinkpad = NULL;
@@ -550,15 +550,15 @@ pad_added_cb (GstElement * dbin2, GstPad * pad, gpointer * data)
 
 /* Called with pbin lock held */
 static void
-gst_pulse_audio_sink_add_dbin2 (GstPulseAudioSink * pbin)
+gst_pulse_audio_sink_add_dbin (GstPulseAudioSink * pbin)
 {
   GstPad *sinkpad = NULL;
 
-  g_assert (pbin->dbin2 == NULL);
+  g_assert (pbin->dbin == NULL);
 
-  pbin->dbin2 = gst_element_factory_make ("decodebin", "pulseaudiosink-dbin2");
+  pbin->dbin = gst_element_factory_make ("decodebin", "pulseaudiosink-dbin");
 
-  if (!pbin->dbin2) {
+  if (!pbin->dbin) {
     post_missing_element_message (pbin, "decodebin");
     GST_ELEMENT_WARNING (pbin, CORE, MISSING_PLUGIN,
         (_("Missing element '%s' - check your GStreamer installation."),
@@ -566,15 +566,15 @@ gst_pulse_audio_sink_add_dbin2 (GstPulseAudioSink * pbin)
     goto out;
   }
 
-  if (!gst_bin_add (GST_BIN (pbin), pbin->dbin2)) {
+  if (!gst_bin_add (GST_BIN (pbin), pbin->dbin)) {
     GST_ERROR_OBJECT (pbin, "Failed to add decodebin to bin");
     goto out;
   }
 
-  pbin->pad_added_id = g_signal_connect (pbin->dbin2, "pad-added",
+  pbin->pad_added_id = g_signal_connect (pbin->dbin, "pad-added",
       G_CALLBACK (pad_added_cb), pbin);
 
-  if (!gst_element_sync_state_with_parent (pbin->dbin2)) {
+  if (!gst_element_sync_state_with_parent (pbin->dbin)) {
     GST_ERROR_OBJECT (pbin, "Failed to set decodebin to parent state");
     goto out;
   }
@@ -582,14 +582,14 @@ gst_pulse_audio_sink_add_dbin2 (GstPulseAudioSink * pbin)
   /* Trap the newsegment events that we feed the decodebin and discard them */
   sinkpad = gst_element_get_static_pad (GST_ELEMENT (pbin->psink), "sink");
   pbin->event_probe_id = gst_pad_add_probe (sinkpad, GST_PAD_PROBE_TYPE_EVENT,
-      (GstPadProbeCallback) dbin2_event_probe, gst_object_ref (pbin), NULL);
+      (GstPadProbeCallback) dbin_event_probe, gst_object_ref (pbin), NULL);
   gst_object_unref (sinkpad);
   sinkpad = NULL;
 
   GST_DEBUG_OBJECT (pbin, "Distributing running time to decodebin");
-  distribute_running_time (pbin->dbin2, &pbin->segment);
+  distribute_running_time (pbin->dbin, &pbin->segment);
 
-  sinkpad = gst_element_get_static_pad (pbin->dbin2, "sink");
+  sinkpad = gst_element_get_static_pad (pbin->dbin, "sink");
 
   gst_pulse_audio_sink_update_sinkpad (pbin, sinkpad);
 
@@ -611,7 +611,7 @@ update_eac3_alignment (GstPulseAudioSink * pbin)
 
   if (g_str_equal (gst_structure_get_name (st), "audio/x-eac3")) {
     GstStructure *event_st = gst_structure_new ("ac3parse-set-alignment",
-        "alignment", G_TYPE_STRING, pbin->dbin2 ? "frame" : "iec61937", NULL);
+        "alignment", G_TYPE_STRING, pbin->dbin ? "frame" : "iec61937", NULL);
 
     if (!gst_pad_push_event (pbin->sinkpad,
             gst_event_new_custom (GST_EVENT_CUSTOM_UPSTREAM, event_st)))
@@ -645,9 +645,9 @@ proxypad_blocked_cb (GstPad * pad, GstPadProbeType ptype, gpointer type_data,
     }
 
     if (gst_pad_accept_caps (sinkpad, caps)) {
-      if (pbin->dbin2) {
+      if (pbin->dbin) {
         GST_DEBUG_OBJECT (pbin, "Removing decodebin");
-        gst_pulse_audio_sink_free_dbin2 (pbin);
+        gst_pulse_audio_sink_free_dbin (pbin);
         gst_pulse_audio_sink_update_sinkpad (pbin, sinkpad);
       } else
         GST_DEBUG_OBJECT (pbin, "Doing nothing");
@@ -664,14 +664,14 @@ proxypad_blocked_cb (GstPad * pad, GstPadProbeType ptype, gpointer type_data,
     pbin->format_lost = FALSE;
   }
 
-  if (pbin->dbin2 != NULL) {
+  if (pbin->dbin != NULL) {
     /* decodebin doesn't support reconfiguration, so throw this one away and
      * create a new one. */
-    gst_pulse_audio_sink_free_dbin2 (pbin);
+    gst_pulse_audio_sink_free_dbin (pbin);
   }
 
   GST_DEBUG_OBJECT (pbin, "Adding decodebin");
-  gst_pulse_audio_sink_add_dbin2 (pbin);
+  gst_pulse_audio_sink_add_dbin (pbin);
 
 done:
   update_eac3_alignment (pbin);
@@ -738,6 +738,7 @@ gst_pulse_audio_sink_sink_event (GstPad * pad, GstEvent * event)
 {
   GstPulseAudioSink *pbin = GST_PULSE_AUDIO_SINK (gst_pad_get_parent (pad));
   gboolean ret;
+  gboolean forward = TRUE;
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_CAPS:
@@ -746,14 +747,12 @@ gst_pulse_audio_sink_sink_event (GstPad * pad, GstEvent * event)
 
       gst_event_parse_caps (event, &caps);
       ret = gst_pulse_audio_sink_set_caps (pbin, caps);
-      gst_caps_unref (caps);
+      forward = FALSE;
       break;
     }
     case GST_EVENT_SEGMENT:
     {
       const GstSegment *segment = NULL;
-
-      ret = pbin->sinkpad_old_eventfunc (pad, gst_event_ref (event));
 
       GST_PULSE_AUDIO_SINK_LOCK (pbin);
       gst_event_parse_segment (event, &segment);
@@ -773,20 +772,21 @@ gst_pulse_audio_sink_sink_event (GstPad * pad, GstEvent * event)
     }
 
     case GST_EVENT_FLUSH_STOP:
-      ret = pbin->sinkpad_old_eventfunc (pad, gst_event_ref (event));
-
       GST_PULSE_AUDIO_SINK_LOCK (pbin);
       gst_segment_init (&pbin->segment, GST_FORMAT_UNDEFINED);
       GST_PULSE_AUDIO_SINK_UNLOCK (pbin);
       break;
 
     default:
-      ret = pbin->sinkpad_old_eventfunc (pad, gst_event_ref (event));
       break;
   }
 
+  if (forward)
+    ret = pbin->sinkpad_old_eventfunc (pad, event);
+  else
+    gst_event_unref (event);
+
   gst_object_unref (pbin);
-  gst_event_unref (event);
 
   return ret;
 }
@@ -892,11 +892,11 @@ gst_pulse_audio_sink_change_state (GstElement * element,
       GST_PULSE_AUDIO_SINK_LOCK (pbin);
       gst_segment_init (&pbin->segment, GST_FORMAT_UNDEFINED);
 
-      if (pbin->dbin2) {
+      if (pbin->dbin) {
         GstPad *pad = gst_element_get_static_pad (GST_ELEMENT (pbin->psink),
             "sink");
 
-        gst_pulse_audio_sink_free_dbin2 (pbin);
+        gst_pulse_audio_sink_free_dbin (pbin);
         gst_pulse_audio_sink_update_sinkpad (pbin, pad);
 
         gst_object_unref (pad);
