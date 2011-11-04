@@ -24,13 +24,13 @@
 #include "config.h"
 #endif
 
-#include "gstsurfacebuffer.h"
+#include "gstsurfacemeta.h"
 
 /**
- * SECTION:gstsurfacebuffer
- * @short_description: Accelerated surface base class
+ * SECTION:gstsurfacemeta
+ * @short_description: Accelerated surface metadata
  *
- * This base class is used to abstract hardware accelerated buffers and enable
+ * This meta data is used to abstract hardware accelerated buffers and enable
  * generic convertion to standard type such as GL textures. The media type for
  * those buffers is defined by #GST_VIDEO_CAPS_SURFACE. An implementation
  * specific type must be set using the "type" key (e.g. type="vaapi").
@@ -44,30 +44,25 @@
  * </note>
  */
 
-G_DEFINE_TYPE (GstSurfaceBuffer, gst_surface_buffer, GST_TYPE_BUFFER);
 
-static GstSurfaceConverter *
-gst_surface_buffer_default_create_converter (GstSurfaceBuffer * surface,
-    const gchar * type, GValue * dest)
+const GstMetaInfo *
+gst_surface_meta_get_info (void)
 {
-  return NULL;
-}
+  static const GstMetaInfo *meta_info = NULL;
 
-static void
-gst_surface_buffer_class_init (GstSurfaceBufferClass * klass)
-{
-  klass->create_converter = gst_surface_buffer_default_create_converter;
-}
-
-static void
-gst_surface_buffer_init (GstSurfaceBuffer * surface)
-{
-  /* Nothing to do */
+  if (meta_info == NULL) {
+    meta_info = gst_meta_register ("GstSurfaceMeta", "GstSurfaceMeta",
+        sizeof (GstSurfaceMeta),
+        (GstMetaInitFunction) NULL,
+        (GstMetaFreeFunction) NULL,
+        (GstMetaCopyFunction) NULL, (GstMetaTransformFunction) NULL);
+  }
+  return meta_info;
 }
 
 /**
- * gst_surface_buffer_create_converter:
- * @buffer: a #GstSurfaceBuffer
+ * gst_surface_meta_create_converter:
+ * @meta: a #GstSurfaceMeta
  * @type: the type to convert to
  * @dest: a #GValue containing the destination to upload
  *
@@ -79,10 +74,10 @@ gst_surface_buffer_init (GstSurfaceBuffer * surface)
  * Returns: newly allocated #GstSurfaceConverter
  */
 GstSurfaceConverter *
-gst_surface_buffer_create_converter (GstSurfaceBuffer * buffer,
+gst_surface_meta_create_converter (GstSurfaceMeta * meta,
     const gchar * type, GValue * dest)
 {
-  g_return_val_if_fail (GST_IS_SURFACE_BUFFER (buffer), FALSE);
-  return GST_SURFACE_BUFFER_GET_CLASS (buffer)->create_converter (buffer,
-      type, dest);
+  g_return_val_if_fail (meta != NULL, FALSE);
+
+  return meta->create_converter (meta, type, dest);
 }

@@ -184,9 +184,10 @@ gst_video_context_new_structure (const gchar ** types)
 }
 
 static gboolean
-gst_video_context_pad_query (gpointer item, GValue * value, gpointer user_data)
+gst_video_context_pad_query (const GValue * item, GValue * value,
+    gpointer user_data)
 {
-  GstPad *pad = GST_PAD (item);
+  GstPad *pad = g_value_get_object (item);
   GstQuery *query = user_data;
   gboolean res;
 
@@ -353,7 +354,7 @@ gst_video_context_message_parse_prepare (GstMessage * message,
   if (GST_MESSAGE_TYPE (message) != GST_MESSAGE_ELEMENT)
     return FALSE;
 
-  if (!gst_structure_has_name (message->structure, "prepare-video-context"))
+  if (!gst_message_has_name (message, "prepare-video-context"))
     return FALSE;
 
   if (!GST_IS_VIDEO_CONTEXT (src))
@@ -384,7 +385,7 @@ GstQuery *
 gst_video_context_query_new (const gchar ** types)
 {
   GstStructure *structure = gst_video_context_new_structure (types);
-  return gst_query_new_application (GST_QUERY_CUSTOM, structure);
+  return gst_query_new_custom (GST_QUERY_CUSTOM, structure);
 }
 
 /**
@@ -440,7 +441,7 @@ gst_video_context_run_query (GstElement * element, GstQuery * query)
 const gchar **
 gst_video_context_query_get_supported_types (GstQuery * query)
 {
-  GstStructure *structure = gst_query_get_structure (query);
+  const GstStructure *structure = gst_query_get_structure (query);
   const GValue *value = gst_structure_get_value (structure, "types");
 
   if (G_VALUE_HOLDS (value, G_TYPE_STRV))
@@ -461,7 +462,7 @@ void
 gst_video_context_query_parse_value (GstQuery * query, const gchar ** type,
     const GValue ** value)
 {
-  GstStructure *structure = gst_query_get_structure (query);
+  const GstStructure *structure = gst_query_get_structure (query);
 
   if (type)
     *type = gst_structure_get_string (structure, "video-context-type");
@@ -482,7 +483,7 @@ void
 gst_video_context_query_set_value (GstQuery * query, const gchar * type,
     GValue * value)
 {
-  GstStructure *structure = gst_query_get_structure (query);
+  GstStructure *structure = gst_query_writable_structure (query);
   gst_structure_set (structure, "video-context-type", G_TYPE_STRING, type,
       "video-context", G_TYPE_VALUE, value, NULL);
 }
@@ -499,7 +500,7 @@ void
 gst_video_context_query_set_string (GstQuery * query, const gchar * type,
     const gchar * value)
 {
-  GstStructure *structure = gst_query_get_structure (query);
+  GstStructure *structure = gst_query_writable_structure (query);
   gst_structure_set (structure, "video-context-type", G_TYPE_STRING, type,
       "video-context", G_TYPE_STRING, value, NULL);
 }
@@ -516,7 +517,7 @@ void
 gst_video_context_query_set_pointer (GstQuery * query, const gchar * type,
     gpointer value)
 {
-  GstStructure *structure = gst_query_get_structure (query);
+  GstStructure *structure = gst_query_writable_structure (query);
   gst_structure_set (structure, "video-context-type", G_TYPE_STRING, type,
       "video-context", G_TYPE_POINTER, value, NULL);
 }
@@ -533,7 +534,7 @@ void
 gst_video_context_query_set_object (GstQuery * query, const gchar * type,
     GObject * value)
 {
-  GstStructure *structure = gst_query_get_structure (query);
+  GstStructure *structure = gst_query_writable_structure (query);
   gst_structure_set (structure, "video-context-type", G_TYPE_STRING, type,
       "video-context", G_TYPE_OBJECT, value, NULL);
 }

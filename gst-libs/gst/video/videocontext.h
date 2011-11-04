@@ -36,8 +36,8 @@
 G_BEGIN_DECLS
 
 #define GST_TYPE_VIDEO_CONTEXT              (gst_video_context_iface_get_type ())
-#define GST_VIDEO_CONTEXT(obj)              (GST_IMPLEMENTS_INTERFACE_CHECK_INSTANCE_CAST ((obj), GST_TYPE_VIDEO_CONTEXT, GstVideoContext))
-#define GST_IS_VIDEO_CONTEXT(obj)           (GST_IMPLEMENTS_INTERFACE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_VIDEO_CONTEXT))
+#define GST_VIDEO_CONTEXT(obj)              (G_TYPE_CHECK_INSTANCE_CAST ((obj), GST_TYPE_VIDEO_CONTEXT, GstVideoContext))
+#define GST_IS_VIDEO_CONTEXT(obj)           (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_VIDEO_CONTEXT))
 #define GST_VIDEO_CONTEXT_GET_IFACE(inst)   (G_TYPE_INSTANCE_GET_INTERFACE ((inst), GST_TYPE_VIDEO_CONTEXT, GstVideoContextInterface))
 
 /**

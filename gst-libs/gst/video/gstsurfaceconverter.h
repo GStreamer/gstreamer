@@ -32,12 +32,9 @@
 
 G_BEGIN_DECLS
 
-/* Forward declaration from gstsurfacebuffer.h */
-typedef struct _GstSurfaceBuffer GstSurfaceBuffer;
-
 #define GST_TYPE_SURFACE_CONVERTER             (gst_surface_converter_get_type ())
-#define GST_SURFACE_CONVERTER(obj)             (GST_IMPLEMENTS_INTERFACE_CHECK_INSTANCE_CAST ((obj), GST_TYPE_SURFACE_CONVERTER, GstSurfaceConverter))
-#define GST_IS_SURFACE_CONVERTER(obj)          (GST_IMPLEMENTS_INTERFACE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_SURFACE_CONVERTER))
+#define GST_SURFACE_CONVERTER(obj)             (G_TYPE_CHECK_INSTANCE_CAST ((obj), GST_TYPE_SURFACE_CONVERTER, GstSurfaceConverter))
+#define GST_IS_SURFACE_CONVERTER(obj)          (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_SURFACE_CONVERTER))
 #define GST_SURFACE_CONVERTER_GET_IFACE(inst)  (G_TYPE_INSTANCE_GET_INTERFACE ((inst), GST_TYPE_SURFACE_CONVERTER, GstSurfaceConverterInterface))
 
 typedef struct _GstSurfaceConverter GstSurfaceConverter;
@@ -55,13 +52,13 @@ struct _GstSurfaceConverterInterface
   GTypeInterface parent;
 
   gboolean (*upload) (GstSurfaceConverter *converter,
-                      GstSurfaceBuffer *buffer);
+                      GstBuffer *buffer);
 };
 
 GType     gst_surface_converter_get_type (void);
 
 gboolean  gst_surface_converter_upload (GstSurfaceConverter *converter,
-                                        GstSurfaceBuffer *buffer);
+                                        GstBuffer *buffer);
 
 G_END_DECLS
 

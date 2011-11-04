@@ -8,7 +8,7 @@ libgstbasevideo_@GST_MAJORMINOR@_la_SOURCES = \
 	gstbasevideoutils.c \
 	gstbasevideodecoder.c \
 	gstbasevideoencoder.c \
-	gstsurfacebuffer.c \
+	gstsurfacemeta.c \
 	gstsurfaceconverter.c \
 	videocontext.c
 
@@ -18,7 +18,7 @@ libgstbasevideo_@GST_MAJORMINOR@include_HEADERS = \
 	gstbasevideoutils.h \
 	gstbasevideodecoder.h \
 	gstbasevideoencoder.h \
-	gstsurfacebuffer.h \
+	gstsurfacemeta.h \
 	gstsurfaceconverter.h \
 	videocontext.h
 

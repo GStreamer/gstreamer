@@ -25,7 +25,7 @@
 #endif
 
 #include "gstsurfaceconverter.h"
-#include "gstsurfacebuffer.h"
+#include "gstsurfacemeta.h"
 
 /**
  * SECTION:gstsurfaceconverter
@@ -63,7 +63,7 @@ gst_surface_converter_default_init (GstSurfaceConverterInterface * iface)
 /**
  * gst_surface_converter_upload:
  * @converter: a #GstSurfaceConverter
- * @buffer: the #GstSurfaceBuffer to upload
+ * @buffer: the #GstBuffer to upload
  *
  * Convert and uploads the #GstSurfaceBuffer to the converter destination.
  *
@@ -71,10 +71,10 @@ gst_surface_converter_default_init (GstSurfaceConverterInterface * iface)
  */
 gboolean
 gst_surface_converter_upload (GstSurfaceConverter * converter,
-    GstSurfaceBuffer * buffer)
+    GstBuffer * buffer)
 {
   g_return_val_if_fail (GST_IS_SURFACE_CONVERTER (converter), FALSE);
-  g_return_val_if_fail (GST_IS_SURFACE_BUFFER (buffer), FALSE);
+  g_return_val_if_fail (GST_IS_BUFFER (buffer), FALSE);
   return GST_SURFACE_CONVERTER_GET_IFACE (converter)->upload (converter,
       buffer);
 }
