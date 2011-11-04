@@ -110,7 +110,7 @@ pad_blocked_cb (GstPad * pad, GstPadProbeType type, gpointer type_data,
     gst_ghost_pad_set_target (GST_GHOST_PAD_CAST (self->srcpad), NULL);
 
     if (self->use_converters) {
-      self->conv = gst_element_factory_make ("audioconvert", "conv");
+      self->conv = gst_element_factory_make ("audioconvert", "paconv");
       if (self->conv == NULL) {
         post_missing_element_message (self, "audioconvert");
         GST_ELEMENT_WARNING (self, CORE, MISSING_PLUGIN,

@@ -109,7 +109,7 @@ pad_blocked_cb (GstPad * pad, GstPadProbeType type, gpointer type_data,
     gst_ghost_pad_set_target (GST_GHOST_PAD_CAST (self->sinkpad), NULL);
     gst_ghost_pad_set_target (GST_GHOST_PAD_CAST (self->srcpad), NULL);
 
-    self->conv = gst_element_factory_make (COLORSPACE, "conv");
+    self->conv = gst_element_factory_make (COLORSPACE, "pvconv");
     if (self->conv == NULL) {
       post_missing_element_message (self, COLORSPACE);
       GST_ELEMENT_WARNING (self, CORE, MISSING_PLUGIN,
