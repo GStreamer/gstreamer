@@ -2484,7 +2484,7 @@ gst_base_text_overlay_video_chain (GstPad * pad, GstBuffer * buffer)
     gst_caps_unref (caps);
   }
 
-  gst_object_sync_values (G_OBJECT (overlay), GST_BUFFER_TIMESTAMP (buffer));
+  gst_object_sync_values (GST_OBJECT (overlay), GST_BUFFER_TIMESTAMP (buffer));
 
 wait_for_text_buf:
 
@@ -2774,8 +2774,6 @@ gst_base_text_overlay_change_state (GstElement * element,
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
-  gst_controller_init (NULL, NULL);
-
   if (!gst_element_register (plugin, "textoverlay", GST_RANK_NONE,
           GST_TYPE_TEXT_OVERLAY) ||
       !gst_element_register (plugin, "timeoverlay", GST_RANK_NONE,

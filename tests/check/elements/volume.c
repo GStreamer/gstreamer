@@ -24,8 +24,8 @@
 
 #include <gst/base/gstbasetransform.h>
 #include <gst/check/gstcheck.h>
-#include <gst/controller/gstcontroller.h>
 #include <gst/interfaces/streamvolume.h>
+#include <gst/controller/gstinterpolationcontrolsource.h>
 
 /* For ease of programming we use globals to keep refs for our floating
  * src and sink pads we create; otherwise we always have to do get_pad,

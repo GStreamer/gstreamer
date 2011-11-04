@@ -43,7 +43,6 @@
 #include <math.h>
 #include <stdlib.h>
 #include <string.h>
-#include <gst/controller/gstcontroller.h>
 
 #include "gstaudiotestsrc.h"
 
@@ -1185,7 +1184,7 @@ gst_audio_test_src_fill (GstBaseSrc * basesrc, guint64 offset,
     GST_BUFFER_DURATION (buffer) = src->next_time - next_time;
   }
 
-  gst_object_sync_values (G_OBJECT (src), GST_BUFFER_TIMESTAMP (buffer));
+  gst_object_sync_values (GST_OBJECT (src), GST_BUFFER_TIMESTAMP (buffer));
 
   src->next_time = next_time;
   src->next_sample = next_sample;
@@ -1288,9 +1287,6 @@ gst_audio_test_src_get_property (GObject * object, guint prop_id,
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
-  /* initialize gst controller library */
-  gst_controller_init (NULL, NULL);
-
   GST_DEBUG_CATEGORY_INIT (audio_test_src_debug, "audiotestsrc", 0,
       "Audio Test Source");
 

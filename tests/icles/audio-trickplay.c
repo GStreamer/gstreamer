@@ -16,7 +16,6 @@
  */
 
 #include <gst/gst.h>
-#include <gst/controller/gstcontroller.h>
 #include <gst/controller/gstinterpolationcontrolsource.h>
 
 static void
@@ -65,7 +64,6 @@ main (gint argc, gchar ** argv)
   gboolean be_quiet = FALSE;
 
   gst_init (&argc, &argv);
-  gst_controller_init (&argc, &argv);
 
   if (argc) {
     gint arg;
@@ -128,7 +126,7 @@ main (gint argc, gchar ** argv)
   gst_object_unref (src_pad);
 
   /* add a controller to the source */
-  if (!(ctrl = gst_controller_new (G_OBJECT (src), "freq", "volume", NULL))) {
+  if (!(ctrl = gst_controller_new (GST_OBJECT (src), "freq", "volume", NULL))) {
     GST_WARNING ("can't control source element");
     goto Error;
   }

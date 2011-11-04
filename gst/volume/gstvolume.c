@@ -46,7 +46,6 @@
 #include <gst/base/gstbasetransform.h>
 #include <gst/audio/audio.h>
 #include <gst/interfaces/mixer.h>
-#include <gst/controller/gstcontroller.h>
 #include <gst/audio/audio.h>
 #include <gst/audio/gstaudiofilter.h>
 
@@ -240,7 +239,6 @@ volume_update_volume (GstVolume * self, gfloat volume, gboolean mute)
 {
   gboolean passthrough;
   gboolean res;
-  GstController *controller;
 
   GST_DEBUG_OBJECT (self, "configure mute %d, volume %f", mute, volume);
 
@@ -270,8 +268,7 @@ volume_update_volume (GstVolume * self, gfloat volume, gboolean mute)
    * because the property can change from 1.0 to something
    * else in the middle of a buffer.
    */
-  controller = gst_object_get_controller (G_OBJECT (self));
-  passthrough = passthrough && (controller == NULL);
+  passthrough = passthrough && (GST_OBJECT (self)->ctrl == NULL);
 
   GST_DEBUG_OBJECT (self, "set passthrough %d", passthrough);
 
@@ -777,7 +774,7 @@ volume_before_transform (GstBaseTransform * base, GstBuffer * buffer)
       GST_TIME_ARGS (timestamp));
 
   if (GST_CLOCK_TIME_IS_VALID (timestamp))
-    gst_object_sync_values (G_OBJECT (self), timestamp);
+    gst_object_sync_values (GST_OBJECT (self), timestamp);
 
   /* get latest values */
   GST_OBJECT_LOCK (self);
@@ -815,8 +812,8 @@ volume_transform_ip (GstBaseTransform * base, GstBuffer * outbuf)
 
   data = gst_buffer_map (outbuf, &size, NULL, GST_MAP_READWRITE);
 
-  mute_csource = gst_object_get_control_source (G_OBJECT (self), "mute");
-  volume_csource = gst_object_get_control_source (G_OBJECT (self), "volume");
+  mute_csource = gst_object_get_control_source (GST_OBJECT (self), "mute");
+  volume_csource = gst_object_get_control_source (GST_OBJECT (self), "volume");
 
   if (mute_csource || (volume_csource && !self->current_mute)) {
     gint rate = GST_AUDIO_INFO_RATE (&filter->info);
@@ -959,9 +956,6 @@ static gboolean
 plugin_init (GstPlugin * plugin)
 {
   gst_volume_orc_init ();
-
-  /* initialize gst controller library */
-  gst_controller_init (NULL, NULL);
 
   GST_DEBUG_CATEGORY_INIT (GST_CAT_DEFAULT, "volume", 0, "Volume gain");
 
