@@ -1,5 +1,5 @@
 ext/cdio/gstcdiocddasrc.c
 ext/dvdread/dvdreadsrc.c
-ext/lame/gstlame.c
+ext/lame/gstlamemp3enc.c
 ext/twolame/gsttwolame.c
 gst/asfdemux/gstasfdemux.c
