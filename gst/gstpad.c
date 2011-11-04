@@ -3615,7 +3615,9 @@ gst_pad_chain_data_unchecked (GstPad * pad, GstPadProbeType type, void *data)
       goto events_error;
   }
 
-  PROBE (pad, GST_PAD_PROBE_TYPE_PUSH | type, data, probe_stopped);
+  PROBE (pad, type | GST_PAD_PROBE_TYPE_BLOCK, data, probe_stopped);
+
+  PROBE (pad, type, data, probe_stopped);
 
   GST_OBJECT_UNLOCK (pad);
 
@@ -3741,7 +3743,8 @@ gst_pad_chain (GstPad * pad, GstBuffer * buffer)
   g_return_val_if_fail (GST_PAD_IS_SINK (pad), GST_FLOW_ERROR);
   g_return_val_if_fail (GST_IS_BUFFER (buffer), GST_FLOW_ERROR);
 
-  return gst_pad_chain_data_unchecked (pad, GST_PAD_PROBE_TYPE_BUFFER, buffer);
+  return gst_pad_chain_data_unchecked (pad,
+      GST_PAD_PROBE_TYPE_BUFFER | GST_PAD_PROBE_TYPE_PUSH, buffer);
 }
 
 static GstFlowReturn
@@ -3759,7 +3762,8 @@ gst_pad_chain_list_default (GstPad * pad, GstBufferList * list)
   for (i = 0; i < len; i++) {
     buffer = gst_buffer_list_get (list, i);
     ret =
-        gst_pad_chain_data_unchecked (pad, GST_PAD_PROBE_TYPE_BUFFER,
+        gst_pad_chain_data_unchecked (pad,
+        GST_PAD_PROBE_TYPE_BUFFER | GST_PAD_PROBE_TYPE_PUSH,
         gst_buffer_ref (buffer));
     if (ret != GST_FLOW_OK)
       break;
@@ -3803,8 +3807,8 @@ gst_pad_chain_list (GstPad * pad, GstBufferList * list)
   g_return_val_if_fail (GST_PAD_IS_SINK (pad), GST_FLOW_ERROR);
   g_return_val_if_fail (GST_IS_BUFFER_LIST (list), GST_FLOW_ERROR);
 
-  return gst_pad_chain_data_unchecked (pad, GST_PAD_PROBE_TYPE_BUFFER_LIST,
-      list);
+  return gst_pad_chain_data_unchecked (pad,
+      GST_PAD_PROBE_TYPE_BUFFER_LIST | GST_PAD_PROBE_TYPE_PUSH, list);
 }
 
 static GstFlowReturn
@@ -3816,8 +3820,6 @@ gst_pad_push_data (GstPad * pad, GstPadProbeType type, void *data)
   GST_OBJECT_LOCK (pad);
   if (G_UNLIKELY (GST_PAD_IS_FLUSHING (pad)))
     goto flushing;
-
-  type |= GST_PAD_PROBE_TYPE_PUSH;
 
   /* do block probes */
   PROBE (pad, type | GST_PAD_PROBE_TYPE_BLOCK, data, probe_stopped);
@@ -3913,7 +3915,8 @@ gst_pad_push (GstPad * pad, GstBuffer * buffer)
   g_return_val_if_fail (GST_PAD_IS_SRC (pad), GST_FLOW_ERROR);
   g_return_val_if_fail (GST_IS_BUFFER (buffer), GST_FLOW_ERROR);
 
-  return gst_pad_push_data (pad, GST_PAD_PROBE_TYPE_BUFFER, buffer);
+  return gst_pad_push_data (pad,
+      GST_PAD_PROBE_TYPE_BUFFER | GST_PAD_PROBE_TYPE_PUSH, buffer);
 }
 
 /**
@@ -3949,7 +3952,8 @@ gst_pad_push_list (GstPad * pad, GstBufferList * list)
   g_return_val_if_fail (GST_PAD_IS_SRC (pad), GST_FLOW_ERROR);
   g_return_val_if_fail (GST_IS_BUFFER_LIST (list), GST_FLOW_ERROR);
 
-  return gst_pad_push_data (pad, GST_PAD_PROBE_TYPE_BUFFER_LIST, list);
+  return gst_pad_push_data (pad,
+      GST_PAD_PROBE_TYPE_BUFFER_LIST | GST_PAD_PROBE_TYPE_PUSH, list);
 }
 
 static GstFlowReturn
@@ -3964,6 +3968,9 @@ gst_pad_get_range_unchecked (GstPad * pad, guint64 offset, guint size,
   GST_OBJECT_LOCK (pad);
   if (G_UNLIKELY (GST_PAD_IS_FLUSHING (pad)))
     goto flushing;
+
+  PROBE (pad, GST_PAD_PROBE_TYPE_PULL | GST_PAD_PROBE_TYPE_BLOCK, NULL,
+      probe_stopped);
   GST_OBJECT_UNLOCK (pad);
 
   if (G_UNLIKELY ((getrangefunc = GST_PAD_GETRANGEFUNC (pad)) == NULL))
@@ -3982,7 +3989,7 @@ gst_pad_get_range_unchecked (GstPad * pad, guint64 offset, guint size,
   /* can only fire the signal if we have a valid buffer */
   GST_OBJECT_LOCK (pad);
   PROBE (pad, GST_PAD_PROBE_TYPE_PULL | GST_PAD_PROBE_TYPE_BUFFER, *buffer,
-      probe_stopped);
+      probe_stopped_unref);
   GST_OBJECT_UNLOCK (pad);
 
   GST_PAD_STREAM_UNLOCK (pad);
@@ -4007,6 +4014,14 @@ no_function:
     return GST_FLOW_NOT_SUPPORTED;
   }
 probe_stopped:
+  {
+    GST_CAT_LOG_OBJECT (GST_CAT_SCHEDULING, pad,
+        "probe returned %s", gst_flow_get_name (ret));
+    GST_OBJECT_UNLOCK (pad);
+    GST_PAD_STREAM_UNLOCK (pad);
+    return ret;
+  }
+probe_stopped_unref:
   {
     GST_CAT_LOG_OBJECT (GST_CAT_SCHEDULING, pad,
         "probe returned %s", gst_flow_get_name (ret));
@@ -4528,6 +4543,10 @@ gst_pad_send_event (GstPad * pad, GstEvent * event)
       /* now do the probe */
       if (G_UNLIKELY (GST_PAD_IS_FLUSHING (pad)))
         goto flushing;
+
+      PROBE (pad,
+          GST_PAD_PROBE_TYPE_PUSH | GST_PAD_PROBE_TYPE_EVENT |
+          GST_PAD_PROBE_TYPE_BLOCK, event, probe_stopped);
 
       PROBE (pad, GST_PAD_PROBE_TYPE_PUSH | GST_PAD_PROBE_TYPE_EVENT, event,
           probe_stopped);

@@ -174,6 +174,8 @@ The push dataflow probe behavior is the same for buffers and biderectional event
                       O                   flushing?   O 
                       O                 WRONG_STATE   O 
                       O< - - - - - - - - - - - - - - -O 
+                      O                               O-> do BLOCK probes
+                      O                               O 
                       O                               O-> do DATA probes
                       O                               O 
                       O                               O---> chainfunc /
@@ -204,36 +206,38 @@ was an error.
 It there is a valid DATA item, the DATA probes are called for the item.
 
 
-                srcpad                          sinkpad
-                  |                               |
-                  |                               | gst_pad_pull_range()
-                  |                               O<---------------------
-                  |                               O
-                  |                               O  flushing?
-                  |                               O  WRONG_STATE
-                  |                               O - - - - - - - - - - >
-                  |             do BLOCK probes <-O
-                  |                               O   no peer?
-                  |                               O  NOT_LINKED
-                  |                               O - - - - - - - - - - >
-                  |          gst_pad_get_range()  O
-                  O<------------------------------O
-                  O                               O
-                  O flushing?                     O
-                  O WRONG_STATE                   O
-                  O- - - - - - - - - - - - - - - >O
- getrangefunc <---O                               O
-                  O  flow error?                  O
-                  O- - - - - - - - - - - - - - - >O
-                  O                               O
- do DATA probes <-O                               O
-                  O- - - - - - - - - - - - - - - >O
-                  |                               O 
-                  |              do IDLE probes <-O               
-                  |                               O   flow error?
-                  |                               O - - - - - - - - - - >
-                  |                               O
-                  |              do DATA probes <-O  
-                  |                               O - - - - - - - - - - >
-                  |                               |
+                 srcpad                          sinkpad
+                   |                               |
+                   |                               | gst_pad_pull_range()
+                   |                               O<---------------------
+                   |                               O
+                   |                               O  flushing?
+                   |                               O  WRONG_STATE
+                   |                               O - - - - - - - - - - >
+                   |             do BLOCK probes <-O
+                   |                               O   no peer?
+                   |                               O  NOT_LINKED
+                   |                               O - - - - - - - - - - >
+                   |          gst_pad_get_range()  O
+                   O<------------------------------O
+                   O                               O
+                   O flushing?                     O
+                   O WRONG_STATE                   O
+                   O- - - - - - - - - - - - - - - >O
+ do BLOCK probes <-O                               O
+                   O                               O
+  getrangefunc <---O                               O
+                   O  flow error?                  O
+                   O- - - - - - - - - - - - - - - >O
+                   O                               O
+  do DATA probes <-O                               O
+                   O- - - - - - - - - - - - - - - >O
+                   |                               O 
+                   |              do IDLE probes <-O               
+                   |                               O   flow error?
+                   |                               O - - - - - - - - - - >
+                   |                               O
+                   |              do DATA probes <-O  
+                   |                               O - - - - - - - - - - >
+                   |                               |
 
