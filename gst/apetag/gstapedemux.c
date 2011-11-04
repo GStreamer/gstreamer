@@ -162,7 +162,7 @@ ape_demux_get_gst_tag_from_tag (const gchar * ape_tag,
 static GstTagList *
 ape_demux_parse_tags (const guint8 * data, gint size)
 {
-  GstTagList *taglist = gst_tag_list_new ();
+  GstTagList *taglist = gst_tag_list_new_empty ();
 
   GST_LOG ("Reading tags from chunk of size %u bytes", size);
 
