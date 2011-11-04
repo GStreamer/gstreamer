@@ -1397,7 +1397,7 @@ parse_frame_header (GstBitReader * br, GstVC1FrameHdr * framehdr,
 
   pic->rangeredfrm = 0;
   if (structc->rangered) {
-    READ_UINT8 (br, pic->rangeredfrm, 2);
+    READ_UINT8 (br, pic->rangeredfrm, 1);
   }
 
   /*  Figuring out the picture type */
@@ -1985,8 +1985,16 @@ gst_vc1_parse_entry_point_header (const guint8 * data, gsize size,
   entrypoint->quantizer = gst_bit_reader_get_bits_uint8_unchecked (&br, 2);
 
   if (advanced->hrd_param_flag) {
+    if (seqhdr->advanced.hrd_param.hrd_num_leaky_buckets >
+        MAX_HRD_NUM_LEAKY_BUCKETS) {
+      GST_WARNING
+          ("hrd_num_leaky_buckets (%d) > MAX_HRD_NUM_LEAKY_BUCKETS (%d)",
+          seqhdr->advanced.hrd_param.hrd_num_leaky_buckets,
+          MAX_HRD_NUM_LEAKY_BUCKETS);
+      goto failed;
+    }
     for (i = 0; i < seqhdr->advanced.hrd_param.hrd_num_leaky_buckets; i++)
-      READ_UINT8 (&br, entrypoint->hrd_full[MAX_HRD_NUM_LEAKY_BUCKETS], 8);
+      READ_UINT8 (&br, entrypoint->hrd_full[i], 8);
   }
 
   READ_UINT8 (&br, entrypoint->coded_size_flag, 1);
