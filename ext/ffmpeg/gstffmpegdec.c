@@ -899,6 +899,8 @@ gst_ffmpegdec_get_buffer (AVCodecContext * context, AVFrame * picture)
 
   ffmpegdec = (GstFFMpegDec *) context->opaque;
 
+  ffmpegdec->context->pix_fmt = context->pix_fmt;
+
   GST_DEBUG_OBJECT (ffmpegdec, "getting buffer");
 
   /* apply the last info we have seen to this picture, when we get the
@@ -1190,14 +1192,14 @@ update_video_context (GstFFMpegDec * ffmpegdec, gboolean force)
     return FALSE;
 
   GST_DEBUG_OBJECT (ffmpegdec,
-      "Renegotiating video from %dx%d@ %d:%d PAR %d/%d fps to %dx%d@ %d:%d PAR %d/%d fps",
+      "Renegotiating video from %dx%d@ %d:%d PAR %d/%d fps to %dx%d@ %d:%d PAR %d/%d fps pixfmt %d",
       ffmpegdec->ctx_width, ffmpegdec->ctx_height,
       ffmpegdec->ctx_par_n, ffmpegdec->ctx_par_d,
       ffmpegdec->ctx_time_n, ffmpegdec->ctx_time_d,
       context->width, context->height,
       context->sample_aspect_ratio.num,
       context->sample_aspect_ratio.den,
-      context->time_base.num, context->time_base.den);
+      context->time_base.num, context->time_base.den, context->pix_fmt);
 
   ffmpegdec->ctx_width = context->width;
   ffmpegdec->ctx_height = context->height;
@@ -1306,8 +1308,8 @@ unknown_format:
 #ifdef HAVE_FFMPEG_UNINSTALLED
     /* using internal ffmpeg snapshot */
     GST_ELEMENT_ERROR (ffmpegdec, CORE, NEGOTIATION,
-        ("Could not find GStreamer caps mapping for FFmpeg codec '%s'.",
-            oclass->in_plugin->name), (NULL));
+        ("Could not find GStreamer caps mapping for FFmpeg pixfmt %d.",
+            ffmpegdec->ctx_pix_fmt), (NULL));
 #else
     /* using external ffmpeg */
     GST_ELEMENT_ERROR (ffmpegdec, CORE, NEGOTIATION,
