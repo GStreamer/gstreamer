@@ -265,13 +265,13 @@ gst_qt_mux_base_init (gpointer g_class)
   gst_element_class_add_pad_template (element_class, srctempl);
 
   if (params->audio_sink_caps) {
-    audiosinktempl = gst_pad_template_new ("audio_%d",
+    audiosinktempl = gst_pad_template_new ("audio_%u",
         GST_PAD_SINK, GST_PAD_REQUEST, params->audio_sink_caps);
     gst_element_class_add_pad_template (element_class, audiosinktempl);
   }
 
   if (params->video_sink_caps) {
-    videosinktempl = gst_pad_template_new ("video_%d",
+    videosinktempl = gst_pad_template_new ("video_%u",
         GST_PAD_SINK, GST_PAD_REQUEST, params->video_sink_caps);
     gst_element_class_add_pad_template (element_class, videosinktempl);
   }
@@ -3395,19 +3395,19 @@ gst_qt_mux_request_new_pad (GstElement * element,
   if (qtmux->state > GST_QT_MUX_STATE_STARTED)
     goto too_late;
 
-  if (templ == gst_element_class_get_pad_template (klass, "audio_%d")) {
+  if (templ == gst_element_class_get_pad_template (klass, "audio_%u")) {
     audio = TRUE;
-    if (req_name != NULL && sscanf (req_name, "audio_%02d", &pad_id) == 1) {
+    if (req_name != NULL && sscanf (req_name, "audio_%u", &pad_id) == 1) {
       name = g_strdup (req_name);
     } else {
-      name = g_strdup_printf ("audio_%02d", qtmux->audio_pads++);
+      name = g_strdup_printf ("audio_%u", qtmux->audio_pads++);
     }
-  } else if (templ == gst_element_class_get_pad_template (klass, "video_%d")) {
+  } else if (templ == gst_element_class_get_pad_template (klass, "video_%u")) {
     audio = FALSE;
-    if (req_name != NULL && sscanf (req_name, "video_%02d", &pad_id) == 1) {
+    if (req_name != NULL && sscanf (req_name, "video_%u", &pad_id) == 1) {
       name = g_strdup (req_name);
     } else {
-      name = g_strdup_printf ("video_%02d", qtmux->video_pads++);
+      name = g_strdup_printf ("video_%u", qtmux->video_pads++);
     }
   } else
     goto wrong_template;

@@ -70,7 +70,7 @@
 GST_DEBUG_CATEGORY_STATIC (gst_interleave_debug);
 #define GST_CAT_DEFAULT gst_interleave_debug
 
-static GstStaticPadTemplate sink_template = GST_STATIC_PAD_TEMPLATE ("sink%d",
+static GstStaticPadTemplate sink_template = GST_STATIC_PAD_TEMPLATE ("sink_%u",
     GST_PAD_SINK,
     GST_PAD_REQUEST,
     GST_STATIC_CAPS ("audio/x-raw-int, "
@@ -487,7 +487,7 @@ gst_interleave_request_new_pad (GstElement * element, GstPadTemplate * templ,
   padnumber = g_atomic_int_exchange_and_add (&self->padcounter, 1);
 #endif
 
-  pad_name = g_strdup_printf ("sink%d", padnumber);
+  pad_name = g_strdup_printf ("sink_%u", padnumber);
   new_pad = GST_PAD_CAST (g_object_new (GST_TYPE_INTERLEAVE_PAD,
           "name", pad_name, "direction", templ->direction,
           "template", templ, NULL));

@@ -66,8 +66,8 @@ setup_src_pad (GstElement * element,
   ASSERT_OBJECT_REFCOUNT (srcpad, "srcpad", 1);
   gst_pad_set_active (srcpad, TRUE);
 
-  if (!(sinkpad = gst_element_get_static_pad (element, "audio_%d")))
-    sinkpad = gst_element_get_request_pad (element, "audio_%d");
+  if (!(sinkpad = gst_element_get_static_pad (element, "audio_%u")))
+    sinkpad = gst_element_get_request_pad (element, "audio_%u");
   fail_if (sinkpad == NULL, "Could not get sink pad from %s",
       GST_ELEMENT_NAME (element));
   /* references are owned by: 1) us, 2) matroskamux, 3) collect pads */

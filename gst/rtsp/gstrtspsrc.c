@@ -2197,7 +2197,7 @@ new_manager_pad (GstElement * manager, GstPad * pad, GstRTSPSrc * src)
   GST_RTSP_STATE_LOCK (src);
   /* find stream */
   name = gst_object_get_name (GST_OBJECT_CAST (pad));
-  if (sscanf (name, "recv_rtp_src_%d_%d_%d", &id, &ssrc, &pt) != 3)
+  if (sscanf (name, "recv_rtp_src_%u_%u_%u", &id, &ssrc, &pt) != 3)
     goto unknown_stream;
 
   GST_DEBUG_OBJECT (src, "stream: %u, SSRC %d, PT %d", id, ssrc, pt);
@@ -2440,10 +2440,10 @@ gst_rtspsrc_stream_configure_manager (GstRTSPSrc * src, GstRTSPStream * stream,
 
     /* we stream directly to the manager, get some pads. Each RTSP stream goes
      * into a separate RTP session. */
-    name = g_strdup_printf ("recv_rtp_sink_%d", stream->id);
+    name = g_strdup_printf ("recv_rtp_sink_%u", stream->id);
     stream->channelpad[0] = gst_element_get_request_pad (src->manager, name);
     g_free (name);
-    name = g_strdup_printf ("recv_rtcp_sink_%d", stream->id);
+    name = g_strdup_printf ("recv_rtcp_sink_%u", stream->id);
     stream->channelpad[1] = gst_element_get_request_pad (src->manager, name);
     g_free (name);
 
@@ -2602,7 +2602,7 @@ gst_rtspsrc_stream_configure_tcp (GstRTSPSrc * src, GstRTSPStream * stream,
     gst_pad_set_active (stream->rtcppad, TRUE);
 
     /* get session RTCP pad */
-    name = g_strdup_printf ("send_rtcp_src_%d", stream->id);
+    name = g_strdup_printf ("send_rtcp_src_%u", stream->id);
     pad = gst_element_get_request_pad (src->manager, name);
     g_free (name);
 
@@ -2924,7 +2924,7 @@ gst_rtspsrc_stream_configure_udp_sinks (GstRTSPSrc * src,
     stream->rtcppad = gst_element_get_static_pad (stream->udpsink[1], "sink");
 
     /* get session RTCP pad */
-    name = g_strdup_printf ("send_rtcp_src_%d", stream->id);
+    name = g_strdup_printf ("send_rtcp_src_%u", stream->id);
     pad = gst_element_get_request_pad (src->manager, name);
     g_free (name);
 

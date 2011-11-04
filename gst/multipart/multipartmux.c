@@ -57,7 +57,7 @@ static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",
     GST_STATIC_CAPS ("multipart/x-mixed-replace")
     );
 
-static GstStaticPadTemplate sink_factory = GST_STATIC_PAD_TEMPLATE ("sink_%d",
+static GstStaticPadTemplate sink_factory = GST_STATIC_PAD_TEMPLATE ("sink_%u",
     GST_PAD_SINK,
     GST_PAD_REQUEST,
     GST_STATIC_CAPS_ANY         /* we can take anything, really */
@@ -178,13 +178,13 @@ gst_multipart_mux_request_new_pad (GstElement * element,
   GstElementClass *klass = GST_ELEMENT_GET_CLASS (element);
   gchar *name;
 
-  if (templ != gst_element_class_get_pad_template (klass, "sink_%d"))
+  if (templ != gst_element_class_get_pad_template (klass, "sink_%u"))
     goto wrong_template;
 
   multipart_mux = GST_MULTIPART_MUX (element);
 
   /* create new pad with the name */
-  name = g_strdup_printf ("sink_%02d", multipart_mux->numpads);
+  name = g_strdup_printf ("sink_%u", multipart_mux->numpads);
   newpad = gst_pad_new_from_template (templ, name);
   g_free (name);
 

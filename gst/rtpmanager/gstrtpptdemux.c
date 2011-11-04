@@ -88,7 +88,7 @@ GST_STATIC_PAD_TEMPLATE ("sink",
     );
 
 static GstStaticPadTemplate rtp_pt_demux_src_template =
-GST_STATIC_PAD_TEMPLATE ("src_%d",
+GST_STATIC_PAD_TEMPLATE ("src_%u",
     GST_PAD_SRC,
     GST_PAD_SOMETIMES,
     GST_STATIC_CAPS ("application/x-rtp, " "payload = (int) [ 0, 255 ]")
@@ -323,8 +323,8 @@ gst_rtp_pt_demux_chain (GstPad * pad, GstBuffer * buf)
     gchar *padname;
 
     klass = GST_ELEMENT_GET_CLASS (rtpdemux);
-    templ = gst_element_class_get_pad_template (klass, "src_%d");
-    padname = g_strdup_printf ("src_%d", pt);
+    templ = gst_element_class_get_pad_template (klass, "src_%u");
+    padname = g_strdup_printf ("src_%u", pt);
     srcpad = gst_pad_new_from_template (templ, padname);
     gst_pad_use_fixed_caps (srcpad);
     g_free (padname);

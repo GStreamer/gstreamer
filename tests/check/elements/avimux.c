@@ -231,7 +231,7 @@ check_avimux_pad (GstStaticPadTemplate * srctemplate,
 
 GST_START_TEST (test_video_pad)
 {
-  check_avimux_pad (&srcvideotemplate, VIDEO_CAPS_STRING, "00db", "video_%d");
+  check_avimux_pad (&srcvideotemplate, VIDEO_CAPS_STRING, "00db", "video_%u");
 }
 
 GST_END_TEST;
@@ -239,7 +239,7 @@ GST_END_TEST;
 
 GST_START_TEST (test_audio_pad)
 {
-  check_avimux_pad (&srcaudiotemplate, AUDIO_CAPS_STRING, "00wb", "audio_%d");
+  check_avimux_pad (&srcaudiotemplate, AUDIO_CAPS_STRING, "00wb", "audio_%u");
 }
 
 GST_END_TEST;

@@ -358,14 +358,14 @@ check_qtmux_pad_fragmented (GstStaticPadTemplate * srctemplate,
 
 GST_START_TEST (test_video_pad_dd)
 {
-  check_qtmux_pad (&srcvideotemplate, "video_%d", 0);
+  check_qtmux_pad (&srcvideotemplate, "video_%u", 0);
 }
 
 GST_END_TEST;
 
 GST_START_TEST (test_audio_pad_dd)
 {
-  check_qtmux_pad (&srcaudiotemplate, "audio_%d", 0);
+  check_qtmux_pad (&srcaudiotemplate, "audio_%u", 0);
 }
 
 GST_END_TEST;
@@ -373,14 +373,14 @@ GST_END_TEST;
 
 GST_START_TEST (test_video_pad_frag_dd)
 {
-  check_qtmux_pad_fragmented (&srcvideotemplate, "video_%d", 0, FALSE);
+  check_qtmux_pad_fragmented (&srcvideotemplate, "video_%u", 0, FALSE);
 }
 
 GST_END_TEST;
 
 GST_START_TEST (test_audio_pad_frag_dd)
 {
-  check_qtmux_pad_fragmented (&srcaudiotemplate, "audio_%d", 0, FALSE);
+  check_qtmux_pad_fragmented (&srcaudiotemplate, "audio_%u", 0, FALSE);
 }
 
 GST_END_TEST;
@@ -388,7 +388,7 @@ GST_END_TEST;
 
 GST_START_TEST (test_video_pad_frag_dd_streamable)
 {
-  check_qtmux_pad_fragmented (&srcvideotemplate, "video_%d", 0, TRUE);
+  check_qtmux_pad_fragmented (&srcvideotemplate, "video_%u", 0, TRUE);
 }
 
 GST_END_TEST;
@@ -396,7 +396,7 @@ GST_END_TEST;
 
 GST_START_TEST (test_audio_pad_frag_dd_streamable)
 {
-  check_qtmux_pad_fragmented (&srcaudiotemplate, "audio_%d", 0, TRUE);
+  check_qtmux_pad_fragmented (&srcaudiotemplate, "audio_%u", 0, TRUE);
 }
 
 GST_END_TEST;
@@ -405,14 +405,14 @@ GST_END_TEST;
 
 GST_START_TEST (test_video_pad_reorder)
 {
-  check_qtmux_pad (&srcvideotemplate, "video_%d", 1);
+  check_qtmux_pad (&srcvideotemplate, "video_%u", 1);
 }
 
 GST_END_TEST;
 
 GST_START_TEST (test_audio_pad_reorder)
 {
-  check_qtmux_pad (&srcaudiotemplate, "audio_%d", 1);
+  check_qtmux_pad (&srcaudiotemplate, "audio_%u", 1);
 }
 
 GST_END_TEST;
@@ -420,14 +420,14 @@ GST_END_TEST;
 
 GST_START_TEST (test_video_pad_frag_reorder)
 {
-  check_qtmux_pad_fragmented (&srcvideotemplate, "video_%d", 1, FALSE);
+  check_qtmux_pad_fragmented (&srcvideotemplate, "video_%u", 1, FALSE);
 }
 
 GST_END_TEST;
 
 GST_START_TEST (test_audio_pad_frag_reorder)
 {
-  check_qtmux_pad_fragmented (&srcaudiotemplate, "audio_%d", 1, FALSE);
+  check_qtmux_pad_fragmented (&srcaudiotemplate, "audio_%u", 1, FALSE);
 }
 
 GST_END_TEST;
@@ -435,7 +435,7 @@ GST_END_TEST;
 
 GST_START_TEST (test_video_pad_frag_reorder_streamable)
 {
-  check_qtmux_pad_fragmented (&srcvideotemplate, "video_%d", 1, TRUE);
+  check_qtmux_pad_fragmented (&srcvideotemplate, "video_%u", 1, TRUE);
 }
 
 GST_END_TEST;
@@ -443,7 +443,7 @@ GST_END_TEST;
 
 GST_START_TEST (test_audio_pad_frag_reorder_streamable)
 {
-  check_qtmux_pad_fragmented (&srcaudiotemplate, "audio_%d", 1, TRUE);
+  check_qtmux_pad_fragmented (&srcaudiotemplate, "audio_%u", 1, TRUE);
 }
 
 GST_END_TEST;
@@ -452,14 +452,14 @@ GST_END_TEST;
 
 GST_START_TEST (test_video_pad_asc)
 {
-  check_qtmux_pad (&srcvideotemplate, "video_%d", 2);
+  check_qtmux_pad (&srcvideotemplate, "video_%u", 2);
 }
 
 GST_END_TEST;
 
 GST_START_TEST (test_audio_pad_asc)
 {
-  check_qtmux_pad (&srcaudiotemplate, "audio_%d", 2);
+  check_qtmux_pad (&srcaudiotemplate, "audio_%u", 2);
 }
 
 GST_END_TEST;
@@ -467,14 +467,14 @@ GST_END_TEST;
 
 GST_START_TEST (test_video_pad_frag_asc)
 {
-  check_qtmux_pad_fragmented (&srcvideotemplate, "video_%d", 2, FALSE);
+  check_qtmux_pad_fragmented (&srcvideotemplate, "video_%u", 2, FALSE);
 }
 
 GST_END_TEST;
 
 GST_START_TEST (test_audio_pad_frag_asc)
 {
-  check_qtmux_pad_fragmented (&srcaudiotemplate, "audio_%d", 2, FALSE);
+  check_qtmux_pad_fragmented (&srcaudiotemplate, "audio_%u", 2, FALSE);
 }
 
 GST_END_TEST;
@@ -482,7 +482,7 @@ GST_END_TEST;
 
 GST_START_TEST (test_video_pad_frag_asc_streamable)
 {
-  check_qtmux_pad_fragmented (&srcvideotemplate, "video_%d", 2, TRUE);
+  check_qtmux_pad_fragmented (&srcvideotemplate, "video_%u", 2, TRUE);
 }
 
 GST_END_TEST;
@@ -490,14 +490,14 @@ GST_END_TEST;
 
 GST_START_TEST (test_audio_pad_frag_asc_streamable)
 {
-  check_qtmux_pad_fragmented (&srcaudiotemplate, "audio_%d", 2, TRUE);
+  check_qtmux_pad_fragmented (&srcaudiotemplate, "audio_%u", 2, TRUE);
 }
 
 GST_END_TEST;
 
 GST_START_TEST (test_reuse)
 {
-  GstElement *qtmux = setup_qtmux (&srcvideotemplate, "video_%d");
+  GstElement *qtmux = setup_qtmux (&srcvideotemplate, "video_%u");
   GstBuffer *inbuffer;
   GstCaps *caps;
 
@@ -520,7 +520,7 @@ GST_START_TEST (test_reuse)
   /* send eos to have all written */
   fail_unless (gst_pad_push_event (mysrcpad, gst_event_new_eos ()) == TRUE);
 
-  cleanup_qtmux (qtmux, "video_%d");
+  cleanup_qtmux (qtmux, "video_%u");
 }
 
 GST_END_TEST;
@@ -844,11 +844,11 @@ test_average_bitrate_custom (const gchar * elementname,
 
 GST_START_TEST (test_average_bitrate)
 {
-  test_average_bitrate_custom ("mp4mux", &srcaudioaactemplate, "audio_%d");
-  test_average_bitrate_custom ("mp4mux", &srcvideoh264template, "video_%d");
+  test_average_bitrate_custom ("mp4mux", &srcaudioaactemplate, "audio_%u");
+  test_average_bitrate_custom ("mp4mux", &srcvideoh264template, "video_%u");
 
-  test_average_bitrate_custom ("qtmux", &srcaudioaactemplate, "audio_%d");
-  test_average_bitrate_custom ("qtmux", &srcvideoh264template, "video_%d");
+  test_average_bitrate_custom ("qtmux", &srcaudioaactemplate, "audio_%u");
+  test_average_bitrate_custom ("qtmux", &srcvideoh264template, "video_%u");
 }
 
 GST_END_TEST;

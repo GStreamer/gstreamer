@@ -28,30 +28,30 @@
  * #GstRtpBin is configured with a number of request pads that define the
  * functionality that is activated, similar to the #GstRtpSession element.
  *
- * To use #GstRtpBin as an RTP receiver, request a recv_rtp_sink_\%d pad. The session
+ * To use #GstRtpBin as an RTP receiver, request a recv_rtp_sink_\%u pad. The session
  * number must be specified in the pad name.
- * Data received on the recv_rtp_sink_\%d pad will be processed in the #GstRtpSession
+ * Data received on the recv_rtp_sink_\%u pad will be processed in the #GstRtpSession
  * manager and after being validated forwarded on #GstRtpSsrcDemux element. Each
  * RTP stream is demuxed based on the SSRC and send to a #GstRtpJitterBuffer. After
  * the packets are released from the jitterbuffer, they will be forwarded to a
  * #GstRtpPtDemux element. The #GstRtpPtDemux element will demux the packets based
- * on the payload type and will create a unique pad recv_rtp_src_\%d_\%d_\%d on
+ * on the payload type and will create a unique pad recv_rtp_src_\%u_\%u_\%u on
  * gstrtpbin with the session number, SSRC and payload type respectively as the pad
  * name.
  *
- * To also use #GstRtpBin as an RTCP receiver, request a recv_rtcp_sink_\%d pad. The
+ * To also use #GstRtpBin as an RTCP receiver, request a recv_rtcp_sink_\%u pad. The
  * session number must be specified in the pad name.
  *
  * If you want the session manager to generate and send RTCP packets, request
- * the send_rtcp_src_\%d pad with the session number in the pad name. Packet pushed
+ * the send_rtcp_src_\%u pad with the session number in the pad name. Packet pushed
  * on this pad contain SR/RR RTCP reports that should be sent to all participants
  * in the session.
  *
- * To use #GstRtpBin as a sender, request a send_rtp_sink_\%d pad, which will
- * automatically create a send_rtp_src_\%d pad. If the session number is not provided,
+ * To use #GstRtpBin as a sender, request a send_rtp_sink_\%u pad, which will
+ * automatically create a send_rtp_src_\%u pad. If the session number is not provided,
  * the pad from the lowest available session will be returned. The session manager will modify the
  * SSRC in the RTP packets to its own SSRC and wil forward the packets on the
- * send_rtp_src_\%d pad after updating its internal state.
+ * send_rtp_src_\%u pad after updating its internal state.
  *
  * The session manager needs the clock-rate of the payload types it is handling
  * and will signal the #GstRtpSession::request-pt-map signal when it needs such a
@@ -134,21 +134,21 @@ GST_DEBUG_CATEGORY_STATIC (gst_rtp_bin_debug);
 
 /* sink pads */
 static GstStaticPadTemplate rtpbin_recv_rtp_sink_template =
-GST_STATIC_PAD_TEMPLATE ("recv_rtp_sink_%d",
+GST_STATIC_PAD_TEMPLATE ("recv_rtp_sink_%u",
     GST_PAD_SINK,
     GST_PAD_REQUEST,
     GST_STATIC_CAPS ("application/x-rtp")
     );
 
 static GstStaticPadTemplate rtpbin_recv_rtcp_sink_template =
-GST_STATIC_PAD_TEMPLATE ("recv_rtcp_sink_%d",
+GST_STATIC_PAD_TEMPLATE ("recv_rtcp_sink_%u",
     GST_PAD_SINK,
     GST_PAD_REQUEST,
     GST_STATIC_CAPS ("application/x-rtcp")
     );
 
 static GstStaticPadTemplate rtpbin_send_rtp_sink_template =
-GST_STATIC_PAD_TEMPLATE ("send_rtp_sink_%d",
+GST_STATIC_PAD_TEMPLATE ("send_rtp_sink_%u",
     GST_PAD_SINK,
     GST_PAD_REQUEST,
     GST_STATIC_CAPS ("application/x-rtp")
@@ -156,21 +156,21 @@ GST_STATIC_PAD_TEMPLATE ("send_rtp_sink_%d",
 
 /* src pads */
 static GstStaticPadTemplate rtpbin_recv_rtp_src_template =
-GST_STATIC_PAD_TEMPLATE ("recv_rtp_src_%d_%d_%d",
+GST_STATIC_PAD_TEMPLATE ("recv_rtp_src_%u_%u_%u",
     GST_PAD_SRC,
     GST_PAD_SOMETIMES,
     GST_STATIC_CAPS ("application/x-rtp")
     );
 
 static GstStaticPadTemplate rtpbin_send_rtcp_src_template =
-GST_STATIC_PAD_TEMPLATE ("send_rtcp_src_%d",
+GST_STATIC_PAD_TEMPLATE ("send_rtcp_src_%u",
     GST_PAD_SRC,
     GST_PAD_REQUEST,
     GST_STATIC_CAPS ("application/x-rtcp")
     );
 
 static GstStaticPadTemplate rtpbin_send_rtp_src_template =
-GST_STATIC_PAD_TEMPLATE ("send_rtp_src_%d",
+GST_STATIC_PAD_TEMPLATE ("send_rtp_src_%u",
     GST_PAD_SRC,
     GST_PAD_SOMETIMES,
     GST_STATIC_CAPS ("application/x-rtp")
@@ -2358,8 +2358,8 @@ new_payload_found (GstElement * element, guint pt, GstPad * pad,
 
   /* ghost the pad to the parent */
   klass = GST_ELEMENT_GET_CLASS (rtpbin);
-  templ = gst_element_class_get_pad_template (klass, "recv_rtp_src_%d_%d_%d");
-  padname = g_strdup_printf ("recv_rtp_src_%d_%u_%d",
+  templ = gst_element_class_get_pad_template (klass, "recv_rtp_src_%u_%u_%u");
+  padname = g_strdup_printf ("recv_rtp_src_%u_%u_%u",
       stream->session->id, stream->ssrc, pt);
   gpad = gst_ghost_pad_new_from_template (padname, pad, templ);
   g_free (padname);
@@ -2492,7 +2492,7 @@ new_ssrc_pad_found (GstElement * element, guint ssrc, GstPad * pad,
 
   /* get pad and link */
   GST_DEBUG_OBJECT (rtpbin, "linking jitterbuffer RTP");
-  padname = g_strdup_printf ("src_%d", ssrc);
+  padname = g_strdup_printf ("src_%u", ssrc);
   srcpad = gst_element_get_static_pad (element, padname);
   g_free (padname);
   sinkpad = gst_element_get_static_pad (stream->buffer, "sink");
@@ -2501,7 +2501,7 @@ new_ssrc_pad_found (GstElement * element, guint ssrc, GstPad * pad,
   gst_object_unref (srcpad);
 
   GST_DEBUG_OBJECT (rtpbin, "linking jitterbuffer RTCP");
-  padname = g_strdup_printf ("rtcp_src_%d", ssrc);
+  padname = g_strdup_printf ("rtcp_src_%u", ssrc);
   srcpad = gst_element_get_static_pad (element, padname);
   g_free (padname);
   sinkpad = gst_element_get_request_pad (stream->buffer, "sink_rtcp");
@@ -2541,8 +2541,8 @@ new_ssrc_pad_found (GstElement * element, guint ssrc, GstPad * pad,
 
     /* ghost the pad to the parent */
     klass = GST_ELEMENT_GET_CLASS (rtpbin);
-    templ = gst_element_class_get_pad_template (klass, "recv_rtp_src_%d_%d_%d");
-    padname = g_strdup_printf ("recv_rtp_src_%d_%u_%d",
+    templ = gst_element_class_get_pad_template (klass, "recv_rtp_src_%u_%u_%u");
+    padname = g_strdup_printf ("recv_rtp_src_%u_%u_%u",
         stream->session->id, stream->ssrc, 255);
     gpad = gst_ghost_pad_new_from_template (padname, pad, templ);
     g_free (padname);
@@ -2585,7 +2585,7 @@ create_recv_rtp (GstRtpBin * rtpbin, GstPadTemplate * templ, const gchar * name)
   GstPadLinkReturn lres;
 
   /* first get the session number */
-  if (name == NULL || sscanf (name, "recv_rtp_sink_%d", &sessid) != 1)
+  if (name == NULL || sscanf (name, "recv_rtp_sink_%u", &sessid) != 1)
     goto no_name;
 
   GST_DEBUG_OBJECT (rtpbin, "finding session %d", sessid);
@@ -2707,7 +2707,7 @@ create_recv_rtcp (GstRtpBin * rtpbin, GstPadTemplate * templ,
   GstPadLinkReturn lres;
 
   /* first get the session number */
-  if (name == NULL || sscanf (name, "recv_rtcp_sink_%d", &sessid) != 1)
+  if (name == NULL || sscanf (name, "recv_rtcp_sink_%u", &sessid) != 1)
     goto no_name;
 
   GST_DEBUG_OBJECT (rtpbin, "finding session %d", sessid);
@@ -2810,7 +2810,7 @@ create_send_rtp (GstRtpBin * rtpbin, GstPadTemplate * templ, const gchar * name)
   GstElementClass *klass;
 
   /* first get the session number */
-  if (name == NULL || sscanf (name, "send_rtp_sink_%d", &sessid) != 1)
+  if (name == NULL || sscanf (name, "send_rtp_sink_%u", &sessid) != 1)
     goto no_name;
 
   /* get or create session */
@@ -2845,8 +2845,8 @@ create_send_rtp (GstRtpBin * rtpbin, GstPadTemplate * templ, const gchar * name)
 
   /* ghost the new source pad */
   klass = GST_ELEMENT_GET_CLASS (rtpbin);
-  gname = g_strdup_printf ("send_rtp_src_%d", sessid);
-  templ = gst_element_class_get_pad_template (klass, "send_rtp_src_%d");
+  gname = g_strdup_printf ("send_rtp_src_%u", sessid);
+  templ = gst_element_class_get_pad_template (klass, "send_rtp_src_%u");
   session->send_rtp_src_ghost =
       gst_ghost_pad_new_from_template (gname, session->send_rtp_src, templ);
   gst_pad_set_active (session->send_rtp_src_ghost, TRUE);
@@ -2916,7 +2916,7 @@ create_rtcp (GstRtpBin * rtpbin, GstPadTemplate * templ, const gchar * name)
   GstRtpBinSession *session;
 
   /* first get the session number */
-  if (name == NULL || sscanf (name, "send_rtcp_src_%d", &sessid) != 1)
+  if (name == NULL || sscanf (name, "send_rtcp_src_%u", &sessid) != 1)
     goto no_name;
 
   /* get or create session */
@@ -3064,16 +3064,16 @@ gst_rtp_bin_request_new_pad (GstElement * element,
   GST_DEBUG_OBJECT (rtpbin, "Trying to request a pad with name %s", pad_name);
 
   /* figure out the template */
-  if (templ == gst_element_class_get_pad_template (klass, "recv_rtp_sink_%d")) {
+  if (templ == gst_element_class_get_pad_template (klass, "recv_rtp_sink_%u")) {
     result = create_recv_rtp (rtpbin, templ, pad_name);
   } else if (templ == gst_element_class_get_pad_template (klass,
-          "recv_rtcp_sink_%d")) {
+          "recv_rtcp_sink_%u")) {
     result = create_recv_rtcp (rtpbin, templ, pad_name);
   } else if (templ == gst_element_class_get_pad_template (klass,
-          "send_rtp_sink_%d")) {
+          "send_rtp_sink_%u")) {
     result = create_send_rtp (rtpbin, templ, pad_name);
   } else if (templ == gst_element_class_get_pad_template (klass,
-          "send_rtcp_src_%d")) {
+          "send_rtcp_src_%u")) {
     result = create_rtcp (rtpbin, templ, pad_name);
   } else
     goto wrong_template;

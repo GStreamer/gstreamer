@@ -95,7 +95,7 @@ static GstStaticPadTemplate src_templ = GST_STATIC_PAD_TEMPLATE ("src",
  */
 
 static GstStaticPadTemplate videosink_templ =
-    GST_STATIC_PAD_TEMPLATE ("video_%d",
+    GST_STATIC_PAD_TEMPLATE ("video_%u",
     GST_PAD_SINK,
     GST_PAD_REQUEST,
     GST_STATIC_CAPS ("video/mpeg, "
@@ -140,7 +140,7 @@ static GstStaticPadTemplate videosink_templ =
  * * require codec data, etc as needed
  */
 static GstStaticPadTemplate audiosink_templ =
-    GST_STATIC_PAD_TEMPLATE ("audio_%d",
+    GST_STATIC_PAD_TEMPLATE ("audio_%u",
     GST_PAD_SINK,
     GST_PAD_REQUEST,
     GST_STATIC_CAPS ("audio/mpeg, "
@@ -205,7 +205,7 @@ static GstStaticPadTemplate audiosink_templ =
     );
 
 static GstStaticPadTemplate subtitlesink_templ =
-GST_STATIC_PAD_TEMPLATE ("subtitle_%d",
+GST_STATIC_PAD_TEMPLATE ("subtitle_%u",
     GST_PAD_SINK,
     GST_PAD_REQUEST,
     GST_STATIC_CAPS ("subtitle/x-kate"));
@@ -1851,13 +1851,13 @@ gst_matroska_mux_request_new_pad (GstElement * element,
   GstMatroskaTrackContext *context = NULL;
   gint pad_id;
 
-  if (templ == gst_element_class_get_pad_template (klass, "audio_%d")) {
+  if (templ == gst_element_class_get_pad_template (klass, "audio_%u")) {
     /* don't mix named and unnamed pads, if the pad already exists we fail when
      * trying to add it */
-    if (req_name != NULL && sscanf (req_name, "audio_%d", &pad_id) == 1) {
+    if (req_name != NULL && sscanf (req_name, "audio_%u", &pad_id) == 1) {
       pad_name = req_name;
     } else {
-      name = g_strdup_printf ("audio_%d", mux->num_a_streams++);
+      name = g_strdup_printf ("audio_%u", mux->num_a_streams++);
       pad_name = name;
     }
     setcapsfunc = GST_DEBUG_FUNCPTR (gst_matroska_mux_audio_pad_setcaps);
@@ -1865,13 +1865,13 @@ gst_matroska_mux_request_new_pad (GstElement * element,
         g_new0 (GstMatroskaTrackAudioContext, 1);
     context->type = GST_MATROSKA_TRACK_TYPE_AUDIO;
     context->name = g_strdup ("Audio");
-  } else if (templ == gst_element_class_get_pad_template (klass, "video_%d")) {
+  } else if (templ == gst_element_class_get_pad_template (klass, "video_%u")) {
     /* don't mix named and unnamed pads, if the pad already exists we fail when
      * trying to add it */
-    if (req_name != NULL && sscanf (req_name, "video_%d", &pad_id) == 1) {
+    if (req_name != NULL && sscanf (req_name, "video_%u", &pad_id) == 1) {
       pad_name = req_name;
     } else {
-      name = g_strdup_printf ("video_%d", mux->num_v_streams++);
+      name = g_strdup_printf ("video_%u", mux->num_v_streams++);
       pad_name = name;
     }
     setcapsfunc = GST_DEBUG_FUNCPTR (gst_matroska_mux_video_pad_setcaps);
@@ -1879,13 +1879,13 @@ gst_matroska_mux_request_new_pad (GstElement * element,
         g_new0 (GstMatroskaTrackVideoContext, 1);
     context->type = GST_MATROSKA_TRACK_TYPE_VIDEO;
     context->name = g_strdup ("Video");
-  } else if (templ == gst_element_class_get_pad_template (klass, "subtitle_%d")) {
+  } else if (templ == gst_element_class_get_pad_template (klass, "subtitle_%u")) {
     /* don't mix named and unnamed pads, if the pad already exists we fail when
      * trying to add it */
-    if (req_name != NULL && sscanf (req_name, "subtitle_%d", &pad_id) == 1) {
+    if (req_name != NULL && sscanf (req_name, "subtitle_%u", &pad_id) == 1) {
       pad_name = req_name;
     } else {
-      name = g_strdup_printf ("subtitle_%d", mux->num_t_streams++);
+      name = g_strdup_printf ("subtitle_%u", mux->num_t_streams++);
       pad_name = name;
     }
     setcapsfunc = GST_DEBUG_FUNCPTR (gst_matroska_mux_subtitle_pad_setcaps);
