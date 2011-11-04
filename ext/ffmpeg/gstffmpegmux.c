@@ -56,7 +56,7 @@ struct _GstFFMpegMux
   AVFormatContext *context;
   gboolean opened;
 
-  gint videopads, audiopads;
+  guint videopads, audiopads;
 
   /*< private > */
   /* event_function is the collectpads default eventfunction */
@@ -273,13 +273,13 @@ gst_ffmpegmux_base_init (gpointer g_class)
   gst_element_class_add_pad_template (element_class, srctempl);
 
   if (audiosinkcaps) {
-    audiosinktempl = gst_pad_template_new ("audio_%d",
+    audiosinktempl = gst_pad_template_new ("audio_%u",
         GST_PAD_SINK, GST_PAD_REQUEST, audiosinkcaps);
     gst_element_class_add_pad_template (element_class, audiosinktempl);
   }
 
   if (videosinkcaps) {
-    videosinktempl = gst_pad_template_new ("video_%d",
+    videosinktempl = gst_pad_template_new ("video_%u",
         GST_PAD_SINK, GST_PAD_REQUEST, videosinkcaps);
     gst_element_class_add_pad_template (element_class, videosinktempl);
   }
@@ -419,13 +419,13 @@ gst_ffmpegmux_request_new_pad (GstElement * element,
   g_return_val_if_fail (ffmpegmux->opened == FALSE, NULL);
 
   /* figure out a name that *we* like */
-  if (templ == gst_element_class_get_pad_template (klass, "video_%d")) {
-    padname = g_strdup_printf ("video_%d", ffmpegmux->videopads++);
+  if (templ == gst_element_class_get_pad_template (klass, "video_%u")) {
+    padname = g_strdup_printf ("video_%u", ffmpegmux->videopads++);
     type = AVMEDIA_TYPE_VIDEO;
     bitrate = 64 * 1024;
     framesize = 1152;
-  } else if (templ == gst_element_class_get_pad_template (klass, "audio_%d")) {
-    padname = g_strdup_printf ("audio_%d", ffmpegmux->audiopads++);
+  } else if (templ == gst_element_class_get_pad_template (klass, "audio_%u")) {
+    padname = g_strdup_printf ("audio_%u", ffmpegmux->audiopads++);
     type = AVMEDIA_TYPE_AUDIO;
     bitrate = 285 * 1024;
   } else {

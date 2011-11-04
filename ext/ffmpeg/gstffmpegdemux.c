@@ -213,9 +213,9 @@ gst_ffmpegdemux_base_init (GstFFMpegDemuxClass * klass)
   sinkcaps = gst_ffmpeg_formatid_to_caps (name);
   sinktempl = gst_pad_template_new ("sink",
       GST_PAD_SINK, GST_PAD_ALWAYS, sinkcaps);
-  videosrctempl = gst_pad_template_new ("video_%02d",
+  videosrctempl = gst_pad_template_new ("video_%u",
       GST_PAD_SRC, GST_PAD_SOMETIMES, GST_CAPS_ANY);
-  audiosrctempl = gst_pad_template_new ("audio_%02d",
+  audiosrctempl = gst_pad_template_new ("audio_%u",
       GST_PAD_SRC, GST_PAD_SOMETIMES, GST_CAPS_ANY);
 
   gst_element_class_add_pad_template (element_class, videosrctempl);
@@ -921,9 +921,12 @@ gst_ffmpegdemux_create_padname (const gchar * templ, gint n)
 {
   GString *string;
 
+  /* FIXME, we just want to printf the number according to the template but
+   * then the format string is not a literal and we can't check arguments and
+   * this generates a compiler error */
   string = g_string_new (templ);
-  g_string_truncate (string, string->len - 4);
-  g_string_append_printf (string, "%02d", n);
+  g_string_truncate (string, string->len - 2);
+  g_string_append_printf (string, "%u", n);
 
   return g_string_free (string, FALSE);
 }
