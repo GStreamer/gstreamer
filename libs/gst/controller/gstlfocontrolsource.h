@@ -27,8 +27,6 @@
 #include <glib-object.h>
 #include <gst/gst.h>
 
-#include <gst/controller/gstcontrolsource.h>
-
 G_BEGIN_DECLS
 
 #define GST_TYPE_LFO_CONTROL_SOURCE \

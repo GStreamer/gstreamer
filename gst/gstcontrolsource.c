@@ -41,6 +41,8 @@
  *
  */
 
+#include "gst_private.h"
+
 #include <glib-object.h>
 #include <gst/gst.h>
 

@@ -1,7 +1,8 @@
 /* GStreamer
  *
- * Copyright (C) <2005> Stefan Kost <ensonic at users dot sf dot net>
- * Copyright (C) 2007 Sebastian Dröge <slomo@circular-chaos.org>
+ * Copyright (C) 2005 Stefan Kost <ensonic at users dot sf dot net>
+ *               2007 Sebastian Dröge <slomo@circular-chaos.org>
+ *               2011 Stefan Sauer <ensonic at users dot sf dot net>
  *
  * gstcontroller.c: dynamic parameter control subsystem
  *
@@ -72,20 +73,19 @@
  * </orderedlist>
  */
 
-#ifdef HAVE_CONFIG_H
-#  include "config.h"
-#endif
+#include "gst_private.h"
 
+#include "gstobject.h"
+#include "gstclock.h"
+#include "gstinfo.h"
 #include "gstcontroller.h"
-#include "gstcontrollerprivate.h"
 #include "gstcontrolsource.h"
-#include "gstinterpolationcontrolsource.h"
+#include "gstparamspecs.h"
 
 #define GST_CAT_DEFAULT controller_debug
-GST_DEBUG_CATEGORY_EXTERN (GST_CAT_DEFAULT);
+GST_DEBUG_CATEGORY (GST_CAT_DEFAULT);
 
 static GObjectClass *parent_class = NULL;
-GQuark priv_gst_controller_key;
 
 /* property ids */
 enum
@@ -102,6 +102,20 @@ struct _GstControllerPrivate
 /* helper */
 
 /*
+ * GstControlledProperty:
+ */
+typedef struct _GstControlledProperty
+{
+  GParamSpec *pspec;            /* GParamSpec for this property */
+  const gchar *name;            /* name of the property */
+  GstControlSource *csource;    /* GstControlSource for this property */
+  gboolean disabled;
+  GValue last_value;
+} GstControlledProperty;
+
+#define GST_CONTROLLED_PROPERTY(obj)    ((GstControlledProperty *)(obj))
+
+/*
  * gst_controlled_property_new:
  * @object: for which object the controlled property should be set up
  * @name: the name of the property to be controlled
@@ -112,7 +126,7 @@ struct _GstControllerPrivate
  * Returns: a freshly allocated structure or %NULL
  */
 static GstControlledProperty *
-gst_controlled_property_new (GObject * object, const gchar * name)
+gst_controlled_property_new (GstObject * object, const gchar * name)
 {
   GstControlledProperty *prop = NULL;
   GParamSpec *pspec;
@@ -191,54 +205,56 @@ gst_controller_find_controlled_property (GstController * self,
 
 /*
  * gst_controller_add_property:
- * @self: the controller object or %NULL if none yet exists
- * @object: object to bind the property
+ * @self: the controller object
  * @name: name of projecty in @object
- * @ref_existing: pointer to flag that tracks if we need to ref an existing
- *   controller still
  *
  * Creates a new #GstControlledProperty if there is none for property @name yet.
- * In case this is the first controlled propery, it creates the controller as
- * well.
  *
- * Returns: a newly created controller object or reffed existing one with the
- * given property bound.
+ * Returns: %TRUE if the property has been added to the controller
  */
-static GstController *
-gst_controller_add_property (GstController * self, GObject * object,
-    const gchar * name, gboolean * ref_existing)
+static gboolean
+gst_controller_add_property (GstController * self, const gchar * name)
 {
+  gboolean res = TRUE;
+
   /* test if this property isn't yet controlled */
-  if (!self || !gst_controller_find_controlled_property (self, name)) {
+  if (!gst_controller_find_controlled_property (self, name)) {
     GstControlledProperty *prop;
 
-    /* create GstControlledProperty and add to self->propeties List */
-    if ((prop = gst_controlled_property_new (object, name))) {
-      /* if we don't have a controller object yet, now is the time to create one */
-      if (!self) {
-        self = g_object_newv (GST_TYPE_CONTROLLER, 0, NULL);
-        self->object = g_object_ref (object);
-        /* store the controller */
-        g_object_set_qdata (object, priv_gst_controller_key, self);
-        *ref_existing = FALSE;
-      } else {
-        /* only want one single _ref(), even for multiple properties */
-        if (*ref_existing) {
-          g_object_ref (self);
-          *ref_existing = FALSE;
-          GST_INFO ("returning existing controller");
-        }
-      }
+    /* create GstControlledProperty and add to self->properties list */
+    if ((prop = gst_controlled_property_new (self->object, name)))
       self->properties = g_list_prepend (self->properties, prop);
-    }
+    else
+      res = FALSE;
   } else {
     GST_WARNING ("trying to control property %s again", name);
-    if (*ref_existing) {
-      g_object_ref (self);
-      *ref_existing = FALSE;
-    }
   }
-  return self;
+  return res;
+}
+
+/*
+ * gst_controller_remove_property:
+ * @self: the controller object
+ * @name: name of projecty in @object
+ *
+ * Removes a #GstControlledProperty for property @name.
+ *
+ * Returns: %TRUE if the property has been removed from the controller
+ */
+static gboolean
+gst_controller_remove_property (GstController * self, const gchar * name)
+{
+  gboolean res = TRUE;
+  GstControlledProperty *prop;
+
+  if ((prop = gst_controller_find_controlled_property (self, name))) {
+    self->properties = g_list_remove (self->properties, prop);
+    //g_signal_handler_disconnect (self->object, prop->notify_handler_id);
+    gst_controlled_property_free (prop);
+  } else {
+    res = FALSE;
+  }
+  return res;
 }
 
 /* methods */
@@ -253,25 +269,24 @@ gst_controller_add_property (GstController * self, GObject * object,
  * Returns: the new controller.
  */
 GstController *
-gst_controller_new_valist (GObject * object, va_list var_args)
+gst_controller_new_valist (GstObject * object, va_list var_args)
 {
   GstController *self;
-  gboolean ref_existing = TRUE;
   gchar *name;
 
   g_return_val_if_fail (G_IS_OBJECT (object), NULL);
 
   GST_INFO ("setting up a new controller");
 
-  self = g_object_get_qdata (object, priv_gst_controller_key);
+  self = g_object_newv (GST_TYPE_CONTROLLER, 0, NULL);
+  self->object = g_object_ref (object);
+
   /* create GstControlledProperty for each property */
   while ((name = va_arg (var_args, gchar *))) {
-    self = gst_controller_add_property (self, object, name, &ref_existing);
+    gst_controller_add_property (self, name);
   }
   va_end (var_args);
 
-  if (self)
-    GST_INFO ("controller->ref_count=%d", G_OBJECT (self)->ref_count);
   return self;
 }
 
@@ -288,10 +303,9 @@ gst_controller_new_valist (GObject * object, va_list var_args)
  * Returns: the new controller.
  */
 GstController *
-gst_controller_new_list (GObject * object, GList * list)
+gst_controller_new_list (GstObject * object, GList * list)
 {
   GstController *self;
-  gboolean ref_existing = TRUE;
   gchar *name;
   GList *node;
 
@@ -299,15 +313,15 @@ gst_controller_new_list (GObject * object, GList * list)
 
   GST_INFO ("setting up a new controller");
 
-  self = g_object_get_qdata (object, priv_gst_controller_key);
+  self = g_object_newv (GST_TYPE_CONTROLLER, 0, NULL);
+  self->object = g_object_ref (object);
+
   /* create GstControlledProperty for each property */
   for (node = list; node; node = g_list_next (node)) {
     name = (gchar *) node->data;
-    self = gst_controller_add_property (self, object, name, &ref_existing);
+    gst_controller_add_property (self, name);
   }
 
-  if (self)
-    GST_INFO ("controller->ref_count=%d", G_OBJECT (self)->ref_count);
   return self;
 }
 
@@ -321,7 +335,7 @@ gst_controller_new_list (GObject * object, GList * list)
  * Returns: the new controller.
  */
 GstController *
-gst_controller_new (GObject * object, ...)
+gst_controller_new (GstObject * object, ...)
 {
   GstController *self;
   va_list var_args;
@@ -333,6 +347,63 @@ gst_controller_new (GObject * object, ...)
   va_end (var_args);
 
   return self;
+}
+
+// FIXME: docs
+gboolean
+gst_controller_add_properties_valist (GstController * self, va_list var_args)
+{
+  gboolean res = TRUE;
+  gchar *name;
+
+  g_return_val_if_fail (GST_IS_CONTROLLER (self), FALSE);
+
+  while ((name = va_arg (var_args, gchar *))) {
+    /* find the property in the properties list of the controller, remove and free it */
+    g_mutex_lock (self->lock);
+    res &= gst_controller_add_property (self, name);
+    g_mutex_unlock (self->lock);
+  }
+
+  return res;
+}
+
+// FIXME: docs
+gboolean
+gst_controller_add_properties_list (GstController * self, GList * list)
+{
+  gboolean res = TRUE;
+  gchar *name;
+  GList *tmp;
+
+  g_return_val_if_fail (GST_IS_CONTROLLER (self), FALSE);
+
+  for (tmp = list; tmp; tmp = g_list_next (tmp)) {
+    name = (gchar *) tmp->data;
+
+    /* find the property in the properties list of the controller, remove and free it */
+    g_mutex_lock (self->lock);
+    res &= gst_controller_add_property (self, name);
+    g_mutex_unlock (self->lock);
+  }
+
+  return res;
+}
+
+// FIXME: docs
+gboolean
+gst_controller_add_properties (GstController * self, ...)
+{
+  gboolean res;
+  va_list var_args;
+
+  g_return_val_if_fail (GST_IS_CONTROLLER (self), FALSE);
+
+  va_start (var_args, self);
+  res = gst_controller_add_properties_valist (self, var_args);
+  va_end (var_args);
+
+  return res;
 }
 
 /**
@@ -348,7 +419,6 @@ gboolean
 gst_controller_remove_properties_valist (GstController * self, va_list var_args)
 {
   gboolean res = TRUE;
-  GstControlledProperty *prop;
   gchar *name;
 
   g_return_val_if_fail (GST_IS_CONTROLLER (self), FALSE);
@@ -356,13 +426,7 @@ gst_controller_remove_properties_valist (GstController * self, va_list var_args)
   while ((name = va_arg (var_args, gchar *))) {
     /* find the property in the properties list of the controller, remove and free it */
     g_mutex_lock (self->lock);
-    if ((prop = gst_controller_find_controlled_property (self, name))) {
-      self->properties = g_list_remove (self->properties, prop);
-      //g_signal_handler_disconnect (self->object, prop->notify_handler_id);
-      gst_controlled_property_free (prop);
-    } else {
-      res = FALSE;
-    }
+    res &= gst_controller_remove_property (self, name);
     g_mutex_unlock (self->lock);
   }
 
@@ -385,7 +449,6 @@ gboolean
 gst_controller_remove_properties_list (GstController * self, GList * list)
 {
   gboolean res = TRUE;
-  GstControlledProperty *prop;
   gchar *name;
   GList *tmp;
 
@@ -396,13 +459,7 @@ gst_controller_remove_properties_list (GstController * self, GList * list)
 
     /* find the property in the properties list of the controller, remove and free it */
     g_mutex_lock (self->lock);
-    if ((prop = gst_controller_find_controlled_property (self, name))) {
-      self->properties = g_list_remove (self->properties, prop);
-      //g_signal_handler_disconnect (self->object, prop->notify_handler_id);
-      gst_controlled_property_free (prop);
-    } else {
-      res = FALSE;
-    }
+    res &= gst_controller_remove_property (self, name);
     g_mutex_unlock (self->lock);
   }
 
@@ -598,7 +655,7 @@ gst_controller_get (GstController * self, const gchar * property_name,
         val = NULL;
       }
     } else {
-      g_object_get_property (self->object, prop->name, val);
+      g_object_get_property ((GObject *) self->object, prop->name, val);
     }
   }
   g_mutex_unlock (self->lock);
@@ -666,7 +723,7 @@ gst_controller_sync_values (GstController * self, GstClockTime timestamp)
   GST_LOG ("sync_values");
 
   g_mutex_lock (self->lock);
-  g_object_freeze_notify (self->object);
+  g_object_freeze_notify ((GObject *) self->object);
   /* go over the controlled properties of the controller */
   for (node = self->properties; node; node = g_list_next (node)) {
     prop = node->data;
@@ -688,7 +745,7 @@ gst_controller_sync_values (GstController * self, GstClockTime timestamp)
        */
       if ((timestamp < self->priv->last_sync) ||
           gst_value_compare (&value, &prop->last_value) != GST_VALUE_EQUAL) {
-        g_object_set_property (self->object, prop->name, &value);
+        g_object_set_property ((GObject *) self->object, prop->name, &value);
         g_value_copy (&value, &prop->last_value);
       }
     } else {
@@ -698,7 +755,7 @@ gst_controller_sync_values (GstController * self, GstClockTime timestamp)
     ret &= val_ret;
   }
   self->priv->last_sync = timestamp;
-  g_object_thaw_notify (self->object);
+  g_object_thaw_notify ((GObject *) self->object);
 
   g_mutex_unlock (self->lock);
 
@@ -871,8 +928,6 @@ _gst_controller_dispose (GObject * object)
       self->properties = NULL;
     }
 
-    /* remove controller from object's qdata list */
-    g_object_set_qdata (self->object, priv_gst_controller_key, NULL);
     g_object_unref (self->object);
     self->object = NULL;
     g_mutex_unlock (self->lock);
@@ -919,8 +974,6 @@ _gst_controller_class_init (GstControllerClass * klass)
   gobject_class->dispose = _gst_controller_dispose;
   gobject_class->finalize = _gst_controller_finalize;
 
-  priv_gst_controller_key = g_quark_from_static_string ("gst::controller");
-
   /* register properties */
   g_object_class_install_property (gobject_class, PROP_CONTROL_RATE,
       g_param_spec_uint64 ("control-rate",
@@ -929,8 +982,8 @@ _gst_controller_class_init (GstControllerClass * klass)
           1, G_MAXUINT, 100 * GST_MSECOND,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
-  /* register signals */
-  /* set defaults for overridable methods */
+  GST_DEBUG_CATEGORY_INIT (GST_CAT_DEFAULT, "gstcontroller", 0,
+      "dynamic parameter control for gstreamer elements");
 }
 
 GType

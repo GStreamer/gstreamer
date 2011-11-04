@@ -38,12 +38,16 @@
 
 #include <glib-object.h>
 #include <gst/gst.h>
+#include <gst/gstcontrolsource.h>
 
-#include "gstcontrolsource.h"
 #include "gstlfocontrolsource.h"
 #include "gstlfocontrolsourceprivate.h"
 
 #include <gst/math-compat.h>
+
+#define GST_CAT_DEFAULT controller_debug
+GST_DEBUG_CATEGORY_STATIC (GST_CAT_DEFAULT);
+
 
 #define EMPTY(x) (x)
 
@@ -603,8 +607,11 @@ gst_lfo_waveform_get_type (void)
   return (GType) gtype;
 }
 
-G_DEFINE_TYPE (GstLFOControlSource, gst_lfo_control_source,
-    GST_TYPE_CONTROL_SOURCE);
+#define _do_init \
+  GST_DEBUG_CATEGORY_INIT (GST_CAT_DEFAULT, "lfo control source", 0, "low frequency oscillator control source")
+
+G_DEFINE_TYPE_WITH_CODE (GstLFOControlSource, gst_lfo_control_source,
+    GST_TYPE_CONTROL_SOURCE, _do_init);
 
 static GObjectClass *parent_class = NULL;
 

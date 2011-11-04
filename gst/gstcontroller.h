@@ -1,8 +1,9 @@
 /* GStreamer
  *
- * Copyright (C) <2005> Stefan Kost <ensonic at users dot sf dot net>
+ * Copyright (C) 2005 Stefan Kost <ensonic at users dot sf dot net>
+ *               2011 Stefan Sauer <ensonic at users dot sf dot net>
  *
- * gst-controller.h: dynamic parameter control subsystem
+ * gstcontroller.h: dynamic parameter control subsystem
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -23,15 +24,16 @@
 #ifndef __GST_CONTROLLER_H__
 #define __GST_CONTROLLER_H__
 
+#include <gst/gstconfig.h>
+
 #include <string.h>
 
 #include <glib.h>
 #include <glib-object.h>
 #include <glib/gprintf.h>
-#include <gst/gst.h>
 
-#include <gst/controller/gstcontrolsource.h>
-#include <gst/controller/gstinterpolationcontrolsource.h>
+#include <gst/gstobject.h>
+#include <gst/gstcontrolsource.h>
 
 G_BEGIN_DECLS
 
@@ -60,7 +62,7 @@ struct _GstController
 
   GList *properties;  /* List of GstControlledProperty */
   GMutex *lock;       /* Secure property access, elements will access from threads */
-  GObject *object;    /* the object we control */
+  GstObject *object;  /* the object we control */
 
   /*< private >*/
   GstControllerPrivate *priv;
@@ -79,14 +81,16 @@ GType gst_controller_get_type (void);
 
 /* GstController functions */
 
-GstController *gst_controller_new_valist (GObject * object, va_list var_args);
-GstController *gst_controller_new_list (GObject * object, GList *list);
-GstController *gst_controller_new (GObject * object, ...) G_GNUC_NULL_TERMINATED;
+GstController *gst_controller_new_valist (GstObject * object, va_list var_args);
+GstController *gst_controller_new_list (GstObject * object, GList *list);
+GstController *gst_controller_new (GstObject * object, ...) G_GNUC_NULL_TERMINATED;
 
-gboolean gst_controller_remove_properties_valist (GstController * self,
-    va_list var_args);
-gboolean gst_controller_remove_properties_list (GstController * self,
-						GList *list);
+gboolean gst_controller_add_properties_valist (GstController * self, va_list var_args);
+gboolean gst_controller_add_properties_list (GstController * self, GList *list);
+gboolean gst_controller_add_properties (GstController * self, ...) G_GNUC_NULL_TERMINATED;
+
+gboolean gst_controller_remove_properties_valist (GstController * self, va_list var_args);
+gboolean gst_controller_remove_properties_list (GstController * self, GList *list);
 gboolean gst_controller_remove_properties (GstController * self, ...) G_GNUC_NULL_TERMINATED;
 
 void gst_controller_set_disabled (GstController *self, gboolean disabled);
@@ -104,32 +108,6 @@ gboolean gst_controller_get_value_arrays (GstController * self,
     GstClockTime timestamp, GSList * value_arrays);
 gboolean gst_controller_get_value_array (GstController * self,
     GstClockTime timestamp, GstValueArray * value_array);
-
-/* GObject convenience functions */
-
-GstController *gst_object_control_properties (GObject * object, ...) G_GNUC_NULL_TERMINATED;
-gboolean gst_object_uncontrol_properties (GObject * object, ...) G_GNUC_NULL_TERMINATED;
-
-GstController *gst_object_get_controller (GObject * object);
-gboolean gst_object_set_controller (GObject * object, GstController * controller);
-
-GstClockTime gst_object_suggest_next_sync (GObject * object);
-gboolean gst_object_sync_values (GObject * object, GstClockTime timestamp);
-
-gboolean gst_object_set_control_source (GObject *object, const gchar * property_name, GstControlSource *csource);
-GstControlSource * gst_object_get_control_source (GObject *object, const gchar * property_name);
-
-gboolean gst_object_get_value_arrays (GObject * object,
-    GstClockTime timestamp, GSList * value_arrays);
-gboolean gst_object_get_value_array (GObject * object,
-    GstClockTime timestamp, GstValueArray * value_array);
-
-GstClockTime gst_object_get_control_rate (GObject * object);
-void gst_object_set_control_rate (GObject * object, GstClockTime control_rate);
-
-/* lib init/done */
-
-gboolean gst_controller_init (int * argc, char ***argv);
 
 
 G_END_DECLS

@@ -23,8 +23,11 @@
 #ifndef __GST_CONTROL_SOURCE_H__
 #define __GST_CONTROL_SOURCE_H__
 
+#include <gst/gstconfig.h>
+
 #include <glib-object.h>
-#include <gst/gst.h>
+
+#include <gst/gstclock.h>
 
 G_BEGIN_DECLS
 

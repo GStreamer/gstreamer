@@ -149,7 +149,6 @@ typedef enum
  */
 #define GST_OBJECT_FLAG_UNSET(obj,flag)        (GST_OBJECT_FLAGS (obj) &= ~(flag))
 
-
 typedef struct _GstObject GstObject;
 typedef struct _GstObjectClass GstObjectClass;
 
@@ -172,6 +171,7 @@ struct _GstObject {
   guint32        flags;
 
   /*< private >*/
+  gpointer ctrl;        /* time controlled properties */
   gpointer _gst_reserved;
 };
 
@@ -227,6 +227,29 @@ gchar *		gst_object_get_path_string	(GstObject *object);
 
 /* misc utils */
 gboolean	gst_object_check_uniqueness	(GList *list, const gchar *name);
+
+/* controller functions */
+#include <gst/gstclock.h>
+#include <gst/gstcontrolsource.h>
+
+gboolean gst_object_control_properties (GstObject * object, ...) G_GNUC_NULL_TERMINATED;
+gboolean gst_object_uncontrol_properties (GstObject * object, ...) G_GNUC_NULL_TERMINATED;
+
+GstClockTime gst_object_suggest_next_sync (GstObject * object);
+gboolean gst_object_sync_values (GstObject * object, GstClockTime timestamp);
+
+void gst_object_set_automation_disabled (GstObject *object, gboolean disabled);                                        // NEW was gst_controller_set_disabled
+void gst_object_set_property_automation_disabled (GstObject *object, const gchar * property_name, gboolean disabled);  // NEW was gst_controller_set_property_disabled
+
+gboolean gst_object_set_control_source (GstObject *object, const gchar * property_name, GstControlSource *csource);
+GstControlSource * gst_object_get_control_source (GstObject *object, const gchar * property_name);
+
+GValue *gst_object_get_value (GstObject * object, const gchar * property_name, GstClockTime timestamp);                // NEW was gst_controller_get
+gboolean gst_object_get_value_arrays (GstObject * object, GstClockTime timestamp, GSList * value_arrays);
+gboolean gst_object_get_value_array (GstObject * object, GstClockTime timestamp, GstValueArray * value_array);
+
+GstClockTime gst_object_get_control_rate (GstObject * object);
+void gst_object_set_control_rate (GstObject * object, GstClockTime control_rate);
 
 G_END_DECLS
 

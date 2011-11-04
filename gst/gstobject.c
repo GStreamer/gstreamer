@@ -88,6 +88,7 @@
 
 #include "gstobject.h"
 #include "gstmarshal.h"
+#include "gstcontroller.h"
 #include "gstinfo.h"
 #include "gstutils.h"
 
@@ -342,6 +343,7 @@ gst_object_replace (GstObject ** oldobj, GstObject * newobj)
 static void
 gst_object_dispose (GObject * object)
 {
+  GstObject *self = (GstObject *) object;
   GstObject *parent;
 
   GST_CAT_TRACE_OBJECT (GST_CAT_REFCOUNTING, object, "dispose");
@@ -351,6 +353,11 @@ gst_object_dispose (GObject * object)
     goto have_parent;
   GST_OBJECT_PARENT (object) = NULL;
   GST_OBJECT_UNLOCK (object);
+
+  if (self->ctrl) {
+    g_object_unref (self->ctrl);
+    self->ctrl = NULL;
+  }
 
   ((GObjectClass *) gst_object_parent_class)->dispose (object);
 
@@ -949,4 +956,300 @@ gst_object_get_path_string (GstObject * object)
   g_slist_free (parentage);
 
   return path;
+}
+
+/* controller functions */
+
+/**
+ * gst_object_control_properties:
+ * @object: the object of which some properties should be controlled
+ * @...: %NULL terminated list of property names that should be controlled
+ *
+ * Creates a GstController that allows you to dynamically control one, or more,
+ * GObject properties. If the given GstObject already has a GstController,
+ * it adds the given properties to the existing
+ * controller and returns that controller.
+ *
+ * Returns: %TRUE if the properties have been made controllable.
+ */
+gboolean
+gst_object_control_properties (GstObject * object, ...)
+{
+  gboolean res = FALSE;
+  va_list var_args;
+
+  g_return_val_if_fail (GST_IS_OBJECT (object), FALSE);
+
+  va_start (var_args, object);
+  if (object->ctrl) {
+    object->ctrl = gst_controller_new_valist (object, var_args);
+    res = (object->ctrl != NULL);
+  } else {
+    res = gst_controller_add_properties_valist ((GstController *) object->ctrl,
+        var_args);
+  }
+  va_end (var_args);
+  return res;
+}
+
+/**
+ * gst_object_uncontrol_properties:
+ * @object: the object of which some properties should not be controlled anymore
+ * @...: %NULL terminated list of property names that should be controlled
+ *
+ * Removes the given element's properties from it's controller
+ *
+ * Returns: %FALSE if one of the given property names isn't handled by the
+ * controller, %TRUE otherwise
+ */
+gboolean
+gst_object_uncontrol_properties (GstObject * object, ...)
+{
+  gboolean res = FALSE;
+  g_return_val_if_fail (GST_IS_OBJECT (object), FALSE);
+
+  if (object->ctrl) {
+    va_list var_args;
+
+    va_start (var_args, object);
+    res = gst_controller_remove_properties_valist (
+        (GstController *) object->ctrl, var_args);
+    va_end (var_args);
+  }
+  return (res);
+}
+
+/**
+ * gst_object_suggest_next_sync:
+ * @object: the object that has controlled properties
+ *
+ * Convenience function for GObject
+ *
+ * Returns: same thing as gst_controller_suggest_next_sync()
+ */
+GstClockTime
+gst_object_suggest_next_sync (GstObject * object)
+{
+  g_return_val_if_fail (GST_IS_OBJECT (object), GST_CLOCK_TIME_NONE);
+
+  if (object->ctrl)
+    return gst_controller_suggest_next_sync ((GstController *) object->ctrl);
+  return (GST_CLOCK_TIME_NONE);
+}
+
+/**
+ * gst_object_sync_values:
+ * @object: the object that has controlled properties
+ * @timestamp: the time that should be processed
+ *
+ * Convenience function for GObject
+ *
+ * Returns: same thing as gst_controller_sync_values()
+ */
+gboolean
+gst_object_sync_values (GstObject * object, GstClockTime timestamp)
+{
+  g_return_val_if_fail (GST_IS_OBJECT (object), FALSE);
+
+  if (object->ctrl)
+    return gst_controller_sync_values ((GstController *) object->ctrl,
+        timestamp);
+  /* this is no failure, its called by elements regardless if there is a
+   * controller assigned or not */
+  return (TRUE);
+}
+
+// FIXME: docs
+void
+gst_object_set_automation_disabled (GstObject * object, gboolean disabled)
+{
+  g_return_if_fail (GST_IS_OBJECT (object));
+
+  if (object->ctrl)
+    gst_controller_set_disabled (object->ctrl, disabled);
+}
+
+// FIXME: docs
+void
+gst_object_set_property_automation_disabled (GstObject * object,
+    const gchar * property_name, gboolean disabled)
+{
+  g_return_if_fail (GST_IS_OBJECT (object));
+  g_return_if_fail (property_name);
+
+  if (object->ctrl)
+    gst_controller_set_property_disabled ((GstController *) object->ctrl,
+        property_name, disabled);
+}
+
+/**
+ * gst_object_set_control_source:
+ * @object: the controller object
+ * @property_name: name of the property for which the #GstControlSource should be set
+ * @csource: the #GstControlSource that should be used for the property
+ *
+ * Sets the #GstControlSource for @property_name. If there already was a #GstControlSource
+ * for this property it will be unreferenced.
+ *
+ * Returns: %FALSE if the given property isn't handled by the controller or the new #GstControlSource
+ * couldn't be bound to the property, %TRUE if everything worked as expected.
+ */
+gboolean
+gst_object_set_control_source (GstObject * object, const gchar * property_name,
+    GstControlSource * csource)
+{
+  g_return_val_if_fail (GST_IS_OBJECT (object), FALSE);
+  g_return_val_if_fail (property_name, FALSE);
+  g_return_val_if_fail (GST_IS_CONTROL_SOURCE (csource), FALSE);
+
+  if (object->ctrl)
+    return gst_controller_set_control_source ((GstController *) object->ctrl,
+        property_name, csource);
+  return FALSE;
+}
+
+/**
+ * gst_object_get_control_source:
+ * @object: the object
+ * @property_name: name of the property for which the #GstControlSource should be get
+ *
+ * Gets the corresponding #GstControlSource for the property. This should be unreferenced
+ * again after use.
+ *
+ * Returns: (transfer full): the #GstControlSource for @property_name or NULL if
+ * the property is not controlled by this controller or no #GstControlSource was
+ * assigned yet.
+ */
+GstControlSource *
+gst_object_get_control_source (GstObject * object, const gchar * property_name)
+{
+  g_return_val_if_fail (GST_IS_OBJECT (object), NULL);
+  g_return_val_if_fail (property_name, NULL);
+
+  if (object->ctrl)
+    return gst_controller_get_control_source ((GstController *) object->ctrl,
+        property_name);
+  return NULL;
+}
+
+// FIXME: docs
+GValue *
+gst_object_get_value (GstObject * object, const gchar * property_name,
+    GstClockTime timestamp)
+{
+  g_return_val_if_fail (GST_IS_OBJECT (object), NULL);
+  g_return_val_if_fail (property_name, NULL);
+
+  if (object->ctrl)
+    return gst_controller_get (object->ctrl, property_name, timestamp);
+  return NULL;
+}
+
+/**
+ * gst_object_get_value_arrays:
+ * @object: the object that has controlled properties
+ * @timestamp: the time that should be processed
+ * @value_arrays: list to return the control-values in
+ *
+ * Function to be able to get an array of values for one or more given element
+ * properties.
+ *
+ * If the GstValueArray->values array in list nodes is NULL, it will be created
+ * by the function.
+ * The type of the values in the array are the same as the property's type.
+ *
+ * The g_object_* functions are just convenience functions for GObject
+ *
+ * Returns: %TRUE if the given array(s) could be filled, %FALSE otherwise
+ */
+gboolean
+gst_object_get_value_arrays (GstObject * object, GstClockTime timestamp,
+    GSList * value_arrays)
+{
+  g_return_val_if_fail (GST_IS_OBJECT (object), FALSE);
+  g_return_val_if_fail (GST_CLOCK_TIME_IS_VALID (timestamp), FALSE);
+
+  if (object->ctrl)
+    return gst_controller_get_value_arrays ((GstController *) object->ctrl,
+        timestamp, value_arrays);
+  return (FALSE);
+}
+
+/**
+ * gst_object_get_value_array:
+ * @object: the object that has controlled properties
+ * @timestamp: the time that should be processed
+ * @value_array: array to put control-values in
+ *
+ * Function to be able to get an array of values for one element properties
+ *
+ * If the GstValueArray->values array is NULL, it will be created by the function.
+ * The type of the values in the array are the same as the property's type.
+ *
+ * The g_object_* functions are just convenience functions for GObject
+ *
+ * Returns: %TRUE if the given array(s) could be filled, %FALSE otherwise
+ */
+gboolean
+gst_object_get_value_array (GstObject * object, GstClockTime timestamp,
+    GstValueArray * value_array)
+{
+  g_return_val_if_fail (GST_IS_OBJECT (object), FALSE);
+  g_return_val_if_fail (GST_CLOCK_TIME_IS_VALID (timestamp), FALSE);
+
+  if (object->ctrl)
+    return gst_controller_get_value_array ((GstController *) object->ctrl,
+        timestamp, value_array);
+  return (FALSE);
+}
+
+/**
+ * gst_object_get_control_rate:
+ * @object: the object that has controlled properties
+ *
+ * Obtain the control-rate for this @object. Audio processing #GstElement
+ * objects will use this rate to sub-divide their processing loop and call
+ * gst_object_sync_values() inbetween. The length of the processing segment
+ * should be up to @control-rate nanoseconds.
+ *
+ * If the @object is not under property control, this will return
+ * %GST_CLOCK_TIME_NONE. This allows the element to avoid the sub-dividing.
+ *
+ * The control-rate is not expected to change if the element is in
+ * %GST_STATE_PAUSED or %GST_STATE_PLAYING.
+ *
+ * Returns: the control rate in nanoseconds
+ */
+GstClockTime
+gst_object_get_control_rate (GstObject * object)
+{
+  GstClockTime control_rate = GST_CLOCK_TIME_NONE;
+
+  g_return_val_if_fail (GST_IS_OBJECT (object), FALSE);
+
+  if (object->ctrl)
+    g_object_get (object->ctrl, "control-rate", &control_rate, NULL);
+  return (control_rate);
+}
+
+/**
+ * gst_object_set_control_rate:
+ * @object: the object that has controlled properties
+ * @control_rate: the new control-rate in nanoseconds.
+ *
+ * Change the control-rate for this @object. Audio processing #GstElement
+ * objects will use this rate to sub-divide their processing loop and call
+ * gst_object_sync_values() inbetween. The length of the processing segment
+ * should be up to @control-rate nanoseconds.
+ *
+ * The control-rate should not change if the element is in %GST_STATE_PAUSED or
+ * %GST_STATE_PLAYING.
+ */
+void
+gst_object_set_control_rate (GstObject * object, GstClockTime control_rate)
+{
+  g_return_if_fail (GST_IS_OBJECT (object));
+
+  if (object->ctrl)
+    g_object_set (object->ctrl, "control-rate", control_rate, NULL);
 }

@@ -40,15 +40,17 @@
 #include <glib-object.h>
 #include <gst/gst.h>
 
-#include "gstcontrolsource.h"
 #include "gstinterpolationcontrolsource.h"
 #include "gstinterpolationcontrolsourceprivate.h"
 
 #define GST_CAT_DEFAULT controller_debug
-GST_DEBUG_CATEGORY_EXTERN (GST_CAT_DEFAULT);
+GST_DEBUG_CATEGORY_STATIC (GST_CAT_DEFAULT);
 
-G_DEFINE_TYPE (GstInterpolationControlSource, gst_interpolation_control_source,
-    GST_TYPE_CONTROL_SOURCE);
+#define _do_init \
+  GST_DEBUG_CATEGORY_INIT (GST_CAT_DEFAULT, "interpolation control source", 0, "timeline value interpolating control source")
+
+G_DEFINE_TYPE_WITH_CODE (GstInterpolationControlSource,
+    gst_interpolation_control_source, GST_TYPE_CONTROL_SOURCE, _do_init);
 
 static GObjectClass *parent_class = NULL;
 

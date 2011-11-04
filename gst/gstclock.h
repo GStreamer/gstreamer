@@ -24,8 +24,6 @@
 #ifndef __GST_CLOCK_H__
 #define __GST_CLOCK_H__
 
-#include <gst/gstobject.h>
-
 G_BEGIN_DECLS
 
 /* --- standard type macros --- */
@@ -374,6 +372,8 @@ struct _GstClockEntry {
   gboolean               unscheduled;
   gboolean               woken_up;
 };
+
+#include <gst/gstobject.h>
 
 /**
  * GstClockFlags:
