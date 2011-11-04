@@ -104,20 +104,20 @@
 GST_DEBUG_CATEGORY_STATIC (rtspsrc_debug);
 #define GST_CAT_DEFAULT (rtspsrc_debug)
 
-static GstStaticPadTemplate rtptemplate = GST_STATIC_PAD_TEMPLATE ("stream%d",
+static GstStaticPadTemplate rtptemplate = GST_STATIC_PAD_TEMPLATE ("stream_%u",
     GST_PAD_SRC,
     GST_PAD_SOMETIMES,
     GST_STATIC_CAPS ("application/x-rtp; application/x-rdt"));
 
 /* templates used internally */
 static GstStaticPadTemplate anysrctemplate =
-GST_STATIC_PAD_TEMPLATE ("internalsrc%d",
+GST_STATIC_PAD_TEMPLATE ("internalsrc_%u",
     GST_PAD_SRC,
     GST_PAD_SOMETIMES,
     GST_STATIC_CAPS_ANY);
 
 static GstStaticPadTemplate anysinktemplate =
-GST_STATIC_PAD_TEMPLATE ("internalsink%d",
+GST_STATIC_PAD_TEMPLATE ("internalsink_%u",
     GST_PAD_SINK,
     GST_PAD_SOMETIMES,
     GST_STATIC_CAPS_ANY);
@@ -2552,7 +2552,7 @@ gst_rtspsrc_stream_configure_tcp (GstRTSPSrc * src, GstRTSPStream * stream,
     GST_DEBUG_OBJECT (src, "no manager, creating pad");
 
     /* create a new pad we will use to stream to */
-    name = g_strdup_printf ("stream%d", stream->id);
+    name = g_strdup_printf ("stream_%u", stream->id);
     template = gst_static_pad_template_get (&rtptemplate);
     stream->channelpad[0] = gst_pad_new_from_template (template, name);
     gst_object_unref (template);
@@ -2569,7 +2569,7 @@ gst_rtspsrc_stream_configure_tcp (GstRTSPSrc * src, GstRTSPStream * stream,
     template = gst_static_pad_template_get (&anysrctemplate);
 
     /* allocate pads for sending the channel data into the manager */
-    pad0 = gst_pad_new_from_template (template, "internalsrc0");
+    pad0 = gst_pad_new_from_template (template, "internalsrc_0");
     gst_pad_link (pad0, stream->channelpad[0]);
     gst_object_unref (stream->channelpad[0]);
     stream->channelpad[0] = pad0;
@@ -2581,7 +2581,7 @@ gst_rtspsrc_stream_configure_tcp (GstRTSPSrc * src, GstRTSPStream * stream,
     if (stream->channelpad[1]) {
       /* if we have a sinkpad for the other channel, create a pad and link to the
        * manager. */
-      pad1 = gst_pad_new_from_template (template, "internalsrc1");
+      pad1 = gst_pad_new_from_template (template, "internalsrc_1");
       gst_pad_set_event_function (pad1, gst_rtspsrc_handle_internal_src_event);
       gst_pad_link (pad1, stream->channelpad[1]);
       gst_object_unref (stream->channelpad[1]);
@@ -2596,7 +2596,7 @@ gst_rtspsrc_stream_configure_tcp (GstRTSPSrc * src, GstRTSPStream * stream,
 
     template = gst_static_pad_template_get (&anysinktemplate);
 
-    stream->rtcppad = gst_pad_new_from_template (template, "internalsink0");
+    stream->rtcppad = gst_pad_new_from_template (template, "internalsink_0");
     gst_pad_set_chain_function (stream->rtcppad, gst_rtspsrc_sink_chain);
     gst_pad_set_element_private (stream->rtcppad, stream);
     gst_pad_set_active (stream->rtcppad, TRUE);
@@ -3020,7 +3020,7 @@ gst_rtspsrc_stream_configure_transport (GstRTSPStream * stream,
 
     /* create ghostpad, don't add just yet, this will be done when we activate
      * the stream. */
-    name = g_strdup_printf ("stream%d", stream->id);
+    name = g_strdup_printf ("stream_%u", stream->id);
     template = gst_static_pad_template_get (&rtptemplate);
     stream->srcpad = gst_ghost_pad_new_from_template (name, outpad, template);
     gst_pad_set_event_function (stream->srcpad, gst_rtspsrc_handle_src_event);
