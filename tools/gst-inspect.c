@@ -25,8 +25,6 @@
 #  include "config.h"
 #endif
 
-#include <gst/controller/gstcontroller.h>
-
 #include "tools.h"
 
 #include <string.h>

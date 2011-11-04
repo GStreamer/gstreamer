@@ -20,7 +20,6 @@
  */
 
 #include <gst/gst.h>
-#include <gst/controller/gstcontroller.h>
 #include <gst/controller/gstinterpolationcontrolsource.h>
 
 /* a song in buzztard can easily reach 30000 here */
@@ -89,7 +88,6 @@ main (gint argc, gchar * argv[])
   GstClockTime tick;
 
   gst_init (&argc, &argv);
-  gst_controller_init (&argc, &argv);
 
   /* build pipeline */
   bin = gst_pipeline_new ("pipeline");
@@ -112,7 +110,7 @@ main (gint argc, gchar * argv[])
   tick = BLOCK_SIZE * GST_SECOND / 44100;
 
   /* add a controller to the source */
-  if (!(ctrl = gst_controller_new (G_OBJECT (src), "freq", NULL))) {
+  if (!(ctrl = gst_controller_new (GST_OBJECT (src), "freq", NULL))) {
     GST_WARNING ("can't control source element");
     goto Error;
   }
