@@ -1,13 +1,9 @@
 EXPORTS
-	gst_buffer_add_meta_video
-	gst_buffer_add_meta_video_full
-	gst_buffer_get_meta_video_id
+	gst_buffer_add_video_meta
+	gst_buffer_add_video_meta_full
+	gst_buffer_get_video_meta_id
 	gst_buffer_pool_config_get_video_alignment
 	gst_buffer_pool_config_set_video_alignment
-	gst_meta_video_crop_get_info
-	gst_meta_video_get_info
-	gst_meta_video_map
-	gst_meta_video_unmap
 	gst_video_buffer_flags_get_type
 	gst_video_calculate_display_ratio
 	gst_video_chroma_site_get_type
@@ -18,6 +14,7 @@ EXPORTS
 	gst_video_colorimetry_matches
 	gst_video_convert_frame
 	gst_video_convert_frame_async
+	gst_video_crop_meta_get_info
 	gst_video_event_new_still_frame
 	gst_video_event_parse_still_frame
 	gst_video_filter_get_type
@@ -39,6 +36,9 @@ EXPORTS
 	gst_video_info_init
 	gst_video_info_set_format
 	gst_video_info_to_caps
+	gst_video_meta_get_info
+	gst_video_meta_map
+	gst_video_meta_unmap
 	gst_video_parse_caps_palette
 	gst_video_sink_center_rect
 	gst_video_sink_get_type
