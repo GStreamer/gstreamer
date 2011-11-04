@@ -540,7 +540,7 @@ pad_added_cb (GstElement * dbin2, GstPad * pad, gpointer * data)
 
   GST_PULSE_AUDIO_SINK_LOCK (pbin);
   if (gst_pad_link (pad, sinkpad) != GST_PAD_LINK_OK)
-    GST_ERROR_OBJECT (pbin, "Failed to link decodebin2 to pulsesink");
+    GST_ERROR_OBJECT (pbin, "Failed to link decodebin to pulsesink");
   else
     GST_DEBUG_OBJECT (pbin, "Linked new pad to pulsesink");
   GST_PULSE_AUDIO_SINK_UNLOCK (pbin);
@@ -556,18 +556,18 @@ gst_pulse_audio_sink_add_dbin2 (GstPulseAudioSink * pbin)
 
   g_assert (pbin->dbin2 == NULL);
 
-  pbin->dbin2 = gst_element_factory_make ("decodebin2", "pulseaudiosink-dbin2");
+  pbin->dbin2 = gst_element_factory_make ("decodebin", "pulseaudiosink-dbin2");
 
   if (!pbin->dbin2) {
-    post_missing_element_message (pbin, "decodebin2");
+    post_missing_element_message (pbin, "decodebin");
     GST_ELEMENT_WARNING (pbin, CORE, MISSING_PLUGIN,
         (_("Missing element '%s' - check your GStreamer installation."),
-            "decodebin2"), ("audio playback might fail"));
+            "decodebin"), ("audio playback might fail"));
     goto out;
   }
 
   if (!gst_bin_add (GST_BIN (pbin), pbin->dbin2)) {
-    GST_ERROR_OBJECT (pbin, "Failed to add decodebin2 to bin");
+    GST_ERROR_OBJECT (pbin, "Failed to add decodebin to bin");
     goto out;
   }
 
@@ -575,7 +575,7 @@ gst_pulse_audio_sink_add_dbin2 (GstPulseAudioSink * pbin)
       G_CALLBACK (pad_added_cb), pbin);
 
   if (!gst_element_sync_state_with_parent (pbin->dbin2)) {
-    GST_ERROR_OBJECT (pbin, "Failed to set decodebin2 to parent state");
+    GST_ERROR_OBJECT (pbin, "Failed to set decodebin to parent state");
     goto out;
   }
 
@@ -657,7 +657,7 @@ proxypad_blocked_cb (GstPad * pad, GstPadProbeType ptype, gpointer type_data,
       goto done;
     }
     /* pulsesink doesn't accept the incoming caps, so add a decodebin
-     * (potentially after removing the existing once, since decodebin2 can't
+     * (potentially after removing the existing once, since decodebin can't
      * renegotiate). */
   } else {
     /* Format lost, proceed to try plugging a decodebin */
@@ -665,7 +665,7 @@ proxypad_blocked_cb (GstPad * pad, GstPadProbeType ptype, gpointer type_data,
   }
 
   if (pbin->dbin2 != NULL) {
-    /* decodebin2 doesn't support reconfiguration, so throw this one away and
+    /* decodebin doesn't support reconfiguration, so throw this one away and
      * create a new one. */
     gst_pulse_audio_sink_free_dbin2 (pbin);
   }
@@ -739,8 +739,6 @@ gst_pulse_audio_sink_sink_event (GstPad * pad, GstEvent * event)
   GstPulseAudioSink *pbin = GST_PULSE_AUDIO_SINK (gst_pad_get_parent (pad));
   gboolean ret;
 
-  ret = pbin->sinkpad_old_eventfunc (pad, gst_event_ref (event));
-
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_CAPS:
     {
@@ -754,6 +752,8 @@ gst_pulse_audio_sink_sink_event (GstPad * pad, GstEvent * event)
     case GST_EVENT_SEGMENT:
     {
       const GstSegment *segment = NULL;
+
+      ret = pbin->sinkpad_old_eventfunc (pad, gst_event_ref (event));
 
       GST_PULSE_AUDIO_SINK_LOCK (pbin);
       gst_event_parse_segment (event, &segment);
@@ -773,12 +773,15 @@ gst_pulse_audio_sink_sink_event (GstPad * pad, GstEvent * event)
     }
 
     case GST_EVENT_FLUSH_STOP:
+      ret = pbin->sinkpad_old_eventfunc (pad, gst_event_ref (event));
+
       GST_PULSE_AUDIO_SINK_LOCK (pbin);
       gst_segment_init (&pbin->segment, GST_FORMAT_UNDEFINED);
       GST_PULSE_AUDIO_SINK_UNLOCK (pbin);
       break;
 
     default:
+      ret = pbin->sinkpad_old_eventfunc (pad, gst_event_ref (event));
       break;
   }
 
