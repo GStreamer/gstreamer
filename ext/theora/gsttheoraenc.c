@@ -310,7 +310,7 @@ gst_theora_enc_class_init (GstTheoraEncClass * klass)
 
   th_ctx = dummy_encode_ctx ();
   if (th_ctx) {
-    if (!check_speed_level (th_ctx, &default_speed_level, &max_speed_level))
+    if (check_speed_level (th_ctx, &default_speed_level, &max_speed_level))
       GST_WARNING
           ("Failed to determine settings for the speed-level property.");
     th_encode_free (th_ctx);
