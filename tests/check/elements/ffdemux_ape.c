@@ -51,8 +51,8 @@ error_cb (GstBus * bus, GstMessage * msg, gpointer user_data)
   return GST_BUS_PASS;
 }
 
-static GstProbeReturn
-event_probe (GstPad * pad, GstProbeType type, gpointer type_data,
+static GstPadProbeReturn
+event_probe (GstPad * pad, GstPadProbeType type, gpointer type_data,
     gpointer user_data)
 {
   GstTagList **p_tags = user_data;
@@ -68,7 +68,7 @@ event_probe (GstPad * pad, GstProbeType type, gpointer type_data,
       *p_tags = gst_tag_list_copy (event_tags);
     }
   }
-  return GST_PROBE_OK;          /* keep the data */
+  return GST_PAD_PROBE_OK;      /* keep the data */
 }
 
 /* FIXME: push_mode not used currently */
@@ -113,7 +113,7 @@ read_tags_from_file (const gchar * file, gboolean push_mode)
   /* we want to make sure there's a tag event coming out of ffdemux_ape
    * (ie. the one apedemux generated) */
   pad = gst_element_get_static_pad (sink, "sink");
-  gst_pad_add_probe (pad, GST_PROBE_TYPE_EVENT, event_probe, &tags, NULL);
+  gst_pad_add_probe (pad, GST_PAD_PROBE_TYPE_EVENT, event_probe, &tags, NULL);
   gst_object_unref (pad);
 
   state_ret = gst_element_set_state (pipeline, GST_STATE_PAUSED);
