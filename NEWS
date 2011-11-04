@@ -1,4 +1,27 @@
-This is GStreamer FFmpeg Plug-ins  0.10.12, "A year in hell"
+This is GStreamer FFmpeg Plug-ins  0.10.13, "Speeding, sparks like lightning"
+
+Changes since 0.10.12:
+
+      * Use libav 0.7.2 internal branch for security fixes
+      * Fixes for handling FLAC 
+      * Post QoS messages when dropping 
+      * Properly report GPL or LGPL licensing
+
+Bugs fixed since 0.10.12:
+
+      * 566605 : Support the new ffmpeg metadata API
+      * 574661 : [gstffmpegdec] Wrong usage of parsers
+      * 608892 : DCA/AAC/AC-3 decoders broken in gst-ffmpeg
+      * 532779 : ffmpeg configured with options leading to GPL license
+      * 589361 : [ffdec_flac] extradata NULL or too small error
+      * 640012 : ffmpegdec outputs wrong timestamps
+      * 643591 : ffmpegdec: invalid timestamp being used for next timestamp calculation
+      * 651768 : [PATCH] Arm cross compile fail (Failed to configure embedded FFmpeg tree)
+      * 654634 : postproc: gst-inspect-0.10 -a aborts with gstpostproc.c:360:change_mode: assertion failed: (postproc- > mode)
+      * 656155 : ffdec_mpeg2video and interlace property
+      * 656328 : [ffdeinterlace] add automatic " mode " property
+      * 657950 : ffmpegdec: post QoS messages when dropping a frame
+      * 658019 : ffdec_ass: caps seems wrong
 
 Changes since 0.10.11:
 

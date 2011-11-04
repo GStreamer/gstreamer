@@ -1,9 +1,162 @@
-=== release 0.10.12 ===
+=== release 0.10.13 ===
 
-2011-07-20  Edward Hervey <edward.hervey@collabora.co.uk>
+2011-11-02  Edward Hervey <edward.hervey@collabora.co.uk>
 
 	* configure.ac:
-	  releasing 0.10.12, "A year in hell"
+	  releasing 0.10.13, "Speeding, sparks like lightning"
+
+2011-10-31 11:40:37 +0100  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* configure.ac:
+	  0.10.12.3 pre-release
+
+2011-07-05 21:35:46 +0300  Martin Storsjo <martin@martin.st>
+
+	* configure.ac:
+	* ext/Makefile.am:
+	* ext/ffmpeg/gstffmpeg.c:
+	* ext/libswscale/gstffmpegscale.c:
+	  Allow building a LGPL only gst-ffmpeg plugin
+	  This removes --enable-gpl and --enable-postproc from the
+	  ffmpeg configure line, and disables building the postproc
+	  gstreamer plugin.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=654037
+	  Conflicts:
+	  configure.ac
+
+2011-10-10 23:56:04 +0100  Sjoerd Simons <sjoerd.simons@collabora.co.uk>
+
+	* ext/ffmpeg/gstffmpegenc.c:
+	  ffmpegenc: Pass the size of the output buffer to avcodec_encode_audio
+	  avcodec_encode_audio is documented as taking the size of the output
+	  buffer not the size of the input buffer.  This fixes the use of the G722
+	  encoder and makes the code more consistent with avconv from the libav
+	  source tree.
+
+2011-10-10 22:04:48 +0100  Sjoerd Simons <sjoerd.simons@collabora.co.uk>
+
+	* ext/ffmpeg/gstffmpegcodecmap.c:
+	  ffmpegcodecmap: Further specify allowed rates for G722 and G726
+
+2011-10-10 14:50:09 +0100  Sjoerd Simons <sjoerd.simons@collabora.co.uk>
+
+	* ext/ffmpeg/gstffmpegcodecmap.c:
+	  ffmpegcodecmap: Always restrict audio codec in the unfixed cases
+	  If the context isn't fixed yet or if it doesn't exist then always
+	  restrict the caps.
+	  Also restrict the maximum channels for G726 and G722 to 1 channel
+
+2011-10-18 10:23:44 +0200  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* configure.ac:
+	  0.10.12.2 pre-release
+
+2011-10-18 10:18:27 +0200  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* gst-libs/ext/libav:
+	  libav: Update to v0.7.2 release
+
+2011-08-29 15:18:39 +0100  Vincent Penquerc'h <vincent.penquerch@collabora.co.uk>
+
+	* ext/ffmpeg/gstffmpegdec.c:
+	  ffdec: ensure buffers have correct interlacedness in caps
+	  Whether a frame is interlaced or not is unknown at the time of
+	  buffer allocation, so caps on the buffer in opaque will have
+	  a previous frame's interlaced flag set. So if interlacedness
+	  changes, we update the buffer (if any) caps with the correct
+	  interlaced flag once we know.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=656155
+
+2011-09-01 16:46:47 +0100  Vincent Penquerc'h <vincent.penquerch@collabora.co.uk>
+
+	* ext/ffmpeg/gstffmpegdec.c:
+	  ffmpegdec: post QoS messages when dropping a frame
+	  There seems to be a little bit of non obvious logic where
+	  the QoS logic can decide to not drop decoding a frame and
+	  pass it to ffmpeg, telling it to drop.
+	  In this case, the QoS logic does not drop the frame itself,
+	  but since the frame will end up being dropped, we still
+	  mark it as dropped and post a QoS message.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=657950
+
+2011-09-26 19:55:54 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* ext/ffmpeg/gstffmpegdec.c:
+	  ffmpegdec: disable parser for already-parsed FLAC input
+	  Not needed to make anything work, just seems to make sense.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=589361
+
+2011-09-26 19:54:52 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* ext/ffmpeg/gstffmpegcodecmap.c:
+	  ffmpegcodecmap: don't create dummy codec data for FLAC decoder
+	  Since then it just errors out because it's too small, as it
+	  wants the flac headers as codec data if there is codec data.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=589361
+
+2011-08-12 09:06:03 +0100  Tvrtko Ursulin <tvrtko.ursulin@onelan.co.uk>
+
+	* ext/ffmpeg/gstffmpegdeinterlace.c:
+	  ffdeinterlace: add "mode" property including automatic mode
+	  Just like deinterlace.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=656328
+
+2011-09-07 16:10:02 +0200  Stefan Sauer <ensonic@users.sf.net>
+
+	* docs/plugins/Makefile.am:
+	  docs: cleanup makefiles
+	  Remove commented out parts that we don't need. Remove "the wingo addition" - no
+	  so useful after all. Narrow down file-globs for plugin docs.
+
+2011-09-06 21:52:50 +0200  Stefan Sauer <ensonic@users.sf.net>
+
+	* common:
+	  Automatic update of common submodule
+	  From a39eb83 to 11f0cd5
+
+2011-09-06 16:06:23 +0200  Stefan Sauer <ensonic@users.sf.net>
+
+	* common:
+	  Automatic update of common submodule
+	  From 605cd9a to a39eb83
+
+2011-09-02 16:25:16 -0400  Nicolas Dufresne <nicolas.dufresne@collabora.com>
+
+	* ext/ffmpeg/gstffmpegdec.c:
+	  ffdec: Blacklist non-working subtitle decoders
+	  This include decoder for ASS, SRT, PGS, DVD and DVB. Those are generated
+	  with bad capabilities and are not usable in GStreamer. Other elements exist
+	  to handle those subtitle formats.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=658019
+
+2011-07-18 12:12:38 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* tests/check/.gitignore:
+	* tests/check/Makefile.am:
+	* tests/check/elements/postproc.c:
+	  tests: add simple test for creating postproc elements
+	  https://bugzilla.gnome.org/show_bug.cgi?id=654634
+
+2011-09-03 12:30:26 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* gst-libs/ext/libav:
+	  Update internal libav snapshot to latest releases/0.7 tip for postproc fix
+	  https://bugzilla.gnome.org/show_bug.cgi?id=654634
+
+2011-09-03 12:27:28 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* configure.ac:
+	  configure: back to development
+
+=== release 0.10.12 ===
+
+2011-07-20 12:14:45 +0200  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	  Release 0.10.12
 
 2011-07-20 12:05:34 +0200  Edward Hervey <edward.hervey@collabora.co.uk>
 
