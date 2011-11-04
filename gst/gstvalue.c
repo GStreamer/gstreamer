@@ -296,6 +296,58 @@ gst_value_lcopy_list_or_array (const GValue * value, guint n_collect_values,
   return NULL;
 }
 
+static gboolean
+gst_value_list_or_array_get_basic_type (const GValue * value, GType * type)
+{
+  if (GST_VALUE_HOLDS_LIST (value)) {
+    if (VALUE_LIST_SIZE (value) == 0)
+      return FALSE;
+    return gst_value_list_or_array_get_basic_type (VALUE_LIST_GET_VALUE (value,
+            0), type);
+  }
+  if (GST_VALUE_HOLDS_ARRAY (value)) {
+    const GArray *array = (const GArray *) value->data[0].v_pointer;
+    if (array->len == 0)
+      return FALSE;
+    return gst_value_list_or_array_get_basic_type (&g_array_index (array,
+            GValue, 0), type);
+  }
+  *type = G_VALUE_TYPE (value);
+  return TRUE;
+}
+
+#define IS_RANGE_COMPAT(type1,type2,t1,t2) \
+  (((t1) == (type1) && (t2) == (type2)) || ((t2) == (type1) && (t1) == (type2)))
+
+static gboolean
+gst_value_list_or_array_are_compatible (const GValue * value1,
+    const GValue * value2)
+{
+  GType basic_type1, basic_type2;
+
+  /* empty or same type is OK */
+  if (!gst_value_list_or_array_get_basic_type (value1, &basic_type1) ||
+      !gst_value_list_or_array_get_basic_type (value2, &basic_type2) ||
+      basic_type1 == basic_type2)
+    return TRUE;
+
+  /* ranges are distinct types for each bound type... */
+  if (IS_RANGE_COMPAT (G_TYPE_INT, GST_TYPE_INT_RANGE, basic_type1,
+          basic_type2))
+    return TRUE;
+  if (IS_RANGE_COMPAT (G_TYPE_INT64, GST_TYPE_INT64_RANGE, basic_type1,
+          basic_type2))
+    return TRUE;
+  if (IS_RANGE_COMPAT (G_TYPE_DOUBLE, GST_TYPE_DOUBLE_RANGE, basic_type1,
+          basic_type2))
+    return TRUE;
+  if (IS_RANGE_COMPAT (GST_TYPE_FRACTION, GST_TYPE_FRACTION_RANGE, basic_type1,
+          basic_type2))
+    return TRUE;
+
+  return FALSE;
+}
+
 /**
  * gst_value_list_append_value:
  * @value: a #GValue of type #GST_TYPE_LIST
@@ -310,6 +362,8 @@ gst_value_list_append_value (GValue * value, const GValue * append_value)
 
   g_return_if_fail (GST_VALUE_HOLDS_LIST (value));
   g_return_if_fail (G_IS_VALUE (append_value));
+  g_return_if_fail (gst_value_list_or_array_are_compatible (value,
+          append_value));
 
   gst_value_init_and_copy (&val, append_value);
   g_array_append_vals ((GArray *) value->data[0].v_pointer, &val, 1);
@@ -329,6 +383,8 @@ gst_value_list_prepend_value (GValue * value, const GValue * prepend_value)
 
   g_return_if_fail (GST_VALUE_HOLDS_LIST (value));
   g_return_if_fail (G_IS_VALUE (prepend_value));
+  g_return_if_fail (gst_value_list_or_array_are_compatible (value,
+          prepend_value));
 
   gst_value_init_and_copy (&val, prepend_value);
   g_array_prepend_vals ((GArray *) value->data[0].v_pointer, &val, 1);
@@ -355,6 +411,7 @@ gst_value_list_concat (GValue * dest, const GValue * value1,
   g_return_if_fail (G_VALUE_TYPE (dest) == 0);
   g_return_if_fail (G_IS_VALUE (value1));
   g_return_if_fail (G_IS_VALUE (value2));
+  g_return_if_fail (gst_value_list_or_array_are_compatible (value1, value2));
 
   value1_length =
       (GST_VALUE_HOLDS_LIST (value1) ? VALUE_LIST_SIZE (value1) : 1);
@@ -412,6 +469,7 @@ gst_value_list_merge (GValue * dest, const GValue * value1,
   g_return_if_fail (G_VALUE_TYPE (dest) == 0);
   g_return_if_fail (G_IS_VALUE (value1));
   g_return_if_fail (G_IS_VALUE (value2));
+  g_return_if_fail (gst_value_list_or_array_are_compatible (value1, value2));
 
   value1_length =
       (GST_VALUE_HOLDS_LIST (value1) ? VALUE_LIST_SIZE (value1) : 1);
@@ -537,6 +595,8 @@ gst_value_array_append_value (GValue * value, const GValue * append_value)
 
   g_return_if_fail (GST_VALUE_HOLDS_ARRAY (value));
   g_return_if_fail (G_IS_VALUE (append_value));
+  g_return_if_fail (gst_value_list_or_array_are_compatible (value,
+          append_value));
 
   gst_value_init_and_copy (&val, append_value);
   g_array_append_vals ((GArray *) value->data[0].v_pointer, &val, 1);
@@ -556,6 +616,8 @@ gst_value_array_prepend_value (GValue * value, const GValue * prepend_value)
 
   g_return_if_fail (GST_VALUE_HOLDS_ARRAY (value));
   g_return_if_fail (G_IS_VALUE (prepend_value));
+  g_return_if_fail (gst_value_list_or_array_are_compatible (value,
+          prepend_value));
 
   gst_value_init_and_copy (&val, prepend_value);
   g_array_prepend_vals ((GArray *) value->data[0].v_pointer, &val, 1);
@@ -3509,34 +3571,32 @@ gst_value_can_union (const GValue * value1, const GValue * value2)
  *
  * Creates a GValue corresponding to the union of @value1 and @value2.
  *
- * Returns: always returns %TRUE
+ * Returns: TRUE if the union suceeded.
  */
-/* FIXME: change return type to 'void'? */
 gboolean
 gst_value_union (GValue * dest, const GValue * value1, const GValue * value2)
 {
-  GstValueUnionInfo *union_info;
+  const GstValueUnionInfo *union_info;
   guint i, len;
+  GType type1, type2;
 
   g_return_val_if_fail (dest != NULL, FALSE);
   g_return_val_if_fail (G_IS_VALUE (value1), FALSE);
   g_return_val_if_fail (G_IS_VALUE (value2), FALSE);
+  g_return_val_if_fail (gst_value_list_or_array_are_compatible (value1, value2),
+      FALSE);
 
   len = gst_value_union_funcs->len;
+  type1 = G_VALUE_TYPE (value1);
+  type2 = G_VALUE_TYPE (value2);
 
   for (i = 0; i < len; i++) {
     union_info = &g_array_index (gst_value_union_funcs, GstValueUnionInfo, i);
-    if (union_info->type1 == G_VALUE_TYPE (value1) &&
-        union_info->type2 == G_VALUE_TYPE (value2)) {
-      if (union_info->func (dest, value1, value2)) {
-        return TRUE;
-      }
+    if (union_info->type1 == type1 && union_info->type2 == type2) {
+      return union_info->func (dest, value1, value2);
     }
-    if (union_info->type1 == G_VALUE_TYPE (value2) &&
-        union_info->type2 == G_VALUE_TYPE (value1)) {
-      if (union_info->func (dest, value2, value1)) {
-        return TRUE;
-      }
+    if (union_info->type1 == type2 && union_info->type2 == type1) {
+      return union_info->func (dest, value2, value1);
     }
   }
 
