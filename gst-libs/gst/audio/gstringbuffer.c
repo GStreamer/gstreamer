@@ -214,7 +214,7 @@ gst_ring_buffer_parse_caps (GstRingBufferSpec * spec, GstCaps * caps)
       goto parse_error;
 
     spec->type = GST_BUFTYPE_A_LAW;
-    spec->info.bpf = info.channels;
+    info.bpf = info.channels;
   } else if (g_str_equal (mimetype, "audio/x-mulaw")) {
     /* extract the needed information from the cap */
     if (!(gst_structure_get_int (structure, "rate", &info.rate) &&
@@ -222,35 +222,35 @@ gst_ring_buffer_parse_caps (GstRingBufferSpec * spec, GstCaps * caps)
       goto parse_error;
 
     spec->type = GST_BUFTYPE_MU_LAW;
-    spec->info.bpf = info.channels;
+    info.bpf = info.channels;
   } else if (g_str_equal (mimetype, "audio/x-iec958")) {
     /* extract the needed information from the cap */
     if (!(gst_structure_get_int (structure, "rate", &info.rate)))
       goto parse_error;
 
     spec->type = GST_BUFTYPE_IEC958;
-    spec->info.bpf = 4;
+    info.bpf = 4;
   } else if (g_str_equal (mimetype, "audio/x-ac3")) {
     /* extract the needed information from the cap */
     if (!(gst_structure_get_int (structure, "rate", &info.rate)))
       goto parse_error;
 
     spec->type = GST_BUFTYPE_AC3;
-    spec->info.bpf = 4;
+    info.bpf = 4;
   } else if (g_str_equal (mimetype, "audio/x-eac3")) {
     /* extract the needed information from the cap */
     if (!(gst_structure_get_int (structure, "rate", &info.rate)))
       goto parse_error;
 
     spec->type = GST_BUFTYPE_EAC3;
-    spec->info.bpf = 16;
+    info.bpf = 16;
   } else if (g_str_equal (mimetype, "audio/x-dts")) {
     /* extract the needed information from the cap */
     if (!(gst_structure_get_int (structure, "rate", &info.rate)))
       goto parse_error;
 
     spec->type = GST_BUFTYPE_DTS;
-    spec->info.bpf = 4;
+    info.bpf = 4;
   } else if (g_str_equal (mimetype, "audio/mpeg") &&
       gst_structure_get_int (structure, "mpegaudioversion", &i) &&
       (i == 1 || i == 2)) {
@@ -260,7 +260,7 @@ gst_ring_buffer_parse_caps (GstRingBufferSpec * spec, GstCaps * caps)
       goto parse_error;
 
     spec->type = GST_BUFTYPE_MPEG;
-    spec->info.bpf = 4;
+    info.bpf = 4;
   } else {
     goto parse_error;
   }
