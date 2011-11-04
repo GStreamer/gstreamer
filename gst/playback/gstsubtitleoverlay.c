@@ -298,26 +298,16 @@ _factory_filter (GstPluginFeature * feature, GstCaps ** subcaps)
   templ_caps = _get_sub_caps (factory);
 
   if (is_renderer && have_video_sink && templ_caps) {
-    GstCaps *tmp;
-
     GST_DEBUG ("Found renderer element %s (%s) with caps %" GST_PTR_FORMAT,
         gst_element_factory_get_longname (factory),
         gst_plugin_feature_get_name (feature), templ_caps);
-    tmp = gst_caps_union (*subcaps, templ_caps);
-    gst_caps_unref (templ_caps);
-    gst_caps_replace (subcaps, tmp);
-    gst_caps_unref (tmp);
+    gst_caps_merge (*subcaps, templ_caps);
     return TRUE;
   } else if (!is_renderer && !have_video_sink && templ_caps) {
-    GstCaps *tmp;
-
     GST_DEBUG ("Found parser element %s (%s) with caps %" GST_PTR_FORMAT,
         gst_element_factory_get_longname (factory),
         gst_plugin_feature_get_name (feature), templ_caps);
-    tmp = gst_caps_union (*subcaps, templ_caps);
-    gst_caps_unref (templ_caps);
-    gst_caps_replace (subcaps, tmp);
-    gst_caps_unref (tmp);
+    gst_caps_merge (*subcaps, templ_caps);
     return TRUE;
   } else {
     if (templ_caps)
