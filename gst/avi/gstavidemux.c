@@ -140,17 +140,17 @@ gst_avi_demux_class_init (GstAviDemuxClass * klass)
 
   audcaps = gst_riff_create_audio_template_caps ();
   gst_caps_append (audcaps, gst_caps_new_empty_simple ("audio/x-avi-unknown"));
-  audiosrctempl = gst_pad_template_new ("audio_%02d",
+  audiosrctempl = gst_pad_template_new ("audio_%u",
       GST_PAD_SRC, GST_PAD_SOMETIMES, audcaps);
 
   vidcaps = gst_riff_create_video_template_caps ();
   gst_caps_append (vidcaps, gst_riff_create_iavs_template_caps ());
   gst_caps_append (vidcaps, gst_caps_new_empty_simple ("video/x-avi-unknown"));
-  videosrctempl = gst_pad_template_new ("video_%02d",
+  videosrctempl = gst_pad_template_new ("video_%u",
       GST_PAD_SRC, GST_PAD_SOMETIMES, vidcaps);
 
   subcaps = gst_caps_new_empty_simple ("application/x-subtitle-avi");
-  subsrctempl = gst_pad_template_new ("subtitle_%02d",
+  subsrctempl = gst_pad_template_new ("subtitle_%u",
       GST_PAD_SRC, GST_PAD_SOMETIMES, subcaps);
   gst_element_class_add_pad_template (gstelement_class, audiosrctempl);
   gst_element_class_add_pad_template (gstelement_class, videosrctempl);
@@ -2162,8 +2162,8 @@ gst_avi_demux_parse_stream (GstAviDemux * avi, GstBuffer * buf)
 
       fourcc = (stream->strf.vids->compression) ?
           stream->strf.vids->compression : stream->strh->fcc_handler;
-      padname = g_strdup_printf ("video_%02d", avi->num_v_streams);
-      templ = gst_element_class_get_pad_template (klass, "video_%02d");
+      padname = g_strdup_printf ("video_%u", avi->num_v_streams);
+      templ = gst_element_class_get_pad_template (klass, "video_%u");
       caps = gst_riff_create_video_caps (fourcc, stream->strh,
           stream->strf.vids, stream->extradata, stream->initdata, &codec_name);
       if (!caps) {
@@ -2190,8 +2190,8 @@ gst_avi_demux_parse_stream (GstAviDemux * avi, GstBuffer * buf)
       break;
     }
     case GST_RIFF_FCC_auds:{
-      padname = g_strdup_printf ("audio_%02d", avi->num_a_streams);
-      templ = gst_element_class_get_pad_template (klass, "audio_%02d");
+      padname = g_strdup_printf ("audio_%u", avi->num_a_streams);
+      templ = gst_element_class_get_pad_template (klass, "audio_%u");
       caps = gst_riff_create_audio_caps (stream->strf.auds->format,
           stream->strh, stream->strf.auds, stream->extradata,
           stream->initdata, &codec_name);
@@ -2206,8 +2206,8 @@ gst_avi_demux_parse_stream (GstAviDemux * avi, GstBuffer * buf)
     case GST_RIFF_FCC_iavs:{
       guint32 fourcc = stream->strh->fcc_handler;
 
-      padname = g_strdup_printf ("video_%02d", avi->num_v_streams);
-      templ = gst_element_class_get_pad_template (klass, "video_%02d");
+      padname = g_strdup_printf ("video_%u", avi->num_v_streams);
+      templ = gst_element_class_get_pad_template (klass, "video_%u");
       caps = gst_riff_create_iavs_caps (fourcc, stream->strh,
           stream->strf.iavs, stream->extradata, stream->initdata, &codec_name);
       if (!caps) {
@@ -2219,8 +2219,8 @@ gst_avi_demux_parse_stream (GstAviDemux * avi, GstBuffer * buf)
       break;
     }
     case GST_RIFF_FCC_txts:{
-      padname = g_strdup_printf ("subtitle_%02d", avi->num_t_streams);
-      templ = gst_element_class_get_pad_template (klass, "subtitle_%02d");
+      padname = g_strdup_printf ("subtitle_%u", avi->num_t_streams);
+      templ = gst_element_class_get_pad_template (klass, "subtitle_%u");
       caps = gst_caps_new_empty_simple ("application/x-subtitle-avi");
       tag_name = NULL;
       avi->num_t_streams++;
@@ -3979,7 +3979,7 @@ gst_avi_demux_do_seek (GstAviDemux * avi, GstSegment * segment)
   GstAviStream *stream;
 
   seek_time = segment->position;
-  keyframe = !!(segment->flags & GST_SEEK_FLAG_KEY_UNIT);
+  keyframe = ! !(segment->flags & GST_SEEK_FLAG_KEY_UNIT);
 
   GST_DEBUG_OBJECT (avi, "seek to: %" GST_TIME_FORMAT
       " keyframe seeking:%d", GST_TIME_ARGS (seek_time), keyframe);
@@ -4219,7 +4219,7 @@ avi_demux_handle_seek_push (GstAviDemux * avi, GstPad * pad, GstEvent * event)
   gst_segment_do_seek (&seeksegment, rate, format, flags,
       cur_type, cur, stop_type, stop, &update);
 
-  keyframe = !!(flags & GST_SEEK_FLAG_KEY_UNIT);
+  keyframe = ! !(flags & GST_SEEK_FLAG_KEY_UNIT);
   cur = seeksegment.position;
 
   GST_DEBUG_OBJECT (avi,

@@ -75,7 +75,7 @@ enum
 };
 
 static GstStaticPadTemplate multipart_demux_src_template_factory =
-GST_STATIC_PAD_TEMPLATE ("src_%d",
+GST_STATIC_PAD_TEMPLATE ("src_%u",
     GST_PAD_SRC,
     GST_PAD_SOMETIMES,
     GST_STATIC_CAPS_ANY);
@@ -306,7 +306,7 @@ gst_multipart_find_pad_by_mime (GstMultipartDemux * demux, gchar * mime,
 
     GST_DEBUG_OBJECT (demux, "creating pad with mime: %s", mime);
 
-    name = g_strdup_printf ("src_%d", demux->numpads);
+    name = g_strdup_printf ("src_%u", demux->numpads);
     pad =
         gst_pad_new_from_static_template (&multipart_demux_src_template_factory,
         name);

@@ -69,7 +69,7 @@
 GST_DEBUG_CATEGORY_STATIC (gst_deinterleave_debug);
 #define GST_CAT_DEFAULT gst_deinterleave_debug
 
-static GstStaticPadTemplate src_template = GST_STATIC_PAD_TEMPLATE ("src%d",
+static GstStaticPadTemplate src_template = GST_STATIC_PAD_TEMPLATE ("src_%u",
     GST_PAD_SRC,
     GST_PAD_SOMETIMES,
     GST_STATIC_CAPS ("audio/x-raw-int, "
@@ -255,7 +255,7 @@ gst_deinterleave_add_new_pads (GstDeinterleave * self, GstCaps * caps)
   guint i;
 
   for (i = 0; i < self->channels; i++) {
-    gchar *name = g_strdup_printf ("src%d", i);
+    gchar *name = g_strdup_printf ("src_%u", i);
 
     GstCaps *srccaps;
 

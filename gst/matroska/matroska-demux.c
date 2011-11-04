@@ -96,21 +96,21 @@ static GstStaticPadTemplate sink_templ = GST_STATIC_PAD_TEMPLATE ("sink",
 /* TODO: fill in caps! */
 
 static GstStaticPadTemplate audio_src_templ =
-GST_STATIC_PAD_TEMPLATE ("audio_%02d",
+GST_STATIC_PAD_TEMPLATE ("audio_%u",
     GST_PAD_SRC,
     GST_PAD_SOMETIMES,
     GST_STATIC_CAPS ("ANY")
     );
 
 static GstStaticPadTemplate video_src_templ =
-GST_STATIC_PAD_TEMPLATE ("video_%02d",
+GST_STATIC_PAD_TEMPLATE ("video_%u",
     GST_PAD_SRC,
     GST_PAD_SOMETIMES,
     GST_STATIC_CAPS ("ANY")
     );
 
 static GstStaticPadTemplate subtitle_src_templ =
-    GST_STATIC_PAD_TEMPLATE ("subtitle_%02d",
+    GST_STATIC_PAD_TEMPLATE ("subtitle_%u",
     GST_PAD_SRC,
     GST_PAD_SOMETIMES,
     GST_STATIC_CAPS ("text/x-pango-markup; application/x-ssa; "
@@ -1207,8 +1207,8 @@ gst_matroska_demux_add_stream (GstMatroskaDemux * demux, GstEbmlRead * ebml)
       GstMatroskaTrackVideoContext *videocontext =
           (GstMatroskaTrackVideoContext *) context;
 
-      padname = g_strdup_printf ("video_%02d", demux->num_v_streams++);
-      templ = gst_element_class_get_pad_template (klass, "video_%02d");
+      padname = g_strdup_printf ("video_%u", demux->num_v_streams++);
+      templ = gst_element_class_get_pad_template (klass, "video_%u");
       caps = gst_matroska_demux_video_caps (videocontext,
           context->codec_id, (guint8 *) context->codec_priv,
           context->codec_priv_size, &codec, &riff_fourcc);
@@ -1226,8 +1226,8 @@ gst_matroska_demux_add_stream (GstMatroskaDemux * demux, GstEbmlRead * ebml)
       GstMatroskaTrackAudioContext *audiocontext =
           (GstMatroskaTrackAudioContext *) context;
 
-      padname = g_strdup_printf ("audio_%02d", demux->num_a_streams++);
-      templ = gst_element_class_get_pad_template (klass, "audio_%02d");
+      padname = g_strdup_printf ("audio_%u", demux->num_a_streams++);
+      templ = gst_element_class_get_pad_template (klass, "audio_%u");
       caps = gst_matroska_demux_audio_caps (audiocontext,
           context->codec_id, context->codec_priv, context->codec_priv_size,
           &codec, &riff_audio_fmt);
@@ -1245,8 +1245,8 @@ gst_matroska_demux_add_stream (GstMatroskaDemux * demux, GstEbmlRead * ebml)
       GstMatroskaTrackSubtitleContext *subtitlecontext =
           (GstMatroskaTrackSubtitleContext *) context;
 
-      padname = g_strdup_printf ("subtitle_%02d", demux->num_t_streams++);
-      templ = gst_element_class_get_pad_template (klass, "subtitle_%02d");
+      padname = g_strdup_printf ("subtitle_%u", demux->num_t_streams++);
+      templ = gst_element_class_get_pad_template (klass, "subtitle_%u");
       caps = gst_matroska_demux_subtitle_caps (subtitlecontext,
           context->codec_id, context->codec_priv, context->codec_priv_size);
       break;
@@ -1936,8 +1936,8 @@ gst_matroska_demux_handle_seek_event (GstMatroskaDemux * demux,
     }
   }
 
-  flush = !!(flags & GST_SEEK_FLAG_FLUSH);
-  keyunit = !!(flags & GST_SEEK_FLAG_KEY_UNIT);
+  flush = ! !(flags & GST_SEEK_FLAG_FLUSH);
+  keyunit = ! !(flags & GST_SEEK_FLAG_KEY_UNIT);
 
   GST_DEBUG_OBJECT (demux, "New segment %" GST_SEGMENT_FORMAT, &seeksegment);
 

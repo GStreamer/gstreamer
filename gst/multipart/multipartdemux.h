@@ -68,7 +68,7 @@ struct _GstMultipartDemux
   GstPad *sinkpad;
 
   GSList *srcpads;
-  gint numpads;
+  guint numpads;
 
   GstAdapter *adapter;
 

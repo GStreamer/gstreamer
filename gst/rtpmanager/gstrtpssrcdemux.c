@@ -70,14 +70,14 @@ GST_STATIC_PAD_TEMPLATE ("rtcp_sink",
     );
 
 static GstStaticPadTemplate rtp_ssrc_demux_src_template =
-GST_STATIC_PAD_TEMPLATE ("src_%d",
+GST_STATIC_PAD_TEMPLATE ("src_%u",
     GST_PAD_SRC,
     GST_PAD_SOMETIMES,
     GST_STATIC_CAPS ("application/x-rtp")
     );
 
 static GstStaticPadTemplate rtp_ssrc_demux_rtcp_src_template =
-GST_STATIC_PAD_TEMPLATE ("rtcp_src_%d",
+GST_STATIC_PAD_TEMPLATE ("rtcp_src_%u",
     GST_PAD_SRC,
     GST_PAD_SOMETIMES,
     GST_STATIC_CAPS ("application/x-rtcp")
@@ -174,13 +174,13 @@ find_or_create_demux_pad_for_ssrc (GstRtpSsrcDemux * demux, guint32 ssrc)
   }
 
   klass = GST_ELEMENT_GET_CLASS (demux);
-  templ = gst_element_class_get_pad_template (klass, "src_%d");
-  padname = g_strdup_printf ("src_%d", ssrc);
+  templ = gst_element_class_get_pad_template (klass, "src_%u");
+  padname = g_strdup_printf ("src_%u", ssrc);
   rtp_pad = gst_pad_new_from_template (templ, padname);
   g_free (padname);
 
-  templ = gst_element_class_get_pad_template (klass, "rtcp_src_%d");
-  padname = g_strdup_printf ("rtcp_src_%d", ssrc);
+  templ = gst_element_class_get_pad_template (klass, "rtcp_src_%u");
+  padname = g_strdup_printf ("rtcp_src_%u", ssrc);
   rtcp_pad = gst_pad_new_from_template (templ, padname);
   g_free (padname);
 
