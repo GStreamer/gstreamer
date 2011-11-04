@@ -82,7 +82,7 @@ gst_rm_utils_read_tags (const guint8 * data, guint datalen,
 
   GST_DEBUG ("File Content : (CONT) len = %d", datalen);
 
-  tags = gst_tag_list_new ();
+  tags = gst_tag_list_new_empty ();
 
   for (i = 0; i < G_N_ELEMENTS (gst_tags); ++i) {
     gchar *str = NULL;

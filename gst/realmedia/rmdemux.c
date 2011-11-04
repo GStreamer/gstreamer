@@ -1390,7 +1390,7 @@ gst_rmdemux_add_stream (GstRMDemux * rmdemux, GstRMDemuxStream * stream)
 
         /* Sony ATRAC3 */
       case GST_RM_AUD_ATRC:
-        stream_caps = gst_caps_new_simple ("audio/x-vnd.sony.atrac3", NULL);
+        stream_caps = gst_caps_new_empty_simple ("audio/x-vnd.sony.atrac3");
         stream->needs_descrambling = TRUE;
         stream->subpackets_needed = stream->height;
         stream->subpackets = NULL;
@@ -1407,7 +1407,7 @@ gst_rmdemux_add_stream (GstRMDemux * rmdemux, GstRMDemuxStream * stream)
         /* RALF is lossless */
       case GST_RM_AUD_RALF:
         GST_DEBUG_OBJECT (rmdemux, "RALF");
-        stream_caps = gst_caps_new_simple ("audio/x-ralf-mpeg4-generic", NULL);
+        stream_caps = gst_caps_new_empty_simple ("audio/x-ralf-mpeg4-generic");
         break;
 
       case GST_RM_AUD_SIPR:
@@ -1420,7 +1420,7 @@ gst_rmdemux_add_stream (GstRMDemux * rmdemux, GstRMDemuxStream * stream)
         }
 
         GST_DEBUG_OBJECT (rmdemux, "SIPR");
-        stream_caps = gst_caps_new_simple ("audio/x-sipro", NULL);
+        stream_caps = gst_caps_new_empty_simple ("audio/x-sipro");
         stream->needs_descrambling = TRUE;
         stream->subpackets_needed = stream->height;
         stream->subpackets = NULL;
@@ -1508,7 +1508,7 @@ gst_rmdemux_add_stream (GstRMDemux * rmdemux, GstRMDemuxStream * stream)
     /* save for later, we must send the tags after the newsegment event */
     if (codec_tag != NULL && codec_name != NULL) {
       if (stream->pending_tags == NULL)
-        stream->pending_tags = gst_tag_list_new ();
+        stream->pending_tags = gst_tag_list_new_empty ();
       gst_tag_list_add (stream->pending_tags, GST_TAG_MERGE_KEEP,
           codec_tag, codec_name, NULL);
       g_free (codec_name);
@@ -1596,13 +1596,13 @@ gst_rmdemux_parse_mdpr (GstRMDemux * rmdemux, const guint8 * data, int length)
   GST_LOG_OBJECT (rmdemux, "Stream avg bitrate=%u", avg_bitrate);
   if (max_bitrate != 0) {
     if (stream->pending_tags == NULL)
-      stream->pending_tags = gst_tag_list_new ();
+      stream->pending_tags = gst_tag_list_new_empty ();
     gst_tag_list_add (stream->pending_tags, GST_TAG_MERGE_REPLACE,
         GST_TAG_MAXIMUM_BITRATE, max_bitrate, NULL);
   }
   if (avg_bitrate != 0) {
     if (stream->pending_tags == NULL)
-      stream->pending_tags = gst_tag_list_new ();
+      stream->pending_tags = gst_tag_list_new_empty ();
     gst_tag_list_add (stream->pending_tags, GST_TAG_MERGE_REPLACE,
         GST_TAG_BITRATE, avg_bitrate, NULL);
   }
@@ -2624,15 +2624,15 @@ gst_rmdemux_parse_packet (GstRMDemux * rmdemux, GstBuffer * in, guint16 version)
     rmdemux->need_newsegment = FALSE;
 
     if (rmdemux->pending_tags != NULL) {
-      gst_element_found_tags (GST_ELEMENT (rmdemux), rmdemux->pending_tags);
+      gst_rmdemux_send_event (rmdemux,
+          gst_event_new_tag (rmdemux->pending_tags));
       rmdemux->pending_tags = NULL;
     }
   }
 
   if (stream->pending_tags != NULL) {
     GST_LOG_OBJECT (stream->pad, "tags %" GST_PTR_FORMAT, stream->pending_tags);
-    gst_element_found_tags_for_pad (GST_ELEMENT_CAST (rmdemux), stream->pad,
-        stream->pending_tags);
+    gst_pad_push_event (stream->pad, gst_event_new_tag (stream->pending_tags));
     stream->pending_tags = NULL;
   }
 

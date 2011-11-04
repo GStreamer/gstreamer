@@ -410,7 +410,7 @@ gst_real_audio_demux_parse_header (GstRealAudioDemux * demux)
 
       /* Sipro/ACELP.NET Voice Codec (MIME unknown) */
     case GST_RM_AUD_SIPR:
-      caps = gst_caps_new_simple ("audio/x-sipro", NULL);
+      caps = gst_caps_new_empty_simple ("audio/x-sipro");
       break;
 
     default:
@@ -466,7 +466,7 @@ gst_real_audio_demux_parse_header (GstRealAudioDemux * demux)
 
   if (codec_name) {
     if (demux->pending_tags == NULL)
-      demux->pending_tags = gst_tag_list_new ();
+      demux->pending_tags = gst_tag_list_new_empty ();
 
     gst_tag_list_add (demux->pending_tags, GST_TAG_MERGE_REPLACE,
         GST_TAG_AUDIO_CODEC, codec_name, NULL);
@@ -526,8 +526,8 @@ gst_real_audio_demux_parse_data (GstRealAudioDemux * demux)
     }
 
     if (demux->pending_tags) {
-      gst_element_found_tags_for_pad (GST_ELEMENT (demux), demux->srcpad,
-          demux->pending_tags);
+      gst_pad_push_event (demux->srcpad,
+          gst_event_new_tag (demux->pending_tags));
       demux->pending_tags = NULL;
     }
 

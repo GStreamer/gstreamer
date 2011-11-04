@@ -192,7 +192,7 @@ gst_rdt_depay_setcaps (GstPad * pad, GstCaps * caps)
   rdtdepay->clock_rate = clock_rate;
 
   /* set caps on pad and on header */
-  srccaps = gst_caps_new_simple ("application/vnd.rn-realmedia", NULL);
+  srccaps = gst_caps_new_empty_simple ("application/vnd.rn-realmedia");
   gst_pad_set_caps (rdtdepay->srcpad, srccaps);
   gst_caps_unref (srccaps);
 
