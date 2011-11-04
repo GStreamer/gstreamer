@@ -53,7 +53,7 @@ static GstStaticPadTemplate sink_template = GST_STATIC_PAD_TEMPLATE ("sink",
     );
 
 static GstStaticPadTemplate video_template =
-GST_STATIC_PAD_TEMPLATE ("video_%02d",
+GST_STATIC_PAD_TEMPLATE ("video_%u",
     GST_PAD_SRC,
     GST_PAD_SOMETIMES,
     GST_STATIC_CAPS ("video/mpeg, "
@@ -61,7 +61,7 @@ GST_STATIC_PAD_TEMPLATE ("video_%02d",
     );
 
 static GstStaticPadTemplate audio_template =
-GST_STATIC_PAD_TEMPLATE ("audio_%02d",
+GST_STATIC_PAD_TEMPLATE ("audio_%u",
     GST_PAD_SRC,
     GST_PAD_SOMETIMES,
     GST_STATIC_CAPS ("audio/mpeg, " "mpegversion = (int) 1"
@@ -70,7 +70,7 @@ GST_STATIC_PAD_TEMPLATE ("audio_%02d",
     );
 
 static GstStaticPadTemplate private_template =
-GST_STATIC_PAD_TEMPLATE ("private_%d",
+GST_STATIC_PAD_TEMPLATE ("private_%u",
     GST_PAD_SRC,
     GST_PAD_SOMETIMES,
     GST_STATIC_CAPS_ANY);
@@ -347,7 +347,7 @@ gst_mpeg_demux_get_video_stream (GstMPEGDemux * mpeg_demux,
     video_str = g_new0 (GstMPEGVideoStream, 1);
     str = (GstMPEGStream *) video_str;
 
-    name = g_strdup_printf ("video_%02d", stream_nr);
+    name = g_strdup_printf ("video_%u", stream_nr);
     CLASS (mpeg_demux)->init_stream (mpeg_demux, type, str, stream_nr, name,
         CLASS (mpeg_demux)->video_template);
     g_free (name);
@@ -422,7 +422,7 @@ gst_mpeg_demux_get_audio_stream (GstMPEGDemux * mpeg_demux,
   if (str == NULL) {
     str = g_new0 (GstMPEGStream, 1);
 
-    name = g_strdup_printf ("audio_%02d", stream_nr);
+    name = g_strdup_printf ("audio_%u", stream_nr);
     CLASS (mpeg_demux)->init_stream (mpeg_demux, type, str, stream_nr, name,
         CLASS (mpeg_demux)->audio_template);
     g_free (name);
@@ -479,7 +479,7 @@ gst_mpeg_demux_get_private_stream (GstMPEGDemux * mpeg_demux,
   str = mpeg_demux->private_stream[stream_nr];
 
   if (str == NULL) {
-    name = g_strdup_printf ("private_%d", stream_nr + 1);
+    name = g_strdup_printf ("private_%u", stream_nr + 1);
     str = g_new0 (GstMPEGStream, 1);
     CLASS (mpeg_demux)->init_stream (mpeg_demux, type, str, stream_nr, name,
         CLASS (mpeg_demux)->private_template);

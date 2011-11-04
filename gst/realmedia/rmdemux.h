@@ -83,8 +83,8 @@ struct _GstRMDemux {
   GstPad *sinkpad;
 
   GSList *streams;
-  int n_video_streams;
-  int n_audio_streams;
+  guint n_video_streams;
+  guint n_audio_streams;
   GstAdapter *adapter;
   gboolean have_pads;
 

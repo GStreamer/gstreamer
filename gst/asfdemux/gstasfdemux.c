@@ -53,13 +53,13 @@ GST_STATIC_PAD_TEMPLATE ("sink",
     );
 
 static GstStaticPadTemplate audio_src_template =
-GST_STATIC_PAD_TEMPLATE ("audio_%02d",
+GST_STATIC_PAD_TEMPLATE ("audio_%u",
     GST_PAD_SRC,
     GST_PAD_SOMETIMES,
     GST_STATIC_CAPS_ANY);
 
 static GstStaticPadTemplate video_src_template =
-GST_STATIC_PAD_TEMPLATE ("video_%02d",
+GST_STATIC_PAD_TEMPLATE ("video_%u",
     GST_PAD_SRC,
     GST_PAD_SOMETIMES,
     GST_STATIC_CAPS_ANY);
@@ -2179,7 +2179,7 @@ gst_asf_demux_add_audio_stream (GstASFDemux * demux,
   size_left = audio->size;
 
   /* Create the audio pad */
-  name = g_strdup_printf ("audio_%02d", demux->num_audio_streams);
+  name = g_strdup_printf ("audio_%u", demux->num_audio_streams);
 
   src_pad = gst_pad_new_from_static_template (&audio_src_template, name);
   g_free (name);
@@ -2236,7 +2236,7 @@ gst_asf_demux_add_video_stream (GstASFDemux * demux,
   gint size_left = video->size - 40;
 
   /* Create the video pad */
-  name = g_strdup_printf ("video_%02d", demux->num_video_streams);
+  name = g_strdup_printf ("video_%u", demux->num_video_streams);
   src_pad = gst_pad_new_from_static_template (&video_src_template, name);
   g_free (name);
 
@@ -2349,7 +2349,7 @@ gst_asf_demux_parse_stream_object (GstASFDemux * demux, guint8 * data,
 
   flags = gst_asf_demux_get_uint16 (&data, &size);
   stream_id = flags & 0x7f;
-  is_encrypted = !!((flags & 0x8000) << 15);
+  is_encrypted = ! !((flags & 0x8000) << 15);
   unknown = gst_asf_demux_get_uint32 (&data, &size);
 
   GST_DEBUG_OBJECT (demux, "Found stream %u, time_offset=%" GST_TIME_FORMAT,
@@ -2957,8 +2957,8 @@ gst_asf_demux_process_file (GstASFDemux * demux, guint8 * data, guint64 size)
   max_pktsize = gst_asf_demux_get_uint32 (&data, &size);
   min_bitrate = gst_asf_demux_get_uint32 (&data, &size);
 
-  demux->broadcast = !!(flags & 0x01);
-  demux->seekable = !!(flags & 0x02);
+  demux->broadcast = ! !(flags & 0x01);
+  demux->seekable = ! !(flags & 0x02);
 
   GST_DEBUG_OBJECT (demux, "min_pktsize = %u", min_pktsize);
   GST_DEBUG_OBJECT (demux, "flags::broadcast = %d", demux->broadcast);

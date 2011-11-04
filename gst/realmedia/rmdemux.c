@@ -112,13 +112,13 @@ GST_STATIC_PAD_TEMPLATE ("sink",
     );
 
 static GstStaticPadTemplate gst_rmdemux_videosrc_template =
-GST_STATIC_PAD_TEMPLATE ("video_%02d",
+GST_STATIC_PAD_TEMPLATE ("video_%u",
     GST_PAD_SRC,
     GST_PAD_SOMETIMES,
     GST_STATIC_CAPS_ANY);
 
 static GstStaticPadTemplate gst_rmdemux_audiosrc_template =
-GST_STATIC_PAD_TEMPLATE ("audio_%02d",
+GST_STATIC_PAD_TEMPLATE ("audio_%u",
     GST_PAD_SRC,
     GST_PAD_SOMETIMES,
     GST_STATIC_CAPS_ANY);
@@ -1295,7 +1295,7 @@ gst_rmdemux_add_stream (GstRMDemux * rmdemux, GstRMDemuxStream * stream)
   int version = 0;
 
   if (stream->subtype == GST_RMDEMUX_STREAM_VIDEO) {
-    char *name = g_strdup_printf ("video_%02d", rmdemux->n_video_streams);
+    char *name = g_strdup_printf ("video_%u", rmdemux->n_video_streams);
 
     stream->pad =
         gst_pad_new_from_static_template (&gst_rmdemux_videosrc_template, name);
@@ -1343,7 +1343,7 @@ gst_rmdemux_add_stream (GstRMDemux * rmdemux, GstRMDemuxStream * stream)
     rmdemux->n_video_streams++;
 
   } else if (stream->subtype == GST_RMDEMUX_STREAM_AUDIO) {
-    char *name = g_strdup_printf ("audio_%02d", rmdemux->n_audio_streams);
+    char *name = g_strdup_printf ("audio_%u", rmdemux->n_audio_streams);
 
     stream->pad =
         gst_pad_new_from_static_template (&gst_rmdemux_audiosrc_template, name);

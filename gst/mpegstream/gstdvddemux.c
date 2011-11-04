@@ -97,7 +97,7 @@ GST_STATIC_PAD_TEMPLATE ("current_video",
     VIDEO_CAPS);
 
 static GstStaticPadTemplate audio_template =
-GST_STATIC_PAD_TEMPLATE ("dvd_audio_%02d",
+GST_STATIC_PAD_TEMPLATE ("dvd_audio_%u",
     GST_PAD_SRC,
     GST_PAD_SOMETIMES,
     AUDIO_CAPS);
@@ -109,7 +109,7 @@ GST_STATIC_PAD_TEMPLATE ("current_audio",
     AUDIO_CAPS);
 
 static GstStaticPadTemplate subpicture_template =
-GST_STATIC_PAD_TEMPLATE ("subpicture_%d",
+GST_STATIC_PAD_TEMPLATE ("subpicture_%u",
     GST_PAD_SRC,
     GST_PAD_SOMETIMES,
     SUBPICTURE_CAPS);
@@ -527,7 +527,7 @@ gst_dvd_demux_get_audio_stream (GstMPEGDemux * mpeg_demux,
       str = (GstMPEGStream *) lpcm_str;
     }
 
-    name = g_strdup_printf ("audio_%02d", stream_nr);
+    name = g_strdup_printf ("audio_%u", stream_nr);
     DEMUX_CLASS (dvd_demux)->init_stream (mpeg_demux, type, str, stream_nr,
         name, DEMUX_CLASS (dvd_demux)->audio_template);
     /* update caps */
