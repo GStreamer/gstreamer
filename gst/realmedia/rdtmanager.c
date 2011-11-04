@@ -87,28 +87,28 @@ enum
 };
 
 static GstStaticPadTemplate gst_rdt_manager_recv_rtp_sink_template =
-GST_STATIC_PAD_TEMPLATE ("recv_rtp_sink_%d",
+GST_STATIC_PAD_TEMPLATE ("recv_rtp_sink_%u",
     GST_PAD_SINK,
     GST_PAD_REQUEST,
     GST_STATIC_CAPS ("application/x-rdt")
     );
 
 static GstStaticPadTemplate gst_rdt_manager_recv_rtcp_sink_template =
-GST_STATIC_PAD_TEMPLATE ("recv_rtcp_sink_%d",
+GST_STATIC_PAD_TEMPLATE ("recv_rtcp_sink_%u",
     GST_PAD_SINK,
     GST_PAD_REQUEST,
     GST_STATIC_CAPS ("application/x-rtcp")
     );
 
 static GstStaticPadTemplate gst_rdt_manager_recv_rtp_src_template =
-GST_STATIC_PAD_TEMPLATE ("recv_rtp_src_%d_%d_%d",
+GST_STATIC_PAD_TEMPLATE ("recv_rtp_src_%u_%u_%u",
     GST_PAD_SRC,
     GST_PAD_SOMETIMES,
     GST_STATIC_CAPS ("application/x-rdt")
     );
 
 static GstStaticPadTemplate gst_rdt_manager_rtcp_src_template =
-GST_STATIC_PAD_TEMPLATE ("rtcp_src_%d",
+GST_STATIC_PAD_TEMPLATE ("rtcp_src_%u",
     GST_PAD_SRC,
     GST_PAD_REQUEST,
     GST_STATIC_CAPS ("application/x-rtcp")
@@ -288,9 +288,9 @@ activate_session (GstRDTManager * rdtmanager, GstRDTManagerSession * session,
   if (caps)
     gst_rdt_manager_parse_caps (rdtmanager, session, caps);
 
-  name = g_strdup_printf ("recv_rtp_src_%d_%u_%d", session->id, ssrc, pt);
+  name = g_strdup_printf ("recv_rtp_src_%u_%u_%u", session->id, ssrc, pt);
   klass = GST_ELEMENT_GET_CLASS (rdtmanager);
-  templ = gst_element_class_get_pad_template (klass, "recv_rtp_src_%d_%d_%d");
+  templ = gst_element_class_get_pad_template (klass, "recv_rtp_src_%u_%u_%u");
   session->recv_rtp_src = gst_pad_new_from_template (templ, name);
   g_free (name);
 
@@ -1130,7 +1130,7 @@ create_recv_rtp (GstRDTManager * rdtmanager, GstPadTemplate * templ,
   GstRDTManagerSession *session;
 
   /* first get the session number */
-  if (name == NULL || sscanf (name, "recv_rtp_sink_%d", &sessid) != 1)
+  if (name == NULL || sscanf (name, "recv_rtp_sink_%u", &sessid) != 1)
     goto no_name;
 
   GST_DEBUG_OBJECT (rdtmanager, "finding session %d", sessid);
@@ -1190,7 +1190,7 @@ create_recv_rtcp (GstRDTManager * rdtmanager, GstPadTemplate * templ,
   GstRDTManagerSession *session;
 
   /* first get the session number */
-  if (name == NULL || sscanf (name, "recv_rtcp_sink_%d", &sessid) != 1)
+  if (name == NULL || sscanf (name, "recv_rtcp_sink_%u", &sessid) != 1)
     goto no_name;
 
   GST_DEBUG_OBJECT (rdtmanager, "finding session %d", sessid);
@@ -1244,7 +1244,7 @@ create_rtcp (GstRDTManager * rdtmanager, GstPadTemplate * templ,
   GstRDTManagerSession *session;
 
   /* first get the session number */
-  if (name == NULL || sscanf (name, "rtcp_src_%d", &sessid) != 1)
+  if (name == NULL || sscanf (name, "rtcp_src_%u", &sessid) != 1)
     goto no_name;
 
   /* get or create session */
@@ -1298,12 +1298,12 @@ gst_rdt_manager_request_new_pad (GstElement * element,
   klass = GST_ELEMENT_GET_CLASS (element);
 
   /* figure out the template */
-  if (templ == gst_element_class_get_pad_template (klass, "recv_rtp_sink_%d")) {
+  if (templ == gst_element_class_get_pad_template (klass, "recv_rtp_sink_%u")) {
     result = create_recv_rtp (rdtmanager, templ, name);
   } else if (templ == gst_element_class_get_pad_template (klass,
-          "recv_rtcp_sink_%d")) {
+          "recv_rtcp_sink_%u")) {
     result = create_recv_rtcp (rdtmanager, templ, name);
-  } else if (templ == gst_element_class_get_pad_template (klass, "rtcp_src_%d")) {
+  } else if (templ == gst_element_class_get_pad_template (klass, "rtcp_src_%u")) {
     result = create_rtcp (rdtmanager, templ, name);
   } else
     goto wrong_template;
