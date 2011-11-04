@@ -91,7 +91,7 @@ GST_DEBUG_CATEGORY_STATIC (queue_dataflow);
                       queue->cur_level.time, \
                       queue->min_threshold.time, \
                       queue->max_size.time, \
-                      queue->queue->length)
+                      queue->queue.length)
 
 /* Queue signals and args */
 enum
@@ -420,7 +420,8 @@ gst_queue_init (GstQueue * queue)
   queue->qlock = g_mutex_new ();
   queue->item_add = g_cond_new ();
   queue->item_del = g_cond_new ();
-  queue->queue = g_queue_new ();
+
+  g_queue_init (&queue->queue);
 
   queue->sinktime = GST_CLOCK_TIME_NONE;
   queue->srctime = GST_CLOCK_TIME_NONE;
@@ -438,16 +439,15 @@ gst_queue_init (GstQueue * queue)
 static void
 gst_queue_finalize (GObject * object)
 {
+  GstMiniObject *data;
   GstQueue *queue = GST_QUEUE (object);
 
   GST_DEBUG_OBJECT (queue, "finalizing queue");
 
-  while (!g_queue_is_empty (queue->queue)) {
-    GstMiniObject *data = g_queue_pop_head (queue->queue);
-
+  while ((data = g_queue_pop_head (&queue->queue)))
     gst_mini_object_unref (data);
-  }
-  g_queue_free (queue->queue);
+
+  g_queue_clear (&queue->queue);
   g_mutex_free (queue->qlock);
   g_cond_free (queue->item_add);
   g_cond_free (queue->item_del);
@@ -631,9 +631,9 @@ apply_buffer (GstQueue * queue, GstBuffer * buffer, GstSegment * segment,
 static void
 gst_queue_locked_flush (GstQueue * queue)
 {
-  while (!g_queue_is_empty (queue->queue)) {
-    GstMiniObject *data = g_queue_pop_head (queue->queue);
+  GstMiniObject *data;
 
+  while ((data = g_queue_pop_head (&queue->queue))) {
     /* Then lose another reference because we are supposed to destroy that
        data when flushing */
     gst_mini_object_unref (data);
@@ -664,7 +664,7 @@ gst_queue_locked_enqueue_buffer (GstQueue * queue, gpointer item)
   queue->cur_level.bytes += gst_buffer_get_size (buffer);
   apply_buffer (queue, buffer, &queue->sink_segment, TRUE, TRUE);
 
-  g_queue_push_tail (queue->queue, item);
+  g_queue_push_tail (&queue->queue, item);
   GST_QUEUE_SIGNAL_ADD (queue);
 }
 
@@ -685,7 +685,7 @@ gst_queue_locked_enqueue_event (GstQueue * queue, gpointer item)
     case GST_EVENT_SEGMENT:
       apply_segment (queue, event, &queue->sink_segment, TRUE);
       /* if the queue is empty, apply sink segment on the source */
-      if (queue->queue->length == 0) {
+      if (queue->queue.length == 0) {
         GST_CAT_LOG_OBJECT (queue_dataflow, queue, "Apply segment on srcpad");
         apply_segment (queue, event, &queue->src_segment, FALSE);
         queue->newseg_applied_to_src = TRUE;
@@ -698,7 +698,7 @@ gst_queue_locked_enqueue_event (GstQueue * queue, gpointer item)
       break;
   }
 
-  g_queue_push_tail (queue->queue, item);
+  g_queue_push_tail (&queue->queue, item);
   GST_QUEUE_SIGNAL_ADD (queue);
 }
 
@@ -708,7 +708,7 @@ gst_queue_locked_dequeue (GstQueue * queue, gboolean * is_buffer)
 {
   GstMiniObject *item;
 
-  item = g_queue_pop_head (queue->queue);
+  item = g_queue_pop_head (&queue->queue);
   if (item == NULL)
     goto no_item;
 
@@ -865,7 +865,7 @@ out_eos:
 static gboolean
 gst_queue_is_empty (GstQueue * queue)
 {
-  if (queue->queue->length == 0)
+  if (queue->queue.length == 0)
     return TRUE;
 
   /* It is possible that a max size is reached before all min thresholds are.

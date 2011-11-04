@@ -95,7 +95,7 @@ struct _GstQueue2
   gboolean unexpected;
 
   /* the queue of data we're keeping our hands on */
-  GQueue *queue;
+  GQueue queue;
 
   GstQueue2Size cur_level;       /* currently in the queue */
   GstQueue2Size max_level;       /* max. amount of data allowed in the queue */
