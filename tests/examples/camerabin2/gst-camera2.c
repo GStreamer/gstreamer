@@ -32,7 +32,7 @@
 #include "gst-camera2.h"
 
 #include <gst/gst.h>
-#include <gst/interfaces/xoverlay.h>
+#include <gst/interfaces/videooverlay.h>
 #include <gtk/gtk.h>
 #include <gdk/gdkx.h>
 #include <gdk/gdkkeysyms.h>
@@ -92,12 +92,12 @@ bus_sync_callback (GstBus * bus, GstMessage * message, gpointer data)
   if (GST_MESSAGE_TYPE (message) != GST_MESSAGE_ELEMENT)
     return GST_BUS_PASS;
 
-  if (!gst_structure_has_name (message->structure, "prepare-xwindow-id"))
+  if (!gst_message_has_name (message, "prepare-xwindow-id"))
     return GST_BUS_PASS;
 
   /* FIXME: make sure to get XID in main thread */
   ui_drawing = GTK_WIDGET (gtk_builder_get_object (builder, "viewfinderArea"));
-  gst_x_overlay_set_window_handle (GST_X_OVERLAY (message->src),
+  gst_video_overlay_set_window_handle (GST_VIDEO_OVERLAY (message->src),
 #if GTK_CHECK_VERSION (2, 91, 6)
       GDK_WINDOW_XID (gtk_widget_get_window (ui_drawing)));
 #else

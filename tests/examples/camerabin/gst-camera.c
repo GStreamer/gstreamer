@@ -219,8 +219,7 @@ handle_element_message (GstMessage * msg)
   const GValue *image;
   GstBuffer *buf = NULL;
   guint8 *data = NULL;
-  gchar *caps_string;
-  guint size = 0;
+  gsize size = 0;
   gchar *filename = NULL;
   FILE *f = NULL;
   size_t written;
@@ -232,8 +231,6 @@ handle_element_message (GstMessage * msg)
     image = gst_structure_get_value (st, "buffer");
     if (image) {
       buf = gst_value_get_buffer (image);
-      data = GST_BUFFER_DATA (buf);
-      size = GST_BUFFER_SIZE (buf);
       if (g_str_equal (gst_structure_get_name (st), "raw-image")) {
         filename = g_strdup_printf ("test_%04u.raw", num_pics);
       } else if (g_str_equal (gst_structure_get_name (st), "preview-image")) {
@@ -243,13 +240,12 @@ handle_element_message (GstMessage * msg)
         g_print ("unknown buffer received\n");
         return;
       }
-      caps_string = gst_caps_to_string (GST_BUFFER_CAPS (buf));
-      g_print ("writing buffer to %s, buffer caps: %s\n",
-          filename, caps_string);
-      g_free (caps_string);
+      g_print ("writing buffer to %s\n", filename);
       f = g_fopen (filename, "w");
       if (f) {
+        data = gst_buffer_map (buf, &size, NULL, GST_MAP_READ);
         written = fwrite (data, size, 1, f);
+        gst_buffer_unmap (buf, data, size);
         if (!written) {
           g_print ("errro writing file\n");
         }
@@ -270,11 +266,11 @@ my_bus_sync_callback (GstBus * bus, GstMessage * message, gpointer data)
   if (GST_MESSAGE_TYPE (message) != GST_MESSAGE_ELEMENT)
     return GST_BUS_PASS;
 
-  if (!gst_structure_has_name (message->structure, "prepare-xwindow-id"))
+  if (!gst_message_has_name (message, "prepare-xwindow-id"))
     return GST_BUS_PASS;
 
   /* FIXME: make sure to get XID in main thread */
-  gst_x_overlay_set_window_handle (GST_X_OVERLAY (message->src),
+  gst_video_overlay_set_window_handle (GST_VIDEO_OVERLAY (message->src),
 #if GTK_CHECK_VERSION (2, 91, 6)
       GDK_WINDOW_XID (gtk_widget_get_window (ui_drawing)));
 #else
@@ -465,7 +461,7 @@ me_gst_setup_pipeline_create_post_bin (const gchar * post, gboolean video)
   }
 
   caps = gst_caps_new_simple ("video/x-raw-yuv",
-      "format", GST_TYPE_FOURCC, GST_MAKE_FOURCC ('I', '4', '2', '0'), NULL);
+      "format", G_TYPE_STRING, "I420", NULL);
   g_object_set (G_OBJECT (filter), "caps", caps, NULL);
   gst_caps_unref (caps);
 
@@ -1110,7 +1106,7 @@ create_menu_items_from_structure (GstStructure * structure)
   GString *item_str = NULL;
   guint j, num_items_created = 0, num_framerates = 1;
   gint w = 0, h = 0, n = 0, d = 1;
-  guint32 fourcc = 0;
+  const gchar *format = NULL;
 
   g_return_val_if_fail (structure != NULL, 0);
 
@@ -1120,8 +1116,8 @@ create_menu_items_from_structure (GstStructure * structure)
   if (0 == strcmp (structure_name, "video/x-raw-yuv")) {
     item_str = g_string_new_len ("", 128);
 
-    if (gst_structure_has_field_typed (structure, "format", GST_TYPE_FOURCC)) {
-      gst_structure_get_fourcc (structure, "format", &fourcc);
+    if (gst_structure_has_field_typed (structure, "format", G_TYPE_STRING)) {
+      format = gst_structure_get_string (structure, "format");
     }
 
     if (gst_structure_has_field_typed (structure, "width", GST_TYPE_INT_RANGE)) {
@@ -1170,15 +1166,14 @@ create_menu_items_from_structure (GstStructure * structure)
         d = gst_value_get_fraction_denominator (item);
       }
       g_string_assign (item_str, structure_name);
-      g_string_append_printf (item_str, " (%" GST_FOURCC_FORMAT ")",
-          GST_FOURCC_ARGS (fourcc));
+      g_string_append_printf (item_str, " (%s)", format);
       g_string_append_printf (item_str, ", %dx%d at %d/%d", w, h, n, d);
       gtk_list_store_append (store, &iter);
       gtk_list_store_set (store, &iter, 0, item_str->str, -1);
 
       video_caps =
-          gst_caps_new_simple (structure_name, "format", GST_TYPE_FOURCC,
-          fourcc,
+          gst_caps_new_simple (structure_name, "format", G_TYPE_STRING,
+          format,
           "width", G_TYPE_INT, w, "height", G_TYPE_INT, h,
           "framerate", GST_TYPE_FRACTION, n, d, NULL);
       video_caps_list = g_list_append (video_caps_list, video_caps);

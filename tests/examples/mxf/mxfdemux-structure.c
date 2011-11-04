@@ -30,8 +30,14 @@ static gchar *
 g_value_to_string (const GValue * val)
 {
   if (G_VALUE_TYPE (val) == GST_TYPE_BUFFER) {
-    const GstBuffer *buf = gst_value_get_buffer (val);
-    gchar *ret = g_base64_encode (GST_BUFFER_DATA (buf), GST_BUFFER_SIZE (buf));
+    GstBuffer *buf = gst_value_get_buffer (val);
+    gpointer data;
+    gsize size;
+    gchar *ret;
+
+    data = gst_buffer_map (buf, &size, NULL, GST_MAP_READ);
+    ret = g_base64_encode (data, size);
+    gst_buffer_unmap (buf, data, size);
 
     return ret;
   } else {

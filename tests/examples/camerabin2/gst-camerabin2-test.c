@@ -105,7 +105,7 @@
 #define GST_USE_UNSTABLE_API 1
 
 #include <gst/gst.h>
-#include <gst/interfaces/xoverlay.h>
+#include <gst/interfaces/videooverlay.h>
 #include <gst/interfaces/photography.h>
 #include <string.h>
 #include <sys/time.h>
@@ -311,18 +311,16 @@ create_host_window (void)
   }
 }
 
-static gboolean
-camera_src_get_timestamp_probe (GstPad * pad, GstMiniObject * obj,
-    gpointer udata)
+static GstPadProbeReturn
+camera_src_get_timestamp_probe (GstPad * pad, GstPadProbeType type,
+    GstMiniObject * obj, gpointer udata)
 {
   CaptureTiming *timing;
 
   timing = (CaptureTiming *) g_list_first (capture_times)->data;
   timing->camera_capture = gst_util_get_timestamp ();
 
-  gst_pad_remove_data_probe (pad, camera_probe_id);
-
-  return TRUE;
+  return GST_PAD_PROBE_REMOVE;
 }
 
 static gboolean
@@ -334,7 +332,7 @@ viewfinder_get_timestamp_probe (GstPad * pad, GstMiniObject * obj,
   timing = (CaptureTiming *) g_list_first (capture_times)->data;
   timing->precapture = gst_util_get_timestamp ();
 
-  gst_pad_remove_data_probe (pad, viewfinder_probe_id);
+  gst_pad_remove_probe (pad, viewfinder_probe_id);
 
   return TRUE;
 }
@@ -346,8 +344,7 @@ sync_bus_callback (GstBus * bus, GstMessage * message, gpointer data)
   const GValue *image;
   GstBuffer *buf = NULL;
   guint8 *data_buf = NULL;
-  gchar *caps_string;
-  guint size = 0;
+  gsize size = 0;
   gchar *preview_filename = NULL;
   FILE *f = NULL;
   size_t written;
@@ -356,10 +353,10 @@ sync_bus_callback (GstBus * bus, GstMessage * message, gpointer data)
     case GST_MESSAGE_ELEMENT:{
       st = gst_message_get_structure (message);
       if (st) {
-        if (gst_structure_has_name (message->structure, "prepare-xwindow-id")) {
+        if (gst_message_has_name (message, "prepare-xwindow-id")) {
           if (!no_xwindow && window) {
-            gst_x_overlay_set_window_handle (GST_X_OVERLAY (GST_MESSAGE_SRC
-                    (message)), window);
+            gst_video_overlay_set_window_handle (GST_VIDEO_OVERLAY
+                (GST_MESSAGE_SRC (message)), window);
             gst_message_unref (message);
             message = NULL;
             return GST_BUS_DROP;
@@ -376,8 +373,10 @@ sync_bus_callback (GstBus * bus, GstMessage * message, gpointer data)
             /* set up probe to check when the viewfinder gets data */
             GstPad *pad = gst_element_get_static_pad (viewfinder_sink, "sink");
 
-            viewfinder_probe_id = gst_pad_add_buffer_probe (pad,
-                (GCallback) viewfinder_get_timestamp_probe, NULL);
+            viewfinder_probe_id =
+                gst_pad_add_probe (pad, GST_PAD_PROBE_TYPE_BUFFER,
+                (GstPadProbeCallback) viewfinder_get_timestamp_probe, NULL,
+                NULL);
 
             gst_object_unref (pad);
           }
@@ -386,14 +385,12 @@ sync_bus_callback (GstBus * bus, GstMessage * message, gpointer data)
           image = gst_structure_get_value (st, "buffer");
           if (image) {
             buf = gst_value_get_buffer (image);
-            data_buf = GST_BUFFER_DATA (buf);
-            size = GST_BUFFER_SIZE (buf);
             preview_filename = g_strdup_printf ("test_vga.rgb");
-            caps_string = gst_caps_to_string (GST_BUFFER_CAPS (buf));
-            g_free (caps_string);
             f = g_fopen (preview_filename, "w");
             if (f) {
+              data_buf = gst_buffer_map (buf, &size, NULL, GST_MAP_READ);
               written = fwrite (data_buf, size, 1, f);
+              gst_buffer_unmap (buf, data_buf, size);
               if (!written) {
                 g_print ("error writing file\n");
               }
@@ -915,8 +912,7 @@ run_pipeline (gpointer user_data)
 
   g_object_get (camerabin, "camera-source", &video_source, NULL);
   if (video_source) {
-    if (GST_IS_ELEMENT (video_source) &&
-        gst_element_implements_interface (video_source, GST_TYPE_PHOTOGRAPHY)) {
+    if (GST_IS_ELEMENT (video_source) && GST_IS_PHOTOGRAPHY (video_source)) {
       /* Set GstPhotography interface options. If option not given as
          command-line parameter use default of the source element. */
       if (scene_mode != SCENE_MODE_NONE)
@@ -953,8 +949,8 @@ run_pipeline (gpointer user_data)
     GstPad *pad;
 
     pad = gst_element_get_static_pad (video_source, "imgsrc");
-    camera_probe_id = gst_pad_add_buffer_probe (pad,
-        (GCallback) camera_src_get_timestamp_probe, NULL);
+    camera_probe_id = gst_pad_add_probe (pad, GST_PAD_PROBE_TYPE_BUFFER,
+        (GstPadProbeCallback) camera_src_get_timestamp_probe, NULL, NULL);
 
     gst_object_unref (pad);
   }
