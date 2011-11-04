@@ -649,8 +649,10 @@ proxypad_blocked_cb (GstPad * pad, GstPadProbeType ptype, gpointer type_data,
         GST_DEBUG_OBJECT (pbin, "Removing decodebin");
         gst_pulse_audio_sink_free_dbin (pbin);
         gst_pulse_audio_sink_update_sinkpad (pbin, sinkpad);
-      } else
+      } else {
         GST_DEBUG_OBJECT (pbin, "Doing nothing");
+        gst_pad_send_event (sinkpad, gst_event_new_caps (caps));
+      }
 
       gst_caps_unref (caps);
       gst_object_unref (sinkpad);
