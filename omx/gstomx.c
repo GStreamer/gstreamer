@@ -345,6 +345,12 @@ EmptyBufferDone (OMX_HANDLETYPE hComponent, OMX_PTR pAppData,
   if (buf->omx_buf->nFilledLen == 0)
     buf->omx_buf->nOffset = 0;
 
+  /* Reset all flags, some implementations don't
+   * reset them themselves and the flags are not
+   * valid anymore after the buffer was consumed
+   */
+  buf->omx_buf->nFlags = 0;
+
   g_queue_push_tail (port->pending_buffers, buf);
   g_cond_broadcast (port->port_cond);
   g_mutex_unlock (port->port_lock);
@@ -1059,6 +1065,11 @@ gst_omx_port_release_buffer (GstOMXPort * port, GstOMXBuffer * buf)
   if (port->port_def.eDir == OMX_DirInput) {
     err = OMX_EmptyThisBuffer (comp->handle, buf->omx_buf);
   } else {
+    /* Reset all flags, some implementations don't
+     * reset them themselves and the flags are not
+     * valid anymore after the buffer was consumed
+     */
+    buf->omx_buf->nFlags = 0;
     err = OMX_FillThisBuffer (comp->handle, buf->omx_buf);
   }
 
@@ -1192,6 +1203,11 @@ gst_omx_port_set_flushing (GstOMXPort * port, gboolean flush)
       while ((buf = g_queue_pop_head (port->pending_buffers))) {
         g_assert (!buf->used);
 
+        /* Reset all flags, some implementations don't
+         * reset them themselves and the flags are not
+         * valid anymore after the buffer was consumed
+         */
+        buf->omx_buf->nFlags = 0;
         err = OMX_FillThisBuffer (comp->handle, buf->omx_buf);
         if (err != OMX_ErrorNone) {
           GST_ERROR_OBJECT (comp->parent,
@@ -1578,6 +1594,11 @@ gst_omx_port_set_enabled_unlocked (GstOMXPort * port, gboolean enabled)
       while ((buf = g_queue_pop_head (port->pending_buffers))) {
         g_assert (!buf->used);
 
+        /* Reset all flags, some implementations don't
+         * reset them themselves and the flags are not
+         * valid anymore after the buffer was consumed
+         */
+        buf->omx_buf->nFlags = 0;
         err = OMX_FillThisBuffer (comp->handle, buf->omx_buf);
         if (err != OMX_ErrorNone) {
           GST_ERROR_OBJECT (comp->parent,
