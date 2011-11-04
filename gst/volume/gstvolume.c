@@ -268,7 +268,7 @@ volume_update_volume (GstVolume * self, gfloat volume, gboolean mute)
    * because the property can change from 1.0 to something
    * else in the middle of a buffer.
    */
-  passthrough = passthrough && (GST_OBJECT (self)->ctrl == NULL);
+  passthrough &= gst_object_has_active_automation (GST_OBJECT (self));
 
   GST_DEBUG_OBJECT (self, "set passthrough %d", passthrough);
 
