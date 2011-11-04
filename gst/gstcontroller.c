@@ -491,6 +491,34 @@ gst_controller_remove_properties (GstController * self, ...)
 }
 
 /**
+ * gst_controller_is_active:
+ * @self: the #GstController which should be disabled
+ *
+ * Check if the controller is active. It is active if it has at least one
+ * controlled property that is not disabled.
+ *
+ * Returns: %TRUE if the controller is active
+ */
+gboolean
+gst_controller_is_active (GstController * self)
+{
+  gboolean active = FALSE;
+  GList *node;
+  GstControlledProperty *prop;
+
+  g_return_if_fail (GST_IS_CONTROLLER (self));
+
+  g_mutex_lock (self->lock);
+  for (node = self->properties; node; node = node->next) {
+    prop = node->data;
+    active |= !prop->disabled;
+  }
+  g_mutex_unlock (self->lock);
+
+  return active;
+}
+
+/**
  * gst_controller_set_property_disabled:
  * @self: the #GstController which should be disabled
  * @property_name: property to disable
@@ -501,7 +529,6 @@ gst_controller_remove_properties (GstController * self, ...)
  * some time, i.e. gst_controller_sync_values() will do nothing for the
  * property.
  */
-
 void
 gst_controller_set_property_disabled (GstController * self,
     const gchar * property_name, gboolean disabled)
@@ -517,7 +544,6 @@ gst_controller_set_property_disabled (GstController * self,
   }
   g_mutex_unlock (self->lock);
 }
-
 
 /**
  * gst_controller_set_disabled:

@@ -238,6 +238,7 @@ gboolean gst_object_uncontrol_properties (GstObject * object, ...) G_GNUC_NULL_T
 GstClockTime gst_object_suggest_next_sync (GstObject * object);
 gboolean gst_object_sync_values (GstObject * object, GstClockTime timestamp);
 
+gboolean gst_object_has_active_automation (GstObject *object);
 void gst_object_set_automation_disabled (GstObject *object, gboolean disabled);
 void gst_object_set_property_automation_disabled (GstObject *object, const gchar * property_name, gboolean disabled);
 

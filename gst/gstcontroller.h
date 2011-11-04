@@ -93,6 +93,7 @@ gboolean gst_controller_remove_properties_valist (GstController * self, va_list 
 gboolean gst_controller_remove_properties_list (GstController * self, GList *list);
 gboolean gst_controller_remove_properties (GstController * self, ...) G_GNUC_NULL_TERMINATED;
 
+gboolean gst_controller_is_active (GstController * self);
 void gst_controller_set_disabled (GstController *self, gboolean disabled);
 void gst_controller_set_property_disabled (GstController *self, const gchar * property_name, gboolean disabled);
 gboolean gst_controller_set_control_source (GstController *self, const gchar * property_name, GstControlSource *csource);

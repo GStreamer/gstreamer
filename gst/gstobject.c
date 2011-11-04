@@ -1059,7 +1059,36 @@ gst_object_sync_values (GstObject * object, GstClockTime timestamp)
   return (TRUE);
 }
 
-// FIXME: docs
+/**
+ * gst_object_has_active_automation:
+ * @object: the object that has controlled properties
+ *
+ * Check if the object has an active controller. It has one if it has at least
+ * one controlled property that is not disabled.
+ *
+ * Returns: %TRUE if the controller is active
+ */
+gboolean
+gst_object_has_active_automation (GstObject * object)
+{
+  gboolean res = FALSE;
+
+  g_return_if_fail (GST_IS_OBJECT (object));
+
+  if (object->ctrl)
+    res = gst_controller_is_active ((GstController *) object->ctrl);
+  return res;
+}
+
+/**
+ * gst_object_set_automation_disabled:
+ * @object: the object that has controlled properties
+ * @disabled: boolean that specifies whether to disable the controller
+ * or not.
+ *
+ * This function is used to disable all properties of the #GstController
+ * for some time, i.e. gst_object_sync_values() will do nothing..
+ */
 void
 gst_object_set_automation_disabled (GstObject * object, gboolean disabled)
 {
@@ -1069,7 +1098,17 @@ gst_object_set_automation_disabled (GstObject * object, gboolean disabled)
     gst_controller_set_disabled (object->ctrl, disabled);
 }
 
-// FIXME: docs
+/**
+ * gst_object_set_property_automation_disabled:
+ * @object: the object that has controlled properties
+ * @property_name: property to disable
+ * @disabled: boolean that specifies whether to disable the controller
+ * or not.
+ *
+ * This function is used to disable the #GstController on a property for
+ * some time, i.e. gst_controller_sync_values() will do nothing for the
+ * property.
+ */
 void
 gst_object_set_property_automation_disabled (GstObject * object,
     const gchar * property_name, gboolean disabled)
