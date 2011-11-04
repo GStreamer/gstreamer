@@ -1405,11 +1405,19 @@ theora_enc_change_state (GstElement * element, GstStateChange transition)
 {
   GstTheoraEnc *enc;
   GstStateChangeReturn ret;
+  th_enc_ctx *th_ctx;
 
   enc = GST_THEORA_ENC (element);
 
   switch (transition) {
     case GST_STATE_CHANGE_NULL_TO_READY:
+      th_ctx = dummy_encode_ctx ();
+      if (!th_ctx) {
+        GST_ELEMENT_ERROR (enc, STREAM, ENCODE, (NULL),
+            ("libtheora has been compiled with the encoder disabled"));
+        return GST_STATE_CHANGE_FAILURE;
+      }
+      th_encode_free (th_ctx);
       break;
     case GST_STATE_CHANGE_READY_TO_PAUSED:
       GST_DEBUG_OBJECT (enc, "READY->PAUSED Initing theora state");
