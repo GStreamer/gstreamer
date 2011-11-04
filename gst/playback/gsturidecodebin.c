@@ -99,7 +99,7 @@ struct _GstURIDecodeBin
   GSList *decodebins;
   GSList *pending_decodebins;
   GHashTable *streams;
-  gint numpads;
+  guint numpads;
 
   /* for dynamic sources */
   guint src_np_sig_id;          /* new-pad signal id */
@@ -137,7 +137,7 @@ struct _GstURIDecodeBinClass
   void (*drained) (GstElement * element);
 };
 
-static GstStaticPadTemplate srctemplate = GST_STATIC_PAD_TEMPLATE ("src%d",
+static GstStaticPadTemplate srctemplate = GST_STATIC_PAD_TEMPLATE ("src_%u",
     GST_PAD_SRC,
     GST_PAD_SOMETIMES,
     GST_STATIC_CAPS_ANY);
@@ -1045,7 +1045,7 @@ new_decoded_pad_added_cb (GstElement * element, GstPad * pad,
   GST_DEBUG_OBJECT (element, "new decoded pad, name: <%s>", GST_PAD_NAME (pad));
 
   GST_URI_DECODE_BIN_LOCK (decoder);
-  padname = g_strdup_printf ("src%d", decoder->numpads);
+  padname = g_strdup_printf ("src_%u", decoder->numpads);
   decoder->numpads++;
   GST_URI_DECODE_BIN_UNLOCK (decoder);
 
