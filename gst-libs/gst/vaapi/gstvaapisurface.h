@@ -27,6 +27,7 @@
 #include <gst/vaapi/gstvaapidisplay.h>
 #include <gst/vaapi/gstvaapiimage.h>
 #include <gst/vaapi/gstvaapisubpicture.h>
+#include <gst/video/gstsurfacebuffer.h>
 
 G_BEGIN_DECLS
 
@@ -39,18 +40,19 @@ typedef enum _GstVaapiSurfaceRenderFlags        GstVaapiSurfaceRenderFlags;
  *
  * Generic caps type for VA surfaces.
  */
-#define GST_VAAPI_SURFACE_CAPS_NAME     \
-    "video/x-vaapi-surface"
+#define GST_VAAPI_SURFACE_CAPS_NAME GST_VIDEO_CAPS_SURFACE
 
 /**
  * GST_VAAPI_SURFACE_CAPS:
  *
  * Generic caps for VA surfaces.
  */
-#define GST_VAAPI_SURFACE_CAPS          \
-    GST_VAAPI_SURFACE_CAPS_NAME ", "    \
-    "width  = (int) [ 1, MAX ],"        \
-    "height = (int) [ 1, MAX ],"        \
+#define GST_VAAPI_SURFACE_CAPS                  \
+    GST_VAAPI_SURFACE_CAPS_NAME ", "            \
+    "type = vaapi, "                            \
+    "opengl = (boolean) { true, false }, "      \
+    "width  = (int) [ 1, MAX ], "               \
+    "height = (int) [ 1, MAX ], "               \
     "framerate = (fraction) [ 0, MAX ]"
 
 /**

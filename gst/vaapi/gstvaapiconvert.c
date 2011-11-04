@@ -462,7 +462,7 @@ gst_vaapiconvert_transform_caps(
         out_caps = gst_caps_from_string(gst_vaapiconvert_vaapi_caps_str);
     }
     else {
-        if (!gst_structure_has_name(structure, "video/x-vaapi-surface"))
+        if (!gst_structure_has_name(structure, GST_VAAPI_SURFACE_CAPS_NAME))
             return NULL;
         out_caps = gst_caps_from_string(gst_vaapiconvert_yuv_caps_str);
         if (convert->display) {
@@ -667,7 +667,7 @@ gst_vaapiconvert_get_unit_size(
     GstVideoFormat format;
     gint width, height;
 
-    if (gst_structure_has_name(structure, "video/x-vaapi-surface"))
+    if (gst_structure_has_name(structure, GST_VAAPI_SURFACE_CAPS_NAME))
         *size = 0;
     else {
         if (!gst_video_format_parse_caps(caps, &format, &width, &height))

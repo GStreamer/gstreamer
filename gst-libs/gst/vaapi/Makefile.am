@@ -134,6 +134,7 @@ libgstvaapi_@GST_MAJORMINOR@includedir =	\
 	$(libgstvaapi_includedir)
 
 libgstvaapi_@GST_MAJORMINOR@_la_CFLAGS =	\
+	-DGST_USE_UNSTABLE_API			\
 	-I$(top_srcdir)/gst-libs		\
 	$(GST_BASE_CFLAGS)			\
 	$(GST_CFLAGS)				\
@@ -165,6 +166,7 @@ libgstvaapi_x11_@GST_MAJORMINOR@includedir =	\
 	$(libgstvaapi_includedir)
 
 libgstvaapi_x11_@GST_MAJORMINOR@_la_CFLAGS =	\
+	-DGST_USE_UNSTABLE_API			\
 	-I$(top_srcdir)/gst-libs		\
 	$(GLIB_CFLAGS)				\
 	$(GST_BASE_CFLAGS)			\
@@ -196,6 +198,7 @@ libgstvaapi_glx_@GST_MAJORMINOR@includedir =	\
 	$(libgstvaapi_includedir)
 
 libgstvaapi_glx_@GST_MAJORMINOR@_la_CFLAGS =	\
+	-DGST_USE_UNSTABLE_API			\
 	-I$(top_srcdir)/gst-libs		\
 	$(GLIB_CFLAGS)				\
 	$(GST_BASE_CFLAGS)			\

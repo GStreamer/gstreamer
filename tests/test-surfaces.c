@@ -66,7 +66,8 @@ main(int argc, char *argv[])
     g_object_unref(surface);
 
     caps = gst_caps_new_simple(
-        "video/x-vaapi-surface",
+        GST_VAAPI_SURFACE_CAPS_NAME,
+        "type", G_TYPE_STRING, "vaapi",
         "width", G_TYPE_INT, width,
         "height", G_TYPE_INT, height,
         NULL

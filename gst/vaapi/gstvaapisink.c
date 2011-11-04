@@ -499,7 +499,7 @@ gst_vaapisink_buffer_alloc(
         goto error_ensure_display;
 
     structure = gst_caps_get_structure(caps, 0);
-    if (!gst_structure_has_name(structure, "video/x-vaapi-surface"))
+    if (!gst_structure_has_name(structure, GST_VAAPI_SURFACE_CAPS_NAME))
         goto error_invalid_caps;
 
     buffer = gst_vaapi_video_buffer_new(sink->display);
