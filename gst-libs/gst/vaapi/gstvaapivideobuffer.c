@@ -26,6 +26,7 @@
 
 #include "config.h"
 #include "gstvaapivideobuffer.h"
+#include "gstvaapivideobuffer_priv.h"
 #include "gstvaapiimagepool.h"
 #include "gstvaapisurfacepool.h"
 #include "gstvaapiobject_priv.h"
@@ -561,4 +562,37 @@ gst_vaapi_video_buffer_set_surface_proxy(
         set_surface(buffer, surface);
         buffer->priv->proxy = g_object_ref(proxy);
     }
+}
+
+/**
+ * gst_vaapi_video_buffer_set_display:
+ * @buffer: a #GstVaapiVideoBuffer
+ * @display a #GstVaapiDisplay
+ *
+ * For subclass only, don't use.
+ */
+void
+gst_vaapi_video_buffer_set_display(
+    GstVaapiVideoBuffer *buffer,
+    GstVaapiDisplay     *display
+)
+{
+  set_display(buffer, display);
+}
+
+/**
+ * gst_vaapi_video_buffer_set_display:
+ * @buffer: a #GstVaapiVideoBuffer
+ * @other_buffer: a #GstBuffer
+ *
+ * For subclass only, don't use.
+ */
+void
+gst_vaapi_video_buffer_set_buffer(
+    GstVaapiVideoBuffer *buffer,
+    GstBuffer           *other_buffer
+)
+{
+  g_return_if_fail (buffer->priv->buffer == NULL);
+  buffer->priv->buffer = gst_buffer_ref (other_buffer);
 }
