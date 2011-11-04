@@ -28,6 +28,7 @@ Android.mk: Makefile.am $(BUILT_SOURCES)
 	 -:TAGS eng debug \
          -:REL_TOP $(top_srcdir) -:ABS_TOP $(abs_top_srcdir) \
 	 -:SOURCES $(libgstbayer_la_SOURCES) \
+               $(nodist_libgstbayer_la_SOURCES) \
 	 -:CFLAGS $(DEFS) $(DEFAULT_INCLUDES) $(libgstbayer_la_CFLAGS) \
 	 -:LDFLAGS $(libgstbayer_la_LDFLAGS) \
 	           $(libgstbayer_la_LIBADD) \
