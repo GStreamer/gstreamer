@@ -1791,8 +1791,8 @@ gst_bin_sort_iterator_copy (const GstBinSortIterator * it,
   GHashTableIter iter;
   gpointer key, value;
 
-  copy->queue = g_queue_copy (it->queue);
-  g_queue_foreach (copy->queue, (GFunc) gst_object_ref, NULL);
+  copy->queue = it->queue;
+  g_queue_foreach (&copy->queue, (GFunc) gst_object_ref, NULL);
 
   copy->bin = gst_object_ref (it->bin);
   if (it->best)
