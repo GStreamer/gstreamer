@@ -148,8 +148,8 @@ differences:
   * Multiple streams handling.
 
     The element handles queueing data on more than one stream at once. To
-  achieve such a feature it has request sink pads (sink_%d) and 'sometimes' src
-  pads (src_%d).
+  achieve such a feature it has request sink pads (sink_%u) and 'sometimes' src
+  pads (src_%u).
 
     When requesting a given sinkpad, the associated srcpad for that stream will
   be created. Ex: requesting sink_1 will generate src_1.
