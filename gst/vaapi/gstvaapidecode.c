@@ -29,12 +29,15 @@
  */
 
 #include "config.h"
-#include "gstvaapidecode.h"
-#include <gst/vaapi/gstvaapidisplay_x11.h>
+
+#include <gst/vaapi/gstvaapidisplay.h>
 #include <gst/vaapi/gstvaapivideosink.h>
 #include <gst/vaapi/gstvaapivideobuffer.h>
 #include <gst/vaapi/gstvaapidecoder_ffmpeg.h>
-#include <gst/vaapi/gstvaapiutils_gst.h>
+#include <gst/video/videocontext.h>
+
+#include "gstvaapidecode.h"
+#include "gstvaapipluginutil.h"
 
 #define GST_PLUGIN_NAME "vaapidecode"
 #define GST_PLUGIN_DESC "A VA-API based video decoder"
@@ -80,11 +83,15 @@ static GstStaticPadTemplate gst_vaapidecode_src_factory =
         GST_PAD_ALWAYS,
         GST_STATIC_CAPS(gst_vaapidecode_src_caps_str));
 
-GST_BOILERPLATE(
+#define GstVideoContextClass GstVideoContextInterface
+GST_BOILERPLATE_WITH_INTERFACE(
     GstVaapiDecode,
     gst_vaapidecode,
     GstElement,
-    GST_TYPE_ELEMENT);
+    GST_TYPE_ELEMENT,
+    GstVideoContext,
+    GST_TYPE_VIDEO_CONTEXT,
+    gst_video_context);
 
 enum {
     PROP_0,
@@ -257,24 +264,10 @@ error_commit_buffer:
     }
 }
 
-static inline gboolean
-gst_vaapidecode_ensure_display(GstVaapiDecode *decode)
-{
-    GstVaapiDisplay *display;
-
-    if (!decode->display) {
-        display = gst_vaapi_display_lookup_downstream(GST_ELEMENT(decode));
-        if (!display)
-            return FALSE;
-        decode->display = g_object_ref(display);
-    }
-    return TRUE;
-}
-
 static gboolean
 gst_vaapidecode_create(GstVaapiDecode *decode, GstCaps *caps)
 {
-    if (!gst_vaapidecode_ensure_display(decode))
+    if (!gst_vaapi_ensure_display(decode, &decode->display))
         return FALSE;
 
     decode->decoder_mutex = g_mutex_new();
@@ -337,6 +330,28 @@ gst_vaapidecode_reset(GstVaapiDecode *decode, GstCaps *caps)
 
     gst_vaapidecode_destroy(decode);
     return gst_vaapidecode_create(decode, caps);
+}
+
+/* GstVideoContext interface */
+
+static void
+gst_vaapidecode_set_video_context(GstVideoContext *context, const gchar *type,
+    const GValue *value)
+{
+    GstVaapiDecode *decode = GST_VAAPIDECODE (context);
+    gst_vaapi_set_display (type, value, &decode->display);
+}
+
+static gboolean
+gst_video_context_supported (GstVaapiDecode *decode, GType iface_type)
+{
+  return (iface_type == GST_TYPE_VIDEO_CONTEXT);
+}
+
+static void
+gst_video_context_interface_init(GstVideoContextInterface *iface)
+{
+    iface->set_context = gst_vaapidecode_set_video_context;
 }
 
 static void
@@ -494,15 +509,10 @@ gst_vaapidecode_ensure_allowed_caps(GstVaapiDecode *decode)
     if (decode->allowed_caps)
         return TRUE;
 
-    if (gst_vaapidecode_ensure_display(decode))
-        display = g_object_ref(decode->display);
-    else {
-        display = gst_vaapi_display_x11_new(NULL);
-        if (!display)
-            goto error_no_display;
-    }
+    if (!gst_vaapi_ensure_display(decode, &decode->display))
+        goto error_no_display;
 
-    decode_caps = gst_vaapi_display_get_decode_caps(display);
+    decode_caps = gst_vaapi_display_get_decode_caps(decode->display);
     if (!decode_caps)
         goto error_no_decode_caps;
     n_decode_caps = gst_caps_get_size(decode_caps);
@@ -530,7 +540,6 @@ gst_vaapidecode_ensure_allowed_caps(GstVaapiDecode *decode)
     }
 
     gst_caps_unref(decode_caps);
-    g_object_unref(display);
     return TRUE;
 
     /* ERRORS */
@@ -542,14 +551,12 @@ error_no_display:
 error_no_decode_caps:
     {
         GST_DEBUG("failed to retrieve VA decode caps");
-        g_object_unref(display);
         return FALSE;
     }
 error_no_memory:
     {
         GST_DEBUG("failed to allocate allowed-caps set");
         gst_caps_unref(decode_caps);
-        g_object_unref(display);
         return FALSE;
     }
 }
@@ -621,6 +628,22 @@ gst_vaapidecode_src_event(GstPad *pad, GstEvent *event)
     return gst_pad_push_event(decode->sinkpad, event);
 }
 
+static gboolean
+gst_vaapidecode_query (GstPad *pad, GstQuery *query) {
+    GstVaapiDecode *decode = GST_VAAPIDECODE (gst_pad_get_parent_element (pad));
+    gboolean res;
+
+    GST_DEBUG ("sharing display %p", decode->display);
+
+    if (gst_vaapi_reply_to_query (query, decode->display))
+      res = TRUE;
+    else
+      res = gst_pad_query_default (pad, query);
+
+    g_object_unref (decode);
+    return res;
+}
+
 static void
 gst_vaapidecode_init(GstVaapiDecode *decode, GstVaapiDecodeClass *klass)
 {
@@ -656,5 +679,6 @@ gst_vaapidecode_init(GstVaapiDecode *decode, GstVaapiDecodeClass *klass)
 
     gst_pad_use_fixed_caps(decode->srcpad);
     gst_pad_set_event_function(decode->srcpad, gst_vaapidecode_src_event);
+    gst_pad_set_query_function(decode->srcpad, gst_vaapidecode_query);
     gst_element_add_pad(GST_ELEMENT(decode), decode->srcpad);
 }

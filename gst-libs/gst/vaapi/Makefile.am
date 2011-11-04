@@ -37,7 +37,6 @@ libgstvaapi_source_c =				\
 	gstvaapisurfacepool.c			\
 	gstvaapisurfaceproxy.c			\
 	gstvaapiutils.c				\
-	gstvaapiutils_gst.c			\
 	gstvaapivalue.c				\
 	gstvaapivideobuffer.c			\
 	gstvaapivideopool.c			\
@@ -77,7 +76,6 @@ libgstvaapi_source_priv_h =			\
 	gstvaapidisplay_priv.h			\
 	gstvaapiobject_priv.h			\
 	gstvaapiutils.h				\
-	gstvaapiutils_gst.h			\
 	$(libgst_vaapi_ffmpeg_source_priv_h)	\
 	$(NULL)
 

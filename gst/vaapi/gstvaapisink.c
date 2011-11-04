@@ -31,8 +31,9 @@
 
 #include "config.h"
 #include <gst/gst.h>
-#include <gst/video/video.h>
 #include <gst/gstutils_version.h>
+#include <gst/video/video.h>
+#include <gst/video/videocontext.h>
 #include <gst/vaapi/gstvaapivideobuffer.h>
 #include <gst/vaapi/gstvaapivideosink.h>
 #include <gst/vaapi/gstvaapidisplay_x11.h>
@@ -41,10 +42,12 @@
 #include <gst/vaapi/gstvaapidisplay_glx.h>
 #include <gst/vaapi/gstvaapiwindow_glx.h>
 #endif
-#include "gstvaapisink.h"
 
 /* Supported interfaces */
 #include <gst/interfaces/xoverlay.h>
+
+#include "gstvaapisink.h"
+#include "gstvaapipluginutil.h"
 
 #define HAVE_GST_XOVERLAY_SET_WINDOW_HANDLE \
     GST_PLUGINS_BASE_CHECK_VERSION(0,10,31)
@@ -84,7 +87,6 @@ enum {
     PROP_0,
 
     PROP_USE_GLX,
-    PROP_DISPLAY,
     PROP_FULLSCREEN,
     PROP_SYNCHRONOUS,
     PROP_USE_REFLECTION
@@ -98,7 +100,7 @@ gst_vaapisink_implements_interface_supported(
     GType                   type
 )
 {
-    return (type == GST_VAAPI_TYPE_VIDEO_SINK ||
+    return (type == GST_TYPE_VIDEO_CONTEXT ||
             type == GST_TYPE_X_OVERLAY);
 }
 
@@ -110,19 +112,18 @@ gst_vaapisink_implements_iface_init(GstImplementsInterfaceClass *iface)
 
 /* GstVaapiVideoSink interface */
 
-static GstVaapiDisplay *
-gst_vaapisink_get_display(GstVaapiSink *sink);
-
-static GstVaapiDisplay *
-gst_vaapi_video_sink_do_get_display(GstVaapiVideoSink *sink)
+static void
+gst_vaapisink_set_video_context(GstVideoContext *context, const gchar *type,
+    const GValue *value)
 {
-    return gst_vaapisink_get_display(GST_VAAPISINK(sink));
+  GstVaapiSink *sink = GST_VAAPISINK (context);
+  gst_vaapi_set_display (type, value, &sink->display);
 }
 
 static void
-gst_vaapi_video_sink_iface_init(GstVaapiVideoSinkInterface *iface)
+gst_vaapisink_video_context_iface_init(GstVideoContextInterface *iface)
 {
-    iface->get_display = gst_vaapi_video_sink_do_get_display;
+    iface->set_context = gst_vaapisink_set_video_context;
 }
 
 /* GstXOverlay interface */
@@ -191,8 +192,8 @@ gst_vaapisink_iface_init(GType type)
 
     G_IMPLEMENT_INTERFACE(GST_TYPE_IMPLEMENTS_INTERFACE,
                           gst_vaapisink_implements_iface_init);
-    G_IMPLEMENT_INTERFACE(GST_VAAPI_TYPE_VIDEO_SINK,
-                          gst_vaapi_video_sink_iface_init);
+    G_IMPLEMENT_INTERFACE(GST_TYPE_VIDEO_CONTEXT,
+                          gst_vaapisink_video_context_iface_init);
     G_IMPLEMENT_INTERFACE(GST_TYPE_X_OVERLAY,
                           gst_vaapisink_xoverlay_iface_init);
 }
@@ -203,11 +204,6 @@ gst_vaapisink_destroy(GstVaapiSink *sink)
     if (sink->display) {
         g_object_unref(sink->display);
         sink->display = NULL;
-    }
-
-    if (sink->display_name) {
-        g_free(sink->display_name);
-        sink->display_name = NULL;
     }
 }
 
@@ -260,23 +256,6 @@ configure_notify_event_pending(
         configure_notify_event_pending_cb, (XPointer)&args
     );
     return args.match;
-}
-
-static inline gboolean
-gst_vaapisink_ensure_display(GstVaapiSink *sink)
-{
-    if (!sink->display) {
-#if USE_VAAPISINK_GLX
-        if (sink->use_glx)
-            sink->display = gst_vaapi_display_glx_new(sink->display_name);
-        else
-#endif
-            sink->display = gst_vaapi_display_x11_new(sink->display_name);
-        if (!sink->display || !gst_vaapi_display_get_display(sink->display))
-            return FALSE;
-        g_object_set(sink, "synchronous", sink->synchronous, NULL);
-    }
-    return sink->display != NULL;
 }
 
 static gboolean
@@ -384,7 +363,7 @@ gst_vaapisink_ensure_window_xid(GstVaapiSink *sink, guintptr window_id)
     int x, y;
     XID xid = window_id;
 
-    if (!gst_vaapisink_ensure_display(sink))
+    if (!gst_vaapi_ensure_display(sink, &sink->display))
         return FALSE;
 
     gst_vaapi_display_lock(sink->display);
@@ -427,8 +406,6 @@ gst_vaapisink_start(GstBaseSink *base_sink)
 {
     GstVaapiSink * const sink = GST_VAAPISINK(base_sink);
 
-    if (!gst_vaapisink_ensure_display(sink))
-        return FALSE;
     return TRUE;
 }
 
@@ -470,6 +447,9 @@ gst_vaapisink_set_caps(GstBaseSink *base_sink, GstCaps *caps)
     sink->video_par_n  = video_par_n;
     sink->video_par_d  = video_par_d;
     GST_DEBUG("video pixel-aspect-ratio %d/%d", video_par_n, video_par_d);
+
+    if (!gst_vaapi_ensure_display(sink, &sink->display))
+        return FALSE;
 
     gst_vaapi_display_get_size(sink->display, &display_width, &display_height);
     if (!gst_vaapisink_ensure_render_rect(sink, display_width, display_height))
@@ -515,6 +495,9 @@ gst_vaapisink_buffer_alloc(
     GstStructure *structure;
     GstBuffer *buffer;
 
+    if (!gst_vaapi_ensure_display(sink, &sink->display))
+        goto error_ensure_display;
+
     structure = gst_caps_get_structure(caps, 0);
     if (!gst_structure_has_name(structure, "video/x-vaapi-surface"))
         goto error_invalid_caps;
@@ -528,6 +511,11 @@ gst_vaapisink_buffer_alloc(
     return GST_FLOW_OK;
 
     /* ERRORS */
+error_ensure_display:
+    {
+        GST_ERROR("failed to ensure display");
+        return GST_FLOW_UNEXPECTED;
+    }
 error_invalid_caps:
     {
         GST_ERROR("failed to validate input caps");
@@ -719,6 +707,12 @@ gst_vaapisink_show_frame(GstBaseSink *base_sink, GstBuffer *buffer)
     guint flags;
     gboolean success;
 
+    if (sink->display != gst_vaapi_video_buffer_get_display (vbuffer)) {
+      if (sink->display)
+        g_object_unref (sink->display);
+      sink->display = g_object_ref (gst_vaapi_video_buffer_get_display (vbuffer));
+    }
+
     if (!sink->window)
         return GST_FLOW_UNEXPECTED;
 
@@ -738,6 +732,14 @@ gst_vaapisink_show_frame(GstBaseSink *base_sink, GstBuffer *buffer)
 #endif
         success = gst_vaapisink_show_frame_x11(sink, surface, flags);
     return success ? GST_FLOW_OK : GST_FLOW_UNEXPECTED;
+}
+
+static gboolean
+gst_vaapisink_query(GstBaseSink *base_sink, GstQuery *query)
+{
+    GstVaapiSink *sink = GST_VAAPISINK(base_sink);
+    GST_DEBUG ("sharing display %p", sink->display);
+    return gst_vaapi_reply_to_query (query, sink->display);
 }
 
 static void
@@ -761,10 +763,6 @@ gst_vaapisink_set_property(
     switch (prop_id) {
     case PROP_USE_GLX:
         sink->use_glx = g_value_get_boolean(value);
-        break;
-    case PROP_DISPLAY:
-        g_free(sink->display_name);
-        sink->display_name = g_strdup(g_value_get_string(value));
         break;
     case PROP_FULLSCREEN:
         sink->fullscreen = g_value_get_boolean(value);
@@ -794,9 +792,6 @@ gst_vaapisink_get_property(
     switch (prop_id) {
     case PROP_USE_GLX:
         g_value_set_boolean(value, sink->use_glx);
-        break;
-    case PROP_DISPLAY:
-        g_value_set_string(value, sink->display_name);
         break;
     case PROP_FULLSCREEN:
         g_value_set_boolean(value, sink->fullscreen);
@@ -845,6 +840,7 @@ gst_vaapisink_class_init(GstVaapiSinkClass *klass)
     basesink_class->buffer_alloc = gst_vaapisink_buffer_alloc;
     basesink_class->preroll      = gst_vaapisink_show_frame;
     basesink_class->render       = gst_vaapisink_show_frame;
+    basesink_class->query        = gst_vaapisink_query;
 
 #if USE_VAAPISINK_GLX
     g_object_class_install_property
@@ -865,15 +861,6 @@ gst_vaapisink_class_init(GstVaapiSinkClass *klass)
                               FALSE,
                               G_PARAM_READWRITE));
 #endif
-
-    g_object_class_install_property
-        (object_class,
-         PROP_DISPLAY,
-         g_param_spec_string("display",
-                             "X11 display name",
-                             "X11 display name",
-                             "",
-                             G_PARAM_READWRITE));
 
     g_object_class_install_property
         (object_class,
@@ -903,7 +890,6 @@ gst_vaapisink_class_init(GstVaapiSinkClass *klass)
 static void
 gst_vaapisink_init(GstVaapiSink *sink, GstVaapiSinkClass *klass)
 {
-    sink->display_name   = NULL;
     sink->display        = NULL;
     sink->window         = NULL;
     sink->window_width   = 0;
@@ -918,12 +904,4 @@ gst_vaapisink_init(GstVaapiSink *sink, GstVaapiSinkClass *klass)
     sink->synchronous    = FALSE;
     sink->use_glx        = USE_VAAPISINK_GLX;
     sink->use_reflection = FALSE;
-}
-
-GstVaapiDisplay *
-gst_vaapisink_get_display(GstVaapiSink *sink)
-{
-    if (!gst_vaapisink_ensure_display(sink))
-        return NULL;
-    return sink->display;
 }

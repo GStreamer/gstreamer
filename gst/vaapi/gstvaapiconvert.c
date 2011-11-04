@@ -29,11 +29,14 @@
  */
 
 #include "config.h"
+
 #include <gst/gst.h>
 #include <gst/video/video.h>
+#include <gst/video/videocontext.h>
 #include <gst/vaapi/gstvaapivideosink.h>
 #include <gst/vaapi/gstvaapivideobuffer.h>
-#include <gst/vaapi/gstvaapiutils_gst.h>
+
+#include "gstvaapipluginutil.h"
 #include "gstvaapiconvert.h"
 
 #define GST_PLUGIN_NAME "vaapiconvert"
@@ -73,11 +76,15 @@ static GstStaticPadTemplate gst_vaapiconvert_src_factory =
         GST_PAD_ALWAYS,
         GST_STATIC_CAPS(gst_vaapiconvert_vaapi_caps_str));
 
-GST_BOILERPLATE(
+#define GstVideoContextClass GstVideoContextInterface
+GST_BOILERPLATE_WITH_INTERFACE(
     GstVaapiConvert,
     gst_vaapiconvert,
     GstBaseTransform,
-    GST_TYPE_BASE_TRANSFORM);
+    GST_TYPE_BASE_TRANSFORM,
+    GstVideoContext,
+    GST_TYPE_VIDEO_CONTEXT,
+    gst_video_context);
 
 /*
  * Direct rendering levels (direct-rendering)
@@ -144,6 +151,34 @@ gst_vaapiconvert_prepare_output_buffer(
     GstCaps          *caps,
     GstBuffer       **poutbuf
 );
+
+static gboolean
+gst_vaapiconvert_query(
+    GstPad   *pad,
+    GstQuery *query
+);
+
+/* GstVideoContext interface */
+
+static void
+gst_vaapiconvert_set_video_context(GstVideoContext *context, const gchar *type,
+    const GValue *value)
+{
+  GstVaapiConvert *convert = GST_VAAPICONVERT (context);
+  gst_vaapi_set_display (type, value, &convert->display);
+}
+
+static gboolean
+gst_video_context_supported (GstVaapiConvert *convert, GType iface_type)
+{
+  return (iface_type == GST_TYPE_VIDEO_CONTEXT);
+}
+
+static void
+gst_video_context_interface_init(GstVideoContextInterface *iface)
+{
+    iface->set_context = gst_vaapiconvert_set_video_context;
+}
 
 static void
 gst_vaapiconvert_destroy(GstVaapiConvert *convert)
@@ -289,7 +324,7 @@ gst_vaapiconvert_class_init(GstVaapiConvertClass *klass)
 static void
 gst_vaapiconvert_init(GstVaapiConvert *convert, GstVaapiConvertClass *klass)
 {
-    GstPad *sinkpad;
+    GstPad *sinkpad, *srcpad;
 
     convert->display                    = NULL;
     convert->images                     = NULL;
@@ -310,20 +345,20 @@ gst_vaapiconvert_init(GstVaapiConvert *convert, GstVaapiConvertClass *klass)
         gst_vaapiconvert_sinkpad_buffer_alloc
     );
     g_object_unref(sinkpad);
+
+    /* Override query on src pad */
+    srcpad = gst_element_get_static_pad(GST_ELEMENT(convert), "src");
+    gst_pad_set_query_function(srcpad, gst_vaapiconvert_query);
 }
 
 static gboolean
 gst_vaapiconvert_start(GstBaseTransform *trans)
 {
     GstVaapiConvert * const convert = GST_VAAPICONVERT(trans);
-    GstVaapiDisplay *display;
 
-    /* Look for a downstream display */
-    display = gst_vaapi_display_lookup_downstream(GST_ELEMENT(trans));
-    if (!display)
+    if (!gst_vaapi_ensure_display(convert, &convert->display))
         return FALSE;
 
-    convert->display = g_object_ref(display);
     return TRUE;
 }
 
@@ -765,4 +800,21 @@ gst_vaapiconvert_prepare_output_buffer(
     gst_buffer_set_caps(buffer, caps);
     *poutbuf = buffer;
     return GST_FLOW_OK;
+}
+
+static gboolean
+gst_vaapiconvert_query(GstPad *pad, GstQuery *query)
+{
+  GstVaapiConvert *convert = GST_VAAPICONVERT (gst_pad_get_parent_element (pad));
+  gboolean res;
+
+  GST_DEBUG ("sharing display %p", convert->display);
+
+  if (gst_vaapi_reply_to_query (query, convert->display))
+    res = TRUE;
+  else
+    res = gst_pad_query_default (pad, query);
+
+  g_object_unref (convert);
+  return res;
 }

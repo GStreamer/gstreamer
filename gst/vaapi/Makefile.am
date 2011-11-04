@@ -2,6 +2,7 @@ plugin_LTLIBRARIES = libgstvaapi.la
 
 libgstvaapi_CFLAGS = \
 	$(LIBVA_CFLAGS)		\
+	-DGST_USE_UNSTABLE_API	\
 	-I$(top_srcdir)/gst-libs
 
 if USE_VAAPI_GLX
@@ -16,12 +17,14 @@ libgstvaapi_la_SOURCES =	\
 	gstvaapi.c		\
 	gstvaapiconvert.c	\
 	gstvaapidecode.c	\
+	gstvaapipluginutil.c	\
 	gstvaapisink.c		\
 	$(NULL)
 
 noinst_HEADERS =		\
 	gstvaapiconvert.h	\
 	gstvaapidecode.h	\
+	gstvaapipluginutil.h	\
 	gstvaapisink.h		\
 	$(NULL)
 
@@ -31,6 +34,7 @@ libgstvaapi_la_CFLAGS =	\
 	$(GST_BASE_CFLAGS)	\
 	$(GST_VIDEO_CFLAGS)	\
 	$(GST_INTERFACES_CFLAGS) \
+	$(GST_BASEVIDEO_CFLAGS)	\
 	$(GST_PLUGINS_BASE_CFLAGS)
 
 libgstvaapi_la_LIBADD =	\
@@ -39,6 +43,7 @@ libgstvaapi_la_LIBADD =	\
 	$(GST_BASE_LIBS)	\
 	$(GST_VIDEO_LIBS)	\
 	$(GST_INTERFACES_LIBS)	\
+	$(GST_BASEVIDEO_LIBS)	\
 	$(GST_PLUGINS_BASE_LIBS)
 
 libgstvaapi_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)

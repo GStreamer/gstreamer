@@ -67,7 +67,6 @@ struct _GstVaapiSink {
     /*< private >*/
     GstVideoSink parent_instance;
 
-    gchar              *display_name;
     GstVaapiDisplay    *display;
     GstVaapiWindow     *window;
     guint               window_width;

@@ -29,6 +29,13 @@ m4_define([gst_plugins_base_version],
 m4_define([va_api_x11_version], [0.31.0])
 m4_define([va_api_glx_version], [0.32.0])
 
+# gst plugins-bad version number
+m4_define([gst_plugins_bad_major_version], [0])
+m4_define([gst_plugins_bad_minor_version], [10])
+m4_define([gst_plugins_bad_micro_version], [22])
+m4_define([gst_plugins_bad_version],
+          [gst_plugins_bad_major_version.gst_plugins_bad_minor_version.gst_plugins_bad_micro_version])
+
 # libva package version number
 m4_define([libva_x11_package_version], [1.0.3])
 m4_define([libva_glx_package_version], [1.0.9])
@@ -61,6 +68,7 @@ dnl Versions for GStreamer and plugins-base
 GST_MAJORMINOR=gst_major_minor_version
 GST_VERSION_REQUIRED=gst_version
 GST_PLUGINS_BASE_VERSION_REQUIRED=gst_plugins_base_version
+GST_PLUGINS_BAD_VERSION_REQUIRED=gst_plugins_bad_version
 AC_SUBST(GST_MAJORMINOR)
 AC_SUBST(GST_VERSION_REQUIRED)
 AC_SUBST(GST_PLUGINS_BASE_VERSION_REQUIRED)
@@ -167,6 +175,13 @@ PKG_CHECK_MODULES([GST_VIDEO],
 )
 AC_SUBST(GST_VIDEO_CFLAGS)
 AC_SUBST(GST_VIDEO_LIBS)
+
+dnl Check for GStreamer basevideo
+PKG_CHECK_MODULES([GST_BASEVIDEO],
+    [gstreamer-basevideo-$GST_MAJORMINOR >= $GST_PLUGINS_BAD_VERSION_REQUIRED]
+)
+AC_SUBST(GST_BASEVIDEO_CFLAGS)
+AC_SUBST(GST_BASEVIDEO_LIBS)
 
 dnl Check for GStreamer interfaces
 PKG_CHECK_MODULES([GST_INTERFACES],

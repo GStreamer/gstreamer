@@ -1,7 +1,9 @@
 /*
- *  gstvaapiutils_gst.h - GST utilties
+ *  gstvaapipluginutil.h - VA-API plugins private helper
  *
- *  gstreamer-vaapi (C) 2010-2011 Splitted-Desktop Systems
+ *  Copyright (C) 2011 Intel Corporation
+ *  Copyright (C) 2011 Collabora
+ *    Author: Nicolas Dufresne <nicolas.dufresne@collabora.co.uk>
  *
  *  This library is free software; you can redistribute it and/or
  *  modify it under the terms of the GNU Lesser General Public License
@@ -19,13 +21,10 @@
  *  Boston, MA 02110-1301 USA
  */
 
-#ifndef GST_VAAPI_UTILS_GST_H
-#define GST_VAAPI_UTILS_GST_H
-
 #include <gst/gst.h>
+#include <gst/video/videocontext.h>
 #include <gst/vaapi/gstvaapidisplay.h>
 
-GstVaapiDisplay *
-gst_vaapi_display_lookup_downstream(GstElement *element);
-
-#endif /* GST_VAAPI_UTILS_GST_H */
+gboolean gst_vaapi_ensure_display (gpointer element, GstVaapiDisplay **display);
+void gst_vaapi_set_display (const gchar *type, const GValue *value, GstVaapiDisplay **display);
+gboolean gst_vaapi_reply_to_query (GstQuery *query, GstVaapiDisplay *display);
