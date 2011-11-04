@@ -9,7 +9,6 @@ GST_PLUGINS_BASE_BUILT_SOURCES := 						\
 	pkgconfig/gstreamer-cdda-0.10.pc			\
 	pkgconfig/gstreamer-fft-0.10.pc				\
 	pkgconfig/gstreamer-interfaces-0.10.pc			\
-	pkgconfig/gstreamer-netbuffer-0.10.pc			\
 	pkgconfig/gstreamer-pbutils-0.10.pc			\
 	pkgconfig/gstreamer-plugins-base-0.10.pc		\
 	pkgconfig/gstreamer-riff-0.10.pc			\
@@ -23,7 +22,6 @@ GST_PLUGINS_BASE_BUILT_SOURCES := 						\
 	pkgconfig/gstreamer-cdda-0.10-uninstalled.pc		\
 	pkgconfig/gstreamer-fft-0.10-uninstalled.pc		\
 	pkgconfig/gstreamer-interfaces-0.10-uninstalled.pc	\
-	pkgconfig/gstreamer-netbuffer-0.10-uninstalled.pc	\
 	pkgconfig/gstreamer-pbutils-0.10-uninstalled.pc		\
 	pkgconfig/gstreamer-plugins-base-0.10-uninstalled.pc	\
 	pkgconfig/gstreamer-riff-0.10-uninstalled.pc		\
@@ -40,7 +38,6 @@ GST_PLUGINS_BASE_BUILT_SOURCES := 						\
 	gst-libs/gst/pbutils/Android.mk				\
 	gst-libs/gst/rtp/Android.mk				\
 	gst-libs/gst/rtsp/Android.mk				\
-	gst-libs/gst/netbuffer/Android.mk			\
 	gst-libs/gst/sdp/Android.mk				\
 	gst-libs/gst/app/Android.mk				\
 	gst-libs/gst/fft/Android.mk				\
@@ -102,7 +99,6 @@ CONFIGURE_TARGETS += gst-plugins-base-configure
 -include $(GST_PLUGINS_BASE_TOP)/gst-libs/gst/pbutils/Android.mk
 -include $(GST_PLUGINS_BASE_TOP)/gst-libs/gst/rtp/Android.mk
 -include $(GST_PLUGINS_BASE_TOP)/gst-libs/gst/rtsp/Android.mk
--include $(GST_PLUGINS_BASE_TOP)/gst-libs/gst/netbuffer/Android.mk
 -include $(GST_PLUGINS_BASE_TOP)/gst-libs/gst/sdp/Android.mk
 -include $(GST_PLUGINS_BASE_TOP)/gst-libs/gst/app/Android.mk
 -include $(GST_PLUGINS_BASE_TOP)/gst/playback/Android.mk

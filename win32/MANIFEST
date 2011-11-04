@@ -9,7 +9,6 @@ win32/common/libgstapp.def
 win32/common/libgstaudio.def
 win32/common/libgstcdda.def
 win32/common/libgstinterfaces.def
-win32/common/libgstnetbuffer.def
 win32/common/libgstpbutils.def
 win32/common/libgstriff.def
 win32/common/libgstrtp.def
@@ -38,7 +37,6 @@ win32/vs6/libgstdecodebin.dsp
 win32/vs6/libgstfft.dsp
 win32/vs6/libgstgdp.dsp
 win32/vs6/libgstinterfaces.dsp
-win32/vs6/libgstnetbuffer.dsp
 win32/vs6/libgstogg.dsp
 win32/vs6/libgstpbutils.dsp
 win32/vs6/libgstplaybin.dsp

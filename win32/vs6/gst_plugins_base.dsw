@@ -177,17 +177,6 @@ Package=<4>
 
 ###############################################################################
 
-Project: "libgstnetbuffer"=".\libgstnetbuffer.dsp" - Package Owner=<4>
-
-Package=<5>
-{{{
-}}}
-
-Package=<4>
-{{{
-}}}
-
-###############################################################################
 
 Project: "libgstogg"=".\libgstogg.dsp" - Package Owner=<4>
 

@@ -87,7 +87,6 @@ rm -rf $RPM_BUILD_ROOT
 %{_libdir}/libgstaudio-%{majorminor}.so.*
 %{_libdir}/libgstcdda-%{majorminor}.so*
 %{_libdir}/libgstinterfaces-%{majorminor}.so.*
-%{_libdir}/libgstnetbuffer-%{majorminor}.so*
 %{_libdir}/libgstpbutils-%{majorminor}.so*
 %{_libdir}/libgstriff-%{majorminor}.so.*
 %{_libdir}/libgstrtp-%{majorminor}.so*
@@ -179,7 +178,6 @@ GStreamer Plugins Base library development and header files.
 %{_includedir}/gstreamer-%{majorminor}/gst/rtp/gstbasertppayload.h
 %{_includedir}/gstreamer-%{majorminor}/gst/video/gstvideofilter.h
 %{_includedir}/gstreamer-%{majorminor}/gst/video/gstvideosink.h
-%{_includedir}/gstreamer-%{majorminor}/gst/netbuffer/gstnetbuffer.h
 %{_includedir}/gstreamer-%{majorminor}/gst/cdda/gstcddabasesrc.h
 %{_includedir}/gstreamer-%{majorminor}/gst/audio/mixerutils.h
 %{_includedir}/gstreamer-%{majorminor}/gst/interfaces/videoorientation.h
@@ -232,7 +230,6 @@ GStreamer Plugins Base library development and header files.
 %{_libdir}/libgstvideo-%{majorminor}.so
 %{_libdir}/libgstrtp-%{majorminor}.so
 %{_libdir}/libgstinterfaces-%{majorminor}.so
-%{_libdir}/libgstnetbuffer-%{majorminor}.so
 %{_libdir}/libgstpbutils-%{majorminor}.so
 %{_libdir}/libgstcdda-%{majorminor}.so
 %{_libdir}/libgstapp-%{majorminor}.so
@@ -243,7 +240,6 @@ GStreamer Plugins Base library development and header files.
 %{_libdir}/pkgconfig/gstreamer-cdda-%{majorminor}.pc
 %{_libdir}/pkgconfig/gstreamer-fft-%{majorminor}.pc
 %{_libdir}/pkgconfig/gstreamer-interfaces-%{majorminor}.pc
-%{_libdir}/pkgconfig/gstreamer-netbuffer-%{majorminor}.pc
 %{_libdir}/pkgconfig/gstreamer-pbutils-%{majorminor}.pc
 %{_libdir}/pkgconfig/gstreamer-riff-%{majorminor}.pc
 %{_libdir}/pkgconfig/gstreamer-rtp-%{majorminor}.pc
@@ -257,7 +253,6 @@ GStreamer Plugins Base library development and header files.
 %{_libdir}/girepository-1.0/GstAudio-%{majorminor}.typelib
 %{_libdir}/girepository-1.0/GstFft-%{majorminor}.typelib
 %{_libdir}/girepository-1.0/GstInterfaces-%{majorminor}.typelib
-%{_libdir}/girepository-1.0/GstNetbuffer-%{majorminor}.typelib
 %{_libdir}/girepository-1.0/GstPbutils-%{majorminor}.typelib
 %{_libdir}/girepository-1.0/GstRiff-%{majorminor}.typelib
 %{_libdir}/girepository-1.0/GstRtp-%{majorminor}.typelib
@@ -269,7 +264,6 @@ GStreamer Plugins Base library development and header files.
 %{_datadir}/gir-1.0/GstAudio-%{majorminor}.gir
 %{_datadir}/gir-1.0/GstFft-%{majorminor}.gir
 %{_datadir}/gir-1.0/GstInterfaces-%{majorminor}.gir
-%{_datadir}/gir-1.0/GstNetbuffer-%{majorminor}.gir
 %{_datadir}/gir-1.0/GstPbutils-%{majorminor}.gir
 %{_datadir}/gir-1.0/GstRiff-%{majorminor}.gir
 %{_datadir}/gir-1.0/GstRtp-%{majorminor}.gir

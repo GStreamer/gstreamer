@@ -119,7 +119,6 @@ check_PROGRAMS = \
 	libs/fft \
 	libs/mixer \
 	libs/navigation \
-	libs/netbuffer \
 	libs/pbutils \
 	libs/profile \
 	libs/rtp \
@@ -200,7 +199,6 @@ libs_libsabi_LDADD = \
 	$(top_builddir)/gst-libs/gst/cdda/libgstcdda-@GST_MAJORMINOR@.la \
 	$(top_builddir)/gst-libs/gst/fft/libgstfft-@GST_MAJORMINOR@.la \
 	$(top_builddir)/gst-libs/gst/interfaces/libgstinterfaces-@GST_MAJORMINOR@.la \
-	$(top_builddir)/gst-libs/gst/netbuffer/libgstnetbuffer-@GST_MAJORMINOR@.la \
 	$(top_builddir)/gst-libs/gst/pbutils/libgstpbutils-@GST_MAJORMINOR@.la \
 	$(top_builddir)/gst-libs/gst/rtp/libgstrtp-@GST_MAJORMINOR@.la \
 	$(top_builddir)/gst-libs/gst/rtsp/libgstrtsp-@GST_MAJORMINOR@.la \
@@ -268,13 +266,6 @@ libs_navigation_LDADD = \
 	$(top_builddir)/gst-libs/gst/interfaces/libgstinterfaces-@GST_MAJORMINOR@.la \
         $(GST_BASE_LIBS) \
         $(LDADD)
-
-libs_netbuffer_CFLAGS = \
-	$(GST_PLUGINS_BASE_CFLAGS) \
-	$(AM_CFLAGS)
-libs_netbuffer_LDADD = \
-	$(top_builddir)/gst-libs/gst/netbuffer/libgstnetbuffer-@GST_MAJORMINOR@.la \
-	$(LDADD)
 
 libs_rtp_CFLAGS = \
 	$(GST_PLUGINS_BASE_CFLAGS) \

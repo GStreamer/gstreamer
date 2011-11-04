@@ -64,8 +64,6 @@
 #include <gst/interfaces/videoorientation.h>
 #include <gst/interfaces/videooverlay.h>
 
-#include <gst/netbuffer/gstnetbuffer.h>
-
 #include <gst/pbutils/codec-utils.h>
 #include <gst/pbutils/descriptions.h>
 #include <gst/pbutils/encoding-profile.h>
