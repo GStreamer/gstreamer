@@ -35,9 +35,6 @@
 #include <gst/base/gstpushsrc.h>
 #include <gst/base/gsttypefindhelper.h>
 
-#include <gst/controller/gstcontroller.h>
-#include <gst/controller/gstcontrollerprivate.h>
-#include <gst/controller/gstcontrolsource.h>
 #include <gst/controller/gstinterpolationcontrolsource.h>
 #include <gst/controller/gstinterpolationcontrolsourceprivate.h>
 #include <gst/controller/gstlfocontrolsource.h>
