@@ -88,6 +88,8 @@ struct _GstMpeg2dec {
   GstVideoInfo   vinfo;
   gint           decoded_width;
   gint           decoded_height;
+  gint		 width;
+  gint		 height;
   gint64         frame_period;
   gboolean       interlaced;
   GstBufferPool *pool;

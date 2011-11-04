@@ -363,6 +363,10 @@ gst_mpeg2dec_negotiate_pool (GstMpeg2dec * dec, GstCaps * caps,
     alignment = 15;
   }
 
+  GST_DEBUG_OBJECT (dec,
+      "size:%d, min:%d, max:%d, prefix:%d, alignment:%d, pool:%p", size, min,
+      max, prefix, alignment, pool);
+
   if (pool == NULL) {
     /* we did not get a pool, make one ourselves then */
     pool = gst_buffer_pool_new ();
@@ -382,6 +386,9 @@ gst_mpeg2dec_negotiate_pool (GstMpeg2dec * dec, GstCaps * caps,
   /* check if downstream supports cropping */
   dec->use_cropping =
       gst_query_has_allocation_meta (query, GST_VIDEO_CROP_META_API);
+
+  GST_DEBUG_OBJECT (dec, "downstream supports cropping : %d",
+      dec->use_cropping);
 
   gst_buffer_pool_set_config (pool, config);
   /* and activate */
@@ -421,8 +428,8 @@ handle_sequence (GstMpeg2dec * mpeg2dec, const mpeg2_info_t * info)
   if (sequence->frame_period == 0)
     goto invalid_frame_period;
 
-  width = sequence->picture_width;
-  height = sequence->picture_height;
+  mpeg2dec->width = width = sequence->picture_width;
+  mpeg2dec->height = height = sequence->picture_height;
 
   /* mpeg2 video can only be from 16x16 to 4096x4096. Everything
    * else is a corrupted file */
@@ -453,11 +460,15 @@ handle_sequence (GstMpeg2dec * mpeg2dec, const mpeg2_info_t * info)
   mpeg2dec->v_offs = y_size + uv_size;
 
   gst_video_info_init (&vinfo);
-  gst_video_info_set_format (&vinfo, format, width, height);
+  gst_video_info_set_format (&vinfo, format, sequence->width, sequence->height);
 
   /* size of the decoded frame */
   mpeg2dec->decoded_width = sequence->width;
   mpeg2dec->decoded_height = sequence->height;
+
+  GST_DEBUG_OBJECT (mpeg2dec,
+      "widthxheight: %dx%d , decoded_widthxheight: %dx%d", width, height,
+      sequence->width, sequence->height);
 
   /* sink caps par overrides sequence PAR */
   if (mpeg2dec->have_par) {
@@ -969,6 +980,17 @@ handle_slice (GstMpeg2dec * mpeg2dec, const mpeg2_info_t * info)
    * array of buffers */
   gst_buffer_ref (outbuf);
 
+  if (mpeg2dec->use_cropping) {
+    GstVideoCropMeta *crop;
+
+    crop = gst_buffer_add_video_crop_meta (outbuf);
+    /* we can do things slightly more efficient when we know that
+     * downstream understands clipping */
+    crop->x = 0;
+    crop->y = 0;
+    crop->width = mpeg2dec->width;
+    crop->height = mpeg2dec->height;
+  }
 #if 0
   /* do cropping if the target region is smaller than the input one */
   if (mpeg2dec->decoded_width != mpeg2dec->width ||
