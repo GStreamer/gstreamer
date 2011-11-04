@@ -34,13 +34,13 @@ GST_DEBUG_CATEGORY_STATIC (dvb_base_bin_debug);
 #define GST_CAT_DEFAULT dvb_base_bin_debug
 
 static GstStaticPadTemplate src_template =
-GST_STATIC_PAD_TEMPLATE ("src%d", GST_PAD_SRC,
+GST_STATIC_PAD_TEMPLATE ("src_%u", GST_PAD_SRC,
     GST_PAD_REQUEST,
     GST_STATIC_CAPS ("video/mpegts, " "systemstream = (boolean) true ")
     );
 
 static GstStaticPadTemplate program_template =
-GST_STATIC_PAD_TEMPLATE ("program_%d", GST_PAD_SRC,
+GST_STATIC_PAD_TEMPLATE ("program_%u", GST_PAD_SRC,
     GST_PAD_SOMETIMES,
     GST_STATIC_CAPS ("video/mpegts, " "systemstream = (boolean) true ")
     );
@@ -563,7 +563,7 @@ dvb_base_bin_init_cam (DvbBaseBin * dvbbasebin)
     if (cam_device_open (dvbbasebin->hwcam, ca_file)) {
       /* HACK: poll the cam in a buffer probe */
       dvbbasebin->ts_pad =
-          gst_element_get_request_pad (dvbbasebin->mpegtsparse, "src%d");
+          gst_element_get_request_pad (dvbbasebin->mpegtsparse, "src_%u");
       gst_pad_add_probe (dvbbasebin->ts_pad, GST_PAD_PROBE_TYPE_BLOCK,
           dvb_base_bin_ts_pad_probe_cb, dvbbasebin, NULL);
     } else {

@@ -78,7 +78,7 @@ GST_DEBUG_CATEGORY_STATIC (GST_CAT_DEFAULT);
   "depth = (int) 8 "
 
 static GstStaticPadTemplate gst_ssim_src_template =
-GST_STATIC_PAD_TEMPLATE ("src%d",
+GST_STATIC_PAD_TEMPLATE ("src_%u",
     GST_PAD_SRC,
     GST_PAD_SOMETIMES,
     GST_STATIC_CAPS (SRC_CAPS)
@@ -92,7 +92,7 @@ GST_STATIC_PAD_TEMPLATE ("original",
     );
 
 static GstStaticPadTemplate gst_ssim_sink_modified_template =
-GST_STATIC_PAD_TEMPLATE ("modified%d",
+GST_STATIC_PAD_TEMPLATE ("modified_%u",
     GST_PAD_SINK,
     GST_PAD_REQUEST,
     GST_STATIC_CAPS (SINK_CAPS)
@@ -1125,7 +1125,7 @@ gst_ssim_request_new_pad (GstElement * element, GstPadTemplate * templ,
   GstPad *newsrc;
   gint padcount;
   GstPadTemplate *template;
-  gint num = -1;
+  guint num = -1;
 
   if (templ->direction != GST_PAD_SINK)
     goto not_sink;
@@ -1145,9 +1145,9 @@ gst_ssim_request_new_pad (GstElement * element, GstPadTemplate * templ,
     newpad = gst_pad_new_from_template (templ, "original");
     GST_DEBUG_OBJECT (ssim, "request new sink pad original");
     ssim->orig = newpad;
-  } else if (strncmp (padname, "modified", 8) == 0) {
-    const gchar *numstr = &padname[8];
-    num = strtol (numstr, NULL, 10);
+  } else if (strncmp (padname, "modified_", 9) == 0) {
+    const gchar *numstr = &padname[9];
+    num = strtoul (numstr, NULL, 10);
     if (errno == EINVAL || errno == ERANGE)
       goto bad_name;
     newpad = gst_pad_new_from_template (templ, padname);
@@ -1181,11 +1181,11 @@ gst_ssim_request_new_pad (GstElement * element, GstPadTemplate * templ,
     padcount = g_atomic_int_exchange_and_add (&ssim->padcount, 1);
 #endif
 
-  if (num >= 0) {
+  if (num != -1) {
     GstSSimOutputContext *c;
 
     template = gst_static_pad_template_get (&gst_ssim_src_template);
-    name = g_strdup_printf ("src%d", num);
+    name = g_strdup_printf ("src_%u", num);
     newsrc = gst_pad_new_from_template (template, name);
     GST_DEBUG_OBJECT (ssim, "creating src pad %s", name);
     g_free (name);

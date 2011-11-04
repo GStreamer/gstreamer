@@ -82,7 +82,7 @@ static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",
     GST_STATIC_CAPS ("application/x-rtp")
     );
 
-static GstStaticPadTemplate sink_factory = GST_STATIC_PAD_TEMPLATE ("sink_%d",
+static GstStaticPadTemplate sink_factory = GST_STATIC_PAD_TEMPLATE ("sink_%u",
     GST_PAD_SINK,
     GST_PAD_REQUEST,
     GST_STATIC_CAPS ("application/x-rtp")
@@ -107,7 +107,7 @@ static void gst_rtp_mux_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 static void gst_rtp_mux_dispose (GObject * object);
 
-static gboolean gst_rtp_mux_src_event_real (GstRTPMux *rtp_mux,
+static gboolean gst_rtp_mux_src_event_real (GstRTPMux * rtp_mux,
     GstEvent * event);
 
 GST_BOILERPLATE (GstRTPMux, gst_rtp_mux, GstElement, GST_TYPE_ELEMENT);
@@ -204,7 +204,7 @@ gst_rtp_mux_src_event (GstPad * pad, GstEvent * event)
 }
 
 static gboolean
-gst_rtp_mux_src_event_real (GstRTPMux *rtp_mux, GstEvent * event)
+gst_rtp_mux_src_event_real (GstRTPMux * rtp_mux, GstEvent * event)
 {
   GstIterator *iter;
   GstPad *sinkpad;

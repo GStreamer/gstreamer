@@ -106,7 +106,7 @@ enum
 };
 
 static GstStaticPadTemplate mpegtsmux_sink_factory =
-    GST_STATIC_PAD_TEMPLATE ("sink_%d",
+    GST_STATIC_PAD_TEMPLATE ("sink_%u",
     GST_PAD_SINK,
     GST_PAD_REQUEST,
     GST_STATIC_CAPS ("video/mpeg, "
@@ -749,14 +749,14 @@ mpegtsmux_request_new_pad (GstElement * element,
   GstPad *pad = NULL;
   MpegTsPadData *pad_data = NULL;
 
-  if (name != NULL && sscanf (name, "sink_%d", &pid) == 1) {
+  if (name != NULL && sscanf (name, "sink_%u", &pid) == 1) {
     if (tsmux_find_stream (mux->tsmux, pid))
       goto stream_exists;
   } else {
     pid = tsmux_get_new_pid (mux->tsmux);
   }
 
-  pad_name = g_strdup_printf ("sink_%d", pid);
+  pad_name = g_strdup_printf ("sink_%u", pid);
   pad = gst_pad_new_from_template (templ, pad_name);
   g_free (pad_name);
 

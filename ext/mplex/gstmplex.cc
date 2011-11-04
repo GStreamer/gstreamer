@@ -67,7 +67,7 @@ static GstStaticPadTemplate src_templ = GST_STATIC_PAD_TEMPLATE ("src",
     );
 
 static GstStaticPadTemplate video_sink_templ =
-GST_STATIC_PAD_TEMPLATE ("video_%d",
+GST_STATIC_PAD_TEMPLATE ("video_%u",
     GST_PAD_SINK,
     GST_PAD_REQUEST,
     GST_STATIC_CAPS ("video/mpeg, "
@@ -82,7 +82,7 @@ GST_STATIC_PAD_TEMPLATE ("video_%d",
   "rate = (int) [ 8000, 96000 ]"
 
 static GstStaticPadTemplate audio_sink_templ =
-    GST_STATIC_PAD_TEMPLATE ("audio_%d",
+    GST_STATIC_PAD_TEMPLATE ("audio_%u",
     GST_PAD_SINK,
     GST_PAD_REQUEST,
     GST_STATIC_CAPS ("audio/mpeg, "
@@ -609,12 +609,12 @@ gst_mplex_request_new_pad (GstElement * element,
   GstPad *newpad;
   GstMplexPad *mpad;
 
-  if (templ == gst_element_class_get_pad_template (klass, "audio_%d")) {
+  if (templ == gst_element_class_get_pad_template (klass, "audio_%u")) {
     GST_DEBUG_OBJECT (mplex, "request pad audio %d", mplex->num_apads);
-    padname = g_strdup_printf ("audio_%d", mplex->num_apads++);
-  } else if (templ == gst_element_class_get_pad_template (klass, "video_%d")) {
+    padname = g_strdup_printf ("audio_%u", mplex->num_apads++);
+  } else if (templ == gst_element_class_get_pad_template (klass, "video_%u")) {
     GST_DEBUG_OBJECT (mplex, "request pad video %d", mplex->num_vpads);
-    padname = g_strdup_printf ("video_%d", mplex->num_vpads++);
+    padname = g_strdup_printf ("video_%u", mplex->num_vpads++);
   } else {
     GST_WARNING_OBJECT (mplex, "This is not our template!");
     return NULL;

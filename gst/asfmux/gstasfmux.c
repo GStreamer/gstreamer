@@ -136,13 +136,13 @@ static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",
     );
 
 static GstStaticPadTemplate video_sink_factory =
-GST_STATIC_PAD_TEMPLATE ("video_%d",
+GST_STATIC_PAD_TEMPLATE ("video_%u",
     GST_PAD_SINK,
     GST_PAD_REQUEST,
     GST_STATIC_CAPS ("video/x-wmv, wmvversion = (int) [1,3]"));
 
 static GstStaticPadTemplate audio_sink_factory =
-    GST_STATIC_PAD_TEMPLATE ("audio_%d",
+    GST_STATIC_PAD_TEMPLATE ("audio_%u",
     GST_PAD_SINK,
     GST_PAD_REQUEST,
     GST_STATIC_CAPS ("audio/x-wma, wmaversion = (int) [1,3]; "
@@ -2251,16 +2251,16 @@ gst_asf_mux_request_new_pad (GstElement * element,
     return NULL;
   }
 
-  if (templ == gst_element_class_get_pad_template (klass, "audio_%d")) {
-    name = g_strdup_printf ("audio_%02d", asfmux->stream_number + 1);
+  if (templ == gst_element_class_get_pad_template (klass, "audio_%u")) {
+    name = g_strdup_printf ("audio_%u", asfmux->stream_number + 1);
     GST_DEBUG_OBJECT (asfmux, "Adding new pad %s", name);
     newpad = gst_pad_new_from_template (templ, name);
     g_free (name);
     is_audio = TRUE;
     gst_pad_set_setcaps_function (newpad,
         GST_DEBUG_FUNCPTR (gst_asf_mux_audio_set_caps));
-  } else if (templ == gst_element_class_get_pad_template (klass, "video_%d")) {
-    name = g_strdup_printf ("video_%02d", asfmux->stream_number + 1);
+  } else if (templ == gst_element_class_get_pad_template (klass, "video_%u")) {
+    name = g_strdup_printf ("video_%u", asfmux->stream_number + 1);
     GST_DEBUG_OBJECT (asfmux, "Adding new pad %s", name);
     newpad = gst_pad_new_from_template (templ, name);
     g_free (name);

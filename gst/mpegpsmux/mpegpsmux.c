@@ -58,7 +58,7 @@ enum
 };
 
 static GstStaticPadTemplate mpegpsmux_sink_factory =
-    GST_STATIC_PAD_TEMPLATE ("sink_%d",
+    GST_STATIC_PAD_TEMPLATE ("sink_%u",
     GST_PAD_SINK,
     GST_PAD_REQUEST,
     GST_STATIC_CAPS ("video/mpeg, "

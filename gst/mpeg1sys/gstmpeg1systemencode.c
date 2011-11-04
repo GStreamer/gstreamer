@@ -47,7 +47,7 @@ static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",
     GST_STATIC_CAPS ("video/mpeg, " "systemstream = (boolean) TRUE")
     );
 static GstStaticPadTemplate video_sink_factory =
-GST_STATIC_PAD_TEMPLATE ("video_%d",
+GST_STATIC_PAD_TEMPLATE ("video_%u",
     GST_PAD_SINK,
     GST_PAD_REQUEST,
     GST_STATIC_CAPS ("video/mpeg, "
@@ -55,7 +55,7 @@ GST_STATIC_PAD_TEMPLATE ("video_%d",
     );
 
 static GstStaticPadTemplate audio_sink_factory =
-GST_STATIC_PAD_TEMPLATE ("audio_%d",
+GST_STATIC_PAD_TEMPLATE ("audio_%u",
     GST_PAD_SINK,
     GST_PAD_REQUEST,
     GST_STATIC_CAPS ("audio/mpeg, "

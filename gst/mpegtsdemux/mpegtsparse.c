@@ -70,13 +70,13 @@ struct _MpegTSParsePad
 };
 
 static GstStaticPadTemplate src_template =
-GST_STATIC_PAD_TEMPLATE ("src%d", GST_PAD_SRC,
+GST_STATIC_PAD_TEMPLATE ("src_%u", GST_PAD_SRC,
     GST_PAD_REQUEST,
     GST_STATIC_CAPS ("video/mpegts, " "systemstream = (boolean) true ")
     );
 
 static GstStaticPadTemplate program_template =
-GST_STATIC_PAD_TEMPLATE ("program_%d", GST_PAD_SRC,
+GST_STATIC_PAD_TEMPLATE ("program_%u", GST_PAD_SRC,
     GST_PAD_SOMETIMES,
     GST_STATIC_CAPS ("video/mpegts, " "systemstream = (boolean) true ")
     );
@@ -221,7 +221,7 @@ mpegts_parse_activate_program (MpegTSParse2 * parse,
   gchar *pad_name;
 
   pad_name =
-      g_strdup_printf ("program_%d",
+      g_strdup_printf ("program_%u",
       ((MpegTSBaseProgram *) program)->program_number);
 
   tspad = mpegts_parse_create_tspad (parse, pad_name);
@@ -436,7 +436,7 @@ mpegts_parse_request_new_pad (GstElement * element, GstPadTemplate * template,
   parse = GST_MPEGTS_PARSE (element);
 
   GST_OBJECT_LOCK (element);
-  name = g_strdup_printf ("src%d", parse->req_pads++);
+  name = g_strdup_printf ("src_%u", parse->req_pads++);
   GST_OBJECT_UNLOCK (element);
 
   pad = mpegts_parse_create_tspad (parse, name)->pad;

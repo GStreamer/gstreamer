@@ -85,14 +85,14 @@ enum
 };
 
 static GstStaticPadTemplate mixmatrix_sink_template =
-GST_STATIC_PAD_TEMPLATE ("sink%d",
+GST_STATIC_PAD_TEMPLATE ("sink_%u",
     GST_PAD_SINK,
     GST_PAD_REQUEST,
     GST_STATIC_CAPS (GST_AUDIO_FLOAT_STANDARD_PAD_TEMPLATE_CAPS)
     );
 
 static GstStaticPadTemplate mixmatrix_src_template =
-GST_STATIC_PAD_TEMPLATE ("src%d",
+GST_STATIC_PAD_TEMPLATE ("src_%u",
     GST_PAD_SRC,
     GST_PAD_REQUEST,
     GST_STATIC_CAPS (GST_AUDIO_FLOAT_STANDARD_PAD_TEMPLATE_CAPS)
@@ -370,7 +370,7 @@ gst_mixmatrix_request_new_pad (GstElement * element, GstPadTemplate * templ,
   mix = GST_MIXMATRIX (element);
 
   /* figure out if it's a sink pad */
-  if (sscanf (name, "sink%d", &padnum)) {
+  if (sscanf (name, "sink_%u", &padnum)) {
     /* check to see if it already exists */
     if (padnum < mix->sinkpadalloc && mix->sinkpads[padnum])
       return mix->sinkpads[padnum];
@@ -393,7 +393,7 @@ gst_mixmatrix_request_new_pad (GstElement * element, GstPadTemplate * templ,
     mix->sinkpads[padnum] = pad;
   }
   /* or it's a src pad */
-  else if (sscanf (name, "src%d", &padnum)) {
+  else if (sscanf (name, "src_%u", &padnum)) {
     /* check to see if it already exists */
     if (padnum < mix->srcpadalloc && mix->srcpads[padnum])
       return mix->srcpads[padnum];
