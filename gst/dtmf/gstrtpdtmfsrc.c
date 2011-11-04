@@ -341,6 +341,9 @@ gst_rtp_dtmf_src_handle_dtmf_event (GstRTPDTMFSrc * dtmfsrc,
   gboolean start;
   gint method;
   GstClockTime last_stop;
+  gint event_number;
+  gint event_volume;
+  gboolean correct_order;
 
   if (!gst_structure_get_int (event_structure, "type", &event_type) ||
       !gst_structure_get_boolean (event_structure, "start", &start) ||
@@ -353,17 +356,24 @@ gst_rtp_dtmf_src_handle_dtmf_event (GstRTPDTMFSrc * dtmfsrc,
     }
   }
 
+  if (start)
+    if (!gst_structure_get_int (event_structure, "number", &event_number) ||
+        !gst_structure_get_int (event_structure, "volume", &event_volume))
+      goto failure;
+
   GST_OBJECT_LOCK (dtmfsrc);
   if (gst_structure_get_clock_time (event_structure, "last-stop", &last_stop))
     dtmfsrc->last_stop = last_stop;
   else
     dtmfsrc->last_stop = GST_CLOCK_TIME_NONE;
+  correct_order = (start != dtmfsrc->last_event_was_start);
+  dtmfsrc->last_event_was_start = start;
   GST_OBJECT_UNLOCK (dtmfsrc);
 
-  if (start) {
-    gint event_number;
-    gint event_volume;
+  if (!correct_order)
+    goto failure;
 
+  if (start) {
     if (!gst_structure_get_int (event_structure, "number", &event_number) ||
         !gst_structure_get_int (event_structure, "volume", &event_volume))
       goto failure;
@@ -1048,6 +1058,7 @@ gst_rtp_dtmf_src_change_state (GstElement * element, GstStateChange transition)
         gst_dtmf_src_post_message (dtmfsrc, "dtmf-event-dropped", event);
         gst_rtp_dtmf_src_event_free (event);
       }
+      dtmfsrc->last_event_was_start = FALSE;
 
       no_preroll = TRUE;
       break;
@@ -1071,6 +1082,7 @@ gst_rtp_dtmf_src_change_state (GstElement * element, GstStateChange transition)
         gst_dtmf_src_post_message (dtmfsrc, "dtmf-event-dropped", event);
         gst_rtp_dtmf_src_event_free (event);
       }
+      dtmfsrc->last_event_was_start = FALSE;
 
       /* Indicate that we don't do PRE_ROLL */
       break;

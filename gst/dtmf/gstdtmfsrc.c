@@ -330,6 +330,9 @@ gst_dtmf_src_handle_dtmf_event (GstDTMFSrc * dtmfsrc,
   gboolean start;
   gint method;
   GstClockTime last_stop;
+  gint event_number;
+  gint event_volume;
+  gboolean correct_order;
 
   if (!gst_structure_get_int (event_structure, "type", &event_type) ||
       !gst_structure_get_boolean (event_structure, "start", &start) ||
@@ -342,22 +345,25 @@ gst_dtmf_src_handle_dtmf_event (GstDTMFSrc * dtmfsrc,
     }
   }
 
+  if (start)
+    if (!gst_structure_get_int (event_structure, "number", &event_number) ||
+        !gst_structure_get_int (event_structure, "volume", &event_volume))
+      goto failure;
+
 
   GST_OBJECT_LOCK (dtmfsrc);
   if (gst_structure_get_clock_time (event_structure, "last-stop", &last_stop))
     dtmfsrc->last_stop = last_stop;
   else
     dtmfsrc->last_stop = GST_CLOCK_TIME_NONE;
+  correct_order = (start != dtmfsrc->last_event_was_start);
+  dtmfsrc->last_event_was_start = start;
   GST_OBJECT_UNLOCK (dtmfsrc);
 
+  if (!correct_order)
+    goto failure;
+
   if (start) {
-    gint event_number;
-    gint event_volume;
-
-    if (!gst_structure_get_int (event_structure, "number", &event_number) ||
-        !gst_structure_get_int (event_structure, "volume", &event_volume))
-      goto failure;
-
     GST_DEBUG_OBJECT (dtmfsrc, "Received start event %d with volume %d",
         event_number, event_volume);
     gst_dtmf_src_add_start_event (dtmfsrc, event_number, event_volume);
@@ -896,6 +902,7 @@ gst_dtmf_src_change_state (GstElement * element, GstStateChange transition)
         g_slice_free (GstDTMFSrcEvent, event);
         event = g_async_queue_try_pop (dtmfsrc->event_queue);
       }
+      dtmfsrc->last_event_was_start = FALSE;
       dtmfsrc->timestamp = 0;
       no_preroll = TRUE;
       break;
@@ -922,6 +929,7 @@ gst_dtmf_src_change_state (GstElement * element, GstStateChange transition)
         g_slice_free (GstDTMFSrcEvent, event);
         event = g_async_queue_try_pop (dtmfsrc->event_queue);
       }
+      dtmfsrc->last_event_was_start = FALSE;
 
       break;
     default:
