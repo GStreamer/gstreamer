@@ -238,13 +238,13 @@ gboolean gst_object_uncontrol_properties (GstObject * object, ...) G_GNUC_NULL_T
 GstClockTime gst_object_suggest_next_sync (GstObject * object);
 gboolean gst_object_sync_values (GstObject * object, GstClockTime timestamp);
 
-void gst_object_set_automation_disabled (GstObject *object, gboolean disabled);                                        // NEW was gst_controller_set_disabled
-void gst_object_set_property_automation_disabled (GstObject *object, const gchar * property_name, gboolean disabled);  // NEW was gst_controller_set_property_disabled
+void gst_object_set_automation_disabled (GstObject *object, gboolean disabled);
+void gst_object_set_property_automation_disabled (GstObject *object, const gchar * property_name, gboolean disabled);
 
 gboolean gst_object_set_control_source (GstObject *object, const gchar * property_name, GstControlSource *csource);
 GstControlSource * gst_object_get_control_source (GstObject *object, const gchar * property_name);
 
-GValue *gst_object_get_value (GstObject * object, const gchar * property_name, GstClockTime timestamp);                // NEW was gst_controller_get
+GValue *gst_object_get_value (GstObject * object, const gchar * property_name, GstClockTime timestamp);
 gboolean gst_object_get_value_arrays (GstObject * object, GstClockTime timestamp, GSList * value_arrays);
 gboolean gst_object_get_value_array (GstObject * object, GstClockTime timestamp, GstValueArray * value_array);
 
