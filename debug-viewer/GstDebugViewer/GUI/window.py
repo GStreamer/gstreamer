@@ -219,7 +219,8 @@ class Window (object):
                             ("clear-line-view", gtk.STOCK_CLEAR, None),
                             ("show-about", gtk.STOCK_ABOUT, None),
                             ("enlarge-text", gtk.STOCK_ZOOM_IN, _("Enlarge Text"), "<Ctrl>plus"),
-                            ("shrink-text", gtk.STOCK_ZOOM_OUT, _("Shrink Text"), "<Ctrl>minus")])
+                            ("shrink-text", gtk.STOCK_ZOOM_OUT, _("Shrink Text"), "<Ctrl>minus"),
+                            ("reset-text", gtk.STOCK_ZOOM_100, _("Normal Text Size"), "<Ctrl>0")])
         self.actions.add_group (group)
         self.actions.reload_file.props.sensitive = False
 
@@ -300,7 +301,8 @@ class Window (object):
                             "hide-before-line", "hide-after-line", "show-hidden-lines",
                             "edit-copy-line", "edit-copy-message", "set-base-time",
                             "hide-log-level", "hide-log-category", "hide-log-object",
-                            "hide-filename", "show-about", "enlarge-text", "shrink-text"):
+                            "hide-filename", "show-about", "enlarge-text", "shrink-text",
+                            "reset-text"):
             name = action_name.replace ("-", "_")
             action = getattr (self.actions, name)
             handler = getattr (self, "handle_%s_action_activate" % (name,))
@@ -586,6 +588,10 @@ class Window (object):
     def handle_shrink_text_action_activate (self, action):
 
         self.update_zoom_level (-1)
+
+    def handle_reset_text_action_activate (self, action):
+
+        self.update_zoom_level (-self.zoom_level)
 
     def update_zoom_level (self, delta_step):
 
