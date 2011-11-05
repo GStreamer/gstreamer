@@ -598,6 +598,22 @@ class ViewColumnManager (ColumnManager):
 
         return ColumnManager.detach (self)
 
+    def set_zoom (self, scale):
+
+        ColumnManager.set_zoom (self, scale)
+
+        if self.view is None:
+            return
+
+        model = self.view.get_model ()
+
+        # Timestamp and log level columns are pretty much fixed size, so resize
+        # them back to default on zoom change:
+        for column in self.columns:
+            if column.name in (TimeColumn.name,
+                               LevelColumn.name):
+                self.size_column (column, self.view, model)
+
     def size_column (self, column, view, model):
 
         if column.default_size is None:
