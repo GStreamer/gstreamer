@@ -36,6 +36,14 @@
 #include <gst/vaapi/gstvaapivideosink.h>
 #include <gst/vaapi/gstvaapivideobuffer.h>
 
+#if USE_VAAPI_GLX
+#include <gst/vaapi/gstvaapivideobuffer_glx.h>
+#define gst_vaapi_video_buffer_new_from_pool(pool) \
+    gst_vaapi_video_buffer_glx_new_from_pool(pool)
+#define gst_vaapi_video_buffer_new_from_buffer(buffer) \
+    gst_vaapi_video_buffer_glx_new_from_buffer(buffer)
+#endif
+
 #include "gstvaapipluginutil.h"
 #include "gstvaapiconvert.h"
 
