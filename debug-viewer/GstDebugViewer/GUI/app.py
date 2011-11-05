@@ -38,6 +38,8 @@ class AppStateSection (Common.GUI.StateSection):
     column_order = Common.GUI.StateItemList ("column-order", ViewColumnManager)
     columns_visible = Common.GUI.StateItemList ("columns-visible", ViewColumnManager)
 
+    zoom_level = Common.GUI.StateInt ("zoom-level")
+
 class AppState (Common.GUI.State):
 
     def __init__ (self, *a, **kw):

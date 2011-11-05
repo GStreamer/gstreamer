@@ -290,6 +290,10 @@ class Window (object):
     def attach (self):
 
         self.zoom_level = 0
+        zoom_percent = self.app.state_section.zoom_level
+        if zoom_percent:
+            self.restore_zoom (float (zoom_percent) / 100.)
+
         self.window_state.attach (window = self.gtk_window,
                                   state = self.app.state_section)
 
@@ -593,6 +597,14 @@ class Window (object):
 
         self.update_zoom_level (-self.zoom_level)
 
+    def restore_zoom (self, scale):
+
+        from math import log
+
+        self.zoom_level = int (round (log (scale) / log (ZOOM_FACTOR)))
+
+        self.column_manager.set_zoom (scale)
+
     def update_zoom_level (self, delta_step):
 
         if not delta_step:
@@ -602,6 +614,8 @@ class Window (object):
         scale = ZOOM_FACTOR ** self.zoom_level
 
         self.column_manager.set_zoom (scale)
+
+        self.app.state_section.zoom_level = int (round (scale * 100.))
 
     def add_model_filter (self, filter):
 
