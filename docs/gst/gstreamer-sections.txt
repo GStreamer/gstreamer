@@ -729,10 +729,6 @@ gst_element_state_change_return_get_name
 gst_element_sync_state_with_parent
 gst_element_change_state
 
-<SUBSECTION element-tags>
-gst_element_found_tags
-gst_element_found_tags_for_pad
-
 <SUBSECTION element-messages>
 gst_element_message_full
 gst_element_post_message

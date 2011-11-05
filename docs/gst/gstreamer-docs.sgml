@@ -74,7 +74,6 @@ Windows.  It is released under the GNU Library General Public License
     <xi:include href="xml/gstelementfactory.xml" />
     <xi:include href="xml/gsterror.xml" />
     <xi:include href="xml/gstevent.xml" />
-    <xi:include href="xml/gstfilter.xml" />
     <xi:include href="xml/gstformat.xml" />
     <xi:include href="xml/gstghostpad.xml" />
     <xi:include href="xml/gstindex.xml" />
