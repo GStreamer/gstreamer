@@ -1073,7 +1073,7 @@ gst_object_has_active_automation (GstObject * object)
 {
   gboolean res = FALSE;
 
-  g_return_if_fail (GST_IS_OBJECT (object));
+  g_return_val_if_fail (GST_IS_OBJECT (object), FALSE);
 
   if (object->ctrl)
     res = gst_controller_is_active ((GstController *) object->ctrl);
