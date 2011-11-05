@@ -45,17 +45,6 @@
   </menubar>
   <menubar name="context">
     <menu name="LogViewContextMenu" action="ViewMenuAction">
-      <menu name="ViewColumnsMenu" action="ViewColumnsMenuAction">
-        <menuitem name="ViewColumnsTime" action="show-time-column"/>
-        <menuitem name="ViewColumnsLevel" action="show-level-column"/>
-        <menuitem name="ViewColumnsPid" action="show-pid-column"/>
-        <menuitem name="ViewColumnsThread" action="show-thread-column"/>
-        <menuitem name="ViewColumnsCode" action="show-code-column"/>
-        <menuitem name="ViewColumnsCategory" action="show-category-column"/>
-        <menuitem name="ViewColumnsFunction" action="show-function-column"/>
-        <menuitem name="ViewColumnsObject" action="show-object-column"/>
-        <menuitem name="ViewColumnsMessage" action="show-message-column"/>
-      </menu>
       <placeholder name="LogViewContextMenuAdditions"/>
       <separator/>
       <menuitem name="ViewContextMenuSetBaseTime" action="set-base-time"/>
@@ -69,9 +58,6 @@
       <separator/>
       <menuitem name="ViewContextMenuCopyMessage" action="edit-copy-message"/>
       <menuitem name="ViewContextMenuCopyLine" action="edit-copy-line"/>
-      <separator/>
-      <menuitem name="ZoomInMessage" action="enlarge-text"/>
-      <menuitem name="ZoomOutMessage" action="shrink-text"/>
     </menu>
     <menu name="LineViewContextMenu" action="LineViewContextMenuAction">
       <menuitem name="LineViewContextMenuClear" action="clear-line-view"/>
