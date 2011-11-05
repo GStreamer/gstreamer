@@ -377,6 +377,7 @@ class ColumnManager (Common.GUI.Manager):
 
         self.view = None
         self.actions = None
+        self.zoom = 1.0
         self.__columns_changed_id = None
         self.columns = []
         self.column_order = list (self.column_classes)
@@ -450,6 +451,15 @@ class ColumnManager (Common.GUI.Manager):
         sort_model.set_sort_column_id (TREE_SORTABLE_UNSORTED_COLUMN_ID,
                                        gtk.SORT_ASCENDING)
 
+    def set_zoom (self, scale):
+
+        for column in self.columns:
+            cell = column.view_column.get_cell_renderers ()[0]
+            cell.props.scale = scale
+            column.view_column.queue_resize ()
+
+        self.zoom = scale
+
     def get_toggle_action (self, column_class):
 
         action_name = "show-%s-column" % (column_class.name,)
@@ -463,8 +473,13 @@ class ColumnManager (Common.GUI.Manager):
 
         name = column.name
         pos = self.__get_column_insert_position (column)
+
         if self.view.props.fixed_height_mode:
             column.view_column.props.sizing = gtk.TREE_VIEW_COLUMN_FIXED
+
+        cell = column.view_column.get_cell_renderers ()[0]
+        cell.props.scale = self.zoom
+
         self.columns.insert (pos, column)
         self.view.insert_column (column.view_column, pos)
 

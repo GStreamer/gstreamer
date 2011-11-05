@@ -19,6 +19,8 @@
 
 """GStreamer Debug Viewer GUI module."""
 
+ZOOM_FACTOR = 1.15
+
 def _ (s):
     return s
 
@@ -286,6 +288,7 @@ class Window (object):
 
     def attach (self):
 
+        self.zoom_level = 0
         self.window_state.attach (window = self.gtk_window,
                                   state = self.app.state_section)
 
@@ -577,18 +580,22 @@ class Window (object):
         self.clipboard.set_text (self.get_active_line ()[col_id])
 
     def handle_enlarge_text_action_activate (self, action):
-        for col in self.column_manager.columns:
-            cell = col.view_column.get_cell_renderers ()[0]
-            cell.props.scale *= 1.15
-            col.view_column.queue_resize ()
-        self.widgets.log_view_scrolled_window.props.vadjustment.emit ("value-changed")
+
+        self.update_zoom_level (1)
 
     def handle_shrink_text_action_activate (self, action):
-        for col in self.column_manager.columns:
-            cell = col.view_column.get_cell_renderers ()[0]
-            cell.props.scale /= 1.15
-            col.view_column.queue_resize ()
-        self.widgets.log_view_scrolled_window.props.vadjustment.emit ("value-changed")
+
+        self.update_zoom_level (-1)
+
+    def update_zoom_level (self, delta_step):
+
+        if not delta_step:
+            return
+
+        self.zoom_level += delta_step
+        scale = ZOOM_FACTOR ** self.zoom_level
+
+        self.column_manager.set_zoom (scale)
 
     def add_model_filter (self, filter):
 
