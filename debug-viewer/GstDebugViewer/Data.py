@@ -287,20 +287,6 @@ class LogLine (list):
 
         return line
 
-    def line_string (self, message = None):
-
-        # Replicates gstreamer/gst/gstinfo.c:gst_debug_log_default.
-
-        ts, pid, thread, level, category, filename, line, function, object_, message_offset = self
-
-        if isinstance (message_offset, str):
-            message = message_offset
-
-        # FIXME: Regarding object_, this doesn't fully replicate the formatting!
-        return "%s %5d 0x%x %s %20s %s:%d:%s:<%s> %s" % (time_args (ts), pid, thread, level.name.ljust (5),
-                                                         category, filename, line, function,
-                                                         object_, message,)
-
 class LogLines (object):
 
     def __init__ (self, fileobj, line_cache):
