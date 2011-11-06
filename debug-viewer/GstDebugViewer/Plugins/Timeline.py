@@ -609,13 +609,18 @@ class TimelineWidget (gtk.DrawingArea):
                 yield sum ((level_counts[level] for level in levels))
 
         level = Data.debug_level_info
-        levels_prev = (Data.debug_level_trace,Data.debug_level_fixme,Data.debug_level_log, Data.debug_level_debug,)
+        levels_prev = (Data.debug_level_trace,
+                       Data.debug_level_fixme,
+                       Data.debug_level_log,
+                       Data.debug_level_debug,)
         ctx.set_source_rgb (*(colors[level][1].float_tuple ()))
         self.__draw_graph (ctx, w, h, maximum,
                            list (cumulative_level_counts (level, *levels_prev)))
 
         level = Data.debug_level_debug
-        levels_prev = (Data.debug_level_trace,Data.debug_level_fixme,Data.debug_level_log,)
+        levels_prev = (Data.debug_level_trace,
+                       Data.debug_level_fixme,
+                       Data.debug_level_log,)
         ctx.set_source_rgb (*(colors[level][1].float_tuple ()))
         self.__draw_graph (ctx, w, h, maximum,
                            list (cumulative_level_counts (level, *levels_prev)))
@@ -659,7 +664,6 @@ class TimelineWidget (gtk.DrawingArea):
         if not data:
             return
 
-        from operator import add
         heights = [h * float (d) / maximum for d in data]
         ctx.move_to (0, h)
         for i in range (len (heights)):
