@@ -216,10 +216,7 @@ class LevelColumn (TextColumn):
             else:
                 cell_colors = (None, None, None,)
             cell_props.foreground_gdk = cell_colors[0]
-            if path[0] % 2:
-                cell_props.background_gdk = cell_colors[1]
-            else:
-                cell_props.background_gdk = cell_colors[2]
+            cell_props.background_gdk = cell_colors[1]
 
         return level_data_func
 

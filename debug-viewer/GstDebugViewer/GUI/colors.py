@@ -121,22 +121,14 @@ class LevelColorThemeTango (LevelColorTheme):
         LevelColorTheme.__init__ (self)
 
         p = TangoPalette.get ()
-        self.add_color (Data.debug_level_none,
-                        None, None, None)
-        self.add_color (Data.debug_level_trace,
-                        p.black, p.aluminium2, Color ("#d3d7cf"))
-        self.add_color (Data.debug_level_fixme,
-                        p.black, p.butter3, Color ("#c4a000"))
-        self.add_color (Data.debug_level_log,
-                        p.black, p.plum1, Color ("#e0a4d9"))
-        self.add_color (Data.debug_level_debug,
-                        p.black, p.skyblue1, Color ("#8cc4ff"))
-        self.add_color (Data.debug_level_info,
-                        p.black, p.chameleon1, Color ("#9dff3b"))
-        self.add_color (Data.debug_level_warning,
-                        p.black, p.orange1, Color ("#ffc266"))
-        self.add_color (Data.debug_level_error,
-                        p.white, p.scarletred1, Color ("#ff4545"))
+        self.add_color (Data.debug_level_none, None, None, None)
+        self.add_color (Data.debug_level_trace, p.black, p.aluminium2)
+        self.add_color (Data.debug_level_fixme, p.black, p.butter3)
+        self.add_color (Data.debug_level_log, p.black, p.plum1)
+        self.add_color (Data.debug_level_debug, p.black, p.skyblue1)
+        self.add_color (Data.debug_level_info, p.black, p.chameleon1)
+        self.add_color (Data.debug_level_warning, p.black, p.orange1)
+        self.add_color (Data.debug_level_error, p.white, p.scarletred1)
 
 class ThreadColorTheme (ColorTheme):
 
