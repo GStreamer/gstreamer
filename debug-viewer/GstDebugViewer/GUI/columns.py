@@ -604,9 +604,12 @@ class ViewColumnManager (ColumnManager):
 
         # Timestamp and log level columns are pretty much fixed size, so resize
         # them back to default on zoom change:
+        names = (TimeColumn.name,
+                 LevelColumn.name,
+                 PidColumn.name,
+                 ThreadColumn.name)
         for column in self.columns:
-            if column.name in (TimeColumn.name,
-                               LevelColumn.name):
+            if column.name in names:
                 self.size_column (column)
 
     def size_column (self, column):
