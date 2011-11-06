@@ -674,8 +674,7 @@ class Window (object):
     def handle_set_base_time_action_activate (self, action):
 
         row = self.get_active_line ()
-        time_column = self.column_manager.find_item (name = "time")
-        time_column.set_base_time (row[LogModelBase.COL_TIME])
+        self.column_manager.set_base_time (row[LogModelBase.COL_TIME])
 
     def handle_hide_log_level_action_activate (self, action):
 

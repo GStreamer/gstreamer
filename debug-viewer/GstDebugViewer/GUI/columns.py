@@ -457,6 +457,16 @@ class ColumnManager (Common.GUI.Manager):
 
         self.zoom = scale
 
+    def set_base_time (self, base_time):
+
+        try:
+            time_column = self.find_item (name = TimeColumn.name)
+        except KeyError:
+            return
+
+        time_column.set_base_time (base_time)
+        self.size_column (time_column)
+
     def get_toggle_action (self, column_class):
 
         action_name = "show-%s-column" % (column_class.name,)
