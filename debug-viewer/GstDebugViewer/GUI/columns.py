@@ -54,7 +54,7 @@ class SizedColumn (Column):
 
     default_size = None
 
-    def compute_default_size (self, view, model):
+    def compute_default_size (self):
 
         return None
 
@@ -109,11 +109,11 @@ class TextColumn (SizedColumn):
             cell.props.text = modify_func (model.get (tree_iter, id_)[0])
         column.set_cell_data_func (cell, cell_data_func)
 
-    def compute_default_size (self, view, model):
+    def compute_default_size (self):
 
         values = self.get_values_for_size ()
         if not values:
-            return SizedColumn.compute_default_size (self, view, model)
+            return SizedColumn.compute_default_size (self)
 
         cell = self.view_column.get_cell_renderers ()[0]
 
@@ -602,19 +602,17 @@ class ViewColumnManager (ColumnManager):
         if self.view is None:
             return
 
-        model = self.view.get_model ()
-
         # Timestamp and log level columns are pretty much fixed size, so resize
         # them back to default on zoom change:
         for column in self.columns:
             if column.name in (TimeColumn.name,
                                LevelColumn.name):
-                self.size_column (column, self.view, model)
+                self.size_column (column)
 
-    def size_column (self, column, view, model):
+    def size_column (self, column):
 
         if column.default_size is None:
-            default_size = column.compute_default_size (view, model)
+            default_size = column.compute_default_size ()
         else:
             default_size = column.default_size
         # FIXME: Abstract away fixed size setting in Column class!
@@ -628,8 +626,7 @@ class ViewColumnManager (ColumnManager):
     def _add_column (self, column):
 
         result = ColumnManager._add_column (self, column)
-        model = self.view.get_model ()
-        self.size_column (column, self.view, model)
+        self.size_column (column)
         return result
 
     def _remove_column (self, column):
@@ -647,7 +644,7 @@ class ViewColumnManager (ColumnManager):
             return
         self.logger.debug ("model changed, sizing columns")
         for column in self.iter_items ():
-            self.size_column (column, view, model)
+            self.size_column (column)
         self.columns_sized = True
 
 class WrappingMessageColumn (MessageColumn):
