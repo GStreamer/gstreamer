@@ -62,6 +62,9 @@ struct _GstBaseAudioSinkPrivate
    * before resyncing */
   guint64 drift_tolerance;
 
+  /* time of the previous detected discont candidate */
+  GstClockTime discont_time;
+
   /* number of nanoseconds we allow timestamps to drift
    * before resyncing */
   GstClockTime alignment_threshold;
@@ -963,6 +966,7 @@ gst_base_audio_sink_event (GstBaseSink * bsink, GstEvent * event)
       sink->priv->avg_skew = -1;
       sink->next_sample = -1;
       sink->priv->eos_time = -1;
+      sink->priv->discont_time = -1;
       if (sink->ringbuffer)
         gst_ring_buffer_set_flushing (sink->ringbuffer, FALSE);
       break;
@@ -1384,6 +1388,7 @@ gst_base_audio_sink_sync_latency (GstBaseSink * bsink, GstMiniObject * obj)
   sink->priv->avg_skew = -1;
   sink->next_sample = -1;
   sink->priv->eos_time = -1;
+  sink->priv->discont_time = -1;
 
   return GST_FLOW_OK;
 
@@ -1418,6 +1423,7 @@ gst_base_audio_sink_get_alignment (GstBaseAudioSink * sink,
   gint64 samples_done = segdone * ringbuf->samples_per_seg;
   gint64 headroom = sample_offset - samples_done;
   gboolean allow_align = TRUE;
+  gboolean discont = FALSE;
 
   /* now try to align the sample to the previous one, first see how big the
    * difference is. */
@@ -1437,7 +1443,24 @@ gst_base_audio_sink_get_alignment (GstBaseAudioSink * sink,
   if (sample_diff > headroom && align < 0)
     allow_align = FALSE;
 
-  if (G_LIKELY (sample_diff < max_sample_diff && allow_align)) {
+  /* wait before deciding to make a discontinuity */
+  if (G_UNLIKELY (sample_diff >= max_sample_diff)) {
+    GstClockTime time = gst_util_uint64_scale_int (sample_offset,
+        GST_SECOND, ringbuf->spec.rate);
+    if (sink->priv->discont_time == -1) {
+      /* discont candidate */
+      sink->priv->discont_time = time;
+    } else if (time - sink->priv->discont_time >= GST_SECOND) {
+      /* one second passed, discontinuity detected */
+      discont = TRUE;
+      sink->priv->discont_time = -1;
+    }
+  } else if (G_UNLIKELY (sink->priv->discont_time != -1)) {
+    /* we have had a discont, but are now back on track! */
+    sink->priv->discont_time = -1;
+  }
+
+  if (G_LIKELY (!discont && allow_align)) {
     GST_DEBUG_OBJECT (sink,
         "align with prev sample, ABS (%" G_GINT64_FORMAT ") < %"
         G_GINT64_FORMAT, align, max_sample_diff);
@@ -2045,6 +2068,7 @@ gst_base_audio_sink_change_state (GstElement * element,
       sink->next_sample = -1;
       sink->priv->last_align = -1;
       sink->priv->eos_time = -1;
+      sink->priv->discont_time = -1;
       gst_ring_buffer_set_flushing (sink->ringbuffer, FALSE);
       gst_ring_buffer_may_start (sink->ringbuffer, FALSE);
 
