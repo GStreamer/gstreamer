@@ -916,6 +916,44 @@ ges_timeline_pipeline_preview_set_video_sink (GESTimelinePipeline * self,
   g_object_set (self->priv->playsink, "video-sink", sink, NULL);
 };
 
+/**
+ * ges_timeline_pipeline_preview_get_audio_sink:
+ * @self: a #GESTimelinePipeline
+ *
+ * Obtains a pointer to playsink's audio sink element that is used for
+ * displaying audio when the #GESTimelinePipeline is in %TIMELINE_MODE_PREVIEW
+ *
+ * The caller is responsible for unreffing the returned element with
+ * #gst_object_unref.
+ *
+ * Returns: (transfer full): a pointer to the playsink audio sink #GstElement
+ */
+GstElement *
+ges_timeline_pipeline_preview_get_audio_sink (GESTimelinePipeline * self)
+{
+  GstElement *sink;
+
+  g_object_get (self->priv->playsink, "audio-sink", &sink, NULL);
+
+  return sink;
+};
+
+/**
+ * ges_timeline_pipeline_preview_set_audio_sink:
+ * @self: a #GESTimelinePipeline in %GST_STATE_NULL
+ * @sink: (transfer none): a audio sink #GstElement
+ *
+ * Sets playsink's audio sink element that is used for displaying audio when
+ * the #GESTimelinePipeline is in %TIMELINE_MODE_PREVIEW
+ */
+void
+ges_timeline_pipeline_preview_set_audio_sink (GESTimelinePipeline * self,
+    GstElement * sink)
+{
+  g_object_set (self->priv->playsink, "audio-sink", sink, NULL);
+};
+
+
 static gboolean
 play_sink_multiple_seeks_send_event (GstElement * element, GstEvent * event)
 {
