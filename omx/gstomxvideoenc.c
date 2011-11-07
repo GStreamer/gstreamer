@@ -1100,6 +1100,9 @@ gst_omx_video_enc_reset (GstBaseVideoEncoder * encoder)
 
   GST_DEBUG_OBJECT (self, "Resetting encoder");
 
+  if (self->started)
+    gst_omx_video_enc_drain (self);
+
   /* FIXME: Workaround for 
    * https://bugzilla.gnome.org/show_bug.cgi?id=654529
    *
@@ -1111,7 +1114,6 @@ gst_omx_video_enc_reset (GstBaseVideoEncoder * encoder)
   GST_BASE_VIDEO_CODEC (self)->frames = NULL;
 
   if (self->started) {
-    gst_omx_video_enc_drain (self);
     self->started = FALSE;
 
     gst_omx_port_set_flushing (self->in_port, TRUE);
