@@ -65,7 +65,7 @@ struct _GstPlaySinkConvertBin
   GMutex *lock;
 
   GstPad *sinkpad, *sink_proxypad;
-  gboolean sink_proxypad_blocked;
+  guint sink_proxypad_block_id;
   GstSegment segment;
 
   GstPad *srcpad;
