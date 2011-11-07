@@ -982,6 +982,16 @@ gst_omx_video_enc_set_format (GstBaseVideoEncoder * encoder,
       self->started = FALSE;
     }
 
+    /* FIXME: Workaround for 
+     * https://bugzilla.gnome.org/show_bug.cgi?id=654529
+     *
+     * This is always called with GST_BASE_VIDEO_CODEC_STREAM_LOCK
+     */
+    g_list_foreach (GST_BASE_VIDEO_CODEC (self)->frames,
+        (GFunc) gst_base_video_codec_free_frame, NULL);
+    g_list_free (GST_BASE_VIDEO_CODEC (self)->frames);
+    GST_BASE_VIDEO_CODEC (self)->frames = NULL;
+
     if (gst_omx_port_manual_reconfigure (self->in_port, TRUE) != OMX_ErrorNone)
       return FALSE;
     if (gst_omx_port_set_enabled (self->in_port, FALSE) != OMX_ErrorNone)
