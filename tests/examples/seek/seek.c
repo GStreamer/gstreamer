@@ -2131,6 +2131,19 @@ message_received (GstBus * bus, GstMessage * message, GstPipeline * pipeline)
 {
   const GstStructure *s;
 
+  switch (GST_MESSAGE_TYPE (message)) {
+    case GST_MESSAGE_ERROR:
+      GST_DEBUG_BIN_TO_DOT_FILE_WITH_TS (GST_BIN (pipeline),
+          GST_DEBUG_GRAPH_SHOW_ALL, "seek.error");
+      break;
+    case GST_MESSAGE_WARNING:
+      GST_DEBUG_BIN_TO_DOT_FILE_WITH_TS (GST_BIN (pipeline),
+          GST_DEBUG_GRAPH_SHOW_ALL, "seek.warning");
+      break;
+    default:
+      break;
+  }
+
   s = gst_message_get_structure (message);
   g_print ("message from \"%s\" (%s): ",
       GST_STR_NULL (GST_ELEMENT_NAME (GST_MESSAGE_SRC (message))),
@@ -2310,6 +2323,19 @@ msg_state_changed (GstBus * bus, GstMessage * message, GstPipeline * pipeline)
       set_update_scale (TRUE);
     } else {
       set_update_scale (FALSE);
+    }
+
+    /* dump graph for (some) pipeline state changes */
+    {
+      gchar *dump_name;
+
+      dump_name = g_strdup_printf ("seek.%s_%s",
+          gst_element_state_get_name (old), gst_element_state_get_name (new));
+
+      GST_DEBUG_BIN_TO_DOT_FILE_WITH_TS (GST_BIN (pipeline),
+          GST_DEBUG_GRAPH_SHOW_ALL, dump_name);
+
+      g_free (dump_name);
     }
   }
 }
