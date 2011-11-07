@@ -57,9 +57,19 @@ struct _GstBaseAudioSinkPrivate
 
   GstClockTime eos_time;
 
-  /* number of microseconds we alow timestamps or clock slaving to drift
+  /* number of microseconds we allow clock slaving to drift
    * before resyncing */
   guint64 drift_tolerance;
+
+  /* number of nanoseconds we allow timestamps to drift
+   * before resyncing */
+  GstClockTime alignment_threshold;
+
+  /* time of the previous detected discont candidate */
+  GstClockTime discont_time;
+
+  /* number of nanoseconds to wait until creating a discontinuity */
+  GstClockTime discont_wait;
 };
 
 /* BaseAudioSink signals and args */
@@ -78,9 +88,17 @@ enum
 /* FIXME, enable pull mode when clock slaving and trick modes are figured out */
 #define DEFAULT_CAN_ACTIVATE_PULL FALSE
 
-/* when timestamps or clock slaving drift for more than 40ms we resync. This is
+/* when timestamps drift for more than 40ms we resync. This should
+ * be anough to compensate for timestamp rounding errors. */
+#define DEFAULT_ALIGNMENT_THRESHOLD   (40 * GST_MSECOND)
+
+/* when clock slaving drift for more than 40ms we resync. This is
  * a reasonable default */
 #define DEFAULT_DRIFT_TOLERANCE   ((40 * GST_MSECOND) / GST_USECOND)
+
+/* allow for one second before resyncing to see if the timestamps drift will
+ * fix itself, or is a permanent offset */
+#define DEFAULT_DISCONT_WAIT        (1 * GST_SECOND)
 
 enum
 {
@@ -91,7 +109,9 @@ enum
   PROP_PROVIDE_CLOCK,
   PROP_SLAVE_METHOD,
   PROP_CAN_ACTIVATE_PULL,
+  PROP_ALIGNMENT_THRESHOLD,
   PROP_DRIFT_TOLERANCE,
+  PROP_DISCONT_WAIT,
 
   PROP_LAST
 };
@@ -213,15 +233,41 @@ gst_base_audio_sink_class_init (GstBaseAudioSinkClass * klass)
   /**
    * GstBaseAudioSink:drift-tolerance
    *
-   * Controls the amount of time in milliseconds that timestamps or clocks are allowed
+   * Controls the amount of time in microseconds that clocks are allowed
    * to drift before resynchronisation happens.
    *
    * Since: 0.10.26
    */
   g_object_class_install_property (gobject_class, PROP_DRIFT_TOLERANCE,
       g_param_spec_int64 ("drift-tolerance", "Drift Tolerance",
-          "Tolerance for timestamp and clock drift in microseconds", 1,
+          "Tolerance for clock drift in microseconds", 1,
           G_MAXINT64, DEFAULT_DRIFT_TOLERANCE,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+  /**
+   * GstBaseAudioSink:alignment_threshold
+   *
+   * Controls the amount of time in nanoseconds that timestamps are allowed
+   * to drift from their ideal time before choosing not to align them.
+   *
+   * Since: 0.10.26
+   */
+  g_object_class_install_property (gobject_class, PROP_ALIGNMENT_THRESHOLD,
+      g_param_spec_int64 ("alignment-threshold", "Alignment Threshold",
+          "Timestamp alignment threshold in nanoseconds", 1,
+          G_MAXINT64, DEFAULT_ALIGNMENT_THRESHOLD,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  /**
+   * GstBaseAudioSink:discont-wait
+   *
+   * A window of time in nanoseconds to wait before creating a discontinuity as
+   * a result of breaching the drift-tolerance.
+   */
+  g_object_class_install_property (gobject_class, PROP_DISCONT_WAIT,
+      g_param_spec_int64 ("discont-wait", "Discont Wait",
+          "Window of time in nanoseconds to wait before "
+          "creating a discontinuity", 0,
+          G_MAXINT64, DEFAULT_DISCONT_WAIT,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   gstelement_class->change_state =
@@ -264,6 +310,8 @@ gst_base_audio_sink_init (GstBaseAudioSink * baseaudiosink)
   baseaudiosink->provide_clock = DEFAULT_PROVIDE_CLOCK;
   baseaudiosink->priv->slave_method = DEFAULT_SLAVE_METHOD;
   baseaudiosink->priv->drift_tolerance = DEFAULT_DRIFT_TOLERANCE;
+  baseaudiosink->priv->alignment_threshold = DEFAULT_ALIGNMENT_THRESHOLD;
+  baseaudiosink->priv->discont_wait = DEFAULT_DISCONT_WAIT;
 
   baseaudiosink->provided_clock = gst_audio_clock_new ("GstAudioSinkClock",
       (GstAudioClockGetTimeFunc) gst_base_audio_sink_get_time, baseaudiosink);
@@ -632,6 +680,94 @@ gst_base_audio_sink_get_drift_tolerance (GstBaseAudioSink * sink)
   return result;
 }
 
+/**
+ * gst_base_audio_sink_set_alignment_threshold:
+ * @sink: a #GstBaseAudioSink
+ * @alignment_threshold: the new alignment threshold in nanoseconds
+ *
+ * Controls the sink's alignment threshold.
+ *
+ * Since: 0.10.31
+ */
+void
+gst_base_audio_sink_set_alignment_threshold (GstBaseAudioSink * sink,
+    GstClockTime alignment_threshold)
+{
+  g_return_if_fail (GST_IS_BASE_AUDIO_SINK (sink));
+
+  GST_OBJECT_LOCK (sink);
+  sink->priv->alignment_threshold = alignment_threshold;
+  GST_OBJECT_UNLOCK (sink);
+}
+
+/**
+ * gst_base_audio_sink_get_alignment_threshold
+ * @sink: a #GstBaseAudioSink
+ *
+ * Get the current alignment threshold, in nanoseconds, used by @sink.
+ *
+ * Returns: The current alignment threshold used by @sink.
+ *
+ * Since: 0.10.31
+ */
+GstClockTime
+gst_base_audio_sink_get_alignment_threshold (GstBaseAudioSink * sink)
+{
+  gint64 result;
+
+  g_return_val_if_fail (GST_IS_BASE_AUDIO_SINK (sink), -1);
+
+  GST_OBJECT_LOCK (sink);
+  result = sink->priv->alignment_threshold;
+  GST_OBJECT_UNLOCK (sink);
+
+  return result;
+}
+
+/**
+ * gst_base_audio_sink_set_discont_wait:
+ * @sink: a #GstBaseAudioSink
+ * @discont_wait: the new discont wait in nanoseconds
+ *
+ * Controls how long the sink will wait before creating a discontinuity.
+ *
+ * Since: 0.10.31
+ */
+void
+gst_base_audio_sink_set_discont_wait (GstBaseAudioSink * sink,
+    GstClockTime discont_wait)
+{
+  g_return_if_fail (GST_IS_BASE_AUDIO_SINK (sink));
+
+  GST_OBJECT_LOCK (sink);
+  sink->priv->discont_wait = discont_wait;
+  GST_OBJECT_UNLOCK (sink);
+}
+
+/**
+ * gst_base_audio_sink_get_discont_wait
+ * @sink: a #GstBaseAudioSink
+ *
+ * Get the current discont wait, in nanoseconds, used by @sink.
+ *
+ * Returns: The current discont wait used by @sink.
+ *
+ * Since: 0.10.31
+ */
+GstClockTime
+gst_base_audio_sink_get_discont_wait (GstBaseAudioSink * sink)
+{
+  GstClockTime result;
+
+  g_return_val_if_fail (GST_IS_BASE_AUDIO_SINK (sink), -1);
+
+  GST_OBJECT_LOCK (sink);
+  result = sink->priv->discont_wait;
+  GST_OBJECT_UNLOCK (sink);
+
+  return result;
+}
+
 static void
 gst_base_audio_sink_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec)
@@ -658,6 +794,13 @@ gst_base_audio_sink_set_property (GObject * object, guint prop_id,
       break;
     case PROP_DRIFT_TOLERANCE:
       gst_base_audio_sink_set_drift_tolerance (sink, g_value_get_int64 (value));
+      break;
+    case PROP_ALIGNMENT_THRESHOLD:
+      gst_base_audio_sink_set_alignment_threshold (sink,
+          g_value_get_uint64 (value));
+      break;
+    case PROP_DISCONT_WAIT:
+      gst_base_audio_sink_set_discont_wait (sink, g_value_get_uint64 (value));
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -691,6 +834,13 @@ gst_base_audio_sink_get_property (GObject * object, guint prop_id,
       break;
     case PROP_DRIFT_TOLERANCE:
       g_value_set_int64 (value, gst_base_audio_sink_get_drift_tolerance (sink));
+      break;
+    case PROP_ALIGNMENT_THRESHOLD:
+      g_value_set_uint64 (value,
+          gst_base_audio_sink_get_alignment_threshold (sink));
+      break;
+    case PROP_DISCONT_WAIT:
+      g_value_set_uint64 (value, gst_base_audio_sink_get_discont_wait (sink));
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -864,6 +1014,7 @@ gst_base_audio_sink_event (GstBaseSink * bsink, GstEvent * event)
       sink->priv->avg_skew = -1;
       sink->next_sample = -1;
       sink->priv->eos_time = -1;
+      sink->priv->discont_time = -1;
       if (sink->ringbuffer)
         gst_ring_buffer_set_flushing (sink->ringbuffer, FALSE);
       break;
@@ -1274,6 +1425,7 @@ gst_base_audio_sink_sync_latency (GstBaseSink * bsink, GstMiniObject * obj)
   sink->priv->avg_skew = -1;
   sink->next_sample = -1;
   sink->priv->eos_time = -1;
+  sink->priv->discont_time = -1;
 
   return GST_FLOW_OK;
 
@@ -1302,43 +1454,65 @@ gst_base_audio_sink_get_alignment (GstBaseAudioSink * sink,
 {
   GstRingBuffer *ringbuf = sink->ringbuffer;
   gint64 align;
-  gint64 diff;
-  gint64 maxdrift;
+  gint64 sample_diff;
+  gint64 max_sample_diff;
   gint segdone = g_atomic_int_get (&ringbuf->segdone) - ringbuf->segbase;
   gint64 samples_done = segdone * ringbuf->samples_per_seg;
   gint64 headroom = sample_offset - samples_done;
   gboolean allow_align = TRUE;
+  gboolean discont = FALSE;
   gint rate;
 
   /* now try to align the sample to the previous one, first see how big the
    * difference is. */
   if (sample_offset >= sink->next_sample)
-    diff = sample_offset - sink->next_sample;
+    sample_diff = sample_offset - sink->next_sample;
   else
-    diff = sink->next_sample - sample_offset;
+    sample_diff = sink->next_sample - sample_offset;
 
   rate = GST_AUDIO_INFO_RATE (&ringbuf->spec.info);
 
-  /* calculate the max allowed drift in units of samples. By default this is
-   * 20ms and should be anough to compensate for timestamp rounding errors. */
-  maxdrift = (rate * sink->priv->drift_tolerance) / GST_MSECOND;
+  /* calculate the max allowed drift in units of samples. */
+  max_sample_diff = gst_util_uint64_scale_int (sink->priv->alignment_threshold,
+      rate, GST_SECOND);
 
   /* calc align with previous sample */
   align = sink->next_sample - sample_offset;
 
   /* don't align if it means writing behind the read-segment */
-  if (diff > headroom && align < 0)
+  if (sample_diff > headroom && align < 0)
     allow_align = FALSE;
 
-  if (G_LIKELY (diff < maxdrift && allow_align)) {
+  if (G_UNLIKELY (sample_diff >= max_sample_diff)) {
+    /* wait before deciding to make a discontinuity */
+    if (sink->priv->discont_wait > 0) {
+      GstClockTime time = gst_util_uint64_scale_int (sample_offset,
+          GST_SECOND, rate);
+      if (sink->priv->discont_time == -1) {
+        /* discont candidate */
+        sink->priv->discont_time = time;
+      } else if (time - sink->priv->discont_time >= sink->priv->discont_wait) {
+        /* discont_wait expired, discontinuity detected */
+        discont = TRUE;
+        sink->priv->discont_time = -1;
+      }
+    } else {
+      discont = TRUE;
+    }
+  } else if (G_UNLIKELY (sink->priv->discont_time != -1)) {
+    /* we have had a discont, but are now back on track! */
+    sink->priv->discont_time = -1;
+  }
+
+  if (G_LIKELY (!discont && allow_align)) {
     GST_DEBUG_OBJECT (sink,
         "align with prev sample, ABS (%" G_GINT64_FORMAT ") < %"
-        G_GINT64_FORMAT, align, maxdrift);
+        G_GINT64_FORMAT, align, max_sample_diff);
   } else {
     gint64 diff_s G_GNUC_UNUSED;
 
     /* calculate sample diff in seconds for error message */
-    diff_s = gst_util_uint64_scale_int (diff, GST_SECOND, rate);
+    diff_s = gst_util_uint64_scale_int (sample_diff, GST_SECOND, rate);
 
     /* timestamps drifted apart from previous samples too much, we need to
      * resync. We log this as an element warning. */
@@ -1941,6 +2115,7 @@ gst_base_audio_sink_change_state (GstElement * element,
       sink->next_sample = -1;
       sink->priv->last_align = -1;
       sink->priv->eos_time = -1;
+      sink->priv->discont_time = -1;
       gst_ring_buffer_set_flushing (sink->ringbuffer, FALSE);
       gst_ring_buffer_may_start (sink->ringbuffer, FALSE);
 

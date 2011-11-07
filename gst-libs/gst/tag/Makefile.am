@@ -110,7 +110,7 @@ Android.mk: Makefile.am
 	 -:TAGS eng debug \
          -:REL_TOP $(top_srcdir) -:ABS_TOP $(abs_top_srcdir) \
 	 -:SOURCES $(libgsttag_@GST_MAJORMINOR@_la_SOURCES) \
-	 -:CFLAGS $(DEFS) $(libgsttag_@GST_MAJORMINOR@_la_CFLAGS) \
+	 -:CFLAGS $(DEFS) $(DEFAULT_INCLUDES) $(libgsttag_@GST_MAJORMINOR@_la_CFLAGS) \
 	 -:LDFLAGS $(libgsttag_@GST_MAJORMINOR@_la_LDFLAGS) \
 	           $(libgsttag_@GST_MAJORMINOR@_la_LIBADD) \
 	           -ldl \

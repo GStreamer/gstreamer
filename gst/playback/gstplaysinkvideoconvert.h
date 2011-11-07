@@ -18,6 +18,7 @@
  */
 
 #include <gst/gst.h>
+#include "gstplaysinkconvertbin.h"
 
 #ifndef __GST_PLAY_SINK_VIDEO_CONVERT_H__
 #define __GST_PLAY_SINK_VIDEO_CONVERT_H__
@@ -35,47 +36,18 @@ G_BEGIN_DECLS
   (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_PLAY_SINK_VIDEO_CONVERT))
 #define GST_IS_PLAY_SINK_VIDEO_CONVERT_CLASS(klass) \
   (G_TYPE_CHECK_CLASS_TYPE ((klass), GST_TYPE_PLAY_SINK_VIDEO_CONVERT))
-
-#define GST_PLAY_SINK_VIDEO_CONVERT_LOCK(obj) G_STMT_START {                   \
-    GST_LOG_OBJECT (obj,                                                \
-                    "locking from thread %p",                           \
-                    g_thread_self ());                                  \
-    g_mutex_lock (GST_PLAY_SINK_VIDEO_CONVERT_CAST(obj)->lock);                \
-    GST_LOG_OBJECT (obj,                                                \
-                    "locked from thread %p",                            \
-                    g_thread_self ());                                  \
-} G_STMT_END
-
-#define GST_PLAY_SINK_VIDEO_CONVERT_UNLOCK(obj) G_STMT_START {                 \
-    GST_LOG_OBJECT (obj,                                                \
-                    "unlocking from thread %p",                         \
-                    g_thread_self ());                                  \
-    g_mutex_unlock (GST_PLAY_SINK_VIDEO_CONVERT_CAST(obj)->lock);              \
-} G_STMT_END
-
 typedef struct _GstPlaySinkVideoConvert GstPlaySinkVideoConvert;
 typedef struct _GstPlaySinkVideoConvertClass GstPlaySinkVideoConvertClass;
 
 struct _GstPlaySinkVideoConvert
 {
-  GstBin parent;
+  GstPlaySinkConvertBin parent;
 
-  /* < private > */
-  GMutex *lock;
-
-  GstPad *sinkpad, *sink_proxypad;
-  gulong sink_proxypad_block_id;
-  GstSegment segment;
-
-  GstPad *srcpad;
-
-  gboolean raw;
-  GstElement *conv, *scale;
 };
 
 struct _GstPlaySinkVideoConvertClass
 {
-  GstBinClass parent;
+  GstPlaySinkConvertBinClass parent;
 };
 
 GType gst_play_sink_video_convert_get_type (void);

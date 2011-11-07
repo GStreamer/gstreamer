@@ -175,6 +175,16 @@ void       gst_base_audio_sink_set_drift_tolerance    (GstBaseAudioSink *sink,
                                                        gint64 drift_tolerance);
 gint64     gst_base_audio_sink_get_drift_tolerance    (GstBaseAudioSink *sink);
 
+void       gst_base_audio_sink_set_alignment_threshold (GstBaseAudioSink * sink,
+                                                        GstClockTime alignment_threshold);
+GstClockTime
+           gst_base_audio_sink_get_alignment_threshold (GstBaseAudioSink * sink);
+
+void       gst_base_audio_sink_set_discont_wait       (GstBaseAudioSink * sink,
+                                                       GstClockTime discont_wait);
+GstClockTime
+           gst_base_audio_sink_get_discont_wait       (GstBaseAudioSink * sink);
+
 G_END_DECLS
 
 #endif /* __GST_BASE_AUDIO_SINK_H__ */

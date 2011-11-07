@@ -40,7 +40,6 @@
 #endif
 
 #include <gst/gst.h>
-#include <gst/base/gstcollectpads.h>
 #include <gst/base/gstbytewriter.h>
 #include <gst/tag/tag.h>
 
