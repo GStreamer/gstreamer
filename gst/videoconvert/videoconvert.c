@@ -1293,7 +1293,7 @@ putline16_r210 (VideoConvert * convert, GstVideoFrame * dest,
 {
   int i;
   guint8 *destline = FRAME_GET_LINE (dest, 0, j);
-  for (i = 0; i < convert->width / 2; i++) {
+  for (i = 0; i < convert->width; i++) {
     guint32 x = 0;
     x |= (src[i * 4 + 1] & 0xffc0) << 14;
     x |= (src[i * 4 + 2] & 0xffc0) << 4;
