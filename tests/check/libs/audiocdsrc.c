@@ -329,10 +329,21 @@ GST_START_TEST (test_discid_calculations)
     GST_CD_FOO_SRC (foosrc)->cur_disc = i;
     gst_element_set_state (pipeline, GST_STATE_PLAYING);
 
+    /* TAG messages are queued and only rendered after the preroll object has
+     * been prerolled (and ASYNC_DONE was posted), the TAG event got queued for
+     * processing/posting after that */
+    GST_LOG ("waiting for ASYNC_DONE message on the bus");
+    msg =
+        gst_bus_timed_pop_filtered (GST_ELEMENT_BUS (pipeline),
+        GST_CLOCK_TIME_NONE, GST_MESSAGE_ASYNC_DONE);
+    gst_message_unref (msg);
+
+    GST_LOG ("waiting for TAG message on the bus");
     msg =
         gst_bus_timed_pop_filtered (GST_ELEMENT_BUS (pipeline),
         GST_CLOCK_TIME_NONE, GST_MESSAGE_TAG);
     gst_message_parse_tag (msg, &tags);
+    GST_LOG ("got tags: %" GST_PTR_FORMAT, tags);
     fail_unless (tags != NULL);
     fail_unless (tag_list_has_tag (tags, "track-count", G_TYPE_UINT));
     fail_unless (tag_list_has_tag (tags, "track-number", G_TYPE_UINT));
@@ -343,11 +354,6 @@ GST_START_TEST (test_discid_calculations)
     fail_unless (tag_list_has_tag (tags, "musicbrainz-discid-full",
             G_TYPE_STRING));
     gst_tag_list_free (tags);
-    gst_message_unref (msg);
-
-    msg =
-        gst_bus_timed_pop_filtered (GST_ELEMENT_BUS (pipeline),
-        GST_CLOCK_TIME_NONE, GST_MESSAGE_ASYNC_DONE);
     gst_message_unref (msg);
 
     gst_element_set_state (pipeline, GST_STATE_NULL);
