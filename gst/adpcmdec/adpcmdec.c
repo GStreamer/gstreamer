@@ -199,21 +199,21 @@ adpcmdec_sink_setcaps (GstPad * pad, GstCaps * caps)
  *
  *=====================================================================
 */
-static int AdaptationTable[] = {
+static const int AdaptationTable[] = {
   230, 230, 230, 230, 307, 409, 512, 614,
   768, 614, 512, 409, 307, 230, 230, 230
 };
 
-static int AdaptCoeff1[] = {
+static const int AdaptCoeff1[] = {
   256, 512, 0, 192, 240, 460, 392
 };
 
-static int AdaptCoeff2[] = {
+static const int AdaptCoeff2[] = {
   0, -256, 0, 64, 0, -208, -232
 };
 
 static gint16
-read_sample (guint8 * data)
+read_sample (const guint8 * data)
 {
   guint16 val = data[0] | (data[1] << 8);
   return *((gint16 *) & val);
@@ -225,7 +225,7 @@ read_sample (guint8 * data)
    All buffer lengths have been verified by the caller 
  */
 static gboolean
-adpcmdec_decode_ms_block (ADPCMDec * dec, int n_samples, guint8 * data,
+adpcmdec_decode_ms_block (ADPCMDec * dec, int n_samples, const guint8 * data,
     gint16 * samples)
 {
   gint16 pred[2];
@@ -298,11 +298,11 @@ adpcmdec_decode_ms_block (ADPCMDec * dec, int n_samples, guint8 * data,
   return TRUE;
 }
 
-static int ima_indx_adjust[16] = {
+static const int ima_indx_adjust[16] = {
   -1, -1, -1, -1, 2, 4, 6, 8, -1, -1, -1, -1, 2, 4, 6, 8,
 };
 
-static int ima_step_size[89] = {
+static const int ima_step_size[89] = {
   7, 8, 9, 10, 11, 12, 13, 14, 16, 17, 19, 21, 23, 25, 28, 31, 34, 37, 41, 45,
   50, 55, 60, 66, 73, 80, 88, 97, 107, 118, 130, 143, 157, 173, 190, 209, 230,
   253, 279, 307, 337, 371, 408, 449, 494, 544, 598, 658, 724, 796, 876, 963,
@@ -318,7 +318,7 @@ static int ima_step_size[89] = {
    All buffer lengths have been verified by the caller 
  */
 static gboolean
-adpcmdec_decode_ima_block (ADPCMDec * dec, int n_samples, guint8 * data,
+adpcmdec_decode_ima_block (ADPCMDec * dec, int n_samples, const guint8 * data,
     gint16 * samples)
 {
   gint16 stepindex[2];
@@ -378,7 +378,7 @@ adpcmdec_decode_ima_block (ADPCMDec * dec, int n_samples, guint8 * data,
 }
 
 static GstFlowReturn
-adpcmdec_decode_block (ADPCMDec * dec, guint8 * data, int blocksize)
+adpcmdec_decode_block (ADPCMDec * dec, const guint8 * data, int blocksize)
 {
   gboolean res;
   GstBuffer *outbuf = NULL;
