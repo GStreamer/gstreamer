@@ -1166,8 +1166,8 @@ gst_h264_parser_identify_nalu (GstH264NalParser * nalparser,
 {
   gint off1, off2;
 
-  if (size - offset < 4) {
-    GST_DEBUG ("Can't parse, buffer has too small size %" G_GSSIZE_FORMAT
+  if (size < offset + 4) {
+    GST_DEBUG ("Can't parse, buffer has too small size %" G_GSIZE_FORMAT
         ", offset %u", size, offset);
     return GST_H264_PARSER_ERROR;
   }
@@ -1239,6 +1239,12 @@ gst_h264_parser_identify_nalu_avc (GstH264NalParser * nalparser,
     GstH264NalUnit * nalu)
 {
   GstBitReader br;
+
+  if (size < offset + nal_length_size) {
+    GST_DEBUG ("Can't parse, buffer has too small size %" G_GSIZE_FORMAT
+        ", offset %u", size, offset);
+    return GST_H264_PARSER_ERROR;
+  }
 
   size = size - offset;
   gst_bit_reader_init (&br, data + offset, size);
