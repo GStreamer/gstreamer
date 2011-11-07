@@ -408,16 +408,6 @@ _find_nearest_frame (GstOMXVideoDec * self, GstOMXBuffer * buf)
   guint64 best_diff = G_MAXUINT64;
   BufferIdentification *best_id = NULL;
 
-  /* This prevents a deadlock between the srcpad stream
-   * lock and the videocodec stream lock, if ::reset()
-   * is called at the wrong time
-   */
-  if (gst_omx_port_is_flushing (self->out_port)) {
-    GST_DEBUG_OBJECT (self, "Flushing -- returning NULL");
-    return NULL;
-  }
-
-  GST_BASE_VIDEO_CODEC_STREAM_LOCK (self);
   for (l = GST_BASE_VIDEO_CODEC (self)->frames; l; l = l->next) {
     GstVideoFrame *tmp = l->data;
     BufferIdentification *id = tmp->coder_hook;
@@ -471,8 +461,6 @@ _find_nearest_frame (GstOMXVideoDec * self, GstOMXBuffer * buf)
       }
     }
   }
-
-  GST_BASE_VIDEO_CODEC_STREAM_UNLOCK (self);
 
   if (finish_frames) {
     g_warning ("Too old frames, bug in decoder -- please file a bug");
@@ -699,6 +687,17 @@ gst_omx_video_dec_loop (GstOMXVideoDec * self)
   GST_DEBUG_OBJECT (self, "Handling buffer: 0x%08x %lu", buf->omx_buf->nFlags,
       buf->omx_buf->nTimeStamp);
 
+  /* This prevents a deadlock between the srcpad stream
+   * lock and the videocodec stream lock, if ::reset()
+   * is called at the wrong time
+   */
+  if (gst_omx_port_is_flushing (self->out_port)) {
+    GST_DEBUG_OBJECT (self, "Flushing");
+    gst_omx_port_release_buffer (self->out_port, buf);
+    goto flushing;
+  }
+
+  GST_BASE_VIDEO_CODEC_STREAM_LOCK (self);
   frame = _find_nearest_frame (self, buf);
   if (!frame && buf->omx_buf->nFilledLen > 0) {
     GstBuffer *outbuf;
@@ -715,6 +714,7 @@ gst_omx_video_dec_loop (GstOMXVideoDec * self)
 
     if (!gst_omx_video_dec_fill_buffer (self, buf, outbuf)) {
       gst_buffer_unref (outbuf);
+      GST_BASE_VIDEO_CODEC_STREAM_UNLOCK (self);
       goto invalid_buffer;
     }
   } else if (buf->omx_buf->nFilledLen > 0) {
@@ -737,6 +737,7 @@ gst_omx_video_dec_loop (GstOMXVideoDec * self)
         flow_ret =
             gst_base_video_decoder_finish_frame (GST_BASE_VIDEO_DECODER (self),
             frame);
+        GST_BASE_VIDEO_CODEC_STREAM_UNLOCK (self);
         goto invalid_buffer;
       }
     }
@@ -748,6 +749,7 @@ gst_omx_video_dec_loop (GstOMXVideoDec * self)
         gst_base_video_decoder_finish_frame (GST_BASE_VIDEO_DECODER (self),
         frame);
   }
+  GST_BASE_VIDEO_CODEC_STREAM_UNLOCK (self);
 
   if (flow_ret == GST_FLOW_OK && (buf->omx_buf->nFlags & OMX_BUFFERFLAG_EOS)) {
     g_mutex_lock (self->drain_lock);
