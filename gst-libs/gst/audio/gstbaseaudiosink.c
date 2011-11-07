@@ -252,7 +252,7 @@ gst_base_audio_sink_class_init (GstBaseAudioSinkClass * klass)
    * Controls the amount of time in nanoseconds that timestamps are allowed
    * to drift from their ideal time before choosing not to align them.
    *
-   * Since: 0.10.26
+   * Since: 0.10.36
    */
   g_object_class_install_property (gobject_class, PROP_ALIGNMENT_THRESHOLD,
       g_param_spec_int64 ("alignment-threshold", "Alignment Threshold",
@@ -265,6 +265,8 @@ gst_base_audio_sink_class_init (GstBaseAudioSinkClass * klass)
    *
    * A window of time in nanoseconds to wait before creating a discontinuity as
    * a result of breaching the drift-tolerance.
+   *
+   * Since: 0.10.36
    */
   g_object_class_install_property (gobject_class, PROP_DISCONT_WAIT,
       g_param_spec_int64 ("discont-wait", "Discont Wait",
@@ -714,7 +716,7 @@ gst_base_audio_sink_get_drift_tolerance (GstBaseAudioSink * sink)
  *
  * Controls the sink's alignment threshold.
  *
- * Since: 0.10.31
+ * Since: 0.10.36
  */
 void
 gst_base_audio_sink_set_alignment_threshold (GstBaseAudioSink * sink,
@@ -735,7 +737,7 @@ gst_base_audio_sink_set_alignment_threshold (GstBaseAudioSink * sink,
  *
  * Returns: The current alignment threshold used by @sink.
  *
- * Since: 0.10.31
+ * Since: 0.10.36
  */
 GstClockTime
 gst_base_audio_sink_get_alignment_threshold (GstBaseAudioSink * sink)
@@ -758,7 +760,7 @@ gst_base_audio_sink_get_alignment_threshold (GstBaseAudioSink * sink)
  *
  * Controls how long the sink will wait before creating a discontinuity.
  *
- * Since: 0.10.31
+ * Since: 0.10.36
  */
 void
 gst_base_audio_sink_set_discont_wait (GstBaseAudioSink * sink,
@@ -779,7 +781,7 @@ gst_base_audio_sink_set_discont_wait (GstBaseAudioSink * sink,
  *
  * Returns: The current discont wait used by @sink.
  *
- * Since: 0.10.31
+ * Since: 0.10.36
  */
 GstClockTime
 gst_base_audio_sink_get_discont_wait (GstBaseAudioSink * sink)

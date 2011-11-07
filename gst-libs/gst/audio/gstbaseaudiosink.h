@@ -144,7 +144,7 @@ struct _GstBaseAudioSink {
  * @payload: payload data in a format suitable to write to the sink. If no
  *           payloading is required, returns a reffed copy of the original
  *           buffer, else returns the payloaded buffer with all other metadata
- *           copied. (Since: 0.10.35)
+ *           copied. (Since: 0.10.36)
  *
  * #GstBaseAudioSink class. Override the vmethod to implement
  * functionality.

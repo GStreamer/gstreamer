@@ -436,7 +436,7 @@ gst_text_overlay_class_init (GstTextOverlayClass * klass)
    *
    * Whether to display a shadow of each letter under the text.
    *
-   * Since: 0.10.35
+   * Since: 0.10.36
    **/
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_SHADOW,
       g_param_spec_boolean ("shadow", "create shadow of text",
@@ -527,7 +527,7 @@ gst_text_overlay_class_init (GstTextOverlayClass * klass)
    *
    * Color of the outline of the rendered text.
    *
-   * Since: 0.10.35
+   * Since: 0.10.36
    **/
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_OUTLINE_COLOR,
       g_param_spec_uint ("outline-color", "Text Outline Color",

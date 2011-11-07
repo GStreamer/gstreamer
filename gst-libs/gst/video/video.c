@@ -2081,7 +2081,7 @@ gst_video_format_get_size (GstVideoFormat format, int width, int height)
  * Calculates the total number of bytes in the raw video format for the given
  * caps.  This number should be used when allocating a buffer for raw video.
  *
- * Since: 0.10.34
+ * Since: 0.10.36
  *
  * Returns: %TRUE if the size could be calculated from the caps
  */
