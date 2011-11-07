@@ -634,7 +634,6 @@ _find_nearest_frame (GstOMXVideoEnc * self, GstOMXBuffer * buf)
   guint64 best_diff = G_MAXUINT64;
   BufferIdentification *best_id = NULL;
 
-  GST_BASE_VIDEO_CODEC_STREAM_LOCK (self);
   for (l = GST_BASE_VIDEO_CODEC (self)->frames; l; l = l->next) {
     GstVideoFrame *tmp = l->data;
     BufferIdentification *id = tmp->coder_hook;
@@ -688,8 +687,6 @@ _find_nearest_frame (GstOMXVideoEnc * self, GstOMXBuffer * buf)
       }
     }
   }
-
-  GST_BASE_VIDEO_CODEC_STREAM_UNLOCK (self);
 
   if (finish_frames) {
     g_warning ("Too old frames, bug in encoder -- please file a bug");
@@ -768,6 +765,7 @@ gst_omx_video_enc_loop (GstOMXVideoEnc * self)
     goto flushing;
   }
 
+  GST_BASE_VIDEO_CODEC_STREAM_LOCK (self);
   frame = _find_nearest_frame (self, buf);
   if ((buf->omx_buf->nFlags & OMX_BUFFERFLAG_CODECCONFIG)
       && buf->omx_buf->nFilledLen > 0) {
@@ -785,6 +783,7 @@ gst_omx_video_enc_loop (GstOMXVideoEnc * self)
       gst_caps_unref (caps);
       if (buf)
         gst_omx_port_release_buffer (self->out_port, buf);
+      GST_BASE_VIDEO_CODEC_STREAM_UNLOCK (self);
       goto caps_failed;
     }
     gst_caps_unref (caps);
@@ -840,6 +839,7 @@ gst_omx_video_enc_loop (GstOMXVideoEnc * self)
         gst_base_video_encoder_finish_frame (GST_BASE_VIDEO_ENCODER (self),
         frame);
   }
+  GST_BASE_VIDEO_CODEC_STREAM_UNLOCK (self);
 
   if (flow_ret == GST_FLOW_OK && (buf->omx_buf->nFlags & OMX_BUFFERFLAG_EOS)) {
     g_mutex_lock (self->drain_lock);
