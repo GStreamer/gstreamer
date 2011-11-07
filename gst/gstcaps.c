@@ -1292,7 +1292,7 @@ gst_caps_intersect_zig_zag (const GstCaps * caps1, const GstCaps * caps2)
 static GstCaps *
 gst_caps_intersect_first (const GstCaps * caps1, const GstCaps * caps2)
 {
-  guint64 i;                    /* index can be up to 2 * G_MAX_UINT */
+  guint i;
   guint j, len1, len2;
 
   GstStructure *struct1;

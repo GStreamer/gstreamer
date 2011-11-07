@@ -3078,10 +3078,7 @@ gst_caps_structure_can_intersect_field (GQuark id, const GValue * val1,
 
       if (eq == GST_VALUE_UNORDERED) {
         /* we need to try interseting */
-        GValue dest_value = { 0 };
-        if (gst_value_intersect (&dest_value, val1, val2)) {
-          g_value_unset (&dest_value);
-        } else {
+        if (!gst_value_intersect (NULL, val1, val2)) {
           return FALSE;
         }
       } else if (eq != GST_VALUE_EQUAL) {
@@ -3115,11 +3112,8 @@ gst_structure_can_intersect (const GstStructure * struct1,
     return FALSE;
 
   /* tries to intersect if we have the field in both */
-  if (G_UNLIKELY (!gst_structure_foreach ((GstStructure *) struct1,
-              gst_caps_structure_can_intersect_field, (gpointer) struct2)))
-    return FALSE;
-
-  return TRUE;
+  return gst_structure_foreach ((GstStructure *) struct1,
+      gst_caps_structure_can_intersect_field, (gpointer) struct2);
 }
 
 static gboolean
@@ -3127,16 +3121,22 @@ gst_caps_structure_is_subset_field (GQuark field_id, const GValue * value,
     gpointer user_data)
 {
   GstStructure *superset = user_data;
-  GValue subtraction = { 0, };
   const GValue *other;
+  int comparison;
 
   if (!(other = gst_structure_id_get_value (superset, field_id)))
     /* field is missing in the superset => is subset */
     return TRUE;
 
+  comparison = gst_value_compare (other, value);
+
   /* equal values are subset */
-  if (gst_value_compare (other, value) == GST_VALUE_EQUAL)
+  if (comparison == GST_VALUE_EQUAL)
     return TRUE;
+
+  /* ordered, but unequal, values are not */
+  if (comparison != GST_VALUE_UNORDERED)
+    return FALSE;
 
   /*
    * 1 - [1,2] = empty
@@ -3156,14 +3156,12 @@ gst_caps_structure_is_subset_field (GQuark field_id, const GValue * value,
    *
    *  First caps subtraction needs to return a non-empty set, second
    *  subtractions needs to give en empty set.
+   *  Both substractions are switched below, as it's faster that way.
    */
-  if (gst_value_subtract (&subtraction, other, value)) {
-    g_value_unset (&subtraction);
-    /* !empty result, swapping must be empty */
-    if (!gst_value_subtract (&subtraction, value, other))
+  if (!gst_value_subtract (NULL, value, other)) {
+    if (gst_value_subtract (NULL, other, value)) {
       return TRUE;
-
-    g_value_unset (&subtraction);
+    }
   }
   return FALSE;
 }
