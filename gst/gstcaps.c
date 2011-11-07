@@ -1111,10 +1111,10 @@ gst_caps_is_strictly_equal (const GstCaps * caps1, const GstCaps * caps2)
   if (G_UNLIKELY (caps1 == NULL || caps2 == NULL))
     return FALSE;
 
-  if (caps1->structs->len != caps2->structs->len)
+  if (GST_CAPS_LEN (caps1) != GST_CAPS_LEN (caps2))
     return FALSE;
 
-  for (i = 0; i < caps1->structs->len; i++) {
+  for (i = 0; i < GST_CAPS_LEN (caps1); i++) {
     if (!gst_structure_is_equal (gst_caps_get_structure_unchecked (caps1, i),
             gst_caps_get_structure_unchecked (caps2, i)))
       return FALSE;
