@@ -387,3 +387,123 @@
    obj:/usr/lib/libfontconfig.so.*
    fun:FcFontRenderPrepare
 }
+# ALSA leaks which are fixed by calling snd_config_update_free_global
+{
+   <ALSA cached config data>
+   Memcheck:Leak
+   fun:malloc
+   fun:strdup
+   obj:/usr/lib/libasound.so.2.0.0
+   obj:/usr/lib/libasound.so.2.0.0
+   fun:gst_alsa_get_device_list
+   fun:gst_alsa_device_property_probe_get_values
+   fun:gst_property_probe_get_values
+   fun:gst_property_probe_probe_and_get_values
+   fun:gst_property_probe_probe_and_get_values_name
+   fun:test_device_property_probe
+   fun:srunner_run_all
+   fun:gst_check_run_suite
+   fun:main
+}
+{
+   <ALSA cached config data>
+   Memcheck:Leak
+   fun:malloc
+   obj:/usr/lib/libasound.so.2.0.0
+   obj:/usr/lib/libasound.so.2.0.0
+   fun:gst_alsa_get_device_list
+   fun:gst_alsa_device_property_probe_get_values
+   fun:gst_property_probe_get_values
+   fun:gst_property_probe_probe_and_get_values
+   fun:gst_property_probe_probe_and_get_values_name
+   fun:test_device_property_probe
+   fun:srunner_run_all
+   fun:gst_check_run_suite
+   fun:main
+}
+{
+   <ALSA cached config data>
+   Memcheck:Leak
+   fun:malloc
+   fun:_dl_close_worker
+   fun:_dl_close
+   fun:_dl_catch_error
+   fun:_dlerror_run
+   fun:dlclose
+   obj:/usr/lib/libasound.so.2.0.0
+   fun:snd_config_searcha_hooks
+   fun:snd_config_searchva_hooks
+   obj:/usr/lib/libasound.so.2.0.0
+   fun:snd_config_search_definition
+   obj:/usr/lib/libasound.so.2.0.0
+   fun:gst_alsa_get_device_list
+   fun:gst_alsa_device_property_probe_get_values
+   fun:gst_property_probe_get_values
+   fun:gst_property_probe_probe_and_get_values
+   fun:gst_property_probe_probe_and_get_values_name
+   fun:test_device_property_probe
+   fun:srunner_run_all
+   fun:gst_check_run_suite
+}
+{
+   <ALSA cached config data>
+   Memcheck:Leak
+   fun:malloc
+   fun:strdup
+   obj:/usr/lib/libasound.so.2.0.0
+   obj:/usr/lib/libasound.so.2.0.0
+   fun:snd_hctl_open
+   fun:snd_mixer_attach
+   fun:gst_alsa_mixer_open
+   fun:gst_alsa_mixer_new
+   fun:gst_alsa_mixer_element_change_state
+   fun:gst_element_change_state
+   fun:gst_element_set_state_func
+   fun:test_alsa_mixer_track
+   fun:srunner_run_all
+   fun:gst_check_run_suite
+   fun:main
+}
+{
+   <ALSA cached config data>
+   Memcheck:Leak
+   fun:malloc
+   fun:strdup
+   obj:/usr/lib/libasound.so.2.0.0
+   obj:/usr/lib/libasound.so.2.0.0
+   fun:snd_hctl_open
+   fun:snd_mixer_attach
+   fun:gst_alsa_mixer_open
+   fun:gst_alsa_mixer_new
+   fun:gst_alsa_mixer_element_change_state
+   fun:gst_element_change_state
+   fun:gst_element_set_state_func
+   fun:test_alsa_mixer_track
+   fun:srunner_run_all
+   fun:gst_check_run_suite
+   fun:main
+}
+{
+   <ALSA cached config data>
+   Memcheck:Leak
+   fun:malloc
+   fun:_dl_close_worker
+   fun:_dl_close
+   fun:_dl_catch_error
+   fun:_dlerror_run
+   fun:dlclose
+   obj:/usr/lib/libasound.so.2.0.0
+   fun:snd_config_searcha_hooks
+   fun:snd_config_searchva_hooks
+   obj:/usr/lib/libasound.so.2.0.0
+   fun:snd_config_search_definition
+   obj:/usr/lib/libasound.so.2.0.0
+   fun:snd_hctl_open
+   fun:snd_mixer_attach
+   fun:gst_alsa_mixer_open
+   fun:gst_alsa_mixer_new
+   fun:gst_alsa_mixer_element_change_state
+   fun:gst_element_change_state
+   fun:gst_element_set_state_func
+   fun:test_alsa_mixer_track
+}

@@ -282,7 +282,7 @@ gst_theora_enc_class_init (GstTheoraEncClass * klass)
 
   th_ctx = dummy_encode_ctx ();
   if (th_ctx) {
-    if (!check_speed_level (th_ctx, &default_speed_level, &max_speed_level))
+    if (check_speed_level (th_ctx, &default_speed_level, &max_speed_level))
       GST_WARNING
           ("Failed to determine settings for the speed-level property.");
     th_encode_free (th_ctx);
@@ -555,10 +555,10 @@ theora_enc_get_supported_formats (void)
 {
   th_enc_ctx *encoder;
   th_info info;
-  struct
+  static const struct
   {
     th_pixel_fmt pixelformat;
-    const char *fourcc;
+    const char fourcc[];
   } formats[] = {
     {
     TH_PF_420, "I420"}, {
@@ -769,9 +769,8 @@ theora_buffer_from_packet (GstTheoraEnc * enc, ogg_packet * packet,
     enc->next_discont = FALSE;
   }
 
-  /* the second most significant bit of the first data byte is cleared
-   * for keyframes */
-  if (packet->bytes > 0 && (packet->packet[0] & 0x40) == 0) {
+  /* th_packet_iskeyframe returns positive for keyframes */
+  if (th_packet_iskeyframe (packet) > 0) {
     GST_BUFFER_FLAG_UNSET (buf, GST_BUFFER_FLAG_DELTA_UNIT);
   } else {
     GST_BUFFER_FLAG_SET (buf, GST_BUFFER_FLAG_DELTA_UNIT);
@@ -1218,7 +1217,7 @@ theora_enc_chain (GstPad * pad, GstBuffer * buffer)
   enc = GST_THEORA_ENC (GST_PAD_PARENT (pad));
 
   /* we keep track of two timelines.
-   * - The timestamps from the incomming buffers, which we copy to the outgoing
+   * - The timestamps from the incoming buffers, which we copy to the outgoing
    *   encoded buffers as-is. We need to do this as we simply forward the
    *   newsegment events.
    * - The running_time of the buffers, which we use to construct the granulepos
@@ -1277,7 +1276,7 @@ theora_enc_chain (GstPad * pad, GstBuffer * buffer)
   }
 
   /* make sure we copy the discont flag to the next outgoing buffer when it's
-   * set on the incomming buffer */
+   * set on the incoming buffer */
   if (GST_BUFFER_IS_DISCONT (buffer)) {
     enc->next_discont = TRUE;
   }
@@ -1382,11 +1381,19 @@ theora_enc_change_state (GstElement * element, GstStateChange transition)
 {
   GstTheoraEnc *enc;
   GstStateChangeReturn ret;
+  th_enc_ctx *th_ctx;
 
   enc = GST_THEORA_ENC (element);
 
   switch (transition) {
     case GST_STATE_CHANGE_NULL_TO_READY:
+      th_ctx = dummy_encode_ctx ();
+      if (!th_ctx) {
+        GST_ELEMENT_ERROR (enc, STREAM, ENCODE, (NULL),
+            ("libtheora has been compiled with the encoder disabled"));
+        return GST_STATE_CHANGE_FAILURE;
+      }
+      th_encode_free (th_ctx);
       break;
     case GST_STATE_CHANGE_READY_TO_PAUSED:
       GST_DEBUG_OBJECT (enc, "READY->PAUSED Initing theora state");
@@ -1469,6 +1476,8 @@ theora_enc_set_property (GObject * object, guint prop_id,
     case PROP_NOISE_SENSITIVITY:
     case PROP_SHARPNESS:
       /* kept for API compat, but ignored */
+      GST_WARNING_OBJECT (object, "Obsolete property '%s' ignored",
+          pspec->name);
       break;
     case PROP_BITRATE:
       GST_OBJECT_LOCK (enc);

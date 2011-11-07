@@ -1299,6 +1299,7 @@ gst_ogg_pad_handle_push_mode_state (GstOggPad * pad, ogg_page * page)
         GstFlowReturn res;
 
         /* tell the pipeline we've just found out the duration */
+        ogg->push_time_length = ogg->total_time;
         GST_INFO_OBJECT (ogg, "New duration found: %" GST_TIME_FORMAT,
             GST_TIME_ARGS (ogg->total_time));
         message =
