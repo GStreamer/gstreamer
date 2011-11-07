@@ -799,7 +799,7 @@ gst_play_sink_set_vis_plugin (GstPlaySink * playsink, GstElement * vis)
    * function returns FALSE but the previous pad block will do the right thing
    * anyway. */
   GST_DEBUG_OBJECT (playsink, "blocking vis pad");
-  gst_pad_add_probe (chain->blockpad, GST_PAD_PROBE_TYPE_BLOCK,
+  gst_pad_add_probe (chain->blockpad, GST_PAD_PROBE_TYPE_BLOCK_DOWNSTREAM,
       gst_play_sink_vis_blocked, playsink, NULL);
 done:
   GST_PLAY_SINK_UNLOCK (playsink);
@@ -2940,8 +2940,9 @@ video_set_blocked (GstPlaySink * playsink, gboolean blocked)
             (playsink->video_pad)));
     if (blocked && playsink->video_block_id == 0) {
       playsink->video_block_id =
-          gst_pad_add_probe (opad, GST_PAD_PROBE_TYPE_BLOCK, sinkpad_blocked_cb,
-          gst_object_ref (playsink), (GDestroyNotify) gst_object_unref);
+          gst_pad_add_probe (opad, GST_PAD_PROBE_TYPE_BLOCK_DOWNSTREAM,
+          sinkpad_blocked_cb, gst_object_ref (playsink),
+          (GDestroyNotify) gst_object_unref);
     } else if (!blocked && playsink->video_block_id) {
       gst_pad_remove_probe (opad, playsink->video_block_id);
       PENDING_FLAG_UNSET (playsink, GST_PLAY_SINK_TYPE_VIDEO_RAW);
@@ -2962,8 +2963,9 @@ audio_set_blocked (GstPlaySink * playsink, gboolean blocked)
             (playsink->audio_pad)));
     if (blocked && playsink->audio_block_id == 0) {
       playsink->audio_block_id =
-          gst_pad_add_probe (opad, GST_PAD_PROBE_TYPE_BLOCK, sinkpad_blocked_cb,
-          gst_object_ref (playsink), (GDestroyNotify) gst_object_unref);
+          gst_pad_add_probe (opad, GST_PAD_PROBE_TYPE_BLOCK_DOWNSTREAM,
+          sinkpad_blocked_cb, gst_object_ref (playsink),
+          (GDestroyNotify) gst_object_unref);
     } else if (!blocked && playsink->audio_block_id) {
       gst_pad_remove_probe (opad, playsink->audio_block_id);
       PENDING_FLAG_UNSET (playsink, GST_PLAY_SINK_TYPE_AUDIO_RAW);
@@ -2984,8 +2986,9 @@ text_set_blocked (GstPlaySink * playsink, gboolean blocked)
             (playsink->text_pad)));
     if (blocked && playsink->text_block_id == 0) {
       playsink->text_block_id =
-          gst_pad_add_probe (opad, GST_PAD_PROBE_TYPE_BLOCK, sinkpad_blocked_cb,
-          gst_object_ref (playsink), (GDestroyNotify) gst_object_unref);
+          gst_pad_add_probe (opad, GST_PAD_PROBE_TYPE_BLOCK_DOWNSTREAM,
+          sinkpad_blocked_cb, gst_object_ref (playsink),
+          (GDestroyNotify) gst_object_unref);
     } else if (!blocked && playsink->text_block_id) {
       gst_pad_remove_probe (opad, playsink->text_block_id);
       PENDING_FLAG_UNSET (playsink, GST_PLAY_SINK_TYPE_TEXT);
@@ -3206,7 +3209,7 @@ gst_play_sink_request_pad (GstPlaySink * playsink, GstPlaySinkType type)
           GST_PAD_CAST (gst_proxy_pad_get_internal (GST_PROXY_PAD (res)));
 
       *block_id =
-          gst_pad_add_probe (blockpad, GST_PAD_PROBE_TYPE_BLOCK,
+          gst_pad_add_probe (blockpad, GST_PAD_PROBE_TYPE_BLOCK_DOWNSTREAM,
           sinkpad_blocked_cb, gst_object_ref (playsink),
           (GDestroyNotify) gst_object_unref);
       PENDING_FLAG_SET (playsink, type);

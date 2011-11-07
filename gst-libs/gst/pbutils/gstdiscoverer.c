@@ -506,7 +506,7 @@ uridecodebin_pad_added_cb (GstElement * uridecodebin, GstPad * pad,
   gst_object_unref (sinkpad);
 
   /* Add an event probe */
-  gst_pad_add_probe (pad, GST_PAD_PROBE_TYPE_EVENT,
+  gst_pad_add_probe (pad, GST_PAD_PROBE_TYPE_EVENT_DOWNSTREAM,
       (GstPadProbeCallback) _event_probe, ps, NULL);
 
   DISCO_LOCK (dc);

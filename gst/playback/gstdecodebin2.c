@@ -1685,8 +1685,8 @@ setup_caps_delay:
     ppad->pad = gst_object_ref (pad);
     ppad->chain = chain;
     ppad->event_probe_id =
-        gst_pad_add_probe (pad, GST_PAD_PROBE_TYPE_EVENT, pad_event_cb, ppad,
-        NULL);
+        gst_pad_add_probe (pad, GST_PAD_PROBE_TYPE_EVENT_DOWNSTREAM,
+        pad_event_cb, ppad, NULL);
     chain->pending_pads = g_list_prepend (chain->pending_pads, ppad);
     g_signal_connect (G_OBJECT (pad), "notify::caps",
         G_CALLBACK (caps_notify_cb), chain);
@@ -3794,7 +3794,8 @@ gst_decode_pad_set_blocked (GstDecodePad * dpad, gboolean blocked)
   if (!blocked || !dbin->shutdown) {
     if (blocked) {
       if (dpad->block_id == 0)
-        dpad->block_id = gst_pad_add_probe (opad, GST_PAD_PROBE_TYPE_BLOCK,
+        dpad->block_id =
+            gst_pad_add_probe (opad, GST_PAD_PROBE_TYPE_BLOCK_DOWNSTREAM,
             source_pad_blocked_cb, gst_object_ref (dpad),
             (GDestroyNotify) gst_object_unref);
     } else {
@@ -3833,7 +3834,7 @@ out:
 static void
 gst_decode_pad_add_drained_check (GstDecodePad * dpad)
 {
-  gst_pad_add_probe (GST_PAD_CAST (dpad), GST_PAD_PROBE_TYPE_EVENT,
+  gst_pad_add_probe (GST_PAD_CAST (dpad), GST_PAD_PROBE_TYPE_EVENT_DOWNSTREAM,
       source_pad_event_probe, dpad, NULL);
 }
 

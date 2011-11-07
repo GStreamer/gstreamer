@@ -1671,8 +1671,8 @@ gst_play_bin_suburidecodebin_block (GstSourceGroup * group,
         sinkpad = g_value_get_object (&item);
         if (block) {
           group->block_id =
-              gst_pad_add_probe (sinkpad, GST_PAD_PROBE_TYPE_BLOCK, NULL, NULL,
-              NULL);
+              gst_pad_add_probe (sinkpad, GST_PAD_PROBE_TYPE_BLOCK_DOWNSTREAM,
+              NULL, NULL, NULL);
         } else if (group->block_id) {
           gst_pad_remove_probe (sinkpad, group->block_id);
           group->block_id = 0;
@@ -2589,8 +2589,8 @@ pad_added_cb (GstElement * decodebin, GstPad * pad, GstSourceGroup * group)
      * configured the sinks we will unblock them all. */
     GST_DEBUG_OBJECT (playbin, "blocking %" GST_PTR_FORMAT, select->srcpad);
     select->block_id =
-        gst_pad_add_probe (select->srcpad, GST_PAD_PROBE_TYPE_BLOCK, NULL, NULL,
-        NULL);
+        gst_pad_add_probe (select->srcpad, GST_PAD_PROBE_TYPE_BLOCK_DOWNSTREAM,
+        NULL, NULL, NULL);
   }
 
   /* get sinkpad for the new stream */
@@ -2899,7 +2899,8 @@ no_more_pads_cb (GstElement * decodebin, GstSourceGroup * group)
            pad might not be linked yet. Additionally, sending it here
            apparently would be on the wrong thread */
         select->sinkpad_data_probe =
-            gst_pad_add_probe (select->sinkpad, GST_PAD_PROBE_TYPE_DATA,
+            gst_pad_add_probe (select->sinkpad,
+            GST_PAD_PROBE_TYPE_DATA_DOWNSTREAM,
             (GstPadProbeCallback) stream_changed_data_probe, (gpointer) select,
             NULL);
 

@@ -1060,8 +1060,8 @@ new_decoded_pad_added_cb (GstElement * element, GstPad * pad,
   /* add event probe to monitor tags */
   stream = g_slice_alloc0 (sizeof (GstURIDecodeBinStream));
   stream->probe_id =
-      gst_pad_add_probe (pad, GST_PAD_PROBE_TYPE_EVENT, decoded_pad_event_probe,
-      decoder, NULL);
+      gst_pad_add_probe (pad, GST_PAD_PROBE_TYPE_EVENT_DOWNSTREAM,
+      decoded_pad_event_probe, decoder, NULL);
   GST_URI_DECODE_BIN_LOCK (decoder);
   g_hash_table_insert (decoder->streams, pad, stream);
   GST_URI_DECODE_BIN_UNLOCK (decoder);
@@ -1095,8 +1095,8 @@ static void
 expose_decoded_pad (GstElement * element, GstPad * pad,
     GstURIDecodeBin * decoder)
 {
-  gst_pad_add_probe (pad, GST_PAD_PROBE_TYPE_EVENT, source_pad_event_probe,
-      decoder, NULL);
+  gst_pad_add_probe (pad, GST_PAD_PROBE_TYPE_EVENT_DOWNSTREAM,
+      source_pad_event_probe, decoder, NULL);
 
   new_decoded_pad_added_cb (element, pad, decoder);
 }

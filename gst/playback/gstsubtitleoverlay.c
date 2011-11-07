@@ -120,8 +120,8 @@ block_video (GstSubtitleOverlay * self)
 
   if (self->video_block_pad) {
     self->video_block_id =
-        gst_pad_add_probe (self->video_block_pad, GST_PAD_PROBE_TYPE_BLOCK,
-        _pad_blocked_cb, self, NULL);
+        gst_pad_add_probe (self->video_block_pad,
+        GST_PAD_PROBE_TYPE_BLOCK_DOWNSTREAM, _pad_blocked_cb, self, NULL);
   }
 }
 
@@ -143,8 +143,8 @@ block_subtitle (GstSubtitleOverlay * self)
 
   if (self->subtitle_block_pad) {
     self->subtitle_block_id =
-        gst_pad_add_probe (self->subtitle_block_pad, GST_PAD_PROBE_TYPE_BLOCK,
-        _pad_blocked_cb, self, NULL);
+        gst_pad_add_probe (self->subtitle_block_pad,
+        GST_PAD_PROBE_TYPE_BLOCK_DOWNSTREAM, _pad_blocked_cb, self, NULL);
   }
 }
 
