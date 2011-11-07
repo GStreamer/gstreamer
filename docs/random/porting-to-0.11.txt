@@ -81,8 +81,8 @@ The 0.11 porting guide
 
     gst_pad_set_bufferalloc_function(), gst_pad_alloc_buffer() and
     gst_pad_alloc_buffer_and_set_caps() are removed. Use the ALLOCATION query
-    now to obtain a reference to a bufferpool object that can be used to
-    allocate buffers.
+    now when negotiating formats to obtain a reference to a bufferpool object
+    that can be used to allocate buffers using gst_buffer_pool_acquire_buffer().
 
     removed sched_private, it should not be used, use g_object_set_qdata() or
     use element_private.
@@ -202,6 +202,9 @@ The 0.11 porting guide
     
     gst_buffer_make_metadata_writable() is gone, you can replace this safely
     with gst_buffer_make_writable().
+    
+    gst_buffer_copy_metadata() is gone, use gst_buffer_copy_into() instead and
+    mind use GST_BUFFER_COPY_METADATA instead of the former GST_BUFFER_COPY_ALL.
 
     gst_buffer_create_sub() is gone and can be safely replaced with
     gst_buffer_copy_region(). 
