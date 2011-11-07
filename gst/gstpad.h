@@ -472,7 +472,8 @@ typedef gboolean		(*GstPadForwardFunction)	(GstPad *pad, gpointer user_data);
  * @GST_PAD_PROBE_TYPE_BLOCK: probe and block pads
  * @GST_PAD_PROBE_TYPE_BUFFER: probe buffers
  * @GST_PAD_PROBE_TYPE_BUFFER_LIST: probe buffer lists
- * @GST_PAD_PROBE_TYPE_EVENT: probe events
+ * @GST_PAD_PROBE_TYPE_EVENT_DOWNSTREAM: probe downstream events
+ * @GST_PAD_PROBE_TYPE_EVENT_UPSTREAM: probe upstream events
  * @GST_PAD_PROBE_TYPE_PUSH: probe push
  * @GST_PAD_PROBE_TYPE_PULL: probe pull
  *
@@ -482,23 +483,31 @@ typedef gboolean		(*GstPadForwardFunction)	(GstPad *pad, gpointer user_data);
  */
 typedef enum
 {
-  GST_PAD_PROBE_TYPE_INVALID      = 0,
+  GST_PAD_PROBE_TYPE_INVALID          = 0,
   /* flags to control blocking */
-  GST_PAD_PROBE_TYPE_IDLE         = (1 << 0),
-  GST_PAD_PROBE_TYPE_BLOCK        = (1 << 1),
+  GST_PAD_PROBE_TYPE_IDLE             = (1 << 0),
+  GST_PAD_PROBE_TYPE_BLOCK            = (1 << 1),
   /* flags to select datatypes */
-  GST_PAD_PROBE_TYPE_BUFFER       = (1 << 2),
-  GST_PAD_PROBE_TYPE_BUFFER_LIST  = (1 << 3),
-  GST_PAD_PROBE_TYPE_EVENT        = (1 << 4),
+  GST_PAD_PROBE_TYPE_BUFFER           = (1 << 2),
+  GST_PAD_PROBE_TYPE_BUFFER_LIST      = (1 << 3),
+  GST_PAD_PROBE_TYPE_EVENT_DOWNSTREAM = (1 << 4),
+  GST_PAD_PROBE_TYPE_EVENT_UPSTREAM   = (1 << 5),
   /* flags to select scheduling mode */
-  GST_PAD_PROBE_TYPE_PUSH         = (1 << 5),
-  GST_PAD_PROBE_TYPE_PULL         = (1 << 6),
+  GST_PAD_PROBE_TYPE_PUSH             = (1 << 6),
+  GST_PAD_PROBE_TYPE_PULL             = (1 << 7),
 } GstPadProbeType;
 
-#define GST_PAD_PROBE_TYPE_BLOCKING   (GST_PAD_PROBE_TYPE_IDLE | GST_PAD_PROBE_TYPE_BLOCK)
-#define GST_PAD_PROBE_TYPE_DATA       (GST_PAD_PROBE_TYPE_BUFFER | GST_PAD_PROBE_TYPE_EVENT | \
-                                   GST_PAD_PROBE_TYPE_BUFFER_LIST)
-#define GST_PAD_PROBE_TYPE_SCHEDULING (GST_PAD_PROBE_TYPE_PUSH | GST_PAD_PROBE_TYPE_PULL)
+#define GST_PAD_PROBE_TYPE_BLOCKING         (GST_PAD_PROBE_TYPE_IDLE | GST_PAD_PROBE_TYPE_BLOCK)
+#define GST_PAD_PROBE_TYPE_BLOCK_DOWNSTREAM (GST_PAD_PROBE_TYPE_BLOCK | GST_PAD_PROBE_TYPE_DATA_DOWNSTREAM)
+#define GST_PAD_PROBE_TYPE_BLOCK_UPSTREAM   (GST_PAD_PROBE_TYPE_BLOCK | GST_PAD_PROBE_TYPE_DATA_UPSTREAM)
+#define GST_PAD_PROBE_TYPE_DATA_DOWNSTREAM  (GST_PAD_PROBE_TYPE_BUFFER | GST_PAD_PROBE_TYPE_BUFFER_LIST | \
+                                             GST_PAD_PROBE_TYPE_EVENT_DOWNSTREAM)
+#define GST_PAD_PROBE_TYPE_DATA_UPSTREAM    (GST_PAD_PROBE_TYPE_EVENT_UPSTREAM)
+#define GST_PAD_PROBE_TYPE_DATA_BOTH        (GST_PAD_PROBE_TYPE_DATA_DOWNSTREAM | \
+                                             GST_PAD_PROBE_TYPE_DATA_UPSTREAM)
+#define GST_PAD_PROBE_TYPE_EVENT_BOTH       (GST_PAD_PROBE_TYPE_EVENT_DOWNSTREAM | \
+                                             GST_PAD_PROBE_TYPE_EVENT_UPSTREAM)
+#define GST_PAD_PROBE_TYPE_SCHEDULING       (GST_PAD_PROBE_TYPE_PUSH | GST_PAD_PROBE_TYPE_PULL)
 
 /**
  * GstPadProbeReturn:

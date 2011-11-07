@@ -71,7 +71,7 @@ GST_START_TEST (test_queue)
   pad = gst_element_get_static_pad (queue, "sink");
   fail_unless (pad != NULL);
   probe =
-      gst_pad_add_probe (pad, GST_PAD_PROBE_TYPE_EVENT,
+      gst_pad_add_probe (pad, GST_PAD_PROBE_TYPE_EVENT_DOWNSTREAM,
       (GstPadProbeCallback) modify_caps, filter, NULL);
 
   bus = gst_element_get_bus (pipeline);

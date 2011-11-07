@@ -97,20 +97,20 @@ GST_START_TEST (test_buffer_probe_n_times)
   pad = gst_element_get_static_pad (fakesink, "sink");
 
   /* add the probes we need for the test */
-  gst_pad_add_probe (pad, GST_PAD_PROBE_TYPE_DATA, data_probe,
+  gst_pad_add_probe (pad, GST_PAD_PROBE_TYPE_DATA_BOTH, data_probe,
       SPECIAL_POINTER (0), NULL);
   gst_pad_add_probe (pad, GST_PAD_PROBE_TYPE_BUFFER, buffer_probe,
       SPECIAL_POINTER (1), NULL);
-  gst_pad_add_probe (pad, GST_PAD_PROBE_TYPE_EVENT, event_probe,
+  gst_pad_add_probe (pad, GST_PAD_PROBE_TYPE_EVENT_BOTH, event_probe,
       SPECIAL_POINTER (2), NULL);
 
   /* add some string probes just to test that the data is free'd
    * properly as it should be */
-  gst_pad_add_probe (pad, GST_PAD_PROBE_TYPE_DATA, probe_do_nothing,
+  gst_pad_add_probe (pad, GST_PAD_PROBE_TYPE_DATA_BOTH, probe_do_nothing,
       g_strdup ("data probe string"), (GDestroyNotify) g_free);
   gst_pad_add_probe (pad, GST_PAD_PROBE_TYPE_BUFFER, probe_do_nothing,
       g_strdup ("buffer probe string"), (GDestroyNotify) g_free);
-  gst_pad_add_probe (pad, GST_PAD_PROBE_TYPE_EVENT, probe_do_nothing,
+  gst_pad_add_probe (pad, GST_PAD_PROBE_TYPE_EVENT_BOTH, probe_do_nothing,
       g_strdup ("event probe string"), (GDestroyNotify) g_free);
 
   gst_object_unref (pad);
@@ -194,13 +194,13 @@ GST_START_TEST (test_buffer_probe_once)
 
   pad = gst_element_get_static_pad (fakesink, "sink");
   id1 =
-      gst_pad_add_probe (pad, GST_PAD_PROBE_TYPE_DATA,
+      gst_pad_add_probe (pad, GST_PAD_PROBE_TYPE_DATA_BOTH,
       (GstPadProbeCallback) data_probe_once, &id1, NULL);
   id2 =
       gst_pad_add_probe (pad, GST_PAD_PROBE_TYPE_BUFFER,
       (GstPadProbeCallback) buffer_probe_once, &id2, NULL);
   id3 =
-      gst_pad_add_probe (pad, GST_PAD_PROBE_TYPE_EVENT,
+      gst_pad_add_probe (pad, GST_PAD_PROBE_TYPE_EVENT_BOTH,
       (GstPadProbeCallback) event_probe_once, &id3, NULL);
   gst_object_unref (pad);
 

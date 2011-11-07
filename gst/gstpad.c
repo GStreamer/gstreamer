@@ -110,7 +110,8 @@ struct _GstPadPrivate
   PadEvent events[GST_EVENT_MAX_STICKY];
 
   gint using;
-  gint probe_cookie;
+  guint probe_list_cookie;
+  guint probe_cookie;
 };
 
 typedef struct
@@ -126,8 +127,9 @@ typedef struct
   GstPad *pad;
   GstPadProbeType mask;
   gpointer type_data;
-  GstPadProbeReturn ret;
+  gboolean dropped;
   gboolean pass;
+  gboolean marshalled;
   guint cookie;
 } ProbeMarshall;
 
@@ -1048,11 +1050,6 @@ gst_pad_is_active (GstPad * pad)
  * Be notified of different states of pads. The provided callback is called for
  * every state that matches @mask.
  *
- * <note>
- *  Pad probe handlers are only called for source pads in push mode
- *  and sink pads in pull mode.
- * </note>
- *
  * Returns: an id or 0 on error. The id can be used to remove the probe with
  * gst_pad_remove_probe().
  *
@@ -1071,18 +1068,6 @@ gst_pad_add_probe (GstPad * pad, GstPadProbeType mask,
 
   GST_OBJECT_LOCK (pad);
 
-  /* FIXME : I'm not checking for != GST_PAD_ACTIVATE_correct_direction
-   * because the pad might not be activated yet.
-   * This means that _add_probe() might return a valid probeid ...
-   * which will potentially never be called if the pad
-   * is activated in the wrong direction */
-  if (G_UNLIKELY ((mask & GST_PAD_PROBE_TYPE_PUSH) &&
-          (GST_PAD_ACTIVATE_MODE (pad) == GST_PAD_ACTIVATE_PULL)))
-    goto wrong_direction;
-  if (G_UNLIKELY ((mask & GST_PAD_PROBE_TYPE_PULL) &&
-          (GST_PAD_ACTIVATE_MODE (pad) == GST_PAD_ACTIVATE_PUSH)))
-    goto wrong_direction;
-
   /* make a new probe */
   hook = g_hook_alloc (&pad->probes);
 
@@ -1091,8 +1076,8 @@ gst_pad_add_probe (GstPad * pad, GstPadProbeType mask,
 
   /* when no contraints are given for the types, assume all types are
    * acceptable */
-  if ((mask & GST_PAD_PROBE_TYPE_DATA) == 0)
-    mask |= GST_PAD_PROBE_TYPE_DATA;
+  if ((mask & GST_PAD_PROBE_TYPE_DATA_BOTH) == 0)
+    mask |= GST_PAD_PROBE_TYPE_DATA_BOTH;
   if ((mask & GST_PAD_PROBE_TYPE_SCHEDULING) == 0)
     mask |= GST_PAD_PROBE_TYPE_SCHEDULING;
 
@@ -1101,14 +1086,13 @@ gst_pad_add_probe (GstPad * pad, GstPadProbeType mask,
   hook->func = callback;
   hook->data = user_data;
   hook->destroy = destroy_data;
-  PROBE_COOKIE (hook) = 0;
-
-  /* incremenent cookie so that the new hook get's called */
-  pad->priv->probe_cookie++;
+  PROBE_COOKIE (hook) = (pad->priv->probe_cookie - 1);
 
   /* add the probe */
   g_hook_prepend (&pad->probes, hook);
   pad->num_probes++;
+  /* incremenent cookie so that the new hook get's called */
+  pad->priv->probe_list_cookie++;
 
   /* get the id of the hook, we return this and it can be used to remove the
    * probe later */
@@ -1145,15 +1129,6 @@ gst_pad_add_probe (GstPad * pad, GstPadProbeType mask,
     GST_OBJECT_UNLOCK (pad);
   }
   return res;
-
-wrong_direction:
-  {
-    GST_CAT_INFO_OBJECT (GST_CAT_SCHEDULING, pad, "pad block on the wrong pad, "
-        "block src pads in push mode and sink pads in pull mode.");
-    GST_OBJECT_UNLOCK (pad);
-
-    return 0;
-  }
 }
 
 static void
@@ -3349,24 +3324,31 @@ probe_hook_marshal (GHook * hook, ProbeMarshall * data)
   GstPadProbeCallback callback;
   GstPadProbeReturn ret;
 
+  GST_CAT_LOG_OBJECT (GST_CAT_SCHEDULING, pad,
+      "hook %lu, cookie %u checking", hook->hook_id, PROBE_COOKIE (hook));
+
   /* if we have called this callback, do nothing */
-  if (PROBE_COOKIE (hook) == data->cookie)
+  if (PROBE_COOKIE (hook) == data->cookie) {
+    GST_CAT_LOG_OBJECT (GST_CAT_SCHEDULING, pad,
+        "hook %lu, cookie %u already called", hook->hook_id,
+        PROBE_COOKIE (hook));
     return;
+  }
 
   PROBE_COOKIE (hook) = data->cookie;
 
   flags = hook->flags >> G_HOOK_FLAG_USER_SHIFT;
 
   /* one of the data types */
-  if ((flags & GST_PAD_PROBE_TYPE_DATA & data->mask) == 0)
-    return;
+  if ((flags & GST_PAD_PROBE_TYPE_DATA_BOTH & data->mask) == 0)
+    goto no_match;
   /* one of the scheduling types */
   if ((flags & GST_PAD_PROBE_TYPE_SCHEDULING & data->mask) == 0)
-    return;
+    goto no_match;
   /* all of the blocking types must match */
   if ((flags & GST_PAD_PROBE_TYPE_BLOCKING) !=
       (data->mask & GST_PAD_PROBE_TYPE_BLOCKING))
-    return;
+    goto no_match;
 
   GST_CAT_LOG_OBJECT (GST_CAT_SCHEDULING, pad,
       "hook %lu with flags 0x%08x matches", hook->hook_id, flags);
@@ -3380,6 +3362,7 @@ probe_hook_marshal (GHook * hook, ProbeMarshall * data)
   ret = callback (pad, data->mask, data->type_data, hook->data);
 
   GST_OBJECT_LOCK (pad);
+  data->marshalled = TRUE;
 
   switch (ret) {
     case GST_PAD_PROBE_REMOVE:
@@ -3392,7 +3375,7 @@ probe_hook_marshal (GHook * hook, ProbeMarshall * data)
        * anymore */
       GST_DEBUG_OBJECT (pad, "asked to drop item");
       data->mask = GST_PAD_PROBE_TYPE_INVALID;
-      data->ret = GST_PAD_PROBE_DROP;
+      data->dropped = TRUE;
       break;
     case GST_PAD_PROBE_PASS:
       /* inform the pad block to let things pass */
@@ -3402,6 +3385,15 @@ probe_hook_marshal (GHook * hook, ProbeMarshall * data)
     default:
       GST_DEBUG_OBJECT (pad, "probe returned %d", ret);
       break;
+  }
+  return;
+
+no_match:
+  {
+    GST_CAT_LOG_OBJECT (GST_CAT_SCHEDULING, pad,
+        "hook %lu with flags 0x%08x does not match %08x", hook->hook_id,
+        flags, data->mask);
+    return;
   }
 }
 
@@ -3423,35 +3415,48 @@ do_probe_callbacks (GstPad * pad, GstPadProbeType mask, gpointer type_data,
 {
   ProbeMarshall data;
   guint cookie;
+  gboolean is_block;
+
+  is_block = (mask & GST_PAD_PROBE_TYPE_BLOCK) == GST_PAD_PROBE_TYPE_BLOCK;
 
   data.pad = pad;
   data.mask = mask;
   data.type_data = type_data;
-  data.ret = GST_PAD_PROBE_OK;
   data.pass = FALSE;
-  data.cookie = pad->priv->probe_cookie++;
+  data.marshalled = FALSE;
+  data.dropped = FALSE;
+  data.cookie = ++pad->priv->probe_cookie;
 
 again:
-  cookie = pad->priv->probe_cookie;
+  GST_CAT_LOG_OBJECT (GST_CAT_SCHEDULING, pad,
+      "do probes cookie %u", data.cookie);
+  cookie = pad->priv->probe_list_cookie;
 
-  g_hook_list_marshal (&pad->probes, FALSE,
+  g_hook_list_marshal (&pad->probes, TRUE,
       (GHookMarshaller) probe_hook_marshal, &data);
 
   /* if the list changed, call the new callbacks (they will not have their
    * cookie set to data.cookie */
-  if (cookie != pad->priv->probe_cookie) {
+  if (cookie != pad->priv->probe_list_cookie) {
     GST_CAT_LOG_OBJECT (GST_CAT_SCHEDULING, pad,
         "probe list changed, restarting");
     goto again;
   }
 
-  if (data.ret == GST_PAD_PROBE_DROP)
+  /* the first item that dropped will stop the hooks and then we drop here */
+  if (data.dropped)
     goto dropped;
 
+  /* if no handler matched and we are blocking, let the item pass */
+  if (!data.marshalled && is_block)
+    goto passed;
+
+  /* At this point, all handlers returned either OK or PASS. If one handler
+   * returned PASS, let the item pass */
   if (data.pass)
     goto passed;
 
-  if (mask & GST_PAD_PROBE_TYPE_BLOCK) {
+  if (is_block) {
     while (GST_PAD_IS_BLOCKED (pad)) {
       GST_CAT_LOG_OBJECT (GST_CAT_SCHEDULING, pad,
           "we are blocked %d times", pad->num_blocked);
@@ -4233,10 +4238,16 @@ gst_pad_push_event (GstPad * pad, GstEvent * event)
   GstPad *peerpad;
   gboolean result;
   gboolean stored = FALSE;
+  GstPadProbeType type;
 
   g_return_val_if_fail (GST_IS_PAD (pad), FALSE);
   g_return_val_if_fail (event != NULL, FALSE);
   g_return_val_if_fail (GST_IS_EVENT (event), FALSE);
+
+  if (GST_EVENT_IS_DOWNSTREAM (event))
+    type = GST_PAD_PROBE_TYPE_EVENT_DOWNSTREAM;
+  else
+    type = GST_PAD_PROBE_TYPE_EVENT_UPSTREAM;
 
   GST_OBJECT_LOCK (pad);
 
@@ -4332,16 +4343,15 @@ gst_pad_push_event (GstPad * pad, GstEvent * event)
       if (G_UNLIKELY (GST_PAD_IS_FLUSHING (pad)))
         goto flushed;
 
-      PROBE (pad, GST_PAD_PROBE_TYPE_PUSH | GST_PAD_PROBE_TYPE_EVENT
-          | GST_PAD_PROBE_TYPE_BLOCK, event, probe_stopped);
+      PROBE (pad, type | GST_PAD_PROBE_TYPE_PUSH |
+          GST_PAD_PROBE_TYPE_BLOCK, event, probe_stopped);
 
       break;
     }
   }
 
   /* send probes after modifying the events above */
-  PROBE (pad, GST_PAD_PROBE_TYPE_PUSH | GST_PAD_PROBE_TYPE_EVENT, event,
-      probe_stopped);
+  PROBE (pad, type | GST_PAD_PROBE_TYPE_PUSH, event, probe_stopped);
 
   /* now check the peer pad */
   if (peerpad == NULL)
@@ -4433,6 +4443,7 @@ gst_pad_send_event (GstPad * pad, GstEvent * event)
   GstFlowReturn ret;
   gboolean result = FALSE;
   gboolean serialized, need_unlock = FALSE, needs_events, sticky;
+  GstPadProbeType type;
 
   g_return_val_if_fail (GST_IS_PAD (pad), FALSE);
   g_return_val_if_fail (event != NULL, FALSE);
@@ -4443,11 +4454,13 @@ gst_pad_send_event (GstPad * pad, GstEvent * event)
       goto wrong_direction;
     serialized = GST_EVENT_IS_SERIALIZED (event);
     sticky = GST_EVENT_IS_STICKY (event);
+    type = GST_PAD_PROBE_TYPE_EVENT_DOWNSTREAM;
   } else if (GST_PAD_IS_SRC (pad)) {
     if (G_UNLIKELY (!GST_EVENT_IS_UPSTREAM (event)))
       goto wrong_direction;
     /* events on srcpad never are serialized and sticky */
     serialized = sticky = FALSE;
+    type = GST_PAD_PROBE_TYPE_EVENT_UPSTREAM;
   } else
     goto unknown_direction;
 
@@ -4545,11 +4558,10 @@ gst_pad_send_event (GstPad * pad, GstEvent * event)
         goto flushing;
 
       PROBE (pad,
-          GST_PAD_PROBE_TYPE_PUSH | GST_PAD_PROBE_TYPE_EVENT |
+          type | GST_PAD_PROBE_TYPE_PUSH |
           GST_PAD_PROBE_TYPE_BLOCK, event, probe_stopped);
 
-      PROBE (pad, GST_PAD_PROBE_TYPE_PUSH | GST_PAD_PROBE_TYPE_EVENT, event,
-          probe_stopped);
+      PROBE (pad, type | GST_PAD_PROBE_TYPE_PUSH, event, probe_stopped);
 
       break;
   }

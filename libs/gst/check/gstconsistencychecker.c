@@ -120,7 +120,7 @@ gst_consistency_checker_new (GstPad * pad)
   consist = g_new0 (GstStreamConsistency, 1);
   consist->pad = g_object_ref (pad);
   consist->probeid =
-      gst_pad_add_probe (pad, GST_PAD_PROBE_TYPE_DATA,
+      gst_pad_add_probe (pad, GST_PAD_PROBE_TYPE_DATA_DOWNSTREAM,
       (GstPadProbeCallback) source_pad_data_cb, consist, NULL);
 
   return consist;

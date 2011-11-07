@@ -295,7 +295,7 @@ GST_START_TEST (test_push_unlinked)
   ASSERT_MINI_OBJECT_REFCOUNT (buffer, "buffer", 1);
   gst_buffer_unref (buffer);
 
-  /* adding a probe that returns FALSE will drop the buffer without trying
+  /* adding a probe that returns _DROP will drop the buffer without trying
    * to chain */
   id = gst_pad_add_probe (src, GST_PAD_PROBE_TYPE_BUFFER,
       (GstPadProbeCallback) _probe_handler, GINT_TO_POINTER (0), NULL);
@@ -306,7 +306,7 @@ GST_START_TEST (test_push_unlinked)
   gst_buffer_unref (buffer);
   gst_pad_remove_probe (src, id);
 
-  /* adding a probe that returns TRUE will still chain the buffer,
+  /* adding a probe that returns _OK will still chain the buffer,
    * and hence drop because pad is unlinked */
   id = gst_pad_add_probe (src, GST_PAD_PROBE_TYPE_BUFFER,
       (GstPadProbeCallback) _probe_handler, GINT_TO_POINTER (1), NULL);

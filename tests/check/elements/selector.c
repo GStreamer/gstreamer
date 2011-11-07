@@ -76,7 +76,7 @@ setup_output_pad (GstElement * element, GstStaticPadTemplate * tmpl)
 
   /* add probe */
   probe_id =
-      gst_pad_add_probe (output_pad, GST_PAD_PROBE_TYPE_DATA,
+      gst_pad_add_probe (output_pad, GST_PAD_PROBE_TYPE_DATA_BOTH,
       (GstPadProbeCallback) probe_cb, NULL, NULL);
   g_object_set_data (G_OBJECT (output_pad), "probe_id",
       GINT_TO_POINTER (probe_id));
@@ -317,7 +317,7 @@ run_input_selector_buffer_count (gint num_input_pads,
   }
   /* add probe */
   probe_id =
-      gst_pad_add_probe (output_pad, GST_PAD_PROBE_TYPE_DATA,
+      gst_pad_add_probe (output_pad, GST_PAD_PROBE_TYPE_DATA_BOTH,
       (GstPadProbeCallback) probe_cb, NULL, NULL);
   g_object_set_data (G_OBJECT (output_pad), "probe_id",
       GINT_TO_POINTER (probe_id));

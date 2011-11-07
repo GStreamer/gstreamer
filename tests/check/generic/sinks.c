@@ -772,9 +772,6 @@ pad_blocked_cb (GstPad * pad, GstPadProbeType type, gpointer type_data,
   g_cond_signal (blocked_cond);
   g_mutex_unlock (blocked_lock);
 
-  if (GST_IS_EVENT (type_data) && GST_EVENT_IS_UPSTREAM (type_data))
-    return GST_PAD_PROBE_PASS;
-
   return GST_PAD_PROBE_OK;
 }
 
@@ -806,8 +803,8 @@ GST_START_TEST (test_add_live2)
   GST_DEBUG ("blocking srcpad");
   /* block source pad */
   srcpad = gst_element_get_static_pad (src, "src");
-  id = gst_pad_add_probe (srcpad, GST_PAD_PROBE_TYPE_BLOCK, pad_blocked_cb,
-      NULL, NULL);
+  id = gst_pad_add_probe (srcpad, GST_PAD_PROBE_TYPE_BLOCK_DOWNSTREAM,
+      pad_blocked_cb, NULL, NULL);
 
   /* set source to PAUSED without adding it to the pipeline */
   ret = gst_element_set_state (src, GST_STATE_PAUSED);
