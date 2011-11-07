@@ -907,7 +907,7 @@ gst_buffer_resize (GstBuffer * buffer, gssize offset, gsize size)
  *
  * @size and @maxsize will contain the current valid number of bytes in the
  * returned memory area and the total maximum mount of bytes available in the
- * returned memory area respectively.
+ * returned memory area respectively. Both parameters can be %NULL.
  *
  * When @buffer is writable but the memory isn't, a writable copy will
  * automatically be created and returned. The readonly copy of the buffer memory
@@ -1000,7 +1000,8 @@ not_writable:
  * @data: the previously mapped data
  * @size: the size of @data
  *
- * Release the memory previously mapped with gst_buffer_map().
+ * Release the memory previously mapped with gst_buffer_map(). Pass -1 to size
+ * if no update is needed.
  *
  * Returns: #TRUE on success. #FALSE can be returned when the new size is larger
  * than the maxsize of the memory.
