@@ -581,7 +581,8 @@ gst_pulse_audio_sink_add_dbin (GstPulseAudioSink * pbin)
 
   /* Trap the newsegment events that we feed the decodebin and discard them */
   sinkpad = gst_element_get_static_pad (GST_ELEMENT (pbin->psink), "sink");
-  pbin->event_probe_id = gst_pad_add_probe (sinkpad, GST_PAD_PROBE_TYPE_EVENT,
+  pbin->event_probe_id =
+      gst_pad_add_probe (sinkpad, GST_PAD_PROBE_TYPE_EVENT_DOWNSTREAM,
       (GstPadProbeCallback) dbin_event_probe, gst_object_ref (pbin), NULL);
   gst_object_unref (sinkpad);
   sinkpad = NULL;
@@ -714,8 +715,9 @@ gst_pulse_audio_sink_src_event (GstPad * pad, GstEvent * event)
 
     if (pbin->block_probe_id == 0)
       pbin->block_probe_id =
-          gst_pad_add_probe (pad, GST_PAD_PROBE_TYPE_BLOCK, proxypad_blocked_cb,
-          gst_object_ref (pbin), (GDestroyNotify) gst_object_unref);
+          gst_pad_add_probe (pad, GST_PAD_PROBE_TYPE_BLOCK_DOWNSTREAM,
+          proxypad_blocked_cb, gst_object_ref (pbin),
+          (GDestroyNotify) gst_object_unref);
     GST_PULSE_AUDIO_SINK_UNLOCK (pbin);
 
     ret = TRUE;
@@ -852,9 +854,9 @@ gst_pulse_audio_sink_set_caps (GstPulseAudioSink * pbin, GstCaps * caps)
 
   if (pbin->block_probe_id == 0)
     pbin->block_probe_id =
-        gst_pad_add_probe (pbin->sink_proxypad, GST_PAD_PROBE_TYPE_BLOCK,
-        proxypad_blocked_cb, gst_object_ref (pbin),
-        (GDestroyNotify) gst_object_unref);
+        gst_pad_add_probe (pbin->sink_proxypad,
+        GST_PAD_PROBE_TYPE_BLOCK_DOWNSTREAM, proxypad_blocked_cb,
+        gst_object_ref (pbin), (GDestroyNotify) gst_object_unref);
 
   GST_PULSE_AUDIO_SINK_UNLOCK (pbin);
 

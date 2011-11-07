@@ -2768,8 +2768,8 @@ gst_rtspsrc_stream_configure_udp (GstRTSPSrc * src, GstRTSPStream * stream,
      * UDP source, we know that UDP is not blocked by a firewall and we can
      * configure all the streams to let the application autoplug decoders. */
     stream->blockid =
-        gst_pad_add_probe (stream->blockedpad, GST_PAD_PROBE_TYPE_BLOCK,
-        pad_blocked, src, NULL);
+        gst_pad_add_probe (stream->blockedpad,
+        GST_PAD_PROBE_TYPE_BLOCK_DOWNSTREAM, pad_blocked, src, NULL);
 
     if (stream->channelpad[0]) {
       GST_DEBUG_OBJECT (src, "connecting UDP source 0 to manager");
