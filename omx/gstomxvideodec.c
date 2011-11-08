@@ -1446,6 +1446,11 @@ gst_omx_video_dec_finish (GstBaseVideoDecoder * decoder)
     return GST_BASE_VIDEO_DECODER_FLOW_DROPPED;
   self->eos = TRUE;
 
+  /* Make sure to release the base class stream lock, otherwise
+   * _loop() can't call _finish_frame() and we might block forever
+   * because no input buffers are released */
+  GST_BASE_VIDEO_CODEC_STREAM_UNLOCK (self);
+
   /* Send an EOS buffer to the component and let the base
    * class drop the EOS event. We will send it later when
    * the EOS buffer arrives on the output port. */
@@ -1454,6 +1459,8 @@ gst_omx_video_dec_finish (GstBaseVideoDecoder * decoder)
     buf->omx_buf->nFlags |= OMX_BUFFERFLAG_EOS;
     gst_omx_port_release_buffer (self->in_port, buf);
   }
+
+  GST_BASE_VIDEO_CODEC_STREAM_LOCK (self);
 
   return GST_BASE_VIDEO_DECODER_FLOW_DROPPED;
 }
@@ -1474,14 +1481,20 @@ gst_omx_video_dec_drain (GstOMXVideoDec * self)
   if (self->eos)
     return GST_FLOW_OK;
 
+  /* Make sure to release the base class stream lock, otherwise
+   * _loop() can't call _finish_frame() and we might block forever
+   * because no input buffers are released */
+  GST_BASE_VIDEO_CODEC_STREAM_UNLOCK (self);
+
   /* Send an EOS buffer to the component and let the base
    * class drop the EOS event. We will send it later when
    * the EOS buffer arrives on the output port. */
   acq_ret = gst_omx_port_acquire_buffer (self->in_port, &buf);
-  if (acq_ret != GST_OMX_ACQUIRE_BUFFER_OK)
+  if (acq_ret != GST_OMX_ACQUIRE_BUFFER_OK) {
+    GST_BASE_VIDEO_CODEC_STREAM_LOCK (self);
     return GST_FLOW_ERROR;
+  }
 
-  GST_BASE_VIDEO_CODEC_STREAM_UNLOCK (self);
   g_mutex_lock (self->drain_lock);
   self->draining = TRUE;
   buf->omx_buf->nFlags |= OMX_BUFFERFLAG_EOS;
