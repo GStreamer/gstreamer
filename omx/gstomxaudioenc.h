@@ -58,6 +58,9 @@ struct _GstOMXAudioEnc
    * the first buffer */
   gboolean started;
 
+  /* TRUE if upstream is EOS */
+  gboolean eos;
+
   /* Draining state */
   GMutex *drain_lock;
   GCond *drain_cond;
