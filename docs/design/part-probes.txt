@@ -45,20 +45,22 @@ Overview
   
     typedef enum
     {
-      GST_PAD_PROBE_TYPE_INVALID      = 0,
+      GST_PAD_PROBE_TYPE_INVALID          = 0,
 
       /* flags to control blocking */
-      GST_PAD_PROBE_TYPE_IDLE         = (1 << 0),
-      GST_PAD_PROBE_TYPE_BLOCK        = (1 << 1),
+      GST_PAD_PROBE_TYPE_IDLE             = (1 << 0),
+      GST_PAD_PROBE_TYPE_BLOCK            = (1 << 1),
 
       /* flags to select datatypes */
-      GST_PAD_PROBE_TYPE_BUFFER       = (1 << 2),
-      GST_PAD_PROBE_TYPE_BUFFER_LIST  = (1 << 3),
-      GST_PAD_PROBE_TYPE_EVENT        = (1 << 4),
+      GST_PAD_PROBE_TYPE_BUFFER           = (1 << 2),
+      GST_PAD_PROBE_TYPE_BUFFER_LIST      = (1 << 3),
+      GST_PAD_PROBE_TYPE_EVENT_DOWNSTREAM = (1 << 4),
+      GST_PAD_PROBE_TYPE_EVENT_UPSTREAM   = (1 << 5),
 
       /* flags to select scheduling mode */
-      GST_PAD_PROBE_TYPE_PUSH         = (1 << 5),
-      GST_PAD_PROBE_TYPE_PULL         = (1 << 6),
+      GST_PAD_PROBE_TYPE_PUSH             = (1 << 6),
+      GST_PAD_PROBE_TYPE_PULL             = (1 << 7),
+
     } GstPadProbeType;
 
  When adding a probe with the IDLE or BLOCK flag, the probe will become a
@@ -71,14 +73,13 @@ Overview
 
  The probe callback is defined as:
 
-   GstPadProbeReturn (*GstPadProbeCallback) (GstPad *pad, GstPadProbeType type,
-                                          gpointer type_data,
+   GstPadProbeReturn (*GstPadProbeCallback) (GstPad *pad, GstPadProbeInfo *info,
                                           gpointer user_data);
 
- The executing probe type is passed as an argument and is guaranteed to match
- the mask that was used to register the callback. type_data contains type
- specific data, which is usually the data item that is blocked or NULL when
- no data item is present.  
+ A probe info structure is passed as an argument and its type is guaranteed
+ to match the mask that was used to register the callback. The data item in the
+ info contains type specific data, which is usually the data item that is blocked
+ or NULL when no data item is present.  
  
  The probe can return any of the following return values:
 
@@ -111,8 +112,8 @@ Blocking probes
   thread.
 
   The IDLE probe in useful to perform dynamic linking, it allows to wait for for
-  a safe moment when an unlink/link operation can be done. Since the event is a
-  blocking event, it will also make sure that the pad stays idle until the probe
+  a safe moment when an unlink/link operation can be done. Since the probe is a
+  blocking probe, it will also make sure that the pad stays idle until the probe
   is removed.
 
   When the BLOCK flag is set, the probe callback will be called when new data
@@ -135,7 +136,7 @@ Non-Blocking probes
 Push dataflow
 -------------
 
-All probes have the GST_PAD_PROBE_TYPE_PUSH flag set in the callbacks.
+Push probes have the GST_PAD_PROBE_TYPE_PUSH flag set in the callbacks.
 
 In push based scheduling, the blocking probe is called first with the data item.
 Then the data probes are called before the peer pad chain or event function is
@@ -144,13 +145,13 @@ called.
 The data probes are called before the peer pad is checked. This allows for
 linking the pad in either the BLOCK or DATA probes on the pad.
 
-Before the peerpad chain or event function is called, the peer pad data probes
-are called.
+Before the peerpad chain or event function is called, the peer pad block and
+data probes are called.
 
 Finally, the IDLE probe is called on the pad after the data was sent to the
 peer pad.
 
-The push dataflow probe behavior is the same for buffers and biderectional events.
+The push dataflow probe behavior is the same for buffers and bidirectional events.
 
 
                      pad                           peerpad
@@ -191,19 +192,20 @@ The push dataflow probe behavior is the same for buffers and biderectional event
 Pull dataflow
 -------------
 
-All probes have the GST_PAD_PROBE_TYPE_PULL flag set in the callbacks.
+Pull probes have the GST_PAD_PROBE_TYPE_PULL flag set in the callbacks.
 
 The gst_pad_pull_range() call will first trigger the BLOCK probes without a DATA
-item. This allows the pad to be linked before the peer pad is resolved.
+item. This allows the pad to be linked before the peer pad is resolved. It also
+allows the callback to set a data item in the probe info.
 
-After the getrange function is called on the peer pad and there is a data item,
-the DATA probes are called.
+After the blocking probe and the getrange function is called on the peer pad
+and there is a data item, the DATA probes are called.
 
 When control returns to the sinkpad, the IDLE callbacks are called. The IDLE
 callback is called without a data item so that it will also be called when there
 was an error.
 
-It there is a valid DATA item, the DATA probes are called for the item.
+If there is a valid DATA item, the DATA probes are called for the item.
 
 
                  srcpad                          sinkpad

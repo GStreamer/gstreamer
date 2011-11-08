@@ -3400,20 +3400,40 @@ no_match:
   }
 }
 
-#define PROBE_ND_FULL(pad,mask,label,defaultval)                \
+#define PROBE_PRE_PULL(pad,mask,data,offs,size,label,probed,defaultval)    \
   G_STMT_START {						\
     if (G_UNLIKELY (pad->num_probes)) {				\
-      GstPadProbeInfo info = { mask, NULL };                   \
+      /* we start with passing NULL as the data item */         \
+      GstPadProbeInfo info = { mask, NULL, offs, size };        \
+      ret = do_probe_callbacks (pad, &info, defaultval);	\
+      /* store the possibly updated data item */                \
+      data = GST_PAD_PROBE_INFO_DATA (&info);                   \
+      /* if something went wrong, exit */                       \
+      if (G_UNLIKELY (ret != defaultval && ret != GST_FLOW_OK))	\
+        goto label;						\
+      /* otherwise check if the probe retured data */           \
+      if (G_UNLIKELY (data != NULL))                            \
+        goto probed;						\
+    }								\
+  } G_STMT_END
+
+
+/* a probe that does not take or return any data */
+#define PROBE_NO_DATA(pad,mask,label,defaultval)                \
+  G_STMT_START {						\
+    if (G_UNLIKELY (pad->num_probes)) {				\
+      /* pass NULL as the data item */                          \
+      GstPadProbeInfo info = { mask, NULL, 0, 0 };              \
       ret = do_probe_callbacks (pad, &info, defaultval);	\
       if (G_UNLIKELY (ret != defaultval && ret != GST_FLOW_OK))	\
         goto label;						\
     }								\
   } G_STMT_END
 
-#define PROBE_FULL(pad,mask,data,label,defaultval)              \
+#define PROBE_FULL(pad,mask,data,offs,size,label,defaultval)    \
   G_STMT_START {						\
     if (G_UNLIKELY (pad->num_probes)) {				\
-      GstPadProbeInfo info = { mask, data };                    \
+      GstPadProbeInfo info = { mask, data, offs, size };        \
       ret = do_probe_callbacks (pad, &info, defaultval);	\
       data = GST_PAD_PROBE_INFO_DATA (&info);                   \
       if (G_UNLIKELY (ret != defaultval && ret != GST_FLOW_OK))	\
@@ -3421,10 +3441,10 @@ no_match:
     }								\
   } G_STMT_END
 
-#define PROBE(pad,mask,data,label)		\
-  PROBE_FULL(pad, mask, data, label, GST_FLOW_OK);
-#define PROBE_ND(pad,mask,label)		\
-  PROBE_ND_FULL(pad, mask, label, GST_FLOW_OK);
+#define PROBE_PUSH(pad,mask,data,label)		                \
+  PROBE_FULL(pad, mask, data, -1, -1, label, GST_FLOW_OK);
+#define PROBE_PULL(pad,mask,data,offs,size,label)		\
+  PROBE_FULL(pad, mask, data, offs, size, label, GST_FLOW_OK);
 
 static GstFlowReturn
 do_probe_callbacks (GstPad * pad, GstPadProbeInfo * info,
@@ -3637,9 +3657,9 @@ gst_pad_chain_data_unchecked (GstPad * pad, GstPadProbeType type, void *data)
       goto events_error;
   }
 
-  PROBE (pad, type | GST_PAD_PROBE_TYPE_BLOCK, data, probe_stopped);
+  PROBE_PUSH (pad, type | GST_PAD_PROBE_TYPE_BLOCK, data, probe_stopped);
 
-  PROBE (pad, type, data, probe_stopped);
+  PROBE_PUSH (pad, type, data, probe_stopped);
 
   GST_OBJECT_UNLOCK (pad);
 
@@ -3844,10 +3864,10 @@ gst_pad_push_data (GstPad * pad, GstPadProbeType type, void *data)
     goto flushing;
 
   /* do block probes */
-  PROBE (pad, type | GST_PAD_PROBE_TYPE_BLOCK, data, probe_stopped);
+  PROBE_PUSH (pad, type | GST_PAD_PROBE_TYPE_BLOCK, data, probe_stopped);
 
   /* do post-blocking probes */
-  PROBE (pad, type, data, probe_stopped);
+  PROBE_PUSH (pad, type, data, probe_stopped);
 
   if (G_UNLIKELY ((peer = GST_PAD_PEER (pad)) == NULL))
     goto not_linked;
@@ -3865,7 +3885,7 @@ gst_pad_push_data (GstPad * pad, GstPadProbeType type, void *data)
   pad->priv->using--;
   if (pad->priv->using == 0) {
     /* pad is not active anymore, trigger idle callbacks */
-    PROBE_ND_FULL (pad, GST_PAD_PROBE_TYPE_PUSH | GST_PAD_PROBE_TYPE_IDLE,
+    PROBE_NO_DATA (pad, GST_PAD_PROBE_TYPE_PUSH | GST_PAD_PROBE_TYPE_IDLE,
         probe_stopped, ret);
   }
   GST_OBJECT_UNLOCK (pad);
@@ -3991,8 +4011,10 @@ gst_pad_get_range_unchecked (GstPad * pad, guint64 offset, guint size,
   if (G_UNLIKELY (GST_PAD_IS_FLUSHING (pad)))
     goto flushing;
 
-  PROBE_ND (pad, GST_PAD_PROBE_TYPE_PULL | GST_PAD_PROBE_TYPE_BLOCK,
-      probe_stopped);
+  /* when one of the probes returns a buffer, probed_data will be called and we
+   * skip calling the getrange function */
+  PROBE_PRE_PULL (pad, GST_PAD_PROBE_TYPE_PULL | GST_PAD_PROBE_TYPE_BLOCK,
+      *buffer, offset, size, probe_stopped, probed_data, GST_FLOW_OK);
   GST_OBJECT_UNLOCK (pad);
 
   if (G_UNLIKELY ((getrangefunc = GST_PAD_GETRANGEFUNC (pad)) == NULL))
@@ -4010,8 +4032,9 @@ gst_pad_get_range_unchecked (GstPad * pad, guint64 offset, guint size,
 
   /* can only fire the signal if we have a valid buffer */
   GST_OBJECT_LOCK (pad);
-  PROBE (pad, GST_PAD_PROBE_TYPE_PULL | GST_PAD_PROBE_TYPE_BUFFER, *buffer,
-      probe_stopped_unref);
+probed_data:
+  PROBE_PULL (pad, GST_PAD_PROBE_TYPE_PULL | GST_PAD_PROBE_TYPE_BUFFER,
+      *buffer, offset, size, probe_stopped_unref);
   GST_OBJECT_UNLOCK (pad);
 
   GST_PAD_STREAM_UNLOCK (pad);
@@ -4139,8 +4162,10 @@ gst_pad_pull_range (GstPad * pad, guint64 offset, guint size,
   if (G_UNLIKELY (GST_PAD_IS_FLUSHING (pad)))
     goto flushing;
 
-  PROBE_ND (pad, GST_PAD_PROBE_TYPE_PULL | GST_PAD_PROBE_TYPE_BLOCK,
-      pre_probe_stopped);
+  /* when one of the probes returns a buffer, probed_data will be called and we
+   * skip calling the peer getrange function */
+  PROBE_PRE_PULL (pad, GST_PAD_PROBE_TYPE_PULL | GST_PAD_PROBE_TYPE_BLOCK,
+      *buffer, offset, size, pre_probe_stopped, probed_data, GST_FLOW_OK);
 
   if (G_UNLIKELY ((peer = GST_PAD_PEER (pad)) == NULL))
     goto not_linked;
@@ -4157,15 +4182,16 @@ gst_pad_pull_range (GstPad * pad, guint64 offset, guint size,
   pad->priv->using--;
   if (pad->priv->using == 0) {
     /* pad is not active anymore, trigger idle callbacks */
-    PROBE_ND (pad, GST_PAD_PROBE_TYPE_PULL | GST_PAD_PROBE_TYPE_IDLE,
-        post_probe_stopped);
+    PROBE_NO_DATA (pad, GST_PAD_PROBE_TYPE_PULL | GST_PAD_PROBE_TYPE_IDLE,
+        post_probe_stopped, ret);
   }
 
   if (G_UNLIKELY (ret != GST_FLOW_OK))
     goto pull_range_failed;
 
-  PROBE (pad, GST_PAD_PROBE_TYPE_PULL | GST_PAD_PROBE_TYPE_BUFFER, buffer,
-      post_probe_stopped);
+probed_data:
+  PROBE_PULL (pad, GST_PAD_PROBE_TYPE_PULL | GST_PAD_PROBE_TYPE_BUFFER,
+      *buffer, offset, size, post_probe_stopped);
 
   needs_events = GST_PAD_NEEDS_EVENTS (pad);
   if (G_UNLIKELY (needs_events)) {
@@ -4360,7 +4386,7 @@ gst_pad_push_event (GstPad * pad, GstEvent * event)
       if (G_UNLIKELY (GST_PAD_IS_FLUSHING (pad)))
         goto flushed;
 
-      PROBE (pad, type | GST_PAD_PROBE_TYPE_PUSH |
+      PROBE_PUSH (pad, type | GST_PAD_PROBE_TYPE_PUSH |
           GST_PAD_PROBE_TYPE_BLOCK, event, probe_stopped);
 
       break;
@@ -4368,7 +4394,7 @@ gst_pad_push_event (GstPad * pad, GstEvent * event)
   }
 
   /* send probes after modifying the events above */
-  PROBE (pad, type | GST_PAD_PROBE_TYPE_PUSH, event, probe_stopped);
+  PROBE_PUSH (pad, type | GST_PAD_PROBE_TYPE_PUSH, event, probe_stopped);
 
   /* now check the peer pad */
   if (peerpad == NULL)
@@ -4395,8 +4421,8 @@ gst_pad_push_event (GstPad * pad, GstEvent * event)
   pad->priv->using--;
   if (pad->priv->using == 0) {
     /* pad is not active anymore, trigger idle callbacks */
-    PROBE_ND (pad, GST_PAD_PROBE_TYPE_PUSH | GST_PAD_PROBE_TYPE_IDLE,
-        probe_stopped);
+    PROBE_NO_DATA (pad, GST_PAD_PROBE_TYPE_PUSH | GST_PAD_PROBE_TYPE_IDLE,
+        probe_stopped, GST_FLOW_OK);
   }
   GST_OBJECT_UNLOCK (pad);
 
@@ -4574,11 +4600,11 @@ gst_pad_send_event (GstPad * pad, GstEvent * event)
       if (G_UNLIKELY (GST_PAD_IS_FLUSHING (pad)))
         goto flushing;
 
-      PROBE (pad,
+      PROBE_PUSH (pad,
           type | GST_PAD_PROBE_TYPE_PUSH |
           GST_PAD_PROBE_TYPE_BLOCK, event, probe_stopped);
 
-      PROBE (pad, type | GST_PAD_PROBE_TYPE_PUSH, event, probe_stopped);
+      PROBE_PUSH (pad, type | GST_PAD_PROBE_TYPE_PUSH, event, probe_stopped);
 
       break;
   }

@@ -213,9 +213,9 @@ typedef enum {
 
 /**
  * GstPadActivateMode:
- * @GST_PAD_ACTIVATE_NONE:	  	 Pad will not handle dataflow
- * @GST_PAD_ACTIVATE_PUSH:		 Pad handles dataflow in downstream push mode
- * @GST_PAD_ACTIVATE_PULL:     	 Pad handles dataflow in upstream pull mode
+ * @GST_PAD_ACTIVATE_NONE: Pad will not handle dataflow
+ * @GST_PAD_ACTIVATE_PUSH: Pad handles dataflow in downstream push mode
+ * @GST_PAD_ACTIVATE_PULL: Pad handles dataflow in upstream pull mode
  *
  * The status of a GstPad. After activating a pad, which usually happens when the
  * parent element goes from READY to PAUSED, the GstPadActivateMode defines if the
@@ -531,7 +531,12 @@ typedef enum
 /**
  * GstPadProbeInfo:
  * @type: the current probe type
- * @data: type specific data
+ * @data: type specific data, check the @type field to know the datatype.
+ *    This field can be NULL.
+ * @offset: offset of pull probe, this field is valid when @type contains
+ *    #GST_PAD_PROBE_TYPE_PULL
+ * @size: size of pull probe, this field is valid when @type contains
+ *    #GST_PAD_PROBE_TYPE_PULL
  *
  * Info passed in the #GstPadProbeCallback.
  */
@@ -539,6 +544,8 @@ typedef struct
 {
   GstPadProbeType type;
   gpointer data;
+  guint64 offset;
+  guint size;
 } GstPadProbeInfo;
 
 #define GST_PAD_PROBE_INFO_TYPE(d)         ((d)->type)
@@ -548,6 +555,9 @@ typedef struct
 #define GST_PAD_PROBE_INFO_BUFFER_LIST(d)  GST_BUFFER_LIST_CAST(GST_PAD_PROBE_INFO_DATA(d))
 #define GST_PAD_PROBE_INFO_EVENT(d)        GST_EVENT_CAST(GST_PAD_PROBE_INFO_DATA(d))
 
+#define GST_PAD_PROBE_INFO_OFFSET(d)       ((d)->offset)
+#define GST_PAD_PROBE_INFO_SIZE(d)         ((d)->size)
+
 /**
  * GstPadProbeCallback
  * @pad: the #GstPad that is blocked
@@ -556,9 +566,11 @@ typedef struct
  *
  * Callback used by gst_pad_add_probe(). Gets called to notify about the current
  * blocking type.
+ *
+ * The callback is allowed to modify the data pointer in @info.
  */
-typedef GstPadProbeReturn      (*GstPadProbeCallback)              (GstPad *pad, GstPadProbeInfo *info,
-                                                                    gpointer user_data);
+typedef GstPadProbeReturn   (*GstPadProbeCallback)   (GstPad *pad, GstPadProbeInfo *info,
+                                                      gpointer user_data);
 
 /**
  * GstPadStickyEventsForeachFunction:
@@ -570,7 +582,8 @@ typedef GstPadProbeReturn      (*GstPadProbeCallback)              (GstPad *pad,
  *
  * Returns: GST_FLOW_OK if the iteration should continue
  */
-typedef GstFlowReturn           (*GstPadStickyEventsForeachFunction) (GstPad *pad, GstEvent *event, gpointer user_data);
+typedef GstFlowReturn       (*GstPadStickyEventsForeachFunction) (GstPad *pad, GstEvent *event,
+                                                                  gpointer user_data);
 
 /**
  * GstPadFlags:
