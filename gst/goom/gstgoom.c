@@ -99,6 +99,7 @@ static gboolean gst_goom_src_event (GstPad * pad, GstEvent * event);
 static gboolean gst_goom_sink_event (GstPad * pad, GstEvent * event);
 
 static gboolean gst_goom_src_query (GstPad * pad, GstQuery * query);
+static gboolean gst_goom_sink_query (GstPad * pad, GstQuery * query);
 
 #define gst_goom_parent_class parent_class
 G_DEFINE_TYPE (GstGoom, gst_goom, GST_TYPE_ELEMENT);
@@ -135,6 +136,8 @@ gst_goom_init (GstGoom * goom)
       GST_DEBUG_FUNCPTR (gst_goom_chain));
   gst_pad_set_event_function (goom->sinkpad,
       GST_DEBUG_FUNCPTR (gst_goom_sink_event));
+  gst_pad_set_query_function (goom->sinkpad,
+      GST_DEBUG_FUNCPTR (gst_goom_sink_query));
   gst_element_add_pad (GST_ELEMENT (goom), goom->sinkpad);
 
   goom->srcpad = gst_pad_new_from_static_template (&src_template, "src");
@@ -453,6 +456,29 @@ gst_goom_src_query (GstPad * pad, GstQuery * query)
     }
     default:
       res = gst_pad_peer_query (goom->sinkpad, query);
+      break;
+  }
+
+  gst_object_unref (goom);
+
+  return res;
+}
+
+static gboolean
+gst_goom_sink_query (GstPad * pad, GstQuery * query)
+{
+  gboolean res = FALSE;
+  GstGoom *goom;
+
+  goom = GST_GOOM (gst_pad_get_parent (pad));
+
+  switch (GST_QUERY_TYPE (query)) {
+    case GST_QUERY_ALLOCATION:
+      /* we convert audio to video, don't pass allocation queries for audio 
+       * through */
+      break;
+    default:
+      res = gst_pad_peer_query (goom->srcpad, query);
       break;
   }
 
