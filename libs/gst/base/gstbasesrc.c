@@ -587,7 +587,7 @@ gst_base_src_set_format (GstBaseSrc * src, GstFormat format)
  * read past current tracked size.  Otherwise, size is checked for upon each
  * read.
  *
- * Since: 0.10.35
+ * Since: 0.10.36
  */
 void
 gst_base_src_set_dynamic_size (GstBaseSrc * src, gboolean dynamic)

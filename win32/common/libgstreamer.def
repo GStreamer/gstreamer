@@ -190,6 +190,7 @@ EXPORTS
 	gst_caps_is_equal
 	gst_caps_is_equal_fixed
 	gst_caps_is_fixed
+	gst_caps_is_strictly_equal
 	gst_caps_is_subset
 	gst_caps_is_subset_structure
 	gst_caps_merge

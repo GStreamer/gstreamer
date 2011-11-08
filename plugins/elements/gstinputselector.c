@@ -859,7 +859,7 @@ gst_input_selector_class_init (GstInputSelectorClass * klass)
    * buffers are dropped by input-selector that might be needed
    * when switching the active pad.
    *
-   * Since: 0.10.35
+   * Since: 0.10.36
    */
   g_object_class_install_property (gobject_class, PROP_SYNC_STREAMS,
       g_param_spec_boolean ("sync-streams", "Sync Streams",
