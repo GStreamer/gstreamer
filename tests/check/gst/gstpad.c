@@ -297,7 +297,7 @@ GST_START_TEST (test_push_unlinked)
   /* adding a probe that returns _DROP will drop the buffer without trying
    * to chain */
   id = gst_pad_add_probe (src, GST_PAD_PROBE_TYPE_BUFFER,
-      (GstPadProbeCallback) _probe_handler, GINT_TO_POINTER (0), NULL);
+      _probe_handler, GINT_TO_POINTER (0), NULL);
   buffer = gst_buffer_new ();
   gst_buffer_ref (buffer);
   fail_unless (gst_pad_push (src, buffer) == GST_FLOW_OK);
@@ -308,7 +308,7 @@ GST_START_TEST (test_push_unlinked)
   /* adding a probe that returns _OK will still chain the buffer,
    * and hence drop because pad is unlinked */
   id = gst_pad_add_probe (src, GST_PAD_PROBE_TYPE_BUFFER,
-      (GstPadProbeCallback) _probe_handler, GINT_TO_POINTER (1), NULL);
+      _probe_handler, GINT_TO_POINTER (1), NULL);
   buffer = gst_buffer_new ();
   gst_buffer_ref (buffer);
   fail_unless (gst_pad_push (src, buffer) == GST_FLOW_NOT_LINKED);
@@ -388,7 +388,7 @@ GST_START_TEST (test_push_linked)
   /* adding a probe that returns FALSE will drop the buffer without trying
    * to chain */
   id = gst_pad_add_probe (src, GST_PAD_PROBE_TYPE_BUFFER,
-      (GstPadProbeCallback) _probe_handler, GINT_TO_POINTER (0), NULL);
+      _probe_handler, GINT_TO_POINTER (0), NULL);
   buffer = gst_buffer_new ();
   gst_buffer_ref (buffer);
   fail_unless (gst_pad_push (src, buffer) == GST_FLOW_OK);
@@ -399,7 +399,7 @@ GST_START_TEST (test_push_linked)
 
   /* adding a probe that returns TRUE will still chain the buffer */
   id = gst_pad_add_probe (src, GST_PAD_PROBE_TYPE_BUFFER,
-      (GstPadProbeCallback) _probe_handler, GINT_TO_POINTER (1), NULL);
+      _probe_handler, GINT_TO_POINTER (1), NULL);
   buffer = gst_buffer_new ();
   gst_buffer_ref (buffer);
   fail_unless (gst_pad_push (src, buffer) == GST_FLOW_OK);
@@ -471,27 +471,27 @@ GST_START_TEST (test_push_linked_flushing)
 
   /* adding a probe that returns FALSE will drop the buffer without trying
    * to chain */
-  id = gst_pad_add_buffer_probe (src, (GCallback) _probe_handler,
-      GINT_TO_POINTER (0));
+  id = gst_pad_add_probe (src, GST_PAD_PROBE_TYPE_BUFFER, _probe_handler,
+      GINT_TO_POINTER (0), NULL);
   buffer = gst_buffer_new ();
   gst_buffer_ref (buffer);
   fail_unless (gst_pad_push (src, buffer) == GST_FLOW_OK);
   ASSERT_MINI_OBJECT_REFCOUNT (buffer, "buffer", 1);
   fail_unless_equals_int (g_list_length (buffers), 0);
   gst_buffer_unref (buffer);
-  gst_pad_remove_buffer_probe (src, id);
+  gst_pad_remove_probe (src, id);
 
   /* adding a probe that returns TRUE will still chain the buffer,
    * and hence drop because pad is flushing */
-  id = gst_pad_add_buffer_probe (src, (GCallback) _probe_handler,
-      GINT_TO_POINTER (1));
+  id = gst_pad_add_probe (src, GST_PAD_PROBE_TYPE_BUFFER, _probe_handler,
+      GINT_TO_POINTER (1), NULL);
   buffer = gst_buffer_new ();
   gst_buffer_ref (buffer);
   fail_unless (gst_pad_push (src, buffer) == GST_FLOW_WRONG_STATE);
   ASSERT_MINI_OBJECT_REFCOUNT (buffer, "buffer", 1);
   fail_unless_equals_int (g_list_length (buffers), 0);
   gst_buffer_unref (buffer);
-  gst_pad_remove_buffer_probe (src, id);
+  gst_pad_remove_probe (src, id);
 
 
   /* cleanup */
