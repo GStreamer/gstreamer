@@ -8867,8 +8867,13 @@ qtdemux_parse_tree (GstQTDemux * qtdemux)
 
   /* set duration in the segment info */
   gst_qtdemux_get_duration (qtdemux, &duration);
-  if (duration)
+  if (duration) {
     gst_segment_set_duration (&qtdemux->segment, GST_FORMAT_TIME, duration);
+    /* also do not exceed duration; stop is set that way post seek anyway,
+     * and segment activation falls back to duration,
+     * whereas loop only checks stop, so let's align this here as well */
+    qtdemux->segment.stop = duration;
+  }
 
   /* parse all traks */
   trak = qtdemux_tree_get_child_by_type (qtdemux->moov_node, FOURCC_trak);
