@@ -395,6 +395,7 @@ gst_ts_demux_srcpad_query_types (GstPad * pad)
   static const GstQueryType query_types[] = {
     GST_QUERY_DURATION,
     GST_QUERY_SEEKING,
+    GST_QUERY_LATENCY,
     0
   };
 
@@ -424,6 +425,30 @@ gst_ts_demux_srcpad_query (GstPad * pad, GstQuery * query)
         GST_DEBUG_OBJECT (demux, "only query duration on TIME is supported");
         res = FALSE;
       }
+      break;
+    case GST_QUERY_LATENCY:
+    {
+      GST_DEBUG ("query latency");
+      res = gst_pad_peer_query (base->sinkpad, query);
+      if (res && base->upstream_live) {
+        GstClockTime min_lat, max_lat;
+        gboolean live;
+
+        /* According to H.222.0
+           Annex D.0.3 (System Time Clock recovery in the decoder)
+           and D.0.2 (Audio and video presentation synchronization)
+
+           We can end up with an interval of up to 700ms between valid
+           PCR/SCR. We therefore allow a latency of 700ms for that.
+         */
+        gst_query_parse_latency (query, &live, &min_lat, &max_lat);
+        if (min_lat != -1)
+          min_lat += 700 * GST_MSECOND;
+        if (max_lat != -1)
+          max_lat += 700 * GST_MSECOND;
+        gst_query_set_latency (query, live, min_lat, max_lat);
+      }
+    }
       break;
     case GST_QUERY_SEEKING:
       GST_DEBUG ("query seeking");
