@@ -69,9 +69,9 @@ no_pipeline (DemoPlayer * player)
 }
 
 static GstPadProbeReturn
-demo_player_event_listener (GstPad * pad, GstPadProbeType type,
-    GstEvent * event, gpointer data)
+demo_player_event_listener (GstPad * pad, GstPadProbeInfo * info, gpointer data)
 {
+  GstEvent *event = GST_PAD_PROBE_INFO_EVENT (info);
   DemoPlayer *player = DEMO_PLAYER (data);
   DemoPlayerPrivate *priv = DEMO_PLAYER_GET_PRIVATE (player);
 
@@ -175,8 +175,8 @@ demo_player_build_pipeline (DemoPlayer * player)
   LINK_ELEMENTS (resample, asink);
 
   gst_pad_add_probe (gst_element_get_static_pad (asink, "sink"),
-      GST_PAD_PROBE_TYPE_EVENT,
-      (GstPadProbeCallback) demo_player_event_listener, player, NULL);
+      GST_PAD_PROBE_TYPE_EVENT_DOWNSTREAM,
+      demo_player_event_listener, player, NULL);
 
   ghostpad = gst_element_get_static_pad (filter, "sink");
   gst_element_add_pad (audioline, gst_ghost_pad_new ("sink", ghostpad));
@@ -198,8 +198,8 @@ demo_player_build_pipeline (DemoPlayer * player)
   MAKE_ELEMENT (NULL, priv->scalerate_line, audiosink_name,
       "scaling_audio_sink");
   gst_pad_add_probe (gst_element_get_static_pad (priv->scalerate_line,
-          "sink"), GST_PAD_PROBE_TYPE_EVENT,
-      (GstPadProbeCallback) demo_player_event_listener, player, NULL);
+          "sink"), GST_PAD_PROBE_TYPE_EVENT_DOWNSTREAM,
+      demo_player_event_listener, player, NULL);
   g_object_ref (priv->scaletempo_line);
   g_object_ref (priv->scalerate_line);
 }

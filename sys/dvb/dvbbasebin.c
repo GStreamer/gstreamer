@@ -100,7 +100,7 @@ static void dvb_base_bin_dispose (GObject * object);
 static void dvb_base_bin_finalize (GObject * object);
 
 static GstPadProbeReturn dvb_base_bin_ts_pad_probe_cb (GstPad * pad,
-    GstPadProbeType type, gpointer data, gpointer user_data);
+    GstPadProbeInfo * info, gpointer user_data);
 static GstStateChangeReturn dvb_base_bin_change_state (GstElement * element,
     GstStateChange transition);
 static void dvb_base_bin_handle_message (GstBin * bin, GstMessage * message);
@@ -528,8 +528,8 @@ dvb_base_bin_reset_pmtlist (DvbBaseBin * dvbbasebin)
 }
 
 static GstPadProbeReturn
-dvb_base_bin_ts_pad_probe_cb (GstPad * pad, GstPadProbeType type,
-    gpointer data, gpointer user_data)
+dvb_base_bin_ts_pad_probe_cb (GstPad * pad, GstPadProbeInfo * info,
+    gpointer user_data)
 {
   DvbBaseBin *dvbbasebin = GST_DVB_BASE_BIN (user_data);
 

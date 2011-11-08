@@ -312,8 +312,8 @@ create_host_window (void)
 }
 
 static GstPadProbeReturn
-camera_src_get_timestamp_probe (GstPad * pad, GstPadProbeType type,
-    GstMiniObject * obj, gpointer udata)
+camera_src_get_timestamp_probe (GstPad * pad, GstPadProbeInfo * info,
+    gpointer udata)
 {
   CaptureTiming *timing;
 
@@ -323,8 +323,8 @@ camera_src_get_timestamp_probe (GstPad * pad, GstPadProbeType type,
   return GST_PAD_PROBE_REMOVE;
 }
 
-static gboolean
-viewfinder_get_timestamp_probe (GstPad * pad, GstMiniObject * obj,
+static GstPadProbeReturn
+viewfinder_get_timestamp_probe (GstPad * pad, GstPadProbeInfo * info,
     gpointer udata)
 {
   CaptureTiming *timing;
@@ -332,9 +332,7 @@ viewfinder_get_timestamp_probe (GstPad * pad, GstMiniObject * obj,
   timing = (CaptureTiming *) g_list_first (capture_times)->data;
   timing->precapture = gst_util_get_timestamp ();
 
-  gst_pad_remove_probe (pad, viewfinder_probe_id);
-
-  return TRUE;
+  return GST_PAD_PROBE_REMOVE;
 }
 
 static GstBusSyncReply
@@ -375,8 +373,7 @@ sync_bus_callback (GstBus * bus, GstMessage * message, gpointer data)
 
             viewfinder_probe_id =
                 gst_pad_add_probe (pad, GST_PAD_PROBE_TYPE_BUFFER,
-                (GstPadProbeCallback) viewfinder_get_timestamp_probe, NULL,
-                NULL);
+                viewfinder_get_timestamp_probe, NULL, NULL);
 
             gst_object_unref (pad);
           }
@@ -950,7 +947,7 @@ run_pipeline (gpointer user_data)
 
     pad = gst_element_get_static_pad (video_source, "imgsrc");
     camera_probe_id = gst_pad_add_probe (pad, GST_PAD_PROBE_TYPE_BUFFER,
-        (GstPadProbeCallback) camera_src_get_timestamp_probe, NULL, NULL);
+        camera_src_get_timestamp_probe, NULL, NULL);
 
     gst_object_unref (pad);
   }

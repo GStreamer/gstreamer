@@ -179,8 +179,7 @@ static gboolean setup_add_pad_probe (GstElement * elem, const gchar * pad_name,
  */
 
 static GstPadProbeReturn
-pad_has_buffer (GstPad * pad, GstPadProbeType type, gpointer type_data,
-    gpointer user_data)
+pad_has_buffer (GstPad * pad, GstPadProbeInfo * info, gpointer user_data)
 {
   gboolean *signal_sink = (gboolean *) user_data;
   gboolean print_and_restart = FALSE;
