@@ -714,6 +714,7 @@ gst_omx_video_dec_loop (GstOMXVideoDec * self)
 
     if (!gst_omx_video_dec_fill_buffer (self, buf, outbuf)) {
       gst_buffer_unref (outbuf);
+      gst_omx_port_release_buffer (self->out_port, buf);
       GST_BASE_VIDEO_CODEC_STREAM_UNLOCK (self);
       goto invalid_buffer;
     }
@@ -737,6 +738,7 @@ gst_omx_video_dec_loop (GstOMXVideoDec * self)
         flow_ret =
             gst_base_video_decoder_finish_frame (GST_BASE_VIDEO_DECODER (self),
             frame);
+        gst_omx_port_release_buffer (self->out_port, buf);
         GST_BASE_VIDEO_CODEC_STREAM_UNLOCK (self);
         goto invalid_buffer;
       }
@@ -1279,8 +1281,10 @@ gst_omx_video_dec_handle_frame (GstBaseVideoDecoder * decoder,
 
     g_assert (acq_ret == GST_OMX_ACQUIRE_BUFFER_OK && buf != NULL);
 
-    if (buf->omx_buf->nAllocLen - buf->omx_buf->nOffset <= 0)
+    if (buf->omx_buf->nAllocLen - buf->omx_buf->nOffset <= 0) {
+      gst_omx_port_release_buffer (self->in_port, buf);
       goto full_buffer;
+    }
 
     if (self->downstream_flow_ret != GST_FLOW_OK) {
       GST_ERROR_OBJECT (self, "Downstream returned %s",
@@ -1372,7 +1376,6 @@ full_buffer:
     GST_ELEMENT_ERROR (self, LIBRARY, FAILED, (NULL),
         ("Got OpenMAX buffer with no free space (%p, %u/%u)", buf,
             buf->omx_buf->nOffset, buf->omx_buf->nAllocLen));
-    gst_omx_port_release_buffer (self->in_port, buf);
     return GST_FLOW_ERROR;
   }
 
