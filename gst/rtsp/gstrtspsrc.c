@@ -2153,8 +2153,7 @@ gst_rtspsrc_sink_chain (GstPad * pad, GstBuffer * buffer)
 }
 
 static GstPadProbeReturn
-pad_blocked (GstPad * pad, GstPadProbeType type, gpointer type_data,
-    gpointer user_data)
+pad_blocked (GstPad * pad, GstPadProbeInfo * info, gpointer user_data)
 {
   GstRTSPSrc *src = user_data;
 

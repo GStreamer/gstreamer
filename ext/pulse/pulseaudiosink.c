@@ -514,9 +514,9 @@ distribute_running_time (GstElement * element, const GstSegment * segment)
 }
 
 static GstPadProbeReturn
-dbin_event_probe (GstPad * pad, GstPadProbeType ptype, GstEvent * event,
-    gpointer data)
+dbin_event_probe (GstPad * pad, GstPadProbeInfo * info, gpointer data)
 {
+  GstEvent *event = GST_PAD_PROBE_INFO_EVENT (info);
   GstPulseAudioSink *pbin = GST_PULSE_AUDIO_SINK (data);
 
   if (GST_EVENT_TYPE (event) == GST_EVENT_SEGMENT) {
@@ -583,7 +583,7 @@ gst_pulse_audio_sink_add_dbin (GstPulseAudioSink * pbin)
   sinkpad = gst_element_get_static_pad (GST_ELEMENT (pbin->psink), "sink");
   pbin->event_probe_id =
       gst_pad_add_probe (sinkpad, GST_PAD_PROBE_TYPE_EVENT_DOWNSTREAM,
-      (GstPadProbeCallback) dbin_event_probe, gst_object_ref (pbin), NULL);
+      dbin_event_probe, gst_object_ref (pbin), NULL);
   gst_object_unref (sinkpad);
   sinkpad = NULL;
 
@@ -623,8 +623,7 @@ update_eac3_alignment (GstPulseAudioSink * pbin)
 }
 
 static GstPadProbeReturn
-proxypad_blocked_cb (GstPad * pad, GstPadProbeType ptype, gpointer type_data,
-    gpointer data)
+proxypad_blocked_cb (GstPad * pad, GstPadProbeInfo * info, gpointer data)
 {
   GstPulseAudioSink *pbin = GST_PULSE_AUDIO_SINK (data);
   GstCaps *caps;
