@@ -174,8 +174,6 @@ struct _GstDecodeBin
 
   gboolean expose_allstreams;   /* Whether to expose unknow type streams or not */
 
-  gboolean upstream_seekable;   /* if upstream is seekable */
-
   GList *filtered;              /* elements for which error messages are filtered */
 };
 
@@ -275,7 +273,7 @@ static void type_found (GstElement * typefind, guint probability,
     GstCaps * caps, GstDecodeBin * decode_bin);
 
 static void decodebin_set_queue_size (GstDecodeBin * dbin,
-    GstElement * multiqueue, gboolean preroll);
+    GstElement * multiqueue, gboolean preroll, gboolean seekable);
 
 static gboolean gst_decode_bin_autoplug_continue (GstElement * element,
     GstPad * pad, GstCaps * caps);
@@ -299,6 +297,8 @@ static GstPad *find_sink_pad (GstElement * element);
 static GstStateChangeReturn gst_decode_bin_change_state (GstElement * element,
     GstStateChange transition);
 static void gst_decode_bin_handle_message (GstBin * bin, GstMessage * message);
+
+static gboolean check_upstream_seekable (GstDecodeBin * dbin, GstPad * pad);
 
 #define EXPOSE_LOCK(dbin) G_STMT_START {				\
     GST_LOG_OBJECT (dbin,						\
@@ -2204,28 +2204,26 @@ beach:
  *
  * Check if upstream is seekable.
  */
-static void
+static gboolean
 check_upstream_seekable (GstDecodeBin * dbin, GstPad * pad)
 {
   GstQuery *query;
   gint64 start = -1, stop = -1;
-
-  dbin->upstream_seekable = FALSE;
+  gboolean seekable = FALSE;
 
   query = gst_query_new_seeking (GST_FORMAT_BYTES);
   if (!gst_pad_peer_query (pad, query)) {
     GST_DEBUG_OBJECT (dbin, "seeking query failed");
     gst_query_unref (query);
-    return;
+    return FALSE;
   }
 
-  gst_query_parse_seeking (query, NULL, &dbin->upstream_seekable,
-      &start, &stop);
+  gst_query_parse_seeking (query, NULL, &seekable, &start, &stop);
 
   gst_query_unref (query);
 
   /* try harder to query upstream size if we didn't get it the first time */
-  if (dbin->upstream_seekable && stop == -1) {
+  if (seekable && stop == -1) {
     GstFormat fmt = GST_FORMAT_BYTES;
 
     GST_DEBUG_OBJECT (dbin, "doing duration query to fix up unset stop");
@@ -2234,12 +2232,13 @@ check_upstream_seekable (GstDecodeBin * dbin, GstPad * pad)
 
   /* if upstream doesn't know the size, it's likely that it's not seekable in
    * practice even if it technically may be seekable */
-  if (dbin->upstream_seekable && (start != 0 || stop <= start)) {
+  if (seekable && (start != 0 || stop <= start)) {
     GST_DEBUG_OBJECT (dbin, "seekable but unknown start/stop -> disable");
-    dbin->upstream_seekable = FALSE;
+    return FALSE;
   }
 
-  GST_DEBUG_OBJECT (dbin, "upstream seekable: %d", dbin->upstream_seekable);
+  GST_DEBUG_OBJECT (dbin, "upstream seekable: %d", seekable);
+  return seekable;
 }
 
 static void
@@ -2269,10 +2268,6 @@ type_found (GstElement * typefind, guint probability,
 
   pad = gst_element_get_static_pad (typefind, "src");
   sink_pad = gst_element_get_static_pad (typefind, "sink");
-
-  /* if upstream is seekable we can safely set a limit in time to the queues so
-   * that streams at low bitrates can preroll */
-  check_upstream_seekable (decode_bin, sink_pad);
 
   /* need some lock here to prevent race with shutdown state change
    * which might yank away e.g. decode_chain while building stuff here.
@@ -2406,7 +2401,7 @@ no_more_pads_cb (GstElement * element, GstDecodeChain * chain)
    * we can probably set its buffering state to playing now */
   GST_DEBUG_OBJECT (group->dbin, "Setting group %p multiqueue to "
       "'playing' buffering mode", group);
-  decodebin_set_queue_size (group->dbin, group->multiqueue, FALSE);
+  decodebin_set_queue_size (group->dbin, group->multiqueue, FALSE, TRUE);
   CHAIN_MUTEX_UNLOCK (chain);
 
   EXPOSE_LOCK (chain->dbin);
@@ -2862,7 +2857,7 @@ gst_decode_group_hide (GstDecodeGroup * group)
  * playing or prerolling. */
 static void
 decodebin_set_queue_size (GstDecodeBin * dbin, GstElement * multiqueue,
-    gboolean preroll)
+    gboolean preroll, gboolean seekable)
 {
   guint max_bytes, max_buffers;
   guint64 max_time;
@@ -2875,7 +2870,7 @@ decodebin_set_queue_size (GstDecodeBin * dbin, GstElement * multiqueue,
     if ((max_buffers = dbin->max_size_buffers) == 0)
       max_buffers = AUTO_PREROLL_SIZE_BUFFERS;
     if ((max_time = dbin->max_size_time) == 0)
-      max_time = dbin->upstream_seekable ? AUTO_PREROLL_SEEKABLE_SIZE_TIME :
+      max_time = seekable ? AUTO_PREROLL_SEEKABLE_SIZE_TIME :
           AUTO_PREROLL_NOT_SEEKABLE_SIZE_TIME;
   } else {
     /* update runtime limits. At runtime, we try to keep the amount of buffers
@@ -2905,6 +2900,7 @@ gst_decode_group_new (GstDecodeBin * dbin, GstDecodeChain * parent)
 {
   GstDecodeGroup *group = g_slice_new0 (GstDecodeGroup);
   GstElement *mq;
+  gboolean seekable;
 
   GST_DEBUG_OBJECT (dbin, "Creating new group %p with parent chain %p", group,
       parent);
@@ -2925,7 +2921,17 @@ gst_decode_group_new (GstDecodeBin * dbin, GstDecodeChain * parent)
   }
 
   /* configure queue sizes for preroll */
-  decodebin_set_queue_size (dbin, mq, TRUE);
+  seekable = FALSE;
+  if (parent && parent->demuxer) {
+    GstElement *element =
+        ((GstDecodeElement *) parent->elements->data)->element;
+    GstPad *pad = gst_element_get_static_pad (element, "sink");
+    if (pad) {
+      seekable = check_upstream_seekable (dbin, pad);
+      gst_object_unref (pad);
+    }
+  }
+  decodebin_set_queue_size (dbin, mq, TRUE, seekable);
 
   group->overrunsig = g_signal_connect (G_OBJECT (mq), "overrun",
       G_CALLBACK (multi_queue_overrun_cb), group);
@@ -3687,7 +3693,7 @@ gst_decode_chain_expose (GstDecodeChain * chain, GList ** endpads,
   dbin = group->dbin;
 
   /* configure queues for playback */
-  decodebin_set_queue_size (dbin, group->multiqueue, FALSE);
+  decodebin_set_queue_size (dbin, group->multiqueue, FALSE, TRUE);
 
   /* we can now disconnect any overrun signal, which is used to expose the
    * group. */
