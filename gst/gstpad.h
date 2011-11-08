@@ -788,14 +788,6 @@ struct _GstPadClass {
  */
 #define GST_PAD_STREAM_LOCK(pad)        (g_static_rec_mutex_lock(GST_PAD_GET_STREAM_LOCK(pad)))
 /**
- * GST_PAD_STREAM_LOCK_FULL:
- * @pad: a #GstPad
- * @t: the number of times to recursively lock
- *
- * Lock the stream lock of @pad @t times.
- */
-#define GST_PAD_STREAM_LOCK_FULL(pad,t) (g_static_rec_mutex_lock_full(GST_PAD_GET_STREAM_LOCK(pad), t))
-/**
  * GST_PAD_STREAM_TRYLOCK:
  * @pad: a #GstPad
  *
@@ -810,14 +802,6 @@ struct _GstPadClass {
  * Unlock the stream lock of @pad.
  */
 #define GST_PAD_STREAM_UNLOCK(pad)      (g_static_rec_mutex_unlock(GST_PAD_GET_STREAM_LOCK(pad)))
-/**
- * GST_PAD_STREAM_UNLOCK_FULL:
- * @pad: a #GstPad
- *
- * Fully unlock the recursive stream lock of @pad, return the number of times
- * @pad was locked.
- */
-#define GST_PAD_STREAM_UNLOCK_FULL(pad) (g_static_rec_mutex_unlock_full(GST_PAD_GET_STREAM_LOCK(pad)))
 
 #define GST_PAD_BLOCK_GET_COND(pad)     (GST_PAD_CAST(pad)->block_cond)
 #define GST_PAD_BLOCK_WAIT(pad)         (g_cond_wait(GST_PAD_BLOCK_GET_COND (pad), GST_OBJECT_GET_LOCK (pad)))
