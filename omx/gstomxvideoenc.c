@@ -871,6 +871,7 @@ component_error:
         gst_event_new_eos ());
     gst_pad_pause_task (GST_BASE_VIDEO_CODEC_SRC_PAD (self));
     self->downstream_flow_ret = GST_FLOW_ERROR;
+    self->started = FALSE;
     return;
   }
 flushing:
@@ -878,6 +879,7 @@ flushing:
     GST_DEBUG_OBJECT (self, "Flushing -- stopping task");
     gst_pad_pause_task (GST_BASE_VIDEO_CODEC_SRC_PAD (self));
     self->downstream_flow_ret = GST_FLOW_WRONG_STATE;
+    self->started = FALSE;
     return;
   }
 flow_error:
@@ -897,6 +899,7 @@ flow_error:
           gst_event_new_eos ());
       gst_pad_pause_task (GST_BASE_VIDEO_CODEC_SRC_PAD (self));
     }
+    self->started = FALSE;
     return;
   }
 reconfigure_error:
@@ -907,6 +910,7 @@ reconfigure_error:
         gst_event_new_eos ());
     gst_pad_pause_task (GST_BASE_VIDEO_CODEC_SRC_PAD (self));
     self->downstream_flow_ret = GST_FLOW_NOT_NEGOTIATED;
+    self->started = FALSE;
     return;
   }
 caps_failed:
@@ -916,6 +920,7 @@ caps_failed:
         gst_event_new_eos ());
     gst_pad_pause_task (GST_BASE_VIDEO_CODEC_SRC_PAD (self));
     self->downstream_flow_ret = GST_FLOW_NOT_NEGOTIATED;
+    self->started = FALSE;
     return;
   }
 }
@@ -928,6 +933,7 @@ gst_omx_video_enc_start (GstBaseVideoEncoder * encoder)
 
   self = GST_OMX_VIDEO_ENC (encoder);
 
+  self->eos = FALSE;
   self->downstream_flow_ret = GST_FLOW_OK;
   ret =
       gst_pad_start_task (GST_BASE_VIDEO_CODEC_SRC_PAD (self),
@@ -949,6 +955,8 @@ gst_omx_video_enc_stop (GstBaseVideoEncoder * encoder)
     gst_omx_component_set_state (self->component, OMX_StateIdle);
 
   self->downstream_flow_ret = GST_FLOW_WRONG_STATE;
+  self->started = FALSE;
+  self->eos = FALSE;
 
   g_mutex_lock (self->drain_lock);
   self->draining = FALSE;
@@ -987,10 +995,7 @@ gst_omx_video_enc_set_format (GstBaseVideoEncoder * encoder,
    * format change happened we can just exit here.
    */
   if (needs_disable) {
-    if (self->started) {
-      gst_omx_video_enc_drain (self);
-      self->started = FALSE;
-    }
+    gst_omx_video_enc_drain (self);
 
     /* FIXME: Workaround for 
      * https://bugzilla.gnome.org/show_bug.cgi?id=654529
@@ -1100,8 +1105,7 @@ gst_omx_video_enc_reset (GstBaseVideoEncoder * encoder)
 
   GST_DEBUG_OBJECT (self, "Resetting encoder");
 
-  if (self->started)
-    gst_omx_video_enc_drain (self);
+  gst_omx_video_enc_drain (self);
 
   /* FIXME: Workaround for 
    * https://bugzilla.gnome.org/show_bug.cgi?id=654529
@@ -1132,6 +1136,7 @@ gst_omx_video_enc_reset (GstBaseVideoEncoder * encoder)
   }
 
   /* Start the srcpad loop again */
+  self->eos = FALSE;
   self->downstream_flow_ret = GST_FLOW_OK;
   gst_pad_start_task (GST_BASE_VIDEO_CODEC_SRC_PAD (self),
       (GstTaskFunction) gst_omx_video_enc_loop, encoder);
@@ -1316,6 +1321,11 @@ gst_omx_video_enc_handle_frame (GstBaseVideoEncoder * encoder,
 
   GST_DEBUG_OBJECT (self, "Handling frame");
 
+  if (self->eos) {
+    GST_WARNING_OBJECT (self, "Got frame after EOS");
+    return GST_FLOW_UNEXPECTED;
+  }
+
   if (self->downstream_flow_ret != GST_FLOW_OK) {
     GST_ERROR_OBJECT (self, "Downstream returned %s",
         gst_flow_get_name (self->downstream_flow_ret));
@@ -1459,6 +1469,11 @@ gst_omx_video_enc_finish (GstBaseVideoEncoder * encoder)
 
   GST_DEBUG_OBJECT (self, "Sending EOS to the component");
 
+  /* Don't send EOS buffer twice, this doesn't work */
+  if (self->eos)
+    return TRUE;
+  self->eos = TRUE;
+
   /* Send an EOS buffer to the component and let the base
    * class drop the EOS event. We will send it later when
    * the EOS buffer arrives on the output port. */
@@ -1479,7 +1494,13 @@ gst_omx_video_enc_drain (GstOMXVideoEnc * self)
 
   GST_DEBUG_OBJECT (self, "Draining component");
 
-  g_assert (self->started);
+  if (!self->started)
+    return GST_FLOW_OK;
+  self->started = FALSE;
+
+  /* Don't send EOS buffer twice, this doesn't work */
+  if (self->eos)
+    return GST_FLOW_OK;
 
   /* Send an EOS buffer to the component and let the base
    * class drop the EOS event. We will send it later when
@@ -1498,6 +1519,8 @@ gst_omx_video_enc_drain (GstOMXVideoEnc * self)
   GST_DEBUG_OBJECT (self, "Drained component");
   g_mutex_unlock (self->drain_lock);
   GST_BASE_VIDEO_CODEC_STREAM_LOCK (self);
+
+  self->started = FALSE;
 
   return GST_FLOW_OK;
 }
