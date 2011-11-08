@@ -1773,6 +1773,9 @@ gst_base_src_default_event (GstBaseSrc * src, GstEvent * event)
       result = TRUE;
       break;
     }
+    case GST_EVENT_LATENCY:
+      result = TRUE;
+      break;
     default:
       result = FALSE;
       break;
