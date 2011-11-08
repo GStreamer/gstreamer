@@ -957,6 +957,7 @@ static void
 gst_camera_bin_handle_message (GstBin * bin, GstMessage * message)
 {
   GstCameraBin2 *camerabin = GST_CAMERA_BIN2_CAST (bin);
+  gboolean dec_counter = FALSE;
 
   switch (GST_MESSAGE_TYPE (message)) {
     case GST_MESSAGE_ELEMENT:{
@@ -964,7 +965,6 @@ gst_camera_bin_handle_message (GstBin * bin, GstMessage * message)
       const gchar *filename;
 
       if (gst_structure_has_name (structure, "GstMultiFileSink")) {
-        GST_CAMERA_BIN2_PROCESSING_DEC (GST_CAMERA_BIN2_CAST (bin));
         filename = gst_structure_get_string (structure, "filename");
         GST_DEBUG_OBJECT (bin, "Got file save message from multifilesink, "
             "image %s has been saved", filename);
@@ -972,6 +972,7 @@ gst_camera_bin_handle_message (GstBin * bin, GstMessage * message)
           gst_image_capture_bin_post_image_done (GST_CAMERA_BIN2_CAST (bin),
               filename);
         }
+        dec_counter = TRUE;
       } else if (gst_structure_has_name (structure, "preview-image")) {
         GValue *value;
         gchar *location = NULL;
@@ -1001,7 +1002,7 @@ gst_camera_bin_handle_message (GstBin * bin, GstMessage * message)
         }
 
         GST_LOG_OBJECT (bin, "received preview-image message");
-        GST_CAMERA_BIN2_PROCESSING_DEC (GST_CAMERA_BIN2_CAST (bin));
+        dec_counter = TRUE;
       }
     }
       break;
@@ -1014,10 +1015,10 @@ gst_camera_bin_handle_message (GstBin * bin, GstMessage * message)
         /* some capturing failed */
         GST_WARNING_OBJECT (bin, "Capture failed, reason: %s - %s",
             err->message, debug);
-        GST_CAMERA_BIN2_PROCESSING_DEC (GST_CAMERA_BIN2_CAST (bin));
         if (camerabin->post_previews) {
           gst_camera_bin_skip_next_preview (camerabin);
         }
+        dec_counter = TRUE;
       }
     }
       break;
@@ -1025,8 +1026,8 @@ gst_camera_bin_handle_message (GstBin * bin, GstMessage * message)
       GstElement *src = GST_ELEMENT (GST_MESSAGE_SRC (message));
       if (src == GST_CAMERA_BIN2_CAST (bin)->videosink) {
         GST_DEBUG_OBJECT (bin, "EOS from video branch");
-        GST_CAMERA_BIN2_PROCESSING_DEC (GST_CAMERA_BIN2_CAST (bin));
         gst_video_capture_bin_post_video_done (GST_CAMERA_BIN2_CAST (bin));
+        dec_counter = TRUE;
       }
     }
       break;
@@ -1035,6 +1036,9 @@ gst_camera_bin_handle_message (GstBin * bin, GstMessage * message)
   }
   if (message)
     GST_BIN_CLASS (parent_class)->handle_message (bin, message);
+
+  if (dec_counter)
+    GST_CAMERA_BIN2_PROCESSING_DEC (camerabin);
 }
 
 /*
