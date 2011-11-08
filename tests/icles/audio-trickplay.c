@@ -31,10 +31,9 @@ check_position (GstElement * elem, GstQuery * pos, const gchar * info)
 }
 
 static GstPadProbeReturn
-print_buffer_ts (GstPad * pad, GstPadProbeType type, gpointer type_data,
-    gpointer user_data)
+print_buffer_ts (GstPad * pad, GstPadProbeInfo * info, gpointer user_data)
 {
-  GstBuffer *buffer = type_data;
+  GstBuffer *buffer = GST_PAD_PROBE_INFO_BUFFER (info);
 
   GST_DEBUG_OBJECT (pad, "  ts: %" GST_TIME_FORMAT,
       GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buffer)));

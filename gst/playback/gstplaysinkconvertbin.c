@@ -196,8 +196,7 @@ gst_play_sink_convert_bin_on_element_added (GstElement * element,
 }
 
 static GstPadProbeReturn
-pad_blocked_cb (GstPad * pad, GstPadProbeType type, gpointer type_data,
-    gpointer user_data)
+pad_blocked_cb (GstPad * pad, GstPadProbeInfo * info, gpointer user_data)
 {
   GstPlaySinkConvertBin *self = user_data;
   GstPad *peer;

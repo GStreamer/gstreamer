@@ -158,9 +158,9 @@ check_chain_final_state (gpointer key, ChainState * state, gpointer data)
 }
 
 static GstPadProbeReturn
-eos_buffer_probe (GstPad * pad, GstPadProbeType type, GstBuffer * buffer,
-    gpointer unused)
+eos_buffer_probe (GstPad * pad, GstPadProbeInfo * info, gpointer unused)
 {
+  GstBuffer *buffer = GST_PAD_PROBE_INFO_BUFFER (info);
   gint ret;
   gint size;
   gchar *oggbuffer;

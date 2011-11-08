@@ -119,10 +119,12 @@ cleanup_vorbistag (GstElement * vorbistag)
 
 
 static GstPadProbeReturn
-buffer_probe (GstPad * pad, GstPadProbeType type, GstBuffer * buffer,
-    gpointer unused)
+buffer_probe (GstPad * pad, GstPadProbeInfo * info, gpointer unused)
 {
+  GstBuffer *buffer = GST_PAD_PROBE_INFO_BUFFER (info);
+
   g_async_queue_push (pending_buffers, gst_buffer_ref (buffer));
+
   return GST_PAD_PROBE_OK;
 }
 

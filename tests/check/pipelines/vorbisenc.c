@@ -262,9 +262,10 @@ GST_START_TEST (test_timestamps)
 GST_END_TEST;
 
 static GstPadProbeReturn
-drop_second_data_buffer (GstPad * droppad, GstPadProbeType type,
-    GstBuffer * buffer, gpointer unused)
+drop_second_data_buffer (GstPad * droppad, GstPadProbeInfo * info,
+    gpointer unused)
 {
+  GstBuffer *buffer = GST_PAD_PROBE_INFO_BUFFER (info);
   GstPadProbeReturn res = GST_PAD_PROBE_OK;
 
   if (GST_BUFFER_OFFSET (buffer) == 4096)

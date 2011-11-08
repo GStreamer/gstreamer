@@ -486,8 +486,8 @@ static void gst_decode_pad_unblock (GstDecodePad * dpad);
 static void gst_decode_pad_set_blocked (GstDecodePad * dpad, gboolean blocked);
 
 static void gst_pending_pad_free (GstPendingPad * ppad);
-static GstPadProbeReturn pad_event_cb (GstPad * pad, GstPadProbeType type,
-    gpointer type_data, gpointer data);
+static GstPadProbeReturn pad_event_cb (GstPad * pad, GstPadProbeInfo * info,
+    gpointer data);
 
 /********************************
  * Standard GObject boilerplate *
@@ -2288,10 +2288,9 @@ exit:
 }
 
 static GstPadProbeReturn
-pad_event_cb (GstPad * pad, GstPadProbeType type, gpointer type_data,
-    gpointer data)
+pad_event_cb (GstPad * pad, GstPadProbeInfo * info, gpointer data)
 {
-  GstEvent *event = type_data;
+  GstEvent *event = GST_PAD_PROBE_INFO_EVENT (info);
   GstPendingPad *ppad = (GstPendingPad *) data;
   GstDecodeChain *chain = ppad->chain;
   GstDecodeBin *dbin = chain->dbin;
@@ -3723,8 +3722,7 @@ gst_decode_pad_init (GstDecodePad * pad)
 }
 
 static GstPadProbeReturn
-source_pad_blocked_cb (GstPad * pad, GstPadProbeType type, gpointer type_data,
-    gpointer user_data)
+source_pad_blocked_cb (GstPad * pad, GstPadProbeInfo * info, gpointer user_data)
 {
   GstDecodePad *dpad = user_data;
   GstDecodeChain *chain;
@@ -3748,10 +3746,10 @@ source_pad_blocked_cb (GstPad * pad, GstPadProbeType type, gpointer type_data,
 }
 
 static GstPadProbeReturn
-source_pad_event_probe (GstPad * pad, GstPadProbeType type, gpointer type_data,
+source_pad_event_probe (GstPad * pad, GstPadProbeInfo * info,
     gpointer user_data)
 {
-  GstEvent *event = type_data;
+  GstEvent *event = GST_PAD_PROBE_INFO_EVENT (info);
   GstDecodePad *dpad = user_data;
   gboolean res = TRUE;
 

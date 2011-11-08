@@ -411,9 +411,10 @@ gst_discoverer_set_timeout (GstDiscoverer * dc, GstClockTime timeout)
 }
 
 static GstPadProbeReturn
-_event_probe (GstPad * pad, GstPadProbeType type, GstEvent * event,
-    PrivateStream * ps)
+_event_probe (GstPad * pad, GstPadProbeInfo * info, PrivateStream * ps)
 {
+  GstEvent *event = GST_PAD_PROBE_INFO_EVENT (info);
+
   if (GST_EVENT_TYPE (event) == GST_EVENT_TAG) {
     GstTagList *tl = NULL, *tmp;
 
@@ -1043,8 +1044,8 @@ discoverer_collect (GstDiscoverer * dc)
           gst_caps_get_structure (dc->priv->current_info->stream_info->caps, 0);
 
       if (g_str_has_prefix (gst_structure_get_name (st), "image/"))
-        ((GstDiscovererVideoInfo *) dc->priv->current_info->stream_info)->
-            is_image = TRUE;
+        ((GstDiscovererVideoInfo *) dc->priv->current_info->
+            stream_info)->is_image = TRUE;
     }
   }
 

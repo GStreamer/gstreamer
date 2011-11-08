@@ -721,8 +721,8 @@ gst_play_sink_get_sink (GstPlaySink * playsink, GstPlaySinkType type)
 }
 
 static GstPadProbeReturn
-gst_play_sink_vis_blocked (GstPad * tee_pad, GstPadProbeType type,
-    gpointer type_data, gpointer user_data)
+gst_play_sink_vis_blocked (GstPad * tee_pad, GstPadProbeInfo * info,
+    gpointer user_data)
 {
   GstPlaySink *playsink;
   GstPlayVisChain *chain;
@@ -2928,8 +2928,8 @@ is_raw_pad (GstPad * pad)
 }
 
 static GstPadProbeReturn
-sinkpad_blocked_cb (GstPad * blockedpad, GstPadProbeType type,
-    gpointer type_data, gpointer user_data);
+sinkpad_blocked_cb (GstPad * blockedpad, GstPadProbeInfo * info,
+    gpointer user_data);
 
 static void
 video_set_blocked (GstPlaySink * playsink, gboolean blocked)
@@ -3000,8 +3000,8 @@ text_set_blocked (GstPlaySink * playsink, gboolean blocked)
 }
 
 static GstPadProbeReturn
-sinkpad_blocked_cb (GstPad * blockedpad, GstPadProbeType type,
-    gpointer type_data, gpointer user_data)
+sinkpad_blocked_cb (GstPad * blockedpad, GstPadProbeInfo * info,
+    gpointer user_data)
 {
   GstPlaySink *playsink = (GstPlaySink *) user_data;
   GstPad *pad;

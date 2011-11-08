@@ -2411,9 +2411,9 @@ selector_active_pad_changed (GObject * selector, GParamSpec * pspec,
 
 /* this callback sends a delayed event once the pad becomes unblocked */
 static GstPadProbeReturn
-stream_changed_data_probe (GstPad * pad, GstPadProbeType type,
-    GstMiniObject * object, gpointer data)
+stream_changed_data_probe (GstPad * pad, GstPadProbeInfo * info, gpointer data)
 {
+  GstMiniObject *object = GST_PAD_PROBE_INFO_DATA (info);
   GstSourceSelect *select = (GstSourceSelect *) data;
   GstEvent *e;
 
@@ -2901,8 +2901,7 @@ no_more_pads_cb (GstElement * decodebin, GstSourceGroup * group)
         select->sinkpad_data_probe =
             gst_pad_add_probe (select->sinkpad,
             GST_PAD_PROBE_TYPE_DATA_DOWNSTREAM,
-            (GstPadProbeCallback) stream_changed_data_probe, (gpointer) select,
-            NULL);
+            stream_changed_data_probe, (gpointer) select, NULL);
 
         g_mutex_unlock (group->stream_changed_pending_lock);
         gst_message_unref (msg);

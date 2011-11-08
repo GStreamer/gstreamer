@@ -109,8 +109,7 @@ do_async_done (GstSubtitleOverlay * self)
 }
 
 static GstPadProbeReturn
-_pad_blocked_cb (GstPad * pad, GstPadProbeType type, gpointer type_data,
-    gpointer user_data);
+_pad_blocked_cb (GstPad * pad, GstPadProbeInfo * info, gpointer user_data);
 
 static void
 block_video (GstSubtitleOverlay * self)
@@ -744,8 +743,7 @@ _has_font_desc_property (GstElement * element)
 }
 
 static GstPadProbeReturn
-_pad_blocked_cb (GstPad * pad, GstPadProbeType type, gpointer type_data,
-    gpointer user_data)
+_pad_blocked_cb (GstPad * pad, GstPadProbeInfo * info, gpointer user_data)
 {
   GstSubtitleOverlay *self = GST_SUBTITLE_OVERLAY_CAST (user_data);
   GstCaps *subcaps;

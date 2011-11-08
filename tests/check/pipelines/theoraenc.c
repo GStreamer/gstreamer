@@ -309,10 +309,10 @@ GST_START_TEST (test_continuity)
 GST_END_TEST;
 
 static GstPadProbeReturn
-drop_second_data_buffer (GstPad * droppad, GstPadProbeType probe_type,
-    gpointer probe_obj, gpointer unused)
+drop_second_data_buffer (GstPad * droppad, GstPadProbeInfo * info,
+    gpointer unused)
 {
-  GstBuffer *buffer = probe_obj;
+  GstBuffer *buffer = GST_PAD_PROBE_INFO_BUFFER (info);
 
   if (GST_BUFFER_OFFSET (buffer) == 1)
     return GST_PAD_PROBE_DROP;

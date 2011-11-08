@@ -988,10 +988,10 @@ configure_stream_buffering (GstURIDecodeBin * decoder)
 }
 
 static GstPadProbeReturn
-decoded_pad_event_probe (GstPad * pad, GstPadProbeType type, gpointer type_data,
+decoded_pad_event_probe (GstPad * pad, GstPadProbeInfo * info,
     gpointer user_data)
 {
-  GstEvent *event = type_data;
+  GstEvent *event = GST_PAD_PROBE_INFO_EVENT (info);
   GstURIDecodeBin *decoder = user_data;
 
   GST_LOG_OBJECT (pad, "%s, decoder %p", GST_EVENT_TYPE_NAME (event), decoder);
@@ -1071,10 +1071,10 @@ new_decoded_pad_added_cb (GstElement * element, GstPad * pad,
 }
 
 static GstPadProbeReturn
-source_pad_event_probe (GstPad * pad, GstPadProbeType type, gpointer type_data,
+source_pad_event_probe (GstPad * pad, GstPadProbeInfo * info,
     gpointer user_data)
 {
-  GstEvent *event = type_data;
+  GstEvent *event = GST_PAD_PROBE_INFO_EVENT (info);
   GstURIDecodeBin *decoder = user_data;
 
   GST_LOG_OBJECT (pad, "%s, decoder %p", GST_EVENT_TYPE_NAME (event), decoder);
