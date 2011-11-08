@@ -4472,7 +4472,7 @@ gst_avi_demux_invert (GstAviStream * stream, GstBuffer * buf)
 
   h = stream->strf.vids->height;
   w = stream->strf.vids->width;
-  stride = w * (bpp / 8);
+  stride = GST_ROUND_UP_4 (w * (bpp / 8));
 
   buf = gst_buffer_make_writable (buf);
   if (GST_BUFFER_SIZE (buf) < (stride * h)) {
