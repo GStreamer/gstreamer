@@ -511,6 +511,10 @@ typedef enum
                                              GST_PAD_PROBE_TYPE_DATA_UPSTREAM)
 #define GST_PAD_PROBE_TYPE_EVENT_BOTH       (GST_PAD_PROBE_TYPE_EVENT_DOWNSTREAM | \
                                              GST_PAD_PROBE_TYPE_EVENT_UPSTREAM)
+#define GST_PAD_PROBE_TYPE_QUERY_BOTH       (GST_PAD_PROBE_TYPE_QUERY_DOWNSTREAM | \
+                                             GST_PAD_PROBE_TYPE_QUERY_UPSTREAM)
+#define GST_PAD_PROBE_TYPE_ALL_BOTH         (GST_PAD_PROBE_TYPE_DATA_BOTH | \
+                                             GST_PAD_PROBE_TYPE_QUERY_BOTH)
 #define GST_PAD_PROBE_TYPE_SCHEDULING       (GST_PAD_PROBE_TYPE_PUSH | GST_PAD_PROBE_TYPE_PULL)
 
 /**

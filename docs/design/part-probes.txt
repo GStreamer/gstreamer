@@ -243,3 +243,39 @@ If there is a valid DATA item, the DATA probes are called for the item.
                    |                               O - - - - - - - - - - >
                    |                               |
 
+
+Queries
+-------
+
+Query probes have the GST_PAD_PROBE_TYPE_QUERY_* flag set in the callbacks.
+
+
+                     pad                           peerpad
+                      |                               |
+ gst_pad_peer_query() |                               |
+ -------------------->O                               |
+                      O                               | 
+                      O-> do BLOCK probes             | 
+                      O                               | 
+                      O-> do QUERY | PUSH probes      | 
+         no peer?     O                               |
+           FALSE      O                               | 
+        < - - - - - - O                               |
+                      O   gst_pad_query()             | 
+                      O------------------------------>O
+                      O                               O-> do BLOCK probes
+                      O                               O 
+                      O                               O-> do QUERY | PUSH probes
+                      O                               O 
+                      O                               O---> queryfunc
+                      O                    error      O 
+        <- - - - - - - - - - - - - - - - - - - - - - -O 
+                      O                               O 
+                      O                               O-> do QUERY | PULL probes
+                      O< - - - - - - - - - - - - - - -O 
+                      O                               |
+                      O-> do QUERY | PULL probes      | 
+                      O                               | 
+        < - - - - - - O                               | 
+                      |                               | 
+

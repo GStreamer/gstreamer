@@ -1075,8 +1075,8 @@ gst_pad_add_probe (GstPad * pad, GstPadProbeType mask,
 
   /* when no contraints are given for the types, assume all types are
    * acceptable */
-  if ((mask & GST_PAD_PROBE_TYPE_DATA_BOTH) == 0)
-    mask |= GST_PAD_PROBE_TYPE_DATA_BOTH;
+  if ((mask & GST_PAD_PROBE_TYPE_ALL_BOTH) == 0)
+    mask |= GST_PAD_PROBE_TYPE_ALL_BOTH;
   if ((mask & GST_PAD_PROBE_TYPE_SCHEDULING) == 0)
     mask |= GST_PAD_PROBE_TYPE_SCHEDULING;
 
@@ -3179,104 +3179,6 @@ gst_pad_event_default (GstPad * pad, GstEvent * event)
 }
 
 /**
- * gst_pad_query:
- * @pad: a #GstPad to invoke the default query on.
- * @query: (transfer none): the #GstQuery to perform.
- *
- * Dispatches a query to a pad. The query should have been allocated by the
- * caller via one of the type-specific allocation functions. The element that
- * the pad belongs to is responsible for filling the query with an appropriate
- * response, which should then be parsed with a type-specific query parsing
- * function.
- *
- * Again, the caller is responsible for both the allocation and deallocation of
- * the query structure.
- *
- * Please also note that some queries might need a running pipeline to work.
- *
- * Returns: TRUE if the query could be performed.
- */
-gboolean
-gst_pad_query (GstPad * pad, GstQuery * query)
-{
-  gboolean res;
-  GstPadQueryFunction func;
-
-  g_return_val_if_fail (GST_IS_PAD (pad), FALSE);
-  g_return_val_if_fail (GST_IS_QUERY (query), FALSE);
-
-  GST_DEBUG_OBJECT (pad, "sending query %p (%s)", query,
-      GST_QUERY_TYPE_NAME (query));
-
-  if ((func = GST_PAD_QUERYFUNC (pad)) == NULL)
-    goto no_func;
-
-  res = func (pad, query);
-
-  GST_DEBUG_OBJECT (pad, "sent query %p (%s), result %d", query,
-      GST_QUERY_TYPE_NAME (query), res);
-
-  return res;
-
-no_func:
-  {
-    GST_DEBUG_OBJECT (pad, "had no query function");
-    return FALSE;
-  }
-}
-
-/**
- * gst_pad_peer_query:
- * @pad: a #GstPad to invoke the peer query on.
- * @query: (transfer none): the #GstQuery to perform.
- *
- * Performs gst_pad_query() on the peer of @pad.
- *
- * The caller is responsible for both the allocation and deallocation of
- * the query structure.
- *
- * Returns: TRUE if the query could be performed. This function returns %FALSE
- * if @pad has no peer.
- *
- * Since: 0.10.15
- */
-gboolean
-gst_pad_peer_query (GstPad * pad, GstQuery * query)
-{
-  GstPad *peerpad;
-  gboolean result;
-
-  g_return_val_if_fail (GST_IS_PAD (pad), FALSE);
-  g_return_val_if_fail (GST_IS_QUERY (query), FALSE);
-
-  GST_OBJECT_LOCK (pad);
-
-  GST_DEBUG_OBJECT (pad, "peer query %p (%s)", query,
-      GST_QUERY_TYPE_NAME (query));
-
-  peerpad = GST_PAD_PEER (pad);
-  if (G_UNLIKELY (peerpad == NULL))
-    goto no_peer;
-
-  gst_object_ref (peerpad);
-  GST_OBJECT_UNLOCK (pad);
-
-  result = gst_pad_query (peerpad, query);
-
-  gst_object_unref (peerpad);
-
-  return result;
-
-  /* ERRORS */
-no_peer:
-  {
-    GST_WARNING_OBJECT (pad, "pad has no peer");
-    GST_OBJECT_UNLOCK (pad);
-    return FALSE;
-  }
-}
-
-/**
  * gst_pad_query_default:
  * @pad: a #GstPad to call the default query handler on.
  * @query: (transfer none): the #GstQuery to handle.
@@ -3343,7 +3245,7 @@ probe_hook_marshal (GHook * hook, ProbeMarshall * data)
   type = info->type;
 
   /* one of the data types */
-  if ((flags & GST_PAD_PROBE_TYPE_DATA_BOTH & type) == 0)
+  if ((flags & GST_PAD_PROBE_TYPE_ALL_BOTH & type) == 0)
     goto no_match;
   /* one of the scheduling types */
   if ((flags & GST_PAD_PROBE_TYPE_SCHEDULING & type) == 0)
@@ -3627,6 +3529,163 @@ done:
   GST_OBJECT_UNLOCK (pad);
 }
 
+
+/**
+ * gst_pad_query:
+ * @pad: a #GstPad to invoke the default query on.
+ * @query: (transfer none): the #GstQuery to perform.
+ *
+ * Dispatches a query to a pad. The query should have been allocated by the
+ * caller via one of the type-specific allocation functions. The element that
+ * the pad belongs to is responsible for filling the query with an appropriate
+ * response, which should then be parsed with a type-specific query parsing
+ * function.
+ *
+ * Again, the caller is responsible for both the allocation and deallocation of
+ * the query structure.
+ *
+ * Please also note that some queries might need a running pipeline to work.
+ *
+ * Returns: TRUE if the query could be performed.
+ */
+gboolean
+gst_pad_query (GstPad * pad, GstQuery * query)
+{
+  gboolean res;
+  GstPadQueryFunction func;
+  GstPadProbeType type;
+  GstFlowReturn ret;
+
+  g_return_val_if_fail (GST_IS_PAD (pad), FALSE);
+  g_return_val_if_fail (GST_IS_QUERY (query), FALSE);
+
+  GST_DEBUG_OBJECT (pad, "sending query %p (%s)", query,
+      GST_QUERY_TYPE_NAME (query));
+
+  if (GST_PAD_IS_SRC (pad))
+    type = GST_PAD_PROBE_TYPE_QUERY_UPSTREAM;
+  else
+    type = GST_PAD_PROBE_TYPE_QUERY_DOWNSTREAM;
+
+  GST_OBJECT_LOCK (pad);
+  PROBE_PUSH (pad, type | GST_PAD_PROBE_TYPE_PUSH |
+      GST_PAD_PROBE_TYPE_BLOCK, query, probe_stopped);
+  PROBE_PUSH (pad, type | GST_PAD_PROBE_TYPE_PUSH, query, probe_stopped);
+  GST_OBJECT_UNLOCK (pad);
+
+  if ((func = GST_PAD_QUERYFUNC (pad)) == NULL)
+    goto no_func;
+
+  res = func (pad, query);
+
+  GST_DEBUG_OBJECT (pad, "sent query %p (%s), result %d", query,
+      GST_QUERY_TYPE_NAME (query), res);
+
+  if (res != TRUE)
+    goto query_failed;
+
+  GST_OBJECT_LOCK (pad);
+  PROBE_PUSH (pad, type | GST_PAD_PROBE_TYPE_PULL, query, probe_stopped);
+  GST_OBJECT_UNLOCK (pad);
+
+  return res;
+
+no_func:
+  {
+    GST_DEBUG_OBJECT (pad, "had no query function");
+    return FALSE;
+  }
+query_failed:
+  {
+    GST_DEBUG_OBJECT (pad, "query failed");
+    return FALSE;
+  }
+probe_stopped:
+  {
+    GST_DEBUG_OBJECT (pad, "probe stopped: %s", gst_flow_get_name (ret));
+    GST_OBJECT_UNLOCK (pad);
+    return FALSE;
+  }
+}
+
+/**
+ * gst_pad_peer_query:
+ * @pad: a #GstPad to invoke the peer query on.
+ * @query: (transfer none): the #GstQuery to perform.
+ *
+ * Performs gst_pad_query() on the peer of @pad.
+ *
+ * The caller is responsible for both the allocation and deallocation of
+ * the query structure.
+ *
+ * Returns: TRUE if the query could be performed. This function returns %FALSE
+ * if @pad has no peer.
+ *
+ * Since: 0.10.15
+ */
+gboolean
+gst_pad_peer_query (GstPad * pad, GstQuery * query)
+{
+  GstPad *peerpad;
+  GstPadProbeType type;
+  gboolean res;
+  GstFlowReturn ret;
+
+  g_return_val_if_fail (GST_IS_PAD (pad), FALSE);
+  g_return_val_if_fail (GST_IS_QUERY (query), FALSE);
+
+  if (GST_PAD_IS_SRC (pad))
+    type = GST_PAD_PROBE_TYPE_QUERY_DOWNSTREAM;
+  else
+    type = GST_PAD_PROBE_TYPE_QUERY_UPSTREAM;
+
+  GST_DEBUG_OBJECT (pad, "peer query %p (%s)", query,
+      GST_QUERY_TYPE_NAME (query));
+
+  GST_OBJECT_LOCK (pad);
+  PROBE_PUSH (pad, type | GST_PAD_PROBE_TYPE_PUSH |
+      GST_PAD_PROBE_TYPE_BLOCK, query, probe_stopped);
+  PROBE_PUSH (pad, type | GST_PAD_PROBE_TYPE_PUSH, query, probe_stopped);
+
+  peerpad = GST_PAD_PEER (pad);
+  if (G_UNLIKELY (peerpad == NULL))
+    goto no_peer;
+
+  gst_object_ref (peerpad);
+  GST_OBJECT_UNLOCK (pad);
+
+  res = gst_pad_query (peerpad, query);
+
+  gst_object_unref (peerpad);
+
+  if (res != TRUE)
+    goto query_failed;
+
+  GST_OBJECT_LOCK (pad);
+  PROBE_PUSH (pad, type | GST_PAD_PROBE_TYPE_PULL, query, probe_stopped);
+  GST_OBJECT_UNLOCK (pad);
+
+  return res;
+
+  /* ERRORS */
+no_peer:
+  {
+    GST_WARNING_OBJECT (pad, "pad has no peer");
+    GST_OBJECT_UNLOCK (pad);
+    return FALSE;
+  }
+query_failed:
+  {
+    GST_DEBUG_OBJECT (pad, "query failed");
+    return FALSE;
+  }
+probe_stopped:
+  {
+    GST_DEBUG_OBJECT (pad, "probe stopped: %s", gst_flow_get_name (ret));
+    GST_OBJECT_UNLOCK (pad);
+    return FALSE;
+  }
+}
 
 /**********************************************************************
  * Data passing functions
@@ -4700,6 +4759,8 @@ update_failed:
     return FALSE;
   }
 }
+
+
 
 /**
  * gst_pad_set_element_private:
