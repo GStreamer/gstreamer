@@ -1118,7 +1118,7 @@ gst_caps_is_subset (const GstCaps * subset, const GstCaps * superset)
  *
  * Returns: %TRUE if @structure is a subset of @caps
  *
- * Since: 0.10.35
+ * Since: 0.10.36
  */
 gboolean
 gst_caps_is_subset_structure (const GstCaps * caps,

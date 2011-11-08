@@ -3207,7 +3207,7 @@ gst_base_parse_set_passthrough (GstBaseParse * parse, gboolean passthrough)
  * by the parsing process.  If there is such a latency, which depends on the
  * particular parsing of the format, it typically corresponds to 1 frame duration.
  *
- * Since: 0.10.34
+ * Since: 0.10.36
  */
 void
 gst_base_parse_set_latency (GstBaseParse * parse, GstClockTime min_latency,
