@@ -399,6 +399,86 @@ GST_START_TEST (test_push_linked)
 
 GST_END_TEST;
 
+GST_START_TEST (test_push_linked_flushing)
+{
+  GstPad *src, *sink;
+  GstCaps *caps;
+  GstPadLinkReturn plr;
+  GstBuffer *buffer;
+  gulong id;
+
+  /* setup */
+  src = gst_pad_new ("src", GST_PAD_SRC);
+  fail_if (src == NULL);
+  sink = gst_pad_new ("sink", GST_PAD_SINK);
+  fail_if (sink == NULL);
+  gst_pad_set_chain_function (sink, gst_check_chain_func);
+
+  caps = gst_pad_get_allowed_caps (src);
+  fail_unless (caps == NULL);
+  caps = gst_pad_get_allowed_caps (sink);
+  fail_unless (caps == NULL);
+
+  caps = gst_caps_from_string ("foo/bar");
+  /* one for me */
+  ASSERT_CAPS_REFCOUNT (caps, "caps", 1);
+
+  gst_pad_set_caps (src, caps);
+  gst_pad_set_caps (sink, caps);
+  /* one for me and one for each set_caps */
+  ASSERT_CAPS_REFCOUNT (caps, "caps", 3);
+
+  plr = gst_pad_link (src, sink);
+  fail_unless (GST_PAD_LINK_SUCCESSFUL (plr));
+  ASSERT_CAPS_REFCOUNT (caps, "caps", 3);
+
+  /* not activating the pads here, which keeps them flushing */
+
+  /* pushing on a flushing pad will drop the buffer */
+  buffer = gst_buffer_new ();
+  gst_buffer_ref (buffer);
+  fail_unless (gst_pad_push (src, buffer) == GST_FLOW_WRONG_STATE);
+  ASSERT_MINI_OBJECT_REFCOUNT (buffer, "buffer", 1);
+  fail_unless_equals_int (g_list_length (buffers), 0);
+  gst_buffer_unref (buffer);
+
+  /* adding a probe that returns FALSE will drop the buffer without trying
+   * to chain */
+  id = gst_pad_add_buffer_probe (src, (GCallback) _probe_handler,
+      GINT_TO_POINTER (0));
+  buffer = gst_buffer_new ();
+  gst_buffer_ref (buffer);
+  fail_unless (gst_pad_push (src, buffer) == GST_FLOW_OK);
+  ASSERT_MINI_OBJECT_REFCOUNT (buffer, "buffer", 1);
+  fail_unless_equals_int (g_list_length (buffers), 0);
+  gst_buffer_unref (buffer);
+  gst_pad_remove_buffer_probe (src, id);
+
+  /* adding a probe that returns TRUE will still chain the buffer,
+   * and hence drop because pad is flushing */
+  id = gst_pad_add_buffer_probe (src, (GCallback) _probe_handler,
+      GINT_TO_POINTER (1));
+  buffer = gst_buffer_new ();
+  gst_buffer_ref (buffer);
+  fail_unless (gst_pad_push (src, buffer) == GST_FLOW_WRONG_STATE);
+  ASSERT_MINI_OBJECT_REFCOUNT (buffer, "buffer", 1);
+  fail_unless_equals_int (g_list_length (buffers), 0);
+  gst_buffer_unref (buffer);
+  gst_pad_remove_buffer_probe (src, id);
+
+
+  /* cleanup */
+  ASSERT_CAPS_REFCOUNT (caps, "caps", 3);
+  ASSERT_OBJECT_REFCOUNT (src, "src", 1);
+  gst_pad_link (src, sink);
+  gst_object_unref (src);
+  gst_object_unref (sink);
+  ASSERT_CAPS_REFCOUNT (caps, "caps", 1);
+  gst_caps_unref (caps);
+}
+
+GST_END_TEST;
+
 static GstBuffer *
 buffer_from_string (const gchar * str)
 {
@@ -984,6 +1064,7 @@ gst_pad_suite (void)
   tcase_add_test (tc_chain, test_name_is_valid);
   tcase_add_test (tc_chain, test_push_unlinked);
   tcase_add_test (tc_chain, test_push_linked);
+  tcase_add_test (tc_chain, test_push_linked_flushing);
   tcase_add_test (tc_chain, test_push_buffer_list_compat);
   tcase_add_test (tc_chain, test_flowreturn);
   tcase_add_test (tc_chain, test_push_negotiation);
