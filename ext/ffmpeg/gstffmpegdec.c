@@ -477,35 +477,43 @@ static gboolean
 gst_ffmpegdec_query (GstPad * pad, GstQuery * query)
 {
   GstFFMpegDec *ffmpegdec;
-  GstPad *peer;
-  gboolean res;
+  gboolean res = FALSE;
 
   ffmpegdec = (GstFFMpegDec *) gst_pad_get_parent (pad);
 
-  res = FALSE;
+  switch (GST_QUERY_TYPE (query)) {
+    case GST_QUERY_LATENCY:
+    {
+      GST_DEBUG_OBJECT (ffmpegdec, "latency query %d",
+          ffmpegdec->context->has_b_frames);
+      if ((res = gst_pad_peer_query (ffmpegdec->sinkpad, query))) {
+        if (ffmpegdec->context->has_b_frames) {
+          gboolean live;
+          GstClockTime min_lat, max_lat, our_lat;
 
-  if ((peer = gst_pad_get_peer (ffmpegdec->sinkpad))) {
-    /* just forward to peer */
-    res = gst_pad_query (peer, query);
-    gst_object_unref (peer);
+          gst_query_parse_latency (query, &live, &min_lat, &max_lat);
+          if (ffmpegdec->format.video.fps_n > 0)
+            our_lat =
+                gst_util_uint64_scale_int (ffmpegdec->context->has_b_frames *
+                GST_SECOND, ffmpegdec->format.video.fps_d,
+                ffmpegdec->format.video.fps_n);
+          else
+            our_lat =
+                gst_util_uint64_scale_int (ffmpegdec->context->has_b_frames *
+                GST_SECOND, 1, 25);
+          if (min_lat != -1)
+            min_lat += our_lat;
+          if (max_lat != -1)
+            max_lat += our_lat;
+          gst_query_set_latency (query, live, min_lat, max_lat);
+        }
+      }
+    }
+      break;
+    default:
+      res = gst_pad_query_default (pad, query);
+      break;
   }
-#if 0
-  {
-    GstFormat bfmt;
-
-    bfmt = GST_FORMAT_BYTES;
-
-    /* ok, do bitrate calc... */
-    if ((type != GST_QUERY_POSITION && type != GST_QUERY_TOTAL) ||
-        *fmt != GST_FORMAT_TIME || ffmpegdec->context->bit_rate == 0 ||
-        !gst_pad_query (peer, type, &bfmt, value))
-      return FALSE;
-
-    if (ffmpegdec->pcache && type == GST_QUERY_POSITION)
-      *value -= GST_BUFFER_SIZE (ffmpegdec->pcache);
-    *value *= GST_SECOND / ffmpegdec->context->bit_rate;
-  }
-#endif
 
   gst_object_unref (ffmpegdec);
 
@@ -1546,6 +1554,9 @@ check_keyframe (GstFFMpegDec * ffmpegdec)
   if (!ffmpegdec->has_b_frames && ffmpegdec->picture->pict_type == FF_B_TYPE) {
     GST_DEBUG_OBJECT (ffmpegdec, "we have B frames");
     ffmpegdec->has_b_frames = TRUE;
+    /* Emit latency message to recalculate it */
+    gst_element_post_message (GST_ELEMENT_CAST (ffmpegdec),
+        gst_message_new_latency (GST_OBJECT_CAST (ffmpegdec)));
   }
 
   is_itype = (ffmpegdec->picture->pict_type == FF_I_TYPE);
