@@ -23,7 +23,7 @@
 /**
  * SECTION:gstbuffer
  * @short_description: Data-passing buffer type, supporting sub-buffers.
- * @see_also: #GstPad, #GstMiniObject
+ * @see_also: #GstPad, #GstMiniObject, #GstBufferPool
  *
  * Buffers are the basic unit of data transfer in GStreamer.  The #GstBuffer
  * type provides all the state necessary to define the regions of memory as
@@ -32,39 +32,30 @@
  * ensure that neither memory space goes away prematurely.
  *
  * Buffers are usually created with gst_buffer_new(). After a buffer has been
- * created one will typically allocate memory for it and set the size of the
- * buffer data.  The following example creates a buffer that can hold a given
- * video frame with a given width, height and bits per plane.
+ * created one will typically allocate memory for it and add it to the buffer.
+ * The following example creates a buffer that can hold a given video frame
+ * with a given width, height and bits per plane.
  * <example>
  * <title>Creating a buffer for a video frame</title>
  *   <programlisting>
  *   GstBuffer *buffer;
+ *   GstMemory *memory;
  *   gint size, width, height, bpp;
  *   ...
  *   size = width * height * bpp;
  *   buffer = gst_buffer_new ();
- *   GST_BUFFER_SIZE (buffer) = size;
- *   GST_BUFFER_MALLOCDATA (buffer) = g_malloc (size);
- *   GST_BUFFER_DATA (buffer) = GST_BUFFER_MALLOCDATA (buffer);
+ *   memory = gst_allocator_alloc (NULL, size, 0);
+ *   gst_buffer_take_memory (buffer, -1, memory);
  *   ...
  *   </programlisting>
  * </example>
  *
- * Alternatively, use gst_buffer_new_and_alloc()
+ * Alternatively, use gst_buffer_new_allocate()
  * to create a buffer with preallocated data of a given size.
  *
- * The data pointed to by the buffer can be retrieved with the GST_BUFFER_DATA()
- * macro. The size of the data can be found with GST_BUFFER_SIZE(). For buffers
- * of size 0, the data pointer is undefined (usually NULL) and should never be used.
- *
- * If an element knows what pad you will push the buffer out on, it should use
- * gst_pad_alloc_buffer() instead to create a buffer.  This allows downstream
- * elements to provide special buffers to write in, like hardware buffers.
- *
- * A buffer has a pointer to a #GstCaps describing the media type of the data
- * in the buffer. Attach caps to the buffer with gst_buffer_set_caps(); this
- * is typically done before pushing out a buffer using gst_pad_push() so that
- * the downstream element knows the type of the buffer.
+ * Buffers can contain a list of #GstMemory objects. You can retrieve how many
+ * memory objects with gst_buffer_n_memory() and you can get a pointer
+ * to memory with gst_buffer_peek_memory()
  *
  * A buffer will usually have timestamps, and a duration, but neither of these
  * are guaranteed (they may be set to #GST_CLOCK_TIME_NONE). Whenever a
@@ -107,7 +98,7 @@
  * the refcount drops to 0, any data pointed to by the buffer is unreffed as
  * well.
  *
- * Last reviewed on March 30, 2011 (0.11.0)
+ * Last reviewed on November 8, 2011 (0.11.2)
  */
 #include "gst_private.h"
 
