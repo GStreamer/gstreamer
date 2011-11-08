@@ -864,7 +864,8 @@ gst_video_info_from_caps (GstVideoInfo * info, const GstCaps * caps)
   /* ERROR */
 wrong_name:
   {
-    GST_ERROR ("wrong name, expected video/x-raw");
+    GST_ERROR ("wrong name '%s', expected video/x-raw",
+        gst_structure_get_name (structure));
     return FALSE;
   }
 no_format:
@@ -874,7 +875,7 @@ no_format:
   }
 unknown_format:
   {
-    GST_ERROR ("unknown format given");
+    GST_ERROR ("unknown format '%s' given", s);
     return FALSE;
   }
 no_width:
@@ -1009,7 +1010,7 @@ gst_video_frame_map_id (GstVideoFrame * frame, GstVideoInfo * info,
   /* ERRORS */
 no_metadata:
   {
-    GST_ERROR ("no GstVideoMeta for id", id);
+    GST_ERROR ("no GstVideoMeta for id %d", id);
     return FALSE;
   }
 invalid_size:
