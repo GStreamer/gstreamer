@@ -451,6 +451,8 @@ GST_START_TEST (test_push_linked_flushing)
   ASSERT_CAPS_REFCOUNT (caps, "caps", 1);
 
   gst_pad_set_caps (src, caps);
+  /* need to activate to make it accept the caps */
+  gst_pad_set_active (sink, TRUE);
   gst_pad_set_caps (sink, caps);
   /* one for me and one for each set_caps */
   ASSERT_CAPS_REFCOUNT (caps, "caps", 3);
@@ -468,6 +470,9 @@ GST_START_TEST (test_push_linked_flushing)
   ASSERT_MINI_OBJECT_REFCOUNT (buffer, "buffer", 1);
   fail_unless_equals_int (g_list_length (buffers), 0);
   gst_buffer_unref (buffer);
+
+  gst_pad_set_active (src, TRUE);
+  gst_pad_set_active (sink, FALSE);
 
   /* adding a probe that returns FALSE will drop the buffer without trying
    * to chain */
@@ -493,9 +498,8 @@ GST_START_TEST (test_push_linked_flushing)
   gst_buffer_unref (buffer);
   gst_pad_remove_probe (src, id);
 
-
   /* cleanup */
-  ASSERT_CAPS_REFCOUNT (caps, "caps", 3);
+  ASSERT_CAPS_REFCOUNT (caps, "caps", 2);
   ASSERT_OBJECT_REFCOUNT (src, "src", 1);
   gst_pad_link (src, sink);
   gst_object_unref (src);
