@@ -24,9 +24,9 @@
 #include <gst/gst.h>
 
 static GstPadProbeReturn
-modify_caps (GstObject * pad, GstPadProbeType type, GstEvent * event,
-    gpointer data)
+modify_caps (GstObject * pad, GstPadProbeInfo * info, gpointer data)
 {
+  GstEvent *event = GST_PAD_PROBE_INFO_EVENT (info);
   GstElement *filter = GST_ELEMENT (data);
   GstCaps *caps;
 

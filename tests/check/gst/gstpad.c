@@ -251,8 +251,7 @@ GST_START_TEST (test_name_is_valid)
 GST_END_TEST;
 
 static GstPadProbeReturn
-_probe_handler (GstPad * pad, GstPadProbeType type, GstBuffer * buffer,
-    gpointer userdata)
+_probe_handler (GstPad * pad, GstPadProbeInfo * info, gpointer userdata)
 {
   gint ret = GPOINTER_TO_INT (userdata);
 
@@ -690,12 +689,11 @@ GST_END_TEST;
 static gulong id;
 
 static GstPadProbeReturn
-block_async_cb (GstPad * pad, GstPadProbeType type, gpointer type_data,
-    gpointer user_data)
+block_async_cb (GstPad * pad, GstPadProbeInfo * info, gpointer user_data)
 {
   gboolean *bool_user_data = (gboolean *) user_data;
 
-  fail_unless ((type & GST_PAD_PROBE_TYPE_BLOCK) != 0);
+  fail_unless ((info->type & GST_PAD_PROBE_TYPE_BLOCK) != 0);
 
   /* here we should have blocked == 0 unblocked == 0 */
   fail_unless (bool_user_data[0] == FALSE);
@@ -799,8 +797,7 @@ block_async_full_destroy (gpointer user_data)
 }
 
 static GstPadProbeReturn
-block_async_full_cb (GstPad * pad, GstPadProbeType type, gpointer type_data,
-    gpointer user_data)
+block_async_full_cb (GstPad * pad, GstPadProbeInfo * info, gpointer user_data)
 {
   *(gint *) user_data = (gint) TRUE;
 
@@ -896,14 +893,14 @@ unblock_async_not_called (GstPad * pad, gboolean blocked, gpointer user_data)
 #endif
 
 static GstPadProbeReturn
-block_async_second_no_flush (GstPad * pad, GstPadProbeType type,
-    gpointer type_data, gpointer user_data)
+block_async_second_no_flush (GstPad * pad, GstPadProbeInfo * info,
+    gpointer user_data)
 {
   gboolean *bool_user_data = (gboolean *) user_data;
 
   GST_DEBUG ("second probe called");
 
-  fail_unless (type & GST_PAD_PROBE_TYPE_BLOCK);
+  fail_unless (info->type & GST_PAD_PROBE_TYPE_BLOCK);
 
   fail_unless (bool_user_data[0] == TRUE);
   fail_unless (bool_user_data[1] == FALSE);
@@ -918,13 +915,13 @@ block_async_second_no_flush (GstPad * pad, GstPadProbeType type,
 }
 
 static GstPadProbeReturn
-block_async_first_no_flush (GstPad * pad, GstPadProbeType type,
-    gpointer type_data, gpointer user_data)
+block_async_first_no_flush (GstPad * pad, GstPadProbeInfo * info,
+    gpointer user_data)
 {
   static int n_calls = 0;
   gboolean *bool_user_data = (gboolean *) user_data;
 
-  fail_unless (type & GST_PAD_PROBE_TYPE_BLOCK);
+  fail_unless (info->type & GST_PAD_PROBE_TYPE_BLOCK);
 
   GST_DEBUG ("first probe called");
 

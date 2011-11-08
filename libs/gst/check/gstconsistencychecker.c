@@ -42,9 +42,11 @@ struct _GstStreamConsistency
 };
 
 static gboolean
-source_pad_data_cb (GstPad * pad, GstPadProbeType type, GstMiniObject * data,
+source_pad_data_cb (GstPad * pad, GstPadProbeInfo * info,
     GstStreamConsistency * consist)
 {
+  GstMiniObject *data = GST_PAD_PROBE_INFO_DATA (info);
+
   if (GST_IS_BUFFER (data)) {
     GST_DEBUG_OBJECT (pad,
         "Buffer pts %" GST_TIME_FORMAT ", dts %" GST_TIME_FORMAT,

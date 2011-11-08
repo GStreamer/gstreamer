@@ -33,19 +33,17 @@ static int n_buffer_probes = 0;
 static int n_event_probes = 0;
 
 static GstPadProbeReturn
-probe_do_nothing (GstPad * pad, GstPadProbeType type, gpointer type_data,
-    gpointer data)
+probe_do_nothing (GstPad * pad, GstPadProbeInfo * info, gpointer data)
 {
-  GstMiniObject *obj = type_data;
+  GstMiniObject *obj = GST_PAD_PROBE_INFO_DATA (info);
   GST_DEBUG_OBJECT (pad, "is buffer:%d", GST_IS_BUFFER (obj));
   return GST_PAD_PROBE_OK;
 }
 
 static GstPadProbeReturn
-data_probe (GstPad * pad, GstPadProbeType type, gpointer type_data,
-    gpointer data)
+data_probe (GstPad * pad, GstPadProbeInfo * info, gpointer data)
 {
-  GstMiniObject *obj = type_data;
+  GstMiniObject *obj = GST_PAD_PROBE_INFO_DATA (info);
   n_data_probes++;
   GST_DEBUG_OBJECT (pad, "data probe %d", n_data_probes);
   g_assert (GST_IS_BUFFER (obj) || GST_IS_EVENT (obj));
@@ -54,10 +52,9 @@ data_probe (GstPad * pad, GstPadProbeType type, gpointer type_data,
 }
 
 static GstPadProbeReturn
-buffer_probe (GstPad * pad, GstPadProbeType type, gpointer type_data,
-    gpointer data)
+buffer_probe (GstPad * pad, GstPadProbeInfo * info, gpointer data)
 {
-  GstBuffer *obj = type_data;
+  GstBuffer *obj = GST_PAD_PROBE_INFO_BUFFER (info);
   n_buffer_probes++;
   GST_DEBUG_OBJECT (pad, "buffer probe %d", n_buffer_probes);
   g_assert (GST_IS_BUFFER (obj));
@@ -66,10 +63,9 @@ buffer_probe (GstPad * pad, GstPadProbeType type, gpointer type_data,
 }
 
 static GstPadProbeReturn
-event_probe (GstPad * pad, GstPadProbeType type, gpointer type_data,
-    gpointer data)
+event_probe (GstPad * pad, GstPadProbeInfo * info, gpointer data)
 {
-  GstEvent *obj = type_data;
+  GstEvent *obj = GST_PAD_PROBE_INFO_EVENT (info);
   n_event_probes++;
   GST_DEBUG_OBJECT (pad, "event probe %d [%s]",
       n_event_probes, GST_EVENT_TYPE_NAME (obj));
@@ -140,9 +136,10 @@ static int n_buffer_probes_once = 0;
 static int n_event_probes_once = 0;
 
 static GstPadProbeReturn
-data_probe_once (GstPad * pad, GstPadProbeType type, GstMiniObject * obj,
-    guint * data)
+data_probe_once (GstPad * pad, GstPadProbeInfo * info, guint * data)
 {
+  GstMiniObject *obj = GST_PAD_PROBE_INFO_DATA (info);
+
   n_data_probes_once++;
   g_assert (GST_IS_BUFFER (obj) || GST_IS_EVENT (obj));
 
@@ -152,9 +149,10 @@ data_probe_once (GstPad * pad, GstPadProbeType type, GstMiniObject * obj,
 }
 
 static GstPadProbeReturn
-buffer_probe_once (GstPad * pad, GstPadProbeType type, GstBuffer * obj,
-    guint * data)
+buffer_probe_once (GstPad * pad, GstPadProbeInfo * info, guint * data)
 {
+  GstBuffer *obj = GST_PAD_PROBE_INFO_BUFFER (info);
+
   n_buffer_probes_once++;
   g_assert (GST_IS_BUFFER (obj));
 
@@ -164,9 +162,10 @@ buffer_probe_once (GstPad * pad, GstPadProbeType type, GstBuffer * obj,
 }
 
 static GstPadProbeReturn
-event_probe_once (GstPad * pad, GstPadProbeType type, GstEvent * obj,
-    guint * data)
+event_probe_once (GstPad * pad, GstPadProbeInfo * info, guint * data)
 {
+  GstEvent *obj = GST_PAD_PROBE_INFO_EVENT (info);
+
   n_event_probes_once++;
   g_assert (GST_IS_EVENT (obj));
 

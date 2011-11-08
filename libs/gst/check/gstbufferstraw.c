@@ -37,10 +37,11 @@ static gulong id;
 
 /* called for every buffer.  Waits until the global "buf" variable is unset,
  * then sets it to the buffer received, and signals. */
-static gboolean
-buffer_probe (GstPad * pad, GstPadProbeType type, GstBuffer * buffer,
-    gpointer unused)
+static GstPadProbeReturn
+buffer_probe (GstPad * pad, GstPadProbeInfo * info, gpointer unused)
 {
+  GstBuffer *buffer = GST_PAD_PROBE_INFO_BUFFER (info);
+
   g_mutex_lock (lock);
 
   while (buf != NULL)
@@ -53,7 +54,7 @@ buffer_probe (GstPad * pad, GstPadProbeType type, GstBuffer * buffer,
 
   g_mutex_unlock (lock);
 
-  return TRUE;
+  return GST_PAD_PROBE_OK;
 }
 
 /**
@@ -83,7 +84,7 @@ gst_buffer_straw_start_pipeline (GstElement * bin, GstPad * pad)
   GstStateChangeReturn ret;
 
   id = gst_pad_add_probe (pad, GST_PAD_PROBE_TYPE_BUFFER,
-      (GstPadProbeCallback) buffer_probe, NULL, NULL);
+      buffer_probe, NULL, NULL);
 
   cond = g_cond_new ();
   lock = g_mutex_new ();

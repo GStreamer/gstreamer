@@ -527,18 +527,38 @@ typedef enum
   GST_PAD_PROBE_PASS,
 } GstPadProbeReturn;
 
+
+/**
+ * GstPadProbeInfo:
+ * @type: the current probe type
+ * @data: type specific data
+ *
+ * Info passed in the #GstPadProbeCallback.
+ */
+typedef struct
+{
+  GstPadProbeType type;
+  gpointer data;
+} GstPadProbeInfo;
+
+#define GST_PAD_PROBE_INFO_TYPE(d)         ((d)->type)
+#define GST_PAD_PROBE_INFO_DATA(d)         ((d)->data)
+
+#define GST_PAD_PROBE_INFO_BUFFER(d)       GST_BUFFER_CAST(GST_PAD_PROBE_INFO_DATA(d))
+#define GST_PAD_PROBE_INFO_BUFFER_LIST(d)  GST_BUFFER_LIST_CAST(GST_PAD_PROBE_INFO_DATA(d))
+#define GST_PAD_PROBE_INFO_EVENT(d)        GST_EVENT_CAST(GST_PAD_PROBE_INFO_DATA(d))
+
 /**
  * GstPadProbeCallback
  * @pad: the #GstPad that is blocked
- * @type: the current probe type
- * @type_data: type specific data
+ * @info: #GstPadProbeInfo
  * @user_data: the gpointer to optional user data.
  *
  * Callback used by gst_pad_add_probe(). Gets called to notify about the current
  * blocking type.
  */
-typedef GstPadProbeReturn      (*GstPadProbeCallback)              (GstPad *pad, GstPadProbeType type,
-                                                                 gpointer type_data, gpointer user_data);
+typedef GstPadProbeReturn      (*GstPadProbeCallback)              (GstPad *pad, GstPadProbeInfo *info,
+                                                                    gpointer user_data);
 
 /**
  * GstPadStickyEventsForeachFunction:

@@ -35,11 +35,11 @@ static GstStaticPadTemplate srctemplate = GST_STATIC_PAD_TEMPLATE ("src",
 
 /* Data probe cb to drop everything but count buffers and events */
 static GstPadProbeReturn
-probe_cb (GstPad * pad, GstPadProbeType type, GstMiniObject * obj,
-    gpointer user_data)
+probe_cb (GstPad * pad, GstPadProbeInfo * info, gpointer user_data)
 {
   gint count = 0;
   const gchar *count_type = NULL;
+  GstMiniObject *obj = GST_PAD_PROBE_INFO_DATA (info);
 
   GST_LOG_OBJECT (pad, "got data");
 

@@ -764,11 +764,10 @@ static GMutex *blocked_lock;
 static GCond *blocked_cond;
 
 static GstPadProbeReturn
-pad_blocked_cb (GstPad * pad, GstPadProbeType type, gpointer type_data,
-    gpointer user_data)
+pad_blocked_cb (GstPad * pad, GstPadProbeInfo * info, gpointer user_data)
 {
   g_mutex_lock (blocked_lock);
-  GST_DEBUG ("srcpad blocked: %d, sending signal", type);
+  GST_DEBUG ("srcpad blocked: %d, sending signal", info->type);
   g_cond_signal (blocked_cond);
   g_mutex_unlock (blocked_lock);
 

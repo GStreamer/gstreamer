@@ -270,10 +270,9 @@ static GstEvent *got_event_before_q, *got_event_after_q;
 static GTimeVal got_event_time;
 
 static GstPadProbeReturn
-event_probe (GstPad * pad, GstPadProbeType type, gpointer type_data,
-    gpointer user_data)
+event_probe (GstPad * pad, GstPadProbeInfo * info, gpointer user_data)
 {
-  GstMiniObject *data = type_data;
+  GstMiniObject *data = GST_PAD_PROBE_INFO_DATA (info);
   gboolean before_q = (gboolean) GPOINTER_TO_INT (user_data);
 
   GST_DEBUG ("event probe called %p", data);
@@ -361,17 +360,13 @@ signal_data_wait (SignalData * data)
 }
 
 static GstPadProbeReturn
-signal_blocked (GstPad * pad, GstPadProbeType type, gpointer type_data,
-    gpointer user_data)
+signal_blocked (GstPad * pad, GstPadProbeInfo * info, gpointer user_data)
 {
   SignalData *data = (SignalData *) user_data;
 
   GST_DEBUG ("signal called %p", data);
   signal_data_signal (data);
   GST_DEBUG ("signal done %p", data);
-
-  if (GST_IS_EVENT (type_data) && GST_EVENT_IS_UPSTREAM (type_data))
-    return GST_PAD_PROBE_PASS;
 
   return GST_PAD_PROBE_OK;
 }
@@ -403,7 +398,7 @@ static void test_event
   signal_data_init (&data);
 
   /* We block the pad so the stream lock is released and we can send the event */
-  id = gst_pad_add_probe (fake_srcpad, GST_PAD_PROBE_TYPE_BLOCK,
+  id = gst_pad_add_probe (fake_srcpad, GST_PAD_PROBE_TYPE_BLOCK_DOWNSTREAM,
       signal_blocked, &data, NULL);
   fail_unless (id != 0);
 

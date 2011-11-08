@@ -479,8 +479,7 @@ typedef struct
 } BlockData;
 
 static GstPadProbeReturn
-block_callback (GstPad * pad, GstPadProbeType type, gpointer type_data,
-    gpointer user_data)
+block_callback (GstPad * pad, GstPadProbeInfo * info, gpointer user_data)
 {
   BlockData *block_data = (BlockData *) user_data;
 

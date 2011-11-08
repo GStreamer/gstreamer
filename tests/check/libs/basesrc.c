@@ -28,9 +28,10 @@
 #include <gst/base/gstbasesrc.h>
 
 static GstPadProbeReturn
-eos_event_counter (GstObject * pad, GstPadProbeType type, GstEvent * event,
-    guint * p_num_eos)
+eos_event_counter (GstObject * pad, GstPadProbeInfo * info, guint * p_num_eos)
 {
+  GstEvent *event = GST_PAD_PROBE_INFO_EVENT (info);
+
   fail_unless (event != NULL);
   fail_unless (GST_IS_EVENT (event));
 
@@ -483,9 +484,10 @@ GST_END_TEST;
 
 
 static GstPadProbeReturn
-segment_event_catcher (GstObject * pad, GstPadProbeType type, GstEvent * event,
+segment_event_catcher (GstObject * pad, GstPadProbeInfo * info,
     gpointer * user_data)
 {
+  GstEvent *event = GST_PAD_PROBE_INFO_EVENT (info);
   GstEvent **last_event = (GstEvent **) user_data;
   fail_unless (event != NULL);
   fail_unless (GST_IS_EVENT (event));
