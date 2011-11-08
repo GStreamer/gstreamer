@@ -3449,6 +3449,59 @@ gst_value_can_compare (const GValue * value1, const GValue * value2)
   return gst_value_get_compare_func (value1) != NULL;
 }
 
+static gboolean
+gst_value_list_equals_range (const GValue * list, const GValue * value)
+{
+  const GValue *first;
+  guint list_size, n;
+
+  g_return_val_if_fail (G_IS_VALUE (list), FALSE);
+  g_return_val_if_fail (G_IS_VALUE (value), FALSE);
+  g_return_val_if_fail (GST_VALUE_HOLDS_LIST (list), FALSE);
+
+  /* TODO: compare against an empty list ? No type though... */
+  list_size = VALUE_LIST_SIZE (list);
+  if (list_size == 0)
+    return FALSE;
+
+  /* compare the basic types - they have to match */
+  first = VALUE_LIST_GET_VALUE (list, 0);
+#define CHECK_TYPES(type,prefix) \
+  (prefix##_VALUE_HOLDS_##type(first) && GST_VALUE_HOLDS_##type##_RANGE (value))
+  if (CHECK_TYPES (INT, G)) {
+    const gint rmin = gst_value_get_int_range_min (value);
+    const gint rmax = gst_value_get_int_range_max (value);
+    /* note: this will overflow for min 0 and max INT_MAX, but this
+       would only be equal to a list of INT_MAX elements, which seems
+       very unlikely */
+    if (list_size != rmax - rmin + 1)
+      return FALSE;
+    for (n = 0; n < list_size; ++n) {
+      gint v = g_value_get_int (VALUE_LIST_GET_VALUE (list, n));
+      if (v < rmin || v > rmax) {
+        return FALSE;
+      }
+    }
+    return TRUE;
+  } else if (CHECK_TYPES (INT64, G)) {
+    const gint64 rmin = gst_value_get_int64_range_min (value);
+    const gint64 rmax = gst_value_get_int64_range_max (value);
+    GST_DEBUG ("List/range of int64s");
+    if (list_size != rmax - rmin + 1)
+      return FALSE;
+    for (n = 0; n < list_size; ++n) {
+      gint64 v = g_value_get_int64 (VALUE_LIST_GET_VALUE (list, n));
+      if (v < rmin || v > rmax)
+        return FALSE;
+    }
+    return TRUE;
+  }
+#undef CHECK_TYPES
+
+  /* other combinations don't make sense for equality */
+  return FALSE;
+}
+
 /**
  * gst_value_compare:
  * @value1: a value to compare
@@ -3471,21 +3524,28 @@ gst_value_compare (const GValue * value1, const GValue * value2)
   g_return_val_if_fail (G_IS_VALUE (value1), GST_VALUE_LESS_THAN);
   g_return_val_if_fail (G_IS_VALUE (value2), GST_VALUE_GREATER_THAN);
 
-  /* Special case: lists and scalar values 
-   * "{ 1 }" and "1" are equal */
+  /* Special cases: lists and scalar values ("{ 1 }" and "1" are equal),
+     as well as lists and ranges ("{ 1, 2 }" and "[ 1, 2 ]" are equal) */
   ltype = gst_value_list_get_type ();
-  if (G_VALUE_HOLDS (value1, ltype) && !G_VALUE_HOLDS (value2, ltype)
-      && gst_value_list_get_size (value1) == 1) {
-    const GValue *elt;
+  if (G_VALUE_HOLDS (value1, ltype) && !G_VALUE_HOLDS (value2, ltype)) {
 
-    elt = gst_value_list_get_value (value1, 0);
-    return gst_value_compare (elt, value2);
-  } else if (G_VALUE_HOLDS (value2, ltype) && !G_VALUE_HOLDS (value1, ltype)
-      && gst_value_list_get_size (value2) == 1) {
-    const GValue *elt;
+    if (gst_value_list_equals_range (value1, value2)) {
+      return GST_VALUE_EQUAL;
+    } else if (gst_value_list_get_size (value1) == 1) {
+      const GValue *elt;
 
-    elt = gst_value_list_get_value (value2, 0);
-    return gst_value_compare (elt, value1);
+      elt = gst_value_list_get_value (value1, 0);
+      return gst_value_compare (elt, value2);
+    }
+  } else if (G_VALUE_HOLDS (value2, ltype) && !G_VALUE_HOLDS (value1, ltype)) {
+    if (gst_value_list_equals_range (value2, value1)) {
+      return GST_VALUE_EQUAL;
+    } else if (gst_value_list_get_size (value2) == 1) {
+      const GValue *elt;
+
+      elt = gst_value_list_get_value (value2, 0);
+      return gst_value_compare (elt, value1);
+    }
   }
 
   if (G_VALUE_TYPE (value1) != G_VALUE_TYPE (value2))
