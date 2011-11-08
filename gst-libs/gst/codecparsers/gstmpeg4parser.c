@@ -286,14 +286,14 @@ failed:
 }
 
 static inline guint8
-compute_resync_marker_size (const GstMpeg4VideoObjectPlane * vop)
+compute_resync_marker_size (const GstMpeg4VideoObjectPlane * vop,
+    guint32 * pattern, guint32 * mask)
 {
   guint8 off;
   /* FIXME handle the binary only shape case */
   switch (vop->coding_type) {
     case (GST_MPEG4_I_VOP):
       off = 16;
-
       break;
     case (GST_MPEG4_S_VOP):
     case (GST_MPEG4_P_VOP):
@@ -308,8 +308,96 @@ compute_resync_marker_size (const GstMpeg4VideoObjectPlane * vop)
       return -1;
   }
 
+  if (mask && pattern) {
+    switch (off) {
+      case 16:
+        *pattern = 0x00008;
+        *mask = 0xfffff;
+        break;
+      case 17:
+        *pattern = 0x00004;
+        *mask = 0xfffff;
+        break;
+      case 18:
+        *pattern = 0x00002;
+        *mask = 0xfffff;
+        break;
+      case 19:
+        *pattern = 0x00001;
+        *mask = 0xfffff;
+        break;
+      case 20:
+        *pattern = 0x000008;
+        *mask = 0xffffff;
+        break;
+      case 21:
+        *pattern = 0x000004;
+        *mask = 0xffffff;
+        break;
+      case 22:
+        *pattern = 0x000002;
+        *mask = 0xffffff;
+        break;
+      case 23:
+        *pattern = 0x000001;
+        *mask = 0xffffff;
+        break;
+    }
+  }
+
   return off++;                 /* Take the following 1 into account */
 }
+
+/**
+ * gst_mpeg4_next_resync:
+ * @packet: The #GstMpeg4Packet to fill
+ * @vop: The previously parsed #GstMpeg4VideoObjectPlane
+ * @offset: offset from which to start the parsing
+ * @data: The data to parse
+ * @size: The size of the @data to parse
+ *
+ * Parses @data and fills @packet with the information of the next resync packet
+ * found.
+ *
+ * Returns: a #GstMpeg4ParseResult
+ */
+static GstMpeg4ParseResult
+gst_mpeg4_next_resync (GstMpeg4Packet * packet,
+    const GstMpeg4VideoObjectPlane * vop, const guint8 * data, gsize size)
+{
+  guint markersize = 0, off1, off2;
+  guint32 mask = 0xff, pattern = 0xff;
+  GstByteReader br;
+
+  gst_byte_reader_init (&br, data, size);
+
+  g_return_val_if_fail (packet != NULL, GST_MPEG4_PARSER_ERROR);
+  g_return_val_if_fail (vop != NULL, GST_MPEG4_PARSER_ERROR);
+
+  markersize = compute_resync_marker_size (vop, &pattern, &mask);
+
+  off1 = gst_byte_reader_masked_scan_uint32 (&br, mask, pattern, 0, size);
+
+  if (off1 < 0)
+    return GST_MPEG4_PARSER_NO_PACKET;
+
+  GST_DEBUG ("Resync code found at %i", off1);
+
+  packet->offset = off1;
+  packet->type = GST_MPEG4_RESYNC;
+  packet->marker_size = markersize;
+
+  off2 = gst_byte_reader_masked_scan_uint32 (&br, mask, pattern,
+      off1, size - off1);
+
+  if (off2 < 0)
+    return GST_MPEG4_PARSER_NO_PACKET_END;
+
+  packet->size = off1 - off2;
+
+  return GST_MPEG4_PARSER_OK;
+}
+
 
 /********** API **********/
 
@@ -317,6 +405,8 @@ compute_resync_marker_size (const GstMpeg4VideoObjectPlane * vop)
  * gst_mpeg4_parse:
  * @packet: The #GstMpeg4Packet to fill
  * @skip_user_data: %TRUE to skip user data packet %FALSE otherwize
+ * @vop: The last parsed #GstMpeg4VideoObjectPlane or %NULL if you do
+ * not need to detect the resync codes.
  * @offset: offset from which to start the parsing
  * @data: The data to parse
  * @size: The size of the @data to parse
@@ -328,10 +418,12 @@ compute_resync_marker_size (const GstMpeg4VideoObjectPlane * vop)
  */
 GstMpeg4ParseResult
 gst_mpeg4_parse (GstMpeg4Packet * packet, gboolean skip_user_data,
-    const guint8 * data, guint offset, gsize size)
+    GstMpeg4VideoObjectPlane * vop, const guint8 * data, guint offset,
+    gsize size)
 {
   gint off1, off2;
   GstByteReader br;
+  GstMpeg4ParseResult resync_res;
 
   gst_byte_reader_init (&br, data, size);
 
@@ -345,6 +437,18 @@ gst_mpeg4_parse (GstMpeg4Packet * packet, gboolean skip_user_data,
     return GST_MPEG4_PARSER_ERROR;
   }
 
+  if (vop) {
+    resync_res =
+        gst_mpeg4_next_resync (packet, vop, data + offset, size - offset);
+
+    /*  We found a complet slice */
+    if (resync_res == GST_MPEG4_PARSER_OK)
+      return resync_res;
+
+    else if (resync_res == GST_MPEG4_PARSER_OK)
+      goto find_end;
+  }
+
   off1 = gst_byte_reader_masked_scan_uint32 (&br, 0xffffff00, 0x00000100,
       offset, size - offset);
 
@@ -355,13 +459,16 @@ gst_mpeg4_parse (GstMpeg4Packet * packet, gboolean skip_user_data,
 
   /* Recursively skip user data if needed */
   if (skip_user_data && data[off1 + 3] == GST_MPEG4_USER_DATA)
-    return gst_mpeg4_parse (packet, skip_user_data, data, off1 + 3,
+    /* If we are here, we know no resync code has been found the first time, so we
+     * don't look for it this time */
+    return gst_mpeg4_parse (packet, skip_user_data, NULL, data, off1 + 3,
         size - off1 - 3);
 
   packet->offset = off1 + 3;
   packet->data = data;
   packet->type = (GstMpeg4StartCode) (data[off1 + 3]);
 
+find_end:
   off2 = gst_byte_reader_masked_scan_uint32 (&br, 0xffffff00, 0x00000100,
       off1 + 4, size - off1 - 4);
 
@@ -1465,68 +1572,6 @@ failed:
 }
 
 /**
- * gst_mpeg4_next_resync:
- * @packet: The #GstMpeg4Packet to fill
- * @vop: The previously parsed #GstMpeg4VideoObjectPlane
- * @offset: offset from which to start the parsing
- * @data: The data to parse
- * @size: The size of the @data to parse
- *
- * Parses @data and fills @packet with the information of the next resync packet
- * found.
- *
- * Returns: a #GstMpeg4ParseResult
- */
-GstMpeg4ParseResult
-gst_mpeg4_next_resync (GstMpeg4Packet * packet,
-    const GstMpeg4VideoObjectPlane * vop, const guint8 * data, gsize size)
-{
-  guint markersize = 0, skip, remaining;
-  GstBitReader br;
-
-  gst_bit_reader_init (&br, data, size);
-
-  g_return_val_if_fail (packet != NULL, GST_MPEG4_PARSER_ERROR);
-  g_return_val_if_fail (vop != NULL, GST_MPEG4_PARSER_ERROR);
-
-  /* Skip to the end of the vop header */
-  gst_bit_reader_skip (&br, vop->size);
-
-  /* 5.2.3 Definition of nextbits_bytealigned() function */
-  skip = vop->size % 8;
-  remaining = gst_bit_reader_get_remaining (&br);
-  if (!skip) {
-    if (remaining > 8 && br.data[br.byte + 1] == 0x7f)
-      skip = 8;
-  }
-
-  /* Align to next byte */
-  if (!gst_bit_reader_skip (&br, skip))
-    goto failed;
-
-  markersize = compute_resync_marker_size (vop);
-
-  CHECK_REMAINING (&br, markersize);
-
-  if (gst_bit_reader_peek_bits_uint32_unchecked (&br, markersize) != 0x01)
-    goto failed;
-
-  GST_DEBUG ("Resync code found at %i", br.byte);
-
-  packet->offset = br.byte;
-  packet->type = GST_MPEG4_RESYNC;
-  packet->size = 0;
-  packet->marker_size = markersize;
-
-  return GST_MPEG4_PARSER_OK;
-
-failed:
-  GST_DEBUG ("No resync found in this buffer");
-
-  return GST_MPEG4_PARSER_NO_PACKET;
-}
-
-/**
  * gst_mpeg4_parse_video_packet_header:
  * @videopackethdr: The #GstMpeg4VideoPacketHdr structure to fill
  * @vol: The last parsed #GstMpeg4VideoObjectLayer, will be updated
@@ -1553,7 +1598,7 @@ gst_mpeg4_parse_video_packet_header (GstMpeg4VideoPacketHdr * videopackethdr,
   g_return_val_if_fail (videopackethdr != NULL, GST_MPEG4_PARSER_ERROR);
   g_return_val_if_fail (vol != NULL, GST_MPEG4_PARSER_ERROR);
 
-  markersize = compute_resync_marker_size (vop);
+  markersize = compute_resync_marker_size (vop, NULL, NULL);
 
   CHECK_REMAINING (&br, markersize);
 

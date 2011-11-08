@@ -515,7 +515,6 @@ struct _GstMpeg4VideoPacketHdr {
  * @offset: offset of the start of the packet (without the 3 bytes startcode), but
  * including the #GstMpeg4StartCode byte.
  * @size: The size in bytes of the packet or %G_MAXUINT if the end wasn't found.
- * Set to 0 if type == GST_MPEG4_RESYNC.
  * @marker_size: The size in bit of the resync marker.
  *
  * A structure that contains the type of a packet, its offset and its size
@@ -537,6 +536,7 @@ GstMpeg4ParseResult gst_h263_parse       (GstMpeg4Packet * packet,
 
 GstMpeg4ParseResult gst_mpeg4_parse      (GstMpeg4Packet * packet,
                                           gboolean skip_user_data,
+                                          GstMpeg4VideoObjectPlane *vop,
                                           const guint8 * data, guint offset,
                                           gsize size);
 
@@ -567,11 +567,6 @@ gst_mpeg4_parse_visual_object_sequence   (GstMpeg4VisualObjectSequence *vos,
 GstMpeg4ParseResult
 gst_mpeg4_parse_video_plane_short_header (GstMpeg4VideoPlaneShortHdr * shorthdr,
                                           const guint8 * data, gsize size);
-
-GstMpeg4ParseResult
-gst_mpeg4_next_resync                    (GstMpeg4Packet * packet,
-                                          const GstMpeg4VideoObjectPlane * vop,
-                                          const guint8 *data, gsize size);
 
 GstMpeg4ParseResult
 gst_mpeg4_parse_video_packet_header      (GstMpeg4VideoPacketHdr * videopackethdr,

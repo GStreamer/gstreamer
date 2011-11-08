@@ -393,7 +393,7 @@ retry:
   }
 
   /* didn't find anything that looks like a sync word, skip */
-  switch (gst_mpeg4_parse (&packet, TRUE, data, off, size)) {
+  switch (gst_mpeg4_parse (&packet, TRUE, NULL, data, off, size)) {
     case (GST_MPEG4_PARSER_NO_PACKET):
     case (GST_MPEG4_PARSER_ERROR):
       *skipsize = size - 3;
@@ -437,7 +437,7 @@ next:
   off++;
 
   /* so now we have start code at start of data; locate next packet */
-  switch (gst_mpeg4_parse (&packet, TRUE, data, off, size)) {
+  switch (gst_mpeg4_parse (&packet, TRUE, NULL, data, off, size)) {
     case (GST_MPEG4_PARSER_NO_PACKET_END):
       ret = gst_mpeg4vparse_process_sc (mp4vparse, &packet, size);
       if (ret)
@@ -638,7 +638,7 @@ gst_mpeg4vparse_set_caps (GstBaseParse * parse, GstCaps * caps)
      * whether sucessful or not */
     data = GST_BUFFER_DATA (buf);
     size = GST_BUFFER_SIZE (buf);
-    res = gst_mpeg4_parse (&packet, TRUE, data, 0, size);
+    res = gst_mpeg4_parse (&packet, TRUE, NULL, data, 0, size);
 
     while (res == GST_MPEG4_PARSER_OK || res == GST_MPEG4_PARSER_NO_PACKET_END) {
 
@@ -646,7 +646,7 @@ gst_mpeg4vparse_set_caps (GstBaseParse * parse, GstCaps * caps)
           packet.type <= GST_MPEG4_VIDEO_LAYER_LAST)
         mp4vparse->vol_offset = packet.offset;
 
-      res = gst_mpeg4_parse (&packet, TRUE, data, packet.offset, size);
+      res = gst_mpeg4_parse (&packet, TRUE, NULL, data, packet.offset, size);
     }
 
     /* And take it as config */
