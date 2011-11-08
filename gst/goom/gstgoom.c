@@ -543,7 +543,6 @@ gst_goom_chain (GstPad * pad, GstBuffer * buffer)
 
   while (TRUE) {
     const guint16 *data;
-    gboolean need_skip;
     guchar *out_frame;
     gint i;
     guint avail, to_flush;
@@ -570,12 +569,12 @@ gst_goom_chain (GstPad * pad, GstBuffer * buffer)
       timestamp += gst_util_uint64_scale_int (dist, GST_SECOND, goom->rate);
     }
 
-    if (timestamp != -1) {
+    if (GST_CLOCK_TIME_IS_VALID (timestamp)) {
       gint64 qostime;
+      gboolean need_skip;
 
       qostime = gst_segment_to_running_time (&goom->segment, GST_FORMAT_TIME,
-          timestamp);
-      qostime += goom->duration;
+          timestamp) + goom->duration;
 
       GST_OBJECT_LOCK (goom);
       /* check for QoS, don't compute buffers that are known to be late */
@@ -677,8 +676,7 @@ gst_goom_change_state (GstElement * element, GstStateChange transition)
     case GST_STATE_CHANGE_PAUSED_TO_READY:
       if (goom->pool) {
         gst_buffer_pool_set_active (goom->pool, FALSE);
-        gst_object_unref (goom->pool);
-        goom->pool = NULL;
+        gst_object_replace ((GstObject **) & goom->pool, NULL);
       }
       break;
     case GST_STATE_CHANGE_READY_TO_NULL:
