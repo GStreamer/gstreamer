@@ -1350,8 +1350,10 @@ gst_omx_video_enc_handle_frame (GstBaseVideoEncoder * encoder,
 
     g_assert (acq_ret == GST_OMX_ACQUIRE_BUFFER_OK && buf != NULL);
 
-    if (buf->omx_buf->nAllocLen - buf->omx_buf->nOffset <= 0)
+    if (buf->omx_buf->nAllocLen - buf->omx_buf->nOffset <= 0) {
+      gst_omx_port_release_buffer (self->in_port, buf);
       goto full_buffer;
+    }
 
     if (self->downstream_flow_ret != GST_FLOW_OK) {
       GST_ERROR_OBJECT (self, "Downstream returned %s",
@@ -1415,7 +1417,6 @@ full_buffer:
     GST_ELEMENT_ERROR (self, LIBRARY, FAILED, (NULL),
         ("Got OpenMAX buffer with no free space (%p, %u/%u)", buf,
             buf->omx_buf->nOffset, buf->omx_buf->nAllocLen));
-    gst_omx_port_release_buffer (self->in_port, buf);
     return GST_FLOW_ERROR;
   }
 
