@@ -1048,6 +1048,8 @@ gst_omx_port_release_buffer (GstOMXPort * port, GstOMXBuffer * buf)
   if ((err = gst_omx_component_get_last_error (comp)) != OMX_ErrorNone) {
     GST_ERROR_OBJECT (comp->parent, "Component is in error state: %s (0x%08x)",
         gst_omx_error_to_string (err), err);
+    g_queue_push_tail (port->pending_buffers, buf);
+    g_cond_broadcast (port->port_cond);
     goto done;
   }
 
