@@ -1054,6 +1054,8 @@ gst_omx_port_release_buffer (GstOMXPort * port, GstOMXBuffer * buf)
   if (port->flushing) {
     GST_DEBUG_OBJECT (comp->parent, "Port %u is flushing, not releasing buffer",
         port->index);
+    g_queue_push_tail (port->pending_buffers, buf);
+    g_cond_broadcast (port->port_cond);
     goto done;
   }
 
@@ -1073,9 +1075,10 @@ gst_omx_port_release_buffer (GstOMXPort * port, GstOMXBuffer * buf)
     err = OMX_FillThisBuffer (comp->handle, buf->omx_buf);
   }
 
-done:
   GST_DEBUG_OBJECT (comp->parent, "Released buffer %p to port %u: %s (0x%08x)",
       buf, port->index, gst_omx_error_to_string (err), err);
+
+done:
   g_mutex_unlock (port->port_lock);
 
   return err;
