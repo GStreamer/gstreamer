@@ -884,7 +884,7 @@ gst_event_new_qos (GstQOSType type, gdouble proportion,
   /* diff must be positive or timestamp + diff must be positive */
   g_return_val_if_fail (diff >= 0 || -diff <= timestamp, NULL);
 
-  GST_CAT_INFO (GST_CAT_EVENT,
+  GST_CAT_LOG (GST_CAT_EVENT,
       "creating qos type %d, proportion %lf, diff %" G_GINT64_FORMAT
       ", timestamp %" GST_TIME_FORMAT, type, proportion,
       diff, GST_TIME_ARGS (timestamp));
