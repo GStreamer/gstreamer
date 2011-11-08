@@ -877,8 +877,10 @@ gst_omx_audio_enc_handle_frame (GstBaseAudioEncoder * encoder,
       return self->downstream_flow_ret;
     }
 
-    if (buf->omx_buf->nAllocLen - buf->omx_buf->nOffset <= 0)
+    if (buf->omx_buf->nAllocLen - buf->omx_buf->nOffset <= 0) {
+      gst_omx_port_release_buffer (self->in_port, buf);
       goto full_buffer;
+    }
 
     /* Copy the buffer content in chunks of size as requested
      * by the port */
@@ -919,7 +921,6 @@ full_buffer:
     GST_ELEMENT_ERROR (self, LIBRARY, FAILED, (NULL),
         ("Got OpenMAX buffer with no free space (%p, %u/%u)", buf,
             buf->omx_buf->nOffset, buf->omx_buf->nAllocLen));
-    gst_omx_port_release_buffer (self->in_port, buf);
     return GST_FLOW_ERROR;
   }
 component_error:
