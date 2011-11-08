@@ -699,7 +699,17 @@ gst_omx_video_dec_loop (GstOMXVideoDec * self)
 
   GST_BASE_VIDEO_CODEC_STREAM_LOCK (self);
   frame = _find_nearest_frame (self, buf);
-  if (!frame && buf->omx_buf->nFilledLen > 0) {
+
+  if (frame
+      &&
+      gst_base_video_decoder_get_max_decode_time (GST_BASE_VIDEO_DECODER (self),
+          frame) < 0) {
+    GST_WARNING_OBJECT (self, "Frame is too late, dropping");
+    gst_omx_port_release_buffer (self->out_port, buf);
+    flow_ret =
+        gst_base_video_decoder_finish_frame (GST_BASE_VIDEO_DECODER (self),
+        frame);
+  } else if (!frame && buf->omx_buf->nFilledLen > 0) {
     GstBuffer *outbuf;
 
     /* This sometimes happens at EOS or if the input is not properly framed,
