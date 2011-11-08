@@ -216,6 +216,9 @@ mpegts_base_reset (MpegTSBase * base)
   base->in_gap = 0;
   base->first_buf_ts = GST_CLOCK_TIME_NONE;
 
+  base->upstream_live = FALSE;
+  base->query_latency = FALSE;
+
   if (klass->reset)
     klass->reset (base);
 }
@@ -1224,6 +1227,22 @@ mpegts_base_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
   return res;
 }
 
+static void
+query_upstream_latency (MpegTSBase * base)
+{
+  GstQuery *query;
+
+  query = gst_query_new_latency ();
+  if (gst_pad_peer_query (base->sinkpad, query)) {
+    gst_query_parse_latency (query, &base->upstream_live, NULL, NULL);
+    GST_DEBUG_OBJECT (base, "Upstream is %s",
+        base->upstream_live ? "LIVE" : "NOT LIVE");
+  } else
+    GST_WARNING_OBJECT (base, "Failed to query upstream latency");
+  gst_query_unref (query);
+  base->query_latency = TRUE;
+}
+
 static inline GstFlowReturn
 mpegts_base_push (MpegTSBase * base, MpegTSPacketizerPacket * packet,
     MpegTSPacketizerSection * section)
@@ -1251,6 +1270,10 @@ mpegts_base_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
 
   base = GST_MPEGTS_BASE (parent);
   packetizer = base->packetizer;
+
+  if (G_UNLIKELY (base->query_latency == FALSE)) {
+    query_upstream_latency (base);
+  }
 
   if (G_UNLIKELY (!GST_CLOCK_TIME_IS_VALID (base->first_buf_ts)) &&
       GST_BUFFER_TIMESTAMP_IS_VALID (buf)) {

@@ -137,6 +137,11 @@ struct _MpegTSBase {
   GstClockTime in_gap;
   GstClockTime first_buf_ts;
 
+  /* Whether upstream is live or not */
+  gboolean upstream_live;
+  /* Whether we queried the upstream latency or not */
+  gboolean query_latency;
+
   /* Upstream segment */
   GstSegment segment;
 };
