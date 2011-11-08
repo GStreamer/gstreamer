@@ -59,6 +59,16 @@ static void update_height (GESTimelineObject * object);
 static gint sort_track_effects (gpointer a, gpointer b,
     GESTimelineObject * object);
 
+static gboolean
+ges_timeline_object_set_start_internal (GESTimelineObject * object,
+    guint64 start);
+static gboolean ges_timeline_object_set_inpoint_internal (GESTimelineObject *
+    object, guint64 inpoint);
+static gboolean ges_timeline_object_set_duration_internal (GESTimelineObject *
+    object, guint64 duration);
+static gboolean ges_timeline_object_set_priority_internal (GESTimelineObject *
+    object, guint32 priority);
+
 G_DEFINE_ABSTRACT_TYPE (GESTimelineObject, ges_timeline_object,
     G_TYPE_INITIALLY_UNOWNED);
 
@@ -164,16 +174,19 @@ ges_timeline_object_set_property (GObject * object, guint property_id,
 
   switch (property_id) {
     case PROP_START:
-      ges_timeline_object_set_start (tobj, g_value_get_uint64 (value));
+      ges_timeline_object_set_start_internal (tobj, g_value_get_uint64 (value));
       break;
     case PROP_INPOINT:
-      ges_timeline_object_set_inpoint (tobj, g_value_get_uint64 (value));
+      ges_timeline_object_set_inpoint_internal (tobj,
+          g_value_get_uint64 (value));
       break;
     case PROP_DURATION:
-      ges_timeline_object_set_duration (tobj, g_value_get_uint64 (value));
+      ges_timeline_object_set_duration_internal (tobj,
+          g_value_get_uint64 (value));
       break;
     case PROP_PRIORITY:
-      ges_timeline_object_set_priority (tobj, g_value_get_uint (value));
+      ges_timeline_object_set_priority_internal (tobj,
+          g_value_get_uint (value));
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
@@ -621,15 +634,9 @@ find_object_mapping (GESTimelineObject * object, GESTrackObject * child)
   return NULL;
 }
 
-/**
- * ges_timeline_object_set_start:
- * @object: a #GESTimelineObject
- * @start: the position in #GstClockTime
- *
- * Set the position of the object in its containing layer
- */
-void
-ges_timeline_object_set_start (GESTimelineObject * object, guint64 start)
+static gboolean
+ges_timeline_object_set_start_internal (GESTimelineObject * object,
+    guint64 start)
 {
   GList *tmp;
   GESTrackObject *tr;
@@ -656,18 +663,30 @@ ges_timeline_object_set_start (GESTimelineObject * object, guint64 start)
   object->priv->ignore_notifies = FALSE;
 
   object->start = start;
+  return TRUE;
 }
 
 /**
- * ges_timeline_object_set_inpoint:
+ * ges_timeline_object_set_start:
  * @object: a #GESTimelineObject
- * @inpoint: the in-point in #GstClockTime
+ * @start: the position in #GstClockTime
  *
- * Set the in-point, that is the moment at which the @object will start
- * outputting data from its contents.
+ * Set the position of the object in its containing layer
  */
 void
-ges_timeline_object_set_inpoint (GESTimelineObject * object, guint64 inpoint)
+ges_timeline_object_set_start (GESTimelineObject * object, guint64 start)
+{
+  if (ges_timeline_object_set_start_internal (object, start))
+#if GLIB_CHECK_VERSION(2,26,0)
+    g_object_notify_by_pspec (G_OBJECT (object), properties[PROP_START]);
+#else
+    g_object_notify (G_OBJECT (object), "start");
+#endif
+}
+
+static gboolean
+ges_timeline_object_set_inpoint_internal (GESTimelineObject * object,
+    guint64 inpoint)
 {
   GList *tmp;
   GESTrackObject *tr;
@@ -684,17 +703,31 @@ ges_timeline_object_set_inpoint (GESTimelineObject * object, guint64 inpoint)
   }
 
   object->inpoint = inpoint;
+  return TRUE;
 }
 
 /**
- * ges_timeline_object_set_duration:
+ * ges_timeline_object_set_inpoint:
  * @object: a #GESTimelineObject
- * @duration: the duration in #GstClockTime
+ * @inpoint: the in-point in #GstClockTime
  *
- * Set the duration of the object
+ * Set the in-point, that is the moment at which the @object will start
+ * outputting data from its contents.
  */
 void
-ges_timeline_object_set_duration (GESTimelineObject * object, guint64 duration)
+ges_timeline_object_set_inpoint (GESTimelineObject * object, guint64 inpoint)
+{
+  if (ges_timeline_object_set_inpoint_internal (object, inpoint))
+#if GLIB_CHECK_VERSION(2,26,0)
+    g_object_notify_by_pspec (G_OBJECT (object), properties[PROP_INPOINT]);
+#else
+    g_object_notify (G_OBJECT (object), "in-point");
+#endif
+}
+
+static gboolean
+ges_timeline_object_set_duration_internal (GESTimelineObject * object,
+    guint64 duration)
 {
   GList *tmp;
   GESTrackObject *tr;
@@ -711,17 +744,30 @@ ges_timeline_object_set_duration (GESTimelineObject * object, guint64 duration)
   }
 
   object->duration = duration;
+  return TRUE;
 }
 
 /**
- * ges_timeline_object_set_priority:
+ * ges_timeline_object_set_duration:
  * @object: a #GESTimelineObject
- * @priority: the priority
+ * @duration: the duration in #GstClockTime
  *
- * Sets the priority of the object within the containing layer
+ * Set the duration of the object
  */
 void
-ges_timeline_object_set_priority (GESTimelineObject * object, guint priority)
+ges_timeline_object_set_duration (GESTimelineObject * object, guint64 duration)
+{
+  if (ges_timeline_object_set_duration_internal (object, duration))
+#if GLIB_CHECK_VERSION(2,26,0)
+    g_object_notify_by_pspec (G_OBJECT (object), properties[PROP_DURATION]);
+#else
+    g_object_notify (G_OBJECT (object), "duration");
+#endif
+}
+
+static gboolean
+ges_timeline_object_set_priority_internal (GESTimelineObject * object,
+    guint priority)
 {
   GList *tmp;
   GESTrackObject *tr;
@@ -750,6 +796,25 @@ ges_timeline_object_set_priority (GESTimelineObject * object, guint priority)
   priv->ignore_notifies = FALSE;
 
   object->priority = priority;
+  return TRUE;
+}
+
+/**
+ * ges_timeline_object_set_priority:
+ * @object: a #GESTimelineObject
+ * @priority: the priority
+ *
+ * Sets the priority of the object within the containing layer
+ */
+void
+ges_timeline_object_set_priority (GESTimelineObject * object, guint priority)
+{
+  if (ges_timeline_object_set_priority_internal (object, priority))
+#if GLIB_CHECK_VERSION(2,26,0)
+    g_object_notify_by_pspec (G_OBJECT (object), properties[PROP_PRIORITY]);
+#else
+    g_object_notify (G_OBJECT (object), "priority");
+#endif
 }
 
 /**
