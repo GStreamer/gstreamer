@@ -81,6 +81,10 @@ struct _GstTSDemux
   TSPcrOffset last_pcr;
   TSPcrOffset cur_pcr;
   TSPcrOffset index_pcr;
+
+  /* LIVE MODE ONLY */
+  /* Delta between incoming ts and PTS */
+  GstClockTime pts_delta;
 };
 
 struct _GstTSDemuxClass
