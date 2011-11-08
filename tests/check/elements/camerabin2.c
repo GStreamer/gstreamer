@@ -379,7 +379,7 @@ setup_wrappercamerabinsrc_videotestsrc (void)
   g_object_set (G_OBJECT (audiosrc), "is-live", TRUE, NULL);
   g_object_set (G_OBJECT (src), "video-source", testsrc, NULL);
   g_object_set (G_OBJECT (camera), "camera-source", src, "preview-caps",
-      preview_caps, "audio-source", audiosrc, NULL);
+      preview_caps, "post-previews", TRUE, "audio-source", audiosrc, NULL);
   gst_object_unref (src);
   gst_object_unref (testsrc);
   gst_object_unref (audiosrc);
