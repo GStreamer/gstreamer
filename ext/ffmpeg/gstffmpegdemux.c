@@ -681,19 +681,6 @@ gst_ffmpegdemux_src_event (GstPad * pad, GstEvent * event)
   return res;
 }
 
-static const GstQueryType *
-gst_ffmpegdemux_src_query_list (GstPad * pad)
-{
-  static const GstQueryType src_types[] = {
-    GST_QUERY_DURATION,
-    GST_QUERY_POSITION,
-    GST_QUERY_SEEKING,
-    0
-  };
-
-  return src_types;
-}
-
 static gboolean
 gst_ffmpegdemux_send_event (GstElement * element, GstEvent * event)
 {
@@ -995,7 +982,6 @@ gst_ffmpegdemux_get_stream (GstFFMpegDemux * demux, AVStream * avstream)
   gst_pad_set_caps (pad, caps);
   gst_caps_unref (caps);
 
-  gst_pad_set_query_type_function (pad, gst_ffmpegdemux_src_query_list);
   gst_pad_set_query_function (pad, gst_ffmpegdemux_src_query);
   gst_pad_set_event_function (pad, gst_ffmpegdemux_src_event);
 
