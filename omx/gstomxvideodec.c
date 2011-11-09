@@ -725,7 +725,6 @@ gst_omx_video_dec_loop (GstOMXVideoDec * self)
     if (!gst_omx_video_dec_fill_buffer (self, buf, outbuf)) {
       gst_buffer_unref (outbuf);
       gst_omx_port_release_buffer (self->out_port, buf);
-      GST_BASE_VIDEO_CODEC_STREAM_UNLOCK (self);
       goto invalid_buffer;
     }
   } else if (buf->omx_buf->nFilledLen > 0) {
@@ -749,7 +748,6 @@ gst_omx_video_dec_loop (GstOMXVideoDec * self)
             gst_base_video_decoder_finish_frame (GST_BASE_VIDEO_DECODER (self),
             frame);
         gst_omx_port_release_buffer (self->out_port, buf);
-        GST_BASE_VIDEO_CODEC_STREAM_UNLOCK (self);
         goto invalid_buffer;
       }
     }
@@ -761,7 +759,6 @@ gst_omx_video_dec_loop (GstOMXVideoDec * self)
         gst_base_video_decoder_finish_frame (GST_BASE_VIDEO_DECODER (self),
         frame);
   }
-  GST_BASE_VIDEO_CODEC_STREAM_UNLOCK (self);
 
   if ((flow_ret == GST_FLOW_OK && (buf->omx_buf->nFlags & OMX_BUFFERFLAG_EOS))
       || flow_ret == GST_FLOW_UNEXPECTED) {
@@ -785,6 +782,8 @@ gst_omx_video_dec_loop (GstOMXVideoDec * self)
 
   if (flow_ret != GST_FLOW_OK)
     goto flow_error;
+
+  GST_BASE_VIDEO_CODEC_STREAM_UNLOCK (self);
 
   return;
 
@@ -829,6 +828,7 @@ flow_error:
       gst_pad_pause_task (GST_BASE_VIDEO_CODEC_SRC_PAD (self));
     }
     self->started = FALSE;
+    GST_BASE_VIDEO_CODEC_STREAM_UNLOCK (self);
     return;
   }
 
@@ -853,6 +853,7 @@ invalid_buffer:
     gst_pad_pause_task (GST_BASE_VIDEO_CODEC_SRC_PAD (self));
     self->downstream_flow_ret = GST_FLOW_NOT_NEGOTIATED;
     self->started = FALSE;
+    GST_BASE_VIDEO_CODEC_STREAM_UNLOCK (self);
     return;
   }
 
