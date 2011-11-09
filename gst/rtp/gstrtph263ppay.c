@@ -104,7 +104,7 @@ static void gst_rtp_h263p_pay_get_property (GObject * object, guint prop_id,
 static gboolean gst_rtp_h263p_pay_setcaps (GstBaseRTPPayload * payload,
     GstCaps * caps);
 static GstCaps *gst_rtp_h263p_pay_sink_getcaps (GstBaseRTPPayload * payload,
-    GstPad * pad);
+    GstPad * pad, GstCaps * filter);
 static GstFlowReturn gst_rtp_h263p_pay_handle_buffer (GstBaseRTPPayload *
     payload, GstBuffer * buffer);
 
@@ -229,7 +229,8 @@ caps_append (GstCaps * caps, GstStructure * in_s, guint x, guint y, guint mpi)
 
 
 static GstCaps *
-gst_rtp_h263p_pay_sink_getcaps (GstBaseRTPPayload * payload, GstPad * pad)
+gst_rtp_h263p_pay_sink_getcaps (GstBaseRTPPayload * payload, GstPad * pad,
+    GstCaps * filter)
 {
   GstRtpH263PPay *rtph263ppay;
   GstCaps *caps = gst_caps_new_empty ();
@@ -239,7 +240,8 @@ gst_rtp_h263p_pay_sink_getcaps (GstBaseRTPPayload * payload, GstPad * pad)
 
   rtph263ppay = GST_RTP_H263P_PAY (payload);
 
-  peercaps = gst_pad_peer_get_caps (GST_BASE_RTP_PAYLOAD_SRCPAD (payload));
+  peercaps =
+      gst_pad_peer_get_caps (GST_BASE_RTP_PAYLOAD_SRCPAD (payload), filter);
   if (!peercaps)
     return
         gst_caps_copy (gst_pad_get_pad_template_caps
