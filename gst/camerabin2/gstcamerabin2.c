@@ -429,21 +429,27 @@ gst_camera_bin_start_capture (GstCameraBin2 * camerabin)
   if (taglist) {
     GstPad *active_pad;
 
-    GST_DEBUG_OBJECT (camerabin, "Pushing tags from application: %"
+    GST_DEBUG_OBJECT (camerabin, "Have tags from application: %"
         GST_PTR_FORMAT, taglist);
 
     if (camerabin->mode == MODE_IMAGE) {
-      active_pad = gst_element_get_static_pad (camerabin->src,
-          GST_BASE_CAMERA_SRC_IMAGE_PAD_NAME);
+      /* Store image tags in a list and push them later, this prevents
+         start_capture() from blocking in pad_push_event call */
+      g_mutex_lock (camerabin->image_tags_mutex);
+      camerabin->image_tags_list =
+          g_slist_append (camerabin->image_tags_list,
+          gst_tag_list_copy (taglist));
+      g_mutex_unlock (camerabin->image_tags_mutex);
     } else {
       active_pad = gst_element_get_static_pad (camerabin->src,
           GST_BASE_CAMERA_SRC_VIDEO_PAD_NAME);
-    }
+      gst_pad_push_event (active_pad,
+          gst_event_new_tag (gst_tag_list_copy (taglist)));
 
-    gst_pad_push_event (active_pad,
-        gst_event_new_tag (gst_tag_list_copy (taglist)));
-    gst_object_unref (active_pad);
+      gst_object_unref (active_pad);
+    }
   }
+  GST_DEBUG_OBJECT (camerabin, "Start-capture end");
 }
 
 static void
@@ -526,6 +532,7 @@ gst_camera_bin_dispose (GObject * object)
 
   g_free (camerabin->location);
   g_mutex_free (camerabin->preview_list_mutex);
+  g_mutex_free (camerabin->image_tags_mutex);
 
   if (camerabin->src_capture_notify_id)
     g_signal_handler_disconnect (camerabin->src,
@@ -882,6 +889,7 @@ gst_camera_bin_init (GstCameraBin2 * camera)
   camera->max_zoom = MAX_ZOOM;
   camera->flags = DEFAULT_FLAGS;
   camera->preview_list_mutex = g_mutex_new ();
+  camera->image_tags_mutex = g_mutex_new ();
 
   /* capsfilters are created here as we proxy their caps properties and
    * this way we avoid having to store the caps while on NULL state to 
@@ -1263,7 +1271,27 @@ gst_camera_bin_image_src_buffer_probe (GstPad * pad, GstBuffer * buf,
   GstEvent *evt;
   gchar *location = NULL;
   GstPad *peer;
+  GstTagList *tags;
 
+  /* Push pending image tags */
+  g_mutex_lock (camerabin->image_tags_mutex);
+  if (camerabin->image_tags_list) {
+    tags = camerabin->image_tags_list->data;
+    camerabin->image_tags_list =
+        g_slist_delete_link (camerabin->image_tags_list,
+        camerabin->image_tags_list);
+    g_mutex_unlock (camerabin->image_tags_mutex);
+    GST_DEBUG_OBJECT (camerabin, "Pushing tags from application: %"
+        GST_PTR_FORMAT, tags);
+    peer = gst_pad_get_peer (pad);
+    gst_pad_send_event (peer, gst_event_new_tag (tags));
+    gst_object_unref (peer);
+  } else {
+    g_mutex_unlock (camerabin->image_tags_mutex);
+    GST_DEBUG_OBJECT (camerabin, "No tags from application to send");
+  }
+
+  /* Push image location event */
   if (camerabin->image_location_list) {
     location = camerabin->image_location_list->data;
     camerabin->image_location_list =
@@ -1774,6 +1802,13 @@ gst_camera_bin_change_state (GstElement * element, GstStateChange trans)
       g_slist_foreach (camera->image_location_list, (GFunc) g_free, NULL);
       g_slist_free (camera->image_location_list);
       camera->image_location_list = NULL;
+
+      g_mutex_lock (camera->image_tags_mutex);
+      g_slist_foreach (camera->image_tags_list, (GFunc) gst_tag_list_free,
+          NULL);
+      g_slist_free (camera->image_tags_list);
+      camera->image_tags_list = NULL;
+      g_mutex_unlock (camera->image_tags_mutex);
 
       g_mutex_lock (camera->preview_list_mutex);
       g_slist_foreach (camera->preview_location_list, (GFunc) g_free, NULL);

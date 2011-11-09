@@ -93,6 +93,9 @@ struct _GstCameraBin2
    * as file location change notifications, they are pushed before
    * each buffer capture */
   GSList *image_location_list;
+  /* Store also tags and push them before each captured image */
+  GMutex *image_tags_mutex;
+  GSList *image_tags_list;
 
   /*
    * Similar to above, but used for giving names to previews
