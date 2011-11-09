@@ -153,7 +153,6 @@ static gboolean gst_tag_demux_sink_activate (GstPad * sinkpad);
 static GstStateChangeReturn gst_tag_demux_change_state (GstElement * element,
     GstStateChange transition);
 static gboolean gst_tag_demux_pad_query (GstPad * pad, GstQuery * query);
-static const GstQueryType *gst_tag_demux_get_query_types (GstPad * pad);
 static gboolean gst_tag_demux_get_upstream_size (GstTagDemux * tagdemux);
 static void gst_tag_demux_send_pending_events (GstTagDemux * tagdemux);
 static void gst_tag_demux_send_tag_event (GstTagDemux * tagdemux);
@@ -335,8 +334,6 @@ gst_tag_demux_add_srcpad (GstTagDemux * tagdemux, GstCaps * new_caps)
         (GST_ELEMENT_GET_CLASS (tagdemux), "src"), "src");
     g_return_val_if_fail (tagdemux->priv->srcpad != NULL, FALSE);
 
-    gst_pad_set_query_type_function (tagdemux->priv->srcpad,
-        GST_DEBUG_FUNCPTR (gst_tag_demux_get_query_types));
     gst_pad_set_query_function (tagdemux->priv->srcpad,
         GST_DEBUG_FUNCPTR (gst_tag_demux_pad_query));
     gst_pad_set_event_function (tagdemux->priv->srcpad,
@@ -1414,18 +1411,6 @@ gst_tag_demux_pad_query (GstPad * pad, GstQuery * query)
   }
 
   return TRUE;
-}
-
-static const GstQueryType *
-gst_tag_demux_get_query_types (GstPad * pad)
-{
-  static const GstQueryType types[] = {
-    GST_QUERY_POSITION,
-    GST_QUERY_DURATION,
-    0
-  };
-
-  return types;
 }
 
 static void

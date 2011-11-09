@@ -151,7 +151,6 @@ static void gst_ogm_video_parse_init (GstOgmParse * ogm);
 static void gst_ogm_audio_parse_init (GstOgmParse * ogm);
 static void gst_ogm_text_parse_init (GstOgmParse * ogm);
 
-static const GstQueryType *gst_ogm_parse_get_sink_querytypes (GstPad * pad);
 static gboolean gst_ogm_parse_sink_event (GstPad * pad, GstEvent * event);
 static gboolean gst_ogm_parse_sink_query (GstPad * pad, GstQuery * query);
 static gboolean gst_ogm_parse_sink_convert (GstPad * pad, GstFormat src_format,
@@ -381,8 +380,6 @@ static void
 gst_ogm_text_parse_init (GstOgmParse * ogm)
 {
   ogm->sinkpad = gst_pad_new_from_static_template (&sink_factory_text, "sink");
-  gst_pad_set_query_type_function (ogm->sinkpad,
-      gst_ogm_parse_get_sink_querytypes);
   gst_pad_set_query_function (ogm->sinkpad,
       GST_DEBUG_FUNCPTR (gst_ogm_parse_sink_query));
   gst_pad_set_chain_function (ogm->sinkpad,
@@ -393,17 +390,6 @@ gst_ogm_text_parse_init (GstOgmParse * ogm)
 
   ogm->srcpad = NULL;
   ogm->srcpadtempl = text_src_templ;
-}
-
-static const GstQueryType *
-gst_ogm_parse_get_sink_querytypes (GstPad * pad)
-{
-  static const GstQueryType types[] = {
-    GST_QUERY_POSITION,
-    0
-  };
-
-  return types;
 }
 
 static gboolean

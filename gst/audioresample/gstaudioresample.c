@@ -118,7 +118,6 @@ static gboolean gst_audio_resample_sink_event (GstBaseTransform * base,
 static gboolean gst_audio_resample_start (GstBaseTransform * base);
 static gboolean gst_audio_resample_stop (GstBaseTransform * base);
 static gboolean gst_audio_resample_query (GstPad * pad, GstQuery * query);
-static const GstQueryType *gst_audio_resample_query_type (GstPad * pad);
 
 #define gst_audio_resample_parent_class parent_class
 G_DEFINE_TYPE (GstAudioResample, gst_audio_resample, GST_TYPE_BASE_TRANSFORM);
@@ -179,8 +178,6 @@ gst_audio_resample_init (GstAudioResample * resample)
 
   gst_base_transform_set_gap_aware (trans, TRUE);
   gst_pad_set_query_function (trans->srcpad, gst_audio_resample_query);
-  gst_pad_set_query_type_function (trans->srcpad,
-      gst_audio_resample_query_type);
 }
 
 /* vmethods */
@@ -1259,17 +1256,6 @@ gst_audio_resample_query (GstPad * pad, GstQuery * query)
   }
   gst_object_unref (resample);
   return res;
-}
-
-static const GstQueryType *
-gst_audio_resample_query_type (GstPad * pad)
-{
-  static const GstQueryType types[] = {
-    GST_QUERY_LATENCY,
-    0
-  };
-
-  return types;
 }
 
 static void

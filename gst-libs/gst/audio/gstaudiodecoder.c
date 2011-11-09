@@ -284,7 +284,6 @@ gboolean gst_audio_decoder_src_setcaps (GstAudioDecoder * dec, GstCaps * caps);
 static GstFlowReturn gst_audio_decoder_chain (GstPad * pad, GstBuffer * buf);
 static gboolean gst_audio_decoder_src_query (GstPad * pad, GstQuery * query);
 static gboolean gst_audio_decoder_sink_query (GstPad * pad, GstQuery * query);
-static const GstQueryType *gst_audio_decoder_get_query_types (GstPad * pad);
 static void gst_audio_decoder_reset (GstAudioDecoder * dec, gboolean full);
 
 static GstElementClass *parent_class = NULL;
@@ -395,8 +394,6 @@ gst_audio_decoder_init (GstAudioDecoder * dec, GstAudioDecoderClass * klass)
       GST_DEBUG_FUNCPTR (gst_audio_decoder_src_event));
   gst_pad_set_query_function (dec->srcpad,
       GST_DEBUG_FUNCPTR (gst_audio_decoder_src_query));
-  gst_pad_set_query_type_function (dec->srcpad,
-      GST_DEBUG_FUNCPTR (gst_audio_decoder_get_query_types));
   gst_pad_use_fixed_caps (dec->srcpad);
   gst_element_add_pad (GST_ELEMENT (dec), dec->srcpad);
   GST_DEBUG_OBJECT (dec, "srcpad created");
@@ -580,7 +577,7 @@ gst_audio_decoder_setup (GstAudioDecoder * dec)
   gst_query_unref (query);
 
   /* normalize to bool */
-  dec->priv->agg = !!res;
+  dec->priv->agg = ! !res;
 }
 
 /* mini aggregator combining output buffers into fewer larger ones,
@@ -1764,20 +1761,6 @@ gst_audio_decoder_sink_query (GstPad * pad, GstQuery * query)
 error:
   gst_object_unref (dec);
   return res;
-}
-
-static const GstQueryType *
-gst_audio_decoder_get_query_types (GstPad * pad)
-{
-  static const GstQueryType gst_audio_decoder_src_query_types[] = {
-    GST_QUERY_POSITION,
-    GST_QUERY_DURATION,
-    GST_QUERY_CONVERT,
-    GST_QUERY_LATENCY,
-    0
-  };
-
-  return gst_audio_decoder_src_query_types;
 }
 
 /* FIXME ? are any of these queries (other than latency) a decoder's business ??

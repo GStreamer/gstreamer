@@ -131,7 +131,6 @@ static gboolean gst_ogg_demux_receive_event (GstElement * element,
 static void gst_ogg_pad_dispose (GObject * object);
 static void gst_ogg_pad_finalize (GObject * object);
 
-static const GstQueryType *gst_ogg_pad_query_types (GstPad * pad);
 static gboolean gst_ogg_pad_src_query (GstPad * pad, GstQuery * query);
 static gboolean gst_ogg_pad_event (GstPad * pad, GstEvent * event);
 static GstOggPad *gst_ogg_chain_get_stream (GstOggChain * chain,
@@ -168,8 +167,6 @@ gst_ogg_pad_init (GstOggPad * pad)
 {
   gst_pad_set_event_function (GST_PAD (pad),
       GST_DEBUG_FUNCPTR (gst_ogg_pad_event));
-  gst_pad_set_query_type_function (GST_PAD (pad),
-      GST_DEBUG_FUNCPTR (gst_ogg_pad_query_types));
   gst_pad_set_query_function (GST_PAD (pad),
       GST_DEBUG_FUNCPTR (gst_ogg_pad_src_query));
   gst_pad_use_fixed_caps (GST_PAD (pad));
@@ -239,18 +236,6 @@ gst_ogg_pad_finalize (GObject * object)
   ogg_stream_clear (&pad->map.stream);
 
   G_OBJECT_CLASS (gst_ogg_pad_parent_class)->finalize (object);
-}
-
-static const GstQueryType *
-gst_ogg_pad_query_types (GstPad * pad)
-{
-  static const GstQueryType query_types[] = {
-    GST_QUERY_DURATION,
-    GST_QUERY_SEEKING,
-    0
-  };
-
-  return query_types;
 }
 
 static gboolean

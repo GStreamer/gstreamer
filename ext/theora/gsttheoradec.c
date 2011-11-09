@@ -108,7 +108,6 @@ static const GstFormat *theora_get_formats (GstPad * pad);
 #if 0
 static const GstEventMask *theora_get_event_masks (GstPad * pad);
 #endif
-static const GstQueryType *theora_get_query_types (GstPad * pad);
 
 static gboolean
 gst_theora_dec_ctl_is_supported (int req)
@@ -201,7 +200,6 @@ gst_theora_dec_init (GstTheoraDec * dec)
   dec->srcpad =
       gst_pad_new_from_static_template (&theora_dec_src_factory, "src");
   gst_pad_set_event_function (dec->srcpad, theora_dec_src_event);
-  gst_pad_set_query_type_function (dec->srcpad, theora_get_query_types);
   gst_pad_set_query_function (dec->srcpad, theora_dec_src_query);
   gst_pad_use_fixed_caps (dec->srcpad);
 
@@ -286,20 +284,6 @@ theora_get_event_masks (GstPad * pad)
   return theora_src_event_masks;
 }
 #endif
-
-static const GstQueryType *
-theora_get_query_types (GstPad * pad)
-{
-  static const GstQueryType theora_src_query_types[] = {
-    GST_QUERY_POSITION,
-    GST_QUERY_DURATION,
-    GST_QUERY_CONVERT,
-    0
-  };
-
-  return theora_src_query_types;
-}
-
 
 static gboolean
 theora_dec_src_convert (GstPad * pad,

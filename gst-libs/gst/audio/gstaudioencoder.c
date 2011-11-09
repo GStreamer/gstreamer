@@ -302,7 +302,6 @@ static gboolean gst_audio_encoder_sink_setcaps (GstAudioEncoder * enc,
 static GstFlowReturn gst_audio_encoder_chain (GstPad * pad, GstBuffer * buffer);
 static gboolean gst_audio_encoder_src_query (GstPad * pad, GstQuery * query);
 static gboolean gst_audio_encoder_sink_query (GstPad * pad, GstQuery * query);
-static const GstQueryType *gst_audio_encoder_get_query_types (GstPad * pad);
 static GstCaps *gst_audio_encoder_sink_getcaps (GstPad * pad, GstCaps * filter);
 
 static void
@@ -378,8 +377,6 @@ gst_audio_encoder_init (GstAudioEncoder * enc, GstAudioEncoderClass * bclass)
   enc->srcpad = gst_pad_new_from_template (pad_template, "src");
   gst_pad_set_query_function (enc->srcpad,
       GST_DEBUG_FUNCPTR (gst_audio_encoder_src_query));
-  gst_pad_set_query_type_function (enc->srcpad,
-      GST_DEBUG_FUNCPTR (gst_audio_encoder_get_query_types));
   gst_pad_use_fixed_caps (enc->srcpad);
   gst_element_add_pad (GST_ELEMENT (enc), enc->srcpad);
   GST_DEBUG_OBJECT (enc, "src created");
@@ -1408,20 +1405,6 @@ gst_audio_encoder_sink_query (GstPad * pad, GstQuery * query)
 error:
   gst_object_unref (enc);
   return res;
-}
-
-static const GstQueryType *
-gst_audio_encoder_get_query_types (GstPad * pad)
-{
-  static const GstQueryType gst_audio_encoder_src_query_types[] = {
-    GST_QUERY_POSITION,
-    GST_QUERY_DURATION,
-    GST_QUERY_CONVERT,
-    GST_QUERY_LATENCY,
-    0
-  };
-
-  return gst_audio_encoder_src_query_types;
 }
 
 /*

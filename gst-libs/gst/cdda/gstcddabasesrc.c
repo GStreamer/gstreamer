@@ -122,7 +122,6 @@ static void gst_cdda_base_src_get_property (GObject * object, guint prop_id,
 static void gst_cdda_base_src_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
 static void gst_cdda_base_src_finalize (GObject * obj);
-static const GstQueryType *gst_cdda_base_src_get_query_types (GstPad * pad);
 static gboolean gst_cdda_base_src_query (GstBaseSrc * src, GstQuery * query);
 static gboolean gst_cdda_base_src_handle_event (GstBaseSrc * basesrc,
     GstEvent * event);
@@ -259,9 +258,6 @@ gst_cdda_base_src_class_init (GstCddaBaseSrcClass * klass)
 static void
 gst_cdda_base_src_init (GstCddaBaseSrc * src)
 {
-  gst_pad_set_query_type_function (GST_BASE_SRC_PAD (src),
-      GST_DEBUG_FUNCPTR (gst_cdda_base_src_get_query_types));
-
   /* we're not live and we operate in time */
   gst_base_src_set_format (GST_BASE_SRC (src), GST_FORMAT_TIME);
   gst_base_src_set_live (GST_BASE_SRC (src), FALSE);
@@ -428,19 +424,6 @@ gst_cdda_base_src_get_track_from_sector (GstCddaBaseSrc * src, gint sector)
       return i;
   }
   return -1;
-}
-
-static const GstQueryType *
-gst_cdda_base_src_get_query_types (GstPad * pad)
-{
-  static const GstQueryType src_query_types[] = {
-    GST_QUERY_DURATION,
-    GST_QUERY_POSITION,
-    GST_QUERY_CONVERT,
-    0
-  };
-
-  return src_query_types;
 }
 
 static gboolean
