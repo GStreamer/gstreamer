@@ -41,14 +41,20 @@ static GstStaticPadTemplate gst_wave_scope_src_template =
 GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (GST_VIDEO_CAPS_xRGB_HOST_ENDIAN)
+#if G_BYTE_ORDER == G_BIG_ENDIAN
+    GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE ("xRGB"))
+#else
+    GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE ("BGRx"))
+#endif
     );
 
 static GstStaticPadTemplate gst_wave_scope_sink_template =
 GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (GST_AUDIO_INT_STANDARD_PAD_TEMPLATE_CAPS)
+    GST_STATIC_CAPS ("audio/x-raw, "
+        "format = (string) " GST_AUDIO_NE (S16) ", "
+        "rate = (int) [ 8000, 96000 ], " "channels = (int) 2")
     );
 
 
@@ -59,13 +65,14 @@ static gboolean gst_wave_scope_render (GstBaseAudioVisualizer * scope,
     GstBuffer * audio, GstBuffer * video);
 
 
-GST_BOILERPLATE (GstWaveScope, gst_wave_scope, GstBaseAudioVisualizer,
-    GST_TYPE_BASE_AUDIO_VISUALIZER);
+G_DEFINE_TYPE (GstWaveScope, gst_wave_scope, GST_TYPE_BASE_AUDIO_VISUALIZER);
 
 static void
-gst_wave_scope_base_init (gpointer g_class)
+gst_wave_scope_class_init (GstWaveScopeClass * g_class)
 {
-  GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
+  GstElementClass *element_class = (GstElementClass *) g_class;
+  GstBaseAudioVisualizerClass *scope_class =
+      (GstBaseAudioVisualizerClass *) g_class;
 
   gst_element_class_set_details_simple (element_class, "Waveform oscilloscope",
       "Visualization",
@@ -75,19 +82,12 @@ gst_wave_scope_base_init (gpointer g_class)
       gst_static_pad_template_get (&gst_wave_scope_src_template));
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&gst_wave_scope_sink_template));
-}
-
-static void
-gst_wave_scope_class_init (GstWaveScopeClass * g_class)
-{
-  GstBaseAudioVisualizerClass *scope_class =
-      (GstBaseAudioVisualizerClass *) g_class;
 
   scope_class->render = GST_DEBUG_FUNCPTR (gst_wave_scope_render);
 }
 
 static void
-gst_wave_scope_init (GstWaveScope * scope, GstWaveScopeClass * g_class)
+gst_wave_scope_init (GstWaveScope * scope)
 {
   /* do nothing */
 }
@@ -96,15 +96,17 @@ static gboolean
 gst_wave_scope_render (GstBaseAudioVisualizer * scope, GstBuffer * audio,
     GstBuffer * video)
 {
-  guint32 *vdata = (guint32 *) GST_BUFFER_DATA (video);
-  gint16 *adata = (gint16 *) GST_BUFFER_DATA (audio);
+  gsize asize;
+  guint32 *vdata =
+      (guint32 *) gst_buffer_map (video, NULL, NULL, GST_MAP_WRITE);
+  gint16 *adata = (gint16 *) gst_buffer_map (audio, &asize, NULL, GST_MAP_READ);
   guint i, c, s, x, y, off, oy;
   guint num_samples;
   gfloat dx, dy;
   guint w = scope->width;
 
   /* draw dots */
-  num_samples = GST_BUFFER_SIZE (audio) / (scope->channels * sizeof (gint16));
+  num_samples = asize / (scope->channels * sizeof (gint16));
   dx = (gfloat) scope->width / (gfloat) num_samples;
   dy = scope->height / 65536.0;
   oy = scope->height / 2;
@@ -117,6 +119,8 @@ gst_wave_scope_render (GstBaseAudioVisualizer * scope, GstBuffer * audio,
       vdata[off] = 0x00FFFFFF;
     }
   }
+  gst_buffer_unmap (video, vdata, -1);
+  gst_buffer_unmap (audio, adata, -1);
   return TRUE;
 }
 

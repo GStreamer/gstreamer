@@ -41,14 +41,20 @@ static GstStaticPadTemplate gst_synae_scope_src_template =
 GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (GST_VIDEO_CAPS_xRGB_HOST_ENDIAN)
+#if G_BYTE_ORDER == G_BIG_ENDIAN
+    GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE ("xRGB"))
+#else
+    GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE ("BGRx"))
+#endif
     );
 
 static GstStaticPadTemplate gst_synae_scope_sink_template =
 GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (GST_AUDIO_INT_STANDARD_PAD_TEMPLATE_CAPS)
+    GST_STATIC_CAPS ("audio/x-raw, "
+        "format = (string) " GST_AUDIO_NE (S16) ", "
+        "rate = (int) [ 8000, 96000 ], " "channels = (int) 2")
     );
 
 
@@ -62,13 +68,17 @@ static gboolean gst_synae_scope_render (GstBaseAudioVisualizer * scope,
     GstBuffer * audio, GstBuffer * video);
 
 
-GST_BOILERPLATE (GstSynaeScope, gst_synae_scope, GstBaseAudioVisualizer,
-    GST_TYPE_BASE_AUDIO_VISUALIZER);
+G_DEFINE_TYPE (GstSynaeScope, gst_synae_scope, GST_TYPE_BASE_AUDIO_VISUALIZER);
 
 static void
-gst_synae_scope_base_init (gpointer g_class)
+gst_synae_scope_class_init (GstSynaeScopeClass * g_class)
 {
-  GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
+  GObjectClass *gobject_class = (GObjectClass *) g_class;
+  GstElementClass *element_class = (GstElementClass *) g_class;
+  GstBaseAudioVisualizerClass *scope_class =
+      (GstBaseAudioVisualizerClass *) g_class;
+
+  gobject_class->finalize = gst_synae_scope_finalize;
 
   gst_element_class_set_details_simple (element_class, "Synaescope",
       "Visualization",
@@ -79,23 +89,13 @@ gst_synae_scope_base_init (gpointer g_class)
       gst_static_pad_template_get (&gst_synae_scope_src_template));
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&gst_synae_scope_sink_template));
-}
-
-static void
-gst_synae_scope_class_init (GstSynaeScopeClass * g_class)
-{
-  GObjectClass *gobject_class = (GObjectClass *) g_class;
-  GstBaseAudioVisualizerClass *scope_class =
-      (GstBaseAudioVisualizerClass *) g_class;
-
-  gobject_class->finalize = gst_synae_scope_finalize;
 
   scope_class->setup = GST_DEBUG_FUNCPTR (gst_synae_scope_setup);
   scope_class->render = GST_DEBUG_FUNCPTR (gst_synae_scope_render);
 }
 
 static void
-gst_synae_scope_init (GstSynaeScope * scope, GstSynaeScopeClass * g_class)
+gst_synae_scope_init (GstSynaeScope * scope)
 {
   guint32 *colors = scope->colors;
   guint *shade = scope->shade;
@@ -144,7 +144,7 @@ gst_synae_scope_finalize (GObject * object)
     scope->adata_r = NULL;
   }
 
-  G_OBJECT_CLASS (parent_class)->finalize (object);
+  G_OBJECT_CLASS (gst_synae_scope_parent_class)->finalize (object);
 }
 
 static gboolean
@@ -203,8 +203,10 @@ gst_synae_scope_render (GstBaseAudioVisualizer * bscope, GstBuffer * audio,
     GstBuffer * video)
 {
   GstSynaeScope *scope = GST_SYNAE_SCOPE (bscope);
-  guint32 *vdata = (guint32 *) GST_BUFFER_DATA (video);
-  gint16 *adata = (gint16 *) GST_BUFFER_DATA (audio);
+  gsize asize;
+  guint32 *vdata =
+      (guint32 *) gst_buffer_map (video, NULL, NULL, GST_MAP_WRITE);
+  gint16 *adata = (gint16 *) gst_buffer_map (audio, &asize, NULL, GST_MAP_READ);
   gint16 *adata_l = scope->adata_l;
   gint16 *adata_r = scope->adata_r;
   GstFFTS16Complex *fdata_l = scope->freq_data_l;
@@ -217,7 +219,7 @@ gst_synae_scope_render (GstBaseAudioVisualizer * bscope, GstBuffer * audio,
   guint *shade = scope->shade;
   //guint w2 = w /2;
   guint ch = bscope->channels;
-  guint num_samples = GST_BUFFER_SIZE (audio) / (ch * sizeof (gint16));
+  guint num_samples = asize / (ch * sizeof (gint16));
   gint i, j, b;
   gint br, br1, br2;
   gint clarity;

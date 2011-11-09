@@ -33,7 +33,6 @@
 #include "config.h"
 #endif
 #include <string.h>
-#include <gst/controller/gstcontroller.h>
 
 #include "gstbaseaudiovisualizer.h"
 
@@ -64,13 +63,24 @@ static void gst_base_audio_visualizer_dispose (GObject * object);
 
 static gboolean gst_base_audio_visualizer_src_negotiate (GstBaseAudioVisualizer
     * scope);
-static gboolean gst_base_audio_visualizer_src_setcaps (GstPad * pad,
-    GstCaps * caps);
-static gboolean gst_base_audio_visualizer_sink_setcaps (GstPad * pad,
-    GstCaps * caps);
+static gboolean gst_base_audio_visualizer_src_setcaps (GstBaseAudioVisualizer *
+    scope, GstCaps * caps);
+static gboolean gst_base_audio_visualizer_sink_setcaps (GstBaseAudioVisualizer *
+    scope, GstCaps * caps);
 
 static GstFlowReturn gst_base_audio_visualizer_chain (GstPad * pad,
     GstBuffer * buffer);
+
+static gboolean gst_base_audio_visualizer_src_event (GstPad * pad,
+    GstEvent * event);
+static gboolean gst_base_audio_visualizer_sink_event (GstPad * pad,
+    GstEvent * event);
+
+static gboolean gst_base_audio_visualizer_src_query (GstPad * pad,
+    GstQuery * query);
+static gboolean gst_base_audio_visualizer_sink_query (GstPad * pad,
+    GstQuery * query);
+
 static GstStateChangeReturn gst_base_audio_visualizer_change_state (GstElement *
     element, GstStateChange transition);
 
@@ -456,16 +466,20 @@ gst_base_audio_visualizer_init (GstBaseAudioVisualizer * scope,
   scope->sinkpad = gst_pad_new_from_template (pad_template, "sink");
   gst_pad_set_chain_function (scope->sinkpad,
       GST_DEBUG_FUNCPTR (gst_base_audio_visualizer_chain));
-  gst_pad_set_setcaps_function (scope->sinkpad,
-      GST_DEBUG_FUNCPTR (gst_base_audio_visualizer_sink_setcaps));
+  gst_pad_set_event_function (scope->sinkpad,
+      GST_DEBUG_FUNCPTR (gst_base_audio_visualizer_sink_event));
+  gst_pad_set_query_function (scope->sinkpad,
+      GST_DEBUG_FUNCPTR (gst_base_audio_visualizer_sink_query));
   gst_element_add_pad (GST_ELEMENT (scope), scope->sinkpad);
 
   pad_template =
       gst_element_class_get_pad_template (GST_ELEMENT_CLASS (g_class), "src");
   g_return_if_fail (pad_template != NULL);
   scope->srcpad = gst_pad_new_from_template (pad_template, "src");
-  gst_pad_set_setcaps_function (scope->srcpad,
-      GST_DEBUG_FUNCPTR (gst_base_audio_visualizer_src_setcaps));
+  gst_pad_set_event_function (scope->srcpad,
+      GST_DEBUG_FUNCPTR (gst_base_audio_visualizer_src_event));
+  gst_pad_set_query_function (scope->srcpad,
+      GST_DEBUG_FUNCPTR (gst_base_audio_visualizer_src_query));
   gst_element_add_pad (GST_ELEMENT (scope), scope->srcpad);
 
   scope->adapter = gst_adapter_new ();
@@ -486,8 +500,6 @@ gst_base_audio_visualizer_init (GstBaseAudioVisualizer * scope,
   /* reset the initial audio state */
   scope->rate = GST_AUDIO_DEF_RATE;
   scope->channels = 2;
-
-  scope->next_ts = GST_CLOCK_TIME_NONE;
 
   scope->config_lock = g_mutex_new ();
 }
@@ -555,16 +567,27 @@ gst_base_audio_visualizer_dispose (GObject * object)
   G_OBJECT_CLASS (parent_class)->dispose (object);
 }
 
-static gboolean
-gst_base_audio_visualizer_sink_setcaps (GstPad * pad, GstCaps * caps)
+static void
+gst_base_audio_visualizer_reset (GstBaseAudioVisualizer * scope)
 {
-  GstBaseAudioVisualizer *scope;
+  gst_adapter_clear (scope->adapter);
+  gst_segment_init (&scope->segment, GST_FORMAT_UNDEFINED);
+
+  GST_OBJECT_LOCK (scope);
+  scope->proportion = 1.0;
+  scope->earliest_time = -1;
+  GST_OBJECT_UNLOCK (scope);
+}
+
+static gboolean
+gst_base_audio_visualizer_sink_setcaps (GstBaseAudioVisualizer * scope,
+    GstCaps * caps)
+{
   GstStructure *structure;
   gint channels;
   gint rate;
   gboolean res = TRUE;
 
-  scope = GST_BASE_AUDIO_VISUALIZER (gst_pad_get_parent (pad));
   structure = gst_caps_get_structure (caps, 0);
 
   if (!gst_structure_get_int (structure, "channels", &channels) ||
@@ -584,7 +607,6 @@ gst_base_audio_visualizer_sink_setcaps (GstPad * pad, GstCaps * caps)
       scope->channels, scope->rate);
 
 done:
-  gst_object_unref (scope);
   return res;
 
   /* Errors */
@@ -610,78 +632,23 @@ wrong_rate:
 }
 
 static gboolean
-gst_base_audio_visualizer_src_negotiate (GstBaseAudioVisualizer * scope)
+gst_base_audio_visualizer_src_setcaps (GstBaseAudioVisualizer * scope,
+    GstCaps * caps)
 {
-  GstCaps *othercaps, *target, *intersect;
-  GstStructure *structure;
-  const GstCaps *templ;
-
-  templ = gst_pad_get_pad_template_caps (scope->srcpad);
-
-  GST_DEBUG_OBJECT (scope, "performing negotiation");
-
-  /* see what the peer can do */
-  othercaps = gst_pad_peer_get_caps (scope->srcpad);
-  if (othercaps) {
-    intersect = gst_caps_intersect (othercaps, templ);
-    gst_caps_unref (othercaps);
-
-    if (gst_caps_is_empty (intersect))
-      goto no_format;
-
-    target = gst_caps_copy_nth (intersect, 0);
-    gst_caps_unref (intersect);
-  } else {
-    target = gst_caps_ref ((GstCaps *) templ);
-  }
-
-  structure = gst_caps_get_structure (target, 0);
-  gst_structure_fixate_field_nearest_int (structure, "width", scope->width);
-  gst_structure_fixate_field_nearest_int (structure, "height", scope->height);
-  gst_structure_fixate_field_nearest_fraction (structure, "framerate",
-      scope->fps_n, scope->fps_d);
-
-  GST_DEBUG_OBJECT (scope, "final caps are %" GST_PTR_FORMAT, target);
-
-  gst_pad_set_caps (scope->srcpad, target);
-  gst_caps_unref (target);
-
-  return TRUE;
-
-no_format:
-  {
-    gst_caps_unref (intersect);
-    return FALSE;
-  }
-}
-
-static gboolean
-gst_base_audio_visualizer_src_setcaps (GstPad * pad, GstCaps * caps)
-{
-  GstBaseAudioVisualizer *scope;
   GstBaseAudioVisualizerClass *klass;
-  gint w, h;
-  gint num, denom;
-  GstVideoFormat format;
-  gboolean res = TRUE;
+  GstStructure *structure;
+  gboolean res;
 
-  scope = GST_BASE_AUDIO_VISUALIZER (gst_pad_get_parent (pad));
+  structure = gst_caps_get_structure (caps, 0);
+  if (!gst_structure_get_int (structure, "width", &scope->width) ||
+      !gst_structure_get_int (structure, "height", &scope->height) ||
+      !gst_structure_get_fraction (structure, "framerate", &scope->fps_n,
+          &scope->fps_d))
+    goto error;
+
   klass = GST_BASE_AUDIO_VISUALIZER_CLASS (G_OBJECT_GET_CLASS (scope));
 
-  if (!gst_video_format_parse_caps (caps, &format, &w, &h)) {
-    goto missing_caps_details;
-  }
-  if (!gst_video_parse_caps_framerate (caps, &num, &denom)) {
-    goto missing_caps_details;
-  }
-
-  g_mutex_lock (scope->config_lock);
-
-  scope->width = w;
-  scope->height = h;
-  scope->fps_n = num;
-  scope->fps_d = denom;
-  scope->video_format = format;
+  //scope->video_format = format; ??
 
   scope->frame_duration = gst_util_uint64_scale_int (GST_SECOND,
       scope->fps_d, scope->fps_n);
@@ -689,7 +656,7 @@ gst_base_audio_visualizer_src_setcaps (GstPad * pad, GstCaps * caps)
       scope->fps_d, scope->fps_n);
   scope->req_spf = scope->spf;
 
-  scope->bpf = w * h * 4;
+  scope->bpf = scope->width * scope->height * 4;
 
   if (scope->pixelbuf)
     g_free (scope->pixelbuf);
@@ -703,20 +670,119 @@ gst_base_audio_visualizer_src_setcaps (GstPad * pad, GstCaps * caps)
   GST_DEBUG_OBJECT (scope, "blocks: spf %u, req_spf %u",
       scope->spf, scope->req_spf);
 
-  g_mutex_unlock (scope->config_lock);
+  res = gst_pad_push_event (scope->srcpad, gst_event_new_caps (caps));
 
-done:
-  gst_object_unref (scope);
   return res;
 
-  /* Errors */
-missing_caps_details:
+  /* ERRORS */
+error:
   {
-    GST_WARNING_OBJECT (scope,
-        "missing width, height or framerate in the caps");
-    res = FALSE;
-    goto done;
+    GST_DEBUG_OBJECT (scope, "error parsing caps");
+    return FALSE;
   }
+}
+
+static gboolean
+gst_base_audio_visualizer_src_negotiate (GstBaseAudioVisualizer * scope)
+{
+  GstCaps *othercaps, *target;
+  GstStructure *structure;
+  GstCaps *templ;
+  GstQuery *query;
+  GstBufferPool *pool = NULL;
+  guint size, min, max, prefix, alignment;
+
+  templ = gst_pad_get_pad_template_caps (scope->srcpad);
+
+  GST_DEBUG_OBJECT (scope, "performing negotiation");
+
+  /* see what the peer can do */
+  othercaps = gst_pad_peer_get_caps (scope->srcpad, NULL);
+  if (othercaps) {
+    target = gst_caps_intersect (othercaps, templ);
+    gst_caps_unref (othercaps);
+    gst_caps_unref (templ);
+
+    if (gst_caps_is_empty (target))
+      goto no_format;
+
+    gst_caps_truncate (target);
+  } else {
+    target = gst_caps_ref ((GstCaps *) templ);
+  }
+
+  structure = gst_caps_get_structure (target, 0);
+  gst_structure_fixate_field_nearest_int (structure, "width", scope->width);
+  gst_structure_fixate_field_nearest_int (structure, "height", scope->height);
+  gst_structure_fixate_field_nearest_fraction (structure, "framerate",
+      scope->fps_n, scope->fps_d);
+
+  GST_DEBUG_OBJECT (scope, "final caps are %" GST_PTR_FORMAT, target);
+
+  gst_base_audio_visualizer_src_setcaps (scope, target);
+
+  /* try to get a bufferpool now */
+  /* find a pool for the negotiated caps now */
+  query = gst_query_new_allocation (target, TRUE);
+
+  if (gst_pad_peer_query (scope->srcpad, query)) {
+    /* we got configuration from our peer, parse them */
+    gst_query_parse_allocation_params (query, &size, &min, &max, &prefix,
+        &alignment, &pool);
+  } else {
+    size = scope->bpf;
+    min = max = 0;
+    prefix = 0;
+    alignment = 0;
+  }
+
+  if (pool == NULL) {
+    GstStructure *config;
+
+    /* we did not get a pool, make one ourselves then */
+    pool = gst_buffer_pool_new ();
+
+    config = gst_buffer_pool_get_config (pool);
+    gst_buffer_pool_config_set (config, target, size, min, max, prefix,
+        alignment);
+    gst_buffer_pool_set_config (pool, config);
+  }
+
+  if (scope->pool)
+    gst_object_unref (scope->pool);
+  scope->pool = pool;
+
+  /* and activate */
+  gst_buffer_pool_set_active (pool, TRUE);
+
+  gst_caps_unref (target);
+
+  return TRUE;
+
+no_format:
+  {
+    gst_caps_unref (target);
+    return FALSE;
+  }
+}
+
+/* make sure we are negotiated */
+static GstFlowReturn
+gst_base_audio_visualizer_ensure_negotiated (GstBaseAudioVisualizer * scope)
+{
+  gboolean reconfigure;
+
+  GST_OBJECT_LOCK (scope->srcpad);
+  reconfigure = GST_PAD_NEEDS_RECONFIGURE (scope->srcpad);
+  GST_OBJECT_FLAG_UNSET (scope->srcpad, GST_PAD_NEED_RECONFIGURE);
+  GST_OBJECT_UNLOCK (scope->srcpad);
+
+  /* we don't know an output format yet, pick one */
+  if (reconfigure || !gst_pad_has_current_caps (scope->srcpad)) {
+    if (!gst_base_audio_visualizer_src_negotiate (scope))
+      return GST_FLOW_NOT_NEGOTIATED;
+  }
+  return GST_FLOW_OK;
 }
 
 static GstFlowReturn
@@ -726,8 +792,9 @@ gst_base_audio_visualizer_chain (GstPad * pad, GstBuffer * buffer)
   GstBaseAudioVisualizer *scope;
   GstBaseAudioVisualizerClass *klass;
   GstBuffer *inbuf;
+  guint64 dist, ts;
   guint avail, sbpf;
-  guint8 *adata;
+  gpointer adata, vdata;
   gboolean (*render) (GstBaseAudioVisualizer * scope, GstBuffer * audio,
       GstBuffer * video);
 
@@ -740,18 +807,19 @@ gst_base_audio_visualizer_chain (GstPad * pad, GstBuffer * buffer)
 
   /* resync on DISCONT */
   if (GST_BUFFER_FLAG_IS_SET (buffer, GST_BUFFER_FLAG_DISCONT)) {
-    scope->next_ts = GST_CLOCK_TIME_NONE;
     gst_adapter_clear (scope->adapter);
   }
 
-  if (GST_PAD_CAPS (scope->srcpad) == NULL) {
-    if (!gst_base_audio_visualizer_src_negotiate (scope))
-      return GST_FLOW_NOT_NEGOTIATED;
+  if (scope->bps == 0) {
+    ret = GST_FLOW_NOT_NEGOTIATED;
+    goto beach;
   }
-
-  /* Match timestamps from the incoming audio */
-  if (GST_BUFFER_TIMESTAMP (buffer) != GST_CLOCK_TIME_NONE)
-    scope->next_ts = GST_BUFFER_TIMESTAMP (buffer);
+  /* Make sure have an output format */
+  ret = gst_base_audio_visualizer_ensure_negotiated (scope);
+  if (ret != GST_FLOW_OK) {
+    gst_buffer_unref (buffer);
+    goto beach;
+  }
 
   gst_adapter_push (scope->adapter, buffer);
 
@@ -762,7 +830,7 @@ gst_base_audio_visualizer_chain (GstPad * pad, GstBuffer * buffer)
 
   inbuf = scope->inbuf;
   /* FIXME: the timestamp in the adapter would be different */
-  gst_buffer_copy_metadata (inbuf, buffer, GST_BUFFER_COPY_ALL);
+  gst_buffer_copy_into (inbuf, buffer, GST_BUFFER_COPY_METADATA, 0, -1);
 
   /* this is what we have */
   avail = gst_adapter_available (scope->adapter);
@@ -770,10 +838,37 @@ gst_base_audio_visualizer_chain (GstPad * pad, GstBuffer * buffer)
   while (avail >= sbpf) {
     GstBuffer *outbuf;
 
+    /* get timestamp of the current adapter content */
+    ts = gst_adapter_prev_timestamp (scope->adapter, &dist);
+    if (GST_CLOCK_TIME_IS_VALID (ts)) {
+      /* convert bytes to time */
+      dist /= scope->bps;
+      ts += gst_util_uint64_scale_int (dist, GST_SECOND, scope->rate);
+    }
+
+    if (GST_CLOCK_TIME_IS_VALID (ts)) {
+      gint64 qostime;
+      gboolean need_skip;
+
+      qostime =
+          gst_segment_to_running_time (&scope->segment, GST_FORMAT_TIME, ts) +
+          scope->frame_duration;
+
+      GST_OBJECT_LOCK (scope);
+      /* check for QoS, don't compute buffers that are known to be late */
+      need_skip = scope->earliest_time != -1 && qostime <= scope->earliest_time;
+      GST_OBJECT_UNLOCK (scope);
+
+      if (need_skip) {
+        GST_WARNING_OBJECT (scope,
+            "QoS: skip ts: %" GST_TIME_FORMAT ", earliest: %" GST_TIME_FORMAT,
+            GST_TIME_ARGS (qostime), GST_TIME_ARGS (scope->earliest_time));
+        goto skip;
+      }
+    }
+
     g_mutex_unlock (scope->config_lock);
-    ret = gst_pad_alloc_buffer_and_set_caps (scope->srcpad,
-        GST_BUFFER_OFFSET_NONE,
-        scope->bpf, GST_PAD_CAPS (scope->srcpad), &outbuf);
+    ret = gst_buffer_pool_acquire_buffer (scope->pool, &outbuf, NULL);
     g_mutex_lock (scope->config_lock);
     /* recheck as the value could have changed */
     sbpf = scope->req_spf * scope->channels * sizeof (gint16);
@@ -783,22 +878,25 @@ gst_base_audio_visualizer_chain (GstPad * pad, GstBuffer * buffer)
       break;
 
     /* sync controlled properties */
-    gst_object_sync_values (GST_OBJECT (scope), scope->next_ts);
+    gst_object_sync_values (GST_OBJECT (scope), ts);
 
-    GST_BUFFER_TIMESTAMP (outbuf) = scope->next_ts;
+    GST_BUFFER_TIMESTAMP (outbuf) = ts;
     GST_BUFFER_DURATION (outbuf) = scope->frame_duration;
+
+    vdata = gst_buffer_map (outbuf, NULL, NULL, GST_MAP_WRITE);
     if (scope->shader) {
-      memcpy (GST_BUFFER_DATA (outbuf), scope->pixelbuf, scope->bpf);
+      memcpy (vdata, scope->pixelbuf, scope->bpf);
     } else {
-      memset (GST_BUFFER_DATA (outbuf), 0, scope->bpf);
+      memset (vdata, 0, scope->bpf);
     }
 
     /* this can fail as the data size we need could have changed */
-    if (!(adata = (guint8 *) gst_adapter_peek (scope->adapter, sbpf)))
+    if (!(adata = (gpointer) gst_adapter_map (scope->adapter, sbpf)))
       break;
 
-    GST_BUFFER_DATA (inbuf) = adata;
-    GST_BUFFER_SIZE (inbuf) = sbpf;
+    gst_buffer_take_memory (inbuf, -1,
+        gst_memory_new_wrapped (GST_MEMORY_FLAG_READONLY, adata, NULL, sbpf, 0,
+            sbpf));
 
     /* call class->render() vmethod */
     if (render) {
@@ -807,59 +905,243 @@ gst_base_audio_visualizer_chain (GstPad * pad, GstBuffer * buffer)
       } else {
         /* run various post processing (shading and geometri transformation */
         if (scope->shader) {
-          scope->shader (scope, GST_BUFFER_DATA (outbuf), scope->pixelbuf);
+          scope->shader (scope, vdata, scope->pixelbuf);
         }
       }
     }
+
+    gst_buffer_unmap (outbuf, vdata, scope->bpf);
 
     g_mutex_unlock (scope->config_lock);
     ret = gst_pad_push (scope->srcpad, outbuf);
     outbuf = NULL;
     g_mutex_lock (scope->config_lock);
 
+  skip:
     /* recheck as the value could have changed */
     sbpf = scope->req_spf * scope->channels * sizeof (gint16);
     GST_LOG_OBJECT (scope, "avail: %u, bpf: %u", avail, sbpf);
     /* we want to take less or more, depending on spf : req_spf */
     if (avail - sbpf >= sbpf) {
       gst_adapter_flush (scope->adapter, sbpf);
+      gst_adapter_unmap (scope->adapter);
     } else if (avail - sbpf >= 0) {
       /* just flush a bit and stop */
       gst_adapter_flush (scope->adapter, (avail - sbpf));
+      gst_adapter_unmap (scope->adapter);
       break;
     }
     avail = gst_adapter_available (scope->adapter);
 
     if (ret != GST_FLOW_OK)
       break;
-
-    if (scope->next_ts != GST_CLOCK_TIME_NONE)
-      scope->next_ts += scope->frame_duration;
   }
 
   g_mutex_unlock (scope->config_lock);
 
+beach:
   gst_object_unref (scope);
 
   return ret;
+}
+
+static gboolean
+gst_base_audio_visualizer_src_event (GstPad * pad, GstEvent * event)
+{
+  gboolean res;
+  GstBaseAudioVisualizer *scope;
+
+  scope = GST_BASE_AUDIO_VISUALIZER (gst_pad_get_parent (pad));
+
+  switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_QOS:
+    {
+      gdouble proportion;
+      GstClockTimeDiff diff;
+      GstClockTime timestamp;
+
+      gst_event_parse_qos (event, NULL, &proportion, &diff, &timestamp);
+
+      /* save stuff for the _chain() function */
+      GST_OBJECT_LOCK (scope);
+      scope->proportion = proportion;
+      if (diff >= 0)
+        /* we're late, this is a good estimate for next displayable
+         * frame (see part-qos.txt) */
+        scope->earliest_time = timestamp + 2 * diff + scope->frame_duration;
+      else
+        scope->earliest_time = timestamp + diff;
+      GST_OBJECT_UNLOCK (scope);
+
+      res = gst_pad_push_event (scope->sinkpad, event);
+      break;
+    }
+    default:
+      res = gst_pad_push_event (scope->sinkpad, event);
+      break;
+  }
+  gst_object_unref (scope);
+
+  return res;
+}
+
+static gboolean
+gst_base_audio_visualizer_sink_event (GstPad * pad, GstEvent * event)
+{
+  gboolean res;
+  GstBaseAudioVisualizer *scope;
+
+  scope = GST_BASE_AUDIO_VISUALIZER (gst_pad_get_parent (pad));
+
+  switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_CAPS:
+    {
+      GstCaps *caps;
+
+      gst_event_parse_caps (event, &caps);
+      res = gst_base_audio_visualizer_sink_setcaps (scope, caps);
+      break;
+    }
+    case GST_EVENT_FLUSH_START:
+      res = gst_pad_push_event (scope->srcpad, event);
+      break;
+    case GST_EVENT_FLUSH_STOP:
+      gst_base_audio_visualizer_reset (scope);
+      res = gst_pad_push_event (scope->srcpad, event);
+      break;
+    case GST_EVENT_SEGMENT:
+    {
+      /* the newsegment values are used to clip the input samples
+       * and to convert the incomming timestamps to running time so
+       * we can do QoS */
+      gst_event_copy_segment (event, &scope->segment);
+
+      res = gst_pad_push_event (scope->srcpad, event);
+      break;
+    }
+    default:
+      res = gst_pad_push_event (scope->srcpad, event);
+      break;
+  }
+  gst_object_unref (scope);
+
+  return res;
+}
+
+static gboolean
+gst_base_audio_visualizer_src_query (GstPad * pad, GstQuery * query)
+{
+  gboolean res = FALSE;
+  GstBaseAudioVisualizer *scope;
+
+  scope = GST_BASE_AUDIO_VISUALIZER (gst_pad_get_parent (pad));
+
+  switch (GST_QUERY_TYPE (query)) {
+    case GST_QUERY_LATENCY:
+    {
+      /* We need to send the query upstream and add the returned latency to our
+       * own */
+      GstClockTime min_latency, max_latency;
+      gboolean us_live;
+      GstClockTime our_latency;
+      guint max_samples;
+
+      if (scope->rate == 0)
+        break;
+
+      if ((res = gst_pad_peer_query (scope->sinkpad, query))) {
+        gst_query_parse_latency (query, &us_live, &min_latency, &max_latency);
+
+        GST_DEBUG_OBJECT (scope, "Peer latency: min %"
+            GST_TIME_FORMAT " max %" GST_TIME_FORMAT,
+            GST_TIME_ARGS (min_latency), GST_TIME_ARGS (max_latency));
+
+        /* the max samples we must buffer buffer */
+        max_samples = MAX (scope->req_spf, scope->spf);
+        our_latency =
+            gst_util_uint64_scale_int (max_samples, GST_SECOND, scope->rate);
+
+        GST_DEBUG_OBJECT (scope, "Our latency: %" GST_TIME_FORMAT,
+            GST_TIME_ARGS (our_latency));
+
+        /* we add some latency but only if we need to buffer more than what
+         * upstream gives us */
+        min_latency += our_latency;
+        if (max_latency != -1)
+          max_latency += our_latency;
+
+        GST_DEBUG_OBJECT (scope, "Calculated total latency : min %"
+            GST_TIME_FORMAT " max %" GST_TIME_FORMAT,
+            GST_TIME_ARGS (min_latency), GST_TIME_ARGS (max_latency));
+
+        gst_query_set_latency (query, TRUE, min_latency, max_latency);
+      }
+      break;
+    }
+    default:
+      res = gst_pad_peer_query (scope->sinkpad, query);
+      break;
+  }
+
+  gst_object_unref (scope);
+
+  return res;
+}
+
+static gboolean
+gst_base_audio_visualizer_sink_query (GstPad * pad, GstQuery * query)
+{
+  gboolean res = FALSE;
+  GstBaseAudioVisualizer *scope;
+
+  scope = GST_BASE_AUDIO_VISUALIZER (gst_pad_get_parent (pad));
+
+  switch (GST_QUERY_TYPE (query)) {
+    case GST_QUERY_ALLOCATION:
+      /* we convert audio to video, don't pass allocation queries for audio 
+       * through */
+      break;
+    default:
+      res = gst_pad_peer_query (scope->srcpad, query);
+      break;
+  }
+
+  gst_object_unref (scope);
+
+  return res;
 }
 
 static GstStateChangeReturn
 gst_base_audio_visualizer_change_state (GstElement * element,
     GstStateChange transition)
 {
+  GstStateChangeReturn ret;
   GstBaseAudioVisualizer *scope;
 
   scope = GST_BASE_AUDIO_VISUALIZER (element);
 
   switch (transition) {
     case GST_STATE_CHANGE_READY_TO_PAUSED:
-      scope->next_ts = GST_CLOCK_TIME_NONE;
-      gst_adapter_clear (scope->adapter);
+      gst_base_audio_visualizer_reset (scope);
       break;
     default:
       break;
   }
 
-  return GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
+  ret = GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
+
+  switch (transition) {
+    case GST_STATE_CHANGE_PAUSED_TO_READY:
+      if (scope->pool) {
+        gst_buffer_pool_set_active (scope->pool, FALSE);
+        gst_object_replace ((GstObject **) & scope->pool, NULL);
+      }
+      break;
+    case GST_STATE_CHANGE_READY_TO_NULL:
+      break;
+    default:
+      break;
+  }
+
+  return ret;
 }

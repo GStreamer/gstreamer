@@ -74,6 +74,7 @@ struct _GstBaseAudioVisualizer
   /* pads */
   GstPad *srcpad, *sinkpad;
 
+  GstBufferPool *pool;
   GstAdapter *adapter;
   GstBuffer *inbuf;
   guint8 *pixelbuf;
@@ -82,7 +83,6 @@ struct _GstBaseAudioVisualizer
   GstBaseAudioVisualizerShaderFunc shader;
   guint32 shade_amount;
 
-  guint64 next_ts;              /* the timestamp of the next frame */
   guint64 frame_duration;
   guint bpf;                    /* bytes per frame */
   guint bps;                    /* bytes per sample */
@@ -94,14 +94,20 @@ struct _GstBaseAudioVisualizer
   gint fps_n, fps_d;
   gint width;
   gint height;
-  gint channels;
 
   /* audio state */
   gint sample_rate;
+  gint channels;
   gint rate;
   
   /* configuration mutex */
   GMutex *config_lock;
+  
+  /* QoS stuff *//* with LOCK */
+  gdouble proportion;
+  GstClockTime earliest_time;
+  
+  GstSegment segment;
 };
 
 struct _GstBaseAudioVisualizerClass

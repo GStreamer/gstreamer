@@ -42,14 +42,20 @@ static GstStaticPadTemplate gst_spectra_scope_src_template =
 GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (GST_VIDEO_CAPS_xRGB_HOST_ENDIAN)
+#if G_BYTE_ORDER == G_BIG_ENDIAN
+    GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE ("xRGB"))
+#else
+    GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE ("BGRx"))
+#endif
     );
 
 static GstStaticPadTemplate gst_spectra_scope_sink_template =
 GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (GST_AUDIO_INT_STANDARD_PAD_TEMPLATE_CAPS)
+    GST_STATIC_CAPS ("audio/x-raw, "
+        "format = (string) " GST_AUDIO_NE (S16) ", "
+        "rate = (int) [ 8000, 96000 ], " "channels = (int) 2")
     );
 
 
@@ -63,13 +69,18 @@ static gboolean gst_spectra_scope_render (GstBaseAudioVisualizer * scope,
     GstBuffer * audio, GstBuffer * video);
 
 
-GST_BOILERPLATE (GstSpectraScope, gst_spectra_scope, GstBaseAudioVisualizer,
+G_DEFINE_TYPE (GstSpectraScope, gst_spectra_scope,
     GST_TYPE_BASE_AUDIO_VISUALIZER);
 
 static void
-gst_spectra_scope_base_init (gpointer g_class)
+gst_spectra_scope_class_init (GstSpectraScopeClass * g_class)
 {
-  GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
+  GObjectClass *gobject_class = (GObjectClass *) g_class;
+  GstElementClass *element_class = (GstElementClass *) g_class;
+  GstBaseAudioVisualizerClass *scope_class =
+      (GstBaseAudioVisualizerClass *) g_class;
+
+  gobject_class->finalize = gst_spectra_scope_finalize;
 
   gst_element_class_set_details_simple (element_class,
       "Frequency spectrum scope", "Visualization",
@@ -79,23 +90,13 @@ gst_spectra_scope_base_init (gpointer g_class)
       gst_static_pad_template_get (&gst_spectra_scope_src_template));
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&gst_spectra_scope_sink_template));
-}
-
-static void
-gst_spectra_scope_class_init (GstSpectraScopeClass * g_class)
-{
-  GObjectClass *gobject_class = (GObjectClass *) g_class;
-  GstBaseAudioVisualizerClass *scope_class =
-      (GstBaseAudioVisualizerClass *) g_class;
-
-  gobject_class->finalize = gst_spectra_scope_finalize;
 
   scope_class->setup = GST_DEBUG_FUNCPTR (gst_spectra_scope_setup);
   scope_class->render = GST_DEBUG_FUNCPTR (gst_spectra_scope_render);
 }
 
 static void
-gst_spectra_scope_init (GstSpectraScope * scope, GstSpectraScopeClass * g_class)
+gst_spectra_scope_init (GstSpectraScope * scope)
 {
   /* do nothing */
 }
@@ -114,7 +115,7 @@ gst_spectra_scope_finalize (GObject * object)
     scope->freq_data = NULL;
   }
 
-  G_OBJECT_CLASS (parent_class)->finalize (object);
+  G_OBJECT_CLASS (gst_spectra_scope_parent_class)->finalize (object);
 }
 
 static gboolean
@@ -164,9 +165,11 @@ gst_spectra_scope_render (GstBaseAudioVisualizer * bscope, GstBuffer * audio,
     GstBuffer * video)
 {
   GstSpectraScope *scope = GST_SPECTRA_SCOPE (bscope);
-  guint32 *vdata = (guint32 *) GST_BUFFER_DATA (video);
-  gint16 *adata = (gint16 *) g_memdup (GST_BUFFER_DATA (audio),
-      GST_BUFFER_SIZE (audio));
+  gsize asize;
+  guint32 *vdata =
+      (guint32 *) gst_buffer_map (video, NULL, NULL, GST_MAP_WRITE);
+  gint16 *adata = (gint16 *) gst_buffer_map (audio, &asize, NULL, GST_MAP_READ);
+  gint16 *mono_adata = (gint16 *) g_memdup (adata, asize);
   GstFFTS16Complex *fdata = scope->freq_data;
   guint x, y, off;
   guint l, h = bscope->height - 1;
@@ -175,22 +178,22 @@ gst_spectra_scope_render (GstBaseAudioVisualizer * bscope, GstBuffer * audio,
 
   if (bscope->channels > 1) {
     guint ch = bscope->channels;
-    guint num_samples = GST_BUFFER_SIZE (audio) / (ch * sizeof (gint16));
+    guint num_samples = asize / (ch * sizeof (gint16));
     guint i, c, v, s = 0;
 
     /* deinterleave and mixdown adata */
     for (i = 0; i < num_samples; i++) {
       v = 0;
       for (c = 0; c < ch; c++) {
-        v += adata[s++];
+        v += mono_adata[s++];
       }
-      adata[i] = v / ch;
+      mono_adata[i] = v / ch;
     }
   }
 
   /* run fft */
-  gst_fft_s16_window (scope->fft_ctx, adata, GST_FFT_WINDOW_HAMMING);
-  gst_fft_s16_fft (scope->fft_ctx, adata, fdata);
+  gst_fft_s16_window (scope->fft_ctx, mono_adata, GST_FFT_WINDOW_HAMMING);
+  gst_fft_s16_fft (scope->fft_ctx, mono_adata, fdata);
   g_free (adata);
 
   /* draw lines */
@@ -210,6 +213,8 @@ gst_spectra_scope_render (GstBaseAudioVisualizer * bscope, GstBuffer * audio,
       add_pixel (&vdata[off], 0x007F7F7F);
     }
   }
+  gst_buffer_unmap (video, vdata, -1);
+  gst_buffer_unmap (audio, adata, -1);
   return TRUE;
 }
 
