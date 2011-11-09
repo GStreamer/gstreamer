@@ -427,29 +427,28 @@ gst_camera_bin_start_capture (GstCameraBin2 * camerabin)
    * notify from ready for capture going to FALSE
    */
   taglist = gst_tag_setter_get_tag_list (GST_TAG_SETTER (camerabin));
-  if (taglist) {
+  GST_DEBUG_OBJECT (camerabin, "Have tags from application: %"
+      GST_PTR_FORMAT, taglist);
+
+  if (camerabin->mode == MODE_IMAGE) {
+    /* Store image tags in a list and push them later, this prevents
+       start_capture() from blocking in pad_push_event call */
+    g_mutex_lock (camerabin->image_tags_mutex);
+    camerabin->image_tags_list =
+        g_slist_append (camerabin->image_tags_list,
+        taglist ? gst_tag_list_copy (taglist) : NULL);
+    g_mutex_unlock (camerabin->image_tags_mutex);
+  } else if (taglist) {
     GstPad *active_pad;
 
-    GST_DEBUG_OBJECT (camerabin, "Have tags from application: %"
-        GST_PTR_FORMAT, taglist);
+    active_pad = gst_element_get_static_pad (camerabin->src,
+        GST_BASE_CAMERA_SRC_VIDEO_PAD_NAME);
+    gst_pad_push_event (active_pad,
+        gst_event_new_tag (gst_tag_list_copy (taglist)));
 
-    if (camerabin->mode == MODE_IMAGE) {
-      /* Store image tags in a list and push them later, this prevents
-         start_capture() from blocking in pad_push_event call */
-      g_mutex_lock (camerabin->image_tags_mutex);
-      camerabin->image_tags_list =
-          g_slist_append (camerabin->image_tags_list,
-          gst_tag_list_copy (taglist));
-      g_mutex_unlock (camerabin->image_tags_mutex);
-    } else {
-      active_pad = gst_element_get_static_pad (camerabin->src,
-          GST_BASE_CAMERA_SRC_VIDEO_PAD_NAME);
-      gst_pad_push_event (active_pad,
-          gst_event_new_tag (gst_tag_list_copy (taglist)));
-
-      gst_object_unref (active_pad);
-    }
+    gst_object_unref (active_pad);
   }
+
   GST_DEBUG_OBJECT (camerabin, "Start-capture end");
 }
 
@@ -1284,9 +1283,11 @@ gst_camera_bin_image_src_buffer_probe (GstPad * pad, GstBuffer * buf,
     g_mutex_unlock (camerabin->image_tags_mutex);
     GST_DEBUG_OBJECT (camerabin, "Pushing tags from application: %"
         GST_PTR_FORMAT, tags);
-    peer = gst_pad_get_peer (pad);
-    gst_pad_send_event (peer, gst_event_new_tag (tags));
-    gst_object_unref (peer);
+    if (tags) {
+      peer = gst_pad_get_peer (pad);
+      gst_pad_send_event (peer, gst_event_new_tag (tags));
+      gst_object_unref (peer);
+    }
   } else {
     g_mutex_unlock (camerabin->image_tags_mutex);
     GST_DEBUG_OBJECT (camerabin, "No tags from application to send");
@@ -1759,6 +1760,13 @@ fail:
   return FALSE;
 }
 
+static void
+_gst_tag_list_free_maybe (GstTagList * taglist)
+{
+  if (taglist)
+    gst_tag_list_free (taglist);
+}
+
 static GstStateChangeReturn
 gst_camera_bin_change_state (GstElement * element, GstStateChange trans)
 {
@@ -1805,8 +1813,8 @@ gst_camera_bin_change_state (GstElement * element, GstStateChange trans)
       camera->image_location_list = NULL;
 
       g_mutex_lock (camera->image_tags_mutex);
-      g_slist_foreach (camera->image_tags_list, (GFunc) gst_tag_list_free,
-          NULL);
+      g_slist_foreach (camera->image_tags_list,
+          (GFunc) _gst_tag_list_free_maybe, NULL);
       g_slist_free (camera->image_tags_list);
       camera->image_tags_list = NULL;
       g_mutex_unlock (camera->image_tags_mutex);
