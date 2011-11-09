@@ -596,7 +596,6 @@ struct _GstElement
  * @get_index: set a #GstIndex on the element
  * @set_index: get the #GstIndex of an element
  * @send_event: send a #GstEvent to the element
- * @get_query_types: get the supported #GstQueryType of this element
  * @query: perform a #GstQuery on the element
  * @state_changed: called immediately after a new state was set.
  *
@@ -655,7 +654,6 @@ struct _GstElementClass
   /* query functions */
   gboolean              (*send_event)           (GstElement *element, GstEvent *event);
 
-  const GstQueryType*   (*get_query_types)      (GstElement *element);
   gboolean              (*query)                (GstElement *element, GstQuery *query);
 
   /*< private >*/

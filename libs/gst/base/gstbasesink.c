@@ -368,7 +368,6 @@ static void gst_base_sink_get_property (GObject * object, guint prop_id,
 static gboolean gst_base_sink_send_event (GstElement * element,
     GstEvent * event);
 static gboolean default_element_query (GstElement * element, GstQuery * query);
-static const GstQueryType *gst_base_sink_get_query_types (GstElement * element);
 
 static GstCaps *gst_base_sink_get_caps (GstBaseSink * sink, GstCaps * caps);
 static gboolean gst_base_sink_set_caps (GstBaseSink * sink, GstCaps * caps);
@@ -543,8 +542,6 @@ gst_base_sink_class_init (GstBaseSinkClass * klass)
       GST_DEBUG_FUNCPTR (gst_base_sink_change_state);
   gstelement_class->send_event = GST_DEBUG_FUNCPTR (gst_base_sink_send_event);
   gstelement_class->query = GST_DEBUG_FUNCPTR (default_element_query);
-  gstelement_class->get_query_types =
-      GST_DEBUG_FUNCPTR (gst_base_sink_get_query_types);
 
   klass->get_caps = GST_DEBUG_FUNCPTR (gst_base_sink_get_caps);
   klass->set_caps = GST_DEBUG_FUNCPTR (gst_base_sink_set_caps);
@@ -4708,20 +4705,6 @@ gst_base_sink_get_duration (GstBaseSink * basesink, GstFormat format,
   }
 
   return res;
-}
-
-static const GstQueryType *
-gst_base_sink_get_query_types (GstElement * element)
-{
-  static const GstQueryType query_types[] = {
-    GST_QUERY_DURATION,
-    GST_QUERY_POSITION,
-    GST_QUERY_SEGMENT,
-    GST_QUERY_LATENCY,
-    0
-  };
-
-  return query_types;
 }
 
 static gboolean
