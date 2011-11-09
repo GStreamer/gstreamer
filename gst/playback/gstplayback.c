@@ -29,7 +29,6 @@
 
 #include "gstplayback.h"
 #include "gstplaysink.h"
-#include "gststreamselector.h"
 #include "gstsubtitleoverlay.h"
 
 static gboolean
@@ -45,10 +44,6 @@ plugin_init (GstPlugin * plugin)
   bindtextdomain (GETTEXT_PACKAGE, LOCALEDIR);
   bind_textdomain_codeset (GETTEXT_PACKAGE, "UTF-8");
 #endif /* ENABLE_NLS */
-
-  /* ref class from a thread-safe context to work around missing bit of
-   * thread-safety in GObject */
-  g_type_class_ref (GST_TYPE_STREAM_SELECTOR);
 
   res = gst_play_bin2_plugin_init (plugin);
   res &= gst_play_sink_plugin_init (plugin);
