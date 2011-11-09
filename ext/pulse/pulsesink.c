@@ -1736,6 +1736,7 @@ static void gst_pulsesink_get_property (GObject * object, guint prop_id,
 static void gst_pulsesink_finalize (GObject * object);
 
 static gboolean gst_pulsesink_event (GstBaseSink * sink, GstEvent * event);
+static gboolean gst_pulsesink_query (GstBaseSink * sink, GstQuery * query);
 
 static GstStateChangeReturn gst_pulsesink_change_state (GstElement * element,
     GstStateChange transition);
@@ -1825,6 +1826,7 @@ gst_pulsesink_class_init (GstPulseSinkClass * klass)
   gobject_class->get_property = gst_pulsesink_get_property;
 
   gstbasesink_class->event = GST_DEBUG_FUNCPTR (gst_pulsesink_event);
+  gstbasesink_class->query = GST_DEBUG_FUNCPTR (gst_pulsesink_query);
 
   /* restore the original basesink pull methods */
   bc = g_type_class_peek (GST_TYPE_BASE_SINK);
@@ -2004,11 +2006,11 @@ done:
 /* NOTE: If you're making changes here, see if pulseaudiosink acceptcaps also
  * needs to be changed accordingly. */
 static gboolean
-gst_pulsesink_pad_acceptcaps (GstPad * pad, GstCaps * caps)
+gst_pulsesink_query_acceptcaps (GstPulseSink * psink, GstCaps * caps)
 {
-  GstPulseSink *psink = GST_PULSESINK (gst_pad_get_parent_element (pad));
   GstPulseRingBuffer *pbuf = GST_PULSERING_BUFFER_CAST (GST_BASE_AUDIO_SINK
       (psink)->ringbuffer);
+  GstPad *pad = GST_BASE_SINK_PAD (psink);
   GstCaps *pad_caps;
   GstStructure *st;
   gboolean ret = FALSE;
@@ -2122,7 +2124,6 @@ out:
   pa_threaded_mainloop_unlock (mainloop);
 
 done:
-  gst_object_unref (psink);
   return ret;
 
 info_failed:
@@ -2171,11 +2172,6 @@ gst_pulsesink_init (GstPulseSink * pulsesink)
   GST_BASE_AUDIO_SINK (pulsesink)->provided_clock =
       gst_audio_clock_new ("GstPulseSinkClock",
       (GstAudioClockGetTimeFunc) gst_pulsesink_get_time, pulsesink);
-
-#ifdef HAVE_PULSE_1_0
-  gst_pad_set_acceptcaps_function (GST_BASE_SINK (pulsesink)->sinkpad,
-      GST_DEBUG_FUNCPTR (gst_pulsesink_pad_acceptcaps));
-#endif
 
   /* TRUE for sinks, FALSE for sources */
   pulsesink->probe = gst_pulseprobe_new (G_OBJECT (pulsesink),
@@ -2868,6 +2864,30 @@ gst_pulsesink_event (GstBaseSink * sink, GstEvent * event)
   }
 
   return GST_BASE_SINK_CLASS (parent_class)->event (sink, event);
+}
+
+static gboolean
+gst_pulsesink_query (GstBaseSink * sink, GstQuery * query)
+{
+  GstPulseSink *pulsesink = GST_PULSESINK_CAST (sink);
+  gboolean ret;
+
+  switch (GST_QUERY_TYPE (query)) {
+    case GST_QUERY_ACCEPT_CAPS:
+    {
+      GstCaps *caps;
+
+      gst_query_parse_accept_caps (query, &caps);
+      ret = gst_pulsesink_query_acceptcaps (pulsesink, caps);
+      gst_query_set_accept_caps_result (query, ret);
+      ret = TRUE;
+      break;
+    }
+    default:
+      ret = GST_BASE_SINK_CLASS (parent_class)->query (sink, query);
+      break;
+  }
+  return ret;
 }
 
 static void

@@ -114,8 +114,10 @@ static void gst_pulse_audio_sink_dispose (GObject * object);
 static gboolean gst_pulse_audio_sink_src_event (GstPad * pad, GstEvent * event);
 static gboolean gst_pulse_audio_sink_sink_event (GstPad * pad,
     GstEvent * event);
-static gboolean gst_pulse_audio_sink_sink_acceptcaps (GstPad * pad,
-    GstCaps * caps);
+static gboolean gst_pulse_audio_sink_sink_query (GstPad * pad,
+    GstQuery * query);
+static gboolean gst_pulse_audio_sink_sink_acceptcaps (GstPulseAudioSink * pbin,
+    GstPad * pad, GstCaps * caps);
 static GstStateChangeReturn
 gst_pulse_audio_sink_change_state (GstElement * element,
     GstStateChange transition);
@@ -371,8 +373,8 @@ gst_pulse_audio_sink_init (GstPulseAudioSink * pbin)
   pbin->sinkpad_old_eventfunc = GST_PAD_EVENTFUNC (pbin->sinkpad);
   gst_pad_set_event_function (pbin->sinkpad,
       GST_DEBUG_FUNCPTR (gst_pulse_audio_sink_sink_event));
-  gst_pad_set_acceptcaps_function (pbin->sinkpad,
-      GST_DEBUG_FUNCPTR (gst_pulse_audio_sink_sink_acceptcaps));
+  gst_pad_set_query_function (pbin->sinkpad,
+      GST_DEBUG_FUNCPTR (gst_pulse_audio_sink_sink_query));
 
   gst_element_add_pad (GST_ELEMENT (pbin), pbin->sinkpad);
 
@@ -799,9 +801,9 @@ gst_pulse_audio_sink_sink_event (GstPad * pad, GstEvent * event)
  * means that upstream will have to have everything possibly upto a parser
  * plugged and we plugin a decoder whenever required. */
 static gboolean
-gst_pulse_audio_sink_sink_acceptcaps (GstPad * pad, GstCaps * caps)
+gst_pulse_audio_sink_sink_acceptcaps (GstPulseAudioSink * pbin, GstPad * pad,
+    GstCaps * caps)
 {
-  GstPulseAudioSink *pbin = GST_PULSE_AUDIO_SINK (gst_pad_get_parent (pad));
   GstRingBufferSpec spec = { 0 };
   const GstStructure *st;
   GstCaps *pad_caps = NULL;
@@ -839,9 +841,35 @@ out:
   if (pad_caps)
     gst_caps_unref (pad_caps);
 
+  return ret;
+}
+
+static gboolean
+gst_pulse_audio_sink_sink_query (GstPad * pad, GstQuery * query)
+{
+  GstPulseAudioSink *pbin = GST_PULSE_AUDIO_SINK (gst_pad_get_parent (pad));
+  gboolean ret = FALSE;
+
+  switch (GST_QUERY_TYPE (query)) {
+    case GST_QUERY_ACCEPT_CAPS:
+    {
+      GstCaps *caps;
+
+      gst_query_parse_accept_caps (query, &caps);
+      ret = gst_pulse_audio_sink_sink_acceptcaps (pbin, pad, caps);
+      gst_query_set_accept_caps_result (query, ret);
+      ret = TRUE;
+      break;
+    }
+    default:
+      ret = gst_pad_query_default (pad, query);
+      break;
+  }
+
   gst_object_unref (pbin);
 
   return ret;
+
 }
 
 static gboolean
