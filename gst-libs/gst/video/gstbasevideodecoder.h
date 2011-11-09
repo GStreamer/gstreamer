@@ -187,7 +187,7 @@ struct _GstBaseVideoDecoder
 };
 
 /**
- * GstBaseAudioDecoderClass:
+ * GstBaseVideoDecoderClass:
  * @start:          Optional.
  *                  Called when the element starts processing.
  *                  Allows opening external resources.
