@@ -4450,6 +4450,9 @@ gst_pad_send_event (GstPad * pad, GstEvent * event)
       GST_CAT_DEBUG_OBJECT (GST_CAT_EVENT, pad, "have event type %s",
           GST_EVENT_TYPE_NAME (event));
 
+      if (G_UNLIKELY (GST_PAD_IS_FLUSHING (pad)))
+        goto flushing;
+
       if (serialized) {
         /* lock order: STREAM_LOCK, LOCK, recheck flushing. */
         GST_OBJECT_UNLOCK (pad);
@@ -4499,9 +4502,6 @@ gst_pad_send_event (GstPad * pad, GstEvent * event)
         }
       }
       /* now do the probe */
-      if (G_UNLIKELY (GST_PAD_IS_FLUSHING (pad)))
-        goto flushing;
-
       PROBE_PUSH (pad,
           type | GST_PAD_PROBE_TYPE_PUSH |
           GST_PAD_PROBE_TYPE_BLOCK, event, probe_stopped);
