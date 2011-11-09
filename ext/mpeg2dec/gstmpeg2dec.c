@@ -85,7 +85,6 @@ static void gst_mpeg2dec_set_index (GstElement * element, GstIndex * index);
 static GstIndex *gst_mpeg2dec_get_index (GstElement * element);
 
 static gboolean gst_mpeg2dec_src_event (GstPad * pad, GstEvent * event);
-static const GstQueryType *gst_mpeg2dec_get_src_query_types (GstPad * pad);
 
 static gboolean gst_mpeg2dec_src_query (GstPad * pad, GstQuery * query);
 
@@ -174,8 +173,6 @@ gst_mpeg2dec_init (GstMpeg2dec * mpeg2dec)
       gst_pad_new_from_static_template (&src_template_factory, "src");
   gst_pad_set_event_function (mpeg2dec->srcpad,
       GST_DEBUG_FUNCPTR (gst_mpeg2dec_src_event));
-  gst_pad_set_query_type_function (mpeg2dec->srcpad,
-      GST_DEBUG_FUNCPTR (gst_mpeg2dec_get_src_query_types));
   gst_pad_set_query_function (mpeg2dec->srcpad,
       GST_DEBUG_FUNCPTR (gst_mpeg2dec_src_query));
   gst_pad_use_fixed_caps (mpeg2dec->srcpad);
@@ -1443,18 +1440,6 @@ gst_mpeg2dec_src_convert (GstPad * pad, GstFormat src_format, gint64 src_value,
       res = FALSE;
   }
   return res;
-}
-
-static const GstQueryType *
-gst_mpeg2dec_get_src_query_types (GstPad * pad)
-{
-  static const GstQueryType types[] = {
-    GST_QUERY_POSITION,
-    GST_QUERY_DURATION,
-    0
-  };
-
-  return types;
 }
 
 static gboolean

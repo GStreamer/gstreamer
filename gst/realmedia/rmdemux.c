@@ -144,7 +144,6 @@ static gboolean gst_rmdemux_sink_activate_pull (GstPad * sinkpad,
 static gboolean gst_rmdemux_sink_event (GstPad * pad, GstEvent * event);
 static gboolean gst_rmdemux_src_event (GstPad * pad, GstEvent * event);
 static void gst_rmdemux_send_event (GstRMDemux * rmdemux, GstEvent * event);
-static const GstQueryType *gst_rmdemux_src_query_types (GstPad * pad);
 static gboolean gst_rmdemux_src_query (GstPad * pad, GstQuery * query);
 static gboolean gst_rmdemux_perform_seek (GstRMDemux * rmdemux,
     GstEvent * event);
@@ -658,19 +657,6 @@ gst_rmdemux_src_query (GstPad * pad, GstQuery * query)
 
   gst_object_unref (rmdemux);
   return res;
-}
-
-static const GstQueryType *
-gst_rmdemux_src_query_types (GstPad * pad)
-{
-  static const GstQueryType query_types[] = {
-    GST_QUERY_POSITION,
-    GST_QUERY_DURATION,
-    GST_QUERY_SEEKING,
-    0
-  };
-
-  return query_types;
 }
 
 static void
@@ -1493,8 +1479,6 @@ gst_rmdemux_add_stream (GstRMDemux * rmdemux, GstRMDemuxStream * stream)
     gst_pad_set_caps (stream->pad, stream_caps);
     gst_pad_set_event_function (stream->pad,
         GST_DEBUG_FUNCPTR (gst_rmdemux_src_event));
-    gst_pad_set_query_type_function (stream->pad,
-        GST_DEBUG_FUNCPTR (gst_rmdemux_src_query_types));
     gst_pad_set_query_function (stream->pad,
         GST_DEBUG_FUNCPTR (gst_rmdemux_src_query));
 

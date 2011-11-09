@@ -82,8 +82,6 @@ static void gst_mad_get_property (GObject * object, guint prop_id,
 
 static gboolean gst_mad_src_event (GstPad * pad, GstEvent * event);
 
-static const GstQueryType *gst_mad_get_query_types (GstPad * pad);
-
 static gboolean gst_mad_src_query (GstPad * pad, GstQuery * query);
 static gboolean gst_mad_convert_sink (GstPad * pad, GstFormat src_format,
     gint64 src_value, GstFormat * dest_format, gint64 * dest_value);
@@ -241,8 +239,6 @@ gst_mad_init (GstMad * mad)
       GST_DEBUG_FUNCPTR (gst_mad_src_event));
   gst_pad_set_query_function (mad->srcpad,
       GST_DEBUG_FUNCPTR (gst_mad_src_query));
-  gst_pad_set_query_type_function (mad->srcpad,
-      GST_DEBUG_FUNCPTR (gst_mad_get_query_types));
   gst_pad_use_fixed_caps (mad->srcpad);
 
   mad->tempbuffer = g_malloc (MAD_BUFFER_MDLEN * 3);
@@ -433,19 +429,6 @@ gst_mad_convert_src (GstPad * pad, GstFormat src_format, gint64 src_value,
       res = FALSE;
   }
   return res;
-}
-
-static const GstQueryType *
-gst_mad_get_query_types (GstPad * pad)
-{
-  static const GstQueryType gst_mad_src_query_types[] = {
-    GST_QUERY_POSITION,
-    GST_QUERY_DURATION,
-    GST_QUERY_CONVERT,
-    0
-  };
-
-  return gst_mad_src_query_types;
 }
 
 static gboolean

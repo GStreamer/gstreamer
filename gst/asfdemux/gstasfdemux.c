@@ -84,7 +84,6 @@ static gboolean gst_asf_demux_element_send_event (GstElement * element,
 static gboolean gst_asf_demux_send_event_unlocked (GstASFDemux * demux,
     GstEvent * event);
 static gboolean gst_asf_demux_handle_src_query (GstPad * pad, GstQuery * query);
-static const GstQueryType *gst_asf_demux_get_src_query_types (GstPad * pad);
 static GstFlowReturn gst_asf_demux_chain (GstPad * pad, GstBuffer * buf);
 static gboolean gst_asf_demux_sink_event (GstPad * pad, GstEvent * event);
 static GstFlowReturn gst_asf_demux_process_object (GstASFDemux * demux,
@@ -2129,8 +2128,6 @@ gst_asf_demux_setup_pad (GstASFDemux * demux, GstPad * src_pad,
 
   gst_pad_set_event_function (src_pad,
       GST_DEBUG_FUNCPTR (gst_asf_demux_handle_src_event));
-  gst_pad_set_query_type_function (src_pad,
-      GST_DEBUG_FUNCPTR (gst_asf_demux_get_src_query_types));
   gst_pad_set_query_function (src_pad,
       GST_DEBUG_FUNCPTR (gst_asf_demux_handle_src_query));
 
@@ -3849,19 +3846,6 @@ gst_asf_demux_send_event_unlocked (GstASFDemux * demux, GstEvent * event)
   }
   gst_event_unref (event);
   return ret;
-}
-
-static const GstQueryType *
-gst_asf_demux_get_src_query_types (GstPad * pad)
-{
-  static const GstQueryType types[] = {
-    GST_QUERY_POSITION,
-    GST_QUERY_DURATION,
-    GST_QUERY_SEEKING,
-    0
-  };
-
-  return types;
 }
 
 static gboolean
