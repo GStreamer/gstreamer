@@ -58,23 +58,23 @@ static GstPad *gst_stream_selector_activate_sinkpad (GstStreamSelector * sel,
 static GstPad *gst_stream_selector_get_linked_pad (GstPad * pad,
     gboolean strict);
 
-#define GST_TYPE_SELECTOR_PAD \
-  (gst_selector_pad_get_type())
-#define GST_SELECTOR_PAD(obj) \
-  (G_TYPE_CHECK_INSTANCE_CAST ((obj), GST_TYPE_SELECTOR_PAD, GstSelectorPad))
-#define GST_SELECTOR_PAD_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_CAST ((klass), GST_TYPE_SELECTOR_PAD, GstSelectorPadClass))
+#define GST_TYPE_STREAM_SELECTOR_PAD \
+  (gst_stream_selector_pad_get_type())
+#define GST_STREAM_SELECTOR_PAD(obj) \
+  (G_TYPE_CHECK_INSTANCE_CAST ((obj), GST_TYPE_STREAM_SELECTOR_PAD, GstStreamSelectorPad))
+#define GST_STREAM_SELECTOR_PAD_CLASS(klass) \
+  (G_TYPE_CHECK_CLASS_CAST ((klass), GST_TYPE_STREAM_SELECTOR_PAD, GstStreamSelectorPadClass))
 #define GST_IS_SELECTOR_PAD(obj) \
-  (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_SELECTOR_PAD))
+  (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_STREAM_SELECTOR_PAD))
 #define GST_IS_SELECTOR_PAD_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_TYPE ((klass), GST_TYPE_SELECTOR_PAD))
-#define GST_SELECTOR_PAD_CAST(obj) \
-  ((GstSelectorPad *)(obj))
+  (G_TYPE_CHECK_CLASS_TYPE ((klass), GST_TYPE_STREAM_SELECTOR_PAD))
+#define GST_STREAM_SELECTOR_PAD_CAST(obj) \
+  ((GstStreamSelectorPad *)(obj))
 
-typedef struct _GstSelectorPad GstSelectorPad;
-typedef struct _GstSelectorPadClass GstSelectorPadClass;
+typedef struct _GstStreamSelectorPad GstStreamSelectorPad;
+typedef struct _GstStreamSelectorPadClass GstStreamSelectorPadClass;
 
-struct _GstSelectorPad
+struct _GstStreamSelectorPad
 {
   GstPad parent;
 
@@ -85,20 +85,22 @@ struct _GstSelectorPad
   GstTagList *tags;
 };
 
-struct _GstSelectorPadClass
+struct _GstStreamSelectorPadClass
 {
   GstPadClass parent;
 };
 
-static void gst_selector_pad_finalize (GObject * object);
+static void gst_stream_selector_pad_finalize (GObject * object);
 
-static void gst_selector_pad_get_property (GObject * object,
+static void gst_stream_selector_pad_get_property (GObject * object,
     guint prop_id, GValue * value, GParamSpec * pspec);
 
-static void gst_selector_pad_reset (GstSelectorPad * pad);
-static gboolean gst_selector_pad_event (GstPad * pad, GstEvent * event);
-static GstCaps *gst_selector_pad_getcaps (GstPad * pad, GstCaps * filter);
-static GstFlowReturn gst_selector_pad_chain (GstPad * pad, GstBuffer * buf);
+static void gst_stream_selector_pad_reset (GstStreamSelectorPad * pad);
+static gboolean gst_stream_selector_pad_event (GstPad * pad, GstEvent * event);
+static GstCaps *gst_stream_selector_pad_getcaps (GstPad * pad,
+    GstCaps * filter);
+static GstFlowReturn gst_stream_selector_pad_chain (GstPad * pad,
+    GstBuffer * buf);
 
 enum
 {
@@ -108,18 +110,18 @@ enum
   PROP_PAD_LAST
 };
 
-GType gst_selector_pad_get_type (void);
-G_DEFINE_TYPE (GstSelectorPad, gst_selector_pad, GST_TYPE_PAD);
+GType gst_stream_selector_pad_get_type (void);
+G_DEFINE_TYPE (GstStreamSelectorPad, gst_stream_selector_pad, GST_TYPE_PAD);
 
 static void
-gst_selector_pad_class_init (GstSelectorPadClass * klass)
+gst_stream_selector_pad_class_init (GstStreamSelectorPadClass * klass)
 {
   GObjectClass *gobject_class;
 
   gobject_class = (GObjectClass *) klass;
 
-  gobject_class->finalize = gst_selector_pad_finalize;
-  gobject_class->get_property = gst_selector_pad_get_property;
+  gobject_class->finalize = gst_stream_selector_pad_finalize;
+  gobject_class->get_property = gst_stream_selector_pad_get_property;
 
   g_object_class_install_property (gobject_class, PROP_PAD_TAGS,
       g_param_spec_boxed ("tags", "Tags",
@@ -133,31 +135,31 @@ gst_selector_pad_class_init (GstSelectorPadClass * klass)
 }
 
 static void
-gst_selector_pad_init (GstSelectorPad * pad)
+gst_stream_selector_pad_init (GstStreamSelectorPad * pad)
 {
-  gst_selector_pad_reset (pad);
+  gst_stream_selector_pad_reset (pad);
 }
 
 static void
-gst_selector_pad_finalize (GObject * object)
+gst_stream_selector_pad_finalize (GObject * object)
 {
-  GstSelectorPad *pad;
+  GstStreamSelectorPad *pad;
 
-  pad = GST_SELECTOR_PAD_CAST (object);
+  pad = GST_STREAM_SELECTOR_PAD_CAST (object);
 
   if (pad->tags)
     gst_tag_list_free (pad->tags);
 
-  G_OBJECT_CLASS (gst_selector_pad_parent_class)->finalize (object);
+  G_OBJECT_CLASS (gst_stream_selector_pad_parent_class)->finalize (object);
 }
 
 static void
-gst_selector_pad_get_property (GObject * object,
+gst_stream_selector_pad_get_property (GObject * object,
     guint prop_id, GValue * value, GParamSpec * pspec)
 {
-  GstSelectorPad *pad;
+  GstStreamSelectorPad *pad;
 
-  pad = GST_SELECTOR_PAD (object);
+  pad = GST_STREAM_SELECTOR_PAD (object);
 
   switch (prop_id) {
     case PROP_PAD_TAGS:
@@ -182,7 +184,7 @@ gst_selector_pad_get_property (GObject * object,
 }
 
 static void
-gst_selector_pad_reset (GstSelectorPad * pad)
+gst_stream_selector_pad_reset (GstStreamSelectorPad * pad)
 {
   pad->active = FALSE;
   pad->eos = FALSE;
@@ -190,16 +192,16 @@ gst_selector_pad_reset (GstSelectorPad * pad)
 }
 
 static gboolean
-gst_selector_pad_event (GstPad * pad, GstEvent * event)
+gst_stream_selector_pad_event (GstPad * pad, GstEvent * event)
 {
   gboolean res = TRUE;
   gboolean forward = TRUE;
   GstStreamSelector *sel;
-  GstSelectorPad *selpad;
+  GstStreamSelectorPad *selpad;
   GstPad *active_sinkpad;
 
   sel = GST_STREAM_SELECTOR (gst_pad_get_parent (pad));
-  selpad = GST_SELECTOR_PAD_CAST (pad);
+  selpad = GST_STREAM_SELECTOR_PAD_CAST (pad);
 
   /* only forward if we are dealing with the active sinkpad */
   active_sinkpad = gst_stream_selector_activate_sinkpad (sel, pad);
@@ -207,7 +209,7 @@ gst_selector_pad_event (GstPad * pad, GstEvent * event)
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_FLUSH_STOP:
-      gst_selector_pad_reset (selpad);
+      gst_stream_selector_pad_reset (selpad);
       break;
     case GST_EVENT_SEGMENT:
     {
@@ -253,7 +255,7 @@ gst_selector_pad_event (GstPad * pad, GstEvent * event)
 }
 
 static GstCaps *
-gst_selector_pad_getcaps (GstPad * pad, GstCaps * filter)
+gst_stream_selector_pad_getcaps (GstPad * pad, GstCaps * filter)
 {
   GstStreamSelector *sel;
   GstCaps *caps;
@@ -271,17 +273,17 @@ gst_selector_pad_getcaps (GstPad * pad, GstCaps * filter)
 }
 
 static GstFlowReturn
-gst_selector_pad_chain (GstPad * pad, GstBuffer * buf)
+gst_stream_selector_pad_chain (GstPad * pad, GstBuffer * buf)
 {
   GstStreamSelector *sel;
   GstFlowReturn res;
   GstPad *active_sinkpad;
-  GstSelectorPad *selpad;
+  GstStreamSelectorPad *selpad;
   GstClockTime timestamp;
   GstSegment *seg;
 
   sel = GST_STREAM_SELECTOR (gst_pad_get_parent (pad));
-  selpad = GST_SELECTOR_PAD_CAST (pad);
+  selpad = GST_STREAM_SELECTOR_PAD_CAST (pad);
   seg = &selpad->segment;
 
   active_sinkpad = gst_stream_selector_activate_sinkpad (sel, pad);
@@ -423,9 +425,9 @@ gst_stream_selector_set_property (GObject * object, guint prop_id,
 
       GST_OBJECT_LOCK (object);
       if (pad != sel->active_sinkpad) {
-        GstSelectorPad *selpad;
+        GstStreamSelectorPad *selpad;
 
-        selpad = GST_SELECTOR_PAD_CAST (pad);
+        selpad = GST_STREAM_SELECTOR_PAD_CAST (pad);
         /* we can only activate pads that have data received */
         if (selpad && !selpad->active) {
           GST_DEBUG_OBJECT (sel, "No data received on pad %" GST_PTR_FORMAT,
@@ -537,9 +539,9 @@ static GstPad *
 gst_stream_selector_activate_sinkpad (GstStreamSelector * sel, GstPad * pad)
 {
   GstPad *active_sinkpad;
-  GstSelectorPad *selpad;
+  GstStreamSelectorPad *selpad;
 
-  selpad = GST_SELECTOR_PAD_CAST (pad);
+  selpad = GST_STREAM_SELECTOR_PAD_CAST (pad);
 
   GST_OBJECT_LOCK (sel);
   selpad->active = TRUE;
@@ -588,18 +590,18 @@ gst_stream_selector_request_new_pad (GstElement * element,
   GST_LOG_OBJECT (sel, "Creating new pad %d", sel->padcount);
   GST_OBJECT_LOCK (sel);
   name = g_strdup_printf ("sink_%u", sel->padcount++);
-  sinkpad = g_object_new (GST_TYPE_SELECTOR_PAD,
+  sinkpad = g_object_new (GST_TYPE_STREAM_SELECTOR_PAD,
       "name", name, "direction", templ->direction, "template", templ, NULL);
   g_free (name);
   sel->n_pads++;
   GST_OBJECT_UNLOCK (sel);
 
   gst_pad_set_event_function (sinkpad,
-      GST_DEBUG_FUNCPTR (gst_selector_pad_event));
+      GST_DEBUG_FUNCPTR (gst_stream_selector_pad_event));
   gst_pad_set_getcaps_function (sinkpad,
-      GST_DEBUG_FUNCPTR (gst_selector_pad_getcaps));
+      GST_DEBUG_FUNCPTR (gst_stream_selector_pad_getcaps));
   gst_pad_set_chain_function (sinkpad,
-      GST_DEBUG_FUNCPTR (gst_selector_pad_chain));
+      GST_DEBUG_FUNCPTR (gst_stream_selector_pad_chain));
   gst_pad_set_iterate_internal_links_function (sinkpad,
       GST_DEBUG_FUNCPTR (gst_stream_selector_pad_iterate_linked_pads));
 
