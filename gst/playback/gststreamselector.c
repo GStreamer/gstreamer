@@ -90,14 +90,10 @@ struct _GstSelectorPadClass
   GstPadClass parent;
 };
 
-static void gst_selector_pad_class_init (GstSelectorPadClass * klass);
-static void gst_selector_pad_init (GstSelectorPad * pad);
 static void gst_selector_pad_finalize (GObject * object);
 
 static void gst_selector_pad_get_property (GObject * object,
     guint prop_id, GValue * value, GParamSpec * pspec);
-
-static GstPadClass *selector_pad_parent_class = NULL;
 
 static void gst_selector_pad_reset (GstSelectorPad * pad);
 static gboolean gst_selector_pad_event (GstPad * pad, GstEvent * event);
@@ -112,30 +108,8 @@ enum
   PROP_PAD_LAST
 };
 
-static GType
-gst_selector_pad_get_type (void)
-{
-  static GType selector_pad_type = 0;
-
-  if (!selector_pad_type) {
-    static const GTypeInfo selector_pad_info = {
-      sizeof (GstSelectorPadClass),
-      NULL,
-      NULL,
-      (GClassInitFunc) gst_selector_pad_class_init,
-      NULL,
-      NULL,
-      sizeof (GstSelectorPad),
-      0,
-      (GInstanceInitFunc) gst_selector_pad_init,
-    };
-
-    selector_pad_type =
-        g_type_register_static (GST_TYPE_PAD, "GstPlaybinSelectorPad",
-        &selector_pad_info, 0);
-  }
-  return selector_pad_type;
-}
+GType gst_selector_pad_get_type (void);
+G_DEFINE_TYPE (GstSelectorPad, gst_selector_pad, GST_TYPE_PAD);
 
 static void
 gst_selector_pad_class_init (GstSelectorPadClass * klass)
@@ -143,8 +117,6 @@ gst_selector_pad_class_init (GstSelectorPadClass * klass)
   GObjectClass *gobject_class;
 
   gobject_class = (GObjectClass *) klass;
-
-  selector_pad_parent_class = g_type_class_peek_parent (klass);
 
   gobject_class->finalize = gst_selector_pad_finalize;
   gobject_class->get_property = gst_selector_pad_get_property;
@@ -176,7 +148,7 @@ gst_selector_pad_finalize (GObject * object)
   if (pad->tags)
     gst_tag_list_free (pad->tags);
 
-  G_OBJECT_CLASS (selector_pad_parent_class)->finalize (object);
+  G_OBJECT_CLASS (gst_selector_pad_parent_class)->finalize (object);
 }
 
 static void
@@ -351,10 +323,6 @@ ignore:
 
 static void gst_stream_selector_dispose (GObject * object);
 
-static void gst_stream_selector_init (GstStreamSelector * sel);
-static void gst_stream_selector_base_init (GstStreamSelectorClass * klass);
-static void gst_stream_selector_class_init (GstStreamSelectorClass * klass);
-
 static void gst_stream_selector_set_property (GObject * object,
     guint prop_id, const GValue * value, GParamSpec * pspec);
 static void gst_stream_selector_get_property (GObject * object,
@@ -367,51 +335,8 @@ static void gst_stream_selector_release_pad (GstElement * element,
 static GstIterator *gst_stream_selector_pad_iterate_linked_pads (GstPad * pad);
 static GstCaps *gst_stream_selector_getcaps (GstPad * pad, GstCaps * filter);
 
-static GstElementClass *parent_class = NULL;
-
-GType
-gst_stream_selector_get_type (void)
-{
-  static GType stream_selector_type = 0;
-
-  if (!stream_selector_type) {
-    static const GTypeInfo stream_selector_info = {
-      sizeof (GstStreamSelectorClass),
-      (GBaseInitFunc) gst_stream_selector_base_init,
-      NULL,
-      (GClassInitFunc) gst_stream_selector_class_init,
-      NULL,
-      NULL,
-      sizeof (GstStreamSelector),
-      0,
-      (GInstanceInitFunc) gst_stream_selector_init,
-    };
-    stream_selector_type =
-        g_type_register_static (GST_TYPE_ELEMENT,
-        "GstStreamSelector", &stream_selector_info, 0);
-    GST_DEBUG_CATEGORY_INIT (stream_selector_debug,
-        "streamselector", 0, "A stream-selector element");
-  }
-
-  return stream_selector_type;
-}
-
-static void
-gst_stream_selector_base_init (GstStreamSelectorClass * klass)
-{
-  GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
-
-  gst_element_class_set_details_simple (element_class,
-      "StreamSelector", "Generic",
-      "N-to-1 input stream_selectoring",
-      "Julien Moutte <julien@moutte.net>, "
-      "Jan Schmidt <thaytan@mad.scientist.com>, "
-      "Wim Taymans <wim.taymans@gmail.com>");
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&gst_stream_selector_sink_factory));
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&gst_stream_selector_src_factory));
-}
+#define gst_stream_selector_parent_class parent_class
+G_DEFINE_TYPE (GstStreamSelector, gst_stream_selector, GST_TYPE_ELEMENT);
 
 static void
 gst_stream_selector_class_init (GstStreamSelectorClass * klass)
@@ -437,6 +362,21 @@ gst_stream_selector_class_init (GstStreamSelectorClass * klass)
 
   gstelement_class->request_new_pad = gst_stream_selector_request_new_pad;
   gstelement_class->release_pad = gst_stream_selector_release_pad;
+
+  gst_element_class_set_details_simple (gstelement_class,
+      "StreamSelector", "Generic",
+      "N-to-1 input stream_selectoring",
+      "Julien Moutte <julien@moutte.net>, "
+      "Jan Schmidt <thaytan@mad.scientist.com>, "
+      "Wim Taymans <wim.taymans@gmail.com>");
+
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&gst_stream_selector_sink_factory));
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&gst_stream_selector_src_factory));
+
+  GST_DEBUG_CATEGORY_INIT (stream_selector_debug,
+      "streamselector", 0, "A stream-selector element");
 }
 
 static void
