@@ -365,20 +365,25 @@ AG_GST_SET_PACKAGE_RELEASE_DATETIME_WITH_NANO([$PACKAGE_VERSION_NANO],
   ["${srcdir}/gst-plugins-base.doap"],
   [$PACKAGE_VERSION_MAJOR.$PACKAGE_VERSION_MINOR.$PACKAGE_VERSION_MICRO])
 
+# set by AG_GST_PARSE_SUBSYSTEM_DISABLES above
+dnl make sure it doesn't complain about unused variables if debugging is disabled
+NO_WARNINGS=""
+AG_GST_CHECK_GST_DEBUG_DISABLED([NO_WARNINGS="-Wno-unused"], [NO_WARNINGS=""])
+
 dnl define an ERROR_CFLAGS Makefile variable
 dnl -Wformat-nonliteral - see ext/pango/gstclockoverlay.c and http://gcc.gnu.org/bugzilla/show_bug.cgi?id=39438
 AG_GST_SET_ERROR_CFLAGS($GST_GIT, [
     -Wmissing-declarations -Wmissing-prototypes -Wredundant-decls -Wundef
     -Wwrite-strings -Wformat-nonliteral -Wformat-security
     -Winit-self -Wmissing-include-dirs -Waddress -Waggregate-return
-    -Wno-multichar -Wnested-externs ])
+    -Wno-multichar -Wnested-externs $NO_WARNINGS])
 
 dnl define an ERROR_CXXFLAGS Makefile variable
 AG_GST_SET_ERROR_CXXFLAGS($GST_GIT, [
     -Wmissing-declarations -Wredundant-decls -Wundef
     -Wwrite-strings -Wformat-nonliteral -Wformat-security
     -Winit-self -Wmissing-include-dirs -Waddress -Waggregate-return
-    -Wno-multichar])
+    -Wno-multichar $NO_WARNINGS])
 
 dnl define correct level for debugging messages
 AG_GST_SET_LEVEL_DEFAULT($GST_GIT)
