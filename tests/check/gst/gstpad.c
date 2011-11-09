@@ -214,6 +214,142 @@ GST_START_TEST (test_get_allowed_caps)
 
 GST_END_TEST;
 
+static GstCaps *event_caps = NULL;
+
+static gboolean
+sticky_event (GstPad * pad, GstEvent * event)
+{
+  GstCaps *caps;
+
+  fail_unless (GST_EVENT_TYPE (event) == GST_EVENT_CAPS);
+
+  /* Ensure we get here just once: */
+  fail_unless (event_caps == NULL);
+
+  /* The event must arrive before any buffer: */
+  fail_unless_equals_int (g_list_length (buffers), 0);
+
+  gst_event_parse_caps (event, &caps);
+  event_caps = gst_caps_ref (caps);
+
+  gst_event_unref (event);
+
+  return TRUE;
+}
+
+GST_START_TEST (test_sticky_caps_unlinked)
+{
+  GstCaps *caps;
+  GstPadTemplate *src_template, *sink_template;
+  GstPad *src, *sink;
+  GstEvent *event;
+
+  caps = gst_caps_from_string ("foo/bar, dummy=(int){1, 2}");
+  src_template = gst_pad_template_new ("src", GST_PAD_SRC,
+      GST_PAD_ALWAYS, caps);
+  sink_template = gst_pad_template_new ("sink", GST_PAD_SINK,
+      GST_PAD_ALWAYS, caps);
+  gst_caps_unref (caps);
+
+  src = gst_pad_new_from_template (src_template, "src");
+  fail_if (src == NULL);
+  sink = gst_pad_new_from_template (sink_template, "sink");
+  fail_if (sink == NULL);
+  gst_pad_set_event_function (sink, sticky_event);
+  gst_pad_set_chain_function (sink, gst_check_chain_func);
+
+  gst_object_unref (src_template);
+  gst_object_unref (sink_template);
+
+  caps = gst_caps_from_string ("foo/bar, dummy=(int)1");
+  ASSERT_CAPS_REFCOUNT (caps, "caps", 1);
+
+  event = gst_event_new_caps (caps);
+  /* Pad is still inactive but the event gets stored sticky, so push is
+   * successful: */
+  fail_unless (gst_pad_push_event (src, event) == TRUE);
+  fail_unless (event_caps == NULL);
+
+  /* Linking and activating will not forward the sticky event yet... */
+  fail_unless (GST_PAD_LINK_SUCCESSFUL (gst_pad_link (src, sink)));
+  gst_pad_set_active (src, TRUE);
+  gst_pad_set_active (sink, TRUE);
+  fail_unless (event_caps == NULL);
+
+  /* ...but the first buffer will: */
+  fail_unless (gst_pad_push (src, gst_buffer_new ()) == GST_FLOW_OK);
+  fail_unless (event_caps == caps);
+  fail_unless_equals_int (g_list_length (buffers), 1);
+
+  gst_caps_replace (&caps, NULL);
+  gst_caps_replace (&event_caps, NULL);
+
+  ASSERT_OBJECT_REFCOUNT (src, "src", 1);
+  ASSERT_OBJECT_REFCOUNT (sink, "sink", 1);
+  gst_object_unref (src);
+  gst_object_unref (sink);
+}
+
+GST_END_TEST;
+
+/* Like test_sticky_caps_unlinked, but link before caps: */
+
+GST_START_TEST (test_sticky_caps_flushing)
+{
+  GstCaps *caps;
+  GstPadTemplate *src_template, *sink_template;
+  GstPad *src, *sink;
+  GstEvent *event;
+
+  caps = gst_caps_from_string ("foo/bar, dummy=(int){1, 2}");
+  src_template = gst_pad_template_new ("src", GST_PAD_SRC,
+      GST_PAD_ALWAYS, caps);
+  sink_template = gst_pad_template_new ("sink", GST_PAD_SINK,
+      GST_PAD_ALWAYS, caps);
+  gst_caps_unref (caps);
+
+  src = gst_pad_new_from_template (src_template, "src");
+  fail_if (src == NULL);
+  sink = gst_pad_new_from_template (sink_template, "sink");
+  fail_if (sink == NULL);
+  gst_pad_set_event_function (sink, sticky_event);
+  gst_pad_set_chain_function (sink, gst_check_chain_func);
+
+  gst_object_unref (src_template);
+  gst_object_unref (sink_template);
+
+  fail_unless (GST_PAD_LINK_SUCCESSFUL (gst_pad_link (src, sink)));
+
+  caps = gst_caps_from_string ("foo/bar, dummy=(int)1");
+  ASSERT_CAPS_REFCOUNT (caps, "caps", 1);
+
+  event = gst_event_new_caps (caps);
+  /* Pads are still inactive but event gets stored sticky, so push is
+   * successful: */
+  fail_unless (gst_pad_push_event (src, event) == TRUE);
+  fail_unless (event_caps == NULL);
+
+  /* Activating will not forward the sticky event yet... */
+  gst_pad_set_active (src, TRUE);
+  gst_pad_set_active (sink, TRUE);
+  fail_unless (event_caps == NULL);
+
+  /* ...but the first buffer will: */
+  fail_unless (gst_pad_push (src, gst_buffer_new ()) == GST_FLOW_OK);
+  fail_unless (event_caps == caps);
+  fail_unless_equals_int (g_list_length (buffers), 1);
+
+  gst_caps_replace (&caps, NULL);
+  gst_caps_replace (&event_caps, NULL);
+
+  ASSERT_OBJECT_REFCOUNT (src, "src", 1);
+  ASSERT_OBJECT_REFCOUNT (sink, "sink", 1);
+  gst_object_unref (src);
+  gst_object_unref (sink);
+}
+
+GST_END_TEST;
+
 static gboolean
 name_is_valid (const gchar * name, GstPadPresence presence)
 {
@@ -1072,6 +1208,8 @@ gst_pad_suite (void)
   tcase_add_test (tc_chain, test_link);
   tcase_add_test (tc_chain, test_refcount);
   tcase_add_test (tc_chain, test_get_allowed_caps);
+  tcase_add_test (tc_chain, test_sticky_caps_unlinked);
+  tcase_add_test (tc_chain, test_sticky_caps_flushing);
   tcase_add_test (tc_chain, test_link_unlink_threaded);
   tcase_add_test (tc_chain, test_name_is_valid);
   tcase_add_test (tc_chain, test_push_unlinked);
