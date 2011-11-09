@@ -228,6 +228,7 @@ static GstFlowReturn gst_queue2_push_one (GstQueue2 * queue);
 static void gst_queue2_loop (GstPad * pad);
 
 static gboolean gst_queue2_handle_sink_event (GstPad * pad, GstEvent * event);
+static gboolean gst_queue2_handle_sink_query (GstPad * pad, GstQuery * query);
 
 static gboolean gst_queue2_handle_src_event (GstPad * pad, GstEvent * event);
 static gboolean gst_queue2_handle_src_query (GstPad * pad, GstQuery * query);
@@ -235,7 +236,6 @@ static gboolean gst_queue2_handle_query (GstElement * element,
     GstQuery * query);
 
 static GstCaps *gst_queue2_getcaps (GstPad * pad, GstCaps * filter);
-static gboolean gst_queue2_acceptcaps (GstPad * pad, GstCaps * caps);
 
 static GstFlowReturn gst_queue2_get_range (GstPad * pad, guint64 offset,
     guint length, GstBuffer ** buffer);
@@ -379,10 +379,10 @@ gst_queue2_init (GstQueue2 * queue)
       GST_DEBUG_FUNCPTR (gst_queue2_sink_activate_push));
   gst_pad_set_event_function (queue->sinkpad,
       GST_DEBUG_FUNCPTR (gst_queue2_handle_sink_event));
+  gst_pad_set_query_function (queue->sinkpad,
+      GST_DEBUG_FUNCPTR (gst_queue2_handle_sink_query));
   gst_pad_set_getcaps_function (queue->sinkpad,
       GST_DEBUG_FUNCPTR (gst_queue2_getcaps));
-  gst_pad_set_acceptcaps_function (queue->sinkpad,
-      GST_DEBUG_FUNCPTR (gst_queue2_acceptcaps));
   gst_element_add_pad (GST_ELEMENT (queue), queue->sinkpad);
 
   queue->srcpad = gst_pad_new_from_static_template (&srctemplate, "src");
@@ -395,8 +395,6 @@ gst_queue2_init (GstQueue2 * queue)
       GST_DEBUG_FUNCPTR (gst_queue2_get_range));
   gst_pad_set_getcaps_function (queue->srcpad,
       GST_DEBUG_FUNCPTR (gst_queue2_getcaps));
-  gst_pad_set_acceptcaps_function (queue->srcpad,
-      GST_DEBUG_FUNCPTR (gst_queue2_acceptcaps));
   gst_pad_set_event_function (queue->srcpad,
       GST_DEBUG_FUNCPTR (gst_queue2_handle_src_event));
   gst_pad_set_query_function (queue->srcpad,
@@ -609,21 +607,6 @@ init_ranges (GstQueue2 * queue)
   clean_ranges (queue);
   /* make a range for offset 0 */
   queue->current = add_range (queue, 0);
-}
-
-static gboolean
-gst_queue2_acceptcaps (GstPad * pad, GstCaps * caps)
-{
-  GstQueue2 *queue;
-  GstPad *otherpad;
-  gboolean result;
-
-  queue = GST_QUEUE2 (GST_PAD_PARENT (pad));
-
-  otherpad = (pad == queue->srcpad ? queue->sinkpad : queue->srcpad);
-  result = gst_pad_peer_accept_caps (otherpad, caps);
-
-  return result;
 }
 
 static GstCaps *
@@ -2056,6 +2039,26 @@ out_eos:
 }
 
 static gboolean
+gst_queue2_handle_sink_query (GstPad * pad, GstQuery * query)
+{
+  gboolean res;
+  GstQueue2 *queue;
+
+  queue = GST_QUEUE2 (gst_pad_get_parent (pad));
+  if (G_UNLIKELY (queue == NULL))
+    return FALSE;
+
+  switch (GST_QUERY_TYPE (query)) {
+    default:
+      res = gst_pad_peer_query (queue->srcpad, query);
+      break;
+  }
+  gst_object_unref (queue);
+
+  return res;
+}
+
+static gboolean
 gst_queue2_is_empty (GstQueue2 * queue)
 {
   /* never empty on EOS */
@@ -2411,19 +2414,6 @@ gst_queue2_handle_src_event (GstPad * pad, GstEvent * event)
 }
 
 static gboolean
-gst_queue2_peer_query (GstQueue2 * queue, GstPad * pad, GstQuery * query)
-{
-  gboolean ret = FALSE;
-  GstPad *peer;
-
-  if ((peer = gst_pad_get_peer (pad))) {
-    ret = gst_pad_query (peer, query);
-    gst_object_unref (peer);
-  }
-  return ret;
-}
-
-static gboolean
 gst_queue2_handle_src_query (GstPad * pad, GstQuery * query)
 {
   GstQueue2 *queue;
@@ -2438,7 +2428,7 @@ gst_queue2_handle_src_query (GstPad * pad, GstQuery * query)
       gint64 peer_pos;
       GstFormat format;
 
-      if (!gst_queue2_peer_query (queue, queue->sinkpad, query))
+      if (!gst_pad_peer_query (queue->sinkpad, query))
         goto peer_failed;
 
       /* get peer position */
@@ -2465,7 +2455,7 @@ gst_queue2_handle_src_query (GstPad * pad, GstQuery * query)
     {
       GST_DEBUG_OBJECT (queue, "doing peer query");
 
-      if (!gst_queue2_peer_query (queue, queue->sinkpad, query))
+      if (!gst_pad_peer_query (queue->sinkpad, query))
         goto peer_failed;
 
       GST_DEBUG_OBJECT (queue, "peer query success");
@@ -2480,7 +2470,7 @@ gst_queue2_handle_src_query (GstPad * pad, GstQuery * query)
       /* FIXME - is this condition correct? what should ring buffer do? */
       if (QUEUE_IS_USING_QUEUE (queue)) {
         /* no temp file, just forward to the peer */
-        if (!gst_queue2_peer_query (queue, queue->sinkpad, query))
+        if (!gst_pad_peer_query (queue->sinkpad, query))
           goto peer_failed;
         GST_DEBUG_OBJECT (queue, "buffering forwarded to peer");
       } else {
@@ -2604,7 +2594,7 @@ gst_queue2_handle_src_query (GstPad * pad, GstQuery * query)
     }
     default:
       /* peer handled other queries */
-      if (!gst_queue2_peer_query (queue, queue->sinkpad, query))
+      if (!gst_pad_peer_query (queue->sinkpad, query))
         goto peer_failed;
       break;
   }

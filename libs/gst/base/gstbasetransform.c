@@ -318,7 +318,6 @@ static GstFlowReturn gst_base_transform_getrange (GstPad * pad, guint64 offset,
 static GstFlowReturn gst_base_transform_chain (GstPad * pad,
     GstBuffer * buffer);
 static GstCaps *gst_base_transform_getcaps (GstPad * pad, GstCaps * filter);
-static gboolean gst_base_transform_acceptcaps (GstPad * pad, GstCaps * caps);
 static gboolean gst_base_transform_acceptcaps_default (GstBaseTransform * trans,
     GstPadDirection direction, GstCaps * caps);
 static gboolean gst_base_transform_setcaps (GstBaseTransform * trans,
@@ -399,8 +398,6 @@ gst_base_transform_init (GstBaseTransform * trans,
   trans->sinkpad = gst_pad_new_from_template (pad_template, "sink");
   gst_pad_set_getcaps_function (trans->sinkpad,
       GST_DEBUG_FUNCPTR (gst_base_transform_getcaps));
-  gst_pad_set_acceptcaps_function (trans->sinkpad,
-      GST_DEBUG_FUNCPTR (gst_base_transform_acceptcaps));
   gst_pad_set_event_function (trans->sinkpad,
       GST_DEBUG_FUNCPTR (gst_base_transform_sink_event));
   gst_pad_set_chain_function (trans->sinkpad,
@@ -417,8 +414,6 @@ gst_base_transform_init (GstBaseTransform * trans,
   trans->srcpad = gst_pad_new_from_template (pad_template, "src");
   gst_pad_set_getcaps_function (trans->srcpad,
       GST_DEBUG_FUNCPTR (gst_base_transform_getcaps));
-  gst_pad_set_acceptcaps_function (trans->srcpad,
-      GST_DEBUG_FUNCPTR (gst_base_transform_acceptcaps));
   gst_pad_set_event_function (trans->srcpad,
       GST_DEBUG_FUNCPTR (gst_base_transform_src_event));
   gst_pad_set_getrange_function (trans->srcpad,
@@ -1182,24 +1177,6 @@ no_transform_possible:
   }
 }
 
-static gboolean
-gst_base_transform_acceptcaps (GstPad * pad, GstCaps * caps)
-{
-  gboolean ret = TRUE;
-  GstBaseTransform *trans;
-  GstBaseTransformClass *bclass;
-
-  trans = GST_BASE_TRANSFORM (gst_pad_get_parent (pad));
-  bclass = GST_BASE_TRANSFORM_GET_CLASS (trans);
-
-  if (bclass->accept_caps)
-    ret = bclass->accept_caps (trans, GST_PAD_DIRECTION (pad), caps);
-
-  gst_object_unref (trans);
-
-  return ret;
-}
-
 /* called when new caps arrive on the sink or source pad,
  * We try to find the best caps for the other side using our _find_transform()
  * function. If there are caps, we configure the transform for this new
@@ -1304,8 +1281,11 @@ gst_base_transform_default_query (GstBaseTransform * trans,
 {
   gboolean ret = FALSE;
   GstPad *otherpad;
+  GstBaseTransformClass *klass;
 
   otherpad = (direction == GST_PAD_SRC) ? trans->sinkpad : trans->srcpad;
+
+  klass = GST_BASE_TRANSFORM_GET_CLASS (trans);
 
   switch (GST_QUERY_TYPE (query)) {
     case GST_QUERY_ALLOCATION:
@@ -1324,11 +1304,7 @@ gst_base_transform_default_query (GstBaseTransform * trans,
         GST_DEBUG_OBJECT (trans, "doing passthrough query");
         ret = gst_pad_peer_query (otherpad, query);
       } else {
-        GstBaseTransformClass *klass;
-
         GST_DEBUG_OBJECT (trans, "propose allocation values");
-
-        klass = GST_BASE_TRANSFORM_GET_CLASS (trans);
         /* pass the query to the propose_allocation vmethod if any */
         if (G_LIKELY (klass->propose_allocation))
           ret = klass->propose_allocation (trans, query);
@@ -1360,6 +1336,19 @@ gst_base_transform_default_query (GstBaseTransform * trans,
         gst_query_set_position (query, format, pos);
       } else {
         ret = gst_pad_peer_query (otherpad, query);
+      }
+      break;
+    }
+    case GST_QUERY_ACCEPT_CAPS:
+    {
+      GstCaps *caps;
+
+      gst_query_parse_accept_caps (query, &caps);
+      if (klass->accept_caps) {
+        ret = klass->accept_caps (trans, direction, caps);
+        gst_query_set_accept_caps_result (query, ret);
+        /* return TRUE, we answered the query */
+        ret = TRUE;
       }
       break;
     }

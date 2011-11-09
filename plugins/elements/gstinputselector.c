@@ -180,7 +180,6 @@ static gint64 gst_selector_pad_get_running_time (GstSelectorPad * pad);
 static void gst_selector_pad_reset (GstSelectorPad * pad);
 static gboolean gst_selector_pad_event (GstPad * pad, GstEvent * event);
 static GstCaps *gst_selector_pad_getcaps (GstPad * pad, GstCaps * filter);
-static gboolean gst_selector_pad_acceptcaps (GstPad * pad, GstCaps * caps);
 static gboolean gst_selector_pad_query (GstPad * pad, GstQuery * query);
 static GstIterator *gst_selector_pad_iterate_linked_pads (GstPad * pad);
 static GstFlowReturn gst_selector_pad_chain (GstPad * pad, GstBuffer * buf);
@@ -506,6 +505,7 @@ gst_selector_pad_query (GstPad * pad, GstQuery * query)
   otherpad = gst_input_selector_get_linked_pad (sel, pad, TRUE);
 
   switch (GST_QUERY_TYPE (query)) {
+    case GST_QUERY_ACCEPT_CAPS:
     default:
       if (otherpad)
         res = gst_pad_peer_query (otherpad, query);
@@ -537,23 +537,6 @@ gst_selector_pad_getcaps (GstPad * pad, GstCaps * filter)
   gst_object_unref (sel);
 
   return caps;
-}
-
-static gboolean
-gst_selector_pad_acceptcaps (GstPad * pad, GstCaps * caps)
-{
-  GstInputSelector *sel;
-  gboolean res;
-
-  sel = GST_INPUT_SELECTOR (gst_pad_get_parent (pad));
-  if (G_UNLIKELY (sel == NULL))
-    return FALSE;
-
-  GST_DEBUG_OBJECT (sel, "Checking acceptcaps of srcpad peer");
-  res = gst_pad_peer_accept_caps (sel->srcpad, caps);
-  gst_object_unref (sel);
-
-  return res;
 }
 
 /* must be called with the SELECTOR_LOCK, will block while the pad is blocked 
@@ -1323,8 +1306,6 @@ gst_input_selector_request_new_pad (GstElement * element,
       GST_DEBUG_FUNCPTR (gst_selector_pad_event));
   gst_pad_set_getcaps_function (sinkpad,
       GST_DEBUG_FUNCPTR (gst_selector_pad_getcaps));
-  gst_pad_set_acceptcaps_function (sinkpad,
-      GST_DEBUG_FUNCPTR (gst_selector_pad_acceptcaps));
   gst_pad_set_query_function (sinkpad,
       GST_DEBUG_FUNCPTR (gst_selector_pad_query));
   gst_pad_set_chain_function (sinkpad,

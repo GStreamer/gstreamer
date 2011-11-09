@@ -142,7 +142,6 @@ static void gst_pad_get_property (GObject * object, guint prop_id,
 static GstCaps *gst_pad_get_caps_unlocked (GstPad * pad, GstCaps * filter);
 static void gst_pad_set_pad_template (GstPad * pad, GstPadTemplate * templ);
 static gboolean gst_pad_activate_default (GstPad * pad);
-static gboolean gst_pad_acceptcaps_default (GstPad * pad, GstCaps * caps);
 static void gst_pad_fixate_caps_default (GstPad * pad, GstCaps * caps);
 static GstFlowReturn gst_pad_chain_list_default (GstPad * pad,
     GstBufferList * list);
@@ -302,7 +301,6 @@ gst_pad_class_init (GstPadClass * klass)
   GST_DEBUG_REGISTER_FUNCPTR (gst_pad_event_default);
   GST_DEBUG_REGISTER_FUNCPTR (gst_pad_query_default);
   GST_DEBUG_REGISTER_FUNCPTR (gst_pad_iterate_internal_links_default);
-  GST_DEBUG_REGISTER_FUNCPTR (gst_pad_acceptcaps_default);
   GST_DEBUG_REGISTER_FUNCPTR (gst_pad_chain_list_default);
   GST_DEBUG_REGISTER_FUNCPTR (gst_pad_fixate_caps_default);
 }
@@ -318,7 +316,6 @@ gst_pad_init (GstPad * pad)
   GST_PAD_EVENTFUNC (pad) = gst_pad_event_default;
   GST_PAD_QUERYFUNC (pad) = gst_pad_query_default;
   GST_PAD_ITERINTLINKFUNC (pad) = gst_pad_iterate_internal_links_default;
-  GST_PAD_ACCEPTCAPSFUNC (pad) = gst_pad_acceptcaps_default;
   GST_PAD_FIXATECAPSFUNC (pad) = gst_pad_fixate_caps_default;
   GST_PAD_CHAINLISTFUNC (pad) = gst_pad_chain_list_default;
 
@@ -1546,27 +1543,6 @@ gst_pad_set_getcaps_function (GstPad * pad, GstPadGetCapsFunction getcaps)
 }
 
 /**
- * gst_pad_set_acceptcaps_function:
- * @pad: a #GstPad.
- * @acceptcaps: the #GstPadAcceptCapsFunction to set.
- *
- * Sets the given acceptcaps function for the pad.  The acceptcaps function
- * will be called to check if the pad can accept the given caps. Setting the
- * acceptcaps function to NULL restores the default behaviour of allowing
- * any caps that matches the caps from gst_pad_get_caps().
- */
-void
-gst_pad_set_acceptcaps_function (GstPad * pad,
-    GstPadAcceptCapsFunction acceptcaps)
-{
-  g_return_if_fail (GST_IS_PAD (pad));
-
-  GST_PAD_ACCEPTCAPSFUNC (pad) = acceptcaps;
-  GST_CAT_DEBUG_OBJECT (GST_CAT_PADS, pad, "acceptcapsfunc set to %s",
-      GST_DEBUG_FUNCPTR_NAME (acceptcaps));
-}
-
-/**
  * gst_pad_set_fixatecaps_function:
  * @pad: a #GstPad.
  * @fixatecaps: the #GstPadFixateCapsFunction to set.
@@ -2447,37 +2423,6 @@ gst_pad_fixate_caps (GstPad * pad, GstCaps * caps)
     fixatefunc (pad, caps);
 }
 
-/* Default accept caps implementation just checks against
- * against the allowed caps for the pad */
-static gboolean
-gst_pad_acceptcaps_default (GstPad * pad, GstCaps * caps)
-{
-  /* get the caps and see if it intersects to something not empty */
-  GstCaps *allowed;
-  gboolean result = FALSE;
-
-  GST_DEBUG_OBJECT (pad, "caps %" GST_PTR_FORMAT, caps);
-
-  allowed = gst_pad_get_caps (pad, NULL);
-  if (!allowed)
-    goto nothing_allowed;
-
-  GST_DEBUG_OBJECT (pad, "allowed caps %" GST_PTR_FORMAT, allowed);
-
-  result = gst_caps_is_subset (caps, allowed);
-
-  gst_caps_unref (allowed);
-
-  return result;
-
-  /* ERRORS */
-nothing_allowed:
-  {
-    GST_DEBUG_OBJECT (pad, "no caps allowed on the pad");
-    return FALSE;
-  }
-}
-
 /**
  * gst_pad_accept_caps:
  * @pad: a #GstPad to check
@@ -2490,54 +2435,23 @@ nothing_allowed:
 gboolean
 gst_pad_accept_caps (GstPad * pad, GstCaps * caps)
 {
-  gboolean result;
-  GstPadAcceptCapsFunction acceptfunc;
-#if 0
-  GstCaps *existing = NULL;
-#endif
+  gboolean res;
+  GstQuery *query;
 
   g_return_val_if_fail (GST_IS_PAD (pad), FALSE);
+  g_return_val_if_fail (GST_IS_CAPS (caps), FALSE);
 
-  /* any pad can be unnegotiated */
-  if (caps == NULL)
-    return TRUE;
-
-  /* lock for checking the existing caps */
   GST_CAT_DEBUG_OBJECT (GST_CAT_CAPS, pad, "accept caps of %p", caps);
-#if 0
-  GST_OBJECT_LOCK (pad);
-  /* The current caps on a pad are trivially acceptable */
-  if (G_LIKELY ((existing = GST_PAD_CAPS (pad)))) {
-    if (caps == existing || gst_caps_is_equal (caps, existing))
-      goto is_same_caps;
+
+  query = gst_query_new_accept_caps (caps);
+  res = gst_pad_query (pad, query);
+  if (res) {
+    GST_DEBUG_OBJECT (pad, "query returned %d", res);
+    gst_query_parse_accept_caps_result (query, &res);
   }
-  GST_OBJECT_UNLOCK (pad);
-#endif
-  acceptfunc = GST_PAD_ACCEPTCAPSFUNC (pad);
+  gst_query_unref (query);
 
-  /* Only null if the element explicitly unset it */
-  if (G_UNLIKELY (acceptfunc == NULL))
-    goto no_func;
-
-  /* we can call the function */
-  result = acceptfunc (pad, caps);
-  GST_DEBUG_OBJECT (pad, "acceptfunc returned %d", result);
-
-  return result;
-
-#if 0
-is_same_caps:
-  {
-    GST_DEBUG_OBJECT (pad, "pad had same caps");
-    GST_OBJECT_UNLOCK (pad);
-    return TRUE;
-  }
-#endif
-no_func:
-  {
-    GST_DEBUG_OBJECT (pad, "no acceptcaps function");
-    return FALSE;
-  }
+  return res;
 }
 
 /**
@@ -2546,41 +2460,24 @@ no_func:
  * @caps: a #GstCaps to check on the pad
  *
  * Check if the peer of @pad accepts @caps. If @pad has no peer, this function
- * returns TRUE.
+ * returns FALSE.
  *
  * Returns: TRUE if the peer of @pad can accept the caps or @pad has no peer.
  */
 gboolean
 gst_pad_peer_accept_caps (GstPad * pad, GstCaps * caps)
 {
-  GstPad *peerpad;
   gboolean result;
+  GstQuery *query;
 
   g_return_val_if_fail (GST_IS_PAD (pad), FALSE);
+  g_return_val_if_fail (GST_IS_CAPS (caps), FALSE);
 
-  GST_OBJECT_LOCK (pad);
-
-  GST_CAT_DEBUG_OBJECT (GST_CAT_CAPS, pad, "peer accept caps of (%p)", pad);
-
-  peerpad = GST_PAD_PEER (pad);
-  if (G_UNLIKELY (peerpad == NULL))
-    goto no_peer;
-
-  gst_object_ref (peerpad);
-  /* release lock before calling external methods but keep ref to pad */
-  GST_OBJECT_UNLOCK (pad);
-
-  result = gst_pad_accept_caps (peerpad, caps);
-
-  gst_object_unref (peerpad);
+  query = gst_query_new_accept_caps (caps);
+  result = gst_pad_peer_query (pad, query);
+  gst_query_unref (query);
 
   return result;
-
-no_peer:
-  {
-    GST_OBJECT_UNLOCK (pad);
-    return TRUE;
-  }
 }
 
 /**
@@ -3093,6 +2990,33 @@ gst_pad_event_default (GstPad * pad, GstEvent * event)
   return result;
 }
 
+/* Default accept caps implementation just checks against
+ * the allowed caps for the pad */
+static gboolean
+gst_pad_query_accept_caps (GstPad * pad, GstQuery * query)
+{
+  /* get the caps and see if it intersects to something not empty */
+  GstCaps *caps, *allowed;
+  gboolean result;
+
+  gst_query_parse_accept_caps (query, &caps);
+
+  GST_DEBUG_OBJECT (pad, "caps %" GST_PTR_FORMAT, caps);
+
+  allowed = gst_pad_get_caps (pad, NULL);
+  if (allowed) {
+    GST_DEBUG_OBJECT (pad, "allowed caps %" GST_PTR_FORMAT, allowed);
+    result = gst_caps_is_subset (caps, allowed);
+    gst_caps_unref (allowed);
+  } else {
+    GST_DEBUG_OBJECT (pad, "no caps allowed on the pad");
+    result = FALSE;
+  }
+  gst_query_set_accept_caps_result (query, result);
+
+  return TRUE;
+}
+
 /**
  * gst_pad_query_default:
  * @pad: a #GstPad to call the default query handler on.
@@ -3113,6 +3037,10 @@ gst_pad_query_default (GstPad * pad, GstQuery * query)
 
   switch (GST_QUERY_TYPE (query)) {
     case GST_QUERY_SCHEDULING:
+      forward = FALSE;
+      break;
+    case GST_QUERY_ACCEPT_CAPS:
+      ret = gst_pad_query_accept_caps (pad, query);
       forward = FALSE;
       break;
     case GST_QUERY_POSITION:

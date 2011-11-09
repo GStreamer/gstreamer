@@ -197,6 +197,7 @@ static GstFlowReturn gst_queue_push_one (GstQueue * queue);
 static void gst_queue_loop (GstPad * pad);
 
 static gboolean gst_queue_handle_sink_event (GstPad * pad, GstEvent * event);
+static gboolean gst_queue_handle_sink_query (GstPad * pad, GstQuery * query);
 
 static gboolean gst_queue_handle_src_event (GstPad * pad, GstEvent * event);
 static gboolean gst_queue_handle_src_query (GstPad * pad, GstQuery * query);
@@ -370,6 +371,7 @@ gst_queue_class_init (GstQueueClass * klass)
   GST_DEBUG_REGISTER_FUNCPTR (gst_queue_chain);
   GST_DEBUG_REGISTER_FUNCPTR (gst_queue_sink_activate_push);
   GST_DEBUG_REGISTER_FUNCPTR (gst_queue_handle_sink_event);
+  GST_DEBUG_REGISTER_FUNCPTR (gst_queue_handle_sink_query);
   GST_DEBUG_REGISTER_FUNCPTR (gst_queue_link_sink);
   GST_DEBUG_REGISTER_FUNCPTR (gst_queue_getcaps);
   GST_DEBUG_REGISTER_FUNCPTR (gst_queue_acceptcaps);
@@ -388,9 +390,9 @@ gst_queue_init (GstQueue * queue)
   gst_pad_set_activatepush_function (queue->sinkpad,
       gst_queue_sink_activate_push);
   gst_pad_set_event_function (queue->sinkpad, gst_queue_handle_sink_event);
+  gst_pad_set_query_function (queue->sinkpad, gst_queue_handle_sink_query);
   gst_pad_set_link_function (queue->sinkpad, gst_queue_link_sink);
   gst_pad_set_getcaps_function (queue->sinkpad, gst_queue_getcaps);
-  gst_pad_set_acceptcaps_function (queue->sinkpad, gst_queue_acceptcaps);
   gst_element_add_pad (GST_ELEMENT (queue), queue->sinkpad);
 
   queue->srcpad = gst_pad_new_from_static_template (&srctemplate, "src");
@@ -398,7 +400,6 @@ gst_queue_init (GstQueue * queue)
   gst_pad_set_activatepush_function (queue->srcpad,
       gst_queue_src_activate_push);
   gst_pad_set_link_function (queue->srcpad, gst_queue_link_src);
-  gst_pad_set_acceptcaps_function (queue->srcpad, gst_queue_acceptcaps);
   gst_pad_set_getcaps_function (queue->srcpad, gst_queue_getcaps);
   gst_pad_set_event_function (queue->srcpad, gst_queue_handle_src_event);
   gst_pad_set_query_function (queue->srcpad, gst_queue_handle_src_query);
@@ -863,6 +864,26 @@ out_eos:
 }
 
 static gboolean
+gst_queue_handle_sink_query (GstPad * pad, GstQuery * query)
+{
+  GstQueue *queue = GST_QUEUE (gst_pad_get_parent (pad));
+  gboolean res;
+
+  if (G_UNLIKELY (queue == NULL))
+    return FALSE;
+
+  switch (GST_QUERY_TYPE (query)) {
+    case GST_QUERY_ACCEPT_CAPS:
+    default:
+      res = gst_pad_peer_query (queue->srcpad, query);
+      break;
+  }
+  gst_object_unref (queue);
+
+  return res;
+}
+
+static gboolean
 gst_queue_is_empty (GstQueue * queue)
 {
   if (queue->queue.length == 0)
@@ -1273,19 +1294,12 @@ static gboolean
 gst_queue_handle_src_query (GstPad * pad, GstQuery * query)
 {
   GstQueue *queue = GST_QUEUE (gst_pad_get_parent (pad));
-  GstPad *peer;
   gboolean res;
 
   if (G_UNLIKELY (queue == NULL))
     return FALSE;
 
-  if (!(peer = gst_pad_get_peer (queue->sinkpad))) {
-    gst_object_unref (queue);
-    return FALSE;
-  }
-
-  res = gst_pad_query (peer, query);
-  gst_object_unref (peer);
+  res = gst_pad_peer_query (queue->sinkpad, query);
   if (!res) {
     gst_object_unref (queue);
     return FALSE;

@@ -810,10 +810,6 @@ print_pad_info (GstElement * element)
     if (pad->getcapsfunc)
       n_print ("      Has getcapsfunc(): %s\n",
           GST_DEBUG_FUNCPTR_NAME (pad->getcapsfunc));
-    /* gst_pad_acceptcaps_default is static :/ */
-    if (pad->acceptcapsfunc)
-      n_print ("      Has acceptcapsfunc(): %s\n",
-          GST_DEBUG_FUNCPTR_NAME (pad->acceptcapsfunc));
     if (pad->fixatecapsfunc)
       n_print ("      Has fixatecapsfunc(): %s\n",
           GST_DEBUG_FUNCPTR_NAME (pad->fixatecapsfunc));

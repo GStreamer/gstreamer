@@ -419,18 +419,6 @@ typedef void			(*GstPadUnlinkFunction)		(GstPad *pad);
 typedef GstCaps*		(*GstPadGetCapsFunction)	(GstPad *pad, GstCaps *filter);
 
 /**
- * GstPadAcceptCapsFunction:
- * @pad: the #GstPad to check
- * @caps: the #GstCaps to check
- *
- * Check if @pad can accept @caps. By default this function will see if @caps
- * intersect with the result from gst_pad_get_caps() by can be overridden to
- * perform extra checks.
- *
- * Returns: TRUE if the caps can be accepted by the pad.
- */
-typedef gboolean		(*GstPadAcceptCapsFunction)	(GstPad *pad, GstCaps *caps);
-/**
  * GstPadFixateCapsFunction:
  * @pad: a #GstPad
  * @caps: the #GstCaps to fixate
@@ -626,7 +614,6 @@ typedef enum {
  * @block_cond: conditional to signal pad block
  * @probes: installed probes
  * @getcapsfunc: function to get caps of the pad
- * @acceptcapsfunc: function to check if pad can accept caps
  * @fixatecapsfunc: function to fixate caps
  * @mode: current activation mode of the pad
  * @activatefunc: pad activation function
@@ -668,7 +655,6 @@ struct _GstPad {
 
   /* the pad capabilities */
   GstPadGetCapsFunction		getcapsfunc;
-  GstPadAcceptCapsFunction	 acceptcapsfunc;
   GstPadFixateCapsFunction	 fixatecapsfunc;
 
   GstPadActivateMode		 mode;
@@ -743,7 +729,6 @@ struct _GstPadClass {
 #define GST_PAD_UNLINKFUNC(pad)		(GST_PAD_CAST(pad)->unlinkfunc)
 
 #define GST_PAD_GETCAPSFUNC(pad)	(GST_PAD_CAST(pad)->getcapsfunc)
-#define GST_PAD_ACCEPTCAPSFUNC(pad)	(GST_PAD_CAST(pad)->acceptcapsfunc)
 #define GST_PAD_FIXATECAPSFUNC(pad)	(GST_PAD_CAST(pad)->fixatecapsfunc)
 
 #define GST_PAD_IS_SRC(pad)		(GST_PAD_DIRECTION(pad) == GST_PAD_SRC)
@@ -880,7 +865,6 @@ GstPad*			gst_pad_get_peer			(GstPad *pad);
 
 /* capsnego functions */
 void			gst_pad_set_getcaps_function		(GstPad *pad, GstPadGetCapsFunction getcaps);
-void			gst_pad_set_acceptcaps_function		(GstPad *pad, GstPadAcceptCapsFunction acceptcaps);
 void			gst_pad_set_fixatecaps_function		(GstPad *pad, GstPadFixateCapsFunction fixatecaps);
 
 GstCaps*                gst_pad_get_pad_template_caps		(GstPad *pad);

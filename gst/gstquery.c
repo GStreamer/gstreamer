@@ -105,6 +105,7 @@ static GstQueryTypeDefinition standard_definitions[] = {
   {GST_QUERY_URI, "uri", "URI of the source or sink", 0},
   {GST_QUERY_ALLOCATION, "allocation", "Allocation properties", 0},
   {GST_QUERY_SCHEDULING, "scheduling", "Scheduling properties", 0},
+  {GST_QUERY_ACCEPT_CAPS, "accept-caps", "Accept caps", 0},
   {GST_QUERY_NONE, NULL, NULL, 0}
 };
 
@@ -2001,4 +2002,64 @@ gst_query_parse_scheduling (GstQuery * query, gboolean * pull_mode,
       GST_QUARK (MINSIZE), G_TYPE_INT, minsize,
       GST_QUARK (MAXSIZE), G_TYPE_INT, maxsize,
       GST_QUARK (ALIGN), G_TYPE_INT, align, NULL);
+}
+
+/**
+ * gst_query_new_accept_caps
+ * @caps: a #GstCaps
+ *
+ * Constructs a new query object for querying if @caps are accepted.
+ *
+ * Free-function: gst_query_unref
+ *
+ * Returns: (transfer full): a new #GstQuery
+ */
+GstQuery *
+gst_query_new_accept_caps (GstCaps * caps)
+{
+  GstQuery *query;
+  GstStructure *structure;
+
+  structure = gst_structure_new_id (GST_QUARK (QUERY_ACCEPT_CAPS),
+      GST_QUARK (CAPS), GST_TYPE_CAPS, caps,
+      GST_QUARK (RESULT), G_TYPE_BOOLEAN, FALSE, NULL);
+  query = gst_query_new (GST_QUERY_ACCEPT_CAPS, structure);
+
+  return query;
+}
+
+void
+gst_query_parse_accept_caps (GstQuery * query, GstCaps ** caps)
+{
+  GstStructure *structure;
+
+  g_return_if_fail (GST_QUERY_TYPE (query) == GST_QUERY_ACCEPT_CAPS);
+
+  structure = GST_QUERY_STRUCTURE (query);
+  gst_structure_id_get (structure, GST_QUARK (CAPS), GST_TYPE_CAPS, caps, NULL);
+}
+
+void
+gst_query_set_accept_caps_result (GstQuery * query, gboolean result)
+{
+  GstStructure *structure;
+
+  g_return_if_fail (GST_QUERY_TYPE (query) == GST_QUERY_ACCEPT_CAPS);
+  g_return_if_fail (gst_query_is_writable (query));
+
+  structure = GST_QUERY_STRUCTURE (query);
+  gst_structure_id_set (structure,
+      GST_QUARK (RESULT), G_TYPE_BOOLEAN, result, NULL);
+}
+
+void
+gst_query_parse_accept_caps_result (GstQuery * query, gboolean * result)
+{
+  GstStructure *structure;
+
+  g_return_if_fail (GST_QUERY_TYPE (query) == GST_QUERY_ACCEPT_CAPS);
+
+  structure = GST_QUERY_STRUCTURE (query);
+  gst_structure_id_get (structure,
+      GST_QUARK (RESULT), G_TYPE_BOOLEAN, result, NULL);
 }

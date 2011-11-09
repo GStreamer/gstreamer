@@ -55,6 +55,7 @@ G_BEGIN_DECLS
  * @GST_QUERY_URI: query the URI of the source or sink. Since 0.10.22.
  * @GST_QUERY_ALLOCATION: the buffer allocation properties
  * @GST_QUERY_SCHEDULING: the scheduling properties
+ * @GST_QUERY_ACCEPT_CAPS: the accept caps query
  *
  * Standard predefined Query types
  */
@@ -75,7 +76,9 @@ typedef enum {
   GST_QUERY_CUSTOM,
   GST_QUERY_URI,
   GST_QUERY_ALLOCATION,
-  GST_QUERY_SCHEDULING
+  GST_QUERY_SCHEDULING,
+  GST_QUERY_ACCEPT_CAPS,
+  GST_QUERY_LAST
 } GstQueryType;
 
 /**
@@ -378,6 +381,11 @@ void            gst_query_set_scheduling          (GstQuery *query, gboolean pul
 void            gst_query_parse_scheduling        (GstQuery *query, gboolean *pull_mode,
                                                    gboolean *random_access, gboolean *sequential,
                                                    gint *minsize, gint *maxsize, gint *align);
+/* accept-caps query */
+GstQuery *      gst_query_new_accept_caps          (GstCaps *caps);
+void            gst_query_parse_accept_caps        (GstQuery *query, GstCaps **caps);
+void            gst_query_set_accept_caps_result   (GstQuery *query, gboolean result);
+void            gst_query_parse_accept_caps_result (GstQuery *query, gboolean *result);
 
 G_END_DECLS
 

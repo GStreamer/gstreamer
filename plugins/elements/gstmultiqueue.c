@@ -1036,16 +1036,10 @@ gst_single_queue_push_one (GstMultiQueue * mq, GstSingleQueue * sq,
   if (GST_IS_BUFFER (object)) {
     GstBuffer *buffer;
     GstClockTime timestamp, duration;
-#if 0
-    GstCaps *caps;
-#endif
 
     buffer = GST_BUFFER_CAST (object);
     timestamp = GST_BUFFER_TIMESTAMP (buffer);
     duration = GST_BUFFER_DURATION (buffer);
-#if 0
-    caps = GST_BUFFER_CAPS (buffer);
-#endif
 
     apply_buffer (mq, sq, timestamp, duration, &sq->src_segment);
 
@@ -1055,14 +1049,6 @@ gst_single_queue_push_one (GstMultiQueue * mq, GstSingleQueue * sq,
     GST_DEBUG_OBJECT (mq,
         "SingleQueue %d : Pushing buffer %p with ts %" GST_TIME_FORMAT,
         sq->id, buffer, GST_TIME_ARGS (timestamp));
-
-#if 0
-    /* Set caps on pad before pushing, this avoids core calling the acceptcaps
-     * function on the srcpad, which will call acceptcaps upstream, which might
-     * not accept these caps (anymore). */
-    if (caps && caps != GST_PAD_CAPS (sq->srcpad))
-      gst_pad_set_caps (sq->srcpad, caps);
-#endif
 
     result = gst_pad_push (sq->srcpad, buffer);
   } else if (GST_IS_EVENT (object)) {
@@ -1525,6 +1511,7 @@ gst_multi_queue_sink_query (GstPad * pad, GstQuery * query)
   gboolean res;
 
   switch (GST_QUERY_TYPE (query)) {
+    case GST_QUERY_ACCEPT_CAPS:
     default:
       /* default handling */
       res = gst_pad_peer_query (sq->srcpad, query);
@@ -1547,22 +1534,6 @@ gst_multi_queue_getcaps (GstPad * pad, GstCaps * filter)
   result = gst_pad_peer_get_caps (otherpad, filter);
   if (result == NULL)
     result = (filter ? gst_caps_ref (filter) : gst_caps_new_any ());
-
-  return result;
-}
-
-static gboolean
-gst_multi_queue_acceptcaps (GstPad * pad, GstCaps * caps)
-{
-  GstSingleQueue *sq = gst_pad_get_element_private (pad);
-  GstPad *otherpad;
-  gboolean result;
-
-  otherpad = (pad == sq->srcpad) ? sq->sinkpad : sq->srcpad;
-
-  GST_LOG_OBJECT (otherpad, "Accept caps from the peer of this pad");
-
-  result = gst_pad_peer_accept_caps (otherpad, caps);
 
   return result;
 }
@@ -1605,6 +1576,7 @@ gst_multi_queue_src_query (GstPad * pad, GstQuery * query)
 
   /* FIXME, Handle position offset depending on queue size */
   switch (GST_QUERY_TYPE (query)) {
+    case GST_QUERY_ACCEPT_CAPS:
     default:
       /* default handling */
       res = gst_pad_peer_query (sq->sinkpad, query);
@@ -1953,8 +1925,6 @@ gst_single_queue_new (GstMultiQueue * mqueue, guint id)
       GST_DEBUG_FUNCPTR (gst_multi_queue_sink_event));
   gst_pad_set_getcaps_function (sq->sinkpad,
       GST_DEBUG_FUNCPTR (gst_multi_queue_getcaps));
-  gst_pad_set_acceptcaps_function (sq->sinkpad,
-      GST_DEBUG_FUNCPTR (gst_multi_queue_acceptcaps));
   gst_pad_set_query_function (sq->sinkpad,
       GST_DEBUG_FUNCPTR (gst_multi_queue_sink_query));
   gst_pad_set_iterate_internal_links_function (sq->sinkpad,
@@ -1968,8 +1938,6 @@ gst_single_queue_new (GstMultiQueue * mqueue, guint id)
       GST_DEBUG_FUNCPTR (gst_multi_queue_src_activate_push));
   gst_pad_set_getcaps_function (sq->srcpad,
       GST_DEBUG_FUNCPTR (gst_multi_queue_getcaps));
-  gst_pad_set_acceptcaps_function (sq->srcpad,
-      GST_DEBUG_FUNCPTR (gst_multi_queue_acceptcaps));
   gst_pad_set_event_function (sq->srcpad,
       GST_DEBUG_FUNCPTR (gst_multi_queue_src_event));
   gst_pad_set_query_function (sq->srcpad,
