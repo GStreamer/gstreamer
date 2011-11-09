@@ -142,16 +142,23 @@ gboolean
 gst_proxy_pad_query_default (GstPad * pad, GstQuery * query)
 {
   gboolean res;
-  GstPad *target;
 
   g_return_val_if_fail (GST_IS_PROXY_PAD (pad), FALSE);
   g_return_val_if_fail (GST_IS_QUERY (query), FALSE);
 
-  if (!(target = gst_proxy_pad_get_target (pad)))
-    goto no_target;
+  switch (GST_QUERY_TYPE (query)) {
+    default:
+    {
+      GstPad *target;
 
-  res = gst_pad_query (target, query);
-  gst_object_unref (target);
+      if (!(target = gst_proxy_pad_get_target (pad)))
+        goto no_target;
+
+      res = gst_pad_query (target, query);
+      gst_object_unref (target);
+      break;
+    }
+  }
 
   return res;
 

@@ -1518,6 +1518,21 @@ was_eos:
   }
 }
 
+static gboolean
+gst_multi_queue_sink_query (GstPad * pad, GstQuery * query)
+{
+  GstSingleQueue *sq = gst_pad_get_element_private (pad);
+  gboolean res;
+
+  switch (GST_QUERY_TYPE (query)) {
+    default:
+      /* default handling */
+      res = gst_pad_peer_query (sq->srcpad, query);
+      break;
+  }
+  return res;
+}
+
 static GstCaps *
 gst_multi_queue_getcaps (GstPad * pad, GstCaps * filter)
 {
@@ -1586,27 +1601,16 @@ static gboolean
 gst_multi_queue_src_query (GstPad * pad, GstQuery * query)
 {
   GstSingleQueue *sq = gst_pad_get_element_private (pad);
-  GstPad *peerpad;
   gboolean res;
 
   /* FIXME, Handle position offset depending on queue size */
-
-  /* default handling */
-  if (!(peerpad = gst_pad_get_peer (sq->sinkpad)))
-    goto no_peer;
-
-  res = gst_pad_query (peerpad, query);
-
-  gst_object_unref (peerpad);
-
-  return res;
-
-  /* ERRORS */
-no_peer:
-  {
-    GST_LOG_OBJECT (sq->sinkpad, "Couldn't send query because we have no peer");
-    return FALSE;
+  switch (GST_QUERY_TYPE (query)) {
+    default:
+      /* default handling */
+      res = gst_pad_peer_query (sq->sinkpad, query);
+      break;
   }
+  return res;
 }
 
 /*
@@ -1951,6 +1955,8 @@ gst_single_queue_new (GstMultiQueue * mqueue, guint id)
       GST_DEBUG_FUNCPTR (gst_multi_queue_getcaps));
   gst_pad_set_acceptcaps_function (sq->sinkpad,
       GST_DEBUG_FUNCPTR (gst_multi_queue_acceptcaps));
+  gst_pad_set_query_function (sq->sinkpad,
+      GST_DEBUG_FUNCPTR (gst_multi_queue_sink_query));
   gst_pad_set_iterate_internal_links_function (sq->sinkpad,
       GST_DEBUG_FUNCPTR (gst_multi_queue_iterate_internal_links));
 
