@@ -626,6 +626,7 @@ gst_omx_video_dec_loop (GstOMXVideoDec * self)
   GstVideoFrame *frame;
   GstFlowReturn flow_ret = GST_FLOW_OK;
   GstOMXAcquireBufferReturn acq_return;
+  GstClockTimeDiff deadline;
 
   acq_return = gst_omx_port_acquire_buffer (port, &buf);
   if (acq_return == GST_OMX_ACQUIRE_BUFFER_ERROR) {
@@ -701,10 +702,11 @@ gst_omx_video_dec_loop (GstOMXVideoDec * self)
   frame = _find_nearest_frame (self, buf);
 
   if (frame
-      &&
-      gst_base_video_decoder_get_max_decode_time (GST_BASE_VIDEO_DECODER (self),
-          frame) < 0) {
-    GST_WARNING_OBJECT (self, "Frame is too late, dropping");
+      && (deadline = gst_base_video_decoder_get_max_decode_time
+          (GST_BASE_VIDEO_DECODER (self), frame)) < 0) {
+    GST_WARNING_OBJECT (self,
+        "Frame is too late, dropping (deadline %" GST_TIME_FORMAT ")",
+        GST_TIME_ARGS (-deadline));
     gst_omx_port_release_buffer (self->out_port, buf);
     flow_ret =
         gst_base_video_decoder_finish_frame (GST_BASE_VIDEO_DECODER (self),
