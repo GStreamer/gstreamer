@@ -319,7 +319,7 @@ scan_for_start_codes (const GstByteReader * reader, guint offset, guint size)
  * Returns: a #GList of #GstMpegVideoTypeOffsetSize
  */
 GList *
-gst_mpeg_video_parse (guint8 * data, gsize size, guint offset)
+gst_mpeg_video_parse (const guint8 * data, gsize size, guint offset)
 {
   gint off, rsize;
   GstByteReader br;
@@ -385,7 +385,7 @@ gst_mpeg_video_parse (guint8 * data, gsize size, guint offset)
  */
 gboolean
 gst_mpeg_video_parse_sequence_header (GstMpegVideoSequenceHdr * seqhdr,
-    guint8 * data, gsize size, guint offset)
+    const guint8 * data, gsize size, guint offset)
 {
   GstBitReader br;
 
@@ -414,7 +414,7 @@ gst_mpeg_video_parse_sequence_header (GstMpegVideoSequenceHdr * seqhdr,
  */
 gboolean
 gst_mpeg_video_parse_sequence_extension (GstMpegVideoSequenceExt * seqext,
-    guint8 * data, gsize size, guint offset)
+    const guint8 * data, gsize size, guint offset)
 {
   GstBitReader br;
 
@@ -482,7 +482,7 @@ gst_mpeg_video_parse_sequence_extension (GstMpegVideoSequenceExt * seqext,
  */
 gboolean
 gst_mpeg_video_parse_quant_matrix_extension (GstMpegVideoQuantMatrixExt * quant,
-    guint8 * data, gsize size, guint offset)
+    const guint8 * data, gsize size, guint offset)
 {
   guint8 i;
   GstBitReader br;
@@ -556,7 +556,7 @@ failed:
  */
 gboolean
 gst_mpeg_video_parse_picture_extension (GstMpegVideoPictureExt * ext,
-    guint8 * data, gsize size, guint offset)
+    const guint8 * data, gsize size, guint offset)
 {
   GstBitReader br;
 
@@ -657,7 +657,7 @@ failed:
  */
 gboolean
 gst_mpeg_video_parse_picture_header (GstMpegVideoPictureHdr * hdr,
-    guint8 * data, gsize size, guint offset)
+    const guint8 * data, gsize size, guint offset)
 {
   GstBitReader br;
 
@@ -728,7 +728,7 @@ failed:
  * Returns: %TRUE if the gop could be parsed correctly, %FALSE otherwize.
  */
 gboolean
-gst_mpeg_video_parse_gop (GstMpegVideoGop * gop, guint8 * data,
+gst_mpeg_video_parse_gop (GstMpegVideoGop * gop, const guint8 * data,
     gsize size, guint offset)
 {
   GstBitReader br;

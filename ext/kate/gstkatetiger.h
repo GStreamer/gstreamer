@@ -88,6 +88,7 @@ struct _GstKateTiger
   guchar default_background_g;
   guchar default_background_b;
   guchar default_background_a;
+  gboolean silent;
 
   gint video_width;
   gint video_height;

@@ -110,6 +110,12 @@
  * gst_element_send_event (pipeline, event);
  * </programlisting>
  *
+ * When a DTMF tone actually starts or stop, a "dtmf-event-processed"
+ * element #GstMessage with the same fields as the "dtmf-event"
+ * #GstEvent that was used to request the event. Also, if any event
+ * has not been processed when the element goes from the PAUSED to the
+ * READY state, then a "dtmf-event-dropped" message is posted on the
+ * #GstBus in the order that they were received.
  */
 
 #ifdef HAVE_CONFIG_H
@@ -324,6 +330,9 @@ gst_dtmf_src_handle_dtmf_event (GstDTMFSrc * dtmfsrc,
   gboolean start;
   gint method;
   GstClockTime last_stop;
+  gint event_number;
+  gint event_volume;
+  gboolean correct_order;
 
   if (!gst_structure_get_int (event_structure, "type", &event_type) ||
       !gst_structure_get_boolean (event_structure, "start", &start) ||
@@ -336,22 +345,25 @@ gst_dtmf_src_handle_dtmf_event (GstDTMFSrc * dtmfsrc,
     }
   }
 
+  if (start)
+    if (!gst_structure_get_int (event_structure, "number", &event_number) ||
+        !gst_structure_get_int (event_structure, "volume", &event_volume))
+      goto failure;
+
 
   GST_OBJECT_LOCK (dtmfsrc);
   if (gst_structure_get_clock_time (event_structure, "last-stop", &last_stop))
     dtmfsrc->last_stop = last_stop;
   else
     dtmfsrc->last_stop = GST_CLOCK_TIME_NONE;
+  correct_order = (start != dtmfsrc->last_event_was_start);
+  dtmfsrc->last_event_was_start = start;
   GST_OBJECT_UNLOCK (dtmfsrc);
 
+  if (!correct_order)
+    goto failure;
+
   if (start) {
-    gint event_number;
-    gint event_volume;
-
-    if (!gst_structure_get_int (event_structure, "number", &event_number) ||
-        !gst_structure_get_int (event_structure, "volume", &event_volume))
-      goto failure;
-
     GST_DEBUG_OBJECT (dtmfsrc, "Received start event %d with volume %d",
         event_number, event_volume);
     gst_dtmf_src_add_start_event (dtmfsrc, event_number, event_volume);
@@ -625,6 +637,35 @@ gst_dtmf_src_create_next_tone_packet (GstDTMFSrc * dtmfsrc,
   return buf;
 }
 
+static void
+gst_dtmf_src_post_message (GstDTMFSrc * dtmfsrc, const gchar * message_name,
+    GstDTMFSrcEvent * event)
+{
+  GstStructure *s = NULL;
+
+  switch (event->event_type) {
+    case DTMF_EVENT_TYPE_START:
+      s = gst_structure_new (message_name,
+          "type", G_TYPE_INT, 1,
+          "method", G_TYPE_INT, 2,
+          "start", G_TYPE_BOOLEAN, TRUE,
+          "number", G_TYPE_INT, event->event_number,
+          "volume", G_TYPE_INT, event->volume, NULL);
+      break;
+    case DTMF_EVENT_TYPE_STOP:
+      s = gst_structure_new (message_name,
+          "type", G_TYPE_INT, 1, "method", G_TYPE_INT, 2,
+          "start", G_TYPE_BOOLEAN, FALSE, NULL);
+      break;
+    case DTMF_EVENT_TYPE_PAUSE_TASK:
+      return;
+  }
+
+  if (s)
+    gst_element_post_message (GST_ELEMENT (dtmfsrc),
+        gst_message_new_element (GST_OBJECT (dtmfsrc), s));
+}
+
 static GstFlowReturn
 gst_dtmf_src_create (GstBaseSrc * basesrc, guint64 offset,
     guint length, GstBuffer ** buffer)
@@ -650,6 +691,7 @@ gst_dtmf_src_create (GstBaseSrc * basesrc, guint64 offset,
         case DTMF_EVENT_TYPE_STOP:
           GST_WARNING_OBJECT (dtmfsrc,
               "Received a DTMF stop event when already stopped");
+          gst_dtmf_src_post_message (dtmfsrc, "dtmf-event-dropped", event);
           break;
         case DTMF_EVENT_TYPE_START:
           gst_dtmf_prepare_timestamps (dtmfsrc);
@@ -657,6 +699,8 @@ gst_dtmf_src_create (GstBaseSrc * basesrc, guint64 offset,
           event->packet_count = 0;
           dtmfsrc->last_event = event;
           event = NULL;
+          gst_dtmf_src_post_message (dtmfsrc, "dtmf-event-processed",
+              dtmfsrc->last_event);
           break;
         case DTMF_EVENT_TYPE_PAUSE_TASK:
           /*
@@ -684,10 +728,12 @@ gst_dtmf_src_create (GstBaseSrc * basesrc, guint64 offset,
           case DTMF_EVENT_TYPE_START:
             GST_WARNING_OBJECT (dtmfsrc,
                 "Received two consecutive DTMF start events");
+            gst_dtmf_src_post_message (dtmfsrc, "dtmf-event-dropped", event);
             break;
           case DTMF_EVENT_TYPE_STOP:
             g_slice_free (GstDTMFSrcEvent, dtmfsrc->last_event);
             dtmfsrc->last_event = NULL;
+            gst_dtmf_src_post_message (dtmfsrc, "dtmf-event-processed", event);
             break;
           case DTMF_EVENT_TYPE_PAUSE_TASK:
             /*
@@ -853,9 +899,11 @@ gst_dtmf_src_change_state (GstElement * element, GstStateChange transition)
       event = g_async_queue_try_pop (dtmfsrc->event_queue);
 
       while (event != NULL) {
+        gst_dtmf_src_post_message (dtmfsrc, "dtmf-event-dropped", event);
         g_slice_free (GstDTMFSrcEvent, event);
         event = g_async_queue_try_pop (dtmfsrc->event_queue);
       }
+      dtmfsrc->last_event_was_start = FALSE;
       dtmfsrc->timestamp = 0;
       no_preroll = TRUE;
       break;
@@ -878,9 +926,11 @@ gst_dtmf_src_change_state (GstElement * element, GstStateChange transition)
       event = g_async_queue_try_pop (dtmfsrc->event_queue);
 
       while (event != NULL) {
+        gst_dtmf_src_post_message (dtmfsrc, "dtmf-event-dropped", event);
         g_slice_free (GstDTMFSrcEvent, event);
         event = g_async_queue_try_pop (dtmfsrc->event_queue);
       }
+      dtmfsrc->last_event_was_start = FALSE;
 
       break;
     default:

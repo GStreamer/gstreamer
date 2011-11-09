@@ -66,11 +66,11 @@ static GstStaticPadTemplate adpcmenc_src_template =
 #define DEFAULT_ADPCM_BLOCK_SIZE 1024
 #define DEFAULT_ADPCM_LAYOUT LAYOUT_ADPCM_DVI
 
-static int ima_indx_adjust[16] = {
+static const int ima_indx_adjust[16] = {
   -1, -1, -1, -1, 2, 4, 6, 8, -1, -1, -1, -1, 2, 4, 6, 8,
 };
 
-static int ima_step_size[89] = {
+static const int ima_step_size[89] = {
   7, 8, 9, 10, 11, 12, 13, 14, 16, 17, 19, 21, 23, 25, 28, 31, 34, 37, 41, 45,
   50, 55, 60, 66, 73, 80, 88, 97, 107, 118, 130, 143, 157, 173, 190, 209, 230,
   253, 279, 307, 337, 371, 408, 449, 494, 544, 598, 658, 724, 796, 876, 963,
@@ -302,7 +302,8 @@ adpcmenc_encode_ima_sample (gint16 sample, gint16 * prev_sample,
 }
 
 static gboolean
-adpcmenc_encode_ima_block (ADPCMEnc * enc, gint16 * samples, guint8 * outbuf)
+adpcmenc_encode_ima_block (ADPCMEnc * enc, const gint16 * samples,
+    guint8 * outbuf)
 {
   const int HEADER_SIZE = 4;
   gint16 prev_sample[2] = { 0, 0 };
@@ -368,7 +369,7 @@ adpcmenc_encode_ima_block (ADPCMEnc * enc, gint16 * samples, guint8 * outbuf)
 }
 
 static GstFlowReturn
-adpcmenc_encode_block (ADPCMEnc * enc, gint16 * samples, int blocksize)
+adpcmenc_encode_block (ADPCMEnc * enc, const gint16 * samples, int blocksize)
 {
   gboolean res;
   GstBuffer *outbuf = NULL;

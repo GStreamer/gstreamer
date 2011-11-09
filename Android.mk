@@ -8,6 +8,7 @@ GST_PLUGINS_BAD_BUILT_SOURCES := \
 	pkgconfig/gstreamer-plugins-bad-0.10.pc \
 	gst-libs/gst/baseparse/Android.mk \
 	gst-libs/gst/basecamerabinsrc/Android.mk \
+	gst-libs/gst/codecparsers/Android.mk \
 	gst-libs/gst/interfaces/Android.mk \
 	gst/h264parse/Android.mk \
 	gst/videoparsers/Android.mk \
@@ -102,6 +103,7 @@ CONFIGURE_TARGETS += gst-plugins-bad-configure
 
 -include $(GST_PLUGINS_BAD_TOP)/gst-libs/gst/baseparse/Android.mk
 -include $(GST_PLUGINS_BAD_TOP)/gst-libs/gst/basecamerabinsrc/Android.mk
+-include $(GST_PLUGINS_BAD_TOP)/gst-libs/gst/codecparsers/Android.mk
 -include $(GST_PLUGINS_BAD_TOP)/gst-libs/gst/interfaces/Android.mk
 -include $(GST_PLUGINS_BAD_TOP)/gst/h264parse/Android.mk
 -include $(GST_PLUGINS_BAD_TOP)/gst/audiobuffer/Android.mk

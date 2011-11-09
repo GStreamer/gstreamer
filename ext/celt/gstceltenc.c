@@ -494,7 +494,7 @@ gst_celt_enc_src_query (GstPad * pad, GstQuery * query)
       GstClockTime min_latency, max_latency;
       gint64 latency;
 
-      if ((res = gst_pad_peer_query (pad, query))) {
+      if ((res = gst_pad_peer_query (enc->sinkpad, query))) {
         gst_query_parse_latency (query, &live, &min_latency, &max_latency);
 
         latency = gst_celt_enc_get_latency (enc);
@@ -820,7 +820,7 @@ gst_celt_enc_encode (GstCeltEnc * enc, gboolean flush)
   }
 
   if (flush && gst_adapter_available (enc->adapter) % bytes != 0) {
-    guint diff = gst_adapter_available (enc->adapter) % bytes;
+    guint diff = bytes - gst_adapter_available (enc->adapter) % bytes;
     GstBuffer *buf = gst_buffer_new_and_alloc (diff);
 
     memset (GST_BUFFER_DATA (buf), 0, diff);
