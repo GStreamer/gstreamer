@@ -1873,17 +1873,6 @@ gst_subtitle_overlay_subtitle_sink_getcaps (GstPad * pad, GstCaps * filter)
 }
 
 static gboolean
-gst_subtitle_overlay_subtitle_sink_acceptcaps (GstPad * pad, GstCaps * caps)
-{
-  GstCaps *othercaps = gst_subtitle_overlay_subtitle_sink_getcaps (pad, NULL);
-  gboolean ret = gst_caps_is_subset (caps, othercaps);
-
-  gst_caps_unref (othercaps);
-
-  return ret;
-}
-
-static gboolean
 gst_subtitle_overlay_subtitle_sink_setcaps (GstSubtitleOverlay * self,
     GstCaps * caps)
 {
@@ -2052,6 +2041,34 @@ out:
   return ret;
 }
 
+static gboolean
+gst_subtitle_overlay_subtitle_sink_query (GstPad * pad, GstQuery * query)
+{
+  GstSubtitleOverlay *self = GST_SUBTITLE_OVERLAY (gst_pad_get_parent (pad));
+  gboolean ret;
+
+  switch (GST_QUERY_TYPE (query)) {
+    case GST_QUERY_ACCEPT_CAPS:
+    {
+      GstCaps *caps, *othercaps;
+
+      gst_query_parse_accept_caps (query, &caps);
+      othercaps = gst_subtitle_overlay_subtitle_sink_getcaps (pad, NULL);
+      ret = gst_caps_is_subset (caps, othercaps);
+      gst_caps_unref (othercaps);
+      gst_query_set_accept_caps_result (query, ret);
+      ret = TRUE;
+      break;
+    }
+    default:
+      ret = gst_pad_query_default (pad, query);
+      break;
+  }
+  gst_object_unref (self);
+
+  return ret;
+}
+
 static void
 gst_subtitle_overlay_init (GstSubtitleOverlay * self)
 {
@@ -2101,12 +2118,12 @@ gst_subtitle_overlay_init (GstSubtitleOverlay * self)
       GST_DEBUG_FUNCPTR (gst_subtitle_overlay_subtitle_sink_unlink));
   gst_pad_set_event_function (self->subtitle_sinkpad,
       GST_DEBUG_FUNCPTR (gst_subtitle_overlay_subtitle_sink_event));
+  gst_pad_set_query_function (self->subtitle_sinkpad,
+      GST_DEBUG_FUNCPTR (gst_subtitle_overlay_subtitle_sink_query));
   gst_pad_set_chain_function (self->subtitle_sinkpad,
       GST_DEBUG_FUNCPTR (gst_subtitle_overlay_subtitle_sink_chain));
   gst_pad_set_getcaps_function (self->subtitle_sinkpad,
       GST_DEBUG_FUNCPTR (gst_subtitle_overlay_subtitle_sink_getcaps));
-  gst_pad_set_acceptcaps_function (self->subtitle_sinkpad,
-      GST_DEBUG_FUNCPTR (gst_subtitle_overlay_subtitle_sink_acceptcaps));
 
   proxypad =
       GST_PAD_CAST (gst_proxy_pad_get_internal (GST_PROXY_PAD
