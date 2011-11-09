@@ -8830,8 +8830,16 @@ qtdemux_parse_tree (GstQTDemux * qtdemux)
   /* Moving qt creation time (secs since 1904) to unix time */
   if (creation_time != 0) {
     if (creation_time > QTDEMUX_SECONDS_FROM_1904_TO_1970) {
+      GTimeVal now;
+
       creation_time -= QTDEMUX_SECONDS_FROM_1904_TO_1970;
-      datetime = gst_date_time_new_from_unix_epoch_local_time (creation_time);
+      /* some data cleansing sanity */
+      g_get_current_time (&now);
+      if (now.tv_sec + 24 * 3600 < creation_time) {
+        GST_DEBUG_OBJECT (qtdemux, "discarding bogus future creation time");
+      } else {
+        datetime = gst_date_time_new_from_unix_epoch_local_time (creation_time);
+      }
     } else {
       GST_WARNING_OBJECT (qtdemux, "Can't handle datetimes before 1970 yet, "
           "please file a bug at http://bugzilla.gnome.org");
