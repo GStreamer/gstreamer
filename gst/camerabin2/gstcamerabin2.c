@@ -377,11 +377,6 @@ gst_camera_bin_start_capture (GstCameraBin2 * camerabin)
 
   GST_CAMERA_BIN2_PROCESSING_INC (camerabin);
 
-  if (camerabin->post_previews) {
-    /* Count processing of preview images too */
-    GST_CAMERA_BIN2_PROCESSING_INC (camerabin);
-  }
-
   if (camerabin->location)
     location = g_strdup_printf (camerabin->location, capture_index);
 
@@ -410,11 +405,17 @@ gst_camera_bin_start_capture (GstCameraBin2 * camerabin)
         g_slist_append (camerabin->image_location_list, g_strdup (location));
   }
 
-  /* store the next preview filename */
-  g_mutex_lock (camerabin->preview_list_mutex);
-  camerabin->preview_location_list =
-      g_slist_append (camerabin->preview_location_list, location);
-  g_mutex_unlock (camerabin->preview_list_mutex);
+  if (camerabin->post_previews) {
+    /* Count processing of preview images too */
+    GST_CAMERA_BIN2_PROCESSING_INC (camerabin);
+    /* store the next preview filename */
+    g_mutex_lock (camerabin->preview_list_mutex);
+    camerabin->preview_location_list =
+        g_slist_append (camerabin->preview_location_list, location);
+    g_mutex_unlock (camerabin->preview_list_mutex);
+  } else {
+    g_free (location);
+  }
 
   g_signal_emit_by_name (camerabin->src, "start-capture", NULL);
   if (camerabin->mode == MODE_VIDEO && camerabin->audio_src)
