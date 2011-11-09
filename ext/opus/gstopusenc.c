@@ -270,7 +270,7 @@ gst_opus_enc_sink_setcaps (GstPad * pad, GstCaps * caps)
     gst_caps_unref (otherpadcaps);
   }
 
-  GST_ERROR_OBJECT (pad, "channels=%d rate=%d frame-size=%d",
+  GST_DEBUG_OBJECT (pad, "channels=%d rate=%d frame-size=%d",
       enc->n_channels, enc->sample_rate, enc->frame_size);
   switch (enc->frame_size) {
     case 2:
@@ -296,7 +296,7 @@ gst_opus_enc_sink_setcaps (GstPad * pad, GstCaps * caps)
       return FALSE;
       break;
   }
-  GST_ERROR ("frame_samples %d", enc->frame_samples);
+  GST_DEBUG_OBJECT (pad, "frame_samples %d", enc->frame_samples);
 
   gst_opus_enc_setup (enc);
 
@@ -534,7 +534,7 @@ gst_opus_enc_src_query (GstPad * pad, GstQuery * query)
       GstClockTime min_latency, max_latency;
       gint64 latency;
 
-      if ((res = gst_pad_peer_query (pad, query))) {
+      if ((res = gst_pad_peer_query (enc->sinkpad, query))) {
         gst_query_parse_latency (query, &live, &min_latency, &max_latency);
 
         latency = gst_opus_enc_get_latency (enc);
@@ -807,7 +807,7 @@ gst_opus_enc_encode (GstOpusEnc * enc, gboolean flush)
       (enc->bitrate * enc->frame_samples / enc->sample_rate + 4) / 8;
 
   if (flush && gst_adapter_available (enc->adapter) % bytes != 0) {
-    guint diff = gst_adapter_available (enc->adapter) % bytes;
+    guint diff = bytes - gst_adapter_available (enc->adapter) % bytes;
     GstBuffer *buf = gst_buffer_new_and_alloc (diff);
 
     memset (GST_BUFFER_DATA (buf), 0, diff);
