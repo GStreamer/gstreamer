@@ -125,8 +125,6 @@ static GstFlowReturn gst_base_video_encoder_chain (GstPad * pad,
     GstBuffer * buf);
 static GstStateChangeReturn gst_base_video_encoder_change_state (GstElement *
     element, GstStateChange transition);
-static const GstQueryType *gst_base_video_encoder_get_query_types (GstPad *
-    pad);
 static gboolean gst_base_video_encoder_src_query (GstPad * pad,
     GstQuery * query);
 
@@ -197,8 +195,6 @@ gst_base_video_encoder_init (GstBaseVideoEncoder * base_video_encoder)
 
   pad = GST_BASE_VIDEO_CODEC_SRC_PAD (base_video_encoder);
 
-  gst_pad_set_query_type_function (pad,
-      GST_DEBUG_FUNCPTR (gst_base_video_encoder_get_query_types));
   gst_pad_set_query_function (pad,
       GST_DEBUG_FUNCPTR (gst_base_video_encoder_src_query));
   gst_pad_set_event_function (pad,
@@ -613,18 +609,6 @@ gst_base_video_encoder_src_event (GstPad * pad, GstEvent * event)
 
   gst_object_unref (base_video_encoder);
   return ret;
-}
-
-static const GstQueryType *
-gst_base_video_encoder_get_query_types (GstPad * pad)
-{
-  static const GstQueryType query_types[] = {
-    GST_QUERY_CONVERT,
-    GST_QUERY_LATENCY,
-    0
-  };
-
-  return query_types;
 }
 
 static gboolean

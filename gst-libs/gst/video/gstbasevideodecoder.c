@@ -149,8 +149,6 @@ static gboolean gst_base_video_decoder_sink_query (GstPad * pad,
     GstQuery * query);
 static GstStateChangeReturn gst_base_video_decoder_change_state (GstElement *
     element, GstStateChange transition);
-static const GstQueryType *gst_base_video_decoder_get_query_types (GstPad *
-    pad);
 static gboolean gst_base_video_decoder_src_query (GstPad * pad,
     GstQuery * query);
 static void gst_base_video_decoder_reset (GstBaseVideoDecoder *
@@ -214,8 +212,6 @@ gst_base_video_decoder_init (GstBaseVideoDecoder * base_video_decoder)
 
   gst_pad_set_event_function (pad,
       GST_DEBUG_FUNCPTR (gst_base_video_decoder_src_event));
-  gst_pad_set_query_type_function (pad,
-      GST_DEBUG_FUNCPTR (gst_base_video_decoder_get_query_types));
   gst_pad_set_query_function (pad,
       GST_DEBUG_FUNCPTR (gst_base_video_decoder_src_query));
   gst_pad_use_fixed_caps (pad);
@@ -696,19 +692,6 @@ done:
 convert_error:
   GST_DEBUG_OBJECT (base_video_decoder, "could not convert format");
   goto done;
-}
-
-static const GstQueryType *
-gst_base_video_decoder_get_query_types (GstPad * pad)
-{
-  static const GstQueryType query_types[] = {
-    GST_QUERY_POSITION,
-    GST_QUERY_DURATION,
-    GST_QUERY_CONVERT,
-    0
-  };
-
-  return query_types;
 }
 
 static gboolean

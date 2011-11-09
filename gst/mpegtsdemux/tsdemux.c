@@ -179,7 +179,6 @@ enum
 };
 
 /* Pad functions */
-static const GstQueryType *gst_ts_demux_srcpad_query_types (GstPad * pad);
 static gboolean gst_ts_demux_srcpad_query (GstPad * pad, GstQuery * query);
 
 
@@ -366,18 +365,6 @@ gst_ts_demux_get_property (GObject * object, guint prop_id,
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
   }
-}
-
-static const GstQueryType *
-gst_ts_demux_srcpad_query_types (GstPad * pad)
-{
-  static const GstQueryType query_types[] = {
-    GST_QUERY_DURATION,
-    GST_QUERY_SEEKING,
-    0
-  };
-
-  return query_types;
 }
 
 static gboolean
@@ -1197,7 +1184,6 @@ create_pad_for_stream (MpegTSBase * base, MpegTSBaseStream * bstream,
     pad = gst_pad_new_from_template (template, name);
     gst_pad_use_fixed_caps (pad);
     gst_pad_set_caps (pad, caps);
-    gst_pad_set_query_type_function (pad, gst_ts_demux_srcpad_query_types);
     gst_pad_set_query_function (pad, gst_ts_demux_srcpad_query);
     gst_pad_set_event_function (pad, gst_ts_demux_srcpad_event);
   }
