@@ -411,10 +411,12 @@ gst_ebml_write_element_push (GstEbmlWrite * ebml, GstBuffer * buf,
   if (!buf_data)
     buf_data = GST_BUFFER_DATA (buf);
 
-  if (buf_data_end)
+  if (buf_data_end) {
     data_size = buf_data_end - buf_data;
-  else
+    GST_BUFFER_SIZE (buf) = data_size;
+  } else {
     data_size = GST_BUFFER_SIZE (buf);
+  }
 
   ebml->pos += data_size;
 

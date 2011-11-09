@@ -22,6 +22,8 @@
 #endif
 
 #include <string.h>
+#include <stdlib.h>
+#include <stdio.h>
 
 #include <gst/rtp/gstrtpbuffer.h>
 
@@ -61,8 +63,22 @@ static GstStaticPadTemplate gst_rtp_h263p_pay_sink_template =
 GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("video/x-h263, " "variant = (string) \"itu\" ")
+    GST_STATIC_CAPS ("video/x-h263, " "variant = (string) \"itu\"")
     );
+
+/*
+ * We also return these in getcaps() as required by the SDP caps
+ *
+ * width = (int) [16, 4096]
+ * height = (int) [16, 4096]
+ * "annex-f = (boolean) {true, false},"
+ * "annex-i = (boolean) {true, false},"
+ * "annex-j = (boolean) {true, false},"
+ * "annex-l = (boolean) {true, false},"
+ * "annex-t = (boolean) {true, false},"
+ * "annex-v = (boolean) {true, false}")
+ */
+
 
 static GstStaticPadTemplate gst_rtp_h263p_pay_src_template =
     GST_STATIC_PAD_TEMPLATE ("src",
@@ -87,6 +103,8 @@ static void gst_rtp_h263p_pay_get_property (GObject * object, guint prop_id,
 
 static gboolean gst_rtp_h263p_pay_setcaps (GstBaseRTPPayload * payload,
     GstCaps * caps);
+static GstCaps *gst_rtp_h263p_pay_sink_getcaps (GstBaseRTPPayload * payload,
+    GstPad * pad);
 static GstFlowReturn gst_rtp_h263p_pay_handle_buffer (GstBaseRTPPayload *
     payload, GstBuffer * buffer);
 
@@ -109,6 +127,7 @@ gst_rtp_h263p_pay_class_init (GstRtpH263PPayClass * klass)
   gobject_class->get_property = gst_rtp_h263p_pay_get_property;
 
   gstbasertppayload_class->set_caps = gst_rtp_h263p_pay_setcaps;
+  gstbasertppayload_class->get_caps = gst_rtp_h263p_pay_sink_getcaps;
   gstbasertppayload_class->handle_buffer = gst_rtp_h263p_pay_handle_buffer;
 
   g_object_class_install_property (G_OBJECT_CLASS (klass),
@@ -186,6 +205,380 @@ gst_rtp_h263p_pay_setcaps (GstBaseRTPPayload * payload, GstCaps * caps)
 
   return res;
 }
+
+static void
+caps_append (GstCaps * caps, GstStructure * in_s, guint x, guint y, guint mpi)
+{
+  GstStructure *s;
+
+  if (!in_s)
+    return;
+
+  if (mpi < 1 || mpi > 32)
+    return;
+
+  s = gst_structure_copy (in_s);
+
+  gst_structure_set (s,
+      "width", GST_TYPE_INT_RANGE, 1, x,
+      "height", GST_TYPE_INT_RANGE, 1, y,
+      "framerate", GST_TYPE_FRACTION_RANGE, 0, 1, 30000, 1001 * mpi, NULL);
+
+  gst_caps_merge_structure (caps, s);
+}
+
+
+static GstCaps *
+gst_rtp_h263p_pay_sink_getcaps (GstBaseRTPPayload * payload, GstPad * pad)
+{
+  GstRtpH263PPay *rtph263ppay;
+  GstCaps *caps = gst_caps_new_empty ();
+  GstCaps *peercaps = NULL;
+  GstCaps *intersect = NULL;
+  guint i;
+
+  rtph263ppay = GST_RTP_H263P_PAY (payload);
+
+  peercaps = gst_pad_peer_get_caps (GST_BASE_RTP_PAYLOAD_SRCPAD (payload));
+  if (!peercaps)
+    return
+        gst_caps_copy (gst_pad_get_pad_template_caps
+        (GST_BASE_RTP_PAYLOAD_SINKPAD (payload)));
+
+  intersect = gst_caps_intersect (peercaps,
+      gst_pad_get_pad_template_caps (GST_BASE_RTP_PAYLOAD_SRCPAD (payload)));
+  gst_caps_unref (peercaps);
+
+  if (gst_caps_is_empty (intersect))
+    return intersect;
+
+  for (i = 0; i < gst_caps_get_size (intersect); i++) {
+    GstStructure *s = gst_caps_get_structure (intersect, i);
+    const gchar *encoding_name = gst_structure_get_string (s, "encoding-name");
+
+    if (!strcmp (encoding_name, "H263-2000")) {
+      const gchar *profile_str = gst_structure_get_string (s, "profile");
+      const gchar *level_str = gst_structure_get_string (s, "level");
+      int profile = 0;
+      int level = 0;
+
+      if (profile_str && level_str) {
+        gboolean i = FALSE, j = FALSE, l = FALSE, t = FALSE, f = FALSE,
+            v = FALSE;
+        GstStructure *new_s = gst_structure_new ("video/x-h263",
+            "variant", G_TYPE_STRING, "itu",
+            NULL);
+
+        profile = atoi (profile_str);
+        level = atoi (level_str);
+
+        /* These profiles are defined in the H.263 Annex X */
+        switch (profile) {
+          case 0:
+            /* The Baseline Profile (Profile 0) */
+            break;
+          case 1:
+            /* H.320 Coding Efficiency Version 2 Backward-Compatibility Profile
+             * (Profile 1)
+             * Baseline + Annexes I, J, L.4 and T
+             */
+            i = j = l = t = TRUE;
+            break;
+          case 2:
+            /* Version 1 Backward-Compatibility Profile (Profile 2)
+             * Baseline + Annex F
+             */
+            i = j = l = t = f = TRUE;
+            break;
+          case 3:
+            /* Version 2 Interactive and Streaming Wireless Profile
+             * Baseline + Annexes I, J, T
+             */
+            i = j = t = TRUE;
+            break;
+          case 4:
+            /* Version 3 Interactive and Streaming Wireless Profile (Profile 4)
+             * Baseline + Annexes I, J, T, V, W.6.3.8,
+             */
+            /* Missing W.6.3.8 */
+            i = j = t = v = TRUE;
+            break;
+          case 5:
+            /* Conversational High Compression Profile (Profile 5)
+             * Baseline + Annexes F, I, J, L.4, T, D, U
+             */
+            /* Missing D, U */
+            f = i = j = l = t = TRUE;
+            break;
+          case 6:
+            /* Conversational Internet Profile (Profile 6)
+             * Baseline + Annexes F, I, J, L.4, T, D, U and
+             * K with arbitratry slice ordering
+             */
+            /* Missing D, U, K with arbitratry slice ordering */
+            f = i = j = l = t = TRUE;
+            break;
+          case 7:
+            /* Conversational Interlace Profile (Profile 7)
+             * Baseline + Annexes F, I, J, L.4, T, D, U,  W.6.3.11
+             */
+            /* Missing D, U, W.6.3.11 */
+            f = i = j = l = t = TRUE;
+            break;
+          case 8:
+            /* High Latency Profile (Profile 8)
+             * Baseline + Annexes F, I, J, L.4, T, D, U, P.5, O.1.1 and
+             * K with arbitratry slice ordering
+             */
+            /* Missing D, U, P.5, O.1.1 */
+            f = i = j = l = t = TRUE;
+            break;
+        }
+
+
+        if (f || i || j || t || l || v) {
+          GValue list = { 0 };
+          GValue vstr = { 0 };
+
+          g_value_init (&list, GST_TYPE_LIST);
+          g_value_init (&vstr, G_TYPE_STRING);
+
+          g_value_set_static_string (&vstr, "h263");
+          gst_value_list_append_value (&list, &vstr);
+          g_value_set_static_string (&vstr, "h263p");
+          gst_value_list_append_value (&list, &vstr);
+
+          if (l || v) {
+            g_value_set_static_string (&vstr, "h263pp");
+            gst_value_list_append_value (&list, &vstr);
+          }
+          g_value_unset (&vstr);
+
+          gst_structure_set_value (new_s, "h263version", &list);
+          g_value_unset (&list);
+        } else {
+          gst_structure_set (new_s, "h263version", G_TYPE_STRING, "h263", NULL);
+        }
+
+
+        if (!f)
+          gst_structure_set (new_s, "annex-f", G_TYPE_BOOLEAN, FALSE, NULL);
+        if (!i)
+          gst_structure_set (new_s, "annex-i", G_TYPE_BOOLEAN, FALSE, NULL);
+        if (!j)
+          gst_structure_set (new_s, "annex-j", G_TYPE_BOOLEAN, FALSE, NULL);
+        if (!t)
+          gst_structure_set (new_s, "annex-t", G_TYPE_BOOLEAN, FALSE, NULL);
+        if (!l)
+          gst_structure_set (new_s, "annex-l", G_TYPE_BOOLEAN, FALSE, NULL);
+        if (!v)
+          gst_structure_set (new_s, "annex-v", G_TYPE_BOOLEAN, FALSE, NULL);
+
+
+        if (level <= 10 || level == 45) {
+          gst_structure_set (new_s,
+              "width", GST_TYPE_INT_RANGE, 1, 176,
+              "height", GST_TYPE_INT_RANGE, 1, 144,
+              "framerate", GST_TYPE_FRACTION_RANGE, 0, 1, 30000, 2002, NULL);
+          gst_caps_merge_structure (caps, new_s);
+        } else if (level <= 20) {
+          GstStructure *s_copy = gst_structure_copy (new_s);
+
+          gst_structure_set (new_s,
+              "width", GST_TYPE_INT_RANGE, 1, 352,
+              "height", GST_TYPE_INT_RANGE, 1, 288,
+              "framerate", GST_TYPE_FRACTION_RANGE, 0, 1, 30000, 2002, NULL);
+          gst_caps_merge_structure (caps, new_s);
+
+          gst_structure_set (s_copy,
+              "width", GST_TYPE_INT_RANGE, 1, 176,
+              "height", GST_TYPE_INT_RANGE, 1, 144,
+              "framerate", GST_TYPE_FRACTION_RANGE, 0, 1, 30000, 1001, NULL);
+          gst_caps_merge_structure (caps, s_copy);
+        } else if (level <= 40) {
+
+          gst_structure_set (new_s,
+              "width", GST_TYPE_INT_RANGE, 1, 352,
+              "height", GST_TYPE_INT_RANGE, 1, 288,
+              "framerate", GST_TYPE_FRACTION_RANGE, 0, 1, 30000, 1001, NULL);
+          gst_caps_merge_structure (caps, new_s);
+        } else if (level <= 50) {
+          GstStructure *s_copy = gst_structure_copy (new_s);
+
+          gst_structure_set (new_s,
+              "width", GST_TYPE_INT_RANGE, 1, 352,
+              "height", GST_TYPE_INT_RANGE, 1, 288,
+              "framerate", GST_TYPE_FRACTION_RANGE, 0, 1, 50, 1, NULL);
+          gst_caps_merge_structure (caps, new_s);
+
+          gst_structure_set (s_copy,
+              "width", GST_TYPE_INT_RANGE, 1, 352,
+              "height", GST_TYPE_INT_RANGE, 1, 240,
+              "framerate", GST_TYPE_FRACTION_RANGE, 0, 1, 60000, 1001, NULL);
+          gst_caps_merge_structure (caps, s_copy);
+        } else if (level <= 60) {
+          GstStructure *s_copy = gst_structure_copy (new_s);
+
+          gst_structure_set (new_s,
+              "width", GST_TYPE_INT_RANGE, 1, 720,
+              "height", GST_TYPE_INT_RANGE, 1, 288,
+              "framerate", GST_TYPE_FRACTION_RANGE, 0, 1, 50, 1, NULL);
+          gst_caps_merge_structure (caps, new_s);
+
+          gst_structure_set (s_copy,
+              "width", GST_TYPE_INT_RANGE, 1, 720,
+              "height", GST_TYPE_INT_RANGE, 1, 240,
+              "framerate", GST_TYPE_FRACTION_RANGE, 0, 1, 60000, 1001, NULL);
+          gst_caps_merge_structure (caps, s_copy);
+        } else if (level <= 70) {
+          GstStructure *s_copy = gst_structure_copy (new_s);
+
+          gst_structure_set (new_s,
+              "width", GST_TYPE_INT_RANGE, 1, 720,
+              "height", GST_TYPE_INT_RANGE, 1, 576,
+              "framerate", GST_TYPE_FRACTION_RANGE, 0, 1, 50, 1, NULL);
+          gst_caps_merge_structure (caps, new_s);
+
+          gst_structure_set (s_copy,
+              "width", GST_TYPE_INT_RANGE, 1, 720,
+              "height", GST_TYPE_INT_RANGE, 1, 480,
+              "framerate", GST_TYPE_FRACTION_RANGE, 0, 1, 60000, 1001, NULL);
+          gst_caps_merge_structure (caps, s_copy);
+        } else {
+          gst_caps_merge_structure (caps, new_s);
+        }
+
+      } else {
+        GstStructure *new_s = gst_structure_new ("video/x-h263",
+            "variant", G_TYPE_STRING, "itu",
+            "h263version", G_TYPE_STRING, "h263",
+            NULL);
+
+        GST_DEBUG_OBJECT (rtph263ppay, "No profile or level specified"
+            " for H263-2000, defaulting to baseline H263");
+
+        gst_caps_merge_structure (caps, new_s);
+      }
+    } else {
+      gboolean f = FALSE, i = FALSE, j = FALSE, t = FALSE;
+      /* FIXME: ffmpeg support the Appendix K too, how do we express it ?
+       *   guint k;
+       */
+      const gchar *str;
+      GstStructure *new_s = gst_structure_new ("video/x-h263",
+          "variant", G_TYPE_STRING, "itu",
+          NULL);
+      gboolean added = FALSE;
+
+      str = gst_structure_get_string (s, "f");
+      if (str && !strcmp (str, "1"))
+        f = TRUE;
+
+      str = gst_structure_get_string (s, "i");
+      if (str && !strcmp (str, "1"))
+        i = TRUE;
+
+      str = gst_structure_get_string (s, "j");
+      if (str && !strcmp (str, "1"))
+        j = TRUE;
+
+      str = gst_structure_get_string (s, "t");
+      if (str && !strcmp (str, "1"))
+        t = TRUE;
+
+      if (f || i || j || t) {
+        GValue list = { 0 };
+        GValue vstr = { 0 };
+
+        g_value_init (&list, GST_TYPE_LIST);
+        g_value_init (&vstr, G_TYPE_STRING);
+
+        g_value_set_static_string (&vstr, "h263");
+        gst_value_list_append_value (&list, &vstr);
+        g_value_set_static_string (&vstr, "h263p");
+        gst_value_list_append_value (&list, &vstr);
+        g_value_unset (&vstr);
+
+        gst_structure_set_value (new_s, "h263version", &list);
+        g_value_unset (&list);
+      } else {
+        gst_structure_set (new_s, "h263version", G_TYPE_STRING, "h263", NULL);
+      }
+
+      if (!f)
+        gst_structure_set (new_s, "annex-f", G_TYPE_BOOLEAN, FALSE, NULL);
+      if (!i)
+        gst_structure_set (new_s, "annex-i", G_TYPE_BOOLEAN, FALSE, NULL);
+      if (!j)
+        gst_structure_set (new_s, "annex-j", G_TYPE_BOOLEAN, FALSE, NULL);
+      if (!t)
+        gst_structure_set (new_s, "annex-t", G_TYPE_BOOLEAN, FALSE, NULL);
+
+
+      str = gst_structure_get_string (s, "custom");
+      if (str) {
+        unsigned int xmax, ymax, mpi;
+        if (sscanf (str, "%u,%u,%u", &xmax, &ymax, &mpi) == 3) {
+          if (xmax % 4 && ymax % 4 && mpi >= 1 && mpi <= 32) {
+            caps_append (caps, new_s, xmax, ymax, mpi);
+            added = TRUE;
+          } else {
+            GST_WARNING_OBJECT (rtph263ppay, "Invalid custom framesize/MPI"
+                " %u x %u at %u, ignoring", xmax, ymax, mpi);
+          }
+        } else {
+          GST_WARNING_OBJECT (rtph263ppay, "Invalid custom framesize/MPI: %s,"
+              " ignoring", str);
+        }
+      }
+
+      str = gst_structure_get_string (s, "16cif");
+      if (str) {
+        int mpi = atoi (str);
+        caps_append (caps, new_s, 1408, 1152, mpi);
+        added = TRUE;
+      }
+
+      str = gst_structure_get_string (s, "4cif");
+      if (str) {
+        int mpi = atoi (str);
+        caps_append (caps, new_s, 704, 576, mpi);
+        added = TRUE;
+      }
+
+      str = gst_structure_get_string (s, "cif");
+      if (str) {
+        int mpi = atoi (str);
+        caps_append (caps, new_s, 352, 288, mpi);
+        added = TRUE;
+      }
+
+      str = gst_structure_get_string (s, "qcif");
+      if (str) {
+        int mpi = atoi (str);
+        caps_append (caps, new_s, 176, 144, mpi);
+        added = TRUE;
+      }
+
+      str = gst_structure_get_string (s, "sqcif");
+      if (str) {
+        int mpi = atoi (str);
+        caps_append (caps, new_s, 128, 96, mpi);
+        added = TRUE;
+      }
+
+      if (added)
+        gst_structure_free (new_s);
+      else
+        gst_caps_merge_structure (caps, new_s);
+    }
+  }
+
+  gst_caps_unref (intersect);
+
+  return caps;
+}
+
 
 static void
 gst_rtp_h263p_pay_set_property (GObject * object, guint prop_id,

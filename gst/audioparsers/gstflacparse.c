@@ -527,6 +527,34 @@ gst_flac_parse_frame_header_is_valid (GstFlacParse * flacparse,
   if (actual_crc != expected_crc)
     goto error;
 
+  /* 
+     The FLAC format documentation says:
+     The "blocking strategy" bit determines how to calculate the sample number
+     of the first sample in the frame. If the bit is 0 (fixed-blocksize), the
+     frame header encodes the frame number as above, and the frame's starting
+     sample number will be the frame number times the blocksize. If it is 1
+     (variable-blocksize), the frame header encodes the frame's starting
+     sample number itself. (In the case of a fixed-blocksize stream, only the
+     last block may be shorter than the stream blocksize; its starting sample
+     number will be calculated as the frame number times the previous frame's
+     blocksize, or zero if it is the first frame). 
+
+     Therefore, when in fixed block size mode, we only update the block size
+     the first time, then reuse that block size for subsequent calls.
+     This will also fix a timestamp problem with the last block's timestamp
+     being miscalculated by scaling the block number by a "wrong" block size.
+   */
+  if (blocking_strategy == 0) {
+    if (flacparse->block_size != 0) {
+      /* after first block */
+      if (flacparse->block_size != block_size) {
+        /* TODO: can we know we're on the last frame, to avoid warning ? */
+        GST_WARNING_OBJECT (flacparse, "Block size is not constant");
+        block_size = flacparse->block_size;
+      }
+    }
+  }
+
   if (set) {
     flacparse->block_size = block_size;
     if (!flacparse->samplerate)
@@ -706,7 +734,6 @@ gst_flac_parse_check_valid_frame (GstBaseParse * parse,
 
     flacparse->offset = GST_BUFFER_OFFSET (buffer);
     flacparse->blocking_strategy = 0;
-    flacparse->block_size = 0;
     flacparse->sample_number = 0;
 
     GST_DEBUG_OBJECT (flacparse, "Found sync code");
@@ -1404,7 +1431,6 @@ gst_flac_parse_parse_frame (GstBaseParse * parse, GstBaseParseFrame * frame)
 
     flacparse->offset = -1;
     flacparse->blocking_strategy = 0;
-    flacparse->block_size = 0;
     flacparse->sample_number = 0;
     res = GST_FLOW_OK;
   }
