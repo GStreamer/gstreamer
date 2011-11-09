@@ -90,7 +90,6 @@ static void gst_cmml_dec_get_property (GObject * dec, guint property_id,
     GValue * value, GParamSpec * pspec);
 static void gst_cmml_dec_set_property (GObject * dec, guint property_id,
     const GValue * value, GParamSpec * pspec);
-static const GstQueryType *gst_cmml_dec_query_types (GstPad * pad);
 static gboolean gst_cmml_dec_sink_query (GstPad * pad, GstQuery * query);
 static gboolean gst_cmml_dec_sink_event (GstPad * pad, GstEvent * event);
 static gboolean gst_cmml_dec_convert (GstPad * pad, GstFormat src_fmt,
@@ -154,7 +153,6 @@ gst_cmml_dec_init (GstCmmlDec * dec)
   dec->sinkpad =
       gst_pad_new_from_static_template (&gst_cmml_dec_sink_factory, "sink");
   gst_pad_set_chain_function (dec->sinkpad, gst_cmml_dec_chain);
-  gst_pad_set_query_type_function (dec->sinkpad, gst_cmml_dec_query_types);
   gst_pad_set_query_function (dec->sinkpad, gst_cmml_dec_sink_query);
   gst_pad_set_event_function (dec->sinkpad, gst_cmml_dec_sink_event);
   gst_element_add_pad (GST_ELEMENT (dec), dec->sinkpad);
@@ -252,17 +250,6 @@ gst_cmml_dec_change_state (GstElement * element, GstStateChange transition)
   }
 
   return res;
-}
-
-static const GstQueryType *
-gst_cmml_dec_query_types (GstPad * pad)
-{
-  static const GstQueryType query_types[] = {
-    GST_QUERY_CONVERT,
-    0
-  };
-
-  return query_types;
 }
 
 static gboolean

@@ -119,11 +119,11 @@ gst_flv_demux_parse_and_add_index_entry (GstFlvDemux * demux, GstClockTime ts,
     gboolean key;
 
     gst_index_entry_assoc_map (entry, GST_FORMAT_TIME, &time);
-    key = !!(GST_INDEX_ASSOC_FLAGS (entry) & GST_ASSOCIATION_FLAG_KEY_UNIT);
+    key = ! !(GST_INDEX_ASSOC_FLAGS (entry) & GST_ASSOCIATION_FLAG_KEY_UNIT);
     GST_LOG_OBJECT (demux, "position already mapped to time %" GST_TIME_FORMAT
         ", keyframe %d", GST_TIME_ARGS (time), key);
     /* there is not really a way to delete the existing one */
-    if (time != ts || key != !!keyframe)
+    if (time != ts || key != ! !keyframe)
       GST_DEBUG_OBJECT (demux, "metadata mismatch");
 #endif
     return;
@@ -177,19 +177,6 @@ FLV_GET_STRING (GstByteReader * reader)
   }
 
   return string;
-}
-
-static const GstQueryType *
-gst_flv_demux_query_types (GstPad * pad)
-{
-  static const GstQueryType query_types[] = {
-    GST_QUERY_DURATION,
-    GST_QUERY_POSITION,
-    GST_QUERY_SEEKING,
-    0
-  };
-
-  return query_types;
 }
 
 static void
@@ -903,8 +890,6 @@ gst_flv_demux_parse_tag_audio (GstFlvDemux * demux, GstBuffer * buffer)
 #endif
 
     /* Set functions on the pad */
-    gst_pad_set_query_type_function (demux->audio_pad,
-        GST_DEBUG_FUNCPTR (gst_flv_demux_query_types));
     gst_pad_set_query_function (demux->audio_pad,
         GST_DEBUG_FUNCPTR (gst_flv_demux_query));
     gst_pad_set_event_function (demux->audio_pad,
@@ -1275,8 +1260,6 @@ gst_flv_demux_parse_tag_video (GstFlvDemux * demux, GstBuffer * buffer)
 #endif
 
     /* Set functions on the pad */
-    gst_pad_set_query_type_function (demux->video_pad,
-        GST_DEBUG_FUNCPTR (gst_flv_demux_query_types));
     gst_pad_set_query_function (demux->video_pad,
         GST_DEBUG_FUNCPTR (gst_flv_demux_query));
     gst_pad_set_event_function (demux->video_pad,
@@ -2493,7 +2476,7 @@ flv_demux_handle_seek_push (GstFlvDemux * demux, GstEvent * event)
   if (format != GST_FORMAT_TIME)
     goto wrong_format;
 
-  flush = !!(flags & GST_SEEK_FLAG_FLUSH);
+  flush = ! !(flags & GST_SEEK_FLAG_FLUSH);
   /* FIXME : the keyframe flag is never used ! */
 
   /* Work on a copy until we are sure the seek succeeded. */
@@ -2654,7 +2637,7 @@ gst_flv_demux_handle_seek_pull (GstFlvDemux * demux, GstEvent * event,
     demux->seeking = seeking;
   GST_OBJECT_UNLOCK (demux);
 
-  flush = !!(flags & GST_SEEK_FLAG_FLUSH);
+  flush = ! !(flags & GST_SEEK_FLAG_FLUSH);
   /* FIXME : the keyframe flag is never used */
 
   if (flush) {

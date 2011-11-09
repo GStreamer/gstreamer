@@ -73,8 +73,6 @@ static gboolean gst_audio_fx_base_fir_filter_setup (GstAudioFilter * base,
 
 static gboolean gst_audio_fx_base_fir_filter_query (GstPad * pad,
     GstQuery * query);
-static const GstQueryType *gst_audio_fx_base_fir_filter_query_type (GstPad *
-    pad);
 
 /* 
  * The code below calculates the linear convolution:
@@ -616,8 +614,6 @@ gst_audio_fx_base_fir_filter_init (GstAudioFXBaseFIRFilter * self)
 
   gst_pad_set_query_function (GST_BASE_TRANSFORM (self)->srcpad,
       gst_audio_fx_base_fir_filter_query);
-  gst_pad_set_query_type_function (GST_BASE_TRANSFORM (self)->srcpad,
-      gst_audio_fx_base_fir_filter_query_type);
 }
 
 void
@@ -1002,17 +998,6 @@ gst_audio_fx_base_fir_filter_query (GstPad * pad, GstQuery * query)
   }
   gst_object_unref (self);
   return res;
-}
-
-static const GstQueryType *
-gst_audio_fx_base_fir_filter_query_type (GstPad * pad)
-{
-  static const GstQueryType types[] = {
-    GST_QUERY_LATENCY,
-    0
-  };
-
-  return types;
 }
 
 static gboolean

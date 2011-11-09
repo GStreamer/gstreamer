@@ -71,7 +71,6 @@ static gboolean gst_wavparse_send_event (GstElement * element,
 static GstStateChangeReturn gst_wavparse_change_state (GstElement * element,
     GstStateChange transition);
 
-static const GstQueryType *gst_wavparse_get_query_types (GstPad * pad);
 static gboolean gst_wavparse_pad_query (GstPad * pad, GstQuery * query);
 static gboolean gst_wavparse_pad_convert (GstPad * pad,
     GstFormat src_format,
@@ -202,8 +201,6 @@ gst_wavparse_init (GstWavParse * wavparse)
       gst_pad_new_from_template (gst_element_class_get_pad_template
       (GST_ELEMENT_GET_CLASS (wavparse), "src"), "src");
   gst_pad_use_fixed_caps (wavparse->srcpad);
-  gst_pad_set_query_type_function (wavparse->srcpad,
-      GST_DEBUG_FUNCPTR (gst_wavparse_get_query_types));
   gst_pad_set_query_function (wavparse->srcpad,
       GST_DEBUG_FUNCPTR (gst_wavparse_pad_query));
   gst_pad_set_event_function (wavparse->srcpad,
@@ -2400,20 +2397,6 @@ no_bps_fact:
     res = FALSE;
     goto done;
   }
-}
-
-static const GstQueryType *
-gst_wavparse_get_query_types (GstPad * pad)
-{
-  static const GstQueryType types[] = {
-    GST_QUERY_POSITION,
-    GST_QUERY_DURATION,
-    GST_QUERY_CONVERT,
-    GST_QUERY_SEEKING,
-    0
-  };
-
-  return types;
 }
 
 /* handle queries for location and length in requested format */

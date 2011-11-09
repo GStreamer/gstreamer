@@ -87,7 +87,6 @@ static gboolean gst_avi_demux_push_event (GstAviDemux * avi, GstEvent * event);
 #if 0
 static const GstFormat *gst_avi_demux_get_src_formats (GstPad * pad);
 #endif
-static const GstQueryType *gst_avi_demux_get_src_query_types (GstPad * pad);
 static gboolean gst_avi_demux_handle_src_query (GstPad * pad, GstQuery * query);
 static gboolean gst_avi_demux_src_convert (GstPad * pad, GstFormat src_format,
     gint64 src_value, GstFormat * dest_format, gint64 * dest_value);
@@ -415,20 +414,6 @@ done:
       "Returning res:%d dest_format:%s dest_value:%" G_GUINT64_FORMAT, res,
       gst_format_get_name (*dest_format), *dest_value);
   return res;
-}
-
-static const GstQueryType *
-gst_avi_demux_get_src_query_types (GstPad * pad)
-{
-  static const GstQueryType src_types[] = {
-    GST_QUERY_POSITION,
-    GST_QUERY_DURATION,
-    GST_QUERY_SEEKING,
-    GST_QUERY_CONVERT,
-    0
-  };
-
-  return src_types;
 }
 
 static gboolean
@@ -2255,8 +2240,6 @@ gst_avi_demux_parse_stream (GstAviDemux * avi, GstBuffer * buf)
 #endif
   gst_pad_set_event_function (pad,
       GST_DEBUG_FUNCPTR (gst_avi_demux_handle_src_event));
-  gst_pad_set_query_type_function (pad,
-      GST_DEBUG_FUNCPTR (gst_avi_demux_get_src_query_types));
   gst_pad_set_query_function (pad,
       GST_DEBUG_FUNCPTR (gst_avi_demux_handle_src_query));
 #if 0

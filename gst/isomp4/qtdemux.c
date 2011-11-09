@@ -678,21 +678,6 @@ done:
 }
 #endif
 
-static const GstQueryType *
-gst_qtdemux_get_src_query_types (GstPad * pad)
-{
-  static const GstQueryType src_types[] = {
-    GST_QUERY_POSITION,
-    GST_QUERY_DURATION,
-    GST_QUERY_CONVERT,
-    GST_QUERY_FORMATS,
-    GST_QUERY_SEEKING,
-    0
-  };
-
-  return src_types;
-}
-
 static gboolean
 gst_qtdemux_get_duration (GstQTDemux * qtdemux, gint64 * duration)
 {
@@ -5141,8 +5126,6 @@ gst_qtdemux_add_stream (GstQTDemux * qtdemux,
 
     gst_pad_use_fixed_caps (stream->pad);
     gst_pad_set_event_function (stream->pad, gst_qtdemux_handle_src_event);
-    gst_pad_set_query_type_function (stream->pad,
-        gst_qtdemux_get_src_query_types);
     gst_pad_set_query_function (stream->pad, gst_qtdemux_handle_src_query);
 
     GST_DEBUG_OBJECT (qtdemux, "setting caps %" GST_PTR_FORMAT, stream->caps);
