@@ -641,7 +641,7 @@ static void
 gst_dtmf_src_post_message (GstDTMFSrc * dtmfsrc, const gchar * message_name,
     GstDTMFSrcEvent * event)
 {
-  GstStructure *s;
+  GstStructure *s = NULL;
 
   switch (event->event_type) {
     case DTMF_EVENT_TYPE_START:
@@ -661,8 +661,9 @@ gst_dtmf_src_post_message (GstDTMFSrc * dtmfsrc, const gchar * message_name,
       return;
   }
 
-  gst_element_post_message (GST_ELEMENT (dtmfsrc),
-      gst_message_new_element (GST_OBJECT (dtmfsrc), s));
+  if (s)
+    gst_element_post_message (GST_ELEMENT (dtmfsrc),
+        gst_message_new_element (GST_OBJECT (dtmfsrc), s));
 }
 
 static GstFlowReturn
