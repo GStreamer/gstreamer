@@ -1206,23 +1206,19 @@ gst_omx_video_dec_reset (GstBaseVideoDecoder * decoder)
   g_list_free (GST_BASE_VIDEO_CODEC (self)->frames);
   GST_BASE_VIDEO_CODEC (self)->frames = NULL;
 
-  if (self->started) {
-    self->started = FALSE;
+  gst_omx_port_set_flushing (self->in_port, TRUE);
+  gst_omx_port_set_flushing (self->out_port, TRUE);
 
-    gst_omx_port_set_flushing (self->in_port, TRUE);
-    gst_omx_port_set_flushing (self->out_port, TRUE);
+  /* Wait until the srcpad loop is finished,
+   * unlock GST_BASE_VIDEO_CODEC_STREAM_LOCK to prevent deadlocks
+   * caused by using this lock from inside the loop function */
+  GST_BASE_VIDEO_CODEC_STREAM_UNLOCK (self);
+  GST_PAD_STREAM_LOCK (GST_BASE_VIDEO_CODEC_SRC_PAD (self));
+  GST_PAD_STREAM_UNLOCK (GST_BASE_VIDEO_CODEC_SRC_PAD (self));
+  GST_BASE_VIDEO_CODEC_STREAM_LOCK (self);
 
-    /* Wait until the srcpad loop is finished,
-     * unlock GST_BASE_VIDEO_CODEC_STREAM_LOCK to prevent deadlocks
-     * caused by using this lock from inside the loop function */
-    GST_BASE_VIDEO_CODEC_STREAM_UNLOCK (self);
-    GST_PAD_STREAM_LOCK (GST_BASE_VIDEO_CODEC_SRC_PAD (self));
-    GST_PAD_STREAM_UNLOCK (GST_BASE_VIDEO_CODEC_SRC_PAD (self));
-    GST_BASE_VIDEO_CODEC_STREAM_LOCK (self);
-
-    gst_omx_port_set_flushing (self->in_port, FALSE);
-    gst_omx_port_set_flushing (self->out_port, FALSE);
-  }
+  gst_omx_port_set_flushing (self->in_port, FALSE);
+  gst_omx_port_set_flushing (self->out_port, FALSE);
 
   /* Start the srcpad loop again */
   self->eos = FALSE;
