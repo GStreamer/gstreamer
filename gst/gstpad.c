@@ -4302,6 +4302,9 @@ gst_pad_push_event (GstPad * pad, GstEvent * event)
       break;
     default:
     {
+      if (G_UNLIKELY (GST_PAD_IS_FLUSHING (pad)))
+        goto flushed;
+
       /* store the event on the pad, but only on srcpads */
       if (GST_PAD_IS_SRC (pad) && GST_EVENT_IS_STICKY (event)) {
         guint idx;
@@ -4356,9 +4359,6 @@ gst_pad_push_event (GstPad * pad, GstEvent * event)
         default:
           break;
       }
-
-      if (G_UNLIKELY (GST_PAD_IS_FLUSHING (pad)))
-        goto flushed;
 
       PROBE_PUSH (pad, type | GST_PAD_PROBE_TYPE_PUSH |
           GST_PAD_PROBE_TYPE_BLOCK, event, probe_stopped);

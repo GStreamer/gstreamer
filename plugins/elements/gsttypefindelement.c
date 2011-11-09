@@ -965,6 +965,8 @@ gst_type_find_element_activate (GstPad * pad)
           (guint64) size, ext, &probability);
       g_free (ext);
 
+      GST_DEBUG ("Found caps %" GST_PTR_FORMAT, found_caps);
+
       gst_object_unref (peer);
     }
   }
@@ -983,13 +985,18 @@ gst_type_find_element_activate (GstPad * pad)
   }
 
   /* 3 */
+  GST_DEBUG ("Deactivate pull mode");
   gst_pad_activate_pull (pad, FALSE);
 
+#if 0
   /* 4 */
+  GST_DEBUG ("Deactivate push mode mode");
   gst_pad_activate_push (typefind->src, FALSE);
+#endif
 
   /* 5 */
   if (!found_caps || probability < typefind->min_probability) {
+    GST_DEBUG ("Trying to guess using extension");
     found_caps = gst_type_find_guess_by_extension (typefind, pad, &probability);
   }
 
@@ -1002,9 +1009,11 @@ gst_type_find_element_activate (GstPad * pad)
 
 done:
   /* 7 */
+  GST_DEBUG ("Emiting found caps %" GST_PTR_FORMAT, found_caps);
   g_signal_emit (typefind, gst_type_find_element_signals[HAVE_TYPE],
       0, probability, found_caps);
   typefind->mode = MODE_NORMAL;
+
 really_done:
   gst_caps_unref (found_caps);
 
@@ -1014,6 +1023,7 @@ really_done:
   else {
     gboolean ret;
 
+    GST_DEBUG ("Activating in push mode");
     ret = gst_pad_activate_push (typefind->src, TRUE);
     ret &= gst_pad_activate_push (pad, TRUE);
     return ret;
