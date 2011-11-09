@@ -421,6 +421,24 @@ GST_START_TEST (test_fixate_frac_list)
 
 GST_END_TEST;
 
+GST_START_TEST (test_is_subset)
+{
+  GstStructure *s1, *s2;
+
+  s1 = gst_structure_from_string ("test/test, channels=(int){ 1, 2 }", NULL);
+  fail_if (s1 == NULL);
+  s2 = gst_structure_from_string ("test/test, channels=(int)[ 1, 2 ]", NULL);
+  fail_if (s2 == NULL);
+
+  fail_unless (gst_structure_is_subset (s1, s2));
+
+  gst_structure_free (s1);
+  gst_structure_free (s2);
+}
+
+GST_END_TEST;
+
+
 GST_START_TEST (test_structure_nested)
 {
   GstStructure *sp, *sc1, *sc2;
@@ -618,6 +636,7 @@ gst_structure_suite (void)
   tcase_add_test (tc_chain, test_structure_new);
   tcase_add_test (tc_chain, test_fixate);
   tcase_add_test (tc_chain, test_fixate_frac_list);
+  tcase_add_test (tc_chain, test_is_subset);
   tcase_add_test (tc_chain, test_structure_nested);
   tcase_add_test (tc_chain, test_structure_nested_from_and_to_string);
   tcase_add_test (tc_chain, test_vararg_getters);
