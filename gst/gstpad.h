@@ -367,16 +367,6 @@ typedef GstIterator*           (*GstPadIterIntLinkFunction)    (GstPad *pad);
 
 /* generic query function */
 /**
- * GstPadQueryTypeFunction:
- * @pad: a #GstPad to query
- *
- * The signature of the query types function.
- *
- * Returns: a constant array of query types
- */
-typedef const GstQueryType*	(*GstPadQueryTypeFunction)	(GstPad *pad);
-
-/**
  * GstPadQueryFunction:
  * @pad: the #GstPad to query.
  * @query: the #GstQuery object to execute
@@ -701,7 +691,6 @@ struct _GstPad {
   gint64                         offset;
 
   /* generic query method */
-  GstPadQueryTypeFunction	 querytypefunc;
   GstPadQueryFunction		 queryfunc;
 
   /* internal links */
@@ -746,7 +735,6 @@ struct _GstPadClass {
 #define GST_PAD_CHAINLISTFUNC(pad)      (GST_PAD_CAST(pad)->chainlistfunc)
 #define GST_PAD_GETRANGEFUNC(pad)	(GST_PAD_CAST(pad)->getrangefunc)
 #define GST_PAD_EVENTFUNC(pad)		(GST_PAD_CAST(pad)->eventfunc)
-#define GST_PAD_QUERYTYPEFUNC(pad)	(GST_PAD_CAST(pad)->querytypefunc)
 #define GST_PAD_QUERYFUNC(pad)		(GST_PAD_CAST(pad)->queryfunc)
 #define GST_PAD_ITERINTLINKFUNC(pad)    (GST_PAD_CAST(pad)->iterintlinkfunc)
 
@@ -944,10 +932,6 @@ GstIterator *           gst_pad_iterate_internal_links_default  (GstPad * pad);
 
 
 /* generic query function */
-void			gst_pad_set_query_type_function		(GstPad *pad, GstPadQueryTypeFunction type_func);
-const GstQueryType*	gst_pad_get_query_types			(GstPad *pad);
-const GstQueryType*	gst_pad_get_query_types_default		(GstPad *pad);
-
 gboolean		gst_pad_query				(GstPad *pad, GstQuery *query);
 gboolean		gst_pad_peer_query			(GstPad *pad, GstQuery *query);
 void			gst_pad_set_query_function		(GstPad *pad, GstPadQueryFunction query);

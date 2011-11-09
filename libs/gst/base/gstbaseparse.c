@@ -387,7 +387,6 @@ static gboolean gst_base_parse_src_event (GstPad * pad, GstEvent * event);
 static gboolean gst_base_parse_sink_event (GstPad * pad, GstEvent * event);
 static gboolean gst_base_parse_query (GstPad * pad, GstQuery * query);
 static GstCaps *gst_base_parse_sink_getcaps (GstPad * pad, GstCaps * filter);
-static const GstQueryType *gst_base_parse_get_querytypes (GstPad * pad);
 
 static GstFlowReturn gst_base_parse_chain (GstPad * pad, GstBuffer * buffer);
 static void gst_base_parse_loop (GstPad * pad);
@@ -543,8 +542,6 @@ gst_base_parse_init (GstBaseParse * parse, GstBaseParseClass * bclass)
   parse->srcpad = gst_pad_new_from_template (pad_template, "src");
   gst_pad_set_event_function (parse->srcpad,
       GST_DEBUG_FUNCPTR (gst_base_parse_src_event));
-  gst_pad_set_query_type_function (parse->srcpad,
-      GST_DEBUG_FUNCPTR (gst_base_parse_get_querytypes));
   gst_pad_set_query_function (parse->srcpad,
       GST_DEBUG_FUNCPTR (gst_base_parse_query));
   gst_pad_use_fixed_caps (parse->srcpad);
@@ -3270,21 +3267,6 @@ gst_base_parse_get_duration (GstBaseParse * parse, GstFormat format,
   GST_LOG_OBJECT (parse, "res: %d, duration %" GST_TIME_FORMAT, res,
       GST_TIME_ARGS (*duration));
   return res;
-}
-
-static const GstQueryType *
-gst_base_parse_get_querytypes (GstPad * pad)
-{
-  static const GstQueryType list[] = {
-    GST_QUERY_POSITION,
-    GST_QUERY_DURATION,
-    GST_QUERY_FORMATS,
-    GST_QUERY_SEEKING,
-    GST_QUERY_CONVERT,
-    GST_QUERY_NONE
-  };
-
-  return list;
 }
 
 static gboolean

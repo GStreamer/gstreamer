@@ -326,7 +326,6 @@ static gboolean gst_base_transform_setcaps (GstBaseTransform * trans,
 static gboolean gst_base_transform_query (GstPad * pad, GstQuery * query);
 static gboolean gst_base_transform_default_query (GstBaseTransform * trans,
     GstPadDirection direction, GstQuery * query);
-static const GstQueryType *gst_base_transform_query_type (GstPad * pad);
 
 static GstFlowReturn default_prepare_output_buffer (GstBaseTransform * trans,
     GstBuffer * inbuf, GstBuffer ** outbuf);
@@ -410,8 +409,6 @@ gst_base_transform_init (GstBaseTransform * trans,
       GST_DEBUG_FUNCPTR (gst_base_transform_sink_activate_push));
   gst_pad_set_query_function (trans->sinkpad,
       GST_DEBUG_FUNCPTR (gst_base_transform_query));
-  gst_pad_set_query_type_function (trans->sinkpad,
-      GST_DEBUG_FUNCPTR (gst_base_transform_query_type));
   gst_element_add_pad (GST_ELEMENT (trans), trans->sinkpad);
 
   pad_template =
@@ -430,8 +427,6 @@ gst_base_transform_init (GstBaseTransform * trans,
       GST_DEBUG_FUNCPTR (gst_base_transform_src_activate_pull));
   gst_pad_set_query_function (trans->srcpad,
       GST_DEBUG_FUNCPTR (gst_base_transform_query));
-  gst_pad_set_query_type_function (trans->srcpad,
-      GST_DEBUG_FUNCPTR (gst_base_transform_query_type));
   gst_element_add_pad (GST_ELEMENT (trans), trans->srcpad);
 
   trans->transform_lock = g_mutex_new ();
@@ -1398,17 +1393,6 @@ gst_base_transform_query (GstPad * pad, GstQuery * query)
   gst_object_unref (trans);
 
   return ret;
-}
-
-static const GstQueryType *
-gst_base_transform_query_type (GstPad * pad)
-{
-  static const GstQueryType types[] = {
-    GST_QUERY_POSITION,
-    GST_QUERY_NONE
-  };
-
-  return types;
 }
 
 /* this function either returns the input buffer without incrementing the

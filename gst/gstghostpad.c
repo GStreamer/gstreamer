@@ -67,41 +67,6 @@ G_DEFINE_TYPE (GstProxyPad, gst_proxy_pad, GST_TYPE_PAD);
 static GstPad *gst_proxy_pad_get_target (GstPad * pad);
 
 /**
- * gst_proxy_pad_query_type_default:
- * @pad: a #GstPad.
- *
- * Invoke the default query type handler of the proxy pad.
- *
- * Returns: (transfer none) (array zero-terminated=1): a zero-terminated array
- *     of #GstQueryType.
- *
- * Since: 0.10.36
- */
-const GstQueryType *
-gst_proxy_pad_query_type_default (GstPad * pad)
-{
-  GstPad *target;
-  const GstQueryType *res = NULL;
-
-  g_return_val_if_fail (GST_IS_PROXY_PAD (pad), NULL);
-
-  if (!(target = gst_proxy_pad_get_target (pad)))
-    goto no_target;
-
-  res = gst_pad_get_query_types (target);
-  gst_object_unref (target);
-
-  return res;
-
-  /* ERRORS */
-no_target:
-  {
-    GST_DEBUG_OBJECT (pad, "no target pad");
-    return FALSE;
-  }
-}
-
-/**
  * gst_proxy_pad_event_default:
  * @pad: a #GstPad to push the event to.
  * @event: (transfer full): the #GstEvent to send to the pad.
@@ -494,7 +459,6 @@ gst_proxy_pad_class_init (GstProxyPadClass * klass)
   g_type_class_add_private (klass, sizeof (GstProxyPadPrivate));
 
   /* Register common function pointer descriptions */
-  GST_DEBUG_REGISTER_FUNCPTR (gst_proxy_pad_query_type_default);
   GST_DEBUG_REGISTER_FUNCPTR (gst_proxy_pad_event_default);
   GST_DEBUG_REGISTER_FUNCPTR (gst_proxy_pad_query_default);
   GST_DEBUG_REGISTER_FUNCPTR (gst_proxy_pad_iterate_internal_links_default);
@@ -515,7 +479,6 @@ gst_proxy_pad_init (GstProxyPad * ppad)
   GST_PROXY_PAD_PRIVATE (ppad) = G_TYPE_INSTANCE_GET_PRIVATE (ppad,
       GST_TYPE_PROXY_PAD, GstProxyPadPrivate);
 
-  gst_pad_set_query_type_function (pad, gst_proxy_pad_query_type_default);
   gst_pad_set_event_function (pad, gst_proxy_pad_event_default);
   gst_pad_set_query_function (pad, gst_proxy_pad_query_default);
   gst_pad_set_iterate_internal_links_function (pad,

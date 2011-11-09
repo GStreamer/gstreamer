@@ -62,7 +62,6 @@ GType gst_proxy_pad_get_type (void);
 GstProxyPad*     gst_proxy_pad_get_internal     (GstProxyPad *pad);
 
 
-const GstQueryType* gst_proxy_pad_query_type_default             (GstPad *pad);
 gboolean            gst_proxy_pad_event_default                  (GstPad *pad, GstEvent *event);
 gboolean            gst_proxy_pad_query_default                  (GstPad *pad, GstQuery *query);
 GstIterator*        gst_proxy_pad_iterate_internal_links_default (GstPad *pad);

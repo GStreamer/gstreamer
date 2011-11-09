@@ -1571,48 +1571,6 @@ gst_element_seek (GstElement * element, gdouble rate, GstFormat format,
   return result;
 }
 
-/**
- * gst_element_get_query_types:
- * @element: a #GstElement to query
- *
- * Get an array of query types from the element.
- * If the element doesn't implement a query types function,
- * the query will be forwarded to the peer of a random linked sink pad.
- *
- * Returns: An array of #GstQueryType elements that should not
- * be freed or modified.
- *
- * MT safe.
- */
-const GstQueryType *
-gst_element_get_query_types (GstElement * element)
-{
-  GstElementClass *oclass;
-  const GstQueryType *result = NULL;
-
-  g_return_val_if_fail (GST_IS_ELEMENT (element), NULL);
-
-  oclass = GST_ELEMENT_GET_CLASS (element);
-
-  if (oclass->get_query_types) {
-    result = oclass->get_query_types (element);
-  } else {
-    GstPad *pad = gst_element_get_random_pad (element, TRUE, GST_PAD_SINK);
-
-    if (pad) {
-      GstPad *peer = gst_pad_get_peer (pad);
-
-      if (peer) {
-        result = gst_pad_get_query_types (peer);
-
-        gst_object_unref (peer);
-      }
-      gst_object_unref (pad);
-    }
-  }
-  return result;
-}
-
 static gboolean
 gst_element_default_query (GstElement * element, GstQuery * query)
 {

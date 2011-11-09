@@ -100,26 +100,7 @@ print_formats (const GstFormat * formats)
     formats++;
   }
 }
-#endif
 
-static void
-print_query_types (const GstQueryType * types)
-{
-  while (types && *types) {
-    const GstQueryTypeDefinition *definition;
-
-    definition = gst_query_type_get_details (*types);
-    if (definition)
-      n_print ("\t\t(%d):\t%s (%s)\n", *types,
-          definition->nick, definition->description);
-    else
-      n_print ("\t\t(%d):\tUnknown query format\n", *types);
-
-    types++;
-  }
-}
-
-#if 0
 static void
 print_event_masks (const GstEventMask * masks)
 {
@@ -821,13 +802,6 @@ print_pad_info (GstElement * element)
     if (pad->queryfunc != gst_pad_query_default)
       n_print ("      Has custom queryfunc(): %s\n",
           GST_DEBUG_FUNCPTR_NAME (pad->queryfunc));
-    if (pad->querytypefunc != gst_pad_get_query_types_default) {
-      const GstQueryType *query_types = gst_pad_get_query_types (pad);
-      if (query_types) {
-        n_print ("        Provides query types:\n");
-        print_query_types (query_types);
-      }
-    }
 
     if (pad->iterintlinkfunc != gst_pad_iterate_internal_links_default)
       n_print ("      Has custom iterintlinkfunc(): %s\n",

@@ -300,7 +300,6 @@ gst_pad_class_init (GstPadClass * klass)
   /* Register common function pointer descriptions */
   GST_DEBUG_REGISTER_FUNCPTR (gst_pad_activate_default);
   GST_DEBUG_REGISTER_FUNCPTR (gst_pad_event_default);
-  GST_DEBUG_REGISTER_FUNCPTR (gst_pad_get_query_types_default);
   GST_DEBUG_REGISTER_FUNCPTR (gst_pad_query_default);
   GST_DEBUG_REGISTER_FUNCPTR (gst_pad_iterate_internal_links_default);
   GST_DEBUG_REGISTER_FUNCPTR (gst_pad_acceptcaps_default);
@@ -317,7 +316,6 @@ gst_pad_init (GstPad * pad)
 
   GST_PAD_ACTIVATEFUNC (pad) = gst_pad_activate_default;
   GST_PAD_EVENTFUNC (pad) = gst_pad_event_default;
-  GST_PAD_QUERYTYPEFUNC (pad) = gst_pad_get_query_types_default;
   GST_PAD_QUERYFUNC (pad) = gst_pad_query_default;
   GST_PAD_ITERINTLINKFUNC (pad) = gst_pad_iterate_internal_links_default;
   GST_PAD_ACCEPTCAPSFUNC (pad) = gst_pad_acceptcaps_default;
@@ -1444,89 +1442,6 @@ gst_pad_set_query_function (GstPad * pad, GstPadQueryFunction query)
 
   GST_CAT_DEBUG_OBJECT (GST_CAT_PADS, pad, "queryfunc set to %s",
       GST_DEBUG_FUNCPTR_NAME (query));
-}
-
-/**
- * gst_pad_set_query_type_function:
- * @pad: a #GstPad of either direction.
- * @type_func: the #GstPadQueryTypeFunction to set.
- *
- * Set the given query type function for the pad.
- */
-void
-gst_pad_set_query_type_function (GstPad * pad,
-    GstPadQueryTypeFunction type_func)
-{
-  g_return_if_fail (GST_IS_PAD (pad));
-
-  GST_PAD_QUERYTYPEFUNC (pad) = type_func;
-
-  GST_CAT_DEBUG_OBJECT (GST_CAT_PADS, pad, "querytypefunc set to %s",
-      GST_DEBUG_FUNCPTR_NAME (type_func));
-}
-
-/**
- * gst_pad_get_query_types:
- * @pad: a #GstPad.
- *
- * Get an array of supported queries that can be performed
- * on this pad.
- *
- * Returns: (transfer none) (array zero-terminated=1): a zero-terminated array
- *     of #GstQueryType.
- */
-const GstQueryType *
-gst_pad_get_query_types (GstPad * pad)
-{
-  GstPadQueryTypeFunction func;
-
-  g_return_val_if_fail (GST_IS_PAD (pad), NULL);
-
-  if (G_UNLIKELY ((func = GST_PAD_QUERYTYPEFUNC (pad)) == NULL))
-    goto no_func;
-
-  return func (pad);
-
-no_func:
-  {
-    return NULL;
-  }
-}
-
-static gboolean
-gst_pad_get_query_types_dispatcher (GstPad * pad, const GstQueryType ** data)
-{
-  GstPad *peer;
-
-  if ((peer = gst_pad_get_peer (pad))) {
-    *data = gst_pad_get_query_types (peer);
-    gst_object_unref (peer);
-  }
-  return TRUE;
-}
-
-/**
- * gst_pad_get_query_types_default:
- * @pad: a #GstPad.
- *
- * Invoke the default query types function on the pad. This function will get
- * the supported query type from the peer of an internally linked pad of @pad.
- *
- * Returns: (transfer none) (array zero-terminated=1): a zero-terminated array
- *     of #GstQueryType, or NULL if none of the internally-linked pads has a
- *     query types function.
- */
-const GstQueryType *
-gst_pad_get_query_types_default (GstPad * pad)
-{
-  GstQueryType *result = NULL;
-
-  g_return_val_if_fail (GST_IS_PAD (pad), NULL);
-
-  gst_pad_forward (pad, (GstPadForwardFunction)
-      gst_pad_get_query_types_dispatcher, &result);
-
-  return result;
 }
 
 /**
