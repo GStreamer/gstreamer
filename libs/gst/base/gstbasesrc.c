@@ -1148,8 +1148,6 @@ gst_base_src_query (GstPad * pad, GstQuery * query)
 
   if (bclass->query)
     result = bclass->query (src, query);
-  else
-    result = gst_pad_query_default (pad, query);
 
   gst_object_unref (src);
 
