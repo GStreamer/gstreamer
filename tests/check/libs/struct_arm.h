@@ -1,7 +1,5 @@
 
 GstCheckABIStruct list[] = {
-  {"GstAppBufferClass", sizeof (GstAppBufferClass), 16},
-  {"GstAppBuffer", sizeof (GstAppBuffer), 96},
   {"GstAppSinkCallbacks", sizeof (GstAppSinkCallbacks), 28},
   {"GstAppSinkClass", sizeof (GstAppSinkClass), 404},
   {"GstAppSink", sizeof (GstAppSink), 432},
