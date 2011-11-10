@@ -2171,7 +2171,7 @@ gst_pulsesink_init (GstPulseSink * pulsesink)
 
   GST_BASE_AUDIO_SINK (pulsesink)->provided_clock =
       gst_audio_clock_new ("GstPulseSinkClock",
-      (GstAudioClockGetTimeFunc) gst_pulsesink_get_time, pulsesink);
+      (GstAudioClockGetTimeFunc) gst_pulsesink_get_time, pulsesink, NULL);
 
   /* TRUE for sinks, FALSE for sources */
   pulsesink->probe = gst_pulseprobe_new (G_OBJECT (pulsesink),
