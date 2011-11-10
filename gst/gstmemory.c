@@ -61,6 +61,8 @@
 #include "gst_private.h"
 #include "gstmemory.h"
 
+G_DEFINE_BOXED_TYPE (GstMemory, gst_memory, (GBoxedCopyFunc) gst_memory_ref,
+    (GBoxedFreeFunc) gst_memory_unref);
 
 /* buffer alignment in bytes - 1
  * an alignment of 7 would be the same as malloc() guarantees
