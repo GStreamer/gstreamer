@@ -810,10 +810,6 @@ print_pad_info (GstElement * element)
     if (pad->getcapsfunc)
       n_print ("      Has getcapsfunc(): %s\n",
           GST_DEBUG_FUNCPTR_NAME (pad->getcapsfunc));
-    if (pad->fixatecapsfunc)
-      n_print ("      Has fixatecapsfunc(): %s\n",
-          GST_DEBUG_FUNCPTR_NAME (pad->fixatecapsfunc));
-
 
     if (pad->padtemplate)
       n_print ("    Pad Template: '%s'\n", pad->padtemplate->name_template);

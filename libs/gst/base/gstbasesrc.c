@@ -280,7 +280,7 @@ gst_base_src_get_type (void)
 
 static GstCaps *gst_base_src_getcaps (GstPad * pad, GstCaps * filter);
 static void gst_base_src_default_fixate (GstBaseSrc * src, GstCaps * caps);
-static void gst_base_src_fixate (GstPad * pad, GstCaps * caps);
+static void gst_base_src_fixate (GstBaseSrc * src, GstCaps * caps);
 
 static gboolean gst_base_src_is_random_access (GstBaseSrc * src);
 static gboolean gst_base_src_activate_push (GstPad * pad, gboolean active);
@@ -368,12 +368,12 @@ gst_base_src_class_init (GstBaseSrcClass * klass)
   gstelement_class->send_event = GST_DEBUG_FUNCPTR (gst_base_src_send_event);
 
   klass->negotiate = GST_DEBUG_FUNCPTR (gst_base_src_default_negotiate);
-  klass->event = GST_DEBUG_FUNCPTR (gst_base_src_default_event);
-  klass->do_seek = GST_DEBUG_FUNCPTR (gst_base_src_default_do_seek);
-  klass->query = GST_DEBUG_FUNCPTR (gst_base_src_default_query);
+  klass->fixate = GST_DEBUG_FUNCPTR (gst_base_src_default_fixate);
   klass->prepare_seek_segment =
       GST_DEBUG_FUNCPTR (gst_base_src_default_prepare_seek_segment);
-  klass->fixate = GST_DEBUG_FUNCPTR (gst_base_src_default_fixate);
+  klass->do_seek = GST_DEBUG_FUNCPTR (gst_base_src_default_do_seek);
+  klass->query = GST_DEBUG_FUNCPTR (gst_base_src_default_query);
+  klass->event = GST_DEBUG_FUNCPTR (gst_base_src_default_event);
   klass->create = GST_DEBUG_FUNCPTR (gst_base_src_default_create);
   klass->alloc = GST_DEBUG_FUNCPTR (gst_base_src_default_alloc);
 
@@ -417,7 +417,6 @@ gst_base_src_init (GstBaseSrc * basesrc, gpointer g_class)
   gst_pad_set_query_function (pad, gst_base_src_query);
   gst_pad_set_getrange_function (pad, gst_base_src_pad_get_range);
   gst_pad_set_getcaps_function (pad, gst_base_src_getcaps);
-  gst_pad_set_fixatecaps_function (pad, gst_base_src_fixate);
 
   /* hold pointer to pad */
   basesrc->srcpad = pad;
@@ -841,25 +840,21 @@ gst_base_src_getcaps (GstPad * pad, GstCaps * filter)
 }
 
 static void
-gst_base_src_default_fixate (GstBaseSrc * src, GstCaps * caps)
+gst_base_src_default_fixate (GstBaseSrc * bsrc, GstCaps * caps)
 {
-  GST_DEBUG_OBJECT (src, "using default caps fixate function");
+  GST_DEBUG_OBJECT (bsrc, "using default caps fixate function");
   gst_caps_fixate (caps);
 }
 
 static void
-gst_base_src_fixate (GstPad * pad, GstCaps * caps)
+gst_base_src_fixate (GstBaseSrc * bsrc, GstCaps * caps)
 {
   GstBaseSrcClass *bclass;
-  GstBaseSrc *bsrc;
 
-  bsrc = GST_BASE_SRC (gst_pad_get_parent (pad));
   bclass = GST_BASE_SRC_GET_CLASS (bsrc);
 
   if (bclass->fixate)
     bclass->fixate (bsrc, caps);
-
-  gst_object_unref (bsrc);
 }
 
 static gboolean
@@ -2767,11 +2762,6 @@ gst_base_src_default_negotiate (GstBaseSrc * basesrc)
     caps = thiscaps;
   }
   if (caps && !gst_caps_is_empty (caps)) {
-    caps = gst_caps_make_writable (caps);
-
-    /* take first (and best, since they are sorted) possibility */
-    gst_caps_truncate (caps);
-
     /* now fixate */
     GST_DEBUG_OBJECT (basesrc, "have caps: %" GST_PTR_FORMAT, caps);
     if (gst_caps_is_any (caps)) {
@@ -2780,7 +2770,8 @@ gst_base_src_default_negotiate (GstBaseSrc * basesrc)
        * nego is not needed */
       result = TRUE;
     } else {
-      gst_pad_fixate_caps (GST_BASE_SRC_PAD (basesrc), caps);
+      caps = gst_caps_make_writable (caps);
+      gst_base_src_fixate (basesrc, caps);
       GST_DEBUG_OBJECT (basesrc, "fixated to: %" GST_PTR_FORMAT, caps);
       if (gst_caps_is_fixed (caps)) {
         /* yay, fixed caps, use those then, it's possible that the subclass does

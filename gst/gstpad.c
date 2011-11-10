@@ -142,7 +142,6 @@ static void gst_pad_get_property (GObject * object, guint prop_id,
 static GstCaps *gst_pad_get_caps_unlocked (GstPad * pad, GstCaps * filter);
 static void gst_pad_set_pad_template (GstPad * pad, GstPadTemplate * templ);
 static gboolean gst_pad_activate_default (GstPad * pad);
-static void gst_pad_fixate_caps_default (GstPad * pad, GstCaps * caps);
 static GstFlowReturn gst_pad_chain_list_default (GstPad * pad,
     GstBufferList * list);
 
@@ -302,7 +301,6 @@ gst_pad_class_init (GstPadClass * klass)
   GST_DEBUG_REGISTER_FUNCPTR (gst_pad_query_default);
   GST_DEBUG_REGISTER_FUNCPTR (gst_pad_iterate_internal_links_default);
   GST_DEBUG_REGISTER_FUNCPTR (gst_pad_chain_list_default);
-  GST_DEBUG_REGISTER_FUNCPTR (gst_pad_fixate_caps_default);
 }
 
 static void
@@ -316,7 +314,6 @@ gst_pad_init (GstPad * pad)
   GST_PAD_EVENTFUNC (pad) = gst_pad_event_default;
   GST_PAD_QUERYFUNC (pad) = gst_pad_query_default;
   GST_PAD_ITERINTLINKFUNC (pad) = gst_pad_iterate_internal_links_default;
-  GST_PAD_FIXATECAPSFUNC (pad) = gst_pad_fixate_caps_default;
   GST_PAD_CHAINLISTFUNC (pad) = gst_pad_chain_list_default;
 
   GST_PAD_SET_FLUSHING (pad);
@@ -1543,26 +1540,6 @@ gst_pad_set_getcaps_function (GstPad * pad, GstPadGetCapsFunction getcaps)
 }
 
 /**
- * gst_pad_set_fixatecaps_function:
- * @pad: a #GstPad.
- * @fixatecaps: the #GstPadFixateCapsFunction to set.
- *
- * Sets the given fixatecaps function for the pad.  The fixatecaps function
- * will be called whenever the default values for a GstCaps needs to be
- * filled in.
- */
-void
-gst_pad_set_fixatecaps_function (GstPad * pad,
-    GstPadFixateCapsFunction fixatecaps)
-{
-  g_return_if_fail (GST_IS_PAD (pad));
-
-  GST_PAD_FIXATECAPSFUNC (pad) = fixatecaps;
-  GST_CAT_DEBUG_OBJECT (GST_CAT_PADS, pad, "fixatecapsfunc set to %s",
-      GST_DEBUG_FUNCPTR_NAME (fixatecaps));
-}
-
-/**
  * gst_pad_unlink:
  * @srcpad: the source #GstPad to unlink.
  * @sinkpad: the sink #GstPad to unlink.
@@ -2387,40 +2364,6 @@ no_peer:
     GST_OBJECT_UNLOCK (pad);
     return NULL;
   }
-}
-
-static void
-gst_pad_fixate_caps_default (GstPad * pad, GstCaps * caps)
-{
-  /* default fixation */
-  gst_caps_fixate (caps);
-}
-
-/**
- * gst_pad_fixate_caps:
- * @pad: a  #GstPad to fixate
- * @caps: the  #GstCaps to fixate
- *
- * Fixate a caps on the given pad. Modifies the caps in place, so you should
- * make sure that the caps are actually writable (see gst_caps_make_writable()).
- */
-void
-gst_pad_fixate_caps (GstPad * pad, GstCaps * caps)
-{
-  GstPadFixateCapsFunction fixatefunc;
-
-  g_return_if_fail (GST_IS_PAD (pad));
-  g_return_if_fail (caps != NULL);
-  g_return_if_fail (!gst_caps_is_empty (caps));
-  g_return_if_fail (!gst_caps_is_any (caps));
-
-  if (gst_caps_is_fixed (caps) || gst_caps_is_any (caps))
-    return;
-
-  g_return_if_fail (gst_caps_is_writable (caps));
-
-  if (G_LIKELY ((fixatefunc = GST_PAD_FIXATECAPSFUNC (pad))))
-    fixatefunc (pad, caps);
 }
 
 /**

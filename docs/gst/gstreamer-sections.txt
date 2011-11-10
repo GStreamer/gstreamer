@@ -734,7 +734,6 @@ gst_element_message_full
 gst_element_post_message
 
 <SUBSECTION element-query>
-gst_element_get_query_types
 gst_element_query
 gst_element_query_convert
 gst_element_query_position
@@ -1044,7 +1043,6 @@ gst_ghost_pad_internal_activate_pull_default
 
 gst_proxy_pad_get_internal
 
-gst_proxy_pad_query_type_default
 gst_proxy_pad_event_default
 gst_proxy_pad_query_default
 gst_proxy_pad_iterate_internal_links_default
@@ -1052,8 +1050,6 @@ gst_proxy_pad_chain_default
 gst_proxy_pad_chain_list_default
 gst_proxy_pad_getrange_default
 gst_proxy_pad_getcaps_default
-gst_proxy_pad_acceptcaps_default
-gst_proxy_pad_fixatecaps_default
 gst_proxy_pad_unlink_default
 <SUBSECTION Standard>
 GstGhostPadClass
@@ -1616,7 +1612,6 @@ GstPadActivateMode
 GstPadProbeReturn
 GstPadProbeType
 GST_PAD_PROBE_TYPE_BLOCKING
-GST_PAD_PROBE_TYPE_DATA
 GST_PAD_PROBE_TYPE_SCHEDULING
 
 <SUBSECTION Application>
@@ -1684,16 +1679,10 @@ gst_pad_set_unlink_function
 GstPadUnlinkFunction
 
 gst_pad_accept_caps
-gst_pad_set_acceptcaps_function
-GstPadAcceptCapsFunction
 
 gst_pad_set_getcaps_function
 GstPadGetCapsFunction
 gst_pad_proxy_getcaps
-
-gst_pad_fixate_caps
-gst_pad_set_fixatecaps_function
-GstPadFixateCapsFunction
 
 gst_pad_peer_accept_caps
 
@@ -1727,11 +1716,6 @@ gst_pad_query_peer_duration
 gst_pad_query_peer_convert
 gst_pad_set_query_function
 GstPadQueryFunction
-gst_pad_set_query_type_function
-GstPadQueryTypeFunction
-gst_pad_get_query_types
-gst_pad_get_query_types_default
-
 gst_pad_set_iterate_internal_links_function
 GstPadIterIntLinkFunction
 gst_pad_iterate_internal_links
@@ -1754,10 +1738,8 @@ gst_pad_set_active
 
 GST_PAD_GET_STREAM_LOCK
 GST_PAD_STREAM_LOCK
-GST_PAD_STREAM_LOCK_FULL
 GST_PAD_STREAM_TRYLOCK
 GST_PAD_STREAM_UNLOCK
-GST_PAD_STREAM_UNLOCK_FULL
 
 <SUBSECTION Standard>
 GstPadClass

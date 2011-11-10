@@ -369,39 +369,6 @@ gst_proxy_pad_acceptcaps_default (GstPad * pad, GstCaps * caps)
   return res;
 }
 
-/**
- * gst_proxy_pad_fixatecaps_default:
- * @pad: a  #GstPad to fixate
- * @caps: the  #GstCaps to fixate
- *
- * Invoke the default fixatecaps function of the proxy pad.
- *
- * Since: 0.10.36
- */
-void
-gst_proxy_pad_fixatecaps_default (GstPad * pad, GstCaps * caps)
-{
-  GstPad *target;
-
-  g_return_if_fail (GST_IS_PROXY_PAD (pad));
-  g_return_if_fail (GST_IS_CAPS (caps));
-
-  if (!(target = gst_proxy_pad_get_target (pad)))
-    goto no_target;
-
-  gst_pad_fixate_caps (target, caps);
-  gst_object_unref (target);
-
-  return;
-
-  /* ERRORS */
-no_target:
-  {
-    GST_DEBUG_OBJECT (pad, "no target");
-    return;
-  }
-}
-
 static GstPad *
 gst_proxy_pad_get_target (GstPad * pad)
 {
@@ -472,7 +439,6 @@ gst_proxy_pad_class_init (GstProxyPadClass * klass)
   GST_DEBUG_REGISTER_FUNCPTR (gst_proxy_pad_iterate_internal_links_default);
   GST_DEBUG_REGISTER_FUNCPTR (gst_proxy_pad_getcaps_default);
   GST_DEBUG_REGISTER_FUNCPTR (gst_proxy_pad_acceptcaps_default);
-  GST_DEBUG_REGISTER_FUNCPTR (gst_proxy_pad_fixatecaps_default);
   GST_DEBUG_REGISTER_FUNCPTR (gst_proxy_pad_unlink_default);
   GST_DEBUG_REGISTER_FUNCPTR (gst_proxy_pad_chain_default);
   GST_DEBUG_REGISTER_FUNCPTR (gst_proxy_pad_chain_list_default);
@@ -493,7 +459,6 @@ gst_proxy_pad_init (GstProxyPad * ppad)
       gst_proxy_pad_iterate_internal_links_default);
 
   gst_pad_set_getcaps_function (pad, gst_proxy_pad_getcaps_default);
-  gst_pad_set_fixatecaps_function (pad, gst_proxy_pad_fixatecaps_default);
   gst_pad_set_unlink_function (pad, gst_proxy_pad_unlink_default);
 }
 

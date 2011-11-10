@@ -317,6 +317,8 @@ static GstFlowReturn gst_base_transform_getrange (GstPad * pad, guint64 offset,
     guint length, GstBuffer ** buffer);
 static GstFlowReturn gst_base_transform_chain (GstPad * pad,
     GstBuffer * buffer);
+static void gst_base_transform_default_fixate (GstBaseTransform * trans,
+    GstPadDirection direction, GstCaps * caps, GstCaps * othercaps);
 static GstCaps *gst_base_transform_getcaps (GstPad * pad, GstCaps * filter);
 static gboolean gst_base_transform_acceptcaps_default (GstBaseTransform * trans,
     GstPadDirection direction, GstCaps * caps);
@@ -371,6 +373,7 @@ gst_base_transform_class_init (GstBaseTransformClass * klass)
 
   gobject_class->finalize = gst_base_transform_finalize;
 
+  klass->fixate_caps = GST_DEBUG_FUNCPTR (gst_base_transform_default_fixate);
   klass->passthrough_on_same_caps = FALSE;
   klass->sink_event = GST_DEBUG_FUNCPTR (gst_base_transform_sink_eventfunc);
   klass->src_event = GST_DEBUG_FUNCPTR (gst_base_transform_src_eventfunc);
@@ -889,6 +892,14 @@ gst_base_transform_configure_caps (GstBaseTransform * trans, GstCaps * in,
   return ret;
 }
 
+static void
+gst_base_transform_default_fixate (GstBaseTransform * trans,
+    GstPadDirection direction, GstCaps * caps, GstCaps * othercaps)
+{
+  GST_DEBUG_OBJECT (trans, "using default caps fixate function");
+  gst_caps_fixate (othercaps);
+}
+
 /* given a fixed @caps on @pad, create the best possible caps for the
  * other pad.
  * @caps must be fixed when calling this function.
@@ -1002,52 +1013,22 @@ gst_base_transform_find_transform (GstBaseTransform * trans, GstPad * pad,
   if (gst_caps_is_empty (othercaps))
     goto no_transform_possible;
 
-  /* second attempt at fixation, call the fixate vmethod and
-   * ultimately call the pad fixate function. */
-  if (!is_fixed) {
-    GST_DEBUG_OBJECT (trans,
-        "trying to fixate %" GST_PTR_FORMAT " on pad %s:%s",
-        othercaps, GST_DEBUG_PAD_NAME (otherpad));
+  GST_DEBUG ("have %sfixed caps %" GST_PTR_FORMAT, (is_fixed ? "" : "non-"),
+      othercaps);
 
-    /* since we have no other way to fixate left, we might as well just take
-     * the first of the caps list and fixate that */
+  /* second attempt at fixation, call the fixate vmethod */
+  /* caps could be fixed but the subclass may want to add fields */
+  if (klass->fixate_caps) {
+    othercaps = gst_caps_make_writable (othercaps);
 
-    /* FIXME: when fixating using the vmethod, it might make sense to fixate
-     * each of the caps; but Wim doesn't see a use case for that yet */
-    gst_caps_truncate (othercaps);
-
-    if (klass->fixate_caps) {
-      GST_DEBUG_OBJECT (trans, "trying to fixate %" GST_PTR_FORMAT
-          " using caps %" GST_PTR_FORMAT
-          " on pad %s:%s using fixate_caps vmethod", othercaps, caps,
-          GST_DEBUG_PAD_NAME (otherpad));
-      klass->fixate_caps (trans, GST_PAD_DIRECTION (pad), caps, othercaps);
-      is_fixed = gst_caps_is_fixed (othercaps);
-    }
-    /* if still not fixed, no other option but to let the default pad fixate
-     * function do its job */
-    if (!is_fixed) {
-      GST_DEBUG_OBJECT (trans, "trying to fixate %" GST_PTR_FORMAT
-          " on pad %s:%s using gst_pad_fixate_caps", othercaps,
-          GST_DEBUG_PAD_NAME (otherpad));
-      gst_pad_fixate_caps (otherpad, othercaps);
-      is_fixed = gst_caps_is_fixed (othercaps);
-    }
+    GST_DEBUG_OBJECT (trans, "calling faxate_caps for %" GST_PTR_FORMAT
+        " using caps %" GST_PTR_FORMAT " on pad %s:%s", othercaps, caps,
+        GST_DEBUG_PAD_NAME (otherpad));
+    /* note that we pass the complete array of structures to the fixate
+     * function, it needs to truncate itself */
+    klass->fixate_caps (trans, GST_PAD_DIRECTION (pad), caps, othercaps);
+    is_fixed = gst_caps_is_fixed (othercaps);
     GST_DEBUG_OBJECT (trans, "after fixating %" GST_PTR_FORMAT, othercaps);
-  } else {
-    GST_DEBUG ("caps are fixed");
-    /* else caps are fixed but the subclass may want to add fields */
-    if (klass->fixate_caps) {
-      othercaps = gst_caps_make_writable (othercaps);
-
-      GST_DEBUG_OBJECT (trans, "doing fixate %" GST_PTR_FORMAT
-          " using caps %" GST_PTR_FORMAT
-          " on pad %s:%s using fixate_caps vmethod", othercaps, caps,
-          GST_DEBUG_PAD_NAME (otherpad));
-
-      klass->fixate_caps (trans, GST_PAD_DIRECTION (pad), caps, othercaps);
-      is_fixed = gst_caps_is_fixed (othercaps);
-    }
   }
 
   /* caps should be fixed now, if not we have to fail. */

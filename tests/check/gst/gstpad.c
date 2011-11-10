@@ -127,11 +127,15 @@ GST_START_TEST (test_refcount)
   /* one for me */
   ASSERT_CAPS_REFCOUNT (caps, "caps", 1);
 
-  fail_unless (gst_pad_set_caps (src, caps) == TRUE);
   /* can't set caps on flushing sinkpad */
+  fail_if (gst_pad_set_caps (src, caps) == TRUE);
   fail_if (gst_pad_set_caps (sink, caps) == TRUE);
   /* one for me and one for each set_caps */
-  ASSERT_CAPS_REFCOUNT (caps, "caps", 3);
+  ASSERT_CAPS_REFCOUNT (caps, "caps", 1);
+
+  gst_pad_set_active (src, TRUE);
+  fail_unless (gst_pad_set_caps (src, caps) == TRUE);
+  ASSERT_CAPS_REFCOUNT (caps, "caps", 2);
 
   gst_pad_set_active (sink, TRUE);
   fail_unless (gst_pad_set_caps (sink, caps) == TRUE);

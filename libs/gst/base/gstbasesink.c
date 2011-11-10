@@ -400,7 +400,8 @@ static gboolean default_sink_query (GstBaseSink * sink, GstQuery * query);
 
 static gboolean gst_base_sink_negotiate_pull (GstBaseSink * basesink);
 static GstCaps *gst_base_sink_pad_getcaps (GstPad * pad, GstCaps * filter);
-static void gst_base_sink_pad_fixate (GstPad * pad, GstCaps * caps);
+static void gst_base_sink_default_fixate (GstBaseSink * bsink, GstCaps * caps);
+static void gst_base_sink_fixate (GstBaseSink * bsink, GstCaps * caps);
 
 /* check if an object was too late */
 static gboolean gst_base_sink_is_too_late (GstBaseSink * basesink,
@@ -543,6 +544,7 @@ gst_base_sink_class_init (GstBaseSinkClass * klass)
   gstelement_class->send_event = GST_DEBUG_FUNCPTR (gst_base_sink_send_event);
   gstelement_class->query = GST_DEBUG_FUNCPTR (default_element_query);
 
+  klass->fixate = GST_DEBUG_FUNCPTR (gst_base_sink_default_fixate);
   klass->get_caps = GST_DEBUG_FUNCPTR (gst_base_sink_get_caps);
   klass->set_caps = GST_DEBUG_FUNCPTR (gst_base_sink_set_caps);
   klass->get_times = GST_DEBUG_FUNCPTR (gst_base_sink_get_times);
@@ -552,7 +554,7 @@ gst_base_sink_class_init (GstBaseSinkClass * klass)
 
   /* Registering debug symbols for function pointers */
   GST_DEBUG_REGISTER_FUNCPTR (gst_base_sink_pad_getcaps);
-  GST_DEBUG_REGISTER_FUNCPTR (gst_base_sink_pad_fixate);
+  GST_DEBUG_REGISTER_FUNCPTR (gst_base_sink_fixate);
   GST_DEBUG_REGISTER_FUNCPTR (gst_base_sink_pad_activate);
   GST_DEBUG_REGISTER_FUNCPTR (gst_base_sink_pad_activate_push);
   GST_DEBUG_REGISTER_FUNCPTR (gst_base_sink_pad_activate_pull);
@@ -606,18 +608,21 @@ gst_base_sink_pad_getcaps (GstPad * pad, GstCaps * filter)
 }
 
 static void
-gst_base_sink_pad_fixate (GstPad * pad, GstCaps * caps)
+gst_base_sink_default_fixate (GstBaseSink * bsink, GstCaps * caps)
+{
+  GST_DEBUG_OBJECT (bsink, "using default caps fixate function");
+  gst_caps_fixate (caps);
+}
+
+static void
+gst_base_sink_fixate (GstBaseSink * bsink, GstCaps * caps)
 {
   GstBaseSinkClass *bclass;
-  GstBaseSink *bsink;
 
-  bsink = GST_BASE_SINK (gst_pad_get_parent (pad));
   bclass = GST_BASE_SINK_GET_CLASS (bsink);
 
   if (bclass->fixate)
     bclass->fixate (bsink, caps);
-
-  gst_object_unref (bsink);
 }
 
 static void
@@ -635,7 +640,6 @@ gst_base_sink_init (GstBaseSink * basesink, gpointer g_class)
   basesink->sinkpad = gst_pad_new_from_template (pad_template, "sink");
 
   gst_pad_set_getcaps_function (basesink->sinkpad, gst_base_sink_pad_getcaps);
-  gst_pad_set_fixatecaps_function (basesink->sinkpad, gst_base_sink_pad_fixate);
   gst_pad_set_activate_function (basesink->sinkpad, gst_base_sink_pad_activate);
   gst_pad_set_activatepush_function (basesink->sinkpad,
       gst_base_sink_pad_activate_push);
@@ -4243,12 +4247,6 @@ gst_base_sink_negotiate_pull (GstBaseSink * basesink)
 
   GST_DEBUG_OBJECT (basesink, "allowed caps: %" GST_PTR_FORMAT, caps);
 
-  caps = gst_caps_make_writable (caps);
-  /* get the first (preferred) format */
-  gst_caps_truncate (caps);
-
-  GST_DEBUG_OBJECT (basesink, "have caps: %" GST_PTR_FORMAT, caps);
-
   if (gst_caps_is_any (caps)) {
     GST_DEBUG_OBJECT (basesink, "caps were ANY after fixating, "
         "allowing pull()");
@@ -4256,8 +4254,9 @@ gst_base_sink_negotiate_pull (GstBaseSink * basesink)
        pull() without setcaps() */
     result = TRUE;
   } else {
+    caps = gst_caps_make_writable (caps);
     /* try to fixate */
-    gst_pad_fixate_caps (GST_BASE_SINK_PAD (basesink), caps);
+    gst_base_sink_fixate (basesink, caps);
     GST_DEBUG_OBJECT (basesink, "fixated to: %" GST_PTR_FORMAT, caps);
 
     if (gst_caps_is_fixed (caps)) {
