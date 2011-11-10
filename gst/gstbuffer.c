@@ -579,8 +579,6 @@ gst_buffer_new_wrapped_full (gpointer data, GFreeFunc free_func, gsize offset,
 {
   GstBuffer *newbuf;
 
-  g_return_val_if_fail (offset <= size, NULL);
-
   newbuf = gst_buffer_new ();
   gst_buffer_take_memory (newbuf, -1,
       gst_memory_new_wrapped (free_func ? 0 : GST_MEMORY_FLAG_READONLY,
