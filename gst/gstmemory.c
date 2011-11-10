@@ -439,8 +439,8 @@ gst_memory_resize (GstMemory * mem, gssize offset, gsize size)
 /**
  * gst_memory_map:
  * @mem: a #GstMemory
- * @size: pointer for size
- * @maxsize: pointer for maxsize
+ * @size: (out) (allow-none): pointer for size
+ * @maxsize: (out) (allow-none): pointer for maxsize
  * @flags: mapping flags
  *
  * Get a pointer to the memory of @mem that can be accessed according to @flags.
@@ -448,7 +448,7 @@ gst_memory_resize (GstMemory * mem, gssize offset, gsize size)
  * @size and @maxsize will contain the size of the memory and the maximum
  * allocated memory of @mem respectively. They can be set to NULL.
  *
- * Returns: a pointer to the memory of @mem.
+ * Returns: (transfer none): a pointer to the memory of @mem.
  */
 gpointer
 gst_memory_map (GstMemory * mem, gsize * size, gsize * maxsize,
@@ -652,7 +652,7 @@ gst_allocator_set_default (const GstAllocator * allocator)
 
 /**
  * gst_allocator_alloc:
- * @allocator: a #GstAllocator to use
+ * @allocator: (transfer none) (allow-none): a #GstAllocator to use
  * @maxsize: allocated size of @data
  * @align: alignment for the data
  *
@@ -664,7 +664,7 @@ gst_allocator_set_default (const GstAllocator * allocator)
  * @align is given as a bitmask so that @align + 1 equals the amount of bytes to
  * align to. For example, to align to 8 bytes, use an alignment of 7.
  *
- * Returns: a new #GstMemory.
+ * Returns: (transfer full): a new #GstMemory.
  */
 GstMemory *
 gst_allocator_alloc (const GstAllocator * allocator, gsize maxsize, gsize align)

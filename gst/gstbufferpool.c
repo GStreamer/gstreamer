@@ -147,7 +147,7 @@ gst_buffer_pool_finalize (GObject * object)
  *
  * Creates a new #GstBufferPool instance.
  *
- * Returns: a new #GstBufferPool instance
+ * Returns: (transfer full): a new #GstBufferPool instance
  */
 GstBufferPool *
 gst_buffer_pool_new (void)
@@ -430,7 +430,7 @@ wrong_config:
 /**
  * gst_buffer_pool_set_config:
  * @pool: a #GstBufferPool
- * @config: a #GstStructure
+ * @config: (transfer full): a #GstStructure
  *
  * Set the configuration of the pool. The pool must be inactive and all buffers
  * allocated form this pool must be returned or else this function will do
@@ -503,7 +503,7 @@ have_outstanding:
  * can either be modified and used for the gst_buffer_pool_set_config() call
  * or it must be freed after usage.
  *
- * Returns: a copy of the current configuration of @pool. use
+ * Returns: (transfer full): a copy of the current configuration of @pool. use
  * gst_structure_free() after usage or gst_buffer_pool_set_config().
  */
 GstStructure *
@@ -748,13 +748,13 @@ gst_buffer_pool_config_has_option (GstStructure * config, const gchar * option)
 
 /**
  * gst_buffer_pool_config_get:
- * @config: a #GstBufferPool configuration
- * @caps: the caps of buffers
- * @size: the size of each buffer, not including prefix
- * @min_buffers: the minimum amount of buffers to allocate.
- * @max_buffers: the maximum amount of buffers to allocate or 0 for unlimited.
- * @prefix: prefix each buffer with this many bytes
- * @align: alignment of the buffer data.
+ * @config: (transfer none): a #GstBufferPool configuration
+ * @caps: (out): the caps of buffers
+ * @size: (out): the size of each buffer, not including prefix
+ * @min_buffers: (out): the minimum amount of buffers to allocate.
+ * @max_buffers: (out): the maximum amount of buffers to allocate or 0 for unlimited.
+ * @prefix: (out): prefix each buffer with this many bytes
+ * @align: (out): alignment of the buffer data.
  *
  * Get the configuration values from @config.
  */
@@ -864,8 +864,8 @@ default_reset_buffer (GstBufferPool * pool, GstBuffer * buffer,
 /**
  * gst_buffer_pool_acquire_buffer:
  * @pool: a #GstBufferPool
- * @buffer: a location for a #GstBuffer
- * @params: parameters.
+ * @buffer: (out): a location for a #GstBuffer
+ * @params: (transfer none) (allow-none) parameters.
  *
  * Acquire a buffer from @pool. @buffer should point to a memory location that
  * can hold a pointer to the new buffer.
@@ -922,7 +922,7 @@ default_release_buffer (GstBufferPool * pool, GstBuffer * buffer)
 /**
  * gst_buffer_pool_release_buffer:
  * @pool: a #GstBufferPool
- * @buffer: a #GstBuffer
+ * @buffer: (transfer none): a #GstBuffer
  *
  * Release @buffer to @pool. @buffer should have previously been allocated from
  * @pool with gst_buffer_pool_acquire_buffer().

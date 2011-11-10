@@ -888,8 +888,8 @@ gst_buffer_resize (GstBuffer * buffer, gssize offset, gsize size)
 /**
  * gst_buffer_map:
  * @buffer: a #GstBuffer.
- * @size: a location for the size
- * @maxsize: a location for the max size
+ * @size: (out) (allow-none): a location for the size
+ * @maxsize: (out) (allow-none): a location for the max size
  * @flags: flags for the mapping
  *
  * This function return a pointer to the memory in @buffer. @flags describe the
@@ -907,7 +907,7 @@ gst_buffer_resize (GstBuffer * buffer, gssize offset, gsize size)
  * When the buffer contains multiple memory blocks, the returned pointer will be
  * a concatenation of the memory blocks.
  *
- * Returns: a pointer to the memory for the buffer.
+ * Returns: (transfer none): a pointer to the memory for the buffer.
  */
 gpointer
 gst_buffer_map (GstBuffer * buffer, gsize * size, gsize * maxsize,
@@ -1497,7 +1497,7 @@ gst_buffer_get_meta (GstBuffer * buffer, const GstMetaInfo * info)
  *
  * Add metadata for @info to @buffer using the parameters in @params.
  *
- * Returns: the metadata for the api in @info on @buffer.
+ * Returns: (transfer none): the metadata for the api in @info on @buffer.
  */
 GstMeta *
 gst_buffer_add_meta (GstBuffer * buffer, const GstMetaInfo * info,
