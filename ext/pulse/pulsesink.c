@@ -2869,6 +2869,7 @@ gst_pulsesink_event (GstBaseSink * sink, GstEvent * event)
 static gboolean
 gst_pulsesink_query (GstBaseSink * sink, GstQuery * query)
 {
+#ifdef HAVE_PULSE_1_0
   GstPulseSink *pulsesink = GST_PULSESINK_CAST (sink);
   gboolean ret;
 
@@ -2888,6 +2889,9 @@ gst_pulsesink_query (GstBaseSink * sink, GstQuery * query)
       break;
   }
   return ret;
+#else
+  return GST_BASE_SINK_CLASS (parent_class)->query (sink, query);
+#endif
 }
 
 static void
