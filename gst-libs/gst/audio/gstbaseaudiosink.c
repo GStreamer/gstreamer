@@ -255,9 +255,9 @@ gst_base_audio_sink_class_init (GstBaseAudioSinkClass * klass)
    * Since: 0.10.36
    */
   g_object_class_install_property (gobject_class, PROP_ALIGNMENT_THRESHOLD,
-      g_param_spec_int64 ("alignment-threshold", "Alignment Threshold",
+      g_param_spec_uint64 ("alignment-threshold", "Alignment Threshold",
           "Timestamp alignment threshold in nanoseconds", 1,
-          G_MAXINT64, DEFAULT_ALIGNMENT_THRESHOLD,
+          G_MAXUINT64 - 1, DEFAULT_ALIGNMENT_THRESHOLD,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   /**
@@ -269,10 +269,10 @@ gst_base_audio_sink_class_init (GstBaseAudioSinkClass * klass)
    * Since: 0.10.36
    */
   g_object_class_install_property (gobject_class, PROP_DISCONT_WAIT,
-      g_param_spec_int64 ("discont-wait", "Discont Wait",
+      g_param_spec_uint64 ("discont-wait", "Discont Wait",
           "Window of time in nanoseconds to wait before "
           "creating a discontinuity", 0,
-          G_MAXINT64, DEFAULT_DISCONT_WAIT,
+          G_MAXUINT64 - 1, DEFAULT_DISCONT_WAIT,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   gstelement_class->change_state =
