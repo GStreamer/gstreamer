@@ -119,7 +119,7 @@ struct _GstVideoSinkClass {
   GstFlowReturn  (*show_frame) (GstVideoSink *video_sink, GstBuffer *buf);
 
   /*< private >*/
-  gpointer _gst_reserved[GST_PADDING - 1];
+  gpointer _gst_reserved[GST_PADDING];
 };
 
 GType gst_video_sink_get_type (void);
