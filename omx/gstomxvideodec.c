@@ -645,6 +645,7 @@ gst_omx_video_dec_loop (GstOMXVideoDec * self)
 
     GST_DEBUG_OBJECT (self, "Port settings have changed, updating caps");
 
+    GST_BASE_VIDEO_CODEC_STREAM_LOCK (self);
     gst_omx_port_get_port_definition (port, &port_def);
     g_assert (port_def.format.video.eCompressionFormat ==
         OMX_VIDEO_CodingUnused);
@@ -661,6 +662,7 @@ gst_omx_video_dec_loop (GstOMXVideoDec * self)
             port_def.format.video.eColorFormat);
         if (buf)
           gst_omx_port_release_buffer (self->out_port, buf);
+        GST_BASE_VIDEO_CODEC_STREAM_UNLOCK (self);
         goto caps_failed;
         break;
     }
@@ -673,8 +675,11 @@ gst_omx_video_dec_loop (GstOMXVideoDec * self)
     if (!gst_base_video_decoder_set_src_caps (GST_BASE_VIDEO_DECODER (self))) {
       if (buf)
         gst_omx_port_release_buffer (self->out_port, buf);
+      GST_BASE_VIDEO_CODEC_STREAM_UNLOCK (self);
       goto caps_failed;
     }
+
+    GST_BASE_VIDEO_CODEC_STREAM_UNLOCK (self);
 
     /* Now get a buffer */
     if (acq_return != GST_OMX_ACQUIRE_BUFFER_OK)
