@@ -548,6 +548,8 @@ gst_audio_convert_fixate_caps (GstBaseTransform * base,
       gst_structure_fixate_field_nearest_int (outs, "rate", rate);
     }
   }
+
+  gst_caps_truncate (othercaps);
   GST_DEBUG_OBJECT (base, "fixated othercaps to %" GST_PTR_FORMAT, othercaps);
 }
 
