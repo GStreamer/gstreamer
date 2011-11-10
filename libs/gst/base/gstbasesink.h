@@ -176,9 +176,9 @@ struct _GstBaseSinkClass {
   /* notify subclass of query */
   gboolean      (*query)        (GstBaseSink *sink, GstQuery *query);
 
-  /* notify subclass of event, preroll buffer or real buffer */
+  /* notify subclass of event */
   gboolean      (*event)        (GstBaseSink *sink, GstEvent *event);
-
+  /* notify subclass of preroll buffer or real buffer */
   GstFlowReturn (*preroll)      (GstBaseSink *sink, GstBuffer *buffer);
   GstFlowReturn (*render)       (GstBaseSink *sink, GstBuffer *buffer);
   /* Render a BufferList */
