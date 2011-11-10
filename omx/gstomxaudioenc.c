@@ -421,10 +421,12 @@ gst_omx_audio_enc_loop (GstOMXAudioEnc * self)
 
     GST_DEBUG_OBJECT (self, "Port settings have changed, updating caps");
 
+    GST_BASE_AUDIO_ENCODER_STREAM_LOCK (self);
     caps = klass->get_caps (self, self->out_port, state);
     if (!caps) {
       if (buf)
         gst_omx_port_release_buffer (self->out_port, buf);
+      GST_BASE_AUDIO_ENCODER_STREAM_UNLOCK (self);
       goto caps_failed;
     }
 
@@ -432,9 +434,11 @@ gst_omx_audio_enc_loop (GstOMXAudioEnc * self)
       gst_caps_unref (caps);
       if (buf)
         gst_omx_port_release_buffer (self->out_port, buf);
+      GST_BASE_AUDIO_ENCODER_STREAM_UNLOCK (self);
       goto caps_failed;
     }
     gst_caps_unref (caps);
+    GST_BASE_AUDIO_ENCODER_STREAM_UNLOCK (self);
 
     /* Now get a buffer */
     if (acq_return != GST_OMX_ACQUIRE_BUFFER_OK)
