@@ -40,6 +40,8 @@
 #include "config.h"
 #endif
 
+#include <string.h>
+
 #include <gst/gst.h>
 #include <gst/base/gstbasetransform.h>
 
