@@ -406,7 +406,7 @@ gst_adapter_try_to_merge_up (GstAdapter * adapter, gsize size)
  * Returns: (transfer none) (array length=size): a pointer to the first
  *     @size bytes of data, or NULL
  */
-const guint8 *
+const gpointer
 gst_adapter_map (GstAdapter * adapter, gsize size)
 {
   GstBuffer *cur;
@@ -515,7 +515,7 @@ gst_adapter_unmap (GstAdapter * adapter, gsize flush)
  * Since: 0.10.12
  */
 void
-gst_adapter_copy (GstAdapter * adapter, guint8 * dest, gsize offset, gsize size)
+gst_adapter_copy (GstAdapter * adapter, gpointer dest, gsize offset, gsize size)
 {
   g_return_if_fail (GST_IS_ADAPTER (adapter));
   g_return_if_fail (size > 0);
@@ -658,10 +658,10 @@ gst_adapter_take_internal (GstAdapter * adapter, gsize nbytes)
  * Returns: (transfer full) (array length=nbytes): oven-fresh hot data, or
  *     #NULL if @nbytes bytes are not available
  */
-guint8 *
+gpointer
 gst_adapter_take (GstAdapter * adapter, gsize nbytes)
 {
-  guint8 *data;
+  gpointer data;
 
   g_return_val_if_fail (GST_IS_ADAPTER (adapter), NULL);
   g_return_val_if_fail (nbytes > 0, NULL);

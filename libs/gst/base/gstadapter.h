@@ -57,7 +57,7 @@ struct _GstAdapter {
   gsize         skip;
 
   /* we keep state of assembled pieces */
-  guint8 *      assembled_data;
+  gpointer      assembled_data;
   gsize         assembled_size;
   gsize         assembled_len;
 
@@ -79,12 +79,12 @@ GstAdapter *            gst_adapter_new                 (void);
 
 void                    gst_adapter_clear               (GstAdapter *adapter);
 void                    gst_adapter_push                (GstAdapter *adapter, GstBuffer* buf);
-const guint8 *          gst_adapter_map                 (GstAdapter *adapter, gsize size);
+const gpointer          gst_adapter_map                 (GstAdapter *adapter, gsize size);
 void                    gst_adapter_unmap               (GstAdapter *adapter, gsize flush);
-void                    gst_adapter_copy                (GstAdapter *adapter, guint8 *dest,
+void                    gst_adapter_copy                (GstAdapter *adapter, gpointer dest,
                                                          gsize offset, gsize size);
 void                    gst_adapter_flush               (GstAdapter *adapter, gsize flush);
-guint8*                 gst_adapter_take                (GstAdapter *adapter, gsize nbytes);
+gpointer                gst_adapter_take                (GstAdapter *adapter, gsize nbytes);
 GstBuffer*              gst_adapter_take_buffer         (GstAdapter *adapter, gsize nbytes);
 GList*                  gst_adapter_take_list           (GstAdapter *adapter, gsize nbytes);
 gsize                   gst_adapter_available           (GstAdapter *adapter);
