@@ -302,11 +302,21 @@ static GstCaps *
 gst_vorbis_enc_getcaps (GstAudioEncoder * enc, GstCaps * filter)
 {
   GstVorbisEnc *vorbisenc = GST_VORBISENC (enc);
+  GstCaps *caps;
 
   if (vorbisenc->sinkcaps == NULL)
     vorbisenc->sinkcaps = gst_vorbis_enc_generate_sink_caps ();
 
-  return gst_audio_encoder_proxy_getcaps (enc, vorbisenc->sinkcaps);
+  if (filter) {
+    GstCaps *int_caps = gst_caps_intersect_full (filter, vorbisenc->sinkcaps,
+        GST_CAPS_INTERSECT_FIRST);
+    caps = gst_audio_encoder_proxy_getcaps (enc, int_caps);
+    gst_caps_unref (int_caps);
+  } else {
+    caps = gst_audio_encoder_proxy_getcaps (enc, vorbisenc->sinkcaps);
+  }
+
+  return caps;
 }
 
 static gint64
