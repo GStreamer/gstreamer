@@ -166,7 +166,7 @@ gst_encoding_target_get_description (GstEncodingTarget * target)
  *
  * Since: 0.10.32
  *
- * Returns: (transfer none) (element-type Gst.EncodingProfile): A list of
+ * Returns: (transfer none) (element-type GstPbutils.EncodingProfile): A list of
  * #GstEncodingProfile(s) this @target handles.
  */
 const GList *
@@ -246,7 +246,7 @@ validate_name (const gchar * name)
  * belongs. For example: #GST_ENCODING_CATEGORY_DEVICE.
  * @description: (transfer none): A description of #GstEncodingTarget in the
  * current locale.
- * @profiles: (transfer none) (element-type Gst.EncodingProfile): A #GList of
+ * @profiles: (transfer none) (element-type GstPbutils.EncodingProfile): A #GList of
  * #GstEncodingProfile.
  *
  * Creates a new #GstEncodingTarget.
