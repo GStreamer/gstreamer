@@ -15,6 +15,7 @@
  * GST_DEBUG_NO_COLOR=1 GST_DEBUG="*:2,default:3,*sink*:4,*ring*:4,*pulse*:5" ./audio-trickplay -a -f 2>log-af.txt
  */
 
+#include <string.h>
 #include <gst/gst.h>
 #include <gst/controller/gstinterpolationcontrolsource.h>
 
@@ -47,7 +48,6 @@ main (gint argc, gchar ** argv)
   gint res = 1;
   GstElement *src, *mix = NULL, *sink;
   GstElement *bin;
-  GstController *ctrl;
   GstInterpolationControlSource *csource1, *csource2;
   GstClock *clock;
   GstClockID clock_id;
@@ -125,7 +125,7 @@ main (gint argc, gchar ** argv)
   gst_object_unref (src_pad);
 
   /* add a controller to the source */
-  if (!(ctrl = gst_controller_new (GST_OBJECT (src), "freq", "volume", NULL))) {
+  if (!gst_object_control_properties (GST_OBJECT (src), "freq", "volume", NULL)) {
     GST_WARNING ("can't control source element");
     goto Error;
   }
@@ -133,9 +133,9 @@ main (gint argc, gchar ** argv)
   csource1 = gst_interpolation_control_source_new ();
   csource2 = gst_interpolation_control_source_new ();
 
-  gst_controller_set_control_source (ctrl, "volume",
+  gst_object_set_control_source (GST_OBJECT (src), "volume",
       GST_CONTROL_SOURCE (csource1));
-  gst_controller_set_control_source (ctrl, "freq",
+  gst_object_set_control_source (GST_OBJECT (src), "freq",
       GST_CONTROL_SOURCE (csource2));
 
   /* Set interpolation mode */
@@ -257,7 +257,6 @@ main (gint argc, gchar ** argv)
 
   /* cleanup */
   gst_query_unref (pos);
-  g_object_unref (G_OBJECT (ctrl));
   gst_object_unref (G_OBJECT (clock));
   gst_object_unref (G_OBJECT (bin));
   res = 0;
