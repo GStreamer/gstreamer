@@ -91,11 +91,16 @@ gst_test_trans_class_init (GstTestTransClass * klass)
       gst_static_pad_template_get (src_template));
 
   trans_class->passthrough_on_same_caps = klass_passthrough_on_same_caps;
-  trans_class->transform_ip = klass_transform_ip;
-  trans_class->transform = klass_transform;
-  trans_class->transform_caps = klass_transform_caps;
-  trans_class->transform_size = klass_transform_size;
-  trans_class->set_caps = klass_set_caps;
+  if (klass_transform_ip != NULL)
+    trans_class->transform_ip = klass_transform_ip;
+  if (klass_transform != NULL)
+    trans_class->transform = klass_transform;
+  if (klass_transform_caps != NULL)
+    trans_class->transform_caps = klass_transform_caps;
+  if (klass_transform_size != NULL)
+    trans_class->transform_size = klass_transform_size;
+  if (klass_set_caps != NULL)
+    trans_class->set_caps = klass_set_caps;
 }
 
 static void
