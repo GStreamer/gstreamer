@@ -6,7 +6,6 @@ GST_PLUGINS_UGLY_TOP := $(LOCAL_PATH)
 GST_PLUGINS_UGLY_BUILT_SOURCES = \
 	ext/mad/Android.mk \
 	gst/synaesthesia/Android.mk \
-	gst/iec958/Android.mk \
 	gst/mpegaudioparse/Android.mk \
 	gst/mpegstream/Android.mk \
 	gst/realmedia/Android.mk \

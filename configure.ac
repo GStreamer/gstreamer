@@ -210,15 +210,13 @@ dnl *** plug-ins to include ***
 
 dnl Non ported plugins (non-dependant, then dependant)
 dnl Make sure you have a space before and after all plugins
-GST_PLUGINS_NONPORTED=" iec958 synaesthesia xingmux \
- mpegstream cdio twolame "
+GST_PLUGINS_NONPORTED=" synaesthesia xingmux mpegstream cdio twolame "
 AC_SUBST(GST_PLUGINS_NONPORTED)
 
 dnl these are all the gst plug-ins, compilable without additional libs
 AG_GST_CHECK_PLUGIN(asfdemux)
 AG_GST_CHECK_PLUGIN(dvdlpcmdec)
 AG_GST_CHECK_PLUGIN(dvdsub)
-AG_GST_CHECK_PLUGIN(iec958)
 AG_GST_CHECK_PLUGIN(xingmux)
 AG_GST_CHECK_PLUGIN(mpegstream)
 AG_GST_CHECK_PLUGIN(realmedia)
@@ -443,7 +441,6 @@ gst/Makefile
 gst/asfdemux/Makefile
 gst/dvdlpcmdec/Makefile
 gst/dvdsub/Makefile
-gst/iec958/Makefile
 gst/mpegstream/Makefile
 gst/realmedia/Makefile
 gst/synaesthesia/Makefile

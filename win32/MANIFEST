@@ -5,7 +5,6 @@ win32/vs6/libgstac3parse.dsp
 win32/vs6/libgstasfdemux.dsp
 win32/vs6/libgstdvdlpcmdec.dsp
 win32/vs6/libgstdvdsub.dsp
-win32/vs6/libgstiec958.dsp
 win32/vs6/libgstlame.dsp
 win32/vs6/libgstmad.dsp
 win32/vs6/libgstmpegaudioparse.dsp
