@@ -452,8 +452,7 @@ gst_vis_src_negotiate (GstVisual * visual)
   gst_structure_fixate_field_nearest_int (structure, "height", DEFAULT_HEIGHT);
   gst_structure_fixate_field_nearest_fraction (structure, "framerate",
       DEFAULT_FPS_N, DEFAULT_FPS_D);
-
-  gst_pad_fixate_caps (visual->srcpad, target);
+  gst_caps_fixate (target);
 
   GST_DEBUG_OBJECT (visual, "after fixate caps %" GST_PTR_FORMAT, target);
 
