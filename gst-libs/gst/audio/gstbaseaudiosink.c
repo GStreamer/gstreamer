@@ -278,18 +278,14 @@ gst_base_audio_sink_class_init (GstBaseAudioSinkClass * klass)
       GST_DEBUG_FUNCPTR (gst_base_audio_sink_provide_clock);
   gstelement_class->query = GST_DEBUG_FUNCPTR (gst_base_audio_sink_query);
 
+  gstbasesink_class->fixate = GST_DEBUG_FUNCPTR (gst_base_audio_sink_fixate);
+  gstbasesink_class->set_caps = GST_DEBUG_FUNCPTR (gst_base_audio_sink_setcaps);
   gstbasesink_class->event = GST_DEBUG_FUNCPTR (gst_base_audio_sink_event);
-  gstbasesink_class->preroll = GST_DEBUG_FUNCPTR (gst_base_audio_sink_preroll);
-  gstbasesink_class->query = GST_DEBUG_FUNCPTR (gst_base_audio_sink_query_pad);
-  gstbasesink_class->render = GST_DEBUG_FUNCPTR (gst_base_audio_sink_render);
   gstbasesink_class->get_times =
       GST_DEBUG_FUNCPTR (gst_base_audio_sink_get_times);
-  gstbasesink_class->set_caps = GST_DEBUG_FUNCPTR (gst_base_audio_sink_setcaps);
-  gstbasesink_class->fixate = GST_DEBUG_FUNCPTR (gst_base_audio_sink_fixate);
-#if 0
-  gstbasesink_class->async_play =
-      GST_DEBUG_FUNCPTR (gst_base_audio_sink_async_play);
-#endif
+  gstbasesink_class->preroll = GST_DEBUG_FUNCPTR (gst_base_audio_sink_preroll);
+  gstbasesink_class->render = GST_DEBUG_FUNCPTR (gst_base_audio_sink_render);
+  gstbasesink_class->query = GST_DEBUG_FUNCPTR (gst_base_audio_sink_query_pad);
   gstbasesink_class->activate_pull =
       GST_DEBUG_FUNCPTR (gst_base_audio_sink_activate_pull);
 
@@ -956,6 +952,8 @@ gst_base_audio_sink_fixate (GstBaseSink * bsink, GstCaps * caps)
     gst_structure_fixate_field_boolean (s, "signed", TRUE);
   if (gst_structure_has_field (s, "endianness"))
     gst_structure_fixate_field_nearest_int (s, "endianness", G_BYTE_ORDER);
+
+  GST_BASE_SINK_CLASS (parent_class)->fixate (bsink, caps);
 }
 
 static void

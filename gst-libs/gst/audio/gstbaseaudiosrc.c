@@ -663,9 +663,10 @@ static gboolean
 gst_base_audio_src_event (GstBaseSrc * bsrc, GstEvent * event)
 {
   GstBaseAudioSrc *src = GST_BASE_AUDIO_SRC (bsrc);
-  gboolean res;
+  gboolean res, forward;
 
-  res = TRUE;
+  res = FALSE;
+  forward = TRUE;
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_FLUSH_START:
@@ -681,12 +682,15 @@ gst_base_audio_src_event (GstBaseSrc * bsrc, GstEvent * event)
       break;
     case GST_EVENT_SEEK:
       GST_DEBUG_OBJECT (bsrc, "refuse to seek");
-      res = FALSE;
+      forward = FALSE;
       break;
     default:
-      GST_DEBUG_OBJECT (bsrc, "dropping event %p", event);
+      GST_DEBUG_OBJECT (bsrc, "forward event %p", event);
       break;
   }
+  if (forward)
+    res = GST_BASE_SRC_CLASS (parent_class)->event (bsrc, event);
+
   return res;
 }
 
