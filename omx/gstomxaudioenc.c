@@ -446,6 +446,7 @@ gst_omx_audio_enc_loop (GstOMXAudioEnc * self)
   GST_DEBUG_OBJECT (self, "Handling buffer: 0x%08x %lu", buf->omx_buf->nFlags,
       buf->omx_buf->nTimeStamp);
 
+  GST_BASE_AUDIO_ENCODER_STREAM_LOCK (self);
   if ((buf->omx_buf->nFlags & OMX_BUFFERFLAG_CODECCONFIG)
       && buf->omx_buf->nFilledLen > 0) {
     GstCaps *caps;
@@ -462,6 +463,7 @@ gst_omx_audio_enc_loop (GstOMXAudioEnc * self)
       gst_caps_unref (caps);
       if (buf)
         gst_omx_port_release_buffer (self->out_port, buf);
+      GST_BASE_AUDIO_ENCODER_STREAM_UNLOCK (self);
       goto caps_failed;
     }
     gst_caps_unref (caps);
@@ -523,6 +525,8 @@ gst_omx_audio_enc_loop (GstOMXAudioEnc * self)
   if (flow_ret != GST_FLOW_OK)
     goto flow_error;
 
+  GST_BASE_AUDIO_ENCODER_STREAM_UNLOCK (self);
+
   return;
 
 component_error:
@@ -564,6 +568,7 @@ flow_error:
       gst_pad_pause_task (GST_BASE_AUDIO_ENCODER_SRC_PAD (self));
     }
     self->started = FALSE;
+    GST_BASE_AUDIO_ENCODER_STREAM_UNLOCK (self);
     return;
   }
 reconfigure_error:
@@ -812,8 +817,10 @@ gst_omx_audio_enc_flush (GstBaseAudioEncoder * encoder)
   gst_omx_port_set_flushing (self->out_port, TRUE);
 
   /* Wait until the srcpad loop is finished */
+  GST_BASE_AUDIO_ENCODER_STREAM_UNLOCK (self);
   GST_PAD_STREAM_LOCK (GST_BASE_AUDIO_ENCODER_SRC_PAD (self));
   GST_PAD_STREAM_UNLOCK (GST_BASE_AUDIO_ENCODER_SRC_PAD (self));
+  GST_BASE_AUDIO_ENCODER_STREAM_LOCK (self);
 
   gst_omx_port_set_flushing (self->in_port, FALSE);
   gst_omx_port_set_flushing (self->out_port, FALSE);
