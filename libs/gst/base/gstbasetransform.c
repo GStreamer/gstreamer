@@ -317,6 +317,8 @@ static GstFlowReturn gst_base_transform_getrange (GstPad * pad, guint64 offset,
     guint length, GstBuffer ** buffer);
 static GstFlowReturn gst_base_transform_chain (GstPad * pad,
     GstBuffer * buffer);
+static GstCaps *gst_base_transform_default_transform_caps (GstBaseTransform *
+    trans, GstPadDirection direction, GstCaps * caps, GstCaps * filter);
 static void gst_base_transform_default_fixate (GstBaseTransform * trans,
     GstPadDirection direction, GstCaps * caps, GstCaps * othercaps);
 static GstCaps *gst_base_transform_getcaps (GstPad * pad, GstCaps * filter);
@@ -327,6 +329,9 @@ static gboolean gst_base_transform_setcaps (GstBaseTransform * trans,
 static gboolean gst_base_transform_query (GstPad * pad, GstQuery * query);
 static gboolean gst_base_transform_default_query (GstBaseTransform * trans,
     GstPadDirection direction, GstQuery * query);
+static gboolean gst_base_transform_default_transform_size (GstBaseTransform *
+    trans, GstPadDirection direction, GstCaps * caps, gsize size,
+    GstCaps * othercaps, gsize * othersize);
 
 static GstFlowReturn default_prepare_output_buffer (GstBaseTransform * trans,
     GstBuffer * inbuf, GstBuffer ** outbuf);
@@ -373,16 +378,22 @@ gst_base_transform_class_init (GstBaseTransformClass * klass)
 
   gobject_class->finalize = gst_base_transform_finalize;
 
-  klass->fixate_caps = GST_DEBUG_FUNCPTR (gst_base_transform_default_fixate);
   klass->passthrough_on_same_caps = FALSE;
-  klass->sink_event = GST_DEBUG_FUNCPTR (gst_base_transform_sink_eventfunc);
-  klass->src_event = GST_DEBUG_FUNCPTR (gst_base_transform_src_eventfunc);
+
+  klass->transform_caps =
+      GST_DEBUG_FUNCPTR (gst_base_transform_default_transform_caps);
+  klass->fixate_caps = GST_DEBUG_FUNCPTR (gst_base_transform_default_fixate);
   klass->accept_caps =
       GST_DEBUG_FUNCPTR (gst_base_transform_acceptcaps_default);
+  klass->query = GST_DEBUG_FUNCPTR (gst_base_transform_default_query);
+  klass->transform_size =
+      GST_DEBUG_FUNCPTR (gst_base_transform_default_transform_size);
+
+  klass->sink_event = GST_DEBUG_FUNCPTR (gst_base_transform_sink_eventfunc);
+  klass->src_event = GST_DEBUG_FUNCPTR (gst_base_transform_src_eventfunc);
   klass->prepare_output_buffer =
       GST_DEBUG_FUNCPTR (default_prepare_output_buffer);
   klass->copy_metadata = GST_DEBUG_FUNCPTR (default_copy_metadata);
-  klass->query = GST_DEBUG_FUNCPTR (gst_base_transform_default_query);
 }
 
 static void
@@ -450,6 +461,22 @@ gst_base_transform_init (GstBaseTransform * trans,
   trans->priv->dropped = 0;
 }
 
+static GstCaps *
+gst_base_transform_default_transform_caps (GstBaseTransform * trans,
+    GstPadDirection direction, GstCaps * caps, GstCaps * filter)
+{
+  GstCaps *ret;
+
+  GST_DEBUG_OBJECT (trans, "identity from: %" GST_PTR_FORMAT, caps);
+  /* no transform function, use the identity transform */
+  if (filter) {
+    ret = gst_caps_intersect_full (filter, caps, GST_CAPS_INTERSECT_FIRST);
+  } else {
+    ret = gst_caps_ref (caps);
+  }
+  return ret;
+}
+
 /* given @caps on the src or sink pad (given by @direction)
  * calculate the possible caps on the other pad.
  *
@@ -459,7 +486,7 @@ static GstCaps *
 gst_base_transform_transform_caps (GstBaseTransform * trans,
     GstPadDirection direction, GstCaps * caps, GstCaps * filter)
 {
-  GstCaps *ret;
+  GstCaps *ret = NULL;
   GstBaseTransformClass *klass;
 
   if (caps == NULL)
@@ -469,7 +496,6 @@ gst_base_transform_transform_caps (GstBaseTransform * trans,
 
   /* if there is a custom transform function, use this */
   if (klass->transform_caps) {
-
     GST_DEBUG_OBJECT (trans, "transform caps (direction = %d)", direction);
 
     GST_LOG_OBJECT (trans, "from: %" GST_PTR_FORMAT, caps);
@@ -495,56 +521,27 @@ gst_base_transform_transform_caps (GstBaseTransform * trans,
       }
     }
 #endif
-  } else {
-    GST_DEBUG_OBJECT (trans, "identity from: %" GST_PTR_FORMAT, caps);
-    /* no transform function, use the identity transform */
-    if (filter) {
-      ret = gst_caps_intersect_full (filter, caps, GST_CAPS_INTERSECT_FIRST);
-    } else {
-      ret = gst_caps_ref (caps);
-    }
   }
 
-  GST_DEBUG_OBJECT (trans, "to: (%d) %" GST_PTR_FORMAT, gst_caps_get_size (ret),
-      ret);
+  GST_DEBUG_OBJECT (trans, "to: %" GST_PTR_FORMAT, ret);
 
   return ret;
 }
 
-/* transform a buffer of @size with @caps on the pad with @direction to
- * the size of a buffer with @othercaps and store the result in @othersize
- *
- * We have two ways of doing this:
- *  1) use a custom transform size function, this is for complicated custom
- *     cases with no fixed unit_size.
- *  2) use the unit_size functions where there is a relationship between the
- *     caps and the size of a buffer.
- */
 static gboolean
-gst_base_transform_transform_size (GstBaseTransform * trans,
-    GstPadDirection direction, GstCaps * caps,
-    gsize size, GstCaps * othercaps, gsize * othersize)
+gst_base_transform_default_transform_size (GstBaseTransform * trans,
+    GstPadDirection direction, GstCaps * caps, gsize size,
+    GstCaps * othercaps, gsize * othersize)
 {
   gsize inunitsize, outunitsize, units;
   GstBaseTransformClass *klass;
-  gboolean ret;
 
   klass = GST_BASE_TRANSFORM_GET_CLASS (trans);
 
-  GST_DEBUG_OBJECT (trans,
-      "asked to transform size %" G_GSIZE_FORMAT " for caps %"
-      GST_PTR_FORMAT " to size for caps %" GST_PTR_FORMAT " in direction %s",
-      size, caps, othercaps, direction == GST_PAD_SRC ? "SRC" : "SINK");
-
-  if (klass->transform_size) {
-    /* if there is a custom transform function, use this */
-    ret = klass->transform_size (trans, direction, caps, size, othercaps,
-        othersize);
-  } else if (klass->get_unit_size == NULL) {
+  if (klass->get_unit_size == NULL) {
     /* if there is no transform_size and no unit_size, it means the
      * element does not modify the size of a buffer */
     *othersize = size;
-    ret = TRUE;
   } else {
     /* there is no transform_size function, we have to use the unit_size
      * functions. This method assumes there is a fixed unit_size associated with
@@ -572,10 +569,8 @@ gst_base_transform_transform_size (GstBaseTransform * trans,
     *othersize = units * outunitsize;
     GST_DEBUG_OBJECT (trans, "transformed size to %" G_GSIZE_FORMAT,
         *othersize);
-
-    ret = TRUE;
   }
-  return ret;
+  return TRUE;
 
   /* ERRORS */
 no_in_size:
@@ -598,6 +593,38 @@ no_out_size:
     g_warning ("%s: could not get out_size", GST_ELEMENT_NAME (trans));
     return FALSE;
   }
+}
+
+/* transform a buffer of @size with @caps on the pad with @direction to
+ * the size of a buffer with @othercaps and store the result in @othersize
+ *
+ * We have two ways of doing this:
+ *  1) use a custom transform size function, this is for complicated custom
+ *     cases with no fixed unit_size.
+ *  2) use the unit_size functions where there is a relationship between the
+ *     caps and the size of a buffer.
+ */
+static gboolean
+gst_base_transform_transform_size (GstBaseTransform * trans,
+    GstPadDirection direction, GstCaps * caps,
+    gsize size, GstCaps * othercaps, gsize * othersize)
+{
+  GstBaseTransformClass *klass;
+  gboolean ret = FALSE;
+
+  klass = GST_BASE_TRANSFORM_GET_CLASS (trans);
+
+  GST_DEBUG_OBJECT (trans,
+      "asked to transform size %" G_GSIZE_FORMAT " for caps %"
+      GST_PTR_FORMAT " to size for caps %" GST_PTR_FORMAT " in direction %s",
+      size, caps, othercaps, direction == GST_PAD_SRC ? "SRC" : "SINK");
+
+  if (klass->transform_size) {
+    /* if there is a custom transform function, use this */
+    ret = klass->transform_size (trans, direction, caps, size, othercaps,
+        othersize);
+  }
+  return ret;
 }
 
 /* get the caps that can be handled by @pad. We perform:
@@ -1347,7 +1374,7 @@ gst_base_transform_query (GstPad * pad, GstQuery * query)
 {
   GstBaseTransform *trans;
   GstBaseTransformClass *bclass;
-  gboolean ret;
+  gboolean ret = FALSE;
 
   trans = GST_BASE_TRANSFORM (gst_pad_get_parent (pad));
   if (G_UNLIKELY (trans == NULL))
@@ -1357,8 +1384,6 @@ gst_base_transform_query (GstPad * pad, GstQuery * query)
 
   if (bclass->query)
     ret = bclass->query (trans, GST_PAD_DIRECTION (pad), query);
-  else
-    ret = gst_pad_query_default (pad, query);
 
   gst_object_unref (trans);
 
@@ -1509,30 +1534,26 @@ gst_base_transform_get_unit_size (GstBaseTransform * trans, GstCaps * caps,
   }
 
   bclass = GST_BASE_TRANSFORM_GET_CLASS (trans);
-  if (bclass->get_unit_size) {
-    res = bclass->get_unit_size (trans, caps, size);
-    GST_DEBUG_OBJECT (trans,
-        "caps %" GST_PTR_FORMAT ") has unit size %" G_GSIZE_FORMAT ", res %s",
-        caps, *size, res ? "TRUE" : "FALSE");
+  res = bclass->get_unit_size (trans, caps, size);
+  GST_DEBUG_OBJECT (trans,
+      "caps %" GST_PTR_FORMAT ") has unit size %" G_GSIZE_FORMAT ", res %s",
+      caps, *size, res ? "TRUE" : "FALSE");
 
-    if (res) {
-      /* and cache the values */
-      if (trans->cache_caps1 == NULL) {
-        gst_caps_replace (&trans->cache_caps1, caps);
-        trans->cache_caps1_size = *size;
-        GST_DEBUG_OBJECT (trans,
-            "caching %" G_GSIZE_FORMAT " in first cache", *size);
-      } else if (trans->cache_caps2 == NULL) {
-        gst_caps_replace (&trans->cache_caps2, caps);
-        trans->cache_caps2_size = *size;
-        GST_DEBUG_OBJECT (trans,
-            "caching %" G_GSIZE_FORMAT " in second cache", *size);
-      } else {
-        GST_DEBUG_OBJECT (trans, "no free spot to cache unit_size");
-      }
+  if (res) {
+    /* and cache the values */
+    if (trans->cache_caps1 == NULL) {
+      gst_caps_replace (&trans->cache_caps1, caps);
+      trans->cache_caps1_size = *size;
+      GST_DEBUG_OBJECT (trans,
+          "caching %" G_GSIZE_FORMAT " in first cache", *size);
+    } else if (trans->cache_caps2 == NULL) {
+      gst_caps_replace (&trans->cache_caps2, caps);
+      trans->cache_caps2_size = *size;
+      GST_DEBUG_OBJECT (trans,
+          "caching %" G_GSIZE_FORMAT " in second cache", *size);
+    } else {
+      GST_DEBUG_OBJECT (trans, "no free spot to cache unit_size");
     }
-  } else {
-    GST_DEBUG_OBJECT (trans, "Sub-class does not implement get_unit_size");
   }
   return res;
 }
