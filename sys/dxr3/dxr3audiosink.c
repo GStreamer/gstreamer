@@ -93,7 +93,8 @@ static gboolean dxr3audiosink_open (Dxr3AudioSink * sink);
 static gboolean dxr3audiosink_set_mode_pcm (Dxr3AudioSink * sink);
 static gboolean dxr3audiosink_set_mode_ac3 (Dxr3AudioSink * sink);
 static void dxr3audiosink_close (Dxr3AudioSink * sink);
-static void dxr3audiosink_set_clock (GstElement * element, GstClock * clock);
+static gboolean dxr3audiosink_set_clock (GstElement * element,
+    GstClock * clock);
 
 static GstPadLinkReturn dxr3audiosink_pcm_sinklink (GstPad * pad,
     const GstCaps * caps);
@@ -440,12 +441,14 @@ dxr3audiosink_close (Dxr3AudioSink * sink)
 }
 
 
-static void
+static gboolean
 dxr3audiosink_set_clock (GstElement * element, GstClock * clock)
 {
   Dxr3AudioSink *src = DXR3AUDIOSINK (element);
 
   src->clock = clock;
+
+  return GST_ELEMENT_CLASS (parent_class)->set_clock (element, clock);
 }
 
 

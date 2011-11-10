@@ -72,7 +72,7 @@ static void dxr3spusink_get_property (GObject * object,
 
 static gboolean dxr3spusink_open (Dxr3SpuSink * sink);
 static void dxr3spusink_close (Dxr3SpuSink * sink);
-static void dxr3spusink_set_clock (GstElement * element, GstClock * clock);
+static gboolean dxr3spusink_set_clock (GstElement * element, GstClock * clock);
 
 static gboolean dxr3spusink_handle_event (GstPad * pad, GstEvent * event);
 static void dxr3spusink_chain (GstPad * pad, GstData * _data);
@@ -305,12 +305,14 @@ dxr3spusink_close (Dxr3SpuSink * sink)
 }
 
 
-static void
+static gboolean
 dxr3spusink_set_clock (GstElement * element, GstClock * clock)
 {
   Dxr3SpuSink *src = DXR3SPUSINK (element);
 
   src->clock = clock;
+
+  return GST_ELEMENT_CLASS (element)->set_clock (element, clock);
 }
 
 

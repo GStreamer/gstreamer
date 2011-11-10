@@ -96,7 +96,8 @@ static void dxr3videosink_get_property (GObject * object,
 
 static gboolean dxr3videosink_open (Dxr3VideoSink * sink);
 static void dxr3videosink_close (Dxr3VideoSink * sink);
-static void dxr3videosink_set_clock (GstElement * element, GstClock * clock);
+static gboolean dxr3videosink_set_clock (GstElement * element,
+    GstClock * clock);
 
 static void dxr3videosink_reset_parser (Dxr3VideoSink * sink);
 static int dxr3videosink_next_start_code (Dxr3VideoSink * sink);
@@ -308,12 +309,14 @@ dxr3videosink_close (Dxr3VideoSink * sink)
 }
 
 
-static void
+static gboolean
 dxr3videosink_set_clock (GstElement * element, GstClock * clock)
 {
   Dxr3VideoSink *src = DXR3VIDEOSINK (element);
 
   src->clock = clock;
+
+  return GST_ELEMENT_CLASS (parent_class)->set_clock (element, clock);
 }
 
 

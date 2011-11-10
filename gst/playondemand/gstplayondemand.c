@@ -71,7 +71,7 @@ static void play_on_demand_finalize (GObject * object);
 static GstPadLinkReturn play_on_demand_pad_link (GstPad * pad,
     const GstCaps * caps);
 static void play_on_demand_loop (GstElement * elem);
-static void play_on_demand_set_clock (GstElement * elem, GstClock * clock);
+static gboolean play_on_demand_set_clock (GstElement * elem, GstClock * clock);
 
 /* signal handlers */
 static void play_on_demand_play_handler (GstElement * elem);
@@ -463,7 +463,7 @@ play_on_demand_loop (GstElement * elem)
   }
 }
 
-static void
+static gboolean
 play_on_demand_set_clock (GstElement * elem, GstClock * clock)
 {
   GstPlayOnDemand *filter;
@@ -473,6 +473,8 @@ play_on_demand_set_clock (GstElement * elem, GstClock * clock)
   filter = GST_PLAYONDEMAND (elem);
 
   filter->clock = clock;
+
+  return GST_ELEMENT_CLASS (parent_class)->set_clock (elem, clock);
 }
 
 static void

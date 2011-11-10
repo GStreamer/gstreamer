@@ -753,7 +753,7 @@ gst_ks_video_src_set_clock (GstElement * element, GstClock * clock)
     gst_ks_clock_provide_master_clock (priv->ksclock, clock);
   GST_OBJECT_UNLOCK (element);
 
-  return TRUE;
+  return GST_ELEMENT_CLASS (element)->set_clock (element, clock);
 }
 
 static GstCaps *

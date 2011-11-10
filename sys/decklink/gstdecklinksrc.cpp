@@ -728,7 +728,7 @@ static gboolean
 gst_decklink_src_set_clock (GstElement * element, GstClock * clock)
 {
 
-  return TRUE;
+  return GST_ELEMENT_CLASS (parent_class)->set_clock (element, clock);
 }
 
 static GstIndex *
