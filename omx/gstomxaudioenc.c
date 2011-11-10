@@ -345,10 +345,8 @@ gst_omx_audio_enc_change_state (GstElement * element, GstStateChange transition)
         gst_omx_port_set_flushing (self->out_port, FALSE);
       self->downstream_flow_ret = GST_FLOW_OK;
 
-      g_mutex_lock (self->drain_lock);
       self->draining = FALSE;
-      g_cond_broadcast (self->drain_cond);
-      g_mutex_unlock (self->drain_lock);
+      self->started = FALSE;
       break;
     case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
       break;
@@ -380,6 +378,7 @@ gst_omx_audio_enc_change_state (GstElement * element, GstStateChange transition)
       break;
     case GST_STATE_CHANGE_PAUSED_TO_READY:
       self->downstream_flow_ret = GST_FLOW_WRONG_STATE;
+      self->started = FALSE;
       break;
     case GST_STATE_CHANGE_READY_TO_NULL:
       if (!gst_omx_audio_enc_close (self))
