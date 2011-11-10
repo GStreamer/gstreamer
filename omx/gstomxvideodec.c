@@ -1463,6 +1463,8 @@ gst_omx_video_dec_finish (GstBaseVideoDecoder * decoder)
     buf->omx_buf->nFlags |= OMX_BUFFERFLAG_EOS;
     gst_omx_port_release_buffer (self->in_port, buf);
     GST_DEBUG_OBJECT (self, "Sent EOS to the component");
+  } else {
+    GST_ERROR_OBJECT (self, "Failed to acquire buffer for EOS: %d", acq_ret);
   }
 
   GST_BASE_VIDEO_CODEC_STREAM_LOCK (self);
