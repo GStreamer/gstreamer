@@ -647,7 +647,7 @@ gst_faad_parse (GstAudioDecoder * dec, GstAdapter * adapter,
 
     data = gst_adapter_map (adapter, size);
     ret = gst_faad_sync (faad, data, size, !eos, offset, length);
-    gst_adapter_unmap (adapter, 0);
+    gst_adapter_unmap (adapter);
 
     return (ret ? GST_FLOW_OK : GST_FLOW_UNEXPECTED);
   }
