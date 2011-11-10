@@ -54,11 +54,13 @@ struct _GstPushSrc {
 struct _GstPushSrcClass {
   GstBaseSrcClass parent_class;
 
-  /* ask the subclass to create a buffer */
+  /* ask the subclass to create a buffer, the default implementation
+   * uses alloc and fill */
   GstFlowReturn (*create) (GstPushSrc *src, GstBuffer **buf);
-
+  /* allocate memory for a buffer */
+  GstFlowReturn (*alloc)  (GstPushSrc *src, GstBuffer **buf);
   /* ask the subclass to fill a buffer */
-  GstFlowReturn (*fill) (GstPushSrc *src, GstBuffer *buf);
+  GstFlowReturn (*fill)   (GstPushSrc *src, GstBuffer *buf);
 
   /*< private >*/
   gpointer _gst_reserved[GST_PADDING];
