@@ -316,7 +316,8 @@ gst_base_audio_sink_init (GstBaseAudioSink * baseaudiosink)
   baseaudiosink->priv->discont_wait = DEFAULT_DISCONT_WAIT;
 
   baseaudiosink->provided_clock = gst_audio_clock_new ("GstAudioSinkClock",
-      (GstAudioClockGetTimeFunc) gst_base_audio_sink_get_time, baseaudiosink);
+      (GstAudioClockGetTimeFunc) gst_base_audio_sink_get_time, baseaudiosink,
+      NULL);
 
   basesink = GST_BASE_SINK_CAST (baseaudiosink);
   basesink->can_activate_push = TRUE;

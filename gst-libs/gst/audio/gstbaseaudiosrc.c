@@ -247,7 +247,8 @@ gst_base_audio_src_init (GstBaseAudioSrc * baseaudiosrc)
   GST_BASE_SRC (baseaudiosrc)->blocksize = 0;
 
   baseaudiosrc->clock = gst_audio_clock_new ("GstAudioSrcClock",
-      (GstAudioClockGetTimeFunc) gst_base_audio_src_get_time, baseaudiosrc);
+      (GstAudioClockGetTimeFunc) gst_base_audio_src_get_time, baseaudiosrc,
+      NULL);
 
   /* we are always a live source */
   gst_base_src_set_live (GST_BASE_SRC (baseaudiosrc), TRUE);

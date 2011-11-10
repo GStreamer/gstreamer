@@ -124,31 +124,6 @@ gst_audio_clock_dispose (GObject * object)
  * @name: the name of the clock
  * @func: a function
  * @user_data: user data
- *
- * Create a new #GstAudioClock instance. Whenever the clock time should be
- * calculated it will call @func with @user_data. When @func returns
- * #GST_CLOCK_TIME_NONE, the clock will return the last reported time.
- *
- * Returns: a new #GstAudioClock casted to a #GstClock.
- */
-GstClock *
-gst_audio_clock_new (const gchar * name, GstAudioClockGetTimeFunc func,
-    gpointer user_data)
-{
-  GstAudioClock *aclock =
-      GST_AUDIO_CLOCK (g_object_new (GST_TYPE_AUDIO_CLOCK, "name", name, NULL));
-
-  aclock->func = func;
-  aclock->user_data = user_data;
-
-  return (GstClock *) aclock;
-}
-
-/**
- * gst_audio_clock_new_full:
- * @name: the name of the clock
- * @func: a function
- * @user_data: user data
  * @destroy_notify: #GDestroyNotify for @user_data
  *
  * Create a new #GstAudioClock instance. Whenever the clock time should be
@@ -160,7 +135,7 @@ gst_audio_clock_new (const gchar * name, GstAudioClockGetTimeFunc func,
  * Since: 0.10.31
  */
 GstClock *
-gst_audio_clock_new_full (const gchar * name, GstAudioClockGetTimeFunc func,
+gst_audio_clock_new (const gchar * name, GstAudioClockGetTimeFunc func,
     gpointer user_data, GDestroyNotify destroy_notify)
 {
   GstAudioClock *aclock =
