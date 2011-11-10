@@ -126,6 +126,8 @@ static GstStateChangeReturn gst_element_get_state_func (GstElement * element,
     GstState * state, GstState * pending, GstClockTime timeout);
 static GstStateChangeReturn gst_element_set_state_func (GstElement * element,
     GstState state);
+static gboolean gst_element_set_clock_func (GstElement * element,
+    GstClock * clock);
 static void gst_element_set_bus_func (GstElement * element, GstBus * bus);
 
 static gboolean gst_element_default_send_event (GstElement * element,
@@ -227,6 +229,7 @@ gst_element_class_init (GstElementClass * klass)
   klass->change_state = GST_DEBUG_FUNCPTR (gst_element_change_state_func);
   klass->set_state = GST_DEBUG_FUNCPTR (gst_element_set_state_func);
   klass->get_state = GST_DEBUG_FUNCPTR (gst_element_get_state_func);
+  klass->set_clock = GST_DEBUG_FUNCPTR (gst_element_set_clock_func);
   klass->set_bus = GST_DEBUG_FUNCPTR (gst_element_set_bus_func);
   klass->query = GST_DEBUG_FUNCPTR (gst_element_default_query);
   klass->send_event = GST_DEBUG_FUNCPTR (gst_element_default_send_event);
@@ -400,6 +403,19 @@ gst_element_provide_clock (GstElement * element)
   return result;
 }
 
+static gboolean
+gst_element_set_clock_func (GstElement * element, GstClock * clock)
+{
+  GstClock **clock_p;
+
+  GST_OBJECT_LOCK (element);
+  clock_p = &element->clock;
+  gst_object_replace ((GstObject **) clock_p, (GstObject *) clock);
+  GST_OBJECT_UNLOCK (element);
+
+  return TRUE;
+}
+
 /**
  * gst_element_set_clock:
  * @element: a #GstElement to set the clock for.
@@ -419,8 +435,7 @@ gboolean
 gst_element_set_clock (GstElement * element, GstClock * clock)
 {
   GstElementClass *oclass;
-  gboolean res = TRUE;
-  GstClock **clock_p;
+  gboolean res = FALSE;
 
   g_return_val_if_fail (GST_IS_ELEMENT (element), FALSE);
   g_return_val_if_fail (clock == NULL || GST_IS_CLOCK (clock), FALSE);
@@ -432,13 +447,6 @@ gst_element_set_clock (GstElement * element, GstClock * clock)
   if (oclass->set_clock)
     res = oclass->set_clock (element, clock);
 
-  if (res) {
-    /* only update the clock pointer if the element accepted the clock */
-    GST_OBJECT_LOCK (element);
-    clock_p = &element->clock;
-    gst_object_replace ((GstObject **) clock_p, (GstObject *) clock);
-    GST_OBJECT_UNLOCK (element);
-  }
   return res;
 }
 

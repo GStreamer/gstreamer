@@ -741,6 +741,9 @@ gst_bin_set_clock_func (GstElement * element, GstClock * clock)
   g_value_unset (&data);
   gst_iterator_free (it);
 
+  if (res)
+    res = GST_ELEMENT_CLASS (parent_class)->set_clock (element, clock);
+
   return res;
 }
 
