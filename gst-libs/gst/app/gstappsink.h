@@ -75,7 +75,7 @@ typedef struct {
   GstFlowReturn (*new_buffer_list)  (GstAppSink *sink, gpointer user_data);
 
   /*< private >*/
-  gpointer     _gst_reserved[GST_PADDING - 1];
+  gpointer     _gst_reserved[GST_PADDING];
 } GstAppSinkCallbacks;
 
 struct _GstAppSink
@@ -94,20 +94,18 @@ struct _GstAppSinkClass
   GstBaseSinkClass basesink_class;
 
   /* signals */
-  void        (*eos)          (GstAppSink *sink);
-  void        (*new_preroll)  (GstAppSink *sink);
-  void        (*new_buffer)   (GstAppSink *sink);
+  void        (*eos)              (GstAppSink *sink);
+  void        (*new_preroll)      (GstAppSink *sink);
+  void        (*new_buffer)       (GstAppSink *sink);
+  void        (*new_buffer_list)  (GstAppSink *sink);
 
   /* actions */
   GstBuffer     * (*pull_preroll)      (GstAppSink *sink);
   GstBuffer     * (*pull_buffer)       (GstAppSink *sink);
-
-  /* ABI added */
-  GstBufferList * (*new_buffer_list)   (GstAppSink *sink);
   GstBufferList * (*pull_buffer_list)  (GstAppSink *sink);
 
   /*< private >*/
-  gpointer     _gst_reserved[GST_PADDING - 2];
+  gpointer     _gst_reserved[GST_PADDING];
 };
 
 GType gst_app_sink_get_type(void);
