@@ -806,19 +806,17 @@ gst_omx_audio_enc_flush (GstBaseAudioEncoder * encoder)
 
   GST_DEBUG_OBJECT (self, "Resetting encoder");
 
-  if (self->started) {
-    gst_omx_audio_enc_drain (self);
+  gst_omx_audio_enc_drain (self);
 
-    gst_omx_port_set_flushing (self->in_port, TRUE);
-    gst_omx_port_set_flushing (self->out_port, TRUE);
+  gst_omx_port_set_flushing (self->in_port, TRUE);
+  gst_omx_port_set_flushing (self->out_port, TRUE);
 
-    /* Wait until the srcpad loop is finished */
-    GST_PAD_STREAM_LOCK (GST_BASE_AUDIO_ENCODER_SRC_PAD (self));
-    GST_PAD_STREAM_UNLOCK (GST_BASE_AUDIO_ENCODER_SRC_PAD (self));
+  /* Wait until the srcpad loop is finished */
+  GST_PAD_STREAM_LOCK (GST_BASE_AUDIO_ENCODER_SRC_PAD (self));
+  GST_PAD_STREAM_UNLOCK (GST_BASE_AUDIO_ENCODER_SRC_PAD (self));
 
-    gst_omx_port_set_flushing (self->in_port, FALSE);
-    gst_omx_port_set_flushing (self->out_port, FALSE);
-  }
+  gst_omx_port_set_flushing (self->in_port, FALSE);
+  gst_omx_port_set_flushing (self->out_port, FALSE);
 
   /* Start the srcpad loop again */
   self->downstream_flow_ret = GST_FLOW_OK;
