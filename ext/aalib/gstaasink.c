@@ -71,8 +71,9 @@ static GstStaticPadTemplate sink_template = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE ("I420"))
     );
 
-static gboolean gst_aasink_setcaps (GstBaseSink * pad, GstCaps * caps);
-static void gst_aasink_get_times (GstBaseSink * sink, GstBuffer * buffer,
+static void gst_aasink_fixate (GstBaseSink * bsink, GstCaps * caps);
+static gboolean gst_aasink_setcaps (GstBaseSink * bsink, GstCaps * caps);
+static void gst_aasink_get_times (GstBaseSink * bsink, GstBuffer * buffer,
     GstClockTime * start, GstClockTime * end);
 static GstFlowReturn gst_aasink_render (GstBaseSink * basesink,
     GstBuffer * buffer);
@@ -212,6 +213,7 @@ gst_aasink_class_init (GstAASinkClass * klass)
 
   gstelement_class->change_state = GST_DEBUG_FUNCPTR (gst_aasink_change_state);
 
+  gstbasesink_class->fixate = GST_DEBUG_FUNCPTR (gst_aasink_fixate);
   gstbasesink_class->set_caps = GST_DEBUG_FUNCPTR (gst_aasink_setcaps);
   gstbasesink_class->get_times = GST_DEBUG_FUNCPTR (gst_aasink_get_times);
   gstbasesink_class->preroll = GST_DEBUG_FUNCPTR (gst_aasink_render);
@@ -219,7 +221,7 @@ gst_aasink_class_init (GstAASinkClass * klass)
 }
 
 static void
-gst_aasink_fixate (GstPad * pad, GstCaps * caps)
+gst_aasink_fixate (GstBaseSink * bsink, GstCaps * caps)
 {
   GstStructure *structure;
 
@@ -228,6 +230,8 @@ gst_aasink_fixate (GstPad * pad, GstCaps * caps)
   gst_structure_fixate_field_nearest_int (structure, "width", 320);
   gst_structure_fixate_field_nearest_int (structure, "height", 240);
   gst_structure_fixate_field_nearest_fraction (structure, "framerate", 30, 1);
+
+  GST_BASE_SINK_CLASS (parent_class)->fixate (bsink, caps);
 }
 
 static gboolean
@@ -256,11 +260,6 @@ invalid_caps:
 static void
 gst_aasink_init (GstAASink * aasink)
 {
-  GstPad *pad;
-
-  pad = GST_BASE_SINK_PAD (aasink);
-  gst_pad_set_fixatecaps_function (pad, gst_aasink_fixate);
-
   memcpy (&aasink->ascii_surf, &aa_defparams,
       sizeof (struct aa_hardware_params));
   aasink->ascii_parms.bright = 0;

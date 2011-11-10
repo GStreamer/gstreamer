@@ -402,7 +402,7 @@ gst_v4l2src_negotiate (GstBaseSrc * basesrc)
 
     /* now fixate */
     if (!gst_caps_is_empty (caps)) {
-      gst_pad_fixate_caps (GST_BASE_SRC_PAD (basesrc), caps);
+      gst_v4l2src_fixate (basesrc, caps);
       GST_DEBUG_OBJECT (basesrc, "fixated to: %" GST_PTR_FORMAT, caps);
       LOG_CAPS (basesrc, caps);
 

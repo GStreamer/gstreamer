@@ -78,7 +78,7 @@ enum
 #define gst_ximage_src_parent_class parent_class
 G_DEFINE_TYPE (GstXImageSrc, gst_ximage_src, GST_TYPE_PUSH_SRC);
 
-static void gst_ximage_src_fixate (GstPad * pad, GstCaps * caps);
+static void gst_ximage_src_fixate (GstBaseSrc * bsrc, GstCaps * caps);
 static void gst_ximage_src_clear_bufpool (GstXImageSrc * ximagesrc);
 
 /* Called when a buffer is returned from the pipeline */
@@ -1131,7 +1131,7 @@ gst_ximage_src_set_caps (GstBaseSrc * bs, GstCaps * caps)
 }
 
 static void
-gst_ximage_src_fixate (GstPad * pad, GstCaps * caps)
+gst_ximage_src_fixate (GstBaseSrc * bsrc, GstCaps * caps)
 {
   gint i;
   GstStructure *structure;
@@ -1141,6 +1141,7 @@ gst_ximage_src_fixate (GstPad * pad, GstCaps * caps)
 
     gst_structure_fixate_field_nearest_fraction (structure, "framerate", 25, 1);
   }
+  GST_BASE_SRC_CLASS (parent_class)->fixate (bsrc, caps);
 }
 
 static void
@@ -1269,12 +1270,13 @@ gst_ximage_src_class_init (GstXImageSrcClass * klass)
       "Zaheer Merali <zaheerabbas at merali dot org>");
   gst_element_class_add_pad_template (ec, gst_static_pad_template_get (&t));
 
-  push_class->create = gst_ximage_src_create;
+  bc->fixate = gst_ximage_src_fixate;
   bc->get_caps = gst_ximage_src_get_caps;
   bc->set_caps = gst_ximage_src_set_caps;
   bc->start = gst_ximage_src_start;
   bc->stop = gst_ximage_src_stop;
   bc->unlock = gst_ximage_src_unlock;
+  push_class->create = gst_ximage_src_create;
 }
 
 static void
@@ -1282,8 +1284,6 @@ gst_ximage_src_init (GstXImageSrc * ximagesrc)
 {
   gst_base_src_set_format (GST_BASE_SRC (ximagesrc), GST_FORMAT_TIME);
   gst_base_src_set_live (GST_BASE_SRC (ximagesrc), TRUE);
-  gst_pad_set_fixatecaps_function (GST_BASE_SRC_PAD (ximagesrc),
-      gst_ximage_src_fixate);
 
   ximagesrc->pool_lock = g_mutex_new ();
   ximagesrc->x_lock = g_mutex_new ();

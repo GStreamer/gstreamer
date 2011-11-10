@@ -952,7 +952,7 @@ gst_pulsesrc_negotiate (GstBaseSrc * basesrc)
 
     /* now fixate */
     if (!gst_caps_is_empty (caps)) {
-      gst_pad_fixate_caps (GST_BASE_SRC_PAD (basesrc), caps);
+      GST_BASE_SRC_CLASS (parent_class)->fixate (basesrc, caps);
       GST_DEBUG_OBJECT (basesrc, "fixated to: %" GST_PTR_FORMAT, caps);
 
       if (gst_caps_is_any (caps)) {
@@ -1084,7 +1084,7 @@ gst_pulsesrc_success_cb (pa_stream * s, int success, void *userdata)
 {
   GstPulseSrc *pulsesrc = GST_PULSESRC_CAST (userdata);
 
-  pulsesrc->operation_success = !!success;
+  pulsesrc->operation_success = ! !success;
   pa_threaded_mainloop_signal (pulsesrc->mainloop, 0);
 }
 

@@ -1264,7 +1264,7 @@ gst_jpeg_dec_negotiate (GstJpegDec * dec, gint width, gint height, gint clrspc)
         gst_caps_unref (caps);
       caps = gst_caps_copy_nth (allowed_caps, i);
       /* sigh, ds and _parse_caps need fixed caps for parsing, fixate */
-      gst_pad_fixate_caps (dec->srcpad, caps);
+      gst_caps_fixate (caps);
       GST_LOG_OBJECT (dec, "checking caps %" GST_PTR_FORMAT, caps);
 
       if (!gst_video_info_from_caps (&tmpinfo, caps))
