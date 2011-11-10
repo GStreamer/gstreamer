@@ -91,7 +91,6 @@
 #endif
 
 #include "gstrtspconnection.h"
-#include "gstrtspbase64.h"
 
 union gst_sockaddr
 {

@@ -1,7 +1,6 @@
 libgstrtspincludedir = $(includedir)/gstreamer-@GST_MAJORMINOR@/gst/rtsp
 
-libgstrtspinclude_HEADERS = gstrtspbase64.h \
-			    gstrtsptransport.h \
+libgstrtspinclude_HEADERS = gstrtsptransport.h \
 			    gstrtspurl.h \
 			    gstrtspmessage.h    \
 			    gstrtspconnection.h \
@@ -17,8 +16,7 @@ lib_LTLIBRARIES = libgstrtsp-@GST_MAJORMINOR@.la
 built_sources = gstrtsp-marshal.c gstrtsp-enumtypes.c
 built_headers = gstrtsp-marshal.h gstrtsp-enumtypes.h
 
-libgstrtsp_@GST_MAJORMINOR@_la_SOURCES = gstrtspbase64.c \
-					 gstrtsptransport.c \
+libgstrtsp_@GST_MAJORMINOR@_la_SOURCES = gstrtsptransport.c \
 					 gstrtspurl.c \
 					 gstrtspmessage.c    \
                                          gstrtspconnection.c \
