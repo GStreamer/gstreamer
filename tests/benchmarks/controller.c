@@ -19,6 +19,8 @@
  * Boston, MA 02111-1307, USA.
  */
 
+#include <stdio.h>
+
 #include <gst/gst.h>
 #include <gst/controller/gstinterpolationcontrolsource.h>
 
@@ -80,7 +82,6 @@ main (gint argc, gchar * argv[])
   gint i, j;
   GstElement *src, *sink;
   GstElement *bin;
-  GstController *ctrl;
   GstInterpolationControlSource *csource;
   GValue freq = { 0, };
   GstClockTime bt, ct;
@@ -109,15 +110,15 @@ main (gint argc, gchar * argv[])
 
   tick = BLOCK_SIZE * GST_SECOND / 44100;
 
-  /* add a controller to the source */
-  if (!(ctrl = gst_controller_new (GST_OBJECT (src), "freq", NULL))) {
+  /* select parameters to control */
+  if (!gst_object_control_properties (GST_OBJECT (src), "freq", NULL)) {
     GST_WARNING ("can't control source element");
     goto Error;
   }
 
   /* create and configure control source */
   csource = gst_interpolation_control_source_new ();
-  gst_controller_set_control_source (ctrl, "freq",
+  gst_object_set_control_source (GST_OBJECT (src), "freq",
       GST_CONTROL_SOURCE (csource));
   gst_interpolation_control_source_set_interpolation_mode (csource,
       GST_INTERPOLATE_LINEAR);
@@ -194,7 +195,6 @@ main (gint argc, gchar * argv[])
       GST_TIME_ARGS (elapsed));
 
   /* cleanup */
-  g_object_unref (G_OBJECT (ctrl));
   gst_object_unref (G_OBJECT (bin));
   res = 0;
 Error:

@@ -171,7 +171,10 @@ struct _GstObject {
   guint32        flags;
 
   /*< private >*/
-  gpointer ctrl;        /* time controlled properties */
+  GList *properties;  /* List of GstControlledProperty */
+  guint64 control_rate;
+  guint64 last_sync;
+
   gpointer _gst_reserved;
 };
 
@@ -229,7 +232,6 @@ gchar *		gst_object_get_path_string	(GstObject *object);
 gboolean	gst_object_check_uniqueness	(GList *list, const gchar *name);
 
 /* controller functions */
-#include <gst/gstclock.h>
 #include <gst/gstcontrolsource.h>
 
 gboolean gst_object_control_properties (GstObject * object, ...) G_GNUC_NULL_TERMINATED;
@@ -238,9 +240,9 @@ gboolean gst_object_uncontrol_properties (GstObject * object, ...) G_GNUC_NULL_T
 GstClockTime gst_object_suggest_next_sync (GstObject * object);
 gboolean gst_object_sync_values (GstObject * object, GstClockTime timestamp);
 
-gboolean gst_object_has_active_automation (GstObject *object);
-void gst_object_set_automation_disabled (GstObject *object, gboolean disabled);
-void gst_object_set_property_automation_disabled (GstObject *object, const gchar * property_name, gboolean disabled);
+gboolean gst_object_has_active_controlled_properties (GstObject *object);
+void gst_object_set_controlled_properties_disabled (GstObject *object, gboolean disabled);
+void gst_object_set_controlled_property_disabled (GstObject *object, const gchar * property_name, gboolean disabled);
 
 gboolean gst_object_set_control_source (GstObject *object, const gchar * property_name, GstControlSource *csource);
 GstControlSource * gst_object_get_control_source (GstObject *object, const gchar * property_name);

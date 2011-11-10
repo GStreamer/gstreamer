@@ -48,8 +48,8 @@
 
 #include "gstcontrolsource.h"
 
-#define GST_CAT_DEFAULT controller_debug
-GST_DEBUG_CATEGORY_EXTERN (GST_CAT_DEFAULT);
+#define GST_CAT_DEFAULT control_source_debug
+GST_DEBUG_CATEGORY_STATIC (GST_CAT_DEFAULT);
 
 G_DEFINE_ABSTRACT_TYPE (GstControlSource, gst_control_source, G_TYPE_OBJECT);
 
@@ -64,6 +64,9 @@ gst_control_source_class_init (GstControlSourceClass * klass)
 
   /* Has to be implemented by children */
   klass->bind = NULL;
+
+  GST_DEBUG_CATEGORY_INIT (GST_CAT_DEFAULT, "gstcontrolsource", 0,
+      "dynamic parameter control sources");
 }
 
 static void

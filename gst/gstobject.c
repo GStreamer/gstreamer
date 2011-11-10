@@ -80,6 +80,56 @@
  * gst_object_set_name() and gst_object_get_name() are used to set/get the name
  * of the object.
  *
+ *
+ * <refsect2>
+ * <title>controlled properties</title>
+ * Controlled properties offers a lightweight way to adjust gobject
+ * properties over stream-time. It works by using time-stamped value pairs that
+ * are queued for element-properties. At run-time the elements continously pull
+ * values changes for the current stream-time.
+ *
+ * What needs to be changed in a #GstElement?
+ * Very little - it is just two steps to make a plugin controllable!
+ * <orderedlist>
+ *   <listitem><para>
+ *     mark gobject-properties paramspecs that make sense to be controlled,
+ *     by GST_PARAM_CONTROLLABLE.
+ *   </para></listitem>
+ *   <listitem><para>
+ *     when processing data (get, chain, loop function) at the beginning call
+ *     gst_object_sync_values(element,timestamp).
+ *     This will made the controller to update all gobject properties that are under
+ *     control with the current values based on timestamp.
+ *   </para></listitem>
+ * </orderedlist>
+ *
+ * What needs to be done in applications?
+ * Again its not a lot to change.
+ * <orderedlist>
+ *   <listitem><para>
+ *     first put some properties under control, by calling
+ *     gst_object_control_properties (object, "prop1", "prop2",...);
+ *   </para></listitem>
+ *   <listitem><para>
+ *     create a #GstControlSource.
+ *     csource = gst_interpolation_control_source_new ();
+ *     gst_interpolation_control_source_set_interpolation_mode(csource, mode);
+ *   </para></listitem>
+ *   <listitem><para>
+ *     Attach the #GstControlSource on the controller to a property.
+ *     gst_object_set_control_source (object, "prop1", csource);
+ *   </para></listitem>
+ *   <listitem><para>
+ *     Set the control values
+ *     gst_interpolation_control_source_set (csource,0 * GST_SECOND, value1);
+ *     gst_interpolation_control_source_set (csource,1 * GST_SECOND, value2);
+ *   </para></listitem>
+ *   <listitem><para>
+ *     start your pipeline
+ *   </para></listitem>
+ * </orderedlist>
+ * </refsect2>
+ *
  * Last reviewed on 2005-11-09 (0.9.4)
  */
 
@@ -88,8 +138,10 @@
 
 #include "gstobject.h"
 #include "gstmarshal.h"
-#include "gstcontroller.h"
+#include "gstclock.h"
+#include "gstcontrolsource.h"
 #include "gstinfo.h"
+#include "gstparamspecs.h"
 #include "gstutils.h"
 
 #ifndef GST_DISABLE_TRACE
@@ -141,6 +193,21 @@ static gboolean gst_object_set_name_default (GstObject * object);
 static guint gst_object_signals[LAST_SIGNAL] = { 0 };
 
 static GParamSpec *properties[PROP_LAST];
+
+/*
+ * GstControlledProperty:
+ */
+typedef struct _GstControlledProperty
+{
+  GParamSpec *pspec;            /* GParamSpec for this property */
+  const gchar *name;            /* name of the property */
+  GstControlSource *csource;    /* GstControlSource for this property */
+  gboolean disabled;
+  GValue last_value;
+} GstControlledProperty;
+
+static void gst_controlled_property_free (GstControlledProperty * prop);
+
 
 G_DEFINE_ABSTRACT_TYPE (GstObject, gst_object, G_TYPE_INITIALLY_UNOWNED);
 
@@ -208,6 +275,9 @@ gst_object_init (GstObject * object)
 #endif
 
   object->flags = 0;
+
+  object->control_rate = 100 * GST_MSECOND;
+  object->last_sync = GST_CLOCK_TIME_NONE;
 }
 
 /**
@@ -354,9 +424,14 @@ gst_object_dispose (GObject * object)
   GST_OBJECT_PARENT (object) = NULL;
   GST_OBJECT_UNLOCK (object);
 
-  if (self->ctrl) {
-    g_object_unref (self->ctrl);
-    self->ctrl = NULL;
+  if (self->properties) {
+    GList *node;
+
+    for (node = self->properties; node; node = g_list_next (node)) {
+      gst_controlled_property_free ((GstControlledProperty *) node->data);
+    }
+    g_list_free (self->properties);
+    self->properties = NULL;
   }
 
   ((GObjectClass *) gst_object_parent_class)->dispose (object);
@@ -958,6 +1033,151 @@ gst_object_get_path_string (GstObject * object)
   return path;
 }
 
+/* controller helper functions */
+
+/*
+ * gst_controlled_property_new:
+ * @object: for which object the controlled property should be set up
+ * @name: the name of the property to be controlled
+ *
+ * Private method which initializes the fields of a new controlled property
+ * structure.
+ *
+ * Returns: a freshly allocated structure or %NULL
+ */
+static GstControlledProperty *
+gst_controlled_property_new (GstObject * object, const gchar * name)
+{
+  GstControlledProperty *prop = NULL;
+  GParamSpec *pspec;
+
+  GST_INFO ("trying to put property '%s' under control", name);
+
+  /* check if the object has a property of that name */
+  if ((pspec =
+          g_object_class_find_property (G_OBJECT_GET_CLASS (object), name))) {
+    GST_DEBUG ("  psec->flags : 0x%08x", pspec->flags);
+
+    /* check if this param is witable && controlable && !construct-only */
+    g_return_val_if_fail ((pspec->flags & (G_PARAM_WRITABLE |
+                GST_PARAM_CONTROLLABLE | G_PARAM_CONSTRUCT_ONLY)) ==
+        (G_PARAM_WRITABLE | GST_PARAM_CONTROLLABLE), NULL);
+
+    if ((prop = g_slice_new (GstControlledProperty))) {
+      prop->pspec = pspec;
+      prop->name = pspec->name;
+      prop->csource = NULL;
+      prop->disabled = FALSE;
+      memset (&prop->last_value, 0, sizeof (GValue));
+      g_value_init (&prop->last_value, G_PARAM_SPEC_VALUE_TYPE (prop->pspec));
+    }
+  } else {
+    GST_WARNING ("class '%s' has no property '%s'", G_OBJECT_TYPE_NAME (object),
+        name);
+  }
+  return prop;
+}
+
+/*
+ * gst_controlled_property_free:
+ * @prop: the object to free
+ *
+ * Private method which frees all data allocated by a #GstControlledProperty
+ * instance.
+ */
+static void
+gst_controlled_property_free (GstControlledProperty * prop)
+{
+  if (prop->csource)
+    g_object_unref (prop->csource);
+  g_value_unset (&prop->last_value);
+  g_slice_free (GstControlledProperty, prop);
+}
+
+/*
+ * gst_object_find_controlled_property:
+ * @self: the gobject to search for a property in
+ * @name: the gobject property name to look for
+ *
+ * Searches the list of properties under control.
+ *
+ * Returns: a #GstControlledProperty or %NULL if the property is not being
+ * controlled.
+ */
+static GstControlledProperty *
+gst_object_find_controlled_property (GstObject * self, const gchar * name)
+{
+  GstControlledProperty *prop;
+  GList *node;
+
+  for (node = self->properties; node; node = g_list_next (node)) {
+    prop = node->data;
+    /* FIXME: eventually use GQuark to speed it up */
+    if (!strcmp (prop->name, name)) {
+      return prop;
+    }
+  }
+  GST_DEBUG ("controller does not (yet) manage property '%s'", name);
+
+  return NULL;
+}
+
+/*
+ * gst_object_add_controlled_property:
+ * @self: the object
+ * @name: name of projecty in @object
+ *
+ * Creates a new #GstControlledProperty if there is none for property @name yet.
+ *
+ * Returns: %TRUE if the property has been added to the controller
+ */
+static gboolean
+gst_object_add_controlled_property (GstObject * self, const gchar * name)
+{
+  gboolean res = TRUE;
+
+  /* test if this property isn't yet controlled */
+  if (!gst_object_find_controlled_property (self, name)) {
+    GstControlledProperty *prop;
+
+    /* create GstControlledProperty and add to self->properties list */
+    if ((prop = gst_controlled_property_new (self, name))) {
+      self->properties = g_list_prepend (self->properties, prop);
+      GST_DEBUG_OBJECT (self, "property %s added", name);
+    } else
+      res = FALSE;
+  } else {
+    GST_WARNING_OBJECT (self, "trying to control property %s again", name);
+  }
+  return res;
+}
+
+/*
+ * gst_object_remove_controlled_property:
+ * @self: the object
+ * @name: name of projecty in @object
+ *
+ * Removes a #GstControlledProperty for property @name.
+ *
+ * Returns: %TRUE if the property has been removed from the controller
+ */
+static gboolean
+gst_object_remove_controlled_property (GstObject * self, const gchar * name)
+{
+  gboolean res = TRUE;
+  GstControlledProperty *prop;
+
+  if ((prop = gst_object_find_controlled_property (self, name))) {
+    self->properties = g_list_remove (self->properties, prop);
+    //g_signal_handler_disconnect (self->object, prop->notify_handler_id);
+    gst_controlled_property_free (prop);
+    GST_DEBUG_OBJECT (self, "property %s removed", name);
+  } else {
+    res = FALSE;
+  }
+  return res;
+}
+
 /* controller functions */
 
 /**
@@ -975,24 +1195,18 @@ gst_object_get_path_string (GstObject * object)
 gboolean
 gst_object_control_properties (GstObject * object, ...)
 {
-  gboolean res = FALSE;
+  gboolean res = TRUE;
   va_list var_args;
+  gchar *name;
 
   g_return_val_if_fail (GST_IS_OBJECT (object), FALSE);
 
   va_start (var_args, object);
-  if (object->ctrl) {
-    GstController *ctrl = gst_controller_new_valist (object, var_args);
-
-    /* FIXME: see gst_controller_new_*() */
-    g_object_unref (object->ctrl);
-    object->ctrl = ctrl;
-
-    res = (object->ctrl != NULL);
-  } else {
-    res = gst_controller_add_properties_valist ((GstController *) object->ctrl,
-        var_args);
+  GST_OBJECT_LOCK (object);
+  while ((name = va_arg (var_args, gchar *))) {
+    res &= gst_object_add_controlled_property (object, name);
   }
+  GST_OBJECT_UNLOCK (object);
   va_end (var_args);
   return res;
 }
@@ -1010,17 +1224,19 @@ gst_object_control_properties (GstObject * object, ...)
 gboolean
 gst_object_uncontrol_properties (GstObject * object, ...)
 {
-  gboolean res = FALSE;
+  gboolean res = TRUE;
+  va_list var_args;
+  gchar *name;
+
   g_return_val_if_fail (GST_IS_OBJECT (object), FALSE);
 
-  if (object->ctrl) {
-    va_list var_args;
-
-    va_start (var_args, object);
-    res = gst_controller_remove_properties_valist (
-        (GstController *) object->ctrl, var_args);
-    va_end (var_args);
+  va_start (var_args, object);
+  GST_OBJECT_LOCK (object);
+  while ((name = va_arg (var_args, gchar *))) {
+    res &= gst_object_remove_controlled_property (object, name);
   }
+  GST_OBJECT_UNLOCK (object);
+  va_end (var_args);
   return (res);
 }
 
@@ -1028,18 +1244,32 @@ gst_object_uncontrol_properties (GstObject * object, ...)
  * gst_object_suggest_next_sync:
  * @object: the object that has controlled properties
  *
- * Convenience function for GObject
+ * Returns a suggestion for timestamps where buffers should be split
+ * to get best controller results.
  *
- * Returns: same thing as gst_controller_suggest_next_sync()
+ * Returns: Returns the suggested timestamp or %GST_CLOCK_TIME_NONE
+ * if no control-rate was set.
  */
 GstClockTime
 gst_object_suggest_next_sync (GstObject * object)
 {
-  g_return_val_if_fail (GST_IS_OBJECT (object), GST_CLOCK_TIME_NONE);
+  GstClockTime ret;
 
-  if (object->ctrl)
-    return gst_controller_suggest_next_sync ((GstController *) object->ctrl);
-  return (GST_CLOCK_TIME_NONE);
+  g_return_val_if_fail (GST_IS_OBJECT (object), GST_CLOCK_TIME_NONE);
+  g_return_val_if_fail (object->control_rate != GST_CLOCK_TIME_NONE,
+      GST_CLOCK_TIME_NONE);
+
+  GST_OBJECT_LOCK (object);
+
+  /* TODO: Implement more logic, depending on interpolation mode and control
+   * points
+   * FIXME: we need playback direction
+   */
+  ret = object->last_sync + object->control_rate;
+
+  GST_OBJECT_UNLOCK (object);
+
+  return ret;
 }
 
 /**
@@ -1047,64 +1277,122 @@ gst_object_suggest_next_sync (GstObject * object)
  * @object: the object that has controlled properties
  * @timestamp: the time that should be processed
  *
- * Convenience function for GObject
+ * Sets the properties of the object, according to the #GstControlSources that
+ * (maybe) handle them and for the given timestamp.
  *
- * Returns: same thing as gst_controller_sync_values()
+ * If this function fails, it is most likely the application developers fault.
+ * Most probably the control sources are not setup correctly.
+ *
+ * Returns: %TRUE if the controller values could be applied to the object
+ * properties, %FALSE otherwise
  */
 gboolean
 gst_object_sync_values (GstObject * object, GstClockTime timestamp)
 {
-  g_return_val_if_fail (GST_IS_OBJECT (object), FALSE);
+  GstControlledProperty *prop;
+  GList *node;
+  gboolean ret = TRUE, val_ret;
+  GValue value = { 0, };
 
-  if (object->ctrl)
-    return gst_controller_sync_values ((GstController *) object->ctrl,
-        timestamp);
-  /* this is no failure, its called by elements regardless if there is a
-   * controller assigned or not */
-  return (TRUE);
+  g_return_val_if_fail (GST_IS_OBJECT (object), FALSE);
+  g_return_val_if_fail (GST_CLOCK_TIME_IS_VALID (timestamp), FALSE);
+
+  GST_LOG ("sync_values");
+
+  /* FIXME: this deadlocks */
+  /* GST_OBJECT_LOCK (object); */
+  g_object_freeze_notify ((GObject *) object);
+  /* go over the controlled properties of the controller */
+  for (node = object->properties; node; node = g_list_next (node)) {
+    prop = node->data;
+
+    if (!prop->csource || prop->disabled)
+      continue;
+
+    GST_LOG ("property '%s' at ts=%" G_GUINT64_FORMAT, prop->name, timestamp);
+
+    /* we can make this faster
+     * http://bugzilla.gnome.org/show_bug.cgi?id=536939
+     */
+    g_value_init (&value, G_PARAM_SPEC_VALUE_TYPE (prop->pspec));
+    val_ret = gst_control_source_get_value (prop->csource, timestamp, &value);
+    if (G_LIKELY (val_ret)) {
+      /* always set the value for first time, but then only if it changed
+       * this should limit g_object_notify invocations.
+       * FIXME: can we detect negative playback rates?
+       */
+      if ((timestamp < object->last_sync) ||
+          gst_value_compare (&value, &prop->last_value) != GST_VALUE_EQUAL) {
+        g_object_set_property ((GObject *) object, prop->name, &value);
+        g_value_copy (&value, &prop->last_value);
+      }
+    } else {
+      GST_DEBUG ("no control value for param %s", prop->name);
+    }
+    g_value_unset (&value);
+    ret &= val_ret;
+  }
+  object->last_sync = timestamp;
+  g_object_thaw_notify ((GObject *) object);
+  /* GST_OBJECT_UNLOCK (object); */
+
+  return ret;
 }
 
 /**
- * gst_object_has_active_automation:
+ * gst_object_has_active_controlled_properties:
  * @object: the object that has controlled properties
  *
- * Check if the object has an active controller. It has one if it has at least
- * one controlled property that is not disabled.
+ * Check if the @object has an active controlled properties.
  *
- * Returns: %TRUE if the controller is active
+ * Returns: %TRUE if the object has active controlled properties
  */
 gboolean
-gst_object_has_active_automation (GstObject * object)
+gst_object_has_active_controlled_properties (GstObject * object)
 {
   gboolean res = FALSE;
+  GList *node;
+  GstControlledProperty *prop;
 
   g_return_val_if_fail (GST_IS_OBJECT (object), FALSE);
 
-  if (object->ctrl)
-    res = gst_controller_is_active ((GstController *) object->ctrl);
+  GST_OBJECT_LOCK (object);
+  for (node = object->properties; node; node = node->next) {
+    prop = node->data;
+    res |= !prop->disabled;
+  }
+  GST_OBJECT_UNLOCK (object);
   return res;
 }
 
 /**
- * gst_object_set_automation_disabled:
+ * gst_object_set_controlled_properties_disabled:
  * @object: the object that has controlled properties
  * @disabled: boolean that specifies whether to disable the controller
  * or not.
  *
- * This function is used to disable all properties of the #GstController
- * for some time, i.e. gst_object_sync_values() will do nothing..
+ * This function is used to disable all controlled properties of the @object for
+ * some time, i.e. gst_object_sync_values() will do nothing..
  */
 void
-gst_object_set_automation_disabled (GstObject * object, gboolean disabled)
+gst_object_set_controlled_properties_disabled (GstObject * object,
+    gboolean disabled)
 {
+  GList *node;
+  GstControlledProperty *prop;
+
   g_return_if_fail (GST_IS_OBJECT (object));
 
-  if (object->ctrl)
-    gst_controller_set_disabled (object->ctrl, disabled);
+  GST_OBJECT_LOCK (object);
+  for (node = object->properties; node; node = node->next) {
+    prop = node->data;
+    prop->disabled = disabled;
+  }
+  GST_OBJECT_UNLOCK (object);
 }
 
 /**
- * gst_object_set_property_automation_disabled:
+ * gst_object_set_controlled_property_disabled:
  * @object: the object that has controlled properties
  * @property_name: property to disable
  * @disabled: boolean that specifies whether to disable the controller
@@ -1115,15 +1403,19 @@ gst_object_set_automation_disabled (GstObject * object, gboolean disabled)
  * property.
  */
 void
-gst_object_set_property_automation_disabled (GstObject * object,
+gst_object_set_controlled_property_disabled (GstObject * object,
     const gchar * property_name, gboolean disabled)
 {
+  GstControlledProperty *prop;
+
   g_return_if_fail (GST_IS_OBJECT (object));
   g_return_if_fail (property_name);
 
-  if (object->ctrl)
-    gst_controller_set_property_disabled ((GstController *) object->ctrl,
-        property_name, disabled);
+  GST_OBJECT_LOCK (object);
+  if ((prop = gst_object_find_controlled_property (object, property_name))) {
+    prop->disabled = disabled;
+  }
+  GST_OBJECT_UNLOCK (object);
 }
 
 /**
@@ -1142,14 +1434,30 @@ gboolean
 gst_object_set_control_source (GstObject * object, const gchar * property_name,
     GstControlSource * csource)
 {
+  GstControlledProperty *prop;
+  gboolean ret = FALSE;
+
   g_return_val_if_fail (GST_IS_OBJECT (object), FALSE);
   g_return_val_if_fail (property_name, FALSE);
-  g_return_val_if_fail (GST_IS_CONTROL_SOURCE (csource), FALSE);
+  g_return_val_if_fail ((!csource || GST_IS_CONTROL_SOURCE (csource)), FALSE);
 
-  if (object->ctrl)
-    return gst_controller_set_control_source ((GstController *) object->ctrl,
-        property_name, csource);
-  return FALSE;
+  GST_OBJECT_LOCK (object);
+  if ((prop = gst_object_find_controlled_property (object, property_name))) {
+    GstControlSource *old = prop->csource;
+
+    if (csource && (ret = gst_control_source_bind (csource, prop->pspec))) {
+      prop->csource = g_object_ref (csource);
+    } else if (!csource) {
+      ret = TRUE;
+      prop->csource = NULL;
+    }
+
+    if (ret && old)
+      g_object_unref (old);
+  }
+  GST_OBJECT_UNLOCK (object);
+
+  return ret;
 }
 
 /**
@@ -1167,26 +1475,64 @@ gst_object_set_control_source (GstObject * object, const gchar * property_name,
 GstControlSource *
 gst_object_get_control_source (GstObject * object, const gchar * property_name)
 {
+  GstControlledProperty *prop;
+  GstControlSource *ret = NULL;
+
   g_return_val_if_fail (GST_IS_OBJECT (object), NULL);
   g_return_val_if_fail (property_name, NULL);
 
-  if (object->ctrl)
-    return gst_controller_get_control_source ((GstController *) object->ctrl,
-        property_name);
-  return NULL;
+  GST_OBJECT_LOCK (object);
+  if ((prop = gst_object_find_controlled_property (object, property_name))) {
+    if ((ret = prop->csource))
+      g_object_ref (ret);
+  }
+  GST_OBJECT_UNLOCK (object);
+
+  return ret;
 }
 
-// FIXME: docs
+/**
+ * gst_object_get_value:
+ * @object: the object that has controlled properties
+ * @property_name: the name of the property to get
+ * @timestamp: the time the control-change should be read from
+ *
+ * Gets the value for the given controllered property at the requested time.
+ *
+ * Returns: the GValue of the property at the given time, or %NULL if the
+ * property isn't controlled.
+ */
 GValue *
 gst_object_get_value (GstObject * object, const gchar * property_name,
     GstClockTime timestamp)
 {
+  GstControlledProperty *prop;
+  GValue *val = NULL;
+
   g_return_val_if_fail (GST_IS_OBJECT (object), NULL);
   g_return_val_if_fail (property_name, NULL);
+  g_return_val_if_fail (GST_CLOCK_TIME_IS_VALID (timestamp), NULL);
 
-  if (object->ctrl)
-    return gst_controller_get (object->ctrl, property_name, timestamp);
-  return NULL;
+  GST_OBJECT_LOCK (object);
+  if ((prop = gst_object_find_controlled_property (object, property_name))) {
+    val = g_new0 (GValue, 1);
+    g_value_init (val, G_PARAM_SPEC_VALUE_TYPE (prop->pspec));
+    if (prop->csource) {
+      gboolean res;
+
+      /* get current value via control source */
+      res = gst_control_source_get_value (prop->csource, timestamp, val);
+      if (!res) {
+        g_free (val);
+        val = NULL;
+      }
+    } else {
+      g_object_get_property ((GObject *) object, prop->name, val);
+    }
+  }
+  GST_OBJECT_UNLOCK (object);
+
+  return val;
 }
 
 /**
@@ -1210,13 +1556,17 @@ gboolean
 gst_object_get_value_arrays (GstObject * object, GstClockTime timestamp,
     GSList * value_arrays)
 {
+  gboolean res = TRUE;
+  GSList *node;
+
   g_return_val_if_fail (GST_IS_OBJECT (object), FALSE);
   g_return_val_if_fail (GST_CLOCK_TIME_IS_VALID (timestamp), FALSE);
+  g_return_val_if_fail (value_arrays, FALSE);
 
-  if (object->ctrl)
-    return gst_controller_get_value_arrays ((GstController *) object->ctrl,
-        timestamp, value_arrays);
-  return (FALSE);
+  for (node = value_arrays; (res && node); node = g_slist_next (node)) {
+    res = gst_object_get_value_array (object, timestamp, node->data);
+  }
+  return res;
 }
 
 /**
@@ -1238,13 +1588,30 @@ gboolean
 gst_object_get_value_array (GstObject * object, GstClockTime timestamp,
     GstValueArray * value_array)
 {
+  gboolean res = FALSE;
+  GstControlledProperty *prop;
+
   g_return_val_if_fail (GST_IS_OBJECT (object), FALSE);
   g_return_val_if_fail (GST_CLOCK_TIME_IS_VALID (timestamp), FALSE);
+  g_return_val_if_fail (value_array, FALSE);
+  g_return_val_if_fail (value_array->property_name, FALSE);
+  g_return_val_if_fail (value_array->values, FALSE);
 
-  if (object->ctrl)
-    return gst_controller_get_value_array ((GstController *) object->ctrl,
-        timestamp, value_array);
-  return (FALSE);
+  GST_OBJECT_LOCK (object);
+
+  if ((prop = gst_object_find_controlled_property (object,
+              value_array->property_name))) {
+    /* get current value_array via control source */
+    if (!prop->csource)
+      goto out;
+
+    res = gst_control_source_get_value_array (prop->csource, timestamp,
+        value_array);
+  }
+
+out:
+  GST_OBJECT_UNLOCK (object);
+  return res;
 }
 
 /**
@@ -1267,13 +1634,9 @@ gst_object_get_value_array (GstObject * object, GstClockTime timestamp,
 GstClockTime
 gst_object_get_control_rate (GstObject * object)
 {
-  GstClockTime control_rate = GST_CLOCK_TIME_NONE;
-
   g_return_val_if_fail (GST_IS_OBJECT (object), FALSE);
 
-  if (object->ctrl)
-    g_object_get (object->ctrl, "control-rate", &control_rate, NULL);
-  return (control_rate);
+  return object->control_rate;
 }
 
 /**
@@ -1294,6 +1657,5 @@ gst_object_set_control_rate (GstObject * object, GstClockTime control_rate)
 {
   g_return_if_fail (GST_IS_OBJECT (object));
 
-  if (object->ctrl)
-    g_object_set (object->ctrl, "control-rate", control_rate, NULL);
+  object->control_rate = control_rate;
 }
