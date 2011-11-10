@@ -35,7 +35,6 @@
 #include <string.h>
 
 #include <gst/rtsp/gstrtspextension.h>
-#include <gst/rtsp/gstrtspbase64.h>
 
 #include "realhash.h"
 #include "rtspreal.h"

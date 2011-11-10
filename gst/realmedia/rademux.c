@@ -473,7 +473,8 @@ gst_real_audio_demux_parse_header (GstRealAudioDemux * demux)
     g_free (codec_name);
   }
 
-  gst_adapter_unmap (demux->adapter, demux->data_offset - 6);
+  gst_adapter_unmap (demux->adapter);
+  gst_adapter_flush (demux->adapter, demux->data_offset - 6);
 
   demux->state = REAL_AUDIO_DEMUX_STATE_DATA;
   demux->need_newsegment = TRUE;

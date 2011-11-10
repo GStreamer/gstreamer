@@ -1002,7 +1002,8 @@ gst_rmdemux_chain (GstPad * pad, GstBuffer * buffer)
            * happen. */
           GST_WARNING_OBJECT (rmdemux, "Bogus looking header, unprintable "
               "FOURCC");
-          gst_adapter_unmap (rmdemux->adapter, 4);
+          gst_adapter_unmap (rmdemux->adapter);
+          gst_adapter_flush (rmdemux->adapter, 4);
 
           break;
         }
@@ -1013,7 +1014,8 @@ gst_rmdemux_chain (GstPad * pad, GstBuffer * buffer)
             GST_FOURCC_ARGS (rmdemux->object_id), rmdemux->size,
             rmdemux->object_version);
 
-        gst_adapter_unmap (rmdemux->adapter, HEADER_SIZE);
+        gst_adapter_unmap (rmdemux->adapter);
+        gst_adapter_flush (rmdemux->adapter, HEADER_SIZE);
 
         switch (rmdemux->object_id) {
           case GST_MAKE_FOURCC ('.', 'R', 'M', 'F'):
@@ -1060,7 +1062,8 @@ gst_rmdemux_chain (GstPad * pad, GstBuffer * buffer)
         if ((rmdemux->object_version == 0) || (rmdemux->object_version == 1)) {
           data = gst_adapter_map (rmdemux->adapter, rmdemux->size);
           gst_rmdemux_parse__rmf (rmdemux, data, rmdemux->size);
-          gst_adapter_unmap (rmdemux->adapter, rmdemux->size);
+          gst_adapter_unmap (rmdemux->adapter);
+          gst_adapter_flush (rmdemux->adapter, rmdemux->size);
         } else {
           gst_adapter_flush (rmdemux->adapter, rmdemux->size);
         }
@@ -1074,7 +1077,8 @@ gst_rmdemux_chain (GstPad * pad, GstBuffer * buffer)
 
         data = gst_adapter_map (rmdemux->adapter, rmdemux->size);
         gst_rmdemux_parse_prop (rmdemux, data, rmdemux->size);
-        gst_adapter_unmap (rmdemux->adapter, rmdemux->size);
+        gst_adapter_unmap (rmdemux->adapter);
+        gst_adapter_flush (rmdemux->adapter, rmdemux->size);
 
         rmdemux->state = RMDEMUX_STATE_HEADER;
         break;
@@ -1086,7 +1090,8 @@ gst_rmdemux_chain (GstPad * pad, GstBuffer * buffer)
 
         data = gst_adapter_map (rmdemux->adapter, rmdemux->size);
         gst_rmdemux_parse_mdpr (rmdemux, data, rmdemux->size);
-        gst_adapter_unmap (rmdemux->adapter, rmdemux->size);
+        gst_adapter_unmap (rmdemux->adapter);
+        gst_adapter_flush (rmdemux->adapter, rmdemux->size);
 
         rmdemux->state = RMDEMUX_STATE_HEADER;
         break;
@@ -1098,7 +1103,8 @@ gst_rmdemux_chain (GstPad * pad, GstBuffer * buffer)
 
         data = gst_adapter_map (rmdemux->adapter, rmdemux->size);
         gst_rmdemux_parse_cont (rmdemux, data, rmdemux->size);
-        gst_adapter_unmap (rmdemux->adapter, rmdemux->size);
+        gst_adapter_unmap (rmdemux->adapter);
+        gst_adapter_flush (rmdemux->adapter, rmdemux->size);
 
         rmdemux->state = RMDEMUX_STATE_HEADER;
         break;
@@ -1121,7 +1127,8 @@ gst_rmdemux_chain (GstPad * pad, GstBuffer * buffer)
 
         data = gst_adapter_map (rmdemux->adapter, rmdemux->size);
         gst_rmdemux_parse_data (rmdemux, data, rmdemux->size);
-        gst_adapter_unmap (rmdemux->adapter, rmdemux->size);
+        gst_adapter_unmap (rmdemux->adapter);
+        gst_adapter_flush (rmdemux->adapter, rmdemux->size);
 
         rmdemux->state = RMDEMUX_STATE_DATA_PACKET;
         break;
@@ -1134,7 +1141,8 @@ gst_rmdemux_chain (GstPad * pad, GstBuffer * buffer)
         data = gst_adapter_map (rmdemux->adapter, rmdemux->size);
         rmdemux->size = gst_rmdemux_parse_indx (rmdemux, data, rmdemux->size);
         /* Only flush the header */
-        gst_adapter_unmap (rmdemux->adapter, HEADER_SIZE);
+        gst_adapter_unmap (rmdemux->adapter);
+        gst_adapter_flush (rmdemux->adapter, HEADER_SIZE);
 
         rmdemux->state = RMDEMUX_STATE_INDX_DATA;
         break;
@@ -1148,7 +1156,8 @@ gst_rmdemux_chain (GstPad * pad, GstBuffer * buffer)
 
           data = gst_adapter_map (rmdemux->adapter, rmdemux->size);
           gst_rmdemux_parse_indx_data (rmdemux, data, rmdemux->size);
-          gst_adapter_unmap (rmdemux->adapter, rmdemux->size);
+          gst_adapter_unmap (rmdemux->adapter);
+          gst_adapter_flush (rmdemux->adapter, rmdemux->size);
         }
 
         rmdemux->state = RMDEMUX_STATE_HEADER;
