@@ -368,11 +368,21 @@ gst_camera_bin_start_capture (GstCameraBin2 * camerabin)
   GST_DEBUG_OBJECT (camerabin, "Received start-capture");
 
   /* check that we have a valid location */
-  if (camerabin->mode == MODE_VIDEO && camerabin->location == NULL) {
-    GST_ELEMENT_ERROR (camerabin, RESOURCE, OPEN_WRITE,
-        (_("File location is set to NULL, please set it to a valid filename")),
-        (NULL));
-    return;
+  if (camerabin->mode == MODE_VIDEO) {
+    if (camerabin->location == NULL) {
+      GST_ELEMENT_ERROR (camerabin, RESOURCE, OPEN_WRITE,
+          (_("File location is set to NULL, please set it to a valid filename")), (NULL));
+      return;
+    }
+
+    g_mutex_lock (camerabin->video_capture_mutex);
+    if (camerabin->video_state != GST_CAMERA_BIN_VIDEO_IDLE) {
+      GST_WARNING_OBJECT (camerabin, "Another video recording is ongoing"
+          " (state %d), cannot start a new one", camerabin->video_state);
+      g_mutex_unlock (camerabin->video_capture_mutex);
+      return;
+    }
+    camerabin->video_state = GST_CAMERA_BIN_VIDEO_STARTING;
   }
 
   GST_CAMERA_BIN2_PROCESSING_INC (camerabin);
@@ -420,8 +430,13 @@ gst_camera_bin_start_capture (GstCameraBin2 * camerabin)
   }
 
   g_signal_emit_by_name (camerabin->src, "start-capture", NULL);
-  if (camerabin->mode == MODE_VIDEO && camerabin->audio_src)
-    gst_element_set_state (camerabin->audio_src, GST_STATE_PLAYING);
+  if (camerabin->mode == MODE_VIDEO) {
+    if (camerabin->audio_src)
+      gst_element_set_state (camerabin->audio_src, GST_STATE_PLAYING);
+
+    camerabin->video_state = GST_CAMERA_BIN_VIDEO_RECORDING;
+    g_mutex_unlock (camerabin->video_capture_mutex);
+  }
 
   /*
    * We have to push tags after start capture because the video elements
@@ -458,12 +473,19 @@ static void
 gst_camera_bin_stop_capture (GstCameraBin2 * camerabin)
 {
   GST_DEBUG_OBJECT (camerabin, "Received stop-capture");
-  if (camerabin->src)
-    g_signal_emit_by_name (camerabin->src, "stop-capture", NULL);
+  if (camerabin->mode == MODE_VIDEO) {
+    g_mutex_lock (camerabin->video_capture_mutex);
+    if (camerabin->video_state == GST_CAMERA_BIN_VIDEO_RECORDING) {
+      if (camerabin->src)
+        g_signal_emit_by_name (camerabin->src, "stop-capture", NULL);
 
-  if (camerabin->mode == MODE_VIDEO && camerabin->audio_src) {
-    camerabin->audio_drop_eos = FALSE;
-    gst_element_send_event (camerabin->audio_src, gst_event_new_eos ());
+      camerabin->video_state = GST_CAMERA_BIN_VIDEO_FINISHING;
+      if (camerabin->audio_src) {
+        camerabin->audio_drop_eos = FALSE;
+        gst_element_send_event (camerabin->audio_src, gst_event_new_eos ());
+      }
+    }
+    g_mutex_unlock (camerabin->video_capture_mutex);
   }
 }
 
@@ -535,6 +557,7 @@ gst_camera_bin_dispose (GObject * object)
   g_free (camerabin->location);
   g_mutex_free (camerabin->preview_list_mutex);
   g_mutex_free (camerabin->image_capture_mutex);
+  g_mutex_free (camerabin->video_capture_mutex);
 
   if (camerabin->src_capture_notify_id)
     g_signal_handler_disconnect (camerabin->src,
@@ -892,6 +915,7 @@ gst_camera_bin_init (GstCameraBin2 * camera)
   camera->flags = DEFAULT_FLAGS;
   camera->preview_list_mutex = g_mutex_new ();
   camera->image_capture_mutex = g_mutex_new ();
+  camera->video_capture_mutex = g_mutex_new ();
 
   /* capsfilters are created here as we proxy their caps properties and
    * this way we avoid having to store the caps while on NULL state to 
@@ -1035,9 +1059,14 @@ gst_camera_bin_handle_message (GstBin * bin, GstMessage * message)
     case GST_MESSAGE_EOS:{
       GstElement *src = GST_ELEMENT (GST_MESSAGE_SRC (message));
       if (src == GST_CAMERA_BIN2_CAST (bin)->videosink) {
+        g_mutex_lock (camerabin->video_capture_mutex);
         GST_DEBUG_OBJECT (bin, "EOS from video branch");
+        g_assert (camerabin->video_state == GST_CAMERA_BIN_VIDEO_FINISHING);
+
         gst_video_capture_bin_post_video_done (GST_CAMERA_BIN2_CAST (bin));
         dec_counter = TRUE;
+        camerabin->video_state = GST_CAMERA_BIN_VIDEO_IDLE;
+        g_mutex_unlock (camerabin->video_capture_mutex);
       }
     }
       break;
@@ -1810,6 +1839,7 @@ gst_camera_bin_change_state (GstElement * element, GstStateChange trans)
 
       gst_tag_setter_reset_tags (GST_TAG_SETTER (camera));
       GST_CAMERA_BIN2_RESET_PROCESSING_COUNTER (camera);
+      camera->video_state = GST_CAMERA_BIN_VIDEO_IDLE;
 
       g_mutex_lock (camera->image_capture_mutex);
       g_slist_foreach (camera->image_location_list, (GFunc) g_free, NULL);
