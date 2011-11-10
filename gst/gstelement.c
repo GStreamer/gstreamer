@@ -1523,8 +1523,6 @@ gst_element_send_event (GstElement * element, GstEvent * event)
     GST_CAT_DEBUG (GST_CAT_ELEMENT_PADS, "send %s event on element %s",
         GST_EVENT_TYPE_NAME (event), GST_ELEMENT_NAME (element));
     result = oclass->send_event (element, event);
-  } else {
-    result = gst_element_default_send_event (element, event);
   }
   GST_STATE_UNLOCK (element);
 
@@ -1626,8 +1624,6 @@ gst_element_query (GstElement * element, GstQuery * query)
     GST_CAT_DEBUG (GST_CAT_ELEMENT_PADS, "send query on element %s",
         GST_ELEMENT_NAME (element));
     result = oclass->query (element, query);
-  } else {
-    result = gst_element_default_query (element, query);
   }
   return result;
 }
