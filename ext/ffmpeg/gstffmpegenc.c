@@ -1048,7 +1048,8 @@ gst_ffmpegenc_chain_audio (GstPad * pad, GstBuffer * inbuf)
           gst_ffmpegenc_encode_audio (ffmpegenc, in_data, frame_bytes, out_size,
           timestamp, duration, ffmpegenc->discont);
 
-      gst_adapter_unmap (ffmpegenc->adapter, frame_bytes);
+      gst_adapter_unmap (ffmpegenc->adapter);
+      gst_adapter_flush (ffmpegenc->adapter, frame_bytes);
 
       if (ret != GST_FLOW_OK)
         goto push_failed;
