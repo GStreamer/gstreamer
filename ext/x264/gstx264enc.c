@@ -1565,7 +1565,7 @@ gst_x264_enc_sink_set_caps (GstPad * pad, GstCaps * caps)
     }
 
     allowed_caps = gst_caps_make_writable (allowed_caps);
-    gst_pad_fixate_caps (encoder->srcpad, allowed_caps);
+    gst_caps_fixate (allowed_caps);
     s = gst_caps_get_structure (allowed_caps, 0);
 
     profile = gst_structure_get_string (s, "profile");
