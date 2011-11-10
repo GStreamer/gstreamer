@@ -278,6 +278,8 @@ gst_base_src_get_type (void)
   return base_src_type;
 }
 
+static GstCaps *gst_base_src_default_get_caps (GstBaseSrc * bsrc,
+    GstCaps * filter);
 static GstCaps *gst_base_src_getcaps (GstPad * pad, GstCaps * filter);
 static void gst_base_src_default_fixate (GstBaseSrc * src, GstCaps * caps);
 static void gst_base_src_fixate (GstBaseSrc * src, GstCaps * caps);
@@ -367,6 +369,7 @@ gst_base_src_class_init (GstBaseSrcClass * klass)
       GST_DEBUG_FUNCPTR (gst_base_src_change_state);
   gstelement_class->send_event = GST_DEBUG_FUNCPTR (gst_base_src_send_event);
 
+  klass->get_caps = GST_DEBUG_FUNCPTR (gst_base_src_default_get_caps);
   klass->negotiate = GST_DEBUG_FUNCPTR (gst_base_src_default_negotiate);
   klass->fixate = GST_DEBUG_FUNCPTR (gst_base_src_default_fixate);
   klass->prepare_seek_segment =
@@ -807,6 +810,33 @@ gst_base_src_set_caps (GstBaseSrc * src, GstCaps * caps)
 }
 
 static GstCaps *
+gst_base_src_default_get_caps (GstBaseSrc * bsrc, GstCaps * filter)
+{
+  GstCaps *caps = NULL;
+  GstPadTemplate *pad_template;
+  GstBaseSrcClass *bclass;
+
+  bclass = GST_BASE_SRC_GET_CLASS (bsrc);
+
+  pad_template =
+      gst_element_class_get_pad_template (GST_ELEMENT_CLASS (bclass), "src");
+
+  if (pad_template != NULL) {
+    caps = gst_pad_template_get_caps (pad_template);
+
+    if (filter) {
+      GstCaps *intersection;
+
+      intersection =
+          gst_caps_intersect_full (filter, caps, GST_CAPS_INTERSECT_FIRST);
+      gst_caps_unref (caps);
+      caps = intersection;
+    }
+  }
+  return caps;
+}
+
+static GstCaps *
 gst_base_src_getcaps (GstPad * pad, GstCaps * filter)
 {
   GstBaseSrcClass *bclass;
@@ -818,24 +848,6 @@ gst_base_src_getcaps (GstPad * pad, GstCaps * filter)
   if (bclass->get_caps)
     caps = bclass->get_caps (bsrc, filter);
 
-  if (caps == NULL) {
-    GstPadTemplate *pad_template;
-
-    pad_template =
-        gst_element_class_get_pad_template (GST_ELEMENT_CLASS (bclass), "src");
-    if (pad_template != NULL) {
-      caps = gst_pad_template_get_caps (pad_template);
-
-      if (filter) {
-        GstCaps *intersection;
-
-        intersection =
-            gst_caps_intersect_full (filter, caps, GST_CAPS_INTERSECT_FIRST);
-        gst_caps_unref (caps);
-        caps = intersection;
-      }
-    }
-  }
   return caps;
 }
 
