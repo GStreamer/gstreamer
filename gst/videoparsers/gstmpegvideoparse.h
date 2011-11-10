@@ -21,7 +21,7 @@
  * Free Software Foundation, Inc., 59 Temple Place - Suite 330,
  * Boston, MA 02111-1307, USA.
  */
- 
+
 #ifndef __GST_MPEGVIDEO_PARSE_H__
 #define __GST_MPEGVIDEO_PARSE_H__
 
@@ -68,6 +68,10 @@ struct _GstMpegvParse {
   /* properties */
   gboolean drop;
   gboolean gop_split;
+
+  int fps_num;
+  int fps_den;
+  int frame_repeat_count;
 };
 
 struct _GstMpegvParseClass {
