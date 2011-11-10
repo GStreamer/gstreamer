@@ -73,6 +73,7 @@ GstBase-@GST_MAJORMINOR@.gir: $(INTROSPECTION_SCANNER) libgstbase-@GST_MAJORMINO
 		GST_PLUGIN_SYSTEM_PATH="" GST_PLUGIN_PATH="" GST_REGISTRY_UPDATE=no \
 		$(INTROSPECTION_SCANNER) -v --namespace GstBase \
 		--nsversion=@GST_MAJORMINOR@ \
+		--warn-all \
 		--strip-prefix=Gst \
 		-DGST_USE_UNSTABLE_API \
 		-I$(top_srcdir) \

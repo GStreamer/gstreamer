@@ -50,6 +50,7 @@ GstNet-@GST_MAJORMINOR@.gir: $(INTROSPECTION_SCANNER) libgstnet-@GST_MAJORMINOR@
 		GST_PLUGIN_SYSTEM_PATH="" GST_PLUGIN_PATH="" GST_REGISTRY_UPDATE=no \
 		$(INTROSPECTION_SCANNER) -v --namespace GstNet \
 		--strip-prefix=Gst \
+		--warn-all \
 		--nsversion=@GST_MAJORMINOR@ \
 		-DGST_USE_UNSTABLE_API \
 		-I$(top_srcdir) \
