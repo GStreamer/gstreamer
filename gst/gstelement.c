@@ -1135,10 +1135,6 @@ gst_element_get_request_pad (GstElement * element, const gchar * name)
  * Pad templates can be looked up using
  * gst_element_factory_get_static_pad_templates().
  *
- * If the @caps are specified and the element implements thew new
- * request_new_pad_full virtual method, the element will use them to select
- * which pad to create.
- *
  * The pad should be released with gst_element_release_request_pad().
  *
  * Returns: (transfer full): requested #GstPad if found, otherwise %NULL.
