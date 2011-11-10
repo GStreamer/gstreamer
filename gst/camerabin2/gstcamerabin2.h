@@ -128,6 +128,7 @@ struct _GstCameraBin2
   gboolean audio_drop_eos;
 
   GMutex *video_capture_mutex;
+  GCond *video_state_cond;
   GstCameraBinVideoState video_state;
 
   /* properties */
