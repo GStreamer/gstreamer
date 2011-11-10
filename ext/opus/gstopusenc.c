@@ -1009,7 +1009,7 @@ gst_opus_enc_get_property (GObject * object, guint prop_id, GValue * value,
       g_value_set_int (value, enc->bitrate);
       break;
     case PROP_BANDWIDTH:
-      g_value_set_int (value, enc->bandwidth);
+      g_value_set_enum (value, enc->bandwidth);
       break;
     case PROP_FRAME_SIZE:
       g_value_set_int (value, enc->frame_size);
@@ -1054,7 +1054,7 @@ gst_opus_enc_set_property (GObject * object, guint prop_id,
       enc->bitrate = g_value_get_int (value);
       break;
     case PROP_BANDWIDTH:
-      enc->bandwidth = g_value_get_int (value);
+      enc->bandwidth = g_value_get_enum (value);
       break;
     case PROP_FRAME_SIZE:
       enc->frame_size = g_value_get_int (value);
