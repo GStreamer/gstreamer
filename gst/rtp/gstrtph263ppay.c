@@ -678,7 +678,7 @@ gst_rtp_h263p_pay_flush (GstRtpH263PPay * rtph263ppay)
         }
         parsed_len++;
       }
-      gst_adapter_unmap (rtph263ppay->adapter, 0);
+      gst_adapter_unmap (rtph263ppay->adapter);
     }
 
     /* for picture start frames (non-fragmented), we need to remove the first

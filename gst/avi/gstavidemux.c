@@ -914,7 +914,7 @@ gst_avi_demux_peek_chunk_info (GstAviDemux * avi, guint32 * tag, guint32 * size)
   data = gst_adapter_map (avi->adapter, 8);
   *tag = GST_READ_UINT32_LE (data);
   *size = GST_READ_UINT32_LE (data + 4);
-  gst_adapter_unmap (avi->adapter, 0);
+  gst_adapter_unmap (avi->adapter);
 
   return TRUE;
 }
@@ -3248,7 +3248,7 @@ gst_avi_demux_stream_header_push (GstAviDemux * avi)
         tag = GST_READ_UINT32_LE (data);
         size = GST_READ_UINT32_LE (data + 4);
         ltag = GST_READ_UINT32_LE (data + 8);
-        gst_adapter_unmap (avi->adapter, 0);
+        gst_adapter_unmap (avi->adapter);
 
         if (tag == GST_RIFF_TAG_LIST) {
           switch (ltag) {

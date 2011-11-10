@@ -4050,7 +4050,7 @@ gst_qtdemux_chain (GstPad * sinkpad, GstBuffer * inbuf)
         /* get fourcc/length, set neededbytes */
         extract_initial_length_and_fourcc ((guint8 *) data, demux->neededbytes,
             &size, &fourcc);
-        gst_adapter_unmap (demux->adapter, 0);
+        gst_adapter_unmap (demux->adapter);
         data = NULL;
         GST_DEBUG_OBJECT (demux, "Peeking found [%" GST_FOURCC_FORMAT "] "
             "size: %" G_GUINT64_FORMAT, GST_FOURCC_ARGS (fourcc), size);
@@ -4174,7 +4174,7 @@ gst_qtdemux_chain (GstPad * sinkpad, GstBuffer * inbuf)
             GST_DEBUG_OBJECT (demux, "Parsing [moof]");
             if (!qtdemux_parse_moof (demux, data, demux->neededbytes,
                     demux->offset, NULL)) {
-              gst_adapter_unmap (demux->adapter, 0);
+              gst_adapter_unmap (demux->adapter);
               ret = GST_FLOW_ERROR;
               goto done;
             }
@@ -4193,7 +4193,7 @@ gst_qtdemux_chain (GstPad * sinkpad, GstBuffer * inbuf)
               GST_FOURCC_ARGS (fourcc));
           /* Let's jump that one and go back to initial state */
         }
-        gst_adapter_unmap (demux->adapter, 0);
+        gst_adapter_unmap (demux->adapter);
         data = NULL;
 
         if (demux->mdatbuffer && demux->n_streams) {

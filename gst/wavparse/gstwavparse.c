@@ -1014,7 +1014,7 @@ gst_wavparse_peek_chunk_info (GstWavParse * wav, guint32 * tag, guint32 * size)
   data = gst_adapter_map (wav->adapter, 8);
   *tag = GST_READ_UINT32_LE (data);
   *size = GST_READ_UINT32_LE (data + 4);
-  gst_adapter_unmap (wav->adapter, 0);
+  gst_adapter_unmap (wav->adapter);
 
   GST_DEBUG ("Next chunk size is %d bytes, type %" GST_FOURCC_FORMAT, *size,
       GST_FOURCC_ARGS (*tag));
@@ -1357,7 +1357,8 @@ gst_wavparse_stream_headers (GstWavParse * wav)
             gst_adapter_flush (wav->adapter, 8);
             data = gst_adapter_map (wav->adapter, data_size);
             wav->fact = GST_READ_UINT32_LE (data);
-            gst_adapter_unmap (wav->adapter, GST_ROUND_UP_2 (size));
+            gst_adapter_unmap (wav->adapter);
+            gst_adapter_flush (wav->adapter, GST_ROUND_UP_2 (size));
           } else {
             gst_buffer_unref (buf);
             if ((res =
@@ -1402,7 +1403,7 @@ gst_wavparse_stream_headers (GstWavParse * wav)
           acid = (const gst_riff_acid *) gst_adapter_map (wav->adapter,
               data_size);
           tempo = acid->tempo;
-          gst_adapter_unmap (wav->adapter, 0);
+          gst_adapter_unmap (wav->adapter);
         } else {
           gst_buffer_unref (buf);
           if ((res =
@@ -1441,7 +1442,7 @@ gst_wavparse_stream_headers (GstWavParse * wav)
           }
           data = gst_adapter_map (wav->adapter, 12);
           ltag = GST_READ_UINT32_LE (data + 8);
-          gst_adapter_unmap (wav->adapter, 0);
+          gst_adapter_unmap (wav->adapter);
         } else {
           gst_buffer_unref (buf);
           if ((res =

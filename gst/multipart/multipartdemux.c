@@ -443,7 +443,7 @@ multipart_parse_header (GstMultipartDemux * multipart)
       GST_DEBUG_OBJECT (multipart,
           "Parsed the header - boundary: %s, mime-type: %s, content-length: %d",
           multipart->boundary, multipart->mime_type, multipart->content_length);
-      gst_adapter_unmap (multipart->adapter, 0);
+      gst_adapter_unmap (multipart->adapter);
       return next - data;
     }
 
@@ -466,7 +466,7 @@ multipart_parse_header (GstMultipartDemux * multipart)
 
 need_more_data:
   GST_DEBUG_OBJECT (multipart, "Need more data for the header");
-  gst_adapter_unmap (multipart->adapter, 0);
+  gst_adapter_unmap (multipart->adapter);
 
   return MULTIPART_NEED_MORE_DATA;
 
@@ -474,13 +474,13 @@ wrong_header:
   {
     GST_ELEMENT_ERROR (multipart, STREAM, DEMUX, (NULL),
         ("Boundary not found in the multipart header"));
-    gst_adapter_unmap (multipart->adapter, 0);
+    gst_adapter_unmap (multipart->adapter);
     return MULTIPART_DATA_ERROR;
   }
 eos:
   {
     GST_DEBUG_OBJECT (multipart, "we are EOS");
-    gst_adapter_unmap (multipart->adapter, 0);
+    gst_adapter_unmap (multipart->adapter);
     return MULTIPART_DATA_EOS;
   }
 }
@@ -506,7 +506,7 @@ multipart_find_boundary (GstMultipartDemux * multipart, gint * datalen)
       else if (data[len] == '\n')
         len += 1;
 
-      gst_adapter_unmap (multipart->adapter, 0);
+      gst_adapter_unmap (multipart->adapter);
       /* Don't check if boundary is actually there, but let the header parsing
        * bail out if it isn't */
       return len;
@@ -535,12 +535,12 @@ multipart_find_boundary (GstMultipartDemux * multipart, gint * datalen)
         len -= 1;
       *datalen = len;
 
-      gst_adapter_unmap (multipart->adapter, 0);
+      gst_adapter_unmap (multipart->adapter);
       multipart->scanpos = 0;
       return pos - data;
     }
   }
-  gst_adapter_unmap (multipart->adapter, 0);
+  gst_adapter_unmap (multipart->adapter);
   multipart->scanpos = pos - data;
   return MULTIPART_NEED_MORE_DATA;
 }

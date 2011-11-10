@@ -612,7 +612,7 @@ gst_goom_chain (GstPad * pad, GstBuffer * buffer)
       GST_DEBUG_OBJECT (goom, "allocating output buffer");
       ret = gst_buffer_pool_acquire_buffer (goom->pool, &outbuf, NULL);
       if (ret != GST_FLOW_OK) {
-        gst_adapter_unmap (goom->adapter, 0);
+        gst_adapter_unmap (goom->adapter);
         goto beach;
       }
     }
@@ -623,7 +623,7 @@ gst_goom_chain (GstPad * pad, GstBuffer * buffer)
     out_frame = (guchar *) goom_update (goom->plugin, goom->datain, 0, 0);
     gst_buffer_fill (outbuf, 0, out_frame, goom->outsize);
 
-    gst_adapter_unmap (goom->adapter, 0);
+    gst_adapter_unmap (goom->adapter);
 
     GST_DEBUG ("Pushing frame with time=%" GST_TIME_FORMAT ", duration=%"
         GST_TIME_FORMAT, GST_TIME_ARGS (timestamp),

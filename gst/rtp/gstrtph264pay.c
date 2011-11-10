@@ -1303,7 +1303,8 @@ gst_rtp_h264_pay_handle_buffer (GstBaseRTPPayload * basepayload,
 
 done:
   if (bytestream) {
-    gst_adapter_unmap (rtph264pay->adapter, pushed);
+    gst_adapter_unmap (rtph264pay->adapter);
+    gst_adapter_flush (rtph264pay->adapter, pushed);
   } else {
     gst_buffer_unmap (buffer, bdata, bsize);
     gst_buffer_unref (buffer);

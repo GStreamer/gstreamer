@@ -351,7 +351,8 @@ gst_au_parse_parse_header (GstAuParse * auparse)
   gst_au_parse_negotiate_srcpad (auparse, tempcaps);
 
   GST_DEBUG_OBJECT (auparse, "offset=%" G_GINT64_FORMAT, auparse->offset);
-  gst_adapter_unmap (auparse->adapter, auparse->offset);
+  gst_adapter_unmap (auparse->adapter);
+  gst_adapter_flush (auparse->adapter, auparse->offset);
 
   gst_caps_unref (tempcaps);
   return GST_FLOW_OK;
@@ -359,27 +360,27 @@ gst_au_parse_parse_header (GstAuParse * auparse)
   /* ERRORS */
 unknown_header:
   {
-    gst_adapter_unmap (auparse->adapter, 0);
+    gst_adapter_unmap (auparse->adapter);
     GST_ELEMENT_ERROR (auparse, STREAM, WRONG_TYPE, (NULL), (NULL));
     return GST_FLOW_ERROR;
   }
 unsupported_sample_rate:
   {
-    gst_adapter_unmap (auparse->adapter, 0);
+    gst_adapter_unmap (auparse->adapter);
     GST_ELEMENT_ERROR (auparse, STREAM, FORMAT, (NULL),
         ("Unsupported samplerate: %u", auparse->samplerate));
     return GST_FLOW_ERROR;
   }
 unsupported_number_of_channels:
   {
-    gst_adapter_unmap (auparse->adapter, 0);
+    gst_adapter_unmap (auparse->adapter);
     GST_ELEMENT_ERROR (auparse, STREAM, FORMAT, (NULL),
         ("Unsupported number of channels: %u", auparse->channels));
     return GST_FLOW_ERROR;
   }
 unknown_format:
   {
-    gst_adapter_unmap (auparse->adapter, 0);
+    gst_adapter_unmap (auparse->adapter);
     GST_ELEMENT_ERROR (auparse, STREAM, FORMAT, (NULL),
         ("Unsupported encoding: %u", auparse->encoding));
     return GST_FLOW_ERROR;

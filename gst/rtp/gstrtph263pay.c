@@ -1769,7 +1769,8 @@ gst_rtp_h263_pay_flush (GstRtpH263Pay * rtph263pay)
 end:
   gst_rtp_h263_pay_context_destroy (context,
       context->piclayer->ptype_srcformat);
-  gst_adapter_unmap (rtph263pay->adapter, rtph263pay->available_data);
+  gst_adapter_unmap (rtph263pay->adapter);
+  gst_adapter_flush (rtph263pay->adapter, rtph263pay->available_data);
 
   return ret;
 }

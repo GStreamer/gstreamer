@@ -331,7 +331,8 @@ gst_icydemux_parse_and_send_tags (GstICYDemux * icydemux)
 
   g_strfreev (strings);
   g_free (buffer);
-  gst_adapter_unmap (icydemux->meta_adapter, length);
+  gst_adapter_unmap (icydemux->meta_adapter);
+  gst_adapter_flush (icydemux->meta_adapter, length);
 
   if (!gst_tag_list_is_empty (tags))
     gst_icydemux_tag_found (icydemux, tags);

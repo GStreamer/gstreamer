@@ -249,7 +249,7 @@ gst_flac_tag_chain (GstPad * pad, GstBuffer * buffer)
     size = (block_header[1] << 16)
         | (block_header[2] << 8)
         | block_header[3];
-    gst_adapter_unmap (tag->adapter, 0);
+    gst_adapter_unmap (tag->adapter);
 
     /* The 4 bytes long header isn't included in the metadata size */
     tag->metadata_block_size = size + 4;
