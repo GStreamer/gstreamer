@@ -180,7 +180,7 @@ gst_rtp_mp4v_pay_new_caps (GstRtpMP4VPay * rtpmp4vpay)
   gst_value_set_buffer (&v, rtpmp4vpay->config);
   config = gst_value_serialize (&v);
 
-  res = gst_basertppayload_set_outcaps (GST_BASE_RTP_PAYLOAD (rtpmp4vpay),
+  res = gst_base_rtp_payload_set_outcaps (GST_BASE_RTP_PAYLOAD (rtpmp4vpay),
       "profile-level-id", G_TYPE_STRING, profile,
       "config", G_TYPE_STRING, config, NULL);
 
@@ -202,7 +202,7 @@ gst_rtp_mp4v_pay_setcaps (GstBaseRTPPayload * payload, GstCaps * caps)
 
   rtpmp4vpay = GST_RTP_MP4V_PAY (payload);
 
-  gst_basertppayload_set_options (payload, "video", TRUE, "MP4V-ES",
+  gst_base_rtp_payload_set_options (payload, "video", TRUE, "MP4V-ES",
       rtpmp4vpay->rate);
 
   res = TRUE;
@@ -310,14 +310,16 @@ gst_rtp_mp4v_pay_flush (GstRtpMP4VPay * rtpmp4vpay)
       /* add to list */
       gst_buffer_list_insert (list, -1, outbuf);
     } else {
-      ret = gst_basertppayload_push (GST_BASE_RTP_PAYLOAD (rtpmp4vpay), outbuf);
+      ret =
+          gst_base_rtp_payload_push (GST_BASE_RTP_PAYLOAD (rtpmp4vpay), outbuf);
     }
   }
 
   if (rtpmp4vpay->buffer_list) {
     /* push the whole buffer list at once */
     ret =
-        gst_basertppayload_push_list (GST_BASE_RTP_PAYLOAD (rtpmp4vpay), list);
+        gst_base_rtp_payload_push_list (GST_BASE_RTP_PAYLOAD (rtpmp4vpay),
+        list);
   }
 
   return ret;
@@ -561,7 +563,7 @@ gst_rtp_mp4v_pay_handle_buffer (GstBaseRTPPayload * basepayload,
   /* get packet length of data and see if we exceeded MTU. */
   packet_len = gst_rtp_buffer_calc_packet_len (avail + size, 0, 0);
 
-  if (gst_basertppayload_is_filled (basepayload,
+  if (gst_base_rtp_payload_is_filled (basepayload,
           packet_len, rtpmp4vpay->duration + duration)) {
     ret = gst_rtp_mp4v_pay_flush (rtpmp4vpay);
     rtpmp4vpay->first_timestamp = timestamp;

@@ -312,8 +312,7 @@ gst_rtp_vraw_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
     GST_LOG_OBJECT (depayload, "new frame with timestamp %u", timestamp);
     /* new timestamp, flush old buffer and create new output buffer */
     if (rtpvrawdepay->outbuf) {
-      gst_base_rtp_depayload_push_ts (depayload, rtpvrawdepay->timestamp,
-          rtpvrawdepay->outbuf);
+      gst_base_rtp_depayload_push (depayload, rtpvrawdepay->outbuf);
       rtpvrawdepay->outbuf = NULL;
     }
 
@@ -526,8 +525,7 @@ gst_rtp_vraw_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
   if (gst_rtp_buffer_get_marker (&rtp)) {
     GST_LOG_OBJECT (depayload, "marker, flushing frame");
     if (rtpvrawdepay->outbuf) {
-      gst_base_rtp_depayload_push_ts (depayload, timestamp,
-          rtpvrawdepay->outbuf);
+      gst_base_rtp_depayload_push (depayload, rtpvrawdepay->outbuf);
       rtpvrawdepay->outbuf = NULL;
     }
     rtpvrawdepay->timestamp = -1;

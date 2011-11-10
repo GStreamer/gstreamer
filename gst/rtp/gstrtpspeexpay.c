@@ -184,9 +184,9 @@ gst_rtp_speex_pay_parse_ident (GstRtpSPEEXPay * rtpspeexpay,
 
   payload = GST_BASE_RTP_PAYLOAD (rtpspeexpay);
 
-  gst_basertppayload_set_options (payload, "audio", FALSE, "SPEEX", rate);
+  gst_base_rtp_payload_set_options (payload, "audio", FALSE, "SPEEX", rate);
   cstr = g_strdup_printf ("%d", nb_channels);
-  res = gst_basertppayload_set_outcaps (payload, "encoding-params",
+  res = gst_base_rtp_payload_set_outcaps (payload, "encoding-params",
       G_TYPE_STRING, cstr, NULL);
   g_free (cstr);
 
@@ -290,7 +290,7 @@ gst_rtp_speex_pay_handle_buffer (GstBaseRTPPayload * basepayload,
 
   gst_rtp_buffer_unmap (&rtp);
 
-  ret = gst_basertppayload_push (basepayload, outbuf);
+  ret = gst_base_rtp_payload_push (basepayload, outbuf);
 
 done:
   gst_buffer_unmap (buffer, data, -1);

@@ -198,9 +198,9 @@ gst_rtp_h263p_pay_setcaps (GstBaseRTPPayload * payload, GstCaps * caps)
   if (!encoding_name)
     encoding_name = g_strdup ("H263-1998");
 
-  gst_basertppayload_set_options (payload, "video", TRUE,
+  gst_base_rtp_payload_set_options (payload, "video", TRUE,
       (gchar *) encoding_name, 90000);
-  res = gst_basertppayload_set_outcaps (payload, NULL);
+  res = gst_base_rtp_payload_set_outcaps (payload, NULL);
   g_free (encoding_name);
 
   return res;
@@ -719,7 +719,8 @@ gst_rtp_h263p_pay_flush (GstRtpH263PPay * rtph263ppay)
 
     gst_adapter_flush (rtph263ppay->adapter, towrite);
 
-    ret = gst_basertppayload_push (GST_BASE_RTP_PAYLOAD (rtph263ppay), outbuf);
+    ret =
+        gst_base_rtp_payload_push (GST_BASE_RTP_PAYLOAD (rtph263ppay), outbuf);
 
     avail -= towrite;
     fragmented = TRUE;

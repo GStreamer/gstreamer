@@ -251,10 +251,10 @@ gst_rtp_celt_pay_parse_ident (GstRtpCELTPay * rtpceltpay,
 
   payload = GST_BASE_RTP_PAYLOAD (rtpceltpay);
 
-  gst_basertppayload_set_options (payload, "audio", FALSE, "CELT", rate);
+  gst_base_rtp_payload_set_options (payload, "audio", FALSE, "CELT", rate);
   cstr = g_strdup_printf ("%d", nb_channels);
   fsstr = g_strdup_printf ("%d", frame_size);
-  res = gst_basertppayload_set_outcaps (payload, "encoding-params",
+  res = gst_base_rtp_payload_set_outcaps (payload, "encoding-params",
       G_TYPE_STRING, cstr, "frame-size", G_TYPE_STRING, fsstr, NULL);
   g_free (cstr);
   g_free (fsstr);
@@ -354,7 +354,7 @@ gst_rtp_celt_pay_flush_queued (GstRtpCELTPay * rtpceltpay)
   rtpceltpay->sbytes = 0;
   rtpceltpay->qduration = 0;
 
-  ret = gst_basertppayload_push (GST_BASE_RTP_PAYLOAD (rtpceltpay), outbuf);
+  ret = gst_base_rtp_payload_push (GST_BASE_RTP_PAYLOAD (rtpceltpay), outbuf);
 
   return ret;
 }
@@ -415,7 +415,7 @@ gst_rtp_celt_pay_handle_buffer (GstBaseRTPPayload * basepayload,
 
   packet_len = gst_rtp_buffer_calc_packet_len (payload_len, 0, 0);
 
-  if (gst_basertppayload_is_filled (basepayload, packet_len, packet_dur)) {
+  if (gst_base_rtp_payload_is_filled (basepayload, packet_len, packet_dur)) {
     /* size or duration would overflow the packet, flush the queued data */
     ret = gst_rtp_celt_pay_flush_queued (rtpceltpay);
   }

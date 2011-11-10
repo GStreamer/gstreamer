@@ -160,12 +160,12 @@ gst_rtp_amr_pay_setcaps (GstBaseRTPPayload * basepayload, GstCaps * caps)
     goto wrong_type;
 
   if (rtpamrpay->mode == GST_RTP_AMR_P_MODE_NB)
-    gst_basertppayload_set_options (basepayload, "audio", TRUE, "AMR", 8000);
+    gst_base_rtp_payload_set_options (basepayload, "audio", TRUE, "AMR", 8000);
   else
-    gst_basertppayload_set_options (basepayload, "audio", TRUE, "AMR-WB",
+    gst_base_rtp_payload_set_options (basepayload, "audio", TRUE, "AMR-WB",
         16000);
 
-  res = gst_basertppayload_set_outcaps (basepayload,
+  res = gst_base_rtp_payload_set_outcaps (basepayload,
       "encoding-params", G_TYPE_STRING, "1", "octet-align", G_TYPE_STRING, "1",
       /* don't set the defaults
        *
@@ -376,7 +376,7 @@ gst_rtp_amr_pay_handle_buffer (GstBaseRTPPayload * basepayload,
 
   gst_rtp_buffer_unmap (&rtp);
 
-  ret = gst_basertppayload_push (basepayload, outbuf);
+  ret = gst_base_rtp_payload_push (basepayload, outbuf);
 
   return ret;
 

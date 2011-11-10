@@ -121,7 +121,7 @@ gst_rtp_g729_pay_init (GstRTPG729Pay * pay)
   GstBaseRTPPayload *payload = GST_BASE_RTP_PAYLOAD (pay);
 
   payload->pt = GST_RTP_PAYLOAD_G729;
-  gst_basertppayload_set_options (payload, "audio", FALSE, "G729", 8000);
+  gst_base_rtp_payload_set_options (payload, "audio", FALSE, "G729", 8000);
 
   pay->adapter = gst_adapter_new ();
 }
@@ -150,7 +150,7 @@ gst_rtp_g729_pay_set_caps (GstBaseRTPPayload * payload, GstCaps * caps)
   payload->pt = pt;
   payload->dynamic = pt != GST_RTP_PAYLOAD_G729;
 
-  res = gst_basertppayload_set_outcaps (payload, NULL);
+  res = gst_base_rtp_payload_set_outcaps (payload, NULL);
 
   return res;
 }
@@ -199,7 +199,7 @@ gst_rtp_g729_pay_push (GstRTPG729Pay * rtpg729pay,
   }
   gst_rtp_buffer_unmap (&rtp);
 
-  ret = gst_basertppayload_push (basepayload, outbuf);
+  ret = gst_base_rtp_payload_push (basepayload, outbuf);
 
   return ret;
 }

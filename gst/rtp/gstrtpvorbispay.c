@@ -218,7 +218,7 @@ gst_rtp_vorbis_pay_flush_packet (GstRtpVorbisPay * rtpvorbispay)
 
   /* push, this gives away our ref to the packet, so clear it. */
   ret =
-      gst_basertppayload_push (GST_BASE_RTP_PAYLOAD (rtpvorbispay),
+      gst_base_rtp_payload_push (GST_BASE_RTP_PAYLOAD (rtpvorbispay),
       rtpvorbispay->packet);
   rtpvorbispay->packet = NULL;
 
@@ -385,10 +385,10 @@ gst_rtp_vorbis_pay_finish_headers (GstBaseRTPPayload * basepayload)
 
   /* configure payloader settings */
   cstr = g_strdup_printf ("%d", rtpvorbispay->channels);
-  gst_basertppayload_set_options (basepayload, "audio", TRUE, "VORBIS",
+  gst_base_rtp_payload_set_options (basepayload, "audio", TRUE, "VORBIS",
       rtpvorbispay->rate);
   res =
-      gst_basertppayload_set_outcaps (basepayload, "encoding-params",
+      gst_base_rtp_payload_set_outcaps (basepayload, "encoding-params",
       G_TYPE_STRING, cstr, "configuration", G_TYPE_STRING, configuration, NULL);
   g_free (cstr);
   g_free (configuration);
@@ -543,7 +543,7 @@ gst_rtp_vorbis_pay_handle_buffer (GstBaseRTPPayload * basepayload,
   packet_len = gst_rtp_buffer_calc_packet_len (newsize, 0, 0);
 
   /* check buffer filled against length and max latency */
-  flush = gst_basertppayload_is_filled (basepayload, packet_len, newduration);
+  flush = gst_base_rtp_payload_is_filled (basepayload, packet_len, newduration);
   /* we can store up to 15 vorbis packets in one RTP packet. */
   flush |= (rtpvorbispay->payload_pkts == 15);
   /* flush if we have a new VDT */

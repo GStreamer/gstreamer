@@ -129,14 +129,15 @@ gst_rtp_ilbc_pay_sink_setcaps (GstBaseRTPPayload * basertppayload,
   if (mode != 20 && mode != 30)
     goto wrong_mode;
 
-  gst_basertppayload_set_options (basertppayload, "audio", TRUE, "ILBC", 8000);
+  gst_base_rtp_payload_set_options (basertppayload, "audio", TRUE, "ILBC",
+      8000);
   /* set options for this frame based audio codec */
   gst_base_rtp_audio_payload_set_frame_options (basertpaudiopayload,
       mode, mode == 30 ? 50 : 38);
 
   mode_str = g_strdup_printf ("%d", mode);
   ret =
-      gst_basertppayload_set_outcaps (basertppayload, "mode", G_TYPE_STRING,
+      gst_base_rtp_payload_set_outcaps (basertppayload, "mode", G_TYPE_STRING,
       mode_str, NULL);
   g_free (mode_str);
 

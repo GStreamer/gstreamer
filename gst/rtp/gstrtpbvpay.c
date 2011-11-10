@@ -125,11 +125,11 @@ gst_rtp_bv_pay_sink_setcaps (GstBaseRTPPayload * basertppayload, GstCaps * caps)
     goto wrong_mode;
 
   if (mode == 16) {
-    gst_basertppayload_set_options (basertppayload, "audio", TRUE, "BV16",
+    gst_base_rtp_payload_set_options (basertppayload, "audio", TRUE, "BV16",
         8000);
     basertppayload->clock_rate = 8000;
   } else {
-    gst_basertppayload_set_options (basertppayload, "audio", TRUE, "BV32",
+    gst_base_rtp_payload_set_options (basertppayload, "audio", TRUE, "BV32",
         16000);
     basertppayload->clock_rate = 16000;
   }

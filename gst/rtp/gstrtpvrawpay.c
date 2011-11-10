@@ -203,14 +203,14 @@ gst_rtp_vraw_pay_setcaps (GstBaseRTPPayload * payload, GstCaps * caps)
   wstr = g_strdup_printf ("%d", GST_VIDEO_INFO_WIDTH (&info));
   hstr = g_strdup_printf ("%d", GST_VIDEO_INFO_HEIGHT (&info));
 
-  gst_basertppayload_set_options (payload, "video", TRUE, "RAW", 90000);
+  gst_base_rtp_payload_set_options (payload, "video", TRUE, "RAW", 90000);
   if (info.flags & GST_VIDEO_FLAG_INTERLACED) {
-    res = gst_basertppayload_set_outcaps (payload, "sampling", G_TYPE_STRING,
+    res = gst_base_rtp_payload_set_outcaps (payload, "sampling", G_TYPE_STRING,
         samplingstr, "depth", G_TYPE_STRING, depthstr, "width", G_TYPE_STRING,
         wstr, "height", G_TYPE_STRING, hstr, "colorimetry", G_TYPE_STRING,
         colorimetrystr, "interlace", G_TYPE_STRING, "true", NULL);
   } else {
-    res = gst_basertppayload_set_outcaps (payload, "sampling", G_TYPE_STRING,
+    res = gst_base_rtp_payload_set_outcaps (payload, "sampling", G_TYPE_STRING,
         samplingstr, "depth", G_TYPE_STRING, depthstr, "width", G_TYPE_STRING,
         wstr, "height", G_TYPE_STRING, hstr, "colorimetry", G_TYPE_STRING,
         colorimetrystr, NULL);
@@ -494,7 +494,7 @@ gst_rtp_vraw_pay_handle_buffer (GstBaseRTPPayload * payload, GstBuffer * buffer)
       }
 
       /* push buffer */
-      ret = gst_basertppayload_push (payload, out);
+      ret = gst_base_rtp_payload_push (payload, out);
     }
 
   }

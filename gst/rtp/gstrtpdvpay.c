@@ -221,15 +221,15 @@ gst_dv_pay_negotiate (GstRTPDVPay * rtpdvpay, guint8 * data, gsize size)
     default:
       break;
   }
-  gst_basertppayload_set_options (GST_BASE_RTP_PAYLOAD (rtpdvpay), media, TRUE,
-      "DV", 90000);
+  gst_base_rtp_payload_set_options (GST_BASE_RTP_PAYLOAD (rtpdvpay), media,
+      TRUE, "DV", 90000);
 
   if (audio_bundled) {
-    res = gst_basertppayload_set_outcaps (GST_BASE_RTP_PAYLOAD (rtpdvpay),
+    res = gst_base_rtp_payload_set_outcaps (GST_BASE_RTP_PAYLOAD (rtpdvpay),
         "encode", G_TYPE_STRING, encode,
         "audio", G_TYPE_STRING, "bundled", NULL);
   } else {
-    res = gst_basertppayload_set_outcaps (GST_BASE_RTP_PAYLOAD (rtpdvpay),
+    res = gst_base_rtp_payload_set_outcaps (GST_BASE_RTP_PAYLOAD (rtpdvpay),
         "encode", G_TYPE_STRING, encode, NULL);
   }
   return res;
@@ -360,7 +360,7 @@ gst_rtp_dv_pay_handle_buffer (GstBaseRTPPayload * basepayload,
 
       /* Push out the created piece, and check for errors. */
       gst_rtp_buffer_unmap (&rtp);
-      ret = gst_basertppayload_push (basepayload, outbuf);
+      ret = gst_base_rtp_payload_push (basepayload, outbuf);
       if (ret != GST_FLOW_OK)
         break;
 

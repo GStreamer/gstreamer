@@ -259,7 +259,7 @@ gst_rtp_theora_pay_flush_packet (GstRtpTheoraPay * rtptheorapay)
 
   /* push, this gives away our ref to the packet, so clear it. */
   ret =
-      gst_basertppayload_push (GST_BASE_RTP_PAYLOAD (rtptheorapay),
+      gst_base_rtp_payload_push (GST_BASE_RTP_PAYLOAD (rtptheorapay),
       rtptheorapay->packet);
   rtptheorapay->packet = NULL;
 
@@ -445,13 +445,13 @@ gst_rtp_theora_pay_finish_headers (GstBaseRTPPayload * basepayload)
   /* configure payloader settings */
   wstr = g_strdup_printf ("%d", rtptheorapay->width);
   hstr = g_strdup_printf ("%d", rtptheorapay->height);
-  gst_basertppayload_set_options (basepayload, "video", TRUE, "THEORA", 90000);
-  res = gst_basertppayload_set_outcaps (basepayload,
-      "sampling", G_TYPE_STRING, "YCbCr-4:2:0",
-      "width", G_TYPE_STRING, wstr,
-      "height", G_TYPE_STRING, hstr,
-      "configuration", G_TYPE_STRING, configuration,
-      "delivery-method", G_TYPE_STRING, "inline",
+  gst_base_rtp_payload_set_options (basepayload, "video", TRUE, "THEORA",
+      90000);
+  res =
+      gst_base_rtp_payload_set_outcaps (basepayload, "sampling", G_TYPE_STRING,
+      "YCbCr-4:2:0", "width", G_TYPE_STRING, wstr, "height", G_TYPE_STRING,
+      hstr, "configuration", G_TYPE_STRING, configuration, "delivery-method",
+      G_TYPE_STRING, "inline",
       /* don't set the other defaults 
        */
       NULL);
@@ -550,7 +550,7 @@ gst_rtp_theora_pay_payload_buffer (GstRtpTheoraPay * rtptheorapay, guint8 TDT,
   packet_len = gst_rtp_buffer_calc_packet_len (newsize, 0, 0);
 
   /* check buffer filled against length and max latency */
-  flush = gst_basertppayload_is_filled (GST_BASE_RTP_PAYLOAD (rtptheorapay),
+  flush = gst_base_rtp_payload_is_filled (GST_BASE_RTP_PAYLOAD (rtptheorapay),
       packet_len, newduration);
   /* we can store up to 15 theora packets in one RTP packet. */
   flush |= (rtptheorapay->payload_pkts == 15);

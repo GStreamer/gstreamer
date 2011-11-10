@@ -102,8 +102,8 @@ gst_rtp_pcma_pay_setcaps (GstBaseRTPPayload * payload, GstCaps * caps)
 
   payload->pt = GST_RTP_PAYLOAD_PCMA;
 
-  gst_basertppayload_set_options (payload, "audio", FALSE, "PCMA", 8000);
-  res = gst_basertppayload_set_outcaps (payload, NULL);
+  gst_base_rtp_payload_set_options (payload, "audio", FALSE, "PCMA", 8000);
+  res = gst_base_rtp_payload_set_outcaps (payload, NULL);
 
   return res;
 }

@@ -131,8 +131,8 @@ gst_rtp_mpv_pay_reset (GstRTPMPVPay * pay)
 static gboolean
 gst_rtp_mpv_pay_setcaps (GstBaseRTPPayload * payload, GstCaps * caps)
 {
-  gst_basertppayload_set_options (payload, "video", FALSE, "MPV", 90000);
-  return gst_basertppayload_set_outcaps (payload, NULL);
+  gst_base_rtp_payload_set_options (payload, "video", FALSE, "MPV", 90000);
+  return gst_base_rtp_payload_set_outcaps (payload, NULL);
 }
 
 static gboolean
@@ -216,7 +216,7 @@ gst_rtp_mpv_pay_flush (GstRTPMPVPay * rtpmpvpay)
 
     GST_BUFFER_TIMESTAMP (outbuf) = rtpmpvpay->first_ts;
 
-    ret = gst_basertppayload_push (GST_BASE_RTP_PAYLOAD (rtpmpvpay), outbuf);
+    ret = gst_base_rtp_payload_push (GST_BASE_RTP_PAYLOAD (rtpmpvpay), outbuf);
   }
 
   return ret;
@@ -264,7 +264,7 @@ gst_rtp_mpv_pay_handle_buffer (GstBaseRTPPayload * basepayload,
   GST_LOG_OBJECT (rtpmpvpay, "available %d, rtp packet length %d", avail,
       packet_len);
 
-  if (gst_basertppayload_is_filled (basepayload,
+  if (gst_base_rtp_payload_is_filled (basepayload,
           packet_len, rtpmpvpay->duration)) {
     ret = gst_rtp_mpv_pay_flush (rtpmpvpay);
   } else {

@@ -318,8 +318,8 @@ gst_rtp_jpeg_pay_setcaps (GstBaseRTPPayload * basepayload, GstCaps * caps)
   }
   pay->width = width / 8;
 
-  gst_basertppayload_set_options (basepayload, "video", TRUE, "JPEG", 90000);
-  res = gst_basertppayload_set_outcaps (basepayload, NULL);
+  gst_base_rtp_payload_set_options (basepayload, "video", TRUE, "JPEG", 90000);
+  res = gst_base_rtp_payload_set_outcaps (basepayload, NULL);
 
   return res;
 
@@ -819,7 +819,7 @@ gst_rtp_jpeg_pay_handle_buffer (GstBaseRTPPayload * basepayload,
       /* and add to list */
       gst_buffer_list_insert (list, -1, outbuf);
     } else {
-      ret = gst_basertppayload_push (basepayload, outbuf);
+      ret = gst_base_rtp_payload_push (basepayload, outbuf);
       if (ret != GST_FLOW_OK)
         break;
     }
@@ -832,7 +832,7 @@ gst_rtp_jpeg_pay_handle_buffer (GstBaseRTPPayload * basepayload,
 
   if (pay->buffer_list) {
     /* push the whole buffer list at once */
-    ret = gst_basertppayload_push_list (basepayload, list);
+    ret = gst_base_rtp_payload_push_list (basepayload, list);
   }
 
   gst_buffer_unmap (buffer, bdata, -1);

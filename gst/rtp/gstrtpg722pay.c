@@ -132,7 +132,7 @@ gst_rtp_g722_pay_setcaps (GstBaseRTPPayload * basepayload, GstCaps * caps)
    * RFC 3551 although the sampling rate is 16000 Hz */
   clock_rate = 8000;
 
-  gst_basertppayload_set_options (basepayload, "audio", TRUE, "G722",
+  gst_base_rtp_payload_set_options (basepayload, "audio", TRUE, "G722",
       clock_rate);
   params = g_strdup_printf ("%d", channels);
 
@@ -142,11 +142,11 @@ gst_rtp_g722_pay_setcaps (GstBaseRTPPayload * basepayload, GstCaps * caps)
   }
 
   if (order && order->name) {
-    res = gst_basertppayload_set_outcaps (basepayload,
+    res = gst_base_rtp_payload_set_outcaps (basepayload,
         "encoding-params", G_TYPE_STRING, params, "channels", G_TYPE_INT,
         channels, "channel-order", G_TYPE_STRING, order->name, NULL);
   } else {
-    res = gst_basertppayload_set_outcaps (basepayload,
+    res = gst_base_rtp_payload_set_outcaps (basepayload,
         "encoding-params", G_TYPE_STRING, params, "channels", G_TYPE_INT,
         channels, NULL);
   }

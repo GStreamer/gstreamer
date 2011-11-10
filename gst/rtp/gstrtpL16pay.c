@@ -140,7 +140,7 @@ gst_rtp_L16_pay_setcaps (GstBaseRTPPayload * basepayload, GstCaps * caps)
   else
     order = NULL;
 
-  gst_basertppayload_set_options (basepayload, "audio", TRUE, "L16", rate);
+  gst_base_rtp_payload_set_options (basepayload, "audio", TRUE, "L16", rate);
   params = g_strdup_printf ("%d", channels);
 
   if (!order && channels > 2) {
@@ -149,11 +149,11 @@ gst_rtp_L16_pay_setcaps (GstBaseRTPPayload * basepayload, GstCaps * caps)
   }
 
   if (order && order->name) {
-    res = gst_basertppayload_set_outcaps (basepayload,
+    res = gst_base_rtp_payload_set_outcaps (basepayload,
         "encoding-params", G_TYPE_STRING, params, "channels", G_TYPE_INT,
         channels, "channel-order", G_TYPE_STRING, order->name, NULL);
   } else {
-    res = gst_basertppayload_set_outcaps (basepayload,
+    res = gst_base_rtp_payload_set_outcaps (basepayload,
         "encoding-params", G_TYPE_STRING, params, "channels", G_TYPE_INT,
         channels, NULL);
   }

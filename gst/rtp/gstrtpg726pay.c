@@ -237,8 +237,9 @@ gst_rtp_g726_pay_setcaps (GstBaseRTPPayload * payload, GstCaps * caps)
     GST_DEBUG_OBJECT (payload, "no peer caps, AAL2 %d", pay->aal2);
   }
 
-  gst_basertppayload_set_options (payload, "audio", TRUE, encoding_name, 8000);
-  res = gst_basertppayload_set_outcaps (payload, NULL);
+  gst_base_rtp_payload_set_options (payload, "audio", TRUE, encoding_name,
+      8000);
+  res = gst_base_rtp_payload_set_outcaps (payload, NULL);
 
   g_free (encoding_name);
 

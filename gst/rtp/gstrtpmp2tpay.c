@@ -108,8 +108,8 @@ gst_rtp_mp2t_pay_setcaps (GstBaseRTPPayload * payload, GstCaps * caps)
 {
   gboolean res;
 
-  gst_basertppayload_set_options (payload, "video", TRUE, "MP2T", 90000);
-  res = gst_basertppayload_set_outcaps (payload, NULL);
+  gst_base_rtp_payload_set_options (payload, "video", TRUE, "MP2T", 90000);
+  res = gst_base_rtp_payload_set_outcaps (payload, NULL);
 
   return res;
 }
@@ -140,7 +140,7 @@ gst_rtp_mp2t_pay_flush (GstRTPMP2TPay * rtpmp2tpay)
   GST_DEBUG_OBJECT (rtpmp2tpay, "pushing buffer of size %d",
       gst_buffer_get_size (outbuf));
 
-  ret = gst_basertppayload_push (GST_BASE_RTP_PAYLOAD (rtpmp2tpay), outbuf);
+  ret = gst_base_rtp_payload_push (GST_BASE_RTP_PAYLOAD (rtpmp2tpay), outbuf);
 
   /* flush the adapter content */
   gst_adapter_flush (rtpmp2tpay->adapter, avail);
@@ -178,7 +178,7 @@ gst_rtp_mp2t_pay_handle_buffer (GstBaseRTPPayload * basepayload,
 
   /* if this buffer is going to overflow the packet, flush what we
    * have. */
-  if (gst_basertppayload_is_filled (basepayload,
+  if (gst_base_rtp_payload_is_filled (basepayload,
           packet_len, rtpmp2tpay->duration + duration)) {
     ret = gst_rtp_mp2t_pay_flush (rtpmp2tpay);
     rtpmp2tpay->first_ts = timestamp;

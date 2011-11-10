@@ -111,9 +111,10 @@ gst_rtp_gst_pay_setcaps (GstBaseRTPPayload * payload, GstCaps * caps)
   capsenc = g_base64_encode ((guchar *) capsstr, strlen (capsstr));
   g_free (capsstr);
 
-  gst_basertppayload_set_options (payload, "application", TRUE, "X-GST", 90000);
+  gst_base_rtp_payload_set_options (payload, "application", TRUE, "X-GST",
+      90000);
   res =
-      gst_basertppayload_set_outcaps (payload, "caps", G_TYPE_STRING, capsenc,
+      gst_base_rtp_payload_set_outcaps (payload, "caps", G_TYPE_STRING, capsenc,
       NULL);
   g_free (capsenc);
 
@@ -203,7 +204,7 @@ gst_rtp_gst_pay_handle_buffer (GstBaseRTPPayload * basepayload,
 
     GST_BUFFER_TIMESTAMP (outbuf) = timestamp;
 
-    ret = gst_basertppayload_push (basepayload, outbuf);
+    ret = gst_base_rtp_payload_push (basepayload, outbuf);
   }
   gst_buffer_unmap (buffer, data, size);
   gst_buffer_unref (buffer);

@@ -440,7 +440,6 @@ gst_rtp_vorbis_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
   GstFlowReturn ret;
   gint payload_len;
   guint8 *payload, *to_free = NULL;
-  guint32 timestamp;
   guint32 header, ident;
   guint8 F, VDT, packets;
   GstRTPBuffer rtp;
@@ -564,8 +563,6 @@ gst_rtp_vorbis_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
    * ..                        vorbis data                           |
    * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+*
    */
-  timestamp = gst_rtp_buffer_get_timestamp (&rtp);
-
   while (payload_len > 2) {
     guint16 length;
 
@@ -608,18 +605,9 @@ gst_rtp_vorbis_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
     payload += length;
     payload_len -= length;
 
-    if (timestamp != -1)
-      /* push with timestamp of the last packet, which is the same timestamp that
-       * should apply to the first assembled packet. */
-      ret = gst_base_rtp_depayload_push_ts (depayload, timestamp, outbuf);
-    else
-      ret = gst_base_rtp_depayload_push (depayload, outbuf);
-
+    ret = gst_base_rtp_depayload_push (depayload, outbuf);
     if (ret != GST_FLOW_OK)
       break;
-
-    /* make sure we don't set a timestamp on next buffers */
-    timestamp = -1;
   }
 
   g_free (to_free);

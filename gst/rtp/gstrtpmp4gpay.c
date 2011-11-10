@@ -370,10 +370,10 @@ gst_rtp_mp4g_pay_new_caps (GstRtpMP4GPay * rtpmp4gpay)
 
   /* hmm, silly */
   if (rtpmp4gpay->params) {
-    res = gst_basertppayload_set_outcaps (GST_BASE_RTP_PAYLOAD (rtpmp4gpay),
+    res = gst_base_rtp_payload_set_outcaps (GST_BASE_RTP_PAYLOAD (rtpmp4gpay),
         "encoding-params", G_TYPE_STRING, rtpmp4gpay->params, MP4GCAPS);
   } else {
-    res = gst_basertppayload_set_outcaps (GST_BASE_RTP_PAYLOAD (rtpmp4gpay),
+    res = gst_base_rtp_payload_set_outcaps (GST_BASE_RTP_PAYLOAD (rtpmp4gpay),
         MP4GCAPS);
   }
 
@@ -432,7 +432,7 @@ gst_rtp_mp4g_pay_setcaps (GstBaseRTPPayload * payload, GstCaps * caps)
   if (media_type == NULL)
     goto config_failed;
 
-  gst_basertppayload_set_options (payload, media_type, TRUE, "MPEG4-GENERIC",
+  gst_base_rtp_payload_set_options (payload, media_type, TRUE, "MPEG4-GENERIC",
       rtpmp4gpay->rate);
 
   res = gst_rtp_mp4g_pay_new_caps (rtpmp4gpay);
@@ -545,7 +545,7 @@ gst_rtp_mp4g_pay_flush (GstRtpMP4GPay * rtpmp4gpay)
       rtpmp4gpay->offset += rtpmp4gpay->frame_len;
     }
 
-    ret = gst_basertppayload_push (GST_BASE_RTP_PAYLOAD (rtpmp4gpay), outbuf);
+    ret = gst_base_rtp_payload_push (GST_BASE_RTP_PAYLOAD (rtpmp4gpay), outbuf);
 
     avail -= payload_len;
   }

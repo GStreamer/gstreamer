@@ -228,7 +228,7 @@ gst_rtp_mp4a_pay_new_caps (GstRtpMP4APay * rtpmp4apay)
   gst_value_set_buffer (&v, rtpmp4apay->config);
   config = gst_value_serialize (&v);
 
-  res = gst_basertppayload_set_outcaps (GST_BASE_RTP_PAYLOAD (rtpmp4apay),
+  res = gst_base_rtp_payload_set_outcaps (GST_BASE_RTP_PAYLOAD (rtpmp4apay),
       "cpresent", G_TYPE_STRING, "0", "config", G_TYPE_STRING, config, NULL);
 
   g_value_unset (&v);
@@ -321,7 +321,7 @@ gst_rtp_mp4a_pay_setcaps (GstBaseRTPPayload * payload, GstCaps * caps)
     GST_WARNING_OBJECT (payload, "Need framed AAC data as input!");
   }
 
-  gst_basertppayload_set_options (payload, "audio", TRUE, "MP4A-LATM",
+  gst_base_rtp_payload_set_options (payload, "audio", TRUE, "MP4A-LATM",
       rtpmp4apay->rate);
 
   res = gst_rtp_mp4a_pay_new_caps (rtpmp4apay);
@@ -423,7 +423,7 @@ gst_rtp_mp4a_pay_handle_buffer (GstBaseRTPPayload * basepayload,
     /* copy incomming timestamp (if any) to outgoing buffers */
     GST_BUFFER_TIMESTAMP (outbuf) = timestamp;
 
-    ret = gst_basertppayload_push (GST_BASE_RTP_PAYLOAD (rtpmp4apay), outbuf);
+    ret = gst_base_rtp_payload_push (GST_BASE_RTP_PAYLOAD (rtpmp4apay), outbuf);
 
     fragmented = TRUE;
   }

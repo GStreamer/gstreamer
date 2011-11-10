@@ -107,7 +107,7 @@ gst_rtp_g723_pay_init (GstRTPG723Pay * pay)
   pay->adapter = gst_adapter_new ();
 
   payload->pt = GST_RTP_PAYLOAD_G723;
-  gst_basertppayload_set_options (payload, "audio", FALSE, "G723", 8000);
+  gst_base_rtp_payload_set_options (payload, "audio", FALSE, "G723", 8000);
 }
 
 static void
@@ -138,7 +138,7 @@ gst_rtp_g723_pay_set_caps (GstBaseRTPPayload * payload, GstCaps * caps)
   payload->pt = pt;
   payload->dynamic = pt != GST_RTP_PAYLOAD_G723;
 
-  res = gst_basertppayload_set_outcaps (payload, NULL);
+  res = gst_base_rtp_payload_set_outcaps (payload, NULL);
 
   return res;
 }
@@ -178,7 +178,7 @@ gst_rtp_g723_pay_flush (GstRTPG723Pay * pay)
   }
   gst_rtp_buffer_unmap (&rtp);
 
-  ret = gst_basertppayload_push (GST_BASE_RTP_PAYLOAD (pay), outbuf);
+  ret = gst_base_rtp_payload_push (GST_BASE_RTP_PAYLOAD (pay), outbuf);
 
   return ret;
 }
@@ -229,7 +229,7 @@ gst_rtp_g723_pay_handle_buffer (GstBaseRTPPayload * payload, GstBuffer * buf)
   packet_dur = pay->duration + G723_FRAME_DURATION;
   packet_len = gst_rtp_buffer_calc_packet_len (payload_len, 0, 0);
 
-  if (gst_basertppayload_is_filled (payload, packet_len, packet_dur)) {
+  if (gst_base_rtp_payload_is_filled (payload, packet_len, packet_dur)) {
     /* size or duration would overflow the packet, flush the queued data */
     ret = gst_rtp_g723_pay_flush (pay);
   }

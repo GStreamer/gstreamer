@@ -117,12 +117,12 @@ gst_rtp_siren_pay_setcaps (GstBaseRTPPayload * basertppayload, GstCaps * caps)
   if (g_ascii_strcasecmp ("audio/x-siren", payload_name))
     goto wrong_caps;
 
-  gst_basertppayload_set_options (basertppayload, "audio", TRUE, "SIREN",
+  gst_base_rtp_payload_set_options (basertppayload, "audio", TRUE, "SIREN",
       16000);
   /* set options for this frame based audio codec */
   gst_base_rtp_audio_payload_set_frame_options (basertpaudiopayload, 20, 40);
 
-  return gst_basertppayload_set_outcaps (basertppayload, NULL);
+  return gst_base_rtp_payload_set_outcaps (basertppayload, NULL);
 
   /* ERRORS */
 wrong_dct:

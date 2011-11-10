@@ -133,8 +133,8 @@ gst_rtp_mpa_pay_setcaps (GstBaseRTPPayload * payload, GstCaps * caps)
 {
   gboolean res;
 
-  gst_basertppayload_set_options (payload, "audio", TRUE, "MPA", 90000);
-  res = gst_basertppayload_set_outcaps (payload, NULL);
+  gst_base_rtp_payload_set_options (payload, "audio", TRUE, "MPA", 90000);
+  res = gst_base_rtp_payload_set_outcaps (payload, NULL);
 
   return res;
 }
@@ -236,7 +236,7 @@ gst_rtp_mpa_pay_flush (GstRtpMPAPay * rtpmpapay)
     GST_BUFFER_TIMESTAMP (outbuf) = rtpmpapay->first_ts;
     GST_BUFFER_DURATION (outbuf) = rtpmpapay->duration;
 
-    ret = gst_basertppayload_push (GST_BASE_RTP_PAYLOAD (rtpmpapay), outbuf);
+    ret = gst_base_rtp_payload_push (GST_BASE_RTP_PAYLOAD (rtpmpapay), outbuf);
   }
 
   return ret;
@@ -271,7 +271,7 @@ gst_rtp_mpa_pay_handle_buffer (GstBaseRTPPayload * basepayload,
 
   /* if this buffer is going to overflow the packet, flush what we
    * have. */
-  if (gst_basertppayload_is_filled (basepayload,
+  if (gst_base_rtp_payload_is_filled (basepayload,
           packet_len, rtpmpapay->duration + duration)) {
     ret = gst_rtp_mpa_pay_flush (rtpmpapay);
     avail = 0;

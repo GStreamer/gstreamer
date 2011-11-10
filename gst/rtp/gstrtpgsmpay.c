@@ -107,8 +107,8 @@ gst_rtp_gsm_pay_setcaps (GstBaseRTPPayload * payload, GstCaps * caps)
   if (strcmp ("audio/x-gsm", stname))
     goto invalid_type;
 
-  gst_basertppayload_set_options (payload, "audio", FALSE, "GSM", 8000);
-  res = gst_basertppayload_set_outcaps (payload, NULL);
+  gst_base_rtp_payload_set_options (payload, "audio", FALSE, "GSM", 8000);
+  res = gst_base_rtp_payload_set_outcaps (payload, NULL);
 
   return res;
 
@@ -168,7 +168,7 @@ gst_rtp_gsm_pay_handle_buffer (GstBaseRTPPayload * basepayload,
   GST_DEBUG ("gst_rtp_gsm_pay_chain: pushing buffer of size %d",
       gst_buffer_get_size (outbuf));
 
-  ret = gst_basertppayload_push (basepayload, outbuf);
+  ret = gst_base_rtp_payload_push (basepayload, outbuf);
 
   return ret;
 
