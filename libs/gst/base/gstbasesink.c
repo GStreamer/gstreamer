@@ -544,12 +544,12 @@ gst_base_sink_class_init (GstBaseSinkClass * klass)
   gstelement_class->send_event = GST_DEBUG_FUNCPTR (gst_base_sink_send_event);
   gstelement_class->query = GST_DEBUG_FUNCPTR (default_element_query);
 
-  klass->fixate = GST_DEBUG_FUNCPTR (gst_base_sink_default_fixate);
   klass->get_caps = GST_DEBUG_FUNCPTR (gst_base_sink_get_caps);
   klass->set_caps = GST_DEBUG_FUNCPTR (gst_base_sink_set_caps);
-  klass->get_times = GST_DEBUG_FUNCPTR (gst_base_sink_get_times);
+  klass->fixate = GST_DEBUG_FUNCPTR (gst_base_sink_default_fixate);
   klass->activate_pull =
       GST_DEBUG_FUNCPTR (gst_base_sink_default_activate_pull);
+  klass->get_times = GST_DEBUG_FUNCPTR (gst_base_sink_get_times);
   klass->query = GST_DEBUG_FUNCPTR (default_sink_query);
 
   /* Registering debug symbols for function pointers */
