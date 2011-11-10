@@ -500,15 +500,20 @@ gst_omx_audio_enc_loop (GstOMXAudioEnc * self)
         outbuf, n_samples);
   }
 
-  if (flow_ret == GST_FLOW_OK && (buf->omx_buf->nFlags & OMX_BUFFERFLAG_EOS)) {
+  if ((flow_ret == GST_FLOW_OK && (buf->omx_buf->nFlags & OMX_BUFFERFLAG_EOS))
+      || flow_ret == GST_FLOW_UNEXPECTED) {
     g_mutex_lock (self->drain_lock);
     if (self->draining) {
+      GST_DEBUG_OBJECT (self, "Drained");
       self->draining = FALSE;
       g_cond_broadcast (self->drain_cond);
-    } else {
+    } else if (flow_ret == GST_FLOW_OK) {
+      GST_DEBUG_OBJECT (self, "Component signalled EOS");
       flow_ret = GST_FLOW_UNEXPECTED;
     }
     g_mutex_unlock (self->drain_lock);
+  } else {
+    GST_DEBUG_OBJECT (self, "Finished frame: %s", gst_flow_get_name (flow_ret));
   }
 
   gst_omx_port_release_buffer (port, buf);
