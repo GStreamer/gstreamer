@@ -129,6 +129,13 @@ The 0.11 porting guide
 
     GstActivateMode -> GstPadActivateMode, GST_ACTIVATE_* -> GST_PAD_ACTIVATE_*
 
+    The GstPadAcceptCapsFunction was removed and replaced with a
+    GST_QUERY_ACCEPT_CAPS query.
+
+    The GstPadFixateCapsFunction was removed. It has no replacement, you can
+    simply do the fixation in the element or use a vmethod from the base class
+    if appropriate.
+
 * GstPadTemplate
     gst_pad_template_get_caps() returns a new reference of the caps
     and the return value needs to be unreffed after usage.
