@@ -397,7 +397,7 @@ gst_alsasrc_getcaps (GstBaseSrc * bsrc, GstCaps * filter)
 
   if (src->handle == NULL) {
     GST_DEBUG_OBJECT (src, "device not open, using template caps");
-    return NULL;                /* base class will get template caps for us */
+    return GST_BASE_SRC_CLASS (parent_class)->get_caps (bsrc, filter);
   }
 
   if (src->cached_caps) {
@@ -414,6 +414,8 @@ gst_alsasrc_getcaps (GstBaseSrc * bsrc, GstCaps * filter)
   g_return_val_if_fail (pad_template != NULL, NULL);
 
   templ_caps = gst_pad_template_get_caps (pad_template);
+  GST_INFO_OBJECT (src, "template caps %" GST_PTR_FORMAT, templ_caps);
+
   caps = gst_alsa_probe_supported_formats (GST_OBJECT (src), src->handle,
       templ_caps);
   gst_caps_unref (templ_caps);

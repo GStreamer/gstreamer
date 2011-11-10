@@ -101,6 +101,48 @@ static const struct
   32, 32, SND_PCM_FORMAT_S32, SND_PCM_FORMAT_U32}
 };
 
+static void
+add_format (const gchar * str, GstStructure * s, snd_pcm_format_mask_t * mask,
+    GstCaps * caps)
+{
+  GstStructure *scopy;
+  GstAudioFormat format;
+  const GstAudioFormatInfo *finfo;
+  gint w, width = 0, depth = 0;
+
+  format = gst_audio_format_from_string (str);
+  if (format == GST_AUDIO_FORMAT_UNKNOWN)
+    return;
+
+  finfo = gst_audio_format_get_info (format);
+
+  width = GST_AUDIO_FORMAT_INFO_WIDTH (finfo);
+  depth = GST_AUDIO_FORMAT_INFO_DEPTH (finfo);
+
+  for (w = 0; w < G_N_ELEMENTS (pcmformats); w++)
+    if (pcmformats[w].width == width && pcmformats[w].depth == depth)
+      break;
+  if (w == G_N_ELEMENTS (pcmformats))
+    return;                     /* Unknown format */
+
+  if (snd_pcm_format_mask_test (mask, pcmformats[w].sformat) &&
+      snd_pcm_format_mask_test (mask, pcmformats[w].uformat)) {
+    scopy = gst_structure_copy (s);
+  } else if (snd_pcm_format_mask_test (mask, pcmformats[w].sformat)) {
+    scopy = gst_structure_copy (s);
+    /* FIXME, remove unsigned version */
+  } else if (snd_pcm_format_mask_test (mask, pcmformats[w].uformat)) {
+    scopy = gst_structure_copy (s);
+    /* FIXME, remove signed version */
+  } else {
+    scopy = NULL;
+  }
+  if (scopy) {
+    gst_caps_append_structure (caps, scopy);
+  }
+}
+
+
 static GstCaps *
 gst_alsa_detect_formats (GstObject * obj, snd_pcm_hw_params_t * hw_params,
     GstCaps * in_caps)
@@ -116,11 +158,7 @@ gst_alsa_detect_formats (GstObject * obj, snd_pcm_hw_params_t * hw_params,
   caps = gst_caps_new_empty ();
 
   for (i = 0; i < gst_caps_get_size (in_caps); ++i) {
-    GstStructure *scopy;
-    const gchar *str;
-    GstAudioFormat format;
-    const GstAudioFormatInfo *finfo;
-    gint w, width = 0, depth = 0;
+    const GValue *format;
 
     s = gst_caps_get_structure (in_caps, i);
     if (!gst_structure_has_name (s, "audio/x-raw")) {
@@ -128,40 +166,25 @@ gst_alsa_detect_formats (GstObject * obj, snd_pcm_hw_params_t * hw_params,
       continue;
     }
 
-    str = gst_structure_get_string (s, "format");
-    if (str == NULL)
+    format = gst_structure_get_value (s, "format");
+    if (format == NULL)
       continue;
 
-    format = gst_audio_format_from_string (str);
-    if (format == GST_AUDIO_FORMAT_UNKNOWN)
+    if (GST_VALUE_HOLDS_LIST (format)) {
+      gint i, len;
+
+      len = gst_value_list_get_size (format);
+      for (i = 0; i < len; i++) {
+        const GValue *val;
+
+        val = gst_value_list_get_value (format, i);
+        if (G_VALUE_HOLDS_STRING (val))
+          add_format (g_value_get_string (val), s, mask, caps);
+      }
+    } else if (G_VALUE_HOLDS_STRING (format)) {
+      add_format (g_value_get_string (format), s, mask, caps);
+    } else
       continue;
-
-    finfo = gst_audio_format_get_info (format);
-
-    width = GST_AUDIO_FORMAT_INFO_WIDTH (finfo);
-    depth = GST_AUDIO_FORMAT_INFO_DEPTH (finfo);
-
-    for (w = 0; w < G_N_ELEMENTS (pcmformats); w++)
-      if (pcmformats[w].width == width && pcmformats[w].depth == depth)
-        break;
-    if (w == G_N_ELEMENTS (pcmformats))
-      continue;                 /* Unknown format */
-
-    if (snd_pcm_format_mask_test (mask, pcmformats[w].sformat) &&
-        snd_pcm_format_mask_test (mask, pcmformats[w].uformat)) {
-      scopy = gst_structure_copy (s);
-    } else if (snd_pcm_format_mask_test (mask, pcmformats[w].sformat)) {
-      scopy = gst_structure_copy (s);
-      /* FIXME, remove unsigned version */
-    } else if (snd_pcm_format_mask_test (mask, pcmformats[w].uformat)) {
-      scopy = gst_structure_copy (s);
-      /* FIXME, remove signed version */
-    } else {
-      scopy = NULL;
-    }
-    if (scopy) {
-      gst_caps_append_structure (caps, scopy);
-    }
   }
 
   snd_pcm_format_mask_free (mask);
