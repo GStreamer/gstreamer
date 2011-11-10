@@ -773,7 +773,7 @@ gst_audio_encoder_push_buffers (GstAudioEncoder * enc, gboolean force)
 
     if (G_LIKELY (buf)) {
       gst_buffer_unref (buf);
-      gst_adapter_unmap (priv->adapter, 0);
+      gst_adapter_unmap (priv->adapter);
     }
 
     /* no data to feed, no leftover provided, then bail out */

@@ -848,7 +848,7 @@ gst_visual_chain (GstPad * pad, GstBuffer * buffer)
       GST_DEBUG_OBJECT (visual, "allocating output buffer");
       ret = gst_buffer_pool_acquire_buffer (visual->pool, &outbuf, NULL);
       if (ret != GST_FLOW_OK) {
-        gst_adapter_unmap (visual->adapter, 0);
+        gst_adapter_unmap (visual->adapter);
         goto beach;
       }
     }
@@ -860,7 +860,7 @@ gst_visual_chain (GstPad * pad, GstBuffer * buffer)
     gst_buffer_unmap (outbuf, outdata, outsize);
     GST_DEBUG_OBJECT (visual, "rendered one frame");
 
-    gst_adapter_unmap (visual->adapter, 0);
+    gst_adapter_unmap (visual->adapter);
 
     GST_BUFFER_TIMESTAMP (outbuf) = timestamp;
     GST_BUFFER_DURATION (outbuf) = visual->duration;

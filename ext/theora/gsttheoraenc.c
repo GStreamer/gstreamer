@@ -1061,7 +1061,7 @@ theora_enc_read_multipass_cache (GstTheoraEnc * enc)
     bytes_consumed =
         th_encode_ctl (enc->encoder, TH_ENCCTL_2PASS_IN, (guint8 *) cache_data,
         bytes_read);
-    gst_adapter_unmap (enc->multipass_cache_adapter, 0);
+    gst_adapter_unmap (enc->multipass_cache_adapter);
 
     done = bytes_consumed <= 0;
     if (bytes_consumed > 0)

@@ -286,7 +286,7 @@ gst_gdp_depay_chain (GstPad * pad, GstBuffer * buffer)
           data = gst_adapter_map (this->adapter, this->payload_length);
           res = gst_dp_validate_payload (GST_DP_HEADER_LENGTH, this->header,
               data);
-          gst_adapter_unmap (this->adapter, 0);
+          gst_adapter_unmap (this->adapter);
 
           if (!res)
             goto payload_validate_error;

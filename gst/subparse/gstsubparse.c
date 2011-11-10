@@ -1421,9 +1421,10 @@ feed_textbuf (GstSubParse * self, GstBuffer * buf)
 
   if (input && consumed > 0) {
     self->textbuf = g_string_append (self->textbuf, input);
-    gst_adapter_unmap (self->adapter, consumed);
+    gst_adapter_unmap (self->adapter);
+    gst_adapter_flush (self->adapter, consumed);
   } else {
-    gst_adapter_unmap (self->adapter, 0);
+    gst_adapter_unmap (self->adapter);
   }
 
   g_free (input);
