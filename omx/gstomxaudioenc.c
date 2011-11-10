@@ -968,8 +968,10 @@ gst_omx_audio_enc_event (GstBaseAudioEncoder * encoder, GstEvent * event)
     GST_DEBUG_OBJECT (self, "Sending EOS to the component");
 
     /* Don't send EOS buffer twice, this doesn't work */
-    if (self->eos)
+    if (self->eos) {
+      GST_DEBUG_OBJECT (self, "Component is already EOS");
       return FALSE;
+    }
     self->eos = TRUE;
 
     /* Make sure to release the base class stream lock, otherwise
@@ -984,6 +986,9 @@ gst_omx_audio_enc_event (GstBaseAudioEncoder * encoder, GstEvent * event)
     if (acq_ret == GST_OMX_ACQUIRE_BUFFER_OK) {
       buf->omx_buf->nFlags |= OMX_BUFFERFLAG_EOS;
       gst_omx_port_release_buffer (self->in_port, buf);
+      GST_DEBUG_OBJECT (self, "Sent EOS to the component");
+    } else {
+      GST_ERROR_OBJECT (self, "Failed to acquire buffer for EOS: %d", acq_ret);
     }
 
     GST_BASE_AUDIO_ENCODER_STREAM_LOCK (self);
@@ -1002,13 +1007,17 @@ gst_omx_audio_enc_drain (GstOMXAudioEnc * self)
 
   GST_DEBUG_OBJECT (self, "Draining component");
 
-  if (!self->started)
+  if (!self->started) {
+    GST_DEBUG_OBJECT (self, "Component not started yet");
     return GST_FLOW_OK;
+  }
   self->started = FALSE;
 
   /* Don't send EOS buffer twice, this doesn't work */
-  if (self->eos)
+  if (self->eos) {
+    GST_DEBUG_OBJECT (self, "Component is EOS already");
     return GST_FLOW_OK;
+  }
 
   /* Make sure to release the base class stream lock, otherwise
    * _loop() can't call _finish_frame() and we might block forever
@@ -1021,6 +1030,8 @@ gst_omx_audio_enc_drain (GstOMXAudioEnc * self)
   acq_ret = gst_omx_port_acquire_buffer (self->in_port, &buf);
   if (acq_ret != GST_OMX_ACQUIRE_BUFFER_OK) {
     GST_BASE_AUDIO_ENCODER_STREAM_LOCK (self);
+    GST_ERROR_OBJECT (self, "Failed to acquire buffer for draining: %d",
+        acq_ret);
     return GST_FLOW_ERROR;
   }
 
