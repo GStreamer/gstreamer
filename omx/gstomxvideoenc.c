@@ -838,7 +838,6 @@ gst_omx_video_enc_loop (GstOMXVideoEnc * self)
         gst_base_video_encoder_finish_frame (GST_BASE_VIDEO_ENCODER (self),
         frame);
   }
-  GST_BASE_VIDEO_CODEC_STREAM_UNLOCK (self);
 
   if ((flow_ret == GST_FLOW_OK && (buf->omx_buf->nFlags & OMX_BUFFERFLAG_EOS))
       || flow_ret == GST_FLOW_UNEXPECTED) {
@@ -862,6 +861,8 @@ gst_omx_video_enc_loop (GstOMXVideoEnc * self)
 
   if (flow_ret != GST_FLOW_OK)
     goto flow_error;
+
+  GST_BASE_VIDEO_CODEC_STREAM_UNLOCK (self);
 
   return;
 
@@ -904,6 +905,7 @@ flow_error:
       gst_pad_pause_task (GST_BASE_VIDEO_CODEC_SRC_PAD (self));
     }
     self->started = FALSE;
+    GST_BASE_VIDEO_CODEC_STREAM_UNLOCK (self);
     return;
   }
 reconfigure_error:
