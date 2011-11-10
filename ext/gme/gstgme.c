@@ -126,18 +126,6 @@ gst_gme_dec_class_init (GstGmeDecClass * klass)
   element_class->change_state = GST_DEBUG_FUNCPTR (gst_gme_dec_change_state);
 }
 
-static const GstQueryType *
-gst_gme_dec_src_query_type (GstPad * pad)
-{
-  static const GstQueryType query_types[] = {
-    GST_QUERY_DURATION,
-    GST_QUERY_POSITION,
-    (GstQueryType) 0
-  };
-
-  return query_types;
-}
-
 
 static void
 gst_gme_dec_init (GstGmeDec * gme)
@@ -151,7 +139,6 @@ gst_gme_dec_init (GstGmeDec * gme)
   gme->srcpad = gst_pad_new_from_static_template (&src_factory, "src");
   gst_pad_set_event_function (gme->srcpad, gst_gme_dec_src_event);
   gst_pad_set_query_function (gme->srcpad, gst_gme_dec_src_query);
-  gst_pad_set_query_type_function (gme->srcpad, gst_gme_dec_src_query_type);
   gst_pad_use_fixed_caps (gme->srcpad);
   gst_element_add_pad (GST_ELEMENT (gme), gme->srcpad);
 
