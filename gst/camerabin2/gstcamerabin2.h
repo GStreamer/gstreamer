@@ -89,10 +89,13 @@ struct _GstCameraBin2
   /* Index of the auto incrementing file index for captures */
   gint capture_index;
 
+  GMutex *image_capture_mutex;
   /* stores list of image locations to be pushed to the image sink
    * as file location change notifications, they are pushed before
    * each buffer capture */
   GSList *image_location_list;
+  /* Store also tags and push them before each captured image */
+  GSList *image_tags_list;
 
   /*
    * Similar to above, but used for giving names to previews

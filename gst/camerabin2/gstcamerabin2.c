@@ -377,11 +377,6 @@ gst_camera_bin_start_capture (GstCameraBin2 * camerabin)
 
   GST_CAMERA_BIN2_PROCESSING_INC (camerabin);
 
-  if (camerabin->post_previews) {
-    /* Count processing of preview images too */
-    GST_CAMERA_BIN2_PROCESSING_INC (camerabin);
-  }
-
   if (camerabin->location)
     location = g_strdup_printf (camerabin->location, capture_index);
 
@@ -406,15 +401,23 @@ gst_camera_bin_start_capture (GstCameraBin2 * camerabin)
     }
   } else {
     /* store the next capture buffer filename */
+    g_mutex_lock (camerabin->image_capture_mutex);
     camerabin->image_location_list =
         g_slist_append (camerabin->image_location_list, g_strdup (location));
+    g_mutex_unlock (camerabin->image_capture_mutex);
   }
 
-  /* store the next preview filename */
-  g_mutex_lock (camerabin->preview_list_mutex);
-  camerabin->preview_location_list =
-      g_slist_append (camerabin->preview_location_list, location);
-  g_mutex_unlock (camerabin->preview_list_mutex);
+  if (camerabin->post_previews) {
+    /* Count processing of preview images too */
+    GST_CAMERA_BIN2_PROCESSING_INC (camerabin);
+    /* store the next preview filename */
+    g_mutex_lock (camerabin->preview_list_mutex);
+    camerabin->preview_location_list =
+        g_slist_append (camerabin->preview_location_list, location);
+    g_mutex_unlock (camerabin->preview_list_mutex);
+  } else {
+    g_free (location);
+  }
 
   g_signal_emit_by_name (camerabin->src, "start-capture", NULL);
   if (camerabin->mode == MODE_VIDEO && camerabin->audio_src)
@@ -426,24 +429,29 @@ gst_camera_bin_start_capture (GstCameraBin2 * camerabin)
    * notify from ready for capture going to FALSE
    */
   taglist = gst_tag_setter_get_tag_list (GST_TAG_SETTER (camerabin));
-  if (taglist) {
+  GST_DEBUG_OBJECT (camerabin, "Have tags from application: %"
+      GST_PTR_FORMAT, taglist);
+
+  if (camerabin->mode == MODE_IMAGE) {
+    /* Store image tags in a list and push them later, this prevents
+       start_capture() from blocking in pad_push_event call */
+    g_mutex_lock (camerabin->image_capture_mutex);
+    camerabin->image_tags_list =
+        g_slist_append (camerabin->image_tags_list,
+        taglist ? gst_tag_list_copy (taglist) : NULL);
+    g_mutex_unlock (camerabin->image_capture_mutex);
+  } else if (taglist) {
     GstPad *active_pad;
 
-    GST_DEBUG_OBJECT (camerabin, "Pushing tags from application: %"
-        GST_PTR_FORMAT, taglist);
-
-    if (camerabin->mode == MODE_IMAGE) {
-      active_pad = gst_element_get_static_pad (camerabin->src,
-          GST_BASE_CAMERA_SRC_IMAGE_PAD_NAME);
-    } else {
-      active_pad = gst_element_get_static_pad (camerabin->src,
-          GST_BASE_CAMERA_SRC_VIDEO_PAD_NAME);
-    }
-
+    active_pad = gst_element_get_static_pad (camerabin->src,
+        GST_BASE_CAMERA_SRC_VIDEO_PAD_NAME);
     gst_pad_push_event (active_pad,
         gst_event_new_tag (gst_tag_list_copy (taglist)));
+
     gst_object_unref (active_pad);
   }
+
+  GST_DEBUG_OBJECT (camerabin, "Start-capture end");
 }
 
 static void
@@ -526,6 +534,7 @@ gst_camera_bin_dispose (GObject * object)
 
   g_free (camerabin->location);
   g_mutex_free (camerabin->preview_list_mutex);
+  g_mutex_free (camerabin->image_capture_mutex);
 
   if (camerabin->src_capture_notify_id)
     g_signal_handler_disconnect (camerabin->src,
@@ -882,6 +891,7 @@ gst_camera_bin_init (GstCameraBin2 * camera)
   camera->max_zoom = MAX_ZOOM;
   camera->flags = DEFAULT_FLAGS;
   camera->preview_list_mutex = g_mutex_new ();
+  camera->image_capture_mutex = g_mutex_new ();
 
   /* capsfilters are created here as we proxy their caps properties and
    * this way we avoid having to store the caps while on NULL state to 
@@ -1263,7 +1273,28 @@ gst_camera_bin_image_src_buffer_probe (GstPad * pad, GstBuffer * buf,
   GstEvent *evt;
   gchar *location = NULL;
   GstPad *peer;
+  GstTagList *tags;
 
+  g_mutex_lock (camerabin->image_capture_mutex);
+
+  /* Push pending image tags */
+  if (camerabin->image_tags_list) {
+    tags = camerabin->image_tags_list->data;
+    camerabin->image_tags_list =
+        g_slist_delete_link (camerabin->image_tags_list,
+        camerabin->image_tags_list);
+    GST_DEBUG_OBJECT (camerabin, "Pushing tags from application: %"
+        GST_PTR_FORMAT, tags);
+    if (tags) {
+      peer = gst_pad_get_peer (pad);
+      gst_pad_send_event (peer, gst_event_new_tag (tags));
+      gst_object_unref (peer);
+    }
+  } else {
+    GST_DEBUG_OBJECT (camerabin, "No tags from application to send");
+  }
+
+  /* Push image location event */
   if (camerabin->image_location_list) {
     location = camerabin->image_location_list->data;
     camerabin->image_location_list =
@@ -1273,8 +1304,10 @@ gst_camera_bin_image_src_buffer_probe (GstPad * pad, GstBuffer * buf,
         location);
   } else {
     GST_DEBUG_OBJECT (camerabin, "No filename location change to send");
+    g_mutex_unlock (camerabin->image_capture_mutex);
     return ret;
   }
+  g_mutex_unlock (camerabin->image_capture_mutex);
 
   if (location) {
     evt = gst_camera_bin_new_event_file_location (location);
@@ -1730,6 +1763,13 @@ fail:
   return FALSE;
 }
 
+static void
+_gst_tag_list_free_maybe (GstTagList * taglist)
+{
+  if (taglist)
+    gst_tag_list_free (taglist);
+}
+
 static GstStateChangeReturn
 gst_camera_bin_change_state (GstElement * element, GstStateChange trans)
 {
@@ -1771,9 +1811,16 @@ gst_camera_bin_change_state (GstElement * element, GstStateChange trans)
       gst_tag_setter_reset_tags (GST_TAG_SETTER (camera));
       GST_CAMERA_BIN2_RESET_PROCESSING_COUNTER (camera);
 
+      g_mutex_lock (camera->image_capture_mutex);
       g_slist_foreach (camera->image_location_list, (GFunc) g_free, NULL);
       g_slist_free (camera->image_location_list);
       camera->image_location_list = NULL;
+
+      g_slist_foreach (camera->image_tags_list,
+          (GFunc) _gst_tag_list_free_maybe, NULL);
+      g_slist_free (camera->image_tags_list);
+      camera->image_tags_list = NULL;
+      g_mutex_unlock (camera->image_capture_mutex);
 
       g_mutex_lock (camera->preview_list_mutex);
       g_slist_foreach (camera->preview_location_list, (GFunc) g_free, NULL);
