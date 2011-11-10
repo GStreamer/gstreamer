@@ -87,7 +87,6 @@
 #include <gst/rtp/gstrtpbuffer.h>
 #include <gst/rtp/gstrtppayloads.h>
 
-#include <gst/rtsp/gstrtspbase64.h>
 #include <gst/rtsp/gstrtspconnection.h>
 #include <gst/rtsp/gstrtspdefs.h>
 #include <gst/rtsp/gstrtsp-enumtypes.h>
