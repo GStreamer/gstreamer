@@ -63,7 +63,6 @@ main (gint argc, gchar ** argv)
 {
   GstElement *pipeline;
   GstElement *shapewipe;
-  GstController *ctrl;
   GstLFOControlSource *csource;
   GValue val = { 0, };
   GMainLoop *loop;
@@ -97,14 +96,14 @@ main (gint argc, gchar ** argv)
 
   shapewipe = gst_bin_get_by_name (GST_BIN (pipeline), "shape");
 
-  if (!(ctrl = gst_controller_new (GST_OBJECT (shapewipe), "position", NULL))) {
+  if (!gst_object_control_properties (GST_OBJECT (shapewipe), "position", NULL)) {
     g_print ("can't control shapewipe element\n");
     return -3;
   }
 
   csource = gst_lfo_control_source_new ();
 
-  gst_controller_set_control_source (ctrl, "position",
+  gst_object_set_control_source (GST_OBJECT (shapewipe), "position",
       GST_CONTROL_SOURCE (csource));
 
   g_value_init (&val, G_TYPE_FLOAT);
@@ -138,7 +137,6 @@ main (gint argc, gchar ** argv)
 
   g_main_loop_unref (loop);
 
-  g_object_unref (G_OBJECT (ctrl));
   gst_object_unref (G_OBJECT (pipeline));
 
   return 0;

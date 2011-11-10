@@ -68,7 +68,7 @@ event_loop (GstElement * bin)
 }
 
 static void
-set_program (GstController * ctrl, GstStructure * prog)
+set_program (GstObject * elem, GstStructure * prog)
 {
   const GstStructure *s;
   GstInterpolationControlSource *cs;
@@ -99,7 +99,7 @@ set_program (GstController * ctrl, GstStructure * prog)
       cs = g_hash_table_lookup (css, name);
       if (!cs) {
         cs = gst_interpolation_control_source_new ();
-        gst_controller_set_control_source (ctrl, name, GST_CONTROL_SOURCE (cs));
+        gst_object_set_control_source (elem, name, GST_CONTROL_SOURCE (cs));
         gst_interpolation_control_source_set_interpolation_mode (cs,
             GST_INTERPOLATE_NONE);
         g_hash_table_insert (css, (gpointer) name, cs);
@@ -124,7 +124,6 @@ main (gint argc, gchar ** argv)
   GstElement *bin;
   GstElement *src, *fmt, *enc, *sink;
   GstCaps *caps;
-  GstController *ctrl;
   GstStructure *prog;
 
   /* init gstreamer */
@@ -170,8 +169,8 @@ main (gint argc, gchar ** argv)
   }
 
   /* get the controller */
-  if (!(ctrl = gst_controller_new (GST_OBJECT (src), "brightness", "contrast",
-              "saturation", NULL))) {
+  if (!gst_object_control_properties (GST_OBJECT (src), "brightness",
+          "contrast", "saturation", NULL)) {
     GST_WARNING ("can't control source element");
     return -1;
   }
@@ -192,7 +191,7 @@ main (gint argc, gchar ** argv)
       ", image03=(structure)\"image\\,brightness\\=0\\,contrast\\=15\\;\";",
       NULL);
 #endif
-  set_program (ctrl, prog);
+  set_program (GST_OBJECT (src), prog);
   g_object_set (src, "num-buffers", gst_structure_n_fields (prog), NULL);
 
   /* prepare playback */
