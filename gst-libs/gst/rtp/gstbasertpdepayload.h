@@ -88,10 +88,6 @@ struct _GstBaseRTPDepayloadClass
    * pushed.  */
   GstBuffer * (*process) (GstBaseRTPDepayload *base, GstBuffer *in);
 
-  /* non-pure function used to convert from RTP timestamp to GST timestamp
-   * this function is used by the child class before gst_pad_pushing */
-  void (*set_gst_timestamp) (GstBaseRTPDepayload *filter, guint32 timestamp, GstBuffer *buf);
-
   /* non-pure function used to to signal the depayloader about packet loss. the
    * timestamp and duration are the estimated values of the lost packet.
    * The default implementation of this message pushes a segment update. */
@@ -108,10 +104,8 @@ struct _GstBaseRTPDepayloadClass
 
 GType gst_base_rtp_depayload_get_type (void);
 
-GstFlowReturn   gst_base_rtp_depayload_push              (GstBaseRTPDepayload *filter, GstBuffer *out_buf);
-GstFlowReturn   gst_base_rtp_depayload_push_ts           (GstBaseRTPDepayload *filter,
-		                                          guint32 timestamp, GstBuffer *out_buf);
-GstFlowReturn   gst_base_rtp_depayload_push_list         (GstBaseRTPDepayload *filter, GstBufferList *out_list);
+GstFlowReturn   gst_base_rtp_depayload_push       (GstBaseRTPDepayload *filter, GstBuffer *out_buf);
+GstFlowReturn   gst_base_rtp_depayload_push_list  (GstBaseRTPDepayload *filter, GstBufferList *out_list);
 
 
 G_END_DECLS

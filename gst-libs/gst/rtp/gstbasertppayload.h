@@ -25,7 +25,7 @@
 G_BEGIN_DECLS
 
 #define GST_TYPE_BASE_RTP_PAYLOAD \
-        (gst_basertppayload_get_type())
+        (gst_base_rtp_payload_get_type())
 #define GST_BASE_RTP_PAYLOAD(obj) \
         (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_BASE_RTP_PAYLOAD,GstBaseRTPPayload))
 #define GST_BASE_RTP_PAYLOAD_CLASS(klass) \
@@ -134,7 +134,7 @@ struct _GstBaseRTPPayloadClass
   /* receive caps on the sink pad, configure the payloader. */
   gboolean      (*set_caps)             (GstBaseRTPPayload *payload, GstCaps *caps);
 
-  /* handle a buffer, perform 0 or more gst_basertppayload_push() on
+  /* handle a buffer, perform 0 or more gst_base_rtp_payload_push() on
    * the RTP buffers. This function takes ownership of the buffer. */
   GstFlowReturn (*handle_buffer)        (GstBaseRTPPayload *payload,
                                          GstBuffer *buffer);
@@ -144,24 +144,24 @@ struct _GstBaseRTPPayloadClass
   gpointer _gst_reserved[GST_PADDING];
 };
 
-GType           gst_basertppayload_get_type             (void);
+GType           gst_base_rtp_payload_get_type           (void);
 
-void            gst_basertppayload_set_options          (GstBaseRTPPayload *payload,
+void            gst_base_rtp_payload_set_options        (GstBaseRTPPayload *payload,
                                                          const gchar *media,
                                                          gboolean dynamic,
                                                          const gchar *encoding_name,
                                                          guint32 clock_rate);
 
-gboolean        gst_basertppayload_set_outcaps          (GstBaseRTPPayload *payload,
+gboolean        gst_base_rtp_payload_set_outcaps        (GstBaseRTPPayload *payload,
                                                          const gchar *fieldname, ...);
 
-gboolean        gst_basertppayload_is_filled            (GstBaseRTPPayload *payload,
+gboolean        gst_base_rtp_payload_is_filled          (GstBaseRTPPayload *payload,
                                                          guint size, GstClockTime duration);
 
-GstFlowReturn   gst_basertppayload_push                 (GstBaseRTPPayload *payload,
+GstFlowReturn   gst_base_rtp_payload_push               (GstBaseRTPPayload *payload,
                                                          GstBuffer *buffer);
 
-GstFlowReturn   gst_basertppayload_push_list            (GstBaseRTPPayload *payload,
+GstFlowReturn   gst_base_rtp_payload_push_list          (GstBaseRTPPayload *payload,
                                                          GstBufferList *list);
 
 G_END_DECLS

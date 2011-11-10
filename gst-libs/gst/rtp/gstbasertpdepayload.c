@@ -41,7 +41,8 @@ struct _GstBaseRTPDepayloadPrivate
   gdouble play_scale;
 
   gboolean discont;
-  GstClockTime timestamp;
+  GstClockTime pts;
+  GstClockTime dts;
   GstClockTime duration;
 
   guint32 next_seqnum;
@@ -76,8 +77,6 @@ static gboolean gst_base_rtp_depayload_handle_sink_event (GstPad * pad,
 static GstStateChangeReturn gst_base_rtp_depayload_change_state (GstElement *
     element, GstStateChange transition);
 
-static void gst_base_rtp_depayload_set_gst_timestamp
-    (GstBaseRTPDepayload * filter, guint32 rtptime, GstBuffer * buf);
 static gboolean gst_base_rtp_depayload_packet_lost (GstBaseRTPDepayload *
     filter, GstEvent * event);
 static gboolean gst_base_rtp_depayload_handle_event (GstBaseRTPDepayload *
@@ -132,7 +131,6 @@ gst_base_rtp_depayload_class_init (GstBaseRTPDepayloadClass * klass)
 
   gstelement_class->change_state = gst_base_rtp_depayload_change_state;
 
-  klass->set_gst_timestamp = gst_base_rtp_depayload_set_gst_timestamp;
   klass->packet_lost = gst_base_rtp_depayload_packet_lost;
   klass->handle_event = gst_base_rtp_depayload_handle_event;
 
@@ -245,7 +243,7 @@ gst_base_rtp_depayload_chain (GstPad * pad, GstBuffer * in)
   GstBaseRTPDepayloadClass *bclass;
   GstFlowReturn ret = GST_FLOW_OK;
   GstBuffer *out_buf;
-  GstClockTime timestamp;
+  GstClockTime pts, dts;
   guint16 seqnum;
   guint32 rtptime;
   gboolean discont;
@@ -267,12 +265,14 @@ gst_base_rtp_depayload_chain (GstPad * pad, GstBuffer * in)
   if (!priv->discont)
     priv->discont = GST_BUFFER_IS_DISCONT (in);
 
-  timestamp = GST_BUFFER_TIMESTAMP (in);
+  pts = GST_BUFFER_PTS (in);
+  dts = GST_BUFFER_DTS (in);
   /* convert to running_time and save the timestamp, this is the timestamp
    * we put on outgoing buffers. */
-  timestamp = gst_segment_to_running_time (&filter->segment, GST_FORMAT_TIME,
-      timestamp);
-  priv->timestamp = timestamp;
+  pts = gst_segment_to_running_time (&filter->segment, GST_FORMAT_TIME, pts);
+  dts = gst_segment_to_running_time (&filter->segment, GST_FORMAT_TIME, dts);
+  priv->pts = pts;
+  priv->dts = dts;
   priv->duration = GST_BUFFER_DURATION (in);
 
   gst_rtp_buffer_map (in, GST_MAP_READ, &rtp);
@@ -282,9 +282,9 @@ gst_base_rtp_depayload_chain (GstPad * pad, GstBuffer * in)
 
   discont = FALSE;
 
-  GST_LOG_OBJECT (filter, "discont %d, seqnum %u, rtptime %u, timestamp %"
-      GST_TIME_FORMAT, priv->discont, seqnum, rtptime,
-      GST_TIME_ARGS (timestamp));
+  GST_LOG_OBJECT (filter, "discont %d, seqnum %u, rtptime %u, pts %"
+      GST_TIME_FORMAT ", dts %" GST_TIME_FORMAT, priv->discont, seqnum, rtptime,
+      GST_TIME_ARGS (pts), GST_TIME_ARGS (dts));
 
   /* Check seqnum. This is a very simple check that makes sure that the seqnums
    * are striclty increasing, dropping anything that is out of the ordinary. We
@@ -334,9 +334,7 @@ gst_base_rtp_depayload_chain (GstPad * pad, GstBuffer * in)
   /* let's send it out to processing */
   out_buf = bclass->process (filter, in);
   if (out_buf) {
-    /* we pass rtptime as backward compatibility, in reality, the incomming
-     * buffer timestamp is always applied to the outgoing packet. */
-    ret = gst_base_rtp_depayload_push_ts (filter, rtptime, out_buf);
+    ret = gst_base_rtp_depayload_push (filter, out_buf);
   }
   gst_buffer_unref (in);
 
@@ -503,20 +501,29 @@ typedef struct
 {
   GstBaseRTPDepayload *depayload;
   GstBaseRTPDepayloadClass *bclass;
-  gboolean do_ts;
-  gboolean rtptime;
 } HeaderData;
 
 static gboolean
 set_headers (GstBuffer ** buffer, guint idx, HeaderData * data)
 {
   GstBaseRTPDepayload *depayload = data->depayload;
+  GstBaseRTPDepayloadPrivate *priv = depayload->priv;
+  GstClockTime pts, dts, duration;
 
   *buffer = gst_buffer_make_writable (*buffer);
 
-  /* set the timestamp if we must and can */
-  if (data->bclass->set_gst_timestamp && data->do_ts)
-    data->bclass->set_gst_timestamp (depayload, data->rtptime, *buffer);
+  pts = GST_BUFFER_PTS (*buffer);
+  dts = GST_BUFFER_DTS (*buffer);
+  duration = GST_BUFFER_DURATION (*buffer);
+
+  /* apply last incomming timestamp and duration to outgoing buffer if
+   * not otherwise set. */
+  if (!GST_CLOCK_TIME_IS_VALID (pts))
+    GST_BUFFER_PTS (*buffer) = priv->pts;
+  if (!GST_CLOCK_TIME_IS_VALID (dts))
+    GST_BUFFER_DTS (*buffer) = priv->dts;
+  if (!GST_CLOCK_TIME_IS_VALID (duration))
+    GST_BUFFER_DURATION (*buffer) = priv->duration;
 
   if (G_UNLIKELY (depayload->priv->discont)) {
     GST_LOG_OBJECT (depayload, "Marking DISCONT on output buffer");
@@ -524,18 +531,21 @@ set_headers (GstBuffer ** buffer, guint idx, HeaderData * data)
     depayload->priv->discont = FALSE;
   }
 
+  /* make sure we only set the timestamp on the first packet */
+  priv->pts = GST_CLOCK_TIME_NONE;
+  priv->dts = GST_CLOCK_TIME_NONE;
+  priv->duration = GST_CLOCK_TIME_NONE;
+
   return TRUE;
 }
 
 static GstFlowReturn
 gst_base_rtp_depayload_prepare_push (GstBaseRTPDepayload * filter,
-    gboolean do_ts, guint32 rtptime, gboolean is_list, gpointer obj)
+    gboolean is_list, gpointer obj)
 {
   HeaderData data;
 
   data.depayload = filter;
-  data.rtptime = rtptime;
-  data.do_ts = do_ts;
   data.bclass = GST_BASE_RTP_DEPAYLOAD_GET_CLASS (filter);
 
   if (is_list) {
@@ -562,40 +572,6 @@ gst_base_rtp_depayload_prepare_push (GstBaseRTPDepayload * filter,
 }
 
 /**
- * gst_base_rtp_depayload_push_ts:
- * @filter: a #GstBaseRTPDepayload
- * @timestamp: an RTP timestamp to apply
- * @out_buf: a #GstBuffer
- *
- * Push @out_buf to the peer of @filter. This function takes ownership of
- * @out_buf.
- *
- * Unlike gst_base_rtp_depayload_push(), this function will by default apply
- * the last incomming timestamp on the outgoing buffer when it didn't have a
- * timestamp already. The set_get_timestamp vmethod can be overwritten to change
- * this behaviour (and take, for example, @timestamp into account).
- *
- * Returns: a #GstFlowReturn.
- */
-GstFlowReturn
-gst_base_rtp_depayload_push_ts (GstBaseRTPDepayload * filter, guint32 timestamp,
-    GstBuffer * out_buf)
-{
-  GstFlowReturn res;
-
-  res =
-      gst_base_rtp_depayload_prepare_push (filter, TRUE, timestamp, FALSE,
-      &out_buf);
-
-  if (G_LIKELY (res == GST_FLOW_OK))
-    res = gst_pad_push (filter->srcpad, out_buf);
-  else
-    gst_buffer_unref (out_buf);
-
-  return res;
-}
-
-/**
  * gst_base_rtp_depayload_push:
  * @filter: a #GstBaseRTPDepayload
  * @out_buf: a #GstBuffer
@@ -603,9 +579,8 @@ gst_base_rtp_depayload_push_ts (GstBaseRTPDepayload * filter, guint32 timestamp,
  * Push @out_buf to the peer of @filter. This function takes ownership of
  * @out_buf.
  *
- * Unlike gst_base_rtp_depayload_push_ts(), this function will not apply
- * any timestamp on the outgoing buffer. Subclasses should therefore timestamp
- * outgoing buffers themselves.
+ * This function will by default apply the last incomming timestamp on
+ * the outgoing buffer when it didn't have a timestamp already.
  *
  * Returns: a #GstFlowReturn.
  */
@@ -614,7 +589,7 @@ gst_base_rtp_depayload_push (GstBaseRTPDepayload * filter, GstBuffer * out_buf)
 {
   GstFlowReturn res;
 
-  res = gst_base_rtp_depayload_prepare_push (filter, FALSE, 0, FALSE, &out_buf);
+  res = gst_base_rtp_depayload_prepare_push (filter, FALSE, &out_buf);
 
   if (G_LIKELY (res == GST_FLOW_OK))
     res = gst_pad_push (filter->srcpad, out_buf);
@@ -642,7 +617,7 @@ gst_base_rtp_depayload_push_list (GstBaseRTPDepayload * filter,
 {
   GstFlowReturn res;
 
-  res = gst_base_rtp_depayload_prepare_push (filter, TRUE, 0, TRUE, &out_list);
+  res = gst_base_rtp_depayload_prepare_push (filter, TRUE, &out_list);
 
   if (G_LIKELY (res == GST_FLOW_OK))
     res = gst_pad_push_list (filter->srcpad, out_list);
@@ -679,26 +654,6 @@ gst_base_rtp_depayload_packet_lost (GstBaseRTPDepayload * filter,
   sevent = create_segment_event (filter, TRUE, position);
 
   return gst_pad_push_event (filter->srcpad, sevent);
-}
-
-static void
-gst_base_rtp_depayload_set_gst_timestamp (GstBaseRTPDepayload * filter,
-    guint32 rtptime, GstBuffer * buf)
-{
-  GstBaseRTPDepayloadPrivate *priv;
-  GstClockTime timestamp, duration;
-
-  priv = filter->priv;
-
-  timestamp = GST_BUFFER_TIMESTAMP (buf);
-  duration = GST_BUFFER_DURATION (buf);
-
-  /* apply last incomming timestamp and duration to outgoing buffer if
-   * not otherwise set. */
-  if (!GST_CLOCK_TIME_IS_VALID (timestamp))
-    GST_BUFFER_TIMESTAMP (buf) = priv->timestamp;
-  if (!GST_CLOCK_TIME_IS_VALID (duration))
-    GST_BUFFER_DURATION (buf) = priv->duration;
 }
 
 static GstStateChangeReturn

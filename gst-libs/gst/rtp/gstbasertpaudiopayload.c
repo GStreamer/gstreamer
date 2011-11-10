@@ -152,10 +152,8 @@ gst_base_rtp_audio_payload_sample_time_to_bytes (GstBaseRTPAudioPayload *
 
 static GstFlowReturn gst_base_rtp_audio_payload_handle_buffer (GstBaseRTPPayload
     * payload, GstBuffer * buffer);
-
 static GstStateChangeReturn gst_base_rtp_payload_audio_change_state (GstElement
     * element, GstStateChange transition);
-
 static gboolean gst_base_rtp_payload_audio_handle_event (GstBaseRTPPayload
     * payload, GstEvent * event);
 
@@ -475,7 +473,7 @@ gst_base_rtp_audio_payload_push (GstBaseRTPAudioPayload * baseaudiopayload,
   gst_base_rtp_audio_payload_set_meta (baseaudiopayload, outbuf, payload_len,
       timestamp);
 
-  ret = gst_basertppayload_push (basepayload, outbuf);
+  ret = gst_base_rtp_payload_push (basepayload, outbuf);
 
   return ret;
 }
@@ -526,7 +524,7 @@ gst_base_rtp_audio_payload_push_buffer (GstBaseRTPAudioPayload *
     }
 
     GST_DEBUG_OBJECT (baseaudiopayload, "Pushing list %p", list);
-    ret = gst_basertppayload_push_list (basepayload, list);
+    ret = gst_base_rtp_payload_push_list (basepayload, list);
   } else {
     GstRTPBuffer rtp;
 
@@ -539,7 +537,7 @@ gst_base_rtp_audio_payload_push_buffer (GstBaseRTPAudioPayload *
     gst_buffer_unref (buffer);
 
     GST_DEBUG_OBJECT (baseaudiopayload, "Pushing buffer %p", outbuf);
-    ret = gst_basertppayload_push (basepayload, outbuf);
+    ret = gst_base_rtp_payload_push (basepayload, outbuf);
   }
 
   return ret;
@@ -630,7 +628,7 @@ gst_base_rtp_audio_payload_flush (GstBaseRTPAudioPayload * baseaudiopayload,
     gst_base_rtp_audio_payload_set_meta (baseaudiopayload, outbuf, payload_len,
         timestamp);
 
-    ret = gst_basertppayload_push (basepayload, outbuf);
+    ret = gst_base_rtp_payload_push (basepayload, outbuf);
   }
 
   return ret;
