@@ -727,12 +727,15 @@ gst_omx_video_enc_loop (GstOMXVideoEnc * self)
     GstVideoState *state = &GST_BASE_VIDEO_CODEC (self)->state;
     GstCaps *caps;
 
+    GST_BASE_VIDEO_CODEC_STREAM_LOCK (self);
+
     GST_DEBUG_OBJECT (self, "Port settings have changed, updating caps");
 
     caps = klass->get_caps (self, self->out_port, state);
     if (!caps) {
       if (buf)
         gst_omx_port_release_buffer (self->out_port, buf);
+      GST_BASE_VIDEO_CODEC_STREAM_UNLOCK (self);
       goto caps_failed;
     }
 
@@ -740,9 +743,12 @@ gst_omx_video_enc_loop (GstOMXVideoEnc * self)
       gst_caps_unref (caps);
       if (buf)
         gst_omx_port_release_buffer (self->out_port, buf);
+      GST_BASE_VIDEO_CODEC_STREAM_UNLOCK (self);
       goto caps_failed;
     }
     gst_caps_unref (caps);
+
+    GST_BASE_VIDEO_CODEC_STREAM_UNLOCK (self);
 
     /* Now get a buffer */
     if (acq_return != GST_OMX_ACQUIRE_BUFFER_OK)
