@@ -358,7 +358,6 @@ gst_omx_video_dec_change_state (GstElement * element, GstStateChange transition)
       if (self->out_port)
         gst_omx_port_set_flushing (self->out_port, TRUE);
 
-      self->started = FALSE;
       g_mutex_lock (self->drain_lock);
       self->draining = FALSE;
       g_cond_broadcast (self->drain_cond);
@@ -381,6 +380,7 @@ gst_omx_video_dec_change_state (GstElement * element, GstStateChange transition)
       break;
     case GST_STATE_CHANGE_PAUSED_TO_READY:
       self->downstream_flow_ret = GST_FLOW_WRONG_STATE;
+      self->started = FALSE;
       break;
     case GST_STATE_CHANGE_READY_TO_NULL:
       if (!gst_omx_video_dec_close (self))
