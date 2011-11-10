@@ -100,13 +100,29 @@ static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",
     GST_STATIC_CAPS ("application/ogg")
     );
 
-static GstStaticPadTemplate sink_factory = GST_STATIC_PAD_TEMPLATE ("sink_%u",
+static GstStaticPadTemplate video_sink_factory =
+    GST_STATIC_PAD_TEMPLATE ("video_%u",
     GST_PAD_SINK,
     GST_PAD_REQUEST,
     GST_STATIC_CAPS ("video/x-theora; "
-        "audio/x-vorbis; audio/x-flac; audio/x-speex; audio/x-celt; "
-        "application/x-ogm-video; application/x-ogm-audio; video/x-dirac; "
-        "video/x-smoke; video/x-vp8; text/x-cmml, encoded = (boolean) TRUE; "
+        "application/x-ogm-video; video/x-dirac; "
+        "video/x-smoke; video/x-vp8; ")
+    );
+
+static GstStaticPadTemplate audio_sink_factory =
+    GST_STATIC_PAD_TEMPLATE ("audio_%u",
+    GST_PAD_SINK,
+    GST_PAD_REQUEST,
+    GST_STATIC_CAPS
+    ("audio/x-vorbis; audio/x-flac; audio/x-speex; audio/x-celt; "
+        "application/x-ogm-audio; ")
+    );
+
+static GstStaticPadTemplate subtitle_sink_factory =
+    GST_STATIC_PAD_TEMPLATE ("subtitle_%u",
+    GST_PAD_SINK,
+    GST_PAD_REQUEST,
+    GST_STATIC_CAPS ("text/x-cmml, encoded = (boolean) TRUE; "
         "subtitle/x-kate; application/x-kate")
     );
 
@@ -147,7 +163,11 @@ gst_ogg_mux_class_init (GstOggMuxClass * klass)
   gst_element_class_add_pad_template (gstelement_class,
       gst_static_pad_template_get (&src_factory));
   gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&sink_factory));
+      gst_static_pad_template_get (&video_sink_factory));
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&audio_sink_factory));
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&subtitle_sink_factory));
 
   gst_element_class_set_details_simple (gstelement_class,
       "Ogg muxer", "Codec/Muxer",
@@ -382,12 +402,15 @@ gst_ogg_mux_request_new_pad (GstElement * element,
 
   klass = GST_ELEMENT_GET_CLASS (element);
 
-  if (templ != gst_element_class_get_pad_template (klass, "sink_%u"))
+  if (templ != gst_element_class_get_pad_template (klass, "video_%u") &&
+      templ != gst_element_class_get_pad_template (klass, "audio_%u") &&
+      templ != gst_element_class_get_pad_template (klass, "subtitle_%u")) {
     goto wrong_template;
+  }
 
   {
     guint32 serial;
-    gchar *name;
+    gchar *name = NULL;
 
     if (req_name == NULL || strlen (req_name) < 6) {
       /* no name given when requesting the pad, use random serial number */
@@ -406,7 +429,15 @@ gst_ogg_mux_request_new_pad (GstElement * element,
     }
     /* create new pad with the name */
     GST_DEBUG_OBJECT (ogg_mux, "Creating new pad for serial %d", serial);
-    name = g_strdup_printf ("sink_%u", serial);
+
+    if (templ == gst_element_class_get_pad_template (klass, "video_%u")) {
+      name = g_strdup_printf ("video_%u", serial);
+    } else if (templ == gst_element_class_get_pad_template (klass, "audio_%u")) {
+      name = g_strdup_printf ("audio_%u", serial);
+    } else if (templ == gst_element_class_get_pad_template (klass,
+            "subtitle_%u")) {
+      name = g_strdup_printf ("subtitle_%u", serial);
+    }
     newpad = gst_pad_new_from_template (templ, name);
     g_free (name);
 
