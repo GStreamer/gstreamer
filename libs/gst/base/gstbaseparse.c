@@ -2383,7 +2383,7 @@ gst_base_parse_chain (GstPad * pad, GstBuffer * buffer)
       skip = -1;
       gst_base_parse_frame_update (parse, frame, tmpbuf);
       res = bclass->check_valid_frame (parse, frame, &fsize, &skip);
-      gst_adapter_unmap (parse->priv->adapter, 0);
+      gst_adapter_unmap (parse->priv->adapter);
       gst_buffer_replace (&frame->buffer, NULL);
       gst_buffer_remove_memory_range (tmpbuf, 0, -1);
       if (res) {

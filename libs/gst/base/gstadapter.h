@@ -80,7 +80,7 @@ GstAdapter *            gst_adapter_new                 (void);
 void                    gst_adapter_clear               (GstAdapter *adapter);
 void                    gst_adapter_push                (GstAdapter *adapter, GstBuffer* buf);
 const gpointer          gst_adapter_map                 (GstAdapter *adapter, gsize size);
-void                    gst_adapter_unmap               (GstAdapter *adapter, gsize flush);
+void                    gst_adapter_unmap               (GstAdapter *adapter);
 void                    gst_adapter_copy                (GstAdapter *adapter, gpointer dest,
                                                          gsize offset, gsize size);
 void                    gst_adapter_flush               (GstAdapter *adapter, gsize flush);

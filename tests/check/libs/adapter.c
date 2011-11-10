@@ -69,13 +69,13 @@ GST_START_TEST (test_peek1)
   fail_if (data1 == NULL);
   /* it should point to the buffer data as well */
   fail_if (data1 != bufdata);
-  gst_adapter_unmap (adapter, 0);
+  gst_adapter_unmap (adapter);
 
   data2 = gst_adapter_map (adapter, 512);
   fail_if (data2 == NULL);
   /* second peek should return the same pointer */
   fail_if (data2 != data1);
-  gst_adapter_unmap (adapter, 0);
+  gst_adapter_unmap (adapter);
 
   /* this should fail since we don't have that many bytes */
   ASSERT_CRITICAL (gst_adapter_flush (adapter, 513));
@@ -99,7 +99,7 @@ GST_START_TEST (test_peek1)
   /* peek should return the same old pointer + 10 */
   fail_if (data2 != data1 + 10);
   fail_if (data2 != bufdata + 10);
-  gst_adapter_unmap (adapter, 0);
+  gst_adapter_unmap (adapter);
 
   /* flush some more */
   gst_adapter_flush (adapter, 500);
@@ -114,7 +114,7 @@ GST_START_TEST (test_peek1)
   fail_if (data2 == NULL);
   fail_if (data2 != data1 + 510);
   fail_if (data2 != bufdata + 510);
-  gst_adapter_unmap (adapter, 0);
+  gst_adapter_unmap (adapter);
 
   /* flush some more */
   gst_adapter_flush (adapter, 2);
@@ -541,7 +541,7 @@ GST_START_TEST (test_timestamp)
   /* remove empty buffer, timestamp still visible */
   cdata = gst_adapter_map (adapter, 50);
   fail_unless (cdata != NULL);
-  gst_adapter_unmap (adapter, 0);
+  gst_adapter_unmap (adapter);
 
   data = gst_adapter_take (adapter, 50);
   fail_unless (data != NULL);

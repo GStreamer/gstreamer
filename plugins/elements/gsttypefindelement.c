@@ -795,7 +795,7 @@ gst_type_find_element_chain_do_typefinding (GstTypeFindElement * typefind,
   data = gst_adapter_map (typefind->adapter, avail);
   caps = gst_type_find_helper_for_data (GST_OBJECT (typefind),
       data, avail, &probability);
-  gst_adapter_unmap (typefind->adapter, 0);
+  gst_adapter_unmap (typefind->adapter);
 
   if (caps == NULL && have_max)
     goto no_type_found;

@@ -62,7 +62,8 @@
  *     const guint8 *data = gst_adapter_map (adapter, 512);
  *     // use flowreturn as an error value
  *     ret = my_library_foo (data);
- *     gst_adapter_unmap (adapter, 512);
+ *     gst_adapter_unmap (adapter);
+ *     gst_adapter_flush (adapter, 512);
  *   }
  *
  *   gst_object_unref (this);
@@ -478,13 +479,11 @@ gst_adapter_map (GstAdapter * adapter, gsize size)
 /**
  * gst_adapter_unmap:
  * @adapter: a #GstAdapter
- * @flush: the amount of bytes to flush
  *
- * Releases the memory obtained with the last gst_adapter_map() and flushes
- * @size bytes from the adapter.
+ * Releases the memory obtained with the last gst_adapter_map().
  */
 void
-gst_adapter_unmap (GstAdapter * adapter, gsize flush)
+gst_adapter_unmap (GstAdapter * adapter)
 {
   g_return_if_fail (GST_IS_ADAPTER (adapter));
 
@@ -493,9 +492,6 @@ gst_adapter_unmap (GstAdapter * adapter, gsize flush)
     gst_buffer_unmap (cur, adapter->priv->cdata, adapter->priv->csize);
     adapter->priv->cdata = NULL;
   }
-
-  if (flush)
-    gst_adapter_flush_unchecked (adapter, flush);
 }
 
 /**
