@@ -102,7 +102,7 @@ gint            gst_net_address_get_address_bytes (const GstNetAddress *naddr, g
 gboolean        gst_net_address_equal             (const GstNetAddress *naddr1,
                                                    const GstNetAddress *naddr2);
 
-gint            gst_net_address_to_string         (const GstNetAddress *naddr, gchar *dest, gulong len);
+gint            gst_net_address_to_string         (const GstNetAddress *naddr, gchar *dest, gsize len);
 
 G_END_DECLS
 

@@ -330,8 +330,7 @@ gst_net_address_equal (const GstNetAddress * naddr1,
  * Since: 0.10.24
  */
 gint
-gst_net_address_to_string (const GstNetAddress * naddr, gchar * dest,
-    gulong len)
+gst_net_address_to_string (const GstNetAddress * naddr, gchar * dest, gsize len)
 {
   gint result;
 
