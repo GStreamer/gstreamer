@@ -854,9 +854,13 @@ gst_video_info_from_caps (GstVideoInfo * info, const GstCaps * caps)
 
   if ((s = gst_structure_get_string (structure, "chroma-site")))
     info->chroma_site = gst_video_chroma_from_string (s);
+  else
+    info->chroma_site = GST_VIDEO_CHROMA_SITE_UNKNOWN;
 
   if ((s = gst_structure_get_string (structure, "colorimetry")))
     gst_video_colorimetry_from_string (&info->colorimetry, s);
+  else
+    memset (&info->colorimetry, 0, sizeof (GstVideoColorimetry));
 
   if (gst_structure_get_fraction (structure, "pixel-aspect-ratio",
           &par_n, &par_d)) {
