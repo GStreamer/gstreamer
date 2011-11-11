@@ -41,14 +41,14 @@ typedef struct _GstRTPBVPayClass GstRTPBVPayClass;
 
 struct _GstRTPBVPay
 {
-  GstBaseRTPAudioPayload audiopayload;
+  GstRTPBaseAudioPayload audiopayload;
 
   gint mode;
 };
 
 struct _GstRTPBVPayClass
 {
-  GstBaseRTPAudioPayloadClass parent_class;
+  GstRTPBaseAudioPayloadClass parent_class;
 };
 
 GType gst_rtp_bv_pay_get_type (void);

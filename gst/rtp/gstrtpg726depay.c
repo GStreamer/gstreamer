@@ -82,28 +82,28 @@ static void gst_rtp_g726_depay_get_property (GObject * object, guint prop_id,
 static void gst_rtp_g726_depay_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
 
-static GstBuffer *gst_rtp_g726_depay_process (GstBaseRTPDepayload * depayload,
+static GstBuffer *gst_rtp_g726_depay_process (GstRTPBaseDepayload * depayload,
     GstBuffer * buf);
-static gboolean gst_rtp_g726_depay_setcaps (GstBaseRTPDepayload * depayload,
+static gboolean gst_rtp_g726_depay_setcaps (GstRTPBaseDepayload * depayload,
     GstCaps * caps);
 
 #define gst_rtp_g726_depay_parent_class parent_class
 G_DEFINE_TYPE (GstRtpG726Depay, gst_rtp_g726_depay,
-    GST_TYPE_BASE_RTP_DEPAYLOAD);
+    GST_TYPE_RTP_BASE_DEPAYLOAD);
 
 static void
 gst_rtp_g726_depay_class_init (GstRtpG726DepayClass * klass)
 {
   GObjectClass *gobject_class;
   GstElementClass *gstelement_class;
-  GstBaseRTPDepayloadClass *gstbasertpdepayload_class;
+  GstRTPBaseDepayloadClass *gstrtpbasedepayload_class;
 
   GST_DEBUG_CATEGORY_INIT (rtpg726depay_debug, "rtpg726depay", 0,
       "G.726 RTP Depayloader");
 
   gobject_class = (GObjectClass *) klass;
   gstelement_class = (GstElementClass *) klass;
-  gstbasertpdepayload_class = (GstBaseRTPDepayloadClass *) klass;
+  gstrtpbasedepayload_class = (GstRTPBaseDepayloadClass *) klass;
 
   gobject_class->set_property = gst_rtp_g726_depay_set_property;
   gobject_class->get_property = gst_rtp_g726_depay_get_property;
@@ -123,24 +123,24 @@ gst_rtp_g726_depay_class_init (GstRtpG726DepayClass * klass)
       "Extracts G.726 audio from RTP packets",
       "Axis Communications <dev-gstreamer@axis.com>");
 
-  gstbasertpdepayload_class->process = gst_rtp_g726_depay_process;
-  gstbasertpdepayload_class->set_caps = gst_rtp_g726_depay_setcaps;
+  gstrtpbasedepayload_class->process = gst_rtp_g726_depay_process;
+  gstrtpbasedepayload_class->set_caps = gst_rtp_g726_depay_setcaps;
 }
 
 static void
 gst_rtp_g726_depay_init (GstRtpG726Depay * rtpG726depay)
 {
-  GstBaseRTPDepayload *depayload;
+  GstRTPBaseDepayload *depayload;
 
-  depayload = GST_BASE_RTP_DEPAYLOAD (rtpG726depay);
+  depayload = GST_RTP_BASE_DEPAYLOAD (rtpG726depay);
 
-  gst_pad_use_fixed_caps (GST_BASE_RTP_DEPAYLOAD_SRCPAD (depayload));
+  gst_pad_use_fixed_caps (GST_RTP_BASE_DEPAYLOAD_SRCPAD (depayload));
 
   rtpG726depay->force_aal2 = DEFAULT_FORCE_AAL2;
 }
 
 static gboolean
-gst_rtp_g726_depay_setcaps (GstBaseRTPDepayload * depayload, GstCaps * caps)
+gst_rtp_g726_depay_setcaps (GstRTPBaseDepayload * depayload, GstCaps * caps)
 {
   GstCaps *srccaps;
   GstStructure *structure;
@@ -186,7 +186,7 @@ gst_rtp_g726_depay_setcaps (GstBaseRTPDepayload * depayload, GstCaps * caps)
       "bitrate", G_TYPE_INT, depay->bitrate,
       "layout", G_TYPE_STRING, LAYOUT_G726, NULL);
 
-  ret = gst_pad_set_caps (GST_BASE_RTP_DEPAYLOAD_SRCPAD (depayload), srccaps);
+  ret = gst_pad_set_caps (GST_RTP_BASE_DEPAYLOAD_SRCPAD (depayload), srccaps);
   gst_caps_unref (srccaps);
 
   return ret;
@@ -202,7 +202,7 @@ unknown_encoding:
 
 
 static GstBuffer *
-gst_rtp_g726_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
+gst_rtp_g726_depay_process (GstRTPBaseDepayload * depayload, GstBuffer * buf)
 {
   GstRtpG726Depay *depay;
   GstBuffer *outbuf = NULL;

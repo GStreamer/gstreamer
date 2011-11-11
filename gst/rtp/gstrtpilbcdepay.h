@@ -46,14 +46,14 @@ typedef enum {
 
 struct _GstRTPiLBCDepay
 {
-  GstBaseRTPDepayload depayload;
+  GstRTPBaseDepayload depayload;
 
   GstiLBCMode mode;
 };
 
 struct _GstRTPiLBCDepayClass
 {
-  GstBaseRTPDepayloadClass parent_class;
+  GstRTPBaseDepayloadClass parent_class;
 };
 
 GType gst_rtp_ilbc_depay_get_type (void);

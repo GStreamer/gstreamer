@@ -72,30 +72,30 @@ GST_STATIC_PAD_TEMPLATE ("src",
 
 static void gst_rtp_qcelp_depay_finalize (GObject * object);
 
-static gboolean gst_rtp_qcelp_depay_setcaps (GstBaseRTPDepayload * depayload,
+static gboolean gst_rtp_qcelp_depay_setcaps (GstRTPBaseDepayload * depayload,
     GstCaps * caps);
-static GstBuffer *gst_rtp_qcelp_depay_process (GstBaseRTPDepayload * depayload,
+static GstBuffer *gst_rtp_qcelp_depay_process (GstRTPBaseDepayload * depayload,
     GstBuffer * buf);
 
 #define gst_rtp_qcelp_depay_parent_class parent_class
 G_DEFINE_TYPE (GstRtpQCELPDepay, gst_rtp_qcelp_depay,
-    GST_TYPE_BASE_RTP_DEPAYLOAD);
+    GST_TYPE_RTP_BASE_DEPAYLOAD);
 
 static void
 gst_rtp_qcelp_depay_class_init (GstRtpQCELPDepayClass * klass)
 {
   GObjectClass *gobject_class;
   GstElementClass *gstelement_class;
-  GstBaseRTPDepayloadClass *gstbasertpdepayload_class;
+  GstRTPBaseDepayloadClass *gstrtpbasedepayload_class;
 
   gobject_class = (GObjectClass *) klass;
   gstelement_class = (GstElementClass *) klass;
-  gstbasertpdepayload_class = (GstBaseRTPDepayloadClass *) klass;
+  gstrtpbasedepayload_class = (GstRTPBaseDepayloadClass *) klass;
 
   gobject_class->finalize = gst_rtp_qcelp_depay_finalize;
 
-  gstbasertpdepayload_class->process = gst_rtp_qcelp_depay_process;
-  gstbasertpdepayload_class->set_caps = gst_rtp_qcelp_depay_setcaps;
+  gstrtpbasedepayload_class->process = gst_rtp_qcelp_depay_process;
+  gstrtpbasedepayload_class->set_caps = gst_rtp_qcelp_depay_setcaps;
 
   gst_element_class_add_pad_template (gstelement_class,
       gst_static_pad_template_get (&gst_rtp_qcelp_depay_src_template));
@@ -114,9 +114,9 @@ gst_rtp_qcelp_depay_class_init (GstRtpQCELPDepayClass * klass)
 static void
 gst_rtp_qcelp_depay_init (GstRtpQCELPDepay * rtpqcelpdepay)
 {
-  GstBaseRTPDepayload G_GNUC_UNUSED *depayload;
+  GstRTPBaseDepayload G_GNUC_UNUSED *depayload;
 
-  depayload = GST_BASE_RTP_DEPAYLOAD (rtpqcelpdepay);
+  depayload = GST_RTP_BASE_DEPAYLOAD (rtpqcelpdepay);
 }
 
 static void
@@ -137,14 +137,14 @@ gst_rtp_qcelp_depay_finalize (GObject * object)
 
 
 static gboolean
-gst_rtp_qcelp_depay_setcaps (GstBaseRTPDepayload * depayload, GstCaps * caps)
+gst_rtp_qcelp_depay_setcaps (GstRTPBaseDepayload * depayload, GstCaps * caps)
 {
   GstCaps *srccaps;
   gboolean res;
 
   srccaps = gst_caps_new_simple ("audio/qcelp",
       "channels", G_TYPE_INT, 1, "rate", G_TYPE_INT, 8000, NULL);
-  res = gst_pad_set_caps (GST_BASE_RTP_DEPAYLOAD_SRCPAD (depayload), srccaps);
+  res = gst_pad_set_caps (GST_RTP_BASE_DEPAYLOAD_SRCPAD (depayload), srccaps);
   gst_caps_unref (srccaps);
 
   return res;
@@ -208,7 +208,7 @@ flush_packets (GstRtpQCELPDepay * depay)
     outbuf = g_ptr_array_index (depay->packets, i);
     g_ptr_array_index (depay->packets, i) = NULL;
 
-    gst_base_rtp_depayload_push (GST_BASE_RTP_DEPAYLOAD (depay), outbuf);
+    gst_rtp_base_depayload_push (GST_RTP_BASE_DEPAYLOAD (depay), outbuf);
   }
 
   /* and reset interleaving state */
@@ -252,7 +252,7 @@ create_erasure_buffer (GstRtpQCELPDepay * depay)
 }
 
 static GstBuffer *
-gst_rtp_qcelp_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
+gst_rtp_qcelp_depay_process (GstRTPBaseDepayload * depayload, GstBuffer * buf)
 {
   GstRtpQCELPDepay *depay;
   GstBuffer *outbuf;
@@ -363,7 +363,7 @@ gst_rtp_qcelp_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
 
     if (!depay->interleaved || index == 0) {
       /* not interleaved or first frame in packet, just push */
-      gst_base_rtp_depayload_push (depayload, outbuf);
+      gst_rtp_base_depayload_push (depayload, outbuf);
 
       if (timestamp != -1)
         timestamp += FRAME_DURATION;

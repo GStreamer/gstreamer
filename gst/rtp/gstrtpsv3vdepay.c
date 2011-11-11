@@ -49,16 +49,16 @@ GST_STATIC_PAD_TEMPLATE ("sink",
 
 #define gst_rtp_sv3v_depay_parent_class parent_class
 G_DEFINE_TYPE (GstRtpSV3VDepay, gst_rtp_sv3v_depay,
-    GST_TYPE_BASE_RTP_DEPAYLOAD);
+    GST_TYPE_RTP_BASE_DEPAYLOAD);
 
 static void gst_rtp_sv3v_depay_finalize (GObject * object);
 
 static GstStateChangeReturn gst_rtp_sv3v_depay_change_state (GstElement *
     element, GstStateChange transition);
 
-static GstBuffer *gst_rtp_sv3v_depay_process (GstBaseRTPDepayload * depayload,
+static GstBuffer *gst_rtp_sv3v_depay_process (GstRTPBaseDepayload * depayload,
     GstBuffer * buf);
-gboolean gst_rtp_sv3v_depay_setcaps (GstBaseRTPDepayload * filter,
+gboolean gst_rtp_sv3v_depay_setcaps (GstRTPBaseDepayload * filter,
     GstCaps * caps);
 
 static void
@@ -66,14 +66,14 @@ gst_rtp_sv3v_depay_class_init (GstRtpSV3VDepayClass * klass)
 {
   GObjectClass *gobject_class;
   GstElementClass *gstelement_class;
-  GstBaseRTPDepayloadClass *gstbasertpdepayload_class;
+  GstRTPBaseDepayloadClass *gstrtpbasedepayload_class;
 
   gobject_class = (GObjectClass *) klass;
   gstelement_class = (GstElementClass *) klass;
-  gstbasertpdepayload_class = (GstBaseRTPDepayloadClass *) klass;
+  gstrtpbasedepayload_class = (GstRTPBaseDepayloadClass *) klass;
 
-  gstbasertpdepayload_class->process = gst_rtp_sv3v_depay_process;
-  gstbasertpdepayload_class->set_caps = gst_rtp_sv3v_depay_setcaps;
+  gstrtpbasedepayload_class->process = gst_rtp_sv3v_depay_process;
+  gstrtpbasedepayload_class->set_caps = gst_rtp_sv3v_depay_setcaps;
 
   gobject_class->finalize = gst_rtp_sv3v_depay_finalize;
 
@@ -111,7 +111,7 @@ gst_rtp_sv3v_depay_finalize (GObject * object)
 
 // only on the sink
 gboolean
-gst_rtp_sv3v_depay_setcaps (GstBaseRTPDepayload * filter, GstCaps * caps)
+gst_rtp_sv3v_depay_setcaps (GstRTPBaseDepayload * filter, GstCaps * caps)
 {
   GstStructure *structure = gst_caps_get_structure (caps, 0);
   gint clock_rate;
@@ -126,7 +126,7 @@ gst_rtp_sv3v_depay_setcaps (GstBaseRTPDepayload * filter, GstCaps * caps)
 }
 
 static GstBuffer *
-gst_rtp_sv3v_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
+gst_rtp_sv3v_depay_process (GstRTPBaseDepayload * depayload, GstBuffer * buf)
 {
   GstRtpSV3VDepay *rtpsv3vdepay;
   static struct
@@ -207,7 +207,7 @@ gst_rtp_sv3v_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
 
     /* if we already have caps, we don't need to do anything. FIXME, check if
      * something changed. */
-    if (G_UNLIKELY (gst_pad_has_current_caps (GST_BASE_RTP_DEPAYLOAD_SRCPAD
+    if (G_UNLIKELY (gst_pad_has_current_caps (GST_RTP_BASE_DEPAYLOAD_SRCPAD
                 (depayload)))) {
       GST_DEBUG ("Already configured, skipping config parsing");
       goto beach;
@@ -243,7 +243,7 @@ gst_rtp_sv3v_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
         "width", G_TYPE_INT, rtpsv3vdepay->width,
         "height", G_TYPE_INT, rtpsv3vdepay->height,
         "codec_data", GST_TYPE_BUFFER, codec_data, NULL);
-    gst_pad_set_caps (GST_BASE_RTP_DEPAYLOAD_SRCPAD (depayload), caps);
+    gst_pad_set_caps (GST_RTP_BASE_DEPAYLOAD_SRCPAD (depayload), caps);
     gst_caps_unref (caps);
 
     GST_DEBUG ("Depayloader now configured");

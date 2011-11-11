@@ -51,26 +51,26 @@ GST_STATIC_PAD_TEMPLATE ("src",
         "clock-rate = (int) 8000")
     );
 
-static gboolean gst_rtp_g722_pay_setcaps (GstBaseRTPPayload * basepayload,
+static gboolean gst_rtp_g722_pay_setcaps (GstRTPBasePayload * basepayload,
     GstCaps * caps);
-static GstCaps *gst_rtp_g722_pay_getcaps (GstBaseRTPPayload * rtppayload,
+static GstCaps *gst_rtp_g722_pay_getcaps (GstRTPBasePayload * rtppayload,
     GstPad * pad, GstCaps * filter);
 
 #define gst_rtp_g722_pay_parent_class parent_class
 G_DEFINE_TYPE (GstRtpG722Pay, gst_rtp_g722_pay,
-    GST_TYPE_BASE_RTP_AUDIO_PAYLOAD);
+    GST_TYPE_RTP_BASE_AUDIO_PAYLOAD);
 
 static void
 gst_rtp_g722_pay_class_init (GstRtpG722PayClass * klass)
 {
   GstElementClass *gstelement_class;
-  GstBaseRTPPayloadClass *gstbasertppayload_class;
+  GstRTPBasePayloadClass *gstrtpbasepayload_class;
 
   GST_DEBUG_CATEGORY_INIT (rtpg722pay_debug, "rtpg722pay", 0,
       "G722 RTP Payloader");
 
   gstelement_class = (GstElementClass *) klass;
-  gstbasertppayload_class = (GstBaseRTPPayloadClass *) klass;
+  gstrtpbasepayload_class = (GstRTPBasePayloadClass *) klass;
 
   gst_element_class_add_pad_template (gstelement_class,
       gst_static_pad_template_get (&gst_rtp_g722_pay_src_template));
@@ -82,23 +82,23 @@ gst_rtp_g722_pay_class_init (GstRtpG722PayClass * klass)
       "Payload-encode Raw audio into RTP packets (RFC 3551)",
       "Wim Taymans <wim.taymans@gmail.com>");
 
-  gstbasertppayload_class->set_caps = gst_rtp_g722_pay_setcaps;
-  gstbasertppayload_class->get_caps = gst_rtp_g722_pay_getcaps;
+  gstrtpbasepayload_class->set_caps = gst_rtp_g722_pay_setcaps;
+  gstrtpbasepayload_class->get_caps = gst_rtp_g722_pay_getcaps;
 }
 
 static void
 gst_rtp_g722_pay_init (GstRtpG722Pay * rtpg722pay)
 {
-  GstBaseRTPAudioPayload *basertpaudiopayload;
+  GstRTPBaseAudioPayload *rtpbaseaudiopayload;
 
-  basertpaudiopayload = GST_BASE_RTP_AUDIO_PAYLOAD (rtpg722pay);
+  rtpbaseaudiopayload = GST_RTP_BASE_AUDIO_PAYLOAD (rtpg722pay);
 
-  /* tell basertpaudiopayload that this is a sample based codec */
-  gst_base_rtp_audio_payload_set_sample_based (basertpaudiopayload);
+  /* tell rtpbaseaudiopayload that this is a sample based codec */
+  gst_rtp_base_audio_payload_set_sample_based (rtpbaseaudiopayload);
 }
 
 static gboolean
-gst_rtp_g722_pay_setcaps (GstBaseRTPPayload * basepayload, GstCaps * caps)
+gst_rtp_g722_pay_setcaps (GstRTPBasePayload * basepayload, GstCaps * caps)
 {
   GstRtpG722Pay *rtpg722pay;
   GstStructure *structure;
@@ -107,9 +107,9 @@ gst_rtp_g722_pay_setcaps (GstBaseRTPPayload * basepayload, GstCaps * caps)
   gchar *params;
   GstAudioChannelPosition *pos;
   const GstRTPChannelOrder *order;
-  GstBaseRTPAudioPayload *basertpaudiopayload;
+  GstRTPBaseAudioPayload *rtpbaseaudiopayload;
 
-  basertpaudiopayload = GST_BASE_RTP_AUDIO_PAYLOAD (basepayload);
+  rtpbaseaudiopayload = GST_RTP_BASE_AUDIO_PAYLOAD (basepayload);
   rtpg722pay = GST_RTP_G722_PAY (basepayload);
 
   structure = gst_caps_get_structure (caps, 0);
@@ -132,7 +132,7 @@ gst_rtp_g722_pay_setcaps (GstBaseRTPPayload * basepayload, GstCaps * caps)
    * RFC 3551 although the sampling rate is 16000 Hz */
   clock_rate = 8000;
 
-  gst_base_rtp_payload_set_options (basepayload, "audio", TRUE, "G722",
+  gst_rtp_base_payload_set_options (basepayload, "audio", TRUE, "G722",
       clock_rate);
   params = g_strdup_printf ("%d", channels);
 
@@ -142,11 +142,11 @@ gst_rtp_g722_pay_setcaps (GstBaseRTPPayload * basepayload, GstCaps * caps)
   }
 
   if (order && order->name) {
-    res = gst_base_rtp_payload_set_outcaps (basepayload,
+    res = gst_rtp_base_payload_set_outcaps (basepayload,
         "encoding-params", G_TYPE_STRING, params, "channels", G_TYPE_INT,
         channels, "channel-order", G_TYPE_STRING, order->name, NULL);
   } else {
-    res = gst_base_rtp_payload_set_outcaps (basepayload,
+    res = gst_rtp_base_payload_set_outcaps (basepayload,
         "encoding-params", G_TYPE_STRING, params, "channels", G_TYPE_INT,
         channels, NULL);
   }
@@ -160,7 +160,7 @@ gst_rtp_g722_pay_setcaps (GstBaseRTPPayload * basepayload, GstCaps * caps)
   /* bits-per-sample is 4 * channels for G722, but as the RTP clock runs at
    * half speed (8 instead of 16 khz), pretend it's 8 bits per sample
    * channels. */
-  gst_base_rtp_audio_payload_set_samplebits_options (basertpaudiopayload,
+  gst_rtp_base_audio_payload_set_samplebits_options (rtpbaseaudiopayload,
       8 * rtpg722pay->channels);
 
   return res;
@@ -179,7 +179,7 @@ no_channels:
 }
 
 static GstCaps *
-gst_rtp_g722_pay_getcaps (GstBaseRTPPayload * rtppayload, GstPad * pad,
+gst_rtp_g722_pay_getcaps (GstRTPBasePayload * rtppayload, GstPad * pad,
     GstCaps * filter)
 {
   GstCaps *otherpadcaps;

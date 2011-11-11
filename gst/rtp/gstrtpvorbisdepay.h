@@ -47,7 +47,7 @@ typedef struct _GstRtpVorbisConfig {
 
 struct _GstRtpVorbisDepay
 {
-  GstBaseRTPDepayload parent;
+  GstRTPBaseDepayload parent;
 
   GList              *configs;
   GstRtpVorbisConfig *config;
@@ -58,7 +58,7 @@ struct _GstRtpVorbisDepay
 
 struct _GstRtpVorbisDepayClass
 {
-  GstBaseRTPDepayloadClass parent_class;
+  GstRTPBaseDepayloadClass parent_class;
 };
 
 GType gst_rtp_vorbis_depay_get_type (void);

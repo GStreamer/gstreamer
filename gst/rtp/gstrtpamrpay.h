@@ -48,7 +48,7 @@ typedef enum {
 
 struct _GstRtpAMRPay
 {
-  GstBaseRTPPayload payload;
+  GstRTPBasePayload payload;
 
   GstRtpAMRPayMode mode;
   GstClockTime first_ts;
@@ -58,7 +58,7 @@ struct _GstRtpAMRPay
 
 struct _GstRtpAMRPayClass
 {
-  GstBaseRTPPayloadClass parent_class;
+  GstRTPBasePayloadClass parent_class;
 };
 
 GType gst_rtp_amr_pay_get_type (void);

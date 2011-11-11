@@ -51,24 +51,24 @@ static GstStaticPadTemplate gst_rtp_mpa_depay_sink_template =
     );
 
 #define gst_rtp_mpa_depay_parent_class parent_class
-G_DEFINE_TYPE (GstRtpMPADepay, gst_rtp_mpa_depay, GST_TYPE_BASE_RTP_DEPAYLOAD);
+G_DEFINE_TYPE (GstRtpMPADepay, gst_rtp_mpa_depay, GST_TYPE_RTP_BASE_DEPAYLOAD);
 
-static gboolean gst_rtp_mpa_depay_setcaps (GstBaseRTPDepayload * depayload,
+static gboolean gst_rtp_mpa_depay_setcaps (GstRTPBaseDepayload * depayload,
     GstCaps * caps);
-static GstBuffer *gst_rtp_mpa_depay_process (GstBaseRTPDepayload * depayload,
+static GstBuffer *gst_rtp_mpa_depay_process (GstRTPBaseDepayload * depayload,
     GstBuffer * buf);
 
 static void
 gst_rtp_mpa_depay_class_init (GstRtpMPADepayClass * klass)
 {
   GstElementClass *gstelement_class;
-  GstBaseRTPDepayloadClass *gstbasertpdepayload_class;
+  GstRTPBaseDepayloadClass *gstrtpbasedepayload_class;
 
   GST_DEBUG_CATEGORY_INIT (rtpmpadepay_debug, "rtpmpadepay", 0,
       "MPEG Audio RTP Depayloader");
 
   gstelement_class = (GstElementClass *) klass;
-  gstbasertpdepayload_class = (GstBaseRTPDepayloadClass *) klass;
+  gstrtpbasedepayload_class = (GstRTPBaseDepayloadClass *) klass;
 
   gst_element_class_add_pad_template (gstelement_class,
       gst_static_pad_template_get (&gst_rtp_mpa_depay_src_template));
@@ -80,8 +80,8 @@ gst_rtp_mpa_depay_class_init (GstRtpMPADepayClass * klass)
       "Extracts MPEG audio from RTP packets (RFC 2038)",
       "Wim Taymans <wim.taymans@gmail.com>");
 
-  gstbasertpdepayload_class->set_caps = gst_rtp_mpa_depay_setcaps;
-  gstbasertpdepayload_class->process = gst_rtp_mpa_depay_process;
+  gstrtpbasedepayload_class->set_caps = gst_rtp_mpa_depay_setcaps;
+  gstrtpbasedepayload_class->process = gst_rtp_mpa_depay_process;
 }
 
 static void
@@ -91,7 +91,7 @@ gst_rtp_mpa_depay_init (GstRtpMPADepay * rtpmpadepay)
 }
 
 static gboolean
-gst_rtp_mpa_depay_setcaps (GstBaseRTPDepayload * depayload, GstCaps * caps)
+gst_rtp_mpa_depay_setcaps (GstRTPBaseDepayload * depayload, GstCaps * caps)
 {
   GstStructure *structure;
   GstCaps *outcaps;
@@ -113,7 +113,7 @@ gst_rtp_mpa_depay_setcaps (GstBaseRTPDepayload * depayload, GstCaps * caps)
 }
 
 static GstBuffer *
-gst_rtp_mpa_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
+gst_rtp_mpa_depay_process (GstRTPBaseDepayload * depayload, GstBuffer * buf)
 {
   GstRtpMPADepay *rtpmpadepay;
   GstBuffer *outbuf;

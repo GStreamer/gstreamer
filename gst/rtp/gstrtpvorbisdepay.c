@@ -59,11 +59,11 @@ GST_STATIC_PAD_TEMPLATE ("src",
 
 #define gst_rtp_vorbis_depay_parent_class parent_class
 G_DEFINE_TYPE (GstRtpVorbisDepay, gst_rtp_vorbis_depay,
-    GST_TYPE_BASE_RTP_DEPAYLOAD);
+    GST_TYPE_RTP_BASE_DEPAYLOAD);
 
-static gboolean gst_rtp_vorbis_depay_setcaps (GstBaseRTPDepayload * depayload,
+static gboolean gst_rtp_vorbis_depay_setcaps (GstRTPBaseDepayload * depayload,
     GstCaps * caps);
-static GstBuffer *gst_rtp_vorbis_depay_process (GstBaseRTPDepayload * depayload,
+static GstBuffer *gst_rtp_vorbis_depay_process (GstRTPBaseDepayload * depayload,
     GstBuffer * buf);
 
 static void gst_rtp_vorbis_depay_finalize (GObject * object);
@@ -76,18 +76,18 @@ gst_rtp_vorbis_depay_class_init (GstRtpVorbisDepayClass * klass)
 {
   GObjectClass *gobject_class;
   GstElementClass *gstelement_class;
-  GstBaseRTPDepayloadClass *gstbasertpdepayload_class;
+  GstRTPBaseDepayloadClass *gstrtpbasedepayload_class;
 
   gobject_class = (GObjectClass *) klass;
   gstelement_class = (GstElementClass *) klass;
-  gstbasertpdepayload_class = (GstBaseRTPDepayloadClass *) klass;
+  gstrtpbasedepayload_class = (GstRTPBaseDepayloadClass *) klass;
 
   gobject_class->finalize = gst_rtp_vorbis_depay_finalize;
 
   gstelement_class->change_state = gst_rtp_vorbis_depay_change_state;
 
-  gstbasertpdepayload_class->process = gst_rtp_vorbis_depay_process;
-  gstbasertpdepayload_class->set_caps = gst_rtp_vorbis_depay_setcaps;
+  gstrtpbasedepayload_class->process = gst_rtp_vorbis_depay_process;
+  gstrtpbasedepayload_class->set_caps = gst_rtp_vorbis_depay_setcaps;
 
   gst_element_class_add_pad_template (gstelement_class,
       gst_static_pad_template_get (&gst_rtp_vorbis_depay_sink_template));
@@ -337,7 +337,7 @@ gst_rtp_vorbis_depay_parse_inband_configuration (GstRtpVorbisDepay *
 }
 
 static gboolean
-gst_rtp_vorbis_depay_setcaps (GstBaseRTPDepayload * depayload, GstCaps * caps)
+gst_rtp_vorbis_depay_setcaps (GstRTPBaseDepayload * depayload, GstCaps * caps)
 {
   GstStructure *structure;
   GstRtpVorbisDepay *rtpvorbisdepay;
@@ -417,7 +417,7 @@ gst_rtp_vorbis_depay_switch_codebook (GstRtpVorbisDepay * rtpvorbisdepay,
         GstBuffer *header = GST_BUFFER_CAST (headers->data);
 
         gst_buffer_ref (header);
-        gst_base_rtp_depayload_push (GST_BASE_RTP_DEPAYLOAD (rtpvorbisdepay),
+        gst_rtp_base_depayload_push (GST_RTP_BASE_DEPAYLOAD (rtpvorbisdepay),
             header);
       }
       /* remember the current config */
@@ -433,7 +433,7 @@ gst_rtp_vorbis_depay_switch_codebook (GstRtpVorbisDepay * rtpvorbisdepay,
 }
 
 static GstBuffer *
-gst_rtp_vorbis_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
+gst_rtp_vorbis_depay_process (GstRTPBaseDepayload * depayload, GstBuffer * buf)
 {
   GstRtpVorbisDepay *rtpvorbisdepay;
   GstBuffer *outbuf;
@@ -605,7 +605,7 @@ gst_rtp_vorbis_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
     payload += length;
     payload_len -= length;
 
-    ret = gst_base_rtp_depayload_push (depayload, outbuf);
+    ret = gst_rtp_base_depayload_push (depayload, outbuf);
     if (ret != GST_FLOW_OK)
       break;
   }

@@ -34,9 +34,9 @@
 
 #define G723_FRAME_DURATION (30 * GST_MSECOND)
 
-static gboolean gst_rtp_g723_pay_set_caps (GstBaseRTPPayload * payload,
+static gboolean gst_rtp_g723_pay_set_caps (GstRTPBasePayload * payload,
     GstCaps * caps);
-static GstFlowReturn gst_rtp_g723_pay_handle_buffer (GstBaseRTPPayload *
+static GstFlowReturn gst_rtp_g723_pay_handle_buffer (GstRTPBasePayload *
     payload, GstBuffer * buf);
 
 static GstStaticPadTemplate gst_rtp_g723_pay_sink_template =
@@ -68,18 +68,18 @@ static GstStateChangeReturn gst_rtp_g723_pay_change_state (GstElement * element,
     GstStateChange transition);
 
 #define gst_rtp_g723_pay_parent_class parent_class
-G_DEFINE_TYPE (GstRTPG723Pay, gst_rtp_g723_pay, GST_TYPE_BASE_RTP_PAYLOAD);
+G_DEFINE_TYPE (GstRTPG723Pay, gst_rtp_g723_pay, GST_TYPE_RTP_BASE_PAYLOAD);
 
 static void
 gst_rtp_g723_pay_class_init (GstRTPG723PayClass * klass)
 {
   GObjectClass *gobject_class;
   GstElementClass *gstelement_class;
-  GstBaseRTPPayloadClass *payload_class;
+  GstRTPBasePayloadClass *payload_class;
 
   gobject_class = (GObjectClass *) klass;
   gstelement_class = (GstElementClass *) klass;
-  payload_class = (GstBaseRTPPayloadClass *) klass;
+  payload_class = (GstRTPBasePayloadClass *) klass;
 
   gobject_class->finalize = gst_rtp_g723_pay_finalize;
 
@@ -102,12 +102,12 @@ gst_rtp_g723_pay_class_init (GstRTPG723PayClass * klass)
 static void
 gst_rtp_g723_pay_init (GstRTPG723Pay * pay)
 {
-  GstBaseRTPPayload *payload = GST_BASE_RTP_PAYLOAD (pay);
+  GstRTPBasePayload *payload = GST_RTP_BASE_PAYLOAD (pay);
 
   pay->adapter = gst_adapter_new ();
 
   payload->pt = GST_RTP_PAYLOAD_G723;
-  gst_base_rtp_payload_set_options (payload, "audio", FALSE, "G723", 8000);
+  gst_rtp_base_payload_set_options (payload, "audio", FALSE, "G723", 8000);
 }
 
 static void
@@ -125,7 +125,7 @@ gst_rtp_g723_pay_finalize (GObject * object)
 
 
 static gboolean
-gst_rtp_g723_pay_set_caps (GstBaseRTPPayload * payload, GstCaps * caps)
+gst_rtp_g723_pay_set_caps (GstRTPBasePayload * payload, GstCaps * caps)
 {
   gboolean res;
   GstStructure *structure;
@@ -138,7 +138,7 @@ gst_rtp_g723_pay_set_caps (GstBaseRTPPayload * payload, GstCaps * caps)
   payload->pt = pt;
   payload->dynamic = pt != GST_RTP_PAYLOAD_G723;
 
-  res = gst_base_rtp_payload_set_outcaps (payload, NULL);
+  res = gst_rtp_base_payload_set_outcaps (payload, NULL);
 
   return res;
 }
@@ -178,7 +178,7 @@ gst_rtp_g723_pay_flush (GstRTPG723Pay * pay)
   }
   gst_rtp_buffer_unmap (&rtp);
 
-  ret = gst_base_rtp_payload_push (GST_BASE_RTP_PAYLOAD (pay), outbuf);
+  ret = gst_rtp_base_payload_push (GST_RTP_BASE_PAYLOAD (pay), outbuf);
 
   return ret;
 }
@@ -192,7 +192,7 @@ static const guint size_tab[4] = {
 };
 
 static GstFlowReturn
-gst_rtp_g723_pay_handle_buffer (GstBaseRTPPayload * payload, GstBuffer * buf)
+gst_rtp_g723_pay_handle_buffer (GstRTPBasePayload * payload, GstBuffer * buf)
 {
   GstFlowReturn ret = GST_FLOW_OK;
   guint8 *data;
@@ -229,7 +229,7 @@ gst_rtp_g723_pay_handle_buffer (GstBaseRTPPayload * payload, GstBuffer * buf)
   packet_dur = pay->duration + G723_FRAME_DURATION;
   packet_len = gst_rtp_buffer_calc_packet_len (payload_len, 0, 0);
 
-  if (gst_base_rtp_payload_is_filled (payload, packet_len, packet_dur)) {
+  if (gst_rtp_base_payload_is_filled (payload, packet_len, packet_dur)) {
     /* size or duration would overflow the packet, flush the queued data */
     ret = gst_rtp_g723_pay_flush (pay);
   }

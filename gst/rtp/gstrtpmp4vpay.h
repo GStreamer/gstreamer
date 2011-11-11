@@ -42,7 +42,7 @@ typedef struct _GstRtpMP4VPayClass GstRtpMP4VPayClass;
 
 struct _GstRtpMP4VPay
 {
-  GstBaseRTPPayload    payload;
+  GstRTPBasePayload    payload;
 
   GstAdapter   *adapter;
   GstClockTime  first_timestamp;
@@ -64,7 +64,7 @@ struct _GstRtpMP4VPay
 
 struct _GstRtpMP4VPayClass
 {
-  GstBaseRTPPayloadClass parent_class;
+  GstRTPBasePayloadClass parent_class;
 };
 
 GType gst_rtp_mp4v_pay_get_type (void);

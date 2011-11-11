@@ -36,13 +36,13 @@ typedef struct _GstRtpCELTDepayClass GstRtpCELTDepayClass;
 
 struct _GstRtpCELTDepay
 {
-  GstBaseRTPDepayload depayload;
+  GstRTPBaseDepayload depayload;
   gint frame_size;
 };
 
 struct _GstRtpCELTDepayClass
 {
-  GstBaseRTPDepayloadClass parent_class;
+  GstRTPBaseDepayloadClass parent_class;
 };
 
 GType gst_rtp_celt_depay_get_type (void);

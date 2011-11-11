@@ -48,7 +48,7 @@ typedef enum
 
 struct _GstRtpH263PPay
 {
-  GstBaseRTPPayload    payload;
+  GstRTPBasePayload    payload;
 
   GstAdapter          *adapter;
   GstClockTime         first_timestamp;
@@ -58,7 +58,7 @@ struct _GstRtpH263PPay
 
 struct _GstRtpH263PPayClass
 {
-  GstBaseRTPPayloadClass parent_class;
+  GstRTPBasePayloadClass parent_class;
 };
 
 GType gst_rtp_h263p_pay_get_type (void);

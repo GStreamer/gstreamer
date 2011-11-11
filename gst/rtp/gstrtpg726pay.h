@@ -35,7 +35,7 @@ typedef struct _GstRtpG726PayClass GstRtpG726PayClass;
 
 struct _GstRtpG726Pay
 {
-  GstBaseRTPAudioPayload audiopayload;
+  GstRTPBaseAudioPayload audiopayload;
 
   gboolean aal2;
   gboolean force_aal2;
@@ -44,7 +44,7 @@ struct _GstRtpG726Pay
 
 struct _GstRtpG726PayClass
 {
-  GstBaseRTPAudioPayloadClass parent_class;
+  GstRTPBaseAudioPayloadClass parent_class;
 };
 
 GType gst_rtp_g726_pay_get_type (void);

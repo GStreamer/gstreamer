@@ -42,7 +42,7 @@ typedef struct _GstRtpH263DepayClass GstRtpH263DepayClass;
 
 struct _GstRtpH263Depay
 {
-  GstBaseRTPDepayload depayload;
+  GstRTPBaseDepayload depayload;
 
   guint8 offset;	/* offset to apply to next payload */
   guint8 leftover;	/* leftover from previous payload (if offset != 0) */
@@ -53,7 +53,7 @@ struct _GstRtpH263Depay
 
 struct _GstRtpH263DepayClass
 {
-  GstBaseRTPDepayloadClass parent_class;
+  GstRTPBaseDepayloadClass parent_class;
 };
 
 GType gst_rtp_h263_depay_get_type (void);

@@ -61,7 +61,7 @@ typedef struct _GstRtpH263PayPackage GstRtpH263PayPackage;
 
 struct _GstRtpH263Pay
 {
-  GstBaseRTPPayload payload;
+  GstRTPBasePayload payload;
 
   GstAdapter *adapter;
   GstClockTime first_ts;
@@ -87,7 +87,7 @@ struct _GstRtpH263PayContext
 
 struct _GstRtpH263PayClass
 {
-  GstBaseRTPPayloadClass parent_class;
+  GstRTPBasePayloadClass parent_class;
 };
 
 typedef struct _GstRtpH263PayAHeader

@@ -78,33 +78,33 @@ static void gst_rtp_mp4g_pay_finalize (GObject * object);
 static GstStateChangeReturn gst_rtp_mp4g_pay_change_state (GstElement * element,
     GstStateChange transition);
 
-static gboolean gst_rtp_mp4g_pay_setcaps (GstBaseRTPPayload * payload,
+static gboolean gst_rtp_mp4g_pay_setcaps (GstRTPBasePayload * payload,
     GstCaps * caps);
-static GstFlowReturn gst_rtp_mp4g_pay_handle_buffer (GstBaseRTPPayload *
+static GstFlowReturn gst_rtp_mp4g_pay_handle_buffer (GstRTPBasePayload *
     payload, GstBuffer * buffer);
-static gboolean gst_rtp_mp4g_pay_handle_event (GstBaseRTPPayload * payload,
+static gboolean gst_rtp_mp4g_pay_handle_event (GstRTPBasePayload * payload,
     GstEvent * event);
 
 #define gst_rtp_mp4g_pay_parent_class parent_class
-G_DEFINE_TYPE (GstRtpMP4GPay, gst_rtp_mp4g_pay, GST_TYPE_BASE_RTP_PAYLOAD)
+G_DEFINE_TYPE (GstRtpMP4GPay, gst_rtp_mp4g_pay, GST_TYPE_RTP_BASE_PAYLOAD)
 
      static void gst_rtp_mp4g_pay_class_init (GstRtpMP4GPayClass * klass)
 {
   GObjectClass *gobject_class;
   GstElementClass *gstelement_class;
-  GstBaseRTPPayloadClass *gstbasertppayload_class;
+  GstRTPBasePayloadClass *gstrtpbasepayload_class;
 
   gobject_class = (GObjectClass *) klass;
   gstelement_class = (GstElementClass *) klass;
-  gstbasertppayload_class = (GstBaseRTPPayloadClass *) klass;
+  gstrtpbasepayload_class = (GstRTPBasePayloadClass *) klass;
 
   gobject_class->finalize = gst_rtp_mp4g_pay_finalize;
 
   gstelement_class->change_state = gst_rtp_mp4g_pay_change_state;
 
-  gstbasertppayload_class->set_caps = gst_rtp_mp4g_pay_setcaps;
-  gstbasertppayload_class->handle_buffer = gst_rtp_mp4g_pay_handle_buffer;
-  gstbasertppayload_class->handle_event = gst_rtp_mp4g_pay_handle_event;
+  gstrtpbasepayload_class->set_caps = gst_rtp_mp4g_pay_setcaps;
+  gstrtpbasepayload_class->handle_buffer = gst_rtp_mp4g_pay_handle_buffer;
+  gstrtpbasepayload_class->handle_event = gst_rtp_mp4g_pay_handle_event;
 
   gst_element_class_add_pad_template (gstelement_class,
       gst_static_pad_template_get (&gst_rtp_mp4g_pay_src_template));
@@ -370,10 +370,10 @@ gst_rtp_mp4g_pay_new_caps (GstRtpMP4GPay * rtpmp4gpay)
 
   /* hmm, silly */
   if (rtpmp4gpay->params) {
-    res = gst_base_rtp_payload_set_outcaps (GST_BASE_RTP_PAYLOAD (rtpmp4gpay),
+    res = gst_rtp_base_payload_set_outcaps (GST_RTP_BASE_PAYLOAD (rtpmp4gpay),
         "encoding-params", G_TYPE_STRING, rtpmp4gpay->params, MP4GCAPS);
   } else {
-    res = gst_base_rtp_payload_set_outcaps (GST_BASE_RTP_PAYLOAD (rtpmp4gpay),
+    res = gst_rtp_base_payload_set_outcaps (GST_RTP_BASE_PAYLOAD (rtpmp4gpay),
         MP4GCAPS);
   }
 
@@ -385,7 +385,7 @@ gst_rtp_mp4g_pay_new_caps (GstRtpMP4GPay * rtpmp4gpay)
 }
 
 static gboolean
-gst_rtp_mp4g_pay_setcaps (GstBaseRTPPayload * payload, GstCaps * caps)
+gst_rtp_mp4g_pay_setcaps (GstRTPBasePayload * payload, GstCaps * caps)
 {
   GstRtpMP4GPay *rtpmp4gpay;
   GstStructure *structure;
@@ -432,7 +432,7 @@ gst_rtp_mp4g_pay_setcaps (GstBaseRTPPayload * payload, GstCaps * caps)
   if (media_type == NULL)
     goto config_failed;
 
-  gst_base_rtp_payload_set_options (payload, media_type, TRUE, "MPEG4-GENERIC",
+  gst_rtp_base_payload_set_options (payload, media_type, TRUE, "MPEG4-GENERIC",
       rtpmp4gpay->rate);
 
   res = gst_rtp_mp4g_pay_new_caps (rtpmp4gpay);
@@ -463,7 +463,7 @@ gst_rtp_mp4g_pay_flush (GstRtpMP4GPay * rtpmp4gpay)
   total = avail = gst_adapter_available (rtpmp4gpay->adapter);
 
   ret = GST_FLOW_OK;
-  mtu = GST_BASE_RTP_PAYLOAD_MTU (rtpmp4gpay);
+  mtu = GST_RTP_BASE_PAYLOAD_MTU (rtpmp4gpay);
 
   while (avail > 0) {
     guint towrite;
@@ -545,7 +545,7 @@ gst_rtp_mp4g_pay_flush (GstRtpMP4GPay * rtpmp4gpay)
       rtpmp4gpay->offset += rtpmp4gpay->frame_len;
     }
 
-    ret = gst_base_rtp_payload_push (GST_BASE_RTP_PAYLOAD (rtpmp4gpay), outbuf);
+    ret = gst_rtp_base_payload_push (GST_RTP_BASE_PAYLOAD (rtpmp4gpay), outbuf);
 
     avail -= payload_len;
   }
@@ -556,7 +556,7 @@ gst_rtp_mp4g_pay_flush (GstRtpMP4GPay * rtpmp4gpay)
 /* we expect buffers as exactly one complete AU
  */
 static GstFlowReturn
-gst_rtp_mp4g_pay_handle_buffer (GstBaseRTPPayload * basepayload,
+gst_rtp_mp4g_pay_handle_buffer (GstRTPBasePayload * basepayload,
     GstBuffer * buffer)
 {
   GstRtpMP4GPay *rtpmp4gpay;
@@ -573,7 +573,7 @@ gst_rtp_mp4g_pay_handle_buffer (GstBaseRTPPayload * basepayload,
 }
 
 static gboolean
-gst_rtp_mp4g_pay_handle_event (GstBaseRTPPayload * payload, GstEvent * event)
+gst_rtp_mp4g_pay_handle_event (GstRTPBasePayload * payload, GstEvent * event)
 {
   GstRtpMP4GPay *rtpmp4gpay;
 

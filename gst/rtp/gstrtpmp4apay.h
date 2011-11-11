@@ -42,7 +42,7 @@ typedef struct _GstRtpMP4APayClass GstRtpMP4APayClass;
 
 struct _GstRtpMP4APay
 {
-  GstBaseRTPPayload    payload;
+  GstRTPBasePayload    payload;
 
   gint          rate;
   gchar        *params;
@@ -53,7 +53,7 @@ struct _GstRtpMP4APay
 
 struct _GstRtpMP4APayClass
 {
-  GstBaseRTPPayloadClass parent_class;
+  GstRTPBasePayloadClass parent_class;
 };
 
 GType gst_rtp_mp4a_pay_get_type (void);

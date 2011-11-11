@@ -41,7 +41,7 @@ typedef struct _GstRtpQCELPDepayClass GstRtpQCELPDepayClass;
 
 struct _GstRtpQCELPDepay
 {
-  GstBaseRTPDepayload depayload;
+  GstRTPBaseDepayload depayload;
 
   gboolean interleaved;
   guint bundling;
@@ -50,7 +50,7 @@ struct _GstRtpQCELPDepay
 
 struct _GstRtpQCELPDepayClass
 {
-  GstBaseRTPDepayloadClass parent_class;
+  GstRTPBaseDepayloadClass parent_class;
 };
 
 GType gst_rtp_qcelp_depay_get_type (void);

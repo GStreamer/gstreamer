@@ -42,7 +42,7 @@ typedef struct _GstRtpSV3VDepayClass GstRtpSV3VDepayClass;
 
 struct _GstRtpSV3VDepay
 {
-  GstBaseRTPDepayload depayload;
+  GstRTPBaseDepayload depayload;
 
   GstAdapter *adapter;
 
@@ -55,7 +55,7 @@ struct _GstRtpSV3VDepay
 
 struct _GstRtpSV3VDepayClass
 {
-  GstBaseRTPDepayloadClass parent_class;
+  GstRTPBaseDepayloadClass parent_class;
 };
 
 GType gst_rtp_sv3v_depay_get_type (void);

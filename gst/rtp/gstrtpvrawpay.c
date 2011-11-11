@@ -66,23 +66,23 @@ GST_STATIC_PAD_TEMPLATE ("src",
     )
     );
 
-static gboolean gst_rtp_vraw_pay_setcaps (GstBaseRTPPayload * payload,
+static gboolean gst_rtp_vraw_pay_setcaps (GstRTPBasePayload * payload,
     GstCaps * caps);
-static GstFlowReturn gst_rtp_vraw_pay_handle_buffer (GstBaseRTPPayload *
+static GstFlowReturn gst_rtp_vraw_pay_handle_buffer (GstRTPBasePayload *
     payload, GstBuffer * buffer);
 
-G_DEFINE_TYPE (GstRtpVRawPay, gst_rtp_vraw_pay, GST_TYPE_BASE_RTP_PAYLOAD)
+G_DEFINE_TYPE (GstRtpVRawPay, gst_rtp_vraw_pay, GST_TYPE_RTP_BASE_PAYLOAD)
 
      static void gst_rtp_vraw_pay_class_init (GstRtpVRawPayClass * klass)
 {
-  GstBaseRTPPayloadClass *gstbasertppayload_class;
+  GstRTPBasePayloadClass *gstrtpbasepayload_class;
   GstElementClass *gstelement_class;
 
   gstelement_class = (GstElementClass *) klass;
-  gstbasertppayload_class = (GstBaseRTPPayloadClass *) klass;
+  gstrtpbasepayload_class = (GstRTPBasePayloadClass *) klass;
 
-  gstbasertppayload_class->set_caps = gst_rtp_vraw_pay_setcaps;
-  gstbasertppayload_class->handle_buffer = gst_rtp_vraw_pay_handle_buffer;
+  gstrtpbasepayload_class->set_caps = gst_rtp_vraw_pay_setcaps;
+  gstrtpbasepayload_class->handle_buffer = gst_rtp_vraw_pay_handle_buffer;
 
   gst_element_class_add_pad_template (gstelement_class,
       gst_static_pad_template_get (&gst_rtp_vraw_pay_src_template));
@@ -104,7 +104,7 @@ gst_rtp_vraw_pay_init (GstRtpVRawPay * rtpvrawpay)
 }
 
 static gboolean
-gst_rtp_vraw_pay_setcaps (GstBaseRTPPayload * payload, GstCaps * caps)
+gst_rtp_vraw_pay_setcaps (GstRTPBasePayload * payload, GstCaps * caps)
 {
   GstRtpVRawPay *rtpvrawpay;
   gboolean res;
@@ -203,14 +203,14 @@ gst_rtp_vraw_pay_setcaps (GstBaseRTPPayload * payload, GstCaps * caps)
   wstr = g_strdup_printf ("%d", GST_VIDEO_INFO_WIDTH (&info));
   hstr = g_strdup_printf ("%d", GST_VIDEO_INFO_HEIGHT (&info));
 
-  gst_base_rtp_payload_set_options (payload, "video", TRUE, "RAW", 90000);
+  gst_rtp_base_payload_set_options (payload, "video", TRUE, "RAW", 90000);
   if (info.flags & GST_VIDEO_FLAG_INTERLACED) {
-    res = gst_base_rtp_payload_set_outcaps (payload, "sampling", G_TYPE_STRING,
+    res = gst_rtp_base_payload_set_outcaps (payload, "sampling", G_TYPE_STRING,
         samplingstr, "depth", G_TYPE_STRING, depthstr, "width", G_TYPE_STRING,
         wstr, "height", G_TYPE_STRING, hstr, "colorimetry", G_TYPE_STRING,
         colorimetrystr, "interlace", G_TYPE_STRING, "true", NULL);
   } else {
-    res = gst_base_rtp_payload_set_outcaps (payload, "sampling", G_TYPE_STRING,
+    res = gst_rtp_base_payload_set_outcaps (payload, "sampling", G_TYPE_STRING,
         samplingstr, "depth", G_TYPE_STRING, depthstr, "width", G_TYPE_STRING,
         wstr, "height", G_TYPE_STRING, hstr, "colorimetry", G_TYPE_STRING,
         colorimetrystr, NULL);
@@ -234,7 +234,7 @@ unknown_format:
 }
 
 static GstFlowReturn
-gst_rtp_vraw_pay_handle_buffer (GstBaseRTPPayload * payload, GstBuffer * buffer)
+gst_rtp_vraw_pay_handle_buffer (GstRTPBasePayload * payload, GstBuffer * buffer)
 {
   GstRtpVRawPay *rtpvrawpay;
   GstFlowReturn ret = GST_FLOW_OK;
@@ -264,7 +264,7 @@ gst_rtp_vraw_pay_handle_buffer (GstBaseRTPPayload * payload, GstBuffer * buffer)
   ystride = GST_VIDEO_FRAME_COMP_STRIDE (&frame, 0);
   uvstride = GST_VIDEO_FRAME_COMP_STRIDE (&frame, 1);
 
-  mtu = GST_BASE_RTP_PAYLOAD_MTU (payload);
+  mtu = GST_RTP_BASE_PAYLOAD_MTU (payload);
 
   /* amount of bytes for one pixel */
   pgroup = rtpvrawpay->pgroup;
@@ -494,7 +494,7 @@ gst_rtp_vraw_pay_handle_buffer (GstBaseRTPPayload * payload, GstBuffer * buffer)
       }
 
       /* push buffer */
-      ret = gst_base_rtp_payload_push (payload, out);
+      ret = gst_rtp_base_payload_push (payload, out);
     }
 
   }

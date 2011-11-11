@@ -80,16 +80,16 @@ static GstStaticPadTemplate gst_rtp_h263p_depay_sink_template =
 
 #define gst_rtp_h263p_depay_parent_class parent_class
 G_DEFINE_TYPE (GstRtpH263PDepay, gst_rtp_h263p_depay,
-    GST_TYPE_BASE_RTP_DEPAYLOAD);
+    GST_TYPE_RTP_BASE_DEPAYLOAD);
 
 static void gst_rtp_h263p_depay_finalize (GObject * object);
 
 static GstStateChangeReturn gst_rtp_h263p_depay_change_state (GstElement *
     element, GstStateChange transition);
 
-static GstBuffer *gst_rtp_h263p_depay_process (GstBaseRTPDepayload * depayload,
+static GstBuffer *gst_rtp_h263p_depay_process (GstRTPBaseDepayload * depayload,
     GstBuffer * buf);
-gboolean gst_rtp_h263p_depay_setcaps (GstBaseRTPDepayload * filter,
+gboolean gst_rtp_h263p_depay_setcaps (GstRTPBaseDepayload * filter,
     GstCaps * caps);
 
 static void
@@ -97,11 +97,11 @@ gst_rtp_h263p_depay_class_init (GstRtpH263PDepayClass * klass)
 {
   GObjectClass *gobject_class;
   GstElementClass *gstelement_class;
-  GstBaseRTPDepayloadClass *gstbasertpdepayload_class;
+  GstRTPBaseDepayloadClass *gstrtpbasedepayload_class;
 
   gobject_class = (GObjectClass *) klass;
   gstelement_class = (GstElementClass *) klass;
-  gstbasertpdepayload_class = (GstBaseRTPDepayloadClass *) klass;
+  gstrtpbasedepayload_class = (GstRTPBaseDepayloadClass *) klass;
 
   gobject_class->finalize = gst_rtp_h263p_depay_finalize;
 
@@ -117,8 +117,8 @@ gst_rtp_h263p_depay_class_init (GstRtpH263PDepayClass * klass)
       "Extracts H263/+/++ video from RTP packets (RFC 4629)",
       "Wim Taymans <wim.taymans@gmail.com>");
 
-  gstbasertpdepayload_class->process = gst_rtp_h263p_depay_process;
-  gstbasertpdepayload_class->set_caps = gst_rtp_h263p_depay_setcaps;
+  gstrtpbasedepayload_class->process = gst_rtp_h263p_depay_process;
+  gstrtpbasedepayload_class->set_caps = gst_rtp_h263p_depay_setcaps;
 }
 
 static void
@@ -141,7 +141,7 @@ gst_rtp_h263p_depay_finalize (GObject * object)
 }
 
 gboolean
-gst_rtp_h263p_depay_setcaps (GstBaseRTPDepayload * filter, GstCaps * caps)
+gst_rtp_h263p_depay_setcaps (GstRTPBaseDepayload * filter, GstCaps * caps)
 {
   GstCaps *srccaps = NULL;
   GstStructure *structure = gst_caps_get_structure (caps, 0);
@@ -207,7 +207,7 @@ gst_rtp_h263p_depay_setcaps (GstBaseRTPDepayload * filter, GstCaps * caps)
   if (!srccaps)
     goto no_caps;
 
-  res = gst_pad_set_caps (GST_BASE_RTP_DEPAYLOAD_SRCPAD (filter), srccaps);
+  res = gst_pad_set_caps (GST_RTP_BASE_DEPAYLOAD_SRCPAD (filter), srccaps);
   gst_caps_unref (srccaps);
 
   return res;
@@ -226,7 +226,7 @@ no_caps:
 }
 
 static GstBuffer *
-gst_rtp_h263p_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
+gst_rtp_h263p_depay_process (GstRTPBaseDepayload * depayload, GstBuffer * buf)
 {
   GstRtpH263PDepay *rtph263pdepay;
   GstBuffer *outbuf;

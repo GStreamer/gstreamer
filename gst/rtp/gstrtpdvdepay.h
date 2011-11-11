@@ -41,7 +41,7 @@ typedef struct _GstRTPDVDepayClass GstRTPDVDepayClass;
 
 struct _GstRTPDVDepay
 {
-  GstBaseRTPDepayload parent;
+  GstRTPBaseDepayload parent;
 
   GstBuffer *acc;
   guint frame_size;
@@ -54,7 +54,7 @@ struct _GstRTPDVDepay
 
 struct _GstRTPDVDepayClass
 {
-  GstBaseRTPDepayloadClass parent_class;
+  GstRTPBaseDepayloadClass parent_class;
 };
 
 GType gst_rtp_dv_depay_get_type (void);

@@ -41,12 +41,12 @@ typedef struct _GstRTPSirenPayClass GstRTPSirenPayClass;
 
 struct _GstRTPSirenPay
 {
-  GstBaseRTPAudioPayload audiopayload;
+  GstRTPBaseAudioPayload audiopayload;
 };
 
 struct _GstRTPSirenPayClass
 {
-  GstBaseRTPAudioPayloadClass parent_class;
+  GstRTPBaseAudioPayloadClass parent_class;
 };
 
 GType gst_rtp_siren_pay_get_type (void);

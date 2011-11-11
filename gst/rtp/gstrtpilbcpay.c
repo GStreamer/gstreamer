@@ -48,26 +48,26 @@ GST_STATIC_PAD_TEMPLATE ("src",
     );
 
 
-static GstCaps *gst_rtp_ilbc_pay_sink_getcaps (GstBaseRTPPayload * payload,
+static GstCaps *gst_rtp_ilbc_pay_sink_getcaps (GstRTPBasePayload * payload,
     GstPad * pad, GstCaps * filter);
-static gboolean gst_rtp_ilbc_pay_sink_setcaps (GstBaseRTPPayload * payload,
+static gboolean gst_rtp_ilbc_pay_sink_setcaps (GstRTPBasePayload * payload,
     GstCaps * caps);
 
 #define gst_rtp_ilbc_pay_parent_class parent_class
 G_DEFINE_TYPE (GstRTPILBCPay, gst_rtp_ilbc_pay,
-    GST_TYPE_BASE_RTP_AUDIO_PAYLOAD);
+    GST_TYPE_RTP_BASE_AUDIO_PAYLOAD);
 
 static void
 gst_rtp_ilbc_pay_class_init (GstRTPILBCPayClass * klass)
 {
   GstElementClass *gstelement_class;
-  GstBaseRTPPayloadClass *gstbasertppayload_class;
+  GstRTPBasePayloadClass *gstrtpbasepayload_class;
 
   GST_DEBUG_CATEGORY_INIT (rtpilbcpay_debug, "rtpilbcpay", 0,
       "iLBC audio RTP payloader");
 
   gstelement_class = (GstElementClass *) klass;
-  gstbasertppayload_class = (GstBaseRTPPayloadClass *) klass;
+  gstrtpbasepayload_class = (GstRTPBasePayloadClass *) klass;
 
   gst_element_class_add_pad_template (gstelement_class,
       gst_static_pad_template_get (&gst_rtp_ilbc_pay_sink_template));
@@ -79,43 +79,43 @@ gst_rtp_ilbc_pay_class_init (GstRTPILBCPayClass * klass)
       "Packetize iLBC audio streams into RTP packets",
       "Philippe Kalaf <philippe.kalaf@collabora.co.uk>");
 
-  gstbasertppayload_class->set_caps = gst_rtp_ilbc_pay_sink_setcaps;
-  gstbasertppayload_class->get_caps = gst_rtp_ilbc_pay_sink_getcaps;
+  gstrtpbasepayload_class->set_caps = gst_rtp_ilbc_pay_sink_setcaps;
+  gstrtpbasepayload_class->get_caps = gst_rtp_ilbc_pay_sink_getcaps;
 }
 
 static void
 gst_rtp_ilbc_pay_init (GstRTPILBCPay * rtpilbcpay)
 {
-  GstBaseRTPPayload *basertppayload;
-  GstBaseRTPAudioPayload *basertpaudiopayload;
+  GstRTPBasePayload *rtpbasepayload;
+  GstRTPBaseAudioPayload *rtpbaseaudiopayload;
 
-  basertppayload = GST_BASE_RTP_PAYLOAD (rtpilbcpay);
-  basertpaudiopayload = GST_BASE_RTP_AUDIO_PAYLOAD (rtpilbcpay);
+  rtpbasepayload = GST_RTP_BASE_PAYLOAD (rtpilbcpay);
+  rtpbaseaudiopayload = GST_RTP_BASE_AUDIO_PAYLOAD (rtpilbcpay);
 
   /* we don't set the payload type, it should be set by the application using
    * the pt property or the default 96 will be used */
-  basertppayload->clock_rate = 8000;
+  rtpbasepayload->clock_rate = 8000;
 
   rtpilbcpay->mode = -1;
 
-  /* tell basertpaudiopayload that this is a frame based codec */
-  gst_base_rtp_audio_payload_set_frame_based (basertpaudiopayload);
+  /* tell rtpbaseaudiopayload that this is a frame based codec */
+  gst_rtp_base_audio_payload_set_frame_based (rtpbaseaudiopayload);
 }
 
 static gboolean
-gst_rtp_ilbc_pay_sink_setcaps (GstBaseRTPPayload * basertppayload,
+gst_rtp_ilbc_pay_sink_setcaps (GstRTPBasePayload * rtpbasepayload,
     GstCaps * caps)
 {
   GstRTPILBCPay *rtpilbcpay;
-  GstBaseRTPAudioPayload *basertpaudiopayload;
+  GstRTPBaseAudioPayload *rtpbaseaudiopayload;
   gboolean ret;
   gint mode;
   gchar *mode_str;
   GstStructure *structure;
   const char *payload_name;
 
-  rtpilbcpay = GST_RTP_ILBC_PAY (basertppayload);
-  basertpaudiopayload = GST_BASE_RTP_AUDIO_PAYLOAD (basertppayload);
+  rtpilbcpay = GST_RTP_ILBC_PAY (rtpbasepayload);
+  rtpbaseaudiopayload = GST_RTP_BASE_AUDIO_PAYLOAD (rtpbasepayload);
 
   structure = gst_caps_get_structure (caps, 0);
 
@@ -129,15 +129,15 @@ gst_rtp_ilbc_pay_sink_setcaps (GstBaseRTPPayload * basertppayload,
   if (mode != 20 && mode != 30)
     goto wrong_mode;
 
-  gst_base_rtp_payload_set_options (basertppayload, "audio", TRUE, "ILBC",
+  gst_rtp_base_payload_set_options (rtpbasepayload, "audio", TRUE, "ILBC",
       8000);
   /* set options for this frame based audio codec */
-  gst_base_rtp_audio_payload_set_frame_options (basertpaudiopayload,
+  gst_rtp_base_audio_payload_set_frame_options (rtpbaseaudiopayload,
       mode, mode == 30 ? 50 : 38);
 
   mode_str = g_strdup_printf ("%d", mode);
   ret =
-      gst_base_rtp_payload_set_outcaps (basertppayload, "mode", G_TYPE_STRING,
+      gst_rtp_base_payload_set_outcaps (rtpbasepayload, "mode", G_TYPE_STRING,
       mode_str, NULL);
   g_free (mode_str);
 
@@ -176,7 +176,7 @@ mode_changed:
 /* we return the padtemplate caps with the mode field fixated to a value if we
  * can */
 static GstCaps *
-gst_rtp_ilbc_pay_sink_getcaps (GstBaseRTPPayload * rtppayload, GstPad * pad,
+gst_rtp_ilbc_pay_sink_getcaps (GstRTPBasePayload * rtppayload, GstPad * pad,
     GstCaps * filter)
 {
   GstCaps *otherpadcaps;

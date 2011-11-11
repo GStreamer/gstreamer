@@ -36,12 +36,12 @@ typedef struct _GstRtpSPEEXDepayClass GstRtpSPEEXDepayClass;
 
 struct _GstRtpSPEEXDepay
 {
-  GstBaseRTPDepayload depayload;
+  GstRTPBaseDepayload depayload;
 };
 
 struct _GstRtpSPEEXDepayClass
 {
-  GstBaseRTPDepayloadClass parent_class;
+  GstRTPBaseDepayloadClass parent_class;
 };
 
 GType gst_rtp_speex_depay_get_type (void);

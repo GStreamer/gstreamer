@@ -41,7 +41,7 @@ typedef struct _GstRtpG722PayClass GstRtpG722PayClass;
 
 struct _GstRtpG722Pay
 {
-  GstBaseRTPAudioPayload payload;
+  GstRTPBaseAudioPayload payload;
 
   gint rate;
   gint channels;
@@ -49,7 +49,7 @@ struct _GstRtpG722Pay
 
 struct _GstRtpG722PayClass
 {
-  GstBaseRTPAudioPayloadClass parent_class;
+  GstRTPBaseAudioPayloadClass parent_class;
 };
 
 GType gst_rtp_g722_pay_get_type (void);

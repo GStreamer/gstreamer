@@ -53,25 +53,25 @@ static GstStaticPadTemplate gst_rtp_bv_pay_src_template =
     );
 
 
-static GstCaps *gst_rtp_bv_pay_sink_getcaps (GstBaseRTPPayload * payload,
+static GstCaps *gst_rtp_bv_pay_sink_getcaps (GstRTPBasePayload * payload,
     GstPad * pad, GstCaps * filter);
-static gboolean gst_rtp_bv_pay_sink_setcaps (GstBaseRTPPayload * payload,
+static gboolean gst_rtp_bv_pay_sink_setcaps (GstRTPBasePayload * payload,
     GstCaps * caps);
 
 #define gst_rtp_bv_pay_parent_class parent_class
-G_DEFINE_TYPE (GstRTPBVPay, gst_rtp_bv_pay, GST_TYPE_BASE_RTP_AUDIO_PAYLOAD);
+G_DEFINE_TYPE (GstRTPBVPay, gst_rtp_bv_pay, GST_TYPE_RTP_BASE_AUDIO_PAYLOAD);
 
 static void
 gst_rtp_bv_pay_class_init (GstRTPBVPayClass * klass)
 {
   GstElementClass *gstelement_class;
-  GstBaseRTPPayloadClass *gstbasertppayload_class;
+  GstRTPBasePayloadClass *gstrtpbasepayload_class;
 
   GST_DEBUG_CATEGORY_INIT (rtpbvpay_debug, "rtpbvpay", 0,
       "BroadcomVoice audio RTP payloader");
 
   gstelement_class = (GstElementClass *) klass;
-  gstbasertppayload_class = (GstBaseRTPPayloadClass *) klass;
+  gstrtpbasepayload_class = (GstRTPBasePayloadClass *) klass;
 
   gst_element_class_add_pad_template (gstelement_class,
       gst_static_pad_template_get (&gst_rtp_bv_pay_sink_template));
@@ -83,34 +83,34 @@ gst_rtp_bv_pay_class_init (GstRTPBVPayClass * klass)
       "Packetize BroadcomVoice audio streams into RTP packets (RFC 4298)",
       "Wim Taymans <wim.taymans@collabora.co.uk>");
 
-  gstbasertppayload_class->set_caps = gst_rtp_bv_pay_sink_setcaps;
-  gstbasertppayload_class->get_caps = gst_rtp_bv_pay_sink_getcaps;
+  gstrtpbasepayload_class->set_caps = gst_rtp_bv_pay_sink_setcaps;
+  gstrtpbasepayload_class->get_caps = gst_rtp_bv_pay_sink_getcaps;
 }
 
 static void
 gst_rtp_bv_pay_init (GstRTPBVPay * rtpbvpay)
 {
-  GstBaseRTPAudioPayload *basertpaudiopayload;
+  GstRTPBaseAudioPayload *rtpbaseaudiopayload;
 
-  basertpaudiopayload = GST_BASE_RTP_AUDIO_PAYLOAD (rtpbvpay);
+  rtpbaseaudiopayload = GST_RTP_BASE_AUDIO_PAYLOAD (rtpbvpay);
 
   rtpbvpay->mode = -1;
 
-  /* tell basertpaudiopayload that this is a frame based codec */
-  gst_base_rtp_audio_payload_set_frame_based (basertpaudiopayload);
+  /* tell rtpbaseaudiopayload that this is a frame based codec */
+  gst_rtp_base_audio_payload_set_frame_based (rtpbaseaudiopayload);
 }
 
 static gboolean
-gst_rtp_bv_pay_sink_setcaps (GstBaseRTPPayload * basertppayload, GstCaps * caps)
+gst_rtp_bv_pay_sink_setcaps (GstRTPBasePayload * rtpbasepayload, GstCaps * caps)
 {
   GstRTPBVPay *rtpbvpay;
-  GstBaseRTPAudioPayload *basertpaudiopayload;
+  GstRTPBaseAudioPayload *rtpbaseaudiopayload;
   gint mode;
   GstStructure *structure;
   const char *payload_name;
 
-  rtpbvpay = GST_RTP_BV_PAY (basertppayload);
-  basertpaudiopayload = GST_BASE_RTP_AUDIO_PAYLOAD (basertppayload);
+  rtpbvpay = GST_RTP_BV_PAY (rtpbasepayload);
+  rtpbaseaudiopayload = GST_RTP_BASE_AUDIO_PAYLOAD (rtpbasepayload);
 
   structure = gst_caps_get_structure (caps, 0);
 
@@ -125,17 +125,17 @@ gst_rtp_bv_pay_sink_setcaps (GstBaseRTPPayload * basertppayload, GstCaps * caps)
     goto wrong_mode;
 
   if (mode == 16) {
-    gst_base_rtp_payload_set_options (basertppayload, "audio", TRUE, "BV16",
+    gst_rtp_base_payload_set_options (rtpbasepayload, "audio", TRUE, "BV16",
         8000);
-    basertppayload->clock_rate = 8000;
+    rtpbasepayload->clock_rate = 8000;
   } else {
-    gst_base_rtp_payload_set_options (basertppayload, "audio", TRUE, "BV32",
+    gst_rtp_base_payload_set_options (rtpbasepayload, "audio", TRUE, "BV32",
         16000);
-    basertppayload->clock_rate = 16000;
+    rtpbasepayload->clock_rate = 16000;
   }
 
   /* set options for this frame based audio codec */
-  gst_base_rtp_audio_payload_set_frame_options (basertpaudiopayload,
+  gst_rtp_base_audio_payload_set_frame_options (rtpbaseaudiopayload,
       mode, mode == 16 ? 10 : 20);
 
   if (mode != rtpbvpay->mode && rtpbvpay->mode != -1)
@@ -173,7 +173,7 @@ mode_changed:
 /* we return the padtemplate caps with the mode field fixated to a value if we
  * can */
 static GstCaps *
-gst_rtp_bv_pay_sink_getcaps (GstBaseRTPPayload * rtppayload, GstPad * pad,
+gst_rtp_bv_pay_sink_getcaps (GstRTPBasePayload * rtppayload, GstPad * pad,
     GstCaps * filter)
 {
   GstCaps *otherpadcaps;

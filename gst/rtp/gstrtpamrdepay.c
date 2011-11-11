@@ -106,22 +106,22 @@ static GstStaticPadTemplate gst_rtp_amr_depay_src_template =
         "audio/AMR-WB, " "channels = (int) 1," "rate = (int) 16000")
     );
 
-static gboolean gst_rtp_amr_depay_setcaps (GstBaseRTPDepayload * depayload,
+static gboolean gst_rtp_amr_depay_setcaps (GstRTPBaseDepayload * depayload,
     GstCaps * caps);
-static GstBuffer *gst_rtp_amr_depay_process (GstBaseRTPDepayload * depayload,
+static GstBuffer *gst_rtp_amr_depay_process (GstRTPBaseDepayload * depayload,
     GstBuffer * buf);
 
 #define gst_rtp_amr_depay_parent_class parent_class
-G_DEFINE_TYPE (GstRtpAMRDepay, gst_rtp_amr_depay, GST_TYPE_BASE_RTP_DEPAYLOAD);
+G_DEFINE_TYPE (GstRtpAMRDepay, gst_rtp_amr_depay, GST_TYPE_RTP_BASE_DEPAYLOAD);
 
 static void
 gst_rtp_amr_depay_class_init (GstRtpAMRDepayClass * klass)
 {
   GstElementClass *gstelement_class;
-  GstBaseRTPDepayloadClass *gstbasertpdepayload_class;
+  GstRTPBaseDepayloadClass *gstrtpbasedepayload_class;
 
   gstelement_class = (GstElementClass *) klass;
-  gstbasertpdepayload_class = (GstBaseRTPDepayloadClass *) klass;
+  gstrtpbasedepayload_class = (GstRTPBaseDepayloadClass *) klass;
 
   gst_element_class_add_pad_template (gstelement_class,
       gst_static_pad_template_get (&gst_rtp_amr_depay_src_template));
@@ -133,8 +133,8 @@ gst_rtp_amr_depay_class_init (GstRtpAMRDepayClass * klass)
       "Extracts AMR or AMR-WB audio from RTP packets (RFC 3267)",
       "Wim Taymans <wim.taymans@gmail.com>");
 
-  gstbasertpdepayload_class->process = gst_rtp_amr_depay_process;
-  gstbasertpdepayload_class->set_caps = gst_rtp_amr_depay_setcaps;
+  gstrtpbasedepayload_class->process = gst_rtp_amr_depay_process;
+  gstrtpbasedepayload_class->set_caps = gst_rtp_amr_depay_setcaps;
 
   GST_DEBUG_CATEGORY_INIT (rtpamrdepay_debug, "rtpamrdepay", 0,
       "AMR/AMR-WB RTP Depayloader");
@@ -143,15 +143,15 @@ gst_rtp_amr_depay_class_init (GstRtpAMRDepayClass * klass)
 static void
 gst_rtp_amr_depay_init (GstRtpAMRDepay * rtpamrdepay)
 {
-  GstBaseRTPDepayload *depayload;
+  GstRTPBaseDepayload *depayload;
 
-  depayload = GST_BASE_RTP_DEPAYLOAD (rtpamrdepay);
+  depayload = GST_RTP_BASE_DEPAYLOAD (rtpamrdepay);
 
-  gst_pad_use_fixed_caps (GST_BASE_RTP_DEPAYLOAD_SRCPAD (depayload));
+  gst_pad_use_fixed_caps (GST_RTP_BASE_DEPAYLOAD_SRCPAD (depayload));
 }
 
 static gboolean
-gst_rtp_amr_depay_setcaps (GstBaseRTPDepayload * depayload, GstCaps * caps)
+gst_rtp_amr_depay_setcaps (GstRTPBaseDepayload * depayload, GstCaps * caps)
 {
   GstStructure *structure;
   GstCaps *srccaps;
@@ -241,7 +241,7 @@ gst_rtp_amr_depay_setcaps (GstBaseRTPDepayload * depayload, GstCaps * caps)
   srccaps = gst_caps_new_simple (type,
       "channels", G_TYPE_INT, rtpamrdepay->channels,
       "rate", G_TYPE_INT, clock_rate, NULL);
-  res = gst_pad_set_caps (GST_BASE_RTP_DEPAYLOAD_SRCPAD (depayload), srccaps);
+  res = gst_pad_set_caps (GST_RTP_BASE_DEPAYLOAD_SRCPAD (depayload), srccaps);
   gst_caps_unref (srccaps);
 
   return res;
@@ -266,7 +266,7 @@ static const gint wb_frame_size[16] = {
 };
 
 static GstBuffer *
-gst_rtp_amr_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
+gst_rtp_amr_depay_process (GstRTPBaseDepayload * depayload, GstBuffer * buf)
 {
   GstRtpAMRDepay *rtpamrdepay;
   const gint *frame_size;

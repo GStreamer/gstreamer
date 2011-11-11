@@ -65,22 +65,22 @@ GST_STATIC_PAD_TEMPLATE ("src",
         "clock-rate = (int) 90000, " "encoding-name = (string) \"X-GST\"")
     );
 
-static gboolean gst_rtp_gst_pay_setcaps (GstBaseRTPPayload * payload,
+static gboolean gst_rtp_gst_pay_setcaps (GstRTPBasePayload * payload,
     GstCaps * caps);
-static GstFlowReturn gst_rtp_gst_pay_handle_buffer (GstBaseRTPPayload * payload,
+static GstFlowReturn gst_rtp_gst_pay_handle_buffer (GstRTPBasePayload * payload,
     GstBuffer * buffer);
 
 #define gst_rtp_gst_pay_parent_class parent_class
-G_DEFINE_TYPE (GstRtpGSTPay, gst_rtp_gst_pay, GST_TYPE_BASE_RTP_PAYLOAD);
+G_DEFINE_TYPE (GstRtpGSTPay, gst_rtp_gst_pay, GST_TYPE_RTP_BASE_PAYLOAD);
 
 static void
 gst_rtp_gst_pay_class_init (GstRtpGSTPayClass * klass)
 {
   GstElementClass *gstelement_class;
-  GstBaseRTPPayloadClass *gstbasertppayload_class;
+  GstRTPBasePayloadClass *gstrtpbasepayload_class;
 
   gstelement_class = (GstElementClass *) klass;
-  gstbasertppayload_class = (GstBaseRTPPayloadClass *) klass;
+  gstrtpbasepayload_class = (GstRTPBasePayloadClass *) klass;
 
   gst_element_class_add_pad_template (gstelement_class,
       gst_static_pad_template_get (&gst_rtp_gst_pay_src_template));
@@ -92,8 +92,8 @@ gst_rtp_gst_pay_class_init (GstRtpGSTPayClass * klass)
       "Payload GStreamer buffers as RTP packets",
       "Wim Taymans <wim.taymans@gmail.com>");
 
-  gstbasertppayload_class->set_caps = gst_rtp_gst_pay_setcaps;
-  gstbasertppayload_class->handle_buffer = gst_rtp_gst_pay_handle_buffer;
+  gstrtpbasepayload_class->set_caps = gst_rtp_gst_pay_setcaps;
+  gstrtpbasepayload_class->handle_buffer = gst_rtp_gst_pay_handle_buffer;
 }
 
 static void
@@ -102,7 +102,7 @@ gst_rtp_gst_pay_init (GstRtpGSTPay * rtpgstpay)
 }
 
 static gboolean
-gst_rtp_gst_pay_setcaps (GstBaseRTPPayload * payload, GstCaps * caps)
+gst_rtp_gst_pay_setcaps (GstRTPBasePayload * payload, GstCaps * caps)
 {
   gboolean res;
   gchar *capsstr, *capsenc;
@@ -111,10 +111,10 @@ gst_rtp_gst_pay_setcaps (GstBaseRTPPayload * payload, GstCaps * caps)
   capsenc = g_base64_encode ((guchar *) capsstr, strlen (capsstr));
   g_free (capsstr);
 
-  gst_base_rtp_payload_set_options (payload, "application", TRUE, "X-GST",
+  gst_rtp_base_payload_set_options (payload, "application", TRUE, "X-GST",
       90000);
   res =
-      gst_base_rtp_payload_set_outcaps (payload, "caps", G_TYPE_STRING, capsenc,
+      gst_rtp_base_payload_set_outcaps (payload, "caps", G_TYPE_STRING, capsenc,
       NULL);
   g_free (capsenc);
 
@@ -122,7 +122,7 @@ gst_rtp_gst_pay_setcaps (GstBaseRTPPayload * payload, GstCaps * caps)
 }
 
 static GstFlowReturn
-gst_rtp_gst_pay_handle_buffer (GstBaseRTPPayload * basepayload,
+gst_rtp_gst_pay_handle_buffer (GstRTPBasePayload * basepayload,
     GstBuffer * buffer)
 {
   GstRtpGSTPay *rtpgstpay;
@@ -170,7 +170,7 @@ gst_rtp_gst_pay_handle_buffer (GstBaseRTPPayload * basepayload,
     packet_len = gst_rtp_buffer_calc_packet_len (8 + left, 0, 0);
 
     /* fill one MTU or all available bytes */
-    towrite = MIN (packet_len, GST_BASE_RTP_PAYLOAD_MTU (rtpgstpay));
+    towrite = MIN (packet_len, GST_RTP_BASE_PAYLOAD_MTU (rtpgstpay));
 
     /* this is the payload length */
     payload_len = gst_rtp_buffer_calc_payload_len (towrite, 0, 0);
@@ -204,7 +204,7 @@ gst_rtp_gst_pay_handle_buffer (GstBaseRTPPayload * basepayload,
 
     GST_BUFFER_TIMESTAMP (outbuf) = timestamp;
 
-    ret = gst_base_rtp_payload_push (basepayload, outbuf);
+    ret = gst_rtp_base_payload_push (basepayload, outbuf);
   }
   gst_buffer_unmap (buffer, data, size);
   gst_buffer_unref (buffer);

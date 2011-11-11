@@ -92,13 +92,13 @@ GST_STATIC_PAD_TEMPLATE ("sink",
     );
 
 #define gst_rtp_xqt_depay_parent_class parent_class
-G_DEFINE_TYPE (GstRtpXQTDepay, gst_rtp_xqt_depay, GST_TYPE_BASE_RTP_DEPAYLOAD);
+G_DEFINE_TYPE (GstRtpXQTDepay, gst_rtp_xqt_depay, GST_TYPE_RTP_BASE_DEPAYLOAD);
 
 static void gst_rtp_xqt_depay_finalize (GObject * object);
 
-static gboolean gst_rtp_xqt_depay_setcaps (GstBaseRTPDepayload * depayload,
+static gboolean gst_rtp_xqt_depay_setcaps (GstRTPBaseDepayload * depayload,
     GstCaps * caps);
-static GstBuffer *gst_rtp_xqt_depay_process (GstBaseRTPDepayload * depayload,
+static GstBuffer *gst_rtp_xqt_depay_process (GstRTPBaseDepayload * depayload,
     GstBuffer * buf);
 
 static GstStateChangeReturn gst_rtp_xqt_depay_change_state (GstElement *
@@ -110,11 +110,11 @@ gst_rtp_xqt_depay_class_init (GstRtpXQTDepayClass * klass)
 {
   GObjectClass *gobject_class;
   GstElementClass *gstelement_class;
-  GstBaseRTPDepayloadClass *gstbasertpdepayload_class;
+  GstRTPBaseDepayloadClass *gstrtpbasedepayload_class;
 
   gobject_class = (GObjectClass *) klass;
   gstelement_class = (GstElementClass *) klass;
-  gstbasertpdepayload_class = (GstBaseRTPDepayloadClass *) klass;
+  gstrtpbasedepayload_class = (GstRTPBaseDepayloadClass *) klass;
 
   parent_class = g_type_class_peek_parent (klass);
 
@@ -122,8 +122,8 @@ gst_rtp_xqt_depay_class_init (GstRtpXQTDepayClass * klass)
 
   gstelement_class->change_state = gst_rtp_xqt_depay_change_state;
 
-  gstbasertpdepayload_class->set_caps = gst_rtp_xqt_depay_setcaps;
-  gstbasertpdepayload_class->process = gst_rtp_xqt_depay_process;
+  gstrtpbasedepayload_class->set_caps = gst_rtp_xqt_depay_setcaps;
+  gstrtpbasedepayload_class->process = gst_rtp_xqt_depay_process;
 
   GST_DEBUG_CATEGORY_INIT (rtpxqtdepay_debug, "rtpxqtdepay", 0,
       "QT Media RTP Depayloader");
@@ -213,7 +213,7 @@ gst_rtp_quicktime_parse_sd (GstRtpXQTDepay * rtpxqtdepay, guint8 * data,
           caps = gst_caps_new_simple ("video/x-h264",
               "codec_data", GST_TYPE_BUFFER, buf, NULL);
           gst_buffer_unref (buf);
-          gst_pad_set_caps (GST_BASE_RTP_DEPAYLOAD (rtpxqtdepay)->srcpad, caps);
+          gst_pad_set_caps (GST_RTP_BASE_DEPAYLOAD (rtpxqtdepay)->srcpad, caps);
           gst_caps_unref (caps);
           break;
         }
@@ -235,7 +235,7 @@ too_short:
 }
 
 static gboolean
-gst_rtp_xqt_depay_setcaps (GstBaseRTPDepayload * depayload, GstCaps * caps)
+gst_rtp_xqt_depay_setcaps (GstRTPBaseDepayload * depayload, GstCaps * caps)
 {
   GstStructure *structure;
   gint clock_rate = 90000;      /* default */
@@ -249,7 +249,7 @@ gst_rtp_xqt_depay_setcaps (GstBaseRTPDepayload * depayload, GstCaps * caps)
 }
 
 static GstBuffer *
-gst_rtp_xqt_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
+gst_rtp_xqt_depay_process (GstRTPBaseDepayload * depayload, GstBuffer * buf)
 {
   GstRtpXQTDepay *rtpxqtdepay;
   GstBuffer *outbuf = NULL;
@@ -597,7 +597,7 @@ gst_rtp_xqt_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
           if (!s)
             GST_BUFFER_FLAG_SET (outbuf, GST_BUFFER_FLAG_DELTA_UNIT);
 
-          gst_base_rtp_depayload_push (depayload, outbuf);
+          gst_rtp_base_depayload_push (depayload, outbuf);
 
           /* aligned on 32 bit boundary */
           slen = GST_ROUND_UP_4 (slen);

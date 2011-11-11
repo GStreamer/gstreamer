@@ -128,15 +128,15 @@ gst_bs_parse_read (GstBsParse * bs, guint n)
 
 #define gst_rtp_mp4g_depay_parent_class parent_class
 G_DEFINE_TYPE (GstRtpMP4GDepay, gst_rtp_mp4g_depay,
-    GST_TYPE_BASE_RTP_DEPAYLOAD);
+    GST_TYPE_RTP_BASE_DEPAYLOAD);
 
 static void gst_rtp_mp4g_depay_finalize (GObject * object);
 
-static gboolean gst_rtp_mp4g_depay_setcaps (GstBaseRTPDepayload * depayload,
+static gboolean gst_rtp_mp4g_depay_setcaps (GstRTPBaseDepayload * depayload,
     GstCaps * caps);
-static GstBuffer *gst_rtp_mp4g_depay_process (GstBaseRTPDepayload * depayload,
+static GstBuffer *gst_rtp_mp4g_depay_process (GstRTPBaseDepayload * depayload,
     GstBuffer * buf);
-static gboolean gst_rtp_mp4g_depay_handle_event (GstBaseRTPDepayload * filter,
+static gboolean gst_rtp_mp4g_depay_handle_event (GstRTPBaseDepayload * filter,
     GstEvent * event);
 
 static GstStateChangeReturn gst_rtp_mp4g_depay_change_state (GstElement *
@@ -148,19 +148,19 @@ gst_rtp_mp4g_depay_class_init (GstRtpMP4GDepayClass * klass)
 {
   GObjectClass *gobject_class;
   GstElementClass *gstelement_class;
-  GstBaseRTPDepayloadClass *gstbasertpdepayload_class;
+  GstRTPBaseDepayloadClass *gstrtpbasedepayload_class;
 
   gobject_class = (GObjectClass *) klass;
   gstelement_class = (GstElementClass *) klass;
-  gstbasertpdepayload_class = (GstBaseRTPDepayloadClass *) klass;
+  gstrtpbasedepayload_class = (GstRTPBaseDepayloadClass *) klass;
 
   gobject_class->finalize = gst_rtp_mp4g_depay_finalize;
 
   gstelement_class->change_state = gst_rtp_mp4g_depay_change_state;
 
-  gstbasertpdepayload_class->process = gst_rtp_mp4g_depay_process;
-  gstbasertpdepayload_class->set_caps = gst_rtp_mp4g_depay_setcaps;
-  gstbasertpdepayload_class->handle_event = gst_rtp_mp4g_depay_handle_event;
+  gstrtpbasedepayload_class->process = gst_rtp_mp4g_depay_process;
+  gstrtpbasedepayload_class->set_caps = gst_rtp_mp4g_depay_setcaps;
+  gstrtpbasedepayload_class->handle_event = gst_rtp_mp4g_depay_handle_event;
 
   gst_element_class_add_pad_template (gstelement_class,
       gst_static_pad_template_get (&gst_rtp_mp4g_depay_src_template));
@@ -215,7 +215,7 @@ gst_rtp_mp4g_depay_parse_int (GstStructure * structure, const gchar * field,
 }
 
 static gboolean
-gst_rtp_mp4g_depay_setcaps (GstBaseRTPDepayload * depayload, GstCaps * caps)
+gst_rtp_mp4g_depay_setcaps (GstRTPBaseDepayload * depayload, GstCaps * caps)
 {
   GstStructure *structure;
   GstRtpMP4GDepay *rtpmp4gdepay;
@@ -348,7 +348,7 @@ gst_rtp_mp4g_depay_flush_queue (GstRtpMP4GDepay * rtpmp4gdepay)
     }
 
     GST_DEBUG_OBJECT (rtpmp4gdepay, "pushing AU_index %u", AU_index);
-    gst_base_rtp_depayload_push (GST_BASE_RTP_DEPAYLOAD (rtpmp4gdepay), outbuf);
+    gst_rtp_base_depayload_push (GST_RTP_BASE_DEPAYLOAD (rtpmp4gdepay), outbuf);
     rtpmp4gdepay->next_AU_index = AU_index + 1;
   }
 }
@@ -368,7 +368,7 @@ gst_rtp_mp4g_depay_queue (GstRtpMP4GDepay * rtpmp4gdepay, GstBuffer * outbuf)
 
     /* we received the expected packet, push it and flush as much as we can from
      * the queue */
-    gst_base_rtp_depayload_push (GST_BASE_RTP_DEPAYLOAD (rtpmp4gdepay), outbuf);
+    gst_rtp_base_depayload_push (GST_RTP_BASE_DEPAYLOAD (rtpmp4gdepay), outbuf);
     rtpmp4gdepay->next_AU_index++;
 
     while ((outbuf = g_queue_peek_head (rtpmp4gdepay->packets))) {
@@ -380,7 +380,7 @@ gst_rtp_mp4g_depay_queue (GstRtpMP4GDepay * rtpmp4gdepay, GstBuffer * outbuf)
         GST_DEBUG_OBJECT (rtpmp4gdepay, "pushing expected AU_index %u",
             AU_index);
         outbuf = g_queue_pop_head (rtpmp4gdepay->packets);
-        gst_base_rtp_depayload_push (GST_BASE_RTP_DEPAYLOAD (rtpmp4gdepay),
+        gst_rtp_base_depayload_push (GST_RTP_BASE_DEPAYLOAD (rtpmp4gdepay),
             outbuf);
         rtpmp4gdepay->next_AU_index++;
       } else {
@@ -419,7 +419,7 @@ gst_rtp_mp4g_depay_queue (GstRtpMP4GDepay * rtpmp4gdepay, GstBuffer * outbuf)
 }
 
 static GstBuffer *
-gst_rtp_mp4g_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
+gst_rtp_mp4g_depay_process (GstRTPBaseDepayload * depayload, GstBuffer * buf)
 {
   GstRtpMP4GDepay *rtpmp4gdepay;
   GstBuffer *outbuf = NULL;
@@ -718,7 +718,7 @@ short_payload:
 }
 
 static gboolean
-gst_rtp_mp4g_depay_handle_event (GstBaseRTPDepayload * filter, GstEvent * event)
+gst_rtp_mp4g_depay_handle_event (GstRTPBaseDepayload * filter, GstEvent * event)
 {
   gboolean ret;
   GstRtpMP4GDepay *rtpmp4gdepay;
@@ -734,7 +734,7 @@ gst_rtp_mp4g_depay_handle_event (GstBaseRTPDepayload * filter, GstEvent * event)
   }
 
   ret =
-      GST_BASE_RTP_DEPAYLOAD_CLASS (parent_class)->handle_event (filter, event);
+      GST_RTP_BASE_DEPAYLOAD_CLASS (parent_class)->handle_event (filter, event);
 
   return ret;
 }

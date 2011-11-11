@@ -42,12 +42,12 @@ typedef struct _GstRTPGSMPayClass GstRTPGSMPayClass;
 
 struct _GstRTPGSMPay
 {
-  GstBaseRTPPayload payload;
+  GstRTPBasePayload payload;
 };
 
 struct _GstRTPGSMPayClass
 {
-  GstBaseRTPPayloadClass parent_class;
+  GstRTPBasePayloadClass parent_class;
 };
 
 GType gst_rtp_gsm_pay_get_type (void);

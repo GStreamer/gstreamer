@@ -49,7 +49,7 @@ typedef enum
 
 struct _GstRTPDVPay
 {
-  GstBaseRTPPayload payload;
+  GstRTPBasePayload payload;
 
   gboolean negotiated;
   GstDVPayMode mode;
@@ -57,7 +57,7 @@ struct _GstRTPDVPay
 
 struct _GstRTPDVPayClass
 {
-  GstBaseRTPPayloadClass parent_class;
+  GstRTPBasePayloadClass parent_class;
 };
 
 GType gst_rtp_dv_pay_get_type (void);

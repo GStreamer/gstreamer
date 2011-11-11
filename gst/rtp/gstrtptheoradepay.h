@@ -47,7 +47,7 @@ typedef struct _GstRtpTheoraConfig {
 
 struct _GstRtpTheoraDepay
 {
-  GstBaseRTPDepayload parent;
+  GstRTPBaseDepayload parent;
 
   GList              *configs;
   GstRtpTheoraConfig *config;
@@ -60,7 +60,7 @@ struct _GstRtpTheoraDepay
 
 struct _GstRtpTheoraDepayClass
 {
-  GstBaseRTPDepayloadClass parent_class;
+  GstRTPBaseDepayloadClass parent_class;
 };
 
 GType gst_rtp_theora_depay_get_type (void);

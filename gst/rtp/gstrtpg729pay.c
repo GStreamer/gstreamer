@@ -44,9 +44,9 @@ GST_DEBUG_CATEGORY_STATIC (rtpg729pay_debug);
 #define G729_FRAME_DURATION_MS (10)
 
 static gboolean
-gst_rtp_g729_pay_set_caps (GstBaseRTPPayload * payload, GstCaps * caps);
+gst_rtp_g729_pay_set_caps (GstRTPBasePayload * payload, GstCaps * caps);
 static GstFlowReturn
-gst_rtp_g729_pay_handle_buffer (GstBaseRTPPayload * payload, GstBuffer * buf);
+gst_rtp_g729_pay_handle_buffer (GstRTPBasePayload * payload, GstBuffer * buf);
 
 static GstStateChangeReturn
 gst_rtp_g729_pay_change_state (GstElement * element, GstStateChange transition);
@@ -75,7 +75,7 @@ static GstStaticPadTemplate gst_rtp_g729_pay_src_template =
     );
 
 #define gst_rtp_g729_pay_parent_class parent_class
-G_DEFINE_TYPE (GstRTPG729Pay, gst_rtp_g729_pay, GST_TYPE_BASE_RTP_PAYLOAD);
+G_DEFINE_TYPE (GstRTPG729Pay, gst_rtp_g729_pay, GST_TYPE_RTP_BASE_PAYLOAD);
 
 static void
 gst_rtp_g729_pay_finalize (GObject * object)
@@ -92,7 +92,7 @@ gst_rtp_g729_pay_class_init (GstRTPG729PayClass * klass)
 {
   GObjectClass *gobject_class = (GObjectClass *) klass;
   GstElementClass *gstelement_class = (GstElementClass *) klass;
-  GstBaseRTPPayloadClass *payload_class = GST_BASE_RTP_PAYLOAD_CLASS (klass);
+  GstRTPBasePayloadClass *payload_class = GST_RTP_BASE_PAYLOAD_CLASS (klass);
 
   GST_DEBUG_CATEGORY_INIT (rtpg729pay_debug, "rtpg729pay", 0,
       "G.729 RTP Payloader");
@@ -118,10 +118,10 @@ gst_rtp_g729_pay_class_init (GstRTPG729PayClass * klass)
 static void
 gst_rtp_g729_pay_init (GstRTPG729Pay * pay)
 {
-  GstBaseRTPPayload *payload = GST_BASE_RTP_PAYLOAD (pay);
+  GstRTPBasePayload *payload = GST_RTP_BASE_PAYLOAD (pay);
 
   payload->pt = GST_RTP_PAYLOAD_G729;
-  gst_base_rtp_payload_set_options (payload, "audio", FALSE, "G729", 8000);
+  gst_rtp_base_payload_set_options (payload, "audio", FALSE, "G729", 8000);
 
   pay->adapter = gst_adapter_new ();
 }
@@ -137,7 +137,7 @@ gst_rtp_g729_pay_reset (GstRTPG729Pay * pay)
 }
 
 static gboolean
-gst_rtp_g729_pay_set_caps (GstBaseRTPPayload * payload, GstCaps * caps)
+gst_rtp_g729_pay_set_caps (GstRTPBasePayload * payload, GstCaps * caps)
 {
   gboolean res;
   GstStructure *structure;
@@ -150,7 +150,7 @@ gst_rtp_g729_pay_set_caps (GstBaseRTPPayload * payload, GstCaps * caps)
   payload->pt = pt;
   payload->dynamic = pt != GST_RTP_PAYLOAD_G729;
 
-  res = gst_base_rtp_payload_set_outcaps (payload, NULL);
+  res = gst_rtp_base_payload_set_outcaps (payload, NULL);
 
   return res;
 }
@@ -159,7 +159,7 @@ static GstFlowReturn
 gst_rtp_g729_pay_push (GstRTPG729Pay * rtpg729pay,
     const guint8 * data, guint payload_len)
 {
-  GstBaseRTPPayload *basepayload;
+  GstRTPBasePayload *basepayload;
   GstClockTime duration;
   guint frames;
   GstBuffer *outbuf;
@@ -167,7 +167,7 @@ gst_rtp_g729_pay_push (GstRTPG729Pay * rtpg729pay,
   GstFlowReturn ret;
   GstRTPBuffer rtp = { NULL };
 
-  basepayload = GST_BASE_RTP_PAYLOAD (rtpg729pay);
+  basepayload = GST_RTP_BASE_PAYLOAD (rtpg729pay);
 
   GST_DEBUG_OBJECT (rtpg729pay, "Pushing %d bytes ts %" GST_TIME_FORMAT,
       payload_len, GST_TIME_ARGS (rtpg729pay->next_ts));
@@ -199,7 +199,7 @@ gst_rtp_g729_pay_push (GstRTPG729Pay * rtpg729pay,
   }
   gst_rtp_buffer_unmap (&rtp);
 
-  ret = gst_base_rtp_payload_push (basepayload, outbuf);
+  ret = gst_rtp_base_payload_push (basepayload, outbuf);
 
   return ret;
 }
@@ -223,7 +223,7 @@ gst_rtp_g729_pay_recalc_rtp_time (GstRTPG729Pay * rtpg729pay, GstClockTime time)
 }
 
 static GstFlowReturn
-gst_rtp_g729_pay_handle_buffer (GstBaseRTPPayload * payload, GstBuffer * buf)
+gst_rtp_g729_pay_handle_buffer (GstRTPBasePayload * payload, GstBuffer * buf)
 {
   GstFlowReturn ret = GST_FLOW_OK;
   GstRTPG729Pay *rtpg729pay = GST_RTP_G729_PAY (payload);
@@ -261,7 +261,7 @@ gst_rtp_g729_pay_handle_buffer (GstBaseRTPPayload * payload, GstBuffer * buf)
 
   max_payload_len = MIN (
       /* MTU max */
-      (int) (gst_rtp_buffer_calc_payload_len (GST_BASE_RTP_PAYLOAD_MTU
+      (int) (gst_rtp_buffer_calc_payload_len (GST_RTP_BASE_PAYLOAD_MTU
               (payload), 0, 0) / G729_FRAME_SIZE)
       * G729_FRAME_SIZE,
       /* ptime max */

@@ -42,14 +42,14 @@ typedef struct _GstRtpMP4VDepayClass GstRtpMP4VDepayClass;
 
 struct _GstRtpMP4VDepay
 {
-  GstBaseRTPDepayload depayload;
+  GstRTPBaseDepayload depayload;
   
   GstAdapter *adapter;
 };
 
 struct _GstRtpMP4VDepayClass
 {
-  GstBaseRTPDepayloadClass parent_class;
+  GstRTPBaseDepayloadClass parent_class;
 };
 
 GType gst_rtp_mp4v_depay_get_type (void);

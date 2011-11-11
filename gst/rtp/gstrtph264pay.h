@@ -49,7 +49,7 @@ typedef struct _GstRtpH264PayClass GstRtpH264PayClass;
 
 struct _GstRtpH264Pay
 {
-  GstBaseRTPPayload payload;
+  GstRTPBasePayload payload;
 
   guint profile;
   GList *sps, *pps;
@@ -74,7 +74,7 @@ struct _GstRtpH264Pay
 
 struct _GstRtpH264PayClass
 {
-  GstBaseRTPPayloadClass parent_class;
+  GstRTPBasePayloadClass parent_class;
 };
 
 GType gst_rtp_h264_pay_get_type (void);

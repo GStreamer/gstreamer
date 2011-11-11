@@ -44,7 +44,7 @@ typedef struct _GstRtpMPARobustDepayClass GstRtpMPARobustDepayClass;
 
 struct _GstRtpMPARobustDepay
 {
-  GstBaseRTPDepayload depayload;
+  GstRTPBaseDepayload depayload;
 
   GstAdapter *adapter;
   gboolean    has_descriptor;
@@ -66,7 +66,7 @@ struct _GstRtpMPARobustDepay
 
 struct _GstRtpMPARobustDepayClass
 {
-  GstBaseRTPDepayloadClass parent_class;
+  GstRTPBaseDepayloadClass parent_class;
 };
 
 GType gst_rtp_mpa_robust_depay_get_type (void);

@@ -69,11 +69,11 @@ static GstStaticPadTemplate gst_rtp_mp2t_depay_sink_template =
     );
 
 G_DEFINE_TYPE (GstRtpMP2TDepay, gst_rtp_mp2t_depay,
-    GST_TYPE_BASE_RTP_DEPAYLOAD);
+    GST_TYPE_RTP_BASE_DEPAYLOAD);
 
-static gboolean gst_rtp_mp2t_depay_setcaps (GstBaseRTPDepayload * depayload,
+static gboolean gst_rtp_mp2t_depay_setcaps (GstRTPBaseDepayload * depayload,
     GstCaps * caps);
-static GstBuffer *gst_rtp_mp2t_depay_process (GstBaseRTPDepayload * depayload,
+static GstBuffer *gst_rtp_mp2t_depay_process (GstRTPBaseDepayload * depayload,
     GstBuffer * buf);
 
 static void gst_rtp_mp2t_depay_set_property (GObject * object, guint prop_id,
@@ -86,14 +86,14 @@ gst_rtp_mp2t_depay_class_init (GstRtpMP2TDepayClass * klass)
 {
   GObjectClass *gobject_class;
   GstElementClass *gstelement_class;
-  GstBaseRTPDepayloadClass *gstbasertpdepayload_class;
+  GstRTPBaseDepayloadClass *gstrtpbasedepayload_class;
 
   gobject_class = (GObjectClass *) klass;
   gstelement_class = (GstElementClass *) klass;
-  gstbasertpdepayload_class = (GstBaseRTPDepayloadClass *) klass;
+  gstrtpbasedepayload_class = (GstRTPBaseDepayloadClass *) klass;
 
-  gstbasertpdepayload_class->process = gst_rtp_mp2t_depay_process;
-  gstbasertpdepayload_class->set_caps = gst_rtp_mp2t_depay_setcaps;
+  gstrtpbasedepayload_class->process = gst_rtp_mp2t_depay_process;
+  gstrtpbasedepayload_class->set_caps = gst_rtp_mp2t_depay_setcaps;
 
   gobject_class->set_property = gst_rtp_mp2t_depay_set_property;
   gobject_class->get_property = gst_rtp_mp2t_depay_get_property;
@@ -124,7 +124,7 @@ gst_rtp_mp2t_depay_init (GstRtpMP2TDepay * rtpmp2tdepay)
 }
 
 static gboolean
-gst_rtp_mp2t_depay_setcaps (GstBaseRTPDepayload * depayload, GstCaps * caps)
+gst_rtp_mp2t_depay_setcaps (GstRTPBaseDepayload * depayload, GstCaps * caps)
 {
   GstCaps *srccaps;
   GstStructure *structure;
@@ -139,14 +139,14 @@ gst_rtp_mp2t_depay_setcaps (GstBaseRTPDepayload * depayload, GstCaps * caps)
   srccaps = gst_caps_new_simple ("video/mpegts",
       "packetsize", G_TYPE_INT, 188,
       "systemstream", G_TYPE_BOOLEAN, TRUE, NULL);
-  res = gst_pad_set_caps (GST_BASE_RTP_DEPAYLOAD_SRCPAD (depayload), srccaps);
+  res = gst_pad_set_caps (GST_RTP_BASE_DEPAYLOAD_SRCPAD (depayload), srccaps);
   gst_caps_unref (srccaps);
 
   return res;
 }
 
 static GstBuffer *
-gst_rtp_mp2t_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
+gst_rtp_mp2t_depay_process (GstRTPBaseDepayload * depayload, GstBuffer * buf)
 {
   GstRtpMP2TDepay *rtpmp2tdepay;
   GstBuffer *outbuf;

@@ -42,7 +42,7 @@ typedef struct _GstRtpJ2KDepayClass GstRtpJ2KDepayClass;
 
 struct _GstRtpJ2KDepay
 {
-  GstBaseRTPDepayload depayload;
+  GstRTPBaseDepayload depayload;
 
   guint64 last_rtptime;
   guint last_mh_id;
@@ -64,7 +64,7 @@ struct _GstRtpJ2KDepay
 
 struct _GstRtpJ2KDepayClass
 {
-  GstBaseRTPDepayloadClass parent_class;
+  GstRTPBaseDepayloadClass parent_class;
 };
 
 GType gst_rtp_j2k_depay_get_type (void);

@@ -37,7 +37,7 @@ typedef struct _GstRtpG726DepayClass GstRtpG726DepayClass;
 
 struct _GstRtpG726Depay
 {
-  GstBaseRTPDepayload depayload;
+  GstRTPBaseDepayload depayload;
 
   gboolean aal2;
   gboolean force_aal2;
@@ -46,7 +46,7 @@ struct _GstRtpG726Depay
 
 struct _GstRtpG726DepayClass
 {
-  GstBaseRTPDepayloadClass parent_class;
+  GstRTPBaseDepayloadClass parent_class;
 };
 
 GType gst_rtp_g726_depay_get_type (void);

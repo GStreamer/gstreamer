@@ -101,34 +101,34 @@ static void gst_rtp_h263p_pay_set_property (GObject * object, guint prop_id,
 static void gst_rtp_h263p_pay_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 
-static gboolean gst_rtp_h263p_pay_setcaps (GstBaseRTPPayload * payload,
+static gboolean gst_rtp_h263p_pay_setcaps (GstRTPBasePayload * payload,
     GstCaps * caps);
-static GstCaps *gst_rtp_h263p_pay_sink_getcaps (GstBaseRTPPayload * payload,
+static GstCaps *gst_rtp_h263p_pay_sink_getcaps (GstRTPBasePayload * payload,
     GstPad * pad, GstCaps * filter);
-static GstFlowReturn gst_rtp_h263p_pay_handle_buffer (GstBaseRTPPayload *
+static GstFlowReturn gst_rtp_h263p_pay_handle_buffer (GstRTPBasePayload *
     payload, GstBuffer * buffer);
 
 #define gst_rtp_h263p_pay_parent_class parent_class
-G_DEFINE_TYPE (GstRtpH263PPay, gst_rtp_h263p_pay, GST_TYPE_BASE_RTP_PAYLOAD);
+G_DEFINE_TYPE (GstRtpH263PPay, gst_rtp_h263p_pay, GST_TYPE_RTP_BASE_PAYLOAD);
 
 static void
 gst_rtp_h263p_pay_class_init (GstRtpH263PPayClass * klass)
 {
   GObjectClass *gobject_class;
   GstElementClass *gstelement_class;
-  GstBaseRTPPayloadClass *gstbasertppayload_class;
+  GstRTPBasePayloadClass *gstrtpbasepayload_class;
 
   gobject_class = (GObjectClass *) klass;
   gstelement_class = (GstElementClass *) klass;
-  gstbasertppayload_class = (GstBaseRTPPayloadClass *) klass;
+  gstrtpbasepayload_class = (GstRTPBasePayloadClass *) klass;
 
   gobject_class->finalize = gst_rtp_h263p_pay_finalize;
   gobject_class->set_property = gst_rtp_h263p_pay_set_property;
   gobject_class->get_property = gst_rtp_h263p_pay_get_property;
 
-  gstbasertppayload_class->set_caps = gst_rtp_h263p_pay_setcaps;
-  gstbasertppayload_class->get_caps = gst_rtp_h263p_pay_sink_getcaps;
-  gstbasertppayload_class->handle_buffer = gst_rtp_h263p_pay_handle_buffer;
+  gstrtpbasepayload_class->set_caps = gst_rtp_h263p_pay_setcaps;
+  gstrtpbasepayload_class->get_caps = gst_rtp_h263p_pay_sink_getcaps;
+  gstrtpbasepayload_class->handle_buffer = gst_rtp_h263p_pay_handle_buffer;
 
   g_object_class_install_property (G_OBJECT_CLASS (klass),
       PROP_FRAGMENTATION_MODE, g_param_spec_enum ("fragmentation-mode",
@@ -173,7 +173,7 @@ gst_rtp_h263p_pay_finalize (GObject * object)
 }
 
 static gboolean
-gst_rtp_h263p_pay_setcaps (GstBaseRTPPayload * payload, GstCaps * caps)
+gst_rtp_h263p_pay_setcaps (GstRTPBasePayload * payload, GstCaps * caps)
 {
   gboolean res;
   GstCaps *peercaps;
@@ -182,10 +182,10 @@ gst_rtp_h263p_pay_setcaps (GstBaseRTPPayload * payload, GstCaps * caps)
   g_return_val_if_fail (gst_caps_is_fixed (caps), FALSE);
 
   peercaps =
-      gst_pad_peer_get_caps (GST_BASE_RTP_PAYLOAD_SRCPAD (payload), NULL);
+      gst_pad_peer_get_caps (GST_RTP_BASE_PAYLOAD_SRCPAD (payload), NULL);
   if (peercaps) {
     GstCaps *intersect = gst_caps_intersect (peercaps,
-        gst_pad_get_pad_template_caps (GST_BASE_RTP_PAYLOAD_SRCPAD (payload)));
+        gst_pad_get_pad_template_caps (GST_RTP_BASE_PAYLOAD_SRCPAD (payload)));
 
     gst_caps_unref (peercaps);
     if (!gst_caps_is_empty (intersect)) {
@@ -198,9 +198,9 @@ gst_rtp_h263p_pay_setcaps (GstBaseRTPPayload * payload, GstCaps * caps)
   if (!encoding_name)
     encoding_name = g_strdup ("H263-1998");
 
-  gst_base_rtp_payload_set_options (payload, "video", TRUE,
+  gst_rtp_base_payload_set_options (payload, "video", TRUE,
       (gchar *) encoding_name, 90000);
-  res = gst_base_rtp_payload_set_outcaps (payload, NULL);
+  res = gst_rtp_base_payload_set_outcaps (payload, NULL);
   g_free (encoding_name);
 
   return res;
@@ -229,7 +229,7 @@ caps_append (GstCaps * caps, GstStructure * in_s, guint x, guint y, guint mpi)
 
 
 static GstCaps *
-gst_rtp_h263p_pay_sink_getcaps (GstBaseRTPPayload * payload, GstPad * pad,
+gst_rtp_h263p_pay_sink_getcaps (GstRTPBasePayload * payload, GstPad * pad,
     GstCaps * filter)
 {
   GstRtpH263PPay *rtph263ppay;
@@ -241,14 +241,14 @@ gst_rtp_h263p_pay_sink_getcaps (GstBaseRTPPayload * payload, GstPad * pad,
   rtph263ppay = GST_RTP_H263P_PAY (payload);
 
   peercaps =
-      gst_pad_peer_get_caps (GST_BASE_RTP_PAYLOAD_SRCPAD (payload), filter);
+      gst_pad_peer_get_caps (GST_RTP_BASE_PAYLOAD_SRCPAD (payload), filter);
   if (!peercaps)
     return
         gst_caps_copy (gst_pad_get_pad_template_caps
-        (GST_BASE_RTP_PAYLOAD_SINKPAD (payload)));
+        (GST_RTP_BASE_PAYLOAD_SINKPAD (payload)));
 
   intersect = gst_caps_intersect (peercaps,
-      gst_pad_get_pad_template_caps (GST_BASE_RTP_PAYLOAD_SRCPAD (payload)));
+      gst_pad_get_pad_template_caps (GST_RTP_BASE_PAYLOAD_SRCPAD (payload)));
   gst_caps_unref (peercaps);
 
   if (gst_caps_is_empty (intersect))
@@ -686,7 +686,7 @@ gst_rtp_h263p_pay_flush (GstRtpH263PPay * rtph263ppay)
     header_len = (fragmented && !found_gob) ? 2 : 0;
 
     towrite = MIN (avail, gst_rtp_buffer_calc_payload_len
-        (GST_BASE_RTP_PAYLOAD_MTU (rtph263ppay) - header_len, 0, 0));
+        (GST_RTP_BASE_PAYLOAD_MTU (rtph263ppay) - header_len, 0, 0));
 
     if (next_gop > 0)
       towrite = MIN (next_gop, towrite);
@@ -720,7 +720,7 @@ gst_rtp_h263p_pay_flush (GstRtpH263PPay * rtph263ppay)
     gst_adapter_flush (rtph263ppay->adapter, towrite);
 
     ret =
-        gst_base_rtp_payload_push (GST_BASE_RTP_PAYLOAD (rtph263ppay), outbuf);
+        gst_rtp_base_payload_push (GST_RTP_BASE_PAYLOAD (rtph263ppay), outbuf);
 
     avail -= towrite;
     fragmented = TRUE;
@@ -730,7 +730,7 @@ gst_rtp_h263p_pay_flush (GstRtpH263PPay * rtph263ppay)
 }
 
 static GstFlowReturn
-gst_rtp_h263p_pay_handle_buffer (GstBaseRTPPayload * payload,
+gst_rtp_h263p_pay_handle_buffer (GstRTPBasePayload * payload,
     GstBuffer * buffer)
 {
   GstRtpH263PPay *rtph263ppay;

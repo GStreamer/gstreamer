@@ -41,12 +41,12 @@ typedef struct _GstRtpMPADepayClass GstRtpMPADepayClass;
 
 struct _GstRtpMPADepay
 {
-  GstBaseRTPDepayload depayload;
+  GstRTPBaseDepayload depayload;
 };
 
 struct _GstRtpMPADepayClass
 {
-  GstBaseRTPDepayloadClass parent_class;
+  GstRTPBaseDepayloadClass parent_class;
 };
 
 GType gst_rtp_mpa_depay_get_type (void);

@@ -42,7 +42,7 @@ typedef struct _GstRtpH263PDepayClass GstRtpH263PDepayClass;
 
 struct _GstRtpH263PDepay
 {
-  GstBaseRTPDepayload depayload;
+  GstRTPBaseDepayload depayload;
 
   GstAdapter *adapter;
   gboolean    wait_start;
@@ -50,7 +50,7 @@ struct _GstRtpH263PDepay
 
 struct _GstRtpH263PDepayClass
 {
-  GstBaseRTPDepayloadClass parent_class;
+  GstRTPBaseDepayloadClass parent_class;
 };
 
 GType gst_rtp_h263p_depay_get_type (void);

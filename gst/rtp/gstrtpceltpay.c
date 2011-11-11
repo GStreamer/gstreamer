@@ -55,29 +55,29 @@ static void gst_rtp_celt_pay_finalize (GObject * object);
 static GstStateChangeReturn gst_rtp_celt_pay_change_state (GstElement *
     element, GstStateChange transition);
 
-static gboolean gst_rtp_celt_pay_setcaps (GstBaseRTPPayload * payload,
+static gboolean gst_rtp_celt_pay_setcaps (GstRTPBasePayload * payload,
     GstCaps * caps);
-static GstCaps *gst_rtp_celt_pay_getcaps (GstBaseRTPPayload * payload,
+static GstCaps *gst_rtp_celt_pay_getcaps (GstRTPBasePayload * payload,
     GstPad * pad, GstCaps * filter);
-static GstFlowReturn gst_rtp_celt_pay_handle_buffer (GstBaseRTPPayload *
+static GstFlowReturn gst_rtp_celt_pay_handle_buffer (GstRTPBasePayload *
     payload, GstBuffer * buffer);
 
 #define gst_rtp_celt_pay_parent_class parent_class
-G_DEFINE_TYPE (GstRtpCELTPay, gst_rtp_celt_pay, GST_TYPE_BASE_RTP_PAYLOAD);
+G_DEFINE_TYPE (GstRtpCELTPay, gst_rtp_celt_pay, GST_TYPE_RTP_BASE_PAYLOAD);
 
 static void
 gst_rtp_celt_pay_class_init (GstRtpCELTPayClass * klass)
 {
   GObjectClass *gobject_class;
   GstElementClass *gstelement_class;
-  GstBaseRTPPayloadClass *gstbasertppayload_class;
+  GstRTPBasePayloadClass *gstrtpbasepayload_class;
 
   GST_DEBUG_CATEGORY_INIT (rtpceltpay_debug, "rtpceltpay", 0,
       "CELT RTP Payloader");
 
   gobject_class = (GObjectClass *) klass;
   gstelement_class = (GstElementClass *) klass;
-  gstbasertppayload_class = (GstBaseRTPPayloadClass *) klass;
+  gstrtpbasepayload_class = (GstRTPBasePayloadClass *) klass;
 
   gobject_class->finalize = gst_rtp_celt_pay_finalize;
 
@@ -93,9 +93,9 @@ gst_rtp_celt_pay_class_init (GstRtpCELTPayClass * klass)
       "Payload-encodes CELT audio into a RTP packet",
       "Wim Taymans <wim.taymans@gmail.com>");
 
-  gstbasertppayload_class->set_caps = gst_rtp_celt_pay_setcaps;
-  gstbasertppayload_class->get_caps = gst_rtp_celt_pay_getcaps;
-  gstbasertppayload_class->handle_buffer = gst_rtp_celt_pay_handle_buffer;
+  gstrtpbasepayload_class->set_caps = gst_rtp_celt_pay_setcaps;
+  gstrtpbasepayload_class->get_caps = gst_rtp_celt_pay_getcaps;
+  gstrtpbasepayload_class->handle_buffer = gst_rtp_celt_pay_handle_buffer;
 }
 
 static void
@@ -149,7 +149,7 @@ gst_rtp_celt_pay_add_queued (GstRtpCELTPay * rtpceltpay, GstBuffer * buffer,
 }
 
 static gboolean
-gst_rtp_celt_pay_setcaps (GstBaseRTPPayload * payload, GstCaps * caps)
+gst_rtp_celt_pay_setcaps (GstRTPBasePayload * payload, GstCaps * caps)
 {
   /* don't configure yet, we wait for the ident packet */
   return TRUE;
@@ -157,7 +157,7 @@ gst_rtp_celt_pay_setcaps (GstBaseRTPPayload * payload, GstCaps * caps)
 
 
 static GstCaps *
-gst_rtp_celt_pay_getcaps (GstBaseRTPPayload * payload, GstPad * pad,
+gst_rtp_celt_pay_getcaps (GstRTPBasePayload * payload, GstPad * pad,
     GstCaps * filter)
 {
   GstCaps *otherpadcaps;
@@ -202,7 +202,7 @@ gst_rtp_celt_pay_parse_ident (GstRtpCELTPay * rtpceltpay,
 {
   guint32 version, header_size, rate, nb_channels, frame_size, overlap;
   guint32 bytes_per_packet;
-  GstBaseRTPPayload *payload;
+  GstRTPBasePayload *payload;
   gchar *cstr, *fsstr;
   gboolean res;
 
@@ -249,12 +249,12 @@ gst_rtp_celt_pay_parse_ident (GstRtpCELTPay * rtpceltpay,
   GST_DEBUG_OBJECT (rtpceltpay, "overlap %d, bytes_per_packet %d",
       overlap, bytes_per_packet);
 
-  payload = GST_BASE_RTP_PAYLOAD (rtpceltpay);
+  payload = GST_RTP_BASE_PAYLOAD (rtpceltpay);
 
-  gst_base_rtp_payload_set_options (payload, "audio", FALSE, "CELT", rate);
+  gst_rtp_base_payload_set_options (payload, "audio", FALSE, "CELT", rate);
   cstr = g_strdup_printf ("%d", nb_channels);
   fsstr = g_strdup_printf ("%d", frame_size);
-  res = gst_base_rtp_payload_set_outcaps (payload, "encoding-params",
+  res = gst_rtp_base_payload_set_outcaps (payload, "encoding-params",
       G_TYPE_STRING, cstr, "frame-size", G_TYPE_STRING, fsstr, NULL);
   g_free (cstr);
   g_free (fsstr);
@@ -354,13 +354,13 @@ gst_rtp_celt_pay_flush_queued (GstRtpCELTPay * rtpceltpay)
   rtpceltpay->sbytes = 0;
   rtpceltpay->qduration = 0;
 
-  ret = gst_base_rtp_payload_push (GST_BASE_RTP_PAYLOAD (rtpceltpay), outbuf);
+  ret = gst_rtp_base_payload_push (GST_RTP_BASE_PAYLOAD (rtpceltpay), outbuf);
 
   return ret;
 }
 
 static GstFlowReturn
-gst_rtp_celt_pay_handle_buffer (GstBaseRTPPayload * basepayload,
+gst_rtp_celt_pay_handle_buffer (GstRTPBasePayload * basepayload,
     GstBuffer * buffer)
 {
   GstFlowReturn ret;
@@ -415,7 +415,7 @@ gst_rtp_celt_pay_handle_buffer (GstBaseRTPPayload * basepayload,
 
   packet_len = gst_rtp_buffer_calc_packet_len (payload_len, 0, 0);
 
-  if (gst_base_rtp_payload_is_filled (basepayload, packet_len, packet_dur)) {
+  if (gst_rtp_base_payload_is_filled (basepayload, packet_len, packet_dur)) {
     /* size or duration would overflow the packet, flush the queued data */
     ret = gst_rtp_celt_pay_flush_queued (rtpceltpay);
   }

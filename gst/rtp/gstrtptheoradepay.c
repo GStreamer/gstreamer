@@ -62,13 +62,13 @@ GST_STATIC_PAD_TEMPLATE ("src",
 
 #define gst_rtp_theora_depay_parent_class parent_class
 G_DEFINE_TYPE (GstRtpTheoraDepay, gst_rtp_theora_depay,
-    GST_TYPE_BASE_RTP_DEPAYLOAD);
+    GST_TYPE_RTP_BASE_DEPAYLOAD);
 
-static gboolean gst_rtp_theora_depay_setcaps (GstBaseRTPDepayload * depayload,
+static gboolean gst_rtp_theora_depay_setcaps (GstRTPBaseDepayload * depayload,
     GstCaps * caps);
-static GstBuffer *gst_rtp_theora_depay_process (GstBaseRTPDepayload * depayload,
+static GstBuffer *gst_rtp_theora_depay_process (GstRTPBaseDepayload * depayload,
     GstBuffer * buf);
-static gboolean gst_rtp_theora_depay_packet_lost (GstBaseRTPDepayload *
+static gboolean gst_rtp_theora_depay_packet_lost (GstRTPBaseDepayload *
     depayload, GstEvent * event);
 
 static void gst_rtp_theora_depay_finalize (GObject * object);
@@ -78,17 +78,17 @@ gst_rtp_theora_depay_class_init (GstRtpTheoraDepayClass * klass)
 {
   GObjectClass *gobject_class;
   GstElementClass *gstelement_class;
-  GstBaseRTPDepayloadClass *gstbasertpdepayload_class;
+  GstRTPBaseDepayloadClass *gstrtpbasedepayload_class;
 
   gobject_class = (GObjectClass *) klass;
   gstelement_class = (GstElementClass *) klass;
-  gstbasertpdepayload_class = (GstBaseRTPDepayloadClass *) klass;
+  gstrtpbasedepayload_class = (GstRTPBaseDepayloadClass *) klass;
 
   gobject_class->finalize = gst_rtp_theora_depay_finalize;
 
-  gstbasertpdepayload_class->process = gst_rtp_theora_depay_process;
-  gstbasertpdepayload_class->set_caps = gst_rtp_theora_depay_setcaps;
-  gstbasertpdepayload_class->packet_lost = gst_rtp_theora_depay_packet_lost;
+  gstrtpbasedepayload_class->process = gst_rtp_theora_depay_process;
+  gstrtpbasedepayload_class->set_caps = gst_rtp_theora_depay_setcaps;
+  gstrtpbasedepayload_class->packet_lost = gst_rtp_theora_depay_packet_lost;
 
   gst_element_class_add_pad_template (gstelement_class,
       gst_static_pad_template_get (&gst_rtp_theora_depay_sink_template));
@@ -302,7 +302,7 @@ gst_rtp_theora_depay_parse_inband_configuration (GstRtpTheoraDepay *
 }
 
 static gboolean
-gst_rtp_theora_depay_setcaps (GstBaseRTPDepayload * depayload, GstCaps * caps)
+gst_rtp_theora_depay_setcaps (GstRTPBaseDepayload * depayload, GstCaps * caps)
 {
   GstStructure *structure;
   GstRtpTheoraDepay *rtptheoradepay;
@@ -381,7 +381,7 @@ gst_rtp_theora_depay_switch_codebook (GstRtpTheoraDepay * rtptheoradepay,
         GstBuffer *header = GST_BUFFER_CAST (headers->data);
 
         gst_buffer_ref (header);
-        gst_base_rtp_depayload_push (GST_BASE_RTP_DEPAYLOAD (rtptheoradepay),
+        gst_rtp_base_depayload_push (GST_RTP_BASE_DEPAYLOAD (rtptheoradepay),
             header);
       }
       /* remember the current config */
@@ -397,7 +397,7 @@ gst_rtp_theora_depay_switch_codebook (GstRtpTheoraDepay * rtptheoradepay,
 }
 
 static GstBuffer *
-gst_rtp_theora_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
+gst_rtp_theora_depay_process (GstRTPBaseDepayload * depayload, GstBuffer * buf)
 {
   GstRtpTheoraDepay *rtptheoradepay;
   GstBuffer *outbuf;
@@ -569,7 +569,7 @@ gst_rtp_theora_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
     payload += length;
     payload_len -= length;
 
-    ret = gst_base_rtp_depayload_push (depayload, outbuf);
+    ret = gst_rtp_base_depayload_push (depayload, outbuf);
     if (ret != GST_FLOW_OK)
       break;
   }
@@ -621,7 +621,7 @@ invalid_configuration:
   }
 request_config:
   {
-    gst_pad_push_event (GST_BASE_RTP_DEPAYLOAD_SINKPAD (depayload),
+    gst_pad_push_event (GST_RTP_BASE_DEPAYLOAD_SINKPAD (depayload),
         gst_event_new_custom (GST_EVENT_CUSTOM_UPSTREAM,
             gst_structure_new ("GstForceKeyUnit",
                 "all-headers", G_TYPE_BOOLEAN, TRUE, NULL)));
@@ -631,7 +631,7 @@ request_config:
 request_keyframe:
   {
     rtptheoradepay->needs_keyframe = TRUE;
-    gst_pad_push_event (GST_BASE_RTP_DEPAYLOAD_SINKPAD (depayload),
+    gst_pad_push_event (GST_RTP_BASE_DEPAYLOAD_SINKPAD (depayload),
         gst_event_new_custom (GST_EVENT_CUSTOM_UPSTREAM,
             gst_structure_new_empty ("GstForceKeyUnit")));
     gst_rtp_buffer_unmap (&rtp);
@@ -647,7 +647,7 @@ gst_rtp_theora_depay_plugin_init (GstPlugin * plugin)
 }
 
 static gboolean
-gst_rtp_theora_depay_packet_lost (GstBaseRTPDepayload * depayload,
+gst_rtp_theora_depay_packet_lost (GstRTPBaseDepayload * depayload,
     GstEvent * event)
 {
   GstRtpTheoraDepay *rtptheoradepay = GST_RTP_THEORA_DEPAY (depayload);
@@ -658,7 +658,7 @@ gst_rtp_theora_depay_packet_lost (GstBaseRTPDepayload * depayload,
       " is missing", seqnum);
   rtptheoradepay->needs_keyframe = TRUE;
 
-  gst_pad_push_event (GST_BASE_RTP_DEPAYLOAD_SINKPAD (depayload),
+  gst_pad_push_event (GST_RTP_BASE_DEPAYLOAD_SINKPAD (depayload),
       gst_event_new_custom (GST_EVENT_CUSTOM_UPSTREAM,
           gst_structure_new_empty ("GstForceKeyUnit")));
 

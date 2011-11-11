@@ -42,7 +42,7 @@ typedef struct _GstRtpGSTDepayClass GstRtpGSTDepayClass;
 
 struct _GstRtpGSTDepay
 {
-  GstBaseRTPDepayload depayload;
+  GstRTPBaseDepayload depayload;
 
   GstAdapter *adapter;
   guint current_CV;
@@ -51,7 +51,7 @@ struct _GstRtpGSTDepay
 
 struct _GstRtpGSTDepayClass
 {
-  GstBaseRTPDepayloadClass parent_class;
+  GstRTPBaseDepayloadClass parent_class;
 };
 
 GType gst_rtp_gst_depay_get_type (void);

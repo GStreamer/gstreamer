@@ -42,7 +42,7 @@ typedef struct _GstRTPG723PayClass GstRTPG723PayClass;
 
 struct _GstRTPG723Pay
 {
-  GstBaseRTPPayload payload;
+  GstRTPBasePayload payload;
 
   GstAdapter  *adapter;
   GstClockTime duration;
@@ -52,7 +52,7 @@ struct _GstRTPG723Pay
 
 struct _GstRTPG723PayClass
 {
-  GstBaseRTPPayloadClass parent_class;
+  GstRTPBasePayloadClass parent_class;
 };
 
 GType gst_rtp_g723_pay_get_type (void);

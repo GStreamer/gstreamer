@@ -63,16 +63,16 @@ static GstStaticPadTemplate gst_rtp_h263_depay_sink_template =
 
 #define gst_rtp_h263_depay_parent_class parent_class
 G_DEFINE_TYPE (GstRtpH263Depay, gst_rtp_h263_depay,
-    GST_TYPE_BASE_RTP_DEPAYLOAD);
+    GST_TYPE_RTP_BASE_DEPAYLOAD);
 
 static void gst_rtp_h263_depay_finalize (GObject * object);
 
 static GstStateChangeReturn gst_rtp_h263_depay_change_state (GstElement *
     element, GstStateChange transition);
 
-static GstBuffer *gst_rtp_h263_depay_process (GstBaseRTPDepayload * depayload,
+static GstBuffer *gst_rtp_h263_depay_process (GstRTPBaseDepayload * depayload,
     GstBuffer * buf);
-gboolean gst_rtp_h263_depay_setcaps (GstBaseRTPDepayload * filter,
+gboolean gst_rtp_h263_depay_setcaps (GstRTPBaseDepayload * filter,
     GstCaps * caps);
 
 static void
@@ -80,14 +80,14 @@ gst_rtp_h263_depay_class_init (GstRtpH263DepayClass * klass)
 {
   GObjectClass *gobject_class;
   GstElementClass *gstelement_class;
-  GstBaseRTPDepayloadClass *gstbasertpdepayload_class;
+  GstRTPBaseDepayloadClass *gstrtpbasedepayload_class;
 
   GST_DEBUG_CATEGORY_INIT (rtph263depay_debug, "rtph263depay", 0,
       "H263 Video RTP Depayloader");
 
   gobject_class = (GObjectClass *) klass;
   gstelement_class = (GstElementClass *) klass;
-  gstbasertpdepayload_class = (GstBaseRTPDepayloadClass *) klass;
+  gstrtpbasedepayload_class = (GstRTPBaseDepayloadClass *) klass;
 
   gobject_class->finalize = gst_rtp_h263_depay_finalize;
 
@@ -104,8 +104,8 @@ gst_rtp_h263_depay_class_init (GstRtpH263DepayClass * klass)
       "Philippe Kalaf <philippe.kalaf@collabora.co.uk>, "
       "Edward Hervey <bilboed@bilboed.com>");
 
-  gstbasertpdepayload_class->process = gst_rtp_h263_depay_process;
-  gstbasertpdepayload_class->set_caps = gst_rtp_h263_depay_setcaps;
+  gstrtpbasedepayload_class->process = gst_rtp_h263_depay_process;
+  gstrtpbasedepayload_class->set_caps = gst_rtp_h263_depay_setcaps;
 }
 
 static void
@@ -131,7 +131,7 @@ gst_rtp_h263_depay_finalize (GObject * object)
 }
 
 gboolean
-gst_rtp_h263_depay_setcaps (GstBaseRTPDepayload * filter, GstCaps * caps)
+gst_rtp_h263_depay_setcaps (GstRTPBaseDepayload * filter, GstCaps * caps)
 {
   GstCaps *srccaps;
   GstStructure *structure = gst_caps_get_structure (caps, 0);
@@ -144,14 +144,14 @@ gst_rtp_h263_depay_setcaps (GstBaseRTPDepayload * filter, GstCaps * caps)
   srccaps = gst_caps_new_simple ("video/x-h263",
       "variant", G_TYPE_STRING, "itu",
       "h263version", G_TYPE_STRING, "h263", NULL);
-  gst_pad_set_caps (GST_BASE_RTP_DEPAYLOAD_SRCPAD (filter), srccaps);
+  gst_pad_set_caps (GST_RTP_BASE_DEPAYLOAD_SRCPAD (filter), srccaps);
   gst_caps_unref (srccaps);
 
   return TRUE;
 }
 
 static GstBuffer *
-gst_rtp_h263_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
+gst_rtp_h263_depay_process (GstRTPBaseDepayload * depayload, GstBuffer * buf)
 {
   GstRtpH263Depay *rtph263depay;
   GstBuffer *outbuf;
@@ -325,7 +325,7 @@ skip:
 
       GST_DEBUG ("Pushing out a buffer of %d bytes", avail);
 
-      gst_base_rtp_depayload_push (depayload, outbuf);
+      gst_rtp_base_depayload_push (depayload, outbuf);
       rtph263depay->offset = 0;
       rtph263depay->leftover = 0;
       rtph263depay->start = FALSE;

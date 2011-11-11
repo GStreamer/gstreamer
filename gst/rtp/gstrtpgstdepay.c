@@ -46,7 +46,7 @@ GST_STATIC_PAD_TEMPLATE ("sink",
     );
 
 #define gst_rtp_gst_depay_parent_class parent_class
-G_DEFINE_TYPE (GstRtpGSTDepay, gst_rtp_gst_depay, GST_TYPE_BASE_RTP_DEPAYLOAD);
+G_DEFINE_TYPE (GstRtpGSTDepay, gst_rtp_gst_depay, GST_TYPE_RTP_BASE_DEPAYLOAD);
 
 static void gst_rtp_gst_depay_finalize (GObject * object);
 
@@ -54,9 +54,9 @@ static GstStateChangeReturn gst_rtp_gst_depay_change_state (GstElement *
     element, GstStateChange transition);
 
 static void gst_rtp_gst_depay_reset (GstRtpGSTDepay * rtpgstdepay);
-static gboolean gst_rtp_gst_depay_setcaps (GstBaseRTPDepayload * depayload,
+static gboolean gst_rtp_gst_depay_setcaps (GstRTPBaseDepayload * depayload,
     GstCaps * caps);
-static GstBuffer *gst_rtp_gst_depay_process (GstBaseRTPDepayload * depayload,
+static GstBuffer *gst_rtp_gst_depay_process (GstRTPBaseDepayload * depayload,
     GstBuffer * buf);
 
 static void
@@ -64,14 +64,14 @@ gst_rtp_gst_depay_class_init (GstRtpGSTDepayClass * klass)
 {
   GObjectClass *gobject_class;
   GstElementClass *gstelement_class;
-  GstBaseRTPDepayloadClass *gstbasertpdepayload_class;
+  GstRTPBaseDepayloadClass *gstrtpbasedepayload_class;
 
   GST_DEBUG_CATEGORY_INIT (rtpgstdepay_debug, "rtpgstdepay", 0,
       "Gstreamer RTP Depayloader");
 
   gobject_class = (GObjectClass *) klass;
   gstelement_class = (GstElementClass *) klass;
-  gstbasertpdepayload_class = (GstBaseRTPDepayloadClass *) klass;
+  gstrtpbasedepayload_class = (GstRTPBaseDepayloadClass *) klass;
 
   gobject_class->finalize = gst_rtp_gst_depay_finalize;
 
@@ -87,8 +87,8 @@ gst_rtp_gst_depay_class_init (GstRtpGSTDepayClass * klass)
       "Extracts GStreamer buffers from RTP packets",
       "Wim Taymans <wim.taymans@gmail.com>");
 
-  gstbasertpdepayload_class->set_caps = gst_rtp_gst_depay_setcaps;
-  gstbasertpdepayload_class->process = gst_rtp_gst_depay_process;
+  gstrtpbasedepayload_class->set_caps = gst_rtp_gst_depay_setcaps;
+  gstrtpbasedepayload_class->process = gst_rtp_gst_depay_process;
 }
 
 static void
@@ -130,7 +130,7 @@ gst_rtp_gst_depay_reset (GstRtpGSTDepay * rtpgstdepay)
 }
 
 static gboolean
-gst_rtp_gst_depay_setcaps (GstBaseRTPDepayload * depayload, GstCaps * caps)
+gst_rtp_gst_depay_setcaps (GstRTPBaseDepayload * depayload, GstCaps * caps)
 {
   GstRtpGSTDepay *rtpgstdepay;
   GstStructure *structure;
@@ -170,7 +170,7 @@ gst_rtp_gst_depay_setcaps (GstBaseRTPDepayload * depayload, GstCaps * caps)
 }
 
 static GstBuffer *
-gst_rtp_gst_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
+gst_rtp_gst_depay_process (GstRTPBaseDepayload * depayload, GstBuffer * buf)
 {
   GstRtpGSTDepay *rtpgstdepay;
   GstBuffer *subbuf, *outbuf = NULL;

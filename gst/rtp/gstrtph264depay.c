@@ -81,7 +81,7 @@ GST_STATIC_PAD_TEMPLATE ("sink",
 
 #define gst_rtp_h264_depay_parent_class parent_class
 G_DEFINE_TYPE (GstRtpH264Depay, gst_rtp_h264_depay,
-    GST_TYPE_BASE_RTP_DEPAYLOAD);
+    GST_TYPE_RTP_BASE_DEPAYLOAD);
 
 static void gst_rtp_h264_depay_finalize (GObject * object);
 static void gst_rtp_h264_depay_set_property (GObject * object, guint prop_id,
@@ -92,11 +92,11 @@ static void gst_rtp_h264_depay_get_property (GObject * object, guint prop_id,
 static GstStateChangeReturn gst_rtp_h264_depay_change_state (GstElement *
     element, GstStateChange transition);
 
-static GstBuffer *gst_rtp_h264_depay_process (GstBaseRTPDepayload * depayload,
+static GstBuffer *gst_rtp_h264_depay_process (GstRTPBaseDepayload * depayload,
     GstBuffer * buf);
-static gboolean gst_rtp_h264_depay_setcaps (GstBaseRTPDepayload * filter,
+static gboolean gst_rtp_h264_depay_setcaps (GstRTPBaseDepayload * filter,
     GstCaps * caps);
-static gboolean gst_rtp_h264_depay_handle_event (GstBaseRTPDepayload * depay,
+static gboolean gst_rtp_h264_depay_handle_event (GstRTPBaseDepayload * depay,
     GstEvent * event);
 
 static void
@@ -104,11 +104,11 @@ gst_rtp_h264_depay_class_init (GstRtpH264DepayClass * klass)
 {
   GObjectClass *gobject_class;
   GstElementClass *gstelement_class;
-  GstBaseRTPDepayloadClass *gstbasertpdepayload_class;
+  GstRTPBaseDepayloadClass *gstrtpbasedepayload_class;
 
   gobject_class = (GObjectClass *) klass;
   gstelement_class = (GstElementClass *) klass;
-  gstbasertpdepayload_class = (GstBaseRTPDepayloadClass *) klass;
+  gstrtpbasedepayload_class = (GstRTPBaseDepayloadClass *) klass;
 
   gobject_class->finalize = gst_rtp_h264_depay_finalize;
 
@@ -135,9 +135,9 @@ gst_rtp_h264_depay_class_init (GstRtpH264DepayClass * klass)
       "Wim Taymans <wim.taymans@gmail.com>");
   gstelement_class->change_state = gst_rtp_h264_depay_change_state;
 
-  gstbasertpdepayload_class->process = gst_rtp_h264_depay_process;
-  gstbasertpdepayload_class->set_caps = gst_rtp_h264_depay_setcaps;
-  gstbasertpdepayload_class->handle_event = gst_rtp_h264_depay_handle_event;
+  gstrtpbasedepayload_class->process = gst_rtp_h264_depay_process;
+  gstrtpbasedepayload_class->set_caps = gst_rtp_h264_depay_setcaps;
+  gstrtpbasedepayload_class->handle_event = gst_rtp_h264_depay_handle_event;
 
   GST_DEBUG_CATEGORY_INIT (rtph264depay_debug, "rtph264depay", 0,
       "H264 Video RTP Depayloader");
@@ -230,7 +230,7 @@ gst_rtp_h264_depay_negotiate (GstRtpH264Depay * rtph264depay)
   gint merge = -1;
 
   caps =
-      gst_pad_get_allowed_caps (GST_BASE_RTP_DEPAYLOAD_SRCPAD (rtph264depay));
+      gst_pad_get_allowed_caps (GST_RTP_BASE_DEPAYLOAD_SRCPAD (rtph264depay));
 
   GST_DEBUG_OBJECT (rtph264depay, "allowed caps: %" GST_PTR_FORMAT, caps);
 
@@ -282,7 +282,7 @@ gst_rtp_h264_depay_negotiate (GstRtpH264Depay * rtph264depay)
 }
 
 static gboolean
-gst_rtp_h264_depay_setcaps (GstBaseRTPDepayload * depayload, GstCaps * caps)
+gst_rtp_h264_depay_setcaps (GstRTPBaseDepayload * depayload, GstCaps * caps)
 {
   GstCaps *srccaps;
   gint clock_rate;
@@ -505,7 +505,7 @@ static GstBuffer *
 gst_rtp_h264_depay_handle_nal (GstRtpH264Depay * rtph264depay, GstBuffer * nal,
     GstClockTime in_timestamp, gboolean marker)
 {
-  GstBaseRTPDepayload *depayload = GST_BASE_RTP_DEPAYLOAD (rtph264depay);
+  GstRTPBaseDepayload *depayload = GST_RTP_BASE_DEPAYLOAD (rtph264depay);
   gint nal_type;
   gsize size;
   guint8 *data;
@@ -629,7 +629,7 @@ gst_rtp_h264_push_fragmentation_unit (GstRtpH264Depay * rtph264depay,
     outbuf = gst_rtp_h264_depay_handle_nal (rtph264depay, outbuf,
         rtph264depay->fu_timestamp, rtph264depay->fu_marker);
     if (outbuf)
-      gst_base_rtp_depayload_push (GST_BASE_RTP_DEPAYLOAD (rtph264depay),
+      gst_rtp_base_depayload_push (GST_RTP_BASE_DEPAYLOAD (rtph264depay),
           outbuf);
     return NULL;
   } else {
@@ -639,7 +639,7 @@ gst_rtp_h264_push_fragmentation_unit (GstRtpH264Depay * rtph264depay,
 }
 
 static GstBuffer *
-gst_rtp_h264_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
+gst_rtp_h264_depay_process (GstRTPBaseDepayload * depayload, GstBuffer * buf)
 {
   GstRtpH264Depay *rtph264depay;
   GstBuffer *outbuf = NULL;
@@ -916,7 +916,7 @@ not_implemented:
 }
 
 static gboolean
-gst_rtp_h264_depay_handle_event (GstBaseRTPDepayload * depay, GstEvent * event)
+gst_rtp_h264_depay_handle_event (GstRTPBaseDepayload * depay, GstEvent * event)
 {
   GstRtpH264Depay *rtph264depay;
 
@@ -931,7 +931,7 @@ gst_rtp_h264_depay_handle_event (GstBaseRTPDepayload * depay, GstEvent * event)
   }
 
   return
-      GST_BASE_RTP_DEPAYLOAD_CLASS (parent_class)->handle_event (depay, event);
+      GST_RTP_BASE_DEPAYLOAD_CLASS (parent_class)->handle_event (depay, event);
 }
 
 static GstStateChangeReturn

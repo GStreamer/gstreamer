@@ -105,25 +105,25 @@ static void gst_rtp_j2k_pay_set_property (GObject * object, guint prop_id,
 static void gst_rtp_j2k_pay_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 
-static gboolean gst_rtp_j2k_pay_setcaps (GstBaseRTPPayload * basepayload,
+static gboolean gst_rtp_j2k_pay_setcaps (GstRTPBasePayload * basepayload,
     GstCaps * caps);
 
-static GstFlowReturn gst_rtp_j2k_pay_handle_buffer (GstBaseRTPPayload * pad,
+static GstFlowReturn gst_rtp_j2k_pay_handle_buffer (GstRTPBasePayload * pad,
     GstBuffer * buffer);
 
 #define gst_rtp_j2k_pay_parent_class parent_class
-G_DEFINE_TYPE (GstRtpJ2KPay, gst_rtp_j2k_pay, GST_TYPE_BASE_RTP_PAYLOAD);
+G_DEFINE_TYPE (GstRtpJ2KPay, gst_rtp_j2k_pay, GST_TYPE_RTP_BASE_PAYLOAD);
 
 static void
 gst_rtp_j2k_pay_class_init (GstRtpJ2KPayClass * klass)
 {
   GObjectClass *gobject_class;
   GstElementClass *gstelement_class;
-  GstBaseRTPPayloadClass *gstbasertppayload_class;
+  GstRTPBasePayloadClass *gstrtpbasepayload_class;
 
   gobject_class = (GObjectClass *) klass;
   gstelement_class = (GstElementClass *) klass;
-  gstbasertppayload_class = (GstBaseRTPPayloadClass *) klass;
+  gstrtpbasepayload_class = (GstRTPBasePayloadClass *) klass;
 
   gobject_class->set_property = gst_rtp_j2k_pay_set_property;
   gobject_class->get_property = gst_rtp_j2k_pay_get_property;
@@ -143,8 +143,8 @@ gst_rtp_j2k_pay_class_init (GstRtpJ2KPayClass * klass)
       "Payload-encodes JPEG 2000 pictures into RTP packets (RFC 5371)",
       "Wim Taymans <wim.taymans@gmail.com>");
 
-  gstbasertppayload_class->set_caps = gst_rtp_j2k_pay_setcaps;
-  gstbasertppayload_class->handle_buffer = gst_rtp_j2k_pay_handle_buffer;
+  gstrtpbasepayload_class->set_caps = gst_rtp_j2k_pay_setcaps;
+  gstrtpbasepayload_class->handle_buffer = gst_rtp_j2k_pay_handle_buffer;
 
   GST_DEBUG_CATEGORY_INIT (rtpj2kpay_debug, "rtpj2kpay", 0,
       "JPEG 2000 RTP Payloader");
@@ -157,7 +157,7 @@ gst_rtp_j2k_pay_init (GstRtpJ2KPay * pay)
 }
 
 static gboolean
-gst_rtp_j2k_pay_setcaps (GstBaseRTPPayload * basepayload, GstCaps * caps)
+gst_rtp_j2k_pay_setcaps (GstRTPBasePayload * basepayload, GstCaps * caps)
 {
   GstStructure *caps_structure = gst_caps_get_structure (caps, 0);
   GstRtpJ2KPay *pay;
@@ -174,9 +174,9 @@ gst_rtp_j2k_pay_setcaps (GstBaseRTPPayload * basepayload, GstCaps * caps)
     pay->width = width;
   }
 
-  gst_base_rtp_payload_set_options (basepayload, "video", TRUE, "JPEG2000",
+  gst_rtp_base_payload_set_options (basepayload, "video", TRUE, "JPEG2000",
       90000);
-  res = gst_base_rtp_payload_set_outcaps (basepayload, NULL);
+  res = gst_rtp_base_payload_set_outcaps (basepayload, NULL);
 
   return res;
 }
@@ -325,7 +325,7 @@ find_pu_end (GstRtpJ2KPay * pay, const guint8 * data, guint size,
 }
 
 static GstFlowReturn
-gst_rtp_j2k_pay_handle_buffer (GstBaseRTPPayload * basepayload,
+gst_rtp_j2k_pay_handle_buffer (GstRTPBasePayload * basepayload,
     GstBuffer * buffer)
 {
   GstRtpJ2KPay *pay;
@@ -342,7 +342,7 @@ gst_rtp_j2k_pay_handle_buffer (GstBaseRTPPayload * basepayload,
   guint end, pos;
 
   pay = GST_RTP_J2K_PAY (basepayload);
-  mtu = GST_BASE_RTP_PAYLOAD_MTU (pay);
+  mtu = GST_RTP_BASE_PAYLOAD_MTU (pay);
 
   data = gst_buffer_map (buffer, &size, NULL, GST_MAP_READ);
   timestamp = GST_BUFFER_TIMESTAMP (buffer);
@@ -520,7 +520,7 @@ gst_rtp_j2k_pay_handle_buffer (GstBaseRTPPayload * basepayload,
         memcpy (header + HEADER_SIZE, &data[offset], data_size);
         gst_rtp_buffer_unmap (&rtp);
 
-        ret = gst_base_rtp_payload_push (basepayload, outbuf);
+        ret = gst_rtp_base_payload_push (basepayload, outbuf);
         if (ret != GST_FLOW_OK)
           goto done;
       }
@@ -542,7 +542,7 @@ done:
   if (pay->buffer_list) {
     /* free iterator and push the whole buffer list at once */
     gst_buffer_list_iterator_free (it);
-    ret = gst_base_rtp_payload_push_list (basepayload, list);
+    ret = gst_rtp_base_payload_push_list (basepayload, list);
   }
 #endif
 

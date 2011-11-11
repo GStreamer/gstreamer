@@ -70,25 +70,25 @@ static void gst_rtp_g726_pay_get_property (GObject * object, guint prop_id,
 static void gst_rtp_g726_pay_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
 
-static gboolean gst_rtp_g726_pay_setcaps (GstBaseRTPPayload * payload,
+static gboolean gst_rtp_g726_pay_setcaps (GstRTPBasePayload * payload,
     GstCaps * caps);
-static GstFlowReturn gst_rtp_g726_pay_handle_buffer (GstBaseRTPPayload *
+static GstFlowReturn gst_rtp_g726_pay_handle_buffer (GstRTPBasePayload *
     payload, GstBuffer * buffer);
 
 #define gst_rtp_g726_pay_parent_class parent_class
 G_DEFINE_TYPE (GstRtpG726Pay, gst_rtp_g726_pay,
-    GST_TYPE_BASE_RTP_AUDIO_PAYLOAD);
+    GST_TYPE_RTP_BASE_AUDIO_PAYLOAD);
 
 static void
 gst_rtp_g726_pay_class_init (GstRtpG726PayClass * klass)
 {
   GObjectClass *gobject_class;
   GstElementClass *gstelement_class;
-  GstBaseRTPPayloadClass *gstbasertppayload_class;
+  GstRTPBasePayloadClass *gstrtpbasepayload_class;
 
   gobject_class = (GObjectClass *) klass;
   gstelement_class = (GstElementClass *) klass;
-  gstbasertppayload_class = (GstBaseRTPPayloadClass *) klass;
+  gstrtpbasepayload_class = (GstRTPBasePayloadClass *) klass;
 
   gobject_class->set_property = gst_rtp_g726_pay_set_property;
   gobject_class->get_property = gst_rtp_g726_pay_get_property;
@@ -108,8 +108,8 @@ gst_rtp_g726_pay_class_init (GstRtpG726PayClass * klass)
       "Payload-encodes G.726 audio into a RTP packet",
       "Axis Communications <dev-gstreamer@axis.com>");
 
-  gstbasertppayload_class->set_caps = gst_rtp_g726_pay_setcaps;
-  gstbasertppayload_class->handle_buffer = gst_rtp_g726_pay_handle_buffer;
+  gstrtpbasepayload_class->set_caps = gst_rtp_g726_pay_setcaps;
+  gstrtpbasepayload_class->handle_buffer = gst_rtp_g726_pay_handle_buffer;
 
   GST_DEBUG_CATEGORY_INIT (rtpg726pay_debug, "rtpg726pay", 0,
       "G.726 RTP Payloader");
@@ -118,29 +118,29 @@ gst_rtp_g726_pay_class_init (GstRtpG726PayClass * klass)
 static void
 gst_rtp_g726_pay_init (GstRtpG726Pay * rtpg726pay)
 {
-  GstBaseRTPAudioPayload *basertpaudiopayload;
+  GstRTPBaseAudioPayload *rtpbaseaudiopayload;
 
-  basertpaudiopayload = GST_BASE_RTP_AUDIO_PAYLOAD (rtpg726pay);
+  rtpbaseaudiopayload = GST_RTP_BASE_AUDIO_PAYLOAD (rtpg726pay);
 
-  GST_BASE_RTP_PAYLOAD (rtpg726pay)->clock_rate = 8000;
+  GST_RTP_BASE_PAYLOAD (rtpg726pay)->clock_rate = 8000;
 
   rtpg726pay->force_aal2 = DEFAULT_FORCE_AAL2;
 
   /* sample based codec */
-  gst_base_rtp_audio_payload_set_sample_based (basertpaudiopayload);
+  gst_rtp_base_audio_payload_set_sample_based (rtpbaseaudiopayload);
 }
 
 static gboolean
-gst_rtp_g726_pay_setcaps (GstBaseRTPPayload * payload, GstCaps * caps)
+gst_rtp_g726_pay_setcaps (GstRTPBasePayload * payload, GstCaps * caps)
 {
   gchar *encoding_name;
   GstStructure *structure;
-  GstBaseRTPAudioPayload *basertpaudiopayload;
+  GstRTPBaseAudioPayload *rtpbaseaudiopayload;
   GstRtpG726Pay *pay;
   GstCaps *peercaps;
   gboolean res;
 
-  basertpaudiopayload = GST_BASE_RTP_AUDIO_PAYLOAD (payload);
+  rtpbaseaudiopayload = GST_RTP_BASE_AUDIO_PAYLOAD (payload);
   pay = GST_RTP_G726_PAY (payload);
 
   structure = gst_caps_get_structure (caps, 0);
@@ -156,22 +156,22 @@ gst_rtp_g726_pay_setcaps (GstBaseRTPPayload * payload, GstCaps * caps)
   switch (pay->bitrate) {
     case 16000:
       encoding_name = g_strdup ("G726-16");
-      gst_base_rtp_audio_payload_set_samplebits_options (basertpaudiopayload,
+      gst_rtp_base_audio_payload_set_samplebits_options (rtpbaseaudiopayload,
           2);
       break;
     case 24000:
       encoding_name = g_strdup ("G726-24");
-      gst_base_rtp_audio_payload_set_samplebits_options (basertpaudiopayload,
+      gst_rtp_base_audio_payload_set_samplebits_options (rtpbaseaudiopayload,
           3);
       break;
     case 32000:
       encoding_name = g_strdup ("G726-32");
-      gst_base_rtp_audio_payload_set_samplebits_options (basertpaudiopayload,
+      gst_rtp_base_audio_payload_set_samplebits_options (rtpbaseaudiopayload,
           4);
       break;
     case 40000:
       encoding_name = g_strdup ("G726-40");
-      gst_base_rtp_audio_payload_set_samplebits_options (basertpaudiopayload,
+      gst_rtp_base_audio_payload_set_samplebits_options (rtpbaseaudiopayload,
           5);
       break;
     default:
@@ -237,9 +237,9 @@ gst_rtp_g726_pay_setcaps (GstBaseRTPPayload * payload, GstCaps * caps)
     GST_DEBUG_OBJECT (payload, "no peer caps, AAL2 %d", pay->aal2);
   }
 
-  gst_base_rtp_payload_set_options (payload, "audio", TRUE, encoding_name,
+  gst_rtp_base_payload_set_options (payload, "audio", TRUE, encoding_name,
       8000);
-  res = gst_base_rtp_payload_set_outcaps (payload, NULL);
+  res = gst_rtp_base_payload_set_outcaps (payload, NULL);
 
   g_free (encoding_name);
 
@@ -259,7 +259,7 @@ no_format:
 }
 
 static GstFlowReturn
-gst_rtp_g726_pay_handle_buffer (GstBaseRTPPayload * payload, GstBuffer * buffer)
+gst_rtp_g726_pay_handle_buffer (GstRTPBasePayload * payload, GstBuffer * buffer)
 {
   GstFlowReturn res;
   GstRtpG726Pay *pay;
@@ -368,7 +368,7 @@ gst_rtp_g726_pay_handle_buffer (GstBaseRTPPayload * payload, GstBuffer * buffer)
   }
 
   res =
-      GST_BASE_RTP_PAYLOAD_CLASS (parent_class)->handle_buffer (payload,
+      GST_RTP_BASE_PAYLOAD_CLASS (parent_class)->handle_buffer (payload,
       buffer);
 
   return res;

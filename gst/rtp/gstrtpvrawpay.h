@@ -42,7 +42,7 @@ typedef struct _GstRtpVRawPayClass GstRtpVRawPayClass;
 
 struct _GstRtpVRawPay
 {
-  GstBaseRTPPayload payload;
+  GstRTPBasePayload payload;
 
   GstVideoInfo vinfo;
 
@@ -57,7 +57,7 @@ struct _GstRtpVRawPay
 
 struct _GstRtpVRawPayClass
 {
-  GstBaseRTPPayloadClass parent_class;
+  GstRTPBasePayloadClass parent_class;
 };
 
 GType gst_rtp_vraw_pay_get_type (void);

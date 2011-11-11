@@ -50,21 +50,21 @@ static GstStaticPadTemplate gst_rtp_pcmu_pay_src_template =
         "clock-rate = (int) [1, MAX ], " "encoding-name = (string) \"PCMU\"")
     );
 
-static gboolean gst_rtp_pcmu_pay_setcaps (GstBaseRTPPayload * payload,
+static gboolean gst_rtp_pcmu_pay_setcaps (GstRTPBasePayload * payload,
     GstCaps * caps);
 
 #define gst_rtp_pcmu_pay_parent_class parent_class
 G_DEFINE_TYPE (GstRtpPcmuPay, gst_rtp_pcmu_pay,
-    GST_TYPE_BASE_RTP_AUDIO_PAYLOAD);
+    GST_TYPE_RTP_BASE_AUDIO_PAYLOAD);
 
 static void
 gst_rtp_pcmu_pay_class_init (GstRtpPcmuPayClass * klass)
 {
   GstElementClass *gstelement_class;
-  GstBaseRTPPayloadClass *gstbasertppayload_class;
+  GstRTPBasePayloadClass *gstrtpbasepayload_class;
 
   gstelement_class = (GstElementClass *) klass;
-  gstbasertppayload_class = (GstBaseRTPPayloadClass *) klass;
+  gstrtpbasepayload_class = (GstRTPBasePayloadClass *) klass;
 
   gst_element_class_add_pad_template (gstelement_class,
       gst_static_pad_template_get (&gst_rtp_pcmu_pay_sink_template));
@@ -76,34 +76,34 @@ gst_rtp_pcmu_pay_class_init (GstRtpPcmuPayClass * klass)
       "Payload-encodes PCMU audio into a RTP packet",
       "Edgard Lima <edgard.lima@indt.org.br>");
 
-  gstbasertppayload_class->set_caps = gst_rtp_pcmu_pay_setcaps;
+  gstrtpbasepayload_class->set_caps = gst_rtp_pcmu_pay_setcaps;
 }
 
 static void
 gst_rtp_pcmu_pay_init (GstRtpPcmuPay * rtppcmupay)
 {
-  GstBaseRTPAudioPayload *basertpaudiopayload;
+  GstRTPBaseAudioPayload *rtpbaseaudiopayload;
 
-  basertpaudiopayload = GST_BASE_RTP_AUDIO_PAYLOAD (rtppcmupay);
+  rtpbaseaudiopayload = GST_RTP_BASE_AUDIO_PAYLOAD (rtppcmupay);
 
-  GST_BASE_RTP_PAYLOAD (rtppcmupay)->clock_rate = 8000;
+  GST_RTP_BASE_PAYLOAD (rtppcmupay)->clock_rate = 8000;
 
-  /* tell basertpaudiopayload that this is a sample based codec */
-  gst_base_rtp_audio_payload_set_sample_based (basertpaudiopayload);
+  /* tell rtpbaseaudiopayload that this is a sample based codec */
+  gst_rtp_base_audio_payload_set_sample_based (rtpbaseaudiopayload);
 
   /* octet-per-sample is 1 for PCM */
-  gst_base_rtp_audio_payload_set_sample_options (basertpaudiopayload, 1);
+  gst_rtp_base_audio_payload_set_sample_options (rtpbaseaudiopayload, 1);
 }
 
 static gboolean
-gst_rtp_pcmu_pay_setcaps (GstBaseRTPPayload * payload, GstCaps * caps)
+gst_rtp_pcmu_pay_setcaps (GstRTPBasePayload * payload, GstCaps * caps)
 {
   gboolean res;
 
   payload->pt = GST_RTP_PAYLOAD_PCMU;
 
-  gst_base_rtp_payload_set_options (payload, "audio", FALSE, "PCMU", 8000);
-  res = gst_base_rtp_payload_set_outcaps (payload, NULL);
+  gst_rtp_base_payload_set_options (payload, "audio", FALSE, "PCMU", 8000);
+  res = gst_rtp_base_payload_set_outcaps (payload, NULL);
 
   return res;
 }

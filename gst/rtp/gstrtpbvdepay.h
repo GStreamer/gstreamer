@@ -41,14 +41,14 @@ typedef struct _GstRTPBVDepayClass GstRTPBVDepayClass;
 
 struct _GstRTPBVDepay
 {
-  GstBaseRTPDepayload depayload;
+  GstRTPBaseDepayload depayload;
 
   gint mode;
 };
 
 struct _GstRTPBVDepayClass
 {
-  GstBaseRTPDepayloadClass parent_class;
+  GstRTPBaseDepayloadClass parent_class;
 };
 
 GType gst_rtp_bv_depay_get_type (void);

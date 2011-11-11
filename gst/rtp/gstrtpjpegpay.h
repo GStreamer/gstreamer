@@ -39,7 +39,7 @@ typedef struct _GstRtpJPEGPayClass GstRtpJPEGPayClass;
 
 struct _GstRtpJPEGPay
 {
-  GstBaseRTPPayload payload;
+  GstRTPBasePayload payload;
 
   guint8 quality;
   guint8 type;
@@ -54,7 +54,7 @@ struct _GstRtpJPEGPay
 
 struct _GstRtpJPEGPayClass
 {
-  GstBaseRTPPayloadClass parent_class;
+  GstRTPBasePayloadClass parent_class;
 };
 
 GType gst_rtp_jpeg_pay_get_type (void);

@@ -42,13 +42,13 @@ typedef struct _GstRTPSirenDepayClass GstRTPSirenDepayClass;
 
 struct _GstRTPSirenDepay
 {
-  GstBaseRTPDepayload depayload;
+  GstRTPBaseDepayload depayload;
 
 };
 
 struct _GstRTPSirenDepayClass
 {
-  GstBaseRTPDepayloadClass parent_class;
+  GstRTPBaseDepayloadClass parent_class;
 };
 
 GType gst_rtp_siren_depay_get_type (void);

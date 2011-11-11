@@ -42,7 +42,7 @@ typedef struct _GstRtpMPAPayClass GstRtpMPAPayClass;
 
 struct _GstRtpMPAPay
 {
-  GstBaseRTPPayload payload;
+  GstRTPBasePayload payload;
 
   GstAdapter *adapter;
   GstClockTime first_ts;
@@ -51,7 +51,7 @@ struct _GstRtpMPAPay
 
 struct _GstRtpMPAPayClass
 {
-  GstBaseRTPPayloadClass parent_class;
+  GstRTPBasePayloadClass parent_class;
 };
 
 GType gst_rtp_mpa_pay_get_type (void);

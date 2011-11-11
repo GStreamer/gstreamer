@@ -56,30 +56,30 @@ static void gst_rtp_mpa_pay_finalize (GObject * object);
 static GstStateChangeReturn gst_rtp_mpa_pay_change_state (GstElement * element,
     GstStateChange transition);
 
-static gboolean gst_rtp_mpa_pay_setcaps (GstBaseRTPPayload * payload,
+static gboolean gst_rtp_mpa_pay_setcaps (GstRTPBasePayload * payload,
     GstCaps * caps);
-static gboolean gst_rtp_mpa_pay_handle_event (GstBaseRTPPayload * payload,
+static gboolean gst_rtp_mpa_pay_handle_event (GstRTPBasePayload * payload,
     GstEvent * event);
 static GstFlowReturn gst_rtp_mpa_pay_flush (GstRtpMPAPay * rtpmpapay);
-static GstFlowReturn gst_rtp_mpa_pay_handle_buffer (GstBaseRTPPayload * payload,
+static GstFlowReturn gst_rtp_mpa_pay_handle_buffer (GstRTPBasePayload * payload,
     GstBuffer * buffer);
 
 #define gst_rtp_mpa_pay_parent_class parent_class
-G_DEFINE_TYPE (GstRtpMPAPay, gst_rtp_mpa_pay, GST_TYPE_BASE_RTP_PAYLOAD);
+G_DEFINE_TYPE (GstRtpMPAPay, gst_rtp_mpa_pay, GST_TYPE_RTP_BASE_PAYLOAD);
 
 static void
 gst_rtp_mpa_pay_class_init (GstRtpMPAPayClass * klass)
 {
   GObjectClass *gobject_class;
   GstElementClass *gstelement_class;
-  GstBaseRTPPayloadClass *gstbasertppayload_class;
+  GstRTPBasePayloadClass *gstrtpbasepayload_class;
 
   GST_DEBUG_CATEGORY_INIT (rtpmpapay_debug, "rtpmpapay", 0,
       "MPEG Audio RTP Depayloader");
 
   gobject_class = (GObjectClass *) klass;
   gstelement_class = (GstElementClass *) klass;
-  gstbasertppayload_class = (GstBaseRTPPayloadClass *) klass;
+  gstrtpbasepayload_class = (GstRTPBasePayloadClass *) klass;
 
   gobject_class->finalize = gst_rtp_mpa_pay_finalize;
 
@@ -95,9 +95,9 @@ gst_rtp_mpa_pay_class_init (GstRtpMPAPayClass * klass)
       "Payload MPEG audio as RTP packets (RFC 2038)",
       "Wim Taymans <wim.taymans@gmail.com>");
 
-  gstbasertppayload_class->set_caps = gst_rtp_mpa_pay_setcaps;
-  gstbasertppayload_class->handle_event = gst_rtp_mpa_pay_handle_event;
-  gstbasertppayload_class->handle_buffer = gst_rtp_mpa_pay_handle_buffer;
+  gstrtpbasepayload_class->set_caps = gst_rtp_mpa_pay_setcaps;
+  gstrtpbasepayload_class->handle_event = gst_rtp_mpa_pay_handle_event;
+  gstrtpbasepayload_class->handle_buffer = gst_rtp_mpa_pay_handle_buffer;
 }
 
 static void
@@ -129,18 +129,18 @@ gst_rtp_mpa_pay_reset (GstRtpMPAPay * pay)
 }
 
 static gboolean
-gst_rtp_mpa_pay_setcaps (GstBaseRTPPayload * payload, GstCaps * caps)
+gst_rtp_mpa_pay_setcaps (GstRTPBasePayload * payload, GstCaps * caps)
 {
   gboolean res;
 
-  gst_base_rtp_payload_set_options (payload, "audio", TRUE, "MPA", 90000);
-  res = gst_base_rtp_payload_set_outcaps (payload, NULL);
+  gst_rtp_base_payload_set_options (payload, "audio", TRUE, "MPA", 90000);
+  res = gst_rtp_base_payload_set_outcaps (payload, NULL);
 
   return res;
 }
 
 static gboolean
-gst_rtp_mpa_pay_handle_event (GstBaseRTPPayload * payload, GstEvent * event)
+gst_rtp_mpa_pay_handle_event (GstRTPBasePayload * payload, GstEvent * event)
 {
   gboolean ret;
   GstRtpMPAPay *rtpmpapay;
@@ -160,7 +160,7 @@ gst_rtp_mpa_pay_handle_event (GstBaseRTPPayload * payload, GstEvent * event)
   }
 
   ret =
-      GST_BASE_RTP_PAYLOAD_CLASS (parent_class)->handle_event (payload, event);
+      GST_RTP_BASE_PAYLOAD_CLASS (parent_class)->handle_event (payload, event);
 
   return ret;
 }
@@ -195,7 +195,7 @@ gst_rtp_mpa_pay_flush (GstRtpMPAPay * rtpmpapay)
     packet_len = gst_rtp_buffer_calc_packet_len (4 + avail, 0, 0);
 
     /* fill one MTU or all available bytes */
-    towrite = MIN (packet_len, GST_BASE_RTP_PAYLOAD_MTU (rtpmpapay));
+    towrite = MIN (packet_len, GST_RTP_BASE_PAYLOAD_MTU (rtpmpapay));
 
     /* this is the payload length */
     payload_len = gst_rtp_buffer_calc_payload_len (towrite, 0, 0);
@@ -236,14 +236,14 @@ gst_rtp_mpa_pay_flush (GstRtpMPAPay * rtpmpapay)
     GST_BUFFER_TIMESTAMP (outbuf) = rtpmpapay->first_ts;
     GST_BUFFER_DURATION (outbuf) = rtpmpapay->duration;
 
-    ret = gst_base_rtp_payload_push (GST_BASE_RTP_PAYLOAD (rtpmpapay), outbuf);
+    ret = gst_rtp_base_payload_push (GST_RTP_BASE_PAYLOAD (rtpmpapay), outbuf);
   }
 
   return ret;
 }
 
 static GstFlowReturn
-gst_rtp_mpa_pay_handle_buffer (GstBaseRTPPayload * basepayload,
+gst_rtp_mpa_pay_handle_buffer (GstRTPBasePayload * basepayload,
     GstBuffer * buffer)
 {
   GstRtpMPAPay *rtpmpapay;
@@ -271,7 +271,7 @@ gst_rtp_mpa_pay_handle_buffer (GstBaseRTPPayload * basepayload,
 
   /* if this buffer is going to overflow the packet, flush what we
    * have. */
-  if (gst_base_rtp_payload_is_filled (basepayload,
+  if (gst_rtp_base_payload_is_filled (basepayload,
           packet_len, rtpmpapay->duration + duration)) {
     ret = gst_rtp_mpa_pay_flush (rtpmpapay);
     avail = 0;

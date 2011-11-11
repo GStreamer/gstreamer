@@ -41,7 +41,7 @@ typedef struct _GstRtpJ2KPayClass GstRtpJ2KPayClass;
 
 struct _GstRtpJ2KPay
 {
-  GstBaseRTPPayload payload;
+  GstRTPBasePayload payload;
 
   gboolean buffer_list;
 
@@ -51,7 +51,7 @@ struct _GstRtpJ2KPay
 
 struct _GstRtpJ2KPayClass
 {
-  GstBaseRTPPayloadClass parent_class;
+  GstRTPBasePayloadClass parent_class;
 };
 
 GType gst_rtp_j2k_pay_get_type (void);

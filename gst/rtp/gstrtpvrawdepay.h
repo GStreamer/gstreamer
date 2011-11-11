@@ -44,7 +44,7 @@ typedef struct _GstRtpVRawDepayClass GstRtpVRawDepayClass;
 
 struct _GstRtpVRawDepay
 {
-  GstBaseRTPDepayload payload;
+  GstRTPBaseDepayload payload;
 
   GstBufferPool *pool;
   GstVideoInfo vinfo;
@@ -59,7 +59,7 @@ struct _GstRtpVRawDepay
 
 struct _GstRtpVRawDepayClass
 {
-  GstBaseRTPDepayloadClass parent_class;
+  GstRTPBaseDepayloadClass parent_class;
 };
 
 GType gst_rtp_vraw_depay_get_type (void);

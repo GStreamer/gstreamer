@@ -59,28 +59,28 @@ GST_STATIC_PAD_TEMPLATE ("src",
 
 static void gst_rtp_mp4a_pay_finalize (GObject * object);
 
-static gboolean gst_rtp_mp4a_pay_setcaps (GstBaseRTPPayload * payload,
+static gboolean gst_rtp_mp4a_pay_setcaps (GstRTPBasePayload * payload,
     GstCaps * caps);
-static GstFlowReturn gst_rtp_mp4a_pay_handle_buffer (GstBaseRTPPayload *
+static GstFlowReturn gst_rtp_mp4a_pay_handle_buffer (GstRTPBasePayload *
     payload, GstBuffer * buffer);
 
 #define gst_rtp_mp4a_pay_parent_class parent_class
-G_DEFINE_TYPE (GstRtpMP4APay, gst_rtp_mp4a_pay, GST_TYPE_BASE_RTP_PAYLOAD)
+G_DEFINE_TYPE (GstRtpMP4APay, gst_rtp_mp4a_pay, GST_TYPE_RTP_BASE_PAYLOAD)
 
      static void gst_rtp_mp4a_pay_class_init (GstRtpMP4APayClass * klass)
 {
   GObjectClass *gobject_class;
   GstElementClass *gstelement_class;
-  GstBaseRTPPayloadClass *gstbasertppayload_class;
+  GstRTPBasePayloadClass *gstrtpbasepayload_class;
 
   gobject_class = (GObjectClass *) klass;
   gstelement_class = (GstElementClass *) klass;
-  gstbasertppayload_class = (GstBaseRTPPayloadClass *) klass;
+  gstrtpbasepayload_class = (GstRTPBasePayloadClass *) klass;
 
   gobject_class->finalize = gst_rtp_mp4a_pay_finalize;
 
-  gstbasertppayload_class->set_caps = gst_rtp_mp4a_pay_setcaps;
-  gstbasertppayload_class->handle_buffer = gst_rtp_mp4a_pay_handle_buffer;
+  gstrtpbasepayload_class->set_caps = gst_rtp_mp4a_pay_setcaps;
+  gstrtpbasepayload_class->handle_buffer = gst_rtp_mp4a_pay_handle_buffer;
 
   gst_element_class_add_pad_template (gstelement_class,
       gst_static_pad_template_get (&gst_rtp_mp4a_pay_src_template));
@@ -228,7 +228,7 @@ gst_rtp_mp4a_pay_new_caps (GstRtpMP4APay * rtpmp4apay)
   gst_value_set_buffer (&v, rtpmp4apay->config);
   config = gst_value_serialize (&v);
 
-  res = gst_base_rtp_payload_set_outcaps (GST_BASE_RTP_PAYLOAD (rtpmp4apay),
+  res = gst_rtp_base_payload_set_outcaps (GST_RTP_BASE_PAYLOAD (rtpmp4apay),
       "cpresent", G_TYPE_STRING, "0", "config", G_TYPE_STRING, config, NULL);
 
   g_value_unset (&v);
@@ -238,7 +238,7 @@ gst_rtp_mp4a_pay_new_caps (GstRtpMP4APay * rtpmp4apay)
 }
 
 static gboolean
-gst_rtp_mp4a_pay_setcaps (GstBaseRTPPayload * payload, GstCaps * caps)
+gst_rtp_mp4a_pay_setcaps (GstRTPBasePayload * payload, GstCaps * caps)
 {
   GstRtpMP4APay *rtpmp4apay;
   GstStructure *structure;
@@ -321,7 +321,7 @@ gst_rtp_mp4a_pay_setcaps (GstBaseRTPPayload * payload, GstCaps * caps)
     GST_WARNING_OBJECT (payload, "Need framed AAC data as input!");
   }
 
-  gst_base_rtp_payload_set_options (payload, "audio", TRUE, "MP4A-LATM",
+  gst_rtp_base_payload_set_options (payload, "audio", TRUE, "MP4A-LATM",
       rtpmp4apay->rate);
 
   res = gst_rtp_mp4a_pay_new_caps (rtpmp4apay);
@@ -339,7 +339,7 @@ config_failed:
 /* we expect buffers as exactly one complete AU
  */
 static GstFlowReturn
-gst_rtp_mp4a_pay_handle_buffer (GstBaseRTPPayload * basepayload,
+gst_rtp_mp4a_pay_handle_buffer (GstRTPBasePayload * basepayload,
     GstBuffer * buffer)
 {
   GstRtpMP4APay *rtpmp4apay;
@@ -359,7 +359,7 @@ gst_rtp_mp4a_pay_handle_buffer (GstBaseRTPPayload * basepayload,
   timestamp = GST_BUFFER_TIMESTAMP (buffer);
 
   fragmented = FALSE;
-  mtu = GST_BASE_RTP_PAYLOAD_MTU (rtpmp4apay);
+  mtu = GST_RTP_BASE_PAYLOAD_MTU (rtpmp4apay);
 
   while (size > 0) {
     guint towrite;
@@ -423,7 +423,7 @@ gst_rtp_mp4a_pay_handle_buffer (GstBaseRTPPayload * basepayload,
     /* copy incomming timestamp (if any) to outgoing buffers */
     GST_BUFFER_TIMESTAMP (outbuf) = timestamp;
 
-    ret = gst_base_rtp_payload_push (GST_BASE_RTP_PAYLOAD (rtpmp4apay), outbuf);
+    ret = gst_rtp_base_payload_push (GST_RTP_BASE_PAYLOAD (rtpmp4apay), outbuf);
 
     fragmented = TRUE;
   }

@@ -41,7 +41,7 @@ typedef struct _GstRtpL16PayClass GstRtpL16PayClass;
 
 struct _GstRtpL16Pay
 {
-  GstBaseRTPAudioPayload payload;
+  GstRTPBaseAudioPayload payload;
 
   gint rate;
   gint channels;
@@ -49,7 +49,7 @@ struct _GstRtpL16Pay
 
 struct _GstRtpL16PayClass
 {
-  GstBaseRTPAudioPayloadClass parent_class;
+  GstRTPBaseAudioPayloadClass parent_class;
 };
 
 GType gst_rtp_L16_pay_get_type (void);

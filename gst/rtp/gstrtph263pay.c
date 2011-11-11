@@ -369,13 +369,13 @@ static GstStaticPadTemplate gst_rtp_h263_pay_src_template =
 
 static void gst_rtp_h263_pay_finalize (GObject * object);
 
-static gboolean gst_rtp_h263_pay_setcaps (GstBaseRTPPayload * payload,
+static gboolean gst_rtp_h263_pay_setcaps (GstRTPBasePayload * payload,
     GstCaps * caps);
 static void gst_rtp_h263_pay_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
 static void gst_rtp_h263_pay_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
-static GstFlowReturn gst_rtp_h263_pay_handle_buffer (GstBaseRTPPayload *
+static GstFlowReturn gst_rtp_h263_pay_handle_buffer (GstRTPBasePayload *
     payload, GstBuffer * buffer);
 
 static void gst_rtp_h263_pay_boundry_init (GstRtpH263PayBoundry * boundry,
@@ -396,23 +396,23 @@ static void gst_rtp_h263_pay_context_destroy (GstRtpH263PayContext * context,
 static void gst_rtp_h263_pay_package_destroy (GstRtpH263PayPackage * pack);
 
 #define gst_rtp_h263_pay_parent_class parent_class
-G_DEFINE_TYPE (GstRtpH263Pay, gst_rtp_h263_pay, GST_TYPE_BASE_RTP_PAYLOAD);
+G_DEFINE_TYPE (GstRtpH263Pay, gst_rtp_h263_pay, GST_TYPE_RTP_BASE_PAYLOAD);
 
 static void
 gst_rtp_h263_pay_class_init (GstRtpH263PayClass * klass)
 {
   GObjectClass *gobject_class;
   GstElementClass *gstelement_class;
-  GstBaseRTPPayloadClass *gstbasertppayload_class;
+  GstRTPBasePayloadClass *gstrtpbasepayload_class;
 
   gobject_class = (GObjectClass *) klass;
   gstelement_class = (GstElementClass *) klass;
-  gstbasertppayload_class = (GstBaseRTPPayloadClass *) klass;
+  gstrtpbasepayload_class = (GstRTPBasePayloadClass *) klass;
 
   gobject_class->finalize = gst_rtp_h263_pay_finalize;
 
-  gstbasertppayload_class->set_caps = gst_rtp_h263_pay_setcaps;
-  gstbasertppayload_class->handle_buffer = gst_rtp_h263_pay_handle_buffer;
+  gstrtpbasepayload_class->set_caps = gst_rtp_h263_pay_setcaps;
+  gstrtpbasepayload_class->handle_buffer = gst_rtp_h263_pay_handle_buffer;
   gobject_class->set_property = gst_rtp_h263_pay_set_property;
   gobject_class->get_property = gst_rtp_h263_pay_get_property;
 
@@ -459,13 +459,13 @@ gst_rtp_h263_pay_finalize (GObject * object)
 }
 
 static gboolean
-gst_rtp_h263_pay_setcaps (GstBaseRTPPayload * payload, GstCaps * caps)
+gst_rtp_h263_pay_setcaps (GstRTPBasePayload * payload, GstCaps * caps)
 {
   gboolean res;
 
   payload->pt = GST_RTP_PAYLOAD_H263;
-  gst_base_rtp_payload_set_options (payload, "video", TRUE, "H263", 90000);
-  res = gst_base_rtp_payload_set_outcaps (payload, NULL);
+  gst_rtp_base_payload_set_options (payload, "video", TRUE, "H263", 90000);
+  res = gst_rtp_base_payload_set_outcaps (payload, NULL);
 
   return res;
 }
@@ -1279,7 +1279,7 @@ gst_rtp_h263_pay_push (GstRtpH263Pay * rtph263pay,
   gst_rtp_buffer_unmap (&rtp);
 
   ret =
-      gst_base_rtp_payload_push (GST_BASE_RTP_PAYLOAD (rtph263pay),
+      gst_rtp_base_payload_push (GST_RTP_BASE_PAYLOAD (rtph263pay),
       package->outbuf);
   GST_DEBUG ("Package pushed, returning");
 
@@ -1776,7 +1776,7 @@ end:
 }
 
 static GstFlowReturn
-gst_rtp_h263_pay_handle_buffer (GstBaseRTPPayload * payload, GstBuffer * buffer)
+gst_rtp_h263_pay_handle_buffer (GstRTPBasePayload * payload, GstBuffer * buffer)
 {
 
   GstRtpH263Pay *rtph263pay;

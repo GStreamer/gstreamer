@@ -75,21 +75,21 @@ static GstStaticPadTemplate sink_factory = GST_STATIC_PAD_TEMPLATE ("sink",
 static GstStateChangeReturn
 gst_rtp_dv_depay_change_state (GstElement * element, GstStateChange transition);
 
-static GstBuffer *gst_rtp_dv_depay_process (GstBaseRTPDepayload * base,
+static GstBuffer *gst_rtp_dv_depay_process (GstRTPBaseDepayload * base,
     GstBuffer * in);
-static gboolean gst_rtp_dv_depay_setcaps (GstBaseRTPDepayload * depayload,
+static gboolean gst_rtp_dv_depay_setcaps (GstRTPBaseDepayload * depayload,
     GstCaps * caps);
 
 #define gst_rtp_dv_depay_parent_class parent_class
-G_DEFINE_TYPE (GstRTPDVDepay, gst_rtp_dv_depay, GST_TYPE_BASE_RTP_DEPAYLOAD);
+G_DEFINE_TYPE (GstRTPDVDepay, gst_rtp_dv_depay, GST_TYPE_RTP_BASE_DEPAYLOAD);
 
 
 static void
 gst_rtp_dv_depay_class_init (GstRTPDVDepayClass * klass)
 {
   GstElementClass *gstelement_class = (GstElementClass *) klass;
-  GstBaseRTPDepayloadClass *gstbasertpdepayload_class =
-      (GstBaseRTPDepayloadClass *) klass;
+  GstRTPBaseDepayloadClass *gstrtpbasedepayload_class =
+      (GstRTPBaseDepayloadClass *) klass;
 
   GST_DEBUG_CATEGORY_INIT (rtpdvdepay_debug, "rtpdvdepay", 0,
       "DV RTP Depayloader");
@@ -107,9 +107,9 @@ gst_rtp_dv_depay_class_init (GstRTPDVDepayClass * klass)
       "Depayloads DV from RTP packets (RFC 3189)",
       "Marcel Moreaux <marcelm@spacelabs.nl>, Wim Taymans <wim.taymans@gmail.com>");
 
-  gstbasertpdepayload_class->process =
+  gstrtpbasedepayload_class->process =
       GST_DEBUG_FUNCPTR (gst_rtp_dv_depay_process);
-  gstbasertpdepayload_class->set_caps =
+  gstrtpbasedepayload_class->set_caps =
       GST_DEBUG_FUNCPTR (gst_rtp_dv_depay_setcaps);
 }
 
@@ -159,7 +159,7 @@ parse_encode (GstRTPDVDepay * rtpdvdepay, const gchar * encode)
 }
 
 static gboolean
-gst_rtp_dv_depay_setcaps (GstBaseRTPDepayload * depayload, GstCaps * caps)
+gst_rtp_dv_depay_setcaps (GstRTPBaseDepayload * depayload, GstCaps * caps)
 {
   GstStructure *structure;
   GstRTPDVDepay *rtpdvdepay;
@@ -291,7 +291,7 @@ calculate_difblock_location (guint8 * block)
  * NTSC.
  */
 static GstBuffer *
-gst_rtp_dv_depay_process (GstBaseRTPDepayload * base, GstBuffer * in)
+gst_rtp_dv_depay_process (GstRTPBaseDepayload * base, GstBuffer * in)
 {
   GstBuffer *out = NULL;
   guint8 *payload;

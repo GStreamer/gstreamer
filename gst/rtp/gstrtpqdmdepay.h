@@ -49,7 +49,7 @@ typedef struct _QDM2Packet {
 
 struct _GstRtpQDM2Depay
 {
-  GstBaseRTPDepayload depayload;
+  GstRTPBaseDepayload depayload;
 
   GstAdapter *adapter;
 
@@ -73,7 +73,7 @@ struct _GstRtpQDM2Depay
 
 struct _GstRtpQDM2DepayClass
 {
-  GstBaseRTPDepayloadClass parent_class;
+  GstRTPBaseDepayloadClass parent_class;
 };
 
 GType gst_rtp_qdm2_depay_get_type (void);

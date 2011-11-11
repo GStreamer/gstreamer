@@ -45,31 +45,31 @@ GST_STATIC_PAD_TEMPLATE ("src",
         "clock-rate = (int) 90000, " "encoding-name = (string) \"MP2T\"")
     );
 
-static gboolean gst_rtp_mp2t_pay_setcaps (GstBaseRTPPayload * payload,
+static gboolean gst_rtp_mp2t_pay_setcaps (GstRTPBasePayload * payload,
     GstCaps * caps);
-static GstFlowReturn gst_rtp_mp2t_pay_handle_buffer (GstBaseRTPPayload *
+static GstFlowReturn gst_rtp_mp2t_pay_handle_buffer (GstRTPBasePayload *
     payload, GstBuffer * buffer);
 static GstFlowReturn gst_rtp_mp2t_pay_flush (GstRTPMP2TPay * rtpmp2tpay);
 static void gst_rtp_mp2t_pay_finalize (GObject * object);
 
 #define gst_rtp_mp2t_pay_parent_class parent_class
-G_DEFINE_TYPE (GstRTPMP2TPay, gst_rtp_mp2t_pay, GST_TYPE_BASE_RTP_PAYLOAD);
+G_DEFINE_TYPE (GstRTPMP2TPay, gst_rtp_mp2t_pay, GST_TYPE_RTP_BASE_PAYLOAD);
 
 static void
 gst_rtp_mp2t_pay_class_init (GstRTPMP2TPayClass * klass)
 {
   GObjectClass *gobject_class;
   GstElementClass *gstelement_class;
-  GstBaseRTPPayloadClass *gstbasertppayload_class;
+  GstRTPBasePayloadClass *gstrtpbasepayload_class;
 
   gobject_class = (GObjectClass *) klass;
   gstelement_class = (GstElementClass *) klass;
-  gstbasertppayload_class = (GstBaseRTPPayloadClass *) klass;
+  gstrtpbasepayload_class = (GstRTPBasePayloadClass *) klass;
 
   gobject_class->finalize = gst_rtp_mp2t_pay_finalize;
 
-  gstbasertppayload_class->set_caps = gst_rtp_mp2t_pay_setcaps;
-  gstbasertppayload_class->handle_buffer = gst_rtp_mp2t_pay_handle_buffer;
+  gstrtpbasepayload_class->set_caps = gst_rtp_mp2t_pay_setcaps;
+  gstrtpbasepayload_class->handle_buffer = gst_rtp_mp2t_pay_handle_buffer;
 
   gst_element_class_add_pad_template (gstelement_class,
       gst_static_pad_template_get (&gst_rtp_mp2t_pay_sink_template));
@@ -84,8 +84,8 @@ gst_rtp_mp2t_pay_class_init (GstRTPMP2TPayClass * klass)
 static void
 gst_rtp_mp2t_pay_init (GstRTPMP2TPay * rtpmp2tpay)
 {
-  GST_BASE_RTP_PAYLOAD (rtpmp2tpay)->clock_rate = 90000;
-  GST_BASE_RTP_PAYLOAD_PT (rtpmp2tpay) = GST_RTP_PAYLOAD_MP2T;
+  GST_RTP_BASE_PAYLOAD (rtpmp2tpay)->clock_rate = 90000;
+  GST_RTP_BASE_PAYLOAD_PT (rtpmp2tpay) = GST_RTP_PAYLOAD_MP2T;
 
   rtpmp2tpay->adapter = gst_adapter_new ();
 }
@@ -104,12 +104,12 @@ gst_rtp_mp2t_pay_finalize (GObject * object)
 }
 
 static gboolean
-gst_rtp_mp2t_pay_setcaps (GstBaseRTPPayload * payload, GstCaps * caps)
+gst_rtp_mp2t_pay_setcaps (GstRTPBasePayload * payload, GstCaps * caps)
 {
   gboolean res;
 
-  gst_base_rtp_payload_set_options (payload, "video", TRUE, "MP2T", 90000);
-  res = gst_base_rtp_payload_set_outcaps (payload, NULL);
+  gst_rtp_base_payload_set_options (payload, "video", TRUE, "MP2T", 90000);
+  res = gst_rtp_base_payload_set_outcaps (payload, NULL);
 
   return res;
 }
@@ -140,7 +140,7 @@ gst_rtp_mp2t_pay_flush (GstRTPMP2TPay * rtpmp2tpay)
   GST_DEBUG_OBJECT (rtpmp2tpay, "pushing buffer of size %d",
       gst_buffer_get_size (outbuf));
 
-  ret = gst_base_rtp_payload_push (GST_BASE_RTP_PAYLOAD (rtpmp2tpay), outbuf);
+  ret = gst_rtp_base_payload_push (GST_RTP_BASE_PAYLOAD (rtpmp2tpay), outbuf);
 
   /* flush the adapter content */
   gst_adapter_flush (rtpmp2tpay->adapter, avail);
@@ -149,7 +149,7 @@ gst_rtp_mp2t_pay_flush (GstRTPMP2TPay * rtpmp2tpay)
 }
 
 static GstFlowReturn
-gst_rtp_mp2t_pay_handle_buffer (GstBaseRTPPayload * basepayload,
+gst_rtp_mp2t_pay_handle_buffer (GstRTPBasePayload * basepayload,
     GstBuffer * buffer)
 {
   GstRTPMP2TPay *rtpmp2tpay;
@@ -178,7 +178,7 @@ gst_rtp_mp2t_pay_handle_buffer (GstBaseRTPPayload * basepayload,
 
   /* if this buffer is going to overflow the packet, flush what we
    * have. */
-  if (gst_base_rtp_payload_is_filled (basepayload,
+  if (gst_rtp_base_payload_is_filled (basepayload,
           packet_len, rtpmp2tpay->duration + duration)) {
     ret = gst_rtp_mp2t_pay_flush (rtpmp2tpay);
     rtpmp2tpay->first_ts = timestamp;

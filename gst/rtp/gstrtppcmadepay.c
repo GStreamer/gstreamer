@@ -60,23 +60,23 @@ GST_STATIC_PAD_TEMPLATE ("src",
     GST_STATIC_CAPS ("audio/x-alaw, channels = (int) 1, rate = (int) [1, MAX ]")
     );
 
-static GstBuffer *gst_rtp_pcma_depay_process (GstBaseRTPDepayload * depayload,
+static GstBuffer *gst_rtp_pcma_depay_process (GstRTPBaseDepayload * depayload,
     GstBuffer * buf);
-static gboolean gst_rtp_pcma_depay_setcaps (GstBaseRTPDepayload * depayload,
+static gboolean gst_rtp_pcma_depay_setcaps (GstRTPBaseDepayload * depayload,
     GstCaps * caps);
 
 #define gst_rtp_pcma_depay_parent_class parent_class
 G_DEFINE_TYPE (GstRtpPcmaDepay, gst_rtp_pcma_depay,
-    GST_TYPE_BASE_RTP_DEPAYLOAD);
+    GST_TYPE_RTP_BASE_DEPAYLOAD);
 
 static void
 gst_rtp_pcma_depay_class_init (GstRtpPcmaDepayClass * klass)
 {
   GstElementClass *gstelement_class;
-  GstBaseRTPDepayloadClass *gstbasertpdepayload_class;
+  GstRTPBaseDepayloadClass *gstrtpbasedepayload_class;
 
   gstelement_class = (GstElementClass *) klass;
-  gstbasertpdepayload_class = (GstBaseRTPDepayloadClass *) klass;
+  gstrtpbasedepayload_class = (GstRTPBaseDepayloadClass *) klass;
 
   gst_element_class_add_pad_template (gstelement_class,
       gst_static_pad_template_get (&gst_rtp_pcma_depay_src_template));
@@ -88,22 +88,22 @@ gst_rtp_pcma_depay_class_init (GstRtpPcmaDepayClass * klass)
       "Extracts PCMA audio from RTP packets",
       "Edgard Lima <edgard.lima@indt.org.br>, Zeeshan Ali <zeenix@gmail.com>");
 
-  gstbasertpdepayload_class->process = gst_rtp_pcma_depay_process;
-  gstbasertpdepayload_class->set_caps = gst_rtp_pcma_depay_setcaps;
+  gstrtpbasedepayload_class->process = gst_rtp_pcma_depay_process;
+  gstrtpbasedepayload_class->set_caps = gst_rtp_pcma_depay_setcaps;
 }
 
 static void
 gst_rtp_pcma_depay_init (GstRtpPcmaDepay * rtppcmadepay)
 {
-  GstBaseRTPDepayload *depayload;
+  GstRTPBaseDepayload *depayload;
 
-  depayload = GST_BASE_RTP_DEPAYLOAD (rtppcmadepay);
+  depayload = GST_RTP_BASE_DEPAYLOAD (rtppcmadepay);
 
-  gst_pad_use_fixed_caps (GST_BASE_RTP_DEPAYLOAD_SRCPAD (depayload));
+  gst_pad_use_fixed_caps (GST_RTP_BASE_DEPAYLOAD_SRCPAD (depayload));
 }
 
 static gboolean
-gst_rtp_pcma_depay_setcaps (GstBaseRTPDepayload * depayload, GstCaps * caps)
+gst_rtp_pcma_depay_setcaps (GstRTPBaseDepayload * depayload, GstCaps * caps)
 {
   GstCaps *srccaps;
   GstStructure *structure;
@@ -118,14 +118,14 @@ gst_rtp_pcma_depay_setcaps (GstBaseRTPDepayload * depayload, GstCaps * caps)
 
   srccaps = gst_caps_new_simple ("audio/x-alaw",
       "channels", G_TYPE_INT, 1, "rate", G_TYPE_INT, clock_rate, NULL);
-  ret = gst_pad_set_caps (GST_BASE_RTP_DEPAYLOAD_SRCPAD (depayload), srccaps);
+  ret = gst_pad_set_caps (GST_RTP_BASE_DEPAYLOAD_SRCPAD (depayload), srccaps);
   gst_caps_unref (srccaps);
 
   return ret;
 }
 
 static GstBuffer *
-gst_rtp_pcma_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
+gst_rtp_pcma_depay_process (GstRTPBaseDepayload * depayload, GstBuffer * buf)
 {
   GstBuffer *outbuf = NULL;
   gboolean marker;

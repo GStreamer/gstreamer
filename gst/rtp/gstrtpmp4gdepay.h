@@ -42,7 +42,7 @@ typedef struct _GstRtpMP4GDepayClass GstRtpMP4GDepayClass;
 
 struct _GstRtpMP4GDepay
 {
-  GstBaseRTPDepayload depayload;
+  GstRTPBaseDepayload depayload;
 
   gint profile_level_id;
   gint streamtype;
@@ -74,7 +74,7 @@ struct _GstRtpMP4GDepay
 
 struct _GstRtpMP4GDepayClass
 {
-  GstBaseRTPDepayloadClass parent_class;
+  GstRTPBaseDepayloadClass parent_class;
 };
 
 GType gst_rtp_mp4g_depay_get_type (void);

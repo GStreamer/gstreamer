@@ -44,12 +44,12 @@ typedef struct _GstRtpG729DepayClass GstRtpG729DepayClass;
 
 struct _GstRtpG729Depay
 {
-  GstBaseRTPDepayload depayload;
+  GstRTPBaseDepayload depayload;
 };
 
 struct _GstRtpG729DepayClass
 {
-  GstBaseRTPDepayloadClass parent_class;
+  GstRTPBaseDepayloadClass parent_class;
 };
 
 GType gst_rtp_g729_depay_get_type (void);

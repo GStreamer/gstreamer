@@ -71,26 +71,26 @@ GST_STATIC_PAD_TEMPLATE ("src",
     GST_STATIC_CAPS ("audio/G729, " "channels = (int) 1," "rate = (int) 8000")
     );
 
-static gboolean gst_rtp_g729_depay_setcaps (GstBaseRTPDepayload * depayload,
+static gboolean gst_rtp_g729_depay_setcaps (GstRTPBaseDepayload * depayload,
     GstCaps * caps);
-static GstBuffer *gst_rtp_g729_depay_process (GstBaseRTPDepayload * depayload,
+static GstBuffer *gst_rtp_g729_depay_process (GstRTPBaseDepayload * depayload,
     GstBuffer * buf);
 
 #define gst_rtp_g729_depay_parent_class parent_class
 G_DEFINE_TYPE (GstRtpG729Depay, gst_rtp_g729_depay,
-    GST_TYPE_BASE_RTP_DEPAYLOAD);
+    GST_TYPE_RTP_BASE_DEPAYLOAD);
 
 static void
 gst_rtp_g729_depay_class_init (GstRtpG729DepayClass * klass)
 {
   GstElementClass *gstelement_class;
-  GstBaseRTPDepayloadClass *gstbasertpdepayload_class;
+  GstRTPBaseDepayloadClass *gstrtpbasedepayload_class;
 
   GST_DEBUG_CATEGORY_INIT (rtpg729depay_debug, "rtpg729depay", 0,
       "G.729 RTP Depayloader");
 
   gstelement_class = (GstElementClass *) klass;
-  gstbasertpdepayload_class = (GstBaseRTPDepayloadClass *) klass;
+  gstrtpbasedepayload_class = (GstRTPBaseDepayloadClass *) klass;
 
   gst_element_class_add_pad_template (gstelement_class,
       gst_static_pad_template_get (&gst_rtp_g729_depay_src_template));
@@ -102,22 +102,22 @@ gst_rtp_g729_depay_class_init (GstRtpG729DepayClass * klass)
       "Extracts G.729 audio from RTP packets (RFC 3551)",
       "Laurent Glayal <spglegle@yahoo.fr>");
 
-  gstbasertpdepayload_class->process = gst_rtp_g729_depay_process;
-  gstbasertpdepayload_class->set_caps = gst_rtp_g729_depay_setcaps;
+  gstrtpbasedepayload_class->process = gst_rtp_g729_depay_process;
+  gstrtpbasedepayload_class->set_caps = gst_rtp_g729_depay_setcaps;
 }
 
 static void
 gst_rtp_g729_depay_init (GstRtpG729Depay * rtpg729depay)
 {
-  GstBaseRTPDepayload *depayload;
+  GstRTPBaseDepayload *depayload;
 
-  depayload = GST_BASE_RTP_DEPAYLOAD (rtpg729depay);
+  depayload = GST_RTP_BASE_DEPAYLOAD (rtpg729depay);
 
-  gst_pad_use_fixed_caps (GST_BASE_RTP_DEPAYLOAD_SRCPAD (depayload));
+  gst_pad_use_fixed_caps (GST_RTP_BASE_DEPAYLOAD_SRCPAD (depayload));
 }
 
 static gboolean
-gst_rtp_g729_depay_setcaps (GstBaseRTPDepayload * depayload, GstCaps * caps)
+gst_rtp_g729_depay_setcaps (GstRTPBaseDepayload * depayload, GstCaps * caps)
 {
   GstStructure *structure;
   GstCaps *srccaps;
@@ -149,7 +149,7 @@ gst_rtp_g729_depay_setcaps (GstBaseRTPDepayload * depayload, GstCaps * caps)
 
   srccaps = gst_caps_new_simple ("audio/G729",
       "channels", G_TYPE_INT, channels, "rate", G_TYPE_INT, clock_rate, NULL);
-  ret = gst_pad_set_caps (GST_BASE_RTP_DEPAYLOAD_SRCPAD (depayload), srccaps);
+  ret = gst_pad_set_caps (GST_RTP_BASE_DEPAYLOAD_SRCPAD (depayload), srccaps);
   gst_caps_unref (srccaps);
 
   return ret;
@@ -169,7 +169,7 @@ wrong_clock_rate:
 }
 
 static GstBuffer *
-gst_rtp_g729_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
+gst_rtp_g729_depay_process (GstRTPBaseDepayload * depayload, GstBuffer * buf)
 {
   GstRtpG729Depay *rtpg729depay;
   GstBuffer *outbuf = NULL;

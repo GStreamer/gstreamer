@@ -53,21 +53,21 @@ static GstStaticPadTemplate gst_rtp_mpv_depay_sink_template =
         "clock-rate = (int) 90000")
     );
 
-G_DEFINE_TYPE (GstRtpMPVDepay, gst_rtp_mpv_depay, GST_TYPE_BASE_RTP_DEPAYLOAD);
+G_DEFINE_TYPE (GstRtpMPVDepay, gst_rtp_mpv_depay, GST_TYPE_RTP_BASE_DEPAYLOAD);
 
-static gboolean gst_rtp_mpv_depay_setcaps (GstBaseRTPDepayload * depayload,
+static gboolean gst_rtp_mpv_depay_setcaps (GstRTPBaseDepayload * depayload,
     GstCaps * caps);
-static GstBuffer *gst_rtp_mpv_depay_process (GstBaseRTPDepayload * depayload,
+static GstBuffer *gst_rtp_mpv_depay_process (GstRTPBaseDepayload * depayload,
     GstBuffer * buf);
 
 static void
 gst_rtp_mpv_depay_class_init (GstRtpMPVDepayClass * klass)
 {
   GstElementClass *gstelement_class;
-  GstBaseRTPDepayloadClass *gstbasertpdepayload_class;
+  GstRTPBaseDepayloadClass *gstrtpbasedepayload_class;
 
   gstelement_class = (GstElementClass *) klass;
-  gstbasertpdepayload_class = (GstBaseRTPDepayloadClass *) klass;
+  gstrtpbasedepayload_class = (GstRTPBaseDepayloadClass *) klass;
 
   gst_element_class_add_pad_template (gstelement_class,
       gst_static_pad_template_get (&gst_rtp_mpv_depay_src_template));
@@ -79,8 +79,8 @@ gst_rtp_mpv_depay_class_init (GstRtpMPVDepayClass * klass)
       "Extracts MPEG video from RTP packets (RFC 2250)",
       "Wim Taymans <wim.taymans@gmail.com>");
 
-  gstbasertpdepayload_class->set_caps = gst_rtp_mpv_depay_setcaps;
-  gstbasertpdepayload_class->process = gst_rtp_mpv_depay_process;
+  gstrtpbasedepayload_class->set_caps = gst_rtp_mpv_depay_setcaps;
+  gstrtpbasedepayload_class->process = gst_rtp_mpv_depay_process;
 
   GST_DEBUG_CATEGORY_INIT (rtpmpvdepay_debug, "rtpmpvdepay", 0,
       "MPEG Video RTP Depayloader");
@@ -92,7 +92,7 @@ gst_rtp_mpv_depay_init (GstRtpMPVDepay * rtpmpvdepay)
 }
 
 static gboolean
-gst_rtp_mpv_depay_setcaps (GstBaseRTPDepayload * depayload, GstCaps * caps)
+gst_rtp_mpv_depay_setcaps (GstRTPBaseDepayload * depayload, GstCaps * caps)
 {
   GstStructure *structure;
   gint clock_rate;
@@ -115,7 +115,7 @@ gst_rtp_mpv_depay_setcaps (GstBaseRTPDepayload * depayload, GstCaps * caps)
 }
 
 static GstBuffer *
-gst_rtp_mpv_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
+gst_rtp_mpv_depay_process (GstRTPBaseDepayload * depayload, GstBuffer * buf)
 {
   GstRtpMPVDepay *rtpmpvdepay;
   GstBuffer *outbuf;

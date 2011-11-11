@@ -64,25 +64,25 @@ static GstStaticPadTemplate gst_rtp_L16_pay_src_template =
         "clock-rate = (int) 44100")
     );
 
-static gboolean gst_rtp_L16_pay_setcaps (GstBaseRTPPayload * basepayload,
+static gboolean gst_rtp_L16_pay_setcaps (GstRTPBasePayload * basepayload,
     GstCaps * caps);
-static GstCaps *gst_rtp_L16_pay_getcaps (GstBaseRTPPayload * rtppayload,
+static GstCaps *gst_rtp_L16_pay_getcaps (GstRTPBasePayload * rtppayload,
     GstPad * pad, GstCaps * filter);
 
 #define gst_rtp_L16_pay_parent_class parent_class
-G_DEFINE_TYPE (GstRtpL16Pay, gst_rtp_L16_pay, GST_TYPE_BASE_RTP_AUDIO_PAYLOAD);
+G_DEFINE_TYPE (GstRtpL16Pay, gst_rtp_L16_pay, GST_TYPE_RTP_BASE_AUDIO_PAYLOAD);
 
 static void
 gst_rtp_L16_pay_class_init (GstRtpL16PayClass * klass)
 {
   GstElementClass *gstelement_class;
-  GstBaseRTPPayloadClass *gstbasertppayload_class;
+  GstRTPBasePayloadClass *gstrtpbasepayload_class;
 
   gstelement_class = (GstElementClass *) klass;
-  gstbasertppayload_class = (GstBaseRTPPayloadClass *) klass;
+  gstrtpbasepayload_class = (GstRTPBasePayloadClass *) klass;
 
-  gstbasertppayload_class->set_caps = gst_rtp_L16_pay_setcaps;
-  gstbasertppayload_class->get_caps = gst_rtp_L16_pay_getcaps;
+  gstrtpbasepayload_class->set_caps = gst_rtp_L16_pay_setcaps;
+  gstrtpbasepayload_class->get_caps = gst_rtp_L16_pay_getcaps;
 
   gst_element_class_add_pad_template (gstelement_class,
       gst_static_pad_template_get (&gst_rtp_L16_pay_src_template));
@@ -101,16 +101,16 @@ gst_rtp_L16_pay_class_init (GstRtpL16PayClass * klass)
 static void
 gst_rtp_L16_pay_init (GstRtpL16Pay * rtpL16pay)
 {
-  GstBaseRTPAudioPayload *basertpaudiopayload;
+  GstRTPBaseAudioPayload *rtpbaseaudiopayload;
 
-  basertpaudiopayload = GST_BASE_RTP_AUDIO_PAYLOAD (rtpL16pay);
+  rtpbaseaudiopayload = GST_RTP_BASE_AUDIO_PAYLOAD (rtpL16pay);
 
-  /* tell basertpaudiopayload that this is a sample based codec */
-  gst_base_rtp_audio_payload_set_sample_based (basertpaudiopayload);
+  /* tell rtpbaseaudiopayload that this is a sample based codec */
+  gst_rtp_base_audio_payload_set_sample_based (rtpbaseaudiopayload);
 }
 
 static gboolean
-gst_rtp_L16_pay_setcaps (GstBaseRTPPayload * basepayload, GstCaps * caps)
+gst_rtp_L16_pay_setcaps (GstRTPBasePayload * basepayload, GstCaps * caps)
 {
   GstRtpL16Pay *rtpL16pay;
   GstStructure *structure;
@@ -119,9 +119,9 @@ gst_rtp_L16_pay_setcaps (GstBaseRTPPayload * basepayload, GstCaps * caps)
   gchar *params;
   GstAudioChannelPosition *pos;
   const GstRTPChannelOrder *order;
-  GstBaseRTPAudioPayload *basertpaudiopayload;
+  GstRTPBaseAudioPayload *rtpbaseaudiopayload;
 
-  basertpaudiopayload = GST_BASE_RTP_AUDIO_PAYLOAD (basepayload);
+  rtpbaseaudiopayload = GST_RTP_BASE_AUDIO_PAYLOAD (basepayload);
   rtpL16pay = GST_RTP_L16_PAY (basepayload);
 
   structure = gst_caps_get_structure (caps, 0);
@@ -140,7 +140,7 @@ gst_rtp_L16_pay_setcaps (GstBaseRTPPayload * basepayload, GstCaps * caps)
   else
     order = NULL;
 
-  gst_base_rtp_payload_set_options (basepayload, "audio", TRUE, "L16", rate);
+  gst_rtp_base_payload_set_options (basepayload, "audio", TRUE, "L16", rate);
   params = g_strdup_printf ("%d", channels);
 
   if (!order && channels > 2) {
@@ -149,11 +149,11 @@ gst_rtp_L16_pay_setcaps (GstBaseRTPPayload * basepayload, GstCaps * caps)
   }
 
   if (order && order->name) {
-    res = gst_base_rtp_payload_set_outcaps (basepayload,
+    res = gst_rtp_base_payload_set_outcaps (basepayload,
         "encoding-params", G_TYPE_STRING, params, "channels", G_TYPE_INT,
         channels, "channel-order", G_TYPE_STRING, order->name, NULL);
   } else {
-    res = gst_base_rtp_payload_set_outcaps (basepayload,
+    res = gst_rtp_base_payload_set_outcaps (basepayload,
         "encoding-params", G_TYPE_STRING, params, "channels", G_TYPE_INT,
         channels, NULL);
   }
@@ -165,7 +165,7 @@ gst_rtp_L16_pay_setcaps (GstBaseRTPPayload * basepayload, GstCaps * caps)
   rtpL16pay->channels = channels;
 
   /* octet-per-sample is 2 * channels for L16 */
-  gst_base_rtp_audio_payload_set_sample_options (basertpaudiopayload,
+  gst_rtp_base_audio_payload_set_sample_options (rtpbaseaudiopayload,
       2 * rtpL16pay->channels);
 
   return res;
@@ -184,7 +184,7 @@ no_channels:
 }
 
 static GstCaps *
-gst_rtp_L16_pay_getcaps (GstBaseRTPPayload * rtppayload, GstPad * pad,
+gst_rtp_L16_pay_getcaps (GstRTPBasePayload * rtppayload, GstPad * pad,
     GstCaps * filter)
 {
   GstCaps *otherpadcaps;

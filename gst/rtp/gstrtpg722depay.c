@@ -64,24 +64,24 @@ static GstStaticPadTemplate gst_rtp_g722_depay_sink_template =
 
 #define gst_rtp_g722_depay_parent_class parent_class
 G_DEFINE_TYPE (GstRtpG722Depay, gst_rtp_g722_depay,
-    GST_TYPE_BASE_RTP_DEPAYLOAD);
+    GST_TYPE_RTP_BASE_DEPAYLOAD);
 
-static gboolean gst_rtp_g722_depay_setcaps (GstBaseRTPDepayload * depayload,
+static gboolean gst_rtp_g722_depay_setcaps (GstRTPBaseDepayload * depayload,
     GstCaps * caps);
-static GstBuffer *gst_rtp_g722_depay_process (GstBaseRTPDepayload * depayload,
+static GstBuffer *gst_rtp_g722_depay_process (GstRTPBaseDepayload * depayload,
     GstBuffer * buf);
 
 static void
 gst_rtp_g722_depay_class_init (GstRtpG722DepayClass * klass)
 {
   GstElementClass *gstelement_class;
-  GstBaseRTPDepayloadClass *gstbasertpdepayload_class;
+  GstRTPBaseDepayloadClass *gstrtpbasedepayload_class;
 
   GST_DEBUG_CATEGORY_INIT (rtpg722depay_debug, "rtpg722depay", 0,
       "G722 RTP Depayloader");
 
   gstelement_class = (GstElementClass *) klass;
-  gstbasertpdepayload_class = (GstBaseRTPDepayloadClass *) klass;
+  gstrtpbasedepayload_class = (GstRTPBaseDepayloadClass *) klass;
 
   gst_element_class_add_pad_template (gstelement_class,
       gst_static_pad_template_get (&gst_rtp_g722_depay_src_template));
@@ -93,8 +93,8 @@ gst_rtp_g722_depay_class_init (GstRtpG722DepayClass * klass)
       "Extracts G722 audio from RTP packets",
       "Wim Taymans <wim.taymans@gmail.com>");
 
-  gstbasertpdepayload_class->set_caps = gst_rtp_g722_depay_setcaps;
-  gstbasertpdepayload_class->process = gst_rtp_g722_depay_process;
+  gstrtpbasedepayload_class->set_caps = gst_rtp_g722_depay_setcaps;
+  gstrtpbasedepayload_class->process = gst_rtp_g722_depay_process;
 }
 
 static void
@@ -119,7 +119,7 @@ gst_rtp_g722_depay_parse_int (GstStructure * structure, const gchar * field,
 }
 
 static gboolean
-gst_rtp_g722_depay_setcaps (GstBaseRTPDepayload * depayload, GstCaps * caps)
+gst_rtp_g722_depay_setcaps (GstRTPBaseDepayload * depayload, GstCaps * caps)
 {
   GstStructure *structure;
   GstRtpG722Depay *rtpg722depay;
@@ -212,7 +212,7 @@ no_clockrate:
 }
 
 static GstBuffer *
-gst_rtp_g722_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
+gst_rtp_g722_depay_process (GstRTPBaseDepayload * depayload, GstBuffer * buf)
 {
   GstRtpG722Depay *rtpg722depay;
   GstBuffer *outbuf;

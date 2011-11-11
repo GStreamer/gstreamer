@@ -49,33 +49,33 @@ GST_STATIC_PAD_TEMPLATE ("sink",
 
 #define gst_rtp_vraw_depay_parent_class parent_class
 G_DEFINE_TYPE (GstRtpVRawDepay, gst_rtp_vraw_depay,
-    GST_TYPE_BASE_RTP_DEPAYLOAD);
+    GST_TYPE_RTP_BASE_DEPAYLOAD);
 
-static gboolean gst_rtp_vraw_depay_setcaps (GstBaseRTPDepayload * depayload,
+static gboolean gst_rtp_vraw_depay_setcaps (GstRTPBaseDepayload * depayload,
     GstCaps * caps);
-static GstBuffer *gst_rtp_vraw_depay_process (GstBaseRTPDepayload * depayload,
+static GstBuffer *gst_rtp_vraw_depay_process (GstRTPBaseDepayload * depayload,
     GstBuffer * buf);
 
 static GstStateChangeReturn gst_rtp_vraw_depay_change_state (GstElement *
     element, GstStateChange transition);
 
-static gboolean gst_rtp_vraw_depay_handle_event (GstBaseRTPDepayload * filter,
+static gboolean gst_rtp_vraw_depay_handle_event (GstRTPBaseDepayload * filter,
     GstEvent * event);
 
 static void
 gst_rtp_vraw_depay_class_init (GstRtpVRawDepayClass * klass)
 {
   GstElementClass *gstelement_class;
-  GstBaseRTPDepayloadClass *gstbasertpdepayload_class;
+  GstRTPBaseDepayloadClass *gstrtpbasedepayload_class;
 
   gstelement_class = (GstElementClass *) klass;
-  gstbasertpdepayload_class = (GstBaseRTPDepayloadClass *) klass;
+  gstrtpbasedepayload_class = (GstRTPBaseDepayloadClass *) klass;
 
   gstelement_class->change_state = gst_rtp_vraw_depay_change_state;
 
-  gstbasertpdepayload_class->set_caps = gst_rtp_vraw_depay_setcaps;
-  gstbasertpdepayload_class->process = gst_rtp_vraw_depay_process;
-  gstbasertpdepayload_class->handle_event = gst_rtp_vraw_depay_handle_event;
+  gstrtpbasedepayload_class->set_caps = gst_rtp_vraw_depay_setcaps;
+  gstrtpbasedepayload_class->process = gst_rtp_vraw_depay_process;
+  gstrtpbasedepayload_class->handle_event = gst_rtp_vraw_depay_handle_event;
 
   gst_element_class_add_pad_template (gstelement_class,
       gst_static_pad_template_get (&gst_rtp_vraw_depay_src_template));
@@ -124,7 +124,7 @@ gst_rtp_vraw_depay_negotiate_pool (GstRtpVRawDepay * depay, GstCaps * caps,
   /* find a pool for the negotiated caps now */
   query = gst_query_new_allocation (caps, TRUE);
 
-  if (gst_pad_peer_query (GST_BASE_RTP_DEPAYLOAD_SRCPAD (depay), query)) {
+  if (gst_pad_peer_query (GST_RTP_BASE_DEPAYLOAD_SRCPAD (depay), query)) {
     GST_DEBUG_OBJECT (depay, "got downstream ALLOCATION hints");
     /* we got configuration from our peer, parse them */
     gst_query_parse_allocation_params (query, &size, &min, &max, &prefix,
@@ -163,7 +163,7 @@ gst_rtp_vraw_depay_negotiate_pool (GstRtpVRawDepay * depay, GstCaps * caps,
 }
 
 static gboolean
-gst_rtp_vraw_depay_setcaps (GstBaseRTPDepayload * depayload, GstCaps * caps)
+gst_rtp_vraw_depay_setcaps (GstRTPBaseDepayload * depayload, GstCaps * caps)
 {
   GstStructure *structure;
   GstRtpVRawDepay *rtpvrawdepay;
@@ -240,7 +240,7 @@ gst_rtp_vraw_depay_setcaps (GstBaseRTPDepayload * depayload, GstCaps * caps)
   rtpvrawdepay->yinc = yinc;
 
   srccaps = gst_video_info_to_caps (&rtpvrawdepay->vinfo);
-  res = gst_pad_set_caps (GST_BASE_RTP_DEPAYLOAD_SRCPAD (depayload), srccaps);
+  res = gst_pad_set_caps (GST_RTP_BASE_DEPAYLOAD_SRCPAD (depayload), srccaps);
   gst_caps_unref (srccaps);
 
   GST_DEBUG_OBJECT (depayload, "width %d, height %d, format %d", width, height,
@@ -289,7 +289,7 @@ no_bufferpool:
 }
 
 static GstBuffer *
-gst_rtp_vraw_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
+gst_rtp_vraw_depay_process (GstRTPBaseDepayload * depayload, GstBuffer * buf)
 {
   GstRtpVRawDepay *rtpvrawdepay;
   guint8 *payload, *yp, *up, *vp, *headers;
@@ -312,15 +312,15 @@ gst_rtp_vraw_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
     GST_LOG_OBJECT (depayload, "new frame with timestamp %u", timestamp);
     /* new timestamp, flush old buffer and create new output buffer */
     if (rtpvrawdepay->outbuf) {
-      gst_base_rtp_depayload_push (depayload, rtpvrawdepay->outbuf);
+      gst_rtp_base_depayload_push (depayload, rtpvrawdepay->outbuf);
       rtpvrawdepay->outbuf = NULL;
     }
 
-    if (gst_pad_check_reconfigure (GST_BASE_RTP_DEPAYLOAD_SRCPAD (depayload))) {
+    if (gst_pad_check_reconfigure (GST_RTP_BASE_DEPAYLOAD_SRCPAD (depayload))) {
       GstCaps *caps;
 
       caps =
-          gst_pad_get_current_caps (GST_BASE_RTP_DEPAYLOAD_SRCPAD (depayload));
+          gst_pad_get_current_caps (GST_RTP_BASE_DEPAYLOAD_SRCPAD (depayload));
       gst_rtp_vraw_depay_negotiate_pool (rtpvrawdepay, caps,
           &rtpvrawdepay->vinfo);
       gst_caps_unref (caps);
@@ -525,7 +525,7 @@ gst_rtp_vraw_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
   if (gst_rtp_buffer_get_marker (&rtp)) {
     GST_LOG_OBJECT (depayload, "marker, flushing frame");
     if (rtpvrawdepay->outbuf) {
-      gst_base_rtp_depayload_push (depayload, rtpvrawdepay->outbuf);
+      gst_rtp_base_depayload_push (depayload, rtpvrawdepay->outbuf);
       rtpvrawdepay->outbuf = NULL;
     }
     rtpvrawdepay->timestamp = -1;
@@ -570,7 +570,7 @@ short_packet:
 }
 
 static gboolean
-gst_rtp_vraw_depay_handle_event (GstBaseRTPDepayload * filter, GstEvent * event)
+gst_rtp_vraw_depay_handle_event (GstRTPBaseDepayload * filter, GstEvent * event)
 {
   gboolean ret;
   GstRtpVRawDepay *rtpvrawdepay;
@@ -586,7 +586,7 @@ gst_rtp_vraw_depay_handle_event (GstBaseRTPDepayload * filter, GstEvent * event)
   }
 
   ret =
-      GST_BASE_RTP_DEPAYLOAD_CLASS (parent_class)->handle_event (filter, event);
+      GST_RTP_BASE_DEPAYLOAD_CLASS (parent_class)->handle_event (filter, event);
 
   return ret;
 }

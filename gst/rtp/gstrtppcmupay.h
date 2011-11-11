@@ -37,12 +37,12 @@ typedef struct _GstRtpPcmuPayClass GstRtpPcmuPayClass;
 
 struct _GstRtpPcmuPay
 {
-  GstBaseRTPAudioPayload audiopayload;
+  GstRTPBaseAudioPayload audiopayload;
 };
 
 struct _GstRtpPcmuPayClass
 {
-  GstBaseRTPAudioPayloadClass parent_class;
+  GstRTPBaseAudioPayloadClass parent_class;
 };
 
 GType gst_rtp_pcmu_pay_get_type (void);

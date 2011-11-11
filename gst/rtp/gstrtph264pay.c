@@ -110,30 +110,30 @@ static void gst_rtp_h264_pay_set_property (GObject * object, guint prop_id,
 static void gst_rtp_h264_pay_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 
-static GstCaps *gst_rtp_h264_pay_getcaps (GstBaseRTPPayload * payload,
+static GstCaps *gst_rtp_h264_pay_getcaps (GstRTPBasePayload * payload,
     GstPad * pad, GstCaps * filter);
-static gboolean gst_rtp_h264_pay_setcaps (GstBaseRTPPayload * basepayload,
+static gboolean gst_rtp_h264_pay_setcaps (GstRTPBasePayload * basepayload,
     GstCaps * caps);
-static GstFlowReturn gst_rtp_h264_pay_handle_buffer (GstBaseRTPPayload * pad,
+static GstFlowReturn gst_rtp_h264_pay_handle_buffer (GstRTPBasePayload * pad,
     GstBuffer * buffer);
-static gboolean gst_rtp_h264_pay_handle_event (GstBaseRTPPayload * payload,
+static gboolean gst_rtp_h264_pay_handle_event (GstRTPBasePayload * payload,
     GstEvent * event);
 static GstStateChangeReturn gst_rtp_h264_pay_change_state (GstElement *
     element, GstStateChange transition);
 
 #define gst_rtp_h264_pay_parent_class parent_class
-G_DEFINE_TYPE (GstRtpH264Pay, gst_rtp_h264_pay, GST_TYPE_BASE_RTP_PAYLOAD);
+G_DEFINE_TYPE (GstRtpH264Pay, gst_rtp_h264_pay, GST_TYPE_RTP_BASE_PAYLOAD);
 
 static void
 gst_rtp_h264_pay_class_init (GstRtpH264PayClass * klass)
 {
   GObjectClass *gobject_class;
   GstElementClass *gstelement_class;
-  GstBaseRTPPayloadClass *gstbasertppayload_class;
+  GstRTPBasePayloadClass *gstrtpbasepayload_class;
 
   gobject_class = (GObjectClass *) klass;
   gstelement_class = (GstElementClass *) klass;
-  gstbasertppayload_class = (GstBaseRTPPayloadClass *) klass;
+  gstrtpbasepayload_class = (GstRTPBasePayloadClass *) klass;
 
   gobject_class->set_property = gst_rtp_h264_pay_set_property;
   gobject_class->get_property = gst_rtp_h264_pay_get_property;
@@ -190,10 +190,10 @@ gst_rtp_h264_pay_class_init (GstRtpH264PayClass * klass)
   gstelement_class->change_state =
       GST_DEBUG_FUNCPTR (gst_rtp_h264_pay_change_state);
 
-  gstbasertppayload_class->get_caps = gst_rtp_h264_pay_getcaps;
-  gstbasertppayload_class->set_caps = gst_rtp_h264_pay_setcaps;
-  gstbasertppayload_class->handle_buffer = gst_rtp_h264_pay_handle_buffer;
-  gstbasertppayload_class->handle_event = gst_rtp_h264_pay_handle_event;
+  gstrtpbasepayload_class->get_caps = gst_rtp_h264_pay_getcaps;
+  gstrtpbasepayload_class->set_caps = gst_rtp_h264_pay_setcaps;
+  gstrtpbasepayload_class->handle_buffer = gst_rtp_h264_pay_handle_buffer;
+  gstrtpbasepayload_class->handle_event = gst_rtp_h264_pay_handle_event;
 
   GST_DEBUG_CATEGORY_INIT (rtph264pay_debug, "rtph264pay", 0,
       "H264 RTP Payloader");
@@ -264,13 +264,13 @@ static const gchar *all_levels[] = {
 };
 
 static GstCaps *
-gst_rtp_h264_pay_getcaps (GstBaseRTPPayload * payload, GstPad * pad,
+gst_rtp_h264_pay_getcaps (GstRTPBasePayload * payload, GstPad * pad,
     GstCaps * filter)
 {
   GstCaps *allowed_caps;
 
   allowed_caps =
-      gst_pad_peer_get_caps (GST_BASE_RTP_PAYLOAD_SRCPAD (payload), filter);
+      gst_pad_peer_get_caps (GST_RTP_BASE_PAYLOAD_SRCPAD (payload), filter);
 
   if (allowed_caps) {
     GstCaps *caps = NULL;
@@ -364,7 +364,7 @@ any:
 /* take the currently configured SPS and PPS lists and set them on the caps as
  * sprop-parameter-sets */
 static gboolean
-gst_rtp_h264_pay_set_sps_pps (GstBaseRTPPayload * basepayload)
+gst_rtp_h264_pay_set_sps_pps (GstRTPBasePayload * basepayload)
 {
   GstRtpH264Pay *payloader = GST_RTP_H264_PAY (basepayload);
   gchar *profile;
@@ -406,7 +406,7 @@ gst_rtp_h264_pay_set_sps_pps (GstBaseRTPPayload * basepayload)
   /* profile is 24 bit. Force it to respect the limit */
   profile = g_strdup_printf ("%06x", payloader->profile & 0xffffff);
   /* combine into output caps */
-  res = gst_base_rtp_payload_set_outcaps (basepayload,
+  res = gst_rtp_base_payload_set_outcaps (basepayload,
       "sprop-parameter-sets", G_TYPE_STRING, sprops->str, NULL);
   g_string_free (sprops, TRUE);
   g_free (profile);
@@ -415,7 +415,7 @@ gst_rtp_h264_pay_set_sps_pps (GstBaseRTPPayload * basepayload)
 }
 
 static gboolean
-gst_rtp_h264_pay_setcaps (GstBaseRTPPayload * basepayload, GstCaps * caps)
+gst_rtp_h264_pay_setcaps (GstRTPBasePayload * basepayload, GstCaps * caps)
 {
   GstRtpH264Pay *rtph264pay;
   GstStructure *str;
@@ -431,7 +431,7 @@ gst_rtp_h264_pay_setcaps (GstBaseRTPPayload * basepayload, GstCaps * caps)
 
   /* we can only set the output caps when we found the sprops and profile
    * NALs */
-  gst_base_rtp_payload_set_options (basepayload, "video", TRUE, "H264", 90000);
+  gst_rtp_base_payload_set_options (basepayload, "video", TRUE, "H264", 90000);
 
   alignment = gst_structure_get_string (str, "alignment");
   if (alignment && !strcmp (alignment, "au"))
@@ -782,12 +782,12 @@ gst_rtp_h264_pay_decode_nal (GstRtpH264Pay * payloader,
 }
 
 static GstFlowReturn
-gst_rtp_h264_pay_payload_nal (GstBaseRTPPayload * basepayload,
+gst_rtp_h264_pay_payload_nal (GstRTPBasePayload * basepayload,
     const guint8 * data, guint size, GstClockTime timestamp,
     GstBuffer * buffer_orig, gboolean end_of_au);
 
 static GstFlowReturn
-gst_rtp_h264_pay_send_sps_pps (GstBaseRTPPayload * basepayload,
+gst_rtp_h264_pay_send_sps_pps (GstRTPBasePayload * basepayload,
     GstRtpH264Pay * rtph264pay, GstClockTime timestamp)
 {
   GstFlowReturn ret = GST_FLOW_OK;
@@ -829,7 +829,7 @@ gst_rtp_h264_pay_send_sps_pps (GstBaseRTPPayload * basepayload,
 }
 
 static GstFlowReturn
-gst_rtp_h264_pay_payload_nal (GstBaseRTPPayload * basepayload,
+gst_rtp_h264_pay_payload_nal (GstRTPBasePayload * basepayload,
     const guint8 * data, guint size, GstClockTime timestamp,
     GstBuffer * buffer_orig, gboolean end_of_au)
 {
@@ -846,7 +846,7 @@ gst_rtp_h264_pay_payload_nal (GstBaseRTPPayload * basepayload,
   GstRTPBuffer rtp = { NULL };
 
   rtph264pay = GST_RTP_H264_PAY (basepayload);
-  mtu = GST_BASE_RTP_PAYLOAD_MTU (rtph264pay);
+  mtu = GST_RTP_BASE_PAYLOAD_MTU (rtph264pay);
 
   nalType = data[0] & 0x1f;
   GST_DEBUG_OBJECT (rtph264pay, "Processing Buffer with NAL TYPE=%d", nalType);
@@ -944,7 +944,7 @@ gst_rtp_h264_pay_payload_nal (GstBaseRTPPayload * basepayload,
       gst_buffer_list_add (list, paybuf);
 
       /* push the list to the next element in the pipe */
-      ret = gst_base_rtp_payload_push_list (basepayload, list);
+      ret = gst_rtp_base_payload_push_list (basepayload, list);
     } else
 #endif
     {
@@ -953,7 +953,7 @@ gst_rtp_h264_pay_payload_nal (GstBaseRTPPayload * basepayload,
       memcpy (payload, data, size);
       gst_rtp_buffer_unmap (&rtp);
 
-      ret = gst_base_rtp_payload_push (basepayload, outbuf);
+      ret = gst_rtp_base_payload_push (basepayload, outbuf);
     }
   } else {
     /* fragmentation Units FU-A */
@@ -1052,7 +1052,7 @@ gst_rtp_h264_pay_payload_nal (GstBaseRTPPayload * basepayload,
             "recorded %d payload bytes into packet iteration=%d",
             limitedSize + 2, ii);
 
-        ret = gst_base_rtp_payload_push (basepayload, outbuf);
+        ret = gst_rtp_base_payload_push (basepayload, outbuf);
         if (ret != GST_FLOW_OK)
           break;
       }
@@ -1067,7 +1067,7 @@ gst_rtp_h264_pay_payload_nal (GstBaseRTPPayload * basepayload,
     if (rtph264pay->buffer_list) {
       /* free iterator and push the whole buffer list at once */
       gst_buffer_list_iterator_free (it);
-      ret = gst_base_rtp_payload_push_list (basepayload, list);
+      ret = gst_rtp_base_payload_push_list (basepayload, list);
     }
 #endif
   }
@@ -1075,7 +1075,7 @@ gst_rtp_h264_pay_payload_nal (GstBaseRTPPayload * basepayload,
 }
 
 static GstFlowReturn
-gst_rtp_h264_pay_handle_buffer (GstBaseRTPPayload * basepayload,
+gst_rtp_h264_pay_handle_buffer (GstRTPBasePayload * basepayload,
     GstBuffer * buffer)
 {
   GstRtpH264Pay *rtph264pay;
@@ -1218,7 +1218,7 @@ gst_rtp_h264_pay_handle_buffer (GstBaseRTPPayload * basepayload,
       if (rtph264pay->sprop_parameter_sets != NULL) {
         /* explicitly set profile and sprop, use those */
         if (rtph264pay->update_caps) {
-          if (!gst_base_rtp_payload_set_outcaps (basepayload,
+          if (!gst_rtp_base_payload_set_outcaps (basepayload,
                   "sprop-parameter-sets", G_TYPE_STRING,
                   rtph264pay->sprop_parameter_sets, NULL))
             goto caps_rejected;
@@ -1322,7 +1322,7 @@ caps_rejected:
 }
 
 static gboolean
-gst_rtp_h264_pay_handle_event (GstBaseRTPPayload * payload, GstEvent * event)
+gst_rtp_h264_pay_handle_event (GstRTPBasePayload * payload, GstEvent * event)
 {
   gboolean res;
   const GstStructure *s;
@@ -1347,7 +1347,7 @@ gst_rtp_h264_pay_handle_event (GstBaseRTPPayload * payload, GstEvent * event)
   }
 
   res =
-      GST_BASE_RTP_PAYLOAD_CLASS (parent_class)->handle_event (payload, event);
+      GST_RTP_BASE_PAYLOAD_CLASS (parent_class)->handle_event (payload, event);
 
   return res;
 }

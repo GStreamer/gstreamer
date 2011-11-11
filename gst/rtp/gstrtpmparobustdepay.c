@@ -71,14 +71,14 @@ typedef struct _GstADUFrame
 
 #define gst_rtp_mpa_robust_depay_parent_class parent_class
 G_DEFINE_TYPE (GstRtpMPARobustDepay, gst_rtp_mpa_robust_depay,
-    GST_TYPE_BASE_RTP_DEPAYLOAD);
+    GST_TYPE_RTP_BASE_DEPAYLOAD);
 
 static GstStateChangeReturn gst_rtp_mpa_robust_change_state (GstElement *
     element, GstStateChange transition);
 
-static gboolean gst_rtp_mpa_robust_depay_setcaps (GstBaseRTPDepayload *
+static gboolean gst_rtp_mpa_robust_depay_setcaps (GstRTPBaseDepayload *
     depayload, GstCaps * caps);
-static GstBuffer *gst_rtp_mpa_robust_depay_process (GstBaseRTPDepayload *
+static GstBuffer *gst_rtp_mpa_robust_depay_process (GstRTPBaseDepayload *
     depayload, GstBuffer * buf);
 
 static void
@@ -99,14 +99,14 @@ gst_rtp_mpa_robust_depay_class_init (GstRtpMPARobustDepayClass * klass)
 {
   GObjectClass *gobject_class;
   GstElementClass *gstelement_class;
-  GstBaseRTPDepayloadClass *gstbasertpdepayload_class;
+  GstRTPBaseDepayloadClass *gstrtpbasedepayload_class;
 
   GST_DEBUG_CATEGORY_INIT (rtpmparobustdepay_debug, "rtpmparobustdepay", 0,
       "Robust MPEG Audio RTP Depayloader");
 
   gobject_class = (GObjectClass *) klass;
   gstelement_class = (GstElementClass *) klass;
-  gstbasertpdepayload_class = (GstBaseRTPDepayloadClass *) klass;
+  gstrtpbasedepayload_class = (GstRTPBaseDepayloadClass *) klass;
 
   gobject_class->finalize = gst_rtp_mpa_robust_depay_finalize;
 
@@ -123,8 +123,8 @@ gst_rtp_mpa_robust_depay_class_init (GstRtpMPARobustDepayClass * klass)
       "Extracts MPEG audio from RTP packets (RFC 5219)",
       "Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>");
 
-  gstbasertpdepayload_class->set_caps = gst_rtp_mpa_robust_depay_setcaps;
-  gstbasertpdepayload_class->process = gst_rtp_mpa_robust_depay_process;
+  gstrtpbasedepayload_class->set_caps = gst_rtp_mpa_robust_depay_setcaps;
+  gstrtpbasedepayload_class->process = gst_rtp_mpa_robust_depay_process;
 }
 
 static void
@@ -135,7 +135,7 @@ gst_rtp_mpa_robust_depay_init (GstRtpMPARobustDepay * rtpmpadepay)
 }
 
 static gboolean
-gst_rtp_mpa_robust_depay_setcaps (GstBaseRTPDepayload * depayload,
+gst_rtp_mpa_robust_depay_setcaps (GstRTPBaseDepayload * depayload,
     GstCaps * caps)
 {
   GstRtpMPARobustDepay *rtpmpadepay;
@@ -495,7 +495,7 @@ gst_rtp_mpa_robust_depay_push_mp3_frames (GstRtpMPARobustDepay * rtpmpadepay)
     if (G_UNLIKELY (frame->layer != 3)) {
       GST_DEBUG_OBJECT (rtpmpadepay, "layer %d frame, sending as-is",
           frame->layer);
-      gst_base_rtp_depayload_push (GST_BASE_RTP_DEPAYLOAD (rtpmpadepay),
+      gst_rtp_base_depayload_push (GST_RTP_BASE_DEPAYLOAD (rtpmpadepay),
           frame->buffer);
       frame->buffer = NULL;
       /* and remove it from any further consideration */
@@ -617,7 +617,7 @@ gst_rtp_mpa_robust_depay_push_mp3_frames (GstRtpMPARobustDepay * rtpmpadepay)
       rtpmpadepay->size -= head->data_size;
       gst_rtp_mpa_robust_depay_dequeue_frame (rtpmpadepay);
       /* send */
-      ret = gst_base_rtp_depayload_push (GST_BASE_RTP_DEPAYLOAD (rtpmpadepay),
+      ret = gst_rtp_base_depayload_push (GST_RTP_BASE_DEPAYLOAD (rtpmpadepay),
           buf);
     }
   }
@@ -641,7 +641,7 @@ gst_rtp_mpa_robust_depay_submit_adu (GstRtpMPARobustDepay * rtpmpadepay,
 }
 
 static GstBuffer *
-gst_rtp_mpa_robust_depay_process (GstBaseRTPDepayload * depayload,
+gst_rtp_mpa_robust_depay_process (GstRTPBaseDepayload * depayload,
     GstBuffer * buf)
 {
   GstRtpMPARobustDepay *rtpmpadepay;
@@ -680,8 +680,8 @@ gst_rtp_mpa_robust_depay_process (GstBaseRTPDepayload * depayload,
    */
   while (payload_len) {
     if (G_LIKELY (rtpmpadepay->has_descriptor)) {
-      cont = !!(payload[offset] & 0x80);
-      dtype = !!(payload[offset] & 0x40);
+      cont = ! !(payload[offset] & 0x80);
+      dtype = ! !(payload[offset] & 0x40);
       if (dtype) {
         size = (payload[offset] & 0x3f) << 8 | payload[offset + 1];
         payload_len--;

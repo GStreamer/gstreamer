@@ -43,7 +43,7 @@ typedef struct _GstRtpL16DepayClass GstRtpL16DepayClass;
 /* Definition of structure storing data for this element. */
 struct _GstRtpL16Depay
 {
-  GstBaseRTPDepayload depayload;
+  GstRTPBaseDepayload depayload;
 
   guint rate;
   guint channels;
@@ -52,7 +52,7 @@ struct _GstRtpL16Depay
 /* Standard definition defining a class for this element. */
 struct _GstRtpL16DepayClass
 {
-  GstBaseRTPDepayloadClass parent_class;
+  GstRTPBaseDepayloadClass parent_class;
 };
 
 GType gst_rtp_L16_depay_get_type (void);

@@ -42,7 +42,7 @@ typedef struct _GstRtpVorbisPayClass GstRtpVorbisPayClass;
 
 struct _GstRtpVorbisPay
 {
-  GstBaseRTPPayload payload;
+  GstRTPBasePayload payload;
 
   /* the headers */
   gboolean      need_headers;
@@ -65,7 +65,7 @@ struct _GstRtpVorbisPay
 
 struct _GstRtpVorbisPayClass
 {
-  GstBaseRTPPayloadClass parent_class;
+  GstRTPBasePayloadClass parent_class;
 };
 
 GType gst_rtp_vorbis_pay_get_type (void);

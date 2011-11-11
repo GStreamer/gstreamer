@@ -85,25 +85,25 @@ static GstStaticPadTemplate gst_rtp_amr_pay_src_template =
         "maxptime = (int) [ 20, MAX ], " "ptime = (int) [ 20, MAX ]")
     );
 
-static gboolean gst_rtp_amr_pay_setcaps (GstBaseRTPPayload * basepayload,
+static gboolean gst_rtp_amr_pay_setcaps (GstRTPBasePayload * basepayload,
     GstCaps * caps);
-static GstFlowReturn gst_rtp_amr_pay_handle_buffer (GstBaseRTPPayload * pad,
+static GstFlowReturn gst_rtp_amr_pay_handle_buffer (GstRTPBasePayload * pad,
     GstBuffer * buffer);
 
 static GstStateChangeReturn
 gst_rtp_amr_pay_change_state (GstElement * element, GstStateChange transition);
 
 #define gst_rtp_amr_pay_parent_class parent_class
-G_DEFINE_TYPE (GstRtpAMRPay, gst_rtp_amr_pay, GST_TYPE_BASE_RTP_PAYLOAD);
+G_DEFINE_TYPE (GstRtpAMRPay, gst_rtp_amr_pay, GST_TYPE_RTP_BASE_PAYLOAD);
 
 static void
 gst_rtp_amr_pay_class_init (GstRtpAMRPayClass * klass)
 {
   GstElementClass *gstelement_class;
-  GstBaseRTPPayloadClass *gstbasertppayload_class;
+  GstRTPBasePayloadClass *gstrtpbasepayload_class;
 
   gstelement_class = (GstElementClass *) klass;
-  gstbasertppayload_class = (GstBaseRTPPayloadClass *) klass;
+  gstrtpbasepayload_class = (GstRTPBasePayloadClass *) klass;
 
   gstelement_class->change_state = gst_rtp_amr_pay_change_state;
 
@@ -117,8 +117,8 @@ gst_rtp_amr_pay_class_init (GstRtpAMRPayClass * klass)
       "Payload-encode AMR or AMR-WB audio into RTP packets (RFC 3267)",
       "Wim Taymans <wim.taymans@gmail.com>");
 
-  gstbasertppayload_class->set_caps = gst_rtp_amr_pay_setcaps;
-  gstbasertppayload_class->handle_buffer = gst_rtp_amr_pay_handle_buffer;
+  gstrtpbasepayload_class->set_caps = gst_rtp_amr_pay_setcaps;
+  gstrtpbasepayload_class->handle_buffer = gst_rtp_amr_pay_handle_buffer;
 
   GST_DEBUG_CATEGORY_INIT (rtpamrpay_debug, "rtpamrpay", 0,
       "AMR/AMR-WB RTP Payloader");
@@ -138,7 +138,7 @@ gst_rtp_amr_pay_reset (GstRtpAMRPay * pay)
 }
 
 static gboolean
-gst_rtp_amr_pay_setcaps (GstBaseRTPPayload * basepayload, GstCaps * caps)
+gst_rtp_amr_pay_setcaps (GstRTPBasePayload * basepayload, GstCaps * caps)
 {
   GstRtpAMRPay *rtpamrpay;
   gboolean res;
@@ -160,12 +160,12 @@ gst_rtp_amr_pay_setcaps (GstBaseRTPPayload * basepayload, GstCaps * caps)
     goto wrong_type;
 
   if (rtpamrpay->mode == GST_RTP_AMR_P_MODE_NB)
-    gst_base_rtp_payload_set_options (basepayload, "audio", TRUE, "AMR", 8000);
+    gst_rtp_base_payload_set_options (basepayload, "audio", TRUE, "AMR", 8000);
   else
-    gst_base_rtp_payload_set_options (basepayload, "audio", TRUE, "AMR-WB",
+    gst_rtp_base_payload_set_options (basepayload, "audio", TRUE, "AMR-WB",
         16000);
 
-  res = gst_base_rtp_payload_set_outcaps (basepayload,
+  res = gst_rtp_base_payload_set_outcaps (basepayload,
       "encoding-params", G_TYPE_STRING, "1", "octet-align", G_TYPE_STRING, "1",
       /* don't set the defaults
        *
@@ -221,7 +221,7 @@ static const gint wb_frame_size[16] = {
 };
 
 static GstFlowReturn
-gst_rtp_amr_pay_handle_buffer (GstBaseRTPPayload * basepayload,
+gst_rtp_amr_pay_handle_buffer (GstRTPBasePayload * basepayload,
     GstBuffer * buffer)
 {
   GstRtpAMRPay *rtpamrpay;
@@ -239,7 +239,7 @@ gst_rtp_amr_pay_handle_buffer (GstBaseRTPPayload * basepayload,
   GstRTPBuffer rtp = { NULL };
 
   rtpamrpay = GST_RTP_AMR_PAY (basepayload);
-  mtu = GST_BASE_RTP_PAYLOAD_MTU (rtpamrpay);
+  mtu = GST_RTP_BASE_PAYLOAD_MTU (rtpamrpay);
 
   data = gst_buffer_map (buffer, &size, NULL, GST_MAP_READ);
 
@@ -376,7 +376,7 @@ gst_rtp_amr_pay_handle_buffer (GstBaseRTPPayload * basepayload,
 
   gst_rtp_buffer_unmap (&rtp);
 
-  ret = gst_base_rtp_payload_push (basepayload, outbuf);
+  ret = gst_rtp_base_payload_push (basepayload, outbuf);
 
   return ret;
 

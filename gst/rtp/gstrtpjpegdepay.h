@@ -42,7 +42,7 @@ typedef struct _GstRtpJPEGDepayClass GstRtpJPEGDepayClass;
 
 struct _GstRtpJPEGDepay
 {
-  GstBaseRTPDepayload depayload;
+  GstRTPBaseDepayload depayload;
 
   GstAdapter *adapter;
   gboolean    discont;
@@ -58,7 +58,7 @@ struct _GstRtpJPEGDepay
 
 struct _GstRtpJPEGDepayClass
 {
-  GstBaseRTPDepayloadClass parent_class;
+  GstRTPBaseDepayloadClass parent_class;
 };
 
 GType gst_rtp_jpeg_depay_get_type (void);

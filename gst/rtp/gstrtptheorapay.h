@@ -42,7 +42,7 @@ typedef struct _GstRtpTheoraPayClass GstRtpTheoraPayClass;
 
 struct _GstRtpTheoraPay
 {
-  GstBaseRTPPayload payload;
+  GstRTPBasePayload payload;
 
   /* the headers */
   gboolean      need_headers;
@@ -72,7 +72,7 @@ struct _GstRtpTheoraPay
 
 struct _GstRtpTheoraPayClass
 {
-  GstBaseRTPPayloadClass parent_class;
+  GstRTPBasePayloadClass parent_class;
 };
 
 GType gst_rtp_theora_pay_get_type (void);

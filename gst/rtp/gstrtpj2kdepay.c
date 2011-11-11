@@ -66,7 +66,7 @@ enum
 };
 
 #define gst_rtp_j2k_depay_parent_class parent_class
-G_DEFINE_TYPE (GstRtpJ2KDepay, gst_rtp_j2k_depay, GST_TYPE_BASE_RTP_DEPAYLOAD);
+G_DEFINE_TYPE (GstRtpJ2KDepay, gst_rtp_j2k_depay, GST_TYPE_RTP_BASE_DEPAYLOAD);
 
 static void gst_rtp_j2k_depay_finalize (GObject * object);
 
@@ -79,9 +79,9 @@ static GstStateChangeReturn
 gst_rtp_j2k_depay_change_state (GstElement * element,
     GstStateChange transition);
 
-static gboolean gst_rtp_j2k_depay_setcaps (GstBaseRTPDepayload * depayload,
+static gboolean gst_rtp_j2k_depay_setcaps (GstRTPBaseDepayload * depayload,
     GstCaps * caps);
-static GstBuffer *gst_rtp_j2k_depay_process (GstBaseRTPDepayload * depayload,
+static GstBuffer *gst_rtp_j2k_depay_process (GstRTPBaseDepayload * depayload,
     GstBuffer * buf);
 
 static void
@@ -89,11 +89,11 @@ gst_rtp_j2k_depay_class_init (GstRtpJ2KDepayClass * klass)
 {
   GObjectClass *gobject_class;
   GstElementClass *gstelement_class;
-  GstBaseRTPDepayloadClass *gstbasertpdepayload_class;
+  GstRTPBaseDepayloadClass *gstrtpbasedepayload_class;
 
   gobject_class = (GObjectClass *) klass;
   gstelement_class = (GstElementClass *) klass;
-  gstbasertpdepayload_class = (GstBaseRTPDepayloadClass *) klass;
+  gstrtpbasedepayload_class = (GstRTPBaseDepayloadClass *) klass;
 
   gobject_class->finalize = gst_rtp_j2k_depay_finalize;
 
@@ -117,8 +117,8 @@ gst_rtp_j2k_depay_class_init (GstRtpJ2KDepayClass * klass)
 
   gstelement_class->change_state = gst_rtp_j2k_depay_change_state;
 
-  gstbasertpdepayload_class->set_caps = gst_rtp_j2k_depay_setcaps;
-  gstbasertpdepayload_class->process = gst_rtp_j2k_depay_process;
+  gstrtpbasedepayload_class->set_caps = gst_rtp_j2k_depay_setcaps;
+  gstrtpbasedepayload_class->process = gst_rtp_j2k_depay_process;
 
   GST_DEBUG_CATEGORY_INIT (rtpj2kdepay_debug, "rtpj2kdepay", 0,
       "J2K Video RTP Depayloader");
@@ -182,7 +182,7 @@ gst_rtp_j2k_depay_finalize (GObject * object)
 }
 
 static gboolean
-gst_rtp_j2k_depay_setcaps (GstBaseRTPDepayload * depayload, GstCaps * caps)
+gst_rtp_j2k_depay_setcaps (GstRTPBaseDepayload * depayload, GstCaps * caps)
 {
   GstStructure *structure;
   gint clock_rate;
@@ -212,7 +212,7 @@ gst_rtp_j2k_depay_clear_pu (GstRtpJ2KDepay * rtpj2kdepay)
 }
 
 static GstFlowReturn
-gst_rtp_j2k_depay_flush_pu (GstBaseRTPDepayload * depayload)
+gst_rtp_j2k_depay_flush_pu (GstRTPBaseDepayload * depayload)
 {
   GstRtpJ2KDepay *rtpj2kdepay;
   GstBuffer *mheader;
@@ -259,7 +259,7 @@ done:
 }
 
 static GstFlowReturn
-gst_rtp_j2k_depay_flush_tile (GstBaseRTPDepayload * depayload)
+gst_rtp_j2k_depay_flush_tile (GstRTPBaseDepayload * depayload)
 {
   GstRtpJ2KDepay *rtpj2kdepay;
   guint avail, mh_id;
@@ -364,7 +364,7 @@ invalid_tile:
 }
 
 static GstFlowReturn
-gst_rtp_j2k_depay_flush_frame (GstBaseRTPDepayload * depayload)
+gst_rtp_j2k_depay_flush_frame (GstRTPBaseDepayload * depayload)
 {
   GstRtpJ2KDepay *rtpj2kdepay;
   guint8 end[2];
@@ -417,13 +417,13 @@ gst_rtp_j2k_depay_flush_frame (GstBaseRTPDepayload * depayload)
       gst_buffer_list_iterator_add_list (it, list);
       gst_buffer_list_iterator_free (it);
 
-      ret = gst_base_rtp_depayload_push_list (depayload, buflist);
+      ret = gst_rtp_base_depayload_push_list (depayload, buflist);
     } else
 #endif
     {
       GST_DEBUG_OBJECT (rtpj2kdepay, "pushing buffer of %u bytes", avail);
       outbuf = gst_adapter_take_buffer (rtpj2kdepay->f_adapter, avail);
-      ret = gst_base_rtp_depayload_push (depayload, outbuf);
+      ret = gst_rtp_base_depayload_push (depayload, outbuf);
     }
   } else {
     GST_WARNING_OBJECT (rtpj2kdepay, "empty packet");
@@ -445,7 +445,7 @@ done:
 }
 
 static GstBuffer *
-gst_rtp_j2k_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
+gst_rtp_j2k_depay_process (GstRTPBaseDepayload * depayload, GstBuffer * buf)
 {
   GstRtpJ2KDepay *rtpj2kdepay;
   guint8 *payload;
