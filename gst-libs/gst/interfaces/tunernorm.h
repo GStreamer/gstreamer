@@ -53,6 +53,7 @@ struct _GstTunerNorm {
   gchar  *label;
   GValue  framerate;
 
+  /*< private >*/
   gpointer _gst_reserved[GST_PADDING];
 };
 
