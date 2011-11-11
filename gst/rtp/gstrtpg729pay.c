@@ -284,8 +284,8 @@ gst_rtp_g729_pay_handle_buffer (GstRTPBasePayload * payload, GstBuffer * buf)
   }
 
   /* If the ptime is specified in the caps, tried to adhere to it exactly */
-  if (payload->abidata.ABI.ptime) {
-    guint64 ptime = payload->abidata.ABI.ptime / GST_MSECOND;
+  if (payload->ptime) {
+    guint64 ptime = payload->ptime / GST_MSECOND;
     guint ptime_in_bytes = G729_FRAME_SIZE *
         (guint) (ptime / G729_FRAME_DURATION_MS);
 
