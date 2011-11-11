@@ -220,6 +220,7 @@ struct _GstAudioFormatInfo {
   GstAudioFormatUnpack unpack_func;
   GstAudioFormatPack pack_func;
 
+  /*< private >*/
   gpointer _gst_reserved[GST_PADDING];
 };
 
@@ -287,6 +288,7 @@ struct _GstAudioInfo {
   gint                      bpf;
   GstAudioChannelPosition   position[64];
 
+  /*< private >*/
   gpointer _gst_reserved[GST_PADDING];
 };
 
