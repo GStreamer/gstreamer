@@ -94,9 +94,6 @@ struct _GstTunerInterface {
   void (*signal_changed)    (GstTuner        *tuner,
                              GstTunerChannel *channel,
                              gint             signal);
-
-  /*< private >*/
-  gpointer _gst_reserved[GST_PADDING];
 };
 
 GType           gst_tuner_get_type              (void);

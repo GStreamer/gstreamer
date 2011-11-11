@@ -42,9 +42,6 @@ typedef struct _GstStreamVolumeInterface GstStreamVolumeInterface;
 
 struct _GstStreamVolumeInterface {
   GTypeInterface iface;
-
-  /*< private >*/
-  gpointer _gst_reserved[GST_PADDING];
 };
 
 /**

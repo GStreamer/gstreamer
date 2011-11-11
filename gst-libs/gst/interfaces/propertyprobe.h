@@ -72,9 +72,6 @@ struct _GstPropertyProbeInterface {
   GValueArray * (*get_values)     (GstPropertyProbe *probe,
                                    guint             prop_id,
                                    const GParamSpec *pspec);
-
-  /*< private >*/
-  gpointer _gst_reserved[GST_PADDING];
 };
 
 GType        gst_property_probe_get_type       (void);

@@ -75,9 +75,6 @@ struct _GstVideoOrientationInterface {
   gboolean (* set_vflip)   (GstVideoOrientation *video_orientation, gboolean flip);
   gboolean (* set_hcenter) (GstVideoOrientation *video_orientation, gint center);
   gboolean (* set_vcenter) (GstVideoOrientation *video_orientation, gint center);
-
-  /*< private > */
-  gpointer _gst_reserved[GST_PADDING];
 };
 
 GType           gst_video_orientation_get_type              (void);

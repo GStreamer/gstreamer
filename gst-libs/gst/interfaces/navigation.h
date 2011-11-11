@@ -51,9 +51,6 @@ struct _GstNavigationInterface {
 
   /* virtual functions */
   void (*send_event) (GstNavigation *navigation, GstStructure *structure);
-
-  /*< private >*/
-  gpointer _gst_reserved[GST_PADDING];
 };
 
 GType           gst_navigation_get_type (void);

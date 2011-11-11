@@ -138,9 +138,6 @@ struct _GstMixerInterface {
                                     GstMixerOptions *opts);
 
   GstMixerFlags (* get_mixer_flags) (GstMixer *mixer);
-
-  /*< private >*/
-  gpointer _gst_reserved[GST_PADDING];
 };
 
 GType           gst_mixer_get_type      (void);

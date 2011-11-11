@@ -89,9 +89,6 @@ struct _GstColorBalanceInterface {
   void (* value_changed) (GstColorBalance        *balance,
                           GstColorBalanceChannel *channel,
                           gint                    value);
-
-  /*< private >*/
-  gpointer _gst_reserved[GST_PADDING];
 };
 
 GType   gst_color_balance_get_type      (void);
