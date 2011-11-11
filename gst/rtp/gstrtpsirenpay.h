@@ -23,7 +23,7 @@
 #define __GST_RTP_SIREN_PAY_H__
 
 #include <gst/gst.h>
-#include <gst/rtp/gstbasertpaudiopayload.h>
+#include <gst/rtp/gstrtpbaseaudiopayload.h>
 
 G_BEGIN_DECLS
 #define GST_TYPE_RTP_SIREN_PAY \

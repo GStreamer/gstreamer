@@ -22,7 +22,7 @@
 #define __GST_RTP_MPA_ROBUST_DEPAY_H__
 
 #include <gst/gst.h>
-#include <gst/rtp/gstbasertpdepayload.h>
+#include <gst/rtp/gstrtpbasedepayload.h>
 #include <gst/base/gstadapter.h>
 #include <gst/base/gstbytewriter.h>
 

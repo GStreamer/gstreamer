@@ -17,7 +17,7 @@
 #define __GST_RTP_G726_PAY_H__
 
 #include <gst/gst.h>
-#include <gst/rtp/gstbasertpaudiopayload.h>
+#include <gst/rtp/gstrtpbaseaudiopayload.h>
 
 G_BEGIN_DECLS typedef struct _GstRtpG726Pay GstRtpG726Pay;
 typedef struct _GstRtpG726PayClass GstRtpG726PayClass;

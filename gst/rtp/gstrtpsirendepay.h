@@ -23,7 +23,7 @@
 #define __GST_RTP_SIREN_DEPAY_H__
 
 #include <gst/gst.h>
-#include <gst/rtp/gstbasertpdepayload.h>
+#include <gst/rtp/gstrtpbasedepayload.h>
 
 G_BEGIN_DECLS typedef struct _GstRTPSirenDepay GstRTPSirenDepay;
 typedef struct _GstRTPSirenDepayClass GstRTPSirenDepayClass;
