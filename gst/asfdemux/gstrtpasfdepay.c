@@ -52,16 +52,16 @@ static GstStaticPadTemplate sink_factory = GST_STATIC_PAD_TEMPLATE ("sink",
     );
 
 #define gst_rtp_asf_depay_parent_class parent_class
-G_DEFINE_TYPE (GstRtpAsfDepay, gst_rtp_asf_depay, GST_TYPE_BASE_RTP_DEPAYLOAD);
+G_DEFINE_TYPE (GstRtpAsfDepay, gst_rtp_asf_depay, GST_TYPE_RTP_BASE_DEPAYLOAD);
 
 static void gst_rtp_asf_depay_finalize (GObject * object);
 
 static GstStateChangeReturn gst_rtp_asf_depay_change_state (GstElement *
     element, GstStateChange transition);
 
-static gboolean gst_rtp_asf_depay_setcaps (GstBaseRTPDepayload * depay,
+static gboolean gst_rtp_asf_depay_setcaps (GstRTPBaseDepayload * depay,
     GstCaps * caps);
-static GstBuffer *gst_rtp_asf_depay_process (GstBaseRTPDepayload * basedepay,
+static GstBuffer *gst_rtp_asf_depay_process (GstRTPBaseDepayload * basedepay,
     GstBuffer * buf);
 
 static void
@@ -69,11 +69,11 @@ gst_rtp_asf_depay_class_init (GstRtpAsfDepayClass * klass)
 {
   GObjectClass *gobject_class;
   GstElementClass *gstelement_class;
-  GstBaseRTPDepayloadClass *gstbasertpdepayload_class;
+  GstRTPBaseDepayloadClass *gstrtpbasedepayload_class;
 
   gobject_class = (GObjectClass *) klass;
   gstelement_class = (GstElementClass *) klass;
-  gstbasertpdepayload_class = (GstBaseRTPDepayloadClass *) klass;
+  gstrtpbasedepayload_class = (GstRTPBaseDepayloadClass *) klass;
 
   gst_element_class_add_pad_template (gstelement_class,
       gst_static_pad_template_get (&src_factory));
@@ -91,9 +91,9 @@ gst_rtp_asf_depay_class_init (GstRtpAsfDepayClass * klass)
   gstelement_class->change_state =
       GST_DEBUG_FUNCPTR (gst_rtp_asf_depay_change_state);
 
-  gstbasertpdepayload_class->set_caps =
+  gstrtpbasedepayload_class->set_caps =
       GST_DEBUG_FUNCPTR (gst_rtp_asf_depay_setcaps);
-  gstbasertpdepayload_class->process =
+  gstrtpbasedepayload_class->process =
       GST_DEBUG_FUNCPTR (gst_rtp_asf_depay_process);
 
   GST_DEBUG_CATEGORY_INIT (rtpasfdepayload_debug, "rtpasfdepayload", 0,
@@ -123,7 +123,7 @@ static const guint8 asf_marker[16] = { 0x30, 0x26, 0xb2, 0x75, 0x8e, 0x66,
 };
 
 static gboolean
-gst_rtp_asf_depay_setcaps (GstBaseRTPDepayload * depayload, GstCaps * caps)
+gst_rtp_asf_depay_setcaps (GstRTPBaseDepayload * depayload, GstCaps * caps)
 {
   GstRtpAsfDepay *depay;
   GstStructure *s;
@@ -179,7 +179,7 @@ gst_rtp_asf_depay_setcaps (GstBaseRTPDepayload * depayload, GstCaps * caps)
   gst_buffer_take_memory (buf, -1,
       gst_memory_new_wrapped (0, headers, g_free, headers_len, 0, headers_len));
 
-  gst_base_rtp_depayload_push (depayload, buf);
+  gst_rtp_base_depayload_push (depayload, buf);
 
   return TRUE;
 
@@ -311,7 +311,7 @@ gst_rtp_asf_depay_set_padding (GstRtpAsfDepay * depayload,
 /* Docs: 'RTSP Protocol PDF' document from http://sdp.ppona.com/ (page 8) */
 
 static GstBuffer *
-gst_rtp_asf_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
+gst_rtp_asf_depay_process (GstRTPBaseDepayload * depayload, GstBuffer * buf)
 {
   GstRtpAsfDepay *depay;
   const guint8 *payload;
@@ -487,7 +487,7 @@ gst_rtp_asf_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
 
     GST_BUFFER_TIMESTAMP (outbuf) = timestamp;
 
-    gst_base_rtp_depayload_push (depayload, outbuf);
+    gst_rtp_base_depayload_push (depayload, outbuf);
 
     /* only apply the timestamp to the first buffer of this packet */
     timestamp = -1;
