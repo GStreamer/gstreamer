@@ -23,7 +23,7 @@
 /**
  * SECTION:gstbaseaudiosrc
  * @short_description: Base class for audio sources
- * @see_also: #GstAudioSrc, #GstRingBuffer.
+ * @see_also: #GstAudioSrc, #GstAudioRingBuffer.
  *
  * This is the base class for audio sources. Subclasses need to implement the
  * ::create_ringbuffer vmethod. This base class will then take care of
@@ -230,7 +230,7 @@ gst_base_audio_src_class_init (GstBaseAudioSrcClass * klass)
   /* ref class from a thread-safe context to work around missing bit of
    * thread-safety in GObject */
   g_type_class_ref (GST_TYPE_AUDIO_CLOCK);
-  g_type_class_ref (GST_TYPE_RING_BUFFER);
+  g_type_class_ref (GST_TYPE_AUDIO_RING_BUFFER);
 }
 
 static void
@@ -291,7 +291,7 @@ gst_base_audio_src_provide_clock (GstElement * elem)
   if (src->ringbuffer == NULL)
     goto wrong_state;
 
-  if (!gst_ring_buffer_is_acquired (src->ringbuffer))
+  if (!gst_audio_ring_buffer_is_acquired (src->ringbuffer))
     goto wrong_state;
 
   GST_OBJECT_LOCK (src);
@@ -328,11 +328,11 @@ gst_base_audio_src_get_time (GstClock * clock, GstBaseAudioSrc * src)
           || src->ringbuffer->spec.info.rate == 0))
     return GST_CLOCK_TIME_NONE;
 
-  raw = samples = gst_ring_buffer_samples_done (src->ringbuffer);
+  raw = samples = gst_audio_ring_buffer_samples_done (src->ringbuffer);
 
   /* the number of samples not yet processed, this is still queued in the
    * device (not yet read for capture). */
-  delay = gst_ring_buffer_delay (src->ringbuffer);
+  delay = gst_audio_ring_buffer_delay (src->ringbuffer);
 
   samples += delay;
 
@@ -527,7 +527,7 @@ static gboolean
 gst_base_audio_src_setcaps (GstBaseSrc * bsrc, GstCaps * caps)
 {
   GstBaseAudioSrc *src = GST_BASE_AUDIO_SRC (bsrc);
-  GstRingBufferSpec *spec;
+  GstAudioRingBufferSpec *spec;
   gint bpf, rate;
 
   spec = &src->ringbuffer->spec;
@@ -536,7 +536,7 @@ gst_base_audio_src_setcaps (GstBaseSrc * bsrc, GstCaps * caps)
   spec->latency_time = src->latency_time;
 
   GST_OBJECT_LOCK (src);
-  if (!gst_ring_buffer_parse_caps (spec, caps)) {
+  if (!gst_audio_ring_buffer_parse_caps (spec, caps)) {
     GST_OBJECT_UNLOCK (src);
     goto parse_error;
   }
@@ -552,13 +552,13 @@ gst_base_audio_src_setcaps (GstBaseSrc * bsrc, GstCaps * caps)
 
   GST_DEBUG ("release old ringbuffer");
 
-  gst_ring_buffer_release (src->ringbuffer);
+  gst_audio_ring_buffer_release (src->ringbuffer);
 
-  gst_ring_buffer_debug_spec_buff (spec);
+  gst_audio_ring_buffer_debug_spec_buff (spec);
 
   GST_DEBUG ("acquire new ringbuffer");
 
-  if (!gst_ring_buffer_acquire (src->ringbuffer, spec))
+  if (!gst_audio_ring_buffer_acquire (src->ringbuffer, spec))
     goto acquire_error;
 
   /* calculate actual latency and buffer times */
@@ -566,7 +566,7 @@ gst_base_audio_src_setcaps (GstBaseSrc * bsrc, GstCaps * caps)
   spec->buffer_time =
       spec->segtotal * spec->segsize * GST_MSECOND / (rate * bpf);
 
-  gst_ring_buffer_debug_spec_buff (spec);
+  gst_audio_ring_buffer_debug_spec_buff (spec);
 
   g_object_notify (G_OBJECT (src), "actual-buffer-time");
   g_object_notify (G_OBJECT (src), "actual-latency-time");
@@ -606,7 +606,7 @@ gst_base_audio_src_query (GstBaseSrc * bsrc, GstQuery * query)
     case GST_QUERY_LATENCY:
     {
       GstClockTime min_latency, max_latency;
-      GstRingBufferSpec *spec;
+      GstAudioRingBufferSpec *spec;
       gint bpf, rate;
 
       GST_OBJECT_LOCK (src);
@@ -671,14 +671,14 @@ gst_base_audio_src_event (GstBaseSrc * bsrc, GstEvent * event)
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_FLUSH_START:
       GST_DEBUG_OBJECT (bsrc, "flush-start");
-      gst_ring_buffer_pause (src->ringbuffer);
-      gst_ring_buffer_clear_all (src->ringbuffer);
+      gst_audio_ring_buffer_pause (src->ringbuffer);
+      gst_audio_ring_buffer_clear_all (src->ringbuffer);
       break;
     case GST_EVENT_FLUSH_STOP:
       GST_DEBUG_OBJECT (bsrc, "flush-stop");
       /* always resync on sample after a flush */
       src->next_sample = -1;
-      gst_ring_buffer_clear_all (src->ringbuffer);
+      gst_audio_ring_buffer_clear_all (src->ringbuffer);
       break;
     case GST_EVENT_SEEK:
       GST_DEBUG_OBJECT (bsrc, "refuse to seek");
@@ -755,8 +755,8 @@ gst_base_audio_src_create (GstBaseSrc * bsrc, guint64 offset, guint length,
   guint samples, total_samples;
   guint64 sample;
   gint bpf, rate;
-  GstRingBuffer *ringbuffer;
-  GstRingBufferSpec *spec;
+  GstAudioRingBuffer *ringbuffer;
+  GstAudioRingBufferSpec *spec;
   guint read;
   GstClockTime timestamp, duration;
   GstClock *clock;
@@ -764,7 +764,7 @@ gst_base_audio_src_create (GstBaseSrc * bsrc, guint64 offset, guint length,
   ringbuffer = src->ringbuffer;
   spec = &ringbuffer->spec;
 
-  if (G_UNLIKELY (!gst_ring_buffer_is_acquired (ringbuffer)))
+  if (G_UNLIKELY (!gst_audio_ring_buffer_is_acquired (ringbuffer)))
     goto wrong_state;
 
   bpf = GST_AUDIO_INFO_BPF (&spec->info);
@@ -803,7 +803,7 @@ gst_base_audio_src_create (GstBaseSrc * bsrc, guint64 offset, guint length,
 
   data = ptr = gst_buffer_map (buf, NULL, NULL, GST_MAP_WRITE);
   do {
-    read = gst_ring_buffer_read (ringbuffer, sample, ptr, samples);
+    read = gst_audio_ring_buffer_read (ringbuffer, sample, ptr, samples);
     GST_DEBUG_OBJECT (src, "read %u of %u", read, samples);
     /* if we read all, we're done */
     if (read == samples)
@@ -932,7 +932,7 @@ gst_base_audio_src_create (GstBaseSrc * bsrc, guint64 offset, guint length,
           segment_diff = running_time_segment - last_written_segment;
 
           /* advance the ringbuffer */
-          gst_ring_buffer_advance (ringbuffer, segment_diff);
+          gst_audio_ring_buffer_advance (ringbuffer, segment_diff);
 
           /* we move the  new read segment to the last known written segment */
           new_read_segment =
@@ -1045,17 +1045,17 @@ stopped:
  * gst_base_audio_src_create_ringbuffer:
  * @src: a #GstBaseAudioSrc.
  *
- * Create and return the #GstRingBuffer for @src. This function will call the
+ * Create and return the #GstAudioRingBuffer for @src. This function will call the
  * ::create_ringbuffer vmethod and will set @src as the parent of the returned
  * buffer (see gst_object_set_parent()).
  *
  * Returns: The new ringbuffer of @src.
  */
-GstRingBuffer *
+GstAudioRingBuffer *
 gst_base_audio_src_create_ringbuffer (GstBaseAudioSrc * src)
 {
   GstBaseAudioSrcClass *bclass;
-  GstRingBuffer *buffer = NULL;
+  GstAudioRingBuffer *buffer = NULL;
 
   bclass = GST_BASE_AUDIO_SRC_GET_CLASS (src);
   if (bclass->create_ringbuffer)
@@ -1083,14 +1083,14 @@ gst_base_audio_src_change_state (GstElement * element,
         src->ringbuffer = gst_base_audio_src_create_ringbuffer (src);
       }
       GST_OBJECT_UNLOCK (src);
-      if (!gst_ring_buffer_open_device (src->ringbuffer))
+      if (!gst_audio_ring_buffer_open_device (src->ringbuffer))
         goto open_failed;
       break;
     case GST_STATE_CHANGE_READY_TO_PAUSED:
       GST_DEBUG_OBJECT (src, "READY->PAUSED");
       src->next_sample = -1;
-      gst_ring_buffer_set_flushing (src->ringbuffer, FALSE);
-      gst_ring_buffer_may_start (src->ringbuffer, FALSE);
+      gst_audio_ring_buffer_set_flushing (src->ringbuffer, FALSE);
+      gst_audio_ring_buffer_may_start (src->ringbuffer, FALSE);
       /* Only post clock-provide messages if this is the clock that
        * we've created. If the subclass has overriden it the subclass
        * should post this messages whenever necessary */
@@ -1103,12 +1103,12 @@ gst_base_audio_src_change_state (GstElement * element,
       break;
     case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
       GST_DEBUG_OBJECT (src, "PAUSED->PLAYING");
-      gst_ring_buffer_may_start (src->ringbuffer, TRUE);
+      gst_audio_ring_buffer_may_start (src->ringbuffer, TRUE);
       break;
     case GST_STATE_CHANGE_PLAYING_TO_PAUSED:
       GST_DEBUG_OBJECT (src, "PLAYING->PAUSED");
-      gst_ring_buffer_may_start (src->ringbuffer, FALSE);
-      gst_ring_buffer_pause (src->ringbuffer);
+      gst_audio_ring_buffer_may_start (src->ringbuffer, FALSE);
+      gst_audio_ring_buffer_pause (src->ringbuffer);
       break;
     case GST_STATE_CHANGE_PAUSED_TO_READY:
       GST_DEBUG_OBJECT (src, "PAUSED->READY");
@@ -1120,7 +1120,7 @@ gst_base_audio_src_change_state (GstElement * element,
           (GstAudioClockGetTimeFunc) gst_base_audio_src_get_time)
         gst_element_post_message (element,
             gst_message_new_clock_lost (GST_OBJECT_CAST (element), src->clock));
-      gst_ring_buffer_set_flushing (src->ringbuffer, TRUE);
+      gst_audio_ring_buffer_set_flushing (src->ringbuffer, TRUE);
       break;
     default:
       break;
@@ -1131,11 +1131,11 @@ gst_base_audio_src_change_state (GstElement * element,
   switch (transition) {
     case GST_STATE_CHANGE_PAUSED_TO_READY:
       GST_DEBUG_OBJECT (src, "PAUSED->READY");
-      gst_ring_buffer_release (src->ringbuffer);
+      gst_audio_ring_buffer_release (src->ringbuffer);
       break;
     case GST_STATE_CHANGE_READY_TO_NULL:
       GST_DEBUG_OBJECT (src, "READY->NULL");
-      gst_ring_buffer_close_device (src->ringbuffer);
+      gst_audio_ring_buffer_close_device (src->ringbuffer);
       GST_OBJECT_LOCK (src);
       gst_object_unparent (GST_OBJECT_CAST (src->ringbuffer));
       src->ringbuffer = NULL;

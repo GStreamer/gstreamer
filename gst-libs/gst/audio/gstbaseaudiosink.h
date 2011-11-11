@@ -42,7 +42,7 @@
  * function will be used to perform a pull_range() on the sinkpad.
  * The thread scheduling the callback can be a real-time thread.
  *
- * Subclasses must implement a GstRingBuffer in addition to overriding
+ * Subclasses must implement a GstAudioRingBuffer in addition to overriding
  * the methods in GstBaseSink and this class.
  */
 
@@ -107,25 +107,25 @@ typedef struct _GstBaseAudioSinkPrivate GstBaseAudioSinkPrivate;
  * Opaque #GstBaseAudioSink.
  */
 struct _GstBaseAudioSink {
-  GstBaseSink    element;
+  GstBaseSink         element;
 
   /*< protected >*/ /* with LOCK */
   /* our ringbuffer */
-  GstRingBuffer *ringbuffer;
+  GstAudioRingBuffer *ringbuffer;
 
   /* required buffer and latency in microseconds */
-  guint64        buffer_time;
-  guint64        latency_time;
+  guint64             buffer_time;
+  guint64             latency_time;
 
   /* the next sample to write */
-  guint64        next_sample;
+  guint64             next_sample;
 
   /* clock */
-  gboolean       provide_clock;
-  GstClock      *provided_clock;
+  gboolean            provide_clock;
+  GstClock           *provided_clock;
 
   /* with g_atomic_; currently rendering eos */
-  gboolean       eos_rendering;
+  gboolean            eos_rendering;
 
   /*< private >*/
   GstBaseAudioSinkPrivate *priv;
@@ -136,7 +136,7 @@ struct _GstBaseAudioSink {
 /**
  * GstBaseAudioSinkClass:
  * @parent_class: the parent class.
- * @create_ringbuffer: create and return a #GstRingBuffer to write to.
+ * @create_ringbuffer: create and return a #GstAudioRingBuffer to write to.
  * @payload: payload data in a format suitable to write to the sink. If no
  *           payloading is required, returns a reffed copy of the original
  *           buffer, else returns the payloaded buffer with all other metadata
@@ -146,14 +146,14 @@ struct _GstBaseAudioSink {
  * functionality.
  */
 struct _GstBaseAudioSinkClass {
-  GstBaseSinkClass parent_class;
+  GstBaseSinkClass     parent_class;
 
   /* subclass ringbuffer allocation */
-  GstRingBuffer* (*create_ringbuffer)  (GstBaseAudioSink *sink);
+  GstAudioRingBuffer* (*create_ringbuffer)  (GstBaseAudioSink *sink);
 
   /* subclass payloader */
-  GstBuffer*     (*payload)            (GstBaseAudioSink *sink,
-                                        GstBuffer        *buffer);
+  GstBuffer*          (*payload)            (GstBaseAudioSink *sink,
+                                             GstBuffer        *buffer);
   /*< private >*/
   gpointer _gst_reserved[GST_PADDING];
 };
@@ -161,29 +161,30 @@ struct _GstBaseAudioSinkClass {
 GType gst_base_audio_sink_get_type(void);
 GType gst_base_audio_sink_slave_method_get_type (void);
 
-GstRingBuffer *gst_base_audio_sink_create_ringbuffer (GstBaseAudioSink *sink);
+GstAudioRingBuffer *
+           gst_base_audio_sink_create_ringbuffer       (GstBaseAudioSink *sink);
 
-void       gst_base_audio_sink_set_provide_clock      (GstBaseAudioSink *sink, gboolean provide);
-gboolean   gst_base_audio_sink_get_provide_clock      (GstBaseAudioSink *sink);
+void       gst_base_audio_sink_set_provide_clock       (GstBaseAudioSink *sink, gboolean provide);
+gboolean   gst_base_audio_sink_get_provide_clock       (GstBaseAudioSink *sink);
 
-void       gst_base_audio_sink_set_slave_method       (GstBaseAudioSink *sink,
-                                                       GstBaseAudioSinkSlaveMethod method);
+void       gst_base_audio_sink_set_slave_method        (GstBaseAudioSink *sink,
+                                                        GstBaseAudioSinkSlaveMethod method);
 GstBaseAudioSinkSlaveMethod
-           gst_base_audio_sink_get_slave_method       (GstBaseAudioSink *sink);
+           gst_base_audio_sink_get_slave_method        (GstBaseAudioSink *sink);
 
-void       gst_base_audio_sink_set_drift_tolerance    (GstBaseAudioSink *sink,
-                                                       gint64 drift_tolerance);
-gint64     gst_base_audio_sink_get_drift_tolerance    (GstBaseAudioSink *sink);
+void       gst_base_audio_sink_set_drift_tolerance     (GstBaseAudioSink *sink,
+                                                        gint64 drift_tolerance);
+gint64     gst_base_audio_sink_get_drift_tolerance     (GstBaseAudioSink *sink);
 
 void       gst_base_audio_sink_set_alignment_threshold (GstBaseAudioSink * sink,
                                                         GstClockTime alignment_threshold);
 GstClockTime
            gst_base_audio_sink_get_alignment_threshold (GstBaseAudioSink * sink);
 
-void       gst_base_audio_sink_set_discont_wait       (GstBaseAudioSink * sink,
-                                                       GstClockTime discont_wait);
+void       gst_base_audio_sink_set_discont_wait        (GstBaseAudioSink * sink,
+                                                        GstClockTime discont_wait);
 GstClockTime
-           gst_base_audio_sink_get_discont_wait       (GstBaseAudioSink * sink);
+           gst_base_audio_sink_get_discont_wait        (GstBaseAudioSink * sink);
 
 G_END_DECLS
 

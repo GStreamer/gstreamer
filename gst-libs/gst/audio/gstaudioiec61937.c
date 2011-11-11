@@ -72,7 +72,7 @@ caps_get_string_field (const GstCaps * caps, const gchar * field)
  * Since: 0.10.36
  */
 guint
-gst_audio_iec61937_frame_size (const GstRingBufferSpec * spec)
+gst_audio_iec61937_frame_size (const GstAudioRingBufferSpec * spec)
 {
   switch (spec->type) {
     case GST_BUFTYPE_AC3:
@@ -149,7 +149,7 @@ gst_audio_iec61937_frame_size (const GstRingBufferSpec * spec)
  */
 gboolean
 gst_audio_iec61937_payload (const guint8 * src, guint src_n, guint8 * dst,
-    guint dst_n, const GstRingBufferSpec * spec)
+    guint dst_n, const GstAudioRingBufferSpec * spec)
 {
   guint i, tmp;
 #if G_BYTE_ORDER == G_BIG_ENDIAN

@@ -43,45 +43,46 @@
 
 #include "gstringbuffer.h"
 
-GST_DEBUG_CATEGORY_STATIC (gst_ring_buffer_debug);
-#define GST_CAT_DEFAULT gst_ring_buffer_debug
+GST_DEBUG_CATEGORY_STATIC (gst_audio_ring_buffer_debug);
+#define GST_CAT_DEFAULT gst_audio_ring_buffer_debug
 
-static void gst_ring_buffer_dispose (GObject * object);
-static void gst_ring_buffer_finalize (GObject * object);
+static void gst_audio_ring_buffer_dispose (GObject * object);
+static void gst_audio_ring_buffer_finalize (GObject * object);
 
-static gboolean gst_ring_buffer_pause_unlocked (GstRingBuffer * buf);
-static void default_clear_all (GstRingBuffer * buf);
-static guint default_commit (GstRingBuffer * buf, guint64 * sample,
+static gboolean gst_audio_ring_buffer_pause_unlocked (GstAudioRingBuffer * buf);
+static void default_clear_all (GstAudioRingBuffer * buf);
+static guint default_commit (GstAudioRingBuffer * buf, guint64 * sample,
     guchar * data, gint in_samples, gint out_samples, gint * accum);
 
 /* ringbuffer abstract base class */
-G_DEFINE_ABSTRACT_TYPE (GstRingBuffer, gst_ring_buffer, GST_TYPE_OBJECT);
+G_DEFINE_ABSTRACT_TYPE (GstAudioRingBuffer, gst_audio_ring_buffer,
+    GST_TYPE_OBJECT);
 
 static void
-gst_ring_buffer_class_init (GstRingBufferClass * klass)
+gst_audio_ring_buffer_class_init (GstAudioRingBufferClass * klass)
 {
   GObjectClass *gobject_class;
-  GstRingBufferClass *gstringbuffer_class;
+  GstAudioRingBufferClass *gstringbuffer_class;
 
   gobject_class = (GObjectClass *) klass;
-  gstringbuffer_class = (GstRingBufferClass *) klass;
+  gstringbuffer_class = (GstAudioRingBufferClass *) klass;
 
-  GST_DEBUG_CATEGORY_INIT (gst_ring_buffer_debug, "ringbuffer", 0,
+  GST_DEBUG_CATEGORY_INIT (gst_audio_ring_buffer_debug, "ringbuffer", 0,
       "ringbuffer class");
 
-  gobject_class->dispose = gst_ring_buffer_dispose;
-  gobject_class->finalize = gst_ring_buffer_finalize;
+  gobject_class->dispose = gst_audio_ring_buffer_dispose;
+  gobject_class->finalize = gst_audio_ring_buffer_finalize;
 
   gstringbuffer_class->clear_all = GST_DEBUG_FUNCPTR (default_clear_all);
   gstringbuffer_class->commit = GST_DEBUG_FUNCPTR (default_commit);
 }
 
 static void
-gst_ring_buffer_init (GstRingBuffer * ringbuffer)
+gst_audio_ring_buffer_init (GstAudioRingBuffer * ringbuffer)
 {
   ringbuffer->open = FALSE;
   ringbuffer->acquired = FALSE;
-  ringbuffer->state = GST_RING_BUFFER_STATE_STOPPED;
+  ringbuffer->state = GST_AUDIO_RING_BUFFER_STATE_STOPPED;
   ringbuffer->cond = g_cond_new ();
   ringbuffer->waiting = 0;
   ringbuffer->empty_seg = NULL;
@@ -89,25 +90,25 @@ gst_ring_buffer_init (GstRingBuffer * ringbuffer)
 }
 
 static void
-gst_ring_buffer_dispose (GObject * object)
+gst_audio_ring_buffer_dispose (GObject * object)
 {
-  GstRingBuffer *ringbuffer = GST_RING_BUFFER (object);
+  GstAudioRingBuffer *ringbuffer = GST_AUDIO_RING_BUFFER (object);
 
   gst_caps_replace (&ringbuffer->spec.caps, NULL);
 
-  G_OBJECT_CLASS (gst_ring_buffer_parent_class)->dispose (G_OBJECT
+  G_OBJECT_CLASS (gst_audio_ring_buffer_parent_class)->dispose (G_OBJECT
       (ringbuffer));
 }
 
 static void
-gst_ring_buffer_finalize (GObject * object)
+gst_audio_ring_buffer_finalize (GObject * object)
 {
-  GstRingBuffer *ringbuffer = GST_RING_BUFFER (object);
+  GstAudioRingBuffer *ringbuffer = GST_AUDIO_RING_BUFFER (object);
 
   g_cond_free (ringbuffer->cond);
   g_free (ringbuffer->empty_seg);
 
-  G_OBJECT_CLASS (gst_ring_buffer_parent_class)->finalize (G_OBJECT
+  G_OBJECT_CLASS (gst_audio_ring_buffer_parent_class)->finalize (G_OBJECT
       (ringbuffer));
 }
 
@@ -127,13 +128,13 @@ static const gchar *format_type_names[] = {
 #endif
 
 /**
- * gst_ring_buffer_debug_spec_caps:
+ * gst_audio_ring_buffer_debug_spec_caps:
  * @spec: the spec to debug
  *
  * Print debug info about the parsed caps in @spec to the debug log.
  */
 void
-gst_ring_buffer_debug_spec_caps (GstRingBufferSpec * spec)
+gst_audio_ring_buffer_debug_spec_caps (GstAudioRingBufferSpec * spec)
 {
 #if 0
   gint i, bytes;
@@ -157,13 +158,13 @@ gst_ring_buffer_debug_spec_caps (GstRingBufferSpec * spec)
 }
 
 /**
- * gst_ring_buffer_debug_spec_buff:
+ * gst_audio_ring_buffer_debug_spec_buff:
  * @spec: the spec to debug
  *
  * Print debug info about the buffer sized in @spec to the debug log.
  */
 void
-gst_ring_buffer_debug_spec_buff (GstRingBufferSpec * spec)
+gst_audio_ring_buffer_debug_spec_buff (GstAudioRingBufferSpec * spec)
 {
   gint bpf = GST_AUDIO_INFO_BPF (&spec->info);
 
@@ -180,7 +181,7 @@ gst_ring_buffer_debug_spec_buff (GstRingBufferSpec * spec)
 }
 
 /**
- * gst_ring_buffer_parse_caps:
+ * gst_audio_ring_buffer_parse_caps:
  * @spec: a spec
  * @caps: a #GstCaps
  *
@@ -189,7 +190,7 @@ gst_ring_buffer_debug_spec_buff (GstRingBufferSpec * spec)
  * Returns: TRUE if the caps could be parsed.
  */
 gboolean
-gst_ring_buffer_parse_caps (GstRingBufferSpec * spec, GstCaps * caps)
+gst_audio_ring_buffer_parse_caps (GstAudioRingBufferSpec * spec, GstCaps * caps)
 {
   const gchar *mimetype;
   GstStructure *structure;
@@ -284,8 +285,8 @@ gst_ring_buffer_parse_caps (GstRingBufferSpec * spec, GstCaps * caps)
 
   spec->info = info;
 
-  gst_ring_buffer_debug_spec_caps (spec);
-  gst_ring_buffer_debug_spec_buff (spec);
+  gst_audio_ring_buffer_debug_spec_caps (spec);
+  gst_audio_ring_buffer_debug_spec_buff (spec);
 
   return TRUE;
 
@@ -298,8 +299,8 @@ parse_error:
 }
 
 /**
- * gst_ring_buffer_convert:
- * @buf: the #GstRingBuffer
+ * gst_audio_ring_buffer_convert:
+ * @buf: the #GstAudioRingBuffer
  * @src_fmt: the source format
  * @src_val: the source value
  * @dest_fmt: the destination format
@@ -313,7 +314,7 @@ parse_error:
  * Since: 0.10.22.
  */
 gboolean
-gst_ring_buffer_convert (GstRingBuffer * buf,
+gst_audio_ring_buffer_convert (GstAudioRingBuffer * buf,
     GstFormat src_fmt, gint64 src_val, GstFormat dest_fmt, gint64 * dest_val)
 {
   gboolean res;
@@ -328,8 +329,8 @@ gst_ring_buffer_convert (GstRingBuffer * buf,
 }
 
 /**
- * gst_ring_buffer_set_callback:
- * @buf: the #GstRingBuffer to set the callback on
+ * gst_audio_ring_buffer_set_callback:
+ * @buf: the #GstAudioRingBuffer to set the callback on
  * @cb: the callback to set
  * @user_data: user data passed to the callback
  *
@@ -339,10 +340,10 @@ gst_ring_buffer_convert (GstRingBuffer * buf,
  * MT safe.
  */
 void
-gst_ring_buffer_set_callback (GstRingBuffer * buf, GstRingBufferCallback cb,
-    gpointer user_data)
+gst_audio_ring_buffer_set_callback (GstAudioRingBuffer * buf,
+    GstAudioRingBufferCallback cb, gpointer user_data)
 {
-  g_return_if_fail (GST_IS_RING_BUFFER (buf));
+  g_return_if_fail (GST_IS_AUDIO_RING_BUFFER (buf));
 
   GST_OBJECT_LOCK (buf);
   buf->callback = cb;
@@ -352,8 +353,8 @@ gst_ring_buffer_set_callback (GstRingBuffer * buf, GstRingBufferCallback cb,
 
 
 /**
- * gst_ring_buffer_open_device:
- * @buf: the #GstRingBuffer
+ * gst_audio_ring_buffer_open_device:
+ * @buf: the #GstAudioRingBuffer
  *
  * Open the audio device associated with the ring buffer. Does not perform any
  * setup on the device. You must open the device before acquiring the ring
@@ -364,12 +365,12 @@ gst_ring_buffer_set_callback (GstRingBuffer * buf, GstRingBufferCallback cb,
  * MT safe.
  */
 gboolean
-gst_ring_buffer_open_device (GstRingBuffer * buf)
+gst_audio_ring_buffer_open_device (GstAudioRingBuffer * buf)
 {
   gboolean res = TRUE;
-  GstRingBufferClass *rclass;
+  GstAudioRingBufferClass *rclass;
 
-  g_return_val_if_fail (GST_IS_RING_BUFFER (buf), FALSE);
+  g_return_val_if_fail (GST_IS_AUDIO_RING_BUFFER (buf), FALSE);
 
   GST_DEBUG_OBJECT (buf, "opening device");
 
@@ -382,7 +383,7 @@ gst_ring_buffer_open_device (GstRingBuffer * buf)
   /* if this fails, something is wrong in this file */
   g_assert (!buf->acquired);
 
-  rclass = GST_RING_BUFFER_GET_CLASS (buf);
+  rclass = GST_AUDIO_RING_BUFFER_GET_CLASS (buf);
   if (G_LIKELY (rclass->open_device))
     res = rclass->open_device (buf);
 
@@ -413,23 +414,23 @@ open_failed:
 }
 
 /**
- * gst_ring_buffer_close_device:
- * @buf: the #GstRingBuffer
+ * gst_audio_ring_buffer_close_device:
+ * @buf: the #GstAudioRingBuffer
  *
  * Close the audio device associated with the ring buffer. The ring buffer
- * should already have been released via gst_ring_buffer_release().
+ * should already have been released via gst_audio_ring_buffer_release().
  *
  * Returns: TRUE if the device could be closed, FALSE on error.
  *
  * MT safe.
  */
 gboolean
-gst_ring_buffer_close_device (GstRingBuffer * buf)
+gst_audio_ring_buffer_close_device (GstAudioRingBuffer * buf)
 {
   gboolean res = TRUE;
-  GstRingBufferClass *rclass;
+  GstAudioRingBufferClass *rclass;
 
-  g_return_val_if_fail (GST_IS_RING_BUFFER (buf), FALSE);
+  g_return_val_if_fail (GST_IS_AUDIO_RING_BUFFER (buf), FALSE);
 
   GST_DEBUG_OBJECT (buf, "closing device");
 
@@ -442,7 +443,7 @@ gst_ring_buffer_close_device (GstRingBuffer * buf)
 
   buf->open = FALSE;
 
-  rclass = GST_RING_BUFFER_GET_CLASS (buf);
+  rclass = GST_AUDIO_RING_BUFFER_GET_CLASS (buf);
   if (G_LIKELY (rclass->close_device))
     res = rclass->close_device (buf);
 
@@ -480,8 +481,8 @@ close_error:
 }
 
 /**
- * gst_ring_buffer_device_is_open:
- * @buf: the #GstRingBuffer
+ * gst_audio_ring_buffer_device_is_open:
+ * @buf: the #GstAudioRingBuffer
  *
  * Checks the status of the device associated with the ring buffer.
  *
@@ -490,11 +491,11 @@ close_error:
  * MT safe.
  */
 gboolean
-gst_ring_buffer_device_is_open (GstRingBuffer * buf)
+gst_audio_ring_buffer_device_is_open (GstAudioRingBuffer * buf)
 {
   gboolean res = TRUE;
 
-  g_return_val_if_fail (GST_IS_RING_BUFFER (buf), FALSE);
+  g_return_val_if_fail (GST_IS_AUDIO_RING_BUFFER (buf), FALSE);
 
   GST_OBJECT_LOCK (buf);
   res = buf->open;
@@ -504,8 +505,8 @@ gst_ring_buffer_device_is_open (GstRingBuffer * buf)
 }
 
 /**
- * gst_ring_buffer_acquire:
- * @buf: the #GstRingBuffer to acquire
+ * gst_audio_ring_buffer_acquire:
+ * @buf: the #GstAudioRingBuffer to acquire
  * @spec: the specs of the buffer
  *
  * Allocate the resources for the ringbuffer. This function fills
@@ -517,13 +518,14 @@ gst_ring_buffer_device_is_open (GstRingBuffer * buf)
  * MT safe.
  */
 gboolean
-gst_ring_buffer_acquire (GstRingBuffer * buf, GstRingBufferSpec * spec)
+gst_audio_ring_buffer_acquire (GstAudioRingBuffer * buf,
+    GstAudioRingBufferSpec * spec)
 {
   gboolean res = FALSE;
-  GstRingBufferClass *rclass;
+  GstAudioRingBufferClass *rclass;
   gint segsize, bpf;
 
-  g_return_val_if_fail (GST_IS_RING_BUFFER (buf), FALSE);
+  g_return_val_if_fail (GST_IS_AUDIO_RING_BUFFER (buf), FALSE);
 
   GST_DEBUG_OBJECT (buf, "acquiring device %p", buf);
 
@@ -536,7 +538,7 @@ gst_ring_buffer_acquire (GstRingBuffer * buf, GstRingBufferSpec * spec)
 
   buf->acquired = TRUE;
 
-  rclass = GST_RING_BUFFER_GET_CLASS (buf);
+  rclass = GST_AUDIO_RING_BUFFER_GET_CLASS (buf);
   if (G_LIKELY (rclass->acquire))
     res = rclass->acquire (buf, spec);
 
@@ -605,8 +607,8 @@ invalid_bpf:
 }
 
 /**
- * gst_ring_buffer_release:
- * @buf: the #GstRingBuffer to release
+ * gst_audio_ring_buffer_release:
+ * @buf: the #GstAudioRingBuffer to release
  *
  * Free the resources of the ringbuffer.
  *
@@ -615,16 +617,16 @@ invalid_bpf:
  * MT safe.
  */
 gboolean
-gst_ring_buffer_release (GstRingBuffer * buf)
+gst_audio_ring_buffer_release (GstAudioRingBuffer * buf)
 {
   gboolean res = FALSE;
-  GstRingBufferClass *rclass;
+  GstAudioRingBufferClass *rclass;
 
-  g_return_val_if_fail (GST_IS_RING_BUFFER (buf), FALSE);
+  g_return_val_if_fail (GST_IS_AUDIO_RING_BUFFER (buf), FALSE);
 
   GST_DEBUG_OBJECT (buf, "releasing device");
 
-  gst_ring_buffer_stop (buf);
+  gst_audio_ring_buffer_stop (buf);
 
   GST_OBJECT_LOCK (buf);
   if (G_UNLIKELY (!buf->acquired))
@@ -635,13 +637,13 @@ gst_ring_buffer_release (GstRingBuffer * buf)
   /* if this fails, something is wrong in this file */
   g_assert (buf->open == TRUE);
 
-  rclass = GST_RING_BUFFER_GET_CLASS (buf);
+  rclass = GST_AUDIO_RING_BUFFER_GET_CLASS (buf);
   if (G_LIKELY (rclass->release))
     res = rclass->release (buf);
 
   /* signal any waiters */
   GST_DEBUG_OBJECT (buf, "signal waiter");
-  GST_RING_BUFFER_SIGNAL (buf);
+  GST_AUDIO_RING_BUFFER_SIGNAL (buf);
 
   if (G_UNLIKELY (!res))
     goto release_failed;
@@ -671,8 +673,8 @@ release_failed:
 }
 
 /**
- * gst_ring_buffer_is_acquired:
- * @buf: the #GstRingBuffer to check
+ * gst_audio_ring_buffer_is_acquired:
+ * @buf: the #GstAudioRingBuffer to check
  *
  * Check if the ringbuffer is acquired and ready to use.
  *
@@ -681,11 +683,11 @@ release_failed:
  * MT safe.
  */
 gboolean
-gst_ring_buffer_is_acquired (GstRingBuffer * buf)
+gst_audio_ring_buffer_is_acquired (GstAudioRingBuffer * buf)
 {
   gboolean res;
 
-  g_return_val_if_fail (GST_IS_RING_BUFFER (buf), FALSE);
+  g_return_val_if_fail (GST_IS_AUDIO_RING_BUFFER (buf), FALSE);
 
   GST_OBJECT_LOCK (buf);
   res = buf->acquired;
@@ -695,8 +697,8 @@ gst_ring_buffer_is_acquired (GstRingBuffer * buf)
 }
 
 /**
- * gst_ring_buffer_activate:
- * @buf: the #GstRingBuffer to activate
+ * gst_audio_ring_buffer_activate:
+ * @buf: the #GstAudioRingBuffer to activate
  * @active: the new mode
  *
  * Activate @buf to start or stop pulling data.
@@ -709,12 +711,12 @@ gst_ring_buffer_is_acquired (GstRingBuffer * buf)
  * Since: 0.10.22.
  */
 gboolean
-gst_ring_buffer_activate (GstRingBuffer * buf, gboolean active)
+gst_audio_ring_buffer_activate (GstAudioRingBuffer * buf, gboolean active)
 {
   gboolean res = FALSE;
-  GstRingBufferClass *rclass;
+  GstAudioRingBufferClass *rclass;
 
-  g_return_val_if_fail (GST_IS_RING_BUFFER (buf), FALSE);
+  g_return_val_if_fail (GST_IS_AUDIO_RING_BUFFER (buf), FALSE);
 
   GST_DEBUG_OBJECT (buf, "activate device");
 
@@ -725,7 +727,7 @@ gst_ring_buffer_activate (GstRingBuffer * buf, gboolean active)
   if (G_UNLIKELY (buf->active == active))
     goto was_active;
 
-  rclass = GST_RING_BUFFER_GET_CLASS (buf);
+  rclass = GST_AUDIO_RING_BUFFER_GET_CLASS (buf);
   /* if there is no activate function we assume it was started/released
    * in the acquire method */
   if (G_LIKELY (rclass->activate))
@@ -765,8 +767,8 @@ activate_failed:
 }
 
 /**
- * gst_ring_buffer_is_active:
- * @buf: the #GstRingBuffer
+ * gst_audio_ring_buffer_is_active:
+ * @buf: the #GstAudioRingBuffer
  *
  * Check if @buf is activated.
  *
@@ -777,11 +779,11 @@ activate_failed:
  * Since: 0.10.22.
  */
 gboolean
-gst_ring_buffer_is_active (GstRingBuffer * buf)
+gst_audio_ring_buffer_is_active (GstAudioRingBuffer * buf)
 {
   gboolean res;
 
-  g_return_val_if_fail (GST_IS_RING_BUFFER (buf), FALSE);
+  g_return_val_if_fail (GST_IS_AUDIO_RING_BUFFER (buf), FALSE);
 
   GST_OBJECT_LOCK (buf);
   res = buf->active;
@@ -792,8 +794,8 @@ gst_ring_buffer_is_active (GstRingBuffer * buf)
 
 
 /**
- * gst_ring_buffer_set_flushing:
- * @buf: the #GstRingBuffer to flush
+ * gst_audio_ring_buffer_set_flushing:
+ * @buf: the #GstAudioRingBuffer to flush
  * @flushing: the new mode
  *
  * Set the ringbuffer to flushing mode or normal mode.
@@ -801,24 +803,24 @@ gst_ring_buffer_is_active (GstRingBuffer * buf)
  * MT safe.
  */
 void
-gst_ring_buffer_set_flushing (GstRingBuffer * buf, gboolean flushing)
+gst_audio_ring_buffer_set_flushing (GstAudioRingBuffer * buf, gboolean flushing)
 {
-  g_return_if_fail (GST_IS_RING_BUFFER (buf));
+  g_return_if_fail (GST_IS_AUDIO_RING_BUFFER (buf));
 
   GST_OBJECT_LOCK (buf);
   buf->flushing = flushing;
 
   if (flushing) {
-    gst_ring_buffer_pause_unlocked (buf);
+    gst_audio_ring_buffer_pause_unlocked (buf);
   } else {
-    gst_ring_buffer_clear_all (buf);
+    gst_audio_ring_buffer_clear_all (buf);
   }
   GST_OBJECT_UNLOCK (buf);
 }
 
 /**
- * gst_ring_buffer_start:
- * @buf: the #GstRingBuffer to start
+ * gst_audio_ring_buffer_start:
+ * @buf: the #GstAudioRingBuffer to start
  *
  * Start processing samples from the ringbuffer.
  *
@@ -827,13 +829,13 @@ gst_ring_buffer_set_flushing (GstRingBuffer * buf, gboolean flushing)
  * MT safe.
  */
 gboolean
-gst_ring_buffer_start (GstRingBuffer * buf)
+gst_audio_ring_buffer_start (GstAudioRingBuffer * buf)
 {
   gboolean res = FALSE;
-  GstRingBufferClass *rclass;
+  GstAudioRingBufferClass *rclass;
   gboolean resume = FALSE;
 
-  g_return_val_if_fail (GST_IS_RING_BUFFER (buf), FALSE);
+  g_return_val_if_fail (GST_IS_AUDIO_RING_BUFFER (buf), FALSE);
 
   GST_DEBUG_OBJECT (buf, "starting ringbuffer");
 
@@ -849,13 +851,14 @@ gst_ring_buffer_start (GstRingBuffer * buf)
 
   /* if stopped, set to started */
   res = g_atomic_int_compare_and_exchange (&buf->state,
-      GST_RING_BUFFER_STATE_STOPPED, GST_RING_BUFFER_STATE_STARTED);
+      GST_AUDIO_RING_BUFFER_STATE_STOPPED, GST_AUDIO_RING_BUFFER_STATE_STARTED);
 
   if (!res) {
     GST_DEBUG_OBJECT (buf, "was not stopped, try paused");
     /* was not stopped, try from paused */
     res = g_atomic_int_compare_and_exchange (&buf->state,
-        GST_RING_BUFFER_STATE_PAUSED, GST_RING_BUFFER_STATE_STARTED);
+        GST_AUDIO_RING_BUFFER_STATE_PAUSED,
+        GST_AUDIO_RING_BUFFER_STATE_STARTED);
     if (!res) {
       /* was not paused either, must be started then */
       res = TRUE;
@@ -866,7 +869,7 @@ gst_ring_buffer_start (GstRingBuffer * buf)
     GST_DEBUG_OBJECT (buf, "resuming");
   }
 
-  rclass = GST_RING_BUFFER_GET_CLASS (buf);
+  rclass = GST_AUDIO_RING_BUFFER_GET_CLASS (buf);
   if (resume) {
     if (G_LIKELY (rclass->resume))
       res = rclass->resume (buf);
@@ -876,7 +879,7 @@ gst_ring_buffer_start (GstRingBuffer * buf)
   }
 
   if (G_UNLIKELY (!res)) {
-    buf->state = GST_RING_BUFFER_STATE_PAUSED;
+    buf->state = GST_AUDIO_RING_BUFFER_STATE_PAUSED;
     GST_DEBUG_OBJECT (buf, "failed to start");
   } else {
     GST_DEBUG_OBJECT (buf, "started");
@@ -908,30 +911,30 @@ may_not_start:
 }
 
 static gboolean
-gst_ring_buffer_pause_unlocked (GstRingBuffer * buf)
+gst_audio_ring_buffer_pause_unlocked (GstAudioRingBuffer * buf)
 {
   gboolean res = FALSE;
-  GstRingBufferClass *rclass;
+  GstAudioRingBufferClass *rclass;
 
   GST_DEBUG_OBJECT (buf, "pausing ringbuffer");
 
   /* if started, set to paused */
   res = g_atomic_int_compare_and_exchange (&buf->state,
-      GST_RING_BUFFER_STATE_STARTED, GST_RING_BUFFER_STATE_PAUSED);
+      GST_AUDIO_RING_BUFFER_STATE_STARTED, GST_AUDIO_RING_BUFFER_STATE_PAUSED);
 
   if (!res)
     goto not_started;
 
   /* signal any waiters */
   GST_DEBUG_OBJECT (buf, "signal waiter");
-  GST_RING_BUFFER_SIGNAL (buf);
+  GST_AUDIO_RING_BUFFER_SIGNAL (buf);
 
-  rclass = GST_RING_BUFFER_GET_CLASS (buf);
+  rclass = GST_AUDIO_RING_BUFFER_GET_CLASS (buf);
   if (G_LIKELY (rclass->pause))
     res = rclass->pause (buf);
 
   if (G_UNLIKELY (!res)) {
-    buf->state = GST_RING_BUFFER_STATE_STARTED;
+    buf->state = GST_AUDIO_RING_BUFFER_STATE_STARTED;
     GST_DEBUG_OBJECT (buf, "failed to pause");
   } else {
     GST_DEBUG_OBJECT (buf, "paused");
@@ -948,8 +951,8 @@ not_started:
 }
 
 /**
- * gst_ring_buffer_pause:
- * @buf: the #GstRingBuffer to pause
+ * gst_audio_ring_buffer_pause:
+ * @buf: the #GstAudioRingBuffer to pause
  *
  * Pause processing samples from the ringbuffer.
  *
@@ -958,11 +961,11 @@ not_started:
  * MT safe.
  */
 gboolean
-gst_ring_buffer_pause (GstRingBuffer * buf)
+gst_audio_ring_buffer_pause (GstAudioRingBuffer * buf)
 {
   gboolean res = FALSE;
 
-  g_return_val_if_fail (GST_IS_RING_BUFFER (buf), FALSE);
+  g_return_val_if_fail (GST_IS_AUDIO_RING_BUFFER (buf), FALSE);
 
   GST_OBJECT_LOCK (buf);
   if (G_UNLIKELY (buf->flushing))
@@ -971,7 +974,7 @@ gst_ring_buffer_pause (GstRingBuffer * buf)
   if (G_UNLIKELY (!buf->acquired))
     goto not_acquired;
 
-  res = gst_ring_buffer_pause_unlocked (buf);
+  res = gst_audio_ring_buffer_pause_unlocked (buf);
   GST_OBJECT_UNLOCK (buf);
 
   return res;
@@ -992,8 +995,8 @@ not_acquired:
 }
 
 /**
- * gst_ring_buffer_stop:
- * @buf: the #GstRingBuffer to stop
+ * gst_audio_ring_buffer_stop:
+ * @buf: the #GstAudioRingBuffer to stop
  *
  * Stop processing samples from the ringbuffer.
  *
@@ -1002,12 +1005,12 @@ not_acquired:
  * MT safe.
  */
 gboolean
-gst_ring_buffer_stop (GstRingBuffer * buf)
+gst_audio_ring_buffer_stop (GstAudioRingBuffer * buf)
 {
   gboolean res = FALSE;
-  GstRingBufferClass *rclass;
+  GstAudioRingBufferClass *rclass;
 
-  g_return_val_if_fail (GST_IS_RING_BUFFER (buf), FALSE);
+  g_return_val_if_fail (GST_IS_AUDIO_RING_BUFFER (buf), FALSE);
 
   GST_DEBUG_OBJECT (buf, "stopping");
 
@@ -1015,13 +1018,14 @@ gst_ring_buffer_stop (GstRingBuffer * buf)
 
   /* if started, set to stopped */
   res = g_atomic_int_compare_and_exchange (&buf->state,
-      GST_RING_BUFFER_STATE_STARTED, GST_RING_BUFFER_STATE_STOPPED);
+      GST_AUDIO_RING_BUFFER_STATE_STARTED, GST_AUDIO_RING_BUFFER_STATE_STOPPED);
 
   if (!res) {
     GST_DEBUG_OBJECT (buf, "was not started, try paused");
     /* was not started, try from paused */
     res = g_atomic_int_compare_and_exchange (&buf->state,
-        GST_RING_BUFFER_STATE_PAUSED, GST_RING_BUFFER_STATE_STOPPED);
+        GST_AUDIO_RING_BUFFER_STATE_PAUSED,
+        GST_AUDIO_RING_BUFFER_STATE_STOPPED);
     if (!res) {
       /* was not paused either, must have been stopped then */
       res = TRUE;
@@ -1032,14 +1036,14 @@ gst_ring_buffer_stop (GstRingBuffer * buf)
 
   /* signal any waiters */
   GST_DEBUG_OBJECT (buf, "signal waiter");
-  GST_RING_BUFFER_SIGNAL (buf);
+  GST_AUDIO_RING_BUFFER_SIGNAL (buf);
 
-  rclass = GST_RING_BUFFER_GET_CLASS (buf);
+  rclass = GST_AUDIO_RING_BUFFER_GET_CLASS (buf);
   if (G_LIKELY (rclass->stop))
     res = rclass->stop (buf);
 
   if (G_UNLIKELY (!res)) {
-    buf->state = GST_RING_BUFFER_STATE_STARTED;
+    buf->state = GST_AUDIO_RING_BUFFER_STATE_STARTED;
     GST_DEBUG_OBJECT (buf, "failed to stop");
   } else {
     GST_DEBUG_OBJECT (buf, "stopped");
@@ -1051,8 +1055,8 @@ done:
 }
 
 /**
- * gst_ring_buffer_delay:
- * @buf: the #GstRingBuffer to query
+ * gst_audio_ring_buffer_delay:
+ * @buf: the #GstAudioRingBuffer to query
  *
  * Get the number of samples queued in the audio device. This is
  * usually less than the segment size but can be bigger when the
@@ -1070,18 +1074,18 @@ done:
  * MT safe.
  */
 guint
-gst_ring_buffer_delay (GstRingBuffer * buf)
+gst_audio_ring_buffer_delay (GstAudioRingBuffer * buf)
 {
-  GstRingBufferClass *rclass;
+  GstAudioRingBufferClass *rclass;
   guint res;
 
-  g_return_val_if_fail (GST_IS_RING_BUFFER (buf), 0);
+  g_return_val_if_fail (GST_IS_AUDIO_RING_BUFFER (buf), 0);
 
   /* buffer must be acquired */
-  if (G_UNLIKELY (!gst_ring_buffer_is_acquired (buf)))
+  if (G_UNLIKELY (!gst_audio_ring_buffer_is_acquired (buf)))
     goto not_acquired;
 
-  rclass = GST_RING_BUFFER_GET_CLASS (buf);
+  rclass = GST_AUDIO_RING_BUFFER_GET_CLASS (buf);
   if (G_LIKELY (rclass->delay))
     res = rclass->delay (buf);
   else
@@ -1097,24 +1101,24 @@ not_acquired:
 }
 
 /**
- * gst_ring_buffer_samples_done:
- * @buf: the #GstRingBuffer to query
+ * gst_audio_ring_buffer_samples_done:
+ * @buf: the #GstAudioRingBuffer to query
  *
  * Get the number of samples that were processed by the ringbuffer
  * since it was last started. This does not include the number of samples not
- * yet processed (see gst_ring_buffer_delay()).
+ * yet processed (see gst_audio_ring_buffer_delay()).
  *
  * Returns: The number of samples processed by the ringbuffer.
  *
  * MT safe.
  */
 guint64
-gst_ring_buffer_samples_done (GstRingBuffer * buf)
+gst_audio_ring_buffer_samples_done (GstAudioRingBuffer * buf)
 {
   gint segdone;
   guint64 samples;
 
-  g_return_val_if_fail (GST_IS_RING_BUFFER (buf), 0);
+  g_return_val_if_fail (GST_IS_AUDIO_RING_BUFFER (buf), 0);
 
   /* get the amount of segments we processed */
   segdone = g_atomic_int_get (&buf->segdone);
@@ -1126,8 +1130,8 @@ gst_ring_buffer_samples_done (GstRingBuffer * buf)
 }
 
 /**
- * gst_ring_buffer_set_sample:
- * @buf: the #GstRingBuffer to use
+ * gst_audio_ring_buffer_set_sample:
+ * @buf: the #GstAudioRingBuffer to use
  * @sample: the sample number to set
  *
  * Make sure that the next sample written to the device is
@@ -1140,9 +1144,9 @@ gst_ring_buffer_samples_done (GstRingBuffer * buf)
  * MT safe.
  */
 void
-gst_ring_buffer_set_sample (GstRingBuffer * buf, guint64 sample)
+gst_audio_ring_buffer_set_sample (GstAudioRingBuffer * buf, guint64 sample)
 {
-  g_return_if_fail (GST_IS_RING_BUFFER (buf));
+  g_return_if_fail (GST_IS_AUDIO_RING_BUFFER (buf));
 
   if (sample == -1)
     sample = 0;
@@ -1155,14 +1159,14 @@ gst_ring_buffer_set_sample (GstRingBuffer * buf, guint64 sample)
    * offset when calculating the processed samples. */
   buf->segbase = buf->segdone - sample / buf->samples_per_seg;
 
-  gst_ring_buffer_clear_all (buf);
+  gst_audio_ring_buffer_clear_all (buf);
 
   GST_DEBUG_OBJECT (buf, "set sample to %" G_GUINT64_FORMAT ", segbase %d",
       sample, buf->segbase);
 }
 
 static void
-default_clear_all (GstRingBuffer * buf)
+default_clear_all (GstAudioRingBuffer * buf)
 {
   gint i;
 
@@ -1173,26 +1177,26 @@ default_clear_all (GstRingBuffer * buf)
   GST_DEBUG_OBJECT (buf, "clear all segments");
 
   for (i = 0; i < buf->spec.segtotal; i++) {
-    gst_ring_buffer_clear (buf, i);
+    gst_audio_ring_buffer_clear (buf, i);
   }
 }
 
 /**
- * gst_ring_buffer_clear_all:
- * @buf: the #GstRingBuffer to clear
+ * gst_audio_ring_buffer_clear_all:
+ * @buf: the #GstAudioRingBuffer to clear
  *
  * Fill the ringbuffer with silence.
  *
  * MT safe.
  */
 void
-gst_ring_buffer_clear_all (GstRingBuffer * buf)
+gst_audio_ring_buffer_clear_all (GstAudioRingBuffer * buf)
 {
-  GstRingBufferClass *rclass;
+  GstAudioRingBufferClass *rclass;
 
-  g_return_if_fail (GST_IS_RING_BUFFER (buf));
+  g_return_if_fail (GST_IS_AUDIO_RING_BUFFER (buf));
 
-  rclass = GST_RING_BUFFER_GET_CLASS (buf);
+  rclass = GST_AUDIO_RING_BUFFER_GET_CLASS (buf);
 
   if (G_LIKELY (rclass->clear_all))
     rclass->clear_all (buf);
@@ -1200,21 +1204,21 @@ gst_ring_buffer_clear_all (GstRingBuffer * buf)
 
 
 static gboolean
-wait_segment (GstRingBuffer * buf)
+wait_segment (GstAudioRingBuffer * buf)
 {
   gint segments;
   gboolean wait = TRUE;
 
   /* buffer must be started now or we deadlock since nobody is reading */
   if (G_UNLIKELY (g_atomic_int_get (&buf->state) !=
-          GST_RING_BUFFER_STATE_STARTED)) {
+          GST_AUDIO_RING_BUFFER_STATE_STARTED)) {
     /* see if we are allowed to start it */
     if (G_UNLIKELY (g_atomic_int_get (&buf->may_start) == FALSE))
       goto no_start;
 
     GST_DEBUG_OBJECT (buf, "start!");
     segments = g_atomic_int_get (&buf->segdone);
-    gst_ring_buffer_start (buf);
+    gst_audio_ring_buffer_start (buf);
 
     /* After starting, the writer may have wrote segments already and then we
      * don't need to wait anymore */
@@ -1228,19 +1232,19 @@ wait_segment (GstRingBuffer * buf)
     goto flushing;
 
   if (G_UNLIKELY (g_atomic_int_get (&buf->state) !=
-          GST_RING_BUFFER_STATE_STARTED))
+          GST_AUDIO_RING_BUFFER_STATE_STARTED))
     goto not_started;
 
   if (G_LIKELY (wait)) {
     if (g_atomic_int_compare_and_exchange (&buf->waiting, 0, 1)) {
       GST_DEBUG_OBJECT (buf, "waiting..");
-      GST_RING_BUFFER_WAIT (buf);
+      GST_AUDIO_RING_BUFFER_WAIT (buf);
 
       if (G_UNLIKELY (buf->flushing))
         goto flushing;
 
       if (G_UNLIKELY (g_atomic_int_get (&buf->state) !=
-              GST_RING_BUFFER_STATE_STARTED))
+              GST_AUDIO_RING_BUFFER_STATE_STARTED))
         goto not_started;
     }
   }
@@ -1358,7 +1362,7 @@ G_STMT_START {					\
 } G_STMT_END
 
 static guint
-default_commit (GstRingBuffer * buf, guint64 * sample,
+default_commit (GstAudioRingBuffer * buf, guint64 * sample,
     guchar * data, gint in_samples, gint out_samples, gint * accum)
 {
   gint segdone;
@@ -1487,8 +1491,8 @@ not_started:
 }
 
 /**
- * gst_ring_buffer_commit_full:
- * @buf: the #GstRingBuffer to commit
+ * gst_audio_ring_buffer_commit_full:
+ * @buf: the #GstAudioRingBuffer to commit
  * @sample: the sample position of the data
  * @data: the data to commit
  * @in_samples: the number of samples in the data to commit
@@ -1522,18 +1526,18 @@ not_started:
  * Since: 0.10.11.
  */
 guint
-gst_ring_buffer_commit_full (GstRingBuffer * buf, guint64 * sample,
+gst_audio_ring_buffer_commit_full (GstAudioRingBuffer * buf, guint64 * sample,
     guchar * data, gint in_samples, gint out_samples, gint * accum)
 {
-  GstRingBufferClass *rclass;
+  GstAudioRingBufferClass *rclass;
   guint res = -1;
 
-  g_return_val_if_fail (GST_IS_RING_BUFFER (buf), -1);
+  g_return_val_if_fail (GST_IS_AUDIO_RING_BUFFER (buf), -1);
 
   if (G_UNLIKELY (in_samples == 0 || out_samples == 0))
     return in_samples;
 
-  rclass = GST_RING_BUFFER_GET_CLASS (buf);
+  rclass = GST_AUDIO_RING_BUFFER_GET_CLASS (buf);
 
   if (G_LIKELY (rclass->commit))
     res = rclass->commit (buf, sample, data, in_samples, out_samples, accum);
@@ -1542,13 +1546,13 @@ gst_ring_buffer_commit_full (GstRingBuffer * buf, guint64 * sample,
 }
 
 /**
- * gst_ring_buffer_commit:
- * @buf: the #GstRingBuffer to commit
+ * gst_audio_ring_buffer_commit:
+ * @buf: the #GstAudioRingBuffer to commit
  * @sample: the sample position of the data
  * @data: the data to commit
  * @len: the number of samples in the data to commit
  *
- * Same as gst_ring_buffer_commit_full() but with a in_samples and out_samples
+ * Same as gst_audio_ring_buffer_commit_full() but with a in_samples and out_samples
  * equal to @len, ignoring accum.
  *
  * Returns: The number of samples written to the ringbuffer or -1 on
@@ -1557,20 +1561,20 @@ gst_ring_buffer_commit_full (GstRingBuffer * buf, guint64 * sample,
  * MT safe.
  */
 guint
-gst_ring_buffer_commit (GstRingBuffer * buf, guint64 sample, guchar * data,
-    guint len)
+gst_audio_ring_buffer_commit (GstAudioRingBuffer * buf, guint64 sample,
+    guchar * data, guint len)
 {
   guint res;
   guint64 samplep = sample;
 
-  res = gst_ring_buffer_commit_full (buf, &samplep, data, len, len, NULL);
+  res = gst_audio_ring_buffer_commit_full (buf, &samplep, data, len, len, NULL);
 
   return res;
 }
 
 /**
- * gst_ring_buffer_read:
- * @buf: the #GstRingBuffer to read from
+ * gst_audio_ring_buffer_read:
+ * @buf: the #GstAudioRingBuffer to read from
  * @sample: the sample position of the data
  * @data: where the data should be read
  * @len: the number of samples in data to read
@@ -1589,15 +1593,15 @@ gst_ring_buffer_commit (GstRingBuffer * buf, guint64 sample, guchar * data,
  * MT safe.
  */
 guint
-gst_ring_buffer_read (GstRingBuffer * buf, guint64 sample, guchar * data,
-    guint len)
+gst_audio_ring_buffer_read (GstAudioRingBuffer * buf, guint64 sample,
+    guchar * data, guint len)
 {
   gint segdone;
   gint segsize, segtotal, bpf, sps;
   guint8 *dest;
   guint to_read;
 
-  g_return_val_if_fail (GST_IS_RING_BUFFER (buf), -1);
+  g_return_val_if_fail (GST_IS_AUDIO_RING_BUFFER (buf), -1);
   g_return_val_if_fail (buf->memory != NULL, -1);
   g_return_val_if_fail (data != NULL, -1);
 
@@ -1680,8 +1684,8 @@ not_started:
 }
 
 /**
- * gst_ring_buffer_prepare_read:
- * @buf: the #GstRingBuffer to read from
+ * gst_audio_ring_buffer_prepare_read:
+ * @buf: the #GstAudioRingBuffer to read from
  * @segment: the segment to read
  * @readptr: the pointer to the memory where samples can be read
  * @len: the number of bytes to read
@@ -1694,17 +1698,17 @@ not_started:
  * MT safe.
  */
 gboolean
-gst_ring_buffer_prepare_read (GstRingBuffer * buf, gint * segment,
+gst_audio_ring_buffer_prepare_read (GstAudioRingBuffer * buf, gint * segment,
     guint8 ** readptr, gint * len)
 {
   guint8 *data;
   gint segdone;
 
-  g_return_val_if_fail (GST_IS_RING_BUFFER (buf), FALSE);
+  g_return_val_if_fail (GST_IS_AUDIO_RING_BUFFER (buf), FALSE);
 
   if (buf->callback == NULL) {
     /* push mode, fail when nothing is started */
-    if (g_atomic_int_get (&buf->state) != GST_RING_BUFFER_STATE_STARTED)
+    if (g_atomic_int_get (&buf->state) != GST_AUDIO_RING_BUFFER_STATE_STARTED)
       return FALSE;
   }
 
@@ -1734,8 +1738,8 @@ gst_ring_buffer_prepare_read (GstRingBuffer * buf, gint * segment,
 }
 
 /**
- * gst_ring_buffer_advance:
- * @buf: the #GstRingBuffer to advance
+ * gst_audio_ring_buffer_advance:
+ * @buf: the #GstAudioRingBuffer to advance
  * @advance: the number of segments written
  *
  * Subclasses should call this function to notify the fact that 
@@ -1744,9 +1748,9 @@ gst_ring_buffer_prepare_read (GstRingBuffer * buf, gint * segment,
  * MT safe.
  */
 void
-gst_ring_buffer_advance (GstRingBuffer * buf, guint advance)
+gst_audio_ring_buffer_advance (GstAudioRingBuffer * buf, guint advance)
 {
-  g_return_if_fail (GST_IS_RING_BUFFER (buf));
+  g_return_if_fail (GST_IS_AUDIO_RING_BUFFER (buf));
 
   /* update counter */
   g_atomic_int_add (&buf->segdone, advance);
@@ -1757,14 +1761,14 @@ gst_ring_buffer_advance (GstRingBuffer * buf, guint advance)
   if (g_atomic_int_compare_and_exchange (&buf->waiting, 1, 0)) {
     GST_OBJECT_LOCK (buf);
     GST_DEBUG_OBJECT (buf, "signal waiter");
-    GST_RING_BUFFER_SIGNAL (buf);
+    GST_AUDIO_RING_BUFFER_SIGNAL (buf);
     GST_OBJECT_UNLOCK (buf);
   }
 }
 
 /**
- * gst_ring_buffer_clear:
- * @buf: the #GstRingBuffer to clear
+ * gst_audio_ring_buffer_clear:
+ * @buf: the #GstAudioRingBuffer to clear
  * @segment: the segment to clear
  *
  * Clear the given segment of the buffer with silence samples.
@@ -1773,11 +1777,11 @@ gst_ring_buffer_advance (GstRingBuffer * buf, guint advance)
  * MT safe.
  */
 void
-gst_ring_buffer_clear (GstRingBuffer * buf, gint segment)
+gst_audio_ring_buffer_clear (GstAudioRingBuffer * buf, gint segment)
 {
   guint8 *data;
 
-  g_return_if_fail (GST_IS_RING_BUFFER (buf));
+  g_return_if_fail (GST_IS_AUDIO_RING_BUFFER (buf));
 
   /* no data means it's already cleared */
   if (G_UNLIKELY (buf->memory == NULL))
@@ -1798,8 +1802,8 @@ gst_ring_buffer_clear (GstRingBuffer * buf, gint segment)
 }
 
 /**
- * gst_ring_buffer_may_start:
- * @buf: the #GstRingBuffer
+ * gst_audio_ring_buffer_may_start:
+ * @buf: the #GstAudioRingBuffer
  * @allowed: the new value
  *
  * Tell the ringbuffer that it is allowed to start playback when
@@ -1810,9 +1814,9 @@ gst_ring_buffer_clear (GstRingBuffer * buf, gint segment)
  * Since: 0.10.6
  */
 void
-gst_ring_buffer_may_start (GstRingBuffer * buf, gboolean allowed)
+gst_audio_ring_buffer_may_start (GstAudioRingBuffer * buf, gboolean allowed)
 {
-  g_return_if_fail (GST_IS_RING_BUFFER (buf));
+  g_return_if_fail (GST_IS_AUDIO_RING_BUFFER (buf));
 
   GST_LOG_OBJECT (buf, "may start: %d", allowed);
   g_atomic_int_set (&buf->may_start, allowed);

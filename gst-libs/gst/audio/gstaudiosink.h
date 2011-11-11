@@ -77,7 +77,7 @@ struct _GstAudioSinkClass {
   /* open the device with given specs */
   gboolean (*open)      (GstAudioSink *sink);
   /* prepare resources and state to operate with the given specs */
-  gboolean (*prepare)   (GstAudioSink *sink, GstRingBufferSpec *spec);
+  gboolean (*prepare)   (GstAudioSink *sink, GstAudioRingBufferSpec *spec);
   /* undo anything that was done in prepare() */
   gboolean (*unprepare) (GstAudioSink *sink);
   /* close the device */

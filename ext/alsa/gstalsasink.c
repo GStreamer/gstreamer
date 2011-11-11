@@ -83,7 +83,7 @@ static GstCaps *gst_alsasink_getcaps (GstBaseSink * bsink, GstCaps * filter);
 
 static gboolean gst_alsasink_open (GstAudioSink * asink);
 static gboolean gst_alsasink_prepare (GstAudioSink * asink,
-    GstRingBufferSpec * spec);
+    GstAudioRingBufferSpec * spec);
 static gboolean gst_alsasink_unprepare (GstAudioSink * asink);
 static gboolean gst_alsasink_close (GstAudioSink * asink);
 static gint gst_alsasink_write (GstAudioSink * asink, gpointer data,
@@ -588,7 +588,7 @@ set_sw_params:
 }
 
 static gboolean
-alsasink_parse_spec (GstAlsaSink * alsa, GstRingBufferSpec * spec)
+alsasink_parse_spec (GstAlsaSink * alsa, GstAudioRingBufferSpec * spec)
 {
   /* Initialize our boolean */
   alsa->iec958 = FALSE;
@@ -754,7 +754,7 @@ open_error:
 }
 
 static gboolean
-gst_alsasink_prepare (GstAudioSink * asink, GstRingBufferSpec * spec)
+gst_alsasink_prepare (GstAudioSink * asink, GstAudioRingBufferSpec * spec)
 {
   GstAlsaSink *alsa;
   gint err;

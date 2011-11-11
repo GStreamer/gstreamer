@@ -87,21 +87,21 @@ typedef enum
  * Opaque #GstBaseAudioSrc.
  */
 struct _GstBaseAudioSrc {
-  GstPushSrc     element;
+  GstPushSrc          element;
 
   /*< protected >*/ /* with LOCK */
   /* our ringbuffer */
-  GstRingBuffer *ringbuffer;
+  GstAudioRingBuffer *ringbuffer;
 
   /* required buffer and latency */
-  GstClockTime   buffer_time;
-  GstClockTime   latency_time;
+  GstClockTime        buffer_time;
+  GstClockTime        latency_time;
 
   /* the next sample to write */
-  guint64        next_sample;
+  guint64             next_sample;
 
   /* clock */
-  GstClock      *clock;
+  GstClock           *clock;
 
   /*< private >*/
   GstBaseAudioSrcPrivate *priv;
@@ -112,16 +112,16 @@ struct _GstBaseAudioSrc {
 /**
  * GstBaseAudioSrcClass:
  * @parent_class: the parent class.
- * @create_ringbuffer: create and return a #GstRingBuffer to read from.
+ * @create_ringbuffer: create and return a #GstAudioRingBuffer to read from.
  *
  * #GstBaseAudioSrc class. Override the vmethod to implement
  * functionality.
  */
 struct _GstBaseAudioSrcClass {
-  GstPushSrcClass parent_class;
+  GstPushSrcClass      parent_class;
 
   /* subclass ringbuffer allocation */
-  GstRingBuffer* (*create_ringbuffer)  (GstBaseAudioSrc *src);
+  GstAudioRingBuffer* (*create_ringbuffer)  (GstBaseAudioSrc *src);
 
   /*< private >*/
   gpointer _gst_reserved[GST_PADDING];
@@ -130,7 +130,8 @@ struct _GstBaseAudioSrcClass {
 GType gst_base_audio_src_get_type(void);
 GType gst_base_audio_src_slave_method_get_type (void);
 
-GstRingBuffer *gst_base_audio_src_create_ringbuffer (GstBaseAudioSrc *src);
+GstAudioRingBuffer *
+           gst_base_audio_src_create_ringbuffer        (GstBaseAudioSrc *src);
 
 void       gst_base_audio_src_set_provide_clock        (GstBaseAudioSrc *src, gboolean provide);
 gboolean   gst_base_audio_src_get_provide_clock        (GstBaseAudioSrc *src);

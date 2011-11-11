@@ -81,7 +81,7 @@ static GstCaps *gst_alsasrc_getcaps (GstBaseSrc * bsrc, GstCaps * filter);
 
 static gboolean gst_alsasrc_open (GstAudioSrc * asrc);
 static gboolean gst_alsasrc_prepare (GstAudioSrc * asrc,
-    GstRingBufferSpec * spec);
+    GstAudioRingBufferSpec * spec);
 static gboolean gst_alsasrc_unprepare (GstAudioSrc * asrc);
 static gboolean gst_alsasrc_close (GstAudioSrc * asrc);
 static guint gst_alsasrc_read (GstAudioSrc * asrc, gpointer data, guint length);
@@ -657,7 +657,7 @@ set_sw_params:
 }
 
 static gboolean
-alsasrc_parse_spec (GstAlsaSrc * alsa, GstRingBufferSpec * spec)
+alsasrc_parse_spec (GstAlsaSrc * alsa, GstAudioRingBufferSpec * spec)
 {
   switch (spec->type) {
     case GST_BUFTYPE_RAW:
@@ -816,7 +816,7 @@ open_error:
 }
 
 static gboolean
-gst_alsasrc_prepare (GstAudioSrc * asrc, GstRingBufferSpec * spec)
+gst_alsasrc_prepare (GstAudioSrc * asrc, GstAudioRingBufferSpec * spec)
 {
   GstAlsaSrc *alsa;
   gint err;

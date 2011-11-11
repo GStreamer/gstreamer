@@ -20,54 +20,54 @@
  * Boston, MA 02111-1307, USA.
  */
 
-#ifndef __GST_RING_BUFFER_H__
-#define __GST_RING_BUFFER_H__
+#ifndef __GST_AUDIO_RING_BUFFER_H__
+#define __GST_AUDIO_RING_BUFFER_H__
 
 #include <gst/gst.h>
 #include <gst/audio/audio.h>
 
 G_BEGIN_DECLS
 
-#define GST_TYPE_RING_BUFFER             (gst_ring_buffer_get_type())
-#define GST_RING_BUFFER(obj)             (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_RING_BUFFER,GstRingBuffer))
-#define GST_RING_BUFFER_CLASS(klass)     (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_RING_BUFFER,GstRingBufferClass))
-#define GST_RING_BUFFER_GET_CLASS(obj)   (G_TYPE_INSTANCE_GET_CLASS ((obj), GST_TYPE_RING_BUFFER, GstRingBufferClass))
-#define GST_RING_BUFFER_CAST(obj)        ((GstRingBuffer *)obj)
-#define GST_IS_RING_BUFFER(obj)          (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_RING_BUFFER))
-#define GST_IS_RING_BUFFER_CLASS(klass)  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_RING_BUFFER))
+#define GST_TYPE_AUDIO_RING_BUFFER             (gst_audio_ring_buffer_get_type())
+#define GST_AUDIO_RING_BUFFER(obj)             (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_AUDIO_RING_BUFFER,GstAudioRingBuffer))
+#define GST_AUDIO_RING_BUFFER_CLASS(klass)     (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_AUDIO_RING_BUFFER,GstAudioRingBufferClass))
+#define GST_AUDIO_RING_BUFFER_GET_CLASS(obj)   (G_TYPE_INSTANCE_GET_CLASS ((obj), GST_TYPE_AUDIO_RING_BUFFER, GstAudioRingBufferClass))
+#define GST_AUDIO_RING_BUFFER_CAST(obj)        ((GstAudioRingBuffer *)obj)
+#define GST_IS_AUDIO_RING_BUFFER(obj)          (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_AUDIO_RING_BUFFER))
+#define GST_IS_AUDIO_RING_BUFFER_CLASS(klass)  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_AUDIO_RING_BUFFER))
 
-typedef struct _GstRingBuffer GstRingBuffer;
-typedef struct _GstRingBufferClass GstRingBufferClass;
-typedef struct _GstRingBufferSpec GstRingBufferSpec;
+typedef struct _GstAudioRingBuffer GstAudioRingBuffer;
+typedef struct _GstAudioRingBufferClass GstAudioRingBufferClass;
+typedef struct _GstAudioRingBufferSpec GstAudioRingBufferSpec;
 
 /**
- * GstRingBufferCallback:
- * @rbuf: a #GstRingBuffer
+ * GstAudioRingBufferCallback:
+ * @rbuf: a #GstAudioRingBuffer
  * @data: target to fill
  * @len: amount to fill
  * @user_data: user data
  *
- * This function is set with gst_ring_buffer_set_callback() and is
+ * This function is set with gst_audio_ring_buffer_set_callback() and is
  * called to fill the memory at @data with @len bytes of samples.
  */
-typedef void (*GstRingBufferCallback) (GstRingBuffer *rbuf, guint8* data, guint len, gpointer user_data);
+typedef void (*GstAudioRingBufferCallback) (GstAudioRingBuffer *rbuf, guint8* data, guint len, gpointer user_data);
 
 /**
- * GstRingBufferState:
- * @GST_RING_BUFFER_STATE_STOPPED: The ringbuffer is stopped
- * @GST_RING_BUFFER_STATE_PAUSED: The ringbuffer is paused
- * @GST_RING_BUFFER_STATE_STARTED: The ringbuffer is started
+ * GstAudioRingBufferState:
+ * @GST_AUDIO_RING_BUFFER_STATE_STOPPED: The ringbuffer is stopped
+ * @GST_AUDIO_RING_BUFFER_STATE_PAUSED: The ringbuffer is paused
+ * @GST_AUDIO_RING_BUFFER_STATE_STARTED: The ringbuffer is started
  *
  * The state of the ringbuffer.
  */
 typedef enum {
-  GST_RING_BUFFER_STATE_STOPPED,
-  GST_RING_BUFFER_STATE_PAUSED,
-  GST_RING_BUFFER_STATE_STARTED
-} GstRingBufferState;
+  GST_AUDIO_RING_BUFFER_STATE_STOPPED,
+  GST_AUDIO_RING_BUFFER_STATE_PAUSED,
+  GST_AUDIO_RING_BUFFER_STATE_STARTED
+} GstAudioRingBufferState;
 
 /**
- * GstRingBufferSegState:
+ * GstAudioRingBufferSegState:
  * @GST_SEGSTATE_INVALID: The content of the segment is invalid
  * @GST_SEGSTATE_EMPTY: The segment is empty
  * @GST_SEGSTATE_FILLED: The segment contains valid data
@@ -80,7 +80,7 @@ typedef enum {
   GST_SEGSTATE_EMPTY,
   GST_SEGSTATE_FILLED,
   GST_SEGSTATE_PARTIAL
-} GstRingBufferSegState;
+} GstAudioRingBufferSegState;
 
 /**
  * GstBufferFormatType:
@@ -116,7 +116,7 @@ typedef enum
 } GstBufferFormatType;
 
 /**
- * GstRingBufferSpec:
+ * GstAudioRingBufferSpec:
  * @caps: The caps that generated the Spec.
  * @type: the sample type
  * @info: the #GstAudioInfo
@@ -129,7 +129,7 @@ typedef enum
  *
  * The structure containing the format specification of the ringbuffer.
  */
-struct _GstRingBufferSpec
+struct _GstAudioRingBufferSpec
 {
   /*< public >*/
   /* in */
@@ -160,13 +160,13 @@ struct _GstRingBufferSpec
   gpointer _gst_reserved[GST_PADDING];
 };
 
-#define GST_RING_BUFFER_GET_COND(buf) (((GstRingBuffer *)buf)->cond)
-#define GST_RING_BUFFER_WAIT(buf)     (g_cond_wait (GST_RING_BUFFER_GET_COND (buf), GST_OBJECT_GET_LOCK (buf)))
-#define GST_RING_BUFFER_SIGNAL(buf)   (g_cond_signal (GST_RING_BUFFER_GET_COND (buf)))
-#define GST_RING_BUFFER_BROADCAST(buf)(g_cond_broadcast (GST_RING_BUFFER_GET_COND (buf)))
+#define GST_AUDIO_RING_BUFFER_GET_COND(buf) (((GstAudioRingBuffer *)buf)->cond)
+#define GST_AUDIO_RING_BUFFER_WAIT(buf)     (g_cond_wait (GST_AUDIO_RING_BUFFER_GET_COND (buf), GST_OBJECT_GET_LOCK (buf)))
+#define GST_AUDIO_RING_BUFFER_SIGNAL(buf)   (g_cond_signal (GST_AUDIO_RING_BUFFER_GET_COND (buf)))
+#define GST_AUDIO_RING_BUFFER_BROADCAST(buf)(g_cond_broadcast (GST_AUDIO_RING_BUFFER_GET_COND (buf)))
 
 /**
- * GstRingBuffer:
+ * GstAudioRingBuffer:
  * @cond: used to signal start/stop/pause/resume actions
  * @open: boolean indicating that the ringbuffer is open
  * @acquired: boolean indicating that the ringbuffer is acquired
@@ -183,41 +183,41 @@ struct _GstRingBufferSpec
  *
  * The ringbuffer base class structure.
  */
-struct _GstRingBuffer {
-  GstObject              object;
+struct _GstAudioRingBuffer {
+  GstObject                   object;
 
   /*< public >*/ /* with LOCK */
-  GCond                 *cond;
-  gboolean               open;
-  gboolean               acquired;
-  guint8                *memory;
-  gsize                  size;
-  GstRingBufferSpec      spec;
-  GstRingBufferSegState *segstate;
-  gint                   samples_per_seg;
-  guint8                *empty_seg;
+  GCond                      *cond;
+  gboolean                    open;
+  gboolean                    acquired;
+  guint8                     *memory;
+  gsize                       size;
+  GstAudioRingBufferSpec      spec;
+  GstAudioRingBufferSegState *segstate;
+  gint                        samples_per_seg;
+  guint8                     *empty_seg;
 
   /*< public >*/ /* ATOMIC */
-  gint                   state;
-  gint                   segdone;
-  gint                   segbase;
-  gint                   waiting;
+  gint                        state;
+  gint                        segdone;
+  gint                        segbase;
+  gint                        waiting;
 
   /*< private >*/
-  GstRingBufferCallback  callback;
-  gpointer               cb_data;
+  GstAudioRingBufferCallback  callback;
+  gpointer                    cb_data;
 
-  gboolean               flushing;
+  gboolean                    flushing;
   /* ATOMIC */
-  gint                   may_start;
-  gboolean               active;
+  gint                        may_start;
+  gboolean                    active;
 
   /*< private >*/
-  gpointer _gst_reserved[GST_PADDING + 0];
+  gpointer _gst_reserved[GST_PADDING];
 };
 
 /**
- * GstRingBufferClass:
+ * GstAudioRingBufferClass:
  * @parent_class: parent class
  * @open_device:  open the device, don't set any params or allocate anything
  * @acquire: allocate the resources for the ringbuffer using the given spec
@@ -235,104 +235,105 @@ struct _GstRingBuffer {
  *
  * The vmethods that subclasses can override to implement the ringbuffer.
  */
-struct _GstRingBufferClass {
+struct _GstAudioRingBufferClass {
   GstObjectClass parent_class;
 
   /*< public >*/
-  gboolean     (*open_device)  (GstRingBuffer *buf);
-  gboolean     (*acquire)      (GstRingBuffer *buf, GstRingBufferSpec *spec);
-  gboolean     (*release)      (GstRingBuffer *buf);
-  gboolean     (*close_device) (GstRingBuffer *buf);
+  gboolean     (*open_device)  (GstAudioRingBuffer *buf);
+  gboolean     (*acquire)      (GstAudioRingBuffer *buf, GstAudioRingBufferSpec *spec);
+  gboolean     (*release)      (GstAudioRingBuffer *buf);
+  gboolean     (*close_device) (GstAudioRingBuffer *buf);
 
-  gboolean     (*start)        (GstRingBuffer *buf);
-  gboolean     (*pause)        (GstRingBuffer *buf);
-  gboolean     (*resume)       (GstRingBuffer *buf);
-  gboolean     (*stop)         (GstRingBuffer *buf);
+  gboolean     (*start)        (GstAudioRingBuffer *buf);
+  gboolean     (*pause)        (GstAudioRingBuffer *buf);
+  gboolean     (*resume)       (GstAudioRingBuffer *buf);
+  gboolean     (*stop)         (GstAudioRingBuffer *buf);
 
-  guint        (*delay)        (GstRingBuffer *buf);
+  guint        (*delay)        (GstAudioRingBuffer *buf);
 
   /* ABI added */
-  gboolean     (*activate)     (GstRingBuffer *buf, gboolean active);
+  gboolean     (*activate)     (GstAudioRingBuffer *buf, gboolean active);
 
-  guint        (*commit)       (GstRingBuffer * buf, guint64 *sample,
+  guint        (*commit)       (GstAudioRingBuffer * buf, guint64 *sample,
                                 guchar * data, gint in_samples,
                                 gint out_samples, gint * accum);
 
-  void         (*clear_all)    (GstRingBuffer * buf);
+  void         (*clear_all)    (GstAudioRingBuffer * buf);
 
   /*< private >*/
-  gpointer _gst_reserved[GST_PADDING - 3];
+  gpointer _gst_reserved[GST_PADDING];
 };
 
-GType gst_ring_buffer_get_type(void);
+GType gst_audio_ring_buffer_get_type(void);
 
 /* callback stuff */
-void            gst_ring_buffer_set_callback    (GstRingBuffer *buf, GstRingBufferCallback cb,
-                                                 gpointer user_data);
+void            gst_audio_ring_buffer_set_callback    (GstAudioRingBuffer *buf,
+                                                       GstAudioRingBufferCallback cb,
+                                                       gpointer user_data);
 
-gboolean        gst_ring_buffer_parse_caps      (GstRingBufferSpec *spec, GstCaps *caps);
-void            gst_ring_buffer_debug_spec_caps (GstRingBufferSpec *spec);
-void            gst_ring_buffer_debug_spec_buff (GstRingBufferSpec *spec);
+gboolean        gst_audio_ring_buffer_parse_caps      (GstAudioRingBufferSpec *spec, GstCaps *caps);
+void            gst_audio_ring_buffer_debug_spec_caps (GstAudioRingBufferSpec *spec);
+void            gst_audio_ring_buffer_debug_spec_buff (GstAudioRingBufferSpec *spec);
 
-gboolean        gst_ring_buffer_convert         (GstRingBuffer * buf, GstFormat src_fmt,
-                                                 gint64 src_val, GstFormat dest_fmt,
-						 gint64 * dest_val);
+gboolean        gst_audio_ring_buffer_convert         (GstAudioRingBuffer * buf, GstFormat src_fmt,
+                                                       gint64 src_val, GstFormat dest_fmt,
+                                                       gint64 * dest_val);
 
 /* device state */
-gboolean        gst_ring_buffer_open_device     (GstRingBuffer *buf);
-gboolean        gst_ring_buffer_close_device    (GstRingBuffer *buf);
+gboolean        gst_audio_ring_buffer_open_device     (GstAudioRingBuffer *buf);
+gboolean        gst_audio_ring_buffer_close_device    (GstAudioRingBuffer *buf);
 
-gboolean        gst_ring_buffer_device_is_open  (GstRingBuffer *buf);
+gboolean        gst_audio_ring_buffer_device_is_open  (GstAudioRingBuffer *buf);
 
 /* allocate resources */
-gboolean        gst_ring_buffer_acquire         (GstRingBuffer *buf, GstRingBufferSpec *spec);
-gboolean        gst_ring_buffer_release         (GstRingBuffer *buf);
+gboolean        gst_audio_ring_buffer_acquire         (GstAudioRingBuffer *buf, GstAudioRingBufferSpec *spec);
+gboolean        gst_audio_ring_buffer_release         (GstAudioRingBuffer *buf);
 
-gboolean        gst_ring_buffer_is_acquired     (GstRingBuffer *buf);
+gboolean        gst_audio_ring_buffer_is_acquired     (GstAudioRingBuffer *buf);
 
 /* activating */
-gboolean        gst_ring_buffer_activate        (GstRingBuffer *buf, gboolean active);
-gboolean        gst_ring_buffer_is_active       (GstRingBuffer *buf);
+gboolean        gst_audio_ring_buffer_activate        (GstAudioRingBuffer *buf, gboolean active);
+gboolean        gst_audio_ring_buffer_is_active       (GstAudioRingBuffer *buf);
 
 /* flushing */
-void            gst_ring_buffer_set_flushing    (GstRingBuffer *buf, gboolean flushing);
+void            gst_audio_ring_buffer_set_flushing    (GstAudioRingBuffer *buf, gboolean flushing);
 
 /* playback/pause */
-gboolean        gst_ring_buffer_start           (GstRingBuffer *buf);
-gboolean        gst_ring_buffer_pause           (GstRingBuffer *buf);
-gboolean        gst_ring_buffer_stop            (GstRingBuffer *buf);
+gboolean        gst_audio_ring_buffer_start           (GstAudioRingBuffer *buf);
+gboolean        gst_audio_ring_buffer_pause           (GstAudioRingBuffer *buf);
+gboolean        gst_audio_ring_buffer_stop            (GstAudioRingBuffer *buf);
 
 /* get status */
-guint           gst_ring_buffer_delay           (GstRingBuffer *buf);
-guint64         gst_ring_buffer_samples_done    (GstRingBuffer *buf);
+guint           gst_audio_ring_buffer_delay           (GstAudioRingBuffer *buf);
+guint64         gst_audio_ring_buffer_samples_done    (GstAudioRingBuffer *buf);
 
-void            gst_ring_buffer_set_sample      (GstRingBuffer *buf, guint64 sample);
+void            gst_audio_ring_buffer_set_sample      (GstAudioRingBuffer *buf, guint64 sample);
 
 /* clear all segments */
-void            gst_ring_buffer_clear_all       (GstRingBuffer *buf);
+void            gst_audio_ring_buffer_clear_all       (GstAudioRingBuffer *buf);
 
 /* commit samples */
-guint           gst_ring_buffer_commit          (GstRingBuffer *buf, guint64 sample,
-                                                 guchar *data, guint len);
-guint           gst_ring_buffer_commit_full     (GstRingBuffer * buf, guint64 *sample,
-		                                 guchar * data, gint in_samples,
-						 gint out_samples, gint * accum);
+guint           gst_audio_ring_buffer_commit          (GstAudioRingBuffer *buf, guint64 sample,
+                                                       guchar *data, guint len);
+guint           gst_audio_ring_buffer_commit_full     (GstAudioRingBuffer * buf, guint64 *sample,
+                                                       guchar * data, gint in_samples,
+                                                       gint out_samples, gint * accum);
 
 /* read samples */
-guint           gst_ring_buffer_read            (GstRingBuffer *buf, guint64 sample,
-                                                 guchar *data, guint len);
+guint           gst_audio_ring_buffer_read            (GstAudioRingBuffer *buf, guint64 sample,
+                                                       guchar *data, guint len);
 
 /* mostly protected */
 /* not yet implemented
-gboolean        gst_ring_buffer_prepare_write   (GstRingBuffer *buf, gint *segment, guint8 **writeptr, gint *len);
+gboolean        gst_audio_ring_buffer_prepare_write   (GstAudioRingBuffer *buf, gint *segment, guint8 **writeptr, gint *len);
 */
-gboolean        gst_ring_buffer_prepare_read    (GstRingBuffer *buf, gint *segment, guint8 **readptr, gint *len);
-void            gst_ring_buffer_clear           (GstRingBuffer *buf, gint segment);
-void            gst_ring_buffer_advance         (GstRingBuffer *buf, guint advance);
+gboolean        gst_audio_ring_buffer_prepare_read    (GstAudioRingBuffer *buf, gint *segment,
+                                                       guint8 **readptr, gint *len);
+void            gst_audio_ring_buffer_clear           (GstAudioRingBuffer *buf, gint segment);
+void            gst_audio_ring_buffer_advance         (GstAudioRingBuffer *buf, guint advance);
 
-void            gst_ring_buffer_may_start       (GstRingBuffer *buf, gboolean allowed);
-
+void            gst_audio_ring_buffer_may_start       (GstAudioRingBuffer *buf, gboolean allowed);
 
 G_END_DECLS
 
-#endif /* __GST_RING_BUFFER_H__ */
+#endif /* __GST_AUDIO_RING_BUFFER_H__ */

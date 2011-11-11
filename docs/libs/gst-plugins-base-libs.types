@@ -18,7 +18,7 @@ gst_base_audio_sink_get_type
 #include <gst/audio/gstbaseaudiosrc.h>
 gst_base_audio_src_get_type
 #include <gst/audio/gstringbuffer.h>
-gst_ring_buffer_get_type
+gst_audio_ring_buffer_get_type
 
 
 #include <gst/cdda/gstcddabasesrc.h>

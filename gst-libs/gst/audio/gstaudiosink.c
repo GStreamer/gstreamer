@@ -23,7 +23,7 @@
 /**
  * SECTION:gstaudiosink
  * @short_description: Simple base class for audio sinks
- * @see_also: #GstBaseAudioSink, #GstRingBuffer, #GstAudioSink.
+ * @see_also: #GstBaseAudioSink, #GstAudioRingBuffer, #GstAudioSink.
  *
  * This is the most simple base class for audio sinks that only requires
  * subclasses to implement a set of simple functions:
@@ -62,7 +62,7 @@
  *
  * All scheduling of samples and timestamps is done in this base class
  * together with #GstBaseAudioSink using a default implementation of a
- * #GstRingBuffer that uses threads.
+ * #GstAudioRingBuffer that uses threads.
  *
  * Last reviewed on 2006-09-27 (0.10.12)
  */
@@ -99,7 +99,7 @@ typedef struct _GstAudioSinkRingBufferClass GstAudioSinkRingBufferClass;
 
 struct _GstAudioSinkRingBuffer
 {
-  GstRingBuffer object;
+  GstAudioRingBuffer object;
 
   gboolean running;
   gint queuedseg;
@@ -109,7 +109,7 @@ struct _GstAudioSinkRingBuffer
 
 struct _GstAudioSinkRingBufferClass
 {
-  GstRingBufferClass parent_class;
+  GstAudioRingBufferClass parent_class;
 };
 
 static void gst_audio_sink_ring_buffer_class_init (GstAudioSinkRingBufferClass *
@@ -119,18 +119,20 @@ static void gst_audio_sink_ring_buffer_init (GstAudioSinkRingBuffer *
 static void gst_audio_sink_ring_buffer_dispose (GObject * object);
 static void gst_audio_sink_ring_buffer_finalize (GObject * object);
 
-static GstRingBufferClass *ring_parent_class = NULL;
+static GstAudioRingBufferClass *ring_parent_class = NULL;
 
-static gboolean gst_audio_sink_ring_buffer_open_device (GstRingBuffer * buf);
-static gboolean gst_audio_sink_ring_buffer_close_device (GstRingBuffer * buf);
-static gboolean gst_audio_sink_ring_buffer_acquire (GstRingBuffer * buf,
-    GstRingBufferSpec * spec);
-static gboolean gst_audio_sink_ring_buffer_release (GstRingBuffer * buf);
-static gboolean gst_audio_sink_ring_buffer_start (GstRingBuffer * buf);
-static gboolean gst_audio_sink_ring_buffer_pause (GstRingBuffer * buf);
-static gboolean gst_audio_sink_ring_buffer_stop (GstRingBuffer * buf);
-static guint gst_audio_sink_ring_buffer_delay (GstRingBuffer * buf);
-static gboolean gst_audio_sink_ring_buffer_activate (GstRingBuffer * buf,
+static gboolean gst_audio_sink_ring_buffer_open_device (GstAudioRingBuffer *
+    buf);
+static gboolean gst_audio_sink_ring_buffer_close_device (GstAudioRingBuffer *
+    buf);
+static gboolean gst_audio_sink_ring_buffer_acquire (GstAudioRingBuffer * buf,
+    GstAudioRingBufferSpec * spec);
+static gboolean gst_audio_sink_ring_buffer_release (GstAudioRingBuffer * buf);
+static gboolean gst_audio_sink_ring_buffer_start (GstAudioRingBuffer * buf);
+static gboolean gst_audio_sink_ring_buffer_pause (GstAudioRingBuffer * buf);
+static gboolean gst_audio_sink_ring_buffer_stop (GstAudioRingBuffer * buf);
+static guint gst_audio_sink_ring_buffer_delay (GstAudioRingBuffer * buf);
+static gboolean gst_audio_sink_ring_buffer_activate (GstAudioRingBuffer * buf,
     gboolean active);
 
 /* ringbuffer abstract base class */
@@ -154,8 +156,8 @@ gst_audio_sink_ring_buffer_get_type (void)
     };
 
     ringbuffer_type =
-        g_type_register_static (GST_TYPE_RING_BUFFER, "GstAudioSinkRingBuffer",
-        &ringbuffer_info, 0);
+        g_type_register_static (GST_TYPE_AUDIO_RING_BUFFER,
+        "GstAudioSinkRingBuffer", &ringbuffer_info, 0);
   }
   return ringbuffer_type;
 }
@@ -164,10 +166,10 @@ static void
 gst_audio_sink_ring_buffer_class_init (GstAudioSinkRingBufferClass * klass)
 {
   GObjectClass *gobject_class;
-  GstRingBufferClass *gstringbuffer_class;
+  GstAudioRingBufferClass *gstringbuffer_class;
 
   gobject_class = (GObjectClass *) klass;
-  gstringbuffer_class = (GstRingBufferClass *) klass;
+  gstringbuffer_class = (GstAudioRingBufferClass *) klass;
 
   ring_parent_class = g_type_class_peek_parent (klass);
 
@@ -205,7 +207,7 @@ typedef gint (*WriteFunc) (GstAudioSink * sink, gpointer data, guint length);
  * The start/stop methods control the thread.
  */
 static void
-audioringbuffer_thread_func (GstRingBuffer * buf)
+audioringbuffer_thread_func (GstAudioRingBuffer * buf)
 {
   GstAudioSink *sink;
   GstAudioSinkClass *csink;
@@ -242,7 +244,7 @@ audioringbuffer_thread_func (GstRingBuffer * buf)
     gint readseg;
 
     /* buffer must be started */
-    if (gst_ring_buffer_prepare_read (buf, &readseg, &readptr, &len)) {
+    if (gst_audio_ring_buffer_prepare_read (buf, &readseg, &readptr, &len)) {
       gint written;
 
       left = len;
@@ -263,16 +265,16 @@ audioringbuffer_thread_func (GstRingBuffer * buf)
       } while (left > 0);
 
       /* clear written samples */
-      gst_ring_buffer_clear (buf, readseg);
+      gst_audio_ring_buffer_clear (buf, readseg);
 
       /* we wrote one segment */
-      gst_ring_buffer_advance (buf, 1);
+      gst_audio_ring_buffer_advance (buf, 1);
     } else {
       GST_OBJECT_LOCK (abuf);
       if (!abuf->running)
         goto stop_running;
       if (G_UNLIKELY (g_atomic_int_get (&buf->state) ==
-              GST_RING_BUFFER_STATE_STARTED)) {
+              GST_AUDIO_RING_BUFFER_STATE_STARTED)) {
         GST_OBJECT_UNLOCK (abuf);
         continue;
       }
@@ -338,7 +340,7 @@ gst_audio_sink_ring_buffer_finalize (GObject * object)
 }
 
 static gboolean
-gst_audio_sink_ring_buffer_open_device (GstRingBuffer * buf)
+gst_audio_sink_ring_buffer_open_device (GstAudioRingBuffer * buf)
 {
   GstAudioSink *sink;
   GstAudioSinkClass *csink;
@@ -363,7 +365,7 @@ could_not_open:
 }
 
 static gboolean
-gst_audio_sink_ring_buffer_close_device (GstRingBuffer * buf)
+gst_audio_sink_ring_buffer_close_device (GstAudioRingBuffer * buf)
 {
   GstAudioSink *sink;
   GstAudioSinkClass *csink;
@@ -388,8 +390,8 @@ could_not_close:
 }
 
 static gboolean
-gst_audio_sink_ring_buffer_acquire (GstRingBuffer * buf,
-    GstRingBufferSpec * spec)
+gst_audio_sink_ring_buffer_acquire (GstAudioRingBuffer * buf,
+    GstAudioRingBufferSpec * spec)
 {
   GstAudioSink *sink;
   GstAudioSinkClass *csink;
@@ -420,7 +422,7 @@ could_not_prepare:
 }
 
 static gboolean
-gst_audio_sink_ring_buffer_activate (GstRingBuffer * buf, gboolean active)
+gst_audio_sink_ring_buffer_activate (GstAudioRingBuffer * buf, gboolean active)
 {
   GstAudioSink *sink;
   GstAudioSinkRingBuffer *abuf;
@@ -470,7 +472,7 @@ thread_failed:
 
 /* function is called with LOCK */
 static gboolean
-gst_audio_sink_ring_buffer_release (GstRingBuffer * buf)
+gst_audio_sink_ring_buffer_release (GstAudioRingBuffer * buf)
 {
   GstAudioSink *sink;
   GstAudioSinkClass *csink;
@@ -501,7 +503,7 @@ could_not_unprepare:
 }
 
 static gboolean
-gst_audio_sink_ring_buffer_start (GstRingBuffer * buf)
+gst_audio_sink_ring_buffer_start (GstAudioRingBuffer * buf)
 {
   GstAudioSink *sink;
 
@@ -514,7 +516,7 @@ gst_audio_sink_ring_buffer_start (GstRingBuffer * buf)
 }
 
 static gboolean
-gst_audio_sink_ring_buffer_pause (GstRingBuffer * buf)
+gst_audio_sink_ring_buffer_pause (GstAudioRingBuffer * buf)
 {
   GstAudioSink *sink;
   GstAudioSinkClass *csink;
@@ -533,7 +535,7 @@ gst_audio_sink_ring_buffer_pause (GstRingBuffer * buf)
 }
 
 static gboolean
-gst_audio_sink_ring_buffer_stop (GstRingBuffer * buf)
+gst_audio_sink_ring_buffer_stop (GstAudioRingBuffer * buf)
 {
   GstAudioSink *sink;
   GstAudioSinkClass *csink;
@@ -559,7 +561,7 @@ gst_audio_sink_ring_buffer_stop (GstRingBuffer * buf)
 }
 
 static guint
-gst_audio_sink_ring_buffer_delay (GstRingBuffer * buf)
+gst_audio_sink_ring_buffer_delay (GstAudioRingBuffer * buf)
 {
   GstAudioSink *sink;
   GstAudioSinkClass *csink;
@@ -592,7 +594,7 @@ enum
 G_DEFINE_TYPE_WITH_CODE (GstAudioSink, gst_audio_sink,
     GST_TYPE_BASE_AUDIO_SINK, _do_init);
 
-static GstRingBuffer *gst_audio_sink_create_ringbuffer (GstBaseAudioSink *
+static GstAudioRingBuffer *gst_audio_sink_create_ringbuffer (GstBaseAudioSink *
     sink);
 
 static void
@@ -613,10 +615,10 @@ gst_audio_sink_init (GstAudioSink * audiosink)
 {
 }
 
-static GstRingBuffer *
+static GstAudioRingBuffer *
 gst_audio_sink_create_ringbuffer (GstBaseAudioSink * sink)
 {
-  GstRingBuffer *buffer;
+  GstAudioRingBuffer *buffer;
 
   GST_DEBUG_OBJECT (sink, "creating ringbuffer");
   buffer = g_object_new (GST_TYPE_AUDIO_SINK_RING_BUFFER, NULL);

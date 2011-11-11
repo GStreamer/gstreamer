@@ -23,7 +23,7 @@
 /**
  * SECTION:gstbaseaudiosink
  * @short_description: Base class for audio sinks
- * @see_also: #GstAudioSink, #GstRingBuffer.
+ * @see_also: #GstAudioSink, #GstAudioRingBuffer.
  *
  * This is the base class for audio sinks. Subclasses need to implement the
  * ::create_ringbuffer vmethod. This base class will then take care of
@@ -165,8 +165,8 @@ static gboolean gst_base_audio_sink_query (GstElement * element, GstQuery *
 static GstClock *gst_base_audio_sink_provide_clock (GstElement * elem);
 static GstClockTime gst_base_audio_sink_get_time (GstClock * clock,
     GstBaseAudioSink * sink);
-static void gst_base_audio_sink_callback (GstRingBuffer * rbuf, guint8 * data,
-    guint len, gpointer user_data);
+static void gst_base_audio_sink_callback (GstAudioRingBuffer * rbuf,
+    guint8 * data, guint len, gpointer user_data);
 
 static GstFlowReturn gst_base_audio_sink_preroll (GstBaseSink * bsink,
     GstBuffer * buffer);
@@ -292,7 +292,7 @@ gst_base_audio_sink_class_init (GstBaseAudioSinkClass * klass)
   /* ref class from a thread-safe context to work around missing bit of
    * thread-safety in GObject */
   g_type_class_ref (GST_TYPE_AUDIO_CLOCK);
-  g_type_class_ref (GST_TYPE_RING_BUFFER);
+  g_type_class_ref (GST_TYPE_AUDIO_RING_BUFFER);
 
 }
 
@@ -356,7 +356,7 @@ gst_base_audio_sink_provide_clock (GstElement * elem)
   if (sink->ringbuffer == NULL)
     goto wrong_state;
 
-  if (!gst_ring_buffer_is_acquired (sink->ringbuffer))
+  if (!gst_audio_ring_buffer_is_acquired (sink->ringbuffer))
     goto wrong_state;
 
   GST_OBJECT_LOCK (sink);
@@ -400,8 +400,9 @@ gst_base_audio_sink_query_pad (GstBaseSink * bsink, GstQuery * query)
 
       if (basesink->ringbuffer) {
         gst_query_parse_convert (query, &src_fmt, &src_val, &dest_fmt, NULL);
-        res = gst_ring_buffer_convert (basesink->ringbuffer, src_fmt, src_val,
-            dest_fmt, &dest_val);
+        res =
+            gst_audio_ring_buffer_convert (basesink->ringbuffer, src_fmt,
+            src_val, dest_fmt, &dest_val);
         if (res) {
           gst_query_set_convert (query, src_fmt, src_val, dest_fmt, dest_val);
         }
@@ -439,7 +440,7 @@ gst_base_audio_sink_query (GstElement * element, GstQuery * query)
 
         /* we and upstream are both live, adjust the min_latency */
         if (live && us_live) {
-          GstRingBufferSpec *spec;
+          GstAudioRingBufferSpec *spec;
 
           GST_OBJECT_LOCK (basesink);
           if (!basesink->ringbuffer || !basesink->ringbuffer->spec.info.rate) {
@@ -492,8 +493,9 @@ gst_base_audio_sink_query (GstElement * element, GstQuery * query)
 
       if (basesink->ringbuffer) {
         gst_query_parse_convert (query, &src_fmt, &src_val, &dest_fmt, NULL);
-        res = gst_ring_buffer_convert (basesink->ringbuffer, src_fmt, src_val,
-            dest_fmt, &dest_val);
+        res =
+            gst_audio_ring_buffer_convert (basesink->ringbuffer, src_fmt,
+            src_val, dest_fmt, &dest_val);
         if (res) {
           gst_query_set_convert (query, src_fmt, src_val, dest_fmt, dest_val);
         }
@@ -521,11 +523,11 @@ gst_base_audio_sink_get_time (GstClock * clock, GstBaseAudioSink * sink)
     return GST_CLOCK_TIME_NONE;
 
   /* our processed samples are always increasing */
-  raw = samples = gst_ring_buffer_samples_done (sink->ringbuffer);
+  raw = samples = gst_audio_ring_buffer_samples_done (sink->ringbuffer);
 
   /* the number of samples not yet processed, this is still queued in the
    * device (not played for playback). */
-  delay = gst_ring_buffer_delay (sink->ringbuffer);
+  delay = gst_audio_ring_buffer_delay (sink->ringbuffer);
 
   if (G_LIKELY (samples >= delay))
     samples -= delay;
@@ -851,7 +853,7 @@ static gboolean
 gst_base_audio_sink_setcaps (GstBaseSink * bsink, GstCaps * caps)
 {
   GstBaseAudioSink *sink = GST_BASE_AUDIO_SINK (bsink);
-  GstRingBufferSpec *spec;
+  GstAudioRingBufferSpec *spec;
   GstClockTime now;
   GstClockTime crate_num, crate_denom;
 
@@ -871,9 +873,9 @@ gst_base_audio_sink_setcaps (GstBaseSink * bsink, GstCaps * caps)
   GST_DEBUG_OBJECT (sink, "time was %" GST_TIME_FORMAT, GST_TIME_ARGS (now));
 
   /* release old ringbuffer */
-  gst_ring_buffer_pause (sink->ringbuffer);
-  gst_ring_buffer_activate (sink->ringbuffer, FALSE);
-  gst_ring_buffer_release (sink->ringbuffer);
+  gst_audio_ring_buffer_pause (sink->ringbuffer);
+  gst_audio_ring_buffer_activate (sink->ringbuffer, FALSE);
+  gst_audio_ring_buffer_release (sink->ringbuffer);
 
   GST_DEBUG_OBJECT (sink, "parse caps");
 
@@ -881,18 +883,18 @@ gst_base_audio_sink_setcaps (GstBaseSink * bsink, GstCaps * caps)
   spec->latency_time = sink->latency_time;
 
   /* parse new caps */
-  if (!gst_ring_buffer_parse_caps (spec, caps))
+  if (!gst_audio_ring_buffer_parse_caps (spec, caps))
     goto parse_error;
 
-  gst_ring_buffer_debug_spec_buff (spec);
+  gst_audio_ring_buffer_debug_spec_buff (spec);
 
   GST_DEBUG_OBJECT (sink, "acquire ringbuffer");
-  if (!gst_ring_buffer_acquire (sink->ringbuffer, spec))
+  if (!gst_audio_ring_buffer_acquire (sink->ringbuffer, spec))
     goto acquire_error;
 
   if (bsink->pad_mode == GST_PAD_ACTIVATE_PUSH) {
     GST_DEBUG_OBJECT (sink, "activate ringbuffer");
-    gst_ring_buffer_activate (sink->ringbuffer, TRUE);
+    gst_audio_ring_buffer_activate (sink->ringbuffer, TRUE);
   }
 
   /* due to possible changes in the spec file we should recalibrate the clock */
@@ -909,7 +911,7 @@ gst_base_audio_sink_setcaps (GstBaseSink * bsink, GstCaps * caps)
 
   spec->buffer_time = spec->segtotal * spec->latency_time;
 
-  gst_ring_buffer_debug_spec_buff (spec);
+  gst_audio_ring_buffer_debug_spec_buff (spec);
 
   return TRUE;
 
@@ -982,8 +984,8 @@ gst_base_audio_sink_drain (GstBaseAudioSink * sink)
   /* need to start playback before we can drain, but only when
    * we have successfully negotiated a format and thus acquired the
    * ringbuffer. */
-  if (gst_ring_buffer_is_acquired (sink->ringbuffer))
-    gst_ring_buffer_start (sink->ringbuffer);
+  if (gst_audio_ring_buffer_is_acquired (sink->ringbuffer))
+    gst_audio_ring_buffer_start (sink->ringbuffer);
 
   if (sink->priv->eos_time != -1) {
     GST_DEBUG_OBJECT (sink,
@@ -1008,7 +1010,7 @@ gst_base_audio_sink_event (GstBaseSink * bsink, GstEvent * event)
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_FLUSH_START:
       if (sink->ringbuffer)
-        gst_ring_buffer_set_flushing (sink->ringbuffer, TRUE);
+        gst_audio_ring_buffer_set_flushing (sink->ringbuffer, TRUE);
       break;
     case GST_EVENT_FLUSH_STOP:
       /* always resync on sample after a flush */
@@ -1017,7 +1019,7 @@ gst_base_audio_sink_event (GstBaseSink * bsink, GstEvent * event)
       sink->priv->eos_time = -1;
       sink->priv->discont_time = -1;
       if (sink->ringbuffer)
-        gst_ring_buffer_set_flushing (sink->ringbuffer, FALSE);
+        gst_audio_ring_buffer_set_flushing (sink->ringbuffer, FALSE);
       break;
     case GST_EVENT_EOS:
       /* now wait till we played everything */
@@ -1034,7 +1036,7 @@ gst_base_audio_sink_preroll (GstBaseSink * bsink, GstBuffer * buffer)
 {
   GstBaseAudioSink *sink = GST_BASE_AUDIO_SINK (bsink);
 
-  if (!gst_ring_buffer_is_acquired (sink->ringbuffer))
+  if (!gst_audio_ring_buffer_is_acquired (sink->ringbuffer))
     goto wrong_state;
 
   /* we don't really do anything when prerolling. We could make a
@@ -1398,7 +1400,7 @@ gst_base_audio_sink_sync_latency (GstBaseSink * bsink, GstMiniObject * obj)
   }
 
   /* start ringbuffer so we can start slaving right away when we need to */
-  gst_ring_buffer_start (sink->ringbuffer);
+  gst_audio_ring_buffer_start (sink->ringbuffer);
 
   GST_DEBUG_OBJECT (sink,
       "internal time: %" GST_TIME_FORMAT " external time: %" GST_TIME_FORMAT,
@@ -1453,7 +1455,7 @@ static gint64
 gst_base_audio_sink_get_alignment (GstBaseAudioSink * sink,
     GstClockTime sample_offset)
 {
-  GstRingBuffer *ringbuf = sink->ringbuffer;
+  GstAudioRingBuffer *ringbuf = sink->ringbuffer;
   gint64 align;
   gint64 sample_diff;
   gint64 max_sample_diff;
@@ -1535,7 +1537,7 @@ gst_base_audio_sink_render (GstBaseSink * bsink, GstBuffer * buf)
   GstClockTimeDiff sync_offset, ts_offset;
   GstBaseAudioSinkClass *bclass;
   GstBaseAudioSink *sink;
-  GstRingBuffer *ringbuf;
+  GstAudioRingBuffer *ringbuf;
   gint64 diff, align;
   guint64 ctime, cstop;
   gsize offset;
@@ -1559,7 +1561,7 @@ gst_base_audio_sink_render (GstBaseSink * bsink, GstBuffer * buf)
   ringbuf = sink->ringbuffer;
 
   /* can't do anything when we don't have the device */
-  if (G_UNLIKELY (!gst_ring_buffer_is_acquired (ringbuf)))
+  if (G_UNLIKELY (!gst_audio_ring_buffer_is_acquired (ringbuf)))
     goto wrong_state;
 
   /* Wait for upstream latency before starting the ringbuffer, we do this so
@@ -1830,8 +1832,8 @@ no_sync:
   data = gst_buffer_map (buf, &size, NULL, GST_MAP_READ);
   do {
     written =
-        gst_ring_buffer_commit_full (ringbuf, &sample_offset, data + offset,
-        samples, out_samples, &accum);
+        gst_audio_ring_buffer_commit_full (ringbuf, &sample_offset,
+        data + offset, samples, out_samples, &accum);
 
     GST_DEBUG_OBJECT (sink, "wrote %u of %u", written, samples);
     /* if we wrote all, we're done */
@@ -1870,7 +1872,7 @@ no_sync:
   if (GST_CLOCK_TIME_IS_VALID (stop) && stop >= bsink->segment.stop) {
     GST_DEBUG_OBJECT (sink,
         "start playback because we are at the end of segment");
-    gst_ring_buffer_start (ringbuf);
+    gst_audio_ring_buffer_start (ringbuf);
   }
 
   ret = GST_FLOW_OK;
@@ -1936,17 +1938,17 @@ sync_latency_failed:
  * gst_base_audio_sink_create_ringbuffer:
  * @sink: a #GstBaseAudioSink.
  *
- * Create and return the #GstRingBuffer for @sink. This function will call the
+ * Create and return the #GstAudioRingBuffer for @sink. This function will call the
  * ::create_ringbuffer vmethod and will set @sink as the parent of the returned
  * buffer (see gst_object_set_parent()).
  *
  * Returns: The new ringbuffer of @sink.
  */
-GstRingBuffer *
+GstAudioRingBuffer *
 gst_base_audio_sink_create_ringbuffer (GstBaseAudioSink * sink)
 {
   GstBaseAudioSinkClass *bclass;
-  GstRingBuffer *buffer = NULL;
+  GstAudioRingBuffer *buffer = NULL;
 
   bclass = GST_BASE_AUDIO_SINK_GET_CLASS (sink);
   if (bclass->create_ringbuffer)
@@ -1959,8 +1961,8 @@ gst_base_audio_sink_create_ringbuffer (GstBaseAudioSink * sink)
 }
 
 static void
-gst_base_audio_sink_callback (GstRingBuffer * rbuf, guint8 * data, guint len,
-    gpointer user_data)
+gst_base_audio_sink_callback (GstAudioRingBuffer * rbuf, guint8 * data,
+    guint len, gpointer user_data)
 {
   GstBaseSink *basesink;
   GstBaseAudioSink *sink;
@@ -2019,7 +2021,7 @@ error:
   {
     GST_WARNING_OBJECT (basesink, "Got flow '%s' but can't return it: %d",
         gst_flow_get_name (ret), ret);
-    gst_ring_buffer_pause (rbuf);
+    gst_audio_ring_buffer_pause (rbuf);
     GST_PAD_STREAM_UNLOCK (basesink->sinkpad);
     return;
   }
@@ -2030,7 +2032,7 @@ eos:
      * set segment.stop and segment.duration to the last sample or so */
     GST_DEBUG_OBJECT (sink, "EOS");
     gst_base_audio_sink_drain (sink);
-    gst_ring_buffer_pause (rbuf);
+    gst_audio_ring_buffer_pause (rbuf);
     gst_element_post_message (GST_ELEMENT_CAST (sink),
         gst_message_new_eos (GST_OBJECT_CAST (sink)));
     GST_PAD_STREAM_UNLOCK (basesink->sinkpad);
@@ -2038,7 +2040,7 @@ eos:
 flushing:
   {
     GST_DEBUG_OBJECT (sink, "we are flushing");
-    gst_ring_buffer_pause (rbuf);
+    gst_audio_ring_buffer_pause (rbuf);
     GST_BASE_SINK_PREROLL_UNLOCK (basesink);
     GST_PAD_STREAM_UNLOCK (basesink->sinkpad);
     return;
@@ -2046,7 +2048,7 @@ flushing:
 preroll_error:
   {
     GST_DEBUG_OBJECT (sink, "error %s", gst_flow_get_name (ret));
-    gst_ring_buffer_pause (rbuf);
+    gst_audio_ring_buffer_pause (rbuf);
     GST_BASE_SINK_PREROLL_UNLOCK (basesink);
     GST_PAD_STREAM_UNLOCK (basesink->sinkpad);
     return;
@@ -2062,14 +2064,14 @@ gst_base_audio_sink_activate_pull (GstBaseSink * basesink, gboolean active)
   if (active) {
     GST_DEBUG_OBJECT (basesink, "activating pull");
 
-    gst_ring_buffer_set_callback (sink->ringbuffer,
+    gst_audio_ring_buffer_set_callback (sink->ringbuffer,
         gst_base_audio_sink_callback, sink);
 
-    ret = gst_ring_buffer_activate (sink->ringbuffer, TRUE);
+    ret = gst_audio_ring_buffer_activate (sink->ringbuffer, TRUE);
   } else {
     GST_DEBUG_OBJECT (basesink, "deactivating pull");
-    gst_ring_buffer_set_callback (sink->ringbuffer, NULL, NULL);
-    ret = gst_ring_buffer_activate (sink->ringbuffer, FALSE);
+    gst_audio_ring_buffer_set_callback (sink->ringbuffer, NULL, NULL);
+    ret = gst_audio_ring_buffer_activate (sink->ringbuffer, FALSE);
   }
 
   return ret;
@@ -2086,10 +2088,10 @@ gst_base_audio_sink_async_play (GstBaseSink * basesink)
 
   GST_DEBUG_OBJECT (sink, "ringbuffer may start now");
   sink->priv->sync_latency = TRUE;
-  gst_ring_buffer_may_start (sink->ringbuffer, TRUE);
+  gst_audio_ring_buffer_may_start (sink->ringbuffer, TRUE);
   if (basesink->pad_mode == GST_PAD_ACTIVATE_PULL) {
     /* we always start the ringbuffer in pull mode immediatly */
-    gst_ring_buffer_start (sink->ringbuffer);
+    gst_audio_ring_buffer_start (sink->ringbuffer);
   }
 
   return GST_STATE_CHANGE_SUCCESS;
@@ -2109,7 +2111,7 @@ gst_base_audio_sink_change_state (GstElement * element,
         gst_audio_clock_reset (GST_AUDIO_CLOCK (sink->provided_clock), 0);
         sink->ringbuffer = gst_base_audio_sink_create_ringbuffer (sink);
       }
-      if (!gst_ring_buffer_open_device (sink->ringbuffer))
+      if (!gst_audio_ring_buffer_open_device (sink->ringbuffer))
         goto open_failed;
       break;
     case GST_STATE_CHANGE_READY_TO_PAUSED:
@@ -2117,8 +2119,8 @@ gst_base_audio_sink_change_state (GstElement * element,
       sink->priv->last_align = -1;
       sink->priv->eos_time = -1;
       sink->priv->discont_time = -1;
-      gst_ring_buffer_set_flushing (sink->ringbuffer, FALSE);
-      gst_ring_buffer_may_start (sink->ringbuffer, FALSE);
+      gst_audio_ring_buffer_set_flushing (sink->ringbuffer, FALSE);
+      gst_audio_ring_buffer_may_start (sink->ringbuffer, FALSE);
 
       /* Only post clock-provide messages if this is the clock that
        * we've created. If the subclass has overriden it the subclass
@@ -2140,20 +2142,20 @@ gst_base_audio_sink_change_state (GstElement * element,
       eos = GST_BASE_SINK (sink)->eos;
       GST_OBJECT_UNLOCK (sink);
 
-      gst_ring_buffer_may_start (sink->ringbuffer, TRUE);
+      gst_audio_ring_buffer_may_start (sink->ringbuffer, TRUE);
       if (GST_BASE_SINK_CAST (sink)->pad_mode == GST_PAD_ACTIVATE_PULL ||
           g_atomic_int_get (&sink->eos_rendering) || eos) {
         /* we always start the ringbuffer in pull mode immediatly */
         /* sync rendering on eos needs running clock,
          * and others need running clock when finished rendering eos */
-        gst_ring_buffer_start (sink->ringbuffer);
+        gst_audio_ring_buffer_start (sink->ringbuffer);
       }
       break;
     }
     case GST_STATE_CHANGE_PLAYING_TO_PAUSED:
       /* ringbuffer cannot start anymore */
-      gst_ring_buffer_may_start (sink->ringbuffer, FALSE);
-      gst_ring_buffer_pause (sink->ringbuffer);
+      gst_audio_ring_buffer_may_start (sink->ringbuffer, FALSE);
+      gst_audio_ring_buffer_pause (sink->ringbuffer);
 
       GST_OBJECT_LOCK (sink);
       sink->priv->sync_latency = FALSE;
@@ -2172,7 +2174,7 @@ gst_base_audio_sink_change_state (GstElement * element,
 
       /* make sure we unblock before calling the parent state change
        * so it can grab the STREAM_LOCK */
-      gst_ring_buffer_set_flushing (sink->ringbuffer, TRUE);
+      gst_audio_ring_buffer_set_flushing (sink->ringbuffer, TRUE);
       break;
     default:
       break;
@@ -2186,17 +2188,17 @@ gst_base_audio_sink_change_state (GstElement * element,
       gst_clock_set_master (sink->provided_clock, NULL);
       break;
     case GST_STATE_CHANGE_PAUSED_TO_READY:
-      gst_ring_buffer_activate (sink->ringbuffer, FALSE);
-      gst_ring_buffer_release (sink->ringbuffer);
+      gst_audio_ring_buffer_activate (sink->ringbuffer, FALSE);
+      gst_audio_ring_buffer_release (sink->ringbuffer);
       break;
     case GST_STATE_CHANGE_READY_TO_NULL:
       /* we release again here because the aqcuire happens when setting the
        * caps, which happens before we commit the state to PAUSED and thus the
        * PAUSED->READY state change (see above, where we release the ringbuffer)
        * might not be called when we get here. */
-      gst_ring_buffer_activate (sink->ringbuffer, FALSE);
-      gst_ring_buffer_release (sink->ringbuffer);
-      gst_ring_buffer_close_device (sink->ringbuffer);
+      gst_audio_ring_buffer_activate (sink->ringbuffer, FALSE);
+      gst_audio_ring_buffer_release (sink->ringbuffer);
+      gst_audio_ring_buffer_close_device (sink->ringbuffer);
       GST_OBJECT_LOCK (sink);
       gst_object_unparent (GST_OBJECT_CAST (sink->ringbuffer));
       sink->ringbuffer = NULL;
