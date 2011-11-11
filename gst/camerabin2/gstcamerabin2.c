@@ -183,8 +183,10 @@
 
 #define GST_CAMERA_BIN2_PROCESSING_DEC(c)                                \
 {                                                                       \
-  if (g_atomic_int_dec_and_test (&c->processing_counter))               \
+  if (g_atomic_int_dec_and_test (&c->processing_counter)) {             \
     g_object_notify (G_OBJECT (c), "idle");                             \
+    GST_DEBUG_OBJECT ((c), "Camerabin now idle");			\
+  }									\
   GST_DEBUG_OBJECT ((c), "Processing counter decremented");             \
 }
 
