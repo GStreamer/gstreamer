@@ -821,11 +821,12 @@ gst_buffer_resize (GstBuffer * buffer, gssize offset, gssize size)
   GstMemory *mem;
 
   g_return_if_fail (gst_buffer_is_writable (buffer));
+  g_return_if_fail (size >= -1);
 
   bufsize = gst_buffer_get_sizes (buffer, &bufoffs, &bufmax);
 
-  GST_CAT_LOG (GST_CAT_BUFFER, "trim %p %" G_GSSIZE_FORMAT "-%" G_GSIZE_FORMAT
-      " size:%" G_GSIZE_FORMAT " offs:%" G_GSSIZE_FORMAT " max:%"
+  GST_CAT_LOG (GST_CAT_BUFFER, "trim %p %" G_GSSIZE_FORMAT "-%" G_GSSIZE_FORMAT
+      " size:%" G_GSIZE_FORMAT " offs:%" G_GSIZE_FORMAT " max:%"
       G_GSIZE_FORMAT, buffer, offset, size, bufsize, bufoffs, bufmax);
 
   /* we can't go back further than the current offset or past the end of the
