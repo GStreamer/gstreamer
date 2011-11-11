@@ -65,7 +65,7 @@ typedef struct _GstJackAudioSrcClass GstJackAudioSrcClass;
 
 struct _GstJackAudioSrc
 {
-    GstBaseAudioSrc src;
+    GstAudioBaseSrc src;
 
     /*< private >*/
     /* cached caps */
@@ -87,7 +87,7 @@ struct _GstJackAudioSrc
 
 struct _GstJackAudioSrcClass
 {
-    GstBaseAudioSrcClass parent_class;
+    GstAudioBaseSrcClass parent_class;
 };
 
 GType gst_jack_audio_src_get_type (void);

@@ -48,7 +48,7 @@ typedef struct _GstJackAudioSinkClass GstJackAudioSinkClass;
  * Opaque #GstJackAudioSink.
  */
 struct _GstJackAudioSink {
-  GstBaseAudioSink element;
+  GstAudioBaseSink element;
 
   /*< private >*/
   /* cached caps */
@@ -69,7 +69,7 @@ struct _GstJackAudioSink {
 };
 
 struct _GstJackAudioSinkClass {
-  GstBaseAudioSinkClass parent_class;
+  GstAudioBaseSinkClass parent_class;
 };
 
 GType gst_jack_audio_sink_get_type (void);

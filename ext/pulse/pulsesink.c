@@ -943,7 +943,7 @@ gst_pulseringbuffer_acquire (GstAudioRingBuffer * buf,
     goto connect_failed;
 
   /* our clock will now start from 0 again */
-  clock = GST_AUDIO_CLOCK (GST_BASE_AUDIO_SINK (psink)->provided_clock);
+  clock = GST_AUDIO_CLOCK (GST_AUDIO_BASE_SINK (psink)->provided_clock);
   gst_audio_clock_reset (clock, 0);
 
   if (!gst_pulsering_wait_for_stream_ready (psink, pbuf->stream))
@@ -1173,7 +1173,7 @@ gst_pulseringbuffer_start (GstAudioRingBuffer * buf)
 
   /* EOS needs running clock */
   if (GST_BASE_SINK_CAST (psink)->eos ||
-      g_atomic_int_get (&GST_BASE_AUDIO_SINK (psink)->eos_rendering))
+      g_atomic_int_get (&GST_AUDIO_BASE_SINK (psink)->eos_rendering))
     gst_pulsering_set_corked (pbuf, FALSE, FALSE);
 
   pa_threaded_mainloop_unlock (mainloop);
@@ -1751,7 +1751,7 @@ static GstStaticPadTemplate pad_template = GST_STATIC_PAD_TEMPLATE ("sink",
 GST_IMPLEMENT_PULSEPROBE_METHODS (GstPulseSink, gst_pulsesink);
 
 #define gst_pulsesink_parent_class parent_class
-G_DEFINE_TYPE_WITH_CODE (GstPulseSink, gst_pulsesink, GST_TYPE_BASE_AUDIO_SINK,
+G_DEFINE_TYPE_WITH_CODE (GstPulseSink, gst_pulsesink, GST_TYPE_AUDIO_BASE_SINK,
     gst_pulsesink_init_contexts ();
     G_IMPLEMENT_INTERFACE (GST_TYPE_PROPERTY_PROBE,
         gst_pulsesink_property_probe_interface_init);
@@ -1759,7 +1759,7 @@ G_DEFINE_TYPE_WITH_CODE (GstPulseSink, gst_pulsesink, GST_TYPE_BASE_AUDIO_SINK,
     );
 
 static GstAudioRingBuffer *
-gst_pulsesink_create_ringbuffer (GstBaseAudioSink * sink)
+gst_pulsesink_create_ringbuffer (GstAudioBaseSink * sink)
 {
   GstAudioRingBuffer *buffer;
 
@@ -1771,7 +1771,7 @@ gst_pulsesink_create_ringbuffer (GstBaseAudioSink * sink)
 }
 
 static GstBuffer *
-gst_pulsesink_payload (GstBaseAudioSink * sink, GstBuffer * buf)
+gst_pulsesink_payload (GstAudioBaseSink * sink, GstBuffer * buf)
 {
   switch (sink->ringbuffer->spec.type) {
     case GST_BUFTYPE_AC3:
@@ -1820,7 +1820,7 @@ gst_pulsesink_class_init (GstPulseSinkClass * klass)
   GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
   GstBaseSinkClass *gstbasesink_class = GST_BASE_SINK_CLASS (klass);
   GstBaseSinkClass *bc;
-  GstBaseAudioSinkClass *gstaudiosink_class = GST_BASE_AUDIO_SINK_CLASS (klass);
+  GstAudioBaseSinkClass *gstaudiosink_class = GST_AUDIO_BASE_SINK_CLASS (klass);
   GstElementClass *gstelement_class = GST_ELEMENT_CLASS (klass);
 
   gobject_class->finalize = gst_pulsesink_finalize;
@@ -1916,7 +1916,7 @@ gst_pulsesink_class_init (GstPulseSinkClass * klass)
 
 /* returns the current time of the sink ringbuffer */
 static GstClockTime
-gst_pulsesink_get_time (GstClock * clock, GstBaseAudioSink * sink)
+gst_pulsesink_get_time (GstClock * clock, GstAudioBaseSink * sink)
 {
   GstPulseSink *psink;
   GstPulseRingBuffer *pbuf;
@@ -2010,7 +2010,7 @@ done:
 static gboolean
 gst_pulsesink_query_acceptcaps (GstPulseSink * psink, GstCaps * caps)
 {
-  GstPulseRingBuffer *pbuf = GST_PULSERING_BUFFER_CAST (GST_BASE_AUDIO_SINK
+  GstPulseRingBuffer *pbuf = GST_PULSERING_BUFFER_CAST (GST_AUDIO_BASE_SINK
       (psink)->ringbuffer);
   GstPad *pad = GST_BASE_SINK_PAD (psink);
   GstCaps *pad_caps;
@@ -2042,7 +2042,7 @@ gst_pulsesink_query_acceptcaps (GstPulseSink * psink, GstCaps * caps)
 
   pa_threaded_mainloop_lock (mainloop);
 
-  spec.latency_time = GST_BASE_AUDIO_SINK (psink)->latency_time;
+  spec.latency_time = GST_AUDIO_BASE_SINK (psink)->latency_time;
   if (!gst_audio_ring_buffer_parse_caps (&spec, caps))
     goto out;
 
@@ -2168,10 +2168,10 @@ gst_pulsesink_init (GstPulseSink * pulsesink)
   pulsesink->proplist = NULL;
 
   /* override with a custom clock */
-  if (GST_BASE_AUDIO_SINK (pulsesink)->provided_clock)
-    gst_object_unref (GST_BASE_AUDIO_SINK (pulsesink)->provided_clock);
+  if (GST_AUDIO_BASE_SINK (pulsesink)->provided_clock)
+    gst_object_unref (GST_AUDIO_BASE_SINK (pulsesink)->provided_clock);
 
-  GST_BASE_AUDIO_SINK (pulsesink)->provided_clock =
+  GST_AUDIO_BASE_SINK (pulsesink)->provided_clock =
       gst_audio_clock_new ("GstPulseSinkClock",
       (GstAudioClockGetTimeFunc) gst_pulsesink_get_time, pulsesink, NULL);
 
@@ -2230,7 +2230,7 @@ gst_pulsesink_set_volume (GstPulseSink * psink, gdouble volume)
 
   GST_DEBUG_OBJECT (psink, "setting volume to %f", volume);
 
-  pbuf = GST_PULSERING_BUFFER_CAST (GST_BASE_AUDIO_SINK (psink)->ringbuffer);
+  pbuf = GST_PULSERING_BUFFER_CAST (GST_AUDIO_BASE_SINK (psink)->ringbuffer);
   if (pbuf == NULL || pbuf->stream == NULL)
     goto no_buffer;
 
@@ -2307,7 +2307,7 @@ gst_pulsesink_set_mute (GstPulseSink * psink, gboolean mute)
 
   GST_DEBUG_OBJECT (psink, "setting mute state to %d", mute);
 
-  pbuf = GST_PULSERING_BUFFER_CAST (GST_BASE_AUDIO_SINK (psink)->ringbuffer);
+  pbuf = GST_PULSERING_BUFFER_CAST (GST_AUDIO_BASE_SINK (psink)->ringbuffer);
   if (pbuf == NULL || pbuf->stream == NULL)
     goto no_buffer;
 
@@ -2400,7 +2400,7 @@ gst_pulsesink_get_volume (GstPulseSink * psink)
 
   pa_threaded_mainloop_lock (mainloop);
 
-  pbuf = GST_PULSERING_BUFFER_CAST (GST_BASE_AUDIO_SINK (psink)->ringbuffer);
+  pbuf = GST_PULSERING_BUFFER_CAST (GST_AUDIO_BASE_SINK (psink)->ringbuffer);
   if (pbuf == NULL || pbuf->stream == NULL)
     goto no_buffer;
 
@@ -2472,7 +2472,7 @@ gst_pulsesink_get_mute (GstPulseSink * psink)
   pa_threaded_mainloop_lock (mainloop);
   mute = psink->mute;
 
-  pbuf = GST_PULSERING_BUFFER_CAST (GST_BASE_AUDIO_SINK (psink)->ringbuffer);
+  pbuf = GST_PULSERING_BUFFER_CAST (GST_AUDIO_BASE_SINK (psink)->ringbuffer);
   if (pbuf == NULL || pbuf->stream == NULL)
     goto no_buffer;
 
@@ -2534,7 +2534,7 @@ gst_pulsesink_device_description (GstPulseSink * psink)
     goto no_mainloop;
 
   pa_threaded_mainloop_lock (mainloop);
-  pbuf = GST_PULSERING_BUFFER_CAST (GST_BASE_AUDIO_SINK (psink)->ringbuffer);
+  pbuf = GST_PULSERING_BUFFER_CAST (GST_AUDIO_BASE_SINK (psink)->ringbuffer);
   if (pbuf == NULL)
     goto no_buffer;
 
@@ -2667,7 +2667,7 @@ gst_pulsesink_change_title (GstPulseSink * psink, const gchar * t)
 
   pa_threaded_mainloop_lock (mainloop);
 
-  pbuf = GST_PULSERING_BUFFER_CAST (GST_BASE_AUDIO_SINK (psink)->ringbuffer);
+  pbuf = GST_PULSERING_BUFFER_CAST (GST_AUDIO_BASE_SINK (psink)->ringbuffer);
 
   if (pbuf == NULL || pbuf->stream == NULL)
     goto no_buffer;
@@ -2742,7 +2742,7 @@ gst_pulsesink_change_props (GstPulseSink * psink, GstTagList * l)
     goto finish;
 
   pa_threaded_mainloop_lock (mainloop);
-  pbuf = GST_PULSERING_BUFFER_CAST (GST_BASE_AUDIO_SINK (psink)->ringbuffer);
+  pbuf = GST_PULSERING_BUFFER_CAST (GST_AUDIO_BASE_SINK (psink)->ringbuffer);
   if (pbuf == NULL || pbuf->stream == NULL)
     goto no_buffer;
 
@@ -2787,7 +2787,7 @@ gst_pulsesink_flush_ringbuffer (GstPulseSink * psink)
 
   pa_threaded_mainloop_lock (mainloop);
 
-  pbuf = GST_PULSERING_BUFFER_CAST (GST_BASE_AUDIO_SINK (psink)->ringbuffer);
+  pbuf = GST_PULSERING_BUFFER_CAST (GST_AUDIO_BASE_SINK (psink)->ringbuffer);
 
   if (pbuf == NULL || pbuf->stream == NULL)
     goto no_buffer;
@@ -2945,7 +2945,7 @@ gst_pulsesink_change_state (GstElement * element, GstStateChange transition)
     case GST_STATE_CHANGE_READY_TO_PAUSED:
       gst_element_post_message (element,
           gst_message_new_clock_provide (GST_OBJECT_CAST (element),
-              GST_BASE_AUDIO_SINK (pulsesink)->provided_clock, TRUE));
+              GST_AUDIO_BASE_SINK (pulsesink)->provided_clock, TRUE));
       break;
 
     default:
@@ -2961,7 +2961,7 @@ gst_pulsesink_change_state (GstElement * element, GstStateChange transition)
       /* format_lost is reset in release() in baseaudiosink */
       gst_element_post_message (element,
           gst_message_new_clock_lost (GST_OBJECT_CAST (element),
-              GST_BASE_AUDIO_SINK (pulsesink)->provided_clock));
+              GST_AUDIO_BASE_SINK (pulsesink)->provided_clock));
       break;
     case GST_STATE_CHANGE_READY_TO_NULL:
       gst_pulsesink_release_mainloop (pulsesink);

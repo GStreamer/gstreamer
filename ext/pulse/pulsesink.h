@@ -56,7 +56,7 @@ typedef struct _GstPulseSinkClass GstPulseSinkClass;
 
 struct _GstPulseSink
 {
-  GstBaseAudioSink sink;
+  GstAudioBaseSink sink;
 
   gchar *server, *device, *stream_name, *client_name;
   gchar *device_description;
@@ -87,7 +87,7 @@ struct _GstPulseSink
 
 struct _GstPulseSinkClass
 {
-  GstBaseAudioSinkClass parent_class;
+  GstAudioBaseSinkClass parent_class;
 };
 
 GType gst_pulsesink_get_type (void);

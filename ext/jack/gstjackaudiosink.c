@@ -21,7 +21,7 @@
 
 /**
  * SECTION:element-jackaudiosink
- * @see_also: #GstBaseAudioSink, #GstAudioRingBuffer
+ * @see_also: #GstAudioBaseSink, #GstAudioRingBuffer
  *
  * A Sink that outputs data to Jack ports.
  * 
@@ -660,7 +660,7 @@ enum
 };
 
 #define gst_jack_audio_sink_parent_class parent_class
-G_DEFINE_TYPE (GstJackAudioSink, gst_jack_audio_sink, GST_TYPE_BASE_AUDIO_SINK);
+G_DEFINE_TYPE (GstJackAudioSink, gst_jack_audio_sink, GST_TYPE_AUDIO_BASE_SINK);
 
 static void gst_jack_audio_sink_dispose (GObject * object);
 static void gst_jack_audio_sink_set_property (GObject * object, guint prop_id,
@@ -671,7 +671,7 @@ static void gst_jack_audio_sink_get_property (GObject * object, guint prop_id,
 static GstCaps *gst_jack_audio_sink_getcaps (GstBaseSink * bsink,
     GstCaps * filter);
 static GstAudioRingBuffer
-    * gst_jack_audio_sink_create_ringbuffer (GstBaseAudioSink * sink);
+    * gst_jack_audio_sink_create_ringbuffer (GstAudioBaseSink * sink);
 
 static void
 gst_jack_audio_sink_class_init (GstJackAudioSinkClass * klass)
@@ -679,7 +679,7 @@ gst_jack_audio_sink_class_init (GstJackAudioSinkClass * klass)
   GObjectClass *gobject_class;
   GstElementClass *gstelement_class;
   GstBaseSinkClass *gstbasesink_class;
-  GstBaseAudioSinkClass *gstbaseaudiosink_class;
+  GstAudioBaseSinkClass *gstbaseaudiosink_class;
 
   GST_DEBUG_CATEGORY_INIT (gst_jack_audio_sink_debug, "jacksink", 0,
       "jacksink element");
@@ -687,7 +687,7 @@ gst_jack_audio_sink_class_init (GstJackAudioSinkClass * klass)
   gobject_class = (GObjectClass *) klass;
   gstelement_class = (GstElementClass *) klass;
   gstbasesink_class = (GstBaseSinkClass *) klass;
-  gstbaseaudiosink_class = (GstBaseAudioSinkClass *) klass;
+  gstbaseaudiosink_class = (GstAudioBaseSinkClass *) klass;
 
   gobject_class->dispose = gst_jack_audio_sink_dispose;
   gobject_class->get_property = gst_jack_audio_sink_get_property;
@@ -857,7 +857,7 @@ no_client:
 }
 
 static GstAudioRingBuffer *
-gst_jack_audio_sink_create_ringbuffer (GstBaseAudioSink * sink)
+gst_jack_audio_sink_create_ringbuffer (GstAudioBaseSink * sink)
 {
   GstAudioRingBuffer *buffer;
 

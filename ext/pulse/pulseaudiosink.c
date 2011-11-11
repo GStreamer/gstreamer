@@ -818,7 +818,7 @@ gst_pulse_audio_sink_sink_acceptcaps (GstPulseAudioSink * pbin, GstPad * pad,
   if (!gst_caps_is_fixed (caps))
     goto out;
 
-  spec.latency_time = GST_BASE_AUDIO_SINK (pbin->psink)->latency_time;
+  spec.latency_time = GST_AUDIO_BASE_SINK (pbin->psink)->latency_time;
   if (!gst_audio_ring_buffer_parse_caps (&spec, caps))
     goto out;
 

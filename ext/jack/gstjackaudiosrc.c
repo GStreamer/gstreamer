@@ -42,7 +42,7 @@
 
 /**
  * SECTION:element-jackaudiosrc
- * @see_also: #GstBaseAudioSrc, #GstAudioRingBuffer
+ * @see_also: #GstAudioBaseSrc, #GstAudioRingBuffer
  *
  * A Src that inputs data from Jack ports.
  * 
@@ -678,7 +678,7 @@ static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",
     );
 
 #define gst_jack_audio_src_parent_class parent_class
-G_DEFINE_TYPE (GstJackAudioSrc, gst_jack_audio_src, GST_TYPE_BASE_AUDIO_SRC);
+G_DEFINE_TYPE (GstJackAudioSrc, gst_jack_audio_src, GST_TYPE_AUDIO_BASE_SRC);
 
 static void gst_jack_audio_src_dispose (GObject * object);
 static void gst_jack_audio_src_set_property (GObject * object, guint prop_id,
@@ -688,7 +688,7 @@ static void gst_jack_audio_src_get_property (GObject * object, guint prop_id,
 
 static GstCaps *gst_jack_audio_src_getcaps (GstBaseSrc * bsrc,
     GstCaps * filter);
-static GstAudioRingBuffer *gst_jack_audio_src_create_ringbuffer (GstBaseAudioSrc
+static GstAudioRingBuffer *gst_jack_audio_src_create_ringbuffer (GstAudioBaseSrc
     * src);
 
 /* GObject vmethod implementations */
@@ -700,7 +700,7 @@ gst_jack_audio_src_class_init (GstJackAudioSrcClass * klass)
   GObjectClass *gobject_class;
   GstElementClass *gstelement_class;
   GstBaseSrcClass *gstbasesrc_class;
-  GstBaseAudioSrcClass *gstbaseaudiosrc_class;
+  GstAudioBaseSrcClass *gstbaseaudiosrc_class;
 
   GST_DEBUG_CATEGORY_INIT (gst_jack_audio_src_debug, "jacksrc", 0,
       "jacksrc element");
@@ -708,7 +708,7 @@ gst_jack_audio_src_class_init (GstJackAudioSrcClass * klass)
   gobject_class = (GObjectClass *) klass;
   gstelement_class = (GstElementClass *) klass;
   gstbasesrc_class = (GstBaseSrcClass *) klass;
-  gstbaseaudiosrc_class = (GstBaseAudioSrcClass *) klass;
+  gstbaseaudiosrc_class = (GstAudioBaseSrcClass *) klass;
 
   gobject_class->dispose = gst_jack_audio_src_dispose;
   gobject_class->set_property = gst_jack_audio_src_set_property;
@@ -880,7 +880,7 @@ no_client:
 }
 
 static GstAudioRingBuffer *
-gst_jack_audio_src_create_ringbuffer (GstBaseAudioSrc * src)
+gst_jack_audio_src_create_ringbuffer (GstAudioBaseSrc * src)
 {
   GstAudioRingBuffer *buffer;
 
