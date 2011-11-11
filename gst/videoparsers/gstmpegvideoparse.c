@@ -183,6 +183,7 @@ gst_mpegv_parse_reset_frame (GstMpegvParse * mpvparse)
   mpvparse->last_sc = -1;
   mpvparse->seq_offset = G_MAXUINT;
   mpvparse->pic_offset = -1;
+  mpvparse->frame_repeat_count = 0;
 }
 
 static void
@@ -238,8 +239,13 @@ gst_mpegv_parse_process_config (GstMpegvParse * mpvparse, GstBuffer * buf,
       memcmp (GST_BUFFER_DATA (mpvparse->config), data, size) == 0)
     return TRUE;
 
-  if (!gst_mpeg_video_parse_sequence_header (&mpvparse->sequencehdr, data,
+  if (gst_mpeg_video_parse_sequence_header (&mpvparse->sequencehdr, data,
           GST_BUFFER_SIZE (buf) - mpvparse->seq_offset, 0)) {
+    if (mpvparse->fps_num == 0 || mpvparse->fps_den == 0) {
+      mpvparse->fps_num = mpvparse->sequencehdr.fps_n;
+      mpvparse->fps_den = mpvparse->sequencehdr.fps_d;
+    }
+  } else {
     GST_DEBUG_OBJECT (mpvparse,
         "failed to parse config data (size %d) at offset %d",
         size, mpvparse->seq_offset);
@@ -258,8 +264,17 @@ gst_mpegv_parse_process_config (GstMpegvParse * mpvparse, GstBuffer * buf,
 
       if (tpoffsz->type == GST_MPEG_VIDEO_PACKET_EXTENSION) {
         mpvparse->mpeg_version = 2;
-        gst_mpeg_video_parse_sequence_extension (&mpvparse->sequenceext,
-            GST_BUFFER_DATA (buf), GST_BUFFER_SIZE (buf), tpoffsz->offset);
+
+        if (gst_mpeg_video_parse_sequence_extension (&mpvparse->sequenceext,
+                GST_BUFFER_DATA (buf), GST_BUFFER_SIZE (buf),
+                tpoffsz->offset)) {
+          mpvparse->fps_num =
+              mpvparse->sequencehdr.fps_n * (mpvparse->sequenceext.fps_n_ext +
+              1) * 2;
+          mpvparse->fps_den =
+              mpvparse->sequencehdr.fps_d * (mpvparse->sequenceext.fps_d_ext +
+              1);
+        }
       }
     }
   }
@@ -335,6 +350,27 @@ picture_type_name (guint8 pct)
 }
 #endif /* GST_DISABLE_GST_DEBUG */
 
+static void
+parse_picture_extension (GstMpegvParse * mpvparse, GstBuffer * buf, guint off)
+{
+  GstMpegVideoPictureExt ext;
+  if (gst_mpeg_video_parse_picture_extension (&ext, GST_BUFFER_DATA (buf),
+          GST_BUFFER_SIZE (buf), off)) {
+    mpvparse->frame_repeat_count = 1;
+
+    if (ext.repeat_first_field) {
+      if (mpvparse->sequenceext.progressive) {
+        if (ext.top_field_first)
+          mpvparse->frame_repeat_count = 5;
+        else
+          mpvparse->frame_repeat_count = 3;
+      } else if (ext.progressive_frame) {
+        mpvparse->frame_repeat_count = 2;
+      }
+    }
+  }
+}
+
 /* caller guarantees at least start code in @buf at @off */
 /* for off == 0 initial code; returns TRUE if code starts a frame,
  * otherwise returns TRUE if code terminates preceding frame */
@@ -374,6 +410,10 @@ gst_mpegv_parse_process_sc (GstMpegvParse * mpvparse,
       else
         ret = TRUE;
       break;
+    case GST_MPEG_VIDEO_PACKET_EXTENSION:
+      GST_LOG_OBJECT (mpvparse, "startcode is VIDEO PACKET EXTENSION");
+      parse_picture_extension (mpvparse, buf, off);
+      packet = FALSE;
     default:
       packet = FALSE;
       break;
@@ -551,9 +591,9 @@ gst_mpegv_parse_update_src_caps (GstMpegvParse * mpvparse)
   }
 
   /* perhaps we have  a framerate */
-  if (mpvparse->sequencehdr.fps_n > 0 && mpvparse->sequencehdr.fps_d > 0) {
-    gint fps_num = mpvparse->sequencehdr.fps_n;
-    gint fps_den = mpvparse->sequencehdr.fps_d;
+  if (mpvparse->fps_num > 0 && mpvparse->fps_den > 0) {
+    gint fps_num = mpvparse->fps_num;
+    gint fps_den = mpvparse->fps_den;
     GstClockTime latency = gst_util_uint64_scale (GST_SECOND, fps_den, fps_num);
 
     gst_caps_set_simple (caps, "framerate",
@@ -657,6 +697,9 @@ gst_mpegv_parse_parse_frame (GstBaseParse * parse, GstBaseParseFrame * frame)
     frame->flags |= GST_BASE_PARSE_FRAME_FLAG_NO_FRAME;
     GST_BUFFER_DURATION (buffer) = 0;
   }
+
+  GST_BUFFER_DURATION (buffer) =
+      (1 + mpvparse->frame_repeat_count) * GST_BUFFER_DURATION (buffer);
 
   if (G_UNLIKELY (mpvparse->drop && !mpvparse->config)) {
     GST_DEBUG_OBJECT (mpvparse, "dropping frame as no config yet");
