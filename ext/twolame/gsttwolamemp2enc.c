@@ -53,7 +53,7 @@
 #endif
 
 #include "string.h"
-#include "gsttwolame.h"
+#include "gsttwolamemp2enc.h"
 #include "gst/gst-i18n-plugin.h"
 
 GST_DEBUG_CATEGORY_STATIC (debug);
@@ -873,7 +873,7 @@ plugin_init (GstPlugin * plugin)
   bind_textdomain_codeset (GETTEXT_PACKAGE, "UTF-8");
 #endif /* ENABLE_NLS */
 
-  if (!gst_element_register (plugin, "twolame", GST_RANK_PRIMARY,
+  if (!gst_element_register (plugin, "twolamemp2enc", GST_RANK_PRIMARY,
           GST_TYPE_TWO_LAME))
     return FALSE;
 

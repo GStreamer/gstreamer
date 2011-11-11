@@ -246,7 +246,7 @@ gst_synaesthesia_get_type
 </SECTION>
 
 <SECTION>
-<FILE>element-twolame</FILE>
+<FILE>element-twolamemp2enc</FILE>
 <TITLE>twolame</TITLE>
 GstTwoLame
 <SUBSECTION Standard>
