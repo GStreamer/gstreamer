@@ -27,7 +27,7 @@
 
 G_BEGIN_DECLS
 
-/** 
+/**
  * GstRTPPayload:
  * @GST_RTP_PAYLOAD_PCMU: ITU-T G.711. mu-law audio (RFC 3551)
  * @GST_RTP_PAYLOAD_1016: RFC 3551 says reserved
@@ -64,7 +64,7 @@ G_BEGIN_DECLS
  *
  * Audio:
  * reserved: 19
- * unassigned: 20-23, 
+ * unassigned: 20-23,
  *
  * Video:
  * unassigned: 24, 27, 29, 30, 35-71, 77-95
@@ -91,7 +91,7 @@ typedef enum
   GST_RTP_PAYLOAD_G728 = 15,
   GST_RTP_PAYLOAD_DVI4_11025 = 16,
   GST_RTP_PAYLOAD_DVI4_22050 = 17,
-  GST_RTP_PAYLOAD_G729 = 18,   
+  GST_RTP_PAYLOAD_G729 = 18,
 
   /* Video: */
 
@@ -182,6 +182,8 @@ struct _GstRTPPayloadInfo
   guint        clock_rate;
   const gchar *encoding_parameters;
   guint        bitrate;
+
+  gpointer _gst_reserved[GST_PADDING];
 };
 
 const GstRTPPayloadInfo *  gst_rtp_payload_info_for_pt     (guint8 payload_type);

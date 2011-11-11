@@ -59,7 +59,7 @@ struct _GstRTPBaseDepayload
   /*< private >*/
   GstRTPBaseDepayloadPrivate *priv;
 
-  gpointer _gst_reserved[GST_PADDING-1];
+  gpointer _gst_reserved[GST_PADDING];
 };
 
 /**
@@ -97,7 +97,7 @@ struct _GstRTPBaseDepayloadClass
   gboolean (*handle_event) (GstRTPBaseDepayload * filter, GstEvent * event);
 
   /*< private >*/
-  gpointer _gst_reserved[GST_PADDING-2];
+  gpointer _gst_reserved[GST_PADDING];
 };
 
 GType gst_rtp_base_depayload_get_type (void);

@@ -288,7 +288,7 @@ gst_rtp_base_payload_init (GstRTPBasePayload * rtpbasepayload, gpointer g_class)
   rtpbasepayload->max_ptime = DEFAULT_MAX_PTIME;
   rtpbasepayload->min_ptime = DEFAULT_MIN_PTIME;
   rtpbasepayload->priv->perfect_rtptime = DEFAULT_PERFECT_RTPTIME;
-  rtpbasepayload->abidata.ABI.ptime_multiple = DEFAULT_PTIME_MULTIPLE;
+  rtpbasepayload->ptime_multiple = DEFAULT_PTIME_MULTIPLE;
   rtpbasepayload->priv->base_offset = GST_BUFFER_OFFSET_NONE;
   rtpbasepayload->priv->base_rtime = GST_BUFFER_OFFSET_NONE;
 
@@ -553,7 +553,7 @@ gst_rtp_base_payload_set_outcaps (GstRTPBasePayload * payload,
   }
 
   payload->priv->caps_max_ptime = DEFAULT_MAX_PTIME;
-  payload->abidata.ABI.ptime = 0;
+  payload->ptime = 0;
 
   /* the peer caps can override some of the defaults */
   peercaps = gst_pad_peer_get_caps (payload->srcpad, srccaps);
@@ -593,7 +593,7 @@ gst_rtp_base_payload_set_outcaps (GstRTPBasePayload * payload,
       payload->priv->caps_max_ptime = max_ptime * GST_MSECOND;
 
     if (gst_structure_get_uint (s, "ptime", &ptime))
-      payload->abidata.ABI.ptime = ptime * GST_MSECOND;
+      payload->ptime = ptime * GST_MSECOND;
 
     if (gst_structure_get_int (s, "payload", &pt)) {
       /* use peer pt */
@@ -946,7 +946,7 @@ gst_rtp_base_payload_set_property (GObject * object, guint prop_id,
       priv->perfect_rtptime = g_value_get_boolean (value);
       break;
     case PROP_PTIME_MULTIPLE:
-      rtpbasepayload->abidata.ABI.ptime_multiple = g_value_get_int64 (value);
+      rtpbasepayload->ptime_multiple = g_value_get_int64 (value);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -1005,7 +1005,7 @@ gst_rtp_base_payload_get_property (GObject * object, guint prop_id,
       g_value_set_boolean (value, priv->perfect_rtptime);
       break;
     case PROP_PTIME_MULTIPLE:
-      g_value_set_int64 (value, rtpbasepayload->abidata.ABI.ptime_multiple);
+      g_value_set_int64 (value, rtpbasepayload->ptime_multiple);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);

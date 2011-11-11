@@ -102,17 +102,13 @@ struct _GstRTPBasePayload
   GstSegment segment;
 
   guint64  min_ptime;
+  guint64  ptime; /* in ns */
+  guint64  ptime_multiple; /* in ns */
 
   /*< private >*/
   GstRTPBasePayloadPrivate *priv;
 
-  union  {
-    struct {
-      guint64 ptime; /* in ns */
-      guint64 ptime_multiple; /* in ns */
-    } ABI;
-    gpointer _gst_reserved[GST_PADDING - (sizeof(guint64)/sizeof(gpointer)) - 1];
-  } abidata;
+  gpointer _gst_reserved[GST_PADDING];
 };
 
 /**

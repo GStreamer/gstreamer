@@ -112,8 +112,8 @@ void            gst_rtp_buffer_set_seq               (GstRTPBuffer *rtp, guint16
 guint32         gst_rtp_buffer_get_timestamp         (GstRTPBuffer *rtp);
 void            gst_rtp_buffer_set_timestamp         (GstRTPBuffer *rtp, guint32 timestamp);
 
-GstBuffer* 	gst_rtp_buffer_get_payload_buffer    (GstRTPBuffer *rtp);
-GstBuffer* 	gst_rtp_buffer_get_payload_subbuffer (GstRTPBuffer *rtp, guint offset, guint len);
+GstBuffer*      gst_rtp_buffer_get_payload_buffer    (GstRTPBuffer *rtp);
+GstBuffer*      gst_rtp_buffer_get_payload_subbuffer (GstRTPBuffer *rtp, guint offset, guint len);
 
 guint           gst_rtp_buffer_get_payload_len       (GstRTPBuffer *rtp);
 gpointer        gst_rtp_buffer_get_payload           (GstRTPBuffer *rtp);
