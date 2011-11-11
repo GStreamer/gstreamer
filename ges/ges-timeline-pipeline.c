@@ -954,7 +954,7 @@ ges_timeline_pipeline_get_thumbnail_rgb24 (GESTimelinePipeline * self,
 GstElement *
 ges_timeline_pipeline_preview_get_video_sink (GESTimelinePipeline * self)
 {
-  GstElement *sink;
+  GstElement *sink = NULL;
 
   g_object_get (self->priv->playsink, "video-sink", &sink, NULL);
 
@@ -991,7 +991,7 @@ ges_timeline_pipeline_preview_set_video_sink (GESTimelinePipeline * self,
 GstElement *
 ges_timeline_pipeline_preview_get_audio_sink (GESTimelinePipeline * self)
 {
-  GstElement *sink;
+  GstElement *sink = NULL;
 
   g_object_get (self->priv->playsink, "audio-sink", &sink, NULL);
 
