@@ -804,7 +804,7 @@ static gboolean
 gst_pulse_audio_sink_sink_acceptcaps (GstPulseAudioSink * pbin, GstPad * pad,
     GstCaps * caps)
 {
-  GstRingBufferSpec spec = { 0 };
+  GstAudioRingBufferSpec spec = { 0 };
   const GstStructure *st;
   GstCaps *pad_caps = NULL;
   gboolean ret = FALSE;
@@ -819,7 +819,7 @@ gst_pulse_audio_sink_sink_acceptcaps (GstPulseAudioSink * pbin, GstPad * pad,
     goto out;
 
   spec.latency_time = GST_BASE_AUDIO_SINK (pbin->psink)->latency_time;
-  if (!gst_ring_buffer_parse_caps (&spec, caps))
+  if (!gst_audio_ring_buffer_parse_caps (&spec, caps))
     goto out;
 
   /* Make sure non-raw input is framed (one frame per buffer) and can be

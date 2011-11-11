@@ -58,7 +58,7 @@ typedef struct _GstJackRingBufferClass GstJackRingBufferClass;
 
 struct _GstJackRingBuffer
 {
-  GstRingBuffer object;
+  GstAudioRingBuffer object;
 
   gint sample_rate;
   gint buffer_size;
@@ -67,22 +67,22 @@ struct _GstJackRingBuffer
 
 struct _GstJackRingBufferClass
 {
-  GstRingBufferClass parent_class;
+  GstAudioRingBufferClass parent_class;
 };
 
 static void gst_jack_ring_buffer_class_init(GstJackRingBufferClass * klass);
 static void gst_jack_ring_buffer_init(GstJackRingBuffer * ringbuffer,
     GstJackRingBufferClass * klass);
 
-static GstRingBufferClass *ring_parent_class = NULL;
+static GstAudioRingBufferClass *ring_parent_class = NULL;
 
-static gboolean gst_jack_ring_buffer_open_device(GstRingBuffer * buf);
-static gboolean gst_jack_ring_buffer_close_device(GstRingBuffer * buf);
-static gboolean gst_jack_ring_buffer_acquire(GstRingBuffer * buf,GstRingBufferSpec * spec);
-static gboolean gst_jack_ring_buffer_release(GstRingBuffer * buf);
-static gboolean gst_jack_ring_buffer_start(GstRingBuffer * buf);
-static gboolean gst_jack_ring_buffer_pause(GstRingBuffer * buf);
-static gboolean gst_jack_ring_buffer_stop(GstRingBuffer * buf);
-static guint gst_jack_ring_buffer_delay(GstRingBuffer * buf);
+static gboolean gst_jack_ring_buffer_open_device(GstAudioRingBuffer * buf);
+static gboolean gst_jack_ring_buffer_close_device(GstAudioRingBuffer * buf);
+static gboolean gst_jack_ring_buffer_acquire(GstAudioRingBuffer * buf,GstAudioRingBufferSpec * spec);
+static gboolean gst_jack_ring_buffer_release(GstAudioRingBuffer * buf);
+static gboolean gst_jack_ring_buffer_start(GstAudioRingBuffer * buf);
+static gboolean gst_jack_ring_buffer_pause(GstAudioRingBuffer * buf);
+static gboolean gst_jack_ring_buffer_stop(GstAudioRingBuffer * buf);
+static guint gst_jack_ring_buffer_delay(GstAudioRingBuffer * buf);
 
 #endif 

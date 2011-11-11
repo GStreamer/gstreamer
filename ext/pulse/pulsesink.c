@@ -131,7 +131,7 @@ static GMutex *pa_shared_resource_mutex = NULL;
  * pulseaudio memory instead. */
 struct _GstPulseRingBuffer
 {
-  GstRingBuffer object;
+  GstAudioRingBuffer object;
 
   gchar *context_name;
   gchar *stream_name;
@@ -159,28 +159,29 @@ struct _GstPulseRingBuffer
 };
 struct _GstPulseRingBufferClass
 {
-  GstRingBufferClass parent_class;
+  GstAudioRingBufferClass parent_class;
 };
 
 static GType gst_pulseringbuffer_get_type (void);
 static void gst_pulseringbuffer_finalize (GObject * object);
 
-static GstRingBufferClass *ring_parent_class = NULL;
+static GstAudioRingBufferClass *ring_parent_class = NULL;
 
-static gboolean gst_pulseringbuffer_open_device (GstRingBuffer * buf);
-static gboolean gst_pulseringbuffer_close_device (GstRingBuffer * buf);
-static gboolean gst_pulseringbuffer_acquire (GstRingBuffer * buf,
-    GstRingBufferSpec * spec);
-static gboolean gst_pulseringbuffer_release (GstRingBuffer * buf);
-static gboolean gst_pulseringbuffer_start (GstRingBuffer * buf);
-static gboolean gst_pulseringbuffer_pause (GstRingBuffer * buf);
-static gboolean gst_pulseringbuffer_stop (GstRingBuffer * buf);
-static void gst_pulseringbuffer_clear (GstRingBuffer * buf);
-static guint gst_pulseringbuffer_commit (GstRingBuffer * buf,
+static gboolean gst_pulseringbuffer_open_device (GstAudioRingBuffer * buf);
+static gboolean gst_pulseringbuffer_close_device (GstAudioRingBuffer * buf);
+static gboolean gst_pulseringbuffer_acquire (GstAudioRingBuffer * buf,
+    GstAudioRingBufferSpec * spec);
+static gboolean gst_pulseringbuffer_release (GstAudioRingBuffer * buf);
+static gboolean gst_pulseringbuffer_start (GstAudioRingBuffer * buf);
+static gboolean gst_pulseringbuffer_pause (GstAudioRingBuffer * buf);
+static gboolean gst_pulseringbuffer_stop (GstAudioRingBuffer * buf);
+static void gst_pulseringbuffer_clear (GstAudioRingBuffer * buf);
+static guint gst_pulseringbuffer_commit (GstAudioRingBuffer * buf,
     guint64 * sample, guchar * data, gint in_samples, gint out_samples,
     gint * accum);
 
-G_DEFINE_TYPE (GstPulseRingBuffer, gst_pulseringbuffer, GST_TYPE_RING_BUFFER);
+G_DEFINE_TYPE (GstPulseRingBuffer, gst_pulseringbuffer,
+    GST_TYPE_AUDIO_RING_BUFFER);
 
 static void
 gst_pulsesink_init_contexts (void)
@@ -195,10 +196,10 @@ static void
 gst_pulseringbuffer_class_init (GstPulseRingBufferClass * klass)
 {
   GObjectClass *gobject_class;
-  GstRingBufferClass *gstringbuffer_class;
+  GstAudioRingBufferClass *gstringbuffer_class;
 
   gobject_class = (GObjectClass *) klass;
-  gstringbuffer_class = (GstRingBufferClass *) klass;
+  gstringbuffer_class = (GstAudioRingBufferClass *) klass;
 
   ring_parent_class = g_type_class_peek_parent (klass);
 
@@ -457,7 +458,7 @@ gst_pulsering_context_subscribe_cb (pa_context * c,
 /* will be called when the device should be opened. In this case we will connect
  * to the server. We should not try to open any streams in this state. */
 static gboolean
-gst_pulseringbuffer_open_device (GstRingBuffer * buf)
+gst_pulseringbuffer_open_device (GstAudioRingBuffer * buf)
 {
   GstPulseSink *psink;
   GstPulseRingBuffer *pbuf;
@@ -572,7 +573,7 @@ connect_failed:
 
 /* close the device */
 static gboolean
-gst_pulseringbuffer_close_device (GstRingBuffer * buf)
+gst_pulseringbuffer_close_device (GstAudioRingBuffer * buf)
 {
   GstPulseSink *psink;
   GstPulseRingBuffer *pbuf;
@@ -621,10 +622,10 @@ static void
 gst_pulsering_stream_request_cb (pa_stream * s, size_t length, void *userdata)
 {
   GstPulseSink *psink;
-  GstRingBuffer *rbuf;
+  GstAudioRingBuffer *rbuf;
   GstPulseRingBuffer *pbuf;
 
-  rbuf = GST_RING_BUFFER_CAST (userdata);
+  rbuf = GST_AUDIO_RING_BUFFER_CAST (userdata);
   pbuf = GST_PULSERING_BUFFER_CAST (userdata);
   psink = GST_PULSESINK_CAST (GST_OBJECT_PARENT (pbuf));
 
@@ -794,7 +795,8 @@ gst_pulsering_wait_for_stream_ready (GstPulseSink * psink, pa_stream * stream)
 /* This method should create a new stream of the given @spec. No playback should
  * start yet so we start in the corked state. */
 static gboolean
-gst_pulseringbuffer_acquire (GstRingBuffer * buf, GstRingBufferSpec * spec)
+gst_pulseringbuffer_acquire (GstAudioRingBuffer * buf,
+    GstAudioRingBufferSpec * spec)
 {
   GstPulseSink *psink;
   GstPulseRingBuffer *pbuf;
@@ -1020,7 +1022,7 @@ connect_failed:
 
 /* free the stream that we acquired before */
 static gboolean
-gst_pulseringbuffer_release (GstRingBuffer * buf)
+gst_pulseringbuffer_release (GstAudioRingBuffer * buf)
 {
   GstPulseRingBuffer *pbuf;
 
@@ -1107,7 +1109,7 @@ cork_failed:
 }
 
 static void
-gst_pulseringbuffer_clear (GstRingBuffer * buf)
+gst_pulseringbuffer_clear (GstAudioRingBuffer * buf)
 {
   GstPulseSink *psink;
   GstPulseRingBuffer *pbuf;
@@ -1151,7 +1153,7 @@ mainloop_enter_defer_cb (pa_mainloop_api * api, void *userdata)
 
 /* start/resume playback ASAP, we don't uncork here but in the commit method */
 static gboolean
-gst_pulseringbuffer_start (GstRingBuffer * buf)
+gst_pulseringbuffer_start (GstAudioRingBuffer * buf)
 {
   GstPulseSink *psink;
   GstPulseRingBuffer *pbuf;
@@ -1181,7 +1183,7 @@ gst_pulseringbuffer_start (GstRingBuffer * buf)
 
 /* pause/stop playback ASAP */
 static gboolean
-gst_pulseringbuffer_pause (GstRingBuffer * buf)
+gst_pulseringbuffer_pause (GstAudioRingBuffer * buf)
 {
   GstPulseSink *psink;
   GstPulseRingBuffer *pbuf;
@@ -1229,7 +1231,7 @@ mainloop_leave_defer_cb (pa_mainloop_api * api, void *userdata)
 
 /* stop playback, we flush everything. */
 static gboolean
-gst_pulseringbuffer_stop (GstRingBuffer * buf)
+gst_pulseringbuffer_stop (GstAudioRingBuffer * buf)
 {
   GstPulseSink *psink;
   GstPulseRingBuffer *pbuf;
@@ -1366,7 +1368,7 @@ G_STMT_START {                                  \
 /* our custom commit function because we write into the buffer of pulseaudio
  * instead of keeping our own buffer */
 static guint
-gst_pulseringbuffer_commit (GstRingBuffer * buf, guint64 * sample,
+gst_pulseringbuffer_commit (GstAudioRingBuffer * buf, guint64 * sample,
     guchar * data, gint in_samples, gint out_samples, gint * accum)
 {
   GstPulseSink *psink;
@@ -1390,13 +1392,13 @@ gst_pulseringbuffer_commit (GstRingBuffer * buf, guint64 * sample,
 
   /* make sure the ringbuffer is started */
   if (G_UNLIKELY (g_atomic_int_get (&buf->state) !=
-          GST_RING_BUFFER_STATE_STARTED)) {
+          GST_AUDIO_RING_BUFFER_STATE_STARTED)) {
     /* see if we are allowed to start it */
     if (G_UNLIKELY (g_atomic_int_get (&buf->may_start) == FALSE))
       goto no_start;
 
     GST_DEBUG_OBJECT (buf, "start!");
-    if (!gst_ring_buffer_start (buf))
+    if (!gst_audio_ring_buffer_start (buf))
       goto start_failed;
   }
 
@@ -1701,7 +1703,7 @@ gst_pulsering_flush (GstPulseRingBuffer * pbuf)
 #ifndef GST_DISABLE_GST_DEBUG
     gint bpf;
 
-    bpf = (GST_RING_BUFFER_CAST (pbuf))->spec.info.bpf;
+    bpf = (GST_AUDIO_RING_BUFFER_CAST (pbuf))->spec.info.bpf;
     GST_LOG_OBJECT (psink,
         "flushing %u samples at offset %" G_GINT64_FORMAT,
         (guint) pbuf->m_towrite / bpf, pbuf->m_offset);
@@ -1756,10 +1758,10 @@ G_DEFINE_TYPE_WITH_CODE (GstPulseSink, gst_pulsesink, GST_TYPE_BASE_AUDIO_SINK,
     G_IMPLEMENT_INTERFACE (GST_TYPE_STREAM_VOLUME, NULL)
     );
 
-static GstRingBuffer *
+static GstAudioRingBuffer *
 gst_pulsesink_create_ringbuffer (GstBaseAudioSink * sink)
 {
-  GstRingBuffer *buffer;
+  GstAudioRingBuffer *buffer;
 
   GST_DEBUG_OBJECT (sink, "creating ringbuffer");
   buffer = g_object_new (GST_TYPE_PULSERING_BUFFER, NULL);
@@ -2015,7 +2017,7 @@ gst_pulsesink_query_acceptcaps (GstPulseSink * psink, GstCaps * caps)
   GstStructure *st;
   gboolean ret = FALSE;
 
-  GstRingBufferSpec spec = { 0 };
+  GstAudioRingBufferSpec spec = { 0 };
   pa_stream *stream = NULL;
   pa_operation *o = NULL;
   pa_channel_map channel_map;
@@ -2041,7 +2043,7 @@ gst_pulsesink_query_acceptcaps (GstPulseSink * psink, GstCaps * caps)
   pa_threaded_mainloop_lock (mainloop);
 
   spec.latency_time = GST_BASE_AUDIO_SINK (psink)->latency_time;
-  if (!gst_ring_buffer_parse_caps (&spec, caps))
+  if (!gst_audio_ring_buffer_parse_caps (&spec, caps))
     goto out;
 
   if (!gst_pulse_fill_format_info (&spec, &format, &channels))

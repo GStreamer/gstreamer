@@ -134,7 +134,7 @@ gstaudioformat_to_pasampleformat (GstAudioFormat format,
 }
 
 gboolean
-gst_pulse_fill_sample_spec (GstRingBufferSpec * spec, pa_sample_spec * ss)
+gst_pulse_fill_sample_spec (GstAudioRingBufferSpec * spec, pa_sample_spec * ss)
 {
   if (spec->type == GST_BUFTYPE_RAW) {
     if (!gstaudioformat_to_pasampleformat (GST_AUDIO_INFO_FORMAT (&spec->info),
@@ -158,7 +158,7 @@ gst_pulse_fill_sample_spec (GstRingBufferSpec * spec, pa_sample_spec * ss)
 
 #ifdef HAVE_PULSE_1_0
 gboolean
-gst_pulse_fill_format_info (GstRingBufferSpec * spec, pa_format_info ** f,
+gst_pulse_fill_format_info (GstAudioRingBufferSpec * spec, pa_format_info ** f,
     guint * channels)
 {
   pa_format_info *format;
@@ -234,7 +234,7 @@ gst_pulse_client_name (void)
 
 pa_channel_map *
 gst_pulse_gst_to_channel_map (pa_channel_map * map,
-    const GstRingBufferSpec * spec)
+    const GstAudioRingBufferSpec * spec)
 {
   int i;
   GstAudioChannelPosition *pos;
@@ -268,9 +268,9 @@ gst_pulse_gst_to_channel_map (pa_channel_map * map,
   return map;
 }
 
-GstRingBufferSpec *
+GstAudioRingBufferSpec *
 gst_pulse_channel_map_to_gst (const pa_channel_map * map,
-    GstRingBufferSpec * spec)
+    GstAudioRingBufferSpec * spec)
 {
   int i;
   GstAudioChannelPosition *pos;

@@ -83,7 +83,7 @@ static gboolean gst_pulsesrc_open (GstAudioSrc * asrc);
 static gboolean gst_pulsesrc_close (GstAudioSrc * asrc);
 
 static gboolean gst_pulsesrc_prepare (GstAudioSrc * asrc,
-    GstRingBufferSpec * spec);
+    GstAudioRingBufferSpec * spec);
 
 static gboolean gst_pulsesrc_unprepare (GstAudioSrc * asrc);
 
@@ -810,12 +810,12 @@ gst_pulsesrc_create_stream (GstPulseSrc * pulsesrc, GstCaps * caps)
   pa_channel_map channel_map;
   GstStructure *s;
   gboolean need_channel_layout = FALSE;
-  GstRingBufferSpec spec;
+  GstAudioRingBufferSpec spec;
   const gchar *name;
 
-  memset (&spec, 0, sizeof (GstRingBufferSpec));
+  memset (&spec, 0, sizeof (GstAudioRingBufferSpec));
   spec.latency_time = GST_SECOND;
-  if (!gst_ring_buffer_parse_caps (&spec, caps))
+  if (!gst_audio_ring_buffer_parse_caps (&spec, caps))
     goto invalid_caps;
 
   /* Keep the refcount of the caps at 1 to make them writable */
@@ -980,7 +980,7 @@ no_nego_needed:
 }
 
 static gboolean
-gst_pulsesrc_prepare (GstAudioSrc * asrc, GstRingBufferSpec * spec)
+gst_pulsesrc_prepare (GstAudioSrc * asrc, GstAudioRingBufferSpec * spec)
 {
   pa_buffer_attr wanted;
   const pa_buffer_attr *actual;
