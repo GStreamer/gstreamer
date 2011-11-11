@@ -22,7 +22,6 @@
 #define __GST_IIR_EQUALIZER__
 
 #include <gst/audio/gstaudiofilter.h>
-#include <gst/audio/gstringbuffer.h>
 
 typedef struct _GstIirEqualizer GstIirEqualizer;
 typedef struct _GstIirEqualizerClass GstIirEqualizerClass;
