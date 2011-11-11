@@ -295,7 +295,7 @@ gsize       gst_buffer_memset              (GstBuffer *buffer, gsize offset,
                                             guint8 val, gsize size);
 
 gsize       gst_buffer_get_sizes           (GstBuffer *buffer, gsize *offset, gsize *maxsize);
-void        gst_buffer_resize              (GstBuffer *buffer, gssize offset, gsize size);
+void        gst_buffer_resize              (GstBuffer *buffer, gssize offset, gssize size);
 
 /**
  * gst_buffer_get_size:
@@ -317,7 +317,7 @@ void        gst_buffer_resize              (GstBuffer *buffer, gssize offset, gs
 /* getting memory */
 gpointer    gst_buffer_map                 (GstBuffer *buffer, gsize *size, gsize *maxsize,
                                             GstMapFlags flags);
-gboolean    gst_buffer_unmap               (GstBuffer *buffer, gpointer data, gsize size);
+gboolean    gst_buffer_unmap               (GstBuffer *buffer, gpointer data, gssize size);
 
 /* refcounting */
 /**

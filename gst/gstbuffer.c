@@ -456,7 +456,8 @@ gst_buffer_new (void)
 
 /**
  * gst_buffer_new_allocate:
- * @allocator: the #GstAllocator to use
+ * @allocator: (allow-none): the #GstAllocator to use, or NULL to use the
+ *     default allocator
  * @size: the size in bytes of the new buffer's data.
  * @align: the alignment of the buffer memory
  *
@@ -807,12 +808,12 @@ gst_buffer_get_sizes (GstBuffer * buffer, gsize * offset, gsize * maxsize)
  * gst_buffer_resize:
  * @buffer: a #GstBuffer.
  * @offset: the offset adjustement
- * @size: the new size
+ * @size: the new size or -1 to just adjust the offset
  *
  * Set the total size of the buffer
  */
 void
-gst_buffer_resize (GstBuffer * buffer, gssize offset, gsize size)
+gst_buffer_resize (GstBuffer * buffer, gssize offset, gssize size)
 {
   guint len;
   guint i;
@@ -824,8 +825,8 @@ gst_buffer_resize (GstBuffer * buffer, gssize offset, gsize size)
   bufsize = gst_buffer_get_sizes (buffer, &bufoffs, &bufmax);
 
   GST_CAT_LOG (GST_CAT_BUFFER, "trim %p %" G_GSSIZE_FORMAT "-%" G_GSIZE_FORMAT
-      " size:%" G_GSIZE_FORMAT " offs:%" G_GSIZE_FORMAT " max:%" G_GSIZE_FORMAT,
-      buffer, offset, size, bufsize, bufoffs, bufmax);
+      " size:%" G_GSIZE_FORMAT " offs:%" G_GSSIZE_FORMAT " max:%"
+      G_GSIZE_FORMAT, buffer, offset, size, bufsize, bufoffs, bufmax);
 
   /* we can't go back further than the current offset or past the end of the
    * buffer */
@@ -987,7 +988,7 @@ not_writable:
  * gst_buffer_unmap:
  * @buffer: a #GstBuffer.
  * @data: the previously mapped data
- * @size: the size of @data
+ * @size: the size of @data, or -1
  *
  * Release the memory previously mapped with gst_buffer_map(). Pass -1 to size
  * if no update is needed.
@@ -996,12 +997,13 @@ not_writable:
  * than the maxsize of the memory.
  */
 gboolean
-gst_buffer_unmap (GstBuffer * buffer, gpointer data, gsize size)
+gst_buffer_unmap (GstBuffer * buffer, gpointer data, gssize size)
 {
   gboolean result;
   guint len;
 
   g_return_val_if_fail (GST_IS_BUFFER (buffer), FALSE);
+  g_return_val_if_fail (size >= -1, FALSE);
 
   len = GST_BUFFER_MEM_LEN (buffer);
 

@@ -143,7 +143,7 @@ typedef gsize       (*GstMemoryGetSizesFunction)  (GstMemory *mem, gsize *offset
  * GstMemoryResizeFunction:
  * @mem: a #GstMemory
  * @offset: the offset adjustement
- * @size: the new size
+ * @size: the new size or -1 to just adjust the offset
  *
  * Adjust the size and offset of @mem. @offset bytes will be adjusted from the
  * current first byte in @mem as retrieved with gst_memory_map() and the new
@@ -151,7 +151,7 @@ typedef gsize       (*GstMemoryGetSizesFunction)  (GstMemory *mem, gsize *offset
  *
  * @size can be set to -1, which will only adjust the offset.
  */
-typedef void        (*GstMemoryResizeFunction)    (GstMemory *mem, gssize offset, gsize size);
+typedef void        (*GstMemoryResizeFunction)    (GstMemory *mem, gssize offset, gssize size);
 
 /**
  * GstMemoryMapFunction:
@@ -175,7 +175,7 @@ typedef gpointer    (*GstMemoryMapFunction)       (GstMemory *mem, gsize *size, 
  * GstMemoryUnmapFunction:
  * @mem: a #GstMemory
  * @data: the data pointer
- * @size: the new size
+ * @size: the new size, or -1 to not modify the size
  *
  * Return the pointer previously retrieved with gst_memory_map() and adjust the
  * size of the memory with @size. @size can optionally be set to -1 to not
@@ -183,7 +183,7 @@ typedef gpointer    (*GstMemoryMapFunction)       (GstMemory *mem, gsize *size, 
  *
  * Returns: %TRUE on success.
  */
-typedef gboolean    (*GstMemoryUnmapFunction)     (GstMemory *mem, gpointer data, gsize size);
+typedef gboolean    (*GstMemoryUnmapFunction)     (GstMemory *mem, gpointer data, gssize size);
 
 /**
  * GstMemoryFreeFunction:
@@ -198,7 +198,7 @@ typedef void        (*GstMemoryFreeFunction)      (GstMemory *mem);
  * GstMemoryCopyFunction:
  * @mem: a #GstMemory
  * @offset: an offset
- * @size: a size
+ * @size: a size or -1
  *
  * Copy @size bytes from @mem starting at @offset and return them wrapped in a
  * new GstMemory object.
@@ -207,13 +207,13 @@ typedef void        (*GstMemoryFreeFunction)      (GstMemory *mem);
  * Returns: a new #GstMemory object wrapping a copy of the requested region in
  * @mem.
  */
-typedef GstMemory * (*GstMemoryCopyFunction)      (GstMemory *mem, gssize offset, gsize size);
+typedef GstMemory * (*GstMemoryCopyFunction)      (GstMemory *mem, gssize offset, gssize size);
 
 /**
  * GstMemoryShareFunction:
  * @mem: a #GstMemory
  * @offset: an offset
- * @size: a size
+ * @size: a size or -1
  *
  * Share @size bytes from @mem starting at @offset and return them wrapped in a
  * new GstMemory object. If @size is set to -1, all bytes starting at @offset are
@@ -221,7 +221,7 @@ typedef GstMemory * (*GstMemoryCopyFunction)      (GstMemory *mem, gssize offset
  *
  * Returns: a new #GstMemory object sharing the requested region in @mem.
  */
-typedef GstMemory * (*GstMemoryShareFunction)     (GstMemory *mem, gssize offset, gsize size);
+typedef GstMemory * (*GstMemoryShareFunction)     (GstMemory *mem, gssize offset, gssize size);
 
 /**
  * GstMemoryIsSpanFunction:
@@ -291,11 +291,11 @@ void        gst_memory_resize     (GstMemory *mem, gssize offset, gsize size);
 /* retrieving data */
 gpointer    gst_memory_map        (GstMemory *mem, gsize *size, gsize *maxsize,
                                    GstMapFlags flags);
-gboolean    gst_memory_unmap      (GstMemory *mem, gpointer data, gsize size);
+gboolean    gst_memory_unmap      (GstMemory *mem, gpointer data, gssize size);
 
 /* copy and subregions */
-GstMemory * gst_memory_copy       (GstMemory *mem, gssize offset, gsize size);
-GstMemory * gst_memory_share      (GstMemory *mem, gssize offset, gsize size);
+GstMemory * gst_memory_copy       (GstMemory *mem, gssize offset, gssize size);
+GstMemory * gst_memory_share      (GstMemory *mem, gssize offset, gssize size);
 
 /* span memory */
 gboolean    gst_memory_is_span    (GstMemory *mem1, GstMemory *mem2, gsize *offset);

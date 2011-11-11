@@ -278,7 +278,7 @@ _default_mem_is_span (GstMemoryDefault * mem1, GstMemoryDefault * mem2,
 }
 
 static GstMemory *
-_fallback_copy (GstMemory * mem, gssize offset, gsize size)
+_fallback_copy (GstMemory * mem, gssize offset, gssize size)
 {
   GstMemory *copy;
   guint8 *data, *dest;
@@ -465,7 +465,7 @@ gst_memory_map (GstMemory * mem, gsize * size, gsize * maxsize,
  * gst_memory_unmap:
  * @mem: a #GstMemory
  * @data: data to unmap
- * @size: new size of @mem
+ * @size: new size of @mem, or -1
  *
  * Release the memory pointer obtained with gst_memory_map() and set the size of
  * the memory to @size. @size can be set to -1 when the size should not be
@@ -474,7 +474,7 @@ gst_memory_map (GstMemory * mem, gsize * size, gsize * maxsize,
  * Returns: TRUE when the memory was release successfully.
  */
 gboolean
-gst_memory_unmap (GstMemory * mem, gpointer data, gsize size)
+gst_memory_unmap (GstMemory * mem, gpointer data, gssize size)
 {
   g_return_val_if_fail (mem != NULL, FALSE);
 
@@ -485,7 +485,7 @@ gst_memory_unmap (GstMemory * mem, gpointer data, gsize size)
  * gst_memory_copy:
  * @mem: a #GstMemory
  * @offset: an offset to copy
- * @size: size to copy
+ * @size: size to copy or -1 to copy all bytes from offset
  *
  * Return a copy of @size bytes from @mem starting from @offset. This copy is
  * guaranteed to be writable. @size can be set to -1 to return a copy all bytes
@@ -494,7 +494,7 @@ gst_memory_unmap (GstMemory * mem, gpointer data, gsize size)
  * Returns: a new #GstMemory.
  */
 GstMemory *
-gst_memory_copy (GstMemory * mem, gssize offset, gsize size)
+gst_memory_copy (GstMemory * mem, gssize offset, gssize size)
 {
   g_return_val_if_fail (mem != NULL, NULL);
 
@@ -505,17 +505,17 @@ gst_memory_copy (GstMemory * mem, gssize offset, gsize size)
  * gst_memory_share:
  * @mem: a #GstMemory
  * @offset: an offset to share
- * @size: size to share
+ * @size: size to share or -1 to share bytes from offset
  *
- * Return a shared copy of @size bytes from @mem starting from @offset. No memory
- * copy is performed and the memory region is simply shared. The result is
- * guaranteed to be not-writable. @size can be set to -1 to return a share all bytes
- * from @offset.
+ * Return a shared copy of @size bytes from @mem starting from @offset. No
+ * memory copy is performed and the memory region is simply shared. The result
+ * is guaranteed to be not-writable. @size can be set to -1 to return a share
+ * all bytes from @offset.
  *
  * Returns: a new #GstMemory.
  */
 GstMemory *
-gst_memory_share (GstMemory * mem, gssize offset, gsize size)
+gst_memory_share (GstMemory * mem, gssize offset, gssize size)
 {
   g_return_val_if_fail (mem != NULL, NULL);
 
