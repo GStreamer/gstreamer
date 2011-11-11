@@ -2958,7 +2958,7 @@ gst_pulsesink_change_state (GstElement * element, GstStateChange transition)
 
   switch (transition) {
     case GST_STATE_CHANGE_PAUSED_TO_READY:
-      /* format_lost is reset in release() in baseaudiosink */
+      /* format_lost is reset in release() in audiobasesink */
       gst_element_post_message (element,
           gst_message_new_clock_lost (GST_OBJECT_CAST (element),
               GST_AUDIO_BASE_SINK (pulsesink)->provided_clock));
@@ -2983,7 +2983,7 @@ mainloop_failed:
 state_failure:
   {
     if (transition == GST_STATE_CHANGE_NULL_TO_READY) {
-      /* Clear the PA mainloop if baseaudiosink failed to open the ring_buffer */
+      /* Clear the PA mainloop if audiobasesink failed to open the ring_buffer */
       g_assert (mainloop);
       gst_pulsesink_release_mainloop (pulsesink);
     }

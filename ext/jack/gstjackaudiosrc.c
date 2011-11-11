@@ -700,7 +700,7 @@ gst_jack_audio_src_class_init (GstJackAudioSrcClass * klass)
   GObjectClass *gobject_class;
   GstElementClass *gstelement_class;
   GstBaseSrcClass *gstbasesrc_class;
-  GstAudioBaseSrcClass *gstbaseaudiosrc_class;
+  GstAudioBaseSrcClass *gstaudiobasesrc_class;
 
   GST_DEBUG_CATEGORY_INIT (gst_jack_audio_src_debug, "jacksrc", 0,
       "jacksrc element");
@@ -708,7 +708,7 @@ gst_jack_audio_src_class_init (GstJackAudioSrcClass * klass)
   gobject_class = (GObjectClass *) klass;
   gstelement_class = (GstElementClass *) klass;
   gstbasesrc_class = (GstBaseSrcClass *) klass;
-  gstbaseaudiosrc_class = (GstAudioBaseSrcClass *) klass;
+  gstaudiobasesrc_class = (GstAudioBaseSrcClass *) klass;
 
   gobject_class->dispose = gst_jack_audio_src_dispose;
   gobject_class->set_property = gst_jack_audio_src_set_property;
@@ -739,7 +739,7 @@ gst_jack_audio_src_class_init (GstJackAudioSrcClass * klass)
       "Tristan Matthews <tristan@sat.qc.ca>");
 
   gstbasesrc_class->get_caps = GST_DEBUG_FUNCPTR (gst_jack_audio_src_getcaps);
-  gstbaseaudiosrc_class->create_ringbuffer =
+  gstaudiobasesrc_class->create_ringbuffer =
       GST_DEBUG_FUNCPTR (gst_jack_audio_src_create_ringbuffer);
 
   /* ref class from a thread-safe context to work around missing bit of

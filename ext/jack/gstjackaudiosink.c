@@ -679,7 +679,7 @@ gst_jack_audio_sink_class_init (GstJackAudioSinkClass * klass)
   GObjectClass *gobject_class;
   GstElementClass *gstelement_class;
   GstBaseSinkClass *gstbasesink_class;
-  GstAudioBaseSinkClass *gstbaseaudiosink_class;
+  GstAudioBaseSinkClass *gstaudiobasesink_class;
 
   GST_DEBUG_CATEGORY_INIT (gst_jack_audio_sink_debug, "jacksink", 0,
       "jacksink element");
@@ -687,7 +687,7 @@ gst_jack_audio_sink_class_init (GstJackAudioSinkClass * klass)
   gobject_class = (GObjectClass *) klass;
   gstelement_class = (GstElementClass *) klass;
   gstbasesink_class = (GstBaseSinkClass *) klass;
-  gstbaseaudiosink_class = (GstAudioBaseSinkClass *) klass;
+  gstaudiobasesink_class = (GstAudioBaseSinkClass *) klass;
 
   gobject_class->dispose = gst_jack_audio_sink_dispose;
   gobject_class->get_property = gst_jack_audio_sink_get_property;
@@ -719,7 +719,7 @@ gst_jack_audio_sink_class_init (GstJackAudioSinkClass * klass)
 
   gstbasesink_class->get_caps = GST_DEBUG_FUNCPTR (gst_jack_audio_sink_getcaps);
 
-  gstbaseaudiosink_class->create_ringbuffer =
+  gstaudiobasesink_class->create_ringbuffer =
       GST_DEBUG_FUNCPTR (gst_jack_audio_sink_create_ringbuffer);
 
   /* ref class from a thread-safe context to work around missing bit of

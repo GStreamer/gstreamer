@@ -25,7 +25,7 @@
 #include <jack/jack.h>
 
 #include <gst/gst.h>
-#include <gst/audio/gstbaseaudiosink.h>
+#include <gst/audio/gstaudiobasesink.h>
 
 #include "gstjack.h"
 #include "gstjackaudioclient.h"
