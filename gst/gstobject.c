@@ -80,9 +80,9 @@
  * gst_object_set_name() and gst_object_get_name() are used to set/get the name
  * of the object.
  *
- *
  * <refsect2>
  * <title>controlled properties</title>
+ * <para>
  * Controlled properties offers a lightweight way to adjust gobject
  * properties over stream-time. It works by using time-stamped value pairs that
  * are queued for element-properties. At run-time the elements continously pull
@@ -128,6 +128,7 @@
  *     start your pipeline
  *   </para></listitem>
  * </orderedlist>
+ * </para>
  * </refsect2>
  *
  * Last reviewed on 2005-11-09 (0.9.4)
