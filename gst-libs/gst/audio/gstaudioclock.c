@@ -23,12 +23,12 @@
 /**
  * SECTION:gstaudioclock
  * @short_description: Helper object for implementing audio clocks
- * @see_also: #GstBaseAudioSink, #GstSystemClock
+ * @see_also: #GstAudioBaseSink, #GstSystemClock
  *
  * #GstAudioClock makes it easy for elements to implement a #GstClock, they
  * simply need to provide a function that returns the current clock time.
  *
- * This object is internally used to implement the clock in #GstBaseAudioSink.
+ * This object is internally used to implement the clock in #GstAudioBaseSink.
  *
  * Last reviewed on 2006-09-27 (0.10.12)
  */

@@ -316,7 +316,7 @@ static GstStateChangeReturn
 gst_alsasrc_change_state (GstElement * element, GstStateChange transition)
 {
   GstStateChangeReturn ret = GST_STATE_CHANGE_SUCCESS;
-  GstBaseAudioSrc *src = GST_BASE_AUDIO_SRC (element);
+  GstAudioBaseSrc *src = GST_AUDIO_BASE_SRC (element);
   GstAlsaSrc *asrc = GST_ALSA_SRC (element);
   GstClock *clk;
 

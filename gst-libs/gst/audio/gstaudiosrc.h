@@ -44,7 +44,7 @@ typedef struct _GstAudioSrcClass GstAudioSrcClass;
  * Base class for simple audio sources.
  */
 struct _GstAudioSrc {
-  GstBaseAudioSrc        element;
+  GstAudioBaseSrc        element;
 
   /*< private >*/ /* with LOCK */
   GThread   *thread;
@@ -68,7 +68,7 @@ struct _GstAudioSrc {
  * functionality.
  */
 struct _GstAudioSrcClass {
-  GstBaseAudioSrcClass parent_class;
+  GstAudioBaseSrcClass parent_class;
 
   /* vtable */
 

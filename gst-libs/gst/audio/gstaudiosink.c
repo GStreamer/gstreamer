@@ -23,7 +23,7 @@
 /**
  * SECTION:gstaudiosink
  * @short_description: Simple base class for audio sinks
- * @see_also: #GstBaseAudioSink, #GstAudioRingBuffer, #GstAudioSink.
+ * @see_also: #GstAudioBaseSink, #GstAudioRingBuffer, #GstAudioSink.
  *
  * This is the most simple base class for audio sinks that only requires
  * subclasses to implement a set of simple functions:
@@ -61,7 +61,7 @@
  * </variablelist>
  *
  * All scheduling of samples and timestamps is done in this base class
- * together with #GstBaseAudioSink using a default implementation of a
+ * together with #GstAudioBaseSink using a default implementation of a
  * #GstAudioRingBuffer that uses threads.
  *
  * Last reviewed on 2006-09-27 (0.10.12)
@@ -592,17 +592,17 @@ enum
     GST_DEBUG_CATEGORY_INIT (gst_audio_sink_debug, "audiosink", 0, "audiosink element");
 #define gst_audio_sink_parent_class parent_class
 G_DEFINE_TYPE_WITH_CODE (GstAudioSink, gst_audio_sink,
-    GST_TYPE_BASE_AUDIO_SINK, _do_init);
+    GST_TYPE_AUDIO_BASE_SINK, _do_init);
 
-static GstAudioRingBuffer *gst_audio_sink_create_ringbuffer (GstBaseAudioSink *
+static GstAudioRingBuffer *gst_audio_sink_create_ringbuffer (GstAudioBaseSink *
     sink);
 
 static void
 gst_audio_sink_class_init (GstAudioSinkClass * klass)
 {
-  GstBaseAudioSinkClass *gstbaseaudiosink_class;
+  GstAudioBaseSinkClass *gstbaseaudiosink_class;
 
-  gstbaseaudiosink_class = (GstBaseAudioSinkClass *) klass;
+  gstbaseaudiosink_class = (GstAudioBaseSinkClass *) klass;
 
   gstbaseaudiosink_class->create_ringbuffer =
       GST_DEBUG_FUNCPTR (gst_audio_sink_create_ringbuffer);
@@ -616,7 +616,7 @@ gst_audio_sink_init (GstAudioSink * audiosink)
 }
 
 static GstAudioRingBuffer *
-gst_audio_sink_create_ringbuffer (GstBaseAudioSink * sink)
+gst_audio_sink_create_ringbuffer (GstAudioBaseSink * sink)
 {
   GstAudioRingBuffer *buffer;
 

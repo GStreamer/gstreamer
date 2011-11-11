@@ -44,7 +44,7 @@ typedef struct _GstAudioSinkClass GstAudioSinkClass;
  * Opaque #GstAudioSink.
  */
 struct _GstAudioSink {
-  GstBaseAudioSink       element;
+  GstAudioBaseSink       element;
 
   /*< private >*/ /* with LOCK */
   GThread   *thread;
@@ -70,7 +70,7 @@ struct _GstAudioSink {
  * #GstAudioSink class. Override the vmethods to implement functionality.
  */
 struct _GstAudioSinkClass {
-  GstBaseAudioSinkClass parent_class;
+  GstAudioBaseSinkClass parent_class;
 
   /* vtable */
 

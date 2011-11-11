@@ -20,7 +20,7 @@
 /**
  * SECTION:gstaudioringbuffer
  * @short_description: Base class for audio ringbuffer implementations
- * @see_also: #GstBaseAudioSink, #GstAudioSink
+ * @see_also: #GstAudioBaseSink, #GstAudioSink
  *
  * <refsect2>
  * <para>

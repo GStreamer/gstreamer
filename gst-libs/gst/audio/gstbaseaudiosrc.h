@@ -23,8 +23,8 @@
 /* a base class for audio sources.
  */
 
-#ifndef __GST_BASE_AUDIO_SRC_H__
-#define __GST_BASE_AUDIO_SRC_H__
+#ifndef __GST_AUDIO_BASE_SRC_H__
+#define __GST_AUDIO_BASE_SRC_H__
 
 #include <gst/gst.h>
 #include <gst/base/gstpushsrc.h>
@@ -33,60 +33,60 @@
 
 G_BEGIN_DECLS
 
-#define GST_TYPE_BASE_AUDIO_SRC                 (gst_base_audio_src_get_type())
-#define GST_BASE_AUDIO_SRC(obj)                 (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_BASE_AUDIO_SRC,GstBaseAudioSrc))
-#define GST_BASE_AUDIO_SRC_CLASS(klass)         (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_BASE_AUDIO_SRC,GstBaseAudioSrcClass))
-#define GST_BASE_AUDIO_SRC_GET_CLASS(obj)       (G_TYPE_INSTANCE_GET_CLASS ((obj), GST_TYPE_BASE_AUDIO_SRC, GstBaseAudioSrcClass))
-#define GST_IS_BASE_AUDIO_SRC(obj)              (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_BASE_AUDIO_SRC))
-#define GST_IS_BASE_AUDIO_SRC_CLASS(klass)      (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_BASE_AUDIO_SRC))
+#define GST_TYPE_AUDIO_BASE_SRC                 (gst_audio_base_src_get_type())
+#define GST_AUDIO_BASE_SRC(obj)                 (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_AUDIO_BASE_SRC,GstAudioBaseSrc))
+#define GST_AUDIO_BASE_SRC_CLASS(klass)         (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_AUDIO_BASE_SRC,GstAudioBaseSrcClass))
+#define GST_AUDIO_BASE_SRC_GET_CLASS(obj)       (G_TYPE_INSTANCE_GET_CLASS ((obj), GST_TYPE_AUDIO_BASE_SRC, GstAudioBaseSrcClass))
+#define GST_IS_AUDIO_BASE_SRC(obj)              (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_AUDIO_BASE_SRC))
+#define GST_IS_AUDIO_BASE_SRC_CLASS(klass)      (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_AUDIO_BASE_SRC))
 
 /**
- * GST_BASE_AUDIO_SRC_CLOCK:
- * @obj: a #GstBaseAudioSrc
+ * GST_AUDIO_BASE_SRC_CLOCK:
+ * @obj: a #GstAudioBaseSrc
  *
  * Get the #GstClock of @obj.
  */
-#define GST_BASE_AUDIO_SRC_CLOCK(obj)    (GST_BASE_AUDIO_SRC (obj)->clock)
+#define GST_AUDIO_BASE_SRC_CLOCK(obj)    (GST_AUDIO_BASE_SRC (obj)->clock)
 /**
- * GST_BASE_AUDIO_SRC_PAD:
- * @obj: a #GstBaseAudioSrc
+ * GST_AUDIO_BASE_SRC_PAD:
+ * @obj: a #GstAudioBaseSrc
  *
  * Get the source #GstPad of @obj.
  */
-#define GST_BASE_AUDIO_SRC_PAD(obj)      (GST_BASE_SRC (obj)->srcpad)
+#define GST_AUDIO_BASE_SRC_PAD(obj)      (GST_BASE_SRC (obj)->srcpad)
 
-typedef struct _GstBaseAudioSrc GstBaseAudioSrc;
-typedef struct _GstBaseAudioSrcClass GstBaseAudioSrcClass;
-typedef struct _GstBaseAudioSrcPrivate GstBaseAudioSrcPrivate;
+typedef struct _GstAudioBaseSrc GstAudioBaseSrc;
+typedef struct _GstAudioBaseSrcClass GstAudioBaseSrcClass;
+typedef struct _GstAudioBaseSrcPrivate GstAudioBaseSrcPrivate;
 
 /**
- * GstBaseAudioSrcSlaveMethod:
- * @GST_BASE_AUDIO_SRC_SLAVE_RESAMPLE: Resample to match the master clock. 
- * @GST_BASE_AUDIO_SRC_SLAVE_RETIMESTAMP: Retimestamp output buffers with master
+ * GstAudioBaseSrcSlaveMethod:
+ * @GST_AUDIO_BASE_SRC_SLAVE_RESAMPLE: Resample to match the master clock. 
+ * @GST_AUDIO_BASE_SRC_SLAVE_RETIMESTAMP: Retimestamp output buffers with master
  * clock time.
- * @GST_BASE_AUDIO_SRC_SLAVE_SKEW: Adjust capture pointer when master clock
+ * @GST_AUDIO_BASE_SRC_SLAVE_SKEW: Adjust capture pointer when master clock
  * drifts too much.
- * @GST_BASE_AUDIO_SRC_SLAVE_NONE: No adjustment is done. 
+ * @GST_AUDIO_BASE_SRC_SLAVE_NONE: No adjustment is done. 
  *
  * Different possible clock slaving algorithms when the internal audio clock was
  * not selected as the pipeline clock.
  */
 typedef enum
 {
-  GST_BASE_AUDIO_SRC_SLAVE_RESAMPLE,
-  GST_BASE_AUDIO_SRC_SLAVE_RETIMESTAMP,
-  GST_BASE_AUDIO_SRC_SLAVE_SKEW,
-  GST_BASE_AUDIO_SRC_SLAVE_NONE
-} GstBaseAudioSrcSlaveMethod;
+  GST_AUDIO_BASE_SRC_SLAVE_RESAMPLE,
+  GST_AUDIO_BASE_SRC_SLAVE_RETIMESTAMP,
+  GST_AUDIO_BASE_SRC_SLAVE_SKEW,
+  GST_AUDIO_BASE_SRC_SLAVE_NONE
+} GstAudioBaseSrcSlaveMethod;
 
-#define GST_TYPE_BASE_AUDIO_SRC_SLAVE_METHOD (gst_base_audio_src_slave_method_get_type ())
+#define GST_TYPE_AUDIO_BASE_SRC_SLAVE_METHOD (gst_audio_base_src_slave_method_get_type ())
 
 /**
- * GstBaseAudioSrc:
+ * GstAudioBaseSrc:
  *
- * Opaque #GstBaseAudioSrc.
+ * Opaque #GstAudioBaseSrc.
  */
-struct _GstBaseAudioSrc {
+struct _GstAudioBaseSrc {
   GstPushSrc          element;
 
   /*< protected >*/ /* with LOCK */
@@ -104,44 +104,44 @@ struct _GstBaseAudioSrc {
   GstClock           *clock;
 
   /*< private >*/
-  GstBaseAudioSrcPrivate *priv;
+  GstAudioBaseSrcPrivate *priv;
 
   gpointer _gst_reserved[GST_PADDING - 1];
 };
 
 /**
- * GstBaseAudioSrcClass:
+ * GstAudioBaseSrcClass:
  * @parent_class: the parent class.
  * @create_ringbuffer: create and return a #GstAudioRingBuffer to read from.
  *
- * #GstBaseAudioSrc class. Override the vmethod to implement
+ * #GstAudioBaseSrc class. Override the vmethod to implement
  * functionality.
  */
-struct _GstBaseAudioSrcClass {
+struct _GstAudioBaseSrcClass {
   GstPushSrcClass      parent_class;
 
   /* subclass ringbuffer allocation */
-  GstAudioRingBuffer* (*create_ringbuffer)  (GstBaseAudioSrc *src);
+  GstAudioRingBuffer* (*create_ringbuffer)  (GstAudioBaseSrc *src);
 
   /*< private >*/
   gpointer _gst_reserved[GST_PADDING];
 };
 
-GType gst_base_audio_src_get_type(void);
-GType gst_base_audio_src_slave_method_get_type (void);
+GType gst_audio_base_src_get_type(void);
+GType gst_audio_base_src_slave_method_get_type (void);
 
 GstAudioRingBuffer *
-           gst_base_audio_src_create_ringbuffer        (GstBaseAudioSrc *src);
+           gst_audio_base_src_create_ringbuffer        (GstAudioBaseSrc *src);
 
-void       gst_base_audio_src_set_provide_clock        (GstBaseAudioSrc *src, gboolean provide);
-gboolean   gst_base_audio_src_get_provide_clock        (GstBaseAudioSrc *src);
+void       gst_audio_base_src_set_provide_clock        (GstAudioBaseSrc *src, gboolean provide);
+gboolean   gst_audio_base_src_get_provide_clock        (GstAudioBaseSrc *src);
 
-void       gst_base_audio_src_set_slave_method         (GstBaseAudioSrc *src,
-                                                        GstBaseAudioSrcSlaveMethod method);
-GstBaseAudioSrcSlaveMethod
-           gst_base_audio_src_get_slave_method         (GstBaseAudioSrc *src);
+void       gst_audio_base_src_set_slave_method         (GstAudioBaseSrc *src,
+                                                        GstAudioBaseSrcSlaveMethod method);
+GstAudioBaseSrcSlaveMethod
+           gst_audio_base_src_get_slave_method         (GstAudioBaseSrc *src);
 
 
 G_END_DECLS
 
-#endif /* __GST_BASE_AUDIO_SRC_H__ */
+#endif /* __GST_AUDIO_BASE_SRC_H__ */

@@ -46,8 +46,8 @@
  * the methods in GstBaseSink and this class.
  */
 
-#ifndef __GST_BASE_AUDIO_SINK_H__
-#define __GST_BASE_AUDIO_SINK_H__
+#ifndef __GST_AUDIO_BASE_SINK_H__
+#define __GST_AUDIO_BASE_SINK_H__
 
 #include <gst/gst.h>
 #include <gst/base/gstbasesink.h>
@@ -56,57 +56,57 @@
 
 G_BEGIN_DECLS
 
-#define GST_TYPE_BASE_AUDIO_SINK                (gst_base_audio_sink_get_type())
-#define GST_BASE_AUDIO_SINK(obj)                (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_BASE_AUDIO_SINK,GstBaseAudioSink))
-#define GST_BASE_AUDIO_SINK_CLASS(klass)        (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_BASE_AUDIO_SINK,GstBaseAudioSinkClass))
-#define GST_BASE_AUDIO_SINK_GET_CLASS(obj)      (G_TYPE_INSTANCE_GET_CLASS ((obj), GST_TYPE_BASE_AUDIO_SINK, GstBaseAudioSinkClass))
-#define GST_IS_BASE_AUDIO_SINK(obj)             (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_BASE_AUDIO_SINK))
-#define GST_IS_BASE_AUDIO_SINK_CLASS(klass)     (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_BASE_AUDIO_SINK))
+#define GST_TYPE_AUDIO_BASE_SINK                (gst_audio_base_sink_get_type())
+#define GST_AUDIO_BASE_SINK(obj)                (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_AUDIO_BASE_SINK,GstAudioBaseSink))
+#define GST_AUDIO_BASE_SINK_CLASS(klass)        (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_AUDIO_BASE_SINK,GstAudioBaseSinkClass))
+#define GST_AUDIO_BASE_SINK_GET_CLASS(obj)      (G_TYPE_INSTANCE_GET_CLASS ((obj), GST_TYPE_AUDIO_BASE_SINK, GstAudioBaseSinkClass))
+#define GST_IS_AUDIO_BASE_SINK(obj)             (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_AUDIO_BASE_SINK))
+#define GST_IS_AUDIO_BASE_SINK_CLASS(klass)     (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_AUDIO_BASE_SINK))
 
 /**
- * GST_BASE_AUDIO_SINK_CLOCK:
- * @obj: a #GstBaseAudioSink
+ * GST_AUDIO_BASE_SINK_CLOCK:
+ * @obj: a #GstAudioBaseSink
  *
  * Get the #GstClock of @obj.
  */
-#define GST_BASE_AUDIO_SINK_CLOCK(obj)   (GST_BASE_AUDIO_SINK (obj)->clock)
+#define GST_AUDIO_BASE_SINK_CLOCK(obj)   (GST_AUDIO_BASE_SINK (obj)->clock)
 /**
- * GST_BASE_AUDIO_SINK_PAD:
- * @obj: a #GstBaseAudioSink
+ * GST_AUDIO_BASE_SINK_PAD:
+ * @obj: a #GstAudioBaseSink
  *
  * Get the sink #GstPad of @obj.
  */
-#define GST_BASE_AUDIO_SINK_PAD(obj)     (GST_BASE_SINK (obj)->sinkpad)
+#define GST_AUDIO_BASE_SINK_PAD(obj)     (GST_BASE_SINK (obj)->sinkpad)
 
 /**
- * GstBaseAudioSinkSlaveMethod:
- * @GST_BASE_AUDIO_SINK_SLAVE_RESAMPLE: Resample to match the master clock
- * @GST_BASE_AUDIO_SINK_SLAVE_SKEW: Adjust playout pointer when master clock
+ * GstAudioBaseSinkSlaveMethod:
+ * @GST_AUDIO_BASE_SINK_SLAVE_RESAMPLE: Resample to match the master clock
+ * @GST_AUDIO_BASE_SINK_SLAVE_SKEW: Adjust playout pointer when master clock
  * drifts too much.
- * @GST_BASE_AUDIO_SINK_SLAVE_NONE: No adjustment is done.
+ * @GST_AUDIO_BASE_SINK_SLAVE_NONE: No adjustment is done.
  *
  * Different possible clock slaving algorithms used when the internal audio
  * clock is not selected as the pipeline master clock.
  */
 typedef enum
 {
-  GST_BASE_AUDIO_SINK_SLAVE_RESAMPLE,
-  GST_BASE_AUDIO_SINK_SLAVE_SKEW,
-  GST_BASE_AUDIO_SINK_SLAVE_NONE
-} GstBaseAudioSinkSlaveMethod;
+  GST_AUDIO_BASE_SINK_SLAVE_RESAMPLE,
+  GST_AUDIO_BASE_SINK_SLAVE_SKEW,
+  GST_AUDIO_BASE_SINK_SLAVE_NONE
+} GstAudioBaseSinkSlaveMethod;
 
-#define GST_TYPE_BASE_AUDIO_SINK_SLAVE_METHOD (gst_base_audio_sink_slave_method_get_type ())
+#define GST_TYPE_AUDIO_BASE_SINK_SLAVE_METHOD (gst_audio_base_sink_slave_method_get_type ())
 
-typedef struct _GstBaseAudioSink GstBaseAudioSink;
-typedef struct _GstBaseAudioSinkClass GstBaseAudioSinkClass;
-typedef struct _GstBaseAudioSinkPrivate GstBaseAudioSinkPrivate;
+typedef struct _GstAudioBaseSink GstAudioBaseSink;
+typedef struct _GstAudioBaseSinkClass GstAudioBaseSinkClass;
+typedef struct _GstAudioBaseSinkPrivate GstAudioBaseSinkPrivate;
 
 /**
- * GstBaseAudioSink:
+ * GstAudioBaseSink:
  *
- * Opaque #GstBaseAudioSink.
+ * Opaque #GstAudioBaseSink.
  */
-struct _GstBaseAudioSink {
+struct _GstAudioBaseSink {
   GstBaseSink         element;
 
   /*< protected >*/ /* with LOCK */
@@ -128,13 +128,13 @@ struct _GstBaseAudioSink {
   gboolean            eos_rendering;
 
   /*< private >*/
-  GstBaseAudioSinkPrivate *priv;
+  GstAudioBaseSinkPrivate *priv;
 
   gpointer _gst_reserved[GST_PADDING];
 };
 
 /**
- * GstBaseAudioSinkClass:
+ * GstAudioBaseSinkClass:
  * @parent_class: the parent class.
  * @create_ringbuffer: create and return a #GstAudioRingBuffer to write to.
  * @payload: payload data in a format suitable to write to the sink. If no
@@ -142,50 +142,50 @@ struct _GstBaseAudioSink {
  *           buffer, else returns the payloaded buffer with all other metadata
  *           copied. (Since: 0.10.36)
  *
- * #GstBaseAudioSink class. Override the vmethod to implement
+ * #GstAudioBaseSink class. Override the vmethod to implement
  * functionality.
  */
-struct _GstBaseAudioSinkClass {
+struct _GstAudioBaseSinkClass {
   GstBaseSinkClass     parent_class;
 
   /* subclass ringbuffer allocation */
-  GstAudioRingBuffer* (*create_ringbuffer)  (GstBaseAudioSink *sink);
+  GstAudioRingBuffer* (*create_ringbuffer)  (GstAudioBaseSink *sink);
 
   /* subclass payloader */
-  GstBuffer*          (*payload)            (GstBaseAudioSink *sink,
+  GstBuffer*          (*payload)            (GstAudioBaseSink *sink,
                                              GstBuffer        *buffer);
   /*< private >*/
   gpointer _gst_reserved[GST_PADDING];
 };
 
-GType gst_base_audio_sink_get_type(void);
-GType gst_base_audio_sink_slave_method_get_type (void);
+GType gst_audio_base_sink_get_type(void);
+GType gst_audio_base_sink_slave_method_get_type (void);
 
 GstAudioRingBuffer *
-           gst_base_audio_sink_create_ringbuffer       (GstBaseAudioSink *sink);
+           gst_audio_base_sink_create_ringbuffer       (GstAudioBaseSink *sink);
 
-void       gst_base_audio_sink_set_provide_clock       (GstBaseAudioSink *sink, gboolean provide);
-gboolean   gst_base_audio_sink_get_provide_clock       (GstBaseAudioSink *sink);
+void       gst_audio_base_sink_set_provide_clock       (GstAudioBaseSink *sink, gboolean provide);
+gboolean   gst_audio_base_sink_get_provide_clock       (GstAudioBaseSink *sink);
 
-void       gst_base_audio_sink_set_slave_method        (GstBaseAudioSink *sink,
-                                                        GstBaseAudioSinkSlaveMethod method);
-GstBaseAudioSinkSlaveMethod
-           gst_base_audio_sink_get_slave_method        (GstBaseAudioSink *sink);
+void       gst_audio_base_sink_set_slave_method        (GstAudioBaseSink *sink,
+                                                        GstAudioBaseSinkSlaveMethod method);
+GstAudioBaseSinkSlaveMethod
+           gst_audio_base_sink_get_slave_method        (GstAudioBaseSink *sink);
 
-void       gst_base_audio_sink_set_drift_tolerance     (GstBaseAudioSink *sink,
+void       gst_audio_base_sink_set_drift_tolerance     (GstAudioBaseSink *sink,
                                                         gint64 drift_tolerance);
-gint64     gst_base_audio_sink_get_drift_tolerance     (GstBaseAudioSink *sink);
+gint64     gst_audio_base_sink_get_drift_tolerance     (GstAudioBaseSink *sink);
 
-void       gst_base_audio_sink_set_alignment_threshold (GstBaseAudioSink * sink,
+void       gst_audio_base_sink_set_alignment_threshold (GstAudioBaseSink * sink,
                                                         GstClockTime alignment_threshold);
 GstClockTime
-           gst_base_audio_sink_get_alignment_threshold (GstBaseAudioSink * sink);
+           gst_audio_base_sink_get_alignment_threshold (GstAudioBaseSink * sink);
 
-void       gst_base_audio_sink_set_discont_wait        (GstBaseAudioSink * sink,
+void       gst_audio_base_sink_set_discont_wait        (GstAudioBaseSink * sink,
                                                         GstClockTime discont_wait);
 GstClockTime
-           gst_base_audio_sink_get_discont_wait        (GstBaseAudioSink * sink);
+           gst_audio_base_sink_get_discont_wait        (GstAudioBaseSink * sink);
 
 G_END_DECLS
 
-#endif /* __GST_BASE_AUDIO_SINK_H__ */
+#endif /* __GST_AUDIO_BASE_SINK_H__ */

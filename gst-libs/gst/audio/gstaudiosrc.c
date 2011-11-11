@@ -23,7 +23,7 @@
 /**
  * SECTION:gstaudiosrc
  * @short_description: Simple base class for audio sources
- * @see_also: #GstBaseAudioSrc, #GstAudioRingBuffer, #GstAudioSrc.
+ * @see_also: #GstAudioBaseSrc, #GstAudioRingBuffer, #GstAudioSrc.
  *
  * This is the most simple base class for audio sources that only requires
  * subclasses to implement a set of simple functions:
@@ -61,7 +61,7 @@
  * </variablelist>
  *
  * All scheduling of samples and timestamps is done in this base class
- * together with #GstBaseAudioSrc using a default implementation of a
+ * together with #GstAudioBaseSrc using a default implementation of a
  * #GstAudioRingBuffer that uses threads.
  *
  * Last reviewed on 2006-09-27 (0.10.12)
@@ -505,17 +505,17 @@ enum
     GST_DEBUG_CATEGORY_INIT (gst_audio_src_debug, "audiosrc", 0, "audiosrc element");
 #define gst_audio_src_parent_class parent_class
 G_DEFINE_TYPE_WITH_CODE (GstAudioSrc, gst_audio_src,
-    GST_TYPE_BASE_AUDIO_SRC, _do_init);
+    GST_TYPE_AUDIO_BASE_SRC, _do_init);
 
-static GstAudioRingBuffer *gst_audio_src_create_ringbuffer (GstBaseAudioSrc *
+static GstAudioRingBuffer *gst_audio_src_create_ringbuffer (GstAudioBaseSrc *
     src);
 
 static void
 gst_audio_src_class_init (GstAudioSrcClass * klass)
 {
-  GstBaseAudioSrcClass *gstbaseaudiosrc_class;
+  GstAudioBaseSrcClass *gstbaseaudiosrc_class;
 
-  gstbaseaudiosrc_class = (GstBaseAudioSrcClass *) klass;
+  gstbaseaudiosrc_class = (GstAudioBaseSrcClass *) klass;
 
   gstbaseaudiosrc_class->create_ringbuffer =
       GST_DEBUG_FUNCPTR (gst_audio_src_create_ringbuffer);
@@ -529,7 +529,7 @@ gst_audio_src_init (GstAudioSrc * audiosrc)
 }
 
 static GstAudioRingBuffer *
-gst_audio_src_create_ringbuffer (GstBaseAudioSrc * src)
+gst_audio_src_create_ringbuffer (GstAudioBaseSrc * src)
 {
   GstAudioRingBuffer *buffer;
 
