@@ -826,9 +826,16 @@ gst_video_info_from_caps (GstVideoInfo * info, const GstCaps * caps)
   gst_video_info_set_format (info, format, width, height);
 
   if (gst_structure_get_fraction (structure, "framerate", &fps_n, &fps_d)) {
+    if (fps_n == 0) {
+      /* variable framerate */
+      info->flags |= GST_VIDEO_FLAG_VARIABLE_FPS;
+      /* see if we have a max-framerate */
+      gst_structure_get_fraction (structure, "max-framerate", &fps_n, &fps_d);
+    }
     info->fps_n = fps_n;
     info->fps_d = fps_d;
   } else {
+    /* unspecified is variable framerate */
     info->fps_n = 0;
     info->fps_d = 1;
   }
@@ -915,7 +922,6 @@ gst_video_info_to_caps (GstVideoInfo * info)
       "format", G_TYPE_STRING, format,
       "width", G_TYPE_INT, info->width,
       "height", G_TYPE_INT, info->height,
-      "framerate", GST_TYPE_FRACTION, info->fps_n, info->fps_d,
       "pixel-aspect-ratio", GST_TYPE_FRACTION, info->par_n, info->par_d, NULL);
 
   if (info->flags & GST_VIDEO_FLAG_INTERLACED)
@@ -929,6 +935,16 @@ gst_video_info_to_caps (GstVideoInfo * info)
 
   if (info->views > 1)
     gst_caps_set_simple (caps, "views", G_TYPE_INT, info->views, NULL);
+
+  if (info->flags & GST_VIDEO_FLAG_VARIABLE_FPS && info->fps_n != 0) {
+    /* variable fps with a max-framerate */
+    gst_caps_set_simple (caps, "framerate", GST_TYPE_FRACTION, 0, 1,
+        "max-framerate", GST_TYPE_FRACTION, info->fps_n, info->fps_d, NULL);
+  } else {
+    /* no variable fps or no max-framerate */
+    gst_caps_set_simple (caps, "framerate", GST_TYPE_FRACTION,
+        info->fps_n, info->fps_d, NULL);
+  }
 
   return caps;
 }

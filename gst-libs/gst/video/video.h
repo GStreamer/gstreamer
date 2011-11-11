@@ -312,17 +312,20 @@ typedef struct _GstVideoFrame GstVideoFrame;
  * @GST_VIDEO_FLAG_ONEFIELD: one field
  * @GST_VIDEO_FLAG_TELECINE: telecine
  * @GST_VIDEO_FLAG_PROGRESSIVE: video is progressive
+ * @GST_VIDEO_FLAG_VARIABLE_FPS: a variable fps is selected, fps_n and fps_d
+ * denote the maximum fps of the video
  *
  * Extra video flags
  */
 typedef enum {
-  GST_VIDEO_FLAG_NONE        = 0,
-  GST_VIDEO_FLAG_INTERLACED  = (1 << 0),
-  GST_VIDEO_FLAG_TFF         = (1 << 1),
-  GST_VIDEO_FLAG_RFF         = (1 << 2),
-  GST_VIDEO_FLAG_ONEFIELD    = (1 << 3),
-  GST_VIDEO_FLAG_TELECINE    = (1 << 4),
-  GST_VIDEO_FLAG_PROGRESSIVE = (1 << 5)
+  GST_VIDEO_FLAG_NONE         = 0,
+  GST_VIDEO_FLAG_INTERLACED   = (1 << 0),
+  GST_VIDEO_FLAG_TFF          = (1 << 1),
+  GST_VIDEO_FLAG_RFF          = (1 << 2),
+  GST_VIDEO_FLAG_ONEFIELD     = (1 << 3),
+  GST_VIDEO_FLAG_TELECINE     = (1 << 4),
+  GST_VIDEO_FLAG_PROGRESSIVE  = (1 << 5),
+  GST_VIDEO_FLAG_VARIABLE_FPS = (1 << 6)
 } GstVideoFlags;
 
 /**

@@ -12,6 +12,10 @@ Media Types
   framerate, GST_TYPE_FRACTION, default 0/1
     The framerate of the video 0/1 for variable framerate
 
+  max-framerate, GST_TYPE_FRACTION, default as framerate
+    For variable framerates this would be the maximum framerate that
+    is expected. This value is only valid when the framerate is 0/1
+
   pixel-aspect-ratio, GST_TYPE_FRACTION, default 1/1
     The pixel aspect ration of the video
 
