@@ -3,7 +3,7 @@
   <description>Decode DVD LPCM frames into standard PCM</description>
   <filename>../../gst/dvdlpcmdec/.libs/libgstdvdlpcmdec.so</filename>
   <basename>libgstdvdlpcmdec.so</basename>
-  <version>0.10.18.1</version>
+  <version>0.11.0.1</version>
   <license>LGPL</license>
   <source>gst-plugins-ugly</source>
   <package>GStreamer Ugly Plug-ins git</package>
@@ -26,7 +26,7 @@
           <name>src</name>
           <direction>source</direction>
           <presence>always</presence>
-          <details>audio/x-raw-int, width=(int){ 16, 24 }, rate=(int){ 32000, 44100, 48000, 96000 }, channels=(int)[ 1, 8 ], endianness=(int){ 4321 }, depth=(int){ 16, 24 }, signed=(boolean){ true }</details>
+          <details>audio/x-raw, format=(string){ S16BE, S24BE }, rate=(int){ 32000, 44100, 48000, 96000 }, channels=(int)[ 1, 8 ]</details>
         </caps>
       </pads>
     </element>

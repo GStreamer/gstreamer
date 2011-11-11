@@ -3,7 +3,7 @@
   <description>Uses libsidplay to decode .sid files</description>
   <filename>../../ext/sidplay/.libs/libgstsid.so</filename>
   <basename>libgstsid.so</basename>
-  <version>0.10.18.1</version>
+  <version>0.11.0.1</version>
   <license>GPL</license>
   <source>gst-plugins-ugly</source>
   <package>GStreamer Ugly Plug-ins git</package>
@@ -26,7 +26,7 @@
           <name>src</name>
           <direction>source</direction>
           <presence>always</presence>
-          <details>audio/x-raw-int, endianness=(int)1234, signed=(boolean){ true, false }, width=(int){ 8, 16 }, depth=(int){ 8, 16 }, rate=(int)[ 8000, 48000 ], channels=(int)[ 1, 2 ]</details>
+          <details>audio/x-raw, format=(string){ S8, U8, S16LE, U16LE }, rate=(int)[ 8000, 48000 ], channels=(int)[ 1, 2 ]</details>
         </caps>
       </pads>
     </element>

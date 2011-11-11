@@ -3,7 +3,7 @@
   <description>Adaptive Multi-Rate Wide-Band Decoder</description>
   <filename>../../ext/amrwbdec/.libs/libgstamrwbdec.so</filename>
   <basename>libgstamrwbdec.so</basename>
-  <version>0.10.18.1</version>
+  <version>0.11.0.1</version>
   <license>unknown</license>
   <source>gst-plugins-ugly</source>
   <package>GStreamer Ugly Plug-ins git</package>
@@ -26,7 +26,7 @@
           <name>src</name>
           <direction>source</direction>
           <presence>always</presence>
-          <details>audio/x-raw-int, width=(int)16, depth=(int)16, signed=(boolean)true, endianness=(int)1234, rate=(int)16000, channels=(int)1</details>
+          <details>audio/x-raw, format=(string)S16LE, rate=(int)16000, channels=(int)1</details>
         </caps>
       </pads>
     </element>

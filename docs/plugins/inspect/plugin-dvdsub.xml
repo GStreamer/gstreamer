@@ -3,7 +3,7 @@
   <description>DVD subtitle parser and decoder</description>
   <filename>../../gst/dvdsub/.libs/libgstdvdsub.so</filename>
   <basename>libgstdvdsub.so</basename>
-  <version>0.10.18.1</version>
+  <version>0.11.0.1</version>
   <license>LGPL</license>
   <source>gst-plugins-ugly</source>
   <package>GStreamer Ugly Plug-ins git</package>
@@ -26,7 +26,7 @@
           <name>src</name>
           <direction>source</direction>
           <presence>always</presence>
-          <details>video/x-raw-yuv, format=(fourcc)AYUV, width=(int)720, height=(int)576, framerate=(fraction)0/1; video/x-raw-rgb, width=(int)720, height=(int)576, framerate=(fraction)0/1, bpp=(int)32, endianness=(int)4321, red_mask=(int)16711680, green_mask=(int)65280, blue_mask=(int)255, alpha_mask=(int)-16777216, depth=(int)32</details>
+          <details>video/x-raw, format=(string){ AYUV, ARGB }, width=(int)720, height=(int)576, framerate=(fraction)0/1</details>
         </caps>
       </pads>
     </element>

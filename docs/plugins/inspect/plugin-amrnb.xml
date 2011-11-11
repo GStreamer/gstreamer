@@ -3,7 +3,7 @@
   <description>Adaptive Multi-Rate Narrow-Band</description>
   <filename>../../ext/amrnb/.libs/libgstamrnb.so</filename>
   <basename>libgstamrnb.so</basename>
-  <version>0.10.18.1</version>
+  <version>0.11.0.1</version>
   <license>unknown</license>
   <source>gst-plugins-ugly</source>
   <package>GStreamer Ugly Plug-ins git</package>
@@ -26,7 +26,7 @@
           <name>src</name>
           <direction>source</direction>
           <presence>always</presence>
-          <details>audio/x-raw-int, width=(int)16, depth=(int)16, signed=(boolean)true, endianness=(int)1234, rate=(int)8000, channels=(int)1</details>
+          <details>audio/x-raw, format=(string)S16LE, rate=(int)8000, channels=(int)1</details>
         </caps>
       </pads>
     </element>
@@ -41,7 +41,7 @@
           <name>sink</name>
           <direction>sink</direction>
           <presence>always</presence>
-          <details>audio/x-raw-int, width=(int)16, depth=(int)16, signed=(boolean)true, endianness=(int)1234, rate=(int)8000, channels=(int)1</details>
+          <details>audio/x-raw, format=(string)S16LE, rate=(int)8000, channels=(int)1</details>
         </caps>
         <caps>
           <name>src</name>
