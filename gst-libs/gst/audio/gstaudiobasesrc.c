@@ -2,7 +2,7 @@
  * Copyright (C) 1999,2000 Erik Walthinsen <omega@cse.ogi.edu>
  *                    2005 Wim Taymans <wim@fluendo.com>
  *
- * gstbaseaudiosrc.c: 
+ * gstaudiobasesrc.c: 
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -21,7 +21,7 @@
  */
 
 /**
- * SECTION:gstbaseaudiosrc
+ * SECTION:gstaudiobasesrc
  * @short_description: Base class for audio sources
  * @see_also: #GstAudioSrc, #GstAudioRingBuffer.
  *
@@ -38,7 +38,7 @@
 
 #include <string.h>
 
-#include "gstbaseaudiosrc.h"
+#include "gstaudiobasesrc.h"
 
 #include "gst/gst-i18n-plugin.h"
 
@@ -108,8 +108,8 @@ enum
 static void
 _do_init (GType type)
 {
-  GST_DEBUG_CATEGORY_INIT (gst_audio_base_src_debug, "baseaudiosrc", 0,
-      "baseaudiosrc element");
+  GST_DEBUG_CATEGORY_INIT (gst_audio_base_src_debug, "audiobasesrc", 0,
+      "audiobasesrc element");
 
 #ifdef ENABLE_NLS
   GST_DEBUG ("binding text domain %s to locale dir %s", GETTEXT_PACKAGE,
@@ -234,26 +234,26 @@ gst_audio_base_src_class_init (GstAudioBaseSrcClass * klass)
 }
 
 static void
-gst_audio_base_src_init (GstAudioBaseSrc * baseaudiosrc)
+gst_audio_base_src_init (GstAudioBaseSrc * audiobasesrc)
 {
-  baseaudiosrc->priv = GST_AUDIO_BASE_SRC_GET_PRIVATE (baseaudiosrc);
+  audiobasesrc->priv = GST_AUDIO_BASE_SRC_GET_PRIVATE (audiobasesrc);
 
-  baseaudiosrc->buffer_time = DEFAULT_BUFFER_TIME;
-  baseaudiosrc->latency_time = DEFAULT_LATENCY_TIME;
-  baseaudiosrc->priv->provide_clock = DEFAULT_PROVIDE_CLOCK;
-  baseaudiosrc->priv->slave_method = DEFAULT_SLAVE_METHOD;
+  audiobasesrc->buffer_time = DEFAULT_BUFFER_TIME;
+  audiobasesrc->latency_time = DEFAULT_LATENCY_TIME;
+  audiobasesrc->priv->provide_clock = DEFAULT_PROVIDE_CLOCK;
+  audiobasesrc->priv->slave_method = DEFAULT_SLAVE_METHOD;
   /* reset blocksize we use latency time to calculate a more useful 
    * value based on negotiated format. */
-  GST_BASE_SRC (baseaudiosrc)->blocksize = 0;
+  GST_BASE_SRC (audiobasesrc)->blocksize = 0;
 
-  baseaudiosrc->clock = gst_audio_clock_new ("GstAudioSrcClock",
-      (GstAudioClockGetTimeFunc) gst_audio_base_src_get_time, baseaudiosrc,
+  audiobasesrc->clock = gst_audio_clock_new ("GstAudioSrcClock",
+      (GstAudioClockGetTimeFunc) gst_audio_base_src_get_time, audiobasesrc,
       NULL);
 
   /* we are always a live source */
-  gst_base_src_set_live (GST_BASE_SRC (baseaudiosrc), TRUE);
+  gst_base_src_set_live (GST_BASE_SRC (audiobasesrc), TRUE);
   /* we operate in time */
-  gst_base_src_set_format (GST_BASE_SRC (baseaudiosrc), GST_FORMAT_TIME);
+  gst_base_src_set_format (GST_BASE_SRC (audiobasesrc), GST_FORMAT_TIME);
 }
 
 static void

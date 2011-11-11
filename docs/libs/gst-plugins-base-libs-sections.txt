@@ -286,8 +286,8 @@ GST_AUDIO_SRC_GET_CLASS
 </SECTION>
 
 <SECTION>
-<FILE>gstbaseaudiosink</FILE>
-<INCLUDE>gst/audio/gstbaseaudiosink.h</INCLUDE>
+<FILE>gstaudiobasesink</FILE>
+<INCLUDE>gst/audio/gstaudiobasesink.h</INCLUDE>
 GstAudioBaseSink
 GstAudioBaseSinkClass
 GstAudioBaseSinkSlaveMethod
@@ -315,8 +315,8 @@ GST_TYPE_AUDIO_BASE_SINK_SLAVE_METHOD
 </SECTION>
 
 <SECTION>
-<FILE>gstbaseaudiosrc</FILE>
-<INCLUDE>gst/audio/gstbaseaudiosrc.h</INCLUDE>
+<FILE>gstaudiobasesrc</FILE>
+<INCLUDE>gst/audio/gstaudiobasesrc.h</INCLUDE>
 GstAudioBaseSrc
 GstAudioBaseSrcClass
 GstAudioBaseSrcSlaveMethod

@@ -2,7 +2,7 @@
  * Copyright (C) 1999,2000 Erik Walthinsen <omega@cse.ogi.edu>
  *                    2005 Wim Taymans <wim@fluendo.com>
  *
- * gstbaseaudiosink.c:
+ * gstaudiobasesink.c:
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -21,7 +21,7 @@
  */
 
 /**
- * SECTION:gstbaseaudiosink
+ * SECTION:gstaudiobasesink
  * @short_description: Base class for audio sinks
  * @see_also: #GstAudioSink, #GstAudioRingBuffer.
  *
@@ -34,7 +34,7 @@
 
 #include <string.h>
 
-#include "gstbaseaudiosink.h"
+#include "gstaudiobasesink.h"
 
 GST_DEBUG_CATEGORY_STATIC (gst_audio_base_sink_debug);
 #define GST_CAT_DEFAULT gst_audio_base_sink_debug
@@ -139,7 +139,7 @@ gst_audio_base_sink_slave_method_get_type (void)
 
 
 #define _do_init \
-    GST_DEBUG_CATEGORY_INIT (gst_audio_base_sink_debug, "baseaudiosink", 0, "baseaudiosink element");
+    GST_DEBUG_CATEGORY_INIT (gst_audio_base_sink_debug, "audiobasesink", 0, "audiobasesink element");
 #define gst_audio_base_sink_parent_class parent_class
 G_DEFINE_TYPE_WITH_CODE (GstAudioBaseSink, gst_audio_base_sink,
     GST_TYPE_BASE_SINK, _do_init);
@@ -297,25 +297,25 @@ gst_audio_base_sink_class_init (GstAudioBaseSinkClass * klass)
 }
 
 static void
-gst_audio_base_sink_init (GstAudioBaseSink * baseaudiosink)
+gst_audio_base_sink_init (GstAudioBaseSink * audiobasesink)
 {
   GstBaseSink *basesink;
 
-  baseaudiosink->priv = GST_AUDIO_BASE_SINK_GET_PRIVATE (baseaudiosink);
+  audiobasesink->priv = GST_AUDIO_BASE_SINK_GET_PRIVATE (audiobasesink);
 
-  baseaudiosink->buffer_time = DEFAULT_BUFFER_TIME;
-  baseaudiosink->latency_time = DEFAULT_LATENCY_TIME;
-  baseaudiosink->provide_clock = DEFAULT_PROVIDE_CLOCK;
-  baseaudiosink->priv->slave_method = DEFAULT_SLAVE_METHOD;
-  baseaudiosink->priv->drift_tolerance = DEFAULT_DRIFT_TOLERANCE;
-  baseaudiosink->priv->alignment_threshold = DEFAULT_ALIGNMENT_THRESHOLD;
-  baseaudiosink->priv->discont_wait = DEFAULT_DISCONT_WAIT;
+  audiobasesink->buffer_time = DEFAULT_BUFFER_TIME;
+  audiobasesink->latency_time = DEFAULT_LATENCY_TIME;
+  audiobasesink->provide_clock = DEFAULT_PROVIDE_CLOCK;
+  audiobasesink->priv->slave_method = DEFAULT_SLAVE_METHOD;
+  audiobasesink->priv->drift_tolerance = DEFAULT_DRIFT_TOLERANCE;
+  audiobasesink->priv->alignment_threshold = DEFAULT_ALIGNMENT_THRESHOLD;
+  audiobasesink->priv->discont_wait = DEFAULT_DISCONT_WAIT;
 
-  baseaudiosink->provided_clock = gst_audio_clock_new ("GstAudioSinkClock",
-      (GstAudioClockGetTimeFunc) gst_audio_base_sink_get_time, baseaudiosink,
+  audiobasesink->provided_clock = gst_audio_clock_new ("GstAudioSinkClock",
+      (GstAudioClockGetTimeFunc) gst_audio_base_sink_get_time, audiobasesink,
       NULL);
 
-  basesink = GST_BASE_SINK_CAST (baseaudiosink);
+  basesink = GST_BASE_SINK_CAST (audiobasesink);
   basesink->can_activate_push = TRUE;
   basesink->can_activate_pull = DEFAULT_CAN_ACTIVATE_PULL;
 

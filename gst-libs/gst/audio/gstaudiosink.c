@@ -600,11 +600,11 @@ static GstAudioRingBuffer *gst_audio_sink_create_ringbuffer (GstAudioBaseSink *
 static void
 gst_audio_sink_class_init (GstAudioSinkClass * klass)
 {
-  GstAudioBaseSinkClass *gstbaseaudiosink_class;
+  GstAudioBaseSinkClass *gstaudiobasesink_class;
 
-  gstbaseaudiosink_class = (GstAudioBaseSinkClass *) klass;
+  gstaudiobasesink_class = (GstAudioBaseSinkClass *) klass;
 
-  gstbaseaudiosink_class->create_ringbuffer =
+  gstaudiobasesink_class->create_ringbuffer =
       GST_DEBUG_FUNCPTR (gst_audio_sink_create_ringbuffer);
 
   g_type_class_ref (GST_TYPE_AUDIO_SINK_RING_BUFFER);

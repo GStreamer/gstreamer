@@ -513,11 +513,11 @@ static GstAudioRingBuffer *gst_audio_src_create_ringbuffer (GstAudioBaseSrc *
 static void
 gst_audio_src_class_init (GstAudioSrcClass * klass)
 {
-  GstAudioBaseSrcClass *gstbaseaudiosrc_class;
+  GstAudioBaseSrcClass *gstaudiobasesrc_class;
 
-  gstbaseaudiosrc_class = (GstAudioBaseSrcClass *) klass;
+  gstaudiobasesrc_class = (GstAudioBaseSrcClass *) klass;
 
-  gstbaseaudiosrc_class->create_ringbuffer =
+  gstaudiobasesrc_class->create_ringbuffer =
       GST_DEBUG_FUNCPTR (gst_audio_src_create_ringbuffer);
 
   g_type_class_ref (GST_TYPE_AUDIO_SRC_RING_BUFFER);

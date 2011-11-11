@@ -24,7 +24,7 @@
 #define __GST_AUDIO_SINK_H__
 
 #include <gst/gst.h>
-#include <gst/audio/gstbaseaudiosink.h>
+#include <gst/audio/gstaudiobasesink.h>
 
 G_BEGIN_DECLS
 

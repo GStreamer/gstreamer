@@ -25,8 +25,8 @@ libgstaudio_@GST_MAJORMINOR@_la_SOURCES = \
 	multichannel.c \
 	gstaudiodecoder.c \
 	gstaudioencoder.c \
-	gstbaseaudiosink.c \
-	gstbaseaudiosrc.c \
+	gstaudiobasesink.c \
+	gstaudiobasesrc.c \
 	gstaudiofilter.c \
 	gstaudiosink.c \
 	gstaudiosrc.c \
@@ -41,8 +41,8 @@ libgstaudio_@GST_MAJORMINOR@include_HEADERS = \
 	gstaudiofilter.h \
 	gstaudiodecoder.h \
 	gstaudioencoder.h \
-	gstbaseaudiosink.h \
-	gstbaseaudiosrc.h \
+	gstaudiobasesink.h \
+	gstaudiobasesrc.h \
 	gstaudiosink.h \
 	gstaudiosrc.h \
 	mixerutils.h \

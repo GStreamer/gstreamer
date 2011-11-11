@@ -24,7 +24,7 @@
 #define __GST_AUDIO_SRC_H__
 
 #include <gst/gst.h>
-#include <gst/audio/gstbaseaudiosrc.h>
+#include <gst/audio/gstaudiobasesrc.h>
 
 G_BEGIN_DECLS
 
