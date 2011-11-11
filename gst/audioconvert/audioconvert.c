@@ -676,9 +676,9 @@ audio_convert_clean_context (AudioConvertCtx * ctx)
   g_return_val_if_fail (ctx != NULL, FALSE);
 
   gst_audio_quantize_free (ctx);
+  gst_channel_mix_unset_matrix (ctx);
   gst_audio_info_init (&ctx->in);
   gst_audio_info_init (&ctx->out);
-  gst_channel_mix_unset_matrix (ctx);
 
   g_free (ctx->tmpbuf);
   ctx->tmpbuf = NULL;
