@@ -2268,7 +2268,7 @@ paint_setup_ARGB64 (paintinfo * p, GstVideoFrame * frame)
   p->ap = GST_VIDEO_FRAME_PLANE_DATA (frame, 0);
   p->yp = p->ap + 2;
   p->up = p->ap + 4;
-  p->yp = p->ap + 6;
+  p->vp = p->ap + 6;
   p->astride = GST_VIDEO_FRAME_PLANE_STRIDE (frame, 0);
   p->ystride = p->astride;
   p->ustride = p->astride;
