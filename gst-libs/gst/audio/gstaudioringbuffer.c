@@ -18,7 +18,7 @@
  */
 
 /**
- * SECTION:gstringbuffer
+ * SECTION:gstaudioringbuffer
  * @short_description: Base class for audio ringbuffer implementations
  * @see_also: #GstBaseAudioSink, #GstAudioSink
  *
@@ -41,7 +41,7 @@
 
 #include <string.h>
 
-#include "gstringbuffer.h"
+#include "gstaudioringbuffer.h"
 
 GST_DEBUG_CATEGORY_STATIC (gst_audio_ring_buffer_debug);
 #define GST_CAT_DEFAULT gst_audio_ring_buffer_debug
@@ -62,10 +62,10 @@ static void
 gst_audio_ring_buffer_class_init (GstAudioRingBufferClass * klass)
 {
   GObjectClass *gobject_class;
-  GstAudioRingBufferClass *gstringbuffer_class;
+  GstAudioRingBufferClass *gstaudioringbuffer_class;
 
   gobject_class = (GObjectClass *) klass;
-  gstringbuffer_class = (GstAudioRingBufferClass *) klass;
+  gstaudioringbuffer_class = (GstAudioRingBufferClass *) klass;
 
   GST_DEBUG_CATEGORY_INIT (gst_audio_ring_buffer_debug, "ringbuffer", 0,
       "ringbuffer class");
@@ -73,8 +73,8 @@ gst_audio_ring_buffer_class_init (GstAudioRingBufferClass * klass)
   gobject_class->dispose = gst_audio_ring_buffer_dispose;
   gobject_class->finalize = gst_audio_ring_buffer_finalize;
 
-  gstringbuffer_class->clear_all = GST_DEBUG_FUNCPTR (default_clear_all);
-  gstringbuffer_class->commit = GST_DEBUG_FUNCPTR (default_commit);
+  gstaudioringbuffer_class->clear_all = GST_DEBUG_FUNCPTR (default_clear_all);
+  gstaudioringbuffer_class->commit = GST_DEBUG_FUNCPTR (default_commit);
 }
 
 static void

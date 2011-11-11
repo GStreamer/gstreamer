@@ -357,8 +357,8 @@ gst_audio_channel_position_get_type
 </SECTION>
 
 <SECTION>
-<FILE>gstringbuffer</FILE>
-<INCLUDE>gst/audio/gstringbuffer.h</INCLUDE>
+<FILE>gstaudioringbuffer</FILE>
+<INCLUDE>gst/audio/gstaudioringbuffer.h</INCLUDE>
 GstAudioRingBuffer
 GstAudioRingBufferClass
 GstAudioRingBufferSpec

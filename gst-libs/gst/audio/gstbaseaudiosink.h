@@ -51,7 +51,7 @@
 
 #include <gst/gst.h>
 #include <gst/base/gstbasesink.h>
-#include "gstringbuffer.h"
+#include "gstaudioringbuffer.h"
 #include "gstaudioclock.h"
 
 G_BEGIN_DECLS

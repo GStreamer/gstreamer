@@ -1,7 +1,7 @@
 # variables used for enum/marshal generation
 glib_enum_headers= 		\
 	multichannel.h		\
-	gstringbuffer.h
+	gstaudioringbuffer.h
 
 glib_enum_define = GST_AUDIO
 glib_gen_prefix = gst_audio
@@ -19,7 +19,7 @@ CLEANFILES = $(BUILT_SOURCES)
 # FIXME 0.11: rename GstBaseAudioSink to GstAudioBaseSink or merge with GstAudioSink
 libgstaudio_@GST_MAJORMINOR@_la_SOURCES = \
 	audio.c \
-	gstringbuffer.c \
+	gstaudioringbuffer.c \
 	gstaudioclock.c \
 	mixerutils.c \
 	multichannel.c \
@@ -36,7 +36,7 @@ nodist_libgstaudio_@GST_MAJORMINOR@_la_SOURCES = $(built_sources) $(built_header
 libgstaudio_@GST_MAJORMINOR@includedir = $(includedir)/gstreamer-@GST_MAJORMINOR@/gst/audio
 libgstaudio_@GST_MAJORMINOR@include_HEADERS = \
 	audio.h \
-	gstringbuffer.h \
+	gstaudioringbuffer.h \
 	gstaudioclock.h \
 	gstaudiofilter.h \
 	gstaudiodecoder.h \
