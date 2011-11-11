@@ -100,7 +100,7 @@ struct _GstPluginFeature {
   GstPlugin     *plugin;      /* weak ref */
 
   /*< private >*/
-  gpointer _gst_reserved[GST_PADDING - 1];
+  gpointer _gst_reserved[GST_PADDING];
 };
 
 struct _GstPluginFeatureClass {

@@ -116,7 +116,7 @@ typedef enum {
  * @leave_thread: a thread is exiting, this is called when the thread is about
  *   to leave its function
  *
- * Custom GstTask thread callback functions that can be installed. 
+ * Custom GstTask thread callback functions that can be installed.
  *
  * Since: 0.10.24
  */

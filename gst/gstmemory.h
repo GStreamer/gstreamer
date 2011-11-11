@@ -265,6 +265,8 @@ struct _GstMemoryInfo {
   GstMemoryIsSpanFunction   is_span;
 
   gpointer user_data;
+
+  gpointer _gst_reserved[GST_PADDING];
 };
 
 /* allocators */

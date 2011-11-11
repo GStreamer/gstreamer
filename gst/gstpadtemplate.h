@@ -138,7 +138,7 @@ struct _GstPadTemplateClass {
   gpointer _gst_reserved[GST_PADDING];
 };
 
-/** 
+/**
  * GstStaticPadTemplate:
  * @name_template: the name of the template
  * @direction: the direction of the template

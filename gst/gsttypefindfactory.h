@@ -45,21 +45,21 @@ typedef struct _GstTypeFindFactoryClass GstTypeFindFactoryClass;
  * Object that stores information about a typefind function.
  */
 struct _GstTypeFindFactory {
-  GstPluginFeature		feature;
+  GstPluginFeature              feature;
   /* <private> */
 
-  GstTypeFindFunction		function;
-  gchar **			extensions;
-  GstCaps *			caps; /* FIXME: not yet saved in registry */
+  GstTypeFindFunction           function;
+  gchar **                      extensions;
+  GstCaps *                     caps; /* FIXME: not yet saved in registry */
 
-  gpointer			user_data;
-  GDestroyNotify		user_data_notify;
+  gpointer                      user_data;
+  GDestroyNotify                user_data_notify;
 
   gpointer _gst_reserved[GST_PADDING];
 };
 
 struct _GstTypeFindFactoryClass {
-  GstPluginFeatureClass		parent;
+  GstPluginFeatureClass         parent;
   /* <private> */
 
   gpointer _gst_reserved[GST_PADDING];
@@ -67,14 +67,14 @@ struct _GstTypeFindFactoryClass {
 
 /* typefinding interface */
 
-GType           gst_type_find_factory_get_type		(void);
+GType           gst_type_find_factory_get_type          (void);
 
-GList *		gst_type_find_factory_get_list		(void);
+GList *         gst_type_find_factory_get_list          (void);
 
-gchar **	gst_type_find_factory_get_extensions	(GstTypeFindFactory *factory);
-GstCaps *	gst_type_find_factory_get_caps	  	(GstTypeFindFactory *factory);
-void		gst_type_find_factory_call_function	(GstTypeFindFactory *factory,
-							 GstTypeFind *find);
+gchar **        gst_type_find_factory_get_extensions    (GstTypeFindFactory *factory);
+GstCaps *       gst_type_find_factory_get_caps          (GstTypeFindFactory *factory);
+void            gst_type_find_factory_call_function     (GstTypeFindFactory *factory,
+                                                         GstTypeFind *find);
 
 G_END_DECLS
 

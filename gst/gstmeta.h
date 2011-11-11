@@ -106,6 +106,8 @@ struct _GstMetaInfo {
   GstMetaFreeFunction        free_func;
   GstMetaCopyFunction        copy_func;
   GstMetaTransformFunction   transform_func;
+
+  gpointer _gst_reserved[GST_PADDING];
 };
 
 const GstMetaInfo *  gst_meta_register        (const gchar *api, const gchar *impl,

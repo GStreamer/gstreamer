@@ -520,6 +520,8 @@ typedef struct
   gpointer data;
   guint64 offset;
   guint size;
+
+  gpointer _gst_reserved[GST_PADDING];
 } GstPadProbeInfo;
 
 #define GST_PAD_PROBE_INFO_TYPE(d)         ((d)->type)
@@ -557,8 +559,8 @@ typedef GstPadProbeReturn   (*GstPadProbeCallback)   (GstPad *pad, GstPadProbeIn
  *
  * Returns: GST_FLOW_OK if the iteration should continue
  */
-typedef GstFlowReturn       (*GstPadStickyEventsForeachFunction) (GstPad *pad, GstEvent *event,
-                                                                  gpointer user_data);
+typedef GstFlowReturn  (*GstPadStickyEventsForeachFunction) (GstPad *pad, GstEvent *event,
+                                                             gpointer user_data);
 
 /**
  * GstPadFlags:

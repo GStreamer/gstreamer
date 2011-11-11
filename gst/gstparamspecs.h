@@ -105,7 +105,7 @@ typedef struct _GstParamSpecFraction GstParamSpecFraction;
  */
 struct _GstParamSpecFraction {
   GParamSpec    parent_instance;
-  
+
   gint          min_num, min_den;
   gint          max_num, max_den;
   gint          def_num, def_den;

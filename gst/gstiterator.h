@@ -40,10 +40,10 @@ G_BEGIN_DECLS
  * The result of gst_iterator_next().
  */
 typedef enum {
-  GST_ITERATOR_DONE	= 0,
-  GST_ITERATOR_OK	= 1,
-  GST_ITERATOR_RESYNC	= 2,
-  GST_ITERATOR_ERROR	= 3
+  GST_ITERATOR_DONE     = 0,
+  GST_ITERATOR_OK       = 1,
+  GST_ITERATOR_RESYNC   = 2,
+  GST_ITERATOR_ERROR    = 3
 } GstIteratorResult;
 
 typedef struct _GstIterator GstIterator;
@@ -57,9 +57,9 @@ typedef struct _GstIterator GstIterator;
  * The result of a #GstIteratorItemFunction.
  */
 typedef enum {
-  GST_ITERATOR_ITEM_SKIP	= 0,
-  GST_ITERATOR_ITEM_PASS	= 1,
-  GST_ITERATOR_ITEM_END		= 2
+  GST_ITERATOR_ITEM_SKIP        = 0,
+  GST_ITERATOR_ITEM_PASS        = 1,
+  GST_ITERATOR_ITEM_END         = 2
 } GstIteratorItem;
 
 /**
@@ -94,7 +94,7 @@ typedef GstIteratorItem   (*GstIteratorItemFunction)    (GstIterator *it, const 
  * @result: a pointer to hold the next item
  *
  * The function that will be called when the next element of the iterator
- * should be retrieved. 
+ * should be retrieved.
  *
  * Implementors of a #GstIterator should implement this
  * function and pass it to the constructor of the custom iterator.
@@ -102,7 +102,7 @@ typedef GstIteratorItem   (*GstIteratorItemFunction)    (GstIterator *it, const 
  *
  * Returns: the result of the operation.
  */
-typedef GstIteratorResult (*GstIteratorNextFunction)	(GstIterator *it, GValue *result);
+typedef GstIteratorResult (*GstIteratorNextFunction)    (GstIterator *it, GValue *result);
 /**
  * GstIteratorResyncFunction:
  * @it: the iterator
@@ -116,7 +116,7 @@ typedef GstIteratorResult (*GstIteratorNextFunction)	(GstIterator *it, GValue *r
  * function and pass it to the constructor of the custom iterator.
  * The function will be called with the iterator lock held.
  */
-typedef void		  (*GstIteratorResyncFunction)	(GstIterator *it);
+typedef void              (*GstIteratorResyncFunction)  (GstIterator *it);
 /**
  * GstIteratorFreeFunction:
  * @it: the iterator
@@ -127,7 +127,7 @@ typedef void		  (*GstIteratorResyncFunction)	(GstIterator *it);
  * function and pass it to the constructor of the custom iterator.
  * The function will be called with the iterator lock held.
  */
-typedef void		  (*GstIteratorFreeFunction)	(GstIterator *it);
+typedef void              (*GstIteratorFreeFunction)    (GstIterator *it);
 
 /**
  * GstIteratorForeachFunction:
@@ -148,7 +148,7 @@ typedef void         (*GstIteratorForeachFunction)     (const GValue * item, gpo
  *
  * Returns: TRUE if the fold should continue, FALSE if it should stop.
  */
-typedef gboolean	  (*GstIteratorFoldFunction)    (const GValue * item, GValue * ret, gpointer user_data);
+typedef gboolean          (*GstIteratorFoldFunction)    (const GValue * item, GValue * ret, gpointer user_data);
 
 /**
  * GST_ITERATOR:
@@ -156,14 +156,14 @@ typedef gboolean	  (*GstIteratorFoldFunction)    (const GValue * item, GValue * 
  *
  * Macro to cast to a #GstIterator
  */
-#define GST_ITERATOR(it)		((GstIterator*)(it))
+#define GST_ITERATOR(it)                ((GstIterator*)(it))
 /**
  * GST_ITERATOR_LOCK:
  * @it: the #GstIterator to get the lock of
  *
  * Macro to get the lock protecting the datastructure being iterated.
  */
-#define GST_ITERATOR_LOCK(it)		(GST_ITERATOR(it)->lock)
+#define GST_ITERATOR_LOCK(it)           (GST_ITERATOR(it)->lock)
 /**
  * GST_ITERATOR_COOKIE:
  * @it: the #GstIterator to get the cookie of
@@ -175,7 +175,7 @@ typedef gboolean	  (*GstIteratorFoldFunction)    (const GValue * item, GValue * 
  * value of the master cookie. If they are different, a concurrent
  * modification happened to the iterator and a resync is needed.
  */
-#define GST_ITERATOR_COOKIE(it)		(GST_ITERATOR(it)->cookie)
+#define GST_ITERATOR_COOKIE(it)         (GST_ITERATOR(it)->cookie)
 /**
  * GST_ITERATOR_ORIG_COOKIE:
  * @it: the #GstIterator to get the master cookie of
@@ -184,7 +184,7 @@ typedef gboolean	  (*GstIteratorFoldFunction)    (const GValue * item, GValue * 
  * master cookie protects the structure being iterated and gets updated
  * whenever the datastructure changes.
  */
-#define GST_ITERATOR_ORIG_COOKIE(it)	(GST_ITERATOR(it)->master_cookie)
+#define GST_ITERATOR_ORIG_COOKIE(it)    (GST_ITERATOR(it)->master_cookie)
 
 /**
  * GstIterator:
@@ -201,7 +201,7 @@ typedef gboolean	  (*GstIteratorFoldFunction)    (const GValue * item, GValue * 
  * @master_cookie: A pointer to the master cookie.
  * @size: the size of the iterator
  *
- * #GstIterator base structure. The values of this structure are 
+ * #GstIterator base structure. The values of this structure are
  * protected for subclasses, use the methods to use the #GstIterator.
  */
 struct _GstIterator {
@@ -212,13 +212,13 @@ struct _GstIterator {
   GstIteratorResyncFunction resync;
   GstIteratorFreeFunction free;
 
-  GstIterator *pushed;		/* pushed iterator */
+  GstIterator *pushed;          /* pushed iterator */
 
   GType     type;
   GMutex   *lock;
-  guint32   cookie;		/* cookie of the iterator */
-  guint32  *master_cookie;	/* pointer to guint32 holding the cookie when this
-				   iterator was created */
+  guint32   cookie;             /* cookie of the iterator */
+  guint32  *master_cookie;      /* pointer to guint32 holding the cookie when this
+                                   iterator was created */
   guint     size;
 
   /*< private >*/
@@ -228,21 +228,21 @@ struct _GstIterator {
 GType                   gst_iterator_get_type           (void);
 
 /* creating iterators */
-GstIterator*		gst_iterator_new		(guint size,
-							 GType type,
-							 GMutex *lock,
-							 guint32 *master_cookie,
+GstIterator*            gst_iterator_new                (guint size,
+                                                         GType type,
+                                                         GMutex *lock,
+                                                         guint32 *master_cookie,
                                                          GstIteratorCopyFunction copy,
-							 GstIteratorNextFunction next,
+                                                         GstIteratorNextFunction next,
                                                          GstIteratorItemFunction item,
-							 GstIteratorResyncFunction resync,
-							 GstIteratorFreeFunction free);
+                                                         GstIteratorResyncFunction resync,
+                                                         GstIteratorFreeFunction free);
 
-GstIterator*		gst_iterator_new_list	        (GType type,
-							 GMutex *lock,
-							 guint32 *master_cookie,
-							 GList **list,
-							 GObject * owner,
+GstIterator*            gst_iterator_new_list           (GType type,
+                                                         GMutex *lock,
+                                                         guint32 *master_cookie,
+                                                         GList **list,
+                                                         GObject * owner,
                                                          GstIteratorItemFunction item);
 
 GstIterator*            gst_iterator_new_single         (GType type,
@@ -251,21 +251,21 @@ GstIterator*            gst_iterator_new_single         (GType type,
 GstIterator*            gst_iterator_copy               (const GstIterator *it);
 
 /* using iterators */
-GstIteratorResult	gst_iterator_next		(GstIterator *it, GValue * elem);
-void			gst_iterator_resync		(GstIterator *it);
-void			gst_iterator_free		(GstIterator *it);
+GstIteratorResult       gst_iterator_next               (GstIterator *it, GValue * elem);
+void                    gst_iterator_resync             (GstIterator *it);
+void                    gst_iterator_free               (GstIterator *it);
 
-void			gst_iterator_push		(GstIterator *it, GstIterator *other);
+void                    gst_iterator_push               (GstIterator *it, GstIterator *other);
 
 /* higher-order functions that operate on iterators */
-GstIterator*		gst_iterator_filter		(GstIterator *it, GCompareFunc func,
+GstIterator*            gst_iterator_filter             (GstIterator *it, GCompareFunc func,
                                                          const GValue * user_data);
-GstIteratorResult	gst_iterator_fold		(GstIterator *it,
+GstIteratorResult       gst_iterator_fold               (GstIterator *it,
                                                          GstIteratorFoldFunction func,
                                                          GValue *ret, gpointer user_data);
-GstIteratorResult	gst_iterator_foreach		(GstIterator *it,
+GstIteratorResult       gst_iterator_foreach            (GstIterator *it,
                                                          GstIteratorForeachFunction func, gpointer user_data);
-gboolean 		gst_iterator_find_custom	(GstIterator *it, GCompareFunc func,
+gboolean                gst_iterator_find_custom        (GstIterator *it, GCompareFunc func,
                                                          GValue *elem, gpointer user_data);
 
 G_END_DECLS

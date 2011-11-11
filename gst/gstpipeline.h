@@ -28,13 +28,13 @@
 
 G_BEGIN_DECLS
 
-#define GST_TYPE_PIPELINE 		(gst_pipeline_get_type ())
-#define GST_PIPELINE(obj) 		(G_TYPE_CHECK_INSTANCE_CAST ((obj), GST_TYPE_PIPELINE, GstPipeline))
-#define GST_IS_PIPELINE(obj) 		(G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_PIPELINE))
-#define GST_PIPELINE_CLASS(klass) 	(G_TYPE_CHECK_CLASS_CAST ((klass), GST_TYPE_PIPELINE, GstPipelineClass))
-#define GST_IS_PIPELINE_CLASS(klass) 	(G_TYPE_CHECK_CLASS_TYPE ((klass), GST_TYPE_PIPELINE))
-#define GST_PIPELINE_GET_CLASS(obj) 	(G_TYPE_INSTANCE_GET_CLASS ((obj), GST_TYPE_PIPELINE, GstPipelineClass))
-#define GST_PIPELINE_CAST(obj) 		((GstPipeline*)(obj))
+#define GST_TYPE_PIPELINE               (gst_pipeline_get_type ())
+#define GST_PIPELINE(obj)               (G_TYPE_CHECK_INSTANCE_CAST ((obj), GST_TYPE_PIPELINE, GstPipeline))
+#define GST_IS_PIPELINE(obj)            (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_PIPELINE))
+#define GST_PIPELINE_CLASS(klass)       (G_TYPE_CHECK_CLASS_CAST ((klass), GST_TYPE_PIPELINE, GstPipelineClass))
+#define GST_IS_PIPELINE_CLASS(klass)    (G_TYPE_CHECK_CLASS_TYPE ((klass), GST_TYPE_PIPELINE))
+#define GST_PIPELINE_GET_CLASS(obj)     (G_TYPE_INSTANCE_GET_CLASS ((obj), GST_TYPE_PIPELINE, GstPipelineClass))
+#define GST_PIPELINE_CAST(obj)          ((GstPipeline*)(obj))
 
 typedef struct _GstPipeline GstPipeline;
 typedef struct _GstPipelineClass GstPipelineClass;
@@ -55,7 +55,7 @@ typedef enum {
 
 /**
  * GstPipeline:
- * @fixed_clock: The fixed clock of the pipeline, used when 
+ * @fixed_clock: The fixed clock of the pipeline, used when
  *               GST_PIPELINE_FLAG_FIXED_CLOCK is set.
  * @stream_time: The stream time of the pipeline. A better name for this
  *         property would be the running_time, the total time spent in the
@@ -67,18 +67,18 @@ typedef enum {
  * The #GstPipeline structure.
  */
 struct _GstPipeline {
-  GstBin 	 bin;
+  GstBin         bin;
 
   /*< public >*/ /* with LOCK */
   GstClock      *fixed_clock;
 
-  GstClockTime   stream_time;	
+  GstClockTime   stream_time;
   GstClockTime   delay;
 
   /*< private >*/
   GstPipelinePrivate *priv;
 
-  gpointer _gst_reserved[GST_PADDING-1];
+  gpointer _gst_reserved[GST_PADDING];
 };
 
 struct _GstPipelineClass {
@@ -88,10 +88,10 @@ struct _GstPipelineClass {
   gpointer _gst_reserved[GST_PADDING];
 };
 
-GType		gst_pipeline_get_type		(void);
-GstElement*	gst_pipeline_new		(const gchar *name);
+GType           gst_pipeline_get_type           (void);
+GstElement*     gst_pipeline_new                (const gchar *name);
 
-GstBus*		gst_pipeline_get_bus		(GstPipeline *pipeline);
+GstBus*         gst_pipeline_get_bus            (GstPipeline *pipeline);
 
 void            gst_pipeline_use_clock          (GstPipeline *pipeline, GstClock *clock);
 gboolean        gst_pipeline_set_clock          (GstPipeline *pipeline, GstClock *clock);

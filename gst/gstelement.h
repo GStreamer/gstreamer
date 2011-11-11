@@ -254,7 +254,7 @@ typedef enum {
  *     Sinks unblock any #GstClock wait calls.
  *   </para></listitem>
  *   <listitem><para>
- *     When a sink does not have a pending buffer to play, it returns 
+ *     When a sink does not have a pending buffer to play, it returns
  *     %GST_STATE_CHANGE_ASYNC from this state change and completes the state
  *     change when it receives a new buffer or an %GST_EVENT_EOS.
  *   </para></listitem>
@@ -673,7 +673,7 @@ void                    gst_element_class_set_metadata          (GstElementClass
                                                                  const gchar     *author);
 void                    gst_element_class_add_metadata          (GstElementClass * klass,
                                                                  const gchar * key, const gchar * value);
-const gchar          *  gst_element_class_get_metadata          (GstElementClass * klass,
+const gchar *           gst_element_class_get_metadata          (GstElementClass * klass,
                                                                  const gchar * key);
 
 

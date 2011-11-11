@@ -127,7 +127,8 @@ struct _GstBus
 
   /*< private >*/
   GstBusPrivate    *priv;
-  gpointer _gst_reserved[GST_PADDING - 1];
+
+  gpointer _gst_reserved[GST_PADDING];
 };
 
 struct _GstBusClass

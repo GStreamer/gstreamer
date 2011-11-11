@@ -213,6 +213,7 @@ struct _GstPlugin {
                                  * that matches the plugin's basename */
 
   GstPluginPrivate *priv;
+
   gpointer _gst_reserved[GST_PADDING];
 };
 
@@ -341,12 +342,11 @@ GstPlugin *		gst_plugin_load_file		(const gchar *filename, GError** error);
 GstPlugin *             gst_plugin_load                 (GstPlugin *plugin);
 GstPlugin *             gst_plugin_load_by_name         (const gchar *name);
 
-void                    gst_plugin_add_dependency (GstPlugin    * plugin,
-                                                   const gchar ** env_vars,
-                                                   const gchar ** paths,
-                                                   const gchar ** names,
-                                                   GstPluginDependencyFlags flags);
-
+void                    gst_plugin_add_dependency        (GstPlugin    * plugin,
+                                                          const gchar ** env_vars,
+                                                          const gchar ** paths,
+                                                          const gchar ** names,
+                                                          GstPluginDependencyFlags flags);
 void                    gst_plugin_add_dependency_simple (GstPlugin   * plugin,
                                                           const gchar * env_vars,
                                                           const gchar * paths,

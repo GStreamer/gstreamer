@@ -27,23 +27,23 @@
 G_BEGIN_DECLS
 
 /* --- standard type macros --- */
-#define GST_TYPE_CLOCK			(gst_clock_get_type ())
-#define GST_CLOCK(clock)		(G_TYPE_CHECK_INSTANCE_CAST ((clock), GST_TYPE_CLOCK, GstClock))
-#define GST_IS_CLOCK(clock)		(G_TYPE_CHECK_INSTANCE_TYPE ((clock), GST_TYPE_CLOCK))
-#define GST_CLOCK_CLASS(cclass)		(G_TYPE_CHECK_CLASS_CAST ((cclass), GST_TYPE_CLOCK, GstClockClass))
-#define GST_IS_CLOCK_CLASS(cclass)	(G_TYPE_CHECK_CLASS_TYPE ((cclass), GST_TYPE_CLOCK))
-#define GST_CLOCK_GET_CLASS(clock)	(G_TYPE_INSTANCE_GET_CLASS ((clock), GST_TYPE_CLOCK, GstClockClass))
-#define GST_CLOCK_CAST(clock)		((GstClock*)(clock))
+#define GST_TYPE_CLOCK                  (gst_clock_get_type ())
+#define GST_CLOCK(clock)                (G_TYPE_CHECK_INSTANCE_CAST ((clock), GST_TYPE_CLOCK, GstClock))
+#define GST_IS_CLOCK(clock)             (G_TYPE_CHECK_INSTANCE_TYPE ((clock), GST_TYPE_CLOCK))
+#define GST_CLOCK_CLASS(cclass)         (G_TYPE_CHECK_CLASS_CAST ((cclass), GST_TYPE_CLOCK, GstClockClass))
+#define GST_IS_CLOCK_CLASS(cclass)      (G_TYPE_CHECK_CLASS_TYPE ((cclass), GST_TYPE_CLOCK))
+#define GST_CLOCK_GET_CLASS(clock)      (G_TYPE_INSTANCE_GET_CLASS ((clock), GST_TYPE_CLOCK, GstClockClass))
+#define GST_CLOCK_CAST(clock)           ((GstClock*)(clock))
 
-#define GST_CLOCK_SLAVE_LOCK(clock)	g_mutex_lock (GST_CLOCK_CAST (clock)->slave_lock)
-#define GST_CLOCK_SLAVE_UNLOCK(clock)	g_mutex_unlock (GST_CLOCK_CAST (clock)->slave_lock)
+#define GST_CLOCK_SLAVE_LOCK(clock)     g_mutex_lock (GST_CLOCK_CAST (clock)->slave_lock)
+#define GST_CLOCK_SLAVE_UNLOCK(clock)   g_mutex_unlock (GST_CLOCK_CAST (clock)->slave_lock)
 
 /**
  * GstClockTime:
  *
  * A datatype to hold a time, measured in nanoseconds.
  */
-typedef guint64	GstClockTime;
+typedef guint64 GstClockTime;
 
 /**
  * GST_TYPE_CLOCK_TIME:
@@ -70,21 +70,21 @@ typedef gpointer GstClockID;
  *
  * Constant to define an undefined clock time.
  */
-#define GST_CLOCK_TIME_NONE		((GstClockTime) -1)
+#define GST_CLOCK_TIME_NONE             ((GstClockTime) -1)
 /**
  * GST_CLOCK_TIME_IS_VALID:
  * @time: clock time to validate
  *
  * Tests if a given #GstClockTime represents a valid defined time.
  */
-#define GST_CLOCK_TIME_IS_VALID(time)	(((GstClockTime)(time)) != GST_CLOCK_TIME_NONE)
+#define GST_CLOCK_TIME_IS_VALID(time)   (((GstClockTime)(time)) != GST_CLOCK_TIME_NONE)
 
 /* FIXME: still need to explicitly force types on the defines below */
 /**
  * GST_SECOND:
  *
  * Constant that defines one GStreamer second.
- * 
+ *
  * Value: 1000000000
  *
  */
@@ -93,27 +93,27 @@ typedef gpointer GstClockID;
  * GST_MSECOND:
  *
  * Constant that defines one GStreamer millisecond.
- * 
+ *
  * Value: 1000000
- * 
+ *
  */
 #define GST_MSECOND (GST_SECOND / G_GINT64_CONSTANT (1000))
 /**
  * GST_USECOND:
  *
  * Constant that defines one GStreamer microsecond.
- * 
+ *
  * Value: 1000
- * 
+ *
  */
 #define GST_USECOND (GST_SECOND / G_GINT64_CONSTANT (1000000))
 /**
  * GST_NSECOND:
  *
  * Constant that defines one GStreamer nanosecond
- * 
+ *
  * Value: 1
- * 
+ *
  */
 #define GST_NSECOND (GST_SECOND / G_GINT64_CONSTANT (1000000000))
 
@@ -163,7 +163,7 @@ typedef gpointer GstClockID;
  * Calculate a difference between two clock times as a #GstClockTimeDiff.
  * The difference is calculated as @e - @s.
  */
-#define GST_CLOCK_DIFF(s, e)		(GstClockTimeDiff)((e) - (s))
+#define GST_CLOCK_DIFF(s, e)            (GstClockTimeDiff)((e) - (s))
 
 /**
  * GST_TIMEVAL_TO_TIME:
@@ -171,7 +171,7 @@ typedef gpointer GstClockID;
  *
  * Convert a #GTimeVal to a #GstClockTime.
  */
-#define GST_TIMEVAL_TO_TIME(tv)		(GstClockTime)((tv).tv_sec * GST_SECOND + (tv).tv_usec * GST_USECOND)
+#define GST_TIMEVAL_TO_TIME(tv)         (GstClockTime)((tv).tv_sec * GST_SECOND + (tv).tv_usec * GST_USECOND)
 
 /**
  * GST_TIME_TO_TIMEVAL:
@@ -184,12 +184,12 @@ typedef gpointer GstClockID;
  * which is about 68 years.  Expect trouble if you want to schedule stuff
  * in your pipeline for 2038.</note>
  */
-#define GST_TIME_TO_TIMEVAL(t,tv)				\
-G_STMT_START {							\
-  (tv).tv_sec  = ((GstClockTime) (t)) / GST_SECOND;		\
-  (tv).tv_usec = (((GstClockTime) (t)) -			\
-                  ((GstClockTime) (tv).tv_sec) * GST_SECOND)	\
-                 / GST_USECOND;					\
+#define GST_TIME_TO_TIMEVAL(t,tv)                               \
+G_STMT_START {                                                  \
+  (tv).tv_sec  = ((GstClockTime) (t)) / GST_SECOND;             \
+  (tv).tv_usec = (((GstClockTime) (t)) -                        \
+                  ((GstClockTime) (tv).tv_sec) * GST_SECOND)    \
+                 / GST_USECOND;                                 \
 } G_STMT_END
 
 /**
@@ -198,7 +198,7 @@ G_STMT_START {							\
  *
  * Convert a struct timespec (see man pselect) to a #GstClockTime.
  */
-#define GST_TIMESPEC_TO_TIME(ts)	(GstClockTime)((ts).tv_sec * GST_SECOND + (ts).tv_nsec * GST_NSECOND)
+#define GST_TIMESPEC_TO_TIME(ts)        (GstClockTime)((ts).tv_sec * GST_SECOND + (ts).tv_nsec * GST_NSECOND)
 /**
  * GST_TIME_TO_TIMESPEC:
  * @t: The #GstClockTime to convert
@@ -206,10 +206,10 @@ G_STMT_START {							\
  *
  * Convert a #GstClockTime to a struct timespec (see man pselect)
  */
-#define GST_TIME_TO_TIMESPEC(t,ts)			\
-G_STMT_START {						\
-  (ts).tv_sec  =  (t) / GST_SECOND;			\
-  (ts).tv_nsec = ((t) - (ts).tv_sec * GST_SECOND) / GST_NSECOND;	\
+#define GST_TIME_TO_TIMESPEC(t,ts)                      \
+G_STMT_START {                                          \
+  (ts).tv_sec  =  (t) / GST_SECOND;                     \
+  (ts).tv_nsec = ((t) - (ts).tv_sec * GST_SECOND) / GST_NSECOND;        \
 } G_STMT_END
 
 /* timestamp debugging macros */
@@ -250,10 +250,10 @@ G_STMT_START {						\
  */
 #define GST_CLOCK_ENTRY_TRACE_NAME "GstClockEntry"
 
-typedef struct _GstClockEntry	GstClockEntry;
-typedef struct _GstClock	GstClock;
-typedef struct _GstClockClass	GstClockClass;
-typedef struct _GstClockPrivate	GstClockPrivate;
+typedef struct _GstClockEntry   GstClockEntry;
+typedef struct _GstClock        GstClock;
+typedef struct _GstClockClass   GstClockClass;
+typedef struct _GstClockPrivate GstClockPrivate;
 
 /* --- prototype for async callbacks --- */
 /**
@@ -267,8 +267,8 @@ typedef struct _GstClockPrivate	GstClockPrivate;
  *
  * Returns: %TRUE or %FALSE (currently unused)
  */
-typedef gboolean	(*GstClockCallback)	(GstClock *clock, GstClockTime time,
-						 GstClockID id, gpointer user_data);
+typedef gboolean        (*GstClockCallback)     (GstClock *clock, GstClockTime time,
+                                                 GstClockID id, gpointer user_data);
 /**
  * GstClockReturn:
  * @GST_CLOCK_OK: The operation succeeded.
@@ -284,14 +284,14 @@ typedef gboolean	(*GstClockCallback)	(GstClock *clock, GstClockTime time,
  */
 typedef enum
 {
-  GST_CLOCK_OK		=  0,
-  GST_CLOCK_EARLY	=  1,
-  GST_CLOCK_UNSCHEDULED	=  2,
-  GST_CLOCK_BUSY	=  3,
-  GST_CLOCK_BADTIME	=  4,
-  GST_CLOCK_ERROR	=  5,
-  GST_CLOCK_UNSUPPORTED	=  6,
-  GST_CLOCK_DONE	=  7
+  GST_CLOCK_OK          =  0,
+  GST_CLOCK_EARLY       =  1,
+  GST_CLOCK_UNSCHEDULED =  2,
+  GST_CLOCK_BUSY        =  3,
+  GST_CLOCK_BADTIME     =  4,
+  GST_CLOCK_ERROR       =  5,
+  GST_CLOCK_UNSUPPORTED =  6,
+  GST_CLOCK_DONE        =  7
 } GstClockReturn;
 
 /**
@@ -312,42 +312,42 @@ typedef enum {
  *
  * Cast to a clock entry
  */
-#define GST_CLOCK_ENTRY(entry)		((GstClockEntry *)(entry))
+#define GST_CLOCK_ENTRY(entry)          ((GstClockEntry *)(entry))
 /**
  * GST_CLOCK_ENTRY_CLOCK:
  * @entry: the entry to query
  *
  * Get the owner clock of the entry
  */
-#define GST_CLOCK_ENTRY_CLOCK(entry)	((entry)->clock)
+#define GST_CLOCK_ENTRY_CLOCK(entry)    ((entry)->clock)
 /**
  * GST_CLOCK_ENTRY_TYPE:
  * @entry: the entry to query
  *
  * Get the type of the clock entry
  */
-#define GST_CLOCK_ENTRY_TYPE(entry)	((entry)->type)
+#define GST_CLOCK_ENTRY_TYPE(entry)     ((entry)->type)
 /**
  * GST_CLOCK_ENTRY_TIME:
  * @entry: the entry to query
  *
  * Get the requested time of this entry
  */
-#define GST_CLOCK_ENTRY_TIME(entry)	((entry)->time)
+#define GST_CLOCK_ENTRY_TIME(entry)     ((entry)->time)
 /**
  * GST_CLOCK_ENTRY_INTERVAL:
  * @entry: the entry to query
  *
  * Get the interval of this periodic entry
  */
-#define GST_CLOCK_ENTRY_INTERVAL(entry)	((entry)->interval)
+#define GST_CLOCK_ENTRY_INTERVAL(entry) ((entry)->interval)
 /**
  * GST_CLOCK_ENTRY_STATUS:
  * @entry: the entry to query
  *
  * The status of the entry
  */
-#define GST_CLOCK_ENTRY_STATUS(entry)	((entry)->status)
+#define GST_CLOCK_ENTRY_STATUS(entry)   ((entry)->status)
 
 /**
  * GstClockEntry:
@@ -359,18 +359,20 @@ typedef enum {
  * not be extended or allocated using a custom allocator.
  */
 struct _GstClockEntry {
-  gint			refcount;
+  gint                  refcount;
   /*< protected >*/
-  GstClock		*clock;
-  GstClockEntryType	 type;
-  GstClockTime		 time;
-  GstClockTime		 interval;
-  GstClockReturn	 status;
-  GstClockCallback	 func;
-  gpointer		 user_data;
-  GDestroyNotify	 destroy_data;
+  GstClock              *clock;
+  GstClockEntryType      type;
+  GstClockTime           time;
+  GstClockTime           interval;
+  GstClockReturn         status;
+  GstClockCallback       func;
+  gpointer               user_data;
+  GDestroyNotify         destroy_data;
   gboolean               unscheduled;
   gboolean               woken_up;
+
+  gpointer _gst_reserved[GST_PADDING];
 };
 
 #include <gst/gstobject.h>
@@ -395,7 +397,7 @@ typedef enum {
   GST_CLOCK_FLAG_CAN_SET_RESOLUTION     = (GST_OBJECT_FLAG_LAST << 4),
   GST_CLOCK_FLAG_CAN_SET_MASTER         = (GST_OBJECT_FLAG_LAST << 5),
   /* padding */
-  GST_CLOCK_FLAG_LAST		        = (GST_OBJECT_FLAG_LAST << 8)
+  GST_CLOCK_FLAG_LAST                   = (GST_OBJECT_FLAG_LAST << 8)
 } GstClockFlags;
 
 /**
@@ -445,22 +447,22 @@ typedef enum {
  * protected for subclasses, use the methods to use the #GstClock.
  */
 struct _GstClock {
-  GstObject	 object;
+  GstObject      object;
 
-  GMutex	*slave_lock; /* order: SLAVE_LOCK, OBJECT_LOCK */
+  GMutex        *slave_lock; /* order: SLAVE_LOCK, OBJECT_LOCK */
 
   /*< protected >*/ /* with LOCK */
-  GstClockTime	 internal_calibration;
-  GstClockTime	 external_calibration;
-  GstClockTime	 rate_numerator;
-  GstClockTime	 rate_denominator;
-  GstClockTime	 last_time;
-  GList		*entries;
-  GCond		*entries_changed;
+  GstClockTime   internal_calibration;
+  GstClockTime   external_calibration;
+  GstClockTime   rate_numerator;
+  GstClockTime   rate_denominator;
+  GstClockTime   last_time;
+  GList         *entries;
+  GCond         *entries_changed;
 
   /*< private >*/ /* with LOCK */
-  GstClockTime	 resolution;
-  gboolean	 stats;
+  GstClockTime   resolution;
+  gboolean       stats;
 
   /* for master/slave clocks */
   GstClock      *master;
@@ -475,10 +477,9 @@ struct _GstClock {
   GstClockID     clockid;
 
   /*< private >*/
-  union {
-    GstClockPrivate *priv;
-    GstClockTime     _gst_reserved[GST_PADDING];
-  } ABI;
+  GstClockPrivate *priv;
+
+  gpointer _gst_reserved[GST_PADDING];
 };
 
 /**
@@ -504,83 +505,83 @@ struct _GstClockClass {
   /* vtable */
   GstClockTime          (*change_resolution)    (GstClock *clock,
                                                  GstClockTime old_resolution,
-						 GstClockTime new_resolution);
+                                                 GstClockTime new_resolution);
   GstClockTime          (*get_resolution)       (GstClock *clock);
 
-  GstClockTime		(*get_internal_time)	(GstClock *clock);
+  GstClockTime          (*get_internal_time)    (GstClock *clock);
 
   /* waiting on an ID */
   GstClockReturn        (*wait)                 (GstClock *clock, GstClockEntry *entry,
-		                                 GstClockTimeDiff *jitter);
+                                                 GstClockTimeDiff *jitter);
   GstClockReturn        (*wait_async)           (GstClock *clock, GstClockEntry *entry);
-  void                  (*unschedule)		(GstClock *clock, GstClockEntry *entry);
+  void                  (*unschedule)           (GstClock *clock, GstClockEntry *entry);
 
   /*< private >*/
   gpointer _gst_reserved[GST_PADDING];
 };
 
-GType			gst_clock_get_type		(void);
+GType                   gst_clock_get_type              (void);
 
-GstClockTime		gst_clock_set_resolution	(GstClock *clock,
+GstClockTime            gst_clock_set_resolution        (GstClock *clock,
                                                          GstClockTime resolution);
-GstClockTime		gst_clock_get_resolution	(GstClock *clock);
+GstClockTime            gst_clock_get_resolution        (GstClock *clock);
 
-GstClockTime		gst_clock_get_time		(GstClock *clock);
-void			gst_clock_set_calibration	(GstClock *clock, GstClockTime internal,
+GstClockTime            gst_clock_get_time              (GstClock *clock);
+void                    gst_clock_set_calibration       (GstClock *clock, GstClockTime internal,
                                                          GstClockTime external,
                                                          GstClockTime rate_num,
                                                          GstClockTime rate_denom);
-void			gst_clock_get_calibration	(GstClock *clock, GstClockTime *internal,
+void                    gst_clock_get_calibration       (GstClock *clock, GstClockTime *internal,
                                                          GstClockTime *external,
                                                          GstClockTime *rate_num,
                                                          GstClockTime *rate_denom);
 
 /* master/slave clocks */
-gboolean		gst_clock_set_master		(GstClock *clock, GstClock *master);
-GstClock*		gst_clock_get_master		(GstClock *clock);
-gboolean		gst_clock_add_observation       (GstClock *clock, GstClockTime slave,
-							 GstClockTime master, gdouble *r_squared);
+gboolean                gst_clock_set_master            (GstClock *clock, GstClock *master);
+GstClock*               gst_clock_get_master            (GstClock *clock);
+gboolean                gst_clock_add_observation       (GstClock *clock, GstClockTime slave,
+                                                         GstClockTime master, gdouble *r_squared);
 
 
 /* getting and adjusting internal/external time */
-GstClockTime		gst_clock_get_internal_time	(GstClock *clock);
-GstClockTime		gst_clock_adjust_unlocked	(GstClock *clock, GstClockTime internal);
+GstClockTime            gst_clock_get_internal_time     (GstClock *clock);
+GstClockTime            gst_clock_adjust_unlocked       (GstClock *clock, GstClockTime internal);
 GstClockTime            gst_clock_unadjust_unlocked     (GstClock * clock, GstClockTime external);
 
 
 /* creating IDs that can be used to get notifications */
-GstClockID		gst_clock_new_single_shot_id	(GstClock *clock,
-							 GstClockTime time);
-GstClockID		gst_clock_new_periodic_id	(GstClock *clock,
-							 GstClockTime start_time,
-							 GstClockTime interval);
+GstClockID              gst_clock_new_single_shot_id    (GstClock *clock,
+                                                         GstClockTime time);
+GstClockID              gst_clock_new_periodic_id       (GstClock *clock,
+                                                         GstClockTime start_time,
+                                                         GstClockTime interval);
 
 /* reference counting */
 GstClockID              gst_clock_id_ref                (GstClockID id);
 void                    gst_clock_id_unref              (GstClockID id);
 
 /* operations on IDs */
-gint			gst_clock_id_compare_func	(gconstpointer id1, gconstpointer id2);
+gint                    gst_clock_id_compare_func       (gconstpointer id1, gconstpointer id2);
 
-GstClockTime		gst_clock_id_get_time		(GstClockID id);
-GstClockReturn		gst_clock_id_wait		(GstClockID id,
-							 GstClockTimeDiff *jitter);
-GstClockReturn		gst_clock_id_wait_async		(GstClockID id,
-							 GstClockCallback func,
-							 gpointer user_data);
-GstClockReturn		gst_clock_id_wait_async_full	(GstClockID id,
-							 GstClockCallback func,
-							 gpointer user_data,
-							 GDestroyNotify destroy_data);
-void			gst_clock_id_unschedule		(GstClockID id);
+GstClockTime            gst_clock_id_get_time           (GstClockID id);
+GstClockReturn          gst_clock_id_wait               (GstClockID id,
+                                                         GstClockTimeDiff *jitter);
+GstClockReturn          gst_clock_id_wait_async         (GstClockID id,
+                                                         GstClockCallback func,
+                                                         gpointer user_data);
+GstClockReturn          gst_clock_id_wait_async_full    (GstClockID id,
+                                                         GstClockCallback func,
+                                                         gpointer user_data,
+                                                         GDestroyNotify destroy_data);
+void                    gst_clock_id_unschedule         (GstClockID id);
 
 gboolean                gst_clock_single_shot_id_reinit (GstClock * clock,
-							 GstClockID id,
-							 GstClockTime time);
+                                                         GstClockID id,
+                                                         GstClockTime time);
 gboolean                gst_clock_periodic_id_reinit    (GstClock * clock,
-							 GstClockID id,
-							 GstClockTime start_time,
-							 GstClockTime interval);
+                                                         GstClockID id,
+                                                         GstClockTime start_time,
+                                                         GstClockTime interval);
 
 G_END_DECLS
 

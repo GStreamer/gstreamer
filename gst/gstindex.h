@@ -318,7 +318,7 @@ typedef enum {
 
 /**
  * GstIndex:
- * 
+ *
  * Opaque #GstIndex structure.
  */
 struct _GstIndex {

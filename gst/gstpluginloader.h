@@ -26,10 +26,10 @@ G_BEGIN_DECLS
 typedef struct _GstPluginLoader GstPluginLoader;
 
 typedef struct _GstPluginLoaderFuncs {
-  GstPluginLoader * (*create)(GstRegistry *registry);
-  gboolean (*destroy)(GstPluginLoader *loader);
-  gboolean (*load)(GstPluginLoader *loader, const gchar *filename,
-      off_t file_size, time_t file_mtime);
+  GstPluginLoader * (*create)   (GstRegistry *registry);
+  gboolean          (*destroy)  (GstPluginLoader *loader);
+  gboolean          (*load)     (GstPluginLoader *loader, const gchar *filename,
+                                 off_t file_size, time_t file_mtime);
 } GstPluginLoaderFuncs;
 
 extern const GstPluginLoaderFuncs _priv_gst_plugin_loader_funcs;

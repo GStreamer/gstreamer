@@ -67,7 +67,7 @@ struct _GstPresetInterface
   gboolean     (*rename_preset)       (GstPreset *preset, const gchar *old_name,
                                        const gchar *new_name);
   gboolean     (*delete_preset)       (GstPreset *preset, const gchar *name);
-  
+
   gboolean     (*set_meta)            (GstPreset *preset, const gchar *name,
                                        const gchar *tag, const gchar *value);
   gboolean     (*get_meta)            (GstPreset *preset, const gchar *name,

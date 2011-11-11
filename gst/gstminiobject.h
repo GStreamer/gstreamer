@@ -71,7 +71,7 @@ typedef void (*GstMiniObjectFreeFunction) (GstMiniObject *obj);
  * GstMiniObjectWeakNotify:
  * @data: data that was provided when the weak reference was established
  * @where_the_mini_object_was: the mini object being finalized
- * 
+ *
  * A #GstMiniObjectWeakNotify function can be added to a mini object as a
  * callback that gets triggered when the mini object is finalized. Since the
  * mini object is already being finalized when the #GstMiniObjectWeakNotify is

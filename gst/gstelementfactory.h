@@ -56,7 +56,7 @@ struct _GstElementFactory {
 
   GType                 type;                   /* unique GType of element or 0 if not loaded */
 
-  gpointer		metadata;
+  gpointer              metadata;
 
   GList *               staticpadtemplates;     /* GstStaticPadTemplate list */
   guint                 numpadtemplates;
@@ -167,7 +167,7 @@ typedef guint64 GstElementFactoryListType;
  * Elements matching any of the defined GST_ELEMENT_FACTORY_TYPE_MEDIA types
  *
  * Note: Do not use this if you wish to not filter against any of the defined
- * media types. If you wish to do this, simply don't specify any 
+ * media types. If you wish to do this, simply don't specify any
  * GST_ELEMENT_FACTORY_TYPE_MEDIA flag.
  *
  * Since: 0.10.31
@@ -212,33 +212,33 @@ typedef guint64 GstElementFactoryListType;
   (GST_ELEMENT_FACTORY_TYPE_DECODER | GST_ELEMENT_FACTORY_TYPE_DEMUXER | GST_ELEMENT_FACTORY_TYPE_DEPAYLOADER | GST_ELEMENT_FACTORY_TYPE_PARSER)
 
 /* Element klass defines */
-#define GST_ELEMENT_FACTORY_KLASS_DECODER		"Decoder"
-#define GST_ELEMENT_FACTORY_KLASS_ENCODER		"Encoder"
-#define GST_ELEMENT_FACTORY_KLASS_SINK			"Sink"
-#define GST_ELEMENT_FACTORY_KLASS_SRC			"Source"
-#define GST_ELEMENT_FACTORY_KLASS_MUXER			"Muxer"
-#define GST_ELEMENT_FACTORY_KLASS_DEMUXER		"Demuxer"
-#define GST_ELEMENT_FACTORY_KLASS_PARSER		"Parser"
-#define GST_ELEMENT_FACTORY_KLASS_PAYLOADER		"Payloader"
-#define GST_ELEMENT_FACTORY_KLASS_DEPAYLOADER		"Depayloader"
-#define GST_ELEMENT_FACTORY_KLASS_FORMATTER		"Formatter"
+#define GST_ELEMENT_FACTORY_KLASS_DECODER               "Decoder"
+#define GST_ELEMENT_FACTORY_KLASS_ENCODER               "Encoder"
+#define GST_ELEMENT_FACTORY_KLASS_SINK                  "Sink"
+#define GST_ELEMENT_FACTORY_KLASS_SRC                   "Source"
+#define GST_ELEMENT_FACTORY_KLASS_MUXER                 "Muxer"
+#define GST_ELEMENT_FACTORY_KLASS_DEMUXER               "Demuxer"
+#define GST_ELEMENT_FACTORY_KLASS_PARSER                "Parser"
+#define GST_ELEMENT_FACTORY_KLASS_PAYLOADER             "Payloader"
+#define GST_ELEMENT_FACTORY_KLASS_DEPAYLOADER           "Depayloader"
+#define GST_ELEMENT_FACTORY_KLASS_FORMATTER             "Formatter"
 
-#define GST_ELEMENT_FACTORY_KLASS_MEDIA_VIDEO		"Video"
-#define GST_ELEMENT_FACTORY_KLASS_MEDIA_AUDIO		"Audio"
-#define GST_ELEMENT_FACTORY_KLASS_MEDIA_IMAGE		"Image"
-#define GST_ELEMENT_FACTORY_KLASS_MEDIA_SUBTITLE	"Subtitle"
-#define GST_ELEMENT_FACTORY_KLASS_MEDIA_METADATA	"Metadata"
+#define GST_ELEMENT_FACTORY_KLASS_MEDIA_VIDEO           "Video"
+#define GST_ELEMENT_FACTORY_KLASS_MEDIA_AUDIO           "Audio"
+#define GST_ELEMENT_FACTORY_KLASS_MEDIA_IMAGE           "Image"
+#define GST_ELEMENT_FACTORY_KLASS_MEDIA_SUBTITLE        "Subtitle"
+#define GST_ELEMENT_FACTORY_KLASS_MEDIA_METADATA        "Metadata"
 
 gboolean      gst_element_factory_list_is_type      (GstElementFactory *factory,
-						     GstElementFactoryListType type);
+                                                     GstElementFactoryListType type);
 
 GList *       gst_element_factory_list_get_elements (GstElementFactoryListType type,
-						     GstRank minrank);
+                                                     GstRank minrank);
 
 
 GList *       gst_element_factory_list_filter       (GList *list, const GstCaps *caps,
-						     GstPadDirection direction,
-						     gboolean subsetonly);
+                                                     GstPadDirection direction,
+                                                     gboolean subsetonly);
 G_END_DECLS
 
 #endif /* __GST_ELEMENT_FACTORY_H__ */

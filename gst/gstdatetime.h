@@ -36,31 +36,31 @@ G_BEGIN_DECLS
  */
 typedef struct _GstDateTime GstDateTime;
 
-gint	gst_date_time_get_year 		(const GstDateTime * datetime);
-gint	gst_date_time_get_month		(const GstDateTime * datetime);
-gint	gst_date_time_get_day		(const GstDateTime * datetime);
-gint	gst_date_time_get_hour 		(const GstDateTime * datetime);
-gint	gst_date_time_get_minute 	(const GstDateTime * datetime);
-gint	gst_date_time_get_second 	(const GstDateTime * datetime);
-gint	gst_date_time_get_microsecond 	(const GstDateTime * datetime);
-gfloat	gst_date_time_get_time_zone_offset (const GstDateTime * datetime);
+gint    gst_date_time_get_year             (const GstDateTime * datetime);
+gint    gst_date_time_get_month            (const GstDateTime * datetime);
+gint    gst_date_time_get_day              (const GstDateTime * datetime);
+gint    gst_date_time_get_hour             (const GstDateTime * datetime);
+gint    gst_date_time_get_minute           (const GstDateTime * datetime);
+gint    gst_date_time_get_second           (const GstDateTime * datetime);
+gint    gst_date_time_get_microsecond      (const GstDateTime * datetime);
+gfloat  gst_date_time_get_time_zone_offset (const GstDateTime * datetime);
 
-GstDateTime 	*gst_date_time_new_from_unix_epoch_local_time (gint64 secs);
-GstDateTime 	*gst_date_time_new_from_unix_epoch_utc  (gint64 secs);
-GstDateTime 	*gst_date_time_new_local_time		(gint year, gint month,
-							 gint day, gint hour,
-							 gint minute,
-							 gdouble seconds);
-GstDateTime 	*gst_date_time_new			(gfloat tzoffset,
-							 gint year, gint month,
-							 gint day, gint hour,
-							 gint minute,
-							 gdouble seconds);
-GstDateTime 	*gst_date_time_new_now_local_time (void);
-GstDateTime 	*gst_date_time_new_now_utc 	(void);
+GstDateTime *   gst_date_time_new_from_unix_epoch_local_time (gint64 secs);
+GstDateTime *   gst_date_time_new_from_unix_epoch_utc   (gint64 secs);
+GstDateTime *   gst_date_time_new_local_time            (gint year, gint month,
+                                                         gint day, gint hour,
+                                                         gint minute,
+                                                         gdouble seconds);
+GstDateTime *   gst_date_time_new                       (gfloat tzoffset,
+                                                         gint year, gint month,
+                                                         gint day, gint hour,
+                                                         gint minute,
+                                                         gdouble seconds);
+GstDateTime *   gst_date_time_new_now_local_time (void);
+GstDateTime *   gst_date_time_new_now_utc        (void);
 
-GstDateTime 	*gst_date_time_ref 		(GstDateTime * datetime);
-void 		gst_date_time_unref 		(GstDateTime * datetime);
+GstDateTime *   gst_date_time_ref                (GstDateTime * datetime);
+void            gst_date_time_unref              (GstDateTime * datetime);
 
 G_END_DECLS
 #endif /* __GST_DATE_TIME_H__ */
