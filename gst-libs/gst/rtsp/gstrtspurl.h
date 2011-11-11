@@ -84,7 +84,7 @@ struct _GstRTSPUrl {
   guint16            port;
   gchar             *abspath;
   gchar             *query;
-}; 
+};
 
 GType gst_rtsp_url_get_type (void);
 

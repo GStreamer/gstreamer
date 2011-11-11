@@ -54,7 +54,7 @@ G_BEGIN_DECLS
  * @GST_RTSP_RANGE_SMPTE: SMPTE timecode
  * @GST_RTSP_RANGE_SMPTE_30_DROP: 29.97 frames per second
  * @GST_RTSP_RANGE_SMPTE_25: 25 frames per second
- * @GST_RTSP_RANGE_NPT: Normal play time 
+ * @GST_RTSP_RANGE_NPT: Normal play time
  * @GST_RTSP_RANGE_CLOCK: Absolute time expressed as ISO 8601 timestamps
  *
  * Different possible time range units.
@@ -88,7 +88,7 @@ typedef enum {
 /**
  * GstRTSPTime:
  * @type: the time of the time
- * @seconds: seconds when @type is GST_RTSP_TIME_SECONDS 
+ * @seconds: seconds when @type is GST_RTSP_TIME_SECONDS
  *
  * A time indication.
  */

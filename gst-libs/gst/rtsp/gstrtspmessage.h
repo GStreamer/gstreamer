@@ -104,6 +104,8 @@ struct _GstRTSPMessage
 
   guint8        *body;
   guint          body_size;
+
+  gpointer _gst_reserved[GST_PADDING];
 };
 
 /* memory management */

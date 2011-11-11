@@ -60,75 +60,75 @@ G_BEGIN_DECLS
 typedef struct _GstRTSPConnection GstRTSPConnection;
 
 /* opening/closing a connection */
-GstRTSPResult      gst_rtsp_connection_create        (const GstRTSPUrl *url, GstRTSPConnection **conn);
+GstRTSPResult      gst_rtsp_connection_create         (const GstRTSPUrl *url, GstRTSPConnection **conn);
 GstRTSPResult      gst_rtsp_connection_create_from_fd (gint fd,
                                                        const gchar * ip,
                                                        guint16 port,
                                                        const gchar * initial_buffer,
                                                        GstRTSPConnection ** conn);
-GstRTSPResult      gst_rtsp_connection_accept        (gint sock, GstRTSPConnection **conn);
-GstRTSPResult      gst_rtsp_connection_connect       (GstRTSPConnection *conn, GTimeVal *timeout);
-GstRTSPResult      gst_rtsp_connection_close         (GstRTSPConnection *conn);
-GstRTSPResult      gst_rtsp_connection_free          (GstRTSPConnection *conn);
+GstRTSPResult      gst_rtsp_connection_accept         (gint sock, GstRTSPConnection **conn);
+GstRTSPResult      gst_rtsp_connection_connect        (GstRTSPConnection *conn, GTimeVal *timeout);
+GstRTSPResult      gst_rtsp_connection_close          (GstRTSPConnection *conn);
+GstRTSPResult      gst_rtsp_connection_free           (GstRTSPConnection *conn);
 
 
 /* sending/receiving raw bytes */
-GstRTSPResult      gst_rtsp_connection_read          (GstRTSPConnection * conn, guint8 * data,
-                                                      guint size, GTimeVal * timeout);
-GstRTSPResult      gst_rtsp_connection_write         (GstRTSPConnection * conn, const guint8 * data, 
-		                                      guint size, GTimeVal * timeout);
+GstRTSPResult      gst_rtsp_connection_read           (GstRTSPConnection * conn, guint8 * data,
+                                                       guint size, GTimeVal * timeout);
+GstRTSPResult      gst_rtsp_connection_write          (GstRTSPConnection * conn, const guint8 * data,
+                                                       guint size, GTimeVal * timeout);
 
 /* sending/receiving messages */
-GstRTSPResult      gst_rtsp_connection_send          (GstRTSPConnection *conn, GstRTSPMessage *message,
-                                                      GTimeVal *timeout);
-GstRTSPResult      gst_rtsp_connection_receive       (GstRTSPConnection *conn, GstRTSPMessage *message,
-                                                      GTimeVal *timeout);
+GstRTSPResult      gst_rtsp_connection_send           (GstRTSPConnection *conn, GstRTSPMessage *message,
+                                                       GTimeVal *timeout);
+GstRTSPResult      gst_rtsp_connection_receive        (GstRTSPConnection *conn, GstRTSPMessage *message,
+                                                       GTimeVal *timeout);
 
 /* status management */
-GstRTSPResult      gst_rtsp_connection_poll          (GstRTSPConnection *conn, GstRTSPEvent events,
-                                                      GstRTSPEvent *revents, GTimeVal *timeout);
+GstRTSPResult      gst_rtsp_connection_poll           (GstRTSPConnection *conn, GstRTSPEvent events,
+                                                       GstRTSPEvent *revents, GTimeVal *timeout);
 
 /* reset the timeout */
-GstRTSPResult      gst_rtsp_connection_next_timeout  (GstRTSPConnection *conn, GTimeVal *timeout);
-GstRTSPResult      gst_rtsp_connection_reset_timeout (GstRTSPConnection *conn);
+GstRTSPResult      gst_rtsp_connection_next_timeout   (GstRTSPConnection *conn, GTimeVal *timeout);
+GstRTSPResult      gst_rtsp_connection_reset_timeout  (GstRTSPConnection *conn);
 
 /* flushing state */
-GstRTSPResult      gst_rtsp_connection_flush         (GstRTSPConnection *conn, gboolean flush);
+GstRTSPResult      gst_rtsp_connection_flush          (GstRTSPConnection *conn, gboolean flush);
 
 /* HTTP proxy support */
-GstRTSPResult      gst_rtsp_connection_set_proxy     (GstRTSPConnection *conn,
-                                                      const gchar *host, guint port);
+GstRTSPResult      gst_rtsp_connection_set_proxy      (GstRTSPConnection *conn,
+                                                       const gchar *host, guint port);
 
 /* configure authentication data */
-GstRTSPResult      gst_rtsp_connection_set_auth      (GstRTSPConnection *conn, GstRTSPAuthMethod method,
-                                                      const gchar *user, const gchar *pass);
+GstRTSPResult      gst_rtsp_connection_set_auth       (GstRTSPConnection *conn, GstRTSPAuthMethod method,
+                                                       const gchar *user, const gchar *pass);
 
 void               gst_rtsp_connection_set_auth_param    (GstRTSPConnection *conn,
-		                                          const gchar * param,
-							  const gchar *value);
+                                                          const gchar * param,
+                                                          const gchar *value);
 void               gst_rtsp_connection_clear_auth_params (GstRTSPConnection *conn);
 
 /* configure DSCP */
-GstRTSPResult      gst_rtsp_connection_set_qos_dscp  (GstRTSPConnection *conn,
-                                                      guint qos_dscp);
+GstRTSPResult      gst_rtsp_connection_set_qos_dscp   (GstRTSPConnection *conn,
+                                                       guint qos_dscp);
 
 /* accessors */
-GstRTSPUrl *       gst_rtsp_connection_get_url       (const GstRTSPConnection *conn);
-const gchar *      gst_rtsp_connection_get_ip        (const GstRTSPConnection *conn);
-void               gst_rtsp_connection_set_ip        (GstRTSPConnection *conn, const gchar *ip);
+GstRTSPUrl *       gst_rtsp_connection_get_url        (const GstRTSPConnection *conn);
+const gchar *      gst_rtsp_connection_get_ip         (const GstRTSPConnection *conn);
+void               gst_rtsp_connection_set_ip         (GstRTSPConnection *conn, const gchar *ip);
 
-gint               gst_rtsp_connection_get_readfd    (const GstRTSPConnection *conn);
-gint               gst_rtsp_connection_get_writefd   (const GstRTSPConnection *conn);
+gint               gst_rtsp_connection_get_readfd     (const GstRTSPConnection *conn);
+gint               gst_rtsp_connection_get_writefd    (const GstRTSPConnection *conn);
 
-void               gst_rtsp_connection_set_http_mode (GstRTSPConnection *conn,
-                                                      gboolean enable);
+void               gst_rtsp_connection_set_http_mode  (GstRTSPConnection *conn,
+                                                       gboolean enable);
 
 /* tunneling */
-void               gst_rtsp_connection_set_tunneled  (GstRTSPConnection *conn, gboolean tunneled);
-gboolean           gst_rtsp_connection_is_tunneled   (const GstRTSPConnection *conn);
+void               gst_rtsp_connection_set_tunneled   (GstRTSPConnection *conn, gboolean tunneled);
+gboolean           gst_rtsp_connection_is_tunneled    (const GstRTSPConnection *conn);
 
-const gchar *      gst_rtsp_connection_get_tunnelid  (const GstRTSPConnection *conn);
-GstRTSPResult      gst_rtsp_connection_do_tunnel     (GstRTSPConnection *conn, GstRTSPConnection *conn2);
+const gchar *      gst_rtsp_connection_get_tunnelid   (const GstRTSPConnection *conn);
+GstRTSPResult      gst_rtsp_connection_do_tunnel      (GstRTSPConnection *conn, GstRTSPConnection *conn2);
 
 /* async IO */
 
@@ -176,13 +176,13 @@ typedef struct {
   GstRTSPResult     (*tunnel_lost)      (GstRTSPWatch *watch, gpointer user_data);
 
   /*< private >*/
-  gpointer _gst_reserved[GST_PADDING - 2];
+  gpointer _gst_reserved[GST_PADDING];
 } GstRTSPWatchFuncs;
 
 GstRTSPWatch *     gst_rtsp_watch_new                (GstRTSPConnection *conn,
                                                       GstRTSPWatchFuncs *funcs,
-						      gpointer user_data,
-						      GDestroyNotify notify);
+                                                      gpointer user_data,
+                                                      GDestroyNotify notify);
 void               gst_rtsp_watch_reset              (GstRTSPWatch *watch);
 void               gst_rtsp_watch_unref              (GstRTSPWatch *watch);
 
@@ -195,14 +195,6 @@ GstRTSPResult      gst_rtsp_watch_write_data         (GstRTSPWatch *watch,
 GstRTSPResult      gst_rtsp_watch_send_message       (GstRTSPWatch *watch,
                                                       GstRTSPMessage *message,
                                                       guint *id);
-
-#ifndef GST_DISABLE_DEPRECATED
-guint              gst_rtsp_watch_queue_data         (GstRTSPWatch * watch,
-                                                      const guint8 * data,
-                                                      guint size);
-guint              gst_rtsp_watch_queue_message      (GstRTSPWatch *watch,
-                                                      GstRTSPMessage *message);
-#endif
 
 G_END_DECLS
 

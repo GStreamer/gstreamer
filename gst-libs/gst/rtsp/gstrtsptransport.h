@@ -43,6 +43,7 @@
 #ifndef __GST_RTSP_TRANSPORT_H__
 #define __GST_RTSP_TRANSPORT_H__
 
+#include <gst/gstconfig.h>
 #include <gst/rtsp/gstrtspdefs.h>
 
 G_BEGIN_DECLS
@@ -156,6 +157,7 @@ struct _GstRTSPTransport {
   /* RTP specific */
   guint          ssrc;
 
+  gpointer _gst_reserved[GST_PADDING];
 };
 
 GstRTSPResult      gst_rtsp_transport_new          (GstRTSPTransport **transport);

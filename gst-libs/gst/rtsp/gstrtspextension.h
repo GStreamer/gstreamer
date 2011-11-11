@@ -68,14 +68,14 @@ struct _GstRTSPExtensionInterface {
   GstRTSPResult (*receive_request)  (GstRTSPExtension *ext, GstRTSPMessage *req);
 
   /*< private >*/
-  gpointer                 _gst_reserved[GST_PADDING - 1];
+  gpointer                 _gst_reserved[GST_PADDING];
 };
 
 GType           gst_rtsp_extension_get_type          (void);
 
 /* invoke vfunction on interface */
 gboolean        gst_rtsp_extension_detect_server     (GstRTSPExtension *ext, GstRTSPMessage *resp);
-  
+
 GstRTSPResult   gst_rtsp_extension_before_send       (GstRTSPExtension *ext, GstRTSPMessage *req);
 GstRTSPResult   gst_rtsp_extension_after_send        (GstRTSPExtension *ext, GstRTSPMessage *req,
                                                       GstRTSPMessage *resp);
