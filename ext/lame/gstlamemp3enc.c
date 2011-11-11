@@ -366,13 +366,13 @@ zero_output_rate:
     if (tags)
       gst_tag_list_free (tags);
     GST_ELEMENT_ERROR (lame, LIBRARY, SETTINGS, (NULL),
-        ("LAMEMP3ENC decided on a zero sample rate"));
+        ("LAME mp3 audio decided on a zero sample rate"));
     return FALSE;
   }
 setup_failed:
   {
     GST_ELEMENT_ERROR (lame, LIBRARY, SETTINGS,
-        (_("Failed to configure LAMEMP3ENC encoder. Check your encoding parameters.")), (NULL));
+        (_("Failed to configure LAME mp3 audio encoder. Check your encoding parameters.")), (NULL));
     return FALSE;
   }
 }
