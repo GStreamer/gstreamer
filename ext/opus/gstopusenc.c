@@ -82,11 +82,10 @@ gst_opus_enc_bandwidth_get_type (void)
 static GstStaticPadTemplate sink_factory = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("audio/x-raw-int, "
+    GST_STATIC_CAPS ("audio/x-raw, "
+        "format = (string) { S16LE }, "
         "rate = (int) { 8000, 12000, 16000, 24000, 48000 }, "
-        "channels = (int) [ 1, 2 ], "
-        "endianness = (int) BYTE_ORDER, "
-        "signed = (boolean) TRUE, " "width = (int) 16, " "depth = (int) 16")
+        "channels = (int) [ 1, 2 ] ")
     );
 
 static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",
@@ -138,31 +137,19 @@ static GstStateChangeReturn gst_opus_enc_change_state (GstElement * element,
 
 static GstFlowReturn gst_opus_enc_encode (GstOpusEnc * enc, gboolean flush);
 
-static void
-gst_opus_enc_setup_interfaces (GType opusenc_type)
-{
-  static const GInterfaceInfo tag_setter_info = { NULL, NULL, NULL };
-  const GInterfaceInfo preset_interface_info = {
-    NULL,                       /* interface_init */
-    NULL,                       /* interface_finalize */
-    NULL                        /* interface_data */
-  };
-
-  g_type_add_interface_static (opusenc_type, GST_TYPE_TAG_SETTER,
-      &tag_setter_info);
-  g_type_add_interface_static (opusenc_type, GST_TYPE_PRESET,
-      &preset_interface_info);
-
-  GST_DEBUG_CATEGORY_INIT (opusenc_debug, "opusenc", 0, "Opus encoder");
-}
-
-GST_BOILERPLATE_FULL (GstOpusEnc, gst_opus_enc, GstElement, GST_TYPE_ELEMENT,
-    gst_opus_enc_setup_interfaces);
+#define gst_opus_enc_parent_class parent_class
+G_DEFINE_TYPE_WITH_CODE (GstOpusEnc, gst_opus_enc, GST_TYPE_ELEMENT,
+    G_IMPLEMENT_INTERFACE (GST_TYPE_TAG_SETTER, NULL);
+    G_IMPLEMENT_INTERFACE (GST_TYPE_PRESET, NULL));
 
 static void
-gst_opus_enc_base_init (gpointer g_class)
+gst_opus_enc_class_init (GstOpusEncClass * klass)
 {
-  GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
+  GObjectClass *gobject_class;
+  GstElementClass *element_class;
+
+  gobject_class = (GObjectClass *) klass;
+  element_class = (GstElementClass *) klass;
 
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&src_factory));
@@ -172,16 +159,6 @@ gst_opus_enc_base_init (gpointer g_class)
       "Codec/Encoder/Audio",
       "Encodes audio in Opus format",
       "Sebastian Dröge <sebastian.droege@collabora.co.uk>");
-}
-
-static void
-gst_opus_enc_class_init (GstOpusEncClass * klass)
-{
-  GObjectClass *gobject_class;
-  GstElementClass *gstelement_class;
-
-  gobject_class = (GObjectClass *) klass;
-  gstelement_class = (GstElementClass *) klass;
 
   gobject_class->set_property = gst_opus_enc_set_property;
   gobject_class->get_property = gst_opus_enc_get_property;
@@ -230,8 +207,9 @@ gst_opus_enc_class_init (GstOpusEncClass * klass)
 
   gobject_class->finalize = GST_DEBUG_FUNCPTR (gst_opus_enc_finalize);
 
-  gstelement_class->change_state =
-      GST_DEBUG_FUNCPTR (gst_opus_enc_change_state);
+  element_class->change_state = GST_DEBUG_FUNCPTR (gst_opus_enc_change_state);
+
+  GST_DEBUG_CATEGORY_INIT (opusenc_debug, "opusenc", 0, "Opus encoder");
 }
 
 static void
@@ -305,13 +283,13 @@ gst_opus_enc_sink_setcaps (GstPad * pad, GstCaps * caps)
 
 
 static GstCaps *
-gst_opus_enc_sink_getcaps (GstPad * pad)
+gst_opus_enc_sink_getcaps (GstPad * pad, GstCaps * filter)
 {
   GstCaps *caps = gst_caps_copy (gst_pad_get_pad_template_caps (pad));
   GstCaps *peercaps = NULL;
   GstOpusEnc *enc = GST_OPUS_ENC (gst_pad_get_parent_element (pad));
 
-  peercaps = gst_pad_peer_get_caps (enc->srcpad);
+  peercaps = gst_pad_peer_get_caps (enc->srcpad, NULL);
 
   if (peercaps) {
     if (!gst_caps_is_empty (peercaps) && !gst_caps_is_any (peercaps)) {
@@ -331,6 +309,13 @@ gst_opus_enc_sink_getcaps (GstPad * pad)
   }
 
   gst_object_unref (enc);
+
+  if (filter) {
+    GstCaps *new_caps =
+        gst_caps_intersect_full (filter, caps, GST_CAPS_INTERSECT_FIRST);
+    gst_caps_unref (caps);
+    caps = new_caps;
+  }
 
   return caps;
 }
@@ -449,20 +434,6 @@ gst_opus_enc_get_latency (GstOpusEnc * enc)
       enc->sample_rate);
 }
 
-static const GstQueryType *
-gst_opus_enc_get_query_types (GstPad * pad)
-{
-  static const GstQueryType gst_opus_enc_src_query_types[] = {
-    GST_QUERY_POSITION,
-    GST_QUERY_DURATION,
-    GST_QUERY_CONVERT,
-    GST_QUERY_LATENCY,
-    0
-  };
-
-  return gst_opus_enc_src_query_types;
-}
-
 static gboolean
 gst_opus_enc_src_query (GstPad * pad, GstQuery * query)
 {
@@ -478,17 +449,17 @@ gst_opus_enc_src_query (GstPad * pad, GstQuery * query)
       gint64 pos, val;
 
       gst_query_parse_position (query, &req_fmt, NULL);
-      if ((res = gst_pad_query_peer_position (enc->sinkpad, &req_fmt, &val))) {
+      if ((res = gst_pad_query_peer_position (enc->sinkpad, req_fmt, &val))) {
         gst_query_set_position (query, req_fmt, val);
         break;
       }
 
       fmt = GST_FORMAT_TIME;
-      if (!(res = gst_pad_query_peer_position (enc->sinkpad, &fmt, &pos)))
+      if (!(res = gst_pad_query_peer_position (enc->sinkpad, fmt, &pos)))
         break;
 
       if ((res =
-              gst_pad_query_peer_convert (enc->sinkpad, fmt, pos, &req_fmt,
+              gst_pad_query_peer_convert (enc->sinkpad, fmt, pos, req_fmt,
                   &val)))
         gst_query_set_position (query, req_fmt, val);
 
@@ -500,17 +471,17 @@ gst_opus_enc_src_query (GstPad * pad, GstQuery * query)
       gint64 dur, val;
 
       gst_query_parse_duration (query, &req_fmt, NULL);
-      if ((res = gst_pad_query_peer_duration (enc->sinkpad, &req_fmt, &val))) {
+      if ((res = gst_pad_query_peer_duration (enc->sinkpad, req_fmt, &val))) {
         gst_query_set_duration (query, req_fmt, val);
         break;
       }
 
       fmt = GST_FORMAT_TIME;
-      if (!(res = gst_pad_query_peer_duration (enc->sinkpad, &fmt, &dur)))
+      if (!(res = gst_pad_query_peer_duration (enc->sinkpad, fmt, &dur)))
         break;
 
       if ((res =
-              gst_pad_query_peer_convert (enc->sinkpad, fmt, dur, &req_fmt,
+              gst_pad_query_peer_convert (enc->sinkpad, fmt, dur, req_fmt,
                   &val))) {
         gst_query_set_duration (query, req_fmt, val);
       }
@@ -589,7 +560,7 @@ error:
 }
 
 static void
-gst_opus_enc_init (GstOpusEnc * enc, GstOpusEncClass * klass)
+gst_opus_enc_init (GstOpusEnc * enc)
 {
   enc->sinkpad = gst_pad_new_from_static_template (&sink_factory, "sink");
   gst_element_add_pad (GST_ELEMENT (enc), enc->sinkpad);
@@ -597,8 +568,6 @@ gst_opus_enc_init (GstOpusEnc * enc, GstOpusEncClass * klass)
       GST_DEBUG_FUNCPTR (gst_opus_enc_sinkevent));
   gst_pad_set_chain_function (enc->sinkpad,
       GST_DEBUG_FUNCPTR (gst_opus_enc_chain));
-  gst_pad_set_setcaps_function (enc->sinkpad,
-      GST_DEBUG_FUNCPTR (gst_opus_enc_sink_setcaps));
   gst_pad_set_getcaps_function (enc->sinkpad,
       GST_DEBUG_FUNCPTR (gst_opus_enc_sink_getcaps));
   gst_pad_set_query_function (enc->sinkpad,
@@ -607,8 +576,6 @@ gst_opus_enc_init (GstOpusEnc * enc, GstOpusEncClass * klass)
   enc->srcpad = gst_pad_new_from_static_template (&src_factory, "src");
   gst_pad_set_query_function (enc->srcpad,
       GST_DEBUG_FUNCPTR (gst_opus_enc_src_query));
-  gst_pad_set_query_type_function (enc->srcpad,
-      GST_DEBUG_FUNCPTR (gst_opus_enc_get_query_types));
   gst_element_add_pad (GST_ELEMENT (enc), enc->srcpad);
 
   enc->n_channels = -1;
@@ -708,9 +675,9 @@ encoder_creation_failed:
 static GstFlowReturn
 gst_opus_enc_push_buffer (GstOpusEnc * enc, GstBuffer * buffer)
 {
-  guint size;
+  gsize size;
 
-  size = GST_BUFFER_SIZE (buffer);
+  size = gst_buffer_get_size (buffer);
 
   enc->bytes_out += size;
 
@@ -785,6 +752,16 @@ gst_opus_enc_sinkevent (GstPad * pad, GstEvent * event)
       res = gst_pad_event_default (pad, event);
       break;
     }
+    case GST_EVENT_CAPS:
+    {
+      GstCaps *caps;
+
+      gst_event_parse_caps (event, &caps);
+      res = gst_opus_enc_sink_setcaps (pad, caps);
+      gst_event_unref (event);
+      break;
+    }
+
     default:
       res = gst_pad_event_default (pad, event);
       break;
@@ -810,21 +787,20 @@ gst_opus_enc_encode (GstOpusEnc * enc, gboolean flush)
     guint diff = bytes - gst_adapter_available (enc->adapter) % bytes;
     GstBuffer *buf = gst_buffer_new_and_alloc (diff);
 
-    memset (GST_BUFFER_DATA (buf), 0, diff);
+    gst_buffer_memset (buf, 0, 0, diff);
     gst_adapter_push (enc->adapter, buf);
   }
 
 
   while (gst_adapter_available (enc->adapter) >= bytes) {
     gint16 *data;
-    gint outsize;
+    gint encoded_size;
+    unsigned char *out_data;
+    gsize out_size;
     GstBuffer *outbuf;
 
-    ret = gst_pad_alloc_buffer_and_set_caps (enc->srcpad,
-        GST_BUFFER_OFFSET_NONE, bytes_per_packet, GST_PAD_CAPS (enc->srcpad),
-        &outbuf);
-
-    if (GST_FLOW_OK != ret)
+    outbuf = gst_buffer_new_and_alloc (bytes_per_packet);
+    if (!outbuf)
       goto done;
 
     data = (gint16 *) gst_adapter_take (enc->adapter, bytes);
@@ -833,18 +809,20 @@ gst_opus_enc_encode (GstOpusEnc * enc, gboolean flush)
     GST_DEBUG_OBJECT (enc, "encoding %d samples (%d bytes)",
         enc->frame_samples, bytes);
 
-    outsize = opus_encode (enc->state, data, enc->frame_samples,
-        GST_BUFFER_DATA (outbuf), bytes_per_packet);
+    out_data = gst_buffer_map (outbuf, &out_size, NULL, GST_MAP_WRITE);
+    encoded_size = opus_encode (enc->state, data, enc->frame_samples,
+        out_data, bytes_per_packet);
+    gst_buffer_unmap (outbuf, out_data, out_size);
 
     g_free (data);
 
-    if (outsize < 0) {
-      GST_ERROR_OBJECT (enc, "Encoding failed: %d", outsize);
+    if (encoded_size < 0) {
+      GST_ERROR_OBJECT (enc, "Encoding failed: %d", encoded_size);
       ret = GST_FLOW_ERROR;
       goto done;
-    } else if (outsize != bytes_per_packet) {
+    } else if (encoded_size != bytes_per_packet) {
       GST_WARNING_OBJECT (enc,
-          "Encoded size %d is different from %d bytes per packet", outsize,
+          "Encoded size %d is different from %d bytes per packet", encoded_size,
           bytes_per_packet);
       ret = GST_FLOW_ERROR;
       goto done;
@@ -888,7 +866,8 @@ gst_opus_enc_chain (GstPad * pad, GstBuffer * buf)
   if (!enc->header_sent) {
     GstCaps *caps;
 
-    caps = gst_pad_get_caps (enc->srcpad);
+    caps = gst_pad_get_caps (enc->srcpad, NULL);
+    caps = gst_caps_copy (caps);
     gst_caps_set_simple (caps,
         "rate", G_TYPE_INT, enc->sample_rate,
         "channels", G_TYPE_INT, enc->n_channels,
@@ -899,11 +878,13 @@ gst_opus_enc_chain (GstPad * pad, GstBuffer * buf)
     GST_LOG_OBJECT (enc, "rate=%d channels=%d frame-size=%d",
         enc->sample_rate, enc->n_channels, enc->frame_size);
     gst_pad_set_caps (enc->srcpad, caps);
+    gst_caps_unref (caps);
 
     enc->header_sent = TRUE;
   }
 
-  GST_DEBUG_OBJECT (enc, "received buffer of %u bytes", GST_BUFFER_SIZE (buf));
+  GST_DEBUG_OBJECT (enc, "received buffer of %u bytes",
+      gst_buffer_get_size (buf));
 
   /* Save the timestamp of the first buffer. This will be later
    * used as offset for all following buffers */
@@ -931,13 +912,12 @@ gst_opus_enc_chain (GstPad * pad, GstBuffer * buf)
 
     diff_bytes =
         GST_CLOCK_TIME_TO_FRAMES (diff, enc->sample_rate) * enc->n_channels * 2;
-    if (diff_bytes >= GST_BUFFER_SIZE (buf)) {
+    if (diff_bytes >= gst_buffer_get_size (buf)) {
       gst_buffer_unref (buf);
       return GST_FLOW_OK;
     }
-    buf = gst_buffer_make_metadata_writable (buf);
-    GST_BUFFER_DATA (buf) += diff_bytes;
-    GST_BUFFER_SIZE (buf) -= diff_bytes;
+    buf = gst_buffer_make_writable (buf);
+    gst_buffer_resize (buf, diff_bytes, gst_buffer_get_size (buf) - diff_bytes);
 
     GST_BUFFER_TIMESTAMP (buf) += diff;
     if (GST_BUFFER_DURATION_IS_VALID (buf))

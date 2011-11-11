@@ -64,6 +64,8 @@ struct _GstOpusDec {
 
   int sample_rate;
   int n_channels;
+
+  GstBufferPool *pool;
 };
 
 struct _GstOpusDecClass {
