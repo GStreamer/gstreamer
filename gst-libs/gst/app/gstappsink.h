@@ -47,17 +47,17 @@ typedef struct _GstAppSinkPrivate GstAppSinkPrivate;
  * GstAppSinkCallbacks:
  * @eos: Called when the end-of-stream has been reached. This callback
  *       is called from the steaming thread.
- * @new_preroll: Called when a new preroll buffer is available. 
+ * @new_preroll: Called when a new preroll buffer is available.
  *       This callback is called from the steaming thread.
  *       The new preroll buffer can be retrieved with
  *       gst_app_sink_pull_preroll() either from this callback
  *       or from any other thread.
- * @new_buffer: Called when a new buffer is available. 
+ * @new_buffer: Called when a new buffer is available.
  *       This callback is called from the steaming thread.
  *       The new buffer can be retrieved with
  *       gst_app_sink_pull_buffer() either from this callback
  *       or from any other thread.
- * @new_buffer_list: Called when a new bufferlist is available. 
+ * @new_buffer_list: Called when a new bufferlist is available.
  *       This callback is called from the steaming thread.
  *       The new bufferlist can be retrieved with
  *       gst_app_sink_pull_buffer_list() either from this callback
@@ -130,8 +130,8 @@ GstBufferList * gst_app_sink_pull_buffer_list (GstAppSink *appsink);
 
 void            gst_app_sink_set_callbacks    (GstAppSink * appsink,
                                                GstAppSinkCallbacks *callbacks,
-					       gpointer user_data,
-					       GDestroyNotify notify);
+                                               gpointer user_data,
+                                               GDestroyNotify notify);
 
 G_END_DECLS
 
