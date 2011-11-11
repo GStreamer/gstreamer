@@ -483,6 +483,8 @@ gst_pulse_audio_sink_dispose (GObject * object)
 
   pbin->sinkpad = NULL;
   pbin->psink = NULL;
+
+  G_OBJECT_CLASS (parent_class)->dispose (object);
 }
 
 static gboolean
