@@ -65,6 +65,16 @@ struct _GESTimelinePipelinePrivate
   GstEncodingProfile *profile;
 };
 
+enum
+{
+  PROP_0,
+  PROP_AUDIO_SINK,
+  PROP_VIDEO_SINK,
+  PROP_LAST
+};
+
+static GParamSpec *properties[PROP_LAST];
+
 static GstStateChangeReturn ges_timeline_pipeline_change_state (GstElement *
     element, GstStateChange transition);
 
@@ -74,6 +84,46 @@ static OutputChain *new_output_chain_for_track (GESTimelinePipeline * self,
     GESTrack * track);
 static gboolean play_sink_multiple_seeks_send_event (GstElement * element,
     GstEvent * event);
+
+static void
+ges_timeline_pipeline_get_property (GObject * object, guint property_id,
+    GValue * value, GParamSpec * pspec)
+{
+  GESTimelinePipeline *self = GES_TIMELINE_PIPELINE (object);
+
+  switch (property_id) {
+    case PROP_AUDIO_SINK:
+      g_object_get_property (G_OBJECT (self->priv->playsink), "audio-sink",
+                             value);
+      break;
+    case PROP_VIDEO_SINK:
+      g_object_get_property (G_OBJECT (self->priv->playsink), "video-sink",
+                             value);
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
+  }
+}
+
+static void
+ges_timeline_pipeline_set_property (GObject * object, guint property_id,
+    const GValue * value, GParamSpec * pspec)
+{
+  GESTimelinePipeline *self = GES_TIMELINE_PIPELINE (object);
+
+  switch (property_id) {
+    case PROP_AUDIO_SINK:
+      g_object_set_property (G_OBJECT (self->priv->playsink), "audio-sink",
+                             value);
+      break;
+    case PROP_VIDEO_SINK:
+      g_object_set_property (G_OBJECT (self->priv->playsink), "video-sink",
+                             value);
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
+  }
+}
 
 static void
 ges_timeline_pipeline_dispose (GObject * object)
@@ -113,6 +163,30 @@ ges_timeline_pipeline_class_init (GESTimelinePipelineClass * klass)
   g_type_class_add_private (klass, sizeof (GESTimelinePipelinePrivate));
 
   object_class->dispose = ges_timeline_pipeline_dispose;
+  object_class->get_property = ges_timeline_pipeline_get_property;
+  object_class->set_property = ges_timeline_pipeline_set_property;
+
+  /**
+   * GESTimelinePipeline:audio-sink
+   *
+   * Audio sink for the preview.
+   */
+  properties[PROP_AUDIO_SINK] = g_param_spec_object ("audio-sink", "Audio Sink",
+      "Audio sink for the preview.",
+      GST_TYPE_ELEMENT, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
+  g_object_class_install_property (object_class, PROP_AUDIO_SINK,
+      properties[PROP_AUDIO_SINK]);
+
+  /**
+   * GESTimelinePipeline:video-sink
+   *
+   * Video sink for the preview.
+   */
+  properties[PROP_VIDEO_SINK] = g_param_spec_object ("video-sink", "Video Sink",
+      "Video sink for the preview.",
+      GST_TYPE_ELEMENT, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
+  g_object_class_install_property (object_class, PROP_VIDEO_SINK,
+      properties[PROP_VIDEO_SINK]);
 
   element_class->change_state =
       GST_DEBUG_FUNCPTR (ges_timeline_pipeline_change_state);
