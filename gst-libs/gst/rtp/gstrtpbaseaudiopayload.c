@@ -18,7 +18,7 @@
  */
 
 /**
- * SECTION:gstbasertpaudiopayload
+ * SECTION:gstrtpbaseaudiopayload
  * @short_description: Base class for audio RTP payloader
  *
  * Provides a base class for audio RTP payloaders for frame or sample based
@@ -63,10 +63,10 @@
 #include <gst/rtp/gstrtpbuffer.h>
 #include <gst/base/gstadapter.h>
 
-#include "gstbasertpaudiopayload.h"
+#include "gstrtpbaseaudiopayload.h"
 
-GST_DEBUG_CATEGORY_STATIC (basertpaudiopayload_debug);
-#define GST_CAT_DEFAULT (basertpaudiopayload_debug)
+GST_DEBUG_CATEGORY_STATIC (rtpbaseaudiopayload_debug);
+#define GST_CAT_DEFAULT (rtpbaseaudiopayload_debug)
 
 #define DEFAULT_BUFFER_LIST             FALSE
 
@@ -166,13 +166,13 @@ gst_rtp_base_audio_payload_class_init (GstRTPBaseAudioPayloadClass * klass)
 {
   GObjectClass *gobject_class;
   GstElementClass *gstelement_class;
-  GstRTPBasePayloadClass *gstbasertppayload_class;
+  GstRTPBasePayloadClass *gstrtpbasepayload_class;
 
   g_type_class_add_private (klass, sizeof (GstRTPBaseAudioPayloadPrivate));
 
   gobject_class = (GObjectClass *) klass;
   gstelement_class = (GstElementClass *) klass;
-  gstbasertppayload_class = (GstRTPBasePayloadClass *) klass;
+  gstrtpbasepayload_class = (GstRTPBasePayloadClass *) klass;
 
   gobject_class->finalize = gst_rtp_base_audio_payload_finalize;
   gobject_class->set_property = gst_rtp_base_audio_payload_set_property;
@@ -186,12 +186,12 @@ gst_rtp_base_audio_payload_class_init (GstRTPBaseAudioPayloadClass * klass)
   gstelement_class->change_state =
       GST_DEBUG_FUNCPTR (gst_rtp_base_payload_audio_change_state);
 
-  gstbasertppayload_class->handle_buffer =
+  gstrtpbasepayload_class->handle_buffer =
       GST_DEBUG_FUNCPTR (gst_rtp_base_audio_payload_handle_buffer);
-  gstbasertppayload_class->handle_event =
+  gstrtpbasepayload_class->handle_event =
       GST_DEBUG_FUNCPTR (gst_rtp_base_payload_audio_handle_event);
 
-  GST_DEBUG_CATEGORY_INIT (basertpaudiopayload_debug, "basertpaudiopayload", 0,
+  GST_DEBUG_CATEGORY_INIT (rtpbaseaudiopayload_debug, "rtpbaseaudiopayload", 0,
       "base audio RTP payloader");
 }
 
@@ -262,55 +262,55 @@ gst_rtp_base_audio_payload_get_property (GObject * object,
 
 /**
  * gst_rtp_base_audio_payload_set_frame_based:
- * @basertpaudiopayload: a pointer to the element.
+ * @rtpbaseaudiopayload: a pointer to the element.
  *
  * Tells #GstRTPBaseAudioPayload that the child element is for a frame based
  * audio codec
  */
 void
 gst_rtp_base_audio_payload_set_frame_based (GstRTPBaseAudioPayload *
-    basertpaudiopayload)
+    rtpbaseaudiopayload)
 {
-  g_return_if_fail (basertpaudiopayload != NULL);
-  g_return_if_fail (basertpaudiopayload->priv->time_to_bytes == NULL);
-  g_return_if_fail (basertpaudiopayload->priv->bytes_to_time == NULL);
-  g_return_if_fail (basertpaudiopayload->priv->bytes_to_rtptime == NULL);
+  g_return_if_fail (rtpbaseaudiopayload != NULL);
+  g_return_if_fail (rtpbaseaudiopayload->priv->time_to_bytes == NULL);
+  g_return_if_fail (rtpbaseaudiopayload->priv->bytes_to_time == NULL);
+  g_return_if_fail (rtpbaseaudiopayload->priv->bytes_to_rtptime == NULL);
 
-  basertpaudiopayload->priv->bytes_to_time =
+  rtpbaseaudiopayload->priv->bytes_to_time =
       gst_rtp_base_audio_payload_frame_bytes_to_time;
-  basertpaudiopayload->priv->bytes_to_rtptime =
+  rtpbaseaudiopayload->priv->bytes_to_rtptime =
       gst_rtp_base_audio_payload_frame_bytes_to_rtptime;
-  basertpaudiopayload->priv->time_to_bytes =
+  rtpbaseaudiopayload->priv->time_to_bytes =
       gst_rtp_base_audio_payload_frame_time_to_bytes;
 }
 
 /**
  * gst_rtp_base_audio_payload_set_sample_based:
- * @basertpaudiopayload: a pointer to the element.
+ * @rtpbaseaudiopayload: a pointer to the element.
  *
  * Tells #GstRTPBaseAudioPayload that the child element is for a sample based
  * audio codec
  */
 void
 gst_rtp_base_audio_payload_set_sample_based (GstRTPBaseAudioPayload *
-    basertpaudiopayload)
+    rtpbaseaudiopayload)
 {
-  g_return_if_fail (basertpaudiopayload != NULL);
-  g_return_if_fail (basertpaudiopayload->priv->time_to_bytes == NULL);
-  g_return_if_fail (basertpaudiopayload->priv->bytes_to_time == NULL);
-  g_return_if_fail (basertpaudiopayload->priv->bytes_to_rtptime == NULL);
+  g_return_if_fail (rtpbaseaudiopayload != NULL);
+  g_return_if_fail (rtpbaseaudiopayload->priv->time_to_bytes == NULL);
+  g_return_if_fail (rtpbaseaudiopayload->priv->bytes_to_time == NULL);
+  g_return_if_fail (rtpbaseaudiopayload->priv->bytes_to_rtptime == NULL);
 
-  basertpaudiopayload->priv->bytes_to_time =
+  rtpbaseaudiopayload->priv->bytes_to_time =
       gst_rtp_base_audio_payload_sample_bytes_to_time;
-  basertpaudiopayload->priv->bytes_to_rtptime =
+  rtpbaseaudiopayload->priv->bytes_to_rtptime =
       gst_rtp_base_audio_payload_sample_bytes_to_rtptime;
-  basertpaudiopayload->priv->time_to_bytes =
+  rtpbaseaudiopayload->priv->time_to_bytes =
       gst_rtp_base_audio_payload_sample_time_to_bytes;
 }
 
 /**
  * gst_rtp_base_audio_payload_set_frame_options:
- * @basertpaudiopayload: a pointer to the element.
+ * @rtpbaseaudiopayload: a pointer to the element.
  * @frame_duration: The duraction of an audio frame in milliseconds.
  * @frame_size: The size of an audio frame in bytes.
  *
@@ -319,46 +319,46 @@ gst_rtp_base_audio_payload_set_sample_based (GstRTPBaseAudioPayload *
  */
 void
 gst_rtp_base_audio_payload_set_frame_options (GstRTPBaseAudioPayload
-    * basertpaudiopayload, gint frame_duration, gint frame_size)
+    * rtpbaseaudiopayload, gint frame_duration, gint frame_size)
 {
   GstRTPBaseAudioPayloadPrivate *priv;
 
-  g_return_if_fail (basertpaudiopayload != NULL);
+  g_return_if_fail (rtpbaseaudiopayload != NULL);
 
-  priv = basertpaudiopayload->priv;
+  priv = rtpbaseaudiopayload->priv;
 
-  basertpaudiopayload->frame_duration = frame_duration;
+  rtpbaseaudiopayload->frame_duration = frame_duration;
   priv->frame_duration_ns = frame_duration * GST_MSECOND;
-  basertpaudiopayload->frame_size = frame_size;
+  rtpbaseaudiopayload->frame_size = frame_size;
   priv->align = frame_size;
 
   gst_adapter_clear (priv->adapter);
 
-  GST_DEBUG_OBJECT (basertpaudiopayload, "frame set to %d ms and size %d",
+  GST_DEBUG_OBJECT (rtpbaseaudiopayload, "frame set to %d ms and size %d",
       frame_duration, frame_size);
 }
 
 /**
  * gst_rtp_base_audio_payload_set_sample_options:
- * @basertpaudiopayload: a pointer to the element.
+ * @rtpbaseaudiopayload: a pointer to the element.
  * @sample_size: Size per sample in bytes.
  *
  * Sets the options for sample based audio codecs.
  */
 void
 gst_rtp_base_audio_payload_set_sample_options (GstRTPBaseAudioPayload
-    * basertpaudiopayload, gint sample_size)
+    * rtpbaseaudiopayload, gint sample_size)
 {
-  g_return_if_fail (basertpaudiopayload != NULL);
+  g_return_if_fail (rtpbaseaudiopayload != NULL);
 
   /* sample_size is in bits internally */
-  gst_rtp_base_audio_payload_set_samplebits_options (basertpaudiopayload,
+  gst_rtp_base_audio_payload_set_samplebits_options (rtpbaseaudiopayload,
       sample_size * 8);
 }
 
 /**
  * gst_rtp_base_audio_payload_set_samplebits_options:
- * @basertpaudiopayload: a pointer to the element.
+ * @rtpbaseaudiopayload: a pointer to the element.
  * @sample_size: Size per sample in bits.
  *
  * Sets the options for sample based audio codecs.
@@ -367,16 +367,16 @@ gst_rtp_base_audio_payload_set_sample_options (GstRTPBaseAudioPayload
  */
 void
 gst_rtp_base_audio_payload_set_samplebits_options (GstRTPBaseAudioPayload
-    * basertpaudiopayload, gint sample_size)
+    * rtpbaseaudiopayload, gint sample_size)
 {
   guint fragment_size;
   GstRTPBaseAudioPayloadPrivate *priv;
 
-  g_return_if_fail (basertpaudiopayload != NULL);
+  g_return_if_fail (rtpbaseaudiopayload != NULL);
 
-  priv = basertpaudiopayload->priv;
+  priv = rtpbaseaudiopayload->priv;
 
-  basertpaudiopayload->sample_size = sample_size;
+  rtpbaseaudiopayload->sample_size = sample_size;
 
   /* sample_size is in bits and is converted into multiple bytes */
   fragment_size = sample_size;
@@ -387,7 +387,7 @@ gst_rtp_base_audio_payload_set_samplebits_options (GstRTPBaseAudioPayload
 
   gst_adapter_clear (priv->adapter);
 
-  GST_DEBUG_OBJECT (basertpaudiopayload,
+  GST_DEBUG_OBJECT (rtpbaseaudiopayload,
       "Samplebits set to sample size %d bits", sample_size);
 }
 
@@ -922,16 +922,16 @@ static GstStateChangeReturn
 gst_rtp_base_payload_audio_change_state (GstElement * element,
     GstStateChange transition)
 {
-  GstRTPBaseAudioPayload *basertppayload;
+  GstRTPBaseAudioPayload *rtpbasepayload;
   GstStateChangeReturn ret;
 
-  basertppayload = GST_RTP_BASE_AUDIO_PAYLOAD (element);
+  rtpbasepayload = GST_RTP_BASE_AUDIO_PAYLOAD (element);
 
   switch (transition) {
     case GST_STATE_CHANGE_READY_TO_PAUSED:
-      basertppayload->priv->cached_mtu = -1;
-      basertppayload->priv->last_rtptime = -1;
-      basertppayload->priv->last_timestamp = -1;
+      rtpbasepayload->priv->cached_mtu = -1;
+      rtpbasepayload->priv->last_rtptime = -1;
+      rtpbasepayload->priv->last_timestamp = -1;
       break;
     default:
       break;
@@ -941,7 +941,7 @@ gst_rtp_base_payload_audio_change_state (GstElement * element,
 
   switch (transition) {
     case GST_STATE_CHANGE_PAUSED_TO_READY:
-      gst_adapter_clear (basertppayload->priv->adapter);
+      gst_adapter_clear (rtpbasepayload->priv->adapter);
       break;
     default:
       break;
@@ -979,7 +979,7 @@ gst_rtp_base_payload_audio_handle_event (GstRTPBasePayload * basep,
 
 /**
  * gst_rtp_base_audio_payload_get_adapter:
- * @basertpaudiopayload: a #GstRTPBaseAudioPayload
+ * @rtpbaseaudiopayload: a #GstRTPBaseAudioPayload
  *
  * Gets the internal adapter used by the depayloader.
  *
@@ -989,11 +989,11 @@ gst_rtp_base_payload_audio_handle_event (GstRTPBasePayload * basep,
  */
 GstAdapter *
 gst_rtp_base_audio_payload_get_adapter (GstRTPBaseAudioPayload
-    * basertpaudiopayload)
+    * rtpbaseaudiopayload)
 {
   GstAdapter *adapter;
 
-  if ((adapter = basertpaudiopayload->priv->adapter))
+  if ((adapter = rtpbaseaudiopayload->priv->adapter))
     g_object_ref (adapter);
 
   return adapter;

@@ -13,7 +13,7 @@
  */
 
 /**
- * SECTION:gstbasertppayload
+ * SECTION:gstrtpbasepayload
  * @short_description: Base class for RTP payloader
  *
  * Provides a base class for RTP payloaders
@@ -27,10 +27,10 @@
 
 #include <gst/rtp/gstrtpbuffer.h>
 
-#include "gstbasertppayload.h"
+#include "gstrtpbasepayload.h"
 
-GST_DEBUG_CATEGORY_STATIC (basertppayload_debug);
-#define GST_CAT_DEFAULT (basertppayload_debug)
+GST_DEBUG_CATEGORY_STATIC (rtpbasepayload_debug);
+#define GST_CAT_DEFAULT (rtpbasepayload_debug)
 
 #define GST_RTP_BASE_PAYLOAD_GET_PRIVATE(obj)  \
    (G_TYPE_INSTANCE_GET_PRIVATE ((obj), GST_TYPE_RTP_BASE_PAYLOAD, GstRTPBasePayloadPrivate))
@@ -92,19 +92,19 @@ enum
 };
 
 static void gst_rtp_base_payload_class_init (GstRTPBasePayloadClass * klass);
-static void gst_rtp_base_payload_init (GstRTPBasePayload * basertppayload,
+static void gst_rtp_base_payload_init (GstRTPBasePayload * rtpbasepayload,
     gpointer g_class);
 static void gst_rtp_base_payload_finalize (GObject * object);
 
 static GstCaps *gst_rtp_base_payload_sink_getcaps (GstPad * pad,
     GstCaps * filter);
 static gboolean gst_rtp_base_payload_event_default (GstRTPBasePayload *
-    basertppayload, GstEvent * event);
+    rtpbasepayload, GstEvent * event);
 static gboolean gst_rtp_base_payload_event (GstPad * pad, GstEvent * event);
 static GstFlowReturn gst_rtp_base_payload_chain (GstPad * pad,
     GstBuffer * buffer);
 static GstCaps *gst_rtp_base_payload_getcaps_default (GstRTPBasePayload *
-    basertppayload, GstPad * pad, GstCaps * filter);
+    rtpbasepayload, GstPad * pad, GstCaps * filter);
 
 static void gst_rtp_base_payload_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
@@ -121,10 +121,10 @@ static GstElementClass *parent_class = NULL;
 GType
 gst_rtp_base_payload_get_type (void)
 {
-  static GType basertppayload_type = 0;
+  static GType rtpbasepayload_type = 0;
 
-  if (g_once_init_enter ((gsize *) & basertppayload_type)) {
-    static const GTypeInfo basertppayload_info = {
+  if (g_once_init_enter ((gsize *) & rtpbasepayload_type)) {
+    static const GTypeInfo rtpbasepayload_info = {
       sizeof (GstRTPBasePayloadClass),
       NULL,
       NULL,
@@ -136,11 +136,11 @@ gst_rtp_base_payload_get_type (void)
       (GInstanceInitFunc) gst_rtp_base_payload_init,
     };
 
-    g_once_init_leave ((gsize *) & basertppayload_type,
+    g_once_init_leave ((gsize *) & rtpbasepayload_type,
         g_type_register_static (GST_TYPE_ELEMENT, "GstRTPBasePayload",
-            &basertppayload_info, G_TYPE_FLAG_ABSTRACT));
+            &rtpbasepayload_info, G_TYPE_FLAG_ABSTRACT));
   }
-  return basertppayload_type;
+  return rtpbasepayload_type;
 }
 
 static void
@@ -243,81 +243,81 @@ gst_rtp_base_payload_class_init (GstRTPBasePayloadClass * klass)
   klass->get_caps = gst_rtp_base_payload_getcaps_default;
   klass->handle_event = gst_rtp_base_payload_event_default;
 
-  GST_DEBUG_CATEGORY_INIT (basertppayload_debug, "basertppayload", 0,
+  GST_DEBUG_CATEGORY_INIT (rtpbasepayload_debug, "rtpbasepayload", 0,
       "Base class for RTP Payloaders");
 }
 
 static void
-gst_rtp_base_payload_init (GstRTPBasePayload * basertppayload, gpointer g_class)
+gst_rtp_base_payload_init (GstRTPBasePayload * rtpbasepayload, gpointer g_class)
 {
   GstPadTemplate *templ;
   GstRTPBasePayloadPrivate *priv;
 
-  basertppayload->priv = priv =
-      GST_RTP_BASE_PAYLOAD_GET_PRIVATE (basertppayload);
+  rtpbasepayload->priv = priv =
+      GST_RTP_BASE_PAYLOAD_GET_PRIVATE (rtpbasepayload);
 
   templ =
       gst_element_class_get_pad_template (GST_ELEMENT_CLASS (g_class), "src");
   g_return_if_fail (templ != NULL);
 
-  basertppayload->srcpad = gst_pad_new_from_template (templ, "src");
-  gst_element_add_pad (GST_ELEMENT (basertppayload), basertppayload->srcpad);
+  rtpbasepayload->srcpad = gst_pad_new_from_template (templ, "src");
+  gst_element_add_pad (GST_ELEMENT (rtpbasepayload), rtpbasepayload->srcpad);
 
   templ =
       gst_element_class_get_pad_template (GST_ELEMENT_CLASS (g_class), "sink");
   g_return_if_fail (templ != NULL);
 
-  basertppayload->sinkpad = gst_pad_new_from_template (templ, "sink");
-  gst_pad_set_getcaps_function (basertppayload->sinkpad,
+  rtpbasepayload->sinkpad = gst_pad_new_from_template (templ, "sink");
+  gst_pad_set_getcaps_function (rtpbasepayload->sinkpad,
       gst_rtp_base_payload_sink_getcaps);
-  gst_pad_set_event_function (basertppayload->sinkpad,
+  gst_pad_set_event_function (rtpbasepayload->sinkpad,
       gst_rtp_base_payload_event);
-  gst_pad_set_chain_function (basertppayload->sinkpad,
+  gst_pad_set_chain_function (rtpbasepayload->sinkpad,
       gst_rtp_base_payload_chain);
-  gst_element_add_pad (GST_ELEMENT (basertppayload), basertppayload->sinkpad);
+  gst_element_add_pad (GST_ELEMENT (rtpbasepayload), rtpbasepayload->sinkpad);
 
-  basertppayload->mtu = DEFAULT_MTU;
-  basertppayload->pt = DEFAULT_PT;
-  basertppayload->seqnum_offset = DEFAULT_SEQNUM_OFFSET;
-  basertppayload->ssrc = DEFAULT_SSRC;
-  basertppayload->ts_offset = DEFAULT_TIMESTAMP_OFFSET;
-  priv->seqnum_offset_random = (basertppayload->seqnum_offset == -1);
-  priv->ts_offset_random = (basertppayload->ts_offset == -1);
-  priv->ssrc_random = (basertppayload->ssrc == -1);
+  rtpbasepayload->mtu = DEFAULT_MTU;
+  rtpbasepayload->pt = DEFAULT_PT;
+  rtpbasepayload->seqnum_offset = DEFAULT_SEQNUM_OFFSET;
+  rtpbasepayload->ssrc = DEFAULT_SSRC;
+  rtpbasepayload->ts_offset = DEFAULT_TIMESTAMP_OFFSET;
+  priv->seqnum_offset_random = (rtpbasepayload->seqnum_offset == -1);
+  priv->ts_offset_random = (rtpbasepayload->ts_offset == -1);
+  priv->ssrc_random = (rtpbasepayload->ssrc == -1);
 
-  basertppayload->max_ptime = DEFAULT_MAX_PTIME;
-  basertppayload->min_ptime = DEFAULT_MIN_PTIME;
-  basertppayload->priv->perfect_rtptime = DEFAULT_PERFECT_RTPTIME;
-  basertppayload->abidata.ABI.ptime_multiple = DEFAULT_PTIME_MULTIPLE;
-  basertppayload->priv->base_offset = GST_BUFFER_OFFSET_NONE;
-  basertppayload->priv->base_rtime = GST_BUFFER_OFFSET_NONE;
+  rtpbasepayload->max_ptime = DEFAULT_MAX_PTIME;
+  rtpbasepayload->min_ptime = DEFAULT_MIN_PTIME;
+  rtpbasepayload->priv->perfect_rtptime = DEFAULT_PERFECT_RTPTIME;
+  rtpbasepayload->abidata.ABI.ptime_multiple = DEFAULT_PTIME_MULTIPLE;
+  rtpbasepayload->priv->base_offset = GST_BUFFER_OFFSET_NONE;
+  rtpbasepayload->priv->base_rtime = GST_BUFFER_OFFSET_NONE;
 
-  basertppayload->media = NULL;
-  basertppayload->encoding_name = NULL;
+  rtpbasepayload->media = NULL;
+  rtpbasepayload->encoding_name = NULL;
 
-  basertppayload->clock_rate = 0;
+  rtpbasepayload->clock_rate = 0;
 
-  basertppayload->priv->caps_max_ptime = DEFAULT_MAX_PTIME;
-  basertppayload->priv->prop_max_ptime = DEFAULT_MAX_PTIME;
+  rtpbasepayload->priv->caps_max_ptime = DEFAULT_MAX_PTIME;
+  rtpbasepayload->priv->prop_max_ptime = DEFAULT_MAX_PTIME;
 }
 
 static void
 gst_rtp_base_payload_finalize (GObject * object)
 {
-  GstRTPBasePayload *basertppayload;
+  GstRTPBasePayload *rtpbasepayload;
 
-  basertppayload = GST_RTP_BASE_PAYLOAD (object);
+  rtpbasepayload = GST_RTP_BASE_PAYLOAD (object);
 
-  g_free (basertppayload->media);
-  basertppayload->media = NULL;
-  g_free (basertppayload->encoding_name);
-  basertppayload->encoding_name = NULL;
+  g_free (rtpbasepayload->media);
+  rtpbasepayload->media = NULL;
+  g_free (rtpbasepayload->encoding_name);
+  rtpbasepayload->encoding_name = NULL;
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
 static GstCaps *
-gst_rtp_base_payload_getcaps_default (GstRTPBasePayload * basertppayload,
+gst_rtp_base_payload_getcaps_default (GstRTPBasePayload * rtpbasepayload,
     GstPad * pad, GstCaps * filter)
 {
   GstCaps *caps;
@@ -338,48 +338,48 @@ gst_rtp_base_payload_getcaps_default (GstRTPBasePayload * basertppayload,
 static GstCaps *
 gst_rtp_base_payload_sink_getcaps (GstPad * pad, GstCaps * filter)
 {
-  GstRTPBasePayload *basertppayload;
-  GstRTPBasePayloadClass *basertppayload_class;
+  GstRTPBasePayload *rtpbasepayload;
+  GstRTPBasePayloadClass *rtpbasepayload_class;
   GstCaps *caps = NULL;
 
   GST_DEBUG_OBJECT (pad, "getting caps");
 
-  basertppayload = GST_RTP_BASE_PAYLOAD (gst_pad_get_parent (pad));
-  basertppayload_class = GST_RTP_BASE_PAYLOAD_GET_CLASS (basertppayload);
+  rtpbasepayload = GST_RTP_BASE_PAYLOAD (gst_pad_get_parent (pad));
+  rtpbasepayload_class = GST_RTP_BASE_PAYLOAD_GET_CLASS (rtpbasepayload);
 
-  if (basertppayload_class->get_caps)
-    caps = basertppayload_class->get_caps (basertppayload, pad, filter);
+  if (rtpbasepayload_class->get_caps)
+    caps = rtpbasepayload_class->get_caps (rtpbasepayload, pad, filter);
 
-  gst_object_unref (basertppayload);
+  gst_object_unref (rtpbasepayload);
 
   return caps;
 }
 
 static gboolean
-gst_rtp_base_payload_event_default (GstRTPBasePayload * basertppayload,
+gst_rtp_base_payload_event_default (GstRTPBasePayload * rtpbasepayload,
     GstEvent * event)
 {
   gboolean res = FALSE;
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_FLUSH_START:
-      res = gst_pad_event_default (basertppayload->sinkpad, event);
+      res = gst_pad_event_default (rtpbasepayload->sinkpad, event);
       break;
     case GST_EVENT_FLUSH_STOP:
-      res = gst_pad_event_default (basertppayload->sinkpad, event);
-      gst_segment_init (&basertppayload->segment, GST_FORMAT_UNDEFINED);
+      res = gst_pad_event_default (rtpbasepayload->sinkpad, event);
+      gst_segment_init (&rtpbasepayload->segment, GST_FORMAT_UNDEFINED);
       break;
     case GST_EVENT_CAPS:
     {
-      GstRTPBasePayloadClass *basertppayload_class;
+      GstRTPBasePayloadClass *rtpbasepayload_class;
       GstCaps *caps;
 
       gst_event_parse_caps (event, &caps);
-      GST_DEBUG_OBJECT (basertppayload, "setting caps %" GST_PTR_FORMAT, caps);
+      GST_DEBUG_OBJECT (rtpbasepayload, "setting caps %" GST_PTR_FORMAT, caps);
 
-      basertppayload_class = GST_RTP_BASE_PAYLOAD_GET_CLASS (basertppayload);
-      if (basertppayload_class->set_caps)
-        res = basertppayload_class->set_caps (basertppayload, caps);
+      rtpbasepayload_class = GST_RTP_BASE_PAYLOAD_GET_CLASS (rtpbasepayload);
+      if (rtpbasepayload_class->set_caps)
+        res = rtpbasepayload_class->set_caps (rtpbasepayload, caps);
 
       gst_event_unref (event);
       break;
@@ -388,18 +388,18 @@ gst_rtp_base_payload_event_default (GstRTPBasePayload * basertppayload,
     {
       GstSegment *segment;
 
-      segment = &basertppayload->segment;
+      segment = &rtpbasepayload->segment;
       gst_event_copy_segment (event, segment);
 
-      basertppayload->priv->base_offset = GST_BUFFER_OFFSET_NONE;
+      rtpbasepayload->priv->base_offset = GST_BUFFER_OFFSET_NONE;
 
-      GST_DEBUG_OBJECT (basertppayload,
+      GST_DEBUG_OBJECT (rtpbasepayload,
           "configured SEGMENT %" GST_SEGMENT_FORMAT, segment);
-      res = gst_pad_event_default (basertppayload->sinkpad, event);
+      res = gst_pad_event_default (rtpbasepayload->sinkpad, event);
       break;
     }
     default:
-      res = gst_pad_event_default (basertppayload->sinkpad, event);
+      res = gst_pad_event_default (rtpbasepayload->sinkpad, event);
       break;
   }
   return res;
@@ -408,24 +408,24 @@ gst_rtp_base_payload_event_default (GstRTPBasePayload * basertppayload,
 static gboolean
 gst_rtp_base_payload_event (GstPad * pad, GstEvent * event)
 {
-  GstRTPBasePayload *basertppayload;
-  GstRTPBasePayloadClass *basertppayload_class;
+  GstRTPBasePayload *rtpbasepayload;
+  GstRTPBasePayloadClass *rtpbasepayload_class;
   gboolean res = FALSE;
 
-  basertppayload = GST_RTP_BASE_PAYLOAD (gst_pad_get_parent (pad));
-  if (G_UNLIKELY (basertppayload == NULL)) {
+  rtpbasepayload = GST_RTP_BASE_PAYLOAD (gst_pad_get_parent (pad));
+  if (G_UNLIKELY (rtpbasepayload == NULL)) {
     gst_event_unref (event);
     return FALSE;
   }
 
-  basertppayload_class = GST_RTP_BASE_PAYLOAD_GET_CLASS (basertppayload);
+  rtpbasepayload_class = GST_RTP_BASE_PAYLOAD_GET_CLASS (rtpbasepayload);
 
-  if (basertppayload_class->handle_event)
-    res = basertppayload_class->handle_event (basertppayload, event);
+  if (rtpbasepayload_class->handle_event)
+    res = rtpbasepayload_class->handle_event (rtpbasepayload, event);
   else
     gst_event_unref (event);
 
-  gst_object_unref (basertppayload);
+  gst_object_unref (rtpbasepayload);
 
   return res;
 }
@@ -434,28 +434,28 @@ gst_rtp_base_payload_event (GstPad * pad, GstEvent * event)
 static GstFlowReturn
 gst_rtp_base_payload_chain (GstPad * pad, GstBuffer * buffer)
 {
-  GstRTPBasePayload *basertppayload;
-  GstRTPBasePayloadClass *basertppayload_class;
+  GstRTPBasePayload *rtpbasepayload;
+  GstRTPBasePayloadClass *rtpbasepayload_class;
   GstFlowReturn ret;
 
-  basertppayload = GST_RTP_BASE_PAYLOAD (gst_pad_get_parent (pad));
-  basertppayload_class = GST_RTP_BASE_PAYLOAD_GET_CLASS (basertppayload);
+  rtpbasepayload = GST_RTP_BASE_PAYLOAD (gst_pad_get_parent (pad));
+  rtpbasepayload_class = GST_RTP_BASE_PAYLOAD_GET_CLASS (rtpbasepayload);
 
-  if (!basertppayload_class->handle_buffer)
+  if (!rtpbasepayload_class->handle_buffer)
     goto no_function;
 
-  ret = basertppayload_class->handle_buffer (basertppayload, buffer);
+  ret = rtpbasepayload_class->handle_buffer (rtpbasepayload, buffer);
 
-  gst_object_unref (basertppayload);
+  gst_object_unref (rtpbasepayload);
 
   return ret;
 
   /* ERRORS */
 no_function:
   {
-    GST_ELEMENT_ERROR (basertppayload, STREAM, NOT_IMPLEMENTED, (NULL),
+    GST_ELEMENT_ERROR (rtpbasepayload, STREAM, NOT_IMPLEMENTED, (NULL),
         ("subclass did not implement handle_buffer function"));
-    gst_object_unref (basertppayload);
+    gst_object_unref (rtpbasepayload);
     gst_buffer_unref (buffer);
     return GST_FLOW_ERROR;
   }
@@ -499,18 +499,18 @@ copy_fixed (GQuark field_id, const GValue * value, GstStructure * dest)
 }
 
 static void
-update_max_ptime (GstRTPBasePayload * basertppayload)
+update_max_ptime (GstRTPBasePayload * rtpbasepayload)
 {
-  if (basertppayload->priv->caps_max_ptime != -1 &&
-      basertppayload->priv->prop_max_ptime != -1)
-    basertppayload->max_ptime = MIN (basertppayload->priv->caps_max_ptime,
-        basertppayload->priv->prop_max_ptime);
-  else if (basertppayload->priv->caps_max_ptime != -1)
-    basertppayload->max_ptime = basertppayload->priv->caps_max_ptime;
-  else if (basertppayload->priv->prop_max_ptime != -1)
-    basertppayload->max_ptime = basertppayload->priv->prop_max_ptime;
+  if (rtpbasepayload->priv->caps_max_ptime != -1 &&
+      rtpbasepayload->priv->prop_max_ptime != -1)
+    rtpbasepayload->max_ptime = MIN (rtpbasepayload->priv->caps_max_ptime,
+        rtpbasepayload->priv->prop_max_ptime);
+  else if (rtpbasepayload->priv->caps_max_ptime != -1)
+    rtpbasepayload->max_ptime = rtpbasepayload->priv->caps_max_ptime;
+  else if (rtpbasepayload->priv->prop_max_ptime != -1)
+    rtpbasepayload->max_ptime = rtpbasepayload->priv->prop_max_ptime;
   else
-    basertppayload->max_ptime = DEFAULT_MAX_PTIME;
+    rtpbasepayload->max_ptime = DEFAULT_MAX_PTIME;
 }
 
 /**
@@ -904,49 +904,49 @@ static void
 gst_rtp_base_payload_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec)
 {
-  GstRTPBasePayload *basertppayload;
+  GstRTPBasePayload *rtpbasepayload;
   GstRTPBasePayloadPrivate *priv;
   gint64 val;
 
-  basertppayload = GST_RTP_BASE_PAYLOAD (object);
-  priv = basertppayload->priv;
+  rtpbasepayload = GST_RTP_BASE_PAYLOAD (object);
+  priv = rtpbasepayload->priv;
 
   switch (prop_id) {
     case PROP_MTU:
-      basertppayload->mtu = g_value_get_uint (value);
+      rtpbasepayload->mtu = g_value_get_uint (value);
       break;
     case PROP_PT:
-      basertppayload->pt = g_value_get_uint (value);
+      rtpbasepayload->pt = g_value_get_uint (value);
       break;
     case PROP_SSRC:
       val = g_value_get_uint (value);
-      basertppayload->ssrc = val;
+      rtpbasepayload->ssrc = val;
       priv->ssrc_random = FALSE;
       break;
     case PROP_TIMESTAMP_OFFSET:
       val = g_value_get_uint (value);
-      basertppayload->ts_offset = val;
+      rtpbasepayload->ts_offset = val;
       priv->ts_offset_random = FALSE;
       break;
     case PROP_SEQNUM_OFFSET:
       val = g_value_get_int (value);
-      basertppayload->seqnum_offset = val;
+      rtpbasepayload->seqnum_offset = val;
       priv->seqnum_offset_random = (val == -1);
-      GST_DEBUG_OBJECT (basertppayload, "seqnum offset 0x%04x, random %d",
-          basertppayload->seqnum_offset, priv->seqnum_offset_random);
+      GST_DEBUG_OBJECT (rtpbasepayload, "seqnum offset 0x%04x, random %d",
+          rtpbasepayload->seqnum_offset, priv->seqnum_offset_random);
       break;
     case PROP_MAX_PTIME:
-      basertppayload->priv->prop_max_ptime = g_value_get_int64 (value);
-      update_max_ptime (basertppayload);
+      rtpbasepayload->priv->prop_max_ptime = g_value_get_int64 (value);
+      update_max_ptime (rtpbasepayload);
       break;
     case PROP_MIN_PTIME:
-      basertppayload->min_ptime = g_value_get_int64 (value);
+      rtpbasepayload->min_ptime = g_value_get_int64 (value);
       break;
     case PROP_PERFECT_RTPTIME:
       priv->perfect_rtptime = g_value_get_boolean (value);
       break;
     case PROP_PTIME_MULTIPLE:
-      basertppayload->abidata.ABI.ptime_multiple = g_value_get_int64 (value);
+      rtpbasepayload->abidata.ABI.ptime_multiple = g_value_get_int64 (value);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -958,54 +958,54 @@ static void
 gst_rtp_base_payload_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec)
 {
-  GstRTPBasePayload *basertppayload;
+  GstRTPBasePayload *rtpbasepayload;
   GstRTPBasePayloadPrivate *priv;
 
-  basertppayload = GST_RTP_BASE_PAYLOAD (object);
-  priv = basertppayload->priv;
+  rtpbasepayload = GST_RTP_BASE_PAYLOAD (object);
+  priv = rtpbasepayload->priv;
 
   switch (prop_id) {
     case PROP_MTU:
-      g_value_set_uint (value, basertppayload->mtu);
+      g_value_set_uint (value, rtpbasepayload->mtu);
       break;
     case PROP_PT:
-      g_value_set_uint (value, basertppayload->pt);
+      g_value_set_uint (value, rtpbasepayload->pt);
       break;
     case PROP_SSRC:
       if (priv->ssrc_random)
         g_value_set_uint (value, -1);
       else
-        g_value_set_uint (value, basertppayload->ssrc);
+        g_value_set_uint (value, rtpbasepayload->ssrc);
       break;
     case PROP_TIMESTAMP_OFFSET:
       if (priv->ts_offset_random)
         g_value_set_uint (value, -1);
       else
-        g_value_set_uint (value, (guint32) basertppayload->ts_offset);
+        g_value_set_uint (value, (guint32) rtpbasepayload->ts_offset);
       break;
     case PROP_SEQNUM_OFFSET:
       if (priv->seqnum_offset_random)
         g_value_set_int (value, -1);
       else
-        g_value_set_int (value, (guint16) basertppayload->seqnum_offset);
+        g_value_set_int (value, (guint16) rtpbasepayload->seqnum_offset);
       break;
     case PROP_MAX_PTIME:
-      g_value_set_int64 (value, basertppayload->max_ptime);
+      g_value_set_int64 (value, rtpbasepayload->max_ptime);
       break;
     case PROP_MIN_PTIME:
-      g_value_set_int64 (value, basertppayload->min_ptime);
+      g_value_set_int64 (value, rtpbasepayload->min_ptime);
       break;
     case PROP_TIMESTAMP:
-      g_value_set_uint (value, basertppayload->timestamp);
+      g_value_set_uint (value, rtpbasepayload->timestamp);
       break;
     case PROP_SEQNUM:
-      g_value_set_uint (value, basertppayload->seqnum);
+      g_value_set_uint (value, rtpbasepayload->seqnum);
       break;
     case PROP_PERFECT_RTPTIME:
       g_value_set_boolean (value, priv->perfect_rtptime);
       break;
     case PROP_PTIME_MULTIPLE:
-      g_value_set_int64 (value, basertppayload->abidata.ABI.ptime_multiple);
+      g_value_set_int64 (value, rtpbasepayload->abidata.ABI.ptime_multiple);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -1017,37 +1017,37 @@ static GstStateChangeReturn
 gst_rtp_base_payload_change_state (GstElement * element,
     GstStateChange transition)
 {
-  GstRTPBasePayload *basertppayload;
+  GstRTPBasePayload *rtpbasepayload;
   GstRTPBasePayloadPrivate *priv;
   GstStateChangeReturn ret;
 
-  basertppayload = GST_RTP_BASE_PAYLOAD (element);
-  priv = basertppayload->priv;
+  rtpbasepayload = GST_RTP_BASE_PAYLOAD (element);
+  priv = rtpbasepayload->priv;
 
   switch (transition) {
     case GST_STATE_CHANGE_NULL_TO_READY:
       break;
     case GST_STATE_CHANGE_READY_TO_PAUSED:
-      gst_segment_init (&basertppayload->segment, GST_FORMAT_UNDEFINED);
+      gst_segment_init (&rtpbasepayload->segment, GST_FORMAT_UNDEFINED);
 
       if (priv->seqnum_offset_random)
-        basertppayload->seqnum_base = g_random_int_range (0, G_MAXUINT16);
+        rtpbasepayload->seqnum_base = g_random_int_range (0, G_MAXUINT16);
       else
-        basertppayload->seqnum_base = basertppayload->seqnum_offset;
-      priv->next_seqnum = basertppayload->seqnum_base;
-      basertppayload->seqnum = basertppayload->seqnum_base;
+        rtpbasepayload->seqnum_base = rtpbasepayload->seqnum_offset;
+      priv->next_seqnum = rtpbasepayload->seqnum_base;
+      rtpbasepayload->seqnum = rtpbasepayload->seqnum_base;
 
       if (priv->ssrc_random)
-        basertppayload->current_ssrc = g_random_int ();
+        rtpbasepayload->current_ssrc = g_random_int ();
       else
-        basertppayload->current_ssrc = basertppayload->ssrc;
+        rtpbasepayload->current_ssrc = rtpbasepayload->ssrc;
 
       if (priv->ts_offset_random)
-        basertppayload->ts_base = g_random_int ();
+        rtpbasepayload->ts_base = g_random_int ();
       else
-        basertppayload->ts_base = basertppayload->ts_offset;
-      basertppayload->timestamp = basertppayload->ts_base;
-      g_atomic_int_set (&basertppayload->priv->notified_first_timestamp, 1);
+        rtpbasepayload->ts_base = rtpbasepayload->ts_offset;
+      rtpbasepayload->timestamp = rtpbasepayload->ts_base;
+      g_atomic_int_set (&rtpbasepayload->priv->notified_first_timestamp, 1);
       priv->base_offset = GST_BUFFER_OFFSET_NONE;
       break;
     default:
@@ -1058,7 +1058,7 @@ gst_rtp_base_payload_change_state (GstElement * element,
 
   switch (transition) {
     case GST_STATE_CHANGE_PLAYING_TO_PAUSED:
-      g_atomic_int_set (&basertppayload->priv->notified_first_timestamp, 1);
+      g_atomic_int_set (&rtpbasepayload->priv->notified_first_timestamp, 1);
       break;
     case GST_STATE_CHANGE_READY_TO_NULL:
       break;

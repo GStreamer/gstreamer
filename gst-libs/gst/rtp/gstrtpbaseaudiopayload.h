@@ -21,7 +21,7 @@
 #define __GST_RTP_BASE_AUDIO_PAYLOAD_H__
 
 #include <gst/gst.h>
-#include <gst/rtp/gstbasertppayload.h>
+#include <gst/rtp/gstrtpbasepayload.h>
 #include <gst/base/gstadapter.h>
 
 G_BEGIN_DECLS
@@ -78,20 +78,20 @@ struct _GstRTPBaseAudioPayloadClass
 GType gst_rtp_base_audio_payload_get_type (void);
 
 /* configure frame based */
-void            gst_rtp_base_audio_payload_set_frame_based        (GstRTPBaseAudioPayload *basertpaudiopayload);
+void            gst_rtp_base_audio_payload_set_frame_based        (GstRTPBaseAudioPayload *rtpbaseaudiopayload);
 
-void            gst_rtp_base_audio_payload_set_frame_options      (GstRTPBaseAudioPayload *basertpaudiopayload,
+void            gst_rtp_base_audio_payload_set_frame_options      (GstRTPBaseAudioPayload *rtpbaseaudiopayload,
                                                                    gint frame_duration, gint frame_size);
 
 /* configure sample based */
-void            gst_rtp_base_audio_payload_set_sample_based       (GstRTPBaseAudioPayload *basertpaudiopayload);
-void            gst_rtp_base_audio_payload_set_sample_options     (GstRTPBaseAudioPayload *basertpaudiopayload,
+void            gst_rtp_base_audio_payload_set_sample_based       (GstRTPBaseAudioPayload *rtpbaseaudiopayload);
+void            gst_rtp_base_audio_payload_set_sample_options     (GstRTPBaseAudioPayload *rtpbaseaudiopayload,
                                                                    gint sample_size);
-void            gst_rtp_base_audio_payload_set_samplebits_options (GstRTPBaseAudioPayload *basertpaudiopayload,
+void            gst_rtp_base_audio_payload_set_samplebits_options (GstRTPBaseAudioPayload *rtpbaseaudiopayload,
                                                                    gint sample_size);
 
 /* get the internal adapter */
-GstAdapter*     gst_rtp_base_audio_payload_get_adapter            (GstRTPBaseAudioPayload *basertpaudiopayload);
+GstAdapter*     gst_rtp_base_audio_payload_get_adapter            (GstRTPBaseAudioPayload *rtpbaseaudiopayload);
 
 /* push and flushing data */
 GstFlowReturn   gst_rtp_base_audio_payload_push                   (GstRTPBaseAudioPayload * baseaudiopayload,

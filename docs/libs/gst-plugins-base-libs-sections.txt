@@ -1123,8 +1123,8 @@ gst_riff_strh
 # rtp
 
 <SECTION>
-<FILE>gstbasertpaudiopayload</FILE>
-<INCLUDE>gst/rtp/gstbasertpaudiopayload.h</INCLUDE>
+<FILE>gstrtpbaseaudiopayload</FILE>
+<INCLUDE>gst/rtp/gstrtpbaseaudiopayload.h</INCLUDE>
 GstRTPBaseAudioPayload
 GstRTPBaseAudioPayloadClass
 
@@ -1148,8 +1148,8 @@ GstRTPBaseAudioPayloadPrivate
 </SECTION>
 
 <SECTION>
-<FILE>gstbasertpdepayload</FILE>
-<INCLUDE>gst/rtp/gstbasertpdepayload.h</INCLUDE>
+<FILE>gstrtpbasedepayload</FILE>
+<INCLUDE>gst/rtp/gstrtpbasedepayload.h</INCLUDE>
 GstRTPBaseDepayload
 GstRTPBaseDepayloadClass
 
@@ -1179,8 +1179,8 @@ QUEUE_UNLOCK
 </SECTION>
 
 <SECTION>
-<FILE>gstbasertppayload</FILE>
-<INCLUDE>gst/rtp/gstbasertppayload.h</INCLUDE>
+<FILE>gstrtpbasepayload</FILE>
+<INCLUDE>gst/rtp/gstrtpbasepayload.h</INCLUDE>
 GstRTPBasePayload
 GstRTPBasePayloadClass
 

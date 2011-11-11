@@ -19,16 +19,16 @@
  */
 
 /**
- * SECTION:gstbasertpdepayload
+ * SECTION:gstrtpbasedepayload
  * @short_description: Base class for RTP depayloader
  *
  * Provides a base class for RTP depayloaders
  */
 
-#include "gstbasertpdepayload.h"
+#include "gstrtpbasedepayload.h"
 
-GST_DEBUG_CATEGORY_STATIC (basertpdepayload_debug);
-#define GST_CAT_DEFAULT (basertpdepayload_debug)
+GST_DEBUG_CATEGORY_STATIC (rtpbasedepayload_debug);
+#define GST_CAT_DEFAULT (rtpbasedepayload_debug)
 
 #define GST_RTP_BASE_DEPAYLOAD_GET_PRIVATE(obj)  \
    (G_TYPE_INSTANCE_GET_PRIVATE ((obj), GST_TYPE_RTP_BASE_DEPAYLOAD, GstRTPBaseDepayloadPrivate))
@@ -85,7 +85,7 @@ static gboolean gst_rtp_base_depayload_handle_event (GstRTPBaseDepayload *
 static GstElementClass *parent_class = NULL;
 static void gst_rtp_base_depayload_class_init (GstRTPBaseDepayloadClass *
     klass);
-static void gst_rtp_base_depayload_init (GstRTPBaseDepayload * basertppayload,
+static void gst_rtp_base_depayload_init (GstRTPBaseDepayload * rtpbasepayload,
     GstRTPBaseDepayloadClass * klass);
 
 GType
@@ -134,7 +134,7 @@ gst_rtp_base_depayload_class_init (GstRTPBaseDepayloadClass * klass)
   klass->packet_lost = gst_rtp_base_depayload_packet_lost;
   klass->handle_event = gst_rtp_base_depayload_handle_event;
 
-  GST_DEBUG_CATEGORY_INIT (basertpdepayload_debug, "basertpdepayload", 0,
+  GST_DEBUG_CATEGORY_INIT (rtpbasedepayload_debug, "rtpbasedepayload", 0,
       "Base class for RTP Depayloaders");
 }
 

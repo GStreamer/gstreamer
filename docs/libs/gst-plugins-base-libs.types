@@ -48,11 +48,11 @@ gst_video_orientation_get_type
 gst_video_overlay_get_type
 
 
-#include <gst/rtp/gstbasertpdepayload.h>
+#include <gst/rtp/gstrtpbasedepayload.h>
 gst_rtp_base_depayload_get_type
-#include <gst/rtp/gstbasertppayload.h>
+#include <gst/rtp/gstrtpbasepayload.h>
 gst_rtp_base_payload_get_type
-#include <gst/rtp/gstbasertpaudiopayload.h>
+#include <gst/rtp/gstrtpbaseaudiopayload.h>
 gst_rtp_base_audio_payload_get_type
 
 
