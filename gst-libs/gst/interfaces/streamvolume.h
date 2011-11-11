@@ -41,7 +41,7 @@ typedef struct _GstStreamVolume GstStreamVolume;
 typedef struct _GstStreamVolumeInterface GstStreamVolumeInterface;
 
 struct _GstStreamVolumeInterface {
-  GTypeInterface parent;
+  GTypeInterface iface;
 
   /*< private >*/
   gpointer _gst_reserved[GST_PADDING];
@@ -58,7 +58,7 @@ struct _GstStreamVolumeInterface {
  *
  * Formulas to convert from a linear to a cubic or dB volume are
  * cbrt(val) and 20 * log10 (val).
- * 
+ *
  * Since: 0.10.25
  */
 typedef enum {

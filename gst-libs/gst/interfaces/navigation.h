@@ -41,13 +41,13 @@ typedef struct _GstNavigationInterface GstNavigationInterface;
 
 /**
  * GstNavigationInterface:
- * @g_iface: the parent interface
+ * @iface: the parent interface
  * @send_event: sending a navigation event
  *
  * Color-balance interface.
  */
 struct _GstNavigationInterface {
-  GTypeInterface g_iface;
+  GTypeInterface iface;
 
   /* virtual functions */
   void (*send_event) (GstNavigation *navigation, GstStructure *structure);
@@ -155,20 +155,20 @@ typedef enum
 
 GstNavigationQueryType gst_navigation_query_get_type (GstQuery *query);
 
-GstQuery *gst_navigation_query_new_commands (void);
-void gst_navigation_query_set_commands (GstQuery *query, gint n_cmds, ...);
-void gst_navigation_query_set_commandsv (GstQuery *query, gint n_cmds,
-    GstNavigationCommand *cmds);
-gboolean gst_navigation_query_parse_commands_length (GstQuery *query,
-                                                 guint *n_cmds);
-gboolean gst_navigation_query_parse_commands_nth (GstQuery *query, guint nth,
-                                              GstNavigationCommand *cmd);
+GstQuery *      gst_navigation_query_new_commands       (void);
+void            gst_navigation_query_set_commands       (GstQuery *query, gint n_cmds, ...);
+void            gst_navigation_query_set_commandsv      (GstQuery *query, gint n_cmds,
+                                                         GstNavigationCommand *cmds);
+gboolean        gst_navigation_query_parse_commands_length     (GstQuery *query,
+                                                                guint *n_cmds);
+gboolean        gst_navigation_query_parse_commands_nth        (GstQuery *query, guint nth,
+                                                                GstNavigationCommand *cmd);
 
-GstQuery *gst_navigation_query_new_angles (void);
-void gst_navigation_query_set_angles (GstQuery *query, guint cur_angle,
-                                      guint n_angles);
-gboolean gst_navigation_query_parse_angles (GstQuery *query, guint *cur_angle,
-                                            guint *n_angles);
+GstQuery *      gst_navigation_query_new_angles         (void);
+void            gst_navigation_query_set_angles         (GstQuery *query, guint cur_angle,
+                                                         guint n_angles);
+gboolean        gst_navigation_query_parse_angles       (GstQuery *query, guint *cur_angle,
+                                                         guint *n_angles);
 
 /* Element messages */
 /**
@@ -198,19 +198,19 @@ typedef enum {
 
 GstNavigationMessageType gst_navigation_message_get_type (GstMessage *message);
 
-GstMessage *gst_navigation_message_new_mouse_over (GstObject *src,
-                                                   gboolean active);
-gboolean gst_navigation_message_parse_mouse_over (GstMessage *message,
-                                              gboolean *active);
+GstMessage *    gst_navigation_message_new_mouse_over       (GstObject *src,
+                                                             gboolean active);
+gboolean        gst_navigation_message_parse_mouse_over     (GstMessage *message,
+                                                             gboolean *active);
 
-GstMessage *gst_navigation_message_new_commands_changed (GstObject *src);
+GstMessage *    gst_navigation_message_new_commands_changed (GstObject *src);
 
-GstMessage *gst_navigation_message_new_angles_changed (GstObject *src,
-                                                       guint cur_angle,
-                                                       guint n_angles);
-gboolean gst_navigation_message_parse_angles_changed (GstMessage *message,
-                                                      guint *cur_angle,
-                                                      guint *n_angles);
+GstMessage *    gst_navigation_message_new_angles_changed   (GstObject *src,
+                                                             guint cur_angle,
+                                                             guint n_angles);
+gboolean        gst_navigation_message_parse_angles_changed (GstMessage *message,
+                                                             guint *cur_angle,
+                                                             guint *n_angles);
 
 /* event parsing functions */
 /**
@@ -248,25 +248,26 @@ typedef enum {
   GST_NAVIGATION_EVENT_COMMAND                    = 6
 } GstNavigationEventType;
 
-GstNavigationEventType gst_navigation_event_get_type (GstEvent *event);
-gboolean gst_navigation_event_parse_key_event (GstEvent *event,
-    const gchar **key);
-gboolean gst_navigation_event_parse_mouse_button_event (GstEvent *event,
-    gint *button, gdouble *x, gdouble *y);
-gboolean gst_navigation_event_parse_mouse_move_event (GstEvent *event,
-    gdouble *x, gdouble *y);
-gboolean gst_navigation_event_parse_command (GstEvent *event,
-    GstNavigationCommand *command);
+GstNavigationEventType gst_navigation_event_get_type          (GstEvent *event);
+
+gboolean        gst_navigation_event_parse_key_event          (GstEvent *event,
+                                                               const gchar **key);
+gboolean        gst_navigation_event_parse_mouse_button_event (GstEvent *event,
+                                                               gint *button, gdouble *x, gdouble *y);
+gboolean        gst_navigation_event_parse_mouse_move_event   (GstEvent *event,
+                                                               gdouble *x, gdouble *y);
+gboolean        gst_navigation_event_parse_command            (GstEvent *event,
+                                                               GstNavigationCommand *command);
 
 /* interface virtual function wrappers */
-void gst_navigation_send_event (GstNavigation *navigation,
-        GstStructure *structure);
-void gst_navigation_send_key_event (GstNavigation *navigation,
-        const char *event, const char *key);
-void gst_navigation_send_mouse_event (GstNavigation *navigation,
-        const char *event, int button, double x, double y);
-void gst_navigation_send_command (GstNavigation *navigation,
-        GstNavigationCommand command);
+void    gst_navigation_send_event       (GstNavigation *navigation,
+                                         GstStructure *structure);
+void    gst_navigation_send_key_event   (GstNavigation *navigation,
+                                         const char *event, const char *key);
+void    gst_navigation_send_mouse_event (GstNavigation *navigation,
+                                         const char *event, int button, double x, double y);
+void    gst_navigation_send_command     (GstNavigation *navigation,
+                                         GstNavigationCommand command);
 
 G_END_DECLS
 

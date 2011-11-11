@@ -67,22 +67,16 @@ struct _GstMixerOptions {
 
 /**
  * GstMixerOptionsClass:
- * @parent: the parent interface
+ * @parent: the parent class
  * @get_values: Optional implementation of gst_mixer_options_get_values().
  *    (Since: 0.10.18)
  */
 struct _GstMixerOptionsClass {
   GstMixerTrackClass parent;
 
-#ifdef GST_MIXER_NEED_DEPRECATED
-  /* signals */
-  void    (* option_changed) (GstMixerOptions *opts,
-                              gchar           *value);
-#endif /* GST_MIXER_NEED_DEPRECATED */
-
   GList * (* get_values)     (GstMixerOptions *opts);
 
-  gpointer _gst_reserved[GST_PADDING-1];
+  gpointer _gst_reserved[GST_PADDING];
 };
 
 GType           gst_mixer_options_get_type (void);

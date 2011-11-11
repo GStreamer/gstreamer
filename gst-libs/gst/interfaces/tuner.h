@@ -29,8 +29,6 @@
 
 G_BEGIN_DECLS
 
-/* FIXME 0.11: remove all CLASS bits, this is an interface */
-
 #define GST_TYPE_TUNER \
   (gst_tuner_get_type ())
 #define GST_TUNER(obj) \
@@ -45,7 +43,7 @@ typedef struct _GstTunerInterface GstTunerInterface;
 
 /**
  * GstTunerInterface:
- * @klass: the parent interface
+ * @iface: the parent interface
  * @list_channels: list available channels
  * @set_channel: set to a channel
  * @get_channel: return the current channel
@@ -63,7 +61,7 @@ typedef struct _GstTunerInterface GstTunerInterface;
  * Tuner interface.
  */
 struct _GstTunerInterface {
-  GTypeInterface klass;
+  GTypeInterface iface;
 
   /* virtual functions */
   const GList * (* list_channels)   (GstTuner        *tuner);

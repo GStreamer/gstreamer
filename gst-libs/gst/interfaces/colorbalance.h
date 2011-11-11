@@ -28,7 +28,6 @@
 
 G_BEGIN_DECLS
 
-/* FIXME 0.11: remove all CLASS bits, this is an interface */
 #define GST_TYPE_COLOR_BALANCE \
   (gst_color_balance_get_type ())
 #define GST_COLOR_BALANCE(obj) \
@@ -38,7 +37,7 @@ G_BEGIN_DECLS
 #define GST_COLOR_BALANCE_GET_INTERFACE(inst) \
   (G_TYPE_INSTANCE_GET_INTERFACE ((inst), GST_TYPE_COLOR_BALANCE, GstColorBalanceInterface))
 
-#define GST_COLOR_BALANCE_TYPE(klass) (klass->balance_type)
+#define GST_COLOR_BALANCE_TYPE(iface) (iface->balance_type)
 
 typedef struct _GstColorBalance GstColorBalance;
 typedef struct _GstColorBalanceInterface GstColorBalanceInterface;
@@ -63,7 +62,7 @@ typedef enum
 
 /**
  * GstColorBalanceInterface:
- * @klass: the parent interface
+ * @iface: the parent interface
  * @balance_type: implementation type
  * @list_channels: list handled channels
  * @set_value: set a channel value
@@ -73,7 +72,7 @@ typedef enum
  * Color-balance interface.
  */
 struct _GstColorBalanceInterface {
-  GTypeInterface klass;
+  GTypeInterface iface;
 
   GstColorBalanceType balance_type;
 

@@ -45,7 +45,7 @@ typedef struct _GstPropertyProbeInterface GstPropertyProbeInterface;
 
 /**
  * GstPropertyProbeInterface:
- * @klass: parent interface type.
+ * @iface: parent interface type.
  * @probe_needed: default signal handler
  * @get_properties: virtual method to get list of probable properties
  * @needs_probe: virtual method to tell if probe need update
@@ -55,7 +55,7 @@ typedef struct _GstPropertyProbeInterface GstPropertyProbeInterface;
  * #GstPropertyProbe interface.
  */
 struct _GstPropertyProbeInterface {
-  GTypeInterface klass;
+  GTypeInterface iface;
 
   /* signals */
   void          (*probe_needed)   (GstPropertyProbe *probe,

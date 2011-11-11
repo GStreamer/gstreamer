@@ -53,20 +53,6 @@
 /* FIXME 0.11: check if we need to add API for sometimes-supportedness
  * (aka making up for GstImplementsInterface removal) */
 
-#ifndef GST_DISABLE_DEPRECATED
-enum
-{
-  SIGNAL_MUTE_TOGGLED,
-  SIGNAL_RECORD_TOGGLED,
-  SIGNAL_VOLUME_CHANGED,
-  SIGNAL_OPTION_CHANGED,
-  LAST_SIGNAL
-};
-
-static guint gst_mixer_signals[LAST_SIGNAL] = { 0 };
-
-#endif
-
 static void gst_mixer_class_init (GstMixerInterface * iface);
 
 GType
@@ -97,44 +83,6 @@ gst_mixer_get_type (void)
 static void
 gst_mixer_class_init (GstMixerInterface * iface)
 {
-#ifndef GST_DISABLE_DEPRECATED
-  static gboolean initialized = FALSE;
-
-  /* signals (deprecated) */
-  if (!initialized) {
-    gst_mixer_signals[SIGNAL_RECORD_TOGGLED] =
-        g_signal_new ("record-toggled",
-        GST_TYPE_MIXER, G_SIGNAL_RUN_LAST,
-        G_STRUCT_OFFSET (GstMixerInterface, record_toggled),
-        NULL, NULL,
-        gst_interfaces_marshal_VOID__OBJECT_BOOLEAN, G_TYPE_NONE, 2,
-        GST_TYPE_MIXER_TRACK, G_TYPE_BOOLEAN);
-    gst_mixer_signals[SIGNAL_MUTE_TOGGLED] =
-        g_signal_new ("mute-toggled",
-        GST_TYPE_MIXER, G_SIGNAL_RUN_LAST,
-        G_STRUCT_OFFSET (GstMixerInterface, mute_toggled),
-        NULL, NULL,
-        gst_interfaces_marshal_VOID__OBJECT_BOOLEAN, G_TYPE_NONE, 2,
-        GST_TYPE_MIXER_TRACK, G_TYPE_BOOLEAN);
-    gst_mixer_signals[SIGNAL_VOLUME_CHANGED] =
-        g_signal_new ("volume-changed",
-        GST_TYPE_MIXER, G_SIGNAL_RUN_LAST,
-        G_STRUCT_OFFSET (GstMixerInterface, volume_changed),
-        NULL, NULL,
-        gst_interfaces_marshal_VOID__OBJECT_POINTER, G_TYPE_NONE, 2,
-        GST_TYPE_MIXER_TRACK, G_TYPE_POINTER);
-    gst_mixer_signals[SIGNAL_OPTION_CHANGED] =
-        g_signal_new ("option-changed",
-        GST_TYPE_MIXER, G_SIGNAL_RUN_LAST,
-        G_STRUCT_OFFSET (GstMixerInterface, option_changed),
-        NULL, NULL,
-        gst_interfaces_marshal_VOID__OBJECT_STRING, G_TYPE_NONE, 2,
-        GST_TYPE_MIXER_OPTIONS, G_TYPE_STRING);
-
-    initialized = TRUE;
-  }
-#endif
-
   iface->mixer_type = GST_MIXER_SOFTWARE;
 
   /* default virtual functions */

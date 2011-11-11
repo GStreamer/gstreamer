@@ -75,20 +75,18 @@ G_BEGIN_DECLS
  * Mixer track flags.
  */
 typedef enum {
-  GST_MIXER_TRACK_INPUT  = (1<<0),
-  GST_MIXER_TRACK_OUTPUT = (1<<1),
-  GST_MIXER_TRACK_MUTE   = (1<<2),
-  GST_MIXER_TRACK_RECORD = (1<<3),
-  GST_MIXER_TRACK_MASTER = (1<<4),
-  GST_MIXER_TRACK_SOFTWARE = (1<<5),
-  GST_MIXER_TRACK_NO_RECORD = (1<<6),
-  GST_MIXER_TRACK_NO_MUTE = (1<<7),
-  GST_MIXER_TRACK_WHITELIST = (1<<8),
-  GST_MIXER_TRACK_READONLY = (1<<9),
-  GST_MIXER_TRACK_WRITEONLY = (1<<10)
+  GST_MIXER_TRACK_INPUT     = (1 << 0),
+  GST_MIXER_TRACK_OUTPUT    = (1 << 1),
+  GST_MIXER_TRACK_MUTE      = (1 << 2),
+  GST_MIXER_TRACK_RECORD    = (1 << 3),
+  GST_MIXER_TRACK_MASTER    = (1 << 4),
+  GST_MIXER_TRACK_SOFTWARE  = (1 << 5),
+  GST_MIXER_TRACK_NO_RECORD = (1 << 6),
+  GST_MIXER_TRACK_NO_MUTE   = (1 << 7),
+  GST_MIXER_TRACK_WHITELIST = (1 << 8),
+  GST_MIXER_TRACK_READABLE  = (1 << 9),
+  GST_MIXER_TRACK_WRITABLE  = (1 << 10)
 } GstMixerTrackFlags;
-
-/* FIXME 0.11: READONLY/WRITEONLY -> READABLE/WRITABLE etc. */
 
 #define GST_MIXER_TRACK_HAS_FLAG(channel, flag) \
   ((channel)->flags & flag)
@@ -101,28 +99,17 @@ struct _GstMixerTrack {
 
   gchar             *label;
 
-  /* FIXME 0.11: flags should be guint32 */
   GstMixerTrackFlags flags;
 
   gint               num_channels;
   gint               min_volume;
   gint               max_volume;
 
-  /* FIXME 0.11: add padding */
+  gpointer _gst_reserved[GST_PADDING];
 };
 
 struct _GstMixerTrackClass {
   GObjectClass parent;
-
-#ifdef GST_MIXER_NEED_DEPRECATED
-  /* signals (deprecated) */
-  void (* mute_toggled)   (GstMixerTrack *channel,
-                           gboolean       mute);
-  void (* record_toggled) (GstMixerTrack *channel,
-                           gboolean       record);
-  void (* volume_changed) (GstMixerTrack *channel,
-                           gint          *volumes);
-#endif /* GST_MIXER_NEED_DEPRECATED */
 
   gpointer _gst_reserved[GST_PADDING];
 };

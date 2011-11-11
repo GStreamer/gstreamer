@@ -46,7 +46,7 @@ typedef struct _GstVideoOrientationInterface GstVideoOrientationInterface;
 
 /**
  * GstVideoOrientationInterface:
- * @parent: parent interface type.
+ * @iface: parent interface type.
  * @get_hflip: virtual method to get horizontal flipping state
  * @get_vflip: virtual method to get vertical flipping state
  * @get_hcenter: virtual method to get horizontal centering state
@@ -59,7 +59,7 @@ typedef struct _GstVideoOrientationInterface GstVideoOrientationInterface;
  * #GstVideoOrientationInterface interface.
  */
 struct _GstVideoOrientationInterface {
-  GTypeInterface parent;
+  GTypeInterface iface;
 
   /* FIXME 0.11: fix awkward API? add some kind of get_supported flags thing
    * and then just return booleans/int from all vfuncs requiring the caller

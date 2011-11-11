@@ -29,8 +29,6 @@
 
 G_BEGIN_DECLS
 
-/* FIXME 0.11: remove all CLASS bits, this is an interface */
-
 #define GST_TYPE_MIXER \
   (gst_mixer_get_type ())
 #define GST_MIXER(obj) \
@@ -40,7 +38,7 @@ G_BEGIN_DECLS
 #define GST_MIXER_GET_INTERFACE(inst) \
   (G_TYPE_INSTANCE_GET_INTERFACE ((inst), GST_TYPE_MIXER, GstMixerInterface))
 
-#define GST_MIXER_TYPE(klass) (klass->mixer_type)
+#define GST_MIXER_TYPE(iface) (iface->mixer_type)
 
 typedef struct _GstMixer GstMixer;
 typedef struct _GstMixerInterface GstMixerInterface;
@@ -113,7 +111,7 @@ typedef enum
 } GstMixerFlags;
 
 struct _GstMixerInterface {
-  GTypeInterface klass;
+  GTypeInterface iface;
 
   GstMixerType mixer_type;
 
@@ -133,39 +131,16 @@ struct _GstMixerInterface {
   void           (* set_record)    (GstMixer      *mixer,
                                     GstMixerTrack *track,
                                     gboolean       record);
-#ifndef GST_DISABLE_DEPRECATED
-  /* signals (deprecated) */
-  void (* mute_toggled)   (GstMixer      *mixer,
-                           GstMixerTrack *channel,
-                           gboolean       mute);
-  void (* record_toggled) (GstMixer      *mixer,
-                           GstMixerTrack *channel,
-                           gboolean       record);
-  void (* volume_changed) (GstMixer      *mixer,
-                           GstMixerTrack *channel,
-                           gint          *volumes);
-#else
-  gpointer padding1[3];
-#endif /* not GST_DISABLE_DEPRECATED */
-
-  void          (* set_option)     (GstMixer      *mixer,
+  void           (* set_option)    (GstMixer      *mixer,
                                     GstMixerOptions *opts,
                                     gchar         *value);
-  const gchar * (* get_option)     (GstMixer      *mixer,
+  const gchar *  (* get_option)    (GstMixer      *mixer,
                                     GstMixerOptions *opts);
-
-#ifndef GST_DISABLE_DEPRECATED
-  void (* option_changed) (GstMixer      *mixer,
-                           GstMixerOptions *opts,
-                           gchar   *option);
-#else
-  gpointer padding2;
-#endif /* not GST_DISABLE_DEPRECATED */
 
   GstMixerFlags (* get_mixer_flags) (GstMixer *mixer);
 
   /*< private >*/
-  gpointer _gst_reserved[GST_PADDING-1];
+  gpointer _gst_reserved[GST_PADDING];
 };
 
 GType           gst_mixer_get_type      (void);

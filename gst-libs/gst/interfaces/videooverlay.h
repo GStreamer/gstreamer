@@ -45,7 +45,7 @@ typedef struct _GstVideoOverlayInterface GstVideoOverlayInterface;
 
 /**
  * GstVideoOverlayInterface:
- * @interface: parent interface type.
+ * @iface: parent interface type.
  * @expose: virtual method to handle expose events
  * @handle_events: virtual method to handle events
  * @set_render_rectangle: virtual method to set the render rectangle
@@ -54,45 +54,45 @@ typedef struct _GstVideoOverlayInterface GstVideoOverlayInterface;
  * #GstVideoOverlay interface
  */
 struct _GstVideoOverlayInterface {
-  GTypeInterface interface;
+  GTypeInterface iface;
 
   /* virtual functions */
-  void (* expose)              (GstVideoOverlay *overlay);
+  void (*expose)               (GstVideoOverlay *overlay);
 
-  void (* handle_events)       (GstVideoOverlay *overlay, gboolean handle_events);
+  void (*handle_events)        (GstVideoOverlay *overlay, gboolean handle_events);
 
-  void (* set_render_rectangle) (GstVideoOverlay *overlay,
-                                 gint x, gint y,
-                                 gint width, gint height);
+  void (*set_render_rectangle) (GstVideoOverlay *overlay,
+                                gint x, gint y,
+                                gint width, gint height);
 
-  void (* set_window_handle)   (GstVideoOverlay *overlay, guintptr handle);
+  void (*set_window_handle)    (GstVideoOverlay *overlay, guintptr handle);
 };
 
 GType   gst_video_overlay_get_type (void);
 
 /* virtual function wrappers */
 
-gboolean gst_video_overlay_set_render_rectangle (GstVideoOverlay * overlay,
-                                                 gint              x,
-                                                 gint              y,
-                                                 gint              width,
-                                                 gint              height);
+gboolean        gst_video_overlay_set_render_rectangle  (GstVideoOverlay * overlay,
+                                                         gint              x,
+                                                         gint              y,
+                                                         gint              width,
+                                                         gint              height);
 
-void gst_video_overlay_expose             (GstVideoOverlay * overlay);
+void            gst_video_overlay_expose                (GstVideoOverlay * overlay);
 
-void gst_video_overlay_handle_events      (GstVideoOverlay * overlay,
-                                           gboolean          handle_events);
+void            gst_video_overlay_handle_events         (GstVideoOverlay * overlay,
+                                                         gboolean          handle_events);
 
-void gst_video_overlay_set_window_handle  (GstVideoOverlay * overlay,
-                                                             guintptr handle);
+void            gst_video_overlay_set_window_handle     (GstVideoOverlay * overlay,
+                                                         guintptr handle);
 
 /* public methods to dispatch bus messages */
-void gst_video_overlay_got_window_handle  (GstVideoOverlay * overlay,
-                                           guintptr          handle);
+void            gst_video_overlay_got_window_handle     (GstVideoOverlay * overlay,
+                                                         guintptr          handle);
 
-void gst_video_overlay_prepare_window_handle (GstVideoOverlay * overlay);
+void            gst_video_overlay_prepare_window_handle (GstVideoOverlay * overlay);
 
-gboolean gst_is_video_overlay_prepare_window_handle_message (GstMessage * msg);
+gboolean        gst_is_video_overlay_prepare_window_handle_message (GstMessage * msg);
 
 G_END_DECLS
 

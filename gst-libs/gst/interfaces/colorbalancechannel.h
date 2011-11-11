@@ -55,11 +55,14 @@ struct _GstColorBalanceChannel {
   gchar  *label;
   gint    min_value;
   gint    max_value;
+
+  /*< private >*/
+  gpointer _gst_reserved[GST_PADDING];
 };
 
 /**
  * GstColorBalanceChannelClass:
- * @parent: the parent interface
+ * @parent: the parent class
  * @value_changed: default handler for value changed notification
  *
  * Color-balance channel class.
