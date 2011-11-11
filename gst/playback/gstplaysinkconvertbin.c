@@ -387,6 +387,7 @@ gst_play_sink_convert_bin_getcaps (GstPad * pad, GstCaps * filter)
       GstCaps *peer_caps = gst_pad_get_caps (peer, filter);
       gst_object_unref (peer);
       if (self->converter_caps) {
+        peer_caps = gst_caps_make_writable (peer_caps);
         gst_caps_merge (peer_caps, gst_caps_ref (self->converter_caps));
         ret = peer_caps;
       } else {
