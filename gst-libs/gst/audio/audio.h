@@ -141,7 +141,7 @@ typedef enum {
   GST_AUDIO_FORMAT_F64 = _GST_AUDIO_FORMAT_NE(F64)
 } GstAudioFormat;
 
-/* FIXME: need GTypes */
+
 typedef struct _GstAudioFormatInfo GstAudioFormatInfo;
 typedef struct _GstAudioInfo GstAudioInfo;
 
@@ -174,7 +174,7 @@ typedef enum
  * interleaved. @dest should at least be big enough to hold @length *
  * channels * size(unpack_format) bytes.
  */
-typedef void (*GstAudioFormatUnpack)         (GstAudioFormatInfo *info, gpointer dest,
+typedef void (*GstAudioFormatUnpack)         (const GstAudioFormatInfo *info, gpointer dest,
                                               const gpointer data, gint length);
 /**
  * GstAudioFormatPack:
@@ -187,7 +187,7 @@ typedef void (*GstAudioFormatUnpack)         (GstAudioFormatInfo *info, gpointer
  * The samples from source have each channel interleaved
  * and will be packed into @data.
  */
-typedef void (*GstAudioFormatPack)           (GstAudioFormatInfo *info, const gpointer src,
+typedef void (*GstAudioFormatPack)           (const GstAudioFormatInfo *info, const gpointer src,
                                               gpointer data, gint length);
 
 /**
@@ -219,7 +219,11 @@ struct _GstAudioFormatInfo {
   GstAudioFormat unpack_format;
   GstAudioFormatUnpack unpack_func;
   GstAudioFormatPack pack_func;
+
+  gpointer _gst_reserved[GST_PADDING];
 };
+
+GType gst_audio_format_info_get_type (void);
 
 #define GST_AUDIO_FORMAT_INFO_FORMAT(info)           ((info)->format)
 #define GST_AUDIO_FORMAT_INFO_NAME(info)             ((info)->name)
@@ -282,7 +286,11 @@ struct _GstAudioInfo {
   gint                      channels;
   gint                      bpf;
   GstAudioChannelPosition   position[64];
+
+  gpointer _gst_reserved[GST_PADDING];
 };
+
+GType gst_audio_info_get_type        (void);
 
 #define GST_AUDIO_INFO_FORMAT(i)             (GST_AUDIO_FORMAT_INFO_FORMAT((i)->finfo))
 #define GST_AUDIO_INFO_NAME(i)               (GST_AUDIO_FORMAT_INFO_NAME((i)->finfo))
@@ -306,16 +314,20 @@ struct _GstAudioInfo {
 #define GST_AUDIO_INFO_BPF(info)             ((info)->bpf)
 #define GST_AUDIO_INFO_POSITION(info,c)      ((info)->position[c])
 
-void         gst_audio_info_init        (GstAudioInfo *info);
-void         gst_audio_info_set_format  (GstAudioInfo *info, GstAudioFormat format,
-                                         gint rate, gint channels);
+GstAudioInfo * gst_audio_info_new         (void);
+void           gst_audio_info_init        (GstAudioInfo *info);
+GstAudioInfo * gst_audio_info_copy        (const GstAudioInfo *info);
+void           gst_audio_info_free        (GstAudioInfo *info);
 
-gboolean     gst_audio_info_from_caps   (GstAudioInfo *info, const GstCaps *caps);
-GstCaps *    gst_audio_info_to_caps     (GstAudioInfo *info);
+void           gst_audio_info_set_format  (GstAudioInfo *info, GstAudioFormat format,
+                                           gint rate, gint channels);
 
-gboolean     gst_audio_info_convert     (GstAudioInfo * info,
-                                         GstFormat src_fmt, gint64 src_val,
-                                         GstFormat dest_fmt, gint64 * dest_val);
+gboolean       gst_audio_info_from_caps   (GstAudioInfo *info, const GstCaps *caps);
+GstCaps *      gst_audio_info_to_caps     (const GstAudioInfo *info);
+
+gboolean       gst_audio_info_convert     (const GstAudioInfo * info,
+                                           GstFormat src_fmt, gint64 src_val,
+                                           GstFormat dest_fmt, gint64 * dest_val);
 
 
 

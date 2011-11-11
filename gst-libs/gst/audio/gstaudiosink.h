@@ -40,7 +40,7 @@ typedef struct _GstAudioSinkClass GstAudioSinkClass;
 
 /**
  * GstAudioSink:
- * 
+ *
  * Opaque #GstAudioSink.
  */
 struct _GstAudioSink {

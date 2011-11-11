@@ -61,12 +61,12 @@ typedef struct _GstAudioBaseSrcPrivate GstAudioBaseSrcPrivate;
 
 /**
  * GstAudioBaseSrcSlaveMethod:
- * @GST_AUDIO_BASE_SRC_SLAVE_RESAMPLE: Resample to match the master clock. 
+ * @GST_AUDIO_BASE_SRC_SLAVE_RESAMPLE: Resample to match the master clock.
  * @GST_AUDIO_BASE_SRC_SLAVE_RETIMESTAMP: Retimestamp output buffers with master
  * clock time.
  * @GST_AUDIO_BASE_SRC_SLAVE_SKEW: Adjust capture pointer when master clock
  * drifts too much.
- * @GST_AUDIO_BASE_SRC_SLAVE_NONE: No adjustment is done. 
+ * @GST_AUDIO_BASE_SRC_SLAVE_NONE: No adjustment is done.
  *
  * Different possible clock slaving algorithms when the internal audio clock was
  * not selected as the pipeline clock.
@@ -106,7 +106,7 @@ struct _GstAudioBaseSrc {
   /*< private >*/
   GstAudioBaseSrcPrivate *priv;
 
-  gpointer _gst_reserved[GST_PADDING - 1];
+  gpointer _gst_reserved[GST_PADDING];
 };
 
 /**

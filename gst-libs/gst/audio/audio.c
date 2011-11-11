@@ -129,6 +129,8 @@ static GstAudioFormatInfo formats[] = {
       SILENT_0)
 };
 
+G_DEFINE_POINTER_TYPE (GstAudioFormatInfo, gst_audio_format_info);
+
 /**
  * gst_audio_format_build_integer:
  * @sign: signed or unsigned format
@@ -262,6 +264,54 @@ gst_audio_format_fill_silence (const GstAudioFormatInfo * info,
   }
 }
 
+/**
+ * gst_audio_info_copy:
+ * @info: a #GstAudioInfo
+ *
+ * Copy a GstAudioInfo structure.
+ *
+ * Returns: a new #GstAudioInfo. free with gst_audio_info_free.
+ */
+GstAudioInfo *
+gst_audio_info_copy (const GstAudioInfo * info)
+{
+  return g_slice_dup (GstAudioInfo, info);
+}
+
+/**
+ * gst_audio_info_free:
+ * @info: a #GstAudioInfo
+ *
+ * Free a GstAudioInfo structure previously allocated with gst_audio_info_new()
+ * or gst_audio_info_copy().
+ */
+void
+gst_audio_info_free (GstAudioInfo * info)
+{
+  g_slice_free (GstAudioInfo, info);
+}
+
+G_DEFINE_BOXED_TYPE (GstAudioInfo, gst_audio_info,
+    (GBoxedCopyFunc) gst_audio_info_copy, (GBoxedFreeFunc) gst_audio_info_free);
+
+/**
+ * gst_audio_info_new:
+ *
+ * Allocate a new #GstAudioInfo that is also initialized with
+ * gst_audio_info_init().
+ *
+ * Returns: a new #GstAudioInfo. free with gst_audio_info_free().
+ */
+GstAudioInfo *
+gst_audio_info_new (void)
+{
+  GstAudioInfo *info;
+
+  info = g_slice_new (GstAudioInfo);
+  gst_audio_info_init (info);
+
+  return info;
+}
 
 /**
  * gst_audio_info_init:
@@ -426,7 +476,7 @@ incoherent_channels:
  *          info of @info.
  */
 GstCaps *
-gst_audio_info_to_caps (GstAudioInfo * info)
+gst_audio_info_to_caps (const GstAudioInfo * info)
 {
   GstCaps *caps;
   const gchar *format;
@@ -485,7 +535,7 @@ gst_audio_info_to_caps (GstAudioInfo * info)
  * Returns: TRUE if the conversion was successful.
  */
 gboolean
-gst_audio_info_convert (GstAudioInfo * info,
+gst_audio_info_convert (const GstAudioInfo * info,
     GstFormat src_fmt, gint64 src_val, GstFormat dest_fmt, gint64 * dest_val)
 {
   gboolean res = TRUE;

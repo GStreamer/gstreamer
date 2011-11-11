@@ -158,6 +158,7 @@ struct _GstAudioDecoder
 
   /*< private >*/
   GstAudioDecoderPrivate *priv;
+
   gpointer       _gst_reserved[GST_PADDING_LARGE];
 };
 

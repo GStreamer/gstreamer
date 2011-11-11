@@ -120,6 +120,7 @@ struct _GstAudioEncoder {
 
   /*< private >*/
   GstAudioEncoderPrivate *priv;
+
   gpointer       _gst_reserved[GST_PADDING_LARGE];
 };
 
