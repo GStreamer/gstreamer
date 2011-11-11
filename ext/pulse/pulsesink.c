@@ -1822,6 +1822,7 @@ gst_pulsesink_class_init (GstPulseSinkClass * klass)
   GstBaseSinkClass *bc;
   GstAudioBaseSinkClass *gstaudiosink_class = GST_AUDIO_BASE_SINK_CLASS (klass);
   GstElementClass *gstelement_class = GST_ELEMENT_CLASS (klass);
+  gchar *clientname;
 
   gobject_class->finalize = gst_pulsesink_finalize;
   gobject_class->set_property = gst_pulsesink_set_property;
@@ -1877,12 +1878,14 @@ gst_pulsesink_class_init (GstPulseSinkClass * klass)
    *
    * Since: 0.10.25
    */
+  clientname = gst_pulse_client_name ();
   g_object_class_install_property (gobject_class,
       PROP_CLIENT,
       g_param_spec_string ("client", "Client",
-          "The PulseAudio client name to use", gst_pulse_client_name (),
+          "The PulseAudio client name to use", clientname,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS |
           GST_PARAM_MUTABLE_READY));
+  g_free (clientname);
 
   /**
    * GstPulseSink:stream-properties
