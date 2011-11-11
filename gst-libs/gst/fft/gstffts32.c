@@ -56,6 +56,13 @@
  * the magnitude of the frequency data.
  */
 
+struct _GstFFTS32
+{
+  void *cfg;
+  gboolean inverse;
+  gint len;
+};
+
 /**
  * gst_fft_s32_new:
  * @len: Length of the FFT in the time domain

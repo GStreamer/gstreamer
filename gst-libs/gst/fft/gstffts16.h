@@ -28,23 +28,6 @@
 typedef struct _GstFFTS16 GstFFTS16;
 typedef struct _GstFFTS16Complex GstFFTS16Complex;
 
-/* FIXME 0.11: Move the struct definition to the sources,
- *             there's no reason to have it public.
- */
-/**
- * GstFFTS16:
- *
- * Instance structure for #GstFFTS16.
- *
- */
-struct _GstFFTS16 {
-  /* <private> */
-  void *cfg;
-  gboolean inverse;
-  gint len;
-  gpointer _padding[GST_PADDING];
-};
-
 /* Copy of kiss_fft_s16_cpx for documentation reasons,
  * do NOT change! */
 
@@ -55,7 +38,6 @@ struct _GstFFTS16 {
  *
  * Data type for complex numbers composed of
  * signed 16 bit integers.
- *
  */
 struct _GstFFTS16Complex
 {
@@ -64,11 +46,14 @@ struct _GstFFTS16Complex
 };
 
 /* Functions */
+GstFFTS16 *     gst_fft_s16_new         (gint len, gboolean inverse);
+void            gst_fft_s16_free        (GstFFTS16 *self);
 
-GstFFTS16 * gst_fft_s16_new (gint len, gboolean inverse);
-void gst_fft_s16_fft (GstFFTS16 *self, const gint16 *timedata, GstFFTS16Complex *freqdata);
-void gst_fft_s16_inverse_fft (GstFFTS16 *self, const GstFFTS16Complex *freqdata, gint16 *timedata);
-void gst_fft_s16_free (GstFFTS16 *self);
+void            gst_fft_s16_fft         (GstFFTS16 *self, const gint16 *timedata,
+                                         GstFFTS16Complex *freqdata);
+void            gst_fft_s16_inverse_fft (GstFFTS16 *self, const GstFFTS16Complex *freqdata,
+                                         gint16 *timedata);
 
-void gst_fft_s16_window (GstFFTS16 *self, gint16 *timedata, GstFFTWindow window);
+void            gst_fft_s16_window      (GstFFTS16 *self, gint16 *timedata, GstFFTWindow window);
+
 #endif /* __GST_FFT_S16_H__ */

@@ -57,6 +57,13 @@
  *
  */
 
+struct _GstFFTF32
+{
+  void *cfg;
+  gboolean inverse;
+  gint len;
+};
+
 /**
  * gst_fft_f32_new:
  * @len: Length of the FFT in the time domain

@@ -54,8 +54,15 @@
  * The relation between them is iFFT (FFT (x)) = x / nfft where nfft is the
  * length of the FFT. This also has to be taken into account when calculation
  * the magnitude of the frequency data.
- * 
+ *
  */
+
+struct _GstFFTS16
+{
+  void *cfg;
+  gboolean inverse;
+  gint len;
+};
 
 /**
  * gst_fft_s16_new:

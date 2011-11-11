@@ -28,23 +28,6 @@
 typedef struct _GstFFTF64 GstFFTF64;
 typedef struct _GstFFTF64Complex GstFFTF64Complex;
 
-/* FIXME 0.11: Move the struct definition to the sources,
- *             there's no reason to have it public.
- */
-/**
- * GstFFTF64:
- *
- * Instance structure for #GstFFTF64.
- *
- */
-struct _GstFFTF64 {
-  /* <private> */
-  void * cfg;
-  gboolean inverse;
-  gint len;
-  gpointer _padding[GST_PADDING];
-};
-
 /* Copy of kiss_fft_f64_cpx for documentation reasons,
  * do NOT change! */
 
@@ -55,7 +38,6 @@ struct _GstFFTF64 {
  *
  * Data type for complex numbers composed of
  * 64 bit float.
- *
  */
 struct _GstFFTF64Complex
 {
@@ -64,12 +46,14 @@ struct _GstFFTF64Complex
 };
 
 /* Functions */
+GstFFTF64 *     gst_fft_f64_new         (gint len, gboolean inverse);
+void            gst_fft_f64_free        (GstFFTF64 *self);
 
-GstFFTF64 * gst_fft_f64_new (gint len, gboolean inverse);
-void gst_fft_f64_fft (GstFFTF64 *self, const gdouble *timedata, GstFFTF64Complex *freqdata);
-void gst_fft_f64_inverse_fft (GstFFTF64 *self, const GstFFTF64Complex *freqdata, gdouble *timedata);
-void gst_fft_f64_free (GstFFTF64 *self);
+void            gst_fft_f64_fft         (GstFFTF64 *self, const gdouble *timedata,
+                                         GstFFTF64Complex *freqdata);
+void            gst_fft_f64_inverse_fft (GstFFTF64 *self, const GstFFTF64Complex *freqdata,
+                                         gdouble *timedata);
 
-void gst_fft_f64_window (GstFFTF64 *self, gdouble *timedata, GstFFTWindow window);
+void            gst_fft_f64_window      (GstFFTF64 *self, gdouble *timedata, GstFFTWindow window);
 
 #endif /* __GST_FFT_F64_H__ */
