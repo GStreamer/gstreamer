@@ -11,7 +11,7 @@ gst/tcp/gsttcp.c
 gst/tcp/gsttcpclientsink.c
 gst/tcp/gsttcpclientsrc.c
 gst-libs/gst/audio/gstaudiocdsrc.c
-gst-libs/gst/audio/gstbaseaudiosrc.c
+gst-libs/gst/audio/gstaudiobasesrc.c
 gst-libs/gst/tag/gsttagdemux.c
 gst-libs/gst/tag/tags.c
 gst-libs/gst/pbutils/descriptions.c
