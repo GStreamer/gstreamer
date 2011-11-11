@@ -69,8 +69,8 @@ G_BEGIN_DECLS
  * @GST_MIXER_TRACK_NO_MUTE: play track doesn't support mute. Since: 0.10.23
  * @GST_MIXER_TRACK_WHITELIST: track should be displayed "by default" in apps.
  *     Since: 0.10.23
- * @GST_MIXER_TRACK_READONLY: track is read-only. Since: 0.10.25
- * @GST_MIXER_TRACK_WRITEONLY: track is write-only. Since: 0.10.25
+ * @GST_MIXER_TRACK_READABLE: track is read-only. Since: 0.10.25
+ * @GST_MIXER_TRACK_WRITABLE: track is write-only. Since: 0.10.25
  *
  * Mixer track flags.
  */
