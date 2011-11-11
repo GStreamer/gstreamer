@@ -95,14 +95,18 @@ gint            gst_net_address_set_address_bytes (GstNetAddress *naddr, GstNetT
                                                    guint8 address[16], guint16 port);
 
 GstNetType      gst_net_address_get_net_type      (const GstNetAddress *naddr);
-gboolean        gst_net_address_get_ip4_address   (const GstNetAddress *naddr, guint32 *address, guint16 *port);
-gboolean        gst_net_address_get_ip6_address   (const GstNetAddress *naddr, guint8 address[16], guint16 *port);
-gint            gst_net_address_get_address_bytes (const GstNetAddress *naddr, guint8 address[16], guint16 *port);
+gboolean        gst_net_address_get_ip4_address   (const GstNetAddress *naddr,
+                                                   guint32 *address, guint16 *port);
+gboolean        gst_net_address_get_ip6_address   (const GstNetAddress *naddr,
+                                                   guint8 address[16], guint16 *port);
+gint            gst_net_address_get_address_bytes (const GstNetAddress *naddr,
+                                                   guint8 address[16], guint16 *port);
 
 gboolean        gst_net_address_equal             (const GstNetAddress *naddr1,
                                                    const GstNetAddress *naddr2);
 
-gint            gst_net_address_to_string         (const GstNetAddress *naddr, gchar *dest, gsize len);
+gint            gst_net_address_to_string         (const GstNetAddress *naddr,
+                                                   gchar *dest, gsize len);
 
 G_END_DECLS
 

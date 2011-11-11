@@ -63,12 +63,12 @@ struct _GstNetTimePacket {
   GstClockTime remote_time;
 };
 
-GstNetTimePacket*	gst_net_time_packet_new 	(const guint8 *buffer);
-guint8*			gst_net_time_packet_serialize	(const GstNetTimePacket *packet);
+GstNetTimePacket*       gst_net_time_packet_new         (const guint8 *buffer);
+guint8*                 gst_net_time_packet_serialize   (const GstNetTimePacket *packet);
 
-GstNetTimePacket*	gst_net_time_packet_receive	(gint fd, struct sockaddr *addr,
+GstNetTimePacket*       gst_net_time_packet_receive     (gint fd, struct sockaddr *addr,
                                                          socklen_t *len);
-gint			gst_net_time_packet_send	(const GstNetTimePacket *packet,
+gint                    gst_net_time_packet_send        (const GstNetTimePacket *packet,
                                                          gint fd, struct sockaddr *addr,
                                                          socklen_t len);
 

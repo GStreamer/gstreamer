@@ -258,13 +258,13 @@ struct _GstBaseParseClass {
                                        GstEvent     * event);
 
   GstCaps *     (*get_sink_caps)      (GstBaseParse * parse,
-				       GstCaps      * filter);
+                                       GstCaps      * filter);
 
   GstFlowReturn (*detect)             (GstBaseParse * parse,
                                        GstBuffer    * buffer);
 
   /*< private >*/
-  gpointer       _gst_reserved[GST_PADDING_LARGE - 2];
+  gpointer       _gst_reserved[GST_PADDING_LARGE];
 };
 
 GType           gst_base_parse_get_type (void);

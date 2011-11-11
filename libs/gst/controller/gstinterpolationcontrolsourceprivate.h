@@ -89,7 +89,7 @@ struct _GstInterpolationControlSourcePrivate
   GValue minimum_value;         /* min value for the handled property */
   GValue maximum_value;         /* max value for the handled property */
   GstInterpolateMode interpolation_mode;
-  
+
   GSequence *values;            /* List of GstControlPoint */
   gint nvalues;                 /* Number of control points */
   gboolean valid_cache;

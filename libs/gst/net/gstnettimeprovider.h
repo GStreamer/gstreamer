@@ -63,7 +63,6 @@ typedef struct _GstNetTimeProvider GstNetTimeProvider;
 typedef struct _GstNetTimeProviderClass GstNetTimeProviderClass;
 typedef struct _GstNetTimeProviderPrivate GstNetTimeProviderPrivate;
 
-
 /**
  * GstNetTimeProvider:
  *
@@ -94,10 +93,12 @@ struct _GstNetTimeProvider {
 
 struct _GstNetTimeProviderClass {
   GstObjectClass parent_class;
+
+  gpointer _gst_reserved[GST_PADDING];
 };
 
-GType			gst_net_time_provider_get_type	(void);
-GstNetTimeProvider*	gst_net_time_provider_new 	(GstClock *clock,
+GType                   gst_net_time_provider_get_type  (void);
+GstNetTimeProvider*     gst_net_time_provider_new       (GstClock *clock,
                                                          const gchar *address,
                                                          gint port);
 

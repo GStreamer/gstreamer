@@ -86,7 +86,7 @@ struct _GstNetClientClock {
   /*< private >*/
   GstNetClientClockPrivate *priv;
 
-  gpointer _gst_reserved[GST_PADDING - 1];
+  gpointer _gst_reserved[GST_PADDING];
 };
 
 struct _GstNetClientClockClass {

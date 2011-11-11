@@ -98,19 +98,19 @@ typedef enum {
 } GstDPPayloadType;
 
 typedef gboolean (*GstDPHeaderFromBufferFunction) (const GstBuffer * buffer,
-						GstDPHeaderFlag flags,
-						guint * length,
-						guint8 ** header);
-typedef gboolean (*GstDPPacketFromCapsFunction) (const GstCaps * caps,
-						GstDPHeaderFlag flags,
-						guint * length,
-						guint8 ** header,
-						guint8 ** payload);
-typedef gboolean (*GstDPPacketFromEventFunction) (const GstEvent * event,
-						GstDPHeaderFlag flags,
-						guint * length,
-						guint8 ** header,
-						guint8 ** payload);
+                                                   GstDPHeaderFlag flags,
+                                                   guint * length,
+                                                   guint8 ** header);
+typedef gboolean (*GstDPPacketFromCapsFunction)   (const GstCaps * caps,
+                                                   GstDPHeaderFlag flags,
+                                                   guint * length,
+                                                   guint8 ** header,
+                                                   guint8 ** payload);
+typedef gboolean (*GstDPPacketFromEventFunction)  (const GstEvent * event,
+                                                   GstDPHeaderFlag flags,
+                                                   guint * length,
+                                                   guint8 ** header,
+                                                   guint8 ** payload);
 
 /**
  * GstDPPacketizer:
@@ -133,7 +133,7 @@ typedef struct {
 } GstDPPacketizer;
 
 
-void		gst_dp_init			(void);
+void            gst_dp_init                     (void);
 
 /* packetizer */
 GstDPPacketizer *
@@ -145,29 +145,29 @@ guint16         gst_dp_crc                      (const guint8 * buffer,
                                                  guint length);
 
 /* payload information from header */
-guint32		gst_dp_header_payload_length	(const guint8 * header);
+guint32         gst_dp_header_payload_length    (const guint8 * header);
 GstDPPayloadType
-		gst_dp_header_payload_type	(const guint8 * header);
+                gst_dp_header_payload_type      (const guint8 * header);
 
 /* converting to GstBuffer/GstEvent/GstCaps */
-GstBuffer *	gst_dp_buffer_from_header	(guint header_length,
-						const guint8 * header);
-GstCaps *	gst_dp_caps_from_packet		(guint header_length,
-						const guint8 * header,
-						const guint8 * payload);
-GstEvent *	gst_dp_event_from_packet	(guint header_length,
-						const guint8 * header,
-						const guint8 * payload);
+GstBuffer *     gst_dp_buffer_from_header       (guint header_length,
+                                                const guint8 * header);
+GstCaps *       gst_dp_caps_from_packet         (guint header_length,
+                                                const guint8 * header,
+                                                const guint8 * payload);
+GstEvent *      gst_dp_event_from_packet        (guint header_length,
+                                                const guint8 * header,
+                                                const guint8 * payload);
 
 /* validation */
-gboolean	gst_dp_validate_header		(guint header_length,
-						const guint8 * header);
-gboolean	gst_dp_validate_payload		(guint header_length,
-						const guint8 * header,
-						const guint8 * payload);
-gboolean	gst_dp_validate_packet		(guint header_length,
-						const guint8 * header,
-						const guint8 * payload);
+gboolean        gst_dp_validate_header          (guint header_length,
+                                                const guint8 * header);
+gboolean        gst_dp_validate_payload         (guint header_length,
+                                                const guint8 * header,
+                                                const guint8 * payload);
+gboolean        gst_dp_validate_packet          (guint header_length,
+                                                const guint8 * header,
+                                                const guint8 * payload);
 
 G_END_DECLS
 

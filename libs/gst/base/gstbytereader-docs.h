@@ -80,10 +80,10 @@ void gst_byte_reader_skip_unchecked (GstByteReader * reader, guint nbytes);
  *
  * Since: 0.10.25
  */
-guint8 gst_byte_reader_get_uint8_unchecked (GstByteReader * reader);
-guint8 gst_byte_reader_peek_uint8_unchecked (GstByteReader * reader);
-gint8 gst_byte_reader_get_int8_unchecked (GstByteReader * reader);
-gint8 gst_byte_reader_peek_int8_unchecked (GstByteReader * reader);
+guint8  gst_byte_reader_get_uint8_unchecked     (GstByteReader * reader);
+guint8  gst_byte_reader_peek_uint8_unchecked    (GstByteReader * reader);
+gint8   gst_byte_reader_get_int8_unchecked      (GstByteReader * reader);
+gint8   gst_byte_reader_peek_int8_unchecked     (GstByteReader * reader);
 
 /**
  * gst_byte_reader_get_uint16_le_unchecked:
@@ -181,14 +181,14 @@ gint8 gst_byte_reader_peek_int8_unchecked (GstByteReader * reader);
  *
  * Since: 0.10.25
  */
-guint16 gst_byte_reader_get_uint16_le_unchecked (GstByteReader * reader);
-guint16 gst_byte_reader_get_uint16_be_unchecked (GstByteReader * reader);
+guint16 gst_byte_reader_get_uint16_le_unchecked  (GstByteReader * reader);
+guint16 gst_byte_reader_get_uint16_be_unchecked  (GstByteReader * reader);
 guint16 gst_byte_reader_peek_uint16_le_unchecked (GstByteReader * reader);
 guint16 gst_byte_reader_peek_uint16_be_unchecked (GstByteReader * reader);
-gint16 gst_byte_reader_get_int16_le_unchecked (GstByteReader * reader);
-gint16 gst_byte_reader_get_int16_be_unchecked (GstByteReader * reader);
-gint16 gst_byte_reader_peek_int16_le_unchecked (GstByteReader * reader);
-gint16 gst_byte_reader_peek_int16_be_unchecked (GstByteReader * reader);
+gint16  gst_byte_reader_get_int16_le_unchecked   (GstByteReader * reader);
+gint16  gst_byte_reader_get_int16_be_unchecked   (GstByteReader * reader);
+gint16  gst_byte_reader_peek_int16_le_unchecked  (GstByteReader * reader);
+gint16  gst_byte_reader_peek_int16_be_unchecked  (GstByteReader * reader);
 
 /**
  * gst_byte_reader_get_uint24_le_unchecked:
@@ -286,14 +286,14 @@ gint16 gst_byte_reader_peek_int16_be_unchecked (GstByteReader * reader);
  *
  * Since: 0.10.25
  */
-guint32 gst_byte_reader_get_uint24_le_unchecked (GstByteReader * reader);
-guint32 gst_byte_reader_get_uint24_be_unchecked (GstByteReader * reader);
+guint32 gst_byte_reader_get_uint24_le_unchecked  (GstByteReader * reader);
+guint32 gst_byte_reader_get_uint24_be_unchecked  (GstByteReader * reader);
 guint32 gst_byte_reader_peek_uint24_le_unchecked (GstByteReader * reader);
 guint32 gst_byte_reader_peek_uint24_be_unchecked (GstByteReader * reader);
-gint32 gst_byte_reader_get_int24_le_unchecked (GstByteReader * reader);
-gint32 gst_byte_reader_get_int24_be_unchecked (GstByteReader * reader);
-gint32 gst_byte_reader_peek_int24_le_unchecked (GstByteReader * reader);
-gint32 gst_byte_reader_peek_int24_be_unchecked (GstByteReader * reader);
+gint32  gst_byte_reader_get_int24_le_unchecked   (GstByteReader * reader);
+gint32  gst_byte_reader_get_int24_be_unchecked   (GstByteReader * reader);
+gint32  gst_byte_reader_peek_int24_le_unchecked  (GstByteReader * reader);
+gint32  gst_byte_reader_peek_int24_be_unchecked  (GstByteReader * reader);
 
 /**
  * gst_byte_reader_get_uint32_le_unchecked:
@@ -391,14 +391,14 @@ gint32 gst_byte_reader_peek_int24_be_unchecked (GstByteReader * reader);
  *
  * Since: 0.10.25
  */
-guint32 gst_byte_reader_get_uint32_le_unchecked (GstByteReader * reader);
-guint32 gst_byte_reader_get_uint32_be_unchecked (GstByteReader * reader);
+guint32 gst_byte_reader_get_uint32_le_unchecked  (GstByteReader * reader);
+guint32 gst_byte_reader_get_uint32_be_unchecked  (GstByteReader * reader);
 guint32 gst_byte_reader_peek_uint32_le_unchecked (GstByteReader * reader);
 guint32 gst_byte_reader_peek_uint32_be_unchecked (GstByteReader * reader);
-gint32 gst_byte_reader_get_int32_le_unchecked (GstByteReader * reader);
-gint32 gst_byte_reader_get_int32_be_unchecked (GstByteReader * reader);
-gint32 gst_byte_reader_peek_int32_le_unchecked (GstByteReader * reader);
-gint32 gst_byte_reader_peek_int32_be_unchecked (GstByteReader * reader);
+gint32  gst_byte_reader_get_int32_le_unchecked   (GstByteReader * reader);
+gint32  gst_byte_reader_get_int32_be_unchecked   (GstByteReader * reader);
+gint32  gst_byte_reader_peek_int32_le_unchecked  (GstByteReader * reader);
+gint32  gst_byte_reader_peek_int32_be_unchecked  (GstByteReader * reader);
 
 /**
  * gst_byte_reader_get_uint64_le_unchecked:
@@ -496,14 +496,14 @@ gint32 gst_byte_reader_peek_int32_be_unchecked (GstByteReader * reader);
  *
  * Since: 0.10.25
  */
-guint64 gst_byte_reader_get_uint64_le_unchecked (GstByteReader * reader);
-guint64 gst_byte_reader_get_uint64_be_unchecked (GstByteReader * reader);
+guint64 gst_byte_reader_get_uint64_le_unchecked  (GstByteReader * reader);
+guint64 gst_byte_reader_get_uint64_be_unchecked  (GstByteReader * reader);
 guint64 gst_byte_reader_peek_uint64_le_unchecked (GstByteReader * reader);
 guint64 gst_byte_reader_peek_uint64_be_unchecked (GstByteReader * reader);
-gint64 gst_byte_reader_get_int64_le_unchecked (GstByteReader * reader);
-gint64 gst_byte_reader_get_int64_be_unchecked (GstByteReader * reader);
-gint64 gst_byte_reader_peek_int64_le_unchecked (GstByteReader * reader);
-gint64 gst_byte_reader_peek_int64_be_unchecked (GstByteReader * reader);
+gint64  gst_byte_reader_get_int64_le_unchecked   (GstByteReader * reader);
+gint64  gst_byte_reader_get_int64_be_unchecked   (GstByteReader * reader);
+gint64  gst_byte_reader_peek_int64_le_unchecked  (GstByteReader * reader);
+gint64  gst_byte_reader_peek_int64_be_unchecked  (GstByteReader * reader);
 
 /**
  * gst_byte_reader_get_float32_le_unchecked:
@@ -594,10 +594,10 @@ gint64 gst_byte_reader_peek_int64_be_unchecked (GstByteReader * reader);
  * Since: 0.10.25
  */
 
-gfloat  gst_byte_reader_get_float32_le_unchecked (GstByteReader * reader);
-gfloat  gst_byte_reader_get_float32_be_unchecked (GstByteReader * reader);
-gdouble gst_byte_reader_get_float64_le_unchecked (GstByteReader * reader);
-gdouble gst_byte_reader_get_float64_be_unchecked (GstByteReader * reader);
+gfloat  gst_byte_reader_get_float32_le_unchecked  (GstByteReader * reader);
+gfloat  gst_byte_reader_get_float32_be_unchecked  (GstByteReader * reader);
+gdouble gst_byte_reader_get_float64_le_unchecked  (GstByteReader * reader);
+gdouble gst_byte_reader_get_float64_be_unchecked  (GstByteReader * reader);
 
 gfloat  gst_byte_reader_peek_float32_le_unchecked (GstByteReader * reader);
 gfloat  gst_byte_reader_peek_float32_be_unchecked (GstByteReader * reader);

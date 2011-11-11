@@ -27,11 +27,11 @@
 
 G_BEGIN_DECLS
 
-#define GST_TYPE_COLLECT_PADS2  		 (gst_collect_pads2_get_type())
-#define GST_COLLECT_PADS2(obj)  		 (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_COLLECT_PADS2,GstCollectPads2))
-#define GST_COLLECT_PADS2_CLASS(klass) 	 (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_COLLECT_PADS2,GstCollectPads2Class))
+#define GST_TYPE_COLLECT_PADS2            (gst_collect_pads2_get_type())
+#define GST_COLLECT_PADS2(obj)            (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_COLLECT_PADS2,GstCollectPads2))
+#define GST_COLLECT_PADS2_CLASS(klass)    (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_COLLECT_PADS2,GstCollectPads2Class))
 #define GST_COLLECT_PADS2_GET_CLASS(obj)  (G_TYPE_INSTANCE_GET_CLASS ((obj),GST_TYPE_COLLECT_PADS2,GstCollectPads2Class))
-#define GST_IS_COLLECT_PADS2(obj)  	 (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_COLLECT_PADS2))
+#define GST_IS_COLLECT_PADS2(obj)         (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_COLLECT_PADS2))
 #define GST_IS_COLLECT_PADS2_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_COLLECT_PADS2))
 
 typedef struct _GstCollectData2 GstCollectData2;
@@ -128,10 +128,10 @@ typedef enum {
 struct _GstCollectData2
 {
   /* with STREAM_LOCK of @collect */
-  GstCollectPads2 	*collect;
-  GstPad		*pad;
-  GstBuffer		*buffer;
-  guint			 pos;
+  GstCollectPads2       *collect;
+  GstPad                *pad;
+  GstBuffer             *buffer;
+  guint                  pos;
   GstSegment             segment;
 
   /*< private >*/
@@ -175,7 +175,7 @@ typedef GstFlowReturn (*GstCollectPads2Function) (GstCollectPads2 *pads, gpointe
  * Since: 0.10.36
  */
 typedef GstFlowReturn (*GstCollectPads2BufferFunction) (GstCollectPads2 *pads, GstCollectData2 *data,
-							GstBuffer *buffer, gpointer user_data);
+                                                        GstBuffer *buffer, gpointer user_data);
 
 /**
  * GstCollectPads2CompareFunction:
@@ -195,9 +195,9 @@ typedef GstFlowReturn (*GstCollectPads2BufferFunction) (GstCollectPads2 *pads, G
  * Since: 0.10.36
  */
 typedef gint (*GstCollectPads2CompareFunction) (GstCollectPads2 *pads,
-						GstCollectData2 * data1, GstClockTime timestamp1,
-						GstCollectData2 * data2, GstClockTime timestamp2,
-						gpointer user_data);
+                                                GstCollectData2 * data1, GstClockTime timestamp1,
+                                                GstCollectData2 * data2, GstClockTime timestamp2,
+                                                gpointer user_data);
 
 /**
  * GstCollectPads2EventFunction:
@@ -212,23 +212,23 @@ typedef gint (*GstCollectPads2CompareFunction) (GstCollectPads2 *pads,
  *
  * Since: 0.10.36
  */
-typedef gboolean (*GstCollectPads2EventFunction)	(GstCollectPads2 *pads, GstCollectData2 * pad,
-							 GstEvent * event, gpointer user_data);
+typedef gboolean (*GstCollectPads2EventFunction)        (GstCollectPads2 *pads, GstCollectData2 * pad,
+                                                         GstEvent * event, gpointer user_data);
 
 
 /**
  * GstCollectPads2ClipFunction:
- * @pads: a #GstCollectPads2 
+ * @pads: a #GstCollectPads2
  * @data: a #GstCollectData2
- * @inbuffer: the input #GstBuffer 
+ * @inbuffer: the input #GstBuffer
  * @outbuffer: the output #GstBuffer
- * @user_data: user data 
+ * @user_data: user data
  *
  * A function that will be called when @inbuffer is received on the pad managed
  * by @data in the collecpad object @pads.
  *
  * The function should use the segment of @data and the negotiated media type on
- * the pad to perform clipping of @inbuffer. 
+ * the pad to perform clipping of @inbuffer.
  *
  * This function takes ownership of @inbuffer and should output a buffer in
  * @outbuffer or return %NULL in @outbuffer if the buffer should be dropped.
@@ -283,28 +283,28 @@ struct _GstCollectPads2 {
   GstObject      object;
 
   /*< public >*/ /* with LOCK and/or STREAM_LOCK */
-  GSList	*data;                  /* list of CollectData items */
+  GSList        *data;                  /* list of CollectData items */
 
   /*< private >*/
-  GStaticRecMutex stream_lock;		/* used to serialize collection among several streams */
+  GStaticRecMutex stream_lock;          /* used to serialize collection among several streams */
   /* with LOCK and/or STREAM_LOCK*/
-  gboolean	 started;
+  gboolean       started;
 
   /* with STREAM_LOCK */
-  guint32	 cookie;		/* @data list cookie */
-  guint		 numpads;		/* number of pads in @data */
-  guint		 queuedpads;		/* number of pads with a buffer */
-  guint		 eospads;		/* number of pads that are EOS */
-  GstClockTime   earliest_time;		/* Current earliest time */
-  GstCollectData2 *earliest_data;	/* Pad data for current earliest time */
+  guint32        cookie;                /* @data list cookie */
+  guint          numpads;               /* number of pads in @data */
+  guint          queuedpads;            /* number of pads with a buffer */
+  guint          eospads;               /* number of pads that are EOS */
+  GstClockTime   earliest_time;         /* Current earliest time */
+  GstCollectData2 *earliest_data;       /* Pad data for current earliest time */
 
   /* with LOCK */
   GSList        *pad_list;              /* updated pad list */
-  guint32	 pad_cookie;            /* updated cookie */
+  guint32        pad_cookie;            /* updated cookie */
 
-  GstCollectPads2Function func;		/* function and user_data for callback */
-  gpointer	 user_data;
-  GstCollectPads2BufferFunction buffer_func;	/* function and user_data for buffer callback */
+  GstCollectPads2Function func;         /* function and user_data for callback */
+  gpointer       user_data;
+  GstCollectPads2BufferFunction buffer_func;    /* function and user_data for buffer callback */
   gpointer       buffer_user_data;
   GstCollectPads2CompareFunction compare_func;
   gpointer       compare_user_data;
@@ -314,12 +314,11 @@ struct _GstCollectPads2 {
   gpointer       clip_user_data;
 
   /* no other lock needed */
-  GMutex        *evt_lock;		/* these make up sort of poor man's event signaling */
+  GMutex        *evt_lock;              /* these make up sort of poor man's event signaling */
   GCond         *evt_cond;
   guint32        evt_cookie;
 
-  gpointer _gst_reserved[GST_PADDING + 0];
-
+  gpointer _gst_reserved[GST_PADDING];
 };
 
 struct _GstCollectPads2Class {
@@ -332,51 +331,57 @@ struct _GstCollectPads2Class {
 GType gst_collect_pads2_get_type(void);
 
 /* creating the object */
-GstCollectPads2*	gst_collect_pads2_new	 	(void);
+GstCollectPads2*        gst_collect_pads2_new           (void);
 
 /* set the callbacks */
-void		gst_collect_pads2_set_function 	(GstCollectPads2 *pads, GstCollectPads2Function func,
-						 gpointer user_data);
-void		gst_collect_pads2_set_buffer_function (GstCollectPads2 *pads,
-     						 GstCollectPads2BufferFunction func, gpointer user_data);
-void            gst_collect_pads2_set_event_function (GstCollectPads2 *pads,
-    						 GstCollectPads2EventFunction func, gpointer user_data);
-void		gst_collect_pads2_set_compare_function (GstCollectPads2 *pads,
-    						 GstCollectPads2CompareFunction func, gpointer user_data);
-void            gst_collect_pads2_set_clip_function (GstCollectPads2 *pads, GstCollectPads2ClipFunction clipfunc,
-                                                 gpointer user_data);
+void            gst_collect_pads2_set_function         (GstCollectPads2 *pads,
+                                                        GstCollectPads2Function func,
+                                                        gpointer user_data);
+void            gst_collect_pads2_set_buffer_function  (GstCollectPads2 *pads,
+                                                        GstCollectPads2BufferFunction func,
+                                                        gpointer user_data);
+void            gst_collect_pads2_set_event_function   (GstCollectPads2 *pads,
+                                                        GstCollectPads2EventFunction func,
+                                                        gpointer user_data);
+void            gst_collect_pads2_set_compare_function (GstCollectPads2 *pads,
+                                                        GstCollectPads2CompareFunction func,
+                                                        gpointer user_data);
+void            gst_collect_pads2_set_clip_function    (GstCollectPads2 *pads,
+                                                        GstCollectPads2ClipFunction clipfunc,
+                                                        gpointer user_data);
 
 /* pad management */
-GstCollectData2* gst_collect_pads2_add_pad	(GstCollectPads2 *pads, GstPad *pad, guint size);
-GstCollectData2* gst_collect_pads2_add_pad_full (GstCollectPads2 *pads, GstPad *pad, guint size,							 GstCollectData2DestroyNotify destroy_notify,
-						 gboolean lock);
-gboolean	gst_collect_pads2_remove_pad	(GstCollectPads2 *pads, GstPad *pad);
-gboolean	gst_collect_pads2_is_active 	(GstCollectPads2 *pads, GstPad *pad);
+GstCollectData2* gst_collect_pads2_add_pad      (GstCollectPads2 *pads, GstPad *pad, guint size);
+GstCollectData2* gst_collect_pads2_add_pad_full (GstCollectPads2 *pads, GstPad *pad, guint size,
+                                                 GstCollectData2DestroyNotify destroy_notify,
+                                                 gboolean lock);
+gboolean        gst_collect_pads2_remove_pad    (GstCollectPads2 *pads, GstPad *pad);
+gboolean        gst_collect_pads2_is_active     (GstCollectPads2 *pads, GstPad *pad);
 
 /* start/stop collection */
-GstFlowReturn	gst_collect_pads2_collect 	(GstCollectPads2 *pads);
-GstFlowReturn	gst_collect_pads2_collect_range (GstCollectPads2 *pads, guint64 offset, guint length);
+GstFlowReturn   gst_collect_pads2_collect       (GstCollectPads2 *pads);
+GstFlowReturn   gst_collect_pads2_collect_range (GstCollectPads2 *pads, guint64 offset, guint length);
 
-void		gst_collect_pads2_start 	(GstCollectPads2 *pads);
-void		gst_collect_pads2_stop 		(GstCollectPads2 *pads);
-void		gst_collect_pads2_set_flushing	(GstCollectPads2 *pads, gboolean flushing);
+void            gst_collect_pads2_start         (GstCollectPads2 *pads);
+void            gst_collect_pads2_stop          (GstCollectPads2 *pads);
+void            gst_collect_pads2_set_flushing  (GstCollectPads2 *pads, gboolean flushing);
 
 /* get collected buffers */
-GstBuffer*	gst_collect_pads2_peek 		(GstCollectPads2 *pads, GstCollectData2 *data);
-GstBuffer*	gst_collect_pads2_pop		(GstCollectPads2 *pads, GstCollectData2 *data);
+GstBuffer*      gst_collect_pads2_peek          (GstCollectPads2 *pads, GstCollectData2 *data);
+GstBuffer*      gst_collect_pads2_pop           (GstCollectPads2 *pads, GstCollectData2 *data);
 
 /* get collected bytes */
-guint 		gst_collect_pads2_available 	(GstCollectPads2 *pads);
-guint 		gst_collect_pads2_flush 	(GstCollectPads2 *pads, GstCollectData2 *data,
-						 guint size);
-GstBuffer*	gst_collect_pads2_read_buffer	(GstCollectPads2 * pads, GstCollectData2 * data,
-						 guint size);
-GstBuffer*	gst_collect_pads2_take_buffer	(GstCollectPads2 * pads, GstCollectData2 * data,
-						 guint size);
+guint           gst_collect_pads2_available     (GstCollectPads2 *pads);
+guint           gst_collect_pads2_flush         (GstCollectPads2 *pads, GstCollectData2 *data,
+                                                 guint size);
+GstBuffer*      gst_collect_pads2_read_buffer   (GstCollectPads2 * pads, GstCollectData2 * data,
+                                                 guint size);
+GstBuffer*      gst_collect_pads2_take_buffer   (GstCollectPads2 * pads, GstCollectData2 * data,
+                                                 guint size);
 
 /* setting and unsetting waiting mode */
-void		gst_collect_pads2_set_waiting	(GstCollectPads2 *pads, GstCollectData2 *data,
-						 gboolean waiting);
+void            gst_collect_pads2_set_waiting   (GstCollectPads2 *pads, GstCollectData2 *data,
+                                                 gboolean waiting);
 
 
 G_END_DECLS

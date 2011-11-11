@@ -49,30 +49,30 @@ typedef struct {
   gpointer _gst_reserved[GST_PADDING];
 } GstBitReader;
 
-GstBitReader * gst_bit_reader_new (const guint8 *data, guint size);
-void gst_bit_reader_free (GstBitReader *reader);
+GstBitReader *  gst_bit_reader_new              (const guint8 *data, guint size);
+void            gst_bit_reader_free             (GstBitReader *reader);
 
-void gst_bit_reader_init (GstBitReader *reader, const guint8 *data, guint size);
+void            gst_bit_reader_init             (GstBitReader *reader, const guint8 *data, guint size);
 
-gboolean gst_bit_reader_set_pos (GstBitReader *reader, guint pos);
+gboolean        gst_bit_reader_set_pos          (GstBitReader *reader, guint pos);
+guint           gst_bit_reader_get_pos          (const GstBitReader *reader);
 
-guint gst_bit_reader_get_pos (const GstBitReader *reader);
-guint gst_bit_reader_get_remaining (const GstBitReader *reader);
+guint           gst_bit_reader_get_remaining    (const GstBitReader *reader);
 
-guint gst_bit_reader_get_size (const GstBitReader *reader);
+guint           gst_bit_reader_get_size         (const GstBitReader *reader);
 
-gboolean gst_bit_reader_skip (GstBitReader *reader, guint nbits);
-gboolean gst_bit_reader_skip_to_byte (GstBitReader *reader);
+gboolean        gst_bit_reader_skip             (GstBitReader *reader, guint nbits);
+gboolean        gst_bit_reader_skip_to_byte     (GstBitReader *reader);
 
-gboolean gst_bit_reader_get_bits_uint8 (GstBitReader *reader, guint8 *val, guint nbits);
-gboolean gst_bit_reader_get_bits_uint16 (GstBitReader *reader, guint16 *val, guint nbits);
-gboolean gst_bit_reader_get_bits_uint32 (GstBitReader *reader, guint32 *val, guint nbits);
-gboolean gst_bit_reader_get_bits_uint64 (GstBitReader *reader, guint64 *val, guint nbits);
+gboolean        gst_bit_reader_get_bits_uint8   (GstBitReader *reader, guint8 *val, guint nbits);
+gboolean        gst_bit_reader_get_bits_uint16  (GstBitReader *reader, guint16 *val, guint nbits);
+gboolean        gst_bit_reader_get_bits_uint32  (GstBitReader *reader, guint32 *val, guint nbits);
+gboolean        gst_bit_reader_get_bits_uint64  (GstBitReader *reader, guint64 *val, guint nbits);
 
-gboolean gst_bit_reader_peek_bits_uint8 (const GstBitReader *reader, guint8 *val, guint nbits);
-gboolean gst_bit_reader_peek_bits_uint16 (const GstBitReader *reader, guint16 *val, guint nbits);
-gboolean gst_bit_reader_peek_bits_uint32 (const GstBitReader *reader, guint32 *val, guint nbits);
-gboolean gst_bit_reader_peek_bits_uint64 (const GstBitReader *reader, guint64 *val, guint nbits);
+gboolean        gst_bit_reader_peek_bits_uint8  (const GstBitReader *reader, guint8 *val, guint nbits);
+gboolean        gst_bit_reader_peek_bits_uint16 (const GstBitReader *reader, guint16 *val, guint nbits);
+gboolean        gst_bit_reader_peek_bits_uint32 (const GstBitReader *reader, guint32 *val, guint nbits);
+gboolean        gst_bit_reader_peek_bits_uint64 (const GstBitReader *reader, guint64 *val, guint nbits);
 
 /**
  * GST_BIT_READER_INIT:

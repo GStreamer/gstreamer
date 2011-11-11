@@ -51,21 +51,22 @@ typedef struct {
   gpointer _gst_reserved[GST_PADDING];
 } GstByteWriter;
 
-GstByteWriter * gst_byte_writer_new (void);
-GstByteWriter * gst_byte_writer_new_with_size (guint size, gboolean fixed);
-GstByteWriter * gst_byte_writer_new_with_data (guint8 *data, guint size, gboolean initialized);
+GstByteWriter * gst_byte_writer_new             (void);
+GstByteWriter * gst_byte_writer_new_with_size   (guint size, gboolean fixed);
+GstByteWriter * gst_byte_writer_new_with_data   (guint8 *data, guint size, gboolean initialized);
 
-void gst_byte_writer_init (GstByteWriter *writer);
-void gst_byte_writer_init_with_size (GstByteWriter *writer, guint size, gboolean fixed);
-void gst_byte_writer_init_with_data (GstByteWriter *writer, guint8 *data, guint size, gboolean initialized);
+void            gst_byte_writer_init            (GstByteWriter *writer);
+void            gst_byte_writer_init_with_size  (GstByteWriter *writer, guint size, gboolean fixed);
+void            gst_byte_writer_init_with_data  (GstByteWriter *writer, guint8 *data,
+                                                 guint size, gboolean initialized);
 
-void gst_byte_writer_free (GstByteWriter *writer);
-guint8 * gst_byte_writer_free_and_get_data (GstByteWriter *writer);
-GstBuffer *gst_byte_writer_free_and_get_buffer (GstByteWriter *writer);
+void            gst_byte_writer_free                    (GstByteWriter *writer);
+guint8 *        gst_byte_writer_free_and_get_data       (GstByteWriter *writer);
+GstBuffer *     gst_byte_writer_free_and_get_buffer     (GstByteWriter *writer);
 
-void gst_byte_writer_reset (GstByteWriter *writer);
-guint8 * gst_byte_writer_reset_and_get_data (GstByteWriter *writer);
-GstBuffer *gst_byte_writer_reset_and_get_buffer (GstByteWriter *writer);
+void            gst_byte_writer_reset                   (GstByteWriter *writer);
+guint8 *        gst_byte_writer_reset_and_get_data      (GstByteWriter *writer);
+GstBuffer *     gst_byte_writer_reset_and_get_buffer    (GstByteWriter *writer);
 
 /**
  * gst_byte_writer_get_pos:
@@ -96,9 +97,9 @@ GstBuffer *gst_byte_writer_reset_and_get_buffer (GstByteWriter *writer);
  * Since: 0.10.26
  */
 #ifdef _FOOL_GTK_DOC_
-G_INLINE_FUNC guint gst_byte_writer_get_pos (const GstByteWriter *writer);
-G_INLINE_FUNC gboolean gst_byte_writer_set_pos (GstByteWriter *writer, guint pos);
-G_INLINE_FUNC guint gst_byte_writer_get_size (const GstByteWriter *writer);
+G_INLINE_FUNC guint     gst_byte_writer_get_pos  (const GstByteWriter *writer);
+G_INLINE_FUNC gboolean  gst_byte_writer_set_pos  (GstByteWriter *writer, guint pos);
+G_INLINE_FUNC guint     gst_byte_writer_get_size (const GstByteWriter *writer);
 #else
 static inline guint
 gst_byte_writer_get_pos (const GstByteWriter *writer)
@@ -119,38 +120,38 @@ gst_byte_writer_get_size (const GstByteWriter *writer)
 }
 #endif
 
-guint gst_byte_writer_get_remaining (const GstByteWriter *writer);
-gboolean gst_byte_writer_ensure_free_space (GstByteWriter *writer, guint size);
+guint           gst_byte_writer_get_remaining     (const GstByteWriter *writer);
+gboolean        gst_byte_writer_ensure_free_space (GstByteWriter *writer, guint size);
 
-gboolean gst_byte_writer_put_uint8 (GstByteWriter *writer, guint8 val);
-gboolean gst_byte_writer_put_int8 (GstByteWriter *writer, gint8 val);
-gboolean gst_byte_writer_put_uint16_be (GstByteWriter *writer, guint16 val);
-gboolean gst_byte_writer_put_uint16_le (GstByteWriter *writer, guint16 val);
-gboolean gst_byte_writer_put_int16_be (GstByteWriter *writer, gint16 val);
-gboolean gst_byte_writer_put_int16_le (GstByteWriter *writer, gint16 val);
-gboolean gst_byte_writer_put_uint24_be (GstByteWriter *writer, guint32 val);
-gboolean gst_byte_writer_put_uint24_le (GstByteWriter *writer, guint32 val);
-gboolean gst_byte_writer_put_int24_be (GstByteWriter *writer, gint32 val);
-gboolean gst_byte_writer_put_int24_le (GstByteWriter *writer, gint32 val);
-gboolean gst_byte_writer_put_uint32_be (GstByteWriter *writer, guint32 val);
-gboolean gst_byte_writer_put_uint32_le (GstByteWriter *writer, guint32 val);
-gboolean gst_byte_writer_put_int32_be (GstByteWriter *writer, gint32 val);
-gboolean gst_byte_writer_put_int32_le (GstByteWriter *writer, gint32 val);
-gboolean gst_byte_writer_put_uint64_be (GstByteWriter *writer, guint64 val);
-gboolean gst_byte_writer_put_uint64_le (GstByteWriter *writer, guint64 val);
-gboolean gst_byte_writer_put_int64_be (GstByteWriter *writer, gint64 val);
-gboolean gst_byte_writer_put_int64_le (GstByteWriter *writer, gint64 val);
+gboolean        gst_byte_writer_put_uint8         (GstByteWriter *writer, guint8 val);
+gboolean        gst_byte_writer_put_int8          (GstByteWriter *writer, gint8 val);
+gboolean        gst_byte_writer_put_uint16_be     (GstByteWriter *writer, guint16 val);
+gboolean        gst_byte_writer_put_uint16_le     (GstByteWriter *writer, guint16 val);
+gboolean        gst_byte_writer_put_int16_be      (GstByteWriter *writer, gint16 val);
+gboolean        gst_byte_writer_put_int16_le      (GstByteWriter *writer, gint16 val);
+gboolean        gst_byte_writer_put_uint24_be     (GstByteWriter *writer, guint32 val);
+gboolean        gst_byte_writer_put_uint24_le     (GstByteWriter *writer, guint32 val);
+gboolean        gst_byte_writer_put_int24_be      (GstByteWriter *writer, gint32 val);
+gboolean        gst_byte_writer_put_int24_le      (GstByteWriter *writer, gint32 val);
+gboolean        gst_byte_writer_put_uint32_be     (GstByteWriter *writer, guint32 val);
+gboolean        gst_byte_writer_put_uint32_le     (GstByteWriter *writer, guint32 val);
+gboolean        gst_byte_writer_put_int32_be      (GstByteWriter *writer, gint32 val);
+gboolean        gst_byte_writer_put_int32_le      (GstByteWriter *writer, gint32 val);
+gboolean        gst_byte_writer_put_uint64_be     (GstByteWriter *writer, guint64 val);
+gboolean        gst_byte_writer_put_uint64_le     (GstByteWriter *writer, guint64 val);
+gboolean        gst_byte_writer_put_int64_be      (GstByteWriter *writer, gint64 val);
+gboolean        gst_byte_writer_put_int64_le      (GstByteWriter *writer, gint64 val);
 
-gboolean gst_byte_writer_put_float32_be (GstByteWriter *writer, gfloat val);
-gboolean gst_byte_writer_put_float32_le (GstByteWriter *writer, gfloat val);
-gboolean gst_byte_writer_put_float64_be (GstByteWriter *writer, gdouble val);
-gboolean gst_byte_writer_put_float64_le (GstByteWriter *writer, gdouble val);
+gboolean        gst_byte_writer_put_float32_be    (GstByteWriter *writer, gfloat val);
+gboolean        gst_byte_writer_put_float32_le    (GstByteWriter *writer, gfloat val);
+gboolean        gst_byte_writer_put_float64_be    (GstByteWriter *writer, gdouble val);
+gboolean        gst_byte_writer_put_float64_le    (GstByteWriter *writer, gdouble val);
 
-gboolean gst_byte_writer_put_data (GstByteWriter *writer, const guint8 *data, guint size);
-gboolean gst_byte_writer_fill (GstByteWriter *writer, guint8 value, guint size);
-gboolean gst_byte_writer_put_string_utf8 (GstByteWriter *writer, const gchar *data);
-gboolean gst_byte_writer_put_string_utf16 (GstByteWriter *writer, const guint16 *data);
-gboolean gst_byte_writer_put_string_utf32 (GstByteWriter *writer, const guint32 *data);
+gboolean        gst_byte_writer_put_data          (GstByteWriter *writer, const guint8 *data, guint size);
+gboolean        gst_byte_writer_fill              (GstByteWriter *writer, guint8 value, guint size);
+gboolean        gst_byte_writer_put_string_utf8   (GstByteWriter *writer, const gchar *data);
+gboolean        gst_byte_writer_put_string_utf16  (GstByteWriter *writer, const guint16 *data);
+gboolean        gst_byte_writer_put_string_utf32  (GstByteWriter *writer, const guint32 *data);
 
 /**
  * gst_byte_writer_put_string:

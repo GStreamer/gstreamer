@@ -57,7 +57,7 @@ struct _GstLFOControlSourcePrivate
   GstClockTime period;
   GstClockTime timeshift;
   GValue amplitude;
-  GValue offset; 
+  GValue offset;
 };
 
 #endif /* __GST_LFO_CONTROL_SOURCE_PRIVATE_H__ */
