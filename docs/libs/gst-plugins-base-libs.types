@@ -49,11 +49,11 @@ gst_video_overlay_get_type
 
 
 #include <gst/rtp/gstbasertpdepayload.h>
-gst_base_rtp_depayload_get_type
+gst_rtp_base_depayload_get_type
 #include <gst/rtp/gstbasertppayload.h>
-gst_base_rtp_payload_get_type
+gst_rtp_base_payload_get_type
 #include <gst/rtp/gstbasertpaudiopayload.h>
-gst_base_rtp_audio_payload_get_type
+gst_rtp_base_audio_payload_get_type
 
 
 #include <gst/video/gstvideofilter.h>

@@ -17,34 +17,34 @@
  * Boston, MA 02111-1307, USA.
  */
 
-#ifndef __GST_BASE_RTP_DEPAYLOAD_H__
-#define __GST_BASE_RTP_DEPAYLOAD_H__
+#ifndef __GST_RTP_BASE_DEPAYLOAD_H__
+#define __GST_RTP_BASE_DEPAYLOAD_H__
 
 #include <gst/gst.h>
 #include <gst/rtp/gstrtpbuffer.h>
 
 G_BEGIN_DECLS
 
-#define GST_TYPE_BASE_RTP_DEPAYLOAD (gst_base_rtp_depayload_get_type())
-#define GST_BASE_RTP_DEPAYLOAD(obj) \
-  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_BASE_RTP_DEPAYLOAD,GstBaseRTPDepayload))
-#define GST_BASE_RTP_DEPAYLOAD_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_BASE_RTP_DEPAYLOAD,GstBaseRTPDepayloadClass))
-#define GST_BASE_RTP_DEPAYLOAD_GET_CLASS(obj) \
-        (G_TYPE_INSTANCE_GET_CLASS ((obj),GST_TYPE_BASE_RTP_DEPAYLOAD,GstBaseRTPDepayloadClass))
-#define GST_IS_BASE_RTP_DEPAYLOAD(obj) \
-  (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_BASE_RTP_DEPAYLOAD))
-#define GST_IS_BASE_RTP_DEPAYLOAD_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_BASE_RTP_DEPAYLOAD))
+#define GST_TYPE_RTP_BASE_DEPAYLOAD (gst_rtp_base_depayload_get_type())
+#define GST_RTP_BASE_DEPAYLOAD(obj) \
+  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_RTP_BASE_DEPAYLOAD,GstRTPBaseDepayload))
+#define GST_RTP_BASE_DEPAYLOAD_CLASS(klass) \
+  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_RTP_BASE_DEPAYLOAD,GstRTPBaseDepayloadClass))
+#define GST_RTP_BASE_DEPAYLOAD_GET_CLASS(obj) \
+        (G_TYPE_INSTANCE_GET_CLASS ((obj),GST_TYPE_RTP_BASE_DEPAYLOAD,GstRTPBaseDepayloadClass))
+#define GST_IS_RTP_BASE_DEPAYLOAD(obj) \
+  (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_RTP_BASE_DEPAYLOAD))
+#define GST_IS_RTP_BASE_DEPAYLOAD_CLASS(klass) \
+  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_RTP_BASE_DEPAYLOAD))
 
-#define GST_BASE_RTP_DEPAYLOAD_SINKPAD(depayload) (GST_BASE_RTP_DEPAYLOAD (depayload)->sinkpad)
-#define GST_BASE_RTP_DEPAYLOAD_SRCPAD(depayload)  (GST_BASE_RTP_DEPAYLOAD (depayload)->srcpad)
+#define GST_RTP_BASE_DEPAYLOAD_SINKPAD(depayload) (GST_RTP_BASE_DEPAYLOAD (depayload)->sinkpad)
+#define GST_RTP_BASE_DEPAYLOAD_SRCPAD(depayload)  (GST_RTP_BASE_DEPAYLOAD (depayload)->srcpad)
 
-typedef struct _GstBaseRTPDepayload      GstBaseRTPDepayload;
-typedef struct _GstBaseRTPDepayloadClass GstBaseRTPDepayloadClass;
-typedef struct _GstBaseRTPDepayloadPrivate GstBaseRTPDepayloadPrivate;
+typedef struct _GstRTPBaseDepayload      GstRTPBaseDepayload;
+typedef struct _GstRTPBaseDepayloadClass GstRTPBaseDepayloadClass;
+typedef struct _GstRTPBaseDepayloadPrivate GstRTPBaseDepayloadPrivate;
 
-struct _GstBaseRTPDepayload
+struct _GstRTPBaseDepayload
 {
   GstElement parent;
 
@@ -57,57 +57,55 @@ struct _GstBaseRTPDepayload
   gboolean need_newsegment;
 
   /*< private >*/
-  GstBaseRTPDepayloadPrivate *priv;
+  GstRTPBaseDepayloadPrivate *priv;
 
   gpointer _gst_reserved[GST_PADDING-1];
 };
 
 /**
- * GstBaseRTPDepayloadClass:
+ * GstRTPBaseDepayloadClass:
  * @parent_class: the parent class
  * @set_caps: configure the depayloader
- * @add_to_queue: (deprecated)
  * @process: process incoming rtp packets
- * @set_gst_timestamp: convert from RTP timestamp to GST timestamp
  * @packet_lost: signal the depayloader about packet loss
  * @handle_event: custom event handling
  *
  * Base class for audio RTP payloader.
  */
-struct _GstBaseRTPDepayloadClass
+struct _GstRTPBaseDepayloadClass
 {
   GstElementClass parent_class;
 
   /* virtuals, inform the subclass of the caps. */
-  gboolean (*set_caps) (GstBaseRTPDepayload *filter, GstCaps *caps);
+  gboolean (*set_caps) (GstRTPBaseDepayload *filter, GstCaps *caps);
 
   /* pure virtual function, child must use this to process incoming
    * rtp packets. If the child returns a buffer without a valid timestamp,
    * the timestamp of @in will be applied to the result buffer and the
    * buffer will be pushed. If this function returns %NULL, nothing is
    * pushed.  */
-  GstBuffer * (*process) (GstBaseRTPDepayload *base, GstBuffer *in);
+  GstBuffer * (*process) (GstRTPBaseDepayload *base, GstBuffer *in);
 
   /* non-pure function used to to signal the depayloader about packet loss. the
    * timestamp and duration are the estimated values of the lost packet.
    * The default implementation of this message pushes a segment update. */
-  gboolean (*packet_lost) (GstBaseRTPDepayload *filter, GstEvent *event);
+  gboolean (*packet_lost) (GstRTPBaseDepayload *filter, GstEvent *event);
 
   /* the default implementation does the default actions for events but
    * implementation can override.
    * Since: 0.10.32   */
-  gboolean (*handle_event) (GstBaseRTPDepayload * filter, GstEvent * event);
+  gboolean (*handle_event) (GstRTPBaseDepayload * filter, GstEvent * event);
 
   /*< private >*/
   gpointer _gst_reserved[GST_PADDING-2];
 };
 
-GType gst_base_rtp_depayload_get_type (void);
+GType gst_rtp_base_depayload_get_type (void);
 
-GstFlowReturn   gst_base_rtp_depayload_push       (GstBaseRTPDepayload *filter, GstBuffer *out_buf);
-GstFlowReturn   gst_base_rtp_depayload_push_list  (GstBaseRTPDepayload *filter, GstBufferList *out_list);
+GstFlowReturn   gst_rtp_base_depayload_push       (GstRTPBaseDepayload *filter, GstBuffer *out_buf);
+GstFlowReturn   gst_rtp_base_depayload_push_list  (GstRTPBaseDepayload *filter, GstBufferList *out_list);
 
 
 G_END_DECLS
 
-#endif /* __GST_BASE_RTP_DEPAYLOAD_H__ */
+#endif /* __GST_RTP_BASE_DEPAYLOAD_H__ */

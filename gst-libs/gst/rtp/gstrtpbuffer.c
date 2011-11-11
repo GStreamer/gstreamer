@@ -21,7 +21,7 @@
 /**
  * SECTION:gstrtpbuffer
  * @short_description: Helper methods for dealing with RTP buffers
- * @see_also: #GstBaseRTPPayload, #GstBaseRTPDepayload, gstrtcpbuffer
+ * @see_also: #GstRTPBasePayload, #GstRTPBaseDepayload, gstrtcpbuffer
  *
  * <refsect2>
  * <para>

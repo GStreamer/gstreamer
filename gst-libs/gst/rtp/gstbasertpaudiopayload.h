@@ -17,8 +17,8 @@
  * Boston, MA 02111-1307, USA.
  */
 
-#ifndef __GST_BASE_RTP_AUDIO_PAYLOAD_H__
-#define __GST_BASE_RTP_AUDIO_PAYLOAD_H__
+#ifndef __GST_RTP_BASE_AUDIO_PAYLOAD_H__
+#define __GST_RTP_BASE_AUDIO_PAYLOAD_H__
 
 #include <gst/gst.h>
 #include <gst/rtp/gstbasertppayload.h>
@@ -26,31 +26,31 @@
 
 G_BEGIN_DECLS
 
-typedef struct _GstBaseRTPAudioPayload GstBaseRTPAudioPayload;
-typedef struct _GstBaseRTPAudioPayloadClass GstBaseRTPAudioPayloadClass;
+typedef struct _GstRTPBaseAudioPayload GstRTPBaseAudioPayload;
+typedef struct _GstRTPBaseAudioPayloadClass GstRTPBaseAudioPayloadClass;
 
-typedef struct _GstBaseRTPAudioPayloadPrivate GstBaseRTPAudioPayloadPrivate;
+typedef struct _GstRTPBaseAudioPayloadPrivate GstRTPBaseAudioPayloadPrivate;
 
-#define GST_TYPE_BASE_RTP_AUDIO_PAYLOAD \
-  (gst_base_rtp_audio_payload_get_type())
-#define GST_BASE_RTP_AUDIO_PAYLOAD(obj) \
+#define GST_TYPE_RTP_BASE_AUDIO_PAYLOAD \
+  (gst_rtp_base_audio_payload_get_type())
+#define GST_RTP_BASE_AUDIO_PAYLOAD(obj) \
   (G_TYPE_CHECK_INSTANCE_CAST((obj), \
-  GST_TYPE_BASE_RTP_AUDIO_PAYLOAD,GstBaseRTPAudioPayload))
-#define GST_BASE_RTP_AUDIO_PAYLOAD_CLASS(klass) \
+  GST_TYPE_RTP_BASE_AUDIO_PAYLOAD,GstRTPBaseAudioPayload))
+#define GST_RTP_BASE_AUDIO_PAYLOAD_CLASS(klass) \
   (G_TYPE_CHECK_CLASS_CAST((klass), \
-  GST_TYPE_BASE_RTP_AUDIO_PAYLOAD,GstBaseRTPAudioPayloadClass))
-#define GST_IS_BASE_RTP_AUDIO_PAYLOAD(obj) \
-  (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_BASE_RTP_AUDIO_PAYLOAD))
-#define GST_IS_BASE_RTP_AUDIO_PAYLOAD_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_BASE_RTP_AUDIO_PAYLOAD))
-#define GST_BASE_RTP_AUDIO_PAYLOAD_CAST(obj) \
-  ((GstBaseRTPAudioPayload *) (obj))
+  GST_TYPE_RTP_BASE_AUDIO_PAYLOAD,GstRTPBaseAudioPayloadClass))
+#define GST_IS_RTP_BASE_AUDIO_PAYLOAD(obj) \
+  (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_RTP_BASE_AUDIO_PAYLOAD))
+#define GST_IS_RTP_BASE_AUDIO_PAYLOAD_CLASS(klass) \
+  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_RTP_BASE_AUDIO_PAYLOAD))
+#define GST_RTP_BASE_AUDIO_PAYLOAD_CAST(obj) \
+  ((GstRTPBaseAudioPayload *) (obj))
 
-struct _GstBaseRTPAudioPayload
+struct _GstRTPBaseAudioPayload
 {
-  GstBaseRTPPayload payload;
+  GstRTPBasePayload payload;
 
-  GstBaseRTPAudioPayloadPrivate *priv;
+  GstRTPBaseAudioPayloadPrivate *priv;
 
   GstClockTime base_ts;
   gint frame_size;
@@ -62,44 +62,44 @@ struct _GstBaseRTPAudioPayload
 };
 
 /**
- * GstBaseRTPAudioPayloadClass:
+ * GstRTPBaseAudioPayloadClass:
  * @parent_class: the parent class
  *
  * Base class for audio RTP payloader.
  */
-struct _GstBaseRTPAudioPayloadClass
+struct _GstRTPBaseAudioPayloadClass
 {
-  GstBaseRTPPayloadClass parent_class;
+  GstRTPBasePayloadClass parent_class;
 
   /*< private >*/
   gpointer _gst_reserved[GST_PADDING];
 };
 
-GType gst_base_rtp_audio_payload_get_type (void);
+GType gst_rtp_base_audio_payload_get_type (void);
 
 /* configure frame based */
-void            gst_base_rtp_audio_payload_set_frame_based        (GstBaseRTPAudioPayload *basertpaudiopayload);
+void            gst_rtp_base_audio_payload_set_frame_based        (GstRTPBaseAudioPayload *basertpaudiopayload);
 
-void            gst_base_rtp_audio_payload_set_frame_options      (GstBaseRTPAudioPayload *basertpaudiopayload,
+void            gst_rtp_base_audio_payload_set_frame_options      (GstRTPBaseAudioPayload *basertpaudiopayload,
                                                                    gint frame_duration, gint frame_size);
 
 /* configure sample based */
-void            gst_base_rtp_audio_payload_set_sample_based       (GstBaseRTPAudioPayload *basertpaudiopayload);
-void            gst_base_rtp_audio_payload_set_sample_options     (GstBaseRTPAudioPayload *basertpaudiopayload,
+void            gst_rtp_base_audio_payload_set_sample_based       (GstRTPBaseAudioPayload *basertpaudiopayload);
+void            gst_rtp_base_audio_payload_set_sample_options     (GstRTPBaseAudioPayload *basertpaudiopayload,
                                                                    gint sample_size);
-void            gst_base_rtp_audio_payload_set_samplebits_options (GstBaseRTPAudioPayload *basertpaudiopayload,
+void            gst_rtp_base_audio_payload_set_samplebits_options (GstRTPBaseAudioPayload *basertpaudiopayload,
                                                                    gint sample_size);
 
 /* get the internal adapter */
-GstAdapter*     gst_base_rtp_audio_payload_get_adapter            (GstBaseRTPAudioPayload *basertpaudiopayload);
+GstAdapter*     gst_rtp_base_audio_payload_get_adapter            (GstRTPBaseAudioPayload *basertpaudiopayload);
 
 /* push and flushing data */
-GstFlowReturn   gst_base_rtp_audio_payload_push                   (GstBaseRTPAudioPayload * baseaudiopayload,
+GstFlowReturn   gst_rtp_base_audio_payload_push                   (GstRTPBaseAudioPayload * baseaudiopayload,
                                                                    const guint8 * data, guint payload_len,
                                                                    GstClockTime timestamp);
-GstFlowReturn   gst_base_rtp_audio_payload_flush                  (GstBaseRTPAudioPayload * baseaudiopayload,
+GstFlowReturn   gst_rtp_base_audio_payload_flush                  (GstRTPBaseAudioPayload * baseaudiopayload,
                                                                    guint payload_len, GstClockTime timestamp);
 
 G_END_DECLS
 
-#endif /* __GST_BASE_RTP_AUDIO_PAYLOAD_H__ */
+#endif /* __GST_RTP_BASE_AUDIO_PAYLOAD_H__ */

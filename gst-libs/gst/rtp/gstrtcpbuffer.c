@@ -23,7 +23,7 @@
 /**
  * SECTION:gstrtcpbuffer
  * @short_description: Helper methods for dealing with RTCP buffers
- * @see_also: #GstBaseRTPPayload, #GstBaseRTPDepayload, #gstrtpbuffer
+ * @see_also: #GstRTPBasePayload, #GstRTPBaseDepayload, #gstrtpbuffer
  *
  * Note: The API in this module is not yet declared stable.
  *

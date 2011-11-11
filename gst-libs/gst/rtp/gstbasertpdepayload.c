@@ -30,10 +30,10 @@
 GST_DEBUG_CATEGORY_STATIC (basertpdepayload_debug);
 #define GST_CAT_DEFAULT (basertpdepayload_debug)
 
-#define GST_BASE_RTP_DEPAYLOAD_GET_PRIVATE(obj)  \
-   (G_TYPE_INSTANCE_GET_PRIVATE ((obj), GST_TYPE_BASE_RTP_DEPAYLOAD, GstBaseRTPDepayloadPrivate))
+#define GST_RTP_BASE_DEPAYLOAD_GET_PRIVATE(obj)  \
+   (G_TYPE_INSTANCE_GET_PRIVATE ((obj), GST_TYPE_RTP_BASE_DEPAYLOAD, GstRTPBaseDepayloadPrivate))
 
-struct _GstBaseRTPDepayloadPrivate
+struct _GstRTPBaseDepayloadPrivate
 {
   GstClockTime npt_start;
   GstClockTime npt_stop;
@@ -63,58 +63,58 @@ enum
   PROP_LAST
 };
 
-static void gst_base_rtp_depayload_finalize (GObject * object);
-static void gst_base_rtp_depayload_set_property (GObject * object,
+static void gst_rtp_base_depayload_finalize (GObject * object);
+static void gst_rtp_base_depayload_set_property (GObject * object,
     guint prop_id, const GValue * value, GParamSpec * pspec);
-static void gst_base_rtp_depayload_get_property (GObject * object,
+static void gst_rtp_base_depayload_get_property (GObject * object,
     guint prop_id, GValue * value, GParamSpec * pspec);
 
-static GstFlowReturn gst_base_rtp_depayload_chain (GstPad * pad,
+static GstFlowReturn gst_rtp_base_depayload_chain (GstPad * pad,
     GstBuffer * in);
-static gboolean gst_base_rtp_depayload_handle_sink_event (GstPad * pad,
+static gboolean gst_rtp_base_depayload_handle_sink_event (GstPad * pad,
     GstEvent * event);
 
-static GstStateChangeReturn gst_base_rtp_depayload_change_state (GstElement *
+static GstStateChangeReturn gst_rtp_base_depayload_change_state (GstElement *
     element, GstStateChange transition);
 
-static gboolean gst_base_rtp_depayload_packet_lost (GstBaseRTPDepayload *
+static gboolean gst_rtp_base_depayload_packet_lost (GstRTPBaseDepayload *
     filter, GstEvent * event);
-static gboolean gst_base_rtp_depayload_handle_event (GstBaseRTPDepayload *
+static gboolean gst_rtp_base_depayload_handle_event (GstRTPBaseDepayload *
     filter, GstEvent * event);
 
 static GstElementClass *parent_class = NULL;
-static void gst_base_rtp_depayload_class_init (GstBaseRTPDepayloadClass *
+static void gst_rtp_base_depayload_class_init (GstRTPBaseDepayloadClass *
     klass);
-static void gst_base_rtp_depayload_init (GstBaseRTPDepayload * basertppayload,
-    GstBaseRTPDepayloadClass * klass);
+static void gst_rtp_base_depayload_init (GstRTPBaseDepayload * basertppayload,
+    GstRTPBaseDepayloadClass * klass);
 
 GType
-gst_base_rtp_depayload_get_type (void)
+gst_rtp_base_depayload_get_type (void)
 {
-  static GType base_rtp_depayload_type = 0;
+  static GType rtp_base_depayload_type = 0;
 
-  if (g_once_init_enter ((gsize *) & base_rtp_depayload_type)) {
-    static const GTypeInfo base_rtp_depayload_info = {
-      sizeof (GstBaseRTPDepayloadClass),
+  if (g_once_init_enter ((gsize *) & rtp_base_depayload_type)) {
+    static const GTypeInfo rtp_base_depayload_info = {
+      sizeof (GstRTPBaseDepayloadClass),
       NULL,
       NULL,
-      (GClassInitFunc) gst_base_rtp_depayload_class_init,
+      (GClassInitFunc) gst_rtp_base_depayload_class_init,
       NULL,
       NULL,
-      sizeof (GstBaseRTPDepayload),
+      sizeof (GstRTPBaseDepayload),
       0,
-      (GInstanceInitFunc) gst_base_rtp_depayload_init,
+      (GInstanceInitFunc) gst_rtp_base_depayload_init,
     };
 
-    g_once_init_leave ((gsize *) & base_rtp_depayload_type,
-        g_type_register_static (GST_TYPE_ELEMENT, "GstBaseRTPDepayload",
-            &base_rtp_depayload_info, G_TYPE_FLAG_ABSTRACT));
+    g_once_init_leave ((gsize *) & rtp_base_depayload_type,
+        g_type_register_static (GST_TYPE_ELEMENT, "GstRTPBaseDepayload",
+            &rtp_base_depayload_info, G_TYPE_FLAG_ABSTRACT));
   }
-  return base_rtp_depayload_type;
+  return rtp_base_depayload_type;
 }
 
 static void
-gst_base_rtp_depayload_class_init (GstBaseRTPDepayloadClass * klass)
+gst_rtp_base_depayload_class_init (GstRTPBaseDepayloadClass * klass)
 {
   GObjectClass *gobject_class;
   GstElementClass *gstelement_class;
@@ -123,29 +123,29 @@ gst_base_rtp_depayload_class_init (GstBaseRTPDepayloadClass * klass)
   gstelement_class = (GstElementClass *) klass;
   parent_class = g_type_class_peek_parent (klass);
 
-  g_type_class_add_private (klass, sizeof (GstBaseRTPDepayloadPrivate));
+  g_type_class_add_private (klass, sizeof (GstRTPBaseDepayloadPrivate));
 
-  gobject_class->finalize = gst_base_rtp_depayload_finalize;
-  gobject_class->set_property = gst_base_rtp_depayload_set_property;
-  gobject_class->get_property = gst_base_rtp_depayload_get_property;
+  gobject_class->finalize = gst_rtp_base_depayload_finalize;
+  gobject_class->set_property = gst_rtp_base_depayload_set_property;
+  gobject_class->get_property = gst_rtp_base_depayload_get_property;
 
-  gstelement_class->change_state = gst_base_rtp_depayload_change_state;
+  gstelement_class->change_state = gst_rtp_base_depayload_change_state;
 
-  klass->packet_lost = gst_base_rtp_depayload_packet_lost;
-  klass->handle_event = gst_base_rtp_depayload_handle_event;
+  klass->packet_lost = gst_rtp_base_depayload_packet_lost;
+  klass->handle_event = gst_rtp_base_depayload_handle_event;
 
   GST_DEBUG_CATEGORY_INIT (basertpdepayload_debug, "basertpdepayload", 0,
       "Base class for RTP Depayloaders");
 }
 
 static void
-gst_base_rtp_depayload_init (GstBaseRTPDepayload * filter,
-    GstBaseRTPDepayloadClass * klass)
+gst_rtp_base_depayload_init (GstRTPBaseDepayload * filter,
+    GstRTPBaseDepayloadClass * klass)
 {
   GstPadTemplate *pad_template;
-  GstBaseRTPDepayloadPrivate *priv;
+  GstRTPBaseDepayloadPrivate *priv;
 
-  priv = GST_BASE_RTP_DEPAYLOAD_GET_PRIVATE (filter);
+  priv = GST_RTP_BASE_DEPAYLOAD_GET_PRIVATE (filter);
   filter->priv = priv;
 
   GST_DEBUG_OBJECT (filter, "init");
@@ -154,9 +154,9 @@ gst_base_rtp_depayload_init (GstBaseRTPDepayload * filter,
       gst_element_class_get_pad_template (GST_ELEMENT_CLASS (klass), "sink");
   g_return_if_fail (pad_template != NULL);
   filter->sinkpad = gst_pad_new_from_template (pad_template, "sink");
-  gst_pad_set_chain_function (filter->sinkpad, gst_base_rtp_depayload_chain);
+  gst_pad_set_chain_function (filter->sinkpad, gst_rtp_base_depayload_chain);
   gst_pad_set_event_function (filter->sinkpad,
-      gst_base_rtp_depayload_handle_sink_event);
+      gst_rtp_base_depayload_handle_sink_event);
   gst_element_add_pad (GST_ELEMENT (filter), filter->sinkpad);
 
   pad_template =
@@ -170,23 +170,23 @@ gst_base_rtp_depayload_init (GstBaseRTPDepayload * filter,
 }
 
 static void
-gst_base_rtp_depayload_finalize (GObject * object)
+gst_rtp_base_depayload_finalize (GObject * object)
 {
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
 static gboolean
-gst_base_rtp_depayload_setcaps (GstBaseRTPDepayload * filter, GstCaps * caps)
+gst_rtp_base_depayload_setcaps (GstRTPBaseDepayload * filter, GstCaps * caps)
 {
-  GstBaseRTPDepayloadClass *bclass;
-  GstBaseRTPDepayloadPrivate *priv;
+  GstRTPBaseDepayloadClass *bclass;
+  GstRTPBaseDepayloadPrivate *priv;
   gboolean res;
   GstStructure *caps_struct;
   const GValue *value;
 
   priv = filter->priv;
 
-  bclass = GST_BASE_RTP_DEPAYLOAD_GET_CLASS (filter);
+  bclass = GST_RTP_BASE_DEPAYLOAD_GET_CLASS (filter);
 
   GST_DEBUG_OBJECT (filter, "Set caps");
 
@@ -236,11 +236,11 @@ gst_base_rtp_depayload_setcaps (GstBaseRTPDepayload * filter, GstCaps * caps)
 }
 
 static GstFlowReturn
-gst_base_rtp_depayload_chain (GstPad * pad, GstBuffer * in)
+gst_rtp_base_depayload_chain (GstPad * pad, GstBuffer * in)
 {
-  GstBaseRTPDepayload *filter;
-  GstBaseRTPDepayloadPrivate *priv;
-  GstBaseRTPDepayloadClass *bclass;
+  GstRTPBaseDepayload *filter;
+  GstRTPBaseDepayloadPrivate *priv;
+  GstRTPBaseDepayloadClass *bclass;
   GstFlowReturn ret = GST_FLOW_OK;
   GstBuffer *out_buf;
   GstClockTime pts, dts;
@@ -250,7 +250,7 @@ gst_base_rtp_depayload_chain (GstPad * pad, GstBuffer * in)
   gint gap;
   GstRTPBuffer rtp;
 
-  filter = GST_BASE_RTP_DEPAYLOAD (GST_OBJECT_PARENT (pad));
+  filter = GST_RTP_BASE_DEPAYLOAD (GST_OBJECT_PARENT (pad));
   priv = filter->priv;
 
   /* we must have a setcaps first */
@@ -326,7 +326,7 @@ gst_base_rtp_depayload_chain (GstPad * pad, GstBuffer * in)
     GST_BUFFER_FLAG_SET (in, GST_BUFFER_FLAG_DISCONT);
   }
 
-  bclass = GST_BASE_RTP_DEPAYLOAD_GET_CLASS (filter);
+  bclass = GST_RTP_BASE_DEPAYLOAD_GET_CLASS (filter);
 
   if (G_UNLIKELY (bclass->process == NULL))
     goto no_process;
@@ -334,7 +334,7 @@ gst_base_rtp_depayload_chain (GstPad * pad, GstBuffer * in)
   /* let's send it out to processing */
   out_buf = bclass->process (filter, in);
   if (out_buf) {
-    ret = gst_base_rtp_depayload_push (filter, out_buf);
+    ret = gst_rtp_base_depayload_push (filter, out_buf);
   }
   gst_buffer_unref (in);
 
@@ -380,7 +380,7 @@ no_process:
 }
 
 static gboolean
-gst_base_rtp_depayload_handle_event (GstBaseRTPDepayload * filter,
+gst_rtp_base_depayload_handle_event (GstRTPBaseDepayload * filter,
     GstEvent * event)
 {
   gboolean res = TRUE;
@@ -398,7 +398,7 @@ gst_base_rtp_depayload_handle_event (GstBaseRTPDepayload * filter,
 
       gst_event_parse_caps (event, &caps);
 
-      res = gst_base_rtp_depayload_setcaps (filter, caps);
+      res = gst_rtp_base_depayload_setcaps (filter, caps);
       forward = FALSE;
       break;
     }
@@ -412,9 +412,9 @@ gst_base_rtp_depayload_handle_event (GstBaseRTPDepayload * filter,
     }
     case GST_EVENT_CUSTOM_DOWNSTREAM:
     {
-      GstBaseRTPDepayloadClass *bclass;
+      GstRTPBaseDepayloadClass *bclass;
 
-      bclass = GST_BASE_RTP_DEPAYLOAD_GET_CLASS (filter);
+      bclass = GST_RTP_BASE_DEPAYLOAD_GET_CLASS (filter);
 
       if (gst_event_has_name (event, "GstRTPPacketLost")) {
         /* we get this event from the jitterbuffer when it considers a packet as
@@ -446,19 +446,19 @@ gst_base_rtp_depayload_handle_event (GstBaseRTPDepayload * filter,
 }
 
 static gboolean
-gst_base_rtp_depayload_handle_sink_event (GstPad * pad, GstEvent * event)
+gst_rtp_base_depayload_handle_sink_event (GstPad * pad, GstEvent * event)
 {
   gboolean res = FALSE;
-  GstBaseRTPDepayload *filter;
-  GstBaseRTPDepayloadClass *bclass;
+  GstRTPBaseDepayload *filter;
+  GstRTPBaseDepayloadClass *bclass;
 
-  filter = GST_BASE_RTP_DEPAYLOAD (gst_pad_get_parent (pad));
+  filter = GST_RTP_BASE_DEPAYLOAD (gst_pad_get_parent (pad));
   if (G_UNLIKELY (filter == NULL)) {
     gst_event_unref (event);
     return FALSE;
   }
 
-  bclass = GST_BASE_RTP_DEPAYLOAD_GET_CLASS (filter);
+  bclass = GST_RTP_BASE_DEPAYLOAD_GET_CLASS (filter);
   if (bclass->handle_event)
     res = bclass->handle_event (filter, event);
   else
@@ -469,12 +469,12 @@ gst_base_rtp_depayload_handle_sink_event (GstPad * pad, GstEvent * event)
 }
 
 static GstEvent *
-create_segment_event (GstBaseRTPDepayload * filter, gboolean update,
+create_segment_event (GstRTPBaseDepayload * filter, gboolean update,
     GstClockTime position)
 {
   GstEvent *event;
   GstClockTime stop;
-  GstBaseRTPDepayloadPrivate *priv;
+  GstRTPBaseDepayloadPrivate *priv;
   GstSegment segment;
 
   priv = filter->priv;
@@ -499,15 +499,15 @@ create_segment_event (GstBaseRTPDepayload * filter, gboolean update,
 
 typedef struct
 {
-  GstBaseRTPDepayload *depayload;
-  GstBaseRTPDepayloadClass *bclass;
+  GstRTPBaseDepayload *depayload;
+  GstRTPBaseDepayloadClass *bclass;
 } HeaderData;
 
 static gboolean
 set_headers (GstBuffer ** buffer, guint idx, HeaderData * data)
 {
-  GstBaseRTPDepayload *depayload = data->depayload;
-  GstBaseRTPDepayloadPrivate *priv = depayload->priv;
+  GstRTPBaseDepayload *depayload = data->depayload;
+  GstRTPBaseDepayloadPrivate *priv = depayload->priv;
   GstClockTime pts, dts, duration;
 
   *buffer = gst_buffer_make_writable (*buffer);
@@ -540,13 +540,13 @@ set_headers (GstBuffer ** buffer, guint idx, HeaderData * data)
 }
 
 static GstFlowReturn
-gst_base_rtp_depayload_prepare_push (GstBaseRTPDepayload * filter,
+gst_rtp_base_depayload_prepare_push (GstRTPBaseDepayload * filter,
     gboolean is_list, gpointer obj)
 {
   HeaderData data;
 
   data.depayload = filter;
-  data.bclass = GST_BASE_RTP_DEPAYLOAD_GET_CLASS (filter);
+  data.bclass = GST_RTP_BASE_DEPAYLOAD_GET_CLASS (filter);
 
   if (is_list) {
     GstBufferList **blist = obj;
@@ -572,8 +572,8 @@ gst_base_rtp_depayload_prepare_push (GstBaseRTPDepayload * filter,
 }
 
 /**
- * gst_base_rtp_depayload_push:
- * @filter: a #GstBaseRTPDepayload
+ * gst_rtp_base_depayload_push:
+ * @filter: a #GstRTPBaseDepayload
  * @out_buf: a #GstBuffer
  *
  * Push @out_buf to the peer of @filter. This function takes ownership of
@@ -585,11 +585,11 @@ gst_base_rtp_depayload_prepare_push (GstBaseRTPDepayload * filter,
  * Returns: a #GstFlowReturn.
  */
 GstFlowReturn
-gst_base_rtp_depayload_push (GstBaseRTPDepayload * filter, GstBuffer * out_buf)
+gst_rtp_base_depayload_push (GstRTPBaseDepayload * filter, GstBuffer * out_buf)
 {
   GstFlowReturn res;
 
-  res = gst_base_rtp_depayload_prepare_push (filter, FALSE, &out_buf);
+  res = gst_rtp_base_depayload_prepare_push (filter, FALSE, &out_buf);
 
   if (G_LIKELY (res == GST_FLOW_OK))
     res = gst_pad_push (filter->srcpad, out_buf);
@@ -600,8 +600,8 @@ gst_base_rtp_depayload_push (GstBaseRTPDepayload * filter, GstBuffer * out_buf)
 }
 
 /**
- * gst_base_rtp_depayload_push_list:
- * @filter: a #GstBaseRTPDepayload
+ * gst_rtp_base_depayload_push_list:
+ * @filter: a #GstRTPBaseDepayload
  * @out_list: a #GstBufferList
  *
  * Push @out_list to the peer of @filter. This function takes ownership of
@@ -612,12 +612,12 @@ gst_base_rtp_depayload_push (GstBaseRTPDepayload * filter, GstBuffer * out_buf)
  * Since: 0.10.32
  */
 GstFlowReturn
-gst_base_rtp_depayload_push_list (GstBaseRTPDepayload * filter,
+gst_rtp_base_depayload_push_list (GstRTPBaseDepayload * filter,
     GstBufferList * out_list)
 {
   GstFlowReturn res;
 
-  res = gst_base_rtp_depayload_prepare_push (filter, TRUE, &out_list);
+  res = gst_rtp_base_depayload_prepare_push (filter, TRUE, &out_list);
 
   if (G_LIKELY (res == GST_FLOW_OK))
     res = gst_pad_push_list (filter->srcpad, out_list);
@@ -630,7 +630,7 @@ gst_base_rtp_depayload_push_list (GstBaseRTPDepayload * filter,
 /* convert the PacketLost event form a jitterbuffer to a segment update.
  * subclasses can override this.  */
 static gboolean
-gst_base_rtp_depayload_packet_lost (GstBaseRTPDepayload * filter,
+gst_rtp_base_depayload_packet_lost (GstRTPBaseDepayload * filter,
     GstEvent * event)
 {
   GstClockTime timestamp, duration, position;
@@ -657,14 +657,14 @@ gst_base_rtp_depayload_packet_lost (GstBaseRTPDepayload * filter,
 }
 
 static GstStateChangeReturn
-gst_base_rtp_depayload_change_state (GstElement * element,
+gst_rtp_base_depayload_change_state (GstElement * element,
     GstStateChange transition)
 {
-  GstBaseRTPDepayload *filter;
-  GstBaseRTPDepayloadPrivate *priv;
+  GstRTPBaseDepayload *filter;
+  GstRTPBaseDepayloadPrivate *priv;
   GstStateChangeReturn ret;
 
-  filter = GST_BASE_RTP_DEPAYLOAD (element);
+  filter = GST_RTP_BASE_DEPAYLOAD (element);
   priv = filter->priv;
 
   switch (transition) {
@@ -702,7 +702,7 @@ gst_base_rtp_depayload_change_state (GstElement * element,
 }
 
 static void
-gst_base_rtp_depayload_set_property (GObject * object, guint prop_id,
+gst_rtp_base_depayload_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec)
 {
   switch (prop_id) {
@@ -713,7 +713,7 @@ gst_base_rtp_depayload_set_property (GObject * object, guint prop_id,
 }
 
 static void
-gst_base_rtp_depayload_get_property (GObject * object, guint prop_id,
+gst_rtp_base_depayload_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec)
 {
   switch (prop_id) {
