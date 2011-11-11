@@ -62,19 +62,11 @@ GST_DEBUG_CATEGORY_STATIC (debug);
 /* TwoLAME can do MPEG-1, MPEG-2 so it has 6 possible
  * sample rates it supports */
 static GstStaticPadTemplate gst_two_lame_sink_template =
-    GST_STATIC_PAD_TEMPLATE ("sink",
+GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("audio/x-raw-float, "
-        "endianness = (int) BYTE_ORDER, "
-        "width = (int) 32, "
-        "rate = (int) { 16000, 22050, 24000, 32000, 44100, 48000 }, "
-        "channels = (int) [ 1, 2 ]; "
-        "audio/x-raw-int, "
-        "endianness = (int) BYTE_ORDER, "
-        "signed = (boolean) true, "
-        "width = (int) 16, "
-        "depth = (int) 16, "
+    GST_STATIC_CAPS ("audio/x-raw, "
+        "format = (string) { " GST_AUDIO_NE (F32) ", " GST_AUDIO_NE (S16) " }, "
         "rate = (int) { 16000, 22050, 24000, 32000, 44100, 48000 }, "
         "channels = (int) [ 1, 2 ]")
     );
@@ -205,8 +197,7 @@ static void gst_two_lame_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 static gboolean gst_two_lame_setup (GstTwoLame * twolame);
 
-GST_BOILERPLATE (GstTwoLame, gst_two_lame, GstAudioEncoder,
-    GST_TYPE_AUDIO_ENCODER);
+G_DEFINE_TYPE (GstTwoLame, gst_two_lame, GST_TYPE_AUDIO_ENCODER);
 
 static void
 gst_two_lame_release_memory (GstTwoLame * twolame)
@@ -222,22 +213,7 @@ gst_two_lame_finalize (GObject * obj)
 {
   gst_two_lame_release_memory (GST_TWO_LAME (obj));
 
-  G_OBJECT_CLASS (parent_class)->finalize (obj);
-}
-
-static void
-gst_two_lame_base_init (gpointer g_class)
-{
-  GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
-
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&gst_two_lame_src_template));
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&gst_two_lame_sink_template));
-  gst_element_class_set_details_simple (element_class, "TwoLAME mp2 encoder",
-      "Codec/Encoder/Audio",
-      "High-quality free MP2 encoder",
-      "Sebastian Dröge <sebastian.droege@collabora.co.uk>");
+  G_OBJECT_CLASS (gst_two_lame_parent_class)->finalize (obj);
 }
 
 static void
@@ -248,8 +224,6 @@ gst_two_lame_class_init (GstTwoLameClass * klass)
 
   gobject_class = (GObjectClass *) klass;
   gstbase_class = (GstAudioEncoderClass *) klass;
-
-  parent_class = g_type_class_peek_parent (klass);
 
   gobject_class->set_property = gst_two_lame_set_property;
   gobject_class->get_property = gst_two_lame_get_property;
@@ -346,6 +320,16 @@ gst_two_lame_class_init (GstTwoLameClass * klass)
           "Calculate Psymodel every n frames",
           0, G_MAXINT, gst_two_lame_default_settings.quick_mode_count,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  gst_element_class_add_pad_template (GST_ELEMENT_CLASS (klass),
+      gst_static_pad_template_get (&gst_two_lame_src_template));
+  gst_element_class_add_pad_template (GST_ELEMENT_CLASS (klass),
+      gst_static_pad_template_get (&gst_two_lame_sink_template));
+
+  gst_element_class_set_details_simple (GST_ELEMENT_CLASS (klass),
+      "TwoLAME mp2 encoder", "Codec/Encoder/Audio",
+      "High-quality free MP2 encoder",
+      "Sebastian Dröge <sebastian.droege@collabora.co.uk>");
 }
 
 static gboolean
@@ -424,7 +408,7 @@ setup_failed:
 }
 
 static void
-gst_two_lame_init (GstTwoLame * twolame, GstTwoLameClass * klass)
+gst_two_lame_init (GstTwoLame * twolame)
 {
   GST_DEBUG_OBJECT (twolame, "starting initialization");
 
@@ -623,6 +607,7 @@ static GstFlowReturn
 gst_two_lame_flush_full (GstTwoLame * lame, gboolean push)
 {
   GstBuffer *buf;
+  guint8 *data;
   gint size;
   GstFlowReturn result = GST_FLOW_OK;
 
@@ -630,10 +615,12 @@ gst_two_lame_flush_full (GstTwoLame * lame, gboolean push)
     return GST_FLOW_OK;
 
   buf = gst_buffer_new_and_alloc (16384);
-  size = twolame_encode_flush (lame->glopts, GST_BUFFER_DATA (buf), 16384);
+  data = gst_buffer_map (buf, NULL, NULL, GST_MAP_WRITE);
+  size = twolame_encode_flush (lame->glopts, data, 16384);
+  gst_buffer_unmap (buf, data, 16384);
 
   if (size > 0 && push) {
-    GST_BUFFER_SIZE (buf) = size;
+    gst_buffer_set_size (buf, size);
     GST_DEBUG_OBJECT (lame, "pushing final packet of %u bytes", size);
     result = gst_audio_encoder_finish_frame (GST_AUDIO_ENCODER (lame), buf, -1);
   } else {
@@ -660,7 +647,7 @@ gst_two_lame_handle_frame (GstAudioEncoder * enc, GstBuffer * buf)
   GstFlowReturn result;
   gint num_samples;
   guint8 *data;
-  guint size;
+  gsize size;
 
   twolame = GST_TWO_LAME (enc);
 
@@ -668,8 +655,7 @@ gst_two_lame_handle_frame (GstAudioEncoder * enc, GstBuffer * buf)
   if (G_UNLIKELY (buf == NULL))
     return gst_two_lame_flush_full (twolame, TRUE);
 
-  data = GST_BUFFER_DATA (buf);
-  size = GST_BUFFER_SIZE (buf);
+  data = gst_buffer_map (buf, &size, NULL, GST_MAP_READ);
 
   if (twolame->float_input)
     num_samples = size / 4;
@@ -679,7 +665,7 @@ gst_two_lame_handle_frame (GstAudioEncoder * enc, GstBuffer * buf)
   /* allocate space for output */
   mp3_buffer_size = 1.25 * num_samples + 16384;
   mp3_buf = gst_buffer_new_and_alloc (mp3_buffer_size);
-  mp3_data = GST_BUFFER_DATA (mp3_buf);
+  mp3_data = gst_buffer_map (mp3_buf, NULL, NULL, GST_MAP_WRITE);
 
   if (twolame->num_channels == 1) {
     if (twolame->float_input)
@@ -704,11 +690,11 @@ gst_two_lame_handle_frame (GstAudioEncoder * enc, GstBuffer * buf)
   GST_LOG_OBJECT (twolame, "encoded %d bytes of audio to %d bytes of mp3",
       size, mp3_size);
 
-  if (mp3_size < 0) {
-  }
+  gst_buffer_unmap (buf, data, -1);
+  gst_buffer_unmap (mp3_buf, mp3_data, -1);
 
   if (mp3_size > 0) {
-    GST_BUFFER_SIZE (mp3_buf) = mp3_size;
+    gst_buffer_set_size (mp3_buf, mp3_size);
     result = gst_audio_encoder_finish_frame (enc, mp3_buf, -1);
   } else {
     if (mp3_size < 0) {
