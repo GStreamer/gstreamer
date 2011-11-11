@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-ugly 0.10.17.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2011-04-27 12:41+0100\n"
+"POT-Creation-Date: 2011-11-11 01:29+0000\n"
 "PO-Revision-Date: 2011-04-26 19:42+0900\n"
 "Last-Translator: Makoto Kato <makoto.kt@gmail.com>\n"
 "Language-Team: Japanese <translation-team-ja@lists.sourceforge.net>\n"
@@ -55,9 +55,12 @@ msgstr ""
 msgid "Could not read DVD."
 msgstr "DVDを読み込むことができません。"
 
-msgid "Failed to configure LAME encoder. Check your encoding parameters."
+#, fuzzy
+msgid ""
+"Failed to configure LAME mp3 audio encoder. Check your encoding parameters."
 msgstr ""
-"LAMEエンコーダーの構成に失敗しました。パラメータをチェックしてください。"
+"TwoLAMEエンコーダーの構成に失敗しました。エンコード用のパラメータをチェックし"
+"てください。"
 
 #, c-format
 msgid ""
@@ -77,6 +80,12 @@ msgstr "このストリームはデータを含んでいません。"
 
 msgid "Internal data stream error."
 msgstr "内部データストリームエラー。"
+
+#, fuzzy
+#~ msgid ""
+#~ "Failed to configure LAMEMP3ENC encoder. Check your encoding parameters."
+#~ msgstr ""
+#~ "LAMEエンコーダーの構成に失敗しました。パラメータをチェックしてください。"
 
 #~ msgid "Invalid title information on DVD."
 #~ msgstr "DVD上のタイトル情報が不正です。"

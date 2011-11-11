@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-ugly 0.10.13.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2010-10-15 15:20+0100\n"
+"POT-Creation-Date: 2011-11-11 01:29+0000\n"
 "PO-Revision-Date: 2010-03-06 22:13+1030\n"
 "Last-Translator: Clytie Siddall <clytie@riverland.net.au>\n"
 "Language-Team: Vietnamese <vi-VN@googlegroups.com>\n"
@@ -53,8 +53,10 @@ msgstr ""
 msgid "Could not read DVD."
 msgstr "Không thể mở đĩa DVD"
 
-msgid "Failed to configure LAME encoder. Check your encoding parameters."
-msgstr "Lỗi cấu hình bộ biên mã LAME. Hãy kiểm tra các tham số biên mã."
+#, fuzzy
+msgid ""
+"Failed to configure LAME mp3 audio encoder. Check your encoding parameters."
+msgstr "Lỗi cấu hình bộ biên mã TwoLAME. Hãy kiểm tra lại các tham số biên mã."
 
 #, c-format
 msgid ""
@@ -72,3 +74,8 @@ msgstr "Luồng này không chứa dữ liệu."
 
 msgid "Internal data stream error."
 msgstr "Lỗi luồng dữ liệu nội bộ."
+
+#, fuzzy
+#~ msgid ""
+#~ "Failed to configure LAMEMP3ENC encoder. Check your encoding parameters."
+#~ msgstr "Lỗi cấu hình bộ biên mã LAME. Hãy kiểm tra các tham số biên mã."

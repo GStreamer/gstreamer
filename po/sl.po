@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-ugly 0.10.17.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2011-04-27 12:41+0100\n"
+"POT-Creation-Date: 2011-11-11 01:29+0000\n"
 "PO-Revision-Date: 2011-04-26 15:35+0100\n"
 "Last-Translator: Klemen Košir <klemen.kosir@gmx.com>\n"
 "Language-Team: Slovenian <translation-team-sl@lists.sourceforge.net>\n"
@@ -58,9 +58,11 @@ msgstr ""
 msgid "Could not read DVD."
 msgstr "DVD-ja ni mogoče prebrati."
 
-msgid "Failed to configure LAME encoder. Check your encoding parameters."
+#, fuzzy
+msgid ""
+"Failed to configure LAME mp3 audio encoder. Check your encoding parameters."
 msgstr ""
-"Napaka med nastavljanjem kodirnika LAME. Preverite parametre kodiranja."
+"Napaka med nastavljanjem kodirnika TwoLAME. Preverite parametre kodiranja."
 
 #, c-format
 msgid ""
@@ -79,3 +81,9 @@ msgstr "Pretok ne vsebuje podatkov."
 
 msgid "Internal data stream error."
 msgstr "Notranja napaka pretoka podatkov."
+
+#, fuzzy
+#~ msgid ""
+#~ "Failed to configure LAMEMP3ENC encoder. Check your encoding parameters."
+#~ msgstr ""
+#~ "Napaka med nastavljanjem kodirnika LAME. Preverite parametre kodiranja."

@@ -9,7 +9,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-ugly-0.10.10.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2010-10-15 15:20+0100\n"
+"POT-Creation-Date: 2011-11-11 01:29+0000\n"
 "PO-Revision-Date: 2009-03-16 03:46+0100\n"
 "Last-Translator: Petr Kovar <pknbe@volny.cz>\n"
 "Language-Team: Czech <translation-team-cs@lists.sourceforge.net>\n"
@@ -56,9 +56,12 @@ msgstr ""
 msgid "Could not read DVD."
 msgstr "Nezdařilo se otevření DVD"
 
-msgid "Failed to configure LAME encoder. Check your encoding parameters."
+#, fuzzy
+msgid ""
+"Failed to configure LAME mp3 audio encoder. Check your encoding parameters."
 msgstr ""
-"Nezdařilo se nastavení kodéru LAME. Je nutné zkontrolovat parametry kódování."
+"Nezdařilo se nastavení kodéru TwoLAME. Je nutné zkontrolovat parametry "
+"kódování."
 
 #, c-format
 msgid ""
@@ -78,6 +81,13 @@ msgstr "Tento proud neobsahuje žádná data."
 
 msgid "Internal data stream error."
 msgstr "Interní chyba datového proudu."
+
+#, fuzzy
+#~ msgid ""
+#~ "Failed to configure LAMEMP3ENC encoder. Check your encoding parameters."
+#~ msgstr ""
+#~ "Nezdařilo se nastavení kodéru LAME. Je nutné zkontrolovat parametry "
+#~ "kódování."
 
 #~ msgid "Invalid title information on DVD."
 #~ msgstr "Neplatná informace o titulu na DVD."

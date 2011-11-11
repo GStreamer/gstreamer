@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-ugly 0.10.11.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2010-10-15 15:20+0100\n"
+"POT-Creation-Date: 2011-11-11 01:29+0000\n"
 "PO-Revision-Date: 2009-06-12 23:12+0800\n"
 "Last-Translator: LI Daobing <lidaobing@gmail.com>\n"
 "Language-Team: Chinese (simplified) <translation-team-zh-cn@lists."
@@ -53,8 +53,10 @@ msgstr ""
 msgid "Could not read DVD."
 msgstr "无法打开 DVD"
 
-msgid "Failed to configure LAME encoder. Check your encoding parameters."
-msgstr "设置 LAME 编码器失败. 请检查你的编码参数."
+#, fuzzy
+msgid ""
+"Failed to configure LAME mp3 audio encoder. Check your encoding parameters."
+msgstr "设置 TwoLAME 编码器失败. 请检查你的编码参数."
 
 #, c-format
 msgid ""
@@ -70,6 +72,11 @@ msgstr "这个串流中没有包含数据."
 
 msgid "Internal data stream error."
 msgstr "内部数据流错误。"
+
+#, fuzzy
+#~ msgid ""
+#~ "Failed to configure LAMEMP3ENC encoder. Check your encoding parameters."
+#~ msgstr "设置 LAME 编码器失败. 请检查你的编码参数."
 
 #~ msgid "Invalid title information on DVD."
 #~ msgstr "无效的 DVD 标题信息。"

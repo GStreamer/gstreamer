@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-ugly 0.10.6\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2010-10-15 15:20+0100\n"
+"POT-Creation-Date: 2011-11-11 01:29+0000\n"
 "PO-Revision-Date: 2007-11-02 14:39+0100\n"
 "Last-Translator: Kjartan Maraas <kmaraas@gnome.org>\n"
 "Language-Team: Norwegian Bokmaal <i18n-nb@lister.ping.uio.no>\n"
@@ -54,7 +54,9 @@ msgstr ""
 msgid "Could not read DVD."
 msgstr "Kunne ikke åpne DVD"
 
-msgid "Failed to configure LAME encoder. Check your encoding parameters."
+#, fuzzy
+msgid ""
+"Failed to configure LAME mp3 audio encoder. Check your encoding parameters."
 msgstr "Kunne ikke konfigurere LAME-koder. Sjekk parameterene for kodingen."
 
 #, c-format
@@ -74,6 +76,11 @@ msgstr "Denne strømmen inneholde ikke data."
 
 msgid "Internal data stream error."
 msgstr ""
+
+#, fuzzy
+#~ msgid ""
+#~ "Failed to configure LAMEMP3ENC encoder. Check your encoding parameters."
+#~ msgstr "Kunne ikke konfigurere LAME-koder. Sjekk parameterene for kodingen."
 
 #~ msgid "Invalid title information on DVD."
 #~ msgstr "Ugyldig tittelinformasjon på DVD."

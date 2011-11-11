@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-ugly 0.10.10.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2010-10-15 15:20+0100\n"
+"POT-Creation-Date: 2011-11-11 01:29+0000\n"
 "PO-Revision-Date: 2009-04-20 01:48+0200\n"
 "Last-Translator: Gabor Kelemen <kelemeng@gnome.hu>\n"
 "Language-Team: Hungarian <translation-team-hu@lists.sourceforge.net>\n"
@@ -55,9 +55,11 @@ msgstr ""
 msgid "Could not read DVD."
 msgstr "A DVD nem nyitható meg"
 
-msgid "Failed to configure LAME encoder. Check your encoding parameters."
+#, fuzzy
+msgid ""
+"Failed to configure LAME mp3 audio encoder. Check your encoding parameters."
 msgstr ""
-"A LAME kódoló beállítása meghiúsult. Ellenőrizze a kódolás beállításait."
+"A TwoLAME kódoló beállítása meghiúsult. Ellenőrizze a kódolás beállításait."
 
 #, c-format
 msgid ""
@@ -76,6 +78,12 @@ msgstr "Ez az adatfolyam nem tartalmaz adatokat."
 
 msgid "Internal data stream error."
 msgstr "Belső adatfolyam-hiba."
+
+#, fuzzy
+#~ msgid ""
+#~ "Failed to configure LAMEMP3ENC encoder. Check your encoding parameters."
+#~ msgstr ""
+#~ "A LAME kódoló beállítása meghiúsult. Ellenőrizze a kódolás beállításait."
 
 #~ msgid "Invalid title information on DVD."
 #~ msgstr "A DVD címinformációi érvénytelenek."

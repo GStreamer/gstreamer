@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-ugly 0.10.12.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2010-10-15 15:20+0100\n"
+"POT-Creation-Date: 2011-11-11 01:29+0000\n"
 "PO-Revision-Date: 2009-07-29 18:18+0300\n"
 "Last-Translator: Simos Xenitellis <simos.lists@googlemail.com>\n"
 "Language-Team: Greek <team@lists.gnome.gr>\n"
@@ -54,9 +54,11 @@ msgstr ""
 msgid "Could not read DVD."
 msgstr "Δεν ήταν δυνατό το άνοιγμα του DVD"
 
-msgid "Failed to configure LAME encoder. Check your encoding parameters."
+#, fuzzy
+msgid ""
+"Failed to configure LAME mp3 audio encoder. Check your encoding parameters."
 msgstr ""
-"Αδυναμία ρύθμισης του κωδικοποιητή LAME. Ελέγξτε τις παραμέτρους "
+"Αδυναμία ρύθμισης του κωδικοποιητή TwoLAME. Ελέγξτε τις παραμέτρους "
 "κωδικοποίησης."
 
 #, c-format
@@ -77,3 +79,10 @@ msgstr "Η ροή αυτή δεν περιέχει καθόλου δεδομέν
 
 msgid "Internal data stream error."
 msgstr "Εσωτερικό σφάλμα ροής δεδομένων."
+
+#, fuzzy
+#~ msgid ""
+#~ "Failed to configure LAMEMP3ENC encoder. Check your encoding parameters."
+#~ msgstr ""
+#~ "Αδυναμία ρύθμισης του κωδικοποιητή LAME. Ελέγξτε τις παραμέτρους "
+#~ "κωδικοποίησης."

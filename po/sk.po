@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-ugly 0.10.11.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2010-10-15 15:20+0100\n"
+"POT-Creation-Date: 2011-11-11 01:29+0000\n"
 "PO-Revision-Date: 2009-09-21 10:26+0100\n"
 "Last-Translator: Peter Tuhársky <tuharsky@misbb.sk>\n"
 "Language-Team: Slovak <sk-i18n@lists.linux.sk>\n"
@@ -57,9 +57,11 @@ msgstr ""
 msgid "Could not read DVD."
 msgstr "Nepodarilo sa otvoriť DVD"
 
-msgid "Failed to configure LAME encoder. Check your encoding parameters."
+#, fuzzy
+msgid ""
+"Failed to configure LAME mp3 audio encoder. Check your encoding parameters."
 msgstr ""
-"Nepodarilo sa nastaviť LAME enkodér. Skontrolujte svoje kódovacie "
+"Nepodarilo sa nastaviť TwoLAME enkodér. Skontrolujte svoje kódovacie "
 "nastavenia, prosím."
 
 #, c-format
@@ -80,6 +82,13 @@ msgstr "Tento prúd neobsahuje žiadne údaje."
 
 msgid "Internal data stream error."
 msgstr "Chyba vnútorného prúdu údajov."
+
+#, fuzzy
+#~ msgid ""
+#~ "Failed to configure LAMEMP3ENC encoder. Check your encoding parameters."
+#~ msgstr ""
+#~ "Nepodarilo sa nastaviť LAME enkodér. Skontrolujte svoje kódovacie "
+#~ "nastavenia, prosím."
 
 #~ msgid "Invalid title information on DVD."
 #~ msgstr "Chybný titul na DVD."

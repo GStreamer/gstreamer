@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-ugly 0.10.11.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2010-10-15 15:20+0100\n"
+"POT-Creation-Date: 2011-11-11 01:29+0000\n"
 "PO-Revision-Date: 2009-06-13 22:02+0700\n"
 "Last-Translator: Andhika Padmawan <andhika.padmawan@gmail.com>\n"
 "Language-Team: Indonesian <translation-team-id@lists.sourceforge.net>\n"
@@ -52,8 +52,10 @@ msgstr ""
 msgid "Could not read DVD."
 msgstr "Tak dapat membuka DVD"
 
-msgid "Failed to configure LAME encoder. Check your encoding parameters."
-msgstr "Gagal mengatur penyandi LAME. Cek parameter penyandian anda."
+#, fuzzy
+msgid ""
+"Failed to configure LAME mp3 audio encoder. Check your encoding parameters."
+msgstr "Gagal mengatur penyandi TwoLAME. Cek parameter penyandian anda."
 
 #, c-format
 msgid ""
@@ -71,6 +73,11 @@ msgstr "Arus ini tidak berisi data."
 
 msgid "Internal data stream error."
 msgstr "Galat arus data internal."
+
+#, fuzzy
+#~ msgid ""
+#~ "Failed to configure LAMEMP3ENC encoder. Check your encoding parameters."
+#~ msgstr "Gagal mengatur penyandi LAME. Cek parameter penyandian anda."
 
 #~ msgid "Invalid title information on DVD."
 #~ msgstr "Informasi judul tidak sah pada DVD."

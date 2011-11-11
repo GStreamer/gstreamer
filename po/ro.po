@@ -5,7 +5,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-ugly 0.10.14.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2010-10-15 15:20+0100\n"
+"POT-Creation-Date: 2011-11-11 01:29+0000\n"
 "PO-Revision-Date: 2010-08-16 03:32+0300\n"
 "Last-Translator: Lucian Adrian Grijincu <lucian.grijincu@gmail.com>\n"
 "Language-Team: Romanian <translation-team-ro@lists.sourceforge.net>\n"
@@ -54,8 +54,11 @@ msgstr ""
 msgid "Could not read DVD."
 msgstr "Nu s-a putut deschide DVD"
 
-msgid "Failed to configure LAME encoder. Check your encoding parameters."
-msgstr "Nu s-a putut configura codorul LAME. Verificați parametrii de codare."
+#, fuzzy
+msgid ""
+"Failed to configure LAME mp3 audio encoder. Check your encoding parameters."
+msgstr ""
+"Nu s-a putut configura codorul TwoLAME. Verificați parametrii de codare."
 
 #, c-format
 msgid ""
@@ -74,3 +77,9 @@ msgstr "Fluxul acesta nu conține date."
 
 msgid "Internal data stream error."
 msgstr "Eroare internă a fluxului de date."
+
+#, fuzzy
+#~ msgid ""
+#~ "Failed to configure LAMEMP3ENC encoder. Check your encoding parameters."
+#~ msgstr ""
+#~ "Nu s-a putut configura codorul LAME. Verificați parametrii de codare."

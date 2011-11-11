@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-ugly 0.10.14.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2011-01-07 14:34+0000\n"
+"POT-Creation-Date: 2011-11-11 01:29+0000\n"
 "PO-Revision-Date: 2010-11-04 23:22+0100\n"
 "Last-Translator: Jordi Mallach <jordi@sindominio.net>\n"
 "Language-Team: Catalan <ca@dodds.net>\n"
@@ -54,9 +54,11 @@ msgstr ""
 msgid "Could not read DVD."
 msgstr "No s'ha pogut obrir el DVD"
 
-msgid "Failed to configure LAME encoder. Check your encoding parameters."
+#, fuzzy
+msgid ""
+"Failed to configure LAME mp3 audio encoder. Check your encoding parameters."
 msgstr ""
-"No s'ha pogut configurar el codificador LAME. Comproveu els paràmetres de "
+"No s'ha pogut configurar el codificador TwoLAME. Comproveu els paràmetres de "
 "codificació."
 
 #, c-format
@@ -77,3 +79,10 @@ msgstr "Aquest flux no conté dades."
 
 msgid "Internal data stream error."
 msgstr "S'ha produït un error intern de flux de dades."
+
+#, fuzzy
+#~ msgid ""
+#~ "Failed to configure LAMEMP3ENC encoder. Check your encoding parameters."
+#~ msgstr ""
+#~ "No s'ha pogut configurar el codificador LAME. Comproveu els paràmetres de "
+#~ "codificació."

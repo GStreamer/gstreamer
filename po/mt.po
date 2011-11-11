@@ -5,7 +5,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-ugly-0.10.9.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2010-10-15 15:20+0100\n"
+"POT-Creation-Date: 2011-11-11 01:29+0000\n"
 "PO-Revision-Date: 2008-11-13 18:18+0100\n"
 "Last-Translator: Michel Bugeja <michelbugeja@rabatmalta.com>\n"
 "Language-Team: Maltese <translation-team-mt@lists.sourceforge.net>\n"
@@ -55,7 +55,9 @@ msgstr ""
 msgid "Could not read DVD."
 msgstr "Ma nistax niftaħ DVD."
 
-msgid "Failed to configure LAME encoder. Check your encoding parameters."
+#, fuzzy
+msgid ""
+"Failed to configure LAME mp3 audio encoder. Check your encoding parameters."
 msgstr ""
 "Problema biex nissetja LAME encoder. Iċċekkja l-parametri tal-encoding."
 
@@ -77,6 +79,12 @@ msgstr "L-istream ma fiha l-ebda data."
 
 msgid "Internal data stream error."
 msgstr "Problema interna fid-data stream."
+
+#, fuzzy
+#~ msgid ""
+#~ "Failed to configure LAMEMP3ENC encoder. Check your encoding parameters."
+#~ msgstr ""
+#~ "Problema biex nissetja LAME encoder. Iċċekkja l-parametri tal-encoding."
 
 #~ msgid "Invalid title information on DVD."
 #~ msgstr "L-informazzjoni tat-titlu tad-DVD mhux validu."

@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-ugly 0.10.11.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2010-10-15 15:20+0100\n"
+"POT-Creation-Date: 2011-11-11 01:29+0000\n"
 "PO-Revision-Date: 2009-08-20 11:40+0100\n"
 "Last-Translator: Rihards Priedītis <rprieditis@gmail.com>\n"
 "Language-Team: Latvian <translation-team-lv@lists.sourceforge.net>\n"
@@ -54,8 +54,11 @@ msgstr ""
 msgid "Could not read DVD."
 msgstr "Nevar atvērt DVD"
 
-msgid "Failed to configure LAME encoder. Check your encoding parameters."
-msgstr "Neizdevās uzstādīt LAME kodētāju. Pārbaudiet jūsu kodējuma parametrus."
+#, fuzzy
+msgid ""
+"Failed to configure LAME mp3 audio encoder. Check your encoding parameters."
+msgstr ""
+"Nezidevās uzstādīt TwoLAME kodētāju. Pārbaudiet jūsu kodējuma parametrus."
 
 #, c-format
 msgid ""
@@ -74,6 +77,12 @@ msgstr "Šī straume nesatur datus."
 
 msgid "Internal data stream error."
 msgstr "Iekšējās datu plūsmas kļūda."
+
+#, fuzzy
+#~ msgid ""
+#~ "Failed to configure LAMEMP3ENC encoder. Check your encoding parameters."
+#~ msgstr ""
+#~ "Neizdevās uzstādīt LAME kodētāju. Pārbaudiet jūsu kodējuma parametrus."
 
 #~ msgid "Invalid title information on DVD."
 #~ msgstr "Nederīga DVD virsraksta informācija."
