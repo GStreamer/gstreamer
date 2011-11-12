@@ -2028,6 +2028,14 @@ gst_query_new_accept_caps (GstCaps * caps)
   return query;
 }
 
+/**
+ * gst_query_parse_accept_caps:
+ * @query: The query to parse
+ * @caps: (out): A pointer to the caps
+ *
+ * Get the caps from @query. The caps remains valid as long as @query remains
+ * valid.
+ */
 void
 gst_query_parse_accept_caps (GstQuery * query, GstCaps ** caps)
 {
@@ -2036,7 +2044,8 @@ gst_query_parse_accept_caps (GstQuery * query, GstCaps ** caps)
   g_return_if_fail (GST_QUERY_TYPE (query) == GST_QUERY_ACCEPT_CAPS);
 
   structure = GST_QUERY_STRUCTURE (query);
-  gst_structure_id_get (structure, GST_QUARK (CAPS), GST_TYPE_CAPS, caps, NULL);
+  *caps = g_value_get_boxed (gst_structure_id_get_value (structure,
+          GST_QUARK (CAPS)));
 }
 
 void
