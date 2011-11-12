@@ -307,8 +307,6 @@ gst_audio_convert_transform_caps (GstBaseTransform * btrans,
   GstCaps *tmp, *tmp2;
   GstCaps *result;
 
-  result = gst_caps_copy (caps);
-
   /* Get all possible caps that we can transform to */
   tmp = gst_audio_convert_caps_remove_format_info (caps);
 
