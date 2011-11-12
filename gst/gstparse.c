@@ -44,12 +44,6 @@
 #include "parse/types.h"
 #endif
 
-static void
-_prepend_missing_element (gchar * element, GList ** list)
-{
-  *list = g_list_prepend (*list, g_strdup (element));
-}
-
 static GstParseContext *
 gst_parse_context_copy (const GstParseContext * context)
 {
@@ -58,9 +52,13 @@ gst_parse_context_copy (const GstParseContext * context)
 
   ret = gst_parse_context_new ();
   if (context) {
-    g_list_foreach (context->missing_elements, (GFunc) _prepend_missing_element,
-        &ret->missing_elements);
-    ret->missing_elements = g_list_reverse (ret->missing_elements);
+    GQueue missing_copy = G_QUEUE_INIT;
+    GList *l;
+
+    for (l = context->missing_elements; l != NULL; l = l->next)
+      g_queue_push_tail (&missing_copy, g_strdup ((const gchar *) l->data));
+
+    ret->missing_elements = missing_copy.head;
   }
 #endif
   return ret;
