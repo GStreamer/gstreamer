@@ -96,11 +96,6 @@ main (gint argc, gchar ** argv)
 
   shapewipe = gst_bin_get_by_name (GST_BIN (pipeline), "shape");
 
-  if (!gst_object_control_properties (GST_OBJECT (shapewipe), "position", NULL)) {
-    g_print ("can't control shapewipe element\n");
-    return -3;
-  }
-
   csource = gst_lfo_control_source_new ();
 
   gst_object_set_control_source (GST_OBJECT (shapewipe), "position",

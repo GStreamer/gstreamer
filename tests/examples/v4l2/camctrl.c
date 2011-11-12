@@ -168,13 +168,6 @@ main (gint argc, gchar ** argv)
     return -1;
   }
 
-  /* get the controller */
-  if (!gst_object_control_properties (GST_OBJECT (src), "brightness",
-          "contrast", "saturation", NULL)) {
-    GST_WARNING ("can't control source element");
-    return -1;
-  }
-
   /* programm a pattern of events */
 #if 0
   prog = gst_structure_from_string ("program"
