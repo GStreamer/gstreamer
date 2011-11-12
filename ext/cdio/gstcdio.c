@@ -49,7 +49,7 @@ gst_cdio_add_cdtext_field (GstObject * src, cdtext_t * cdtext,
   }
 
   if (*p_tags == NULL)
-    *p_tags = gst_tag_list_new ();
+    *p_tags = gst_tag_list_new_empty ();
 
   gst_tag_list_add (*p_tags, GST_TAG_MERGE_REPLACE, gst_tag, txt, NULL);
 

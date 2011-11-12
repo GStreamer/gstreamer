@@ -19,7 +19,7 @@
 
 /**
  * SECTION:element-cdiocddasrc
- * @see_also: GstCdParanoiaSrc, GstCddaBaseSrc
+ * @see_also: GstCdParanoiaSrc, GstAudioCdSrc
  *
  * <refsect2>
  * <para>
@@ -93,8 +93,7 @@ enum
   PROP_READ_SPEED
 };
 
-GST_BOILERPLATE (GstCdioCddaSrc, gst_cdio_cdda_src, GstCddaBaseSrc,
-    GST_TYPE_CDDA_BASE_SRC);
+G_DEFINE_TYPE (GstCdioCddaSrc, gst_cdio_cdda_src, GST_TYPE_AUDIO_CD_SRC);
 
 static void gst_cdio_cdda_src_finalize (GObject * obj);
 static void gst_cdio_cdda_src_set_property (GObject * object, guint prop_id,
@@ -102,31 +101,20 @@ static void gst_cdio_cdda_src_set_property (GObject * object, guint prop_id,
 static void gst_cdio_cdda_src_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 
-static gchar *gst_cdio_cdda_src_get_default_device (GstCddaBaseSrc * src);
-static GstBuffer *gst_cdio_cdda_src_read_sector (GstCddaBaseSrc * src,
+static gchar *gst_cdio_cdda_src_get_default_device (GstAudioCdSrc * src);
+static GstBuffer *gst_cdio_cdda_src_read_sector (GstAudioCdSrc * src,
     gint sector);
-static gboolean gst_cdio_cdda_src_open (GstCddaBaseSrc * src,
+static gboolean gst_cdio_cdda_src_open (GstAudioCdSrc * src,
     const gchar * device);
-static void gst_cdio_cdda_src_close (GstCddaBaseSrc * src);
-
-static void
-gst_cdio_cdda_src_base_init (gpointer g_class)
-{
-  GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
-
-  gst_element_class_set_details_simple (element_class, "CD audio source (CDDA)",
-      "Source/File",
-      "Read audio from CD using libcdio",
-      "Tim-Philipp Müller <tim centricular net>");
-}
+static void gst_cdio_cdda_src_close (GstAudioCdSrc * src);
 
 static gchar *
-gst_cdio_cdda_src_get_default_device (GstCddaBaseSrc * cddabasesrc)
+gst_cdio_cdda_src_get_default_device (GstAudioCdSrc * audiocdsrc)
 {
   GstCdioCddaSrc *src;
   gchar *default_device, *ret;
 
-  src = GST_CDIO_CDDA_SRC (cddabasesrc);
+  src = GST_CDIO_CDDA_SRC (audiocdsrc);
 
   /* src->cdio may be NULL here */
   default_device = cdio_get_default_device (src->cdio);
@@ -140,7 +128,7 @@ gst_cdio_cdda_src_get_default_device (GstCddaBaseSrc * cddabasesrc)
 }
 
 static gchar **
-gst_cdio_cdda_src_probe_devices (GstCddaBaseSrc * cddabasesrc)
+gst_cdio_cdda_src_probe_devices (GstAudioCdSrc * audiocdsrc)
 {
   char **devices, **ret, **d;
 
@@ -156,7 +144,7 @@ gst_cdio_cdda_src_probe_devices (GstCddaBaseSrc * cddabasesrc)
 
   ret = g_strdupv (devices);
   for (d = devices; *d != NULL; ++d) {
-    GST_DEBUG_OBJECT (cddabasesrc, "device: %s", GST_STR_NULL (*d));
+    GST_DEBUG_OBJECT (audiocdsrc, "device: %s", GST_STR_NULL (*d));
     free (*d);
   }
   free (devices);
@@ -166,32 +154,32 @@ gst_cdio_cdda_src_probe_devices (GstCddaBaseSrc * cddabasesrc)
   /* ERRORS */
 no_devices:
   {
-    GST_DEBUG_OBJECT (cddabasesrc, "no devices found");
+    GST_DEBUG_OBJECT (audiocdsrc, "no devices found");
     return NULL;
   }
 empty_devices:
   {
-    GST_DEBUG_OBJECT (cddabasesrc, "empty device list found");
+    GST_DEBUG_OBJECT (audiocdsrc, "empty device list found");
     free (devices);
     return NULL;
   }
 }
 
 static GstBuffer *
-gst_cdio_cdda_src_read_sector (GstCddaBaseSrc * cddabasesrc, gint sector)
+gst_cdio_cdda_src_read_sector (GstAudioCdSrc * audiocdsrc, gint sector)
 {
   GstCdioCddaSrc *src;
-  GstBuffer *buf;
+  guint8 *data;
 
-  src = GST_CDIO_CDDA_SRC (cddabasesrc);
+  src = GST_CDIO_CDDA_SRC (audiocdsrc);
 
-  /* can't use pad_alloc because we can't return the GstFlowReturn */
-  buf = gst_buffer_new_and_alloc (CDIO_CD_FRAMESIZE_RAW);
+  data = g_malloc (CDIO_CD_FRAMESIZE_RAW);
 
-  if (cdio_read_audio_sector (src->cdio, GST_BUFFER_DATA (buf), sector) != 0)
+  /* can't use pad_alloc because we can't return the GstFlowReturn (FIXME 0.11) */
+  if (cdio_read_audio_sector (src->cdio, data, sector) != 0)
     goto read_failed;
 
-  return buf;
+  return gst_buffer_new_wrapped (data, CDIO_CD_FRAMESIZE_RAW);
 
   /* ERRORS */
 read_failed:
@@ -201,7 +189,7 @@ read_failed:
         (_("Could not read from CD.")),
         ("cdio_read_audio_sector at %d failed: %s", sector,
             g_strerror (errno)));
-    gst_buffer_unref (buf);
+    g_free (data);
     return NULL;
   }
 }
@@ -213,13 +201,13 @@ notcdio_track_is_audio_track (const CdIo * p_cdio, track_t i_track)
 }
 
 static gboolean
-gst_cdio_cdda_src_open (GstCddaBaseSrc * cddabasesrc, const gchar * device)
+gst_cdio_cdda_src_open (GstAudioCdSrc * audiocdsrc, const gchar * device)
 {
   GstCdioCddaSrc *src;
   discmode_t discmode;
   gint first_track, num_tracks, i;
 
-  src = GST_CDIO_CDDA_SRC (cddabasesrc);
+  src = GST_CDIO_CDDA_SRC (audiocdsrc);
 
   g_assert (device != NULL);
   g_assert (src->cdio == NULL);
@@ -245,12 +233,12 @@ gst_cdio_cdda_src_open (GstCddaBaseSrc * cddabasesrc, const gchar * device)
     cdio_set_speed (src->cdio, src->read_speed);
 
   gst_cdio_add_cdtext_album_tags (GST_OBJECT_CAST (src), src->cdio,
-      cddabasesrc->tags);
+      audiocdsrc->tags);
 
   GST_LOG_OBJECT (src, "%u tracks, first track: %d", num_tracks, first_track);
 
   for (i = 0; i < num_tracks; ++i) {
-    GstCddaBaseSrcTrack track = { 0, };
+    GstAudioCdSrcTrack track = { 0, };
     gint len_sectors;
 
     len_sectors = cdio_get_track_sec_count (src->cdio, i + first_track);
@@ -265,7 +253,7 @@ gst_cdio_cdda_src_open (GstCddaBaseSrc * cddabasesrc, const gchar * device)
     track.tags = gst_cdio_get_cdtext (GST_OBJECT (src), src->cdio,
         i + first_track);
 
-    gst_cdda_base_src_add_track (GST_CDDA_BASE_SRC (src), &track);
+    gst_audio_cd_src_add_track (GST_AUDIO_CD_SRC (src), &track);
   }
   return TRUE;
 
@@ -289,9 +277,9 @@ not_audio:
 }
 
 static void
-gst_cdio_cdda_src_close (GstCddaBaseSrc * cddabasesrc)
+gst_cdio_cdda_src_close (GstAudioCdSrc * audiocdsrc)
 {
-  GstCdioCddaSrc *src = GST_CDIO_CDDA_SRC (cddabasesrc);
+  GstCdioCddaSrc *src = GST_CDIO_CDDA_SRC (audiocdsrc);
 
   if (src->cdio) {
     cdio_destroy (src->cdio);
@@ -300,7 +288,7 @@ gst_cdio_cdda_src_close (GstCddaBaseSrc * cddabasesrc)
 }
 
 static void
-gst_cdio_cdda_src_init (GstCdioCddaSrc * src, GstCdioCddaSrcClass * klass)
+gst_cdio_cdda_src_init (GstCdioCddaSrc * src)
 {
   src->read_speed = DEFAULT_READ_SPEED; /* don't need atomic access here */
   src->cdio = NULL;
@@ -316,29 +304,35 @@ gst_cdio_cdda_src_finalize (GObject * obj)
     src->cdio = NULL;
   }
 
-  G_OBJECT_CLASS (parent_class)->finalize (obj);
+  G_OBJECT_CLASS (gst_cdio_cdda_src_parent_class)->finalize (obj);
 }
 
 static void
 gst_cdio_cdda_src_class_init (GstCdioCddaSrcClass * klass)
 {
-  GstCddaBaseSrcClass *cddabasesrc_class = GST_CDDA_BASE_SRC_CLASS (klass);
+  GstAudioCdSrcClass *audiocdsrc_class = GST_AUDIO_CD_SRC_CLASS (klass);
+  GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
   GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
 
   gobject_class->set_property = gst_cdio_cdda_src_set_property;
   gobject_class->get_property = gst_cdio_cdda_src_get_property;
   gobject_class->finalize = gst_cdio_cdda_src_finalize;
 
-  cddabasesrc_class->open = gst_cdio_cdda_src_open;
-  cddabasesrc_class->close = gst_cdio_cdda_src_close;
-  cddabasesrc_class->read_sector = gst_cdio_cdda_src_read_sector;
-  cddabasesrc_class->probe_devices = gst_cdio_cdda_src_probe_devices;
-  cddabasesrc_class->get_default_device = gst_cdio_cdda_src_get_default_device;
+  audiocdsrc_class->open = gst_cdio_cdda_src_open;
+  audiocdsrc_class->close = gst_cdio_cdda_src_close;
+  audiocdsrc_class->read_sector = gst_cdio_cdda_src_read_sector;
+  audiocdsrc_class->probe_devices = gst_cdio_cdda_src_probe_devices;
+  audiocdsrc_class->get_default_device = gst_cdio_cdda_src_get_default_device;
 
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_READ_SPEED,
       g_param_spec_int ("read-speed", "Read speed",
           "Read from device at the specified speed (-1 = default)", -1, 100,
           DEFAULT_READ_SPEED, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  gst_element_class_set_details_simple (element_class, "CD audio source (CDDA)",
+      "Source/File",
+      "Read audio from CD using libcdio",
+      "Tim-Philipp Müller <tim centricular net>");
 }
 
 static void
