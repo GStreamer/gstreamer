@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base-0.10.15.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2011-09-29 17:27+0200\n"
+"POT-Creation-Date: 2011-11-12 00:54+0000\n"
 "PO-Revision-Date: 2008-03-07 23:43+0200\n"
 "Last-Translator: Gintautas Miliauskas <gintas@akl.lt>\n"
 "Language-Team: Lithuanian <komp_lt@konferencijos.lt>\n"
@@ -197,6 +197,9 @@ msgstr "Klaida siunčiant duomenis į „%s:%d“."
 msgid "Connection to %s:%d refused."
 msgstr "Prisijungimas prie %s:%d atmestas."
 
+msgid "This CD has no audio tracks"
+msgstr "Šiame CD nėra audio takelių"
+
 msgid "Can't record audio fast enough"
 msgstr "Nepakankamai greitai įrašomas garsas"
 
@@ -359,9 +362,6 @@ msgstr ""
 
 msgid "unparsed id3v2 tag frame"
 msgstr ""
-
-msgid "This CD has no audio tracks"
-msgstr "Šiame CD nėra audio takelių"
 
 msgid "ID3 tag"
 msgstr "ID3 žymė"

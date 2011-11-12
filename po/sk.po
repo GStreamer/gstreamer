@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base 0.10.30.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2011-09-29 17:27+0200\n"
+"POT-Creation-Date: 2011-11-12 00:54+0000\n"
 "PO-Revision-Date: 2010-11-08 15:34+0100\n"
 "Last-Translator: Peter Tuhársky <tuharsky@misbb.sk>\n"
 "Language-Team: Slovak <sk-i18n@lists.linux.sk>\n"
@@ -195,6 +195,9 @@ msgstr "Chyba pri posielaní údajov do \"%s:%d\"."
 msgid "Connection to %s:%d refused."
 msgstr "Spojenie s %s:%d bolo odmietnuté."
 
+msgid "This CD has no audio tracks"
+msgstr "Toto CD nemá zvukové stopy"
+
 msgid "Can't record audio fast enough"
 msgstr "Zvuk sa nedá nahrávať dostatočne rýchlo"
 
@@ -359,9 +362,6 @@ msgstr ""
 
 msgid "unparsed id3v2 tag frame"
 msgstr ""
-
-msgid "This CD has no audio tracks"
-msgstr "Toto CD nemá zvukové stopy"
 
 msgid "ID3 tag"
 msgstr "ID3 značka"

@@ -5,7 +5,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base 0.10.32.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2011-09-29 17:27+0200\n"
+"POT-Creation-Date: 2011-11-12 00:54+0000\n"
 "PO-Revision-Date: 2011-04-26 19:22+0200\n"
 "Last-Translator: Server Acim <serveracim@gmail.com>\n"
 "Language-Team: Turkish <gnu-tr-u12a@lists.sourceforge.net>\n"
@@ -187,6 +187,9 @@ msgstr "Dosyayı şuraya gönderirken hata \"%s:%d\"."
 msgid "Connection to %s:%d refused."
 msgstr "Şuraya bağlantı %s:%d reddedildi."
 
+msgid "This CD has no audio tracks"
+msgstr "Bu CD hiç ses izi içermiyor"
+
 msgid "Can't record audio fast enough"
 msgstr "Sesi yeterince hızlı kaydedemiyor"
 
@@ -349,9 +352,6 @@ msgstr ""
 
 msgid "unparsed id3v2 tag frame"
 msgstr ""
-
-msgid "This CD has no audio tracks"
-msgstr "Bu CD hiç ses izi içermiyor"
 
 msgid "ID3 tag"
 msgstr "ID3 etiketi"

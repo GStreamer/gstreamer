@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base 0.10.28.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2011-09-29 17:27+0200\n"
+"POT-Creation-Date: 2011-11-12 00:54+0000\n"
 "PO-Revision-Date: 2010-04-28 14:27+0200\n"
 "Last-Translator: Luca Ferretti <elle.uca@infinito.it>\n"
 "Language-Team: Italian <tp@lists.linux.it>\n"
@@ -196,6 +196,9 @@ msgstr "Errore durante l'invio dei dati a \"%s:%d\"."
 msgid "Connection to %s:%d refused."
 msgstr "Connessione a %s:%d rifiutata."
 
+msgid "This CD has no audio tracks"
+msgstr "Questo CD non presenta alcuna traccia audio"
+
 # una parafrasi, ma mi pare non perda...  -Luca
 msgid "Can't record audio fast enough"
 msgstr "Impossibile registrare l'audio a velocità adeguata"
@@ -360,9 +363,6 @@ msgstr ""
 
 msgid "unparsed id3v2 tag frame"
 msgstr ""
-
-msgid "This CD has no audio tracks"
-msgstr "Questo CD non presenta alcuna traccia audio"
 
 msgid "ID3 tag"
 msgstr "Tag ID3"

@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base 0.10.32.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2011-09-29 17:27+0200\n"
+"POT-Creation-Date: 2011-11-12 00:54+0000\n"
 "PO-Revision-Date: 2011-04-26 20:30+0400\n"
 "Last-Translator: Yuri Kozlov <yuray@komyakino.ru>\n"
 "Language-Team: Russian <gnu@mx.ru>\n"
@@ -196,6 +196,9 @@ msgstr "Ошибка отправки данных в «%s:%d»."
 msgid "Connection to %s:%d refused."
 msgstr "В соединении с %s:%d отказано."
 
+msgid "This CD has no audio tracks"
+msgstr "На CD нет звуковых дорожек"
+
 msgid "Can't record audio fast enough"
 msgstr "Невозможна запись аудио с достаточной скоростью"
 
@@ -360,9 +363,6 @@ msgstr ""
 
 msgid "unparsed id3v2 tag frame"
 msgstr ""
-
-msgid "This CD has no audio tracks"
-msgstr "На CD нет звуковых дорожек"
 
 msgid "ID3 tag"
 msgstr "ID3-тег"

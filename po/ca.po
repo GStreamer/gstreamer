@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base 0.10.30.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2011-09-29 17:27+0200\n"
+"POT-Creation-Date: 2011-11-12 00:54+0000\n"
 "PO-Revision-Date: 2010-11-04 23:13+0100\n"
 "Last-Translator: Jordi Mallach <jordi@sindominio.net>\n"
 "Language-Team: Catalan <ca@dodds.net>\n"
@@ -192,6 +192,9 @@ msgstr "S'ha produït un error en enviar dades a «%s:%d»."
 msgid "Connection to %s:%d refused."
 msgstr "S'ha refusat la connexió amb %s:%d."
 
+msgid "This CD has no audio tracks"
+msgstr "Aquest CD no té pistes d'àudio"
+
 msgid "Can't record audio fast enough"
 msgstr "No es pot enregistrar l'àudio el suficientment ràpid"
 
@@ -354,9 +357,6 @@ msgstr ""
 
 msgid "unparsed id3v2 tag frame"
 msgstr ""
-
-msgid "This CD has no audio tracks"
-msgstr "Aquest CD no té pistes d'àudio"
 
 msgid "ID3 tag"
 msgstr "Etiqueta ID3"

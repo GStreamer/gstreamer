@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base 0.10.28.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2011-09-29 17:27+0200\n"
+"POT-Creation-Date: 2011-11-12 00:54+0000\n"
 "PO-Revision-Date: 2010-04-26 22:01+0700\n"
 "Last-Translator: Andhika Padmawan <andhika.padmawan@gmail.com>\n"
 "Language-Team: Indonesian <translation-team-id@lists.sourceforge.net>\n"
@@ -188,6 +188,9 @@ msgstr "Galat ketika mengirim data ke \"%s:%d\"."
 msgid "Connection to %s:%d refused."
 msgstr "Koneksi ke %s:%d ditolak."
 
+msgid "This CD has no audio tracks"
+msgstr "CD ini tidak memiliki jalur audio"
+
 msgid "Can't record audio fast enough"
 msgstr "Tak dapat merekam audio cukup cepat"
 
@@ -350,9 +353,6 @@ msgstr ""
 
 msgid "unparsed id3v2 tag frame"
 msgstr ""
-
-msgid "This CD has no audio tracks"
-msgstr "CD ini tidak memiliki jalur audio"
 
 msgid "ID3 tag"
 msgstr "Tag ID3"

@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base 0.10.30.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2011-09-29 17:27+0200\n"
+"POT-Creation-Date: 2011-11-12 00:54+0000\n"
 "PO-Revision-Date: 2010-10-27 12:05+0200\n"
 "Last-Translator: Michael Kotsarinis <mk73628@gmail.com>\n"
 "Language-Team: Greek <team@lists.gnome.gr>\n"
@@ -195,6 +195,9 @@ msgstr "Σφάλμα κατά την αποστολή δεδομένων σε «
 msgid "Connection to %s:%d refused."
 msgstr "Άρνηση σύνδεσης σε %s:%d."
 
+msgid "This CD has no audio tracks"
+msgstr "Αυτό το CD δεν έχει ηχητικά κομμάτια"
+
 msgid "Can't record audio fast enough"
 msgstr "Αδυναμία εγγραφής ήχου αρκετά γρήγορα"
 
@@ -374,9 +377,6 @@ msgstr ""
 
 msgid "unparsed id3v2 tag frame"
 msgstr ""
-
-msgid "This CD has no audio tracks"
-msgstr "Αυτό το CD δεν έχει ηχητικά κομμάτια"
 
 msgid "ID3 tag"
 msgstr "Ετικέτα ID3"

@@ -5,7 +5,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base 0.10.29.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2011-09-29 17:27+0200\n"
+"POT-Creation-Date: 2011-11-12 00:54+0000\n"
 "PO-Revision-Date: 2010-08-16 01:21+0300\n"
 "Last-Translator: Lucian Adrian Grijincu <lucian.grijincu@gmail.com>\n"
 "Language-Team: Romanian <translation-team-ro@lists.sourceforge.net>\n"
@@ -193,6 +193,9 @@ msgstr "Eroare la trimiterea datelor către „%s:%d”."
 msgid "Connection to %s:%d refused."
 msgstr "Conexiunea la %s:%d a fost refuzată."
 
+msgid "This CD has no audio tracks"
+msgstr "Acest CD nu conține piste audio"
+
 msgid "Can't record audio fast enough"
 msgstr "Nu se poate înregistra sunetul destul de repede"
 
@@ -355,9 +358,6 @@ msgstr ""
 
 msgid "unparsed id3v2 tag frame"
 msgstr ""
-
-msgid "This CD has no audio tracks"
-msgstr "Acest CD nu conține piste audio"
 
 msgid "ID3 tag"
 msgstr "etichetă ID3"
