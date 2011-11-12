@@ -151,8 +151,8 @@ GStreamer Plugins Base library development and header files.
 %{_includedir}/gstreamer-%{majorminor}/gst/riff/riff-media.h
 %{_includedir}/gstreamer-%{majorminor}/gst/riff/riff-read.h
 %{_includedir}/gstreamer-%{majorminor}/gst/video/video.h
-%{_includedir}/gstreamer-%{majorminor}/gst/video/gstmetavideo.h
 %{_includedir}/gstreamer-%{majorminor}/gst/video/gstvideopool.h
+%{_includedir}/gstreamer-%{majorminor}/gst/video/gstvideometa.h
 %{_includedir}/gstreamer-%{majorminor}/gst/interfaces/colorbalance.h
 %{_includedir}/gstreamer-%{majorminor}/gst/interfaces/colorbalancechannel.h
 %{_includedir}/gstreamer-%{majorminor}/gst/interfaces/interfaces-enumtypes.h
@@ -166,16 +166,10 @@ GStreamer Plugins Base library development and header files.
 %{_includedir}/gstreamer-%{majorminor}/gst/interfaces/tunernorm.h
 %{_includedir}/gstreamer-%{majorminor}/gst/interfaces/videooverlay.h
 %{_includedir}/gstreamer-%{majorminor}/gst/audio/gstaudiosrc.h
-%{_includedir}/gstreamer-%{majorminor}/gst/audio/gstbaseaudiosrc.h
-%{_includedir}/gstreamer-%{majorminor}/gst/rtp/gstbasertpaudiopayload.h
-%{_includedir}/gstreamer-%{majorminor}/gst/rtp/gstbasertpdepayload.h
 %{_includedir}/gstreamer-%{majorminor}/gst/rtp/gstrtpbuffer.h
 %{_includedir}/gstreamer-%{majorminor}/gst/audio/gstaudioclock.h
 %{_includedir}/gstreamer-%{majorminor}/gst/audio/gstaudiosink.h
-%{_includedir}/gstreamer-%{majorminor}/gst/audio/gstbaseaudiosink.h
-%{_includedir}/gstreamer-%{majorminor}/gst/audio/gstringbuffer.h
 %{_includedir}/gstreamer-%{majorminor}/gst/tag/tag.h
-%{_includedir}/gstreamer-%{majorminor}/gst/rtp/gstbasertppayload.h
 %{_includedir}/gstreamer-%{majorminor}/gst/video/gstvideofilter.h
 %{_includedir}/gstreamer-%{majorminor}/gst/video/gstvideosink.h
 %{_includedir}/gstreamer-%{majorminor}/gst/cdda/gstcddabasesrc.h
@@ -192,7 +186,6 @@ GStreamer Plugins Base library development and header files.
 %{_includedir}/gstreamer-%{majorminor}/gst/fft/gstffts16.h
 %{_includedir}/gstreamer-%{majorminor}/gst/fft/gstffts32.h
 %{_includedir}/gstreamer-%{majorminor}/gst/rtsp/gstrtsp-enumtypes.h
-%{_includedir}/gstreamer-%{majorminor}/gst/rtsp/gstrtspbase64.h
 %{_includedir}/gstreamer-%{majorminor}/gst/rtsp/gstrtspconnection.h
 %{_includedir}/gstreamer-%{majorminor}/gst/rtsp/gstrtspdefs.h
 %{_includedir}/gstreamer-%{majorminor}/gst/rtsp/gstrtspextension.h
@@ -220,6 +213,12 @@ GStreamer Plugins Base library development and header files.
 %{_includedir}/gstreamer-%{majorminor}/gst/audio/gstaudiodecoder.h
 %{_includedir}/gstreamer-%{majorminor}/gst/audio/gstaudioencoder.h
 %{_includedir}/gstreamer-%{majorminor}/gst/tag/gsttagmux.h
+%{_includedir}/gstreamer-%{majorminor}/gst/audio/gstaudiobasesink.h
+%{_includedir}/gstreamer-%{majorminor}/gst/audio/gstaudiobasesrc.h
+%{_includedir}/gstreamer-%{majorminor}/gst/audio/gstaudioringbuffer.h
+%{_includedir}/gstreamer-%{majorminor}/gst/rtp/gstrtpbaseaudiopayload.h
+%{_includedir}/gstreamer-%{majorminor}/gst/rtp/gstrtpbasedepayload.h
+%{_includedir}/gstreamer-%{majorminor}/gst/rtp/gstrtpbasepayload.h
 
 %{_libdir}/libgstfft-%{majorminor}.so
 %{_libdir}/libgstrtsp-%{majorminor}.so
