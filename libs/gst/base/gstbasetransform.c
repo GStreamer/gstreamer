@@ -516,7 +516,7 @@ gst_base_transform_transform_caps (GstBaseTransform * trans,
 
         intersection =
             gst_caps_intersect_full (filter, ret, GST_CAPS_INTERSECT_FIRST);
-        gst_caps_unref (intersection);
+        gst_caps_unref (ret);
         ret = intersection;
       }
     }
