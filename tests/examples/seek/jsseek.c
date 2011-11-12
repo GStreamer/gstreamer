@@ -50,21 +50,6 @@
 GST_DEBUG_CATEGORY_STATIC (seek_debug);
 #define GST_CAT_DEFAULT (seek_debug)
 
-#if (!GTK_CHECK_VERSION(2, 23, 0) || GTK_CHECK_VERSION(2, 90, 0)) && !GTK_CHECK_VERSION(2, 91, 1)
-#define gtk_combo_box_text_new gtk_combo_box_new_text
-#define gtk_combo_box_text_append_text gtk_combo_box_append_text
-#define gtk_combo_box_text_remove gtk_combo_box_remove_text
-#define GTK_COMBO_BOX_TEXT GTK_COMBO_BOX
-#endif
-
-#if !GTK_CHECK_VERSION (2, 17, 7)
-static void
-gtk_widget_get_allocation (GtkWidget * w, GtkAllocation * a)
-{
-  *a = w->allocation;
-}
-#endif
-
 /* configuration */
 
 //#define SOURCE "filesrc"
@@ -1574,6 +1559,7 @@ stop_cb (GtkButton * button, gpointer data)
 
     state = STOP_STATE;
     gtk_statusbar_push (GTK_STATUSBAR (statusbar), status_id, "Stopped");
+    gtk_widget_queue_draw (video_window);
 
     is_live = FALSE;
     buffering = FALSE;
@@ -2469,19 +2455,17 @@ bus_sync_handler (GstBus * bus, GstMessage * message, GstPipeline * data)
 #endif
 
 static gboolean
-handle_expose_cb (GtkWidget * widget, GdkEventExpose * event, gpointer data)
+draw_cb (GtkWidget * widget, cairo_t * cr, gpointer data)
 {
   if (state < GST_STATE_PAUSED) {
-    GtkAllocation allocation;
-    GdkWindow *window = gtk_widget_get_window (widget);
-    cairo_t *cr;
+    int width, height;
 
-    gtk_widget_get_allocation (widget, &allocation);
-    cr = gdk_cairo_create (window);
+    width = gtk_widget_get_allocated_width (widget);
+    height = gtk_widget_get_allocated_height (widget);
     cairo_set_source_rgb (cr, 0, 0, 0);
-    cairo_rectangle (cr, 0, 0, allocation.width, allocation.height);
+    cairo_rectangle (cr, 0, 0, width, height);
     cairo_fill (cr);
-    cairo_destroy (cr);
+    return TRUE;
   }
   return FALSE;
 }
@@ -2489,24 +2473,16 @@ handle_expose_cb (GtkWidget * widget, GdkEventExpose * event, gpointer data)
 static void
 realize_cb (GtkWidget * widget, gpointer data)
 {
-#if GTK_CHECK_VERSION(2,18,0)
-  {
-    GdkWindow *window = gtk_widget_get_window (widget);
+  GdkWindow *window = gtk_widget_get_window (widget);
 
-    /* This is here just for pedagogical purposes, GDK_WINDOW_XID will call it
-     * as well */
-    if (!gdk_window_ensure_native (window))
-      g_error ("Couldn't create native window needed for GstXOverlay!");
-  }
-#endif
+  /* This is here just for pedagogical purposes, GDK_WINDOW_XID will call it
+   * as well */
+  if (!gdk_window_ensure_native (window))
+    g_error ("Couldn't create native window needed for GstXOverlay!");
 
 #ifdef HAVE_X
-  {
-    GdkWindow *window = gtk_widget_get_window (video_window);
-
-    embed_xid = GDK_WINDOW_XID (window);
-    g_print ("Window realize: video window XID = %lu\n", embed_xid);
-  }
+  embed_xid = GDK_WINDOW_XID (window);
+  g_print ("Window realize: video window XID = %lu\n", embed_xid);
 #endif
 }
 
@@ -2754,8 +2730,7 @@ main (int argc, char **argv)
   /* initialize gui elements ... */
   window = gtk_window_new (GTK_WINDOW_TOPLEVEL);
   video_window = gtk_drawing_area_new ();
-  g_signal_connect (video_window, "expose-event",
-      G_CALLBACK (handle_expose_cb), NULL);
+  g_signal_connect (video_window, "draw", G_CALLBACK (draw_cb), NULL);
   g_signal_connect (video_window, "realize", G_CALLBACK (realize_cb), NULL);
   gtk_widget_set_double_buffered (video_window, FALSE);
 
