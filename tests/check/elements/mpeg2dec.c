@@ -1372,7 +1372,7 @@ GST_START_TEST (test_decode_stream1)
   GstBuffer *inbuffer, *outbuffer;
   GstBus *bus;
   int i, num_buffers;
-  GstCaps *out_caps;
+  GstCaps *out_caps, *caps;
 
   mpeg2dec = setup_mpeg2dec ();
 
@@ -1381,8 +1381,7 @@ GST_START_TEST (test_decode_stream1)
       "could not set to playing");
   bus = gst_bus_new ();
 
-  inbuffer = gst_buffer_new_and_alloc (sizeof (test_stream1));
-  memcpy (GST_BUFFER_DATA (inbuffer), test_stream1, sizeof (test_stream1));
+  inbuffer = gst_buffer_new_wrapped (test_stream1, sizeof (test_stream1));
   ASSERT_BUFFER_REFCOUNT (inbuffer, "inbuffer", 1);
   gst_buffer_ref (inbuffer);
 
@@ -1400,21 +1399,22 @@ GST_START_TEST (test_decode_stream1)
 
   /* each buffer should have these caps */
   out_caps =
-      gst_caps_new_simple ("video/x-raw-yuv", "format", GST_TYPE_FOURCC,
-      GST_STR_FOURCC ("I420"), "width", G_TYPE_INT, 176, "height", G_TYPE_INT,
-      144, "pixel-aspect-ratio", GST_TYPE_FRACTION, 1, 1, "framerate",
+      gst_caps_new_simple ("video/x-raw", "format", G_TYPE_STRING,
+      "I420", "width", G_TYPE_INT, 176, "height", G_TYPE_INT, 144,
+      "pixel-aspect-ratio", GST_TYPE_FRACTION, 1, 1, "framerate",
       GST_TYPE_FRACTION, 25, 1, "interlaced", G_TYPE_BOOLEAN, FALSE, NULL);
+
+  caps = gst_pad_get_current_caps (mysinkpad);
+  GST_LOG ("output caps %" GST_PTR_FORMAT, caps);
+  fail_unless (gst_caps_is_equal_fixed (caps, out_caps), "Incorrect out caps");
+  gst_caps_unref (caps);
 
   for (i = 0; i < num_buffers; ++i) {
     outbuffer = GST_BUFFER (buffers->data);
     fail_if (outbuffer == NULL);
 
-    GST_LOG ("buffer caps %" GST_PTR_FORMAT, GST_BUFFER_CAPS (outbuffer));
-    fail_unless (gst_caps_is_equal_fixed (GST_BUFFER_CAPS (outbuffer),
-            out_caps), "Incorrect buffer caps");
-
-    /* I420 with 176x144 must have this size */
-    fail_unless_equals_int (GST_BUFFER_SIZE (outbuffer), 38016);
+    /* I420 with 176x144 should have this size if nothing else was negotiated */
+    fail_unless_equals_int (gst_buffer_get_size (outbuffer), 38016);
 
     buffers = g_list_remove (buffers, outbuffer);
     gst_buffer_unref (outbuffer);
@@ -1440,6 +1440,7 @@ GST_START_TEST (test_decode_stream2)
   GstBus *bus;
   int i, num_buffers;
   GstCaps *out_caps;
+  GstCaps *caps;
 
   mpeg2dec = setup_mpeg2dec ();
 
@@ -1448,8 +1449,7 @@ GST_START_TEST (test_decode_stream2)
       "could not set to playing");
   bus = gst_bus_new ();
 
-  inbuffer = gst_buffer_new_and_alloc (sizeof (test_stream2));
-  memcpy (GST_BUFFER_DATA (inbuffer), test_stream2, sizeof (test_stream2));
+  inbuffer = gst_buffer_new_wrapped (test_stream2, sizeof (test_stream2));
   ASSERT_BUFFER_REFCOUNT (inbuffer, "inbuffer", 1);
   gst_buffer_ref (inbuffer);
 
@@ -1467,21 +1467,22 @@ GST_START_TEST (test_decode_stream2)
 
   /* each buffer should have these caps */
   out_caps =
-      gst_caps_new_simple ("video/x-raw-yuv", "format", GST_TYPE_FOURCC,
-      GST_STR_FOURCC ("I420"), "width", G_TYPE_INT, 183, "height", G_TYPE_INT,
-      217, "pixel-aspect-ratio", GST_TYPE_FRACTION, 1, 1, "framerate",
+      gst_caps_new_simple ("video/x-raw", "format", G_TYPE_STRING, "I420",
+      "width", G_TYPE_INT, 183, "height", G_TYPE_INT, 217,
+      "pixel-aspect-ratio", GST_TYPE_FRACTION, 1, 1, "framerate",
       GST_TYPE_FRACTION, 25, 1, "interlaced", G_TYPE_BOOLEAN, FALSE, NULL);
+
+  caps = gst_pad_get_current_caps (mysinkpad);
+  GST_LOG ("output caps %" GST_PTR_FORMAT, caps);
+  fail_unless (gst_caps_is_equal_fixed (caps, out_caps), "Incorrect out caps");
+  gst_caps_unref (caps);
 
   for (i = 0; i < num_buffers; ++i) {
     outbuffer = GST_BUFFER (buffers->data);
     fail_if (outbuffer == NULL);
 
-    GST_LOG ("buffer caps %" GST_PTR_FORMAT, GST_BUFFER_CAPS (outbuffer));
-    fail_unless (gst_caps_is_equal_fixed (GST_BUFFER_CAPS (outbuffer),
-            out_caps), "Incorrect buffer caps");
-
     /* I420 with 183x217 must have this size */
-    fail_unless_equals_int (GST_BUFFER_SIZE (outbuffer), 60168);
+    fail_unless_equals_int (gst_buffer_get_size (outbuffer), 60168);
 
     buffers = g_list_remove (buffers, outbuffer);
     gst_buffer_unref (outbuffer);
@@ -1515,12 +1516,12 @@ GST_START_TEST (test_decode_garbage)
       "could not set to playing");
   bus = gst_bus_new ();
 
-  inbuffer = gst_buffer_new_and_alloc (4096 * sizeof (guint32));
   /* initialize the buffer with something that is no mpeg2 */
-  tmpbuf = (guint32 *) GST_BUFFER_DATA (inbuffer);
+  tmpbuf = g_new (guint32, 4096);
   for (i = 0; i < 4096; i++) {
     tmpbuf[i] = i;
   }
+  inbuffer = gst_buffer_new_wrapped (tmpbuf, 4096 * sizeof (guint32));
 
   ASSERT_BUFFER_REFCOUNT (inbuffer, "inbuffer", 1);
   gst_buffer_ref (inbuffer);
