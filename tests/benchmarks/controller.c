@@ -110,12 +110,6 @@ main (gint argc, gchar * argv[])
 
   tick = BLOCK_SIZE * GST_SECOND / 44100;
 
-  /* select parameters to control */
-  if (!gst_object_control_properties (GST_OBJECT (src), "freq", NULL)) {
-    GST_WARNING ("can't control source element");
-    goto Error;
-  }
-
   /* create and configure control source */
   csource = gst_interpolation_control_source_new ();
   gst_object_set_control_source (GST_OBJECT (src), "freq",

@@ -419,10 +419,13 @@ The 0.11 porting guide
     gst_object_sync_values() is taking a GstObject * instead of GObject *.
     
     For applications the effect is larger. The whole gst_controller_* API is
-    gone and now available in simplified form under gst_object_*.
-    
-    gst_controller_new* -> gst_object_control_properties
-    gst_controller_add_properties -> gst_object_control_properties
+    gone and now available in simplified form under gst_object_*. There is no
+    more GstController object. Attach a control source to a property to control
+    it and attach NULL to un-control it.
+
+    gst_controller_new* -> gst_object_set_control_source
+    gst_controller_add_properties -> gst_object_set_control_source
     gst_controller_set_control_source -> gst_object_set_control_source
     gst_controller_get_control_source -> gst_object_get_control_source
+
     gst_controller_set_property_disabled -> gst_object_set_controlled_property_disabled

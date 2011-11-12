@@ -232,13 +232,18 @@ teardown (void)
 GST_START_TEST (controller_new_fail1)
 {
   GstElement *elem;
+  GstInterpolationControlSource *cs;
   gboolean res;
 
   elem = gst_element_factory_make ("fakesrc", "test_source");
+  cs = gst_interpolation_control_source_new ();
+
   /* that property should not exist */
-  res = gst_object_control_properties (GST_OBJECT (elem), "_schrompf_", NULL);
+  res = gst_object_set_control_source (GST_OBJECT (elem), "_schrompf_",
+      GST_CONTROL_SOURCE (cs));
   fail_unless (res == FALSE, NULL);
 
+  g_object_unref (cs);
   gst_object_unref (elem);
 }
 
@@ -248,15 +253,18 @@ GST_END_TEST;
 GST_START_TEST (controller_new_fail2)
 {
   GstElement *elem;
+  GstInterpolationControlSource *cs;
   gboolean res;
 
   elem = gst_element_factory_make ("testmonosource", "test_source");
+  cs = gst_interpolation_control_source_new ();
 
   /* that property should exist and but is readonly */
-  ASSERT_CRITICAL (res =
-      gst_object_control_properties (GST_OBJECT (elem), "readonly", NULL));
+  ASSERT_CRITICAL (res = gst_object_set_control_source (GST_OBJECT (elem),
+          "readonly", GST_CONTROL_SOURCE (cs)));
   fail_unless (res == FALSE, NULL);
 
+  g_object_unref (cs);
   gst_object_unref (elem);
 }
 
@@ -266,15 +274,18 @@ GST_END_TEST;
 GST_START_TEST (controller_new_fail3)
 {
   GstElement *elem;
+  GstInterpolationControlSource *cs;
   gboolean res;
 
   elem = gst_element_factory_make ("testmonosource", "test_source");
+  cs = gst_interpolation_control_source_new ();
 
   /* that property should exist and but is not controlable */
-  ASSERT_CRITICAL (res = gst_object_control_properties (GST_OBJECT (elem),
-          "static", NULL));
+  ASSERT_CRITICAL (res = gst_object_set_control_source (GST_OBJECT (elem),
+          "static", GST_CONTROL_SOURCE (cs)));
   fail_unless (res == FALSE, NULL);
 
+  g_object_unref (cs);
   gst_object_unref (elem);
 }
 
@@ -284,16 +295,19 @@ GST_END_TEST;
 GST_START_TEST (controller_new_fail4)
 {
   GstElement *elem;
+  GstInterpolationControlSource *cs;
   gboolean res;
 
   elem = gst_element_factory_make ("testmonosource", "test_source");
+  cs = gst_interpolation_control_source_new ();
 
   /* that property should exist and but is construct-only */
   ASSERT_CRITICAL (res =
-      gst_object_control_properties (GST_OBJECT (elem), "construct-only",
-          NULL));
+      gst_object_set_control_source (GST_OBJECT (elem), "construct-only",
+          GST_CONTROL_SOURCE (cs)));
   fail_unless (res == FALSE, NULL);
 
+  g_object_unref (cs);
   gst_object_unref (elem);
 }
 
@@ -304,14 +318,18 @@ GST_END_TEST;
 GST_START_TEST (controller_new_okay1)
 {
   GstElement *elem;
+  GstInterpolationControlSource *cs;
   gboolean res;
 
   elem = gst_element_factory_make ("testmonosource", "test_source");
+  cs = gst_interpolation_control_source_new ();
 
   /* that property should exist and should be controllable */
-  res = gst_object_control_properties (GST_OBJECT (elem), "ulong", NULL);
+  res = gst_object_set_control_source (GST_OBJECT (elem), "ulong",
+      GST_CONTROL_SOURCE (cs));
   fail_unless (res == TRUE, NULL);
 
+  g_object_unref (cs);
   gst_object_unref (elem);
 }
 
@@ -321,44 +339,58 @@ GST_END_TEST;
 GST_START_TEST (controller_new_okay2)
 {
   GstElement *elem;
+  GstInterpolationControlSource *cs1, *cs2;
   gboolean res;
 
   elem = gst_element_factory_make ("testmonosource", "test_source");
+  cs1 = gst_interpolation_control_source_new ();
+  cs2 = gst_interpolation_control_source_new ();
 
   /* these properties should exist and should be controllable */
-  res = gst_object_control_properties (GST_OBJECT (elem), "ulong", "double",
-      "float", NULL);
+  res = gst_object_set_control_source (GST_OBJECT (elem), "ulong",
+      GST_CONTROL_SOURCE (cs1));
   fail_unless (res == TRUE, NULL);
 
-  res = gst_object_control_properties (GST_OBJECT (elem), "boolean", NULL);
+  res = gst_object_set_control_source (GST_OBJECT (elem), "boolean",
+      GST_CONTROL_SOURCE (cs2));
   fail_unless (res == TRUE, NULL);
 
+  g_object_unref (cs1);
+  g_object_unref (cs2);
   gst_object_unref (elem);
 }
 
 GST_END_TEST;
 
-/* controlling a params twice should be handled */
+/* controlling a param twice should be handled */
 GST_START_TEST (controller_param_twice)
 {
   GstElement *elem;
+  GstInterpolationControlSource *cs;
   gboolean res;
 
   elem = gst_element_factory_make ("testmonosource", "test_source");
+  cs = gst_interpolation_control_source_new ();
 
   /* that property should exist and should be controllable */
-  res =
-      gst_object_control_properties (GST_OBJECT (elem), "ulong", "ulong", NULL);
+  res = gst_object_set_control_source (GST_OBJECT (elem), "ulong",
+      GST_CONTROL_SOURCE (cs));
   fail_unless (res, NULL);
 
+  /* setting it again should not work */
+  res = gst_object_set_control_source (GST_OBJECT (elem), "ulong",
+      GST_CONTROL_SOURCE (cs));
+  fail_unless (!res, NULL);
+
   /* it should have been added at least once, let remove it */
-  res = gst_object_uncontrol_properties (GST_OBJECT (elem), "ulong", NULL);
+  res = gst_object_set_control_source (GST_OBJECT (elem), "ulong", NULL);
   fail_unless (res, NULL);
 
   /* removing it again should not work */
-  res = gst_object_uncontrol_properties (GST_OBJECT (elem), "ulong", NULL);
+  res = gst_object_set_control_source (GST_OBJECT (elem), "ulong", NULL);
   fail_unless (!res, NULL);
 
+  g_object_unref (cs);
   gst_object_unref (elem);
 }
 
@@ -371,10 +403,6 @@ GST_START_TEST (controller_controlsource_refcounts)
   GstControlSource *csource, *test_csource;
 
   elem = gst_element_factory_make ("testmonosource", "test_source");
-
-  /* that property should exist and should be controllable */
-  fail_unless (gst_object_control_properties (GST_OBJECT (elem), "ulong",
-          NULL));
 
   csource = (GstControlSource *) gst_interpolation_control_source_new ();
   fail_unless (csource != NULL, NULL);
@@ -404,10 +432,6 @@ GST_START_TEST (controller_controlsource_empty1)
 
   elem = gst_element_factory_make ("testmonosource", "test_source");
 
-  /* that property should exist and should be controllable */
-  fail_unless (gst_object_control_properties (GST_OBJECT (elem), "ulong",
-          NULL));
-
   csource = (GstControlSource *) gst_interpolation_control_source_new ();
   fail_unless (csource != NULL, NULL);
 
@@ -432,10 +456,6 @@ GST_START_TEST (controller_controlsource_empty2)
   GValue val = { 0, };
 
   elem = gst_element_factory_make ("testmonosource", "test_source");
-
-  /* that property should exist and should be controllable */
-  fail_unless (gst_object_control_properties (GST_OBJECT (elem), "ulong",
-          NULL));
 
   csource = gst_interpolation_control_source_new ();
   fail_unless (csource != NULL, NULL);
@@ -470,10 +490,6 @@ GST_START_TEST (controller_interpolate_none)
   GValue val_ulong = { 0, };
 
   elem = gst_element_factory_make ("testmonosource", "test_source");
-
-  /* that property should exist and should be controllable */
-  fail_unless (gst_object_control_properties (GST_OBJECT (elem), "ulong",
-          NULL));
 
   /* Get interpolation control source */
   csource = gst_interpolation_control_source_new ();
@@ -527,10 +543,6 @@ GST_START_TEST (controller_interpolate_trigger)
   GValue val_ulong = { 0, };
 
   elem = gst_element_factory_make ("testmonosource", "test_source");
-
-  /* that property should exist and should be controllable */
-  fail_unless (gst_object_control_properties (GST_OBJECT (elem), "ulong",
-          NULL));
 
   /* Get interpolation control source */
   csource = gst_interpolation_control_source_new ();
@@ -590,10 +602,6 @@ GST_START_TEST (controller_interpolate_linear)
 
   elem = gst_element_factory_make ("testmonosource", "test_source");
 
-  /* that property should exist and should be controllable */
-  fail_unless (gst_object_control_properties (GST_OBJECT (elem), "ulong",
-          NULL));
-
   /* Get interpolation control source */
   csource = gst_interpolation_control_source_new ();
 
@@ -642,10 +650,6 @@ GST_START_TEST (controller_interpolate_cubic)
   GValue val_double = { 0, };
 
   elem = gst_element_factory_make ("testmonosource", "test_source");
-
-  /* that property should exist and should be controllable */
-  fail_unless (gst_object_control_properties (GST_OBJECT (elem), "double",
-          NULL));
 
   /* Get interpolation control source */
   csource = gst_interpolation_control_source_new ();
@@ -713,10 +717,6 @@ GST_START_TEST (controller_interpolate_cubic_too_few_cp)
 
   elem = gst_element_factory_make ("testmonosource", "test_source");
 
-  /* that property should exist and should be controllable */
-  fail_unless (gst_object_control_properties (GST_OBJECT (elem), "double",
-          NULL));
-
   /* Get interpolation control source */
   csource = gst_interpolation_control_source_new ();
 
@@ -767,10 +767,6 @@ GST_START_TEST (controller_interpolate_unimplemented)
 
   elem = gst_element_factory_make ("testmonosource", "test_source");
 
-  /* that property should exist and should be controllable */
-  fail_unless (gst_object_control_properties (GST_OBJECT (elem), "ulong",
-          NULL));
-
   /* Get interpolation control source */
   csource = gst_interpolation_control_source_new ();
 
@@ -798,10 +794,6 @@ GST_START_TEST (controller_interpolation_unset)
   GValue val_ulong = { 0, };
 
   elem = gst_element_factory_make ("testmonosource", "test_source");
-
-  /* that property should exist and should be controllable */
-  fail_unless (gst_object_control_properties (GST_OBJECT (elem), "ulong",
-          NULL));
 
   /* Get interpolation control source */
   csource = gst_interpolation_control_source_new ();
@@ -875,10 +867,6 @@ GST_START_TEST (controller_interpolation_unset_all)
 
   elem = gst_element_factory_make ("testmonosource", "test_source");
 
-  /* that property should exist and should be controllable */
-  fail_unless (gst_object_control_properties (GST_OBJECT (elem), "ulong",
-          NULL));
-
   /* Get interpolation control source */
   csource = gst_interpolation_control_source_new ();
 
@@ -934,10 +922,6 @@ GST_START_TEST (controller_interpolation_linear_value_array)
 
   elem = gst_element_factory_make ("testmonosource", "test_source");
 
-  /* that property should exist and should be controllable */
-  fail_unless (gst_object_control_properties (GST_OBJECT (elem), "ulong",
-          NULL));
-
   /* Get interpolation control source */
   csource = gst_interpolation_control_source_new ();
 
@@ -991,10 +975,6 @@ GST_START_TEST (controller_interpolation_linear_invalid_values)
   GValue val_float = { 0, };
 
   elem = gst_element_factory_make ("testmonosource", "test_source");
-
-  /* that property should exist and should be controllable */
-  fail_unless (gst_object_control_properties (GST_OBJECT (elem), "float",
-          NULL));
 
   /* Get interpolation control source */
   csource = gst_interpolation_control_source_new ();
@@ -1056,10 +1036,6 @@ GST_START_TEST (controller_interpolation_linear_default_values)
   GValue val_ulong = { 0, };
 
   elem = gst_element_factory_make ("testmonosource", "test_source");
-
-  /* that property should exist and should be controllable */
-  fail_unless (gst_object_control_properties (GST_OBJECT (elem), "ulong",
-          NULL));
 
   /* Get interpolation control source */
   csource = gst_interpolation_control_source_new ();
@@ -1149,10 +1125,6 @@ GST_START_TEST (controller_interpolate_linear_disabled)
   0,};
 
   elem = gst_element_factory_make ("testmonosource", "test_source");
-
-  /* that property should exist and should be controllable */
-  fail_unless (gst_object_control_properties (GST_OBJECT (elem), "ulong",
-          "double", NULL));
 
   /* Get interpolation control source */
   csource = gst_interpolation_control_source_new ();
@@ -1301,10 +1273,6 @@ GST_START_TEST (controller_interpolation_set_from_list)
   /* test that an invalid timestamp throws a warning of some sort */
   elem = gst_element_factory_make ("testmonosource", "test_source");
 
-  /* that property should exist and should be controllable */
-  fail_unless (gst_object_control_properties (GST_OBJECT (elem), "ulong",
-          NULL));
-
   /* Get interpolation control source */
   csource = gst_interpolation_control_source_new ();
 
@@ -1346,15 +1314,10 @@ GST_START_TEST (controller_lfo_sine)
 {
   GstLFOControlSource *csource;
   GstElement *elem;
-  GValue amp = { 0, }
-  , off = {
-  0,};
+  GValue amp = { 0, };
+  GValue off = { 0, };
 
   elem = gst_element_factory_make ("testmonosource", "test_source");
-
-  /* that property should exist and should be controllable */
-  fail_unless (gst_object_control_properties (GST_OBJECT (elem), "ulong",
-          NULL));
 
   /* Get interpolation control source */
   csource = gst_lfo_control_source_new ();
@@ -1412,15 +1375,10 @@ GST_START_TEST (controller_lfo_sine_timeshift)
 {
   GstLFOControlSource *csource;
   GstElement *elem;
-  GValue amp = { 0, }
-  , off = {
-  0,};
+  GValue amp = { 0, };
+  GValue off = { 0, };
 
   elem = gst_element_factory_make ("testmonosource", "test_source");
-
-  /* that property should exist and should be controllable */
-  fail_unless (gst_object_control_properties (GST_OBJECT (elem), "ulong",
-          NULL));
 
   /* Get interpolation control source */
   csource = gst_lfo_control_source_new ();
@@ -1478,15 +1436,10 @@ GST_START_TEST (controller_lfo_square)
 {
   GstLFOControlSource *csource;
   GstElement *elem;
-  GValue amp = { 0, }
-  , off = {
-  0,};
+  GValue amp = { 0, };
+  GValue off = { 0, };
 
   elem = gst_element_factory_make ("testmonosource", "test_source");
-
-  /* that property should exist and should be controllable */
-  fail_unless (gst_object_control_properties (GST_OBJECT (elem), "ulong",
-          NULL));
 
   /* Get interpolation control source */
   csource = gst_lfo_control_source_new ();
@@ -1544,15 +1497,10 @@ GST_START_TEST (controller_lfo_saw)
 {
   GstLFOControlSource *csource;
   GstElement *elem;
-  GValue amp = { 0, }
-  , off = {
-  0,};
+  GValue amp = { 0, };
+  GValue off = { 0, };
 
   elem = gst_element_factory_make ("testmonosource", "test_source");
-
-  /* that property should exist and should be controllable */
-  fail_unless (gst_object_control_properties (GST_OBJECT (elem), "ulong",
-          NULL));
 
   /* Get interpolation control source */
   csource = gst_lfo_control_source_new ();
@@ -1610,15 +1558,10 @@ GST_START_TEST (controller_lfo_rsaw)
 {
   GstLFOControlSource *csource;
   GstElement *elem;
-  GValue amp = { 0, }
-  , off = {
-  0,};
+  GValue amp = { 0, };
+  GValue off = { 0, };
 
   elem = gst_element_factory_make ("testmonosource", "test_source");
-
-  /* that property should exist and should be controllable */
-  fail_unless (gst_object_control_properties (GST_OBJECT (elem), "ulong",
-          NULL));
 
   /* Get interpolation control source */
   csource = gst_lfo_control_source_new ();
@@ -1676,15 +1619,10 @@ GST_START_TEST (controller_lfo_triangle)
 {
   GstLFOControlSource *csource;
   GstElement *elem;
-  GValue amp = { 0, }
-  , off = {
-  0,};
+  GValue amp = { 0, };
+  GValue off = { 0, };
 
   elem = gst_element_factory_make ("testmonosource", "test_source");
-
-  /* that property should exist and should be controllable */
-  fail_unless (gst_object_control_properties (GST_OBJECT (elem), "ulong",
-          NULL));
 
   /* Get interpolation control source */
   csource = gst_lfo_control_source_new ();
@@ -1744,10 +1682,6 @@ GST_START_TEST (controller_lfo_none)
   GstElement *elem;
 
   elem = gst_element_factory_make ("testmonosource", "test_source");
-
-  /* that property should exist and should be controllable */
-  fail_unless (gst_object_control_properties (GST_OBJECT (elem), "ulong",
-          NULL));
 
   /* Get interpolation control source */
   csource = gst_lfo_control_source_new ();
@@ -1817,10 +1751,6 @@ GST_START_TEST (controller_interpolate_linear_before_ts0)
 
   elem = gst_element_factory_make ("testmonosource", "test_source");
 
-  /* that property should exist and should be controllable */
-  fail_unless (gst_object_control_properties (GST_OBJECT (elem), "ulong",
-          NULL));
-
   /* Get interpolation control source */
   csource = gst_interpolation_control_source_new ();
 
@@ -1875,10 +1805,6 @@ GST_START_TEST (controller_interpolation_cp_count)
   GValue val_ulong = { 0, };
 
   elem = gst_element_factory_make ("testmonosource", "test_source");
-
-  /* that property should exist and should be controllable */
-  fail_unless (gst_object_control_properties (GST_OBJECT (elem), "ulong",
-          NULL));
 
   /* Get interpolation control source */
   csource = gst_interpolation_control_source_new ();

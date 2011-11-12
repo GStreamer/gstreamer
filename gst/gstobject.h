@@ -234,9 +234,6 @@ gboolean	gst_object_check_uniqueness	(GList *list, const gchar *name);
 /* controller functions */
 #include <gst/gstcontrolsource.h>
 
-gboolean        gst_object_control_properties   (GstObject * object, ...) G_GNUC_NULL_TERMINATED;
-gboolean        gst_object_uncontrol_properties (GstObject * object, ...) G_GNUC_NULL_TERMINATED;
-
 GstClockTime    gst_object_suggest_next_sync    (GstObject * object);
 gboolean        gst_object_sync_values          (GstObject * object, GstClockTime timestamp);
 

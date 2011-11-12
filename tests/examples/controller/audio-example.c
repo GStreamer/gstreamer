@@ -48,12 +48,6 @@ main (gint argc, gchar ** argv)
      g_object_set (G_OBJECT(src), "wave", 1, NULL);
    */
 
-  /* add a controller to the source */
-  if (!gst_object_control_properties (GST_OBJECT (src), "freq", "volume", NULL)) {
-    GST_WARNING ("can't control source element");
-    goto Error;
-  }
-
   csource1 = gst_interpolation_control_source_new ();
   csource2 = gst_interpolation_control_source_new ();
 
