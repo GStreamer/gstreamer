@@ -29,8 +29,8 @@
  * get_peer, and then remove references in every test function */
 static GstPad *mysrcpad, *mysinkpad;
 
-#define VIDEO_CAPS_STRING "video/x-raw-yuv, " \
-                           "format = (fourcc) I420, " \
+#define VIDEO_CAPS_STRING "video/x-raw, " \
+                           "format = (string) I420, " \
                            "width = (int) 384, " \
                            "height = (int) 288, " \
                            "framerate = (fraction) 25/1"
@@ -106,10 +106,11 @@ check_caps (GstCaps * caps)
     fail_unless (GST_VALUE_HOLDS_BUFFER (avcc));
     buf = gst_value_get_buffer (avcc);
     fail_unless (buf != NULL);
-    data = GST_BUFFER_DATA (buf);
+    data = gst_buffer_map (buf, NULL, NULL, GST_MAP_READ);
     fail_unless_equals_int (data[0], 1);
     /* should be either baseline, main profile or extended profile */
     fail_unless (data[1] == 0x42 || data[1] == 0x4D || data[1] == 0x58);
+    gst_buffer_unmap (buf, (gpointer) data, -1);
   } else if (strcmp (stream_format, "byte-stream") == 0) {
     fail_if (gst_structure_get_value (s, "codec_data") != NULL);
   } else {
@@ -122,6 +123,8 @@ GST_START_TEST (test_video_pad)
   GstElement *x264enc;
   GstBuffer *inbuffer, *outbuffer;
   GstCaps *caps;
+  guint8 *data;
+  gsize size;
   int i, num_buffers;
 
   x264enc = setup_x264enc ();
@@ -129,13 +132,16 @@ GST_START_TEST (test_video_pad)
           GST_STATE_PLAYING) == GST_STATE_CHANGE_SUCCESS,
       "could not set to playing");
 
+  caps = gst_caps_from_string (VIDEO_CAPS_STRING);
+  fail_unless (gst_pad_push_event (mysrcpad, gst_event_new_caps (caps)));
+  gst_caps_unref (caps);
+
   /* corresponds to I420 buffer for the size mentioned in the caps */
   inbuffer = gst_buffer_new_and_alloc (384 * 288 * 3 / 2);
   /* makes valgrind's memcheck happier */
-  memset (GST_BUFFER_DATA (inbuffer), 0, GST_BUFFER_SIZE (inbuffer));
-  caps = gst_caps_from_string (VIDEO_CAPS_STRING);
-  gst_buffer_set_caps (inbuffer, caps);
-  gst_caps_unref (caps);
+  data = gst_buffer_map (inbuffer, &size, NULL, GST_MAP_WRITE);
+  memset (data, 0, size);
+  gst_buffer_unmap (inbuffer, data, size);
   GST_BUFFER_TIMESTAMP (inbuffer) = 0;
   ASSERT_BUFFER_REFCOUNT (inbuffer, "inbuffer", 1);
   fail_unless (gst_pad_push (mysrcpad, inbuffer) == GST_FLOW_OK);
@@ -146,6 +152,15 @@ GST_START_TEST (test_video_pad)
   num_buffers = g_list_length (buffers);
   fail_unless (num_buffers == 1);
 
+  /* check output caps */
+  {
+    GstCaps *outcaps;
+
+    outcaps = gst_pad_get_current_caps (mysinkpad);
+    check_caps (outcaps);
+    gst_caps_unref (outcaps);
+  }
+
   /* clean up buffers */
   for (i = 0; i < num_buffers; ++i) {
     outbuffer = GST_BUFFER (buffers->data);
@@ -155,10 +170,10 @@ GST_START_TEST (test_video_pad)
       case 0:
       {
         gint nsize, npos, j, type, next_type;
-        guint8 *data = GST_BUFFER_DATA (outbuffer);
-        gint size = GST_BUFFER_SIZE (outbuffer);
+        const guint8 *data;
+        gsize size;
 
-        check_caps (GST_BUFFER_CAPS (outbuffer));
+        data = gst_buffer_map (outbuffer, &size, NULL, GST_MAP_READ);
 
         npos = 0;
         j = 0;
@@ -197,6 +212,9 @@ GST_START_TEST (test_video_pad)
       default:
         break;
     }
+
+    gst_buffer_unmap (outbuffer, (gpointer) data, size);
+
     buffers = g_list_remove (buffers, outbuffer);
 
     ASSERT_BUFFER_REFCOUNT (outbuffer, "outbuffer", 1);
@@ -214,9 +232,12 @@ GST_END_TEST;
 GstCaps *pad_caps;
 
 GstCaps *
-getcaps_test (GstPad * pad)
+getcaps_test (GstPad * pad, GstCaps * filter)
 {
-  return gst_caps_ref (pad_caps);
+  if (filter == NULL)
+    return gst_caps_ref (pad_caps);
+  else
+    return gst_caps_intersect (pad_caps, filter);
 }
 
 GST_START_TEST (test_profile_in_caps)
@@ -225,6 +246,7 @@ GST_START_TEST (test_profile_in_caps)
   GstPad *srcpad;
   GstPad *sinkpad;
   GstStructure *s;
+  GstCaps *caps;
 
   pad_caps = gst_caps_from_string (MPEG_CAPS_STRING);
 
@@ -238,8 +260,10 @@ GST_START_TEST (test_profile_in_caps)
 
   fail_unless (gst_pad_set_caps (sinkpad,
           (GstCaps *) gst_pad_get_pad_template_caps (mysrcpad)));
-  s = gst_caps_get_structure (GST_PAD_CAPS (srcpad), 0);
+  caps = gst_pad_get_current_caps (srcpad);
+  s = gst_caps_get_structure (caps, 0);
   fail_unless (!g_strcmp0 (gst_structure_get_string (s, "profile"), "main"));
+  gst_caps_unref (caps);
 
   fail_unless (gst_element_set_state (x264enc,
           GST_STATE_READY) == GST_STATE_CHANGE_SUCCESS,
@@ -250,9 +274,12 @@ GST_START_TEST (test_profile_in_caps)
       "could not set to playing");
   fail_unless (gst_pad_set_caps (sinkpad,
           (GstCaps *) gst_pad_get_pad_template_caps (mysrcpad)));
-  s = gst_caps_get_structure (GST_PAD_CAPS (srcpad), 0);
+
+  caps = gst_pad_get_current_caps (srcpad);
+  s = gst_caps_get_structure (caps, 0);
   fail_unless (!g_strcmp0 (gst_structure_get_string (s, "profile"),
           "constrained-baseline"));
+  gst_caps_unref (caps);
 
   fail_unless (gst_element_set_state (x264enc,
           GST_STATE_READY) == GST_STATE_CHANGE_SUCCESS,
@@ -263,8 +290,11 @@ GST_START_TEST (test_profile_in_caps)
       "could not set to playing");
   fail_unless (gst_pad_set_caps (sinkpad,
           (GstCaps *) gst_pad_get_pad_template_caps (mysrcpad)));
-  s = gst_caps_get_structure (GST_PAD_CAPS (srcpad), 0);
+
+  caps = gst_pad_get_current_caps (srcpad);
+  s = gst_caps_get_structure (caps, 0);
   fail_unless (!g_strcmp0 (gst_structure_get_string (s, "profile"), "high"));
+  gst_caps_unref (caps);
 
   fail_unless (gst_element_set_state (x264enc,
           GST_STATE_READY) == GST_STATE_CHANGE_SUCCESS,
@@ -275,8 +305,11 @@ GST_START_TEST (test_profile_in_caps)
       "could not set to playing");
   fail_unless (gst_pad_set_caps (sinkpad,
           (GstCaps *) gst_pad_get_pad_template_caps (mysrcpad)));
-  s = gst_caps_get_structure (GST_PAD_CAPS (srcpad), 0);
+
+  caps = gst_pad_get_current_caps (srcpad);
+  s = gst_caps_get_structure (caps, 0);
   fail_unless (!g_strcmp0 (gst_structure_get_string (s, "profile"), "main"));
+  gst_caps_unref (caps);
 
   s = gst_caps_get_structure (pad_caps, 0);
   gst_structure_set (s, "profile", G_TYPE_STRING, "constrained-baseline", NULL);
@@ -288,9 +321,12 @@ GST_START_TEST (test_profile_in_caps)
       "could not set to playing");
   fail_unless (gst_pad_set_caps (sinkpad,
           (GstCaps *) gst_pad_get_pad_template_caps (mysrcpad)));
-  s = gst_caps_get_structure (GST_PAD_CAPS (srcpad), 0);
+
+  caps = gst_pad_get_current_caps (srcpad);
+  s = gst_caps_get_structure (caps, 0);
   fail_unless (!g_strcmp0 (gst_structure_get_string (s, "profile"),
           "constrained-baseline"));
+  gst_caps_unref (caps);
 
   s = gst_caps_get_structure (pad_caps, 0);
   gst_structure_set (s, "profile", G_TYPE_STRING, "high", NULL);
@@ -302,8 +338,11 @@ GST_START_TEST (test_profile_in_caps)
       "could not set to playing");
   fail_unless (gst_pad_set_caps (sinkpad,
           (GstCaps *) gst_pad_get_pad_template_caps (mysrcpad)));
-  s = gst_caps_get_structure (GST_PAD_CAPS (srcpad), 0);
+
+  caps = gst_pad_get_current_caps (srcpad);
+  s = gst_caps_get_structure (caps, 0);
   fail_unless (!g_strcmp0 (gst_structure_get_string (s, "profile"), "high"));
+  gst_caps_unref (caps);
 
   gst_object_unref (srcpad);
   gst_object_unref (sinkpad);
