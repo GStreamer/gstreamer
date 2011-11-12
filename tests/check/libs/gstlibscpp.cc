@@ -35,9 +35,9 @@
 #include <gst/audio/gstaudiofilter.h>
 #include <gst/audio/gstaudiosink.h>
 #include <gst/audio/gstaudiosrc.h>
-#include <gst/audio/gstbaseaudiosink.h>
-#include <gst/audio/gstbaseaudiosrc.h>
-#include <gst/audio/gstringbuffer.h>
+#include <gst/audio/gstaudiobasesink.h>
+#include <gst/audio/gstaudiobasesrc.h>
+#include <gst/audio/gstaudioringbuffer.h>
 #include <gst/audio/mixerutils.h>
 #include <gst/audio/multichannel.h>
 
@@ -79,9 +79,9 @@
 #include <gst/riff/riff-media.h>
 #include <gst/riff/riff-read.h>
 
-#include <gst/rtp/gstbasertpaudiopayload.h>
-#include <gst/rtp/gstbasertpdepayload.h>
-#include <gst/rtp/gstbasertppayload.h>
+#include <gst/rtp/gstrtpbaseaudiopayload.h>
+#include <gst/rtp/gstrtpbasedepayload.h>
+#include <gst/rtp/gstrtpbasepayload.h>
 #include <gst/rtp/gstrtcpbuffer.h>
 #include <gst/rtp/gstrtpbuffer.h>
 #include <gst/rtp/gstrtppayloads.h>
