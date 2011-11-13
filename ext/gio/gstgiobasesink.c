@@ -331,10 +331,11 @@ gst_gio_base_sink_query (GstBaseSink * bsink, GstQuery * query)
       return TRUE;
     case GST_QUERY_URI:
       if (GST_IS_URI_HANDLER (sink)) {
-        const gchar *uri;
+        gchar *uri;
 
         uri = gst_uri_handler_get_uri (GST_URI_HANDLER (sink));
         gst_query_set_uri (query, uri);
+        g_free (uri);
         return TRUE;
       }
       return FALSE;

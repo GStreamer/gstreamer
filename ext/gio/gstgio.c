@@ -161,11 +161,11 @@ gst_gio_uri_handler_get_protocols (GType type)
   return protocols;
 }
 
-static const gchar *
+static gchar *
 gst_gio_uri_handler_get_uri (GstURIHandler * handler)
 {
   GstElement *element = GST_ELEMENT (handler);
-  const gchar *uri;
+  gchar *uri;
 
   g_return_val_if_fail (GST_IS_ELEMENT (element), NULL);
 
@@ -175,18 +175,22 @@ gst_gio_uri_handler_get_uri (GstURIHandler * handler)
 }
 
 static gboolean
-gst_gio_uri_handler_set_uri (GstURIHandler * handler, const gchar * uri)
+gst_gio_uri_handler_set_uri (GstURIHandler * handler, const gchar * uri,
+    GError ** error)
 {
   GstElement *element = GST_ELEMENT (handler);
 
   g_return_val_if_fail (GST_IS_ELEMENT (element), FALSE);
 
   if (GST_STATE (element) == GST_STATE_PLAYING ||
-      GST_STATE (element) == GST_STATE_PAUSED)
+      GST_STATE (element) == GST_STATE_PAUSED) {
+    g_set_error (error, GST_URI_ERROR, GST_URI_ERROR_BAD_STATE,
+        "Changing the 'location' property while the element is running is "
+        "not supported");
     return FALSE;
+  }
 
   g_object_set (G_OBJECT (element), "location", uri, NULL);
-
   return TRUE;
 }
 

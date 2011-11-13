@@ -905,13 +905,15 @@ gst_audio_cd_src_uri_get_protocols (GType type)
   return protocols;
 }
 
-static const gchar *
+static gchar *
 gst_audio_cd_src_uri_get_uri (GstURIHandler * handler)
 {
   GstAudioCdSrc *src = GST_AUDIO_CD_SRC (handler);
 
   GST_OBJECT_LOCK (src);
 
+  /* FIXME: can we get rid of all that here and just return a copy of the
+   * existing URI perhaps? */
   g_free (src->uri);
 
   if (GST_OBJECT_FLAG_IS_SET (GST_BASE_SRC (src), GST_BASE_SRC_STARTED)) {
@@ -924,7 +926,7 @@ gst_audio_cd_src_uri_get_uri (GstURIHandler * handler)
 
   GST_OBJECT_UNLOCK (src);
 
-  return src->uri;
+  return g_strdup (src->uri);
 }
 
 /* Note: gst_element_make_from_uri() might call us with just 'cdda://' as
@@ -933,21 +935,14 @@ gst_audio_cd_src_uri_get_uri (GstURIHandler * handler)
 /* We accept URIs of the format cdda://(device#track)|(track) */
 
 static gboolean
-gst_audio_cd_src_uri_set_uri (GstURIHandler * handler, const gchar * uri)
+gst_audio_cd_src_uri_set_uri (GstURIHandler * handler, const gchar * uri,
+    GError ** error)
 {
   GstAudioCdSrc *src = GST_AUDIO_CD_SRC (handler);
-  gchar *protocol;
   const gchar *location;
   gchar *track_number;
 
   GST_OBJECT_LOCK (src);
-
-  protocol = gst_uri_get_protocol (uri);
-  if (!protocol || g_ascii_strcasecmp (protocol, "cdda") != 0) {
-    g_free (protocol);
-    goto failed;
-  }
-  g_free (protocol);
 
   location = uri + 7;
   track_number = g_strrstr (location, "#");
@@ -998,6 +993,8 @@ failed:
   {
     GST_OBJECT_UNLOCK (src);
     GST_DEBUG_OBJECT (src, "cannot handle URI '%s'", uri);
+    g_set_error_literal (error, GST_URI_ERROR, GST_URI_ERROR_BAD_URI,
+        "Could not handle CDDA URI");
     return FALSE;
   }
 }

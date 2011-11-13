@@ -1372,23 +1372,18 @@ gst_app_sink_uri_get_protocols (GType type)
   return protocols;
 }
 
-static const gchar *
+static gchar *
 gst_app_sink_uri_get_uri (GstURIHandler * handler)
 {
-  return "appsink";
+  return g_strdup ("appsink");
 }
 
 static gboolean
-gst_app_sink_uri_set_uri (GstURIHandler * handler, const gchar * uri)
+gst_app_sink_uri_set_uri (GstURIHandler * handler, const gchar * uri,
+    GError ** error)
 {
-  gchar *protocol;
-  gboolean ret;
-
-  protocol = gst_uri_get_protocol (uri);
-  ret = !strcmp (protocol, "appsink");
-  g_free (protocol);
-
-  return ret;
+  /* GstURIHandler checks the protocol for us */
+  return TRUE;
 }
 
 static void

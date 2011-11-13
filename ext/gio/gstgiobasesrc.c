@@ -416,8 +416,9 @@ gst_gio_base_src_query (GstBaseSrc * base_src, GstQuery * query)
   switch (GST_QUERY_TYPE (query)) {
     case GST_QUERY_URI:
       if (GST_IS_URI_HANDLER (src)) {
-        const gchar *uri = gst_uri_handler_get_uri (GST_URI_HANDLER (src));
+        gchar *uri = gst_uri_handler_get_uri (GST_URI_HANDLER (src));
         gst_query_set_uri (query, uri);
+        g_free (uri);
         ret = TRUE;
       }
       break;

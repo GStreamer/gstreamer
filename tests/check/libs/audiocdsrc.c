@@ -289,7 +289,7 @@ test_uri_parse (const gchar * uri, const gchar * device, gint track)
   gint set_track = 0;
 
   foosrc = gst_element_factory_make ("cdfoosrc", "cdfoosrc");
-  fail_unless (gst_uri_handler_set_uri (GST_URI_HANDLER (foosrc), uri) == TRUE,
+  fail_unless (gst_uri_handler_set_uri (GST_URI_HANDLER (foosrc), uri, NULL),
       "couldn't set uri %s", uri);
   g_object_get (foosrc, "device", &set_device, "track", &set_track, NULL);
   fail_unless (set_device != NULL);
@@ -429,26 +429,26 @@ GST_START_TEST (test_uri_parsing)
   /* wrong protocol */
   foosrc = gst_element_factory_make ("cdfoosrc", "cdfoosrc");
   fail_unless (gst_uri_handler_set_uri (GST_URI_HANDLER (foosrc),
-          "x://") == FALSE);
+          "x://", NULL) == FALSE);
   fail_unless (gst_uri_handler_set_uri (GST_URI_HANDLER (foosrc),
-          "cddaq://") == FALSE);
+          "cddaq://", NULL) == FALSE);
 
   /* cdda://track */
   test_uri_parse ("cdda://", "/dev/cdrom", 1);
   test_uri_parse ("cdda://2", "/dev/cdrom", 2);
   test_uri_parse ("cdda://47", "/dev/cdrom", 47);
   fail_unless (gst_uri_handler_set_uri (GST_URI_HANDLER (foosrc),
-          "cdda://-1") == FALSE);
+          "cdda://-1", NULL) == FALSE);
   fail_unless (gst_uri_handler_set_uri (GST_URI_HANDLER (foosrc),
-          "cdda://what") == FALSE);
+          "cdda://what", NULL) == FALSE);
 
   /* cdda://device#track */
   test_uri_parse ("cdda:///dev/hdb#1", "/dev/hdb", 1);
   test_uri_parse ("cdda://anything#8", "anything", 8);
   fail_unless (gst_uri_handler_set_uri (GST_URI_HANDLER (foosrc),
-          "cdda:///dev/hdb#nonsense") == FALSE);
+          "cdda:///dev/hdb#nonsense", NULL) == FALSE);
   fail_unless (gst_uri_handler_set_uri (GST_URI_HANDLER (foosrc),
-          "cdda:///dev/hdb#-2") == FALSE);
+          "cdda:///dev/hdb#-2", NULL) == FALSE);
 
   /* cdda://track#device (device should be ignored - FIXME 0.11) */
   test_uri_parse ("cdda://8#/dev/hdb", "/dev/cdrom", 8);
