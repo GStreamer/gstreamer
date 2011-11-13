@@ -331,6 +331,11 @@ print_element_properties_info (GstElement * element)
       readable = TRUE;
       g_print ("%s%s", (first_flag) ? "" : ", ", _("readable"));
       first_flag = FALSE;
+    } else {
+      /* if we can't read the property value, assume it's set to the default
+       * (which might not be entirely true for sub-classes, but that's an
+       * unlikely corner-case anyway) */
+      g_param_value_set_default (param, &value);
     }
     if (param->flags & G_PARAM_WRITABLE) {
       g_print ("%s%s", (first_flag) ? "" : ", ", _("writable"));
@@ -356,34 +361,23 @@ print_element_properties_info (GstElement * element)
     switch (G_VALUE_TYPE (&value)) {
       case G_TYPE_STRING:
       {
-        GParamSpecString *pstring = G_PARAM_SPEC_STRING (param);
+        const char *string_val = g_value_get_string (&value);
 
         n_print ("%-23.23s String. ", "");
 
-        if (pstring->default_value == NULL)
-          g_print ("Default: null ");
+        if (string_val == NULL)
+          g_print ("Default: null");
         else
-          g_print ("Default: \"%s\" ", pstring->default_value);
-
-        if (readable) {
-          const char *string_val = g_value_get_string (&value);
-
-          if (string_val == NULL)
-            g_print ("Current: null");
-          else
-            g_print ("Current: \"%s\"", string_val);
-        }
+          g_print ("Default: \"%s\"", string_val);
         break;
       }
       case G_TYPE_BOOLEAN:
       {
-        GParamSpecBoolean *pboolean = G_PARAM_SPEC_BOOLEAN (param);
+        gboolean bool_val = g_value_get_boolean (&value);
 
         n_print ("%-23.23s Boolean. ", "");
-        g_print ("Default: %s ", (pboolean->default_value ? "true" : "false"));
-        if (readable)
-          g_print ("Current: %s",
-              (g_value_get_boolean (&value) ? "true" : "false"));
+
+        g_print ("Default: %s", bool_val ? "true" : "false");
         break;
       }
       case G_TYPE_ULONG:
@@ -392,9 +386,7 @@ print_element_properties_info (GstElement * element)
 
         n_print ("%-23.23s Unsigned Long. ", "");
         g_print ("Range: %lu - %lu Default: %lu ",
-            pulong->minimum, pulong->maximum, pulong->default_value);
-        if (readable)
-          g_print ("Current: %lu", g_value_get_ulong (&value));
+            pulong->minimum, pulong->maximum, g_value_get_ulong (&value));
         break;
       }
       case G_TYPE_LONG:
@@ -403,9 +395,7 @@ print_element_properties_info (GstElement * element)
 
         n_print ("%-23.23s Long. ", "");
         g_print ("Range: %ld - %ld Default: %ld ",
-            plong->minimum, plong->maximum, plong->default_value);
-        if (readable)
-          g_print ("Current: %ld", g_value_get_long (&value));
+            plong->minimum, plong->maximum, g_value_get_long (&value));
         break;
       }
       case G_TYPE_UINT:
@@ -414,9 +404,7 @@ print_element_properties_info (GstElement * element)
 
         n_print ("%-23.23s Unsigned Integer. ", "");
         g_print ("Range: %u - %u Default: %u ",
-            puint->minimum, puint->maximum, puint->default_value);
-        if (readable)
-          g_print ("Current: %u", g_value_get_uint (&value));
+            puint->minimum, puint->maximum, g_value_get_uint (&value));
         break;
       }
       case G_TYPE_INT:
@@ -425,9 +413,7 @@ print_element_properties_info (GstElement * element)
 
         n_print ("%-23.23s Integer. ", "");
         g_print ("Range: %d - %d Default: %d ",
-            pint->minimum, pint->maximum, pint->default_value);
-        if (readable)
-          g_print ("Current: %d", g_value_get_int (&value));
+            pint->minimum, pint->maximum, g_value_get_int (&value));
         break;
       }
       case G_TYPE_UINT64:
@@ -437,9 +423,7 @@ print_element_properties_info (GstElement * element)
         n_print ("%-23.23s Unsigned Integer64. ", "");
         g_print ("Range: %" G_GUINT64_FORMAT " - %" G_GUINT64_FORMAT
             " Default: %" G_GUINT64_FORMAT " ",
-            puint64->minimum, puint64->maximum, puint64->default_value);
-        if (readable)
-          g_print ("Current: %" G_GUINT64_FORMAT, g_value_get_uint64 (&value));
+            puint64->minimum, puint64->maximum, g_value_get_uint64 (&value));
         break;
       }
       case G_TYPE_INT64:
@@ -449,9 +433,7 @@ print_element_properties_info (GstElement * element)
         n_print ("%-23.23s Integer64. ", "");
         g_print ("Range: %" G_GINT64_FORMAT " - %" G_GINT64_FORMAT
             " Default: %" G_GINT64_FORMAT " ",
-            pint64->minimum, pint64->maximum, pint64->default_value);
-        if (readable)
-          g_print ("Current: %" G_GINT64_FORMAT, g_value_get_int64 (&value));
+            pint64->minimum, pint64->maximum, g_value_get_int64 (&value));
         break;
       }
       case G_TYPE_FLOAT:
@@ -460,9 +442,7 @@ print_element_properties_info (GstElement * element)
 
         n_print ("%-23.23s Float. ", "");
         g_print ("Range: %15.7g - %15.7g Default: %15.7g ",
-            pfloat->minimum, pfloat->maximum, pfloat->default_value);
-        if (readable)
-          g_print ("Current: %15.7g", g_value_get_float (&value));
+            pfloat->minimum, pfloat->maximum, g_value_get_float (&value));
         break;
       }
       case G_TYPE_DOUBLE:
@@ -471,9 +451,7 @@ print_element_properties_info (GstElement * element)
 
         n_print ("%-23.23s Double. ", "");
         g_print ("Range: %15.7g - %15.7g Default: %15.7g ",
-            pdouble->minimum, pdouble->maximum, pdouble->default_value);
-        if (readable)
-          g_print ("Current: %15.7g", g_value_get_double (&value));
+            pdouble->minimum, pdouble->maximum, g_value_get_double (&value));
         break;
       }
       default:
@@ -486,27 +464,22 @@ print_element_properties_info (GstElement * element)
             print_caps (caps, "                           ");
           }
         } else if (G_IS_PARAM_SPEC_ENUM (param)) {
-          GParamSpecEnum *penum = G_PARAM_SPEC_ENUM (param);
           GEnumValue *values;
           guint j = 0;
           gint enum_value;
-          const gchar *def_val_nick = "", *cur_val_nick = "";
+          const gchar *value_nick = "";
 
           values = G_ENUM_CLASS (g_type_class_ref (param->value_type))->values;
           enum_value = g_value_get_enum (&value);
 
           while (values[j].value_name) {
             if (values[j].value == enum_value)
-              cur_val_nick = values[j].value_nick;
-            if (values[j].value == penum->default_value)
-              def_val_nick = values[j].value_nick;
+              value_nick = values[j].value_nick;
             j++;
           }
 
-          n_print
-              ("%-23.23s Enum \"%s\" Default: %d, \"%s\" Current: %d, \"%s\"",
-              "", g_type_name (G_VALUE_TYPE (&value)), penum->default_value,
-              def_val_nick, enum_value, cur_val_nick);
+          n_print ("%-23.23s Enum \"%s\" Default: %d, \"%s\"", "",
+              g_type_name (G_VALUE_TYPE (&value)), enum_value, value_nick);
 
           j = 0;
           while (values[j].value_name) {
@@ -521,17 +494,15 @@ print_element_properties_info (GstElement * element)
         } else if (G_IS_PARAM_SPEC_FLAGS (param)) {
           GParamSpecFlags *pflags = G_PARAM_SPEC_FLAGS (param);
           GFlagsValue *vals;
-          gchar *cur, *def;
+          gchar *cur;
 
           vals = pflags->flags_class->values;
 
           cur = flags_to_string (vals, g_value_get_flags (&value));
-          def = flags_to_string (vals, pflags->default_value);
 
-          n_print
-              ("%-23.23s Flags \"%s\" Default: 0x%08x, \"%s\" Current: 0x%08x, \"%s\"",
-              "", g_type_name (G_VALUE_TYPE (&value)), pflags->default_value,
-              def, g_value_get_flags (&value), cur);
+          n_print ("%-23.23s Flags \"%s\" Default: 0x%08x, \"%s\"", "",
+              g_type_name (G_VALUE_TYPE (&value)),
+              g_value_get_flags (&value), cur);
 
           while (vals[0].value_name) {
             g_print ("\n");
@@ -543,7 +514,6 @@ print_element_properties_info (GstElement * element)
           }
 
           g_free (cur);
-          g_free (def);
         } else if (G_IS_PARAM_SPEC_OBJECT (param)) {
           n_print ("%-23.23s Object of type \"%s\"", "",
               g_type_name (param->value_type));
@@ -574,12 +544,8 @@ print_element_properties_info (GstElement * element)
           g_print ("Range: %d/%d - %d/%d Default: %d/%d ",
               pfraction->min_num, pfraction->min_den,
               pfraction->max_num, pfraction->max_den,
-              pfraction->def_num, pfraction->def_den);
-          if (readable)
-            g_print ("Current: %d/%d",
-                gst_value_get_fraction_numerator (&value),
-                gst_value_get_fraction_denominator (&value));
-
+              gst_value_get_fraction_numerator (&value),
+              gst_value_get_fraction_denominator (&value));
         } else {
           n_print ("%-23.23s Unknown type %ld \"%s\"", "", param->value_type,
               g_type_name (param->value_type));

@@ -36,6 +36,7 @@ GST_BUILT_SOURCES := 		\
 	plugins/Android.mk \
 	plugins/elements/Android.mk \
 	plugins/indexers/Android.mk \
+	tests/examples/controller/Android.mk \
 	tools/Android.mk
 
 GST_BUILT_SOURCES := $(patsubst %, $(abspath $(gstreamer_TOP))/%, $(GST_BUILT_SOURCES))
@@ -68,3 +69,4 @@ CONFIGURE_TARGETS += gst-configure
 -include $(gstreamer_TOP)/libs/Android.mk
 -include $(gstreamer_TOP)/plugins/Android.mk
 -include $(gstreamer_TOP)/tools/Android.mk
+-include $(gstreamer_TOP)/tests/examples/controller/Android.mk

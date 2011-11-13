@@ -769,7 +769,7 @@ GList *
 gst_element_factory_list_filter (GList * list,
     const GstCaps * caps, GstPadDirection direction, gboolean subsetonly)
 {
-  GList *result = NULL;
+  GQueue results = G_QUEUE_INIT;
 
   GST_DEBUG ("finding factories");
 
@@ -803,7 +803,7 @@ gst_element_factory_list_filter (GList * list,
         if ((subsetonly && gst_caps_is_subset (caps, tmpl_caps)) ||
             (!subsetonly && gst_caps_can_intersect (caps, tmpl_caps))) {
           /* non empty intersection, we can use this element */
-          result = g_list_prepend (result, gst_object_ref (factory));
+          g_queue_push_tail (&results, gst_object_ref (factory));
           gst_caps_unref (tmpl_caps);
           break;
         }
@@ -811,5 +811,5 @@ gst_element_factory_list_filter (GList * list,
       }
     }
   }
-  return g_list_reverse (result);
+  return results.head;
 }

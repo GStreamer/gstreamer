@@ -607,9 +607,9 @@ gst_interpolation_control_source_unset_all (GstInterpolationControlSource *
 }
 
 static void
-_append_control_point (GstControlPoint * cp, GList ** l)
+_append_control_point (GstControlPoint * cp, GQueue * res)
 {
-  *l = g_list_prepend (*l, cp);
+  g_queue_push_tail (res, cp);
 }
 
 /**
@@ -625,7 +625,7 @@ _append_control_point (GstControlPoint * cp, GList ** l)
 GList *
 gst_interpolation_control_source_get_all (GstInterpolationControlSource * self)
 {
-  GList *res = NULL;
+  GQueue res = G_QUEUE_INIT;
 
   g_return_val_if_fail (GST_IS_INTERPOLATION_CONTROL_SOURCE (self), NULL);
 
@@ -635,7 +635,7 @@ gst_interpolation_control_source_get_all (GstInterpolationControlSource * self)
         &res);
   g_mutex_unlock (self->lock);
 
-  return g_list_reverse (res);
+  return res.head;
 }
 
 /**
