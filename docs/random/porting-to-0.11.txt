@@ -391,6 +391,18 @@ The 0.11 porting guide
     allows bindings to properly use GstIterator and prevents complex
     return value ownership issues.
 
+* GstURIHandler
+    gst_uri_handler_get_uri() and the get_uri vfunc now return a copy of
+    the URI string
+
+    gst_uri_handler_set_uri() and the set_uri vfunc now take an additional
+    GError argument so the handler can notify the caller why it didn't
+    accept a particular URI.
+
+    gst_uri_handler_set_uri() now checks if the protocol of the URI passed
+    is one of the protocols advertised by the uri handler, so set_uri vfunc
+    implementations no longer need to check that as well.
+
 * GstTagList
     is now an opaque object instead of being typedefed to a GstStructure. Cast
     to GstStructure or use gst_structure_* API on it at your own peril (it may

@@ -47,6 +47,8 @@
 #include "gstmarshal.h"
 #include "gstregistry.h"
 
+#include "gst-i18n-lib.h"
+
 #include <string.h>
 
 GST_DEBUG_CATEGORY_STATIC (gst_uri_handler_debug);
@@ -80,6 +82,12 @@ gst_uri_handler_get_type (void)
     g_once_init_leave (&urihandler_type, _type);
   }
   return urihandler_type;
+}
+
+GQuark
+gst_uri_error_quark (void)
+{
+  return g_quark_from_static_string ("gst-uri-error-quark");
 }
 
 static const guchar acceptable[96] = {  /* X0   X1   X2   X3   X4   X5   X6   X7   X8   X9   XA   XB   XC   XD   XE   XF */
@@ -589,7 +597,7 @@ gst_element_make_from_uri (const GstURIType type, const gchar * uri,
                 elementname)) != NULL) {
       GstURIHandler *handler = GST_URI_HANDLER (ret);
 
-      if (gst_uri_handler_set_uri (handler, uri))
+      if (gst_uri_handler_set_uri (handler, uri, NULL))
         break;
       gst_object_unref (ret);
       ret = NULL;
@@ -691,13 +699,16 @@ gst_uri_handler_get_uri (GstURIHandler * handler)
  * gst_uri_handler_set_uri:
  * @handler: A #GstURIHandler
  * @uri: URI to set
+ * @error: (allow-none): address where to store a #GError in case of
+ *    an error, or NULL
  *
  * Tries to set the URI of the given handler.
  *
  * Returns: TRUE if the URI was set successfully, else FALSE.
  */
 gboolean
-gst_uri_handler_set_uri (GstURIHandler * handler, const gchar * uri)
+gst_uri_handler_set_uri (GstURIHandler * handler, const gchar * uri,
+    GError ** error)
 {
   GstURIHandlerInterface *iface;
   gboolean ret;
@@ -705,6 +716,7 @@ gst_uri_handler_set_uri (GstURIHandler * handler, const gchar * uri)
 
   g_return_val_if_fail (GST_IS_URI_HANDLER (handler), FALSE);
   g_return_val_if_fail (gst_uri_is_valid (uri), FALSE);
+  g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
 
   iface = GST_URI_HANDLER_GET_INTERFACE (handler);
   g_return_val_if_fail (iface != NULL, FALSE);
@@ -712,12 +724,34 @@ gst_uri_handler_set_uri (GstURIHandler * handler, const gchar * uri)
 
   protocol = gst_uri_get_protocol (uri);
 
+  if (iface->get_protocols) {
+    gchar **p, **protocols;
+    gboolean found_protocol = FALSE;
+
+    protocols = iface->get_protocols (G_OBJECT_TYPE (handler));
+    if (protocols != NULL) {
+      for (p = protocols; *p != NULL; ++p) {
+        if (g_ascii_strcasecmp (protocol, *p) == 0) {
+          found_protocol = TRUE;
+          break;
+        }
+      }
+
+      if (!found_protocol) {
+        g_set_error (error, GST_URI_ERROR, GST_URI_ERROR_BAD_PROTOCOL,
+            _("URI scheme '%s' not supported"), protocol);
+        g_free (protocol);
+        return FALSE;
+      }
+    }
+  }
+
   colon = strstr (uri, ":");
   location = g_strdup (colon);
 
   new_uri = g_strdup_printf ("%s%s", protocol, location);
 
-  ret = iface->set_uri (handler, uri);
+  ret = iface->set_uri (handler, uri, error);
 
   g_free (new_uri);
   g_free (location);

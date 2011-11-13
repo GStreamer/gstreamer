@@ -30,6 +30,34 @@
 
 G_BEGIN_DECLS
 
+GQuark gst_uri_error_quark (void);
+
+/**
+ * GST_URI_ERROR:
+ *
+ * Get access to the error quark of the uri subsystem.
+ */
+#define GST_URI_ERROR gst_uri_error_quark ()
+
+/**
+ * GstURIError:
+ * @GST_URI_ERROR_BAD_PROTOCOL: The protocol is not supported
+ * @GST_URI_ERROR_BAD_URI: There was a problem with the URI
+ * @GST_URI_ERROR_BAD_STATE: Could not set or change the URI because the
+ *     URI handler was in a state where that is not possible or not permitted
+ * @GST_URI_ERROR_BAD_REFERENCE: There was a problem with the entity that
+ *     the URI references
+ *
+ * Different URI-related errors that can occur.
+ */
+typedef enum
+{
+  GST_URI_ERROR_BAD_PROTOCOL,
+  GST_URI_ERROR_BAD_URI,
+  GST_URI_ERROR_BAD_STATE,
+  GST_URI_ERROR_BAD_REFERENCE
+} GstURIError;
+
 /**
  * GstURIType:
  * @GST_URI_UNKNOWN	: The URI direction is unknown
@@ -89,7 +117,8 @@ struct _GstURIHandlerInterface {
   /* using the interface */
   gchar *		(* get_uri)		(GstURIHandler * handler);
   gboolean		(* set_uri)		(GstURIHandler * handler,
-						 const gchar *	 uri);
+						 const gchar   * uri,
+						 GError       ** error);
 };
 
 /* general URI functions */
@@ -119,7 +148,8 @@ guint		gst_uri_handler_get_uri_type	(GstURIHandler * handler);
 gchar **	gst_uri_handler_get_protocols	(GstURIHandler * handler);
 gchar *		gst_uri_handler_get_uri		(GstURIHandler * handler);
 gboolean	gst_uri_handler_set_uri		(GstURIHandler * handler,
-						 const gchar *	 uri);
+						 const gchar   * uri,
+						 GError       ** error);
 
 G_END_DECLS
 

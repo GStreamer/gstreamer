@@ -748,6 +748,7 @@ init_post (GOptionContext * context, GOptionGroup * group, gpointer data,
   g_type_class_ref (gst_task_state_get_type ());
   g_type_class_ref (gst_alloc_trace_flags_get_type ());
   g_type_class_ref (gst_type_find_probability_get_type ());
+  g_type_class_ref (gst_uri_error_get_type ());
   g_type_class_ref (gst_uri_type_get_type ());
   g_type_class_ref (gst_parse_error_get_type ());
   g_type_class_ref (gst_parse_flags_get_type ());
@@ -1120,6 +1121,7 @@ gst_deinit (void)
   g_type_class_unref (g_type_class_peek (gst_type_find_probability_get_type
           ()));
   g_type_class_unref (g_type_class_peek (gst_uri_type_get_type ()));
+  g_type_class_unref (g_type_class_peek (gst_uri_error_get_type ()));
   g_type_class_unref (g_type_class_peek (gst_parse_error_get_type ()));
   g_type_class_unref (g_type_class_peek (gst_param_spec_fraction_get_type ()));
   g_type_class_unref (g_type_class_peek (gst_progress_type_get_type ()));
