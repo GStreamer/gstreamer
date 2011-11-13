@@ -1136,11 +1136,12 @@ gst_neonhttp_src_uri_get_type (void)
   return GST_URI_SRC;
 }
 
-static gchar **
+static const gchar *const *
 gst_neonhttp_src_uri_get_protocols (void)
 {
   static const gchar *protocols[] = { "http", "https", NULL };
-  return (gchar **) protocols;
+
+  return protocols;
 }
 
 static const gchar *

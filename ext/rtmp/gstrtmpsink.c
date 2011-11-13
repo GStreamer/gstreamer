@@ -251,31 +251,35 @@ gst_rtmp_sink_uri_get_type (GType type)
   return GST_URI_SINK;
 }
 
-static gchar **
+static const gchar *const *
 gst_rtmp_sink_uri_get_protocols (GType type)
 {
-  static gchar *protocols[] =
-      { (char *) "rtmp", (char *) "rtmpt", (char *) "rtmps", (char *) "rtmpe",
-    (char *) "rtmfp", (char *) "rtmpte", (char *) "rtmpts", NULL
-  };
+  static const gchar *protocols[] =
+      { "rtmp", "rtmpt", "rtmps", "rtmpe", "rtmfp", "rtmpte", "rtmpts", NULL };
+
   return protocols;
 }
 
-static const gchar *
+static gchar *
 gst_rtmp_sink_uri_get_uri (GstURIHandler * handler)
 {
   GstRTMPSink *sink = GST_RTMP_SINK (handler);
 
-  return sink->uri;
+  /* FIXME: make thread-safe */
+  return g_strdup (sink->uri);
 }
 
 static gboolean
-gst_rtmp_sink_uri_set_uri (GstURIHandler * handler, const gchar * uri)
+gst_rtmp_sink_uri_set_uri (GstURIHandler * handler, const gchar * uri,
+    GError ** error)
 {
   GstRTMPSink *sink = GST_RTMP_SINK (handler);
 
-  if (GST_STATE (sink) >= GST_STATE_PAUSED)
+  if (GST_STATE (sink) >= GST_STATE_PAUSED) {
+    g_set_error (error, GST_URI_ERROR, GST_URI_ERROR_BAD_STATE,
+        "Changing the URI on rtmpsrc when it is running is not supported");
     return FALSE;
+  }
 
   g_free (sink->uri);
   sink->uri = NULL;
@@ -290,6 +294,8 @@ gst_rtmp_sink_uri_set_uri (GstURIHandler * handler, const gchar * uri)
         !host.av_len || !playpath.av_len) {
       GST_ELEMENT_ERROR (sink, RESOURCE, OPEN_WRITE,
           ("Failed to parse URI %s", uri), (NULL));
+      g_set_error (error, GST_URI_ERROR, GST_URI_ERROR_BAD_URI,
+          "Could not parse RTMP URI");
       return FALSE;
     }
     sink->uri = g_strdup (uri);
@@ -320,7 +326,7 @@ gst_rtmp_sink_set_property (GObject * object, guint prop_id,
   switch (prop_id) {
     case PROP_LOCATION:
       gst_rtmp_sink_uri_set_uri (GST_URI_HANDLER (sink),
-          g_value_get_string (value));
+          g_value_get_string (value), NULL);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);

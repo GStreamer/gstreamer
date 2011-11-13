@@ -166,31 +166,35 @@ gst_rtmp_src_uri_get_type (GType type)
   return GST_URI_SRC;
 }
 
-static gchar **
+static const gchar *const *
 gst_rtmp_src_uri_get_protocols (GType type)
 {
-  static gchar *protocols[] =
-      { (char *) "rtmp", (char *) "rtmpt", (char *) "rtmps", (char *) "rtmpe",
-    (char *) "rtmfp", (char *) "rtmpte", (char *) "rtmpts", NULL
-  };
+  static const gchar *protocols[] =
+      { "rtmp", "rtmpt", "rtmps", "rtmpe", "rtmfp", "rtmpte", "rtmpts", NULL };
+
   return protocols;
 }
 
-static const gchar *
+static gchar *
 gst_rtmp_src_uri_get_uri (GstURIHandler * handler)
 {
   GstRTMPSrc *src = GST_RTMP_SRC (handler);
 
-  return src->uri;
+  /* FIXME: make thread-safe */
+  return g_strdup (src->uri);
 }
 
 static gboolean
-gst_rtmp_src_uri_set_uri (GstURIHandler * handler, const gchar * uri)
+gst_rtmp_src_uri_set_uri (GstURIHandler * handler, const gchar * uri,
+    GError ** error)
 {
   GstRTMPSrc *src = GST_RTMP_SRC (handler);
 
-  if (GST_STATE (src) >= GST_STATE_PAUSED)
+  if (GST_STATE (src) >= GST_STATE_PAUSED) {
+    g_set_error (error, GST_URI_ERROR, GST_URI_ERROR_BAD_STATE,
+        "Changing the URI on rtmpsrc when it is running is not supported");
     return FALSE;
+  }
 
   g_free (src->uri);
   src->uri = NULL;
@@ -204,6 +208,8 @@ gst_rtmp_src_uri_set_uri (GstURIHandler * handler, const gchar * uri)
     if (!RTMP_ParseURL (uri, &protocol, &host, &port, &playpath, &app) ||
         !host.av_len || !playpath.av_len) {
       GST_ERROR_OBJECT (src, "Failed to parse URI %s", uri);
+      g_set_error (error, GST_URI_ERROR, GST_URI_ERROR_BAD_URI,
+          "Could not parse RTMP URI");
       return FALSE;
     }
     src->uri = g_strdup (uri);
@@ -236,7 +242,7 @@ gst_rtmp_src_set_property (GObject * object, guint prop_id,
   switch (prop_id) {
     case PROP_LOCATION:{
       gst_rtmp_src_uri_set_uri (GST_URI_HANDLER (src),
-          g_value_get_string (value));
+          g_value_get_string (value), NULL);
       break;
     }
     default:

@@ -71,10 +71,10 @@ static gboolean gst_data_uri_src_start (GstBaseSrc * src);
 static void gst_data_uri_src_handler_init (gpointer g_iface,
     gpointer iface_data);
 static GstURIType gst_data_uri_src_get_uri_type (GType type);
-static gchar **gst_data_uri_src_get_protocols (GType type);
-static const gchar *gst_data_uri_src_get_uri (GstURIHandler * handler);
+static const gchar *const *gst_data_uri_src_get_protocols (GType type);
+static gchar *gst_data_uri_src_get_uri (GstURIHandler * handler);
 static gboolean gst_data_uri_src_set_uri (GstURIHandler * handler,
-    const gchar * uri);
+    const gchar * uri, GError ** error);
 
 
 #define gst_data_uri_src_parent_class parent_class
@@ -145,7 +145,7 @@ gst_data_uri_src_set_property (GObject * object, guint prop_id,
   switch (prop_id) {
     case PROP_URI:
       gst_data_uri_src_set_uri (GST_URI_HANDLER (src),
-          g_value_get_string (value));
+          g_value_get_string (value), NULL);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -276,24 +276,26 @@ gst_data_uri_src_get_uri_type (GType type)
   return GST_URI_SRC;
 }
 
-static gchar **
+static const gchar *const *
 gst_data_uri_src_get_protocols (GType type)
 {
-  static gchar *protocols[] = { (char *) "data", 0 };
+  static const gchar *protocols[] = { "data", 0 };
 
   return protocols;
 }
 
-static const gchar *
+static gchar *
 gst_data_uri_src_get_uri (GstURIHandler * handler)
 {
   GstDataURISrc *src = GST_DATA_URI_SRC (handler);
 
-  return src->uri;
+  /* FIXME: make thread-safe */
+  return g_strdup (src->uri);
 }
 
 static gboolean
-gst_data_uri_src_set_uri (GstURIHandler * handler, const gchar * uri)
+gst_data_uri_src_set_uri (GstURIHandler * handler, const gchar * uri,
+    GError ** error)
 {
   GstDataURISrc *src = GST_DATA_URI_SRC (handler);
   gboolean ret = FALSE;
@@ -413,16 +415,23 @@ wrong_state:
     GST_WARNING_OBJECT (src, "Can't set URI in %s state",
         gst_element_state_get_name (GST_STATE (src)));
     GST_OBJECT_UNLOCK (src);
+    g_set_error (error, GST_URI_ERROR, GST_URI_ERROR_BAD_STATE,
+        "Changing the 'uri' property on dataurisrc while it is running "
+        "is not supported");
     goto out;
   }
 invalid_uri:
   {
     GST_WARNING_OBJECT (src, "invalid URI '%s'", uri);
+    g_set_error (error, GST_URI_ERROR, GST_URI_ERROR_BAD_URI,
+        "Invalid data URI");
     goto out;
   }
 invalid_uri_encoded_data:
   {
     GST_WARNING_OBJECT (src, "Failed to parse data encoded in URI '%s'", uri);
+    g_set_error (error, GST_URI_ERROR, GST_URI_ERROR_BAD_URI,
+        "Could not parse data encoded in data URI");
     goto out;
   }
 }

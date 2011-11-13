@@ -170,10 +170,10 @@ rsn_dvdbin_uri_get_type (void)
   return GST_URI_SRC;
 }
 
-static gchar **
+static const gchar *const *
 rsn_dvdbin_uri_get_protocols (void)
 {
-  static gchar *protocols[] = { (char *) "dvd", NULL };
+  static const gchar *protocols[] = { "dvd", NULL };
 
   return protocols;
 }

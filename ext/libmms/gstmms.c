@@ -68,7 +68,7 @@ static gboolean gst_mms_do_seek (GstBaseSrc * src, GstSegment * segment);
 static GstFlowReturn gst_mms_create (GstPushSrc * psrc, GstBuffer ** buf);
 
 static gboolean gst_mms_uri_set_uri (GstURIHandler * handler,
-    const gchar * uri);
+    const gchar * uri, GError ** error);
 
 #define gst_mms_parent_class parent_class
 G_DEFINE_TYPE_WITH_CODE (GstMMS, gst_mms, GST_TYPE_PUSH_SRC,
@@ -476,7 +476,7 @@ gst_mms_set_property (GObject * object, guint prop_id,
   switch (prop_id) {
     case PROP_LOCATION:
       gst_mms_uri_set_uri (GST_URI_HANDLER (mmssrc),
-          g_value_get_string (value));
+          g_value_get_string (value), NULL);
       break;
     case PROP_CONNECTION_SPEED:
       GST_OBJECT_LOCK (mmssrc);
@@ -528,20 +528,21 @@ gst_mms_uri_get_type (GType type)
   return GST_URI_SRC;
 }
 
-static gchar **
+static const gchar *const *
 gst_mms_uri_get_protocols (GType type)
 {
   static const gchar *protocols[] = { "mms", "mmsh", "mmst", "mmsu", NULL };
 
-  return (gchar **) protocols;
+  return protocols;
 }
 
-static const gchar *
+static gchar *
 gst_mms_uri_get_uri (GstURIHandler * handler)
 {
   GstMMS *src = GST_MMS (handler);
 
-  return src->uri_name;
+  /* FIXME: make thread-safe */
+  return g_strdup (src->uri_name);
 }
 
 static gchar *
@@ -593,14 +594,18 @@ gst_mms_src_make_valid_uri (const gchar * uri)
 }
 
 static gboolean
-gst_mms_uri_set_uri (GstURIHandler * handler, const gchar * uri)
+gst_mms_uri_set_uri (GstURIHandler * handler, const gchar * uri,
+    GError ** error)
 {
   GstMMS *src = GST_MMS (handler);
   gchar *fixed_uri;
 
   fixed_uri = gst_mms_src_make_valid_uri (uri);
-  if (!fixed_uri && uri)
+  if (!fixed_uri && uri) {
+    g_set_error (error, GST_URI_ERROR, GST_URI_ERROR_BAD_URI,
+        "Invalid MMS URI");
     return FALSE;
+  }
 
   GST_OBJECT_LOCK (src);
   if (src->uri_name)

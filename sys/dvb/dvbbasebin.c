@@ -958,45 +958,53 @@ dvb_base_bin_uri_get_type (GType type)
   return GST_URI_SRC;
 }
 
-static gchar **
+static const gchar *const *
 dvb_base_bin_uri_get_protocols (GType type)
 {
-  static gchar *protocols[] = { (char *) "dvb", NULL };
+  static const gchar *protocols[] = { "dvb", NULL };
 
   return protocols;
 }
 
-static const gchar *
+static gchar *
 dvb_base_bin_uri_get_uri (GstURIHandler * handler)
 {
-  return "dvb://";
+  return g_strdup ("dvb://");
 }
 
 static gboolean
-dvb_base_bin_uri_set_uri (GstURIHandler * handler, const gchar * uri)
+dvb_base_bin_uri_set_uri (GstURIHandler * handler, const gchar * uri,
+    GError ** error)
 {
-  gboolean ret;
-  gchar *protocol;
   DvbBaseBin *dvbbasebin = GST_DVB_BASE_BIN (handler);
+  gchar *location;
 
-  protocol = gst_uri_get_protocol (uri);
+  location = gst_uri_get_location (uri);
 
-  if (strcmp (protocol, "dvb") != 0) {
-    ret = FALSE;
-  } else {
-    gchar *location = gst_uri_get_location (uri);
+  if (location == NULL)
+    goto no_location;
 
-    if (location != NULL) {
-      ret = set_properties_for_channel (G_OBJECT (dvbbasebin), location);
-      g_free (location);
-    } else
-      ret = FALSE;
+  if (!set_properties_for_channel (G_OBJECT (dvbbasebin), location))
+    goto set_properties_failed;
+
+  /* FIXME: here is where we parse channels.conf */
+
+  g_free (location);
+  return TRUE;
+/* ERRORS */
+no_location:
+  {
+    g_set_error (error, GST_URI_ERROR, GST_URI_ERROR_BAD_URI,
+        "No details to DVB URI");
+    return FALSE;
   }
-
-  /* here is where we parse channels.conf */
-  g_free (protocol);
-
-  return ret;
+set_properties_failed:
+  {
+    g_set_error (error, GST_URI_ERROR, GST_URI_ERROR_BAD_URI,
+        "Could not set properties from DVB URI");
+    g_free (location);
+    return FALSE;
+  }
 }
 
 static void
