@@ -7,6 +7,11 @@ EXPORTS
 	gst_color_balance_set_value
 	gst_color_balance_type_get_type
 	gst_color_balance_value_changed
+	gst_interfaces_marshal_VOID__OBJECT_BOOLEAN
+	gst_interfaces_marshal_VOID__OBJECT_INT
+	gst_interfaces_marshal_VOID__OBJECT_POINTER
+	gst_interfaces_marshal_VOID__OBJECT_STRING
+	gst_interfaces_marshal_VOID__OBJECT_ULONG
 	gst_is_video_overlay_prepare_window_handle_message
 	gst_mixer_flags_get_type
 	gst_mixer_get_mixer_flags
