@@ -199,10 +199,10 @@ gst_pnm_src_uri_get_type (GType type)
   return GST_URI_SRC;
 }
 
-static gchar **
+static const gchar *const *
 gst_pnm_src_uri_get_protocols (GType type)
 {
-  static gchar *protocols[] = { (gchar *) "pnm", NULL };
+  static const gchar *protocols[] = { "pnm", NULL };
 
   return protocols;
 }

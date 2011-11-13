@@ -1632,10 +1632,10 @@ gst_dvd_read_src_uri_get_type (GType type)
   return GST_URI_SRC;
 }
 
-static gchar **
+static const gchar *const *
 gst_dvd_read_src_uri_get_protocols (GType type)
 {
-  static gchar *protocols[] = { (gchar *) "dvd", NULL };
+  static const gchar *protocols[] = { "dvd", NULL };
 
   return protocols;
 }
