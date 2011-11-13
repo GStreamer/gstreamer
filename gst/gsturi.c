@@ -52,16 +52,6 @@
 GST_DEBUG_CATEGORY_STATIC (gst_uri_handler_debug);
 #define GST_CAT_DEFAULT gst_uri_handler_debug
 
-enum
-{
-  NEW_URI,
-  LAST_SIGNAL
-};
-
-static guint gst_uri_handler_signals[LAST_SIGNAL] = { 0 };
-
-static void gst_uri_handler_base_init (gpointer g_class);
-
 GType
 gst_uri_handler_get_type (void)
 {
@@ -71,7 +61,7 @@ gst_uri_handler_get_type (void)
     GType _type;
     static const GTypeInfo urihandler_info = {
       sizeof (GstURIHandlerInterface),
-      gst_uri_handler_base_init,
+      NULL,
       NULL,
       NULL,
       NULL,
@@ -90,29 +80,6 @@ gst_uri_handler_get_type (void)
     g_once_init_leave (&urihandler_type, _type);
   }
   return urihandler_type;
-}
-
-static void
-gst_uri_handler_base_init (gpointer g_class)
-{
-  static gboolean initialized = FALSE;
-
-  if (G_UNLIKELY (!initialized)) {
-
-    /**
-     * GstURIHandler::new-uri:
-     * @handler: The #GstURIHandler which emitted the signal
-     * @uri: (transfer none): The new URI, or NULL if the URI was removed
-     *
-     * The URI of the given @handler has changed.
-     */
-
-    gst_uri_handler_signals[NEW_URI] =
-        g_signal_new ("new-uri", GST_TYPE_URI_HANDLER, G_SIGNAL_RUN_LAST,
-        G_STRUCT_OFFSET (GstURIHandlerInterface, new_uri), NULL, NULL,
-        gst_marshal_VOID__STRING, G_TYPE_NONE, 1, G_TYPE_STRING);
-    initialized = TRUE;
-  }
 }
 
 static const guchar acceptable[96] = {  /* X0   X1   X2   X3   X4   X5   X6   X7   X8   X9   XA   XB   XC   XD   XE   XF */
@@ -757,22 +724,6 @@ gst_uri_handler_set_uri (GstURIHandler * handler, const gchar * uri)
   g_free (protocol);
 
   return ret;
-}
-
-/**
- * gst_uri_handler_new_uri:
- * @handler: A #GstURIHandler
- * @uri: new URI or NULL if it was unset
- *
- * Emits the new-uri signal for a given handler, when that handler has a new URI.
- * This function should only be called by URI handlers themselves.
- */
-void
-gst_uri_handler_new_uri (GstURIHandler * handler, const gchar * uri)
-{
-  g_return_if_fail (GST_IS_URI_HANDLER (handler));
-
-  g_signal_emit (handler, gst_uri_handler_signals[NEW_URI], 0, uri);
 }
 
 static gchar *

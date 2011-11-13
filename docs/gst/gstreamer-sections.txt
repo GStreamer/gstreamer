@@ -2709,7 +2709,6 @@ gst_uri_handler_get_uri_type
 gst_uri_handler_get_protocols
 gst_uri_handler_get_uri
 gst_uri_handler_set_uri
-gst_uri_handler_new_uri
 <SUBSECTION Standard>
 GST_URI_HANDLER
 GST_IS_URI_HANDLER

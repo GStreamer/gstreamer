@@ -257,7 +257,7 @@ gst_file_src_set_location (GstFileSrc * src, const gchar * location)
     GST_INFO ("uri      : %s", src->uri);
   }
   g_object_notify (G_OBJECT (src), "location");
-  gst_uri_handler_new_uri (GST_URI_HANDLER (src), src->uri);
+  /* FIXME 0.11: notify "uri" property once there is one */
 
   return TRUE;
 

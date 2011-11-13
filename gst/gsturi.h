@@ -80,18 +80,7 @@ typedef struct _GstURIHandlerInterface GstURIHandlerInterface;
 struct _GstURIHandlerInterface {
   GTypeInterface	parent;
 
-  /*< private >*/
-  /* signals */
-  void		(* new_uri)			(GstURIHandler * handler,
-						 const gchar *   uri);
-  /* idea for the future ?
-  gboolean	(* require_password)		(GstURIHandler * handler,
-						 gchar **	 username,
-						 gchar **	 password);
-   */
-
   /* vtable */
-
   /*< public >*/
   /* querying capabilities */
   GstURIType		(* get_type)		(GType type);
@@ -101,12 +90,6 @@ struct _GstURIHandlerInterface {
   const gchar *		(* get_uri)		(GstURIHandler * handler);
   gboolean		(* set_uri)		(GstURIHandler * handler,
 						 const gchar *	 uri);
-
-  /*< private >*/
-  /* we might want to add functions here to query features,
-   * someone with gnome-vfs knowledge go ahead */
-
-  gpointer _gst_reserved[GST_PADDING];
 };
 
 /* general URI functions */
@@ -136,8 +119,6 @@ guint		gst_uri_handler_get_uri_type	(GstURIHandler * handler);
 gchar **	gst_uri_handler_get_protocols	(GstURIHandler * handler);
 const gchar *	gst_uri_handler_get_uri		(GstURIHandler * handler);
 gboolean	gst_uri_handler_set_uri		(GstURIHandler * handler,
-						 const gchar *	 uri);
-void		gst_uri_handler_new_uri		(GstURIHandler * handler,
 						 const gchar *	 uri);
 
 G_END_DECLS
