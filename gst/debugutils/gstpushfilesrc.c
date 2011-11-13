@@ -154,27 +154,39 @@ gst_push_file_src_uri_get_protocols (GType type)
   return protocols;
 }
 
-static const gchar *
+static gchar *
 gst_push_file_src_uri_get_uri (GstURIHandler * handler)
 {
   GstPushFileSrc *src = GST_PUSH_FILE_SRC (handler);
+  gchar *fileuri, *pushfileuri;
 
   if (src->filesrc == NULL)
     return NULL;
 
-  return gst_uri_handler_get_uri (GST_URI_HANDLER (src->filesrc));
+  fileuri = gst_uri_handler_get_uri (GST_URI_HANDLER (src->filesrc));;
+  if (fileuri == NULL)
+    return NULL;
+  pushfileuri = g_strconcat ("push", fileuri, NULL);
+  g_free (fileuri);
+
+  return pushfileuri;
 }
 
 static gboolean
-gst_push_file_src_uri_set_uri (GstURIHandler * handler, const gchar * uri)
+gst_push_file_src_uri_set_uri (GstURIHandler * handler, const gchar * uri,
+    GError ** error)
 {
   GstPushFileSrc *src = GST_PUSH_FILE_SRC (handler);
 
-  if (src->filesrc == NULL || !g_str_has_prefix (uri, "pushfile://"))
+  if (src->filesrc == NULL) {
+    g_set_error_literal (error, GST_URI_ERROR, GST_URI_ERROR_BAD_STATE,
+        "Could not create file source element");
     return FALSE;
+  }
 
   /* skip 'push' bit */
-  return gst_uri_handler_set_uri (GST_URI_HANDLER (src->filesrc), uri + 4);
+  return gst_uri_handler_set_uri (GST_URI_HANDLER (src->filesrc), uri + 4,
+      error);
 }
 
 static void

@@ -139,7 +139,7 @@ static gboolean gst_soup_http_src_query (GstBaseSrc * bsrc, GstQuery * query);
 static gboolean gst_soup_http_src_unlock (GstBaseSrc * bsrc);
 static gboolean gst_soup_http_src_unlock_stop (GstBaseSrc * bsrc);
 static gboolean gst_soup_http_src_set_location (GstSoupHTTPSrc * src,
-    const gchar * uri);
+    const gchar * uri, GError ** error);
 static gboolean gst_soup_http_src_set_proxy (GstSoupHTTPSrc * src,
     const gchar * uri);
 static char *gst_soup_http_src_unicodify (const char *str);
@@ -387,7 +387,7 @@ gst_soup_http_src_set_property (GObject * object, guint prop_id,
         GST_WARNING ("location property cannot be NULL");
         goto done;
       }
-      if (!gst_soup_http_src_set_location (src, location)) {
+      if (!gst_soup_http_src_set_location (src, location, NULL)) {
         GST_WARNING ("badly formatted location");
         goto done;
       }
@@ -1410,7 +1410,8 @@ gst_soup_http_src_query (GstBaseSrc * bsrc, GstQuery * query)
 }
 
 static gboolean
-gst_soup_http_src_set_location (GstSoupHTTPSrc * src, const gchar * uri)
+gst_soup_http_src_set_location (GstSoupHTTPSrc * src, const gchar * uri,
+    GError ** error)
 {
   if (src->location) {
     g_free (src->location);
@@ -1453,20 +1454,22 @@ gst_soup_http_src_uri_get_protocols (GType type)
   return (gchar **) protocols;
 }
 
-static const gchar *
+static gchar *
 gst_soup_http_src_uri_get_uri (GstURIHandler * handler)
 {
   GstSoupHTTPSrc *src = GST_SOUP_HTTP_SRC (handler);
 
-  return src->location;
+  /* FIXME: make thread-safe */
+  return g_strdup (src->location);
 }
 
 static gboolean
-gst_soup_http_src_uri_set_uri (GstURIHandler * handler, const gchar * uri)
+gst_soup_http_src_uri_set_uri (GstURIHandler * handler, const gchar * uri,
+    GError ** error)
 {
   GstSoupHTTPSrc *src = GST_SOUP_HTTP_SRC (handler);
 
-  return gst_soup_http_src_set_location (src, uri);
+  return gst_soup_http_src_set_location (src, uri, error);
 }
 
 static void

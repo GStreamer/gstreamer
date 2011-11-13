@@ -124,7 +124,7 @@ gst_udpsink_finalize (GstUDPSink * udpsink)
 }
 
 static gboolean
-gst_udpsink_set_uri (GstUDPSink * sink, const gchar * uri)
+gst_udpsink_set_uri (GstUDPSink * sink, const gchar * uri, GError ** error)
 {
   gst_multiudpsink_remove (GST_MULTIUDPSINK (sink), sink->uri.host,
       sink->uri.port);
@@ -142,6 +142,8 @@ wrong_uri:
   {
     GST_ELEMENT_ERROR (sink, RESOURCE, READ, (NULL),
         ("error parsing uri %s", uri));
+    g_set_error_literal (error, GST_URI_ERROR, GST_URI_ERROR_BAD_URI,
+        "Could not parse UDP URI");
     return FALSE;
   }
 }
@@ -220,7 +222,7 @@ gst_udpsink_uri_get_protocols (GType type)
   return protocols;
 }
 
-static const gchar *
+static gchar *
 gst_udpsink_uri_get_uri (GstURIHandler * handler)
 {
   GstUDPSink *sink = GST_UDPSINK (handler);
@@ -228,18 +230,14 @@ gst_udpsink_uri_get_uri (GstURIHandler * handler)
   g_free (sink->uristr);
   sink->uristr = gst_udp_uri_string (&sink->uri);
 
-  return sink->uristr;
+  return g_strdup (sink->uristr);
 }
 
 static gboolean
-gst_udpsink_uri_set_uri (GstURIHandler * handler, const gchar * uri)
+gst_udpsink_uri_set_uri (GstURIHandler * handler, const gchar * uri,
+    GError ** error)
 {
-  gboolean ret;
-  GstUDPSink *sink = GST_UDPSINK (handler);
-
-  ret = gst_udpsink_set_uri (sink, uri);
-
-  return ret;
+  return gst_udpsink_set_uri (GST_UDPSINK (handler), uri, error);
 }
 
 static void

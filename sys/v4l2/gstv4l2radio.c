@@ -519,7 +519,7 @@ gst_v4l2radio_uri_get_protocols (GType type)
   return protocols;
 }
 
-static const gchar *
+static gchar *
 gst_v4l2radio_uri_get_uri (GstURIHandler * handler)
 {
   GstV4l2Radio *radio = GST_V4L2RADIO (handler);
@@ -527,19 +527,17 @@ gst_v4l2radio_uri_get_uri (GstURIHandler * handler)
   if (radio->v4l2object->videodev != NULL) {
     if (gst_v4l2_get_frequency (radio->v4l2object,
             0, &(radio->v4l2object->frequency))) {
-      gchar uri[20];
-      gchar freq[6];
-      g_ascii_formatd (freq, 6, "%4.1f", radio->v4l2object->frequency / 1e6);
-      g_snprintf (uri, sizeof (uri), "radio://%s", freq);
-      return g_intern_string (uri);
+      return g_strdup_printf ("radio://%4.1f",
+          radio->v4l2object->frequency / 1e6);
     }
   }
 
-  return "radio://";
+  return g_strdup ("radio://");
 }
 
 static gboolean
-gst_v4l2radio_uri_set_uri (GstURIHandler * handler, const gchar * uri)
+gst_v4l2radio_uri_set_uri (GstURIHandler * handler, const gchar * uri,
+    GError ** error)
 {
   GstV4l2Radio *radio = GST_V4L2RADIO (handler);
   gdouble dfreq;
@@ -564,6 +562,8 @@ gst_v4l2radio_uri_set_uri (GstURIHandler * handler, const gchar * uri)
   return TRUE;
 
 uri_failed:
+  g_set_error_literal (error, GST_URI_ERROR, GST_URI_ERROR_BAD_REFERENCE,
+      "Bad radio URI, could not parse frequency");
   return FALSE;
 }
 

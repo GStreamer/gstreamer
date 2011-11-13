@@ -264,7 +264,7 @@ static GstRTSPResult gst_rtspsrc_close (GstRTSPSrc * src, gboolean async,
     gboolean only_close);
 
 static gboolean gst_rtspsrc_uri_set_uri (GstURIHandler * handler,
-    const gchar * uri);
+    const gchar * uri, GError ** error);
 
 static gboolean gst_rtspsrc_activate_streams (GstRTSPSrc * src);
 static gboolean gst_rtspsrc_loop (GstRTSPSrc * src);
@@ -642,7 +642,7 @@ gst_rtspsrc_set_property (GObject * object, guint prop_id, const GValue * value,
   switch (prop_id) {
     case PROP_LOCATION:
       gst_rtspsrc_uri_set_uri (GST_URI_HANDLER (rtspsrc),
-          g_value_get_string (value));
+          g_value_get_string (value), NULL);
       break;
     case PROP_PROTOCOLS:
       rtspsrc->protocols = g_value_get_flags (value);
@@ -4667,7 +4667,7 @@ error_response:
         else
           transports = GST_RTSP_LOWER_TRANS_UNKNOWN;
 
-        gst_rtspsrc_uri_set_uri (GST_URI_HANDLER (src), new_location);
+        gst_rtspsrc_uri_set_uri (GST_URI_HANDLER (src), new_location, NULL);
 
         /* set old transports */
         if (src->conninfo.url && transports != GST_RTSP_LOWER_TRANS_UNKNOWN)
@@ -6667,17 +6667,18 @@ gst_rtspsrc_uri_get_protocols (GType type)
   return (gchar **) protocols;
 }
 
-static const gchar *
+static gchar *
 gst_rtspsrc_uri_get_uri (GstURIHandler * handler)
 {
   GstRTSPSrc *src = GST_RTSPSRC (handler);
 
-  /* should not dup */
-  return src->conninfo.location;
+  /* FIXME: make thread-safe */
+  return g_strdup (src->conninfo.location);
 }
 
 static gboolean
-gst_rtspsrc_uri_set_uri (GstURIHandler * handler, const gchar * uri)
+gst_rtspsrc_uri_set_uri (GstURIHandler * handler, const gchar * uri,
+    GError ** error)
 {
   GstRTSPSrc *src;
   GstRTSPResult res;
@@ -6737,6 +6738,8 @@ was_ok:
 sdp_failed:
   {
     GST_ERROR_OBJECT (src, "Could not create new SDP (%d)", res);
+    g_set_error_literal (error, GST_URI_ERROR, GST_URI_ERROR_BAD_URI,
+        "Could not create SDP");
     return FALSE;
   }
 invalid_sdp:
@@ -6744,12 +6747,16 @@ invalid_sdp:
     GST_ERROR_OBJECT (src, "Not a valid SDP (%d) '%s'", res,
         GST_STR_NULL (uri));
     gst_sdp_message_free (sdp);
+    g_set_error_literal (error, GST_URI_ERROR, GST_URI_ERROR_BAD_URI,
+        "Invalid SDP");
     return FALSE;
   }
 parse_error:
   {
     GST_ERROR_OBJECT (src, "Not a valid RTSP url '%s' (%d)",
         GST_STR_NULL (uri), res);
+    g_set_error_literal (error, GST_URI_ERROR, GST_URI_ERROR_BAD_URI,
+        "Invalid RTSP URI");
     return FALSE;
   }
 }

@@ -599,7 +599,7 @@ skip_error:
 }
 
 static gboolean
-gst_udpsrc_set_uri (GstUDPSrc * src, const gchar * uri)
+gst_udpsrc_set_uri (GstUDPSrc * src, const gchar * uri, GError ** error)
 {
   if (gst_udp_parse_uri (uri, &src->uri) < 0)
     goto wrong_uri;
@@ -614,6 +614,8 @@ wrong_uri:
   {
     GST_ELEMENT_ERROR (src, RESOURCE, READ, (NULL),
         ("error parsing uri %s", uri));
+    g_set_error_literal (error, GST_URI_ERROR, GST_URI_ERROR_BAD_URI,
+        "Could not parse UDP URI");
     return FALSE;
   }
 }
@@ -650,7 +652,7 @@ gst_udpsrc_set_property (GObject * object, guint prop_id, const GValue * value,
         udpsrc->multi_iface = g_value_dup_string (value);
       break;
     case PROP_URI:
-      gst_udpsrc_set_uri (udpsrc, g_value_get_string (value));
+      gst_udpsrc_set_uri (udpsrc, g_value_get_string (value), NULL);
       break;
     case PROP_CAPS:
     {
@@ -1025,27 +1027,23 @@ gst_udpsrc_uri_get_protocols (GType type)
   return protocols;
 }
 
-static const gchar *
+static gchar *
 gst_udpsrc_uri_get_uri (GstURIHandler * handler)
 {
   GstUDPSrc *src = GST_UDPSRC (handler);
 
+  /* FIXME: make thread-safe; maybe we can get rid of this assignment here? */
   g_free (src->uristr);
   src->uristr = gst_udp_uri_string (&src->uri);
 
-  return src->uristr;
+  return g_strdup (src->uristr);
 }
 
 static gboolean
-gst_udpsrc_uri_set_uri (GstURIHandler * handler, const gchar * uri)
+gst_udpsrc_uri_set_uri (GstURIHandler * handler, const gchar * uri,
+    GError ** error)
 {
-  gboolean ret;
-
-  GstUDPSrc *src = GST_UDPSRC (handler);
-
-  ret = gst_udpsrc_set_uri (src, uri);
-
-  return ret;
+  return gst_udpsrc_set_uri (GST_UDPSRC (handler), uri, error);
 }
 
 static void

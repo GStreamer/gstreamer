@@ -831,26 +831,21 @@ gst_v4l2src_uri_get_protocols (GType type)
   return protocols;
 }
 
-static const gchar *
+static gchar *
 gst_v4l2src_uri_get_uri (GstURIHandler * handler)
 {
   GstV4l2Src *v4l2src = GST_V4L2SRC (handler);
 
   if (v4l2src->v4l2object->videodev != NULL) {
-    gchar uri[256];
-
-    /* need to return a const string, but also don't want to leak the generated
-     * string, so just intern it - there's a limited number of video devices
-     * after all */
-    g_snprintf (uri, sizeof (uri), "v4l2://%s", v4l2src->v4l2object->videodev);
-    return g_intern_string (uri);
+    return g_strdup_printf ("v4l2://%s", v4l2src->v4l2object->videodev);
   }
 
-  return "v4l2://";
+  return g_strdup ("v4l2://");
 }
 
 static gboolean
-gst_v4l2src_uri_set_uri (GstURIHandler * handler, const gchar * uri)
+gst_v4l2src_uri_set_uri (GstURIHandler * handler, const gchar * uri,
+    GError ** error)
 {
   GstV4l2Src *v4l2src = GST_V4L2SRC (handler);
   const gchar *device = DEFAULT_PROP_DEVICE;
