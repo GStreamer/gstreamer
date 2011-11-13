@@ -214,10 +214,10 @@ gst_udpsink_uri_get_type (GType type)
   return GST_URI_SINK;
 }
 
-static gchar **
+static const gchar *const *
 gst_udpsink_uri_get_protocols (GType type)
 {
-  static gchar *protocols[] = { (char *) "udp", NULL };
+  static const gchar *protocols[] = { "udp", NULL };
 
   return protocols;
 }

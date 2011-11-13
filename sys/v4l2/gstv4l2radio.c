@@ -512,10 +512,11 @@ gst_v4l2radio_uri_get_type (GType type)
   return GST_URI_SRC;
 }
 
-static gchar **
+static const gchar *const *
 gst_v4l2radio_uri_get_protocols (GType type)
 {
-  static gchar *protocols[] = { (char *) "radio", NULL };
+  static const gchar *protocols[] = { "radio", NULL };
+
   return protocols;
 }
 

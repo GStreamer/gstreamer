@@ -823,10 +823,10 @@ gst_v4l2src_uri_get_type (GType type)
   return GST_URI_SRC;
 }
 
-static gchar **
+static const gchar *const *
 gst_v4l2src_uri_get_protocols (GType type)
 {
-  static gchar *protocols[] = { (char *) "v4l2", NULL };
+  static const gchar *protocols[] = { "v4l2", NULL };
 
   return protocols;
 }

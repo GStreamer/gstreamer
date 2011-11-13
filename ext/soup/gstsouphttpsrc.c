@@ -1447,11 +1447,12 @@ gst_soup_http_src_uri_get_type (GType type)
   return GST_URI_SRC;
 }
 
-static gchar **
+static const gchar *const *
 gst_soup_http_src_uri_get_protocols (GType type)
 {
   static const gchar *protocols[] = { "http", "https", NULL };
-  return (gchar **) protocols;
+
+  return protocols;
 }
 
 static gchar *
