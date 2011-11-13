@@ -150,13 +150,13 @@ gst_gio_uri_handler_get_type_src (GType type)
   return GST_URI_SRC;
 }
 
-static gchar **
+static const gchar *const *
 gst_gio_uri_handler_get_protocols (GType type)
 {
-  static gchar **protocols = NULL;
+  static const gchar *const *protocols = NULL;
 
   if (!protocols)
-    protocols = gst_gio_get_supported_protocols ();
+    protocols = (const gchar * const *) gst_gio_get_supported_protocols ();
 
   return protocols;
 }

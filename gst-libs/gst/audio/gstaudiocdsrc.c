@@ -897,10 +897,10 @@ gst_audio_cd_src_uri_get_type (GType type)
   return GST_URI_SRC;
 }
 
-static gchar **
+static const gchar *const *
 gst_audio_cd_src_uri_get_protocols (GType type)
 {
-  static gchar *protocols[] = { (char *) "cdda", NULL };
+  static const gchar *protocols[] = { "cdda", NULL };
 
   return protocols;
 }

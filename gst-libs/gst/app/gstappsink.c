@@ -1364,10 +1364,10 @@ gst_app_sink_uri_get_type (GType type)
   return GST_URI_SINK;
 }
 
-static gchar **
+static const gchar *const *
 gst_app_sink_uri_get_protocols (GType type)
 {
-  static gchar *protocols[] = { (char *) "appsink", NULL };
+  static const gchar *protocols[] = { "appsink", NULL };
 
   return protocols;
 }
@@ -1395,4 +1395,5 @@ gst_app_sink_uri_handler_init (gpointer g_iface, gpointer iface_data)
   iface->get_protocols = gst_app_sink_uri_get_protocols;
   iface->get_uri = gst_app_sink_uri_get_uri;
   iface->set_uri = gst_app_sink_uri_set_uri;
+
 }

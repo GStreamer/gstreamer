@@ -58,10 +58,10 @@ gst_caps_src_uri_get_type (void)
   return GST_URI_SRC;
 }
 
-static gchar **
+static const gchar *const *
 gst_caps_src_uri_get_protocols (void)
 {
-  static gchar *protocols[] = { (char *) "caps", NULL };
+  static const gchar *protocols[] = { "caps", NULL };
 
   return protocols;
 }
