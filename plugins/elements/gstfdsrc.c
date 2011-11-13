@@ -605,10 +605,10 @@ gst_fd_src_uri_get_type (GType type)
   return GST_URI_SRC;
 }
 
-static gchar **
+static const gchar *const *
 gst_fd_src_uri_get_protocols (GType type)
 {
-  static gchar *protocols[] = { (char *) "fd", NULL };
+  static const gchar *protocols[] = { "fd", NULL };
 
   return protocols;
 }

@@ -582,10 +582,10 @@ gst_file_src_uri_get_type (GType type)
   return GST_URI_SRC;
 }
 
-static gchar **
+static const gchar *const *
 gst_file_src_uri_get_protocols (GType type)
 {
-  static gchar *protocols[] = { (char *) "file", NULL };
+  static const gchar *protocols[] = { "file", NULL };
 
   return protocols;
 }

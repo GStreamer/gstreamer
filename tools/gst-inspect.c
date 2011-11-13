@@ -690,8 +690,8 @@ static void
 print_uri_handler_info (GstElement * element)
 {
   if (GST_IS_URI_HANDLER (element)) {
+    const gchar *const *uri_protocols;
     const gchar *uri_type;
-    gchar **uri_protocols;
 
     if (gst_uri_handler_get_uri_type (GST_URI_HANDLER (element)) == GST_URI_SRC)
       uri_type = "source";
@@ -1090,8 +1090,9 @@ print_all_uri_handlers (void)
         }
 
         if (GST_IS_URI_HANDLER (element)) {
+          const gchar *const *uri_protocols;
           const gchar *dir;
-          gchar **uri_protocols, *joined;
+          gchar *joined;
 
           switch (gst_uri_handler_get_uri_type (GST_URI_HANDLER (element))) {
             case GST_URI_SRC:
@@ -1107,7 +1108,7 @@ print_all_uri_handlers (void)
 
           uri_protocols =
               gst_uri_handler_get_protocols (GST_URI_HANDLER (element));
-          joined = g_strjoinv (", ", uri_protocols);
+          joined = g_strjoinv (", ", (gchar **) uri_protocols);
 
           g_print ("%s (%s, rank %u): %s\n",
               gst_plugin_feature_get_name (GST_PLUGIN_FEATURE (factory)), dir,
@@ -1392,23 +1393,26 @@ print_plugin_automatic_install_info_codecs (GstElementFactory * factory)
 static void
 print_plugin_automatic_install_info_protocols (GstElementFactory * factory)
 {
-  gchar **protocols, **p;
+  const gchar *const *protocols;
 
   protocols = gst_element_factory_get_uri_protocols (factory);
   if (protocols != NULL && *protocols != NULL) {
     switch (gst_element_factory_get_uri_type (factory)) {
       case GST_URI_SINK:
-        for (p = protocols; *p != NULL; ++p)
-          g_print ("urisink-%s\n", *p);
+        while (*protocols != NULL) {
+          g_print ("urisink-%s\n", *protocols);
+          ++protocols;
+        }
         break;
       case GST_URI_SRC:
-        for (p = protocols; *p != NULL; ++p)
-          g_print ("urisource-%s\n", *p);
+        while (*protocols != NULL) {
+          g_print ("urisource-%s\n", *protocols);
+          ++protocols;
+        }
         break;
       default:
         break;
     }
-    g_strfreev (protocols);
   }
 }
 
