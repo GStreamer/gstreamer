@@ -87,7 +87,7 @@ struct _GstURIHandlerInterface {
   gchar **		(* get_protocols)	(GType type);
 
   /* using the interface */
-  const gchar *		(* get_uri)		(GstURIHandler * handler);
+  gchar *		(* get_uri)		(GstURIHandler * handler);
   gboolean		(* set_uri)		(GstURIHandler * handler,
 						 const gchar *	 uri);
 };
@@ -117,7 +117,7 @@ GType		gst_uri_handler_get_type	(void);
 
 guint		gst_uri_handler_get_uri_type	(GstURIHandler * handler);
 gchar **	gst_uri_handler_get_protocols	(GstURIHandler * handler);
-const gchar *	gst_uri_handler_get_uri		(GstURIHandler * handler);
+gchar *		gst_uri_handler_get_uri		(GstURIHandler * handler);
 gboolean	gst_uri_handler_set_uri		(GstURIHandler * handler,
 						 const gchar *	 uri);
 
