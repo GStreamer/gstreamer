@@ -100,7 +100,6 @@ gst_dvd_read_src_finalize (GObject * object)
   GstDvdReadSrc *src = GST_DVD_READ_SRC (object);
 
   g_free (src->location);
-  g_free (src->last_uri);
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
@@ -114,7 +113,6 @@ gst_dvd_read_src_init (GstDvdReadSrc * src)
   src->dvd_title = NULL;
 
   src->location = g_strdup ("/dev/dvd");
-  src->last_uri = NULL;
   src->new_seek = TRUE;
   src->new_cell = TRUE;
   src->change_cell = FALSE;
@@ -1642,36 +1640,25 @@ gst_dvd_read_src_uri_get_protocols (GType type)
   return protocols;
 }
 
-static const gchar *
+static gchar *
 gst_dvd_read_src_uri_get_uri (GstURIHandler * handler)
 {
   GstDvdReadSrc *src = GST_DVD_READ_SRC (handler);
+  gchar *uri;
 
   GST_OBJECT_LOCK (src);
-
-  g_free (src->last_uri);
-  src->last_uri = g_strdup_printf ("dvd://%d,%d,%d", src->uri_title,
-      src->uri_chapter, src->uri_angle);
-
+  uri = g_strdup_printf ("dvd://%d,%d,%d", src->uri_title, src->uri_chapter,
+      src->uri_angle);
   GST_OBJECT_UNLOCK (src);
 
-  return src->last_uri;
+  return uri;
 }
 
 static gboolean
-gst_dvd_read_src_uri_set_uri (GstURIHandler * handler, const gchar * uri)
+gst_dvd_read_src_uri_set_uri (GstURIHandler * handler, const gchar * uri,
+    GError ** error)
 {
   GstDvdReadSrc *src = GST_DVD_READ_SRC (handler);
-  gboolean ret;
-  gchar *protocol;
-
-  protocol = gst_uri_get_protocol (uri);
-  ret = (protocol != NULL && g_str_equal (protocol, "dvd"));
-  g_free (protocol);
-  protocol = NULL;
-
-  if (!ret)
-    return ret;
 
   /* parse out the new t/c/a and seek to them */
   {
@@ -1682,14 +1669,14 @@ gst_dvd_read_src_uri_set_uri (GstURIHandler * handler, const gchar * uri)
 
     location = gst_uri_get_location (uri);
 
-    if (!location)
-      return ret;
-
     GST_OBJECT_LOCK (src);
 
     src->uri_title = 1;
     src->uri_chapter = 1;
     src->uri_angle = 1;
+
+    if (!location)
+      goto empty_location;
 
     strcur = strs = g_strsplit (location, ",", 0);
     while (strcur && *strcur) {
@@ -1727,13 +1714,15 @@ gst_dvd_read_src_uri_set_uri (GstURIHandler * handler, const gchar * uri)
       src->new_seek = TRUE;
     }
 
-    GST_OBJECT_UNLOCK (src);
-
     g_strfreev (strs);
     g_free (location);
+
+  empty_location:
+
+    GST_OBJECT_UNLOCK (src);
   }
 
-  return ret;
+  return TRUE;
 }
 
 static void

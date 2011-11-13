@@ -47,7 +47,6 @@ struct _GstDvdReadSrc {
 
   /* location */
   gchar           *location;
-  gchar           *last_uri;
 
   gboolean         new_seek;
   gboolean         change_cell;

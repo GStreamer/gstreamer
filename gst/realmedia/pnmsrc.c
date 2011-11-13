@@ -207,21 +207,20 @@ gst_pnm_src_uri_get_protocols (GType type)
   return protocols;
 }
 
-static const gchar *
+static gchar *
 gst_pnm_src_uri_get_uri (GstURIHandler * handler)
 {
   GstPNMSrc *src = GST_PNM_SRC (handler);
 
-  return src->location;
+  /* FIXME: make thread-safe */
+  return g_strdup (src->location);
 }
 
 static gboolean
-gst_pnm_src_uri_set_uri (GstURIHandler * handler, const gchar * uri)
+gst_pnm_src_uri_set_uri (GstURIHandler * handler, const gchar * uri,
+    GError ** error)
 {
   GstPNMSrc *src = GST_PNM_SRC (handler);
-
-  if (!g_str_has_prefix (uri, "pnm://"))
-    return FALSE;
 
   g_free (src->location);
   src->location = g_strdup (uri);
