@@ -273,8 +273,12 @@ gst_element_register (GstPlugin * plugin, const gchar * name, guint rank,
       factory->uri_type = iface->get_type (factory->type);
     if (!GST_URI_TYPE_IS_VALID (factory->uri_type))
       goto urierror;
-    if (iface->get_protocols)
-      factory->uri_protocols = iface->get_protocols (factory->type);
+    if (iface->get_protocols) {
+      const gchar *const *protocols;
+
+      protocols = iface->get_protocols (factory->type);
+      factory->uri_protocols = g_strdupv ((gchar **) protocols);
+    }
     if (!factory->uri_protocols)
       goto urierror;
   }
@@ -577,12 +581,12 @@ gst_element_factory_get_uri_type (GstElementFactory * factory)
  * Returns: (transfer none) (array zero-terminated=1): the supported protocols
  *     or NULL
  */
-gchar **
+const gchar *const *
 gst_element_factory_get_uri_protocols (GstElementFactory * factory)
 {
   g_return_val_if_fail (GST_IS_ELEMENT_FACTORY (factory), NULL);
 
-  return factory->uri_protocols;
+  return (const gchar * const *) factory->uri_protocols;
 }
 
 /**

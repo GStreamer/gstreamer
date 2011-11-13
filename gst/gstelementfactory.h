@@ -90,7 +90,7 @@ guint                   gst_element_factory_get_num_pad_templates (GstElementFac
 const GList *           gst_element_factory_get_static_pad_templates (GstElementFactory *factory);
 
 GstURIType              gst_element_factory_get_uri_type        (GstElementFactory *factory);
-gchar **                gst_element_factory_get_uri_protocols   (GstElementFactory *factory);
+const gchar * const *   gst_element_factory_get_uri_protocols   (GstElementFactory *factory);
 
 gboolean                gst_element_factory_has_interface       (GstElementFactory *factory,
                                                                  const gchar *interfacename);

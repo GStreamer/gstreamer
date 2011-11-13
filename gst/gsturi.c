@@ -478,7 +478,7 @@ SearchEntry;
 static gboolean
 search_by_entry (GstPluginFeature * feature, gpointer search_entry)
 {
-  gchar **protocols;
+  const gchar *const *protocols;
   GstElementFactory *factory;
   SearchEntry *entry = (SearchEntry *) search_entry;
 
@@ -649,11 +649,11 @@ gst_uri_handler_get_uri_type (GstURIHandler * handler)
  *     supported protocols. Returns NULL if the @handler isn't implemented
  *     properly, or the @handler doesn't support any protocols.
  */
-gchar **
+const gchar *const *
 gst_uri_handler_get_protocols (GstURIHandler * handler)
 {
   GstURIHandlerInterface *iface;
-  gchar **ret;
+  const gchar *const *ret;
 
   g_return_val_if_fail (GST_IS_URI_HANDLER (handler), NULL);
 
@@ -673,9 +673,9 @@ gst_uri_handler_get_protocols (GstURIHandler * handler)
  *
  * Gets the currently handled URI.
  *
- * Returns: (transfer none): the URI currently handled by the @handler.
+ * Returns: (transfer full): the URI currently handled by the @handler.
  *   Returns NULL if there are no URI currently handled. The
- *   returned string must not be modified or freed.
+ *   returned string must be freed with g_free() when no longer needed.
  */
 gchar *
 gst_uri_handler_get_uri (GstURIHandler * handler)
@@ -725,7 +725,8 @@ gst_uri_handler_set_uri (GstURIHandler * handler, const gchar * uri,
   protocol = gst_uri_get_protocol (uri);
 
   if (iface->get_protocols) {
-    gchar **p, **protocols;
+    const gchar *const *protocols;
+    const gchar *const *p;
     gboolean found_protocol = FALSE;
 
     protocols = iface->get_protocols (G_OBJECT_TYPE (handler));
