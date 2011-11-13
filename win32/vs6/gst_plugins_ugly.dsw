@@ -3,18 +3,6 @@ Microsoft Developer Studio Workspace File, Format Version 6.00
 
 ###############################################################################
 
-Project: "libgstac3parse"=".\libgstac3parse.dsp" - Package Owner=<4>
-
-Package=<5>
-{{{
-}}}
-
-Package=<4>
-{{{
-}}}
-
-###############################################################################
-
 Project: "libgstasfdemux"=".\libgstasfdemux.dsp" - Package Owner=<4>
 
 Package=<5>
@@ -51,18 +39,6 @@ Package=<4>
 
 ###############################################################################
 
-Project: "libgstiec958"=".\libgstiec958.dsp" - Package Owner=<4>
-
-Package=<5>
-{{{
-}}}
-
-Package=<4>
-{{{
-}}}
-
-###############################################################################
-
 Project: "libgstlame"=".\libgstlame.dsp" - Package Owner=<4>
 
 Package=<5>
@@ -76,30 +52,6 @@ Package=<4>
 ###############################################################################
 
 Project: "libgstmad"=".\libgstmad.dsp" - Package Owner=<4>
-
-Package=<5>
-{{{
-}}}
-
-Package=<4>
-{{{
-}}}
-
-###############################################################################
-
-Project: "libgstmpegaudioparse"=".\libgstmpegaudioparse.dsp" - Package Owner=<4>
-
-Package=<5>
-{{{
-}}}
-
-Package=<4>
-{{{
-}}}
-
-###############################################################################
-
-Project: "libgstmpegstream"=".\libgstmpegstream.dsp" - Package Owner=<4>
 
 Package=<5>
 {{{

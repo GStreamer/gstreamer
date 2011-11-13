@@ -6,8 +6,6 @@ GST_PLUGINS_UGLY_TOP := $(LOCAL_PATH)
 GST_PLUGINS_UGLY_BUILT_SOURCES = \
 	ext/mad/Android.mk \
 	gst/synaesthesia/Android.mk \
-	gst/mpegaudioparse/Android.mk \
-	gst/mpegstream/Android.mk \
 	gst/realmedia/Android.mk \
 	gst/dvdsub/Android.mk \
 	gst/dvdlpcmdec/Android.mk \
@@ -42,9 +40,6 @@ CONFIGURE_TARGETS += gst-plugins-ugly-configure
 -include $(GST_PLUGINS_UGLY_TOP)/ext/mad/Android.mk
 -include $(GST_PLUGINS_UGLY_TOP)/ext/x264/Android.mk
 -include $(GST_PLUGINS_UGLY_TOP)/gst/synaesthesia/Android.mk
--include $(GST_PLUGINS_UGLY_TOP)/gst/iec958/Android.mk
--include $(GST_PLUGINS_UGLY_TOP)/gst/mpegaudioparse/Android.mk
--include $(GST_PLUGINS_UGLY_TOP)/gst/mpegstream/Android.mk
 -include $(GST_PLUGINS_UGLY_TOP)/gst/realmedia/Android.mk
 -include $(GST_PLUGINS_UGLY_TOP)/gst/dvdsub/Android.mk
 -include $(GST_PLUGINS_UGLY_TOP)/gst/dvdlpcmdec/Android.mk
