@@ -26,8 +26,8 @@
  * <refsect2>
  * <title>Example pipelines</title>
  * |[
- * gst-launch filesrc location=music.mp3 ! mad ! audioconvert ! audioresample ! autoaudiosink
- * ]| Decode the mp3 file and play
+ * gst-launch filesrc location=music.mp3 ! mpegaudioparse ! mad ! audioconvert ! audioresample ! autoaudiosink
+ * ]| Decode and play the mp3 file
  * </refsect2>
  */
 
@@ -54,11 +54,8 @@ static GstStaticPadTemplate mad_src_template_factory =
 GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("audio/x-raw-int, "
-        "endianness = (int) " G_STRINGIFY (G_BYTE_ORDER) ", "
-        "signed = (boolean) true, "
-        "width = (int) 32, "
-        "depth = (int) 32, "
+    GST_STATIC_CAPS ("audio/x-raw, "
+        "format = (string) " GST_AUDIO_NE (S32) ", "
         "rate = (int) { 8000, 11025, 12000, 16000, 22050, 24000, 32000, 44100, 48000 }, "
         "channels = (int) [ 1, 2 ]")
     );
@@ -89,29 +86,14 @@ static void gst_mad_set_property (GObject * object, guint prop_id,
 static void gst_mad_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 
-GST_BOILERPLATE (GstMad, gst_mad, GstAudioDecoder, GST_TYPE_AUDIO_DECODER);
-
-static void
-gst_mad_base_init (gpointer g_class)
-{
-  GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
-
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&mad_sink_template_factory));
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&mad_src_template_factory));
-  gst_element_class_set_details_simple (element_class, "mad mp3 decoder",
-      "Codec/Decoder/Audio",
-      "Uses mad code to decode mp3 streams", "Wim Taymans <wim@fluendo.com>");
-}
+G_DEFINE_TYPE (GstMad, gst_mad, GST_TYPE_AUDIO_DECODER);
 
 static void
 gst_mad_class_init (GstMadClass * klass)
 {
   GObjectClass *gobject_class = (GObjectClass *) klass;
+  GstElementClass *element_class = (GstElementClass *) klass;
   GstAudioDecoderClass *base_class = (GstAudioDecoderClass *) klass;
-
-  parent_class = g_type_class_peek_parent (klass);
 
   base_class->start = GST_DEBUG_FUNCPTR (gst_mad_start);
   base_class->stop = GST_DEBUG_FUNCPTR (gst_mad_stop);
@@ -132,10 +114,19 @@ gst_mad_class_init (GstMadClass * klass)
   g_object_class_install_property (gobject_class, ARG_IGNORE_CRC,
       g_param_spec_boolean ("ignore-crc", "Ignore CRC", "Ignore CRC errors",
           TRUE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  gst_element_class_add_pad_template (element_class,
+      gst_static_pad_template_get (&mad_sink_template_factory));
+  gst_element_class_add_pad_template (element_class,
+      gst_static_pad_template_get (&mad_src_template_factory));
+
+  gst_element_class_set_details_simple (element_class, "mad mp3 decoder",
+      "Codec/Decoder/Audio",
+      "Uses mad code to decode mp3 streams", "Wim Taymans <wim@fluendo.com>");
 }
 
 static void
-gst_mad_init (GstMad * mad, GstMadClass * klass)
+gst_mad_init (GstMad * mad)
 {
   GstAudioDecoder *dec;
 
@@ -254,14 +245,14 @@ gst_mad_check_caps_reset (GstMad * mad)
 
     /* we set the caps even when the pad is not connected so they
      * can be gotten for streaminfo */
-    caps = gst_caps_new_simple ("audio/x-raw-int",
-        "endianness", G_TYPE_INT, G_BYTE_ORDER,
+    caps = gst_caps_new_simple ("audio/x-raw",
+        "format", G_TYPE_STRING, GST_AUDIO_NE (S32),
         "signed", G_TYPE_BOOLEAN, TRUE,
         "width", G_TYPE_INT, 32,
         "depth", G_TYPE_INT, 32,
         "rate", G_TYPE_INT, rate, "channels", G_TYPE_INT, nchannels, NULL);
 
-    gst_pad_set_caps (GST_AUDIO_DECODER_SRC_PAD (mad), caps);
+    gst_audio_decoder_set_outcaps (GST_AUDIO_DECODER (mad), caps);
     gst_caps_unref (caps);
 
     mad->caps_set = TRUE;
@@ -270,6 +261,7 @@ gst_mad_check_caps_reset (GstMad * mad)
   }
 }
 
+/* FIXME: does this work properly at all? filesrc ! mad ! pulsesink fails */
 static GstFlowReturn
 gst_mad_parse (GstAudioDecoder * dec, GstAdapter * adapter,
     gint * _offset, gint * len)
@@ -289,9 +281,10 @@ gst_mad_parse (GstAudioDecoder * dec, GstAdapter * adapter,
   prev_offset = -1;
   offset = 0;
   av = gst_adapter_available (adapter);
+  data = gst_adapter_map (adapter, av);
+
   while (offset < av) {
     size = MIN (MAD_BUFFER_MDLEN * 3, av - offset);
-    data = gst_adapter_peek (adapter, av);
 
     /* check for mad asking too much */
     if (offset == prev_offset) {
@@ -394,6 +387,9 @@ gst_mad_parse (GstAudioDecoder * dec, GstAdapter * adapter,
   }
 
 exit:
+
+  gst_adapter_unmap (adapter);
+
   *_offset = offset;
   *len = consumed;
 
@@ -425,23 +421,13 @@ gst_mad_handle_frame (GstAudioDecoder * dec, GstBuffer * buffer)
    * and update later on if needed */
   gst_mad_check_caps_reset (mad);
 
-  // TODO more generic check and size check ?
-  ret = gst_pad_alloc_buffer_and_set_caps (GST_AUDIO_DECODER_SRC_PAD (dec),
-      0, nsamples * mad->channels * 4,
-      GST_PAD_CAPS (GST_AUDIO_DECODER_SRC_PAD (dec)), &outbuffer);
-  if (ret != GST_FLOW_OK) {
-    /* Head for the exit, dropping samples as we go */
-    GST_LOG_OBJECT (dec,
-        "Skipping frame synthesis due to pad_alloc return value");
-    gst_audio_decoder_finish_frame (dec, NULL, 1);
-    goto exit;
-  }
-
   mad_synth_frame (&mad->synth, &mad->frame);
   left_ch = mad->synth.pcm.samples[0];
   right_ch = mad->synth.pcm.samples[1];
 
-  outdata = (gint32 *) GST_BUFFER_DATA (outbuffer);
+  outbuffer = gst_buffer_new_and_alloc (nsamples * mad->channels * 4);
+
+  outdata = gst_buffer_map (outbuffer, NULL, NULL, GST_MAP_WRITE);
 
   /* output sample(s) in 16-bit signed native-endian PCM */
   if (mad->channels == 1) {
@@ -459,8 +445,10 @@ gst_mad_handle_frame (GstAudioDecoder * dec, GstBuffer * buffer)
     }
   }
 
+  gst_buffer_unmap (outbuffer, outdata, -1);
+
   ret = gst_audio_decoder_finish_frame (dec, outbuffer, 1);
-exit:
+
   return ret;
 }
 
@@ -520,11 +508,19 @@ gst_mad_get_property (GObject * object, guint prop_id,
 
 /* plugin initialisation */
 
-gboolean
-gst_mad_register (GstPlugin * plugin)
+static gboolean
+plugin_init (GstPlugin * plugin)
 {
   GST_DEBUG_CATEGORY_INIT (mad_debug, "mad", 0, "mad mp3 decoding");
 
+  /* FIXME 0.11: rename to something better like madmp3dec or madmpegaudiodec
+   * or so? */
   return gst_element_register (plugin, "mad", GST_RANK_NONE,
       gst_mad_get_type ());
 }
+
+GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
+    GST_VERSION_MINOR,
+    "mad",
+    "mp3 decoding based on the mad library",
+    plugin_init, VERSION, "GPL", GST_PACKAGE_NAME, GST_PACKAGE_ORIGIN);
