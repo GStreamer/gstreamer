@@ -557,7 +557,7 @@ gst_element_factory_get_static_pad_templates (GstElementFactory * factory)
  *
  * Returns: type of URIs this element supports
  */
-gint
+GstURIType
 gst_element_factory_get_uri_type (GstElementFactory * factory)
 {
   g_return_val_if_fail (GST_IS_ELEMENT_FACTORY (factory), GST_URI_UNKNOWN);

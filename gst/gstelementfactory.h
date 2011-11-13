@@ -34,6 +34,7 @@ typedef struct _GstElementFactoryClass GstElementFactoryClass;
 #include <gst/gstpluginfeature.h>
 #include <gst/gstpadtemplate.h>
 #include <gst/gstiterator.h>
+#include <gst/gsturi.h>
 
 G_BEGIN_DECLS
 
@@ -62,7 +63,7 @@ struct _GstElementFactory {
   guint                 numpadtemplates;
 
   /* URI interface stuff */
-  guint                 uri_type;
+  GstURIType            uri_type;
   gchar **              uri_protocols;
 
   GList *               interfaces;             /* interface type names this element implements */
@@ -88,7 +89,7 @@ const gchar *           gst_element_factory_get_metadata        (GstElementFacto
 guint                   gst_element_factory_get_num_pad_templates (GstElementFactory *factory);
 const GList *           gst_element_factory_get_static_pad_templates (GstElementFactory *factory);
 
-gint                    gst_element_factory_get_uri_type        (GstElementFactory *factory);
+GstURIType              gst_element_factory_get_uri_type        (GstElementFactory *factory);
 gchar **                gst_element_factory_get_uri_protocols   (GstElementFactory *factory);
 
 gboolean                gst_element_factory_has_interface       (GstElementFactory *factory,

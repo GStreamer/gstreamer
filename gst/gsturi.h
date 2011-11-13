@@ -26,7 +26,6 @@
 
 #include <glib.h>
 #include <gst/gstelement.h>
-#include <gst/gstpluginfeature.h>
 
 G_BEGIN_DECLS
 
@@ -144,7 +143,7 @@ GstElement *	gst_element_make_from_uri	(const GstURIType type,
 /* accessing the interface */
 GType		gst_uri_handler_get_type	(void);
 
-guint		gst_uri_handler_get_uri_type	(GstURIHandler * handler);
+GstURIType	gst_uri_handler_get_uri_type	(GstURIHandler * handler);
 gchar **	gst_uri_handler_get_protocols	(GstURIHandler * handler);
 gchar *		gst_uri_handler_get_uri		(GstURIHandler * handler);
 gboolean	gst_uri_handler_set_uri		(GstURIHandler * handler,
