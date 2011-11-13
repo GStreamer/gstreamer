@@ -23,10 +23,9 @@
 
 #include <gst/gst.h>
 #include <gst/tag/tag.h>
-#include <gst/audio/gstbaseaudiodecoder.h>
+#include <gst/audio/gstaudiodecoder.h>
 
 #include <mad.h>
-#include <id3tag.h>
 
 G_BEGIN_DECLS
 
@@ -47,7 +46,7 @@ typedef struct _GstMadClass GstMadClass;
 
 struct _GstMad
 {
-  GstBaseAudioDecoder element;
+  GstAudioDecoder audiodecoder;
 
   /* state */
   struct mad_stream stream;
@@ -70,7 +69,7 @@ struct _GstMad
 
 struct _GstMadClass
 {
-  GstBaseAudioDecoderClass parent_class;
+  GstAudioDecoderClass audiodecoder_class;
 };
 
 GType                   gst_mad_get_type (void);

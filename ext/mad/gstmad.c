@@ -76,25 +76,20 @@ GST_STATIC_PAD_TEMPLATE ("sink",
     );
 
 
-static gboolean gst_mad_start (GstBaseAudioDecoder * dec);
-static gboolean gst_mad_stop (GstBaseAudioDecoder * dec);
-static gboolean gst_mad_parse (GstBaseAudioDecoder * dec, GstAdapter * adapter,
+static gboolean gst_mad_start (GstAudioDecoder * dec);
+static gboolean gst_mad_stop (GstAudioDecoder * dec);
+static gboolean gst_mad_parse (GstAudioDecoder * dec, GstAdapter * adapter,
     gint * offset, gint * length);
-static GstFlowReturn gst_mad_handle_frame (GstBaseAudioDecoder * dec,
+static GstFlowReturn gst_mad_handle_frame (GstAudioDecoder * dec,
     GstBuffer * buffer);
-static void gst_mad_flush (GstBaseAudioDecoder * dec, gboolean hard);
+static void gst_mad_flush (GstAudioDecoder * dec, gboolean hard);
 
 static void gst_mad_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
 static void gst_mad_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 
-
-typedef GstMad GstBMad;
-typedef GstMadClass GstBMadClass;
-
-GST_BOILERPLATE (GstBMad, gst_mad, GstBaseAudioDecoder,
-    GST_TYPE_BASE_AUDIO_DECODER);
+GST_BOILERPLATE (GstMad, gst_mad, GstAudioDecoder, GST_TYPE_AUDIO_DECODER);
 
 static void
 gst_mad_base_init (gpointer g_class)
@@ -114,7 +109,7 @@ static void
 gst_mad_class_init (GstMadClass * klass)
 {
   GObjectClass *gobject_class = (GObjectClass *) klass;
-  GstBaseAudioDecoderClass *base_class = (GstBaseAudioDecoderClass *) klass;
+  GstAudioDecoderClass *base_class = (GstAudioDecoderClass *) klass;
 
   parent_class = g_type_class_peek_parent (klass);
 
@@ -142,17 +137,17 @@ gst_mad_class_init (GstMadClass * klass)
 static void
 gst_mad_init (GstMad * mad, GstMadClass * klass)
 {
-  GstBaseAudioDecoder *dec;
+  GstAudioDecoder *dec;
 
-  dec = GST_BASE_AUDIO_DECODER (mad);
-  gst_base_audio_decoder_set_tolerance (dec, 20 * GST_MSECOND);
+  dec = GST_AUDIO_DECODER (mad);
+  gst_audio_decoder_set_tolerance (dec, 20 * GST_MSECOND);
 
   mad->half = FALSE;
   mad->ignore_crc = TRUE;
 }
 
 static gboolean
-gst_mad_start (GstBaseAudioDecoder * dec)
+gst_mad_start (GstAudioDecoder * dec)
 {
   GstMad *mad = GST_MAD (dec);
   guint options = 0;
@@ -174,13 +169,13 @@ gst_mad_start (GstBaseAudioDecoder * dec)
   mad->header.emphasis = -1;
 
   /* call upon legacy upstream byte support (e.g. seeking) */
-  gst_base_audio_decoder_set_byte_time (dec, TRUE);
+  gst_audio_decoder_set_byte_time (dec, TRUE);
 
   return TRUE;
 }
 
 static gboolean
-gst_mad_stop (GstBaseAudioDecoder * dec)
+gst_mad_stop (GstAudioDecoder * dec)
 {
   GstMad *mad = GST_MAD (dec);
 
@@ -266,7 +261,7 @@ gst_mad_check_caps_reset (GstMad * mad)
         "depth", G_TYPE_INT, 32,
         "rate", G_TYPE_INT, rate, "channels", G_TYPE_INT, nchannels, NULL);
 
-    gst_pad_set_caps (GST_BASE_AUDIO_DECODER_SRC_PAD (mad), caps);
+    gst_pad_set_caps (GST_AUDIO_DECODER_SRC_PAD (mad), caps);
     gst_caps_unref (caps);
 
     mad->caps_set = TRUE;
@@ -276,7 +271,7 @@ gst_mad_check_caps_reset (GstMad * mad)
 }
 
 static GstFlowReturn
-gst_mad_parse (GstBaseAudioDecoder * dec, GstAdapter * adapter,
+gst_mad_parse (GstAudioDecoder * dec, GstAdapter * adapter,
     gint * _offset, gint * len)
 {
   GstMad *mad;
@@ -353,7 +348,7 @@ gst_mad_parse (GstBaseAudioDecoder * dec, GstAdapter * adapter,
               mad_stream_errorstr (&mad->stream));
           if (!MAD_RECOVERABLE (mad->stream.error)) {
             /* well, all may be well enough bytes later on ... */
-            GST_BASE_AUDIO_DECODER_ERROR (mad, 1, STREAM, DECODE, (NULL),
+            GST_AUDIO_DECODER_ERROR (mad, 1, STREAM, DECODE, (NULL),
                 ("mad error: %s", mad_stream_errorstr (&mad->stream)), ret);
             /* so make sure we really move along ... */
             if (!offset)
@@ -406,7 +401,7 @@ exit:
 }
 
 static GstFlowReturn
-gst_mad_handle_frame (GstBaseAudioDecoder * dec, GstBuffer * buffer)
+gst_mad_handle_frame (GstAudioDecoder * dec, GstBuffer * buffer)
 {
   GstMad *mad;
   GstFlowReturn ret = GST_FLOW_UNEXPECTED;
@@ -431,14 +426,14 @@ gst_mad_handle_frame (GstBaseAudioDecoder * dec, GstBuffer * buffer)
   gst_mad_check_caps_reset (mad);
 
   // TODO more generic check and size check ?
-  ret = gst_pad_alloc_buffer_and_set_caps (GST_BASE_AUDIO_DECODER_SRC_PAD (dec),
+  ret = gst_pad_alloc_buffer_and_set_caps (GST_AUDIO_DECODER_SRC_PAD (dec),
       0, nsamples * mad->channels * 4,
-      GST_PAD_CAPS (GST_BASE_AUDIO_DECODER_SRC_PAD (dec)), &outbuffer);
+      GST_PAD_CAPS (GST_AUDIO_DECODER_SRC_PAD (dec)), &outbuffer);
   if (ret != GST_FLOW_OK) {
     /* Head for the exit, dropping samples as we go */
     GST_LOG_OBJECT (dec,
         "Skipping frame synthesis due to pad_alloc return value");
-    gst_base_audio_decoder_finish_frame (dec, NULL, 1);
+    gst_audio_decoder_finish_frame (dec, NULL, 1);
     goto exit;
   }
 
@@ -464,13 +459,13 @@ gst_mad_handle_frame (GstBaseAudioDecoder * dec, GstBuffer * buffer)
     }
   }
 
-  ret = gst_base_audio_decoder_finish_frame (dec, outbuffer, 1);
+  ret = gst_audio_decoder_finish_frame (dec, outbuffer, 1);
 exit:
   return ret;
 }
 
 static void
-gst_mad_flush (GstBaseAudioDecoder * dec, gboolean hard)
+gst_mad_flush (GstAudioDecoder * dec, gboolean hard)
 {
   GstMad *mad;
 
@@ -528,8 +523,8 @@ gst_mad_get_property (GObject * object, guint prop_id,
 gboolean
 gst_mad_register (GstPlugin * plugin)
 {
-  GST_DEBUG_CATEGORY_INIT (mad_debug, "bmad", 0, "mad mp3 decoding");
+  GST_DEBUG_CATEGORY_INIT (mad_debug, "mad", 0, "mad mp3 decoding");
 
-  return gst_element_register (plugin, "bmad", GST_RANK_NONE,
+  return gst_element_register (plugin, "mad", GST_RANK_NONE,
       gst_mad_get_type ());
 }
