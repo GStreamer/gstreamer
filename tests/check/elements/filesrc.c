@@ -349,23 +349,26 @@ GST_START_TEST (test_uri_interface)
   fail_unless_equals_string (location, "/i/do/not/exist");
   g_free (location);
 
-  location = (gchar *) gst_uri_handler_get_uri (GST_URI_HANDLER (src));
+  location = gst_uri_handler_get_uri (GST_URI_HANDLER (src));
   fail_unless_equals_string (location, "file:///i/do/not/exist");
+  g_free (location);
 
   /* should accept file:///foo/bar URIs */
   fail_unless (gst_uri_handler_set_uri (GST_URI_HANDLER (src),
-          "file:///foo/bar"));
-  location = (gchar *) gst_uri_handler_get_uri (GST_URI_HANDLER (src));
+          "file:///foo/bar", NULL));
+  location = gst_uri_handler_get_uri (GST_URI_HANDLER (src));
   fail_unless_equals_string (location, "file:///foo/bar");
+  g_free (location);
   g_object_get (G_OBJECT (src), "location", &location, NULL);
   fail_unless_equals_string (location, "/foo/bar");
   g_free (location);
 
   /* should accept file://localhost/foo/bar URIs */
   fail_unless (gst_uri_handler_set_uri (GST_URI_HANDLER (src),
-          "file://localhost/foo/baz"));
-  location = (gchar *) gst_uri_handler_get_uri (GST_URI_HANDLER (src));
+          "file://localhost/foo/baz", NULL));
+  location = gst_uri_handler_get_uri (GST_URI_HANDLER (src));
   fail_unless_equals_string (location, "file:///foo/baz");
+  g_free (location);
   g_object_get (G_OBJECT (src), "location", &location, NULL);
   fail_unless_equals_string (location, "/foo/baz");
   g_free (location);
@@ -375,12 +378,13 @@ GST_START_TEST (test_uri_interface)
   g_object_get (G_OBJECT (src), "location", &location, NULL);
   fail_unless_equals_string (location, "/foo/b?r");
   g_free (location);
-  location = (gchar *) gst_uri_handler_get_uri (GST_URI_HANDLER (src));
+  location = gst_uri_handler_get_uri (GST_URI_HANDLER (src));
   fail_unless_equals_string (location, "file:///foo/b%3Fr");
+  g_free (location);
 
   /* should fail with other hostnames */
   fail_if (gst_uri_handler_set_uri (GST_URI_HANDLER (src),
-          "file://hostname/foo/foo"));
+          "file://hostname/foo/foo", NULL));
 
   /* cleanup */
   gst_element_set_bus (src, NULL);
@@ -396,7 +400,7 @@ check_uri_for_uri (GstElement * e, const gchar * in_uri, const gchar * uri)
   GstQuery *query;
   gchar *query_uri = NULL;
 
-  gst_uri_handler_set_uri (GST_URI_HANDLER (e), in_uri);
+  gst_uri_handler_set_uri (GST_URI_HANDLER (e), in_uri, NULL);
 
   query = gst_query_new_uri ();
   fail_unless (gst_element_query (e, query));
