@@ -590,21 +590,22 @@ gst_file_src_uri_get_protocols (GType type)
   return protocols;
 }
 
-static const gchar *
+static gchar *
 gst_file_src_uri_get_uri (GstURIHandler * handler)
 {
   GstFileSrc *src = GST_FILE_SRC (handler);
 
-  return src->uri;
+  /* FIXME: make thread-safe */
+  return g_strdup (src->uri);
 }
 
 static gboolean
-gst_file_src_uri_set_uri (GstURIHandler * handler, const gchar * uri)
+gst_file_src_uri_set_uri (GstURIHandler * handler, const gchar * uri,
+    GError ** err)
 {
   gchar *location, *hostname = NULL;
   gboolean ret = FALSE;
   GstFileSrc *src = GST_FILE_SRC (handler);
-  GError *error = NULL;
 
   if (strcmp (uri, "file://") == 0) {
     /* Special case for "file://" as this is used by some applications
@@ -614,22 +615,19 @@ gst_file_src_uri_set_uri (GstURIHandler * handler, const gchar * uri)
     return TRUE;
   }
 
-  location = g_filename_from_uri (uri, &hostname, &error);
+  location = g_filename_from_uri (uri, &hostname, err);
 
-  if (!location || error) {
-    if (error) {
-      GST_WARNING_OBJECT (src, "Invalid URI '%s' for filesrc: %s", uri,
-          error->message);
-      g_error_free (error);
-    } else {
-      GST_WARNING_OBJECT (src, "Invalid URI '%s' for filesrc", uri);
-    }
+  if (!location || (err != NULL && *err != NULL)) {
+    GST_WARNING_OBJECT (src, "Invalid URI '%s' for filesrc: %s", uri,
+        (err != NULL && *err != NULL) ? (*err)->message : "unknown error");
     goto beach;
   }
 
   if ((hostname) && (strcmp (hostname, "localhost"))) {
     /* Only 'localhost' is permitted */
     GST_WARNING_OBJECT (src, "Invalid hostname '%s' for filesrc", hostname);
+    g_set_error (err, GST_URI_ERROR, GST_URI_ERROR_BAD_URI,
+        "File URI with invalid hostname '%s'", hostname);
     goto beach;
   }
 #ifdef G_OS_WIN32

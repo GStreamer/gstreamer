@@ -269,7 +269,8 @@ gst_file_sink_dispose (GObject * object)
 }
 
 static gboolean
-gst_file_sink_set_location (GstFileSink * sink, const gchar * location)
+gst_file_sink_set_location (GstFileSink * sink, const gchar * location,
+    GError ** error)
 {
   if (sink->file)
     goto was_open;
@@ -295,6 +296,9 @@ was_open:
   {
     g_warning ("Changing the `location' property on filesink when a file is "
         "open is not supported.");
+    g_set_error (error, GST_URI_ERROR, GST_URI_ERROR_BAD_STATE,
+        "Changing the 'location' property on filesink when a file is "
+        "open is not supported");
     return FALSE;
   }
 }
@@ -307,7 +311,7 @@ gst_file_sink_set_property (GObject * object, guint prop_id,
 
   switch (prop_id) {
     case PROP_LOCATION:
-      gst_file_sink_set_location (sink, g_value_get_string (value));
+      gst_file_sink_set_location (sink, g_value_get_string (value), NULL);
       break;
     case PROP_BUFFER_MODE:
       sink->buffer_mode = g_value_get_enum (value);
@@ -693,27 +697,22 @@ gst_file_sink_uri_get_protocols (GType type)
   return protocols;
 }
 
-static const gchar *
+static gchar *
 gst_file_sink_uri_get_uri (GstURIHandler * handler)
 {
   GstFileSink *sink = GST_FILE_SINK (handler);
 
-  return sink->uri;
+  /* FIXME: make thread-safe */
+  return g_strdup (sink->uri);
 }
 
 static gboolean
-gst_file_sink_uri_set_uri (GstURIHandler * handler, const gchar * uri)
+gst_file_sink_uri_set_uri (GstURIHandler * handler, const gchar * uri,
+    GError ** error)
 {
-  gchar *protocol, *location;
+  gchar *location;
   gboolean ret;
   GstFileSink *sink = GST_FILE_SINK (handler);
-
-  protocol = gst_uri_get_protocol (uri);
-  if (strcmp (protocol, "file") != 0) {
-    g_free (protocol);
-    return FALSE;
-  }
-  g_free (protocol);
 
   /* allow file://localhost/foo/bar by stripping localhost but fail
    * for every other hostname */
@@ -730,20 +729,26 @@ gst_file_sink_uri_set_uri (GstURIHandler * handler, const gchar * uri)
     /* Special case for "file://" as this is used by some applications
      *  to test with gst_element_make_from_uri if there's an element
      *  that supports the URI protocol. */
-    gst_file_sink_set_location (sink, NULL);
+    gst_file_sink_set_location (sink, NULL, NULL);
     return TRUE;
   } else {
     location = gst_uri_get_location (uri);
   }
 
-  if (!location)
+  if (!location) {
+    g_set_error_literal (error, GST_URI_ERROR, GST_URI_ERROR_BAD_URI,
+        "File URI without location");
     return FALSE;
+  }
+
   if (!g_path_is_absolute (location)) {
+    g_set_error_literal (error, GST_URI_ERROR, GST_URI_ERROR_BAD_URI,
+        "File URI location must be an absolute path");
     g_free (location);
     return FALSE;
   }
 
-  ret = gst_file_sink_set_location (sink, location);
+  ret = gst_file_sink_set_location (sink, location, error);
   g_free (location);
 
   return ret;

@@ -315,7 +315,7 @@ write_error:
 }
 
 static gboolean
-gst_fd_sink_check_fd (GstFdSink * fdsink, int fd)
+gst_fd_sink_check_fd (GstFdSink * fdsink, int fd, GError ** error)
 {
   struct stat stat_results;
   off_t result;
@@ -347,6 +347,8 @@ invalid:
   {
     GST_ELEMENT_ERROR (fdsink, RESOURCE, WRITE, (NULL),
         ("File descriptor %d is not valid: %s", fd, g_strerror (errno)));
+    g_set_error (error, GST_URI_ERROR, GST_URI_ERROR_BAD_REFERENCE,
+        "File descriptor %d is not valid: %s", fd, g_strerror (errno));
     return FALSE;
   }
 not_seekable:
@@ -363,7 +365,7 @@ gst_fd_sink_start (GstBaseSink * basesink)
   GstPollFD fd = GST_POLL_FD_INIT;
 
   fdsink = GST_FD_SINK (basesink);
-  if (!gst_fd_sink_check_fd (fdsink, fdsink->fd))
+  if (!gst_fd_sink_check_fd (fdsink, fdsink->fd, NULL))
     return FALSE;
 
   if ((fdsink->fdset = gst_poll_new (TRUE)) == NULL)
@@ -427,12 +429,15 @@ gst_fd_sink_unlock_stop (GstBaseSink * basesink)
 }
 
 static gboolean
-gst_fd_sink_update_fd (GstFdSink * fdsink, int new_fd)
+gst_fd_sink_update_fd (GstFdSink * fdsink, int new_fd, GError ** error)
 {
-  if (new_fd < 0)
+  if (new_fd < 0) {
+    g_set_error (error, GST_URI_ERROR, GST_URI_ERROR_BAD_REFERENCE,
+        "File descriptor %d is not valid", new_fd);
     return FALSE;
+  }
 
-  if (!gst_fd_sink_check_fd (fdsink, new_fd))
+  if (!gst_fd_sink_check_fd (fdsink, new_fd, error))
     goto invalid;
 
   /* assign the fd */
@@ -474,7 +479,7 @@ gst_fd_sink_set_property (GObject * object, guint prop_id,
       int fd;
 
       fd = g_value_get_int (value);
-      gst_fd_sink_update_fd (fdsink, fd);
+      gst_fd_sink_update_fd (fdsink, fd, NULL);
       break;
     }
     default:
@@ -594,32 +599,29 @@ gst_fd_sink_uri_get_protocols (GType type)
   return protocols;
 }
 
-static const gchar *
+static gchar *
 gst_fd_sink_uri_get_uri (GstURIHandler * handler)
 {
   GstFdSink *sink = GST_FD_SINK (handler);
 
-  return sink->uri;
+  /* FIXME: make thread-safe */
+  return g_strdup (sink->uri);
 }
 
 static gboolean
-gst_fd_sink_uri_set_uri (GstURIHandler * handler, const gchar * uri)
+gst_fd_sink_uri_set_uri (GstURIHandler * handler, const gchar * uri,
+    GError ** error)
 {
-  gchar *protocol;
   GstFdSink *sink = GST_FD_SINK (handler);
   gint fd;
 
-  protocol = gst_uri_get_protocol (uri);
-  if (strcmp (protocol, "fd") != 0) {
-    g_free (protocol);
+  if (sscanf (uri, "fd://%d", &fd) != 1) {
+    g_set_error (error, GST_URI_ERROR, GST_URI_ERROR_BAD_URI,
+        "File descriptor URI could not be parsed");
     return FALSE;
   }
-  g_free (protocol);
 
-  if (sscanf (uri, "fd://%d", &fd) != 1)
-    return FALSE;
-
-  return gst_fd_sink_update_fd (sink, fd);
+  return gst_fd_sink_update_fd (sink, fd, error);
 }
 
 static void

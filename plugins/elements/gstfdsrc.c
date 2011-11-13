@@ -613,16 +613,18 @@ gst_fd_src_uri_get_protocols (GType type)
   return protocols;
 }
 
-static const gchar *
+static gchar *
 gst_fd_src_uri_get_uri (GstURIHandler * handler)
 {
   GstFdSrc *src = GST_FD_SRC (handler);
 
-  return src->uri;
+  /* FIXME: make thread-safe */
+  return g_strdup (src->uri);
 }
 
 static gboolean
-gst_fd_src_uri_set_uri (GstURIHandler * handler, const gchar * uri)
+gst_fd_src_uri_set_uri (GstURIHandler * handler, const gchar * uri,
+    GError ** err)
 {
   gchar *protocol, *q;
   GstFdSrc *src = GST_FD_SRC (handler);
