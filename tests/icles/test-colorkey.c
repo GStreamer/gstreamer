@@ -34,14 +34,6 @@
 #include <gst/interfaces/videooverlay.h>
 #include <gst/interfaces/propertyprobe.h>
 
-#if !GTK_CHECK_VERSION (2, 17, 7)
-static void
-gtk_widget_get_allocation (GtkWidget * w, GtkAllocation * a)
-{
-  *a = w->allocation;
-}
-#endif
-
 static GtkWidget *video_window = NULL;
 static GstElement *sink = NULL;
 static gulong embed_xid = 0;
@@ -89,7 +81,7 @@ handle_resize_cb (GtkWidget * widget, GdkEventConfigure * event, gpointer data)
 }
 
 static gboolean
-handle_expose_cb (GtkWidget * widget, GdkEventExpose * event, gpointer data)
+draw_cb (GtkWidget * widget, cairo_t * cr, gpointer data)
 {
   redraw_overlay (widget);
   return FALSE;
@@ -98,23 +90,15 @@ handle_expose_cb (GtkWidget * widget, GdkEventExpose * event, gpointer data)
 static void
 realize_cb (GtkWidget * widget, gpointer data)
 {
-#if GTK_CHECK_VERSION(2,18,0)
-  {
-    GdkWindow *window = gtk_widget_get_window (widget);
+  GdkWindow *window = gtk_widget_get_window (widget);
 
-    /* This is here just for pedagogical purposes, GDK_WINDOW_XID will call it
-     * as well */
-    if (!gdk_window_ensure_native (window))
-      g_error ("Couldn't create native window needed for GstVideoOverlay!");
-  }
-#endif
+  /* This is here just for pedagogical purposes, GDK_WINDOW_XID will call it
+   * as well */
+  if (!gdk_window_ensure_native (window))
+    g_error ("Couldn't create native window needed for GstXOverlay!");
 
-  {
-    GdkWindow *window = gtk_widget_get_window (video_window);
-
-    embed_xid = GDK_WINDOW_XID (window);
-    g_print ("Window realize: video window XID = %lu\n", embed_xid);
-  }
+  embed_xid = GDK_WINDOW_XID (window);
+  g_print ("Window realize: video window XID = %lu\n", embed_xid);
 }
 
 static void
@@ -251,8 +235,8 @@ main (int argc, char **argv)
   video_window = gtk_drawing_area_new ();
   g_signal_connect (G_OBJECT (video_window), "configure-event",
       G_CALLBACK (handle_resize_cb), NULL);
-  g_signal_connect (G_OBJECT (video_window), "expose-event",
-      G_CALLBACK (handle_expose_cb), NULL);
+  g_signal_connect (G_OBJECT (video_window), "draw",
+      G_CALLBACK (draw_cb), NULL);
   g_signal_connect (video_window, "realize", G_CALLBACK (realize_cb), NULL);
   gtk_widget_set_double_buffered (video_window, FALSE);
   gtk_container_add (GTK_CONTAINER (window), video_window);

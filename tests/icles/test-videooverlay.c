@@ -35,14 +35,6 @@
 #include <gst/interfaces/videooverlay.h>
 #include <gst/video/gstvideosink.h>
 
-#if !GTK_CHECK_VERSION (2, 17, 7)
-static void
-gtk_widget_get_allocation (GtkWidget * w, GtkAllocation * a)
-{
-  *a = w->allocation;
-}
-#endif
-
 static struct
 {
   gint w, h;
@@ -99,37 +91,30 @@ handle_resize_cb (GtkWidget * widget, GdkEventConfigure * event,
 }
 
 static gboolean
-handle_expose_cb (GtkWidget * widget, GdkEventExpose * event,
-    gpointer user_data)
+handle_draw_cb (GtkWidget * widget, cairo_t * cr, gpointer user_data)
 {
   GstVideoRectangle *r = &anim_state.rect;
-  GtkAllocation allocation;
-  GdkWindow *window;
   GtkStyle *style;
-  cairo_t *cr;
+  int width, height;
+
+  width = gtk_widget_get_allocated_width (widget);
+  height = gtk_widget_get_allocated_height (widget);
 
   style = gtk_widget_get_style (widget);
-  window = gtk_widget_get_window (widget);
-  gtk_widget_get_allocation (widget, &allocation);
-  cr = gdk_cairo_create (window);
 
   gdk_cairo_set_source_color (cr, &style->bg[GTK_STATE_NORMAL]);
 
   /* we should only redraw outside of the video rect! */
-  cairo_rectangle (cr, 0, event->area.y, r->x, event->area.height);
-  cairo_rectangle (cr, r->x + r->w, event->area.y,
-      allocation.width - (r->x + r->w), event->area.height);
+  cairo_rectangle (cr, 0, 0, r->x, height);
+  cairo_rectangle (cr, r->x + r->w, 0, width - (r->x + r->w), height);
 
-  cairo_rectangle (cr, event->area.x, 0, event->area.width, r->y);
-  cairo_rectangle (cr, event->area.x, r->y + r->h,
-      event->area.width, allocation.height - (r->y + r->h));
+  cairo_rectangle (cr, 0, 0, width, r->y);
+  cairo_rectangle (cr, 0, r->y + r->h, width, height - (r->y + r->h));
 
   cairo_fill (cr);
 
-  cairo_destroy (cr);
-
   if (verbose) {
-    g_print ("expose(%p)\n", widget);
+    g_print ("draw(%p)\n", widget);
   }
   gst_video_overlay_expose (anim_state.overlay);
   return FALSE;
@@ -229,8 +214,7 @@ main (gint argc, gchar ** argv)
   handle_resize_cb (video_window, NULL, sink);
   g_signal_connect (video_window, "configure-event",
       G_CALLBACK (handle_resize_cb), NULL);
-  g_signal_connect (video_window, "expose-event",
-      G_CALLBACK (handle_expose_cb), NULL);
+  g_signal_connect (video_window, "draw", G_CALLBACK (handle_draw_cb), NULL);
 
   g_timeout_add (50, (GSourceFunc) animate_render_rect, NULL);
 
