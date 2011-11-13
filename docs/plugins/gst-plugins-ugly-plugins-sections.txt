@@ -78,21 +78,6 @@ gst_cdio_cdda_src_get_type
 </SECTION>
 
 <SECTION>
-<FILE>element-lame</FILE>
-<TITLE>lame</TITLE>
-GstLame
-<SUBSECTION Standard>
-GstLameClass
-GST_LAME
-GST_LAME_CLASS
-GST_IS_LAME
-GST_IS_LAME_CLASS
-GST_TYPE_LAME
-gst_lame_get_type
-gst_lame_register
-</SECTION>
-
-<SECTION>
 <FILE>element-lamemp3enc</FILE>
 <TITLE>lamemp3enc</TITLE>
 GstLameMP3Enc
