@@ -106,6 +106,7 @@ static GstQueryTypeDefinition standard_definitions[] = {
   {GST_QUERY_ALLOCATION, "allocation", "Allocation properties", 0},
   {GST_QUERY_SCHEDULING, "scheduling", "Scheduling properties", 0},
   {GST_QUERY_ACCEPT_CAPS, "accept-caps", "Accept caps", 0},
+  {GST_QUERY_CAPS, "caps", "Caps", 0},
   {GST_QUERY_NONE, NULL, NULL, 0}
 };
 
@@ -2071,4 +2072,65 @@ gst_query_parse_accept_caps_result (GstQuery * query, gboolean * result)
   structure = GST_QUERY_STRUCTURE (query);
   gst_structure_id_get (structure,
       GST_QUARK (RESULT), G_TYPE_BOOLEAN, result, NULL);
+}
+
+/**
+ * gst_query_new_caps
+ *
+ * Constructs a new query object for querying the caps.
+ *
+ * Free-function: gst_query_unref
+ *
+ * Returns: (transfer full): a new #GstQuery
+ */
+GstQuery *
+gst_query_new_caps (void)
+{
+  GstQuery *query;
+  GstStructure *structure;
+
+  structure = gst_structure_new_id (GST_QUARK (QUERY_CAPS),
+      GST_QUARK (CAPS), GST_TYPE_CAPS, NULL, NULL);
+  query = gst_query_new (GST_QUERY_CAPS, structure);
+
+  return query;
+}
+
+/**
+ * gst_query_set_caps:
+ * @query: The query to use
+ * @caps: (in): A pointer to the caps
+ *
+ * Set the @caps in @query.
+ */
+void
+gst_query_set_caps (GstQuery * query, GstCaps * caps)
+{
+  GstStructure *structure;
+
+  g_return_if_fail (GST_QUERY_TYPE (query) == GST_QUERY_CAPS);
+  g_return_if_fail (gst_query_is_writable (query));
+
+  structure = GST_QUERY_STRUCTURE (query);
+  gst_structure_id_set (structure, GST_QUARK (CAPS), GST_TYPE_CAPS, caps, NULL);
+}
+
+/**
+ * gst_query_parse_caps:
+ * @query: The query to parse
+ * @caps: (out): A pointer to the caps
+ *
+ * Get the caps from @query. The caps remains valid as long as @query remains
+ * valid.
+ */
+void
+gst_query_parse_caps (GstQuery * query, GstCaps ** caps)
+{
+  GstStructure *structure;
+
+  g_return_if_fail (GST_QUERY_TYPE (query) == GST_QUERY_CAPS);
+
+  structure = GST_QUERY_STRUCTURE (query);
+  *caps = g_value_get_boxed (gst_structure_id_get_value (structure,
+          GST_QUARK (CAPS)));
 }

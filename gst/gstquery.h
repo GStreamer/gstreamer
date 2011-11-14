@@ -56,6 +56,7 @@ G_BEGIN_DECLS
  * @GST_QUERY_ALLOCATION: the buffer allocation properties
  * @GST_QUERY_SCHEDULING: the scheduling properties
  * @GST_QUERY_ACCEPT_CAPS: the accept caps query
+ * @GST_QUERY_CAPS: the caps query
  *
  * Standard predefined Query types
  */
@@ -77,7 +78,8 @@ typedef enum {
   GST_QUERY_URI,
   GST_QUERY_ALLOCATION,
   GST_QUERY_SCHEDULING,
-  GST_QUERY_ACCEPT_CAPS
+  GST_QUERY_ACCEPT_CAPS,
+  GST_QUERY_CAPS
 } GstQueryType;
 
 /**
@@ -385,6 +387,11 @@ GstQuery *      gst_query_new_accept_caps          (GstCaps *caps);
 void            gst_query_parse_accept_caps        (GstQuery *query, GstCaps **caps);
 void            gst_query_set_accept_caps_result   (GstQuery *query, gboolean result);
 void            gst_query_parse_accept_caps_result (GstQuery *query, gboolean *result);
+
+/* caps query */
+GstQuery *      gst_query_new_caps                 (void);
+void            gst_query_set_caps                 (GstQuery *query, GstCaps *caps);
+void            gst_query_parse_caps               (GstQuery *query, GstCaps **caps);
 
 G_END_DECLS
 
