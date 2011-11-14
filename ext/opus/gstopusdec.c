@@ -67,36 +67,30 @@ GST_STATIC_PAD_TEMPLATE ("sink",
     GST_STATIC_CAPS ("audio/x-opus")
     );
 
-G_DEFINE_TYPE (GstOpusDec, gst_opus_dec, GST_TYPE_ELEMENT);
+G_DEFINE_TYPE (GstOpusDec, gst_opus_dec, GST_TYPE_AUDIO_DECODER);
 
-static gboolean opus_dec_sink_event (GstPad * pad, GstEvent * event);
-static GstFlowReturn opus_dec_chain (GstPad * pad, GstBuffer * buf);
-static gboolean opus_dec_sink_setcaps (GstPad * pad, GstCaps * caps);
-static GstStateChangeReturn opus_dec_change_state (GstElement * element,
-    GstStateChange transition);
-
-static gboolean opus_dec_src_event (GstPad * pad, GstEvent * event);
-static gboolean opus_dec_src_query (GstPad * pad, GstQuery * query);
-static gboolean opus_dec_sink_query (GstPad * pad, GstQuery * query);
-static gboolean opus_dec_convert (GstPad * pad,
-    GstFormat src_format, gint64 src_value,
-    GstFormat * dest_format, gint64 * dest_value);
-
+static gboolean gst_opus_dec_start (GstAudioDecoder * dec);
+static gboolean gst_opus_dec_stop (GstAudioDecoder * dec);
+static GstFlowReturn gst_opus_dec_handle_frame (GstAudioDecoder * dec,
+    GstBuffer * buffer);
+static gboolean gst_opus_dec_set_format (GstAudioDecoder * bdec,
+    GstCaps * caps);
 static GstFlowReturn opus_dec_chain_parse_data (GstOpusDec * dec,
     GstBuffer * buf, GstClockTime timestamp, GstClockTime duration);
-static GstFlowReturn opus_dec_chain_parse_header (GstOpusDec * dec,
-    GstBuffer * buf);
-#if 0
-static GstFlowReturn opus_dec_chain_parse_comments (GstOpusDec * dec,
-    GstBuffer * buf);
-#endif
 
 static void
 gst_opus_dec_class_init (GstOpusDecClass * klass)
 {
+  GstAudioDecoderClass *adclass;
   GstElementClass *element_class;
 
+  adclass = (GstAudioDecoderClass *) klass;
   element_class = (GstElementClass *) klass;
+
+  adclass->start = GST_DEBUG_FUNCPTR (gst_opus_dec_start);
+  adclass->stop = GST_DEBUG_FUNCPTR (gst_opus_dec_stop);
+  adclass->handle_frame = GST_DEBUG_FUNCPTR (gst_opus_dec_handle_frame);
+  adclass->set_format = GST_DEBUG_FUNCPTR (gst_opus_dec_set_format);
 
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&opus_dec_src_factory));
@@ -107,8 +101,6 @@ gst_opus_dec_class_init (GstOpusDecClass * klass)
       "decode opus streams to audio",
       "Sebastian Dröge <sebastian.droege@collabora.co.uk>");
 
-  element_class->change_state = GST_DEBUG_FUNCPTR (opus_dec_change_state);
-
   GST_DEBUG_CATEGORY_INIT (opusdec_debug, "opusdec", 0,
       "opus decoding element");
 }
@@ -116,8 +108,6 @@ gst_opus_dec_class_init (GstOpusDecClass * klass)
 static void
 gst_opus_dec_reset (GstOpusDec * dec)
 {
-  gst_segment_init (&dec->segment, GST_FORMAT_UNDEFINED);
-  dec->granulepos = -1;
   dec->packetno = 0;
   dec->frame_size = 0;
   dec->frame_samples = 960;
@@ -126,48 +116,41 @@ gst_opus_dec_reset (GstOpusDec * dec)
     opus_decoder_destroy (dec->state);
     dec->state = NULL;
   }
-#if 0
-  if (dec->mode) {
-    opus_mode_destroy (dec->mode);
-    dec->mode = NULL;
-  }
-#endif
 
   gst_buffer_replace (&dec->streamheader, NULL);
   gst_buffer_replace (&dec->vorbiscomment, NULL);
-  g_list_foreach (dec->extra_headers, (GFunc) gst_mini_object_unref, NULL);
-  g_list_free (dec->extra_headers);
-  dec->extra_headers = NULL;
-
-#if 0
-  memset (&dec->header, 0, sizeof (dec->header));
-#endif
 }
 
 static void
 gst_opus_dec_init (GstOpusDec * dec)
 {
-  dec->sinkpad =
-      gst_pad_new_from_static_template (&opus_dec_sink_factory, "sink");
-  gst_pad_set_chain_function (dec->sinkpad, GST_DEBUG_FUNCPTR (opus_dec_chain));
-  gst_pad_set_event_function (dec->sinkpad,
-      GST_DEBUG_FUNCPTR (opus_dec_sink_event));
-  gst_pad_set_query_function (dec->sinkpad,
-      GST_DEBUG_FUNCPTR (opus_dec_sink_query));
-  gst_element_add_pad (GST_ELEMENT (dec), dec->sinkpad);
-
-  dec->srcpad = gst_pad_new_from_static_template (&opus_dec_src_factory, "src");
-  gst_pad_use_fixed_caps (dec->srcpad);
-  gst_pad_set_event_function (dec->srcpad,
-      GST_DEBUG_FUNCPTR (opus_dec_src_event));
-  gst_pad_set_query_function (dec->srcpad,
-      GST_DEBUG_FUNCPTR (opus_dec_src_query));
-  gst_element_add_pad (GST_ELEMENT (dec), dec->srcpad);
-
   dec->sample_rate = 48000;
   dec->n_channels = 2;
 
   gst_opus_dec_reset (dec);
+}
+
+static gboolean
+gst_opus_dec_start (GstAudioDecoder * dec)
+{
+  GstOpusDec *odec = GST_OPUS_DEC (dec);
+
+  gst_opus_dec_reset (odec);
+
+  /* we know about concealment */
+  gst_audio_decoder_set_plc_aware (dec, TRUE);
+
+  return TRUE;
+}
+
+static gboolean
+gst_opus_dec_stop (GstAudioDecoder * dec)
+{
+  GstOpusDec *odec = GST_OPUS_DEC (dec);
+
+  gst_opus_dec_reset (odec);
+
+  return TRUE;
 }
 
 static GstFlowReturn
@@ -181,7 +164,7 @@ gst_opus_dec_negotiate_pool (GstOpusDec * dec, GstCaps * caps, gsize bytes)
   /* find a pool for the negotiated caps now */
   query = gst_query_new_allocation (caps, TRUE);
 
-  if (gst_pad_peer_query (dec->srcpad, query)) {
+  if (gst_pad_peer_query (GST_AUDIO_DECODER_SRC_PAD (dec), query)) {
     GST_DEBUG_OBJECT (dec, "got downstream ALLOCATION hints");
     /* we got configuration from our peer, parse them */
     gst_query_parse_allocation_params (query, &size, &min, &max, &prefix,
@@ -216,517 +199,17 @@ gst_opus_dec_negotiate_pool (GstOpusDec * dec, GstCaps * caps, gsize bytes)
   return GST_FLOW_OK;
 }
 
-static gboolean
-opus_dec_sink_setcaps (GstPad * pad, GstCaps * caps)
+static GstFlowReturn
+gst_opus_dec_parse_header (GstOpusDec * dec, GstBuffer * buf)
 {
-  GstOpusDec *dec = GST_OPUS_DEC (gst_pad_get_parent (pad));
-  gboolean ret = TRUE;
-  GstStructure *s;
-  const GValue *streamheader;
-
-  GST_DEBUG_OBJECT (pad, "Setting sink caps to %" GST_PTR_FORMAT, caps);
-
-  s = gst_caps_get_structure (caps, 0);
-  if ((streamheader = gst_structure_get_value (s, "streamheader")) &&
-      G_VALUE_HOLDS (streamheader, GST_TYPE_ARRAY) &&
-      gst_value_array_get_size (streamheader) >= 2) {
-    const GValue *header;
-    GstBuffer *buf;
-    GstFlowReturn res = GST_FLOW_OK;
-
-    header = gst_value_array_get_value (streamheader, 0);
-    if (header && G_VALUE_HOLDS (header, GST_TYPE_BUFFER)) {
-      buf = gst_value_get_buffer (header);
-      res = opus_dec_chain_parse_header (dec, buf);
-      if (res != GST_FLOW_OK)
-        goto done;
-      gst_buffer_replace (&dec->streamheader, buf);
-    }
-#if 0
-    vorbiscomment = gst_value_array_get_value (streamheader, 1);
-    if (vorbiscomment && G_VALUE_HOLDS (vorbiscomment, GST_TYPE_BUFFER)) {
-      buf = gst_value_get_buffer (vorbiscomment);
-      res = opus_dec_chain_parse_comments (dec, buf);
-      if (res != GST_FLOW_OK)
-        goto done;
-      gst_buffer_replace (&dec->vorbiscomment, buf);
-    }
-#endif
-
-    g_list_foreach (dec->extra_headers, (GFunc) gst_mini_object_unref, NULL);
-    g_list_free (dec->extra_headers);
-    dec->extra_headers = NULL;
-
-    if (gst_value_array_get_size (streamheader) > 2) {
-      gint i, n;
-
-      n = gst_value_array_get_size (streamheader);
-      for (i = 2; i < n; i++) {
-        header = gst_value_array_get_value (streamheader, i);
-        buf = gst_value_get_buffer (header);
-        dec->extra_headers =
-            g_list_prepend (dec->extra_headers, gst_buffer_ref (buf));
-      }
-    }
-  }
-
-  if (!gst_structure_get_int (s, "frame-size", &dec->frame_size)) {
-    GST_WARNING_OBJECT (dec, "Frame size not included in caps");
-  }
-  if (!gst_structure_get_int (s, "channels", &dec->n_channels)) {
-    GST_WARNING_OBJECT (dec, "Number of channels not included in caps");
-  }
-  if (!gst_structure_get_int (s, "rate", &dec->sample_rate)) {
-    GST_WARNING_OBJECT (dec, "Sample rate not included in caps");
-  }
-  switch (dec->frame_size) {
-    case 2:
-      dec->frame_samples = dec->sample_rate / 400;
-      break;
-    case 5:
-      dec->frame_samples = dec->sample_rate / 200;
-      break;
-    case 10:
-      dec->frame_samples = dec->sample_rate / 100;
-      break;
-    case 20:
-      dec->frame_samples = dec->sample_rate / 50;
-      break;
-    case 40:
-      dec->frame_samples = dec->sample_rate / 25;
-      break;
-    case 60:
-      dec->frame_samples = 3 * dec->sample_rate / 50;
-      break;
-    default:
-      GST_WARNING_OBJECT (dec, "Unsupported frame size: %d", dec->frame_size);
-      break;
-  }
-
-  dec->frame_duration = gst_util_uint64_scale_int (dec->frame_samples,
-      GST_SECOND, dec->sample_rate);
-
-  GST_INFO_OBJECT (dec,
-      "Got frame size %d, %d channels, %d Hz, giving %d samples per frame, frame duration %"
-      GST_TIME_FORMAT, dec->frame_size, dec->n_channels, dec->sample_rate,
-      dec->frame_samples, GST_TIME_ARGS (dec->frame_duration));
-
-done:
-  gst_object_unref (dec);
-  return ret;
-}
-
-static gboolean
-opus_dec_convert (GstPad * pad,
-    GstFormat src_format, gint64 src_value,
-    GstFormat * dest_format, gint64 * dest_value)
-{
-  gboolean res = TRUE;
-  GstOpusDec *dec;
-  guint64 scale = 1;
-
-  dec = GST_OPUS_DEC (gst_pad_get_parent (pad));
-
-  if (dec->packetno < 1) {
-    res = FALSE;
-    goto cleanup;
-  }
-
-  if (src_format == *dest_format) {
-    *dest_value = src_value;
-    res = TRUE;
-    goto cleanup;
-  }
-
-  if (pad == dec->sinkpad &&
-      (src_format == GST_FORMAT_BYTES || *dest_format == GST_FORMAT_BYTES)) {
-    res = FALSE;
-    goto cleanup;
-  }
-
-  switch (src_format) {
-    case GST_FORMAT_TIME:
-      switch (*dest_format) {
-        case GST_FORMAT_BYTES:
-          scale = sizeof (gint16) * dec->n_channels;
-        case GST_FORMAT_DEFAULT:
-          *dest_value =
-              gst_util_uint64_scale_int (scale * src_value,
-              dec->sample_rate, GST_SECOND);
-          break;
-        default:
-          res = FALSE;
-          break;
-      }
-      break;
-    case GST_FORMAT_DEFAULT:
-      switch (*dest_format) {
-        case GST_FORMAT_BYTES:
-          *dest_value = src_value * sizeof (gint16) * dec->n_channels;
-          break;
-        case GST_FORMAT_TIME:
-          *dest_value =
-              gst_util_uint64_scale_int (src_value, GST_SECOND,
-              dec->sample_rate);
-          break;
-        default:
-          res = FALSE;
-          break;
-      }
-      break;
-    case GST_FORMAT_BYTES:
-      switch (*dest_format) {
-        case GST_FORMAT_DEFAULT:
-          *dest_value = src_value / (sizeof (gint16) * dec->n_channels);
-          break;
-        case GST_FORMAT_TIME:
-          *dest_value = gst_util_uint64_scale_int (src_value, GST_SECOND,
-              dec->sample_rate * sizeof (gint16) * dec->n_channels);
-          break;
-        default:
-          res = FALSE;
-          break;
-      }
-      break;
-    default:
-      res = FALSE;
-      break;
-  }
-
-cleanup:
-  gst_object_unref (dec);
-  return res;
-}
-
-static gboolean
-opus_dec_sink_query (GstPad * pad, GstQuery * query)
-{
-  GstOpusDec *dec;
-  gboolean res;
-
-  dec = GST_OPUS_DEC (gst_pad_get_parent (pad));
-
-  switch (GST_QUERY_TYPE (query)) {
-    case GST_QUERY_CONVERT:
-    {
-      GstFormat src_fmt, dest_fmt;
-      gint64 src_val, dest_val;
-
-      gst_query_parse_convert (query, &src_fmt, &src_val, &dest_fmt, &dest_val);
-      res = opus_dec_convert (pad, src_fmt, src_val, &dest_fmt, &dest_val);
-      if (res) {
-        gst_query_set_convert (query, src_fmt, src_val, dest_fmt, dest_val);
-      }
-      break;
-    }
-    default:
-      res = gst_pad_query_default (pad, query);
-      break;
-  }
-
-  gst_object_unref (dec);
-  return res;
-}
-
-static gboolean
-opus_dec_src_query (GstPad * pad, GstQuery * query)
-{
-  GstOpusDec *dec;
-  gboolean res = FALSE;
-
-  dec = GST_OPUS_DEC (gst_pad_get_parent (pad));
-
-  switch (GST_QUERY_TYPE (query)) {
-    case GST_QUERY_POSITION:{
-      GstSegment segment;
-      GstFormat format;
-      gint64 cur;
-
-      gst_query_parse_position (query, &format, NULL);
-
-      GST_PAD_STREAM_LOCK (dec->sinkpad);
-      segment = dec->segment;
-      GST_PAD_STREAM_UNLOCK (dec->sinkpad);
-
-      if (segment.format != GST_FORMAT_TIME) {
-        GST_DEBUG_OBJECT (dec, "segment not initialised yet");
-        break;
-      }
-
-      if ((res = opus_dec_convert (dec->srcpad, GST_FORMAT_TIME,
-                  segment.position, &format, &cur))) {
-        gst_query_set_position (query, format, cur);
-      }
-      break;
-    }
-    case GST_QUERY_DURATION:{
-      GstFormat format = GST_FORMAT_TIME;
-      gint64 dur;
-
-      /* get duration from demuxer */
-      if (!gst_pad_query_peer_duration (dec->sinkpad, format, &dur))
-        break;
-
-      gst_query_parse_duration (query, &format, NULL);
-
-      /* and convert it into the requested format */
-      if ((res = opus_dec_convert (dec->srcpad, GST_FORMAT_TIME,
-                  dur, &format, &dur))) {
-        gst_query_set_duration (query, format, dur);
-      }
-      break;
-    }
-    default:
-      res = gst_pad_query_default (pad, query);
-      break;
-  }
-
-  gst_object_unref (dec);
-  return res;
-}
-
-static gboolean
-opus_dec_src_event (GstPad * pad, GstEvent * event)
-{
-  gboolean res = FALSE;
-  GstOpusDec *dec = GST_OPUS_DEC (gst_pad_get_parent (pad));
-
-  GST_LOG_OBJECT (dec, "handling %s event", GST_EVENT_TYPE_NAME (event));
-
-  switch (GST_EVENT_TYPE (event)) {
-    case GST_EVENT_SEEK:{
-      GstFormat format, tformat;
-      gdouble rate;
-      GstEvent *real_seek;
-      GstSeekFlags flags;
-      GstSeekType cur_type, stop_type;
-      gint64 cur, stop;
-      gint64 tcur, tstop;
-
-      gst_event_parse_seek (event, &rate, &format, &flags, &cur_type, &cur,
-          &stop_type, &stop);
-
-      /* we have to ask our peer to seek to time here as we know
-       * nothing about how to generate a granulepos from the src
-       * formats or anything.
-       *
-       * First bring the requested format to time
-       */
-      tformat = GST_FORMAT_TIME;
-      if (!(res = opus_dec_convert (pad, format, cur, &tformat, &tcur)))
-        break;
-      if (!(res = opus_dec_convert (pad, format, stop, &tformat, &tstop)))
-        break;
-
-      /* then seek with time on the peer */
-      real_seek = gst_event_new_seek (rate, GST_FORMAT_TIME,
-          flags, cur_type, tcur, stop_type, tstop);
-
-      GST_LOG_OBJECT (dec, "seek to %" GST_TIME_FORMAT, GST_TIME_ARGS (tcur));
-
-      res = gst_pad_push_event (dec->sinkpad, real_seek);
-      gst_event_unref (event);
-      break;
-    }
-    default:
-      res = gst_pad_event_default (pad, event);
-      break;
-  }
-
-  gst_object_unref (dec);
-  return res;
-}
-
-static gboolean
-opus_dec_sink_event (GstPad * pad, GstEvent * event)
-{
-  GstOpusDec *dec;
-  gboolean ret = FALSE;
-
-  dec = GST_OPUS_DEC (gst_pad_get_parent (pad));
-
-  GST_LOG_OBJECT (dec, "handling %s event", GST_EVENT_TYPE_NAME (event));
-
-  switch (GST_EVENT_TYPE (event)) {
-    case GST_EVENT_SEGMENT:{
-      const GstSegment *segment = NULL;
-
-      gst_event_parse_segment (event, &segment);
-
-      if (segment->format != GST_FORMAT_TIME)
-        goto newseg_wrong_format;
-
-      if (segment->rate <= 0.0)
-        goto newseg_wrong_rate;
-
-#if 0
-      /* TODO: update is gone */
-      if (segment->update) {
-        /* time progressed without data, see if we can fill the gap with
-         * some concealment data */
-        if (dec->segment.position < segment->start) {
-          GstClockTime duration;
-
-          duration = segment->start - dec->segment.position;
-          opus_dec_chain_parse_data (dec, NULL, dec->segment.position,
-              duration);
-        }
-      }
-#endif
-
-      /* now configure the values */
-      gst_segment_copy_into (segment, &dec->segment);
-
-      dec->granulepos = -1;
-
-      GST_DEBUG_OBJECT (dec, "segment now: cur = %" GST_TIME_FORMAT " [%"
-          GST_TIME_FORMAT " - %" GST_TIME_FORMAT "]",
-          GST_TIME_ARGS (dec->segment.position),
-          GST_TIME_ARGS (dec->segment.start),
-          GST_TIME_ARGS (dec->segment.stop));
-
-      ret = gst_pad_push_event (dec->srcpad, event);
-      break;
-    }
-
-    case GST_EVENT_CAPS:
-    {
-      GstCaps *caps;
-
-      gst_event_parse_caps (event, &caps);
-      ret = opus_dec_sink_setcaps (pad, caps);
-      gst_event_unref (event);
-      break;
-    }
-
-    default:
-      ret = gst_pad_event_default (pad, event);
-      break;
-  }
-
-  gst_object_unref (dec);
-  return ret;
-
-  /* ERRORS */
-newseg_wrong_format:
-  {
-    GST_DEBUG_OBJECT (dec, "received non TIME newsegment");
-    gst_object_unref (dec);
-    return FALSE;
-  }
-newseg_wrong_rate:
-  {
-    GST_DEBUG_OBJECT (dec, "negative rates not supported yet");
-    gst_object_unref (dec);
-    return FALSE;
-  }
+  return GST_FLOW_OK;
 }
 
 static GstFlowReturn
-opus_dec_chain_parse_header (GstOpusDec * dec, GstBuffer * buf)
+gst_opus_dec_parse_comments (GstOpusDec * dec, GstBuffer * buf)
 {
-  GstCaps *caps;
-  int err;
-
-#if 0
-  dec->samples_per_frame = opus_packet_get_samples_per_frame (
-      (const unsigned char *) GST_BUFFER_DATA (buf), GST_BUFFER_SIZE (buf));
-#endif
-
-#if 0
-  if (memcmp (dec->header.codec_id, "OPUS    ", 8) != 0)
-    goto invalid_header;
-#endif
-
-  dec->state = opus_decoder_create (dec->sample_rate, dec->n_channels, &err);
-  if (!dec->state || err != OPUS_OK)
-    goto init_failed;
-
-  dec->frame_duration = gst_util_uint64_scale_int (dec->frame_size,
-      GST_SECOND, dec->sample_rate);
-
-  /* set caps */
-  caps = gst_caps_new_simple ("audio/x-raw",
-      "format", G_TYPE_STRING, "S16LE",
-      "rate", G_TYPE_INT, dec->sample_rate,
-      "channels", G_TYPE_INT, dec->n_channels, NULL);
-
-  GST_DEBUG_OBJECT (dec, "rate=%d channels=%d frame-size=%d",
-      dec->sample_rate, dec->n_channels, dec->frame_size);
-
-  if (!gst_pad_set_caps (dec->srcpad, caps))
-    goto nego_failed;
-
-  gst_caps_unref (caps);
-  return GST_FLOW_OK;
-
-  /* ERRORS */
-#if 0
-invalid_header:
-  {
-    GST_ELEMENT_ERROR (GST_ELEMENT (dec), STREAM, DECODE,
-        (NULL), ("Invalid header"));
-    return GST_FLOW_ERROR;
-  }
-mode_init_failed:
-  {
-    GST_ELEMENT_ERROR (GST_ELEMENT (dec), STREAM, DECODE,
-        (NULL), ("Mode initialization failed: %d", error));
-    return GST_FLOW_ERROR;
-  }
-#endif
-init_failed:
-  {
-    GST_ELEMENT_ERROR (GST_ELEMENT (dec), STREAM, DECODE,
-        (NULL), ("couldn't initialize decoder"));
-    return GST_FLOW_ERROR;
-  }
-nego_failed:
-  {
-    GST_ELEMENT_ERROR (GST_ELEMENT (dec), STREAM, DECODE,
-        (NULL), ("couldn't negotiate format"));
-    gst_caps_unref (caps);
-    return GST_FLOW_NOT_NEGOTIATED;
-  }
-}
-
-#if 0
-static GstFlowReturn
-opus_dec_chain_parse_comments (GstOpusDec * dec, GstBuffer * buf)
-{
-  GstTagList *list;
-  gchar *encoder = NULL;
-
-  list = gst_tag_list_from_vorbiscomment_buffer (buf, NULL, 0, &encoder);
-
-  if (!list) {
-    GST_WARNING_OBJECT (dec, "couldn't decode comments");
-    list = gst_tag_list_new ();
-  }
-
-  if (encoder) {
-    gst_tag_list_add (list, GST_TAG_MERGE_REPLACE,
-        GST_TAG_ENCODER, encoder, NULL);
-  }
-
-  gst_tag_list_add (list, GST_TAG_MERGE_REPLACE,
-      GST_TAG_AUDIO_CODEC, "Opus", NULL);
-
-  if (dec->header.bytes_per_packet > 0) {
-    gst_tag_list_add (list, GST_TAG_MERGE_REPLACE,
-        GST_TAG_BITRATE, (guint) dec->header.bytes_per_packet * 8, NULL);
-  }
-
-  GST_INFO_OBJECT (dec, "tags: %" GST_PTR_FORMAT, list);
-
-  gst_element_found_tags_for_pad (GST_ELEMENT (dec), dec->srcpad, list);
-
-  g_free (encoder);
-  g_free (ver);
-
   return GST_FLOW_OK;
 }
-#endif
 
 static GstFlowReturn
 opus_dec_chain_parse_data (GstOpusDec * dec, GstBuffer * buf,
@@ -738,11 +221,6 @@ opus_dec_chain_parse_data (GstOpusDec * dec, GstBuffer * buf,
   GstBuffer *outbuf;
   gint16 *out_data;
   int n, err;
-
-  if (timestamp != -1) {
-    dec->segment.position = timestamp;
-    dec->granulepos = -1;
-  }
 
   if (dec->state == NULL) {
     GstCaps *caps;
@@ -760,7 +238,7 @@ opus_dec_chain_parse_data (GstOpusDec * dec, GstBuffer * buf,
     GST_DEBUG_OBJECT (dec, "rate=%d channels=%d frame-size=%d",
         dec->sample_rate, dec->n_channels, dec->frame_size);
 
-    if (!gst_pad_set_caps (dec->srcpad, caps))
+    if (!gst_pad_set_caps (GST_AUDIO_DECODER_SRC_PAD (dec), caps))
       GST_ERROR ("nego failure");
 
     /* negotiate a bufferpool */
@@ -792,8 +270,8 @@ opus_dec_chain_parse_data (GstOpusDec * dec, GstBuffer * buf,
           48000));
   GST_DEBUG ("channels %d", opus_packet_get_nb_channels (data));
 
-  if (gst_pad_check_reconfigure (dec->srcpad)) {
-    GstCaps *caps = gst_pad_get_current_caps (dec->srcpad);
+  if (gst_pad_check_reconfigure (GST_AUDIO_DECODER_SRC_PAD (dec))) {
+    GstCaps *caps = gst_pad_get_current_caps (GST_AUDIO_DECODER_SRC_PAD (dec));
     gst_opus_dec_negotiate_pool (dec, caps,
         dec->frame_samples * dec->n_channels * 2);
     gst_caps_unref (caps);
@@ -818,8 +296,7 @@ opus_dec_chain_parse_data (GstOpusDec * dec, GstBuffer * buf,
   }
 
   if (!GST_CLOCK_TIME_IS_VALID (timestamp)) {
-    timestamp = gst_util_uint64_scale_int (dec->granulepos - dec->frame_size,
-        GST_SECOND, dec->sample_rate);
+    GST_WARNING_OBJECT (dec, "No timestamp in -> no timestamp out");
   }
 
   GST_DEBUG_OBJECT (dec, "timestamp=%" GST_TIME_FORMAT,
@@ -827,18 +304,12 @@ opus_dec_chain_parse_data (GstOpusDec * dec, GstBuffer * buf,
 
   GST_BUFFER_TIMESTAMP (outbuf) = GST_BUFFER_TIMESTAMP (buf);
   GST_BUFFER_DURATION (outbuf) = GST_BUFFER_DURATION (buf);
-  if (dec->discont) {
-    GST_BUFFER_FLAG_SET (outbuf, GST_BUFFER_FLAG_DISCONT);
-    dec->discont = 0;
-  }
-
-  dec->segment.position += dec->frame_duration;
 
   GST_LOG_OBJECT (dec, "pushing buffer with ts=%" GST_TIME_FORMAT ", dur=%"
       GST_TIME_FORMAT, GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (outbuf)),
       GST_TIME_ARGS (dec->frame_duration));
 
-  res = gst_pad_push (dec->srcpad, outbuf);
+  res = gst_audio_decoder_finish_frame (GST_AUDIO_DECODER (dec), outbuf, 1);
 
   gst_buffer_unmap (outbuf, out_data, out_size);
 
@@ -856,70 +327,182 @@ no_bufferpool:
   return GST_FLOW_ERROR;
 }
 
-static GstFlowReturn
-opus_dec_chain (GstPad * pad, GstBuffer * buf)
+static gint
+gst_opus_dec_get_frame_samples (GstOpusDec * dec)
 {
-  GstFlowReturn res;
-  GstOpusDec *dec;
+  gint frame_samples = 0;
+  switch (dec->frame_size) {
+    case 2:
+      frame_samples = dec->sample_rate / 400;
+      break;
+    case 5:
+      frame_samples = dec->sample_rate / 200;
+      break;
+    case 10:
+      frame_samples = dec->sample_rate / 100;
+      break;
+    case 20:
+      frame_samples = dec->sample_rate / 50;
+      break;
+    case 40:
+      frame_samples = dec->sample_rate / 25;
+      break;
+    case 60:
+      frame_samples = 3 * dec->sample_rate / 50;
+      break;
+    default:
+      GST_WARNING_OBJECT (dec, "Unsupported frame size: %d", dec->frame_size);
+      frame_samples = 0;
+      break;
+  }
+  return frame_samples;
+}
 
-  dec = GST_OPUS_DEC (gst_pad_get_parent (pad));
-  GST_LOG_OBJECT (pad,
-      "Got buffer ts %" GST_TIME_FORMAT ", duration %" GST_TIME_FORMAT,
-      GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buf)),
-      GST_TIME_ARGS (GST_BUFFER_DURATION (buf)));
+static gboolean
+gst_opus_dec_set_format (GstAudioDecoder * bdec, GstCaps * caps)
+{
+  GstOpusDec *dec = GST_OPUS_DEC (bdec);
+  gboolean ret = TRUE;
+  GstStructure *s;
+  const GValue *streamheader;
 
-  if (GST_BUFFER_IS_DISCONT (buf)) {
-    dec->discont = TRUE;
+  GST_DEBUG_OBJECT (dec, "set_format: %" GST_PTR_FORMAT, caps);
+
+  s = gst_caps_get_structure (caps, 0);
+  if ((streamheader = gst_structure_get_value (s, "streamheader")) &&
+      G_VALUE_HOLDS (streamheader, GST_TYPE_ARRAY) &&
+      gst_value_array_get_size (streamheader) >= 2) {
+    const GValue *header, *vorbiscomment;
+    GstBuffer *buf;
+    GstFlowReturn res = GST_FLOW_OK;
+
+    header = gst_value_array_get_value (streamheader, 0);
+    if (header && G_VALUE_HOLDS (header, GST_TYPE_BUFFER)) {
+      buf = gst_value_get_buffer (header);
+      res = gst_opus_dec_parse_header (dec, buf);
+      if (res != GST_FLOW_OK)
+        goto done;
+      gst_buffer_replace (&dec->streamheader, buf);
+    }
+
+    vorbiscomment = gst_value_array_get_value (streamheader, 1);
+    if (vorbiscomment && G_VALUE_HOLDS (vorbiscomment, GST_TYPE_BUFFER)) {
+      buf = gst_value_get_buffer (vorbiscomment);
+      res = gst_opus_dec_parse_comments (dec, buf);
+      if (res != GST_FLOW_OK)
+        goto done;
+      gst_buffer_replace (&dec->vorbiscomment, buf);
+    }
   }
 
-  res = opus_dec_chain_parse_data (dec, buf, GST_BUFFER_TIMESTAMP (buf),
-      GST_BUFFER_DURATION (buf));
+  if (!gst_structure_get_int (s, "frame-size", &dec->frame_size)) {
+    GST_WARNING_OBJECT (dec, "Frame size not included in caps");
+  }
+  if (!gst_structure_get_int (s, "channels", &dec->n_channels)) {
+    GST_WARNING_OBJECT (dec, "Number of channels not included in caps");
+  }
+  if (!gst_structure_get_int (s, "rate", &dec->sample_rate)) {
+    GST_WARNING_OBJECT (dec, "Sample rate not included in caps");
+  }
 
-//done:
-  dec->packetno++;
+  dec->frame_samples = gst_opus_dec_get_frame_samples (dec);
+  dec->frame_duration = gst_util_uint64_scale_int (dec->frame_samples,
+      GST_SECOND, dec->sample_rate);
 
-  gst_buffer_unref (buf);
-  gst_object_unref (dec);
+  GST_INFO_OBJECT (dec,
+      "Got frame size %d, %d channels, %d Hz, giving %d samples per frame, frame duration %"
+      GST_TIME_FORMAT, dec->frame_size, dec->n_channels, dec->sample_rate,
+      dec->frame_samples, GST_TIME_ARGS (dec->frame_duration));
+
+  caps = gst_caps_new_simple ("audio/x-raw",
+      "format", G_TYPE_STRING, "S16LE",
+      "rate", G_TYPE_INT, dec->sample_rate,
+      "channels", G_TYPE_INT, dec->n_channels, NULL);
+  gst_audio_decoder_set_outcaps (GST_AUDIO_DECODER (dec), caps);
+  gst_caps_unref (caps);
+
+done:
+  return ret;
+}
+
+static gboolean
+memcmp_buffers (GstBuffer * buf1, GstBuffer * buf2)
+{
+  gsize size1, size2;
+  gpointer data1;
+  gboolean res;
+
+  size1 = gst_buffer_get_size (buf1);
+  size2 = gst_buffer_get_size (buf2);
+
+  if (size1 != size2)
+    return FALSE;
+
+  data1 = gst_buffer_map (buf1, NULL, NULL, GST_MAP_READ);
+  res = gst_buffer_memcmp (buf2, 0, data1, size1) == 0;
+  gst_buffer_unmap (buf1, data1, size1);
 
   return res;
 }
 
-static GstStateChangeReturn
-opus_dec_change_state (GstElement * element, GstStateChange transition)
+
+static GstFlowReturn
+gst_opus_dec_handle_frame (GstAudioDecoder * adec, GstBuffer * buf)
 {
-  GstStateChangeReturn ret;
-  GstOpusDec *dec = GST_OPUS_DEC (element);
+  GstFlowReturn res;
+  GstOpusDec *dec;
 
-  switch (transition) {
-    case GST_STATE_CHANGE_NULL_TO_READY:
-    case GST_STATE_CHANGE_READY_TO_PAUSED:
-    case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
-    default:
-      break;
-  }
+  /* no fancy draining */
+  if (G_UNLIKELY (!buf))
+    return GST_FLOW_OK;
 
-  ret =
-      GST_ELEMENT_CLASS (gst_opus_dec_parent_class)->change_state (element,
-      transition);
-  if (ret != GST_STATE_CHANGE_SUCCESS)
-    return ret;
+  dec = GST_OPUS_DEC (adec);
+  GST_LOG_OBJECT (dec,
+      "Got buffer ts %" GST_TIME_FORMAT ", duration %" GST_TIME_FORMAT,
+      GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buf)),
+      GST_TIME_ARGS (GST_BUFFER_DURATION (buf)));
 
-  switch (transition) {
-    case GST_STATE_CHANGE_PLAYING_TO_PAUSED:
-      break;
-    case GST_STATE_CHANGE_PAUSED_TO_READY:
-      gst_opus_dec_reset (dec);
-      if (dec->pool) {
-        gst_buffer_pool_set_active (dec->pool, FALSE);
-        gst_object_unref (dec->pool);
-        dec->pool = NULL;
+  /* If we have the streamheader and vorbiscomment from the caps already
+   * ignore them here */
+  if (dec->streamheader && dec->vorbiscomment) {
+    if (memcmp_buffers (dec->streamheader, buf)) {
+      GST_DEBUG_OBJECT (dec, "found streamheader");
+      gst_audio_decoder_finish_frame (adec, NULL, 1);
+      res = GST_FLOW_OK;
+    } else if (memcmp_buffers (dec->vorbiscomment, buf)) {
+      GST_DEBUG_OBJECT (dec, "found vorbiscomments");
+      gst_audio_decoder_finish_frame (adec, NULL, 1);
+      res = GST_FLOW_OK;
+    } else {
+      res = opus_dec_chain_parse_data (dec, buf, GST_BUFFER_TIMESTAMP (buf),
+          GST_BUFFER_DURATION (buf));
+    }
+  } else {
+    /* Otherwise fall back to packet counting and assume that the
+     * first two packets are the headers. */
+    switch (dec->packetno) {
+      case 0:
+        GST_DEBUG_OBJECT (dec, "counted streamheader");
+        res = GST_FLOW_OK;
+        res = gst_opus_dec_parse_header (dec, buf);
+        gst_audio_decoder_finish_frame (adec, NULL, 1);
+        break;
+      case 1:
+        GST_DEBUG_OBJECT (dec, "counted vorbiscomments");
+        res = GST_FLOW_OK;
+        res = gst_opus_dec_parse_comments (dec, buf);
+        gst_audio_decoder_finish_frame (adec, NULL, 1);
+        break;
+      default:
+      {
+        res = opus_dec_chain_parse_data (dec, buf, GST_BUFFER_TIMESTAMP (buf),
+            GST_BUFFER_DURATION (buf));
+        break;
       }
-      break;
-    case GST_STATE_CHANGE_READY_TO_NULL:
-      break;
-    default:
-      break;
+    }
   }
 
-  return ret;
+  dec->packetno++;
+
+  return res;
 }

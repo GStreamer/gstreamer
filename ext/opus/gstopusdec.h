@@ -22,6 +22,7 @@
 #define __GST_OPUS_DEC_H__
 
 #include <gst/gst.h>
+#include <gst/audio/gstaudiodecoder.h>
 #include <opus/opus.h>
 
 G_BEGIN_DECLS
@@ -41,11 +42,7 @@ typedef struct _GstOpusDec GstOpusDec;
 typedef struct _GstOpusDecClass GstOpusDecClass;
 
 struct _GstOpusDec {
-  GstElement            element;
-
-  /* pads */
-  GstPad                *sinkpad;
-  GstPad                *srcpad;
+  GstAudioDecoder       element;
 
   OpusDecoder          *state;
   int frame_samples;
@@ -54,13 +51,8 @@ struct _GstOpusDec {
   GstClockTime          frame_duration;
   guint64               packetno;
 
-  GstSegment            segment;    /* STREAM LOCK */
-  gint64                granulepos; /* -1 = needs to be set from current time */
-  gboolean              discont;
-
   GstBuffer            *streamheader;
   GstBuffer            *vorbiscomment;
-  GList                *extra_headers;
 
   int sample_rate;
   int n_channels;
@@ -69,7 +61,7 @@ struct _GstOpusDec {
 };
 
 struct _GstOpusDecClass {
-  GstElementClass parent_class;
+  GstAudioDecoderClass parent_class;
 };
 
 GType gst_opus_dec_get_type (void);
