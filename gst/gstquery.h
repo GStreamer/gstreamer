@@ -56,7 +56,6 @@ G_BEGIN_DECLS
  * @GST_QUERY_ALLOCATION: the buffer allocation properties
  * @GST_QUERY_SCHEDULING: the scheduling properties
  * @GST_QUERY_ACCEPT_CAPS: the accept caps query
- * @GST_QUERY_LAST: last defined query value
  *
  * Standard predefined Query types
  */
@@ -78,8 +77,7 @@ typedef enum {
   GST_QUERY_URI,
   GST_QUERY_ALLOCATION,
   GST_QUERY_SCHEDULING,
-  GST_QUERY_ACCEPT_CAPS,
-  GST_QUERY_LAST
+  GST_QUERY_ACCEPT_CAPS
 } GstQueryType;
 
 /**
