@@ -622,6 +622,22 @@ wait_for_element_message (GstElement * camera, const gchar * name,
   return msg;
 }
 
+static void
+wait_for_idle_state (void)
+{
+  gboolean idle = FALSE;
+
+  /* not the ideal way, but should be enough for testing */
+  while (idle == FALSE) {
+    g_object_get (camera, "idle", &idle, NULL);
+    if (idle)
+      break;
+
+    g_usleep (GST_SECOND / 5);
+  }
+  fail_unless (idle);
+}
+
 GST_START_TEST (test_single_image_capture)
 {
   gboolean idle;
@@ -652,8 +668,7 @@ GST_START_TEST (test_single_image_capture)
   /* check that we got a preview image */
   check_preview_image (camera, image_filename, 0);
 
-  g_object_get (camera, "idle", &idle, NULL);
-  fail_unless (idle);
+  wait_for_idle_state ();
   gst_element_set_state (GST_ELEMENT (camera), GST_STATE_NULL);
   check_file_validity (image_filename, 0, NULL, 0, 0, NO_AUDIO);
 }
@@ -705,8 +720,7 @@ GST_START_TEST (test_multiple_image_captures)
     check_preview_image (camera, image_filename, i);
   }
 
-  g_object_get (camera, "idle", &idle, NULL);
-  fail_unless (idle);
+  wait_for_idle_state ();
   gst_element_set_state (GST_ELEMENT (camera), GST_STATE_NULL);
   for (i = 0; i < 3; i++) {
     check_file_validity (image_filename, i, NULL, widths[i], heights[i],
@@ -756,8 +770,7 @@ GST_START_TEST (test_single_video_recording)
   fail_unless (msg != NULL);
   gst_message_unref (msg);
 
-  g_object_get (camera, "idle", &idle, NULL);
-  fail_unless (idle);
+  wait_for_idle_state ();
   gst_element_set_state (GST_ELEMENT (camera), GST_STATE_NULL);
 
   check_file_validity (video_filename, 0, NULL, 0, 0, WITH_AUDIO);
@@ -819,8 +832,7 @@ GST_START_TEST (test_multiple_video_recordings)
 
     check_preview_image (camera, video_filename, i);
 
-    g_object_get (camera, "idle", &idle, NULL);
-    fail_unless (idle);
+    wait_for_idle_state ();
   }
   gst_element_set_state (GST_ELEMENT (camera), GST_STATE_NULL);
 
@@ -834,7 +846,6 @@ GST_END_TEST;
 
 GST_START_TEST (test_image_video_cycle)
 {
-  gboolean idle;
   gint i;
 
   if (!camera)
@@ -854,8 +865,7 @@ GST_START_TEST (test_image_video_cycle)
     const gchar *img_filename;
     const gchar *vid_filename;
 
-    g_object_get (camera, "idle", &idle, NULL);
-    fail_unless (idle);
+    wait_for_idle_state ();
 
     /* take a picture */
     img_filename = make_const_file_name (image_filename, i);
@@ -885,10 +895,9 @@ GST_START_TEST (test_image_video_cycle)
     gst_message_unref (msg);
 
     check_preview_image (camera, vid_filename, i);
-
-    /* wait for capture to finish */
-    g_usleep (G_USEC_PER_SEC);
   }
+
+  wait_for_idle_state ();
   gst_element_set_state (GST_ELEMENT (camera), GST_STATE_NULL);
 
   /* validate all the files */
@@ -1193,8 +1202,7 @@ GST_START_TEST (test_idle_property)
 
   check_preview_image (camera, video_filename, 0);
 
-  g_object_get (camera, "idle", &idle, NULL);
-  fail_unless (idle);
+  wait_for_idle_state ();
 
   gst_element_set_state (GST_ELEMENT (camera), GST_STATE_NULL);
 
