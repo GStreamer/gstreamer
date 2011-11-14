@@ -333,7 +333,7 @@ EmptyBufferDone (OMX_HANDLETYPE hComponent, OMX_PTR pAppData,
       port->index, buf);
   buf->used = FALSE;
 
-  /* Some OMX implementations don't reset nOffset
+  /* XXX: Some OMX implementations don't reset nOffset
    * when the complete buffer is emptied but instead
    * only reset nFilledLen. We reset nOffset to 0
    * if nFilledLen == 0, which is safe to do because
