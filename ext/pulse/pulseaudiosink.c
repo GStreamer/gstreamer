@@ -537,7 +537,6 @@ dbin2_event_probe (GstPad * pad, GstMiniObject * obj, gpointer data)
   if (GST_EVENT_TYPE (event) == GST_EVENT_NEWSEGMENT) {
     GST_DEBUG_OBJECT (pbin, "Got newsegment - dropping");
     gst_pad_remove_event_probe (pad, pbin->event_probe_id);
-    gst_object_unref (pbin);
     return FALSE;
   }
 
@@ -596,8 +595,9 @@ gst_pulse_audio_sink_add_dbin2 (GstPulseAudioSink * pbin)
 
   /* Trap the newsegment events that we feed the decodebin and discard them */
   sinkpad = gst_element_get_static_pad (GST_ELEMENT (pbin->psink), "sink");
-  pbin->event_probe_id = gst_pad_add_event_probe (sinkpad,
-      G_CALLBACK (dbin2_event_probe), gst_object_ref (pbin));
+  pbin->event_probe_id = gst_pad_add_event_probe_full (sinkpad,
+      G_CALLBACK (dbin2_event_probe), gst_object_ref (pbin),
+      (GDestroyNotify) gst_object_unref);
   gst_object_unref (sinkpad);
   sinkpad = NULL;
 
