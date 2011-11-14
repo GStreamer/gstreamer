@@ -65,6 +65,17 @@ typedef gboolean (*GstMetaInitFunction) (GstMeta *meta, gpointer params, GstBuff
  */
 typedef void (*GstMetaFreeFunction)     (GstMeta *meta, GstBuffer *buffer);
 
+/**
+ * GstMetaCopyFunction:
+ * @dest: a destination #GstBuffer
+ * @meta: a #GstMeta
+ * @buffer: a #GstBuffer
+ * @offset: an offset
+ * @size: a size
+ *
+ * Function called when the region at @offset and @size in @buffer is copied
+ * into @dest. The function should update the metadata on @dest using @meta.
+ */
 typedef void (*GstMetaCopyFunction)     (GstBuffer *dest, GstMeta *meta,
                                          GstBuffer *buffer, gsize offset, gsize size);
 /**
@@ -107,6 +118,7 @@ struct _GstMetaInfo {
   GstMetaCopyFunction        copy_func;
   GstMetaTransformFunction   transform_func;
 
+  /*< private >*/
   gpointer _gst_reserved[GST_PADDING];
 };
 

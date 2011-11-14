@@ -90,6 +90,7 @@ typedef struct _GstBufferPoolParams {
   gint64             stop;
   GstBufferPoolFlags flags;
 
+  /*< private >*/
   gpointer _gst_reserved[GST_PADDING];
 } GstBufferPoolParams;
 

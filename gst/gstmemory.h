@@ -266,6 +266,7 @@ struct _GstMemoryInfo {
 
   gpointer user_data;
 
+  /*< private >*/
   gpointer _gst_reserved[GST_PADDING];
 };
 

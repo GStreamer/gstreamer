@@ -616,7 +616,6 @@ typedef enum {
  * @getrangefunc: function to get a range of data from a pad
  * @eventfunc: function to send an event to a pad
  * @offset: the pad offset
- * @querytypefunc: get list of supported queries
  * @queryfunc: perform a query on the pad
  * @iterintlinkfunc: get the internal links iterator of this pad
  *
