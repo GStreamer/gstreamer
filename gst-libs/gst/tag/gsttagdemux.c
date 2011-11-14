@@ -128,7 +128,7 @@ GST_DEBUG_CATEGORY_STATIC (tagdemux_debug);
 
 static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
-    GST_PAD_SOMETIMES,
+    GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("ANY")
     );
 
@@ -144,9 +144,8 @@ static GstFlowReturn gst_tag_demux_read_range (GstTagDemux * tagdemux,
 static GstFlowReturn gst_tag_demux_src_getrange (GstPad * srcpad,
     guint64 offset, guint length, GstBuffer ** buffer);
 
-static gboolean gst_tag_demux_add_srcpad (GstTagDemux * tagdemux,
+static void gst_tag_demux_set_src_caps (GstTagDemux * tagdemux,
     GstCaps * new_caps);
-static gboolean gst_tag_demux_remove_srcpad (GstTagDemux * tagdemux);
 
 static gboolean gst_tag_demux_srcpad_event (GstPad * pad, GstEvent * event);
 static gboolean gst_tag_demux_sink_activate (GstPad * sinkpad);
@@ -255,8 +254,6 @@ gst_tag_demux_reset (GstTagDemux * tagdemux)
   tagdemux->priv->collect_size = 0;
   gst_caps_replace (caps_p, NULL);
 
-  gst_tag_demux_remove_srcpad (tagdemux);
-
   if (tagdemux->priv->event_tags) {
     gst_tag_list_free (tagdemux->priv->event_tags);
     tagdemux->priv->event_tags = NULL;
@@ -284,6 +281,7 @@ gst_tag_demux_init (GstTagDemux * demux, GstTagDemuxClass * gclass)
   demux->priv = g_type_instance_get_private ((GTypeInstance *) demux,
       GST_TYPE_TAG_DEMUX);
 
+  /* sink pad */
   tmpl = gst_element_class_get_pad_template (element_klass, "sink");
   if (tmpl) {
     demux->priv->sinkpad = gst_pad_new_from_template (tmpl, "sink");
@@ -295,7 +293,24 @@ gst_tag_demux_init (GstTagDemux * demux, GstTagDemuxClass * gclass)
     gst_pad_set_chain_function (demux->priv->sinkpad,
         GST_DEBUG_FUNCPTR (gst_tag_demux_chain));
     gst_element_add_pad (GST_ELEMENT (demux), demux->priv->sinkpad);
+  } else {
+    g_warning ("GstTagDemux subclass %s must provide a sink pad template",
+        G_OBJECT_TYPE_NAME (demux));
   }
+
+  /* source pad */
+  tmpl = gst_element_class_get_pad_template (element_klass, "src");
+  demux->priv->srcpad = gst_pad_new_from_template (tmpl, "src");
+  gst_pad_set_query_function (demux->priv->srcpad,
+      GST_DEBUG_FUNCPTR (gst_tag_demux_pad_query));
+  gst_pad_set_event_function (demux->priv->srcpad,
+      GST_DEBUG_FUNCPTR (gst_tag_demux_srcpad_event));
+  gst_pad_set_activatepull_function (demux->priv->srcpad,
+      GST_DEBUG_FUNCPTR (gst_tag_demux_src_activate_pull));
+  gst_pad_set_getrange_function (demux->priv->srcpad,
+      GST_DEBUG_FUNCPTR (gst_tag_demux_src_getrange));
+  gst_pad_use_fixed_caps (demux->priv->srcpad);
+  gst_element_add_pad (GST_ELEMENT (demux), demux->priv->srcpad);
 
   gst_tag_demux_reset (demux);
 }
@@ -310,72 +325,24 @@ gst_tag_demux_dispose (GObject * object)
   G_OBJECT_CLASS (parent_class)->dispose (object);
 }
 
-static gboolean
-gst_tag_demux_add_srcpad (GstTagDemux * tagdemux, GstCaps * new_caps)
+// FIXME: convert to set_caps / sending a caps event
+static void
+gst_tag_demux_set_src_caps (GstTagDemux * tagdemux, GstCaps * new_caps)
 {
-  if (tagdemux->priv->src_caps == NULL ||
-      !gst_caps_is_equal (new_caps, tagdemux->priv->src_caps)) {
+  GstCaps *old_caps = tagdemux->priv->src_caps;
+
+  if (old_caps == NULL || !gst_caps_is_equal (new_caps, old_caps)) {
 
     gst_caps_replace (&tagdemux->priv->src_caps, new_caps);
 
-    if (tagdemux->priv->srcpad != NULL) {
-      GST_DEBUG_OBJECT (tagdemux, "Changing src pad caps to %" GST_PTR_FORMAT,
-          tagdemux->priv->src_caps);
+    GST_DEBUG_OBJECT (tagdemux, "Changing src pad caps to %" GST_PTR_FORMAT,
+        tagdemux->priv->src_caps);
 
-      gst_pad_set_caps (tagdemux->priv->srcpad, tagdemux->priv->src_caps);
-    }
+    gst_pad_set_caps (tagdemux->priv->srcpad, tagdemux->priv->src_caps);
   } else {
     /* Caps never changed */
   }
-
-  if (tagdemux->priv->srcpad == NULL) {
-    tagdemux->priv->srcpad =
-        gst_pad_new_from_template (gst_element_class_get_pad_template
-        (GST_ELEMENT_GET_CLASS (tagdemux), "src"), "src");
-    g_return_val_if_fail (tagdemux->priv->srcpad != NULL, FALSE);
-
-    gst_pad_set_query_function (tagdemux->priv->srcpad,
-        GST_DEBUG_FUNCPTR (gst_tag_demux_pad_query));
-    gst_pad_set_event_function (tagdemux->priv->srcpad,
-        GST_DEBUG_FUNCPTR (gst_tag_demux_srcpad_event));
-    gst_pad_set_activatepull_function (tagdemux->priv->srcpad,
-        GST_DEBUG_FUNCPTR (gst_tag_demux_src_activate_pull));
-    gst_pad_set_getrange_function (tagdemux->priv->srcpad,
-        GST_DEBUG_FUNCPTR (gst_tag_demux_src_getrange));
-
-    gst_pad_use_fixed_caps (tagdemux->priv->srcpad);
-
-    if (tagdemux->priv->src_caps)
-      gst_pad_set_caps (tagdemux->priv->srcpad, tagdemux->priv->src_caps);
-
-    GST_DEBUG_OBJECT (tagdemux, "Adding src pad with caps %" GST_PTR_FORMAT,
-        tagdemux->priv->src_caps);
-
-    gst_object_ref (tagdemux->priv->srcpad);
-    gst_pad_set_active (tagdemux->priv->srcpad, TRUE);
-    if (!gst_element_add_pad (GST_ELEMENT (tagdemux), tagdemux->priv->srcpad))
-      return FALSE;
-    gst_element_no_more_pads (GST_ELEMENT (tagdemux));
-  }
-
-  return TRUE;
 }
-
-static gboolean
-gst_tag_demux_remove_srcpad (GstTagDemux * demux)
-{
-  gboolean res = TRUE;
-
-  if (demux->priv->srcpad != NULL) {
-    GST_DEBUG_OBJECT (demux, "Removing src pad");
-    res = gst_element_remove_pad (GST_ELEMENT (demux), demux->priv->srcpad);
-    g_return_val_if_fail (res != FALSE, FALSE);
-    gst_object_unref (demux->priv->srcpad);
-    demux->priv->srcpad = NULL;
-  }
-
-  return res;
-};
 
 /* will return FALSE if buffer is beyond end of data; will return TRUE
  * if buffer was trimmed successfully or didn't need trimming, but may
@@ -652,11 +619,7 @@ gst_tag_demux_chain (GstPad * pad, GstBuffer * buf)
       GST_DEBUG_OBJECT (demux, "Found type %" GST_PTR_FORMAT " with a "
           "probability of %u", caps, probability);
 
-      if (!gst_tag_demux_add_srcpad (demux, caps)) {
-        GST_DEBUG_OBJECT (demux, "Failed to add srcpad");
-        gst_caps_unref (caps);
-        goto error;
-      }
+      gst_tag_demux_set_src_caps (demux, caps);
       gst_caps_unref (caps);
 
       /* Move onto streaming and fall-through to push out existing
@@ -707,11 +670,6 @@ gst_tag_demux_chain (GstPad * pad, GstBuffer * buf)
     }
   }
   return GST_FLOW_OK;
-
-error:
-  GST_DEBUG_OBJECT (demux, "error in chain function");
-
-  return GST_FLOW_ERROR;
 }
 
 static gboolean
@@ -1239,11 +1197,8 @@ gst_tag_demux_sink_activate (GstPad * sinkpad)
    * the chain function if we end up in push mode */
   demux->priv->state = GST_TAG_DEMUX_STREAMING;
 
-  /* 6 Add the srcpad for output now we know caps. */
-  if (!gst_tag_demux_add_srcpad (demux, caps)) {
-    GST_DEBUG_OBJECT (demux, "Could not add source pad");
-    goto done_activate;
-  }
+  /* 6 Set the srcpad caps now we know them */
+  gst_tag_demux_set_src_caps (demux, caps);
 
   /* 7 - if the sinkpad is active, it was done by downstream so we're 
    * done, otherwise switch to push */
