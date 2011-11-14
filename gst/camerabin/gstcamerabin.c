@@ -84,6 +84,8 @@
  * unreffed or replaced by a new user set element. Initially only elements
  * needed for view finder mode are created to speed up startup. Image bin and
  * video bin elements are created when setting the mode or starting capture.
+ * GstCameraBin must be in the PLAYING state before #GstCameraBin::capture-start
+ * is called.
  * </para>
  * </refsect2>
  * <refsect2>
