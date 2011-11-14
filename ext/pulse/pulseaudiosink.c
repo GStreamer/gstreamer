@@ -546,7 +546,7 @@ dbin2_event_probe (GstPad * pad, GstMiniObject * obj, gpointer data)
 static void
 pad_added_cb (GstElement * dbin2, GstPad * pad, gpointer * data)
 {
-  GstPulseAudioSink *pbin = GST_PULSE_AUDIO_SINK (data);
+  GstPulseAudioSink *pbin;
   GstPad *sinkpad = NULL;
 
   pbin = GST_PULSE_AUDIO_SINK (data);
