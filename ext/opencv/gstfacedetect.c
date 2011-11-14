@@ -51,7 +51,7 @@
  * <refsect2>
  * <title>Example launch line</title>
  * |[
- * gst-launch-0.10 videotestsrc ! decodebin ! ffmpegcolorspace ! facedetect ! ffmpegcolorspace ! xvimagesink
+ * gst-launch-0.10 autovideosrc ! decodebin2 ! colorspace ! facedetect ! colorspace ! xvimagesink
  * ]|
  * </refsect2>
  */
@@ -225,7 +225,7 @@ gst_facedetect_class_init (GstfacedetectClass * klass)
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_SCALE_FACTOR,
       g_param_spec_double ("scale-factor", "Scale factor",
-          "Factor by which the windows is scaled after each scan",
+          "Factor by which the frame is scaled after each object scan",
           1.1, 10.0, DEFAULT_SCALE_FACTOR,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_MIN_NEIGHBORS,
@@ -234,13 +234,13 @@ gst_facedetect_class_init (GstfacedetectClass * klass)
           "an object", 0, G_MAXINT, DEFAULT_MIN_NEIGHBORS,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_MIN_SIZE_WIDTH,
-      g_param_spec_int ("min-size-width", "Minimum size width",
-          "Minimum window width size", 0, G_MAXINT, DEFAULT_MIN_SIZE_WIDTH,
-          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+      g_param_spec_int ("min-size-width", "Minimum face width",
+          "Minimum area width to be recognized as a face", 0, G_MAXINT,
+          DEFAULT_MIN_SIZE_WIDTH, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_MIN_SIZE_HEIGHT,
-      g_param_spec_int ("min-size-height", "Minimum size height",
-          "Minimum window height size", 0, G_MAXINT, DEFAULT_MIN_SIZE_HEIGHT,
-          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+      g_param_spec_int ("min-size-height", "Minimum face height",
+          "Minimum area height to be recognized as a face", 0, G_MAXINT,
+          DEFAULT_MIN_SIZE_HEIGHT, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 }
 
 /* initialize the new element
@@ -389,18 +389,16 @@ static GstFlowReturn
 gst_facedetect_transform_ip (GstOpencvVideoFilter * base, GstBuffer * buf,
     IplImage * img)
 {
-  Gstfacedetect *filter;
-  CvSeq *faces;
-  int i;
-
-  filter = GST_FACEDETECT (base);
-
-  cvCvtColor (img, filter->cvGray, CV_RGB2GRAY);
-  cvClearMemStorage (filter->cvStorage);
+  Gstfacedetect *filter = GST_FACEDETECT (base);
 
   if (filter->cvCascade) {
     GstMessage *msg = NULL;
     GValue facelist = { 0 };
+    CvSeq *faces;
+    gint i;
+
+    cvCvtColor (img, filter->cvGray, CV_RGB2GRAY);
+    cvClearMemStorage (filter->cvStorage);
 
     faces =
         cvHaarDetectObjects (filter->cvGray, filter->cvCascade,
@@ -419,36 +417,44 @@ gst_facedetect_transform_ip (GstOpencvVideoFilter * base, GstBuffer * buf,
     for (i = 0; i < (faces ? faces->total : 0); i++) {
       CvRect *r = (CvRect *) cvGetSeqElem (faces, i);
       GValue value = { 0 };
-
       GstStructure *s = gst_structure_new ("face",
           "x", G_TYPE_UINT, r->x,
           "y", G_TYPE_UINT, r->y,
           "width", G_TYPE_UINT, r->width,
           "height", G_TYPE_UINT, r->height, NULL);
 
-      GstMessage *m = gst_message_new_element (GST_OBJECT (filter), s);
+      GST_LOG_OBJECT (filter, "%2d/%2d: x,y = %4u,%4u: w.h = %4u,%4u", i,
+          faces->total, r->x, r->y, r->width, r->height);
 
       g_value_init (&value, GST_TYPE_STRUCTURE);
       gst_value_set_structure (&value, s);
       gst_value_list_append_value (&facelist, &value);
       g_value_unset (&value);
-
-      gst_element_post_message (GST_ELEMENT (filter), m);
-
-      if (filter->display) {
-        if (gst_buffer_is_writable (buf)) {
+    }
+    if (filter->display) {
+      if (gst_buffer_is_writable (buf)) {
+        /* draw colored circles for each face */
+        for (i = 0; i < (faces ? faces->total : 0); i++) {
+          CvRect *r = (CvRect *) cvGetSeqElem (faces, i);
           CvPoint center;
-          int radius;
-          center.x = cvRound ((r->x + r->width * 0.5));
-          center.y = cvRound ((r->y + r->height * 0.5));
-          radius = cvRound ((r->width + r->height) * 0.25);
-          cvCircle (img, center, radius, CV_RGB (255, 32, 32), 3, 8, 0);
-        } else {
-          GST_DEBUG_OBJECT (filter, "Buffer is not writable, not drawing "
-              "circles for faces");
-        }
-      }
+          CvSize axes;
+          gdouble w = r->width * 0.5;
+          gdouble h = r->height * 0.6;  /* tweak for face form */
+          gint cb = 255 - ((i & 3) << 7);
+          gint cg = 255 - ((i & 12) << 5);
+          gint cr = 255 - ((i & 48) << 3);
 
+          center.x = cvRound ((r->x + w));
+          center.y = cvRound ((r->y + h));
+          axes.width = w;
+          axes.height = h;
+          cvEllipse (img, center, axes, 0.0, 0.0, 360.0, CV_RGB (cr, cg, cb),
+              3, 8, 0);
+        }
+      } else {
+        GST_LOG_OBJECT (filter, "Buffer is not writable, not drawing "
+            "circles for faces");
+      }
     }
 
     if (msg) {
