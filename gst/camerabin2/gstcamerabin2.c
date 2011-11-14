@@ -399,12 +399,6 @@ gst_camera_bin_start_capture (GstCameraBin2 * camerabin)
     if (camerabin->audio_src) {
       GstClock *clock = gst_pipeline_get_clock (GST_PIPELINE_CAST (camerabin));
 
-      /* need to reset eos status (pads could be flushing) */
-      gst_element_set_state (camerabin->audio_capsfilter, GST_STATE_READY);
-      gst_element_set_state (camerabin->audio_volume, GST_STATE_READY);
-
-      gst_element_sync_state_with_parent (camerabin->audio_capsfilter);
-      gst_element_sync_state_with_parent (camerabin->audio_volume);
       gst_element_set_state (camerabin->audio_src, GST_STATE_PAUSED);
 
       gst_element_set_base_time (camerabin->audio_src,
@@ -536,16 +530,6 @@ gst_camera_bin_src_notify_readyforcapture (GObject * obj, GParamSpec * pspec,
     }
 
     camera->capture_index++;
-  } else {
-    if (camera->mode == MODE_VIDEO && camera->audio_src) {
-      /* FIXME We need to set audiosrc to null to make it resync the ringbuffer
-       * while bug https://bugzilla.gnome.org/show_bug.cgi?id=648359 isn't
-       * fixed.
-       *
-       * Also, we set to NULL here to stop capturing audio through to the next
-       * video mode start capture and to clear EOS. */
-      gst_element_set_state (camera->audio_src, GST_STATE_NULL);
-    }
   }
 }
 
@@ -1000,8 +984,25 @@ gst_camera_bin_video_reset_elements (gpointer u_data)
   /* reset element states to clear eos/flushing pads */
   gst_element_set_state (camerabin->video_encodebin, GST_STATE_READY);
   gst_element_set_state (camerabin->videobin_capsfilter, GST_STATE_READY);
-  gst_element_set_state (camerabin->videobin_capsfilter, GST_STATE_PLAYING);
-  gst_element_set_state (camerabin->video_encodebin, GST_STATE_PLAYING);
+  gst_element_sync_state_with_parent (camerabin->videobin_capsfilter);
+  gst_element_sync_state_with_parent (camerabin->video_encodebin);
+
+  if (camerabin->audio_src) {
+    gst_element_set_state (camerabin->audio_capsfilter, GST_STATE_READY);
+    gst_element_set_state (camerabin->audio_volume, GST_STATE_READY);
+
+    /* FIXME We need to set audiosrc to null to make it resync the ringbuffer
+     * while bug https://bugzilla.gnome.org/show_bug.cgi?id=648359 isn't
+     * fixed.
+     *
+     * Also, we don't reinit the audiosrc to keep audio devices from being open
+     * and running until we really need them */
+    gst_element_set_state (camerabin->audio_src, GST_STATE_NULL);
+
+    gst_element_sync_state_with_parent (camerabin->audio_capsfilter);
+    gst_element_sync_state_with_parent (camerabin->audio_volume);
+
+  }
 
   GST_DEBUG_OBJECT (camerabin, "Setting video state to idle");
   camerabin->video_state = GST_CAMERA_BIN_VIDEO_IDLE;
