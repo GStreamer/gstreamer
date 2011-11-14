@@ -555,7 +555,7 @@ gst_audio_decoder_setup (GstAudioDecoder * dec)
   gst_query_unref (query);
 
   /* normalize to bool */
-  dec->priv->agg = !!res;
+  dec->priv->agg = ! !res;
 }
 
 static GstFlowReturn
@@ -635,15 +635,11 @@ exit:
 static GstFlowReturn
 gst_audio_decoder_output (GstAudioDecoder * dec, GstBuffer * buf)
 {
-  GstAudioDecoderClass *klass;
   GstAudioDecoderPrivate *priv;
-  GstAudioDecoderContext *ctx;
   GstFlowReturn ret = GST_FLOW_OK;
   GstBuffer *inbuf = NULL;
 
-  klass = GST_AUDIO_DECODER_GET_CLASS (dec);
   priv = dec->priv;
-  ctx = &dec->priv->ctx;
 
   if (G_UNLIKELY (priv->agg < 0))
     gst_audio_decoder_setup (dec);
