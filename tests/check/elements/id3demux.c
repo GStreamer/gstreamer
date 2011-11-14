@@ -235,6 +235,8 @@ check_unsync_v24 (const GstTagList * tags, const gchar * file)
   gchar *album = NULL;
   gchar *title = NULL;
   gchar *artist = NULL;
+  guint8 *data;
+  gsize size;
 
   fail_unless (gst_tag_list_get_string (tags, GST_TAG_TITLE, &title));
   fail_unless (title != NULL);
@@ -256,13 +258,15 @@ check_unsync_v24 (const GstTagList * tags, const gchar * file)
   fail_unless (GST_VALUE_HOLDS_BUFFER (val));
   buf = gst_value_get_buffer (val);
   fail_unless (buf != NULL);
-  fail_unless (GST_BUFFER_CAPS (buf) != NULL);
-  fail_unless_equals_int (GST_BUFFER_SIZE (buf), 38022);
+  /* FIXME 0.11: image buffer fail_unless (GST_BUFFER_CAPS (buf) != NULL); */
+  data = gst_buffer_map (buf, &size, NULL, GST_MAP_READ);
+  fail_unless_equals_int (size, 38022);
   /* check for jpeg start/end markers */
-  fail_unless_equals_int (GST_BUFFER_DATA (buf)[0], 0xff);
-  fail_unless_equals_int (GST_BUFFER_DATA (buf)[1], 0xd8);
-  fail_unless_equals_int (GST_BUFFER_DATA (buf)[38020], 0xff);
-  fail_unless_equals_int (GST_BUFFER_DATA (buf)[38021], 0xd9);
+  fail_unless_equals_int (data[0], 0xff);
+  fail_unless_equals_int (data[1], 0xd8);
+  fail_unless_equals_int (data[38020], 0xff);
+  fail_unless_equals_int (data[38021], 0xd9);
+  gst_buffer_unmap (buf, data, size);
 }
 
 GST_START_TEST (test_unsync_v24)
