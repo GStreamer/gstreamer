@@ -272,12 +272,12 @@ gst_rtcp_buffer_map (GstBuffer * buffer, GstMapFlags flags,
 
 /**
  * gst_rtcp_buffer_unmap:
- * @buffer: a buffer with an RTCP packet
+ * @rtcp: a buffer with an RTCP packet
  *
  * Finish @rtcp after being constructured. This function is usually called
  * after gst_rtcp_buffer_map() and after adding the RTCP items to the new buffer.
  *
- * The function adjusts the size of @buffer with the total length of all the
+ * The function adjusts the size of @rtcp with the total length of all the
  * added packets.
  */
 gboolean
@@ -302,11 +302,11 @@ gst_rtcp_buffer_unmap (GstRTCPBuffer * rtcp)
 
 /**
  * gst_rtcp_buffer_get_packet_count:
- * @buffer: a valid RTCP buffer
+ * @rtcp: a valid RTCP buffer
  *
- * Get the number of RTCP packets in @buffer.
+ * Get the number of RTCP packets in @rtcp.
  *
- * Returns: the number of RTCP packets in @buffer.
+ * Returns: the number of RTCP packets in @rtcp.
  */
 guint
 gst_rtcp_buffer_get_packet_count (GstRTCPBuffer * rtcp)
@@ -371,13 +371,13 @@ read_packet_header (GstRTCPPacket * packet)
 
 /**
  * gst_rtcp_buffer_get_first_packet:
- * @buffer: a valid RTCP buffer
+ * @rtcp: a valid RTCP buffer
  * @packet: a #GstRTCPPacket
  *
  * Initialize a new #GstRTCPPacket pointer that points to the first packet in
- * @buffer.
+ * @rtcp.
  *
- * Returns: TRUE if the packet existed in @buffer.
+ * Returns: TRUE if the packet existed in @rtcp.
  */
 gboolean
 gst_rtcp_buffer_get_first_packet (GstRTCPBuffer * rtcp, GstRTCPPacket * packet)
@@ -437,11 +437,11 @@ end:
 
 /**
  * gst_rtcp_buffer_add_packet:
- * @buffer: a valid RTCP buffer
+ * @rtcp: a valid RTCP buffer
  * @type: the #GstRTCPType of the new packet
  * @packet: pointer to new packet
  *
- * Add a new packet of @type to @buffer. @packet will point to the newly created 
+ * Add a new packet of @type to @rtcp. @packet will point to the newly created 
  * packet.
  *
  * Returns: %TRUE if the packet could be created. This function returns %FALSE

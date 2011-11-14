@@ -157,6 +157,7 @@ struct _GstRTSPTransport {
   /* RTP specific */
   guint          ssrc;
 
+  /*< private >*/
   gpointer _gst_reserved[GST_PADDING];
 };
 

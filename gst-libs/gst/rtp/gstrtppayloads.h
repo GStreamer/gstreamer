@@ -183,6 +183,7 @@ struct _GstRTPPayloadInfo
   const gchar *encoding_parameters;
   guint        bitrate;
 
+  /*< private >*/
   gpointer _gst_reserved[GST_PADDING];
 };
 

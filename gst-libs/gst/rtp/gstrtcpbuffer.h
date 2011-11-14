@@ -171,7 +171,7 @@ struct _GstRTCPBuffer
 
 /**
  * GstRTCPPacket:
- * @buffer: pointer to RTCP buffer
+ * @rtcp: pointer to RTCP buffer
  * @offset: offset of packet in buffer data
  *
  * Data structure that points to a packet at @offset in @buffer.

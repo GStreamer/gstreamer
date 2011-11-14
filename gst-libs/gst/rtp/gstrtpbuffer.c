@@ -201,7 +201,7 @@ gst_rtp_buffer_new_allocate (guint payload_len, guint8 pad_len,
 
 /**
  * gst_rtp_buffer_new_allocate_len:
- * @rtp_len: the total length of the packet
+ * @packet_len: the total length of the packet
  * @pad_len: the amount of padding
  * @csrc_count: the number of CSRC entries
  *
@@ -570,7 +570,7 @@ gst_rtp_buffer_get_padding (GstRTPBuffer * rtp)
 
 /**
  * gst_rtp_buffer_set_padding:
- * @buffer: the buffer
+ * @rtp: the buffer
  * @padding: the new padding
  *
  * Set the padding bit on the RTP packet in @buffer to @padding.
