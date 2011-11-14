@@ -515,7 +515,7 @@ plugin_init (GstPlugin * plugin)
 
   /* FIXME 0.11: rename to something better like madmp3dec or madmpegaudiodec
    * or so? */
-  return gst_element_register (plugin, "mad", GST_RANK_NONE,
+  return gst_element_register (plugin, "mad", GST_RANK_SECONDARY,
       gst_mad_get_type ());
 }
 
