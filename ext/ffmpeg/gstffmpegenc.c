@@ -105,6 +105,7 @@ static GstFlowReturn gst_ffmpegenc_chain_audio (GstPad * pad,
     GstBuffer * buffer);
 static gboolean gst_ffmpegenc_event_sink (GstPad * pad, GstEvent * event);
 static gboolean gst_ffmpegenc_event_src (GstPad * pad, GstEvent * event);
+static gboolean gst_ffmpegenc_query_sink (GstPad * pad, GstQuery * query);
 
 static void gst_ffmpegenc_set_property (GObject * object,
     guint prop_id, const GValue * value, GParamSpec * pspec);
@@ -242,7 +243,7 @@ gst_ffmpegenc_init (GstFFMpegEnc * ffmpegenc)
 
   /* setup pads */
   ffmpegenc->sinkpad = gst_pad_new_from_template (oclass->sinktempl, "sink");
-  gst_pad_set_getcaps_function (ffmpegenc->sinkpad, gst_ffmpegenc_getcaps);
+  gst_pad_set_query_function (ffmpegenc->sinkpad, gst_ffmpegenc_query_sink);
   ffmpegenc->srcpad = gst_pad_new_from_template (oclass->srctempl, "src");
   gst_pad_use_fixed_caps (ffmpegenc->srcpad);
 
@@ -1174,16 +1175,18 @@ gst_ffmpegenc_event_sink (GstPad * pad, GstEvent * event)
       break;
       /* no flushing if flush received,
        * buffers in encoder are considered (in the) past */
-
-    case GST_EVENT_CUSTOM_DOWNSTREAM:{
+    case GST_EVENT_CUSTOM_DOWNSTREAM:
+    {
       const GstStructure *s;
+
       s = gst_event_get_structure (event);
       if (gst_structure_has_name (s, "GstForceKeyUnit")) {
         ffmpegenc->picture->pict_type = FF_I_TYPE;
       }
       break;
     }
-    case GST_EVENT_CAPS:{
+    case GST_EVENT_CAPS:
+    {
       GstCaps *caps;
       gboolean ret;
 
@@ -1191,7 +1194,6 @@ gst_ffmpegenc_event_sink (GstPad * pad, GstEvent * event)
       ret = gst_ffmpegenc_setcaps (ffmpegenc, caps);
       gst_event_unref (event);
       return ret;
-      break;
     }
     default:
       break;
@@ -1228,6 +1230,31 @@ gst_ffmpegenc_event_src (GstPad * pad, GstEvent * event)
     return gst_pad_push_event (ffmpegenc->sinkpad, event);
   else
     return TRUE;
+}
+
+static gboolean
+gst_ffmpegenc_query_sink (GstPad * pad, GstQuery * query)
+{
+  gboolean res = FALSE;
+
+  switch (GST_QUERY_TYPE (query)) {
+    case GST_QUERY_CAPS:
+    {
+      GstCaps *filter, *caps;
+
+      gst_query_parse_caps (query, &filter);
+      caps = gst_ffmpegenc_getcaps (pad, filter);
+      gst_query_set_caps_result (query, caps);
+      gst_caps_unref (caps);
+      res = TRUE;
+      break;
+    }
+    default:
+      res = gst_pad_query_default (pad, query);
+      break;
+  }
+
+  return res;
 }
 
 static void

@@ -475,7 +475,7 @@ gst_ffmpegdec_src_query (GstPad * pad, GstQuery * query)
   ffmpegdec = (GstFFMpegDec *) gst_pad_get_parent (pad);
 
   /* just forward to peer */
-  res = gst_pad_peer_query (ffmpegdec->sinkpad, query);
+  res = gst_pad_query_default (pad, query);
 #if 0
   {
     GstFormat bfmt;
