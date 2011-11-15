@@ -89,6 +89,9 @@ static gboolean gst_omx_video_enc_finish (GstBaseVideoEncoder * encoder);
 
 static GstFlowReturn gst_omx_video_enc_drain (GstOMXVideoEnc * self);
 
+static GstFlowReturn gst_omx_video_enc_handle_output_frame (GstOMXVideoEnc *
+    self, GstOMXPort * port, GstOMXBuffer * buf, GstVideoFrame * frame);
+
 enum
 {
   PROP_0,
@@ -314,6 +317,9 @@ gst_omx_video_enc_class_init (GstOMXVideoEncClass * klass)
   klass->default_sink_template_caps = "video/x-raw-yuv, "
       "width = " GST_VIDEO_SIZE_RANGE ", "
       "height = " GST_VIDEO_SIZE_RANGE ", " "framerate = " GST_VIDEO_FPS_RANGE;
+
+  klass->handle_output_frame =
+      GST_DEBUG_FUNCPTR (gst_omx_video_enc_handle_output_frame);
 }
 
 static void
@@ -698,6 +704,91 @@ _find_nearest_frame (GstOMXVideoEnc * self, GstOMXBuffer * buf)
   return best;
 }
 
+static GstFlowReturn
+gst_omx_video_enc_handle_output_frame (GstOMXVideoEnc * self, GstOMXPort * port,
+    GstOMXBuffer * buf, GstVideoFrame * frame)
+{
+  GstOMXVideoEncClass *klass = GST_OMX_VIDEO_ENC_GET_CLASS (self);
+  GstFlowReturn flow_ret = GST_FLOW_OK;
+
+  if ((buf->omx_buf->nFlags & OMX_BUFFERFLAG_CODECCONFIG)
+      && buf->omx_buf->nFilledLen > 0) {
+    GstCaps *caps;
+    GstBuffer *codec_data;
+
+    caps = gst_caps_copy (GST_PAD_CAPS (GST_BASE_VIDEO_CODEC_SRC_PAD (self)));
+    codec_data = gst_buffer_new_and_alloc (buf->omx_buf->nFilledLen);
+    memcpy (GST_BUFFER_DATA (codec_data),
+        buf->omx_buf->pBuffer + buf->omx_buf->nOffset,
+        buf->omx_buf->nFilledLen);
+
+    gst_caps_set_simple (caps, "codec_data", GST_TYPE_BUFFER, codec_data, NULL);
+    if (!gst_pad_set_caps (GST_BASE_VIDEO_CODEC_SRC_PAD (self), caps)) {
+      gst_caps_unref (caps);
+      return GST_FLOW_NOT_NEGOTIATED;
+    }
+    gst_caps_unref (caps);
+    flow_ret = GST_FLOW_OK;
+  } else if (buf->omx_buf->nFilledLen > 0) {
+    GstBuffer *outbuf;
+
+    if (buf->omx_buf->nFilledLen > 0) {
+      outbuf = gst_buffer_new_and_alloc (buf->omx_buf->nFilledLen);
+
+      memcpy (GST_BUFFER_DATA (outbuf),
+          buf->omx_buf->pBuffer + buf->omx_buf->nOffset,
+          buf->omx_buf->nFilledLen);
+    } else {
+      outbuf = gst_buffer_new ();
+    }
+
+    gst_buffer_set_caps (outbuf,
+        GST_PAD_CAPS (GST_BASE_VIDEO_CODEC_SRC_PAD (self)));
+
+    GST_BUFFER_TIMESTAMP (outbuf) =
+        gst_util_uint64_scale (buf->omx_buf->nTimeStamp, GST_SECOND,
+        OMX_TICKS_PER_SECOND);
+    if (buf->omx_buf->nTickCount != 0)
+      GST_BUFFER_DURATION (outbuf) =
+          gst_util_uint64_scale (buf->omx_buf->nTickCount, GST_SECOND,
+          OMX_TICKS_PER_SECOND);
+
+    if ((klass->hacks & GST_OMX_HACK_SYNCFRAME_FLAG_NOT_USED)
+        || (buf->omx_buf->nFlags & OMX_BUFFERFLAG_SYNCFRAME)) {
+      if (frame)
+        frame->is_sync_point = TRUE;
+      else
+        GST_BUFFER_FLAG_UNSET (outbuf, GST_BUFFER_FLAG_DELTA_UNIT);
+    } else {
+      if (frame)
+        frame->is_sync_point = FALSE;
+      else
+        GST_BUFFER_FLAG_SET (outbuf, GST_BUFFER_FLAG_DELTA_UNIT);
+    }
+
+    if (frame) {
+      frame->src_buffer = outbuf;
+      flow_ret =
+          gst_base_video_encoder_finish_frame (GST_BASE_VIDEO_ENCODER (self),
+          frame);
+    } else {
+      GST_ERROR_OBJECT (self, "No corresponding frame found");
+      flow_ret = gst_pad_push (GST_BASE_VIDEO_CODEC_SRC_PAD (self), outbuf);
+    }
+  } else if (frame != NULL) {
+    flow_ret =
+        gst_base_video_encoder_finish_frame (GST_BASE_VIDEO_ENCODER (self),
+        frame);
+  }
+
+  if (flow_ret == GST_FLOW_OK && (buf->omx_buf->nFlags & OMX_BUFFERFLAG_EOS)) {
+    GST_DEBUG_OBJECT (self, "Component signalled EOS");
+    flow_ret = GST_FLOW_UNEXPECTED;
+  }
+
+  return flow_ret;
+}
+
 static void
 gst_omx_video_enc_loop (GstOMXVideoEnc * self)
 {
@@ -772,89 +863,16 @@ gst_omx_video_enc_loop (GstOMXVideoEnc * self)
 
   GST_BASE_VIDEO_CODEC_STREAM_LOCK (self);
   frame = _find_nearest_frame (self, buf);
-  if ((buf->omx_buf->nFlags & OMX_BUFFERFLAG_CODECCONFIG)
-      && buf->omx_buf->nFilledLen > 0) {
-    GstCaps *caps;
-    GstBuffer *codec_data;
 
-    caps = gst_caps_copy (GST_PAD_CAPS (GST_BASE_VIDEO_CODEC_SRC_PAD (self)));
-    codec_data = gst_buffer_new_and_alloc (buf->omx_buf->nFilledLen);
-    memcpy (GST_BUFFER_DATA (codec_data),
-        buf->omx_buf->pBuffer + buf->omx_buf->nOffset,
-        buf->omx_buf->nFilledLen);
+  g_assert (klass->handle_output_frame);
+  flow_ret = klass->handle_output_frame (self, self->out_port, buf, frame);
 
-    gst_caps_set_simple (caps, "codec_data", GST_TYPE_BUFFER, codec_data, NULL);
-    if (!gst_pad_set_caps (GST_BASE_VIDEO_CODEC_SRC_PAD (self), caps)) {
-      gst_caps_unref (caps);
-      if (buf)
-        gst_omx_port_release_buffer (self->out_port, buf);
-      GST_BASE_VIDEO_CODEC_STREAM_UNLOCK (self);
-      goto caps_failed;
-    }
-    gst_caps_unref (caps);
-    flow_ret = GST_FLOW_OK;
-  } else if (buf->omx_buf->nFilledLen > 0) {
-    GstBuffer *outbuf;
-
-    if (buf->omx_buf->nFilledLen > 0) {
-      outbuf = gst_buffer_new_and_alloc (buf->omx_buf->nFilledLen);
-
-      memcpy (GST_BUFFER_DATA (outbuf),
-          buf->omx_buf->pBuffer + buf->omx_buf->nOffset,
-          buf->omx_buf->nFilledLen);
-    } else {
-      outbuf = gst_buffer_new ();
-    }
-
-    gst_buffer_set_caps (outbuf,
-        GST_PAD_CAPS (GST_BASE_VIDEO_CODEC_SRC_PAD (self)));
-
-    GST_BUFFER_TIMESTAMP (outbuf) =
-        gst_util_uint64_scale (buf->omx_buf->nTimeStamp, GST_SECOND,
-        OMX_TICKS_PER_SECOND);
-    if (buf->omx_buf->nTickCount != 0)
-      GST_BUFFER_DURATION (outbuf) =
-          gst_util_uint64_scale (buf->omx_buf->nTickCount, GST_SECOND,
-          OMX_TICKS_PER_SECOND);
-
-    if ((klass->hacks & GST_OMX_HACK_SYNCFRAME_FLAG_NOT_USED)
-        || (buf->omx_buf->nFlags & OMX_BUFFERFLAG_SYNCFRAME)) {
-      if (frame)
-        frame->is_sync_point = TRUE;
-      else
-        GST_BUFFER_FLAG_UNSET (outbuf, GST_BUFFER_FLAG_DELTA_UNIT);
-    } else {
-      if (frame)
-        frame->is_sync_point = FALSE;
-      else
-        GST_BUFFER_FLAG_SET (outbuf, GST_BUFFER_FLAG_DELTA_UNIT);
-    }
-
-    if (frame) {
-      frame->src_buffer = outbuf;
-      flow_ret =
-          gst_base_video_encoder_finish_frame (GST_BASE_VIDEO_ENCODER (self),
-          frame);
-    } else {
-      GST_ERROR_OBJECT (self, "No corresponding frame found");
-      flow_ret = gst_pad_push (GST_BASE_VIDEO_CODEC_SRC_PAD (self), outbuf);
-    }
-  } else if (frame != NULL) {
-    flow_ret =
-        gst_base_video_encoder_finish_frame (GST_BASE_VIDEO_ENCODER (self),
-        frame);
-  }
-
-  if ((flow_ret == GST_FLOW_OK && (buf->omx_buf->nFlags & OMX_BUFFERFLAG_EOS))
-      || flow_ret == GST_FLOW_UNEXPECTED) {
+  if (flow_ret == GST_FLOW_UNEXPECTED) {
     g_mutex_lock (self->drain_lock);
     if (self->draining) {
       GST_DEBUG_OBJECT (self, "Drained");
       self->draining = FALSE;
       g_cond_broadcast (self->drain_cond);
-    } else if (flow_ret == GST_FLOW_OK) {
-      GST_DEBUG_OBJECT (self, "Component signalled EOS");
-      flow_ret = GST_FLOW_UNEXPECTED;
     }
     g_mutex_unlock (self->drain_lock);
   } else {

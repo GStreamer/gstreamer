@@ -94,6 +94,7 @@ struct _GstOMXVideoEncClass
 
   gboolean (*set_format)       (GstOMXVideoEnc * self, GstOMXPort * port, GstVideoState * state);
   GstCaps *(*get_caps)         (GstOMXVideoEnc * self, GstOMXPort * port, GstVideoState * state);
+  GstFlowReturn (*handle_output_frame) (GstOMXVideoEnc * self, GstOMXPort * port, GstOMXBuffer * buffer, GstVideoFrame * frame);
 };
 
 GType gst_omx_video_enc_get_type (void);
