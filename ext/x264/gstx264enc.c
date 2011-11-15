@@ -1678,7 +1678,7 @@ gst_x264_enc_sink_get_caps (GstPad * pad, GstCaps * filter)
     GstCaps *peercaps;
     guint i, n;
 
-    peercaps = gst_pad_get_caps (peer, NULL);
+    peercaps = gst_pad_query_caps (peer, NULL);
 
     /* Translate peercaps to YUV */
     peercaps = gst_caps_make_writable (peercaps);
