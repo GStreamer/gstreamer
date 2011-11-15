@@ -2719,8 +2719,8 @@ query_accept_caps_func (GstPad * pad, QueryAcceptCapsData * data)
  * @pad: a #GstPad to proxy.
  * @query: an ACCEPT_CAPS #GstQuery.
  *
- * Calls gst_pad_accept_caps() for every pad with oposite direction belonging
- * to the same element as @pad, and returns the intersection of the results.
+ * Calls gst_pad_accept_caps() for all internally linked pads of @pad and
+ * returns the intersection of the results.
  *
  * This function is useful as a default accept caps query function for an element
  * that can handle any stream format, but requires caps that are acceptable for
@@ -2798,8 +2798,8 @@ query_caps_func (GstPad * pad, QueryCapsData * data)
  * @pad: a #GstPad to proxy.
  * @query: a CAPS #GstQuery.
  *
- * Calls gst_pad_get_caps() for every pad with oposite direction belonging
- * to the same element as @pad, and returns the intersection of the results.
+ * Calls gst_pad_get_caps() for all internally linked pads fof @pad and returns
+ * the intersection of the results.
  *
  * This function is useful as a default caps query function for an element
  * that can handle any stream format, but requires all its pads to have
