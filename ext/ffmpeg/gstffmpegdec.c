@@ -2005,7 +2005,7 @@ gst_ffmpegdec_video_frame (GstFFMpegDec * ffmpegdec,
      * really remove this because it is the only way of setting frame offsets
      * on outgoing buffers. We should have metadata so that the upstream peer
      * can set a frame number on the encoded data. */
-    gst_pad_query_peer_convert (ffmpegdec->sinkpad,
+    gst_pad_peer_query_convert (ffmpegdec->sinkpad,
         GST_FORMAT_TIME, out_timestamp, GST_FORMAT_DEFAULT, &out_offset);
   } else if (dec_info->offset != GST_BUFFER_OFFSET_NONE) {
     /* FIXME, the input offset is input media specific and might not
