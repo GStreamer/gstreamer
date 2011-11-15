@@ -1581,7 +1581,7 @@ find_timestamps (MpegTSBase * base, guint64 initoff, guint64 * offset)
   demux->program = NULL;
 
   /* Find end position */
-  if (G_UNLIKELY (!gst_pad_query_peer_duration (base->sinkpad, GST_FORMAT_BYTES,
+  if (G_UNLIKELY (!gst_pad_peer_query_duration (base->sinkpad, GST_FORMAT_BYTES,
               &total_bytes))) {
     GST_WARNING_OBJECT (base, "Couldn't get upstream size in bytes");
     ret = GST_FLOW_ERROR;

@@ -754,7 +754,7 @@ gst_base_video_decoder_src_query (GstPad * pad, GstQuery * query)
         gint64 value;
 
         format = GST_FORMAT_BYTES;
-        if (gst_pad_query_peer_duration (GST_BASE_VIDEO_CODEC_SINK_PAD (dec),
+        if (gst_pad_peer_query_duration (GST_BASE_VIDEO_CODEC_SINK_PAD (dec),
                 format, &value)) {
           GST_LOG_OBJECT (dec, "upstream size %" G_GINT64_FORMAT, value);
           format = GST_FORMAT_TIME;
