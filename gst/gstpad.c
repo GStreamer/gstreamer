@@ -2780,7 +2780,7 @@ gst_pad_query_accept_caps_default (GstPad * pad, GstQuery * query)
   GstCaps *caps, *allowed;
   gboolean result;
 
-  GST_DEBUG_OBJECT (pad, "caps %" GST_PTR_FORMAT, caps);
+  GST_DEBUG_OBJECT (pad, "query accept-caps %" GST_PTR_FORMAT, query);
 
   /* first forward the query to internally linked pads when we are dealing with
    * a PROXY CAPS */
