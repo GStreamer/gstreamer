@@ -23,6 +23,7 @@
 
 #include "gstopusdec.h"
 #include "gstopusenc.h"
+#include "gstopusparse.h"
 
 #include <gst/tag/tag.h>
 
@@ -36,6 +37,10 @@ plugin_init (GstPlugin * plugin)
 
   if (!gst_element_register (plugin, "opusdec", GST_RANK_PRIMARY,
           GST_TYPE_OPUS_DEC))
+    return FALSE;
+
+  if (!gst_element_register (plugin, "opusparse", GST_RANK_NONE,
+          GST_TYPE_OPUS_PARSE))
     return FALSE;
 
   gst_tag_register_musicbrainz_tags ();
