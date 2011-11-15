@@ -207,6 +207,31 @@ gst_alaw_dec_getcaps (GstPad * pad, GstCaps * filter)
   return result;
 }
 
+static gboolean
+gst_alaw_dec_query (GstPad * pad, GstQuery * query)
+{
+  gboolean res;
+
+  switch (GST_QUERY_TYPE (query)) {
+    case GST_QUERY_CAPS:
+    {
+      GstCaps *filter, *caps;
+
+      gst_query_parse_caps (query, &filter);
+      caps = gst_alaw_dec_getcaps (pad, filter);
+      gst_query_set_caps_result (query, caps);
+      gst_caps_unref (caps);
+
+      res = TRUE;
+      break;
+    }
+    default:
+      res = gst_pad_query_default (pad, query);
+      break;
+  }
+  return res;
+}
+
 static void
 gst_alaw_dec_class_init (GstALawDecClass * klass)
 {
@@ -231,8 +256,8 @@ gst_alaw_dec_init (GstALawDec * alawdec)
 {
   alawdec->sinkpad =
       gst_pad_new_from_static_template (&alaw_dec_sink_factory, "sink");
-  gst_pad_set_getcaps_function (alawdec->sinkpad,
-      GST_DEBUG_FUNCPTR (gst_alaw_dec_getcaps));
+  gst_pad_set_query_function (alawdec->sinkpad,
+      GST_DEBUG_FUNCPTR (gst_alaw_dec_query));
   gst_pad_set_event_function (alawdec->sinkpad,
       GST_DEBUG_FUNCPTR (gst_alaw_dec_event));
   gst_pad_set_chain_function (alawdec->sinkpad,
@@ -242,8 +267,8 @@ gst_alaw_dec_init (GstALawDec * alawdec)
   alawdec->srcpad =
       gst_pad_new_from_static_template (&alaw_dec_src_factory, "src");
   gst_pad_use_fixed_caps (alawdec->srcpad);
-  gst_pad_set_getcaps_function (alawdec->srcpad,
-      GST_DEBUG_FUNCPTR (gst_alaw_dec_getcaps));
+  gst_pad_set_query_function (alawdec->srcpad,
+      GST_DEBUG_FUNCPTR (gst_alaw_dec_query));
   gst_element_add_pad (GST_ELEMENT (alawdec), alawdec->srcpad);
 }
 

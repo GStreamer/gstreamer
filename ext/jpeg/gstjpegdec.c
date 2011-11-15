@@ -95,6 +95,7 @@ static void gst_jpeg_dec_get_property (GObject * object, guint prop_id,
 
 static GstFlowReturn gst_jpeg_dec_chain (GstPad * pad, GstBuffer * buffer);
 static GstCaps *gst_jpeg_dec_getcaps (GstPad * pad, GstCaps * filter);
+static gboolean gst_jpeg_dec_sink_query (GstPad * pad, GstQuery * query);
 static gboolean gst_jpeg_dec_sink_event (GstPad * pad, GstEvent * event);
 static gboolean gst_jpeg_dec_src_event (GstPad * pad, GstEvent * event);
 static GstStateChangeReturn gst_jpeg_dec_change_state (GstElement * element,
@@ -359,12 +360,12 @@ gst_jpeg_dec_init (GstJpegDec * dec)
       gst_pad_new_from_static_template (&gst_jpeg_dec_sink_pad_template,
       "sink");
   gst_element_add_pad (GST_ELEMENT (dec), dec->sinkpad);
-  gst_pad_set_getcaps_function (dec->sinkpad,
-      GST_DEBUG_FUNCPTR (gst_jpeg_dec_getcaps));
   gst_pad_set_chain_function (dec->sinkpad,
       GST_DEBUG_FUNCPTR (gst_jpeg_dec_chain));
   gst_pad_set_event_function (dec->sinkpad,
       GST_DEBUG_FUNCPTR (gst_jpeg_dec_sink_event));
+  gst_pad_set_query_function (dec->sinkpad,
+      GST_DEBUG_FUNCPTR (gst_jpeg_dec_sink_query));
 
   dec->srcpad =
       gst_pad_new_from_static_template (&gst_jpeg_dec_src_pad_template, "src");
@@ -1773,6 +1774,30 @@ gst_jpeg_dec_sink_event (GstPad * pad, GstEvent * event)
     gst_event_unref (event);
 
   return ret;
+}
+
+static gboolean
+gst_jpeg_dec_sink_query (GstPad * pad, GstQuery * query)
+{
+  gboolean res = FALSE;
+
+  switch (GST_QUERY_TYPE (query)) {
+    case GST_QUERY_CAPS:
+    {
+      GstCaps *filter, *caps;
+
+      gst_query_parse_caps (query, &filter);
+      caps = gst_jpeg_dec_getcaps (pad, filter);
+      gst_query_set_caps_result (query, caps);
+      gst_caps_unref (caps);
+      res = TRUE;
+      break;
+    }
+    default:
+      res = gst_pad_query_default (pad, query);
+      break;
+  }
+  return res;
 }
 
 static void

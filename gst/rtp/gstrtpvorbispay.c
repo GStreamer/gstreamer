@@ -67,7 +67,7 @@ static GstStateChangeReturn gst_rtp_vorbis_pay_change_state (GstElement *
     element, GstStateChange transition);
 static GstFlowReturn gst_rtp_vorbis_pay_handle_buffer (GstRTPBasePayload * pad,
     GstBuffer * buffer);
-static gboolean gst_rtp_vorbis_pay_handle_event (GstRTPBasePayload * payload,
+static gboolean gst_rtp_vorbis_pay_sink_event (GstRTPBasePayload * payload,
     GstEvent * event);
 
 static void
@@ -83,7 +83,7 @@ gst_rtp_vorbis_pay_class_init (GstRtpVorbisPayClass * klass)
 
   gstrtpbasepayload_class->set_caps = gst_rtp_vorbis_pay_setcaps;
   gstrtpbasepayload_class->handle_buffer = gst_rtp_vorbis_pay_handle_buffer;
-  gstrtpbasepayload_class->handle_event = gst_rtp_vorbis_pay_handle_event;
+  gstrtpbasepayload_class->sink_event = gst_rtp_vorbis_pay_sink_event;
 
   gst_element_class_add_pad_template (gstelement_class,
       gst_static_pad_template_get (&gst_rtp_vorbis_pay_src_template));
@@ -663,7 +663,7 @@ header_error:
 }
 
 static gboolean
-gst_rtp_vorbis_pay_handle_event (GstRTPBasePayload * payload, GstEvent * event)
+gst_rtp_vorbis_pay_sink_event (GstRTPBasePayload * payload, GstEvent * event)
 {
   GstRtpVorbisPay *rtpvorbispay = GST_RTP_VORBIS_PAY (payload);
 
@@ -675,7 +675,7 @@ gst_rtp_vorbis_pay_handle_event (GstRTPBasePayload * payload, GstEvent * event)
       break;
   }
   /* false to let parent handle event as well */
-  return FALSE;
+  return GST_RTP_BASE_PAYLOAD_CLASS (parent_class)->sink_event (payload, event);
 }
 
 static GstStateChangeReturn

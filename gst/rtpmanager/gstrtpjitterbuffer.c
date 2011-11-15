@@ -252,13 +252,17 @@ static gboolean gst_rtp_jitter_buffer_sink_rtcp_event (GstPad * pad,
 static GstFlowReturn gst_rtp_jitter_buffer_chain_rtcp (GstPad * pad,
     GstBuffer * buffer);
 
+static gboolean gst_rtp_jitter_buffer_sink_query (GstPad * pad,
+    GstQuery * query);
+
 /* srcpad overrides */
 static gboolean gst_rtp_jitter_buffer_src_event (GstPad * pad,
     GstEvent * event);
 static gboolean
 gst_rtp_jitter_buffer_src_activate_push (GstPad * pad, gboolean active);
 static void gst_rtp_jitter_buffer_loop (GstRtpJitterBuffer * jitterbuffer);
-static gboolean gst_rtp_jitter_buffer_query (GstPad * pad, GstQuery * query);
+static gboolean gst_rtp_jitter_buffer_src_query (GstPad * pad,
+    GstQuery * query);
 
 static void
 gst_rtp_jitter_buffer_clear_pt_map (GstRtpJitterBuffer * jitterbuffer);
@@ -473,9 +477,7 @@ gst_rtp_jitter_buffer_init (GstRtpJitterBuffer * jitterbuffer)
   gst_pad_set_activatepush_function (priv->srcpad,
       GST_DEBUG_FUNCPTR (gst_rtp_jitter_buffer_src_activate_push));
   gst_pad_set_query_function (priv->srcpad,
-      GST_DEBUG_FUNCPTR (gst_rtp_jitter_buffer_query));
-  gst_pad_set_getcaps_function (priv->srcpad,
-      GST_DEBUG_FUNCPTR (gst_rtp_jitter_buffer_getcaps));
+      GST_DEBUG_FUNCPTR (gst_rtp_jitter_buffer_src_query));
   gst_pad_set_event_function (priv->srcpad,
       GST_DEBUG_FUNCPTR (gst_rtp_jitter_buffer_src_event));
 
@@ -487,8 +489,8 @@ gst_rtp_jitter_buffer_init (GstRtpJitterBuffer * jitterbuffer)
       GST_DEBUG_FUNCPTR (gst_rtp_jitter_buffer_chain));
   gst_pad_set_event_function (priv->sinkpad,
       GST_DEBUG_FUNCPTR (gst_rtp_jitter_buffer_sink_event));
-  gst_pad_set_getcaps_function (priv->sinkpad,
-      GST_DEBUG_FUNCPTR (gst_rtp_jitter_buffer_getcaps));
+  gst_pad_set_query_function (priv->sinkpad,
+      GST_DEBUG_FUNCPTR (gst_rtp_jitter_buffer_sink_query));
 
   gst_element_add_pad (GST_ELEMENT (jitterbuffer), priv->srcpad);
   gst_element_add_pad (GST_ELEMENT (jitterbuffer), priv->sinkpad);
@@ -2085,7 +2087,39 @@ ignore_buffer:
 }
 
 static gboolean
-gst_rtp_jitter_buffer_query (GstPad * pad, GstQuery * query)
+gst_rtp_jitter_buffer_sink_query (GstPad * pad, GstQuery * query)
+{
+  GstRtpJitterBuffer *jitterbuffer;
+  gboolean res = FALSE;
+
+  jitterbuffer = GST_RTP_JITTER_BUFFER (gst_pad_get_parent (pad));
+  if (G_UNLIKELY (jitterbuffer == NULL))
+    return FALSE;
+
+  switch (GST_QUERY_TYPE (query)) {
+    case GST_QUERY_CAPS:
+    {
+      GstCaps *filter, *caps;
+
+      gst_query_parse_caps (query, &filter);
+      caps = gst_rtp_jitter_buffer_getcaps (pad, filter);
+      gst_query_set_caps_result (query, caps);
+      gst_caps_unref (caps);
+      res = TRUE;
+      break;
+    }
+    default:
+      res = gst_pad_query_default (pad, query);
+      break;
+  }
+
+  gst_object_unref (jitterbuffer);
+
+  return res;
+}
+
+static gboolean
+gst_rtp_jitter_buffer_src_query (GstPad * pad, GstQuery * query)
 {
   GstRtpJitterBuffer *jitterbuffer;
   GstRtpJitterBufferPrivate *priv;
@@ -2160,6 +2194,17 @@ gst_rtp_jitter_buffer_query (GstPad * pad, GstQuery * query)
       } else {
         res = gst_pad_query_default (pad, query);
       }
+      break;
+    }
+    case GST_QUERY_CAPS:
+    {
+      GstCaps *filter, *caps;
+
+      gst_query_parse_caps (query, &filter);
+      caps = gst_rtp_jitter_buffer_getcaps (pad, filter);
+      gst_query_set_caps_result (query, caps);
+      gst_caps_unref (caps);
+      res = TRUE;
       break;
     }
     default:

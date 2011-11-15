@@ -80,6 +80,8 @@ static void gst_aspect_ratio_crop_get_property (GObject * object, guint prop_id,
 static void gst_aspect_ratio_crop_set_cropping (GstAspectRatioCrop *
     aspect_ratio_crop, gint top, gint right, gint bottom, gint left);
 static GstCaps *gst_aspect_ratio_crop_get_caps (GstPad * pad, GstCaps * filter);
+static gboolean gst_aspect_ratio_crop_src_query (GstPad * pad,
+    GstQuery * query);
 static gboolean gst_aspect_ratio_crop_set_caps (GstAspectRatioCrop *
     aspect_ratio_crop, GstCaps * caps);
 static gboolean gst_aspect_ratio_crop_sink_event (GstPad * pad, GstEvent * evt);
@@ -235,8 +237,8 @@ gst_aspect_ratio_crop_init (GstAspectRatioCrop * aspect_ratio_crop)
       gst_element_get_static_pad (GST_ELEMENT (aspect_ratio_crop->videocrop),
       "src");
   src_pad = gst_ghost_pad_new ("src", link_pad);
-  gst_pad_set_getcaps_function (src_pad,
-      GST_DEBUG_FUNCPTR (gst_aspect_ratio_crop_get_caps));
+  gst_pad_set_query_function (src_pad,
+      GST_DEBUG_FUNCPTR (gst_aspect_ratio_crop_src_query));
   gst_element_add_pad (GST_ELEMENT (aspect_ratio_crop), src_pad);
   gst_object_unref (link_pad);
   /* create ghost pad sink */
@@ -414,6 +416,30 @@ gst_aspect_ratio_crop_get_caps (GstPad * pad, GstCaps * filter)
   }
 
   return return_caps;
+}
+
+static gboolean
+gst_aspect_ratio_crop_src_query (GstPad * pad, GstQuery * query)
+{
+  gboolean res = FALSE;
+
+  switch (GST_QUERY_TYPE (query)) {
+    case GST_QUERY_CAPS:
+    {
+      GstCaps *filter, *caps;
+
+      gst_query_parse_caps (query, &filter);
+      caps = gst_aspect_ratio_crop_get_caps (pad, filter);
+      gst_query_set_caps_result (query, caps);
+      gst_caps_unref (caps);
+      res = TRUE;
+      break;
+    }
+    default:
+      res = gst_pad_query_default (pad, query);
+      break;
+  }
+  return res;
 }
 
 static void

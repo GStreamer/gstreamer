@@ -78,7 +78,7 @@ static gboolean gst_rtp_mp4v_pay_setcaps (GstRTPBasePayload * payload,
     GstCaps * caps);
 static GstFlowReturn gst_rtp_mp4v_pay_handle_buffer (GstRTPBasePayload *
     payload, GstBuffer * buffer);
-static gboolean gst_rtp_mp4v_pay_handle_event (GstRTPBasePayload * pay,
+static gboolean gst_rtp_mp4v_pay_sink_event (GstRTPBasePayload * pay,
     GstEvent * event);
 
 #define gst_rtp_mp4v_pay_parent_class parent_class
@@ -130,7 +130,7 @@ G_DEFINE_TYPE (GstRtpMP4VPay, gst_rtp_mp4v_pay, GST_TYPE_RTP_BASE_PAYLOAD)
 
   gstrtpbasepayload_class->set_caps = gst_rtp_mp4v_pay_setcaps;
   gstrtpbasepayload_class->handle_buffer = gst_rtp_mp4v_pay_handle_buffer;
-  gstrtpbasepayload_class->handle_event = gst_rtp_mp4v_pay_handle_event;
+  gstrtpbasepayload_class->sink_event = gst_rtp_mp4v_pay_sink_event;
 
   GST_DEBUG_CATEGORY_INIT (rtpmp4vpay_debug, "rtpmp4vpay", 0,
       "MP4 video RTP Payloader");
@@ -579,7 +579,7 @@ gst_rtp_mp4v_pay_handle_buffer (GstRTPBasePayload * basepayload,
 }
 
 static gboolean
-gst_rtp_mp4v_pay_handle_event (GstRTPBasePayload * pay, GstEvent * event)
+gst_rtp_mp4v_pay_sink_event (GstRTPBasePayload * pay, GstEvent * event)
 {
   GstRtpMP4VPay *rtpmp4vpay;
 
@@ -602,7 +602,7 @@ gst_rtp_mp4v_pay_handle_event (GstRTPBasePayload * pay, GstEvent * event)
   }
 
   /* let parent handle event too */
-  return FALSE;
+  return GST_RTP_BASE_PAYLOAD_CLASS (parent_class)->sink_event (pay, event);
 }
 
 static void

@@ -146,6 +146,31 @@ mulawdec_getcaps (GstPad * pad, GstCaps * filter)
   return result;
 }
 
+static gboolean
+gst_mulawdec_query (GstPad * pad, GstQuery * query)
+{
+  gboolean res;
+
+  switch (GST_QUERY_TYPE (query)) {
+    case GST_QUERY_CAPS:
+    {
+      GstCaps *filter, *caps;
+
+      gst_query_parse_caps (query, &filter);
+      caps = mulawdec_getcaps (pad, filter);
+      gst_query_set_caps_result (query, caps);
+      gst_caps_unref (caps);
+
+      res = TRUE;
+      break;
+    }
+    default:
+      res = gst_pad_query_default (pad, query);
+      break;
+  }
+  return res;
+}
+
 static void
 gst_mulawdec_class_init (GstMuLawDecClass * klass)
 {
@@ -169,15 +194,14 @@ gst_mulawdec_init (GstMuLawDec * mulawdec)
 {
   mulawdec->sinkpad =
       gst_pad_new_from_static_template (&mulaw_dec_sink_factory, "sink");
-  gst_pad_set_getcaps_function (mulawdec->sinkpad, mulawdec_getcaps);
+  gst_pad_set_query_function (mulawdec->sinkpad, gst_mulawdec_query);
   gst_pad_set_event_function (mulawdec->sinkpad, gst_mulawdec_event);
   gst_pad_set_chain_function (mulawdec->sinkpad, gst_mulawdec_chain);
   gst_element_add_pad (GST_ELEMENT (mulawdec), mulawdec->sinkpad);
 
   mulawdec->srcpad =
       gst_pad_new_from_static_template (&mulaw_dec_src_factory, "src");
-  gst_pad_use_fixed_caps (mulawdec->srcpad);
-  gst_pad_set_getcaps_function (mulawdec->srcpad, mulawdec_getcaps);
+  gst_pad_set_query_function (mulawdec->srcpad, gst_mulawdec_query);
   gst_element_add_pad (GST_ELEMENT (mulawdec), mulawdec->srcpad);
 }
 

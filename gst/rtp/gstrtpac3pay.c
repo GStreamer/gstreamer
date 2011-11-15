@@ -55,7 +55,7 @@ static GstStateChangeReturn gst_rtp_ac3_pay_change_state (GstElement * element,
 
 static gboolean gst_rtp_ac3_pay_setcaps (GstRTPBasePayload * payload,
     GstCaps * caps);
-static gboolean gst_rtp_ac3_pay_handle_event (GstRTPBasePayload * payload,
+static gboolean gst_rtp_ac3_pay_sink_event (GstRTPBasePayload * payload,
     GstEvent * event);
 static GstFlowReturn gst_rtp_ac3_pay_flush (GstRtpAC3Pay * rtpac3pay);
 static GstFlowReturn gst_rtp_ac3_pay_handle_buffer (GstRTPBasePayload * payload,
@@ -93,7 +93,7 @@ gst_rtp_ac3_pay_class_init (GstRtpAC3PayClass * klass)
       "Wim Taymans <wim.taymans@gmail.com>");
 
   gstrtpbasepayload_class->set_caps = gst_rtp_ac3_pay_setcaps;
-  gstrtpbasepayload_class->handle_event = gst_rtp_ac3_pay_handle_event;
+  gstrtpbasepayload_class->sink_event = gst_rtp_ac3_pay_sink_event;
   gstrtpbasepayload_class->handle_buffer = gst_rtp_ac3_pay_handle_buffer;
 }
 
@@ -143,7 +143,7 @@ gst_rtp_ac3_pay_setcaps (GstRTPBasePayload * payload, GstCaps * caps)
 }
 
 static gboolean
-gst_rtp_ac3_pay_handle_event (GstRTPBasePayload * payload, GstEvent * event)
+gst_rtp_ac3_pay_sink_event (GstRTPBasePayload * payload, GstEvent * event)
 {
   gboolean res;
   GstRtpAC3Pay *rtpac3pay;
@@ -162,8 +162,7 @@ gst_rtp_ac3_pay_handle_event (GstRTPBasePayload * payload, GstEvent * event)
       break;
   }
 
-  res =
-      GST_RTP_BASE_PAYLOAD_CLASS (parent_class)->handle_event (payload, event);
+  res = GST_RTP_BASE_PAYLOAD_CLASS (parent_class)->sink_event (payload, event);
 
   return res;
 }

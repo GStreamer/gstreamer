@@ -84,7 +84,7 @@ static GstStateChangeReturn gst_rtp_theora_pay_change_state (GstElement *
     element, GstStateChange transition);
 static GstFlowReturn gst_rtp_theora_pay_handle_buffer (GstRTPBasePayload * pad,
     GstBuffer * buffer);
-static gboolean gst_rtp_theora_pay_handle_event (GstRTPBasePayload * payload,
+static gboolean gst_rtp_theora_pay_sink_event (GstRTPBasePayload * payload,
     GstEvent * event);
 
 
@@ -108,7 +108,7 @@ gst_rtp_theora_pay_class_init (GstRtpTheoraPayClass * klass)
 
   gstrtpbasepayload_class->set_caps = gst_rtp_theora_pay_setcaps;
   gstrtpbasepayload_class->handle_buffer = gst_rtp_theora_pay_handle_buffer;
-  gstrtpbasepayload_class->handle_event = gst_rtp_theora_pay_handle_event;
+  gstrtpbasepayload_class->sink_event = gst_rtp_theora_pay_sink_event;
 
   gobject_class->set_property = gst_rtp_theora_pay_set_property;
   gobject_class->get_property = gst_rtp_theora_pay_get_property;
@@ -793,7 +793,7 @@ header_error:
 }
 
 static gboolean
-gst_rtp_theora_pay_handle_event (GstRTPBasePayload * payload, GstEvent * event)
+gst_rtp_theora_pay_sink_event (GstRTPBasePayload * payload, GstEvent * event)
 {
   GstRtpTheoraPay *rtptheorapay = GST_RTP_THEORA_PAY (payload);
 
@@ -805,7 +805,7 @@ gst_rtp_theora_pay_handle_event (GstRTPBasePayload * payload, GstEvent * event)
       break;
   }
   /* false to let parent handle event as well */
-  return FALSE;
+  return GST_RTP_BASE_PAYLOAD_CLASS (parent_class)->sink_event (payload, event);
 }
 
 static GstStateChangeReturn

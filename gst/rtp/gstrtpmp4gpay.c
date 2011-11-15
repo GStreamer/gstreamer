@@ -82,7 +82,7 @@ static gboolean gst_rtp_mp4g_pay_setcaps (GstRTPBasePayload * payload,
     GstCaps * caps);
 static GstFlowReturn gst_rtp_mp4g_pay_handle_buffer (GstRTPBasePayload *
     payload, GstBuffer * buffer);
-static gboolean gst_rtp_mp4g_pay_handle_event (GstRTPBasePayload * payload,
+static gboolean gst_rtp_mp4g_pay_sink_event (GstRTPBasePayload * payload,
     GstEvent * event);
 
 #define gst_rtp_mp4g_pay_parent_class parent_class
@@ -104,7 +104,7 @@ G_DEFINE_TYPE (GstRtpMP4GPay, gst_rtp_mp4g_pay, GST_TYPE_RTP_BASE_PAYLOAD)
 
   gstrtpbasepayload_class->set_caps = gst_rtp_mp4g_pay_setcaps;
   gstrtpbasepayload_class->handle_buffer = gst_rtp_mp4g_pay_handle_buffer;
-  gstrtpbasepayload_class->handle_event = gst_rtp_mp4g_pay_handle_event;
+  gstrtpbasepayload_class->sink_event = gst_rtp_mp4g_pay_sink_event;
 
   gst_element_class_add_pad_template (gstelement_class,
       gst_static_pad_template_get (&gst_rtp_mp4g_pay_src_template));
@@ -573,7 +573,7 @@ gst_rtp_mp4g_pay_handle_buffer (GstRTPBasePayload * basepayload,
 }
 
 static gboolean
-gst_rtp_mp4g_pay_handle_event (GstRTPBasePayload * payload, GstEvent * event)
+gst_rtp_mp4g_pay_sink_event (GstRTPBasePayload * payload, GstEvent * event)
 {
   GstRtpMP4GPay *rtpmp4gpay;
 
@@ -596,7 +596,7 @@ gst_rtp_mp4g_pay_handle_event (GstRTPBasePayload * payload, GstEvent * event)
   }
 
   /* let parent handle event too */
-  return FALSE;
+  return GST_RTP_BASE_PAYLOAD_CLASS (parent_class)->sink_event (payload, event);
 }
 
 static GstStateChangeReturn

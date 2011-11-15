@@ -1769,6 +1769,31 @@ gst_rtp_session_getcaps_send_rtp (GstPad * pad, GstCaps * filter)
 }
 
 static gboolean
+gst_rtp_session_query_send_rtp (GstPad * pad, GstQuery * query)
+{
+  gboolean res = FALSE;
+
+  switch (GST_QUERY_TYPE (query)) {
+    case GST_QUERY_CAPS:
+    {
+      GstCaps *filter, *caps;
+
+      gst_query_parse_caps (query, &filter);
+      caps = gst_rtp_session_getcaps_send_rtp (pad, filter);
+      gst_query_set_caps_result (query, caps);
+      gst_caps_unref (caps);
+      res = TRUE;
+      break;
+    }
+    default:
+      res = gst_pad_query_default (pad, query);
+      break;
+  }
+
+  return res;
+}
+
+static gboolean
 gst_rtp_session_setcaps_send_rtp (GstPad * pad, GstCaps * caps)
 {
   GstRtpSession *rtpsession;
@@ -1989,8 +2014,8 @@ create_send_rtp_sink (GstRtpSession * rtpsession)
       gst_rtp_session_chain_send_rtp);
   gst_pad_set_chain_list_function (rtpsession->send_rtp_sink,
       gst_rtp_session_chain_send_rtp_list);
-  gst_pad_set_getcaps_function (rtpsession->send_rtp_sink,
-      gst_rtp_session_getcaps_send_rtp);
+  gst_pad_set_query_function (rtpsession->send_rtp_sink,
+      gst_rtp_session_query_send_rtp);
   gst_pad_set_event_function (rtpsession->send_rtp_sink,
       (GstPadEventFunction) gst_rtp_session_event_send_rtp_sink);
   gst_pad_set_iterate_internal_links_function (rtpsession->send_rtp_sink,

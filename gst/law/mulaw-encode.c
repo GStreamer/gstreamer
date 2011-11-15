@@ -114,6 +114,32 @@ mulawenc_getcaps (GstPad * pad, GstCaps * filter)
 }
 
 static gboolean
+gst_mulawenc_query (GstPad * pad, GstQuery * query)
+{
+  gboolean res;
+
+  switch (GST_QUERY_TYPE (query)) {
+    case GST_QUERY_CAPS:
+    {
+      GstCaps *filter, *caps;
+
+      gst_query_parse_caps (query, &filter);
+      caps = mulawenc_getcaps (pad, filter);
+      gst_query_set_caps_result (query, caps);
+      gst_caps_unref (caps);
+
+      res = TRUE;
+      break;
+    }
+    default:
+      res = gst_pad_query_default (pad, query);
+      break;
+  }
+  return res;
+}
+
+
+static gboolean
 mulawenc_setcaps (GstMuLawEnc * mulawenc, GstCaps * caps)
 {
   GstStructure *structure;
@@ -158,15 +184,14 @@ gst_mulawenc_init (GstMuLawEnc * mulawenc)
 {
   mulawenc->sinkpad =
       gst_pad_new_from_static_template (&mulaw_enc_sink_factory, "sink");
-  gst_pad_set_getcaps_function (mulawenc->sinkpad, mulawenc_getcaps);
+  gst_pad_set_query_function (mulawenc->sinkpad, gst_mulawenc_query);
   gst_pad_set_event_function (mulawenc->sinkpad, gst_mulawenc_event);
   gst_pad_set_chain_function (mulawenc->sinkpad, gst_mulawenc_chain);
   gst_element_add_pad (GST_ELEMENT (mulawenc), mulawenc->sinkpad);
 
   mulawenc->srcpad =
       gst_pad_new_from_static_template (&mulaw_enc_src_factory, "src");
-  gst_pad_set_getcaps_function (mulawenc->srcpad, mulawenc_getcaps);
-  gst_pad_use_fixed_caps (mulawenc->srcpad);
+  gst_pad_set_query_function (mulawenc->srcpad, gst_mulawenc_query);
   gst_element_add_pad (GST_ELEMENT (mulawenc), mulawenc->srcpad);
 
   /* init rest */
