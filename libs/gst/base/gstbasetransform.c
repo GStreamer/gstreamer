@@ -997,7 +997,7 @@ gst_base_transform_find_transform (GstBaseTransform * trans, GstPad * pad,
       GST_DEBUG_OBJECT (trans,
           "Checking peer caps with filter %" GST_PTR_FORMAT, othercaps);
 
-      peercaps = gst_pad_get_caps (otherpeer, othercaps);
+      peercaps = gst_pad_query_caps (otherpeer, othercaps);
       GST_DEBUG_OBJECT (trans, "Resulted in %" GST_PTR_FORMAT, peercaps);
 
       templ_caps = gst_pad_get_pad_template_caps (otherpad);
@@ -1126,12 +1126,12 @@ gst_base_transform_acceptcaps_default (GstBaseTransform * trans,
 
     /* get all the formats we can handle on this pad */
     if (direction == GST_PAD_SRC)
-      allowed = gst_pad_get_caps (trans->srcpad, NULL);
+      allowed = gst_pad_query_caps (trans->srcpad, NULL);
     else
-      allowed = gst_pad_get_caps (trans->sinkpad, NULL);
+      allowed = gst_pad_query_caps (trans->sinkpad, NULL);
 
     if (!allowed) {
-      GST_DEBUG_OBJECT (trans, "gst_pad_get_caps() failed");
+      GST_DEBUG_OBJECT (trans, "gst_pad_query_caps() failed");
       goto no_transform_possible;
     }
 

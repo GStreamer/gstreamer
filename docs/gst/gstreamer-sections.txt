@@ -1589,8 +1589,7 @@ gst_pad_unlink
 gst_pad_is_linked
 gst_pad_can_link
 
-gst_pad_get_caps
-gst_pad_get_caps_reffed
+gst_pad_query_caps
 gst_pad_get_allowed_caps
 gst_pad_get_current_caps
 gst_pad_get_pad_template_caps

@@ -891,12 +891,12 @@ void                    gst_element_class_install_std_props (GstElementClass * k
 
 /* pad functions */
 void                    gst_pad_use_fixed_caps          (GstPad *pad);
-gboolean                gst_pad_proxy_query_accept_caps (GstPad *pad, GstQuery *query);
-gboolean                gst_pad_proxy_query_caps        (GstPad *pad, GstQuery *query);
-
 GstElement*             gst_pad_get_parent_element      (GstPad *pad);
 
 /* util query functions */
+gboolean                gst_pad_proxy_query_accept_caps (GstPad *pad, GstQuery *query);
+gboolean                gst_pad_proxy_query_caps        (GstPad *pad, GstQuery *query);
+
 gboolean                gst_pad_query_position          (GstPad *pad, GstFormat format, gint64 *cur);
 gboolean                gst_pad_query_duration          (GstPad *pad, GstFormat format, gint64 *duration);
 gboolean                gst_pad_query_convert           (GstPad *pad, GstFormat src_format, gint64 src_val,

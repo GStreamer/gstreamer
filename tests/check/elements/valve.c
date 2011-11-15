@@ -70,7 +70,7 @@ GST_START_TEST (test_valve_basic)
   fail_unless (gst_pad_push (src, gst_buffer_new ()) == GST_FLOW_OK);
   fail_unless (gst_pad_push (src, gst_buffer_new ()) == GST_FLOW_OK);
   fail_unless (g_list_length (buffers) == 2);
-  caps = gst_pad_get_caps (src, NULL);
+  caps = gst_pad_query_caps (src, NULL);
   templ_caps = gst_pad_get_pad_template_caps (src);
   fail_unless (caps && gst_caps_is_equal (caps, templ_caps));
   gst_caps_unref (templ_caps);
@@ -85,7 +85,7 @@ GST_START_TEST (test_valve_basic)
   fail_unless (gst_pad_push (src, gst_buffer_new ()) == GST_FLOW_OK);
   fail_unless (gst_pad_push (src, gst_buffer_new ()) == GST_FLOW_OK);
   fail_unless (buffers == NULL);
-  caps = gst_pad_get_caps (src, NULL);
+  caps = gst_pad_query_caps (src, NULL);
   templ_caps = gst_pad_get_pad_template_caps (src);
   fail_unless (caps && gst_caps_is_equal (caps, templ_caps));
   gst_caps_unref (templ_caps);

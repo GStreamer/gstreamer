@@ -397,7 +397,7 @@ GST_START_TEST (test_output_selector_no_srcpad_negotiation);
      * setcaps should accept any caps when there are no srcpads */
     g_object_set (sel, "pad-negotiation-mode", i, NULL);
 
-    caps = gst_pad_get_caps (pad, NULL);
+    caps = gst_pad_query_caps (pad, NULL);
     fail_unless (gst_caps_is_any (caps));
 
     gst_caps_unref (caps);

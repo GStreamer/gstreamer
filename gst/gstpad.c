@@ -36,7 +36,7 @@
  * gst_pad_new_from_template().
  *
  * Pads have #GstCaps attached to it to describe the media type they are
- * capable of dealing with.  gst_pad_get_caps() and gst_pad_set_caps() are
+ * capable of dealing with.  gst_pad_query_caps() and gst_pad_set_caps() are
  * used to manipulate the caps of the pads.
  * Pads created from a pad template cannot set capabilities that are
  * incompatible with the pad template capabilities.
@@ -1643,10 +1643,10 @@ gst_pad_link_check_compatible_unlocked (GstPad * src, GstPad * sink,
   /* Doing the expensive caps checking takes priority over only checking the template caps */
   if (flags & GST_PAD_LINK_CHECK_CAPS) {
     GST_OBJECT_UNLOCK (src);
-    srccaps = gst_pad_get_caps (src, NULL);
+    srccaps = gst_pad_query_caps (src, NULL);
     GST_OBJECT_LOCK (src);
     GST_OBJECT_UNLOCK (sink);
-    sinkcaps = gst_pad_get_caps (sink, NULL);
+    sinkcaps = gst_pad_query_caps (sink, NULL);
     GST_OBJECT_LOCK (sink);
   } else {
     /* If one of the two pads doesn't have a template, consider the intersection
@@ -2107,14 +2107,14 @@ gst_pad_get_current_caps (GstPad * pad)
 }
 
 /**
- * gst_pad_get_caps:
+ * gst_pad_query_caps:
  * @pad: a  #GstPad to get the capabilities of.
  * @filter: suggested #GstCaps.
  *
  * Gets the capabilities this pad can produce or consume.
  * Note that this method doesn't necessarily return the caps set by
  * gst_pad_set_caps() - use gst_pad_get_current_caps() for that instead.
- * gst_pad_get_caps returns all possible caps a pad can operate with, using
+ * gst_pad_query_caps returns all possible caps a pad can operate with, using
  * the pad's CAPS query function, If the query fails, this function will return
  * @filter, if not #NULL, otherwise ANY.
  *
@@ -2130,7 +2130,7 @@ gst_pad_get_current_caps (GstPad * pad)
  * Returns: (transfer full): the caps of the pad with incremented ref-count.
  */
 GstCaps *
-gst_pad_get_caps (GstPad * pad, GstCaps * filter)
+gst_pad_query_caps (GstPad * pad, GstCaps * filter)
 {
   GstCaps *result = NULL;
   GstQuery *query;
@@ -2162,7 +2162,7 @@ gst_pad_get_caps (GstPad * pad, GstCaps * filter)
  * @filter: a #GstCaps filter.
  *
  * Gets the capabilities of the peer connected to this pad. Similar to
- * gst_pad_get_caps().
+ * gst_pad_query_caps().
  *
  * When called on srcpads @filter contains the caps that
  * upstream could produce in the order preferred by upstream. When
@@ -2462,7 +2462,7 @@ gst_pad_get_peer (GstPad * pad)
  * @pad and its peer.
  *
  * The allowed capabilities is calculated as the intersection of the results of
- * calling gst_pad_get_caps() on @pad and its peer. The caller owns a reference
+ * calling gst_pad_query_caps() on @pad and its peer. The caller owns a reference
  * on the resulting caps.
  *
  * Returns: (transfer full): the allowed #GstCaps of the pad link. Unref the
@@ -2490,9 +2490,9 @@ gst_pad_get_allowed_caps (GstPad * pad)
 
   gst_object_ref (peer);
   GST_OBJECT_UNLOCK (pad);
-  mycaps = gst_pad_get_caps (pad, NULL);
+  mycaps = gst_pad_query_caps (pad, NULL);
 
-  peercaps = gst_pad_get_caps (peer, NULL);
+  peercaps = gst_pad_query_caps (peer, NULL);
   gst_object_unref (peer);
 
   caps = gst_caps_intersect (mycaps, peercaps);
@@ -2790,7 +2790,7 @@ gst_pad_query_accept_caps_default (GstPad * pad, GstQuery * query)
     }
   }
 
-  allowed = gst_pad_get_caps (pad, NULL);
+  allowed = gst_pad_query_caps (pad, NULL);
   gst_query_parse_accept_caps (query, &caps);
 
   if (allowed) {

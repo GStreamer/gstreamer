@@ -1140,7 +1140,7 @@ gst_element_get_compatible_pad (GstElement * element, GstPad * pad,
           gboolean compatible;
 
           /* Now check if the two pads' caps are compatible */
-          temp = gst_pad_get_caps (pad, NULL);
+          temp = gst_pad_query_caps (pad, NULL);
           if (caps) {
             intersection = gst_caps_intersect (temp, caps);
             gst_caps_unref (temp);
@@ -1148,7 +1148,7 @@ gst_element_get_compatible_pad (GstElement * element, GstPad * pad,
             intersection = temp;
           }
 
-          temp = gst_pad_get_caps (current, NULL);
+          temp = gst_pad_query_caps (current, NULL);
           compatible = gst_caps_can_intersect (temp, intersection);
           gst_caps_unref (temp);
           gst_caps_unref (intersection);
@@ -1198,7 +1198,7 @@ gst_element_get_compatible_pad (GstElement * element, GstPad * pad,
   /* try to create a new one */
   /* requesting is a little crazy, we need a template. Let's create one */
   /* FIXME: why not gst_pad_get_pad_template (pad); */
-  templcaps = gst_pad_get_caps (pad, NULL);
+  templcaps = gst_pad_query_caps (pad, NULL);
   templ = gst_pad_template_new ((gchar *) GST_PAD_NAME (pad),
       GST_PAD_DIRECTION (pad), GST_PAD_ALWAYS, templcaps);
   gst_caps_unref (templcaps);
@@ -2798,7 +2798,7 @@ query_caps_func (GstPad * pad, QueryCapsData * data)
  * @pad: a #GstPad to proxy.
  * @query: a CAPS #GstQuery.
  *
- * Calls gst_pad_get_caps() for all internally linked pads fof @pad and returns
+ * Calls gst_pad_query_caps() for all internally linked pads fof @pad and returns
  * the intersection of the results.
  *
  * This function is useful as a default caps query function for an element

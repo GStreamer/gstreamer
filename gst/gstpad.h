@@ -178,7 +178,7 @@ GQuark			gst_flow_to_quark	(GstFlowReturn ret);
  *   their template caps. This is much faster than @GST_PAD_LINK_CHECK_CAPS, but
  *   would be unsafe e.g. if one pad has %GST_CAPS_ANY.
  * @GST_PAD_LINK_CHECK_CAPS: Check if the pads are compatible by comparing the
- *   caps returned by gst_pad_get_caps().
+ *   caps returned by gst_pad_query_caps().
  *
  * The amount of checking to be done when linking pads. @GST_PAD_LINK_CHECK_CAPS
  * and @GST_PAD_LINK_CHECK_TEMPLATE_CAPS are mutually exclusive. If both are
@@ -834,7 +834,7 @@ GstCaps*                gst_pad_get_pad_template_caps		(GstPad *pad);
 /* capsnego function for linked/unlinked pads */
 GstCaps *		gst_pad_get_current_caps                (GstPad * pad);
 gboolean		gst_pad_has_current_caps                (GstPad * pad);
-GstCaps *		gst_pad_get_caps			(GstPad * pad, GstCaps *filter);
+GstCaps *		gst_pad_query_caps			(GstPad * pad, GstCaps *filter);
 gboolean		gst_pad_accept_caps			(GstPad * pad, GstCaps *caps);
 gboolean		gst_pad_set_caps			(GstPad * pad, GstCaps *caps);
 

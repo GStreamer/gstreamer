@@ -1000,7 +1000,7 @@ GST_START_TEST (test_pad_proxy_query_caps_aggregation)
   gst_element_set_state (tee, GST_STATE_PAUSED);
 
   /* by default, ANY caps should intersect to ANY */
-  caps = gst_pad_get_caps (tee_sink, NULL);
+  caps = gst_pad_query_caps (tee_sink, NULL);
   GST_INFO ("got caps: %" GST_PTR_FORMAT, caps);
   fail_unless (caps != NULL);
   fail_unless (gst_caps_is_any (caps));
@@ -1017,7 +1017,7 @@ GST_START_TEST (test_pad_proxy_query_caps_aggregation)
   gst_pad_use_fixed_caps (sink2_sink);
   gst_caps_unref (caps);
 
-  caps = gst_pad_get_caps (tee_sink, NULL);
+  caps = gst_pad_query_caps (tee_sink, NULL);
   GST_INFO ("got caps: %" GST_PTR_FORMAT, caps);
   fail_unless (caps != NULL);
   fail_unless (gst_caps_is_empty (caps));
@@ -1029,7 +1029,7 @@ GST_START_TEST (test_pad_proxy_query_caps_aggregation)
   gst_pad_use_fixed_caps (sink2_sink);
   gst_caps_unref (caps);
 
-  caps = gst_pad_get_caps (tee_sink, NULL);
+  caps = gst_pad_query_caps (tee_sink, NULL);
   GST_INFO ("got caps: %" GST_PTR_FORMAT, caps);
   fail_unless (caps != NULL);
   fail_if (gst_caps_is_empty (caps));
