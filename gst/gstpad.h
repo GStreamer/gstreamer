@@ -834,12 +834,7 @@ GstCaps*                gst_pad_get_pad_template_caps		(GstPad *pad);
 /* capsnego function for linked/unlinked pads */
 GstCaps *		gst_pad_get_current_caps                (GstPad * pad);
 gboolean		gst_pad_has_current_caps                (GstPad * pad);
-GstCaps *		gst_pad_query_caps			(GstPad * pad, GstCaps *filter);
-gboolean		gst_pad_query_accept_caps			(GstPad * pad, GstCaps *caps);
 gboolean		gst_pad_set_caps			(GstPad * pad, GstCaps *caps);
-
-GstCaps *		gst_pad_peer_query_caps			(GstPad * pad, GstCaps *filter);
-gboolean		gst_pad_peer_query_accept_caps		(GstPad * pad, GstCaps *caps);
 
 /* capsnego for linked pads */
 GstCaps *		gst_pad_get_allowed_caps		(GstPad * pad);

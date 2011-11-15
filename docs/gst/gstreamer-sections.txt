@@ -1589,14 +1589,12 @@ gst_pad_unlink
 gst_pad_is_linked
 gst_pad_can_link
 
-gst_pad_query_caps
 gst_pad_get_allowed_caps
 gst_pad_get_current_caps
 gst_pad_get_pad_template_caps
 gst_pad_set_caps
 
 gst_pad_get_peer
-gst_pad_peer_query_caps
 gst_pad_use_fixed_caps
 gst_pad_has_current_caps
 
@@ -1638,12 +1636,8 @@ GstPadLinkFunction
 gst_pad_set_unlink_function
 GstPadUnlinkFunction
 
-gst_pad_query_accept_caps
-
 gst_pad_proxy_query_caps
 gst_pad_proxy_query_accept_caps
-
-gst_pad_peer_query_accept_caps
 
 gst_pad_set_activate_function
 GstPadActivateFunction
@@ -1666,13 +1660,21 @@ gst_pad_event_default
 
 gst_pad_query
 gst_pad_peer_query
+
 gst_pad_query_default
+
 gst_pad_query_position
 gst_pad_query_duration
 gst_pad_query_convert
+gst_pad_query_accept_caps
+gst_pad_query_caps
+
 gst_pad_peer_query_position
 gst_pad_peer_query_duration
 gst_pad_peer_query_convert
+gst_pad_peer_query_accept_caps
+gst_pad_peer_query_caps
+
 gst_pad_set_query_function
 GstPadQueryFunction
 gst_pad_set_iterate_internal_links_function
