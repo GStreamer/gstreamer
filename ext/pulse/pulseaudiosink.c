@@ -648,7 +648,7 @@ proxypad_blocked_cb (GstPad * pad, GstPadProbeInfo * info, gpointer data)
       caps = gst_pad_query_caps (pad, NULL);
     }
 
-    if (gst_pad_accept_caps (sinkpad, caps)) {
+    if (gst_pad_query_accept_caps (sinkpad, caps)) {
       if (pbin->dbin) {
         GST_DEBUG_OBJECT (pbin, "Removing decodebin");
         gst_pulse_audio_sink_free_dbin (pbin);
