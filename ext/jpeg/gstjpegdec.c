@@ -743,7 +743,7 @@ gst_jpeg_dec_getcaps (GstPad * pad, GstCaps * filter)
     GstStructure *s;
     guint i, n;
 
-    peer_caps = gst_pad_get_caps (peer, filter);
+    peer_caps = gst_pad_query_caps (peer, filter);
 
     /* Translate peercaps to image/jpeg */
     peer_caps = gst_caps_make_writable (peer_caps);

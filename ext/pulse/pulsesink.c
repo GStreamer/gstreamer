@@ -2028,7 +2028,7 @@ gst_pulsesink_query_acceptcaps (GstPulseSink * psink, GstCaps * caps)
   pa_format_info *format = NULL, *formats[1];
   guint channels;
 
-  pad_caps = gst_pad_get_caps (pad, caps);
+  pad_caps = gst_pad_query_caps (pad, caps);
   ret = pad_caps != NULL;
   gst_caps_unref (pad_caps);
 

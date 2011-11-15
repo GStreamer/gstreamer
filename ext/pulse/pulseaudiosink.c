@@ -645,7 +645,7 @@ proxypad_blocked_cb (GstPad * pad, GstPadProbeInfo * info, gpointer data)
       caps = gst_pad_get_current_caps (pbin->sinkpad);
     } else {
       /* We haven't, so get caps from upstream */
-      caps = gst_pad_get_caps (pad, NULL);
+      caps = gst_pad_query_caps (pad, NULL);
     }
 
     if (gst_pad_accept_caps (sinkpad, caps)) {
@@ -811,7 +811,7 @@ gst_pulse_audio_sink_sink_acceptcaps (GstPulseAudioSink * pbin, GstPad * pad,
   GstCaps *pad_caps = NULL;
   gboolean ret = FALSE;
 
-  pad_caps = gst_pad_get_caps (pad, caps);
+  pad_caps = gst_pad_query_caps (pad, caps);
   if (!pad_caps || gst_caps_is_empty (pad_caps))
     goto out;
 

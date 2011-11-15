@@ -72,7 +72,7 @@ new_decoded_pad (GstElement * dec, GstPad * new_pad, gboolean last,
 
   /* FIXME: is this racy or does decodebin2 make sure caps are always
    * negotiated at this point? */
-  caps = gst_pad_get_caps (new_pad, NULL);
+  caps = gst_pad_query_caps (new_pad, NULL);
   g_return_if_fail (caps != NULL);
 
   s = gst_caps_get_structure (caps, 0);

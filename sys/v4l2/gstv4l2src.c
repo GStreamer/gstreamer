@@ -318,7 +318,7 @@ gst_v4l2src_negotiate (GstBaseSrc * basesrc)
   gboolean result = FALSE;
 
   /* first see what is possible on our source pad */
-  thiscaps = gst_pad_get_caps (GST_BASE_SRC_PAD (basesrc), NULL);
+  thiscaps = gst_pad_query_caps (GST_BASE_SRC_PAD (basesrc), NULL);
   GST_DEBUG_OBJECT (basesrc, "caps of src: %" GST_PTR_FORMAT, thiscaps);
   LOG_CAPS (basesrc, thiscaps);
 

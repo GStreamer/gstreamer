@@ -398,7 +398,7 @@ gst_aspect_ratio_crop_get_caps (GstPad * pad, GstCaps * filter)
   } else {
     GstCaps *peer_caps;
 
-    peer_caps = gst_pad_get_caps (peer, filter);
+    peer_caps = gst_pad_query_caps (peer, filter);
     return_caps =
         gst_aspect_ratio_crop_transform_caps (aspect_ratio_crop, peer_caps);
     gst_caps_unref (peer_caps);
