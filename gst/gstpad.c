@@ -2198,7 +2198,7 @@ gst_pad_peer_query_caps (GstPad * pad, GstCaps * filter)
 }
 
 /**
- * gst_pad_accept_caps:
+ * gst_pad_query_accept_caps:
  * @pad: a #GstPad to check
  * @caps: a #GstCaps to check on the pad
  *
@@ -2207,7 +2207,7 @@ gst_pad_peer_query_caps (GstPad * pad, GstCaps * filter)
  * Returns: TRUE if the pad can accept the caps.
  */
 gboolean
-gst_pad_accept_caps (GstPad * pad, GstCaps * caps)
+gst_pad_query_accept_caps (GstPad * pad, GstCaps * caps)
 {
   gboolean res = TRUE;
   GstQuery *query;
@@ -2228,7 +2228,7 @@ gst_pad_accept_caps (GstPad * pad, GstCaps * caps)
 }
 
 /**
- * gst_pad_peer_accept_caps:
+ * gst_pad_peer_query_accept_caps:
  * @pad: a  #GstPad to check the peer of
  * @caps: a #GstCaps to check on the pad
  *
@@ -2238,7 +2238,7 @@ gst_pad_accept_caps (GstPad * pad, GstCaps * caps)
  * Returns: TRUE if the peer of @pad can accept the caps or @pad has no peer.
  */
 gboolean
-gst_pad_peer_accept_caps (GstPad * pad, GstCaps * caps)
+gst_pad_peer_query_accept_caps (GstPad * pad, GstCaps * caps)
 {
   gboolean res = TRUE;
   GstQuery *query;

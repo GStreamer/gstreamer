@@ -1596,8 +1596,7 @@ gst_pad_get_pad_template_caps
 gst_pad_set_caps
 
 gst_pad_get_peer
-gst_pad_peer_get_caps
-gst_pad_peer_get_caps_reffed
+gst_pad_peer_query_caps
 gst_pad_use_fixed_caps
 gst_pad_has_current_caps
 
@@ -1639,12 +1638,12 @@ GstPadLinkFunction
 gst_pad_set_unlink_function
 GstPadUnlinkFunction
 
-gst_pad_accept_caps
+gst_pad_query_accept_caps
 
 gst_pad_proxy_query_caps
 gst_pad_proxy_query_accept_caps
 
-gst_pad_peer_accept_caps
+gst_pad_peer_query_accept_caps
 
 gst_pad_set_activate_function
 GstPadActivateFunction

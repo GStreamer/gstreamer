@@ -1056,7 +1056,7 @@ gst_base_transform_find_transform (GstBaseTransform * trans, GstPad * pad,
     goto could_not_fixate;
 
   /* and peer should accept */
-  if (otherpeer && !gst_pad_accept_caps (otherpeer, othercaps))
+  if (otherpeer && !gst_pad_query_accept_caps (otherpeer, othercaps))
     goto peer_no_accept;
 
   GST_DEBUG_OBJECT (trans, "Input caps were %" GST_PTR_FORMAT
