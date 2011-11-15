@@ -727,7 +727,7 @@ gst_rtp_jitter_buffer_getcaps (GstPad * pad, GstCaps * filter)
 
   other = (pad == priv->srcpad ? priv->sinkpad : priv->srcpad);
 
-  caps = gst_pad_peer_get_caps (other, filter);
+  caps = gst_pad_peer_query_caps (other, filter);
 
   templ = gst_pad_get_pad_template_caps (pad);
   if (caps == NULL) {

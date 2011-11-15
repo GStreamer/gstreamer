@@ -109,7 +109,7 @@ mulawdec_getcaps (GstPad * pad, GstCaps * filter)
     otherpad = mulawdec->srcpad;
   }
   /* get caps from the peer, this can return NULL when there is no peer */
-  othercaps = gst_pad_peer_get_caps (otherpad, filter);
+  othercaps = gst_pad_peer_query_caps (otherpad, filter);
 
   /* get the template caps to make sure we return something acceptable */
   templ = gst_pad_get_pad_template_caps (pad);

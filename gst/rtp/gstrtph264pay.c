@@ -270,7 +270,7 @@ gst_rtp_h264_pay_getcaps (GstRTPBasePayload * payload, GstPad * pad,
   GstCaps *allowed_caps;
 
   allowed_caps =
-      gst_pad_peer_get_caps (GST_RTP_BASE_PAYLOAD_SRCPAD (payload), filter);
+      gst_pad_peer_query_caps (GST_RTP_BASE_PAYLOAD_SRCPAD (payload), filter);
 
   if (allowed_caps) {
     GstCaps *caps = NULL;

@@ -606,7 +606,7 @@ out:
 static void
 update_eac3_alignment (GstPulseAudioSink * pbin)
 {
-  GstCaps *caps = gst_pad_peer_get_caps (pbin->sinkpad, NULL);
+  GstCaps *caps = gst_pad_peer_query_caps (pbin->sinkpad, NULL);
   GstStructure *st;
 
   if (!caps)

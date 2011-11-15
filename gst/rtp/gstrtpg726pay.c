@@ -181,7 +181,7 @@ gst_rtp_g726_pay_setcaps (GstRTPBasePayload * payload, GstCaps * caps)
   GST_DEBUG_OBJECT (payload, "selected base encoding %s", encoding_name);
 
   /* now see if we need to produce AAL2 or not */
-  peercaps = gst_pad_peer_get_caps (payload->srcpad, NULL);
+  peercaps = gst_pad_peer_query_caps (payload->srcpad, NULL);
   if (peercaps) {
     GstCaps *filter, *intersect;
     gchar *capsstr;
