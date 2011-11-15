@@ -711,6 +711,7 @@ gst_flac_dec_handle_frame (GstAudioDecoder * audio_dec, GstBuffer * buf)
 
     if (!got_audio_frame) {
       GST_INFO_OBJECT (dec, "dropping in-stream header, %d bytes", size);
+      gst_audio_decoder_finish_frame (audio_dec, NULL, 1);
       return GST_FLOW_OK;
     }
 
