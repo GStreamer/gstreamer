@@ -2696,19 +2696,22 @@ gst_buffer_join (GstBuffer * buf1, GstBuffer * buf2)
   return result;
 }
 
-static gboolean
-query_accept_caps_fold_func (const GValue * vpad, GValue * ret,
-    GstQuery * query)
+typedef struct
 {
-  GstPad *pad = g_value_get_object (vpad);
-  gboolean result = TRUE;
+  GstQuery *query;
+  gboolean ret;
+} QueryAcceptCapsData;
 
-  if (G_LIKELY (gst_pad_peer_query (pad, query))) {
-    gst_query_parse_accept_caps_result (query, &result);
-    result &= g_value_get_boolean (ret);
-    g_value_set_boolean (ret, result);
+static gboolean
+query_accept_caps_func (GstPad * pad, QueryAcceptCapsData * data)
+{
+  if (G_LIKELY (gst_pad_peer_query (pad, data->query))) {
+    gboolean result;
+
+    gst_query_parse_accept_caps_result (data->query, &result);
+    data->ret &= result;
   }
-  return result;
+  return FALSE;
 }
 
 /**
@@ -2729,9 +2732,7 @@ gboolean
 gst_pad_proxy_query_accept_caps (GstPad * pad, GstQuery * query)
 {
   GstElement *element;
-  GstIterator *iter;
-  GstIteratorResult res;
-  GValue ret = { 0, };
+  QueryAcceptCapsData data;
 
   g_return_val_if_fail (GST_IS_PAD (pad), FALSE);
   g_return_val_if_fail (GST_IS_QUERY (query), FALSE);
@@ -2744,43 +2745,15 @@ gst_pad_proxy_query_accept_caps (GstPad * pad, GstQuery * query)
   if (element == NULL)
     goto no_parent;
 
+  data.query = query;
   /* value to hold the return, by default it holds TRUE */
-  g_value_init (&ret, G_TYPE_BOOLEAN);
-  g_value_set_boolean (&ret, TRUE);
+  data.ret = TRUE;
 
-  /* only iterate the pads in the oposite direction */
-  if (GST_PAD_IS_SRC (pad))
-    iter = gst_element_iterate_sink_pads (element);
-  else
-    iter = gst_element_iterate_src_pads (element);
+  gst_pad_forward (pad, (GstPadForwardFunction) query_accept_caps_func, &data);
 
-  while (1) {
-    res =
-        gst_iterator_fold (iter,
-        (GstIteratorFoldFunction) query_accept_caps_fold_func, &ret, query);
-    switch (res) {
-      case GST_ITERATOR_RESYNC:
-        /* need to reset the result again to TRUE */
-        g_value_set_boolean (&ret, TRUE);
-        gst_iterator_resync (iter);
-        break;
-      case GST_ITERATOR_DONE:
-        /* all pads iterated, return collected value */
-        goto done;
-      case GST_ITERATOR_OK:
-        /* premature exit (happens if caps intersection is empty) */
-        goto done;
-      default:
-        /* iterator returned _ERROR, mark an error and exit */
-        goto error;
-    }
-  }
-done:
-  gst_iterator_free (iter);
   gst_object_unref (element);
 
-  gst_query_set_accept_caps_result (query, g_value_get_boolean (&ret));
-  g_value_unset (&ret);
+  gst_query_set_accept_caps_result (query, data.ret);
 
   return TRUE;
 
@@ -2790,37 +2763,34 @@ no_parent:
     GST_DEBUG_OBJECT (pad, "no parent");
     return FALSE;
   }
-error:
-  {
-    g_warning ("Pad list returned error on element %s",
-        GST_ELEMENT_NAME (element));
-    gst_iterator_free (iter);
-    gst_object_unref (element);
-    return FALSE;
-  }
 }
 
-static gboolean
-query_caps_fold_func (const GValue * vpad, GValue * ret, GstQuery * query)
+typedef struct
 {
-  GstPad *pad = g_value_get_object (vpad);
+  GstQuery *query;
+  GstCaps *ret;
+} QueryCapsData;
+
+static gboolean
+query_caps_func (GstPad * pad, QueryCapsData * data)
+{
   gboolean empty = FALSE;
 
-  if (G_LIKELY (gst_pad_peer_query (pad, query))) {
-    GstCaps *existing, *peercaps, *intersection;
+  if (G_LIKELY (gst_pad_peer_query (pad, data->query))) {
+    GstCaps *peercaps, *intersection;
 
-    existing = g_value_get_pointer (ret);
-    gst_query_parse_caps_result (query, &peercaps);
-
+    gst_query_parse_caps_result (data->query, &peercaps);
     GST_DEBUG_OBJECT (pad, "intersect with result %" GST_PTR_FORMAT, peercaps);
-    intersection = gst_caps_intersect (existing, peercaps);
+    intersection = gst_caps_intersect (data->ret, peercaps);
     GST_DEBUG_OBJECT (pad, "intersected %" GST_PTR_FORMAT, intersection);
-    empty = gst_caps_is_empty (intersection);
 
-    g_value_set_pointer (ret, intersection);
-    gst_caps_unref (existing);
+    gst_caps_unref (data->ret);
+    data->ret = intersection;
+
+    /* stop when empty */
+    empty = gst_caps_is_empty (intersection);
   }
-  return !empty;
+  return empty;
 }
 
 /**
@@ -2840,12 +2810,9 @@ query_caps_fold_func (const GValue * vpad, GValue * ret, GstQuery * query)
 gboolean
 gst_pad_proxy_query_caps (GstPad * pad, GstQuery * query)
 {
-  gboolean result = TRUE;
   GstElement *element;
-  GstCaps *caps, *intersected;
-  GstIterator *iter;
-  GstIteratorResult res;
-  GValue ret = { 0, };
+  GstCaps *intersected;
+  QueryCapsData data;
 
   g_return_val_if_fail (GST_IS_PAD (pad), FALSE);
   g_return_val_if_fail (GST_IS_QUERY (query), FALSE);
@@ -2858,77 +2825,30 @@ gst_pad_proxy_query_caps (GstPad * pad, GstQuery * query)
   if (element == NULL)
     goto no_parent;
 
-  /* value to hold the return, by default it holds ANY, the ref is taken by
-   * the GValue. */
-  g_value_init (&ret, G_TYPE_POINTER);
-  g_value_set_pointer (&ret, gst_caps_new_any ());
+  data.query = query;
+  /* value to hold the return, by default it holds ANY */
+  data.ret = gst_caps_new_any ();
 
-  /* only iterate the pads in the oposite direction */
-  if (GST_PAD_IS_SRC (pad))
-    iter = gst_element_iterate_sink_pads (element);
-  else
-    iter = gst_element_iterate_src_pads (element);
-
-  while (1) {
-    res =
-        gst_iterator_fold (iter, (GstIteratorFoldFunction) query_caps_fold_func,
-        &ret, query);
-    switch (res) {
-      case GST_ITERATOR_RESYNC:
-        /* unref any value stored */
-        if ((caps = g_value_get_pointer (&ret)))
-          gst_caps_unref (caps);
-        /* need to reset the result again to ANY */
-        g_value_set_pointer (&ret, gst_caps_new_any ());
-        gst_iterator_resync (iter);
-        break;
-      case GST_ITERATOR_DONE:
-        /* all pads iterated, return collected value */
-        goto done;
-      case GST_ITERATOR_OK:
-        /* premature exit (happens if caps intersection is empty) */
-        goto done;
-      default:
-        /* iterator returned _ERROR, mark an error and exit */
-        if ((caps = g_value_get_pointer (&ret)))
-          gst_caps_unref (caps);
-        g_value_set_pointer (&ret, NULL);
-        goto error;
-    }
-  }
-done:
-  gst_iterator_free (iter);
+  gst_pad_forward (pad, (GstPadForwardFunction) query_caps_func, &data);
 
   gst_object_unref (element);
 
-  caps = g_value_get_pointer (&ret);
-  g_value_unset (&ret);
-
-  if (caps) {
+  if (data.ret) {
     intersected =
-        gst_caps_intersect (caps, gst_pad_get_pad_template_caps (pad));
-    gst_caps_unref (caps);
+        gst_caps_intersect (data.ret, gst_pad_get_pad_template_caps (pad));
+    gst_caps_unref (data.ret);
   } else {
     intersected = gst_caps_copy (gst_pad_get_pad_template_caps (pad));
   }
-
   gst_query_set_caps_result (query, intersected);
   gst_caps_unref (intersected);
 
-  return result;
+  return TRUE;
 
   /* ERRORS */
 no_parent:
   {
     GST_DEBUG_OBJECT (pad, "no parent");
-    return FALSE;
-  }
-error:
-  {
-    g_warning ("Pad list returned error on element %s",
-        GST_ELEMENT_NAME (element));
-    gst_iterator_free (iter);
-    gst_object_unref (element);
     return FALSE;
   }
 }
