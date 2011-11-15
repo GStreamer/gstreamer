@@ -730,7 +730,7 @@ gst_tag_demux_get_upstream_size (GstTagDemux * tagdemux)
   if (tagdemux->priv->upstream_size > 0)
     return TRUE;
 
-  if (!gst_pad_query_peer_duration (tagdemux->priv->sinkpad, GST_FORMAT_BYTES,
+  if (!gst_pad_peer_query_duration (tagdemux->priv->sinkpad, GST_FORMAT_BYTES,
           &len) || len <= 0) {
     return FALSE;
   }

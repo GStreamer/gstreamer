@@ -1800,7 +1800,7 @@ gst_audio_decoder_src_query (GstPad * pad, GstQuery * query)
       if (format == GST_FORMAT_TIME && gst_audio_decoder_do_byte (dec)) {
         gint64 value;
 
-        if (gst_pad_query_peer_duration (dec->sinkpad, GST_FORMAT_BYTES,
+        if (gst_pad_peer_query_duration (dec->sinkpad, GST_FORMAT_BYTES,
                 &value)) {
           GST_LOG_OBJECT (dec, "upstream size %" G_GINT64_FORMAT, value);
           if (gst_pad_query_convert (dec->sinkpad, GST_FORMAT_BYTES, value,

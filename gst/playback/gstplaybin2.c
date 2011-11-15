@@ -3117,7 +3117,7 @@ autoplug_continue_cb (GstElement * element, GstPad * pad, GstCaps * caps,
 
     sinkcaps = gst_pad_query_caps (sinkpad, NULL);
     if (!gst_caps_is_any (sinkcaps))
-      ret = !gst_pad_accept_caps (sinkpad, caps);
+      ret = !gst_pad_query_accept_caps (sinkpad, caps);
     gst_caps_unref (sinkcaps);
     gst_object_unref (sinkpad);
   } else {
@@ -3149,7 +3149,7 @@ autoplug_continue_cb (GstElement * element, GstPad * pad, GstCaps * caps,
 
       sinkcaps = gst_pad_query_caps (sinkpad, NULL);
       if (!gst_caps_is_any (sinkcaps))
-        ret = !gst_pad_accept_caps (sinkpad, caps);
+        ret = !gst_pad_query_accept_caps (sinkpad, caps);
       gst_caps_unref (sinkcaps);
       gst_object_unref (sinkpad);
     }
@@ -3170,7 +3170,7 @@ autoplug_continue_cb (GstElement * element, GstPad * pad, GstCaps * caps,
 
       sinkcaps = gst_pad_query_caps (sinkpad, NULL);
       if (!gst_caps_is_any (sinkcaps))
-        ret = !gst_pad_accept_caps (sinkpad, caps);
+        ret = !gst_pad_query_accept_caps (sinkpad, caps);
       gst_caps_unref (sinkcaps);
       gst_object_unref (sinkpad);
     }
@@ -3204,7 +3204,7 @@ sink_accepts_caps (GstElement * sink, GstCaps * caps)
   if ((sinkpad = gst_element_get_static_pad (sink, "sink"))) {
     /* Got the sink pad, now let's see if the element actually does accept the
      * caps that we have */
-    if (!gst_pad_accept_caps (sinkpad, caps)) {
+    if (!gst_pad_query_accept_caps (sinkpad, caps)) {
       gst_object_unref (sinkpad);
       return FALSE;
     }
