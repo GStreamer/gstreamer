@@ -150,26 +150,6 @@ gst_stream_synchronizer_query (GstPad * pad, GstQuery * query)
   return ret;
 }
 
-static GstCaps *
-gst_stream_synchronizer_getcaps (GstPad * pad, GstCaps * filter)
-{
-  GstPad *opad;
-  GstCaps *ret = NULL;
-
-  opad = gst_stream_get_other_pad_from_pad (pad);
-  if (opad) {
-    ret = gst_pad_peer_get_caps (opad, filter);
-    gst_object_unref (opad);
-  }
-
-  if (ret == NULL)
-    ret = (filter ? gst_caps_ref (filter) : gst_caps_new_any ());
-
-  GST_LOG_OBJECT (pad, "Returning caps: %" GST_PTR_FORMAT, ret);
-
-  return ret;
-}
-
 /* srcpad functions */
 static gboolean
 gst_stream_synchronizer_src_event (GstPad * pad, GstEvent * event)
@@ -667,8 +647,6 @@ gst_stream_synchronizer_request_new_pad (GstElement * element,
       GST_DEBUG_FUNCPTR (gst_stream_synchronizer_iterate_internal_links));
   gst_pad_set_query_function (stream->sinkpad,
       GST_DEBUG_FUNCPTR (gst_stream_synchronizer_query));
-  gst_pad_set_getcaps_function (stream->sinkpad,
-      GST_DEBUG_FUNCPTR (gst_stream_synchronizer_getcaps));
   gst_pad_set_event_function (stream->sinkpad,
       GST_DEBUG_FUNCPTR (gst_stream_synchronizer_sink_event));
   gst_pad_set_chain_function (stream->sinkpad,
@@ -682,8 +660,6 @@ gst_stream_synchronizer_request_new_pad (GstElement * element,
       GST_DEBUG_FUNCPTR (gst_stream_synchronizer_iterate_internal_links));
   gst_pad_set_query_function (stream->srcpad,
       GST_DEBUG_FUNCPTR (gst_stream_synchronizer_query));
-  gst_pad_set_getcaps_function (stream->srcpad,
-      GST_DEBUG_FUNCPTR (gst_stream_synchronizer_getcaps));
   gst_pad_set_event_function (stream->srcpad,
       GST_DEBUG_FUNCPTR (gst_stream_synchronizer_src_event));
 

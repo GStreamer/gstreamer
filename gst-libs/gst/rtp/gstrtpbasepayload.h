@@ -114,10 +114,12 @@ struct _GstRTPBasePayload
 /**
  * GstRTPBasePayloadClass:
  * @parent_class: the parent class
+ * @get_caps: get desired caps
  * @set_caps: configure the payloader
  * @handle_buffer: process data
- * @handle_event: custom event handling
- * @get_caps: get desired caps
+ * @sink_event: custom event handling on the sinkpad
+ * @src_event: custom event handling on the srcpad
+ * @query: custom query handling
  *
  * Base class for audio RTP payloader.
  */
@@ -134,7 +136,10 @@ struct _GstRTPBasePayloadClass
    * the RTP buffers. This function takes ownership of the buffer. */
   GstFlowReturn (*handle_buffer)        (GstRTPBasePayload *payload,
                                          GstBuffer *buffer);
-  gboolean      (*handle_event)         (GstRTPBasePayload *payload, GstEvent * event);
+  /* handle events and queries */
+  gboolean      (*sink_event)           (GstRTPBasePayload *payload, GstEvent * event);
+  gboolean      (*src_event)            (GstRTPBasePayload *payload, GstEvent * event);
+  gboolean      (*query)                (GstRTPBasePayload *payload, GstPad *pad, GstQuery * query);
 
   /*< private >*/
   gpointer _gst_reserved[GST_PADDING];

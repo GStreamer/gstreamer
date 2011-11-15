@@ -96,15 +96,18 @@ static void gst_rtp_base_payload_init (GstRTPBasePayload * rtpbasepayload,
     gpointer g_class);
 static void gst_rtp_base_payload_finalize (GObject * object);
 
-static GstCaps *gst_rtp_base_payload_sink_getcaps (GstPad * pad,
-    GstCaps * filter);
-static gboolean gst_rtp_base_payload_event_default (GstRTPBasePayload *
-    rtpbasepayload, GstEvent * event);
-static gboolean gst_rtp_base_payload_event (GstPad * pad, GstEvent * event);
-static GstFlowReturn gst_rtp_base_payload_chain (GstPad * pad,
-    GstBuffer * buffer);
 static GstCaps *gst_rtp_base_payload_getcaps_default (GstRTPBasePayload *
     rtpbasepayload, GstPad * pad, GstCaps * filter);
+
+static gboolean gst_rtp_base_payload_sink_event_default (GstRTPBasePayload *
+    rtpbasepayload, GstEvent * event);
+static gboolean gst_rtp_base_payload_sink_event (GstPad * pad,
+    GstEvent * event);
+static gboolean gst_rtp_base_payload_query_default (GstRTPBasePayload *
+    rtpbasepayload, GstPad * pad, GstQuery * query);
+static gboolean gst_rtp_base_payload_query (GstPad * pad, GstQuery * query);
+static GstFlowReturn gst_rtp_base_payload_chain (GstPad * pad,
+    GstBuffer * buffer);
 
 static void gst_rtp_base_payload_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
@@ -241,7 +244,8 @@ gst_rtp_base_payload_class_init (GstRTPBasePayloadClass * klass)
   gstelement_class->change_state = gst_rtp_base_payload_change_state;
 
   klass->get_caps = gst_rtp_base_payload_getcaps_default;
-  klass->handle_event = gst_rtp_base_payload_event_default;
+  klass->sink_event = gst_rtp_base_payload_sink_event_default;
+  klass->query = gst_rtp_base_payload_query_default;
 
   GST_DEBUG_CATEGORY_INIT (rtpbasepayload_debug, "rtpbasepayload", 0,
       "Base class for RTP Payloaders");
@@ -268,12 +272,12 @@ gst_rtp_base_payload_init (GstRTPBasePayload * rtpbasepayload, gpointer g_class)
   g_return_if_fail (templ != NULL);
 
   rtpbasepayload->sinkpad = gst_pad_new_from_template (templ, "sink");
-  gst_pad_set_getcaps_function (rtpbasepayload->sinkpad,
-      gst_rtp_base_payload_sink_getcaps);
-  gst_pad_set_event_function (rtpbasepayload->sinkpad,
-      gst_rtp_base_payload_event);
   gst_pad_set_chain_function (rtpbasepayload->sinkpad,
       gst_rtp_base_payload_chain);
+  gst_pad_set_event_function (rtpbasepayload->sinkpad,
+      gst_rtp_base_payload_sink_event);
+  gst_pad_set_query_function (rtpbasepayload->sinkpad,
+      gst_rtp_base_payload_query);
   gst_element_add_pad (GST_ELEMENT (rtpbasepayload), rtpbasepayload->sinkpad);
 
   rtpbasepayload->mtu = DEFAULT_MTU;
@@ -335,28 +339,8 @@ gst_rtp_base_payload_getcaps_default (GstRTPBasePayload * rtpbasepayload,
   return caps;
 }
 
-static GstCaps *
-gst_rtp_base_payload_sink_getcaps (GstPad * pad, GstCaps * filter)
-{
-  GstRTPBasePayload *rtpbasepayload;
-  GstRTPBasePayloadClass *rtpbasepayload_class;
-  GstCaps *caps = NULL;
-
-  GST_DEBUG_OBJECT (pad, "getting caps");
-
-  rtpbasepayload = GST_RTP_BASE_PAYLOAD (gst_pad_get_parent (pad));
-  rtpbasepayload_class = GST_RTP_BASE_PAYLOAD_GET_CLASS (rtpbasepayload);
-
-  if (rtpbasepayload_class->get_caps)
-    caps = rtpbasepayload_class->get_caps (rtpbasepayload, pad, filter);
-
-  gst_object_unref (rtpbasepayload);
-
-  return caps;
-}
-
 static gboolean
-gst_rtp_base_payload_event_default (GstRTPBasePayload * rtpbasepayload,
+gst_rtp_base_payload_sink_event_default (GstRTPBasePayload * rtpbasepayload,
     GstEvent * event)
 {
   gboolean res = FALSE;
@@ -406,7 +390,7 @@ gst_rtp_base_payload_event_default (GstRTPBasePayload * rtpbasepayload,
 }
 
 static gboolean
-gst_rtp_base_payload_event (GstPad * pad, GstEvent * event)
+gst_rtp_base_payload_sink_event (GstPad * pad, GstEvent * event)
 {
   GstRTPBasePayload *rtpbasepayload;
   GstRTPBasePayloadClass *rtpbasepayload_class;
@@ -420,8 +404,8 @@ gst_rtp_base_payload_event (GstPad * pad, GstEvent * event)
 
   rtpbasepayload_class = GST_RTP_BASE_PAYLOAD_GET_CLASS (rtpbasepayload);
 
-  if (rtpbasepayload_class->handle_event)
-    res = rtpbasepayload_class->handle_event (rtpbasepayload, event);
+  if (rtpbasepayload_class->sink_event)
+    res = rtpbasepayload_class->sink_event (rtpbasepayload, event);
   else
     gst_event_unref (event);
 
@@ -430,6 +414,58 @@ gst_rtp_base_payload_event (GstPad * pad, GstEvent * event)
   return res;
 }
 
+static gboolean
+gst_rtp_base_payload_query_default (GstRTPBasePayload * rtpbasepayload,
+    GstPad * pad, GstQuery * query)
+{
+  gboolean res = FALSE;
+
+  switch (GST_QUERY_TYPE (query)) {
+    case GST_QUERY_CAPS:
+    {
+      GstRTPBasePayloadClass *rtpbasepayload_class;
+      GstCaps *filter, *caps;
+
+      gst_query_parse_caps (query, &filter);
+      GST_DEBUG_OBJECT (rtpbasepayload, "getting caps with filter %"
+          GST_PTR_FORMAT, filter);
+
+      rtpbasepayload_class = GST_RTP_BASE_PAYLOAD_GET_CLASS (rtpbasepayload);
+      if (rtpbasepayload_class->get_caps) {
+        caps = rtpbasepayload_class->get_caps (rtpbasepayload, pad, filter);
+        gst_query_set_caps_result (query, caps);
+        res = TRUE;
+      }
+      break;
+    }
+    default:
+      res = gst_pad_query_default (pad, query);
+      break;
+  }
+  return res;
+}
+
+static gboolean
+gst_rtp_base_payload_query (GstPad * pad, GstQuery * query)
+{
+  GstRTPBasePayload *rtpbasepayload;
+  GstRTPBasePayloadClass *rtpbasepayload_class;
+  gboolean res = FALSE;
+
+  rtpbasepayload = GST_RTP_BASE_PAYLOAD (gst_pad_get_parent (pad));
+  if (G_UNLIKELY (rtpbasepayload == NULL)) {
+    return FALSE;
+  }
+
+  rtpbasepayload_class = GST_RTP_BASE_PAYLOAD_GET_CLASS (rtpbasepayload);
+
+  if (rtpbasepayload_class->query)
+    res = rtpbasepayload_class->query (rtpbasepayload, pad, query);
+
+  gst_object_unref (rtpbasepayload);
+
+  return res;
+}
 
 static GstFlowReturn
 gst_rtp_base_payload_chain (GstPad * pad, GstBuffer * buffer)
@@ -826,8 +862,8 @@ gst_rtp_base_payload_prepare_push (GstRTPBasePayload * payload,
       (is_list) ? -1 : gst_buffer_get_size (GST_BUFFER (obj)),
       payload->seqnum, data.rtptime, GST_TIME_ARGS (data.timestamp));
 
-  if (g_atomic_int_compare_and_exchange (&payload->priv->
-          notified_first_timestamp, 1, 0)) {
+  if (g_atomic_int_compare_and_exchange (&payload->
+          priv->notified_first_timestamp, 1, 0)) {
     g_object_notify (G_OBJECT (payload), "timestamp");
     g_object_notify (G_OBJECT (payload), "seqnum");
   }

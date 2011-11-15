@@ -131,13 +131,13 @@ gst_stream_combiner_sink_event (GstPad * pad, GstEvent * event)
   return gst_pad_push_event (stream_combiner->srcpad, event);
 }
 
-static GstCaps *
-gst_stream_combiner_sink_getcaps (GstPad * pad, GstCaps * filter)
+static gboolean
+gst_stream_combiner_sink_query (GstPad * pad, GstQuery * query)
 {
   GstStreamCombiner *stream_combiner =
       (GstStreamCombiner *) GST_PAD_PARENT (pad);
 
-  return gst_pad_peer_get_caps (stream_combiner->srcpad, filter);
+  return gst_pad_peer_query (stream_combiner->srcpad, query);
 }
 
 static gboolean
@@ -157,6 +157,7 @@ gst_stream_combiner_src_event (GstPad * pad, GstEvent * event)
   if (sinkpad)
     /* Forward upstream as is */
     return gst_pad_push_event (sinkpad, event);
+
   return FALSE;
 }
 
@@ -165,7 +166,6 @@ gst_stream_combiner_src_query (GstPad * pad, GstQuery * query)
 {
   GstStreamCombiner *stream_combiner =
       (GstStreamCombiner *) GST_PAD_PARENT (pad);
-
   GstPad *sinkpad = NULL;
 
   STREAMS_LOCK (stream_combiner);
@@ -178,6 +178,7 @@ gst_stream_combiner_src_query (GstPad * pad, GstQuery * query)
   if (sinkpad)
     /* Forward upstream as is */
     return gst_pad_peer_query (sinkpad, query);
+
   return FALSE;
 }
 
@@ -207,7 +208,7 @@ gst_stream_combiner_request_new_pad (GstElement * element,
   sinkpad = gst_pad_new_from_static_template (&sink_template, name);
   gst_pad_set_chain_function (sinkpad, gst_stream_combiner_chain);
   gst_pad_set_event_function (sinkpad, gst_stream_combiner_sink_event);
-  gst_pad_set_getcaps_function (sinkpad, gst_stream_combiner_sink_getcaps);
+  gst_pad_set_query_function (sinkpad, gst_stream_combiner_sink_query);
 
   STREAMS_LOCK (stream_combiner);
   stream_combiner->sinkpads =

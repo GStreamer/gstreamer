@@ -215,7 +215,6 @@ gst_visual_init (GstVisual * visual)
   gst_element_add_pad (GST_ELEMENT (visual), visual->sinkpad);
 
   visual->srcpad = gst_pad_new_from_static_template (&src_template, "src");
-  gst_pad_set_getcaps_function (visual->srcpad, gst_visual_getcaps);
   gst_pad_set_event_function (visual->srcpad, gst_visual_src_event);
   gst_pad_set_query_function (visual->srcpad, gst_visual_src_query);
   gst_element_add_pad (GST_ELEMENT (visual), visual->srcpad);
@@ -646,8 +645,18 @@ gst_visual_src_query (GstPad * pad, GstQuery * query)
       }
       break;
     }
+    case GST_QUERY_CAPS:
+    {
+      GstCaps *filter, *caps;
+
+      gst_query_parse_caps (query, &filter);
+      caps = gst_visual_getcaps (pad, filter);
+      gst_query_set_caps_result (query, caps);
+      gst_caps_unref (caps);
+      res = TRUE;
+    }
     default:
-      res = gst_pad_peer_query (visual->sinkpad, query);
+      res = gst_pad_query_default (pad, query);
       break;
   }
 

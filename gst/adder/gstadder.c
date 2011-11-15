@@ -106,7 +106,8 @@ static void gst_adder_get_property (GObject * object, guint prop_id,
 
 static gboolean gst_adder_setcaps (GstAdder * adder, GstPad * pad,
     GstCaps * caps);
-static gboolean gst_adder_query (GstPad * pad, GstQuery * query);
+static gboolean gst_adder_src_query (GstPad * pad, GstQuery * query);
+static gboolean gst_adder_sink_query (GstPad * pad, GstQuery * query);
 static gboolean gst_adder_src_event (GstPad * pad, GstEvent * event);
 static gboolean gst_adder_sink_event (GstPad * pad, GstEvent * event);
 
@@ -205,6 +206,30 @@ gst_adder_sink_getcaps (GstPad * pad, GstCaps * filter)
       GST_PAD_NAME (pad), result);
 
   return result;
+}
+
+static gboolean
+gst_adder_sink_query (GstPad * pad, GstQuery * query)
+{
+  gboolean res = FALSE;
+
+  switch (GST_QUERY_TYPE (query)) {
+    case GST_QUERY_CAPS:
+    {
+      GstCaps *filter, *caps;
+
+      gst_query_parse_caps (query, &filter);
+      caps = gst_adder_sink_getcaps (pad, filter);
+      gst_query_set_caps_result (query, caps);
+      gst_caps_unref (caps);
+      res = TRUE;
+      break;
+    }
+    default:
+      res = gst_pad_query_default (pad, query);
+      break;
+  }
+  return res;
 }
 
 typedef struct
@@ -473,7 +498,7 @@ gst_adder_query_latency (GstAdder * adder, GstQuery * query)
 }
 
 static gboolean
-gst_adder_query (GstPad * pad, GstQuery * query)
+gst_adder_src_query (GstPad * pad, GstQuery * query)
 {
   GstAdder *adder = GST_ADDER (gst_pad_get_parent (pad));
   gboolean res = FALSE;
@@ -830,12 +855,11 @@ gst_adder_init (GstAdder * adder)
   adder->srcpad = gst_pad_new_from_template (template, "src");
   gst_object_unref (template);
 
-  gst_pad_set_getcaps_function (adder->srcpad,
-      GST_DEBUG_FUNCPTR (gst_pad_proxy_getcaps));
   gst_pad_set_query_function (adder->srcpad,
-      GST_DEBUG_FUNCPTR (gst_adder_query));
+      GST_DEBUG_FUNCPTR (gst_adder_src_query));
   gst_pad_set_event_function (adder->srcpad,
       GST_DEBUG_FUNCPTR (gst_adder_src_event));
+  GST_PAD_SET_PROXY_CAPS (adder->srcpad);
   gst_element_add_pad (GST_ELEMENT (adder), adder->srcpad);
 
   gst_audio_info_init (&adder->info);
@@ -950,8 +974,7 @@ gst_adder_request_new_pad (GstElement * element, GstPadTemplate * templ,
   GST_DEBUG_OBJECT (adder, "request new pad %s", name);
   g_free (name);
 
-  gst_pad_set_getcaps_function (newpad,
-      GST_DEBUG_FUNCPTR (gst_adder_sink_getcaps));
+  gst_pad_set_query_function (newpad, GST_DEBUG_FUNCPTR (gst_adder_sink_query));
   gst_collect_pads_add_pad (adder->collect, newpad, sizeof (GstCollectData));
 
   /* FIXME: hacked way to override/extend the event function of

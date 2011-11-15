@@ -319,6 +319,8 @@ static gboolean gst_base_text_overlay_src_query (GstPad * pad,
 
 static gboolean gst_base_text_overlay_video_event (GstPad * pad,
     GstEvent * event);
+static gboolean gst_base_text_overlay_video_query (GstPad * pad,
+    GstQuery * query);
 static GstFlowReturn gst_base_text_overlay_video_chain (GstPad * pad,
     GstBuffer * buffer);
 
@@ -614,12 +616,12 @@ gst_base_text_overlay_init (GstBaseTextOverlay * overlay,
   template = gst_static_pad_template_get (&video_sink_template_factory);
   overlay->video_sinkpad = gst_pad_new_from_template (template, "video_sink");
   gst_object_unref (template);
-  gst_pad_set_getcaps_function (overlay->video_sinkpad,
-      GST_DEBUG_FUNCPTR (gst_base_text_overlay_getcaps));
   gst_pad_set_event_function (overlay->video_sinkpad,
       GST_DEBUG_FUNCPTR (gst_base_text_overlay_video_event));
   gst_pad_set_chain_function (overlay->video_sinkpad,
       GST_DEBUG_FUNCPTR (gst_base_text_overlay_video_chain));
+  gst_pad_set_query_function (overlay->video_sinkpad,
+      GST_DEBUG_FUNCPTR (gst_base_text_overlay_video_query));
   gst_element_add_pad (GST_ELEMENT (overlay), overlay->video_sinkpad);
 
   template =
@@ -645,8 +647,6 @@ gst_base_text_overlay_init (GstBaseTextOverlay * overlay,
   template = gst_static_pad_template_get (&src_template_factory);
   overlay->srcpad = gst_pad_new_from_template (template, "src");
   gst_object_unref (template);
-  gst_pad_set_getcaps_function (overlay->srcpad,
-      GST_DEBUG_FUNCPTR (gst_base_text_overlay_getcaps));
   gst_pad_set_event_function (overlay->srcpad,
       GST_DEBUG_FUNCPTR (gst_base_text_overlay_src_event));
   gst_pad_set_query_function (overlay->srcpad,
@@ -1002,7 +1002,22 @@ gst_base_text_overlay_src_query (GstPad * pad, GstQuery * query)
   if (G_UNLIKELY (!overlay))
     return FALSE;
 
-  ret = gst_pad_peer_query (overlay->video_sinkpad, query);
+  switch (GST_QUERY_TYPE (query)) {
+    case GST_QUERY_CAPS:
+    {
+      GstCaps *filter, *caps;
+
+      gst_query_parse_caps (query, &filter);
+      caps = gst_base_text_overlay_getcaps (pad, filter);
+      gst_query_set_caps_result (query, caps);
+      gst_caps_unref (caps);
+      ret = TRUE;
+      break;
+    }
+    default:
+      ret = gst_pad_peer_query (overlay->video_sinkpad, query);
+      break;
+  }
 
   gst_object_unref (overlay);
 
@@ -2302,6 +2317,39 @@ gst_base_text_overlay_video_event (GstPad * pad, GstEvent * event)
       break;
     default:
       ret = gst_pad_event_default (pad, event);
+      break;
+  }
+
+  gst_object_unref (overlay);
+
+  return ret;
+}
+
+static gboolean
+gst_base_text_overlay_video_query (GstPad * pad, GstQuery * query)
+{
+  gboolean ret = FALSE;
+  GstBaseTextOverlay *overlay = NULL;
+
+  overlay = GST_BASE_TEXT_OVERLAY (gst_pad_get_parent (pad));
+  if (G_UNLIKELY (!overlay)) {
+    return FALSE;
+  }
+
+  switch (GST_QUERY_TYPE (query)) {
+    case GST_QUERY_CAPS:
+    {
+      GstCaps *filter, *caps;
+
+      gst_query_parse_caps (query, &filter);
+      caps = gst_base_text_overlay_getcaps (pad, filter);
+      gst_query_set_caps_result (query, caps);
+      gst_caps_unref (caps);
+      ret = TRUE;
+      break;
+    }
+    default:
+      ret = gst_pad_query_default (pad, query);
       break;
   }
 

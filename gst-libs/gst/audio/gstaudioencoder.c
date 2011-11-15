@@ -296,13 +296,15 @@ static void gst_audio_encoder_get_property (GObject * object,
 static gboolean gst_audio_encoder_sink_activate_push (GstPad * pad,
     gboolean active);
 
+static GstCaps *gst_audio_encoder_getcaps_default (GstAudioEncoder * enc,
+    GstCaps * filter);
+
 static gboolean gst_audio_encoder_sink_event (GstPad * pad, GstEvent * event);
 static gboolean gst_audio_encoder_sink_setcaps (GstAudioEncoder * enc,
     GstCaps * caps);
 static GstFlowReturn gst_audio_encoder_chain (GstPad * pad, GstBuffer * buffer);
 static gboolean gst_audio_encoder_src_query (GstPad * pad, GstQuery * query);
 static gboolean gst_audio_encoder_sink_query (GstPad * pad, GstQuery * query);
-static GstCaps *gst_audio_encoder_sink_getcaps (GstPad * pad, GstCaps * filter);
 
 static void
 gst_audio_encoder_class_init (GstAudioEncoderClass * klass)
@@ -340,6 +342,8 @@ gst_audio_encoder_class_init (GstAudioEncoderClass * klass)
           "Consider discontinuity if timestamp jitter/imperfection exceeds tolerance (ns)",
           0, G_MAXINT64, DEFAULT_TOLERANCE,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  klass->getcaps = gst_audio_encoder_getcaps_default;
 }
 
 static void
@@ -358,8 +362,6 @@ gst_audio_encoder_init (GstAudioEncoder * enc, GstAudioEncoderClass * bclass)
   enc->sinkpad = gst_pad_new_from_template (pad_template, "sink");
   gst_pad_set_event_function (enc->sinkpad,
       GST_DEBUG_FUNCPTR (gst_audio_encoder_sink_event));
-  gst_pad_set_getcaps_function (enc->sinkpad,
-      GST_DEBUG_FUNCPTR (gst_audio_encoder_sink_getcaps));
   gst_pad_set_query_function (enc->sinkpad,
       GST_DEBUG_FUNCPTR (gst_audio_encoder_sink_query));
   gst_pad_set_chain_function (enc->sinkpad,
@@ -1192,22 +1194,11 @@ done:
 }
 
 static GstCaps *
-gst_audio_encoder_sink_getcaps (GstPad * pad, GstCaps * filter)
+gst_audio_encoder_getcaps_default (GstAudioEncoder * enc, GstCaps * filter)
 {
-  GstAudioEncoder *enc;
-  GstAudioEncoderClass *klass;
   GstCaps *caps;
 
-  enc = GST_AUDIO_ENCODER (gst_pad_get_parent (pad));
-  klass = GST_AUDIO_ENCODER_GET_CLASS (enc);
-  g_assert (pad == enc->sinkpad);
-
-  if (klass->getcaps)
-    caps = klass->getcaps (enc, filter);
-  else
-    caps = gst_audio_encoder_proxy_getcaps (enc, NULL);
-  gst_object_unref (enc);
-
+  caps = gst_audio_encoder_proxy_getcaps (enc, NULL);
   GST_LOG_OBJECT (enc, "returning caps %" GST_PTR_FORMAT, caps);
 
   return caps;
@@ -1372,7 +1363,7 @@ gst_audio_encoder_sink_event (GstPad * pad, GstEvent * event)
 static gboolean
 gst_audio_encoder_sink_query (GstPad * pad, GstQuery * query)
 {
-  gboolean res = TRUE;
+  gboolean res = FALSE;
   GstAudioEncoder *enc;
 
   enc = GST_AUDIO_ENCODER (gst_pad_get_parent (pad));
@@ -1395,6 +1386,23 @@ gst_audio_encoder_sink_query (GstPad * pad, GstQuery * query)
                   src_fmt, src_val, dest_fmt, &dest_val)))
         goto error;
       gst_query_set_convert (query, src_fmt, src_val, dest_fmt, dest_val);
+      res = TRUE;
+      break;
+    }
+    case GST_QUERY_CAPS:
+    {
+      GstCaps *filter, *caps;
+      GstAudioEncoderClass *klass;
+
+      gst_query_parse_caps (query, &filter);
+
+      klass = GST_AUDIO_ENCODER_GET_CLASS (enc);
+      if (klass->getcaps) {
+        caps = klass->getcaps (enc, filter);
+        gst_query_set_caps_result (query, caps);
+        gst_caps_unref (caps);
+        res = TRUE;
+      }
       break;
     }
     default:
@@ -1404,6 +1412,7 @@ gst_audio_encoder_sink_query (GstPad * pad, GstQuery * query)
 
 error:
   gst_object_unref (enc);
+
   return res;
 }
 

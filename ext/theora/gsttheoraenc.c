@@ -253,7 +253,7 @@ static gboolean theora_enc_src_event (GstPad * pad, GstEvent * event);
 static GstFlowReturn theora_enc_chain (GstPad * pad, GstBuffer * buffer);
 static GstStateChangeReturn theora_enc_change_state (GstElement * element,
     GstStateChange transition);
-static GstCaps *theora_enc_sink_getcaps (GstPad * pad, GstCaps * filter);
+static gboolean theora_enc_sink_query (GstPad * pad, GstQuery * query);
 static gboolean theora_enc_sink_setcaps (GstTheoraEnc * enc, GstCaps * caps);
 static void theora_enc_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
@@ -418,7 +418,7 @@ gst_theora_enc_init (GstTheoraEnc * enc)
       gst_pad_new_from_static_template (&theora_enc_sink_factory, "sink");
   gst_pad_set_chain_function (enc->sinkpad, theora_enc_chain);
   gst_pad_set_event_function (enc->sinkpad, theora_enc_sink_event);
-  gst_pad_set_getcaps_function (enc->sinkpad, theora_enc_sink_getcaps);
+  gst_pad_set_query_function (enc->sinkpad, theora_enc_sink_query);
   gst_element_add_pad (GST_ELEMENT (enc), enc->sinkpad);
 
   enc->srcpad =
@@ -653,6 +653,31 @@ theora_enc_sink_getcaps (GstPad * pad, GstCaps * filter)
   }
 
   return caps;
+}
+
+static gboolean
+theora_enc_sink_query (GstPad * pad, GstQuery * query)
+{
+  gboolean res = FALSE;
+
+  switch (GST_QUERY_TYPE (query)) {
+    case GST_QUERY_CAPS:
+    {
+      GstCaps *filter, *caps;
+
+      gst_query_parse_caps (query, &filter);
+      caps = theora_enc_sink_getcaps (pad, filter);
+      gst_query_set_caps_result (query, caps);
+      gst_caps_unref (caps);
+      res = TRUE;
+      break;
+    }
+    default:
+      res = gst_pad_query_default (pad, query);
+      break;
+  }
+
+  return res;
 }
 
 static gboolean

@@ -80,6 +80,7 @@ static gboolean setup_recoder_pipeline (GstSmartEncoder * smart_encoder);
 
 static GstFlowReturn gst_smart_encoder_chain (GstPad * pad, GstBuffer * buf);
 static gboolean smart_encoder_sink_event (GstPad * pad, GstEvent * event);
+static gboolean smart_encoder_sink_query (GstPad * pad, GstQuery * query);
 static GstCaps *smart_encoder_sink_getcaps (GstPad * pad, GstCaps * filter);
 static GstStateChangeReturn
 gst_smart_encoder_change_state (GstElement * element,
@@ -151,8 +152,7 @@ gst_smart_encoder_init (GstSmartEncoder * smart_encoder)
       gst_pad_new_from_static_template (&sink_template, "sink");
   gst_pad_set_chain_function (smart_encoder->sinkpad, gst_smart_encoder_chain);
   gst_pad_set_event_function (smart_encoder->sinkpad, smart_encoder_sink_event);
-  gst_pad_set_getcaps_function (smart_encoder->sinkpad,
-      smart_encoder_sink_getcaps);
+  gst_pad_set_query_function (smart_encoder->sinkpad, smart_encoder_sink_query);
   gst_element_add_pad (GST_ELEMENT (smart_encoder), smart_encoder->sinkpad);
 
   smart_encoder->srcpad =
@@ -403,6 +403,30 @@ smart_encoder_sink_getcaps (GstPad * pad, GstCaps * filter)
   }
 
   gst_object_unref (smart_encoder);
+  return res;
+}
+
+static gboolean
+smart_encoder_sink_query (GstPad * pad, GstQuery * query)
+{
+  gboolean res;
+
+  switch (GST_QUERY_TYPE (query)) {
+    case GST_QUERY_CAPS:
+    {
+      GstCaps *filter, *caps;
+
+      gst_query_parse_caps (query, &filter);
+      caps = smart_encoder_sink_getcaps (pad, filter);
+      gst_query_set_caps_result (query, caps);
+      gst_caps_unref (caps);
+      res = TRUE;
+      break;
+    }
+    default:
+      res = gst_pad_query_default (pad, query);
+      break;
+  }
   return res;
 }
 

@@ -303,6 +303,30 @@ beach:
 }
 
 static gboolean
+gst_stream_splitter_sink_query (GstPad * pad, GstQuery * query)
+{
+  gboolean res;
+
+  switch (GST_QUERY_TYPE (query)) {
+    case GST_QUERY_CAPS:
+    {
+      GstCaps *filter, *caps;
+
+      gst_query_parse_caps (query, &filter);
+      caps = gst_stream_splitter_sink_getcaps (pad, filter);
+      gst_query_set_caps_result (query, caps);
+      gst_caps_unref (caps);
+      res = TRUE;
+      break;
+    }
+    default:
+      res = gst_pad_query_default (pad, query);
+      break;
+  }
+  return res;
+}
+
+static gboolean
 gst_stream_splitter_sink_setcaps (GstPad * pad, GstCaps * caps)
 {
   GstStreamSplitter *stream_splitter =
@@ -384,15 +408,12 @@ gst_stream_splitter_init (GstStreamSplitter * stream_splitter)
 {
   stream_splitter->sinkpad =
       gst_pad_new_from_static_template (&sink_template, "sink");
-  /* FIXME : No buffer alloc for the time being, it will resort to the fallback */
-  /* gst_pad_set_bufferalloc_function (stream_splitter->sinkpad, */
-  /*     gst_stream_splitter_buffer_alloc); */
   gst_pad_set_chain_function (stream_splitter->sinkpad,
       gst_stream_splitter_chain);
   gst_pad_set_event_function (stream_splitter->sinkpad,
       gst_stream_splitter_sink_event);
-  gst_pad_set_getcaps_function (stream_splitter->sinkpad,
-      gst_stream_splitter_sink_getcaps);
+  gst_pad_set_query_function (stream_splitter->sinkpad,
+      gst_stream_splitter_sink_query);
   gst_element_add_pad (GST_ELEMENT (stream_splitter), stream_splitter->sinkpad);
 
   stream_splitter->lock = g_mutex_new ();

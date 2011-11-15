@@ -230,13 +230,13 @@ gst_audio_rate_init (GstAudioRate * audiorate)
       gst_pad_new_from_static_template (&gst_audio_rate_sink_template, "sink");
   gst_pad_set_event_function (audiorate->sinkpad, gst_audio_rate_sink_event);
   gst_pad_set_chain_function (audiorate->sinkpad, gst_audio_rate_chain);
-  gst_pad_set_getcaps_function (audiorate->sinkpad, gst_pad_proxy_getcaps);
+  GST_PAD_SET_PROXY_CAPS (audiorate->sinkpad);
   gst_element_add_pad (GST_ELEMENT (audiorate), audiorate->sinkpad);
 
   audiorate->srcpad =
       gst_pad_new_from_static_template (&gst_audio_rate_src_template, "src");
   gst_pad_set_event_function (audiorate->srcpad, gst_audio_rate_src_event);
-  gst_pad_set_getcaps_function (audiorate->srcpad, gst_pad_proxy_getcaps);
+  GST_PAD_SET_PROXY_CAPS (audiorate->srcpad);
   gst_element_add_pad (GST_ELEMENT (audiorate), audiorate->srcpad);
 
   audiorate->in = 0;

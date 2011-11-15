@@ -2060,6 +2060,17 @@ gst_subtitle_overlay_subtitle_sink_query (GstPad * pad, GstQuery * query)
       ret = TRUE;
       break;
     }
+    case GST_QUERY_CAPS:
+    {
+      GstCaps *filter, *caps;
+
+      gst_query_parse_caps (query, &filter);
+      caps = gst_subtitle_overlay_subtitle_sink_getcaps (pad, filter);
+      gst_query_set_caps_result (query, caps);
+      gst_caps_unref (caps);
+      ret = TRUE;
+      break;
+    }
     default:
       ret = gst_pad_query_default (pad, query);
       break;
@@ -2122,8 +2133,6 @@ gst_subtitle_overlay_init (GstSubtitleOverlay * self)
       GST_DEBUG_FUNCPTR (gst_subtitle_overlay_subtitle_sink_query));
   gst_pad_set_chain_function (self->subtitle_sinkpad,
       GST_DEBUG_FUNCPTR (gst_subtitle_overlay_subtitle_sink_chain));
-  gst_pad_set_getcaps_function (self->subtitle_sinkpad,
-      GST_DEBUG_FUNCPTR (gst_subtitle_overlay_subtitle_sink_getcaps));
 
   proxypad =
       GST_PAD_CAST (gst_proxy_pad_get_internal (GST_PROXY_PAD

@@ -406,6 +406,30 @@ gst_play_sink_convert_bin_getcaps (GstPad * pad, GstCaps * filter)
   return ret;
 }
 
+static gboolean
+gst_play_sink_convert_bin_query (GstPad * pad, GstQuery * query)
+{
+  gboolean res = FALSE;
+
+  switch (GST_QUERY_TYPE (query)) {
+    case GST_QUERY_CAPS:
+    {
+      GstCaps *filter, *caps;
+
+      gst_query_parse_caps (query, &filter);
+      caps = gst_play_sink_convert_bin_getcaps (pad, filter);
+      gst_query_set_caps_result (query, caps);
+      gst_caps_unref (caps);
+      res = TRUE;
+      break;
+    }
+    default:
+      res = gst_pad_query_default (pad, query);
+      break;
+  }
+  return res;
+}
+
 void
 gst_play_sink_convert_bin_remove_elements (GstPlaySinkConvertBin * self)
 {
@@ -551,8 +575,8 @@ gst_play_sink_convert_bin_init (GstPlaySinkConvertBin * self)
   self->sinkpad = gst_ghost_pad_new_no_target_from_template ("sink", templ);
   gst_pad_set_event_function (self->sinkpad,
       GST_DEBUG_FUNCPTR (gst_play_sink_convert_bin_sink_event));
-  gst_pad_set_getcaps_function (self->sinkpad,
-      GST_DEBUG_FUNCPTR (gst_play_sink_convert_bin_getcaps));
+  gst_pad_set_query_function (self->sinkpad,
+      GST_DEBUG_FUNCPTR (gst_play_sink_convert_bin_query));
 
   self->sink_proxypad =
       GST_PAD_CAST (gst_proxy_pad_get_internal (GST_PROXY_PAD (self->sinkpad)));
@@ -562,8 +586,8 @@ gst_play_sink_convert_bin_init (GstPlaySinkConvertBin * self)
 
   templ = gst_static_pad_template_get (&srctemplate);
   self->srcpad = gst_ghost_pad_new_no_target_from_template ("src", templ);
-  gst_pad_set_getcaps_function (self->srcpad,
-      GST_DEBUG_FUNCPTR (gst_play_sink_convert_bin_getcaps));
+  gst_pad_set_query_function (self->srcpad,
+      GST_DEBUG_FUNCPTR (gst_play_sink_convert_bin_query));
   gst_element_add_pad (GST_ELEMENT_CAST (self), self->srcpad);
   gst_object_unref (templ);
 
