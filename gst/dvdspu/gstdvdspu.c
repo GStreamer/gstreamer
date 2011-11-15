@@ -352,7 +352,7 @@ gst_dvd_spu_video_proxy_getcaps (GstPad * pad, GstCaps * filter)
    * subpicture sink pad */
   otherpad = (pad == dvdspu->srcpad) ? dvdspu->videosinkpad : dvdspu->srcpad;
 
-  caps = gst_pad_peer_get_caps (otherpad, filter);
+  caps = gst_pad_peer_query_caps (otherpad, filter);
   if (caps) {
     GstCaps *temp;
     const GstCaps *templ;

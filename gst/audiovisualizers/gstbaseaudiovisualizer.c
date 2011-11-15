@@ -697,7 +697,7 @@ gst_base_audio_visualizer_src_negotiate (GstBaseAudioVisualizer * scope)
   GST_DEBUG_OBJECT (scope, "performing negotiation");
 
   /* see what the peer can do */
-  othercaps = gst_pad_peer_get_caps (scope->srcpad, NULL);
+  othercaps = gst_pad_peer_query_caps (scope->srcpad, NULL);
   if (othercaps) {
     target = gst_caps_intersect (othercaps, templ);
     gst_caps_unref (othercaps);

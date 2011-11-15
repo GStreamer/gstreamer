@@ -438,7 +438,7 @@ gst_ass_render_getcaps (GstPad * pad, GstCaps * filter)
     otherpad = render->srcpad;
 
   /* we can do what the peer can */
-  caps = gst_pad_peer_get_caps (otherpad, filter);
+  caps = gst_pad_peer_query_caps (otherpad, filter);
   if (caps) {
     GstCaps *temp;
     const GstCaps *templ;
