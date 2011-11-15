@@ -451,7 +451,7 @@ gst_real_audio_demux_parse_header (GstRealAudioDemux * demux)
         demux->byterate_num, demux->byterate_denom,
         demux->byterate_num / demux->byterate_denom);
 
-    if (gst_pad_query_peer_duration (demux->sinkpad, bformat, &size_bytes)) {
+    if (gst_pad_peer_query_duration (demux->sinkpad, bformat, &size_bytes)) {
       demux->duration =
           gst_real_demux_get_timestamp_from_offset (demux, size_bytes);
       demux->upstream_size = size_bytes;

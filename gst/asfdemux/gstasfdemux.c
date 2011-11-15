@@ -677,7 +677,7 @@ gst_asf_demux_handle_seek_event (GstASFDemux * demux, GstEvent * event)
        problem as the seek to this offset needs to happen anway. */
     gint64 offset;
 
-    if (gst_pad_query_peer_convert (demux->sinkpad, GST_FORMAT_TIME, seek_time,
+    if (gst_pad_peer_query_convert (demux->sinkpad, GST_FORMAT_TIME, seek_time,
             GST_FORMAT_BYTES, &offset)) {
       packet = (offset - demux->data_offset) / demux->packet_size;
       GST_LOG_OBJECT (demux, "convert %" GST_TIME_FORMAT
