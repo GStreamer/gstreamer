@@ -768,7 +768,7 @@ _pad_blocked_cb (GstPad * pad, GstPadProbeInfo * info, gpointer user_data)
     if (peer) {
       subcaps = gst_pad_get_current_caps (peer);
       if (!subcaps) {
-        subcaps = gst_pad_get_caps (peer, NULL);
+        subcaps = gst_pad_query_caps (peer, NULL);
         if (!gst_caps_is_fixed (subcaps)) {
           gst_caps_unref (subcaps);
           subcaps = NULL;
@@ -900,7 +900,7 @@ _pad_blocked_cb (GstPad * pad, GstPadProbeInfo * info, gpointer user_data)
 
         video_caps = gst_pad_get_current_caps (video_peer);
         if (!video_caps) {
-          video_caps = gst_pad_get_caps (video_peer, NULL);
+          video_caps = gst_pad_query_caps (video_peer, NULL);
           if (!gst_caps_is_fixed (video_caps)) {
             gst_caps_unref (video_caps);
             video_caps = NULL;
@@ -1208,7 +1208,7 @@ _pad_blocked_cb (GstPad * pad, GstPadProbeInfo * info, gpointer user_data)
         if (video_peer) {
           video_caps = gst_pad_get_current_caps (video_peer);
           if (!video_caps) {
-            video_caps = gst_pad_get_caps (video_peer, NULL);
+            video_caps = gst_pad_query_caps (video_peer, NULL);
           }
           gst_object_unref (video_peer);
         }
@@ -1218,7 +1218,7 @@ _pad_blocked_cb (GstPad * pad, GstPadProbeInfo * info, gpointer user_data)
           GST_WARNING_OBJECT (self, "Can't get video sink from renderer");
           continue;
         }
-        allowed_caps = gst_pad_get_caps (sink, NULL);
+        allowed_caps = gst_pad_query_caps (sink, NULL);
         gst_object_unref (sink);
 
         if (allowed_caps && video_caps)
@@ -1918,7 +1918,7 @@ gst_subtitle_overlay_subtitle_sink_link (GstPad * pad, GstPad * peer)
 
   caps = gst_pad_get_current_caps (peer);
   if (!caps) {
-    caps = gst_pad_get_caps (peer, NULL);
+    caps = gst_pad_query_caps (peer, NULL);
     if (!gst_caps_is_fixed (caps)) {
       gst_caps_unref (caps);
       caps = NULL;

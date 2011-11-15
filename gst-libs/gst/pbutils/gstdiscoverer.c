@@ -478,7 +478,7 @@ uridecodebin_pad_added_cb (GstElement * uridecodebin, GstPad * pad,
   g_object_set (ps->sink, "silent", TRUE, NULL);
   g_object_set (ps->queue, "max-size-buffers", 1, "silent", TRUE, NULL);
 
-  caps = gst_pad_get_caps (pad, NULL);
+  caps = gst_pad_query_caps (pad, NULL);
 
   if (is_subtitle_caps (caps)) {
     /* Subtitle streams are sparse and may not provide any information - don't
@@ -593,7 +593,7 @@ collect_stream_information (GstDiscoverer * dc, PrivateStream * ps, guint idx)
   if (!caps) {
     GST_WARNING ("Couldn't get negotiated caps from %s:%s",
         GST_DEBUG_PAD_NAME (ps->pad));
-    caps = gst_pad_get_caps (ps->pad, NULL);
+    caps = gst_pad_query_caps (ps->pad, NULL);
   }
   if (caps) {
     GST_DEBUG ("Got caps %" GST_PTR_FORMAT, caps);

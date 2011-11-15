@@ -211,7 +211,7 @@ pad_blocked_cb (GstPad * pad, GstPadProbeInfo * info, gpointer user_data)
   peer = gst_pad_get_peer (self->sinkpad);
   caps = gst_pad_get_current_caps (peer);
   if (!caps)
-    caps = gst_pad_get_caps (peer, NULL);
+    caps = gst_pad_query_caps (peer, NULL);
   gst_object_unref (peer);
 
   raw = is_raw_caps (caps, self->audio);
@@ -384,7 +384,7 @@ gst_play_sink_convert_bin_getcaps (GstPad * pad, GstCaps * filter)
   if (otherpad) {
     peer = gst_pad_get_peer (otherpad);
     if (peer) {
-      GstCaps *peer_caps = gst_pad_get_caps (peer, filter);
+      GstCaps *peer_caps = gst_pad_query_caps (peer, filter);
       gst_object_unref (peer);
       if (self->converter_caps) {
         peer_caps = gst_caps_make_writable (peer_caps);
@@ -481,7 +481,7 @@ gst_play_sink_convert_bin_cache_converter_caps (GstPlaySinkConvertBin * self)
     return;
   }
 
-  self->converter_caps = gst_pad_get_caps (pad, NULL);
+  self->converter_caps = gst_pad_query_caps (pad, NULL);
   GST_INFO_OBJECT (self, "Converter caps: %" GST_PTR_FORMAT,
       self->converter_caps);
 

@@ -495,7 +495,7 @@ gst_text_render_chain (GstPad * pad, GstBuffer * inbuf)
 
   gst_text_render_check_argb (render);
 
-  padcaps = gst_pad_get_caps (render->srcpad, NULL);
+  padcaps = gst_pad_query_caps (render->srcpad, NULL);
   caps = gst_pad_peer_get_caps (render->srcpad, padcaps);
   gst_caps_unref (padcaps);
 

@@ -617,7 +617,7 @@ theora_enc_sink_getcaps (GstPad * pad, GstCaps * filter)
     GstStructure *s;
     guint i, n;
 
-    peer_caps = gst_pad_get_caps (peer, NULL);
+    peer_caps = gst_pad_query_caps (peer, NULL);
 
     /* Translate peercaps to YUV */
     peer_caps = gst_caps_make_writable (peer_caps);

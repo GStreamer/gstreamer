@@ -423,7 +423,7 @@ gst_vis_src_negotiate (GstVisual * visual)
   GstBufferPool *pool = NULL;
   guint size, min, max, prefix, alignment;
 
-  caps = gst_pad_get_caps (visual->srcpad, NULL);
+  caps = gst_pad_query_caps (visual->srcpad, NULL);
 
   /* see what the peer can do */
   othercaps = gst_pad_peer_get_caps (visual->srcpad, caps);

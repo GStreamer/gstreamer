@@ -1304,8 +1304,8 @@ GST_START_TEST (test_caps_negotiation)
   fail_if (gst_element_get_state (pipeline, NULL, NULL, GST_CLOCK_TIME_NONE) !=
       GST_STATE_CHANGE_SUCCESS, "Failed to set test pipeline to PAUSED");
 
-  caps1 = gst_pad_get_caps (ac3_src, NULL);
-  fail_if (caps1 == NULL, "gst_pad_get_caps returned NULL");
+  caps1 = gst_pad_query_caps (ac3_src, NULL);
+  fail_if (caps1 == NULL, "gst_pad_query_caps returned NULL");
   GST_DEBUG ("Caps size 1 : %d", gst_caps_get_size (caps1));
 
   fail_if (gst_element_set_state (pipeline, GST_STATE_READY) ==
@@ -1323,9 +1323,9 @@ GST_START_TEST (test_caps_negotiation)
   fail_if (gst_element_get_state (pipeline, NULL, NULL, GST_CLOCK_TIME_NONE) !=
       GST_STATE_CHANGE_SUCCESS, "Failed to set test pipeline back to PAUSED");
 
-  caps2 = gst_pad_get_caps (ac3_src, NULL);
+  caps2 = gst_pad_query_caps (ac3_src, NULL);
 
-  fail_if (caps2 == NULL, "gst_pad_get_caps returned NULL");
+  fail_if (caps2 == NULL, "gst_pad_query_caps returned NULL");
   GST_DEBUG ("Caps size 2 : %d", gst_caps_get_size (caps2));
   fail_unless (gst_caps_get_size (caps1) == gst_caps_get_size (caps2));
 

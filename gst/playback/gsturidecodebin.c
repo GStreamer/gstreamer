@@ -1307,7 +1307,7 @@ has_all_raw_caps (GstPad * pad, GstCaps * rawcaps, gboolean * all_raw)
   gint capssize;
   gboolean res = FALSE;
 
-  caps = gst_pad_get_caps (pad, NULL);
+  caps = gst_pad_query_caps (pad, NULL);
   if (caps == NULL)
     return FALSE;
 
