@@ -909,7 +909,7 @@ gst_dvd_sub_dec_sink_setcaps (GstPad * pad, GstCaps * caps)
             "height", G_TYPE_INT, dec->in_height,
             "framerate", GST_TYPE_FRACTION, 0, 1, NULL);
 
-        if (gst_pad_peer_accept_caps (dec->srcpad, out_caps)) {
+        if (gst_pad_peer_query_accept_caps (dec->srcpad, out_caps)) {
           GST_DEBUG_OBJECT (dec, "peer accepted ARGB");
           /* If ARGB format then set the flag */
           dec->use_ARGB = TRUE;
