@@ -49,6 +49,7 @@ GST_DEBUG_CATEGORY_STATIC (opusdec_debug);
 #define GST_CAT_DEFAULT opusdec_debug
 
 #define DEC_MAX_FRAME_SIZE 2000
+#define DEC_MAX_OUTPUT_BUFFER_SIZE (5760)
 
 static GstStaticPadTemplate opus_dec_src_factory =
 GST_STATIC_PAD_TEMPLATE ("src",
@@ -154,52 +155,6 @@ gst_opus_dec_stop (GstAudioDecoder * dec)
 }
 
 static GstFlowReturn
-gst_opus_dec_negotiate_pool (GstOpusDec * dec, GstCaps * caps, gsize bytes)
-{
-  GstQuery *query;
-  GstBufferPool *pool = NULL;
-  guint size, min, max, prefix, alignment;
-  GstStructure *config;
-
-  /* find a pool for the negotiated caps now */
-  query = gst_query_new_allocation (caps, TRUE);
-
-  if (gst_pad_peer_query (GST_AUDIO_DECODER_SRC_PAD (dec), query)) {
-    GST_DEBUG_OBJECT (dec, "got downstream ALLOCATION hints");
-    /* we got configuration from our peer, parse them */
-    gst_query_parse_allocation_params (query, &size, &min, &max, &prefix,
-        &alignment, &pool);
-    size = MAX (size, bytes);
-  } else {
-    GST_DEBUG_OBJECT (dec, "didn't get downstream ALLOCATION hints");
-    size = bytes;
-    min = max = 0;
-    prefix = 0;
-    alignment = 0;
-  }
-
-  if (pool == NULL) {
-    /* we did not get a pool, make one ourselves then */
-    pool = gst_buffer_pool_new ();
-  }
-
-  if (dec->pool)
-    gst_object_unref (dec->pool);
-  dec->pool = pool;
-
-  config = gst_buffer_pool_get_config (pool);
-  gst_buffer_pool_config_set (config, caps, size, min, max, prefix, alignment);
-
-  gst_buffer_pool_set_config (pool, config);
-  /* and activate */
-  gst_buffer_pool_set_active (pool, TRUE);
-
-  gst_query_unref (query);
-
-  return GST_FLOW_OK;
-}
-
-static GstFlowReturn
 gst_opus_dec_parse_header (GstOpusDec * dec, GstBuffer * buf)
 {
   return GST_FLOW_OK;
@@ -221,6 +176,8 @@ opus_dec_chain_parse_data (GstOpusDec * dec, GstBuffer * buf,
   GstBuffer *outbuf;
   gint16 *out_data;
   int n, err;
+  int samples_per_frame;
+  unsigned int packet_size;
 
   if (dec->state == NULL) {
     GstCaps *caps;
@@ -241,14 +198,6 @@ opus_dec_chain_parse_data (GstOpusDec * dec, GstBuffer * buf,
     if (!gst_pad_set_caps (GST_AUDIO_DECODER_SRC_PAD (dec), caps))
       GST_ERROR ("nego failure");
 
-    /* negotiate a bufferpool */
-    if ((res =
-            gst_opus_dec_negotiate_pool (dec, caps,
-                dec->frame_size * dec->n_channels * 2)) != GST_FLOW_OK) {
-      gst_caps_unref (caps);
-      goto no_bufferpool;
-    }
-
     gst_caps_unref (caps);
   }
 
@@ -265,22 +214,15 @@ opus_dec_chain_parse_data (GstOpusDec * dec, GstBuffer * buf,
     size = 0;
   }
 
+  samples_per_frame =
+      opus_packet_get_samples_per_frame (data, dec->sample_rate);
   GST_DEBUG ("bandwidth %d", opus_packet_get_bandwidth (data));
-  GST_DEBUG ("samples_per_frame %d", opus_packet_get_samples_per_frame (data,
-          48000));
-  GST_DEBUG ("channels %d", opus_packet_get_nb_channels (data));
+  GST_DEBUG ("samples_per_frame %d", samples_per_frame);
 
-  if (gst_pad_check_reconfigure (GST_AUDIO_DECODER_SRC_PAD (dec))) {
-    GstCaps *caps = gst_pad_get_current_caps (GST_AUDIO_DECODER_SRC_PAD (dec));
-    gst_opus_dec_negotiate_pool (dec, caps,
-        dec->frame_samples * dec->n_channels * 2);
-    gst_caps_unref (caps);
-  }
-
-  res = gst_buffer_pool_acquire_buffer (dec->pool, &outbuf, NULL);
-  if (res != GST_FLOW_OK) {
-    GST_DEBUG_OBJECT (dec, "buf alloc flow: %s", gst_flow_get_name (res));
-    return res;
+  packet_size = samples_per_frame * dec->n_channels * 2;
+  outbuf = gst_buffer_new_and_alloc (packet_size);
+  if (!outbuf) {
+    goto buffer_failed;
   }
 
   out_data = (gint16 *) gst_buffer_map (outbuf, &out_size, NULL, GST_MAP_WRITE);
@@ -322,8 +264,8 @@ creation_failed:
   GST_ERROR_OBJECT (dec, "Failed to create Opus decoder: %d", err);
   return GST_FLOW_ERROR;
 
-no_bufferpool:
-  GST_ERROR_OBJECT (dec, "Failed to negotiate buffer pool: %d", res);
+buffer_failed:
+  GST_ERROR_OBJECT (dec, "Failed to create %u byte buffer", packet_size);
   return GST_FLOW_ERROR;
 }
 
