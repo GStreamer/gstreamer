@@ -540,7 +540,7 @@ gst_opus_enc_encode (GstOpusEnc * enc, GstBuffer * buf)
 
       size = ((bsize / bytes) + 1) * bytes;
       mdata = g_malloc0 (size);
-      memcpy (data, bdata, bsize);
+      memcpy (mdata, bdata, bsize);
       gst_buffer_unmap (buf, bdata, bsize);
       bdata = NULL;
       data = mdata;
