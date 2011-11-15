@@ -2760,7 +2760,7 @@ gst_base_src_default_negotiate (GstBaseSrc * basesrc)
     goto no_caps;
 
   /* get the peer caps */
-  peercaps = gst_pad_peer_get_caps (GST_BASE_SRC_PAD (basesrc), thiscaps);
+  peercaps = gst_pad_peer_query_caps (GST_BASE_SRC_PAD (basesrc), thiscaps);
   GST_DEBUG_OBJECT (basesrc, "caps of peer: %" GST_PTR_FORMAT, peercaps);
   if (peercaps) {
     /* The result is already a subset of our caps */

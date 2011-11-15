@@ -474,7 +474,7 @@ GST_START_TEST (test_output_selector_getcaps_none);
 
     g_object_set (sel, "active-pad", pad, NULL);
 
-    caps = gst_pad_peer_get_caps (input_pad, NULL);
+    caps = gst_pad_peer_query_caps (input_pad, NULL);
 
     /* in 'none' mode, the getcaps returns the template, which is ANY */
     g_assert (gst_caps_is_any (caps));
@@ -514,7 +514,7 @@ GST_START_TEST (test_output_selector_getcaps_all);
 
     g_object_set (sel, "active-pad", pad, NULL);
 
-    caps = gst_pad_peer_get_caps (input_pad, NULL);
+    caps = gst_pad_peer_query_caps (input_pad, NULL);
 
     g_assert (gst_caps_is_equal (caps, expected));
     gst_caps_unref (caps);
@@ -556,7 +556,7 @@ GST_START_TEST (test_output_selector_getcaps_active);
 
     templ = gst_pad_get_pad_template ((GstPad *) walker->data);
     expected = gst_pad_template_get_caps (templ);
-    caps = gst_pad_peer_get_caps (input_pad, NULL);
+    caps = gst_pad_peer_query_caps (input_pad, NULL);
 
     g_assert (gst_caps_is_equal (caps, expected));
     gst_caps_unref (caps);

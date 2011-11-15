@@ -2157,7 +2157,7 @@ gst_pad_query_caps (GstPad * pad, GstCaps * filter)
 
 
 /**
- * gst_pad_peer_get_caps:
+ * gst_pad_peer_query_caps:
  * @pad: a  #GstPad to get the capabilities of.
  * @filter: a #GstCaps filter.
  *
@@ -2174,7 +2174,7 @@ gst_pad_query_caps (GstPad * pad, GstCaps * filter)
  * returns %NULL when there is no peer pad.
  */
 GstCaps *
-gst_pad_peer_get_caps (GstPad * pad, GstCaps * filter)
+gst_pad_peer_query_caps (GstPad * pad, GstCaps * filter)
 {
   GstCaps *result = NULL;
   GstQuery *query;

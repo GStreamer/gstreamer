@@ -673,7 +673,7 @@ gst_base_transform_query_caps (GstBaseTransform * trans, GstPad * pad,
     peerfilter = temp;
   }
 
-  peercaps = gst_pad_peer_get_caps (otherpad, peerfilter);
+  peercaps = gst_pad_peer_query_caps (otherpad, peerfilter);
 
   if (peerfilter)
     gst_caps_unref (peerfilter);

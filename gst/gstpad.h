@@ -838,7 +838,7 @@ GstCaps *		gst_pad_query_caps			(GstPad * pad, GstCaps *filter);
 gboolean		gst_pad_accept_caps			(GstPad * pad, GstCaps *caps);
 gboolean		gst_pad_set_caps			(GstPad * pad, GstCaps *caps);
 
-GstCaps *		gst_pad_peer_get_caps			(GstPad * pad, GstCaps *filter);
+GstCaps *		gst_pad_peer_query_caps			(GstPad * pad, GstCaps *filter);
 gboolean		gst_pad_peer_accept_caps		(GstPad * pad, GstCaps *caps);
 
 /* capsnego for linked pads */
