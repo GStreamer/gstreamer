@@ -1524,7 +1524,7 @@ gst_x264_enc_sink_set_caps (GstPad * pad, GstCaps * caps)
   encoder->peer_level = NULL;
 
   /* FIXME: Remove THIS bit in 0.11 when the profile property is removed */
-  peer_caps = gst_pad_peer_get_caps (encoder->srcpad, NULL);
+  peer_caps = gst_pad_peer_query_caps (encoder->srcpad, NULL);
   if (peer_caps) {
     gint i;
     gboolean has_profile_or_level_or_format = FALSE;
