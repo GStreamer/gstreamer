@@ -719,18 +719,18 @@ gst_flac_enc_getcaps (GstAudioEncoder * enc, GstCaps * filter)
 }
 
 static guint64
-gst_flac_enc_query_peer_total_samples (GstFlacEnc * flacenc, GstPad * pad)
+gst_flac_enc_peer_query_total_samples (GstFlacEnc * flacenc, GstPad * pad)
 {
   gint64 duration;
 
   GST_DEBUG_OBJECT (flacenc, "querying peer for DEFAULT format duration");
-  if (gst_pad_query_peer_duration (pad, GST_FORMAT_DEFAULT, &duration)
+  if (gst_pad_peer_query_duration (pad, GST_FORMAT_DEFAULT, &duration)
       && duration != GST_CLOCK_TIME_NONE)
     goto done;
 
   GST_DEBUG_OBJECT (flacenc, "querying peer for TIME format duration");
 
-  if (gst_pad_query_peer_duration (pad, GST_FORMAT_TIME, &duration)
+  if (gst_pad_peer_query_duration (pad, GST_FORMAT_TIME, &duration)
       && duration != GST_CLOCK_TIME_NONE) {
     GST_DEBUG_OBJECT (flacenc, "peer reported duration %" GST_TIME_FORMAT,
         GST_TIME_ARGS (duration));
@@ -778,7 +778,7 @@ gst_flac_enc_set_format (GstAudioEncoder * enc, GstAudioInfo * info)
 
   gst_caps_unref (caps);
 
-  total_samples = gst_flac_enc_query_peer_total_samples (flacenc,
+  total_samples = gst_flac_enc_peer_query_total_samples (flacenc,
       GST_AUDIO_ENCODER_SINK_PAD (enc));
 
   FLAC__stream_encoder_set_bits_per_sample (flacenc->encoder, flacenc->depth);

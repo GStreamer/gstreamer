@@ -623,7 +623,7 @@ gst_mpeg_audio_parse_handle_first_frame (GstMpegAudioParse * mp3parse,
   }
 
   /* obtain real upstream total bytes */
-  if (!gst_pad_query_peer_duration (GST_BASE_PARSE_SINK_PAD (mp3parse),
+  if (!gst_pad_peer_query_duration (GST_BASE_PARSE_SINK_PAD (mp3parse),
           GST_FORMAT_BYTES, &upstream_total_bytes))
     upstream_total_bytes = 0;
 

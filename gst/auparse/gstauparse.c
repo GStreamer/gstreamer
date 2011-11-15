@@ -554,7 +554,7 @@ gst_au_parse_src_query (GstPad * pad, GstQuery * query)
       gint64 len, val;
 
       gst_query_parse_duration (query, &format, NULL);
-      if (!gst_pad_query_peer_duration (auparse->sinkpad, GST_FORMAT_BYTES,
+      if (!gst_pad_peer_query_duration (auparse->sinkpad, GST_FORMAT_BYTES,
               &len)) {
         GST_DEBUG_OBJECT (auparse, "failed to query upstream length");
         break;
@@ -577,7 +577,7 @@ gst_au_parse_src_query (GstPad * pad, GstQuery * query)
       gint64 pos, val;
 
       gst_query_parse_position (query, &format, NULL);
-      if (!gst_pad_query_peer_position (auparse->sinkpad, GST_FORMAT_BYTES,
+      if (!gst_pad_peer_query_position (auparse->sinkpad, GST_FORMAT_BYTES,
               &pos)) {
         GST_DEBUG_OBJECT (auparse, "failed to query upstream position");
         break;

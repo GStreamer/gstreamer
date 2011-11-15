@@ -2926,7 +2926,7 @@ gst_avi_demux_stream_scan (GstAviDemux * avi)
   GST_DEBUG_OBJECT (avi, "Creating index");
 
   /* get the size of the file */
-  if (!gst_pad_query_peer_duration (avi->sinkpad, GST_FORMAT_BYTES, &tmplength))
+  if (!gst_pad_peer_query_duration (avi->sinkpad, GST_FORMAT_BYTES, &tmplength))
     return FALSE;
   length = tmplength;
 
@@ -3089,7 +3089,7 @@ gst_avi_demux_check_seekability (GstAviDemux * avi)
   /* try harder to query upstream size if we didn't get it the first time */
   if (seekable && stop == -1) {
     GST_DEBUG_OBJECT (avi, "doing duration query to fix up unset stop");
-    gst_pad_query_peer_duration (avi->sinkpad, GST_FORMAT_BYTES, &stop);
+    gst_pad_peer_query_duration (avi->sinkpad, GST_FORMAT_BYTES, &stop);
   }
 
   /* if upstream doesn't know the size, it's likely that it's not seekable in

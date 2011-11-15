@@ -918,7 +918,7 @@ gst_wavparse_perform_seek (GstWavParse * wav, GstEvent * event)
   /* make sure filesize is not exceeded due to rounding errors or so,
    * same precaution as in _stream_headers */
   bformat = GST_FORMAT_BYTES;
-  if (gst_pad_query_peer_duration (wav->sinkpad, bformat, &upstream_size))
+  if (gst_pad_peer_query_duration (wav->sinkpad, bformat, &upstream_size))
     wav->end_offset = MIN (wav->end_offset, upstream_size);
 
   /* this is the range of bytes we will use for playback */
@@ -1274,7 +1274,7 @@ gst_wavparse_stream_headers (GstWavParse * wav)
 
   }
 
-  gst_pad_query_peer_duration (wav->sinkpad, GST_FORMAT_BYTES, &upstream_size);
+  gst_pad_peer_query_duration (wav->sinkpad, GST_FORMAT_BYTES, &upstream_size);
   GST_DEBUG_OBJECT (wav, "upstream size %" G_GUINT64_FORMAT, upstream_size);
 
   /* loop headers until we get data */

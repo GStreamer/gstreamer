@@ -782,7 +782,7 @@ gst_flv_mux_create_metadata (GstFlvMux * mux)
     for (l = mux->collect->data; l; l = l->next) {
       GstCollectData *cdata = l->data;
 
-      if (gst_pad_query_peer_duration (cdata->pad, GST_FORMAT_TIME,
+      if (gst_pad_peer_query_duration (cdata->pad, GST_FORMAT_TIME,
               (gint64 *) & dur) && dur != GST_CLOCK_TIME_NONE) {
         if (mux->duration == GST_CLOCK_TIME_NONE)
           mux->duration = dur;

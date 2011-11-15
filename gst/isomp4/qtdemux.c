@@ -2576,7 +2576,7 @@ qtdemux_parse_mfro (GstQTDemux * qtdemux, guint64 * mfra_offset,
   gint64 len;
   GstFormat fmt = GST_FORMAT_BYTES;
 
-  if (!gst_pad_query_peer_duration (qtdemux->sinkpad, &fmt, &len)) {
+  if (!gst_pad_peer_query_duration (qtdemux->sinkpad, &fmt, &len)) {
     GST_DEBUG_OBJECT (qtdemux, "upstream size not available; "
         "can not locate mfro");
     goto exit;
@@ -3993,7 +3993,7 @@ gst_qtdemux_check_seekability (GstQTDemux * demux)
   /* try harder to query upstream size if we didn't get it the first time */
   if (seekable && stop == -1) {
     GST_DEBUG_OBJECT (demux, "doing duration query to fix up unset stop");
-    gst_pad_query_peer_duration (demux->sinkpad, GST_FORMAT_BYTES, &stop);
+    gst_pad_peer_query_duration (demux->sinkpad, GST_FORMAT_BYTES, &stop);
   }
 
   /* if upstream doesn't know the size, it's likely that it's not seekable in
@@ -7521,7 +7521,7 @@ gst_qtdemux_guess_bitrate (GstQTDemux * qtdemux)
 
   GST_DEBUG_OBJECT (qtdemux, "Looking for streams with unknown bitrate");
 
-  if (!gst_pad_query_peer_duration (qtdemux->sinkpad, GST_FORMAT_BYTES, &size)) {
+  if (!gst_pad_peer_query_duration (qtdemux->sinkpad, GST_FORMAT_BYTES, &size)) {
     GST_DEBUG_OBJECT (qtdemux,
         "Size in bytes of the stream not known - bailing");
     return;
