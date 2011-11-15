@@ -17,39 +17,39 @@
  * Free Software Foundation, Inc., 59 Temple Place - Suite 330,
  * Boston, MA 02111-1307, USA.
  */
-#ifdef HAVE_CONFIG_H
-#include <config.h>
-#endif
 
-#include "gstopusdec.h"
-#include "gstopusenc.h"
-#include "gstopusparse.h"
+#ifndef __GST_OPUS_PARSE_H__
+#define __GST_OPUS_PARSE_H__
 
-#include <gst/tag/tag.h>
+#include <gst/gst.h>
+#include <gst/base/gstbaseparse.h>
 
-static gboolean
-plugin_init (GstPlugin * plugin)
-{
+G_BEGIN_DECLS
 
-  if (!gst_element_register (plugin, "opusenc", GST_RANK_NONE,
-          GST_TYPE_OPUS_ENC))
-    return FALSE;
+#define GST_TYPE_OPUS_PARSE \
+  (gst_opus_parse_get_type())
+#define GST_OPUS_PARSE(obj) \
+  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_OPUS_PARSE,GstOpusParse))
+#define GST_OPUS_PARSE_CLASS(klass) \
+  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_OPUS_PARSE,GstOpusParseClass))
+#define GST_IS_OPUS_PARSE(obj) \
+  (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_OPUS_PARSE))
+#define GST_IS_OPUS_PARSE_CLASS(klass) \
+  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_OPUS_PARSE))
 
-  if (!gst_element_register (plugin, "opusdec", GST_RANK_PRIMARY,
-          GST_TYPE_OPUS_DEC))
-    return FALSE;
+typedef struct _GstOpusParse GstOpusParse;
+typedef struct _GstOpusParseClass GstOpusParseClass;
 
-  if (!gst_element_register (plugin, "opusparse", GST_RANK_NONE,
-          GST_TYPE_OPUS_PARSE))
-    return FALSE;
+struct _GstOpusParse {
+  GstBaseParse       element;
+};
 
-  gst_tag_register_musicbrainz_tags ();
+struct _GstOpusParseClass {
+  GstBaseParseClass parent_class;
+};
 
-  return TRUE;
-}
+GType gst_opus_parse_get_type (void);
 
-GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
-    GST_VERSION_MINOR,
-    "opus",
-    "OPUS plugin library",
-    plugin_init, VERSION, "LGPL", GST_PACKAGE_NAME, GST_PACKAGE_ORIGIN)
+G_END_DECLS
+
+#endif /* __GST_OPUS_PARSE_H__ */
