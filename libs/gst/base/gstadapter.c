@@ -216,6 +216,10 @@ gst_adapter_clear (GstAdapter * adapter)
 {
   g_return_if_fail (GST_IS_ADAPTER (adapter));
 
+  if (adapter->priv->cdata) {
+    gst_adapter_unmap (adapter);
+  }
+
   g_slist_foreach (adapter->buflist, (GFunc) gst_mini_object_unref, NULL);
   g_slist_free (adapter->buflist);
   adapter->buflist = NULL;
