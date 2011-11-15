@@ -1507,35 +1507,17 @@ was_eos:
 static gboolean
 gst_multi_queue_sink_query (GstPad * pad, GstQuery * query)
 {
-  GstSingleQueue *sq = gst_pad_get_element_private (pad);
   gboolean res;
 
   switch (GST_QUERY_TYPE (query)) {
     case GST_QUERY_ACCEPT_CAPS:
+    case GST_QUERY_CAPS:
     default:
       /* default handling */
-      res = gst_pad_peer_query (sq->srcpad, query);
+      res = gst_pad_query_default (pad, query);
       break;
   }
   return res;
-}
-
-static GstCaps *
-gst_multi_queue_getcaps (GstPad * pad, GstCaps * filter)
-{
-  GstSingleQueue *sq = gst_pad_get_element_private (pad);
-  GstPad *otherpad;
-  GstCaps *result;
-
-  otherpad = (pad == sq->srcpad) ? sq->sinkpad : sq->srcpad;
-
-  GST_LOG_OBJECT (otherpad, "Getting caps from the peer of this pad");
-
-  result = gst_pad_peer_get_caps (otherpad, filter);
-  if (result == NULL)
-    result = (filter ? gst_caps_ref (filter) : gst_caps_new_any ());
-
-  return result;
 }
 
 static gboolean
@@ -1571,15 +1553,15 @@ gst_multi_queue_src_event (GstPad * pad, GstEvent * event)
 static gboolean
 gst_multi_queue_src_query (GstPad * pad, GstQuery * query)
 {
-  GstSingleQueue *sq = gst_pad_get_element_private (pad);
   gboolean res;
 
   /* FIXME, Handle position offset depending on queue size */
   switch (GST_QUERY_TYPE (query)) {
     case GST_QUERY_ACCEPT_CAPS:
+    case GST_QUERY_CAPS:
     default:
       /* default handling */
-      res = gst_pad_peer_query (sq->sinkpad, query);
+      res = gst_pad_query_default (pad, query);
       break;
   }
   return res;
@@ -1923,12 +1905,11 @@ gst_single_queue_new (GstMultiQueue * mqueue, guint id)
       GST_DEBUG_FUNCPTR (gst_multi_queue_sink_activate_push));
   gst_pad_set_event_function (sq->sinkpad,
       GST_DEBUG_FUNCPTR (gst_multi_queue_sink_event));
-  gst_pad_set_getcaps_function (sq->sinkpad,
-      GST_DEBUG_FUNCPTR (gst_multi_queue_getcaps));
   gst_pad_set_query_function (sq->sinkpad,
       GST_DEBUG_FUNCPTR (gst_multi_queue_sink_query));
   gst_pad_set_iterate_internal_links_function (sq->sinkpad,
       GST_DEBUG_FUNCPTR (gst_multi_queue_iterate_internal_links));
+  GST_OBJECT_FLAG_SET (sq->sinkpad, GST_PAD_PROXY_CAPS);
 
   name = g_strdup_printf ("src_%u", sq->id);
   sq->srcpad = gst_pad_new_from_static_template (&srctemplate, name);
@@ -1936,14 +1917,13 @@ gst_single_queue_new (GstMultiQueue * mqueue, guint id)
 
   gst_pad_set_activatepush_function (sq->srcpad,
       GST_DEBUG_FUNCPTR (gst_multi_queue_src_activate_push));
-  gst_pad_set_getcaps_function (sq->srcpad,
-      GST_DEBUG_FUNCPTR (gst_multi_queue_getcaps));
   gst_pad_set_event_function (sq->srcpad,
       GST_DEBUG_FUNCPTR (gst_multi_queue_src_event));
   gst_pad_set_query_function (sq->srcpad,
       GST_DEBUG_FUNCPTR (gst_multi_queue_src_query));
   gst_pad_set_iterate_internal_links_function (sq->srcpad,
       GST_DEBUG_FUNCPTR (gst_multi_queue_iterate_internal_links));
+  GST_OBJECT_FLAG_SET (sq->srcpad, GST_PAD_PROXY_CAPS);
 
   gst_pad_set_element_private (sq->sinkpad, (gpointer) sq);
   gst_pad_set_element_private (sq->srcpad, (gpointer) sq);

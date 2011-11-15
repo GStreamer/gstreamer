@@ -748,7 +748,7 @@ gst_object_set_parent (GstObject * object, GstObject * parent)
     goto had_parent;
 
   object->parent = parent;
-  g_object_ref_sink (object);
+  gst_object_ref_sink (object);
   GST_OBJECT_UNLOCK (object);
 
   /* FIXME, this does not work, the deep notify takes the lock from the parent

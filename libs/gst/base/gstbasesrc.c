@@ -280,7 +280,6 @@ gst_base_src_get_type (void)
 
 static GstCaps *gst_base_src_default_get_caps (GstBaseSrc * bsrc,
     GstCaps * filter);
-static GstCaps *gst_base_src_getcaps (GstPad * pad, GstCaps * filter);
 static void gst_base_src_default_fixate (GstBaseSrc * src, GstCaps * caps);
 static void gst_base_src_fixate (GstBaseSrc * src, GstCaps * caps);
 
@@ -386,7 +385,6 @@ gst_base_src_class_init (GstBaseSrcClass * klass)
   GST_DEBUG_REGISTER_FUNCPTR (gst_base_src_event_handler);
   GST_DEBUG_REGISTER_FUNCPTR (gst_base_src_query);
   GST_DEBUG_REGISTER_FUNCPTR (gst_base_src_pad_get_range);
-  GST_DEBUG_REGISTER_FUNCPTR (gst_base_src_getcaps);
   GST_DEBUG_REGISTER_FUNCPTR (gst_base_src_fixate);
 }
 
@@ -419,7 +417,6 @@ gst_base_src_init (GstBaseSrc * basesrc, gpointer g_class)
   gst_pad_set_event_function (pad, gst_base_src_event_handler);
   gst_pad_set_query_function (pad, gst_base_src_query);
   gst_pad_set_getrange_function (pad, gst_base_src_pad_get_range);
-  gst_pad_set_getcaps_function (pad, gst_base_src_getcaps);
 
   /* hold pointer to pad */
   basesrc->srcpad = pad;
@@ -836,21 +833,6 @@ gst_base_src_default_get_caps (GstBaseSrc * bsrc, GstCaps * filter)
   return caps;
 }
 
-static GstCaps *
-gst_base_src_getcaps (GstPad * pad, GstCaps * filter)
-{
-  GstBaseSrcClass *bclass;
-  GstBaseSrc *bsrc;
-  GstCaps *caps = NULL;
-
-  bsrc = GST_BASE_SRC (GST_PAD_PARENT (pad));
-  bclass = GST_BASE_SRC_GET_CLASS (bsrc);
-  if (bclass->get_caps)
-    caps = bclass->get_caps (bsrc, filter);
-
-  return caps;
-}
-
 static void
 gst_base_src_default_fixate (GstBaseSrc * bsrc, GstCaps * caps)
 {
@@ -1136,12 +1118,29 @@ gst_base_src_default_query (GstBaseSrc * src, GstQuery * query)
       res = TRUE;
       break;
     }
+    case GST_QUERY_CAPS:
+    {
+      GstBaseSrcClass *bclass;
+      GstCaps *caps, *filter;
+
+      bclass = GST_BASE_SRC_GET_CLASS (src);
+      if (bclass->get_caps) {
+        gst_query_parse_caps (query, &filter);
+        caps = bclass->get_caps (src, filter);
+        gst_query_set_caps_result (query, caps);
+        gst_caps_unref (caps);
+        res = TRUE;
+      } else
+        res = FALSE;
+      break;
+    }
     default:
       res = FALSE;
       break;
   }
   GST_DEBUG_OBJECT (src, "query %s returns %d", GST_QUERY_TYPE_NAME (query),
       res);
+
   return res;
 }
 

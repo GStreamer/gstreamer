@@ -202,8 +202,6 @@ static gboolean gst_queue_handle_sink_query (GstPad * pad, GstQuery * query);
 static gboolean gst_queue_handle_src_event (GstPad * pad, GstEvent * event);
 static gboolean gst_queue_handle_src_query (GstPad * pad, GstQuery * query);
 
-static gboolean gst_queue_acceptcaps (GstPad * pad, GstCaps * caps);
-static GstCaps *gst_queue_getcaps (GstPad * pad, GstCaps * filter);
 static GstPadLinkReturn gst_queue_link_sink (GstPad * pad, GstPad * peer);
 static GstPadLinkReturn gst_queue_link_src (GstPad * pad, GstPad * peer);
 static void gst_queue_locked_flush (GstQueue * queue);
@@ -368,17 +366,15 @@ gst_queue_class_init (GstQueueClass * klass)
       gst_static_pad_template_get (&sinktemplate));
 
   /* Registering debug symbols for function pointers */
-  GST_DEBUG_REGISTER_FUNCPTR (gst_queue_chain);
+  GST_DEBUG_REGISTER_FUNCPTR (gst_queue_src_activate_push);
   GST_DEBUG_REGISTER_FUNCPTR (gst_queue_sink_activate_push);
+  GST_DEBUG_REGISTER_FUNCPTR (gst_queue_link_sink);
+  GST_DEBUG_REGISTER_FUNCPTR (gst_queue_link_src);
   GST_DEBUG_REGISTER_FUNCPTR (gst_queue_handle_sink_event);
   GST_DEBUG_REGISTER_FUNCPTR (gst_queue_handle_sink_query);
-  GST_DEBUG_REGISTER_FUNCPTR (gst_queue_link_sink);
-  GST_DEBUG_REGISTER_FUNCPTR (gst_queue_getcaps);
-  GST_DEBUG_REGISTER_FUNCPTR (gst_queue_acceptcaps);
-  GST_DEBUG_REGISTER_FUNCPTR (gst_queue_src_activate_push);
-  GST_DEBUG_REGISTER_FUNCPTR (gst_queue_link_src);
   GST_DEBUG_REGISTER_FUNCPTR (gst_queue_handle_src_event);
   GST_DEBUG_REGISTER_FUNCPTR (gst_queue_handle_src_query);
+  GST_DEBUG_REGISTER_FUNCPTR (gst_queue_chain);
 }
 
 static void
@@ -392,7 +388,6 @@ gst_queue_init (GstQueue * queue)
   gst_pad_set_event_function (queue->sinkpad, gst_queue_handle_sink_event);
   gst_pad_set_query_function (queue->sinkpad, gst_queue_handle_sink_query);
   gst_pad_set_link_function (queue->sinkpad, gst_queue_link_sink);
-  gst_pad_set_getcaps_function (queue->sinkpad, gst_queue_getcaps);
   gst_element_add_pad (GST_ELEMENT (queue), queue->sinkpad);
 
   queue->srcpad = gst_pad_new_from_static_template (&srctemplate, "src");
@@ -400,7 +395,6 @@ gst_queue_init (GstQueue * queue)
   gst_pad_set_activatepush_function (queue->srcpad,
       gst_queue_src_activate_push);
   gst_pad_set_link_function (queue->srcpad, gst_queue_link_src);
-  gst_pad_set_getcaps_function (queue->srcpad, gst_queue_getcaps);
   gst_pad_set_event_function (queue->srcpad, gst_queue_handle_src_event);
   gst_pad_set_query_function (queue->srcpad, gst_queue_handle_src_query);
   gst_element_add_pad (GST_ELEMENT (queue), queue->srcpad);
@@ -454,46 +448,6 @@ gst_queue_finalize (GObject * object)
   g_cond_free (queue->item_del);
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
-}
-
-static gboolean
-gst_queue_acceptcaps (GstPad * pad, GstCaps * caps)
-{
-  gboolean result;
-  GstQueue *queue;
-  GstPad *otherpad;
-
-  queue = GST_QUEUE (gst_pad_get_parent (pad));
-  if (G_UNLIKELY (queue == NULL))
-    return FALSE;
-
-  otherpad = (pad == queue->srcpad ? queue->sinkpad : queue->srcpad);
-  result = gst_pad_peer_accept_caps (otherpad, caps);
-
-  gst_object_unref (queue);
-
-  return result;
-}
-
-static GstCaps *
-gst_queue_getcaps (GstPad * pad, GstCaps * filter)
-{
-  GstQueue *queue;
-  GstPad *otherpad;
-  GstCaps *result;
-
-  queue = GST_QUEUE (gst_pad_get_parent (pad));
-  if (G_UNLIKELY (queue == NULL))
-    return (filter ? gst_caps_ref (filter) : gst_caps_new_any ());
-
-  otherpad = (pad == queue->srcpad ? queue->sinkpad : queue->srcpad);
-  result = gst_pad_peer_get_caps (otherpad, filter);
-  if (result == NULL)
-    result = (filter ? gst_caps_ref (filter) : gst_caps_new_any ());
-
-  gst_object_unref (queue);
-
-  return result;
 }
 
 static GstPadLinkReturn
@@ -874,8 +828,10 @@ gst_queue_handle_sink_query (GstPad * pad, GstQuery * query)
 
   switch (GST_QUERY_TYPE (query)) {
     case GST_QUERY_ACCEPT_CAPS:
+    case GST_QUERY_CAPS:
     default:
-      res = gst_pad_peer_query (queue->srcpad, query);
+      if (!(res = gst_pad_peer_query (queue->srcpad, query)))
+        res = gst_pad_query_default (pad, query);
       break;
   }
   gst_object_unref (queue);
@@ -1093,9 +1049,6 @@ gst_queue_push_one (GstQueue * queue)
 next:
   if (is_buffer) {
     GstBuffer *buffer;
-#if 0
-    GstCaps *caps;
-#endif
 
     buffer = GST_BUFFER_CAST (data);
 
@@ -1110,21 +1063,8 @@ next:
       }
       queue->head_needs_discont = FALSE;
     }
-#if 0
-    caps = GST_BUFFER_CAPS (buffer);
-#endif
 
     GST_QUEUE_MUTEX_UNLOCK (queue);
-#if 0
-    /* set the right caps on the pad now. We do this before pushing the buffer
-     * because the pad_push call will check (using acceptcaps) if the buffer can
-     * be set on the pad, which might fail because this will be propagated
-     * upstream. Also note that if the buffer has NULL caps, it means that the
-     * caps did not change, so we don't have to change caps on the pad. */
-    if (caps && caps != GST_PAD_CAPS (queue->srcpad))
-      gst_pad_set_caps (queue->srcpad, caps);
-#endif
-
     if (queue->push_newsegment) {
       gst_queue_push_newsegment (queue);
     }

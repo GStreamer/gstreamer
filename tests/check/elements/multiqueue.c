@@ -289,10 +289,27 @@ GST_START_TEST (test_request_pads_named)
 
 GST_END_TEST;
 
-static GstCaps *
-mq_dummypad_getcaps (GstPad * sinkpad, GstCaps * filter)
+static gboolean
+mq_dummypad_query (GstPad * sinkpad, GstQuery * query)
 {
-  return (filter ? gst_caps_ref (filter) : gst_caps_new_any ());
+  gboolean res = TRUE;
+
+  switch (GST_QUERY_TYPE (query)) {
+    case GST_QUERY_CAPS:
+    {
+      GstCaps *filter, *caps;
+
+      gst_query_parse_caps (query, &filter);
+      caps = (filter ? gst_caps_ref (filter) : gst_caps_new_any ());
+      gst_query_set_caps_result (query, caps);
+      gst_caps_unref (caps);
+      break;
+    }
+    default:
+      res = gst_pad_query_default (sinkpad, query);
+      break;
+  }
+  return res;
 }
 
 struct PadData
@@ -432,11 +449,11 @@ run_output_order_test (gint n_linked)
     name = g_strdup_printf ("dummysrc%d", i);
     inputpads[i] = gst_pad_new (name, GST_PAD_SRC);
     g_free (name);
-    gst_pad_set_getcaps_function (inputpads[i], mq_dummypad_getcaps);
+    gst_pad_set_query_function (inputpads[i], mq_dummypad_query);
 
     mq_sinkpad = gst_element_get_request_pad (mq, "sink_%u");
     fail_unless (mq_sinkpad != NULL);
-    gst_pad_link (inputpads[i], mq_sinkpad);
+    fail_unless (gst_pad_link (inputpads[i], mq_sinkpad) == GST_PAD_LINK_OK);
 
     gst_pad_set_active (inputpads[i], TRUE);
 
@@ -447,7 +464,7 @@ run_output_order_test (gint n_linked)
     g_free (name);
     gst_pad_set_chain_function (sinkpads[i], mq_dummypad_chain);
     gst_pad_set_event_function (sinkpads[i], mq_dummypad_event);
-    gst_pad_set_getcaps_function (sinkpads[i], mq_dummypad_getcaps);
+    gst_pad_set_query_function (sinkpads[i], mq_dummypad_query);
 
     pad_data[i].pad_num = i;
     pad_data[i].max_linked_id_ptr = &max_linked_id;
@@ -459,7 +476,7 @@ run_output_order_test (gint n_linked)
     pad_data[i].first_buf = TRUE;
     gst_pad_set_element_private (sinkpads[i], pad_data + i);
 
-    gst_pad_link (mq_srcpad, sinkpads[i]);
+    fail_unless (gst_pad_link (mq_srcpad, sinkpads[i]) == GST_PAD_LINK_OK);
     gst_pad_set_active (sinkpads[i], TRUE);
 
     gst_object_unref (mq_sinkpad);
@@ -588,11 +605,11 @@ GST_START_TEST (test_sparse_stream)
     name = g_strdup_printf ("dummysrc%d", i);
     inputpads[i] = gst_pad_new (name, GST_PAD_SRC);
     g_free (name);
-    gst_pad_set_getcaps_function (inputpads[i], mq_dummypad_getcaps);
+    gst_pad_set_query_function (inputpads[i], mq_dummypad_query);
 
     mq_sinkpad = gst_element_get_request_pad (mq, "sink_%u");
     fail_unless (mq_sinkpad != NULL);
-    gst_pad_link (inputpads[i], mq_sinkpad);
+    fail_unless (gst_pad_link (inputpads[i], mq_sinkpad) == GST_PAD_LINK_OK);
 
     gst_pad_set_active (inputpads[i], TRUE);
 
@@ -603,7 +620,7 @@ GST_START_TEST (test_sparse_stream)
     g_free (name);
     gst_pad_set_chain_function (sinkpads[i], mq_dummypad_chain);
     gst_pad_set_event_function (sinkpads[i], mq_dummypad_event);
-    gst_pad_set_getcaps_function (sinkpads[i], mq_dummypad_getcaps);
+    gst_pad_set_query_function (sinkpads[i], mq_dummypad_query);
 
     pad_data[i].pad_num = i;
     pad_data[i].max_linked_id_ptr = &max_linked_id;
@@ -615,7 +632,7 @@ GST_START_TEST (test_sparse_stream)
     pad_data[i].first_buf = TRUE;
     gst_pad_set_element_private (sinkpads[i], pad_data + i);
 
-    gst_pad_link (mq_srcpad, sinkpads[i]);
+    fail_unless (gst_pad_link (mq_srcpad, sinkpads[i]) == GST_PAD_LINK_OK);
     gst_pad_set_active (sinkpads[i], TRUE);
 
     gst_object_unref (mq_sinkpad);

@@ -2076,20 +2076,35 @@ gst_query_parse_accept_caps_result (GstQuery * query, gboolean * result)
 
 /**
  * gst_query_new_caps
+ * @filer: a filter
  *
  * Constructs a new query object for querying the caps.
+ *
+ * The CAPS query should return the* allowable caps for a pad in the context
+ * of the element's state, its link to other elements, and the devices or files
+ * it has opened. These caps must be a subset of the pad template caps. In the
+ * NULL state with no links, the CAPS query should ideally return the same caps
+ * as the pad template. In rare circumstances, an object property can affect
+ * the caps returned by the CAPS query, but this is discouraged.
+ *
+ * For most filters, the caps returned by CAPS query is directly affected by the
+ * allowed caps on other pads. For demuxers and decoders, the caps returned by
+ * the srcpad's getcaps function is directly related to the stream data. Again,
+ * the CAPS query should return the most specific caps it reasonably can, since this
+ * helps with autoplugging.
  *
  * Free-function: gst_query_unref
  *
  * Returns: (transfer full): a new #GstQuery
  */
 GstQuery *
-gst_query_new_caps (void)
+gst_query_new_caps (GstCaps * filter)
 {
   GstQuery *query;
   GstStructure *structure;
 
   structure = gst_structure_new_id (GST_QUARK (QUERY_CAPS),
+      GST_QUARK (FILTER), GST_TYPE_CAPS, filter,
       GST_QUARK (CAPS), GST_TYPE_CAPS, NULL, NULL);
   query = gst_query_new (GST_QUERY_CAPS, structure);
 
@@ -2097,14 +2112,34 @@ gst_query_new_caps (void)
 }
 
 /**
- * gst_query_set_caps:
+ * gst_query_parse_caps:
+ * @query: The query to parse
+ * @filter: (out): A pointer to the caps filter
+ *
+ * Get the filter from the caps @query. The caps remains valid as long as
+ * @query remains valid.
+ */
+void
+gst_query_parse_caps (GstQuery * query, GstCaps ** filter)
+{
+  GstStructure *structure;
+
+  g_return_if_fail (GST_QUERY_TYPE (query) == GST_QUERY_CAPS);
+
+  structure = GST_QUERY_STRUCTURE (query);
+  *filter = g_value_get_boxed (gst_structure_id_get_value (structure,
+          GST_QUARK (FILTER)));
+}
+
+/**
+ * gst_query_set_caps_result:
  * @query: The query to use
  * @caps: (in): A pointer to the caps
  *
- * Set the @caps in @query.
+ * Set the @caps result in @query.
  */
 void
-gst_query_set_caps (GstQuery * query, GstCaps * caps)
+gst_query_set_caps_result (GstQuery * query, GstCaps * caps)
 {
   GstStructure *structure;
 
@@ -2116,15 +2151,15 @@ gst_query_set_caps (GstQuery * query, GstCaps * caps)
 }
 
 /**
- * gst_query_parse_caps:
+ * gst_query_parse_caps_result:
  * @query: The query to parse
  * @caps: (out): A pointer to the caps
  *
- * Get the caps from @query. The caps remains valid as long as @query remains
- * valid.
+ * Get the caps result from @query. The caps remains valid as long as
+ * @query remains valid.
  */
 void
-gst_query_parse_caps (GstQuery * query, GstCaps ** caps)
+gst_query_parse_caps_result (GstQuery * query, GstCaps ** caps)
 {
   GstStructure *structure;
 
@@ -2133,4 +2168,16 @@ gst_query_parse_caps (GstQuery * query, GstCaps ** caps)
   structure = GST_QUERY_STRUCTURE (query);
   *caps = g_value_get_boxed (gst_structure_id_get_value (structure,
           GST_QUARK (CAPS)));
+}
+
+void
+gst_query_intersect_caps_result (GstQuery * query, GstCaps * filter,
+    GstCapsIntersectMode mode)
+{
+  GstCaps *res, *caps;
+
+  gst_query_parse_caps_result (query, &caps);
+  res = gst_caps_intersect_full (filter, caps, GST_CAPS_INTERSECT_FIRST);
+  gst_query_set_caps_result (query, res);
+  gst_caps_unref (res);
 }

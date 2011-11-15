@@ -975,7 +975,7 @@ GST_END_TEST;
 #endif
 #endif
 
-GST_START_TEST (test_pad_proxy_getcaps_aggregation)
+GST_START_TEST (test_pad_proxy_query_caps_aggregation)
 {
   GstElement *tee, *sink1, *sink2;
   GstCaps *caps;
@@ -1113,7 +1113,7 @@ gst_utils_suite (void)
   tcase_add_test (tc_chain, test_set_value_from_string);
   tcase_add_test (tc_chain, test_binary_search);
 
-  tcase_add_test (tc_chain, test_pad_proxy_getcaps_aggregation);
+  tcase_add_test (tc_chain, test_pad_proxy_query_caps_aggregation);
   tcase_add_test (tc_chain, test_greatest_common_divisor);
   return s;
 }

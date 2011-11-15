@@ -105,8 +105,8 @@ static void gst_output_selector_release_pad (GstElement * element,
 static GstFlowReturn gst_output_selector_chain (GstPad * pad, GstBuffer * buf);
 static GstStateChangeReturn gst_output_selector_change_state (GstElement *
     element, GstStateChange transition);
-static gboolean gst_output_selector_handle_sink_event (GstPad * pad,
-    GstEvent * event);
+static gboolean gst_output_selector_event (GstPad * pad, GstEvent * event);
+static gboolean gst_output_selector_query (GstPad * pad, GstQuery * query);
 static void gst_output_selector_switch_pad_negotiation_mode (GstOutputSelector *
     sel, gint mode);
 
@@ -161,7 +161,9 @@ gst_output_selector_init (GstOutputSelector * sel)
   gst_pad_set_chain_function (sel->sinkpad,
       GST_DEBUG_FUNCPTR (gst_output_selector_chain));
   gst_pad_set_event_function (sel->sinkpad,
-      GST_DEBUG_FUNCPTR (gst_output_selector_handle_sink_event));
+      GST_DEBUG_FUNCPTR (gst_output_selector_event));
+  gst_pad_set_query_function (sel->sinkpad,
+      GST_DEBUG_FUNCPTR (gst_output_selector_query));
 
   gst_element_add_pad (GST_ELEMENT (sel), sel->sinkpad);
 
@@ -280,15 +282,10 @@ gst_output_selector_get_property (GObject * object, guint prop_id,
   }
 }
 
-static GstCaps *
-gst_output_selector_sink_getcaps (GstPad * pad, GstCaps * filter)
+static GstPad *
+gst_output_selector_get_active (GstOutputSelector * sel)
 {
-  GstOutputSelector *sel = GST_OUTPUT_SELECTOR (gst_pad_get_parent (pad));
   GstPad *active = NULL;
-  GstCaps *caps = NULL;
-
-  if (G_UNLIKELY (sel == NULL))
-    return (filter ? gst_caps_ref (filter) : gst_caps_new_any ());
 
   GST_OBJECT_LOCK (sel);
   if (sel->pending_srcpad)
@@ -297,16 +294,7 @@ gst_output_selector_sink_getcaps (GstPad * pad, GstCaps * filter)
     active = gst_object_ref (sel->active_srcpad);
   GST_OBJECT_UNLOCK (sel);
 
-  if (active) {
-    caps = gst_pad_peer_get_caps (active, filter);
-    gst_object_unref (active);
-  }
-  if (caps == NULL) {
-    caps = (filter ? gst_caps_ref (filter) : gst_caps_new_any ());
-  }
-
-  gst_object_unref (sel);
-  return caps;
+  return active;
 }
 
 static void
@@ -314,14 +302,6 @@ gst_output_selector_switch_pad_negotiation_mode (GstOutputSelector * sel,
     gint mode)
 {
   sel->pad_negotiation_mode = mode;
-  if (mode == GST_OUTPUT_SELECTOR_PAD_NEGOTIATION_MODE_ALL) {
-    gst_pad_set_getcaps_function (sel->sinkpad, gst_pad_proxy_getcaps);
-  } else if (mode == GST_OUTPUT_SELECTOR_PAD_NEGOTIATION_MODE_NONE) {
-    gst_pad_set_getcaps_function (sel->sinkpad, NULL);
-  } else {                      /* active */
-    gst_pad_set_getcaps_function (sel->sinkpad,
-        gst_output_selector_sink_getcaps);
-  }
 }
 
 static GstFlowReturn
@@ -520,7 +500,7 @@ gst_output_selector_change_state (GstElement * element,
 }
 
 static gboolean
-gst_output_selector_handle_sink_event (GstPad * pad, GstEvent * event)
+gst_output_selector_event (GstPad * pad, GstEvent * event)
 {
   gboolean res = TRUE;
   GstOutputSelector *sel;
@@ -544,13 +524,7 @@ gst_output_selector_handle_sink_event (GstPad * pad, GstEvent * event)
           gst_event_unref (event);
           break;
         default:
-          GST_OBJECT_LOCK (sel);
-          if (sel->pending_srcpad)
-            active = gst_object_ref (sel->pending_srcpad);
-          else if (sel->active_srcpad)
-            active = gst_object_ref (sel->active_srcpad);
-          GST_OBJECT_UNLOCK (sel);
-
+          active = gst_output_selector_get_active (sel);
           if (active) {
             res = gst_pad_push_event (active, event);
             gst_object_unref (active);
@@ -578,14 +552,8 @@ gst_output_selector_handle_sink_event (GstPad * pad, GstEvent * event)
       break;
     default:
     {
-      GST_OBJECT_LOCK (sel);
-      if (sel->pending_srcpad)
-        active = gst_object_ref (sel->pending_srcpad);
-      else if (sel->active_srcpad)
-        active = gst_object_ref (sel->active_srcpad);
-      GST_OBJECT_UNLOCK (sel);
-
       /* Send other events to pending or active src pad */
+      active = gst_output_selector_get_active (sel);
       if (active) {
         res = gst_pad_push_event (active, event);
         gst_object_unref (active);
@@ -594,6 +562,50 @@ gst_output_selector_handle_sink_event (GstPad * pad, GstEvent * event)
       }
       break;
     }
+  }
+
+  gst_object_unref (sel);
+
+  return res;
+}
+
+static gboolean
+gst_output_selector_query (GstPad * pad, GstQuery * query)
+{
+  gboolean res = TRUE;
+  GstOutputSelector *sel;
+  GstPad *active = NULL;
+
+  sel = GST_OUTPUT_SELECTOR (gst_pad_get_parent (pad));
+  if (G_UNLIKELY (sel == NULL)) {
+    return FALSE;
+  }
+
+  switch (GST_QUERY_TYPE (query)) {
+    case GST_QUERY_CAPS:
+    {
+      switch (sel->pad_negotiation_mode) {
+        case GST_OUTPUT_SELECTOR_PAD_NEGOTIATION_MODE_ALL:
+          /* Send caps to all src pads */
+          res = gst_pad_proxy_query_caps (pad, query);
+          break;
+        case GST_OUTPUT_SELECTOR_PAD_NEGOTIATION_MODE_NONE:
+          res = FALSE;
+          break;
+        default:
+          active = gst_output_selector_get_active (sel);
+          if (active) {
+            res = gst_pad_peer_query (active, query);
+            gst_object_unref (active);
+          } else {
+            res = FALSE;
+          }
+          break;
+      }
+      break;
+    }
+    default:
+      break;
   }
 
   gst_object_unref (sel);

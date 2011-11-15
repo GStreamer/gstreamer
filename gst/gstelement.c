@@ -1267,7 +1267,7 @@ gst_element_class_add_pad_template (GstElementClass * klass,
   }
 
   /* Take ownership of the floating ref */
-  g_object_ref_sink (templ);
+  gst_object_ref_sink (templ);
 
   klass->padtemplates = g_list_append (klass->padtemplates, templ);
   klass->numpadtemplates++;

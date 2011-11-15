@@ -389,9 +389,14 @@ void            gst_query_set_accept_caps_result   (GstQuery *query, gboolean re
 void            gst_query_parse_accept_caps_result (GstQuery *query, gboolean *result);
 
 /* caps query */
-GstQuery *      gst_query_new_caps                 (void);
-void            gst_query_set_caps                 (GstQuery *query, GstCaps *caps);
-void            gst_query_parse_caps               (GstQuery *query, GstCaps **caps);
+GstQuery *      gst_query_new_caps                 (GstCaps *filter);
+void            gst_query_parse_caps               (GstQuery *query, GstCaps **filter);
+
+void            gst_query_set_caps_result          (GstQuery *query, GstCaps *caps);
+void            gst_query_parse_caps_result        (GstQuery *query, GstCaps **caps);
+
+void            gst_query_intersect_caps_result    (GstQuery *query, GstCaps *filter,
+                                                    GstCapsIntersectMode mode);
 
 G_END_DECLS
 

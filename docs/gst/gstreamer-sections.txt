@@ -1014,7 +1014,6 @@ gst_proxy_pad_iterate_internal_links_default
 gst_proxy_pad_chain_default
 gst_proxy_pad_chain_list_default
 gst_proxy_pad_getrange_default
-gst_proxy_pad_getcaps_default
 gst_proxy_pad_unlink_default
 <SUBSECTION Standard>
 GstGhostPadClass
@@ -1643,9 +1642,8 @@ GstPadUnlinkFunction
 
 gst_pad_accept_caps
 
-gst_pad_set_getcaps_function
-GstPadGetCapsFunction
-gst_pad_proxy_getcaps
+gst_pad_proxy_query_caps
+gst_pad_proxy_query_accept_caps
 
 gst_pad_peer_accept_caps
 

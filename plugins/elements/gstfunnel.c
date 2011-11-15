@@ -118,7 +118,7 @@ static void gst_funnel_release_pad (GstElement * element, GstPad * pad);
 
 static GstFlowReturn gst_funnel_sink_chain (GstPad * pad, GstBuffer * buffer);
 static gboolean gst_funnel_sink_event (GstPad * pad, GstEvent * event);
-static GstCaps *gst_funnel_sink_getcaps (GstPad * pad, GstCaps * filter);
+static gboolean gst_funnel_sink_query (GstPad * pad, GstQuery * query);
 
 static gboolean gst_funnel_src_event (GstPad * pad, GstEvent * event);
 
@@ -189,8 +189,8 @@ gst_funnel_request_new_pad (GstElement * element, GstPadTemplate * templ,
       GST_DEBUG_FUNCPTR (gst_funnel_sink_chain));
   gst_pad_set_event_function (sinkpad,
       GST_DEBUG_FUNCPTR (gst_funnel_sink_event));
-  gst_pad_set_getcaps_function (sinkpad,
-      GST_DEBUG_FUNCPTR (gst_funnel_sink_getcaps));
+  gst_pad_set_query_function (sinkpad,
+      GST_DEBUG_FUNCPTR (gst_funnel_sink_query));
 
   gst_pad_set_active (sinkpad, TRUE);
 
@@ -209,24 +209,6 @@ gst_funnel_release_pad (GstElement * element, GstPad * pad)
   gst_pad_set_active (pad, FALSE);
 
   gst_element_remove_pad (GST_ELEMENT_CAST (funnel), pad);
-}
-
-static GstCaps *
-gst_funnel_sink_getcaps (GstPad * pad, GstCaps * filter)
-{
-  GstFunnel *funnel = GST_FUNNEL (gst_pad_get_parent (pad));
-  GstCaps *caps;
-
-  if (G_UNLIKELY (funnel == NULL))
-    return gst_caps_new_any ();
-
-  caps = gst_pad_peer_get_caps (funnel->srcpad, filter);
-  if (caps == NULL)
-    caps = (filter ? gst_caps_ref (filter) : gst_caps_new_any ());
-
-  gst_object_unref (funnel);
-
-  return caps;
 }
 
 static GstFlowReturn
@@ -337,6 +319,26 @@ gst_funnel_sink_event (GstPad * pad, GstEvent * event)
     res = gst_pad_push_event (funnel->srcpad, event);
   else
     gst_event_unref (event);
+
+  gst_object_unref (funnel);
+
+  return res;
+}
+
+static gboolean
+gst_funnel_sink_query (GstPad * pad, GstQuery * query)
+{
+  GstFunnel *funnel = GST_FUNNEL (gst_pad_get_parent (pad));
+  gboolean forward = TRUE;
+  gboolean res = TRUE;
+
+  if (G_UNLIKELY (funnel == NULL)) {
+    gst_query_unref (query);
+    return FALSE;
+  }
+
+  if (forward)
+    res = gst_pad_peer_query (funnel->srcpad, query);
 
   gst_object_unref (funnel);
 

@@ -92,6 +92,87 @@ gst_proxy_pad_event_default (GstPad * pad, GstEvent * event)
   return res;
 }
 
+static gboolean
+gst_proxy_pad_query_caps (GstPad * pad, GstQuery * query)
+{
+  gboolean res;
+  GstPad *target;
+  GstCaps *result;
+  GstPadTemplate *templ;
+
+  g_return_val_if_fail (GST_IS_PROXY_PAD (pad), FALSE);
+
+  templ = GST_PAD_PAD_TEMPLATE (pad);
+  target = gst_proxy_pad_get_target (pad);
+  if (target) {
+    /* if we have a real target, proxy the call */
+    res = gst_pad_query (target, query);
+
+    GST_DEBUG_OBJECT (pad, "get caps of target %s:%s : %" GST_PTR_FORMAT,
+        GST_DEBUG_PAD_NAME (target), query);
+
+    gst_object_unref (target);
+
+    /* filter against the template */
+    if (templ && res) {
+      GstCaps *filt, *tmp;
+
+      filt = GST_PAD_TEMPLATE_CAPS (templ);
+      if (filt) {
+        gst_query_parse_caps_result (query, &result);
+        tmp = gst_caps_intersect_full (result, filt, GST_CAPS_INTERSECT_FIRST);
+        gst_query_set_caps_result (query, tmp);
+        GST_DEBUG_OBJECT (pad,
+            "filtered against template gives %" GST_PTR_FORMAT, tmp);
+        gst_caps_unref (tmp);
+      }
+    }
+  } else {
+    GstCaps *filter;
+
+    res = TRUE;
+
+    gst_query_parse_caps (query, &filter);
+
+    /* else, if we have a template, use its caps. */
+    if (templ) {
+      result = GST_PAD_TEMPLATE_CAPS (templ);
+      GST_DEBUG_OBJECT (pad,
+          "using pad template %p with caps %p %" GST_PTR_FORMAT, templ, result,
+          result);
+
+      if (filter) {
+        GstCaps *intersection;
+
+        GST_DEBUG_OBJECT (pad, "intersect with filter");
+        intersection =
+            gst_caps_intersect_full (filter, result, GST_CAPS_INTERSECT_FIRST);
+        gst_query_set_caps_result (query, intersection);
+        gst_caps_unref (intersection);
+      } else {
+        gst_query_set_caps_result (query, result);
+      }
+      goto done;
+    }
+
+    /* If there's a filter, return that */
+    if (filter != NULL) {
+      GST_DEBUG_OBJECT (pad, "return filter");
+      gst_query_set_caps_result (query, filter);
+      goto done;
+    }
+
+    /* last resort, any caps */
+    GST_DEBUG_OBJECT (pad, "pad has no template, returning ANY");
+    result = gst_caps_new_any ();
+    gst_query_set_caps_result (query, result);
+    gst_caps_unref (result);
+  }
+
+done:
+  return res;
+}
+
 /**
  * gst_proxy_pad_query_default:
  * @pad: a #GstPad to invoke the default query on.
@@ -112,11 +193,11 @@ gst_proxy_pad_query_default (GstPad * pad, GstQuery * query)
   g_return_val_if_fail (GST_IS_PROXY_PAD (pad), FALSE);
   g_return_val_if_fail (GST_IS_QUERY (query), FALSE);
 
-  target = gst_proxy_pad_get_target (pad);
 
   switch (GST_QUERY_TYPE (query)) {
     case GST_QUERY_ACCEPT_CAPS:
     {
+      target = gst_proxy_pad_get_target (pad);
       if (target) {
         res = gst_pad_query (target, query);
         gst_object_unref (target);
@@ -128,8 +209,14 @@ gst_proxy_pad_query_default (GstPad * pad, GstQuery * query)
       }
       break;
     }
+    case GST_QUERY_CAPS:
+    {
+      res = gst_proxy_pad_query_caps (pad, query);
+      break;
+    }
     default:
     {
+      target = gst_proxy_pad_get_target (pad);
       if (target) {
         res = gst_pad_query (target, query);
         gst_object_unref (target);
@@ -256,119 +343,6 @@ gst_proxy_pad_getrange_default (GstPad * pad, guint64 offset, guint size,
   return res;
 }
 
-/**
- * gst_proxy_pad_getcaps_default:
- * @pad: a #GstPad to get the capabilities of.
- * @filter: a #GstCaps filter.
- *
- * Invoke the default getcaps function of the proxy pad.
- *
- * Returns: (transfer full): the caps of the pad with incremented ref-count
- *
- * Since: 0.10.36
- */
-GstCaps *
-gst_proxy_pad_getcaps_default (GstPad * pad, GstCaps * filter)
-{
-  GstPad *target;
-  GstCaps *res;
-  GstPadTemplate *templ;
-
-  g_return_val_if_fail (GST_IS_PROXY_PAD (pad), NULL);
-
-  templ = GST_PAD_PAD_TEMPLATE (pad);
-  target = gst_proxy_pad_get_target (pad);
-  if (target) {
-    /* if we have a real target, proxy the call */
-    res = gst_pad_get_caps (target, filter);
-
-    GST_DEBUG_OBJECT (pad, "get caps of target %s:%s : %" GST_PTR_FORMAT,
-        GST_DEBUG_PAD_NAME (target), res);
-
-    gst_object_unref (target);
-
-    /* filter against the template */
-    if (templ && res) {
-      GstCaps *filt, *tmp;
-
-      filt = GST_PAD_TEMPLATE_CAPS (templ);
-      if (filt) {
-        tmp = gst_caps_intersect_full (res, filt, GST_CAPS_INTERSECT_FIRST);
-        gst_caps_unref (res);
-        res = tmp;
-        GST_DEBUG_OBJECT (pad,
-            "filtered against template gives %" GST_PTR_FORMAT, res);
-      }
-    }
-  } else {
-    /* else, if we have a template, use its caps. */
-    if (templ) {
-      res = GST_PAD_TEMPLATE_CAPS (templ);
-      GST_DEBUG_OBJECT (pad,
-          "using pad template %p with caps %p %" GST_PTR_FORMAT, templ, res,
-          res);
-      res = gst_caps_ref (res);
-
-      if (filter) {
-        GstCaps *intersection =
-            gst_caps_intersect_full (filter, res, GST_CAPS_INTERSECT_FIRST);
-
-        gst_caps_unref (res);
-        res = intersection;
-      }
-
-      goto done;
-    }
-
-    /* If there's a filter, return that */
-    if (filter != NULL) {
-      res = gst_caps_ref (filter);
-      goto done;
-    }
-
-    /* last resort, any caps */
-    GST_DEBUG_OBJECT (pad, "pad has no template, returning ANY");
-    res = gst_caps_new_any ();
-  }
-
-done:
-  return res;
-}
-
-/**
- * gst_proxy_pad_acceptcaps_default:
- * @pad: a #GstPad to check
- * @caps: a #GstCaps to check on the pad
- *
- * Invoke the default acceptcaps function of the proxy pad.
- *
- * Returns: TRUE if the pad can accept the caps.
- *
- * Since: 0.10.36
- */
-gboolean
-gst_proxy_pad_acceptcaps_default (GstPad * pad, GstCaps * caps)
-{
-  GstPad *target;
-  gboolean res;
-
-  g_return_val_if_fail (GST_IS_PROXY_PAD (pad), FALSE);
-  g_return_val_if_fail (caps == NULL || GST_IS_CAPS (caps), FALSE);
-
-  target = gst_proxy_pad_get_target (pad);
-  if (target) {
-    res = gst_pad_accept_caps (target, caps);
-    gst_object_unref (target);
-  } else {
-    GST_DEBUG_OBJECT (pad, "no target");
-    /* We don't have a target, we return TRUE and we assume that any future
-     * target will be able to deal with any configured caps. */
-    res = TRUE;
-  }
-
-  return res;
-}
-
 static GstPad *
 gst_proxy_pad_get_target (GstPad * pad)
 {
@@ -437,8 +411,6 @@ gst_proxy_pad_class_init (GstProxyPadClass * klass)
   GST_DEBUG_REGISTER_FUNCPTR (gst_proxy_pad_event_default);
   GST_DEBUG_REGISTER_FUNCPTR (gst_proxy_pad_query_default);
   GST_DEBUG_REGISTER_FUNCPTR (gst_proxy_pad_iterate_internal_links_default);
-  GST_DEBUG_REGISTER_FUNCPTR (gst_proxy_pad_getcaps_default);
-  GST_DEBUG_REGISTER_FUNCPTR (gst_proxy_pad_acceptcaps_default);
   GST_DEBUG_REGISTER_FUNCPTR (gst_proxy_pad_unlink_default);
   GST_DEBUG_REGISTER_FUNCPTR (gst_proxy_pad_chain_default);
   GST_DEBUG_REGISTER_FUNCPTR (gst_proxy_pad_chain_list_default);
@@ -458,7 +430,6 @@ gst_proxy_pad_init (GstProxyPad * ppad)
   gst_pad_set_iterate_internal_links_function (pad,
       gst_proxy_pad_iterate_internal_links_default);
 
-  gst_pad_set_getcaps_function (pad, gst_proxy_pad_getcaps_default);
   gst_pad_set_unlink_function (pad, gst_proxy_pad_unlink_default);
 }
 

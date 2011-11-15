@@ -140,7 +140,6 @@ static GstFlowReturn gst_tee_chain (GstPad * pad, GstBuffer * buffer);
 static GstFlowReturn gst_tee_chain_list (GstPad * pad, GstBufferList * list);
 static gboolean gst_tee_sink_event (GstPad * pad, GstEvent * event);
 static gboolean gst_tee_sink_query (GstPad * pad, GstQuery * query);
-static gboolean gst_tee_sink_acceptcaps (GstPad * pad, GstCaps * caps);
 static gboolean gst_tee_sink_activate_push (GstPad * pad, gboolean active);
 static gboolean gst_tee_src_query (GstPad * pad, GstQuery * query);
 static gboolean gst_tee_src_activate_pull (GstPad * pad, gboolean active);
@@ -252,13 +251,12 @@ gst_tee_init (GstTee * tee)
       GST_DEBUG_FUNCPTR (gst_tee_sink_event));
   gst_pad_set_query_function (tee->sinkpad,
       GST_DEBUG_FUNCPTR (gst_tee_sink_query));
-  gst_pad_set_getcaps_function (tee->sinkpad,
-      GST_DEBUG_FUNCPTR (gst_pad_proxy_getcaps));
   gst_pad_set_activatepush_function (tee->sinkpad,
       GST_DEBUG_FUNCPTR (gst_tee_sink_activate_push));
   gst_pad_set_chain_function (tee->sinkpad, GST_DEBUG_FUNCPTR (gst_tee_chain));
   gst_pad_set_chain_list_function (tee->sinkpad,
       GST_DEBUG_FUNCPTR (gst_tee_chain_list));
+  GST_OBJECT_FLAG_SET (tee->sinkpad, GST_PAD_PROXY_CAPS);
   gst_element_add_pad (GST_ELEMENT (tee), tee->sinkpad);
 
   tee->last_message = NULL;
@@ -332,8 +330,6 @@ gst_tee_request_new_pad (GstElement * element, GstPadTemplate * templ,
   if (!res)
     goto activate_failed;
 
-  gst_pad_set_getcaps_function (srcpad,
-      GST_DEBUG_FUNCPTR (gst_pad_proxy_getcaps));
   gst_pad_set_activatepull_function (srcpad,
       GST_DEBUG_FUNCPTR (gst_tee_src_activate_pull));
   gst_pad_set_query_function (srcpad, GST_DEBUG_FUNCPTR (gst_tee_src_query));
@@ -341,6 +337,7 @@ gst_tee_request_new_pad (GstElement * element, GstPadTemplate * templ,
       GST_DEBUG_FUNCPTR (gst_tee_src_get_range));
   /* Forward sticky events to the new srcpad */
   gst_pad_sticky_events_foreach (tee->sinkpad, forward_sticky_events, srcpad);
+  GST_OBJECT_FLAG_SET (srcpad, GST_PAD_PROXY_CAPS);
   gst_element_add_pad (GST_ELEMENT_CAST (tee), srcpad);
 
   return srcpad;
@@ -494,67 +491,16 @@ gst_tee_sink_event (GstPad * pad, GstEvent * event)
   return res;
 }
 
-/* on the sink we accept caps that are acceptable to all srcpads */
-static gboolean
-gst_tee_sink_acceptcaps (GstPad * pad, GstCaps * caps)
-{
-  GstTee *tee;
-  gboolean res, done;
-  GstIterator *it;
-  GValue item = { 0, };
-
-  tee = GST_TEE_CAST (GST_PAD_PARENT (pad));
-
-  it = gst_element_iterate_src_pads (GST_ELEMENT_CAST (tee));
-
-  res = TRUE;
-  done = FALSE;
-  while (!done && res) {
-    switch (gst_iterator_next (it, &item)) {
-      case GST_ITERATOR_OK:
-        res &= gst_pad_peer_accept_caps (g_value_get_object (&item), caps);
-        g_value_reset (&item);
-        break;
-      case GST_ITERATOR_RESYNC:
-        res = TRUE;
-        gst_iterator_resync (it);
-        break;
-      case GST_ITERATOR_ERROR:
-        res = FALSE;
-        done = TRUE;
-        break;
-      case GST_ITERATOR_DONE:
-        done = TRUE;
-        break;
-    }
-  }
-  g_value_unset (&item);
-  gst_iterator_free (it);
-
-  return res;
-}
-
 static gboolean
 gst_tee_sink_query (GstPad * pad, GstQuery * query)
 {
   gboolean res;
 
   switch (GST_QUERY_TYPE (query)) {
-    case GST_QUERY_ACCEPT_CAPS:
-    {
-      GstCaps *caps;
-
-      gst_query_parse_accept_caps (query, &caps);
-      res = gst_tee_sink_acceptcaps (pad, caps);
-      gst_query_set_accept_caps_result (query, res);
-      res = TRUE;
-      break;
-    }
     default:
       res = gst_pad_query_default (pad, query);
       break;
   }
-
   return res;
 }
 

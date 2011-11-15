@@ -68,8 +68,6 @@ GstIterator*        gst_proxy_pad_iterate_internal_links_default (GstPad *pad);
 GstFlowReturn       gst_proxy_pad_chain_default                  (GstPad *pad, GstBuffer *buffer);
 GstFlowReturn       gst_proxy_pad_chain_list_default             (GstPad *pad, GstBufferList *list);
 GstFlowReturn       gst_proxy_pad_getrange_default               (GstPad *pad, guint64 offset, guint size, GstBuffer **buffer);
-GstCaps*            gst_proxy_pad_getcaps_default                (GstPad *pad, GstCaps * filter);
-gboolean            gst_proxy_pad_acceptcaps_default             (GstPad *pad, GstCaps *caps);
 void                gst_proxy_pad_unlink_default                 (GstPad * pad);
 
 #define GST_TYPE_GHOST_PAD              (gst_ghost_pad_get_type ())

@@ -384,9 +384,10 @@ static gboolean gst_base_parse_handle_seek (GstBaseParse * parse,
 static void gst_base_parse_handle_tag (GstBaseParse * parse, GstEvent * event);
 
 static gboolean gst_base_parse_src_event (GstPad * pad, GstEvent * event);
+static gboolean gst_base_parse_src_query (GstPad * pad, GstQuery * query);
+
 static gboolean gst_base_parse_sink_event (GstPad * pad, GstEvent * event);
-static gboolean gst_base_parse_query (GstPad * pad, GstQuery * query);
-static GstCaps *gst_base_parse_sink_getcaps (GstPad * pad, GstCaps * filter);
+static gboolean gst_base_parse_sink_query (GstPad * pad, GstQuery * query);
 
 static GstFlowReturn gst_base_parse_chain (GstPad * pad, GstBuffer * buffer);
 static void gst_base_parse_loop (GstPad * pad);
@@ -522,8 +523,8 @@ gst_base_parse_init (GstBaseParse * parse, GstBaseParseClass * bclass)
   parse->sinkpad = gst_pad_new_from_template (pad_template, "sink");
   gst_pad_set_event_function (parse->sinkpad,
       GST_DEBUG_FUNCPTR (gst_base_parse_sink_event));
-  gst_pad_set_getcaps_function (parse->sinkpad,
-      GST_DEBUG_FUNCPTR (gst_base_parse_sink_getcaps));
+  gst_pad_set_query_function (parse->sinkpad,
+      GST_DEBUG_FUNCPTR (gst_base_parse_sink_query));
   gst_pad_set_chain_function (parse->sinkpad,
       GST_DEBUG_FUNCPTR (gst_base_parse_chain));
   gst_pad_set_activate_function (parse->sinkpad,
@@ -543,7 +544,7 @@ gst_base_parse_init (GstBaseParse * parse, GstBaseParseClass * bclass)
   gst_pad_set_event_function (parse->srcpad,
       GST_DEBUG_FUNCPTR (gst_base_parse_src_event));
   gst_pad_set_query_function (parse->srcpad,
-      GST_DEBUG_FUNCPTR (gst_base_parse_query));
+      GST_DEBUG_FUNCPTR (gst_base_parse_src_query));
   gst_pad_use_fixed_caps (parse->srcpad);
   gst_element_add_pad (GST_ELEMENT (parse), parse->srcpad);
   GST_DEBUG_OBJECT (parse, "src created");
@@ -1115,6 +1116,45 @@ gst_base_parse_sink_eventfunc (GstBaseParse * parse, GstEvent * event)
   }
 
   return handled;
+}
+
+static gboolean
+gst_base_parse_sink_query (GstPad * pad, GstQuery * query)
+{
+  GstBaseParse *parse;
+  GstBaseParseClass *bclass;
+  gboolean res;
+
+  parse = GST_BASE_PARSE (gst_pad_get_parent (pad));
+  bclass = GST_BASE_PARSE_GET_CLASS (parse);
+
+  switch (GST_QUERY_TYPE (query)) {
+    case GST_QUERY_CAPS:
+    {
+      if (bclass->get_sink_caps) {
+        GstCaps *caps, *filter;
+
+        gst_query_parse_caps (query, &filter);
+        caps = bclass->get_sink_caps (parse, filter);
+        GST_LOG_OBJECT (parse, "sink getcaps returning caps %" GST_PTR_FORMAT,
+            caps);
+        gst_query_set_caps_result (query, caps);
+        gst_caps_unref (caps);
+
+        res = TRUE;
+      } else
+        res = gst_pad_peer_query (parse->srcpad, query);
+      break;
+    }
+    default:
+    {
+      res = gst_pad_query_default (pad, query);
+      break;
+    }
+  }
+  gst_object_unref (parse);
+
+  return res;
 }
 
 
@@ -3270,7 +3310,7 @@ gst_base_parse_get_duration (GstBaseParse * parse, GstFormat format,
 }
 
 static gboolean
-gst_base_parse_query (GstPad * pad, GstQuery * query)
+gst_base_parse_src_query (GstPad * pad, GstQuery * query)
 {
   GstBaseParse *parse;
   gboolean res = FALSE;
@@ -3947,29 +3987,6 @@ gst_base_parse_handle_tag (GstBaseParse * parse, GstEvent * event)
     GST_DEBUG_OBJECT (parse, "upstream max bitrate %d", tmp);
     parse->priv->post_max_bitrate = FALSE;
   }
-}
-
-static GstCaps *
-gst_base_parse_sink_getcaps (GstPad * pad, GstCaps * filter)
-{
-  GstBaseParse *parse;
-  GstBaseParseClass *klass;
-  GstCaps *caps;
-
-  parse = GST_BASE_PARSE (gst_pad_get_parent (pad));
-  klass = GST_BASE_PARSE_GET_CLASS (parse);
-  g_assert (pad == GST_BASE_PARSE_SINK_PAD (parse));
-
-  if (klass->get_sink_caps)
-    caps = klass->get_sink_caps (parse, filter);
-  else
-    caps = gst_pad_proxy_getcaps (pad, filter);
-  gst_object_unref (parse);
-
-  GST_LOG_OBJECT (parse, "sink getcaps returning caps %" GST_PTR_FORMAT, caps);
-
-  return caps;
-
 }
 
 static void

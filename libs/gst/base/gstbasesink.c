@@ -399,7 +399,6 @@ static gboolean gst_base_sink_event (GstPad * pad, GstEvent * event);
 static gboolean default_sink_query (GstBaseSink * sink, GstQuery * query);
 
 static gboolean gst_base_sink_negotiate_pull (GstBaseSink * basesink);
-static GstCaps *gst_base_sink_pad_getcaps (GstPad * pad, GstCaps * filter);
 static void gst_base_sink_default_fixate (GstBaseSink * bsink, GstCaps * caps);
 static void gst_base_sink_fixate (GstBaseSink * bsink, GstCaps * caps);
 
@@ -553,7 +552,6 @@ gst_base_sink_class_init (GstBaseSinkClass * klass)
   klass->query = GST_DEBUG_FUNCPTR (default_sink_query);
 
   /* Registering debug symbols for function pointers */
-  GST_DEBUG_REGISTER_FUNCPTR (gst_base_sink_pad_getcaps);
   GST_DEBUG_REGISTER_FUNCPTR (gst_base_sink_fixate);
   GST_DEBUG_REGISTER_FUNCPTR (gst_base_sink_pad_activate);
   GST_DEBUG_REGISTER_FUNCPTR (gst_base_sink_pad_activate_push);
@@ -565,17 +563,18 @@ gst_base_sink_class_init (GstBaseSinkClass * klass)
 }
 
 static GstCaps *
-gst_base_sink_pad_getcaps (GstPad * pad, GstCaps * filter)
+gst_base_sink_query_caps (GstBaseSink * bsink, GstPad * pad, GstCaps * filter)
 {
   GstBaseSinkClass *bclass;
-  GstBaseSink *bsink;
   GstCaps *caps = NULL;
+  gboolean fixed;
 
-  bsink = GST_BASE_SINK (gst_pad_get_parent (pad));
   bclass = GST_BASE_SINK_GET_CLASS (bsink);
+  fixed = GST_PAD_IS_FIXED_CAPS (pad);
 
-  if (bsink->pad_mode == GST_PAD_ACTIVATE_PULL) {
-    /* if we are operating in pull mode we only accept the negotiated caps */
+  if (fixed || bsink->pad_mode == GST_PAD_ACTIVATE_PULL) {
+    /* if we are operating in pull mode or fixed caps, we only accept the
+     * currently negotiated caps */
     caps = gst_pad_get_current_caps (pad);
   }
   if (caps == NULL) {
@@ -602,7 +601,6 @@ gst_base_sink_pad_getcaps (GstPad * pad, GstCaps * filter)
       }
     }
   }
-  gst_object_unref (bsink);
 
   return caps;
 }
@@ -639,7 +637,6 @@ gst_base_sink_init (GstBaseSink * basesink, gpointer g_class)
 
   basesink->sinkpad = gst_pad_new_from_template (pad_template, "sink");
 
-  gst_pad_set_getcaps_function (basesink->sinkpad, gst_base_sink_pad_getcaps);
   gst_pad_set_activate_function (basesink->sinkpad, gst_base_sink_pad_activate);
   gst_pad_set_activatepush_function (basesink->sinkpad,
       gst_base_sink_pad_activate_push);
@@ -2059,8 +2056,8 @@ gst_base_sink_wait_clock (GstBaseSink * sink, GstClockTime time,
   /* FIXME: Casting to GstClockEntry only works because the types
    * are the same */
   if (G_LIKELY (sink->priv->cached_clock_id != NULL
-          && GST_CLOCK_ENTRY_CLOCK ((GstClockEntry *) sink->priv->
-              cached_clock_id) == clock)) {
+          && GST_CLOCK_ENTRY_CLOCK ((GstClockEntry *) sink->
+              priv->cached_clock_id) == clock)) {
     if (!gst_clock_single_shot_id_reinit (clock, sink->priv->cached_clock_id,
             time)) {
       gst_clock_id_unref (sink->priv->cached_clock_id);
@@ -4849,6 +4846,17 @@ default_sink_query (GstBaseSink * basesink, GstQuery * query)
         res = bclass->propose_allocation (basesink, query);
       else
         res = FALSE;
+      break;
+    }
+    case GST_QUERY_CAPS:
+    {
+      GstCaps *caps, *filter;
+
+      gst_query_parse_caps (query, &filter);
+      caps = gst_base_sink_query_caps (basesink, basesink->sinkpad, filter);
+      gst_query_set_caps_result (query, caps);
+      gst_caps_unref (caps);
+      res = TRUE;
       break;
     }
     default:
