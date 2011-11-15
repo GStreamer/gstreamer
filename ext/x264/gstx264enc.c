@@ -486,6 +486,7 @@ static void gst_x264_enc_close_encoder (GstX264Enc * encoder);
 static gboolean gst_x264_enc_sink_set_caps (GstPad * pad, GstCaps * caps);
 static GstCaps *gst_x264_enc_sink_get_caps (GstPad * pad, GstCaps * filter);
 static gboolean gst_x264_enc_sink_event (GstPad * pad, GstEvent * event);
+static gboolean gst_x264_enc_sink_query (GstPad * pad, GstQuery * query);
 static gboolean gst_x264_enc_src_event (GstPad * pad, GstEvent * event);
 static GstFlowReturn gst_x264_enc_chain (GstPad * pad, GstBuffer * buf);
 static void gst_x264_enc_flush_frames (GstX264Enc * encoder, gboolean send);
@@ -850,12 +851,12 @@ static void
 gst_x264_enc_init (GstX264Enc * encoder)
 {
   encoder->sinkpad = gst_pad_new_from_static_template (&sink_factory, "sink");
-  gst_pad_set_getcaps_function (encoder->sinkpad,
-      GST_DEBUG_FUNCPTR (gst_x264_enc_sink_get_caps));
   gst_pad_set_event_function (encoder->sinkpad,
       GST_DEBUG_FUNCPTR (gst_x264_enc_sink_event));
   gst_pad_set_chain_function (encoder->sinkpad,
       GST_DEBUG_FUNCPTR (gst_x264_enc_chain));
+  gst_pad_set_query_function (encoder->sinkpad,
+      GST_DEBUG_FUNCPTR (gst_x264_enc_sink_query));
   gst_element_add_pad (GST_ELEMENT (encoder), encoder->sinkpad);
 
   encoder->srcpad = gst_pad_new_from_static_template (&src_factory, "src");
@@ -1812,6 +1813,35 @@ gst_x264_enc_sink_event (GstPad * pad, GstEvent * event)
     gst_event_unref (event);
 
   gst_object_unref (encoder);
+  return ret;
+}
+
+static gboolean
+gst_x264_enc_sink_query (GstPad * pad, GstQuery * query)
+{
+  gboolean ret = FALSE;
+  GstX264Enc *encoder;
+
+  encoder = GST_X264_ENC (gst_pad_get_parent (pad));
+
+  switch (GST_QUERY_TYPE (query)) {
+    case GST_QUERY_CAPS:
+    {
+      GstCaps *filter, *caps;
+
+      gst_query_parse_caps (query, &filter);
+      caps = gst_x264_enc_sink_get_caps (pad, filter);
+      gst_query_set_caps_result (query, caps);
+      gst_caps_unref (caps);
+      ret = TRUE;
+      break;
+    }
+    default:
+      ret = gst_pad_query_default (pad, query);
+      break;
+  }
+  gst_object_unref (encoder);
+
   return ret;
 }
 
