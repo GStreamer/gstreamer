@@ -319,7 +319,7 @@ gst_ffmpegenc_get_possible_sizes (GstFFMpegEnc * ffmpegenc, GstPad * pad,
   GstCaps *intersect = NULL;
   guint i;
 
-  othercaps = gst_pad_peer_get_caps (ffmpegenc->srcpad, NULL);
+  othercaps = gst_pad_peer_query_caps (ffmpegenc->srcpad, NULL);
 
   if (!othercaps)
     return gst_caps_copy (caps);
