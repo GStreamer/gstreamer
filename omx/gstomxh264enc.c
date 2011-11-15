@@ -35,6 +35,8 @@ static gboolean gst_omx_h264_enc_set_format (GstOMXVideoEnc * enc,
     GstOMXPort * port, GstVideoState * state);
 static GstCaps *gst_omx_h264_enc_get_caps (GstOMXVideoEnc * enc,
     GstOMXPort * port, GstVideoState * state);
+static GstFlowReturn gst_omx_h264_enc_handle_output_frame (GstOMXVideoEnc *
+    self, GstOMXPort * port, GstOMXBuffer * buf, GstVideoFrame * frame);
 
 enum
 {
@@ -81,6 +83,8 @@ gst_omx_h264_enc_class_init (GstOMXH264EncClass * klass)
 
   videoenc_class->default_src_template_caps = "video/x-h264, "
       "width=(int) [ 16, 4096 ], " "height=(int) [ 16, 4096 ]";
+  videoenc_class->handle_output_frame =
+      GST_DEBUG_FUNCPTR (gst_omx_h264_enc_handle_output_frame);
 }
 
 static void
@@ -323,4 +327,24 @@ gst_omx_h264_enc_get_caps (GstOMXVideoEnc * enc, GstOMXPort * port,
   }
 
   return caps;
+}
+
+static GstFlowReturn
+gst_omx_h264_enc_handle_output_frame (GstOMXVideoEnc * self, GstOMXPort * port,
+    GstOMXBuffer * buf, GstVideoFrame * frame)
+{
+  if (buf->omx_buf->nFlags & OMX_BUFFERFLAG_CODECCONFIG) {
+    /* The codec data is SPS/PPS with a startcode => bytestream stream format
+     * For bytestream stream format the SPS/PPS is only in-stream and not
+     * in the caps!
+     */
+    if (buf->omx_buf->nFilledLen >= 4 &&
+        GST_READ_UINT32_BE (buf->omx_buf->pBuffer +
+            buf->omx_buf->nOffset) == 0x00000001) {
+      buf->omx_buf->nFlags &= ~OMX_BUFFERFLAG_CODECCONFIG;
+    }
+  }
+
+  return GST_OMX_VIDEO_ENC_CLASS (parent_class)->handle_output_frame (self,
+      port, buf, frame);
 }
