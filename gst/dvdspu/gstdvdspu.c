@@ -91,12 +91,14 @@ static GstStateChangeReturn gst_dvd_spu_change_state (GstElement * element,
     GstStateChange transition);
 
 static gboolean gst_dvd_spu_src_event (GstPad * pad, GstEvent * event);
+static gboolean gst_dvd_spu_src_query (GstPad * pad, GstQuery * query);
 
 static GstCaps *gst_dvd_spu_video_proxy_getcaps (GstPad * pad,
     GstCaps * filter);
 static gboolean gst_dvd_spu_video_set_caps (GstPad * pad, GstCaps * caps);
 static GstFlowReturn gst_dvd_spu_video_chain (GstPad * pad, GstBuffer * buf);
 static gboolean gst_dvd_spu_video_event (GstPad * pad, GstEvent * event);
+static gboolean gst_dvd_spu_video_query (GstPad * pad, GstQuery * query);
 static void gst_dvd_spu_redraw_still (GstDVDSpu * dvdspu, gboolean force);
 
 static void gst_dvd_spu_check_still_updates (GstDVDSpu * dvdspu);
@@ -146,15 +148,13 @@ gst_dvd_spu_init (GstDVDSpu * dvdspu)
 {
   dvdspu->videosinkpad =
       gst_pad_new_from_static_template (&video_sink_factory, "video");
-  gst_pad_set_getcaps_function (dvdspu->videosinkpad,
-      gst_dvd_spu_video_proxy_getcaps);
   gst_pad_set_chain_function (dvdspu->videosinkpad, gst_dvd_spu_video_chain);
   gst_pad_set_event_function (dvdspu->videosinkpad, gst_dvd_spu_video_event);
+  gst_pad_set_query_function (dvdspu->videosinkpad, gst_dvd_spu_video_query);
 
   dvdspu->srcpad = gst_pad_new_from_static_template (&src_factory, "src");
   gst_pad_set_event_function (dvdspu->srcpad, gst_dvd_spu_src_event);
-  gst_pad_set_getcaps_function (dvdspu->srcpad,
-      gst_dvd_spu_video_proxy_getcaps);
+  gst_pad_set_query_function (dvdspu->srcpad, gst_dvd_spu_src_query);
 
   dvdspu->subpic_sinkpad =
       gst_pad_new_from_static_template (&subpic_sink_factory, "subpicture");
@@ -284,6 +284,31 @@ gst_dvd_spu_src_event (GstPad * pad, GstEvent * event)
   }
 
   gst_object_unref (dvdspu);
+  return res;
+}
+
+static gboolean
+gst_dvd_spu_src_query (GstPad * pad, GstQuery * query)
+{
+  gboolean res = FALSE;
+
+  switch (GST_QUERY_TYPE (query)) {
+    case GST_QUERY_CAPS:
+    {
+      GstCaps *filter, *caps;
+
+      gst_query_parse_caps (query, &filter);
+      caps = gst_dvd_spu_video_proxy_getcaps (pad, filter);
+      gst_query_set_caps_result (query, caps);
+      gst_caps_unref (caps);
+      res = TRUE;
+      break;
+    }
+    default:
+      res = gst_pad_query_default (pad, query);
+      break;
+  }
+
   return res;
 }
 
@@ -467,6 +492,31 @@ error:
   gst_event_unref (event);
   return FALSE;
 #endif
+}
+
+static gboolean
+gst_dvd_spu_video_query (GstPad * pad, GstQuery * query)
+{
+  gboolean res = FALSE;
+
+  switch (GST_QUERY_TYPE (query)) {
+    case GST_QUERY_CAPS:
+    {
+      GstCaps *filter, *caps;
+
+      gst_query_parse_caps (query, &filter);
+      caps = gst_dvd_spu_video_proxy_getcaps (pad, filter);
+      gst_query_set_caps_result (query, caps);
+      gst_caps_unref (caps);
+      res = TRUE;
+      break;
+    }
+    default:
+      res = gst_pad_query_default (pad, query);
+      break;
+  }
+
+  return res;
 }
 
 static GstFlowReturn

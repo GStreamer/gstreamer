@@ -121,6 +121,8 @@ static gboolean gst_base_video_encoder_src_event (GstPad * pad,
     GstEvent * event);
 static gboolean gst_base_video_encoder_sink_event (GstPad * pad,
     GstEvent * event);
+static gboolean gst_base_video_encoder_sink_query (GstPad * pad,
+    GstQuery * query);
 static GstFlowReturn gst_base_video_encoder_chain (GstPad * pad,
     GstBuffer * buf);
 static GstStateChangeReturn gst_base_video_encoder_change_state (GstElement *
@@ -130,8 +132,7 @@ static gboolean gst_base_video_encoder_src_query (GstPad * pad,
 
 #define gst_base_video_encoder_parent_class parent_class
 G_DEFINE_TYPE_WITH_CODE (GstBaseVideoEncoder, gst_base_video_encoder,
-    GST_TYPE_BASE_VIDEO_CODEC, G_IMPLEMENT_INTERFACE (GST_TYPE_PRESET, NULL);
-    );
+    GST_TYPE_BASE_VIDEO_CODEC, G_IMPLEMENT_INTERFACE (GST_TYPE_PRESET, NULL););
 
 static void
 gst_base_video_encoder_class_init (GstBaseVideoEncoderClass * klass)
@@ -190,8 +191,8 @@ gst_base_video_encoder_init (GstBaseVideoEncoder * base_video_encoder)
       GST_DEBUG_FUNCPTR (gst_base_video_encoder_chain));
   gst_pad_set_event_function (pad,
       GST_DEBUG_FUNCPTR (gst_base_video_encoder_sink_event));
-  gst_pad_set_getcaps_function (pad,
-      GST_DEBUG_FUNCPTR (gst_base_video_encoder_sink_getcaps));
+  gst_pad_set_query_function (pad,
+      GST_DEBUG_FUNCPTR (gst_base_video_encoder_sink_query));
 
   pad = GST_BASE_VIDEO_CODEC_SRC_PAD (base_video_encoder);
 
@@ -420,6 +421,30 @@ done:
 
   g_object_unref (base_video_encoder);
   return fcaps;
+}
+
+static gboolean
+gst_base_video_encoder_sink_query (GstPad * pad, GstQuery * query)
+{
+  gboolean res = FALSE;
+
+  switch (GST_QUERY_TYPE (query)) {
+    case GST_QUERY_CAPS:
+    {
+      GstCaps *filter, *caps;
+
+      gst_query_parse_caps (query, &filter);
+      caps = gst_base_video_encoder_sink_getcaps (pad, filter);
+      gst_query_set_caps_result (query, caps);
+      gst_caps_unref (caps);
+      res = TRUE;
+      break;
+    }
+    default:
+      res = gst_pad_query_default (pad, query);
+      break;
+  }
+  return res;
 }
 
 static void

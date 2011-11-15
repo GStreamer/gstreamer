@@ -108,6 +108,7 @@ static gboolean gst_dvbsub_overlay_event_src (GstPad * pad, GstEvent * event);
 static void new_dvb_subtitles_cb (DvbSub * dvb_sub, DVBSubtitles * subs,
     gpointer user_data);
 
+static gboolean gst_dvbsub_overlay_query_video (GstPad * pad, GstQuery * query);
 static gboolean gst_dvbsub_overlay_query_src (GstPad * pad, GstQuery * query);
 
 /* initialize the plugin's class */
@@ -185,11 +186,6 @@ gst_dvbsub_overlay_init (GstDVBSubOverlay * render)
   render->text_sinkpad =
       gst_pad_new_from_static_template (&text_sink_factory, "text_sink");
 
-  gst_pad_set_getcaps_function (render->srcpad,
-      GST_DEBUG_FUNCPTR (gst_dvbsub_overlay_getcaps));
-  gst_pad_set_getcaps_function (render->video_sinkpad,
-      GST_DEBUG_FUNCPTR (gst_dvbsub_overlay_getcaps));
-
   gst_pad_set_chain_function (render->video_sinkpad,
       GST_DEBUG_FUNCPTR (gst_dvbsub_overlay_chain_video));
   gst_pad_set_chain_function (render->text_sinkpad,
@@ -202,6 +198,8 @@ gst_dvbsub_overlay_init (GstDVBSubOverlay * render)
   gst_pad_set_event_function (render->srcpad,
       GST_DEBUG_FUNCPTR (gst_dvbsub_overlay_event_src));
 
+  gst_pad_set_query_function (render->video_sinkpad,
+      GST_DEBUG_FUNCPTR (gst_dvbsub_overlay_query_video));
   gst_pad_set_query_function (render->srcpad,
       GST_DEBUG_FUNCPTR (gst_dvbsub_overlay_query_src));
 
@@ -331,7 +329,22 @@ gst_dvbsub_overlay_query_src (GstPad * pad, GstQuery * query)
   GstDVBSubOverlay *render = GST_DVBSUB_OVERLAY (gst_pad_get_parent (pad));
   gboolean ret;
 
-  ret = gst_pad_peer_query (render->video_sinkpad, query);
+  switch (GST_QUERY_TYPE (query)) {
+    case GST_QUERY_CAPS:
+    {
+      GstCaps *filter, *caps;
+
+      gst_query_parse_caps (query, &filter);
+      caps = gst_dvbsub_overlay_getcaps (pad, filter);
+      gst_query_set_caps_result (query, caps);
+      gst_caps_unref (caps);
+      ret = TRUE;
+      break;
+    }
+    default:
+      ret = gst_pad_peer_query (render->video_sinkpad, query);
+      break;
+  }
 
   gst_object_unref (render);
   return ret;
@@ -910,6 +923,33 @@ missing_timestamp:
     gst_buffer_unref (buffer);
     return GST_FLOW_OK;
   }
+}
+
+static gboolean
+gst_dvbsub_overlay_query_video (GstPad * pad, GstQuery * query)
+{
+  GstDVBSubOverlay *render = GST_DVBSUB_OVERLAY (gst_pad_get_parent (pad));
+  gboolean ret;
+
+  switch (GST_QUERY_TYPE (query)) {
+    case GST_QUERY_CAPS:
+    {
+      GstCaps *filter, *caps;
+
+      gst_query_parse_caps (query, &filter);
+      caps = gst_dvbsub_overlay_getcaps (pad, filter);
+      gst_query_set_caps_result (query, caps);
+      gst_caps_unref (caps);
+      ret = TRUE;
+      break;
+    }
+    default:
+      ret = gst_pad_query_default (pad, query);
+      break;
+  }
+
+  gst_object_unref (render);
+  return ret;
 }
 
 static gboolean
