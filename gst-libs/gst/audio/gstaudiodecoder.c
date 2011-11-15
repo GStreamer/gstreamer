@@ -745,7 +745,8 @@ gst_audio_decoder_finish_frame (GstAudioDecoder * dec, GstBuffer * buf,
   size = buf ? gst_buffer_get_size (buf) : 0;
 
   /* must know the output format by now */
-  g_return_val_if_fail (GST_AUDIO_INFO_IS_VALID (&ctx->info), GST_FLOW_ERROR);
+  g_return_val_if_fail (buf == NULL || GST_AUDIO_INFO_IS_VALID (&ctx->info),
+      GST_FLOW_ERROR);
 
   GST_LOG_OBJECT (dec, "accepting %d bytes == %d samples for %d frames",
       buf ? size : -1, buf ? size / ctx->info.bpf : -1, frames);
