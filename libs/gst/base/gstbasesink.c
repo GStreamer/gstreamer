@@ -4313,7 +4313,7 @@ gst_base_sink_pad_activate_pull (GstPad * pad, gboolean active)
     GST_OBJECT_UNLOCK (basesink);
 
     /* get the peer duration in bytes */
-    result = gst_pad_query_peer_duration (pad, GST_FORMAT_BYTES, &duration);
+    result = gst_pad_peer_query_duration (pad, GST_FORMAT_BYTES, &duration);
     if (result) {
       GST_DEBUG_OBJECT (basesink,
           "setting duration in bytes to %" G_GINT64_FORMAT, duration);
@@ -4682,7 +4682,7 @@ gst_base_sink_get_duration (GstBaseSink * basesink, GstFormat format,
      * using our cached value because it might change. Duration caching
      * should be done at a higher level. */
     res =
-        gst_pad_query_peer_duration (basesink->sinkpad, GST_FORMAT_BYTES,
+        gst_pad_peer_query_duration (basesink->sinkpad, GST_FORMAT_BYTES,
         &uduration);
     if (res) {
       basesink->segment.duration = uduration;
@@ -4739,7 +4739,7 @@ default_element_query (GstElement * element, GstQuery * query)
               &upstream);
           if (!res && upstream) {
             res =
-                gst_pad_query_peer_position (basesink->sinkpad, GST_FORMAT_TIME,
+                gst_pad_peer_query_position (basesink->sinkpad, GST_FORMAT_TIME,
                 &cur);
           }
           if (res) {
@@ -4747,7 +4747,7 @@ default_element_query (GstElement * element, GstQuery * query)
                 &upstream);
             if (!res && upstream) {
               res =
-                  gst_pad_query_peer_duration (basesink->sinkpad,
+                  gst_pad_peer_query_duration (basesink->sinkpad,
                   GST_FORMAT_TIME, &dur);
             }
           }

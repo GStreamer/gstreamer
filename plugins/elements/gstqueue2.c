@@ -777,7 +777,7 @@ update_buffering (GstQueue2 * queue)
           mode = GST_BUFFERING_DOWNLOAD;
 
         if (queue->byte_in_rate > 0) {
-          if (gst_pad_query_peer_duration (queue->sinkpad, GST_FORMAT_BYTES,
+          if (gst_pad_peer_query_duration (queue->sinkpad, GST_FORMAT_BYTES,
                   &duration)) {
             buffering_left =
                 (gdouble) ((duration -
@@ -2475,7 +2475,7 @@ gst_queue2_handle_src_query (GstPad * pad, GstQuery * query)
           duration = writing_pos;
         } else {
           /* get duration of upstream in bytes */
-          peer_res = gst_pad_query_peer_duration (queue->sinkpad,
+          peer_res = gst_pad_peer_query_duration (queue->sinkpad,
               GST_FORMAT_BYTES, &duration);
         }
 
@@ -2598,7 +2598,7 @@ gst_queue2_update_upstream_size (GstQueue2 * queue)
 {
   gint64 upstream_size = -1;
 
-  if (gst_pad_query_peer_duration (queue->sinkpad, GST_FORMAT_BYTES,
+  if (gst_pad_peer_query_duration (queue->sinkpad, GST_FORMAT_BYTES,
           &upstream_size)) {
     GST_INFO_OBJECT (queue, "upstream size: %" G_GINT64_FORMAT, upstream_size);
     queue->upstream_size = upstream_size;

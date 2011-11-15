@@ -2881,7 +2881,7 @@ gst_pad_query_position (GstPad * pad, GstFormat format, gint64 * cur)
 }
 
 /**
- * gst_pad_query_peer_position:
+ * gst_pad_peer_query_position:
  * @pad: a #GstPad on whose peer to invoke the position query on.
  *       Must be a sink pad.
  * @format: the #GstFormat requested
@@ -2893,7 +2893,7 @@ gst_pad_query_position (GstPad * pad, GstFormat format, gint64 * cur)
  * Returns: TRUE if the query could be performed.
  */
 gboolean
-gst_pad_query_peer_position (GstPad * pad, GstFormat format, gint64 * cur)
+gst_pad_peer_query_position (GstPad * pad, GstFormat format, gint64 * cur)
 {
   GstQuery *query;
   gboolean ret = FALSE;
@@ -2939,7 +2939,7 @@ gst_pad_query_duration (GstPad * pad, GstFormat format, gint64 * duration)
 }
 
 /**
- * gst_pad_query_peer_duration:
+ * gst_pad_peer_query_duration:
  * @pad: a #GstPad on whose peer pad to invoke the duration query on.
  *       Must be a sink pad.
  * @format: the #GstFormat requested
@@ -2951,7 +2951,7 @@ gst_pad_query_duration (GstPad * pad, GstFormat format, gint64 * duration)
  * Returns: TRUE if the query could be performed.
  */
 gboolean
-gst_pad_query_peer_duration (GstPad * pad, GstFormat format, gint64 * duration)
+gst_pad_peer_query_duration (GstPad * pad, GstFormat format, gint64 * duration)
 {
   GstQuery *query;
   gboolean ret = FALSE;
@@ -3005,7 +3005,7 @@ gst_pad_query_convert (GstPad * pad, GstFormat src_format, gint64 src_val,
 }
 
 /**
- * gst_pad_query_peer_convert:
+ * gst_pad_peer_query_convert:
  * @pad: a #GstPad, on whose peer pad to invoke the convert query on.
  *       Must be a sink pad.
  * @src_format: a #GstFormat to convert from.
@@ -3019,7 +3019,7 @@ gst_pad_query_convert (GstPad * pad, GstFormat src_format, gint64 src_val,
  * Returns: TRUE if the query could be performed.
  */
 gboolean
-gst_pad_query_peer_convert (GstPad * pad, GstFormat src_format, gint64 src_val,
+gst_pad_peer_query_convert (GstPad * pad, GstFormat src_format, gint64 src_val,
     GstFormat dest_format, gint64 * dest_val)
 {
   GstQuery *query;

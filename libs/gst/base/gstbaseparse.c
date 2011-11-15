@@ -1588,7 +1588,7 @@ gst_base_parse_check_seekability (GstBaseParse * parse)
   /* try harder to query upstream size if we didn't get it the first time */
   if (seekable && stop == -1) {
     GST_DEBUG_OBJECT (parse, "doing duration query to fix up unset stop");
-    gst_pad_query_peer_duration (parse->sinkpad, GST_FORMAT_BYTES, &stop);
+    gst_pad_peer_query_duration (parse->sinkpad, GST_FORMAT_BYTES, &stop);
   }
 
   /* if upstream doesn't know the size, it's likely that it's not seekable in
@@ -1626,7 +1626,7 @@ gst_base_parse_check_upstream (GstBaseParse * parse)
 {
   gint64 stop;
 
-  if (gst_pad_query_peer_duration (parse->sinkpad, GST_FORMAT_TIME, &stop))
+  if (gst_pad_peer_query_duration (parse->sinkpad, GST_FORMAT_TIME, &stop))
     if (GST_CLOCK_TIME_IS_VALID (stop) && stop) {
       /* upstream has one, accept it also, and no further updates */
       gst_base_parse_set_duration (parse, GST_FORMAT_TIME, stop, 0);
