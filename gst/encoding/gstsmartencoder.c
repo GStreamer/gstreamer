@@ -393,7 +393,7 @@ smart_encoder_sink_getcaps (GstPad * pad, GstCaps * filter)
     tmpl = gst_static_pad_template_get_caps (&src_template);
 
   /* Try getting it from downstream */
-  peer = gst_pad_peer_get_caps (smart_encoder->srcpad, tmpl);
+  peer = gst_pad_peer_query_caps (smart_encoder->srcpad, tmpl);
 
   if (peer == NULL) {
     res = tmpl;

@@ -426,7 +426,7 @@ gst_vis_src_negotiate (GstVisual * visual)
   caps = gst_pad_query_caps (visual->srcpad, NULL);
 
   /* see what the peer can do */
-  othercaps = gst_pad_peer_get_caps (visual->srcpad, caps);
+  othercaps = gst_pad_peer_query_caps (visual->srcpad, caps);
   if (othercaps) {
     target = othercaps;
     gst_caps_unref (caps);

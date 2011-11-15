@@ -281,11 +281,11 @@ resync:
 
     STREAMS_UNLOCK (stream_splitter);
     if (res) {
-      GstCaps *peercaps = gst_pad_peer_get_caps (srcpad, filter);
+      GstCaps *peercaps = gst_pad_peer_query_caps (srcpad, filter);
       if (peercaps)
         gst_caps_merge (res, gst_caps_make_writable (peercaps));
     } else {
-      res = gst_pad_peer_get_caps (srcpad, filter);
+      res = gst_pad_peer_query_caps (srcpad, filter);
     }
     STREAMS_LOCK (stream_splitter);
 
@@ -355,7 +355,7 @@ resync:
     GstCaps *peercaps;
 
     STREAMS_UNLOCK (stream_splitter);
-    peercaps = gst_pad_peer_get_caps (srcpad, NULL);
+    peercaps = gst_pad_peer_query_caps (srcpad, NULL);
     if (peercaps) {
       res = gst_caps_can_intersect (caps, peercaps);
       gst_caps_unref (peercaps);

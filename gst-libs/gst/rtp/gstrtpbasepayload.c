@@ -592,7 +592,7 @@ gst_rtp_base_payload_set_outcaps (GstRTPBasePayload * payload,
   payload->ptime = 0;
 
   /* the peer caps can override some of the defaults */
-  peercaps = gst_pad_peer_get_caps (payload->srcpad, srccaps);
+  peercaps = gst_pad_peer_query_caps (payload->srcpad, srccaps);
   if (peercaps == NULL) {
     /* no peer caps, just add the other properties */
     gst_caps_set_simple (srccaps,

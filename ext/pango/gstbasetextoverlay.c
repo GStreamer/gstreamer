@@ -1106,7 +1106,7 @@ gst_base_text_overlay_getcaps (GstPad * pad, GstCaps * filter)
     otherpad = overlay->srcpad;
 
   /* we can do what the peer can */
-  caps = gst_pad_peer_get_caps (otherpad, filter);
+  caps = gst_pad_peer_query_caps (otherpad, filter);
   if (caps) {
     GstCaps *temp, *templ;
 

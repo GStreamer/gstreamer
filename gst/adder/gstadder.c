@@ -166,7 +166,7 @@ gst_adder_sink_getcaps (GstPad * pad, GstCaps * filter)
   }
 
   /* get the downstream possible caps */
-  peercaps = gst_pad_peer_get_caps (adder->srcpad, filter_caps);
+  peercaps = gst_pad_peer_query_caps (adder->srcpad, filter_caps);
 
   /* get the allowed caps on this sinkpad */
   sinkcaps = gst_pad_get_current_caps (pad);
