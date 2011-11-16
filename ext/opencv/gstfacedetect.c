@@ -141,7 +141,7 @@ static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",
     GST_STATIC_CAPS ("video/x-raw-rgb")
     );
 
-GST_BOILERPLATE (Gstfacedetect, gst_facedetect, GstOpencvVideoFilter,
+GST_BOILERPLATE (GstFacedetect, gst_facedetect, GstOpencvVideoFilter,
     GST_TYPE_OPENCV_VIDEO_FILTER);
 
 static void gst_facedetect_set_property (GObject * object, guint prop_id,
@@ -155,13 +155,13 @@ static gboolean gst_facedetect_set_caps (GstOpencvVideoFilter * transform,
 static GstFlowReturn gst_facedetect_transform_ip (GstOpencvVideoFilter * base,
     GstBuffer * buf, IplImage * img);
 
-static void gst_facedetect_load_profile (Gstfacedetect * filter);
+static void gst_facedetect_load_profile (GstFacedetect * filter);
 
 /* Clean up */
 static void
 gst_facedetect_finalize (GObject * obj)
 {
-  Gstfacedetect *filter = GST_FACEDETECT (obj);
+  GstFacedetect *filter = GST_FACEDETECT (obj);
 
   if (filter->cvGray) {
     cvReleaseImage (&filter->cvGray);
@@ -196,7 +196,7 @@ gst_facedetect_base_init (gpointer gclass)
 
 /* initialize the facedetect's class */
 static void
-gst_facedetect_class_init (GstfacedetectClass * klass)
+gst_facedetect_class_init (GstFacedetectClass * klass)
 {
   GObjectClass *gobject_class;
   GstOpencvVideoFilterClass *gstopencvbasefilter_class;
@@ -249,7 +249,7 @@ gst_facedetect_class_init (GstfacedetectClass * klass)
  * initialize instance structure
  */
 static void
-gst_facedetect_init (Gstfacedetect * filter, GstfacedetectClass * gclass)
+gst_facedetect_init (GstFacedetect * filter, GstFacedetectClass * gclass)
 {
   filter->profile = g_strdup (DEFAULT_PROFILE);
   filter->display = TRUE;
@@ -268,7 +268,7 @@ static void
 gst_facedetect_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec)
 {
-  Gstfacedetect *filter = GST_FACEDETECT (object);
+  GstFacedetect *filter = GST_FACEDETECT (object);
 
   switch (prop_id) {
     case PROP_PROFILE:
@@ -304,7 +304,7 @@ static void
 gst_facedetect_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec)
 {
-  Gstfacedetect *filter = GST_FACEDETECT (object);
+  GstFacedetect *filter = GST_FACEDETECT (object);
 
   switch (prop_id) {
     case PROP_PROFILE:
@@ -342,7 +342,7 @@ gst_facedetect_set_caps (GstOpencvVideoFilter * transform, gint in_width,
     gint in_height, gint in_depth, gint in_channels,
     gint out_width, gint out_height, gint out_depth, gint out_channels)
 {
-  Gstfacedetect *filter;
+  GstFacedetect *filter;
 
   filter = GST_FACEDETECT (transform);
 
@@ -361,7 +361,7 @@ gst_facedetect_set_caps (GstOpencvVideoFilter * transform, gint in_width,
 }
 
 static GstMessage *
-gst_facedetect_message_new (Gstfacedetect * filter, GstBuffer * buf)
+gst_facedetect_message_new (GstFacedetect * filter, GstBuffer * buf)
 {
   GstBaseTransform *trans = GST_BASE_TRANSFORM_CAST (filter);
   GstStructure *s;
@@ -389,7 +389,7 @@ static GstFlowReturn
 gst_facedetect_transform_ip (GstOpencvVideoFilter * base, GstBuffer * buf,
     IplImage * img)
 {
-  Gstfacedetect *filter = GST_FACEDETECT (base);
+  GstFacedetect *filter = GST_FACEDETECT (base);
 
   if (filter->cvCascade) {
     GstMessage *msg = NULL;
@@ -469,7 +469,7 @@ gst_facedetect_transform_ip (GstOpencvVideoFilter * base, GstBuffer * buf,
 
 
 static void
-gst_facedetect_load_profile (Gstfacedetect * filter)
+gst_facedetect_load_profile (GstFacedetect * filter)
 {
   filter->cvCascade =
       (CvHaarClassifierCascade *) cvLoad (filter->profile, 0, 0, 0);

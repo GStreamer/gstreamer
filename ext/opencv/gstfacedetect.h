@@ -59,17 +59,17 @@ G_BEGIN_DECLS
 #define GST_TYPE_FACEDETECT \
   (gst_facedetect_get_type())
 #define GST_FACEDETECT(obj) \
-  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_FACEDETECT,Gstfacedetect))
+  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_FACEDETECT,GstFacedetect))
 #define GST_FACEDETECT_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_FACEDETECT,GstfacedetectClass))
+  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_FACEDETECT,GstFacedetectClass))
 #define GST_IS_FACEDETECT(obj) \
   (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_FACEDETECT))
 #define GST_IS_FACEDETECT_CLASS(klass) \
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_FACEDETECT))
-typedef struct _Gstfacedetect Gstfacedetect;
-typedef struct _GstfacedetectClass GstfacedetectClass;
+typedef struct _GstFacedetect GstFacedetect;
+typedef struct _GstFacedetectClass GstFacedetectClass;
 
-struct _Gstfacedetect
+struct _GstFacedetect
 {
   GstOpencvVideoFilter element;
 
@@ -87,7 +87,7 @@ struct _Gstfacedetect
   CvMemStorage *cvStorage;
 };
 
-struct _GstfacedetectClass
+struct _GstFacedetectClass
 {
   GstOpencvVideoFilterClass parent_class;
 };
