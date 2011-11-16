@@ -114,7 +114,8 @@ out:
 
 /* Generic pad functions */
 static GstIterator *
-gst_stream_synchronizer_iterate_internal_links (GstPad * pad)
+gst_stream_synchronizer_iterate_internal_links (GstPad * pad,
+    GstObject * parent)
 {
   GstIterator *it = NULL;
   GstPad *opad;
