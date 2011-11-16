@@ -1440,7 +1440,7 @@ gst_avdtp_sink_start (GstBaseSink * basesink)
   self->watch_id = 0;
 
   sk = bt_audio_service_open ();
-  if (sk <= 0) {
+  if (sk < 0) {
     err = -errno;
     GST_ERROR_OBJECT (self, "Cannot open connection to bt "
         "audio service: %s %d", strerror (-err), -err);
