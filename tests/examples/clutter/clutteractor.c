@@ -44,9 +44,9 @@ typedef struct GstGLClutterActor_ GstGLClutterActor;
 static gboolean
 create_actor (GstGLClutterActor * actor)
 {
-  ClutterKnot knot[2];
-  ClutterTimeline *timeline;
-  ClutterEffectTemplate *effect_template;
+  //ClutterKnot knot[2];
+  //ClutterTimeline *timeline;
+  ClutterAnimation *animation = NULL;
 
   actor->texture = g_object_new (CLUTTER_GLX_TYPE_TEXTURE_PIXMAP,
       "window", actor->win, "automatic-updates", TRUE, NULL);
@@ -56,39 +56,42 @@ create_actor (GstGLClutterActor * actor)
   clutter_actor_set_opacity (actor->texture, 0);
   clutter_actor_show (actor->texture);
 
-  timeline =
-      clutter_timeline_new (120 /* frames */ , 50 /* frames per second. */ );
-  clutter_timeline_set_loop (timeline, TRUE);
-  clutter_timeline_start (timeline);
+  //timeline =
+  //    clutter_timeline_new (120 /* frames */ , 50 /* frames per second. */ );
+  //clutter_timeline_set_loop (timeline, TRUE);
+  //clutter_timeline_start (timeline);
 
   /* Instead of our custom callback, 
    * we could use a standard callback. For instance, CLUTTER_ALPHA_SINE_INC. 
    */
-  effect_template =
-      clutter_effect_template_new (timeline, CLUTTER_ALPHA_SINE_INC);
+  /*effect_template =
+     clutter_effect_template_new (timeline, CLUTTER_ALPHA_SINE_INC); */
+  animation =
+      clutter_actor_animate (actor->texture, CLUTTER_LINEAR, 2400,
+      "x", 100.0, "y", 100.0, "opacity", 0, NULL);
 
-  knot[0].x = -10;
-  knot[0].y = -10;
-  knot[1].x = 160;
-  knot[1].y = 120;
+  /* knot[0].x = -10;
+     knot[0].y = -10;
+     knot[1].x = 160;
+     knot[1].y = 120;* /
 
-  // Move the actor along the path:
-  clutter_effect_path (effect_template, actor->texture, knot,
-      sizeof (knot) / sizeof (ClutterKnot), NULL, NULL);
-  clutter_effect_scale (effect_template, actor->texture, 1.0, 1.0, NULL, NULL);
-  clutter_effect_rotate (effect_template, actor->texture,
-      CLUTTER_Z_AXIS, 360.0, W / 2.0, H / 2.0, 0.0,
-      CLUTTER_ROTATE_CW, NULL, NULL);
-  clutter_effect_rotate (effect_template, actor->texture,
-      CLUTTER_X_AXIS, 360.0, 0.0, W / 4.0, 0.0, CLUTTER_ROTATE_CW, NULL, NULL);
+     // Move the actor along the path:
+     /*clutter_effect_path (effect_template, actor->texture, knot,
+     sizeof (knot) / sizeof (ClutterKnot), NULL, NULL);
+     clutter_effect_scale (effect_template, actor->texture, 1.0, 1.0, NULL, NULL);
+     clutter_effect_rotate (effect_template, actor->texture,
+     CLUTTER_Z_AXIS, 360.0, W / 2.0, H / 2.0, 0.0,
+     CLUTTER_ROTATE_CW, NULL, NULL);
+     clutter_effect_rotate (effect_template, actor->texture,
+     CLUTTER_X_AXIS, 360.0, 0.0, W / 4.0, 0.0, CLUTTER_ROTATE_CW, NULL, NULL); */
 
   // Also change the actor's opacity while moving it along the path:
   // (You would probably want to use a different ClutterEffectTemplate, 
   // so you could use a different alpha callback for this.)
-  clutter_effect_fade (effect_template, actor->texture, 255, NULL, NULL);
+  //clutter_effect_fade (effect_template, actor->texture, 255, NULL, NULL);
 
-  g_object_unref (effect_template);
-  g_object_unref (timeline);
+  g_object_unref (animation);
+  //g_object_unref (timeline);
 
   return FALSE;
 }
@@ -123,8 +126,12 @@ main (int argc, char *argv[])
   GstGLClutterActor *actor;
   Display *disp;
   Window stage_win;
+  ClutterInitError clutter_err = CLUTTER_INIT_ERROR_UNKNOWN;
 
-  clutter_init (&argc, &argv);
+  clutter_err = clutter_init (&argc, &argv);
+  if (clutter_err != CLUTTER_INIT_SUCCESS)
+    g_warning ("Failed to initalize clutter: %d\n", clutter_err);
+
   gst_init (&argc, &argv);
 
   disp = clutter_x11_get_default_display ();

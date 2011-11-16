@@ -52,18 +52,19 @@ struct _GstGLBuffer
 
 /* rotation */
 void
-on_new_frame (ClutterTimeline * timeline, gint frame_num, gpointer data)
+on_new_frame (ClutterTimeline * timeline, gint msecs, gpointer data)
 {
   ClutterActor *rect_actor = CLUTTER_ACTOR (data);
   ClutterActor *texture_actor =
       g_object_get_data (G_OBJECT (timeline), "texture_actor");
 
-  clutter_actor_set_rotation (rect_actor, CLUTTER_Z_AXIS, (gdouble) frame_num,
-      clutter_actor_get_width (rect_actor) / 2,
+  clutter_actor_set_rotation (rect_actor, CLUTTER_Z_AXIS,
+      60.0 * (gdouble) msecs / 1000.0, clutter_actor_get_width (rect_actor) / 2,
       clutter_actor_get_height (rect_actor) / 2, 0);
 
   clutter_actor_set_rotation (texture_actor, CLUTTER_Z_AXIS,
-      (gdouble) frame_num, clutter_actor_get_width (texture_actor) / 6,
+      60.0 * (gdouble) msecs / 1000.0,
+      clutter_actor_get_width (texture_actor) / 6,
       clutter_actor_get_height (texture_actor) / 6, 0);
 }
 
@@ -96,7 +97,7 @@ setup_stage (ClutterStage * stage)
 
   /* timeline */
 
-  timeline = clutter_timeline_new (360, 60);
+  timeline = clutter_timeline_new (6000);
   g_object_set_data (G_OBJECT (timeline), "texture_actor", texture_actor);
   clutter_timeline_set_loop (timeline, TRUE);
   clutter_timeline_start (timeline);
@@ -125,7 +126,7 @@ update_texture_actor (gpointer data)
   if (glGetError () != GL_NO_ERROR)
     g_debug ("failed to bind texture that comes from gst-gl\n");
   cogl_texture = cogl_texture_new_from_foreign (gst_gl_buf->texture,
-      CGL_TEXTURE_RECTANGLE_ARB, gst_gl_buf->width, gst_gl_buf->height, 0, 0,
+      GL_TEXTURE_RECTANGLE_ARB, gst_gl_buf->width, gst_gl_buf->height, 0, 0,
       COGL_PIXEL_FORMAT_RGBA_8888);
   glBindTexture (GL_TEXTURE_RECTANGLE_ARB, 0);
 
@@ -134,7 +135,7 @@ update_texture_actor (gpointer data)
    * ref counter of the previous cogl texture is reaching 0 because is_foreign is TRUE */
   clutter_texture_set_cogl_texture (CLUTTER_TEXTURE (texture_actor),
       cogl_texture);
-  cogl_texture_unref (cogl_texture);
+  cogl_handle_unref (cogl_texture);
 
   /* we can now show the clutter scene if not yet visible */
   if (!CLUTTER_ACTOR_IS_VISIBLE (stage))
@@ -213,6 +214,7 @@ end_stream_cb (GstBus * bus, GstMessage * msg, gpointer data)
 int
 main (int argc, char *argv[])
 {
+  ClutterInitError clutter_err = CLUTTER_INIT_ERROR_UNKNOWN;
   GLenum err = 0;
 #ifdef WIN32
   HGLRC clutter_gl_context = 0;
@@ -236,9 +238,12 @@ main (int argc, char *argv[])
 
   gst_init (&argc, &argv);
   clutter_threads_init ();
-  clutter_init (&argc, &argv);
+  clutter_err = clutter_init (&argc, &argv);
+  if (clutter_err != CLUTTER_INIT_SUCCESS)
+    g_warning ("Failed to initalize clutter: %d\n", clutter_err);
   clutter_threads_enter ();
   g_print ("clutter version: %s\n", CLUTTER_VERSION_S);
+  clutter_set_default_frame_rate (2);
 
   /* init glew */
 
@@ -287,7 +292,7 @@ main (int argc, char *argv[])
 
   /* clutter_gl_context is an external OpenGL context with which gst-plugins-gl want to share textures */
 
-  glfilter = gst_bin_get_by_name (GST_BIN (pipeline), "glfilter0");
+  glfilter = gst_bin_get_by_name (GST_BIN (pipeline), "glfiltercube0");
   g_object_set (G_OBJECT (glfilter), "external-opengl-context",
       clutter_gl_context, NULL);
   g_object_unref (glfilter);
@@ -372,6 +377,8 @@ main (int argc, char *argv[])
     GstBuffer *buf = g_async_queue_pop (queue_output_buf);
     gst_buffer_unref (buf);
   }
+
+  g_print ("END\n");
 
   return 0;
 }

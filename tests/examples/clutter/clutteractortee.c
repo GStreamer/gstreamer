@@ -135,8 +135,12 @@ main (int argc, char *argv[])
   const gchar *desc;
   gint i;
   gint ok = FALSE;
+  ClutterInitError clutter_err = CLUTTER_INIT_ERROR_UNKNOWN;
 
-  clutter_init (&argc, &argv);
+  clutter_err = clutter_init (&argc, &argv);
+  if (clutter_err != CLUTTER_INIT_SUCCESS)
+    g_warning ("Failed to initalize clutter: %d\n", clutter_err);
+
   gst_init (&argc, &argv);
 
   disp = clutter_x11_get_default_display ();

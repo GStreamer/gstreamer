@@ -79,8 +79,8 @@ void gst_gl_shader_set_vertex_source   (GstGLShader *shader,
 					const gchar *src);
 void gst_gl_shader_set_fragment_source (GstGLShader *shader, 
 					const gchar *src);
-G_CONST_RETURN gchar * gst_gl_shader_get_vertex_source (GstGLShader *shader);
-G_CONST_RETURN gchar * gst_gl_shader_get_fragment_source (GstGLShader *shader);
+const gchar * gst_gl_shader_get_vertex_source (GstGLShader *shader);
+const gchar * gst_gl_shader_get_fragment_source (GstGLShader *shader);
 
 void gst_gl_shader_set_active (GstGLShader *shader,
 			       gboolean active);

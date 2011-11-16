@@ -90,7 +90,8 @@ G_DEFINE_TYPE (GstGLWindow, gst_gl_window, G_TYPE_OBJECT);
 
 gboolean _gst_gl_window_debug = FALSE;
 
-void gst_gl_window_init_platform ()
+void
+gst_gl_window_init_platform ()
 {
 }
 
@@ -648,7 +649,7 @@ gst_gl_window_run_loop (GstGLWindow * window)
     g_mutex_lock (priv->x_lock);
 
     // use in generic/cube and other related uses
-    priv->allow_extra_expose_events = XPending (priv->device) <= 2;
+    priv->allow_extra_expose_events = XPending (priv->device) <= 0;
 
     switch (event.type) {
       case ClientMessage:
