@@ -547,7 +547,7 @@ gst_speex_enc_encode (GstSpeexEnc * enc, GstBuffer * buf)
   gint frame_size = enc->frame_size;
   gint bytes = frame_size * 2 * enc->channels, samples, size;
   gint outsize, written, dtx_ret = 0;
-  guint8 *data;
+  guint8 *data, *data0 = NULL;
   GstBuffer *outbuf;
   GstFlowReturn ret = GST_FLOW_OK;
 
@@ -558,7 +558,7 @@ gst_speex_enc_encode (GstSpeexEnc * enc, GstBuffer * buf)
     if (G_UNLIKELY (size % bytes)) {
       GST_DEBUG_OBJECT (enc, "draining; adding silence samples");
       size = ((size / bytes) + 1) * bytes;
-      data = g_malloc0 (size);
+      data0 = data = g_malloc0 (size);
       memcpy (data, GST_BUFFER_DATA (buf), GST_BUFFER_SIZE (buf));
     }
   } else {
@@ -610,6 +610,7 @@ gst_speex_enc_encode (GstSpeexEnc * enc, GstBuffer * buf)
       outbuf, samples);
 
 done:
+  g_free (data0);
   return ret;
 }
 
