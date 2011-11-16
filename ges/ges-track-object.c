@@ -1051,8 +1051,7 @@ ges_track_object_lookup_child (GESTrackObject * object, const gchar * prop_name,
     if (g_strcmp0 (G_PARAM_SPEC (key)->name, name) == 0) {
       if (classename == NULL ||
           g_strcmp0 (G_OBJECT_TYPE_NAME (G_OBJECT (value)), classename) == 0) {
-        GST_DEBUG ("The %s property from %s has been found in %s", name,
-            classename, GST_OBJECT_NAME (GST_OBJECT (element)));
+        GST_DEBUG ("The %s property from %s has been found", name, classename);
         if (element)
           *element = g_object_ref (value);
 
