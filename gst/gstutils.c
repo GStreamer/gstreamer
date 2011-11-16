@@ -2731,7 +2731,6 @@ query_accept_caps_func (GstPad * pad, QueryAcceptCapsData * data)
 gboolean
 gst_pad_proxy_query_accept_caps (GstPad * pad, GstQuery * query)
 {
-  GstElement *element;
   QueryAcceptCapsData data;
 
   g_return_val_if_fail (GST_IS_PAD (pad), FALSE);
@@ -2741,28 +2740,14 @@ gst_pad_proxy_query_accept_caps (GstPad * pad, GstQuery * query)
   GST_CAT_DEBUG (GST_CAT_PADS, "proxying accept caps query for %s:%s",
       GST_DEBUG_PAD_NAME (pad));
 
-  element = gst_pad_get_parent_element (pad);
-  if (element == NULL)
-    goto no_parent;
-
   data.query = query;
   /* value to hold the return, by default it holds TRUE */
   data.ret = TRUE;
 
   gst_pad_forward (pad, (GstPadForwardFunction) query_accept_caps_func, &data);
-
-  gst_object_unref (element);
-
   gst_query_set_accept_caps_result (query, data.ret);
 
   return TRUE;
-
-  /* ERRORS */
-no_parent:
-  {
-    GST_DEBUG_OBJECT (pad, "no parent");
-    return FALSE;
-  }
 }
 
 typedef struct
@@ -2810,7 +2795,6 @@ query_caps_func (GstPad * pad, QueryCapsData * data)
 gboolean
 gst_pad_proxy_query_caps (GstPad * pad, GstQuery * query)
 {
-  GstElement *element;
   GstCaps *intersected;
   QueryCapsData data;
 
@@ -2821,17 +2805,11 @@ gst_pad_proxy_query_caps (GstPad * pad, GstQuery * query)
   GST_CAT_DEBUG (GST_CAT_PADS, "proxying caps query for %s:%s",
       GST_DEBUG_PAD_NAME (pad));
 
-  element = gst_pad_get_parent_element (pad);
-  if (element == NULL)
-    goto no_parent;
-
   data.query = query;
   /* value to hold the return, by default it holds ANY */
   data.ret = gst_caps_new_any ();
 
   gst_pad_forward (pad, (GstPadForwardFunction) query_caps_func, &data);
-
-  gst_object_unref (element);
 
   if (data.ret) {
     intersected =
@@ -2844,13 +2822,6 @@ gst_pad_proxy_query_caps (GstPad * pad, GstQuery * query)
   gst_caps_unref (intersected);
 
   return TRUE;
-
-  /* ERRORS */
-no_parent:
-  {
-    GST_DEBUG_OBJECT (pad, "no parent");
-    return FALSE;
-  }
 }
 
 /**
