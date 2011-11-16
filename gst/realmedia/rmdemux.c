@@ -144,7 +144,8 @@ static gboolean gst_rmdemux_sink_activate_pull (GstPad * sinkpad,
 static gboolean gst_rmdemux_sink_event (GstPad * pad, GstEvent * event);
 static gboolean gst_rmdemux_src_event (GstPad * pad, GstEvent * event);
 static void gst_rmdemux_send_event (GstRMDemux * rmdemux, GstEvent * event);
-static gboolean gst_rmdemux_src_query (GstPad * pad, GstQuery * query);
+static gboolean gst_rmdemux_src_query (GstPad * pad, GstObject * parent,
+    GstQuery * query);
 static gboolean gst_rmdemux_perform_seek (GstRMDemux * rmdemux,
     GstEvent * event);
 
@@ -608,12 +609,12 @@ error:
 
 
 static gboolean
-gst_rmdemux_src_query (GstPad * pad, GstQuery * query)
+gst_rmdemux_src_query (GstPad * pad, GstObject * parent, GstQuery * query)
 {
   gboolean res = FALSE;
   GstRMDemux *rmdemux;
 
-  rmdemux = GST_RMDEMUX (gst_pad_get_parent (pad));
+  rmdemux = GST_RMDEMUX (parent);
 
   switch (GST_QUERY_TYPE (query)) {
     case GST_QUERY_POSITION:
@@ -651,11 +652,10 @@ gst_rmdemux_src_query (GstPad * pad, GstQuery * query)
       break;
     }
     default:
-      res = gst_pad_query_default (pad, query);
+      res = gst_pad_query_default (pad, parent, query);
       break;
   }
 
-  gst_object_unref (rmdemux);
   return res;
 }
 

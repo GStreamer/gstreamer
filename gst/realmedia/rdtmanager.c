@@ -120,7 +120,8 @@ static void gst_rdt_manager_set_property (GObject * object,
 static void gst_rdt_manager_get_property (GObject * object,
     guint prop_id, GValue * value, GParamSpec * pspec);
 
-static gboolean gst_rdt_manager_query_src (GstPad * pad, GstQuery * query);
+static gboolean gst_rdt_manager_query_src (GstPad * pad, GstObject * parent,
+    GstQuery * query);
 static gboolean gst_rdt_manager_src_activate_push (GstPad * pad,
     gboolean active);
 
@@ -524,12 +525,12 @@ gst_rdt_manager_finalize (GObject * object)
 }
 
 static gboolean
-gst_rdt_manager_query_src (GstPad * pad, GstQuery * query)
+gst_rdt_manager_query_src (GstPad * pad, GstObject * parent, GstQuery * query)
 {
   GstRDTManager *rdtmanager;
   gboolean res;
 
-  rdtmanager = GST_RDT_MANAGER (GST_PAD_PARENT (pad));
+  rdtmanager = GST_RDT_MANAGER (parent);
 
   switch (GST_QUERY_TYPE (query)) {
     case GST_QUERY_LATENCY:
@@ -547,7 +548,7 @@ gst_rdt_manager_query_src (GstPad * pad, GstQuery * query)
       break;
     }
     default:
-      res = gst_pad_query_default (pad, query);
+      res = gst_pad_query_default (pad, parent, query);
       break;
   }
   return res;

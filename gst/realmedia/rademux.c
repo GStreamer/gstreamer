@@ -69,7 +69,8 @@ static GstStateChangeReturn gst_real_audio_demux_change_state (GstElement * e,
 static GstFlowReturn gst_real_audio_demux_chain (GstPad * pad, GstBuffer * buf);
 static gboolean gst_real_audio_demux_sink_event (GstPad * pad, GstEvent * ev);
 static gboolean gst_real_audio_demux_src_event (GstPad * pad, GstEvent * ev);
-static gboolean gst_real_audio_demux_src_query (GstPad * pad, GstQuery * query);
+static gboolean gst_real_audio_demux_src_query (GstPad * pad,
+    GstObject * parent, GstQuery * query);
 static void gst_real_audio_demux_loop (GstRealAudioDemux * demux);
 static gboolean gst_real_audio_demux_sink_activate (GstPad * sinkpad);
 static gboolean gst_real_audio_demux_sink_activate_push (GstPad * sinkpad,
@@ -859,12 +860,13 @@ gst_real_audio_demux_src_event (GstPad * pad, GstEvent * event)
 }
 
 static gboolean
-gst_real_audio_demux_src_query (GstPad * pad, GstQuery * query)
+gst_real_audio_demux_src_query (GstPad * pad, GstObject * parent,
+    GstQuery * query)
 {
   GstRealAudioDemux *demux;
   gboolean ret = FALSE;
 
-  demux = GST_REAL_AUDIO_DEMUX (gst_pad_get_parent (pad));
+  demux = GST_REAL_AUDIO_DEMUX (parent);
 
   switch (GST_QUERY_TYPE (query)) {
     case GST_QUERY_DURATION:{
@@ -893,11 +895,10 @@ gst_real_audio_demux_src_query (GstPad * pad, GstQuery * query)
       break;
     }
     default:
-      ret = gst_pad_query_default (pad, query);
+      ret = gst_pad_query_default (pad, parent, query);
       break;
   }
 
-  gst_object_unref (demux);
   return ret;
 }
 

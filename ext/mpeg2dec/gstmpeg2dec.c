@@ -86,7 +86,8 @@ static GstIndex *gst_mpeg2dec_get_index (GstElement * element);
 
 static gboolean gst_mpeg2dec_src_event (GstPad * pad, GstEvent * event);
 
-static gboolean gst_mpeg2dec_src_query (GstPad * pad, GstQuery * query);
+static gboolean gst_mpeg2dec_src_query (GstPad * pad, GstObject * parent,
+    GstQuery * query);
 
 static gboolean gst_mpeg2dec_sink_convert (GstPad * pad, GstFormat src_format,
     gint64 src_value, GstFormat * dest_format, gint64 * dest_value);
@@ -102,7 +103,7 @@ static GstFlowReturn gst_mpeg2dec_chain (GstPad * pad, GstBuffer * buf);
 
 static void clear_buffers (GstMpeg2dec * mpeg2dec);
 
-//static gboolean gst_mpeg2dec_sink_query (GstPad * pad, GstQuery * query);
+//static gboolean gst_mpeg2dec_sink_query (GstPad * pad, GstObject * parent, GstQuery * query);
 
 #if 0
 static const GstFormat *gst_mpeg2dec_get_formats (GstPad * pad);
@@ -1443,12 +1444,12 @@ gst_mpeg2dec_src_convert (GstPad * pad, GstFormat src_format, gint64 src_value,
 }
 
 static gboolean
-gst_mpeg2dec_src_query (GstPad * pad, GstQuery * query)
+gst_mpeg2dec_src_query (GstPad * pad, GstObject * parent, GstQuery * query)
 {
   gboolean res = TRUE;
   GstMpeg2dec *mpeg2dec;
 
-  mpeg2dec = GST_MPEG2DEC (GST_PAD_PARENT (pad));
+  mpeg2dec = GST_MPEG2DEC (parent);
 
   switch (GST_QUERY_TYPE (query)) {
     case GST_QUERY_POSITION:
@@ -1485,17 +1486,12 @@ gst_mpeg2dec_src_query (GstPad * pad, GstQuery * query)
       GstFormat format;
       GstFormat rformat;
       gint64 total, total_bytes;
-      GstPad *peer;
-
-      if ((peer = gst_pad_get_peer (mpeg2dec->sinkpad)) == NULL)
-        goto error;
 
       /* save requested format */
       gst_query_parse_duration (query, &format, NULL);
 
       /* send to peer */
-      if ((res = gst_pad_query (peer, query))) {
-        gst_object_unref (peer);
+      if ((res = gst_pad_peer_query (mpeg2dec->sinkpad, query))) {
         goto done;
       } else {
         GST_LOG_OBJECT (mpeg2dec, "query on peer pad failed, trying bytes");
@@ -1504,12 +1500,10 @@ gst_mpeg2dec_src_query (GstPad * pad, GstQuery * query)
       /* query peer for total length in bytes */
       gst_query_set_duration (query, GST_FORMAT_BYTES, -1);
 
-      if (!(res = gst_pad_query (peer, query))) {
+      if (!(res = gst_pad_peer_query (mpeg2dec->sinkpad, query))) {
         GST_LOG_OBJECT (mpeg2dec, "query on peer pad failed");
-        gst_object_unref (peer);
         goto error;
       }
-      gst_object_unref (peer);
 
       /* get the returned format */
       gst_query_parse_duration (query, &rformat, &total_bytes);
@@ -1532,7 +1526,7 @@ gst_mpeg2dec_src_query (GstPad * pad, GstQuery * query)
       break;
     }
     default:
-      res = gst_pad_query_default (pad, query);
+      res = gst_pad_query_default (pad, parent, query);
       break;
   }
 done:

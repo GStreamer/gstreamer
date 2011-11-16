@@ -133,7 +133,7 @@ static gboolean gst_siddec_sink_event (GstPad * pad, GstEvent * event);
 static gboolean gst_siddec_src_convert (GstPad * pad, GstFormat src_format,
     gint64 src_value, GstFormat * dest_format, gint64 * dest_value);
 static gboolean gst_siddec_src_event (GstPad * pad, GstEvent * event);
-static gboolean gst_siddec_src_query (GstPad * pad, GstQuery * query);
+static gboolean gst_siddec_src_query (GstPad * pad, GstObject * parent, GstQuery * query);
 
 static void gst_siddec_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
@@ -625,12 +625,12 @@ gst_siddec_src_event (GstPad * pad, GstEvent * event)
 }
 
 static gboolean
-gst_siddec_src_query (GstPad * pad, GstQuery * query)
+gst_siddec_src_query (GstPad * pad, GstObject * parent, GstQuery * query)
 {
   gboolean res = TRUE;
   GstSidDec *siddec;
 
-  siddec = GST_SIDDEC (gst_pad_get_parent (pad));
+  siddec = GST_SIDDEC (parent);
 
   switch (GST_QUERY_TYPE (query)) {
     case GST_QUERY_POSITION:
@@ -649,10 +649,9 @@ gst_siddec_src_query (GstPad * pad, GstQuery * query)
       break;
     }
     default:
-      res = gst_pad_query_default (pad, query);
+      res = gst_pad_query_default (pad, parent, query);
       break;
   }
-  gst_object_unref (siddec);
 
   return res;
 }

@@ -83,7 +83,8 @@ static gboolean gst_asf_demux_element_send_event (GstElement * element,
     GstEvent * event);
 static gboolean gst_asf_demux_send_event_unlocked (GstASFDemux * demux,
     GstEvent * event);
-static gboolean gst_asf_demux_handle_src_query (GstPad * pad, GstQuery * query);
+static gboolean gst_asf_demux_handle_src_query (GstPad * pad,
+    GstObject * parent, GstQuery * query);
 static GstFlowReturn gst_asf_demux_chain (GstPad * pad, GstBuffer * buf);
 static gboolean gst_asf_demux_sink_event (GstPad * pad, GstEvent * event);
 static GstFlowReturn gst_asf_demux_process_object (GstASFDemux * demux,
@@ -3849,12 +3850,13 @@ gst_asf_demux_send_event_unlocked (GstASFDemux * demux, GstEvent * event)
 }
 
 static gboolean
-gst_asf_demux_handle_src_query (GstPad * pad, GstQuery * query)
+gst_asf_demux_handle_src_query (GstPad * pad, GstObject * parent,
+    GstQuery * query)
 {
   GstASFDemux *demux;
   gboolean res = FALSE;
 
-  demux = GST_ASF_DEMUX (gst_pad_get_parent (pad));
+  demux = GST_ASF_DEMUX (parent);
 
   GST_DEBUG ("handling %s query",
       gst_query_type_get_name (GST_QUERY_TYPE (query)));
@@ -3937,7 +3939,7 @@ gst_asf_demux_handle_src_query (GstPad * pad, GstQuery * query)
           gboolean seekable;
 
           /* try downstream first in TIME */
-          res = gst_pad_query_default (pad, query);
+          res = gst_pad_query_default (pad, parent, query);
 
           gst_query_parse_seeking (query, &fmt, &seekable, NULL, NULL);
           GST_LOG_OBJECT (demux, "upstream %s seekable %d",
@@ -3974,7 +3976,7 @@ gst_asf_demux_handle_src_query (GstPad * pad, GstQuery * query)
        * but we might end up in a live (rtsp) one ... */
 
       /* first forward */
-      res = gst_pad_query_default (pad, query);
+      res = gst_pad_query_default (pad, parent, query);
       if (!res)
         break;
 
@@ -3995,11 +3997,10 @@ gst_asf_demux_handle_src_query (GstPad * pad, GstQuery * query)
       break;
     }
     default:
-      res = gst_pad_query_default (pad, query);
+      res = gst_pad_query_default (pad, parent, query);
       break;
   }
 
-  gst_object_unref (demux);
   return res;
 }
 
