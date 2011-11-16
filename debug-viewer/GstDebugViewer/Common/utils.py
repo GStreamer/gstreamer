@@ -171,7 +171,7 @@ class SaveWriteFile (object):
                                   temp_filename)
                 try:
                     os.unlink (temp_filename)
-                except EnvironmentError, exc:
+                except EnvironmentError as exc:
                     self.logger.warning ("deleting stale temporary file "
                                          "failed: %s", exc)
 
@@ -190,7 +190,7 @@ class SaveWriteFile (object):
         if self.temp_name:
             try:
                 os.rename (self.temp_name, self.target_name)
-            except OSError, exc:
+            except OSError as exc:
                 import errno
                 if exc.errno == errno.EEXIST:
                     # We are probably on windows.
@@ -206,7 +206,7 @@ class SaveWriteFile (object):
 
             try:
                 os.unlink (self.temp_name)
-            except EnvironmentError, exc:
+            except EnvironmentError as exc:
                 self.logger.warning ("deleting temporary file failed: %s", exc)
             self.temp_name = None
 
@@ -301,7 +301,7 @@ class DevhelpClient (object):
         try:
             proc = FixedPopen (("devhelp",) + args,
                                stdout = PIPE)
-        except OSError, exc:
+        except OSError as exc:
             self._check_os_error (exc)
             raise
 
@@ -318,7 +318,7 @@ class DevhelpClient (object):
 
         try:
             proc = FixedPopen (("devhelp",) + args)
-        except OSError, exc:
+        except OSError as exc:
             self._check_os_error (exc)
             raise
 

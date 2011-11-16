@@ -363,7 +363,7 @@ class OptionParser (object):
 
         try:
             result_argv = context.parse (argv)
-        except gobject.GError, exc:
+        except gobject.GError as exc:
             raise OptionError (exc.message)
 
         self.__remaining_args = result_argv[1:]
@@ -437,7 +437,7 @@ def _init_locale (gettext_domain = None):
     if Paths.locale_dir and gettext_domain is not None:
         try:
             locale.setlocale (locale.LC_ALL, "")
-        except locale.Error, exc:
+        except locale.Error as exc:
             from warnings import warn
             warn ("locale error: %s" % (exc,),
                   RuntimeWarning,
@@ -455,7 +455,7 @@ def _init_options (option_parser = None):
 
     try:
         option_parser.parse (sys.argv)
-    except OptionError, exc:
+    except OptionError as exc:
         print >> sys.stderr, exc.args[0]
         sys.exit (1)
 

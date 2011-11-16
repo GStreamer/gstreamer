@@ -419,7 +419,7 @@ class Window (object):
 
             try:
                 select_index = model.line_index_from_top (selected_index)
-            except IndexError, exc:
+            except IndexError as exc:
                 self.logger.debug ("abs line index %i filtered out, not reselecting",
                                    selected_index)
             else:
@@ -741,7 +741,7 @@ class Window (object):
 
                 self.dispatcher = Common.Data.GSourceDispatcher ()
                 self.log_file = Data.LogFile (filename, self.dispatcher)
-            except EnvironmentError, exc:
+            except EnvironmentError as exc:
                 try:
                     file_size = os.path.getsize (filename)
                 except EnvironmentError:

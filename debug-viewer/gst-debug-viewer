@@ -51,7 +51,7 @@ def main ():
 
     try:
         import GstDebugViewer
-    except ImportError, exc:
+    except ImportError as exc:
         print >> sys.stderr, str (exc)
         sys.exit (1)
     else:
