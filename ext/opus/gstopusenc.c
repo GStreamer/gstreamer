@@ -80,6 +80,32 @@ gst_opus_enc_bandwidth_get_type (void)
   return id;
 }
 
+#define GST_OPUS_ENC_TYPE_FRAME_SIZE (gst_opus_enc_frame_size_get_type())
+static GType
+gst_opus_enc_frame_size_get_type (void)
+{
+  static const GEnumValue values[] = {
+    {2, "2.5", "2.5"},
+    {5, "5", "5"},
+    {10, "10", "10"},
+    {20, "20", "20"},
+    {40, "40", "40"},
+    {60, "60", "60"},
+    {0, NULL, NULL}
+  };
+  static volatile GType id = 0;
+
+  if (g_once_init_enter ((gsize *) & id)) {
+    GType _id;
+
+    _id = g_enum_register_static ("GstOpusEncFrameSize", values);
+
+    g_once_init_leave ((gsize *) & id, _id);
+  }
+
+  return id;
+}
+
 static GstStaticPadTemplate sink_factory = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
@@ -216,8 +242,9 @@ gst_opus_enc_class_init (GstOpusEncClass * klass)
           "Audio Band Width", GST_OPUS_ENC_TYPE_BANDWIDTH, DEFAULT_BANDWIDTH,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_FRAME_SIZE,
-      g_param_spec_int ("frame-size", "Frame Size",
-          "The duration of an audio frame, in ms", 2, 60, DEFAULT_FRAMESIZE,
+      g_param_spec_enum ("frame-size", "Frame Size",
+          "The duration of an audio frame, in ms",
+          GST_OPUS_ENC_TYPE_FRAME_SIZE, DEFAULT_FRAMESIZE,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_CBR,
       g_param_spec_boolean ("cbr", "Constant bit rate",
@@ -740,7 +767,7 @@ gst_opus_enc_get_property (GObject * object, guint prop_id, GValue * value,
       g_value_set_enum (value, enc->bandwidth);
       break;
     case PROP_FRAME_SIZE:
-      g_value_set_int (value, enc->frame_size);
+      g_value_set_enum (value, enc->frame_size);
       break;
     case PROP_CBR:
       g_value_set_boolean (value, enc->cbr);
@@ -785,7 +812,7 @@ gst_opus_enc_set_property (GObject * object, guint prop_id,
       enc->bandwidth = g_value_get_enum (value);
       break;
     case PROP_FRAME_SIZE:
-      enc->frame_size = g_value_get_int (value);
+      enc->frame_size = g_value_get_enum (value);
       break;
     case PROP_CBR:
       enc->cbr = g_value_get_boolean (value);
