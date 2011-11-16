@@ -226,7 +226,7 @@ gst_opus_enc_class_init (GstOpusEncClass * klass)
           "Constant bit rate", DEFAULT_CBR,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_CONSTRAINED_VBR,
-      g_param_spec_boolean ("constrained-cbr", "Constrained VBR",
+      g_param_spec_boolean ("constrained-vbr", "Constrained VBR",
           "Constrained VBR", DEFAULT_CONSTRAINED_VBR,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_COMPLEXITY,
