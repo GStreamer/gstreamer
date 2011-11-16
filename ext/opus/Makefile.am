@@ -2,10 +2,12 @@ plugin_LTLIBRARIES = libgstopus.la
 
 libgstopus_la_SOURCES = gstopus.c gstopusdec.c gstopusenc.c
 libgstopus_la_CFLAGS = \
+        -DGST_USE_UNSTABLE_API \
 	$(GST_PLUGINS_BASE_CFLAGS) \
 	$(GST_CFLAGS) \
 	$(OPUS_CFLAGS)
 libgstopus_la_LIBADD = \
+	-lgstaudio-$(GST_MAJORMINOR) \
 	$(GST_PLUGINS_BASE_LIBS) -lgsttag-$(GST_MAJORMINOR) \
 	$(GST_BASE_LIBS) \
 	$(GST_LIBS) \
