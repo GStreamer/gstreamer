@@ -3,6 +3,7 @@
  * Copyright (C) 2005 Thomas Vander Stichele <thomas@apestaart.org>
  * Copyright (C) 2005 Ronald S. Bultje <rbultje@ronald.bitfreak.net>
  * Copyright (C) 2008 Michael Sheldon <mike@mikeasoft.com>
+ * Copyright (C) 2011 Stefan Sauer <ensonic@users.sf.net>
  * 
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -75,7 +76,10 @@ struct _GstFacedetect
 
   gboolean display;
 
-  gchar *profile;
+  gchar *face_profile;
+  gchar *nose_profile;
+  gchar *mouth_profile;
+  gchar *eyes_profile;
   gdouble scale_factor;
   gint min_neighbors;
   gint flags;
@@ -83,7 +87,10 @@ struct _GstFacedetect
   gint min_size_height;
 
   IplImage *cvGray;
-  CvHaarClassifierCascade *cvCascade;
+  CvHaarClassifierCascade *cvFaceDetect;
+  CvHaarClassifierCascade *cvNoseDetect;
+  CvHaarClassifierCascade *cvMouthDetect;
+  CvHaarClassifierCascade *cvEyesDetect;
   CvMemStorage *cvStorage;
 };
 
