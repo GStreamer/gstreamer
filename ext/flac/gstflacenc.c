@@ -477,6 +477,8 @@ gst_flac_enc_stop (GstAudioEncoder * enc)
   g_list_free (flacenc->headers);
   flacenc->headers = NULL;
 
+  gst_tag_setter_reset_tags (GST_TAG_SETTER (enc));
+
   return TRUE;
 }
 
