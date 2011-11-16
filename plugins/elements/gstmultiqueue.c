@@ -575,12 +575,12 @@ gst_multi_queue_get_property (GObject * object, guint prop_id,
 }
 
 static GstIterator *
-gst_multi_queue_iterate_internal_links (GstPad * pad)
+gst_multi_queue_iterate_internal_links (GstPad * pad, GstObject * parent)
 {
   GstIterator *it = NULL;
   GstPad *opad;
   GstSingleQueue *squeue;
-  GstMultiQueue *mq = GST_MULTI_QUEUE (GST_PAD_PARENT (pad));
+  GstMultiQueue *mq = GST_MULTI_QUEUE (parent);
   GValue val = { 0, };
 
   GST_MULTI_QUEUE_MUTEX_LOCK (mq);

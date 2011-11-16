@@ -234,6 +234,7 @@ gst_proxy_pad_query_default (GstPad * pad, GstObject * parent, GstQuery * query)
 /**
  * gst_proyx_pad_iterate_internal_links_default:
  * @pad: the #GstPad to get the internal links of.
+ * @parent: the parent of @pad or NULL
  *
  * Invoke the default iterate internal links function of the proxy pad.
  *
@@ -243,7 +244,7 @@ gst_proxy_pad_query_default (GstPad * pad, GstObject * parent, GstQuery * query)
  * Since: 0.10.36
  */
 GstIterator *
-gst_proxy_pad_iterate_internal_links_default (GstPad * pad)
+gst_proxy_pad_iterate_internal_links_default (GstPad * pad, GstObject * parent)
 {
   GstIterator *res = NULL;
   GstPad *internal;

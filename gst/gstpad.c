@@ -2390,6 +2390,7 @@ no_peer:
 /**
  * gst_pad_iterate_internal_links_default:
  * @pad: the #GstPad to get the internal links of.
+ * @parent: the parent of @pad or NULL
  *
  * Iterate the list of pads to which the given pad is linked to inside of
  * the parent element.
@@ -2404,38 +2405,39 @@ no_peer:
  * Since: 0.10.21
  */
 GstIterator *
-gst_pad_iterate_internal_links_default (GstPad * pad)
+gst_pad_iterate_internal_links_default (GstPad * pad, GstObject * parent)
 {
   GstIterator *res;
   GList **padlist;
   guint32 *cookie;
   GMutex *lock;
   gpointer owner;
+  GstElement *eparent;
 
   g_return_val_if_fail (GST_IS_PAD (pad), NULL);
 
-  {
-    GstElement *parent;
-
+  if (parent != NULL && GST_IS_ELEMENT (parent)) {
+    eparent = GST_ELEMENT_CAST (gst_object_ref (parent));
+  } else {
     GST_OBJECT_LOCK (pad);
-    parent = GST_PAD_PARENT (pad);
-    if (!parent || !GST_IS_ELEMENT (parent))
+    eparent = GST_PAD_PARENT (pad);
+    if (!eparent || !GST_IS_ELEMENT (eparent))
       goto no_parent;
 
-    gst_object_ref (parent);
+    gst_object_ref (eparent);
     GST_OBJECT_UNLOCK (pad);
-
-    if (pad->direction == GST_PAD_SRC)
-      padlist = &parent->sinkpads;
-    else
-      padlist = &parent->srcpads;
-
-    GST_DEBUG_OBJECT (pad, "Making iterator");
-
-    cookie = &parent->pads_cookie;
-    owner = parent;
-    lock = GST_OBJECT_GET_LOCK (parent);
   }
+
+  if (pad->direction == GST_PAD_SRC)
+    padlist = &eparent->sinkpads;
+  else
+    padlist = &eparent->srcpads;
+
+  GST_DEBUG_OBJECT (pad, "Making iterator");
+
+  cookie = &eparent->pads_cookie;
+  owner = eparent;
+  lock = GST_OBJECT_GET_LOCK (eparent);
 
   res = gst_iterator_new_list (GST_TYPE_PAD,
       lock, cookie, padlist, (GObject *) owner, NULL);
@@ -2484,7 +2486,7 @@ gst_pad_iterate_internal_links (GstPad * pad)
   GST_OBJECT_UNLOCK (pad);
 
   if (GST_PAD_ITERINTLINKFUNC (pad))
-    res = GST_PAD_ITERINTLINKFUNC (pad) (pad);
+    res = GST_PAD_ITERINTLINKFUNC (pad) (pad, parent);
 
   RELEASE_PARENT (parent);
 

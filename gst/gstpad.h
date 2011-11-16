@@ -353,6 +353,9 @@ typedef gboolean		(*GstPadEventFunction)		(GstPad *pad, GstEvent *event);
 /**
  * GstPadIterIntLinkFunction:
  * @pad: The #GstPad to query.
+ * @parent: the parent of @pad. If the #GST_PAD_FLAG_NEED_PARENT flag is set,
+ *          @parent is guaranteed to be not-NULL and remain valid during the
+ *          execution of this function.
  *
  * The signature of the internal pad link iterator function.
  *
@@ -363,7 +366,7 @@ typedef gboolean		(*GstPadEventFunction)		(GstPad *pad, GstEvent *event);
  *
  * Since 0.10.21
  */
-typedef GstIterator*           (*GstPadIterIntLinkFunction)    (GstPad *pad);
+typedef GstIterator*           (*GstPadIterIntLinkFunction)    (GstPad *pad, GstObject *parent);
 
 /* generic query function */
 /**
@@ -876,7 +879,7 @@ gboolean		gst_pad_stop_task			(GstPad *pad);
 void                    gst_pad_set_iterate_internal_links_function (GstPad * pad,
                                                                  GstPadIterIntLinkFunction iterintlink);
 GstIterator *           gst_pad_iterate_internal_links          (GstPad * pad);
-GstIterator *           gst_pad_iterate_internal_links_default  (GstPad * pad);
+GstIterator *           gst_pad_iterate_internal_links_default  (GstPad * pad, GstObject *parent);
 
 
 /* generic query function */

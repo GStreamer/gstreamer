@@ -181,7 +181,8 @@ static void gst_selector_pad_reset (GstSelectorPad * pad);
 static gboolean gst_selector_pad_event (GstPad * pad, GstEvent * event);
 static gboolean gst_selector_pad_query (GstPad * pad, GstObject * parent,
     GstQuery * query);
-static GstIterator *gst_selector_pad_iterate_linked_pads (GstPad * pad);
+static GstIterator *gst_selector_pad_iterate_linked_pads (GstPad * pad,
+    GstObject * parent);
 static GstFlowReturn gst_selector_pad_chain (GstPad * pad, GstBuffer * buf);
 
 G_DEFINE_TYPE (GstSelectorPad, gst_selector_pad, GST_TYPE_PAD);
@@ -330,14 +331,14 @@ gst_selector_pad_reset (GstSelectorPad * pad)
 /* strictly get the linked pad from the sinkpad. If the pad is active we return
  * the srcpad else we return NULL */
 static GstIterator *
-gst_selector_pad_iterate_linked_pads (GstPad * pad)
+gst_selector_pad_iterate_linked_pads (GstPad * pad, GstObject * parent)
 {
   GstInputSelector *sel;
   GstPad *otherpad;
   GstIterator *it = NULL;
   GValue val = { 0, };
 
-  sel = GST_INPUT_SELECTOR (GST_PAD_PARENT (pad));
+  sel = GST_INPUT_SELECTOR (parent);
 
   otherpad = gst_input_selector_get_linked_pad (sel, pad, TRUE);
   if (otherpad) {
