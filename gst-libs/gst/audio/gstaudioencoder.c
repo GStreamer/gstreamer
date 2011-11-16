@@ -1073,6 +1073,13 @@ gst_audio_encoder_sink_setcaps (GstPad * pad, GstCaps * caps)
     if (klass->set_format)
       res = klass->set_format (enc, state);
 
+    /* invalidate state to ensure no casual carrying on */
+    if (!res) {
+      GST_DEBUG_OBJECT (enc, "subclass did not accept format");
+      gst_audio_info_clear (state);
+      goto exit;
+    }
+
     /* notify if new latency */
     GST_OBJECT_LOCK (enc);
     if ((ctx->min_latency > 0 && ctx->min_latency != old_min_latency) ||
