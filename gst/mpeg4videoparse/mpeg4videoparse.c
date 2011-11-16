@@ -610,7 +610,7 @@ plugin_init (GstPlugin * plugin)
   GST_DEBUG_CATEGORY_INIT (mpeg4v_parse_debug, "mpeg4videoparse", 0,
       "MPEG-4 video parser");
 
-  if (!gst_element_register (plugin, "mpeg4videoparse", GST_RANK_SECONDARY,
+  if (!gst_element_register (plugin, "mpeg4videoparse", GST_RANK_PRIMARY + 1,
           gst_mpeg4vparse_get_type ()))
     return FALSE;
 
