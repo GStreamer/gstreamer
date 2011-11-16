@@ -772,10 +772,7 @@ gst_base_audio_visualizer_ensure_negotiated (GstBaseAudioVisualizer * scope)
 {
   gboolean reconfigure;
 
-  GST_OBJECT_LOCK (scope->srcpad);
-  reconfigure = GST_PAD_NEEDS_RECONFIGURE (scope->srcpad);
-  GST_OBJECT_FLAG_UNSET (scope->srcpad, GST_PAD_NEED_RECONFIGURE);
-  GST_OBJECT_UNLOCK (scope->srcpad);
+  reconfigure = gst_pad_check_reconfigure (scope->srcpad);
 
   /* we don't know an output format yet, pick one */
   if (reconfigure || !gst_pad_has_current_caps (scope->srcpad)) {
