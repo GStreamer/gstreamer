@@ -122,17 +122,18 @@ static gboolean gst_base_video_encoder_src_event (GstPad * pad,
 static gboolean gst_base_video_encoder_sink_event (GstPad * pad,
     GstEvent * event);
 static gboolean gst_base_video_encoder_sink_query (GstPad * pad,
-    GstQuery * query);
+    GstObject * parent, GstQuery * query);
 static GstFlowReturn gst_base_video_encoder_chain (GstPad * pad,
     GstBuffer * buf);
 static GstStateChangeReturn gst_base_video_encoder_change_state (GstElement *
     element, GstStateChange transition);
 static gboolean gst_base_video_encoder_src_query (GstPad * pad,
-    GstQuery * query);
+    GstObject * parent, GstQuery * query);
 
 #define gst_base_video_encoder_parent_class parent_class
 G_DEFINE_TYPE_WITH_CODE (GstBaseVideoEncoder, gst_base_video_encoder,
-    GST_TYPE_BASE_VIDEO_CODEC, G_IMPLEMENT_INTERFACE (GST_TYPE_PRESET, NULL););
+    GST_TYPE_BASE_VIDEO_CODEC, G_IMPLEMENT_INTERFACE (GST_TYPE_PRESET, NULL);
+    );
 
 static void
 gst_base_video_encoder_class_init (GstBaseVideoEncoderClass * klass)
@@ -424,7 +425,8 @@ done:
 }
 
 static gboolean
-gst_base_video_encoder_sink_query (GstPad * pad, GstQuery * query)
+gst_base_video_encoder_sink_query (GstPad * pad, GstObject * parent,
+    GstQuery * query)
 {
   gboolean res = FALSE;
 
@@ -441,7 +443,7 @@ gst_base_video_encoder_sink_query (GstPad * pad, GstQuery * query)
       break;
     }
     default:
-      res = gst_pad_query_default (pad, query);
+      res = gst_pad_query_default (pad, parent, query);
       break;
   }
   return res;
@@ -637,14 +639,13 @@ gst_base_video_encoder_src_event (GstPad * pad, GstEvent * event)
 }
 
 static gboolean
-gst_base_video_encoder_src_query (GstPad * pad, GstQuery * query)
+gst_base_video_encoder_src_query (GstPad * pad, GstObject * parent,
+    GstQuery * query)
 {
   GstBaseVideoEncoder *enc;
   gboolean res;
-  GstPad *peerpad;
 
-  enc = GST_BASE_VIDEO_ENCODER (gst_pad_get_parent (pad));
-  peerpad = gst_pad_get_peer (GST_BASE_VIDEO_CODEC_SINK_PAD (enc));
+  enc = GST_BASE_VIDEO_ENCODER (parent);
 
   GST_LOG_OBJECT (enc, "handling query: %" GST_PTR_FORMAT, query);
 
@@ -668,7 +669,7 @@ gst_base_video_encoder_src_query (GstPad * pad, GstQuery * query)
       gboolean live;
       GstClockTime min_latency, max_latency;
 
-      res = gst_pad_query (peerpad, query);
+      res = gst_pad_peer_query (GST_BASE_VIDEO_CODEC_SINK_PAD (enc), query);
       if (res) {
         gst_query_parse_latency (query, &live, &min_latency, &max_latency);
         GST_DEBUG_OBJECT (enc, "Peer latency: live %d, min %"
@@ -687,17 +688,16 @@ gst_base_video_encoder_src_query (GstPad * pad, GstQuery * query)
     }
       break;
     default:
-      res = gst_pad_query_default (pad, query);
+      res = gst_pad_query_default (pad, parent, query);
   }
-  gst_object_unref (peerpad);
-  gst_object_unref (enc);
   return res;
 
+  /* ERRORS */
 error:
-  GST_DEBUG_OBJECT (enc, "query failed");
-  gst_object_unref (peerpad);
-  gst_object_unref (enc);
-  return res;
+  {
+    GST_DEBUG_OBJECT (enc, "query failed");
+    return res;
+  }
 }
 
 static GstFlowReturn

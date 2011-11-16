@@ -108,8 +108,10 @@ static gboolean gst_dvbsub_overlay_event_src (GstPad * pad, GstEvent * event);
 static void new_dvb_subtitles_cb (DvbSub * dvb_sub, DVBSubtitles * subs,
     gpointer user_data);
 
-static gboolean gst_dvbsub_overlay_query_video (GstPad * pad, GstQuery * query);
-static gboolean gst_dvbsub_overlay_query_src (GstPad * pad, GstQuery * query);
+static gboolean gst_dvbsub_overlay_query_video (GstPad * pad,
+    GstObject * parent, GstQuery * query);
+static gboolean gst_dvbsub_overlay_query_src (GstPad * pad, GstObject * parent,
+    GstQuery * query);
 
 /* initialize the plugin's class */
 static void
@@ -324,9 +326,10 @@ gst_dvbsub_overlay_change_state (GstElement * element,
 }
 
 static gboolean
-gst_dvbsub_overlay_query_src (GstPad * pad, GstQuery * query)
+gst_dvbsub_overlay_query_src (GstPad * pad, GstObject * parent,
+    GstQuery * query)
 {
-  GstDVBSubOverlay *render = GST_DVBSUB_OVERLAY (gst_pad_get_parent (pad));
+  GstDVBSubOverlay *render = GST_DVBSUB_OVERLAY (parent);
   gboolean ret;
 
   switch (GST_QUERY_TYPE (query)) {
@@ -346,7 +349,6 @@ gst_dvbsub_overlay_query_src (GstPad * pad, GstQuery * query)
       break;
   }
 
-  gst_object_unref (render);
   return ret;
 }
 
@@ -926,9 +928,9 @@ missing_timestamp:
 }
 
 static gboolean
-gst_dvbsub_overlay_query_video (GstPad * pad, GstQuery * query)
+gst_dvbsub_overlay_query_video (GstPad * pad, GstObject * parent,
+    GstQuery * query)
 {
-  GstDVBSubOverlay *render = GST_DVBSUB_OVERLAY (gst_pad_get_parent (pad));
   gboolean ret;
 
   switch (GST_QUERY_TYPE (query)) {
@@ -944,11 +946,10 @@ gst_dvbsub_overlay_query_video (GstPad * pad, GstQuery * query)
       break;
     }
     default:
-      ret = gst_pad_query_default (pad, query);
+      ret = gst_pad_query_default (pad, parent, query);
       break;
   }
 
-  gst_object_unref (render);
   return ret;
 }
 

@@ -115,7 +115,8 @@ static void mpegts_parse_pad_removed (GstElement * element, GstPad * pad);
 static GstPad *mpegts_parse_request_new_pad (GstElement * element,
     GstPadTemplate * templ, const gchar * name, const GstCaps * caps);
 static void mpegts_parse_release_pad (GstElement * element, GstPad * pad);
-static gboolean mpegts_parse_src_pad_query (GstPad * pad, GstQuery * query);
+static gboolean mpegts_parse_src_pad_query (GstPad * pad, GstObject * parent,
+    GstQuery * query);
 static gboolean push_event (MpegTSBase * base, GstEvent * event);
 
 #define mpegts_parse_parent_class parent_class
@@ -674,9 +675,9 @@ mpegts_parse_program_stopped (MpegTSBase * base, MpegTSBaseProgram * program)
 }
 
 static gboolean
-mpegts_parse_src_pad_query (GstPad * pad, GstQuery * query)
+mpegts_parse_src_pad_query (GstPad * pad, GstObject * parent, GstQuery * query)
 {
-  MpegTSParse2 *parse = GST_MPEGTS_PARSE (gst_pad_get_parent (pad));
+  MpegTSParse2 *parse = GST_MPEGTS_PARSE (parent);
   gboolean res;
 
   switch (GST_QUERY_TYPE (query)) {
@@ -699,9 +700,8 @@ mpegts_parse_src_pad_query (GstPad * pad, GstQuery * query)
       break;
     }
     default:
-      res = gst_pad_query_default (pad, query);
+      res = gst_pad_query_default (pad, parent, query);
   }
-  gst_object_unref (parse);
   return res;
 }
 

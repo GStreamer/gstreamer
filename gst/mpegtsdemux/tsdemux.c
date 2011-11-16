@@ -179,7 +179,8 @@ enum
 };
 
 /* Pad functions */
-static gboolean gst_ts_demux_srcpad_query (GstPad * pad, GstQuery * query);
+static gboolean gst_ts_demux_srcpad_query (GstPad * pad, GstObject * parent,
+    GstQuery * query);
 
 
 /* mpegtsbase methods */
@@ -368,14 +369,14 @@ gst_ts_demux_get_property (GObject * object, guint prop_id,
 }
 
 static gboolean
-gst_ts_demux_srcpad_query (GstPad * pad, GstQuery * query)
+gst_ts_demux_srcpad_query (GstPad * pad, GstObject * parent, GstQuery * query)
 {
   gboolean res = TRUE;
   GstFormat format;
   GstTSDemux *demux;
   MpegTSBase *base;
 
-  demux = GST_TS_DEMUX (gst_pad_get_parent (pad));
+  demux = GST_TS_DEMUX (parent);
   base = GST_MPEGTS_BASE (demux);
 
   switch (GST_QUERY_TYPE (query)) {
@@ -412,10 +413,9 @@ gst_ts_demux_srcpad_query (GstPad * pad, GstQuery * query)
       }
       break;
     default:
-      res = gst_pad_query_default (pad, query);
+      res = gst_pad_query_default (pad, parent, query);
   }
 
-  gst_object_unref (demux);
   return res;
 
 }

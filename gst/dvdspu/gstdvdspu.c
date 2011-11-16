@@ -91,14 +91,16 @@ static GstStateChangeReturn gst_dvd_spu_change_state (GstElement * element,
     GstStateChange transition);
 
 static gboolean gst_dvd_spu_src_event (GstPad * pad, GstEvent * event);
-static gboolean gst_dvd_spu_src_query (GstPad * pad, GstQuery * query);
+static gboolean gst_dvd_spu_src_query (GstPad * pad, GstObject * parent,
+    GstQuery * query);
 
 static GstCaps *gst_dvd_spu_video_proxy_getcaps (GstPad * pad,
     GstCaps * filter);
 static gboolean gst_dvd_spu_video_set_caps (GstPad * pad, GstCaps * caps);
 static GstFlowReturn gst_dvd_spu_video_chain (GstPad * pad, GstBuffer * buf);
 static gboolean gst_dvd_spu_video_event (GstPad * pad, GstEvent * event);
-static gboolean gst_dvd_spu_video_query (GstPad * pad, GstQuery * query);
+static gboolean gst_dvd_spu_video_query (GstPad * pad, GstObject * parent,
+    GstQuery * query);
 static void gst_dvd_spu_redraw_still (GstDVDSpu * dvdspu, gboolean force);
 
 static void gst_dvd_spu_check_still_updates (GstDVDSpu * dvdspu);
@@ -288,7 +290,7 @@ gst_dvd_spu_src_event (GstPad * pad, GstEvent * event)
 }
 
 static gboolean
-gst_dvd_spu_src_query (GstPad * pad, GstQuery * query)
+gst_dvd_spu_src_query (GstPad * pad, GstObject * parent, GstQuery * query)
 {
   gboolean res = FALSE;
 
@@ -305,7 +307,7 @@ gst_dvd_spu_src_query (GstPad * pad, GstQuery * query)
       break;
     }
     default:
-      res = gst_pad_query_default (pad, query);
+      res = gst_pad_query_default (pad, parent, query);
       break;
   }
 
@@ -495,7 +497,7 @@ error:
 }
 
 static gboolean
-gst_dvd_spu_video_query (GstPad * pad, GstQuery * query)
+gst_dvd_spu_video_query (GstPad * pad, GstObject * parent, GstQuery * query)
 {
   gboolean res = FALSE;
 
@@ -512,7 +514,7 @@ gst_dvd_spu_video_query (GstPad * pad, GstQuery * query)
       break;
     }
     default:
-      res = gst_pad_query_default (pad, query);
+      res = gst_pad_query_default (pad, parent, query);
       break;
   }
 

@@ -146,11 +146,11 @@ static gboolean gst_base_video_decoder_src_event (GstPad * pad,
 static GstFlowReturn gst_base_video_decoder_chain (GstPad * pad,
     GstBuffer * buf);
 static gboolean gst_base_video_decoder_sink_query (GstPad * pad,
-    GstQuery * query);
+    GstObject * parent, GstQuery * query);
 static GstStateChangeReturn gst_base_video_decoder_change_state (GstElement *
     element, GstStateChange transition);
 static gboolean gst_base_video_decoder_src_query (GstPad * pad,
-    GstQuery * query);
+    GstObject * parent, GstQuery * query);
 static void gst_base_video_decoder_reset (GstBaseVideoDecoder *
     base_video_decoder, gboolean full);
 
@@ -308,8 +308,8 @@ gst_base_video_decoder_setcaps (GstBaseVideoDecoder * base_video_decoder,
   }
 
   if (ret) {
-    gst_buffer_replace (&GST_BASE_VIDEO_CODEC (base_video_decoder)->
-        state.codec_data, NULL);
+    gst_buffer_replace (&GST_BASE_VIDEO_CODEC (base_video_decoder)->state.
+        codec_data, NULL);
     gst_caps_replace (&GST_BASE_VIDEO_CODEC (base_video_decoder)->state.caps,
         NULL);
     GST_BASE_VIDEO_CODEC (base_video_decoder)->state = state;
@@ -695,12 +695,13 @@ convert_error:
 }
 
 static gboolean
-gst_base_video_decoder_src_query (GstPad * pad, GstQuery * query)
+gst_base_video_decoder_src_query (GstPad * pad, GstObject * parent,
+    GstQuery * query)
 {
   GstBaseVideoDecoder *dec;
   gboolean res = TRUE;
 
-  dec = GST_BASE_VIDEO_DECODER (gst_pad_get_parent (pad));
+  dec = GST_BASE_VIDEO_DECODER (parent);
 
   GST_LOG_OBJECT (dec, "handling query: %" GST_PTR_FORMAT, query);
 
@@ -745,7 +746,7 @@ gst_base_video_decoder_src_query (GstPad * pad, GstQuery * query)
       GstFormat format;
 
       /* upstream in any case */
-      if ((res = gst_pad_query_default (pad, query)))
+      if ((res = gst_pad_query_default (pad, parent, query)))
         break;
 
       gst_query_parse_duration (query, &format, NULL);
@@ -783,24 +784,26 @@ gst_base_video_decoder_src_query (GstPad * pad, GstQuery * query)
       break;
     }
     default:
-      res = gst_pad_query_default (pad, query);
+      res = gst_pad_query_default (pad, parent, query);
   }
-  gst_object_unref (dec);
   return res;
 
+  /* ERRORS */
 error:
-  GST_ERROR_OBJECT (dec, "query failed");
-  gst_object_unref (dec);
-  return res;
+  {
+    GST_ERROR_OBJECT (dec, "query failed");
+    return res;
+  }
 }
 
 static gboolean
-gst_base_video_decoder_sink_query (GstPad * pad, GstQuery * query)
+gst_base_video_decoder_sink_query (GstPad * pad, GstObject * parent,
+    GstQuery * query)
 {
   GstBaseVideoDecoder *base_video_decoder;
   gboolean res = FALSE;
 
-  base_video_decoder = GST_BASE_VIDEO_DECODER (gst_pad_get_parent (pad));
+  base_video_decoder = GST_BASE_VIDEO_DECODER (parent);
 
   GST_LOG_OBJECT (base_video_decoder, "handling query: %" GST_PTR_FORMAT,
       query);
@@ -821,16 +824,18 @@ gst_base_video_decoder_sink_query (GstPad * pad, GstQuery * query)
       break;
     }
     default:
-      res = gst_pad_query_default (pad, query);
+      res = gst_pad_query_default (pad, parent, query);
       break;
   }
 done:
-  gst_object_unref (base_video_decoder);
-
   return res;
+
+  /* ERRORS */
 error:
-  GST_DEBUG_OBJECT (base_video_decoder, "query failed");
-  goto done;
+  {
+    GST_DEBUG_OBJECT (base_video_decoder, "query failed");
+    goto done;
+  }
 }
 
 typedef struct _Timestamp Timestamp;

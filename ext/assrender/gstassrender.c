@@ -104,8 +104,10 @@ static gboolean gst_ass_render_event_video (GstPad * pad, GstEvent * event);
 static gboolean gst_ass_render_event_text (GstPad * pad, GstEvent * event);
 static gboolean gst_ass_render_event_src (GstPad * pad, GstEvent * event);
 
-static gboolean gst_ass_render_query_video (GstPad * pad, GstQuery * query);
-static gboolean gst_ass_render_query_src (GstPad * pad, GstQuery * query);
+static gboolean gst_ass_render_query_video (GstPad * pad, GstObject * parent,
+    GstQuery * query);
+static gboolean gst_ass_render_query_src (GstPad * pad, GstObject * parent,
+    GstQuery * query);
 
 /* initialize the plugin's class */
 static void
@@ -350,9 +352,8 @@ gst_ass_render_change_state (GstElement * element, GstStateChange transition)
 }
 
 static gboolean
-gst_ass_render_query_src (GstPad * pad, GstQuery * query)
+gst_ass_render_query_src (GstPad * pad, GstObject * parent, GstQuery * query)
 {
-  GstAssRender *render = GST_ASS_RENDER (gst_pad_get_parent (pad));
   gboolean res = FALSE;
 
   switch (GST_QUERY_TYPE (query)) {
@@ -368,11 +369,10 @@ gst_ass_render_query_src (GstPad * pad, GstQuery * query)
       break;
     }
     default:
-      res = gst_pad_query_default (pad, query);
+      res = gst_pad_query_default (pad, parent, query);
       break;
   }
 
-  gst_object_unref (render);
   return res;
 }
 
@@ -1288,9 +1288,8 @@ gst_ass_render_event_video (GstPad * pad, GstEvent * event)
 }
 
 static gboolean
-gst_ass_render_query_video (GstPad * pad, GstQuery * query)
+gst_ass_render_query_video (GstPad * pad, GstObject * parent, GstQuery * query)
 {
-  GstAssRender *render = GST_ASS_RENDER (gst_pad_get_parent (pad));
   gboolean res = FALSE;
 
   switch (GST_QUERY_TYPE (query)) {
@@ -1306,11 +1305,10 @@ gst_ass_render_query_video (GstPad * pad, GstQuery * query)
       break;
     }
     default:
-      res = gst_pad_query_default (pad, query);
+      res = gst_pad_query_default (pad, parent, query);
       break;
   }
 
-  gst_object_unref (render);
   return res;
 }
 

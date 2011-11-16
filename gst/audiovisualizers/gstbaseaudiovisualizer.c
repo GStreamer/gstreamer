@@ -77,9 +77,9 @@ static gboolean gst_base_audio_visualizer_sink_event (GstPad * pad,
     GstEvent * event);
 
 static gboolean gst_base_audio_visualizer_src_query (GstPad * pad,
-    GstQuery * query);
+    GstObject * parent, GstQuery * query);
 static gboolean gst_base_audio_visualizer_sink_query (GstPad * pad,
-    GstQuery * query);
+    GstObject * parent, GstQuery * query);
 
 static GstStateChangeReturn gst_base_audio_visualizer_change_state (GstElement *
     element, GstStateChange transition);
@@ -1026,12 +1026,13 @@ gst_base_audio_visualizer_sink_event (GstPad * pad, GstEvent * event)
 }
 
 static gboolean
-gst_base_audio_visualizer_src_query (GstPad * pad, GstQuery * query)
+gst_base_audio_visualizer_src_query (GstPad * pad, GstObject * parent,
+    GstQuery * query)
 {
   gboolean res = FALSE;
   GstBaseAudioVisualizer *scope;
 
-  scope = GST_BASE_AUDIO_VISUALIZER (gst_pad_get_parent (pad));
+  scope = GST_BASE_AUDIO_VISUALIZER (parent);
 
   switch (GST_QUERY_TYPE (query)) {
     case GST_QUERY_LATENCY:
@@ -1076,35 +1077,24 @@ gst_base_audio_visualizer_src_query (GstPad * pad, GstQuery * query)
       break;
     }
     default:
-      res = gst_pad_peer_query (scope->sinkpad, query);
+      res = gst_pad_query_default (pad, parent, query);
       break;
   }
-
-  gst_object_unref (scope);
 
   return res;
 }
 
 static gboolean
-gst_base_audio_visualizer_sink_query (GstPad * pad, GstQuery * query)
+gst_base_audio_visualizer_sink_query (GstPad * pad, GstObject * parent,
+    GstQuery * query)
 {
   gboolean res = FALSE;
-  GstBaseAudioVisualizer *scope;
-
-  scope = GST_BASE_AUDIO_VISUALIZER (gst_pad_get_parent (pad));
 
   switch (GST_QUERY_TYPE (query)) {
-    case GST_QUERY_ALLOCATION:
-      /* we convert audio to video, don't pass allocation queries for audio 
-       * through */
-      break;
     default:
-      res = gst_pad_peer_query (scope->srcpad, query);
+      res = gst_pad_query_default (pad, parent, query);
       break;
   }
-
-  gst_object_unref (scope);
-
   return res;
 }
 
