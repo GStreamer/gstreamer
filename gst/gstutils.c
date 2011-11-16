@@ -2394,7 +2394,7 @@ gst_element_seek_simple (GstElement * element, GstFormat format,
 void
 gst_pad_use_fixed_caps (GstPad * pad)
 {
-  GST_OBJECT_FLAG_SET (pad, GST_PAD_FIXED_CAPS);
+  GST_OBJECT_FLAG_SET (pad, GST_PAD_FLAG_FIXED_CAPS);
 }
 
 /**

@@ -379,7 +379,7 @@ gst_queue2_init (GstQueue2 * queue)
       GST_DEBUG_FUNCPTR (gst_queue2_handle_sink_event));
   gst_pad_set_query_function (queue->sinkpad,
       GST_DEBUG_FUNCPTR (gst_queue2_handle_sink_query));
-  GST_OBJECT_FLAG_SET (queue->sinkpad, GST_PAD_PROXY_CAPS);
+  GST_OBJECT_FLAG_SET (queue->sinkpad, GST_PAD_FLAG_PROXY_CAPS);
   gst_element_add_pad (GST_ELEMENT (queue), queue->sinkpad);
 
   queue->srcpad = gst_pad_new_from_static_template (&srctemplate, "src");
@@ -394,7 +394,7 @@ gst_queue2_init (GstQueue2 * queue)
       GST_DEBUG_FUNCPTR (gst_queue2_handle_src_event));
   gst_pad_set_query_function (queue->srcpad,
       GST_DEBUG_FUNCPTR (gst_queue2_handle_src_query));
-  GST_OBJECT_FLAG_SET (queue->srcpad, GST_PAD_PROXY_CAPS);
+  GST_OBJECT_FLAG_SET (queue->srcpad, GST_PAD_FLAG_PROXY_CAPS);
   gst_element_add_pad (GST_ELEMENT (queue), queue->srcpad);
 
   /* levels */

@@ -409,7 +409,7 @@ prepare_event_update (GstPad * srcpad, GstPad * sinkpad)
 
   /* we had some new pending events, set our flag */
   if (pending)
-    GST_OBJECT_FLAG_SET (sinkpad, GST_PAD_NEED_EVENTS);
+    GST_OBJECT_FLAG_SET (sinkpad, GST_PAD_FLAG_NEED_EVENTS);
 }
 
 /* should be called with the OBJECT_LOCK */
@@ -748,7 +748,7 @@ gst_pad_set_active (GstPad * pad, gboolean active)
   } else {
     if (!active) {
       GST_OBJECT_LOCK (pad);
-      GST_OBJECT_FLAG_UNSET (pad, GST_PAD_NEED_RECONFIGURE);
+      GST_OBJECT_FLAG_UNSET (pad, GST_PAD_FLAG_NEED_RECONFIGURE);
       GST_OBJECT_UNLOCK (pad);
     }
   }
@@ -1093,7 +1093,7 @@ gst_pad_add_probe (GstPad * pad, GstPadProbeType mask,
   if (mask & GST_PAD_PROBE_TYPE_BLOCKING) {
     /* we have a block probe */
     pad->num_blocked++;
-    GST_OBJECT_FLAG_SET (pad, GST_PAD_BLOCKED);
+    GST_OBJECT_FLAG_SET (pad, GST_PAD_FLAG_BLOCKED);
     GST_CAT_LOG_OBJECT (GST_CAT_SCHEDULING, pad, "added blocking probe, "
         "now %d blocking probes", pad->num_blocked);
   }
@@ -1137,7 +1137,7 @@ cleanup_hook (GstPad * pad, GHook * hook)
         pad->num_blocked);
     if (pad->num_blocked == 0) {
       GST_DEBUG_OBJECT (pad, "last blocking probe removed, unblocking");
-      GST_OBJECT_FLAG_UNSET (pad, GST_PAD_BLOCKED);
+      GST_OBJECT_FLAG_UNSET (pad, GST_PAD_FLAG_BLOCKED);
       GST_PAD_BLOCK_BROADCAST (pad);
     }
   }
@@ -1202,7 +1202,7 @@ gst_pad_is_blocked (GstPad * pad)
   g_return_val_if_fail (GST_IS_PAD (pad), result);
 
   GST_OBJECT_LOCK (pad);
-  result = GST_OBJECT_FLAG_IS_SET (pad, GST_PAD_BLOCKED);
+  result = GST_OBJECT_FLAG_IS_SET (pad, GST_PAD_FLAG_BLOCKED);
   GST_OBJECT_UNLOCK (pad);
 
   return result;
@@ -1230,8 +1230,7 @@ gst_pad_is_blocking (GstPad * pad)
 
   GST_OBJECT_LOCK (pad);
   /* the blocking flag is only valid if the pad is not flushing */
-  result = GST_OBJECT_FLAG_IS_SET (pad, GST_PAD_BLOCKING) &&
-      !GST_OBJECT_FLAG_IS_SET (pad, GST_PAD_FLUSHING);
+  result = GST_PAD_IS_BLOCKING (pad) && !GST_PAD_IS_FLUSHING (pad);
   GST_OBJECT_UNLOCK (pad);
 
   return result;
@@ -1241,10 +1240,10 @@ gst_pad_is_blocking (GstPad * pad)
  * gst_pad_check_reconfigure:
  * @pad: the #GstPad to check
  *
- * Check and clear the #GST_PAD_NEED_RECONFIGURE flag on @pad and return %TRUE
+ * Check and clear the #GST_PAD_FLAG_NEED_RECONFIGURE flag on @pad and return %TRUE
  * if the flag was set.
  *
- * Returns: %TRUE is the GST_PAD_NEED_RECONFIGURE flag was set on @pad.
+ * Returns: %TRUE is the GST_PAD_FLAG_NEED_RECONFIGURE flag was set on @pad.
  */
 gboolean
 gst_pad_check_reconfigure (GstPad * pad)
@@ -1255,7 +1254,7 @@ gst_pad_check_reconfigure (GstPad * pad)
 
   GST_OBJECT_LOCK (pad);
   reconfigure = GST_PAD_NEEDS_RECONFIGURE (pad);
-  GST_OBJECT_FLAG_UNSET (pad, GST_PAD_NEED_RECONFIGURE);
+  GST_OBJECT_FLAG_UNSET (pad, GST_PAD_FLAG_NEED_RECONFIGURE);
   GST_OBJECT_UNLOCK (pad);
 
   return reconfigure;
@@ -1274,7 +1273,7 @@ gst_pad_mark_reconfigure (GstPad * pad)
   g_return_if_fail (GST_IS_PAD (pad));
 
   GST_OBJECT_LOCK (pad);
-  GST_OBJECT_FLAG_SET (pad, GST_PAD_NEED_RECONFIGURE);
+  GST_OBJECT_FLAG_SET (pad, GST_PAD_FLAG_NEED_RECONFIGURE);
   GST_OBJECT_UNLOCK (pad);
 }
 
@@ -3014,9 +3013,9 @@ again:
        * the pad after setting the FLUSHING flag. */
       GST_CAT_LOG_OBJECT (GST_CAT_SCHEDULING, pad,
           "Waiting to be unblocked or set flushing");
-      GST_OBJECT_FLAG_SET (pad, GST_PAD_BLOCKING);
+      GST_OBJECT_FLAG_SET (pad, GST_PAD_FLAG_BLOCKING);
       GST_PAD_BLOCK_WAIT (pad);
-      GST_OBJECT_FLAG_UNSET (pad, GST_PAD_BLOCKING);
+      GST_OBJECT_FLAG_UNSET (pad, GST_PAD_FLAG_BLOCKING);
       GST_CAT_LOG_OBJECT (GST_CAT_SCHEDULING, pad, "We got unblocked");
 
       if (G_UNLIKELY (GST_PAD_IS_FLUSHING (pad)))
@@ -3125,7 +3124,7 @@ gst_pad_set_offset (GstPad * pad, gint64 offset)
   /* take the current segment event, adjust it and then place
    * it on the sinkpad. events on the srcpad are always active. */
   if (replace_event (pad, peer, idx))
-    GST_OBJECT_FLAG_SET (peer, GST_PAD_NEED_EVENTS);
+    GST_OBJECT_FLAG_SET (peer, GST_PAD_FLAG_NEED_EVENTS);
 
   GST_OBJECT_UNLOCK (peer);
 
@@ -3324,7 +3323,7 @@ gst_pad_chain_data_unchecked (GstPad * pad, GstPadProbeType type, void *data)
 
   needs_events = GST_PAD_NEEDS_EVENTS (pad);
   if (G_UNLIKELY (needs_events)) {
-    GST_OBJECT_FLAG_UNSET (pad, GST_PAD_NEED_EVENTS);
+    GST_OBJECT_FLAG_UNSET (pad, GST_PAD_FLAG_NEED_EVENTS);
 
     GST_DEBUG_OBJECT (pad, "need to update all events");
     ret = gst_pad_update_events (pad);
@@ -3870,7 +3869,7 @@ probed_data:
 
   needs_events = GST_PAD_NEEDS_EVENTS (pad);
   if (G_UNLIKELY (needs_events)) {
-    GST_OBJECT_FLAG_UNSET (pad, GST_PAD_NEED_EVENTS);
+    GST_OBJECT_FLAG_UNSET (pad, GST_PAD_FLAG_NEED_EVENTS);
 
     GST_DEBUG_OBJECT (pad, "we need to update the events");
     ret = gst_pad_update_events (pad);
@@ -4055,7 +4054,7 @@ gst_pad_push_event (GstPad * pad, GstEvent * event)
         }
         case GST_EVENT_RECONFIGURE:
           if (GST_PAD_IS_SINK (pad))
-            GST_OBJECT_FLAG_SET (pad, GST_PAD_NEED_RECONFIGURE);
+            GST_OBJECT_FLAG_SET (pad, GST_PAD_FLAG_NEED_RECONFIGURE);
           break;
         default:
           break;
@@ -4218,7 +4217,7 @@ gst_pad_send_event (GstPad * pad, GstEvent * event)
       break;
     case GST_EVENT_RECONFIGURE:
       if (GST_PAD_IS_SRC (pad))
-        GST_OBJECT_FLAG_SET (pad, GST_PAD_NEED_RECONFIGURE);
+        GST_OBJECT_FLAG_SET (pad, GST_PAD_FLAG_NEED_RECONFIGURE);
     default:
       GST_CAT_DEBUG_OBJECT (GST_CAT_EVENT, pad, "have event type %s",
           GST_EVENT_TYPE_NAME (event));
@@ -4270,7 +4269,7 @@ gst_pad_send_event (GstPad * pad, GstEvent * event)
           gst_event_replace (&ev->pending, event);
           /* set the flag so that we update the events next time. We would
            * usually update below but we might be flushing too. */
-          GST_OBJECT_FLAG_SET (pad, GST_PAD_NEED_EVENTS);
+          GST_OBJECT_FLAG_SET (pad, GST_PAD_FLAG_NEED_EVENTS);
           needs_events = TRUE;
         }
       }
@@ -4287,7 +4286,7 @@ gst_pad_send_event (GstPad * pad, GstEvent * event)
   if (G_UNLIKELY (needs_events)) {
     GstFlowReturn ret;
 
-    GST_OBJECT_FLAG_UNSET (pad, GST_PAD_NEED_EVENTS);
+    GST_OBJECT_FLAG_UNSET (pad, GST_PAD_FLAG_NEED_EVENTS);
 
     GST_DEBUG_OBJECT (pad, "need to update all events");
     ret = gst_pad_update_events (pad);

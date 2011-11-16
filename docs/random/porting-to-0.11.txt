@@ -146,6 +146,7 @@ The 0.11 porting guide
     gst_pad_peer_accept_caps() -> gst_pad_peer_query_accept_caps()
     gst_pad_query_peer_*() -> gst_pad_peer_query_*()
 
+    GstPadFlags: GST_PAD_* -> GST_PAD_FLAG_*
 
 * GstPadTemplate
     gst_pad_template_get_caps() returns a new reference of the caps

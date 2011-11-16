@@ -1227,7 +1227,7 @@ gst_base_transform_setcaps (GstBaseTransform * trans, GstPad * pad,
     goto failed_configure;
 
   GST_OBJECT_LOCK (trans->sinkpad);
-  GST_OBJECT_FLAG_UNSET (trans->srcpad, GST_PAD_NEED_RECONFIGURE);
+  GST_OBJECT_FLAG_UNSET (trans->srcpad, GST_PAD_FLAG_NEED_RECONFIGURE);
   trans->priv->reconfigure = FALSE;
   GST_OBJECT_UNLOCK (trans->sinkpad);
 
@@ -1726,7 +1726,7 @@ gst_base_transform_handle_buffer (GstBaseTransform * trans, GstBuffer * inbuf,
   GST_OBJECT_LOCK (trans->sinkpad);
   reconfigure = GST_PAD_NEEDS_RECONFIGURE (trans->srcpad)
       || trans->priv->reconfigure;
-  GST_OBJECT_FLAG_UNSET (trans->srcpad, GST_PAD_NEED_RECONFIGURE);
+  GST_OBJECT_FLAG_UNSET (trans->srcpad, GST_PAD_FLAG_NEED_RECONFIGURE);
   trans->priv->reconfigure = FALSE;
   GST_OBJECT_UNLOCK (trans->sinkpad);
 

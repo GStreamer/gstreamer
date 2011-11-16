@@ -872,7 +872,7 @@ gst_input_selector_init (GstInputSelector * sel)
       GST_DEBUG_FUNCPTR (gst_input_selector_query));
   gst_pad_set_event_function (sel->srcpad,
       GST_DEBUG_FUNCPTR (gst_input_selector_event));
-  GST_OBJECT_FLAG_SET (sel->srcpad, GST_PAD_PROXY_CAPS);
+  GST_OBJECT_FLAG_SET (sel->srcpad, GST_PAD_FLAG_PROXY_CAPS);
   gst_element_add_pad (GST_ELEMENT (sel), sel->srcpad);
   /* sinkpad management */
   sel->active_sinkpad = NULL;
@@ -1219,7 +1219,7 @@ gst_input_selector_request_new_pad (GstElement * element,
   gst_pad_set_iterate_internal_links_function (sinkpad,
       GST_DEBUG_FUNCPTR (gst_selector_pad_iterate_linked_pads));
 
-  GST_OBJECT_FLAG_SET (sinkpad, GST_PAD_PROXY_CAPS);
+  GST_OBJECT_FLAG_SET (sinkpad, GST_PAD_FLAG_PROXY_CAPS);
   gst_pad_set_active (sinkpad, TRUE);
   gst_element_add_pad (GST_ELEMENT (sel), sinkpad);
   GST_INPUT_SELECTOR_UNLOCK (sel);

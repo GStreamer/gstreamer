@@ -706,7 +706,7 @@ gst_element_add_pad (GstElement * element, GstPad * pad)
   GST_CAT_INFO_OBJECT (GST_CAT_ELEMENT_PADS, element, "adding pad '%s'",
       GST_STR_NULL (pad_name));
   flushing = GST_PAD_IS_FLUSHING (pad);
-  GST_OBJECT_FLAG_SET (pad, GST_PAD_NEED_PARENT);
+  GST_OBJECT_FLAG_SET (pad, GST_PAD_FLAG_NEED_PARENT);
   GST_OBJECT_UNLOCK (pad);
 
   /* then check to see if there's already a pad by that name here */

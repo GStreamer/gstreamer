@@ -256,7 +256,7 @@ gst_tee_init (GstTee * tee)
   gst_pad_set_chain_function (tee->sinkpad, GST_DEBUG_FUNCPTR (gst_tee_chain));
   gst_pad_set_chain_list_function (tee->sinkpad,
       GST_DEBUG_FUNCPTR (gst_tee_chain_list));
-  GST_OBJECT_FLAG_SET (tee->sinkpad, GST_PAD_PROXY_CAPS);
+  GST_OBJECT_FLAG_SET (tee->sinkpad, GST_PAD_FLAG_PROXY_CAPS);
   gst_element_add_pad (GST_ELEMENT (tee), tee->sinkpad);
 
   tee->last_message = NULL;
@@ -337,7 +337,7 @@ gst_tee_request_new_pad (GstElement * element, GstPadTemplate * templ,
       GST_DEBUG_FUNCPTR (gst_tee_src_get_range));
   /* Forward sticky events to the new srcpad */
   gst_pad_sticky_events_foreach (tee->sinkpad, forward_sticky_events, srcpad);
-  GST_OBJECT_FLAG_SET (srcpad, GST_PAD_PROXY_CAPS);
+  GST_OBJECT_FLAG_SET (srcpad, GST_PAD_FLAG_PROXY_CAPS);
   gst_element_add_pad (GST_ELEMENT_CAST (tee), srcpad);
 
   return srcpad;

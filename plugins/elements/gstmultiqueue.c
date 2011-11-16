@@ -1907,7 +1907,7 @@ gst_single_queue_new (GstMultiQueue * mqueue, guint id)
       GST_DEBUG_FUNCPTR (gst_multi_queue_sink_query));
   gst_pad_set_iterate_internal_links_function (sq->sinkpad,
       GST_DEBUG_FUNCPTR (gst_multi_queue_iterate_internal_links));
-  GST_OBJECT_FLAG_SET (sq->sinkpad, GST_PAD_PROXY_CAPS);
+  GST_OBJECT_FLAG_SET (sq->sinkpad, GST_PAD_FLAG_PROXY_CAPS);
 
   name = g_strdup_printf ("src_%u", sq->id);
   sq->srcpad = gst_pad_new_from_static_template (&srctemplate, name);
@@ -1921,7 +1921,7 @@ gst_single_queue_new (GstMultiQueue * mqueue, guint id)
       GST_DEBUG_FUNCPTR (gst_multi_queue_src_query));
   gst_pad_set_iterate_internal_links_function (sq->srcpad,
       GST_DEBUG_FUNCPTR (gst_multi_queue_iterate_internal_links));
-  GST_OBJECT_FLAG_SET (sq->srcpad, GST_PAD_PROXY_CAPS);
+  GST_OBJECT_FLAG_SET (sq->srcpad, GST_PAD_FLAG_PROXY_CAPS);
 
   gst_pad_set_element_private (sq->sinkpad, (gpointer) sq);
   gst_pad_set_element_private (sq->srcpad, (gpointer) sq);
