@@ -731,6 +731,8 @@ gst_omx_video_dec_loop (GstOMXVideoDec * self)
       gst_omx_port_release_buffer (self->out_port, buf);
       goto invalid_buffer;
     }
+
+    flow_ret = gst_pad_push (GST_BASE_VIDEO_CODEC_SRC_PAD (self), outbuf);
   } else if (buf->omx_buf->nFilledLen > 0) {
     if (GST_BASE_VIDEO_CODEC (self)->state.bytes_per_picture == 0) {
       /* FIXME: If the sinkpad caps change we have currently no way
