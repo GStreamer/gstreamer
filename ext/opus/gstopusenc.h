@@ -24,7 +24,7 @@
 
 
 #include <gst/gst.h>
-#include <gst/base/gstadapter.h>
+#include <gst/audio/gstaudioencoder.h>
 
 #include <opus/opus.h>
 
@@ -48,16 +48,9 @@ typedef struct _GstOpusEnc GstOpusEnc;
 typedef struct _GstOpusEncClass GstOpusEncClass;
 
 struct _GstOpusEnc {
-  GstElement            element;
+  GstAudioEncoder       element;
 
-  /* pads */
-  GstPad                *sinkpad;
-  GstPad                *srcpad;
-
-  //OpusHeader            header;
-  //OpusMode             *mode;
   OpusEncoder          *state;
-  GstAdapter           *adapter;
 
   /* properties */
   gboolean              audio_or_voip;
@@ -71,28 +64,20 @@ struct _GstOpusEnc {
   gboolean              dtx;
   gint                  packet_loss_percentage;
 
-  int frame_samples;
-
+  gint                  frame_samples;
   gint                  n_channels;
   gint                  sample_rate;
 
   gboolean              setup;
   gboolean              header_sent;
-  gboolean              eos;
 
-  guint64               samples_in;
-  guint64               bytes_out;
+  GSList                *headers;
 
-  guint64               frameno;
-  guint64               frameno_out;
-
-  GstClockTime     start_ts;
-  GstClockTime     next_ts;
-  guint64          granulepos_offset;
+  GstTagList            *tags;
 };
 
 struct _GstOpusEncClass {
-  GstElementClass parent_class;
+  GstAudioEncoderClass parent_class;
 
   /* signals */
   void (*frame_encoded) (GstElement *element);
