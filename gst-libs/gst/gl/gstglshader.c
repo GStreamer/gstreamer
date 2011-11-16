@@ -219,14 +219,14 @@ gst_gl_shader_set_fragment_source (GstGLShader * shader, const gchar * src)
   priv->fragment_src = g_strdup (src);
 }
 
-G_CONST_RETURN gchar *
+const gchar *
 gst_gl_shader_get_vertex_source (GstGLShader * shader)
 {
   g_return_val_if_fail (GST_GL_IS_SHADER (shader), NULL);
   return shader->priv->vertex_src;
 }
 
-G_CONST_RETURN gchar *
+const gchar *
 gst_gl_shader_get_fragment_source (GstGLShader * shader)
 {
   g_return_val_if_fail (GST_GL_IS_SHADER (shader), NULL);
