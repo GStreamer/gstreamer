@@ -48,8 +48,6 @@
 GST_DEBUG_CATEGORY_STATIC (opusdec_debug);
 #define GST_CAT_DEFAULT opusdec_debug
 
-#define DEC_MAX_FRAME_SIZE 2000
-
 static GstStaticPadTemplate opus_dec_src_factory =
 GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
@@ -117,13 +115,12 @@ static void
 gst_opus_dec_reset (GstOpusDec * dec)
 {
   dec->packetno = 0;
-  dec->frame_size = 0;
-  dec->frame_samples = 960;
-  dec->frame_duration = 0;
   if (dec->state) {
     opus_decoder_destroy (dec->state);
     dec->state = NULL;
   }
+
+  dec->next_ts = 0;
 
   gst_buffer_replace (&dec->streamheader, NULL);
   gst_buffer_replace (&dec->vorbiscomment, NULL);
@@ -183,6 +180,8 @@ opus_dec_chain_parse_data (GstOpusDec * dec, GstBuffer * buf,
   GstBuffer *outbuf;
   gint16 *out_data;
   int n, err;
+  int samples;
+  unsigned int packet_size;
 
   if (dec->state == NULL) {
     GstCaps *caps;
@@ -199,8 +198,8 @@ opus_dec_chain_parse_data (GstOpusDec * dec, GstBuffer * buf,
         "endianness", G_TYPE_INT, G_BYTE_ORDER,
         "width", G_TYPE_INT, 16, "depth", G_TYPE_INT, 16, NULL);
 
-    GST_DEBUG_OBJECT (dec, "rate=%d channels=%d frame-size=%d",
-        dec->sample_rate, dec->n_channels, dec->frame_size);
+    GST_DEBUG_OBJECT (dec, "rate=%d channels=%d",
+        dec->sample_rate, dec->n_channels);
 
     if (!gst_pad_set_caps (GST_AUDIO_DECODER_SRC_PAD (dec), caps))
       GST_ERROR ("nego failure");
@@ -222,14 +221,15 @@ opus_dec_chain_parse_data (GstOpusDec * dec, GstBuffer * buf,
     size = 0;
   }
 
-  GST_DEBUG ("frames %d", opus_packet_get_nb_frames (data, size));
+  samples =
+      opus_packet_get_samples_per_frame (data,
+      dec->sample_rate) * opus_packet_get_nb_frames (data, size);
+  packet_size = samples * dec->n_channels * 2;
   GST_DEBUG ("bandwidth %d", opus_packet_get_bandwidth (data));
-  GST_DEBUG ("samples_per_frame %d", opus_packet_get_samples_per_frame (data,
-          48000));
-  GST_DEBUG ("channels %d", opus_packet_get_nb_channels (data));
+  GST_DEBUG ("samples %d", samples);
 
   res = gst_pad_alloc_buffer_and_set_caps (GST_AUDIO_DECODER_SRC_PAD (dec),
-      GST_BUFFER_OFFSET_NONE, dec->frame_samples * dec->n_channels * 2,
+      GST_BUFFER_OFFSET_NONE, packet_size,
       GST_PAD_CAPS (GST_AUDIO_DECODER_SRC_PAD (dec)), &outbuf);
 
   if (res != GST_FLOW_OK) {
@@ -239,27 +239,28 @@ opus_dec_chain_parse_data (GstOpusDec * dec, GstBuffer * buf,
 
   out_data = (gint16 *) GST_BUFFER_DATA (outbuf);
 
-  GST_LOG_OBJECT (dec, "decoding %d sample frame", dec->frame_samples);
+  GST_LOG_OBJECT (dec, "decoding %d samples, in size %u", samples, size);
 
-  n = opus_decode (dec->state, data, size, out_data, dec->frame_samples, 0);
+  n = opus_decode (dec->state, data, size, out_data, samples, 0);
   if (n < 0) {
     GST_ELEMENT_ERROR (dec, STREAM, DECODE, ("Decoding error: %d", n), (NULL));
     return GST_FLOW_ERROR;
   }
+  GST_DEBUG_OBJECT (dec, "decoded %d samples", n);
 
-  if (!GST_CLOCK_TIME_IS_VALID (timestamp)) {
-    GST_WARNING_OBJECT (dec, "No timestamp in -> no timestamp out");
+  if (GST_CLOCK_TIME_IS_VALID (timestamp)) {
+    GST_BUFFER_TIMESTAMP (outbuf) = timestamp;
+  } else {
+    GST_BUFFER_TIMESTAMP (outbuf) = dec->next_ts;
   }
 
-  GST_DEBUG_OBJECT (dec, "timestamp=%" GST_TIME_FORMAT,
-      GST_TIME_ARGS (timestamp));
-
-  GST_BUFFER_TIMESTAMP (outbuf) = GST_BUFFER_TIMESTAMP (buf);
-  GST_BUFFER_DURATION (outbuf) = GST_BUFFER_DURATION (buf);
+  GST_BUFFER_DURATION (outbuf) =
+      gst_util_uint64_scale (n, GST_SECOND, dec->sample_rate);
+  dec->next_ts = GST_BUFFER_TIMESTAMP (outbuf) + GST_BUFFER_DURATION (outbuf);
 
   GST_LOG_OBJECT (dec, "pushing buffer with ts=%" GST_TIME_FORMAT ", dur=%"
       GST_TIME_FORMAT, GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (outbuf)),
-      GST_TIME_ARGS (dec->frame_duration));
+      GST_TIME_ARGS (GST_BUFFER_DURATION (outbuf)));
 
   res = gst_audio_decoder_finish_frame (GST_AUDIO_DECODER (dec), outbuf, 1);
 
@@ -271,37 +272,6 @@ opus_dec_chain_parse_data (GstOpusDec * dec, GstBuffer * buf,
 creation_failed:
   GST_ERROR_OBJECT (dec, "Failed to create Opus decoder: %d", err);
   return GST_FLOW_ERROR;
-}
-
-static gint
-gst_opus_dec_get_frame_samples (GstOpusDec * dec)
-{
-  gint frame_samples = 0;
-  switch (dec->frame_size) {
-    case 2:
-      frame_samples = dec->sample_rate / 400;
-      break;
-    case 5:
-      frame_samples = dec->sample_rate / 200;
-      break;
-    case 10:
-      frame_samples = dec->sample_rate / 100;
-      break;
-    case 20:
-      frame_samples = dec->sample_rate / 50;
-      break;
-    case 40:
-      frame_samples = dec->sample_rate / 25;
-      break;
-    case 60:
-      frame_samples = 3 * dec->sample_rate / 50;
-      break;
-    default:
-      GST_WARNING_OBJECT (dec, "Unsupported frame size: %d", dec->frame_size);
-      frame_samples = 0;
-      break;
-  }
-  return frame_samples;
 }
 
 static gboolean
@@ -340,24 +310,6 @@ gst_opus_dec_set_format (GstAudioDecoder * bdec, GstCaps * caps)
       gst_buffer_replace (&dec->vorbiscomment, buf);
     }
   }
-  if (!gst_structure_get_int (s, "frame-size", &dec->frame_size)) {
-    GST_WARNING_OBJECT (dec, "Frame size not included in caps");
-  }
-  if (!gst_structure_get_int (s, "channels", &dec->n_channels)) {
-    GST_WARNING_OBJECT (dec, "Number of channels not included in caps");
-  }
-  if (!gst_structure_get_int (s, "rate", &dec->sample_rate)) {
-    GST_WARNING_OBJECT (dec, "Sample rate not included in caps");
-  }
-
-  dec->frame_samples = gst_opus_dec_get_frame_samples (dec);
-  dec->frame_duration = gst_util_uint64_scale_int (dec->frame_samples,
-      GST_SECOND, dec->sample_rate);
-  GST_INFO_OBJECT (dec,
-      "Got frame size %d, %d channels, %d Hz, giving %d samples per frame, frame duration %"
-      GST_TIME_FORMAT, dec->frame_size, dec->n_channels, dec->sample_rate,
-      dec->frame_samples, GST_TIME_ARGS (dec->frame_duration));
-
   caps = gst_caps_new_simple ("audio/x-raw-int",
       "rate", G_TYPE_INT, dec->sample_rate,
       "channels", G_TYPE_INT, dec->n_channels,
@@ -383,6 +335,13 @@ memcmp_buffers (GstBuffer * buf1, GstBuffer * buf2)
     return FALSE;
 
   return !memcmp (GST_BUFFER_DATA (buf1), GST_BUFFER_DATA (buf2), size1);
+}
+
+static gboolean
+gst_opus_dec_is_header (GstBuffer * buf, const char *magic, guint magic_size)
+{
+  return (GST_BUFFER_SIZE (buf) >= magic_size
+      && !memcmp (magic, GST_BUFFER_DATA (buf), magic_size));
 }
 
 static GstFlowReturn
@@ -421,14 +380,24 @@ gst_opus_dec_handle_frame (GstAudioDecoder * adec, GstBuffer * buf)
      * first two packets are the headers. */
     switch (dec->packetno) {
       case 0:
-        GST_DEBUG_OBJECT (dec, "counted streamheader");
-        res = gst_opus_dec_parse_header (dec, buf);
-        gst_audio_decoder_finish_frame (adec, NULL, 1);
+        if (gst_opus_dec_is_header (buf, "OpusHead", 8)) {
+          GST_DEBUG_OBJECT (dec, "found streamheader");
+          res = gst_opus_dec_parse_header (dec, buf);
+          gst_audio_decoder_finish_frame (adec, NULL, 1);
+        } else {
+          res = opus_dec_chain_parse_data (dec, buf, GST_BUFFER_TIMESTAMP (buf),
+              GST_BUFFER_DURATION (buf));
+        }
         break;
       case 1:
-        GST_DEBUG_OBJECT (dec, "counted vorbiscomments");
-        res = gst_opus_dec_parse_comments (dec, buf);
-        gst_audio_decoder_finish_frame (adec, NULL, 1);
+        if (gst_opus_dec_is_header (buf, "OpusTags", 8)) {
+          GST_DEBUG_OBJECT (dec, "counted vorbiscomments");
+          res = gst_opus_dec_parse_comments (dec, buf);
+          gst_audio_decoder_finish_frame (adec, NULL, 1);
+        } else {
+          res = opus_dec_chain_parse_data (dec, buf, GST_BUFFER_TIMESTAMP (buf),
+              GST_BUFFER_DURATION (buf));
+        }
         break;
       default:
       {
