@@ -558,6 +558,8 @@ typedef GstFlowReturn  (*GstPadStickyEventsForeachFunction) (GstPad *pad, GstEve
  * @GST_PAD_PROXY_CAPS: the default event and query handler will forward
  *                      all events and queries to the internally linked pads
  *                      instead of discarding them.
+ * @GST_PAD_NEED_PARENT: ensure that there is a parent object before calling
+ *                       into the pad callbacks.
  * @GST_PAD_FLAG_LAST: offset to define more flags
  *
  * Pad state flags
@@ -570,6 +572,7 @@ typedef enum {
   GST_PAD_NEED_EVENTS      = (GST_OBJECT_FLAG_LAST << 4),
   GST_PAD_FIXED_CAPS       = (GST_OBJECT_FLAG_LAST << 5),
   GST_PAD_PROXY_CAPS       = (GST_OBJECT_FLAG_LAST << 6),
+  GST_PAD_NEED_PARENT      = (GST_OBJECT_FLAG_LAST << 7),
   /* padding */
   GST_PAD_FLAG_LAST        = (GST_OBJECT_FLAG_LAST << 16)
 } GstPadFlags;
@@ -710,6 +713,7 @@ struct _GstPadClass {
 #define GST_PAD_NEEDS_RECONFIGURE(pad)  (GST_OBJECT_FLAG_IS_SET (pad, GST_PAD_NEED_RECONFIGURE))
 #define GST_PAD_NEEDS_EVENTS(pad)       (GST_OBJECT_FLAG_IS_SET (pad, GST_PAD_NEED_EVENTS))
 #define GST_PAD_IS_FIXED_CAPS(pad)	(GST_OBJECT_FLAG_IS_SET (pad, GST_PAD_FIXED_CAPS))
+#define GST_PAD_NEEDS_PARENT(pad)       (GST_OBJECT_FLAG_IS_SET (pad, GST_PAD_NEED_PARENT))
 
 #define GST_PAD_IS_PROXY_CAPS(pad)      (GST_OBJECT_FLAG_IS_SET (pad, GST_PAD_PROXY_CAPS))
 #define GST_PAD_SET_PROXY_CAPS(pad)     (GST_OBJECT_FLAG_SET (pad, GST_PAD_PROXY_CAPS))

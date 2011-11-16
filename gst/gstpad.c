@@ -2192,6 +2192,20 @@ not_accepted:
   }
 }
 
+#define ACQUIRE_PARENT(pad, parent, label)                      \
+  G_STMT_START {                                                \
+    if (G_LIKELY ((parent = GST_OBJECT_PARENT (pad))))          \
+      gst_object_ref (parent);                                  \
+    else if (G_LIKELY (GST_PAD_NEEDS_PARENT (pad)))             \
+      goto label;                                               \
+  } G_STMT_END
+
+#define RELEASE_PARENT(parent)                                  \
+  G_STMT_START {                                                \
+    if (G_LIKELY (parent))                                      \
+      gst_object_unref (parent);                                \
+  } G_STMT_END
+
 /* function to send all pending events on the sinkpad to the event
  * function and collect the results. This function should be called with
  * the object lock. The object lock might be released by this function.
@@ -2199,18 +2213,19 @@ not_accepted:
 static GstFlowReturn
 gst_pad_update_events (GstPad * pad)
 {
+  GstObject *parent;
   GstFlowReturn ret = GST_FLOW_OK;
   guint i;
   GstPadEventFunction eventfunc;
   GstEvent *event;
   gboolean caps_notify = FALSE;
+  PadEvent *ev;
 
   if (G_UNLIKELY ((eventfunc = GST_PAD_EVENTFUNC (pad)) == NULL))
     goto no_function;
 
   for (i = 0; i < GST_EVENT_MAX_STICKY; i++) {
     gboolean res;
-    PadEvent *ev;
 
     ev = &pad->priv->events[i];
 
@@ -2218,10 +2233,14 @@ gst_pad_update_events (GstPad * pad)
     if ((event = gst_event_steal (&ev->pending)) == NULL)
       continue;
 
+    ACQUIRE_PARENT (pad, parent, no_parent);
+
     gst_event_ref (event);
     GST_OBJECT_UNLOCK (pad);
 
     res = do_event_function (pad, event, eventfunc, &caps_notify);
+
+    RELEASE_PARENT (parent);
 
     /* things could have changed while we release the lock, check if we still
      * are handling the same event, if we don't something changed and we have
@@ -2252,6 +2271,12 @@ no_function:
     g_warning ("pad %s:%s has no event handler, file a bug.",
         GST_DEBUG_PAD_NAME (pad));
     return GST_FLOW_NOT_SUPPORTED;
+  }
+no_parent:
+  {
+    GST_DEBUG_OBJECT (pad, "pad has no parent");
+    gst_event_take (&ev->pending, event);
+    return GST_FLOW_WRONG_STATE;
   }
 }
 
@@ -2451,13 +2476,28 @@ GstIterator *
 gst_pad_iterate_internal_links (GstPad * pad)
 {
   GstIterator *res = NULL;
+  GstObject *parent;
 
   g_return_val_if_fail (GST_IS_PAD (pad), NULL);
+
+  GST_OBJECT_LOCK (pad);
+  ACQUIRE_PARENT (pad, parent, no_parent);
+  GST_OBJECT_UNLOCK (pad);
 
   if (GST_PAD_ITERINTLINKFUNC (pad))
     res = GST_PAD_ITERINTLINKFUNC (pad) (pad);
 
+  RELEASE_PARENT (parent);
+
   return res;
+
+  /* ERRORS */
+no_parent:
+  {
+    GST_DEBUG_OBJECT (pad, "no parent");
+    GST_OBJECT_UNLOCK (pad);
+    return FALSE;
+  }
 }
 
 /**
@@ -3115,6 +3155,7 @@ done:
 gboolean
 gst_pad_query (GstPad * pad, GstQuery * query)
 {
+  GstObject *parent;
   gboolean res;
   GstPadQueryFunction func;
   GstPadProbeType type;
@@ -3135,12 +3176,16 @@ gst_pad_query (GstPad * pad, GstQuery * query)
   PROBE_PUSH (pad, type | GST_PAD_PROBE_TYPE_PUSH |
       GST_PAD_PROBE_TYPE_BLOCK, query, probe_stopped);
   PROBE_PUSH (pad, type | GST_PAD_PROBE_TYPE_PUSH, query, probe_stopped);
+
+  ACQUIRE_PARENT (pad, parent, no_parent);
   GST_OBJECT_UNLOCK (pad);
 
   if ((func = GST_PAD_QUERYFUNC (pad)) == NULL)
     goto no_func;
 
   res = func (pad, query);
+
+  RELEASE_PARENT (parent);
 
   GST_DEBUG_OBJECT (pad, "sent query %p (%s), result %d", query,
       GST_QUERY_TYPE_NAME (query), res);
@@ -3154,6 +3199,13 @@ gst_pad_query (GstPad * pad, GstQuery * query)
 
   return res;
 
+  /* ERRORS */
+no_parent:
+  {
+    GST_DEBUG_OBJECT (pad, "had no parent");
+    GST_OBJECT_UNLOCK (pad);
+    return FALSE;
+  }
 no_func:
   {
     GST_DEBUG_OBJECT (pad, "had no query function");
@@ -4252,13 +4304,17 @@ gst_pad_send_event (GstPad * pad, GstEvent * event)
    * note that a sticky event has already been updated above */
   if (G_LIKELY (!needs_events || !sticky)) {
     GstPadEventFunction eventfunc;
+    GstObject *parent;
 
     if (G_UNLIKELY ((eventfunc = GST_PAD_EVENTFUNC (pad)) == NULL))
       goto no_function;
 
+    ACQUIRE_PARENT (pad, parent, no_parent);
     GST_OBJECT_UNLOCK (pad);
 
     result = eventfunc (pad, event);
+
+    RELEASE_PARENT (parent);
   }
 
   if (need_unlock)
@@ -4288,6 +4344,15 @@ no_function:
   {
     g_warning ("pad %s:%s has no event handler, file a bug.",
         GST_DEBUG_PAD_NAME (pad));
+    GST_OBJECT_UNLOCK (pad);
+    if (need_unlock)
+      GST_PAD_STREAM_UNLOCK (pad);
+    gst_event_unref (event);
+    return FALSE;
+  }
+no_parent:
+  {
+    GST_DEBUG_OBJECT (pad, "no parent");
     GST_OBJECT_UNLOCK (pad);
     if (need_unlock)
       GST_PAD_STREAM_UNLOCK (pad);
