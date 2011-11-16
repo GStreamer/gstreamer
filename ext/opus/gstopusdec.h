@@ -45,11 +45,9 @@ struct _GstOpusDec {
   GstAudioDecoder       element;
 
   OpusDecoder          *state;
-  int frame_samples;
 
-  gint                  frame_size;
-  GstClockTime          frame_duration;
   guint64               packetno;
+  GstClockTime          next_ts;
 
   GstBuffer            *streamheader;
   GstBuffer            *vorbiscomment;
