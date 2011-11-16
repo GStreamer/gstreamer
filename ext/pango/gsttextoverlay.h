@@ -3,6 +3,7 @@
 
 #include <gst/gst.h>
 #include <gst/video/video.h>
+#include <gst/video/video-overlay-composition.h>
 #include <gst/controller/gstcontroller.h>
 #include <pango/pangocairo.h>
 
@@ -95,65 +96,67 @@ typedef enum {
  * Opaque textoverlay object structure
  */
 struct _GstTextOverlay {
-    GstElement               element;
+    GstElement                  element;
 
-    GstPad                  *video_sinkpad;
-    GstPad                  *text_sinkpad;
-    GstPad                  *srcpad;
+    GstPad                     *video_sinkpad;
+    GstPad                     *text_sinkpad;
+    GstPad                     *srcpad;
 
-    GstSegment               segment;
-    GstSegment               text_segment;
-    GstBuffer               *text_buffer;
-    gboolean                text_linked;
-    gboolean                video_flushing;
-    gboolean                video_eos;
-    gboolean                text_flushing;
-    gboolean                text_eos;
+    GstSegment                  segment;
+    GstSegment                  text_segment;
+    GstBuffer                  *text_buffer;
+    gboolean                    text_linked;
+    gboolean                    video_flushing;
+    gboolean                    video_eos;
+    gboolean                    text_flushing;
+    gboolean                    text_eos;
 
-    GCond                   *cond;  /* to signal removal of a queued text
+    GCond                      *cond;  /* to signal removal of a queued text
                                      * buffer, arrival of a text buffer,
                                      * a text segment update, or a change
                                      * in status (e.g. shutdown, flushing) */
 
-    gint                     width;
-    gint                     height;
-    gint                     fps_n;
-    gint                     fps_d;
-    GstVideoFormat           format;
+    gint                        width;
+    gint                        height;
+    gint                        fps_n;
+    gint                        fps_d;
+    GstVideoFormat              format;
 
-    GstTextOverlayVAlign     valign;
-    GstTextOverlayHAlign     halign;
-    GstTextOverlayWrapMode   wrap_mode;
-    GstTextOverlayLineAlign  line_align;
+    GstTextOverlayVAlign        valign;
+    GstTextOverlayHAlign        halign;
+    GstTextOverlayWrapMode      wrap_mode;
+    GstTextOverlayLineAlign     line_align;
 
-    gint                     xpad;
-    gint                     ypad;
-    gint                     deltax;
-    gint                     deltay;
-    gdouble                  xpos;
-    gdouble                  ypos;
-    gchar                   *default_text;
-    gboolean                 want_shading;
-    gboolean                 silent;
-    gboolean                 wait_text;
-    guint                    color, outline_color;
+    gint                        xpad;
+    gint                        ypad;
+    gint                        deltax;
+    gint                        deltay;
+    gdouble                     xpos;
+    gdouble                     ypos;
+    gchar                      *default_text;
+    gboolean                    want_shading;
+    gboolean                    silent;
+    gboolean                    wait_text;
+    guint                       color, outline_color;
 
-    PangoLayout             *layout;
-    gdouble                  shadow_offset;
-    gboolean                 want_shadow;
-    gdouble                  outline_offset;
-    guchar                  *text_image;
-    gint                     image_width;
-    gint                     image_height;
-    gint                     baseline_y;
+    PangoLayout                *layout;
+    gdouble                     shadow_offset;
+    gboolean                    want_shadow;
+    gdouble                     outline_offset;
+    guchar                     *text_image;
+    gint                        image_width;
+    gint                        image_height;
+    gint                        baseline_y;
 
-    gboolean                 auto_adjust_size;
-    gboolean                 need_render;
+    gboolean                    auto_adjust_size;
+    gboolean                    need_render;
 
-    gint                     shading_value;  /* for timeoverlay subclass */
+    gint                        shading_value;  /* for timeoverlay subclass */
 
-    gboolean                 have_pango_markup;
-    gboolean                 use_vertical_render;
+    gboolean                    have_pango_markup;
+    gboolean                    use_vertical_render;
+
+    GstVideoOverlayComposition *composition;
 };
 
 struct _GstTextOverlayClass {
