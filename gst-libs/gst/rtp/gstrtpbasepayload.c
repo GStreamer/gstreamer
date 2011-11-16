@@ -105,7 +105,8 @@ static gboolean gst_rtp_base_payload_sink_event (GstPad * pad,
     GstEvent * event);
 static gboolean gst_rtp_base_payload_query_default (GstRTPBasePayload *
     rtpbasepayload, GstPad * pad, GstQuery * query);
-static gboolean gst_rtp_base_payload_query (GstPad * pad, GstQuery * query);
+static gboolean gst_rtp_base_payload_query (GstPad * pad, GstObject * parent,
+    GstQuery * query);
 static GstFlowReturn gst_rtp_base_payload_chain (GstPad * pad,
     GstBuffer * buffer);
 
@@ -439,30 +440,25 @@ gst_rtp_base_payload_query_default (GstRTPBasePayload * rtpbasepayload,
       break;
     }
     default:
-      res = gst_pad_query_default (pad, query);
+      res =
+          gst_pad_query_default (pad, GST_OBJECT_CAST (rtpbasepayload), query);
       break;
   }
   return res;
 }
 
 static gboolean
-gst_rtp_base_payload_query (GstPad * pad, GstQuery * query)
+gst_rtp_base_payload_query (GstPad * pad, GstObject * parent, GstQuery * query)
 {
   GstRTPBasePayload *rtpbasepayload;
   GstRTPBasePayloadClass *rtpbasepayload_class;
   gboolean res = FALSE;
 
-  rtpbasepayload = GST_RTP_BASE_PAYLOAD (gst_pad_get_parent (pad));
-  if (G_UNLIKELY (rtpbasepayload == NULL)) {
-    return FALSE;
-  }
-
+  rtpbasepayload = GST_RTP_BASE_PAYLOAD (parent);
   rtpbasepayload_class = GST_RTP_BASE_PAYLOAD_GET_CLASS (rtpbasepayload);
 
   if (rtpbasepayload_class->query)
     res = rtpbasepayload_class->query (rtpbasepayload, pad, query);
-
-  gst_object_unref (rtpbasepayload);
 
   return res;
 }
@@ -862,8 +858,8 @@ gst_rtp_base_payload_prepare_push (GstRTPBasePayload * payload,
       (is_list) ? -1 : gst_buffer_get_size (GST_BUFFER (obj)),
       payload->seqnum, data.rtptime, GST_TIME_ARGS (data.timestamp));
 
-  if (g_atomic_int_compare_and_exchange (&payload->
-          priv->notified_first_timestamp, 1, 0)) {
+  if (g_atomic_int_compare_and_exchange (&payload->priv->
+          notified_first_timestamp, 1, 0)) {
     g_object_notify (G_OBJECT (payload), "timestamp");
     g_object_notify (G_OBJECT (payload), "seqnum");
   }

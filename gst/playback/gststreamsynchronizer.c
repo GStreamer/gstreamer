@@ -134,7 +134,8 @@ gst_stream_synchronizer_iterate_internal_links (GstPad * pad)
 }
 
 static gboolean
-gst_stream_synchronizer_query (GstPad * pad, GstQuery * query)
+gst_stream_synchronizer_query (GstPad * pad, GstObject * parent,
+    GstQuery * query)
 {
   GstPad *opad;
   gboolean ret = FALSE;

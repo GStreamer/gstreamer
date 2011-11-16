@@ -97,10 +97,10 @@ static GstFlowReturn theora_dec_chain (GstPad * pad, GstBuffer * buffer);
 static GstStateChangeReturn theora_dec_change_state (GstElement * element,
     GstStateChange transition);
 static gboolean theora_dec_src_event (GstPad * pad, GstEvent * event);
-static gboolean theora_dec_src_query (GstPad * pad, GstQuery * query);
-static gboolean theora_dec_src_convert (GstPad * pad,
-    GstFormat src_format, gint64 src_value,
-    GstFormat * dest_format, gint64 * dest_value);
+static gboolean theora_dec_src_query (GstPad * pad, GstObject * parent,
+    GstQuery * query);
+static gboolean theora_dec_src_convert (GstPad * pad, GstFormat src_format,
+    gint64 src_value, GstFormat * dest_format, gint64 * dest_value);
 
 #if 0
 static const GstFormat *theora_get_formats (GstPad * pad);
@@ -432,13 +432,12 @@ no_header:
 #endif
 
 static gboolean
-theora_dec_src_query (GstPad * pad, GstQuery * query)
+theora_dec_src_query (GstPad * pad, GstObject * parent, GstQuery * query)
 {
   GstTheoraDec *dec;
-
   gboolean res = FALSE;
 
-  dec = GST_THEORA_DEC (gst_pad_get_parent (pad));
+  dec = GST_THEORA_DEC (parent);
 
   switch (GST_QUERY_TYPE (query)) {
     case GST_QUERY_POSITION:
@@ -492,11 +491,10 @@ theora_dec_src_query (GstPad * pad, GstQuery * query)
       break;
     }
     default:
-      res = gst_pad_query_default (pad, query);
+      res = gst_pad_query_default (pad, parent, query);
       break;
   }
 done:
-  gst_object_unref (dec);
 
   return res;
 

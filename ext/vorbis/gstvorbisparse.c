@@ -79,10 +79,10 @@ static GstFlowReturn vorbis_parse_chain (GstPad * pad, GstBuffer * buffer);
 static GstStateChangeReturn vorbis_parse_change_state (GstElement * element,
     GstStateChange transition);
 static gboolean vorbis_parse_sink_event (GstPad * pad, GstEvent * event);
-static gboolean vorbis_parse_src_query (GstPad * pad, GstQuery * query);
-static gboolean vorbis_parse_convert (GstPad * pad,
-    GstFormat src_format, gint64 src_value,
-    GstFormat * dest_format, gint64 * dest_value);
+static gboolean vorbis_parse_src_query (GstPad * pad, GstObject * parent,
+    GstQuery * query);
+static gboolean vorbis_parse_convert (GstPad * pad, GstFormat src_format,
+    gint64 src_value, GstFormat * dest_format, gint64 * dest_value);
 static GstFlowReturn vorbis_parse_parse_packet (GstVorbisParse * parse,
     GstBuffer * buf);
 
@@ -545,13 +545,13 @@ vorbis_parse_convert (GstPad * pad,
 }
 
 static gboolean
-vorbis_parse_src_query (GstPad * pad, GstQuery * query)
+vorbis_parse_src_query (GstPad * pad, GstObject * parent, GstQuery * query)
 {
   gint64 granulepos;
   GstVorbisParse *parse;
   gboolean res = FALSE;
 
-  parse = GST_VORBIS_PARSE (GST_PAD_PARENT (pad));
+  parse = GST_VORBIS_PARSE (parent);
 
   switch (GST_QUERY_TYPE (query)) {
     case GST_QUERY_POSITION:
@@ -590,7 +590,7 @@ vorbis_parse_src_query (GstPad * pad, GstQuery * query)
             parse->sinkpad);
         goto error;
       }
-      if (!(res = gst_pad_query (GST_PAD_PEER (parse->sinkpad), query)))
+      if (!(res = gst_pad_peer_query (parse->sinkpad, query)))
         goto error;
       break;
     }
@@ -608,7 +608,7 @@ vorbis_parse_src_query (GstPad * pad, GstQuery * query)
       break;
     }
     default:
-      res = gst_pad_query_default (pad, query);
+      res = gst_pad_query_default (pad, parent, query);
       break;
   }
   return res;

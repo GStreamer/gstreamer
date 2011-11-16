@@ -315,12 +315,12 @@ static gboolean gst_base_text_overlay_setcaps_txt (GstBaseTextOverlay * overlay,
 static gboolean gst_base_text_overlay_src_event (GstPad * pad,
     GstEvent * event);
 static gboolean gst_base_text_overlay_src_query (GstPad * pad,
-    GstQuery * query);
+    GstObject * parent, GstQuery * query);
 
 static gboolean gst_base_text_overlay_video_event (GstPad * pad,
     GstEvent * event);
 static gboolean gst_base_text_overlay_video_query (GstPad * pad,
-    GstQuery * query);
+    GstObject * parent, GstQuery * query);
 static GstFlowReturn gst_base_text_overlay_video_chain (GstPad * pad,
     GstBuffer * buffer);
 
@@ -993,14 +993,13 @@ gst_base_text_overlay_get_property (GObject * object, guint prop_id,
 }
 
 static gboolean
-gst_base_text_overlay_src_query (GstPad * pad, GstQuery * query)
+gst_base_text_overlay_src_query (GstPad * pad, GstObject * parent,
+    GstQuery * query)
 {
   gboolean ret = FALSE;
   GstBaseTextOverlay *overlay = NULL;
 
-  overlay = GST_BASE_TEXT_OVERLAY (gst_pad_get_parent (pad));
-  if (G_UNLIKELY (!overlay))
-    return FALSE;
+  overlay = GST_BASE_TEXT_OVERLAY (parent);
 
   switch (GST_QUERY_TYPE (query)) {
     case GST_QUERY_CAPS:
@@ -1018,8 +1017,6 @@ gst_base_text_overlay_src_query (GstPad * pad, GstQuery * query)
       ret = gst_pad_peer_query (overlay->video_sinkpad, query);
       break;
   }
-
-  gst_object_unref (overlay);
 
   return ret;
 }
@@ -2326,15 +2323,10 @@ gst_base_text_overlay_video_event (GstPad * pad, GstEvent * event)
 }
 
 static gboolean
-gst_base_text_overlay_video_query (GstPad * pad, GstQuery * query)
+gst_base_text_overlay_video_query (GstPad * pad, GstObject * parent,
+    GstQuery * query)
 {
   gboolean ret = FALSE;
-  GstBaseTextOverlay *overlay = NULL;
-
-  overlay = GST_BASE_TEXT_OVERLAY (gst_pad_get_parent (pad));
-  if (G_UNLIKELY (!overlay)) {
-    return FALSE;
-  }
 
   switch (GST_QUERY_TYPE (query)) {
     case GST_QUERY_CAPS:
@@ -2349,11 +2341,9 @@ gst_base_text_overlay_video_query (GstPad * pad, GstQuery * query)
       break;
     }
     default:
-      ret = gst_pad_query_default (pad, query);
+      ret = gst_pad_query_default (pad, parent, query);
       break;
   }
-
-  gst_object_unref (overlay);
 
   return ret;
 }

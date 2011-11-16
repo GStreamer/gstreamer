@@ -131,7 +131,8 @@ static gboolean gst_ogg_demux_receive_event (GstElement * element,
 static void gst_ogg_pad_dispose (GObject * object);
 static void gst_ogg_pad_finalize (GObject * object);
 
-static gboolean gst_ogg_pad_src_query (GstPad * pad, GstQuery * query);
+static gboolean gst_ogg_pad_src_query (GstPad * pad, GstObject * parent,
+    GstQuery * query);
 static gboolean gst_ogg_pad_event (GstPad * pad, GstEvent * event);
 static GstOggPad *gst_ogg_chain_get_stream (GstOggChain * chain,
     guint32 serialno);
@@ -239,12 +240,12 @@ gst_ogg_pad_finalize (GObject * object)
 }
 
 static gboolean
-gst_ogg_pad_src_query (GstPad * pad, GstQuery * query)
+gst_ogg_pad_src_query (GstPad * pad, GstObject * parent, GstQuery * query)
 {
   gboolean res = TRUE;
   GstOggDemux *ogg;
 
-  ogg = GST_OGG_DEMUX (gst_pad_get_parent (pad));
+  ogg = GST_OGG_DEMUX (parent);
 
   switch (GST_QUERY_TYPE (query)) {
     case GST_QUERY_DURATION:
@@ -336,11 +337,10 @@ gst_ogg_pad_src_query (GstPad * pad, GstQuery * query)
     }
 
     default:
-      res = gst_pad_query_default (pad, query);
+      res = gst_pad_query_default (pad, parent, query);
       break;
   }
 done:
-  gst_object_unref (ogg);
 
   return res;
 

@@ -407,7 +407,8 @@ gst_play_sink_convert_bin_getcaps (GstPad * pad, GstCaps * filter)
 }
 
 static gboolean
-gst_play_sink_convert_bin_query (GstPad * pad, GstQuery * query)
+gst_play_sink_convert_bin_query (GstPad * pad, GstObject * parent,
+    GstQuery * query)
 {
   gboolean res = FALSE;
 
@@ -424,7 +425,7 @@ gst_play_sink_convert_bin_query (GstPad * pad, GstQuery * query)
       break;
     }
     default:
-      res = gst_pad_query_default (pad, query);
+      res = gst_pad_query_default (pad, parent, query);
       break;
   }
   return res;

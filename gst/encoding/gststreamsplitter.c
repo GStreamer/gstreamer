@@ -303,7 +303,8 @@ beach:
 }
 
 static gboolean
-gst_stream_splitter_sink_query (GstPad * pad, GstQuery * query)
+gst_stream_splitter_sink_query (GstPad * pad, GstObject * parent,
+    GstQuery * query)
 {
   gboolean res;
 
@@ -320,7 +321,7 @@ gst_stream_splitter_sink_query (GstPad * pad, GstQuery * query)
       break;
     }
     default:
-      res = gst_pad_query_default (pad, query);
+      res = gst_pad_query_default (pad, parent, query);
       break;
   }
   return res;
@@ -392,10 +393,10 @@ gst_stream_splitter_src_event (GstPad * pad, GstEvent * event)
 }
 
 static gboolean
-gst_stream_splitter_src_query (GstPad * pad, GstQuery * query)
+gst_stream_splitter_src_query (GstPad * pad, GstObject * parent,
+    GstQuery * query)
 {
-  GstStreamSplitter *stream_splitter =
-      (GstStreamSplitter *) GST_PAD_PARENT (pad);
+  GstStreamSplitter *stream_splitter = (GstStreamSplitter *) parent;
 
   GST_DEBUG_OBJECT (pad, "%s", GST_QUERY_TYPE_NAME (query));
 

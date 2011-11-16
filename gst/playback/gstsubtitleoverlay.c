@@ -2042,9 +2042,9 @@ out:
 }
 
 static gboolean
-gst_subtitle_overlay_subtitle_sink_query (GstPad * pad, GstQuery * query)
+gst_subtitle_overlay_subtitle_sink_query (GstPad * pad, GstObject * parent,
+    GstQuery * query)
 {
-  GstSubtitleOverlay *self = GST_SUBTITLE_OVERLAY (gst_pad_get_parent (pad));
   gboolean ret;
 
   switch (GST_QUERY_TYPE (query)) {
@@ -2072,10 +2072,9 @@ gst_subtitle_overlay_subtitle_sink_query (GstPad * pad, GstQuery * query)
       break;
     }
     default:
-      ret = gst_pad_query_default (pad, query);
+      ret = gst_pad_query_default (pad, parent, query);
       break;
   }
-  gst_object_unref (self);
 
   return ret;
 }

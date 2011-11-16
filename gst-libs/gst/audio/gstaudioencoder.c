@@ -303,8 +303,10 @@ static gboolean gst_audio_encoder_sink_event (GstPad * pad, GstEvent * event);
 static gboolean gst_audio_encoder_sink_setcaps (GstAudioEncoder * enc,
     GstCaps * caps);
 static GstFlowReturn gst_audio_encoder_chain (GstPad * pad, GstBuffer * buffer);
-static gboolean gst_audio_encoder_src_query (GstPad * pad, GstQuery * query);
-static gboolean gst_audio_encoder_sink_query (GstPad * pad, GstQuery * query);
+static gboolean gst_audio_encoder_src_query (GstPad * pad, GstObject * parent,
+    GstQuery * query);
+static gboolean gst_audio_encoder_sink_query (GstPad * pad, GstObject * parent,
+    GstQuery * query);
 
 static void
 gst_audio_encoder_class_init (GstAudioEncoderClass * klass)
@@ -1361,12 +1363,13 @@ gst_audio_encoder_sink_event (GstPad * pad, GstEvent * event)
 }
 
 static gboolean
-gst_audio_encoder_sink_query (GstPad * pad, GstQuery * query)
+gst_audio_encoder_sink_query (GstPad * pad, GstObject * parent,
+    GstQuery * query)
 {
   gboolean res = FALSE;
   GstAudioEncoder *enc;
 
-  enc = GST_AUDIO_ENCODER (gst_pad_get_parent (pad));
+  enc = GST_AUDIO_ENCODER (parent);
 
   switch (GST_QUERY_TYPE (query)) {
     case GST_QUERY_FORMATS:
@@ -1406,13 +1409,11 @@ gst_audio_encoder_sink_query (GstPad * pad, GstQuery * query)
       break;
     }
     default:
-      res = gst_pad_query_default (pad, query);
+      res = gst_pad_query_default (pad, parent, query);
       break;
   }
 
 error:
-  gst_object_unref (enc);
-
   return res;
 }
 
@@ -1494,17 +1495,12 @@ exit:
  * segment stuff etc at all
  * Supposedly that's backward compatibility ... */
 static gboolean
-gst_audio_encoder_src_query (GstPad * pad, GstQuery * query)
+gst_audio_encoder_src_query (GstPad * pad, GstObject * parent, GstQuery * query)
 {
   GstAudioEncoder *enc;
-  GstPad *peerpad;
   gboolean res = FALSE;
 
-  enc = GST_AUDIO_ENCODER (GST_PAD_PARENT (pad));
-  if (G_UNLIKELY (enc == NULL))
-    return FALSE;
-
-  peerpad = gst_pad_get_peer (GST_PAD (enc->sinkpad));
+  enc = GST_AUDIO_ENCODER (parent);
 
   GST_LOG_OBJECT (enc, "handling query: %" GST_PTR_FORMAT, query);
 
@@ -1519,17 +1515,14 @@ gst_audio_encoder_src_query (GstPad * pad, GstQuery * query)
         break;
       }
 
-      if (!peerpad) {
-        GST_LOG_OBJECT (enc, "no peer");
-        break;
-      }
-
       gst_query_parse_position (query, &req_fmt, NULL);
       fmt = GST_FORMAT_TIME;
-      if (!(res = gst_pad_query_position (peerpad, fmt, &pos)))
+      if (!(res = gst_pad_peer_query_position (enc->sinkpad, fmt, &pos)))
         break;
 
-      if ((res = gst_pad_query_convert (peerpad, fmt, pos, req_fmt, &val))) {
+      if ((res =
+              gst_pad_peer_query_convert (enc->sinkpad, fmt, pos, req_fmt,
+                  &val))) {
         gst_query_set_position (query, req_fmt, val);
       }
       break;
@@ -1544,17 +1537,14 @@ gst_audio_encoder_src_query (GstPad * pad, GstQuery * query)
         break;
       }
 
-      if (!peerpad) {
-        GST_LOG_OBJECT (enc, "no peer");
-        break;
-      }
-
       gst_query_parse_duration (query, &req_fmt, NULL);
       fmt = GST_FORMAT_TIME;
-      if (!(res = gst_pad_query_duration (peerpad, fmt, &dur)))
+      if (!(res = gst_pad_peer_query_duration (enc->sinkpad, fmt, &dur)))
         break;
 
-      if ((res = gst_pad_query_convert (peerpad, fmt, dur, req_fmt, &val))) {
+      if ((res =
+              gst_pad_peer_query_convert (enc->sinkpad, fmt, dur, req_fmt,
+                  &val))) {
         gst_query_set_duration (query, req_fmt, val);
       }
       break;
@@ -1602,11 +1592,10 @@ gst_audio_encoder_src_query (GstPad * pad, GstQuery * query)
       break;
     }
     default:
-      res = gst_pad_query_default (pad, query);
+      res = gst_pad_query_default (pad, parent, query);
       break;
   }
 
-  gst_object_unref (peerpad);
   return res;
 }
 

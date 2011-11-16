@@ -80,7 +80,8 @@ static gboolean setup_recoder_pipeline (GstSmartEncoder * smart_encoder);
 
 static GstFlowReturn gst_smart_encoder_chain (GstPad * pad, GstBuffer * buf);
 static gboolean smart_encoder_sink_event (GstPad * pad, GstEvent * event);
-static gboolean smart_encoder_sink_query (GstPad * pad, GstQuery * query);
+static gboolean smart_encoder_sink_query (GstPad * pad, GstObject * parent,
+    GstQuery * query);
 static GstCaps *smart_encoder_sink_getcaps (GstPad * pad, GstCaps * filter);
 static GstStateChangeReturn
 gst_smart_encoder_change_state (GstElement * element,
@@ -407,7 +408,7 @@ smart_encoder_sink_getcaps (GstPad * pad, GstCaps * filter)
 }
 
 static gboolean
-smart_encoder_sink_query (GstPad * pad, GstQuery * query)
+smart_encoder_sink_query (GstPad * pad, GstObject * parent, GstQuery * query)
 {
   gboolean res;
 
@@ -424,7 +425,7 @@ smart_encoder_sink_query (GstPad * pad, GstQuery * query)
       break;
     }
     default:
-      res = gst_pad_query_default (pad, query);
+      res = gst_pad_query_default (pad, parent, query);
       break;
   }
   return res;

@@ -253,7 +253,8 @@ static gboolean theora_enc_src_event (GstPad * pad, GstEvent * event);
 static GstFlowReturn theora_enc_chain (GstPad * pad, GstBuffer * buffer);
 static GstStateChangeReturn theora_enc_change_state (GstElement * element,
     GstStateChange transition);
-static gboolean theora_enc_sink_query (GstPad * pad, GstQuery * query);
+static gboolean theora_enc_sink_query (GstPad * pad, GstObject * parent,
+    GstQuery * query);
 static gboolean theora_enc_sink_setcaps (GstTheoraEnc * enc, GstCaps * caps);
 static void theora_enc_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
@@ -656,7 +657,7 @@ theora_enc_sink_getcaps (GstPad * pad, GstCaps * filter)
 }
 
 static gboolean
-theora_enc_sink_query (GstPad * pad, GstQuery * query)
+theora_enc_sink_query (GstPad * pad, GstObject * parent, GstQuery * query)
 {
   gboolean res = FALSE;
 
@@ -673,7 +674,7 @@ theora_enc_sink_query (GstPad * pad, GstQuery * query)
       break;
     }
     default:
-      res = gst_pad_query_default (pad, query);
+      res = gst_pad_query_default (pad, parent, query);
       break;
   }
 

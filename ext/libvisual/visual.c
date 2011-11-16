@@ -133,7 +133,8 @@ static GstFlowReturn gst_visual_chain (GstPad * pad, GstBuffer * buffer);
 static gboolean gst_visual_sink_event (GstPad * pad, GstEvent * event);
 static gboolean gst_visual_src_event (GstPad * pad, GstEvent * event);
 
-static gboolean gst_visual_src_query (GstPad * pad, GstQuery * query);
+static gboolean gst_visual_src_query (GstPad * pad, GstObject * parent,
+    GstQuery * query);
 
 static gboolean gst_visual_sink_setcaps (GstPad * pad, GstCaps * caps);
 static GstCaps *gst_visual_getcaps (GstPad * pad, GstCaps * filter);
@@ -593,12 +594,12 @@ gst_visual_src_event (GstPad * pad, GstEvent * event)
 }
 
 static gboolean
-gst_visual_src_query (GstPad * pad, GstQuery * query)
+gst_visual_src_query (GstPad * pad, GstObject * parent, GstQuery * query)
 {
   gboolean res;
   GstVisual *visual;
 
-  visual = GST_VISUAL (GST_PAD_PARENT (pad));
+  visual = GST_VISUAL (parent);
 
   switch (GST_QUERY_TYPE (query)) {
     case GST_QUERY_LATENCY:
@@ -651,7 +652,7 @@ gst_visual_src_query (GstPad * pad, GstQuery * query)
       res = TRUE;
     }
     default:
-      res = gst_pad_query_default (pad, query);
+      res = gst_pad_query_default (pad, parent, query);
       break;
   }
 
@@ -896,8 +897,8 @@ gst_visual_change_state (GstElement * element, GstStateChange transition)
   switch (transition) {
     case GST_STATE_CHANGE_NULL_TO_READY:
       visual->actor =
-          visual_actor_new (GST_VISUAL_GET_CLASS (visual)->plugin->info->
-          plugname);
+          visual_actor_new (GST_VISUAL_GET_CLASS (visual)->plugin->
+          info->plugname);
       visual->video = visual_video_new ();
       visual->audio = visual_audio_new ();
       /* can't have a play without actors */

@@ -106,8 +106,10 @@ static void gst_adder_get_property (GObject * object, guint prop_id,
 
 static gboolean gst_adder_setcaps (GstAdder * adder, GstPad * pad,
     GstCaps * caps);
-static gboolean gst_adder_src_query (GstPad * pad, GstQuery * query);
-static gboolean gst_adder_sink_query (GstPad * pad, GstQuery * query);
+static gboolean gst_adder_src_query (GstPad * pad, GstObject * parent,
+    GstQuery * query);
+static gboolean gst_adder_sink_query (GstPad * pad, GstObject * parent,
+    GstQuery * query);
 static gboolean gst_adder_src_event (GstPad * pad, GstEvent * event);
 static gboolean gst_adder_sink_event (GstPad * pad, GstEvent * event);
 
@@ -209,7 +211,7 @@ gst_adder_sink_getcaps (GstPad * pad, GstCaps * filter)
 }
 
 static gboolean
-gst_adder_sink_query (GstPad * pad, GstQuery * query)
+gst_adder_sink_query (GstPad * pad, GstObject * parent, GstQuery * query)
 {
   gboolean res = FALSE;
 
@@ -226,7 +228,7 @@ gst_adder_sink_query (GstPad * pad, GstQuery * query)
       break;
     }
     default:
-      res = gst_pad_query_default (pad, query);
+      res = gst_pad_query_default (pad, parent, query);
       break;
   }
   return res;
@@ -498,9 +500,9 @@ gst_adder_query_latency (GstAdder * adder, GstQuery * query)
 }
 
 static gboolean
-gst_adder_src_query (GstPad * pad, GstQuery * query)
+gst_adder_src_query (GstPad * pad, GstObject * parent, GstQuery * query)
 {
-  GstAdder *adder = GST_ADDER (gst_pad_get_parent (pad));
+  GstAdder *adder = GST_ADDER (parent);
   gboolean res = FALSE;
 
   switch (GST_QUERY_TYPE (query)) {
@@ -534,11 +536,10 @@ gst_adder_src_query (GstPad * pad, GstQuery * query)
     default:
       /* FIXME, needs a custom query handler because we have multiple
        * sinkpads */
-      res = gst_pad_query_default (pad, query);
+      res = gst_pad_query_default (pad, parent, query);
       break;
   }
 
-  gst_object_unref (adder);
   return res;
 }
 

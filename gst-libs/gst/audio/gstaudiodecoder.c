@@ -282,8 +282,10 @@ static gboolean gst_audio_decoder_sink_setcaps (GstAudioDecoder * dec,
     GstCaps * caps);
 gboolean gst_audio_decoder_src_setcaps (GstAudioDecoder * dec, GstCaps * caps);
 static GstFlowReturn gst_audio_decoder_chain (GstPad * pad, GstBuffer * buf);
-static gboolean gst_audio_decoder_src_query (GstPad * pad, GstQuery * query);
-static gboolean gst_audio_decoder_sink_query (GstPad * pad, GstQuery * query);
+static gboolean gst_audio_decoder_src_query (GstPad * pad, GstObject * parent,
+    GstQuery * query);
+static gboolean gst_audio_decoder_sink_query (GstPad * pad, GstObject * parent,
+    GstQuery * query);
 static void gst_audio_decoder_reset (GstAudioDecoder * dec, gboolean full);
 
 static GstElementClass *parent_class = NULL;
@@ -1730,12 +1732,13 @@ exit:
 }
 
 static gboolean
-gst_audio_decoder_sink_query (GstPad * pad, GstQuery * query)
+gst_audio_decoder_sink_query (GstPad * pad, GstObject * parent,
+    GstQuery * query)
 {
-  gboolean res = TRUE;
+  gboolean res = FALSE;
   GstAudioDecoder *dec;
 
-  dec = GST_AUDIO_DECODER (gst_pad_get_parent (pad));
+  dec = GST_AUDIO_DECODER (parent);
 
   switch (GST_QUERY_TYPE (query)) {
     case GST_QUERY_FORMATS:
@@ -1758,12 +1761,11 @@ gst_audio_decoder_sink_query (GstPad * pad, GstQuery * query)
       break;
     }
     default:
-      res = gst_pad_query_default (pad, query);
+      res = gst_pad_query_default (pad, parent, query);
       break;
   }
 
 error:
-  gst_object_unref (dec);
   return res;
 }
 
@@ -1772,17 +1774,12 @@ error:
  * segment stuff etc at all
  * Supposedly that's backward compatibility ... */
 static gboolean
-gst_audio_decoder_src_query (GstPad * pad, GstQuery * query)
+gst_audio_decoder_src_query (GstPad * pad, GstObject * parent, GstQuery * query)
 {
   GstAudioDecoder *dec;
-  GstPad *peerpad;
   gboolean res = FALSE;
 
-  dec = GST_AUDIO_DECODER (GST_PAD_PARENT (pad));
-  if (G_UNLIKELY (dec == NULL))
-    return FALSE;
-
-  peerpad = gst_pad_get_peer (GST_PAD (dec->sinkpad));
+  dec = GST_AUDIO_DECODER (parent);
 
   GST_LOG_OBJECT (dec, "handling query: %" GST_PTR_FORMAT, query);
 
@@ -1792,7 +1789,7 @@ gst_audio_decoder_src_query (GstPad * pad, GstQuery * query)
       GstFormat format;
 
       /* upstream in any case */
-      if ((res = gst_pad_query_default (pad, query)))
+      if ((res = gst_pad_query_default (pad, parent, query)))
         break;
 
       gst_query_parse_duration (query, &format, NULL);
@@ -1886,11 +1883,10 @@ gst_audio_decoder_src_query (GstPad * pad, GstQuery * query)
       break;
     }
     default:
-      res = gst_pad_query_default (pad, query);
+      res = gst_pad_query_default (pad, parent, query);
       break;
   }
 
-  gst_object_unref (peerpad);
   return res;
 }
 

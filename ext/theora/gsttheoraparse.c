@@ -98,7 +98,8 @@ static GstFlowReturn theora_parse_chain (GstPad * pad, GstBuffer * buffer);
 static GstStateChangeReturn theora_parse_change_state (GstElement * element,
     GstStateChange transition);
 static gboolean theora_parse_sink_event (GstPad * pad, GstEvent * event);
-static gboolean theora_parse_src_query (GstPad * pad, GstQuery * query);
+static gboolean theora_parse_src_query (GstPad * pad, GstObject * parent,
+    GstQuery * query);
 
 static void
 gst_theora_parse_class_init (GstTheoraParseClass * klass)
@@ -801,13 +802,12 @@ no_header:
 }
 
 static gboolean
-theora_parse_src_query (GstPad * pad, GstQuery * query)
+theora_parse_src_query (GstPad * pad, GstObject * parent, GstQuery * query)
 {
   GstTheoraParse *parse;
-
   gboolean res = FALSE;
 
-  parse = GST_THEORA_PARSE (gst_pad_get_parent (pad));
+  parse = GST_THEORA_PARSE (parent);
 
   switch (GST_QUERY_TYPE (query)) {
     case GST_QUERY_POSITION:
@@ -872,11 +872,10 @@ theora_parse_src_query (GstPad * pad, GstQuery * query)
       break;
     }
     default:
-      res = gst_pad_query_default (pad, query);
+      res = gst_pad_query_default (pad, parent, query);
       break;
   }
 done:
-  gst_object_unref (parse);
 
   return res;
 

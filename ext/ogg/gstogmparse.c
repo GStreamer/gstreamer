@@ -152,7 +152,8 @@ static void gst_ogm_audio_parse_init (GstOgmParse * ogm);
 static void gst_ogm_text_parse_init (GstOgmParse * ogm);
 
 static gboolean gst_ogm_parse_sink_event (GstPad * pad, GstEvent * event);
-static gboolean gst_ogm_parse_sink_query (GstPad * pad, GstQuery * query);
+static gboolean gst_ogm_parse_sink_query (GstPad * pad, GstObject * parent,
+    GstQuery * query);
 static gboolean gst_ogm_parse_sink_convert (GstPad * pad, GstFormat src_format,
     gint64 src_value, GstFormat * dest_format, gint64 * dest_value);
 
@@ -454,9 +455,9 @@ gst_ogm_parse_sink_convert (GstPad * pad,
 }
 
 static gboolean
-gst_ogm_parse_sink_query (GstPad * pad, GstQuery * query)
+gst_ogm_parse_sink_query (GstPad * pad, GstObject * parent, GstQuery * query)
 {
-  GstOgmParse *ogm = GST_OGM_PARSE (gst_pad_get_parent (pad));
+  GstOgmParse *ogm = GST_OGM_PARSE (parent);
   GstFormat format;
   gboolean res = FALSE;
 
@@ -491,11 +492,10 @@ gst_ogm_parse_sink_query (GstPad * pad, GstQuery * query)
       break;
     }
     default:
-      res = gst_pad_query_default (pad, query);
+      res = gst_pad_query_default (pad, parent, query);
       break;
   }
 
-  gst_object_unref (ogm);
   return res;
 }
 

@@ -81,7 +81,8 @@ static GstStaticPadTemplate src_templ = GST_STATIC_PAD_TEMPLATE ("src",
 
 
 static gboolean gst_sub_parse_src_event (GstPad * pad, GstEvent * event);
-static gboolean gst_sub_parse_src_query (GstPad * pad, GstQuery * query);
+static gboolean gst_sub_parse_src_query (GstPad * pad, GstObject * parent,
+    GstQuery * query);
 static gboolean gst_sub_parse_sink_event (GstPad * pad, GstEvent * event);
 
 static GstStateChangeReturn gst_sub_parse_change_state (GstElement * element,
@@ -209,9 +210,9 @@ gst_sub_parse_init (GstSubParse * subparse)
  */
 
 static gboolean
-gst_sub_parse_src_query (GstPad * pad, GstQuery * query)
+gst_sub_parse_src_query (GstPad * pad, GstObject * parent, GstQuery * query)
 {
-  GstSubParse *self = GST_SUBPARSE (gst_pad_get_parent (pad));
+  GstSubParse *self = GST_SUBPARSE (parent);
   gboolean ret = FALSE;
 
   GST_DEBUG ("Handling %s query", GST_QUERY_TYPE_NAME (query));
@@ -253,8 +254,6 @@ gst_sub_parse_src_query (GstPad * pad, GstQuery * query)
       ret = gst_pad_peer_query (self->sinkpad, query);
       break;
   }
-
-  gst_object_unref (self);
 
   return ret;
 }
