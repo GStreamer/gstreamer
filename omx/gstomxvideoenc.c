@@ -1414,6 +1414,8 @@ gst_omx_video_enc_handle_frame (GstBaseVideoEncoder * encoder,
       if (err != OMX_ErrorNone)
         GST_ERROR_OBJECT (self, "Failed to force a keyframe: %s (0x%08x)",
             gst_omx_error_to_string (err), err);
+
+      frame->force_keyframe = FALSE;
     }
 
     /* Copy the buffer content in chunks of size as requested
