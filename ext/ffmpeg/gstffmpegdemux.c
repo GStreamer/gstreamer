@@ -714,7 +714,7 @@ gst_ffmpegdemux_send_event (GstElement * element, GstEvent * event)
 }
 
 static gboolean
-gst_ffmpegdemux_src_query (GstPad * pad, GstQuery * query)
+gst_ffmpegdemux_src_query (GstPad * pad, GstObject * parent, GstQuery * query)
 {
   GstFFMpegDemux *demux;
   GstFFStream *stream;
@@ -726,7 +726,7 @@ gst_ffmpegdemux_src_query (GstPad * pad, GstQuery * query)
 
   avstream = stream->avstream;
 
-  demux = (GstFFMpegDemux *) GST_PAD_PARENT (pad);
+  demux = (GstFFMpegDemux *) parent;
 
   switch (GST_QUERY_TYPE (query)) {
     case GST_QUERY_POSITION:
@@ -754,7 +754,7 @@ gst_ffmpegdemux_src_query (GstPad * pad, GstQuery * query)
         case GST_FORMAT_BYTES:
           if (demux->videopads + demux->audiopads == 1 &&
               GST_PAD_PEER (demux->sinkpad) != NULL)
-            res = gst_pad_query_default (pad, query);
+            res = gst_pad_query_default (pad, parent, query);
           break;
         default:
           break;
@@ -791,7 +791,7 @@ gst_ffmpegdemux_src_query (GstPad * pad, GstQuery * query)
         case GST_FORMAT_BYTES:
           if (demux->videopads + demux->audiopads == 1 &&
               GST_PAD_PEER (demux->sinkpad) != NULL)
-            res = gst_pad_query_default (pad, query);
+            res = gst_pad_query_default (pad, parent, query);
           break;
         default:
           break;
@@ -816,7 +816,7 @@ gst_ffmpegdemux_src_query (GstPad * pad, GstQuery * query)
     }
     default:
       /* FIXME : ADD GST_QUERY_CONVERT */
-      res = gst_pad_query_default (pad, query);
+      res = gst_pad_query_default (pad, parent, query);
       break;
   }
 

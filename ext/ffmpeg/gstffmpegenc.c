@@ -105,7 +105,8 @@ static GstFlowReturn gst_ffmpegenc_chain_audio (GstPad * pad,
     GstBuffer * buffer);
 static gboolean gst_ffmpegenc_event_sink (GstPad * pad, GstEvent * event);
 static gboolean gst_ffmpegenc_event_src (GstPad * pad, GstEvent * event);
-static gboolean gst_ffmpegenc_query_sink (GstPad * pad, GstQuery * query);
+static gboolean gst_ffmpegenc_query_sink (GstPad * pad, GstObject * parent,
+    GstQuery * query);
 
 static void gst_ffmpegenc_set_property (GObject * object,
     guint prop_id, const GValue * value, GParamSpec * pspec);
@@ -1233,7 +1234,7 @@ gst_ffmpegenc_event_src (GstPad * pad, GstEvent * event)
 }
 
 static gboolean
-gst_ffmpegenc_query_sink (GstPad * pad, GstQuery * query)
+gst_ffmpegenc_query_sink (GstPad * pad, GstObject * parent, GstQuery * query)
 {
   gboolean res = FALSE;
 
@@ -1250,7 +1251,7 @@ gst_ffmpegenc_query_sink (GstPad * pad, GstQuery * query)
       break;
     }
     default:
-      res = gst_pad_query_default (pad, query);
+      res = gst_pad_query_default (pad, parent, query);
       break;
   }
 

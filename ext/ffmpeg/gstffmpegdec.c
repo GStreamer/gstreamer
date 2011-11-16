@@ -226,7 +226,8 @@ static void gst_ffmpegdec_class_init (GstFFMpegDecClass * klass);
 static void gst_ffmpegdec_init (GstFFMpegDec * ffmpegdec);
 static void gst_ffmpegdec_finalize (GObject * object);
 
-static gboolean gst_ffmpegdec_src_query (GstPad * pad, GstQuery * query);
+static gboolean gst_ffmpegdec_src_query (GstPad * pad, GstObject * parent,
+    GstQuery * query);
 static gboolean gst_ffmpegdec_src_event (GstPad * pad, GstEvent * event);
 
 static gboolean gst_ffmpegdec_sink_event (GstPad * pad, GstEvent * event);
@@ -467,15 +468,12 @@ gst_ffmpegdec_finalize (GObject * object)
 }
 
 static gboolean
-gst_ffmpegdec_src_query (GstPad * pad, GstQuery * query)
+gst_ffmpegdec_src_query (GstPad * pad, GstObject * parent, GstQuery * query)
 {
-  GstFFMpegDec *ffmpegdec;
   gboolean res;
 
-  ffmpegdec = (GstFFMpegDec *) gst_pad_get_parent (pad);
-
   /* just forward to peer */
-  res = gst_pad_query_default (pad, query);
+  res = gst_pad_query_default (pad, parent, query);
 #if 0
   {
     GstFormat bfmt;
@@ -493,8 +491,6 @@ gst_ffmpegdec_src_query (GstPad * pad, GstQuery * query)
     *value *= GST_SECOND / ffmpegdec->context->bit_rate;
   }
 #endif
-
-  gst_object_unref (ffmpegdec);
 
   return res;
 }
