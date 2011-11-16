@@ -208,7 +208,7 @@ gst_alaw_dec_getcaps (GstPad * pad, GstCaps * filter)
 }
 
 static gboolean
-gst_alaw_dec_query (GstPad * pad, GstQuery * query)
+gst_alaw_dec_query (GstPad * pad, GstObject * parent, GstQuery * query)
 {
   gboolean res;
 
@@ -226,7 +226,7 @@ gst_alaw_dec_query (GstPad * pad, GstQuery * query)
       break;
     }
     default:
-      res = gst_pad_query_default (pad, query);
+      res = gst_pad_query_default (pad, parent, query);
       break;
   }
   return res;

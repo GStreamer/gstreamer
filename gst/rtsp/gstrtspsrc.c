@@ -1994,7 +1994,8 @@ gst_rtspsrc_handle_internal_src_event (GstPad * pad, GstEvent * event)
 /* this is the final query function we receive on the internal source pad when
  * we deal with TCP connections */
 static gboolean
-gst_rtspsrc_handle_internal_src_query (GstPad * pad, GstQuery * query)
+gst_rtspsrc_handle_internal_src_query (GstPad * pad, GstObject * parent,
+    GstQuery * query)
 {
   GstRTSPSrc *src;
   gboolean res = TRUE;
@@ -2042,12 +2043,13 @@ gst_rtspsrc_handle_internal_src_query (GstPad * pad, GstQuery * query)
 
 /* this query is executed on the ghost source pad exposed on rtspsrc. */
 static gboolean
-gst_rtspsrc_handle_src_query (GstPad * pad, GstQuery * query)
+gst_rtspsrc_handle_src_query (GstPad * pad, GstObject * parent,
+    GstQuery * query)
 {
   GstRTSPSrc *src;
   gboolean res = FALSE;
 
-  src = GST_RTSPSRC_CAST (gst_pad_get_parent (pad));
+  src = GST_RTSPSRC_CAST (parent);
 
   GST_DEBUG_OBJECT (src, "pad %s:%s received query %s",
       GST_DEBUG_PAD_NAME (pad), GST_QUERY_TYPE_NAME (query));
@@ -2101,7 +2103,6 @@ gst_rtspsrc_handle_src_query (GstPad * pad, GstQuery * query)
       break;
     }
   }
-  gst_object_unref (src);
 
   return res;
 }

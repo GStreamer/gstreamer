@@ -124,7 +124,8 @@ static GstIterator *gst_rtp_ssrc_demux_iterate_internal_links_sink (GstPad *
 static gboolean gst_rtp_ssrc_demux_src_event (GstPad * pad, GstEvent * event);
 static GstIterator *gst_rtp_ssrc_demux_iterate_internal_links_src (GstPad *
     pad);
-static gboolean gst_rtp_ssrc_demux_src_query (GstPad * pad, GstQuery * query);
+static gboolean gst_rtp_ssrc_demux_src_query (GstPad * pad, GstObject * parent,
+    GstQuery * query);
 
 static guint gst_rtp_ssrc_demux_signals[LAST_SIGNAL] = { 0 };
 
@@ -760,14 +761,13 @@ gst_rtp_ssrc_demux_iterate_internal_links_sink (GstPad * pad)
 
 
 static gboolean
-gst_rtp_ssrc_demux_src_query (GstPad * pad, GstQuery * query)
+gst_rtp_ssrc_demux_src_query (GstPad * pad, GstObject * parent,
+    GstQuery * query)
 {
   GstRtpSsrcDemux *demux;
   gboolean res = FALSE;
 
-  demux = GST_RTP_SSRC_DEMUX (gst_pad_get_parent (pad));
-  if (G_UNLIKELY (demux == NULL))
-    return FALSE;
+  demux = GST_RTP_SSRC_DEMUX (parent);
 
   switch (GST_QUERY_TYPE (query)) {
     case GST_QUERY_LATENCY:
@@ -792,10 +792,9 @@ gst_rtp_ssrc_demux_src_query (GstPad * pad, GstQuery * query)
       break;
     }
     default:
-      res = gst_pad_query_default (pad, query);
+      res = gst_pad_query_default (pad, parent, query);
       break;
   }
-  gst_object_unref (demux);
 
   return res;
 }

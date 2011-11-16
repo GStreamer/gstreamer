@@ -72,7 +72,7 @@ static gboolean gst_audio_fx_base_fir_filter_setup (GstAudioFilter * base,
     const GstAudioInfo * info);
 
 static gboolean gst_audio_fx_base_fir_filter_query (GstPad * pad,
-    GstQuery * query);
+    GstObject * parent, GstQuery * query);
 
 /* 
  * The code below calculates the linear convolution:
@@ -942,10 +942,10 @@ gst_audio_fx_base_fir_filter_stop (GstBaseTransform * base)
 }
 
 static gboolean
-gst_audio_fx_base_fir_filter_query (GstPad * pad, GstQuery * query)
+gst_audio_fx_base_fir_filter_query (GstPad * pad, GstObject * parent,
+    GstQuery * query)
 {
-  GstAudioFXBaseFIRFilter *self =
-      GST_AUDIO_FX_BASE_FIR_FILTER (gst_pad_get_parent (pad));
+  GstAudioFXBaseFIRFilter *self = GST_AUDIO_FX_BASE_FIR_FILTER (parent);
   gboolean res = TRUE;
 
   switch (GST_QUERY_TYPE (query)) {
@@ -954,49 +954,45 @@ gst_audio_fx_base_fir_filter_query (GstPad * pad, GstQuery * query)
       GstClockTime min, max;
       gboolean live;
       guint64 latency;
-      GstPad *peer;
       gint rate = GST_AUDIO_FILTER_RATE (self);
 
       if (rate == 0) {
         res = FALSE;
-      } else if ((peer = gst_pad_get_peer (GST_BASE_TRANSFORM (self)->sinkpad))) {
-        if ((res = gst_pad_query (peer, query))) {
-          gst_query_parse_latency (query, &live, &min, &max);
+      } else if ((res =
+              gst_pad_peer_query (GST_BASE_TRANSFORM (self)->sinkpad, query))) {
+        gst_query_parse_latency (query, &live, &min, &max);
 
-          GST_DEBUG_OBJECT (self, "Peer latency: min %"
-              GST_TIME_FORMAT " max %" GST_TIME_FORMAT,
-              GST_TIME_ARGS (min), GST_TIME_ARGS (max));
+        GST_DEBUG_OBJECT (self, "Peer latency: min %"
+            GST_TIME_FORMAT " max %" GST_TIME_FORMAT,
+            GST_TIME_ARGS (min), GST_TIME_ARGS (max));
 
-          if (self->fft && !self->low_latency)
-            latency = self->block_length - self->kernel_length + 1;
-          else
-            latency = self->latency;
+        if (self->fft && !self->low_latency)
+          latency = self->block_length - self->kernel_length + 1;
+        else
+          latency = self->latency;
 
-          /* add our own latency */
-          latency = gst_util_uint64_scale_round (latency, GST_SECOND, rate);
+        /* add our own latency */
+        latency = gst_util_uint64_scale_round (latency, GST_SECOND, rate);
 
-          GST_DEBUG_OBJECT (self, "Our latency: %"
-              GST_TIME_FORMAT, GST_TIME_ARGS (latency));
+        GST_DEBUG_OBJECT (self, "Our latency: %"
+            GST_TIME_FORMAT, GST_TIME_ARGS (latency));
 
-          min += latency;
-          if (max != GST_CLOCK_TIME_NONE)
-            max += latency;
+        min += latency;
+        if (max != GST_CLOCK_TIME_NONE)
+          max += latency;
 
-          GST_DEBUG_OBJECT (self, "Calculated total latency : min %"
-              GST_TIME_FORMAT " max %" GST_TIME_FORMAT,
-              GST_TIME_ARGS (min), GST_TIME_ARGS (max));
+        GST_DEBUG_OBJECT (self, "Calculated total latency : min %"
+            GST_TIME_FORMAT " max %" GST_TIME_FORMAT,
+            GST_TIME_ARGS (min), GST_TIME_ARGS (max));
 
-          gst_query_set_latency (query, live, min, max);
-        }
-        gst_object_unref (peer);
+        gst_query_set_latency (query, live, min, max);
       }
       break;
     }
     default:
-      res = gst_pad_query_default (pad, query);
+      res = gst_pad_query_default (pad, parent, query);
       break;
   }
-  gst_object_unref (self);
   return res;
 }
 

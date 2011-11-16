@@ -98,7 +98,8 @@ static GstFlowReturn gst_goom_chain (GstPad * pad, GstBuffer * buffer);
 static gboolean gst_goom_src_event (GstPad * pad, GstEvent * event);
 static gboolean gst_goom_sink_event (GstPad * pad, GstEvent * event);
 
-static gboolean gst_goom_src_query (GstPad * pad, GstQuery * query);
+static gboolean gst_goom_src_query (GstPad * pad, GstObject * parent,
+    GstQuery * query);
 
 #define gst_goom_parent_class parent_class
 G_DEFINE_TYPE (GstGoom, gst_goom, GST_TYPE_ELEMENT);
@@ -400,12 +401,12 @@ gst_goom_sink_event (GstPad * pad, GstEvent * event)
 }
 
 static gboolean
-gst_goom_src_query (GstPad * pad, GstQuery * query)
+gst_goom_src_query (GstPad * pad, GstObject * parent, GstQuery * query)
 {
   gboolean res = FALSE;
   GstGoom *goom;
 
-  goom = GST_GOOM (GST_PAD_PARENT (pad));
+  goom = GST_GOOM (parent);
 
   switch (GST_QUERY_TYPE (query)) {
     case GST_QUERY_LATENCY:
@@ -450,7 +451,7 @@ gst_goom_src_query (GstPad * pad, GstQuery * query)
       break;
     }
     default:
-      res = gst_pad_query_default (pad, query);
+      res = gst_pad_query_default (pad, parent, query);
       break;
   }
 

@@ -695,10 +695,11 @@ gst_qtdemux_get_duration (GstQTDemux * qtdemux, gint64 * duration)
 }
 
 static gboolean
-gst_qtdemux_handle_src_query (GstPad * pad, GstQuery * query)
+gst_qtdemux_handle_src_query (GstPad * pad, GstObject * parent,
+    GstQuery * query)
 {
   gboolean res = FALSE;
-  GstQTDemux *qtdemux = GST_QTDEMUX (gst_pad_get_parent (pad));
+  GstQTDemux *qtdemux = GST_QTDEMUX (parent);
 
   GST_LOG_OBJECT (pad, "%s query", GST_QUERY_TYPE_NAME (query));
 
@@ -771,11 +772,9 @@ gst_qtdemux_handle_src_query (GstPad * pad, GstQuery * query)
       break;
     }
     default:
-      res = gst_pad_query_default (pad, query);
+      res = gst_pad_query_default (pad, parent, query);
       break;
   }
-
-  gst_object_unref (qtdemux);
 
   return res;
 }

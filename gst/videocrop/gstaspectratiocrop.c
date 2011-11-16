@@ -81,7 +81,7 @@ static void gst_aspect_ratio_crop_set_cropping (GstAspectRatioCrop *
     aspect_ratio_crop, gint top, gint right, gint bottom, gint left);
 static GstCaps *gst_aspect_ratio_crop_get_caps (GstPad * pad, GstCaps * filter);
 static gboolean gst_aspect_ratio_crop_src_query (GstPad * pad,
-    GstQuery * query);
+    GstObject * parent, GstQuery * query);
 static gboolean gst_aspect_ratio_crop_set_caps (GstAspectRatioCrop *
     aspect_ratio_crop, GstCaps * caps);
 static gboolean gst_aspect_ratio_crop_sink_event (GstPad * pad, GstEvent * evt);
@@ -419,7 +419,8 @@ gst_aspect_ratio_crop_get_caps (GstPad * pad, GstCaps * filter)
 }
 
 static gboolean
-gst_aspect_ratio_crop_src_query (GstPad * pad, GstQuery * query)
+gst_aspect_ratio_crop_src_query (GstPad * pad, GstObject * parent,
+    GstQuery * query)
 {
   gboolean res = FALSE;
 
@@ -436,7 +437,7 @@ gst_aspect_ratio_crop_src_query (GstPad * pad, GstQuery * query)
       break;
     }
     default:
-      res = gst_pad_query_default (pad, query);
+      res = gst_pad_query_default (pad, parent, query);
       break;
   }
   return res;

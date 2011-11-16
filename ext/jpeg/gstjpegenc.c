@@ -72,7 +72,8 @@ static void gst_jpegenc_finalize (GObject * object);
 static GstFlowReturn gst_jpegenc_chain (GstPad * pad, GstBuffer * buf);
 static gboolean gst_jpegenc_sink_event (GstPad * pad, GstEvent * event);
 static GstCaps *gst_jpegenc_getcaps (GstPad * pad, GstCaps * filter);
-static gboolean gst_jpegenc_sink_query (GstPad * pad, GstQuery * query);
+static gboolean gst_jpegenc_sink_query (GstPad * pad, GstObject * parent,
+    GstQuery * query);
 
 static void gst_jpegenc_resync (GstJpegEnc * jpegenc);
 static void gst_jpegenc_set_property (GObject * object, guint prop_id,
@@ -342,10 +343,9 @@ done:
 }
 
 static gboolean
-gst_jpegenc_sink_query (GstPad * pad, GstQuery * query)
+gst_jpegenc_sink_query (GstPad * pad, GstObject * parent, GstQuery * query)
 {
   gboolean res;
-  GstJpegEnc *enc = GST_JPEGENC (gst_pad_get_parent (pad));
 
   switch (GST_QUERY_TYPE (query)) {
     case GST_QUERY_CAPS:
@@ -360,12 +360,9 @@ gst_jpegenc_sink_query (GstPad * pad, GstQuery * query)
       break;
     }
     default:
-      res = gst_pad_query_default (pad, query);
+      res = gst_pad_query_default (pad, parent, query);
       break;
   }
-
-  gst_object_unref (enc);
-
   return res;
 }
 

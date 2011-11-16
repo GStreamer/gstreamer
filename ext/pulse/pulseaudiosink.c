@@ -115,12 +115,11 @@ static gboolean gst_pulse_audio_sink_src_event (GstPad * pad, GstEvent * event);
 static gboolean gst_pulse_audio_sink_sink_event (GstPad * pad,
     GstEvent * event);
 static gboolean gst_pulse_audio_sink_sink_query (GstPad * pad,
-    GstQuery * query);
+    GstObject * parent, GstQuery * query);
 static gboolean gst_pulse_audio_sink_sink_acceptcaps (GstPulseAudioSink * pbin,
     GstPad * pad, GstCaps * caps);
-static GstStateChangeReturn
-gst_pulse_audio_sink_change_state (GstElement * element,
-    GstStateChange transition);
+static GstStateChangeReturn gst_pulse_audio_sink_change_state (GstElement *
+    element, GstStateChange transition);
 static gboolean gst_pulse_audio_sink_set_caps (GstPulseAudioSink * pbin,
     GstCaps * caps);
 
@@ -847,9 +846,10 @@ out:
 }
 
 static gboolean
-gst_pulse_audio_sink_sink_query (GstPad * pad, GstQuery * query)
+gst_pulse_audio_sink_sink_query (GstPad * pad, GstObject * parent,
+    GstQuery * query)
 {
-  GstPulseAudioSink *pbin = GST_PULSE_AUDIO_SINK (gst_pad_get_parent (pad));
+  GstPulseAudioSink *pbin = GST_PULSE_AUDIO_SINK (parent);
   gboolean ret = FALSE;
 
   switch (GST_QUERY_TYPE (query)) {
@@ -864,12 +864,9 @@ gst_pulse_audio_sink_sink_query (GstPad * pad, GstQuery * query)
       break;
     }
     default:
-      ret = gst_pad_query_default (pad, query);
+      ret = gst_pad_query_default (pad, parent, query);
       break;
   }
-
-  gst_object_unref (pbin);
-
   return ret;
 
 }

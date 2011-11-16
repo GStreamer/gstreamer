@@ -80,7 +80,8 @@ static GstFlowReturn gst_au_parse_chain (GstPad * pad, GstBuffer * buf);
 static GstStateChangeReturn gst_au_parse_change_state (GstElement * element,
     GstStateChange transition);
 static void gst_au_parse_reset (GstAuParse * auparse);
-static gboolean gst_au_parse_src_query (GstPad * pad, GstQuery * query);
+static gboolean gst_au_parse_src_query (GstPad * pad, GstObject * parent,
+    GstQuery * query);
 static gboolean gst_au_parse_src_event (GstPad * pad, GstEvent * event);
 static gboolean gst_au_parse_sink_event (GstPad * pad, GstEvent * event);
 static gboolean gst_au_parse_src_convert (GstAuParse * auparse,
@@ -541,12 +542,12 @@ gst_au_parse_src_convert (GstAuParse * auparse, GstFormat src_format,
 }
 
 static gboolean
-gst_au_parse_src_query (GstPad * pad, GstQuery * query)
+gst_au_parse_src_query (GstPad * pad, GstObject * parent, GstQuery * query)
 {
   GstAuParse *auparse;
   gboolean ret = FALSE;
 
-  auparse = GST_AU_PARSE (gst_pad_get_parent (pad));
+  auparse = GST_AU_PARSE (parent);
 
   switch (GST_QUERY_TYPE (query)) {
     case GST_QUERY_DURATION:{
@@ -606,11 +607,10 @@ gst_au_parse_src_query (GstPad * pad, GstQuery * query)
       break;
     }
     default:
-      ret = gst_pad_query_default (pad, query);
+      ret = gst_pad_query_default (pad, parent, query);
       break;
   }
 
-  gst_object_unref (auparse);
   return ret;
 }
 

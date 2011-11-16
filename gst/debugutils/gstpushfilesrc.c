@@ -102,7 +102,8 @@ gst_push_file_src_class_init (GstPushFileSrcClass * g_class)
 }
 
 static gboolean
-gst_push_file_src_ghostpad_query (GstPad * pad, GstQuery * query)
+gst_push_file_src_ghostpad_query (GstPad * pad, GstObject * parent,
+    GstQuery * query)
 {
   gboolean res;
 
@@ -112,7 +113,7 @@ gst_push_file_src_ghostpad_query (GstPad * pad, GstQuery * query)
       res = TRUE;
       break;
     default:
-      res = gst_proxy_pad_query_default (pad, query);
+      res = gst_proxy_pad_query_default (pad, parent, query);
       break;
   }
   return res;

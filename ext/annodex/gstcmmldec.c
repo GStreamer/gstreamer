@@ -90,7 +90,8 @@ static void gst_cmml_dec_get_property (GObject * dec, guint property_id,
     GValue * value, GParamSpec * pspec);
 static void gst_cmml_dec_set_property (GObject * dec, guint property_id,
     const GValue * value, GParamSpec * pspec);
-static gboolean gst_cmml_dec_sink_query (GstPad * pad, GstQuery * query);
+static gboolean gst_cmml_dec_sink_query (GstPad * pad, GstObject * parent,
+    GstQuery * query);
 static gboolean gst_cmml_dec_sink_event (GstPad * pad, GstEvent * event);
 static gboolean gst_cmml_dec_convert (GstPad * pad, GstFormat src_fmt,
     gint64 src_val, GstFormat * dest_fmt, gint64 * dest_val);
@@ -253,7 +254,7 @@ gst_cmml_dec_change_state (GstElement * element, GstStateChange transition)
 }
 
 static gboolean
-gst_cmml_dec_sink_query (GstPad * pad, GstQuery * query)
+gst_cmml_dec_sink_query (GstPad * pad, GstObject * parent, GstQuery * query)
 {
   gboolean res = FALSE;
 

@@ -95,7 +95,8 @@ static void gst_jpeg_dec_get_property (GObject * object, guint prop_id,
 
 static GstFlowReturn gst_jpeg_dec_chain (GstPad * pad, GstBuffer * buffer);
 static GstCaps *gst_jpeg_dec_getcaps (GstPad * pad, GstCaps * filter);
-static gboolean gst_jpeg_dec_sink_query (GstPad * pad, GstQuery * query);
+static gboolean gst_jpeg_dec_sink_query (GstPad * pad, GstObject * parent,
+    GstQuery * query);
 static gboolean gst_jpeg_dec_sink_event (GstPad * pad, GstEvent * event);
 static gboolean gst_jpeg_dec_src_event (GstPad * pad, GstEvent * event);
 static GstStateChangeReturn gst_jpeg_dec_change_state (GstElement * element,
@@ -1777,7 +1778,7 @@ gst_jpeg_dec_sink_event (GstPad * pad, GstEvent * event)
 }
 
 static gboolean
-gst_jpeg_dec_sink_query (GstPad * pad, GstQuery * query)
+gst_jpeg_dec_sink_query (GstPad * pad, GstObject * parent, GstQuery * query)
 {
   gboolean res = FALSE;
 
@@ -1794,7 +1795,7 @@ gst_jpeg_dec_sink_query (GstPad * pad, GstQuery * query)
       break;
     }
     default:
-      res = gst_pad_query_default (pad, query);
+      res = gst_pad_query_default (pad, parent, query);
       break;
   }
   return res;

@@ -93,7 +93,8 @@ static gboolean flv_demux_handle_seek_push (GstFlvDemux * demux,
 static gboolean gst_flv_demux_handle_seek_pull (GstFlvDemux * demux,
     GstEvent * event, gboolean seeking);
 
-static gboolean gst_flv_demux_query (GstPad * pad, GstQuery * query);
+static gboolean gst_flv_demux_query (GstPad * pad, GstObject * parent,
+    GstQuery * query);
 static gboolean gst_flv_demux_src_event (GstPad * pad, GstEvent * event);
 
 
@@ -2966,12 +2967,12 @@ gst_flv_demux_src_event (GstPad * pad, GstEvent * event)
 }
 
 static gboolean
-gst_flv_demux_query (GstPad * pad, GstQuery * query)
+gst_flv_demux_query (GstPad * pad, GstObject * parent, GstQuery * query)
 {
   gboolean res = TRUE;
   GstFlvDemux *demux;
 
-  demux = GST_FLV_DEMUX (gst_pad_get_parent (pad));
+  demux = GST_FLV_DEMUX (parent);
 
   switch (GST_QUERY_TYPE (query)) {
     case GST_QUERY_DURATION:
@@ -3056,23 +3057,11 @@ gst_flv_demux_query (GstPad * pad, GstQuery * query)
     }
     case GST_QUERY_LATENCY:
     default:
-    {
-      GstPad *peer;
-
-      if ((peer = gst_pad_get_peer (demux->sinkpad))) {
-        /* query latency on peer pad */
-        res = gst_pad_query (peer, query);
-        gst_object_unref (peer);
-      } else {
-        /* no peer, we don't know */
-        res = FALSE;
-      }
+      res = gst_pad_peer_query (demux->sinkpad, query);
       break;
-    }
   }
 
 beach:
-  gst_object_unref (demux);
 
   return res;
 }

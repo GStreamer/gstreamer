@@ -253,7 +253,7 @@ static GstFlowReturn gst_rtp_jitter_buffer_chain_rtcp (GstPad * pad,
     GstBuffer * buffer);
 
 static gboolean gst_rtp_jitter_buffer_sink_query (GstPad * pad,
-    GstQuery * query);
+    GstObject * parent, GstQuery * query);
 
 /* srcpad overrides */
 static gboolean gst_rtp_jitter_buffer_src_event (GstPad * pad,
@@ -262,7 +262,7 @@ static gboolean
 gst_rtp_jitter_buffer_src_activate_push (GstPad * pad, gboolean active);
 static void gst_rtp_jitter_buffer_loop (GstRtpJitterBuffer * jitterbuffer);
 static gboolean gst_rtp_jitter_buffer_src_query (GstPad * pad,
-    GstQuery * query);
+    GstObject * parent, GstQuery * query);
 
 static void
 gst_rtp_jitter_buffer_clear_pt_map (GstRtpJitterBuffer * jitterbuffer);
@@ -2087,14 +2087,10 @@ ignore_buffer:
 }
 
 static gboolean
-gst_rtp_jitter_buffer_sink_query (GstPad * pad, GstQuery * query)
+gst_rtp_jitter_buffer_sink_query (GstPad * pad, GstObject * parent,
+    GstQuery * query)
 {
-  GstRtpJitterBuffer *jitterbuffer;
   gboolean res = FALSE;
-
-  jitterbuffer = GST_RTP_JITTER_BUFFER (gst_pad_get_parent (pad));
-  if (G_UNLIKELY (jitterbuffer == NULL))
-    return FALSE;
 
   switch (GST_QUERY_TYPE (query)) {
     case GST_QUERY_CAPS:
@@ -2109,25 +2105,22 @@ gst_rtp_jitter_buffer_sink_query (GstPad * pad, GstQuery * query)
       break;
     }
     default:
-      res = gst_pad_query_default (pad, query);
+      res = gst_pad_query_default (pad, parent, query);
       break;
   }
-
-  gst_object_unref (jitterbuffer);
 
   return res;
 }
 
 static gboolean
-gst_rtp_jitter_buffer_src_query (GstPad * pad, GstQuery * query)
+gst_rtp_jitter_buffer_src_query (GstPad * pad, GstObject * parent,
+    GstQuery * query)
 {
   GstRtpJitterBuffer *jitterbuffer;
   GstRtpJitterBufferPrivate *priv;
   gboolean res = FALSE;
 
-  jitterbuffer = GST_RTP_JITTER_BUFFER (gst_pad_get_parent (pad));
-  if (G_UNLIKELY (jitterbuffer == NULL))
-    return FALSE;
+  jitterbuffer = GST_RTP_JITTER_BUFFER (parent);
   priv = jitterbuffer->priv;
 
   switch (GST_QUERY_TYPE (query)) {
@@ -2174,7 +2167,7 @@ gst_rtp_jitter_buffer_src_query (GstPad * pad, GstQuery * query)
 
       gst_query_parse_position (query, &fmt, NULL);
       if (fmt != GST_FORMAT_TIME) {
-        res = gst_pad_query_default (pad, query);
+        res = gst_pad_query_default (pad, parent, query);
         break;
       }
 
@@ -2192,7 +2185,7 @@ gst_rtp_jitter_buffer_src_query (GstPad * pad, GstQuery * query)
         gst_query_set_position (query, GST_FORMAT_TIME, start + last_out);
         res = TRUE;
       } else {
-        res = gst_pad_query_default (pad, query);
+        res = gst_pad_query_default (pad, parent, query);
       }
       break;
     }
@@ -2208,11 +2201,9 @@ gst_rtp_jitter_buffer_src_query (GstPad * pad, GstQuery * query)
       break;
     }
     default:
-      res = gst_pad_query_default (pad, query);
+      res = gst_pad_query_default (pad, parent, query);
       break;
   }
-
-  gst_object_unref (jitterbuffer);
 
   return res;
 }

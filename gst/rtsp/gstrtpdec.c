@@ -433,7 +433,7 @@ gst_rtp_dec_finalize (GObject * object)
 }
 
 static gboolean
-gst_rtp_dec_query_src (GstPad * pad, GstQuery * query)
+gst_rtp_dec_query_src (GstPad * pad, GstObject * parent, GstQuery * query)
 {
   gboolean res;
 
@@ -446,7 +446,7 @@ gst_rtp_dec_query_src (GstPad * pad, GstQuery * query)
       break;
     }
     default:
-      res = gst_pad_query_default (pad, query);
+      res = gst_pad_query_default (pad, parent, query);
       break;
   }
   return res;

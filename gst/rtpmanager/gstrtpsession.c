@@ -1598,12 +1598,13 @@ gst_rtp_session_chain_recv_rtcp (GstPad * pad, GstBuffer * buffer)
 }
 
 static gboolean
-gst_rtp_session_query_send_rtcp_src (GstPad * pad, GstQuery * query)
+gst_rtp_session_query_send_rtcp_src (GstPad * pad, GstObject * parent,
+    GstQuery * query)
 {
   GstRtpSession *rtpsession;
   gboolean ret = FALSE;
 
-  rtpsession = GST_RTP_SESSION (gst_pad_get_parent (pad));
+  rtpsession = GST_RTP_SESSION (parent);
 
   GST_DEBUG_OBJECT (rtpsession, "received QUERY");
 
@@ -1617,8 +1618,6 @@ gst_rtp_session_query_send_rtcp_src (GstPad * pad, GstQuery * query)
       /* other queries simply fail for now */
       break;
   }
-
-  gst_object_unref (rtpsession);
 
   return ret;
 }
@@ -1769,7 +1768,8 @@ gst_rtp_session_getcaps_send_rtp (GstPad * pad, GstCaps * filter)
 }
 
 static gboolean
-gst_rtp_session_query_send_rtp (GstPad * pad, GstQuery * query)
+gst_rtp_session_query_send_rtp (GstPad * pad, GstObject * parent,
+    GstQuery * query)
 {
   gboolean res = FALSE;
 
@@ -1786,7 +1786,7 @@ gst_rtp_session_query_send_rtp (GstPad * pad, GstQuery * query)
       break;
     }
     default:
-      res = gst_pad_query_default (pad, query);
+      res = gst_pad_query_default (pad, parent, query);
       break;
   }
 

@@ -73,7 +73,7 @@ static gboolean gst_shape_wipe_video_sink_setcaps (GstShapeWipe * self,
 static GstCaps *gst_shape_wipe_video_sink_getcaps (GstPad * pad,
     GstCaps * filter);
 static gboolean gst_shape_wipe_video_sink_query (GstPad * pad,
-    GstQuery * query);
+    GstObject * parent, GstQuery * query);
 static GstFlowReturn gst_shape_wipe_mask_sink_chain (GstPad * pad,
     GstBuffer * buffer);
 static gboolean gst_shape_wipe_mask_sink_event (GstPad * pad, GstEvent * event);
@@ -81,10 +81,12 @@ static gboolean gst_shape_wipe_mask_sink_setcaps (GstShapeWipe * self,
     GstCaps * caps);
 static GstCaps *gst_shape_wipe_mask_sink_getcaps (GstPad * pad,
     GstCaps * filter);
-static gboolean gst_shape_wipe_mask_sink_query (GstPad * pad, GstQuery * query);
+static gboolean gst_shape_wipe_mask_sink_query (GstPad * pad,
+    GstObject * parent, GstQuery * query);
 static gboolean gst_shape_wipe_src_event (GstPad * pad, GstEvent * event);
 static GstCaps *gst_shape_wipe_src_getcaps (GstPad * pad, GstCaps * filter);
-static gboolean gst_shape_wipe_src_query (GstPad * pad, GstQuery * query);
+static gboolean gst_shape_wipe_src_query (GstPad * pad, GstObject * parent,
+    GstQuery * query);
 
 enum
 {
@@ -625,9 +627,10 @@ done:
 }
 
 static gboolean
-gst_shape_wipe_video_sink_query (GstPad * pad, GstQuery * query)
+gst_shape_wipe_video_sink_query (GstPad * pad, GstObject * parent,
+    GstQuery * query)
 {
-  GstShapeWipe *self = GST_SHAPE_WIPE (gst_pad_get_parent (pad));
+  GstShapeWipe *self = GST_SHAPE_WIPE (parent);
   gboolean ret;
 
   GST_LOG_OBJECT (pad, "Handling query of type '%s'",
@@ -650,14 +653,13 @@ gst_shape_wipe_video_sink_query (GstPad * pad, GstQuery * query)
       break;
   }
 
-  gst_object_unref (self);
   return ret;
 }
 
 static gboolean
-gst_shape_wipe_src_query (GstPad * pad, GstQuery * query)
+gst_shape_wipe_src_query (GstPad * pad, GstObject * parent, GstQuery * query)
 {
-  GstShapeWipe *self = GST_SHAPE_WIPE (gst_pad_get_parent (pad));
+  GstShapeWipe *self = GST_SHAPE_WIPE (parent);
   gboolean ret;
 
   GST_LOG_OBJECT (pad, "Handling query of type '%s'",
@@ -680,7 +682,6 @@ gst_shape_wipe_src_query (GstPad * pad, GstQuery * query)
       break;
   }
 
-  gst_object_unref (self);
   return ret;
 }
 
@@ -1077,9 +1078,9 @@ gst_shape_wipe_mask_sink_event (GstPad * pad, GstEvent * event)
 }
 
 static gboolean
-gst_shape_wipe_mask_sink_query (GstPad * pad, GstQuery * query)
+gst_shape_wipe_mask_sink_query (GstPad * pad, GstObject * parent,
+    GstQuery * query)
 {
-  GstShapeWipe *self = GST_SHAPE_WIPE (gst_pad_get_parent (pad));
   gboolean ret;
 
   GST_LOG_OBJECT (pad, "Handling query of type '%s'",
@@ -1098,11 +1099,10 @@ gst_shape_wipe_mask_sink_query (GstPad * pad, GstQuery * query)
       break;
     }
     default:
-      ret = gst_pad_query_default (pad, query);
+      ret = gst_pad_query_default (pad, parent, query);
       break;
   }
 
-  gst_object_unref (self);
   return ret;
 }
 

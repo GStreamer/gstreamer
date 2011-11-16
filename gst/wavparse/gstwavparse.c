@@ -71,9 +71,9 @@ static gboolean gst_wavparse_send_event (GstElement * element,
 static GstStateChangeReturn gst_wavparse_change_state (GstElement * element,
     GstStateChange transition);
 
-static gboolean gst_wavparse_pad_query (GstPad * pad, GstQuery * query);
-static gboolean gst_wavparse_pad_convert (GstPad * pad,
-    GstFormat src_format,
+static gboolean gst_wavparse_pad_query (GstPad * pad, GstObject * parent,
+    GstQuery * query);
+static gboolean gst_wavparse_pad_convert (GstPad * pad, GstFormat src_format,
     gint64 src_value, GstFormat * dest_format, gint64 * dest_value);
 
 static GstFlowReturn gst_wavparse_chain (GstPad * pad, GstBuffer * buf);
@@ -2402,14 +2402,13 @@ no_bps_fact:
 
 /* handle queries for location and length in requested format */
 static gboolean
-gst_wavparse_pad_query (GstPad * pad, GstQuery * query)
+gst_wavparse_pad_query (GstPad * pad, GstObject * parent, GstQuery * query)
 {
   gboolean res = TRUE;
-  GstWavParse *wav = GST_WAVPARSE (gst_pad_get_parent (pad));
+  GstWavParse *wav = GST_WAVPARSE (parent);
 
   /* only if we know */
   if (wav->state != GST_WAVPARSE_DATA) {
-    gst_object_unref (wav);
     return FALSE;
   }
 
@@ -2505,10 +2504,9 @@ gst_wavparse_pad_query (GstPad * pad, GstQuery * query)
       break;
     }
     default:
-      res = gst_pad_query_default (pad, query);
+      res = gst_pad_query_default (pad, parent, query);
       break;
   }
-  gst_object_unref (wav);
   return res;
 }
 
