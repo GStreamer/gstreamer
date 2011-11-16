@@ -58,6 +58,7 @@ struct _GstH264Parse
   /* stream */
   gint width, height;
   gint fps_num, fps_den;
+  gint sar_width, sar_height;
   GstBuffer *codec_data;
   guint nal_length_size;
   gboolean packetized;
