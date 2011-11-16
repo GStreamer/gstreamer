@@ -32,6 +32,7 @@ G_BEGIN_DECLS
 
 typedef struct _GstBuffer GstBuffer;
 typedef struct _GstBufferClass GstBufferClass;
+typedef struct _GstBufferPrivate GstBufferPrivate;
 
 /**
  * GST_BUFFER_TRACE_NAME:
@@ -288,7 +289,8 @@ struct _GstBuffer {
   GstBuffer             *parent;
 
   /*< private >*/
-  gpointer _gst_reserved[GST_PADDING - 2];
+  GstBufferPrivate      *priv;
+  gpointer _gst_reserved[GST_PADDING - 3];
 };
 
 struct _GstBufferClass {
@@ -392,6 +394,8 @@ gst_buffer_copy (const GstBuffer * buf)
  * @GST_BUFFER_COPY_TIMESTAMPS: flag indicating that buffer timestamp, duration,
  * offset and offset_end should be copied
  * @GST_BUFFER_COPY_CAPS: flag indicating that buffer caps should be copied
+ * @GST_BUFFER_COPY_QDATA: flag indicating that buffer qdata should be copied
+ *    (Since 0.10.36)
  *
  * A set of flags that can be provided to the gst_buffer_copy_metadata()
  * function to specify which metadata fields should be copied.
@@ -401,7 +405,8 @@ gst_buffer_copy (const GstBuffer * buf)
 typedef enum {
   GST_BUFFER_COPY_FLAGS      = (1 << 0),
   GST_BUFFER_COPY_TIMESTAMPS = (1 << 1),
-  GST_BUFFER_COPY_CAPS       = (1 << 2)
+  GST_BUFFER_COPY_CAPS       = (1 << 2),
+  GST_BUFFER_COPY_QDATA      = (1 << 3)
 } GstBufferCopyFlags;
 
 /**
@@ -412,7 +417,7 @@ typedef enum {
  *
  * Since: 0.10.13
  */
-#define GST_BUFFER_COPY_ALL ((GstBufferCopyFlags) (GST_BUFFER_COPY_FLAGS | GST_BUFFER_COPY_TIMESTAMPS | GST_BUFFER_COPY_CAPS))
+#define GST_BUFFER_COPY_ALL ((GstBufferCopyFlags) (GST_BUFFER_COPY_FLAGS | GST_BUFFER_COPY_TIMESTAMPS | GST_BUFFER_COPY_CAPS | GST_BUFFER_COPY_QDATA))
 
 /* copies metadata into newly allocated buffer */
 void            gst_buffer_copy_metadata        (GstBuffer *dest, const GstBuffer *src,
@@ -445,6 +450,17 @@ void            gst_buffer_copy_metadata        (GstBuffer *dest, const GstBuffe
  * isn't */
 gboolean        gst_buffer_is_metadata_writable (GstBuffer *buf);
 GstBuffer*      gst_buffer_make_metadata_writable (GstBuffer *buf);
+
+/* per-buffer user data */
+
+void                  gst_buffer_set_qdata (GstBuffer     * buffer,
+                                            GQuark          quark,
+                                            GstStructure  * data);
+
+const GstStructure *  gst_buffer_get_qdata (GstBuffer     * buffer,
+                                            GQuark          quark);
+
+
 
 /**
  * gst_buffer_replace:

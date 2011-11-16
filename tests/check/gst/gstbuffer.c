@@ -451,6 +451,59 @@ GST_START_TEST (test_try_new_and_alloc)
 
 GST_END_TEST;
 
+GST_START_TEST (test_qdata)
+{
+  GstStructure *s;
+  GstBuffer *buf, *buf2, *buf3;
+  GQuark q1, q2, q3;
+
+  q1 = g_quark_from_static_string ("GstFooBar");
+  q2 = g_quark_from_static_string ("MyBorkData");
+  q3 = g_quark_from_static_string ("DoNotExist");
+
+  buf = gst_buffer_new ();
+  ASSERT_CRITICAL (gst_buffer_set_qdata (buf, q1, (s =
+              gst_structure_id_empty_new (q2))));
+  gst_structure_free (s);
+
+  gst_buffer_set_qdata (buf, q1, gst_structure_id_empty_new (q1));
+  gst_buffer_set_qdata (buf, q2, gst_structure_id_empty_new (q2));
+  fail_unless (gst_buffer_get_qdata (buf, q3) == NULL);
+  fail_unless (gst_buffer_get_qdata (buf, q1) != NULL);
+  fail_unless (gst_buffer_get_qdata (buf, q2) != NULL);
+
+  /* full copy */
+  buf2 = gst_buffer_copy (buf);
+
+  /* now back to the original buffer... */
+  gst_buffer_set_qdata (buf, q1, NULL);
+  fail_unless (gst_buffer_get_qdata (buf, q1) == NULL);
+
+  /* force creation of sub-buffer with writable metadata */
+  gst_buffer_ref (buf);
+  buf3 = gst_buffer_make_metadata_writable (buf);
+
+  /* and check the copies/subbuffers.. */
+  fail_unless (gst_buffer_get_qdata (buf2, q3) == NULL);
+  fail_unless (gst_buffer_get_qdata (buf2, q1) != NULL);
+  fail_unless (gst_buffer_get_qdata (buf2, q2) != NULL);
+
+  fail_unless (gst_buffer_get_qdata (buf3, q3) == NULL);
+  fail_unless (gst_buffer_get_qdata (buf3, q1) == NULL);
+  fail_unless (gst_buffer_get_qdata (buf3, q2) != NULL);
+  gst_buffer_set_qdata (buf3, q1, gst_structure_id_empty_new (q1));
+  fail_unless (gst_buffer_get_qdata (buf3, q1) != NULL);
+
+  /* original buffer shouldn't have changed */
+  fail_unless (gst_buffer_get_qdata (buf, q1) == NULL);
+
+  gst_buffer_unref (buf);
+  gst_buffer_unref (buf2);
+  gst_buffer_unref (buf3);
+}
+
+GST_END_TEST;
+
 static Suite *
 gst_buffer_suite (void)
 {
@@ -467,6 +520,7 @@ gst_buffer_suite (void)
   tcase_add_test (tc_chain, test_metadata_writable);
   tcase_add_test (tc_chain, test_copy);
   tcase_add_test (tc_chain, test_try_new_and_alloc);
+  tcase_add_test (tc_chain, test_qdata);
 
   return s;
 }

@@ -128,6 +128,12 @@
 #include "gstminiobject.h"
 #include "gstversion.h"
 
+struct _GstBufferPrivate
+{
+  GList *qdata;
+  /* think about locking buffer->priv etc. when adding more fields */
+};
+
 static void gst_buffer_finalize (GstBuffer * buffer);
 static GstBuffer *_gst_buffer_copy (GstBuffer * buffer);
 
@@ -185,6 +191,8 @@ gst_buffer_class_init (GstBufferClass * klass)
   klass->mini_object_class.copy = (GstMiniObjectCopyFunction) _gst_buffer_copy;
   klass->mini_object_class.finalize =
       (GstMiniObjectFinalizeFunction) gst_buffer_finalize;
+
+  g_type_class_add_private (klass, sizeof (GstBufferPrivate));
 }
 
 static void
@@ -203,8 +211,59 @@ gst_buffer_finalize (GstBuffer * buffer)
   if (buffer->parent)
     gst_buffer_unref (buffer->parent);
 
+  if (G_UNLIKELY (buffer->priv != NULL)) {
+    GstBufferPrivate *priv = buffer->priv;
+
+    while (priv->qdata != NULL) {
+      GstStructure *s = priv->qdata->data;
+
+      gst_structure_set_parent_refcount (s, NULL);
+      gst_structure_free (s);
+      priv->qdata = g_list_delete_link (priv->qdata, priv->qdata);
+    }
+    priv->qdata = NULL;
+  }
+
 /*   ((GstMiniObjectClass *) */
 /*       gst_buffer_parent_class)->finalize (GST_MINI_OBJECT_CAST (buffer)); */
+}
+
+static inline GstBufferPrivate *
+gst_buffer_ensure_priv (GstBuffer * buf)
+{
+  GstBufferPrivate *priv = buf->priv;
+
+  if (priv != NULL)
+    return priv;
+
+  priv = buf->priv =
+      G_TYPE_INSTANCE_GET_PRIVATE (buf, GST_TYPE_BUFFER, GstBufferPrivate);
+
+  return priv;
+}
+
+static void
+gst_buffer_copy_qdata (GstBuffer * dest, const GstBuffer * src)
+{
+  GstBufferPrivate *priv;
+  GQueue qdata_copy = G_QUEUE_INIT;
+  GList *l;
+
+  if (G_LIKELY (src->priv == NULL))
+    return;
+
+  for (l = src->priv->qdata; l != NULL; l = l->next) {
+    GstStructure *s = gst_structure_copy (l->data);
+
+    gst_structure_set_parent_refcount (s, &dest->mini_object.refcount);
+    g_queue_push_tail (&qdata_copy, s);
+
+    GST_CAT_TRACE (GST_CAT_BUFFER, "copying qdata '%s' from buffer %p to %p",
+        g_quark_to_string (s->name), src, dest);
+  }
+
+  priv = gst_buffer_ensure_priv (dest);
+  priv->qdata = qdata_copy.head;
 }
 
 /**
@@ -263,6 +322,116 @@ gst_buffer_copy_metadata (GstBuffer * dest, const GstBuffer * src,
   if (flags & GST_BUFFER_COPY_CAPS) {
     gst_caps_replace (&GST_BUFFER_CAPS (dest), GST_BUFFER_CAPS (src));
   }
+
+  if ((flags & GST_BUFFER_COPY_QDATA)) {
+    GST_CAT_TRACE (GST_CAT_BUFFER, "copying qdata from %p to %p", src, dest);
+    gst_buffer_copy_qdata (dest, src);
+  }
+}
+
+/**
+ * gst_buffer_set_qdata:
+ * @buffer: a #GstBuffer
+ * @quark: name quark of data structure to set or replace
+ * @data: (transfer full) (allow-none): a #GstStructure to store with the
+ *    buffer, name must match @quark. Can be NULL to remove an existing
+ *    structure. This function takes ownership of the structure passed.
+ *
+ * Set metadata structure for name quark @quark to @data, or remove the
+ * existing metadata structure by that name in case @data is NULL.
+ *
+ * Takes ownership of @data.
+ *
+ * Since: 0.10.36
+ */
+void
+gst_buffer_set_qdata (GstBuffer * buffer, GQuark quark, GstStructure * data)
+{
+  GstBufferPrivate *priv;
+  GList *l;
+
+  g_return_if_fail (GST_IS_BUFFER (buffer));
+  g_return_if_fail (gst_buffer_is_metadata_writable (buffer));
+  g_return_if_fail (data == NULL || quark == gst_structure_get_name_id (data));
+
+  /* locking should not really be required, since the metadata_writable
+   * check ensures that the caller is the only one holding a ref, so as
+   * as a second ref is added everything turns read-only */
+  priv = gst_buffer_ensure_priv (buffer);
+
+  if (data) {
+    gst_structure_set_parent_refcount (data, &buffer->mini_object.refcount);
+  }
+
+  for (l = priv->qdata; l != NULL; l = l->next) {
+    GstStructure *s = l->data;
+
+    if (s->name == quark) {
+      GST_CAT_LOG (GST_CAT_BUFFER, "Replacing qdata '%s' on buffer %p: "
+          "%" GST_PTR_FORMAT " => %" GST_PTR_FORMAT, g_quark_to_string (quark),
+          buffer, s, data);
+      gst_structure_set_parent_refcount (s, NULL);
+      gst_structure_free (s);
+
+      if (data == NULL)
+        priv->qdata = g_list_delete_link (priv->qdata, l);
+      else
+        l->data = data;
+
+      goto done;
+    }
+  }
+
+  GST_CAT_LOG (GST_CAT_BUFFER, "Set qdata '%s' on buffer %p: %" GST_PTR_FORMAT,
+      g_quark_to_string (quark), buffer, data);
+
+  priv->qdata = g_list_prepend (priv->qdata, data);
+
+done:
+
+  return;
+}
+
+/**
+ * gst_buffer_get_qdata:
+ * @buffer: a #GstBuffer
+ * @quark: name quark of data structure to find
+ *
+ * Get metadata structure for name quark @quark.
+ *
+ * Returns: (transfer none): a #GstStructure, or NULL if not found
+ *
+ * Since: 0.10.36
+ */
+const GstStructure *
+gst_buffer_get_qdata (GstBuffer * buffer, GQuark quark)
+{
+  GstStructure *ret = NULL;
+
+  /* no need for locking: if the caller has the only ref, we're safe, and
+   * if the buffer has multiple refs, it's not metadata-writable any longer
+   * and the data can't change */
+
+  GST_CAT_LOG (GST_CAT_BUFFER, "Looking for qdata '%s' on buffer %p",
+      g_quark_to_string (quark), buffer);
+
+  if (buffer->priv != NULL) {
+    GList *l;
+
+    for (l = buffer->priv->qdata; l != NULL; l = l->next) {
+      GstStructure *s = l->data;
+
+      GST_CAT_LOG (GST_CAT_BUFFER, "checking qdata '%s' on buffer %p",
+          g_quark_to_string (s->name), buffer);
+
+      if (s->name == quark) {
+        ret = s;
+        break;
+      }
+    }
+  }
+
+  return ret;
 }
 
 static GstBuffer *
@@ -632,6 +801,9 @@ gst_buffer_create_sub (GstBuffer * buffer, guint offset, guint size)
     if ((caps = GST_BUFFER_CAPS (buffer)))
       gst_caps_ref (caps);
     GST_BUFFER_CAPS (subbuffer) = caps;
+
+    /* and also the attached qdata */
+    gst_buffer_copy_qdata (subbuffer, buffer);
   } else {
     GST_BUFFER_DURATION (subbuffer) = GST_CLOCK_TIME_NONE;
     GST_BUFFER_OFFSET_END (subbuffer) = GST_BUFFER_OFFSET_NONE;

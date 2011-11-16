@@ -94,6 +94,7 @@ EXPORTS
 	gst_buffer_create_sub
 	gst_buffer_flag_get_type
 	gst_buffer_get_caps
+	gst_buffer_get_qdata
 	gst_buffer_get_type
 	gst_buffer_is_metadata_writable
 	gst_buffer_is_span_fast
@@ -123,6 +124,7 @@ EXPORTS
 	gst_buffer_new
 	gst_buffer_new_and_alloc
 	gst_buffer_set_caps
+	gst_buffer_set_qdata
 	gst_buffer_span
 	gst_buffer_stamp
 	gst_buffer_try_new_and_alloc
