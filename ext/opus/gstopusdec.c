@@ -129,8 +129,8 @@ gst_opus_dec_reset (GstOpusDec * dec)
 static void
 gst_opus_dec_init (GstOpusDec * dec, GstOpusDecClass * g_class)
 {
-  dec->sample_rate = 48000;
-  dec->n_channels = 2;
+  dec->sample_rate = 0;
+  dec->n_channels = 0;
 
   gst_opus_dec_reset (dec);
 }
@@ -170,6 +170,48 @@ gst_opus_dec_parse_comments (GstOpusDec * dec, GstBuffer * buf)
   return GST_FLOW_OK;
 }
 
+static void
+gst_opus_dec_setup_from_peer_caps (GstOpusDec * dec)
+{
+  GstPad *srcpad, *peer;
+  GstStructure *s;
+  GstCaps *caps;
+  const GstCaps *template_caps;
+  const GstCaps *peer_caps;
+
+  srcpad = GST_AUDIO_DECODER_SRC_PAD (dec);
+  peer = gst_pad_get_peer (srcpad);
+
+  if (peer) {
+    template_caps = gst_pad_get_pad_template_caps (srcpad);
+    peer_caps = gst_pad_get_caps (peer);
+    GST_DEBUG_OBJECT (dec, "Peer caps: %" GST_PTR_FORMAT, peer_caps);
+    caps = gst_caps_intersect (template_caps, peer_caps);
+    gst_pad_fixate_caps (peer, caps);
+    GST_DEBUG_OBJECT (dec, "Fixated caps: %" GST_PTR_FORMAT, caps);
+
+    s = gst_caps_get_structure (caps, 0);
+    if (!gst_structure_get_int (s, "channels", &dec->n_channels)) {
+      dec->n_channels = 2;
+      GST_WARNING_OBJECT (dec, "Failed to get channels, using default %d",
+          dec->n_channels);
+    } else {
+      GST_DEBUG_OBJECT (dec, "Got channels %d", dec->n_channels);
+    }
+    if (!gst_structure_get_int (s, "rate", &dec->sample_rate)) {
+      dec->sample_rate = 48000;
+      GST_WARNING_OBJECT (dec, "Failed to get rate, using default %d",
+          dec->sample_rate);
+    } else {
+      GST_DEBUG_OBJECT (dec, "Got sample rate %d", dec->sample_rate);
+    }
+
+    gst_pad_set_caps (GST_AUDIO_DECODER_SRC_PAD (dec), caps);
+  } else {
+    GST_WARNING_OBJECT (dec, "Failed to get src pad peer");
+  }
+}
+
 static GstFlowReturn
 opus_dec_chain_parse_data (GstOpusDec * dec, GstBuffer * buf,
     GstClockTime timestamp, GstClockTime duration)
@@ -184,27 +226,13 @@ opus_dec_chain_parse_data (GstOpusDec * dec, GstBuffer * buf,
   unsigned int packet_size;
 
   if (dec->state == NULL) {
-    GstCaps *caps;
+    gst_opus_dec_setup_from_peer_caps (dec);
 
+    GST_DEBUG_OBJECT (dec, "Creating decoder with %d channels, %d Hz",
+        dec->n_channels, dec->sample_rate);
     dec->state = opus_decoder_create (dec->sample_rate, dec->n_channels, &err);
     if (!dec->state || err != OPUS_OK)
       goto creation_failed;
-
-    /* set caps */
-    caps = gst_caps_new_simple ("audio/x-raw-int",
-        "rate", G_TYPE_INT, dec->sample_rate,
-        "channels", G_TYPE_INT, dec->n_channels,
-        "signed", G_TYPE_BOOLEAN, TRUE,
-        "endianness", G_TYPE_INT, G_BYTE_ORDER,
-        "width", G_TYPE_INT, 16, "depth", G_TYPE_INT, 16, NULL);
-
-    GST_DEBUG_OBJECT (dec, "rate=%d channels=%d",
-        dec->sample_rate, dec->n_channels);
-
-    if (!gst_pad_set_caps (GST_AUDIO_DECODER_SRC_PAD (dec), caps))
-      GST_ERROR ("nego failure");
-
-    gst_caps_unref (caps);
   }
 
   if (buf) {
@@ -310,14 +338,6 @@ gst_opus_dec_set_format (GstAudioDecoder * bdec, GstCaps * caps)
       gst_buffer_replace (&dec->vorbiscomment, buf);
     }
   }
-  caps = gst_caps_new_simple ("audio/x-raw-int",
-      "rate", G_TYPE_INT, dec->sample_rate,
-      "channels", G_TYPE_INT, dec->n_channels,
-      "signed", G_TYPE_BOOLEAN, TRUE,
-      "endianness", G_TYPE_INT, G_BYTE_ORDER,
-      "width", G_TYPE_INT, 16, "depth", G_TYPE_INT, 16, NULL);
-  gst_pad_set_caps (GST_AUDIO_DECODER_SRC_PAD (dec), caps);
-  gst_caps_unref (caps);
 
 done:
   return ret;
