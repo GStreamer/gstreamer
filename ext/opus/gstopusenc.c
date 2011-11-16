@@ -93,9 +93,7 @@ static GstStaticPadTemplate sink_factory = GST_STATIC_PAD_TEMPLATE ("sink",
 static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("audio/x-opus, "
-        "rate = (int) { 8000, 12000, 16000, 24000, 48000 }, "
-        "channels = (int) [ 1, 2 ], " "frame-size = (int) [ 2, 60 ]")
+    GST_STATIC_CAPS ("audio/x-opus")
     );
 
 #define DEFAULT_AUDIO           TRUE
@@ -695,10 +693,7 @@ gst_opus_enc_handle_frame (GstAudioEncoder * benc, GstBuffer * buf)
     buf2 = gst_opus_enc_create_metadata_buffer (enc);
 
     /* mark and put on caps */
-    caps =
-        gst_caps_new_simple ("audio/x-opus", "rate", G_TYPE_INT,
-        enc->sample_rate, "channels", G_TYPE_INT, enc->n_channels, "frame-size",
-        G_TYPE_INT, enc->frame_size, NULL);
+    caps = gst_caps_from_string ("audio/x-opus");
     caps = _gst_caps_set_buffer_array (caps, "streamheader", buf1, buf2, NULL);
 
     /* negotiate with these caps */
