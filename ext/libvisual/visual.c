@@ -268,7 +268,7 @@ static GstCaps *
 gst_visual_getcaps (GstPad * pad, GstCaps * filter)
 {
   GstCaps *ret;
-  GstVisual *visual = GST_VISUAL (gst_pad_get_parent (pad));
+  GstVisual *visual = GST_VISUAL (GST_PAD_PARENT (pad));
   int depths;
 
   if (!visual->actor) {
@@ -319,7 +319,7 @@ beach:
   }
 
   GST_DEBUG_OBJECT (visual, "returning caps %" GST_PTR_FORMAT, ret);
-  gst_object_unref (visual);
+
   return ret;
 }
 
@@ -382,7 +382,7 @@ error:
 static gboolean
 gst_visual_sink_setcaps (GstPad * pad, GstCaps * caps)
 {
-  GstVisual *visual = GST_VISUAL (gst_pad_get_parent (pad));
+  GstVisual *visual = GST_VISUAL (GST_PAD_PARENT (pad));
   GstAudioInfo info;
   gint rate;
 
@@ -400,15 +400,12 @@ gst_visual_sink_setcaps (GstPad * pad, GstCaps * caps)
         gst_util_uint64_scale_int (rate, visual->fps_d, visual->fps_n);
   }
 
-  gst_object_unref (visual);
-
   return TRUE;
 
   /* ERRORS */
 invalid_caps:
   {
     GST_ERROR_OBJECT (visual, "invalid caps received");
-    gst_object_unref (visual);
     return FALSE;
   }
 }
@@ -511,7 +508,7 @@ gst_visual_sink_event (GstPad * pad, GstEvent * event)
   GstVisual *visual;
   gboolean res;
 
-  visual = GST_VISUAL (gst_pad_get_parent (pad));
+  visual = GST_VISUAL (GST_PAD_PARENT (pad));
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_FLUSH_START:
@@ -547,7 +544,6 @@ gst_visual_sink_event (GstPad * pad, GstEvent * event)
       break;
   }
 
-  gst_object_unref (visual);
   return res;
 }
 
@@ -557,7 +553,7 @@ gst_visual_src_event (GstPad * pad, GstEvent * event)
   GstVisual *visual;
   gboolean res;
 
-  visual = GST_VISUAL (gst_pad_get_parent (pad));
+  visual = GST_VISUAL (GST_PAD_PARENT (pad));
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_QOS:
@@ -593,7 +589,6 @@ gst_visual_src_event (GstPad * pad, GstEvent * event)
       break;
   }
 
-  gst_object_unref (visual);
   return res;
 }
 
@@ -603,7 +598,7 @@ gst_visual_src_query (GstPad * pad, GstQuery * query)
   gboolean res;
   GstVisual *visual;
 
-  visual = GST_VISUAL (gst_pad_get_parent (pad));
+  visual = GST_VISUAL (GST_PAD_PARENT (pad));
 
   switch (GST_QUERY_TYPE (query)) {
     case GST_QUERY_LATENCY:
@@ -660,8 +655,6 @@ gst_visual_src_query (GstPad * pad, GstQuery * query)
       break;
   }
 
-  gst_object_unref (visual);
-
   return res;
 }
 
@@ -671,10 +664,7 @@ ensure_negotiated (GstVisual * visual)
 {
   gboolean reconfigure;
 
-  GST_OBJECT_LOCK (visual->srcpad);
-  reconfigure = GST_PAD_NEEDS_RECONFIGURE (visual->srcpad);
-  GST_OBJECT_FLAG_UNSET (visual->srcpad, GST_PAD_NEED_RECONFIGURE);
-  GST_OBJECT_UNLOCK (visual->srcpad);
+  reconfigure = gst_pad_check_reconfigure (visual->srcpad);
 
   /* we don't know an output format yet, pick one */
   if (reconfigure || !gst_pad_has_current_caps (visual->srcpad)) {
@@ -689,7 +679,7 @@ gst_visual_chain (GstPad * pad, GstBuffer * buffer)
 {
   GstBuffer *outbuf = NULL;
   guint i;
-  GstVisual *visual = GST_VISUAL (gst_pad_get_parent (pad));
+  GstVisual *visual = GST_VISUAL (GST_PAD_PARENT (pad));
   GstFlowReturn ret = GST_FLOW_OK;
   guint avail;
   gint bpf, rate, channels;
@@ -893,8 +883,6 @@ beach:
 
   if (outbuf != NULL)
     gst_buffer_unref (outbuf);
-
-  gst_object_unref (visual);
 
   return ret;
 }
