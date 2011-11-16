@@ -421,7 +421,7 @@ gst_output_selector_chain (GstPad * pad, GstBuffer * buf)
   GstOutputSelector *osel;
   GstClockTime position, duration;
 
-  osel = GST_OUTPUT_SELECTOR (gst_pad_get_parent (pad));
+  osel = GST_OUTPUT_SELECTOR (GST_PAD_PARENT (pad));
 
   /*
    * The _switch function might push a buffer if 'resend-latest' is true.
@@ -465,7 +465,6 @@ gst_output_selector_chain (GstPad * pad, GstBuffer * buf)
   GST_LOG_OBJECT (osel, "pushing buffer to %" GST_PTR_FORMAT,
       osel->active_srcpad);
   res = gst_pad_push (osel->active_srcpad, buf);
-  gst_object_unref (osel);
 
   return res;
 }
@@ -506,11 +505,7 @@ gst_output_selector_event (GstPad * pad, GstEvent * event)
   GstOutputSelector *sel;
   GstPad *active = NULL;
 
-  sel = GST_OUTPUT_SELECTOR (gst_pad_get_parent (pad));
-  if (G_UNLIKELY (sel == NULL)) {
-    gst_event_unref (event);
-    return FALSE;
-  }
+  sel = GST_OUTPUT_SELECTOR (GST_PAD_PARENT (pad));
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_CAPS:
@@ -564,8 +559,6 @@ gst_output_selector_event (GstPad * pad, GstEvent * event)
     }
   }
 
-  gst_object_unref (sel);
-
   return res;
 }
 
@@ -576,10 +569,7 @@ gst_output_selector_query (GstPad * pad, GstQuery * query)
   GstOutputSelector *sel;
   GstPad *active = NULL;
 
-  sel = GST_OUTPUT_SELECTOR (gst_pad_get_parent (pad));
-  if (G_UNLIKELY (sel == NULL)) {
-    return FALSE;
-  }
+  sel = GST_OUTPUT_SELECTOR (GST_PAD_PARENT (pad));
 
   switch (GST_QUERY_TYPE (query)) {
     case GST_QUERY_CAPS:
@@ -607,8 +597,6 @@ gst_output_selector_query (GstPad * pad, GstQuery * query)
     default:
       break;
   }
-
-  gst_object_unref (sel);
 
   return res;
 }

@@ -336,9 +336,7 @@ gst_selector_pad_iterate_linked_pads (GstPad * pad)
   GstIterator *it = NULL;
   GValue val = { 0, };
 
-  sel = GST_INPUT_SELECTOR (gst_pad_get_parent (pad));
-  if (G_UNLIKELY (sel == NULL))
-    return NULL;
+  sel = GST_INPUT_SELECTOR (GST_PAD_PARENT (pad));
 
   otherpad = gst_input_selector_get_linked_pad (sel, pad, TRUE);
   if (otherpad) {
@@ -348,7 +346,6 @@ gst_selector_pad_iterate_linked_pads (GstPad * pad)
     g_value_unset (&val);
     gst_object_unref (otherpad);
   }
-  gst_object_unref (sel);
 
   return it;
 }
@@ -363,11 +360,7 @@ gst_selector_pad_event (GstPad * pad, GstEvent * event)
   GstPad *prev_active_sinkpad;
   GstPad *active_sinkpad;
 
-  sel = GST_INPUT_SELECTOR (gst_pad_get_parent (pad));
-  if (G_UNLIKELY (sel == NULL)) {
-    gst_event_unref (event);
-    return FALSE;
-  }
+  sel = GST_INPUT_SELECTOR (GST_PAD_PARENT (pad));
   selpad = GST_SELECTOR_PAD_CAST (pad);
 
   GST_INPUT_SELECTOR_LOCK (sel);
@@ -485,8 +478,6 @@ gst_selector_pad_event (GstPad * pad, GstEvent * event)
   } else
     gst_event_unref (event);
 
-  gst_object_unref (sel);
-
   return res;
 }
 
@@ -494,19 +485,12 @@ static gboolean
 gst_selector_pad_query (GstPad * pad, GstQuery * query)
 {
   gboolean res = FALSE;
-  GstInputSelector *sel;
-
-  sel = GST_INPUT_SELECTOR (gst_pad_get_parent (pad));
-  if (G_UNLIKELY (sel == NULL))
-    return FALSE;
 
   switch (GST_QUERY_TYPE (query)) {
     default:
       res = gst_pad_query_default (pad, query);
       break;
   }
-
-  gst_object_unref (sel);
 
   return res;
 }
@@ -635,7 +619,7 @@ gst_selector_pad_chain (GstPad * pad, GstBuffer * buf)
   GstSegment *seg;
   GstEvent *start_event = NULL;
 
-  sel = GST_INPUT_SELECTOR (gst_pad_get_parent (pad));
+  sel = GST_INPUT_SELECTOR (GST_PAD_PARENT (pad));
   selpad = GST_SELECTOR_PAD_CAST (pad);
   seg = &selpad->segment;
 
@@ -721,7 +705,6 @@ gst_selector_pad_chain (GstPad * pad, GstBuffer * buf)
   selpad->pushed = TRUE;
 
 done:
-  gst_object_unref (sel);
   return res;
 
   /* dropped buffers */
@@ -1050,12 +1033,7 @@ gst_input_selector_event (GstPad * pad, GstEvent * event)
   GstPad *eventpad;
   GList *pushed_pads = NULL;
 
-  sel = GST_INPUT_SELECTOR (gst_pad_get_parent (pad));
-  if (G_UNLIKELY (sel == NULL)) {
-    gst_event_unref (event);
-    return FALSE;
-  }
-
+  sel = GST_INPUT_SELECTOR (GST_PAD_PARENT (pad));
   /* Send upstream events to all sinkpads */
   iter = gst_element_iterate_sink_pads (GST_ELEMENT_CAST (sel));
 
@@ -1110,9 +1088,7 @@ gst_input_selector_query (GstPad * pad, GstQuery * query)
   gboolean res = FALSE;
   GstInputSelector *sel;
 
-  sel = GST_INPUT_SELECTOR (gst_pad_get_parent (pad));
-  if (G_UNLIKELY (sel == NULL))
-    return FALSE;
+  sel = GST_INPUT_SELECTOR (GST_PAD_PARENT (pad));
 
   switch (GST_QUERY_TYPE (query)) {
     case GST_QUERY_LATENCY:
@@ -1173,8 +1149,6 @@ gst_input_selector_query (GstPad * pad, GstQuery * query)
       res = gst_pad_query_default (pad, query);
       break;
   }
-
-  gst_object_unref (sel);
 
   return res;
 }

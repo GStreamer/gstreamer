@@ -198,9 +198,7 @@ gst_valve_sink_event (GstPad * pad, GstEvent * event)
   GstValve *valve;
   gboolean ret = TRUE;
 
-  valve = GST_VALVE (gst_pad_get_parent (pad));
-  if (valve == NULL)
-    return FALSE;
+  valve = GST_VALVE (GST_PAD_PARENT (pad));
 
   if (g_atomic_int_get (&valve->drop))
     gst_event_unref (event);
@@ -213,7 +211,6 @@ gst_valve_sink_event (GstPad * pad, GstEvent * event)
   if (g_atomic_int_get (&valve->drop))
     ret = TRUE;
 
-  gst_object_unref (valve);
   return ret;
 }
 
@@ -224,9 +221,7 @@ gst_valve_query (GstPad * pad, GstQuery * query)
   gboolean res;
   GstPad *otherpad;
 
-  valve = GST_VALVE (gst_pad_get_parent (pad));
-  if (valve == NULL)
-    return FALSE;
+  valve = GST_VALVE (GST_PAD_PARENT (pad));
 
   otherpad = (pad == valve->sinkpad ? valve->srcpad : valve->sinkpad);
 
@@ -239,8 +234,6 @@ gst_valve_query (GstPad * pad, GstQuery * query)
       res = gst_pad_peer_query (otherpad, query);
       break;
   }
-
-  gst_object_unref (valve);
 
   return res;
 }

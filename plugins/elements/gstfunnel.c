@@ -215,7 +215,7 @@ static GstFlowReturn
 gst_funnel_sink_chain (GstPad * pad, GstBuffer * buffer)
 {
   GstFlowReturn res;
-  GstFunnel *funnel = GST_FUNNEL (gst_pad_get_parent (pad));
+  GstFunnel *funnel = GST_FUNNEL (GST_PAD_PARENT (pad));
   GstFunnelPad *fpad = GST_FUNNEL_PAD_CAST (pad);
   GstEvent *event = NULL;
   GstClockTime newts;
@@ -275,7 +275,6 @@ gst_funnel_sink_chain (GstPad * pad, GstBuffer * buffer)
 #if 0
 out:
 #endif
-  gst_object_unref (funnel);
 
   return res;
 }
@@ -283,15 +282,10 @@ out:
 static gboolean
 gst_funnel_sink_event (GstPad * pad, GstEvent * event)
 {
-  GstFunnel *funnel = GST_FUNNEL (gst_pad_get_parent (pad));
+  GstFunnel *funnel = GST_FUNNEL (GST_PAD_PARENT (pad));
   GstFunnelPad *fpad = GST_FUNNEL_PAD_CAST (pad);
   gboolean forward = TRUE;
   gboolean res = TRUE;
-
-  if (G_UNLIKELY (funnel == NULL)) {
-    gst_event_unref (event);
-    return FALSE;
-  }
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_SEGMENT:
@@ -320,27 +314,18 @@ gst_funnel_sink_event (GstPad * pad, GstEvent * event)
   else
     gst_event_unref (event);
 
-  gst_object_unref (funnel);
-
   return res;
 }
 
 static gboolean
 gst_funnel_sink_query (GstPad * pad, GstQuery * query)
 {
-  GstFunnel *funnel = GST_FUNNEL (gst_pad_get_parent (pad));
+  GstFunnel *funnel = GST_FUNNEL (GST_PAD_PARENT (pad));
   gboolean forward = TRUE;
   gboolean res = TRUE;
 
-  if (G_UNLIKELY (funnel == NULL)) {
-    gst_query_unref (query);
-    return FALSE;
-  }
-
   if (forward)
     res = gst_pad_peer_query (funnel->srcpad, query);
-
-  gst_object_unref (funnel);
 
   return res;
 }
@@ -355,11 +340,7 @@ gst_funnel_src_event (GstPad * pad, GstEvent * event)
   gboolean done = FALSE;
   GValue value = { 0, };
 
-  funnel = gst_pad_get_parent_element (pad);
-  if (G_UNLIKELY (funnel == NULL)) {
-    gst_event_unref (event);
-    return FALSE;
-  }
+  funnel = GST_ELEMENT_CAST (GST_PAD_PARENT (pad));
 
   iter = gst_element_iterate_sink_pads (funnel);
 
@@ -384,7 +365,6 @@ gst_funnel_src_event (GstPad * pad, GstEvent * event)
   }
   g_value_unset (&value);
   gst_iterator_free (iter);
-  gst_object_unref (funnel);
   gst_event_unref (event);
 
   return result;

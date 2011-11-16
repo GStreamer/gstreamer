@@ -708,15 +708,13 @@ gst_tee_chain_list (GstPad * pad, GstBufferList * list)
   GstFlowReturn res;
   GstTee *tee;
 
-  tee = GST_TEE_CAST (gst_pad_get_parent (pad));
+  tee = GST_TEE_CAST (GST_PAD_PARENT (pad));
 
   GST_DEBUG_OBJECT (tee, "received list %p", list);
 
   res = gst_tee_handle_data (tee, list, TRUE);
 
   GST_DEBUG_OBJECT (tee, "handled list %s", gst_flow_get_name (res));
-
-  gst_object_unref (tee);
 
   return res;
 }
@@ -754,7 +752,7 @@ gst_tee_src_activate_pull (GstPad * pad, gboolean active)
   gboolean res;
   GstPad *sinkpad;
 
-  tee = GST_TEE (gst_pad_get_parent (pad));
+  tee = GST_TEE (GST_PAD_PARENT (pad));
 
   GST_OBJECT_LOCK (tee);
 
@@ -785,8 +783,6 @@ gst_tee_src_activate_pull (GstPad * pad, gboolean active)
   tee->sink_mode = active & GST_PAD_ACTIVATE_PULL;
   GST_OBJECT_UNLOCK (tee);
 
-  gst_object_unref (tee);
-
   return res;
 
   /* ERRORS */
@@ -795,7 +791,6 @@ cannot_pull:
     GST_OBJECT_UNLOCK (tee);
     GST_INFO_OBJECT (tee, "Cannot activate in pull mode, pull-mode "
         "set to NEVER");
-    gst_object_unref (tee);
     return FALSE;
   }
 cannot_pull_multiple_srcs:
@@ -803,14 +798,12 @@ cannot_pull_multiple_srcs:
     GST_OBJECT_UNLOCK (tee);
     GST_INFO_OBJECT (tee, "Cannot activate multiple src pads in pull mode, "
         "pull-mode set to SINGLE");
-    gst_object_unref (tee);
     return FALSE;
   }
 sink_activate_failed:
   {
     GST_INFO_OBJECT (tee, "Failed to %sactivate sink pad in pull mode",
         active ? "" : "de");
-    gst_object_unref (tee);
     return FALSE;
   }
 }
@@ -822,7 +815,7 @@ gst_tee_src_query (GstPad * pad, GstQuery * query)
   gboolean res;
   GstPad *sinkpad;
 
-  tee = GST_TEE (gst_pad_get_parent (pad));
+  tee = GST_TEE (GST_PAD_PARENT (pad));
 
   switch (GST_QUERY_TYPE (query)) {
     case GST_QUERY_SCHEDULING:
@@ -858,8 +851,6 @@ gst_tee_src_query (GstPad * pad, GstQuery * query)
       break;
   }
 
-  gst_object_unref (tee);
-
   return res;
 }
 
@@ -890,7 +881,7 @@ gst_tee_src_get_range (GstPad * pad, guint64 offset, guint length,
   GstTee *tee;
   GstFlowReturn ret;
 
-  tee = GST_TEE (gst_pad_get_parent (pad));
+  tee = GST_TEE (GST_PAD_PARENT (pad));
 
   ret = gst_pad_pull_range (tee->sinkpad, offset, length, buf);
 
@@ -898,8 +889,6 @@ gst_tee_src_get_range (GstPad * pad, guint64 offset, guint length,
     ret = gst_tee_handle_data (tee, gst_buffer_ref (*buf), FALSE);
   else if (ret == GST_FLOW_EOS)
     gst_tee_pull_eos (tee);
-
-  gst_object_unref (tee);
 
   return ret;
 }

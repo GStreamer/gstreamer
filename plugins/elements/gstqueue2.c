@@ -2017,19 +2017,12 @@ static gboolean
 gst_queue2_handle_sink_query (GstPad * pad, GstQuery * query)
 {
   gboolean res;
-  GstQueue2 *queue;
-
-  queue = GST_QUEUE2 (gst_pad_get_parent (pad));
-  if (G_UNLIKELY (queue == NULL))
-    return FALSE;
 
   switch (GST_QUERY_TYPE (query)) {
     default:
       res = gst_pad_query_default (pad, query);
       break;
   }
-  gst_object_unref (queue);
-
   return res;
 }
 
@@ -2329,12 +2322,8 @@ static gboolean
 gst_queue2_handle_src_event (GstPad * pad, GstEvent * event)
 {
   gboolean res = TRUE;
-  GstQueue2 *queue = GST_QUEUE2 (gst_pad_get_parent (pad));
+  GstQueue2 *queue = GST_QUEUE2 (GST_PAD_PARENT (pad));
 
-  if (G_UNLIKELY (queue == NULL)) {
-    gst_event_unref (event);
-    return FALSE;
-  }
 #ifndef GST_DISABLE_GST_DEBUG
   GST_CAT_DEBUG_OBJECT (queue_dataflow, queue, "got event %p (%s)",
       event, GST_EVENT_TYPE_NAME (event));
@@ -2384,7 +2373,6 @@ gst_queue2_handle_src_event (GstPad * pad, GstEvent * event)
       break;
   }
 
-  gst_object_unref (queue);
   return res;
 }
 
@@ -2393,9 +2381,7 @@ gst_queue2_handle_src_query (GstPad * pad, GstQuery * query)
 {
   GstQueue2 *queue;
 
-  queue = GST_QUEUE2 (gst_pad_get_parent (pad));
-  if (G_UNLIKELY (queue == NULL))
-    return FALSE;
+  queue = GST_QUEUE2 (GST_PAD_PARENT (pad));
 
   switch (GST_QUERY_TYPE (query)) {
     case GST_QUERY_POSITION:
@@ -2574,14 +2560,12 @@ gst_queue2_handle_src_query (GstPad * pad, GstQuery * query)
       break;
   }
 
-  gst_object_unref (queue);
   return TRUE;
 
   /* ERRORS */
 peer_failed:
   {
     GST_DEBUG_OBJECT (queue, "failed peer query");
-    gst_object_unref (queue);
     return FALSE;
   }
 }
@@ -2612,7 +2596,7 @@ gst_queue2_get_range (GstPad * pad, guint64 offset, guint length,
   GstQueue2 *queue;
   GstFlowReturn ret;
 
-  queue = GST_QUEUE2_CAST (gst_pad_get_parent (pad));
+  queue = GST_QUEUE2_CAST (GST_PAD_PARENT (pad));
 
   length = (length == -1) ? DEFAULT_BUFFER_SIZE : length;
   GST_QUEUE2_MUTEX_LOCK_CHECK (queue, queue->srcresult, out_flushing);
@@ -2644,8 +2628,6 @@ gst_queue2_get_range (GstPad * pad, guint64 offset, guint length,
   ret = gst_queue2_create_read (queue, offset, length, buffer);
   GST_QUEUE2_MUTEX_UNLOCK (queue);
 
-  gst_object_unref (queue);
-
   return ret;
 
   /* ERRORS */
@@ -2655,14 +2637,12 @@ out_flushing:
 
     GST_DEBUG_OBJECT (queue, "we are flushing");
     GST_QUEUE2_MUTEX_UNLOCK (queue);
-    gst_object_unref (queue);
     return ret;
   }
 out_unexpected:
   {
     GST_DEBUG_OBJECT (queue, "read beyond end of file");
     GST_QUEUE2_MUTEX_UNLOCK (queue);
-    gst_object_unref (queue);
     return GST_FLOW_EOS;
   }
 }
@@ -2674,7 +2654,7 @@ gst_queue2_sink_activate_push (GstPad * pad, gboolean active)
   gboolean result = TRUE;
   GstQueue2 *queue;
 
-  queue = GST_QUEUE2 (gst_pad_get_parent (pad));
+  queue = GST_QUEUE2 (GST_PAD_PARENT (pad));
 
   if (active) {
     GST_QUEUE2_MUTEX_LOCK (queue);
@@ -2695,8 +2675,6 @@ gst_queue2_sink_activate_push (GstPad * pad, gboolean active)
     GST_QUEUE2_MUTEX_UNLOCK (queue);
   }
 
-  gst_object_unref (queue);
-
   return result;
 }
 
@@ -2708,7 +2686,7 @@ gst_queue2_src_activate_push (GstPad * pad, gboolean active)
   gboolean result = FALSE;
   GstQueue2 *queue;
 
-  queue = GST_QUEUE2 (gst_pad_get_parent (pad));
+  queue = GST_QUEUE2 (GST_PAD_PARENT (pad));
 
   if (active) {
     GST_QUEUE2_MUTEX_LOCK (queue);
@@ -2733,8 +2711,6 @@ gst_queue2_src_activate_push (GstPad * pad, gboolean active)
     result = gst_pad_stop_task (pad);
   }
 
-  gst_object_unref (queue);
-
   return result;
 }
 
@@ -2745,7 +2721,7 @@ gst_queue2_src_activate_pull (GstPad * pad, gboolean active)
   gboolean result;
   GstQueue2 *queue;
 
-  queue = GST_QUEUE2 (gst_pad_get_parent (pad));
+  queue = GST_QUEUE2 (GST_PAD_PARENT (pad));
 
   if (active) {
     GST_QUEUE2_MUTEX_LOCK (queue);
@@ -2786,7 +2762,6 @@ gst_queue2_src_activate_pull (GstPad * pad, gboolean active)
     result = TRUE;
     GST_QUEUE2_MUTEX_UNLOCK (queue);
   }
-  gst_object_unref (queue);
 
   return result;
 }

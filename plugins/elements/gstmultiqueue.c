@@ -580,7 +580,7 @@ gst_multi_queue_iterate_internal_links (GstPad * pad)
   GstIterator *it = NULL;
   GstPad *opad;
   GstSingleQueue *squeue;
-  GstMultiQueue *mq = GST_MULTI_QUEUE (gst_pad_get_parent (pad));
+  GstMultiQueue *mq = GST_MULTI_QUEUE (GST_PAD_PARENT (pad));
   GValue val = { 0, };
 
   GST_MULTI_QUEUE_MUTEX_LOCK (mq);
@@ -604,7 +604,6 @@ gst_multi_queue_iterate_internal_links (GstPad * pad)
 
 out:
   GST_MULTI_QUEUE_MUTEX_UNLOCK (mq);
-  gst_object_unref (mq);
 
   return it;
 }
@@ -1412,7 +1411,7 @@ gst_multi_queue_sink_event (GstPad * pad, GstEvent * event)
   GstEvent *sref = NULL;
 
   sq = (GstSingleQueue *) gst_pad_get_element_private (pad);
-  mq = (GstMultiQueue *) gst_pad_get_parent (pad);
+  mq = (GstMultiQueue *) GST_PAD_PARENT (pad);
 
   type = GST_EVENT_TYPE (event);
 
@@ -1483,7 +1482,6 @@ gst_multi_queue_sink_event (GstPad * pad, GstEvent * event)
       break;
   }
 done:
-  gst_object_unref (mq);
   return res;
 
 flushing:

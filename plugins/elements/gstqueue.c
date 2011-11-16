@@ -462,7 +462,7 @@ gst_queue_link_src (GstPad * pad, GstPad * peer)
   GstPadLinkReturn result = GST_PAD_LINK_OK;
   GstQueue *queue;
 
-  queue = GST_QUEUE (gst_pad_get_parent (pad));
+  queue = GST_QUEUE (GST_PAD_PARENT (pad));
 
   GST_DEBUG_OBJECT (queue, "queue linking source pad");
 
@@ -482,7 +482,6 @@ gst_queue_link_src (GstPad * pad, GstPad * peer)
     }
     GST_QUEUE_MUTEX_UNLOCK (queue);
   }
-  gst_object_unref (queue);
 
   return result;
 }
@@ -729,11 +728,7 @@ gst_queue_handle_sink_event (GstPad * pad, GstEvent * event)
 {
   GstQueue *queue;
 
-  queue = GST_QUEUE (gst_pad_get_parent (pad));
-  if (G_UNLIKELY (queue == NULL)) {
-    gst_event_unref (event);
-    return FALSE;
-  }
+  queue = GST_QUEUE (GST_PAD_PARENT (pad));
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_FLUSH_START:
@@ -794,7 +789,6 @@ gst_queue_handle_sink_event (GstPad * pad, GstEvent * event)
       break;
   }
 done:
-  gst_object_unref (queue);
   return TRUE;
 
   /* ERRORS */
@@ -803,7 +797,6 @@ out_flushing:
     GST_CAT_LOG_OBJECT (queue_dataflow, queue,
         "refusing event, we are flushing");
     GST_QUEUE_MUTEX_UNLOCK (queue);
-    gst_object_unref (queue);
     gst_event_unref (event);
     return FALSE;
   }
@@ -811,7 +804,6 @@ out_eos:
   {
     GST_CAT_LOG_OBJECT (queue_dataflow, queue, "refusing event, we are EOS");
     GST_QUEUE_MUTEX_UNLOCK (queue);
-    gst_object_unref (queue);
     gst_event_unref (event);
     return FALSE;
   }
@@ -820,11 +812,8 @@ out_eos:
 static gboolean
 gst_queue_handle_sink_query (GstPad * pad, GstQuery * query)
 {
-  GstQueue *queue = GST_QUEUE (gst_pad_get_parent (pad));
+  GstQueue *queue = GST_QUEUE (GST_PAD_PARENT (pad));
   gboolean res;
-
-  if (G_UNLIKELY (queue == NULL))
-    return FALSE;
 
   switch (GST_QUERY_TYPE (query)) {
     case GST_QUERY_ACCEPT_CAPS:
@@ -834,7 +823,6 @@ gst_queue_handle_sink_query (GstPad * pad, GstQuery * query)
         res = gst_pad_query_default (pad, query);
       break;
   }
-  gst_object_unref (queue);
 
   return res;
 }
@@ -1213,12 +1201,8 @@ static gboolean
 gst_queue_handle_src_event (GstPad * pad, GstEvent * event)
 {
   gboolean res = TRUE;
-  GstQueue *queue = GST_QUEUE (gst_pad_get_parent (pad));
+  GstQueue *queue = GST_QUEUE (GST_PAD_PARENT (pad));
 
-  if (G_UNLIKELY (queue == NULL)) {
-    gst_event_unref (event);
-    return FALSE;
-  }
 #ifndef GST_DISABLE_GST_DEBUG
   GST_CAT_DEBUG_OBJECT (queue_dataflow, queue, "got event %p (%d)",
       event, GST_EVENT_TYPE (event));
@@ -1226,22 +1210,17 @@ gst_queue_handle_src_event (GstPad * pad, GstEvent * event)
 
   res = gst_pad_push_event (queue->sinkpad, event);
 
-  gst_object_unref (queue);
   return res;
 }
 
 static gboolean
 gst_queue_handle_src_query (GstPad * pad, GstQuery * query)
 {
-  GstQueue *queue = GST_QUEUE (gst_pad_get_parent (pad));
+  GstQueue *queue = GST_QUEUE (GST_PAD_PARENT (pad));
   gboolean res;
-
-  if (G_UNLIKELY (queue == NULL))
-    return FALSE;
 
   res = gst_pad_peer_query (queue->sinkpad, query);
   if (!res) {
-    gst_object_unref (queue);
     return FALSE;
   }
 
@@ -1299,7 +1278,6 @@ gst_queue_handle_src_query (GstPad * pad, GstQuery * query)
       break;
   }
 
-  gst_object_unref (queue);
   return TRUE;
 }
 
@@ -1309,7 +1287,7 @@ gst_queue_sink_activate_push (GstPad * pad, gboolean active)
   gboolean result = TRUE;
   GstQueue *queue;
 
-  queue = GST_QUEUE (gst_pad_get_parent (pad));
+  queue = GST_QUEUE (GST_PAD_PARENT (pad));
 
   if (active) {
     GST_QUEUE_MUTEX_LOCK (queue);
@@ -1325,8 +1303,6 @@ gst_queue_sink_activate_push (GstPad * pad, gboolean active)
     GST_QUEUE_MUTEX_UNLOCK (queue);
   }
 
-  gst_object_unref (queue);
-
   return result;
 }
 
@@ -1336,7 +1312,7 @@ gst_queue_src_activate_push (GstPad * pad, gboolean active)
   gboolean result = FALSE;
   GstQueue *queue;
 
-  queue = GST_QUEUE (gst_pad_get_parent (pad));
+  queue = GST_QUEUE (GST_PAD_PARENT (pad));
 
   if (active) {
     GST_QUEUE_MUTEX_LOCK (queue);
@@ -1362,8 +1338,6 @@ gst_queue_src_activate_push (GstPad * pad, gboolean active)
     /* step 2, make sure streaming finishes */
     result = gst_pad_stop_task (pad);
   }
-
-  gst_object_unref (queue);
 
   return result;
 }
