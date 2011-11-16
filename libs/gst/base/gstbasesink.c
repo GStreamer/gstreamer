@@ -385,7 +385,8 @@ static gboolean gst_base_sink_default_prepare_seek_segment (GstBaseSink * sink,
 static GstStateChangeReturn gst_base_sink_change_state (GstElement * element,
     GstStateChange transition);
 
-static gboolean gst_base_sink_sink_query (GstPad * pad, GstQuery * query);
+static gboolean gst_base_sink_sink_query (GstPad * pad, GstObject * parent,
+    GstQuery * query);
 static GstFlowReturn gst_base_sink_chain (GstPad * pad, GstBuffer * buffer);
 static GstFlowReturn gst_base_sink_chain_list (GstPad * pad,
     GstBufferList * list);
@@ -2056,8 +2057,8 @@ gst_base_sink_wait_clock (GstBaseSink * sink, GstClockTime time,
   /* FIXME: Casting to GstClockEntry only works because the types
    * are the same */
   if (G_LIKELY (sink->priv->cached_clock_id != NULL
-          && GST_CLOCK_ENTRY_CLOCK ((GstClockEntry *) sink->
-              priv->cached_clock_id) == clock)) {
+          && GST_CLOCK_ENTRY_CLOCK ((GstClockEntry *) sink->priv->
+              cached_clock_id) == clock)) {
     if (!gst_clock_single_shot_id_reinit (clock, sink->priv->cached_clock_id,
             time)) {
       gst_clock_id_unref (sink->priv->cached_clock_id);
@@ -4860,33 +4861,28 @@ default_sink_query (GstBaseSink * basesink, GstQuery * query)
       break;
     }
     default:
-      res = gst_pad_query_default (basesink->sinkpad, query);
+      res =
+          gst_pad_query_default (basesink->sinkpad, GST_OBJECT_CAST (basesink),
+          query);
       break;
   }
   return res;
 }
 
 static gboolean
-gst_base_sink_sink_query (GstPad * pad, GstQuery * query)
+gst_base_sink_sink_query (GstPad * pad, GstObject * parent, GstQuery * query)
 {
   GstBaseSink *basesink;
   GstBaseSinkClass *bclass;
   gboolean res;
 
-  basesink = GST_BASE_SINK_CAST (gst_pad_get_parent (pad));
-  if (G_UNLIKELY (basesink == NULL)) {
-    gst_query_unref (query);
-    return FALSE;
-  }
-
+  basesink = GST_BASE_SINK_CAST (parent);
   bclass = GST_BASE_SINK_GET_CLASS (basesink);
 
   if (bclass->query)
     res = bclass->query (basesink, query);
   else
     res = FALSE;
-
-  gst_object_unref (basesink);
 
   return res;
 }

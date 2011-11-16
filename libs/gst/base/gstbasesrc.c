@@ -294,7 +294,8 @@ static gboolean gst_base_src_event_handler (GstPad * pad, GstEvent * event);
 static gboolean gst_base_src_send_event (GstElement * elem, GstEvent * event);
 static gboolean gst_base_src_default_event (GstBaseSrc * src, GstEvent * event);
 
-static gboolean gst_base_src_query (GstPad * pad, GstQuery * query);
+static gboolean gst_base_src_query (GstPad * pad, GstObject * parent,
+    GstQuery * query);
 
 static gboolean gst_base_src_activate_pool (GstBaseSrc * basesrc,
     gboolean active);
@@ -1145,22 +1146,17 @@ gst_base_src_default_query (GstBaseSrc * src, GstQuery * query)
 }
 
 static gboolean
-gst_base_src_query (GstPad * pad, GstQuery * query)
+gst_base_src_query (GstPad * pad, GstObject * parent, GstQuery * query)
 {
   GstBaseSrc *src;
   GstBaseSrcClass *bclass;
   gboolean result = FALSE;
 
-  src = GST_BASE_SRC (gst_pad_get_parent (pad));
-  if (G_UNLIKELY (src == NULL))
-    return FALSE;
-
+  src = GST_BASE_SRC (parent);
   bclass = GST_BASE_SRC_GET_CLASS (src);
 
   if (bclass->query)
     result = bclass->query (src, query);
-
-  gst_object_unref (src);
 
   return result;
 }

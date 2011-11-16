@@ -2776,6 +2776,7 @@ done:
 /**
  * gst_pad_query_default:
  * @pad: a #GstPad to call the default query handler on.
+ * @parent: the parent of @pad or NULL
  * @query: (transfer none): the #GstQuery to handle.
  *
  * Invokes the default query handler for the given pad.
@@ -2787,7 +2788,7 @@ done:
  * Returns: TRUE if the query was performed successfully.
  */
 gboolean
-gst_pad_query_default (GstPad * pad, GstQuery * query)
+gst_pad_query_default (GstPad * pad, GstObject * parent, GstQuery * query)
 {
   gboolean forward = TRUE, ret = FALSE;
 
@@ -3182,7 +3183,7 @@ gst_pad_query (GstPad * pad, GstQuery * query)
   if ((func = GST_PAD_QUERYFUNC (pad)) == NULL)
     goto no_func;
 
-  res = func (pad, query);
+  res = func (pad, parent, query);
 
   RELEASE_PARENT (parent);
 

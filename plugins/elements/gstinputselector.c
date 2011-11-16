@@ -179,7 +179,8 @@ static void gst_selector_pad_set_property (GObject * object,
 static gint64 gst_selector_pad_get_running_time (GstSelectorPad * pad);
 static void gst_selector_pad_reset (GstSelectorPad * pad);
 static gboolean gst_selector_pad_event (GstPad * pad, GstEvent * event);
-static gboolean gst_selector_pad_query (GstPad * pad, GstQuery * query);
+static gboolean gst_selector_pad_query (GstPad * pad, GstObject * parent,
+    GstQuery * query);
 static GstIterator *gst_selector_pad_iterate_linked_pads (GstPad * pad);
 static GstFlowReturn gst_selector_pad_chain (GstPad * pad, GstBuffer * buf);
 
@@ -482,13 +483,13 @@ gst_selector_pad_event (GstPad * pad, GstEvent * event)
 }
 
 static gboolean
-gst_selector_pad_query (GstPad * pad, GstQuery * query)
+gst_selector_pad_query (GstPad * pad, GstObject * parent, GstQuery * query)
 {
   gboolean res = FALSE;
 
   switch (GST_QUERY_TYPE (query)) {
     default:
-      res = gst_pad_query_default (pad, query);
+      res = gst_pad_query_default (pad, parent, query);
       break;
   }
 
@@ -753,7 +754,8 @@ static GstStateChangeReturn gst_input_selector_change_state (GstElement *
     element, GstStateChange transition);
 
 static gboolean gst_input_selector_event (GstPad * pad, GstEvent * event);
-static gboolean gst_input_selector_query (GstPad * pad, GstQuery * query);
+static gboolean gst_input_selector_query (GstPad * pad, GstObject * parent,
+    GstQuery * query);
 static gint64 gst_input_selector_block (GstInputSelector * self);
 
 /* FIXME: create these marshallers using glib-genmarshal */
@@ -1083,12 +1085,12 @@ gst_input_selector_event (GstPad * pad, GstEvent * event)
 /* query on the srcpad. We override this function because by default it will
  * only forward the query to one random sinkpad */
 static gboolean
-gst_input_selector_query (GstPad * pad, GstQuery * query)
+gst_input_selector_query (GstPad * pad, GstObject * parent, GstQuery * query)
 {
   gboolean res = FALSE;
   GstInputSelector *sel;
 
-  sel = GST_INPUT_SELECTOR (GST_PAD_PARENT (pad));
+  sel = GST_INPUT_SELECTOR (parent);
 
   switch (GST_QUERY_TYPE (query)) {
     case GST_QUERY_LATENCY:
@@ -1146,7 +1148,7 @@ gst_input_selector_query (GstPad * pad, GstQuery * query)
       break;
     }
     default:
-      res = gst_pad_query_default (pad, query);
+      res = gst_pad_query_default (pad, parent, query);
       break;
   }
 

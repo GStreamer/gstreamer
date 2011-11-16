@@ -197,10 +197,12 @@ static GstFlowReturn gst_queue_push_one (GstQueue * queue);
 static void gst_queue_loop (GstPad * pad);
 
 static gboolean gst_queue_handle_sink_event (GstPad * pad, GstEvent * event);
-static gboolean gst_queue_handle_sink_query (GstPad * pad, GstQuery * query);
+static gboolean gst_queue_handle_sink_query (GstPad * pad, GstObject * parent,
+    GstQuery * query);
 
 static gboolean gst_queue_handle_src_event (GstPad * pad, GstEvent * event);
-static gboolean gst_queue_handle_src_query (GstPad * pad, GstQuery * query);
+static gboolean gst_queue_handle_src_query (GstPad * pad, GstObject * parent,
+    GstQuery * query);
 
 static GstPadLinkReturn gst_queue_link_sink (GstPad * pad, GstPad * peer);
 static GstPadLinkReturn gst_queue_link_src (GstPad * pad, GstPad * peer);
@@ -810,20 +812,15 @@ out_eos:
 }
 
 static gboolean
-gst_queue_handle_sink_query (GstPad * pad, GstQuery * query)
+gst_queue_handle_sink_query (GstPad * pad, GstObject * parent, GstQuery * query)
 {
-  GstQueue *queue = GST_QUEUE (GST_PAD_PARENT (pad));
   gboolean res;
 
   switch (GST_QUERY_TYPE (query)) {
-    case GST_QUERY_ACCEPT_CAPS:
-    case GST_QUERY_CAPS:
     default:
-      if (!(res = gst_pad_peer_query (queue->srcpad, query)))
-        res = gst_pad_query_default (pad, query);
+      res = gst_pad_query_default (pad, parent, query);
       break;
   }
-
   return res;
 }
 
@@ -1214,15 +1211,14 @@ gst_queue_handle_src_event (GstPad * pad, GstEvent * event)
 }
 
 static gboolean
-gst_queue_handle_src_query (GstPad * pad, GstQuery * query)
+gst_queue_handle_src_query (GstPad * pad, GstObject * parent, GstQuery * query)
 {
-  GstQueue *queue = GST_QUEUE (GST_PAD_PARENT (pad));
+  GstQueue *queue = GST_QUEUE (parent);
   gboolean res;
 
   res = gst_pad_peer_query (queue->sinkpad, query);
-  if (!res) {
+  if (!res)
     return FALSE;
-  }
 
   switch (GST_QUERY_TYPE (query)) {
     case GST_QUERY_POSITION:

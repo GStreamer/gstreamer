@@ -74,7 +74,8 @@ static void gst_valve_get_property (GObject * object,
 
 static GstFlowReturn gst_valve_chain (GstPad * pad, GstBuffer * buffer);
 static gboolean gst_valve_sink_event (GstPad * pad, GstEvent * event);
-static gboolean gst_valve_query (GstPad * pad, GstQuery * query);
+static gboolean gst_valve_query (GstPad * pad, GstObject * parent,
+    GstQuery * query);
 
 #define _do_init \
   GST_DEBUG_CATEGORY_INIT (valve_debug, "valve", 0, "Valve");
@@ -215,20 +216,20 @@ gst_valve_sink_event (GstPad * pad, GstEvent * event)
 }
 
 static gboolean
-gst_valve_query (GstPad * pad, GstQuery * query)
+gst_valve_query (GstPad * pad, GstObject * parent, GstQuery * query)
 {
   GstValve *valve;
   gboolean res;
   GstPad *otherpad;
 
-  valve = GST_VALVE (GST_PAD_PARENT (pad));
+  valve = GST_VALVE (parent);
 
   otherpad = (pad == valve->sinkpad ? valve->srcpad : valve->sinkpad);
 
   switch (GST_QUERY_TYPE (query)) {
     case GST_QUERY_CAPS:
       if (!(res = gst_pad_peer_query (otherpad, query)))
-        res = gst_pad_query_default (pad, query);
+        res = gst_pad_query_default (pad, parent, query);
       break;
     default:
       res = gst_pad_peer_query (otherpad, query);

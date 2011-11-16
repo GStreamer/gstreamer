@@ -369,13 +369,17 @@ typedef GstIterator*           (*GstPadIterIntLinkFunction)    (GstPad *pad);
 /**
  * GstPadQueryFunction:
  * @pad: the #GstPad to query.
+ * @parent: the parent of @pad. If the #GST_PAD_FLAG_NEED_PARENT flag is set,
+ *          @parent is guaranteed to be not-NULL and remain valid during the
+ *          execution of this function.
  * @query: the #GstQuery object to execute
  *
  * The signature of the query function.
  *
  * Returns: TRUE if the query could be performed.
  */
-typedef gboolean		(*GstPadQueryFunction)		(GstPad *pad, GstQuery *query);
+typedef gboolean		(*GstPadQueryFunction)		(GstPad *pad, GstObject *parent,
+                                                                 GstQuery *query);
 
 
 /* linking */
@@ -879,7 +883,8 @@ GstIterator *           gst_pad_iterate_internal_links_default  (GstPad * pad);
 gboolean		gst_pad_query				(GstPad *pad, GstQuery *query);
 gboolean		gst_pad_peer_query			(GstPad *pad, GstQuery *query);
 void			gst_pad_set_query_function		(GstPad *pad, GstPadQueryFunction query);
-gboolean		gst_pad_query_default			(GstPad *pad, GstQuery *query);
+gboolean		gst_pad_query_default			(GstPad *pad, GstObject *parent,
+                                                                 GstQuery *query);
 
 /* misc helper functions */
 gboolean		gst_pad_forward                         (GstPad *pad, GstPadForwardFunction forward,

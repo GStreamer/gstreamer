@@ -290,7 +290,7 @@ GST_START_TEST (test_request_pads_named)
 GST_END_TEST;
 
 static gboolean
-mq_dummypad_query (GstPad * sinkpad, GstQuery * query)
+mq_dummypad_query (GstPad * sinkpad, GstObject * parent, GstQuery * query)
 {
   gboolean res = TRUE;
 
@@ -306,7 +306,7 @@ mq_dummypad_query (GstPad * sinkpad, GstQuery * query)
       break;
     }
     default:
-      res = gst_pad_query_default (sinkpad, query);
+      res = gst_pad_query_default (sinkpad, parent, query);
       break;
   }
   return res;

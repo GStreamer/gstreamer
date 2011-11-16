@@ -384,10 +384,12 @@ static gboolean gst_base_parse_handle_seek (GstBaseParse * parse,
 static void gst_base_parse_handle_tag (GstBaseParse * parse, GstEvent * event);
 
 static gboolean gst_base_parse_src_event (GstPad * pad, GstEvent * event);
-static gboolean gst_base_parse_src_query (GstPad * pad, GstQuery * query);
+static gboolean gst_base_parse_src_query (GstPad * pad, GstObject * parent,
+    GstQuery * query);
 
 static gboolean gst_base_parse_sink_event (GstPad * pad, GstEvent * event);
-static gboolean gst_base_parse_sink_query (GstPad * pad, GstQuery * query);
+static gboolean gst_base_parse_sink_query (GstPad * pad, GstObject * parent,
+    GstQuery * query);
 
 static GstFlowReturn gst_base_parse_chain (GstPad * pad, GstBuffer * buffer);
 static void gst_base_parse_loop (GstPad * pad);
@@ -1119,13 +1121,13 @@ gst_base_parse_sink_eventfunc (GstBaseParse * parse, GstEvent * event)
 }
 
 static gboolean
-gst_base_parse_sink_query (GstPad * pad, GstQuery * query)
+gst_base_parse_sink_query (GstPad * pad, GstObject * parent, GstQuery * query)
 {
   GstBaseParse *parse;
   GstBaseParseClass *bclass;
   gboolean res;
 
-  parse = GST_BASE_PARSE (gst_pad_get_parent (pad));
+  parse = GST_BASE_PARSE (parent);
   bclass = GST_BASE_PARSE_GET_CLASS (parse);
 
   switch (GST_QUERY_TYPE (query)) {
@@ -1148,11 +1150,10 @@ gst_base_parse_sink_query (GstPad * pad, GstQuery * query)
     }
     default:
     {
-      res = gst_pad_query_default (pad, query);
+      res = gst_pad_query_default (pad, parent, query);
       break;
     }
   }
-  gst_object_unref (parse);
 
   return res;
 }
@@ -3310,12 +3311,12 @@ gst_base_parse_get_duration (GstBaseParse * parse, GstFormat format,
 }
 
 static gboolean
-gst_base_parse_src_query (GstPad * pad, GstQuery * query)
+gst_base_parse_src_query (GstPad * pad, GstObject * parent, GstQuery * query)
 {
   GstBaseParse *parse;
   gboolean res = FALSE;
 
-  parse = GST_BASE_PARSE (GST_PAD_PARENT (pad));
+  parse = GST_BASE_PARSE (parent);
 
   GST_LOG_OBJECT (parse, "handling query: %" GST_PTR_FORMAT, query);
 
@@ -3329,7 +3330,7 @@ gst_base_parse_src_query (GstPad * pad, GstQuery * query)
       gst_query_parse_position (query, &format, NULL);
 
       /* try upstream first */
-      res = gst_pad_query_default (pad, query);
+      res = gst_pad_query_default (pad, parent, query);
       if (!res) {
         /* Fall back on interpreting segment */
         GST_OBJECT_LOCK (parse);
@@ -3363,7 +3364,7 @@ gst_base_parse_src_query (GstPad * pad, GstQuery * query)
       gst_query_parse_duration (query, &format, NULL);
 
       /* consult upstream */
-      res = gst_pad_query_default (pad, query);
+      res = gst_pad_query_default (pad, parent, query);
 
       /* otherwise best estimate from us */
       if (!res) {
@@ -3383,7 +3384,7 @@ gst_base_parse_src_query (GstPad * pad, GstQuery * query)
       gst_query_parse_seeking (query, &fmt, NULL, NULL, NULL);
 
       /* consult upstream */
-      res = gst_pad_query_default (pad, query);
+      res = gst_pad_query_default (pad, parent, query);
 
       /* we may be able to help if in TIME */
       if (fmt == GST_FORMAT_TIME && gst_base_parse_is_seekable (parse)) {
@@ -3452,7 +3453,7 @@ gst_base_parse_src_query (GstPad * pad, GstQuery * query)
       break;
     }
     default:
-      res = gst_pad_query_default (pad, query);
+      res = gst_pad_query_default (pad, parent, query);
       break;
   }
   return res;

@@ -118,7 +118,8 @@ static void gst_funnel_release_pad (GstElement * element, GstPad * pad);
 
 static GstFlowReturn gst_funnel_sink_chain (GstPad * pad, GstBuffer * buffer);
 static gboolean gst_funnel_sink_event (GstPad * pad, GstEvent * event);
-static gboolean gst_funnel_sink_query (GstPad * pad, GstQuery * query);
+static gboolean gst_funnel_sink_query (GstPad * pad, GstObject * parent,
+    GstQuery * query);
 
 static gboolean gst_funnel_src_event (GstPad * pad, GstEvent * event);
 
@@ -318,9 +319,9 @@ gst_funnel_sink_event (GstPad * pad, GstEvent * event)
 }
 
 static gboolean
-gst_funnel_sink_query (GstPad * pad, GstQuery * query)
+gst_funnel_sink_query (GstPad * pad, GstObject * parent, GstQuery * query)
 {
-  GstFunnel *funnel = GST_FUNNEL (GST_PAD_PARENT (pad));
+  GstFunnel *funnel = GST_FUNNEL (parent);
   gboolean forward = TRUE;
   gboolean res = TRUE;
 

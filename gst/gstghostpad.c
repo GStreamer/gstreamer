@@ -176,6 +176,7 @@ done:
 /**
  * gst_proxy_pad_query_default:
  * @pad: a #GstPad to invoke the default query on.
+ * @parent: the parent of @pad or NULL
  * @query: (transfer none): the #GstQuery to perform.
  *
  * Invoke the default query function of the proxy pad.
@@ -185,7 +186,7 @@ done:
  * Since: 0.10.36
  */
 gboolean
-gst_proxy_pad_query_default (GstPad * pad, GstQuery * query)
+gst_proxy_pad_query_default (GstPad * pad, GstObject * parent, GstQuery * query)
 {
   gboolean res;
   GstPad *target;

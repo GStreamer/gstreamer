@@ -327,7 +327,8 @@ static gboolean gst_base_transform_acceptcaps_default (GstBaseTransform * trans,
     GstPadDirection direction, GstCaps * caps);
 static gboolean gst_base_transform_setcaps (GstBaseTransform * trans,
     GstPad * pad, GstCaps * caps);
-static gboolean gst_base_transform_query (GstPad * pad, GstQuery * query);
+static gboolean gst_base_transform_query (GstPad * pad, GstObject * parent,
+    GstQuery * query);
 static gboolean gst_base_transform_default_query (GstBaseTransform * trans,
     GstPadDirection direction, GstQuery * query);
 static gboolean gst_base_transform_default_transform_size (GstBaseTransform *
@@ -1380,22 +1381,17 @@ done:
 }
 
 static gboolean
-gst_base_transform_query (GstPad * pad, GstQuery * query)
+gst_base_transform_query (GstPad * pad, GstObject * parent, GstQuery * query)
 {
   GstBaseTransform *trans;
   GstBaseTransformClass *bclass;
   gboolean ret = FALSE;
 
-  trans = GST_BASE_TRANSFORM (gst_pad_get_parent (pad));
-  if (G_UNLIKELY (trans == NULL))
-    return FALSE;
-
+  trans = GST_BASE_TRANSFORM (parent);
   bclass = GST_BASE_TRANSFORM_GET_CLASS (trans);
 
   if (bclass->query)
     ret = bclass->query (trans, GST_PAD_DIRECTION (pad), query);
-
-  gst_object_unref (trans);
 
   return ret;
 }

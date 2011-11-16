@@ -1503,7 +1503,7 @@ was_eos:
 }
 
 static gboolean
-gst_multi_queue_sink_query (GstPad * pad, GstQuery * query)
+gst_multi_queue_sink_query (GstPad * pad, GstObject * parent, GstQuery * query)
 {
   gboolean res;
 
@@ -1512,7 +1512,7 @@ gst_multi_queue_sink_query (GstPad * pad, GstQuery * query)
     case GST_QUERY_CAPS:
     default:
       /* default handling */
-      res = gst_pad_query_default (pad, query);
+      res = gst_pad_query_default (pad, parent, query);
       break;
   }
   return res;
@@ -1549,17 +1549,15 @@ gst_multi_queue_src_event (GstPad * pad, GstEvent * event)
 }
 
 static gboolean
-gst_multi_queue_src_query (GstPad * pad, GstQuery * query)
+gst_multi_queue_src_query (GstPad * pad, GstObject * parent, GstQuery * query)
 {
   gboolean res;
 
   /* FIXME, Handle position offset depending on queue size */
   switch (GST_QUERY_TYPE (query)) {
-    case GST_QUERY_ACCEPT_CAPS:
-    case GST_QUERY_CAPS:
     default:
       /* default handling */
-      res = gst_pad_query_default (pad, query);
+      res = gst_pad_query_default (pad, parent, query);
       break;
   }
   return res;

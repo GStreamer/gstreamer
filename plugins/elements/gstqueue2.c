@@ -228,10 +228,12 @@ static GstFlowReturn gst_queue2_push_one (GstQueue2 * queue);
 static void gst_queue2_loop (GstPad * pad);
 
 static gboolean gst_queue2_handle_sink_event (GstPad * pad, GstEvent * event);
-static gboolean gst_queue2_handle_sink_query (GstPad * pad, GstQuery * query);
+static gboolean gst_queue2_handle_sink_query (GstPad * pad, GstObject * parent,
+    GstQuery * query);
 
 static gboolean gst_queue2_handle_src_event (GstPad * pad, GstEvent * event);
-static gboolean gst_queue2_handle_src_query (GstPad * pad, GstQuery * query);
+static gboolean gst_queue2_handle_src_query (GstPad * pad, GstObject * parent,
+    GstQuery * query);
 static gboolean gst_queue2_handle_query (GstElement * element,
     GstQuery * query);
 
@@ -2014,13 +2016,14 @@ out_eos:
 }
 
 static gboolean
-gst_queue2_handle_sink_query (GstPad * pad, GstQuery * query)
+gst_queue2_handle_sink_query (GstPad * pad, GstObject * parent,
+    GstQuery * query)
 {
   gboolean res;
 
   switch (GST_QUERY_TYPE (query)) {
     default:
-      res = gst_pad_query_default (pad, query);
+      res = gst_pad_query_default (pad, parent, query);
       break;
   }
   return res;
@@ -2377,11 +2380,11 @@ gst_queue2_handle_src_event (GstPad * pad, GstEvent * event)
 }
 
 static gboolean
-gst_queue2_handle_src_query (GstPad * pad, GstQuery * query)
+gst_queue2_handle_src_query (GstPad * pad, GstObject * parent, GstQuery * query)
 {
   GstQueue2 *queue;
 
-  queue = GST_QUEUE2 (GST_PAD_PARENT (pad));
+  queue = GST_QUEUE2 (parent);
 
   switch (GST_QUERY_TYPE (query)) {
     case GST_QUERY_POSITION:
@@ -2555,7 +2558,7 @@ gst_queue2_handle_src_query (GstPad * pad, GstQuery * query)
     }
     default:
       /* peer handled other queries */
-      if (!gst_pad_query_default (pad, query))
+      if (!gst_pad_query_default (pad, parent, query))
         goto peer_failed;
       break;
   }
@@ -2573,8 +2576,11 @@ peer_failed:
 static gboolean
 gst_queue2_handle_query (GstElement * element, GstQuery * query)
 {
+  GstQueue2 *queue = GST_QUEUE2 (element);
+
   /* simply forward to the srcpad query function */
-  return gst_queue2_handle_src_query (GST_QUEUE2_CAST (element)->srcpad, query);
+  return gst_queue2_handle_src_query (queue->srcpad, GST_OBJECT_CAST (element),
+      query);
 }
 
 static void

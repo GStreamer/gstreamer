@@ -142,7 +142,8 @@ static const GstEventMask *gst_type_find_element_src_event_mask (GstPad * pad);
 
 static gboolean gst_type_find_element_src_event (GstPad * pad,
     GstEvent * event);
-static gboolean gst_type_find_handle_src_query (GstPad * pad, GstQuery * query);
+static gboolean gst_type_find_handle_src_query (GstPad * pad,
+    GstObject * parent, GstQuery * query);
 
 static gboolean gst_type_find_element_sink_event (GstPad * pad,
     GstEvent * event);
@@ -366,19 +367,15 @@ gst_type_find_element_get_property (GObject * object, guint prop_id,
 }
 
 static gboolean
-gst_type_find_handle_src_query (GstPad * pad, GstQuery * query)
+gst_type_find_handle_src_query (GstPad * pad, GstObject * parent,
+    GstQuery * query)
 {
   GstTypeFindElement *typefind;
   gboolean res = FALSE;
-  GstPad *peer;
 
-  typefind = GST_TYPE_FIND_ELEMENT (GST_PAD_PARENT (pad));
+  typefind = GST_TYPE_FIND_ELEMENT (parent);
 
-  peer = gst_pad_get_peer (typefind->sink);
-  if (peer == NULL)
-    return FALSE;
-
-  res = gst_pad_query (peer, query);
+  res = gst_pad_peer_query (typefind->sink, query);
   if (!res)
     goto out;
 
@@ -409,7 +406,6 @@ gst_type_find_handle_src_query (GstPad * pad, GstQuery * query)
   }
 
 out:
-  gst_object_unref (peer);
   return res;
 }
 

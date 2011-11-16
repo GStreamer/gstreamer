@@ -106,7 +106,8 @@ static GstFlowReturn gst_output_selector_chain (GstPad * pad, GstBuffer * buf);
 static GstStateChangeReturn gst_output_selector_change_state (GstElement *
     element, GstStateChange transition);
 static gboolean gst_output_selector_event (GstPad * pad, GstEvent * event);
-static gboolean gst_output_selector_query (GstPad * pad, GstQuery * query);
+static gboolean gst_output_selector_query (GstPad * pad, GstObject * parent,
+    GstQuery * query);
 static void gst_output_selector_switch_pad_negotiation_mode (GstOutputSelector *
     sel, gint mode);
 
@@ -563,13 +564,13 @@ gst_output_selector_event (GstPad * pad, GstEvent * event)
 }
 
 static gboolean
-gst_output_selector_query (GstPad * pad, GstQuery * query)
+gst_output_selector_query (GstPad * pad, GstObject * parent, GstQuery * query)
 {
   gboolean res = TRUE;
   GstOutputSelector *sel;
   GstPad *active = NULL;
 
-  sel = GST_OUTPUT_SELECTOR (GST_PAD_PARENT (pad));
+  sel = GST_OUTPUT_SELECTOR (parent);
 
   switch (GST_QUERY_TYPE (query)) {
     case GST_QUERY_CAPS:
@@ -595,8 +596,8 @@ gst_output_selector_query (GstPad * pad, GstQuery * query)
       break;
     }
     default:
+      res = gst_pad_query_default (pad, parent, query);
       break;
   }
-
   return res;
 }
