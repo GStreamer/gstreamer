@@ -454,14 +454,8 @@ class State (object):
 
     def save (self):
 
-        # TODO Py2.5: Use 'with' statement.
-        fp = utils.SaveWriteFile (self._filename, "wt")
-        try:
+        with utils.SaveWriteFile (self._filename, "wt") as fp:
             self._parser.write (fp)
-        except:
-            fp.discard ()
-        else:
-            fp.close ()
 
 class WindowState (object):
 
