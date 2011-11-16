@@ -1449,15 +1449,13 @@ gst_rtp_session_event_recv_rtp_src (GstPad * pad, GstEvent * event)
 
 
 static GstIterator *
-gst_rtp_session_iterate_internal_links (GstPad * pad)
+gst_rtp_session_iterate_internal_links (GstPad * pad, GstObject * parent)
 {
   GstRtpSession *rtpsession;
   GstPad *otherpad = NULL;
   GstIterator *it = NULL;
 
-  rtpsession = GST_RTP_SESSION (gst_pad_get_parent (pad));
-  if (G_UNLIKELY (rtpsession == NULL))
-    return NULL;
+  rtpsession = GST_RTP_SESSION (parent);
 
   GST_RTP_SESSION_LOCK (rtpsession);
   if (pad == rtpsession->recv_rtp_src) {
@@ -1480,8 +1478,6 @@ gst_rtp_session_iterate_internal_links (GstPad * pad)
     g_value_unset (&val);
     gst_object_unref (otherpad);
   }
-
-  gst_object_unref (rtpsession);
 
   return it;
 }

@@ -118,12 +118,12 @@ static GstFlowReturn gst_rtp_ssrc_demux_rtcp_chain (GstPad * pad,
 static gboolean gst_rtp_ssrc_demux_rtcp_sink_event (GstPad * pad,
     GstEvent * event);
 static GstIterator *gst_rtp_ssrc_demux_iterate_internal_links_sink (GstPad *
-    pad);
+    pad, GstObject * parent);
 
 /* srcpad stuff */
 static gboolean gst_rtp_ssrc_demux_src_event (GstPad * pad, GstEvent * event);
 static GstIterator *gst_rtp_ssrc_demux_iterate_internal_links_src (GstPad *
-    pad);
+    pad, GstObject * parent);
 static gboolean gst_rtp_ssrc_demux_src_query (GstPad * pad, GstObject * parent,
     GstQuery * query);
 
@@ -676,17 +676,14 @@ gst_rtp_ssrc_demux_src_event (GstPad * pad, GstEvent * event)
 }
 
 static GstIterator *
-gst_rtp_ssrc_demux_iterate_internal_links_src (GstPad * pad)
+gst_rtp_ssrc_demux_iterate_internal_links_src (GstPad * pad, GstObject * parent)
 {
   GstRtpSsrcDemux *demux;
   GstPad *otherpad = NULL;
   GstIterator *it = NULL;
   GSList *current;
 
-  demux = GST_RTP_SSRC_DEMUX (gst_pad_get_parent (pad));
-
-  if (!demux)
-    return NULL;
+  demux = GST_RTP_SSRC_DEMUX (parent);
 
   GST_PAD_LOCK (demux);
   for (current = demux->srcpads; current; current = g_slist_next (current)) {
@@ -711,7 +708,6 @@ gst_rtp_ssrc_demux_iterate_internal_links_src (GstPad * pad)
   }
   GST_PAD_UNLOCK (demux);
 
-  gst_object_unref (demux);
   return it;
 }
 
@@ -731,16 +727,14 @@ src_pad_compare_func (gconstpointer a, gconstpointer b)
 }
 
 static GstIterator *
-gst_rtp_ssrc_demux_iterate_internal_links_sink (GstPad * pad)
+gst_rtp_ssrc_demux_iterate_internal_links_sink (GstPad * pad,
+    GstObject * parent)
 {
   GstRtpSsrcDemux *demux;
   GstIterator *it = NULL;
   GValue gval = { 0, };
 
-  demux = GST_RTP_SSRC_DEMUX (gst_pad_get_parent (pad));
-
-  if (!demux)
-    return NULL;
+  demux = GST_RTP_SSRC_DEMUX (parent);
 
   g_value_init (&gval, G_TYPE_STRING);
   if (pad == demux->rtp_sink)
@@ -750,11 +744,9 @@ gst_rtp_ssrc_demux_iterate_internal_links_sink (GstPad * pad)
   else
     g_assert_not_reached ();
 
-  it = gst_element_iterate_src_pads (GST_ELEMENT (demux));
+  it = gst_element_iterate_src_pads (GST_ELEMENT_CAST (demux));
 
   it = gst_iterator_filter (it, src_pad_compare_func, &gval);
-
-  gst_object_unref (demux);
 
   return it;
 }

@@ -239,7 +239,8 @@ static GstClock *gst_rtp_jitter_buffer_provide_clock (GstElement * element);
 
 /* pad overrides */
 static GstCaps *gst_rtp_jitter_buffer_getcaps (GstPad * pad, GstCaps * filter);
-static GstIterator *gst_rtp_jitter_buffer_iterate_internal_links (GstPad * pad);
+static GstIterator *gst_rtp_jitter_buffer_iterate_internal_links (GstPad * pad,
+    GstObject * parent);
 
 /* sinkpad overrides */
 static gboolean gst_rtp_jitter_buffer_sink_event (GstPad * pad,
@@ -512,14 +513,14 @@ gst_rtp_jitter_buffer_finalize (GObject * object)
 }
 
 static GstIterator *
-gst_rtp_jitter_buffer_iterate_internal_links (GstPad * pad)
+gst_rtp_jitter_buffer_iterate_internal_links (GstPad * pad, GstObject * parent)
 {
   GstRtpJitterBuffer *jitterbuffer;
   GstPad *otherpad = NULL;
   GstIterator *it;
   GValue val = { 0, };
 
-  jitterbuffer = GST_RTP_JITTER_BUFFER (gst_pad_get_parent (pad));
+  jitterbuffer = GST_RTP_JITTER_BUFFER (parent);
 
   if (pad == jitterbuffer->priv->sinkpad) {
     otherpad = jitterbuffer->priv->srcpad;
@@ -533,8 +534,6 @@ gst_rtp_jitter_buffer_iterate_internal_links (GstPad * pad)
   g_value_set_object (&val, otherpad);
   it = gst_iterator_new_single (GST_TYPE_PAD, &val);
   g_value_unset (&val);
-
-  gst_object_unref (jitterbuffer);
 
   return it;
 }
