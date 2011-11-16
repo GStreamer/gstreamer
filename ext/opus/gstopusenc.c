@@ -588,13 +588,15 @@ gst_opus_enc_encode (GstOpusEnc * enc, GstBuffer * buf)
       GST_ERROR_OBJECT (enc, "Encoding failed: %d", outsize);
       ret = GST_FLOW_ERROR;
       goto done;
-    } else if (outsize != bytes_per_packet) {
+    } else if (outsize > bytes_per_packet) {
       GST_WARNING_OBJECT (enc,
           "Encoded size %d is different from %d bytes per packet", outsize,
           bytes_per_packet);
       ret = GST_FLOW_ERROR;
       goto done;
     }
+
+    GST_BUFFER_SIZE (outbuf) = outsize;
 
     ret =
         gst_audio_encoder_finish_frame (GST_AUDIO_ENCODER (enc), outbuf,
