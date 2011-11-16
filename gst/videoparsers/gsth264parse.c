@@ -337,7 +337,7 @@ gst_h264_parse_wrap_nal (GstH264Parse * h264parse, guint format, guint8 * data,
     guint size)
 {
   GstBuffer *buf;
-  const guint nl = h264parse->nal_length_size;
+  guint nl = h264parse->nal_length_size;
 
   GST_DEBUG_OBJECT (h264parse, "nal length %d", size);
 
@@ -345,7 +345,10 @@ gst_h264_parse_wrap_nal (GstH264Parse * h264parse, guint format, guint8 * data,
   if (format == GST_H264_PARSE_FORMAT_AVC) {
     GST_WRITE_UINT32_BE (GST_BUFFER_DATA (buf), size << (32 - 8 * nl));
   } else {
-    g_assert (nl == 4);
+    /* HACK: nl should always be 4 here, otherwise this won't work. 
+     * There are legit cases where nl in avc stream is 2, but byte-stream
+     * SC is still always 4 bytes. */
+    nl = 4;
     GST_WRITE_UINT32_BE (GST_BUFFER_DATA (buf), 1);
   }
 
