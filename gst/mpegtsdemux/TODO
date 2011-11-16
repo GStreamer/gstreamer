@@ -1,117 +1,151 @@
-mpegtsparse rebasing
+tsdemux/tsparse TODO
 --------------------
 
-Rationale :
------------
+* clock for live streams
+  In order for playback to happen at the same rate as on the producer,
+  we need to estimate the remote clock based on capture time and PCR
+  values.
+  For this estimation to be as accurate as possible, the capture time
+  needs to happen on the sources.
+    => Ensure live sources actually timestamp their buffers
+  Once we have accurate timestamps, we can use an algorithm to
+  calculate the PCR/local-clock skew.
+    => Use the EPTLA algorithm as used in -good/rtp/rtpmanager/
+     gstrtpjitterbuffer
 
-  mpegtsparse code is more sane to handle and work with.
+* Seeking
+  => Split out in a separate file/object. It is polluting tsdemux for
+  code readability/clarity.
 
-  We need a modular demuxer
-
-  We need to avoid duplicating code regarding mpeg-ts in a gazillion
-  elements and allow easy creatiof new elements.
-
-
-Battleplan :
-------------
-* Figure out code from mpegtsparse which would be also needed for a
-mpeg-ts demuxer (ex: packet/psi/pcr parsing).
-* Extract common code into a base mpegtsbase class.
-* Refactor mpegtsparse to subclass that base class.
-* Create a minimalistic demuxer that creates pads (based on PSI info)
-and outputs ES packets (let's say mpeg audio and video to start with)
-
-Potential subclasses :
-----------------------
-* MpegTSParse : Program splitter. Given an incoming multi-program
-  mpeg-ts stream, it can provide request pads for each program. Each
-  of those pads will contain the ts packets specific to that program.
-
-* TSDemux : Program demuxer. Given an incoming single or multi-program
-  mpeg-ts stream, it will reconstruct the original Program Streams of
-  the selected program and output them on dynamically created pads.
-
-* HDVSplitter : Given an incoming HDV mpeg-ts stream, it will locate
-  the beginning of new scenes and output a mpeg-ts stream with the
-  PAT/PMT/AUX packets properly ordered and marked with DISCONT, so
-  that the following pipeline will automatically cut up a tape dump
-  into individual scenes:
-   filesrc ! hdvsplit ! multifilesink next-file=discont
-
-Code/Design common to a program-spliter and a demuxer :
--------------------------------------------------------
-* Parsing TS packets
-* Establishing PAT/PMT mapping
-* Handling the notions of Programs/Streams
-* Seeking ?
-
-  One proposal... would be to have the base class automatically create
-  all the structures (and relationships) for the following objects:
-
-  * Programs (from PAT/PMT, dunno if it could come from something
-  else)
-    * Program id
-    * Streams contained in that program (with links to them)
-    * Which stream contains the PCR
-    * Metadata ?
-  * Streams (ideally... in a table for fast access)
-    * We want to be able to have stream-type specific information
-      easily accessible also (like mpeg video specific data)
-  * Maybe some other info ???
-  
-  The subclasses would then be able to make their own decision based
-  on those objects.
-  Maybe we could have some virtual methods that will be called when a
-  new program is detected, a new stream is added, etc...
-
-  It is the subclass who decides what's to do with a given packet once
-  it's been parsed.
-  tsparse : forward it as-is to the pad corresponding to the program
-  tsdemux : forward it to the proper PS parser
-  hdvsplit : ?
-
-
-Ideas to be taken into account for a proper demuxer :
------------------------------------------------------
-* Push-based (with inacurrate seeking)
-* Pull-based (with fast *AND* accurate seeking)
-* Modular system to add stream-type specific helper parsing
-  * Doesn't have to be fully fledged, just enough to help any kind of
-  seeking and scanning code.
-* ...
-
-Problems to figure out :
-------------------------
-* clock
-  Needed for proper dvb playback. mpegtsdemux currently does internal
-  clock estimation... to provide a clock with PCR estimations.
-  A proper way to solve that would be to timestamp the buffers at the
-  source element using the system clock, and then adjusting the PCR
-  against those values. (i.e. doing the opposite of what's done in
-  mpegtsdemux, but it will be more accurate since the timestamping is
-  done at the source).
-  
-
-Bugs that need fixing :
------------------------
 * Perfomance : Creation/Destruction of buffers is slow
   * => This is due to g_type_instance_create using a dogslow rwlock
   which take up to 50% of gst_adapter_take_buffer()
   => Bugzilla #585375 (performance and contention problems)
 
-Code structure:
-
-  MpegTSBase
-  +--- MpegTSParse
-  +--- TSDemux
-
-
-Known limitations and problems :
---------------------------------
 * mpegtspacketizer
-  * Assumes 188 bytes packets. It should support all modes.
   * offset/timestamp of incoming buffers need to be carried on to the
   sub-buffers in order for several demuxer features to work correctly.
+
 * mpegtsparser
   * SERIOUS room for improvement performance-wise (see callgrind)
 
+
+
+
+Synchronization, Scheduling and Timestamping
+--------------------------------------------
+
+  A mpeg-ts demuxer can be used in a variety of situations:
+  * lives streaming over DVB, UDP, RTP,..
+  * play-as-you-download like HTTP Live Streaming or UPNP/DLNA
+  * random-access local playback, file, Bluray, ...
+
+  Those use-cases can be categorized in 3 different categories:
+  * Push-based scheduling with live sources [0]
+  * Push-based scheduling with non-live sources
+  * Pull-based scheduling with fast random-access
+
+  Due to the nature of timing within the mpeg-ts format, we need to
+pay extra attention to the outgoing NEWSEGMENT event and buffer
+timestamps in order to guarantee proper playback and synchronization
+of the stream.
+
+
+ 1) Live push-based scheduling
+
+  The NEWSEGMENT event will be in time format and is forwarded as is,
+  and the values are cached locally.
+
+  Since the clock is running when the upstream buffers are captured,
+  the outgoing buffer timestamps need to correspond to the incoming
+  buffer timestamp values.
+
+    => A delta, DTS_delta between incoming buffer timestamp and
+       DTS/PTS needs to be computed.
+
+    => The outgoing buffers will be timestamped with their PTS values
+       (overflow corrected) offseted by that initial DTS_delta.
+
+  A latency is introduced between the time the buffer containing the
+  first bit of a Access Unit is received in the demuxer and the moment
+  the demuxer pushed out the buffer corresponding to that Access Unit.
+
+    => That latency needs to be reported. It corresponds to the
+       biggest Access Unit spacing, in this case 1/video-framerate.
+
+  According to the ISO/IEC 13818-1:2007 specifications, D.0.1 Timing
+  mode, the "coded audio and video that represent sound and pictures
+  that are to be presented simultaneously may be separated in time
+  within the coded bit stream by ==>as much as one second<=="
+
+    => The demuxer will therefore report an added latency of 1s to
+       handle this interleave.
+
+
+ 2) Non-live push-based scheduling
+
+  If the upstream NEWSEGMENT is in time format, the NEWSEGMENT event
+  is forwarded as is, and the values are cached locally.
+
+  If upstream does provide a NEWSEGMENT in another format, we need to
+  compute one by taking the default values:
+    start : 0
+    stop  : GST_CLOCK_TIME_NONE
+    time  : 0
+
+  Since no prerolling is happening downstream and the incoming buffers
+  do not have capture timestamps, we need to ensure the first buffer
+  we push out corresponds to the base segment start runing time.
+
+    => A delta between the first DTS to output and the segment start
+       position needs to be computed.
+
+    => The outgoing buffers will be timestamped with their PTS values
+       (overflow corrected) offseted by that initial delta.
+
+  Latency is reported just as with the live use-case.
+
+
+ 3) Random access pull-mode
+
+  We do not get a NEWSEGMENT event from upstream, we therefore need to
+  compute the outgoing values.
+
+  The base stream/running time corresponds to the DTS of the first
+  buffer we will output. The DTS_delta becomes that earliest DTS.
+
+  =>  FILLME
+
+ X) General notes
+
+  It is assumed that PTS/DTS rollovers are detected and corrected such
+  as the outgoing timestamps never rollover. This can be easily
+  handled by correcting the DTS_delta when such rollovers are
+  detected. The maximum value of a GstClockTimeDiff is almost 3
+  centuries, we therefore have enough margin to handle a decent number
+  of rollovers.
+
+  The generic equation for calculating outgoing buffer timestamps
+  therefore becomes:
+
+    D   = DTS_delta, with rollover corrections
+    PTS = PTS of the buffer we are going to push out
+    TS  = Timestamp of the outgoing buffer
+
+    ==>   TS = PTS + D
+
+  If seeking is handled upstream for push-based cases, whether live or
+  not, no extra modification is required.
+
+  If seeking is handled by the demuxer in the non-live push-based
+  cases (converting from TIME to BYTES), the demuxer will need to
+  set the segment start/time values to the requested seek position.
+  The DTS_delta will also have to be recomputed to take into account
+  the seek position.
+
+
+[0] When talking about live sources, we mean this in the GStreamer
+definition of live sources, which is to say sources where if we miss
+the capture, we will miss the data to be captured. Sources which do
+internal buffering (like TCP connections or file descriptors) are
+*NOT* live sources.
