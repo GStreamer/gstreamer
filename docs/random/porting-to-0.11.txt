@@ -136,6 +136,17 @@ The 0.11 porting guide
     simply do the fixation in the element or use a vmethod from the base class
     if appropriate.
 
+    The GstPadGetCapsFunction was removed and replaced with a GST_QUERY_CAPS
+    query.
+
+    gst_pad_proxy_getcaps() -> gst_pad_proxy_query_caps()
+    gst_pad_get_caps() -> gst_pad_query_caps()
+    gst_pad_peer_get_caps() -> gst_pad_peer_query_caps()
+    gst_pad_accept_caps() -> gst_pad_query_accept_caps()
+    gst_pad_peer_accept_caps() -> gst_pad_peer_query_accept_caps()
+    gst_pad_query_peer_*() -> gst_pad_peer_query_*()
+
+
 * GstPadTemplate
     gst_pad_template_get_caps() returns a new reference of the caps
     and the return value needs to be unreffed after usage.
