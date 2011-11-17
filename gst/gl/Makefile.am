@@ -83,6 +83,7 @@ libgstopengl_la_LIBADD = \
 	$(GST_PLUGINS_BASE_LIBS) -lgstvideo-$(GST_MAJORMINOR) -lgstinterfaces-$(GST_MAJORMINOR) \
 	$(GL_LIBS) \
 	$(LIBPNG_LIBS) \
+        $(JPEG_LIBS) \
 	$(LIBM)
 
 libgstopengl_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)

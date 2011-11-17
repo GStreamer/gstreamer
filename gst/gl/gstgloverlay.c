@@ -36,7 +36,9 @@
 #include "config.h"
 #endif
 
+#include <stdio.h>
 #include <stdlib.h>
+#include <jpeglib.h>
 #include <png.h>
 #include "gstgloverlay.h"
 #include <gstgleffectssources.h>
@@ -69,7 +71,8 @@ static void gst_gl_overlay_reset_resources (GstGLFilter * filter);
 static gboolean gst_gl_overlay_filter (GstGLFilter * filter,
     GstGLBuffer * inbuf, GstGLBuffer * outbuf);
 
-static gboolean gst_gl_overlay_loader (GstGLFilter * filter);
+static gint gst_gl_overlay_load_png (GstGLFilter * filter);
+static gint gst_gl_overlay_load_jpeg (GstGLFilter * filter);
 
 enum
 {
@@ -236,7 +239,95 @@ gst_gl_overlay_class_init (GstGLOverlayClass * klass)
 }
 
 static void
-gst_gl_overlay_draw_texture_video (GstGLOverlay * o, GLuint tex)
+gst_gl_overlay_calc_ratio_video (GstGLOverlay * o, gfloat * video_ratio_w,
+    gfloat * video_ratio_h)
+{
+  if (o->ratio_video == 0) {
+    o->ratio_texture = (gfloat) o->ratio_window;
+    *video_ratio_w = (gfloat) o->width_window;
+    *video_ratio_h = (gfloat) o->height_window;
+  } else if (o->ratio_video == 1) {
+    o->ratio_texture = (gfloat) 1.33;
+    *video_ratio_w = 4.0;
+    *video_ratio_h = 3.0;
+  } else if (o->ratio_video == 2) {
+    o->ratio_texture = (gfloat) 1.77;
+    *video_ratio_w = 16.0;
+    *video_ratio_h = 9.0;
+  } else {
+    o->ratio_texture = (gfloat) 1.6;
+    *video_ratio_w = 16.0;
+    *video_ratio_h = 10.0;
+  }
+}
+
+static void
+gst_gl_overlay_init_texture (GstGLOverlay * o, GLuint tex, int flag)
+{
+  if (flag == 0 && o->type_file == 2) {
+    glEnable (GL_TEXTURE_2D);
+    glBindTexture (GL_TEXTURE_2D, tex);
+  } else {
+    glEnable (GL_TEXTURE_RECTANGLE_ARB);
+    glBindTexture (GL_TEXTURE_RECTANGLE_ARB, tex);
+  }
+}
+
+static void
+gst_gl_overlay_draw (GstGLOverlay * o, int flag)
+{
+  float y = 0.0f;
+  float width = 0.0f;
+  float height = 0.0f;
+
+  if (flag == 1) {
+    width = o->width_window;
+    height = o->height_window;
+  } else if (flag == 0 && o->type_file == 1) {
+    width = o->width;
+    height = o->height;
+  } else if (flag == 0 && o->type_file == 2) {
+    width = 1.0;
+    height = 1.0;
+  }
+  y = (o->type_file == 2 && flag == 0 ? o->ratio_y : -o->ratio_y) + o->posy;
+  glTexCoord3f (0.0f, 0.0f, 0.0f);
+  glVertex3f (-o->ratio_x + o->posx, y, 0.0f);
+  glTexCoord3f (width, 0.0, 0.0);
+  glVertex3f (o->ratio_x + o->posx, y, 0.0f);
+  glTexCoord3f (width, height, 0.0);
+  y = (o->type_file == 2 && flag == 0 ? -o->ratio_y : o->ratio_y) + o->posy;
+  glVertex3f (o->ratio_x + o->posx, y, 0.0);
+  glTexCoord3f (0.0f, height, 0.0f);
+  glVertex3f (-o->ratio_x + o->posx, y, 0.0);
+}
+
+static void
+gst_gl_overlay_calc_proportion (GstGLOverlay * o, int flag, float size_texture,
+    float width, float height)
+{
+  if ((1.59 < o->ratio_window && o->ratio_window < 1.61
+          && 1.77 < o->ratio_texture && o->ratio_texture < 1.78)
+      || (1.3 < o->ratio_window && o->ratio_window < 1.34
+          && ((1.7 < o->ratio_texture && o->ratio_texture < 1.78)
+              || (1.59 < o->ratio_texture && o->ratio_texture < 1.61)))) {
+    o->ratio_x = o->ratio_window * (gfloat) size_texture / 100.0;
+    o->ratio_y =
+        (o->ratio_window / width) * height * (gfloat) size_texture / 100.0;
+  } else {
+    o->ratio_x = o->ratio_texture * (gfloat) size_texture / 100.0;
+    o->ratio_y = 1.0 * size_texture / 100.0;
+  }
+  o->posx =
+      ((o->ratio_window - o->ratio_x) * ((flag ==
+              1 ? o->pos_x_video : o->pos_x_png) - 50.0) / 50.0);
+  o->posy =
+      (1.0 - o->ratio_y) * (((flag ==
+              1 ? o->pos_y_video : o->pos_y_png) - 50.0) / 50.0);
+}
+
+static void
+gst_gl_overlay_load_texture (GstGLOverlay * o, GLuint tex, int flag)
 {
   gfloat video_ratio_w;
   gfloat video_ratio_h;
@@ -244,101 +335,29 @@ gst_gl_overlay_draw_texture_video (GstGLOverlay * o, GLuint tex)
   o->ratio_window = (gfloat) o->width_window / (gfloat) o->height_window;
   glMatrixMode (GL_MODELVIEW);
   glActiveTexture (GL_TEXTURE0);
-  glEnable (GL_TEXTURE_RECTANGLE_ARB);
-  glBindTexture (GL_TEXTURE_RECTANGLE_ARB, tex);
-  glTranslatef (0.0f, 0.0f, -1.43f);
-  glScalef (1.0, 1.0, 1.0);
-  if (o->rotate_video)
-    glRotatef (o->angle_video, 0, 1, 0);
-  if (o->ratio_video == 0) {
-    o->ratio_texture = (gfloat) o->ratio_window;
-    video_ratio_w = (gfloat) o->width_window;
-    video_ratio_h = (gfloat) o->height_window;
-  }
-  if (o->ratio_video == 1) {
-    o->ratio_texture = (gfloat) 1.33;
-    video_ratio_w = 4.0;
-    video_ratio_h = 3.0;
-  } else if (o->ratio_video == 2) {
-    o->ratio_texture = (gfloat) 1.77;
-    video_ratio_w = 16.0;
-    video_ratio_h = 9.0;
-  } else {
-    o->ratio_texture = (gfloat) 1.6;
-    video_ratio_w = 16.0;
-    video_ratio_h = 10.0;
-  }
-  if ((1.59 < o->ratio_window && o->ratio_window < 1.61
-          && 1.77 < o->ratio_texture && o->ratio_texture < 1.78)
-      || (1.3 < o->ratio_window && o->ratio_window < 1.34
-          && ((1.7 < o->ratio_texture && o->ratio_texture < 1.78)
-              || (1.59 < o->ratio_texture && o->ratio_texture < 1.61)))) {
-    o->ratio_x = o->ratio_window * (gfloat) o->size_video / 100.0;
-    o->ratio_y =
-        (o->ratio_window / video_ratio_w) * video_ratio_h *
-        (gfloat) o->size_video / 100.0;
-  } else {
-    o->ratio_x = o->ratio_texture * (gfloat) o->size_video / 100.0;
-    o->ratio_y = 1.0 * o->size_video / 100.0;
-  }
-  o->posx = ((o->ratio_window - o->ratio_x) * (o->pos_x_video - 50.0) / 50.0);
-  o->posy = (1.0 - o->ratio_y) * ((o->pos_y_video - 50.0) / 50.0);
-  glBegin (GL_QUADS);
-  glTexCoord3f (0.0f, 0.0f, 0.0f);
-  glVertex3f (-o->ratio_x + o->posx, -o->ratio_y + o->posy, 0.0f);
-  glTexCoord3f (o->width_window, 0.0, 0.0);
-  glVertex3f (o->ratio_x + o->posx, -o->ratio_y + o->posy, 0.0f);
-  glTexCoord3f (o->width_window, o->height_window, 0.0);
-  glVertex3f (o->ratio_x + o->posx, o->ratio_y + o->posy, 0.0);
-  glTexCoord3f (0.0, o->height_window, 0.0);
-  glVertex3f (-o->ratio_x + o->posx, o->ratio_y + o->posy, 0.0);
-  glEnd ();
-}
-
-static void
-gst_gl_overlay_draw_texture_png (GstGLOverlay * o)
-{
-  o->ratio_window = (gfloat) o->width_window / (gfloat) o->height_window;
-  o->ratio_texture = (gfloat) o->width / (gfloat) o->height;
-  glMatrixMode (GL_MODELVIEW);
-  glActiveTexture (GL_TEXTURE0);
-  glEnable (GL_TEXTURE_RECTANGLE_ARB);
+  gst_gl_overlay_init_texture (o, tex, flag);
   glBlendFunc (GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
   glEnable (GL_BLEND);
-  glBindTexture (GL_TEXTURE_RECTANGLE_ARB, o->pbuftexture);
   glTranslatef (0.0f, 0.0f, -1.43f);
   glScalef (1.0, 1.0, 1.0);
-  o->ratio_texture = (gfloat) o->width / (gfloat) o->height;
-  if (o->rotate_png == 2)
-    glRotatef (o->angle_png, 0, 1, 0);
-  if ((1.59 < o->ratio_window && o->ratio_window < 1.61
-          && 1.77 < o->ratio_texture && o->ratio_texture < 1.78)
-      || (1.3 < o->ratio_window && o->ratio_window < 1.34
-          && ((1.7 < o->ratio_texture && o->ratio_texture < 1.78)
-              || (1.59 < o->ratio_texture && o->ratio_texture < 1.61)))) {
-    o->ratio_x = o->ratio_window * (gfloat) o->size_png / 100.0;
-    o->ratio_y =
-        ((o->ratio_window / o->width) * o->height) * (gfloat) o->size_png /
-        100.0;
+  if (flag == 1) {
+    if (o->rotate_video)
+      glRotatef (o->angle_video, 0, 1, 0);
+    gst_gl_overlay_calc_ratio_video (o, &video_ratio_w, &video_ratio_h);
+    gst_gl_overlay_calc_proportion (o, flag, o->size_video, video_ratio_w,
+        video_ratio_h);
   } else {
-    o->ratio_x = o->ratio_texture * (gfloat) o->size_png / 100.0;
-    o->ratio_y = 1.0 * o->size_png / 100.0;
+    o->ratio_texture = (gfloat) o->width / (gfloat) o->height;
+    if (o->rotate_png == 2)
+      glRotatef (o->angle_png, 0, 1, 0);
+    gst_gl_overlay_calc_proportion (o, flag, o->size_png, o->width, o->height);
   }
-  o->posx = ((o->ratio_window - o->ratio_x) * (o->pos_x_png - 50.0) / 50.0);
-  o->posy = (1.0 - o->ratio_y) * ((o->pos_y_png - 50.0) / 50.0);
   glBegin (GL_POLYGON);
-  glTexCoord3f (0.0f, 0.0f, 0.0f);
-  glVertex3f (-o->ratio_x + o->posx, -o->ratio_y + o->posy, 0.0f);
-  glTexCoord3f (o->width, 0.0, 0.0);
-  glVertex3f (o->ratio_x + o->posx, -o->ratio_y + o->posy, 0.0f);
-  glTexCoord3f (o->width, o->height, 0.0);
-  glVertex3f (o->ratio_x + o->posx, o->ratio_y + o->posy, 0.0);
-  glTexCoord3f (0.0, o->height, 0.0);
-  glVertex3f (-o->ratio_x + o->posx, o->ratio_y + o->posy, 0.0);
+  gst_gl_overlay_draw (o, flag);
   glEnd ();
+  if (flag == 1)
+    glDisable (GL_TEXTURE_RECTANGLE_ARB);
 }
-
-
 
 static void
 gst_gl_overlay_init (GstGLOverlay * overlay, GstGLOverlayClass * klass)
@@ -527,7 +546,7 @@ gst_gl_overlay_callback (gint width, gint height, guint texture, gpointer stuff)
   glEnable (GL_DEPTH_TEST);
   gluLookAt (0.0, 0.0, 0.01, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0);
   if (overlay->video_top) {
-    gst_gl_overlay_draw_texture_png (overlay);
+    gst_gl_overlay_load_texture (overlay, overlay->pbuftexture, 0);
     if (overlay->pbuftexture == 0)
       return;
     // if (overlay->stretch) {
@@ -535,9 +554,9 @@ gst_gl_overlay_callback (gint width, gint height, guint texture, gpointer stuff)
     //   height = (gfloat) overlay->height;
     // }
     glLoadIdentity ();
-    gst_gl_overlay_draw_texture_video (overlay, texture);
+    gst_gl_overlay_load_texture (overlay, texture, 1);
   } else {
-    gst_gl_overlay_draw_texture_video (overlay, texture);
+    gst_gl_overlay_load_texture (overlay, texture, 1);
     if (overlay->pbuftexture == 0)
       return;
     // if (overlay->stretch) {
@@ -545,7 +564,7 @@ gst_gl_overlay_callback (gint width, gint height, guint texture, gpointer stuff)
     //   height = (gfloat) overlay->height;
     // }
     glLoadIdentity ();
-    gst_gl_overlay_draw_texture_png (overlay);
+    gst_gl_overlay_load_texture (overlay, overlay->pbuftexture, 0);
   }
 }
 
@@ -555,14 +574,21 @@ init_pixbuf_texture (GstGLDisplay * display, gpointer data)
   GstGLOverlay *overlay = GST_GL_OVERLAY (data);
 
   if (overlay->pixbuf) {
-
     glDeleteTextures (1, &overlay->pbuftexture);
     glGenTextures (1, &overlay->pbuftexture);
-    glBindTexture (GL_TEXTURE_RECTANGLE_ARB, overlay->pbuftexture);
-
-    glTexImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, GL_RGBA,
-        (gint) overlay->width, (gint) overlay->height, 0,
-        GL_RGBA, GL_UNSIGNED_BYTE, overlay->pixbuf);
+    if (overlay->type_file == 1) {
+      glBindTexture (GL_TEXTURE_RECTANGLE_ARB, overlay->pbuftexture);
+      glTexImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, GL_RGBA,
+          (gint) overlay->width, (gint) overlay->height, 0,
+          GL_RGBA, GL_UNSIGNED_BYTE, overlay->pixbuf);
+    } else if (overlay->type_file == 2) {
+      glBindTexture (GL_TEXTURE_2D, overlay->pbuftexture);
+      glTexImage2D (GL_TEXTURE_2D, 0, overlay->internalFormat,
+          overlay->width, overlay->height, 0, overlay->format,
+          GL_UNSIGNED_BYTE, overlay->pixbuf);
+      glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+      glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    }
   } else
     display->isAlive = FALSE;
 }
@@ -574,13 +600,11 @@ gst_gl_overlay_filter (GstGLFilter * filter, GstGLBuffer * inbuf,
   GstGLOverlay *overlay = GST_GL_OVERLAY (filter);
 
   if (overlay->pbuf_has_changed && (overlay->location != NULL)) {
-
-    if (!gst_gl_overlay_loader (filter))
-      overlay->pixbuf = NULL;
-
+    if ((overlay->type_file = gst_gl_overlay_load_png (filter)) == 0)
+      if ((overlay->type_file = gst_gl_overlay_load_jpeg (filter)) == 0)
+        overlay->pixbuf = NULL;
     /* if loader failed then display is turned off */
     gst_gl_display_thread_add (filter->display, init_pixbuf_texture, overlay);
-
     if (overlay->pixbuf) {
       free (overlay->pixbuf);
       overlay->pixbuf = NULL;
@@ -603,8 +627,49 @@ user_warning_fn (png_structp png_ptr, png_const_charp warning_msg)
 
 #define LOAD_ERROR(msg) { GST_WARNING ("unable to load %s: %s", overlay->location, msg); return FALSE; }
 
-static gboolean
-gst_gl_overlay_loader (GstGLFilter * filter)
+static gint
+gst_gl_overlay_load_jpeg (GstGLFilter * filter)
+{
+  GstGLOverlay *overlay = GST_GL_OVERLAY (filter);
+  FILE *fp = NULL;
+  struct jpeg_decompress_struct cinfo;
+  struct jpeg_error_mgr jerr;
+  JSAMPROW j;
+  int i;
+
+  fp = fopen (overlay->location, "rb");
+  if (!fp) {
+    g_error ("error: couldn't open file!\n");
+    return 0;
+  }
+  jpeg_create_decompress (&cinfo);
+  cinfo.err = jpeg_std_error (&jerr);
+  jpeg_stdio_src (&cinfo, fp);
+  jpeg_read_header (&cinfo, TRUE);
+  jpeg_start_decompress (&cinfo);
+  overlay->width = cinfo.image_width;
+  overlay->height = cinfo.image_height;
+  overlay->internalFormat = cinfo.num_components;
+  if (cinfo.num_components == 1)
+    overlay->format = GL_LUMINANCE;
+  else
+    overlay->format = GL_RGB;
+  overlay->pixbuf = (GLubyte *) malloc (sizeof (GLubyte) * overlay->width
+      * overlay->height * overlay->internalFormat);
+  for (i = 0; i < overlay->width; ++i) {
+    j = (overlay->pixbuf +
+        (((int) overlay->height - (i +
+                    1)) * (int) overlay->width * overlay->internalFormat));
+    jpeg_read_scanlines (&cinfo, &j, 1);
+  }
+  jpeg_finish_decompress (&cinfo);
+  jpeg_destroy_decompress (&cinfo);
+  fclose (fp);
+  return 2;
+}
+
+static gint
+gst_gl_overlay_load_png (GstGLFilter * filter)
 {
   GstGLOverlay *overlay = GST_GL_OVERLAY (filter);
 
@@ -620,9 +685,19 @@ gst_gl_overlay_loader (GstGLFilter * filter)
   guint y = 0;
   guchar **rows = NULL;
   gint filler;
+  png_byte magic[8];
+  size_t read;
 
   if (!filter->display)
-    return TRUE;
+    return 1;
+  if ((fp = fopen (overlay->location, "rb")) == NULL)
+    LOAD_ERROR ("file not found");
+  read = fread (magic, 1, sizeof (magic), fp);
+  if (read == 0 || !png_check_sig (magic, sizeof (magic))) {
+    fclose (fp);
+    return 0;
+  }
+  fclose (fp);
 
   if ((fp = fopen (overlay->location, "rb")) == NULL)
     LOAD_ERROR ("file not found");
@@ -682,5 +757,5 @@ gst_gl_overlay_loader (GstGLFilter * filter)
   png_destroy_read_struct (&png_ptr, &info_ptr, png_infopp_NULL);
   fclose (fp);
 
-  return TRUE;
+  return 1;
 }

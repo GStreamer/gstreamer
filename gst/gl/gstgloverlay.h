@@ -52,6 +52,9 @@ struct _GstGLOverlay
   guchar *pixbuf;
   gint width, height;
   GLuint pbuftexture;
+  GLint internalFormat;
+  GLenum format;
+  gint type_file;               // 0 = No; 1 = PNG and 2 = JPEG
   gfloat width_window;
   gfloat height_window;
   gfloat posx;
