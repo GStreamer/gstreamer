@@ -55,6 +55,7 @@ typedef struct
   GstCaps *caps;
   GstTypeFindFactory *factory;  /* for logging */
   GstObject *obj;               /* for logging */
+  GstObject *parent;
 } GstTypeFindHelper;
 
 /*
@@ -133,7 +134,9 @@ helper_find_peek (gpointer data, gint64 offset, guint size)
    * of the file is also not a problem here, we'll just get a truncated buffer
    * in that case (and we'll have to double-check the size we actually get
    * anyway, see below) */
-  ret = helper->func (helper->obj, offset, MAX (size, 4096), &buffer);
+  ret =
+      helper->func (helper->obj, helper->parent, offset, MAX (size, 4096),
+      &buffer);
 
   if (ret != GST_FLOW_OK)
     goto error;
@@ -226,8 +229,9 @@ helper_find_get_length (gpointer data)
 }
 
 /**
- * gst_type_find_helper_get_range_ext:
+ * gst_type_find_helper_get_range:
  * @obj: A #GstObject that will be passed as first argument to @func
+ * @parent: the parent of @obj or NULL
  * @func: (scope call): A generic #GstTypeFindHelperGetRangeFunction that will
  *        be used to access data at random offsets when doing the typefinding
  * @size: The length in bytes
@@ -256,7 +260,7 @@ helper_find_get_length (gpointer data)
  * Since: 0.10.26
  */
 GstCaps *
-gst_type_find_helper_get_range_ext (GstObject * obj,
+gst_type_find_helper_get_range (GstObject * obj, GstObject * parent,
     GstTypeFindHelperGetRangeFunction func, guint64 size,
     const gchar * extension, GstTypeFindProbability * prob)
 {
@@ -277,6 +281,7 @@ gst_type_find_helper_get_range_ext (GstObject * obj,
   helper.best_probability = GST_TYPE_FIND_NONE;
   helper.caps = NULL;
   helper.obj = obj;
+  helper.parent = parent;
 
   find.data = &helper;
   find.peek = helper_find_peek;
@@ -357,37 +362,6 @@ gst_type_find_helper_get_range_ext (GstObject * obj,
 }
 
 /**
- * gst_type_find_helper_get_range:
- * @obj: A #GstObject that will be passed as first argument to @func
- * @func: (scope call): A generic #GstTypeFindHelperGetRangeFunction that will
- *        be used to access data at random offsets when doing the typefinding
- * @size: The length in bytes
- * @prob: (out) (allow-none): location to store the probability of the found
- *     caps, or #NULL
- *
- * Utility function to do pull-based typefinding. Unlike gst_type_find_helper()
- * however, this function will use the specified function @func to obtain the
- * data needed by the typefind functions, rather than operating on a given
- * source pad. This is useful mostly for elements like tag demuxers which
- * strip off data at the beginning and/or end of a file and want to typefind
- * the stripped data stream before adding their own source pad (the specified
- * callback can then call the upstream peer pad with offsets adjusted for the
- * tag size, for example).
- *
- * Free-function: gst_caps_unref
- *
- * Returns: (transfer full): the #GstCaps corresponding to the data stream.
- *     Returns #NULL if no #GstCaps matches the data stream.
- */
-GstCaps *
-gst_type_find_helper_get_range (GstObject * obj,
-    GstTypeFindHelperGetRangeFunction func, guint64 size,
-    GstTypeFindProbability * prob)
-{
-  return gst_type_find_helper_get_range_ext (obj, func, size, NULL, prob);
-}
-
-/**
  * gst_type_find_helper:
  * @src: A source #GstPad
  * @size: The length in bytes
@@ -410,7 +384,8 @@ gst_type_find_helper (GstPad * src, guint64 size)
 
   func = (GstTypeFindHelperGetRangeFunction) (GST_PAD_GETRANGEFUNC (src));
 
-  return gst_type_find_helper_get_range (GST_OBJECT (src), func, size, NULL);
+  return gst_type_find_helper_get_range (GST_OBJECT (src),
+      GST_OBJECT_PARENT (src), func, size, NULL, NULL);
 }
 
 /* ********************** typefinding for buffers ************************* */

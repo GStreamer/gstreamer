@@ -959,7 +959,9 @@ gst_type_find_element_activate (GstPad * pad)
       }
       ext = gst_type_find_get_extension (typefind, pad);
 
-      found_caps = gst_type_find_helper_get_range_ext (GST_OBJECT_CAST (peer),
+      found_caps =
+          gst_type_find_helper_get_range (GST_OBJECT_CAST (peer),
+          GST_OBJECT_PARENT (peer),
           (GstTypeFindHelperGetRangeFunction) (GST_PAD_GETRANGEFUNC (peer)),
           (guint64) size, ext, &probability);
       g_free (ext);
