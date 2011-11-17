@@ -192,15 +192,18 @@ static void gst_queue_set_property (GObject * object,
 static void gst_queue_get_property (GObject * object,
     guint prop_id, GValue * value, GParamSpec * pspec);
 
-static GstFlowReturn gst_queue_chain (GstPad * pad, GstBuffer * buffer);
+static GstFlowReturn gst_queue_chain (GstPad * pad, GstObject * parent,
+    GstBuffer * buffer);
 static GstFlowReturn gst_queue_push_one (GstQueue * queue);
 static void gst_queue_loop (GstPad * pad);
 
-static gboolean gst_queue_handle_sink_event (GstPad * pad, GstEvent * event);
+static gboolean gst_queue_handle_sink_event (GstPad * pad, GstObject * parent,
+    GstEvent * event);
 static gboolean gst_queue_handle_sink_query (GstPad * pad, GstObject * parent,
     GstQuery * query);
 
-static gboolean gst_queue_handle_src_event (GstPad * pad, GstEvent * event);
+static gboolean gst_queue_handle_src_event (GstPad * pad, GstObject * parent,
+    GstEvent * event);
 static gboolean gst_queue_handle_src_query (GstPad * pad, GstObject * parent,
     GstQuery * query);
 
@@ -726,11 +729,11 @@ no_item:
 }
 
 static gboolean
-gst_queue_handle_sink_event (GstPad * pad, GstEvent * event)
+gst_queue_handle_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
 {
   GstQueue *queue;
 
-  queue = GST_QUEUE (GST_PAD_PARENT (pad));
+  queue = GST_QUEUE (parent);
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_FLUSH_START:
@@ -875,12 +878,12 @@ gst_queue_leak_downstream (GstQueue * queue)
 }
 
 static GstFlowReturn
-gst_queue_chain (GstPad * pad, GstBuffer * buffer)
+gst_queue_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
 {
   GstQueue *queue;
   GstClockTime duration, timestamp;
 
-  queue = (GstQueue *) GST_OBJECT_PARENT (pad);
+  queue = GST_QUEUE_CAST (parent);
 
   /* we have to lock the queue since we span threads */
   GST_QUEUE_MUTEX_LOCK_CHECK (queue, out_flushing);
@@ -1195,10 +1198,10 @@ out_flushing:
 }
 
 static gboolean
-gst_queue_handle_src_event (GstPad * pad, GstEvent * event)
+gst_queue_handle_src_event (GstPad * pad, GstObject * parent, GstEvent * event)
 {
   gboolean res = TRUE;
-  GstQueue *queue = GST_QUEUE (GST_PAD_PARENT (pad));
+  GstQueue *queue = GST_QUEUE (parent);
 
 #ifndef GST_DISABLE_GST_DEBUG
   GST_CAT_DEBUG_OBJECT (queue_dataflow, queue, "got event %p (%d)",

@@ -91,8 +91,10 @@ G_DEFINE_TYPE (GstCollectPads, gst_collect_pads, GST_TYPE_OBJECT);
 
 static void gst_collect_pads_clear (GstCollectPads * pads,
     GstCollectData * data);
-static GstFlowReturn gst_collect_pads_chain (GstPad * pad, GstBuffer * buffer);
-static gboolean gst_collect_pads_event (GstPad * pad, GstEvent * event);
+static GstFlowReturn gst_collect_pads_chain (GstPad * pad, GstObject * parent,
+    GstBuffer * buffer);
+static gboolean gst_collect_pads_event (GstPad * pad, GstObject * parent,
+    GstEvent * event);
 static void gst_collect_pads_finalize (GObject * object);
 static void ref_data (GstCollectData * data);
 static void unref_data (GstCollectData * data);
@@ -1062,7 +1064,7 @@ gst_collect_pads_check_collected (GstCollectPads * pads)
 }
 
 static gboolean
-gst_collect_pads_event (GstPad * pad, GstEvent * event)
+gst_collect_pads_event (GstPad * pad, GstObject * parent, GstEvent * event)
 {
   gboolean res;
   GstCollectData *data;
@@ -1087,7 +1089,7 @@ gst_collect_pads_event (GstPad * pad, GstEvent * event)
     case GST_EVENT_FLUSH_START:
     {
       /* forward event to unblock check_collected */
-      gst_pad_event_default (pad, event);
+      gst_pad_event_default (pad, parent, event);
 
       /* now unblock the chain function.
        * no cond per pad, so they all unblock,
@@ -1176,7 +1178,7 @@ gst_collect_pads_event (GstPad * pad, GstEvent * event)
 forward:
   GST_DEBUG_OBJECT (pads, "forward unhandled event: %s",
       GST_EVENT_TYPE_NAME (event));
-  res = gst_pad_event_default (pad, event);
+  res = gst_pad_event_default (pad, parent, event);
 
 done:
   unref_data (data);
@@ -1198,7 +1200,7 @@ pad_removed:
  * collected
  */
 static GstFlowReturn
-gst_collect_pads_chain (GstPad * pad, GstBuffer * buffer)
+gst_collect_pads_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
 {
   GstCollectData *data;
   GstCollectPads *pads;

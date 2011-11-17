@@ -40,7 +40,7 @@ gboolean event_received = FALSE;
 gboolean buffer_allocated = FALSE;
 
 static gboolean
-event_func (GstPad * pad, GstEvent * event)
+event_func (GstPad * pad, GstObject * parent, GstEvent * event)
 {
   event_received = TRUE;
   gst_event_unref (event);

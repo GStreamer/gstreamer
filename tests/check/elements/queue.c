@@ -72,7 +72,7 @@ queue_underrun (GstElement * queue, gpointer user_data)
 }
 
 static gboolean
-event_func (GstPad * pad, GstEvent * event)
+event_func (GstPad * pad, GstObject * parent, GstEvent * event)
 {
   GST_DEBUG ("%s event", gst_event_type_get_name (GST_EVENT_TYPE (event)));
   events = g_list_append (events, event);

@@ -290,7 +290,8 @@ static void gst_base_src_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
 static void gst_base_src_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
-static gboolean gst_base_src_event_handler (GstPad * pad, GstEvent * event);
+static gboolean gst_base_src_event (GstPad * pad, GstObject * parent,
+    GstEvent * event);
 static gboolean gst_base_src_send_event (GstElement * elem, GstEvent * event);
 static gboolean gst_base_src_default_event (GstBaseSrc * src, GstEvent * event);
 
@@ -319,8 +320,8 @@ static GstStateChangeReturn gst_base_src_change_state (GstElement * element,
     GstStateChange transition);
 
 static void gst_base_src_loop (GstPad * pad);
-static GstFlowReturn gst_base_src_pad_get_range (GstPad * pad, guint64 offset,
-    guint length, GstBuffer ** buf);
+static GstFlowReturn gst_base_src_getrange (GstPad * pad, GstObject * parent,
+    guint64 offset, guint length, GstBuffer ** buf);
 static GstFlowReturn gst_base_src_get_range (GstBaseSrc * src, guint64 offset,
     guint length, GstBuffer ** buf);
 static gboolean gst_base_src_seekable (GstBaseSrc * src);
@@ -383,9 +384,9 @@ gst_base_src_class_init (GstBaseSrcClass * klass)
   /* Registering debug symbols for function pointers */
   GST_DEBUG_REGISTER_FUNCPTR (gst_base_src_activate_push);
   GST_DEBUG_REGISTER_FUNCPTR (gst_base_src_activate_pull);
-  GST_DEBUG_REGISTER_FUNCPTR (gst_base_src_event_handler);
+  GST_DEBUG_REGISTER_FUNCPTR (gst_base_src_event);
   GST_DEBUG_REGISTER_FUNCPTR (gst_base_src_query);
-  GST_DEBUG_REGISTER_FUNCPTR (gst_base_src_pad_get_range);
+  GST_DEBUG_REGISTER_FUNCPTR (gst_base_src_getrange);
   GST_DEBUG_REGISTER_FUNCPTR (gst_base_src_fixate);
 }
 
@@ -415,9 +416,9 @@ gst_base_src_init (GstBaseSrc * basesrc, gpointer g_class)
   GST_DEBUG_OBJECT (basesrc, "setting functions on src pad");
   gst_pad_set_activatepush_function (pad, gst_base_src_activate_push);
   gst_pad_set_activatepull_function (pad, gst_base_src_activate_pull);
-  gst_pad_set_event_function (pad, gst_base_src_event_handler);
+  gst_pad_set_event_function (pad, gst_base_src_event);
   gst_pad_set_query_function (pad, gst_base_src_query);
-  gst_pad_set_getrange_function (pad, gst_base_src_pad_get_range);
+  gst_pad_set_getrange_function (pad, gst_base_src_getrange);
 
   /* hold pointer to pad */
   basesrc->srcpad = pad;
@@ -1814,18 +1815,13 @@ not_seekable:
 }
 
 static gboolean
-gst_base_src_event_handler (GstPad * pad, GstEvent * event)
+gst_base_src_event (GstPad * pad, GstObject * parent, GstEvent * event)
 {
   GstBaseSrc *src;
   GstBaseSrcClass *bclass;
   gboolean result = FALSE;
 
-  src = GST_BASE_SRC (gst_pad_get_parent (pad));
-  if (G_UNLIKELY (src == NULL)) {
-    gst_event_unref (event);
-    return FALSE;
-  }
-
+  src = GST_BASE_SRC (parent);
   bclass = GST_BASE_SRC_GET_CLASS (src);
 
   if (bclass->event) {
@@ -1835,7 +1831,6 @@ gst_base_src_event_handler (GstPad * pad, GstEvent * event)
 
 done:
   gst_event_unref (event);
-  gst_object_unref (src);
 
   return result;
 
@@ -2331,13 +2326,13 @@ eos:
 }
 
 static GstFlowReturn
-gst_base_src_pad_get_range (GstPad * pad, guint64 offset, guint length,
-    GstBuffer ** buf)
+gst_base_src_getrange (GstPad * pad, GstObject * parent, guint64 offset,
+    guint length, GstBuffer ** buf)
 {
   GstBaseSrc *src;
   GstFlowReturn res;
 
-  src = GST_BASE_SRC_CAST (gst_object_ref (GST_OBJECT_PARENT (pad)));
+  src = GST_BASE_SRC_CAST (parent);
 
   GST_LIVE_LOCK (src);
   if (G_UNLIKELY (src->priv->flushing))
@@ -2347,8 +2342,6 @@ gst_base_src_pad_get_range (GstPad * pad, guint64 offset, guint length,
 
 done:
   GST_LIVE_UNLOCK (src);
-
-  gst_object_unref (src);
 
   return res;
 

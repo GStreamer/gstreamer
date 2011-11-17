@@ -62,13 +62,18 @@ GType gst_proxy_pad_get_type (void);
 GstProxyPad*     gst_proxy_pad_get_internal     (GstProxyPad *pad);
 
 
-gboolean            gst_proxy_pad_event_default                  (GstPad *pad, GstEvent *event);
+gboolean            gst_proxy_pad_event_default                  (GstPad *pad, GstObject *parent,
+                                                                  GstEvent *event);
 gboolean            gst_proxy_pad_query_default                  (GstPad *pad, GstObject *parent,
                                                                   GstQuery *query);
 GstIterator*        gst_proxy_pad_iterate_internal_links_default (GstPad *pad, GstObject *parent);
-GstFlowReturn       gst_proxy_pad_chain_default                  (GstPad *pad, GstBuffer *buffer);
-GstFlowReturn       gst_proxy_pad_chain_list_default             (GstPad *pad, GstBufferList *list);
-GstFlowReturn       gst_proxy_pad_getrange_default               (GstPad *pad, guint64 offset, guint size, GstBuffer **buffer);
+GstFlowReturn       gst_proxy_pad_chain_default                  (GstPad *pad, GstObject *parent,
+                                                                  GstBuffer *buffer);
+GstFlowReturn       gst_proxy_pad_chain_list_default             (GstPad *pad, GstObject *parent,
+                                                                  GstBufferList *list);
+GstFlowReturn       gst_proxy_pad_getrange_default               (GstPad *pad, GstObject *parent,
+                                                                  guint64 offset, guint size,
+                                                                  GstBuffer **buffer);
 void                gst_proxy_pad_unlink_default                 (GstPad * pad);
 
 #define GST_TYPE_GHOST_PAD              (gst_ghost_pad_get_type ())

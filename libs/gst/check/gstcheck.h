@@ -64,7 +64,7 @@ GstCheckABIStruct;
 
 void gst_check_init (int *argc, char **argv[]);
 
-GstFlowReturn gst_check_chain_func (GstPad * pad, GstBuffer * buffer);
+GstFlowReturn gst_check_chain_func (GstPad * pad, GstObject * parent, GstBuffer * buffer);
 
 void gst_check_message_error (GstMessage * message, GstMessageType type,
     GQuark domain, gint code);

@@ -387,15 +387,17 @@ static GstStateChangeReturn gst_base_sink_change_state (GstElement * element,
 
 static gboolean gst_base_sink_sink_query (GstPad * pad, GstObject * parent,
     GstQuery * query);
-static GstFlowReturn gst_base_sink_chain (GstPad * pad, GstBuffer * buffer);
-static GstFlowReturn gst_base_sink_chain_list (GstPad * pad,
+static GstFlowReturn gst_base_sink_chain (GstPad * pad, GstObject * parent,
+    GstBuffer * buffer);
+static GstFlowReturn gst_base_sink_chain_list (GstPad * pad, GstObject * parent,
     GstBufferList * list);
 
 static void gst_base_sink_loop (GstPad * pad);
 static gboolean gst_base_sink_pad_activate (GstPad * pad);
 static gboolean gst_base_sink_pad_activate_push (GstPad * pad, gboolean active);
 static gboolean gst_base_sink_pad_activate_pull (GstPad * pad, gboolean active);
-static gboolean gst_base_sink_event (GstPad * pad, GstEvent * event);
+static gboolean gst_base_sink_event (GstPad * pad, GstObject * parent,
+    GstEvent * event);
 
 static gboolean default_sink_query (GstBaseSink * sink, GstQuery * query);
 
@@ -2057,8 +2059,8 @@ gst_base_sink_wait_clock (GstBaseSink * sink, GstClockTime time,
   /* FIXME: Casting to GstClockEntry only works because the types
    * are the same */
   if (G_LIKELY (sink->priv->cached_clock_id != NULL
-          && GST_CLOCK_ENTRY_CLOCK ((GstClockEntry *) sink->priv->
-              cached_clock_id) == clock)) {
+          && GST_CLOCK_ENTRY_CLOCK ((GstClockEntry *) sink->
+              priv->cached_clock_id) == clock)) {
     if (!gst_clock_single_shot_id_reinit (clock, sink->priv->cached_clock_id,
             time)) {
       gst_clock_id_unref (sink->priv->cached_clock_id);
@@ -3301,18 +3303,13 @@ gst_base_sink_flush_stop (GstBaseSink * basesink, GstPad * pad,
 }
 
 static gboolean
-gst_base_sink_event (GstPad * pad, GstEvent * event)
+gst_base_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
 {
   GstBaseSink *basesink;
   gboolean result = TRUE;
   GstBaseSinkClass *bclass;
 
-  basesink = GST_BASE_SINK (gst_pad_get_parent (pad));
-  if (G_UNLIKELY (basesink == NULL)) {
-    gst_event_unref (event);
-    return FALSE;
-  }
-
+  basesink = GST_BASE_SINK (parent);
   bclass = GST_BASE_SINK_GET_CLASS (basesink);
 
   GST_DEBUG_OBJECT (basesink, "received event %p %" GST_PTR_FORMAT, event,
@@ -3429,8 +3426,6 @@ gst_base_sink_event (GstPad * pad, GstEvent * event)
       break;
   }
 done:
-  gst_object_unref (basesink);
-
   return result;
 
   /* ERRORS */
@@ -3633,23 +3628,24 @@ wrong_mode:
 }
 
 static GstFlowReturn
-gst_base_sink_chain (GstPad * pad, GstBuffer * buf)
+gst_base_sink_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
 {
   GstBaseSink *basesink;
 
-  basesink = GST_BASE_SINK (GST_OBJECT_PARENT (pad));
+  basesink = GST_BASE_SINK (parent);
 
   return gst_base_sink_chain_main (basesink, pad, _PR_IS_BUFFER, buf);
 }
 
 static GstFlowReturn
-gst_base_sink_chain_list (GstPad * pad, GstBufferList * list)
+gst_base_sink_chain_list (GstPad * pad, GstObject * parent,
+    GstBufferList * list)
 {
   GstBaseSink *basesink;
   GstBaseSinkClass *bclass;
   GstFlowReturn result;
 
-  basesink = GST_BASE_SINK (GST_OBJECT_PARENT (pad));
+  basesink = GST_BASE_SINK (parent);
   bclass = GST_BASE_SINK_GET_CLASS (basesink);
 
   if (G_LIKELY (bclass->render_list)) {
@@ -3979,13 +3975,15 @@ gst_base_sink_perform_step (GstBaseSink * sink, GstPad * pad, GstEvent * event)
 static void
 gst_base_sink_loop (GstPad * pad)
 {
+  GstObject *parent;
   GstBaseSink *basesink;
   GstBuffer *buf = NULL;
   GstFlowReturn result;
   guint blocksize;
   guint64 offset;
 
-  basesink = GST_BASE_SINK (GST_OBJECT_PARENT (pad));
+  parent = GST_OBJECT_PARENT (pad);
+  basesink = GST_BASE_SINK (parent);
 
   g_assert (basesink->pad_mode == GST_PAD_ACTIVATE_PULL);
 
@@ -4029,7 +4027,7 @@ paused:
             gst_message_new_segment_done (GST_OBJECT_CAST (basesink),
                 basesink->segment.format, basesink->segment.position));
       } else {
-        gst_base_sink_event (pad, gst_event_new_eos ());
+        gst_base_sink_event (pad, parent, gst_event_new_eos ());
       }
     } else if (result == GST_FLOW_NOT_LINKED || result <= GST_FLOW_EOS) {
       /* for fatal errors we post an error message, post the error
@@ -4041,7 +4039,7 @@ paused:
       GST_ELEMENT_ERROR (basesink, STREAM, FAILED,
           (_("Internal data stream error.")),
           ("stream stopped, reason %s", gst_flow_get_name (result)));
-      gst_base_sink_event (pad, gst_event_new_eos ());
+      gst_base_sink_event (pad, parent, gst_event_new_eos ());
     }
     return;
   }

@@ -72,8 +72,10 @@ static void gst_valve_set_property (GObject * object,
 static void gst_valve_get_property (GObject * object,
     guint prop_id, GValue * value, GParamSpec * pspec);
 
-static GstFlowReturn gst_valve_chain (GstPad * pad, GstBuffer * buffer);
-static gboolean gst_valve_sink_event (GstPad * pad, GstEvent * event);
+static GstFlowReturn gst_valve_chain (GstPad * pad, GstObject * parent,
+    GstBuffer * buffer);
+static gboolean gst_valve_sink_event (GstPad * pad, GstObject * parent,
+    GstEvent * event);
 static gboolean gst_valve_query (GstPad * pad, GstObject * parent,
     GstQuery * query);
 
@@ -164,9 +166,9 @@ gst_valve_get_property (GObject * object,
 }
 
 static GstFlowReturn
-gst_valve_chain (GstPad * pad, GstBuffer * buffer)
+gst_valve_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
 {
-  GstValve *valve = GST_VALVE (GST_OBJECT_PARENT (pad));
+  GstValve *valve = GST_VALVE (parent);
   GstFlowReturn ret = GST_FLOW_OK;
 
   if (g_atomic_int_get (&valve->drop)) {
@@ -194,12 +196,12 @@ gst_valve_chain (GstPad * pad, GstBuffer * buffer)
 
 
 static gboolean
-gst_valve_sink_event (GstPad * pad, GstEvent * event)
+gst_valve_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
 {
   GstValve *valve;
   gboolean ret = TRUE;
 
-  valve = GST_VALVE (GST_PAD_PARENT (pad));
+  valve = GST_VALVE (parent);
 
   if (g_atomic_int_get (&valve->drop))
     gst_event_unref (event);

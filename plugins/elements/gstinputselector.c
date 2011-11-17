@@ -178,12 +178,14 @@ static void gst_selector_pad_set_property (GObject * object,
 
 static gint64 gst_selector_pad_get_running_time (GstSelectorPad * pad);
 static void gst_selector_pad_reset (GstSelectorPad * pad);
-static gboolean gst_selector_pad_event (GstPad * pad, GstEvent * event);
+static gboolean gst_selector_pad_event (GstPad * pad, GstObject * parent,
+    GstEvent * event);
 static gboolean gst_selector_pad_query (GstPad * pad, GstObject * parent,
     GstQuery * query);
 static GstIterator *gst_selector_pad_iterate_linked_pads (GstPad * pad,
     GstObject * parent);
-static GstFlowReturn gst_selector_pad_chain (GstPad * pad, GstBuffer * buf);
+static GstFlowReturn gst_selector_pad_chain (GstPad * pad, GstObject * parent,
+    GstBuffer * buf);
 
 G_DEFINE_TYPE (GstSelectorPad, gst_selector_pad, GST_TYPE_PAD);
 
@@ -353,7 +355,7 @@ gst_selector_pad_iterate_linked_pads (GstPad * pad, GstObject * parent)
 }
 
 static gboolean
-gst_selector_pad_event (GstPad * pad, GstEvent * event)
+gst_selector_pad_event (GstPad * pad, GstObject * parent, GstEvent * event)
 {
   gboolean res = TRUE;
   gboolean forward;
@@ -362,7 +364,7 @@ gst_selector_pad_event (GstPad * pad, GstEvent * event)
   GstPad *prev_active_sinkpad;
   GstPad *active_sinkpad;
 
-  sel = GST_INPUT_SELECTOR (GST_PAD_PARENT (pad));
+  sel = GST_INPUT_SELECTOR (parent);
   selpad = GST_SELECTOR_PAD_CAST (pad);
 
   GST_INPUT_SELECTOR_LOCK (sel);
@@ -610,7 +612,7 @@ gst_input_selector_wait_running_time (GstInputSelector * sel,
 
 
 static GstFlowReturn
-gst_selector_pad_chain (GstPad * pad, GstBuffer * buf)
+gst_selector_pad_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
 {
   GstInputSelector *sel;
   GstFlowReturn res;
@@ -621,7 +623,7 @@ gst_selector_pad_chain (GstPad * pad, GstBuffer * buf)
   GstSegment *seg;
   GstEvent *start_event = NULL;
 
-  sel = GST_INPUT_SELECTOR (GST_PAD_PARENT (pad));
+  sel = GST_INPUT_SELECTOR (parent);
   selpad = GST_SELECTOR_PAD_CAST (pad);
   seg = &selpad->segment;
 
@@ -754,7 +756,8 @@ static void gst_input_selector_release_pad (GstElement * element, GstPad * pad);
 static GstStateChangeReturn gst_input_selector_change_state (GstElement *
     element, GstStateChange transition);
 
-static gboolean gst_input_selector_event (GstPad * pad, GstEvent * event);
+static gboolean gst_input_selector_event (GstPad * pad, GstObject * parent,
+    GstEvent * event);
 static gboolean gst_input_selector_query (GstPad * pad, GstObject * parent,
     GstQuery * query);
 static gint64 gst_input_selector_block (GstInputSelector * self);
@@ -1026,7 +1029,7 @@ gst_input_selector_get_linked_pad (GstInputSelector * sel, GstPad * pad,
 }
 
 static gboolean
-gst_input_selector_event (GstPad * pad, GstEvent * event)
+gst_input_selector_event (GstPad * pad, GstObject * parent, GstEvent * event)
 {
   GstInputSelector *sel;
   gboolean result = FALSE;
@@ -1036,7 +1039,7 @@ gst_input_selector_event (GstPad * pad, GstEvent * event)
   GstPad *eventpad;
   GList *pushed_pads = NULL;
 
-  sel = GST_INPUT_SELECTOR (GST_PAD_PARENT (pad));
+  sel = GST_INPUT_SELECTOR (parent);
   /* Send upstream events to all sinkpads */
   iter = gst_element_iterate_sink_pads (GST_ELEMENT_CAST (sel));
 

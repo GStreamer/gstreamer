@@ -221,7 +221,7 @@ GST_END_TEST;
 static GstCaps *event_caps = NULL;
 
 static gboolean
-sticky_event (GstPad * pad, GstEvent * event)
+sticky_event (GstPad * pad, GstObject * parent, GstEvent * event)
 {
   GstCaps *caps;
 

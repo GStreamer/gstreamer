@@ -1330,7 +1330,7 @@ out_flushing:
  * _ we push with a unique id (curid)
  */
 static GstFlowReturn
-gst_multi_queue_chain (GstPad * pad, GstBuffer * buffer)
+gst_multi_queue_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
 {
   GstSingleQueue *sq;
   GstMultiQueue *mq;
@@ -1400,7 +1400,7 @@ gst_multi_queue_sink_activate_push (GstPad * pad, gboolean active)
 }
 
 static gboolean
-gst_multi_queue_sink_event (GstPad * pad, GstEvent * event)
+gst_multi_queue_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
 {
   GstSingleQueue *sq;
   GstMultiQueue *mq;
@@ -1411,7 +1411,7 @@ gst_multi_queue_sink_event (GstPad * pad, GstEvent * event)
   GstEvent *sref = NULL;
 
   sq = (GstSingleQueue *) gst_pad_get_element_private (pad);
-  mq = (GstMultiQueue *) GST_PAD_PARENT (pad);
+  mq = (GstMultiQueue *) parent;
 
   type = GST_EVENT_TYPE (event);
 
@@ -1541,7 +1541,7 @@ gst_multi_queue_src_activate_push (GstPad * pad, gboolean active)
 }
 
 static gboolean
-gst_multi_queue_src_event (GstPad * pad, GstEvent * event)
+gst_multi_queue_src_event (GstPad * pad, GstObject * parent, GstEvent * event)
 {
   GstSingleQueue *sq = gst_pad_get_element_private (pad);
 

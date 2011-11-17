@@ -307,15 +307,17 @@ static gboolean gst_base_transform_activate (GstBaseTransform * trans,
 static gboolean gst_base_transform_get_unit_size (GstBaseTransform * trans,
     GstCaps * caps, gsize * size);
 
-static gboolean gst_base_transform_src_event (GstPad * pad, GstEvent * event);
+static gboolean gst_base_transform_src_event (GstPad * pad, GstObject * parent,
+    GstEvent * event);
 static gboolean gst_base_transform_src_eventfunc (GstBaseTransform * trans,
     GstEvent * event);
-static gboolean gst_base_transform_sink_event (GstPad * pad, GstEvent * event);
+static gboolean gst_base_transform_sink_event (GstPad * pad, GstObject * parent,
+    GstEvent * event);
 static gboolean gst_base_transform_sink_eventfunc (GstBaseTransform * trans,
     GstEvent * event);
-static GstFlowReturn gst_base_transform_getrange (GstPad * pad, guint64 offset,
-    guint length, GstBuffer ** buffer);
-static GstFlowReturn gst_base_transform_chain (GstPad * pad,
+static GstFlowReturn gst_base_transform_getrange (GstPad * pad,
+    GstObject * parent, guint64 offset, guint length, GstBuffer ** buffer);
+static GstFlowReturn gst_base_transform_chain (GstPad * pad, GstObject * parent,
     GstBuffer * buffer);
 static GstCaps *gst_base_transform_default_transform_caps (GstBaseTransform *
     trans, GstPadDirection direction, GstCaps * caps, GstCaps * filter);
@@ -1565,25 +1567,20 @@ gst_base_transform_get_unit_size (GstBaseTransform * trans, GstCaps * caps,
 }
 
 static gboolean
-gst_base_transform_sink_event (GstPad * pad, GstEvent * event)
+gst_base_transform_sink_event (GstPad * pad, GstObject * parent,
+    GstEvent * event)
 {
   GstBaseTransform *trans;
   GstBaseTransformClass *bclass;
   gboolean ret = TRUE;
 
-  trans = GST_BASE_TRANSFORM (gst_pad_get_parent (pad));
-  if (G_UNLIKELY (trans == NULL)) {
-    gst_event_unref (event);
-    return FALSE;
-  }
+  trans = GST_BASE_TRANSFORM (parent);
   bclass = GST_BASE_TRANSFORM_GET_CLASS (trans);
 
   if (bclass->sink_event)
     ret = bclass->sink_event (trans, event);
   else
     gst_event_unref (event);
-
-  gst_object_unref (trans);
 
   return ret;
 }
@@ -1646,26 +1643,20 @@ gst_base_transform_sink_eventfunc (GstBaseTransform * trans, GstEvent * event)
 }
 
 static gboolean
-gst_base_transform_src_event (GstPad * pad, GstEvent * event)
+gst_base_transform_src_event (GstPad * pad, GstObject * parent,
+    GstEvent * event)
 {
   GstBaseTransform *trans;
   GstBaseTransformClass *bclass;
   gboolean ret = TRUE;
 
-  trans = GST_BASE_TRANSFORM (gst_pad_get_parent (pad));
-  if (G_UNLIKELY (trans == NULL)) {
-    gst_event_unref (event);
-    return FALSE;
-  }
-
+  trans = GST_BASE_TRANSFORM (parent);
   bclass = GST_BASE_TRANSFORM_GET_CLASS (trans);
 
   if (bclass->src_event)
     ret = bclass->src_event (trans, event);
   else
     gst_event_unref (event);
-
-  gst_object_unref (trans);
 
   return ret;
 }
@@ -1947,7 +1938,7 @@ no_buffer:
  * end based on the transform_size result.
  */
 static GstFlowReturn
-gst_base_transform_getrange (GstPad * pad, guint64 offset,
+gst_base_transform_getrange (GstPad * pad, GstObject * parent, guint64 offset,
     guint length, GstBuffer ** buffer)
 {
   GstBaseTransform *trans;
@@ -1955,7 +1946,7 @@ gst_base_transform_getrange (GstPad * pad, guint64 offset,
   GstFlowReturn ret;
   GstBuffer *inbuf;
 
-  trans = GST_BASE_TRANSFORM (gst_pad_get_parent (pad));
+  trans = GST_BASE_TRANSFORM (parent);
 
   ret = gst_pad_pull_range (trans->sinkpad, offset, length, &inbuf);
   if (G_UNLIKELY (ret != GST_FLOW_OK))
@@ -1970,8 +1961,6 @@ gst_base_transform_getrange (GstPad * pad, guint64 offset,
   GST_BASE_TRANSFORM_UNLOCK (trans);
 
 done:
-  gst_object_unref (trans);
-
   return ret;
 
   /* ERRORS */
@@ -1984,7 +1973,7 @@ pull_error:
 }
 
 static GstFlowReturn
-gst_base_transform_chain (GstPad * pad, GstBuffer * buffer)
+gst_base_transform_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
 {
   GstBaseTransform *trans;
   GstBaseTransformClass *klass;
@@ -1993,7 +1982,7 @@ gst_base_transform_chain (GstPad * pad, GstBuffer * buffer)
   GstClockTime timestamp, duration;
   GstBuffer *outbuf = NULL;
 
-  trans = GST_BASE_TRANSFORM (GST_OBJECT_PARENT (pad));
+  trans = GST_BASE_TRANSFORM (parent);
 
   timestamp = GST_BUFFER_TIMESTAMP (buffer);
   duration = GST_BUFFER_DURATION (buffer);

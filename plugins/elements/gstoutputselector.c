@@ -102,10 +102,12 @@ static GstPad *gst_output_selector_request_new_pad (GstElement * element,
     GstPadTemplate * templ, const gchar * unused, const GstCaps * caps);
 static void gst_output_selector_release_pad (GstElement * element,
     GstPad * pad);
-static GstFlowReturn gst_output_selector_chain (GstPad * pad, GstBuffer * buf);
+static GstFlowReturn gst_output_selector_chain (GstPad * pad,
+    GstObject * parent, GstBuffer * buf);
 static GstStateChangeReturn gst_output_selector_change_state (GstElement *
     element, GstStateChange transition);
-static gboolean gst_output_selector_event (GstPad * pad, GstEvent * event);
+static gboolean gst_output_selector_event (GstPad * pad, GstObject * parent,
+    GstEvent * event);
 static gboolean gst_output_selector_query (GstPad * pad, GstObject * parent,
     GstQuery * query);
 static void gst_output_selector_switch_pad_negotiation_mode (GstOutputSelector *
@@ -416,13 +418,13 @@ gst_output_selector_switch (GstOutputSelector * osel)
 }
 
 static GstFlowReturn
-gst_output_selector_chain (GstPad * pad, GstBuffer * buf)
+gst_output_selector_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
 {
   GstFlowReturn res;
   GstOutputSelector *osel;
   GstClockTime position, duration;
 
-  osel = GST_OUTPUT_SELECTOR (GST_PAD_PARENT (pad));
+  osel = GST_OUTPUT_SELECTOR (parent);
 
   /*
    * The _switch function might push a buffer if 'resend-latest' is true.
@@ -500,13 +502,13 @@ gst_output_selector_change_state (GstElement * element,
 }
 
 static gboolean
-gst_output_selector_event (GstPad * pad, GstEvent * event)
+gst_output_selector_event (GstPad * pad, GstObject * parent, GstEvent * event)
 {
   gboolean res = TRUE;
   GstOutputSelector *sel;
   GstPad *active = NULL;
 
-  sel = GST_OUTPUT_SELECTOR (GST_PAD_PARENT (pad));
+  sel = GST_OUTPUT_SELECTOR (parent);
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_CAPS:
@@ -514,7 +516,7 @@ gst_output_selector_event (GstPad * pad, GstEvent * event)
       switch (sel->pad_negotiation_mode) {
         case GST_OUTPUT_SELECTOR_PAD_NEGOTIATION_MODE_ALL:
           /* Send caps to all src pads */
-          res = gst_pad_event_default (pad, event);
+          res = gst_pad_event_default (pad, parent, event);
           break;
         case GST_OUTPUT_SELECTOR_PAD_NEGOTIATION_MODE_NONE:
           gst_event_unref (event);
@@ -539,12 +541,12 @@ gst_output_selector_event (GstPad * pad, GstEvent * event)
           &sel->segment);
 
       /* Send newsegment to all src pads */
-      res = gst_pad_event_default (pad, event);
+      res = gst_pad_event_default (pad, parent, event);
       break;
     }
     case GST_EVENT_EOS:
       /* Send eos to all src pads */
-      res = gst_pad_event_default (pad, event);
+      res = gst_pad_event_default (pad, parent, event);
       break;
     default:
     {

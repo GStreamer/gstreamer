@@ -441,14 +441,14 @@ GST_START_TEST (test_internal_links)
 GST_END_TEST;
 
 static GstFlowReturn
-_fake_chain (GstPad * pad, GstBuffer * buffer)
+_fake_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
 {
   gst_buffer_unref (buffer);
   return GST_FLOW_OK;
 }
 
 static GstFlowReturn
-_fake_chain_error (GstPad * pad, GstBuffer * buffer)
+_fake_chain_error (GstPad * pad, GstObject * parent, GstBuffer * buffer)
 {
   gst_buffer_unref (buffer);
   return GST_FLOW_ERROR;

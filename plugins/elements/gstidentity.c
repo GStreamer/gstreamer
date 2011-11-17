@@ -361,7 +361,7 @@ gst_identity_sink_event (GstBaseTransform * trans, GstEvent * event)
       gst_segment_init (&segment, segment.format);
       news = gst_event_new_segment (&segment);
 
-      gst_pad_event_default (trans->sinkpad, news);
+      gst_pad_event_default (trans->sinkpad, GST_OBJECT_CAST (trans), news);
     }
   }
 
@@ -371,7 +371,6 @@ gst_identity_sink_event (GstBaseTransform * trans, GstEvent * event)
     identity->prev_timestamp = identity->prev_duration = GST_CLOCK_TIME_NONE;
     identity->prev_offset = identity->prev_offset_end = GST_BUFFER_OFFSET_NONE;
   }
-
 
   if (identity->single_segment && (GST_EVENT_TYPE (event) == GST_EVENT_SEGMENT)) {
     /* eat up segments */

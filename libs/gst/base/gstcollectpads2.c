@@ -92,8 +92,10 @@ G_DEFINE_TYPE (GstCollectPads2, gst_collect_pads2, GST_TYPE_OBJECT);
 
 static void gst_collect_pads2_clear (GstCollectPads2 * pads,
     GstCollectData2 * data);
-static GstFlowReturn gst_collect_pads2_chain (GstPad * pad, GstBuffer * buffer);
-static gboolean gst_collect_pads2_event (GstPad * pad, GstEvent * event);
+static GstFlowReturn gst_collect_pads2_chain (GstPad * pad, GstObject * parent,
+    GstBuffer * buffer);
+static gboolean gst_collect_pads2_event (GstPad * pad, GstObject * parent,
+    GstEvent * event);
 static void gst_collect_pads2_finalize (GObject * object);
 static GstFlowReturn gst_collect_pads2_default_collected (GstCollectPads2 *
     pads, gpointer user_data);
@@ -1536,7 +1538,7 @@ gst_collect_pads2_default_compare_func (GstCollectPads2 * pads,
 }
 
 static gboolean
-gst_collect_pads2_event (GstPad * pad, GstEvent * event)
+gst_collect_pads2_event (GstPad * pad, GstObject * parent, GstEvent * event)
 {
   gboolean res = FALSE, need_unlock = FALSE;
   GstCollectData2 *data;
@@ -1573,7 +1575,7 @@ gst_collect_pads2_event (GstPad * pad, GstEvent * event)
       if (event_func)
         res = event_func (pads, data, event, event_user_data);
       if (!res)
-        res = gst_pad_event_default (pad, event);
+        res = gst_pad_event_default (pad, parent, event);
 
       /* now unblock the chain function.
        * no cond per pad, so they all unblock, 
@@ -1702,7 +1704,7 @@ forward_or_default:
   if (event_func)
     res = event_func (pads, data, event, event_user_data);
   if (!res)
-    res = gst_pad_event_default (pad, event);
+    res = gst_pad_event_default (pad, parent, event);
   if (need_unlock)
     GST_COLLECT_PADS2_STREAM_UNLOCK (pads);
   goto done;
@@ -1742,7 +1744,7 @@ pad_removed:
  * collected 
  */
 static GstFlowReturn
-gst_collect_pads2_chain (GstPad * pad, GstBuffer * buffer)
+gst_collect_pads2_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
 {
   GstCollectData2 *data;
   GstCollectPads2 *pads;

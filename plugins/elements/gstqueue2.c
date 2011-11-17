@@ -223,22 +223,25 @@ static void gst_queue2_set_property (GObject * object,
 static void gst_queue2_get_property (GObject * object,
     guint prop_id, GValue * value, GParamSpec * pspec);
 
-static GstFlowReturn gst_queue2_chain (GstPad * pad, GstBuffer * buffer);
+static GstFlowReturn gst_queue2_chain (GstPad * pad, GstObject * parent,
+    GstBuffer * buffer);
 static GstFlowReturn gst_queue2_push_one (GstQueue2 * queue);
 static void gst_queue2_loop (GstPad * pad);
 
-static gboolean gst_queue2_handle_sink_event (GstPad * pad, GstEvent * event);
+static gboolean gst_queue2_handle_sink_event (GstPad * pad, GstObject * parent,
+    GstEvent * event);
 static gboolean gst_queue2_handle_sink_query (GstPad * pad, GstObject * parent,
     GstQuery * query);
 
-static gboolean gst_queue2_handle_src_event (GstPad * pad, GstEvent * event);
+static gboolean gst_queue2_handle_src_event (GstPad * pad, GstObject * parent,
+    GstEvent * event);
 static gboolean gst_queue2_handle_src_query (GstPad * pad, GstObject * parent,
     GstQuery * query);
 static gboolean gst_queue2_handle_query (GstElement * element,
     GstQuery * query);
 
-static GstFlowReturn gst_queue2_get_range (GstPad * pad, guint64 offset,
-    guint length, GstBuffer ** buffer);
+static GstFlowReturn gst_queue2_get_range (GstPad * pad, GstObject * parent,
+    guint64 offset, guint length, GstBuffer ** buffer);
 
 static gboolean gst_queue2_src_activate_pull (GstPad * pad, gboolean active);
 static gboolean gst_queue2_src_activate_push (GstPad * pad, gboolean active);
@@ -1911,11 +1914,12 @@ no_item:
 }
 
 static gboolean
-gst_queue2_handle_sink_event (GstPad * pad, GstEvent * event)
+gst_queue2_handle_sink_event (GstPad * pad, GstObject * parent,
+    GstEvent * event)
 {
   GstQueue2 *queue;
 
-  queue = GST_QUEUE2 (GST_OBJECT_PARENT (pad));
+  queue = GST_QUEUE2 (parent);
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_FLUSH_START:
@@ -2091,11 +2095,11 @@ gst_queue2_is_filled (GstQueue2 * queue)
 }
 
 static GstFlowReturn
-gst_queue2_chain (GstPad * pad, GstBuffer * buffer)
+gst_queue2_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
 {
   GstQueue2 *queue;
 
-  queue = GST_QUEUE2 (GST_OBJECT_PARENT (pad));
+  queue = GST_QUEUE2 (parent);
 
   GST_CAT_LOG_OBJECT (queue_dataflow, queue, "received buffer %p of size %"
       G_GSIZE_FORMAT ", time %" GST_TIME_FORMAT ", duration %"
@@ -2322,10 +2326,10 @@ out_flushing:
 }
 
 static gboolean
-gst_queue2_handle_src_event (GstPad * pad, GstEvent * event)
+gst_queue2_handle_src_event (GstPad * pad, GstObject * parent, GstEvent * event)
 {
   gboolean res = TRUE;
-  GstQueue2 *queue = GST_QUEUE2 (GST_PAD_PARENT (pad));
+  GstQueue2 *queue = GST_QUEUE2 (parent);
 
 #ifndef GST_DISABLE_GST_DEBUG
   GST_CAT_DEBUG_OBJECT (queue_dataflow, queue, "got event %p (%s)",
@@ -2596,13 +2600,13 @@ gst_queue2_update_upstream_size (GstQueue2 * queue)
 }
 
 static GstFlowReturn
-gst_queue2_get_range (GstPad * pad, guint64 offset, guint length,
-    GstBuffer ** buffer)
+gst_queue2_get_range (GstPad * pad, GstObject * parent, guint64 offset,
+    guint length, GstBuffer ** buffer)
 {
   GstQueue2 *queue;
   GstFlowReturn ret;
 
-  queue = GST_QUEUE2_CAST (GST_PAD_PARENT (pad));
+  queue = GST_QUEUE2_CAST (parent);
 
   length = (length == -1) ? DEFAULT_BUFFER_SIZE : length;
   GST_QUEUE2_MUTEX_LOCK_CHECK (queue, queue->srcresult, out_flushing);

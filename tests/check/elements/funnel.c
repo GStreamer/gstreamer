@@ -106,7 +106,7 @@ static gint bufcount = 0;
 static gint alloccount = 0;
 
 static GstFlowReturn
-chain_ok (GstPad * pad, GstBuffer * buffer)
+chain_ok (GstPad * pad, GstObject * parent, GstBuffer * buffer)
 {
   bufcount++;
 

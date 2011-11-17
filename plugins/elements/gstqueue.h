@@ -38,6 +38,8 @@ G_BEGIN_DECLS
   (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_QUEUE))
 #define GST_IS_QUEUE_CLASS(klass) \
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_QUEUE))
+#define GST_QUEUE_CAST(obj) \
+  ((GstQueue *)(obj))
 
 typedef struct _GstQueue GstQueue;
 typedef struct _GstQueueSize GstQueueSize;

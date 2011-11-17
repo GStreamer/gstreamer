@@ -115,7 +115,7 @@ gst_test_trans_set_data (GstTestTrans * this, TestTransData * data)
 }
 
 static GstFlowReturn
-result_sink_chain (GstPad * pad, GstBuffer * buffer)
+result_sink_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
 {
   TestTransData *data;
 

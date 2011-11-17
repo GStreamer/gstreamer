@@ -136,17 +136,20 @@ static void gst_tee_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 static void gst_tee_dispose (GObject * object);
 
-static GstFlowReturn gst_tee_chain (GstPad * pad, GstBuffer * buffer);
-static GstFlowReturn gst_tee_chain_list (GstPad * pad, GstBufferList * list);
-static gboolean gst_tee_sink_event (GstPad * pad, GstEvent * event);
+static GstFlowReturn gst_tee_chain (GstPad * pad, GstObject * parent,
+    GstBuffer * buffer);
+static GstFlowReturn gst_tee_chain_list (GstPad * pad, GstObject * parent,
+    GstBufferList * list);
+static gboolean gst_tee_sink_event (GstPad * pad, GstObject * parent,
+    GstEvent * event);
 static gboolean gst_tee_sink_query (GstPad * pad, GstObject * parent,
     GstQuery * query);
 static gboolean gst_tee_sink_activate_push (GstPad * pad, gboolean active);
 static gboolean gst_tee_src_query (GstPad * pad, GstObject * parent,
     GstQuery * query);
 static gboolean gst_tee_src_activate_pull (GstPad * pad, gboolean active);
-static GstFlowReturn gst_tee_src_get_range (GstPad * pad, guint64 offset,
-    guint length, GstBuffer ** buf);
+static GstFlowReturn gst_tee_src_get_range (GstPad * pad, GstObject * parent,
+    guint64 offset, guint length, GstBuffer ** buf);
 
 static void
 gst_tee_dispose (GObject * object)
@@ -480,13 +483,13 @@ gst_tee_get_property (GObject * object, guint prop_id, GValue * value,
 }
 
 static gboolean
-gst_tee_sink_event (GstPad * pad, GstEvent * event)
+gst_tee_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
 {
   gboolean res;
 
   switch (GST_EVENT_TYPE (event)) {
     default:
-      res = gst_pad_event_default (pad, event);
+      res = gst_pad_event_default (pad, parent, event);
       break;
   }
 
@@ -688,12 +691,12 @@ error:
 }
 
 static GstFlowReturn
-gst_tee_chain (GstPad * pad, GstBuffer * buffer)
+gst_tee_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
 {
   GstFlowReturn res;
   GstTee *tee;
 
-  tee = GST_TEE_CAST (GST_OBJECT_PARENT (pad));
+  tee = GST_TEE_CAST (parent);
 
   GST_DEBUG_OBJECT (tee, "received buffer %p", buffer);
 
@@ -705,12 +708,12 @@ gst_tee_chain (GstPad * pad, GstBuffer * buffer)
 }
 
 static GstFlowReturn
-gst_tee_chain_list (GstPad * pad, GstBufferList * list)
+gst_tee_chain_list (GstPad * pad, GstObject * parent, GstBufferList * list)
 {
   GstFlowReturn res;
   GstTee *tee;
 
-  tee = GST_TEE_CAST (GST_PAD_PARENT (pad));
+  tee = GST_TEE_CAST (parent);
 
   GST_DEBUG_OBJECT (tee, "received list %p", list);
 
@@ -877,13 +880,13 @@ gst_tee_pull_eos (GstTee * tee)
 }
 
 static GstFlowReturn
-gst_tee_src_get_range (GstPad * pad, guint64 offset, guint length,
-    GstBuffer ** buf)
+gst_tee_src_get_range (GstPad * pad, GstObject * parent, guint64 offset,
+    guint length, GstBuffer ** buf)
 {
   GstTee *tee;
   GstFlowReturn ret;
 
-  tee = GST_TEE (GST_PAD_PARENT (pad));
+  tee = GST_TEE (parent);
 
   ret = gst_pad_pull_range (tee->sinkpad, offset, length, buf);
 

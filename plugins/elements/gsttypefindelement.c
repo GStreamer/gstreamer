@@ -141,18 +141,18 @@ static const GstEventMask *gst_type_find_element_src_event_mask (GstPad * pad);
 #endif
 
 static gboolean gst_type_find_element_src_event (GstPad * pad,
-    GstEvent * event);
+    GstObject * parent, GstEvent * event);
 static gboolean gst_type_find_handle_src_query (GstPad * pad,
     GstObject * parent, GstQuery * query);
 
 static gboolean gst_type_find_element_sink_event (GstPad * pad,
-    GstEvent * event);
+    GstObject * parent, GstEvent * event);
 static gboolean gst_type_find_element_setcaps (GstTypeFindElement * typefind,
     GstCaps * caps);
 static GstFlowReturn gst_type_find_element_chain (GstPad * sinkpad,
-    GstBuffer * buffer);
+    GstObject * parent, GstBuffer * buffer);
 static GstFlowReturn gst_type_find_element_getrange (GstPad * srcpad,
-    guint64 offset, guint length, GstBuffer ** buffer);
+    GstObject * parent, guint64 offset, guint length, GstBuffer ** buffer);
 
 static GstStateChangeReturn
 gst_type_find_element_change_state (GstElement * element,
@@ -426,9 +426,10 @@ gst_type_find_element_src_event_mask (GstPad * pad)
 #endif
 
 static gboolean
-gst_type_find_element_src_event (GstPad * pad, GstEvent * event)
+gst_type_find_element_src_event (GstPad * pad, GstObject * parent,
+    GstEvent * event)
 {
-  GstTypeFindElement *typefind = GST_TYPE_FIND_ELEMENT (GST_PAD_PARENT (pad));
+  GstTypeFindElement *typefind = GST_TYPE_FIND_ELEMENT (parent);
 
   if (typefind->mode != MODE_NORMAL) {
     /* need to do more? */
@@ -514,10 +515,11 @@ no_data:
 }
 
 static gboolean
-gst_type_find_element_sink_event (GstPad * pad, GstEvent * event)
+gst_type_find_element_sink_event (GstPad * pad, GstObject * parent,
+    GstEvent * event)
 {
   gboolean res = FALSE;
-  GstTypeFindElement *typefind = GST_TYPE_FIND_ELEMENT (GST_PAD_PARENT (pad));
+  GstTypeFindElement *typefind = GST_TYPE_FIND_ELEMENT (parent);
 
   GST_DEBUG_OBJECT (typefind, "got %s event in mode %d",
       GST_EVENT_TYPE_NAME (event), typefind->mode);
@@ -726,12 +728,13 @@ gst_type_find_guess_by_extension (GstTypeFindElement * typefind, GstPad * pad,
 }
 
 static GstFlowReturn
-gst_type_find_element_chain (GstPad * pad, GstBuffer * buffer)
+gst_type_find_element_chain (GstPad * pad, GstObject * parent,
+    GstBuffer * buffer)
 {
   GstTypeFindElement *typefind;
   GstFlowReturn res = GST_FLOW_OK;
 
-  typefind = GST_TYPE_FIND_ELEMENT (GST_PAD_PARENT (pad));
+  typefind = GST_TYPE_FIND_ELEMENT (parent);
 
   GST_LOG_OBJECT (typefind, "handling buffer in mode %d", typefind->mode);
 
@@ -854,13 +857,13 @@ low_probability:
 }
 
 static GstFlowReturn
-gst_type_find_element_getrange (GstPad * srcpad,
+gst_type_find_element_getrange (GstPad * srcpad, GstObject * parent,
     guint64 offset, guint length, GstBuffer ** buffer)
 {
   GstTypeFindElement *typefind;
   GstFlowReturn ret;
 
-  typefind = GST_TYPE_FIND_ELEMENT (GST_PAD_PARENT (srcpad));
+  typefind = GST_TYPE_FIND_ELEMENT (parent);
 
   ret = gst_pad_pull_range (typefind->sink, offset, length, buffer);
 

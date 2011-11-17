@@ -326,7 +326,7 @@ struct PadData
 };
 
 static GstFlowReturn
-mq_dummypad_chain (GstPad * sinkpad, GstBuffer * buf)
+mq_dummypad_chain (GstPad * sinkpad, GstObject * parent, GstBuffer * buf)
 {
   guint32 cur_id;
   struct PadData *pad_data;
@@ -377,7 +377,7 @@ mq_dummypad_chain (GstPad * sinkpad, GstBuffer * buf)
 }
 
 static gboolean
-mq_dummypad_event (GstPad * sinkpad, GstEvent * event)
+mq_dummypad_event (GstPad * sinkpad, GstObject * parent, GstEvent * event)
 {
   struct PadData *pad_data;
 

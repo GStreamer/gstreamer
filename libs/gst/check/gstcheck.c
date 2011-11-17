@@ -160,9 +160,9 @@ gst_check_message_error (GstMessage * message, GstMessageType type,
 
 /* helper functions */
 GstFlowReturn
-gst_check_chain_func (GstPad * pad, GstBuffer * buffer)
+gst_check_chain_func (GstPad * pad, GstObject * parent, GstBuffer * buffer)
 {
-  GST_DEBUG ("chain_func: received buffer %p", buffer);
+  GST_DEBUG_OBJECT (pad, "chain_func: received buffer %p", buffer);
   buffers = g_list_append (buffers, buffer);
 
   g_mutex_lock (check_mutex);

@@ -142,7 +142,7 @@ static void gst_pad_get_property (GObject * object, guint prop_id,
 static void gst_pad_set_pad_template (GstPad * pad, GstPadTemplate * templ);
 static gboolean gst_pad_activate_default (GstPad * pad);
 static GstFlowReturn gst_pad_chain_list_default (GstPad * pad,
-    GstBufferList * list);
+    GstObject * parent, GstBufferList * list);
 
 static guint gst_pad_signals[LAST_SIGNAL] = { 0 };
 
@@ -2141,7 +2141,7 @@ gst_pad_set_caps (GstPad * pad, GstCaps * caps)
 }
 
 static gboolean
-do_event_function (GstPad * pad, GstEvent * event,
+do_event_function (GstPad * pad, GstObject * parent, GstEvent * event,
     GstPadEventFunction eventfunc, gboolean * caps_notify)
 {
   gboolean result = TRUE, call_event = TRUE;
@@ -2174,7 +2174,7 @@ do_event_function (GstPad * pad, GstEvent * event,
 
   if (call_event) {
     GST_DEBUG_OBJECT (pad, "calling event function with event %p", event);
-    result = eventfunc (pad, event);
+    result = eventfunc (pad, parent, event);
   } else {
     gst_event_unref (event);
   }
@@ -2237,7 +2237,7 @@ gst_pad_update_events (GstPad * pad)
     gst_event_ref (event);
     GST_OBJECT_UNLOCK (pad);
 
-    res = do_event_function (pad, event, eventfunc, &caps_notify);
+    res = do_event_function (pad, parent, event, eventfunc, &caps_notify);
 
     RELEASE_PARENT (parent);
 
@@ -2603,6 +2603,7 @@ event_forward_func (GstPad * pad, EventData * data)
 /**
  * gst_pad_event_default:
  * @pad: a #GstPad to call the default event handler on.
+ * @parent: the parent of @pad or NULL
  * @event: (transfer full): the #GstEvent to handle.
  *
  * Invokes the default event handler for the given pad.
@@ -2616,7 +2617,7 @@ event_forward_func (GstPad * pad, EventData * data)
  * Returns: TRUE if the event was sent successfully.
  */
 gboolean
-gst_pad_event_default (GstPad * pad, GstEvent * event)
+gst_pad_event_default (GstPad * pad, GstObject * parent, GstEvent * event)
 {
   gboolean result, forward = TRUE;
 
@@ -3211,6 +3212,7 @@ no_parent:
 no_func:
   {
     GST_DEBUG_OBJECT (pad, "had no query function");
+    RELEASE_PARENT (parent);
     return FALSE;
   }
 query_failed:
@@ -3316,6 +3318,7 @@ static inline GstFlowReturn
 gst_pad_chain_data_unchecked (GstPad * pad, GstPadProbeType type, void *data)
 {
   GstFlowReturn ret;
+  GstObject *parent;
   gboolean needs_events;
 
   GST_PAD_STREAM_LOCK (pad);
@@ -3338,6 +3341,7 @@ gst_pad_chain_data_unchecked (GstPad * pad, GstPadProbeType type, void *data)
 
   PROBE_PUSH (pad, type, data, probe_stopped);
 
+  parent = GST_OBJECT_PARENT (pad);
   GST_OBJECT_UNLOCK (pad);
 
   /* NOTE: we read the chainfunc unlocked.
@@ -3355,7 +3359,7 @@ gst_pad_chain_data_unchecked (GstPad * pad, GstPadProbeType type, void *data)
         "calling chainfunction &%s with buffer %" GST_PTR_FORMAT,
         GST_DEBUG_FUNCPTR_NAME (chainfunc), GST_BUFFER (data));
 
-    ret = chainfunc (pad, GST_BUFFER_CAST (data));
+    ret = chainfunc (pad, parent, GST_BUFFER_CAST (data));
 
     GST_CAT_LOG_OBJECT (GST_CAT_SCHEDULING, pad,
         "called chainfunction &%s with buffer %p, returned %s",
@@ -3370,7 +3374,7 @@ gst_pad_chain_data_unchecked (GstPad * pad, GstPadProbeType type, void *data)
         "calling chainlistfunction &%s",
         GST_DEBUG_FUNCPTR_NAME (chainlistfunc));
 
-    ret = chainlistfunc (pad, GST_BUFFER_LIST_CAST (data));
+    ret = chainlistfunc (pad, parent, GST_BUFFER_LIST_CAST (data));
 
     GST_CAT_LOG_OBJECT (GST_CAT_SCHEDULING, pad,
         "called chainlistfunction &%s, returned %s",
@@ -3421,7 +3425,7 @@ no_function:
     gst_mini_object_unref (GST_MINI_OBJECT_CAST (data));
     GST_CAT_LOG_OBJECT (GST_CAT_SCHEDULING, pad,
         "pushing, but not chainhandler");
-    GST_ELEMENT_ERROR (GST_PAD_PARENT (pad), CORE, PAD, (NULL),
+    GST_ELEMENT_ERROR (parent, CORE, PAD, (NULL),
         ("push on pad %s:%s but it has no chainfunction",
             GST_DEBUG_PAD_NAME (pad)));
     GST_PAD_STREAM_UNLOCK (pad);
@@ -3467,7 +3471,8 @@ gst_pad_chain (GstPad * pad, GstBuffer * buffer)
 }
 
 static GstFlowReturn
-gst_pad_chain_list_default (GstPad * pad, GstBufferList * list)
+gst_pad_chain_list_default (GstPad * pad, GstObject * parent,
+    GstBufferList * list)
 {
   guint i, len;
   GstBuffer *buffer;
@@ -3681,6 +3686,7 @@ gst_pad_get_range_unchecked (GstPad * pad, guint64 offset, guint size,
 {
   GstFlowReturn ret;
   GstPadGetRangeFunction getrangefunc;
+  GstObject *parent;
 
   GST_PAD_STREAM_LOCK (pad);
 
@@ -3692,6 +3698,8 @@ gst_pad_get_range_unchecked (GstPad * pad, guint64 offset, guint size,
    * skip calling the getrange function */
   PROBE_PRE_PULL (pad, GST_PAD_PROBE_TYPE_PULL | GST_PAD_PROBE_TYPE_BLOCK,
       *buffer, offset, size, probe_stopped, probed_data, GST_FLOW_OK);
+
+  ACQUIRE_PARENT (pad, parent, no_parent);
   GST_OBJECT_UNLOCK (pad);
 
   if (G_UNLIKELY ((getrangefunc = GST_PAD_GETRANGEFUNC (pad)) == NULL))
@@ -3702,7 +3710,9 @@ gst_pad_get_range_unchecked (GstPad * pad, guint64 offset, guint size,
       G_GUINT64_FORMAT ", size %u",
       GST_DEBUG_FUNCPTR_NAME (getrangefunc), offset, size);
 
-  ret = getrangefunc (pad, offset, size, buffer);
+  ret = getrangefunc (pad, parent, offset, size, buffer);
+
+  RELEASE_PARENT (parent);
 
   if (G_UNLIKELY (ret != GST_FLOW_OK))
     goto get_range_failed;
@@ -3727,11 +3737,19 @@ flushing:
     GST_PAD_STREAM_UNLOCK (pad);
     return GST_FLOW_WRONG_STATE;
   }
+no_parent:
+  {
+    GST_DEBUG_OBJECT (pad, "no parent");
+    GST_OBJECT_UNLOCK (pad);
+    GST_PAD_STREAM_UNLOCK (pad);
+    return GST_FLOW_WRONG_STATE;
+  }
 no_function:
   {
-    GST_ELEMENT_ERROR (GST_PAD_PARENT (pad), CORE, PAD, (NULL),
+    GST_ELEMENT_ERROR (parent, CORE, PAD, (NULL),
         ("getrange on pad %s:%s but it has no getrangefunction",
             GST_DEBUG_PAD_NAME (pad)));
+    RELEASE_PARENT (parent);
     GST_PAD_STREAM_UNLOCK (pad);
     return GST_FLOW_NOT_SUPPORTED;
   }
@@ -4314,7 +4332,7 @@ gst_pad_send_event (GstPad * pad, GstEvent * event)
     ACQUIRE_PARENT (pad, parent, no_parent);
     GST_OBJECT_UNLOCK (pad);
 
-    result = eventfunc (pad, event);
+    result = eventfunc (pad, parent, event);
 
     RELEASE_PARENT (parent);
   }

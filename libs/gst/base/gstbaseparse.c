@@ -383,15 +383,18 @@ static gboolean gst_base_parse_handle_seek (GstBaseParse * parse,
     GstEvent * event);
 static void gst_base_parse_handle_tag (GstBaseParse * parse, GstEvent * event);
 
-static gboolean gst_base_parse_src_event (GstPad * pad, GstEvent * event);
+static gboolean gst_base_parse_src_event (GstPad * pad, GstObject * parent,
+    GstEvent * event);
 static gboolean gst_base_parse_src_query (GstPad * pad, GstObject * parent,
     GstQuery * query);
 
-static gboolean gst_base_parse_sink_event (GstPad * pad, GstEvent * event);
+static gboolean gst_base_parse_sink_event (GstPad * pad, GstObject * parent,
+    GstEvent * event);
 static gboolean gst_base_parse_sink_query (GstPad * pad, GstObject * parent,
     GstQuery * query);
 
-static GstFlowReturn gst_base_parse_chain (GstPad * pad, GstBuffer * buffer);
+static GstFlowReturn gst_base_parse_chain (GstPad * pad, GstObject * parent,
+    GstBuffer * buffer);
 static void gst_base_parse_loop (GstPad * pad);
 
 static gboolean gst_base_parse_check_frame (GstBaseParse * parse,
@@ -865,14 +868,14 @@ gst_base_parse_convert (GstBaseParse * parse,
  * Returns: TRUE if the event was handled.
  */
 static gboolean
-gst_base_parse_sink_event (GstPad * pad, GstEvent * event)
+gst_base_parse_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
 {
   GstBaseParse *parse;
   GstBaseParseClass *bclass;
   gboolean handled = FALSE;
   gboolean ret = TRUE;
 
-  parse = GST_BASE_PARSE (gst_pad_get_parent (pad));
+  parse = GST_BASE_PARSE (parent);
   bclass = GST_BASE_PARSE_GET_CLASS (parse);
 
   GST_DEBUG_OBJECT (parse, "handling event %d, %s", GST_EVENT_TYPE (event),
@@ -906,11 +909,11 @@ gst_base_parse_sink_event (GstPad * pad, GstEvent * event)
       handled = gst_base_parse_sink_eventfunc (parse, event);
 
     if (!handled)
-      ret = gst_pad_event_default (pad, event);
+      ret = gst_pad_event_default (pad, parent, event);
   }
 
-  gst_object_unref (parse);
   GST_DEBUG_OBJECT (parse, "event handled");
+
   return ret;
 }
 
@@ -1168,14 +1171,14 @@ gst_base_parse_sink_query (GstPad * pad, GstObject * parent, GstQuery * query)
  * Returns: TRUE if the event was handled.
  */
 static gboolean
-gst_base_parse_src_event (GstPad * pad, GstEvent * event)
+gst_base_parse_src_event (GstPad * pad, GstObject * parent, GstEvent * event)
 {
   GstBaseParse *parse;
   GstBaseParseClass *bclass;
   gboolean handled = FALSE;
   gboolean ret = TRUE;
 
-  parse = GST_BASE_PARSE (gst_pad_get_parent (pad));
+  parse = GST_BASE_PARSE (parent);
   bclass = GST_BASE_PARSE_GET_CLASS (parse);
 
   GST_DEBUG_OBJECT (parse, "event %d, %s", GST_EVENT_TYPE (event),
@@ -1185,9 +1188,8 @@ gst_base_parse_src_event (GstPad * pad, GstEvent * event)
     handled = bclass->src_event (parse, event);
 
   if (!handled)
-    ret = gst_pad_event_default (pad, event);
+    ret = gst_pad_event_default (pad, parent, event);
 
-  gst_object_unref (parse);
   return ret;
 }
 
@@ -2058,7 +2060,8 @@ gst_base_parse_drain (GstBaseParse * parse)
     if (!avail)
       break;
 
-    if (gst_base_parse_chain (parse->sinkpad, NULL) != GST_FLOW_OK) {
+    if (gst_base_parse_chain (parse->sinkpad, GST_OBJECT_CAST (parse),
+            NULL) != GST_FLOW_OK) {
       break;
     }
 
@@ -2245,7 +2248,7 @@ gst_base_parse_check_sync (GstBaseParse * parse)
 }
 
 static GstFlowReturn
-gst_base_parse_chain (GstPad * pad, GstBuffer * buffer)
+gst_base_parse_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
 {
   GstBaseParseClass *bclass;
   GstBaseParse *parse;
@@ -2259,7 +2262,7 @@ gst_base_parse_chain (GstPad * pad, GstBuffer * buffer)
   GstClockTime timestamp;
   GstBaseParseFrame *frame;
 
-  parse = GST_BASE_PARSE (GST_OBJECT_PARENT (pad));
+  parse = GST_BASE_PARSE (parent);
   bclass = GST_BASE_PARSE_GET_CLASS (parse);
 
   if (parse->priv->detecting) {
@@ -2298,7 +2301,7 @@ gst_base_parse_chain (GstPad * pad, GstBuffer * buffer)
         if (ret == GST_FLOW_OK && !parse->priv->flushing)
           ret =
               gst_base_parse_chain (GST_BASE_PARSE_SINK_PAD (parse),
-              GST_BUFFER_CAST (l->data));
+              parent, GST_BUFFER_CAST (l->data));
         else
           gst_buffer_unref (GST_BUFFER_CAST (l->data));
       }

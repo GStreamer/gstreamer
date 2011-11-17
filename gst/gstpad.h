@@ -256,6 +256,9 @@ typedef gboolean		(*GstPadActivateModeFunction)	(GstPad *pad, gboolean active);
 /**
  * GstPadChainFunction:
  * @pad: the sink #GstPad that performed the chain.
+ * @parent: the parent of @pad. If the #GST_PAD_FLAG_NEED_PARENT flag is set,
+ *          @parent is guaranteed to be not-NULL and remain valid during the
+ *          execution of this function.
  * @buffer: the #GstBuffer that is chained, not %NULL.
  *
  * A function that will be called on sinkpads when chaining buffers.
@@ -270,11 +273,15 @@ typedef gboolean		(*GstPadActivateModeFunction)	(GstPad *pad, gboolean active);
  *
  * Returns: #GST_FLOW_OK for success
  */
-typedef GstFlowReturn		(*GstPadChainFunction)		(GstPad *pad, GstBuffer *buffer);
+typedef GstFlowReturn		(*GstPadChainFunction)		(GstPad *pad, GstObject *parent,
+                                                                 GstBuffer *buffer);
 
 /**
  * GstPadChainListFunction:
  * @pad: the sink #GstPad that performed the chain.
+ * @parent: the parent of @pad. If the #GST_PAD_FLAG_NEED_PARENT flag is set,
+ *          @parent is guaranteed to be not-NULL and remain valid during the
+ *          execution of this function.
  * @list: the #GstBufferList that is chained, not %NULL.
  *
  * A function that will be called on sinkpads when chaining buffer lists.
@@ -289,11 +296,15 @@ typedef GstFlowReturn		(*GstPadChainFunction)		(GstPad *pad, GstBuffer *buffer);
  *
  * Returns: #GST_FLOW_OK for success
  */
-typedef GstFlowReturn		(*GstPadChainListFunction)	(GstPad *pad, GstBufferList *list);
+typedef GstFlowReturn		(*GstPadChainListFunction)	(GstPad *pad, GstObject *parent,
+                                                                 GstBufferList *list);
 
 /**
  * GstPadGetRangeFunction:
  * @pad: the src #GstPad to perform the getrange on.
+ * @parent: the parent of @pad. If the #GST_PAD_FLAG_NEED_PARENT flag is set,
+ *          @parent is guaranteed to be not-NULL and remain valid during the
+ *          execution of this function.
  * @offset: the offset of the range
  * @length: the length of the range
  * @buffer: a memory location to hold the result buffer, cannot be NULL.
@@ -334,19 +345,24 @@ typedef GstFlowReturn		(*GstPadChainListFunction)	(GstPad *pad, GstBufferList *l
  * Returns: #GST_FLOW_OK for success and a valid buffer in @buffer. Any other
  * return value leaves @buffer undefined.
  */
-typedef GstFlowReturn		(*GstPadGetRangeFunction)	(GstPad *pad, guint64 offset,
-		                                                 guint length, GstBuffer **buffer);
+typedef GstFlowReturn		(*GstPadGetRangeFunction)	(GstPad *pad, GstObject *parent,
+                                                                 guint64 offset, guint length,
+                                                                 GstBuffer **buffer);
 
 /**
  * GstPadEventFunction:
  * @pad: the #GstPad to handle the event.
+ * @parent: the parent of @pad. If the #GST_PAD_FLAG_NEED_PARENT flag is set,
+ *          @parent is guaranteed to be not-NULL and remain valid during the
+ *          execution of this function.
  * @event: the #GstEvent to handle.
  *
  * Function signature to handle an event for the pad.
  *
  * Returns: TRUE if the pad could handle the event.
  */
-typedef gboolean		(*GstPadEventFunction)		(GstPad *pad, GstEvent *event);
+typedef gboolean		(*GstPadEventFunction)		(GstPad *pad, GstObject *parent,
+                                                                 GstEvent *event);
 
 
 /* internal links */
@@ -860,7 +876,8 @@ GstFlowReturn		gst_pad_push_list			(GstPad *pad, GstBufferList *list);
 GstFlowReturn		gst_pad_pull_range			(GstPad *pad, guint64 offset, guint size,
 								 GstBuffer **buffer);
 gboolean		gst_pad_push_event			(GstPad *pad, GstEvent *event);
-gboolean		gst_pad_event_default			(GstPad *pad, GstEvent *event);
+gboolean		gst_pad_event_default			(GstPad *pad, GstObject *parent,
+                                                                 GstEvent *event);
 
 /* data passing functions on pad */
 GstFlowReturn		gst_pad_chain				(GstPad *pad, GstBuffer *buffer);
