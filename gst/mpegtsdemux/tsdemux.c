@@ -44,6 +44,12 @@
 #include "payload_parsers.h"
 #include "pesparse.h"
 
+/* 
+ * tsdemux
+ *
+ * See TODO for explanations on improvements needed
+ */
+
 /* latency in mseconds */
 #define TS_LATENCY 700
 
@@ -73,8 +79,6 @@ static GQuark QUARK_OPCR;
 static GQuark QUARK_PTS;
 static GQuark QUARK_DTS;
 static GQuark QUARK_OFFSET;
-
-
 
 typedef enum
 {

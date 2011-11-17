@@ -94,9 +94,7 @@ static GstStaticPadTemplate sink_factory = GST_STATIC_PAD_TEMPLATE ("sink",
 static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("audio/x-opus, "
-        "rate = (int) { 8000, 12000, 16000, 24000, 48000 }, "
-        "channels = (int) [ 1, 2 ], " "frame-size = (int) [ 2, 60 ]")
+    GST_STATIC_CAPS ("audio/x-opus")
     );
 
 #define DEFAULT_AUDIO           TRUE
@@ -144,6 +142,9 @@ static GstFlowReturn gst_opus_enc_handle_frame (GstAudioEncoder * benc,
     GstBuffer * buf);
 static GstFlowReturn gst_opus_enc_pre_push (GstAudioEncoder * benc,
     GstBuffer ** buffer);
+static gint64 gst_opus_enc_get_latency (GstOpusEnc * enc);
+
+static GstFlowReturn gst_opus_enc_encode (GstOpusEnc * enc, GstBuffer * buffer);
 
 static GstFlowReturn gst_opus_enc_encode (GstOpusEnc * enc, GstBuffer * buf);
 static gint64 gst_opus_enc_get_latency (GstOpusEnc * enc);
@@ -157,12 +158,15 @@ static void
 gst_opus_enc_class_init (GstOpusEncClass * klass)
 {
   GObjectClass *gobject_class;
-  GstElementClass *element_class;
+  GstElementClass *gstelement_class;
   GstAudioEncoderClass *base_class;
 
   gobject_class = (GObjectClass *) klass;
-  element_class = (GstElementClass *) klass;
+  gstelement_class = (GstElementClass *) klass;
   base_class = (GstAudioEncoderClass *) klass;
+
+  gobject_class->set_property = gst_opus_enc_set_property;
+  gobject_class->get_property = gst_opus_enc_get_property;
 
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&src_factory));
@@ -179,9 +183,6 @@ gst_opus_enc_class_init (GstOpusEncClass * klass)
   base_class->handle_frame = GST_DEBUG_FUNCPTR (gst_opus_enc_handle_frame);
   base_class->pre_push = GST_DEBUG_FUNCPTR (gst_opus_enc_pre_push);
   base_class->event = GST_DEBUG_FUNCPTR (gst_opus_enc_sink_event);
-
-  gobject_class->set_property = gst_opus_enc_set_property;
-  gobject_class->get_property = gst_opus_enc_get_property;
 
   g_object_class_install_property (gobject_class, PROP_AUDIO,
       g_param_spec_boolean ("audio", "Audio or voice",
@@ -205,7 +206,7 @@ gst_opus_enc_class_init (GstOpusEncClass * klass)
           "Constant bit rate", DEFAULT_CBR,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_CONSTRAINED_VBR,
-      g_param_spec_boolean ("constrained-cbr", "Constrained VBR",
+      g_param_spec_boolean ("constrained-vbr", "Constrained VBR",
           "Constrained VBR", DEFAULT_CONSTRAINED_VBR,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_COMPLEXITY,
@@ -237,12 +238,11 @@ gst_opus_enc_finalize (GObject * object)
 
   enc = GST_OPUS_ENC (object);
 
-  GST_DEBUG_OBJECT (enc, "finalize");
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
 static void
-gst_opus_enc_init (GstOpusEnc * enc)
+gst_opus_enc_init (GstOpusEnc * enc, GstOpusEncClass * klass)
 {
   GstAudioEncoder *benc = GST_AUDIO_ENCODER (enc);
 
@@ -273,7 +273,7 @@ gst_opus_enc_start (GstAudioEncoder * benc)
   GstOpusEnc *enc = GST_OPUS_ENC (benc);
 
   GST_DEBUG_OBJECT (enc, "start");
-  enc->tags = gst_tag_list_new_empty ();
+  enc->tags = gst_tag_list_new ();
   enc->header_sent = FALSE;
   return TRUE;
 }
@@ -295,6 +295,15 @@ gst_opus_enc_stop (GstAudioEncoder * benc)
   enc->headers = NULL;
 
   return TRUE;
+}
+
+static gint64
+gst_opus_enc_get_latency (GstOpusEnc * enc)
+{
+  gint64 latency = gst_util_uint64_scale (enc->frame_samples, GST_SECOND,
+      enc->sample_rate);
+  GST_DEBUG_OBJECT (enc, "Latency: %" GST_TIME_FORMAT, GST_TIME_ARGS (latency));
+  return latency;
 }
 
 static gint
@@ -345,7 +354,6 @@ gst_opus_enc_set_format (GstAudioEncoder * benc, GstAudioInfo * info)
     opus_encoder_destroy (enc->state);
     enc->state = NULL;
   }
-
   if (!gst_opus_enc_setup (enc))
     return FALSE;
 
@@ -354,7 +362,6 @@ gst_opus_enc_set_format (GstAudioEncoder * benc, GstAudioInfo * info)
   /* feedback to base class */
   gst_audio_encoder_set_latency (benc,
       gst_opus_enc_get_latency (enc), gst_opus_enc_get_latency (enc));
-
   gst_audio_encoder_set_frame_samples_min (benc,
       enc->frame_samples * enc->n_channels * 2);
   gst_audio_encoder_set_frame_samples_max (benc,
@@ -362,15 +369,6 @@ gst_opus_enc_set_format (GstAudioEncoder * benc, GstAudioInfo * info)
   gst_audio_encoder_set_frame_max (benc, 0);
 
   return TRUE;
-}
-
-static gint64
-gst_opus_enc_get_latency (GstOpusEnc * enc)
-{
-  gint64 latency = gst_util_uint64_scale (enc->frame_samples, GST_SECOND,
-      enc->sample_rate);
-  GST_DEBUG_OBJECT (enc, "Latency: %" GST_TIME_FORMAT, GST_TIME_ARGS (latency));
-  return latency;
 }
 
 static GstBuffer *
@@ -495,8 +493,8 @@ gst_opus_enc_sink_event (GstAudioEncoder * benc, GstEvent * event)
 static GstFlowReturn
 gst_opus_enc_pre_push (GstAudioEncoder * benc, GstBuffer ** buffer)
 {
-  GstOpusEnc *enc;
   GstFlowReturn ret = GST_FLOW_OK;
+  GstOpusEnc *enc;
 
   enc = GST_OPUS_ENC (benc);
 
@@ -517,6 +515,39 @@ gst_opus_enc_pre_push (GstAudioEncoder * benc, GstBuffer ** buffer)
 
     g_slist_free (enc->headers);
     enc->headers = NULL;
+  }
+
+  return ret;
+}
+
+static GstFlowReturn
+gst_opus_enc_encode (GstOpusEnc * enc, GstBuffer * buf)
+{
+  guint8 *bdata, *data, *mdata = NULL;
+  gsize bsize, size;
+  gsize bytes = enc->frame_samples * enc->n_channels * 2;
+  gsize bytes_per_packet =
+      (enc->bitrate * enc->frame_samples / enc->sample_rate + 4) / 8;
+  gint ret = GST_FLOW_OK;
+
+  if (G_LIKELY (buf)) {
+    bdata = GST_BUFFER_DATA (buf);
+    bsize = GST_BUFFER_SIZE (buf);
+    if (G_UNLIKELY (bsize % bytes)) {
+      GST_DEBUG_OBJECT (enc, "draining; adding silence samples");
+
+      size = ((bsize / bytes) + 1) * bytes;
+      mdata = g_malloc0 (size);
+      memcpy (mdata, bdata, bsize);
+      bdata = NULL;
+      data = mdata;
+    } else {
+      data = bdata;
+      size = bsize;
+    }
+  } else {
+    GST_DEBUG_OBJECT (enc, "nothing to drain");
+    goto done;
   }
 
   return ret;
@@ -669,7 +700,6 @@ gst_opus_enc_handle_frame (GstAudioEncoder * benc, GstBuffer * buf)
   GstFlowReturn ret = GST_FLOW_OK;
 
   enc = GST_OPUS_ENC (benc);
-
   GST_DEBUG_OBJECT (enc, "handle_frame");
 
   if (!enc->header_sent) {
@@ -684,17 +714,13 @@ gst_opus_enc_handle_frame (GstAudioEncoder * benc, GstBuffer * buf)
     buf2 = gst_opus_enc_create_metadata_buffer (enc);
 
     /* mark and put on caps */
-    caps =
-        gst_caps_new_simple ("audio/x-opus", "rate", G_TYPE_INT,
-        enc->sample_rate, "channels", G_TYPE_INT, enc->n_channels, "frame-size",
-        G_TYPE_INT, enc->frame_size, NULL);
+    caps = gst_caps_from_string ("audio/x-opus");
     caps = _gst_caps_set_buffer_array (caps, "streamheader", buf1, buf2, NULL);
 
     /* negotiate with these caps */
     GST_DEBUG_OBJECT (enc, "here are the caps: %" GST_PTR_FORMAT, caps);
 
     gst_pad_set_caps (GST_AUDIO_ENCODER_SRC_PAD (enc), caps);
-    gst_caps_unref (caps);
 
     /* push out buffers */
     /* store buffers for later pre_push sending */
@@ -703,12 +729,11 @@ gst_opus_enc_handle_frame (GstAudioEncoder * benc, GstBuffer * buf)
     GST_DEBUG_OBJECT (enc, "storing header buffers");
     enc->headers = g_slist_prepend (enc->headers, buf2);
     enc->headers = g_slist_prepend (enc->headers, buf1);
-
     enc->header_sent = TRUE;
   }
 
   GST_DEBUG_OBJECT (enc, "received buffer %p of %u bytes", buf,
-      buf ? gst_buffer_get_size (buf) : 0);
+      buf ? GST_BUFFER_SIZE (buf) : 0);
 
   ret = gst_opus_enc_encode (enc, buf);
 

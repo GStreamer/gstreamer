@@ -183,8 +183,10 @@
 
 #define GST_CAMERA_BIN2_PROCESSING_DEC(c)                                \
 {                                                                       \
-  if (g_atomic_int_dec_and_test (&c->processing_counter))               \
+  if (g_atomic_int_dec_and_test (&c->processing_counter)) {             \
     g_object_notify (G_OBJECT (c), "idle");                             \
+    GST_DEBUG_OBJECT ((c), "Camerabin now idle");			\
+  }									\
   GST_DEBUG_OBJECT ((c), "Processing counter decremented");             \
 }
 
@@ -368,11 +370,24 @@ gst_camera_bin_start_capture (GstCameraBin2 * camerabin)
   GST_DEBUG_OBJECT (camerabin, "Received start-capture");
 
   /* check that we have a valid location */
-  if (camerabin->mode == MODE_VIDEO && camerabin->location == NULL) {
-    GST_ELEMENT_ERROR (camerabin, RESOURCE, OPEN_WRITE,
-        (_("File location is set to NULL, please set it to a valid filename")),
-        (NULL));
-    return;
+  if (camerabin->mode == MODE_VIDEO) {
+    if (camerabin->location == NULL) {
+      GST_ELEMENT_ERROR (camerabin, RESOURCE, OPEN_WRITE,
+          (_("File location is set to NULL, please set it to a valid filename")), (NULL));
+      return;
+    }
+
+    g_mutex_lock (camerabin->video_capture_mutex);
+    while (camerabin->video_state == GST_CAMERA_BIN_VIDEO_FINISHING) {
+      g_cond_wait (camerabin->video_state_cond, camerabin->video_capture_mutex);
+    }
+    if (camerabin->video_state != GST_CAMERA_BIN_VIDEO_IDLE) {
+      GST_WARNING_OBJECT (camerabin, "Another video recording is ongoing"
+          " (state %d), cannot start a new one", camerabin->video_state);
+      g_mutex_unlock (camerabin->video_capture_mutex);
+      return;
+    }
+    camerabin->video_state = GST_CAMERA_BIN_VIDEO_STARTING;
   }
 
   GST_CAMERA_BIN2_PROCESSING_INC (camerabin);
@@ -384,12 +399,6 @@ gst_camera_bin_start_capture (GstCameraBin2 * camerabin)
     if (camerabin->audio_src) {
       GstClock *clock = gst_pipeline_get_clock (GST_PIPELINE_CAST (camerabin));
 
-      /* need to reset eos status (pads could be flushing) */
-      gst_element_set_state (camerabin->audio_capsfilter, GST_STATE_READY);
-      gst_element_set_state (camerabin->audio_volume, GST_STATE_READY);
-
-      gst_element_sync_state_with_parent (camerabin->audio_capsfilter);
-      gst_element_sync_state_with_parent (camerabin->audio_volume);
       gst_element_set_state (camerabin->audio_src, GST_STATE_PAUSED);
 
       gst_element_set_base_time (camerabin->audio_src,
@@ -420,8 +429,13 @@ gst_camera_bin_start_capture (GstCameraBin2 * camerabin)
   }
 
   g_signal_emit_by_name (camerabin->src, "start-capture", NULL);
-  if (camerabin->mode == MODE_VIDEO && camerabin->audio_src)
-    gst_element_set_state (camerabin->audio_src, GST_STATE_PLAYING);
+  if (camerabin->mode == MODE_VIDEO) {
+    if (camerabin->audio_src)
+      gst_element_set_state (camerabin->audio_src, GST_STATE_PLAYING);
+
+    camerabin->video_state = GST_CAMERA_BIN_VIDEO_RECORDING;
+    g_mutex_unlock (camerabin->video_capture_mutex);
+  }
 
   /*
    * We have to push tags after start capture because the video elements
@@ -458,12 +472,19 @@ static void
 gst_camera_bin_stop_capture (GstCameraBin2 * camerabin)
 {
   GST_DEBUG_OBJECT (camerabin, "Received stop-capture");
-  if (camerabin->src)
-    g_signal_emit_by_name (camerabin->src, "stop-capture", NULL);
+  if (camerabin->mode == MODE_VIDEO) {
+    g_mutex_lock (camerabin->video_capture_mutex);
+    if (camerabin->video_state == GST_CAMERA_BIN_VIDEO_RECORDING) {
+      if (camerabin->src)
+        g_signal_emit_by_name (camerabin->src, "stop-capture", NULL);
 
-  if (camerabin->mode == MODE_VIDEO && camerabin->audio_src) {
-    camerabin->audio_drop_eos = FALSE;
-    gst_element_send_event (camerabin->audio_src, gst_event_new_eos ());
+      camerabin->video_state = GST_CAMERA_BIN_VIDEO_FINISHING;
+      if (camerabin->audio_src) {
+        camerabin->audio_drop_eos = FALSE;
+        gst_element_send_event (camerabin->audio_src, gst_event_new_eos ());
+      }
+    }
+    g_mutex_unlock (camerabin->video_capture_mutex);
   }
 }
 
@@ -494,11 +515,8 @@ gst_camera_bin_src_notify_readyforcapture (GObject * obj, GParamSpec * pspec,
     gchar *location = NULL;
 
     if (camera->mode == MODE_VIDEO) {
-      /* a video recording is about to start, we reset the videobin to clear eos/flushing state
-       * also need to clean the queue ! capsfilter before it */
+      /* a video recording is about to start, change the filesink location */
       gst_element_set_state (camera->videosink, GST_STATE_NULL);
-      gst_element_set_state (camera->video_encodebin, GST_STATE_NULL);
-      gst_element_set_state (camera->videobin_capsfilter, GST_STATE_NULL);
       location = g_strdup_printf (camera->location, camera->capture_index);
       GST_DEBUG_OBJECT (camera, "Switching videobin location to %s", location);
       g_object_set (camera->videosink, "location", location, NULL);
@@ -509,21 +527,9 @@ gst_camera_bin_src_notify_readyforcapture (GObject * obj, GParamSpec * pspec,
          * and could cause problems in a camerabin2 state change */
         gst_element_set_state (camera->videosink, GST_STATE_NULL);
       }
-      gst_element_set_state (camera->video_encodebin, GST_STATE_PLAYING);
-      gst_element_set_state (camera->videobin_capsfilter, GST_STATE_PLAYING);
     }
 
     camera->capture_index++;
-  } else {
-    if (camera->mode == MODE_VIDEO && camera->audio_src) {
-      /* FIXME We need to set audiosrc to null to make it resync the ringbuffer
-       * while bug https://bugzilla.gnome.org/show_bug.cgi?id=648359 isn't
-       * fixed.
-       *
-       * Also, we set to NULL here to stop capturing audio through to the next
-       * video mode start capture and to clear EOS. */
-      gst_element_set_state (camera->audio_src, GST_STATE_NULL);
-    }
   }
 }
 
@@ -535,6 +541,8 @@ gst_camera_bin_dispose (GObject * object)
   g_free (camerabin->location);
   g_mutex_free (camerabin->preview_list_mutex);
   g_mutex_free (camerabin->image_capture_mutex);
+  g_mutex_free (camerabin->video_capture_mutex);
+  g_cond_free (camerabin->video_state_cond);
 
   if (camerabin->src_capture_notify_id)
     g_signal_handler_disconnect (camerabin->src,
@@ -892,6 +900,8 @@ gst_camera_bin_init (GstCameraBin2 * camera)
   camera->flags = DEFAULT_FLAGS;
   camera->preview_list_mutex = g_mutex_new ();
   camera->image_capture_mutex = g_mutex_new ();
+  camera->video_capture_mutex = g_mutex_new ();
+  camera->video_state_cond = g_cond_new ();
 
   /* capsfilters are created here as we proxy their caps properties and
    * this way we avoid having to store the caps while on NULL state to 
@@ -961,6 +971,46 @@ gst_camera_bin_skip_next_preview (GstCameraBin2 * camerabin)
     GST_WARNING_OBJECT (camerabin, "No previews to skip");
   }
   g_mutex_unlock (camerabin->preview_list_mutex);
+}
+
+static gpointer
+gst_camera_bin_video_reset_elements (gpointer u_data)
+{
+  GstCameraBin2 *camerabin = GST_CAMERA_BIN2_CAST (u_data);
+
+  GST_DEBUG_OBJECT (camerabin, "Resetting video elements state");
+  g_mutex_lock (camerabin->video_capture_mutex);
+
+  /* reset element states to clear eos/flushing pads */
+  gst_element_set_state (camerabin->video_encodebin, GST_STATE_READY);
+  gst_element_set_state (camerabin->videobin_capsfilter, GST_STATE_READY);
+  gst_element_sync_state_with_parent (camerabin->videobin_capsfilter);
+  gst_element_sync_state_with_parent (camerabin->video_encodebin);
+
+  if (camerabin->audio_src) {
+    gst_element_set_state (camerabin->audio_capsfilter, GST_STATE_READY);
+    gst_element_set_state (camerabin->audio_volume, GST_STATE_READY);
+
+    /* FIXME We need to set audiosrc to null to make it resync the ringbuffer
+     * while bug https://bugzilla.gnome.org/show_bug.cgi?id=648359 isn't
+     * fixed.
+     *
+     * Also, we don't reinit the audiosrc to keep audio devices from being open
+     * and running until we really need them */
+    gst_element_set_state (camerabin->audio_src, GST_STATE_NULL);
+
+    gst_element_sync_state_with_parent (camerabin->audio_capsfilter);
+    gst_element_sync_state_with_parent (camerabin->audio_volume);
+
+  }
+
+  GST_DEBUG_OBJECT (camerabin, "Setting video state to idle");
+  camerabin->video_state = GST_CAMERA_BIN_VIDEO_IDLE;
+  g_cond_signal (camerabin->video_state_cond);
+  g_mutex_unlock (camerabin->video_capture_mutex);
+
+  gst_object_unref (camerabin);
+  return NULL;
 }
 
 static void
@@ -1035,9 +1085,24 @@ gst_camera_bin_handle_message (GstBin * bin, GstMessage * message)
     case GST_MESSAGE_EOS:{
       GstElement *src = GST_ELEMENT (GST_MESSAGE_SRC (message));
       if (src == GST_CAMERA_BIN2_CAST (bin)->videosink) {
+
+        g_mutex_lock (camerabin->video_capture_mutex);
         GST_DEBUG_OBJECT (bin, "EOS from video branch");
+        g_assert (camerabin->video_state == GST_CAMERA_BIN_VIDEO_FINISHING);
+
         gst_video_capture_bin_post_video_done (GST_CAMERA_BIN2_CAST (bin));
         dec_counter = TRUE;
+
+        if (!g_thread_create (gst_camera_bin_video_reset_elements,
+                gst_object_ref (camerabin), FALSE, NULL)) {
+          GST_WARNING_OBJECT (camerabin, "Failed to create thread to "
+              "reset video elements' state, video recordings may not work "
+              "anymore");
+          gst_object_unref (camerabin);
+          camerabin->video_state = GST_CAMERA_BIN_VIDEO_IDLE;
+        }
+
+        g_mutex_unlock (camerabin->video_capture_mutex);
       }
     }
       break;
@@ -1810,6 +1875,7 @@ gst_camera_bin_change_state (GstElement * element, GstStateChange trans)
 
       gst_tag_setter_reset_tags (GST_TAG_SETTER (camera));
       GST_CAMERA_BIN2_RESET_PROCESSING_COUNTER (camera);
+      camera->video_state = GST_CAMERA_BIN_VIDEO_IDLE;
 
       g_mutex_lock (camera->image_capture_mutex);
       g_slist_foreach (camera->image_location_list, (GFunc) g_free, NULL);

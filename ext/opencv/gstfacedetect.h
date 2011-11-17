@@ -3,6 +3,7 @@
  * Copyright (C) 2005 Thomas Vander Stichele <thomas@apestaart.org>
  * Copyright (C) 2005 Ronald S. Bultje <rbultje@ronald.bitfreak.net>
  * Copyright (C) 2008 Michael Sheldon <mike@mikeasoft.com>
+ * Copyright (C) 2011 Stefan Sauer <ensonic@users.sf.net>
  * 
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -59,23 +60,26 @@ G_BEGIN_DECLS
 #define GST_TYPE_FACEDETECT \
   (gst_facedetect_get_type())
 #define GST_FACEDETECT(obj) \
-  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_FACEDETECT,Gstfacedetect))
+  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_FACEDETECT,GstFacedetect))
 #define GST_FACEDETECT_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_FACEDETECT,GstfacedetectClass))
+  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_FACEDETECT,GstFacedetectClass))
 #define GST_IS_FACEDETECT(obj) \
   (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_FACEDETECT))
 #define GST_IS_FACEDETECT_CLASS(klass) \
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_FACEDETECT))
-typedef struct _Gstfacedetect Gstfacedetect;
-typedef struct _GstfacedetectClass GstfacedetectClass;
+typedef struct _GstFacedetect GstFacedetect;
+typedef struct _GstFacedetectClass GstFacedetectClass;
 
-struct _Gstfacedetect
+struct _GstFacedetect
 {
   GstOpencvVideoFilter element;
 
   gboolean display;
 
-  gchar *profile;
+  gchar *face_profile;
+  gchar *nose_profile;
+  gchar *mouth_profile;
+  gchar *eyes_profile;
   gdouble scale_factor;
   gint min_neighbors;
   gint flags;
@@ -83,11 +87,14 @@ struct _Gstfacedetect
   gint min_size_height;
 
   IplImage *cvGray;
-  CvHaarClassifierCascade *cvCascade;
+  CvHaarClassifierCascade *cvFaceDetect;
+  CvHaarClassifierCascade *cvNoseDetect;
+  CvHaarClassifierCascade *cvMouthDetect;
+  CvHaarClassifierCascade *cvEyesDetect;
   CvMemStorage *cvStorage;
 };
 
-struct _GstfacedetectClass
+struct _GstFacedetectClass
 {
   GstOpencvVideoFilterClass parent_class;
 };

@@ -24,7 +24,7 @@
 
 
 #include <gst/gst.h>
-#include <gst/base/gstadapter.h>
+#include <gst/audio/gstaudioencoder.h>
 
 #include <celt/celt.h>
 #include <celt/celt_header.h>
@@ -49,16 +49,11 @@ typedef struct _GstCeltEnc GstCeltEnc;
 typedef struct _GstCeltEncClass GstCeltEncClass;
 
 struct _GstCeltEnc {
-  GstElement            element;
-
-  /* pads */
-  GstPad                *sinkpad;
-  GstPad                *srcpad;
+  GstAudioEncoder      element;
 
   CELTHeader            header;
   CELTMode             *mode;
   CELTEncoder          *state;
-  GstAdapter           *adapter;
 
   gint                  bitrate;
   gint                  frame_size;
@@ -72,26 +67,12 @@ struct _GstCeltEnc {
   gint                  channels;
   gint                  rate;
 
-  gboolean              setup;
   gboolean              header_sent;
-  gboolean              eos;
-
-  guint64               samples_in;
-  guint64               bytes_out;
-
-  guint64               frameno;
-  guint64               frameno_out;
-
-  GstClockTime     start_ts;
-  GstClockTime     next_ts;
-  guint64          granulepos_offset;
+  GSList               *headers;
 };
 
 struct _GstCeltEncClass {
-  GstElementClass parent_class;
-
-  /* signals */
-  void (*frame_encoded) (GstElement *element);
+  GstAudioEncoderClass  parent_class;
 };
 
 GType gst_celt_enc_get_type (void);

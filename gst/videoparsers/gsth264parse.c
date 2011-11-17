@@ -91,6 +91,7 @@ static void gst_h264_parse_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 
 static gboolean gst_h264_parse_set_caps (GstBaseParse * parse, GstCaps * caps);
+static GstCaps *gst_h264_parse_get_caps (GstBaseParse * parse);
 static GstFlowReturn gst_h264_parse_chain (GstPad * pad, GstBuffer * buffer);
 
 static void
@@ -138,6 +139,7 @@ gst_h264_parse_class_init (GstH264ParseClass * klass)
   parse_class->pre_push_frame =
       GST_DEBUG_FUNCPTR (gst_h264_parse_pre_push_frame);
   parse_class->set_sink_caps = GST_DEBUG_FUNCPTR (gst_h264_parse_set_caps);
+  parse_class->get_sink_caps = GST_DEBUG_FUNCPTR (gst_h264_parse_get_caps);
 }
 
 static void
@@ -337,7 +339,7 @@ gst_h264_parse_wrap_nal (GstH264Parse * h264parse, guint format, guint8 * data,
     guint size)
 {
   GstBuffer *buf;
-  const guint nl = h264parse->nal_length_size;
+  guint nl = h264parse->nal_length_size;
 
   GST_DEBUG_OBJECT (h264parse, "nal length %d", size);
 
@@ -345,7 +347,10 @@ gst_h264_parse_wrap_nal (GstH264Parse * h264parse, guint format, guint8 * data,
   if (format == GST_H264_PARSE_FORMAT_AVC) {
     GST_WRITE_UINT32_BE (GST_BUFFER_DATA (buf), size << (32 - 8 * nl));
   } else {
-    g_assert (nl == 4);
+    /* HACK: nl should always be 4 here, otherwise this won't work. 
+     * There are legit cases where nl in avc stream is 2, but byte-stream
+     * SC is still always 4 bytes. */
+    nl = 4;
     GST_WRITE_UINT32_BE (GST_BUFFER_DATA (buf), 1);
   }
 
@@ -1331,6 +1336,38 @@ refuse_caps:
     GST_WARNING_OBJECT (h264parse, "refused caps %" GST_PTR_FORMAT, caps);
     return FALSE;
   }
+}
+
+static GstCaps *
+gst_h264_parse_get_caps (GstBaseParse * parse)
+{
+  GstCaps *peercaps;
+  GstCaps *res;
+
+  peercaps = gst_pad_get_allowed_caps (GST_BASE_PARSE_SRC_PAD (parse));
+  if (peercaps) {
+    guint i, n;
+
+    peercaps = gst_caps_make_writable (peercaps);
+    n = gst_caps_get_size (peercaps);
+    for (i = 0; i < n; i++) {
+      GstStructure *s = gst_caps_get_structure (peercaps, i);
+      gst_structure_remove_field (s, "alignment");
+      gst_structure_remove_field (s, "stream-format");
+    }
+
+    res =
+        gst_caps_intersect_full (peercaps,
+        gst_pad_get_pad_template_caps (GST_BASE_PARSE_SRC_PAD (parse)),
+        GST_CAPS_INTERSECT_FIRST);
+    gst_caps_unref (peercaps);
+  } else {
+    res =
+        gst_caps_copy (gst_pad_get_pad_template_caps (GST_BASE_PARSE_SRC_PAD
+            (parse)));
+  }
+
+  return res;
 }
 
 static GstFlowReturn

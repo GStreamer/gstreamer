@@ -47,7 +47,6 @@ struct _GstOpusDec {
   OpusDecoder          *state;
 
   guint64               packetno;
-  GstClockTime          next_ts;
 
   GstBuffer            *streamheader;
   GstBuffer            *vorbiscomment;

@@ -45,6 +45,14 @@ typedef enum
 } GstCamFlags;
 
 
+typedef enum _GstCameraBinVideoState
+{
+  GST_CAMERA_BIN_VIDEO_IDLE=0,
+  GST_CAMERA_BIN_VIDEO_STARTING=1,
+  GST_CAMERA_BIN_VIDEO_RECORDING=2,
+  GST_CAMERA_BIN_VIDEO_FINISHING=3
+} GstCameraBinVideoState;
+
 typedef struct _GstCameraBin2 GstCameraBin2;
 typedef struct _GstCameraBin2Class GstCameraBin2Class;
 
@@ -118,6 +126,10 @@ struct _GstCameraBin2
   gboolean image_profile_switch;
 
   gboolean audio_drop_eos;
+
+  GMutex *video_capture_mutex;
+  GCond *video_state_cond;
+  GstCameraBinVideoState video_state;
 
   /* properties */
   gint mode;

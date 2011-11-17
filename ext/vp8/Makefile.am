@@ -18,6 +18,7 @@ libgstvp8_la_LIBADD = \
 	$(GST_PLUGINS_BASE_LIBS) -lgsttag-@GST_MAJORMINOR@ -lgstvideo-@GST_MAJORMINOR@ \
 	$(GST_BASE_LIBS) $(GST_LIBS) $(VPX_LIBS)
 libgstvp8_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
+libgstvp8_la_LIBTOOLFLAGS = --tag=disable-static
 
 noinst_HEADERS = \
 	gstvp8dec.h \

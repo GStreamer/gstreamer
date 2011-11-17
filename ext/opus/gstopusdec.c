@@ -67,14 +67,14 @@ GST_STATIC_PAD_TEMPLATE ("sink",
 
 G_DEFINE_TYPE (GstOpusDec, gst_opus_dec, GST_TYPE_AUDIO_DECODER);
 
+static GstFlowReturn gst_opus_dec_parse_header (GstOpusDec * dec,
+    GstBuffer * buf);
 static gboolean gst_opus_dec_start (GstAudioDecoder * dec);
 static gboolean gst_opus_dec_stop (GstAudioDecoder * dec);
 static GstFlowReturn gst_opus_dec_handle_frame (GstAudioDecoder * dec,
     GstBuffer * buffer);
 static gboolean gst_opus_dec_set_format (GstAudioDecoder * bdec,
     GstCaps * caps);
-static GstFlowReturn opus_dec_chain_parse_data (GstOpusDec * dec,
-    GstBuffer * buf, GstClockTime timestamp, GstClockTime duration);
 
 static void
 gst_opus_dec_class_init (GstOpusDecClass * klass)
@@ -111,8 +111,6 @@ gst_opus_dec_reset (GstOpusDec * dec)
     opus_decoder_destroy (dec->state);
     dec->state = NULL;
   }
-
-  dec->next_ts = 0;
 
   gst_buffer_replace (&dec->streamheader, NULL);
   gst_buffer_replace (&dec->vorbiscomment, NULL);
@@ -167,17 +165,19 @@ gst_opus_dec_setup_from_peer_caps (GstOpusDec * dec)
 {
   GstPad *srcpad, *peer;
   GstStructure *s;
-  GstCaps *caps, *template_caps, *peer_caps;
+  GstCaps *caps;
+  const GstCaps *template_caps;
+  const GstCaps *peer_caps;
 
   srcpad = GST_AUDIO_DECODER_SRC_PAD (dec);
   peer = gst_pad_get_peer (srcpad);
 
   if (peer) {
     template_caps = gst_pad_get_pad_template_caps (srcpad);
-    peer_caps = gst_pad_get_caps (peer, NULL);
+    peer_caps = gst_pad_get_caps (peer);
     GST_DEBUG_OBJECT (dec, "Peer caps: %" GST_PTR_FORMAT, peer_caps);
     caps = gst_caps_intersect (template_caps, peer_caps);
-    gst_caps_fixate (caps);
+    gst_pad_fixate_caps (peer, caps);
     GST_DEBUG_OBJECT (dec, "Fixated caps: %" GST_PTR_FORMAT, caps);
 
     s = gst_caps_get_structure (caps, 0);
@@ -203,8 +203,7 @@ gst_opus_dec_setup_from_peer_caps (GstOpusDec * dec)
 }
 
 static GstFlowReturn
-opus_dec_chain_parse_data (GstOpusDec * dec, GstBuffer * buf,
-    GstClockTime timestamp, GstClockTime duration)
+opus_dec_chain_parse_data (GstOpusDec * dec, GstBuffer * buf)
 {
   GstFlowReturn res = GST_FLOW_OK;
   gsize size, out_size;
@@ -218,6 +217,8 @@ opus_dec_chain_parse_data (GstOpusDec * dec, GstBuffer * buf,
   if (dec->state == NULL) {
     gst_opus_dec_setup_from_peer_caps (dec);
 
+    GST_DEBUG_OBJECT (dec, "Creating decoder with %d channels, %d Hz",
+        dec->n_channels, dec->sample_rate);
     dec->state = opus_decoder_create (dec->sample_rate, dec->n_channels, &err);
     if (!dec->state || err != OPUS_OK)
       goto creation_failed;
@@ -227,8 +228,6 @@ opus_dec_chain_parse_data (GstOpusDec * dec, GstBuffer * buf,
     data = gst_buffer_map (buf, &size, NULL, GST_MAP_READ);
 
     GST_DEBUG_OBJECT (dec, "received buffer of size %u", size);
-
-    /* copy timestamp */
   } else {
     /* concealment data, pass NULL as the bits parameters */
     GST_DEBUG_OBJECT (dec, "creating concealment data");
@@ -260,20 +259,6 @@ opus_dec_chain_parse_data (GstOpusDec * dec, GstBuffer * buf,
     return GST_FLOW_ERROR;
   }
   GST_DEBUG_OBJECT (dec, "decoded %d samples", n);
-
-  if (GST_CLOCK_TIME_IS_VALID (timestamp)) {
-    GST_BUFFER_TIMESTAMP (outbuf) = timestamp;
-  } else {
-    GST_BUFFER_TIMESTAMP (outbuf) = dec->next_ts;
-  }
-
-  GST_BUFFER_DURATION (outbuf) =
-      gst_util_uint64_scale (n, GST_SECOND, dec->sample_rate);
-  dec->next_ts = GST_BUFFER_TIMESTAMP (outbuf) + GST_BUFFER_DURATION (outbuf);
-
-  GST_LOG_OBJECT (dec, "pushing buffer with ts=%" GST_TIME_FORMAT ", dur=%"
-      GST_TIME_FORMAT, GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (outbuf)),
-      GST_TIME_ARGS (GST_BUFFER_DURATION (outbuf)));
 
   res = gst_audio_decoder_finish_frame (GST_AUDIO_DECODER (dec), outbuf, 1);
 
@@ -395,8 +380,7 @@ gst_opus_dec_handle_frame (GstAudioDecoder * adec, GstBuffer * buf)
       gst_audio_decoder_finish_frame (adec, NULL, 1);
       res = GST_FLOW_OK;
     } else {
-      res = opus_dec_chain_parse_data (dec, buf, GST_BUFFER_TIMESTAMP (buf),
-          GST_BUFFER_DURATION (buf));
+      res = opus_dec_chain_parse_data (dec, buf);
     }
   } else {
     /* Otherwise fall back to packet counting and assume that the
@@ -408,8 +392,7 @@ gst_opus_dec_handle_frame (GstAudioDecoder * adec, GstBuffer * buf)
           res = gst_opus_dec_parse_header (dec, buf);
           gst_audio_decoder_finish_frame (adec, NULL, 1);
         } else {
-          res = opus_dec_chain_parse_data (dec, buf, GST_BUFFER_TIMESTAMP (buf),
-              GST_BUFFER_DURATION (buf));
+          res = opus_dec_chain_parse_data (dec, buf);
         }
         break;
       case 1:
@@ -418,14 +401,12 @@ gst_opus_dec_handle_frame (GstAudioDecoder * adec, GstBuffer * buf)
           res = gst_opus_dec_parse_comments (dec, buf);
           gst_audio_decoder_finish_frame (adec, NULL, 1);
         } else {
-          res = opus_dec_chain_parse_data (dec, buf, GST_BUFFER_TIMESTAMP (buf),
-              GST_BUFFER_DURATION (buf));
+          res = opus_dec_chain_parse_data (dec, buf);
         }
         break;
       default:
       {
-        res = opus_dec_chain_parse_data (dec, buf, GST_BUFFER_TIMESTAMP (buf),
-            GST_BUFFER_DURATION (buf));
+        res = opus_dec_chain_parse_data (dec, buf);
         break;
       }
     }

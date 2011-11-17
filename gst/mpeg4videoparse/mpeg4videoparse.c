@@ -45,8 +45,7 @@ static GstStaticPadTemplate sink_template =
 GST_STATIC_PAD_TEMPLATE ("sink", GST_PAD_SINK,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("video/mpeg, "
-        "mpegversion = (int) 4, "
-        "parsed = (boolean) false, " "systemstream = (boolean) false")
+        "mpegversion = (int) 4, " "systemstream = (boolean) false")
     );
 
 /* Properties */
@@ -634,7 +633,7 @@ plugin_init (GstPlugin * plugin)
   GST_DEBUG_CATEGORY_INIT (mpeg4v_parse_debug, "mpeg4videoparse", 0,
       "MPEG-4 video parser");
 
-  if (!gst_element_register (plugin, "mpeg4videoparse", GST_RANK_SECONDARY,
+  if (!gst_element_register (plugin, "mpeg4videoparse", GST_RANK_PRIMARY + 1,
           gst_mpeg4vparse_get_type ()))
     return FALSE;
 
