@@ -113,7 +113,8 @@ static const GstNamesMap gstnames[] = {
 };
 
 
-static GstFlowReturn gst_multipart_demux_chain (GstPad * pad, GstBuffer * buf);
+static GstFlowReturn gst_multipart_demux_chain (GstPad * pad,
+    GstObject * parent, GstBuffer * buf);
 
 static GstStateChangeReturn gst_multipart_demux_change_state (GstElement *
     element, GstStateChange transition);
@@ -546,7 +547,7 @@ multipart_find_boundary (GstMultipartDemux * multipart, gint * datalen)
 }
 
 static GstFlowReturn
-gst_multipart_demux_chain (GstPad * pad, GstBuffer * buf)
+gst_multipart_demux_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
 {
   GstMultipartDemux *multipart;
   GstAdapter *adapter;
@@ -554,7 +555,7 @@ gst_multipart_demux_chain (GstPad * pad, GstBuffer * buf)
   gint size = 1;
   GstFlowReturn res;
 
-  multipart = GST_MULTIPART_DEMUX (gst_pad_get_parent (pad));
+  multipart = GST_MULTIPART_DEMUX (parent);
   adapter = multipart->adapter;
 
   res = GST_FLOW_OK;
@@ -625,8 +626,6 @@ gst_multipart_demux_chain (GstPad * pad, GstBuffer * buf)
   }
 
 nodata:
-  gst_object_unref (multipart);
-
   if (G_UNLIKELY (size == MULTIPART_DATA_ERROR))
     return GST_FLOW_ERROR;
   if (G_UNLIKELY (size == MULTIPART_DATA_EOS))

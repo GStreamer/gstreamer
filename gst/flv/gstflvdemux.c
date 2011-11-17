@@ -95,7 +95,8 @@ static gboolean gst_flv_demux_handle_seek_pull (GstFlvDemux * demux,
 
 static gboolean gst_flv_demux_query (GstPad * pad, GstObject * parent,
     GstQuery * query);
-static gboolean gst_flv_demux_src_event (GstPad * pad, GstEvent * event);
+static gboolean gst_flv_demux_src_event (GstPad * pad, GstObject * parent,
+    GstEvent * event);
 
 
 static void
@@ -1768,12 +1769,12 @@ flv_demux_seek_to_offset (GstFlvDemux * demux, guint64 offset)
 }
 
 static GstFlowReturn
-gst_flv_demux_chain (GstPad * pad, GstBuffer * buffer)
+gst_flv_demux_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
 {
   GstFlowReturn ret = GST_FLOW_OK;
   GstFlvDemux *demux = NULL;
 
-  demux = GST_FLV_DEMUX (gst_pad_get_parent (pad));
+  demux = GST_FLV_DEMUX (parent);
 
   GST_LOG_OBJECT (demux, "received buffer of %d bytes at offset %"
       G_GUINT64_FORMAT, gst_buffer_get_size (buffer),
@@ -1982,8 +1983,6 @@ beach:
       ret = GST_FLOW_OK;
     }
   }
-
-  gst_object_unref (demux);
 
   return ret;
 
@@ -2867,12 +2866,12 @@ gst_flv_demux_sink_activate_pull (GstPad * sinkpad, gboolean active)
 }
 
 static gboolean
-gst_flv_demux_sink_event (GstPad * pad, GstEvent * event)
+gst_flv_demux_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
 {
   GstFlvDemux *demux;
   gboolean ret = FALSE;
 
-  demux = GST_FLV_DEMUX (gst_pad_get_parent (pad));
+  demux = GST_FLV_DEMUX (parent);
 
   GST_DEBUG_OBJECT (demux, "handling event %s", GST_EVENT_TYPE_NAME (event));
 
@@ -2933,18 +2932,16 @@ gst_flv_demux_sink_event (GstPad * pad, GstEvent * event)
       break;
   }
 
-  gst_object_unref (demux);
-
   return ret;
 }
 
 static gboolean
-gst_flv_demux_src_event (GstPad * pad, GstEvent * event)
+gst_flv_demux_src_event (GstPad * pad, GstObject * parent, GstEvent * event)
 {
   GstFlvDemux *demux;
   gboolean ret = FALSE;
 
-  demux = GST_FLV_DEMUX (gst_pad_get_parent (pad));
+  demux = GST_FLV_DEMUX (parent);
 
   GST_DEBUG_OBJECT (demux, "handling event %s", GST_EVENT_TYPE_NAME (event));
 
@@ -2960,8 +2957,6 @@ gst_flv_demux_src_event (GstPad * pad, GstEvent * event)
       ret = gst_pad_push_event (demux->sinkpad, event);
       break;
   }
-
-  gst_object_unref (demux);
 
   return ret;
 }

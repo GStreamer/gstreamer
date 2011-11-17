@@ -68,8 +68,10 @@ static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",
 
 static void gst_icydemux_dispose (GObject * object);
 
-static GstFlowReturn gst_icydemux_chain (GstPad * pad, GstBuffer * buf);
-static gboolean gst_icydemux_handle_event (GstPad * pad, GstEvent * event);
+static GstFlowReturn gst_icydemux_chain (GstPad * pad, GstObject * parent,
+    GstBuffer * buf);
+static gboolean gst_icydemux_handle_event (GstPad * pad, GstObject * parent,
+    GstEvent * event);
 
 static gboolean gst_icydemux_add_srcpad (GstICYDemux * icydemux,
     GstCaps * new_caps);
@@ -341,9 +343,9 @@ gst_icydemux_parse_and_send_tags (GstICYDemux * icydemux)
 }
 
 static gboolean
-gst_icydemux_handle_event (GstPad * pad, GstEvent * event)
+gst_icydemux_handle_event (GstPad * pad, GstObject * parent, GstEvent * event)
 {
-  GstICYDemux *icydemux = GST_ICYDEMUX (GST_PAD_PARENT (pad));
+  GstICYDemux *icydemux = GST_ICYDEMUX (parent);
   gboolean result;
 
   switch (GST_EVENT_TYPE (event)) {
@@ -377,14 +379,14 @@ gst_icydemux_handle_event (GstPad * pad, GstEvent * event)
         g_list_free (icydemux->cached_events);
         icydemux->cached_events = NULL;
 
-        return gst_pad_event_default (pad, event);
+        return gst_pad_event_default (pad, parent, event);
       default:
         icydemux->cached_events = g_list_append (icydemux->cached_events,
             event);
         return TRUE;
     }
   } else {
-    return gst_pad_event_default (pad, event);
+    return gst_pad_event_default (pad, parent, event);
   }
 }
 
@@ -503,14 +505,14 @@ gst_icydemux_add_meta (GstICYDemux * icydemux, GstBuffer * buf)
 }
 
 static GstFlowReturn
-gst_icydemux_chain (GstPad * pad, GstBuffer * buf)
+gst_icydemux_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
 {
   GstICYDemux *icydemux;
   guint size, chunk, offset;
   GstBuffer *sub;
   GstFlowReturn ret = GST_FLOW_OK;
 
-  icydemux = GST_ICYDEMUX (GST_PAD_PARENT (pad));
+  icydemux = GST_ICYDEMUX (parent);
 
   if (G_UNLIKELY (icydemux->meta_interval < 0))
     goto not_negotiated;

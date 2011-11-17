@@ -75,7 +75,8 @@ static GstStaticPadTemplate src_template = GST_STATIC_PAD_TEMPLATE ("src",
     );
 
 static void gst_avi_subtitle_title_tag (GstAviSubtitle * sub, gchar * title);
-static GstFlowReturn gst_avi_subtitle_chain (GstPad * pad, GstBuffer * buffer);
+static GstFlowReturn gst_avi_subtitle_chain (GstPad * pad, GstObject * parent,
+    GstBuffer * buffer);
 static GstStateChangeReturn gst_avi_subtitle_change_state (GstElement * element,
     GstStateChange transition);
 static gboolean gst_avi_subtitle_send_event (GstElement * element,
@@ -272,9 +273,9 @@ extract_failed:
 }
 
 static GstFlowReturn
-gst_avi_subtitle_chain (GstPad * pad, GstBuffer * buffer)
+gst_avi_subtitle_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
 {
-  GstAviSubtitle *sub = GST_AVI_SUBTITLE (GST_PAD_PARENT (pad));
+  GstAviSubtitle *sub = GST_AVI_SUBTITLE (parent);
   GstFlowReturn ret;
 
   if (sub->subfile != NULL) {

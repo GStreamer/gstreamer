@@ -110,20 +110,23 @@ static void gst_rtp_ssrc_demux_clear_ssrc (GstRtpSsrcDemux * demux,
     guint32 ssrc);
 
 /* sinkpad stuff */
-static GstFlowReturn gst_rtp_ssrc_demux_chain (GstPad * pad, GstBuffer * buf);
-static gboolean gst_rtp_ssrc_demux_sink_event (GstPad * pad, GstEvent * event);
+static GstFlowReturn gst_rtp_ssrc_demux_chain (GstPad * pad, GstObject * parent,
+    GstBuffer * buf);
+static gboolean gst_rtp_ssrc_demux_sink_event (GstPad * pad, GstObject * parent,
+    GstEvent * event);
 
 static GstFlowReturn gst_rtp_ssrc_demux_rtcp_chain (GstPad * pad,
-    GstBuffer * buf);
+    GstObject * parent, GstBuffer * buf);
 static gboolean gst_rtp_ssrc_demux_rtcp_sink_event (GstPad * pad,
-    GstEvent * event);
+    GstObject * parent, GstEvent * event);
 static GstIterator *gst_rtp_ssrc_demux_iterate_internal_links_sink (GstPad *
     pad, GstObject * parent);
 
 /* srcpad stuff */
-static gboolean gst_rtp_ssrc_demux_src_event (GstPad * pad, GstEvent * event);
-static GstIterator *gst_rtp_ssrc_demux_iterate_internal_links_src (GstPad *
-    pad, GstObject * parent);
+static gboolean gst_rtp_ssrc_demux_src_event (GstPad * pad, GstObject * parent,
+    GstEvent * event);
+static GstIterator *gst_rtp_ssrc_demux_iterate_internal_links_src (GstPad * pad,
+    GstObject * parent);
 static gboolean gst_rtp_ssrc_demux_src_query (GstPad * pad, GstObject * parent,
     GstQuery * query);
 
@@ -417,16 +420,13 @@ unknown_pad:
 }
 
 static gboolean
-gst_rtp_ssrc_demux_sink_event (GstPad * pad, GstEvent * event)
+gst_rtp_ssrc_demux_sink_event (GstPad * pad, GstObject * parent,
+    GstEvent * event)
 {
   GstRtpSsrcDemux *demux;
   gboolean res = FALSE;
 
-  demux = GST_RTP_SSRC_DEMUX (gst_pad_get_parent (pad));
-  if (G_UNLIKELY (demux == NULL)) {
-    gst_event_unref (event);
-    return FALSE;
-  }
+  demux = GST_RTP_SSRC_DEMUX (parent);
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_FLUSH_STOP:
@@ -461,17 +461,17 @@ gst_rtp_ssrc_demux_sink_event (GstPad * pad, GstEvent * event)
     }
   }
 
-  gst_object_unref (demux);
   return res;
 }
 
 static gboolean
-gst_rtp_ssrc_demux_rtcp_sink_event (GstPad * pad, GstEvent * event)
+gst_rtp_ssrc_demux_rtcp_sink_event (GstPad * pad, GstObject * parent,
+    GstEvent * event)
 {
   GstRtpSsrcDemux *demux;
   gboolean res = FALSE;
 
-  demux = GST_RTP_SSRC_DEMUX (gst_pad_get_parent (pad));
+  demux = GST_RTP_SSRC_DEMUX (parent);
 
   switch (GST_EVENT_TYPE (event)) {
     default:
@@ -499,12 +499,11 @@ gst_rtp_ssrc_demux_rtcp_sink_event (GstPad * pad, GstEvent * event)
       break;
     }
   }
-  gst_object_unref (demux);
   return res;
 }
 
 static GstFlowReturn
-gst_rtp_ssrc_demux_chain (GstPad * pad, GstBuffer * buf)
+gst_rtp_ssrc_demux_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
 {
   GstFlowReturn ret;
   GstRtpSsrcDemux *demux;
@@ -513,7 +512,7 @@ gst_rtp_ssrc_demux_chain (GstPad * pad, GstBuffer * buf)
   GstRTPBuffer rtp;
   GstPad *srcpad;
 
-  demux = GST_RTP_SSRC_DEMUX (GST_OBJECT_PARENT (pad));
+  demux = GST_RTP_SSRC_DEMUX (parent);
 
   if (!gst_rtp_buffer_validate (buf))
     goto invalid_payload;
@@ -559,7 +558,8 @@ create_failed:
 }
 
 static GstFlowReturn
-gst_rtp_ssrc_demux_rtcp_chain (GstPad * pad, GstBuffer * buf)
+gst_rtp_ssrc_demux_rtcp_chain (GstPad * pad, GstObject * parent,
+    GstBuffer * buf)
 {
   GstFlowReturn ret;
   GstRtpSsrcDemux *demux;
@@ -569,7 +569,7 @@ gst_rtp_ssrc_demux_rtcp_chain (GstPad * pad, GstBuffer * buf)
   GstRTCPBuffer rtcp;
   GstPad *srcpad;
 
-  demux = GST_RTP_SSRC_DEMUX (GST_OBJECT_PARENT (pad));
+  demux = GST_RTP_SSRC_DEMUX (parent);
 
   if (!gst_rtcp_buffer_validate (buf))
     goto invalid_rtcp;
@@ -635,12 +635,13 @@ create_failed:
 }
 
 static gboolean
-gst_rtp_ssrc_demux_src_event (GstPad * pad, GstEvent * event)
+gst_rtp_ssrc_demux_src_event (GstPad * pad, GstObject * parent,
+    GstEvent * event)
 {
   GstRtpSsrcDemux *demux;
   const GstStructure *s;
 
-  demux = GST_RTP_SSRC_DEMUX (gst_pad_get_parent (pad));
+  demux = GST_RTP_SSRC_DEMUX (parent);
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_CUSTOM_UPSTREAM:
@@ -670,9 +671,7 @@ gst_rtp_ssrc_demux_src_event (GstPad * pad, GstEvent * event)
       break;
   }
 
-  gst_object_unref (demux);
-
-  return gst_pad_event_default (pad, event);
+  return gst_pad_event_default (pad, parent, event);
 }
 
 static GstIterator *

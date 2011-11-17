@@ -44,8 +44,10 @@ enum
   ARG_0
 };
 
-static gboolean gst_mulawenc_event (GstPad * pad, GstEvent * event);
-static GstFlowReturn gst_mulawenc_chain (GstPad * pad, GstBuffer * buffer);
+static gboolean gst_mulawenc_event (GstPad * pad, GstObject * parent,
+    GstEvent * event);
+static GstFlowReturn gst_mulawenc_chain (GstPad * pad, GstObject * parent,
+    GstBuffer * buffer);
 
 #define gst_mulawenc_parent_class parent_class
 G_DEFINE_TYPE (GstMuLawEnc, gst_mulawenc, GST_TYPE_ELEMENT);
@@ -200,12 +202,12 @@ gst_mulawenc_init (GstMuLawEnc * mulawenc)
 }
 
 static gboolean
-gst_mulawenc_event (GstPad * pad, GstEvent * event)
+gst_mulawenc_event (GstPad * pad, GstObject * parent, GstEvent * event)
 {
   GstMuLawEnc *mulawenc;
   gboolean res;
 
-  mulawenc = GST_MULAWENC (GST_PAD_PARENT (pad));
+  mulawenc = GST_MULAWENC (parent);
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_CAPS:
@@ -220,14 +222,14 @@ gst_mulawenc_event (GstPad * pad, GstEvent * event)
       break;
     }
     default:
-      res = gst_pad_event_default (pad, event);
+      res = gst_pad_event_default (pad, parent, event);
       break;
   }
   return res;
 }
 
 static GstFlowReturn
-gst_mulawenc_chain (GstPad * pad, GstBuffer * buffer)
+gst_mulawenc_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
 {
   GstMuLawEnc *mulawenc;
   gint16 *linear_data;
@@ -238,7 +240,7 @@ gst_mulawenc_chain (GstPad * pad, GstBuffer * buffer)
   GstFlowReturn ret;
   GstClockTime timestamp, duration;
 
-  mulawenc = GST_MULAWENC (gst_pad_get_parent (pad));
+  mulawenc = GST_MULAWENC (parent);
 
   if (!mulawenc->rate || !mulawenc->channels)
     goto not_negotiated;
@@ -275,7 +277,6 @@ gst_mulawenc_chain (GstPad * pad, GstBuffer * buffer)
   ret = gst_pad_push (mulawenc->srcpad, outbuf);
 
 done:
-  gst_object_unref (mulawenc);
 
   return ret;
 

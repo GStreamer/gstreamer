@@ -1925,13 +1925,14 @@ no_format:
 }
 
 static gboolean
-gst_rtspsrc_handle_src_event (GstPad * pad, GstEvent * event)
+gst_rtspsrc_handle_src_event (GstPad * pad, GstObject * parent,
+    GstEvent * event)
 {
   GstRTSPSrc *src;
   gboolean res = TRUE;
   gboolean forward;
 
-  src = GST_RTSPSRC_CAST (gst_pad_get_parent (pad));
+  src = GST_RTSPSRC_CAST (parent);
 
   GST_DEBUG_OBJECT (src, "pad %s:%s received event %s",
       GST_DEBUG_PAD_NAME (pad), GST_EVENT_TYPE_NAME (event));
@@ -1960,7 +1961,6 @@ gst_rtspsrc_handle_src_event (GstPad * pad, GstEvent * event)
   } else {
     gst_event_unref (event);
   }
-  gst_object_unref (src);
 
   return res;
 }
@@ -1968,7 +1968,8 @@ gst_rtspsrc_handle_src_event (GstPad * pad, GstEvent * event)
 /* this is the final event function we receive on the internal source pad when
  * we deal with TCP connections */
 static gboolean
-gst_rtspsrc_handle_internal_src_event (GstPad * pad, GstEvent * event)
+gst_rtspsrc_handle_internal_src_event (GstPad * pad, GstObject * parent,
+    GstEvent * event)
 {
   GstRTSPSrc *src;
   gboolean res;
@@ -2110,7 +2111,7 @@ gst_rtspsrc_handle_src_query (GstPad * pad, GstObject * parent,
 /* callback for RTCP messages to be sent to the server when operating in TCP
  * mode. */
 static GstFlowReturn
-gst_rtspsrc_sink_chain (GstPad * pad, GstBuffer * buffer)
+gst_rtspsrc_sink_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
 {
   GstRTSPSrc *src;
   GstRTSPStream *stream;

@@ -111,9 +111,10 @@ static void gst_pulse_audio_sink_get_property (GObject * object, guint prop_id,
 static void gst_pulse_audio_sink_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
 static void gst_pulse_audio_sink_dispose (GObject * object);
-static gboolean gst_pulse_audio_sink_src_event (GstPad * pad, GstEvent * event);
+static gboolean gst_pulse_audio_sink_src_event (GstPad * pad,
+    GstObject * parent, GstEvent * event);
 static gboolean gst_pulse_audio_sink_sink_event (GstPad * pad,
-    GstEvent * event);
+    GstObject * parent, GstEvent * event);
 static gboolean gst_pulse_audio_sink_sink_query (GstPad * pad,
     GstObject * parent, GstQuery * query);
 static gboolean gst_pulse_audio_sink_sink_acceptcaps (GstPulseAudioSink * pbin,
@@ -688,13 +689,14 @@ done:
 }
 
 static gboolean
-gst_pulse_audio_sink_src_event (GstPad * pad, GstEvent * event)
+gst_pulse_audio_sink_src_event (GstPad * pad, GstObject * parent,
+    GstEvent * event)
 {
   GstPulseAudioSink *pbin = NULL;
   GstPad *ghostpad = NULL;
   gboolean ret = FALSE;
 
-  ghostpad = GST_PAD_CAST (gst_pad_get_parent (pad));
+  ghostpad = GST_PAD_CAST (parent);
   if (G_UNLIKELY (!ghostpad)) {
     GST_WARNING_OBJECT (pad, "Could not get ghostpad");
     goto out;
@@ -724,13 +726,11 @@ gst_pulse_audio_sink_src_event (GstPad * pad, GstEvent * event)
 
     ret = TRUE;
   } else if (pbin->proxypad_old_eventfunc) {
-    ret = pbin->proxypad_old_eventfunc (pad, event);
+    ret = pbin->proxypad_old_eventfunc (pad, parent, event);
     event = NULL;
   }
 
 out:
-  if (ghostpad)
-    gst_object_unref (ghostpad);
   if (pbin)
     gst_object_unref (pbin);
   if (event)
@@ -740,9 +740,10 @@ out:
 }
 
 static gboolean
-gst_pulse_audio_sink_sink_event (GstPad * pad, GstEvent * event)
+gst_pulse_audio_sink_sink_event (GstPad * pad, GstObject * parent,
+    GstEvent * event)
 {
-  GstPulseAudioSink *pbin = GST_PULSE_AUDIO_SINK (gst_pad_get_parent (pad));
+  GstPulseAudioSink *pbin = GST_PULSE_AUDIO_SINK (parent);
   gboolean ret;
   gboolean forward = TRUE;
 
@@ -788,11 +789,9 @@ gst_pulse_audio_sink_sink_event (GstPad * pad, GstEvent * event)
   }
 
   if (forward)
-    ret = pbin->sinkpad_old_eventfunc (pad, event);
+    ret = pbin->sinkpad_old_eventfunc (pad, parent, event);
   else
     gst_event_unref (event);
-
-  gst_object_unref (pbin);
 
   return ret;
 }

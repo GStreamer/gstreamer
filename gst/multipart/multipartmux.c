@@ -78,7 +78,7 @@ static const MimeTypeMap mimetypes[] = {
 static void gst_multipart_mux_finalize (GObject * object);
 
 static gboolean gst_multipart_mux_handle_src_event (GstPad * pad,
-    GstEvent * event);
+    GstObject * parent, GstEvent * event);
 static GstPad *gst_multipart_mux_request_new_pad (GstElement * element,
     GstPadTemplate * templ, const gchar * name, const GstCaps * caps);
 static GstStateChangeReturn gst_multipart_mux_change_state (GstElement *
@@ -218,12 +218,10 @@ wrong_template:
 
 /* handle events */
 static gboolean
-gst_multipart_mux_handle_src_event (GstPad * pad, GstEvent * event)
+gst_multipart_mux_handle_src_event (GstPad * pad, GstObject * parent,
+    GstEvent * event)
 {
-  GstMultipartMux *multipart_mux;
   GstEventType type;
-
-  multipart_mux = GST_MULTIPART_MUX (gst_pad_get_parent (pad));
 
   type = event ? GST_EVENT_TYPE (event) : GST_EVENT_UNKNOWN;
 
@@ -235,9 +233,7 @@ gst_multipart_mux_handle_src_event (GstPad * pad, GstEvent * event)
       break;
   }
 
-  gst_object_unref (multipart_mux);
-
-  return gst_pad_event_default (pad, event);
+  return gst_pad_event_default (pad, parent, event);
 }
 
 static const gchar *

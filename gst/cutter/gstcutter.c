@@ -100,8 +100,10 @@ static void gst_cutter_set_property (GObject * object, guint prop_id,
 static void gst_cutter_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 
-static gboolean gst_cutter_event (GstPad * pad, GstEvent * event);
-static GstFlowReturn gst_cutter_chain (GstPad * pad, GstBuffer * buffer);
+static gboolean gst_cutter_event (GstPad * pad, GstObject * parent,
+    GstEvent * event);
+static GstFlowReturn gst_cutter_chain (GstPad * pad, GstObject * parent,
+    GstBuffer * buffer);
 
 static void
 gst_cutter_class_init (GstCutterClass * klass)
@@ -236,12 +238,12 @@ gst_cutter_setcaps (GstCutter * filter, GstCaps * caps)
 }
 
 static gboolean
-gst_cutter_event (GstPad * pad, GstEvent * event)
+gst_cutter_event (GstPad * pad, GstObject * parent, GstEvent * event)
 {
   gboolean ret;
   GstCutter *filter;
 
-  filter = GST_CUTTER (GST_OBJECT_PARENT (pad));
+  filter = GST_CUTTER (parent);
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_CAPS:
@@ -250,17 +252,18 @@ gst_cutter_event (GstPad * pad, GstEvent * event)
 
       gst_event_parse_caps (event, &caps);
       ret = gst_cutter_setcaps (filter, caps);
+      gst_event_unref (event);
       break;
     }
     default:
-      ret = gst_pad_event_default (pad, event);
+      ret = gst_pad_event_default (pad, parent, event);
       break;
   }
   return ret;
 }
 
 static GstFlowReturn
-gst_cutter_chain (GstPad * pad, GstBuffer * buf)
+gst_cutter_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
 {
   GstFlowReturn ret = GST_FLOW_OK;
   GstCutter *filter;
@@ -274,7 +277,7 @@ gst_cutter_chain (GstPad * pad, GstBuffer * buf)
   GstBuffer *prebuf;            /* pointer to a prebuffer element */
   GstClockTime duration;
 
-  filter = GST_CUTTER (GST_OBJECT_PARENT (pad));
+  filter = GST_CUTTER (parent);
 
   if (GST_AUDIO_INFO_FORMAT (&filter->info) == GST_AUDIO_FORMAT_UNKNOWN)
     goto not_negotiated;

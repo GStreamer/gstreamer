@@ -225,7 +225,8 @@ static GstPad *gst_qt_mux_request_new_pad (GstElement * element,
 static void gst_qt_mux_release_pad (GstElement * element, GstPad * pad);
 
 /* event */
-static gboolean gst_qt_mux_sink_event (GstPad * pad, GstEvent * event);
+static gboolean gst_qt_mux_sink_event (GstPad * pad, GstObject * parent,
+    GstEvent * event);
 
 static GstFlowReturn gst_qt_mux_collected (GstCollectPads * pads,
     gpointer user_data);
@@ -3294,13 +3295,13 @@ refuse_renegotiation:
 }
 
 static gboolean
-gst_qt_mux_sink_event (GstPad * pad, GstEvent * event)
+gst_qt_mux_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
 {
   gboolean ret;
   GstQTMux *qtmux;
   guint32 avg_bitrate = 0, max_bitrate = 0;
 
-  qtmux = GST_QT_MUX_CAST (gst_pad_get_parent (pad));
+  qtmux = GST_QT_MUX_CAST (parent);
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_CAPS:
@@ -3349,8 +3350,7 @@ gst_qt_mux_sink_event (GstPad * pad, GstEvent * event)
       break;
   }
 
-  ret = qtmux->collect_event (pad, event);
-  gst_object_unref (qtmux);
+  ret = qtmux->collect_event (pad, parent, event);
 
   return ret;
 }

@@ -94,9 +94,12 @@ static void gst_goom_finalize (GObject * object);
 static GstStateChangeReturn gst_goom_change_state (GstElement * element,
     GstStateChange transition);
 
-static GstFlowReturn gst_goom_chain (GstPad * pad, GstBuffer * buffer);
-static gboolean gst_goom_src_event (GstPad * pad, GstEvent * event);
-static gboolean gst_goom_sink_event (GstPad * pad, GstEvent * event);
+static GstFlowReturn gst_goom_chain (GstPad * pad, GstObject * parent,
+    GstBuffer * buffer);
+static gboolean gst_goom_src_event (GstPad * pad, GstObject * parent,
+    GstEvent * event);
+static gboolean gst_goom_sink_event (GstPad * pad, GstObject * parent,
+    GstEvent * event);
 
 static gboolean gst_goom_src_query (GstPad * pad, GstObject * parent,
     GstQuery * query);
@@ -320,12 +323,12 @@ no_format:
 }
 
 static gboolean
-gst_goom_src_event (GstPad * pad, GstEvent * event)
+gst_goom_src_event (GstPad * pad, GstObject * parent, GstEvent * event)
 {
   gboolean res;
   GstGoom *goom;
 
-  goom = GST_GOOM (GST_PAD_PARENT (pad));
+  goom = GST_GOOM (parent);
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_QOS:
@@ -359,12 +362,12 @@ gst_goom_src_event (GstPad * pad, GstEvent * event)
 }
 
 static gboolean
-gst_goom_sink_event (GstPad * pad, GstEvent * event)
+gst_goom_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
 {
   gboolean res;
   GstGoom *goom;
 
-  goom = GST_GOOM (GST_PAD_PARENT (pad));
+  goom = GST_GOOM (parent);
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_CAPS:
@@ -476,13 +479,13 @@ ensure_negotiated (GstGoom * goom)
 
 
 static GstFlowReturn
-gst_goom_chain (GstPad * pad, GstBuffer * buffer)
+gst_goom_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
 {
   GstGoom *goom;
   GstFlowReturn ret;
   GstBuffer *outbuf = NULL;
 
-  goom = GST_GOOM (GST_PAD_PARENT (pad));
+  goom = GST_GOOM (parent);
   if (goom->bps == 0) {
     ret = GST_FLOW_NOT_NEGOTIATED;
     goto beach;

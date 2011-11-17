@@ -34,8 +34,10 @@ GST_DEBUG_CATEGORY_STATIC (alaw_enc_debug);
 extern GstStaticPadTemplate alaw_enc_src_factory;
 extern GstStaticPadTemplate alaw_enc_sink_factory;
 
-static gboolean gst_alaw_enc_event (GstPad * pad, GstEvent * event);
-static GstFlowReturn gst_alaw_enc_chain (GstPad * pad, GstBuffer * buffer);
+static gboolean gst_alaw_enc_event (GstPad * pad, GstObject * parent,
+    GstEvent * event);
+static GstFlowReturn gst_alaw_enc_chain (GstPad * pad, GstObject * parent,
+    GstBuffer * buffer);
 
 G_DEFINE_TYPE (GstALawEnc, gst_alaw_enc, GST_TYPE_ELEMENT);
 
@@ -455,12 +457,12 @@ gst_alaw_enc_init (GstALawEnc * alawenc)
 }
 
 static gboolean
-gst_alaw_enc_event (GstPad * pad, GstEvent * event)
+gst_alaw_enc_event (GstPad * pad, GstObject * parent, GstEvent * event)
 {
   GstALawEnc *alawenc;
   gboolean res;
 
-  alawenc = GST_ALAW_ENC (GST_PAD_PARENT (pad));
+  alawenc = GST_ALAW_ENC (parent);
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_CAPS:
@@ -475,14 +477,14 @@ gst_alaw_enc_event (GstPad * pad, GstEvent * event)
       break;
     }
     default:
-      res = gst_pad_event_default (pad, event);
+      res = gst_pad_event_default (pad, parent, event);
       break;
   }
   return res;
 }
 
 static GstFlowReturn
-gst_alaw_enc_chain (GstPad * pad, GstBuffer * buffer)
+gst_alaw_enc_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
 {
   GstALawEnc *alawenc;
   gint16 *linear_data;
@@ -494,7 +496,7 @@ gst_alaw_enc_chain (GstPad * pad, GstBuffer * buffer)
   GstFlowReturn ret;
   GstClockTime timestamp, duration;
 
-  alawenc = GST_ALAW_ENC (GST_PAD_PARENT (pad));
+  alawenc = GST_ALAW_ENC (parent);
 
   if (G_UNLIKELY (alawenc->rate == 0 || alawenc->channels == 0))
     goto not_negotiated;

@@ -65,9 +65,9 @@ static GstStateChangeReturn gst_shape_wipe_change_state (GstElement * element,
     GstStateChange transition);
 
 static GstFlowReturn gst_shape_wipe_video_sink_chain (GstPad * pad,
-    GstBuffer * buffer);
+    GstObject * parent, GstBuffer * buffer);
 static gboolean gst_shape_wipe_video_sink_event (GstPad * pad,
-    GstEvent * event);
+    GstObject * parent, GstEvent * event);
 static gboolean gst_shape_wipe_video_sink_setcaps (GstShapeWipe * self,
     GstCaps * caps);
 static GstCaps *gst_shape_wipe_video_sink_getcaps (GstPad * pad,
@@ -75,15 +75,17 @@ static GstCaps *gst_shape_wipe_video_sink_getcaps (GstPad * pad,
 static gboolean gst_shape_wipe_video_sink_query (GstPad * pad,
     GstObject * parent, GstQuery * query);
 static GstFlowReturn gst_shape_wipe_mask_sink_chain (GstPad * pad,
-    GstBuffer * buffer);
-static gboolean gst_shape_wipe_mask_sink_event (GstPad * pad, GstEvent * event);
+    GstObject * parent, GstBuffer * buffer);
+static gboolean gst_shape_wipe_mask_sink_event (GstPad * pad,
+    GstObject * parent, GstEvent * event);
 static gboolean gst_shape_wipe_mask_sink_setcaps (GstShapeWipe * self,
     GstCaps * caps);
 static GstCaps *gst_shape_wipe_mask_sink_getcaps (GstPad * pad,
     GstCaps * filter);
 static gboolean gst_shape_wipe_mask_sink_query (GstPad * pad,
     GstObject * parent, GstQuery * query);
-static gboolean gst_shape_wipe_src_event (GstPad * pad, GstEvent * event);
+static gboolean gst_shape_wipe_src_event (GstPad * pad, GstObject * parent,
+    GstEvent * event);
 static GstCaps *gst_shape_wipe_src_getcaps (GstPad * pad, GstCaps * filter);
 static gboolean gst_shape_wipe_src_query (GstPad * pad, GstObject * parent,
     GstQuery * query);
@@ -830,9 +832,10 @@ CREATE_ARGB_FUNCTIONS (16, bgra, 0, 3, 2, 1, 0);
 CREATE_ARGB_FUNCTIONS (8, bgra, 8, 3, 2, 1, 0);
 
 static GstFlowReturn
-gst_shape_wipe_video_sink_chain (GstPad * pad, GstBuffer * buffer)
+gst_shape_wipe_video_sink_chain (GstPad * pad, GstObject * parent,
+    GstBuffer * buffer)
 {
-  GstShapeWipe *self = GST_SHAPE_WIPE (GST_PAD_PARENT (pad));
+  GstShapeWipe *self = GST_SHAPE_WIPE (parent);
   GstFlowReturn ret = GST_FLOW_OK;
   GstBuffer *mask = NULL, *outbuf = NULL;
   GstClockTime timestamp;
@@ -949,9 +952,10 @@ push_failed:
 }
 
 static GstFlowReturn
-gst_shape_wipe_mask_sink_chain (GstPad * pad, GstBuffer * buffer)
+gst_shape_wipe_mask_sink_chain (GstPad * pad, GstObject * parent,
+    GstBuffer * buffer)
 {
-  GstShapeWipe *self = GST_SHAPE_WIPE (GST_PAD_PARENT (pad));
+  GstShapeWipe *self = GST_SHAPE_WIPE (parent);
   GstFlowReturn ret = GST_FLOW_OK;
 
   g_mutex_lock (self->mask_mutex);
@@ -1002,9 +1006,10 @@ gst_shape_wipe_change_state (GstElement * element, GstStateChange transition)
 }
 
 static gboolean
-gst_shape_wipe_video_sink_event (GstPad * pad, GstEvent * event)
+gst_shape_wipe_video_sink_event (GstPad * pad, GstObject * parent,
+    GstEvent * event)
 {
-  GstShapeWipe *self = GST_SHAPE_WIPE (gst_pad_get_parent (pad));
+  GstShapeWipe *self = GST_SHAPE_WIPE (parent);
   gboolean ret;
 
   GST_LOG_OBJECT (pad, "Got %s event", GST_EVENT_TYPE_NAME (event));
@@ -1041,14 +1046,14 @@ gst_shape_wipe_video_sink_event (GstPad * pad, GstEvent * event)
       break;
   }
 
-  gst_object_unref (self);
   return ret;
 }
 
 static gboolean
-gst_shape_wipe_mask_sink_event (GstPad * pad, GstEvent * event)
+gst_shape_wipe_mask_sink_event (GstPad * pad, GstObject * parent,
+    GstEvent * event)
 {
-  GstShapeWipe *self = GST_SHAPE_WIPE (gst_pad_get_parent (pad));
+  GstShapeWipe *self = GST_SHAPE_WIPE (parent);
 
   GST_LOG_OBJECT (pad, "Got %s event", GST_EVENT_TYPE_NAME (event));
 
@@ -1073,7 +1078,6 @@ gst_shape_wipe_mask_sink_event (GstPad * pad, GstEvent * event)
   /* Dropping all events here */
   gst_event_unref (event);
 
-  gst_object_unref (self);
   return TRUE;
 }
 
@@ -1108,9 +1112,9 @@ gst_shape_wipe_mask_sink_query (GstPad * pad, GstObject * parent,
 
 
 static gboolean
-gst_shape_wipe_src_event (GstPad * pad, GstEvent * event)
+gst_shape_wipe_src_event (GstPad * pad, GstObject * parent, GstEvent * event)
 {
-  GstShapeWipe *self = GST_SHAPE_WIPE (gst_pad_get_parent (pad));
+  GstShapeWipe *self = GST_SHAPE_WIPE (parent);
   gboolean ret;
 
   GST_LOG_OBJECT (pad, "Got %s event", GST_EVENT_TYPE_NAME (event));
@@ -1132,7 +1136,6 @@ gst_shape_wipe_src_event (GstPad * pad, GstEvent * event)
       break;
   }
 
-  gst_object_unref (self);
   return ret;
 }
 

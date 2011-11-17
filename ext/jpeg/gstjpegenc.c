@@ -69,8 +69,10 @@ enum
 static void gst_jpegenc_reset (GstJpegEnc * enc);
 static void gst_jpegenc_finalize (GObject * object);
 
-static GstFlowReturn gst_jpegenc_chain (GstPad * pad, GstBuffer * buf);
-static gboolean gst_jpegenc_sink_event (GstPad * pad, GstEvent * event);
+static GstFlowReturn gst_jpegenc_chain (GstPad * pad, GstObject * parent,
+    GstBuffer * buf);
+static gboolean gst_jpegenc_sink_event (GstPad * pad, GstObject * parent,
+    GstEvent * event);
 static GstCaps *gst_jpegenc_getcaps (GstPad * pad, GstCaps * filter);
 static gboolean gst_jpegenc_sink_query (GstPad * pad, GstObject * parent,
     GstQuery * query);
@@ -442,10 +444,10 @@ refuse_caps:
 }
 
 static gboolean
-gst_jpegenc_sink_event (GstPad * pad, GstEvent * event)
+gst_jpegenc_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
 {
   gboolean res;
-  GstJpegEnc *enc = GST_JPEGENC (gst_pad_get_parent (pad));
+  GstJpegEnc *enc = GST_JPEGENC (parent);
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_CAPS:
@@ -454,14 +456,13 @@ gst_jpegenc_sink_event (GstPad * pad, GstEvent * event)
 
       gst_event_parse_caps (event, &caps);
       res = gst_jpegenc_setcaps (enc, caps);
+      gst_event_unref (event);
       break;
     }
     default:
-      res = gst_pad_event_default (pad, event);
+      res = gst_pad_event_default (pad, parent, event);
       break;
   }
-
-  gst_object_unref (enc);
 
   return res;
 }
@@ -533,7 +534,7 @@ gst_jpegenc_resync (GstJpegEnc * jpegenc)
 }
 
 static GstFlowReturn
-gst_jpegenc_chain (GstPad * pad, GstBuffer * buf)
+gst_jpegenc_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
 {
   GstFlowReturn ret;
   GstJpegEnc *jpegenc;
@@ -544,7 +545,7 @@ gst_jpegenc_chain (GstPad * pad, GstBuffer * buf)
   GstBuffer *outbuf;
   GstVideoFrame frame;
 
-  jpegenc = GST_JPEGENC (GST_OBJECT_PARENT (pad));
+  jpegenc = GST_JPEGENC (parent);
 
   if (G_UNLIKELY (GST_VIDEO_INFO_FORMAT (&jpegenc->info) ==
           GST_VIDEO_FORMAT_UNKNOWN))

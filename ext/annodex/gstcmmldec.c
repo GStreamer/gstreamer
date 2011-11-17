@@ -92,12 +92,14 @@ static void gst_cmml_dec_set_property (GObject * dec, guint property_id,
     const GValue * value, GParamSpec * pspec);
 static gboolean gst_cmml_dec_sink_query (GstPad * pad, GstObject * parent,
     GstQuery * query);
-static gboolean gst_cmml_dec_sink_event (GstPad * pad, GstEvent * event);
+static gboolean gst_cmml_dec_sink_event (GstPad * pad, GstObject * parent,
+    GstEvent * event);
 static gboolean gst_cmml_dec_convert (GstPad * pad, GstFormat src_fmt,
     gint64 src_val, GstFormat * dest_fmt, gint64 * dest_val);
 static GstStateChangeReturn gst_cmml_dec_change_state (GstElement * element,
     GstStateChange transition);
-static GstFlowReturn gst_cmml_dec_chain (GstPad * pad, GstBuffer * buffer);
+static GstFlowReturn gst_cmml_dec_chain (GstPad * pad, GstObject * parent,
+    GstBuffer * buffer);
 
 static GstCmmlPacketType gst_cmml_dec_parse_packet_type (GstCmmlDec * dec,
     gchar * data, gsize size);
@@ -306,9 +308,9 @@ gst_cmml_dec_convert (GstPad * pad,
 }
 
 static gboolean
-gst_cmml_dec_sink_event (GstPad * pad, GstEvent * event)
+gst_cmml_dec_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
 {
-  GstCmmlDec *dec = GST_CMML_DEC (GST_PAD_PARENT (pad));
+  GstCmmlDec *dec = GST_CMML_DEC (parent);
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_EOS:
@@ -348,13 +350,13 @@ gst_cmml_dec_sink_event (GstPad * pad, GstEvent * event)
       break;
   }
 
-  return gst_pad_event_default (pad, event);
+  return gst_pad_event_default (pad, parent, event);
 }
 
 static GstFlowReturn
-gst_cmml_dec_chain (GstPad * pad, GstBuffer * buffer)
+gst_cmml_dec_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
 {
-  GstCmmlDec *dec = GST_CMML_DEC (GST_PAD_PARENT (pad));
+  GstCmmlDec *dec = GST_CMML_DEC (parent);
   GstCmmlPacketType packet;
   guint8 *data;
   gsize size;

@@ -54,8 +54,10 @@ enum
 static GstStateChangeReturn
 gst_mulawdec_change_state (GstElement * element, GstStateChange transition);
 
-static gboolean gst_mulawdec_event (GstPad * pad, GstEvent * event);
-static GstFlowReturn gst_mulawdec_chain (GstPad * pad, GstBuffer * buffer);
+static gboolean gst_mulawdec_event (GstPad * pad, GstObject * parent,
+    GstEvent * event);
+static GstFlowReturn gst_mulawdec_chain (GstPad * pad, GstObject * parent,
+    GstBuffer * buffer);
 
 #define gst_mulawdec_parent_class parent_class
 G_DEFINE_TYPE (GstMuLawDec, gst_mulawdec, GST_TYPE_ELEMENT);
@@ -206,12 +208,12 @@ gst_mulawdec_init (GstMuLawDec * mulawdec)
 }
 
 static gboolean
-gst_mulawdec_event (GstPad * pad, GstEvent * event)
+gst_mulawdec_event (GstPad * pad, GstObject * parent, GstEvent * event)
 {
   GstMuLawDec *mulawdec;
   gboolean res;
 
-  mulawdec = GST_MULAWDEC (GST_PAD_PARENT (pad));
+  mulawdec = GST_MULAWDEC (parent);
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_CAPS:
@@ -226,14 +228,14 @@ gst_mulawdec_event (GstPad * pad, GstEvent * event)
       break;
     }
     default:
-      res = gst_pad_event_default (pad, event);
+      res = gst_pad_event_default (pad, parent, event);
       break;
   }
   return res;
 }
 
 static GstFlowReturn
-gst_mulawdec_chain (GstPad * pad, GstBuffer * buffer)
+gst_mulawdec_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
 {
   GstMuLawDec *mulawdec;
   gint16 *linear_data;
@@ -242,7 +244,7 @@ gst_mulawdec_chain (GstPad * pad, GstBuffer * buffer)
   GstBuffer *outbuf;
   GstFlowReturn ret;
 
-  mulawdec = GST_MULAWDEC (GST_PAD_PARENT (pad));
+  mulawdec = GST_MULAWDEC (parent);
 
   if (G_UNLIKELY (mulawdec->rate == 0))
     goto not_negotiated;

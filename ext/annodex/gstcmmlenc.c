@@ -86,12 +86,14 @@ static void gst_cmml_enc_get_property (GObject * object, guint property_id,
     GValue * value, GParamSpec * pspec);
 static void gst_cmml_enc_set_property (GObject * object, guint property_id,
     const GValue * value, GParamSpec * pspec);
-static gboolean gst_cmml_enc_sink_event (GstPad * pad, GstEvent * event);
+static gboolean gst_cmml_enc_sink_event (GstPad * pad, GstObject * parent,
+    GstEvent * event);
 static GstStateChangeReturn gst_cmml_enc_change_state (GstElement * element,
     GstStateChange transition);
-static GstFlowReturn gst_cmml_enc_chain (GstPad * pad, GstBuffer * buffer);
-static void gst_cmml_enc_parse_preamble (GstCmmlEnc * enc,
-    guchar * preamble, guchar * processing_instruction);
+static GstFlowReturn gst_cmml_enc_chain (GstPad * pad, GstObject * parent,
+    GstBuffer * buffer);
+static void gst_cmml_enc_parse_preamble (GstCmmlEnc * enc, guchar * preamble,
+    guchar * processing_instruction);
 static void gst_cmml_enc_parse_end_tag (GstCmmlEnc * enc);
 static void gst_cmml_enc_parse_tag_head (GstCmmlEnc * enc,
     GstCmmlTagHead * head);
@@ -267,9 +269,9 @@ gst_cmml_enc_change_state (GstElement * element, GstStateChange transition)
 }
 
 static gboolean
-gst_cmml_enc_sink_event (GstPad * pad, GstEvent * event)
+gst_cmml_enc_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
 {
-  GstCmmlEnc *enc = GST_CMML_ENC (GST_PAD_PARENT (pad));
+  GstCmmlEnc *enc = GST_CMML_ENC (parent);
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_EOS:
@@ -283,7 +285,7 @@ gst_cmml_enc_sink_event (GstPad * pad, GstEvent * event)
       break;
   }
 
-  return gst_pad_event_default (pad, event);
+  return gst_pad_event_default (pad, parent, event);
 }
 
 static GstFlowReturn
@@ -592,10 +594,10 @@ gst_cmml_enc_push (GstCmmlEnc * enc, GstBuffer * buffer)
 }
 
 static GstFlowReturn
-gst_cmml_enc_chain (GstPad * pad, GstBuffer * buffer)
+gst_cmml_enc_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
 {
   GError *err = NULL;
-  GstCmmlEnc *enc = GST_CMML_ENC (GST_PAD_PARENT (pad));
+  GstCmmlEnc *enc = GST_CMML_ENC (parent);
   gchar *data;
   gsize size;
 

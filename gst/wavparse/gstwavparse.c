@@ -76,10 +76,13 @@ static gboolean gst_wavparse_pad_query (GstPad * pad, GstObject * parent,
 static gboolean gst_wavparse_pad_convert (GstPad * pad, GstFormat src_format,
     gint64 src_value, GstFormat * dest_format, gint64 * dest_value);
 
-static GstFlowReturn gst_wavparse_chain (GstPad * pad, GstBuffer * buf);
-static gboolean gst_wavparse_sink_event (GstPad * pad, GstEvent * event);
+static GstFlowReturn gst_wavparse_chain (GstPad * pad, GstObject * parent,
+    GstBuffer * buf);
+static gboolean gst_wavparse_sink_event (GstPad * pad, GstObject * parent,
+    GstEvent * event);
 static void gst_wavparse_loop (GstPad * pad);
-static gboolean gst_wavparse_srcpad_event (GstPad * pad, GstEvent * event);
+static gboolean gst_wavparse_srcpad_event (GstPad * pad, GstObject * parent,
+    GstEvent * event);
 
 static GstStaticPadTemplate sink_template_factory =
 GST_STATIC_PAD_TEMPLATE ("sink",
@@ -2076,10 +2079,10 @@ pause:
 }
 
 static GstFlowReturn
-gst_wavparse_chain (GstPad * pad, GstBuffer * buf)
+gst_wavparse_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
 {
   GstFlowReturn ret;
-  GstWavParse *wav = GST_WAVPARSE (GST_PAD_PARENT (pad));
+  GstWavParse *wav = GST_WAVPARSE (parent);
 
   GST_LOG_OBJECT (wav, "adapter_push %u bytes", gst_buffer_get_size (buf));
 
@@ -2143,9 +2146,9 @@ gst_wavparse_flush_data (GstWavParse * wav)
 }
 
 static gboolean
-gst_wavparse_sink_event (GstPad * pad, GstEvent * event)
+gst_wavparse_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
 {
-  GstWavParse *wav = GST_WAVPARSE (GST_PAD_PARENT (pad));
+  GstWavParse *wav = GST_WAVPARSE (parent);
   gboolean ret = TRUE;
 
   GST_LOG_OBJECT (wav, "handling %s event", GST_EVENT_TYPE_NAME (event));
@@ -2268,7 +2271,7 @@ gst_wavparse_sink_event (GstPad * pad, GstEvent * event)
       /* fall-through */
     }
     default:
-      ret = gst_pad_event_default (wav->sinkpad, event);
+      ret = gst_pad_event_default (wav->sinkpad, parent, event);
       break;
   }
 
@@ -2511,9 +2514,9 @@ gst_wavparse_pad_query (GstPad * pad, GstObject * parent, GstQuery * query)
 }
 
 static gboolean
-gst_wavparse_srcpad_event (GstPad * pad, GstEvent * event)
+gst_wavparse_srcpad_event (GstPad * pad, GstObject * parent, GstEvent * event)
 {
-  GstWavParse *wavparse = GST_WAVPARSE (gst_pad_get_parent (pad));
+  GstWavParse *wavparse = GST_WAVPARSE (parent);
   gboolean res = FALSE;
 
   GST_DEBUG_OBJECT (wavparse, "%s event", GST_EVENT_TYPE_NAME (event));
@@ -2530,7 +2533,6 @@ gst_wavparse_srcpad_event (GstPad * pad, GstEvent * event)
       res = gst_pad_push_event (wavparse->sinkpad, event);
       break;
   }
-  gst_object_unref (wavparse);
   return res;
 }
 

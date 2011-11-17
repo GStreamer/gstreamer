@@ -125,15 +125,18 @@ static void gst_rtp_pt_demux_finalize (GObject * object);
 static void gst_rtp_pt_demux_release (GstRtpPtDemux * ptdemux);
 static gboolean gst_rtp_pt_demux_setup (GstRtpPtDemux * ptdemux);
 
-static gboolean gst_rtp_pt_demux_sink_event (GstPad * pad, GstEvent * event);
-static GstFlowReturn gst_rtp_pt_demux_chain (GstPad * pad, GstBuffer * buf);
+static gboolean gst_rtp_pt_demux_sink_event (GstPad * pad, GstObject * parent,
+    GstEvent * event);
+static GstFlowReturn gst_rtp_pt_demux_chain (GstPad * pad, GstObject * parent,
+    GstBuffer * buf);
 static GstStateChangeReturn gst_rtp_pt_demux_change_state (GstElement * element,
     GstStateChange transition);
 static void gst_rtp_pt_demux_clear_pt_map (GstRtpPtDemux * rtpdemux);
 
 static GstRtpPtDemuxPad *find_pad_for_pt (GstRtpPtDemux * rtpdemux, guint8 pt);
 
-static gboolean gst_rtp_pt_demux_src_event (GstPad * pad, GstEvent * event);
+static gboolean gst_rtp_pt_demux_src_event (GstPad * pad, GstObject * parent,
+    GstEvent * event);
 
 
 static guint gst_rtp_pt_demux_signals[LAST_SIGNAL] = { 0 };
@@ -293,18 +296,17 @@ gst_rtp_pt_demux_clear_pt_map (GstRtpPtDemux * rtpdemux)
 }
 
 static GstFlowReturn
-gst_rtp_pt_demux_chain (GstPad * pad, GstBuffer * buf)
+gst_rtp_pt_demux_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
 {
   GstFlowReturn ret = GST_FLOW_OK;
   GstRtpPtDemux *rtpdemux;
-  GstElement *element = GST_ELEMENT (GST_OBJECT_PARENT (pad));
   guint8 pt;
   GstPad *srcpad;
   GstRtpPtDemuxPad *rtpdemuxpad;
   GstCaps *caps;
   GstRTPBuffer rtp;
 
-  rtpdemux = GST_RTP_PT_DEMUX (GST_OBJECT_PARENT (pad));
+  rtpdemux = GST_RTP_PT_DEMUX (parent);
 
   if (!gst_rtp_buffer_validate (buf))
     goto invalid_buffer;
@@ -349,7 +351,7 @@ gst_rtp_pt_demux_chain (GstPad * pad, GstBuffer * buf)
     GST_OBJECT_UNLOCK (rtpdemux);
 
     gst_pad_set_active (srcpad, TRUE);
-    gst_element_add_pad (element, srcpad);
+    gst_element_add_pad (GST_ELEMENT_CAST (rtpdemux), srcpad);
 
     GST_DEBUG ("emitting new-payload-type for pt %d", pt);
     g_signal_emit (G_OBJECT (rtpdemux),
@@ -422,16 +424,12 @@ find_pad_for_pt (GstRtpPtDemux * rtpdemux, guint8 pt)
 }
 
 static gboolean
-gst_rtp_pt_demux_sink_event (GstPad * pad, GstEvent * event)
+gst_rtp_pt_demux_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
 {
   GstRtpPtDemux *rtpdemux;
   gboolean res = FALSE;
 
-  rtpdemux = GST_RTP_PT_DEMUX (gst_pad_get_parent (pad));
-  if (G_UNLIKELY (rtpdemux == NULL)) {
-    gst_event_unref (event);
-    return FALSE;
-  }
+  rtpdemux = GST_RTP_PT_DEMUX (parent);
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_CUSTOM_DOWNSTREAM:
@@ -450,27 +448,26 @@ gst_rtp_pt_demux_sink_event (GstPad * pad, GstEvent * event)
           gst_event_unref (event);
 
       } else {
-        res = gst_pad_event_default (pad, event);
+        res = gst_pad_event_default (pad, parent, event);
       }
       break;
     }
     default:
-      res = gst_pad_event_default (pad, event);
+      res = gst_pad_event_default (pad, parent, event);
       break;
   }
 
-  gst_object_unref (rtpdemux);
   return res;
 }
 
 
 static gboolean
-gst_rtp_pt_demux_src_event (GstPad * pad, GstEvent * event)
+gst_rtp_pt_demux_src_event (GstPad * pad, GstObject * parent, GstEvent * event)
 {
   GstRtpPtDemux *demux;
   const GstStructure *s;
 
-  demux = GST_RTP_PT_DEMUX (gst_pad_get_parent (pad));
+  demux = GST_RTP_PT_DEMUX (parent);
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_CUSTOM_UPSTREAM:
@@ -500,12 +497,8 @@ gst_rtp_pt_demux_src_event (GstPad * pad, GstEvent * event)
       break;
   }
 
-  gst_object_unref (demux);
-
-  return gst_pad_event_default (pad, event);
+  return gst_pad_event_default (pad, parent, event);
 }
-
-
 
 /*
  * Reserves resources for the object.

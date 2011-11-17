@@ -192,7 +192,8 @@ static void gst_avi_mux_pad_reset (GstAviPad * avipad, gboolean free);
 
 static GstFlowReturn gst_avi_mux_collect_pads (GstCollectPads * pads,
     GstAviMux * avimux);
-static gboolean gst_avi_mux_handle_event (GstPad * pad, GstEvent * event);
+static gboolean gst_avi_mux_handle_event (GstPad * pad, GstObject * parent,
+    GstEvent * event);
 static GstPad *gst_avi_mux_request_new_pad (GstElement * element,
     GstPadTemplate * templ, const gchar * name, const GstCaps * caps);
 static void gst_avi_mux_release_pad (GstElement * element, GstPad * pad);
@@ -982,7 +983,7 @@ gst_avi_mux_request_new_pad (GstElement * element,
   /* FIXME: hacked way to override/extend the event function of
    * GstCollectPads; because it sets its own event function giving the
    * element no access to events */
-  avimux->collect_event = (GstPadEventFunction) GST_PAD_EVENTFUNC (newpad);
+  avimux->collect_event = GST_PAD_EVENTFUNC (newpad);
   gst_pad_set_event_function (newpad,
       GST_DEBUG_FUNCPTR (gst_avi_mux_handle_event));
 
@@ -1832,12 +1833,12 @@ gst_avi_mux_restart_file (GstAviMux * avimux)
 
 /* handle events (search) */
 static gboolean
-gst_avi_mux_handle_event (GstPad * pad, GstEvent * event)
+gst_avi_mux_handle_event (GstPad * pad, GstObject * parent, GstEvent * event)
 {
   GstAviMux *avimux;
   gboolean ret = TRUE;
 
-  avimux = GST_AVI_MUX (gst_pad_get_parent (pad));
+  avimux = GST_AVI_MUX (parent);
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_CAPS:
@@ -1876,9 +1877,7 @@ gst_avi_mux_handle_event (GstPad * pad, GstEvent * event)
 
   /* now GstCollectPads can take care of the rest, e.g. EOS */
   if (ret)
-    ret = avimux->collect_event (pad, event);
-
-  gst_object_unref (avimux);
+    ret = avimux->collect_event (pad, parent, event);
 
   return ret;
 }

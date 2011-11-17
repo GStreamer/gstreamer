@@ -93,12 +93,15 @@ static void gst_jpeg_dec_set_property (GObject * object, guint prop_id,
 static void gst_jpeg_dec_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 
-static GstFlowReturn gst_jpeg_dec_chain (GstPad * pad, GstBuffer * buffer);
+static GstFlowReturn gst_jpeg_dec_chain (GstPad * pad, GstObject * parent,
+    GstBuffer * buffer);
 static GstCaps *gst_jpeg_dec_getcaps (GstPad * pad, GstCaps * filter);
 static gboolean gst_jpeg_dec_sink_query (GstPad * pad, GstObject * parent,
     GstQuery * query);
-static gboolean gst_jpeg_dec_sink_event (GstPad * pad, GstEvent * event);
-static gboolean gst_jpeg_dec_src_event (GstPad * pad, GstEvent * event);
+static gboolean gst_jpeg_dec_sink_event (GstPad * pad, GstObject * parent,
+    GstEvent * event);
+static gboolean gst_jpeg_dec_src_event (GstPad * pad, GstObject * parent,
+    GstEvent * event);
 static GstStateChangeReturn gst_jpeg_dec_change_state (GstElement * element,
     GstStateChange transition);
 static void gst_jpeg_dec_update_qos (GstJpegDec * dec, gdouble proportion,
@@ -1308,7 +1311,7 @@ gst_jpeg_dec_negotiate (GstJpegDec * dec, gint width, gint height, gint clrspc)
 }
 
 static GstFlowReturn
-gst_jpeg_dec_chain (GstPad * pad, GstBuffer * buf)
+gst_jpeg_dec_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
 {
   GstFlowReturn ret = GST_FLOW_OK;
   GstJpegDec *dec;
@@ -1320,7 +1323,7 @@ gst_jpeg_dec_chain (GstPad * pad, GstBuffer * buf)
   GstClockTime timestamp, duration;
   GstVideoFrame frame;
 
-  dec = GST_JPEG_DEC (GST_PAD_PARENT (pad));
+  dec = GST_JPEG_DEC (parent);
 
   timestamp = GST_BUFFER_TIMESTAMP (buf);
   duration = GST_BUFFER_DURATION (buf);
@@ -1698,16 +1701,12 @@ invalid_yuvrgbgrayscale:
 }
 
 static gboolean
-gst_jpeg_dec_src_event (GstPad * pad, GstEvent * event)
+gst_jpeg_dec_src_event (GstPad * pad, GstObject * parent, GstEvent * event)
 {
   GstJpegDec *dec;
   gboolean res;
 
-  dec = GST_JPEG_DEC (gst_pad_get_parent (pad));
-  if (G_UNLIKELY (dec == NULL)) {
-    gst_event_unref (event);
-    return FALSE;
-  }
+  dec = GST_JPEG_DEC (parent);
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_QOS:{
@@ -1726,15 +1725,14 @@ gst_jpeg_dec_src_event (GstPad * pad, GstEvent * event)
 
   res = gst_pad_push_event (dec->sinkpad, event);
 
-  gst_object_unref (dec);
   return res;
 }
 
 static gboolean
-gst_jpeg_dec_sink_event (GstPad * pad, GstEvent * event)
+gst_jpeg_dec_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
 {
   gboolean ret = TRUE, forward = TRUE;
-  GstJpegDec *dec = GST_JPEG_DEC (GST_OBJECT_PARENT (pad));
+  GstJpegDec *dec = GST_JPEG_DEC (parent);
 
   GST_DEBUG_OBJECT (dec, "event : %s", GST_EVENT_TYPE_NAME (event));
 

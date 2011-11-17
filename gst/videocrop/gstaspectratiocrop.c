@@ -84,7 +84,8 @@ static gboolean gst_aspect_ratio_crop_src_query (GstPad * pad,
     GstObject * parent, GstQuery * query);
 static gboolean gst_aspect_ratio_crop_set_caps (GstAspectRatioCrop *
     aspect_ratio_crop, GstCaps * caps);
-static gboolean gst_aspect_ratio_crop_sink_event (GstPad * pad, GstEvent * evt);
+static gboolean gst_aspect_ratio_crop_sink_event (GstPad * pad,
+    GstObject * parent, GstEvent * evt);
 static void gst_aspect_ratio_crop_finalize (GObject * object);
 static void gst_aspect_ratio_transform_structure (GstAspectRatioCrop *
     aspect_ratio_crop, GstStructure * structure, GstStructure ** new_structure,
@@ -145,13 +146,15 @@ gst_aspect_ratio_crop_set_caps (GstAspectRatioCrop * aspect_ratio_crop,
 }
 
 static gboolean
-gst_aspect_ratio_crop_sink_event (GstPad * pad, GstEvent * evt)
+gst_aspect_ratio_crop_sink_event (GstPad * pad, GstObject * parent,
+    GstEvent * evt)
 {
   gboolean ret;
-  GstAspectRatioCrop *aspect_ratio_crop =
-      GST_ASPECT_RATIO_CROP (gst_pad_get_parent (pad));
+  GstAspectRatioCrop *aspect_ratio_crop = GST_ASPECT_RATIO_CROP (parent);
 
-  ret = aspect_ratio_crop->sinkpad_old_eventfunc (pad, gst_event_ref (evt));
+  ret =
+      aspect_ratio_crop->sinkpad_old_eventfunc (pad, parent,
+      gst_event_ref (evt));
 
   switch (GST_EVENT_TYPE (evt)) {
     case GST_EVENT_CAPS:
@@ -166,9 +169,8 @@ gst_aspect_ratio_crop_sink_event (GstPad * pad, GstEvent * evt)
     default:
       break;
   }
-
-  gst_object_unref (aspect_ratio_crop);
   gst_event_unref (evt);
+
   return ret;
 }
 

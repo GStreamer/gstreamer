@@ -76,14 +76,17 @@ static GstStaticPadTemplate src_template = GST_STATIC_PAD_TEMPLATE ("src",
 
 
 static void gst_au_parse_dispose (GObject * object);
-static GstFlowReturn gst_au_parse_chain (GstPad * pad, GstBuffer * buf);
+static GstFlowReturn gst_au_parse_chain (GstPad * pad, GstObject * parent,
+    GstBuffer * buf);
 static GstStateChangeReturn gst_au_parse_change_state (GstElement * element,
     GstStateChange transition);
 static void gst_au_parse_reset (GstAuParse * auparse);
 static gboolean gst_au_parse_src_query (GstPad * pad, GstObject * parent,
     GstQuery * query);
-static gboolean gst_au_parse_src_event (GstPad * pad, GstEvent * event);
-static gboolean gst_au_parse_sink_event (GstPad * pad, GstEvent * event);
+static gboolean gst_au_parse_src_event (GstPad * pad, GstObject * parent,
+    GstEvent * event);
+static gboolean gst_au_parse_sink_event (GstPad * pad, GstObject * parent,
+    GstEvent * event);
 static gboolean gst_au_parse_src_convert (GstAuParse * auparse,
     GstFormat src_format, gint64 srcval, GstFormat dest_format,
     gint64 * destval);
@@ -391,7 +394,7 @@ unknown_format:
 #define AU_HEADER_SIZE 24
 
 static GstFlowReturn
-gst_au_parse_chain (GstPad * pad, GstBuffer * buf)
+gst_au_parse_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
 {
   GstFlowReturn ret = GST_FLOW_OK;
   GstAuParse *auparse;
@@ -401,7 +404,7 @@ gst_au_parse_chain (GstPad * pad, GstBuffer * buf)
   gint64 offset;
   GstSegment segment;
 
-  auparse = GST_AU_PARSE (gst_pad_get_parent (pad));
+  auparse = GST_AU_PARSE (parent);
 
   GST_LOG_OBJECT (auparse, "got buffer of size %u", gst_buffer_get_size (buf));
 
@@ -465,7 +468,6 @@ gst_au_parse_chain (GstPad * pad, GstBuffer * buf)
 
 out:
 
-  gst_object_unref (auparse);
   return ret;
 }
 
@@ -650,12 +652,12 @@ gst_au_parse_handle_seek (GstAuParse * auparse, GstEvent * event)
 }
 
 static gboolean
-gst_au_parse_sink_event (GstPad * pad, GstEvent * event)
+gst_au_parse_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
 {
   GstAuParse *auparse;
   gboolean ret = TRUE;
 
-  auparse = GST_AU_PARSE (gst_pad_get_parent (pad));
+  auparse = GST_AU_PARSE (parent);
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_CAPS:
@@ -716,32 +718,30 @@ gst_au_parse_sink_event (GstPad * pad, GstEvent * event)
       }
       /* fall-through */
     default:
-      ret = gst_pad_event_default (pad, event);
+      ret = gst_pad_event_default (pad, parent, event);
       break;
   }
 
-  gst_object_unref (auparse);
   return ret;
 }
 
 static gboolean
-gst_au_parse_src_event (GstPad * pad, GstEvent * event)
+gst_au_parse_src_event (GstPad * pad, GstObject * parent, GstEvent * event)
 {
   GstAuParse *auparse;
   gboolean ret;
 
-  auparse = GST_AU_PARSE (gst_pad_get_parent (pad));
+  auparse = GST_AU_PARSE (parent);
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_SEEK:
       ret = gst_au_parse_handle_seek (auparse, event);
       break;
     default:
-      ret = gst_pad_event_default (pad, event);
+      ret = gst_pad_event_default (pad, parent, event);
       break;
   }
 
-  gst_object_unref (auparse);
   return ret;
 }
 

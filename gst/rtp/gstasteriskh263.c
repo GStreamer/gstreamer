@@ -66,7 +66,8 @@ GST_STATIC_PAD_TEMPLATE ("sink",
 
 static void gst_asteriskh263_finalize (GObject * object);
 
-static GstFlowReturn gst_asteriskh263_chain (GstPad * pad, GstBuffer * buffer);
+static GstFlowReturn gst_asteriskh263_chain (GstPad * pad, GstObject * parent,
+    GstBuffer * buffer);
 
 static GstStateChangeReturn gst_asteriskh263_change_state (GstElement *
     element, GstStateChange transition);
@@ -128,13 +129,13 @@ gst_asteriskh263_finalize (GObject * object)
 }
 
 static GstFlowReturn
-gst_asteriskh263_chain (GstPad * pad, GstBuffer * buf)
+gst_asteriskh263_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
 {
   GstAsteriskh263 *asteriskh263;
   GstBuffer *outbuf;
   GstFlowReturn ret;
 
-  asteriskh263 = GST_ASTERISK_H263 (GST_OBJECT_PARENT (pad));
+  asteriskh263 = GST_ASTERISK_H263 (parent);
 
   if (!gst_rtp_buffer_validate (buf))
     goto bad_packet;

@@ -49,15 +49,16 @@ GST_STATIC_PAD_TEMPLATE ("sink",
     GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE ("I420"))
     );
 
-static GstVideoFilterClass *parent_class = NULL;
+#define gst_navigationtest_parent_class parent_class
+G_DEFINE_TYPE (GstNavigationtest, gst_navigationtest, GST_TYPE_VIDEO_FILTER);
 
 static gboolean
-gst_navigationtest_handle_src_event (GstPad * pad, GstEvent * event)
+gst_navigationtest_src_event (GstBaseTransform * trans, GstEvent * event)
 {
   GstNavigationtest *navtest;
   const gchar *type;
 
-  navtest = GST_NAVIGATIONTEST (GST_PAD_PARENT (pad));
+  navtest = GST_NAVIGATIONTEST (trans);
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_NAVIGATION:
@@ -100,7 +101,7 @@ gst_navigationtest_handle_src_event (GstPad * pad, GstEvent * event)
     default:
       break;
   }
-  return gst_pad_event_default (pad, event);
+  return GST_BASE_TRANSFORM_CLASS (parent_class)->src_event (trans, event);
 }
 
 /* Useful macros */
@@ -289,23 +290,7 @@ gst_navigationtest_change_state (GstElement * element,
 }
 
 static void
-gst_navigationtest_base_init (gpointer g_class)
-{
-  GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
-
-  gst_element_class_set_details_simple (element_class, "Video navigation test",
-      "Filter/Effect/Video",
-      "Handle navigation events showing a black square following mouse pointer",
-      "David Schleef <ds@schleef.org>");
-
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&gst_navigationtest_sink_template));
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&gst_navigationtest_src_template));
-}
-
-static void
-gst_navigationtest_class_init (gpointer klass, gpointer class_data)
+gst_navigationtest_class_init (GstNavigationtestClass * klass)
 {
   GstElementClass *element_class;
   GstBaseTransformClass *trans_class;
@@ -318,47 +303,28 @@ gst_navigationtest_class_init (gpointer klass, gpointer class_data)
   element_class->change_state =
       GST_DEBUG_FUNCPTR (gst_navigationtest_change_state);
 
+  gst_element_class_set_details_simple (element_class, "Video navigation test",
+      "Filter/Effect/Video",
+      "Handle navigation events showing a black square following mouse pointer",
+      "David Schleef <ds@schleef.org>");
+
+  gst_element_class_add_pad_template (element_class,
+      gst_static_pad_template_get (&gst_navigationtest_sink_template));
+  gst_element_class_add_pad_template (element_class,
+      gst_static_pad_template_get (&gst_navigationtest_src_template));
+
   trans_class->set_caps = GST_DEBUG_FUNCPTR (gst_navigationtest_set_caps);
   trans_class->get_unit_size =
       GST_DEBUG_FUNCPTR (gst_navigationtest_get_unit_size);
   trans_class->transform = GST_DEBUG_FUNCPTR (gst_navigationtest_transform);
+  trans_class->src_event = GST_DEBUG_FUNCPTR (gst_navigationtest_src_event);
 }
 
 static void
-gst_navigationtest_init (GTypeInstance * instance, gpointer g_class)
+gst_navigationtest_init (GstNavigationtest * navtest)
 {
-  GstNavigationtest *navtest = GST_NAVIGATIONTEST (instance);
-  GstBaseTransform *btrans = GST_BASE_TRANSFORM (instance);
-
-  gst_pad_set_event_function (btrans->srcpad,
-      GST_DEBUG_FUNCPTR (gst_navigationtest_handle_src_event));
-
   navtest->x = -1;
   navtest->y = -1;
-}
-
-GType
-gst_navigationtest_get_type (void)
-{
-  static GType navigationtest_type = 0;
-
-  if (!navigationtest_type) {
-    static const GTypeInfo navigationtest_info = {
-      sizeof (GstNavigationtestClass),
-      gst_navigationtest_base_init,
-      NULL,
-      gst_navigationtest_class_init,
-      NULL,
-      NULL,
-      sizeof (GstNavigationtest),
-      0,
-      gst_navigationtest_init,
-    };
-
-    navigationtest_type = g_type_register_static (GST_TYPE_VIDEO_FILTER,
-        "GstNavigationtest", &navigationtest_info, 0);
-  }
-  return navigationtest_type;
 }
 
 static gboolean

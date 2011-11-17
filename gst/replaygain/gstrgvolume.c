@@ -124,7 +124,8 @@ static void gst_rg_volume_dispose (GObject * object);
 
 static GstStateChangeReturn gst_rg_volume_change_state (GstElement * element,
     GstStateChange transition);
-static gboolean gst_rg_volume_sink_event (GstPad * pad, GstEvent * event);
+static gboolean gst_rg_volume_sink_event (GstPad * pad, GstObject * parent,
+    GstEvent * event);
 
 static GstEvent *gst_rg_volume_tag_event (GstRgVolume * self, GstEvent * event);
 static void gst_rg_volume_reset (GstRgVolume * self);
@@ -442,14 +443,14 @@ gst_rg_volume_change_state (GstElement * element, GstStateChange transition)
 
 /* Event function for the ghost sink pad. */
 static gboolean
-gst_rg_volume_sink_event (GstPad * pad, GstEvent * event)
+gst_rg_volume_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
 {
   GstRgVolume *self;
   GstPad *volume_sink_pad;
   GstEvent *send_event = event;
   gboolean res;
 
-  self = GST_RG_VOLUME (gst_pad_get_parent_element (pad));
+  self = GST_RG_VOLUME (parent);
   volume_sink_pad = gst_ghost_pad_get_target (GST_GHOST_PAD (pad));
 
   switch (GST_EVENT_TYPE (event)) {
@@ -479,7 +480,7 @@ gst_rg_volume_sink_event (GstPad * pad, GstEvent * event)
     res = TRUE;
 
   gst_object_unref (volume_sink_pad);
-  gst_object_unref (self);
+
   return res;
 }
 

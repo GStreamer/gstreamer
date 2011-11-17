@@ -37,8 +37,10 @@ GST_DEBUG_CATEGORY_STATIC (alaw_dec_debug);
 static GstStateChangeReturn
 gst_alaw_dec_change_state (GstElement * element, GstStateChange transition);
 
-static gboolean gst_alaw_dec_event (GstPad * pad, GstEvent * event);
-static GstFlowReturn gst_alaw_dec_chain (GstPad * pad, GstBuffer * buffer);
+static gboolean gst_alaw_dec_event (GstPad * pad, GstObject * parent,
+    GstEvent * event);
+static GstFlowReturn gst_alaw_dec_chain (GstPad * pad, GstObject * parent,
+    GstBuffer * buffer);
 
 #define gst_alaw_dec_parent_class parent_class
 G_DEFINE_TYPE (GstALawDec, gst_alaw_dec, GST_TYPE_ELEMENT);
@@ -273,12 +275,12 @@ gst_alaw_dec_init (GstALawDec * alawdec)
 }
 
 static gboolean
-gst_alaw_dec_event (GstPad * pad, GstEvent * event)
+gst_alaw_dec_event (GstPad * pad, GstObject * parent, GstEvent * event)
 {
   GstALawDec *alawdec;
   gboolean res;
 
-  alawdec = GST_ALAW_DEC (GST_PAD_PARENT (pad));
+  alawdec = GST_ALAW_DEC (parent);
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_CAPS:
@@ -293,14 +295,14 @@ gst_alaw_dec_event (GstPad * pad, GstEvent * event)
       break;
     }
     default:
-      res = gst_pad_event_default (pad, event);
+      res = gst_pad_event_default (pad, parent, event);
       break;
   }
   return res;
 }
 
 static GstFlowReturn
-gst_alaw_dec_chain (GstPad * pad, GstBuffer * buffer)
+gst_alaw_dec_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
 {
   GstALawDec *alawdec;
   gint16 *linear_data;
@@ -310,7 +312,7 @@ gst_alaw_dec_chain (GstPad * pad, GstBuffer * buffer)
   gint i;
   GstFlowReturn ret;
 
-  alawdec = GST_ALAW_DEC (GST_PAD_PARENT (pad));
+  alawdec = GST_ALAW_DEC (parent);
 
   if (G_UNLIKELY (alawdec->rate == 0))
     goto not_negotiated;

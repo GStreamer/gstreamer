@@ -127,8 +127,10 @@ static GstPad *gst_rtp_dec_request_new_pad (GstElement * element,
     GstPadTemplate * templ, const gchar * name, const GstCaps * caps);
 static void gst_rtp_dec_release_pad (GstElement * element, GstPad * pad);
 
-static GstFlowReturn gst_rtp_dec_chain_rtp (GstPad * pad, GstBuffer * buffer);
-static GstFlowReturn gst_rtp_dec_chain_rtcp (GstPad * pad, GstBuffer * buffer);
+static GstFlowReturn gst_rtp_dec_chain_rtp (GstPad * pad, GstObject * parent,
+    GstBuffer * buffer);
+static GstFlowReturn gst_rtp_dec_chain_rtcp (GstPad * pad, GstObject * parent,
+    GstBuffer * buffer);
 
 
 /* Manages the receiving end of the packets.
@@ -453,7 +455,7 @@ gst_rtp_dec_query_src (GstPad * pad, GstObject * parent, GstQuery * query)
 }
 
 static GstFlowReturn
-gst_rtp_dec_chain_rtp (GstPad * pad, GstBuffer * buffer)
+gst_rtp_dec_chain_rtp (GstPad * pad, GstObject * parent, GstBuffer * buffer)
 {
   GstFlowReturn res;
   GstRTPDec *rtpdec;
@@ -462,7 +464,7 @@ gst_rtp_dec_chain_rtp (GstPad * pad, GstBuffer * buffer)
   guint8 pt;
   GstRTPBuffer rtp = { NULL, };
 
-  rtpdec = GST_RTP_DEC (GST_PAD_PARENT (pad));
+  rtpdec = GST_RTP_DEC (parent);
 
   GST_DEBUG_OBJECT (rtpdec, "got rtp packet");
 
@@ -542,7 +544,7 @@ bad_packet:
 }
 
 static GstFlowReturn
-gst_rtp_dec_chain_rtcp (GstPad * pad, GstBuffer * buffer)
+gst_rtp_dec_chain_rtcp (GstPad * pad, GstObject * parent, GstBuffer * buffer)
 {
   GstRTPDec *src;
 
@@ -552,7 +554,7 @@ gst_rtp_dec_chain_rtcp (GstPad * pad, GstBuffer * buffer)
   gboolean more;
 #endif
 
-  src = GST_RTP_DEC (GST_PAD_PARENT (pad));
+  src = GST_RTP_DEC (parent);
 
   GST_DEBUG_OBJECT (src, "got rtcp packet");
 

@@ -91,7 +91,8 @@ static void gst_flv_mux_finalize (GObject * object);
 static GstFlowReturn
 gst_flv_mux_collected (GstCollectPads * pads, gpointer user_data);
 
-static gboolean gst_flv_mux_handle_src_event (GstPad * pad, GstEvent * event);
+static gboolean gst_flv_mux_handle_src_event (GstPad * pad, GstObject * parent,
+    GstEvent * event);
 static GstPad *gst_flv_mux_request_new_pad (GstElement * element,
     GstPadTemplate * templ, const gchar * req_name, const GstCaps * caps);
 static void gst_flv_mux_release_pad (GstElement * element, GstPad * pad);
@@ -253,7 +254,8 @@ gst_flv_mux_reset (GstElement * element)
 }
 
 static gboolean
-gst_flv_mux_handle_src_event (GstPad * pad, GstEvent * event)
+gst_flv_mux_handle_src_event (GstPad * pad, GstObject * parent,
+    GstEvent * event)
 {
   GstEventType type;
 
@@ -267,13 +269,14 @@ gst_flv_mux_handle_src_event (GstPad * pad, GstEvent * event)
       break;
   }
 
-  return gst_pad_event_default (pad, event);
+  return gst_pad_event_default (pad, parent, event);
 }
 
 static gboolean
-gst_flv_mux_handle_sink_event (GstPad * pad, GstEvent * event)
+gst_flv_mux_handle_sink_event (GstPad * pad, GstObject * parent,
+    GstEvent * event)
 {
-  GstFlvMux *mux = GST_FLV_MUX (gst_pad_get_parent (pad));
+  GstFlvMux *mux = GST_FLV_MUX (parent);
   gboolean ret = TRUE;
 
   switch (GST_EVENT_TYPE (event)) {
@@ -314,8 +317,7 @@ gst_flv_mux_handle_sink_event (GstPad * pad, GstEvent * event)
 
   /* now GstCollectPads can take care of the rest, e.g. EOS */
   if (ret)
-    ret = mux->collect_event (pad, event);
-  gst_object_unref (mux);
+    ret = mux->collect_event (pad, parent, event);
 
   return ret;
 }

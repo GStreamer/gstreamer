@@ -81,8 +81,10 @@ static void gst_y4m_encode_get_property (GObject * object,
 
 static void gst_y4m_encode_reset (GstY4mEncode * filter);
 
-static gboolean gst_y4m_encode_sink_event (GstPad * pad, GstEvent * event);
-static GstFlowReturn gst_y4m_encode_chain (GstPad * pad, GstBuffer * buf);
+static gboolean gst_y4m_encode_sink_event (GstPad * pad, GstObject * parent,
+    GstEvent * event);
+static GstFlowReturn gst_y4m_encode_chain (GstPad * pad, GstObject * parent,
+    GstBuffer * buf);
 static GstStateChangeReturn gst_y4m_encode_change_state (GstElement * element,
     GstStateChange transition);
 
@@ -189,7 +191,7 @@ invalid_format:
 }
 
 static gboolean
-gst_y4m_encode_sink_event (GstPad * pad, GstEvent * event)
+gst_y4m_encode_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
 {
   gboolean res;
 
@@ -204,7 +206,7 @@ gst_y4m_encode_sink_event (GstPad * pad, GstEvent * event)
       break;
     }
     default:
-      res = gst_pad_event_default (pad, event);
+      res = gst_pad_event_default (pad, parent, event);
       break;
   }
   return res;
@@ -261,9 +263,9 @@ gst_y4m_encode_get_frame_header (GstY4mEncode * filter)
 }
 
 static GstFlowReturn
-gst_y4m_encode_chain (GstPad * pad, GstBuffer * buf)
+gst_y4m_encode_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
 {
-  GstY4mEncode *filter = GST_Y4M_ENCODE (GST_PAD_PARENT (pad));
+  GstY4mEncode *filter = GST_Y4M_ENCODE (parent);
   GstBuffer *outbuf;
   GstClockTime timestamp;
 

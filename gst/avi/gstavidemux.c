@@ -79,9 +79,10 @@ static void gst_avi_demux_reset (GstAviDemux * avi);
 #if 0
 static const GstEventMask *gst_avi_demux_get_event_mask (GstPad * pad);
 #endif
-static gboolean gst_avi_demux_handle_src_event (GstPad * pad, GstEvent * event);
+static gboolean gst_avi_demux_handle_src_event (GstPad * pad,
+    GstObject * parent, GstEvent * event);
 static gboolean gst_avi_demux_handle_sink_event (GstPad * pad,
-    GstEvent * event);
+    GstObject * parent, GstEvent * event);
 static gboolean gst_avi_demux_push_event (GstAviDemux * avi, GstEvent * event);
 
 #if 0
@@ -102,7 +103,8 @@ static gboolean gst_avi_demux_sink_activate (GstPad * sinkpad);
 static gboolean gst_avi_demux_sink_activate_pull (GstPad * sinkpad,
     gboolean active);
 static gboolean gst_avi_demux_activate_push (GstPad * pad, gboolean active);
-static GstFlowReturn gst_avi_demux_chain (GstPad * pad, GstBuffer * buf);
+static GstFlowReturn gst_avi_demux_chain (GstPad * pad, GstObject * parent,
+    GstBuffer * buf);
 
 static void gst_avi_demux_set_index (GstElement * element, GstIndex * index);
 static GstIndex *gst_avi_demux_get_index (GstElement * element);
@@ -692,10 +694,11 @@ gst_avi_demux_seek_streams_index (GstAviDemux * avi, guint64 offset,
 #define GST_AVI_SEEK_PUSH_DISPLACE     (4 * GST_SECOND)
 
 static gboolean
-gst_avi_demux_handle_sink_event (GstPad * pad, GstEvent * event)
+gst_avi_demux_handle_sink_event (GstPad * pad, GstObject * parent,
+    GstEvent * event)
 {
   gboolean res = TRUE;
-  GstAviDemux *avi = GST_AVI_DEMUX (gst_pad_get_parent (pad));
+  GstAviDemux *avi = GST_AVI_DEMUX (parent);
 
   GST_DEBUG_OBJECT (avi,
       "have event type %s: %p on sink pad", GST_EVENT_TYPE_NAME (event), event);
@@ -850,20 +853,19 @@ gst_avi_demux_handle_sink_event (GstPad * pad, GstEvent * event)
       /* fall through to default case so that the event gets passed downstream */
     }
     default:
-      res = gst_pad_event_default (pad, event);
+      res = gst_pad_event_default (pad, parent, event);
       break;
   }
-
-  gst_object_unref (avi);
 
   return res;
 }
 
 static gboolean
-gst_avi_demux_handle_src_event (GstPad * pad, GstEvent * event)
+gst_avi_demux_handle_src_event (GstPad * pad, GstObject * parent,
+    GstEvent * event)
 {
   gboolean res = TRUE;
-  GstAviDemux *avi = GST_AVI_DEMUX (gst_pad_get_parent (pad));
+  GstAviDemux *avi = GST_AVI_DEMUX (parent);
 
   GST_DEBUG_OBJECT (avi,
       "have event type %s: %p on src pad", GST_EVENT_TYPE_NAME (event), event);
@@ -883,11 +885,9 @@ gst_avi_demux_handle_src_event (GstPad * pad, GstEvent * event)
       gst_event_unref (event);
       break;
     default:
-      res = gst_pad_event_default (pad, event);
+      res = gst_pad_event_default (pad, parent, event);
       break;
   }
-
-  gst_object_unref (avi);
 
   return res;
 }
@@ -5154,10 +5154,10 @@ pause:{
 
 
 static GstFlowReturn
-gst_avi_demux_chain (GstPad * pad, GstBuffer * buf)
+gst_avi_demux_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
 {
   GstFlowReturn res;
-  GstAviDemux *avi = GST_AVI_DEMUX (GST_PAD_PARENT (pad));
+  GstAviDemux *avi = GST_AVI_DEMUX (parent);
   gint i;
 
   if (GST_BUFFER_IS_DISCONT (buf)) {

@@ -89,12 +89,14 @@ enum
 
 static void gst_flac_tag_dispose (GObject * object);
 
-static GstFlowReturn gst_flac_tag_chain (GstPad * pad, GstBuffer * buffer);
+static GstFlowReturn gst_flac_tag_chain (GstPad * pad, GstObject * parent,
+    GstBuffer * buffer);
 
 static GstStateChangeReturn gst_flac_tag_change_state (GstElement * element,
     GstStateChange transition);
 
-static gboolean gst_flac_tag_sink_event (GstPad * pad, GstEvent * event);
+static gboolean gst_flac_tag_sink_event (GstPad * pad, GstObject * parent,
+    GstEvent * event);
 
 #define gst_flac_tag_parent_class parent_class
 G_DEFINE_TYPE_WITH_CODE (GstFlacTag, gst_flac_tag, GST_TYPE_ELEMENT,
@@ -168,13 +170,13 @@ gst_flac_tag_init (GstFlacTag * tag)
 }
 
 static gboolean
-gst_flac_tag_sink_event (GstPad * pad, GstEvent * event)
+gst_flac_tag_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
 {
   gboolean ret;
 
   switch (GST_EVENT_TYPE (event)) {
     default:
-      ret = gst_pad_event_default (pad, event);
+      ret = gst_pad_event_default (pad, parent, event);
       break;
   }
 
@@ -185,7 +187,7 @@ gst_flac_tag_sink_event (GstPad * pad, GstEvent * event)
 #define FLAC_MAGIC_SIZE (sizeof (FLAC_MAGIC) - 1)
 
 static GstFlowReturn
-gst_flac_tag_chain (GstPad * pad, GstBuffer * buffer)
+gst_flac_tag_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
 {
   GstFlacTag *tag;
   GstFlowReturn ret;
@@ -193,7 +195,7 @@ gst_flac_tag_chain (GstPad * pad, GstBuffer * buffer)
   gsize size;
 
   ret = GST_FLOW_OK;
-  tag = GST_FLAC_TAG (gst_pad_get_parent (pad));
+  tag = GST_FLAC_TAG (parent);
 
   gst_adapter_push (tag->adapter, buffer);
 
@@ -424,7 +426,6 @@ gst_flac_tag_chain (GstPad * pad, GstBuffer * buffer)
   }
 
 cleanup:
-  gst_object_unref (tag);
 
   return ret;
 

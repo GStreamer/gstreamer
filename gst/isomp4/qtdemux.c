@@ -405,8 +405,10 @@ static gboolean qtdemux_sink_activate_pull (GstPad * sinkpad, gboolean active);
 static gboolean qtdemux_sink_activate_push (GstPad * sinkpad, gboolean active);
 
 static void gst_qtdemux_loop (GstPad * pad);
-static GstFlowReturn gst_qtdemux_chain (GstPad * sinkpad, GstBuffer * inbuf);
-static gboolean gst_qtdemux_handle_sink_event (GstPad * pad, GstEvent * event);
+static GstFlowReturn gst_qtdemux_chain (GstPad * sinkpad, GstObject * parent,
+    GstBuffer * inbuf);
+static gboolean gst_qtdemux_handle_sink_event (GstPad * pad, GstObject * parent,
+    GstEvent * event);
 
 static gboolean qtdemux_parse_moov (GstQTDemux * qtdemux,
     const guint8 * buffer, guint length);
@@ -1454,10 +1456,11 @@ parse_error:
 }
 
 static gboolean
-gst_qtdemux_handle_src_event (GstPad * pad, GstEvent * event)
+gst_qtdemux_handle_src_event (GstPad * pad, GstObject * parent,
+    GstEvent * event)
 {
   gboolean res = TRUE;
-  GstQTDemux *qtdemux = GST_QTDEMUX (gst_pad_get_parent (pad));
+  GstQTDemux *qtdemux = GST_QTDEMUX (parent);
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_SEEK:
@@ -1494,11 +1497,9 @@ gst_qtdemux_handle_src_event (GstPad * pad, GstEvent * event)
       gst_event_unref (event);
       break;
     default:
-      res = gst_pad_event_default (pad, event);
+      res = gst_pad_event_default (pad, parent, event);
       break;
   }
-
-  gst_object_unref (qtdemux);
 
 done:
   return res;
@@ -1586,9 +1587,10 @@ gst_qtdemux_find_sample (GstQTDemux * qtdemux, gint64 byte_pos, gboolean fw,
 }
 
 static gboolean
-gst_qtdemux_handle_sink_event (GstPad * sinkpad, GstEvent * event)
+gst_qtdemux_handle_sink_event (GstPad * sinkpad, GstObject * parent,
+    GstEvent * event)
 {
-  GstQTDemux *demux = GST_QTDEMUX (GST_PAD_PARENT (sinkpad));
+  GstQTDemux *demux = GST_QTDEMUX (parent);
   gboolean res;
 
   GST_LOG_OBJECT (demux, "handling %s event", GST_EVENT_TYPE_NAME (event));
@@ -1716,7 +1718,7 @@ gst_qtdemux_handle_sink_event (GstPad * sinkpad, GstEvent * event)
       break;
   }
 
-  res = gst_pad_event_default (demux->sinkpad, event);
+  res = gst_pad_event_default (demux->sinkpad, parent, event);
 
 drop:
   return res;
@@ -4013,12 +4015,12 @@ done:
 
 /* FIXME, unverified after edit list updates */
 static GstFlowReturn
-gst_qtdemux_chain (GstPad * sinkpad, GstBuffer * inbuf)
+gst_qtdemux_chain (GstPad * sinkpad, GstObject * parent, GstBuffer * inbuf)
 {
   GstQTDemux *demux;
   GstFlowReturn ret = GST_FLOW_OK;
 
-  demux = GST_QTDEMUX (gst_pad_get_parent (sinkpad));
+  demux = GST_QTDEMUX (parent);
 
   gst_adapter_push (demux->adapter, inbuf);
 
@@ -4385,7 +4387,6 @@ gst_qtdemux_chain (GstPad * sinkpad, GstBuffer * inbuf)
         demux->neededbytes);
   }
 done:
-  gst_object_unref (demux);
 
   return ret;
 

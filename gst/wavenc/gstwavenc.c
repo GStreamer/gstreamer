@@ -107,8 +107,10 @@ static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",
 #define gst_wavenc_parent_class parent_class
 G_DEFINE_TYPE (GstWavEnc, gst_wavenc, GST_TYPE_ELEMENT);
 
-static GstFlowReturn gst_wavenc_chain (GstPad * pad, GstBuffer * buf);
-static gboolean gst_wavenc_event (GstPad * pad, GstEvent * event);
+static GstFlowReturn gst_wavenc_chain (GstPad * pad, GstObject * parent,
+    GstBuffer * buf);
+static gboolean gst_wavenc_event (GstPad * pad, GstObject * parent,
+    GstEvent * event);
 static GstStateChangeReturn gst_wavenc_change_state (GstElement * element,
     GstStateChange transition);
 static gboolean gst_wavenc_sink_setcaps (GstPad * pad, GstCaps * caps);
@@ -582,12 +584,12 @@ write_labels (GstWavEnc * wavenc)
 #endif
 
 static gboolean
-gst_wavenc_event (GstPad * pad, GstEvent * event)
+gst_wavenc_event (GstPad * pad, GstObject * parent, GstEvent * event)
 {
   gboolean res = TRUE;
   GstWavEnc *wavenc;
 
-  wavenc = GST_WAVENC (gst_pad_get_parent (pad));
+  wavenc = GST_WAVENC (parent);
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_CAPS:
@@ -618,7 +620,7 @@ gst_wavenc_event (GstPad * pad, GstEvent * event)
       wavenc->finished_properly = TRUE;
 
       /* and forward the EOS event */
-      res = gst_pad_event_default (pad, event);
+      res = gst_pad_event_default (pad, parent, event);
       break;
     }
     case GST_EVENT_SEGMENT:
@@ -627,18 +629,17 @@ gst_wavenc_event (GstPad * pad, GstEvent * event)
       gst_event_unref (event);
       break;
     default:
-      res = gst_pad_event_default (pad, event);
+      res = gst_pad_event_default (pad, parent, event);
       break;
   }
 
-  gst_object_unref (wavenc);
   return res;
 }
 
 static GstFlowReturn
-gst_wavenc_chain (GstPad * pad, GstBuffer * buf)
+gst_wavenc_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
 {
-  GstWavEnc *wavenc = GST_WAVENC (GST_PAD_PARENT (pad));
+  GstWavEnc *wavenc = GST_WAVENC (parent);
   GstFlowReturn flow = GST_FLOW_OK;
 
   g_return_val_if_fail (wavenc->channels > 0, GST_FLOW_WRONG_STATE);
