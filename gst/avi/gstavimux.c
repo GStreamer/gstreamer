@@ -977,7 +977,7 @@ gst_avi_mux_request_new_pad (GstElement * element,
   g_free (name);
 
   avipad->collect = gst_collect_pads_add_pad (avimux->collect,
-      newpad, sizeof (GstAviCollectData));
+      newpad, sizeof (GstAviCollectData), NULL);
   ((GstAviCollectData *) (avipad->collect))->avipad = avipad;
   /* FIXME: hacked way to override/extend the event function of
    * GstCollectPads; because it sets its own event function giving the

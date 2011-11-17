@@ -366,9 +366,9 @@ gst_smpte_init (GstSMPTE * smpte)
   gst_collect_pads_start (smpte->collect);
 
   gst_collect_pads_add_pad (smpte->collect, smpte->sinkpad1,
-      sizeof (GstCollectData));
+      sizeof (GstCollectData), NULL);
   gst_collect_pads_add_pad (smpte->collect, smpte->sinkpad2,
-      sizeof (GstCollectData));
+      sizeof (GstCollectData), NULL);
 
   smpte->fps = DEFAULT_PROP_FPS;
   smpte->type = DEFAULT_PROP_TYPE;

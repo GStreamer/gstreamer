@@ -1231,7 +1231,7 @@ gst_videomixer_request_new_pad (GstElement * element,
 
     mixcol = (GstVideoMixerCollect *)
         gst_collect_pads_add_pad (mix->collect, GST_PAD (mixpad),
-        sizeof (GstVideoMixerCollect));
+        sizeof (GstVideoMixerCollect), NULL);
 
     /* FIXME: hacked way to override/extend the event function of
      * GstCollectPads; because it sets its own event function giving the

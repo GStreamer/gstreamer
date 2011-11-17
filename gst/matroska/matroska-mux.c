@@ -1901,7 +1901,7 @@ gst_matroska_mux_request_new_pad (GstElement * element,
   newpad = gst_pad_new_from_template (templ, pad_name);
   g_free (name);
   collect_pad = (GstMatroskaPad *)
-      gst_collect_pads_add_pad_full (mux->collect, newpad,
+      gst_collect_pads_add_pad (mux->collect, newpad,
       sizeof (GstMatroskaPad),
       (GstCollectDataDestroyNotify) gst_matroska_pad_free);
 

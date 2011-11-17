@@ -500,7 +500,8 @@ gst_interleave_request_new_pad (GstElement * element, GstPadTemplate * templ,
   gst_pad_set_getcaps_function (new_pad,
       GST_DEBUG_FUNCPTR (gst_interleave_sink_getcaps));
 
-  gst_collect_pads_add_pad (self->collect, new_pad, sizeof (GstCollectData));
+  gst_collect_pads_add_pad (self->collect, new_pad, sizeof (GstCollectData),
+      NULL);
 
   /* FIXME: hacked way to override/extend the event function of
    * GstCollectPads; because it sets its own event function giving the
