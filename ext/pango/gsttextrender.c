@@ -465,7 +465,7 @@ gst_text_renderer_image_to_argb (GstTextRender * render, guchar * pixbuf,
 }
 
 static GstFlowReturn
-gst_text_render_chain (GstPad * pad, GstBuffer * inbuf)
+gst_text_render_chain (GstPad * pad, GstObject * parent, GstBuffer * inbuf)
 {
   GstTextRender *render;
   GstFlowReturn ret;
@@ -476,7 +476,7 @@ gst_text_render_chain (GstPad * pad, GstBuffer * inbuf)
   gint n;
   gint xpos, ypos;
 
-  render = GST_TEXT_RENDER (gst_pad_get_parent (pad));
+  render = GST_TEXT_RENDER (parent);
 
   data = gst_buffer_map (inbuf, &size, NULL, GST_MAP_READ);
 
@@ -574,7 +574,7 @@ done:
   if (caps)
     gst_caps_unref (caps);
   gst_buffer_unref (inbuf);
-  gst_object_unref (render);
+
   return ret;
 }
 

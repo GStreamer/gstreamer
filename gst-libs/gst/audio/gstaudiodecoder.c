@@ -276,12 +276,15 @@ static GstFlowReturn gst_audio_decoder_chain_reverse (GstAudioDecoder *
 
 static GstStateChangeReturn gst_audio_decoder_change_state (GstElement *
     element, GstStateChange transition);
-static gboolean gst_audio_decoder_sink_event (GstPad * pad, GstEvent * event);
-static gboolean gst_audio_decoder_src_event (GstPad * pad, GstEvent * event);
+static gboolean gst_audio_decoder_sink_event (GstPad * pad, GstObject * parent,
+    GstEvent * event);
+static gboolean gst_audio_decoder_src_event (GstPad * pad, GstObject * parent,
+    GstEvent * event);
 static gboolean gst_audio_decoder_sink_setcaps (GstAudioDecoder * dec,
     GstCaps * caps);
 gboolean gst_audio_decoder_src_setcaps (GstAudioDecoder * dec, GstCaps * caps);
-static GstFlowReturn gst_audio_decoder_chain (GstPad * pad, GstBuffer * buf);
+static GstFlowReturn gst_audio_decoder_chain (GstPad * pad, GstObject * parent,
+    GstBuffer * buf);
 static gboolean gst_audio_decoder_src_query (GstPad * pad, GstObject * parent,
     GstQuery * query);
 static gboolean gst_audio_decoder_sink_query (GstPad * pad, GstObject * parent,
@@ -1296,12 +1299,12 @@ gst_audio_decoder_chain_reverse (GstAudioDecoder * dec, GstBuffer * buf)
 }
 
 static GstFlowReturn
-gst_audio_decoder_chain (GstPad * pad, GstBuffer * buffer)
+gst_audio_decoder_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
 {
   GstAudioDecoder *dec;
   GstFlowReturn ret;
 
-  dec = GST_AUDIO_DECODER (GST_PAD_PARENT (pad));
+  dec = GST_AUDIO_DECODER (parent);
 
   GST_LOG_OBJECT (dec,
       "received buffer of size %d with ts %" GST_TIME_FORMAT
@@ -1479,14 +1482,15 @@ gst_audio_decoder_sink_eventfunc (GstAudioDecoder * dec, GstEvent * event)
 }
 
 static gboolean
-gst_audio_decoder_sink_event (GstPad * pad, GstEvent * event)
+gst_audio_decoder_sink_event (GstPad * pad, GstObject * parent,
+    GstEvent * event)
 {
   GstAudioDecoder *dec;
   GstAudioDecoderClass *klass;
   gboolean handled = FALSE;
   gboolean ret = TRUE;
 
-  dec = GST_AUDIO_DECODER (gst_pad_get_parent (pad));
+  dec = GST_AUDIO_DECODER (parent);
   klass = GST_AUDIO_DECODER_GET_CLASS (dec);
 
   GST_DEBUG_OBJECT (dec, "received event %d, %s", GST_EVENT_TYPE (event),
@@ -1510,7 +1514,7 @@ gst_audio_decoder_sink_event (GstPad * pad, GstEvent * event)
     if (!GST_EVENT_IS_SERIALIZED (event)
         || GST_EVENT_TYPE (event) == GST_EVENT_EOS
         || GST_EVENT_TYPE (event) == GST_EVENT_FLUSH_STOP) {
-      ret = gst_pad_event_default (pad, event);
+      ret = gst_pad_event_default (pad, parent, event);
     } else {
       GST_AUDIO_DECODER_STREAM_LOCK (dec);
       dec->priv->pending_events =
@@ -1522,7 +1526,6 @@ gst_audio_decoder_sink_event (GstPad * pad, GstEvent * event)
 
   GST_DEBUG_OBJECT (dec, "event handled");
 
-  gst_object_unref (dec);
   return ret;
 }
 
@@ -1585,16 +1588,12 @@ gst_audio_decoder_do_seek (GstAudioDecoder * dec, GstEvent * event)
 }
 
 static gboolean
-gst_audio_decoder_src_event (GstPad * pad, GstEvent * event)
+gst_audio_decoder_src_event (GstPad * pad, GstObject * parent, GstEvent * event)
 {
   GstAudioDecoder *dec;
   gboolean res = FALSE;
 
-  dec = GST_AUDIO_DECODER (gst_pad_get_parent (pad));
-  if (G_UNLIKELY (dec == NULL)) {
-    gst_event_unref (event);
-    return FALSE;
-  }
+  dec = GST_AUDIO_DECODER (parent);
 
   GST_DEBUG_OBJECT (dec, "received event %d, %s", GST_EVENT_TYPE (event),
       GST_EVENT_TYPE_NAME (event));
@@ -1648,8 +1647,6 @@ gst_audio_decoder_src_event (GstPad * pad, GstEvent * event)
       break;
   }
 done:
-  gst_object_unref (dec);
-
   return res;
 
   /* ERRORS */

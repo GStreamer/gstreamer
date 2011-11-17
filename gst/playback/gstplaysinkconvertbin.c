@@ -248,10 +248,10 @@ unblock:
 }
 
 static gboolean
-gst_play_sink_convert_bin_sink_event (GstPad * pad, GstEvent * event)
+gst_play_sink_convert_bin_sink_event (GstPad * pad, GstObject * parent,
+    GstEvent * event)
 {
-  GstPlaySinkConvertBin *self =
-      GST_PLAY_SINK_CONVERT_BIN (gst_pad_get_parent (pad));
+  GstPlaySinkConvertBin *self = GST_PLAY_SINK_CONVERT_BIN (parent);
   gboolean ret;
 
   switch (GST_EVENT_TYPE (event)) {
@@ -267,7 +267,7 @@ gst_play_sink_convert_bin_sink_event (GstPad * pad, GstEvent * event)
       break;
   }
 
-  ret = gst_proxy_pad_event_default (pad, gst_event_ref (event));
+  ret = gst_proxy_pad_event_default (pad, parent, gst_event_ref (event));
 
   if (GST_EVENT_TYPE (event) == GST_EVENT_SEGMENT) {
     GstSegment seg;
@@ -289,7 +289,6 @@ gst_play_sink_convert_bin_sink_event (GstPad * pad, GstEvent * event)
   }
 
   gst_event_unref (event);
-  gst_object_unref (self);
 
   return ret;
 }

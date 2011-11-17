@@ -99,10 +99,9 @@ gst_stream_splitter_dispose (GObject * object)
 }
 
 static GstFlowReturn
-gst_stream_splitter_chain (GstPad * pad, GstBuffer * buf)
+gst_stream_splitter_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
 {
-  GstStreamSplitter *stream_splitter =
-      (GstStreamSplitter *) GST_PAD_PARENT (pad);
+  GstStreamSplitter *stream_splitter = (GstStreamSplitter *) parent;
   GstFlowReturn res;
   GstPad *srcpad = NULL;
 
@@ -138,10 +137,10 @@ nopad:
 }
 
 static gboolean
-gst_stream_splitter_sink_event (GstPad * pad, GstEvent * event)
+gst_stream_splitter_sink_event (GstPad * pad, GstObject * parent,
+    GstEvent * event)
 {
-  GstStreamSplitter *stream_splitter =
-      (GstStreamSplitter *) GST_PAD_PARENT (pad);
+  GstStreamSplitter *stream_splitter = (GstStreamSplitter *) parent;
   gboolean res = TRUE;
   gboolean toall = FALSE;
   gboolean store = FALSE;
@@ -381,10 +380,10 @@ beach:
 }
 
 static gboolean
-gst_stream_splitter_src_event (GstPad * pad, GstEvent * event)
+gst_stream_splitter_src_event (GstPad * pad, GstObject * parent,
+    GstEvent * event)
 {
-  GstStreamSplitter *stream_splitter =
-      (GstStreamSplitter *) GST_PAD_PARENT (pad);
+  GstStreamSplitter *stream_splitter = (GstStreamSplitter *) parent;
 
   GST_DEBUG_OBJECT (pad, "%s", GST_EVENT_TYPE_NAME (event));
 

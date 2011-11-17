@@ -248,9 +248,12 @@ G_DEFINE_TYPE_WITH_CODE (GstTheoraEnc, gst_theora_enc,
 
 static GstCaps *theora_enc_src_caps;
 
-static gboolean theora_enc_sink_event (GstPad * pad, GstEvent * event);
-static gboolean theora_enc_src_event (GstPad * pad, GstEvent * event);
-static GstFlowReturn theora_enc_chain (GstPad * pad, GstBuffer * buffer);
+static gboolean theora_enc_sink_event (GstPad * pad, GstObject * parent,
+    GstEvent * event);
+static gboolean theora_enc_src_event (GstPad * pad, GstObject * parent,
+    GstEvent * event);
+static GstFlowReturn theora_enc_chain (GstPad * pad, GstObject * parent,
+    GstBuffer * buffer);
 static GstStateChangeReturn theora_enc_change_state (GstElement * element,
     GstStateChange transition);
 static gboolean theora_enc_sink_query (GstPad * pad, GstObject * parent,
@@ -894,13 +897,13 @@ theora_enc_force_keyframe (GstTheoraEnc * enc)
 }
 
 static gboolean
-theora_enc_sink_event (GstPad * pad, GstEvent * event)
+theora_enc_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
 {
   GstTheoraEnc *enc;
   ogg_packet op;
   gboolean res;
 
-  enc = GST_THEORA_ENC (GST_PAD_PARENT (pad));
+  enc = GST_THEORA_ENC (parent);
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_CAPS:
@@ -962,12 +965,12 @@ theora_enc_sink_event (GstPad * pad, GstEvent * event)
 }
 
 static gboolean
-theora_enc_src_event (GstPad * pad, GstEvent * event)
+theora_enc_src_event (GstPad * pad, GstObject * parent, GstEvent * event)
 {
   GstTheoraEnc *enc;
   gboolean res = TRUE;
 
-  enc = GST_THEORA_ENC (GST_PAD_PARENT (pad));
+  enc = GST_THEORA_ENC (parent);
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_CUSTOM_UPSTREAM:
@@ -1232,7 +1235,7 @@ data_push:
 }
 
 static GstFlowReturn
-theora_enc_chain (GstPad * pad, GstBuffer * buffer)
+theora_enc_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
 {
   GstTheoraEnc *enc;
   ogg_packet op;
@@ -1240,7 +1243,7 @@ theora_enc_chain (GstPad * pad, GstBuffer * buffer)
   GstFlowReturn ret;
   gboolean force_keyframe;
 
-  enc = GST_THEORA_ENC (GST_PAD_PARENT (pad));
+  enc = GST_THEORA_ENC (parent);
 
   /* we keep track of two timelines.
    * - The timestamps from the incoming buffers, which we copy to the outgoing

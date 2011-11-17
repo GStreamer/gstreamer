@@ -75,9 +75,12 @@ G_DEFINE_TYPE_WITH_CODE (GstGDPPay, gst_gdp_pay, GST_TYPE_ELEMENT, _do_init);
 
 static void gst_gdp_pay_reset (GstGDPPay * this);
 
-static GstFlowReturn gst_gdp_pay_chain (GstPad * pad, GstBuffer * buffer);
-static gboolean gst_gdp_pay_src_event (GstPad * pad, GstEvent * event);
-static gboolean gst_gdp_pay_sink_event (GstPad * pad, GstEvent * event);
+static GstFlowReturn gst_gdp_pay_chain (GstPad * pad, GstObject * parent,
+    GstBuffer * buffer);
+static gboolean gst_gdp_pay_src_event (GstPad * pad, GstObject * parent,
+    GstEvent * event);
+static gboolean gst_gdp_pay_sink_event (GstPad * pad, GstObject * parent,
+    GstEvent * event);
 
 static GstStateChangeReturn gst_gdp_pay_change_state (GstElement *
     element, GstStateChange transition);
@@ -548,7 +551,7 @@ gst_gdp_queue_buffer (GstGDPPay * this, GstBuffer * buffer)
 }
 
 static GstFlowReturn
-gst_gdp_pay_chain (GstPad * pad, GstBuffer * buffer)
+gst_gdp_pay_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
 {
   GstGDPPay *this;
 #if 0
@@ -557,7 +560,7 @@ gst_gdp_pay_chain (GstPad * pad, GstBuffer * buffer)
   GstBuffer *outbuffer;
   GstFlowReturn ret;
 
-  this = GST_GDP_PAY (gst_pad_get_parent (pad));
+  this = GST_GDP_PAY (parent);
 
   /* we should have received a new_segment before, otherwise it's a bug.
    * fake one in that case */
@@ -636,7 +639,7 @@ gst_gdp_pay_chain (GstPad * pad, GstBuffer * buffer)
 
 done:
   gst_buffer_unref (buffer);
-  gst_object_unref (this);
+
   return ret;
 
   /* ERRORS */
@@ -671,10 +674,10 @@ no_buffer:
 }
 
 static gboolean
-gst_gdp_pay_sink_event (GstPad * pad, GstEvent * event)
+gst_gdp_pay_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
 {
   GstBuffer *outbuffer;
-  GstGDPPay *this = GST_GDP_PAY (gst_pad_get_parent (pad));
+  GstGDPPay *this = GST_GDP_PAY (parent);
   GstFlowReturn flowret;
   GstCaps *caps;
   gboolean ret = TRUE;
@@ -751,7 +754,6 @@ gst_gdp_pay_sink_event (GstPad * pad, GstEvent * event)
 
 done:
   gst_event_unref (event);
-  gst_object_unref (this);
 
   return ret;
 
@@ -780,12 +782,12 @@ push_error:
 }
 
 static gboolean
-gst_gdp_pay_src_event (GstPad * pad, GstEvent * event)
+gst_gdp_pay_src_event (GstPad * pad, GstObject * parent, GstEvent * event)
 {
   GstGDPPay *this;
   gboolean res = TRUE;
 
-  this = GST_GDP_PAY (gst_pad_get_parent (pad));
+  this = GST_GDP_PAY (parent);
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_SEEK:
@@ -800,7 +802,6 @@ gst_gdp_pay_src_event (GstPad * pad, GstEvent * event)
       res = gst_pad_push_event (this->sinkpad, event);
       break;
   }
-  gst_object_unref (this);
 
   return res;
 }

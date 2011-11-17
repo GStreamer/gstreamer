@@ -75,10 +75,12 @@ GST_STATIC_PAD_TEMPLATE ("src",
 #define gst_vorbis_parse_parent_class parent_class
 G_DEFINE_TYPE (GstVorbisParse, gst_vorbis_parse, GST_TYPE_ELEMENT);
 
-static GstFlowReturn vorbis_parse_chain (GstPad * pad, GstBuffer * buffer);
+static GstFlowReturn vorbis_parse_chain (GstPad * pad, GstObject * parent,
+    GstBuffer * buffer);
 static GstStateChangeReturn vorbis_parse_change_state (GstElement * element,
     GstStateChange transition);
-static gboolean vorbis_parse_sink_event (GstPad * pad, GstEvent * event);
+static gboolean vorbis_parse_sink_event (GstPad * pad, GstObject * parent,
+    GstEvent * event);
 static gboolean vorbis_parse_src_query (GstPad * pad, GstObject * parent,
     GstQuery * query);
 static gboolean vorbis_parse_convert (GstPad * pad, GstFormat src_format,
@@ -174,7 +176,7 @@ vorbis_parse_drain_event_queue (GstVorbisParse * parse)
     GstEvent *event;
 
     event = GST_EVENT_CAST (g_queue_pop_head (parse->event_queue));
-    gst_pad_event_default (parse->sinkpad, event);
+    gst_pad_event_default (parse->sinkpad, GST_OBJECT_CAST (parse), event);
   }
 }
 
@@ -416,12 +418,12 @@ vorbis_parse_parse_packet (GstVorbisParse * parse, GstBuffer * buf)
 }
 
 static GstFlowReturn
-vorbis_parse_chain (GstPad * pad, GstBuffer * buffer)
+vorbis_parse_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
 {
   GstVorbisParseClass *klass;
   GstVorbisParse *parse;
 
-  parse = GST_VORBIS_PARSE (GST_PAD_PARENT (pad));
+  parse = GST_VORBIS_PARSE (parent);
   klass = GST_VORBIS_PARSE_CLASS (G_OBJECT_GET_CLASS (parse));
 
   g_assert (klass->parse_packet != NULL);
@@ -440,33 +442,31 @@ vorbis_parse_queue_event (GstVorbisParse * parse, GstEvent * event)
 }
 
 static gboolean
-vorbis_parse_sink_event (GstPad * pad, GstEvent * event)
+vorbis_parse_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
 {
   gboolean ret;
   GstVorbisParse *parse;
 
-  parse = GST_VORBIS_PARSE (gst_pad_get_parent (pad));
+  parse = GST_VORBIS_PARSE (parent);
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_FLUSH_START:
       vorbis_parse_clear_queue (parse);
       parse->prev_granulepos = -1;
       parse->prev_blocksize = -1;
-      ret = gst_pad_event_default (pad, event);
+      ret = gst_pad_event_default (pad, parent, event);
       break;
     case GST_EVENT_EOS:
       vorbis_parse_drain_queue_prematurely (parse);
-      ret = gst_pad_event_default (pad, event);
+      ret = gst_pad_event_default (pad, parent, event);
       break;
     default:
       if (!parse->streamheader_sent && GST_EVENT_IS_SERIALIZED (event))
         ret = vorbis_parse_queue_event (parse, event);
       else
-        ret = gst_pad_event_default (pad, event);
+        ret = gst_pad_event_default (pad, parent, event);
       break;
   }
-
-  gst_object_unref (parse);
 
   return ret;
 }

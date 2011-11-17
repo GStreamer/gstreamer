@@ -1629,13 +1629,14 @@ gst_subtitle_overlay_class_init (GstSubtitleOverlayClass * klass)
 }
 
 static GstFlowReturn
-gst_subtitle_overlay_src_proxy_chain (GstPad * proxypad, GstBuffer * buffer)
+gst_subtitle_overlay_src_proxy_chain (GstPad * proxypad, GstObject * parent,
+    GstBuffer * buffer)
 {
   GstPad *ghostpad;
   GstSubtitleOverlay *self;
   GstFlowReturn ret;
 
-  ghostpad = GST_PAD_CAST (gst_pad_get_parent (proxypad));
+  ghostpad = GST_PAD_CAST (parent);
   if (G_UNLIKELY (!ghostpad)) {
     gst_buffer_unref (buffer);
     return GST_FLOW_ERROR;
@@ -1647,7 +1648,7 @@ gst_subtitle_overlay_src_proxy_chain (GstPad * proxypad, GstBuffer * buffer)
     return GST_FLOW_ERROR;
   }
 
-  ret = gst_proxy_pad_chain_default (proxypad, buffer);
+  ret = gst_proxy_pad_chain_default (proxypad, parent, buffer);
 
   if (IS_VIDEO_CHAIN_IGNORE_ERROR (ret)) {
     GST_ERROR_OBJECT (self, "Downstream chain error: %s",
@@ -1656,20 +1657,20 @@ gst_subtitle_overlay_src_proxy_chain (GstPad * proxypad, GstBuffer * buffer)
   }
 
   gst_object_unref (self);
-  gst_object_unref (ghostpad);
 
   return ret;
 }
 
 static gboolean
-gst_subtitle_overlay_src_proxy_event (GstPad * proxypad, GstEvent * event)
+gst_subtitle_overlay_src_proxy_event (GstPad * proxypad, GstObject * parent,
+    GstEvent * event)
 {
   GstPad *ghostpad = NULL;
   GstSubtitleOverlay *self = NULL;
   gboolean ret = FALSE;
   const GstStructure *s;
 
-  ghostpad = GST_PAD_CAST (gst_pad_get_parent (proxypad));
+  ghostpad = GST_PAD_CAST (parent);
   if (G_UNLIKELY (!ghostpad))
     goto out;
   self = GST_SUBTITLE_OVERLAY_CAST (gst_pad_get_parent (ghostpad));
@@ -1684,7 +1685,7 @@ gst_subtitle_overlay_src_proxy_event (GstPad * proxypad, GstEvent * event)
     event = NULL;
     ret = TRUE;
   } else {
-    ret = gst_proxy_pad_event_default (proxypad, event);
+    ret = gst_proxy_pad_event_default (proxypad, parent, event);
     event = NULL;
   }
 
@@ -1693,8 +1694,7 @@ out:
     gst_event_unref (event);
   if (self)
     gst_object_unref (self);
-  if (ghostpad)
-    gst_object_unref (ghostpad);
+
   return ret;
 }
 
@@ -1744,9 +1744,10 @@ out:
 }
 
 static gboolean
-gst_subtitle_overlay_video_sink_event (GstPad * pad, GstEvent * event)
+gst_subtitle_overlay_video_sink_event (GstPad * pad, GstObject * parent,
+    GstEvent * event)
 {
-  GstSubtitleOverlay *self = GST_SUBTITLE_OVERLAY (gst_pad_get_parent (pad));
+  GstSubtitleOverlay *self = GST_SUBTITLE_OVERLAY (parent);
   gboolean ret;
 
   switch (GST_EVENT_TYPE (event)) {
@@ -1772,7 +1773,7 @@ gst_subtitle_overlay_video_sink_event (GstPad * pad, GstEvent * event)
       break;
   }
 
-  ret = gst_proxy_pad_event_default (pad, gst_event_ref (event));
+  ret = gst_proxy_pad_event_default (pad, parent, gst_event_ref (event));
 
   if (GST_EVENT_TYPE (event) == GST_EVENT_SEGMENT) {
     GST_DEBUG_OBJECT (pad, "segment event: %" GST_PTR_FORMAT, event);
@@ -1784,7 +1785,6 @@ gst_subtitle_overlay_video_sink_event (GstPad * pad, GstEvent * event)
 
 done:
   gst_event_unref (event);
-  gst_object_unref (self);
 
   return ret;
 
@@ -1799,10 +1799,11 @@ invalid_format:
 }
 
 static GstFlowReturn
-gst_subtitle_overlay_video_sink_chain (GstPad * pad, GstBuffer * buffer)
+gst_subtitle_overlay_video_sink_chain (GstPad * pad, GstObject * parent,
+    GstBuffer * buffer)
 {
-  GstSubtitleOverlay *self = GST_SUBTITLE_OVERLAY (GST_PAD_PARENT (pad));
-  GstFlowReturn ret = gst_proxy_pad_chain_default (pad, buffer);
+  GstSubtitleOverlay *self = GST_SUBTITLE_OVERLAY (parent);
+  GstFlowReturn ret = gst_proxy_pad_chain_default (pad, parent, buffer);
 
   if (G_UNLIKELY (self->downstream_chain_error) || self->passthrough_identity) {
     return ret;
@@ -1822,15 +1823,16 @@ gst_subtitle_overlay_video_sink_chain (GstPad * pad, GstBuffer * buffer)
 }
 
 static GstFlowReturn
-gst_subtitle_overlay_subtitle_sink_chain (GstPad * pad, GstBuffer * buffer)
+gst_subtitle_overlay_subtitle_sink_chain (GstPad * pad, GstObject * parent,
+    GstBuffer * buffer)
 {
-  GstSubtitleOverlay *self = GST_SUBTITLE_OVERLAY (GST_PAD_PARENT (pad));
+  GstSubtitleOverlay *self = GST_SUBTITLE_OVERLAY (parent);
 
   if (self->subtitle_error) {
     gst_buffer_unref (buffer);
     return GST_FLOW_OK;
   } else {
-    GstFlowReturn ret = gst_proxy_pad_chain_default (pad, buffer);
+    GstFlowReturn ret = gst_proxy_pad_chain_default (pad, parent, buffer);
 
     if (IS_SUBTITLE_CHAIN_IGNORE_ERROR (ret)) {
       GST_DEBUG_OBJECT (self, "Subtitle chain error: %s",
@@ -1970,9 +1972,10 @@ gst_subtitle_overlay_subtitle_sink_unlink (GstPad * pad)
 }
 
 static gboolean
-gst_subtitle_overlay_subtitle_sink_event (GstPad * pad, GstEvent * event)
+gst_subtitle_overlay_subtitle_sink_event (GstPad * pad, GstObject * parent,
+    GstEvent * event)
 {
-  GstSubtitleOverlay *self = GST_SUBTITLE_OVERLAY (gst_pad_get_parent (pad));
+  GstSubtitleOverlay *self = GST_SUBTITLE_OVERLAY (parent);
   gboolean ret;
 
   if (GST_EVENT_TYPE (event) == GST_EVENT_CUSTOM_DOWNSTREAM_OOB &&
@@ -2026,7 +2029,7 @@ gst_subtitle_overlay_subtitle_sink_event (GstPad * pad, GstEvent * event)
       break;
   }
 
-  ret = gst_proxy_pad_event_default (pad, gst_event_ref (event));
+  ret = gst_proxy_pad_event_default (pad, parent, gst_event_ref (event));
 
   if (GST_EVENT_TYPE (event) == GST_EVENT_SEGMENT) {
     GST_DEBUG_OBJECT (pad, "segment event: %" GST_PTR_FORMAT, event);
@@ -2037,7 +2040,6 @@ gst_subtitle_overlay_subtitle_sink_event (GstPad * pad, GstEvent * event)
   gst_event_unref (event);
 
 out:
-  gst_object_unref (self);
   return ret;
 }
 

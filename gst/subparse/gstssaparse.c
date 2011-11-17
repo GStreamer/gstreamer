@@ -50,9 +50,12 @@ G_DEFINE_TYPE (GstSsaParse, gst_ssa_parse, GST_TYPE_ELEMENT);
 static GstStateChangeReturn gst_ssa_parse_change_state (GstElement *
     element, GstStateChange transition);
 static gboolean gst_ssa_parse_setcaps (GstPad * sinkpad, GstCaps * caps);
-static gboolean gst_ssa_parse_src_event (GstPad * pad, GstEvent * event);
-static gboolean gst_ssa_parse_sink_event (GstPad * pad, GstEvent * event);
-static GstFlowReturn gst_ssa_parse_chain (GstPad * sinkpad, GstBuffer * buf);
+static gboolean gst_ssa_parse_src_event (GstPad * pad, GstObject * parent,
+    GstEvent * event);
+static gboolean gst_ssa_parse_sink_event (GstPad * pad, GstObject * parent,
+    GstEvent * event);
+static GstFlowReturn gst_ssa_parse_chain (GstPad * sinkpad, GstObject * parent,
+    GstBuffer * buf);
 
 static void
 gst_ssa_parse_dispose (GObject * object)
@@ -112,13 +115,13 @@ gst_ssa_parse_class_init (GstSsaParseClass * klass)
 }
 
 static gboolean
-gst_ssa_parse_src_event (GstPad * pad, GstEvent * event)
+gst_ssa_parse_src_event (GstPad * pad, GstObject * parent, GstEvent * event)
 {
-  return gst_pad_event_default (pad, event);
+  return gst_pad_event_default (pad, parent, event);
 }
 
 static gboolean
-gst_ssa_parse_sink_event (GstPad * pad, GstEvent * event)
+gst_ssa_parse_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
 {
   gboolean res;
 
@@ -133,7 +136,7 @@ gst_ssa_parse_sink_event (GstPad * pad, GstEvent * event)
       break;
     }
     default:
-      res = gst_pad_event_default (pad, event);
+      res = gst_pad_event_default (pad, parent, event);
       break;
   }
   return res;
@@ -304,10 +307,10 @@ gst_ssa_parse_push_line (GstSsaParse * parse, gchar * txt,
 }
 
 static GstFlowReturn
-gst_ssa_parse_chain (GstPad * sinkpad, GstBuffer * buf)
+gst_ssa_parse_chain (GstPad * sinkpad, GstObject * parent, GstBuffer * buf)
 {
   GstFlowReturn ret;
-  GstSsaParse *parse = GST_SSA_PARSE (GST_PAD_PARENT (sinkpad));
+  GstSsaParse *parse = GST_SSA_PARSE (parent);
   GstClockTime ts;
   gchar *txt;
   gchar *data;

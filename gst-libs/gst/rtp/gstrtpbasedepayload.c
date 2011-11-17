@@ -70,9 +70,9 @@ static void gst_rtp_base_depayload_get_property (GObject * object,
     guint prop_id, GValue * value, GParamSpec * pspec);
 
 static GstFlowReturn gst_rtp_base_depayload_chain (GstPad * pad,
-    GstBuffer * in);
+    GstObject * parent, GstBuffer * in);
 static gboolean gst_rtp_base_depayload_handle_sink_event (GstPad * pad,
-    GstEvent * event);
+    GstObject * parent, GstEvent * event);
 
 static GstStateChangeReturn gst_rtp_base_depayload_change_state (GstElement *
     element, GstStateChange transition);
@@ -236,7 +236,7 @@ gst_rtp_base_depayload_setcaps (GstRTPBaseDepayload * filter, GstCaps * caps)
 }
 
 static GstFlowReturn
-gst_rtp_base_depayload_chain (GstPad * pad, GstBuffer * in)
+gst_rtp_base_depayload_chain (GstPad * pad, GstObject * parent, GstBuffer * in)
 {
   GstRTPBaseDepayload *filter;
   GstRTPBaseDepayloadPrivate *priv;
@@ -250,7 +250,7 @@ gst_rtp_base_depayload_chain (GstPad * pad, GstBuffer * in)
   gint gap;
   GstRTPBuffer rtp;
 
-  filter = GST_RTP_BASE_DEPAYLOAD (GST_OBJECT_PARENT (pad));
+  filter = GST_RTP_BASE_DEPAYLOAD (parent);
   priv = filter->priv;
 
   /* we must have a setcaps first */
@@ -446,25 +446,20 @@ gst_rtp_base_depayload_handle_event (GstRTPBaseDepayload * filter,
 }
 
 static gboolean
-gst_rtp_base_depayload_handle_sink_event (GstPad * pad, GstEvent * event)
+gst_rtp_base_depayload_handle_sink_event (GstPad * pad, GstObject * parent,
+    GstEvent * event)
 {
   gboolean res = FALSE;
   GstRTPBaseDepayload *filter;
   GstRTPBaseDepayloadClass *bclass;
 
-  filter = GST_RTP_BASE_DEPAYLOAD (gst_pad_get_parent (pad));
-  if (G_UNLIKELY (filter == NULL)) {
-    gst_event_unref (event);
-    return FALSE;
-  }
-
+  filter = GST_RTP_BASE_DEPAYLOAD (parent);
   bclass = GST_RTP_BASE_DEPAYLOAD_GET_CLASS (filter);
   if (bclass->handle_event)
     res = bclass->handle_event (filter, event);
   else
     gst_event_unref (event);
 
-  gst_object_unref (filter);
   return res;
 }
 

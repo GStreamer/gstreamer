@@ -94,10 +94,12 @@ static void theora_parse_get_property (GObject * object, guint prop_id,
 static void theora_parse_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
 
-static GstFlowReturn theora_parse_chain (GstPad * pad, GstBuffer * buffer);
+static GstFlowReturn theora_parse_chain (GstPad * pad, GstObject * parent,
+    GstBuffer * buffer);
 static GstStateChangeReturn theora_parse_change_state (GstElement * element,
     GstStateChange transition);
-static gboolean theora_parse_sink_event (GstPad * pad, GstEvent * event);
+static gboolean theora_parse_sink_event (GstPad * pad, GstObject * parent,
+    GstEvent * event);
 static gboolean theora_parse_src_query (GstPad * pad, GstObject * parent,
     GstQuery * query);
 
@@ -345,7 +347,7 @@ theora_parse_drain_event_queue (GstTheoraParse * parse)
     GstEvent *event;
 
     event = GST_EVENT_CAST (g_queue_pop_head (parse->event_queue));
-    gst_pad_event_default (parse->sinkpad, event);
+    gst_pad_event_default (parse->sinkpad, GST_OBJECT_CAST (parse), event);
   }
 }
 
@@ -639,7 +641,7 @@ theora_parse_queue_buffer (GstTheoraParse * parse, GstBuffer * buf)
 }
 
 static GstFlowReturn
-theora_parse_chain (GstPad * pad, GstBuffer * buffer)
+theora_parse_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
 {
   GstFlowReturn ret;
   GstTheoraParse *parse;
@@ -647,7 +649,7 @@ theora_parse_chain (GstPad * pad, GstBuffer * buffer)
   gsize size;
   gboolean have_header;
 
-  parse = GST_THEORA_PARSE (gst_pad_get_parent (pad));
+  parse = GST_THEORA_PARSE (parent);
 
   have_header = FALSE;
 
@@ -678,8 +680,6 @@ theora_parse_chain (GstPad * pad, GstBuffer * buffer)
     ret = theora_parse_queue_buffer (parse, buffer);
   }
 
-  gst_object_unref (parse);
-
   return ret;
 }
 
@@ -691,33 +691,31 @@ theora_parse_queue_event (GstTheoraParse * parse, GstEvent * event)
 }
 
 static gboolean
-theora_parse_sink_event (GstPad * pad, GstEvent * event)
+theora_parse_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
 {
   gboolean ret;
   GstTheoraParse *parse;
 
-  parse = GST_THEORA_PARSE (gst_pad_get_parent (pad));
+  parse = GST_THEORA_PARSE (parent);
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_FLUSH_STOP:
       theora_parse_clear_queue (parse);
       parse->prev_keyframe = -1;
       parse->prev_frame = -1;
-      ret = gst_pad_event_default (pad, event);
+      ret = gst_pad_event_default (pad, parent, event);
       break;
     case GST_EVENT_EOS:
       theora_parse_drain_queue_prematurely (parse);
-      ret = gst_pad_event_default (pad, event);
+      ret = gst_pad_event_default (pad, parent, event);
       break;
     default:
       if (parse->send_streamheader && GST_EVENT_IS_SERIALIZED (event))
         ret = theora_parse_queue_event (parse, event);
       else
-        ret = gst_pad_event_default (pad, event);
+        ret = gst_pad_event_default (pad, parent, event);
       break;
   }
-
-  gst_object_unref (parse);
 
   return ret;
 }

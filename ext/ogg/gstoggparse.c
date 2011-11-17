@@ -212,7 +212,8 @@ GST_STATIC_PAD_TEMPLATE ("sink",
 static void gst_ogg_parse_dispose (GObject * object);
 static GstStateChangeReturn gst_ogg_parse_change_state (GstElement * element,
     GstStateChange transition);
-static GstFlowReturn gst_ogg_parse_chain (GstPad * pad, GstBuffer * buffer);
+static GstFlowReturn gst_ogg_parse_chain (GstPad * pad, GstObject * parent,
+    GstBuffer * buffer);
 
 static void
 gst_ogg_parse_base_init (gpointer g_class)
@@ -383,7 +384,7 @@ gst_ogg_parse_buffer_from_page (ogg_page * page,
  * pages to output pad.
  */
 static GstFlowReturn
-gst_ogg_parse_chain (GstPad * pad, GstBuffer * buffer)
+gst_ogg_parse_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
 {
   GstOggParse *ogg;
   GstFlowReturn result = GST_FLOW_OK;
@@ -392,7 +393,7 @@ gst_ogg_parse_chain (GstPad * pad, GstBuffer * buffer)
   GstBuffer *pagebuffer;
   GstClockTime buffertimestamp = GST_BUFFER_TIMESTAMP (buffer);
 
-  ogg = GST_OGG_PARSE (GST_OBJECT_PARENT (pad));
+  ogg = GST_OGG_PARSE (parent);
 
   GST_LOG_OBJECT (ogg,
       "Chain function received buffer of size %" G_GSIZE_FORMAT,

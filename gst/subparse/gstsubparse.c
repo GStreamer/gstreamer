@@ -80,15 +80,18 @@ static GstStaticPadTemplate src_templ = GST_STATIC_PAD_TEMPLATE ("src",
     );
 
 
-static gboolean gst_sub_parse_src_event (GstPad * pad, GstEvent * event);
+static gboolean gst_sub_parse_src_event (GstPad * pad, GstObject * parent,
+    GstEvent * event);
 static gboolean gst_sub_parse_src_query (GstPad * pad, GstObject * parent,
     GstQuery * query);
-static gboolean gst_sub_parse_sink_event (GstPad * pad, GstEvent * event);
+static gboolean gst_sub_parse_sink_event (GstPad * pad, GstObject * parent,
+    GstEvent * event);
 
 static GstStateChangeReturn gst_sub_parse_change_state (GstElement * element,
     GstStateChange transition);
 
-static GstFlowReturn gst_sub_parse_chain (GstPad * sinkpad, GstBuffer * buf);
+static GstFlowReturn gst_sub_parse_chain (GstPad * sinkpad, GstObject * parent,
+    GstBuffer * buf);
 
 #define gst_sub_parse_parent_class parent_class
 G_DEFINE_TYPE (GstSubParse, gst_sub_parse, GST_TYPE_ELEMENT);
@@ -259,9 +262,9 @@ gst_sub_parse_src_query (GstPad * pad, GstObject * parent, GstQuery * query)
 }
 
 static gboolean
-gst_sub_parse_src_event (GstPad * pad, GstEvent * event)
+gst_sub_parse_src_event (GstPad * pad, GstObject * parent, GstEvent * event)
 {
-  GstSubParse *self = GST_SUBPARSE (gst_pad_get_parent (pad));
+  GstSubParse *self = GST_SUBPARSE (parent);
   gboolean ret = FALSE;
 
   GST_DEBUG ("Handling %s event", GST_EVENT_TYPE_NAME (event));
@@ -310,13 +313,11 @@ gst_sub_parse_src_event (GstPad * pad, GstEvent * event)
       break;
     }
     default:
-      ret = gst_pad_event_default (pad, event);
+      ret = gst_pad_event_default (pad, parent, event);
       break;
   }
 
 beach:
-  gst_object_unref (self);
-
   return ret;
 }
 
@@ -1528,12 +1529,12 @@ handle_buffer (GstSubParse * self, GstBuffer * buf)
 }
 
 static GstFlowReturn
-gst_sub_parse_chain (GstPad * sinkpad, GstBuffer * buf)
+gst_sub_parse_chain (GstPad * sinkpad, GstObject * parent, GstBuffer * buf)
 {
   GstFlowReturn ret;
   GstSubParse *self;
 
-  self = GST_SUBPARSE (GST_PAD_PARENT (sinkpad));
+  self = GST_SUBPARSE (parent);
 
   /* Push newsegment if needed */
   if (self->need_segment) {
@@ -1550,9 +1551,9 @@ gst_sub_parse_chain (GstPad * sinkpad, GstBuffer * buf)
 }
 
 static gboolean
-gst_sub_parse_sink_event (GstPad * pad, GstEvent * event)
+gst_sub_parse_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
 {
-  GstSubParse *self = GST_SUBPARSE (gst_pad_get_parent (pad));
+  GstSubParse *self = GST_SUBPARSE (parent);
   gboolean ret = FALSE;
 
   GST_DEBUG ("Handling %s event", GST_EVENT_TYPE_NAME (event));
@@ -1573,9 +1574,9 @@ gst_sub_parse_sink_event (GstPad * pad, GstEvent * event)
         gst_buffer_set_size (buf, 2);
 
         GST_BUFFER_OFFSET (buf) = self->offset;
-        gst_sub_parse_chain (pad, buf);
+        gst_sub_parse_chain (pad, parent, buf);
       }
-      ret = gst_pad_event_default (pad, event);
+      ret = gst_pad_event_default (pad, parent, event);
       break;
     }
     case GST_EVENT_SEGMENT:
@@ -1600,22 +1601,20 @@ gst_sub_parse_sink_event (GstPad * pad, GstEvent * event)
     {
       self->flushing = TRUE;
 
-      ret = gst_pad_event_default (pad, event);
+      ret = gst_pad_event_default (pad, parent, event);
       break;
     }
     case GST_EVENT_FLUSH_STOP:
     {
       self->flushing = FALSE;
 
-      ret = gst_pad_event_default (pad, event);
+      ret = gst_pad_event_default (pad, parent, event);
       break;
     }
     default:
-      ret = gst_pad_event_default (pad, event);
+      ret = gst_pad_event_default (pad, parent, event);
       break;
   }
-
-  gst_object_unref (self);
 
   return ret;
 }

@@ -313,21 +313,21 @@ static gboolean gst_base_text_overlay_setcaps (GstBaseTextOverlay * overlay,
 static gboolean gst_base_text_overlay_setcaps_txt (GstBaseTextOverlay * overlay,
     GstCaps * caps);
 static gboolean gst_base_text_overlay_src_event (GstPad * pad,
-    GstEvent * event);
+    GstObject * parent, GstEvent * event);
 static gboolean gst_base_text_overlay_src_query (GstPad * pad,
     GstObject * parent, GstQuery * query);
 
 static gboolean gst_base_text_overlay_video_event (GstPad * pad,
-    GstEvent * event);
+    GstObject * parent, GstEvent * event);
 static gboolean gst_base_text_overlay_video_query (GstPad * pad,
     GstObject * parent, GstQuery * query);
 static GstFlowReturn gst_base_text_overlay_video_chain (GstPad * pad,
-    GstBuffer * buffer);
+    GstObject * parent, GstBuffer * buffer);
 
 static gboolean gst_base_text_overlay_text_event (GstPad * pad,
-    GstEvent * event);
+    GstObject * parent, GstEvent * event);
 static GstFlowReturn gst_base_text_overlay_text_chain (GstPad * pad,
-    GstBuffer * buffer);
+    GstObject * parent, GstBuffer * buffer);
 static GstPadLinkReturn gst_base_text_overlay_text_pad_link (GstPad * pad,
     GstPad * peer);
 static void gst_base_text_overlay_text_pad_unlink (GstPad * pad);
@@ -1022,16 +1022,13 @@ gst_base_text_overlay_src_query (GstPad * pad, GstObject * parent,
 }
 
 static gboolean
-gst_base_text_overlay_src_event (GstPad * pad, GstEvent * event)
+gst_base_text_overlay_src_event (GstPad * pad, GstObject * parent,
+    GstEvent * event)
 {
   gboolean ret = FALSE;
   GstBaseTextOverlay *overlay = NULL;
 
-  overlay = GST_BASE_TEXT_OVERLAY (gst_pad_get_parent (pad));
-  if (G_UNLIKELY (!overlay)) {
-    gst_event_unref (event);
-    return FALSE;
-  }
+  overlay = GST_BASE_TEXT_OVERLAY (parent);
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_SEEK:{
@@ -1081,7 +1078,6 @@ gst_base_text_overlay_src_event (GstPad * pad, GstEvent * event)
   }
 
 beach:
-  gst_object_unref (overlay);
 
   return ret;
 }
@@ -2150,16 +2146,13 @@ gst_base_text_overlay_text_pad_unlink (GstPad * pad)
 }
 
 static gboolean
-gst_base_text_overlay_text_event (GstPad * pad, GstEvent * event)
+gst_base_text_overlay_text_event (GstPad * pad, GstObject * parent,
+    GstEvent * event)
 {
   gboolean ret = FALSE;
   GstBaseTextOverlay *overlay = NULL;
 
-  overlay = GST_BASE_TEXT_OVERLAY (gst_pad_get_parent (pad));
-  if (G_UNLIKELY (!overlay)) {
-    gst_event_unref (event);
-    return FALSE;
-  }
+  overlay = GST_BASE_TEXT_OVERLAY (parent);
 
   GST_LOG_OBJECT (pad, "received event %s", GST_EVENT_TYPE_NAME (event));
 
@@ -2234,26 +2227,21 @@ gst_base_text_overlay_text_event (GstPad * pad, GstEvent * event)
       ret = TRUE;
       break;
     default:
-      ret = gst_pad_event_default (pad, event);
+      ret = gst_pad_event_default (pad, parent, event);
       break;
   }
-
-  gst_object_unref (overlay);
 
   return ret;
 }
 
 static gboolean
-gst_base_text_overlay_video_event (GstPad * pad, GstEvent * event)
+gst_base_text_overlay_video_event (GstPad * pad, GstObject * parent,
+    GstEvent * event)
 {
   gboolean ret = FALSE;
   GstBaseTextOverlay *overlay = NULL;
 
-  overlay = GST_BASE_TEXT_OVERLAY (gst_pad_get_parent (pad));
-  if (G_UNLIKELY (!overlay)) {
-    gst_event_unref (event);
-    return FALSE;
-  }
+  overlay = GST_BASE_TEXT_OVERLAY (parent);
 
   GST_DEBUG_OBJECT (pad, "received event %s", GST_EVENT_TYPE_NAME (event));
 
@@ -2285,7 +2273,7 @@ gst_base_text_overlay_video_event (GstPad * pad, GstEvent * event)
             ("received non-TIME newsegment event on video input"));
       }
 
-      ret = gst_pad_event_default (pad, event);
+      ret = gst_pad_event_default (pad, parent, event);
       break;
     }
     case GST_EVENT_EOS:
@@ -2293,7 +2281,7 @@ gst_base_text_overlay_video_event (GstPad * pad, GstEvent * event)
       GST_INFO_OBJECT (overlay, "video EOS");
       overlay->video_eos = TRUE;
       GST_OBJECT_UNLOCK (overlay);
-      ret = gst_pad_event_default (pad, event);
+      ret = gst_pad_event_default (pad, parent, event);
       break;
     case GST_EVENT_FLUSH_START:
       GST_OBJECT_LOCK (overlay);
@@ -2301,7 +2289,7 @@ gst_base_text_overlay_video_event (GstPad * pad, GstEvent * event)
       overlay->video_flushing = TRUE;
       GST_BASE_TEXT_OVERLAY_BROADCAST (overlay);
       GST_OBJECT_UNLOCK (overlay);
-      ret = gst_pad_event_default (pad, event);
+      ret = gst_pad_event_default (pad, parent, event);
       break;
     case GST_EVENT_FLUSH_STOP:
       GST_OBJECT_LOCK (overlay);
@@ -2310,14 +2298,12 @@ gst_base_text_overlay_video_event (GstPad * pad, GstEvent * event)
       overlay->video_eos = FALSE;
       gst_segment_init (&overlay->segment, GST_FORMAT_TIME);
       GST_OBJECT_UNLOCK (overlay);
-      ret = gst_pad_event_default (pad, event);
+      ret = gst_pad_event_default (pad, parent, event);
       break;
     default:
-      ret = gst_pad_event_default (pad, event);
+      ret = gst_pad_event_default (pad, parent, event);
       break;
   }
-
-  gst_object_unref (overlay);
 
   return ret;
 }
@@ -2369,14 +2355,15 @@ gst_base_text_overlay_pop_text (GstBaseTextOverlay * overlay)
    If the buffer is in our segment we keep it internally except if another one
    is already waiting here, in that case we wait that it gets kicked out */
 static GstFlowReturn
-gst_base_text_overlay_text_chain (GstPad * pad, GstBuffer * buffer)
+gst_base_text_overlay_text_chain (GstPad * pad, GstObject * parent,
+    GstBuffer * buffer)
 {
   GstFlowReturn ret = GST_FLOW_OK;
   GstBaseTextOverlay *overlay = NULL;
   gboolean in_seg = FALSE;
   guint64 clip_start = 0, clip_stop = 0;
 
-  overlay = GST_BASE_TEXT_OVERLAY (GST_PAD_PARENT (pad));
+  overlay = GST_BASE_TEXT_OVERLAY (parent);
 
   GST_OBJECT_LOCK (overlay);
 
@@ -2452,7 +2439,8 @@ beach:
 }
 
 static GstFlowReturn
-gst_base_text_overlay_video_chain (GstPad * pad, GstBuffer * buffer)
+gst_base_text_overlay_video_chain (GstPad * pad, GstObject * parent,
+    GstBuffer * buffer)
 {
   GstBaseTextOverlayClass *klass;
   GstBaseTextOverlay *overlay;
@@ -2461,7 +2449,7 @@ gst_base_text_overlay_video_chain (GstPad * pad, GstBuffer * buffer)
   guint64 start, stop, clip_start = 0, clip_stop = 0;
   gchar *text = NULL;
 
-  overlay = GST_BASE_TEXT_OVERLAY (GST_PAD_PARENT (pad));
+  overlay = GST_BASE_TEXT_OVERLAY (parent);
   klass = GST_BASE_TEXT_OVERLAY_GET_CLASS (overlay);
 
   if (!GST_BUFFER_TIMESTAMP_IS_VALID (buffer))

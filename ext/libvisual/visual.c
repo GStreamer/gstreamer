@@ -129,9 +129,12 @@ static void gst_visual_finalize (GObject * object);
 
 static GstStateChangeReturn gst_visual_change_state (GstElement * element,
     GstStateChange transition);
-static GstFlowReturn gst_visual_chain (GstPad * pad, GstBuffer * buffer);
-static gboolean gst_visual_sink_event (GstPad * pad, GstEvent * event);
-static gboolean gst_visual_src_event (GstPad * pad, GstEvent * event);
+static GstFlowReturn gst_visual_chain (GstPad * pad, GstObject * parent,
+    GstBuffer * buffer);
+static gboolean gst_visual_sink_event (GstPad * pad, GstObject * parent,
+    GstEvent * event);
+static gboolean gst_visual_src_event (GstPad * pad, GstObject * parent,
+    GstEvent * event);
 
 static gboolean gst_visual_src_query (GstPad * pad, GstObject * parent,
     GstQuery * query);
@@ -504,12 +507,12 @@ no_format:
 }
 
 static gboolean
-gst_visual_sink_event (GstPad * pad, GstEvent * event)
+gst_visual_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
 {
   GstVisual *visual;
   gboolean res;
 
-  visual = GST_VISUAL (GST_PAD_PARENT (pad));
+  visual = GST_VISUAL (parent);
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_FLUSH_START:
@@ -541,7 +544,7 @@ gst_visual_sink_event (GstPad * pad, GstEvent * event)
       break;
     }
     default:
-      res = gst_pad_event_default (pad, event);
+      res = gst_pad_event_default (pad, parent, event);
       break;
   }
 
@@ -549,12 +552,12 @@ gst_visual_sink_event (GstPad * pad, GstEvent * event)
 }
 
 static gboolean
-gst_visual_src_event (GstPad * pad, GstEvent * event)
+gst_visual_src_event (GstPad * pad, GstObject * parent, GstEvent * event)
 {
   GstVisual *visual;
   gboolean res;
 
-  visual = GST_VISUAL (GST_PAD_PARENT (pad));
+  visual = GST_VISUAL (parent);
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_QOS:
@@ -586,7 +589,7 @@ gst_visual_src_event (GstPad * pad, GstEvent * event)
       res = TRUE;
       break;
     default:
-      res = gst_pad_event_default (pad, event);
+      res = gst_pad_event_default (pad, parent, event);
       break;
   }
 
@@ -676,11 +679,11 @@ ensure_negotiated (GstVisual * visual)
 }
 
 static GstFlowReturn
-gst_visual_chain (GstPad * pad, GstBuffer * buffer)
+gst_visual_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
 {
   GstBuffer *outbuf = NULL;
   guint i;
-  GstVisual *visual = GST_VISUAL (GST_PAD_PARENT (pad));
+  GstVisual *visual = GST_VISUAL (parent);
   GstFlowReturn ret = GST_FLOW_OK;
   guint avail;
   gint bpf, rate, channels;
@@ -897,8 +900,8 @@ gst_visual_change_state (GstElement * element, GstStateChange transition)
   switch (transition) {
     case GST_STATE_CHANGE_NULL_TO_READY:
       visual->actor =
-          visual_actor_new (GST_VISUAL_GET_CLASS (visual)->plugin->
-          info->plugname);
+          visual_actor_new (GST_VISUAL_GET_CLASS (visual)->plugin->info->
+          plugname);
       visual->video = visual_video_new ();
       visual->audio = visual_audio_new ();
       /* can't have a play without actors */

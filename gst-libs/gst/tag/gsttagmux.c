@@ -88,8 +88,10 @@ G_DEFINE_TYPE_WITH_CODE (GstTagMux, gst_tag_mux, GST_TYPE_ELEMENT,
 
 static GstStateChangeReturn
 gst_tag_mux_change_state (GstElement * element, GstStateChange transition);
-static GstFlowReturn gst_tag_mux_chain (GstPad * pad, GstBuffer * buffer);
-static gboolean gst_tag_mux_sink_event (GstPad * pad, GstEvent * event);
+static GstFlowReturn gst_tag_mux_chain (GstPad * pad, GstObject * parent,
+    GstBuffer * buffer);
+static gboolean gst_tag_mux_sink_event (GstPad * pad, GstObject * parent,
+    GstEvent * event);
 
 static void
 gst_tag_mux_finalize (GObject * obj)
@@ -332,9 +334,9 @@ gst_tag_mux_adjust_event_offsets (GstTagMux * mux,
 }
 
 static GstFlowReturn
-gst_tag_mux_chain (GstPad * pad, GstBuffer * buffer)
+gst_tag_mux_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
 {
-  GstTagMux *mux = GST_TAG_MUX (GST_OBJECT_PARENT (pad));
+  GstTagMux *mux = GST_TAG_MUX (parent);
   GstFlowReturn ret;
   int length;
 
@@ -392,12 +394,12 @@ gst_tag_mux_chain (GstPad * pad, GstBuffer * buffer)
 }
 
 static gboolean
-gst_tag_mux_sink_event (GstPad * pad, GstEvent * event)
+gst_tag_mux_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
 {
   GstTagMux *mux;
   gboolean result;
 
-  mux = GST_TAG_MUX (gst_pad_get_parent (pad));
+  mux = GST_TAG_MUX (parent);
   result = FALSE;
 
   switch (GST_EVENT_TYPE (event)) {
@@ -478,15 +480,13 @@ gst_tag_mux_sink_event (GstPad * pad, GstEvent * event)
       }
 
       /* Now forward EOS */
-      result = gst_pad_event_default (pad, event);
+      result = gst_pad_event_default (pad, parent, event);
       break;
     }
     default:
-      result = gst_pad_event_default (pad, event);
+      result = gst_pad_event_default (pad, parent, event);
       break;
   }
-
-  gst_object_unref (mux);
 
   return result;
 }

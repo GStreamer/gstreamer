@@ -106,9 +106,12 @@ GST_STATIC_PAD_TEMPLATE ("sink",
     GST_STATIC_CAPS (GST_AUDIO_CAPS_MAKE (GST_AUDIO_FORMATS_ALL))
     );
 
-static gboolean gst_audio_rate_sink_event (GstPad * pad, GstEvent * event);
-static gboolean gst_audio_rate_src_event (GstPad * pad, GstEvent * event);
-static GstFlowReturn gst_audio_rate_chain (GstPad * pad, GstBuffer * buf);
+static gboolean gst_audio_rate_sink_event (GstPad * pad, GstObject * parent,
+    GstEvent * event);
+static gboolean gst_audio_rate_src_event (GstPad * pad, GstObject * parent,
+    GstEvent * event);
+static GstFlowReturn gst_audio_rate_chain (GstPad * pad, GstObject * parent,
+    GstBuffer * buf);
 
 static void gst_audio_rate_set_property (GObject * object,
     guint prop_id, const GValue * value, GParamSpec * pspec);
@@ -264,16 +267,16 @@ gst_audio_rate_fill_to_time (GstAudioRate * audiorate, GstClockTime time)
    * it will take care of filling */
   buf = gst_buffer_new ();
   GST_BUFFER_TIMESTAMP (buf) = time;
-  gst_audio_rate_chain (audiorate->sinkpad, buf);
+  gst_audio_rate_chain (audiorate->sinkpad, GST_OBJECT_CAST (audiorate), buf);
 }
 
 static gboolean
-gst_audio_rate_sink_event (GstPad * pad, GstEvent * event)
+gst_audio_rate_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
 {
   gboolean res;
   GstAudioRate *audiorate;
 
-  audiorate = GST_AUDIO_RATE (gst_pad_get_parent (pad));
+  audiorate = GST_AUDIO_RATE (parent);
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_CAPS:
@@ -340,26 +343,22 @@ gst_audio_rate_sink_event (GstPad * pad, GstEvent * event)
       break;
   }
 
-  gst_object_unref (audiorate);
-
   return res;
 }
 
 static gboolean
-gst_audio_rate_src_event (GstPad * pad, GstEvent * event)
+gst_audio_rate_src_event (GstPad * pad, GstObject * parent, GstEvent * event)
 {
   gboolean res;
   GstAudioRate *audiorate;
 
-  audiorate = GST_AUDIO_RATE (gst_pad_get_parent (pad));
+  audiorate = GST_AUDIO_RATE (parent);
 
   switch (GST_EVENT_TYPE (event)) {
     default:
       res = gst_pad_push_event (audiorate->sinkpad, event);
       break;
   }
-
-  gst_object_unref (audiorate);
 
   return res;
 }
@@ -419,7 +418,7 @@ gst_audio_rate_notify_add (GstAudioRate * audiorate)
 }
 
 static GstFlowReturn
-gst_audio_rate_chain (GstPad * pad, GstBuffer * buf)
+gst_audio_rate_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
 {
   GstAudioRate *audiorate;
   GstClockTime in_time;
@@ -429,7 +428,7 @@ gst_audio_rate_chain (GstPad * pad, GstBuffer * buf)
   GstClockTimeDiff diff;
   gint rate, bpf;
 
-  audiorate = GST_AUDIO_RATE (gst_pad_get_parent (pad));
+  audiorate = GST_AUDIO_RATE (parent);
 
   rate = GST_AUDIO_INFO_RATE (&audiorate->info);
   bpf = GST_AUDIO_INFO_BPF (&audiorate->info);
@@ -657,8 +656,6 @@ beach:
 
   if (buf)
     gst_buffer_unref (buf);
-
-  gst_object_unref (audiorate);
 
   return ret;
 

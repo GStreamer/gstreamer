@@ -92,11 +92,14 @@ static void theora_dec_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
 
 static gboolean theora_dec_setcaps (GstTheoraDec * dec, GstCaps * caps);
-static gboolean theora_dec_sink_event (GstPad * pad, GstEvent * event);
-static GstFlowReturn theora_dec_chain (GstPad * pad, GstBuffer * buffer);
+static gboolean theora_dec_sink_event (GstPad * pad, GstObject * parent,
+    GstEvent * event);
+static GstFlowReturn theora_dec_chain (GstPad * pad, GstObject * parent,
+    GstBuffer * buffer);
 static GstStateChangeReturn theora_dec_change_state (GstElement * element,
     GstStateChange transition);
-static gboolean theora_dec_src_event (GstPad * pad, GstEvent * event);
+static gboolean theora_dec_src_event (GstPad * pad, GstObject * parent,
+    GstEvent * event);
 static gboolean theora_dec_src_query (GstPad * pad, GstObject * parent,
     GstQuery * query);
 static gboolean theora_dec_src_convert (GstPad * pad, GstFormat src_format,
@@ -507,12 +510,12 @@ error:
 }
 
 static gboolean
-theora_dec_src_event (GstPad * pad, GstEvent * event)
+theora_dec_src_event (GstPad * pad, GstObject * parent, GstEvent * event)
 {
   gboolean res = TRUE;
   GstTheoraDec *dec;
 
-  dec = GST_THEORA_DEC (gst_pad_get_parent (pad));
+  dec = GST_THEORA_DEC (parent);
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_SEEK:
@@ -579,7 +582,6 @@ theora_dec_src_event (GstPad * pad, GstEvent * event)
       break;
   }
 done:
-  gst_object_unref (dec);
 
   return res;
 
@@ -592,12 +594,12 @@ convert_error:
 }
 
 static gboolean
-theora_dec_sink_event (GstPad * pad, GstEvent * event)
+theora_dec_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
 {
   gboolean ret = FALSE;
   GstTheoraDec *dec;
 
-  dec = GST_THEORA_DEC (gst_pad_get_parent (pad));
+  dec = GST_THEORA_DEC (parent);
 
   GST_LOG_OBJECT (dec, "handling event");
   switch (GST_EVENT_TYPE (event)) {
@@ -658,11 +660,10 @@ theora_dec_sink_event (GstPad * pad, GstEvent * event)
       break;
     }
     default:
-      ret = gst_pad_event_default (pad, event);
+      ret = gst_pad_event_default (pad, parent, event);
       break;
   }
 done:
-  gst_object_unref (dec);
 
   return ret;
 
@@ -723,7 +724,7 @@ theora_dec_setcaps (GstTheoraDec * dec, GstCaps * caps)
           GST_BUFFER_FLAG_SET (buf, GST_BUFFER_FLAG_DISCONT);
 
         /* now feed it to the decoder we can ignore the error */
-        theora_dec_chain (dec->sinkpad, buf);
+        theora_dec_chain (dec->sinkpad, GST_OBJECT_CAST (dec), buf);
 
         /* skip the data */
         left -= psize;
@@ -1567,13 +1568,13 @@ theora_dec_chain_forward (GstTheoraDec * dec, gboolean discont,
 }
 
 static GstFlowReturn
-theora_dec_chain (GstPad * pad, GstBuffer * buf)
+theora_dec_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
 {
   GstTheoraDec *dec;
   GstFlowReturn res;
   gboolean discont;
 
-  dec = GST_THEORA_DEC (gst_pad_get_parent (pad));
+  dec = GST_THEORA_DEC (parent);
 
   /* peel of DISCONT flag */
   discont = GST_BUFFER_IS_DISCONT (buf);
@@ -1590,8 +1591,6 @@ theora_dec_chain (GstPad * pad, GstBuffer * buf)
     res = theora_dec_chain_forward (dec, discont, buf);
   else
     res = theora_dec_chain_reverse (dec, discont, buf);
-
-  gst_object_unref (dec);
 
   return res;
 }

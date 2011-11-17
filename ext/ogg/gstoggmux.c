@@ -130,7 +130,8 @@ static void gst_ogg_mux_finalize (GObject * object);
 
 static GstFlowReturn
 gst_ogg_mux_collected (GstCollectPads2 * pads, GstOggMux * ogg_mux);
-static gboolean gst_ogg_mux_handle_src_event (GstPad * pad, GstEvent * event);
+static gboolean gst_ogg_mux_handle_src_event (GstPad * pad, GstObject * parent,
+    GstEvent * event);
 static GstPad *gst_ogg_mux_request_new_pad (GstElement * element,
     GstPadTemplate * templ, const gchar * name, const GstCaps * caps);
 static void gst_ogg_mux_release_pad (GstElement * element, GstPad * pad);
@@ -303,9 +304,9 @@ gst_ogg_mux_sinkconnect (GstPad * pad, GstPad * peer)
 }
 
 static gboolean
-gst_ogg_mux_sink_event (GstPad * pad, GstEvent * event)
+gst_ogg_mux_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
 {
-  GstOggMux *ogg_mux = GST_OGG_MUX (gst_pad_get_parent (pad));
+  GstOggMux *ogg_mux = GST_OGG_MUX (parent);
   GstOggPadData *ogg_pad = (GstOggPadData *) gst_pad_get_element_private (pad);
   gboolean ret = FALSE;
 
@@ -350,9 +351,8 @@ gst_ogg_mux_sink_event (GstPad * pad, GstEvent * event)
 
   /* now GstCollectPads can take care of the rest, e.g. EOS */
   if (event != NULL)
-    ret = ogg_pad->collect_event (pad, event);
+    ret = ogg_pad->collect_event (pad, parent, event);
 
-  gst_object_unref (ogg_mux);
   return ret;
 }
 
@@ -512,7 +512,8 @@ gst_ogg_mux_release_pad (GstElement * element, GstPad * pad)
 
 /* handle events */
 static gboolean
-gst_ogg_mux_handle_src_event (GstPad * pad, GstEvent * event)
+gst_ogg_mux_handle_src_event (GstPad * pad, GstObject * parent,
+    GstEvent * event)
 {
   GstEventType type;
 
@@ -526,7 +527,7 @@ gst_ogg_mux_handle_src_event (GstPad * pad, GstEvent * event)
       break;
   }
 
-  return gst_pad_event_default (pad, event);
+  return gst_pad_event_default (pad, parent, event);
 }
 
 static GstBuffer *

@@ -110,8 +110,10 @@ static gboolean gst_adder_src_query (GstPad * pad, GstObject * parent,
     GstQuery * query);
 static gboolean gst_adder_sink_query (GstPad * pad, GstObject * parent,
     GstQuery * query);
-static gboolean gst_adder_src_event (GstPad * pad, GstEvent * event);
-static gboolean gst_adder_sink_event (GstPad * pad, GstEvent * event);
+static gboolean gst_adder_src_event (GstPad * pad, GstObject * parent,
+    GstEvent * event);
+static gboolean gst_adder_sink_event (GstPad * pad, GstObject * parent,
+    GstEvent * event);
 
 static GstPad *gst_adder_request_new_pad (GstElement * element,
     GstPadTemplate * temp, const gchar * unused, const GstCaps * caps);
@@ -627,12 +629,12 @@ done:
 }
 
 static gboolean
-gst_adder_src_event (GstPad * pad, GstEvent * event)
+gst_adder_src_event (GstPad * pad, GstObject * parent, GstEvent * event)
 {
   GstAdder *adder;
   gboolean result;
 
-  adder = GST_ADDER (gst_pad_get_parent (pad));
+  adder = GST_ADDER (parent);
 
   GST_DEBUG_OBJECT (pad, "Got %s event on src pad",
       GST_EVENT_TYPE_NAME (event));
@@ -738,18 +740,17 @@ gst_adder_src_event (GstPad * pad, GstEvent * event)
   }
 
 done:
-  gst_object_unref (adder);
 
   return result;
 }
 
 static gboolean
-gst_adder_sink_event (GstPad * pad, GstEvent * event)
+gst_adder_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
 {
   GstAdder *adder;
   gboolean ret = TRUE;
 
-  adder = GST_ADDER (gst_pad_get_parent (pad));
+  adder = GST_ADDER (parent);
 
   GST_DEBUG_OBJECT (pad, "Got %s event on sink pad",
       GST_EVENT_TYPE_NAME (event));
@@ -803,10 +804,9 @@ gst_adder_sink_event (GstPad * pad, GstEvent * event)
   }
 
   /* now GstCollectPads can take care of the rest, e.g. EOS */
-  ret = adder->collect_event (pad, event);
+  ret = adder->collect_event (pad, parent, event);
 
 beach:
-  gst_object_unref (adder);
   return ret;
 }
 

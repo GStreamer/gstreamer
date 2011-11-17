@@ -154,10 +154,10 @@ gst_stream_synchronizer_query (GstPad * pad, GstObject * parent,
 
 /* srcpad functions */
 static gboolean
-gst_stream_synchronizer_src_event (GstPad * pad, GstEvent * event)
+gst_stream_synchronizer_src_event (GstPad * pad, GstObject * parent,
+    GstEvent * event)
 {
-  GstStreamSynchronizer *self =
-      GST_STREAM_SYNCHRONIZER (gst_pad_get_parent (pad));
+  GstStreamSynchronizer *self = GST_STREAM_SYNCHRONIZER (parent);
   GstPad *opad;
   gboolean ret = FALSE;
 
@@ -227,17 +227,15 @@ skip_adjustments:
   }
 
 out:
-  gst_object_unref (self);
-
   return ret;
 }
 
 /* sinkpad functions */
 static gboolean
-gst_stream_synchronizer_sink_event (GstPad * pad, GstEvent * event)
+gst_stream_synchronizer_sink_event (GstPad * pad, GstObject * parent,
+    GstEvent * event)
 {
-  GstStreamSynchronizer *self =
-      GST_STREAM_SYNCHRONIZER (gst_pad_get_parent (pad));
+  GstStreamSynchronizer *self = GST_STREAM_SYNCHRONIZER (parent);
   GstPad *opad;
   gboolean ret = FALSE;
 
@@ -498,16 +496,14 @@ skip_adjustments:
   }
 
 done:
-  gst_object_unref (self);
-
   return ret;
 }
 
 static GstFlowReturn
-gst_stream_synchronizer_sink_chain (GstPad * pad, GstBuffer * buffer)
+gst_stream_synchronizer_sink_chain (GstPad * pad, GstObject * parent,
+    GstBuffer * buffer)
 {
-  GstStreamSynchronizer *self =
-      GST_STREAM_SYNCHRONIZER (gst_pad_get_parent (pad));
+  GstStreamSynchronizer *self = GST_STREAM_SYNCHRONIZER (parent);
   GstPad *opad;
   GstFlowReturn ret = GST_FLOW_ERROR;
   GstStream *stream;
@@ -618,9 +614,6 @@ gst_stream_synchronizer_sink_chain (GstPad * pad, GstBuffer * buffer)
   }
 
 done:
-
-  gst_object_unref (self);
-
   return ret;
 }
 

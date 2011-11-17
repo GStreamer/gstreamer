@@ -299,10 +299,12 @@ static gboolean gst_audio_encoder_sink_activate_push (GstPad * pad,
 static GstCaps *gst_audio_encoder_getcaps_default (GstAudioEncoder * enc,
     GstCaps * filter);
 
-static gboolean gst_audio_encoder_sink_event (GstPad * pad, GstEvent * event);
+static gboolean gst_audio_encoder_sink_event (GstPad * pad, GstObject * parent,
+    GstEvent * event);
 static gboolean gst_audio_encoder_sink_setcaps (GstAudioEncoder * enc,
     GstCaps * caps);
-static GstFlowReturn gst_audio_encoder_chain (GstPad * pad, GstBuffer * buffer);
+static GstFlowReturn gst_audio_encoder_chain (GstPad * pad, GstObject * parent,
+    GstBuffer * buffer);
 static gboolean gst_audio_encoder_src_query (GstPad * pad, GstObject * parent,
     GstQuery * query);
 static gboolean gst_audio_encoder_sink_query (GstPad * pad, GstObject * parent,
@@ -828,7 +830,7 @@ gst_audio_encoder_set_base_gp (GstAudioEncoder * enc)
 }
 
 static GstFlowReturn
-gst_audio_encoder_chain (GstPad * pad, GstBuffer * buffer)
+gst_audio_encoder_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
 {
   GstAudioEncoder *enc;
   GstAudioEncoderPrivate *priv;
@@ -837,7 +839,7 @@ gst_audio_encoder_chain (GstPad * pad, GstBuffer * buffer)
   gboolean discont;
   gsize size;
 
-  enc = GST_AUDIO_ENCODER (GST_OBJECT_PARENT (pad));
+  enc = GST_AUDIO_ENCODER (parent);
 
   priv = enc->priv;
   ctx = &enc->priv->ctx;
@@ -1315,14 +1317,15 @@ gst_audio_encoder_sink_eventfunc (GstAudioEncoder * enc, GstEvent * event)
 }
 
 static gboolean
-gst_audio_encoder_sink_event (GstPad * pad, GstEvent * event)
+gst_audio_encoder_sink_event (GstPad * pad, GstObject * parent,
+    GstEvent * event)
 {
   GstAudioEncoder *enc;
   GstAudioEncoderClass *klass;
   gboolean handled = FALSE;
   gboolean ret = TRUE;
 
-  enc = GST_AUDIO_ENCODER (gst_pad_get_parent (pad));
+  enc = GST_AUDIO_ENCODER (parent);
   klass = GST_AUDIO_ENCODER_GET_CLASS (enc);
 
   GST_DEBUG_OBJECT (enc, "received event %d, %s", GST_EVENT_TYPE (event),
@@ -1346,7 +1349,7 @@ gst_audio_encoder_sink_event (GstPad * pad, GstEvent * event)
     if (!GST_EVENT_IS_SERIALIZED (event)
         || GST_EVENT_TYPE (event) == GST_EVENT_EOS
         || GST_EVENT_TYPE (event) == GST_EVENT_FLUSH_STOP) {
-      ret = gst_pad_event_default (pad, event);
+      ret = gst_pad_event_default (pad, parent, event);
     } else {
       GST_AUDIO_ENCODER_STREAM_LOCK (enc);
       enc->priv->pending_events =
@@ -1358,7 +1361,6 @@ gst_audio_encoder_sink_event (GstPad * pad, GstEvent * event)
 
   GST_DEBUG_OBJECT (enc, "event handled");
 
-  gst_object_unref (enc);
   return ret;
 }
 

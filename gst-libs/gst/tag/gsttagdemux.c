@@ -134,20 +134,23 @@ static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",
 
 static void gst_tag_demux_dispose (GObject * object);
 
-static GstFlowReturn gst_tag_demux_chain (GstPad * pad, GstBuffer * buf);
-static gboolean gst_tag_demux_sink_event (GstPad * pad, GstEvent * event);
+static GstFlowReturn gst_tag_demux_chain (GstPad * pad, GstObject * parent,
+    GstBuffer * buf);
+static gboolean gst_tag_demux_sink_event (GstPad * pad, GstObject * parent,
+    GstEvent * event);
 
 static gboolean gst_tag_demux_src_activate_pull (GstPad * pad, gboolean active);
 static GstFlowReturn gst_tag_demux_read_range (GstTagDemux * tagdemux,
     guint64 offset, guint length, GstBuffer ** buffer);
 
 static GstFlowReturn gst_tag_demux_src_getrange (GstPad * srcpad,
-    guint64 offset, guint length, GstBuffer ** buffer);
+    GstObject * parent, guint64 offset, guint length, GstBuffer ** buffer);
 
 static void gst_tag_demux_set_src_caps (GstTagDemux * tagdemux,
     GstCaps * new_caps);
 
-static gboolean gst_tag_demux_srcpad_event (GstPad * pad, GstEvent * event);
+static gboolean gst_tag_demux_srcpad_event (GstPad * pad, GstObject * parent,
+    GstEvent * event);
 static gboolean gst_tag_demux_sink_activate (GstPad * sinkpad);
 static GstStateChangeReturn gst_tag_demux_change_state (GstElement * element,
     GstStateChange transition);
@@ -538,12 +541,12 @@ gst_tag_demux_chain_parse_tag (GstTagDemux * demux, GstBuffer * collect)
 }
 
 static GstFlowReturn
-gst_tag_demux_chain (GstPad * pad, GstBuffer * buf)
+gst_tag_demux_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
 {
   GstTagDemux *demux;
   gsize size;
 
-  demux = GST_TAG_DEMUX (GST_PAD_PARENT (pad));
+  demux = GST_TAG_DEMUX (parent);
 
   size = gst_buffer_get_size (buf);
 
@@ -674,12 +677,12 @@ gst_tag_demux_chain (GstPad * pad, GstBuffer * buf)
 }
 
 static gboolean
-gst_tag_demux_sink_event (GstPad * pad, GstEvent * event)
+gst_tag_demux_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
 {
   GstTagDemux *demux;
   gboolean ret;
 
-  demux = GST_TAG_DEMUX (gst_pad_get_parent (pad));
+  demux = GST_TAG_DEMUX (parent);
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_EOS:
@@ -687,7 +690,7 @@ gst_tag_demux_sink_event (GstPad * pad, GstEvent * event)
         GST_WARNING_OBJECT (demux, "EOS before we found a type");
         GST_ELEMENT_ERROR (demux, STREAM, TYPE_NOT_FOUND, (NULL), (NULL));
       }
-      ret = gst_pad_event_default (pad, event);
+      ret = gst_pad_event_default (pad, parent, event);
       break;
     case GST_EVENT_SEGMENT:
     {
@@ -700,7 +703,7 @@ gst_tag_demux_sink_event (GstPad * pad, GstEvent * event)
     }
     case GST_EVENT_FLUSH_STOP:
     case GST_EVENT_FLUSH_START:
-      ret = gst_pad_event_default (pad, event);
+      ret = gst_pad_event_default (pad, parent, event);
       break;
     default:
       if (demux->priv->need_newseg && GST_EVENT_IS_SERIALIZED (event)) {
@@ -713,12 +716,11 @@ gst_tag_demux_sink_event (GstPad * pad, GstEvent * event)
         GST_OBJECT_UNLOCK (demux);
         ret = TRUE;
       } else {
-        ret = gst_pad_event_default (pad, event);
+        ret = gst_pad_event_default (pad, parent, event);
       }
       break;
   }
 
-  gst_object_unref (demux);
   return ret;
 }
 
@@ -741,12 +743,12 @@ gst_tag_demux_get_upstream_size (GstTagDemux * tagdemux)
 }
 
 static gboolean
-gst_tag_demux_srcpad_event (GstPad * pad, GstEvent * event)
+gst_tag_demux_srcpad_event (GstPad * pad, GstObject * parent, GstEvent * event)
 {
   GstTagDemux *tagdemux;
   gboolean res = FALSE;
 
-  tagdemux = GST_TAG_DEMUX (gst_pad_get_parent (pad));
+  tagdemux = GST_TAG_DEMUX (parent);
 
   /* Handle SEEK events, with adjusted byte offsets and sizes. */
 
@@ -814,9 +816,9 @@ gst_tag_demux_srcpad_event (GstPad * pad, GstEvent * event)
       break;
   }
 
-  gst_object_unref (tagdemux);
   if (event)
     gst_event_unref (event);
+
   return res;
 }
 
@@ -1284,10 +1286,10 @@ read_beyond_end:
 }
 
 static GstFlowReturn
-gst_tag_demux_src_getrange (GstPad * srcpad,
+gst_tag_demux_src_getrange (GstPad * srcpad, GstObject * parent,
     guint64 offset, guint length, GstBuffer ** buffer)
 {
-  GstTagDemux *demux = GST_TAG_DEMUX (GST_PAD_PARENT (srcpad));
+  GstTagDemux *demux = GST_TAG_DEMUX (parent);
 
   /* downstream in pull mode won't miss a newsegment event,
    * but it likely appreciates other (tag) events */

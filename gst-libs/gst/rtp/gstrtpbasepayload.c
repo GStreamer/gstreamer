@@ -102,13 +102,13 @@ static GstCaps *gst_rtp_base_payload_getcaps_default (GstRTPBasePayload *
 static gboolean gst_rtp_base_payload_sink_event_default (GstRTPBasePayload *
     rtpbasepayload, GstEvent * event);
 static gboolean gst_rtp_base_payload_sink_event (GstPad * pad,
-    GstEvent * event);
+    GstObject * parent, GstEvent * event);
 static gboolean gst_rtp_base_payload_query_default (GstRTPBasePayload *
     rtpbasepayload, GstPad * pad, GstQuery * query);
 static gboolean gst_rtp_base_payload_query (GstPad * pad, GstObject * parent,
     GstQuery * query);
 static GstFlowReturn gst_rtp_base_payload_chain (GstPad * pad,
-    GstBuffer * buffer);
+    GstObject * parent, GstBuffer * buffer);
 
 static void gst_rtp_base_payload_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
@@ -119,8 +119,6 @@ static GstStateChangeReturn gst_rtp_base_payload_change_state (GstElement *
     element, GstStateChange transition);
 
 static GstElementClass *parent_class = NULL;
-
-/* FIXME 0.11: API should be changed to gst_base_typ_payload_xyz */
 
 GType
 gst_rtp_base_payload_get_type (void)
@@ -344,14 +342,15 @@ static gboolean
 gst_rtp_base_payload_sink_event_default (GstRTPBasePayload * rtpbasepayload,
     GstEvent * event)
 {
+  GstObject *parent = GST_OBJECT_CAST (rtpbasepayload);
   gboolean res = FALSE;
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_FLUSH_START:
-      res = gst_pad_event_default (rtpbasepayload->sinkpad, event);
+      res = gst_pad_event_default (rtpbasepayload->sinkpad, parent, event);
       break;
     case GST_EVENT_FLUSH_STOP:
-      res = gst_pad_event_default (rtpbasepayload->sinkpad, event);
+      res = gst_pad_event_default (rtpbasepayload->sinkpad, parent, event);
       gst_segment_init (&rtpbasepayload->segment, GST_FORMAT_UNDEFINED);
       break;
     case GST_EVENT_CAPS:
@@ -380,37 +379,31 @@ gst_rtp_base_payload_sink_event_default (GstRTPBasePayload * rtpbasepayload,
 
       GST_DEBUG_OBJECT (rtpbasepayload,
           "configured SEGMENT %" GST_SEGMENT_FORMAT, segment);
-      res = gst_pad_event_default (rtpbasepayload->sinkpad, event);
+      res = gst_pad_event_default (rtpbasepayload->sinkpad, parent, event);
       break;
     }
     default:
-      res = gst_pad_event_default (rtpbasepayload->sinkpad, event);
+      res = gst_pad_event_default (rtpbasepayload->sinkpad, parent, event);
       break;
   }
   return res;
 }
 
 static gboolean
-gst_rtp_base_payload_sink_event (GstPad * pad, GstEvent * event)
+gst_rtp_base_payload_sink_event (GstPad * pad, GstObject * parent,
+    GstEvent * event)
 {
   GstRTPBasePayload *rtpbasepayload;
   GstRTPBasePayloadClass *rtpbasepayload_class;
   gboolean res = FALSE;
 
-  rtpbasepayload = GST_RTP_BASE_PAYLOAD (gst_pad_get_parent (pad));
-  if (G_UNLIKELY (rtpbasepayload == NULL)) {
-    gst_event_unref (event);
-    return FALSE;
-  }
-
+  rtpbasepayload = GST_RTP_BASE_PAYLOAD (parent);
   rtpbasepayload_class = GST_RTP_BASE_PAYLOAD_GET_CLASS (rtpbasepayload);
 
   if (rtpbasepayload_class->sink_event)
     res = rtpbasepayload_class->sink_event (rtpbasepayload, event);
   else
     gst_event_unref (event);
-
-  gst_object_unref (rtpbasepayload);
 
   return res;
 }
@@ -464,21 +457,20 @@ gst_rtp_base_payload_query (GstPad * pad, GstObject * parent, GstQuery * query)
 }
 
 static GstFlowReturn
-gst_rtp_base_payload_chain (GstPad * pad, GstBuffer * buffer)
+gst_rtp_base_payload_chain (GstPad * pad, GstObject * parent,
+    GstBuffer * buffer)
 {
   GstRTPBasePayload *rtpbasepayload;
   GstRTPBasePayloadClass *rtpbasepayload_class;
   GstFlowReturn ret;
 
-  rtpbasepayload = GST_RTP_BASE_PAYLOAD (gst_pad_get_parent (pad));
+  rtpbasepayload = GST_RTP_BASE_PAYLOAD (parent);
   rtpbasepayload_class = GST_RTP_BASE_PAYLOAD_GET_CLASS (rtpbasepayload);
 
   if (!rtpbasepayload_class->handle_buffer)
     goto no_function;
 
   ret = rtpbasepayload_class->handle_buffer (rtpbasepayload, buffer);
-
-  gst_object_unref (rtpbasepayload);
 
   return ret;
 
@@ -487,7 +479,6 @@ no_function:
   {
     GST_ELEMENT_ERROR (rtpbasepayload, STREAM, NOT_IMPLEMENTED, (NULL),
         ("subclass did not implement handle_buffer function"));
-    gst_object_unref (rtpbasepayload);
     gst_buffer_unref (buffer);
     return GST_FLOW_ERROR;
   }
@@ -858,8 +849,8 @@ gst_rtp_base_payload_prepare_push (GstRTPBasePayload * payload,
       (is_list) ? -1 : gst_buffer_get_size (GST_BUFFER (obj)),
       payload->seqnum, data.rtptime, GST_TIME_ARGS (data.timestamp));
 
-  if (g_atomic_int_compare_and_exchange (&payload->priv->
-          notified_first_timestamp, 1, 0)) {
+  if (g_atomic_int_compare_and_exchange (&payload->
+          priv->notified_first_timestamp, 1, 0)) {
     g_object_notify (G_OBJECT (payload), "timestamp");
     g_object_notify (G_OBJECT (payload), "seqnum");
   }

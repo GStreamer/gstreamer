@@ -78,8 +78,10 @@ static void gst_smart_encoder_dispose (GObject * object);
 
 static gboolean setup_recoder_pipeline (GstSmartEncoder * smart_encoder);
 
-static GstFlowReturn gst_smart_encoder_chain (GstPad * pad, GstBuffer * buf);
-static gboolean smart_encoder_sink_event (GstPad * pad, GstEvent * event);
+static GstFlowReturn gst_smart_encoder_chain (GstPad * pad, GstObject * parent,
+    GstBuffer * buf);
+static gboolean smart_encoder_sink_event (GstPad * pad, GstObject * parent,
+    GstEvent * event);
 static gboolean smart_encoder_sink_query (GstPad * pad, GstObject * parent,
     GstQuery * query);
 static GstCaps *smart_encoder_sink_getcaps (GstPad * pad, GstCaps * filter);
@@ -290,13 +292,13 @@ gst_smart_encoder_push_pending_gop (GstSmartEncoder * smart_encoder)
 }
 
 static GstFlowReturn
-gst_smart_encoder_chain (GstPad * pad, GstBuffer * buf)
+gst_smart_encoder_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
 {
   GstSmartEncoder *smart_encoder;
   GstFlowReturn res = GST_FLOW_OK;
   gboolean discont, keyframe;
 
-  smart_encoder = GST_SMART_ENCODER (gst_object_get_parent (GST_OBJECT (pad)));
+  smart_encoder = GST_SMART_ENCODER (parent);
 
   discont = GST_BUFFER_IS_DISCONT (buf);
   keyframe = !GST_BUFFER_FLAG_IS_SET (buf, GST_BUFFER_FLAG_DELTA_UNIT);
@@ -337,15 +339,14 @@ gst_smart_encoder_chain (GstPad * pad, GstBuffer * buf)
       GST_TIME_ARGS (smart_encoder->gop_stop));
 
 beach:
-  gst_object_unref (smart_encoder);
   return res;
 }
 
 static gboolean
-smart_encoder_sink_event (GstPad * pad, GstEvent * event)
+smart_encoder_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
 {
   gboolean res = TRUE;
-  GstSmartEncoder *smart_encoder = GST_SMART_ENCODER (gst_pad_get_parent (pad));
+  GstSmartEncoder *smart_encoder = GST_SMART_ENCODER (parent);
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_FLUSH_STOP:
@@ -377,7 +378,6 @@ smart_encoder_sink_event (GstPad * pad, GstEvent * event)
 
   res = gst_pad_push_event (smart_encoder->srcpad, event);
 
-  gst_object_unref (smart_encoder);
   return res;
 }
 
@@ -510,7 +510,7 @@ get_encoder (GstCaps * caps)
 }
 
 static GstFlowReturn
-internal_chain (GstPad * pad, GstBuffer * buf)
+internal_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
 {
   GstSmartEncoder *smart_encoder =
       g_object_get_qdata ((GObject *) pad, INTERNAL_ELEMENT);

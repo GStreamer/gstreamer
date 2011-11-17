@@ -133,7 +133,8 @@ static void gst_ogg_pad_finalize (GObject * object);
 
 static gboolean gst_ogg_pad_src_query (GstPad * pad, GstObject * parent,
     GstQuery * query);
-static gboolean gst_ogg_pad_event (GstPad * pad, GstEvent * event);
+static gboolean gst_ogg_pad_event (GstPad * pad, GstObject * parent,
+    GstEvent * event);
 static GstOggPad *gst_ogg_chain_get_stream (GstOggChain * chain,
     guint32 serialno);
 
@@ -384,12 +385,12 @@ error:
 }
 
 static gboolean
-gst_ogg_pad_event (GstPad * pad, GstEvent * event)
+gst_ogg_pad_event (GstPad * pad, GstObject * parent, GstEvent * event)
 {
   gboolean res;
   GstOggDemux *ogg;
 
-  ogg = GST_OGG_DEMUX (gst_pad_get_parent (pad));
+  ogg = GST_OGG_DEMUX (parent);
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_SEEK:
@@ -398,10 +399,9 @@ gst_ogg_pad_event (GstPad * pad, GstEvent * event)
       gst_event_unref (event);
       break;
     default:
-      res = gst_pad_event_default (pad, event);
+      res = gst_pad_event_default (pad, parent, event);
       break;
   }
-  gst_object_unref (ogg);
 
   return res;
 }
@@ -1776,9 +1776,11 @@ static GstFlowReturn gst_ogg_demux_read_chain (GstOggDemux * ogg,
 static GstFlowReturn gst_ogg_demux_read_end_chain (GstOggDemux * ogg,
     GstOggChain * chain);
 
-static gboolean gst_ogg_demux_sink_event (GstPad * pad, GstEvent * event);
+static gboolean gst_ogg_demux_sink_event (GstPad * pad, GstObject * parent,
+    GstEvent * event);
 static void gst_ogg_demux_loop (GstOggPad * pad);
-static GstFlowReturn gst_ogg_demux_chain (GstPad * pad, GstBuffer * buffer);
+static GstFlowReturn gst_ogg_demux_chain (GstPad * pad, GstObject * parent,
+    GstBuffer * buffer);
 static gboolean gst_ogg_demux_sink_activate (GstPad * sinkpad);
 static gboolean gst_ogg_demux_sink_activate_pull (GstPad * sinkpad,
     gboolean active);
@@ -1879,12 +1881,12 @@ gst_ogg_demux_reset_streams (GstOggDemux * ogg)
 }
 
 static gboolean
-gst_ogg_demux_sink_event (GstPad * pad, GstEvent * event)
+gst_ogg_demux_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
 {
   gboolean res;
   GstOggDemux *ogg;
 
-  ogg = GST_OGG_DEMUX (gst_pad_get_parent (pad));
+  ogg = GST_OGG_DEMUX (parent);
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_FLUSH_START:
@@ -1954,7 +1956,6 @@ gst_ogg_demux_sink_event (GstPad * pad, GstEvent * event)
       res = gst_ogg_demux_send_event (ogg, event);
       break;
   }
-  gst_object_unref (ogg);
 
   return res;
 }
@@ -3910,13 +3911,13 @@ unknown_chain:
  * the serialno, submit pages and packets to the oggpads
  */
 static GstFlowReturn
-gst_ogg_demux_chain (GstPad * pad, GstBuffer * buffer)
+gst_ogg_demux_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
 {
   GstOggDemux *ogg;
   gint ret = 0;
   GstFlowReturn result = GST_FLOW_OK;
 
-  ogg = GST_OGG_DEMUX (GST_OBJECT_PARENT (pad));
+  ogg = GST_OGG_DEMUX (parent);
 
   GST_DEBUG_OBJECT (ogg, "enter");
   result = gst_ogg_demux_submit_buffer (ogg, buffer);
@@ -4060,7 +4061,7 @@ gst_ogg_demux_loop_forward (GstOggDemux * ogg)
     ogg->newsegment = NULL;
   }
 
-  ret = gst_ogg_demux_chain (ogg->sinkpad, buffer);
+  ret = gst_ogg_demux_chain (ogg->sinkpad, GST_OBJECT_CAST (ogg), buffer);
   if (ret != GST_FLOW_OK) {
     GST_LOG_OBJECT (ogg, "Failed demux_chain");
     goto done;

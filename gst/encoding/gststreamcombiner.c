@@ -92,10 +92,9 @@ gst_stream_combiner_dispose (GObject * object)
 }
 
 static GstFlowReturn
-gst_stream_combiner_chain (GstPad * pad, GstBuffer * buf)
+gst_stream_combiner_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
 {
-  GstStreamCombiner *stream_combiner =
-      (GstStreamCombiner *) GST_PAD_PARENT (pad);
+  GstStreamCombiner *stream_combiner = (GstStreamCombiner *) parent;
   /* FIXME : IMPLEMENT */
 
   /* with lock taken, check if we're the active stream, if not drop */
@@ -103,10 +102,10 @@ gst_stream_combiner_chain (GstPad * pad, GstBuffer * buf)
 }
 
 static gboolean
-gst_stream_combiner_sink_event (GstPad * pad, GstEvent * event)
+gst_stream_combiner_sink_event (GstPad * pad, GstObject * parent,
+    GstEvent * event)
 {
-  GstStreamCombiner *stream_combiner =
-      (GstStreamCombiner *) GST_PAD_PARENT (pad);
+  GstStreamCombiner *stream_combiner = (GstStreamCombiner *) parent;
   /* FIXME : IMPLEMENT */
 
   GST_DEBUG_OBJECT (pad, "Got event %s", GST_EVENT_TYPE_NAME (event));
@@ -141,10 +140,10 @@ gst_stream_combiner_sink_query (GstPad * pad, GstObject * parent,
 }
 
 static gboolean
-gst_stream_combiner_src_event (GstPad * pad, GstEvent * event)
+gst_stream_combiner_src_event (GstPad * pad, GstObject * parent,
+    GstEvent * event)
 {
-  GstStreamCombiner *stream_combiner =
-      (GstStreamCombiner *) GST_PAD_PARENT (pad);
+  GstStreamCombiner *stream_combiner = (GstStreamCombiner *) parent;
   GstPad *sinkpad = NULL;
 
   STREAMS_LOCK (stream_combiner);

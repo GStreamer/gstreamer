@@ -151,13 +151,15 @@ static void gst_ogm_video_parse_init (GstOgmParse * ogm);
 static void gst_ogm_audio_parse_init (GstOgmParse * ogm);
 static void gst_ogm_text_parse_init (GstOgmParse * ogm);
 
-static gboolean gst_ogm_parse_sink_event (GstPad * pad, GstEvent * event);
+static gboolean gst_ogm_parse_sink_event (GstPad * pad, GstObject * parent,
+    GstEvent * event);
 static gboolean gst_ogm_parse_sink_query (GstPad * pad, GstObject * parent,
     GstQuery * query);
 static gboolean gst_ogm_parse_sink_convert (GstPad * pad, GstFormat src_format,
     gint64 src_value, GstFormat * dest_format, gint64 * dest_value);
 
-static GstFlowReturn gst_ogm_parse_chain (GstPad * pad, GstBuffer * buffer);
+static GstFlowReturn gst_ogm_parse_chain (GstPad * pad, GstObject * parent,
+    GstBuffer * buffer);
 
 static GstStateChangeReturn gst_ogm_parse_change_state (GstElement * element,
     GstStateChange transition);
@@ -837,10 +839,10 @@ buffer_too_small:
 }
 
 static GstFlowReturn
-gst_ogm_parse_chain (GstPad * pad, GstBuffer * buf)
+gst_ogm_parse_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
 {
   GstFlowReturn ret = GST_FLOW_OK;
-  GstOgmParse *ogm = GST_OGM_PARSE (GST_PAD_PARENT (pad));
+  GstOgmParse *ogm = GST_OGM_PARSE (parent);
   guint8 *data;
   gsize size;
 
@@ -885,9 +887,9 @@ buffer_too_small:
 }
 
 static gboolean
-gst_ogm_parse_sink_event (GstPad * pad, GstEvent * event)
+gst_ogm_parse_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
 {
-  GstOgmParse *ogm = GST_OGM_PARSE (gst_pad_get_parent (pad));
+  GstOgmParse *ogm = GST_OGM_PARSE (parent);
   gboolean res;
 
   GST_LOG_OBJECT (ogm, "processing %s event", GST_EVENT_TYPE_NAME (event));
@@ -899,10 +901,9 @@ gst_ogm_parse_sink_event (GstPad * pad, GstEvent * event)
     res = TRUE;
   } else {
     GST_OBJECT_UNLOCK (ogm);
-    res = gst_pad_event_default (pad, event);
+    res = gst_pad_event_default (pad, parent, event);
   }
 
-  gst_object_unref (ogm);
   return res;
 }
 
