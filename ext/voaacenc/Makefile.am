@@ -4,7 +4,7 @@ libgstvoaacenc_la_SOURCES = \
 	gstvoaac.c \
 	gstvoaacenc.c 
 
-libgstvoaacenc_la_CFLAGS = \
+libgstvoaacenc_la_CFLAGS = -DGST_USE_UNSTABLE_API \
 	$(GST_PLUGINS_BASE_CFLAGS) \
 	$(GST_BASE_CFLAGS) \
 	$(GST_CFLAGS) \
