@@ -5127,14 +5127,15 @@ gst_qtdemux_add_stream (GstQTDemux * qtdemux,
     gst_pad_use_fixed_caps (stream->pad);
     gst_pad_set_event_function (stream->pad, gst_qtdemux_handle_src_event);
     gst_pad_set_query_function (stream->pad, gst_qtdemux_handle_src_query);
+    gst_pad_set_active (stream->pad, TRUE);
 
     GST_DEBUG_OBJECT (qtdemux, "setting caps %" GST_PTR_FORMAT, stream->caps);
     gst_pad_set_caps (stream->pad, stream->caps);
 
     GST_DEBUG_OBJECT (qtdemux, "adding pad %s %p to qtdemux %p",
         GST_OBJECT_NAME (stream->pad), stream->pad, qtdemux);
-    gst_pad_set_active (stream->pad, TRUE);
     gst_element_add_pad (GST_ELEMENT_CAST (qtdemux), stream->pad);
+
     if (stream->pending_tags)
       gst_tag_list_free (stream->pending_tags);
     stream->pending_tags = list;
