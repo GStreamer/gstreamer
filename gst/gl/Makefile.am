@@ -9,6 +9,8 @@ if GL_IS_OPENGL
 OPENGL_SOURCES =  \
 	gstglbumper.c \
 	gstglbumper.h \
+	gstglfiltershader.c \
+	gstglfiltershader.h \
 	gstglfilterblur.c \
 	gstglfilterblur.h \
 	gstglfiltersobel.c \

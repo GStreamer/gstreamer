@@ -7,6 +7,7 @@ gstlibsgstgl_C_FILES = \
   gstglbuffer.c \
   gstglfilter.c \
   gstglmixer.c \
+  gstglshadervariables.c \
   gstglshader.c
 
 gstlibsgstgl_OBJC_FILES = gstglwindow_cocoa.m

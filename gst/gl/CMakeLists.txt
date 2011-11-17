@@ -34,6 +34,7 @@ add_library (gstopengl MODULE
   gstglfilterglass.c
   gstglfilterapp.c
   gstglfilterreflectedscreen.c
+  gstglfiltershader.c
   gstglcolorscale.c
   gltestsrc.c
   gstgltestsrc.c
