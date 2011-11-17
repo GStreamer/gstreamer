@@ -420,7 +420,7 @@ gst_mxf_mux_request_new_pad (GstElement * element,
   pad = gst_pad_new_from_template (templ, name);
   g_free (name);
   cpad = (GstMXFMuxPad *)
-      gst_collect_pads_add_pad (mux->collect, pad, sizeof (GstMXFMuxPad));
+      gst_collect_pads_add_pad (mux->collect, pad, sizeof (GstMXFMuxPad), NULL);
   cpad->last_timestamp = 0;
   cpad->adapter = gst_adapter_new ();
   cpad->writer = writer;
