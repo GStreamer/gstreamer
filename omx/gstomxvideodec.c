@@ -639,6 +639,7 @@ gst_omx_video_dec_loop (GstOMXVideoDec * self)
   GstFlowReturn flow_ret = GST_FLOW_OK;
   GstOMXAcquireBufferReturn acq_return;
   GstClockTimeDiff deadline;
+  gboolean is_eos;
 
   acq_return = gst_omx_port_acquire_buffer (port, &buf);
   if (acq_return == GST_OMX_ACQUIRE_BUFFER_ERROR) {
@@ -718,6 +719,8 @@ gst_omx_video_dec_loop (GstOMXVideoDec * self)
   GST_BASE_VIDEO_CODEC_STREAM_LOCK (self);
   frame = _find_nearest_frame (self, buf);
 
+  is_eos = ! !(buf->omx_buf->nFlags & OMX_BUFFERFLAG_EOS);
+
   if (frame
       && (deadline = gst_base_video_decoder_get_max_decode_time
           (GST_BASE_VIDEO_DECODER (self), frame)) < 0) {
@@ -780,8 +783,7 @@ gst_omx_video_dec_loop (GstOMXVideoDec * self)
         frame);
   }
 
-  if ((flow_ret == GST_FLOW_OK && (buf->omx_buf->nFlags & OMX_BUFFERFLAG_EOS))
-      || flow_ret == GST_FLOW_UNEXPECTED) {
+  if (is_eos || flow_ret == GST_FLOW_UNEXPECTED) {
     g_mutex_lock (self->drain_lock);
     if (self->draining) {
       GST_DEBUG_OBJECT (self, "Drained");
