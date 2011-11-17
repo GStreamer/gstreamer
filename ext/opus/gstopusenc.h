@@ -48,11 +48,7 @@ typedef struct _GstOpusEnc GstOpusEnc;
 typedef struct _GstOpusEncClass GstOpusEncClass;
 
 struct _GstOpusEnc {
-  GstAudioEncoder        element;
-
-  /* pads */
-  GstPad                *sinkpad;
-  GstPad                *srcpad;
+  GstAudioEncoder       element;
 
   OpusEncoder          *state;
 
@@ -74,7 +70,8 @@ struct _GstOpusEnc {
 
   gboolean              setup;
   gboolean              header_sent;
-  GSList               *headers;
+
+  GSList                *headers;
 
   GstTagList            *tags;
 };
