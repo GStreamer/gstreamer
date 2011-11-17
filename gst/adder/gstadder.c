@@ -976,7 +976,8 @@ gst_adder_request_new_pad (GstElement * element, GstPadTemplate * templ,
   g_free (name);
 
   gst_pad_set_query_function (newpad, GST_DEBUG_FUNCPTR (gst_adder_sink_query));
-  gst_collect_pads_add_pad (adder->collect, newpad, sizeof (GstCollectData));
+  gst_collect_pads_add_pad (adder->collect, newpad, sizeof (GstCollectData),
+      NULL);
 
   /* FIXME: hacked way to override/extend the event function of
    * GstCollectPads; because it sets its own event function giving the
