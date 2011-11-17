@@ -24,6 +24,7 @@ add_library (gstgl STATIC
   gstglbuffer.c
   gstglfilter.c
   gstglmixer.c
+  gstglshadervariables.c
   gstglshader.c)
 
 target_link_libraries(gstgl
@@ -47,6 +48,7 @@ else (WIN32)
       gstglbuffer.c
       gstglfilter.c
       gstglmixer.c
+      gstglshadervariables.c
       gstglshader.c)
 
     target_link_libraries(gstgl
@@ -70,6 +72,7 @@ else (WIN32)
       gstglbuffer.c
       gstglfilter.c
       gstglmixer.c
+      gstglshadervariables.c
       gstglshader.c)
 
     target_link_libraries(gstgl

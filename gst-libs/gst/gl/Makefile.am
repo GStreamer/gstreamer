@@ -13,7 +13,8 @@ libgstgl_@GST_MAJORMINOR@_la_SOURCES = \
 	gstglbuffer.c \
 	gstglfilter.c \
 	gstglmixer.c \
-	gstglshader.c
+        gstglshader.c \
+        gstglshadervariables.c
 
 if GL_BACKEND_WIN32
 libgstgl_@GST_MAJORMINOR@_la_SOURCES += gstglwindow_win32.c
@@ -37,6 +38,7 @@ libgstgl_@GST_MAJORMINOR@include_HEADERS = \
 	gstglfilter.h \
 	gstglmixer.h \
 	gstglmixerpad.h \
+        gstglshadervariables.h \
 	gstglshader.h
 
 libgstgl_@GST_MAJORMINOR@_la_LIBADD = \

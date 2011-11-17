@@ -519,6 +519,314 @@ gst_gl_shader_set_uniform_1i (GstGLShader * shader, const gchar * name,
 }
 
 void
+gst_gl_shader_set_uniform_1iv (GstGLShader * shader, const gchar * name,
+    guint count, gint * value)
+{
+  GstGLShaderPrivate *priv;
+  GLint location = -1;
+
+  priv = shader->priv;
+
+  g_return_if_fail (priv->program_handle != 0);
+
+  location = glGetUniformLocationARB (priv->program_handle, name);
+
+  glUniform1ivARB (location, count, value);
+}
+
+void
+gst_gl_shader_set_uniform_2f (GstGLShader * shader, const gchar * name,
+    gfloat value0, gfloat value1)
+{
+  GstGLShaderPrivate *priv;
+  GLint location = -1;
+
+  priv = shader->priv;
+
+  g_return_if_fail (priv->program_handle != 0);
+
+  location = glGetUniformLocationARB (priv->program_handle, name);
+
+  glUniform2fARB (location, value0, value1);
+}
+
+void
+gst_gl_shader_set_uniform_2fv (GstGLShader * shader, const gchar * name,
+    guint count, gfloat * value)
+{
+  GstGLShaderPrivate *priv;
+  GLint location = -1;
+
+  priv = shader->priv;
+
+  g_return_if_fail (priv->program_handle != 0);
+
+  location = glGetUniformLocationARB (priv->program_handle, name);
+
+  glUniform2fvARB (location, count, value);
+}
+
+void
+gst_gl_shader_set_uniform_2i (GstGLShader * shader, const gchar * name,
+    gint v0, gint v1)
+{
+  GstGLShaderPrivate *priv;
+  GLint location = -1;
+
+  priv = shader->priv;
+
+  g_return_if_fail (priv->program_handle != 0);
+
+  location = glGetUniformLocationARB (priv->program_handle, name);
+
+  glUniform2iARB (location, v0, v1);
+}
+
+void
+gst_gl_shader_set_uniform_2iv (GstGLShader * shader, const gchar * name,
+    guint count, gint * value)
+{
+  GstGLShaderPrivate *priv;
+  GLint location = -1;
+
+  priv = shader->priv;
+
+  g_return_if_fail (priv->program_handle != 0);
+
+  location = glGetUniformLocationARB (priv->program_handle, name);
+
+  glUniform2ivARB (location, count, value);
+}
+
+void
+gst_gl_shader_set_uniform_3f (GstGLShader * shader, const gchar * name,
+    gfloat v0, gfloat v1, gfloat v2)
+{
+  GstGLShaderPrivate *priv;
+  GLint location = -1;
+
+  priv = shader->priv;
+
+  g_return_if_fail (priv->program_handle != 0);
+
+  location = glGetUniformLocationARB (priv->program_handle, name);
+
+  glUniform3fARB (location, v0, v1, v2);
+}
+
+void
+gst_gl_shader_set_uniform_3fv (GstGLShader * shader, const gchar * name,
+    guint count, gfloat * value)
+{
+  GstGLShaderPrivate *priv;
+  GLint location = -1;
+
+  priv = shader->priv;
+
+  g_return_if_fail (priv->program_handle != 0);
+
+  location = glGetUniformLocationARB (priv->program_handle, name);
+
+  glUniform3fvARB (location, count, value);
+}
+
+void
+gst_gl_shader_set_uniform_3i (GstGLShader * shader, const gchar * name,
+    gint v0, gint v1, gint v2)
+{
+  GstGLShaderPrivate *priv;
+  GLint location = -1;
+
+  priv = shader->priv;
+
+  g_return_if_fail (priv->program_handle != 0);
+
+  location = glGetUniformLocationARB (priv->program_handle, name);
+
+  glUniform3iARB (location, v0, v1, v2);
+}
+
+void
+gst_gl_shader_set_uniform_3iv (GstGLShader * shader, const gchar * name,
+    guint count, gint * value)
+{
+  GstGLShaderPrivate *priv;
+  GLint location = -1;
+
+  priv = shader->priv;
+
+  g_return_if_fail (priv->program_handle != 0);
+
+  location = glGetUniformLocationARB (priv->program_handle, name);
+
+  glUniform3ivARB (location, count, value);
+}
+
+void
+gst_gl_shader_set_uniform_4f (GstGLShader * shader, const gchar * name,
+    gfloat v0, gfloat v1, gfloat v2, gfloat v3)
+{
+  GstGLShaderPrivate *priv;
+  GLint location = -1;
+
+  priv = shader->priv;
+
+  g_return_if_fail (priv->program_handle != 0);
+
+  location = glGetUniformLocationARB (priv->program_handle, name);
+
+  glUniform4fARB (location, v0, v1, v2, v3);
+}
+
+void
+gst_gl_shader_set_uniform_4fv (GstGLShader * shader, const gchar * name,
+    guint count, gfloat * value)
+{
+  GstGLShaderPrivate *priv;
+  GLint location = -1;
+
+  priv = shader->priv;
+
+  g_return_if_fail (priv->program_handle != 0);
+
+  location = glGetUniformLocationARB (priv->program_handle, name);
+
+  glUniform4fvARB (location, count, value);
+}
+
+void
+gst_gl_shader_set_uniform_4i (GstGLShader * shader, const gchar * name,
+    gint v0, gint v1, gint v2, gint v3)
+{
+  GstGLShaderPrivate *priv;
+  GLint location = -1;
+
+  priv = shader->priv;
+
+  g_return_if_fail (priv->program_handle != 0);
+
+  location = glGetUniformLocationARB (priv->program_handle, name);
+
+  glUniform4iARB (location, v0, v1, v2, v3);
+}
+
+void
+gst_gl_shader_set_uniform_4iv (GstGLShader * shader, const gchar * name,
+    guint count, gint * value)
+{
+  GstGLShaderPrivate *priv;
+  GLint location = -1;
+
+  priv = shader->priv;
+
+  g_return_if_fail (priv->program_handle != 0);
+
+  location = glGetUniformLocationARB (priv->program_handle, name);
+
+  glUniform4ivARB (location, count, value);
+}
+
+void
+gst_gl_shader_set_uniform_matrix_2fv (GstGLShader * shader, const gchar * name,
+    GLsizei count, GLboolean transpose, const GLfloat * value)
+{
+  GstGLShaderPrivate *priv;
+  GLint location = -1;
+
+  priv = shader->priv;
+
+  g_return_if_fail (priv->program_handle != 0);
+
+  location = glGetUniformLocationARB (priv->program_handle, name);
+
+  glUniformMatrix2fvARB (location, count, transpose, value);
+}
+
+void
+gst_gl_shader_set_uniform_matrix_2x3fv (GstGLShader * shader,
+    const gchar * name, GLsizei count, GLboolean transpose,
+    const GLfloat * value)
+{
+  GstGLShaderPrivate *priv;
+  GLint location = -1;
+
+  priv = shader->priv;
+
+  g_return_if_fail (priv->program_handle != 0);
+
+  location = glGetUniformLocationARB (priv->program_handle, name);
+
+  glUniformMatrix2x3fv (location, count, transpose, value);
+}
+
+void
+gst_gl_shader_set_uniform_matrix_2x4fv (GstGLShader * shader,
+    const gchar * name, GLsizei count, GLboolean transpose,
+    const GLfloat * value)
+{
+  GstGLShaderPrivate *priv;
+  GLint location = -1;
+
+  priv = shader->priv;
+
+  g_return_if_fail (priv->program_handle != 0);
+
+  location = glGetUniformLocationARB (priv->program_handle, name);
+
+  glUniformMatrix2x4fv (location, count, transpose, value);
+}
+
+void
+gst_gl_shader_set_uniform_matrix_3fv (GstGLShader * shader, const gchar * name,
+    GLsizei count, GLboolean transpose, const GLfloat * value)
+{
+  GstGLShaderPrivate *priv;
+  GLint location = -1;
+
+  priv = shader->priv;
+
+  g_return_if_fail (priv->program_handle != 0);
+
+  location = glGetUniformLocationARB (priv->program_handle, name);
+
+  glUniformMatrix3fvARB (location, count, transpose, value);
+}
+
+void
+gst_gl_shader_set_uniform_matrix_3x2fv (GstGLShader * shader,
+    const gchar * name, GLsizei count, GLboolean transpose,
+    const GLfloat * value)
+{
+  GstGLShaderPrivate *priv;
+  GLint location = -1;
+
+  priv = shader->priv;
+
+  g_return_if_fail (priv->program_handle != 0);
+
+  location = glGetUniformLocationARB (priv->program_handle, name);
+
+  glUniformMatrix3x2fv (location, count, transpose, value);
+}
+
+void
+gst_gl_shader_set_uniform_matrix_3x4fv (GstGLShader * shader,
+    const gchar * name, GLsizei count, GLboolean transpose,
+    const GLfloat * value)
+{
+  GstGLShaderPrivate *priv;
+  GLint location = -1;
+
+  priv = shader->priv;
+
+  g_return_if_fail (priv->program_handle != 0);
+
+  location = glGetUniformLocationARB (priv->program_handle, name);
+
+  glUniformMatrix3x4fv (location, count, transpose, value);
+}
+
+void
 gst_gl_shader_set_uniform_matrix_4fv (GstGLShader * shader, const gchar * name,
     GLsizei count, GLboolean transpose, const GLfloat * value)
 {
@@ -532,6 +840,40 @@ gst_gl_shader_set_uniform_matrix_4fv (GstGLShader * shader, const gchar * name,
   location = glGetUniformLocationARB (priv->program_handle, name);
 
   glUniformMatrix4fvARB (location, count, transpose, value);
+}
+
+void
+gst_gl_shader_set_uniform_matrix_4x2fv (GstGLShader * shader,
+    const gchar * name, GLsizei count, GLboolean transpose,
+    const GLfloat * value)
+{
+  GstGLShaderPrivate *priv;
+  GLint location = -1;
+
+  priv = shader->priv;
+
+  g_return_if_fail (priv->program_handle != 0);
+
+  location = glGetUniformLocationARB (priv->program_handle, name);
+
+  glUniformMatrix4x2fv (location, count, transpose, value);
+}
+
+void
+gst_gl_shader_set_uniform_matrix_4x3fv (GstGLShader * shader,
+    const gchar * name, GLsizei count, GLboolean transpose,
+    const GLfloat * value)
+{
+  GstGLShaderPrivate *priv;
+  GLint location = -1;
+
+  priv = shader->priv;
+
+  g_return_if_fail (priv->program_handle != 0);
+
+  location = glGetUniformLocationARB (priv->program_handle, name);
+
+  glUniformMatrix4x3fv (location, count, transpose, value);
 }
 
 GLint
