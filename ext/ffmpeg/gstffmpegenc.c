@@ -100,11 +100,13 @@ static gboolean gst_ffmpegenc_setcaps (GstFFMpegEnc * ffmpegenc,
     GstCaps * caps);
 static GstCaps *gst_ffmpegenc_getcaps (GstPad * pad, GstCaps * filter);
 static GstFlowReturn gst_ffmpegenc_chain_video (GstPad * pad,
-    GstBuffer * buffer);
+    GstObject * parent, GstBuffer * buffer);
 static GstFlowReturn gst_ffmpegenc_chain_audio (GstPad * pad,
-    GstBuffer * buffer);
-static gboolean gst_ffmpegenc_event_sink (GstPad * pad, GstEvent * event);
-static gboolean gst_ffmpegenc_event_src (GstPad * pad, GstEvent * event);
+    GstObject * parent, GstBuffer * buffer);
+static gboolean gst_ffmpegenc_event_sink (GstPad * pad, GstObject * parent,
+    GstEvent * event);
+static gboolean gst_ffmpegenc_event_src (GstPad * pad, GstObject * parent,
+    GstEvent * event);
 static gboolean gst_ffmpegenc_query_sink (GstPad * pad, GstObject * parent,
     GstQuery * query);
 
@@ -771,9 +773,9 @@ ffmpegenc_setup_working_buf (GstFFMpegEnc * ffmpegenc)
 }
 
 static GstFlowReturn
-gst_ffmpegenc_chain_video (GstPad * pad, GstBuffer * inbuf)
+gst_ffmpegenc_chain_video (GstPad * pad, GstObject * parent, GstBuffer * inbuf)
 {
-  GstFFMpegEnc *ffmpegenc = (GstFFMpegEnc *) (GST_PAD_PARENT (pad));
+  GstFFMpegEnc *ffmpegenc = (GstFFMpegEnc *) parent;
   GstBuffer *outbuf;
   guint8 *data;
   gsize size;
@@ -923,7 +925,7 @@ gst_ffmpegenc_encode_audio (GstFFMpegEnc * ffmpegenc, guint8 * audio_in,
 }
 
 static GstFlowReturn
-gst_ffmpegenc_chain_audio (GstPad * pad, GstBuffer * inbuf)
+gst_ffmpegenc_chain_audio (GstPad * pad, GstObject * parent, GstBuffer * inbuf)
 {
   GstFFMpegEnc *ffmpegenc;
   GstFFMpegEncClass *oclass;
@@ -936,7 +938,7 @@ gst_ffmpegenc_chain_audio (GstPad * pad, GstBuffer * inbuf)
   gboolean discont;
   guint8 *in_data;
 
-  ffmpegenc = (GstFFMpegEnc *) (GST_OBJECT_PARENT (pad));
+  ffmpegenc = (GstFFMpegEnc *) parent;
   oclass = (GstFFMpegEncClass *) G_OBJECT_GET_CLASS (ffmpegenc);
 
   if (G_UNLIKELY (!ffmpegenc->opened))
@@ -1166,9 +1168,9 @@ flush:
 }
 
 static gboolean
-gst_ffmpegenc_event_sink (GstPad * pad, GstEvent * event)
+gst_ffmpegenc_event_sink (GstPad * pad, GstObject * parent, GstEvent * event)
 {
-  GstFFMpegEnc *ffmpegenc = (GstFFMpegEnc *) (GST_PAD_PARENT (pad));
+  GstFFMpegEnc *ffmpegenc = (GstFFMpegEnc *) parent;
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_EOS:
@@ -1204,9 +1206,9 @@ gst_ffmpegenc_event_sink (GstPad * pad, GstEvent * event)
 }
 
 static gboolean
-gst_ffmpegenc_event_src (GstPad * pad, GstEvent * event)
+gst_ffmpegenc_event_src (GstPad * pad, GstObject * parent, GstEvent * event)
 {
-  GstFFMpegEnc *ffmpegenc = (GstFFMpegEnc *) (GST_PAD_PARENT (pad));
+  GstFFMpegEnc *ffmpegenc = (GstFFMpegEnc *) parent;
   gboolean forward = TRUE;
 
   switch (GST_EVENT_TYPE (event)) {

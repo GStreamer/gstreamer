@@ -171,7 +171,7 @@ static gboolean gst_ffmpegscale_set_caps (GstBaseTransform * trans,
 static GstFlowReturn gst_ffmpegscale_transform (GstBaseTransform * trans,
     GstBuffer * inbuf, GstBuffer * outbuf);
 
-static gboolean gst_ffmpegscale_handle_src_event (GstPad * pad,
+static gboolean gst_ffmpegscale_src_event (GstBaseTransform * trans,
     GstEvent * event);
 
 static void
@@ -208,6 +208,7 @@ gst_ffmpegscale_class_init (GstFFMpegScaleClass * klass)
       GST_DEBUG_FUNCPTR (gst_ffmpegscale_get_unit_size);
   trans_class->set_caps = GST_DEBUG_FUNCPTR (gst_ffmpegscale_set_caps);
   trans_class->transform = GST_DEBUG_FUNCPTR (gst_ffmpegscale_transform);
+  trans_class->src_event = GST_DEBUG_FUNCPTR (gst_ffmpegscale_src_event);
 
   trans_class->passthrough_on_same_caps = TRUE;
 }
@@ -215,10 +216,6 @@ gst_ffmpegscale_class_init (GstFFMpegScaleClass * klass)
 static void
 gst_ffmpegscale_init (GstFFMpegScale * scale)
 {
-  GstBaseTransform *trans = GST_BASE_TRANSFORM (scale);
-
-  gst_pad_set_event_function (trans->srcpad, gst_ffmpegscale_handle_src_event);
-
   scale->method = DEFAULT_PROP_METHOD;
   scale->ctx = NULL;
   scale->in_pixfmt = PIX_FMT_NONE;
@@ -649,21 +646,20 @@ invalid_buffer:
 }
 
 static gboolean
-gst_ffmpegscale_handle_src_event (GstPad * pad, GstEvent * event)
+gst_ffmpegscale_src_event (GstBaseTransform * trans, GstEvent * event)
 {
   GstFFMpegScale *scale;
   GstStructure *structure;
   gdouble pointer;
   gboolean res;
 
-  scale = GST_FFMPEGSCALE (gst_pad_get_parent (pad));
+  scale = GST_FFMPEGSCALE (trans);
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_NAVIGATION:
-      event =
-          GST_EVENT (gst_mini_object_make_writable (GST_MINI_OBJECT (event)));
+      event = gst_event_make_writable (event);
 
-      structure = (GstStructure *) gst_event_get_structure (event);
+      structure = gst_event_writable_structure (event);
       if (gst_structure_get_double (structure, "pointer_x", &pointer)) {
         gst_structure_set (structure,
             "pointer_x", G_TYPE_DOUBLE,
@@ -679,9 +675,7 @@ gst_ffmpegscale_handle_src_event (GstPad * pad, GstEvent * event)
       break;
   }
 
-  res = gst_pad_event_default (pad, event);
-
-  gst_object_unref (scale);
+  res = GST_BASE_TRANSFORM_CLASS (parent_class)->src_event (trans, event);
 
   return res;
 }
@@ -777,9 +771,7 @@ plugin_init (GstPlugin * plugin)
 GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
     GST_VERSION_MINOR,
     "ffvideoscale",
-    "videoscaling element (" FFMPEG_SOURCE ")",
-    plugin_init,
-    PACKAGE_VERSION,
+    "videoscaling element (" FFMPEG_SOURCE ")", plugin_init, PACKAGE_VERSION,
 #ifdef GST_FFMPEG_ENABLE_LGPL
     "LGPL",
 #else

@@ -137,7 +137,7 @@ static GstStaticPadTemplate sink_factory = GST_STATIC_PAD_TEMPLATE ("sink",
 G_DEFINE_TYPE (GstFFMpegDeinterlace, gst_ffmpegdeinterlace, GST_TYPE_ELEMENT);
 
 static GstFlowReturn gst_ffmpegdeinterlace_chain (GstPad * pad,
-    GstBuffer * inbuf);
+    GstObject * parent, GstBuffer * inbuf);
 
 static void
 gst_ffmpegdeinterlace_class_init (GstFFMpegDeinterlaceClass * klass)
@@ -230,10 +230,10 @@ gst_ffmpegdeinterlace_sink_setcaps (GstPad * pad, GstCaps * caps)
 }
 
 static gboolean
-gst_ffmpegdeinterlace_sink_event (GstPad * pad, GstEvent * event)
+gst_ffmpegdeinterlace_sink_event (GstPad * pad, GstObject * parent,
+    GstEvent * event)
 {
-  GstFFMpegDeinterlace *deinterlace =
-      GST_FFMPEGDEINTERLACE (gst_pad_get_parent (pad));
+  GstFFMpegDeinterlace *deinterlace = GST_FFMPEGDEINTERLACE (parent);
   gboolean ret = FALSE;
 
   switch (GST_EVENT_TYPE (event)) {
@@ -250,8 +250,6 @@ gst_ffmpegdeinterlace_sink_event (GstPad * pad, GstEvent * event)
       ret = gst_pad_push_event (deinterlace->srcpad, event);
       break;
   }
-
-  gst_object_unref (deinterlace);
 
   return ret;
 }
@@ -280,10 +278,10 @@ gst_ffmpegdeinterlace_init (GstFFMpegDeinterlace * deinterlace)
 }
 
 static GstFlowReturn
-gst_ffmpegdeinterlace_chain (GstPad * pad, GstBuffer * inbuf)
+gst_ffmpegdeinterlace_chain (GstPad * pad, GstObject * parent,
+    GstBuffer * inbuf)
 {
-  GstFFMpegDeinterlace *deinterlace =
-      GST_FFMPEGDEINTERLACE (gst_pad_get_parent (pad));
+  GstFFMpegDeinterlace *deinterlace = GST_FFMPEGDEINTERLACE (parent);
   GstBuffer *outbuf = NULL;
   GstFlowReturn result;
   guint8 *from_data, *to_data;

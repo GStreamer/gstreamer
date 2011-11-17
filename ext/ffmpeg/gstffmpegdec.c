@@ -228,10 +228,13 @@ static void gst_ffmpegdec_finalize (GObject * object);
 
 static gboolean gst_ffmpegdec_src_query (GstPad * pad, GstObject * parent,
     GstQuery * query);
-static gboolean gst_ffmpegdec_src_event (GstPad * pad, GstEvent * event);
+static gboolean gst_ffmpegdec_src_event (GstPad * pad, GstObject * parent,
+    GstEvent * event);
 
-static gboolean gst_ffmpegdec_sink_event (GstPad * pad, GstEvent * event);
-static GstFlowReturn gst_ffmpegdec_chain (GstPad * pad, GstBuffer * buf);
+static gboolean gst_ffmpegdec_sink_event (GstPad * pad, GstObject * parent,
+    GstEvent * event);
+static GstFlowReturn gst_ffmpegdec_chain (GstPad * pad, GstObject * parent,
+    GstBuffer * buf);
 
 static GstStateChangeReturn gst_ffmpegdec_change_state (GstElement * element,
     GstStateChange transition);
@@ -539,12 +542,12 @@ gst_ffmpegdec_read_qos (GstFFMpegDec * ffmpegdec, gdouble * proportion,
 }
 
 static gboolean
-gst_ffmpegdec_src_event (GstPad * pad, GstEvent * event)
+gst_ffmpegdec_src_event (GstPad * pad, GstObject * parent, GstEvent * event)
 {
   GstFFMpegDec *ffmpegdec;
   gboolean res;
 
-  ffmpegdec = (GstFFMpegDec *) gst_pad_get_parent (pad);
+  ffmpegdec = (GstFFMpegDec *) parent;
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_QOS:
@@ -568,8 +571,6 @@ gst_ffmpegdec_src_event (GstPad * pad, GstEvent * event)
       res = gst_pad_push_event (ffmpegdec->sinkpad, event);
       break;
   }
-
-  gst_object_unref (ffmpegdec);
 
   return res;
 }
@@ -2475,12 +2476,12 @@ gst_ffmpegdec_flush_pcache (GstFFMpegDec * ffmpegdec)
 }
 
 static gboolean
-gst_ffmpegdec_sink_event (GstPad * pad, GstEvent * event)
+gst_ffmpegdec_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
 {
   GstFFMpegDec *ffmpegdec;
   gboolean ret = FALSE;
 
-  ffmpegdec = (GstFFMpegDec *) gst_pad_get_parent (pad);
+  ffmpegdec = (GstFFMpegDec *) parent;
 
   GST_DEBUG_OBJECT (ffmpegdec, "Handling %s event",
       GST_EVENT_TYPE_NAME (event));
@@ -2584,7 +2585,6 @@ gst_ffmpegdec_sink_event (GstPad * pad, GstEvent * event)
   ret = gst_pad_push_event (ffmpegdec->srcpad, event);
 
 done:
-  gst_object_unref (ffmpegdec);
 
   return ret;
 
@@ -2604,7 +2604,7 @@ invalid_format:
 }
 
 static GstFlowReturn
-gst_ffmpegdec_chain (GstPad * pad, GstBuffer * inbuf)
+gst_ffmpegdec_chain (GstPad * pad, GstObject * parent, GstBuffer * inbuf)
 {
   GstFFMpegDec *ffmpegdec;
   GstFFMpegDecClass *oclass;
@@ -2620,7 +2620,7 @@ gst_ffmpegdec_chain (GstPad * pad, GstBuffer * inbuf)
   const GstTSInfo *in_info;
   const GstTSInfo *dec_info;
 
-  ffmpegdec = (GstFFMpegDec *) (GST_PAD_PARENT (pad));
+  ffmpegdec = (GstFFMpegDec *) parent;
 
   if (G_UNLIKELY (!ffmpegdec->opened))
     goto not_negotiated;

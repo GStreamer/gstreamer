@@ -117,7 +117,8 @@ static GstPad *gst_ffmpegmux_request_new_pad (GstElement * element,
 static GstFlowReturn gst_ffmpegmux_collected (GstCollectPads * pads,
     gpointer user_data);
 
-static gboolean gst_ffmpegmux_sink_event (GstPad * pad, GstEvent * event);
+static gboolean gst_ffmpegmux_sink_event (GstPad * pad, GstObject * parent,
+    GstEvent * event);
 
 static GstStateChangeReturn gst_ffmpegmux_change_state (GstElement * element,
     GstStateChange transition);
@@ -508,9 +509,9 @@ not_accepted:
 
 
 static gboolean
-gst_ffmpegmux_sink_event (GstPad * pad, GstEvent * event)
+gst_ffmpegmux_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
 {
-  GstFFMpegMux *ffmpegmux = (GstFFMpegMux *) gst_pad_get_parent (pad);
+  GstFFMpegMux *ffmpegmux = (GstFFMpegMux *) parent;
   gboolean res = TRUE;
 
   switch (GST_EVENT_TYPE (event)) {
@@ -535,10 +536,9 @@ gst_ffmpegmux_sink_event (GstPad * pad, GstEvent * event)
   }
 
   /* chaining up to collectpads default event function */
-  res = ffmpegmux->event_function (pad, event);
+  res = ffmpegmux->event_function (pad, parent, event);
 
 beach:
-  gst_object_unref (ffmpegmux);
   return res;
 }
 

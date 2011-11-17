@@ -120,8 +120,10 @@ static void gst_ffmpegdemux_base_init (GstFFMpegDemuxClass * klass);
 static void gst_ffmpegdemux_init (GstFFMpegDemux * demux);
 static void gst_ffmpegdemux_finalize (GObject * object);
 
-static gboolean gst_ffmpegdemux_sink_event (GstPad * sinkpad, GstEvent * event);
-static GstFlowReturn gst_ffmpegdemux_chain (GstPad * sinkpad, GstBuffer * buf);
+static gboolean gst_ffmpegdemux_sink_event (GstPad * sinkpad,
+    GstObject * parent, GstEvent * event);
+static GstFlowReturn gst_ffmpegdemux_chain (GstPad * sinkpad,
+    GstObject * parent, GstBuffer * buf);
 
 static void gst_ffmpegdemux_loop (GstFFMpegDemux * demux);
 static gboolean gst_ffmpegdemux_sink_activate (GstPad * sinkpad);
@@ -649,7 +651,7 @@ no_format:
 }
 
 static gboolean
-gst_ffmpegdemux_src_event (GstPad * pad, GstEvent * event)
+gst_ffmpegdemux_src_event (GstPad * pad, GstObject * parent, GstEvent * event)
 {
   GstFFMpegDemux *demux;
   GstFFStream *stream;
@@ -658,7 +660,7 @@ gst_ffmpegdemux_src_event (GstPad * pad, GstEvent * event)
   if (!(stream = gst_pad_get_element_private (pad)))
     return FALSE;
 
-  demux = (GstFFMpegDemux *) gst_pad_get_parent (pad);
+  demux = (GstFFMpegDemux *) parent;
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_SEEK:
@@ -675,8 +677,6 @@ gst_ffmpegdemux_src_event (GstPad * pad, GstEvent * event)
       gst_event_unref (event);
       break;
   }
-
-  gst_object_unref (demux);
 
   return res;
 }
@@ -1548,13 +1548,14 @@ no_buffer:
 
 
 static gboolean
-gst_ffmpegdemux_sink_event (GstPad * sinkpad, GstEvent * event)
+gst_ffmpegdemux_sink_event (GstPad * sinkpad, GstObject * parent,
+    GstEvent * event)
 {
   GstFFMpegDemux *demux;
   GstFFMpegPipe *ffpipe;
   gboolean result = TRUE;
 
-  demux = (GstFFMpegDemux *) (GST_PAD_PARENT (sinkpad));
+  demux = (GstFFMpegDemux *) parent;
   ffpipe = &(demux->ffpipe);
 
   GST_LOG_OBJECT (demux, "event: %" GST_PTR_FORMAT, event);
@@ -1562,7 +1563,7 @@ gst_ffmpegdemux_sink_event (GstPad * sinkpad, GstEvent * event)
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_FLUSH_START:
       /* forward event */
-      gst_pad_event_default (sinkpad, event);
+      gst_pad_event_default (sinkpad, parent, event);
 
       /* now unblock the chain function */
       GST_FFMPEG_PIPE_MUTEX_LOCK (ffpipe);
@@ -1577,7 +1578,7 @@ gst_ffmpegdemux_sink_event (GstPad * sinkpad, GstEvent * event)
       goto done;
     case GST_EVENT_FLUSH_STOP:
       /* forward event */
-      gst_pad_event_default (sinkpad, event);
+      gst_pad_event_default (sinkpad, parent, event);
 
       GST_OBJECT_LOCK (demux);
       g_list_foreach (demux->cached_events, (GFunc) gst_mini_object_unref,
@@ -1626,7 +1627,7 @@ gst_ffmpegdemux_sink_event (GstPad * sinkpad, GstEvent * event)
       break;
   }
 
-  result = gst_pad_event_default (sinkpad, event);
+  result = gst_pad_event_default (sinkpad, parent, event);
 
 done:
 
@@ -1634,12 +1635,12 @@ done:
 }
 
 static GstFlowReturn
-gst_ffmpegdemux_chain (GstPad * sinkpad, GstBuffer * buffer)
+gst_ffmpegdemux_chain (GstPad * sinkpad, GstObject * parent, GstBuffer * buffer)
 {
   GstFFMpegDemux *demux;
   GstFFMpegPipe *ffpipe;
 
-  demux = (GstFFMpegDemux *) (GST_PAD_PARENT (sinkpad));
+  demux = (GstFFMpegDemux *) parent;
   ffpipe = &demux->ffpipe;
 
   GST_FFMPEG_PIPE_MUTEX_LOCK (ffpipe);
