@@ -141,7 +141,7 @@ static gboolean gst_tag_demux_sink_event (GstPad * pad, GstObject * parent,
 
 static gboolean gst_tag_demux_src_activate_pull (GstPad * pad, gboolean active);
 static GstFlowReturn gst_tag_demux_read_range (GstTagDemux * tagdemux,
-    guint64 offset, guint length, GstBuffer ** buffer);
+    GstObject * parent, guint64 offset, guint length, GstBuffer ** buffer);
 
 static GstFlowReturn gst_tag_demux_src_getrange (GstPad * srcpad,
     GstObject * parent, guint64 offset, guint length, GstBuffer ** buffer);
@@ -1173,10 +1173,11 @@ gst_tag_demux_sink_activate (GstPad * sinkpad)
   }
 
   /* 3 - Do typefinding on data */
-  caps = gst_type_find_helper_get_range (GST_OBJECT (demux),
+  caps = gst_type_find_helper_get_range (GST_OBJECT (demux), NULL,
       (GstTypeFindHelperGetRangeFunction) gst_tag_demux_read_range,
       demux->priv->upstream_size
-      - (demux->priv->strip_start + demux->priv->strip_end), &probability);
+      - (demux->priv->strip_start + demux->priv->strip_end), NULL,
+      &probability);
 
   GST_DEBUG_OBJECT (demux, "Found type %" GST_PTR_FORMAT " with a "
       "probability of %u", caps, probability);
@@ -1236,7 +1237,7 @@ gst_tag_demux_src_activate_pull (GstPad * pad, gboolean active)
 }
 
 static GstFlowReturn
-gst_tag_demux_read_range (GstTagDemux * demux,
+gst_tag_demux_read_range (GstTagDemux * demux, GstObject * parent,
     guint64 offset, guint length, GstBuffer ** buffer)
 {
   GstFlowReturn ret;
@@ -1303,7 +1304,7 @@ gst_tag_demux_src_getrange (GstPad * srcpad, GstObject * parent,
     demux->priv->send_tag_event = FALSE;
   }
 
-  return gst_tag_demux_read_range (demux, offset, length, buffer);
+  return gst_tag_demux_read_range (demux, NULL, offset, length, buffer);
 }
 
 static GstStateChangeReturn
