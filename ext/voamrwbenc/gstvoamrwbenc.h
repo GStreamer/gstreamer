@@ -21,7 +21,8 @@
 #define __GST_VOAMRWBENC_H__
 
 #include <gst/gst.h>
-#include <gst/base/gstadapter.h>
+#include <gst/audio/gstaudioencoder.h>
+
 #include <vo-amrwbenc/enc_if.h>
 
 G_BEGIN_DECLS
@@ -41,14 +42,7 @@ typedef struct _GstVoAmrWbEnc GstVoAmrWbEnc;
 typedef struct _GstVoAmrWbEncClass GstVoAmrWbEncClass;
 
 struct _GstVoAmrWbEnc {
-  GstElement element;
-
-  /* pads */
-  GstPad *sinkpad, *srcpad;
-  guint64 ts;
-  gboolean discont;
-
-  GstAdapter *adapter;
+  GstAudioEncoder element;
 
   /* library handle */
   void *handle;
@@ -59,7 +53,7 @@ struct _GstVoAmrWbEnc {
 };
 
 struct _GstVoAmrWbEncClass {
-  GstElementClass parent_class;
+  GstAudioEncoderClass parent_class;
 };
 
 GType gst_voamrwbenc_get_type (void);
