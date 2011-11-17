@@ -626,7 +626,6 @@ gst_collect_pads_new
 gst_collect_pads_set_function
 gst_collect_pads_set_clip_function
 gst_collect_pads_add_pad
-gst_collect_pads_add_pad_full
 gst_collect_pads_remove_pad
 gst_collect_pads_is_active
 gst_collect_pads_collect

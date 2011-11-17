@@ -92,14 +92,17 @@ struct _GstCollectData
   guint                  pos;
   GstSegment             segment;
 
+  gboolean               flushing;
+  gboolean               new_segment;
+  gboolean               eos;
+  gint                   refcount;
+ 
+  GstCollectDataDestroyNotify destroy_notify;
+
   /*< private >*/
   union {
-    struct {
-      gboolean           flushing;
-      gboolean           new_segment;
-      gboolean           eos;
-      gint               refcount;
-    } ABI;
+    /*struct {
+    } ABI;*/
     /* adding + 0 to mark ABI change to be undone later */
     gpointer _gst_reserved[GST_PADDING];
   } abidata;
@@ -116,7 +119,7 @@ struct _GstCollectData
  */
 typedef GstFlowReturn (*GstCollectPadsFunction) (GstCollectPads *pads, gpointer user_data);
 
-#define GST_COLLECT_PADS_GET_PAD_LOCK(pads) (((GstCollectPads *)pads)->abidata.ABI.pad_lock)
+#define GST_COLLECT_PADS_GET_PAD_LOCK(pads) (((GstCollectPads *)pads)->pad_lock)
 #define GST_COLLECT_PADS_PAD_LOCK(pads)     (g_mutex_lock(GST_COLLECT_PADS_GET_PAD_LOCK (pads)))
 #define GST_COLLECT_PADS_PAD_UNLOCK(pads)   (g_mutex_unlock(GST_COLLECT_PADS_GET_PAD_LOCK (pads)))
 
@@ -155,15 +158,16 @@ struct _GstCollectPads {
   /* with LOCK and PAD_LOCK*/
   gboolean       started;
 
+  /* with PAD_LOCK */
+  GMutex        *pad_lock;              /* used to serialize add/remove */
+  GSList        *pad_list;              /* updated pad list */
+  guint32        pad_cookie;            /* updated cookie */
+  GstCollectPadsPrivate  *priv;
+
   /*< private >*/
   union {
-    struct {
-      /* since 0.10.6 */ /* with PAD_LOCK */
-      GMutex    *pad_lock;              /* used to serialize add/remove */
-      GSList    *pad_list;              /* updated pad list */
-      guint32    pad_cookie;            /* updated cookie */
-      GstCollectPadsPrivate  *priv;
-    } ABI;
+    /*struct {
+    } ABI;*/
     /* adding + 0 to mark ABI change to be undone later */
     gpointer _gst_reserved[GST_PADDING];
   } abidata;
@@ -188,8 +192,7 @@ void            gst_collect_pads_set_clip_function (GstCollectPads *pads, GstCol
                                                     gpointer user_data);
 
 /* pad management */
-GstCollectData* gst_collect_pads_add_pad        (GstCollectPads *pads, GstPad *pad, guint size);
-GstCollectData* gst_collect_pads_add_pad_full   (GstCollectPads *pads, GstPad *pad, guint size, GstCollectDataDestroyNotify destroy_notify);
+GstCollectData* gst_collect_pads_add_pad        (GstCollectPads *pads, GstPad *pad, guint size, GstCollectDataDestroyNotify destroy_notify);
 
 
 gboolean        gst_collect_pads_remove_pad     (GstCollectPads *pads, GstPad *pad);
