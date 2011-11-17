@@ -248,6 +248,8 @@ gst_vorbis_enc_stop (GstAudioEncoder * enc)
   g_slist_foreach (vorbisenc->headers, (GFunc) gst_buffer_unref, NULL);
   vorbisenc->headers = NULL;
 
+  gst_tag_setter_reset_tags (GST_TAG_SETTER (enc));
+
   return TRUE;
 }
 
