@@ -49,11 +49,14 @@
 #define GST_CAT_DEFAULT gst_gl_overlay_debug
 GST_DEBUG_CATEGORY_STATIC (GST_CAT_DEFAULT);
 
-#define DEBUG_INIT(bla)							\
+#define DEBUG_INIT(bla) \
   GST_DEBUG_CATEGORY_INIT (gst_gl_overlay_debug, "gloverlay", 0, "gloverlay element");
 
 GST_BOILERPLATE_FULL (GstGLOverlay, gst_gl_overlay, GstGLFilter,
     GST_TYPE_GL_FILTER, DEBUG_INIT);
+
+static gboolean gst_gl_overlay_set_caps (GstGLFilter * filter,
+    GstCaps * incaps, GstCaps * outcaps);
 
 static void gst_gl_overlay_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
@@ -82,7 +85,8 @@ enum
   PROP_ROTATE_PNG,
   PROP_ROTATE_VIDEO,
   PROP_ANGLE_PNG,
-  PROP_ANGLE_VIDEO
+  PROP_ANGLE_VIDEO,
+  PROP_RATIO_VIDEO
 };
 
 
@@ -122,6 +126,7 @@ gst_gl_overlay_class_init (GstGLOverlayClass * klass)
   gobject_class->set_property = gst_gl_overlay_set_property;
   gobject_class->get_property = gst_gl_overlay_get_property;
 
+  GST_GL_FILTER_CLASS (klass)->set_caps = gst_gl_overlay_set_caps;
   GST_GL_FILTER_CLASS (klass)->filter = gst_gl_overlay_filter;
   GST_GL_FILTER_CLASS (klass)->display_init_cb =
       gst_gl_overlay_init_gl_resources;
@@ -212,6 +217,14 @@ gst_gl_overlay_class_init (GstGLOverlayClass * klass)
           "choose angle in axis to choosen between -90 and 90",
           "choose angle in axis to choosen between -90 and 90",
           -90, 90, 0, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  g_object_class_install_property (gobject_class,
+      PROP_RATIO_VIDEO,
+      g_param_spec_int ("ratio-video",
+          "choose ratio video between 0 and 3\n \t\t\t0 : Default ratio\n\t\t\t1 : 4 / 3\n\t\t\t2 : 16 / 9\n\t\t\t3 : 16 / 10",
+          "choose ratio video between 0 and 3\n \t\t\t0 : Default ratio\n\t\t\t1 : 4 / 3\n\t\t\t2 : 16 / 9\n\t\t\t3 : 16 / 10",
+          0, 3, 0, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
   /*
      g_object_class_install_property (gobject_class,
      PROP_STRETCH,
@@ -223,161 +236,106 @@ gst_gl_overlay_class_init (GstGLOverlayClass * klass)
 }
 
 static void
-gst_gl_overlay_draw_texture_video_on_png (GstGLOverlay * overlay, GLuint tex)
+gst_gl_overlay_draw_texture_video (GstGLOverlay * o, GLuint tex)
 {
-  GstGLFilter *filter = GST_GL_FILTER (overlay);
-  gfloat posx = 0.0;
-  gfloat posy = 0.0;
-  gfloat size = 0.0;
-  gfloat width = (gfloat) filter->width;
-  gfloat height = (gfloat) filter->height;
-  gfloat ratio = 0.0;
-  gfloat translate = 0.0;
+  gfloat video_ratio_w;
+  gfloat video_ratio_h;
 
-  //  if (overlay->stretch) {
-  //  width = (gfloat) overlay->width;
-  // height = (gfloat) overlay->height;
-  //  }
-  if (overlay->pbuftexture != 0) {
-    size = (overlay->size_png) / 50.0f;
-    posx = (overlay->pos_x_png - 50.0f) / 50.0f;
-    posx =
-        (posx - (size / 2) < -1.00) ? (-1.0f + size / 2) : (posx + (size / 2) >
-        1.00) ? (1.0f - size / 2) : posx;
-    posy = (overlay->pos_y_png - 50.0f) / 50.0f;
-    posy =
-        (posy - (size / 2) < -1.00) ? (-1.0f + size / 2) : (posy + (size / 2) >
-        1.00) ? (1.0f - size / 2) : posy;
-    ratio = ((posx + (size / 2)) - (posx - (size / 2))) * height / width;
-    translate = overlay->size_png / 400.0f;
-    glBlendFunc (GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-    glEnable (GL_TEXTURE_RECTANGLE_ARB);
-    glBindTexture (GL_TEXTURE_RECTANGLE_ARB, overlay->pbuftexture);
-    glLoadIdentity ();
-    glTranslatef (0.0f, translate, -1.0f);
-    if (overlay->rotate_png == 2)
-      glRotatef (overlay->angle_png, 0, 1, 0);
-    glBegin (GL_QUADS);
-    glTexCoord3f (0.0f, 0.0f, 0.0f);
-    glVertex3f (posx - (size / 2), posy - (size / 2), 0.0f);
-    glTexCoord3f (width, 0.0, 0.0);
-    glVertex3f (posx + (size / 2), posy - (size / 2), 0.0f);
-    glTexCoord3f (width, height, 0.0);
-    glVertex3f (posx + (size / 2), posy - (size / 2) + ratio, 0.0f);
-    glTexCoord3f (0.0, height, 0.0);
-    glVertex3f (posx - (size / 2), posy - (size / 2) + ratio, 0.0f);
-    glEnd ();
-  }
-  size = (overlay->size_video) / 50.0f;
-  posx = (overlay->pos_x_video - 50.0f) / 50.0f;
-  posx =
-      (posx - (size / 2) < -1.00) ? (-1.0f + size / 2) : (posx + (size / 2) >
-      1.00) ? (1.0f - size / 2) : posx;
-  posy = (overlay->pos_y_video - 50.0f) / 50.0f;
-  posy =
-      (posy - (size / 2) < -1.00) ? (-1.0f + size / 2) : (posy + (size / 2) >
-      1.00) ? (1.0f - size / 2) : posy;
-  ratio = ((posx + (size / 2)) - (posx - (size / 2))) * height / width;
-  translate = overlay->size_video / 400.0f;
+  o->ratio_window = (gfloat) o->width_window / (gfloat) o->height_window;
+  glMatrixMode (GL_MODELVIEW);
   glActiveTexture (GL_TEXTURE0);
-  glBlendFunc (GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
   glEnable (GL_TEXTURE_RECTANGLE_ARB);
   glBindTexture (GL_TEXTURE_RECTANGLE_ARB, tex);
-  glLoadIdentity ();
-  glTranslatef (0.0f, translate, -1.0f);
-  if (overlay->rotate_video)
-    glRotatef (overlay->angle_video, 0, 1, 0);
+  glTranslatef (0.0f, 0.0f, -1.43f);
+  glScalef (1.0, 1.0, 1.0);
+  if (o->rotate_video)
+    glRotatef (o->angle_video, 0, 1, 0);
+  if (o->ratio_video == 0) {
+    o->ratio_texture = (gfloat) o->ratio_window;
+    video_ratio_w = (gfloat) o->width_window;
+    video_ratio_h = (gfloat) o->height_window;
+  }
+  if (o->ratio_video == 1) {
+    o->ratio_texture = (gfloat) 1.33;
+    video_ratio_w = 4.0;
+    video_ratio_h = 3.0;
+  } else if (o->ratio_video == 2) {
+    o->ratio_texture = (gfloat) 1.77;
+    video_ratio_w = 16.0;
+    video_ratio_h = 9.0;
+  } else {
+    o->ratio_texture = (gfloat) 1.6;
+    video_ratio_w = 16.0;
+    video_ratio_h = 10.0;
+  }
+  if ((1.59 < o->ratio_window && o->ratio_window < 1.61
+          && 1.77 < o->ratio_texture && o->ratio_texture < 1.78)
+      || (1.3 < o->ratio_window && o->ratio_window < 1.34
+          && ((1.7 < o->ratio_texture && o->ratio_texture < 1.78)
+              || (1.59 < o->ratio_texture && o->ratio_texture < 1.61)))) {
+    o->ratio_x = o->ratio_window * (gfloat) o->size_video / 100.0;
+    o->ratio_y =
+        (o->ratio_window / video_ratio_w) * video_ratio_h *
+        (gfloat) o->size_video / 100.0;
+  } else {
+    o->ratio_x = o->ratio_texture * (gfloat) o->size_video / 100.0;
+    o->ratio_y = 1.0 * o->size_video / 100.0;
+  }
+  o->posx = ((o->ratio_window - o->ratio_x) * (o->pos_x_video - 50.0) / 50.0);
+  o->posy = (1.0 - o->ratio_y) * ((o->pos_y_video - 50.0) / 50.0);
   glBegin (GL_QUADS);
   glTexCoord3f (0.0f, 0.0f, 0.0f);
-  glVertex3f (posx - (size / 2), posy - (size / 2), 0.0f);
-  glTexCoord3f (width, 0.0f, 0.0f);
-  glVertex3f (posx + (size / 2), posy - (size / 2), 0.0f);
-  glTexCoord3f (width, height, 0.0);
-  glVertex3f (posx + (size / 2), posy - (size / 2) + ratio, 0.0f);
-  glTexCoord3f (0.0f, height, 0.0f);
-  glVertex3f (posx - (size / 2), posy - (size / 2) + ratio, 0.0f);
+  glVertex3f (-o->ratio_x + o->posx, -o->ratio_y + o->posy, 0.0f);
+  glTexCoord3f (o->width_window, 0.0, 0.0);
+  glVertex3f (o->ratio_x + o->posx, -o->ratio_y + o->posy, 0.0f);
+  glTexCoord3f (o->width_window, o->height_window, 0.0);
+  glVertex3f (o->ratio_x + o->posx, o->ratio_y + o->posy, 0.0);
+  glTexCoord3f (0.0, o->height_window, 0.0);
+  glVertex3f (-o->ratio_x + o->posx, o->ratio_y + o->posy, 0.0);
   glEnd ();
-  glFlush ();
 }
 
 static void
-gst_gl_overlay_draw_texture_png_on_video (GstGLOverlay * overlay, GLuint tex)
+gst_gl_overlay_draw_texture_png (GstGLOverlay * o)
 {
-
-  GstGLFilter *filter = GST_GL_FILTER (overlay);
-  gfloat posx = 0.0;
-  gfloat posy = 0.0;
-  gfloat size = 0.0;
-  gfloat width = (gfloat) filter->width;
-  gfloat height = (gfloat) filter->height;
-  gfloat ratio = 0.0;
-  gfloat translate = 0.0;
-
-  size = (overlay->size_video) / 50.0f;
-  posx = (overlay->pos_x_video - 50.0f) / 50.0f;
-  posx =
-      (posx - (size / 2) < -1.00) ? (-1.0f + size / 2) : (posx + (size / 2) >
-      1.00) ? (1.0f - size / 2) : posx;
-  posy = (overlay->pos_y_video - 50.0f) / 50.0f;
-  posy =
-      (posy - (size / 2) < -1.00) ? (-1.0f + size / 2) : (posy + (size / 2) >
-      1.00) ? (1.0f - size / 2) : posy;
-  ratio = ((posx + (size / 2)) - (posx - (size / 2))) * height / width;
-  translate = overlay->size_video / 400.0f;
+  o->ratio_window = (gfloat) o->width_window / (gfloat) o->height_window;
+  o->ratio_texture = (gfloat) o->width / (gfloat) o->height;
+  glMatrixMode (GL_MODELVIEW);
   glActiveTexture (GL_TEXTURE0);
-  glBlendFunc (GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
   glEnable (GL_TEXTURE_RECTANGLE_ARB);
-  glBindTexture (GL_TEXTURE_RECTANGLE_ARB, tex);
-  glLoadIdentity ();
-  glTranslatef (0.0f, translate, -1.0f);
-  if (overlay->rotate_video)
-    glRotatef (overlay->angle_video, 0, 1, 0);
-  glBegin (GL_QUADS);
-  glTexCoord3f (0.0f, 0.0f, 0.0f);
-  glVertex3f (posx - (size / 2), posy - (size / 2), 0.0f);
-  glTexCoord3f (width, 0.0f, 0.0f);
-  glVertex3f (posx + (size / 2), posy - (size / 2), 0.0f);
-  glTexCoord3f (width, height, 0.0f);
-  glVertex3f (posx + (size / 2), posy - (size / 2) + ratio, 0.0f);
-  glTexCoord3f (0.0f, height, 0.0f);
-  glVertex3f (posx - (size / 2), posy - (size / 2) + ratio, 0.0f);
-  glEnd ();
-  if (overlay->pbuftexture == 0)
-    return;
-
-  //  if (overlay->stretch) {
-  //width = (gfloat) overlay->width;
-  //height = (gfloat) overlay->height;
-  //  }
-  size = (overlay->size_png) / 50.0f;
-  posx = (overlay->pos_x_png - 50.0f) / 50.0f;
-  posx =
-      (posx - (size / 2) < -1.00) ? (-1.0f + size / 2) : (posx + (size / 2) >
-      1.00) ? (1.0f - size / 2) : posx;
-  posy = (overlay->pos_y_png - 50.0f) / 50.0f;
-  posy =
-      (posy - (size / 2) < -1.00) ? (-1.0f + size / 2) : (posy + (size / 2) >
-      1.00) ? (1.0f - size / 2) : posy;
-  ratio = ((posx + (size / 2)) - (posx - (size / 2))) * height / width;
-  translate = overlay->size_png / 400.0f;
   glBlendFunc (GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-  glEnable (GL_TEXTURE_RECTANGLE_ARB);
-  glBindTexture (GL_TEXTURE_RECTANGLE_ARB, overlay->pbuftexture);
-  glLoadIdentity ();
-  glTranslatef (0.0f, translate, -1.0f);
-  if (overlay->rotate_png == 2)
-    glRotatef (overlay->angle_png, 0, 1, 0);
-  glBegin (GL_QUADS);
+  glEnable (GL_BLEND);
+  glBindTexture (GL_TEXTURE_RECTANGLE_ARB, o->pbuftexture);
+  glTranslatef (0.0f, 0.0f, -1.43f);
+  glScalef (1.0, 1.0, 1.0);
+  o->ratio_texture = (gfloat) o->width / (gfloat) o->height;
+  if (o->rotate_png == 2)
+    glRotatef (o->angle_png, 0, 1, 0);
+  if ((1.59 < o->ratio_window && o->ratio_window < 1.61
+          && 1.77 < o->ratio_texture && o->ratio_texture < 1.78)
+      || (1.3 < o->ratio_window && o->ratio_window < 1.34
+          && ((1.7 < o->ratio_texture && o->ratio_texture < 1.78)
+              || (1.59 < o->ratio_texture && o->ratio_texture < 1.61)))) {
+    o->ratio_x = o->ratio_window * (gfloat) o->size_png / 100.0;
+    o->ratio_y =
+        ((o->ratio_window / o->width) * o->height) * (gfloat) o->size_png /
+        100.0;
+  } else {
+    o->ratio_x = o->ratio_texture * (gfloat) o->size_png / 100.0;
+    o->ratio_y = 1.0 * o->size_png / 100.0;
+  }
+  o->posx = ((o->ratio_window - o->ratio_x) * (o->pos_x_png - 50.0) / 50.0);
+  o->posy = (1.0 - o->ratio_y) * ((o->pos_y_png - 50.0) / 50.0);
+  glBegin (GL_POLYGON);
   glTexCoord3f (0.0f, 0.0f, 0.0f);
-  glVertex3f (posx - (size / 2), posy - (size / 2), 0.0f);
-  glTexCoord3f (width, 0.0f, 0.0f);
-  glVertex3f (posx + (size / 2), posy - (size / 2), 0.0f);
-  glTexCoord3f (width, height, 0.0f);
-  glVertex3f (posx + (size / 2), posy - (size / 2) + ratio, 0.0f);
-  glTexCoord3f (0.0f, height, 0.0f);
-  glVertex3f (posx - (size / 2), posy - (size / 2) + ratio, 0.0f);
+  glVertex3f (-o->ratio_x + o->posx, -o->ratio_y + o->posy, 0.0f);
+  glTexCoord3f (o->width, 0.0, 0.0);
+  glVertex3f (o->ratio_x + o->posx, -o->ratio_y + o->posy, 0.0f);
+  glTexCoord3f (o->width, o->height, 0.0);
+  glVertex3f (o->ratio_x + o->posx, o->ratio_y + o->posy, 0.0);
+  glTexCoord3f (0.0, o->height, 0.0);
+  glVertex3f (-o->ratio_x + o->posx, o->ratio_y + o->posy, 0.0);
   glEnd ();
-  glFlush ();
 }
 
 
@@ -402,6 +360,7 @@ gst_gl_overlay_init (GstGLOverlay * overlay, GstGLOverlayClass * klass)
   overlay->rotate_video = 0;
   overlay->angle_png = 0;
   overlay->angle_video = 0;
+  overlay->ratio_video = 0;
   //  overlay->stretch = TRUE;
   overlay->pbuf_has_changed = FALSE;
 }
@@ -458,6 +417,9 @@ gst_gl_overlay_set_property (GObject * object, guint prop_id,
     case PROP_ANGLE_VIDEO:
       overlay->angle_video = g_value_get_int (value);
       break;
+    case PROP_RATIO_VIDEO:
+      overlay->ratio_video = g_value_get_int (value);
+      break;
       /*  case PROP_STRETCH:
          overlay->stretch = g_value_get_boolean (value);
          break;
@@ -511,6 +473,9 @@ gst_gl_overlay_get_property (GObject * object, guint prop_id,
     case PROP_ANGLE_VIDEO:
       g_value_set_int (value, overlay->angle_video);
       break;
+    case PROP_RATIO_VIDEO:
+      g_value_set_int (value, overlay->ratio_video);
+      break;
       /*  case PROP_STRETCH:
          g_value_set_boolean (value, overlay->stretch);
          break;
@@ -519,6 +484,28 @@ gst_gl_overlay_get_property (GObject * object, guint prop_id,
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
   }
+}
+
+static gboolean
+gst_gl_overlay_set_caps (GstGLFilter * filter, GstCaps * incaps,
+    GstCaps * outcaps)
+{
+  GstGLOverlay *overlay = GST_GL_OVERLAY (filter);
+  gchar *str_caps;
+  GstStructure *structure;
+  const GValue *width_value;
+
+  structure = gst_caps_get_structure (incaps, 0);
+  width_value = gst_structure_get_value (structure, "width");
+  str_caps = g_strdup_value_contents (width_value);
+  overlay->width_window = atof (str_caps);
+  g_free (str_caps);
+  width_value = gst_structure_get_value (structure, "height");
+  str_caps = g_strdup_value_contents (width_value);
+  overlay->height_window = atof (str_caps);
+  g_free (str_caps);
+
+  return TRUE;
 }
 
 static void
@@ -534,13 +521,32 @@ gst_gl_overlay_callback (gint width, gint height, guint texture, gpointer stuff)
 
   glMatrixMode (GL_PROJECTION);
   glLoadIdentity ();
-  gluPerspective (70.0f, (GLfloat) width / (GLfloat) height, 0.0f, 1000.0f);
-  glMatrixMode (GL_MODELVIEW);
-  glLoadIdentity ();
-  if (overlay->video_top)
-    gst_gl_overlay_draw_texture_video_on_png (overlay, texture);
-  else
-    gst_gl_overlay_draw_texture_png_on_video (overlay, texture);
+  gluPerspective (70.0f,
+      (GLfloat) overlay->width_window / (GLfloat) overlay->height_window, 1.0f,
+      1000.0f);
+  glEnable (GL_DEPTH_TEST);
+  gluLookAt (0.0, 0.0, 0.01, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0);
+  if (overlay->video_top) {
+    gst_gl_overlay_draw_texture_png (overlay);
+    if (overlay->pbuftexture == 0)
+      return;
+    // if (overlay->stretch) {
+    //   width = (gfloat) overlay->width;
+    //   height = (gfloat) overlay->height;
+    // }
+    glLoadIdentity ();
+    gst_gl_overlay_draw_texture_video (overlay, texture);
+  } else {
+    gst_gl_overlay_draw_texture_video (overlay, texture);
+    if (overlay->pbuftexture == 0)
+      return;
+    // if (overlay->stretch) {
+    //   width = (gfloat) overlay->width;
+    //   height = (gfloat) overlay->height;
+    // }
+    glLoadIdentity ();
+    gst_gl_overlay_draw_texture_png (overlay);
+  }
 }
 
 static void
@@ -553,6 +559,7 @@ init_pixbuf_texture (GstGLDisplay * display, gpointer data)
     glDeleteTextures (1, &overlay->pbuftexture);
     glGenTextures (1, &overlay->pbuftexture);
     glBindTexture (GL_TEXTURE_RECTANGLE_ARB, overlay->pbuftexture);
+
     glTexImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, GL_RGBA,
         (gint) overlay->width, (gint) overlay->height, 0,
         GL_RGBA, GL_UNSIGNED_BYTE, overlay->pixbuf);

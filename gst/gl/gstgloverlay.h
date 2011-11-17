@@ -52,6 +52,15 @@ struct _GstGLOverlay
   guchar *pixbuf;
   gint width, height;
   GLuint pbuftexture;
+  gfloat width_window;
+  gfloat height_window;
+  gfloat posx;
+  gfloat posy;
+  gfloat ratio_window;
+  gfloat ratio_texture;
+  gfloat ratio_x;
+  gfloat ratio_y;
+  gfloat ratio_video;
 
 /*  gboolean stretch; */
 };
