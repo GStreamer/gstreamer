@@ -416,6 +416,7 @@ gst_omx_audio_enc_loop (GstOMXAudioEnc * self)
   GstOMXBuffer *buf = NULL;
   GstFlowReturn flow_ret = GST_FLOW_OK;
   GstOMXAcquireBufferReturn acq_return;
+  gboolean is_eos;
 
   klass = GST_OMX_AUDIO_ENC_GET_CLASS (self);
 
@@ -468,6 +469,8 @@ gst_omx_audio_enc_loop (GstOMXAudioEnc * self)
       buf->omx_buf->nTimeStamp);
 
   GST_BASE_AUDIO_ENCODER_STREAM_LOCK (self);
+  is_eos = ! !(buf->omx_buf->nFlags & OMX_BUFFERFLAG_EOS);
+
   if ((buf->omx_buf->nFlags & OMX_BUFFERFLAG_CODECCONFIG)
       && buf->omx_buf->nFilledLen > 0) {
     GstCaps *caps;
@@ -523,8 +526,7 @@ gst_omx_audio_enc_loop (GstOMXAudioEnc * self)
         outbuf, n_samples);
   }
 
-  if ((flow_ret == GST_FLOW_OK && (buf->omx_buf->nFlags & OMX_BUFFERFLAG_EOS))
-      || flow_ret == GST_FLOW_UNEXPECTED) {
+  if (is_eos || flow_ret == GST_FLOW_UNEXPECTED) {
     g_mutex_lock (self->drain_lock);
     if (self->draining) {
       GST_DEBUG_OBJECT (self, "Drained");
