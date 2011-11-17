@@ -1494,10 +1494,12 @@ gst_omx_port_set_enabled_unlocked (GstOMXPort * port, gboolean enabled)
 
   port->enabled_changed = FALSE;
 
-  /* This is also like flushing, i.e. all buffers are returned
-   * by the component and no new buffers should be passed to
-   * the component anymore */
-  port->flushing = TRUE;
+  if (!enabled) {
+    /* This is also like flushing, i.e. all buffers are returned
+     * by the component and no new buffers should be passed to
+     * the component anymore */
+    port->flushing = TRUE;
+  }
 
   g_mutex_unlock (port->port_lock);
   if (enabled)
@@ -1584,8 +1586,6 @@ gst_omx_port_set_enabled_unlocked (GstOMXPort * port, gboolean enabled)
         &port->port_def);
   }
 
-  port->flushing = FALSE;
-
   if (!signalled) {
     GST_ERROR_OBJECT (comp->parent,
         "Timeout waiting for port %u to be %s", port->index,
@@ -1599,6 +1599,9 @@ gst_omx_port_set_enabled_unlocked (GstOMXPort * port, gboolean enabled)
         gst_omx_error_to_string (err), err);
     err = last_error;
   } else {
+    if (enabled)
+      port->flushing = FALSE;
+
     /* If everything went fine and we have an output port we
      * should provide all newly allocated buffers to the port
      */
@@ -1638,7 +1641,6 @@ error:
      * set_last_error() needs all port locks.
      * This is safe here because we're just going
      * to error out anyway */
-    port->flushing = FALSE;
     g_mutex_unlock (port->port_lock);
     gst_omx_component_set_last_error (comp, err);
     g_mutex_lock (port->port_lock);
