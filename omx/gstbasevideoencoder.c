@@ -797,7 +797,6 @@ gst_base_video_encoder_change_state (GstElement * element,
   switch (transition) {
     case GST_STATE_CHANGE_READY_TO_PAUSED:
       gst_base_video_encoder_reset (base_video_encoder);
-      gst_base_video_encoder_reset (base_video_encoder);
       if (base_video_encoder_class->start) {
         base_video_encoder_class->start (base_video_encoder);
       }
