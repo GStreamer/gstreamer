@@ -134,15 +134,18 @@ static void gst_rmdemux_init (GstRMDemux * rmdemux);
 static void gst_rmdemux_finalize (GObject * object);
 static GstStateChangeReturn gst_rmdemux_change_state (GstElement * element,
     GstStateChange transition);
-static GstFlowReturn gst_rmdemux_chain (GstPad * pad, GstBuffer * buffer);
+static GstFlowReturn gst_rmdemux_chain (GstPad * pad, GstObject * parent,
+    GstBuffer * buffer);
 static void gst_rmdemux_loop (GstPad * pad);
 static gboolean gst_rmdemux_sink_activate (GstPad * sinkpad);
 static gboolean gst_rmdemux_sink_activate_push (GstPad * sinkpad,
     gboolean active);
 static gboolean gst_rmdemux_sink_activate_pull (GstPad * sinkpad,
     gboolean active);
-static gboolean gst_rmdemux_sink_event (GstPad * pad, GstEvent * event);
-static gboolean gst_rmdemux_src_event (GstPad * pad, GstEvent * event);
+static gboolean gst_rmdemux_sink_event (GstPad * pad, GstObject * parent,
+    GstEvent * event);
+static gboolean gst_rmdemux_src_event (GstPad * pad, GstObject * parent,
+    GstEvent * event);
 static void gst_rmdemux_send_event (GstRMDemux * rmdemux, GstEvent * event);
 static gboolean gst_rmdemux_src_query (GstPad * pad, GstObject * parent,
     GstQuery * query);
@@ -267,14 +270,9 @@ gst_rmdemux_init (GstRMDemux * rmdemux)
 }
 
 static gboolean
-gst_rmdemux_sink_event (GstPad * pad, GstEvent * event)
+gst_rmdemux_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
 {
-  GstRMDemux *rmdemux;
   gboolean ret;
-
-  rmdemux = GST_RMDEMUX (gst_pad_get_parent (pad));
-
-  GST_LOG_OBJECT (pad, "%s event", GST_EVENT_TYPE_NAME (event));
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_SEGMENT:
@@ -282,20 +280,18 @@ gst_rmdemux_sink_event (GstPad * pad, GstEvent * event)
       ret = TRUE;
       break;
     default:
-      ret = gst_pad_event_default (pad, event);
+      ret = gst_pad_event_default (pad, parent, event);
       break;
   }
-
-  gst_object_unref (rmdemux);
   return ret;
 }
 
 static gboolean
-gst_rmdemux_src_event (GstPad * pad, GstEvent * event)
+gst_rmdemux_src_event (GstPad * pad, GstObject * parent, GstEvent * event)
 {
   gboolean ret = TRUE;
 
-  GstRMDemux *rmdemux = GST_RMDEMUX (GST_PAD_PARENT (pad));
+  GstRMDemux *rmdemux = GST_RMDEMUX (parent);
 
   GST_LOG_OBJECT (rmdemux, "handling src event");
 
@@ -330,7 +326,7 @@ gst_rmdemux_src_event (GstPad * pad, GstEvent * event)
     }
     default:
       GST_LOG_OBJECT (rmdemux, "Event on src: type=%d", GST_EVENT_TYPE (event));
-      ret = gst_pad_event_default (pad, event);
+      ret = gst_pad_event_default (pad, parent, event);
       break;
   }
 
@@ -869,7 +865,7 @@ gst_rmdemux_loop (GstPad * pad)
   }
 
   /* Defer to the chain function */
-  ret = gst_rmdemux_chain (pad, buffer);
+  ret = gst_rmdemux_chain (pad, GST_OBJECT_CAST (rmdemux), buffer);
   if (ret != GST_FLOW_OK) {
     GST_DEBUG_OBJECT (rmdemux, "Chain flow failed at offset 0x%08x",
         rmdemux->offset);
@@ -958,14 +954,14 @@ gst_rmdemux_fourcc_isplausible (guint32 fourcc)
 }
 
 static GstFlowReturn
-gst_rmdemux_chain (GstPad * pad, GstBuffer * buffer)
+gst_rmdemux_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
 {
   GstFlowReturn ret = GST_FLOW_OK;
   const guint8 *data;
   guint16 version;
   guint avail;
 
-  GstRMDemux *rmdemux = GST_RMDEMUX (GST_PAD_PARENT (pad));
+  GstRMDemux *rmdemux = GST_RMDEMUX (parent);
 
   if (rmdemux->base_ts == -1) {
     rmdemux->base_ts = GST_BUFFER_TIMESTAMP (buffer);

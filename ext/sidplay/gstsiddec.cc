@@ -127,12 +127,12 @@ gst_sid_memory_get_type (void)
 
 static void gst_siddec_finalize (GObject * object);
 
-static GstFlowReturn gst_siddec_chain (GstPad * pad, GstBuffer * buffer);
-static gboolean gst_siddec_sink_event (GstPad * pad, GstEvent * event);
+static GstFlowReturn gst_siddec_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer);
+static gboolean gst_siddec_sink_event (GstPad * pad, GstObject * parent, GstEvent * event);
 
 static gboolean gst_siddec_src_convert (GstPad * pad, GstFormat src_format,
     gint64 src_value, GstFormat * dest_format, gint64 * dest_value);
-static gboolean gst_siddec_src_event (GstPad * pad, GstEvent * event);
+static gboolean gst_siddec_src_event (GstPad * pad, GstObject * parent, GstEvent * event);
 static gboolean gst_siddec_src_query (GstPad * pad, GstObject * parent, GstQuery * query);
 
 static void gst_siddec_get_property (GObject * object, guint prop_id,
@@ -471,12 +471,12 @@ could_not_init:
 }
 
 static gboolean
-gst_siddec_sink_event (GstPad * pad, GstEvent * event)
+gst_siddec_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
 {
   GstSidDec *siddec;
   gboolean res;
 
-  siddec = GST_SIDDEC (gst_pad_get_parent (pad));
+  siddec = GST_SIDDEC (parent);
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_EOS:
@@ -490,18 +490,17 @@ gst_siddec_sink_event (GstPad * pad, GstEvent * event)
       break;
   }
   gst_event_unref (event);
-  gst_object_unref (siddec);
 
   return res;
 }
 
 static GstFlowReturn
-gst_siddec_chain (GstPad * pad, GstBuffer * buffer)
+gst_siddec_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
 {
   GstSidDec *siddec;
   guint64 size;
 
-  siddec = GST_SIDDEC (gst_pad_get_parent (pad));
+  siddec = GST_SIDDEC (parent);
 
   size = gst_buffer_get_size (buffer);
   if (siddec->tune_len + size > maxSidtuneFileLen)
@@ -513,8 +512,6 @@ gst_siddec_chain (GstPad * pad, GstBuffer * buffer)
 
   gst_buffer_unref (buffer);
 
-  gst_object_unref (siddec);
-
   return GST_FLOW_OK;
 
   /* ERRORS */
@@ -522,7 +519,6 @@ overflow:
   {
     GST_ELEMENT_ERROR (siddec, STREAM, DECODE,
         (NULL), ("Input data bigger than allowed buffer size"));
-    gst_object_unref (siddec);
     return GST_FLOW_ERROR;
   }
 }
@@ -606,20 +602,15 @@ gst_siddec_src_convert (GstPad * pad, GstFormat src_format, gint64 src_value,
 }
 
 static gboolean
-gst_siddec_src_event (GstPad * pad, GstEvent * event)
+gst_siddec_src_event (GstPad * pad, GstObject * parent, GstEvent * event)
 {
   gboolean res = FALSE;
-  GstSidDec *siddec;
-
-  siddec = GST_SIDDEC (gst_pad_get_parent (pad));
 
   switch (GST_EVENT_TYPE (event)) {
     default:
       break;
   }
   gst_event_unref (event);
-
-  gst_object_unref (siddec);
 
   return res;
 }

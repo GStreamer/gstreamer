@@ -72,8 +72,10 @@ static void gst_rdt_depay_finalize (GObject * object);
 static GstStateChangeReturn gst_rdt_depay_change_state (GstElement *
     element, GstStateChange transition);
 
-static gboolean gst_rdt_depay_sink_event (GstPad * pad, GstEvent * event);
-static GstFlowReturn gst_rdt_depay_chain (GstPad * pad, GstBuffer * buf);
+static gboolean gst_rdt_depay_sink_event (GstPad * pad, GstObject * parent,
+    GstEvent * event);
+static GstFlowReturn gst_rdt_depay_chain (GstPad * pad, GstObject * parent,
+    GstBuffer * buf);
 
 static void
 gst_rdt_depay_class_init (GstRDTDepayClass * klass)
@@ -211,12 +213,12 @@ no_header:
 }
 
 static gboolean
-gst_rdt_depay_sink_event (GstPad * pad, GstEvent * event)
+gst_rdt_depay_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
 {
   GstRDTDepay *depay;
   gboolean res = TRUE;
 
-  depay = GST_RDT_DEPAY (GST_OBJECT_PARENT (pad));
+  depay = GST_RDT_DEPAY (parent);
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_CAPS:
@@ -390,7 +392,7 @@ dropping:
 }
 
 static GstFlowReturn
-gst_rdt_depay_chain (GstPad * pad, GstBuffer * buf)
+gst_rdt_depay_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
 {
   GstRDTDepay *rdtdepay;
   GstFlowReturn ret;
@@ -398,7 +400,7 @@ gst_rdt_depay_chain (GstPad * pad, GstBuffer * buf)
   gboolean more;
   GstRDTPacket packet;
 
-  rdtdepay = GST_RDT_DEPAY (GST_PAD_PARENT (pad));
+  rdtdepay = GST_RDT_DEPAY (parent);
 
   if (GST_BUFFER_IS_DISCONT (buf)) {
     GST_LOG_OBJECT (rdtdepay, "received discont");

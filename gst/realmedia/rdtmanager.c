@@ -134,12 +134,13 @@ static void gst_rdt_manager_release_pad (GstElement * element, GstPad * pad);
 
 static gboolean gst_rdt_manager_parse_caps (GstRDTManager * rdtmanager,
     GstRDTManagerSession * session, GstCaps * caps);
-static gboolean gst_rdt_manager_event_rdt (GstPad * pad, GstEvent * event);
+static gboolean gst_rdt_manager_event_rdt (GstPad * pad, GstObject * parent,
+    GstEvent * event);
 
 static GstFlowReturn gst_rdt_manager_chain_rdt (GstPad * pad,
-    GstBuffer * buffer);
+    GstObject * parent, GstBuffer * buffer);
 static GstFlowReturn gst_rdt_manager_chain_rtcp (GstPad * pad,
-    GstBuffer * buffer);
+    GstObject * parent, GstBuffer * buffer);
 static void gst_rdt_manager_loop (GstPad * pad);
 
 static guint gst_rdt_manager_signals[LAST_SIGNAL] = { 0 };
@@ -710,13 +711,13 @@ wrong_rate:
 }
 
 static gboolean
-gst_rdt_manager_event_rdt (GstPad * pad, GstEvent * event)
+gst_rdt_manager_event_rdt (GstPad * pad, GstObject * parent, GstEvent * event)
 {
   GstRDTManager *rdtmanager;
   GstRDTManagerSession *session;
   gboolean res;
 
-  rdtmanager = GST_RDT_MANAGER (GST_PAD_PARENT (pad));
+  rdtmanager = GST_RDT_MANAGER (parent);
   /* find session */
   session = gst_pad_get_element_private (pad);
 
@@ -731,14 +732,14 @@ gst_rdt_manager_event_rdt (GstPad * pad, GstEvent * event)
       break;
     }
     default:
-      res = gst_pad_event_default (pad, event);
+      res = gst_pad_event_default (pad, parent, event);
       break;
   }
   return res;
 }
 
 static GstFlowReturn
-gst_rdt_manager_chain_rdt (GstPad * pad, GstBuffer * buffer)
+gst_rdt_manager_chain_rdt (GstPad * pad, GstObject * parent, GstBuffer * buffer)
 {
   GstFlowReturn res;
   GstRDTManager *rdtmanager;
@@ -749,7 +750,7 @@ gst_rdt_manager_chain_rdt (GstPad * pad, GstBuffer * buffer)
   guint8 pt;
   gboolean more;
 
-  rdtmanager = GST_RDT_MANAGER (GST_PAD_PARENT (pad));
+  rdtmanager = GST_RDT_MANAGER (parent);
 
   GST_DEBUG_OBJECT (rdtmanager, "got RDT packet");
 
@@ -894,7 +895,8 @@ pause:
 }
 
 static GstFlowReturn
-gst_rdt_manager_chain_rtcp (GstPad * pad, GstBuffer * buffer)
+gst_rdt_manager_chain_rtcp (GstPad * pad, GstObject * parent,
+    GstBuffer * buffer)
 {
   GstRDTManager *src;
 
@@ -904,7 +906,7 @@ gst_rdt_manager_chain_rtcp (GstPad * pad, GstBuffer * buffer)
   gboolean more;
 #endif
 
-  src = GST_RDT_MANAGER (GST_PAD_PARENT (pad));
+  src = GST_RDT_MANAGER (parent);
 
   GST_DEBUG_OBJECT (src, "got rtcp packet");
 

@@ -84,7 +84,8 @@ static void gst_mpeg2dec_reset (GstMpeg2dec * mpeg2dec);
 static void gst_mpeg2dec_set_index (GstElement * element, GstIndex * index);
 static GstIndex *gst_mpeg2dec_get_index (GstElement * element);
 
-static gboolean gst_mpeg2dec_src_event (GstPad * pad, GstEvent * event);
+static gboolean gst_mpeg2dec_src_event (GstPad * pad, GstObject * parent,
+    GstEvent * event);
 
 static gboolean gst_mpeg2dec_src_query (GstPad * pad, GstObject * parent,
     GstQuery * query);
@@ -97,9 +98,11 @@ static gboolean gst_mpeg2dec_src_convert (GstPad * pad, GstFormat src_format,
 static GstStateChangeReturn gst_mpeg2dec_change_state (GstElement * element,
     GstStateChange transition);
 
-static gboolean gst_mpeg2dec_sink_event (GstPad * pad, GstEvent * event);
+static gboolean gst_mpeg2dec_sink_event (GstPad * pad, GstObject * parent,
+    GstEvent * event);
 static gboolean gst_mpeg2dec_setcaps (GstPad * pad, GstCaps * caps);
-static GstFlowReturn gst_mpeg2dec_chain (GstPad * pad, GstBuffer * buf);
+static GstFlowReturn gst_mpeg2dec_chain (GstPad * pad, GstObject * parent,
+    GstBuffer * buf);
 
 static void clear_buffers (GstMpeg2dec * mpeg2dec);
 
@@ -1052,7 +1055,7 @@ dropping_qos:
 }
 
 static GstFlowReturn
-gst_mpeg2dec_chain (GstPad * pad, GstBuffer * buf)
+gst_mpeg2dec_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
 {
   GstMpeg2dec *mpeg2dec;
   gsize size;
@@ -1063,7 +1066,7 @@ gst_mpeg2dec_chain (GstPad * pad, GstBuffer * buf)
   gboolean done = FALSE;
   GstFlowReturn ret = GST_FLOW_OK;
 
-  mpeg2dec = GST_MPEG2DEC (GST_PAD_PARENT (pad));
+  mpeg2dec = GST_MPEG2DEC (parent);
 
   data = gst_buffer_map (buf, &size, NULL, GST_MAP_READ);
   pts = GST_BUFFER_TIMESTAMP (buf);
@@ -1223,12 +1226,12 @@ exit:
 }
 
 static gboolean
-gst_mpeg2dec_sink_event (GstPad * pad, GstEvent * event)
+gst_mpeg2dec_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
 {
   GstMpeg2dec *mpeg2dec;
   gboolean ret = TRUE;
 
-  mpeg2dec = GST_MPEG2DEC (gst_pad_get_parent (pad));
+  mpeg2dec = GST_MPEG2DEC (parent);
 
   GST_DEBUG_OBJECT (mpeg2dec, "Got %s event on sink pad",
       GST_EVENT_TYPE_NAME (event));
@@ -1287,7 +1290,6 @@ gst_mpeg2dec_sink_event (GstPad * pad, GstEvent * event)
   }
 
 done:
-  gst_object_unref (mpeg2dec);
 
   return ret;
 
@@ -1689,12 +1691,12 @@ convert_failed:
 
 
 static gboolean
-gst_mpeg2dec_src_event (GstPad * pad, GstEvent * event)
+gst_mpeg2dec_src_event (GstPad * pad, GstObject * parent, GstEvent * event)
 {
   gboolean res;
   GstMpeg2dec *mpeg2dec;
 
-  mpeg2dec = GST_MPEG2DEC (GST_PAD_PARENT (pad));
+  mpeg2dec = GST_MPEG2DEC (parent);
 
   if (mpeg2dec->decoder == NULL)
     goto no_decoder;

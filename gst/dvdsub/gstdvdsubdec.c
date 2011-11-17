@@ -31,8 +31,10 @@
 #define gst_dvd_sub_dec_parent_class parent_class
 G_DEFINE_TYPE (GstDvdSubDec, gst_dvd_sub_dec, GST_TYPE_ELEMENT);
 
-static gboolean gst_dvd_sub_dec_src_event (GstPad * srcpad, GstEvent * event);
-static GstFlowReturn gst_dvd_sub_dec_chain (GstPad * pad, GstBuffer * buf);
+static gboolean gst_dvd_sub_dec_src_event (GstPad * srcpad, GstObject * parent,
+    GstEvent * event);
+static GstFlowReturn gst_dvd_sub_dec_chain (GstPad * pad, GstObject * parent,
+    GstBuffer * buf);
 
 static gboolean gst_dvd_sub_dec_handle_dvd_event (GstDvdSubDec * dec,
     GstEvent * event);
@@ -41,7 +43,8 @@ static void gst_setup_palette (GstDvdSubDec * dec);
 static void gst_dvd_sub_dec_merge_title (GstDvdSubDec * dec,
     GstVideoFrame * frame);
 static GstClockTime gst_dvd_sub_dec_get_event_delay (GstDvdSubDec * dec);
-static gboolean gst_dvd_sub_dec_sink_event (GstPad * pad, GstEvent * event);
+static gboolean gst_dvd_sub_dec_sink_event (GstPad * pad, GstObject * parent,
+    GstEvent * event);
 static gboolean gst_dvd_sub_dec_sink_setcaps (GstPad * pad, GstCaps * caps);
 
 static GstFlowReturn gst_send_subtitle_frame (GstDvdSubDec * dec,
@@ -177,18 +180,16 @@ gst_dvd_sub_dec_finalize (GObject * gobject)
 }
 
 static gboolean
-gst_dvd_sub_dec_src_event (GstPad * pad, GstEvent * event)
+gst_dvd_sub_dec_src_event (GstPad * pad, GstObject * parent, GstEvent * event)
 {
-  GstDvdSubDec *dec = GST_DVD_SUB_DEC (gst_pad_get_parent (pad));
   gboolean res = FALSE;
 
   switch (GST_EVENT_TYPE (event)) {
     default:
-      res = gst_pad_event_default (pad, event);
+      res = gst_pad_event_default (pad, parent, event);
       break;
   }
 
-  gst_object_unref (dec);
   return res;
 }
 
@@ -797,14 +798,14 @@ gst_dvd_sub_dec_advance_time (GstDvdSubDec * dec, GstClockTime new_ts)
 }
 
 static GstFlowReturn
-gst_dvd_sub_dec_chain (GstPad * pad, GstBuffer * buf)
+gst_dvd_sub_dec_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
 {
   GstFlowReturn ret = GST_FLOW_OK;
   GstDvdSubDec *dec;
   guint8 *data;
   glong size = 0;
 
-  dec = GST_DVD_SUB_DEC (GST_PAD_PARENT (pad));
+  dec = GST_DVD_SUB_DEC (parent);
 
   GST_DEBUG_OBJECT (dec, "Have buffer of size %d, ts %"
       GST_TIME_FORMAT ", dur %" G_GINT64_FORMAT, gst_buffer_get_size (buf),
@@ -938,9 +939,9 @@ beach:
 }
 
 static gboolean
-gst_dvd_sub_dec_sink_event (GstPad * pad, GstEvent * event)
+gst_dvd_sub_dec_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
 {
-  GstDvdSubDec *dec = GST_DVD_SUB_DEC (gst_pad_get_parent (pad));
+  GstDvdSubDec *dec = GST_DVD_SUB_DEC (parent);
   gboolean ret = FALSE;
 
   GST_LOG_OBJECT (dec, "%s event", GST_EVENT_TYPE_NAME (event));
@@ -970,7 +971,7 @@ gst_dvd_sub_dec_sink_event (GstPad * pad, GstEvent * event)
         }
       }
 
-      ret = gst_pad_event_default (pad, event);
+      ret = gst_pad_event_default (pad, parent, event);
       break;
     }
     case GST_EVENT_SEGMENT:
@@ -1017,7 +1018,7 @@ gst_dvd_sub_dec_sink_event (GstPad * pad, GstEvent * event)
         GST_DEBUG_OBJECT (dec, "Got newsegment, new time = %"
             GST_TIME_FORMAT, GST_TIME_ARGS (dec->next_ts));
 
-        ret = gst_pad_event_default (pad, event);
+        ret = gst_pad_event_default (pad, parent, event);
       }
       break;
     }
@@ -1033,15 +1034,14 @@ gst_dvd_sub_dec_sink_event (GstPad * pad, GstEvent * event)
         dec->have_title = FALSE;
       }
 
-      ret = gst_pad_event_default (pad, event);
+      ret = gst_pad_event_default (pad, parent, event);
       break;
     }
     default:{
-      ret = gst_pad_event_default (pad, event);
+      ret = gst_pad_event_default (pad, parent, event);
       break;
     }
   }
-  gst_object_unref (dec);
   return ret;
 }
 

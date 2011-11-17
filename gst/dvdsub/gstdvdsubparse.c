@@ -44,8 +44,10 @@ static void gst_dvd_sub_parse_finalize (GObject * object);
 
 static void gst_dvd_sub_parse_reset (GstDvdSubParse * parse);
 
-static gboolean gst_dvd_sub_parse_event (GstPad * pad, GstEvent * event);
-static GstFlowReturn gst_dvd_sub_parse_chain (GstPad * pad, GstBuffer * buf);
+static gboolean gst_dvd_sub_parse_event (GstPad * pad, GstObject * parent,
+    GstEvent * event);
+static GstFlowReturn gst_dvd_sub_parse_chain (GstPad * pad, GstObject * parent,
+    GstBuffer * buf);
 
 static GstStateChangeReturn gst_dvd_sub_parse_change_state (GstElement *
     element, GstStateChange transition);
@@ -121,12 +123,12 @@ gst_dvd_sub_parse_reset (GstDvdSubParse * parse)
 }
 
 static gboolean
-gst_dvd_sub_parse_event (GstPad * pad, GstEvent * event)
+gst_dvd_sub_parse_event (GstPad * pad, GstObject * parent, GstEvent * event)
 {
   GstDvdSubParse *parse;
   gboolean ret;
 
-  parse = GST_DVD_SUB_PARSE (gst_pad_get_parent (pad));
+  parse = GST_DVD_SUB_PARSE (parent);
 
   switch GST_EVENT_TYPE
     (event) {
@@ -134,19 +136,18 @@ gst_dvd_sub_parse_event (GstPad * pad, GstEvent * event)
       gst_dvd_sub_parse_reset (parse);
       /* fall-through */
     default:
-      ret = gst_pad_event_default (pad, event);
+      ret = gst_pad_event_default (pad, parent, event);
       break;
     }
 
-  gst_object_unref (parse);
   return ret;
 }
 
 
 static GstFlowReturn
-gst_dvd_sub_parse_chain (GstPad * pad, GstBuffer * buf)
+gst_dvd_sub_parse_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
 {
-  GstDvdSubParse *parse = GST_DVD_SUB_PARSE (GST_PAD_PARENT (pad));
+  GstDvdSubParse *parse = GST_DVD_SUB_PARSE (parent);
   GstAdapter *adapter;
   GstBuffer *outbuf = NULL;
   GstFlowReturn ret = GST_FLOW_OK;

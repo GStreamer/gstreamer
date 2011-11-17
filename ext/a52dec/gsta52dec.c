@@ -90,9 +90,12 @@ static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",
 #define gst_a52dec_parent_class parent_class
 G_DEFINE_TYPE (GstA52Dec, gst_a52dec, GST_TYPE_ELEMENT);
 
-static GstFlowReturn gst_a52dec_chain (GstPad * pad, GstBuffer * buffer);
-static GstFlowReturn gst_a52dec_chain_raw (GstPad * pad, GstBuffer * buf);
-static gboolean gst_a52dec_sink_event (GstPad * pad, GstEvent * event);
+static GstFlowReturn gst_a52dec_chain (GstPad * pad, GstObject * parent,
+    GstBuffer * buffer);
+static GstFlowReturn gst_a52dec_chain_raw (GstPad * pad, GstObject * parent,
+    GstBuffer * buf);
+static gboolean gst_a52dec_sink_event (GstPad * pad, GstObject * parent,
+    GstEvent * event);
 static GstStateChangeReturn gst_a52dec_change_state (GstElement * element,
     GstStateChange transition);
 
@@ -465,9 +468,9 @@ gst_a52dec_sink_setcaps (GstA52Dec * a52dec, GstCaps * caps)
 }
 
 static gboolean
-gst_a52dec_sink_event (GstPad * pad, GstEvent * event)
+gst_a52dec_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
 {
-  GstA52Dec *a52dec = GST_A52DEC (gst_pad_get_parent (pad));
+  GstA52Dec *a52dec = GST_A52DEC (parent);
   gboolean ret = FALSE;
 
   GST_LOG ("Handling %s event", GST_EVENT_TYPE_NAME (event));
@@ -536,7 +539,6 @@ gst_a52dec_sink_event (GstPad * pad, GstEvent * event)
       break;
   }
 
-  gst_object_unref (a52dec);
   return ret;
 }
 
@@ -672,9 +674,9 @@ gst_a52dec_handle_frame (GstA52Dec * a52dec, guint8 * data,
 }
 
 static GstFlowReturn
-gst_a52dec_chain (GstPad * pad, GstBuffer * buf)
+gst_a52dec_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
 {
-  GstA52Dec *a52dec = GST_A52DEC (GST_PAD_PARENT (pad));
+  GstA52Dec *a52dec = GST_A52DEC (parent);
   GstFlowReturn ret;
   gint first_access;
 
@@ -714,7 +716,7 @@ gst_a52dec_chain (GstPad * pad, GstBuffer * buf)
 
       subbuf = gst_buffer_copy_region (buf, GST_BUFFER_COPY_ALL, offset, len);
       GST_BUFFER_TIMESTAMP (subbuf) = GST_CLOCK_TIME_NONE;
-      ret = gst_a52dec_chain_raw (pad, subbuf);
+      ret = gst_a52dec_chain_raw (pad, parent, subbuf);
       if (ret != GST_FLOW_OK)
         goto done;
 
@@ -725,7 +727,7 @@ gst_a52dec_chain (GstPad * pad, GstBuffer * buf)
         subbuf = gst_buffer_copy_region (buf, GST_BUFFER_COPY_ALL, offset, len);
         GST_BUFFER_TIMESTAMP (subbuf) = GST_BUFFER_TIMESTAMP (buf);
 
-        ret = gst_a52dec_chain_raw (pad, subbuf);
+        ret = gst_a52dec_chain_raw (pad, parent, subbuf);
       }
     } else {
       /* first_access = 0 or 1, so if there's a timestamp it applies to the first byte */
@@ -733,11 +735,11 @@ gst_a52dec_chain (GstPad * pad, GstBuffer * buf)
           gst_buffer_copy_region (buf, GST_BUFFER_COPY_ALL, offset,
           size - offset);
       GST_BUFFER_TIMESTAMP (subbuf) = GST_BUFFER_TIMESTAMP (buf);
-      ret = gst_a52dec_chain_raw (pad, subbuf);
+      ret = gst_a52dec_chain_raw (pad, parent, subbuf);
     }
   } else {
     gst_buffer_ref (buf);
-    ret = gst_a52dec_chain_raw (pad, buf);
+    ret = gst_a52dec_chain_raw (pad, parent, buf);
   }
 
 done:
@@ -762,7 +764,7 @@ bad_first_access_parameter:
 }
 
 static GstFlowReturn
-gst_a52dec_chain_raw (GstPad * pad, GstBuffer * buf)
+gst_a52dec_chain_raw (GstPad * pad, GstObject * parent, GstBuffer * buf)
 {
   GstA52Dec *a52dec;
   guint8 *bdata, *data;
@@ -770,7 +772,7 @@ gst_a52dec_chain_raw (GstPad * pad, GstBuffer * buf)
   gint length = 0, flags, sample_rate, bit_rate;
   GstFlowReturn result = GST_FLOW_OK;
 
-  a52dec = GST_A52DEC (GST_PAD_PARENT (pad));
+  a52dec = GST_A52DEC (parent);
 
   if (!a52dec->sent_segment) {
     GstSegment segment;

@@ -485,11 +485,14 @@ static void gst_x264_enc_close_encoder (GstX264Enc * encoder);
 
 static gboolean gst_x264_enc_sink_set_caps (GstPad * pad, GstCaps * caps);
 static GstCaps *gst_x264_enc_sink_get_caps (GstPad * pad, GstCaps * filter);
-static gboolean gst_x264_enc_sink_event (GstPad * pad, GstEvent * event);
+static gboolean gst_x264_enc_sink_event (GstPad * pad, GstObject * parent,
+    GstEvent * event);
 static gboolean gst_x264_enc_sink_query (GstPad * pad, GstObject * parent,
     GstQuery * query);
-static gboolean gst_x264_enc_src_event (GstPad * pad, GstEvent * event);
-static GstFlowReturn gst_x264_enc_chain (GstPad * pad, GstBuffer * buf);
+static gboolean gst_x264_enc_src_event (GstPad * pad, GstObject * parent,
+    GstEvent * event);
+static GstFlowReturn gst_x264_enc_chain (GstPad * pad, GstObject * parent,
+    GstBuffer * buf);
 static void gst_x264_enc_flush_frames (GstX264Enc * encoder, gboolean send);
 static GstFlowReturn gst_x264_enc_encode_frame (GstX264Enc * encoder,
     x264_picture_t * pic_in, int *i_nal, gboolean send);
@@ -1720,13 +1723,13 @@ gst_x264_enc_sink_get_caps (GstPad * pad, GstCaps * filter)
 }
 
 static gboolean
-gst_x264_enc_src_event (GstPad * pad, GstEvent * event)
+gst_x264_enc_src_event (GstPad * pad, GstObject * parent, GstEvent * event)
 {
   gboolean ret = TRUE;
   GstX264Enc *encoder;
   gboolean forward = TRUE;
 
-  encoder = GST_X264_ENC (gst_pad_get_parent (pad));
+  encoder = GST_X264_ENC (parent);
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_CUSTOM_UPSTREAM:{
@@ -1752,17 +1755,16 @@ gst_x264_enc_src_event (GstPad * pad, GstEvent * event)
   if (forward)
     ret = gst_pad_push_event (encoder->sinkpad, event);
 
-  gst_object_unref (encoder);
   return ret;
 }
 
 static gboolean
-gst_x264_enc_sink_event (GstPad * pad, GstEvent * event)
+gst_x264_enc_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
 {
   gboolean ret = FALSE, forward = TRUE;
   GstX264Enc *encoder;
 
-  encoder = GST_X264_ENC (gst_pad_get_parent (pad));
+  encoder = GST_X264_ENC (parent);
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_CAPS:
@@ -1813,7 +1815,6 @@ gst_x264_enc_sink_event (GstPad * pad, GstEvent * event)
   else
     gst_event_unref (event);
 
-  gst_object_unref (encoder);
   return ret;
 }
 
@@ -1846,9 +1847,9 @@ gst_x264_enc_sink_query (GstPad * pad, GstObject * parent, GstQuery * query)
  * this function does the actual processing
  */
 static GstFlowReturn
-gst_x264_enc_chain (GstPad * pad, GstBuffer * buf)
+gst_x264_enc_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
 {
-  GstX264Enc *encoder = GST_X264_ENC (GST_OBJECT_PARENT (pad));
+  GstX264Enc *encoder = GST_X264_ENC (parent);
   GstFlowReturn ret;
   x264_picture_t pic_in;
   gint i_nal, i;

@@ -66,9 +66,12 @@ G_DEFINE_TYPE (GstRealAudioDemux, gst_real_audio_demux, GST_TYPE_ELEMENT);
 
 static GstStateChangeReturn gst_real_audio_demux_change_state (GstElement * e,
     GstStateChange transition);
-static GstFlowReturn gst_real_audio_demux_chain (GstPad * pad, GstBuffer * buf);
-static gboolean gst_real_audio_demux_sink_event (GstPad * pad, GstEvent * ev);
-static gboolean gst_real_audio_demux_src_event (GstPad * pad, GstEvent * ev);
+static GstFlowReturn gst_real_audio_demux_chain (GstPad * pad,
+    GstObject * parent, GstBuffer * buf);
+static gboolean gst_real_audio_demux_sink_event (GstPad * pad,
+    GstObject * parent, GstEvent * ev);
+static gboolean gst_real_audio_demux_src_event (GstPad * pad,
+    GstObject * parent, GstEvent * ev);
 static gboolean gst_real_audio_demux_src_query (GstPad * pad,
     GstObject * parent, GstQuery * query);
 static void gst_real_audio_demux_loop (GstRealAudioDemux * demux);
@@ -581,11 +584,11 @@ gst_real_audio_demux_handle_buffer (GstRealAudioDemux * demux, GstBuffer * buf)
 }
 
 static GstFlowReturn
-gst_real_audio_demux_chain (GstPad * pad, GstBuffer * buf)
+gst_real_audio_demux_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
 {
   GstRealAudioDemux *demux;
 
-  demux = GST_REAL_AUDIO_DEMUX (GST_PAD_PARENT (pad));
+  demux = GST_REAL_AUDIO_DEMUX (parent);
 
   return gst_real_audio_demux_handle_buffer (demux, buf);
 }
@@ -709,12 +712,13 @@ pause_task:
 }
 
 static gboolean
-gst_real_audio_demux_sink_event (GstPad * pad, GstEvent * event)
+gst_real_audio_demux_sink_event (GstPad * pad, GstObject * parent,
+    GstEvent * event)
 {
   GstRealAudioDemux *demux;
   gboolean ret;
 
-  demux = GST_REAL_AUDIO_DEMUX (gst_pad_get_parent (pad));
+  demux = GST_REAL_AUDIO_DEMUX (parent);
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_SEGMENT:{
@@ -725,11 +729,9 @@ gst_real_audio_demux_sink_event (GstPad * pad, GstEvent * event)
       break;
     }
     default:
-      ret = gst_pad_event_default (pad, event);
+      ret = gst_pad_event_default (pad, parent, event);
       break;
   }
-
-  gst_object_unref (demux);
   return ret;
 }
 
@@ -835,12 +837,13 @@ cannot_do_backwards_playback:
 }
 
 static gboolean
-gst_real_audio_demux_src_event (GstPad * pad, GstEvent * event)
+gst_real_audio_demux_src_event (GstPad * pad, GstObject * parent,
+    GstEvent * event)
 {
   GstRealAudioDemux *demux;
   gboolean ret = FALSE;
 
-  demux = GST_REAL_AUDIO_DEMUX (gst_pad_get_parent (pad));
+  demux = GST_REAL_AUDIO_DEMUX (parent);
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_QOS:
@@ -851,11 +854,10 @@ gst_real_audio_demux_src_event (GstPad * pad, GstEvent * event)
       gst_event_unref (event);
       break;
     default:
-      ret = gst_pad_event_default (pad, event);
+      ret = gst_pad_event_default (pad, parent, event);
       break;
   }
 
-  gst_object_unref (demux);
   return ret;
 }
 

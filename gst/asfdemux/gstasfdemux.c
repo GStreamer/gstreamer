@@ -85,8 +85,10 @@ static gboolean gst_asf_demux_send_event_unlocked (GstASFDemux * demux,
     GstEvent * event);
 static gboolean gst_asf_demux_handle_src_query (GstPad * pad,
     GstObject * parent, GstQuery * query);
-static GstFlowReturn gst_asf_demux_chain (GstPad * pad, GstBuffer * buf);
-static gboolean gst_asf_demux_sink_event (GstPad * pad, GstEvent * event);
+static GstFlowReturn gst_asf_demux_chain (GstPad * pad, GstObject * parent,
+    GstBuffer * buf);
+static gboolean gst_asf_demux_sink_event (GstPad * pad, GstObject * parent,
+    GstEvent * event);
 static GstFlowReturn gst_asf_demux_process_object (GstASFDemux * demux,
     guint8 ** p_data, guint64 * p_size);
 static gboolean gst_asf_demux_activate (GstPad * sinkpad);
@@ -348,12 +350,12 @@ gst_asf_demux_activate_pull (GstPad * pad, gboolean active)
 
 
 static gboolean
-gst_asf_demux_sink_event (GstPad * pad, GstEvent * event)
+gst_asf_demux_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
 {
   GstASFDemux *demux;
   gboolean ret = TRUE;
 
-  demux = GST_ASF_DEMUX (gst_pad_get_parent (pad));
+  demux = GST_ASF_DEMUX (parent);
 
   GST_LOG_OBJECT (demux, "handling %s event", GST_EVENT_TYPE_NAME (event));
   switch (GST_EVENT_TYPE (event)) {
@@ -428,11 +430,10 @@ gst_asf_demux_sink_event (GstPad * pad, GstEvent * event)
       break;
 
     default:
-      ret = gst_pad_event_default (pad, event);
+      ret = gst_pad_event_default (pad, parent, event);
       break;
   }
 
-  gst_object_unref (demux);
   return ret;
 }
 
@@ -736,12 +737,13 @@ gst_asf_demux_handle_seek_event (GstASFDemux * demux, GstEvent * event)
 }
 
 static gboolean
-gst_asf_demux_handle_src_event (GstPad * pad, GstEvent * event)
+gst_asf_demux_handle_src_event (GstPad * pad, GstObject * parent,
+    GstEvent * event)
 {
   GstASFDemux *demux;
   gboolean ret;
 
-  demux = GST_ASF_DEMUX (gst_pad_get_parent (pad));
+  demux = GST_ASF_DEMUX (parent);
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_SEEK:
@@ -757,11 +759,10 @@ gst_asf_demux_handle_src_event (GstPad * pad, GstEvent * event)
       break;
     default:
       GST_LOG_OBJECT (pad, "%s event", GST_EVENT_TYPE_NAME (event));
-      ret = gst_pad_event_default (pad, event);
+      ret = gst_pad_event_default (pad, parent, event);
       break;
   }
 
-  gst_object_unref (demux);
   return ret;
 }
 
@@ -1761,12 +1762,12 @@ gst_asf_demux_check_header (GstASFDemux * demux)
 }
 
 static GstFlowReturn
-gst_asf_demux_chain (GstPad * pad, GstBuffer * buf)
+gst_asf_demux_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
 {
   GstFlowReturn ret = GST_FLOW_OK;
   GstASFDemux *demux;
 
-  demux = GST_ASF_DEMUX (GST_PAD_PARENT (pad));
+  demux = GST_ASF_DEMUX (parent);
 
   GST_LOG_OBJECT (demux, "buffer: size=%u, offset=%" G_GINT64_FORMAT ", time=%"
       GST_TIME_FORMAT, gst_buffer_get_size (buf), GST_BUFFER_OFFSET (buf),
@@ -3821,7 +3822,8 @@ gst_asf_demux_element_send_event (GstElement * element, GstEvent * event)
 
   for (i = 0; i < demux->num_streams; ++i) {
     gst_event_ref (event);
-    if (gst_asf_demux_handle_src_event (demux->stream[i].pad, event)) {
+    if (gst_asf_demux_handle_src_event (demux->stream[i].pad,
+            GST_OBJECT_CAST (element), event)) {
       gst_event_unref (event);
       return TRUE;
     }

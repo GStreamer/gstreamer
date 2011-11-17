@@ -72,12 +72,13 @@ static void gst_dvdlpcmdec_base_init (gpointer g_class);
 static void gst_dvdlpcmdec_class_init (GstDvdLpcmDecClass * klass);
 static void gst_dvdlpcmdec_init (GstDvdLpcmDec * dvdlpcmdec);
 
-static GstFlowReturn gst_dvdlpcmdec_chain_raw (GstPad * pad,
+static GstFlowReturn gst_dvdlpcmdec_chain_raw (GstPad * pad, GstObject * parent,
     GstBuffer * buffer);
-static GstFlowReturn gst_dvdlpcmdec_chain_dvd (GstPad * pad,
+static GstFlowReturn gst_dvdlpcmdec_chain_dvd (GstPad * pad, GstObject * parent,
     GstBuffer * buffer);
 static gboolean gst_dvdlpcmdec_setcaps (GstPad * pad, GstCaps * caps);
-static gboolean dvdlpcmdec_sink_event (GstPad * pad, GstEvent * event);
+static gboolean dvdlpcmdec_sink_event (GstPad * pad, GstObject * parent,
+    GstEvent * event);
 
 static GstStateChangeReturn gst_dvdlpcmdec_change_state (GstElement * element,
     GstStateChange transition);
@@ -416,7 +417,7 @@ parse_header (GstDvdLpcmDec * dec, guint32 header)
 }
 
 static GstFlowReturn
-gst_dvdlpcmdec_chain_dvd (GstPad * pad, GstBuffer * buf)
+gst_dvdlpcmdec_chain_dvd (GstPad * pad, GstObject * parent, GstBuffer * buf)
 {
   GstDvdLpcmDec *dvdlpcmdec;
   guint8 *data;
@@ -428,7 +429,7 @@ gst_dvdlpcmdec_chain_dvd (GstPad * pad, GstBuffer * buf)
   gint off, len;
   gint rate, channels;
 
-  dvdlpcmdec = GST_DVDLPCMDEC (gst_pad_get_parent (pad));
+  dvdlpcmdec = GST_DVDLPCMDEC (parent);
 
   data = gst_buffer_map (buf, &size, NULL, GST_MAP_READ);
 
@@ -518,7 +519,7 @@ gst_dvdlpcmdec_chain_dvd (GstPad * pad, GstBuffer * buf)
       GST_BUFFER_TIMESTAMP (subbuf) = GST_CLOCK_TIME_NONE;
     }
 
-    ret = gst_dvdlpcmdec_chain_raw (pad, subbuf);
+    ret = gst_dvdlpcmdec_chain_raw (pad, parent, subbuf);
     if (ret != GST_FLOW_OK)
       goto done;
 
@@ -533,20 +534,19 @@ gst_dvdlpcmdec_chain_dvd (GstPad * pad, GstBuffer * buf)
       subbuf = gst_buffer_copy_region (buf, GST_BUFFER_COPY_ALL, off, len);
       GST_BUFFER_TIMESTAMP (subbuf) = GST_BUFFER_TIMESTAMP (buf);
 
-      ret = gst_dvdlpcmdec_chain_raw (pad, subbuf);
+      ret = gst_dvdlpcmdec_chain_raw (pad, parent, subbuf);
     }
   } else {
     GST_LOG_OBJECT (dvdlpcmdec, "Creating single sub-buffer off %d, len %d",
         off, size - off);
     subbuf = gst_buffer_copy_region (buf, GST_BUFFER_COPY_ALL, off, size - off);
     GST_BUFFER_TIMESTAMP (subbuf) = GST_BUFFER_TIMESTAMP (buf);
-    ret = gst_dvdlpcmdec_chain_raw (pad, subbuf);
+    ret = gst_dvdlpcmdec_chain_raw (pad, parent, subbuf);
   }
 
 done:
   gst_buffer_unmap (buf, data, size);
   gst_buffer_unref (buf);
-  gst_object_unref (dvdlpcmdec);
 
   return ret;
 
@@ -587,7 +587,7 @@ bad_first_access:
 }
 
 static GstFlowReturn
-gst_dvdlpcmdec_chain_raw (GstPad * pad, GstBuffer * buf)
+gst_dvdlpcmdec_chain_raw (GstPad * pad, GstObject * parent, GstBuffer * buf)
 {
   GstDvdLpcmDec *dvdlpcmdec;
   gsize size;
@@ -595,7 +595,7 @@ gst_dvdlpcmdec_chain_raw (GstPad * pad, GstBuffer * buf)
   guint samples = 0;
   gint rate, channels;
 
-  dvdlpcmdec = GST_DVDLPCMDEC (gst_pad_get_parent (pad));
+  dvdlpcmdec = GST_DVDLPCMDEC (parent);
 
   size = gst_buffer_get_size (buf);
 
@@ -718,8 +718,6 @@ gst_dvdlpcmdec_chain_raw (GstPad * pad, GstBuffer * buf)
   ret = gst_pad_push (dvdlpcmdec->srcpad, buf);
 
 done:
-  gst_object_unref (dvdlpcmdec);
-
   return ret;
 
   /* ERRORS */
@@ -750,12 +748,12 @@ invalid_width:
 }
 
 static gboolean
-dvdlpcmdec_sink_event (GstPad * pad, GstEvent * event)
+dvdlpcmdec_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
 {
   GstDvdLpcmDec *dvdlpcmdec;
   gboolean res;
 
-  dvdlpcmdec = GST_DVDLPCMDEC (GST_PAD_PARENT (pad));
+  dvdlpcmdec = GST_DVDLPCMDEC (parent);
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_CAPS:
