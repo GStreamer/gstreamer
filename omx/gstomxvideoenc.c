@@ -797,11 +797,6 @@ gst_omx_video_enc_handle_output_frame (GstOMXVideoEnc * self, GstOMXPort * port,
         frame);
   }
 
-  if (flow_ret == GST_FLOW_OK && (buf->omx_buf->nFlags & OMX_BUFFERFLAG_EOS)) {
-    GST_DEBUG_OBJECT (self, "Component signalled EOS");
-    flow_ret = GST_FLOW_UNEXPECTED;
-  }
-
   return flow_ret;
 }
 
@@ -814,6 +809,7 @@ gst_omx_video_enc_loop (GstOMXVideoEnc * self)
   GstVideoFrame *frame;
   GstFlowReturn flow_ret = GST_FLOW_OK;
   GstOMXAcquireBufferReturn acq_return;
+  gboolean is_eos;
 
   klass = GST_OMX_VIDEO_ENC_GET_CLASS (self);
 
@@ -880,15 +876,20 @@ gst_omx_video_enc_loop (GstOMXVideoEnc * self)
   GST_BASE_VIDEO_CODEC_STREAM_LOCK (self);
   frame = _find_nearest_frame (self, buf);
 
+  is_eos = ! !(buf->omx_buf->nFlags & OMX_BUFFERFLAG_EOS);
+
   g_assert (klass->handle_output_frame);
   flow_ret = klass->handle_output_frame (self, self->out_port, buf, frame);
 
-  if (flow_ret == GST_FLOW_UNEXPECTED) {
+  if (is_eos || flow_ret == GST_FLOW_UNEXPECTED) {
     g_mutex_lock (self->drain_lock);
     if (self->draining) {
       GST_DEBUG_OBJECT (self, "Drained");
       self->draining = FALSE;
       g_cond_broadcast (self->drain_cond);
+    } else if (flow_ret == GST_FLOW_OK) {
+      GST_DEBUG_OBJECT (self, "Component signalled EOS");
+      flow_ret = GST_FLOW_UNEXPECTED;
     }
     g_mutex_unlock (self->drain_lock);
   } else {
