@@ -234,8 +234,8 @@ struct _RTPSession {
   GstClockTime  rtcp_feedback_retention_window;
   guint         rtcp_immediate_feedback_threshold;
 
-  GArray       *rtcp_pli_requests;
   GstClockTime last_keyframe_request;
+  gboolean     last_keyframe_all_headers;
 };
 
 /**
@@ -348,7 +348,10 @@ void            rtp_session_request_early_rtcp     (RTPSession * sess, GstClockT
                                                     GstClockTimeDiff max_delay);
 
 /* Notify session of a request for a new key unit */
-void            rtp_session_request_key_unit       (RTPSession * sess,
-                                                    guint32 ssrc);
+gboolean        rtp_session_request_key_unit       (RTPSession * sess,
+                                                    guint32 ssrc,
+                                                    GstClockTime now,
+                                                    gboolean fir,
+                                                    gint count);
 
 #endif /* __RTP_SESSION_H__ */

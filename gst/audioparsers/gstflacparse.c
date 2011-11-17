@@ -394,6 +394,8 @@ gst_flac_parse_frame_header_is_valid (GstFlacParse * flacparse,
 
   /* 0 == fixed block size, 1 == variable block size */
   blocking_strategy = gst_bit_reader_get_bits_uint8_unchecked (&reader, 1);
+  if (flacparse->force_variable_block_size)
+    blocking_strategy = 1;
 
   /* block size index, calculation of the real blocksize below */
   block_size = gst_bit_reader_get_bits_uint16_unchecked (&reader, 4);
@@ -526,6 +528,16 @@ gst_flac_parse_frame_header_is_valid (GstFlacParse * flacparse,
       (gst_bit_reader_get_pos (&reader) / 8) - 1);
   if (actual_crc != expected_crc)
     goto error;
+
+  /* Sanity check sample number against blocking strategy, as it seems
+     some files claim fixed block size but supply sample numbers,
+     rather than block numbers. */
+  if (set && blocking_strategy == 0 && block_size == sample_number) {
+    GST_WARNING_OBJECT (flacparse, "This file claims fixed block size, "
+        "but seems to be lying: assuming variable block size");
+    flacparse->force_variable_block_size = TRUE;
+    blocking_strategy = 1;
+  }
 
   /* 
      The FLAC format documentation says:

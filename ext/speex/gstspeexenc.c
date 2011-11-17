@@ -270,6 +270,8 @@ gst_speex_enc_stop (GstAudioEncoder * benc)
   g_slist_foreach (enc->headers, (GFunc) gst_buffer_unref, NULL);
   enc->headers = NULL;
 
+  gst_tag_setter_reset_tags (GST_TAG_SETTER (enc));
+
   return TRUE;
 }
 
@@ -530,7 +532,7 @@ gst_speex_enc_encode (GstSpeexEnc * enc, GstBuffer * buf)
   gint frame_size = enc->frame_size;
   gint bytes = frame_size * 2 * enc->channels, samples;
   gint outsize, written, dtx_ret = 0;
-  guint8 *data, *bdata, *outdata;
+  guint8 *data, *data0 = NULL, *bdata, *outdata;
   gsize bsize, size;
   GstBuffer *outbuf;
   GstFlowReturn ret = GST_FLOW_OK;
@@ -542,7 +544,7 @@ gst_speex_enc_encode (GstSpeexEnc * enc, GstBuffer * buf)
       GST_DEBUG_OBJECT (enc, "draining; adding silence samples");
 
       size = ((bsize / bytes) + 1) * bytes;
-      data = g_malloc0 (size);
+      data0 = data = g_malloc0 (size);
       memcpy (data, bdata, bsize);
       gst_buffer_unmap (buf, bdata, bsize);
       bdata = NULL;
@@ -606,6 +608,7 @@ gst_speex_enc_encode (GstSpeexEnc * enc, GstBuffer * buf)
       outbuf, samples);
 
 done:
+  g_free (data0);
   return ret;
 }
 

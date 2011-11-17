@@ -1729,7 +1729,8 @@ return_data:
   s = gst_structure_copy (template);
   gst_structure_set (s, "width", G_TYPE_INT, (gint) width,
       "height", G_TYPE_INT, (gint) height,
-      "interlaced", G_TYPE_BOOLEAN, interlaced, NULL);
+      "interlaced", G_TYPE_BOOLEAN, interlaced,
+      "pixel-aspect-ratio", GST_TYPE_FRACTION, 1, 1, NULL);
 
   if (G_IS_VALUE (&rates)) {
     /* only change the framerate on the template when we have a valid probed new
@@ -1990,6 +1991,8 @@ default_frame_sizes:
       gst_structure_set (tmp, "height", GST_TYPE_INT_RANGE, min_h, max_h, NULL);
 
     gst_structure_set (tmp, "interlaced", G_TYPE_BOOLEAN, interlaced, NULL);
+    gst_structure_set (tmp, "pixel-aspect-ratio",
+        GST_TYPE_FRACTION, 1, 1, NULL);
 
     gst_caps_append_structure (ret, tmp);
 

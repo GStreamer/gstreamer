@@ -79,6 +79,8 @@ struct _GstFlacParse {
 
   GList *headers;
   GstBuffer *seektable;
+
+  gboolean force_variable_block_size;
 };
 
 struct _GstFlacParseClass {

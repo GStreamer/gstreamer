@@ -1375,30 +1375,34 @@ gst_rtp_session_event_recv_rtp_sink (GstPad * pad, GstObject * parent,
 
 static gboolean
 gst_rtp_session_request_remote_key_unit (GstRtpSession * rtpsession,
-    guint32 ssrc, guint payload, gboolean all_headers)
+    guint32 ssrc, guint payload, gboolean all_headers, gint count)
 {
   GstCaps *caps;
-  gboolean requested = FALSE;
 
   caps = gst_rtp_session_get_caps_for_pt (rtpsession, payload);
 
   if (caps) {
     const GstStructure *s = gst_caps_get_structure (caps, 0);
     gboolean pli;
+    gboolean fir;
 
     pli = gst_structure_has_field (s, "rtcp-fb-nack-pli");
+    fir = gst_structure_has_field (s, "rtcp-fb-ccm-fir") && all_headers;
+
+    /* Google Talk uses FIR for repair, so send it even if we just want a
+     * regular PLI */
+    if (!pli &&
+        gst_structure_has_field (s, "rtcp-fb-x-gstreamer-fir-as-repair"))
+      fir = TRUE;
 
     gst_caps_unref (caps);
 
-    if (pli) {
-      rtp_session_request_key_unit (rtpsession->priv->session, ssrc);
-      rtp_session_request_early_rtcp (rtpsession->priv->session,
-          gst_clock_get_time (rtpsession->priv->sysclock), 200 * GST_MSECOND);
-      requested = TRUE;
-    }
+    if (pli || fir)
+      return rtp_session_request_key_unit (rtpsession->priv->session, ssrc,
+          gst_clock_get_time (rtpsession->priv->sysclock), fir, count);
   }
 
-  return requested;
+  return FALSE;
 }
 
 static gboolean
@@ -1421,10 +1425,13 @@ gst_rtp_session_event_recv_rtp_src (GstPad * pad, GstObject * parent,
           gst_structure_get_uint (s, "ssrc", &ssrc) &&
           gst_structure_get_uint (s, "payload", &pt)) {
         gboolean all_headers = FALSE;
+        gint count = -1;
 
         gst_structure_get_boolean (s, "all-headers", &all_headers);
+        if (gst_structure_get_int (s, "count", &count) && count < 0)
+          count += G_MAXINT;    /* Make sure count is positive if present */
         if (gst_rtp_session_request_remote_key_unit (rtpsession, ssrc, pt,
-                all_headers))
+                all_headers, count))
           forward = FALSE;
       }
       break;
