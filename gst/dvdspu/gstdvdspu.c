@@ -90,22 +90,27 @@ static void gst_dvd_spu_finalize (GObject * object);
 static GstStateChangeReturn gst_dvd_spu_change_state (GstElement * element,
     GstStateChange transition);
 
-static gboolean gst_dvd_spu_src_event (GstPad * pad, GstEvent * event);
+static gboolean gst_dvd_spu_src_event (GstPad * pad, GstObject * parent,
+    GstEvent * event);
 static gboolean gst_dvd_spu_src_query (GstPad * pad, GstObject * parent,
     GstQuery * query);
 
 static GstCaps *gst_dvd_spu_video_proxy_getcaps (GstPad * pad,
     GstCaps * filter);
 static gboolean gst_dvd_spu_video_set_caps (GstPad * pad, GstCaps * caps);
-static GstFlowReturn gst_dvd_spu_video_chain (GstPad * pad, GstBuffer * buf);
-static gboolean gst_dvd_spu_video_event (GstPad * pad, GstEvent * event);
+static GstFlowReturn gst_dvd_spu_video_chain (GstPad * pad, GstObject * parent,
+    GstBuffer * buf);
+static gboolean gst_dvd_spu_video_event (GstPad * pad, GstObject * parent,
+    GstEvent * event);
 static gboolean gst_dvd_spu_video_query (GstPad * pad, GstObject * parent,
     GstQuery * query);
 static void gst_dvd_spu_redraw_still (GstDVDSpu * dvdspu, gboolean force);
 
 static void gst_dvd_spu_check_still_updates (GstDVDSpu * dvdspu);
-static GstFlowReturn gst_dvd_spu_subpic_chain (GstPad * pad, GstBuffer * buf);
-static gboolean gst_dvd_spu_subpic_event (GstPad * pad, GstEvent * event);
+static GstFlowReturn gst_dvd_spu_subpic_chain (GstPad * pad, GstObject * parent,
+    GstBuffer * buf);
+static gboolean gst_dvd_spu_subpic_event (GstPad * pad, GstObject * parent,
+    GstEvent * event);
 static gboolean gst_dvd_spu_subpic_set_caps (GstPad * pad, GstCaps * caps);
 
 static void gst_dvd_spu_clear (GstDVDSpu * dvdspu);
@@ -273,9 +278,9 @@ gst_dvd_spu_flush_spu_info (GstDVDSpu * dvdspu, gboolean keep_events)
 }
 
 static gboolean
-gst_dvd_spu_src_event (GstPad * pad, GstEvent * event)
+gst_dvd_spu_src_event (GstPad * pad, GstObject * parent, GstEvent * event)
 {
-  GstDVDSpu *dvdspu = GST_DVD_SPU (gst_pad_get_parent (pad));
+  GstDVDSpu *dvdspu = GST_DVD_SPU (parent);
   GstPad *peer;
   gboolean res = TRUE;
 
@@ -284,8 +289,6 @@ gst_dvd_spu_src_event (GstPad * pad, GstEvent * event)
     res = gst_pad_send_event (peer, event);
     gst_object_unref (peer);
   }
-
-  gst_object_unref (dvdspu);
   return res;
 }
 
@@ -372,13 +375,11 @@ gst_dvd_spu_video_proxy_getcaps (GstPad * pad, GstCaps * filter)
 }
 
 static gboolean
-gst_dvd_spu_video_event (GstPad * pad, GstEvent * event)
+gst_dvd_spu_video_event (GstPad * pad, GstObject * parent, GstEvent * event)
 {
-  GstDVDSpu *dvdspu = (GstDVDSpu *) (gst_object_get_parent (GST_OBJECT (pad)));
+  GstDVDSpu *dvdspu = (GstDVDSpu *) parent;
   SpuState *state = &dvdspu->spu_state;
   gboolean res = TRUE;
-
-  g_return_val_if_fail (dvdspu != NULL, FALSE);
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_CAPS:
@@ -399,7 +400,7 @@ gst_dvd_spu_video_event (GstPad * pad, GstEvent * event)
         GstBuffer *to_push = NULL;
 
         /* Forward the event before handling */
-        res = gst_pad_event_default (pad, event);
+        res = gst_pad_event_default (pad, parent, event);
 
         GST_DEBUG_OBJECT (dvdspu,
             "Still frame event on video pad: in-still = %d", in_still);
@@ -425,7 +426,7 @@ gst_dvd_spu_video_event (GstPad * pad, GstEvent * event)
       } else {
         GST_DEBUG_OBJECT (dvdspu,
             "Custom event %" GST_PTR_FORMAT " on video pad", event);
-        res = gst_pad_event_default (pad, event);
+        res = gst_pad_event_default (pad, parent, event);
       }
       break;
     }
@@ -465,14 +466,14 @@ gst_dvd_spu_video_event (GstPad * pad, GstEvent * event)
       dvdspu->video_seg = seg;
       DVD_SPU_UNLOCK (dvdspu);
 
-      res = gst_pad_event_default (pad, event);
+      res = gst_pad_event_default (pad, parent, event);
       break;
     }
     case GST_EVENT_FLUSH_START:
-      res = gst_pad_event_default (pad, event);
+      res = gst_pad_event_default (pad, parent, event);
       goto done;
     case GST_EVENT_FLUSH_STOP:
-      res = gst_pad_event_default (pad, event);
+      res = gst_pad_event_default (pad, parent, event);
 
       DVD_SPU_LOCK (dvdspu);
       gst_segment_init (&dvdspu->video_seg, GST_FORMAT_UNDEFINED);
@@ -482,12 +483,11 @@ gst_dvd_spu_video_event (GstPad * pad, GstEvent * event)
       DVD_SPU_UNLOCK (dvdspu);
       goto done;
     default:
-      res = gst_pad_event_default (pad, event);
+      res = gst_pad_event_default (pad, parent, event);
       break;
   }
 
 done:
-  gst_object_unref (dvdspu);
   return res;
 #if 0
 error:
@@ -522,9 +522,9 @@ gst_dvd_spu_video_query (GstPad * pad, GstObject * parent, GstQuery * query)
 }
 
 static GstFlowReturn
-gst_dvd_spu_video_chain (GstPad * pad, GstBuffer * buf)
+gst_dvd_spu_video_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
 {
-  GstDVDSpu *dvdspu = (GstDVDSpu *) (gst_object_get_parent (GST_OBJECT (pad)));
+  GstDVDSpu *dvdspu = (GstDVDSpu *) parent;
   GstFlowReturn ret;
 
   g_return_val_if_fail (dvdspu != NULL, GST_FLOW_ERROR);
@@ -533,8 +533,6 @@ gst_dvd_spu_video_chain (GstPad * pad, GstBuffer * buf)
       buf, GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buf)));
 
   ret = dvdspu_handle_vid_buffer (dvdspu, buf);
-
-  gst_object_unref (dvdspu);
 
   return ret;
 }
@@ -879,9 +877,9 @@ submit_new_spu_packet (GstDVDSpu * dvdspu, GstBuffer * buf)
 }
 
 static GstFlowReturn
-gst_dvd_spu_subpic_chain (GstPad * pad, GstBuffer * buf)
+gst_dvd_spu_subpic_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
 {
-  GstDVDSpu *dvdspu = (GstDVDSpu *) (gst_object_get_parent (GST_OBJECT (pad)));
+  GstDVDSpu *dvdspu = (GstDVDSpu *) parent;
   GstFlowReturn ret = GST_FLOW_OK;
   gsize size;
 
@@ -1000,22 +998,24 @@ gst_dvd_spu_subpic_chain (GstPad * pad, GstBuffer * buf)
 
 done:
   DVD_SPU_UNLOCK (dvdspu);
-  gst_object_unref (dvdspu);
+
   return ret;
+
+  /* ERRORS */
 caps_not_set:
-  GST_ELEMENT_ERROR (dvdspu, RESOURCE, NO_SPACE_LEFT,
-      (_("Subpicture format was not configured before data flow")), (NULL));
-  ret = GST_FLOW_ERROR;
-  goto done;
+  {
+    GST_ELEMENT_ERROR (dvdspu, RESOURCE, NO_SPACE_LEFT,
+        (_("Subpicture format was not configured before data flow")), (NULL));
+    ret = GST_FLOW_ERROR;
+    goto done;
+  }
 }
 
 static gboolean
-gst_dvd_spu_subpic_event (GstPad * pad, GstEvent * event)
+gst_dvd_spu_subpic_event (GstPad * pad, GstObject * parent, GstEvent * event)
 {
-  GstDVDSpu *dvdspu = (GstDVDSpu *) (gst_object_get_parent (GST_OBJECT (pad)));
+  GstDVDSpu *dvdspu = (GstDVDSpu *) parent;
   gboolean res = TRUE;
-
-  g_return_val_if_fail (dvdspu != NULL, FALSE);
 
   /* Some events on the subpicture sink pad just get ignored, like 
    * FLUSH_START */
@@ -1036,7 +1036,7 @@ gst_dvd_spu_subpic_event (GstPad * pad, GstEvent * event)
       gboolean need_push;
 
       if (!gst_structure_has_name (structure, "application/x-gst-dvd")) {
-        res = gst_pad_event_default (pad, event);
+        res = gst_pad_event_default (pad, parent, event);
         break;
       }
 
@@ -1126,12 +1126,11 @@ gst_dvd_spu_subpic_event (GstPad * pad, GstEvent * event)
       goto done;
       break;
     default:
-      res = gst_pad_event_default (pad, event);
+      res = gst_pad_event_default (pad, parent, event);
       break;
   }
 
 done:
-  gst_object_unref (dvdspu);
 
   return res;
 }

@@ -55,10 +55,13 @@ static void gst_y4m_dec_get_property (GObject * object,
 static void gst_y4m_dec_dispose (GObject * object);
 static void gst_y4m_dec_finalize (GObject * object);
 
-static GstFlowReturn gst_y4m_dec_chain (GstPad * pad, GstBuffer * buffer);
-static gboolean gst_y4m_dec_sink_event (GstPad * pad, GstEvent * event);
+static GstFlowReturn gst_y4m_dec_chain (GstPad * pad, GstObject * parent,
+    GstBuffer * buffer);
+static gboolean gst_y4m_dec_sink_event (GstPad * pad, GstObject * parent,
+    GstEvent * event);
 
-static gboolean gst_y4m_dec_src_event (GstPad * pad, GstEvent * event);
+static gboolean gst_y4m_dec_src_event (GstPad * pad, GstObject * parent,
+    GstEvent * event);
 static gboolean gst_y4m_dec_src_query (GstPad * pad, GstObject * parent,
     GstQuery * query);
 
@@ -415,7 +418,7 @@ error:
 }
 
 static GstFlowReturn
-gst_y4m_dec_chain (GstPad * pad, GstBuffer * buffer)
+gst_y4m_dec_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
 {
   GstY4mDec *y4mdec;
   int n_avail;
@@ -425,7 +428,7 @@ gst_y4m_dec_chain (GstPad * pad, GstBuffer * buffer)
   int i;
   int len;
 
-  y4mdec = GST_Y4M_DEC (gst_pad_get_parent (pad));
+  y4mdec = GST_Y4M_DEC (parent);
 
   GST_DEBUG_OBJECT (y4mdec, "chain");
 
@@ -545,18 +548,18 @@ gst_y4m_dec_chain (GstPad * pad, GstBuffer * buffer)
       break;
   }
 
-  gst_object_unref (y4mdec);
   GST_DEBUG ("returning %d", flow_ret);
+
   return flow_ret;
 }
 
 static gboolean
-gst_y4m_dec_sink_event (GstPad * pad, GstEvent * event)
+gst_y4m_dec_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
 {
   gboolean res;
   GstY4mDec *y4mdec;
 
-  y4mdec = GST_Y4M_DEC (gst_pad_get_parent (pad));
+  y4mdec = GST_Y4M_DEC (parent);
 
   GST_DEBUG_OBJECT (y4mdec, "event");
 
@@ -592,17 +595,16 @@ gst_y4m_dec_sink_event (GstPad * pad, GstEvent * event)
       break;
   }
 
-  gst_object_unref (y4mdec);
   return res;
 }
 
 static gboolean
-gst_y4m_dec_src_event (GstPad * pad, GstEvent * event)
+gst_y4m_dec_src_event (GstPad * pad, GstObject * parent, GstEvent * event)
 {
   gboolean res;
   GstY4mDec *y4mdec;
 
-  y4mdec = GST_Y4M_DEC (gst_pad_get_parent (pad));
+  y4mdec = GST_Y4M_DEC (parent);
 
   GST_DEBUG_OBJECT (y4mdec, "event");
 
@@ -643,7 +645,6 @@ gst_y4m_dec_src_event (GstPad * pad, GstEvent * event)
       break;
   }
 
-  gst_object_unref (y4mdec);
   return res;
 }
 

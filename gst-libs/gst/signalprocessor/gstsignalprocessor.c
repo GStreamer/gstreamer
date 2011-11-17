@@ -204,11 +204,12 @@ static gboolean gst_signal_processor_sink_activate_push (GstPad * pad,
 static GstStateChangeReturn gst_signal_processor_change_state (GstElement *
     element, GstStateChange transition);
 
-static gboolean gst_signal_processor_event (GstPad * pad, GstEvent * event);
+static gboolean gst_signal_processor_event (GstPad * pad, GstObject * parent,
+    GstEvent * event);
 static GstFlowReturn gst_signal_processor_getrange (GstPad * pad,
-    guint64 offset, guint length, GstBuffer ** buffer);
+    GstObject * parent, guint64 offset, guint length, GstBuffer ** buffer);
 static GstFlowReturn gst_signal_processor_chain (GstPad * pad,
-    GstBuffer * buffer);
+    GstObject * parent, GstBuffer * buffer);
 static gboolean gst_signal_processor_setcaps (GstPad * pad, GstCaps * caps);
 
 
@@ -583,13 +584,13 @@ gst_signal_processor_interleave_group (GstSignalProcessorGroup * group,
 }
 
 static gboolean
-gst_signal_processor_event (GstPad * pad, GstEvent * event)
+gst_signal_processor_event (GstPad * pad, GstObject * parent, GstEvent * event)
 {
   GstSignalProcessor *self;
   GstSignalProcessorClass *bclass;
   gboolean ret;
 
-  self = GST_SIGNAL_PROCESSOR (gst_pad_get_parent (pad));
+  self = GST_SIGNAL_PROCESSOR (parent);
   bclass = GST_SIGNAL_PROCESSOR_GET_CLASS (self);
 
   GST_DEBUG_OBJECT (pad, "got event %s", GST_EVENT_TYPE_NAME (event));
@@ -611,19 +612,17 @@ gst_signal_processor_event (GstPad * pad, GstEvent * event)
       break;
     }
     case GST_EVENT_FLUSH_START:
-      ret = gst_pad_event_default (pad, event);
+      ret = gst_pad_event_default (pad, parent, event);
       break;
     case GST_EVENT_FLUSH_STOP:
       /* clear errors now */
       self->flow_state = GST_FLOW_OK;
-      ret = gst_pad_event_default (pad, event);
+      ret = gst_pad_event_default (pad, parent, event);
       break;
     default:
-      ret = gst_pad_event_default (pad, event);
+      ret = gst_pad_event_default (pad, parent, event);
       break;
   }
-
-  gst_object_unref (self);
 
   return ret;
 }
@@ -967,14 +966,14 @@ gst_signal_processor_do_pulls (GstSignalProcessor * self, guint nframes)
 }
 
 static GstFlowReturn
-gst_signal_processor_getrange (GstPad * pad, guint64 offset,
+gst_signal_processor_getrange (GstPad * pad, GstObject * parent, guint64 offset,
     guint length, GstBuffer ** buffer)
 {
   GstSignalProcessor *self;
   GstSignalProcessorPad *spad = (GstSignalProcessorPad *) pad;
   GstFlowReturn ret = GST_FLOW_ERROR;
 
-  self = GST_SIGNAL_PROCESSOR (gst_pad_get_parent (pad));
+  self = GST_SIGNAL_PROCESSOR (parent);
 
   if (spad->pen) {
     *buffer = spad->pen;
@@ -997,8 +996,6 @@ gst_signal_processor_getrange (GstPad * pad, guint64 offset,
   }
 
   GST_DEBUG_OBJECT (self, "returns %s", gst_flow_get_name (ret));
-
-  gst_object_unref (self);
 
   return ret;
 }
@@ -1046,11 +1043,12 @@ gst_signal_processor_do_pushes (GstSignalProcessor * self)
 }
 
 static GstFlowReturn
-gst_signal_processor_chain (GstPad * pad, GstBuffer * buffer)
+gst_signal_processor_chain (GstPad * pad, GstObject * parent,
+    GstBuffer * buffer)
 {
   GstSignalProcessor *self;
 
-  self = GST_SIGNAL_PROCESSOR (gst_pad_get_parent (pad));
+  self = GST_SIGNAL_PROCESSOR (parent);
 
   GST_LOG_OBJECT (self, "chain(%s:%s, %p) : p_in=%u, p_out=%u",
       GST_DEBUG_PAD_NAME (pad), buffer, self->pending_in, self->pending_out);
@@ -1061,8 +1059,6 @@ gst_signal_processor_chain (GstPad * pad, GstBuffer * buffer)
     if (gst_signal_processor_process (self, G_MAXUINT))
       gst_signal_processor_do_pushes (self);
   }
-
-  gst_object_unref (self);
 
   return self->flow_state;
 }

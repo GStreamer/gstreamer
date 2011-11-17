@@ -132,8 +132,9 @@ static void gst_sdp_demux_handle_message (GstBin * bin, GstMessage * message);
 static void gst_sdp_demux_stream_push_event (GstSDPDemux * demux,
     GstSDPStream * stream, GstEvent * event);
 
-static gboolean gst_sdp_demux_sink_event (GstPad * pad, GstEvent * event);
-static GstFlowReturn gst_sdp_demux_sink_chain (GstPad * pad,
+static gboolean gst_sdp_demux_sink_event (GstPad * pad, GstObject * parent,
+    GstEvent * event);
+static GstFlowReturn gst_sdp_demux_sink_chain (GstPad * pad, GstObject * parent,
     GstBuffer * buffer);
 
 /*static guint gst_sdp_demux_signals[LAST_SIGNAL] = { 0 }; */
@@ -387,12 +388,12 @@ is_multicast_address (const gchar * host_name)
   for (ai = res; !ret && ai; ai = ai->ai_next) {
     if (ai->ai_family == AF_INET)
       ret =
-          IN_MULTICAST (ntohl (((struct sockaddr_in *) ai->ai_addr)->
-              sin_addr.s_addr));
+          IN_MULTICAST (ntohl (((struct sockaddr_in *) ai->ai_addr)->sin_addr.
+              s_addr));
     else
       ret =
-          IN6_IS_ADDR_MULTICAST (&((struct sockaddr_in6 *) ai->
-              ai_addr)->sin6_addr);
+          IN6_IS_ADDR_MULTICAST (&((struct sockaddr_in6 *) ai->ai_addr)->
+          sin6_addr);
   }
 
   freeaddrinfo (res);
@@ -1471,12 +1472,12 @@ start_session_failure:
 }
 
 static gboolean
-gst_sdp_demux_sink_event (GstPad * pad, GstEvent * event)
+gst_sdp_demux_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
 {
   GstSDPDemux *demux;
   gboolean res = TRUE;
 
-  demux = GST_SDP_DEMUX (gst_pad_get_parent (pad));
+  demux = GST_SDP_DEMUX (parent);
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_EOS:
@@ -1488,23 +1489,20 @@ gst_sdp_demux_sink_event (GstPad * pad, GstEvent * event)
       gst_event_unref (event);
       break;
   }
-  gst_object_unref (demux);
 
   return res;
 }
 
 static GstFlowReturn
-gst_sdp_demux_sink_chain (GstPad * pad, GstBuffer * buffer)
+gst_sdp_demux_sink_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
 {
   GstSDPDemux *demux;
 
-  demux = GST_SDP_DEMUX (gst_pad_get_parent (pad));
+  demux = GST_SDP_DEMUX (parent);
 
   /* push the SDP message in an adapter, we start doing something with it when
    * we receive EOS */
   gst_adapter_push (demux->adapter, buffer);
-
-  gst_object_unref (demux);
 
   return GST_FLOW_OK;
 }

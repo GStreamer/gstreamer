@@ -69,12 +69,12 @@ static gboolean gst_base_audio_visualizer_sink_setcaps (GstBaseAudioVisualizer *
     scope, GstCaps * caps);
 
 static GstFlowReturn gst_base_audio_visualizer_chain (GstPad * pad,
-    GstBuffer * buffer);
+    GstObject * parent, GstBuffer * buffer);
 
 static gboolean gst_base_audio_visualizer_src_event (GstPad * pad,
-    GstEvent * event);
+    GstObject * parent, GstEvent * event);
 static gboolean gst_base_audio_visualizer_sink_event (GstPad * pad,
-    GstEvent * event);
+    GstObject * parent, GstEvent * event);
 
 static gboolean gst_base_audio_visualizer_src_query (GstPad * pad,
     GstObject * parent, GstQuery * query);
@@ -783,7 +783,8 @@ gst_base_audio_visualizer_ensure_negotiated (GstBaseAudioVisualizer * scope)
 }
 
 static GstFlowReturn
-gst_base_audio_visualizer_chain (GstPad * pad, GstBuffer * buffer)
+gst_base_audio_visualizer_chain (GstPad * pad, GstObject * parent,
+    GstBuffer * buffer)
 {
   GstFlowReturn ret = GST_FLOW_OK;
   GstBaseAudioVisualizer *scope;
@@ -795,7 +796,7 @@ gst_base_audio_visualizer_chain (GstPad * pad, GstBuffer * buffer)
   gboolean (*render) (GstBaseAudioVisualizer * scope, GstBuffer * audio,
       GstBuffer * video);
 
-  scope = GST_BASE_AUDIO_VISUALIZER (gst_pad_get_parent (pad));
+  scope = GST_BASE_AUDIO_VISUALIZER (parent);
   klass = GST_BASE_AUDIO_VISUALIZER_CLASS (G_OBJECT_GET_CLASS (scope));
 
   render = klass->render;
@@ -937,18 +938,17 @@ gst_base_audio_visualizer_chain (GstPad * pad, GstBuffer * buffer)
   g_mutex_unlock (scope->config_lock);
 
 beach:
-  gst_object_unref (scope);
-
   return ret;
 }
 
 static gboolean
-gst_base_audio_visualizer_src_event (GstPad * pad, GstEvent * event)
+gst_base_audio_visualizer_src_event (GstPad * pad, GstObject * parent,
+    GstEvent * event)
 {
   gboolean res;
   GstBaseAudioVisualizer *scope;
 
-  scope = GST_BASE_AUDIO_VISUALIZER (gst_pad_get_parent (pad));
+  scope = GST_BASE_AUDIO_VISUALIZER (parent);
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_QOS:
@@ -977,18 +977,18 @@ gst_base_audio_visualizer_src_event (GstPad * pad, GstEvent * event)
       res = gst_pad_push_event (scope->sinkpad, event);
       break;
   }
-  gst_object_unref (scope);
 
   return res;
 }
 
 static gboolean
-gst_base_audio_visualizer_sink_event (GstPad * pad, GstEvent * event)
+gst_base_audio_visualizer_sink_event (GstPad * pad, GstObject * parent,
+    GstEvent * event)
 {
   gboolean res;
   GstBaseAudioVisualizer *scope;
 
-  scope = GST_BASE_AUDIO_VISUALIZER (gst_pad_get_parent (pad));
+  scope = GST_BASE_AUDIO_VISUALIZER (parent);
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_CAPS:
@@ -1020,7 +1020,6 @@ gst_base_audio_visualizer_sink_event (GstPad * pad, GstEvent * event)
       res = gst_pad_push_event (scope->srcpad, event);
       break;
   }
-  gst_object_unref (scope);
 
   return res;
 }

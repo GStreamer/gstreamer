@@ -855,10 +855,10 @@ done:
 }
 
 static gboolean
-gst_ts_demux_srcpad_event (GstPad * pad, GstEvent * event)
+gst_ts_demux_srcpad_event (GstPad * pad, GstObject * parent, GstEvent * event)
 {
   gboolean res = TRUE;
-  GstTSDemux *demux = GST_TS_DEMUX (gst_pad_get_parent (pad));
+  GstTSDemux *demux = GST_TS_DEMUX (parent);
 
   GST_DEBUG_OBJECT (pad, "Got event %s",
       gst_event_type_get_name (GST_EVENT_TYPE (event)));
@@ -871,10 +871,9 @@ gst_ts_demux_srcpad_event (GstPad * pad, GstEvent * event)
       gst_event_unref (event);
       break;
     default:
-      res = gst_pad_event_default (pad, event);
+      res = gst_pad_event_default (pad, parent, event);
   }
 
-  gst_object_unref (demux);
   return res;
 }
 

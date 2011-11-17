@@ -118,13 +118,13 @@ static void gst_base_video_encoder_finalize (GObject * object);
 static GstCaps *gst_base_video_encoder_sink_getcaps (GstPad * pad,
     GstCaps * filter);
 static gboolean gst_base_video_encoder_src_event (GstPad * pad,
-    GstEvent * event);
+    GstObject * parent, GstEvent * event);
 static gboolean gst_base_video_encoder_sink_event (GstPad * pad,
-    GstEvent * event);
+    GstObject * parent, GstEvent * event);
 static gboolean gst_base_video_encoder_sink_query (GstPad * pad,
     GstObject * parent, GstQuery * query);
 static GstFlowReturn gst_base_video_encoder_chain (GstPad * pad,
-    GstBuffer * buf);
+    GstObject * parent, GstBuffer * buf);
 static GstStateChangeReturn gst_base_video_encoder_change_state (GstElement *
     element, GstStateChange transition);
 static gboolean gst_base_video_encoder_src_query (GstPad * pad,
@@ -132,8 +132,7 @@ static gboolean gst_base_video_encoder_src_query (GstPad * pad,
 
 #define gst_base_video_encoder_parent_class parent_class
 G_DEFINE_TYPE_WITH_CODE (GstBaseVideoEncoder, gst_base_video_encoder,
-    GST_TYPE_BASE_VIDEO_CODEC, G_IMPLEMENT_INTERFACE (GST_TYPE_PRESET, NULL);
-    );
+    GST_TYPE_BASE_VIDEO_CODEC, G_IMPLEMENT_INTERFACE (GST_TYPE_PRESET, NULL););
 
 static void
 gst_base_video_encoder_class_init (GstBaseVideoEncoderClass * klass)
@@ -546,14 +545,15 @@ gst_base_video_encoder_sink_eventfunc (GstBaseVideoEncoder * base_video_encoder,
 }
 
 static gboolean
-gst_base_video_encoder_sink_event (GstPad * pad, GstEvent * event)
+gst_base_video_encoder_sink_event (GstPad * pad, GstObject * parent,
+    GstEvent * event)
 {
   GstBaseVideoEncoder *enc;
   GstBaseVideoEncoderClass *klass;
   gboolean handled = FALSE;
   gboolean ret = TRUE;
 
-  enc = GST_BASE_VIDEO_ENCODER (gst_pad_get_parent (pad));
+  enc = GST_BASE_VIDEO_ENCODER (parent);
   klass = GST_BASE_VIDEO_ENCODER_GET_CLASS (enc);
 
   GST_DEBUG_OBJECT (enc, "received event %d, %s", GST_EVENT_TYPE (event),
@@ -591,17 +591,17 @@ gst_base_video_encoder_sink_event (GstPad * pad, GstEvent * event)
 
   GST_DEBUG_OBJECT (enc, "event handled");
 
-  gst_object_unref (enc);
   return ret;
 }
 
 static gboolean
-gst_base_video_encoder_src_event (GstPad * pad, GstEvent * event)
+gst_base_video_encoder_src_event (GstPad * pad, GstObject * parent,
+    GstEvent * event)
 {
   GstBaseVideoEncoder *base_video_encoder;
   gboolean ret = FALSE;
 
-  base_video_encoder = GST_BASE_VIDEO_ENCODER (gst_pad_get_parent (pad));
+  base_video_encoder = GST_BASE_VIDEO_ENCODER (parent);
 
   GST_LOG_OBJECT (base_video_encoder, "handling event: %" GST_PTR_FORMAT,
       event);
@@ -634,7 +634,6 @@ gst_base_video_encoder_src_event (GstPad * pad, GstEvent * event)
       break;
   }
 
-  gst_object_unref (base_video_encoder);
   return ret;
 }
 
@@ -701,14 +700,14 @@ error:
 }
 
 static GstFlowReturn
-gst_base_video_encoder_chain (GstPad * pad, GstBuffer * buf)
+gst_base_video_encoder_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
 {
   GstBaseVideoEncoder *base_video_encoder;
   GstBaseVideoEncoderClass *klass;
   GstVideoFrameState *frame;
   GstFlowReturn ret = GST_FLOW_OK;
 
-  base_video_encoder = GST_BASE_VIDEO_ENCODER (gst_pad_get_parent (pad));
+  base_video_encoder = GST_BASE_VIDEO_ENCODER (parent);
   klass = GST_BASE_VIDEO_ENCODER_GET_CLASS (base_video_encoder);
 
   g_return_val_if_fail (klass->handle_frame != NULL, GST_FLOW_ERROR);
@@ -772,8 +771,6 @@ gst_base_video_encoder_chain (GstPad * pad, GstBuffer * buf)
 
 done:
   GST_BASE_VIDEO_CODEC_STREAM_UNLOCK (base_video_encoder);
-
-  g_object_unref (base_video_encoder);
 
   return ret;
 }

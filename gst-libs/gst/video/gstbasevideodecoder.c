@@ -140,11 +140,11 @@ static void gst_base_video_decoder_finalize (GObject * object);
 static gboolean gst_base_video_decoder_setcaps (GstBaseVideoDecoder * vdec,
     GstCaps * caps);
 static gboolean gst_base_video_decoder_sink_event (GstPad * pad,
-    GstEvent * event);
+    GstObject * parent, GstEvent * event);
 static gboolean gst_base_video_decoder_src_event (GstPad * pad,
-    GstEvent * event);
+    GstObject * parent, GstEvent * event);
 static GstFlowReturn gst_base_video_decoder_chain (GstPad * pad,
-    GstBuffer * buf);
+    GstObject * parent, GstBuffer * buf);
 static gboolean gst_base_video_decoder_sink_query (GstPad * pad,
     GstObject * parent, GstQuery * query);
 static GstStateChangeReturn gst_base_video_decoder_change_state (GstElement *
@@ -308,8 +308,8 @@ gst_base_video_decoder_setcaps (GstBaseVideoDecoder * base_video_decoder,
   }
 
   if (ret) {
-    gst_buffer_replace (&GST_BASE_VIDEO_CODEC (base_video_decoder)->state.
-        codec_data, NULL);
+    gst_buffer_replace (&GST_BASE_VIDEO_CODEC (base_video_decoder)->
+        state.codec_data, NULL);
     gst_caps_replace (&GST_BASE_VIDEO_CODEC (base_video_decoder)->state.caps,
         NULL);
     GST_BASE_VIDEO_CODEC (base_video_decoder)->state = state;
@@ -387,13 +387,14 @@ gst_base_video_decoder_flush (GstBaseVideoDecoder * dec, gboolean hard)
 }
 
 static gboolean
-gst_base_video_decoder_sink_event (GstPad * pad, GstEvent * event)
+gst_base_video_decoder_sink_event (GstPad * pad, GstObject * parent,
+    GstEvent * event)
 {
   GstBaseVideoDecoder *base_video_decoder;
   GstBaseVideoDecoderClass *base_video_decoder_class;
   gboolean ret = FALSE;
 
-  base_video_decoder = GST_BASE_VIDEO_DECODER (gst_pad_get_parent (pad));
+  base_video_decoder = GST_BASE_VIDEO_DECODER (parent);
   base_video_decoder_class =
       GST_BASE_VIDEO_DECODER_GET_CLASS (base_video_decoder);
 
@@ -499,7 +500,6 @@ gst_base_video_decoder_sink_event (GstPad * pad, GstEvent * event)
   }
 
 done:
-  gst_object_unref (base_video_decoder);
   return ret;
 
 newseg_wrong_format:
@@ -580,12 +580,13 @@ gst_base_video_decoder_do_seek (GstBaseVideoDecoder * dec, GstEvent * event)
 }
 
 static gboolean
-gst_base_video_decoder_src_event (GstPad * pad, GstEvent * event)
+gst_base_video_decoder_src_event (GstPad * pad, GstObject * parent,
+    GstEvent * event)
 {
   GstBaseVideoDecoder *base_video_decoder;
   gboolean res = FALSE;
 
-  base_video_decoder = GST_BASE_VIDEO_DECODER (gst_pad_get_parent (pad));
+  base_video_decoder = GST_BASE_VIDEO_DECODER (parent);
 
   GST_DEBUG_OBJECT (base_video_decoder,
       "received event %d, %s", GST_EVENT_TYPE (event),
@@ -686,7 +687,6 @@ gst_base_video_decoder_src_event (GstPad * pad, GstEvent * event)
       break;
   }
 done:
-  gst_object_unref (base_video_decoder);
   return res;
 
 convert_error:
@@ -1207,12 +1207,12 @@ gst_base_video_decoder_chain_reverse (GstBaseVideoDecoder * dec,
 }
 
 static GstFlowReturn
-gst_base_video_decoder_chain (GstPad * pad, GstBuffer * buf)
+gst_base_video_decoder_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
 {
   GstBaseVideoDecoder *base_video_decoder;
   GstFlowReturn ret = GST_FLOW_OK;
 
-  base_video_decoder = GST_BASE_VIDEO_DECODER (GST_PAD_PARENT (pad));
+  base_video_decoder = GST_BASE_VIDEO_DECODER (parent);
 
   GST_LOG_OBJECT (base_video_decoder,
       "chain %" GST_TIME_FORMAT " duration %" GST_TIME_FORMAT " size %d",

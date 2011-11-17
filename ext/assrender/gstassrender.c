@@ -97,12 +97,17 @@ static GstCaps *gst_ass_render_getcaps (GstPad * pad, GstCaps * filter);
 static gboolean gst_ass_render_setcaps_video (GstPad * pad, GstCaps * caps);
 static gboolean gst_ass_render_setcaps_text (GstPad * pad, GstCaps * caps);
 
-static GstFlowReturn gst_ass_render_chain_video (GstPad * pad, GstBuffer * buf);
-static GstFlowReturn gst_ass_render_chain_text (GstPad * pad, GstBuffer * buf);
+static GstFlowReturn gst_ass_render_chain_video (GstPad * pad,
+    GstObject * parent, GstBuffer * buf);
+static GstFlowReturn gst_ass_render_chain_text (GstPad * pad,
+    GstObject * parent, GstBuffer * buf);
 
-static gboolean gst_ass_render_event_video (GstPad * pad, GstEvent * event);
-static gboolean gst_ass_render_event_text (GstPad * pad, GstEvent * event);
-static gboolean gst_ass_render_event_src (GstPad * pad, GstEvent * event);
+static gboolean gst_ass_render_event_video (GstPad * pad, GstObject * parent,
+    GstEvent * event);
+static gboolean gst_ass_render_event_text (GstPad * pad, GstObject * parent,
+    GstEvent * event);
+static gboolean gst_ass_render_event_src (GstPad * pad, GstObject * parent,
+    GstEvent * event);
 
 static gboolean gst_ass_render_query_video (GstPad * pad, GstObject * parent,
     GstQuery * query);
@@ -377,9 +382,9 @@ gst_ass_render_query_src (GstPad * pad, GstObject * parent, GstQuery * query)
 }
 
 static gboolean
-gst_ass_render_event_src (GstPad * pad, GstEvent * event)
+gst_ass_render_event_src (GstPad * pad, GstObject * parent, GstEvent * event)
 {
-  GstAssRender *render = GST_ASS_RENDER (gst_pad_get_parent (pad));
+  GstAssRender *render = GST_ASS_RENDER (parent);
   gboolean ret = FALSE;
 
   switch (GST_EVENT_TYPE (event)) {
@@ -419,8 +424,6 @@ gst_ass_render_event_src (GstPad * pad, GstEvent * event)
       gst_pad_push_event (render->text_sinkpad, event);
       break;
   }
-
-  gst_object_unref (render);
 
   return ret;
 }
@@ -903,9 +906,10 @@ gst_ass_render_process_text (GstAssRender * render, GstBuffer * buffer,
 }
 
 static GstFlowReturn
-gst_ass_render_chain_video (GstPad * pad, GstBuffer * buffer)
+gst_ass_render_chain_video (GstPad * pad, GstObject * parent,
+    GstBuffer * buffer)
 {
-  GstAssRender *render = GST_ASS_RENDER (GST_PAD_PARENT (pad));
+  GstAssRender *render = GST_ASS_RENDER (parent);
   GstFlowReturn ret = GST_FLOW_OK;
   gboolean in_seg = FALSE;
   guint64 start, stop, clip_start = 0, clip_stop = 0;
@@ -1044,10 +1048,10 @@ out_of_segment:
 }
 
 static GstFlowReturn
-gst_ass_render_chain_text (GstPad * pad, GstBuffer * buffer)
+gst_ass_render_chain_text (GstPad * pad, GstObject * parent, GstBuffer * buffer)
 {
   GstFlowReturn ret = GST_FLOW_OK;
-  GstAssRender *render = GST_ASS_RENDER (GST_PAD_PARENT (pad));
+  GstAssRender *render = GST_ASS_RENDER (parent);
   GstClockTime timestamp, duration;
   GstClockTime sub_running_time, vid_running_time;
   GstClockTime sub_running_time_end;
@@ -1220,10 +1224,10 @@ gst_ass_render_handle_tags (GstAssRender * render, GstTagList * taglist)
 }
 
 static gboolean
-gst_ass_render_event_video (GstPad * pad, GstEvent * event)
+gst_ass_render_event_video (GstPad * pad, GstObject * parent, GstEvent * event)
 {
   gboolean ret = FALSE;
-  GstAssRender *render = GST_ASS_RENDER (gst_pad_get_parent (pad));
+  GstAssRender *render = GST_ASS_RENDER (parent);
 
   GST_DEBUG_OBJECT (pad, "received video event %s",
       GST_EVENT_TYPE_NAME (event));
@@ -1282,8 +1286,6 @@ gst_ass_render_event_video (GstPad * pad, GstEvent * event)
       break;
   }
 
-  gst_object_unref (render);
-
   return ret;
 }
 
@@ -1313,11 +1315,11 @@ gst_ass_render_query_video (GstPad * pad, GstObject * parent, GstQuery * query)
 }
 
 static gboolean
-gst_ass_render_event_text (GstPad * pad, GstEvent * event)
+gst_ass_render_event_text (GstPad * pad, GstObject * parent, GstEvent * event)
 {
   gint i;
   gboolean ret = FALSE;
-  GstAssRender *render = GST_ASS_RENDER (gst_pad_get_parent (pad));
+  GstAssRender *render = GST_ASS_RENDER (parent);
 
   GST_DEBUG_OBJECT (pad, "received text event %s", GST_EVENT_TYPE_NAME (event));
 
@@ -1410,8 +1412,6 @@ gst_ass_render_event_text (GstPad * pad, GstEvent * event)
       ret = gst_pad_push_event (render->srcpad, event);
       break;
   }
-
-  gst_object_unref (render);
 
   return ret;
 }

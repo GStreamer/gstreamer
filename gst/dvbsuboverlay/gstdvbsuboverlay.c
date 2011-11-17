@@ -97,13 +97,16 @@ G_DEFINE_TYPE (GstDVBSubOverlay, gst_dvbsub_overlay, GST_TYPE_ELEMENT);
 static GstCaps *gst_dvbsub_overlay_getcaps (GstPad * pad, GstCaps * filter);
 
 static GstFlowReturn gst_dvbsub_overlay_chain_video (GstPad * pad,
-    GstBuffer * buf);
+    GstObject * parent, GstBuffer * buf);
 static GstFlowReturn gst_dvbsub_overlay_chain_text (GstPad * pad,
-    GstBuffer * buf);
+    GstObject * parent, GstBuffer * buf);
 
-static gboolean gst_dvbsub_overlay_event_video (GstPad * pad, GstEvent * event);
-static gboolean gst_dvbsub_overlay_event_text (GstPad * pad, GstEvent * event);
-static gboolean gst_dvbsub_overlay_event_src (GstPad * pad, GstEvent * event);
+static gboolean gst_dvbsub_overlay_event_video (GstPad * pad,
+    GstObject * parent, GstEvent * event);
+static gboolean gst_dvbsub_overlay_event_text (GstPad * pad, GstObject * parent,
+    GstEvent * event);
+static gboolean gst_dvbsub_overlay_event_src (GstPad * pad, GstObject * parent,
+    GstEvent * event);
 
 static void new_dvb_subtitles_cb (DvbSub * dvb_sub, DVBSubtitles * subs,
     gpointer user_data);
@@ -353,9 +356,10 @@ gst_dvbsub_overlay_query_src (GstPad * pad, GstObject * parent,
 }
 
 static gboolean
-gst_dvbsub_overlay_event_src (GstPad * pad, GstEvent * event)
+gst_dvbsub_overlay_event_src (GstPad * pad, GstObject * parent,
+    GstEvent * event)
 {
-  GstDVBSubOverlay *render = GST_DVBSUB_OVERLAY (gst_pad_get_parent (pad));
+  GstDVBSubOverlay *render = GST_DVBSUB_OVERLAY (parent);
   gboolean ret = FALSE;
 
   switch (GST_EVENT_TYPE (event)) {
@@ -388,8 +392,6 @@ gst_dvbsub_overlay_event_src (GstPad * pad, GstEvent * event)
       gst_pad_push_event (render->text_sinkpad, event);
       break;
   }
-
-  gst_object_unref (render);
 
   return ret;
 }
@@ -740,9 +742,10 @@ new_dvb_subtitles_cb (DvbSub * dvb_sub, DVBSubtitles * subs, gpointer user_data)
 }
 
 static GstFlowReturn
-gst_dvbsub_overlay_chain_text (GstPad * pad, GstBuffer * buffer)
+gst_dvbsub_overlay_chain_text (GstPad * pad, GstObject * parent,
+    GstBuffer * buffer)
 {
-  GstDVBSubOverlay *overlay = GST_DVBSUB_OVERLAY (GST_PAD_PARENT (pad));
+  GstDVBSubOverlay *overlay = GST_DVBSUB_OVERLAY (parent);
   GstClockTime sub_running_time;
 
   GST_INFO_OBJECT (overlay, "subpicture/x-dvb buffer with size %u",
@@ -785,9 +788,10 @@ gst_dvbsub_overlay_chain_text (GstPad * pad, GstBuffer * buffer)
 }
 
 static GstFlowReturn
-gst_dvbsub_overlay_chain_video (GstPad * pad, GstBuffer * buffer)
+gst_dvbsub_overlay_chain_video (GstPad * pad, GstObject * parent,
+    GstBuffer * buffer)
 {
-  GstDVBSubOverlay *overlay = GST_DVBSUB_OVERLAY (GST_PAD_PARENT (pad));
+  GstDVBSubOverlay *overlay = GST_DVBSUB_OVERLAY (parent);
   GstFlowReturn ret = GST_FLOW_OK;
   gint64 start, stop;
   guint64 cstart, cstop;
@@ -954,10 +958,11 @@ gst_dvbsub_overlay_query_video (GstPad * pad, GstObject * parent,
 }
 
 static gboolean
-gst_dvbsub_overlay_event_video (GstPad * pad, GstEvent * event)
+gst_dvbsub_overlay_event_video (GstPad * pad, GstObject * parent,
+    GstEvent * event)
 {
   gboolean ret = FALSE;
-  GstDVBSubOverlay *render = GST_DVBSUB_OVERLAY (gst_pad_get_parent (pad));
+  GstDVBSubOverlay *render = GST_DVBSUB_OVERLAY (parent);
 
   GST_DEBUG_OBJECT (pad, "received video event %s",
       GST_EVENT_TYPE_NAME (event));
@@ -1004,16 +1009,15 @@ gst_dvbsub_overlay_event_video (GstPad * pad, GstEvent * event)
       break;
   }
 
-  gst_object_unref (render);
-
   return ret;
 }
 
 static gboolean
-gst_dvbsub_overlay_event_text (GstPad * pad, GstEvent * event)
+gst_dvbsub_overlay_event_text (GstPad * pad, GstObject * parent,
+    GstEvent * event)
 {
   gboolean ret = FALSE;
-  GstDVBSubOverlay *render = GST_DVBSUB_OVERLAY (gst_pad_get_parent (pad));
+  GstDVBSubOverlay *render = GST_DVBSUB_OVERLAY (parent);
 
   GST_DEBUG_OBJECT (pad, "received text event %s", GST_EVENT_TYPE_NAME (event));
 
@@ -1066,8 +1070,6 @@ gst_dvbsub_overlay_event_text (GstPad * pad, GstEvent * event)
       ret = gst_pad_push_event (render->srcpad, event);
       break;
   }
-
-  gst_object_unref (render);
 
   return ret;
 }
