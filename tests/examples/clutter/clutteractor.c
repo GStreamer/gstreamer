@@ -73,10 +73,10 @@ create_actor (GstGLClutterActor * actor)
   /* knot[0].x = -10;
      knot[0].y = -10;
      knot[1].x = 160;
-     knot[1].y = 120;* /
+     knot[1].y = 120; */
 
-     // Move the actor along the path:
-     /*clutter_effect_path (effect_template, actor->texture, knot,
+  // Move the actor along the path:
+  /* clutter_effect_path (effect_template, actor->texture, knot,
      sizeof (knot) / sizeof (ClutterKnot), NULL, NULL);
      clutter_effect_scale (effect_template, actor->texture, 1.0, 1.0, NULL, NULL);
      clutter_effect_rotate (effect_template, actor->texture,
