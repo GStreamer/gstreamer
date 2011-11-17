@@ -1444,7 +1444,7 @@ gst_avdtp_sink_start (GstBaseSink * basesink)
     err = -errno;
     GST_ERROR_OBJECT (self, "Cannot open connection to bt "
         "audio service: %s %d", strerror (-err), -err);
-    goto failed;
+    return FALSE;
   }
 
   self->server = g_io_channel_unix_new (sk);
