@@ -139,7 +139,8 @@ static GstFlowReturn gst_tag_demux_chain (GstPad * pad, GstObject * parent,
 static gboolean gst_tag_demux_sink_event (GstPad * pad, GstObject * parent,
     GstEvent * event);
 
-static gboolean gst_tag_demux_src_activate_pull (GstPad * pad, gboolean active);
+static gboolean gst_tag_demux_src_activate_pull (GstPad * pad,
+    GstObject * parent, gboolean active);
 static GstFlowReturn gst_tag_demux_read_range (GstTagDemux * tagdemux,
     GstObject * parent, guint64 offset, guint length, GstBuffer ** buffer);
 
@@ -151,7 +152,8 @@ static void gst_tag_demux_set_src_caps (GstTagDemux * tagdemux,
 
 static gboolean gst_tag_demux_srcpad_event (GstPad * pad, GstObject * parent,
     GstEvent * event);
-static gboolean gst_tag_demux_sink_activate (GstPad * sinkpad);
+static gboolean gst_tag_demux_sink_activate (GstPad * sinkpad,
+    GstObject * parent);
 static GstStateChangeReturn gst_tag_demux_change_state (GstElement * element,
     GstStateChange transition);
 static gboolean gst_tag_demux_pad_query (GstPad * pad, GstObject * parent,
@@ -1092,7 +1094,7 @@ done:
  *    otherwise activate both pads in push mode and succeed.
  */
 static gboolean
-gst_tag_demux_sink_activate (GstPad * sinkpad)
+gst_tag_demux_sink_activate (GstPad * sinkpad, GstObject * parent)
 {
   GstTypeFindProbability probability = 0;
   GstTagDemuxClass *klass;
@@ -1105,7 +1107,7 @@ gst_tag_demux_sink_activate (GstPad * sinkpad)
   GstQuery *query;
   gboolean pull_mode;
 
-  demux = GST_TAG_DEMUX (GST_PAD_PARENT (sinkpad));
+  demux = GST_TAG_DEMUX (parent);
   klass = GST_TAG_DEMUX_CLASS (G_OBJECT_GET_CLASS (demux));
 
   /* 1: */
@@ -1229,9 +1231,10 @@ activate_push:
 }
 
 static gboolean
-gst_tag_demux_src_activate_pull (GstPad * pad, gboolean active)
+gst_tag_demux_src_activate_pull (GstPad * pad, GstObject * parent,
+    gboolean active)
 {
-  GstTagDemux *demux = GST_TAG_DEMUX (GST_PAD_PARENT (pad));
+  GstTagDemux *demux = GST_TAG_DEMUX (parent);
 
   return gst_pad_activate_pull (demux->priv->sinkpad, active);
 }

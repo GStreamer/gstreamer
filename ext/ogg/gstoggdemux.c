@@ -1781,11 +1781,12 @@ static gboolean gst_ogg_demux_sink_event (GstPad * pad, GstObject * parent,
 static void gst_ogg_demux_loop (GstOggPad * pad);
 static GstFlowReturn gst_ogg_demux_chain (GstPad * pad, GstObject * parent,
     GstBuffer * buffer);
-static gboolean gst_ogg_demux_sink_activate (GstPad * sinkpad);
+static gboolean gst_ogg_demux_sink_activate (GstPad * sinkpad,
+    GstObject * parent);
 static gboolean gst_ogg_demux_sink_activate_pull (GstPad * sinkpad,
-    gboolean active);
+    GstObject * parent, gboolean active);
 static gboolean gst_ogg_demux_sink_activate_push (GstPad * sinkpad,
-    gboolean active);
+    GstObject * parent, gboolean active);
 static GstStateChangeReturn gst_ogg_demux_change_state (GstElement * element,
     GstStateChange transition);
 
@@ -4307,7 +4308,7 @@ gst_ogg_demux_clear_chains (GstOggDemux * ogg)
  * pull based.
  */
 static gboolean
-gst_ogg_demux_sink_activate (GstPad * sinkpad)
+gst_ogg_demux_sink_activate (GstPad * sinkpad, GstObject * parent)
 {
   GstQuery *query;
   gboolean pull_mode;
@@ -4338,11 +4339,12 @@ activate_push:
 /* this function gets called when we activate ourselves in push mode.
  * We cannot seek (ourselves) in the stream */
 static gboolean
-gst_ogg_demux_sink_activate_push (GstPad * sinkpad, gboolean active)
+gst_ogg_demux_sink_activate_push (GstPad * sinkpad, GstObject * parent,
+    gboolean active)
 {
   GstOggDemux *ogg;
 
-  ogg = GST_OGG_DEMUX (GST_OBJECT_PARENT (sinkpad));
+  ogg = GST_OGG_DEMUX (parent);
 
   ogg->pullmode = FALSE;
   ogg->resync = FALSE;
@@ -4354,11 +4356,12 @@ gst_ogg_demux_sink_activate_push (GstPad * sinkpad, gboolean active)
  * We can perform  random access to the resource and we start a task
  * to start reading */
 static gboolean
-gst_ogg_demux_sink_activate_pull (GstPad * sinkpad, gboolean active)
+gst_ogg_demux_sink_activate_pull (GstPad * sinkpad, GstObject * parent,
+    gboolean active)
 {
   GstOggDemux *ogg;
 
-  ogg = GST_OGG_DEMUX (GST_OBJECT_PARENT (sinkpad));
+  ogg = GST_OGG_DEMUX (parent);
 
   if (active) {
     ogg->need_chains = TRUE;

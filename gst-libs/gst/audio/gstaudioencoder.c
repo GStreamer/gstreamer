@@ -294,7 +294,7 @@ static void gst_audio_encoder_get_property (GObject * object,
     guint prop_id, GValue * value, GParamSpec * pspec);
 
 static gboolean gst_audio_encoder_sink_activate_push (GstPad * pad,
-    gboolean active);
+    GstObject * parent, gboolean active);
 
 static GstCaps *gst_audio_encoder_getcaps_default (GstAudioEncoder * enc,
     GstCaps * filter);
@@ -1701,12 +1701,13 @@ gst_audio_encoder_activate (GstAudioEncoder * enc, gboolean active)
 
 
 static gboolean
-gst_audio_encoder_sink_activate_push (GstPad * pad, gboolean active)
+gst_audio_encoder_sink_activate_push (GstPad * pad, GstObject * parent,
+    gboolean active)
 {
   gboolean result = TRUE;
   GstAudioEncoder *enc;
 
-  enc = GST_AUDIO_ENCODER (gst_pad_get_parent (pad));
+  enc = GST_AUDIO_ENCODER (parent);
 
   GST_DEBUG_OBJECT (enc, "sink activate push %d", active);
 
@@ -1717,7 +1718,6 @@ gst_audio_encoder_sink_activate_push (GstPad * pad, gboolean active)
 
   GST_DEBUG_OBJECT (enc, "sink activate push return: %d", result);
 
-  gst_object_unref (enc);
   return result;
 }
 
