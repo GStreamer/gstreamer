@@ -917,6 +917,9 @@ gst_omx_video_dec_stop (GstBaseVideoDecoder * decoder)
 
   GST_DEBUG_OBJECT (self, "Stopping decoder");
 
+  gst_omx_port_set_flushing (self->in_port, TRUE);
+  gst_omx_port_set_flushing (self->out_port, TRUE);
+
   gst_pad_stop_task (GST_BASE_VIDEO_CODEC_SRC_PAD (decoder));
 
   if (gst_omx_component_get_state (self->component, 0) > OMX_StateIdle)
@@ -930,9 +933,6 @@ gst_omx_video_dec_stop (GstBaseVideoDecoder * decoder)
   self->draining = FALSE;
   g_cond_broadcast (self->drain_cond);
   g_mutex_unlock (self->drain_lock);
-
-  gst_omx_port_set_flushing (self->in_port, TRUE);
-  gst_omx_port_set_flushing (self->out_port, TRUE);
 
   gst_omx_component_get_state (self->component, 5 * GST_SECOND);
 
