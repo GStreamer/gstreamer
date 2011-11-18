@@ -1117,7 +1117,10 @@ gst_base_src_default_query (GstBaseSrc * src, GstQuery * query)
       /* we can operate in getrange mode if the native format is bytes
        * and we are seekable, this condition is set in the random_access
        * flag and is set in the _start() method. */
-      gst_query_set_scheduling (query, random_access, TRUE, FALSE, 1, -1, 1);
+      gst_query_set_scheduling (query, GST_SCHEDULING_FLAG_SEEKABLE, 1, -1, 0);
+      if (random_access)
+        gst_query_add_scheduling_mode (query, GST_PAD_MODE_PULL);
+      gst_query_add_scheduling_mode (query, GST_PAD_MODE_PUSH);
 
       res = TRUE;
       break;

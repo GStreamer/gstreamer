@@ -923,7 +923,7 @@ gst_type_find_element_activate (GstPad * pad, GstObject * parent)
     goto typefind_push;
   }
 
-  gst_query_parse_scheduling (query, &pull_mode, NULL, NULL, NULL, NULL, NULL);
+  pull_mode = gst_query_has_scheduling_mode (query, GST_PAD_MODE_PULL);
   gst_query_unref (query);
 
   if (!pull_mode)

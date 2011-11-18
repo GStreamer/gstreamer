@@ -2556,11 +2556,17 @@ gst_queue2_handle_src_query (GstPad * pad, GstObject * parent, GstQuery * query)
     case GST_QUERY_SCHEDULING:
     {
       gboolean pull_mode;
+      GstSchedulingFlags flags = 0;
 
       /* we can operate in pull mode when we are using a tempfile */
       pull_mode = !QUEUE_IS_USING_QUEUE (queue);
 
-      gst_query_set_scheduling (query, pull_mode, pull_mode, FALSE, 0, -1, 1);
+      if (pull_mode)
+        flags |= GST_SCHEDULING_FLAG_SEEKABLE;
+      gst_query_set_scheduling (query, flags, 0, -1, 0);
+      if (pull_mode)
+        gst_query_add_scheduling_mode (query, GST_PAD_MODE_PULL);
+      gst_query_add_scheduling_mode (query, GST_PAD_MODE_PUSH);
       break;
     }
     default:

@@ -44,6 +44,22 @@ typedef enum {
   GST_PAD_SINK
 } GstPadDirection;
 
+/**
+ * GstPadMode:
+ * @GST_PAD_MODE_NONE: Pad will not handle dataflow
+ * @GST_PAD_MODE_PUSH: Pad handles dataflow in downstream push mode
+ * @GST_PAD_MODE_PULL: Pad handles dataflow in upstream pull mode
+ *
+ * The status of a GstPad. After activating a pad, which usually happens when the
+ * parent element goes from READY to PAUSED, the GstPadMode defines if the
+ * pad operates in push or pull mode.
+ */
+typedef enum {
+  GST_PAD_MODE_NONE,
+  GST_PAD_MODE_PUSH,
+  GST_PAD_MODE_PULL
+} GstPadMode;
+
 #include <gst/gstobject.h>
 #include <gst/gstbuffer.h>
 #include <gst/gstbufferlist.h>
@@ -211,26 +227,11 @@ typedef enum {
  */
 #define GST_PAD_LINK_CHECK_DEFAULT ((GstPadLinkCheck) (GST_PAD_LINK_CHECK_HIERARCHY | GST_PAD_LINK_CHECK_CAPS))
 
-/**
- * GstPadMode:
- * @GST_PAD_MODE_NONE: Pad will not handle dataflow
- * @GST_PAD_MODE_PUSH: Pad handles dataflow in downstream push mode
- * @GST_PAD_MODE_PULL: Pad handles dataflow in upstream pull mode
- *
- * The status of a GstPad. After activating a pad, which usually happens when the
- * parent element goes from READY to PAUSED, the GstPadMode defines if the
- * pad operates in push or pull mode.
- */
-typedef enum {
-  GST_PAD_MODE_NONE,
-  GST_PAD_MODE_PUSH,
-  GST_PAD_MODE_PULL
-} GstPadMode;
-
 /* pad states */
 /**
  * GstPadActivateFunction:
  * @pad: a #GstPad
+ * @parent: the parent of @pad
  *
  * This function is called when the pad is activated during the element
  * READY to PAUSED state change. By default this function will call the
@@ -243,6 +244,7 @@ typedef gboolean		(*GstPadActivateFunction)	(GstPad *pad, GstObject *parent);
 /**
  * GstPadActivateModeFunction:
  * @pad: a #GstPad
+ * @parent: the parent of @pad
  * @active: activate or deactivate the pad.
  *
  * The prototype of the push and pull activate functions.

@@ -104,7 +104,10 @@ gst_push_src_query (GstBaseSrc * src, GstQuery * query)
     {
       /* a pushsrc can by default never operate in pull mode override
        * if you want something different. */
-      gst_query_set_scheduling (query, FALSE, FALSE, TRUE, 1, -1, 1);
+      gst_query_set_scheduling (query, GST_SCHEDULING_FLAG_SEQUENTIAL, 1, -1,
+          0);
+      gst_query_add_scheduling_mode (query, GST_PAD_MODE_PUSH);
+
       ret = TRUE;
       break;
     }

@@ -374,14 +374,30 @@ guint           gst_query_get_n_allocation_memories   (GstQuery *query);
 const gchar *   gst_query_parse_nth_allocation_memory (GstQuery *query, guint index);
 
 /* scheduling query */
+/**
+ * GstSchedulingFlags:
+ * @GST_SCHEDULING_FLAG_SEEKABLE: if seeking is possible
+ * @GST_SCHEDULING_FLAG_SEQUENTIAL: if sequential access is recommended
+ *
+ * The different scheduling flags.
+ */
+typedef enum {
+  GST_SCHEDULING_FLAG_SEEKABLE      = (1 << 0),
+  GST_SCHEDULING_FLAG_SEQUENTIAL    = (1 << 1)
+} GstSchedulingFlags;
+
 GstQuery *      gst_query_new_scheduling          (void);
 
-void            gst_query_set_scheduling          (GstQuery *query, gboolean pull_mode,
-                                                   gboolean random_access, gboolean sequential,
+void            gst_query_set_scheduling          (GstQuery *query, GstSchedulingFlags flags,
                                                    gint minsize, gint maxsize, gint align);
-void            gst_query_parse_scheduling        (GstQuery *query, gboolean *pull_mode,
-                                                   gboolean *random_access, gboolean *sequential,
+void            gst_query_parse_scheduling        (GstQuery *query, GstSchedulingFlags *flags,
                                                    gint *minsize, gint *maxsize, gint *align);
+
+void            gst_query_add_scheduling_mode       (GstQuery *query, GstPadMode mode);
+guint           gst_query_get_n_scheduling_modes    (GstQuery *query);
+GstPadMode      gst_query_parse_nth_scheduling_mode (GstQuery *query, guint index);
+gboolean        gst_query_has_scheduling_mode       (GstQuery *query, GstPadMode mode);
+
 /* accept-caps query */
 GstQuery *      gst_query_new_accept_caps          (GstCaps *caps);
 void            gst_query_parse_accept_caps        (GstQuery *query, GstCaps **caps);

@@ -963,6 +963,28 @@ gst_query_parse_seeking (GstQuery * query, GstFormat * format,
             GST_QUARK (SEGMENT_END)));
 }
 
+static GValueArray *
+ensure_array (GstStructure * s, GQuark quark)
+{
+  GValueArray *array;
+  const GValue *value;
+
+  value = gst_structure_id_get_value (s, quark);
+  if (value) {
+    array = (GValueArray *) g_value_get_boxed (value);
+  } else {
+    GValue new_array_val = { 0, };
+
+    array = g_value_array_new (0);
+
+    g_value_init (&new_array_val, G_TYPE_VALUE_ARRAY);
+    g_value_take_boxed (&new_array_val, array);
+
+    gst_structure_id_take_value (s, quark, &new_array_val);
+  }
+  return array;
+}
+
 /**
  * gst_query_new_formats:
  *
@@ -1375,9 +1397,7 @@ gboolean
 gst_query_add_buffering_range (GstQuery * query, gint64 start, gint64 stop)
 {
   GValueArray *array;
-  GValue *last_array_value;
-  const GValue *value;
-  GValue range_value = { 0 };
+  GValue value = { 0 };
   GstStructure *structure;
 
   g_return_val_if_fail (GST_QUERY_TYPE (query) == GST_QUERY_BUFFERING, FALSE);
@@ -1387,30 +1407,19 @@ gst_query_add_buffering_range (GstQuery * query, gint64 start, gint64 stop)
     return FALSE;
 
   structure = GST_QUERY_STRUCTURE (query);
-  value = gst_structure_id_get_value (structure, GST_QUARK (BUFFERING_RANGES));
-  if (value) {
-    array = (GValueArray *) g_value_get_boxed (value);
+  array = ensure_array (structure, GST_QUARK (BUFFERING_RANGES));
+  if (array->n_values > 1) {
+    GValue *last_array_value;
+
     last_array_value = g_value_array_get_nth (array, array->n_values - 1);
     if (G_UNLIKELY (start <= gst_value_get_int64_range_min (last_array_value)))
       return FALSE;
-  } else {
-    GValue new_array_val = { 0, };
-
-    array = g_value_array_new (0);
-
-    g_value_init (&new_array_val, G_TYPE_VALUE_ARRAY);
-    g_value_take_boxed (&new_array_val, array);
-
-    /* set the value array only once, so we then modify (append to) the
-     * existing value array owned by the GstStructure / the field's GValue */
-    gst_structure_id_take_value (structure, GST_QUARK (BUFFERING_RANGES),
-        &new_array_val);
   }
 
-  g_value_init (&range_value, GST_TYPE_INT64_RANGE);
-  gst_value_set_int64_range (&range_value, start, stop);
-  g_value_array_append (array, &range_value);
-  /* skip the g_value_unset(&range_value) here, we know it's not needed */
+  g_value_init (&value, GST_TYPE_INT64_RANGE);
+  gst_value_set_int64_range (&value, start, stop);
+  g_value_array_append (array, &value);
+  /* skip the g_value_unset(&value) here, we know it's not needed */
 
   return TRUE;
 }
@@ -1430,19 +1439,14 @@ guint
 gst_query_get_n_buffering_ranges (GstQuery * query)
 {
   GValueArray *array;
-  const GValue *value;
-  guint size = 0;
   GstStructure *structure;
 
   g_return_val_if_fail (GST_QUERY_TYPE (query) == GST_QUERY_BUFFERING, 0);
 
   structure = GST_QUERY_STRUCTURE (query);
-  value = gst_structure_id_get_value (structure, GST_QUARK (BUFFERING_RANGES));
-  if (value) {
-    array = (GValueArray *) g_value_get_boxed (value);
-    size = array->n_values;
-  }
-  return size;
+  array = ensure_array (structure, GST_QUARK (BUFFERING_RANGES));
+
+  return array->n_values;
 }
 
 
@@ -1464,23 +1468,21 @@ gboolean
 gst_query_parse_nth_buffering_range (GstQuery * query, guint index,
     gint64 * start, gint64 * stop)
 {
+  GValueArray *array;
   const GValue *value;
-  GValueArray *ranges;
-  GValue *range_value;
   gboolean ret = FALSE;
   GstStructure *structure;
 
   g_return_val_if_fail (GST_QUERY_TYPE (query) == GST_QUERY_BUFFERING, ret);
 
   structure = GST_QUERY_STRUCTURE (query);
-  value = gst_structure_id_get_value (structure, GST_QUARK (BUFFERING_RANGES));
-  ranges = (GValueArray *) g_value_get_boxed (value);
-  range_value = g_value_array_get_nth (ranges, index);
-  if (range_value) {
+  array = ensure_array (structure, GST_QUARK (BUFFERING_RANGES));
+
+  if ((value = g_value_array_get_nth (array, index))) {
     if (start)
-      *start = gst_value_get_int64_range_min (range_value);
+      *start = gst_value_get_int64_range_min (value);
     if (stop)
-      *stop = gst_value_get_int64_range_max (range_value);
+      *stop = gst_value_get_int64_range_max (value);
     ret = TRUE;
   }
 
@@ -1684,7 +1686,6 @@ void
 gst_query_add_allocation_meta (GstQuery * query, const gchar * api)
 {
   GValueArray *array;
-  const GValue *value;
   GValue api_value = { 0 };
   GstStructure *structure;
 
@@ -1693,19 +1694,7 @@ gst_query_add_allocation_meta (GstQuery * query, const gchar * api)
   g_return_if_fail (gst_query_is_writable (query));
 
   structure = GST_QUERY_STRUCTURE (query);
-  value = gst_structure_id_get_value (structure, GST_QUARK (META));
-  if (value) {
-    array = (GValueArray *) g_value_get_boxed (value);
-  } else {
-    GValue new_array_val = { 0, };
-
-    array = g_value_array_new (0);
-
-    g_value_init (&new_array_val, G_TYPE_VALUE_ARRAY);
-    g_value_take_boxed (&new_array_val, array);
-
-    gst_structure_id_take_value (structure, GST_QUARK (META), &new_array_val);
-  }
+  array = ensure_array (structure, GST_QUARK (META));
 
   g_value_init (&api_value, G_TYPE_STRING);
   g_value_set_string (&api_value, api);
@@ -1726,19 +1715,14 @@ guint
 gst_query_get_n_allocation_metas (GstQuery * query)
 {
   GValueArray *array;
-  const GValue *value;
-  guint size = 0;
   GstStructure *structure;
 
   g_return_val_if_fail (GST_QUERY_TYPE (query) == GST_QUERY_ALLOCATION, 0);
 
   structure = GST_QUERY_STRUCTURE (query);
-  value = gst_structure_id_get_value (structure, GST_QUARK (META));
-  if (value) {
-    array = (GValueArray *) g_value_get_boxed (value);
-    size = array->n_values;
-  }
-  return size;
+  array = ensure_array (structure, GST_QUARK (META));
+
+  return array->n_values;
 }
 
 /**
@@ -1754,24 +1738,19 @@ gst_query_get_n_allocation_metas (GstQuery * query)
 const gchar *
 gst_query_parse_nth_allocation_meta (GstQuery * query, guint index)
 {
-  const GValue *value;
+  GValueArray *array;
+  GValue *value;
   const gchar *ret = NULL;
   GstStructure *structure;
 
   g_return_val_if_fail (GST_QUERY_TYPE (query) == GST_QUERY_ALLOCATION, NULL);
 
   structure = GST_QUERY_STRUCTURE (query);
-  value = gst_structure_id_get_value (structure, GST_QUARK (META));
-  if (value) {
-    GValueArray *meta;
-    GValue *api_value;
+  array = ensure_array (structure, GST_QUARK (META));
 
-    meta = (GValueArray *) g_value_get_boxed (value);
-    api_value = g_value_array_get_nth (meta, index);
+  if ((value = g_value_array_get_nth (array, index)))
+    ret = g_value_get_string (value);
 
-    if (api_value)
-      ret = g_value_get_string (api_value);
-  }
   return ret;
 }
 
@@ -1787,25 +1766,21 @@ gst_query_parse_nth_allocation_meta (GstQuery * query, guint index)
 gboolean
 gst_query_has_allocation_meta (GstQuery * query, const gchar * api)
 {
-  const GValue *value;
+  GValueArray *array;
+  GValue *value;
   GstStructure *structure;
+  guint i;
 
   g_return_val_if_fail (GST_QUERY_TYPE (query) == GST_QUERY_ALLOCATION, FALSE);
   g_return_val_if_fail (api != NULL, FALSE);
 
   structure = GST_QUERY_STRUCTURE (query);
-  value = gst_structure_id_get_value (structure, GST_QUARK (META));
-  if (value) {
-    GValueArray *array;
-    GValue *api_value;
-    guint i;
+  array = ensure_array (structure, GST_QUARK (META));
 
-    array = (GValueArray *) g_value_get_boxed (value);
-    for (i = 0; i < array->n_values; i++) {
-      api_value = g_value_array_get_nth (array, i);
-      if (!strcmp (api, g_value_get_string (api_value)))
-        return TRUE;
-    }
+  for (i = 0; i < array->n_values; i++) {
+    value = g_value_array_get_nth (array, i);
+    if (!strcmp (api, g_value_get_string (value)))
+      return TRUE;
   }
   return FALSE;
 }
@@ -1821,33 +1796,19 @@ void
 gst_query_add_allocation_memory (GstQuery * query, const gchar * alloc)
 {
   GValueArray *array;
-  const GValue *value;
-  GValue alloc_value = { 0 };
+  GValue value = { 0 };
   GstStructure *structure;
 
   g_return_if_fail (GST_QUERY_TYPE (query) == GST_QUERY_ALLOCATION);
   g_return_if_fail (gst_query_is_writable (query));
 
   structure = GST_QUERY_STRUCTURE (query);
-  value = gst_structure_id_get_value (structure, GST_QUARK (ALLOCATOR));
-  if (value) {
-    array = (GValueArray *) g_value_get_boxed (value);
-  } else {
-    GValue new_array_val = { 0, };
+  array = ensure_array (structure, GST_QUARK (ALLOCATOR));
 
-    array = g_value_array_new (0);
-
-    g_value_init (&new_array_val, G_TYPE_VALUE_ARRAY);
-    g_value_take_boxed (&new_array_val, array);
-
-    gst_structure_id_take_value (structure, GST_QUARK (ALLOCATOR),
-        &new_array_val);
-  }
-
-  g_value_init (&alloc_value, G_TYPE_STRING);
-  g_value_set_string (&alloc_value, alloc);
-  g_value_array_append (array, &alloc_value);
-  g_value_unset (&alloc_value);
+  g_value_init (&value, G_TYPE_STRING);
+  g_value_set_string (&value, alloc);
+  g_value_array_append (array, &value);
+  g_value_unset (&value);
 }
 
 /**
@@ -1866,19 +1827,14 @@ guint
 gst_query_get_n_allocation_memories (GstQuery * query)
 {
   GValueArray *array;
-  const GValue *value;
-  guint size = 0;
   GstStructure *structure;
 
   g_return_val_if_fail (GST_QUERY_TYPE (query) == GST_QUERY_ALLOCATION, 0);
 
   structure = GST_QUERY_STRUCTURE (query);
-  value = gst_structure_id_get_value (structure, GST_QUARK (ALLOCATOR));
-  if (value) {
-    array = (GValueArray *) g_value_get_boxed (value);
-    size = array->n_values;
-  }
-  return size;
+  array = ensure_array (structure, GST_QUARK (ALLOCATOR));
+
+  return array->n_values;
 }
 
 /**
@@ -1894,24 +1850,19 @@ gst_query_get_n_allocation_memories (GstQuery * query)
 const gchar *
 gst_query_parse_nth_allocation_memory (GstQuery * query, guint index)
 {
-  const GValue *value;
+  GValueArray *array;
+  GValue *value;
   const gchar *ret = NULL;
   GstStructure *structure;
 
   g_return_val_if_fail (GST_QUERY_TYPE (query) == GST_QUERY_ALLOCATION, NULL);
 
   structure = GST_QUERY_STRUCTURE (query);
-  value = gst_structure_id_get_value (structure, GST_QUARK (ALLOCATOR));
-  if (value) {
-    GValueArray *memory;
-    GValue *alloc_value;
+  array = ensure_array (structure, GST_QUARK (ALLOCATOR));
 
-    memory = (GValueArray *) g_value_get_boxed (value);
-    alloc_value = g_value_array_get_nth (memory, index);
+  if ((value = g_value_array_get_nth (array, index)))
+    ret = g_value_get_string (value);
 
-    if (alloc_value)
-      ret = g_value_get_string (alloc_value);
-  }
   return ret;
 }
 
@@ -1931,9 +1882,7 @@ gst_query_new_scheduling (void)
   GstStructure *structure;
 
   structure = gst_structure_new_id (GST_QUARK (QUERY_SCHEDULING),
-      GST_QUARK (PULL_MODE), G_TYPE_BOOLEAN, FALSE,
-      GST_QUARK (RANDOM_ACCESS), G_TYPE_BOOLEAN, FALSE,
-      GST_QUARK (SEQUENTIAL), G_TYPE_BOOLEAN, TRUE,
+      GST_QUARK (FLAGS), GST_TYPE_SCHEDULING_FLAGS, 0,
       GST_QUARK (MINSIZE), G_TYPE_INT, 1,
       GST_QUARK (MAXSIZE), G_TYPE_INT, -1,
       GST_QUARK (ALIGN), G_TYPE_INT, 1, NULL);
@@ -1945,9 +1894,7 @@ gst_query_new_scheduling (void)
 /**
  * gst_query_set_scheduling
  * @query: A valid #GstQuery of type GST_QUERY_SCHEDULING.
- * @pull_mode: if pull mode scheduling is supported
- * @random_access: if random access is possible
- * @sequential: if sequential access is recommended
+ * @flags: #GstSchedulingFlags
  * @minsize: the suggested minimum size of pull requests
  * @maxsize: the suggested maximum size of pull requests
  * @align: the suggested alignment of pull requests
@@ -1955,8 +1902,7 @@ gst_query_new_scheduling (void)
  * Set the scheduling properties.
  */
 void
-gst_query_set_scheduling (GstQuery * query, gboolean pull_mode,
-    gboolean random_access, gboolean sequential,
+gst_query_set_scheduling (GstQuery * query, GstSchedulingFlags flags,
     gint minsize, gint maxsize, gint align)
 {
   GstStructure *structure;
@@ -1966,9 +1912,7 @@ gst_query_set_scheduling (GstQuery * query, gboolean pull_mode,
 
   structure = GST_QUERY_STRUCTURE (query);
   gst_structure_id_set (structure,
-      GST_QUARK (PULL_MODE), G_TYPE_BOOLEAN, pull_mode,
-      GST_QUARK (RANDOM_ACCESS), G_TYPE_BOOLEAN, random_access,
-      GST_QUARK (SEQUENTIAL), G_TYPE_BOOLEAN, sequential,
+      GST_QUARK (FLAGS), GST_TYPE_SCHEDULING_FLAGS, flags,
       GST_QUARK (MINSIZE), G_TYPE_INT, minsize,
       GST_QUARK (MAXSIZE), G_TYPE_INT, maxsize,
       GST_QUARK (ALIGN), G_TYPE_INT, align, NULL);
@@ -1977,9 +1921,7 @@ gst_query_set_scheduling (GstQuery * query, gboolean pull_mode,
 /**
  * gst_query_parse_scheduling
  * @query: A valid #GstQuery of type GST_QUERY_SCHEDULING.
- * @pull_mode: if pull mode scheduling is supported
- * @random_access: if random access is possible
- * @sequential: if sequential access is recommended
+ * @flags: #GstSchedulingFlags
  * @minsize: the suggested minimum size of pull requests
  * @maxsize: the suggested maximum size of pull requests:
  * @align: the suggested alignment of pull requests
@@ -1987,8 +1929,7 @@ gst_query_set_scheduling (GstQuery * query, gboolean pull_mode,
  * Set the scheduling properties.
  */
 void
-gst_query_parse_scheduling (GstQuery * query, gboolean * pull_mode,
-    gboolean * random_access, gboolean * sequential,
+gst_query_parse_scheduling (GstQuery * query, GstSchedulingFlags * flags,
     gint * minsize, gint * maxsize, gint * align)
 {
   GstStructure *structure;
@@ -1997,12 +1938,118 @@ gst_query_parse_scheduling (GstQuery * query, gboolean * pull_mode,
 
   structure = GST_QUERY_STRUCTURE (query);
   gst_structure_id_get (structure,
-      GST_QUARK (PULL_MODE), G_TYPE_BOOLEAN, pull_mode,
-      GST_QUARK (RANDOM_ACCESS), G_TYPE_BOOLEAN, random_access,
-      GST_QUARK (SEQUENTIAL), G_TYPE_BOOLEAN, sequential,
+      GST_QUARK (FLAGS), GST_TYPE_SCHEDULING_FLAGS, flags,
       GST_QUARK (MINSIZE), G_TYPE_INT, minsize,
       GST_QUARK (MAXSIZE), G_TYPE_INT, maxsize,
       GST_QUARK (ALIGN), G_TYPE_INT, align, NULL);
+}
+
+/**
+ * gst_query_add_scheduling_mode
+ * @query: a GST_QUERY_SCHEDULING type query #GstQuery
+ * @mode: a #GstPadMode
+ *
+ * Add @mode as aone of the supported scheduling modes to @query.
+ */
+void
+gst_query_add_scheduling_mode (GstQuery * query, GstPadMode mode)
+{
+  GValueArray *array;
+  GValue value = { 0 };
+  GstStructure *structure;
+
+  g_return_if_fail (GST_QUERY_TYPE (query) == GST_QUERY_SCHEDULING);
+  g_return_if_fail (gst_query_is_writable (query));
+
+  structure = GST_QUERY_STRUCTURE (query);
+  array = ensure_array (structure, GST_QUARK (MODES));
+
+  g_value_init (&value, GST_TYPE_PAD_MODE);
+  g_value_set_enum (&value, mode);
+  g_value_array_append (array, &value);
+  g_value_unset (&value);
+}
+
+/**
+ * gst_query_get_n_scheduling_modes:
+ * @query: a GST_QUERY_SCHEDULING type query #GstQuery
+ *
+ * Retrieve the number of values currently stored in the
+ * scheduling mode array of the query's structure.
+ *
+ * Returns: the scheduling mode array size as a #guint.
+ */
+guint
+gst_query_get_n_scheduling_modes (GstQuery * query)
+{
+  GValueArray *array;
+  GstStructure *structure;
+
+  g_return_val_if_fail (GST_QUERY_TYPE (query) == GST_QUERY_SCHEDULING, 0);
+
+  structure = GST_QUERY_STRUCTURE (query);
+  array = ensure_array (structure, GST_QUARK (MODES));
+
+  return array->n_values;
+}
+
+/**
+ * gst_query_parse_nth_scheduling_mode
+ * @query: a GST_QUERY_SCHEDULING type query #GstQuery
+ * @index: position in the scheduling modes array to read
+ *
+ * Parse an available query and get the scheduling mode
+ * at @index of the scheduling modes array.
+ *
+ * Returns: a #GstPadMode of the scheduling mode at @index.
+ */
+GstPadMode
+gst_query_parse_nth_scheduling_mode (GstQuery * query, guint index)
+{
+  GValueArray *array;
+  GValue *value;
+  GstPadMode ret = GST_PAD_MODE_NONE;
+  GstStructure *structure;
+
+  g_return_val_if_fail (GST_QUERY_TYPE (query) == GST_QUERY_SCHEDULING, ret);
+
+  structure = GST_QUERY_STRUCTURE (query);
+  array = ensure_array (structure, GST_QUARK (MODES));
+
+  if ((value = g_value_array_get_nth (array, index)))
+    ret = g_value_get_enum (value);
+
+  return ret;
+}
+
+/**
+ * gst_query_has_scheduling_mode
+ * @query: a GST_QUERY_SCHEDULING type query #GstQuery
+ * @mode: the scheduling mode
+ *
+ * Check if @query has scheduling mode set.
+ *
+ * Returns: TRUE when @mode is in the list of scheduling modes.
+ */
+gboolean
+gst_query_has_scheduling_mode (GstQuery * query, GstPadMode mode)
+{
+  GValueArray *array;
+  GValue *value;
+  GstStructure *structure;
+  guint i;
+
+  g_return_val_if_fail (GST_QUERY_TYPE (query) == GST_QUERY_SCHEDULING, FALSE);
+
+  structure = GST_QUERY_STRUCTURE (query);
+  array = ensure_array (structure, GST_QUARK (MODES));
+
+  for (i = 0; i < array->n_values; i++) {
+    value = g_value_array_get_nth (array, i);
+    if (mode == g_value_get_enum (value))
+      return TRUE;
+  }
+  return FALSE;
 }
 
 /**

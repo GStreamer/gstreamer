@@ -2949,8 +2949,7 @@ gst_base_parse_sink_activate (GstPad * sinkpad, GstObject * parent)
   query = gst_query_new_scheduling ();
   result = gst_pad_peer_query (sinkpad, query);
   if (result) {
-    gst_query_parse_scheduling (query, &pull_mode, NULL, NULL, NULL, NULL,
-        NULL);
+    pull_mode = gst_query_has_scheduling_mode (query, GST_PAD_MODE_PULL);
   } else {
     pull_mode = FALSE;
   }
