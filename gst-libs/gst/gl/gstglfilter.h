@@ -1,4 +1,4 @@
-/* 
+/*
  * GStreamer
  * Copyright (C) 2007 David Schleef <ds@schleef.org>
  * Copyright (C) 2008 Julien Isorce <julien.isorce@gmail.com>
@@ -41,7 +41,7 @@ typedef struct _GstGLFilter GstGLFilter;
 typedef struct _GstGLFilterClass GstGLFilterClass;
 
 
-typedef gboolean (*GstGLFilterSetCaps) (GstGLFilter* filter, 
+typedef gboolean (*GstGLFilterSetCaps) (GstGLFilter* filter,
 					GstCaps* incaps, GstCaps* outcaps);
 typedef gboolean (*GstGLFilterProcessFunc) (GstGLFilter *filter,
 					    GstGLBuffer *inbuf, GstGLBuffer *outbuf);
@@ -75,7 +75,7 @@ struct _GstGLFilterClass
   GstGLFilterSetCaps set_caps;
   GstGLFilterProcessFunc filter;
   GstGLFilterOnInitFBO onInitFBO;
-  
+
   GstGLFilterOnStart onStart;
   GstGLFilterOnStop onStop;
   GstGLFilterOnReset onReset;
@@ -89,14 +89,16 @@ GType gst_gl_filter_get_type(void);
 
 
 void
-gst_gl_filter_render_to_target (GstGLFilter *filter, 
+gst_gl_filter_render_to_target (GstGLFilter *filter,
 				GLuint input, GLuint target,
 				GLCB func, gpointer data);
+#ifndef OPENGL_ES2
 void
 gst_gl_filter_render_to_target_with_shader (GstGLFilter * filter,
                                             GLuint input, GLuint target, GstGLShader *shader);
 
 void gst_gl_filter_draw_texture (GstGLFilter *filter, GLuint texture);
+#endif
 
 G_END_DECLS
 
