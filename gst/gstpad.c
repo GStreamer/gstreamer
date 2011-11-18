@@ -140,7 +140,7 @@ static void gst_pad_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 
 static void gst_pad_set_pad_template (GstPad * pad, GstPadTemplate * templ);
-static gboolean gst_pad_activate_default (GstPad * pad);
+static gboolean gst_pad_activate_default (GstPad * pad, GstObject * parent);
 static GstFlowReturn gst_pad_chain_list_default (GstPad * pad,
     GstObject * parent, GstBufferList * list);
 
@@ -589,6 +589,20 @@ gst_pad_new_from_static_template (GstStaticPadTemplate * templ,
   return pad;
 }
 
+#define ACQUIRE_PARENT(pad, parent, label)                      \
+  G_STMT_START {                                                \
+    if (G_LIKELY ((parent = GST_OBJECT_PARENT (pad))))          \
+      gst_object_ref (parent);                                  \
+    else if (G_LIKELY (GST_PAD_NEEDS_PARENT (pad)))             \
+      goto label;                                               \
+  } G_STMT_END
+
+#define RELEASE_PARENT(parent)                                  \
+  G_STMT_START {                                                \
+    if (G_LIKELY (parent))                                      \
+      gst_object_unref (parent);                                \
+  } G_STMT_END
+
 /**
  * gst_pad_get_direction:
  * @pad: a #GstPad to get the direction of.
@@ -616,7 +630,7 @@ gst_pad_get_direction (GstPad * pad)
 }
 
 static gboolean
-gst_pad_activate_default (GstPad * pad)
+gst_pad_activate_default (GstPad * pad, GstObject * parent)
 {
   return gst_pad_activate_push (pad, TRUE);
 }
@@ -689,6 +703,7 @@ post_activate (GstPad * pad, GstPadMode new_mode)
 gboolean
 gst_pad_set_active (GstPad * pad, gboolean active)
 {
+  GstObject *parent;
   GstPadMode old;
   gboolean ret = FALSE;
 
@@ -696,6 +711,7 @@ gst_pad_set_active (GstPad * pad, gboolean active)
 
   GST_OBJECT_LOCK (pad);
   old = GST_PAD_MODE (pad);
+  ACQUIRE_PARENT (pad, parent, no_parent);
   GST_OBJECT_UNLOCK (pad);
 
   if (active) {
@@ -710,7 +726,7 @@ gst_pad_set_active (GstPad * pad, gboolean active)
         break;
       case GST_PAD_MODE_NONE:
         GST_DEBUG_OBJECT (pad, "activating pad from none");
-        ret = (GST_PAD_ACTIVATEFUNC (pad)) (pad);
+        ret = (GST_PAD_ACTIVATEFUNC (pad)) (pad, parent);
         break;
       default:
         GST_DEBUG_OBJECT (pad, "unknown activation mode!");
@@ -736,7 +752,27 @@ gst_pad_set_active (GstPad * pad, gboolean active)
     }
   }
 
-  if (!ret) {
+  RELEASE_PARENT (parent);
+
+  if (!ret)
+    goto failed;
+
+  if (!active) {
+    GST_OBJECT_LOCK (pad);
+    GST_OBJECT_FLAG_UNSET (pad, GST_PAD_FLAG_NEED_RECONFIGURE);
+    GST_OBJECT_UNLOCK (pad);
+  }
+  return ret;
+
+  /* ERRORS */
+no_parent:
+  {
+    GST_DEBUG_OBJECT (pad, "no parent");
+    GST_OBJECT_UNLOCK (pad);
+    return FALSE;
+  }
+failed:
+  {
     GST_OBJECT_LOCK (pad);
     if (!active) {
       g_critical ("Failed to deactivate pad %s:%s, very bad",
@@ -745,15 +781,8 @@ gst_pad_set_active (GstPad * pad, gboolean active)
       GST_WARNING_OBJECT (pad, "Failed to activate pad");
     }
     GST_OBJECT_UNLOCK (pad);
-  } else {
-    if (!active) {
-      GST_OBJECT_LOCK (pad);
-      GST_OBJECT_FLAG_UNSET (pad, GST_PAD_FLAG_NEED_RECONFIGURE);
-      GST_OBJECT_UNLOCK (pad);
-    }
+    return FALSE;
   }
-
-  return ret;
 }
 
 /**
@@ -776,6 +805,8 @@ gst_pad_set_active (GstPad * pad, gboolean active)
 gboolean
 gst_pad_activate_pull (GstPad * pad, gboolean active)
 {
+  gboolean res = FALSE;
+  GstObject *parent;
   GstPadMode old, new;
   GstPad *peer;
 
@@ -783,6 +814,7 @@ gst_pad_activate_pull (GstPad * pad, gboolean active)
 
   GST_OBJECT_LOCK (pad);
   old = GST_PAD_MODE (pad);
+  ACQUIRE_PARENT (pad, parent, no_parent);
   GST_OBJECT_UNLOCK (pad);
 
   if (active) {
@@ -846,7 +878,7 @@ gst_pad_activate_pull (GstPad * pad, gboolean active)
   pre_activate (pad, new);
 
   if (GST_PAD_ACTIVATEPULLFUNC (pad)) {
-    if (G_UNLIKELY (!GST_PAD_ACTIVATEPULLFUNC (pad) (pad, active)))
+    if (G_UNLIKELY (!GST_PAD_ACTIVATEPULLFUNC (pad) (pad, parent, active)))
       goto failure;
   } else {
     /* can happen for sinks of passthrough elements */
@@ -857,20 +889,31 @@ gst_pad_activate_pull (GstPad * pad, gboolean active)
   GST_CAT_DEBUG_OBJECT (GST_CAT_PADS, pad, "%s in pull mode",
       active ? "activated" : "deactivated");
 
-  return TRUE;
+exit_success:
+  res = TRUE;
+exit:
+  RELEASE_PARENT (parent);
 
+  return res;
+
+no_parent:
+  {
+    GST_DEBUG_OBJECT (pad, "no parent");
+    GST_OBJECT_UNLOCK (pad);
+    return FALSE;
+  }
 was_ok:
   {
     GST_CAT_DEBUG_OBJECT (GST_CAT_PADS, pad, "already %s in pull mode",
         active ? "activated" : "deactivated");
-    return TRUE;
+    goto exit_success;
   }
 deactivate_failed:
   {
     GST_CAT_DEBUG_OBJECT (GST_CAT_PADS, pad,
         "failed to %s in switch to pull from mode %d",
         (active ? "activate" : "deactivate"), old);
-    return FALSE;
+    goto exit;
   }
 peer_failed:
   {
@@ -879,13 +922,13 @@ peer_failed:
         "activate_pull on peer (%s:%s) failed", GST_DEBUG_PAD_NAME (peer));
     GST_OBJECT_UNLOCK (peer);
     gst_object_unref (peer);
-    return FALSE;
+    goto exit;
   }
 not_linked:
   {
     GST_CAT_INFO_OBJECT (GST_CAT_PADS, pad, "can't activate unlinked sink "
         "pad in pull mode");
-    return FALSE;
+    goto exit;
   }
 failure:
   {
@@ -895,7 +938,7 @@ failure:
     GST_PAD_SET_FLUSHING (pad);
     GST_PAD_MODE (pad) = old;
     GST_OBJECT_UNLOCK (pad);
-    return FALSE;
+    goto exit;
   }
 }
 
@@ -916,6 +959,8 @@ failure:
 gboolean
 gst_pad_activate_push (GstPad * pad, gboolean active)
 {
+  gboolean res = FALSE;
+  GstObject *parent;
   GstPadMode old, new;
 
   g_return_val_if_fail (GST_IS_PAD (pad), FALSE);
@@ -924,6 +969,7 @@ gst_pad_activate_push (GstPad * pad, gboolean active)
 
   GST_OBJECT_LOCK (pad);
   old = GST_PAD_MODE (pad);
+  ACQUIRE_PARENT (pad, parent, no_parent);
   GST_OBJECT_UNLOCK (pad);
 
   if (active) {
@@ -966,7 +1012,7 @@ gst_pad_activate_push (GstPad * pad, gboolean active)
   pre_activate (pad, new);
 
   if (GST_PAD_ACTIVATEPUSHFUNC (pad)) {
-    if (G_UNLIKELY (!GST_PAD_ACTIVATEPUSHFUNC (pad) (pad, active))) {
+    if (G_UNLIKELY (!GST_PAD_ACTIVATEPUSHFUNC (pad) (pad, parent, active))) {
       goto failure;
     }
   } else {
@@ -977,20 +1023,32 @@ gst_pad_activate_push (GstPad * pad, gboolean active)
 
   GST_CAT_DEBUG_OBJECT (GST_CAT_PADS, pad, "%s in push mode",
       active ? "activated" : "deactivated");
-  return TRUE;
 
+exit_success:
+  res = TRUE;
+exit:
+  RELEASE_PARENT (parent);
+
+  return res;
+
+no_parent:
+  {
+    GST_DEBUG_OBJECT (pad, "no parent");
+    GST_OBJECT_UNLOCK (pad);
+    return FALSE;
+  }
 was_ok:
   {
     GST_CAT_DEBUG_OBJECT (GST_CAT_PADS, pad, "already %s in push mode",
         active ? "activated" : "deactivated");
-    return TRUE;
+    goto exit_success;
   }
 deactivate_failed:
   {
     GST_CAT_DEBUG_OBJECT (GST_CAT_PADS, pad,
         "failed to %s in switch to push from mode %d",
         (active ? "activate" : "deactivate"), old);
-    return FALSE;
+    goto exit;
   }
 failure:
   {
@@ -1000,7 +1058,7 @@ failure:
     GST_PAD_SET_FLUSHING (pad);
     GST_PAD_MODE (pad) = old;
     GST_OBJECT_UNLOCK (pad);
-    return FALSE;
+    goto exit;
   }
 }
 
@@ -2190,20 +2248,6 @@ not_accepted:
     return FALSE;
   }
 }
-
-#define ACQUIRE_PARENT(pad, parent, label)                      \
-  G_STMT_START {                                                \
-    if (G_LIKELY ((parent = GST_OBJECT_PARENT (pad))))          \
-      gst_object_ref (parent);                                  \
-    else if (G_LIKELY (GST_PAD_NEEDS_PARENT (pad)))             \
-      goto label;                                               \
-  } G_STMT_END
-
-#define RELEASE_PARENT(parent)                                  \
-  G_STMT_START {                                                \
-    if (G_LIKELY (parent))                                      \
-      gst_object_unref (parent);                                \
-  } G_STMT_END
 
 /* function to send all pending events on the sinkpad to the event
  * function and collect the results. This function should be called with

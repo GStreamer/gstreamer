@@ -284,8 +284,10 @@ static void gst_base_src_default_fixate (GstBaseSrc * src, GstCaps * caps);
 static void gst_base_src_fixate (GstBaseSrc * src, GstCaps * caps);
 
 static gboolean gst_base_src_is_random_access (GstBaseSrc * src);
-static gboolean gst_base_src_activate_push (GstPad * pad, gboolean active);
-static gboolean gst_base_src_activate_pull (GstPad * pad, gboolean active);
+static gboolean gst_base_src_activate_push (GstPad * pad, GstObject * parent,
+    gboolean active);
+static gboolean gst_base_src_activate_pull (GstPad * pad, GstObject * parent,
+    gboolean active);
 static void gst_base_src_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
 static void gst_base_src_get_property (GObject * object, guint prop_id,
@@ -3051,12 +3053,12 @@ gst_base_src_set_playing (GstBaseSrc * basesrc, gboolean live_play)
 }
 
 static gboolean
-gst_base_src_activate_push (GstPad * pad, gboolean active)
+gst_base_src_activate_push (GstPad * pad, GstObject * parent, gboolean active)
 {
   GstBaseSrc *basesrc;
   GstEvent *event;
 
-  basesrc = GST_BASE_SRC (GST_OBJECT_PARENT (pad));
+  basesrc = GST_BASE_SRC (parent);
 
   /* prepare subclass first */
   if (active) {
@@ -3129,11 +3131,11 @@ error_stop:
 }
 
 static gboolean
-gst_base_src_activate_pull (GstPad * pad, gboolean active)
+gst_base_src_activate_pull (GstPad * pad, GstObject * parent, gboolean active)
 {
   GstBaseSrc *basesrc;
 
-  basesrc = GST_BASE_SRC (GST_OBJECT_PARENT (pad));
+  basesrc = GST_BASE_SRC (parent);
 
   /* prepare subclass first */
   if (active) {

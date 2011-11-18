@@ -157,9 +157,10 @@ static GstFlowReturn gst_type_find_element_getrange (GstPad * srcpad,
 static GstStateChangeReturn
 gst_type_find_element_change_state (GstElement * element,
     GstStateChange transition);
-static gboolean gst_type_find_element_activate (GstPad * pad);
-static gboolean
-gst_type_find_element_activate_src_pull (GstPad * pad, gboolean active);
+static gboolean gst_type_find_element_activate (GstPad * pad,
+    GstObject * parent);
+static gboolean gst_type_find_element_activate_src_pull (GstPad * pad,
+    GstObject * parent, gboolean active);
 static GstFlowReturn
 gst_type_find_element_chain_do_typefinding (GstTypeFindElement * typefind,
     gboolean check_avail);
@@ -871,17 +872,18 @@ gst_type_find_element_getrange (GstPad * srcpad, GstObject * parent,
 }
 
 static gboolean
-gst_type_find_element_activate_src_pull (GstPad * pad, gboolean active)
+gst_type_find_element_activate_src_pull (GstPad * pad, GstObject * parent,
+    gboolean active)
 {
   GstTypeFindElement *typefind;
 
-  typefind = GST_TYPE_FIND_ELEMENT (GST_OBJECT_PARENT (pad));
+  typefind = GST_TYPE_FIND_ELEMENT (parent);
 
   return gst_pad_activate_pull (typefind->sink, active);
 }
 
 static gboolean
-gst_type_find_element_activate (GstPad * pad)
+gst_type_find_element_activate (GstPad * pad, GstObject * parent)
 {
   GstTypeFindProbability probability = GST_TYPE_FIND_NONE;
   GstCaps *found_caps = NULL;
@@ -889,7 +891,7 @@ gst_type_find_element_activate (GstPad * pad)
   GstQuery *query;
   gboolean pull_mode;
 
-  typefind = GST_TYPE_FIND_ELEMENT (GST_OBJECT_PARENT (pad));
+  typefind = GST_TYPE_FIND_ELEMENT (parent);
 
   /* if we have force caps, use those */
   GST_OBJECT_LOCK (typefind);

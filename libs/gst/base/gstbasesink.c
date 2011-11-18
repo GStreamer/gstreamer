@@ -393,9 +393,11 @@ static GstFlowReturn gst_base_sink_chain_list (GstPad * pad, GstObject * parent,
     GstBufferList * list);
 
 static void gst_base_sink_loop (GstPad * pad);
-static gboolean gst_base_sink_pad_activate (GstPad * pad);
-static gboolean gst_base_sink_pad_activate_push (GstPad * pad, gboolean active);
-static gboolean gst_base_sink_pad_activate_pull (GstPad * pad, gboolean active);
+static gboolean gst_base_sink_pad_activate (GstPad * pad, GstObject * parent);
+static gboolean gst_base_sink_pad_activate_push (GstPad * pad,
+    GstObject * parent, gboolean active);
+static gboolean gst_base_sink_pad_activate_pull (GstPad * pad,
+    GstObject * parent, gboolean active);
 static gboolean gst_base_sink_event (GstPad * pad, GstObject * parent,
     GstEvent * event);
 
@@ -2059,8 +2061,8 @@ gst_base_sink_wait_clock (GstBaseSink * sink, GstClockTime time,
   /* FIXME: Casting to GstClockEntry only works because the types
    * are the same */
   if (G_LIKELY (sink->priv->cached_clock_id != NULL
-          && GST_CLOCK_ENTRY_CLOCK ((GstClockEntry *) sink->
-              priv->cached_clock_id) == clock)) {
+          && GST_CLOCK_ENTRY_CLOCK ((GstClockEntry *) sink->priv->
+              cached_clock_id) == clock)) {
     if (!gst_clock_single_shot_id_reinit (clock, sink->priv->cached_clock_id,
             time)) {
       gst_clock_id_unref (sink->priv->cached_clock_id);
@@ -4113,14 +4115,14 @@ gst_base_sink_default_activate_pull (GstBaseSink * basesink, gboolean active)
 }
 
 static gboolean
-gst_base_sink_pad_activate (GstPad * pad)
+gst_base_sink_pad_activate (GstPad * pad, GstObject * parent)
 {
   gboolean result = FALSE;
   GstBaseSink *basesink;
   GstQuery *query;
   gboolean pull_mode;
 
-  basesink = GST_BASE_SINK (gst_pad_get_parent (pad));
+  basesink = GST_BASE_SINK (parent);
 
   GST_DEBUG_OBJECT (basesink, "Trying pull mode first");
 
@@ -4189,18 +4191,17 @@ done:
     gst_base_sink_set_flushing (basesink, pad, TRUE);
   }
 
-  gst_object_unref (basesink);
-
   return result;
 }
 
 static gboolean
-gst_base_sink_pad_activate_push (GstPad * pad, gboolean active)
+gst_base_sink_pad_activate_push (GstPad * pad, GstObject * parent,
+    gboolean active)
 {
   gboolean result;
   GstBaseSink *basesink;
 
-  basesink = GST_BASE_SINK (gst_pad_get_parent (pad));
+  basesink = GST_BASE_SINK (parent);
 
   if (active) {
     if (!basesink->can_activate_push) {
@@ -4220,8 +4221,6 @@ gst_base_sink_pad_activate_push (GstPad * pad, gboolean active)
       basesink->pad_mode = GST_PAD_MODE_NONE;
     }
   }
-
-  gst_object_unref (basesink);
 
   return result;
 }
@@ -4290,13 +4289,14 @@ could_not_set_caps:
 
 /* this won't get called until we implement an activate function */
 static gboolean
-gst_base_sink_pad_activate_pull (GstPad * pad, gboolean active)
+gst_base_sink_pad_activate_pull (GstPad * pad, GstObject * parent,
+    gboolean active)
 {
   gboolean result = FALSE;
   GstBaseSink *basesink;
   GstBaseSinkClass *bclass;
 
-  basesink = GST_BASE_SINK (gst_pad_get_parent (pad));
+  basesink = GST_BASE_SINK (parent);
   bclass = GST_BASE_SINK_GET_CLASS (basesink);
 
   if (active) {
@@ -4345,7 +4345,6 @@ gst_base_sink_pad_activate_pull (GstPad * pad, gboolean active)
       GST_OBJECT_UNLOCK (basesink);
     }
   }
-  gst_object_unref (basesink);
 
   return result;
 

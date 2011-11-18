@@ -1383,7 +1383,8 @@ was_eos:
 }
 
 static gboolean
-gst_multi_queue_sink_activate_push (GstPad * pad, gboolean active)
+gst_multi_queue_sink_activate_push (GstPad * pad, GstObject * parent,
+    gboolean active)
 {
   GstSingleQueue *sq;
 
@@ -1519,7 +1520,8 @@ gst_multi_queue_sink_query (GstPad * pad, GstObject * parent, GstQuery * query)
 }
 
 static gboolean
-gst_multi_queue_src_activate_push (GstPad * pad, gboolean active)
+gst_multi_queue_src_activate_push (GstPad * pad, GstObject * parent,
+    gboolean active)
 {
   GstMultiQueue *mq;
   GstSingleQueue *sq;

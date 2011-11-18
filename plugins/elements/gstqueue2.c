@@ -243,9 +243,12 @@ static gboolean gst_queue2_handle_query (GstElement * element,
 static GstFlowReturn gst_queue2_get_range (GstPad * pad, GstObject * parent,
     guint64 offset, guint length, GstBuffer ** buffer);
 
-static gboolean gst_queue2_src_activate_pull (GstPad * pad, gboolean active);
-static gboolean gst_queue2_src_activate_push (GstPad * pad, gboolean active);
-static gboolean gst_queue2_sink_activate_push (GstPad * pad, gboolean active);
+static gboolean gst_queue2_src_activate_pull (GstPad * pad, GstObject * parent,
+    gboolean active);
+static gboolean gst_queue2_src_activate_push (GstPad * pad, GstObject * parent,
+    gboolean active);
+static gboolean gst_queue2_sink_activate_push (GstPad * pad, GstObject * parent,
+    gboolean active);
 static GstStateChangeReturn gst_queue2_change_state (GstElement * element,
     GstStateChange transition);
 
@@ -2659,12 +2662,13 @@ out_unexpected:
 
 /* sink currently only operates in push mode */
 static gboolean
-gst_queue2_sink_activate_push (GstPad * pad, gboolean active)
+gst_queue2_sink_activate_push (GstPad * pad, GstObject * parent,
+    gboolean active)
 {
   gboolean result = TRUE;
   GstQueue2 *queue;
 
-  queue = GST_QUEUE2 (GST_PAD_PARENT (pad));
+  queue = GST_QUEUE2 (parent);
 
   if (active) {
     GST_QUEUE2_MUTEX_LOCK (queue);
@@ -2691,12 +2695,12 @@ gst_queue2_sink_activate_push (GstPad * pad, gboolean active)
 /* src operating in push mode, we start a task on the source pad that pushes out
  * buffers from the queue */
 static gboolean
-gst_queue2_src_activate_push (GstPad * pad, gboolean active)
+gst_queue2_src_activate_push (GstPad * pad, GstObject * parent, gboolean active)
 {
   gboolean result = FALSE;
   GstQueue2 *queue;
 
-  queue = GST_QUEUE2 (GST_PAD_PARENT (pad));
+  queue = GST_QUEUE2 (parent);
 
   if (active) {
     GST_QUEUE2_MUTEX_LOCK (queue);
@@ -2726,12 +2730,12 @@ gst_queue2_src_activate_push (GstPad * pad, gboolean active)
 
 /* pull mode, downstream will call our getrange function */
 static gboolean
-gst_queue2_src_activate_pull (GstPad * pad, gboolean active)
+gst_queue2_src_activate_pull (GstPad * pad, GstObject * parent, gboolean active)
 {
   gboolean result;
   GstQueue2 *queue;
 
-  queue = GST_QUEUE2 (GST_PAD_PARENT (pad));
+  queue = GST_QUEUE2 (parent);
 
   if (active) {
     GST_QUEUE2_MUTEX_LOCK (queue);

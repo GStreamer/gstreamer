@@ -124,11 +124,14 @@ gboolean         gst_ghost_pad_construct         (GstGhostPad *gpad);
 
 void             gst_ghost_pad_unlink_default         (GstPad * pad);
 GstPadLinkReturn gst_ghost_pad_link_default           (GstPad * pad, GstPad * peer);
-gboolean         gst_ghost_pad_activate_pull_default  (GstPad * pad, gboolean active);
-gboolean         gst_ghost_pad_activate_push_default  (GstPad * pad, gboolean active);
 
-gboolean         gst_ghost_pad_internal_activate_push_default (GstPad * pad, gboolean active);
-gboolean         gst_ghost_pad_internal_activate_pull_default (GstPad * pad, gboolean active);
+gboolean         gst_ghost_pad_activate_pull_default  (GstPad * pad, GstObject * parent, gboolean active);
+gboolean         gst_ghost_pad_activate_push_default  (GstPad * pad, GstObject * parent, gboolean active);
+
+gboolean         gst_ghost_pad_internal_activate_push_default   (GstPad * pad, GstObject * parent,
+                                                                 gboolean active);
+gboolean         gst_ghost_pad_internal_activate_pull_default   (GstPad * pad, GstObject * parent,
+                                                                 gboolean active);
 
 G_END_DECLS
 

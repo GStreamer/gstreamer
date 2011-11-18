@@ -374,11 +374,12 @@ static void gst_base_parse_reset (GstBaseParse * parse);
 static void gst_base_parse_set_index (GstElement * element, GstIndex * index);
 static GstIndex *gst_base_parse_get_index (GstElement * element);
 
-static gboolean gst_base_parse_sink_activate (GstPad * sinkpad);
+static gboolean gst_base_parse_sink_activate (GstPad * sinkpad,
+    GstObject * parent);
 static gboolean gst_base_parse_sink_activate_push (GstPad * pad,
-    gboolean active);
+    GstObject * parent, gboolean active);
 static gboolean gst_base_parse_sink_activate_pull (GstPad * pad,
-    gboolean active);
+    GstObject * parent, gboolean active);
 static gboolean gst_base_parse_handle_seek (GstBaseParse * parse,
     GstEvent * event);
 static void gst_base_parse_handle_tag (GstBaseParse * parse, GstEvent * event);
@@ -2934,14 +2935,14 @@ pause:
 }
 
 static gboolean
-gst_base_parse_sink_activate (GstPad * sinkpad)
+gst_base_parse_sink_activate (GstPad * sinkpad, GstObject * parent)
 {
   GstBaseParse *parse;
   gboolean result = TRUE;
   GstQuery *query;
   gboolean pull_mode;
 
-  parse = GST_BASE_PARSE (gst_pad_get_parent (sinkpad));
+  parse = GST_BASE_PARSE (parent);
 
   GST_DEBUG_OBJECT (parse, "sink activate");
 
@@ -2964,7 +2965,6 @@ gst_base_parse_sink_activate (GstPad * sinkpad)
   }
 
   GST_DEBUG_OBJECT (parse, "sink activate return %d", result);
-  gst_object_unref (parse);
   return result;
 }
 
@@ -3001,12 +3001,13 @@ gst_base_parse_activate (GstBaseParse * parse, gboolean active)
 }
 
 static gboolean
-gst_base_parse_sink_activate_push (GstPad * pad, gboolean active)
+gst_base_parse_sink_activate_push (GstPad * pad, GstObject * parent,
+    gboolean active)
 {
   gboolean result = TRUE;
   GstBaseParse *parse;
 
-  parse = GST_BASE_PARSE (gst_pad_get_parent (pad));
+  parse = GST_BASE_PARSE (parent);
 
   GST_DEBUG_OBJECT (parse, "sink activate push %d", active);
 
@@ -3017,17 +3018,17 @@ gst_base_parse_sink_activate_push (GstPad * pad, gboolean active)
 
   GST_DEBUG_OBJECT (parse, "sink activate push return: %d", result);
 
-  gst_object_unref (parse);
   return result;
 }
 
 static gboolean
-gst_base_parse_sink_activate_pull (GstPad * sinkpad, gboolean active)
+gst_base_parse_sink_activate_pull (GstPad * sinkpad, GstObject * parent,
+    gboolean active)
 {
   gboolean result = FALSE;
   GstBaseParse *parse;
 
-  parse = GST_BASE_PARSE (gst_pad_get_parent (sinkpad));
+  parse = GST_BASE_PARSE (parent);
 
   GST_DEBUG_OBJECT (parse, "activate pull %d", active);
 
@@ -3049,7 +3050,6 @@ gst_base_parse_sink_activate_pull (GstPad * sinkpad, gboolean active)
 
   GST_DEBUG_OBJECT (parse, "sink activate pull return: %d", result);
 
-  gst_object_unref (parse);
   return result;
 }
 

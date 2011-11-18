@@ -299,9 +299,9 @@ static void gst_base_transform_set_property (GObject * object, guint prop_id,
 static void gst_base_transform_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 static gboolean gst_base_transform_src_activate_pull (GstPad * pad,
-    gboolean active);
+    GstObject * parent, gboolean active);
 static gboolean gst_base_transform_sink_activate_push (GstPad * pad,
-    gboolean active);
+    GstObject * parent, gboolean active);
 static gboolean gst_base_transform_activate (GstBaseTransform * trans,
     gboolean active);
 static gboolean gst_base_transform_get_unit_size (GstBaseTransform * trans,
@@ -2152,30 +2152,30 @@ gst_base_transform_activate (GstBaseTransform * trans, gboolean active)
 }
 
 static gboolean
-gst_base_transform_sink_activate_push (GstPad * pad, gboolean active)
+gst_base_transform_sink_activate_push (GstPad * pad, GstObject * parent,
+    gboolean active)
 {
   gboolean result = TRUE;
   GstBaseTransform *trans;
 
-  trans = GST_BASE_TRANSFORM (gst_pad_get_parent (pad));
+  trans = GST_BASE_TRANSFORM (parent);
 
   result = gst_base_transform_activate (trans, active);
 
   if (result)
     trans->priv->pad_mode = active ? GST_PAD_MODE_PUSH : GST_PAD_MODE_NONE;
 
-  gst_object_unref (trans);
-
   return result;
 }
 
 static gboolean
-gst_base_transform_src_activate_pull (GstPad * pad, gboolean active)
+gst_base_transform_src_activate_pull (GstPad * pad, GstObject * parent,
+    gboolean active)
 {
   gboolean result = FALSE;
   GstBaseTransform *trans;
 
-  trans = GST_BASE_TRANSFORM (gst_pad_get_parent (pad));
+  trans = GST_BASE_TRANSFORM (parent);
 
   result = gst_pad_activate_pull (trans->sinkpad, active);
 
@@ -2184,8 +2184,6 @@ gst_base_transform_src_activate_pull (GstPad * pad, gboolean active)
 
   if (result)
     trans->priv->pad_mode = active ? GST_PAD_MODE_PULL : GST_PAD_MODE_NONE;
-
-  gst_object_unref (trans);
 
   return result;
 }

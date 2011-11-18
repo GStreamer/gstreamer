@@ -461,6 +461,7 @@ static void gst_ghost_pad_dispose (GObject * object);
 /**
  * gst_ghost_pad_internal_activate_push_default:
  * @pad: the #GstPad to activate or deactivate.
+ * @parent: the parent of @pad or NULL
  * @active: whether the pad should be active or not.
  *
  * Invoke the default activate push function of a proxy pad that is
@@ -471,7 +472,8 @@ static void gst_ghost_pad_dispose (GObject * object);
  * Since: 0.10.36
  */
 gboolean
-gst_ghost_pad_internal_activate_push_default (GstPad * pad, gboolean active)
+gst_ghost_pad_internal_activate_push_default (GstPad * pad, GstObject * parent,
+    gboolean active)
 {
   gboolean ret;
   GstPad *other;
@@ -492,6 +494,7 @@ gst_ghost_pad_internal_activate_push_default (GstPad * pad, gboolean active)
 /**
  * gst_ghost_pad_internal_activate_pull_default:
  * @pad: the #GstPad to activate or deactivate.
+ * @parent: the parent of @pad or NULL
  * @active: whether the pad should be active or not.
  *
  * Invoke the default activate pull function of a proxy pad that is
@@ -502,7 +505,8 @@ gst_ghost_pad_internal_activate_push_default (GstPad * pad, gboolean active)
  * Since: 0.10.36
  */
 gboolean
-gst_ghost_pad_internal_activate_pull_default (GstPad * pad, gboolean active)
+gst_ghost_pad_internal_activate_pull_default (GstPad * pad, GstObject * parent,
+    gboolean active)
 {
   gboolean ret;
   GstPad *other;
@@ -539,6 +543,7 @@ gst_ghost_pad_internal_activate_pull_default (GstPad * pad, gboolean active)
 /**
  * gst_ghost_pad_activate_push_default:
  * @pad: the #GstPad to activate or deactivate.
+ * @parent: the parent of @pad or NULL
  * @active: whether the pad should be active or not.
  *
  * Invoke the default activate push function of a ghost pad.
@@ -548,7 +553,8 @@ gst_ghost_pad_internal_activate_pull_default (GstPad * pad, gboolean active)
  * Since: 0.10.36
  */
 gboolean
-gst_ghost_pad_activate_push_default (GstPad * pad, gboolean active)
+gst_ghost_pad_activate_push_default (GstPad * pad, GstObject * parent,
+    gboolean active)
 {
   gboolean ret;
   GstPad *other;
@@ -568,6 +574,7 @@ gst_ghost_pad_activate_push_default (GstPad * pad, gboolean active)
 /**
  * gst_ghost_pad_activate_pull_default:
  * @pad: the #GstPad to activate or deactivate.
+ * @parent: the parent of @pad or NULL
  * @active: whether the pad should be active or not.
  *
  * Invoke the default activate pull function of a ghost pad.
@@ -577,7 +584,8 @@ gst_ghost_pad_activate_push_default (GstPad * pad, gboolean active)
  * Since: 0.10.36
  */
 gboolean
-gst_ghost_pad_activate_pull_default (GstPad * pad, gboolean active)
+gst_ghost_pad_activate_pull_default (GstPad * pad, GstObject * parent,
+    gboolean active)
 {
   gboolean ret;
   GstPad *other;

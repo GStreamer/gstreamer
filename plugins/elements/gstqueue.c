@@ -211,8 +211,10 @@ static GstPadLinkReturn gst_queue_link_sink (GstPad * pad, GstPad * peer);
 static GstPadLinkReturn gst_queue_link_src (GstPad * pad, GstPad * peer);
 static void gst_queue_locked_flush (GstQueue * queue);
 
-static gboolean gst_queue_src_activate_push (GstPad * pad, gboolean active);
-static gboolean gst_queue_sink_activate_push (GstPad * pad, gboolean active);
+static gboolean gst_queue_src_activate_push (GstPad * pad, GstObject * parent,
+    gboolean active);
+static gboolean gst_queue_sink_activate_push (GstPad * pad, GstObject * parent,
+    gboolean active);
 
 static gboolean gst_queue_is_empty (GstQueue * queue);
 static gboolean gst_queue_is_filled (GstQueue * queue);
@@ -1281,12 +1283,12 @@ gst_queue_handle_src_query (GstPad * pad, GstObject * parent, GstQuery * query)
 }
 
 static gboolean
-gst_queue_sink_activate_push (GstPad * pad, gboolean active)
+gst_queue_sink_activate_push (GstPad * pad, GstObject * parent, gboolean active)
 {
   gboolean result = TRUE;
   GstQueue *queue;
 
-  queue = GST_QUEUE (GST_PAD_PARENT (pad));
+  queue = GST_QUEUE (parent);
 
   if (active) {
     GST_QUEUE_MUTEX_LOCK (queue);
@@ -1306,12 +1308,12 @@ gst_queue_sink_activate_push (GstPad * pad, gboolean active)
 }
 
 static gboolean
-gst_queue_src_activate_push (GstPad * pad, gboolean active)
+gst_queue_src_activate_push (GstPad * pad, GstObject * parent, gboolean active)
 {
   gboolean result = FALSE;
   GstQueue *queue;
 
-  queue = GST_QUEUE (GST_PAD_PARENT (pad));
+  queue = GST_QUEUE (parent);
 
   if (active) {
     GST_QUEUE_MUTEX_LOCK (queue);

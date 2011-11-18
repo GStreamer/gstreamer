@@ -239,7 +239,7 @@ typedef enum {
  *
  * Returns: TRUE if the pad could be activated.
  */
-typedef gboolean		(*GstPadActivateFunction)	(GstPad *pad);
+typedef gboolean		(*GstPadActivateFunction)	(GstPad *pad, GstObject *parent);
 /**
  * GstPadActivateModeFunction:
  * @pad: a #GstPad
@@ -249,7 +249,8 @@ typedef gboolean		(*GstPadActivateFunction)	(GstPad *pad);
  *
  * Returns: TRUE if the pad could be activated or deactivated.
  */
-typedef gboolean		(*GstPadActivateModeFunction)	(GstPad *pad, gboolean active);
+typedef gboolean		(*GstPadActivateModeFunction)	(GstPad *pad, GstObject *parent,
+                                                                 gboolean active);
 
 
 /* data passing */
