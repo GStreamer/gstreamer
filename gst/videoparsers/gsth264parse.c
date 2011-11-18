@@ -653,7 +653,7 @@ gst_h264_parse_check_valid_frame (GstBaseParse * parse,
           *skipsize = nalu.offset;
 
           GST_DEBUG_OBJECT (h264parse, "skipping broken nal");
-          return FALSE;
+          goto invalid;
         } else {
           nalu.size = 0;
           goto end;
@@ -675,7 +675,7 @@ gst_h264_parse_check_valid_frame (GstBaseParse * parse,
           /*  Can't parse the nalu */
           if (size - h264parse->nalu.offset < 2) {
             *skipsize = nalu.offset;
-            return FALSE;
+            goto invalid;
           }
 
           /* We parse it anyway */
@@ -715,6 +715,10 @@ more:
   if (!h264parse->nalu.size) {
     /* skip up to initial startcode */
     *skipsize = h264parse->nalu.sc_offset;
+    /* but mind some stuff will have been skipped */
+    g_assert (current_off >= *skipsize);
+    current_off -= *skipsize;
+    h264parse->nalu.sc_offset = 0;
   } else {
     *skipsize = 0;
   }
@@ -722,6 +726,10 @@ more:
   /* Restart parsing from here next time */
   h264parse->current_off = current_off;
 
+  return FALSE;
+
+invalid:
+  gst_h264_parse_reset_frame (h264parse);
   return FALSE;
 }
 
