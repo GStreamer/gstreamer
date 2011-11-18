@@ -31,7 +31,6 @@
 #include "gstvaapidecoder_priv.h"
 #include "gstvaapidisplay_priv.h"
 #include "gstvaapiobject_priv.h"
-#include "gstvaapiutils_tsb.h"
 
 #define DEBUG 1
 #include "gstvaapidebug.h"
@@ -58,7 +57,7 @@ struct _GstVaapiDecoderVC1Private {
     GstVaapiPicture            *current_picture;
     GstVaapiPicture            *next_picture;
     GstVaapiPicture            *prev_picture;
-    GstVaapiTSB                *tsb;
+    GstAdapter                 *adapter;
     GstBuffer                  *sub_buffer;
     guint8                     *rbdu_buffer;
     guint                       rbdu_buffer_size;
@@ -125,9 +124,10 @@ gst_vaapi_decoder_vc1_close(GstVaapiDecoderVC1 *decoder)
         priv->bitplanes = NULL;
     }
 
-    if (priv->tsb) {
-        gst_vaapi_tsb_destroy(priv->tsb);
-        priv->tsb = NULL;
+    if (priv->adapter) {
+        gst_adapter_clear(priv->adapter);
+        g_object_unref(priv->adapter);
+        priv->adapter = NULL;
     }
 }
 
@@ -138,8 +138,8 @@ gst_vaapi_decoder_vc1_open(GstVaapiDecoderVC1 *decoder, GstBuffer *buffer)
 
     gst_vaapi_decoder_vc1_close(decoder);
 
-    priv->tsb = gst_vaapi_tsb_new();
-    if (!priv->tsb)
+    priv->adapter = gst_adapter_new();
+    if (!priv->adapter)
         return FALSE;
 
     priv->bitplanes = gst_vc1_bitplanes_new();
@@ -970,7 +970,7 @@ decode_frame(GstVaapiDecoderVC1 *decoder, GstVC1BDU *rbdu, GstVC1BDU *ebdu)
     }
 
     /* Update presentation time */
-    pts = gst_vaapi_tsb_get_timestamp(priv->tsb);
+    pts = gst_adapter_prev_timestamp(priv->adapter, NULL);
     picture->pts = pts;
 
     /* Update reference pictures */
@@ -1111,7 +1111,8 @@ decode_buffer(GstVaapiDecoderVC1 *decoder, GstBuffer *buffer)
     if (!buf && buf_size == 0)
         return decode_sequence_end(decoder);
 
-    gst_vaapi_tsb_push(priv->tsb, buffer);
+    gst_buffer_ref(buffer);
+    gst_adapter_push(priv->adapter, buffer);
 
     /* Assume demuxer sends out plain frames if codec-data */
     codec_data = GST_VAAPI_DECODER_CODEC_DATA(decoder);
@@ -1122,7 +1123,9 @@ decode_buffer(GstVaapiDecoderVC1 *decoder, GstBuffer *buffer)
         ebdu.offset    = 0;
         ebdu.data      = buf;
         status = decode_ebdu(decoder, &ebdu);
-        gst_vaapi_tsb_pop(priv->tsb, buf_size);
+
+        if (gst_adapter_available(priv->adapter) >= buf_size)
+            gst_adapter_flush(priv->adapter, buf_size);
         return status;
     }
 
@@ -1153,9 +1156,12 @@ decode_buffer(GstVaapiDecoderVC1 *decoder, GstBuffer *buffer)
             break;
 
         ofs += ebdu.offset + ebdu.size;
-        gst_vaapi_tsb_pop(priv->tsb, ebdu.offset);
+        if (gst_adapter_available(priv->adapter) >= ebdu.offset)
+            gst_adapter_flush(priv->adapter, ebdu.offset);
+
         status = decode_ebdu(decoder, &ebdu);
-        gst_vaapi_tsb_pop(priv->tsb, ebdu.size);
+        if (gst_adapter_available(priv->adapter) >= ebdu.size)
+            gst_adapter_flush(priv->adapter, ebdu.size);
     } while (status == GST_VAAPI_DECODER_STATUS_SUCCESS);
     return status;
 }
@@ -1316,7 +1322,7 @@ gst_vaapi_decoder_vc1_init(GstVaapiDecoderVC1 *decoder)
     priv->current_picture       = NULL;
     priv->next_picture          = NULL;
     priv->prev_picture          = NULL;
-    priv->tsb                   = NULL;
+    priv->adapter               = NULL;
     priv->sub_buffer            = NULL;
     priv->rbdu_buffer           = NULL;
     priv->rbdu_buffer_size      = 0;

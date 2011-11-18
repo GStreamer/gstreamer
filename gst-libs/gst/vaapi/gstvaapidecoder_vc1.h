@@ -23,6 +23,7 @@
 #define GST_VAAPI_DECODER_VC1_H
 
 #include <gst/vaapi/gstvaapidecoder.h>
+#include <gst/base/gstadapter.h>
 
 G_BEGIN_DECLS
 
