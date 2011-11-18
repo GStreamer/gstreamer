@@ -178,6 +178,8 @@ static GstStaticPadTemplate src_template_factory =
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS (GST_VIDEO_CAPS_BGRx ";"
+        GST_VIDEO_CAPS_RGB ";"
+        GST_VIDEO_CAPS_BGR ";"
         GST_VIDEO_CAPS_RGBx ";"
         GST_VIDEO_CAPS_xRGB ";"
         GST_VIDEO_CAPS_xBGR ";"
@@ -185,7 +187,9 @@ static GstStaticPadTemplate src_template_factory =
         GST_VIDEO_CAPS_BGRA ";"
         GST_VIDEO_CAPS_ARGB ";"
         GST_VIDEO_CAPS_ABGR ";"
-        GST_VIDEO_CAPS_YUV ("{AYUV, I420, YV12, UYVY, NV12, NV21}"))
+        GST_VIDEO_CAPS_YUV ("{I420, YV12, AYUV, YUY2, UYVY, v308, v210,"
+            " v216, Y41B, Y42B, Y444, Y800, Y16, NV12, NV21, UYVP, A420,"
+            " YUV9, IYU1}"))
     );
 
 static GstStaticPadTemplate video_sink_template_factory =
@@ -193,6 +197,8 @@ static GstStaticPadTemplate video_sink_template_factory =
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS (GST_VIDEO_CAPS_BGRx ";"
+        GST_VIDEO_CAPS_RGB ";"
+        GST_VIDEO_CAPS_BGR ";"
         GST_VIDEO_CAPS_RGBx ";"
         GST_VIDEO_CAPS_xRGB ";"
         GST_VIDEO_CAPS_xBGR ";"
@@ -200,7 +206,9 @@ static GstStaticPadTemplate video_sink_template_factory =
         GST_VIDEO_CAPS_BGRA ";"
         GST_VIDEO_CAPS_ARGB ";"
         GST_VIDEO_CAPS_ABGR ";"
-        GST_VIDEO_CAPS_YUV ("{AYUV, I420, YV12, UYVY, NV12, NV21}"))
+        GST_VIDEO_CAPS_YUV ("{I420, YV12, AYUV, YUY2, UYVY, v308, v210,"
+            " v216, Y41B, Y42B, Y444, Y800, Y16, NV12, NV21, UYVP, A420,"
+            " YUV9, IYU1}"))
     );
 
 static GstStaticPadTemplate text_sink_template_factory =
