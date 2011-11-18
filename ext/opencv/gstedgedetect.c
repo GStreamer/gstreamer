@@ -65,8 +65,8 @@
 #include "gstopencvutils.h"
 #include "gstedgedetect.h"
 
-GST_DEBUG_CATEGORY_STATIC (gst_edgedetect_debug);
-#define GST_CAT_DEFAULT gst_edgedetect_debug
+GST_DEBUG_CATEGORY_STATIC (gst_edge_detect_debug);
+#define GST_CAT_DEFAULT gst_edge_detect_debug
 
 /* Filter signals and args */
 enum
@@ -100,21 +100,21 @@ static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",
     GST_STATIC_CAPS (GST_VIDEO_CAPS_RGB)
     );
 
-GST_BOILERPLATE (Gstedgedetect, gst_edgedetect, GstElement, GST_TYPE_ELEMENT);
+GST_BOILERPLATE (GstEdgeDetect, gst_edge_detect, GstElement, GST_TYPE_ELEMENT);
 
-static void gst_edgedetect_set_property (GObject * object, guint prop_id,
+static void gst_edge_detect_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
-static void gst_edgedetect_get_property (GObject * object, guint prop_id,
+static void gst_edge_detect_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 
-static gboolean gst_edgedetect_set_caps (GstPad * pad, GstCaps * caps);
-static GstFlowReturn gst_edgedetect_chain (GstPad * pad, GstBuffer * buf);
+static gboolean gst_edge_detect_set_caps (GstPad * pad, GstCaps * caps);
+static GstFlowReturn gst_edge_detect_chain (GstPad * pad, GstBuffer * buf);
 
 /* Clean up */
 static void
-gst_edgedetect_finalize (GObject * obj)
+gst_edge_detect_finalize (GObject * obj)
 {
-  Gstedgedetect *filter = GST_EDGEDETECT (obj);
+  GstEdgeDetect *filter = GST_EDGE_DETECT (obj);
 
   if (filter->cvImage != NULL) {
     cvReleaseImage (&filter->cvImage);
@@ -128,7 +128,7 @@ gst_edgedetect_finalize (GObject * obj)
 
 /* GObject vmethod implementations */
 static void
-gst_edgedetect_base_init (gpointer gclass)
+gst_edge_detect_base_init (gpointer gclass)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (gclass);
 
@@ -146,15 +146,15 @@ gst_edgedetect_base_init (gpointer gclass)
 
 /* initialize the edgedetect's class */
 static void
-gst_edgedetect_class_init (GstedgedetectClass * klass)
+gst_edge_detect_class_init (GstEdgeDetectClass * klass)
 {
   GObjectClass *gobject_class;
 
   gobject_class = (GObjectClass *) klass;
 
-  gobject_class->finalize = GST_DEBUG_FUNCPTR (gst_edgedetect_finalize);
-  gobject_class->set_property = gst_edgedetect_set_property;
-  gobject_class->get_property = gst_edgedetect_get_property;
+  gobject_class->finalize = GST_DEBUG_FUNCPTR (gst_edge_detect_finalize);
+  gobject_class->set_property = gst_edge_detect_set_property;
+  gobject_class->get_property = gst_edge_detect_get_property;
 
   g_object_class_install_property (gobject_class, PROP_MASK,
       g_param_spec_boolean ("mask", "Mask",
@@ -180,15 +180,15 @@ gst_edgedetect_class_init (GstedgedetectClass * klass)
  * initialize instance structure
  */
 static void
-gst_edgedetect_init (Gstedgedetect * filter, GstedgedetectClass * gclass)
+gst_edge_detect_init (GstEdgeDetect * filter, GstEdgeDetectClass * gclass)
 {
   filter->sinkpad = gst_pad_new_from_static_template (&sink_factory, "sink");
   gst_pad_set_setcaps_function (filter->sinkpad,
-      GST_DEBUG_FUNCPTR (gst_edgedetect_set_caps));
+      GST_DEBUG_FUNCPTR (gst_edge_detect_set_caps));
   gst_pad_set_getcaps_function (filter->sinkpad,
       GST_DEBUG_FUNCPTR (gst_pad_proxy_getcaps));
   gst_pad_set_chain_function (filter->sinkpad,
-      GST_DEBUG_FUNCPTR (gst_edgedetect_chain));
+      GST_DEBUG_FUNCPTR (gst_edge_detect_chain));
 
   filter->srcpad = gst_pad_new_from_static_template (&src_factory, "src");
   gst_pad_set_getcaps_function (filter->srcpad,
@@ -203,10 +203,10 @@ gst_edgedetect_init (Gstedgedetect * filter, GstedgedetectClass * gclass)
 }
 
 static void
-gst_edgedetect_set_property (GObject * object, guint prop_id,
+gst_edge_detect_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec)
 {
-  Gstedgedetect *filter = GST_EDGEDETECT (object);
+  GstEdgeDetect *filter = GST_EDGE_DETECT (object);
 
   switch (prop_id) {
     case PROP_MASK:
@@ -228,10 +228,10 @@ gst_edgedetect_set_property (GObject * object, guint prop_id,
 }
 
 static void
-gst_edgedetect_get_property (GObject * object, guint prop_id,
+gst_edge_detect_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec)
 {
-  Gstedgedetect *filter = GST_EDGEDETECT (object);
+  GstEdgeDetect *filter = GST_EDGE_DETECT (object);
 
   switch (prop_id) {
     case PROP_MASK:
@@ -256,14 +256,14 @@ gst_edgedetect_get_property (GObject * object, guint prop_id,
 
 /* this function handles the link with other elements */
 static gboolean
-gst_edgedetect_set_caps (GstPad * pad, GstCaps * caps)
+gst_edge_detect_set_caps (GstPad * pad, GstCaps * caps)
 {
-  Gstedgedetect *filter;
+  GstEdgeDetect *filter;
   GstPad *otherpad;
   gint width, height;
   GstStructure *structure;
 
-  filter = GST_EDGEDETECT (gst_pad_get_parent (pad));
+  filter = GST_EDGE_DETECT (gst_pad_get_parent (pad));
   structure = gst_caps_get_structure (caps, 0);
   gst_structure_get_int (structure, "width", &width);
   gst_structure_get_int (structure, "height", &height);
@@ -283,12 +283,12 @@ gst_edgedetect_set_caps (GstPad * pad, GstCaps * caps)
  * this function does the actual processing
  */
 static GstFlowReturn
-gst_edgedetect_chain (GstPad * pad, GstBuffer * buf)
+gst_edge_detect_chain (GstPad * pad, GstBuffer * buf)
 {
-  Gstedgedetect *filter;
+  GstEdgeDetect *filter;
   GstBuffer *outbuf;
 
-  filter = GST_EDGEDETECT (GST_OBJECT_PARENT (pad));
+  filter = GST_EDGE_DETECT (GST_OBJECT_PARENT (pad));
 
   filter->cvImage->imageData = (char *) GST_BUFFER_DATA (buf);
 
@@ -319,14 +319,14 @@ gst_edgedetect_chain (GstPad * pad, GstBuffer * buf)
  * register the element factories and other features
  */
 gboolean
-gst_edgedetect_plugin_init (GstPlugin * plugin)
+gst_edge_detect_plugin_init (GstPlugin * plugin)
 {
   /* debug category for fltering log messages
    *
    */
-  GST_DEBUG_CATEGORY_INIT (gst_edgedetect_debug, "edgedetect",
+  GST_DEBUG_CATEGORY_INIT (gst_edge_detect_debug, "edgedetect",
       0, "Performs canny edge detection on videos and images");
 
   return gst_element_register (plugin, "edgedetect", GST_RANK_NONE,
-      GST_TYPE_EDGEDETECT);
+      GST_TYPE_EDGE_DETECT);
 }

@@ -1092,7 +1092,7 @@ gst_motion_cells_chain (GstPad * pad, GstBuffer * buf)
  * register the element factories and other features
  */
 gboolean
-gst_motioncells_plugin_init (GstPlugin * plugin)
+gst_motion_cells_plugin_init (GstPlugin * plugin)
 {
   /* debug category for fltering log messages */
   GST_DEBUG_CATEGORY_INIT (gst_motion_cells_debug,

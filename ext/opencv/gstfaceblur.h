@@ -43,8 +43,8 @@
  * Boston, MA 02111-1307, USA.
  */
 
-#ifndef __GST_FACEBLUR_H__
-#define __GST_FACEBLUR_H__
+#ifndef __GST_FACE_BLUR_H__
+#define __GST_FACE_BLUR_H__
 
 #include <gst/gst.h>
 #include <cv.h>
@@ -55,20 +55,20 @@
 
 G_BEGIN_DECLS
 /* #defines don't like whitespacey bits */
-#define GST_TYPE_FACEBLUR \
-  (gst_faceblur_get_type())
-#define GST_FACEBLUR(obj) \
-  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_FACEBLUR,Gstfaceblur))
-#define GST_FACEBLUR_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_FACEBLUR,GstfaceblurClass))
-#define GST_IS_FACEBLUR(obj) \
-  (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_FACEBLUR))
-#define GST_IS_FACEBLUR_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_FACEBLUR))
-typedef struct _Gstfaceblur Gstfaceblur;
-typedef struct _GstfaceblurClass GstfaceblurClass;
+#define GST_TYPE_FACE_BLUR \
+  (gst_face_blur_get_type())
+#define GST_FACE_BLUR(obj) \
+  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_FACE_BLUR,GstFaceBlur))
+#define GST_FACE_BLUR_CLASS(klass) \
+  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_FACE_BLUR,GstFaceBlurClass))
+#define GST_IS_FACE_BLUR(obj) \
+  (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_FACE_BLUR))
+#define GST_IS_FACE_BLUR_CLASS(klass) \
+  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_FACE_BLUR))
+typedef struct _GstFaceBlur GstFaceBlur;
+typedef struct _GstFaceBlurClass GstFaceBlurClass;
 
-struct _Gstfaceblur
+struct _GstFaceBlur
 {
   GstElement element;
 
@@ -83,14 +83,14 @@ struct _Gstfaceblur
   CvMemStorage *cvStorage;
 };
 
-struct _GstfaceblurClass
+struct _GstFaceBlurClass
 {
   GstElementClass parent_class;
 };
 
-GType gst_faceblur_get_type (void);
+GType gst_face_blur_get_type (void);
 
-gboolean gst_faceblur_plugin_init (GstPlugin * plugin);
+gboolean gst_face_blur_plugin_init (GstPlugin * plugin);
 
 G_END_DECLS
-#endif /* __GST_FACEBLUR_H__ */
+#endif /* __GST_FACE_BLUR_H__ */

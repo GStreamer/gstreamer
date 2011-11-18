@@ -43,28 +43,28 @@
  * Boston, MA 02111-1307, USA.
  */
 
-#ifndef __GST_EDGEDETECT_H__
-#define __GST_EDGEDETECT_H__
+#ifndef __GST_EDGE_DETECT_H__
+#define __GST_EDGE_DETECT_H__
 
 #include <gst/gst.h>
 #include <cv.h>
 
 G_BEGIN_DECLS
 /* #defines don't like whitespacey bits */
-#define GST_TYPE_EDGEDETECT \
-  (gst_edgedetect_get_type())
-#define GST_EDGEDETECT(obj) \
-  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_EDGEDETECT,Gstedgedetect))
-#define GST_EDGEDETECT_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_EDGEDETECT,GstedgedetectClass))
-#define GST_IS_EDGEDETECT(obj) \
-  (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_EDGEDETECT))
-#define GST_IS_EDGEDETECT_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_EDGEDETECT))
-typedef struct _Gstedgedetect Gstedgedetect;
-typedef struct _GstedgedetectClass GstedgedetectClass;
+#define GST_TYPE_EDGE_DETECT \
+  (gst_edge_detect_get_type())
+#define GST_EDGE_DETECT(obj) \
+  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_EDGE_DETECT,GstEdgeDetect))
+#define GST_EDGE_DETECT_CLASS(klass) \
+  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_EDGE_DETECT,GstEdgeDetectClass))
+#define GST_IS_EDGE_DETECT(obj) \
+  (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_EDGE_DETECT))
+#define GST_IS_EDGE_DETECT_CLASS(klass) \
+  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_EDGE_DETECT))
+typedef struct _GstEdgeDetect GstEdgeDetect;
+typedef struct _GstEdgeDetectClass GstEdgeDetectClass;
 
-struct _Gstedgedetect
+struct _GstEdgeDetect
 {
   GstElement element;
 
@@ -77,14 +77,14 @@ struct _Gstedgedetect
   IplImage *cvEdge, *cvGray, *cvImage, *cvCEdge;
 };
 
-struct _GstedgedetectClass
+struct _GstEdgeDetectClass
 {
   GstElementClass parent_class;
 };
 
-GType gst_edgedetect_get_type (void);
+GType gst_edge_detect_get_type (void);
 
-gboolean gst_edgedetect_plugin_init (GstPlugin * plugin);
+gboolean gst_edge_detect_plugin_init (GstPlugin * plugin);
 
 G_END_DECLS
-#endif /* __GST_EDGEDETECT_H__ */
+#endif /* __GST_EDGE_DETECT_H__ */

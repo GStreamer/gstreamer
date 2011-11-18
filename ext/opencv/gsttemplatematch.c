@@ -66,8 +66,8 @@
 #include "gstopencvutils.h"
 #include "gsttemplatematch.h"
 
-GST_DEBUG_CATEGORY_STATIC (gst_templatematch_debug);
-#define GST_CAT_DEFAULT gst_templatematch_debug
+GST_DEBUG_CATEGORY_STATIC (gst_template_match_debug);
+#define GST_CAT_DEFAULT gst_template_match_debug
 
 #define DEFAULT_METHOD (3)
 
@@ -100,26 +100,26 @@ static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",
     GST_STATIC_CAPS (GST_VIDEO_CAPS_RGB)
     );
 
-GST_BOILERPLATE (GstTemplateMatch, gst_templatematch, GstElement,
+GST_BOILERPLATE (GstTemplateMatch, gst_template_match, GstElement,
     GST_TYPE_ELEMENT);
 
-static void gst_templatematch_finalize (GObject * object);
-static void gst_templatematch_set_property (GObject * object, guint prop_id,
+static void gst_template_match_finalize (GObject * object);
+static void gst_template_match_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
-static void gst_templatematch_get_property (GObject * object, guint prop_id,
+static void gst_template_match_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 
-static gboolean gst_templatematch_set_caps (GstPad * pad, GstCaps * caps);
-static GstFlowReturn gst_templatematch_chain (GstPad * pad, GstBuffer * buf);
+static gboolean gst_template_match_set_caps (GstPad * pad, GstCaps * caps);
+static GstFlowReturn gst_template_match_chain (GstPad * pad, GstBuffer * buf);
 
-static void gst_templatematch_load_template (GstTemplateMatch * filter);
-static void gst_templatematch_match (IplImage * input, IplImage * template,
+static void gst_template_match_load_template (GstTemplateMatch * filter);
+static void gst_template_match_match (IplImage * input, IplImage * template,
     IplImage * dist_image, double *best_res, CvPoint * best_pos, int method);
 
 /* GObject vmethod implementations */
 
 static void
-gst_templatematch_base_init (gpointer gclass)
+gst_template_match_base_init (gpointer gclass)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (gclass);
 
@@ -137,15 +137,15 @@ gst_templatematch_base_init (gpointer gclass)
 
 /* initialize the templatematch's class */
 static void
-gst_templatematch_class_init (GstTemplateMatchClass * klass)
+gst_template_match_class_init (GstTemplateMatchClass * klass)
 {
   GObjectClass *gobject_class;
 
   gobject_class = (GObjectClass *) klass;
 
-  gobject_class->finalize = gst_templatematch_finalize;
-  gobject_class->set_property = gst_templatematch_set_property;
-  gobject_class->get_property = gst_templatematch_get_property;
+  gobject_class->finalize = gst_template_match_finalize;
+  gobject_class->set_property = gst_template_match_set_property;
+  gobject_class->get_property = gst_template_match_get_property;
 
   g_object_class_install_property (gobject_class, PROP_METHOD,
       g_param_spec_int ("method", "Method",
@@ -166,16 +166,16 @@ gst_templatematch_class_init (GstTemplateMatchClass * klass)
  * initialize instance structure
  */
 static void
-gst_templatematch_init (GstTemplateMatch * filter,
+gst_template_match_init (GstTemplateMatch * filter,
     GstTemplateMatchClass * gclass)
 {
   filter->sinkpad = gst_pad_new_from_static_template (&sink_factory, "sink");
   gst_pad_set_setcaps_function (filter->sinkpad,
-      GST_DEBUG_FUNCPTR (gst_templatematch_set_caps));
+      GST_DEBUG_FUNCPTR (gst_template_match_set_caps));
   gst_pad_set_getcaps_function (filter->sinkpad,
       GST_DEBUG_FUNCPTR (gst_pad_proxy_getcaps));
   gst_pad_set_chain_function (filter->sinkpad,
-      GST_DEBUG_FUNCPTR (gst_templatematch_chain));
+      GST_DEBUG_FUNCPTR (gst_template_match_chain));
 
   filter->srcpad = gst_pad_new_from_static_template (&src_factory, "src");
   gst_pad_set_getcaps_function (filter->srcpad,
@@ -189,14 +189,14 @@ gst_templatematch_init (GstTemplateMatch * filter,
   filter->cvDistImage = NULL;
   filter->cvImage = NULL;
   filter->method = DEFAULT_METHOD;
-  gst_templatematch_load_template (filter);
+  gst_template_match_load_template (filter);
 }
 
 static void
-gst_templatematch_set_property (GObject * object, guint prop_id,
+gst_template_match_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec)
 {
-  GstTemplateMatch *filter = GST_TEMPLATEMATCH (object);
+  GstTemplateMatch *filter = GST_TEMPLATE_MATCH (object);
 
   switch (prop_id) {
     case PROP_METHOD:
@@ -223,7 +223,7 @@ gst_templatematch_set_property (GObject * object, guint prop_id,
       break;
     case PROP_TEMPLATE:
       filter->template = (char *) g_value_get_string (value);
-      gst_templatematch_load_template (filter);
+      gst_template_match_load_template (filter);
       break;
     case PROP_DISPLAY:
       filter->display = g_value_get_boolean (value);
@@ -235,10 +235,10 @@ gst_templatematch_set_property (GObject * object, guint prop_id,
 }
 
 static void
-gst_templatematch_get_property (GObject * object, guint prop_id,
+gst_template_match_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec)
 {
-  GstTemplateMatch *filter = GST_TEMPLATEMATCH (object);
+  GstTemplateMatch *filter = GST_TEMPLATE_MATCH (object);
 
   switch (prop_id) {
     case PROP_METHOD:
@@ -260,14 +260,14 @@ gst_templatematch_get_property (GObject * object, guint prop_id,
 
 /* this function handles the link with other elements */
 static gboolean
-gst_templatematch_set_caps (GstPad * pad, GstCaps * caps)
+gst_template_match_set_caps (GstPad * pad, GstCaps * caps)
 {
   GstTemplateMatch *filter;
   GstPad *otherpad;
   gint width, height;
   GstStructure *structure;
 
-  filter = GST_TEMPLATEMATCH (gst_pad_get_parent (pad));
+  filter = GST_TEMPLATE_MATCH (gst_pad_get_parent (pad));
   structure = gst_caps_get_structure (caps, 0);
   gst_structure_get_int (structure, "width", &width);
   gst_structure_get_int (structure, "height", &height);
@@ -282,10 +282,10 @@ gst_templatematch_set_caps (GstPad * pad, GstCaps * caps)
 }
 
 static void
-gst_templatematch_finalize (GObject * object)
+gst_template_match_finalize (GObject * object)
 {
   GstTemplateMatch *filter;
-  filter = GST_TEMPLATEMATCH (object);
+  filter = GST_TEMPLATE_MATCH (object);
 
   if (filter->cvImage) {
     cvReleaseImageHeader (&filter->cvImage);
@@ -302,13 +302,13 @@ gst_templatematch_finalize (GObject * object)
  * this function does the actual processing
  */
 static GstFlowReturn
-gst_templatematch_chain (GstPad * pad, GstBuffer * buf)
+gst_template_match_chain (GstPad * pad, GstBuffer * buf)
 {
   GstTemplateMatch *filter;
   CvPoint best_pos;
   double best_res;
 
-  filter = GST_TEMPLATEMATCH (GST_OBJECT_PARENT (pad));
+  filter = GST_TEMPLATE_MATCH (GST_OBJECT_PARENT (pad));
 
   /* FIXME Why template == NULL returns OK?
    * shouldn't it be a passthrough instead? */
@@ -344,7 +344,7 @@ gst_templatematch_chain (GstPad * pad, GstBuffer * buf)
     GstStructure *s;
     GstMessage *m;
 
-    gst_templatematch_match (filter->cvImage, filter->cvTemplateImage,
+    gst_template_match_match (filter->cvImage, filter->cvTemplateImage,
         filter->cvDistImage, &best_res, &best_pos, filter->method);
 
     s = gst_structure_new ("template_match",
@@ -376,7 +376,7 @@ gst_templatematch_chain (GstPad * pad, GstBuffer * buf)
 
 
 static void
-gst_templatematch_match (IplImage * input, IplImage * template,
+gst_template_match_match (IplImage * input, IplImage * template,
     IplImage * dist_image, double *best_res, CvPoint * best_pos, int method)
 {
   double dist_min = 0, dist_max = 0;
@@ -397,7 +397,7 @@ gst_templatematch_match (IplImage * input, IplImage * template,
 
 
 static void
-gst_templatematch_load_template (GstTemplateMatch * filter)
+gst_template_match_load_template (GstTemplateMatch * filter)
 {
   if (filter->template) {
     filter->cvTemplateImage =
@@ -416,13 +416,13 @@ gst_templatematch_load_template (GstTemplateMatch * filter)
  * register the element factories and other features
  */
 gboolean
-gst_templatematch_plugin_init (GstPlugin * templatematch)
+gst_template_match_plugin_init (GstPlugin * templatematch)
 {
   /* debug category for fltering log messages */
-  GST_DEBUG_CATEGORY_INIT (gst_templatematch_debug, "templatematch",
+  GST_DEBUG_CATEGORY_INIT (gst_template_match_debug, "templatematch",
       0,
       "Performs template matching on videos and images, providing detected positions via bus messages");
 
   return gst_element_register (templatematch, "templatematch", GST_RANK_NONE,
-      GST_TYPE_TEMPLATEMATCH);
+      GST_TYPE_TEMPLATE_MATCH);
 }

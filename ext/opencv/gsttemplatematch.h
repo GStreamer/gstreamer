@@ -43,8 +43,8 @@
  * Boston, MA 02111-1307, USA.
  */
 
-#ifndef __GST_TEMPLATEMATCH_H__
-#define __GST_TEMPLATEMATCH_H__
+#ifndef __GST_TEMPLATE_MATCH_H__
+#define __GST_TEMPLATE_MATCH_H__
 
 #include <gst/gst.h>
 #include <cv.h>
@@ -52,16 +52,16 @@
 
 G_BEGIN_DECLS
 /* #defines don't like whitespacey bits */
-#define GST_TYPE_TEMPLATEMATCH \
-  (gst_templatematch_get_type())
-#define GST_TEMPLATEMATCH(obj) \
-  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_TEMPLATEMATCH,GstTemplateMatch))
-#define GST_TEMPLATEMATCH_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_TEMPLATEMATCH,GstTemplateMatchClass))
-#define GST_IS_TEMPLATEMATCH(obj) \
-  (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_TEMPLATEMATCH))
-#define GST_IS_TEMPLATEMATCH_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_TEMPLATEMATCH))
+#define GST_TYPE_TEMPLATE_MATCH \
+  (gst_template_match_get_type())
+#define GST_TEMPLATE_MATCH(obj) \
+  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_TEMPLATE_MATCH,GstTemplateMatch))
+#define GST_TEMPLATE_MATCH_CLASS(klass) \
+  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_TEMPLATE_MATCH,GstTemplateMatchClass))
+#define GST_IS_TEMPLATE_MATCH(obj) \
+  (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_TEMPLATE_MATCH))
+#define GST_IS_TEMPLATE_MATCH_CLASS(klass) \
+  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_TEMPLATE_MATCH))
 typedef struct _GstTemplateMatch GstTemplateMatch;
 typedef struct _GstTemplateMatchClass GstTemplateMatchClass;
 
@@ -84,9 +84,9 @@ struct _GstTemplateMatchClass
   GstElementClass parent_class;
 };
 
-GType gst_templatematch_get_type (void);
+GType gst_template_match_get_type (void);
 
-gboolean gst_templatematch_plugin_init (GstPlugin * templatematch);
+gboolean gst_template_match_plugin_init (GstPlugin * templatematch);
 
 G_END_DECLS
-#endif /* __GST_TEMPLATEMATCH_H__ */
+#endif /* __GST_TEMPLATE_MATCH_H__ */
