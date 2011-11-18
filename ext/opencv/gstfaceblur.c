@@ -46,7 +46,7 @@
 /**
  * SECTION:element-faceblur
  *
- * FIXME:Describe faceblur here.
+ * Blurs faces in images and videos.
  *
  * <refsect2>
  * <title>Example launch line</title>

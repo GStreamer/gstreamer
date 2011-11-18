@@ -47,7 +47,7 @@
 /**
  * SECTION:element-templatematch
  *
- * FIXME:Describe templatematch here.
+ * Performs template matching on videos and images, providing detected positions via bus messages.
  *
  * <refsect2>
  * <title>Example launch line</title>
@@ -126,7 +126,7 @@ gst_template_match_base_init (gpointer gclass)
   gst_element_class_set_details_simple (element_class,
       "templatematch",
       "Filter/Effect/Video",
-      "Performs template matching on videos and images, providing detected positions via bus messages",
+      "Performs template matching on videos and images, providing detected positions via bus messages.",
       "Noam Lewis <jones.noamle@gmail.com>");
 
   gst_element_class_add_pad_template (element_class,

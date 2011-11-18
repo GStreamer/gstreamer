@@ -46,7 +46,7 @@
 /**
  * SECTION:element-pyramidsegment
  *
- * FIXME:Describe pyramidsegment here.
+ * Applies pyramid segmentation to a video or image.
  *
  * <refsect2>
  * <title>Example launch line</title>

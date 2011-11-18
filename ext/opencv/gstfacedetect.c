@@ -114,7 +114,7 @@ enum
 };
 
 
-/**
+/*
  * GstOpencvFaceDetectFlags:
  *
  * Flags parameter to OpenCV's cvHaarDetectObjects function.
