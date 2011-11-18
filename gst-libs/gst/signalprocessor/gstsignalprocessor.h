@@ -82,7 +82,7 @@ struct _GstSignalProcessor {
   GstCaps *caps;
   GstSignalProcessorState state;
   GstFlowReturn flow_state;
-  GstPadActivateMode mode;
+  GstPadMode mode;
 
   /* pending inputs before processing can take place */
   guint pending_in;
