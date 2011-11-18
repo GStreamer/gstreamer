@@ -226,7 +226,7 @@ static const GstFormat fmtlist[] = {
 
 struct _GstBaseParsePrivate
 {
-  GstPadActivateMode pad_mode;
+  GstPadMode pad_mode;
 
   GstAdapter *adapter;
 
@@ -558,7 +558,7 @@ gst_base_parse_init (GstBaseParse * parse, GstBaseParseClass * bclass)
 
   parse->priv->adapter = gst_adapter_new ();
 
-  parse->priv->pad_mode = GST_PAD_ACTIVATE_NONE;
+  parse->priv->pad_mode = GST_PAD_MODE_NONE;
 
   g_static_mutex_init (&parse->priv->index_lock);
 
@@ -1738,7 +1738,7 @@ gst_base_parse_handle_and_push_frame (GstBaseParse * parse,
    * If so, that allows and enables extra seek and duration determining options */
   if (G_UNLIKELY (parse->priv->first_frame_offset < 0 && ret == GST_FLOW_OK)) {
     if (GST_BUFFER_TIMESTAMP_IS_VALID (buffer) && parse->priv->has_timing_info
-        && parse->priv->pad_mode == GST_PAD_ACTIVATE_PULL) {
+        && parse->priv->pad_mode == GST_PAD_MODE_PULL) {
       parse->priv->first_frame_offset = offset;
       parse->priv->first_frame_ts = GST_BUFFER_TIMESTAMP (buffer);
       GST_DEBUG_OBJECT (parse, "subclass provided ts %" GST_TIME_FORMAT
@@ -1872,7 +1872,7 @@ gst_base_parse_push_frame (GstBaseParse * parse, GstBaseParseFrame * frame)
 
   /* segment adjustment magic; only if we are running the whole show */
   if (!parse->priv->passthrough && parse->segment.rate > 0.0 &&
-      (parse->priv->pad_mode == GST_PAD_ACTIVATE_PULL ||
+      (parse->priv->pad_mode == GST_PAD_MODE_PULL ||
           parse->priv->upstream_seekable)) {
     /* segment times are typically estimates,
      * actual frame data might lead subclass to different timestamps,
@@ -1940,7 +1940,7 @@ gst_base_parse_push_frame (GstBaseParse * parse, GstBaseParseFrame * frame)
     parse->priv->pending_segment = NULL;
 
     GST_DEBUG_OBJECT (parse, "%s push pending segment",
-        parse->priv->pad_mode == GST_PAD_ACTIVATE_PULL ? "loop" : "chain");
+        parse->priv->pad_mode == GST_PAD_MODE_PULL ? "loop" : "chain");
     gst_pad_push_event (parse->srcpad, pending_segment);
 
     /* have caps; check identity */
@@ -2025,7 +2025,7 @@ gst_base_parse_push_frame (GstBaseParse * parse, GstBaseParseFrame * frame)
     /* if we are not sufficiently in control, let upstream decide on EOS */
     if (ret == GST_FLOW_EOS &&
         (parse->priv->passthrough ||
-            (parse->priv->pad_mode == GST_PAD_ACTIVATE_PUSH &&
+            (parse->priv->pad_mode == GST_PAD_MODE_PUSH &&
                 !parse->priv->upstream_seekable)))
       ret = GST_FLOW_OK;
   }
@@ -2979,7 +2979,7 @@ gst_base_parse_activate (GstBaseParse * parse, gboolean active)
   klass = GST_BASE_PARSE_GET_CLASS (parse);
 
   if (active) {
-    if (parse->priv->pad_mode == GST_PAD_ACTIVATE_NONE && klass->start)
+    if (parse->priv->pad_mode == GST_PAD_MODE_NONE && klass->start)
       result = klass->start (parse);
 
     /* If the subclass implements ::detect we want to
@@ -2991,10 +2991,10 @@ gst_base_parse_activate (GstBaseParse * parse, gboolean active)
     GST_PAD_STREAM_LOCK (parse->sinkpad);
     GST_PAD_STREAM_UNLOCK (parse->sinkpad);
 
-    if (parse->priv->pad_mode != GST_PAD_ACTIVATE_NONE && klass->stop)
+    if (parse->priv->pad_mode != GST_PAD_MODE_NONE && klass->stop)
       result = klass->stop (parse);
 
-    parse->priv->pad_mode = GST_PAD_ACTIVATE_NONE;
+    parse->priv->pad_mode = GST_PAD_MODE_NONE;
   }
   GST_DEBUG_OBJECT (parse, "activate return: %d", result);
   return result;
@@ -3013,8 +3013,7 @@ gst_base_parse_sink_activate_push (GstPad * pad, gboolean active)
   result = gst_base_parse_activate (parse, active);
 
   if (result)
-    parse->priv->pad_mode =
-        active ? GST_PAD_ACTIVATE_PUSH : GST_PAD_ACTIVATE_NONE;
+    parse->priv->pad_mode = active ? GST_PAD_MODE_PUSH : GST_PAD_MODE_NONE;
 
   GST_DEBUG_OBJECT (parse, "sink activate push return: %d", result);
 
@@ -3046,8 +3045,7 @@ gst_base_parse_sink_activate_pull (GstPad * sinkpad, gboolean active)
   }
 
   if (result)
-    parse->priv->pad_mode =
-        active ? GST_PAD_ACTIVATE_PULL : GST_PAD_ACTIVATE_NONE;
+    parse->priv->pad_mode = active ? GST_PAD_MODE_PULL : GST_PAD_MODE_NONE;
 
   GST_DEBUG_OBJECT (parse, "sink activate pull return: %d", result);
 
@@ -3576,7 +3574,7 @@ gst_base_parse_locate_time (GstBaseParse * parse, GstClockTime * _time,
   /* check preconditions are satisfied;
    * start and end are needed, except for special case where we scan for
    * last frame to determine duration */
-  if (parse->priv->pad_mode != GST_PAD_ACTIVATE_PULL || !hpos ||
+  if (parse->priv->pad_mode != GST_PAD_MODE_PULL || !hpos ||
       !GST_CLOCK_TIME_IS_VALID (ltime) ||
       (!GST_CLOCK_TIME_IS_VALID (htime) && time != G_MAXINT64)) {
     return GST_FLOW_OK;
@@ -3736,7 +3734,7 @@ gst_base_parse_handle_seek (GstBaseParse * parse, GstEvent * event)
       cur_type, GST_TIME_ARGS (cur), stop_type, GST_TIME_ARGS (stop));
 
   /* no negative rates in push mode */
-  if (rate < 0.0 && parse->priv->pad_mode == GST_PAD_ACTIVATE_PUSH)
+  if (rate < 0.0 && parse->priv->pad_mode == GST_PAD_MODE_PUSH)
     goto negative_rate;
 
   if (cur_type != GST_SEEK_TYPE_SET ||
@@ -3806,7 +3804,7 @@ gst_base_parse_handle_seek (GstBaseParse * parse, GstEvent * event)
       "seek stop %" G_GINT64_FORMAT " in bytes: %" G_GINT64_FORMAT,
       seeksegment.stop, seekstop);
 
-  if (parse->priv->pad_mode == GST_PAD_ACTIVATE_PULL) {
+  if (parse->priv->pad_mode == GST_PAD_MODE_PULL) {
     gint64 last_stop;
 
     GST_DEBUG_OBJECT (parse, "seek in PULL mode");

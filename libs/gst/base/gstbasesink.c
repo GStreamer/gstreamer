@@ -575,7 +575,7 @@ gst_base_sink_query_caps (GstBaseSink * bsink, GstPad * pad, GstCaps * filter)
   bclass = GST_BASE_SINK_GET_CLASS (bsink);
   fixed = GST_PAD_IS_FIXED_CAPS (pad);
 
-  if (fixed || bsink->pad_mode == GST_PAD_ACTIVATE_PULL) {
+  if (fixed || bsink->pad_mode == GST_PAD_MODE_PULL) {
     /* if we are operating in pull mode or fixed caps, we only accept the
      * currently negotiated caps */
     caps = gst_pad_get_current_caps (pad);
@@ -651,7 +651,7 @@ gst_base_sink_init (GstBaseSink * basesink, gpointer g_class)
   gst_pad_set_chain_list_function (basesink->sinkpad, gst_base_sink_chain_list);
   gst_element_add_pad (GST_ELEMENT_CAST (basesink), basesink->sinkpad);
 
-  basesink->pad_mode = GST_PAD_ACTIVATE_NONE;
+  basesink->pad_mode = GST_PAD_MODE_NONE;
   basesink->preroll_lock = g_mutex_new ();
   basesink->preroll_cond = g_cond_new ();
   priv->preroll_queue = g_queue_new ();
@@ -3290,7 +3290,7 @@ gst_base_sink_flush_stop (GstBaseSink * basesink, GstPad * pad,
   basesink->priv->call_preroll = TRUE;
   basesink->priv->current_step.valid = FALSE;
   basesink->priv->pending_step.valid = FALSE;
-  if (basesink->pad_mode == GST_PAD_ACTIVATE_PUSH) {
+  if (basesink->pad_mode == GST_PAD_MODE_PUSH) {
     /* we need new segment info after the flush. */
     basesink->have_newsegment = FALSE;
     if (reset_time) {
@@ -3601,7 +3601,7 @@ gst_base_sink_chain_main (GstBaseSink * basesink, GstPad * pad,
 {
   GstFlowReturn result;
 
-  if (G_UNLIKELY (basesink->pad_mode != GST_PAD_ACTIVATE_PUSH))
+  if (G_UNLIKELY (basesink->pad_mode != GST_PAD_MODE_PUSH))
     goto wrong_mode;
 
   GST_BASE_SINK_PREROLL_LOCK (basesink);
@@ -3985,7 +3985,7 @@ gst_base_sink_loop (GstPad * pad)
   parent = GST_OBJECT_PARENT (pad);
   basesink = GST_BASE_SINK (parent);
 
-  g_assert (basesink->pad_mode == GST_PAD_ACTIVATE_PULL);
+  g_assert (basesink->pad_mode == GST_PAD_MODE_PULL);
 
   if ((blocksize = basesink->priv->blocksize) == 0)
     blocksize = -1;
@@ -4153,7 +4153,7 @@ gst_base_sink_pad_activate (GstPad * pad)
   /* set the pad mode before starting the task so that it's in the
    * correct state for the new thread. also the sink set_caps and get_caps
    * function checks this */
-  basesink->pad_mode = GST_PAD_ACTIVATE_PULL;
+  basesink->pad_mode = GST_PAD_MODE_PULL;
 
   /* we first try to negotiate a format so that when we try to activate
    * downstream, it knows about our format */
@@ -4205,19 +4205,19 @@ gst_base_sink_pad_activate_push (GstPad * pad, gboolean active)
   if (active) {
     if (!basesink->can_activate_push) {
       result = FALSE;
-      basesink->pad_mode = GST_PAD_ACTIVATE_NONE;
+      basesink->pad_mode = GST_PAD_MODE_NONE;
     } else {
       result = TRUE;
-      basesink->pad_mode = GST_PAD_ACTIVATE_PUSH;
+      basesink->pad_mode = GST_PAD_MODE_PUSH;
     }
   } else {
-    if (G_UNLIKELY (basesink->pad_mode != GST_PAD_ACTIVATE_PUSH)) {
+    if (G_UNLIKELY (basesink->pad_mode != GST_PAD_MODE_PUSH)) {
       g_warning ("Internal GStreamer activation error!!!");
       result = FALSE;
     } else {
       gst_base_sink_set_flushing (basesink, pad, TRUE);
       result = TRUE;
-      basesink->pad_mode = GST_PAD_ACTIVATE_NONE;
+      basesink->pad_mode = GST_PAD_MODE_NONE;
     }
   }
 
@@ -4331,14 +4331,14 @@ gst_base_sink_pad_activate_pull (GstPad * pad, gboolean active)
       goto activate_failed;
 
   } else {
-    if (G_UNLIKELY (basesink->pad_mode != GST_PAD_ACTIVATE_PULL)) {
+    if (G_UNLIKELY (basesink->pad_mode != GST_PAD_MODE_PULL)) {
       g_warning ("Internal GStreamer activation error!!!");
       result = FALSE;
     } else {
       result = gst_base_sink_set_flushing (basesink, pad, TRUE);
       if (bclass->activate_pull)
         result &= bclass->activate_pull (basesink, FALSE);
-      basesink->pad_mode = GST_PAD_ACTIVATE_NONE;
+      basesink->pad_mode = GST_PAD_MODE_NONE;
       /* clear any pending caps */
       GST_OBJECT_LOCK (basesink);
       gst_caps_replace (&basesink->priv->pull_caps, NULL);
@@ -4353,7 +4353,7 @@ gst_base_sink_pad_activate_pull (GstPad * pad, gboolean active)
 activate_failed:
   {
     /* reset, as starting the thread failed */
-    basesink->pad_mode = GST_PAD_ACTIVATE_NONE;
+    basesink->pad_mode = GST_PAD_MODE_NONE;
 
     GST_ERROR_OBJECT (basesink, "subclass failed to activate in pull mode");
     return FALSE;
@@ -4367,7 +4367,7 @@ gst_base_sink_send_event (GstElement * element, GstEvent * event)
   GstPad *pad;
   GstBaseSink *basesink = GST_BASE_SINK (element);
   gboolean forward, result = TRUE;
-  GstPadActivateMode mode;
+  GstPadMode mode;
 
   GST_OBJECT_LOCK (element);
   /* get the pad and the scheduling mode */
@@ -4405,7 +4405,7 @@ gst_base_sink_send_event (GstElement * element, GstEvent * event)
     }
     case GST_EVENT_SEEK:
       /* in pull mode we will execute the seek */
-      if (mode == GST_PAD_ACTIVATE_PULL)
+      if (mode == GST_PAD_MODE_PULL)
         result = gst_base_sink_perform_seek (basesink, pad, event);
       break;
     case GST_EVENT_STEP:
@@ -4463,7 +4463,7 @@ gst_base_sink_get_position (GstBaseSink * basesink, GstFormat format,
   /* we don't use the clip segment in pull mode, when seeking we update the
    * main segment directly with the new segment values without it having to be
    * activated by the rendering after preroll */
-  if (basesink->pad_mode == GST_PAD_ACTIVATE_PUSH)
+  if (basesink->pad_mode == GST_PAD_MODE_PUSH)
     segment = &basesink->clip_segment;
   else
     segment = &basesink->segment;
@@ -4673,7 +4673,7 @@ gst_base_sink_get_duration (GstBaseSink * basesink, GstFormat format,
 {
   gboolean res = FALSE;
 
-  if (basesink->pad_mode == GST_PAD_ACTIVATE_PULL) {
+  if (basesink->pad_mode == GST_PAD_MODE_PULL) {
     gint64 uduration;
 
     /* get the duration in bytes, in pull mode that's all we are sure to
@@ -4808,7 +4808,7 @@ default_element_query (GstElement * element, GstQuery * query)
       break;
     case GST_QUERY_SEGMENT:
     {
-      if (basesink->pad_mode == GST_PAD_ACTIVATE_PULL) {
+      if (basesink->pad_mode == GST_PAD_MODE_PULL) {
         gst_query_set_segment (query, basesink->segment.rate,
             GST_FORMAT_TIME, basesink->segment.start, basesink->segment.stop);
         res = TRUE;

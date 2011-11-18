@@ -212,20 +212,20 @@ typedef enum {
 #define GST_PAD_LINK_CHECK_DEFAULT ((GstPadLinkCheck) (GST_PAD_LINK_CHECK_HIERARCHY | GST_PAD_LINK_CHECK_CAPS))
 
 /**
- * GstPadActivateMode:
- * @GST_PAD_ACTIVATE_NONE: Pad will not handle dataflow
- * @GST_PAD_ACTIVATE_PUSH: Pad handles dataflow in downstream push mode
- * @GST_PAD_ACTIVATE_PULL: Pad handles dataflow in upstream pull mode
+ * GstPadMode:
+ * @GST_PAD_MODE_NONE: Pad will not handle dataflow
+ * @GST_PAD_MODE_PUSH: Pad handles dataflow in downstream push mode
+ * @GST_PAD_MODE_PULL: Pad handles dataflow in upstream pull mode
  *
  * The status of a GstPad. After activating a pad, which usually happens when the
- * parent element goes from READY to PAUSED, the GstPadActivateMode defines if the
+ * parent element goes from READY to PAUSED, the GstPadMode defines if the
  * pad operates in push or pull mode.
  */
 typedef enum {
-  GST_PAD_ACTIVATE_NONE,
-  GST_PAD_ACTIVATE_PUSH,
-  GST_PAD_ACTIVATE_PULL
-} GstPadActivateMode;
+  GST_PAD_MODE_NONE,
+  GST_PAD_MODE_PUSH,
+  GST_PAD_MODE_PULL
+} GstPadMode;
 
 /* pad states */
 /**
@@ -648,7 +648,7 @@ struct _GstPad {
   GCond				*block_cond;
   GHookList                      probes;
 
-  GstPadActivateMode		 mode;
+  GstPadMode		         mode;
   GstPadActivateFunction	 activatefunc;
   GstPadActivateModeFunction	 activatepushfunc;
   GstPadActivateModeFunction	 activatepullfunc;
@@ -703,7 +703,7 @@ struct _GstPadClass {
 #define GST_PAD_PAD_TEMPLATE(pad)	(GST_PAD_CAST(pad)->padtemplate)
 #define GST_PAD_DIRECTION(pad)		(GST_PAD_CAST(pad)->direction)
 #define GST_PAD_TASK(pad)		(GST_PAD_CAST(pad)->task)
-#define GST_PAD_ACTIVATE_MODE(pad)	(GST_PAD_CAST(pad)->mode)
+#define GST_PAD_MODE(pad)	        (GST_PAD_CAST(pad)->mode)
 
 #define GST_PAD_ACTIVATEFUNC(pad)	(GST_PAD_CAST(pad)->activatefunc)
 #define GST_PAD_ACTIVATEPUSHFUNC(pad)	(GST_PAD_CAST(pad)->activatepushfunc)
@@ -724,7 +724,7 @@ struct _GstPadClass {
 
 #define GST_PAD_IS_LINKED(pad)		(GST_PAD_PEER(pad) != NULL)
 
-#define GST_PAD_IS_ACTIVE(pad)          (GST_PAD_ACTIVATE_MODE(pad) != GST_PAD_ACTIVATE_NONE)
+#define GST_PAD_IS_ACTIVE(pad)          (GST_PAD_MODE(pad) != GST_PAD_MODE_NONE)
 
 #define GST_PAD_IS_BLOCKED(pad)		(GST_OBJECT_FLAG_IS_SET (pad, GST_PAD_FLAG_BLOCKED))
 #define GST_PAD_IS_BLOCKING(pad)	(GST_OBJECT_FLAG_IS_SET (pad, GST_PAD_FLAG_BLOCKING))

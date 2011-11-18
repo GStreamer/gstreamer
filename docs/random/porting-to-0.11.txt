@@ -127,7 +127,7 @@ The 0.11 porting guide
 
     GST_FLOW_UNEXPECTED -> GST_FLOW_EOS
 
-    GstActivateMode -> GstPadActivateMode, GST_ACTIVATE_* -> GST_PAD_ACTIVATE_*
+    GstActivateMode -> GstPadMode, GST_ACTIVATE_* -> GST_PAD_MODE_*
 
     The GstPadAcceptCapsFunction was removed and replaced with a
     GST_QUERY_ACCEPT_CAPS query.

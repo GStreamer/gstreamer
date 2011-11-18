@@ -71,7 +71,7 @@ struct _GstBaseSink {
 
   /*< protected >*/
   GstPad        *sinkpad;
-  GstPadActivateMode       pad_mode;
+  GstPadMode     pad_mode;
 
   /*< protected >*/ /* with LOCK */
   guint64        offset;
