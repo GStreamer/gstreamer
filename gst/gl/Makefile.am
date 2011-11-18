@@ -7,8 +7,6 @@ AM_LIBS = $(GST_BASE_LIBS)
 # full opengl required
 if GL_IS_OPENGL
 OPENGL_SOURCES =  \
-	gstglbumper.c \
-	gstglbumper.h \
 	gstglfiltershader.c \
 	gstglfiltershader.h \
 	gstglfilterblur.c \
@@ -27,16 +25,12 @@ OPENGL_SOURCES =  \
 	gstglcolorscale.h \
 	gstgldeinterlace.c \
 	gstgldeinterlace.h \
-	gstgldifferencematte.c \
-	gstgldifferencematte.h \
-	gstgloverlay.c \
 	gltestsrc.c \
 	gltestsrc.h \
 	gstgltestsrc.c \
 	gstgltestsrc.h \
 	gstglmosaic.c \
 	gstglmosaic.h \
-        gstgloverlay.h \
 	effects/gstgleffectscurves.h \
 	effects/gstgleffectstretch.c \
 	effects/gstgleffecttunnel.c \
@@ -50,6 +44,16 @@ OPENGL_SOURCES =  \
 	effects/gstgleffectsin.c \
 	effects/gstgleffectglow.c \
 	effects/gstgleffectxray.c
+	
+if HAVE_PNG
+OPENGL_SOURCES += \
+	gstglbumper.c \
+	gstglbumper.h \
+	gstgldifferencematte.c \
+	gstgldifferencematte.h \
+	gstgloverlay.c \
+	gstgloverlay.h
+endif
 endif
 
 libgstopengl_la_SOURCES = \

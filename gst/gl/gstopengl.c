@@ -118,19 +118,6 @@ plugin_init (GstPlugin * plugin)
     return FALSE;
   }
 
-  if (!gst_element_register (plugin, "gloverlay",
-          GST_RANK_NONE, gst_gl_overlay_get_type ())) {
-    return FALSE;
-  }
-  if (!gst_element_register (plugin, "gldifferencematte",
-          GST_RANK_NONE, gst_gl_differencematte_get_type ())) {
-    return FALSE;
-  }
-  if (!gst_element_register (plugin, "glbumper",
-          GST_RANK_NONE, gst_gl_bumper_get_type ())) {
-    return FALSE;
-  }
-
   if (!gst_element_register (plugin, "glfilterblur",
           GST_RANK_NONE, gst_gl_filterblur_get_type ())) {
     return FALSE;
@@ -175,10 +162,27 @@ plugin_init (GstPlugin * plugin)
           GST_RANK_NONE, GST_TYPE_GL_COLORSCALE)) {
     return FALSE;
   }
+
   if (!gst_element_register (plugin, "glmosaic",
           GST_RANK_NONE, GST_TYPE_GL_MOSAIC)) {
     return FALSE;
   }
+#ifdef HAVE_PNG
+  if (!gst_element_register (plugin, "gldifferencematte",
+          GST_RANK_NONE, gst_gl_differencematte_get_type ())) {
+    return FALSE;
+  }
+
+  if (!gst_element_register (plugin, "glbumper",
+          GST_RANK_NONE, gst_gl_bumper_get_type ())) {
+    return FALSE;
+  }
+
+  if (!gst_element_register (plugin, "gloverlay",
+          GST_RANK_NONE, gst_gl_overlay_get_type ())) {
+    return FALSE;
+  }
+#endif
 #endif
 
   return TRUE;
