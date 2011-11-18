@@ -256,9 +256,9 @@ gst_gio_src_query (GstBaseSrc * base_src, GstQuery * query)
     case GST_QUERY_SCHEDULING:
     {
       gchar *scheme;
-      gboolean pull_mode;
+      GstSchedulingFlags flags;
 
-      pull_mode = FALSE;
+      flags = 0;
       if (src->file == NULL)
         goto forward_parent;
 
@@ -268,7 +268,7 @@ gst_gio_src_query (GstBaseSrc * base_src, GstQuery * query)
 
       if (strcmp (scheme, "file") == 0) {
         GST_LOG_OBJECT (src, "local URI, assuming random access is possible");
-        pull_mode = TRUE;
+        flags |= GST_SCHEDULING_FLAG_SEEKABLE;
       } else if (strcmp (scheme, "http") == 0 || strcmp (scheme, "https") == 0) {
         GST_LOG_OBJECT (src, "blacklisted protocol '%s', "
             "no random access possible", scheme);
@@ -278,7 +278,11 @@ gst_gio_src_query (GstBaseSrc * base_src, GstQuery * query)
       }
       g_free (scheme);
 
-      gst_query_set_scheduling (query, pull_mode, pull_mode, FALSE, 1, -1, 1);
+      gst_query_set_scheduling (query, flags, 1, -1, 0);
+      gst_query_add_scheduling_mode (query, GST_PAD_MODE_PUSH);
+      if (flags & GST_SCHEDULING_FLAG_SEEKABLE)
+        gst_query_add_scheduling_mode (query, GST_PAD_MODE_PULL);
+
       res = TRUE;
       break;
     }

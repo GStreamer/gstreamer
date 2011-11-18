@@ -642,11 +642,13 @@ gst_audio_base_src_query (GstBaseSrc * bsrc, GstQuery * query)
     }
     case GST_QUERY_SCHEDULING:
     {
-      /* we allow limited pull base operation of which the details
-       * will eventually exposed in an as of yet non-existing query.
-       * Basically pulling can be done on any number of bytes as long
-       * as the offset is -1 or sequentially increasing. */
-      gst_query_set_scheduling (query, TRUE, FALSE, TRUE, 1, -1, 1);
+      /* We allow limited pull base operation. Basically pulling can be
+       * done on any number of bytes as long as the offset is -1 or
+       * sequentially increasing. */
+      gst_query_set_scheduling (query, GST_SCHEDULING_FLAG_SEQUENTIAL, 1, -1,
+          0);
+      gst_query_add_scheduling_mode (query, GST_PAD_MODE_PULL);
+      gst_query_add_scheduling_mode (query, GST_PAD_MODE_PUSH);
 
       res = TRUE;
       break;

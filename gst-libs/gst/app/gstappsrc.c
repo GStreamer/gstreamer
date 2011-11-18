@@ -786,17 +786,17 @@ gst_app_src_query (GstBaseSrc * src, GstQuery * query)
     }
     case GST_QUERY_SCHEDULING:
     {
-      gboolean pull_mode = FALSE;
+      gst_query_set_scheduling (query, GST_SCHEDULING_FLAG_SEEKABLE, 1, -1, 0);
+      gst_query_add_scheduling_mode (query, GST_PAD_MODE_PUSH);
 
       switch (priv->stream_type) {
         case GST_APP_STREAM_TYPE_STREAM:
         case GST_APP_STREAM_TYPE_SEEKABLE:
           break;
         case GST_APP_STREAM_TYPE_RANDOM_ACCESS:
-          pull_mode = TRUE;
+          gst_query_add_scheduling_mode (query, GST_PAD_MODE_PULL);
           break;
       }
-      gst_query_set_scheduling (query, pull_mode, TRUE, FALSE, 1, -1, 1);
       res = TRUE;
       break;
     }

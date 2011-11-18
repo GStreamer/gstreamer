@@ -328,8 +328,11 @@ gst_audio_test_src_query (GstBaseSrc * basesrc, GstQuery * query)
     case GST_QUERY_SCHEDULING:
     {
       /* if we can operate in pull mode */
-      gst_query_set_scheduling (query, src->can_activate_pull, TRUE, FALSE, 1,
-          -1, 1);
+      gst_query_set_scheduling (query, GST_SCHEDULING_FLAG_SEEKABLE, 1, -1, 0);
+      gst_query_add_scheduling_mode (query, GST_PAD_MODE_PUSH);
+      if (src->can_activate_pull)
+        gst_query_add_scheduling_mode (query, GST_PAD_MODE_PULL);
+
       res = TRUE;
       break;
     }
