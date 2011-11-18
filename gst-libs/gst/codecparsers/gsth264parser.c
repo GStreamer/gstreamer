@@ -1365,6 +1365,7 @@ gst_h264_parse_sps (GstH264NalUnit * nalu, GstH264SPS * sps,
   sps->frame_crop_right_offset = 0;
   sps->frame_crop_top_offset = 0;
   sps->frame_crop_bottom_offset = 0;
+  sps->delta_pic_order_always_zero_flag = 0;
 
   READ_UINT8 (&nr, sps->profile_idc, 8);
   READ_UINT8 (&nr, sps->constraint_set0_flag, 1);
