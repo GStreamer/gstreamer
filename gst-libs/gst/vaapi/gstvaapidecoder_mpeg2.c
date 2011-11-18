@@ -32,7 +32,6 @@
 #include "gstvaapidecoder_priv.h"
 #include "gstvaapidisplay_priv.h"
 #include "gstvaapiobject_priv.h"
-#include "gstvaapiutils_tsb.h"
 
 #define DEBUG 1
 #include "gstvaapidebug.h"
@@ -67,7 +66,7 @@ struct _GstVaapiDecoderMpeg2Private {
     GstVaapiPicture            *current_picture;
     GstVaapiPicture            *next_picture;
     GstVaapiPicture            *prev_picture;
-    GstVaapiTSB                *tsb;
+    GstAdapter                 *adapter;
     GstBuffer                  *sub_buffer;
     guint                       mb_y;
     guint                       mb_height;
@@ -115,9 +114,10 @@ gst_vaapi_decoder_mpeg2_close(GstVaapiDecoderMpeg2 *decoder)
         priv->sub_buffer = NULL;
     }
 
-    if (priv->tsb) {
-        gst_vaapi_tsb_destroy(priv->tsb);
-        priv->tsb = NULL;
+    if (priv->adapter) {
+        gst_adapter_clear(priv->adapter);
+        g_object_unref(priv->adapter);
+        priv->adapter = NULL;
     }
 }
 
@@ -128,9 +128,9 @@ gst_vaapi_decoder_mpeg2_open(GstVaapiDecoderMpeg2 *decoder, GstBuffer *buffer)
 
     gst_vaapi_decoder_mpeg2_close(decoder);
 
-    priv->tsb = gst_vaapi_tsb_new();
-    if (!priv->tsb)
-        return FALSE;
+    priv->adapter = gst_adapter_new();
+    if (!priv->adapter)
+	return FALSE;
     return TRUE;
 }
 
@@ -332,7 +332,7 @@ decode_sequence(GstVaapiDecoderMpeg2 *decoder, guchar *buf, guint buf_size)
     priv->fps_d = seq_hdr->fps_d;
     gst_vaapi_decoder_set_framerate(base_decoder, priv->fps_n, priv->fps_d);
 
-    priv->seq_pts = gst_vaapi_tsb_get_timestamp(priv->tsb);
+    priv->seq_pts = gst_adapter_prev_timestamp(priv->adapter, NULL);
 
     priv->width                 = seq_hdr->width;
     priv->height                = seq_hdr->height;
@@ -717,7 +717,8 @@ decode_chunks(GstVaapiDecoderMpeg2 *decoder, GstBuffer *buffer, GList *chunks)
             break;
 
         ofs = tos->offset - pos + tos->size;
-        gst_vaapi_tsb_pop(priv->tsb, ofs);
+        if (gst_adapter_available(priv->adapter) >= ofs)
+            gst_adapter_flush(priv->adapter, ofs);
         pos += ofs;
 
         switch (tos->type) {
@@ -798,8 +799,8 @@ decode_buffer(GstVaapiDecoderMpeg2 *decoder, GstBuffer *buffer)
     if (!buf && buf_size == 0)
         return decode_sequence_end(decoder);
 
-    gst_vaapi_tsb_push(priv->tsb, buffer);
-
+    gst_buffer_ref(buffer);
+    gst_adapter_push(priv->adapter, buffer);
     if (priv->sub_buffer) {
         buffer = gst_buffer_merge(priv->sub_buffer, buffer);
         if (!buffer)
@@ -889,7 +890,7 @@ gst_vaapi_decoder_mpeg2_init(GstVaapiDecoderMpeg2 *decoder)
     priv->current_picture       = NULL;
     priv->next_picture          = NULL;
     priv->prev_picture          = NULL;
-    priv->tsb                   = NULL;
+    priv->adapter               = NULL;
     priv->sub_buffer            = NULL;
     priv->mb_y                  = 0;
     priv->mb_height             = 0;
