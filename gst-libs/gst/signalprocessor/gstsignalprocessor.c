@@ -198,9 +198,9 @@ gst_signal_processor_get_type (void)
 
 static void gst_signal_processor_finalize (GObject * object);
 static gboolean gst_signal_processor_src_activate_pull (GstPad * pad,
-    gboolean active);
+    GstObject * parent, gboolean active);
 static gboolean gst_signal_processor_sink_activate_push (GstPad * pad,
-    gboolean active);
+    GstObject * parent, gboolean active);
 static GstStateChangeReturn gst_signal_processor_change_state (GstElement *
     element, GstStateChange transition);
 
@@ -1063,12 +1063,13 @@ gst_signal_processor_chain (GstPad * pad, GstObject * parent,
 }
 
 static gboolean
-gst_signal_processor_sink_activate_push (GstPad * pad, gboolean active)
+gst_signal_processor_sink_activate_push (GstPad * pad, GstObject * parent,
+    gboolean active)
 {
   gboolean result = TRUE;
   GstSignalProcessor *self;
 
-  self = GST_SIGNAL_PROCESSOR (gst_pad_get_parent (pad));
+  self = GST_SIGNAL_PROCESSOR (parent);
 
   if (active) {
     if (self->mode == GST_PAD_MODE_NONE) {
@@ -1094,18 +1095,17 @@ gst_signal_processor_sink_activate_push (GstPad * pad, gboolean active)
 
   GST_DEBUG_OBJECT (self, "result : %d", result);
 
-  gst_object_unref (self);
-
   return result;
 }
 
 static gboolean
-gst_signal_processor_src_activate_pull (GstPad * pad, gboolean active)
+gst_signal_processor_src_activate_pull (GstPad * pad, GstObject * parent,
+    gboolean active)
 {
   gboolean result = TRUE;
   GstSignalProcessor *self;
 
-  self = GST_SIGNAL_PROCESSOR (gst_pad_get_parent (pad));
+  self = GST_SIGNAL_PROCESSOR (parent);
 
   if (active) {
     if (self->mode == GST_PAD_MODE_NONE) {
@@ -1139,8 +1139,6 @@ gst_signal_processor_src_activate_pull (GstPad * pad, gboolean active)
   }
 
   GST_DEBUG_OBJECT (self, "result : %d", result);
-
-  gst_object_unref (self);
 
   return result;
 }

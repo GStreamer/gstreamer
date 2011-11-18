@@ -77,9 +77,11 @@ static void mpegts_base_dispose (GObject * object);
 static void mpegts_base_finalize (GObject * object);
 static void mpegts_base_free_program (MpegTSBaseProgram * program);
 static void mpegts_base_free_stream (MpegTSBaseStream * ptream);
-static gboolean mpegts_base_sink_activate (GstPad * pad);
-static gboolean mpegts_base_sink_activate_pull (GstPad * pad, gboolean active);
-static gboolean mpegts_base_sink_activate_push (GstPad * pad, gboolean active);
+static gboolean mpegts_base_sink_activate (GstPad * pad, GstObject * parent);
+static gboolean mpegts_base_sink_activate_pull (GstPad * pad,
+    GstObject * parent, gboolean active);
+static gboolean mpegts_base_sink_activate_push (GstPad * pad,
+    GstObject * parent, gboolean active);
 static GstFlowReturn mpegts_base_chain (GstPad * pad, GstObject * parent,
     GstBuffer * buf);
 static gboolean mpegts_base_sink_event (GstPad * pad, GstObject * parent,
@@ -1532,7 +1534,7 @@ push_mode:
 
 
 static gboolean
-mpegts_base_sink_activate (GstPad * sinkpad)
+mpegts_base_sink_activate (GstPad * sinkpad, GstObject * parent)
 {
   GstQuery *query;
   gboolean pull_mode;
@@ -1561,9 +1563,10 @@ activate_push:
 }
 
 static gboolean
-mpegts_base_sink_activate_pull (GstPad * pad, gboolean active)
+mpegts_base_sink_activate_pull (GstPad * pad, GstObject * parent,
+    gboolean active)
 {
-  MpegTSBase *base = GST_MPEGTS_BASE (GST_OBJECT_PARENT (pad));
+  MpegTSBase *base = GST_MPEGTS_BASE (parent);
   if (active) {
     base->mode = BASE_MODE_SCANNING;
     return gst_pad_start_task (pad, (GstTaskFunction) mpegts_base_loop, base);
@@ -1572,9 +1575,10 @@ mpegts_base_sink_activate_pull (GstPad * pad, gboolean active)
 }
 
 static gboolean
-mpegts_base_sink_activate_push (GstPad * pad, gboolean active)
+mpegts_base_sink_activate_push (GstPad * pad, GstObject * parent,
+    gboolean active)
 {
-  MpegTSBase *base = GST_MPEGTS_BASE (GST_OBJECT_PARENT (pad));
+  MpegTSBase *base = GST_MPEGTS_BASE (parent);
   base->mode = BASE_MODE_PUSHING;
   return TRUE;
 }
