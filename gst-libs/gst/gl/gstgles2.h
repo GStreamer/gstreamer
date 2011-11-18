@@ -23,6 +23,8 @@
 #ifndef __GST_GL_ES2__
 #define __GST_GL_ES2__
 
+#include <glib.h>
+
 G_BEGIN_DECLS
 
 /* GLEW */
