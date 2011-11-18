@@ -60,18 +60,25 @@ A sinkpad can ask the upstream srcpad for its scheduling attributes. It does
 this with the SCHEDULING query.
 
 
- (out) "pull-mode", G_TYPE_BOOLEAN (default FALSE)
-       - if the pad can operate in pull mode, if this flag is not set the pad
-         will operate in push mode.
+ (out) "modes", G_TYPE_VALUE_ARRAY (default NULL)
+       - an array of GST_TYPE_PAD_MODE enums. Contains all the supported
+         scheduling modes.
 
- (out) "random-access", G_TYPE_BOOLEAN (default FALSE)
+ (out) "flags", GST_TYPE_SCHEDULING_FLAGS (default 0)
+
+     typedef enum {
+       GST_SCHEDULING_FLAG_SEEKABLE      = (1 << 0),
+       GST_SCHEDULING_FLAG_SEQUENTIAL    = (1 << 1)
+     } GstSchedulingFlags;
+
+   _SEEKABLE:
        - the offset of a pull operation can be specified, if this flag is false,
          the offset should be -1,
-
- (out) "sequential", G_TYPE_BOOLEAN (default TRUE)
-       - suggest sequential access to the data. If random-access is specified,
+ 
+   _SEQUENTIAL:
+       - suggest sequential access to the data. If _SEEKABLE is specified,
          seeks are allowed but should be avoided. This is common for network
-         streams. (
+         streams.
 
  (out) "minsize", G_TYPE_INT (default 1)
        - the suggested minimum size of pull requests
@@ -79,7 +86,7 @@ this with the SCHEDULING query.
  (out) "maxsize", G_TYPE_INT (default -1, unlimited)
        - the suggested maximum size of pull requests
 
- (out) "align", G_TYPE_INT (default 1)
+ (out) "align", G_TYPE_INT (default 0)
        - the suggested alignment for the pull requests.
 
 

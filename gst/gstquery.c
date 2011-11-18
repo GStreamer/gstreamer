@@ -1885,7 +1885,7 @@ gst_query_new_scheduling (void)
       GST_QUARK (FLAGS), GST_TYPE_SCHEDULING_FLAGS, 0,
       GST_QUARK (MINSIZE), G_TYPE_INT, 1,
       GST_QUARK (MAXSIZE), G_TYPE_INT, -1,
-      GST_QUARK (ALIGN), G_TYPE_INT, 1, NULL);
+      GST_QUARK (ALIGN), G_TYPE_INT, 0, NULL);
   query = gst_query_new (GST_QUERY_SCHEDULING, structure);
 
   return query;
