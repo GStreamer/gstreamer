@@ -91,9 +91,11 @@ static gboolean gst_asf_demux_sink_event (GstPad * pad, GstObject * parent,
     GstEvent * event);
 static GstFlowReturn gst_asf_demux_process_object (GstASFDemux * demux,
     guint8 ** p_data, guint64 * p_size);
-static gboolean gst_asf_demux_activate (GstPad * sinkpad);
-static gboolean gst_asf_demux_activate_push (GstPad * sinkpad, gboolean active);
-static gboolean gst_asf_demux_activate_pull (GstPad * sinkpad, gboolean active);
+static gboolean gst_asf_demux_activate (GstPad * sinkpad, GstObject * parent);
+static gboolean gst_asf_demux_activate_push (GstPad * sinkpad,
+    GstObject * parent, gboolean active);
+static gboolean gst_asf_demux_activate_pull (GstPad * sinkpad,
+    GstObject * parent, gboolean active);
 static void gst_asf_demux_loop (GstASFDemux * demux);
 static void
 gst_asf_demux_process_queued_extended_stream_objects (GstASFDemux * demux);
@@ -290,7 +292,7 @@ gst_asf_demux_init (GstASFDemux * demux)
 }
 
 static gboolean
-gst_asf_demux_activate (GstPad * sinkpad)
+gst_asf_demux_activate (GstPad * sinkpad, GstObject * parent)
 {
   GstQuery *query;
   gboolean pull_mode;
@@ -318,11 +320,12 @@ activate_push:
 }
 
 static gboolean
-gst_asf_demux_activate_push (GstPad * sinkpad, gboolean active)
+gst_asf_demux_activate_push (GstPad * sinkpad, GstObject * parent,
+    gboolean active)
 {
   GstASFDemux *demux;
 
-  demux = GST_ASF_DEMUX (GST_OBJECT_PARENT (sinkpad));
+  demux = GST_ASF_DEMUX (parent);
 
   demux->state = GST_ASF_DEMUX_STATE_HEADER;
   demux->streaming = TRUE;
@@ -331,11 +334,11 @@ gst_asf_demux_activate_push (GstPad * sinkpad, gboolean active)
 }
 
 static gboolean
-gst_asf_demux_activate_pull (GstPad * pad, gboolean active)
+gst_asf_demux_activate_pull (GstPad * pad, GstObject * parent, gboolean active)
 {
   GstASFDemux *demux;
 
-  demux = GST_ASF_DEMUX (GST_OBJECT_PARENT (pad));
+  demux = GST_ASF_DEMUX (parent);
 
   if (active) {
     demux->state = GST_ASF_DEMUX_STATE_HEADER;

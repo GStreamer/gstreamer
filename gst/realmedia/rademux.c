@@ -75,11 +75,12 @@ static gboolean gst_real_audio_demux_src_event (GstPad * pad,
 static gboolean gst_real_audio_demux_src_query (GstPad * pad,
     GstObject * parent, GstQuery * query);
 static void gst_real_audio_demux_loop (GstRealAudioDemux * demux);
-static gboolean gst_real_audio_demux_sink_activate (GstPad * sinkpad);
+static gboolean gst_real_audio_demux_sink_activate (GstPad * sinkpad,
+    GstObject * parent);
 static gboolean gst_real_audio_demux_sink_activate_push (GstPad * sinkpad,
-    gboolean active);
+    GstObject * parent, gboolean active);
 static gboolean gst_real_audio_demux_sink_activate_pull (GstPad * sinkpad,
-    gboolean active);
+    GstObject * parent, gboolean active);
 
 static void
 gst_real_audio_demux_finalize (GObject * obj)
@@ -180,7 +181,7 @@ gst_real_audio_demux_init (GstRealAudioDemux * demux)
 }
 
 static gboolean
-gst_real_audio_demux_sink_activate (GstPad * sinkpad)
+gst_real_audio_demux_sink_activate (GstPad * sinkpad, GstObject * parent)
 {
   GstQuery *query;
   gboolean pull_mode;
@@ -208,11 +209,12 @@ activate_push:
 }
 
 static gboolean
-gst_real_audio_demux_sink_activate_push (GstPad * sinkpad, gboolean active)
+gst_real_audio_demux_sink_activate_push (GstPad * sinkpad, GstObject * parent,
+    gboolean active)
 {
   GstRealAudioDemux *demux;
 
-  demux = GST_REAL_AUDIO_DEMUX (GST_OBJECT_PARENT (sinkpad));
+  demux = GST_REAL_AUDIO_DEMUX (parent);
 
   demux->seekable = FALSE;
 
@@ -220,11 +222,12 @@ gst_real_audio_demux_sink_activate_push (GstPad * sinkpad, gboolean active)
 }
 
 static gboolean
-gst_real_audio_demux_sink_activate_pull (GstPad * sinkpad, gboolean active)
+gst_real_audio_demux_sink_activate_pull (GstPad * sinkpad, GstObject * parent,
+    gboolean active)
 {
   GstRealAudioDemux *demux;
 
-  demux = GST_REAL_AUDIO_DEMUX (GST_OBJECT_PARENT (sinkpad));
+  demux = GST_REAL_AUDIO_DEMUX (parent);
 
   if (active) {
     demux->seekable = TRUE;

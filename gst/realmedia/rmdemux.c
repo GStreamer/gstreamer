@@ -137,11 +137,12 @@ static GstStateChangeReturn gst_rmdemux_change_state (GstElement * element,
 static GstFlowReturn gst_rmdemux_chain (GstPad * pad, GstObject * parent,
     GstBuffer * buffer);
 static void gst_rmdemux_loop (GstPad * pad);
-static gboolean gst_rmdemux_sink_activate (GstPad * sinkpad);
+static gboolean gst_rmdemux_sink_activate (GstPad * sinkpad,
+    GstObject * parent);
 static gboolean gst_rmdemux_sink_activate_push (GstPad * sinkpad,
-    gboolean active);
+    GstObject * parent, gboolean active);
 static gboolean gst_rmdemux_sink_activate_pull (GstPad * sinkpad,
-    gboolean active);
+    GstObject * parent, gboolean active);
 static gboolean gst_rmdemux_sink_event (GstPad * pad, GstObject * parent,
     GstEvent * event);
 static gboolean gst_rmdemux_src_event (GstPad * pad, GstObject * parent,
@@ -743,7 +744,7 @@ gst_rmdemux_change_state (GstElement * element, GstStateChange transition)
  * pull based.
  */
 static gboolean
-gst_rmdemux_sink_activate (GstPad * sinkpad)
+gst_rmdemux_sink_activate (GstPad * sinkpad, GstObject * parent)
 {
 
   GstQuery *query;
@@ -774,11 +775,12 @@ activate_push:
 /* this function gets called when we activate ourselves in push mode.
  * We cannot seek (ourselves) in the stream */
 static gboolean
-gst_rmdemux_sink_activate_push (GstPad * pad, gboolean active)
+gst_rmdemux_sink_activate_push (GstPad * pad, GstObject * parent,
+    gboolean active)
 {
   GstRMDemux *rmdemux;
 
-  rmdemux = GST_RMDEMUX (GST_PAD_PARENT (pad));
+  rmdemux = GST_RMDEMUX (parent);
 
   GST_DEBUG_OBJECT (rmdemux, "activate_push");
 
@@ -791,11 +793,12 @@ gst_rmdemux_sink_activate_push (GstPad * pad, gboolean active)
  * We can perform  random access to the resource and we start a task
  * to start reading */
 static gboolean
-gst_rmdemux_sink_activate_pull (GstPad * pad, gboolean active)
+gst_rmdemux_sink_activate_pull (GstPad * pad, GstObject * parent,
+    gboolean active)
 {
   GstRMDemux *rmdemux;
 
-  rmdemux = GST_RMDEMUX (GST_PAD_PARENT (pad));
+  rmdemux = GST_RMDEMUX (parent);
 
   GST_DEBUG_OBJECT (rmdemux, "activate_pull");
 

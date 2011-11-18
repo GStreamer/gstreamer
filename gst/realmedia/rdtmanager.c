@@ -123,7 +123,7 @@ static void gst_rdt_manager_get_property (GObject * object,
 static gboolean gst_rdt_manager_query_src (GstPad * pad, GstObject * parent,
     GstQuery * query);
 static gboolean gst_rdt_manager_src_activate_push (GstPad * pad,
-    gboolean active);
+    GstObject * parent, gboolean active);
 
 static GstClock *gst_rdt_manager_provide_clock (GstElement * element);
 static GstStateChangeReturn gst_rdt_manager_change_state (GstElement * element,
@@ -556,7 +556,8 @@ gst_rdt_manager_query_src (GstPad * pad, GstObject * parent, GstQuery * query)
 }
 
 static gboolean
-gst_rdt_manager_src_activate_push (GstPad * pad, gboolean active)
+gst_rdt_manager_src_activate_push (GstPad * pad, GstObject * parent,
+    gboolean active)
 {
   gboolean result = TRUE;
   GstRDTManager *rdtmanager;
