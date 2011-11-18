@@ -143,7 +143,7 @@ struct _GstTextOverlay {
     gdouble                     shadow_offset;
     gboolean                    want_shadow;
     gdouble                     outline_offset;
-    guchar                     *text_image;
+    GstBuffer                  *text_image;
     gint                        image_width;
     gint                        image_height;
     gint                        baseline_y;

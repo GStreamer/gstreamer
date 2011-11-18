@@ -580,7 +580,7 @@ gst_text_overlay_finalize (GObject * object)
   }
 
   if (overlay->text_image) {
-    g_free (overlay->text_image);
+    gst_buffer_unref (overlay->text_image);
     overlay->text_image = NULL;
   }
 
@@ -1235,15 +1235,10 @@ gst_text_overlay_set_composition (GstTextOverlay * overlay)
   gst_text_overlay_get_pos (overlay, &xpos, &ypos);
 
   if (overlay->text_image) {
-    GstBuffer *buffer = gst_buffer_new ();
-
-    GST_BUFFER_DATA (buffer) = overlay->text_image;
-    GST_BUFFER_SIZE (buffer) = gst_video_format_get_size (GST_VIDEO_FORMAT_ARGB,
-        overlay->image_width, overlay->image_height);
-
-    rectangle = gst_video_overlay_rectangle_new_argb (buffer,
+    rectangle = gst_video_overlay_rectangle_new_argb (overlay->text_image,
         overlay->image_width, overlay->image_height, 4 * overlay->image_width,
-        1, 1, xpos, ypos, overlay->image_width, overlay->image_height);
+        xpos, ypos, overlay->image_width, overlay->image_height,
+        GST_VIDEO_OVERLAY_FORMAT_FLAG_NONE);
 
     if (overlay->composition)
       gst_video_overlay_composition_unref (overlay->composition);
@@ -1267,7 +1262,8 @@ gst_text_overlay_render_pangocairo (GstTextOverlay * overlay,
   int width, height;
   double scalef = 1.0;
   double a, r, g, b;
-
+  GstBuffer *buffer;
+  guint8 *text_image;
   g_mutex_lock (GST_TEXT_OVERLAY_GET_CLASS (overlay)->pango_lock);
 
   if (overlay->auto_adjust_size) {
@@ -1333,10 +1329,13 @@ gst_text_overlay_render_pangocairo (GstTextOverlay * overlay,
     cairo_matrix_init_scale (&cairo_matrix, scalef, scalef);
   }
 
-  /* reallocate surface */
-  overlay->text_image = g_realloc (overlay->text_image, 4 * width * height);
+  /* reallocate overlay buffer */
+  buffer = gst_buffer_new_and_alloc (4 * width * height);
+  gst_buffer_replace (&overlay->text_image, buffer);
+  text_image = GST_BUFFER_DATA (buffer);
+  gst_buffer_unref (buffer);
 
-  surface = cairo_image_surface_create_for_data (overlay->text_image,
+  surface = cairo_image_surface_create_for_data (text_image,
       CAIRO_FORMAT_ARGB32, width, height, width * 4);
   cr = cairo_create (surface);
 
