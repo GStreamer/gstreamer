@@ -633,6 +633,16 @@ gst_h264_parse_check_valid_frame (GstBaseParse * parse,
             nalu.offset + nalu.size);
         if (!h264parse->nalu.size && !h264parse->nalu.valid)
           h264parse->nalu = nalu;
+        /* need 2 bytes of next nal */
+        if (nalu.offset + nalu.size + 4 + 2 > size) {
+          if (GST_BASE_PARSE_DRAINING (parse)) {
+            drain = TRUE;
+          } else {
+            GST_DEBUG_OBJECT (h264parse, "need more bytes of next nal");
+            current_off = nalu.sc_offset;
+            goto more;
+          }
+        }
         break;
       case GST_H264_PARSER_BROKEN_LINK:
         return FALSE;
@@ -691,7 +701,8 @@ gst_h264_parse_check_valid_frame (GstBaseParse * parse,
         data, nalu.offset, nalu.size);
 
     gst_h264_parse_process_nal (h264parse, &nalu);
-    if (gst_h264_parse_collect_nal (h264parse, data, size, &nalu) || drain)
+    /* if no next nal, we know it's complete here */
+    if (drain || gst_h264_parse_collect_nal (h264parse, data, size, &nalu))
       break;
   }
 
