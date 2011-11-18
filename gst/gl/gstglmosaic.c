@@ -18,6 +18,23 @@
  * Boston, MA 02111-1307, USA.
  */
 
+/**
+ * SECTION:element-glmosaic
+ *
+ * glmixer sub element. N gl sink pads to 1 source pad.
+ * N + 1 OpenGL contexts shared together.
+ * N <= 6 because the rendering is more a like a cube than a mosaic
+ * Each opengl input stream is rendered on a cube face
+ *
+ * <refsect2>
+ * <title>Examples</title>
+ * |[
+ * gst-launch-0.10 videotestsrc ! "video/x-raw-yuv, format=(fourcc)YUY2" ! glupload ! queue ! glmosaic name=m ! glimagesink videotestsrc pattern=12 ! "video/x-raw-yuv, format=(fourcc)I420, framerate=(fraction)5/1, width=100, height=200" ! glupload ! queue ! m. videotestsrc ! "video/x-raw-rgb, framerate=(fraction)15/1, width=1500, height=1500" ! glupload ! gleffects effect=3 ! queue ! m. videotestsrc ! glupload ! gleffects effect=2 ! queue ! m.  videotestsrc ! glupload ! glfiltercube ! queue ! m. videotestsrc ! glupload ! gleffects effect=6 ! queue ! m.
+ * ]|
+ * FBO (Frame Buffer Object) is required.
+ * </refsect2>
+ */
+
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
