@@ -126,11 +126,12 @@ static GstFlowReturn gst_ffmpegdemux_chain (GstPad * sinkpad,
     GstObject * parent, GstBuffer * buf);
 
 static void gst_ffmpegdemux_loop (GstFFMpegDemux * demux);
-static gboolean gst_ffmpegdemux_sink_activate (GstPad * sinkpad);
-static gboolean
-gst_ffmpegdemux_sink_activate_pull (GstPad * sinkpad, gboolean active);
-static gboolean
-gst_ffmpegdemux_sink_activate_push (GstPad * sinkpad, gboolean active);
+static gboolean gst_ffmpegdemux_sink_activate (GstPad * sinkpad,
+    GstObject * parent);
+static gboolean gst_ffmpegdemux_sink_activate_pull (GstPad * sinkpad,
+    GstObject * parent, gboolean active);
+static gboolean gst_ffmpegdemux_sink_activate_push (GstPad * sinkpad,
+    GstObject * parent, gboolean active);
 
 #if 0
 static gboolean
@@ -1690,7 +1691,7 @@ ignore:
 }
 
 static gboolean
-gst_ffmpegdemux_sink_activate (GstPad * sinkpad)
+gst_ffmpegdemux_sink_activate (GstPad * sinkpad, GstObject * parent)
 {
   GstQuery *query;
   gboolean pull_mode;
@@ -1723,12 +1724,13 @@ activate_push:
  * - (independently managed) task driving ffmpeg
  */
 static gboolean
-gst_ffmpegdemux_sink_activate_push (GstPad * sinkpad, gboolean active)
+gst_ffmpegdemux_sink_activate_push (GstPad * sinkpad, GstObject * parent,
+    gboolean active)
 {
   GstFFMpegDemux *demux;
   gboolean res = FALSE;
 
-  demux = (GstFFMpegDemux *) (gst_pad_get_parent (sinkpad));
+  demux = (GstFFMpegDemux *) (parent);
 
   if (active) {
     if (demux->can_push == FALSE) {
@@ -1760,8 +1762,6 @@ gst_ffmpegdemux_sink_activate_push (GstPad * sinkpad, gboolean active)
   }
 
 beach:
-  gst_object_unref (demux);
-
   return res;
 }
 
@@ -1771,12 +1771,13 @@ beach:
  * - task driving ffmpeg based on sink pad
  */
 static gboolean
-gst_ffmpegdemux_sink_activate_pull (GstPad * sinkpad, gboolean active)
+gst_ffmpegdemux_sink_activate_pull (GstPad * sinkpad, GstObject * parent,
+    gboolean active)
 {
   GstFFMpegDemux *demux;
   gboolean res;
 
-  demux = (GstFFMpegDemux *) (gst_pad_get_parent (sinkpad));
+  demux = (GstFFMpegDemux *) parent;
 
   if (active) {
     demux->seekable = TRUE;
@@ -1786,8 +1787,6 @@ gst_ffmpegdemux_sink_activate_pull (GstPad * sinkpad, gboolean active)
     res = gst_pad_stop_task (sinkpad);
     demux->seekable = FALSE;
   }
-
-  gst_object_unref (demux);
 
   return res;
 }
