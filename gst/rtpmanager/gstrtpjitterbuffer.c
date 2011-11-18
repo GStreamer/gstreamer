@@ -260,7 +260,7 @@ static gboolean gst_rtp_jitter_buffer_sink_query (GstPad * pad,
 static gboolean gst_rtp_jitter_buffer_src_event (GstPad * pad,
     GstObject * parent, GstEvent * event);
 static gboolean gst_rtp_jitter_buffer_src_activate_push (GstPad * pad,
-    gboolean active);
+    GstObject * parent, gboolean active);
 static void gst_rtp_jitter_buffer_loop (GstRtpJitterBuffer * jitterbuffer);
 static gboolean gst_rtp_jitter_buffer_src_query (GstPad * pad,
     GstObject * parent, GstQuery * query);
@@ -882,12 +882,13 @@ gst_rtp_jitter_buffer_flush_stop (GstRtpJitterBuffer * jitterbuffer)
 }
 
 static gboolean
-gst_rtp_jitter_buffer_src_activate_push (GstPad * pad, gboolean active)
+gst_rtp_jitter_buffer_src_activate_push (GstPad * pad, GstObject * parent,
+    gboolean active)
 {
   gboolean result = TRUE;
   GstRtpJitterBuffer *jitterbuffer = NULL;
 
-  jitterbuffer = GST_RTP_JITTER_BUFFER (gst_pad_get_parent (pad));
+  jitterbuffer = GST_RTP_JITTER_BUFFER (parent);
 
   if (active) {
     /* allow data processing */
@@ -906,8 +907,6 @@ gst_rtp_jitter_buffer_src_activate_push (GstPad * pad, gboolean active)
     GST_DEBUG_OBJECT (jitterbuffer, "Stopping task on srcpad");
     result = gst_pad_stop_task (pad);
   }
-
-  gst_object_unref (jitterbuffer);
 
   return result;
 }
@@ -1069,7 +1068,8 @@ gst_rtp_jitter_buffer_sink_event (GstPad * pad, GstObject * parent,
       break;
     case GST_EVENT_FLUSH_STOP:
       ret = gst_pad_push_event (priv->srcpad, event);
-      ret = gst_rtp_jitter_buffer_src_activate_push (priv->srcpad, TRUE);
+      ret =
+          gst_rtp_jitter_buffer_src_activate_push (priv->srcpad, parent, TRUE);
       break;
     case GST_EVENT_EOS:
     {

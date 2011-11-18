@@ -400,9 +400,11 @@ static void gst_qtdemux_set_index (GstElement * element, GstIndex * index);
 static GstIndex *gst_qtdemux_get_index (GstElement * element);
 static GstStateChangeReturn gst_qtdemux_change_state (GstElement * element,
     GstStateChange transition);
-static gboolean qtdemux_sink_activate (GstPad * sinkpad);
-static gboolean qtdemux_sink_activate_pull (GstPad * sinkpad, gboolean active);
-static gboolean qtdemux_sink_activate_push (GstPad * sinkpad, gboolean active);
+static gboolean qtdemux_sink_activate (GstPad * sinkpad, GstObject * parent);
+static gboolean qtdemux_sink_activate_pull (GstPad * sinkpad,
+    GstObject * parent, gboolean active);
+static gboolean qtdemux_sink_activate_push (GstPad * sinkpad,
+    GstObject * parent, gboolean active);
 
 static void gst_qtdemux_loop (GstPad * pad);
 static GstFlowReturn gst_qtdemux_chain (GstPad * sinkpad, GstObject * parent,
@@ -4420,7 +4422,7 @@ no_moov:
 }
 
 static gboolean
-qtdemux_sink_activate (GstPad * sinkpad)
+qtdemux_sink_activate (GstPad * sinkpad, GstObject * parent)
 {
   GstQuery *query;
   gboolean pull_mode;
@@ -4449,9 +4451,10 @@ activate_push:
 }
 
 static gboolean
-qtdemux_sink_activate_pull (GstPad * sinkpad, gboolean active)
+qtdemux_sink_activate_pull (GstPad * sinkpad, GstObject * parent,
+    gboolean active)
 {
-  GstQTDemux *demux = GST_QTDEMUX (GST_PAD_PARENT (sinkpad));
+  GstQTDemux *demux = GST_QTDEMUX (parent);
 
   if (active) {
     demux->pullbased = TRUE;
@@ -4463,9 +4466,10 @@ qtdemux_sink_activate_pull (GstPad * sinkpad, gboolean active)
 }
 
 static gboolean
-qtdemux_sink_activate_push (GstPad * sinkpad, gboolean active)
+qtdemux_sink_activate_push (GstPad * sinkpad, GstObject * parent,
+    gboolean active)
 {
-  GstQTDemux *demux = GST_QTDEMUX (GST_PAD_PARENT (sinkpad));
+  GstQTDemux *demux = GST_QTDEMUX (parent);
 
   demux->pullbased = FALSE;
 

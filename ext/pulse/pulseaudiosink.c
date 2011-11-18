@@ -711,7 +711,7 @@ gst_pulse_audio_sink_src_event (GstPad * pad, GstObject * parent,
   if (G_UNLIKELY (GST_EVENT_TYPE (event) == GST_EVENT_CUSTOM_UPSTREAM) &&
       (gst_event_has_name (event, "pulse-format-lost") ||
           gst_event_has_name (event, "pulse-sink-changed"))) {
-    g_return_val_if_fail (pad->mode != GST_PAD_ACTIVATE_PULL, FALSE);
+    g_return_val_if_fail (pad->mode != GST_PAD_MODE_PULL, FALSE);
 
     GST_PULSE_AUDIO_SINK_LOCK (pbin);
     if (gst_event_has_name (event, "pulse-format-lost"))

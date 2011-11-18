@@ -2799,7 +2799,7 @@ wrong_format:
 
 /* If we can pull that's prefered */
 static gboolean
-gst_flv_demux_sink_activate (GstPad * sinkpad)
+gst_flv_demux_sink_activate (GstPad * sinkpad, GstObject * parent)
 {
   GstQuery *query;
   gboolean pull_mode;
@@ -2830,15 +2830,14 @@ activate_push:
 /* This function gets called when we activate ourselves in push mode.
  * We cannot seek (ourselves) in the stream */
 static gboolean
-gst_flv_demux_sink_activate_push (GstPad * sinkpad, gboolean active)
+gst_flv_demux_sink_activate_push (GstPad * sinkpad, GstObject * parent,
+    gboolean active)
 {
   GstFlvDemux *demux;
 
-  demux = GST_FLV_DEMUX (gst_pad_get_parent (sinkpad));
+  demux = GST_FLV_DEMUX (parent);
 
   demux->random_access = FALSE;
-
-  gst_object_unref (demux);
 
   return TRUE;
 }
@@ -2847,20 +2846,19 @@ gst_flv_demux_sink_activate_push (GstPad * sinkpad, gboolean active)
  * We can perform  random access to the resource and we start a task
  * to start reading */
 static gboolean
-gst_flv_demux_sink_activate_pull (GstPad * sinkpad, gboolean active)
+gst_flv_demux_sink_activate_pull (GstPad * sinkpad, GstObject * parent,
+    gboolean active)
 {
   GstFlvDemux *demux;
 
-  demux = GST_FLV_DEMUX (gst_pad_get_parent (sinkpad));
+  demux = GST_FLV_DEMUX (parent);
 
   if (active) {
     demux->random_access = TRUE;
-    gst_object_unref (demux);
     return gst_pad_start_task (sinkpad, (GstTaskFunction) gst_flv_demux_loop,
         sinkpad);
   } else {
     demux->random_access = FALSE;
-    gst_object_unref (demux);
     return gst_pad_stop_task (sinkpad);
   }
 }

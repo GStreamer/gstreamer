@@ -99,10 +99,12 @@ static gboolean gst_avi_demux_handle_seek (GstAviDemux * avi, GstPad * pad,
 static gboolean gst_avi_demux_handle_seek_push (GstAviDemux * avi, GstPad * pad,
     GstEvent * event);
 static void gst_avi_demux_loop (GstPad * pad);
-static gboolean gst_avi_demux_sink_activate (GstPad * sinkpad);
+static gboolean gst_avi_demux_sink_activate (GstPad * sinkpad,
+    GstObject * parent);
 static gboolean gst_avi_demux_sink_activate_pull (GstPad * sinkpad,
+    GstObject * parent, gboolean active);
+static gboolean gst_avi_demux_activate_push (GstPad * pad, GstObject * parent,
     gboolean active);
-static gboolean gst_avi_demux_activate_push (GstPad * pad, gboolean active);
 static GstFlowReturn gst_avi_demux_chain (GstPad * pad, GstObject * parent,
     GstBuffer * buf);
 
@@ -5265,7 +5267,7 @@ abort_buffering:
 }
 
 static gboolean
-gst_avi_demux_sink_activate (GstPad * sinkpad)
+gst_avi_demux_sink_activate (GstPad * sinkpad, GstObject * parent)
 {
   GstQuery *query;
   gboolean pull_mode;
@@ -5294,9 +5296,10 @@ activate_push:
 }
 
 static gboolean
-gst_avi_demux_sink_activate_pull (GstPad * sinkpad, gboolean active)
+gst_avi_demux_sink_activate_pull (GstPad * sinkpad, GstObject * parent,
+    gboolean active)
 {
-  GstAviDemux *avi = GST_AVI_DEMUX (GST_OBJECT_PARENT (sinkpad));
+  GstAviDemux *avi = GST_AVI_DEMUX (parent);
 
   if (active) {
     avi->streaming = FALSE;
@@ -5308,9 +5311,9 @@ gst_avi_demux_sink_activate_pull (GstPad * sinkpad, gboolean active)
 }
 
 static gboolean
-gst_avi_demux_activate_push (GstPad * pad, gboolean active)
+gst_avi_demux_activate_push (GstPad * pad, GstObject * parent, gboolean active)
 {
-  GstAviDemux *avi = GST_AVI_DEMUX (GST_OBJECT_PARENT (pad));
+  GstAviDemux *avi = GST_AVI_DEMUX (parent);
 
   if (active) {
     GST_DEBUG ("avi: activating push/chain function");

@@ -63,9 +63,10 @@ GST_DEBUG_CATEGORY_STATIC (wavparse_debug);
 
 static void gst_wavparse_dispose (GObject * object);
 
-static gboolean gst_wavparse_sink_activate (GstPad * sinkpad);
+static gboolean gst_wavparse_sink_activate (GstPad * sinkpad,
+    GstObject * parent);
 static gboolean gst_wavparse_sink_activate_pull (GstPad * sinkpad,
-    gboolean active);
+    GstObject * parent, gboolean active);
 static gboolean gst_wavparse_send_event (GstElement * element,
     GstEvent * event);
 static GstStateChangeReturn gst_wavparse_change_state (GstElement * element,
@@ -2537,9 +2538,9 @@ gst_wavparse_srcpad_event (GstPad * pad, GstObject * parent, GstEvent * event)
 }
 
 static gboolean
-gst_wavparse_sink_activate (GstPad * sinkpad)
+gst_wavparse_sink_activate (GstPad * sinkpad, GstObject * parent)
 {
-  GstWavParse *wav = GST_WAVPARSE (gst_pad_get_parent (sinkpad));
+  GstWavParse *wav = GST_WAVPARSE (parent);
   GstQuery *query;
   gboolean pull_mode;
 
@@ -2564,7 +2565,6 @@ gst_wavparse_sink_activate (GstPad * sinkpad)
 
   GST_DEBUG_OBJECT (sinkpad, "activating pull");
   wav->streaming = FALSE;
-  gst_object_unref (wav);
   return gst_pad_activate_pull (sinkpad, TRUE);
 
 activate_push:
@@ -2572,14 +2572,14 @@ activate_push:
     GST_DEBUG_OBJECT (sinkpad, "activating push");
     wav->streaming = TRUE;
     wav->adapter = gst_adapter_new ();
-    gst_object_unref (wav);
     return gst_pad_activate_push (sinkpad, TRUE);
   }
 }
 
 
 static gboolean
-gst_wavparse_sink_activate_pull (GstPad * sinkpad, gboolean active)
+gst_wavparse_sink_activate_pull (GstPad * sinkpad, GstObject * parent,
+    gboolean active)
 {
   if (active) {
     /* if we have a scheduler we can start the task */

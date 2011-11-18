@@ -85,9 +85,9 @@ static void gst_rnd_buffer_size_set_property (GObject * object, guint prop_id,
 static void gst_rnd_buffer_size_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 
-static gboolean gst_rnd_buffer_size_activate (GstPad * pad);
+static gboolean gst_rnd_buffer_size_activate (GstPad * pad, GstObject * parent);
 static gboolean gst_rnd_buffer_size_activate_pull (GstPad * pad,
-    gboolean active);
+    GstObject * parent, gboolean active);
 static void gst_rnd_buffer_size_loop (GstRndBufferSize * self);
 static GstStateChangeReturn gst_rnd_buffer_size_change_state (GstElement *
     element, GstStateChange transition);
@@ -215,7 +215,7 @@ gst_rnd_buffer_size_get_property (GObject * object, guint prop_id,
 
 
 static gboolean
-gst_rnd_buffer_size_activate (GstPad * pad)
+gst_rnd_buffer_size_activate (GstPad * pad, GstObject * parent)
 {
   GstQuery *query;
   gboolean pull_mode;
@@ -245,9 +245,10 @@ no_pull:
 
 
 static gboolean
-gst_rnd_buffer_size_activate_pull (GstPad * pad, gboolean active)
+gst_rnd_buffer_size_activate_pull (GstPad * pad, GstObject * parent,
+    gboolean active)
 {
-  GstRndBufferSize *self = GST_RND_BUFFER_SIZE (GST_OBJECT_PARENT (pad));
+  GstRndBufferSize *self = GST_RND_BUFFER_SIZE (parent);
 
   if (active) {
     GST_INFO_OBJECT (self, "starting pull");
