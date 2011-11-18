@@ -109,7 +109,8 @@ gst_push_file_src_ghostpad_query (GstPad * pad, GstObject * parent,
 
   switch (GST_QUERY_TYPE (query)) {
     case GST_QUERY_SCHEDULING:
-      gst_query_set_scheduling (query, FALSE, TRUE, FALSE, 1, -1, 1);
+      gst_query_set_scheduling (query, GST_SCHEDULING_FLAG_SEEKABLE, 1, -1, 0);
+      gst_query_add_scheduling_mode (query, GST_PAD_MODE_PUSH);
       res = TRUE;
       break;
     default:
