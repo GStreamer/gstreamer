@@ -707,12 +707,8 @@ gst_h264_parse_check_valid_frame (GstBaseParse * parse,
   }
 
 end:
-  /* FIXME this shouldnt be needed */
-  if (h264parse->nalu.sc_offset > 0 && data[h264parse->nalu.sc_offset - 1] == 0)
-    h264parse->nalu.sc_offset--;
-
   *skipsize = h264parse->nalu.sc_offset;
-  *framesize = nalu.offset + nalu.size - h264parse->nalu.sc_offset;     /* CHECKME */
+  *framesize = nalu.offset + nalu.size - h264parse->nalu.sc_offset;
   h264parse->current_off = current_off;
 
   return TRUE;
