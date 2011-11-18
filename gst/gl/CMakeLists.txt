@@ -62,5 +62,6 @@ add_library (gstopengl MODULE
 
 target_link_libraries(gstopengl
   general gstgl
+  general ${JPEG_LIBRARY}
   general ${PNG_LIBRARY}
   general ${ZLIB_LIBRARY})
