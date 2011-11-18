@@ -1,4 +1,4 @@
-/* 
+/*
  * GStreamer
  * Copyright (C) 2008 Filippo Argiolas <filippo.argiolas@gmail.com>
  *
@@ -75,9 +75,9 @@ GType gst_gl_shader_get_type (void);
 
 GstGLShader * gst_gl_shader_new (void);
 
-void gst_gl_shader_set_vertex_source   (GstGLShader *shader, 
+void gst_gl_shader_set_vertex_source   (GstGLShader *shader,
 					const gchar *src);
-void gst_gl_shader_set_fragment_source (GstGLShader *shader, 
+void gst_gl_shader_set_fragment_source (GstGLShader *shader,
 					const gchar *src);
 const gchar * gst_gl_shader_get_vertex_source (GstGLShader *shader);
 const gchar * gst_gl_shader_get_fragment_source (GstGLShader *shader);
@@ -110,22 +110,28 @@ void gst_gl_shader_set_uniform_4f (GstGLShader *shader, const gchar *name, gfloa
 void gst_gl_shader_set_uniform_4fv (GstGLShader *shader, const gchar *name, guint count, gfloat * value);
 void gst_gl_shader_set_uniform_matrix_2fv (GstGLShader * shader, const gchar * name,
   GLsizei count, GLboolean transpose, const GLfloat* value);
+#ifndef OPENGL_ES2
 void gst_gl_shader_set_uniform_matrix_2x3fv (GstGLShader * shader, const gchar * name,
   GLsizei count, GLboolean transpose, const GLfloat* value);
 void gst_gl_shader_set_uniform_matrix_2x4fv (GstGLShader * shader, const gchar * name,
   GLsizei count, GLboolean transpose, const GLfloat* value);
+#endif
 void gst_gl_shader_set_uniform_matrix_3fv (GstGLShader * shader, const gchar * name,
   GLsizei count, GLboolean transpose, const GLfloat* value);
+#ifndef OPENGL_ES2
 void gst_gl_shader_set_uniform_matrix_3x2fv (GstGLShader * shader, const gchar * name,
   GLsizei count, GLboolean transpose, const GLfloat* value);
 void gst_gl_shader_set_uniform_matrix_3x4fv (GstGLShader * shader, const gchar * name,
   GLsizei count, GLboolean transpose, const GLfloat* value);
+#endif
 void gst_gl_shader_set_uniform_matrix_4fv (GstGLShader * shader, const gchar * name,
   GLsizei count, GLboolean transpose, const GLfloat* value);
+#ifndef OPENGL_ES2
 void gst_gl_shader_set_uniform_matrix_4x2fv (GstGLShader * shader, const gchar * name,
   GLsizei count, GLboolean transpose, const GLfloat* value);
 void gst_gl_shader_set_uniform_matrix_4x3fv (GstGLShader * shader, const gchar * name,
   GLsizei count, GLboolean transpose, const GLfloat* value);
+#endif
 
 GLint gst_gl_shader_get_attribute_location (GstGLShader *shader, const gchar *name);
 void gst_gl_shader_bind_attribute_location (GstGLShader * shader, GLuint index, const gchar * name);

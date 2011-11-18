@@ -742,6 +742,7 @@ gst_gl_shader_set_uniform_matrix_2fv (GstGLShader * shader, const gchar * name,
   glUniformMatrix2fvARB (location, count, transpose, value);
 }
 
+#ifndef OPENGL_ES2
 void
 gst_gl_shader_set_uniform_matrix_2x3fv (GstGLShader * shader,
     const gchar * name, GLsizei count, GLboolean transpose,
@@ -775,6 +776,7 @@ gst_gl_shader_set_uniform_matrix_2x4fv (GstGLShader * shader,
 
   glUniformMatrix2x4fv (location, count, transpose, value);
 }
+#endif
 
 void
 gst_gl_shader_set_uniform_matrix_3fv (GstGLShader * shader, const gchar * name,
@@ -792,6 +794,7 @@ gst_gl_shader_set_uniform_matrix_3fv (GstGLShader * shader, const gchar * name,
   glUniformMatrix3fvARB (location, count, transpose, value);
 }
 
+#ifndef OPENGL_ES2
 void
 gst_gl_shader_set_uniform_matrix_3x2fv (GstGLShader * shader,
     const gchar * name, GLsizei count, GLboolean transpose,
@@ -825,6 +828,7 @@ gst_gl_shader_set_uniform_matrix_3x4fv (GstGLShader * shader,
 
   glUniformMatrix3x4fv (location, count, transpose, value);
 }
+#endif
 
 void
 gst_gl_shader_set_uniform_matrix_4fv (GstGLShader * shader, const gchar * name,
@@ -842,6 +846,7 @@ gst_gl_shader_set_uniform_matrix_4fv (GstGLShader * shader, const gchar * name,
   glUniformMatrix4fvARB (location, count, transpose, value);
 }
 
+#ifndef OPENGL_ES2
 void
 gst_gl_shader_set_uniform_matrix_4x2fv (GstGLShader * shader,
     const gchar * name, GLsizei count, GLboolean transpose,
@@ -875,6 +880,7 @@ gst_gl_shader_set_uniform_matrix_4x3fv (GstGLShader * shader,
 
   glUniformMatrix4x3fv (location, count, transpose, value);
 }
+#endif
 
 GLint
 gst_gl_shader_get_attribute_location (GstGLShader * shader, const gchar * name)

@@ -110,12 +110,6 @@ G_BEGIN_DECLS
 #define glUniformMatrix2fvARB glUniformMatrix2fv
 #define glUniformMatrix3fvARB glUniformMatrix3fv
 #define glUniformMatrix4fvARB glUniformMatrix4fv
-#define glUniformMatrix2x3fvARB glUniformMatrix2x3fv
-#define glUniformMatrix2x4fvARB glUniformMatrix2x4fv
-#define glUniformMatrix3x2fvARB glUniformMatrix3x2fv
-#define glUniformMatrix3x3fvARB glUniformMatrix3x4fv
-#define glUniformMatrix4x2fvARB glUniformMatrix4x2fv
-#define glUniformMatrix4x3fvARB glUniformMatrix4x3fv
 #define glGetUniformLocationARB glGetUniformLocation
 #define glGetAttribLocationARB glGetAttribLocation
 #define glBindAttribLocationARB glBindAttribLocation
