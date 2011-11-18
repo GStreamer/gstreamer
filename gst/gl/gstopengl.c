@@ -62,7 +62,6 @@ GType gst_gl_effects_get_type (void);
 #include "gstglfiltershader.h"
 #include "gstglcolorscale.h"
 #include "gstgldeinterlace.h"
-#include "gstglbumper.h"
 #include "gstglmosaic.h"
 
 GType gst_gl_deinterlace_get_type (void);
@@ -73,10 +72,22 @@ GType gst_gl_filtershader_get_type (void);
 GType gst_gl_filtersobel_get_type (void);
 GType gst_gl_filter_laplacian_get_type (void);
 GType gst_gl_filter_glass_get_type (void);
-GType gst_gl_overlay_get_type (void);
+GType gst_gl_mosaic_get_type (void);
+
+#ifdef HAVE_PNG
+#include "gstgldifferencematte.h"
+#include "gstglbumper.h"
+
 GType gst_gl_differencematte_get_type (void);
 GType gst_gl_bumper_get_type (void);
-GType gst_gl_mosaic_get_type (void);
+
+#ifdef HAVE_JPEG
+#include "gstgloverlay.h"
+
+GType gst_gl_overlay_get_type (void);
+
+#endif
+#endif
 #endif
 
 #define GST_CAT_DEFAULT gst_gl_gstgl_debug
@@ -177,11 +188,12 @@ plugin_init (GstPlugin * plugin)
           GST_RANK_NONE, gst_gl_bumper_get_type ())) {
     return FALSE;
   }
-
+#ifdef HAVE_JPEG
   if (!gst_element_register (plugin, "gloverlay",
           GST_RANK_NONE, gst_gl_overlay_get_type ())) {
     return FALSE;
   }
+#endif
 #endif
 #endif
 

@@ -50,9 +50,12 @@ OPENGL_SOURCES += \
 	gstglbumper.c \
 	gstglbumper.h \
 	gstgldifferencematte.c \
-	gstgldifferencematte.h \
+	gstgldifferencematte.h
+if HAVE_JPEG
+OPENGL_SOURCES += \
 	gstgloverlay.c \
 	gstgloverlay.h
+endif
 endif
 endif
 
