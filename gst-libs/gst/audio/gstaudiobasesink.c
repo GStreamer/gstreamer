@@ -892,7 +892,7 @@ gst_audio_base_sink_setcaps (GstBaseSink * bsink, GstCaps * caps)
   if (!gst_audio_ring_buffer_acquire (sink->ringbuffer, spec))
     goto acquire_error;
 
-  if (bsink->pad_mode == GST_PAD_ACTIVATE_PUSH) {
+  if (bsink->pad_mode == GST_PAD_MODE_PUSH) {
     GST_DEBUG_OBJECT (sink, "activate ringbuffer");
     gst_audio_ring_buffer_activate (sink->ringbuffer, TRUE);
   }
@@ -2089,7 +2089,7 @@ gst_audio_base_sink_async_play (GstBaseSink * basesink)
   GST_DEBUG_OBJECT (sink, "ringbuffer may start now");
   sink->priv->sync_latency = TRUE;
   gst_audio_ring_buffer_may_start (sink->ringbuffer, TRUE);
-  if (basesink->pad_mode == GST_PAD_ACTIVATE_PULL) {
+  if (basesink->pad_mode == GST_PAD_MODE_PULL) {
     /* we always start the ringbuffer in pull mode immediatly */
     gst_audio_ring_buffer_start (sink->ringbuffer);
   }
@@ -2143,7 +2143,7 @@ gst_audio_base_sink_change_state (GstElement * element,
       GST_OBJECT_UNLOCK (sink);
 
       gst_audio_ring_buffer_may_start (sink->ringbuffer, TRUE);
-      if (GST_BASE_SINK_CAST (sink)->pad_mode == GST_PAD_ACTIVATE_PULL ||
+      if (GST_BASE_SINK_CAST (sink)->pad_mode == GST_PAD_MODE_PULL ||
           g_atomic_int_get (&sink->eos_rendering) || eos) {
         /* we always start the ringbuffer in pull mode immediatly */
         /* sync rendering on eos needs running clock,
