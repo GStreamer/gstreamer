@@ -1354,16 +1354,17 @@ gst_h264_parse_get_caps (GstBaseParse * parse)
       GstStructure *s = gst_caps_get_structure (peercaps, i);
       gst_structure_remove_field (s, "alignment");
       gst_structure_remove_field (s, "stream-format");
+      gst_structure_remove_field (s, "parsed");
     }
 
     res =
         gst_caps_intersect_full (peercaps,
-        gst_pad_get_pad_template_caps (GST_BASE_PARSE_SRC_PAD (parse)),
+        gst_pad_get_pad_template_caps (GST_BASE_PARSE_SINK_PAD (parse)),
         GST_CAPS_INTERSECT_FIRST);
     gst_caps_unref (peercaps);
   } else {
     res =
-        gst_caps_copy (gst_pad_get_pad_template_caps (GST_BASE_PARSE_SRC_PAD
+        gst_caps_copy (gst_pad_get_pad_template_caps (GST_BASE_PARSE_SINK_PAD
             (parse)));
   }
 
