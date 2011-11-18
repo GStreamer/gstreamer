@@ -539,16 +539,16 @@ gst_h264_parse_collect_nal (GstH264Parse * h264parse, const guint8 * data,
   GstH264NalUnitType nal_type = nalu->type;
   GstH264NalUnit nnalu;
 
+  if (h264parse->align == GST_H264_PARSE_ALIGN_NAL) {
+    return TRUE;
+  }
+
   GST_DEBUG_OBJECT (h264parse, "parsing collected nal");
   parse_res = gst_h264_parser_identify_nalu (h264parse->nalparser, data,
       nalu->offset + nalu->size, size, &nnalu);
 
   if (parse_res == GST_H264_PARSER_ERROR)
     return FALSE;
-
-  if (h264parse->align == GST_H264_PARSE_ALIGN_NAL) {
-    return TRUE;
-  }
 
   /* determine if AU complete */
   GST_LOG_OBJECT (h264parse, "nal type: %d", nal_type);
