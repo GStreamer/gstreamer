@@ -423,7 +423,7 @@ gst_opus_enc_create_id_buffer (GstOpusEnc * enc)
   gst_byte_writer_init (&bw);
 
   /* See http://wiki.xiph.org/OggOpus */
-  gst_byte_writer_put_string_utf8 (&bw, "OpusHead");
+  gst_byte_writer_put_data (&bw, (const guint8 *) "OpusHead", 8);
   gst_byte_writer_put_uint8 (&bw, 0);   /* version number */
   gst_byte_writer_put_uint8 (&bw, enc->n_channels);
   gst_byte_writer_put_uint16_le (&bw, 0);       /* pre-skip *//* TODO: endianness ? */
