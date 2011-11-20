@@ -137,35 +137,59 @@ gst_opus_parse_check_valid_frame (GstBaseParse * base,
   guint32 packet_size;
   int ret = FALSE;
   int channels, bandwidth;
+  const unsigned char *frames[48];
+  unsigned char toc;
+  short frame_sizes[48];
+  int payload_offset;
+  int nframes;
+  int packet_offset = 0;
 
   parse = GST_OPUS_PARSE (base);
 
   data = GST_BUFFER_DATA (frame->buffer);
   size = GST_BUFFER_SIZE (frame->buffer);
   GST_DEBUG_OBJECT (parse, "Checking for frame, %u bytes in buffer", size);
-  if (size < 4) {
-    GST_DEBUG_OBJECT (parse, "Too small");
-    goto beach;
-  }
-  packet_size = GST_READ_UINT32_BE (data);
-  GST_DEBUG_OBJECT (parse, "Packet size: %u bytes", packet_size);
-  if (packet_size > MAX_PAYLOAD_BYTES) {
-    GST_DEBUG_OBJECT (parse, "Too large");
-    goto beach;
-  }
-  if (packet_size > size - 4) {
-    GST_DEBUG_OBJECT (parse, "Truncated");
-    goto beach;
+
+  /* First, check if there's an Opus packet there */
+  nframes =
+      opus_packet_parse (data, size, &toc, frames, frame_sizes,
+      &payload_offset);
+  if (nframes < 0) {
+    /* Then, check for the test vector framing */
+    GST_DEBUG_OBJECT (parse,
+        "No Opus packet found, trying test vector framing");
+    if (size < 4) {
+      GST_DEBUG_OBJECT (parse, "Too small");
+      goto beach;
+    }
+    packet_size = GST_READ_UINT32_BE (data);
+    GST_DEBUG_OBJECT (parse, "Packet size: %u bytes", packet_size);
+    if (packet_size > MAX_PAYLOAD_BYTES) {
+      GST_DEBUG_OBJECT (parse, "Too large");
+      goto beach;
+    }
+    if (packet_size > size - 4) {
+      GST_DEBUG_OBJECT (parse, "Truncated");
+      goto beach;
+    }
+    nframes =
+        opus_packet_parse (data + 8, packet_size, &toc, frames, frame_sizes,
+        &payload_offset);
+    if (nframes < 0) {
+      GST_DEBUG_OBJECT (parse, "No test vector framing either");
+      goto beach;
+    }
+
+    packet_offset = 8;
+    data += packet_offset;
   }
 
-  channels = opus_packet_get_nb_channels (data + 8);
-  bandwidth = opus_packet_get_bandwidth (data + 8);
+  channels = opus_packet_get_nb_channels (data);
+  bandwidth = opus_packet_get_bandwidth (data);
   if (channels < 0 || bandwidth < 0) {
     GST_DEBUG_OBJECT (parse, "It looked like a packet, but it is not");
     goto beach;
   }
-
-  GST_DEBUG_OBJECT (parse, "Got Opus packet, %d bytes");
 
   if (!parse->header_sent) {
     GstCaps *caps;
@@ -180,8 +204,11 @@ gst_opus_parse_check_valid_frame (GstBaseParse * base,
     parse->header_sent = TRUE;
   }
 
-  *skip = 8;
-  *frame_size = packet_size;
+  *skip = packet_offset;
+  *frame_size = payload_offset;
+
+  GST_DEBUG_OBJECT (parse, "Got Opus packet at offset %d, %d bytes", *skip,
+      *frame_size);
   ret = TRUE;
 
 beach:
