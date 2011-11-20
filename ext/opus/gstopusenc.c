@@ -1,6 +1,7 @@
 /* GStreamer Opus Encoder
  * Copyright (C) <1999> Erik Walthinsen <omega@cse.ogi.edu>
  * Copyright (C) <2008> Sebastian Dröge <sebastian.droege@collabora.co.uk>
+ * Copyright (C) <2011> Vincent Penquerc'h <vincent.penquerch@collabora.co.uk>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -46,9 +47,8 @@
 #include <opus/opus.h>
 
 #include <gst/gsttagsetter.h>
-#include <gst/tag/tag.h>
-#include <gst/base/gstbytewriter.h>
 #include <gst/audio/audio.h>
+#include "gstopusheader.h"
 #include "gstopusenc.h"
 
 GST_DEBUG_CATEGORY_STATIC (opusenc_debug);
@@ -414,61 +414,6 @@ gst_opus_enc_set_format (GstAudioEncoder * benc, GstAudioInfo * info)
   return TRUE;
 }
 
-static GstBuffer *
-gst_opus_enc_create_id_buffer (GstOpusEnc * enc)
-{
-  GstBuffer *buffer;
-  GstByteWriter bw;
-
-  gst_byte_writer_init (&bw);
-
-  /* See http://wiki.xiph.org/OggOpus */
-  gst_byte_writer_put_data (&bw, (const guint8 *) "OpusHead", 8);
-  gst_byte_writer_put_uint8 (&bw, 0);   /* version number */
-  gst_byte_writer_put_uint8 (&bw, enc->n_channels);
-  gst_byte_writer_put_uint16_le (&bw, 0);       /* pre-skip *//* TODO: endianness ? */
-  gst_byte_writer_put_uint32_le (&bw, enc->sample_rate);
-  gst_byte_writer_put_uint16_le (&bw, 0);       /* output gain *//* TODO: endianness ? */
-  gst_byte_writer_put_uint8 (&bw, 0);   /* channel mapping *//* TODO: what is this ? */
-
-  buffer = gst_byte_writer_reset_and_get_buffer (&bw);
-
-  GST_BUFFER_OFFSET (buffer) = 0;
-  GST_BUFFER_OFFSET_END (buffer) = 0;
-
-  return buffer;
-}
-
-static GstBuffer *
-gst_opus_enc_create_metadata_buffer (GstOpusEnc * enc)
-{
-  const GstTagList *tags;
-  GstTagList *empty_tags = NULL;
-  GstBuffer *comments = NULL;
-
-  tags = gst_tag_setter_get_tag_list (GST_TAG_SETTER (enc));
-
-  GST_DEBUG_OBJECT (enc, "tags = %" GST_PTR_FORMAT, tags);
-
-  if (tags == NULL) {
-    /* FIXME: better fix chain of callers to not write metadata at all,
-     * if there is none */
-    empty_tags = gst_tag_list_new ();
-    tags = empty_tags;
-  }
-  comments =
-      gst_tag_list_to_vorbiscomment_buffer (tags, (const guint8 *) "OpusTags",
-      8, "Encoded with GStreamer Opusenc");
-
-  GST_BUFFER_OFFSET (comments) = 0;
-  GST_BUFFER_OFFSET_END (comments) = 0;
-
-  if (empty_tags)
-    gst_tag_list_free (empty_tags);
-
-  return comments;
-}
-
 static gboolean
 gst_opus_enc_setup (GstOpusEnc * enc)
 {
@@ -644,63 +589,6 @@ done:
   return ret;
 }
 
-/*
- * (really really) FIXME: move into core (dixit tpm)
- */
-/**
- * _gst_caps_set_buffer_array:
- * @caps: a #GstCaps
- * @field: field in caps to set
- * @buf: header buffers
- *
- * Adds given buffers to an array of buffers set as the given @field
- * on the given @caps.  List of buffer arguments must be NULL-terminated.
- *
- * Returns: input caps with a streamheader field added, or NULL if some error
- */
-static GstCaps *
-_gst_caps_set_buffer_array (GstCaps * caps, const gchar * field,
-    GstBuffer * buf, ...)
-{
-  GstStructure *structure = NULL;
-  va_list va;
-  GValue array = { 0 };
-  GValue value = { 0 };
-
-  g_return_val_if_fail (caps != NULL, NULL);
-  g_return_val_if_fail (gst_caps_is_fixed (caps), NULL);
-  g_return_val_if_fail (field != NULL, NULL);
-
-  caps = gst_caps_make_writable (caps);
-  structure = gst_caps_get_structure (caps, 0);
-
-  g_value_init (&array, GST_TYPE_ARRAY);
-
-  va_start (va, buf);
-  /* put buffers in a fixed list */
-  while (buf) {
-    g_assert (gst_buffer_is_writable (buf));
-
-    /* mark buffer */
-    GST_BUFFER_FLAG_SET (buf, GST_BUFFER_FLAG_IN_CAPS);
-
-    g_value_init (&value, GST_TYPE_BUFFER);
-    buf = gst_buffer_copy (buf);
-    GST_BUFFER_FLAG_SET (buf, GST_BUFFER_FLAG_IN_CAPS);
-    gst_value_set_buffer (&value, buf);
-    gst_buffer_unref (buf);
-    gst_value_array_append_value (&array, &value);
-    g_value_unset (&value);
-
-    buf = va_arg (va, GstBuffer *);
-  }
-
-  gst_structure_set_value (structure, field, &array);
-  g_value_unset (&array);
-
-  return caps;
-}
-
 static GstFlowReturn
 gst_opus_enc_handle_frame (GstAudioEncoder * benc, GstBuffer * buf)
 {
@@ -711,32 +599,20 @@ gst_opus_enc_handle_frame (GstAudioEncoder * benc, GstBuffer * buf)
   GST_DEBUG_OBJECT (enc, "handle_frame");
 
   if (!enc->header_sent) {
-    /* Opus streams in Ogg begin with two headers; the initial header (with
-       most of the codec setup parameters) which is mandated by the Ogg
-       bitstream spec.  The second header holds any comment fields. */
-    GstBuffer *buf1, *buf2;
     GstCaps *caps;
 
-    /* create header buffers */
-    buf1 = gst_opus_enc_create_id_buffer (enc);
-    buf2 = gst_opus_enc_create_metadata_buffer (enc);
+    g_slist_foreach (enc->headers, (GFunc) gst_buffer_unref, NULL);
+    enc->headers = NULL;
 
-    /* mark and put on caps */
-    caps = gst_caps_from_string ("audio/x-opus");
-    caps = _gst_caps_set_buffer_array (caps, "streamheader", buf1, buf2, NULL);
+    gst_opus_header_create_caps (&caps, &enc->headers, enc->n_channels,
+        enc->sample_rate, gst_tag_setter_get_tag_list (GST_TAG_SETTER (enc)));
+
 
     /* negotiate with these caps */
     GST_DEBUG_OBJECT (enc, "here are the caps: %" GST_PTR_FORMAT, caps);
 
     gst_pad_set_caps (GST_AUDIO_ENCODER_SRC_PAD (enc), caps);
 
-    /* push out buffers */
-    /* store buffers for later pre_push sending */
-    g_slist_foreach (enc->headers, (GFunc) gst_buffer_unref, NULL);
-    enc->headers = NULL;
-    GST_DEBUG_OBJECT (enc, "storing header buffers");
-    enc->headers = g_slist_prepend (enc->headers, buf2);
-    enc->headers = g_slist_prepend (enc->headers, buf1);
     enc->header_sent = TRUE;
   }
 

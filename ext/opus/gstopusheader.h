@@ -18,42 +18,15 @@
  * Boston, MA 02111-1307, USA.
  */
 
-#ifndef __GST_OPUS_PARSE_H__
-#define __GST_OPUS_PARSE_H__
+#ifndef __GST_OPUS_HEADER_H__
+#define __GST_OPUS_HEADER_H__
 
 #include <gst/gst.h>
-#include <gst/base/gstbaseparse.h>
 
 G_BEGIN_DECLS
 
-#define GST_TYPE_OPUS_PARSE \
-  (gst_opus_parse_get_type())
-#define GST_OPUS_PARSE(obj) \
-  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_OPUS_PARSE,GstOpusParse))
-#define GST_OPUS_PARSE_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_OPUS_PARSE,GstOpusParseClass))
-#define GST_IS_OPUS_PARSE(obj) \
-  (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_OPUS_PARSE))
-#define GST_IS_OPUS_PARSE_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_OPUS_PARSE))
-
-typedef struct _GstOpusParse GstOpusParse;
-typedef struct _GstOpusParseClass GstOpusParseClass;
-
-struct _GstOpusParse {
-  GstBaseParse       element;
-
-  gboolean header_sent;
-  GSList *headers;
-  GstClockTime next_ts;
-};
-
-struct _GstOpusParseClass {
-  GstBaseParseClass parent_class;
-};
-
-GType gst_opus_parse_get_type (void);
+extern void gst_opus_header_create_caps (GstCaps **caps, GSList **headers, gint nchannels, gint sample_rate, const GstTagList *tags);
 
 G_END_DECLS
 
-#endif /* __GST_OPUS_PARSE_H__ */
+#endif /* __GST_OPUS_HEADER_H__ */
