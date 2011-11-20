@@ -165,8 +165,6 @@ static gboolean gst_opus_enc_set_format (GstAudioEncoder * benc,
     GstAudioInfo * info);
 static GstFlowReturn gst_opus_enc_handle_frame (GstAudioEncoder * benc,
     GstBuffer * buf);
-static GstFlowReturn gst_opus_enc_pre_push (GstAudioEncoder * benc,
-    GstBuffer ** buffer);
 static gint64 gst_opus_enc_get_latency (GstOpusEnc * enc);
 
 static GstFlowReturn gst_opus_enc_encode (GstOpusEnc * enc, GstBuffer * buffer);
@@ -225,7 +223,6 @@ gst_opus_enc_class_init (GstOpusEncClass * klass)
   base_class->stop = GST_DEBUG_FUNCPTR (gst_opus_enc_stop);
   base_class->set_format = GST_DEBUG_FUNCPTR (gst_opus_enc_set_format);
   base_class->handle_frame = GST_DEBUG_FUNCPTR (gst_opus_enc_handle_frame);
-  base_class->pre_push = GST_DEBUG_FUNCPTR (gst_opus_enc_pre_push);
   base_class->event = GST_DEBUG_FUNCPTR (gst_opus_enc_sink_event);
 
   g_object_class_install_property (gobject_class, PROP_AUDIO,
@@ -475,36 +472,6 @@ gst_opus_enc_sink_event (GstAudioEncoder * benc, GstEvent * event)
   }
 
   return FALSE;
-}
-
-static GstFlowReturn
-gst_opus_enc_pre_push (GstAudioEncoder * benc, GstBuffer ** buffer)
-{
-  GstFlowReturn ret = GST_FLOW_OK;
-  GstOpusEnc *enc;
-
-  enc = GST_OPUS_ENC (benc);
-
-  /* FIXME 0.11 ? get rid of this special ogg stuff and have it
-   * put and use 'codec data' in caps like anything else,
-   * with all the usual out-of-band advantage etc */
-  if (G_UNLIKELY (enc->headers)) {
-    GSList *header = enc->headers;
-
-    /* try to push all of these, if we lose one, might as well lose all */
-    while (header) {
-      if (ret == GST_FLOW_OK)
-        ret = gst_pad_push (GST_AUDIO_ENCODER_SRC_PAD (enc), header->data);
-      else
-        gst_pad_push (GST_AUDIO_ENCODER_SRC_PAD (enc), header->data);
-      header = g_slist_next (header);
-    }
-
-    g_slist_free (enc->headers);
-    enc->headers = NULL;
-  }
-
-  return ret;
 }
 
 static GstFlowReturn
