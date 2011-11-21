@@ -77,10 +77,8 @@ static gboolean gst_real_audio_demux_src_query (GstPad * pad,
 static void gst_real_audio_demux_loop (GstRealAudioDemux * demux);
 static gboolean gst_real_audio_demux_sink_activate (GstPad * sinkpad,
     GstObject * parent);
-static gboolean gst_real_audio_demux_sink_activate_push (GstPad * sinkpad,
-    GstObject * parent, gboolean active);
-static gboolean gst_real_audio_demux_sink_activate_pull (GstPad * sinkpad,
-    GstObject * parent, gboolean active);
+static gboolean gst_real_audio_demux_sink_activate_mode (GstPad * sinkpad,
+    GstObject * parent, GstPadMode mode, gboolean active);
 
 static void
 gst_real_audio_demux_finalize (GObject * obj)
@@ -169,10 +167,8 @@ gst_real_audio_demux_init (GstRealAudioDemux * demux)
       GST_DEBUG_FUNCPTR (gst_real_audio_demux_sink_event));
   gst_pad_set_activate_function (demux->sinkpad,
       GST_DEBUG_FUNCPTR (gst_real_audio_demux_sink_activate));
-  gst_pad_set_activatepull_function (demux->sinkpad,
-      GST_DEBUG_FUNCPTR (gst_real_audio_demux_sink_activate_pull));
-  gst_pad_set_activatepush_function (demux->sinkpad,
-      GST_DEBUG_FUNCPTR (gst_real_audio_demux_sink_activate_push));
+  gst_pad_set_activatemode_function (demux->sinkpad,
+      GST_DEBUG_FUNCPTR (gst_real_audio_demux_sink_activate_mode));
 
   gst_element_add_pad (GST_ELEMENT (demux), demux->sinkpad);
 
@@ -200,45 +196,45 @@ gst_real_audio_demux_sink_activate (GstPad * sinkpad, GstObject * parent)
     goto activate_push;
 
   GST_DEBUG_OBJECT (sinkpad, "activating pull");
-  return gst_pad_activate_pull (sinkpad, TRUE);
+  return gst_pad_activate_mode (sinkpad, GST_PAD_MODE_PULL, TRUE);
 
 activate_push:
   {
     GST_DEBUG_OBJECT (sinkpad, "activating push");
-    return gst_pad_activate_push (sinkpad, TRUE);
+    return gst_pad_activate_mode (sinkpad, GST_PAD_MODE_PUSH, TRUE);
   }
 }
 
 static gboolean
-gst_real_audio_demux_sink_activate_push (GstPad * sinkpad, GstObject * parent,
-    gboolean active)
+gst_real_audio_demux_sink_activate_mode (GstPad * sinkpad, GstObject * parent,
+    GstPadMode mode, gboolean active)
 {
+  gboolean res;
   GstRealAudioDemux *demux;
 
   demux = GST_REAL_AUDIO_DEMUX (parent);
 
-  demux->seekable = FALSE;
+  switch (mode) {
+    case GST_PAD_MODE_PUSH:
+      demux->seekable = FALSE;
+      res = TRUE;
+      break;
+    case GST_PAD_MODE_PULL:
+      if (active) {
+        demux->seekable = TRUE;
 
-  return TRUE;
-}
-
-static gboolean
-gst_real_audio_demux_sink_activate_pull (GstPad * sinkpad, GstObject * parent,
-    gboolean active)
-{
-  GstRealAudioDemux *demux;
-
-  demux = GST_REAL_AUDIO_DEMUX (parent);
-
-  if (active) {
-    demux->seekable = TRUE;
-
-    return gst_pad_start_task (sinkpad,
-        (GstTaskFunction) gst_real_audio_demux_loop, demux);
-  } else {
-    demux->seekable = FALSE;
-    return gst_pad_stop_task (sinkpad);
+        res = gst_pad_start_task (sinkpad,
+            (GstTaskFunction) gst_real_audio_demux_loop, demux);
+      } else {
+        demux->seekable = FALSE;
+        res = gst_pad_stop_task (sinkpad);
+      }
+      break;
+    default:
+      res = FALSE;
+      break;
   }
+  return res;
 }
 
 static GstFlowReturn

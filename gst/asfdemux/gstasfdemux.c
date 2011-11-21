@@ -92,10 +92,8 @@ static gboolean gst_asf_demux_sink_event (GstPad * pad, GstObject * parent,
 static GstFlowReturn gst_asf_demux_process_object (GstASFDemux * demux,
     guint8 ** p_data, guint64 * p_size);
 static gboolean gst_asf_demux_activate (GstPad * sinkpad, GstObject * parent);
-static gboolean gst_asf_demux_activate_push (GstPad * sinkpad,
-    GstObject * parent, gboolean active);
-static gboolean gst_asf_demux_activate_pull (GstPad * sinkpad,
-    GstObject * parent, gboolean active);
+static gboolean gst_asf_demux_activate_mode (GstPad * sinkpad,
+    GstObject * parent, GstPadMode mode, gboolean active);
 static void gst_asf_demux_loop (GstASFDemux * demux);
 static void
 gst_asf_demux_process_queued_extended_stream_objects (GstASFDemux * demux);
@@ -281,10 +279,8 @@ gst_asf_demux_init (GstASFDemux * demux)
       GST_DEBUG_FUNCPTR (gst_asf_demux_sink_event));
   gst_pad_set_activate_function (demux->sinkpad,
       GST_DEBUG_FUNCPTR (gst_asf_demux_activate));
-  gst_pad_set_activatepull_function (demux->sinkpad,
-      GST_DEBUG_FUNCPTR (gst_asf_demux_activate_pull));
-  gst_pad_set_activatepush_function (demux->sinkpad,
-      GST_DEBUG_FUNCPTR (gst_asf_demux_activate_push));
+  gst_pad_set_activatemode_function (demux->sinkpad,
+      GST_DEBUG_FUNCPTR (gst_asf_demux_activate_mode));
   gst_element_add_pad (GST_ELEMENT (demux), demux->sinkpad);
 
   /* set initial state */
@@ -311,47 +307,47 @@ gst_asf_demux_activate (GstPad * sinkpad, GstObject * parent)
     goto activate_push;
 
   GST_DEBUG_OBJECT (sinkpad, "activating pull");
-  return gst_pad_activate_pull (sinkpad, TRUE);
+  return gst_pad_activate_mode (sinkpad, GST_PAD_MODE_PULL, TRUE);
 
 activate_push:
   {
     GST_DEBUG_OBJECT (sinkpad, "activating push");
-    return gst_pad_activate_push (sinkpad, TRUE);
+    return gst_pad_activate_mode (sinkpad, GST_PAD_MODE_PUSH, TRUE);
   }
 }
 
 static gboolean
-gst_asf_demux_activate_push (GstPad * sinkpad, GstObject * parent,
-    gboolean active)
+gst_asf_demux_activate_mode (GstPad * sinkpad, GstObject * parent,
+    GstPadMode mode, gboolean active)
 {
+  gboolean res;
   GstASFDemux *demux;
 
   demux = GST_ASF_DEMUX (parent);
 
-  demux->state = GST_ASF_DEMUX_STATE_HEADER;
-  demux->streaming = TRUE;
+  switch (mode) {
+    case GST_PAD_MODE_PUSH:
+      demux->state = GST_ASF_DEMUX_STATE_HEADER;
+      demux->streaming = TRUE;
+      res = TRUE;
+      break;
+    case GST_PAD_MODE_PULL:
+      if (active) {
+        demux->state = GST_ASF_DEMUX_STATE_HEADER;
+        demux->streaming = FALSE;
 
-  return TRUE;
-}
-
-static gboolean
-gst_asf_demux_activate_pull (GstPad * pad, GstObject * parent, gboolean active)
-{
-  GstASFDemux *demux;
-
-  demux = GST_ASF_DEMUX (parent);
-
-  if (active) {
-    demux->state = GST_ASF_DEMUX_STATE_HEADER;
-    demux->streaming = FALSE;
-
-    return gst_pad_start_task (pad, (GstTaskFunction) gst_asf_demux_loop,
-        demux);
-  } else {
-    return gst_pad_stop_task (pad);
+        res = gst_pad_start_task (sinkpad, (GstTaskFunction) gst_asf_demux_loop,
+            demux);
+      } else {
+        res = gst_pad_stop_task (sinkpad);
+      }
+      break;
+    default:
+      res = FALSE;
+      break;
   }
+  return res;
 }
-
 
 static gboolean
 gst_asf_demux_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)

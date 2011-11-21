@@ -139,10 +139,8 @@ static GstFlowReturn gst_rmdemux_chain (GstPad * pad, GstObject * parent,
 static void gst_rmdemux_loop (GstPad * pad);
 static gboolean gst_rmdemux_sink_activate (GstPad * sinkpad,
     GstObject * parent);
-static gboolean gst_rmdemux_sink_activate_push (GstPad * sinkpad,
-    GstObject * parent, gboolean active);
-static gboolean gst_rmdemux_sink_activate_pull (GstPad * sinkpad,
-    GstObject * parent, gboolean active);
+static gboolean gst_rmdemux_sink_activate_mode (GstPad * sinkpad,
+    GstObject * parent, GstPadMode mode, gboolean active);
 static gboolean gst_rmdemux_sink_event (GstPad * pad, GstObject * parent,
     GstEvent * event);
 static gboolean gst_rmdemux_src_event (GstPad * pad, GstObject * parent,
@@ -255,10 +253,8 @@ gst_rmdemux_init (GstRMDemux * rmdemux)
       GST_DEBUG_FUNCPTR (gst_rmdemux_chain));
   gst_pad_set_activate_function (rmdemux->sinkpad,
       GST_DEBUG_FUNCPTR (gst_rmdemux_sink_activate));
-  gst_pad_set_activatepull_function (rmdemux->sinkpad,
-      GST_DEBUG_FUNCPTR (gst_rmdemux_sink_activate_pull));
-  gst_pad_set_activatepush_function (rmdemux->sinkpad,
-      GST_DEBUG_FUNCPTR (gst_rmdemux_sink_activate_push));
+  gst_pad_set_activatemode_function (rmdemux->sinkpad,
+      GST_DEBUG_FUNCPTR (gst_rmdemux_sink_activate_mode));
 
   gst_element_add_pad (GST_ELEMENT (rmdemux), rmdemux->sinkpad);
 
@@ -746,7 +742,6 @@ gst_rmdemux_change_state (GstElement * element, GstStateChange transition)
 static gboolean
 gst_rmdemux_sink_activate (GstPad * sinkpad, GstObject * parent)
 {
-
   GstQuery *query;
   gboolean pull_mode;
 
@@ -764,56 +759,49 @@ gst_rmdemux_sink_activate (GstPad * sinkpad, GstObject * parent)
     goto activate_push;
 
   GST_DEBUG_OBJECT (sinkpad, "activating pull");
-  return gst_pad_activate_pull (sinkpad, TRUE);
+  return gst_pad_activate_mode (sinkpad, GST_PAD_MODE_PULL, TRUE);
 
 activate_push:
   {
     GST_DEBUG_OBJECT (sinkpad, "activating push");
-    return gst_pad_activate_push (sinkpad, TRUE);
+    return gst_pad_activate_mode (sinkpad, GST_PAD_MODE_PUSH, TRUE);
   }
 }
 
-/* this function gets called when we activate ourselves in push mode.
- * We cannot seek (ourselves) in the stream */
 static gboolean
-gst_rmdemux_sink_activate_push (GstPad * pad, GstObject * parent,
-    gboolean active)
+gst_rmdemux_sink_activate_mode (GstPad * sinkpad, GstObject * parent,
+    GstPadMode mode, gboolean active)
 {
-  GstRMDemux *rmdemux;
+  gboolean res;
+  GstRMDemux *demux;
 
-  rmdemux = GST_RMDEMUX (parent);
+  demux = GST_RMDEMUX (parent);
 
-  GST_DEBUG_OBJECT (rmdemux, "activate_push");
-
-  rmdemux->seekable = FALSE;
-
-  return TRUE;
-}
-
-/* this function gets called when we activate ourselves in pull mode.
- * We can perform  random access to the resource and we start a task
- * to start reading */
-static gboolean
-gst_rmdemux_sink_activate_pull (GstPad * pad, GstObject * parent,
-    gboolean active)
-{
-  GstRMDemux *rmdemux;
-
-  rmdemux = GST_RMDEMUX (parent);
-
-  GST_DEBUG_OBJECT (rmdemux, "activate_pull");
-
-  if (active) {
-    rmdemux->seekable = TRUE;
-    rmdemux->offset = 0;
-    rmdemux->loop_state = RMDEMUX_LOOP_STATE_HEADER;
-    rmdemux->data_offset = G_MAXUINT;
-
-    return gst_pad_start_task (pad, (GstTaskFunction) gst_rmdemux_loop, pad);
-  } else {
-    return gst_pad_stop_task (pad);
+  switch (mode) {
+    case GST_PAD_MODE_PUSH:
+      demux->seekable = FALSE;
+      res = TRUE;
+      break;
+    case GST_PAD_MODE_PULL:
+      if (active) {
+        demux->seekable = TRUE;
+        demux->offset = 0;
+        demux->loop_state = RMDEMUX_LOOP_STATE_HEADER;
+        demux->data_offset = G_MAXUINT;
+        res =
+            gst_pad_start_task (sinkpad, (GstTaskFunction) gst_rmdemux_loop,
+            sinkpad);
+      } else {
+        res = gst_pad_stop_task (sinkpad);
+      }
+      break;
+    default:
+      res = FALSE;
+      break;
   }
+  return res;
 }
+
 
 /* random access mode - just pass over to our chain function */
 static void

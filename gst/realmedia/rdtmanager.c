@@ -122,8 +122,8 @@ static void gst_rdt_manager_get_property (GObject * object,
 
 static gboolean gst_rdt_manager_query_src (GstPad * pad, GstObject * parent,
     GstQuery * query);
-static gboolean gst_rdt_manager_src_activate_push (GstPad * pad,
-    GstObject * parent, gboolean active);
+static gboolean gst_rdt_manager_src_activate_mode (GstPad * pad,
+    GstObject * parent, GstPadMode mode, gboolean active);
 
 static GstClock *gst_rdt_manager_provide_clock (GstElement * element);
 static GstStateChangeReturn gst_rdt_manager_change_state (GstElement * element,
@@ -301,8 +301,8 @@ activate_session (GstRDTManager * rdtmanager, GstRDTManagerSession * session,
 
   gst_pad_set_element_private (session->recv_rtp_src, session);
   gst_pad_set_query_function (session->recv_rtp_src, gst_rdt_manager_query_src);
-  gst_pad_set_activatepush_function (session->recv_rtp_src,
-      gst_rdt_manager_src_activate_push);
+  gst_pad_set_activatemode_function (session->recv_rtp_src,
+      gst_rdt_manager_src_activate_mode);
 
   gst_pad_set_active (session->recv_rtp_src, TRUE);
   gst_element_add_pad (GST_ELEMENT_CAST (rdtmanager), session->recv_rtp_src);
@@ -556,52 +556,60 @@ gst_rdt_manager_query_src (GstPad * pad, GstObject * parent, GstQuery * query)
 }
 
 static gboolean
-gst_rdt_manager_src_activate_push (GstPad * pad, GstObject * parent,
-    gboolean active)
+gst_rdt_manager_src_activate_mode (GstPad * pad, GstObject * parent,
+    GstPadMode mode, gboolean active)
 {
-  gboolean result = TRUE;
+  gboolean result;
   GstRDTManager *rdtmanager;
   GstRDTManagerSession *session;
 
   session = gst_pad_get_element_private (pad);
   rdtmanager = session->dec;
 
-  if (active) {
-    /* allow data processing */
-    JBUF_LOCK (session);
-    GST_DEBUG_OBJECT (rdtmanager, "Enabling pop on queue");
-    /* Mark as non flushing */
-    session->srcresult = GST_FLOW_OK;
-    gst_segment_init (&session->segment, GST_FORMAT_TIME);
-    session->last_popped_seqnum = -1;
-    session->last_out_time = -1;
-    session->next_seqnum = -1;
-    session->eos = FALSE;
-    JBUF_UNLOCK (session);
+  switch (mode) {
+    case GST_PAD_MODE_PUSH:
+      if (active) {
+        /* allow data processing */
+        JBUF_LOCK (session);
+        GST_DEBUG_OBJECT (rdtmanager, "Enabling pop on queue");
+        /* Mark as non flushing */
+        session->srcresult = GST_FLOW_OK;
+        gst_segment_init (&session->segment, GST_FORMAT_TIME);
+        session->last_popped_seqnum = -1;
+        session->last_out_time = -1;
+        session->next_seqnum = -1;
+        session->eos = FALSE;
+        JBUF_UNLOCK (session);
 
-    /* start pushing out buffers */
-    GST_DEBUG_OBJECT (rdtmanager, "Starting task on srcpad");
-    gst_pad_start_task (pad, (GstTaskFunction) gst_rdt_manager_loop, pad);
-  } else {
-    /* make sure all data processing stops ASAP */
-    JBUF_LOCK (session);
-    /* mark ourselves as flushing */
-    session->srcresult = GST_FLOW_WRONG_STATE;
-    GST_DEBUG_OBJECT (rdtmanager, "Disabling pop on queue");
-    /* this unblocks any waiting pops on the src pad task */
-    JBUF_SIGNAL (session);
-    /* unlock clock, we just unschedule, the entry will be released by
-     * the locking streaming thread. */
-    if (session->clock_id)
-      gst_clock_id_unschedule (session->clock_id);
-    JBUF_UNLOCK (session);
+        /* start pushing out buffers */
+        GST_DEBUG_OBJECT (rdtmanager, "Starting task on srcpad");
+        result =
+            gst_pad_start_task (pad, (GstTaskFunction) gst_rdt_manager_loop,
+            pad);
+      } else {
+        /* make sure all data processing stops ASAP */
+        JBUF_LOCK (session);
+        /* mark ourselves as flushing */
+        session->srcresult = GST_FLOW_WRONG_STATE;
+        GST_DEBUG_OBJECT (rdtmanager, "Disabling pop on queue");
+        /* this unblocks any waiting pops on the src pad task */
+        JBUF_SIGNAL (session);
+        /* unlock clock, we just unschedule, the entry will be released by
+         * the locking streaming thread. */
+        if (session->clock_id)
+          gst_clock_id_unschedule (session->clock_id);
+        JBUF_UNLOCK (session);
 
-    /* NOTE this will hardlock if the state change is called from the src pad
-     * task thread because we will _join() the thread. */
-    GST_DEBUG_OBJECT (rdtmanager, "Stopping task on srcpad");
-    result = gst_pad_stop_task (pad);
+        /* NOTE this will hardlock if the state change is called from the src pad
+         * task thread because we will _join() the thread. */
+        GST_DEBUG_OBJECT (rdtmanager, "Stopping task on srcpad");
+        result = gst_pad_stop_task (pad);
+      }
+      break;
+    default:
+      result = FALSE;
+      break;
   }
-
   return result;
 }
 
