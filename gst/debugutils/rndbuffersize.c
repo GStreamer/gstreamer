@@ -86,8 +86,8 @@ static void gst_rnd_buffer_size_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 
 static gboolean gst_rnd_buffer_size_activate (GstPad * pad, GstObject * parent);
-static gboolean gst_rnd_buffer_size_activate_pull (GstPad * pad,
-    GstObject * parent, gboolean active);
+static gboolean gst_rnd_buffer_size_activate_mode (GstPad * pad,
+    GstObject * parent, GstPadMode mode, gboolean active);
 static void gst_rnd_buffer_size_loop (GstRndBufferSize * self);
 static GstStateChangeReturn gst_rnd_buffer_size_change_state (GstElement *
     element, GstStateChange transition);
@@ -145,8 +145,8 @@ gst_rnd_buffer_size_init (GstRndBufferSize * self)
   self->sinkpad = gst_pad_new_from_static_template (&sink_template, "sink");
   gst_pad_set_activate_function (self->sinkpad,
       GST_DEBUG_FUNCPTR (gst_rnd_buffer_size_activate));
-  gst_pad_set_activatepull_function (self->sinkpad,
-      GST_DEBUG_FUNCPTR (gst_rnd_buffer_size_activate_pull));
+  gst_pad_set_activatemode_function (self->sinkpad,
+      GST_DEBUG_FUNCPTR (gst_rnd_buffer_size_activate_mode));
   gst_element_add_pad (GST_ELEMENT (self), self->sinkpad);
 
   self->srcpad = gst_pad_new_from_static_template (&src_template, "src");
@@ -234,7 +234,7 @@ gst_rnd_buffer_size_activate (GstPad * pad, GstObject * parent)
     goto no_pull;
 
   GST_DEBUG_OBJECT (pad, "activating pull");
-  return gst_pad_activate_pull (pad, TRUE);
+  return gst_pad_activate_mode (pad, GST_PAD_MODE_PULL, TRUE);
 
   /* ERRORS */
 no_pull:
@@ -246,19 +246,29 @@ no_pull:
 
 
 static gboolean
-gst_rnd_buffer_size_activate_pull (GstPad * pad, GstObject * parent,
-    gboolean active)
+gst_rnd_buffer_size_activate_mode (GstPad * pad, GstObject * parent,
+    GstPadMode mode, gboolean active)
 {
+  gboolean res;
   GstRndBufferSize *self = GST_RND_BUFFER_SIZE (parent);
 
-  if (active) {
-    GST_INFO_OBJECT (self, "starting pull");
-    return gst_pad_start_task (pad, (GstTaskFunction) gst_rnd_buffer_size_loop,
-        self);
-  } else {
-    GST_INFO_OBJECT (self, "stopping pull");
-    return gst_pad_stop_task (pad);
+  switch (mode) {
+    case GST_PAD_MODE_PULL:
+      if (active) {
+        GST_INFO_OBJECT (self, "starting pull");
+        res =
+            gst_pad_start_task (pad, (GstTaskFunction) gst_rnd_buffer_size_loop,
+            self);
+      } else {
+        GST_INFO_OBJECT (self, "stopping pull");
+        res = gst_pad_stop_task (pad);
+      }
+      break;
+    default:
+      res = FALSE;
+      break;
   }
+  return res;
 }
 
 

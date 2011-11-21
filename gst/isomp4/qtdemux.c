@@ -401,10 +401,8 @@ static GstIndex *gst_qtdemux_get_index (GstElement * element);
 static GstStateChangeReturn gst_qtdemux_change_state (GstElement * element,
     GstStateChange transition);
 static gboolean qtdemux_sink_activate (GstPad * sinkpad, GstObject * parent);
-static gboolean qtdemux_sink_activate_pull (GstPad * sinkpad,
-    GstObject * parent, gboolean active);
-static gboolean qtdemux_sink_activate_push (GstPad * sinkpad,
-    GstObject * parent, gboolean active);
+static gboolean qtdemux_sink_activate_mode (GstPad * sinkpad,
+    GstObject * parent, GstPadMode mode, gboolean active);
 
 static void gst_qtdemux_loop (GstPad * pad);
 static GstFlowReturn gst_qtdemux_chain (GstPad * sinkpad, GstObject * parent,
@@ -476,10 +474,8 @@ gst_qtdemux_init (GstQTDemux * qtdemux)
   qtdemux->sinkpad =
       gst_pad_new_from_static_template (&gst_qtdemux_sink_template, "sink");
   gst_pad_set_activate_function (qtdemux->sinkpad, qtdemux_sink_activate);
-  gst_pad_set_activatepull_function (qtdemux->sinkpad,
-      qtdemux_sink_activate_pull);
-  gst_pad_set_activatepush_function (qtdemux->sinkpad,
-      qtdemux_sink_activate_push);
+  gst_pad_set_activatemode_function (qtdemux->sinkpad,
+      qtdemux_sink_activate_mode);
   gst_pad_set_chain_function (qtdemux->sinkpad, gst_qtdemux_chain);
   gst_pad_set_event_function (qtdemux->sinkpad, gst_qtdemux_handle_sink_event);
   gst_element_add_pad (GST_ELEMENT_CAST (qtdemux), qtdemux->sinkpad);
@@ -4441,39 +4437,41 @@ qtdemux_sink_activate (GstPad * sinkpad, GstObject * parent)
     goto activate_push;
 
   GST_DEBUG_OBJECT (sinkpad, "activating pull");
-  return gst_pad_activate_pull (sinkpad, TRUE);
+  return gst_pad_activate_mode (sinkpad, GST_PAD_MODE_PULL, TRUE);
 
 activate_push:
   {
     GST_DEBUG_OBJECT (sinkpad, "activating push");
-    return gst_pad_activate_push (sinkpad, TRUE);
+    return gst_pad_activate_mode (sinkpad, GST_PAD_MODE_PUSH, TRUE);
   }
 }
 
 static gboolean
-qtdemux_sink_activate_pull (GstPad * sinkpad, GstObject * parent,
-    gboolean active)
+qtdemux_sink_activate_mode (GstPad * sinkpad, GstObject * parent,
+    GstPadMode mode, gboolean active)
 {
+  gboolean res;
   GstQTDemux *demux = GST_QTDEMUX (parent);
 
-  if (active) {
-    demux->pullbased = TRUE;
-    return gst_pad_start_task (sinkpad, (GstTaskFunction) gst_qtdemux_loop,
-        sinkpad);
-  } else {
-    return gst_pad_stop_task (sinkpad);
+  switch (mode) {
+    case GST_PAD_MODE_PUSH:
+      demux->pullbased = FALSE;
+      res = TRUE;
+      break;
+    case GST_PAD_MODE_PULL:
+      if (active) {
+        demux->pullbased = TRUE;
+        res = gst_pad_start_task (sinkpad, (GstTaskFunction) gst_qtdemux_loop,
+            sinkpad);
+      } else {
+        res = gst_pad_stop_task (sinkpad);
+      }
+      break;
+    default:
+      res = FALSE;
+      break;
   }
-}
-
-static gboolean
-qtdemux_sink_activate_push (GstPad * sinkpad, GstObject * parent,
-    gboolean active)
-{
-  GstQTDemux *demux = GST_QTDEMUX (parent);
-
-  demux->pullbased = FALSE;
-
-  return TRUE;
+  return res;
 }
 
 #ifdef HAVE_ZLIB

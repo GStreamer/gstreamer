@@ -101,10 +101,8 @@ static gboolean gst_avi_demux_handle_seek_push (GstAviDemux * avi, GstPad * pad,
 static void gst_avi_demux_loop (GstPad * pad);
 static gboolean gst_avi_demux_sink_activate (GstPad * sinkpad,
     GstObject * parent);
-static gboolean gst_avi_demux_sink_activate_pull (GstPad * sinkpad,
-    GstObject * parent, gboolean active);
-static gboolean gst_avi_demux_activate_push (GstPad * pad, GstObject * parent,
-    gboolean active);
+static gboolean gst_avi_demux_sink_activate_mode (GstPad * sinkpad,
+    GstObject * parent, GstPadMode mode, gboolean active);
 static GstFlowReturn gst_avi_demux_chain (GstPad * pad, GstObject * parent,
     GstBuffer * buf);
 
@@ -176,10 +174,8 @@ gst_avi_demux_init (GstAviDemux * avi)
   avi->sinkpad = gst_pad_new_from_static_template (&sink_templ, "sink");
   gst_pad_set_activate_function (avi->sinkpad,
       GST_DEBUG_FUNCPTR (gst_avi_demux_sink_activate));
-  gst_pad_set_activatepull_function (avi->sinkpad,
-      GST_DEBUG_FUNCPTR (gst_avi_demux_sink_activate_pull));
-  gst_pad_set_activatepush_function (avi->sinkpad,
-      GST_DEBUG_FUNCPTR (gst_avi_demux_activate_push));
+  gst_pad_set_activatemode_function (avi->sinkpad,
+      GST_DEBUG_FUNCPTR (gst_avi_demux_sink_activate_mode));
   gst_pad_set_chain_function (avi->sinkpad,
       GST_DEBUG_FUNCPTR (gst_avi_demux_chain));
   gst_pad_set_event_function (avi->sinkpad,
@@ -5286,55 +5282,46 @@ gst_avi_demux_sink_activate (GstPad * sinkpad, GstObject * parent)
     goto activate_push;
 
   GST_DEBUG_OBJECT (sinkpad, "activating pull");
-  return gst_pad_activate_pull (sinkpad, TRUE);
+  return gst_pad_activate_mode (sinkpad, GST_PAD_MODE_PULL, TRUE);
 
 activate_push:
   {
     GST_DEBUG_OBJECT (sinkpad, "activating push");
-    return gst_pad_activate_push (sinkpad, TRUE);
+    return gst_pad_activate_mode (sinkpad, GST_PAD_MODE_PUSH, TRUE);
   }
 }
 
 static gboolean
-gst_avi_demux_sink_activate_pull (GstPad * sinkpad, GstObject * parent,
-    gboolean active)
+gst_avi_demux_sink_activate_mode (GstPad * sinkpad, GstObject * parent,
+    GstPadMode mode, gboolean active)
 {
+  gboolean res;
   GstAviDemux *avi = GST_AVI_DEMUX (parent);
 
-  if (active) {
-    avi->streaming = FALSE;
-    return gst_pad_start_task (sinkpad, (GstTaskFunction) gst_avi_demux_loop,
-        sinkpad);
-  } else {
-    return gst_pad_stop_task (sinkpad);
+  switch (mode) {
+    case GST_PAD_MODE_PULL:
+      if (active) {
+        avi->streaming = FALSE;
+        res = gst_pad_start_task (sinkpad, (GstTaskFunction) gst_avi_demux_loop,
+            sinkpad);
+      } else {
+        res = gst_pad_stop_task (sinkpad);
+      }
+      break;
+    case GST_PAD_MODE_PUSH:
+      if (active) {
+        GST_DEBUG ("avi: activating push/chain function");
+        avi->streaming = TRUE;
+      } else {
+        GST_DEBUG ("avi: deactivating push/chain function");
+      }
+      res = TRUE;
+      break;
+    default:
+      res = FALSE;
+      break;
   }
-}
-
-static gboolean
-gst_avi_demux_activate_push (GstPad * pad, GstObject * parent, gboolean active)
-{
-  GstAviDemux *avi = GST_AVI_DEMUX (parent);
-
-  if (active) {
-    GST_DEBUG ("avi: activating push/chain function");
-    avi->streaming = TRUE;
-#if 0
-    /* create index for some push based seeking if not provided */
-    GST_OBJECT_LOCK (avi);
-    if (!avi->element_index) {
-      GST_DEBUG_OBJECT (avi, "creating index");
-      avi->element_index = gst_index_factory_make ("memindex");
-    }
-    GST_OBJECT_UNLOCK (avi);
-    /* object lock might be taken again */
-    gst_index_get_writer_id (avi->element_index, GST_OBJECT_CAST (avi),
-        &avi->index_id);
-#endif
-  } else {
-    GST_DEBUG ("avi: deactivating push/chain function");
-  }
-
-  return TRUE;
+  return res;
 }
 
 static void

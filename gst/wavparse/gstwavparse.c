@@ -65,8 +65,8 @@ static void gst_wavparse_dispose (GObject * object);
 
 static gboolean gst_wavparse_sink_activate (GstPad * sinkpad,
     GstObject * parent);
-static gboolean gst_wavparse_sink_activate_pull (GstPad * sinkpad,
-    GstObject * parent, gboolean active);
+static gboolean gst_wavparse_sink_activate_mode (GstPad * sinkpad,
+    GstObject * parent, GstPadMode mode, gboolean active);
 static gboolean gst_wavparse_send_event (GstElement * element,
     GstEvent * event);
 static GstStateChangeReturn gst_wavparse_change_state (GstElement * element,
@@ -192,8 +192,8 @@ gst_wavparse_init (GstWavParse * wavparse)
       gst_pad_new_from_static_template (&sink_template_factory, "sink");
   gst_pad_set_activate_function (wavparse->sinkpad,
       GST_DEBUG_FUNCPTR (gst_wavparse_sink_activate));
-  gst_pad_set_activatepull_function (wavparse->sinkpad,
-      GST_DEBUG_FUNCPTR (gst_wavparse_sink_activate_pull));
+  gst_pad_set_activatemode_function (wavparse->sinkpad,
+      GST_DEBUG_FUNCPTR (gst_wavparse_sink_activate_mode));
   gst_pad_set_chain_function (wavparse->sinkpad,
       GST_DEBUG_FUNCPTR (gst_wavparse_chain));
   gst_pad_set_event_function (wavparse->sinkpad,
@@ -2565,30 +2565,43 @@ gst_wavparse_sink_activate (GstPad * sinkpad, GstObject * parent)
 
   GST_DEBUG_OBJECT (sinkpad, "activating pull");
   wav->streaming = FALSE;
-  return gst_pad_activate_pull (sinkpad, TRUE);
+  return gst_pad_activate_mode (sinkpad, GST_PAD_MODE_PULL, TRUE);
 
 activate_push:
   {
     GST_DEBUG_OBJECT (sinkpad, "activating push");
     wav->streaming = TRUE;
     wav->adapter = gst_adapter_new ();
-    return gst_pad_activate_push (sinkpad, TRUE);
+    return gst_pad_activate_mode (sinkpad, GST_PAD_MODE_PUSH, TRUE);
   }
 }
 
 
 static gboolean
-gst_wavparse_sink_activate_pull (GstPad * sinkpad, GstObject * parent,
-    gboolean active)
+gst_wavparse_sink_activate_mode (GstPad * sinkpad, GstObject * parent,
+    GstPadMode mode, gboolean active)
 {
-  if (active) {
-    /* if we have a scheduler we can start the task */
-    return gst_pad_start_task (sinkpad, (GstTaskFunction) gst_wavparse_loop,
-        sinkpad);
-  } else {
-    return gst_pad_stop_task (sinkpad);
+  gboolean res;
+
+  switch (mode) {
+    case GST_PAD_MODE_PUSH:
+      res = TRUE;
+      break;
+    case GST_PAD_MODE_PULL:
+      if (active) {
+        /* if we have a scheduler we can start the task */
+        res = gst_pad_start_task (sinkpad, (GstTaskFunction) gst_wavparse_loop,
+            sinkpad);
+      } else {
+        res = gst_pad_stop_task (sinkpad);
+      }
+      break;
+    default:
+      res = FALSE;
+      break;
   }
-};
+  return res;
+}
 
 static GstStateChangeReturn
 gst_wavparse_change_state (GstElement * element, GstStateChange transition)

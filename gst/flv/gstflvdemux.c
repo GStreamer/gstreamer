@@ -2818,49 +2818,44 @@ gst_flv_demux_sink_activate (GstPad * sinkpad, GstObject * parent)
     goto activate_push;
 
   GST_DEBUG_OBJECT (sinkpad, "activating pull");
-  return gst_pad_activate_pull (sinkpad, TRUE);
+  return gst_pad_activate_mode (sinkpad, GST_PAD_MODE_PULL, TRUE);
 
 activate_push:
   {
     GST_DEBUG_OBJECT (sinkpad, "activating push");
-    return gst_pad_activate_push (sinkpad, TRUE);
+    return gst_pad_activate_mode (sinkpad, GST_PAD_MODE_PUSH, TRUE);
   }
 }
 
-/* This function gets called when we activate ourselves in push mode.
- * We cannot seek (ourselves) in the stream */
 static gboolean
-gst_flv_demux_sink_activate_push (GstPad * sinkpad, GstObject * parent,
-    gboolean active)
+gst_flv_demux_sink_activate_mode (GstPad * sinkpad, GstObject * parent,
+    GstPadMode mode, gboolean active)
 {
+  gboolean res;
   GstFlvDemux *demux;
 
   demux = GST_FLV_DEMUX (parent);
 
-  demux->random_access = FALSE;
-
-  return TRUE;
-}
-
-/* this function gets called when we activate ourselves in pull mode.
- * We can perform  random access to the resource and we start a task
- * to start reading */
-static gboolean
-gst_flv_demux_sink_activate_pull (GstPad * sinkpad, GstObject * parent,
-    gboolean active)
-{
-  GstFlvDemux *demux;
-
-  demux = GST_FLV_DEMUX (parent);
-
-  if (active) {
-    demux->random_access = TRUE;
-    return gst_pad_start_task (sinkpad, (GstTaskFunction) gst_flv_demux_loop,
-        sinkpad);
-  } else {
-    demux->random_access = FALSE;
-    return gst_pad_stop_task (sinkpad);
+  switch (mode) {
+    case GST_PAD_MODE_PUSH:
+      demux->random_access = FALSE;
+      res = TRUE;
+      break;
+    case GST_PAD_MODE_PULL:
+      if (active) {
+        demux->random_access = TRUE;
+        res = gst_pad_start_task (sinkpad, (GstTaskFunction) gst_flv_demux_loop,
+            sinkpad);
+      } else {
+        demux->random_access = FALSE;
+        res = gst_pad_stop_task (sinkpad);
+      }
+      break;
+    default:
+      res = FALSE;
+      break;
   }
+  return res;
 }
 
 static gboolean
@@ -3243,10 +3238,8 @@ gst_flv_demux_init (GstFlvDemux * demux)
       GST_DEBUG_FUNCPTR (gst_flv_demux_chain));
   gst_pad_set_activate_function (demux->sinkpad,
       GST_DEBUG_FUNCPTR (gst_flv_demux_sink_activate));
-  gst_pad_set_activatepull_function (demux->sinkpad,
-      GST_DEBUG_FUNCPTR (gst_flv_demux_sink_activate_pull));
-  gst_pad_set_activatepush_function (demux->sinkpad,
-      GST_DEBUG_FUNCPTR (gst_flv_demux_sink_activate_push));
+  gst_pad_set_activatemode_function (demux->sinkpad,
+      GST_DEBUG_FUNCPTR (gst_flv_demux_sink_activate_mode));
 
   gst_element_add_pad (GST_ELEMENT (demux), demux->sinkpad);
 
