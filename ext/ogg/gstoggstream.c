@@ -127,6 +127,10 @@ gst_ogg_stream_granule_to_time (GstOggStream * pad, gint64 granule)
   if (granule == 0 || pad->granulerate_n == 0 || pad->granulerate_d == 0)
     return 0;
 
+  granule += pad->granule_offset;
+  if (granule < 0)
+    return 0;
+
   return gst_util_uint64_scale (granule, GST_SECOND * pad->granulerate_d,
       pad->granulerate_n);
 }
@@ -1857,6 +1861,11 @@ setup_opus_mapper (GstOggStream * pad, ogg_packet * packet)
   pad->granulerate_d = 1;
   pad->granuleshift = 0;
   pad->n_header_packets = 2;
+
+  /* pre-skip is in samples at 48000 Hz, which matches granule one for one */
+  pad->granule_offset = -GST_READ_UINT16_LE (packet->packet + 10);
+  GST_INFO ("Opus has a pre-skip of %" G_GINT64_FORMAT " samples",
+      -pad->granule_offset);
 
   pad->caps = gst_caps_new_simple ("audio/x-opus", NULL);
 
