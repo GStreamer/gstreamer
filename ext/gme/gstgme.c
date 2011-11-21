@@ -48,9 +48,12 @@ GST_STATIC_PAD_TEMPLATE ("src", GST_PAD_SRC, GST_PAD_ALWAYS,
 #define gst_gme_dec_parent_class parent_class
 G_DEFINE_TYPE (GstGmeDec, gst_gme_dec, GST_TYPE_ELEMENT);
 
-static GstFlowReturn gst_gme_dec_chain (GstPad * pad, GstBuffer * buffer);
-static gboolean gst_gme_dec_sink_event (GstPad * pad, GstEvent * event);
-static gboolean gst_gme_dec_src_event (GstPad * pad, GstEvent * event);
+static GstFlowReturn gst_gme_dec_chain (GstPad * pad, GstObject * parent,
+    GstBuffer * buffer);
+static gboolean gst_gme_dec_sink_event (GstPad * pad, GstObject * parent,
+    GstEvent * event);
+static gboolean gst_gme_dec_src_event (GstPad * pad, GstObject * parent,
+    GstEvent * event);
 static gboolean gst_gme_dec_src_query (GstPad * pad, GstObject * parent,
     GstQuery * query);
 static GstStateChangeReturn gst_gme_dec_change_state (GstElement * element,
@@ -161,22 +164,20 @@ gst_gme_dec_dispose (GObject * object)
 }
 
 static GstFlowReturn
-gst_gme_dec_chain (GstPad * pad, GstBuffer * buffer)
+gst_gme_dec_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
 {
-  GstGmeDec *gme = GST_GME_DEC (gst_pad_get_parent (pad));
+  GstGmeDec *gme = GST_GME_DEC (parent);
 
   /* Accumulate GME data until end-of-stream, then commence playback. */
   gst_adapter_push (gme->adapter, buffer);
-
-  gst_object_unref (gme);
 
   return GST_FLOW_OK;
 }
 
 static gboolean
-gst_gme_dec_sink_event (GstPad * pad, GstEvent * event)
+gst_gme_dec_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
 {
-  GstGmeDec *gme = GST_GME_DEC (gst_pad_get_parent (pad));
+  GstGmeDec *gme = GST_GME_DEC (parent);
   gboolean result = TRUE;
   gboolean forward = FALSE;
 
@@ -199,15 +200,13 @@ gst_gme_dec_sink_event (GstPad * pad, GstEvent * event)
   else
     gst_event_unref (event);
 
-  gst_object_unref (gme);
-
   return result;
 }
 
 static gboolean
-gst_gme_dec_src_event (GstPad * pad, GstEvent * event)
+gst_gme_dec_src_event (GstPad * pad, GstObject * parent, GstEvent * event)
 {
-  GstGmeDec *gme = GST_GME_DEC (gst_pad_get_parent (pad));
+  GstGmeDec *gme = GST_GME_DEC (parent);
   gboolean result = FALSE;
 
   switch (GST_EVENT_TYPE (event)) {
@@ -296,8 +295,6 @@ gst_gme_dec_src_event (GstPad * pad, GstEvent * event)
       result = gst_pad_push_event (gme->sinkpad, event);
       break;
   }
-
-  gst_object_unref (gme);
 
   return result;
 }
