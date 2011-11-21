@@ -795,14 +795,14 @@ gst_audio_decoder_finish_frame (GstAudioDecoder * dec, GstBuffer * buf,
     frames--;
   }
 
+  if (G_UNLIKELY (!buf))
+    goto exit;
+
   /* lock on */
   if (G_UNLIKELY (!GST_CLOCK_TIME_IS_VALID (priv->base_ts))) {
     priv->base_ts = ts;
     GST_DEBUG_OBJECT (dec, "base_ts now %" GST_TIME_FORMAT, GST_TIME_ARGS (ts));
   }
-
-  if (G_UNLIKELY (!buf))
-    goto exit;
 
   /* slightly convoluted approach caters for perfect ts if subclass desires */
   if (GST_CLOCK_TIME_IS_VALID (ts)) {
