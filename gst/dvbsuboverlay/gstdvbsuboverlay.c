@@ -710,7 +710,8 @@ gst_dvbsub_overlay_process_text (GstDVBSubOverlay * overlay, GstBuffer * buffer,
       "Processing subtitles with fake PTS=%" G_GUINT64_FORMAT
       " which is a running time of %" GST_TIME_FORMAT,
       pts, GST_TIME_ARGS (pts));
-  GST_DEBUG_OBJECT (overlay, "Feeding %u bytes to libdvbsub", size);
+  GST_DEBUG_OBJECT (overlay, "Feeding %" G_GSIZE_FORMAT " bytes to libdvbsub",
+      size);
 
   data = gst_buffer_map (buffer, &size, NULL, GST_MAP_READ);
 
@@ -748,7 +749,8 @@ gst_dvbsub_overlay_chain_text (GstPad * pad, GstObject * parent,
   GstDVBSubOverlay *overlay = GST_DVBSUB_OVERLAY (parent);
   GstClockTime sub_running_time;
 
-  GST_INFO_OBJECT (overlay, "subpicture/x-dvb buffer with size %u",
+  GST_INFO_OBJECT (overlay,
+      "subpicture/x-dvb buffer with size %" G_GSIZE_FORMAT,
       gst_buffer_get_size (buffer));
 
   GST_LOG_OBJECT (overlay,

@@ -1322,7 +1322,7 @@ mpegts_packetizer_parse_nit (MpegTSPacketizer2 * packetizer,
   }
 
   if (data != end - 4) {
-    GST_WARNING ("PID %d invalid NIT parsed %d length %d",
+    GST_WARNING ("PID %d invalid NIT parsed %d length %" G_GSIZE_FORMAT,
         section->pid, (gint) (data - bufdata), size);
     goto error;
   }
@@ -1533,7 +1533,7 @@ mpegts_packetizer_parse_sdt (MpegTSPacketizer2 * packetizer,
   }
 
   if (data != end - 4) {
-    GST_WARNING ("PID %d invalid SDT parsed %d length %d",
+    GST_WARNING ("PID %d invalid SDT parsed %d length %" G_GSIZE_FORMAT,
         section->pid, (gint) (data - bufdata), size);
     goto error;
   }
@@ -1997,7 +1997,7 @@ mpegts_packetizer_parse_eit (MpegTSPacketizer2 * packetizer,
   }
 
   if (data != end - 4) {
-    GST_WARNING ("PID %d invalid EIT parsed %d length %d",
+    GST_WARNING ("PID %d invalid EIT parsed %d length %" G_GSIZE_FORMAT,
         section->pid, (gint) (data - bufdata), size);
     goto error;
   }
@@ -2172,7 +2172,7 @@ mpegts_packetizer_push (MpegTSPacketizer2 * packetizer, GstBuffer * buffer)
     packetizer->offset = GST_BUFFER_OFFSET (buffer);
   }
 
-  GST_DEBUG ("Pushing %u byte from offset %" G_GUINT64_FORMAT,
+  GST_DEBUG ("Pushing %" G_GSIZE_FORMAT " byte from offset %" G_GUINT64_FORMAT,
       gst_buffer_get_size (buffer), GST_BUFFER_OFFSET (buffer));
   gst_adapter_push (packetizer->adapter, buffer);
 }
@@ -2421,8 +2421,9 @@ mpegts_packetizer_push_section (MpegTSPacketizer2 * packetizer,
     if (stream->continuity_counter != CONTINUITY_UNSET) {
       GST_DEBUG
           ("PID %d table_id %d sub_table_extension %d payload_unit_start_indicator set but section "
-          "not complete (last_continuity: %d continuity: %d sec len %d buffer %d avail %d",
-          packet->pid, table_id, subtable_extension, stream->continuity_counter,
+          "not complete (last_continuity: %d continuity: %d sec len %d buffer %"
+          G_GSIZE_FORMAT " avail %" G_GSIZE_FORMAT, packet->pid, table_id,
+          subtable_extension, stream->continuity_counter,
           packet->continuity_counter, section_length,
           gst_buffer_get_size (sub_buf), stream->section_adapter->size);
       mpegts_packetizer_clear_section (packetizer, stream);

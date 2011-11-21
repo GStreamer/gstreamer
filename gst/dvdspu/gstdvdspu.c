@@ -829,8 +829,9 @@ submit_new_spu_packet (GstDVDSpu * dvdspu, GstBuffer * buf)
   GstClockTime run_ts = GST_CLOCK_TIME_NONE;
 
   GST_DEBUG_OBJECT (dvdspu,
-      "Complete subpicture buffer of %u bytes with TS %" GST_TIME_FORMAT,
-      gst_buffer_get_size (buf), GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buf)));
+      "Complete subpicture buffer of %" G_GSIZE_FORMAT " bytes with TS %"
+      GST_TIME_FORMAT, gst_buffer_get_size (buf),
+      GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buf)));
 
   /* Decide whether to pass this buffer through to the rendering code */
   ts = GST_BUFFER_TIMESTAMP (buf);
@@ -886,7 +887,7 @@ gst_dvd_spu_subpic_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
   g_return_val_if_fail (dvdspu != NULL, GST_FLOW_ERROR);
 
   GST_INFO_OBJECT (dvdspu, "Have subpicture buffer with timestamp %"
-      GST_TIME_FORMAT " and size %u",
+      GST_TIME_FORMAT " and size %" G_GSIZE_FORMAT,
       GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buf)), gst_buffer_get_size (buf));
 
   DVD_SPU_LOCK (dvdspu);
@@ -933,15 +934,15 @@ gst_dvd_spu_subpic_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
         } else if (packet_size < size) {
           /* Somehow we collected too much - something is wrong. Drop the
            * packet entirely and wait for a new one */
-          GST_DEBUG_OBJECT (dvdspu, "Discarding invalid SPU buffer of size %u",
-              size);
+          GST_DEBUG_OBJECT (dvdspu,
+              "Discarding invalid SPU buffer of size %" G_GSIZE_FORMAT, size);
 
           gst_buffer_unref (dvdspu->partial_spu);
           dvdspu->partial_spu = NULL;
         } else {
           GST_LOG_OBJECT (dvdspu,
-              "SPU buffer claims to be of size %u. Collected %u so far.",
-              packet_size, size);
+              "SPU buffer claims to be of size %u. Collected %" G_GSIZE_FORMAT
+              " so far.", packet_size, size);
         }
       }
       break;
@@ -985,7 +986,8 @@ gst_dvd_spu_subpic_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
         dvdspu->partial_spu = NULL;
       } else if (ptr == end) {
         GST_DEBUG_OBJECT (dvdspu,
-            "Have complete PGS packet of size %u. Enqueueing.", size);
+            "Have complete PGS packet of size %" G_GSIZE_FORMAT ". Enqueueing.",
+            size);
         submit_new_spu_packet (dvdspu, dvdspu->partial_spu);
         dvdspu->partial_spu = NULL;
       }

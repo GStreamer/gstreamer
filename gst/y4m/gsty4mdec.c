@@ -523,7 +523,7 @@ gst_y4m_dec_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
     len = strlen (header);
     if (n_avail < y4mdec->info.size + len + 1) {
       /* not enough data */
-      GST_DEBUG ("not enough data for frame %d < %d",
+      GST_DEBUG ("not enough data for frame %d < %" G_GSIZE_FORMAT,
           n_avail, y4mdec->info.size + len + 1);
       break;
     }

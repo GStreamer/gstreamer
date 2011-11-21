@@ -1151,7 +1151,7 @@ gst_base_video_decoder_flush_parse (GstBaseVideoDecoder * dec)
     GstBuffer *buf = GST_BUFFER_CAST (dec->queued->data);
 
     if (G_LIKELY (res == GST_FLOW_OK)) {
-      GST_DEBUG_OBJECT (dec, "pushing buffer %p of size %u, "
+      GST_DEBUG_OBJECT (dec, "pushing buffer %p of size %" G_GSIZE_FORMAT ", "
           "time %" GST_TIME_FORMAT ", dur %" GST_TIME_FORMAT, buf,
           gst_buffer_get_size (buf), GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buf)),
           GST_TIME_ARGS (GST_BUFFER_DURATION (buf)));
@@ -1194,7 +1194,7 @@ gst_base_video_decoder_chain_reverse (GstBaseVideoDecoder * dec,
   }
 
   if (G_LIKELY (buf)) {
-    GST_DEBUG_OBJECT (dec, "gathering buffer %p of size %u, "
+    GST_DEBUG_OBJECT (dec, "gathering buffer %p of size %" G_GSIZE_FORMAT ", "
         "time %" GST_TIME_FORMAT ", dur %" GST_TIME_FORMAT, buf,
         gst_buffer_get_size (buf), GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buf)),
         GST_TIME_ARGS (GST_BUFFER_DURATION (buf)));
@@ -1215,8 +1215,8 @@ gst_base_video_decoder_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
   base_video_decoder = GST_BASE_VIDEO_DECODER (parent);
 
   GST_LOG_OBJECT (base_video_decoder,
-      "chain %" GST_TIME_FORMAT " duration %" GST_TIME_FORMAT " size %d",
-      GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buf)),
+      "chain %" GST_TIME_FORMAT " duration %" GST_TIME_FORMAT " size %"
+      G_GSIZE_FORMAT "", GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buf)),
       GST_TIME_ARGS (GST_BUFFER_DURATION (buf)), gst_buffer_get_size (buf));
 
   GST_BASE_VIDEO_CODEC_STREAM_LOCK (base_video_decoder);
@@ -1374,7 +1374,8 @@ gst_base_video_decoder_finish_frame (GstBaseVideoDecoder * base_video_decoder,
   GST_BASE_VIDEO_CODEC_STREAM_LOCK (base_video_decoder);
 
 #ifndef GST_DISABLE_GST_DEBUG
-  GST_LOG_OBJECT (base_video_decoder, "n %d in %d out %d",
+  GST_LOG_OBJECT (base_video_decoder,
+      "n %d in %" G_GSIZE_FORMAT " out %" G_GSIZE_FORMAT,
       g_list_length (GST_BASE_VIDEO_CODEC (base_video_decoder)->frames),
       gst_adapter_available (base_video_decoder->input_adapter),
       gst_adapter_available (base_video_decoder->output_adapter));

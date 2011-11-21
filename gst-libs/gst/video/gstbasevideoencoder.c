@@ -715,7 +715,7 @@ gst_base_video_encoder_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
   GST_BASE_VIDEO_CODEC_STREAM_LOCK (base_video_encoder);
 
   GST_LOG_OBJECT (base_video_encoder,
-      "received buffer of size %d with ts %" GST_TIME_FORMAT
+      "received buffer of size %" G_GSIZE_FORMAT " with ts %" GST_TIME_FORMAT
       ", duration %" GST_TIME_FORMAT, gst_buffer_get_size (buf),
       GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buf)),
       GST_TIME_ARGS (GST_BUFFER_DURATION (buf)));

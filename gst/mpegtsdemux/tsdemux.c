@@ -2052,8 +2052,9 @@ gst_ts_demux_queue_data (GstTSDemux * demux, TSDemuxStream * stream,
   buf = packet->buffer;
   data = gst_buffer_map (buf, &size, 0, GST_MAP_READ);
 
-  GST_DEBUG ("Resizing buffer to %d (size:%d) (Was %d bytes long)",
-      packet->payload - data, packet->data_end - packet->payload, size);
+  GST_DEBUG ("Resizing buffer to %d (size:%d) (Was %" G_GSIZE_FORMAT
+      " bytes long)", (int) (packet->payload - data),
+      (int) (packet->data_end - packet->payload), size);
   gst_buffer_unmap (buf, data, size);
 
   gst_buffer_resize (buf, packet->payload - data,
@@ -2250,7 +2251,7 @@ gst_ts_demux_handle_packet (GstTSDemux * demux, TSDemuxStream * stream,
       packet->continuity_counter, packet->payload);
 
   if (section) {
-    GST_DEBUG ("section complete:%d, buffer size %d",
+    GST_DEBUG ("section complete:%d, buffer size %" G_GSIZE_FORMAT,
         section->complete, gst_buffer_get_size (section->buffer));
     gst_buffer_unref (packet->buffer);
     return res;
