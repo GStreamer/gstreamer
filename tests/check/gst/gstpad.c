@@ -88,6 +88,7 @@ GST_START_TEST (test_link_unlink_threaded)
   fail_if (sink == NULL);
 
   caps = gst_caps_from_string ("foo/bar");
+  gst_pad_set_active (src, TRUE);
   gst_pad_set_caps (src, caps);
   gst_pad_set_active (sink, TRUE);
   gst_pad_set_caps (sink, caps);
@@ -180,9 +181,10 @@ GST_START_TEST (test_get_allowed_caps)
   caps = gst_caps_from_string ("foo/bar");
 
   sink = gst_pad_new ("sink", GST_PAD_SINK);
+  gst_pad_set_active (src, TRUE);
   fail_unless (gst_pad_set_caps (src, caps) == TRUE);
   fail_if (gst_pad_set_caps (sink, caps) == TRUE);
-  ASSERT_CAPS_REFCOUNT (caps, "caps", 3);
+  ASSERT_CAPS_REFCOUNT (caps, "caps", 2);
 
   gst_pad_set_active (sink, TRUE);
   fail_unless (gst_pad_set_caps (sink, caps) == TRUE);
@@ -269,14 +271,12 @@ GST_START_TEST (test_sticky_caps_unlinked)
   ASSERT_CAPS_REFCOUNT (caps, "caps", 1);
 
   event = gst_event_new_caps (caps);
-  /* Pad is still inactive but the event gets stored sticky, so push is
-   * successful: */
+  gst_pad_set_active (src, TRUE);
   fail_unless (gst_pad_push_event (src, event) == TRUE);
   fail_unless (event_caps == NULL);
 
   /* Linking and activating will not forward the sticky event yet... */
   fail_unless (GST_PAD_LINK_SUCCESSFUL (gst_pad_link (src, sink)));
-  gst_pad_set_active (src, TRUE);
   gst_pad_set_active (sink, TRUE);
   fail_unless (event_caps == NULL);
 
@@ -328,13 +328,11 @@ GST_START_TEST (test_sticky_caps_flushing)
   ASSERT_CAPS_REFCOUNT (caps, "caps", 1);
 
   event = gst_event_new_caps (caps);
-  /* Pads are still inactive but event gets stored sticky, so push is
-   * successful: */
+  gst_pad_set_active (src, TRUE);
   fail_unless (gst_pad_push_event (src, event) == TRUE);
   fail_unless (event_caps == NULL);
 
   /* Activating will not forward the sticky event yet... */
-  gst_pad_set_active (src, TRUE);
   gst_pad_set_active (sink, TRUE);
   fail_unless (event_caps == NULL);
 
@@ -415,9 +413,6 @@ GST_START_TEST (test_push_unlinked)
 
   caps = gst_caps_from_string ("foo/bar");
 
-  gst_pad_set_caps (src, caps);
-  ASSERT_CAPS_REFCOUNT (caps, "caps", 2);
-
   /* pushing on an inactive pad will return wrong state */
   buffer = gst_buffer_new ();
   gst_buffer_ref (buffer);
@@ -426,6 +421,8 @@ GST_START_TEST (test_push_unlinked)
   gst_buffer_unref (buffer);
 
   gst_pad_set_active (src, TRUE);
+  gst_pad_set_caps (src, caps);
+  ASSERT_CAPS_REFCOUNT (caps, "caps", 2);
 
   /* pushing on an unlinked pad will drop the buffer */
   buffer = gst_buffer_new ();
@@ -489,6 +486,7 @@ GST_START_TEST (test_push_linked)
   /* one for me */
   ASSERT_CAPS_REFCOUNT (caps, "caps", 1);
 
+  gst_pad_set_active (src, TRUE);
   gst_pad_set_caps (src, caps);
   gst_pad_set_active (sink, TRUE);
   gst_pad_set_caps (sink, caps);
@@ -507,10 +505,6 @@ GST_START_TEST (test_push_linked)
   gst_buffer_ref (buffer);
   fail_unless (gst_pad_chain (sink, buffer) == GST_FLOW_WRONG_STATE);
 #endif
-
-  /* activate pads */
-  gst_pad_set_active (src, TRUE);
-  gst_pad_set_active (sink, TRUE);
 
   /* test */
   /* pushing on a linked pad will drop the ref to the buffer */
@@ -590,6 +584,7 @@ GST_START_TEST (test_push_linked_flushing)
   /* one for me */
   ASSERT_CAPS_REFCOUNT (caps, "caps", 1);
 
+  gst_pad_set_active (src, TRUE);
   gst_pad_set_caps (src, caps);
   /* need to activate to make it accept the caps */
   gst_pad_set_active (sink, TRUE);
@@ -602,6 +597,8 @@ GST_START_TEST (test_push_linked_flushing)
   ASSERT_CAPS_REFCOUNT (caps, "caps", 3);
 
   /* not activating the pads here, which keeps them flushing */
+  gst_pad_set_active (src, FALSE);
+  gst_pad_set_active (sink, FALSE);
 
   /* pushing on a flushing pad will drop the buffer */
   buffer = gst_buffer_new ();
@@ -639,7 +636,7 @@ GST_START_TEST (test_push_linked_flushing)
   gst_pad_remove_probe (src, id);
 
   /* cleanup */
-  ASSERT_CAPS_REFCOUNT (caps, "caps", 2);
+  ASSERT_CAPS_REFCOUNT (caps, "caps", 1);
   ASSERT_OBJECT_REFCOUNT (src, "src", 1);
   gst_pad_link (src, sink);
   gst_object_unref (src);
@@ -700,6 +697,7 @@ GST_START_TEST (test_push_buffer_list_compat)
 
   caps = gst_caps_from_string ("foo/bar");
 
+  gst_pad_set_active (src, TRUE);
   gst_pad_set_caps (src, caps);
   gst_pad_set_active (sink, TRUE);
   gst_pad_set_caps (sink, caps);
@@ -708,10 +706,6 @@ GST_START_TEST (test_push_buffer_list_compat)
   fail_unless (GST_PAD_LINK_SUCCESSFUL (plr));
 
   list = gst_buffer_list_new ();
-
-  /* activate pads */
-  gst_pad_set_active (src, TRUE);
-  gst_pad_set_active (sink, TRUE);
 
   /* test */
   /* adding to a buffer list will drop the ref to the buffer */
@@ -855,6 +849,7 @@ GST_START_TEST (test_src_unref_unlink)
 
   caps = gst_caps_from_string ("foo/bar");
 
+  gst_pad_set_active (src, TRUE);
   gst_pad_set_caps (src, caps);
   gst_pad_set_active (sink, TRUE);
   gst_pad_set_caps (sink, caps);
@@ -890,6 +885,7 @@ GST_START_TEST (test_sink_unref_unlink)
 
   caps = gst_caps_from_string ("foo/bar");
 
+  gst_pad_set_active (src, TRUE);
   gst_pad_set_caps (src, caps);
   gst_pad_set_active (sink, TRUE);
   gst_pad_set_caps (sink, caps);
