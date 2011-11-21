@@ -20,6 +20,10 @@
 
 #include "gstglshadervariables.h"
 
+#ifdef G_OS_WIN32
+#define strtok_r strtok_s
+#endif
+
 #define trimleft(s,chars) while(s[0] && strchr(chars,s[0])) ++s;
 #define trimright(s,chars) { \
 	char *end; \
