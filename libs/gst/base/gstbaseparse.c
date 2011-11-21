@@ -376,10 +376,8 @@ static GstIndex *gst_base_parse_get_index (GstElement * element);
 
 static gboolean gst_base_parse_sink_activate (GstPad * sinkpad,
     GstObject * parent);
-static gboolean gst_base_parse_sink_activate_push (GstPad * pad,
-    GstObject * parent, gboolean active);
-static gboolean gst_base_parse_sink_activate_pull (GstPad * pad,
-    GstObject * parent, gboolean active);
+static gboolean gst_base_parse_sink_activate_mode (GstPad * pad,
+    GstObject * parent, GstPadMode mode, gboolean active);
 static gboolean gst_base_parse_handle_seek (GstBaseParse * parse,
     GstEvent * event);
 static void gst_base_parse_handle_tag (GstBaseParse * parse, GstEvent * event);
@@ -535,10 +533,8 @@ gst_base_parse_init (GstBaseParse * parse, GstBaseParseClass * bclass)
       GST_DEBUG_FUNCPTR (gst_base_parse_chain));
   gst_pad_set_activate_function (parse->sinkpad,
       GST_DEBUG_FUNCPTR (gst_base_parse_sink_activate));
-  gst_pad_set_activatepush_function (parse->sinkpad,
-      GST_DEBUG_FUNCPTR (gst_base_parse_sink_activate_push));
-  gst_pad_set_activatepull_function (parse->sinkpad,
-      GST_DEBUG_FUNCPTR (gst_base_parse_sink_activate_pull));
+  gst_pad_set_activatemode_function (parse->sinkpad,
+      GST_DEBUG_FUNCPTR (gst_base_parse_sink_activate_mode));
   gst_element_add_pad (GST_ELEMENT (parse), parse->sinkpad);
 
   GST_DEBUG_OBJECT (parse, "sinkpad created");
@@ -2957,10 +2953,10 @@ gst_base_parse_sink_activate (GstPad * sinkpad, GstObject * parent)
 
   if (pull_mode) {
     GST_DEBUG_OBJECT (parse, "trying to activate in pull mode");
-    result = gst_pad_activate_pull (sinkpad, TRUE);
+    result = gst_pad_activate_mode (sinkpad, GST_PAD_MODE_PULL, TRUE);
   } else {
     GST_DEBUG_OBJECT (parse, "trying to activate in push mode");
-    result = gst_pad_activate_push (sinkpad, TRUE);
+    result = gst_pad_activate_mode (sinkpad, GST_PAD_MODE_PUSH, TRUE);
   }
 
   GST_DEBUG_OBJECT (parse, "sink activate return %d", result);
@@ -3000,58 +2996,42 @@ gst_base_parse_activate (GstBaseParse * parse, gboolean active)
 }
 
 static gboolean
-gst_base_parse_sink_activate_push (GstPad * pad, GstObject * parent,
-    gboolean active)
+gst_base_parse_sink_activate_mode (GstPad * pad, GstObject * parent,
+    GstPadMode mode, gboolean active)
 {
   gboolean result = TRUE;
   GstBaseParse *parse;
 
   parse = GST_BASE_PARSE (parent);
 
-  GST_DEBUG_OBJECT (parse, "sink activate push %d", active);
-
-  result = gst_base_parse_activate (parse, active);
-
-  if (result)
-    parse->priv->pad_mode = active ? GST_PAD_MODE_PUSH : GST_PAD_MODE_NONE;
-
-  GST_DEBUG_OBJECT (parse, "sink activate push return: %d", result);
-
-  return result;
-}
-
-static gboolean
-gst_base_parse_sink_activate_pull (GstPad * sinkpad, GstObject * parent,
-    gboolean active)
-{
-  gboolean result = FALSE;
-  GstBaseParse *parse;
-
-  parse = GST_BASE_PARSE (parent);
-
-  GST_DEBUG_OBJECT (parse, "activate pull %d", active);
+  GST_DEBUG_OBJECT (parse, "sink activate mode %d, %d", mode, active);
 
   result = gst_base_parse_activate (parse, active);
 
   if (result) {
-    if (active) {
-      parse->priv->pending_segment = gst_event_new_segment (&parse->segment);
-      result &=
-          gst_pad_start_task (sinkpad, (GstTaskFunction) gst_base_parse_loop,
-          sinkpad);
-    } else {
-      result &= gst_pad_stop_task (sinkpad);
+    switch (mode) {
+      case GST_PAD_MODE_PULL:
+        if (active) {
+          parse->priv->pending_segment =
+              gst_event_new_segment (&parse->segment);
+          result &=
+              gst_pad_start_task (pad, (GstTaskFunction) gst_base_parse_loop,
+              pad);
+        } else {
+          result &= gst_pad_stop_task (pad);
+        }
+        break;
+      default:
+        break;
     }
   }
-
   if (result)
-    parse->priv->pad_mode = active ? GST_PAD_MODE_PULL : GST_PAD_MODE_NONE;
+    parse->priv->pad_mode = active ? mode : GST_PAD_MODE_NONE;
 
-  GST_DEBUG_OBJECT (parse, "sink activate pull return: %d", result);
+  GST_DEBUG_OBJECT (parse, "sink activate return: %d", result);
 
   return result;
 }
-
 
 /**
  * gst_base_parse_set_duration:

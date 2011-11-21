@@ -186,7 +186,7 @@ GST_START_TEST (test_pull)
   fail_unless (pad != NULL);
 
   /* activate the pad in pull mode */
-  res = gst_pad_activate_pull (pad, TRUE);
+  res = gst_pad_activate_mode (pad, GST_PAD_MODE_PULL, TRUE);
   fail_unless (res == TRUE);
 
   /* not start playing */

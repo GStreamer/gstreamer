@@ -243,12 +243,10 @@ static gboolean gst_queue2_handle_query (GstElement * element,
 static GstFlowReturn gst_queue2_get_range (GstPad * pad, GstObject * parent,
     guint64 offset, guint length, GstBuffer ** buffer);
 
-static gboolean gst_queue2_src_activate_pull (GstPad * pad, GstObject * parent,
-    gboolean active);
-static gboolean gst_queue2_src_activate_push (GstPad * pad, GstObject * parent,
-    gboolean active);
-static gboolean gst_queue2_sink_activate_push (GstPad * pad, GstObject * parent,
-    gboolean active);
+static gboolean gst_queue2_src_activate_mode (GstPad * pad, GstObject * parent,
+    GstPadMode mode, gboolean active);
+static gboolean gst_queue2_sink_activate_mode (GstPad * pad, GstObject * parent,
+    GstPadMode mode, gboolean active);
 static GstStateChangeReturn gst_queue2_change_state (GstElement * element,
     GstStateChange transition);
 
@@ -381,8 +379,8 @@ gst_queue2_init (GstQueue2 * queue)
 
   gst_pad_set_chain_function (queue->sinkpad,
       GST_DEBUG_FUNCPTR (gst_queue2_chain));
-  gst_pad_set_activatepush_function (queue->sinkpad,
-      GST_DEBUG_FUNCPTR (gst_queue2_sink_activate_push));
+  gst_pad_set_activatemode_function (queue->sinkpad,
+      GST_DEBUG_FUNCPTR (gst_queue2_sink_activate_mode));
   gst_pad_set_event_function (queue->sinkpad,
       GST_DEBUG_FUNCPTR (gst_queue2_handle_sink_event));
   gst_pad_set_query_function (queue->sinkpad,
@@ -392,10 +390,8 @@ gst_queue2_init (GstQueue2 * queue)
 
   queue->srcpad = gst_pad_new_from_static_template (&srctemplate, "src");
 
-  gst_pad_set_activatepull_function (queue->srcpad,
-      GST_DEBUG_FUNCPTR (gst_queue2_src_activate_pull));
-  gst_pad_set_activatepush_function (queue->srcpad,
-      GST_DEBUG_FUNCPTR (gst_queue2_src_activate_push));
+  gst_pad_set_activatemode_function (queue->srcpad,
+      GST_DEBUG_FUNCPTR (gst_queue2_src_activate_mode));
   gst_pad_set_getrange_function (queue->srcpad,
       GST_DEBUG_FUNCPTR (gst_queue2_get_range));
   gst_pad_set_event_function (queue->srcpad,
@@ -2668,33 +2664,40 @@ out_unexpected:
 
 /* sink currently only operates in push mode */
 static gboolean
-gst_queue2_sink_activate_push (GstPad * pad, GstObject * parent,
-    gboolean active)
+gst_queue2_sink_activate_mode (GstPad * pad, GstObject * parent,
+    GstPadMode mode, gboolean active)
 {
-  gboolean result = TRUE;
+  gboolean result;
   GstQueue2 *queue;
 
   queue = GST_QUEUE2 (parent);
 
-  if (active) {
-    GST_QUEUE2_MUTEX_LOCK (queue);
-    GST_DEBUG_OBJECT (queue, "activating push mode");
-    queue->srcresult = GST_FLOW_OK;
-    queue->sinkresult = GST_FLOW_OK;
-    queue->is_eos = FALSE;
-    queue->unexpected = FALSE;
-    reset_rate_timer (queue);
-    GST_QUEUE2_MUTEX_UNLOCK (queue);
-  } else {
-    /* unblock chain function */
-    GST_QUEUE2_MUTEX_LOCK (queue);
-    GST_DEBUG_OBJECT (queue, "deactivating push mode");
-    queue->srcresult = GST_FLOW_WRONG_STATE;
-    queue->sinkresult = GST_FLOW_WRONG_STATE;
-    gst_queue2_locked_flush (queue);
-    GST_QUEUE2_MUTEX_UNLOCK (queue);
+  switch (mode) {
+    case GST_PAD_MODE_PUSH:
+      if (active) {
+        GST_QUEUE2_MUTEX_LOCK (queue);
+        GST_DEBUG_OBJECT (queue, "activating push mode");
+        queue->srcresult = GST_FLOW_OK;
+        queue->sinkresult = GST_FLOW_OK;
+        queue->is_eos = FALSE;
+        queue->unexpected = FALSE;
+        reset_rate_timer (queue);
+        GST_QUEUE2_MUTEX_UNLOCK (queue);
+      } else {
+        /* unblock chain function */
+        GST_QUEUE2_MUTEX_LOCK (queue);
+        GST_DEBUG_OBJECT (queue, "deactivating push mode");
+        queue->srcresult = GST_FLOW_WRONG_STATE;
+        queue->sinkresult = GST_FLOW_WRONG_STATE;
+        gst_queue2_locked_flush (queue);
+        GST_QUEUE2_MUTEX_UNLOCK (queue);
+      }
+      result = TRUE;
+      break;
+    default:
+      result = FALSE;
+      break;
   }
-
   return result;
 }
 
@@ -2784,6 +2787,27 @@ gst_queue2_src_activate_pull (GstPad * pad, GstObject * parent, gboolean active)
   }
 
   return result;
+}
+
+static gboolean
+gst_queue2_src_activate_mode (GstPad * pad, GstObject * parent, GstPadMode mode,
+    gboolean active)
+{
+  gboolean res;
+
+  switch (mode) {
+    case GST_PAD_MODE_PULL:
+      res = gst_queue2_src_activate_pull (pad, parent, active);
+      break;
+    case GST_PAD_MODE_PUSH:
+      res = gst_queue2_src_activate_push (pad, parent, active);
+      break;
+    default:
+      GST_LOG_OBJECT (pad, "unknown activation mode %d");
+      res = FALSE;
+      break;
+  }
+  return res;
 }
 
 static GstStateChangeReturn

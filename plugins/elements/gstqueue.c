@@ -211,10 +211,10 @@ static GstPadLinkReturn gst_queue_link_sink (GstPad * pad, GstPad * peer);
 static GstPadLinkReturn gst_queue_link_src (GstPad * pad, GstPad * peer);
 static void gst_queue_locked_flush (GstQueue * queue);
 
-static gboolean gst_queue_src_activate_push (GstPad * pad, GstObject * parent,
-    gboolean active);
-static gboolean gst_queue_sink_activate_push (GstPad * pad, GstObject * parent,
-    gboolean active);
+static gboolean gst_queue_src_activate_mode (GstPad * pad, GstObject * parent,
+    GstPadMode mode, gboolean active);
+static gboolean gst_queue_sink_activate_mode (GstPad * pad, GstObject * parent,
+    GstPadMode mode, gboolean active);
 
 static gboolean gst_queue_is_empty (GstQueue * queue);
 static gboolean gst_queue_is_filled (GstQueue * queue);
@@ -373,8 +373,7 @@ gst_queue_class_init (GstQueueClass * klass)
       gst_static_pad_template_get (&sinktemplate));
 
   /* Registering debug symbols for function pointers */
-  GST_DEBUG_REGISTER_FUNCPTR (gst_queue_src_activate_push);
-  GST_DEBUG_REGISTER_FUNCPTR (gst_queue_sink_activate_push);
+  GST_DEBUG_REGISTER_FUNCPTR (gst_queue_src_activate_mode);
   GST_DEBUG_REGISTER_FUNCPTR (gst_queue_link_sink);
   GST_DEBUG_REGISTER_FUNCPTR (gst_queue_link_src);
   GST_DEBUG_REGISTER_FUNCPTR (gst_queue_handle_sink_event);
@@ -390,8 +389,8 @@ gst_queue_init (GstQueue * queue)
   queue->sinkpad = gst_pad_new_from_static_template (&sinktemplate, "sink");
 
   gst_pad_set_chain_function (queue->sinkpad, gst_queue_chain);
-  gst_pad_set_activatepush_function (queue->sinkpad,
-      gst_queue_sink_activate_push);
+  gst_pad_set_activatemode_function (queue->sinkpad,
+      gst_queue_sink_activate_mode);
   gst_pad_set_event_function (queue->sinkpad, gst_queue_handle_sink_event);
   gst_pad_set_query_function (queue->sinkpad, gst_queue_handle_sink_query);
   gst_pad_set_link_function (queue->sinkpad, gst_queue_link_sink);
@@ -399,8 +398,8 @@ gst_queue_init (GstQueue * queue)
 
   queue->srcpad = gst_pad_new_from_static_template (&srctemplate, "src");
 
-  gst_pad_set_activatepush_function (queue->srcpad,
-      gst_queue_src_activate_push);
+  gst_pad_set_activatemode_function (queue->srcpad,
+      gst_queue_src_activate_mode);
   gst_pad_set_link_function (queue->srcpad, gst_queue_link_src);
   gst_pad_set_event_function (queue->srcpad, gst_queue_handle_src_event);
   gst_pad_set_query_function (queue->srcpad, gst_queue_handle_src_query);
@@ -1283,63 +1282,79 @@ gst_queue_handle_src_query (GstPad * pad, GstObject * parent, GstQuery * query)
 }
 
 static gboolean
-gst_queue_sink_activate_push (GstPad * pad, GstObject * parent, gboolean active)
+gst_queue_sink_activate_mode (GstPad * pad, GstObject * parent, GstPadMode mode,
+    gboolean active)
 {
-  gboolean result = TRUE;
+  gboolean result;
   GstQueue *queue;
 
   queue = GST_QUEUE (parent);
 
-  if (active) {
-    GST_QUEUE_MUTEX_LOCK (queue);
-    queue->srcresult = GST_FLOW_OK;
-    queue->eos = FALSE;
-    queue->unexpected = FALSE;
-    GST_QUEUE_MUTEX_UNLOCK (queue);
-  } else {
-    /* step 1, unblock chain function */
-    GST_QUEUE_MUTEX_LOCK (queue);
-    queue->srcresult = GST_FLOW_WRONG_STATE;
-    gst_queue_locked_flush (queue);
-    GST_QUEUE_MUTEX_UNLOCK (queue);
+  switch (mode) {
+    case GST_PAD_MODE_PUSH:
+      if (active) {
+        GST_QUEUE_MUTEX_LOCK (queue);
+        queue->srcresult = GST_FLOW_OK;
+        queue->eos = FALSE;
+        queue->unexpected = FALSE;
+        GST_QUEUE_MUTEX_UNLOCK (queue);
+      } else {
+        /* step 1, unblock chain function */
+        GST_QUEUE_MUTEX_LOCK (queue);
+        queue->srcresult = GST_FLOW_WRONG_STATE;
+        gst_queue_locked_flush (queue);
+        GST_QUEUE_MUTEX_UNLOCK (queue);
+      }
+      result = TRUE;
+      break;
+    default:
+      result = FALSE;
+      break;
   }
-
   return result;
 }
 
 static gboolean
-gst_queue_src_activate_push (GstPad * pad, GstObject * parent, gboolean active)
+gst_queue_src_activate_mode (GstPad * pad, GstObject * parent, GstPadMode mode,
+    gboolean active)
 {
-  gboolean result = FALSE;
+  gboolean result;
   GstQueue *queue;
 
   queue = GST_QUEUE (parent);
 
-  if (active) {
-    GST_QUEUE_MUTEX_LOCK (queue);
-    queue->srcresult = GST_FLOW_OK;
-    queue->eos = FALSE;
-    queue->unexpected = FALSE;
-    /* we do not start the task yet if the pad is not connected */
-    if (gst_pad_is_linked (pad))
-      result = gst_pad_start_task (pad, (GstTaskFunction) gst_queue_loop, pad);
-    else {
-      GST_INFO_OBJECT (queue, "not starting task as pad is not linked");
-      result = TRUE;
-    }
-    GST_QUEUE_MUTEX_UNLOCK (queue);
-  } else {
-    /* step 1, unblock loop function */
-    GST_QUEUE_MUTEX_LOCK (queue);
-    queue->srcresult = GST_FLOW_WRONG_STATE;
-    /* the item add signal will unblock */
-    g_cond_signal (queue->item_add);
-    GST_QUEUE_MUTEX_UNLOCK (queue);
+  switch (mode) {
+    case GST_PAD_MODE_PUSH:
+      if (active) {
+        GST_QUEUE_MUTEX_LOCK (queue);
+        queue->srcresult = GST_FLOW_OK;
+        queue->eos = FALSE;
+        queue->unexpected = FALSE;
+        /* we do not start the task yet if the pad is not connected */
+        if (gst_pad_is_linked (pad))
+          result =
+              gst_pad_start_task (pad, (GstTaskFunction) gst_queue_loop, pad);
+        else {
+          GST_INFO_OBJECT (queue, "not starting task as pad is not linked");
+          result = TRUE;
+        }
+        GST_QUEUE_MUTEX_UNLOCK (queue);
+      } else {
+        /* step 1, unblock loop function */
+        GST_QUEUE_MUTEX_LOCK (queue);
+        queue->srcresult = GST_FLOW_WRONG_STATE;
+        /* the item add signal will unblock */
+        g_cond_signal (queue->item_add);
+        GST_QUEUE_MUTEX_UNLOCK (queue);
 
-    /* step 2, make sure streaming finishes */
-    result = gst_pad_stop_task (pad);
+        /* step 2, make sure streaming finishes */
+        result = gst_pad_stop_task (pad);
+      }
+      break;
+    default:
+      result = FALSE;
+      break;
   }
-
   return result;
 }
 

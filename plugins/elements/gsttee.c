@@ -144,12 +144,12 @@ static gboolean gst_tee_sink_event (GstPad * pad, GstObject * parent,
     GstEvent * event);
 static gboolean gst_tee_sink_query (GstPad * pad, GstObject * parent,
     GstQuery * query);
-static gboolean gst_tee_sink_activate_push (GstPad * pad, GstObject * parent,
-    gboolean active);
+static gboolean gst_tee_sink_activate_mode (GstPad * pad, GstObject * parent,
+    GstPadMode mode, gboolean active);
 static gboolean gst_tee_src_query (GstPad * pad, GstObject * parent,
     GstQuery * query);
-static gboolean gst_tee_src_activate_pull (GstPad * pad, GstObject * parent,
-    gboolean active);
+static gboolean gst_tee_src_activate_mode (GstPad * pad, GstObject * parent,
+    GstPadMode mode, gboolean active);
 static GstFlowReturn gst_tee_src_get_range (GstPad * pad, GstObject * parent,
     guint64 offset, guint length, GstBuffer ** buf);
 
@@ -258,8 +258,8 @@ gst_tee_init (GstTee * tee)
       GST_DEBUG_FUNCPTR (gst_tee_sink_event));
   gst_pad_set_query_function (tee->sinkpad,
       GST_DEBUG_FUNCPTR (gst_tee_sink_query));
-  gst_pad_set_activatepush_function (tee->sinkpad,
-      GST_DEBUG_FUNCPTR (gst_tee_sink_activate_push));
+  gst_pad_set_activatemode_function (tee->sinkpad,
+      GST_DEBUG_FUNCPTR (gst_tee_sink_activate_mode));
   gst_pad_set_chain_function (tee->sinkpad, GST_DEBUG_FUNCPTR (gst_tee_chain));
   gst_pad_set_chain_list_function (tee->sinkpad,
       GST_DEBUG_FUNCPTR (gst_tee_chain_list));
@@ -327,7 +327,7 @@ gst_tee_request_new_pad (GstElement * element, GstPadTemplate * templ,
       /* we already have a src pad in pull mode, and our pull mode can only be
          SINGLE, so fall through to activate this new pad in push mode */
     case GST_PAD_MODE_PUSH:
-      res = gst_pad_activate_push (srcpad, TRUE);
+      res = gst_pad_activate_mode (srcpad, GST_PAD_MODE_PUSH, TRUE);
       break;
     default:
       res = TRUE;
@@ -337,8 +337,8 @@ gst_tee_request_new_pad (GstElement * element, GstPadTemplate * templ,
   if (!res)
     goto activate_failed;
 
-  gst_pad_set_activatepull_function (srcpad,
-      GST_DEBUG_FUNCPTR (gst_tee_src_activate_pull));
+  gst_pad_set_activatemode_function (srcpad,
+      GST_DEBUG_FUNCPTR (gst_tee_src_activate_mode));
   gst_pad_set_query_function (srcpad, GST_DEBUG_FUNCPTR (gst_tee_src_query));
   gst_pad_set_getrange_function (srcpad,
       GST_DEBUG_FUNCPTR (gst_tee_src_get_range));
@@ -727,20 +727,31 @@ gst_tee_chain_list (GstPad * pad, GstObject * parent, GstBufferList * list)
 }
 
 static gboolean
-gst_tee_sink_activate_push (GstPad * pad, GstObject * parent, gboolean active)
+gst_tee_sink_activate_mode (GstPad * pad, GstObject * parent, GstPadMode mode,
+    gboolean active)
 {
+  gboolean res;
   GstTee *tee;
 
   tee = GST_TEE (parent);
 
-  GST_OBJECT_LOCK (tee);
-  tee->sink_mode = active && GST_PAD_MODE_PUSH;
+  switch (mode) {
+    case GST_PAD_MODE_PUSH:
+    {
+      GST_OBJECT_LOCK (tee);
+      tee->sink_mode = active ? mode : GST_PAD_MODE_NONE;
 
-  if (active && !tee->has_chain)
-    goto no_chain;
-  GST_OBJECT_UNLOCK (tee);
-
-  return TRUE;
+      if (active && !tee->has_chain)
+        goto no_chain;
+      GST_OBJECT_UNLOCK (tee);
+      res = TRUE;
+      break;
+    }
+    default:
+      res = FALSE;
+      break;
+  }
+  return res;
 
   /* ERRORS */
 no_chain:
@@ -753,7 +764,8 @@ no_chain:
 }
 
 static gboolean
-gst_tee_src_activate_pull (GstPad * pad, GstObject * parent, gboolean active)
+gst_tee_src_activate_mode (GstPad * pad, GstObject * parent, GstPadMode mode,
+    gboolean active)
 {
   GstTee *tee;
   gboolean res;
@@ -761,35 +773,43 @@ gst_tee_src_activate_pull (GstPad * pad, GstObject * parent, gboolean active)
 
   tee = GST_TEE (parent);
 
-  GST_OBJECT_LOCK (tee);
+  switch (mode) {
+    case GST_PAD_MODE_PULL:
+    {
+      GST_OBJECT_LOCK (tee);
 
-  if (tee->pull_mode == GST_TEE_PULL_MODE_NEVER)
-    goto cannot_pull;
+      if (tee->pull_mode == GST_TEE_PULL_MODE_NEVER)
+        goto cannot_pull;
 
-  if (tee->pull_mode == GST_TEE_PULL_MODE_SINGLE && active && tee->pull_pad)
-    goto cannot_pull_multiple_srcs;
+      if (tee->pull_mode == GST_TEE_PULL_MODE_SINGLE && active && tee->pull_pad)
+        goto cannot_pull_multiple_srcs;
 
-  sinkpad = gst_object_ref (tee->sinkpad);
+      sinkpad = gst_object_ref (tee->sinkpad);
 
-  GST_OBJECT_UNLOCK (tee);
+      GST_OBJECT_UNLOCK (tee);
 
-  res = gst_pad_activate_pull (sinkpad, active);
-  gst_object_unref (sinkpad);
+      res = gst_pad_activate_mode (sinkpad, GST_PAD_MODE_PULL, active);
+      gst_object_unref (sinkpad);
 
-  if (!res)
-    goto sink_activate_failed;
+      if (!res)
+        goto sink_activate_failed;
 
-  GST_OBJECT_LOCK (tee);
-  if (active) {
-    if (tee->pull_mode == GST_TEE_PULL_MODE_SINGLE)
-      tee->pull_pad = pad;
-  } else {
-    if (pad == tee->pull_pad)
-      tee->pull_pad = NULL;
+      GST_OBJECT_LOCK (tee);
+      if (active) {
+        if (tee->pull_mode == GST_TEE_PULL_MODE_SINGLE)
+          tee->pull_pad = pad;
+      } else {
+        if (pad == tee->pull_pad)
+          tee->pull_pad = NULL;
+      }
+      tee->sink_mode = active & GST_PAD_MODE_PULL;
+      GST_OBJECT_UNLOCK (tee);
+      break;
+    }
+    default:
+      res = TRUE;
+      break;
   }
-  tee->sink_mode = active & GST_PAD_MODE_PULL;
-  GST_OBJECT_UNLOCK (tee);
-
   return res;
 
   /* ERRORS */

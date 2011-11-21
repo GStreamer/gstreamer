@@ -284,10 +284,8 @@ static void gst_base_src_default_fixate (GstBaseSrc * src, GstCaps * caps);
 static void gst_base_src_fixate (GstBaseSrc * src, GstCaps * caps);
 
 static gboolean gst_base_src_is_random_access (GstBaseSrc * src);
-static gboolean gst_base_src_activate_push (GstPad * pad, GstObject * parent,
-    gboolean active);
-static gboolean gst_base_src_activate_pull (GstPad * pad, GstObject * parent,
-    gboolean active);
+static gboolean gst_base_src_activate_mode (GstPad * pad, GstObject * parent,
+    GstPadMode mode, gboolean active);
 static void gst_base_src_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
 static void gst_base_src_get_property (GObject * object, guint prop_id,
@@ -384,8 +382,7 @@ gst_base_src_class_init (GstBaseSrcClass * klass)
   klass->alloc = GST_DEBUG_FUNCPTR (gst_base_src_default_alloc);
 
   /* Registering debug symbols for function pointers */
-  GST_DEBUG_REGISTER_FUNCPTR (gst_base_src_activate_push);
-  GST_DEBUG_REGISTER_FUNCPTR (gst_base_src_activate_pull);
+  GST_DEBUG_REGISTER_FUNCPTR (gst_base_src_activate_mode);
   GST_DEBUG_REGISTER_FUNCPTR (gst_base_src_event);
   GST_DEBUG_REGISTER_FUNCPTR (gst_base_src_query);
   GST_DEBUG_REGISTER_FUNCPTR (gst_base_src_getrange);
@@ -416,8 +413,7 @@ gst_base_src_init (GstBaseSrc * basesrc, gpointer g_class)
   pad = gst_pad_new_from_template (pad_template, "src");
 
   GST_DEBUG_OBJECT (basesrc, "setting functions on src pad");
-  gst_pad_set_activatepush_function (pad, gst_base_src_activate_push);
-  gst_pad_set_activatepull_function (pad, gst_base_src_activate_pull);
+  gst_pad_set_activatemode_function (pad, gst_base_src_activate_mode);
   gst_pad_set_event_function (pad, gst_base_src_event);
   gst_pad_set_query_function (pad, gst_base_src_query);
   gst_pad_set_getrange_function (pad, gst_base_src_getrange);
@@ -3181,6 +3177,28 @@ error_stop:
     return FALSE;
   }
 }
+
+static gboolean
+gst_base_src_activate_mode (GstPad * pad, GstObject * parent,
+    GstPadMode mode, gboolean active)
+{
+  gboolean res;
+
+  switch (mode) {
+    case GST_PAD_MODE_PULL:
+      res = gst_base_src_activate_pull (pad, parent, active);
+      break;
+    case GST_PAD_MODE_PUSH:
+      res = gst_base_src_activate_push (pad, parent, active);
+      break;
+    default:
+      GST_LOG_OBJECT (pad, "unknown activation mode %d");
+      res = FALSE;
+      break;
+  }
+  return res;
+}
+
 
 static GstStateChangeReturn
 gst_base_src_change_state (GstElement * element, GstStateChange transition)

@@ -298,10 +298,10 @@ static void gst_base_transform_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
 static void gst_base_transform_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
-static gboolean gst_base_transform_src_activate_pull (GstPad * pad,
-    GstObject * parent, gboolean active);
-static gboolean gst_base_transform_sink_activate_push (GstPad * pad,
-    GstObject * parent, gboolean active);
+static gboolean gst_base_transform_src_activate_mode (GstPad * pad,
+    GstObject * parent, GstPadMode mode, gboolean active);
+static gboolean gst_base_transform_sink_activate_mode (GstPad * pad,
+    GstObject * parent, GstPadMode mode, gboolean active);
 static gboolean gst_base_transform_activate (GstBaseTransform * trans,
     gboolean active);
 static gboolean gst_base_transform_get_unit_size (GstBaseTransform * trans,
@@ -418,8 +418,8 @@ gst_base_transform_init (GstBaseTransform * trans,
       GST_DEBUG_FUNCPTR (gst_base_transform_sink_event));
   gst_pad_set_chain_function (trans->sinkpad,
       GST_DEBUG_FUNCPTR (gst_base_transform_chain));
-  gst_pad_set_activatepush_function (trans->sinkpad,
-      GST_DEBUG_FUNCPTR (gst_base_transform_sink_activate_push));
+  gst_pad_set_activatemode_function (trans->sinkpad,
+      GST_DEBUG_FUNCPTR (gst_base_transform_sink_activate_mode));
   gst_pad_set_query_function (trans->sinkpad,
       GST_DEBUG_FUNCPTR (gst_base_transform_query));
   gst_element_add_pad (GST_ELEMENT (trans), trans->sinkpad);
@@ -432,8 +432,8 @@ gst_base_transform_init (GstBaseTransform * trans,
       GST_DEBUG_FUNCPTR (gst_base_transform_src_event));
   gst_pad_set_getrange_function (trans->srcpad,
       GST_DEBUG_FUNCPTR (gst_base_transform_getrange));
-  gst_pad_set_activatepull_function (trans->srcpad,
-      GST_DEBUG_FUNCPTR (gst_base_transform_src_activate_pull));
+  gst_pad_set_activatemode_function (trans->srcpad,
+      GST_DEBUG_FUNCPTR (gst_base_transform_src_activate_mode));
   gst_pad_set_query_function (trans->srcpad,
       GST_DEBUG_FUNCPTR (gst_base_transform_query));
   gst_element_add_pad (GST_ELEMENT (trans), trans->srcpad);
@@ -2152,38 +2152,57 @@ gst_base_transform_activate (GstBaseTransform * trans, gboolean active)
 }
 
 static gboolean
-gst_base_transform_sink_activate_push (GstPad * pad, GstObject * parent,
-    gboolean active)
-{
-  gboolean result = TRUE;
-  GstBaseTransform *trans;
-
-  trans = GST_BASE_TRANSFORM (parent);
-
-  result = gst_base_transform_activate (trans, active);
-
-  if (result)
-    trans->priv->pad_mode = active ? GST_PAD_MODE_PUSH : GST_PAD_MODE_NONE;
-
-  return result;
-}
-
-static gboolean
-gst_base_transform_src_activate_pull (GstPad * pad, GstObject * parent,
-    gboolean active)
+gst_base_transform_sink_activate_mode (GstPad * pad, GstObject * parent,
+    GstPadMode mode, gboolean active)
 {
   gboolean result = FALSE;
   GstBaseTransform *trans;
 
   trans = GST_BASE_TRANSFORM (parent);
 
-  result = gst_pad_activate_pull (trans->sinkpad, active);
+  switch (mode) {
+    case GST_PAD_MODE_PUSH:
+    {
+      result = gst_base_transform_activate (trans, active);
 
-  if (result)
-    result &= gst_base_transform_activate (trans, active);
+      if (result)
+        trans->priv->pad_mode = active ? GST_PAD_MODE_PUSH : GST_PAD_MODE_NONE;
 
-  if (result)
-    trans->priv->pad_mode = active ? GST_PAD_MODE_PULL : GST_PAD_MODE_NONE;
+      break;
+    }
+    default:
+      result = TRUE;
+      break;
+  }
+  return result;
+}
+
+static gboolean
+gst_base_transform_src_activate_mode (GstPad * pad, GstObject * parent,
+    GstPadMode mode, gboolean active)
+{
+  gboolean result = FALSE;
+  GstBaseTransform *trans;
+
+  trans = GST_BASE_TRANSFORM (parent);
+
+  switch (mode) {
+    case GST_PAD_MODE_PULL:
+    {
+      result =
+          gst_pad_activate_mode (trans->sinkpad, GST_PAD_MODE_PULL, active);
+
+      if (result)
+        result &= gst_base_transform_activate (trans, active);
+
+      if (result)
+        trans->priv->pad_mode = active ? mode : GST_PAD_MODE_NONE;
+      break;
+    }
+    default:
+      result = TRUE;
+      break;
+  }
 
   return result;
 }

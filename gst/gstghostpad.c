@@ -458,27 +458,12 @@ G_DEFINE_TYPE (GstGhostPad, gst_ghost_pad, GST_TYPE_PROXY_PAD);
 
 static void gst_ghost_pad_dispose (GObject * object);
 
-/**
- * gst_ghost_pad_internal_activate_push_default:
- * @pad: the #GstPad to activate or deactivate.
- * @parent: the parent of @pad or NULL
- * @active: whether the pad should be active or not.
- *
- * Invoke the default activate push function of a proxy pad that is
- * owned by a ghost pad.
- *
- * Returns: %TRUE if the operation was successful.
- *
- * Since: 0.10.36
- */
-gboolean
+static gboolean
 gst_ghost_pad_internal_activate_push_default (GstPad * pad, GstObject * parent,
     gboolean active)
 {
   gboolean ret;
   GstPad *other;
-
-  g_return_val_if_fail (GST_IS_PROXY_PAD (pad), FALSE);
 
   GST_LOG_OBJECT (pad, "%sactivate push on %s:%s, we're ok",
       (active ? "" : "de"), GST_DEBUG_PAD_NAME (pad));
@@ -486,32 +471,17 @@ gst_ghost_pad_internal_activate_push_default (GstPad * pad, GstObject * parent,
   /* in both cases (SRC and SINK) we activate just the internal pad. The targets
    * will be activated later (or already in case of a ghost sinkpad). */
   other = GST_PROXY_PAD_INTERNAL (pad);
-  ret = gst_pad_activate_push (other, active);
+  ret = gst_pad_activate_mode (other, GST_PAD_MODE_PUSH, active);
 
   return ret;
 }
 
-/**
- * gst_ghost_pad_internal_activate_pull_default:
- * @pad: the #GstPad to activate or deactivate.
- * @parent: the parent of @pad or NULL
- * @active: whether the pad should be active or not.
- *
- * Invoke the default activate pull function of a proxy pad that is
- * owned by a ghost pad.
- *
- * Returns: %TRUE if the operation was successful.
- *
- * Since: 0.10.36
- */
-gboolean
+static gboolean
 gst_ghost_pad_internal_activate_pull_default (GstPad * pad, GstObject * parent,
     gboolean active)
 {
   gboolean ret;
   GstPad *other;
-
-  g_return_val_if_fail (GST_IS_PROXY_PAD (pad), FALSE);
 
   GST_LOG_OBJECT (pad, "%sactivate pull on %s:%s", (active ? "" : "de"),
       GST_DEBUG_PAD_NAME (pad));
@@ -524,12 +494,12 @@ gst_ghost_pad_internal_activate_pull_default (GstPad * pad, GstObject * parent,
      * further upstream */
     GST_LOG_OBJECT (pad, "pad is src, activate internal");
     other = GST_PROXY_PAD_INTERNAL (pad);
-    ret = gst_pad_activate_pull (other, active);
+    ret = gst_pad_activate_mode (other, GST_PAD_MODE_PULL, active);
   } else if (G_LIKELY ((other = gst_pad_get_peer (pad)))) {
     /* We are SINK, the ghostpad is SRC, we propagate the activation upstream
      * since we hold a pointer to the upstream peer. */
     GST_LOG_OBJECT (pad, "activating peer");
-    ret = gst_pad_activate_pull (other, active);
+    ret = gst_pad_activate_mode (other, GST_PAD_MODE_PULL, active);
     gst_object_unref (other);
   } else {
     /* this is failure, we can't activate pull if there is no peer */
@@ -541,18 +511,41 @@ gst_ghost_pad_internal_activate_pull_default (GstPad * pad, GstObject * parent,
 }
 
 /**
- * gst_ghost_pad_activate_push_default:
+ * gst_ghost_pad_internal_activate_mode_default:
  * @pad: the #GstPad to activate or deactivate.
  * @parent: the parent of @pad or NULL
+ * @mode: the requested activation mode
  * @active: whether the pad should be active or not.
  *
- * Invoke the default activate push function of a ghost pad.
+ * Invoke the default activate mode function of a proxy pad that is
+ * owned by a ghost pad.
  *
  * Returns: %TRUE if the operation was successful.
- *
- * Since: 0.10.36
  */
 gboolean
+gst_ghost_pad_internal_activate_mode_default (GstPad * pad, GstObject * parent,
+    GstPadMode mode, gboolean active)
+{
+  gboolean res;
+
+  g_return_val_if_fail (GST_IS_PROXY_PAD (pad), FALSE);
+
+  switch (mode) {
+    case GST_PAD_MODE_PULL:
+      res = gst_ghost_pad_internal_activate_pull_default (pad, parent, active);
+      break;
+    case GST_PAD_MODE_PUSH:
+      res = gst_ghost_pad_internal_activate_push_default (pad, parent, active);
+      break;
+    default:
+      GST_LOG_OBJECT (pad, "unknown activation mode %d");
+      res = FALSE;
+      break;
+  }
+  return res;
+}
+
+static gboolean
 gst_ghost_pad_activate_push_default (GstPad * pad, GstObject * parent,
     gboolean active)
 {
@@ -566,31 +559,17 @@ gst_ghost_pad_activate_push_default (GstPad * pad, GstObject * parent,
 
   /* just activate the internal pad */
   other = GST_PROXY_PAD_INTERNAL (pad);
-  ret = gst_pad_activate_push (other, active);
+  ret = gst_pad_activate_mode (other, GST_PAD_MODE_PUSH, active);
 
   return ret;
 }
 
-/**
- * gst_ghost_pad_activate_pull_default:
- * @pad: the #GstPad to activate or deactivate.
- * @parent: the parent of @pad or NULL
- * @active: whether the pad should be active or not.
- *
- * Invoke the default activate pull function of a ghost pad.
- *
- * Returns: %TRUE if the operation was successful.
- *
- * Since: 0.10.36
- */
-gboolean
+static gboolean
 gst_ghost_pad_activate_pull_default (GstPad * pad, GstObject * parent,
     gboolean active)
 {
   gboolean ret;
   GstPad *other;
-
-  g_return_val_if_fail (GST_IS_GHOST_PAD (pad), FALSE);
 
   GST_LOG_OBJECT (pad, "%sactivate pull on %s:%s", (active ? "" : "de"),
       GST_DEBUG_PAD_NAME (pad));
@@ -601,12 +580,12 @@ gst_ghost_pad_activate_pull_default (GstPad * pad, GstObject * parent,
      * upstream */
     GST_LOG_OBJECT (pad, "pad is src, activate internal");
     other = GST_PROXY_PAD_INTERNAL (pad);
-    ret = gst_pad_activate_pull (other, active);
+    ret = gst_pad_activate_mode (other, GST_PAD_MODE_PULL, active);
   } else if (G_LIKELY ((other = gst_pad_get_peer (pad)))) {
     /* We are SINK and activated by the internal pad, propagate activation
      * upstream because we hold a ref to the upstream peer */
     GST_LOG_OBJECT (pad, "activating peer");
-    ret = gst_pad_activate_pull (other, active);
+    ret = gst_pad_activate_mode (other, GST_PAD_MODE_PULL, active);
     gst_object_unref (other);
   } else {
     /* no peer, we fail */
@@ -615,6 +594,40 @@ gst_ghost_pad_activate_pull_default (GstPad * pad, GstObject * parent,
   }
 
   return ret;
+}
+
+/**
+ * gst_ghost_pad_activate_mode_default:
+ * @pad: the #GstPad to activate or deactivate.
+ * @parent: the parent of @pad or NULL
+ * @mode: the requested activation mode
+ * @active: whether the pad should be active or not.
+ *
+ * Invoke the default activate mode function of a ghost pad.
+ *
+ * Returns: %TRUE if the operation was successful.
+ */
+gboolean
+gst_ghost_pad_activate_mode_default (GstPad * pad, GstObject * parent,
+    GstPadMode mode, gboolean active)
+{
+  gboolean res;
+
+  g_return_val_if_fail (GST_IS_GHOST_PAD (pad), FALSE);
+
+  switch (mode) {
+    case GST_PAD_MODE_PULL:
+      res = gst_ghost_pad_activate_pull_default (pad, parent, active);
+      break;
+    case GST_PAD_MODE_PUSH:
+      res = gst_ghost_pad_activate_push_default (pad, parent, active);
+      break;
+    default:
+      GST_LOG_OBJECT (pad, "unknown activation mode %d");
+      res = FALSE;
+      break;
+  }
+  return res;
 }
 
 /**
@@ -687,10 +700,8 @@ gst_ghost_pad_init (GstGhostPad * pad)
   GST_GHOST_PAD_PRIVATE (pad) = G_TYPE_INSTANCE_GET_PRIVATE (pad,
       GST_TYPE_GHOST_PAD, GstGhostPadPrivate);
 
-  gst_pad_set_activatepull_function (GST_PAD_CAST (pad),
-      gst_ghost_pad_activate_pull_default);
-  gst_pad_set_activatepush_function (GST_PAD_CAST (pad),
-      gst_ghost_pad_activate_push_default);
+  gst_pad_set_activatemode_function (GST_PAD_CAST (pad),
+      gst_ghost_pad_activate_mode_default);
 }
 
 static void
@@ -721,8 +732,7 @@ gst_ghost_pad_dispose (GObject * object)
   GST_OBJECT_LOCK (pad);
   internal = GST_PROXY_PAD_INTERNAL (pad);
 
-  gst_pad_set_activatepull_function (internal, NULL);
-  gst_pad_set_activatepush_function (internal, NULL);
+  gst_pad_set_activatemode_function (internal, NULL);
 
   /* disposes of the internal pad, since the ghostpad is the only possible object
    * that has a refcount on the internal pad. */
@@ -821,10 +831,8 @@ gst_ghost_pad_construct (GstGhostPad * gpad)
   GST_PROXY_PAD_INTERNAL (internal) = pad;
 
   /* special activation functions for the internal pad */
-  gst_pad_set_activatepull_function (internal,
-      gst_ghost_pad_internal_activate_pull_default);
-  gst_pad_set_activatepush_function (internal,
-      gst_ghost_pad_internal_activate_push_default);
+  gst_pad_set_activatemode_function (internal,
+      gst_ghost_pad_internal_activate_mode_default);
 
   GST_OBJECT_UNLOCK (pad);
 

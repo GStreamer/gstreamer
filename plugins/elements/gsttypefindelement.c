@@ -159,8 +159,8 @@ gst_type_find_element_change_state (GstElement * element,
     GstStateChange transition);
 static gboolean gst_type_find_element_activate (GstPad * pad,
     GstObject * parent);
-static gboolean gst_type_find_element_activate_src_pull (GstPad * pad,
-    GstObject * parent, gboolean active);
+static gboolean gst_type_find_element_activate_src_mode (GstPad * pad,
+    GstObject * parent, GstPadMode mode, gboolean active);
 static GstFlowReturn
 gst_type_find_element_chain_do_typefinding (GstTypeFindElement * typefind,
     gboolean check_avail);
@@ -271,8 +271,8 @@ gst_type_find_element_init (GstTypeFindElement * typefind)
   typefind->src =
       gst_pad_new_from_static_template (&type_find_element_src_template, "src");
 
-  gst_pad_set_activatepull_function (typefind->src,
-      GST_DEBUG_FUNCPTR (gst_type_find_element_activate_src_pull));
+  gst_pad_set_activatemode_function (typefind->src,
+      GST_DEBUG_FUNCPTR (gst_type_find_element_activate_src_mode));
   gst_pad_set_getrange_function (typefind->src,
       GST_DEBUG_FUNCPTR (gst_type_find_element_getrange));
   gst_pad_set_event_function (typefind->src,
@@ -872,14 +872,23 @@ gst_type_find_element_getrange (GstPad * srcpad, GstObject * parent,
 }
 
 static gboolean
-gst_type_find_element_activate_src_pull (GstPad * pad, GstObject * parent,
-    gboolean active)
+gst_type_find_element_activate_src_mode (GstPad * pad, GstObject * parent,
+    GstPadMode mode, gboolean active)
 {
+  gboolean res;
   GstTypeFindElement *typefind;
 
   typefind = GST_TYPE_FIND_ELEMENT (parent);
 
-  return gst_pad_activate_pull (typefind->sink, active);
+  switch (mode) {
+    case GST_PAD_MODE_PULL:
+      res = gst_pad_activate_mode (typefind->sink, mode, active);
+      break;
+    default:
+      res = TRUE;
+      break;
+  }
+  return res;
 }
 
 static gboolean
@@ -929,7 +938,7 @@ gst_type_find_element_activate (GstPad * pad, GstObject * parent)
   if (!pull_mode)
     goto typefind_push;
 
-  if (!gst_pad_activate_pull (pad, TRUE))
+  if (!gst_pad_activate_mode (pad, GST_PAD_MODE_PULL, TRUE))
     goto typefind_push;
 
   /* 2 */
@@ -946,7 +955,7 @@ gst_type_find_element_activate (GstPad * pad, GstObject * parent)
       if (!gst_pad_query_duration (peer, GST_FORMAT_BYTES, &size)) {
         GST_WARNING_OBJECT (typefind, "Could not query upstream length!");
         gst_object_unref (peer);
-        gst_pad_activate_pull (pad, FALSE);
+        gst_pad_activate_mode (pad, GST_PAD_MODE_PULL, FALSE);
         return FALSE;
       }
 
@@ -956,7 +965,7 @@ gst_type_find_element_activate (GstPad * pad, GstObject * parent)
         GST_ELEMENT_ERROR (typefind, STREAM, TYPE_NOT_FOUND,
             (_("Stream contains no data.")), ("Can't typefind empty stream"));
         gst_object_unref (peer);
-        gst_pad_activate_pull (pad, FALSE);
+        gst_pad_activate_mode (pad, GST_PAD_MODE_PULL, FALSE);
         return FALSE;
       }
       ext = gst_type_find_get_extension (typefind, pad);
@@ -989,12 +998,12 @@ gst_type_find_element_activate (GstPad * pad, GstObject * parent)
 
   /* 3 */
   GST_DEBUG ("Deactivate pull mode");
-  gst_pad_activate_pull (pad, FALSE);
+  gst_pad_activate_mode (pad, GST_PAD_MODE_PULL, FALSE);
 
 #if 0
   /* 4 */
   GST_DEBUG ("Deactivate push mode mode");
-  gst_pad_activate_push (typefind->src, FALSE);
+  gst_pad_activate_mode (typefind->src, GST_PAD_MODE_PUSH, FALSE);
 #endif
 
   /* 5 */
@@ -1027,14 +1036,14 @@ really_done:
     gboolean ret;
 
     GST_DEBUG ("Activating in push mode");
-    ret = gst_pad_activate_push (typefind->src, TRUE);
-    ret &= gst_pad_activate_push (pad, TRUE);
+    ret = gst_pad_activate_mode (typefind->src, GST_PAD_MODE_PUSH, TRUE);
+    ret &= gst_pad_activate_mode (pad, GST_PAD_MODE_PUSH, TRUE);
     return ret;
   }
 typefind_push:
   {
     start_typefinding (typefind);
-    return gst_pad_activate_push (pad, TRUE);
+    return gst_pad_activate_mode (pad, GST_PAD_MODE_PUSH, TRUE);
   }
 }
 

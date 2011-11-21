@@ -1000,11 +1000,9 @@ gst_ghost_pad_construct
 
 gst_ghost_pad_unlink_default
 gst_ghost_pad_link_default
-gst_ghost_pad_activate_pull_default
-gst_ghost_pad_activate_push_default
+gst_ghost_pad_activate_mode_default
 
-gst_ghost_pad_internal_activate_push_default
-gst_ghost_pad_internal_activate_pull_default
+gst_ghost_pad_internal_activate_mode_default
 
 gst_proxy_pad_get_internal
 
@@ -1642,8 +1640,7 @@ gst_pad_proxy_query_accept_caps
 gst_pad_set_activate_function
 GstPadActivateFunction
 
-gst_pad_set_activatepush_function
-gst_pad_set_activatepull_function
+gst_pad_set_activatemode_function
 GstPadActivateModeFunction
 
 gst_pad_check_reconfigure
@@ -1653,8 +1650,7 @@ gst_pad_push
 gst_pad_push_event
 gst_pad_push_list
 gst_pad_pull_range
-gst_pad_activate_pull
-gst_pad_activate_push
+gst_pad_activate_mode
 gst_pad_send_event
 gst_pad_event_default
 
@@ -1728,7 +1724,7 @@ gst_pad_link_return_get_type
 gst_pad_link_check_get_type
 gst_pad_presence_get_type
 gst_flow_return_get_type
-gst_activate_mode_get_type
+gst_pad_mode_get_type
 gst_probe_return_get_type
 gst_probe_type_get_type
 

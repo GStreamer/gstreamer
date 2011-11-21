@@ -394,10 +394,8 @@ static GstFlowReturn gst_base_sink_chain_list (GstPad * pad, GstObject * parent,
 
 static void gst_base_sink_loop (GstPad * pad);
 static gboolean gst_base_sink_pad_activate (GstPad * pad, GstObject * parent);
-static gboolean gst_base_sink_pad_activate_push (GstPad * pad,
-    GstObject * parent, gboolean active);
-static gboolean gst_base_sink_pad_activate_pull (GstPad * pad,
-    GstObject * parent, gboolean active);
+static gboolean gst_base_sink_pad_activate_mode (GstPad * pad,
+    GstObject * parent, GstPadMode mode, gboolean active);
 static gboolean gst_base_sink_event (GstPad * pad, GstObject * parent,
     GstEvent * event);
 
@@ -559,8 +557,7 @@ gst_base_sink_class_init (GstBaseSinkClass * klass)
   /* Registering debug symbols for function pointers */
   GST_DEBUG_REGISTER_FUNCPTR (gst_base_sink_fixate);
   GST_DEBUG_REGISTER_FUNCPTR (gst_base_sink_pad_activate);
-  GST_DEBUG_REGISTER_FUNCPTR (gst_base_sink_pad_activate_push);
-  GST_DEBUG_REGISTER_FUNCPTR (gst_base_sink_pad_activate_pull);
+  GST_DEBUG_REGISTER_FUNCPTR (gst_base_sink_pad_activate_mode);
   GST_DEBUG_REGISTER_FUNCPTR (gst_base_sink_event);
   GST_DEBUG_REGISTER_FUNCPTR (gst_base_sink_chain);
   GST_DEBUG_REGISTER_FUNCPTR (gst_base_sink_chain_list);
@@ -643,10 +640,8 @@ gst_base_sink_init (GstBaseSink * basesink, gpointer g_class)
   basesink->sinkpad = gst_pad_new_from_template (pad_template, "sink");
 
   gst_pad_set_activate_function (basesink->sinkpad, gst_base_sink_pad_activate);
-  gst_pad_set_activatepush_function (basesink->sinkpad,
-      gst_base_sink_pad_activate_push);
-  gst_pad_set_activatepull_function (basesink->sinkpad,
-      gst_base_sink_pad_activate_pull);
+  gst_pad_set_activatemode_function (basesink->sinkpad,
+      gst_base_sink_pad_activate_mode);
   gst_pad_set_query_function (basesink->sinkpad, gst_base_sink_sink_query);
   gst_pad_set_event_function (basesink->sinkpad, gst_base_sink_event);
   gst_pad_set_chain_function (basesink->sinkpad, gst_base_sink_chain);
@@ -4165,7 +4160,7 @@ gst_base_sink_pad_activate (GstPad * pad, GstObject * parent)
   }
 
   /* ok activate now */
-  if (!gst_pad_activate_pull (pad, TRUE)) {
+  if (!gst_pad_activate_mode (pad, GST_PAD_MODE_PULL, TRUE)) {
     /* clear any pending caps */
     GST_OBJECT_LOCK (basesink);
     gst_caps_replace (&basesink->priv->pull_caps, NULL);
@@ -4181,7 +4176,7 @@ gst_base_sink_pad_activate (GstPad * pad, GstObject * parent)
   /* push mode fallback */
 fallback:
   GST_DEBUG_OBJECT (basesink, "Falling back to push mode");
-  if ((result = gst_pad_activate_push (pad, TRUE))) {
+  if ((result = gst_pad_activate_mode (pad, GST_PAD_MODE_PUSH, TRUE))) {
     GST_DEBUG_OBJECT (basesink, "Success activating push mode");
   }
 
@@ -4357,6 +4352,27 @@ activate_failed:
     GST_ERROR_OBJECT (basesink, "subclass failed to activate in pull mode");
     return FALSE;
   }
+}
+
+static gboolean
+gst_base_sink_pad_activate_mode (GstPad * pad, GstObject * parent,
+    GstPadMode mode, gboolean active)
+{
+  gboolean res;
+
+  switch (mode) {
+    case GST_PAD_MODE_PULL:
+      res = gst_base_sink_pad_activate_pull (pad, parent, active);
+      break;
+    case GST_PAD_MODE_PUSH:
+      res = gst_base_sink_pad_activate_push (pad, parent, active);
+      break;
+    default:
+      GST_LOG_OBJECT (pad, "unknown activation mode %d", mode);
+      res = FALSE;
+      break;
+  }
+  return res;
 }
 
 /* send an event to our sinkpad peer. */

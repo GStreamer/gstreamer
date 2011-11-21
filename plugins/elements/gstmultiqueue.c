@@ -1383,21 +1383,30 @@ was_eos:
 }
 
 static gboolean
-gst_multi_queue_sink_activate_push (GstPad * pad, GstObject * parent,
-    gboolean active)
+gst_multi_queue_sink_activate_mode (GstPad * pad, GstObject * parent,
+    GstPadMode mode, gboolean active)
 {
+  gboolean res;
   GstSingleQueue *sq;
 
   sq = (GstSingleQueue *) gst_pad_get_element_private (pad);
 
-  if (active) {
-    /* All pads start off linked until they push one buffer */
-    sq->srcresult = GST_FLOW_OK;
-  } else {
-    sq->srcresult = GST_FLOW_WRONG_STATE;
-    gst_data_queue_flush (sq->queue);
+  switch (mode) {
+    case GST_PAD_MODE_PUSH:
+      if (active) {
+        /* All pads start off linked until they push one buffer */
+        sq->srcresult = GST_FLOW_OK;
+      } else {
+        sq->srcresult = GST_FLOW_WRONG_STATE;
+        gst_data_queue_flush (sq->queue);
+      }
+      res = TRUE;
+      break;
+    default:
+      res = FALSE;
+      break;
   }
-  return TRUE;
+  return res;
 }
 
 static gboolean
@@ -1520,24 +1529,31 @@ gst_multi_queue_sink_query (GstPad * pad, GstObject * parent, GstQuery * query)
 }
 
 static gboolean
-gst_multi_queue_src_activate_push (GstPad * pad, GstObject * parent,
-    gboolean active)
+gst_multi_queue_src_activate_mode (GstPad * pad, GstObject * parent,
+    GstPadMode mode, gboolean active)
 {
   GstMultiQueue *mq;
   GstSingleQueue *sq;
-  gboolean result = FALSE;
+  gboolean result;
 
   sq = (GstSingleQueue *) gst_pad_get_element_private (pad);
   mq = sq->mqueue;
 
   GST_DEBUG_OBJECT (mq, "SingleQueue %d", sq->id);
 
-  if (active) {
-    result = gst_single_queue_flush (mq, sq, FALSE);
-  } else {
-    result = gst_single_queue_flush (mq, sq, TRUE);
-    /* make sure streaming finishes */
-    result |= gst_pad_stop_task (pad);
+  switch (mode) {
+    case GST_PAD_MODE_PUSH:
+      if (active) {
+        result = gst_single_queue_flush (mq, sq, FALSE);
+      } else {
+        result = gst_single_queue_flush (mq, sq, TRUE);
+        /* make sure streaming finishes */
+        result |= gst_pad_stop_task (pad);
+      }
+      break;
+    default:
+      result = FALSE;
+      break;
   }
   return result;
 }
@@ -1899,8 +1915,8 @@ gst_single_queue_new (GstMultiQueue * mqueue, guint id)
 
   gst_pad_set_chain_function (sq->sinkpad,
       GST_DEBUG_FUNCPTR (gst_multi_queue_chain));
-  gst_pad_set_activatepush_function (sq->sinkpad,
-      GST_DEBUG_FUNCPTR (gst_multi_queue_sink_activate_push));
+  gst_pad_set_activatemode_function (sq->sinkpad,
+      GST_DEBUG_FUNCPTR (gst_multi_queue_sink_activate_mode));
   gst_pad_set_event_function (sq->sinkpad,
       GST_DEBUG_FUNCPTR (gst_multi_queue_sink_event));
   gst_pad_set_query_function (sq->sinkpad,
@@ -1913,8 +1929,8 @@ gst_single_queue_new (GstMultiQueue * mqueue, guint id)
   sq->srcpad = gst_pad_new_from_static_template (&srctemplate, name);
   g_free (name);
 
-  gst_pad_set_activatepush_function (sq->srcpad,
-      GST_DEBUG_FUNCPTR (gst_multi_queue_src_activate_push));
+  gst_pad_set_activatemode_function (sq->srcpad,
+      GST_DEBUG_FUNCPTR (gst_multi_queue_src_activate_mode));
   gst_pad_set_event_function (sq->srcpad,
       GST_DEBUG_FUNCPTR (gst_multi_queue_src_event));
   gst_pad_set_query_function (sq->srcpad,

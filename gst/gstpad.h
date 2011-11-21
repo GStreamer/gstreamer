@@ -245,6 +245,7 @@ typedef gboolean		(*GstPadActivateFunction)	(GstPad *pad, GstObject *parent);
  * GstPadActivateModeFunction:
  * @pad: a #GstPad
  * @parent: the parent of @pad
+ * @mode: the requested activation mode of @pad
  * @active: activate or deactivate the pad.
  *
  * The prototype of the push and pull activate functions.
@@ -252,7 +253,7 @@ typedef gboolean		(*GstPadActivateFunction)	(GstPad *pad, GstObject *parent);
  * Returns: TRUE if the pad could be activated or deactivated.
  */
 typedef gboolean		(*GstPadActivateModeFunction)	(GstPad *pad, GstObject *parent,
-                                                                 gboolean active);
+                                                                 GstPadMode mode, gboolean active);
 
 
 /* data passing */
@@ -616,8 +617,7 @@ typedef enum {
  * @probes: installed probes
  * @mode: current activation mode of the pad
  * @activatefunc: pad activation function
- * @activatepushfunc: function to activate/deactivate pad in push mode
- * @activatepullfunc: function to activate/deactivate pad in pull mode
+ * @activatemodefunc: function to activate/deactivate pad in the requested mode
  * @peer: the pad this pad is linked to
  * @linkfunc: function called when pad is linked
  * @unlinkfunc: function called when pad is unlinked
@@ -653,8 +653,7 @@ struct _GstPad {
 
   GstPadMode		         mode;
   GstPadActivateFunction	 activatefunc;
-  GstPadActivateModeFunction	 activatepushfunc;
-  GstPadActivateModeFunction	 activatepullfunc;
+  GstPadActivateModeFunction	 activatemodefunc;
 
   /* pad link */
   GstPad			*peer;
@@ -709,8 +708,7 @@ struct _GstPadClass {
 #define GST_PAD_MODE(pad)	        (GST_PAD_CAST(pad)->mode)
 
 #define GST_PAD_ACTIVATEFUNC(pad)	(GST_PAD_CAST(pad)->activatefunc)
-#define GST_PAD_ACTIVATEPUSHFUNC(pad)	(GST_PAD_CAST(pad)->activatepushfunc)
-#define GST_PAD_ACTIVATEPULLFUNC(pad)	(GST_PAD_CAST(pad)->activatepullfunc)
+#define GST_PAD_ACTIVATEMODEFUNC(pad)	(GST_PAD_CAST(pad)->activatemodefunc)
 #define GST_PAD_CHAINFUNC(pad)		(GST_PAD_CAST(pad)->chainfunc)
 #define GST_PAD_CHAINLISTFUNC(pad)      (GST_PAD_CAST(pad)->chainlistfunc)
 #define GST_PAD_GETRANGEFUNC(pad)	(GST_PAD_CAST(pad)->getrangefunc)
@@ -814,8 +812,8 @@ GstPadDirection		gst_pad_get_direction			(GstPad *pad);
 
 gboolean		gst_pad_set_active			(GstPad *pad, gboolean active);
 gboolean		gst_pad_is_active			(GstPad *pad);
-gboolean		gst_pad_activate_pull			(GstPad *pad, gboolean active);
-gboolean		gst_pad_activate_push			(GstPad *pad, gboolean active);
+gboolean		gst_pad_activate_mode			(GstPad *pad, GstPadMode mode,
+                                                                 gboolean active);
 
 gulong                  gst_pad_add_probe                       (GstPad *pad,
 								 GstPadProbeType mask,
@@ -840,8 +838,7 @@ GstFlowReturn           gst_pad_sticky_events_foreach           (GstPad *pad, Gs
 
 /* data passing setup functions */
 void			gst_pad_set_activate_function		(GstPad *pad, GstPadActivateFunction activate);
-void			gst_pad_set_activatepull_function	(GstPad *pad, GstPadActivateModeFunction activatepull);
-void			gst_pad_set_activatepush_function	(GstPad *pad, GstPadActivateModeFunction activatepush);
+void			gst_pad_set_activatemode_function	(GstPad *pad, GstPadActivateModeFunction activatemode);
 void			gst_pad_set_chain_function		(GstPad *pad, GstPadChainFunction chain);
 void			gst_pad_set_chain_list_function	        (GstPad *pad, GstPadChainListFunction chainlist);
 void			gst_pad_set_getrange_function		(GstPad *pad, GstPadGetRangeFunction get);
