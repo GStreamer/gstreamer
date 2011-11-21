@@ -538,7 +538,7 @@ gst_ghost_pad_internal_activate_mode_default (GstPad * pad, GstObject * parent,
       res = gst_ghost_pad_internal_activate_push_default (pad, parent, active);
       break;
     default:
-      GST_LOG_OBJECT (pad, "unknown activation mode %d");
+      GST_LOG_OBJECT (pad, "unknown activation mode %d", mode);
       res = FALSE;
       break;
   }
@@ -623,7 +623,7 @@ gst_ghost_pad_activate_mode_default (GstPad * pad, GstObject * parent,
       res = gst_ghost_pad_activate_push_default (pad, parent, active);
       break;
     default:
-      GST_LOG_OBJECT (pad, "unknown activation mode %d");
+      GST_LOG_OBJECT (pad, "unknown activation mode %d", mode);
       res = FALSE;
       break;
   }
