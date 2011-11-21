@@ -490,7 +490,8 @@ gst_audio_encoder_finish_frame (GstAudioEncoder * enc, GstBuffer * buf,
 
   GST_AUDIO_ENCODER_STREAM_LOCK (enc);
 
-  GST_LOG_OBJECT (enc, "accepting %d bytes encoded data as %d samples",
+  GST_LOG_OBJECT (enc,
+      "accepting %" G_GSIZE_FORMAT " bytes encoded data as %d samples",
       buf ? gst_buffer_get_size (buf) : -1, samples);
 
   /* mark subclass still alive and providing */
@@ -607,7 +608,7 @@ gst_audio_encoder_finish_frame (GstAudioEncoder * enc, GstBuffer * buf,
 
     size = gst_buffer_get_size (buf);
 
-    GST_LOG_OBJECT (enc, "taking %d bytes for output", size);
+    GST_LOG_OBJECT (enc, "taking %" G_GSIZE_FORMAT " bytes for output", size);
     buf = gst_buffer_make_writable (buf);
 
     /* decorate */
@@ -666,7 +667,8 @@ gst_audio_encoder_finish_frame (GstAudioEncoder * enc, GstBuffer * buf,
       }
     }
 
-    GST_LOG_OBJECT (enc, "pushing buffer of size %d with ts %" GST_TIME_FORMAT
+    GST_LOG_OBJECT (enc,
+        "pushing buffer of size %" G_GSIZE_FORMAT " with ts %" GST_TIME_FORMAT
         ", duration %" GST_TIME_FORMAT, size,
         GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buf)),
         GST_TIME_ARGS (GST_BUFFER_DURATION (buf)));
@@ -853,7 +855,7 @@ gst_audio_encoder_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
   size = gst_buffer_get_size (buffer);
 
   GST_LOG_OBJECT (enc,
-      "received buffer of size %d with ts %" GST_TIME_FORMAT
+      "received buffer of size %" G_GSIZE_FORMAT " with ts %" GST_TIME_FORMAT
       ", duration %" GST_TIME_FORMAT, size,
       GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buffer)),
       GST_TIME_ARGS (GST_BUFFER_DURATION (buffer)));
@@ -900,8 +902,8 @@ gst_audio_encoder_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
   size = gst_buffer_get_size (buffer);
 
   GST_LOG_OBJECT (enc,
-      "buffer after segment clipping has size %d with ts %" GST_TIME_FORMAT
-      ", duration %" GST_TIME_FORMAT, size,
+      "buffer after segment clipping has size %" G_GSIZE_FORMAT " with ts %"
+      GST_TIME_FORMAT ", duration %" GST_TIME_FORMAT, size,
       GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buffer)),
       GST_TIME_ARGS (GST_BUFFER_DURATION (buffer)));
 
@@ -999,8 +1001,8 @@ not_negotiated:
 wrong_buffer:
   {
     GST_ELEMENT_ERROR (enc, STREAM, ENCODE, (NULL),
-        ("buffer size %d not a multiple of %d", gst_buffer_get_size (buffer),
-            ctx->info.bpf));
+        ("buffer size %" G_GSIZE_FORMAT " not a multiple of %d",
+            gst_buffer_get_size (buffer), ctx->info.bpf));
     gst_buffer_unref (buffer);
     ret = GST_FLOW_ERROR;
     goto done;

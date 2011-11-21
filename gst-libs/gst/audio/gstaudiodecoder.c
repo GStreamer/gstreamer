@@ -604,7 +604,8 @@ gst_audio_decoder_push_forward (GstAudioDecoder * dec, GstBuffer * buf)
     return GST_FLOW_OK;
   }
 
-  GST_LOG_OBJECT (dec, "clipping buffer of size %d with ts %" GST_TIME_FORMAT
+  GST_LOG_OBJECT (dec,
+      "clipping buffer of size %" G_GSIZE_FORMAT " with ts %" GST_TIME_FORMAT
       ", duration %" GST_TIME_FORMAT, gst_buffer_get_size (buf),
       GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buf)),
       GST_TIME_ARGS (GST_BUFFER_DURATION (buf)));
@@ -644,7 +645,8 @@ gst_audio_decoder_push_forward (GstAudioDecoder * dec, GstBuffer * buf)
     }
   }
 
-  GST_LOG_OBJECT (dec, "pushing buffer of size %d with ts %" GST_TIME_FORMAT
+  GST_LOG_OBJECT (dec,
+      "pushing buffer of size %" G_GSIZE_FORMAT " with ts %" GST_TIME_FORMAT
       ", duration %" GST_TIME_FORMAT, gst_buffer_get_size (buf),
       GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buf)),
       GST_TIME_ARGS (GST_BUFFER_DURATION (buf)));
@@ -670,7 +672,8 @@ gst_audio_decoder_output (GstAudioDecoder * dec, GstBuffer * buf)
     gst_audio_decoder_setup (dec);
 
   if (G_LIKELY (buf)) {
-    GST_LOG_OBJECT (dec, "output buffer of size %d with ts %" GST_TIME_FORMAT
+    GST_LOG_OBJECT (dec,
+        "output buffer of size %" G_GSIZE_FORMAT " with ts %" GST_TIME_FORMAT
         ", duration %" GST_TIME_FORMAT, gst_buffer_get_size (buf),
         GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buf)),
         GST_TIME_ARGS (GST_BUFFER_DURATION (buf)));
@@ -769,8 +772,10 @@ gst_audio_decoder_finish_frame (GstAudioDecoder * dec, GstBuffer * buf,
   g_return_val_if_fail (buf == NULL || GST_AUDIO_INFO_IS_VALID (&ctx->info),
       GST_FLOW_ERROR);
 
-  GST_LOG_OBJECT (dec, "accepting %d bytes == %d samples for %d frames",
-      buf ? size : -1, buf ? size / ctx->info.bpf : -1, frames);
+  GST_LOG_OBJECT (dec,
+      "accepting %" G_GSIZE_FORMAT " bytes == %" G_GSIZE_FORMAT
+      " samples for %d frames", buf ? size : -1,
+      buf ? size / ctx->info.bpf : -1, frames);
 
   GST_AUDIO_DECODER_STREAM_LOCK (dec);
 
@@ -903,7 +908,8 @@ exit:
 wrong_buffer:
   {
     GST_ELEMENT_ERROR (dec, STREAM, ENCODE, (NULL),
-        ("buffer size %d not a multiple of %d", size, ctx->info.bpf));
+        ("buffer size %" G_GSIZE_FORMAT " not a multiple of %d", size,
+            ctx->info.bpf));
     gst_buffer_unref (buf);
     ret = GST_FLOW_ERROR;
     goto exit;
@@ -927,8 +933,9 @@ gst_audio_decoder_handle_frame (GstAudioDecoder * dec,
   if (G_LIKELY (buffer)) {
     gsize size = gst_buffer_get_size (buffer);
     /* keep around for admin */
-    GST_LOG_OBJECT (dec, "tracking frame size %d, ts %" GST_TIME_FORMAT,
-        size, GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buffer)));
+    GST_LOG_OBJECT (dec,
+        "tracking frame size %" G_GSIZE_FORMAT ", ts %" GST_TIME_FORMAT, size,
+        GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buffer)));
     g_queue_push_tail (&dec->priv->frames, buffer);
     dec->priv->ctx.delay = dec->priv->frames.length;
     dec->priv->bytes_in += size;
@@ -1279,7 +1286,7 @@ gst_audio_decoder_flush_decode (GstAudioDecoder * dec)
     }
 
     if (G_LIKELY (res == GST_FLOW_OK)) {
-      GST_DEBUG_OBJECT (dec, "pushing buffer %p of size %u, "
+      GST_DEBUG_OBJECT (dec, "pushing buffer %p of size %" G_GSIZE_FORMAT ", "
           "time %" GST_TIME_FORMAT ", dur %" GST_TIME_FORMAT, buf,
           gst_buffer_get_size (buf), GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buf)),
           GST_TIME_ARGS (GST_BUFFER_DURATION (buf)));
@@ -1322,7 +1329,7 @@ gst_audio_decoder_chain_reverse (GstAudioDecoder * dec, GstBuffer * buf)
   }
 
   if (G_LIKELY (buf)) {
-    GST_DEBUG_OBJECT (dec, "gathering buffer %p of size %u, "
+    GST_DEBUG_OBJECT (dec, "gathering buffer %p of size %" G_GSIZE_FORMAT ", "
         "time %" GST_TIME_FORMAT ", dur %" GST_TIME_FORMAT, buf,
         gst_buffer_get_size (buf), GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buf)),
         GST_TIME_ARGS (GST_BUFFER_DURATION (buf)));
@@ -1343,7 +1350,7 @@ gst_audio_decoder_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
   dec = GST_AUDIO_DECODER (parent);
 
   GST_LOG_OBJECT (dec,
-      "received buffer of size %d with ts %" GST_TIME_FORMAT
+      "received buffer of size %" G_GSIZE_FORMAT " with ts %" GST_TIME_FORMAT
       ", duration %" GST_TIME_FORMAT, gst_buffer_get_size (buffer),
       GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buffer)),
       GST_TIME_ARGS (GST_BUFFER_DURATION (buffer)));
