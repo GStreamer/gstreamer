@@ -41,9 +41,10 @@
 #  include "config.h"
 #endif
 
-#include "gstopusdec.h"
 #include <string.h>
 #include <gst/tag/tag.h>
+#include "gstopusheader.h"
+#include "gstopusdec.h"
 
 GST_DEBUG_CATEGORY_STATIC (opusdec_debug);
 #define GST_CAT_DEFAULT opusdec_debug
@@ -77,8 +78,6 @@ static GstFlowReturn gst_opus_dec_handle_frame (GstAudioDecoder * dec,
     GstBuffer * buffer);
 static gboolean gst_opus_dec_set_format (GstAudioDecoder * bdec,
     GstCaps * caps);
-static gboolean gst_opus_dec_is_header (GstBuffer * buf, const char *magic,
-    guint magic_size);
 
 static void
 gst_opus_dec_base_init (gpointer g_class)
@@ -163,7 +162,7 @@ gst_opus_dec_stop (GstAudioDecoder * dec)
 static GstFlowReturn
 gst_opus_dec_parse_header (GstOpusDec * dec, GstBuffer * buf)
 {
-  g_return_val_if_fail (gst_opus_dec_is_header (buf, "OpusHead", 8),
+  g_return_val_if_fail (gst_opus_header_is_header (buf, "OpusHead", 8),
       GST_FLOW_ERROR);
   g_return_val_if_fail (GST_BUFFER_SIZE (buf) >= 19, GST_FLOW_ERROR);
 
@@ -374,13 +373,6 @@ memcmp_buffers (GstBuffer * buf1, GstBuffer * buf2)
   return !memcmp (GST_BUFFER_DATA (buf1), GST_BUFFER_DATA (buf2), size1);
 }
 
-static gboolean
-gst_opus_dec_is_header (GstBuffer * buf, const char *magic, guint magic_size)
-{
-  return (GST_BUFFER_SIZE (buf) >= magic_size
-      && !memcmp (magic, GST_BUFFER_DATA (buf), magic_size));
-}
-
 static GstFlowReturn
 gst_opus_dec_handle_frame (GstAudioDecoder * adec, GstBuffer * buf)
 {
@@ -416,7 +408,7 @@ gst_opus_dec_handle_frame (GstAudioDecoder * adec, GstBuffer * buf)
      * first two packets might be the headers, checking magic. */
     switch (dec->packetno) {
       case 0:
-        if (gst_opus_dec_is_header (buf, "OpusHead", 8)) {
+        if (gst_opus_header_is_header (buf, "OpusHead", 8)) {
           GST_DEBUG_OBJECT (dec, "found streamheader");
           res = gst_opus_dec_parse_header (dec, buf);
           gst_audio_decoder_finish_frame (adec, NULL, 1);
@@ -425,7 +417,7 @@ gst_opus_dec_handle_frame (GstAudioDecoder * adec, GstBuffer * buf)
         }
         break;
       case 1:
-        if (gst_opus_dec_is_header (buf, "OpusTags", 8)) {
+        if (gst_opus_header_is_header (buf, "OpusTags", 8)) {
           GST_DEBUG_OBJECT (dec, "counted vorbiscomments");
           res = gst_opus_dec_parse_comments (dec, buf);
           gst_audio_decoder_finish_frame (adec, NULL, 1);
