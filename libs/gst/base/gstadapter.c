@@ -407,7 +407,7 @@ gst_adapter_try_to_merge_up (GstAdapter * adapter, gsize size)
  * Returns: (transfer none) (array length=size): a pointer to the first
  *     @size bytes of data, or NULL
  */
-const gpointer
+gconstpointer
 gst_adapter_map (GstAdapter * adapter, gsize size)
 {
   GstBuffer *cur;
