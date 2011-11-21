@@ -20,8 +20,12 @@
 
 #include "gstglshadervariables.h"
 
-#ifdef G_OS_WIN32
+#if !defined(strtok_r) && defined(G_OS_WIN32)
+#if defined(_MSC_VER)
 #define strtok_r strtok_s
+#else
+#define strtok_r(s,d,p) strtok(s,d)
+#endif
 #endif
 
 #define trimleft(s,chars) while(s[0] && strchr(chars,s[0])) ++s;
@@ -349,7 +353,7 @@ parsename (char **varname, int *arraysize, char **saveptr)
 {
   char *t;
   char *i;
-  int j;
+  gint j;
 
   *arraysize = 0;
   t = strtok_r (0, "=", saveptr);
@@ -363,7 +367,7 @@ parsename (char **varname, int *arraysize, char **saveptr)
   if (!i) {                     // not an array
     if (!t[0])
       return t;
-    for (j = 0; j < strlen (t); ++j) {
+    for (j = 0; j < (gint) strlen (t); ++j) {
       if (!strchr (VALID_VARNAME_CHARS, t[j]))
         return t + j;
     }
@@ -380,7 +384,7 @@ parsename (char **varname, int *arraysize, char **saveptr)
 
     if (!t[0])
       return t;
-    for (j = 0; j < strlen (t); ++j) {
+    for (j = 0; j < (gint) strlen (t); ++j) {
       if (!strchr (VALID_VARNAME_CHARS, t[j]))
         return t;
     }
@@ -656,7 +660,7 @@ parsevalue (char *value, char *_saveptr, struct gst_gl_shadervariable_desc *ret)
     case _int:
       ret->count = (ret->arraysize) ? ret->arraysize : 1;
       if (ret->count == 1) {
-        for (j = 0; j < strlen (value); ++j) {
+        for (j = 0; j < (gint) strlen (value); ++j) {
           if (!strchr ("-0123456789", value[j]))
             return _saveptr + j;
         }
@@ -677,7 +681,7 @@ parsevalue (char *value, char *_saveptr, struct gst_gl_shadervariable_desc *ret)
           if (!t[0])
             return _saveptr + (saveptr - t);
 
-          for (j = 0; j < strlen (value); ++j) {
+          for (j = 0; j < (gint) strlen (value); ++j) {
             if (!strchr ("-0123456789", value[j]))
               return _saveptr + (saveptr - t) + j;
           }
@@ -691,7 +695,7 @@ parsevalue (char *value, char *_saveptr, struct gst_gl_shadervariable_desc *ret)
     case _uint:
       ret->count = (ret->arraysize) ? ret->arraysize : 1;
       if (ret->count == 1) {
-        for (j = 0; j < strlen (value); ++j) {
+        for (j = 0; j < (gint) strlen (value); ++j) {
           if (!strchr ("0123456789", value[j]))
             return _saveptr + j;
         }
@@ -712,7 +716,7 @@ parsevalue (char *value, char *_saveptr, struct gst_gl_shadervariable_desc *ret)
           if (!t[0])
             return _saveptr + (saveptr - t);
 
-          for (j = 0; j < strlen (value); ++j) {
+          for (j = 0; j < (gint) strlen (value); ++j) {
             if (!strchr ("0123456789", value[j]))
               return _saveptr + (saveptr - t) + j;
           }
@@ -726,7 +730,7 @@ parsevalue (char *value, char *_saveptr, struct gst_gl_shadervariable_desc *ret)
     case _float:
       ret->count = (ret->arraysize) ? ret->arraysize : 1;
       if (ret->count == 1) {
-        for (j = 0; j < strlen (value); ++j) {
+        for (j = 0; j < (gint) strlen (value); ++j) {
           if (!strchr ("0123456789.-", value[j]))
             return _saveptr + j;
         }
@@ -747,7 +751,7 @@ parsevalue (char *value, char *_saveptr, struct gst_gl_shadervariable_desc *ret)
           if (!t[0])
             return _saveptr + (saveptr - t);
 
-          for (j = 0; j < strlen (value); ++j) {
+          for (j = 0; j < (gint) strlen (value); ++j) {
             if (!strchr ("0123456789.-", value[j]))
               return _saveptr + (saveptr - t) + j;
           }
@@ -910,7 +914,7 @@ vec_parsevalue (int n, char *value, char *_saveptr,
       if (!t[0])
         return _saveptr + (saveptr - t);
 
-      for (j = 0; j < strlen (value); ++j) {
+      for (j = 0; j < (gint) strlen (value); ++j) {
         if (!strchr ("0123456789.-", value[j]))
           return _saveptr + (saveptr - t) + j;
       }
@@ -960,7 +964,7 @@ vec_parsevalue (int n, char *value, char *_saveptr,
         if (!t[0])
           return _saveptr + (t - value);
 
-        for (j = 0; j < strlen (t); ++j) {
+        for (j = 0; j < (gint) strlen (t); ++j) {
           if (!strchr ("0123456789.-", t[j]))
             return _saveptr + (t - value) + j;
         }
@@ -1157,7 +1161,7 @@ ivec_parsevalue (int n, char *value, char *_saveptr,
       if (!t[0])
         return _saveptr + (saveptr - t);
 
-      for (j = 0; j < strlen (value); ++j) {
+      for (j = 0; j < (gint) strlen (value); ++j) {
         if (!strchr ("0123456789-", value[j]))
           return _saveptr + (saveptr - t) + j;
       }
@@ -1207,7 +1211,7 @@ ivec_parsevalue (int n, char *value, char *_saveptr,
         if (!t[0])
           return _saveptr + (t - value);
 
-        for (j = 0; j < strlen (t); ++j) {
+        for (j = 0; j < (gint) strlen (t); ++j) {
           if (!strchr ("0123456789-", t[j]))
             return _saveptr + (t - value) + j;
         }
@@ -1283,7 +1287,7 @@ uvec_parsevalue (int n, char *value, char *_saveptr,
       if (!t[0])
         return _saveptr + (saveptr - t);
 
-      for (j = 0; j < strlen (value); ++j) {
+      for (j = 0; j < (gint) strlen (value); ++j) {
         if (!strchr ("0123456789", value[j]))
           return _saveptr + (saveptr - t) + j;
       }
@@ -1333,7 +1337,7 @@ uvec_parsevalue (int n, char *value, char *_saveptr,
         if (!t[0])
           return _saveptr + (t - value);
 
-        for (j = 0; j < strlen (t); ++j) {
+        for (j = 0; j < (gint) strlen (t); ++j) {
           if (!strchr ("0123456789", t[j]))
             return _saveptr + (t - value) + j;
         }
@@ -1409,7 +1413,7 @@ mat_parsevalue (int n, int m, char *value, char *_saveptr,
       if (!t[0])
         return _saveptr + (saveptr - t);
 
-      for (j = 0; j < strlen (value); ++j) {
+      for (j = 0; j < (gint) strlen (value); ++j) {
         if (!strchr ("0123456789.-", value[j]))
           return _saveptr + (saveptr - t) + j;
       }
@@ -1459,7 +1463,7 @@ mat_parsevalue (int n, int m, char *value, char *_saveptr,
         if (!t[0])
           return _saveptr + (t - value);
 
-        for (j = 0; j < strlen (t); ++j) {
+        for (j = 0; j < (gint) strlen (t); ++j) {
           if (!strchr ("0123456789.-", t[j]))
             return _saveptr + (t - value) + j;
         }

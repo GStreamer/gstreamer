@@ -284,46 +284,46 @@ gst_gl_overlay_draw (GstGLOverlay * o, int flag)
     width = o->width_window;
     height = o->height_window;
   } else if (flag == 0 && o->type_file == 1) {
-    width = o->width;
-    height = o->height;
+    width = (gfloat) o->width;
+    height = (gfloat) o->height;
   } else if (flag == 0 && o->type_file == 2) {
-    width = 1.0;
-    height = 1.0;
+    width = 1.0f;
+    height = 1.0f;
   }
   y = (o->type_file == 2 && flag == 0 ? o->ratio_y : -o->ratio_y) + o->posy;
   glTexCoord3f (0.0f, 0.0f, 0.0f);
   glVertex3f (-o->ratio_x + o->posx, y, 0.0f);
-  glTexCoord3f (width, 0.0, 0.0);
+  glTexCoord3f (width, 0.0f, 0.0f);
   glVertex3f (o->ratio_x + o->posx, y, 0.0f);
-  glTexCoord3f (width, height, 0.0);
+  glTexCoord3f (width, height, 0.0f);
   y = (o->type_file == 2 && flag == 0 ? -o->ratio_y : o->ratio_y) + o->posy;
-  glVertex3f (o->ratio_x + o->posx, y, 0.0);
+  glVertex3f (o->ratio_x + o->posx, y, 0.0f);
   glTexCoord3f (0.0f, height, 0.0f);
-  glVertex3f (-o->ratio_x + o->posx, y, 0.0);
+  glVertex3f (-o->ratio_x + o->posx, y, 0.0f);
 }
 
 static void
 gst_gl_overlay_calc_proportion (GstGLOverlay * o, int flag, float size_texture,
     float width, float height)
 {
-  if ((1.59 < o->ratio_window && o->ratio_window < 1.61
-          && 1.77 < o->ratio_texture && o->ratio_texture < 1.78)
-      || (1.3 < o->ratio_window && o->ratio_window < 1.34
-          && ((1.7 < o->ratio_texture && o->ratio_texture < 1.78)
-              || (1.59 < o->ratio_texture && o->ratio_texture < 1.61)))) {
-    o->ratio_x = o->ratio_window * (gfloat) size_texture / 100.0;
+  if ((1.59f < o->ratio_window && o->ratio_window < 1.61f
+          && 1.77f < o->ratio_texture && o->ratio_texture < 1.78f)
+      || (1.3f < o->ratio_window && o->ratio_window < 1.34f
+          && ((1.7f < o->ratio_texture && o->ratio_texture < 1.78f)
+              || (1.59f < o->ratio_texture && o->ratio_texture < 1.61f)))) {
+    o->ratio_x = o->ratio_window * (gfloat) size_texture / 100.0f;
     o->ratio_y =
-        (o->ratio_window / width) * height * (gfloat) size_texture / 100.0;
+        (o->ratio_window / width) * height * (gfloat) size_texture / 100.0f;
   } else {
-    o->ratio_x = o->ratio_texture * (gfloat) size_texture / 100.0;
-    o->ratio_y = 1.0 * size_texture / 100.0;
+    o->ratio_x = o->ratio_texture * (gfloat) size_texture / 100.0f;
+    o->ratio_y = 1.0f * size_texture / 100.0f;
   }
   o->posx =
       ((o->ratio_window - o->ratio_x) * ((flag ==
-              1 ? o->pos_x_video : o->pos_x_png) - 50.0) / 50.0);
+              1 ? o->pos_x_video : o->pos_x_png) - 50.0f) / 50.0f);
   o->posy =
-      (1.0 - o->ratio_y) * (((flag ==
-              1 ? o->pos_y_video : o->pos_y_png) - 50.0) / 50.0);
+      (1.0f - o->ratio_y) * (((flag ==
+              1 ? o->pos_y_video : o->pos_y_png) - 50.0f) / 50.0f);
 }
 
 static void
@@ -350,7 +350,8 @@ gst_gl_overlay_load_texture (GstGLOverlay * o, GLuint tex, int flag)
     o->ratio_texture = (gfloat) o->width / (gfloat) o->height;
     if (o->rotate_png == 2)
       glRotatef (o->angle_png, 0, 1, 0);
-    gst_gl_overlay_calc_proportion (o, flag, o->size_png, o->width, o->height);
+    gst_gl_overlay_calc_proportion (o, flag, o->size_png, (gfloat) o->width,
+        (gfloat) o->height);
   }
   glBegin (GL_POLYGON);
   gst_gl_overlay_draw (o, flag);
@@ -437,7 +438,7 @@ gst_gl_overlay_set_property (GObject * object, guint prop_id,
       overlay->angle_video = g_value_get_int (value);
       break;
     case PROP_RATIO_VIDEO:
-      overlay->ratio_video = g_value_get_int (value);
+      overlay->ratio_video = (gfloat) g_value_get_int (value);
       break;
       /*  case PROP_STRETCH:
          overlay->stretch = g_value_get_boolean (value);
@@ -493,7 +494,7 @@ gst_gl_overlay_get_property (GObject * object, guint prop_id,
       g_value_set_int (value, overlay->angle_video);
       break;
     case PROP_RATIO_VIDEO:
-      g_value_set_int (value, overlay->ratio_video);
+      g_value_set_int (value, (gint) overlay->ratio_video);
       break;
       /*  case PROP_STRETCH:
          g_value_set_boolean (value, overlay->stretch);
@@ -510,19 +511,15 @@ gst_gl_overlay_set_caps (GstGLFilter * filter, GstCaps * incaps,
     GstCaps * outcaps)
 {
   GstGLOverlay *overlay = GST_GL_OVERLAY (filter);
-  gchar *str_caps;
-  GstStructure *structure;
-  const GValue *width_value;
+  GstStructure *s = gst_caps_get_structure (incaps, 0);
+  gint width = 0;
+  gint height = 0;
 
-  structure = gst_caps_get_structure (incaps, 0);
-  width_value = gst_structure_get_value (structure, "width");
-  str_caps = g_strdup_value_contents (width_value);
-  overlay->width_window = atof (str_caps);
-  g_free (str_caps);
-  width_value = gst_structure_get_value (structure, "height");
-  str_caps = g_strdup_value_contents (width_value);
-  overlay->height_window = atof (str_caps);
-  g_free (str_caps);
+  gst_structure_get_int (s, "width", &width);
+  gst_structure_get_int (s, "height", &height);
+
+  overlay->width_window = (gfloat) width;
+  overlay->height_window = (gfloat) height;
 
   return TRUE;
 }

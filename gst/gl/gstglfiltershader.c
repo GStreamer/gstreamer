@@ -258,13 +258,13 @@ gst_gl_filtershader_load_file (char *filename, char **storage)
 {
 
   size_t count;
-  ssize_t bytes;
-  int f;
+  size_t bytes;
+  FILE *f;
 
   // read the filter from file
   GST_INFO ("loading file: %s", filename);
-  f = open (filename, O_RDONLY);
-  if (f < 0) {
+  f = fopen (filename, O_RDONLY);
+  if (f == NULL) {
     GST_ERROR ("could not open file: %s", filename);
     return -1;
   }
@@ -274,22 +274,23 @@ gst_gl_filtershader_load_file (char *filename, char **storage)
     *storage = 0;
   }
 
-  count = lseek (f, 0, SEEK_END);
+  count = fseek (f, 0, SEEK_END);
   *storage = g_malloc (count + 1);
   if (!*storage) {
     GST_ERROR ("g_malloc failed: %u", count);
     return -1;
   }
 
-  lseek (f, 0, SEEK_SET);
-  bytes = read (f, (void *) *storage, count);
+  fseek (f, 0, SEEK_SET);
+  bytes = fread ((void *) *storage, sizeof (char), count, f);
   if (bytes < 0 || bytes != count) {
     GST_ERROR ("read failed: %u/%u", bytes, count);
     return -1;
   }
   ((char *) *storage)[count] = 0;
 
-  close (f);
+  if (f)
+    fclose (f);
   GST_INFO ("read: %u", bytes);
   return 0;
 }
