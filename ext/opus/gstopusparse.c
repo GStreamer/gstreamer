@@ -136,13 +136,14 @@ gst_opus_parse_check_valid_frame (GstBaseParse * base,
   gsize size;
   guint32 packet_size;
   int ret = FALSE;
-  int channels, bandwidth;
+  int channels;
   const unsigned char *frames[48];
   unsigned char toc;
   short frame_sizes[48];
   int payload_offset;
   int nframes;
   int packet_offset = 0;
+  gboolean is_header, is_idheader, is_commentheader;
 
   parse = GST_OPUS_PARSE (base);
 
@@ -150,11 +151,19 @@ gst_opus_parse_check_valid_frame (GstBaseParse * base,
   size = GST_BUFFER_SIZE (frame->buffer);
   GST_DEBUG_OBJECT (parse, "Checking for frame, %u bytes in buffer", size);
 
-  /* First, check if there's an Opus packet there */
-  nframes =
-      opus_packet_parse (data, size, &toc, frames, frame_sizes,
-      &payload_offset);
-  if (nframes < 0) {
+  /* check for headers */
+  is_idheader = gst_opus_header_is_header (frame->buffer, "OpusHead", 8);
+  is_commentheader = gst_opus_header_is_header (frame->buffer, "OpusTags", 8);
+  is_header = is_idheader || is_commentheader;
+
+  if (!is_header) {
+    /* Next, check if there's an Opus packet there */
+    nframes =
+        opus_packet_parse (data, size, &toc, frames, frame_sizes,
+        &payload_offset);
+  }
+
+  if (!is_header && nframes < 0) {
     /* Then, check for the test vector framing */
     GST_DEBUG_OBJECT (parse,
         "No Opus packet found, trying test vector framing");
@@ -184,15 +193,16 @@ gst_opus_parse_check_valid_frame (GstBaseParse * base,
     data += packet_offset;
   }
 
-  channels = opus_packet_get_nb_channels (data);
-  bandwidth = opus_packet_get_bandwidth (data);
-  if (channels < 0 || bandwidth < 0) {
-    GST_DEBUG_OBJECT (parse, "It looked like a packet, but it is not");
-    goto beach;
-  }
-
   if (!parse->header_sent) {
     GstCaps *caps;
+
+    /* Opus streams can decode to 1 or 2 channels, so use the header
+       value if we have one, or 2 otherwise */
+    if (is_idheader) {
+      channels = data[9];
+    } else {
+      channels = 2;
+    }
 
     g_slist_foreach (parse->headers, (GFunc) gst_buffer_unref, NULL);
     parse->headers = NULL;
@@ -204,8 +214,13 @@ gst_opus_parse_check_valid_frame (GstBaseParse * base,
     parse->header_sent = TRUE;
   }
 
-  *skip = packet_offset;
-  *frame_size = payload_offset;
+  if (is_header) {
+    *skip = 0;
+    *frame_size = size;
+  } else {
+    *skip = packet_offset;
+    *frame_size = payload_offset;
+  }
 
   GST_DEBUG_OBJECT (parse, "Got Opus packet at offset %d, %d bytes", *skip,
       *frame_size);
@@ -278,6 +293,15 @@ gst_opus_parse_parse_frame (GstBaseParse * base, GstBaseParseFrame * frame)
   GstOpusParse *parse;
 
   parse = GST_OPUS_PARSE (base);
+
+  if (gst_opus_header_is_header (frame->buffer, "OpusHead", 8)
+      || gst_opus_header_is_header (frame->buffer, "OpusTags", 8)) {
+    GST_BUFFER_TIMESTAMP (frame->buffer) = 0;
+    GST_BUFFER_DURATION (frame->buffer) = GST_CLOCK_TIME_NONE;
+    GST_BUFFER_OFFSET_END (frame->buffer) = GST_CLOCK_TIME_NONE;
+    GST_BUFFER_OFFSET (frame->buffer) = GST_CLOCK_TIME_NONE;
+    return GST_FLOW_OK;
+  }
 
   GST_BUFFER_TIMESTAMP (frame->buffer) = parse->next_ts;
 
