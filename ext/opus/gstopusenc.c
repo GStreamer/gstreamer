@@ -333,6 +333,7 @@ gst_opus_enc_stop (GstAudioEncoder * benc)
   enc->tags = NULL;
   g_slist_foreach (enc->headers, (GFunc) gst_buffer_unref, NULL);
   enc->headers = NULL;
+  gst_tag_setter_reset_tags (GST_TAG_SETTER (enc));
 
   return TRUE;
 }
