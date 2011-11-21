@@ -963,7 +963,7 @@ gst_rmdemux_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
 
   gst_adapter_push (rmdemux->adapter, buffer);
 
-  GST_LOG_OBJECT (rmdemux, "Chaining buffer of size %d",
+  GST_LOG_OBJECT (rmdemux, "Chaining buffer of size %" G_GSIZE_FORMAT,
       gst_buffer_get_size (buffer));
 
   while (TRUE) {
@@ -1108,7 +1108,7 @@ gst_rmdemux_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
 
         /* The actual header is only 8 bytes */
         rmdemux->size = DATA_SIZE;
-        GST_LOG_OBJECT (rmdemux, "data available %d",
+        GST_LOG_OBJECT (rmdemux, "data available %" G_GSIZE_FORMAT,
             gst_adapter_available (rmdemux->adapter));
         if (gst_adapter_available (rmdemux->adapter) < rmdemux->size)
           goto unlock;
@@ -2091,8 +2091,9 @@ gst_rmdemux_handle_scrambled_packet (GstRMDemux * rmdemux,
   if (stream->subpackets == NULL)
     stream->subpackets = g_ptr_array_sized_new (stream->subpackets_needed);
 
-  GST_LOG ("Got subpacket %u/%u, len=%u, key=%d", stream->subpackets->len + 1,
-      stream->subpackets_needed, gst_buffer_get_size (buf), keyframe);
+  GST_LOG ("Got subpacket %u/%u, len=%" G_GSIZE_FORMAT ", key=%d",
+      stream->subpackets->len + 1, stream->subpackets_needed,
+      gst_buffer_get_size (buf), keyframe);
 
   if (keyframe && stream->subpackets->len > 0) {
     gst_rmdemux_stream_clear_cached_subpackets (rmdemux, stream);
@@ -2338,8 +2339,9 @@ gst_rmdemux_parse_video_packet (GstRMDemux * rmdemux, GstRMDemuxStream * stream,
     }
 
     GST_DEBUG_OBJECT (rmdemux,
-        "seq %d, subseq %d, offset %d, length %d, size %d, header %02x",
-        pkg_seqnum, pkg_subseq, pkg_offset, pkg_length, size, pkg_header);
+        "seq %d, subseq %d, offset %d, length %d, size %" G_GSIZE_FORMAT
+        ", header %02x", pkg_seqnum, pkg_subseq, pkg_offset, pkg_length, size,
+        pkg_header);
 
     /* calc size of fragment */
     if ((pkg_header & 0xc0) == 0x80) {
@@ -2466,7 +2468,7 @@ gst_rmdemux_parse_video_packet (GstRMDemux * rmdemux, GstRMDemuxStream * stream,
     data += fragment_size;
     size -= fragment_size;
   }
-  GST_DEBUG_OBJECT (rmdemux, "%d bytes left", size);
+  GST_DEBUG_OBJECT (rmdemux, "%" G_GSIZE_FORMAT " bytes left", size);
 
 done:
   gst_buffer_unmap (in, base, -1);
@@ -2518,9 +2520,9 @@ gst_rmdemux_parse_audio_packet (GstRMDemux * rmdemux, GstRMDemuxStream * stream,
     ret = gst_rmdemux_handle_scrambled_packet (rmdemux, stream, buffer, key);
   } else {
     GST_LOG_OBJECT (rmdemux,
-        "Pushing buffer of size %d, timestamp %" GST_TIME_FORMAT "to pad %s",
-        gst_buffer_get_size (buffer), GST_TIME_ARGS (timestamp),
-        GST_PAD_NAME (stream->pad));
+        "Pushing buffer of size %" G_GSIZE_FORMAT ", timestamp %"
+        GST_TIME_FORMAT "to pad %s", gst_buffer_get_size (buffer),
+        GST_TIME_ARGS (timestamp), GST_PAD_NAME (stream->pad));
 
     if (stream->discont) {
       GST_BUFFER_FLAG_SET (buffer, GST_BUFFER_FLAG_DISCONT);
@@ -2563,7 +2565,7 @@ gst_rmdemux_parse_packet (GstRMDemux * rmdemux, GstBuffer * in, guint16 version)
   rmdemux->segment.position = timestamp;
 
   GST_LOG_OBJECT (rmdemux, "Parsing a packet for stream=%d, timestamp=%"
-      GST_TIME_FORMAT ", size %u, version=%d, ts=%u", id,
+      GST_TIME_FORMAT ", size %" G_GSIZE_FORMAT ", version=%d, ts=%u", id,
       GST_TIME_ARGS (timestamp), size, version, ts);
 
   if (rmdemux->first_ts == GST_CLOCK_TIME_NONE) {
@@ -2619,8 +2621,8 @@ gst_rmdemux_parse_packet (GstRMDemux * rmdemux, GstBuffer * in, guint16 version)
 
   if ((rmdemux->offset + size) <= stream->seek_offset) {
     GST_DEBUG_OBJECT (rmdemux,
-        "Stream %d is skipping: seek_offset=%d, offset=%d, size=%u",
-        stream->id, stream->seek_offset, rmdemux->offset, size);
+        "Stream %d is skipping: seek_offset=%d, offset=%d, size=%"
+        G_GSIZE_FORMAT, stream->id, stream->seek_offset, rmdemux->offset, size);
     cret = GST_FLOW_OK;
     gst_buffer_unref (in);
     goto beach;

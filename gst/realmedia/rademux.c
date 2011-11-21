@@ -672,7 +672,8 @@ pull_range_error:
 pull_range_short_read:
   {
     GST_WARNING_OBJECT (demux, "pull range short read: wanted %u bytes, but "
-        "got only %u bytes", bytes_needed, gst_buffer_get_size (buf));
+        "got only %" G_GSIZE_FORMAT " bytes", bytes_needed,
+        gst_buffer_get_size (buf));
     gst_buffer_unref (buf);
     goto eos;
   }

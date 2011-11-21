@@ -960,7 +960,7 @@ gst_asf_demux_pull_data (GstASFDemux * demux, guint64 offset, guint size,
   buffer_size = gst_buffer_get_size (*p_buf);
   if (G_UNLIKELY (buffer_size < size)) {
     GST_DEBUG_OBJECT (demux, "short read pulling buffer at %" G_GUINT64_FORMAT
-        "+%u (got only %u bytes)", offset, size, buffer_size);
+        "+%u (got only %" G_GSIZE_FORMAT " bytes)", offset, size, buffer_size);
     gst_buffer_unref (*p_buf);
     if (G_LIKELY (p_flow))
       *p_flow = GST_FLOW_UNEXPECTED;
@@ -1477,7 +1477,7 @@ gst_asf_demux_push_complete_payloads (GstASFDemux * demux, gboolean force)
     /* FIXME: we should really set durations on buffers if we can */
 
     GST_LOG_OBJECT (stream->pad, "pushing buffer, ts=%" GST_TIME_FORMAT
-        ", dur=%" GST_TIME_FORMAT " size=%u",
+        ", dur=%" GST_TIME_FORMAT " size=%" G_GSIZE_FORMAT,
         GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (payload->buf)),
         GST_TIME_ARGS (GST_BUFFER_DURATION (payload->buf)),
         gst_buffer_get_size (payload->buf));
@@ -1769,7 +1769,8 @@ gst_asf_demux_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
 
   demux = GST_ASF_DEMUX (parent);
 
-  GST_LOG_OBJECT (demux, "buffer: size=%u, offset=%" G_GINT64_FORMAT ", time=%"
+  GST_LOG_OBJECT (demux,
+      "buffer: size=%" G_GSIZE_FORMAT ", offset=%" G_GINT64_FORMAT ", time=%"
       GST_TIME_FORMAT, gst_buffer_get_size (buf), GST_BUFFER_OFFSET (buf),
       GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buf)));
 
@@ -2348,7 +2349,7 @@ gst_asf_demux_parse_stream_object (GstASFDemux * demux, guint8 * data,
 
   flags = gst_asf_demux_get_uint16 (&data, &size);
   stream_id = flags & 0x7f;
-  is_encrypted = ! !((flags & 0x8000) << 15);
+  is_encrypted = !!((flags & 0x8000) << 15);
   unknown = gst_asf_demux_get_uint32 (&data, &size);
 
   GST_DEBUG_OBJECT (demux, "Found stream %u, time_offset=%" GST_TIME_FORMAT,
@@ -2956,8 +2957,8 @@ gst_asf_demux_process_file (GstASFDemux * demux, guint8 * data, guint64 size)
   max_pktsize = gst_asf_demux_get_uint32 (&data, &size);
   min_bitrate = gst_asf_demux_get_uint32 (&data, &size);
 
-  demux->broadcast = ! !(flags & 0x01);
-  demux->seekable = ! !(flags & 0x02);
+  demux->broadcast = !!(flags & 0x01);
+  demux->seekable = !!(flags & 0x02);
 
   GST_DEBUG_OBJECT (demux, "min_pktsize = %u", min_pktsize);
   GST_DEBUG_OBJECT (demux, "flags::broadcast = %d", demux->broadcast);
@@ -3783,10 +3784,10 @@ gst_asf_demux_descramble_buffer (GstASFDemux * demux, AsfStream * stream,
     idx = row + col * demux->ds_packet_size / demux->ds_chunk_size;
     GST_DEBUG ("idx=%u, row=%u, col=%u, off=%u, ds_chunk_size=%u", idx, row,
         col, off, demux->ds_chunk_size);
-    GST_DEBUG ("scrambled buffer size=%u, span=%u, packet_size=%u",
-        gst_buffer_get_size (scrambled_buffer), demux->span,
-        demux->ds_packet_size);
-    GST_DEBUG ("gst_buffer_get_size (scrambled_buffer) = %u",
+    GST_DEBUG ("scrambled buffer size=%" G_GSIZE_FORMAT
+        ", span=%u, packet_size=%u", gst_buffer_get_size (scrambled_buffer),
+        demux->span, demux->ds_packet_size);
+    GST_DEBUG ("gst_buffer_get_size (scrambled_buffer) = %" G_GSIZE_FORMAT,
         gst_buffer_get_size (scrambled_buffer));
     sub_buffer =
         gst_buffer_copy_region (scrambled_buffer, GST_BUFFER_COPY_NONE,

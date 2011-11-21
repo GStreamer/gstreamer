@@ -154,7 +154,7 @@ gst_dvd_sub_parse_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
 
   adapter = parse->adapter;
 
-  GST_LOG_OBJECT (parse, "%4u bytes, ts: %" GST_TIME_FORMAT,
+  GST_LOG_OBJECT (parse, "%" G_GSIZE_FORMAT " bytes, ts: %" GST_TIME_FORMAT,
       gst_buffer_get_size (buf), GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buf)));
 
   gst_adapter_push (adapter, buf);

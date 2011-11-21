@@ -460,8 +460,8 @@ gst_dvdlpcmdec_chain_dvd (GstPad * pad, GstObject * parent, GstBuffer * buf)
     dvdlpcmdec->header = header;
   }
 
-  GST_LOG_OBJECT (dvdlpcmdec, "first_access %d, buffer length %d", first_access,
-      size);
+  GST_LOG_OBJECT (dvdlpcmdec, "first_access %d, buffer length %" G_GSIZE_FORMAT,
+      first_access, size);
 
   rate = GST_AUDIO_INFO_RATE (&dvdlpcmdec->info);
   channels = GST_AUDIO_INFO_CHANNELS (&dvdlpcmdec->info);
@@ -537,8 +537,9 @@ gst_dvdlpcmdec_chain_dvd (GstPad * pad, GstObject * parent, GstBuffer * buf)
       ret = gst_dvdlpcmdec_chain_raw (pad, parent, subbuf);
     }
   } else {
-    GST_LOG_OBJECT (dvdlpcmdec, "Creating single sub-buffer off %d, len %d",
-        off, size - off);
+    GST_LOG_OBJECT (dvdlpcmdec,
+        "Creating single sub-buffer off %d, len %" G_GSIZE_FORMAT, off,
+        size - off);
     subbuf = gst_buffer_copy_region (buf, GST_BUFFER_COPY_ALL, off, size - off);
     GST_BUFFER_TIMESTAMP (subbuf) = GST_BUFFER_TIMESTAMP (buf);
     ret = gst_dvdlpcmdec_chain_raw (pad, parent, subbuf);
@@ -600,7 +601,7 @@ gst_dvdlpcmdec_chain_raw (GstPad * pad, GstObject * parent, GstBuffer * buf)
   size = gst_buffer_get_size (buf);
 
   GST_LOG_OBJECT (dvdlpcmdec,
-      "got buffer %p of size %d with ts %" GST_TIME_FORMAT,
+      "got buffer %p of size %" G_GSIZE_FORMAT " with ts %" GST_TIME_FORMAT,
       buf, size, GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buf)));
 
   rate = GST_AUDIO_INFO_RATE (&dvdlpcmdec->info);
@@ -723,8 +724,8 @@ done:
   /* ERRORS */
 drop:
   {
-    GST_DEBUG_OBJECT (dvdlpcmdec, "Buffer of size %u is too small. Dropping",
-        size);
+    GST_DEBUG_OBJECT (dvdlpcmdec,
+        "Buffer of size %" G_GSIZE_FORMAT " is too small. Dropping", size);
     gst_buffer_unref (buf);
     ret = GST_FLOW_OK;
     goto done;

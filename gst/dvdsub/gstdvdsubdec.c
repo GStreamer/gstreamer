@@ -807,7 +807,7 @@ gst_dvd_sub_dec_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
 
   dec = GST_DVD_SUB_DEC (parent);
 
-  GST_DEBUG_OBJECT (dec, "Have buffer of size %d, ts %"
+  GST_DEBUG_OBJECT (dec, "Have buffer of size %" G_GSIZE_FORMAT ", ts %"
       GST_TIME_FORMAT ", dur %" G_GINT64_FORMAT, gst_buffer_get_size (buf),
       GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buf)), GST_BUFFER_DURATION (buf));
 

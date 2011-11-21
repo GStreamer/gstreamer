@@ -464,8 +464,9 @@ gst_rtp_asf_depay_process (GstRTPBaseDepayload * depayload, GstBuffer * buf)
     if (plen < depay->packet_size) {
       GstBuffer *tmp;
 
-      GST_LOG_OBJECT (depay, "padding buffer size %d to packet size %d",
-          plen, depay->packet_size);
+      GST_LOG_OBJECT (depay,
+          "padding buffer size %" G_GSIZE_FORMAT " to packet size %d", plen,
+          depay->packet_size);
 
       tmp = gst_buffer_new_and_alloc (depay->packet_size);
       gst_buffer_copy_into (tmp, outbuf, GST_BUFFER_COPY_ALL, 0, plen);
