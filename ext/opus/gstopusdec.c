@@ -168,7 +168,7 @@ gst_opus_dec_parse_header (GstOpusDec * dec, GstBuffer * buf)
   g_return_val_if_fail (GST_BUFFER_SIZE (buf) >= 19, GST_FLOW_ERROR);
 
   dec->pre_skip = GST_READ_UINT16_LE (GST_BUFFER_DATA (buf) + 10);
-  GST_DEBUG_OBJECT (dec, "Found pre-skip of %u samples", dec->pre_skip);
+  GST_INFO_OBJECT (dec, "Found pre-skip of %u samples", dec->pre_skip);
 
   return GST_FLOW_OK;
 }
@@ -288,6 +288,24 @@ opus_dec_chain_parse_data (GstOpusDec * dec, GstBuffer * buf)
   }
   GST_DEBUG_OBJECT (dec, "decoded %d samples", n);
   GST_BUFFER_SIZE (outbuf) = n * 2 * dec->n_channels;
+
+  /* Skip any samples that need skipping */
+  if (dec->pre_skip > 0) {
+    guint scaled_pre_skip = dec->pre_skip * dec->sample_rate / 48000;
+    guint skip = scaled_pre_skip > n ? n : scaled_pre_skip;
+    guint scaled_skip = skip * 48000 / dec->sample_rate;
+    GST_BUFFER_SIZE (outbuf) -= skip * 2 * dec->n_channels;
+    GST_BUFFER_DATA (outbuf) += skip * 2 * dec->n_channels;
+    dec->pre_skip -= scaled_skip;
+    GST_INFO_OBJECT (dec,
+        "Skipping %u samples (%u at 48000 Hz, %u left to skip)", skip,
+        scaled_skip, dec->pre_skip);
+
+    if (GST_BUFFER_SIZE (outbuf) == 0) {
+      gst_buffer_unref (outbuf);
+      outbuf = NULL;
+    }
+  }
 
   res = gst_audio_decoder_finish_frame (GST_AUDIO_DECODER (dec), outbuf, 1);
 
