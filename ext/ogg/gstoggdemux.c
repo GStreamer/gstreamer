@@ -1783,10 +1783,8 @@ static GstFlowReturn gst_ogg_demux_chain (GstPad * pad, GstObject * parent,
     GstBuffer * buffer);
 static gboolean gst_ogg_demux_sink_activate (GstPad * sinkpad,
     GstObject * parent);
-static gboolean gst_ogg_demux_sink_activate_pull (GstPad * sinkpad,
-    GstObject * parent, gboolean active);
-static gboolean gst_ogg_demux_sink_activate_push (GstPad * sinkpad,
-    GstObject * parent, gboolean active);
+static gboolean gst_ogg_demux_sink_activate_mode (GstPad * sinkpad,
+    GstObject * parent, GstPadMode mode, gboolean active);
 static GstStateChangeReturn gst_ogg_demux_change_state (GstElement * element,
     GstStateChange transition);
 
@@ -1828,10 +1826,8 @@ gst_ogg_demux_init (GstOggDemux * ogg)
   gst_pad_set_event_function (ogg->sinkpad, gst_ogg_demux_sink_event);
   gst_pad_set_chain_function (ogg->sinkpad, gst_ogg_demux_chain);
   gst_pad_set_activate_function (ogg->sinkpad, gst_ogg_demux_sink_activate);
-  gst_pad_set_activatepull_function (ogg->sinkpad,
-      gst_ogg_demux_sink_activate_pull);
-  gst_pad_set_activatepush_function (ogg->sinkpad,
-      gst_ogg_demux_sink_activate_push);
+  gst_pad_set_activatemode_function (ogg->sinkpad,
+      gst_ogg_demux_sink_activate_mode);
   gst_element_add_pad (GST_ELEMENT (ogg), ogg->sinkpad);
 
   ogg->chain_lock = g_mutex_new ();
@@ -4327,51 +4323,46 @@ gst_ogg_demux_sink_activate (GstPad * sinkpad, GstObject * parent)
     goto activate_push;
 
   GST_DEBUG_OBJECT (sinkpad, "activating pull");
-  return gst_pad_activate_pull (sinkpad, TRUE);
+  return gst_pad_activate_mode (sinkpad, GST_PAD_MODE_PULL, TRUE);
 
 activate_push:
   {
     GST_DEBUG_OBJECT (sinkpad, "activating push");
-    return gst_pad_activate_push (sinkpad, TRUE);
+    return gst_pad_activate_mode (sinkpad, GST_PAD_MODE_PUSH, TRUE);
   }
 }
 
-/* this function gets called when we activate ourselves in push mode.
- * We cannot seek (ourselves) in the stream */
 static gboolean
-gst_ogg_demux_sink_activate_push (GstPad * sinkpad, GstObject * parent,
-    gboolean active)
+gst_ogg_demux_sink_activate_mode (GstPad * sinkpad, GstObject * parent,
+    GstPadMode mode, gboolean active)
 {
+  gboolean res;
   GstOggDemux *ogg;
 
   ogg = GST_OGG_DEMUX (parent);
 
-  ogg->pullmode = FALSE;
-  ogg->resync = FALSE;
+  switch (mode) {
+    case GST_PAD_MODE_PUSH:
+      ogg->pullmode = FALSE;
+      ogg->resync = FALSE;
+      res = TRUE;
+      break;
+    case GST_PAD_MODE_PULL:
+      if (active) {
+        ogg->need_chains = TRUE;
+        ogg->pullmode = TRUE;
 
-  return TRUE;
-}
-
-/* this function gets called when we activate ourselves in pull mode.
- * We can perform  random access to the resource and we start a task
- * to start reading */
-static gboolean
-gst_ogg_demux_sink_activate_pull (GstPad * sinkpad, GstObject * parent,
-    gboolean active)
-{
-  GstOggDemux *ogg;
-
-  ogg = GST_OGG_DEMUX (parent);
-
-  if (active) {
-    ogg->need_chains = TRUE;
-    ogg->pullmode = TRUE;
-
-    return gst_pad_start_task (sinkpad, (GstTaskFunction) gst_ogg_demux_loop,
-        sinkpad);
-  } else {
-    return gst_pad_stop_task (sinkpad);
+        res = gst_pad_start_task (sinkpad, (GstTaskFunction) gst_ogg_demux_loop,
+            sinkpad);
+      } else {
+        res = gst_pad_stop_task (sinkpad);
+      }
+      break;
+    default:
+      res = FALSE;
+      break;
   }
+  return res;
 }
 
 static GstStateChangeReturn

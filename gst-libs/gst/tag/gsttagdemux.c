@@ -139,8 +139,8 @@ static GstFlowReturn gst_tag_demux_chain (GstPad * pad, GstObject * parent,
 static gboolean gst_tag_demux_sink_event (GstPad * pad, GstObject * parent,
     GstEvent * event);
 
-static gboolean gst_tag_demux_src_activate_pull (GstPad * pad,
-    GstObject * parent, gboolean active);
+static gboolean gst_tag_demux_src_activate_mode (GstPad * pad,
+    GstObject * parent, GstPadMode mode, gboolean active);
 static GstFlowReturn gst_tag_demux_read_range (GstTagDemux * tagdemux,
     GstObject * parent, guint64 offset, guint length, GstBuffer ** buffer);
 
@@ -311,8 +311,8 @@ gst_tag_demux_init (GstTagDemux * demux, GstTagDemuxClass * gclass)
       GST_DEBUG_FUNCPTR (gst_tag_demux_pad_query));
   gst_pad_set_event_function (demux->priv->srcpad,
       GST_DEBUG_FUNCPTR (gst_tag_demux_srcpad_event));
-  gst_pad_set_activatepull_function (demux->priv->srcpad,
-      GST_DEBUG_FUNCPTR (gst_tag_demux_src_activate_pull));
+  gst_pad_set_activatemode_function (demux->priv->srcpad,
+      GST_DEBUG_FUNCPTR (gst_tag_demux_src_activate_mode));
   gst_pad_set_getrange_function (demux->priv->srcpad,
       GST_DEBUG_FUNCPTR (gst_tag_demux_src_getrange));
   gst_pad_use_fixed_caps (demux->priv->srcpad);
@@ -1129,7 +1129,7 @@ gst_tag_demux_sink_activate (GstPad * sinkpad, GstObject * parent)
   if (!pull_mode)
     goto activate_push;
 
-  if (!gst_pad_activate_pull (sinkpad, TRUE))
+  if (!gst_pad_activate_mode (sinkpad, GST_PAD_MODE_PULL, TRUE))
     goto activate_push;
 
   /* Look for tags at start and end of file */
@@ -1185,7 +1185,7 @@ gst_tag_demux_sink_activate (GstPad * sinkpad, GstObject * parent)
       "probability of %u", caps, probability);
 
   /* 4 - Deactivate pull mode */
-  if (!gst_pad_activate_pull (sinkpad, FALSE)) {
+  if (!gst_pad_activate_mode (sinkpad, GST_PAD_MODE_PULL, FALSE)) {
     if (caps)
       gst_caps_unref (caps);
     GST_DEBUG_OBJECT (demux, "Could not deactivate sinkpad after reading tags");
@@ -1210,8 +1210,8 @@ gst_tag_demux_sink_activate (GstPad * sinkpad, GstObject * parent)
    * done, otherwise switch to push */
   ret = TRUE;
   if (!gst_pad_is_active (sinkpad)) {
-    ret = gst_pad_activate_push (demux->priv->srcpad, TRUE);
-    ret &= gst_pad_activate_push (sinkpad, TRUE);
+    ret = gst_pad_activate_mode (demux->priv->srcpad, GST_PAD_MODE_PUSH, TRUE);
+    ret &= gst_pad_activate_mode (sinkpad, GST_PAD_MODE_PUSH, TRUE);
   }
 
 done_activate:
@@ -1226,17 +1226,25 @@ activate_push:
     GST_DEBUG_OBJECT (demux, "No pull mode. Changing to push, but won't be "
         "able to read end tags");
     demux->priv->state = GST_TAG_DEMUX_READ_START_TAG;
-    return gst_pad_activate_push (sinkpad, TRUE);
+    return gst_pad_activate_mode (sinkpad, GST_PAD_MODE_PUSH, TRUE);
   }
 }
 
 static gboolean
-gst_tag_demux_src_activate_pull (GstPad * pad, GstObject * parent,
-    gboolean active)
+gst_tag_demux_src_activate_mode (GstPad * pad, GstObject * parent,
+    GstPadMode mode, gboolean active)
 {
+  gboolean res = TRUE;
   GstTagDemux *demux = GST_TAG_DEMUX (parent);
 
-  return gst_pad_activate_pull (demux->priv->sinkpad, active);
+  switch (mode) {
+    case GST_PAD_MODE_PULL:
+      res = gst_pad_activate_mode (demux->priv->sinkpad, mode, active);
+      break;
+    default:
+      break;
+  }
+  return res;
 }
 
 static GstFlowReturn

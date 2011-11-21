@@ -293,8 +293,8 @@ static void gst_audio_encoder_set_property (GObject * object,
 static void gst_audio_encoder_get_property (GObject * object,
     guint prop_id, GValue * value, GParamSpec * pspec);
 
-static gboolean gst_audio_encoder_sink_activate_push (GstPad * pad,
-    GstObject * parent, gboolean active);
+static gboolean gst_audio_encoder_sink_activate_mode (GstPad * pad,
+    GstObject * parent, GstPadMode mode, gboolean active);
 
 static GstCaps *gst_audio_encoder_getcaps_default (GstAudioEncoder * enc,
     GstCaps * filter);
@@ -370,8 +370,8 @@ gst_audio_encoder_init (GstAudioEncoder * enc, GstAudioEncoderClass * bclass)
       GST_DEBUG_FUNCPTR (gst_audio_encoder_sink_query));
   gst_pad_set_chain_function (enc->sinkpad,
       GST_DEBUG_FUNCPTR (gst_audio_encoder_chain));
-  gst_pad_set_activatepush_function (enc->sinkpad,
-      GST_DEBUG_FUNCPTR (gst_audio_encoder_sink_activate_push));
+  gst_pad_set_activatemode_function (enc->sinkpad,
+      GST_DEBUG_FUNCPTR (gst_audio_encoder_sink_activate_mode));
   gst_element_add_pad (GST_ELEMENT (enc), enc->sinkpad);
 
   GST_DEBUG_OBJECT (enc, "sinkpad created");
@@ -1701,8 +1701,8 @@ gst_audio_encoder_activate (GstAudioEncoder * enc, gboolean active)
 
 
 static gboolean
-gst_audio_encoder_sink_activate_push (GstPad * pad, GstObject * parent,
-    gboolean active)
+gst_audio_encoder_sink_activate_mode (GstPad * pad, GstObject * parent,
+    GstPadMode mode, gboolean active)
 {
   gboolean result = TRUE;
   GstAudioEncoder *enc;
