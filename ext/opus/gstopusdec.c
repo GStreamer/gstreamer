@@ -244,12 +244,19 @@ opus_dec_chain_parse_data (GstOpusDec * dec, GstBuffer * buf)
     size = 0;
   }
 
-  samples =
-      opus_packet_get_samples_per_frame (data,
-      dec->sample_rate) * opus_packet_get_nb_frames (data, size);
+  if (data) {
+    samples =
+        opus_packet_get_samples_per_frame (data,
+        dec->sample_rate) * opus_packet_get_nb_frames (data, size);
+    packet_size = samples * dec->n_channels * 2;
+    GST_DEBUG_OBJECT (dec, "bandwidth %d", opus_packet_get_bandwidth (data));
+    GST_DEBUG_OBJECT (dec, "samples %d", samples);
+  } else {
+    /* use maximum size (120 ms) as we do now know in advance how many samples
+       will be returned */
+    samples = 120 * dec->sample_rate / 1000;
+  }
   packet_size = samples * dec->n_channels * 2;
-  GST_DEBUG_OBJECT (dec, "bandwidth %d", opus_packet_get_bandwidth (data));
-  GST_DEBUG_OBJECT (dec, "samples %d", samples);
 
   res = gst_pad_alloc_buffer_and_set_caps (GST_AUDIO_DECODER_SRC_PAD (dec),
       GST_BUFFER_OFFSET_NONE, packet_size,
@@ -262,14 +269,13 @@ opus_dec_chain_parse_data (GstOpusDec * dec, GstBuffer * buf)
 
   out_data = (gint16 *) GST_BUFFER_DATA (outbuf);
 
-  GST_LOG_OBJECT (dec, "decoding %d samples, in size %u", samples, size);
-
   n = opus_decode (dec->state, data, size, out_data, samples, 0);
   if (n < 0) {
     GST_ELEMENT_ERROR (dec, STREAM, DECODE, ("Decoding error: %d", n), (NULL));
     return GST_FLOW_ERROR;
   }
   GST_DEBUG_OBJECT (dec, "decoded %d samples", n);
+  GST_BUFFER_SIZE (outbuf) = n * 2 * dec->n_channels;
 
   res = gst_audio_decoder_finish_frame (GST_AUDIO_DECODER (dec), outbuf, 1);
 
