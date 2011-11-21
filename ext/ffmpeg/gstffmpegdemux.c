@@ -128,10 +128,8 @@ static GstFlowReturn gst_ffmpegdemux_chain (GstPad * sinkpad,
 static void gst_ffmpegdemux_loop (GstFFMpegDemux * demux);
 static gboolean gst_ffmpegdemux_sink_activate (GstPad * sinkpad,
     GstObject * parent);
-static gboolean gst_ffmpegdemux_sink_activate_pull (GstPad * sinkpad,
-    GstObject * parent, gboolean active);
-static gboolean gst_ffmpegdemux_sink_activate_push (GstPad * sinkpad,
-    GstObject * parent, gboolean active);
+static gboolean gst_ffmpegdemux_sink_activate_mode (GstPad * sinkpad,
+    GstObject * parent, GstPadMode mode, gboolean active);
 
 #if 0
 static gboolean
@@ -258,10 +256,8 @@ gst_ffmpegdemux_init (GstFFMpegDemux * demux)
   demux->sinkpad = gst_pad_new_from_template (oclass->sinktempl, "sink");
   gst_pad_set_activate_function (demux->sinkpad,
       GST_DEBUG_FUNCPTR (gst_ffmpegdemux_sink_activate));
-  gst_pad_set_activatepull_function (demux->sinkpad,
-      GST_DEBUG_FUNCPTR (gst_ffmpegdemux_sink_activate_pull));
-  gst_pad_set_activatepush_function (demux->sinkpad,
-      GST_DEBUG_FUNCPTR (gst_ffmpegdemux_sink_activate_push));
+  gst_pad_set_activatemode_function (demux->sinkpad,
+      GST_DEBUG_FUNCPTR (gst_ffmpegdemux_sink_activate_mode));
   gst_element_add_pad (GST_ELEMENT (demux), demux->sinkpad);
 
   /* push based setup */
@@ -1710,12 +1706,12 @@ gst_ffmpegdemux_sink_activate (GstPad * sinkpad, GstObject * parent)
     goto activate_push;
 
   GST_DEBUG_OBJECT (sinkpad, "activating pull");
-  return gst_pad_activate_pull (sinkpad, TRUE);
+  return gst_pad_activate_mode (sinkpad, GST_PAD_MODE_PULL, TRUE);
 
 activate_push:
   {
     GST_DEBUG_OBJECT (sinkpad, "activating push");
-    return gst_pad_activate_push (sinkpad, TRUE);
+    return gst_pad_activate_mode (sinkpad, GST_PAD_MODE_PUSH, TRUE);
   }
 }
 
@@ -1789,6 +1785,26 @@ gst_ffmpegdemux_sink_activate_pull (GstPad * sinkpad, GstObject * parent,
     demux->seekable = FALSE;
   }
 
+  return res;
+}
+
+static gboolean
+gst_ffmpegdemux_sink_activate_mode (GstPad * sinkpad, GstObject * parent,
+    GstPadMode mode, gboolean active)
+{
+  gboolean res;
+
+  switch (mode) {
+    case GST_PAD_MODE_PUSH:
+      res = gst_ffmpegdemux_sink_activate_push (sinkpad, parent, active);
+      break;
+    case GST_PAD_MODE_PULL:
+      res = gst_ffmpegdemux_sink_activate_pull (sinkpad, parent, active);
+      break;
+    default:
+      res = FALSE;
+      break;
+  }
   return res;
 }
 
