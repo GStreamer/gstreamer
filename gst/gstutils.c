@@ -3088,7 +3088,7 @@ gst_pad_peer_query_caps (GstPad * pad, GstCaps * filter)
   if (gst_pad_peer_query (pad, query)) {
     gst_query_parse_caps_result (query, &result);
     gst_caps_ref (result);
-    GST_DEBUG_OBJECT (pad, "peer query returned %d", result);
+    GST_DEBUG_OBJECT (pad, "peer query returned %" GST_PTR_FORMAT, result);
   } else if (filter) {
     result = gst_caps_ref (filter);
   } else {

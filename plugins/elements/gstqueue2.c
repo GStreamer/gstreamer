@@ -2803,7 +2803,7 @@ gst_queue2_src_activate_mode (GstPad * pad, GstObject * parent, GstPadMode mode,
       res = gst_queue2_src_activate_push (pad, parent, active);
       break;
     default:
-      GST_LOG_OBJECT (pad, "unknown activation mode %d");
+      GST_LOG_OBJECT (pad, "unknown activation mode %d", mode);
       res = FALSE;
       break;
   }
