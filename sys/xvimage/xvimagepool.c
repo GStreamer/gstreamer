@@ -650,12 +650,6 @@ no_buffer:
   }
 }
 
-static void
-xvimage_buffer_pool_free (GstBufferPool * pool, GstBuffer * buffer)
-{
-  gst_buffer_unref (buffer);
-}
-
 GstBufferPool *
 gst_xvimage_buffer_pool_new (GstXvImageSink * xvimagesink)
 {
@@ -684,7 +678,6 @@ gst_xvimage_buffer_pool_class_init (GstXvImageBufferPoolClass * klass)
   gstbufferpool_class->get_options = xvimage_buffer_pool_get_options;
   gstbufferpool_class->set_config = xvimage_buffer_pool_set_config;
   gstbufferpool_class->alloc_buffer = xvimage_buffer_pool_alloc;
-  gstbufferpool_class->free_buffer = xvimage_buffer_pool_free;
 }
 
 static void
