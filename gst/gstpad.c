@@ -395,6 +395,7 @@ replace_event (GstPad * srcpad, GstPad * sinkpad, guint idx)
 }
 
 
+/* srcpad and sinkpad LOCK must be taken */
 static void
 prepare_event_update (GstPad * srcpad, GstPad * sinkpad)
 {
@@ -1598,11 +1599,13 @@ gst_pad_link_check_compatible_unlocked (GstPad * src, GstPad * sink,
 
   /* Doing the expensive caps checking takes priority over only checking the template caps */
   if (flags & GST_PAD_LINK_CHECK_CAPS) {
-    GST_OBJECT_UNLOCK (src);
-    srccaps = gst_pad_query_caps (src, NULL);
-    GST_OBJECT_LOCK (src);
     GST_OBJECT_UNLOCK (sink);
+    GST_OBJECT_UNLOCK (src);
+
+    srccaps = gst_pad_query_caps (src, NULL);
     sinkcaps = gst_pad_query_caps (sink, NULL);
+
+    GST_OBJECT_LOCK (src);
     GST_OBJECT_LOCK (sink);
   } else {
     /* If one of the two pads doesn't have a template, consider the intersection
