@@ -237,8 +237,8 @@ gst_break_my_data_transform_ip (GstBaseTransform * trans, GstBuffer * buf)
   data = gst_buffer_map (buf, &size, NULL, GST_MAP_READWRITE);
 
   GST_LOG_OBJECT (bmd,
-      "got buffer %p (size %u, timestamp %" G_GUINT64_FORMAT ", offset %"
-      G_GUINT64_FORMAT "", buf, size, GST_BUFFER_TIMESTAMP (buf),
+      "got buffer %p (size %" G_GSIZE_FORMAT ", timestamp %" G_GUINT64_FORMAT
+      ", offset %" G_GUINT64_FORMAT "", buf, size, GST_BUFFER_TIMESTAMP (buf),
       GST_BUFFER_OFFSET (buf));
 
   for (; i < size; i++) {
@@ -250,7 +250,8 @@ gst_break_my_data_transform_ip (GstBaseTransform * trans, GstBuffer * buf)
       } else {
         new = bmd->set;
       }
-      GST_INFO_OBJECT (bmd, "changing byte %u from 0x%02X to 0x%02X", i,
+      GST_INFO_OBJECT (bmd,
+          "changing byte %" G_GSIZE_FORMAT " from 0x%02X to 0x%02X", i,
           (guint) GST_READ_UINT8 (data + i), (guint) ((guint8) new));
       data[i] = new;
     }

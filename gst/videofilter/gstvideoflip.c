@@ -191,8 +191,9 @@ gst_video_flip_get_unit_size (GstBaseTransform * btrans, GstCaps * caps,
 
   *size = info.size;
 
-  GST_DEBUG_OBJECT (btrans, "our frame size is %d bytes (%dx%d)", *size,
-      info.width, info.height);
+  GST_DEBUG_OBJECT (btrans,
+      "our frame size is %" G_GSIZE_FORMAT " bytes (%dx%d)", *size, info.width,
+      info.height);
 
   return TRUE;
 }

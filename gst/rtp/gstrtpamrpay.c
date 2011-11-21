@@ -252,7 +252,7 @@ gst_rtp_amr_pay_handle_buffer (GstRTPBasePayload * basepayload,
   else
     frame_size = wb_frame_size;
 
-  GST_DEBUG_OBJECT (basepayload, "got %d bytes", size);
+  GST_DEBUG_OBJECT (basepayload, "got %" G_GSIZE_FORMAT " bytes", size);
 
   /* FIXME, only
    * octet aligned, no interleaving, single channel, no CRC,

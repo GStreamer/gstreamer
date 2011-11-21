@@ -396,7 +396,7 @@ gst_rtp_celt_pay_handle_buffer (GstRTPBasePayload * basepayload,
   duration = GST_BUFFER_DURATION (buffer);
 
   GST_LOG_OBJECT (rtpceltpay,
-      "got buffer of duration %" GST_TIME_FORMAT ", size %u",
+      "got buffer of duration %" GST_TIME_FORMAT ", size %" G_GSIZE_FORMAT,
       GST_TIME_ARGS (duration), size);
 
   /* calculate the size of the size field and the payload */

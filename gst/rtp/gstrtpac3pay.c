@@ -367,7 +367,8 @@ gst_rtp_ac3_pay_handle_buffer (GstRTPBasePayload * basepayload,
       break;
 
     NF++;
-    GST_DEBUG_OBJECT (rtpac3pay, "found frame %u of size %u", NF, frame_size);
+    GST_DEBUG_OBJECT (rtpac3pay, "found frame %" G_GSIZE_FORMAT " of size %u",
+        NF, frame_size);
 
     p += frame_size;
     left -= frame_size;

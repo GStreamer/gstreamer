@@ -130,8 +130,8 @@ gst_rtp_mp1s_depay_process (GstRTPBaseDepayload * depayload, GstBuffer * buf)
   gst_rtp_buffer_unmap (&rtp);
 
   if (outbuf)
-    GST_DEBUG ("gst_rtp_mp1s_depay_chain: pushing buffer of size %d",
-        gst_buffer_get_size (outbuf));
+    GST_DEBUG ("gst_rtp_mp1s_depay_chain: pushing buffer of size %"
+        G_GSIZE_FORMAT, gst_buffer_get_size (outbuf));
 
   return outbuf;
 }

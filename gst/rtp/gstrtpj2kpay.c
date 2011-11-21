@@ -348,7 +348,8 @@ gst_rtp_j2k_pay_handle_buffer (GstRTPBasePayload * basepayload,
   timestamp = GST_BUFFER_TIMESTAMP (buffer);
   offset = pos = end = 0;
 
-  GST_LOG_OBJECT (pay, "got buffer size %u, timestamp %" GST_TIME_FORMAT, size,
+  GST_LOG_OBJECT (pay,
+      "got buffer size %" G_GSIZE_FORMAT ", timestamp %" GST_TIME_FORMAT, size,
       GST_TIME_ARGS (timestamp));
 
   /* do some header defaults first */

@@ -198,7 +198,8 @@ gst_rtp_theora_depay_parse_configuration (GstRtpTheoraDepay * rtptheoradepay,
     data += 6;
 
     GST_DEBUG_OBJECT (rtptheoradepay,
-        "header %d, ident 0x%08x, length %u, left %u", i, ident, length, size);
+        "header %d, ident 0x%08x, length %u, left %" G_GSIZE_FORMAT, i, ident,
+        length, size);
 
     /* FIXME check if we already got this ident */
 

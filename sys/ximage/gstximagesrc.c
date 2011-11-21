@@ -431,6 +431,7 @@ composite_pixel (GstXContext * xcontext, guchar * dest, guchar * src)
 }
 #endif
 
+#ifdef HAVE_XDAMAGE
 static void
 copy_buffer (GstBuffer * dest, GstBuffer * src)
 {
@@ -441,6 +442,7 @@ copy_buffer (GstBuffer * dest, GstBuffer * src)
   gst_buffer_fill (dest, 0, data, size);
   gst_buffer_unmap (src, data, size);
 }
+#endif
 
 /* Retrieve an XImageSrcBuffer, preferably from our
  * pool of existing images and populate it from the window */

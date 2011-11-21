@@ -214,9 +214,9 @@ gst_rtp_celt_depay_process (GstRTPBaseDepayload * depayload, GstBuffer * buf)
 
   gst_rtp_buffer_map (buf, GST_MAP_READ, &rtp);
 
-  GST_LOG_OBJECT (depayload, "got %d bytes, mark %d ts %u seqn %d",
-      gst_buffer_get_size (buf),
-      gst_rtp_buffer_get_marker (&rtp),
+  GST_LOG_OBJECT (depayload,
+      "got %" G_GSIZE_FORMAT " bytes, mark %d ts %u seqn %d",
+      gst_buffer_get_size (buf), gst_rtp_buffer_get_marker (&rtp),
       gst_rtp_buffer_get_timestamp (&rtp), gst_rtp_buffer_get_seq (&rtp));
 
   GST_LOG_OBJECT (depayload, "got clock-rate=%d, frame_size=%d, "

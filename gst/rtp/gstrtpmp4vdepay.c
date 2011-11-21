@@ -184,8 +184,8 @@ gst_rtp_mp4v_depay_process (GstRTPBaseDepayload * depayload, GstBuffer * buf)
 
     outbuf = gst_adapter_take_buffer (rtpmp4vdepay->adapter, avail);
 
-    GST_DEBUG ("gst_rtp_mp4v_depay_chain: pushing buffer of size %d",
-        gst_buffer_get_size (outbuf));
+    GST_DEBUG ("gst_rtp_mp4v_depay_chain: pushing buffer of size %"
+        G_GSIZE_FORMAT, gst_buffer_get_size (outbuf));
   }
 
   gst_rtp_buffer_unmap (&rtp);

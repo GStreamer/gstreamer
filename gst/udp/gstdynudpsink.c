@@ -196,12 +196,13 @@ gst_dynudpsink_render (GstBaseSink * bsink, GstBuffer * buffer)
 
   data = gst_buffer_map (buffer, &size, NULL, GST_MAP_READ);
 
-  GST_DEBUG ("about to send %d bytes", size);
+  GST_DEBUG ("about to send %" G_GSIZE_FORMAT " bytes", size);
 
   /* let's get the address from the metaata */
   gst_net_address_get_ip4_address (&meta->naddr, &destaddr, &destport);
 
-  GST_DEBUG ("sending %d bytes to client %d port %d", size, destaddr, destport);
+  GST_DEBUG ("sending %" G_GSIZE_FORMAT " bytes to client %d port %d", size,
+      destaddr, destport);
 
   theiraddr.sin_family = AF_INET;
   theiraddr.sin_addr.s_addr = destaddr;
@@ -221,7 +222,7 @@ gst_dynudpsink_render (GstBaseSink * bsink, GstBuffer * buffer)
     }
   }
 
-  GST_DEBUG ("sent %d bytes", size);
+  GST_DEBUG ("sent %" G_GSIZE_FORMAT " bytes", size);
 
   return GST_FLOW_OK;
 

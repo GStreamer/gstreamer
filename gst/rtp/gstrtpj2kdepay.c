@@ -237,7 +237,8 @@ gst_rtp_j2k_depay_flush_pu (GstRTPBaseDepayload * depayload)
     /* append packets */
     for (walk = packets; walk; walk = g_list_next (walk)) {
       GstBuffer *buf = GST_BUFFER_CAST (walk->data);
-      GST_DEBUG_OBJECT (rtpj2kdepay, "append pu packet of size %u",
+      GST_DEBUG_OBJECT (rtpj2kdepay,
+          "append pu packet of size %" G_GSIZE_FORMAT,
           gst_buffer_get_size (buf));
       gst_adapter_push (rtpj2kdepay->t_adapter, buf);
     }
@@ -334,7 +335,7 @@ gst_rtp_j2k_depay_flush_tile (GstRTPBaseDepayload * depayload)
       gst_buffer_unmap (buf, data, size);
     }
 
-    GST_DEBUG_OBJECT (rtpj2kdepay, "append pu packet of size %u",
+    GST_DEBUG_OBJECT (rtpj2kdepay, "append pu packet of size %" G_GSIZE_FORMAT,
         gst_buffer_get_size (buf));
     gst_adapter_push (rtpj2kdepay->f_adapter, buf);
   }

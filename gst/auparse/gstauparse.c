@@ -406,7 +406,8 @@ gst_au_parse_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
 
   auparse = GST_AU_PARSE (parent);
 
-  GST_LOG_OBJECT (auparse, "got buffer of size %u", gst_buffer_get_size (buf));
+  GST_LOG_OBJECT (auparse, "got buffer of size %" G_GSIZE_FORMAT,
+      gst_buffer_get_size (buf));
 
   gst_adapter_push (auparse->adapter, buf);
   buf = NULL;

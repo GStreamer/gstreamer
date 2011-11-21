@@ -318,7 +318,8 @@ GST_PLUGINS_NONPORTED="deinterlace flx goom2k1 \
  videobox videomixer \
  cairo cairo_gobject dv1394 gdk_pixbuf libdv libpng \
  oss oss4 shout2 \
- taglib wavpack "
+ taglib wavpack \
+ osx_video osx_audio "
 AC_SUBST(GST_PLUGINS_NONPORTED)
 
 dnl these are all the gst plug-ins, compilable without additional libs

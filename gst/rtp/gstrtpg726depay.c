@@ -215,7 +215,7 @@ gst_rtp_g726_depay_process (GstRTPBaseDepayload * depayload, GstBuffer * buf)
 
   marker = gst_rtp_buffer_get_marker (&rtp);
 
-  GST_DEBUG ("process : got %d bytes, mark %d ts %u seqn %d",
+  GST_DEBUG ("process : got %" G_GSIZE_FORMAT " bytes, mark %d ts %u seqn %d",
       gst_buffer_get_size (buf), marker,
       gst_rtp_buffer_get_timestamp (&rtp), gst_rtp_buffer_get_seq (&rtp));
 

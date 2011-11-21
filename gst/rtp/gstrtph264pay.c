@@ -546,7 +546,7 @@ gst_rtp_h264_pay_setcaps (GstRTPBasePayload * basepayload, GstCaps * caps)
 
 avcc_too_small:
   {
-    GST_ERROR_OBJECT (rtph264pay, "avcC size %u < 7", size);
+    GST_ERROR_OBJECT (rtph264pay, "avcC size %" G_GSIZE_FORMAT " < 7", size);
     goto error;
   }
 wrong_version:
@@ -1101,7 +1101,8 @@ gst_rtp_h264_pay_handle_buffer (GstRTPBasePayload * basepayload,
     gst_adapter_push (rtph264pay->adapter, buffer);
     size = gst_adapter_available (rtph264pay->adapter);
     data = gst_adapter_map (rtph264pay->adapter, size);
-    GST_DEBUG_OBJECT (basepayload, "got %d bytes (%d)", size,
+    GST_DEBUG_OBJECT (basepayload,
+        "got %" G_GSIZE_FORMAT " bytes (%" G_GSIZE_FORMAT ")", size,
         gst_buffer_get_size (buffer));
 
     if (!GST_CLOCK_TIME_IS_VALID (timestamp))
@@ -1111,7 +1112,7 @@ gst_rtp_h264_pay_handle_buffer (GstRTPBasePayload * basepayload,
     data = bdata;
     size = bsize;
     timestamp = GST_BUFFER_TIMESTAMP (buffer);
-    GST_DEBUG_OBJECT (basepayload, "got %d bytes", size);
+    GST_DEBUG_OBJECT (basepayload, "got %" G_GSIZE_FORMAT " bytes", size);
   }
 
   ret = GST_FLOW_OK;
@@ -1179,8 +1180,8 @@ gst_rtp_h264_pay_handle_buffer (GstRTPBasePayload * basepayload,
     /* array must be empty when we get here */
     g_assert (nal_queue->len == 0);
 
-    GST_DEBUG_OBJECT (basepayload, "found first start at %u, bytes left %u",
-        next, size);
+    GST_DEBUG_OBJECT (basepayload,
+        "found first start at %u, bytes left %" G_GSIZE_FORMAT, next, size);
 
     /* first pass to locate NALs and parse SPS/PPS */
     while (size > 4) {

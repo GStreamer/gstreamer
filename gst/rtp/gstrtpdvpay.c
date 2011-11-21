@@ -305,8 +305,9 @@ gst_rtp_dv_pay_handle_buffer (GstRTPBasePayload * basepayload,
   osize = size;
 
   GST_DEBUG_OBJECT (rtpdvpay,
-      "DV RTP payloader got buffer of %u bytes, splitting in %u byte "
-      "payload fragments, at time %" GST_TIME_FORMAT, size, max_payload_size,
+      "DV RTP payloader got buffer of %" G_GSIZE_FORMAT
+      " bytes, splitting in %u byte " "payload fragments, at time %"
+      GST_TIME_FORMAT, size, max_payload_size,
       GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buffer)));
 
   if (!rtpdvpay->negotiated) {

@@ -391,8 +391,9 @@ gst_dca_parse_check_valid_frame (GstBaseParse * parse,
     } else {
       /* FIXME: baseparse always seems to hand us buffers of min_frame_size
        * bytes, which is unhelpful here */
-      GST_LOG_OBJECT (dcaparse, "next sync out of reach (%u < %u)",
-          bufsize, size + 16);
+      GST_LOG_OBJECT (dcaparse,
+          "next sync out of reach (%" G_GSIZE_FORMAT " < %u)", bufsize,
+          size + 16);
       /* *skipsize = 0; */
       /* return FALSE; */
     }

@@ -174,7 +174,7 @@ gst_rtp_mpv_depay_process (GstRTPBaseDepayload * depayload, GstBuffer * buf)
 
     if (outbuf) {
       GST_DEBUG_OBJECT (rtpmpvdepay,
-          "gst_rtp_mpv_depay_chain: pushing buffer of size %d",
+          "gst_rtp_mpv_depay_chain: pushing buffer of size %" G_GSIZE_FORMAT,
           gst_buffer_get_size (outbuf));
     }
     return outbuf;

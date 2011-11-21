@@ -1938,8 +1938,8 @@ iterate_adapter:
 
   GST_LOG_OBJECT (wav,
       "Got buffer. timestamp:%" GST_TIME_FORMAT " , duration:%" GST_TIME_FORMAT
-      ", size:%u", GST_TIME_ARGS (timestamp), GST_TIME_ARGS (duration),
-      gst_buffer_get_size (buf));
+      ", size:%" G_GSIZE_FORMAT, GST_TIME_ARGS (timestamp),
+      GST_TIME_ARGS (duration), gst_buffer_get_size (buf));
 
   if ((res = gst_pad_push (wav->srcpad, buf)) != GST_FLOW_OK)
     goto push_error;
@@ -2085,7 +2085,8 @@ gst_wavparse_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
   GstFlowReturn ret;
   GstWavParse *wav = GST_WAVPARSE (parent);
 
-  GST_LOG_OBJECT (wav, "adapter_push %u bytes", gst_buffer_get_size (buf));
+  GST_LOG_OBJECT (wav, "adapter_push %" G_GSIZE_FORMAT " bytes",
+      gst_buffer_get_size (buf));
 
   gst_adapter_push (wav->adapter, buf);
 

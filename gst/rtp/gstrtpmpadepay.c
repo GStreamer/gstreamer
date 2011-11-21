@@ -156,7 +156,7 @@ gst_rtp_mpa_depay_process (GstRTPBaseDepayload * depayload, GstBuffer * buf)
     GST_BUFFER_FLAG_SET (outbuf, GST_BUFFER_FLAG_DISCONT);
   }
   GST_DEBUG_OBJECT (rtpmpadepay,
-      "gst_rtp_mpa_depay_chain: pushing buffer of size %d",
+      "gst_rtp_mpa_depay_chain: pushing buffer of size %" G_GSIZE_FORMAT "",
       gst_buffer_get_size (outbuf));
 
   gst_rtp_buffer_unmap (&rtp);

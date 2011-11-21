@@ -763,7 +763,7 @@ done:
 wrong_size:
   {
     GST_ELEMENT_WARNING (rtptheorapay, STREAM, DECODE,
-        ("Invalid packet size (%d <= 0xffff)", size), (NULL));
+        ("Invalid packet size (%" G_GSIZE_FORMAT " <= 0xffff)", size), (NULL));
     gst_buffer_unmap (buffer, data, -1);
     gst_buffer_unref (buffer);
     return GST_FLOW_OK;

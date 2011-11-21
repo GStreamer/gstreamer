@@ -682,7 +682,7 @@ gst_qt_mux_add_mp4_cover (GstQTMux * qtmux, const GstTagList * list,
 
   data = gst_buffer_map (buf, &size, NULL, GST_MAP_READ);
   GST_DEBUG_OBJECT (qtmux, "Adding tag %" GST_FOURCC_FORMAT
-      " -> image size %d", GST_FOURCC_ARGS (fourcc), size);
+      " -> image size %" G_GSIZE_FORMAT "", GST_FOURCC_ARGS (fourcc), size);
   atom_moov_add_tag (qtmux->moov, fourcc, flags, data, size);
   gst_buffer_unmap (buf, data, size);
 done:
@@ -1121,7 +1121,8 @@ gst_qt_mux_add_metadata_tags (GstQTMux * qtmux, const GstTagList * list)
         gsize size;
 
         data = gst_buffer_map (buf, &size, NULL, GST_MAP_READ);
-        GST_DEBUG_OBJECT (qtmux, "Found private tag %d/%d; size %d, caps %"
+        GST_DEBUG_OBJECT (qtmux,
+            "Found private tag %d/%d; size %" G_GSIZE_FORMAT ", caps %"
             GST_PTR_FORMAT, i, num_tags, size, caps);
         s = gst_caps_get_structure (caps, 0);
         if (s && (style = gst_structure_get_string (s, "style"))) {
@@ -1198,7 +1199,7 @@ gst_qt_mux_send_buffer (GstQTMux * qtmux, GstBuffer * buf, guint64 * offset,
   g_return_val_if_fail (buf != NULL, GST_FLOW_ERROR);
 
   size = gst_buffer_get_size (buf);
-  GST_LOG_OBJECT (qtmux, "sending buffer size %d", size);
+  GST_LOG_OBJECT (qtmux, "sending buffer size %" G_GSIZE_FORMAT, size);
 
   if (mind_fast && qtmux->fast_start_file) {
     gint ret;
@@ -1997,7 +1998,7 @@ flush:
     pad->traf = NULL;
     atom_moof_copy_data (moof, &data, &size, &offset);
     buffer = _gst_buffer_new_take_data (data, offset);
-    GST_LOG_OBJECT (qtmux, "writing moof size %d",
+    GST_LOG_OBJECT (qtmux, "writing moof size %" G_GSIZE_FORMAT,
         gst_buffer_get_size (buffer));
     ret = gst_qt_mux_send_buffer (qtmux, buffer, &qtmux->header_size, FALSE);
 

@@ -912,8 +912,8 @@ gst_spectrum_transform_ip (GstBaseTransform * trans, GstBuffer * buffer)
     fft_todo = nfft - (spectrum->num_frames % nfft);
     msg_todo = spectrum->frames_todo - spectrum->num_frames;
     GST_LOG_OBJECT (spectrum,
-        "message frames todo: %u, fft frames todo: %u, input frames %u",
-        msg_todo, fft_todo, (size / bpf));
+        "message frames todo: %u, fft frames todo: %u, input frames %"
+        G_GSIZE_FORMAT, msg_todo, fft_todo, (size / bpf));
     block_size = msg_todo;
     if (block_size > (size / bpf))
       block_size = (size / bpf);
@@ -934,7 +934,8 @@ gst_spectrum_transform_ip (GstBaseTransform * trans, GstBuffer * buffer)
 
     have_full_interval = (spectrum->num_frames == spectrum->frames_todo);
 
-    GST_LOG_OBJECT (spectrum, "size: %u, do-fft = %d, do-message = %d", size,
+    GST_LOG_OBJECT (spectrum,
+        "size: %" G_GSIZE_FORMAT ", do-fft = %d, do-message = %d", size,
         (spectrum->num_frames % nfft == 0), have_full_interval);
 
     /* If we have enough frames for an FFT or we have all frames required for

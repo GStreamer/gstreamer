@@ -368,7 +368,7 @@ invalid_size:
         ("Invalid input buffer size"),
         ("Invalid buffer size, should be a multiple of"
             " G729_FRAME_SIZE(10) with an optional G729B_CN_FRAME_SIZE(2)"
-            " added to it, but it is %u", size));
+            " added to it, but it is %" G_GSIZE_FORMAT, size));
     gst_buffer_unref (buf);
     return GST_FLOW_ERROR;
   }

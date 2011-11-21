@@ -599,8 +599,8 @@ gst_qtdemux_pull_atom (GstQTDemux * qtdemux, guint64 offset, guint64 size,
   bsize = gst_buffer_get_size (*buf);
   /* Catch short reads - we don't want any partial atoms */
   if (G_UNLIKELY (bsize < size)) {
-    GST_WARNING_OBJECT (qtdemux, "short read: %u < %" G_GUINT64_FORMAT,
-        bsize, size);
+    GST_WARNING_OBJECT (qtdemux,
+        "short read: %" G_GSIZE_FORMAT " < %" G_GUINT64_FORMAT, bsize, size);
     gst_buffer_unref (*buf);
     *buf = NULL;
     return GST_FLOW_UNEXPECTED;
@@ -2718,8 +2718,9 @@ gst_qtdemux_loop_state_header (GstQTDemux * qtdemux)
       if (length != size) {
         GST_ELEMENT_ERROR (qtdemux, STREAM, DEMUX,
             (_("This file is incomplete and cannot be played.")),
-            ("We got less than expected (received %u, wanted %u, offset %"
-                G_GUINT64_FORMAT ")", size, (guint) length, cur_offset));
+            ("We got less than expected (received %" G_GSIZE_FORMAT
+                ", wanted %u, offset %" G_GUINT64_FORMAT ")", size,
+                (guint) length, cur_offset));
         gst_buffer_unmap (moov, data, size);
         gst_buffer_unref (moov);
         ret = GST_FLOW_ERROR;
@@ -3537,7 +3538,8 @@ gst_qtdemux_process_buffer (GstQTDemux * qtdemux, QtDemuxStream * stream,
     nsize = MIN (nsize, size - 2);
   }
 
-  GST_LOG_OBJECT (qtdemux, "3GPP timed text subtitle: %d/%d", nsize, size);
+  GST_LOG_OBJECT (qtdemux, "3GPP timed text subtitle: %d/%" G_GSIZE_FORMAT "",
+      nsize, size);
 
   /* takes care of UTF-8 validation or UTF-16 recognition,
    * no other encoding expected */
@@ -4026,8 +4028,9 @@ gst_qtdemux_chain (GstPad * sinkpad, GstObject * parent, GstBuffer * inbuf)
   if (demux->neededbytes == -1)
     goto eos;
 
-  GST_DEBUG_OBJECT (demux, "pushing in inbuf %p, neededbytes:%u, available:%u",
-      inbuf, demux->neededbytes, gst_adapter_available (demux->adapter));
+  GST_DEBUG_OBJECT (demux,
+      "pushing in inbuf %p, neededbytes:%u, available:%" G_GSIZE_FORMAT, inbuf,
+      demux->neededbytes, gst_adapter_available (demux->adapter));
 
   while (((gst_adapter_available (demux->adapter)) >= demux->neededbytes) &&
       (ret == GST_FLOW_OK)) {
@@ -6247,7 +6250,7 @@ qtdemux_parse_amr_bitrate (GstBuffer * buf, gboolean wb)
   data = gst_buffer_map (buf, &size, NULL, GST_MAP_READ);
 
   if (size != 0x11) {
-    GST_DEBUG ("Atom should have size 0x11, not %u", size);
+    GST_DEBUG ("Atom should have size 0x11, not %" G_GSIZE_FORMAT, size);
     goto bad_data;
   }
 

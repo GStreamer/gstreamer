@@ -770,7 +770,7 @@ gst_flac_parse_check_valid_frame (GstBaseParse * parse,
         goto cleanup;
       } else {
         GST_ERROR_OBJECT (flacparse,
-            "Giving up on invalid frame (%d bytes)", bufsize);
+            "Giving up on invalid frame (%" G_GSIZE_FORMAT " bytes)", bufsize);
         result = FALSE;
         goto cleanup;
       }
@@ -815,8 +815,8 @@ gst_flac_parse_handle_streaminfo (GstFlacParse * flacparse, GstBuffer * buffer)
   gst_bit_reader_init (&reader, data, size);
 
   if (size != 4 + 34) {
-    GST_ERROR_OBJECT (flacparse, "Invalid metablock size for STREAMINFO: %u",
-        size);
+    GST_ERROR_OBJECT (flacparse,
+        "Invalid metablock size for STREAMINFO: %" G_GSIZE_FORMAT "", size);
     goto failure;
   }
 

@@ -659,7 +659,8 @@ gst_wavenc_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
     wavenc->sent_header = TRUE;
   }
 
-  GST_LOG_OBJECT (wavenc, "pushing %u bytes raw audio, ts=%" GST_TIME_FORMAT,
+  GST_LOG_OBJECT (wavenc,
+      "pushing %" G_GSIZE_FORMAT " bytes raw audio, ts=%" GST_TIME_FORMAT,
       gst_buffer_get_size (buf), GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buf)));
 
   buf = gst_buffer_make_writable (buf);

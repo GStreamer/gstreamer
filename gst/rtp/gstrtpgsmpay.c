@@ -165,7 +165,7 @@ gst_rtp_gsm_pay_handle_buffer (GstRTPBasePayload * basepayload,
   gst_buffer_unmap (buffer, data, size);
   gst_buffer_unref (buffer);
 
-  GST_DEBUG ("gst_rtp_gsm_pay_chain: pushing buffer of size %d",
+  GST_DEBUG ("gst_rtp_gsm_pay_chain: pushing buffer of size %" G_GSIZE_FORMAT,
       gst_buffer_get_size (outbuf));
 
   ret = gst_rtp_base_payload_push (basepayload, outbuf);

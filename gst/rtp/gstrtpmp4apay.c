@@ -190,7 +190,9 @@ gst_rtp_mp4a_pay_parse_audio_config (GstRtpMP4APay * rtpmp4apay,
 too_short:
   {
     GST_ELEMENT_ERROR (rtpmp4apay, STREAM, FORMAT,
-        (NULL), ("config string too short, expected 2 bytes, got %d", size));
+        (NULL),
+        ("config string too short, expected 2 bytes, got %" G_GSIZE_FORMAT,
+            size));
     gst_buffer_unmap (buffer, data, -1);
     return FALSE;
   }
@@ -388,8 +390,8 @@ gst_rtp_mp4a_pay_handle_buffer (GstRTPBasePayload * basepayload,
     payload_len = gst_rtp_buffer_calc_payload_len (towrite, 0, 0);
 
     GST_DEBUG_OBJECT (rtpmp4apay,
-        "avail %d, towrite %d, packet_len %d, payload_len %d", size, towrite,
-        packet_len, payload_len);
+        "avail %" G_GSIZE_FORMAT ", towrite %d, packet_len %d, payload_len %d",
+        size, towrite, packet_len, payload_len);
 
     /* create buffer to hold the payload. */
     outbuf = gst_rtp_buffer_new_allocate (payload_len, 0, 0);

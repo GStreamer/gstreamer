@@ -276,7 +276,7 @@ gst_rtp_g726_pay_handle_buffer (GstRTPBasePayload * payload, GstBuffer * buffer)
 
     data = gst_buffer_map (buffer, &len, NULL, GST_MAP_READWRITE);
 
-    GST_LOG_OBJECT (pay, "packing %u bytes of data", len);
+    GST_LOG_OBJECT (pay, "packing %" G_GSIZE_FORMAT " bytes of data", len);
 
     /* we need to reshuffle the bytes, output is of the form:
      * A B C D .. with the number of bits depending on the bitrate. */

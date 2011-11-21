@@ -504,7 +504,7 @@ gst_goom_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
   }
 
   GST_DEBUG_OBJECT (goom,
-      "Input buffer has %d samples, time=%" G_GUINT64_FORMAT,
+      "Input buffer has %" G_GSIZE_FORMAT " samples, time=%" G_GUINT64_FORMAT,
       gst_buffer_get_size (buffer) / goom->bps, GST_BUFFER_TIMESTAMP (buffer));
 
   /* Collect samples until we have enough for an output frame */

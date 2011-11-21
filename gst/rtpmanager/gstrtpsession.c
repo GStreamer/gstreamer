@@ -1355,7 +1355,7 @@ gst_rtp_session_event_recv_rtp_sink (GstPad * pad, GstObject * parent,
        * timestamps in SR reports */
       gst_event_copy_segment (event, &in_segment);
       GST_DEBUG_OBJECT (rtpsession, "received segment %" GST_SEGMENT_FORMAT,
-          in_segment);
+          &in_segment);
 
       /* accept upstream */
       gst_segment_copy_into (&in_segment, segment);
@@ -1679,7 +1679,7 @@ gst_rtp_session_event_send_rtp_sink (GstPad * pad, GstObject * parent,
        * timestamps in SR reports */
       gst_event_copy_segment (event, &in_segment);
       GST_DEBUG_OBJECT (rtpsession, "received segment %" GST_SEGMENT_FORMAT,
-          in_segment);
+          &in_segment);
 
       /* accept upstream */
       gst_segment_copy_into (&in_segment, segment);

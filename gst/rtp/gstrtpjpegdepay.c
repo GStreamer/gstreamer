@@ -649,8 +649,7 @@ gst_rtp_jpeg_depay_process (GstRTPBaseDepayload * depayload, GstBuffer * buf)
     size = MakeHeaders (data, type, width, height, qtable, precision, dri);
     gst_buffer_unmap (outbuf, data, size);
 
-    GST_DEBUG_OBJECT (rtpjpegdepay,
-        "pushing %" G_GSIZE_FORMAT " bytes of header", size);
+    GST_DEBUG_OBJECT (rtpjpegdepay, "pushing %u bytes of header", size);
 
     gst_adapter_push (rtpjpegdepay->adapter, outbuf);
   }

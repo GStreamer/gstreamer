@@ -260,7 +260,7 @@ invalid_size:
   {
     GST_ELEMENT_WARNING (pay, STREAM, WRONG_TYPE,
         ("Invalid input buffer size"),
-        ("Input size should be 4, 20 or 24, got %u", size));
+        ("Input size should be 4, 20 or 24, got %" G_GSIZE_FORMAT, size));
     gst_buffer_unmap (buf, data, size);
     gst_buffer_unref (buf);
     return GST_FLOW_OK;
@@ -269,7 +269,8 @@ wrong_size:
   {
     GST_ELEMENT_WARNING (pay, STREAM, WRONG_TYPE,
         ("Wrong input buffer size"),
-        ("Expected input buffer size %u but got %u", size_tab[HDR], size));
+        ("Expected input buffer size %u but got %" G_GSIZE_FORMAT,
+            size_tab[HDR], size));
     gst_buffer_unmap (buf, data, size);
     gst_buffer_unref (buf);
     return GST_FLOW_OK;

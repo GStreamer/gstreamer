@@ -132,8 +132,9 @@ gst_navigationtest_get_unit_size (GstBaseTransform * btrans, GstCaps * caps,
       gst_structure_get_int (structure, "height", &height)) {
     *size = GST_VIDEO_I420_SIZE (width, height);
     ret = TRUE;
-    GST_DEBUG_OBJECT (navtest, "our frame size is %d bytes (%dx%d)", *size,
-        width, height);
+    GST_DEBUG_OBJECT (navtest,
+        "our frame size is %" G_GSIZE_FORMAT " bytes (%dx%d)", *size, width,
+        height);
   }
 
   return ret;

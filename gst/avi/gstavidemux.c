@@ -1161,7 +1161,7 @@ no_buffer:
 avih_too_small:
   {
     GST_ELEMENT_ERROR (avi, STREAM, DEMUX, (NULL),
-        ("Too small avih (%d available, %d needed)",
+        ("Too small avih (%" G_GSIZE_FORMAT " available, %d needed)",
             size, (int) sizeof (gst_riff_avih)));
     gst_buffer_unref (buf);
     return FALSE;
@@ -1242,7 +1242,8 @@ gst_avi_demux_parse_superindex (GstAviDemux * avi,
 too_small:
   {
     GST_ERROR_OBJECT (avi,
-        "Not enough data to parse superindex (%d available, 24 needed)", size);
+        "Not enough data to parse superindex (%" G_GSIZE_FORMAT
+        " available, 24 needed)", size);
     if (buf) {
       gst_buffer_unmap (buf, data, size);
       gst_buffer_unref (buf);
@@ -1528,7 +1529,8 @@ done:
 too_small:
   {
     GST_ERROR_OBJECT (avi,
-        "Not enough data to parse subindex (%d available, 24 needed)", size);
+        "Not enough data to parse subindex (%" G_GSIZE_FORMAT
+        " available, 24 needed)", size);
     goto done;                  /* continue */
   }
 not_implemented:
@@ -1802,7 +1804,7 @@ gst_avi_demux_riff_parse_vprp (GstElement * element,
 too_small:
   {
     GST_ERROR_OBJECT (element,
-        "Too small vprp (%d available, at least %d needed)",
+        "Too small vprp (%" G_GSIZE_FORMAT " available, at least %d needed)",
         size, (int) G_STRUCT_OFFSET (gst_riff_vprp, field_info));
     gst_buffer_unref (buf);
     return FALSE;
@@ -1853,7 +1855,8 @@ gst_avi_demux_roundup_list (GstAviDemux * avi, GstBuffer ** buf)
     GstBuffer *obuf;
     guint8 *data;
 
-    GST_DEBUG_OBJECT (avi, "rounding up dubious list size %d", size);
+    GST_DEBUG_OBJECT (avi, "rounding up dubious list size %" G_GSIZE_FORMAT,
+        size);
     obuf = gst_buffer_new_and_alloc (size + 1);
 
     data = gst_buffer_map (obuf, NULL, NULL, GST_MAP_WRITE);
@@ -2336,7 +2339,7 @@ gst_avi_demux_parse_odml (GstAviDemux * avi, GstBuffer * buf)
         /* check size */
         if (size < sizeof (gst_riff_dmlh)) {
           GST_ERROR_OBJECT (avi,
-              "DMLH entry is too small (%d bytes, %d needed)",
+              "DMLH entry is too small (%" G_GSIZE_FORMAT " bytes, %d needed)",
               size, (int) sizeof (gst_riff_dmlh));
           gst_buffer_unmap (sub, data, size);
           goto next;
@@ -2691,7 +2694,7 @@ gst_avi_demux_stream_index (GstAviDemux * avi)
           avi->sinkpad, &offset, &tag, &buf) != GST_FLOW_OK)
     return;
 
-  GST_DEBUG ("will parse index chunk size %u for tag %"
+  GST_DEBUG ("will parse index chunk size %" G_GSIZE_FORMAT " for tag %"
       GST_FOURCC_FORMAT, gst_buffer_get_size (buf), GST_FOURCC_ARGS (tag));
 
   gst_avi_demux_parse_index (avi, buf);
@@ -2784,7 +2787,7 @@ gst_avi_demux_stream_index_push (GstAviDemux * avi)
   /* advance offset */
   offset += 8 + GST_ROUND_UP_2 (size);
 
-  GST_DEBUG ("will parse index chunk size %u for tag %"
+  GST_DEBUG ("will parse index chunk size %" G_GSIZE_FORMAT " for tag %"
       GST_FOURCC_FORMAT, gst_buffer_get_size (buf), GST_FOURCC_ARGS (tag));
 
   avi->offset = avi->first_movi_offset;
@@ -2865,7 +2868,8 @@ pull_failed:
   }
 wrong_size:
   {
-    GST_DEBUG_OBJECT (avi, "got %d bytes which is <> 8 bytes", bufsize);
+    GST_DEBUG_OBJECT (avi, "got %" G_GSIZE_FORMAT " bytes which is <> 8 bytes",
+        bufsize);
     res = GST_FLOW_ERROR;
     goto done;
   }
@@ -3705,7 +3709,8 @@ gst_avi_demux_stream_header_pull (GstAviDemux * avi)
       GST_DEBUG_OBJECT (avi, "pull_range failure while looking for tags");
       goto pull_range_failed;
     } else if (gst_buffer_get_size (buf) < 12) {
-      GST_DEBUG_OBJECT (avi, "got %d bytes which is less than 12 bytes",
+      GST_DEBUG_OBJECT (avi,
+          "got %" G_GSIZE_FORMAT " bytes which is less than 12 bytes",
           gst_buffer_get_size (buf));
       gst_buffer_unref (buf);
       return GST_FLOW_ERROR;
@@ -3737,7 +3742,7 @@ gst_avi_demux_stream_header_pull (GstAviDemux * avi)
               GST_DEBUG_OBJECT (avi, "couldn't read INFO chunk");
               goto pull_range_failed;
             }
-            GST_DEBUG ("got size %u", gst_buffer_get_size (buf));
+            GST_DEBUG ("got size %" G_GSIZE_FORMAT, gst_buffer_get_size (buf));
             if (size < 4) {
               GST_DEBUG ("skipping INFO LIST prefix");
               avi->offset += (4 - GST_ROUND_UP_2 (size));
@@ -4201,7 +4206,7 @@ avi_demux_handle_seek_push (GstAviDemux * avi, GstPad * pad, GstEvent * event)
   gst_segment_do_seek (&seeksegment, rate, format, flags,
       cur_type, cur, stop_type, stop, &update);
 
-  keyframe = ! !(flags & GST_SEEK_FLAG_KEY_UNIT);
+  keyframe = !!(flags & GST_SEEK_FLAG_KEY_UNIT);
   cur = seeksegment.position;
 
   GST_DEBUG_OBJECT (avi,
@@ -4719,7 +4724,7 @@ gst_avi_demux_loop_data (GstAviDemux * avi)
     /* update current position in the segment */
     avi->segment.position = timestamp;
 
-    GST_DEBUG_OBJECT (avi, "Pushing buffer of size %u, ts %"
+    GST_DEBUG_OBJECT (avi, "Pushing buffer of size %" G_GSIZE_FORMAT ", ts %"
         GST_TIME_FORMAT ", dur %" GST_TIME_FORMAT ", off %" G_GUINT64_FORMAT
         ", off_end %" G_GUINT64_FORMAT,
         gst_buffer_get_size (buf), GST_TIME_ARGS (timestamp),
@@ -4776,8 +4781,8 @@ pull_failed:
 short_buffer:
   {
     GST_WARNING_OBJECT (avi, "Short read at offset %" G_GUINT64_FORMAT
-        ", only got %d/%" G_GUINT64_FORMAT " bytes (truncated file?)", offset,
-        gst_buffer_get_size (buf), size);
+        ", only got %" G_GSIZE_FORMAT "/%" G_GUINT64_FORMAT
+        " bytes (truncated file?)", offset, gst_buffer_get_size (buf), size);
     gst_buffer_unref (buf);
     ret = GST_FLOW_UNEXPECTED;
     goto beach;
@@ -5166,7 +5171,8 @@ gst_avi_demux_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
       avi->stream[i].discont = TRUE;
   }
 
-  GST_DEBUG ("Store %d bytes in adapter", gst_buffer_get_size (buf));
+  GST_DEBUG ("Store %" G_GSIZE_FORMAT " bytes in adapter",
+      gst_buffer_get_size (buf));
   gst_adapter_push (avi->adapter, buf);
 
   switch (avi->state) {

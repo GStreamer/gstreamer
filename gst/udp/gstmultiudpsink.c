@@ -570,7 +570,7 @@ gst_multiudpsink_render (GstBaseSink * bsink, GstBuffer * buffer)
 
     if (bsize > UDP_MAX_SIZE) {
       GST_WARNING ("Attempting to send a UDP packet larger than maximum "
-          "size (%d > %d)", bsize, UDP_MAX_SIZE);
+          "size (%" G_GSIZE_FORMAT " > %d)", bsize, UDP_MAX_SIZE);
     }
 
     msg.msg_iov[msg.msg_iovlen].iov_len = bsize;

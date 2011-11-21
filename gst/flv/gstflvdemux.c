@@ -821,7 +821,7 @@ gst_flv_demux_parse_tag_audio (GstFlvDemux * demux, GstBuffer * buffer)
 
   /* Error out on tags with too small headers */
   if (gst_buffer_get_size (buffer) < 11) {
-    GST_ERROR_OBJECT (demux, "Too small tag size (%d)",
+    GST_ERROR_OBJECT (demux, "Too small tag size (%" G_GSIZE_FORMAT ")",
         gst_buffer_get_size (buffer));
     return GST_FLOW_ERROR;
   }
@@ -1038,7 +1038,8 @@ gst_flv_demux_parse_tag_audio (GstFlvDemux * demux, GstBuffer * buffer)
     demux->audio_need_segment = FALSE;
   }
 
-  GST_LOG_OBJECT (demux, "pushing %d bytes buffer at pts %" GST_TIME_FORMAT
+  GST_LOG_OBJECT (demux,
+      "pushing %" G_GSIZE_FORMAT " bytes buffer at pts %" GST_TIME_FORMAT
       " with duration %" GST_TIME_FORMAT ", offset %" G_GUINT64_FORMAT,
       gst_buffer_get_size (outbuf),
       GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (outbuf)),
@@ -1415,7 +1416,8 @@ gst_flv_demux_parse_tag_video (GstFlvDemux * demux, GstBuffer * buffer)
     demux->video_need_segment = FALSE;
   }
 
-  GST_LOG_OBJECT (demux, "pushing %d bytes buffer at pts %" GST_TIME_FORMAT
+  GST_LOG_OBJECT (demux,
+      "pushing %" G_GSIZE_FORMAT " bytes buffer at pts %" GST_TIME_FORMAT
       " with duration %" GST_TIME_FORMAT ", offset %" G_GUINT64_FORMAT
       ", keyframe (%d)", gst_buffer_get_size (outbuf),
       GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (outbuf)),
@@ -1776,7 +1778,8 @@ gst_flv_demux_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
 
   demux = GST_FLV_DEMUX (parent);
 
-  GST_LOG_OBJECT (demux, "received buffer of %d bytes at offset %"
+  GST_LOG_OBJECT (demux,
+      "received buffer of %" G_GSIZE_FORMAT " bytes at offset %"
       G_GUINT64_FORMAT, gst_buffer_get_size (buffer),
       GST_BUFFER_OFFSET (buffer));
 
@@ -2024,8 +2027,8 @@ gst_flv_demux_pull_range (GstFlvDemux * demux, GstPad * pad, guint64 offset,
 
   if (G_UNLIKELY (*buffer && gst_buffer_get_size (*buffer) != size)) {
     GST_WARNING_OBJECT (demux,
-        "partial pull got %d when expecting %d from offset %" G_GUINT64_FORMAT,
-        gst_buffer_get_size (*buffer), size, offset);
+        "partial pull got %" G_GSIZE_FORMAT " when expecting %d from offset %"
+        G_GUINT64_FORMAT, gst_buffer_get_size (*buffer), size, offset);
     gst_buffer_unref (*buffer);
     ret = GST_FLOW_UNEXPECTED;
     *buffer = NULL;

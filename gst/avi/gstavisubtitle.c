@@ -243,7 +243,8 @@ wrong_magic_word:
 wrong_name_length:
   {
     GST_ELEMENT_ERROR (sub, STREAM, DECODE, (NULL),
-        ("name doesn't fit in buffer (%d < %d)", size, 17 + name_length));
+        ("name doesn't fit in buffer (%" G_GSIZE_FORMAT " < %d)", size,
+            17 + name_length));
     gst_buffer_unmap (buf, data, size);
     return GST_FLOW_ERROR;
   }
@@ -258,7 +259,7 @@ wrong_fixed_word_2:
 wrong_total_length:
   {
     GST_ELEMENT_ERROR (sub, STREAM, DECODE, (NULL),
-        ("buffer size is wrong: need %d bytes, have %d bytes",
+        ("buffer size is wrong: need %d bytes, have %" G_GSIZE_FORMAT " bytes",
             17 + name_length + file_length, size));
     gst_buffer_unmap (buf, data, size);
     return GST_FLOW_ERROR;

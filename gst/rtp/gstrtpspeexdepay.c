@@ -202,7 +202,7 @@ gst_rtp_speex_depay_process (GstRTPBaseDepayload * depayload, GstBuffer * buf)
 
   gst_rtp_buffer_map (buf, GST_MAP_READ, &rtp);
 
-  GST_DEBUG ("process : got %d bytes, mark %d ts %u seqn %d",
+  GST_DEBUG ("process : got %" G_GSIZE_FORMAT " bytes, mark %d ts %u seqn %d",
       gst_buffer_get_size (buf),
       gst_rtp_buffer_get_marker (&rtp),
       gst_rtp_buffer_get_timestamp (&rtp), gst_rtp_buffer_get_seq (&rtp));

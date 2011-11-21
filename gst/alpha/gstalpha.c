@@ -445,8 +445,9 @@ gst_alpha_get_unit_size (GstBaseTransform * btrans,
 
   *size = info.size;
 
-  GST_DEBUG_OBJECT (btrans, "unit size = %d for format %s w %d height %d",
-      *size, GST_VIDEO_INFO_NAME (&info), GST_VIDEO_INFO_WIDTH (&info),
+  GST_DEBUG_OBJECT (btrans,
+      "unit size = %" G_GSIZE_FORMAT " for format %s w %d height %d", *size,
+      GST_VIDEO_INFO_NAME (&info), GST_VIDEO_INFO_WIDTH (&info),
       GST_VIDEO_INFO_HEIGHT (&info));
 
   return TRUE;
