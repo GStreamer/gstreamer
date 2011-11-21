@@ -77,6 +77,8 @@ static GstFlowReturn gst_opus_dec_handle_frame (GstAudioDecoder * dec,
     GstBuffer * buffer);
 static gboolean gst_opus_dec_set_format (GstAudioDecoder * bdec,
     GstCaps * caps);
+static gboolean gst_opus_dec_is_header (GstBuffer * buf, const char *magic,
+    guint magic_size);
 
 static void
 gst_opus_dec_base_init (gpointer g_class)
@@ -122,6 +124,8 @@ gst_opus_dec_reset (GstOpusDec * dec)
 
   gst_buffer_replace (&dec->streamheader, NULL);
   gst_buffer_replace (&dec->vorbiscomment, NULL);
+
+  dec->pre_skip = 0;
 }
 
 static void
@@ -159,8 +163,16 @@ gst_opus_dec_stop (GstAudioDecoder * dec)
 static GstFlowReturn
 gst_opus_dec_parse_header (GstOpusDec * dec, GstBuffer * buf)
 {
+  g_return_val_if_fail (gst_opus_dec_is_header (buf, "OpusHead", 8),
+      GST_FLOW_ERROR);
+  g_return_val_if_fail (GST_BUFFER_SIZE (buf) >= 19, GST_FLOW_ERROR);
+
+  dec->pre_skip = GST_READ_UINT16_LE (GST_BUFFER_DATA (buf) + 10);
+  GST_DEBUG_OBJECT (dec, "Found pre-skip of %u samples", dec->pre_skip);
+
   return GST_FLOW_OK;
 }
+
 
 static GstFlowReturn
 gst_opus_dec_parse_comments (GstOpusDec * dec, GstBuffer * buf)
