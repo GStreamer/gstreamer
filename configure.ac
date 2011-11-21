@@ -353,6 +353,7 @@ AG_GST_CHECK_PLUGIN(sdi)
 AG_GST_CHECK_PLUGIN(sdp)
 AG_GST_CHECK_PLUGIN(segmentclip)
 AG_GST_CHECK_PLUGIN(siren)
+AG_GST_CHECK_PLUGIN(smooth)
 AG_GST_CHECK_PLUGIN(speed)
 AG_GST_CHECK_PLUGIN(subenc)
 AG_GST_CHECK_PLUGIN(stereo)
@@ -1947,6 +1948,7 @@ gst/sdi/Makefile
 gst/sdp/Makefile
 gst/segmentclip/Makefile
 gst/siren/Makefile
+gst/smooth/Makefile
 gst/speed/Makefile
 gst/subenc/Makefile
 gst/stereo/Makefile
