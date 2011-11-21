@@ -248,8 +248,8 @@ opus_dec_chain_parse_data (GstOpusDec * dec, GstBuffer * buf)
       opus_packet_get_samples_per_frame (data,
       dec->sample_rate) * opus_packet_get_nb_frames (data, size);
   packet_size = samples * dec->n_channels * 2;
-  GST_DEBUG ("bandwidth %d", opus_packet_get_bandwidth (data));
-  GST_DEBUG ("samples %d", samples);
+  GST_DEBUG_OBJECT (dec, "bandwidth %d", opus_packet_get_bandwidth (data));
+  GST_DEBUG_OBJECT (dec, "samples %d", samples);
 
   res = gst_pad_alloc_buffer_and_set_caps (GST_AUDIO_DECODER_SRC_PAD (dec),
       GST_BUFFER_OFFSET_NONE, packet_size,
@@ -377,7 +377,7 @@ gst_opus_dec_handle_frame (GstAudioDecoder * adec, GstBuffer * buf)
     }
   } else {
     /* Otherwise fall back to packet counting and assume that the
-     * first two packets are the headers. */
+     * first two packets might be the headers, checking magic. */
     switch (dec->packetno) {
       case 0:
         if (gst_opus_dec_is_header (buf, "OpusHead", 8)) {
