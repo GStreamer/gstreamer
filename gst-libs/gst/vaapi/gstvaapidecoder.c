@@ -671,6 +671,7 @@ create_picture(GstVaapiDecoder *decoder)
 
     picture->type       = GST_VAAPI_PICTURE_TYPE_NONE;
     picture->flags      = 0;
+    picture->ref_count  = 1;
     picture->surface_id = VA_INVALID_ID;
     picture->surface    = NULL;
     picture->param_id   = VA_INVALID_ID;

@@ -149,6 +149,7 @@ struct _GstVaapiCodecInfo {
 struct _GstVaapiPicture {
     GstVaapiPictureType type;
     guint               flags;
+    guint               ref_count;
     VASurfaceID         surface_id;
     GstVaapiSurface    *surface;
     VABufferID          param_id;
@@ -253,6 +254,20 @@ gst_vaapi_decoder_new_picture(GstVaapiDecoder *decoder)
 void
 gst_vaapi_decoder_free_picture(GstVaapiDecoder *decoder, GstVaapiPicture *picture)
     attribute_hidden;
+
+static inline GstVaapiPicture *
+gst_vaapi_decoder_ref_picture(GstVaapiDecoder *decoder, GstVaapiPicture *picture)
+{
+    ++picture->ref_count;
+    return picture;
+}
+
+static inline void
+gst_vaapi_decoder_unref_picture(GstVaapiDecoder *decoder, GstVaapiPicture *picture)
+{
+    if (--picture->ref_count == 0)
+        gst_vaapi_decoder_free_picture(decoder, picture);
+}
 
 GstVaapiIqMatrix *
 gst_vaapi_decoder_new_iq_matrix(GstVaapiDecoder *decoder)
