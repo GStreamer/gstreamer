@@ -161,3 +161,10 @@ gst_opus_header_create_caps (GstCaps ** caps, GSList ** headers, gint nchannels,
   *headers = g_slist_prepend (*headers, buf2);
   *headers = g_slist_prepend (*headers, buf1);
 }
+
+gboolean
+gst_opus_header_is_header (GstBuffer * buf, const char *magic, guint magic_size)
+{
+  return (GST_BUFFER_SIZE (buf) >= magic_size
+      && !memcmp (magic, GST_BUFFER_DATA (buf), magic_size));
+}

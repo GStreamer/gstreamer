@@ -26,6 +26,8 @@
 G_BEGIN_DECLS
 
 extern void gst_opus_header_create_caps (GstCaps **caps, GSList **headers, gint nchannels, gint sample_rate, const GstTagList *tags);
+extern gboolean gst_opus_header_is_header (GstBuffer * buf, const char *magic, guint magic_size);
+
 
 G_END_DECLS
 
