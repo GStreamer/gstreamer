@@ -197,10 +197,10 @@ gst_signal_processor_get_type (void)
 }
 
 static void gst_signal_processor_finalize (GObject * object);
-static gboolean gst_signal_processor_src_activate_pull (GstPad * pad,
-    GstObject * parent, gboolean active);
-static gboolean gst_signal_processor_sink_activate_push (GstPad * pad,
-    GstObject * parent, gboolean active);
+static gboolean gst_signal_processor_src_activate_mode (GstPad * pad,
+    GstObject * parent, GstPadMode mode, gboolean active);
+static gboolean gst_signal_processor_sink_activate_mode (GstPad * pad,
+    GstObject * parent, GstPadMode mode, gboolean active);
 static GstStateChangeReturn gst_signal_processor_change_state (GstElement *
     element, GstStateChange transition);
 
@@ -232,9 +232,9 @@ gst_signal_processor_class_init (GstSignalProcessorClass * klass)
   GST_DEBUG_REGISTER_FUNCPTR (gst_signal_processor_setcaps);
   GST_DEBUG_REGISTER_FUNCPTR (gst_signal_processor_event);
   GST_DEBUG_REGISTER_FUNCPTR (gst_signal_processor_chain);
-  GST_DEBUG_REGISTER_FUNCPTR (gst_signal_processor_sink_activate_push);
+  GST_DEBUG_REGISTER_FUNCPTR (gst_signal_processor_sink_activate_mode);
   GST_DEBUG_REGISTER_FUNCPTR (gst_signal_processor_getrange);
-  GST_DEBUG_REGISTER_FUNCPTR (gst_signal_processor_src_activate_pull);
+  GST_DEBUG_REGISTER_FUNCPTR (gst_signal_processor_src_activate_mode);
 
   GST_DEBUG_CATEGORY_INIT (gst_signal_processor_debug, "signalprocessor", 0,
       "signalprocessor baseclass");
@@ -259,14 +259,14 @@ gst_signal_processor_add_pad_from_template (GstSignalProcessor * self,
 
     gst_pad_set_event_function (pad, gst_signal_processor_event);
     gst_pad_set_chain_function (pad, gst_signal_processor_chain);
-    gst_pad_set_activatepush_function (pad,
-        gst_signal_processor_sink_activate_push);
+    gst_pad_set_activatemode_function (pad,
+        gst_signal_processor_sink_activate_mode);
   } else {
     GST_DEBUG_OBJECT (pad, "added new src pad");
 
     gst_pad_set_getrange_function (pad, gst_signal_processor_getrange);
-    gst_pad_set_activatepull_function (pad,
-        gst_signal_processor_src_activate_pull);
+    gst_pad_set_activatemode_function (pad,
+        gst_signal_processor_src_activate_mode);
   }
 
   gst_element_add_pad (GST_ELEMENT (self), pad);
@@ -1063,34 +1063,41 @@ gst_signal_processor_chain (GstPad * pad, GstObject * parent,
 }
 
 static gboolean
-gst_signal_processor_sink_activate_push (GstPad * pad, GstObject * parent,
-    gboolean active)
+gst_signal_processor_sink_activate_mode (GstPad * pad, GstObject * parent,
+    GstPadMode mode, gboolean active)
 {
-  gboolean result = TRUE;
+  gboolean result;
   GstSignalProcessor *self;
 
   self = GST_SIGNAL_PROCESSOR (parent);
 
-  if (active) {
-    if (self->mode == GST_PAD_MODE_NONE) {
-      self->mode = GST_PAD_MODE_PUSH;
-      result = TRUE;
-    } else if (self->mode == GST_PAD_MODE_PUSH) {
-      result = TRUE;
-    } else {
-      g_warning ("foo");
+  switch (mode) {
+    case GST_PAD_MODE_PUSH:
+      if (active) {
+        if (self->mode == GST_PAD_MODE_NONE) {
+          self->mode = GST_PAD_MODE_PUSH;
+          result = TRUE;
+        } else if (self->mode == GST_PAD_MODE_PUSH) {
+          result = TRUE;
+        } else {
+          g_warning ("foo");
+          result = FALSE;
+        }
+      } else {
+        if (self->mode == GST_PAD_MODE_NONE) {
+          result = TRUE;
+        } else if (self->mode == GST_PAD_MODE_PUSH) {
+          self->mode = GST_PAD_MODE_NONE;
+          result = TRUE;
+        } else {
+          g_warning ("foo");
+          result = FALSE;
+        }
+      }
+      break;
+    default:
       result = FALSE;
-    }
-  } else {
-    if (self->mode == GST_PAD_MODE_NONE) {
-      result = TRUE;
-    } else if (self->mode == GST_PAD_MODE_PUSH) {
-      self->mode = GST_PAD_MODE_NONE;
-      result = TRUE;
-    } else {
-      g_warning ("foo");
-      result = FALSE;
-    }
+      break;
   }
 
   GST_DEBUG_OBJECT (self, "result : %d", result);
@@ -1099,43 +1106,52 @@ gst_signal_processor_sink_activate_push (GstPad * pad, GstObject * parent,
 }
 
 static gboolean
-gst_signal_processor_src_activate_pull (GstPad * pad, GstObject * parent,
-    gboolean active)
+gst_signal_processor_src_activate_mode (GstPad * pad, GstObject * parent,
+    GstPadMode mode, gboolean active)
 {
-  gboolean result = TRUE;
+  gboolean result;
   GstSignalProcessor *self;
 
   self = GST_SIGNAL_PROCESSOR (parent);
 
-  if (active) {
-    if (self->mode == GST_PAD_MODE_NONE) {
-      GList *l;
+  switch (mode) {
+    case GST_PAD_MODE_PUSH:
+      if (active) {
+        if (self->mode == GST_PAD_MODE_NONE) {
+          GList *l;
 
-      for (l = GST_ELEMENT (self)->sinkpads; l; l = l->next)
-        result &= gst_pad_activate_pull (pad, active);
-      if (result)
-        self->mode = GST_PAD_MODE_PULL;
-    } else if (self->mode == GST_PAD_MODE_PULL) {
-      result = TRUE;
-    } else {
-      g_warning ("foo");
-      result = FALSE;
-    }
-  } else {
-    if (self->mode == GST_PAD_MODE_NONE) {
-      result = TRUE;
-    } else if (self->mode == GST_PAD_MODE_PULL) {
-      GList *l;
+          result = TRUE;
+          for (l = GST_ELEMENT (self)->sinkpads; l; l = l->next)
+            result &= gst_pad_activate_mode (pad, GST_PAD_MODE_PULL, active);
+          if (result)
+            self->mode = GST_PAD_MODE_PULL;
+        } else if (self->mode == GST_PAD_MODE_PULL) {
+          result = TRUE;
+        } else {
+          g_warning ("foo");
+          result = FALSE;
+        }
+      } else {
+        if (self->mode == GST_PAD_MODE_NONE) {
+          result = TRUE;
+        } else if (self->mode == GST_PAD_MODE_PULL) {
+          GList *l;
 
-      for (l = GST_ELEMENT (self)->sinkpads; l; l = l->next)
-        result &= gst_pad_activate_pull (pad, active);
-      if (result)
-        self->mode = GST_PAD_MODE_NONE;
-      result = TRUE;
-    } else {
-      g_warning ("foo");
+          result = TRUE;
+          for (l = GST_ELEMENT (self)->sinkpads; l; l = l->next)
+            result &= gst_pad_activate_mode (pad, GST_PAD_MODE_PULL, active);
+          if (result)
+            self->mode = GST_PAD_MODE_NONE;
+          result = TRUE;
+        } else {
+          g_warning ("foo");
+          result = FALSE;
+        }
+      }
+      break;
+    default:
       result = FALSE;
-    }
+      break;
   }
 
   GST_DEBUG_OBJECT (self, "result : %d", result);

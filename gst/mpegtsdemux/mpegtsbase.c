@@ -78,10 +78,8 @@ static void mpegts_base_finalize (GObject * object);
 static void mpegts_base_free_program (MpegTSBaseProgram * program);
 static void mpegts_base_free_stream (MpegTSBaseStream * ptream);
 static gboolean mpegts_base_sink_activate (GstPad * pad, GstObject * parent);
-static gboolean mpegts_base_sink_activate_pull (GstPad * pad,
-    GstObject * parent, gboolean active);
-static gboolean mpegts_base_sink_activate_push (GstPad * pad,
-    GstObject * parent, gboolean active);
+static gboolean mpegts_base_sink_activate_mode (GstPad * pad,
+    GstObject * parent, GstPadMode mode, gboolean active);
 static GstFlowReturn mpegts_base_chain (GstPad * pad, GstObject * parent,
     GstBuffer * buf);
 static gboolean mpegts_base_sink_event (GstPad * pad, GstObject * parent,
@@ -227,10 +225,8 @@ mpegts_base_init (MpegTSBase * base)
 {
   base->sinkpad = gst_pad_new_from_static_template (&sink_template, "sink");
   gst_pad_set_activate_function (base->sinkpad, mpegts_base_sink_activate);
-  gst_pad_set_activatepull_function (base->sinkpad,
-      mpegts_base_sink_activate_pull);
-  gst_pad_set_activatepush_function (base->sinkpad,
-      mpegts_base_sink_activate_push);
+  gst_pad_set_activatemode_function (base->sinkpad,
+      mpegts_base_sink_activate_mode);
   gst_pad_set_chain_function (base->sinkpad, mpegts_base_chain);
   gst_pad_set_event_function (base->sinkpad, mpegts_base_sink_event);
   gst_element_add_pad (GST_ELEMENT (base), base->sinkpad);
@@ -1553,36 +1549,41 @@ mpegts_base_sink_activate (GstPad * sinkpad, GstObject * parent)
     goto activate_push;
 
   GST_DEBUG_OBJECT (sinkpad, "activating pull");
-  return gst_pad_activate_pull (sinkpad, TRUE);
+  return gst_pad_activate_mode (sinkpad, GST_PAD_MODE_PULL, TRUE);
 
 activate_push:
   {
     GST_DEBUG_OBJECT (sinkpad, "activating push");
-    return gst_pad_activate_push (sinkpad, TRUE);
+    return gst_pad_activate_mode (sinkpad, GST_PAD_MODE_PUSH, TRUE);
   }
 }
 
 static gboolean
-mpegts_base_sink_activate_pull (GstPad * pad, GstObject * parent,
-    gboolean active)
+mpegts_base_sink_activate_mode (GstPad * pad, GstObject * parent,
+    GstPadMode mode, gboolean active)
 {
+  gboolean res;
   MpegTSBase *base = GST_MPEGTS_BASE (parent);
-  if (active) {
-    base->mode = BASE_MODE_SCANNING;
-    return gst_pad_start_task (pad, (GstTaskFunction) mpegts_base_loop, base);
-  } else
-    return gst_pad_stop_task (pad);
-}
 
-static gboolean
-mpegts_base_sink_activate_push (GstPad * pad, GstObject * parent,
-    gboolean active)
-{
-  MpegTSBase *base = GST_MPEGTS_BASE (parent);
-  base->mode = BASE_MODE_PUSHING;
-  return TRUE;
+  switch (mode) {
+    case GST_PAD_MODE_PUSH:
+      base->mode = BASE_MODE_PUSHING;
+      res = TRUE;
+      break;
+    case GST_PAD_MODE_PULL:
+      if (active) {
+        base->mode = BASE_MODE_SCANNING;
+        res =
+            gst_pad_start_task (pad, (GstTaskFunction) mpegts_base_loop, base);
+      } else
+        res = gst_pad_stop_task (pad);
+      break;
+    default:
+      res = FALSE;
+      break;
+  }
+  return res;
 }
-
 
 static GstStateChangeReturn
 mpegts_base_change_state (GstElement * element, GstStateChange transition)
