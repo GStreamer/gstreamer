@@ -579,7 +579,7 @@ gst_vorbis_enc_buffer_from_header_packet (GstVorbisEnc * vorbisenc,
   GST_BUFFER_TIMESTAMP (outbuf) = GST_CLOCK_TIME_NONE;
   GST_BUFFER_DURATION (outbuf) = GST_CLOCK_TIME_NONE;
 
-  GST_DEBUG ("created header packet buffer, %d bytes",
+  GST_DEBUG ("created header packet buffer, %" G_GSIZE_FORMAT " bytes",
       gst_buffer_get_size (outbuf));
   return outbuf;
 }

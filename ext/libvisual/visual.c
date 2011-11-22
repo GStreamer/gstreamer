@@ -707,7 +707,7 @@ gst_visual_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
   channels = GST_AUDIO_INFO_CHANNELS (&visual->info);
 
   GST_DEBUG_OBJECT (visual,
-      "Input buffer has %d samples, time=%" G_GUINT64_FORMAT,
+      "Input buffer has %" G_GSIZE_FORMAT " samples, time=%" G_GUINT64_FORMAT,
       gst_buffer_get_size (buffer) / bpf, GST_BUFFER_TIMESTAMP (buffer));
 
   gst_adapter_push (visual->adapter, buffer);

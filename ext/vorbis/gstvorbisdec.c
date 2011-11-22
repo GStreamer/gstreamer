@@ -561,8 +561,8 @@ vorbis_handle_data_packet (GstVorbisDec * vd, ogg_packet * packet,
 #endif
 
   size = sample_count * vd->info.bpf;
-  GST_LOG_OBJECT (vd, "%d samples ready for reading, size %d", sample_count,
-      size);
+  GST_LOG_OBJECT (vd, "%d samples ready for reading, size %" G_GSIZE_FORMAT,
+      sample_count, size);
 
   /* alloc buffer for it */
   out = gst_buffer_new_allocate (NULL, size, 0);
@@ -583,7 +583,7 @@ vorbis_handle_data_packet (GstVorbisDec * vd, ogg_packet * packet,
       sample_count, vd->info.channels);
 #endif
 
-  GST_LOG_OBJECT (vd, "setting output size to %d", size);
+  GST_LOG_OBJECT (vd, "setting output size to %" G_GSIZE_FORMAT, size);
   gst_buffer_unmap (out, data, size);
 
 done:
