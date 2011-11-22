@@ -54,6 +54,12 @@
 GST_DEBUG_CATEGORY_STATIC (opusenc_debug);
 #define GST_CAT_DEFAULT opusenc_debug
 
+/* Some arbitrary bounds beyond which it really doesn't make sense.
+   The spec mentions 6 kb/s to 510 kb/s, so 4000 and 650000 ought to be
+   safe as property bounds. */
+#define LOWEST_BITRATE 4000
+#define HIGHEST_BITRATE 650000
+
 #define GST_OPUS_ENC_TYPE_BANDWIDTH (gst_opus_enc_bandwidth_get_type())
 static GType
 gst_opus_enc_bandwidth_get_type (void)
@@ -234,7 +240,7 @@ gst_opus_enc_class_init (GstOpusEncClass * klass)
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_BITRATE,
       g_param_spec_int ("bitrate", "Encoding Bit-rate",
           "Specify an encoding bit-rate (in bps).",
-          1, 320000, DEFAULT_BITRATE,
+          LOWEST_BITRATE, HIGHEST_BITRATE, DEFAULT_BITRATE,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_BANDWIDTH,
       g_param_spec_enum ("bandwidth", "Band Width",
