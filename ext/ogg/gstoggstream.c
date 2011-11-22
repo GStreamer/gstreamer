@@ -1876,15 +1876,15 @@ static gint64
 packet_duration_opus (GstOggStream * pad, ogg_packet * packet)
 {
   static const guint64 durations[32] = {
-    10000, 20000, 40000, 60000, /* Silk NB */
-    10000, 20000, 40000, 60000, /* Silk MB */
-    10000, 20000, 40000, 60000, /* Silk WB */
-    10000, 20000,               /* Hybrid SWB */
-    10000, 20000,               /* Hybrid FB */
-    2500, 5000, 10000, 20000,   /* CELT NB */
-    2500, 5000, 10000, 20000,   /* CELT NB */
-    2500, 5000, 10000, 20000,   /* CELT NB */
-    2500, 5000, 10000, 20000,   /* CELT NB */
+    480, 960, 1920, 2880,       /* Silk NB */
+    480, 960, 1920, 2880,       /* Silk MB */
+    480, 960, 1920, 2880,       /* Silk WB */
+    480, 960,                   /* Hybrid SWB */
+    480, 960,                   /* Hybrid FB */
+    120, 240, 480, 960,         /* CELT NB */
+    120, 240, 480, 960,         /* CELT NB */
+    120, 240, 480, 960,         /* CELT NB */
+    120, 240, 480, 960,         /* CELT NB */
   };
 
   gint64 duration;
@@ -1901,7 +1901,7 @@ packet_duration_opus (GstOggStream * pad, ogg_packet * packet)
 
   toc = packet->packet[0];
 
-  frame_duration = durations[toc >> 3] * 1000;
+  frame_duration = durations[toc >> 3];
   switch (toc & 3) {
     case 0:
       nframes = 1;
@@ -1922,13 +1922,13 @@ packet_duration_opus (GstOggStream * pad, ogg_packet * packet)
   }
 
   duration = nframes * frame_duration;
-  if (duration > 120 * GST_MSECOND) {
+  if (duration > 5760) {
     GST_WARNING ("Opus packet duration > 120 ms, invalid");
     return 0;
   }
   GST_LOG ("Opus packet: frame size %.1f ms, %d frames, duration %.1f ms",
-      frame_duration / 1000000.f, nframes, duration / 1000000.f);
-  return (duration + 24000) / 48000;
+      frame_duration / 48.f, nframes, duration / 48.f);
+  return duration;
 }
 
 
