@@ -578,7 +578,7 @@ typedef GstFlowReturn  (*GstPadStickyEventsForeachFunction) (GstPad *pad, GstEve
  *                            The flag has to be unset manually after
  *                            reconfiguration happened.
  *                            Since: 0.10.34.
- * @GST_PAD_FLAG_NEED_EVENTS: the pad has pending events
+ * @GST_PAD_FLAG_PENDING_EVENTS: the pad has pending events
  * @GST_PAD_FLAG_FIXED_CAPS: the pad is using fixed caps this means that once the
  *                      caps are set on the pad, the caps query function only
  *                      returns those caps.
@@ -596,7 +596,7 @@ typedef enum {
   GST_PAD_FLAG_FLUSHING         = (GST_OBJECT_FLAG_LAST << 1),
   GST_PAD_FLAG_BLOCKING         = (GST_OBJECT_FLAG_LAST << 2),
   GST_PAD_FLAG_NEED_RECONFIGURE = (GST_OBJECT_FLAG_LAST << 3),
-  GST_PAD_FLAG_NEED_EVENTS      = (GST_OBJECT_FLAG_LAST << 4),
+  GST_PAD_FLAG_PENDING_EVENTS   = (GST_OBJECT_FLAG_LAST << 4),
   GST_PAD_FLAG_FIXED_CAPS       = (GST_OBJECT_FLAG_LAST << 5),
   GST_PAD_FLAG_PROXY_CAPS       = (GST_OBJECT_FLAG_LAST << 6),
   GST_PAD_FLAG_NEED_PARENT      = (GST_OBJECT_FLAG_LAST << 7),
@@ -725,7 +725,7 @@ struct _GstPadClass {
 #define GST_PAD_UNSET_FLUSHING(pad)	(GST_OBJECT_FLAG_UNSET (pad, GST_PAD_FLAG_FLUSHING))
 
 #define GST_PAD_NEEDS_RECONFIGURE(pad)  (GST_OBJECT_FLAG_IS_SET (pad, GST_PAD_FLAG_NEED_RECONFIGURE))
-#define GST_PAD_NEEDS_EVENTS(pad)       (GST_OBJECT_FLAG_IS_SET (pad, GST_PAD_FLAG_NEED_EVENTS))
+#define GST_PAD_HAS_PENDING_EVENTS(pad) (GST_OBJECT_FLAG_IS_SET (pad, GST_PAD_FLAG_PENDING_EVENTS))
 #define GST_PAD_IS_FIXED_CAPS(pad)	(GST_OBJECT_FLAG_IS_SET (pad, GST_PAD_FLAG_FIXED_CAPS))
 #define GST_PAD_NEEDS_PARENT(pad)       (GST_OBJECT_FLAG_IS_SET (pad, GST_PAD_FLAG_NEED_PARENT))
 
