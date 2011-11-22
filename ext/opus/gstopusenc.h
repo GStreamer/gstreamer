@@ -63,6 +63,7 @@ struct _GstOpusEnc {
   gboolean              inband_fec;
   gboolean              dtx;
   gint                  packet_loss_percentage;
+  guint                 max_payload_size;
 
   gint                  frame_samples;
   gint                  n_channels;
