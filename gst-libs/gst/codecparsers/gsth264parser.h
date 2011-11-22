@@ -168,24 +168,25 @@ typedef enum
   GST_H264_S_SI_SLICE = 9
 } GstH264SliceType;
 
-typedef struct _GstH264NalParser        GstH264NalParser;
+typedef struct _GstH264NalParser              GstH264NalParser;
 
-typedef struct _GstH264NalUnit          GstH264NalUnit;
+typedef struct _GstH264NalUnit                GstH264NalUnit;
 
-typedef struct _GstH264SPS              GstH264SPS;
-typedef struct _GstH264PPS              GstH264PPS;
-typedef struct _GstH264HRDParams        GstH264HRDParams;
-typedef struct _GstH264VUIParams        GstH264VUIParams;
+typedef struct _GstH264SPS                    GstH264SPS;
+typedef struct _GstH264PPS                    GstH264PPS;
+typedef struct _GstH264HRDParams              GstH264HRDParams;
+typedef struct _GstH264VUIParams              GstH264VUIParams;
 
-typedef struct _GstH264DecRefPicMarking GstH264DecRefPicMarking;
-typedef struct _GstH264RefPicMarking    GstH264RefPicMarking;
-typedef struct _GstH264PredWeightTable  GstH264PredWeightTable;
-typedef struct _GstH264SliceHdr         GstH264SliceHdr;
+typedef struct _GstH264RefPicListModification GstH264RefPicListModification;
+typedef struct _GstH264DecRefPicMarking       GstH264DecRefPicMarking;
+typedef struct _GstH264RefPicMarking          GstH264RefPicMarking;
+typedef struct _GstH264PredWeightTable        GstH264PredWeightTable;
+typedef struct _GstH264SliceHdr               GstH264SliceHdr;
 
-typedef struct _GstH264ClockTimestamp   GstH264ClockTimestamp;
-typedef struct _GstH264PicTiming        GstH264PicTiming;
-typedef struct _GstH264BufferingPeriod  GstH264BufferingPeriod;
-typedef struct _GstH264SEIMessage       GstH264SEIMessage;
+typedef struct _GstH264ClockTimestamp         GstH264ClockTimestamp;
+typedef struct _GstH264PicTiming              GstH264PicTiming;
+typedef struct _GstH264BufferingPeriod        GstH264BufferingPeriod;
+typedef struct _GstH264SEIMessage             GstH264SEIMessage;
 
 /**
  * GstH264NalUnit:
@@ -485,6 +486,18 @@ struct _GstH264PPS
   gboolean valid;
 };
 
+struct _GstH264RefPicListModification
+{
+  guint8 modification_of_pic_nums_idc;
+  union
+  {
+    /* if modification_of_pic_nums_idc == 0 || 1 */
+    guint32 abs_diff_pic_num_minus1;
+    /* if modification_of_pic_nums_idc == 2 */
+    guint32 long_term_pic_num;
+  } value;
+};
+
 struct _GstH264PredWeightTable
 {
   guint8 luma_log2_weight_denom;
@@ -558,6 +571,11 @@ struct _GstH264SliceHdr
 
   guint8 num_ref_idx_l0_active_minus1;
   guint8 num_ref_idx_l1_active_minus1;
+
+  guint8 ref_pic_list_modification_flag_l0;
+  GstH264RefPicListModification ref_pic_list_modification_l0[32];
+  guint8 ref_pic_list_modification_flag_l1;
+  GstH264RefPicListModification ref_pic_list_modification_l1[32];
 
   GstH264PredWeightTable pred_weight_table;
   /* if nal_unit.ref_idc != 0 */

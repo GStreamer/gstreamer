@@ -743,58 +743,54 @@ error:
 }
 
 static gboolean
-slice_parse_ref_pic_list_modification (GstH264SliceHdr * slice, NalReader * nr)
+slice_parse_ref_pic_list_modification_1 (GstH264SliceHdr * slice,
+    NalReader * nr, guint list)
 {
-  GST_DEBUG ("parsing \"Reference picture list modification\"");
+  GstH264RefPicListModification *entries;
+  guint8 *ref_pic_list_modification_flag;
+  guint32 modification_of_pic_nums_idc;
+  guint i = 0;
 
-  if (!GST_H264_IS_I_SLICE (slice) && !GST_H264_IS_SI_SLICE (slice)) {
-    guint8 ref_pic_list_modification_flag_l0;
-    guint32 modification_of_pic_nums_idc;
-
-    READ_UINT8 (nr, ref_pic_list_modification_flag_l0, 1);
-    if (ref_pic_list_modification_flag_l0)
-      do {
-        READ_UE (nr, modification_of_pic_nums_idc);
-        if (modification_of_pic_nums_idc == 0
-            || modification_of_pic_nums_idc == 1) {
-          guint32 abs_diff_pic_num_minus1 G_GNUC_UNUSED;
-
-          READ_UE_ALLOWED (nr, abs_diff_pic_num_minus1, 0,
-              slice->max_pic_num - 1);
-        } else if (modification_of_pic_nums_idc == 2) {
-          guint32 long_term_pic_num;
-
-          READ_UE (nr, long_term_pic_num);
-        }
-      } while (modification_of_pic_nums_idc != 3);
+  if (list == 0) {
+    entries = slice->ref_pic_list_modification_l0;
+    ref_pic_list_modification_flag = &slice->ref_pic_list_modification_flag_l0;
+  } else {
+    entries = slice->ref_pic_list_modification_l1;
+    ref_pic_list_modification_flag = &slice->ref_pic_list_modification_flag_l1;
   }
 
-  if (GST_H264_IS_B_SLICE (slice)) {
-    guint8 ref_pic_list_modification_flag_l1;
-    guint32 modification_of_pic_nums_idc;
-
-    READ_UINT8 (nr, ref_pic_list_modification_flag_l1, 1);
-    if (ref_pic_list_modification_flag_l1)
-      do {
-        READ_UE (nr, modification_of_pic_nums_idc);
-        if (modification_of_pic_nums_idc == 0
-            || modification_of_pic_nums_idc == 1) {
-          guint32 abs_diff_num_minus1;
-
-          READ_UE (nr, abs_diff_num_minus1);
-        } else if (modification_of_pic_nums_idc == 2) {
-          guint32 long_term_pic_num;
-
-          READ_UE (nr, long_term_pic_num);
-        }
-      } while (modification_of_pic_nums_idc != 3);
-  }
+  READ_UINT8 (nr, *ref_pic_list_modification_flag, 1);
+  do {
+    READ_UE (nr, modification_of_pic_nums_idc);
+    if (modification_of_pic_nums_idc == 0 || modification_of_pic_nums_idc == 1) {
+      READ_UE_ALLOWED (nr, entries[i].value.abs_diff_pic_num_minus1, 0,
+          slice->max_pic_num - 1);
+    } else if (modification_of_pic_nums_idc == 2) {
+      READ_UE (nr, entries[i].value.long_term_pic_num);
+    }
+  } while (modification_of_pic_nums_idc != 3);
 
   return TRUE;
 
 error:
-  GST_WARNING ("error parsing \"Reference picture list modification\"");
+  GST_WARNING ("error parsing \"Reference picture list %u modification\"",
+      list);
   return FALSE;
+}
+
+static gboolean
+slice_parse_ref_pic_list_modification (GstH264SliceHdr * slice, NalReader * nr)
+{
+  if (!GST_H264_IS_I_SLICE (slice) && !GST_H264_IS_SI_SLICE (slice)) {
+    if (!slice_parse_ref_pic_list_modification_1 (slice, nr, 0))
+      return FALSE;
+  }
+
+  if (GST_H264_IS_B_SLICE (slice)) {
+    if (!slice_parse_ref_pic_list_modification_1 (slice, nr, 1))
+      return FALSE;
+  }
+  return TRUE;
 }
 
 static gboolean
