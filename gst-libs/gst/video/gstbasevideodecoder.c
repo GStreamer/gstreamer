@@ -2028,7 +2028,7 @@ gst_base_video_decoder_alloc_src_frame (GstBaseVideoDecoder *
  * @frame: a #GstVideoFrame
  *
  * Determines maximum possible decoding time for @frame that will
- * allow it to decode and arrive in time (as determined by QoS messages).
+ * allow it to decode and arrive in time (as determined by QoS events).
  * In particular, a negative result means decoding in time is no longer possible
  * and should therefore occur as soon/skippy as possible.
  *
