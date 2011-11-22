@@ -743,55 +743,57 @@ error:
 }
 
 static gboolean
-slice_parse_ref_pic_list_reordering (GstH264SliceHdr * slice, NalReader * nr)
+slice_parse_ref_pic_list_modification (GstH264SliceHdr * slice, NalReader * nr)
 {
-  GST_DEBUG ("parsing \"Reference picture list reordering\"");
+  GST_DEBUG ("parsing \"Reference picture list modification\"");
 
   if (!GST_H264_IS_I_SLICE (slice) && !GST_H264_IS_SI_SLICE (slice)) {
-    guint8 ref_pic_list_reordering_flag_l0;
-    guint32 reordering_of_pic_nums_idc;
+    guint8 ref_pic_list_modification_flag_l0;
+    guint32 modification_of_pic_nums_idc;
 
-    READ_UINT8 (nr, ref_pic_list_reordering_flag_l0, 1);
-    if (ref_pic_list_reordering_flag_l0)
+    READ_UINT8 (nr, ref_pic_list_modification_flag_l0, 1);
+    if (ref_pic_list_modification_flag_l0)
       do {
-        READ_UE (nr, reordering_of_pic_nums_idc);
-        if (reordering_of_pic_nums_idc == 0 || reordering_of_pic_nums_idc == 1) {
+        READ_UE (nr, modification_of_pic_nums_idc);
+        if (modification_of_pic_nums_idc == 0
+            || modification_of_pic_nums_idc == 1) {
           guint32 abs_diff_pic_num_minus1 G_GNUC_UNUSED;
 
           READ_UE_ALLOWED (nr, abs_diff_pic_num_minus1, 0,
               slice->max_pic_num - 1);
-        } else if (reordering_of_pic_nums_idc == 2) {
+        } else if (modification_of_pic_nums_idc == 2) {
           guint32 long_term_pic_num;
 
           READ_UE (nr, long_term_pic_num);
         }
-      } while (reordering_of_pic_nums_idc != 3);
+      } while (modification_of_pic_nums_idc != 3);
   }
 
   if (GST_H264_IS_B_SLICE (slice)) {
-    guint8 ref_pic_list_reordering_flag_l1;
-    guint32 reordering_of_pic_nums_idc;
+    guint8 ref_pic_list_modification_flag_l1;
+    guint32 modification_of_pic_nums_idc;
 
-    READ_UINT8 (nr, ref_pic_list_reordering_flag_l1, 1);
-    if (ref_pic_list_reordering_flag_l1)
+    READ_UINT8 (nr, ref_pic_list_modification_flag_l1, 1);
+    if (ref_pic_list_modification_flag_l1)
       do {
-        READ_UE (nr, reordering_of_pic_nums_idc);
-        if (reordering_of_pic_nums_idc == 0 || reordering_of_pic_nums_idc == 1) {
+        READ_UE (nr, modification_of_pic_nums_idc);
+        if (modification_of_pic_nums_idc == 0
+            || modification_of_pic_nums_idc == 1) {
           guint32 abs_diff_num_minus1;
 
           READ_UE (nr, abs_diff_num_minus1);
-        } else if (reordering_of_pic_nums_idc == 2) {
+        } else if (modification_of_pic_nums_idc == 2) {
           guint32 long_term_pic_num;
 
           READ_UE (nr, long_term_pic_num);
         }
-      } while (reordering_of_pic_nums_idc != 3);
+      } while (modification_of_pic_nums_idc != 3);
   }
 
   return TRUE;
 
 error:
-  GST_WARNING ("error parsing \"Reference picture list reordering\"");
+  GST_WARNING ("error parsing \"Reference picture list modification\"");
   return FALSE;
 }
 
@@ -1781,7 +1783,7 @@ gst_h264_parser_parse_slice_hdr (GstH264NalParser * nalparser,
     }
   }
 
-  if (!slice_parse_ref_pic_list_reordering (slice, &nr))
+  if (!slice_parse_ref_pic_list_modification (slice, &nr))
     goto error;
 
   if ((pps->weighted_pred_flag && (GST_H264_IS_P_SLICE (slice)
