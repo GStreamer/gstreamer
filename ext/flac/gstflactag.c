@@ -258,7 +258,8 @@ gst_flac_tag_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
     tag->metadata_last_block = is_last;
 
     GST_DEBUG_OBJECT (tag,
-        "got metadata block: %d bytes, type %d, is vorbiscomment: %d, is last: %d",
+        "got metadata block: %" G_GSIZE_FORMAT " bytes, type %d, "
+        "is vorbiscomment: %d, is last: %d",
         size, type, (type == 0x04), is_last);
 
     /* Metadata blocks of type 4 are vorbis comment blocks */
@@ -404,7 +405,8 @@ gst_flac_tag_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
     data[3] = ((size - 4) & 0x0000FF);
     gst_buffer_unmap (buffer, data, size);
 
-    GST_DEBUG_OBJECT (tag, "pushing %d byte vorbiscomment buffer", size);
+    GST_DEBUG_OBJECT (tag, "pushing %" G_GSIZE_FORMAT " byte vorbiscomment "
+        "buffer", size);
 
     ret = gst_pad_push (tag->srcpad, buffer);
     if (ret != GST_FLOW_OK) {
@@ -451,7 +453,7 @@ comment_too_long:
      * be a real world problem though
      */
     GST_ELEMENT_ERROR (tag, CORE, TAG, (NULL),
-        ("Vorbis comment of size %d too long", size));
+        ("Vorbis comment of size %" G_GSIZE_FORMAT " too long", size));
     ret = GST_FLOW_ERROR;
     goto cleanup;
   }

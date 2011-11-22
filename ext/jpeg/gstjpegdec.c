@@ -1350,8 +1350,9 @@ gst_jpeg_dec_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
       (dec->segment.stop != -1) &&
       (gst_adapter_available (dec->adapter) < dec->segment.stop)) {
     /* We assume that non-packetized input in bytes is *one* single jpeg image */
-    GST_DEBUG ("Non-packetized mode. Got %d bytes, need %" G_GINT64_FORMAT,
-        gst_adapter_available (dec->adapter), dec->segment.stop);
+    GST_DEBUG ("Non-packetized mode. Got %" G_GSIZE_FORMAT " bytes, "
+        "need %" G_GINT64_FORMAT, gst_adapter_available (dec->adapter),
+        dec->segment.stop);
     goto need_more_data;
   }
 

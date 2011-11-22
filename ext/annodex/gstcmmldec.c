@@ -457,7 +457,7 @@ gst_cmml_dec_parse_ident_header (GstCmmlDec * dec, guint8 * data, gsize size)
   /* the ident header has a fixed length */
   if (size != CMML_IDENT_HEADER_SIZE) {
     GST_ELEMENT_ERROR (dec, STREAM, DECODE,
-        (NULL), ("wrong ident header size: %d", size));
+        (NULL), ("wrong ident header size: %" G_GSIZE_FORMAT, size));
     dec->flow_return = GST_FLOW_ERROR;
 
     return;

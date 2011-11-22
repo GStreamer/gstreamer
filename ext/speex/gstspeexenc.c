@@ -491,7 +491,7 @@ gst_speex_enc_setup (GstSpeexEnc * enc)
 static GstFlowReturn
 gst_speex_enc_push_buffer (GstSpeexEnc * enc, GstBuffer * buffer)
 {
-  GST_DEBUG_OBJECT (enc, "pushing output buffer of size %u",
+  GST_DEBUG_OBJECT (enc, "pushing output buffer of size %" G_GSIZE_FORMAT,
       gst_buffer_get_size (buffer));
 
   return gst_pad_push (GST_AUDIO_ENCODER_SRC_PAD (enc), buffer);
@@ -720,7 +720,7 @@ gst_speex_enc_handle_frame (GstAudioEncoder * benc, GstBuffer * buf)
     enc->header_sent = TRUE;
   }
 
-  GST_DEBUG_OBJECT (enc, "received buffer %p of %u bytes", buf,
+  GST_DEBUG_OBJECT (enc, "received buffer %p of %" G_GSIZE_FORMAT " bytes", buf,
       buf ? gst_buffer_get_size (buf) : 0);
 
   ret = gst_speex_enc_encode (enc, buf);

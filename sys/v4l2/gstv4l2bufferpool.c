@@ -144,7 +144,7 @@ gst_v4l2_buffer_pool_alloc_buffer (GstBufferPool * bpool, GstBuffer ** buffer,
 
       index = pool->num_allocated;
 
-      GST_LOG_OBJECT (pool, "creating buffer %u, %p", index, newbuf, pool);
+      GST_LOG_OBJECT (pool, "creating buffer %u, %p", index, newbuf);
 
       meta->vbuffer.index = index;
       meta->vbuffer.type = obj->type;

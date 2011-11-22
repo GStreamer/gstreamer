@@ -1036,7 +1036,8 @@ push_headers:
     GstBuffer *buf;
 
     buf = GST_BUFFER (l->data);
-    GST_LOG_OBJECT (enc, "Pushing header buffer, size %u bytes",
+    GST_LOG_OBJECT (enc,
+        "Pushing header buffer, size %" G_GSIZE_FORMAT " bytes",
         gst_buffer_get_size (buf));
 #if 0
     GST_MEMDUMP_OBJECT (enc, "header buffer", GST_BUFFER_DATA (buf),

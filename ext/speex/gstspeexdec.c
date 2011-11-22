@@ -375,8 +375,8 @@ gst_speex_dec_parse_data (GstSpeexDec * dec, GstBuffer * buf)
     fpp = dec->header->frames_per_packet;
     bits = &dec->bits;
 
-    GST_DEBUG_OBJECT (dec, "received buffer of size %u, fpp %d, %d bits",
-        size, fpp, speex_bits_remaining (bits));
+    GST_DEBUG_OBJECT (dec, "received buffer of size %" G_GSIZE_FORMAT
+        ", fpp %d, %d bits", size, fpp, speex_bits_remaining (bits));
   } else {
     /* FIXME ? actually consider how much concealment is needed */
     /* concealment data, pass NULL as the bits parameters */

@@ -541,7 +541,7 @@ gst_ximage_src_ximage_get (GstXImageSrc * ximagesrc)
 
           if (!have_frame) {
             GST_LOG_OBJECT (ximagesrc,
-                "Copying from last frame ximage->size: %d",
+                "Copying from last frame ximage->size: %" G_GSIZE_FORMAT,
                 gst_buffer_get_size (ximage));
             copy_buffer (ximage, ximagesrc->last_ximage);
             have_frame = TRUE;
@@ -603,7 +603,7 @@ gst_ximage_src_ximage_get (GstXImageSrc * ximagesrc)
     } while (XPending (ximagesrc->xcontext->disp));
     if (!have_frame) {
       GST_LOG_OBJECT (ximagesrc,
-          "Copying from last frame ximage->size: %d",
+          "Copying from last frame ximage->size: %" G_GSIZE_FORMAT,
           gst_buffer_get_size (ximage));
       copy_buffer (ximage, ximagesrc->last_ximage);
     }

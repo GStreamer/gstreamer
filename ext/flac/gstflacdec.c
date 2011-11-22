@@ -266,8 +266,8 @@ gst_flac_dec_set_format (GstAudioDecoder * dec, GstCaps * caps)
       return FALSE;
 
     header_buf = g_value_dup_boxed (header_val);
-    GST_INFO_OBJECT (dec, "pushing header buffer of %d bytes into adapter",
-        gst_buffer_get_size (header_buf));
+    GST_INFO_OBJECT (dec, "pushing header buffer of %" G_GSIZE_FORMAT " bytes "
+        "into adapter", gst_buffer_get_size (header_buf));
     gst_adapter_push (flacdec->adapter, header_buf);
   }
 
@@ -499,7 +499,8 @@ gst_flac_dec_read_stream (const FLAC__StreamDecoder * decoder,
     return FLAC__STREAM_DECODER_READ_STATUS_ABORT;
   }
 
-  GST_LOG_OBJECT (dec, "feeding %u bytes to decoder (available=%u, bytes=%u)",
+  GST_LOG_OBJECT (dec, "feeding %u bytes to decoder "
+      "(available=%" G_GSIZE_FORMAT ", bytes=%u)",
       len, gst_adapter_available (dec->adapter), (guint) * bytes);
   gst_adapter_copy (dec->adapter, buffer, 0, len);
   *bytes = len;
@@ -693,9 +694,9 @@ gst_flac_dec_handle_frame (GstAudioDecoder * audio_dec, GstBuffer * buf)
     return GST_FLOW_OK;
   }
 
-  GST_LOG_OBJECT (dec, "frame: ts %" GST_TIME_FORMAT ", flags 0x%04x, %u bytes",
-      GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buf)), GST_BUFFER_FLAGS (buf),
-      gst_buffer_get_size (buf));
+  GST_LOG_OBJECT (dec, "frame: ts %" GST_TIME_FORMAT ", flags 0x%04x, "
+      "%" G_GSIZE_FORMAT " bytes", GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buf)),
+      GST_BUFFER_FLAGS (buf), gst_buffer_get_size (buf));
 
   /* drop any in-stream headers, we've processed those in set_format already */
   if (G_UNLIKELY (!dec->got_headers)) {
@@ -710,7 +711,8 @@ gst_flac_dec_handle_frame (GstAudioDecoder * audio_dec, GstBuffer * buf)
     gst_buffer_unmap (buf, data, size);
 
     if (!got_audio_frame) {
-      GST_INFO_OBJECT (dec, "dropping in-stream header, %d bytes", size);
+      GST_INFO_OBJECT (dec, "dropping in-stream header, %" G_GSIZE_FORMAT " "
+          "bytes", size);
       gst_audio_decoder_finish_frame (audio_dec, NULL, 1);
       return GST_FLOW_OK;
     }
@@ -725,7 +727,7 @@ gst_flac_dec_handle_frame (GstAudioDecoder * audio_dec, GstBuffer * buf)
   dec->last_flow = GST_FLOW_OK;
 
   /* framed - there should always be enough data to decode something */
-  GST_LOG_OBJECT (dec, "%u bytes available",
+  GST_LOG_OBJECT (dec, "%" G_GSIZE_FORMAT " bytes available",
       gst_adapter_available (dec->adapter));
 
   if (!FLAC__stream_decoder_process_single (dec->decoder)) {
