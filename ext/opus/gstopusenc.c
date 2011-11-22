@@ -132,6 +132,7 @@ static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",
 #define DEFAULT_INBAND_FEC      FALSE
 #define DEFAULT_DTX             FALSE
 #define DEFAULT_PACKET_LOSS_PERCENT 0
+#define DEFAULT_MAX_PAYLOAD_SIZE 1024
 
 enum
 {
@@ -145,7 +146,8 @@ enum
   PROP_COMPLEXITY,
   PROP_INBAND_FEC,
   PROP_DTX,
-  PROP_PACKET_LOSS_PERCENT
+  PROP_PACKET_LOSS_PERCENT,
+  PROP_MAX_PAYLOAD_SIZE
 };
 
 static void gst_opus_enc_finalize (GObject * object);
@@ -267,6 +269,11 @@ gst_opus_enc_class_init (GstOpusEncClass * klass)
           "Loss percentage", "Packet loss percentage", 0, 100,
           DEFAULT_PACKET_LOSS_PERCENT,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+  g_object_class_install_property (G_OBJECT_CLASS (klass),
+      PROP_MAX_PAYLOAD_SIZE, g_param_spec_uint ("max-payload-size",
+          "Max payload size", "Maximum payload size in bytes", 2, 1275,
+          DEFAULT_MAX_PAYLOAD_SIZE,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   gobject_class->finalize = GST_DEBUG_FUNCPTR (gst_opus_enc_finalize);
 }
@@ -301,6 +308,7 @@ gst_opus_enc_init (GstOpusEnc * enc, GstOpusEncClass * klass)
   enc->inband_fec = DEFAULT_INBAND_FEC;
   enc->dtx = DEFAULT_DTX;
   enc->packet_loss_percentage = DEFAULT_PACKET_LOSS_PERCENT;
+  enc->max_payload_size = DEFAULT_MAX_PAYLOAD_SIZE;
 
   /* arrange granulepos marking (and required perfect ts) */
   gst_audio_encoder_set_mark_granule (benc, TRUE);
@@ -481,8 +489,6 @@ gst_opus_enc_encode (GstOpusEnc * enc, GstBuffer * buf)
   guint8 *bdata, *data, *mdata = NULL;
   gsize bsize, size;
   gsize bytes = enc->frame_samples * enc->n_channels * 2;
-  gsize bytes_per_packet =
-      (enc->bitrate * enc->frame_samples / enc->sample_rate + 4) / 8;
   gint ret = GST_FLOW_OK;
 
   if (G_LIKELY (buf)) {
@@ -511,27 +517,27 @@ gst_opus_enc_encode (GstOpusEnc * enc, GstBuffer * buf)
     GstBuffer *outbuf;
 
     ret = gst_pad_alloc_buffer_and_set_caps (GST_AUDIO_ENCODER_SRC_PAD (enc),
-        GST_BUFFER_OFFSET_NONE, bytes_per_packet,
+        GST_BUFFER_OFFSET_NONE, enc->max_payload_size,
         GST_PAD_CAPS (GST_AUDIO_ENCODER_SRC_PAD (enc)), &outbuf);
 
     if (GST_FLOW_OK != ret)
       goto done;
 
-    GST_DEBUG_OBJECT (enc, "encoding %d samples (%d bytes) to %d bytes",
-        enc->frame_samples, bytes, bytes_per_packet);
+    GST_DEBUG_OBJECT (enc, "encoding %d samples (%d bytes)",
+        enc->frame_samples);
 
     outsize =
         opus_encode (enc->state, (const gint16 *) data, enc->frame_samples,
-        GST_BUFFER_DATA (outbuf), bytes_per_packet);
+        GST_BUFFER_DATA (outbuf), enc->max_payload_size);
 
     if (outsize < 0) {
       GST_ERROR_OBJECT (enc, "Encoding failed: %d", outsize);
       ret = GST_FLOW_ERROR;
       goto done;
-    } else if (outsize > bytes_per_packet) {
+    } else if (outsize > enc->max_payload_size) {
       GST_WARNING_OBJECT (enc,
-          "Encoded size %d is different from %d bytes per packet", outsize,
-          bytes_per_packet);
+          "Encoded size %d is higher than max payload size (%d bytes)",
+          outsize, enc->max_payload_size);
       ret = GST_FLOW_ERROR;
       goto done;
     }
@@ -631,6 +637,9 @@ gst_opus_enc_get_property (GObject * object, guint prop_id, GValue * value,
     case PROP_PACKET_LOSS_PERCENT:
       g_value_set_int (value, enc->packet_loss_percentage);
       break;
+    case PROP_MAX_PAYLOAD_SIZE:
+      g_value_set_uint (value, enc->max_payload_size);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -675,6 +684,9 @@ gst_opus_enc_set_property (GObject * object, guint prop_id,
       break;
     case PROP_PACKET_LOSS_PERCENT:
       enc->packet_loss_percentage = g_value_get_int (value);
+      break;
+    case PROP_MAX_PAYLOAD_SIZE:
+      enc->max_payload_size = g_value_get_uint (value);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
