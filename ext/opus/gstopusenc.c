@@ -241,45 +241,55 @@ gst_opus_enc_class_init (GstOpusEncClass * klass)
       g_param_spec_int ("bitrate", "Encoding Bit-rate",
           "Specify an encoding bit-rate (in bps).",
           LOWEST_BITRATE, HIGHEST_BITRATE, DEFAULT_BITRATE,
-          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS |
+          GST_PARAM_MUTABLE_PLAYING));
   g_object_class_install_property (gobject_class, PROP_BANDWIDTH,
-      g_param_spec_enum ("bandwidth", "Band Width",
-          "Audio Band Width", GST_OPUS_ENC_TYPE_BANDWIDTH, DEFAULT_BANDWIDTH,
-          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+      g_param_spec_enum ("bandwidth", "Band Width", "Audio Band Width",
+          GST_OPUS_ENC_TYPE_BANDWIDTH, DEFAULT_BANDWIDTH,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS |
+          GST_PARAM_MUTABLE_PLAYING));
   g_object_class_install_property (gobject_class, PROP_FRAME_SIZE,
       g_param_spec_enum ("frame-size", "Frame Size",
-          "The duration of an audio frame, in ms",
-          GST_OPUS_ENC_TYPE_FRAME_SIZE, DEFAULT_FRAMESIZE,
-          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+          "The duration of an audio frame, in ms", GST_OPUS_ENC_TYPE_FRAME_SIZE,
+          DEFAULT_FRAMESIZE,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS |
+          GST_PARAM_MUTABLE_PLAYING));
   g_object_class_install_property (gobject_class, PROP_CBR,
-      g_param_spec_boolean ("cbr", "Constant bit rate",
-          "Constant bit rate", DEFAULT_CBR,
-          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+      g_param_spec_boolean ("cbr", "Constant bit rate", "Constant bit rate",
+          DEFAULT_CBR,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS |
+          GST_PARAM_MUTABLE_PLAYING));
   g_object_class_install_property (gobject_class, PROP_CONSTRAINED_VBR,
       g_param_spec_boolean ("constrained-vbr", "Constrained VBR",
           "Constrained VBR", DEFAULT_CONSTRAINED_VBR,
-          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS |
+          GST_PARAM_MUTABLE_PLAYING));
   g_object_class_install_property (gobject_class, PROP_COMPLEXITY,
-      g_param_spec_int ("complexity", "Complexity",
-          "Complexity", 0, 10, DEFAULT_COMPLEXITY,
-          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+      g_param_spec_int ("complexity", "Complexity", "Complexity", 0, 10,
+          DEFAULT_COMPLEXITY,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS |
+          GST_PARAM_MUTABLE_PLAYING));
   g_object_class_install_property (gobject_class, PROP_INBAND_FEC,
       g_param_spec_boolean ("inband-fec", "In-band FEC",
           "Enable forward error correction", DEFAULT_INBAND_FEC,
-          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS |
+          GST_PARAM_MUTABLE_PLAYING));
   g_object_class_install_property (gobject_class, PROP_DTX,
-      g_param_spec_boolean ("dtx", "DTX",
-          "DTX", DEFAULT_DTX, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+      g_param_spec_boolean ("dtx", "DTX", "DTX", DEFAULT_DTX,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS |
+          GST_PARAM_MUTABLE_PLAYING));
   g_object_class_install_property (G_OBJECT_CLASS (klass),
       PROP_PACKET_LOSS_PERCENT, g_param_spec_int ("packet-loss-percentage",
           "Loss percentage", "Packet loss percentage", 0, 100,
           DEFAULT_PACKET_LOSS_PERCENT,
-          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS |
+          GST_PARAM_MUTABLE_PLAYING));
   g_object_class_install_property (G_OBJECT_CLASS (klass),
       PROP_MAX_PAYLOAD_SIZE, g_param_spec_uint ("max-payload-size",
           "Max payload size", "Maximum payload size in bytes", 2, 1275,
           DEFAULT_MAX_PAYLOAD_SIZE,
-          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS |
+          GST_PARAM_MUTABLE_PLAYING));
 
   gobject_class->finalize = GST_DEBUG_FUNCPTR (gst_opus_enc_finalize);
 }
