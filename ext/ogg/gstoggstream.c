@@ -1895,6 +1895,10 @@ packet_duration_opus (GstOggStream * pad, ogg_packet * packet)
   if (packet->bytes < 1)
     return 0;
 
+  /* headers */
+  if (packet->bytes >= 8 && !memcmp (packet->packet, "Opus", 4))
+    return 0;
+
   toc = packet->packet[0];
 
   frame_duration = durations[toc >> 3] * 1000;
