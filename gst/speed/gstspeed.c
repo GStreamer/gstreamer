@@ -21,7 +21,7 @@
 /**
  * SECTION:element-speed
  *
- * Plays an audio stream at a different speed.
+ * Plays an audio stream at a different speed (by resampling the audio).
  * 
  * Do not use this element. Either use the 'pitch' element, or do a seek with
  * a non-1.0 rate parameter, this will have the same effect as using the speed
