@@ -1872,6 +1872,12 @@ setup_opus_mapper (GstOggStream * pad, ogg_packet * packet)
   return TRUE;
 }
 
+static gboolean
+is_header_opus (GstOggStream * pad, ogg_packet * packet)
+{
+  return packet->bytes >= 8 && !memcmp (packet->packet, "Opus", 4);
+}
+
 static gint64
 packet_duration_opus (GstOggStream * pad, ogg_packet * packet)
 {
@@ -1896,7 +1902,7 @@ packet_duration_opus (GstOggStream * pad, ogg_packet * packet)
     return 0;
 
   /* headers */
-  if (packet->bytes >= 8 && !memcmp (packet->packet, "Opus", 4))
+  if (is_header_opus (pad, packet))
     return 0;
 
   toc = packet->packet[0];
@@ -2109,7 +2115,7 @@ const GstOggMap mappers[] = {
     granulepos_to_granule_default,
     granule_to_granulepos_default,
     NULL,
-    is_header_count,
+    is_header_opus,
     packet_duration_opus,
     NULL,
     extract_tags_count
