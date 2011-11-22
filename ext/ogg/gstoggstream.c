@@ -1937,6 +1937,15 @@ packet_duration_opus (GstOggStream * pad, ogg_packet * packet)
   return duration;
 }
 
+static void
+extract_tags_opus (GstOggStream * pad, ogg_packet * packet)
+{
+  if (packet->bytes >= 8 && memcmp (packet->packet, "OpusTags", 8) == 0) {
+    tag_list_from_vorbiscomment_packet (packet,
+        (const guint8 *) "OpusTags", 8, &pad->taglist);
+  }
+}
+
 
 /* *INDENT-OFF* */
 /* indent hates our freedoms */
@@ -2118,7 +2127,7 @@ const GstOggMap mappers[] = {
     is_header_opus,
     packet_duration_opus,
     NULL,
-    extract_tags_count
+    extract_tags_opus
   },
   {
     "\001audio\0\0\0", 9, 53,
