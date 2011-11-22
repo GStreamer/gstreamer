@@ -1405,11 +1405,7 @@ gst_base_video_decoder_finish_frame (GstBaseVideoDecoder * base_video_decoder,
     GstVideoFrame *tmp = l->data;
 
     if (tmp->events) {
-      GList *k;
-
-      for (k = g_list_last (tmp->events); k; k = k->prev)
-        events = g_list_prepend (events, k->data);
-      g_list_free (tmp->events);
+      events = tmp->events;
       tmp->events = NULL;
     }
 
@@ -1417,7 +1413,7 @@ gst_base_video_decoder_finish_frame (GstBaseVideoDecoder * base_video_decoder,
       break;
   }
 
-  for (l = g_list_last (events); l; l = l->next)
+  for (l = g_list_last (events); l; l = l->prev)
     gst_pad_push_event (GST_BASE_VIDEO_CODEC_SRC_PAD (base_video_decoder),
         l->data);
   g_list_free (events);
