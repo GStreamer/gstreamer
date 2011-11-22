@@ -291,6 +291,8 @@ gst_opus_enc_finalize (GObject * object)
 
   enc = GST_OPUS_ENC (object);
 
+  g_mutex_free (enc->property_lock);
+
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
@@ -300,6 +302,8 @@ gst_opus_enc_init (GstOpusEnc * enc, GstOpusEncClass * klass)
   GstAudioEncoder *benc = GST_AUDIO_ENCODER (enc);
 
   GST_DEBUG_OBJECT (enc, "init");
+
+  enc->property_lock = g_mutex_new ();
 
   enc->n_channels = -1;
   enc->sample_rate = -1;
@@ -329,6 +333,7 @@ gst_opus_enc_start (GstAudioEncoder * benc)
   GST_DEBUG_OBJECT (enc, "start");
   enc->tags = gst_tag_list_new ();
   enc->header_sent = FALSE;
+
   return TRUE;
 }
 
@@ -359,6 +364,18 @@ gst_opus_enc_get_latency (GstOpusEnc * enc)
       enc->sample_rate);
   GST_DEBUG_OBJECT (enc, "Latency: %" GST_TIME_FORMAT, GST_TIME_ARGS (latency));
   return latency;
+}
+
+static void
+gst_opus_enc_setup_base_class (GstOpusEnc * enc, GstAudioEncoder * benc)
+{
+  gst_audio_encoder_set_latency (benc,
+      gst_opus_enc_get_latency (enc), gst_opus_enc_get_latency (enc));
+  gst_audio_encoder_set_frame_samples_min (benc,
+      enc->frame_samples * enc->n_channels * 2);
+  gst_audio_encoder_set_frame_samples_max (benc,
+      enc->frame_samples * enc->n_channels * 2);
+  gst_audio_encoder_set_frame_max (benc, 0);
 }
 
 static gint
@@ -399,6 +416,8 @@ gst_opus_enc_set_format (GstAudioEncoder * benc, GstAudioInfo * info)
 
   enc = GST_OPUS_ENC (benc);
 
+  g_mutex_lock (enc->property_lock);
+
   enc->n_channels = GST_AUDIO_INFO_CHANNELS (info);
   enc->sample_rate = GST_AUDIO_INFO_RATE (info);
   GST_DEBUG_OBJECT (benc, "Setup with %d channels, %d Hz", enc->n_channels,
@@ -415,13 +434,9 @@ gst_opus_enc_set_format (GstAudioEncoder * benc, GstAudioInfo * info)
   enc->frame_samples = gst_opus_enc_get_frame_samples (enc);
 
   /* feedback to base class */
-  gst_audio_encoder_set_latency (benc,
-      gst_opus_enc_get_latency (enc), gst_opus_enc_get_latency (enc));
-  gst_audio_encoder_set_frame_samples_min (benc,
-      enc->frame_samples * enc->n_channels * 2);
-  gst_audio_encoder_set_frame_samples_max (benc,
-      enc->frame_samples * enc->n_channels * 2);
-  gst_audio_encoder_set_frame_max (benc, 0);
+  gst_opus_enc_setup_base_class (enc, benc);
+
+  g_mutex_unlock (enc->property_lock);
 
   return TRUE;
 }
@@ -494,9 +509,12 @@ gst_opus_enc_encode (GstOpusEnc * enc, GstBuffer * buf)
 {
   guint8 *bdata, *data, *mdata = NULL;
   gsize bsize, size;
-  gsize bytes = enc->frame_samples * enc->n_channels * 2;
+  gsize bytes;
   gint ret = GST_FLOW_OK;
 
+  g_mutex_lock (enc->property_lock);
+
+  bytes = enc->frame_samples * enc->n_channels * 2;
   if (G_LIKELY (buf)) {
     bdata = GST_BUFFER_DATA (buf);
     bsize = GST_BUFFER_SIZE (buf);
@@ -563,6 +581,8 @@ gst_opus_enc_encode (GstOpusEnc * enc, GstBuffer * buf)
 
 done:
 
+  g_mutex_unlock (enc->property_lock);
+
   if (mdata)
     g_free (mdata);
 
@@ -612,6 +632,8 @@ gst_opus_enc_get_property (GObject * object, guint prop_id, GValue * value,
 
   enc = GST_OPUS_ENC (object);
 
+  g_mutex_lock (enc->property_lock);
+
   switch (prop_id) {
     case PROP_AUDIO:
       g_value_set_boolean (value, enc->audio_or_voip);
@@ -650,6 +672,8 @@ gst_opus_enc_get_property (GObject * object, guint prop_id, GValue * value,
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
   }
+
+  g_mutex_unlock (enc->property_lock);
 }
 
 static void
@@ -660,42 +684,64 @@ gst_opus_enc_set_property (GObject * object, guint prop_id,
 
   enc = GST_OPUS_ENC (object);
 
+#define GST_OPUS_UPDATE_PROPERTY(prop,type,ctl) do { \
+  g_mutex_lock (enc->property_lock); \
+  enc->prop = g_value_get_##type (value); \
+  if (enc->state) { \
+    opus_encoder_ctl (enc->state, OPUS_SET_##ctl (enc->prop)); \
+  } \
+  g_mutex_unlock (enc->property_lock); \
+} while(0)
+
   switch (prop_id) {
     case PROP_AUDIO:
       enc->audio_or_voip = g_value_get_boolean (value);
       break;
     case PROP_BITRATE:
-      enc->bitrate = g_value_get_int (value);
+      GST_OPUS_UPDATE_PROPERTY (bitrate, int, BITRATE);
       break;
     case PROP_BANDWIDTH:
-      enc->bandwidth = g_value_get_enum (value);
+      GST_OPUS_UPDATE_PROPERTY (bandwidth, enum, BANDWIDTH);
       break;
     case PROP_FRAME_SIZE:
+      g_mutex_lock (enc->property_lock);
       enc->frame_size = g_value_get_enum (value);
+      enc->frame_samples = gst_opus_enc_get_frame_samples (enc);
+      gst_opus_enc_setup_base_class (enc, GST_AUDIO_ENCODER (enc));
+      g_mutex_unlock (enc->property_lock);
       break;
     case PROP_CBR:
+      /* this one has an opposite meaning to the opus ctl... */
+      g_mutex_lock (enc->property_lock);
       enc->cbr = g_value_get_boolean (value);
+      opus_encoder_ctl (enc->state, OPUS_SET_VBR (!enc->cbr));
+      g_mutex_unlock (enc->property_lock);
       break;
     case PROP_CONSTRAINED_VBR:
-      enc->constrained_vbr = g_value_get_boolean (value);
+      GST_OPUS_UPDATE_PROPERTY (constrained_vbr, boolean, VBR_CONSTRAINT);
       break;
     case PROP_COMPLEXITY:
-      enc->complexity = g_value_get_int (value);
+      GST_OPUS_UPDATE_PROPERTY (complexity, int, COMPLEXITY);
       break;
     case PROP_INBAND_FEC:
-      enc->inband_fec = g_value_get_boolean (value);
+      GST_OPUS_UPDATE_PROPERTY (inband_fec, boolean, INBAND_FEC);
       break;
     case PROP_DTX:
-      enc->dtx = g_value_get_boolean (value);
+      GST_OPUS_UPDATE_PROPERTY (dtx, boolean, DTX);
       break;
     case PROP_PACKET_LOSS_PERCENT:
-      enc->packet_loss_percentage = g_value_get_int (value);
+      GST_OPUS_UPDATE_PROPERTY (packet_loss_percentage, int, PACKET_LOSS_PERC);
       break;
     case PROP_MAX_PAYLOAD_SIZE:
+      g_mutex_lock (enc->property_lock);
       enc->max_payload_size = g_value_get_uint (value);
+      g_mutex_unlock (enc->property_lock);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
   }
+
+#undef GST_OPUS_UPDATE_PROPERTY
+
 }
