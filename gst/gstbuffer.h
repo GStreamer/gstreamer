@@ -462,15 +462,17 @@ void            gst_buffer_copy_into            (GstBuffer *dest, GstBuffer *src
  * buffer is unreffed, the new is reffed).
  *
  * Either @nbuf or the #GstBuffer pointed to by @obuf may be NULL.
+ *
+ * Returns: TRUE when @obuf was different from @nbuf.
  */
 #ifdef _FOOL_GTK_DOC_
-G_INLINE_FUNC void gst_buffer_replace (GstBuffer **obuf, GstBuffer *nbuf);
+G_INLINE_FUNC gboolean gst_buffer_replace (GstBuffer **obuf, GstBuffer *nbuf);
 #endif
 
-static inline void
+static inline gboolean
 gst_buffer_replace (GstBuffer **obuf, GstBuffer *nbuf)
 {
-  gst_mini_object_replace ((GstMiniObject **) obuf, (GstMiniObject *) nbuf);
+  return gst_mini_object_replace ((GstMiniObject **) obuf, (GstMiniObject *) nbuf);
 }
 
 /* creating a region */

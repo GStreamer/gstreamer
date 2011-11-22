@@ -282,13 +282,13 @@ extern GType _gst_event_type;
  * Returns: TRUE if @new_event was different from @old_event
  */
 #ifdef _FOOL_GTK_DOC_
-G_INLINE_FUNC void gst_event_replace (GstEvent **old_event, GstEvent *new_event);
+G_INLINE_FUNC gboolean gst_event_replace (GstEvent **old_event, GstEvent *new_event);
 #endif
 
-static inline void
+static inline gboolean
 gst_event_replace (GstEvent **old_event, GstEvent *new_event)
 {
-  gst_mini_object_replace ((GstMiniObject **) old_event, (GstMiniObject *) new_event);
+  return gst_mini_object_replace ((GstMiniObject **) old_event, (GstMiniObject *) new_event);
 }
 
 /**
