@@ -228,7 +228,6 @@ EXPORTS
 	gst_collect_pads2_stop
 	gst_collect_pads2_take_buffer
 	gst_collect_pads_add_pad
-	gst_collect_pads_add_pad_full
 	gst_collect_pads_available
 	gst_collect_pads_collect
 	gst_collect_pads_collect_range
@@ -252,4 +251,3 @@ EXPORTS
 	gst_type_find_helper_for_data
 	gst_type_find_helper_for_extension
 	gst_type_find_helper_get_range
-	gst_type_find_helper_get_range_ext
