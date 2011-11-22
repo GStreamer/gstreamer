@@ -883,7 +883,8 @@ gst_base_parse_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
   if (parse->priv->pending_segment && GST_EVENT_TYPE (event) != GST_EVENT_EOS
       && GST_EVENT_TYPE (event) != GST_EVENT_SEGMENT
       && GST_EVENT_TYPE (event) != GST_EVENT_FLUSH_START
-      && GST_EVENT_TYPE (event) != GST_EVENT_FLUSH_STOP) {
+      && GST_EVENT_TYPE (event) != GST_EVENT_FLUSH_STOP
+      && GST_EVENT_TYPE (event) != GST_EVENT_CAPS) {
 
     if (GST_EVENT_TYPE (event) == GST_EVENT_TAG)
       /* See if any bitrate tags were posted */
