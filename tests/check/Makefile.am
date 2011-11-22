@@ -135,6 +135,12 @@ else
 check_zbar =
 endif
 
+if USE_OPUS
+check_opus = elements/opus
+else
+check_opus =
+endif
+
 VALGRIND_TO_FIX = \
 	elements/mpeg2enc \
 	elements/mplex    \
@@ -161,6 +167,7 @@ check_PROGRAMS = \
 	$(check_ofa)        \
 	$(check_timidity)  \
 	$(check_kate)  \
+	$(check_opus)  \
 	elements/autoconvert \
 	elements/autovideoconvert \
 	elements/asfmux \
