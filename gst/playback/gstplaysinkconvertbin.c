@@ -413,11 +413,19 @@ gst_play_sink_convert_bin_remove_elements (GstPlaySinkConvertBin * self)
 }
 
 static void
-gst_play_sink_convert_bin_finalize (GObject * object)
+gst_play_sink_convert_bin_dispose (GObject * object)
 {
   GstPlaySinkConvertBin *self = GST_PLAY_SINK_CONVERT_BIN_CAST (object);
 
   gst_play_sink_convert_bin_remove_elements (self);
+
+  G_OBJECT_CLASS (parent_class)->dispose (object);
+}
+
+static void
+gst_play_sink_convert_bin_finalize (GObject * object)
+{
+  GstPlaySinkConvertBin *self = GST_PLAY_SINK_CONVERT_BIN_CAST (object);
 
   gst_object_unref (self->sink_proxypad);
   g_mutex_free (self->lock);
@@ -521,6 +529,7 @@ gst_play_sink_convert_bin_class_init (GstPlaySinkConvertBinClass * klass)
   gobject_class = (GObjectClass *) klass;
   gstelement_class = (GstElementClass *) klass;
 
+  gobject_class->dispose = gst_play_sink_convert_bin_dispose;
   gobject_class->finalize = gst_play_sink_convert_bin_finalize;
 
   gst_element_class_add_pad_template (gstelement_class,
