@@ -355,7 +355,7 @@ gst_opus_enc_stop (GstAudioEncoder * benc)
   GST_DEBUG_OBJECT (enc, "stop");
   enc->header_sent = FALSE;
   if (enc->state) {
-    opus_encoder_destroy (enc->state);
+    opus_multistream_encoder_destroy (enc->state);
     enc->state = NULL;
   }
   gst_tag_list_free (enc->tags);
@@ -435,7 +435,7 @@ gst_opus_enc_set_format (GstAudioEncoder * benc, GstAudioInfo * info)
 
   /* handle reconfigure */
   if (enc->state) {
-    opus_encoder_destroy (enc->state);
+    opus_multistream_encoder_destroy (enc->state);
     enc->state = NULL;
   }
   if (!gst_opus_enc_setup (enc))
@@ -455,24 +455,34 @@ static gboolean
 gst_opus_enc_setup (GstOpusEnc * enc)
 {
   int error = OPUS_OK;
+  unsigned char mapping[256];
+  int n;
 
   GST_DEBUG_OBJECT (enc, "setup");
 
-  enc->state = opus_encoder_create (enc->sample_rate, enc->n_channels,
+  for (n = 0; n < enc->n_channels; ++n)
+    mapping[n] = n;
+
+  enc->state =
+      opus_multistream_encoder_create (enc->sample_rate, enc->n_channels,
+      (enc->n_channels + 1) / 2, enc->n_channels / 2, mapping,
       enc->audio_or_voip ? OPUS_APPLICATION_AUDIO : OPUS_APPLICATION_VOIP,
       &error);
   if (!enc->state || error != OPUS_OK)
     goto encoder_creation_failed;
 
-  opus_encoder_ctl (enc->state, OPUS_SET_BITRATE (enc->bitrate), 0);
-  opus_encoder_ctl (enc->state, OPUS_SET_BANDWIDTH (enc->bandwidth), 0);
-  opus_encoder_ctl (enc->state, OPUS_SET_VBR (!enc->cbr), 0);
-  opus_encoder_ctl (enc->state, OPUS_SET_VBR_CONSTRAINT (enc->constrained_vbr),
+  opus_multistream_encoder_ctl (enc->state, OPUS_SET_BITRATE (enc->bitrate), 0);
+  opus_multistream_encoder_ctl (enc->state, OPUS_SET_BANDWIDTH (enc->bandwidth),
       0);
-  opus_encoder_ctl (enc->state, OPUS_SET_COMPLEXITY (enc->complexity), 0);
-  opus_encoder_ctl (enc->state, OPUS_SET_INBAND_FEC (enc->inband_fec), 0);
-  opus_encoder_ctl (enc->state, OPUS_SET_DTX (enc->dtx), 0);
-  opus_encoder_ctl (enc->state,
+  opus_multistream_encoder_ctl (enc->state, OPUS_SET_VBR (!enc->cbr), 0);
+  opus_multistream_encoder_ctl (enc->state,
+      OPUS_SET_VBR_CONSTRAINT (enc->constrained_vbr), 0);
+  opus_multistream_encoder_ctl (enc->state,
+      OPUS_SET_COMPLEXITY (enc->complexity), 0);
+  opus_multistream_encoder_ctl (enc->state,
+      OPUS_SET_INBAND_FEC (enc->inband_fec), 0);
+  opus_multistream_encoder_ctl (enc->state, OPUS_SET_DTX (enc->dtx), 0);
+  opus_multistream_encoder_ctl (enc->state,
       OPUS_SET_PACKET_LOSS_PERC (enc->packet_loss_percentage), 0);
 
   GST_LOG_OBJECT (enc, "we have frame size %d", enc->frame_size);
@@ -557,8 +567,8 @@ gst_opus_enc_encode (GstOpusEnc * enc, GstBuffer * buf)
         enc->frame_samples);
 
     outsize =
-        opus_encode (enc->state, (const gint16 *) data, enc->frame_samples,
-        GST_BUFFER_DATA (outbuf), enc->max_payload_size);
+        opus_multistream_encode (enc->state, (const gint16 *) data,
+        enc->frame_samples, GST_BUFFER_DATA (outbuf), enc->max_payload_size);
 
     if (outsize < 0) {
       GST_ERROR_OBJECT (enc, "Encoding failed: %d", outsize);
@@ -694,7 +704,7 @@ gst_opus_enc_set_property (GObject * object, guint prop_id,
   g_mutex_lock (enc->property_lock); \
   enc->prop = g_value_get_##type (value); \
   if (enc->state) { \
-    opus_encoder_ctl (enc->state, OPUS_SET_##ctl (enc->prop)); \
+    opus_multistream_encoder_ctl (enc->state, OPUS_SET_##ctl (enc->prop)); \
   } \
   g_mutex_unlock (enc->property_lock); \
 } while(0)
@@ -720,7 +730,7 @@ gst_opus_enc_set_property (GObject * object, guint prop_id,
       /* this one has an opposite meaning to the opus ctl... */
       g_mutex_lock (enc->property_lock);
       enc->cbr = g_value_get_boolean (value);
-      opus_encoder_ctl (enc->state, OPUS_SET_VBR (!enc->cbr));
+      opus_multistream_encoder_ctl (enc->state, OPUS_SET_VBR (!enc->cbr));
       g_mutex_unlock (enc->property_lock);
       break;
     case PROP_CONSTRAINED_VBR:
