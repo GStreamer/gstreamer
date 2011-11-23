@@ -31,8 +31,7 @@
 
 typedef struct _GstBlendVideoFormatInfo GstBlendVideoFormatInfo;
 
-/**
- * GstBlendVideoFormatInfo:
+/* GstBlendVideoFormatInfo:
  * @fmt: The #GstVideoFormat describing the video format
  * @width: The width of the video
  * @height: The height of the video
@@ -50,9 +49,6 @@ struct _GstBlendVideoFormatInfo
 
     gint            width;
     gint            height;
-
-    gint            dest_width;
-    gint            dest_height;
 
     guint8        * pixels;
     gsize           size;

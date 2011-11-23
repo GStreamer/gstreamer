@@ -51,8 +51,9 @@ BUILT_GIRSOURCES = GstVideo-@GST_MAJORMINOR@.gir
 
 gir_headers=$(patsubst %,$(srcdir)/%, $(libgstvideo_@GST_MAJORMINOR@include_HEADERS))
 gir_headers+=$(patsubst %,$(builddir)/%, $(built_headers))
-gir_sources=$(patsubst %,$(srcdir)/%, $(libgstvideo_@GST_MAJORMINOR@_la_SOURCES))
-gir_sources+=$(patsubst %,$(builddir)/%, $(built_sources))
+video_gir_sources=$(patsubst %,$(srcdir)/%, $(libgstvideo_@GST_MAJORMINOR@_la_SOURCES))
+video_gir_sources+=$(patsubst %,$(builddir)/%, $(built_sources))
+gir_sources=$(subst $(srcdir)/video-blend.h,,$(subst $(srcdir)/video-blend.c,,$(video_gir_sources)))
 gir_cincludes=$(patsubst %,--c-include='gst/video/%',$(libgstvideo_@GST_MAJORMINOR@include_HEADERS))
 gir_cincludes+=$(patsubst %,--c-include='gst/video/%',$(nodist_libgstvideo_@GST_MAJORMINOR@include_HEADERS))
 
