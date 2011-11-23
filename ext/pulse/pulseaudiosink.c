@@ -525,9 +525,8 @@ dbin_event_probe (GstPad * pad, GstPadProbeInfo * info, gpointer data)
 
   if (GST_EVENT_TYPE (event) == GST_EVENT_SEGMENT) {
     GST_DEBUG_OBJECT (pbin, "Got newsegment - dropping");
-    gst_pad_remove_probe (pad, pbin->event_probe_id);
-    gst_object_unref (pbin);
-    return GST_PAD_PROBE_DROP;
+    pbin->event_probe_id = 0;
+    return GST_PAD_PROBE_REMOVE;
   }
 
   return GST_PAD_PROBE_OK;
@@ -585,9 +584,11 @@ gst_pulse_audio_sink_add_dbin (GstPulseAudioSink * pbin)
 
   /* Trap the newsegment events that we feed the decodebin and discard them */
   sinkpad = gst_element_get_static_pad (GST_ELEMENT (pbin->psink), "sink");
-  pbin->event_probe_id =
-      gst_pad_add_probe (sinkpad, GST_PAD_PROBE_TYPE_EVENT_DOWNSTREAM,
-      dbin_event_probe, gst_object_ref (pbin), NULL);
+  if (pbin->event_probe_id == 0)
+    pbin->event_probe_id =
+        gst_pad_add_probe (sinkpad, GST_PAD_PROBE_TYPE_EVENT_DOWNSTREAM,
+        dbin_event_probe, gst_object_ref (pbin),
+        (GDestroyNotify) gst_object_unref);
   gst_object_unref (sinkpad);
   sinkpad = NULL;
 
@@ -877,12 +878,25 @@ gst_pulse_audio_sink_set_caps (GstPulseAudioSink * pbin, GstCaps * caps)
 
   GST_PULSE_AUDIO_SINK_LOCK (pbin);
 
+  GST_DEBUG_OBJECT (pbin, "got caps %" GST_PTR_FORMAT, caps);
+
+  if (gst_pad_has_current_caps (pbin->sinkpad)) {
+    GstCaps *current;
+    /* See if we already got caps on our sinkpad */
+    current = gst_pad_get_current_caps (pbin->sinkpad);
+    ret = gst_caps_is_equal (caps, current);
+    gst_caps_unref (current);
+    if (ret)
+      goto done;
+  }
+
   if (pbin->block_probe_id == 0)
     pbin->block_probe_id =
         gst_pad_add_probe (pbin->sink_proxypad,
         GST_PAD_PROBE_TYPE_BLOCK_DOWNSTREAM, proxypad_blocked_cb,
         gst_object_ref (pbin), (GDestroyNotify) gst_object_unref);
 
+done:
   GST_PULSE_AUDIO_SINK_UNLOCK (pbin);
 
   return ret;
