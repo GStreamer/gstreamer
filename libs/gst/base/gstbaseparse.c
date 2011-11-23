@@ -3994,13 +3994,12 @@ gst_base_parse_sink_getcaps (GstPad * pad)
   if (klass->get_sink_caps)
     caps = klass->get_sink_caps (parse);
   else
-    caps = gst_pad_proxy_getcaps (pad);
+    caps = gst_caps_copy (gst_pad_get_pad_template_caps (pad));
   gst_object_unref (parse);
 
   GST_LOG_OBJECT (parse, "sink getcaps returning caps %" GST_PTR_FORMAT, caps);
 
   return caps;
-
 }
 
 static void
