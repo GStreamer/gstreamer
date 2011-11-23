@@ -202,22 +202,22 @@ gst_rtmp_sink_render (GstBaseSink * bsink, GstBuffer * buf)
 
     /* FIXME: Parse the first buffer and see if it contains a header plus a packet instead
      * of just assuming it's only the header */
-    GST_LOG_OBJECT (sink, "Caching first buffer of size %d for concatenation",
-        gst_buffer_get_size (buf));
+    GST_LOG_OBJECT (sink, "Caching first buffer of size %" G_GSIZE_FORMAT
+        " for concatenation", gst_buffer_get_size (buf));
     gst_buffer_replace (&sink->cache, buf);
     sink->first = FALSE;
     return GST_FLOW_OK;
   }
 
   if (sink->cache) {
-    GST_LOG_OBJECT (sink, "Joining 2nd buffer of size %d to cached buf",
-        gst_buffer_get_size (buf));
+    GST_LOG_OBJECT (sink, "Joining 2nd buffer of size %" G_GSIZE_FORMAT
+        " to cached buf", gst_buffer_get_size (buf));
     gst_buffer_ref (buf);
     reffed_buf = buf = gst_buffer_join (sink->cache, buf);
     sink->cache = NULL;
   }
 
-  GST_LOG_OBJECT (sink, "Sending %d bytes to RTMP server",
+  GST_LOG_OBJECT (sink, "Sending %" G_GSIZE_FORMAT " bytes to RTMP server",
       gst_buffer_get_size (buf));
 
   data = gst_buffer_map (buf, &size, NULL, GST_MAP_READ);

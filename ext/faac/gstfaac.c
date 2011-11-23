@@ -657,7 +657,7 @@ gst_faac_handle_frame (GstAudioEncoder * enc, GstBuffer * in_buf)
 
   gst_buffer_unmap (in_buf, data, size);
 
-  GST_LOG_OBJECT (faac, "encoder return: %d", ret_size);
+  GST_LOG_OBJECT (faac, "encoder return: %" G_GSIZE_FORMAT, ret_size);
 
   if (ret_size > 0) {
     gst_buffer_unmap (out_buf, out_data, ret_size);
