@@ -1,12 +1,12 @@
 prefix=
 exec_prefix=
-libdir=${pcfiledir}/../gst-libs/gst/basevideo
+libdir=${pcfiledir}/../gst-libs/gst/video
 includedir=${pcfiledir}/../gst-libs
 
 Name: GStreamer base video, Uninstalled
 Description: Base class, interface and utilities for video elements, Uninstalled
 Requires: gstreamer-@GST_MAJORMINOR@ gstreamer-base-@GST_MAJORMINOR@
 Version: @VERSION@
-Libs: -L${libdir} ${libdir}/libgstbasevideo-@GST_MAJORMINOR@.la
+Libs: -L${libdir} ${libdir}/libgstvideo-@GST_MAJORMINOR@.la
 Cflags: -I${includedir}
 
