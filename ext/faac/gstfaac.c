@@ -666,9 +666,11 @@ gst_faac_handle_frame (GstAudioEncoder * enc, GstBuffer * in_buf)
     goto encode_failed;
 
   GST_LOG_OBJECT (faac, "encoder return: %d", ret_size);
-  if (ret_size > 0) {
+  if (G_LIKELY (ret_size > 0)) {
     GST_BUFFER_SIZE (out_buf) = ret_size;
     ret = gst_audio_encoder_finish_frame (enc, out_buf, faac->samples);
+  } else {
+    gst_buffer_unref (out_buf);
   }
 
   return ret;
@@ -676,6 +678,7 @@ gst_faac_handle_frame (GstAudioEncoder * enc, GstBuffer * in_buf)
   /* ERRORS */
 encode_failed:
   {
+    gst_buffer_unref (out_buf);
     GST_ELEMENT_ERROR (faac, LIBRARY, ENCODE, (NULL), (NULL));
     return GST_FLOW_ERROR;
   }
