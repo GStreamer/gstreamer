@@ -458,8 +458,6 @@ gst_opus_enc_setup (GstOpusEnc * enc)
 
   GST_DEBUG_OBJECT (enc, "setup");
 
-  enc->setup = FALSE;
-
   enc->state = opus_encoder_create (enc->sample_rate, enc->n_channels,
       enc->audio_or_voip ? OPUS_APPLICATION_AUDIO : OPUS_APPLICATION_VOIP,
       &error);
@@ -478,8 +476,6 @@ gst_opus_enc_setup (GstOpusEnc * enc)
       OPUS_SET_PACKET_LOSS_PERC (enc->packet_loss_percentage), 0);
 
   GST_LOG_OBJECT (enc, "we have frame size %d", enc->frame_size);
-
-  enc->setup = TRUE;
 
   return TRUE;
 

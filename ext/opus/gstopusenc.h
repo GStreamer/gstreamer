@@ -72,7 +72,6 @@ struct _GstOpusEnc {
   gint                  n_channels;
   gint                  sample_rate;
 
-  gboolean              setup;
   gboolean              header_sent;
 
   GSList                *headers;
