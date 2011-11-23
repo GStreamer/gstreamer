@@ -258,7 +258,8 @@ gst_amrnbenc_handle_frame (GstAudioEncoder * enc, GstBuffer * buffer)
 
   if (G_UNLIKELY (in_size < 320)) {
     gst_buffer_unmap (buffer, in_data, in_size);
-    GST_DEBUG_OBJECT (amrnbenc, "discarding trailing data %d", in_size);
+    GST_DEBUG_OBJECT (amrnbenc, "discarding trailing data of %" G_GSIZE_FORMAT
+        " bytes", in_size);
     return gst_audio_encoder_finish_frame (enc, NULL, -1);
   }
 
@@ -274,7 +275,7 @@ gst_amrnbenc_handle_frame (GstAudioEncoder * enc, GstBuffer * buffer)
       in_data, out_data, 0);
   gst_buffer_unmap (out, out_data, out_size);
 
-  GST_LOG_OBJECT (amrnbenc, "output data size %d", out_size);
+  GST_LOG_OBJECT (amrnbenc, "output data size %" G_GSIZE_FORMAT, out_size);
 
   if (out_size) {
     ret = gst_audio_encoder_finish_frame (enc, out, 160);

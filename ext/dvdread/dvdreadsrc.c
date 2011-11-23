@@ -1218,7 +1218,8 @@ gst_dvd_read_src_do_seek (GstBaseSrc * basesrc, GstSegment * s)
     if (s->format == sector_format) {
       gint first, last;
       gst_dvd_read_src_get_sector_bounds (src, &first, &last);
-      GST_DEBUG_OBJECT (src, "Format is sector, seeking to %d", s->position);
+      GST_DEBUG_OBJECT (src, "Format is sector, seeking to %" G_GINT64_FORMAT,
+          s->position);
       src->cur_pack = s->position;
       if (src->cur_pack < first)
         src->cur_pack = first;

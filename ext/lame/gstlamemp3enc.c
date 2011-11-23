@@ -556,8 +556,8 @@ gst_lamemp3enc_handle_frame (GstAudioEncoder * enc, GstBuffer * in_buf)
   }
   gst_buffer_unmap (in_buf, data, size);
 
-  GST_LOG_OBJECT (lame, "encoded %d bytes of audio to %d bytes of mp3",
-      size, mp3_size);
+  GST_LOG_OBJECT (lame, "encoded %" G_GSIZE_FORMAT " bytes of audio "
+      "to %d bytes of mp3", size, mp3_size);
 
   if (G_LIKELY (mp3_size > 0)) {
     gst_buffer_unmap (mp3_buf, mp3_data, mp3_size);
