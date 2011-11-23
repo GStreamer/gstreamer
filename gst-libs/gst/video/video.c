@@ -317,8 +317,10 @@ gst_video_parse_caps_chroma_site (GstCaps * caps)
  * Determines the #GstVideoFormat of @caps and places it in the location
  * pointed to by @format.  Extracts the size of the video and places it
  * in the location pointed to by @width and @height.  If @caps does not
- * represent one of the raw video formats listed in #GstVideoFormat, the
- * function will fail and return FALSE.
+ * represent a video format or does not contain height and width, the
+ * function will fail and return FALSE. If @caps does not represent a raw
+ * video format listed in #GstVideoFormat, but still contains video caps,
+ * this function will return TRUE and set @format to #GST_VIDEO_FORMAT_UNKNOWN.
  *
  * Since: 0.10.16
  *
@@ -429,6 +431,8 @@ gst_video_format_parse_caps (const GstCaps * caps, GstVideoFormat * format,
       } else {
         ok = FALSE;
       }
+    } else if (g_str_has_prefix (gst_structure_get_name (structure), "video/")) {
+      *format = GST_VIDEO_FORMAT_UNKNOWN;
     } else {
       ok = FALSE;
     }
