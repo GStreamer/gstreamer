@@ -8,13 +8,15 @@ subclass). The baseclass takes care of that.
 
 = API =
 
-* should we add some basic drawing helpers to the baseclass
+* we have a couple of drawing helpers in gstdrawhelpers.h
+  (would be nice if we could use cairo) 
   draw_point (x,y,color);
+  draw_line (x1,x2,y1,y2,color);
+* some more we could add:
   draw_hline (x1,x2,y,color);
   draw_vline (x,y1,y2,color);
   draw_rect (x1,x2,y1,y2,color);
   draw_box (x1,x2,y1,y2,color); // filled
-  - would be nice if we could use cairo
 * shading effects
   - would be nice to use a generic 3x3 matrix operation, we don't run inplace
     anyway
@@ -22,6 +24,7 @@ subclass). The baseclass takes care of that.
 
 = Elements to port =
 gst-plugin-ugly/gst/synaestesia -> synaescope
+gst-plugin-bad/gst/smoothwave -> wavescope
 gst-plugin-good/gst/monoscope -> blend into what we have in wavescope
 
 = Elements to add =
@@ -41,11 +44,12 @@ GST_DEBUG="*:2,*scope*:4"
 GST_PLUGIN_PATH=$GST_PLUGIN_PATH:$PWD gst-inspect scopes
 
 GST_PLUGIN_PATH=$GST_PLUGIN_PATH:$PWD gst-launch audiotestsrc ! audioconvert ! wavescope ! colorspace ! ximagesink
-GST_PLUGIN_PATH=$GST_PLUGIN_PATH:$PWD gst-launch filesrc location=/home/ensonic/Musik/xotox-hypnocat.mp3 ! decodebin2 ! audioconvert ! wavescope ! colorspace ! ximagesink
-GST_PLUGIN_PATH=$GST_PLUGIN_PATH:$PWD gst-launch filesrc location=/home/ensonic/Musik/xotox-hypnocat.mp3 ! decodebin2 ! audioconvert ! spectrascope ! colorspace ! ximagesink
+GST_PLUGIN_PATH=$GST_PLUGIN_PATH:$PWD gst-launch filesrc location=$HOME/Music/1.mp3 ! decodebin2 ! audioconvert ! wavescope ! colorspace ! ximagesink
 
-GST_PLUGIN_PATH=$GST_PLUGIN_PATH:$PWD gst-launch filesrc location=/home/ensonic/Musik/Gridlock/Trace/04\ Uh4.17.mp3 ! decodebin2 ! audioconvert ! spectrascope ! colorspace ! ximagesink
-GST_PLUGIN_PATH=$GST_PLUGIN_PATH:$PWD gst-launch filesrc location=/home/ensonic/Musik/Gridlock/Trace/04\ Uh4.17.mp3 ! decodebin2 ! audioconvert ! spectrascope shader=fade-and-move-up shade-amount=0x00040302 ! colorspace ! ximagesink
+GST_PLUGIN_PATH=$GST_PLUGIN_PATH:$PWD gst-launch filesrc location=$HOME/Music/1.mp3 ! decodebin2 ! audioconvert ! spacescope style=lines shade-amount=0x00080402 ! ximagesink
 
-GST_PLUGIN_PATH=$GST_PLUGIN_PATH:$PWD gst-launch filesrc location=/home/ensonic/Musik/Gridlock/Trace/04\ Uh4.17.mp3 ! decodebin2 ! tee name=t ! queue ! audioconvert ! synaesthesia ! ximagesink t. ! queue ! synaescope shade-amount=0x00040404 ! colorspace ! ximagesink
+GST_PLUGIN_PATH=$GST_PLUGIN_PATH:$PWD gst-launch filesrc location=$HOME/Music/1.mp3 ! decodebin2 ! audioconvert ! spectrascope ! colorspace ! ximagesink
+GST_PLUGIN_PATH=$GST_PLUGIN_PATH:$PWD gst-launch filesrc location=$HOME/Music/1.mp3 ! decodebin2 ! audioconvert ! spectrascope shader=fade-and-move-up shade-amount=0x00040302 ! colorspace ! ximagesink
+
+GST_PLUGIN_PATH=$GST_PLUGIN_PATH:$PWD gst-launch filesrc location=$HOME/Music/1.mp3 ! decodebin2 ! tee name=t ! queue ! audioconvert ! synaesthesia ! ximagesink t. ! queue ! synaescope shade-amount=0x00040404 ! colorspace ! ximagesink
 

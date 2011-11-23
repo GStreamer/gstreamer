@@ -18,6 +18,8 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
  
+/* FIXME: add versions that don't ignore alpha */
+ 
 #define draw_dot(_vd, _x, _y, _st, _c) G_STMT_START {                          \
   _vd[(_y * _st) + _x] = _c;                                                   \
 } G_STMT_END
