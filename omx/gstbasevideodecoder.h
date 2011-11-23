@@ -182,6 +182,10 @@ struct _GstBaseVideoDecoder
   int               reorder_depth;
   int               distance_from_sync;
 
+  /* qos messages: frames dropped/processed */
+  guint             dropped;
+  guint             processed;
+
   /* FIXME before moving to base */
   void             *padding[GST_PADDING_LARGE];
 };
@@ -267,7 +271,8 @@ GstClockTimeDiff gst_base_video_decoder_get_max_decode_time (
                                     GstVideoFrame *frame);
 GstFlowReturn    gst_base_video_decoder_finish_frame (GstBaseVideoDecoder *base_video_decoder,
                                     GstVideoFrame *frame);
-
+GstFlowReturn    gst_base_video_decoder_drop_frame (GstBaseVideoDecoder *dec,
+                                    GstVideoFrame *frame);
 GType            gst_base_video_decoder_get_type (void);
 
 G_END_DECLS
