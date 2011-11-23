@@ -559,15 +559,23 @@ typedef GstPadProbeReturn   (*GstPadProbeCallback)   (GstPad *pad, GstPadProbeIn
 /**
  * GstPadStickyEventsForeachFunction:
  * @pad: the #GstPad.
- * @event: the sticky #GstEvent.
+ * @event: a sticky #GstEvent.
  * @user_data: the #gpointer to optional user data.
  *
  * Callback used by gst_pad_sticky_events_foreach().
  *
- * Returns: GST_FLOW_OK if the iteration should continue
+ * When this function returns %TRUE, the next event will be
+ * returned. When %FALSE is returned, gst_pad_sticky_events_foreach() will return.
+ *
+ * When @event is set to NULL, the item will be removed from the list of sticky events.
+ * When @event has been made writable, the new buffer reference can be assigned
+ * to @event. This function is responsible for unreffing the old event when
+ * removing or modifying.
+ *
+ * Returns: %TRUE if the iteration should continue
  */
-typedef GstFlowReturn  (*GstPadStickyEventsForeachFunction) (GstPad *pad, GstEvent *event,
-                                                             gpointer user_data);
+typedef gboolean  (*GstPadStickyEventsForeachFunction) (GstPad *pad, GstEvent **event,
+                                                        gpointer user_data);
 
 /**
  * GstPadFlags:
@@ -823,8 +831,9 @@ gpointer		gst_pad_get_element_private		(GstPad *pad);
 
 GstPadTemplate*		gst_pad_get_pad_template		(GstPad *pad);
 
-GstEvent*               gst_pad_get_sticky_event                (GstPad *pad, GstEventType event_type);
-GstFlowReturn           gst_pad_sticky_events_foreach           (GstPad *pad, GstPadStickyEventsForeachFunction foreach_func, gpointer user_data);
+GstEvent*               gst_pad_get_sticky_event                (GstPad *pad, GstEventType event_type,
+                                                                 guint idx);
+void                    gst_pad_sticky_events_foreach           (GstPad *pad, GstPadStickyEventsForeachFunction foreach_func, gpointer user_data);
 
 /* data passing setup functions */
 void			gst_pad_set_activate_function_full	(GstPad *pad,

@@ -307,14 +307,14 @@ gst_output_selector_switch_pad_negotiation_mode (GstOutputSelector * sel,
   sel->pad_negotiation_mode = mode;
 }
 
-static GstFlowReturn
-forward_sticky_events (GstPad * pad, GstEvent * event, gpointer user_data)
+static gboolean
+forward_sticky_events (GstPad * pad, GstEvent ** event, gpointer user_data)
 {
   GstPad *srcpad = GST_PAD_CAST (user_data);
 
-  gst_pad_push_event (srcpad, gst_event_ref (event));
+  gst_pad_push_event (srcpad, gst_event_ref (*event));
 
-  return GST_FLOW_OK;
+  return TRUE;
 }
 
 static GstPad *

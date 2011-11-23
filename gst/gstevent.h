@@ -29,11 +29,13 @@ typedef struct _GstEvent GstEvent;
 
 /**
  * GstEventTypeFlags:
- * @GST_EVENT_TYPE_UPSTREAM:   Set if the event can travel upstream.
- * @GST_EVENT_TYPE_DOWNSTREAM: Set if the event can travel downstream.
- * @GST_EVENT_TYPE_SERIALIZED: Set if the event should be serialized with data
- *                             flow.
- * @GST_EVENT_TYPE_STICKY:     Set if the event is sticky on the pads.
+ * @GST_EVENT_TYPE_UPSTREAM:     Set if the event can travel upstream.
+ * @GST_EVENT_TYPE_DOWNSTREAM:   Set if the event can travel downstream.
+ * @GST_EVENT_TYPE_SERIALIZED:   Set if the event should be serialized with data
+ *                               flow.
+ * @GST_EVENT_TYPE_STICKY:       Set if the event is sticky on the pads.
+ * @GST_EVENT_TYPE_STICKY_MULTI: Multiple sticky events can be on a pad, each
+ *                               identified by the event name.
  *
  * #GstEventTypeFlags indicate the aspects of the different #GstEventType
  * values. You can get the type flags of a #GstEventType with the
@@ -43,7 +45,8 @@ typedef enum {
   GST_EVENT_TYPE_UPSTREAM       = 1 << 0,
   GST_EVENT_TYPE_DOWNSTREAM     = 1 << 1,
   GST_EVENT_TYPE_SERIALIZED     = 1 << 2,
-  GST_EVENT_TYPE_STICKY         = 1 << 3
+  GST_EVENT_TYPE_STICKY         = 1 << 3,
+  GST_EVENT_TYPE_STICKY_MULTI   = 1 << 4
 } GstEventTypeFlags;
 
 /**
@@ -135,9 +138,9 @@ typedef enum {
   /* downstream serialized events */
   GST_EVENT_CAPS                  = GST_EVENT_MAKE_TYPE (5, 1, FLAG(DOWNSTREAM) | FLAG(SERIALIZED) | FLAG(STICKY)),
   GST_EVENT_SEGMENT               = GST_EVENT_MAKE_TYPE (6, 2, FLAG(DOWNSTREAM) | FLAG(SERIALIZED) | FLAG(STICKY)),
-  GST_EVENT_TAG                   = GST_EVENT_MAKE_TYPE (7, 3, FLAG(DOWNSTREAM) | FLAG(SERIALIZED) | FLAG(STICKY)),
+  GST_EVENT_TAG                   = GST_EVENT_MAKE_TYPE (7, 3, FLAG(DOWNSTREAM) | FLAG(SERIALIZED) | FLAG(STICKY) | FLAG(STICKY_MULTI)),
   GST_EVENT_BUFFERSIZE            = GST_EVENT_MAKE_TYPE (8, 4, FLAG(DOWNSTREAM) | FLAG(SERIALIZED) | FLAG(STICKY)),
-  GST_EVENT_SINK_MESSAGE          = GST_EVENT_MAKE_TYPE (9, 5, FLAG(DOWNSTREAM) | FLAG(SERIALIZED) | FLAG(STICKY)),
+  GST_EVENT_SINK_MESSAGE          = GST_EVENT_MAKE_TYPE (9, 5, FLAG(DOWNSTREAM) | FLAG(SERIALIZED) | FLAG(STICKY) | FLAG(STICKY_MULTI)),
   GST_EVENT_EOS                   = GST_EVENT_MAKE_TYPE (10, 6, FLAG(DOWNSTREAM) | FLAG(SERIALIZED) | FLAG(STICKY)),
 
   /* upstream events */
