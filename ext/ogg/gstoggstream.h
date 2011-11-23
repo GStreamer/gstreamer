@@ -60,6 +60,7 @@ struct _GstOggStream
   gboolean have_fisbone;
   gint granulerate_n;
   gint granulerate_d;
+  gint64 granule_offset;
   guint32 preroll;
   guint granuleshift;
   gint n_header_packets;

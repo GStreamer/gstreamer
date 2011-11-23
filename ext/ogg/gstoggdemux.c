@@ -891,9 +891,12 @@ gst_ogg_pad_submit_packet (GstOggPad * pad, ogg_packet * packet)
         pad->start_time = gst_ogg_stream_granule_to_time (&pad->map,
             start_granule);
         GST_DEBUG_OBJECT (ogg,
-            "start time %" GST_TIME_FORMAT " (%" GST_TIME_FORMAT ") for %s",
+            "start time %" GST_TIME_FORMAT " (%" GST_TIME_FORMAT ") for %s "
+            "from granpos %" G_GINT64_FORMAT " (granule %" G_GINT64_FORMAT ", "
+            "accumulated granule %" G_GINT64_FORMAT,
             GST_TIME_ARGS (pad->start_time), GST_TIME_ARGS (pad->start_time),
-            gst_ogg_stream_get_media_type (&pad->map));
+            gst_ogg_stream_get_media_type (&pad->map), packet->granulepos,
+            granule, pad->map.accumulated_granule);
       } else {
         packet->granulepos = gst_ogg_stream_granule_to_granulepos (&pad->map,
             pad->map.accumulated_granule, pad->keyframe_granule);

@@ -115,7 +115,7 @@ static GstStaticPadTemplate audio_sink_factory =
     GST_PAD_REQUEST,
     GST_STATIC_CAPS
     ("audio/x-vorbis; audio/x-flac; audio/x-speex; audio/x-celt; "
-        "application/x-ogm-audio; ")
+        "application/x-ogm-audio; audio/x-opus")
     );
 
 static GstStaticPadTemplate subtitle_sink_factory =

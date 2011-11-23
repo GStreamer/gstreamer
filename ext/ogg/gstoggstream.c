@@ -127,6 +127,10 @@ gst_ogg_stream_granule_to_time (GstOggStream * pad, gint64 granule)
   if (granule == 0 || pad->granulerate_n == 0 || pad->granulerate_d == 0)
     return 0;
 
+  granule += pad->granule_offset;
+  if (granule < 0)
+    return 0;
+
   return gst_util_uint64_scale (granule, GST_SECOND * pad->granulerate_d,
       pad->granulerate_n);
 }
@@ -1820,6 +1824,103 @@ extract_tags_kate (GstOggStream * pad, ogg_packet * packet)
   }
 }
 
+/* opus */
+
+static gboolean
+setup_opus_mapper (GstOggStream * pad, ogg_packet * packet)
+{
+  if (packet->bytes < 19)
+    return FALSE;
+
+  pad->granulerate_n = 48000;
+  pad->granulerate_d = 1;
+  pad->granuleshift = 0;
+  pad->n_header_packets = 2;
+
+  /* pre-skip is in samples at 48000 Hz, which matches granule one for one */
+  pad->granule_offset = -GST_READ_UINT16_LE (packet->packet + 10);
+  GST_INFO ("Opus has a pre-skip of %" G_GINT64_FORMAT " samples",
+      -pad->granule_offset);
+
+  pad->caps = gst_caps_new_simple ("audio/x-opus", NULL);
+
+  return TRUE;
+}
+
+static gboolean
+is_header_opus (GstOggStream * pad, ogg_packet * packet)
+{
+  return packet->bytes >= 8 && !memcmp (packet->packet, "Opus", 4);
+}
+
+static gint64
+packet_duration_opus (GstOggStream * pad, ogg_packet * packet)
+{
+  static const guint64 durations[32] = {
+    480, 960, 1920, 2880,       /* Silk NB */
+    480, 960, 1920, 2880,       /* Silk MB */
+    480, 960, 1920, 2880,       /* Silk WB */
+    480, 960,                   /* Hybrid SWB */
+    480, 960,                   /* Hybrid FB */
+    120, 240, 480, 960,         /* CELT NB */
+    120, 240, 480, 960,         /* CELT NB */
+    120, 240, 480, 960,         /* CELT NB */
+    120, 240, 480, 960,         /* CELT NB */
+  };
+
+  gint64 duration;
+  gint64 frame_duration;
+  gint nframes;
+  guint8 toc;
+
+  if (packet->bytes < 1)
+    return 0;
+
+  /* headers */
+  if (is_header_opus (pad, packet))
+    return 0;
+
+  toc = packet->packet[0];
+
+  frame_duration = durations[toc >> 3];
+  switch (toc & 3) {
+    case 0:
+      nframes = 1;
+      break;
+    case 1:
+      nframes = 2;
+      break;
+    case 2:
+      nframes = 2;
+      break;
+    case 3:
+      if (packet->bytes < 2) {
+        GST_WARNING ("Code 3 Opus packet has less than 2 bytes");
+        return 0;
+      }
+      nframes = packet->packet[1] & 63;
+      break;
+  }
+
+  duration = nframes * frame_duration;
+  if (duration > 5760) {
+    GST_WARNING ("Opus packet duration > 120 ms, invalid");
+    return 0;
+  }
+  GST_LOG ("Opus packet: frame size %.1f ms, %d frames, duration %.1f ms",
+      frame_duration / 48.f, nframes, duration / 48.f);
+  return duration;
+}
+
+static void
+extract_tags_opus (GstOggStream * pad, ogg_packet * packet)
+{
+  if (packet->bytes >= 8 && memcmp (packet->packet, "OpusTags", 8) == 0) {
+    tag_list_from_vorbiscomment_packet (packet,
+        (const guint8 *) "OpusTags", 8, &pad->taglist);
+  }
+}
+
 
 /* *INDENT-OFF* */
 /* indent hates our freedoms */
@@ -1990,6 +2091,18 @@ const GstOggMap mappers[] = {
     packet_duration_vp8,
     granulepos_to_key_granule_vp8,
     extract_tags_vp8
+  },
+  {
+    "OpusHead", 8, 0,
+    "audio/x-opus",
+    setup_opus_mapper,
+    granulepos_to_granule_default,
+    granule_to_granulepos_default,
+    NULL,
+    is_header_opus,
+    packet_duration_opus,
+    NULL,
+    extract_tags_opus
   },
   {
     "\001audio\0\0\0", 9, 53,
