@@ -67,6 +67,14 @@ GST_STATIC_PAD_TEMPLATE ("sink",
     GST_STATIC_CAPS ("audio/x-opus")
     );
 
+#define DEFAULT_USE_INBAND_FEC FALSE
+
+enum
+{
+  PROP_0,
+  PROP_USE_INBAND_FEC
+};
+
 GST_BOILERPLATE (GstOpusDec, gst_opus_dec, GstAudioDecoder,
     GST_TYPE_AUDIO_DECODER);
 
@@ -78,6 +86,11 @@ static GstFlowReturn gst_opus_dec_handle_frame (GstAudioDecoder * dec,
     GstBuffer * buffer);
 static gboolean gst_opus_dec_set_format (GstAudioDecoder * bdec,
     GstCaps * caps);
+static void gst_opus_dec_get_property (GObject * object, guint prop_id,
+    GValue * value, GParamSpec * pspec);
+static void gst_opus_dec_set_property (GObject * object, guint prop_id,
+    const GValue * value, GParamSpec * pspec);
+
 
 static void
 gst_opus_dec_base_init (gpointer g_class)
@@ -97,16 +110,26 @@ gst_opus_dec_base_init (gpointer g_class)
 static void
 gst_opus_dec_class_init (GstOpusDecClass * klass)
 {
+  GObjectClass *gobject_class;
   GstAudioDecoderClass *adclass;
   GstElementClass *gstelement_class;
 
+  gobject_class = (GObjectClass *) klass;
   adclass = (GstAudioDecoderClass *) klass;
   gstelement_class = (GstElementClass *) klass;
+
+  gobject_class->set_property = gst_opus_dec_set_property;
+  gobject_class->get_property = gst_opus_dec_get_property;
 
   adclass->start = GST_DEBUG_FUNCPTR (gst_opus_dec_start);
   adclass->stop = GST_DEBUG_FUNCPTR (gst_opus_dec_stop);
   adclass->handle_frame = GST_DEBUG_FUNCPTR (gst_opus_dec_handle_frame);
   adclass->set_format = GST_DEBUG_FUNCPTR (gst_opus_dec_set_format);
+
+  g_object_class_install_property (gobject_class, PROP_USE_INBAND_FEC,
+      g_param_spec_boolean ("use-inband-fec", "Use in-band FEC",
+          "Use forward error correction if available", DEFAULT_USE_INBAND_FEC,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   GST_DEBUG_CATEGORY_INIT (opusdec_debug, "opusdec", 0,
       "opus decoding element");
@@ -123,6 +146,8 @@ gst_opus_dec_reset (GstOpusDec * dec)
 
   gst_buffer_replace (&dec->streamheader, NULL);
   gst_buffer_replace (&dec->vorbiscomment, NULL);
+  gst_buffer_replace (&dec->last_buffer, NULL);
+  dec->primed = FALSE;
 
   dec->pre_skip = 0;
 }
@@ -132,6 +157,7 @@ gst_opus_dec_init (GstOpusDec * dec, GstOpusDecClass * g_class)
 {
   dec->sample_rate = 0;
   dec->n_channels = 0;
+  dec->use_inband_fec = FALSE;
 
   gst_opus_dec_reset (dec);
 }
@@ -145,6 +171,11 @@ gst_opus_dec_start (GstAudioDecoder * dec)
 
   /* we know about concealment */
   gst_audio_decoder_set_plc_aware (dec, TRUE);
+
+  if (odec->use_inband_fec) {
+    gst_audio_decoder_set_latency (dec, 2 * GST_MSECOND + GST_MSECOND / 2,
+        120 * GST_MSECOND);
+  }
 
   return TRUE;
 }
@@ -222,7 +253,7 @@ gst_opus_dec_setup_from_peer_caps (GstOpusDec * dec)
 }
 
 static GstFlowReturn
-opus_dec_chain_parse_data (GstOpusDec * dec, GstBuffer * buf)
+opus_dec_chain_parse_data (GstOpusDec * dec, GstBuffer * buffer)
 {
   GstFlowReturn res = GST_FLOW_OK;
   gint size;
@@ -232,6 +263,7 @@ opus_dec_chain_parse_data (GstOpusDec * dec, GstBuffer * buf)
   int n, err;
   int samples;
   unsigned int packet_size;
+  GstBuffer *buf;
 
   if (dec->state == NULL) {
     gst_opus_dec_setup_from_peer_caps (dec);
@@ -243,30 +275,37 @@ opus_dec_chain_parse_data (GstOpusDec * dec, GstBuffer * buf)
       goto creation_failed;
   }
 
+  if (buffer) {
+    GST_DEBUG_OBJECT (dec, "Received buffer of size %u",
+        GST_BUFFER_SIZE (buffer));
+  } else {
+    GST_DEBUG_OBJECT (dec, "Received missing buffer");
+  }
+
+  /* if using in-band FEC, we introdude one extra frame's delay as we need
+     to potentially wait for next buffer to decode a missing buffer */
+  if (dec->use_inband_fec && !dec->primed) {
+    GST_DEBUG_OBJECT (dec, "First buffer received in FEC mode, early out");
+    goto done;
+  }
+
+  /* That's the buffer we'll be sending to the opus decoder. */
+  buf = dec->use_inband_fec && dec->last_buffer ? dec->last_buffer : buffer;
+
   if (buf) {
     data = GST_BUFFER_DATA (buf);
     size = GST_BUFFER_SIZE (buf);
-
-    GST_DEBUG_OBJECT (dec, "received buffer of size %u", size);
+    GST_DEBUG_OBJECT (dec, "Using buffer of size %u", size);
   } else {
     /* concealment data, pass NULL as the bits parameters */
-    GST_DEBUG_OBJECT (dec, "creating concealment data");
+    GST_DEBUG_OBJECT (dec, "Using NULL buffer");
     data = NULL;
     size = 0;
   }
 
-  if (data) {
-    samples =
-        opus_packet_get_samples_per_frame (data,
-        dec->sample_rate) * opus_packet_get_nb_frames (data, size);
-    packet_size = samples * dec->n_channels * 2;
-    GST_DEBUG_OBJECT (dec, "bandwidth %d", opus_packet_get_bandwidth (data));
-    GST_DEBUG_OBJECT (dec, "samples %d", samples);
-  } else {
-    /* use maximum size (120 ms) as we do now know in advance how many samples
-       will be returned */
-    samples = 120 * dec->sample_rate / 1000;
-  }
+  /* use maximum size (120 ms) as the number of returned samples is
+     not constant over the stream. */
+  samples = 120 * dec->sample_rate / 1000;
   packet_size = samples * dec->n_channels * 2;
 
   res = gst_pad_alloc_buffer_and_set_caps (GST_AUDIO_DECODER_SRC_PAD (dec),
@@ -280,7 +319,19 @@ opus_dec_chain_parse_data (GstOpusDec * dec, GstBuffer * buf)
 
   out_data = (gint16 *) GST_BUFFER_DATA (outbuf);
 
-  n = opus_decode (dec->state, data, size, out_data, samples, 0);
+  if (dec->use_inband_fec) {
+    if (dec->last_buffer) {
+      /* normal delayed decode */
+      n = opus_decode (dec->state, data, size, out_data, samples, 0);
+    } else {
+      /* FEC reconstruction decode */
+      n = opus_decode (dec->state, data, size, out_data, samples, 1);
+    }
+  } else {
+    /* normal decode */
+    n = opus_decode (dec->state, data, size, out_data, samples, 0);
+  }
+
   if (n < 0) {
     GST_ELEMENT_ERROR (dec, STREAM, DECODE, ("Decoding error: %d", n), (NULL));
     return GST_FLOW_ERROR;
@@ -310,6 +361,12 @@ opus_dec_chain_parse_data (GstOpusDec * dec, GstBuffer * buf)
 
   if (res != GST_FLOW_OK)
     GST_DEBUG_OBJECT (dec, "flow: %s", gst_flow_get_name (res));
+
+done:
+  if (dec->use_inband_fec) {
+    gst_buffer_replace (&dec->last_buffer, buffer);
+    dec->primed = TRUE;
+  }
 
   return res;
 
@@ -436,4 +493,36 @@ gst_opus_dec_handle_frame (GstAudioDecoder * adec, GstBuffer * buf)
   dec->packetno++;
 
   return res;
+}
+
+static void
+gst_opus_dec_get_property (GObject * object, guint prop_id, GValue * value,
+    GParamSpec * pspec)
+{
+  GstOpusDec *dec = GST_OPUS_DEC (object);
+
+  switch (prop_id) {
+    case PROP_USE_INBAND_FEC:
+      g_value_set_boolean (value, dec->use_inband_fec);
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
+  }
+}
+
+static void
+gst_opus_dec_set_property (GObject * object, guint prop_id,
+    const GValue * value, GParamSpec * pspec)
+{
+  GstOpusDec *dec = GST_OPUS_DEC (object);
+
+  switch (prop_id) {
+    case PROP_USE_INBAND_FEC:
+      dec->use_inband_fec = g_value_get_boolean (value);
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
+  }
 }
