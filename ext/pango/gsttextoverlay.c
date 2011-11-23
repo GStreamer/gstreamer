@@ -173,6 +173,7 @@ enum
   PROP_LAST
 };
 
+/* FIXME Use GST_VIDEO_CAPS_SURFACE when it lands in base */
 static GstStaticPadTemplate src_template_factory =
     GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
@@ -187,6 +188,7 @@ static GstStaticPadTemplate src_template_factory =
         GST_VIDEO_CAPS_BGRA ";"
         GST_VIDEO_CAPS_ARGB ";"
         GST_VIDEO_CAPS_ABGR ";"
+        "video/x-surface;"
         GST_VIDEO_CAPS_YUV ("{I420, YV12, AYUV, YUY2, UYVY, v308, v210,"
             " v216, Y41B, Y42B, Y444, Y800, Y16, NV12, NV21, UYVP, A420,"
             " YUV9, IYU1}"))
@@ -206,6 +208,7 @@ static GstStaticPadTemplate video_sink_template_factory =
         GST_VIDEO_CAPS_BGRA ";"
         GST_VIDEO_CAPS_ARGB ";"
         GST_VIDEO_CAPS_ABGR ";"
+        "video/x-surface;"
         GST_VIDEO_CAPS_YUV ("{I420, YV12, AYUV, YUY2, UYVY, v308, v210,"
             " v216, Y41B, Y42B, Y444, Y800, Y16, NV12, NV21, UYVP, A420,"
             " YUV9, IYU1}"))
@@ -797,8 +800,20 @@ gst_text_overlay_setcaps (GstPad * pad, GstCaps * caps)
   overlay->fps_d = gst_value_get_fraction_denominator (fps);
 
   if (ret) {
+    GstStructure *structure;
+
     GST_OBJECT_LOCK (overlay);
     g_mutex_lock (GST_TEXT_OVERLAY_GET_CLASS (overlay)->pango_lock);
+
+    /* FIXME Use the query to the sink to do that when implemented */
+    /* Update wether to attach composition to buffer or do the composition
+     * ourselves */
+    structure = gst_caps_get_structure (caps, 0);
+    if (gst_structure_has_name (structure, "video/x-surface"))
+      overlay->attach_compo_to_buffer = TRUE;
+    else
+      overlay->attach_compo_to_buffer = FALSE;
+
     gst_text_overlay_update_wrap_mode (overlay);
     g_mutex_unlock (GST_TEXT_OVERLAY_GET_CLASS (overlay)->pango_lock);
     GST_OBJECT_UNLOCK (overlay);
@@ -1639,8 +1654,15 @@ gst_text_overlay_push_frame (GstTextOverlay * overlay, GstBuffer * video_frame)
     }
   }
 
-  if (overlay->composition)
-    gst_video_overlay_composition_blend (overlay->composition, video_frame);
+  if (overlay->composition) {
+    if (overlay->attach_compo_to_buffer) {
+      GST_DEBUG_OBJECT (overlay, "Attaching text to the buffer");
+      gst_video_buffer_set_overlay_composition (video_frame,
+          overlay->composition);
+    } else {
+      gst_video_overlay_composition_blend (overlay->composition, video_frame);
+    }
+  }
 
   return gst_pad_push (overlay->srcpad, video_frame);
 }

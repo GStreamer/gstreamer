@@ -156,6 +156,8 @@ struct _GstTextOverlay {
     gboolean                    have_pango_markup;
     gboolean                    use_vertical_render;
 
+    gboolean                    attach_compo_to_buffer;
+
     GstVideoOverlayComposition *composition;
 };
 
