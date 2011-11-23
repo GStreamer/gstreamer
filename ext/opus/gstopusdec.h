@@ -54,6 +54,10 @@ struct _GstOpusDec {
   int sample_rate;
   int n_channels;
   guint32 pre_skip;
+
+  gboolean use_inband_fec;
+  GstBuffer *last_buffer;
+  gboolean primed;
 };
 
 struct _GstOpusDecClass {
