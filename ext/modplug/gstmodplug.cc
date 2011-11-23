@@ -466,10 +466,10 @@ gst_modplug_fixate (GstPad * pad, GstCaps * caps)
   GstStructure *structure;
 
   structure = gst_caps_get_structure (caps, 0);
-  if (gst_structure_fixate_field_nearest_int (structure, "rate", 44100))
-    return;
-  if (gst_structure_fixate_field_nearest_int (structure, "channels", 2))
-    return;
+  if (!gst_structure_fixate_field_nearest_int (structure, "rate", 44100))
+    GST_WARNING_OBJECT (pad, "Failed to fixate rate to 44100");
+  if (!gst_structure_fixate_field_nearest_int (structure, "channels", 2))
+    GST_WARNING_OBJECT (pad, "Failed to fixate number of channels to stereo");
 }
 
 static gboolean
