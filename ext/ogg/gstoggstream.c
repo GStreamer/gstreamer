@@ -1842,7 +1842,7 @@ setup_opus_mapper (GstOggStream * pad, ogg_packet * packet)
   GST_INFO ("Opus has a pre-skip of %" G_GINT64_FORMAT " samples",
       -pad->granule_offset);
 
-  pad->caps = gst_caps_new_simple ("audio/x-opus", NULL);
+  pad->caps = gst_caps_new_empty_simple ("audio/x-opus");
 
   return TRUE;
 }
