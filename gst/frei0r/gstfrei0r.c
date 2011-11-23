@@ -105,7 +105,8 @@ gst_frei0r_klass_install_properties (GObjectClass * gobject_class,
       case F0R_PARAM_BOOL:
         g_object_class_install_property (gobject_class, count++,
             g_param_spec_boolean (prop_name, param_info->name,
-                param_info->explanation, properties[i].default_value.data.b,
+                param_info->explanation,
+                properties[i].default_value.data.b ? TRUE : FALSE,
                 G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE));
         properties[i].n_prop_ids = 1;
         break;
