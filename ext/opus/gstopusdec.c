@@ -41,6 +41,7 @@
 #  include "config.h"
 #endif
 
+#include <math.h>
 #include <string.h>
 #include <gst/tag/tag.h>
 #include "gstopusheader.h"
@@ -67,12 +68,16 @@ GST_STATIC_PAD_TEMPLATE ("sink",
     GST_STATIC_CAPS ("audio/x-opus")
     );
 
+#define DB_TO_LINEAR(x) pow (10., (x) / 20.)
+
 #define DEFAULT_USE_INBAND_FEC FALSE
+#define DEFAULT_APPLY_GAIN TRUE
 
 enum
 {
   PROP_0,
-  PROP_USE_INBAND_FEC
+  PROP_USE_INBAND_FEC,
+  PROP_APPLY_GAIN
 };
 
 GST_BOILERPLATE (GstOpusDec, gst_opus_dec, GstAudioDecoder,
@@ -131,6 +136,11 @@ gst_opus_dec_class_init (GstOpusDecClass * klass)
           "Use forward error correction if available", DEFAULT_USE_INBAND_FEC,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
+  g_object_class_install_property (gobject_class, PROP_APPLY_GAIN,
+      g_param_spec_boolean ("apply-gain", "Apply gain",
+          "Apply gain if any is specified in the header", DEFAULT_APPLY_GAIN,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
   GST_DEBUG_CATEGORY_INIT (opusdec_debug, "opusdec", 0,
       "opus decoding element");
 }
@@ -150,6 +160,7 @@ gst_opus_dec_reset (GstOpusDec * dec)
   dec->primed = FALSE;
 
   dec->pre_skip = 0;
+  dec->r128_gain = 0;
 }
 
 static void
@@ -158,6 +169,7 @@ gst_opus_dec_init (GstOpusDec * dec, GstOpusDecClass * g_class)
   dec->sample_rate = 0;
   dec->n_channels = 0;
   dec->use_inband_fec = FALSE;
+  dec->apply_gain = DEFAULT_APPLY_GAIN;
 
   gst_opus_dec_reset (dec);
 }
@@ -190,6 +202,18 @@ gst_opus_dec_stop (GstAudioDecoder * dec)
   return TRUE;
 }
 
+static double
+gst_opus_dec_get_r128_gain (gint16 r128_gain)
+{
+  return r128_gain / (double) (1 << 8);
+}
+
+static double
+gst_opus_dec_get_r128_volume (gint16 r128_gain)
+{
+  return DB_TO_LINEAR (gst_opus_dec_get_r128_gain (r128_gain));
+}
+
 static GstFlowReturn
 gst_opus_dec_parse_header (GstOpusDec * dec, GstBuffer * buf)
 {
@@ -198,7 +222,11 @@ gst_opus_dec_parse_header (GstOpusDec * dec, GstBuffer * buf)
   g_return_val_if_fail (GST_BUFFER_SIZE (buf) >= 19, GST_FLOW_ERROR);
 
   dec->pre_skip = GST_READ_UINT16_LE (GST_BUFFER_DATA (buf) + 10);
-  GST_INFO_OBJECT (dec, "Found pre-skip of %u samples", dec->pre_skip);
+  dec->r128_gain = GST_READ_UINT16_LE (GST_BUFFER_DATA (buf) + 14);
+  dec->r128_gain_volume = gst_opus_dec_get_r128_volume (dec->r128_gain);
+  GST_INFO_OBJECT (dec,
+      "Found pre-skip of %u samples, R128 gain %d (volume %f)",
+      dec->pre_skip, dec->r128_gain, dec->r128_gain_volume);
 
   return GST_FLOW_OK;
 }
@@ -357,6 +385,23 @@ opus_dec_chain_parse_data (GstOpusDec * dec, GstBuffer * buffer)
     }
   }
 
+  /* Apply gain */
+  /* Would be better off leaving this to a volume element, as this is
+     a naive conversion that does too many int/float conversions.
+     However, we don't have control over the pipeline...
+     So make it optional if the user program wants to use a volume,
+     but do it by default so the correct volume goes out by default */
+  if (dec->apply_gain && outbuf && dec->r128_gain) {
+    unsigned int i, nsamples = GST_BUFFER_SIZE (outbuf) / 2;
+    double volume = dec->r128_gain_volume;
+    gint16 *samples = (gint16 *) GST_BUFFER_DATA (outbuf);
+    GST_DEBUG_OBJECT (dec, "Applying gain: volume %f", volume);
+    for (i = 0; i < nsamples; ++i) {
+      int sample = (int) (samples[i] * volume + 0.5);
+      samples[i] = sample < -32768 ? -32768 : sample > 32767 ? 32767 : sample;
+    }
+  }
+
   res = gst_audio_decoder_finish_frame (GST_AUDIO_DECODER (dec), outbuf, 1);
 
   if (res != GST_FLOW_OK)
@@ -505,6 +550,9 @@ gst_opus_dec_get_property (GObject * object, guint prop_id, GValue * value,
     case PROP_USE_INBAND_FEC:
       g_value_set_boolean (value, dec->use_inband_fec);
       break;
+    case PROP_APPLY_GAIN:
+      g_value_set_boolean (value, dec->apply_gain);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -520,6 +568,9 @@ gst_opus_dec_set_property (GObject * object, guint prop_id,
   switch (prop_id) {
     case PROP_USE_INBAND_FEC:
       dec->use_inband_fec = g_value_get_boolean (value);
+      break;
+    case PROP_APPLY_GAIN:
+      dec->apply_gain = g_value_get_boolean (value);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);

@@ -54,6 +54,10 @@ struct _GstOpusDec {
   int sample_rate;
   int n_channels;
   guint32 pre_skip;
+  gint16 r128_gain;
+
+  gboolean apply_gain;
+  double r128_gain_volume;
 
   gboolean use_inband_fec;
   GstBuffer *last_buffer;
