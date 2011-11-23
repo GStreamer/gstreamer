@@ -152,6 +152,7 @@ gboolean        gst_byte_writer_fill              (GstByteWriter *writer, guint8
 gboolean        gst_byte_writer_put_string_utf8   (GstByteWriter *writer, const gchar *data);
 gboolean        gst_byte_writer_put_string_utf16  (GstByteWriter *writer, const guint16 *data);
 gboolean        gst_byte_writer_put_string_utf32  (GstByteWriter *writer, const guint32 *data);
+gboolean        gst_byte_writer_put_buffer        (GstByteWriter *writer, GstBuffer * buffer, gsize offset, gssize size);
 
 /**
  * gst_byte_writer_put_string:
