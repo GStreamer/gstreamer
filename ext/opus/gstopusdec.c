@@ -150,7 +150,7 @@ gst_opus_dec_reset (GstOpusDec * dec)
 {
   dec->packetno = 0;
   if (dec->state) {
-    opus_decoder_destroy (dec->state);
+    opus_multistream_decoder_destroy (dec->state);
     dec->state = NULL;
   }
 
@@ -228,6 +228,16 @@ gst_opus_dec_parse_header (GstOpusDec * dec, GstBuffer * buf)
       "Found pre-skip of %u samples, R128 gain %d (volume %f)",
       dec->pre_skip, dec->r128_gain, dec->r128_gain_volume);
 
+  dec->channel_mapping_family = GST_BUFFER_DATA (buf)[18];
+  if (dec->channel_mapping_family != 0) {
+    GST_ELEMENT_ERROR (dec, STREAM, DECODE,
+        ("Decoding error: unsupported channel nmapping family %d",
+            dec->channel_mapping_family), (NULL));
+    return GST_FLOW_ERROR;
+  }
+  dec->channel_mapping[0] = 0;
+  dec->channel_mapping[1] = 1;
+
   return GST_FLOW_OK;
 }
 
@@ -298,7 +308,8 @@ opus_dec_chain_parse_data (GstOpusDec * dec, GstBuffer * buffer)
 
     GST_DEBUG_OBJECT (dec, "Creating decoder with %d channels, %d Hz",
         dec->n_channels, dec->sample_rate);
-    dec->state = opus_decoder_create (dec->sample_rate, dec->n_channels, &err);
+    dec->state = opus_multistream_decoder_create (dec->sample_rate,
+        dec->n_channels, 1, 1, dec->channel_mapping, &err);
     if (!dec->state || err != OPUS_OK)
       goto creation_failed;
   }
@@ -350,14 +361,16 @@ opus_dec_chain_parse_data (GstOpusDec * dec, GstBuffer * buffer)
   if (dec->use_inband_fec) {
     if (dec->last_buffer) {
       /* normal delayed decode */
-      n = opus_decode (dec->state, data, size, out_data, samples, 0);
+      n = opus_multistream_decode (dec->state, data, size, out_data, samples,
+          0);
     } else {
       /* FEC reconstruction decode */
-      n = opus_decode (dec->state, data, size, out_data, samples, 1);
+      n = opus_multistream_decode (dec->state, data, size, out_data, samples,
+          1);
     }
   } else {
     /* normal decode */
-    n = opus_decode (dec->state, data, size, out_data, samples, 0);
+    n = opus_multistream_decode (dec->state, data, size, out_data, samples, 0);
   }
 
   if (n < 0) {
