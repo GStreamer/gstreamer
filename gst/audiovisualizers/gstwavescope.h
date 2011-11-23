@@ -33,9 +33,15 @@ G_BEGIN_DECLS
 typedef struct _GstWaveScope GstWaveScope;
 typedef struct _GstWaveScopeClass GstWaveScopeClass;
 
+typedef void (*GstWaveScopeProcessFunc) (GstBaseAudioVisualizer *, guint32 *, gint16 *, guint);
+
 struct _GstWaveScope
 {
   GstBaseAudioVisualizer parent;
+  
+  /* < private > */
+  GstWaveScopeProcessFunc process;
+  gint style;
 };
 
 struct _GstWaveScopeClass

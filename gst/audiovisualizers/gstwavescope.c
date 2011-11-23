@@ -35,6 +35,7 @@
 #include "config.h"
 #endif
 
+#include <stdlib.h>
 #include "gstwavescope.h"
 
 static GstStaticPadTemplate gst_wave_scope_src_template =
@@ -55,7 +56,48 @@ GST_STATIC_PAD_TEMPLATE ("sink",
 GST_DEBUG_CATEGORY_STATIC (wave_scope_debug);
 #define GST_CAT_DEFAULT wave_scope_debug
 
-static gboolean gst_wave_scope_render (GstBaseAudioVisualizer * scope,
+enum
+{
+  PROP_0,
+  PROP_STYLE
+};
+
+enum
+{
+  STYLE_DOTS = 0,
+  STYLE_LINES,
+  NUM_STYLES
+};
+
+#define GST_TYPE_WAVE_SCOPE_STYLE (gst_wave_scope_style_get_type ())
+static GType
+gst_wave_scope_style_get_type (void)
+{
+  static GType gtype = 0;
+
+  if (gtype == 0) {
+    static const GEnumValue values[] = {
+      {STYLE_DOTS, "draw dots (default)", "dots"},
+      {STYLE_LINES, "draw lines", "lines"},
+      {0, NULL, NULL}
+    };
+
+    gtype = g_enum_register_static ("GstWaveScopeStyle", values);
+  }
+  return gtype;
+}
+
+static void gst_wave_scope_set_property (GObject * object, guint prop_id,
+    const GValue * value, GParamSpec * pspec);
+static void gst_wave_scope_get_property (GObject * object, guint prop_id,
+    GValue * value, GParamSpec * pspec);
+
+static void render_dots (GstBaseAudioVisualizer * scope, guint32 * vdata,
+    gint16 * adata, guint num_samples);
+static void render_lines (GstBaseAudioVisualizer * scope, guint32 * vdata,
+    gint16 * adata, guint num_samples);
+
+static gboolean gst_wave_scope_render (GstBaseAudioVisualizer * base,
     GstBuffer * audio, GstBuffer * video);
 
 
@@ -80,10 +122,20 @@ gst_wave_scope_base_init (gpointer g_class)
 static void
 gst_wave_scope_class_init (GstWaveScopeClass * g_class)
 {
+  GObjectClass *gobject_class = (GObjectClass *) g_class;
   GstBaseAudioVisualizerClass *scope_class =
       (GstBaseAudioVisualizerClass *) g_class;
 
+  gobject_class->set_property = gst_wave_scope_set_property;
+  gobject_class->get_property = gst_wave_scope_get_property;
+
   scope_class->render = GST_DEBUG_FUNCPTR (gst_wave_scope_render);
+
+  g_object_class_install_property (gobject_class, PROP_STYLE,
+      g_param_spec_enum ("style", "drawing style",
+          "Drawing styles for the wave form display.",
+          GST_TYPE_WAVE_SCOPE_STYLE, STYLE_DOTS,
+          G_PARAM_CONSTRUCT | G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 }
 
 static void
@@ -92,31 +144,134 @@ gst_wave_scope_init (GstWaveScope * scope, GstWaveScopeClass * g_class)
   /* do nothing */
 }
 
-static gboolean
-gst_wave_scope_render (GstBaseAudioVisualizer * scope, GstBuffer * audio,
-    GstBuffer * video)
+static void
+gst_wave_scope_set_property (GObject * object, guint prop_id,
+    const GValue * value, GParamSpec * pspec)
 {
-  guint32 *vdata = (guint32 *) GST_BUFFER_DATA (video);
-  gint16 *adata = (gint16 *) GST_BUFFER_DATA (audio);
-  guint i, c, s, x, y, off, oy;
-  guint num_samples;
+  GstWaveScope *scope = GST_WAVE_SCOPE (object);
+
+  switch (prop_id) {
+    case PROP_STYLE:
+      scope->style = g_value_get_enum (value);
+      switch (scope->style) {
+        case STYLE_DOTS:
+          scope->process = render_dots;
+          break;
+        case STYLE_LINES:
+          scope->process = render_lines;
+          break;
+      }
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
+  }
+}
+
+static void
+gst_wave_scope_get_property (GObject * object, guint prop_id,
+    GValue * value, GParamSpec * pspec)
+{
+  GstWaveScope *scope = GST_WAVE_SCOPE (object);
+
+  switch (prop_id) {
+    case PROP_STYLE:
+      g_value_set_enum (value, scope->style);
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
+  }
+}
+
+static void
+render_dots (GstBaseAudioVisualizer * scope, guint32 * vdata, gint16 * adata,
+    guint num_samples)
+{
+  gint channels = scope->channels;
+  guint i, c, s, x = 0, y, oy;
   gfloat dx, dy;
   guint w = scope->width;
+  guint off;
 
   /* draw dots */
-  num_samples = GST_BUFFER_SIZE (audio) / (scope->channels * sizeof (gint16));
-  dx = (gfloat) scope->width / (gfloat) num_samples;
+  dx = (gfloat) w / (gfloat) num_samples;
   dy = scope->height / 65536.0;
   oy = scope->height / 2;
-  s = 0;
-  for (i = 0; i < num_samples; i++) {
-    x = (guint) ((gfloat) i * dx);
-    for (c = 0; c < scope->channels; c++) {
-      y = (guint) (oy + (gfloat) adata[s++] * dy);
+  for (c = 0; c < channels; c++) {
+    s = c;
+    for (i = 0; i < num_samples; i++) {
+      x = (guint) ((gfloat) i * dx);
+      y = (guint) (oy + (gfloat) adata[s] * dy);
+      s += channels;
       off = (y * w) + x;
       vdata[off] = 0x00FFFFFF;
     }
   }
+}
+
+static void
+draw_line (guint32 * vdata, guint x1, guint x2, guint y1, guint y2, guint w)
+{
+  guint i, j, x, y, off;
+  gint dx = x2 - x1;
+  gint dy = y2 - y1;
+  gfloat f;
+
+  if (abs (dx) > abs (dy)) {
+    j = abs (dx);
+  } else {
+    j = abs (dy);
+  }
+  for (i = 0; i < j; i++) {
+    f = (gfloat) i / (gfloat) j;
+    x = x1 + dx * f;
+    y = y1 + dy * f;
+    off = (y * w) + x;
+    vdata[off] = 0x00FFFFFF;
+  }
+}
+
+static void
+render_lines (GstBaseAudioVisualizer * scope, guint32 * vdata, gint16 * adata,
+    guint num_samples)
+{
+  gint channels = scope->channels;
+  guint i, c, s, x = 0, y, oy;
+  gfloat dx, dy;
+  guint w = scope->width;
+  gint x2, y2;
+
+  /* draw lines */
+  dx = (gfloat) w / (gfloat) num_samples;
+  dy = scope->height / 65536.0;
+  oy = scope->height / 2;
+  for (c = 0; c < channels; c++) {
+    s = c;
+    x2 = 0;
+    y2 = (guint) (oy + (gfloat) adata[s] * dy);
+    for (i = 1; i < num_samples; i++) {
+      x = (guint) ((gfloat) i * dx);
+      y = (guint) (oy + (gfloat) adata[s] * dy);
+      s += channels;
+      draw_line (vdata, x2, x, y2, y, w);
+      x2 = x;
+      y2 = y;
+    }
+  }
+}
+
+static gboolean
+gst_wave_scope_render (GstBaseAudioVisualizer * base, GstBuffer * audio,
+    GstBuffer * video)
+{
+  GstWaveScope *scope = GST_WAVE_SCOPE (base);
+  guint32 *vdata = (guint32 *) GST_BUFFER_DATA (video);
+  gint16 *adata = (gint16 *) GST_BUFFER_DATA (audio);
+  guint num_samples;
+
+  num_samples = GST_BUFFER_SIZE (audio) / (base->channels * sizeof (gint16));
+  scope->process (base, vdata, adata, num_samples);
   return TRUE;
 }
 
