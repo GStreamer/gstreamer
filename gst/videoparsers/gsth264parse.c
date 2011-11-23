@@ -193,6 +193,7 @@ gst_h264_parse_reset (GstH264Parse * h264parse)
   h264parse->height = 0;
   h264parse->fps_num = 0;
   h264parse->fps_den = 0;
+  h264parse->aspect_ratio_idc = 0;
   h264parse->sar_width = 0;
   h264parse->sar_height = 0;
   gst_buffer_replace (&h264parse->codec_data, NULL);
@@ -814,6 +815,92 @@ gst_h264_parse_make_codec_data (GstH264Parse * h264parse)
 }
 
 static void
+gst_h264_parse_get_par (GstH264Parse * h264parse, gint * num, gint * den)
+{
+  gint par_n, par_d;
+
+  par_n = par_d = 0;
+  switch (h264parse->aspect_ratio_idc) {
+    case 0:
+      par_n = par_d = 0;
+      break;
+    case 1:
+      par_n = 1;
+      par_d = 1;
+      break;
+    case 2:
+      par_n = 12;
+      par_d = 11;
+      break;
+    case 3:
+      par_n = 10;
+      par_d = 11;
+      break;
+    case 4:
+      par_n = 16;
+      par_d = 11;
+      break;
+    case 5:
+      par_n = 40;
+      par_d = 33;
+      break;
+    case 6:
+      par_n = 24;
+      par_d = 11;
+      break;
+    case 7:
+      par_n = 20;
+      par_d = 11;
+      break;
+    case 8:
+      par_n = 32;
+      par_d = 11;
+      break;
+    case 9:
+      par_n = 80;
+      par_d = 33;
+      break;
+    case 10:
+      par_n = 18;
+      par_d = 11;
+      break;
+    case 11:
+      par_n = 15;
+      par_d = 11;
+      break;
+    case 12:
+      par_n = 64;
+      par_d = 33;
+      break;
+    case 13:
+      par_n = 160;
+      par_d = 99;
+      break;
+    case 14:
+      par_n = 4;
+      par_d = 3;
+      break;
+    case 15:
+      par_n = 3;
+      par_d = 2;
+      break;
+    case 16:
+      par_n = 2;
+      par_d = 1;
+      break;
+    case 255:
+      par_n = h264parse->sar_width;
+      par_d = h264parse->sar_height;
+      break;
+    default:
+      par_n = par_d = 0;
+  }
+
+  *num = par_n;
+  *den = par_d;
+}
+
+static void
 gst_h264_parse_update_src_caps (GstH264Parse * h264parse, GstCaps * caps)
 {
   GstH264SPS *sps;
@@ -861,46 +948,80 @@ gst_h264_parse_update_src_caps (GstH264Parse * h264parse, GstCaps * caps)
   caps = NULL;
   if (G_UNLIKELY (!sps)) {
     caps = gst_caps_copy (sink_caps);
-  } else if (G_UNLIKELY (h264parse->width != sps->width ||
-          h264parse->height != sps->height || h264parse->fps_num != sps->fps_num
-          || h264parse->fps_den != sps->fps_den ||
-          h264parse->sar_width != sps->vui_parameters.sar_width ||
-          h264parse->sar_height != sps->vui_parameters.sar_height
-          || modified)) {
-    caps = gst_caps_copy (sink_caps);
-    /* sps should give this */
-    gst_caps_set_simple (caps, "width", G_TYPE_INT, sps->width,
-        "height", G_TYPE_INT, sps->height, NULL);
-    h264parse->height = sps->height;
-    h264parse->width = sps->width;
-    /* but not necessarily or reliably this */
-    if ((!h264parse->fps_num || !h264parse->fps_den) &&
-        sps->fps_num > 0 && sps->fps_den > 0) {
-      gst_caps_set_simple (caps, "framerate",
-          GST_TYPE_FRACTION, sps->fps_num, sps->fps_den, NULL);
-      h264parse->fps_num = sps->fps_num;
-      h264parse->fps_den = sps->fps_den;
-      gst_base_parse_set_frame_rate (GST_BASE_PARSE (h264parse),
-          h264parse->fps_num, h264parse->fps_den, 0, 0);
+  } else {
+    if (G_UNLIKELY (h264parse->width != sps->width ||
+            h264parse->height != sps->height)) {
+      GST_INFO_OBJECT (h264parse, "resolution changed %dx%d",
+          sps->width, sps->height);
+      h264parse->width = sps->width;
+      h264parse->height = sps->height;
+      modified = TRUE;
     }
-    if ((sps->vui_parameters.sar_width > 0 &&
-            sps->vui_parameters.sar_height > 0) &&
-        (h264parse->sar_width != sps->vui_parameters.sar_width ||
-            h264parse->sar_height != sps->vui_parameters.sar_height)) {
-      h264parse->sar_width = sps->vui_parameters.sar_width;
-      h264parse->sar_height = sps->vui_parameters.sar_height;
+
+    /* 0/1 is set as the default in the codec parser */
+    if (sps->vui_parameters.timing_info_present_flag &&
+        !(sps->fps_num == 0 && sps->fps_den == 1)) {
+      if (G_UNLIKELY (h264parse->fps_num != sps->fps_num
+              || h264parse->fps_den != sps->fps_den)) {
+        GST_INFO_OBJECT (h264parse, "framerate changed %d/%d",
+            sps->fps_num, sps->fps_den);
+        h264parse->fps_num = sps->fps_num;
+        h264parse->fps_den = sps->fps_den;
+        gst_base_parse_set_frame_rate (GST_BASE_PARSE (h264parse),
+            h264parse->fps_num, h264parse->fps_den, 0, 0);
+        modified = TRUE;
+      }
+    }
+
+    if (sps->vui_parameters.aspect_ratio_info_present_flag) {
+      if (G_UNLIKELY (h264parse->aspect_ratio_idc !=
+              sps->vui_parameters.aspect_ratio_idc)) {
+        h264parse->aspect_ratio_idc = sps->vui_parameters.aspect_ratio_idc;
+        GST_INFO_OBJECT (h264parse, "aspect ratio idc changed %d",
+            h264parse->aspect_ratio_idc);
+        modified = TRUE;
+      }
+
+      /* 255 means sar_width and sar_height present */
+      if (G_UNLIKELY (sps->vui_parameters.aspect_ratio_idc == 255 &&
+              (h264parse->sar_width != sps->vui_parameters.sar_width ||
+                  h264parse->sar_height != sps->vui_parameters.sar_height))) {
+        h264parse->sar_width = sps->vui_parameters.sar_width;
+        h264parse->sar_height = sps->vui_parameters.sar_height;
+        GST_INFO_OBJECT (h264parse, "aspect ratio SAR changed %d/%d",
+            h264parse->sar_width, h264parse->sar_height);
+        modified = TRUE;
+      }
+    }
+
+    if (G_UNLIKELY (modified)) {
+      caps = gst_caps_copy (sink_caps);
+      /* sps should give this */
+      gst_caps_set_simple (caps, "width", G_TYPE_INT, sps->width,
+          "height", G_TYPE_INT, sps->height, NULL);
+      /* but not necessarily or reliably this */
+      if (h264parse->fps_num > 0 && h264parse->fps_den > 0)
+        gst_caps_set_simple (caps, "framerate",
+            GST_TYPE_FRACTION, sps->fps_num, sps->fps_den, NULL);
     }
   }
 
   if (caps) {
+    gint par_n, par_d;
+
     gst_caps_set_simple (caps, "parsed", G_TYPE_BOOLEAN, TRUE,
         "stream-format", G_TYPE_STRING,
         gst_h264_parse_get_string (h264parse, TRUE, h264parse->format),
         "alignment", G_TYPE_STRING,
         gst_h264_parse_get_string (h264parse, FALSE, h264parse->align), NULL);
-    if (h264parse->sar_width > 0 && h264parse->sar_height > 0)
+
+    gst_h264_parse_get_par (h264parse, &par_n, &par_d);
+    if (par_n != 0 && par_d != 0) {
+      GST_INFO_OBJECT (h264parse, "PAR %d/%d", par_n, par_d);
       gst_caps_set_simple (caps, "pixel-aspect-ratio", GST_TYPE_FRACTION,
-          h264parse->sar_width, h264parse->sar_height, NULL);
+          par_n, par_d, NULL);
+    }
+
     if (buf) {
       gst_caps_set_simple (caps, "codec_data", GST_TYPE_BUFFER, buf, NULL);
       gst_buffer_replace (&h264parse->codec_data, buf);
