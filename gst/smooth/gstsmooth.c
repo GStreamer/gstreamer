@@ -188,9 +188,8 @@ gst_smooth_transform (GstBaseTransform * btrans, GstBuffer * inbuf,
     GstBuffer * outbuf)
 {
   GstSmooth *smooth;
-  guchar *idata, *odata;
-  gulong size;
-  gint lumsize, chromsize;
+  guint8 *idata, *odata;
+  guint size, lumsize, chromsize;
 
   smooth = GST_SMOOTH (btrans);
   idata = GST_BUFFER_DATA (inbuf);
