@@ -3869,7 +3869,6 @@ gst_pad_push_event (GstPad * pad, GstEvent * event)
     goto unknown_direction;
 
   GST_OBJECT_LOCK (pad);
-  peerpad = GST_PAD_PEER (pad);
 
   /* Two checks to be made:
    * . (un)set the FLUSHING flag for flushing events,
@@ -3916,9 +3915,6 @@ gst_pad_push_event (GstPad * pad, GstEvent * event)
               GST_EVENT_TYPE_NAME (event));
           pad->priv->events[idx].received = FALSE;
         }
-        /* the peerpad might have changed. Things we checked above could not
-         * have changed. */
-        peerpad = GST_PAD_PEER (pad);
         stored = TRUE;
       }
 
@@ -3945,6 +3941,7 @@ gst_pad_push_event (GstPad * pad, GstEvent * event)
   PROBE_PUSH (pad, type | GST_PAD_PROBE_TYPE_PUSH, event, probe_stopped);
 
   /* now check the peer pad */
+  peerpad = GST_PAD_PEER (pad);
   if (peerpad == NULL)
     goto not_linked;
 
