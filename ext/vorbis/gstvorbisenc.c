@@ -65,7 +65,7 @@ GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("audio/x-raw-float, "
         "rate = (int) [ 1, 200000 ], "
-        "channels = (int) [ 1, 256 ], " "endianness = (int) BYTE_ORDER, "
+        "channels = (int) [ 1, 255 ], " "endianness = (int) BYTE_ORDER, "
         "width = (int) 32")
     );
 
@@ -310,7 +310,7 @@ gst_vorbis_enc_generate_sink_caps (void)
 
   gst_caps_append_structure (caps, gst_structure_new ("audio/x-raw-float",
           "rate", GST_TYPE_INT_RANGE, 1, 200000,
-          "channels", GST_TYPE_INT_RANGE, 9, 256,
+          "channels", GST_TYPE_INT_RANGE, 9, 255,
           "endianness", G_TYPE_INT, G_BYTE_ORDER, "width", G_TYPE_INT, 32,
           NULL));
 
