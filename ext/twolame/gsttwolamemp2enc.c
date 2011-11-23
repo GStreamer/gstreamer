@@ -687,8 +687,8 @@ gst_two_lame_handle_frame (GstAudioEncoder * enc, GstBuffer * buf)
           num_samples / twolame->num_channels, mp3_data, mp3_buffer_size);
   }
 
-  GST_LOG_OBJECT (twolame, "encoded %d bytes of audio to %d bytes of mp3",
-      size, mp3_size);
+  GST_LOG_OBJECT (twolame, "encoded %" G_GSIZE_FORMAT " bytes of audio "
+      "to %d bytes of mp3", size, mp3_size);
 
   gst_buffer_unmap (buf, data, -1);
   gst_buffer_unmap (mp3_buf, mp3_data, -1);
