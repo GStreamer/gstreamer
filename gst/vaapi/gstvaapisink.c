@@ -645,7 +645,7 @@ gst_vaapisink_show_frame_x11(
 )
 {
     if (!gst_vaapi_window_put_surface(sink->window, surface,
-                                      NULL, &sink->display_rect, flags)) {
+                NULL, &sink->display_rect, flags)) {
         GST_DEBUG("could not render VA surface");
         return FALSE;
     }
@@ -660,6 +660,8 @@ gst_vaapisink_show_frame(GstBaseSink *base_sink, GstBuffer *buffer)
     GstVaapiSurface *surface;
     guint flags;
     gboolean success;
+    GstVideoOverlayComposition * const composition =
+        gst_video_buffer_get_overlay_composition(buffer);
 
     if (sink->display != gst_vaapi_video_buffer_get_display (vbuffer)) {
       if (sink->display)
@@ -678,6 +680,9 @@ gst_vaapisink_show_frame(GstBaseSink *base_sink, GstBuffer *buffer)
               GST_VAAPI_ID_ARGS(gst_vaapi_surface_get_id(surface)));
 
     flags = GST_VAAPI_PICTURE_STRUCTURE_FRAME;
+
+    if (!gst_vaapi_surface_update_composition(surface, composition))
+        GST_WARNING("could not update subtitles");
 
 #if USE_VAAPISINK_GLX
     if (sink->use_glx)
