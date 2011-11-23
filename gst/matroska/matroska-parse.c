@@ -380,6 +380,11 @@ gst_matroska_parse_reset (GstElement * element)
     gst_buffer_unref (parse->common.cached_buffer);
     parse->common.cached_buffer = NULL;
   }
+
+  if (parse->streamheader != NULL) {
+    gst_buffer_unref (parse->streamheader);
+    parse->streamheader = NULL;
+  }
 }
 
 static GstFlowReturn

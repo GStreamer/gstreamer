@@ -37,6 +37,7 @@ interleave
 jpegenc
 level
 matroskamux
+matroskaparse
 mpegaudioparse
 multifile
 qtmux

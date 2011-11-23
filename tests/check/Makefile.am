@@ -134,6 +134,7 @@ check_PROGRAMS = \
 	elements/interleave \
 	elements/level \
 	elements/matroskamux \
+	elements/matroskaparse \
 	elements/mpegaudioparse \
 	elements/multifile \
 	elements/qtmux \
