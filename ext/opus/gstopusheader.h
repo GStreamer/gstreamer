@@ -1,11 +1,6 @@
-/* -*- c-basic-offset: 2 -*-
- * 
- * GStreamer
- * Copyright (C) 1999,2000 Erik Walthinsen <omega@cse.ogi.edu>
- *               2000 Wim Taymans <wtay@chello.be>
- *               2006 Dreamlab Technologies Ltd. <mathis.hofer@dreamlab.net>
- *
- * gstfilter.h: element for filter plug-ins
+/* GStreamer
+ * Copyright (C) <1999> Erik Walthinsen <omega@cse.ogi.edu>
+ * Copyright (C) <2008> Sebastian Dröge <sebastian.droege@collabora.co.uk>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -23,11 +18,17 @@
  * Boston, MA 02111-1307, USA.
  */
 
-
-#ifndef __GST_FILTER_H__
-#define __GST_FILTER_H__
+#ifndef __GST_OPUS_HEADER_H__
+#define __GST_OPUS_HEADER_H__
 
 #include <gst/gst.h>
-GType gst_iir_get_type (void);
 
-#endif /* __GST_FILTER_H__ */
+G_BEGIN_DECLS
+
+extern void gst_opus_header_create_caps (GstCaps **caps, GSList **headers, gint nchannels, gint sample_rate, const GstTagList *tags);
+extern gboolean gst_opus_header_is_header (GstBuffer * buf, const char *magic, guint magic_size);
+
+
+G_END_DECLS
+
+#endif /* __GST_OPUS_HEADER_H__ */

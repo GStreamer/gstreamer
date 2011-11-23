@@ -1389,11 +1389,7 @@ gst_base_video_decoder_finish_frame (GstBaseVideoDecoder * base_video_decoder,
     GstVideoFrameState *tmp = l->data;
 
     if (tmp->events) {
-      GList *k;
-
-      for (k = g_list_last (tmp->events); k; k = k->prev)
-        events = g_list_prepend (events, k->data);
-      g_list_free (tmp->events);
+      events = tmp->events;
       tmp->events = NULL;
     }
 
@@ -1401,7 +1397,7 @@ gst_base_video_decoder_finish_frame (GstBaseVideoDecoder * base_video_decoder,
       break;
   }
 
-  for (l = g_list_last (events); l; l = l->next)
+  for (l = g_list_last (events); l; l = l->prev)
     gst_pad_push_event (GST_BASE_VIDEO_CODEC_SRC_PAD (base_video_decoder),
         l->data);
   g_list_free (events);
@@ -2055,7 +2051,7 @@ gst_base_video_decoder_alloc_src_frame (GstBaseVideoDecoder *
  * @frame: a #GstVideoFrameState
  *
  * Determines maximum possible decoding time for @frame that will
- * allow it to decode and arrive in time (as determined by QoS messages).
+ * allow it to decode and arrive in time (as determined by QoS events).
  * In particular, a negative result means decoding in time is no longer possible
  * and should therefore occur as soon/skippy as possible.
  *

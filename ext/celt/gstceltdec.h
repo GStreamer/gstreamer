@@ -52,8 +52,6 @@ struct _GstCeltDec {
   gint                  frame_size;
   guint64               packetno;
 
-  gboolean              discont;
-
   GstBuffer            *streamheader;
   GstBuffer            *vorbiscomment;
   GList                *extra_headers;

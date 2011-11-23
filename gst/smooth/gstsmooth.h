@@ -23,6 +23,8 @@
 
 
 #include <gst/gst.h>
+#include <gst/video/video.h>
+#include <gst/video/gstvideofilter.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -44,7 +46,7 @@ typedef struct _GstSmooth GstSmooth;
 typedef struct _GstSmoothClass GstSmoothClass;
 
 struct _GstSmooth {
-  GstElement element;
+  GstVideoFilter element;
 
   int format;
   int width;
@@ -53,13 +55,13 @@ struct _GstSmooth {
   gboolean active;
   int tolerance;
   int filtersize;
-  gboolean lum_only;
+  gboolean luma_only;
 
   GstPad *sinkpad,*srcpad;
 };
 
 struct _GstSmoothClass {
-  GstElementClass parent_class;
+  GstVideoFilterClass parent_class;
 };
 
 GType gst_smooth_get_type(void);

@@ -118,7 +118,7 @@ struct _GstMotioncellsClass
 
 GType gst_motion_cells_get_type (void);
 
-gboolean gst_motioncells_plugin_init (GstPlugin * plugin);
+gboolean gst_motion_cells_plugin_init (GstPlugin * plugin);
 
 G_END_DECLS
 #endif /* __GST_MOTION_CELLS_H__ */

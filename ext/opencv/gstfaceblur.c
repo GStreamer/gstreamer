@@ -46,7 +46,7 @@
 /**
  * SECTION:element-faceblur
  *
- * FIXME:Describe faceblur here.
+ * Blurs faces in images and videos.
  *
  * <refsect2>
  * <title>Example launch line</title>
@@ -65,8 +65,8 @@
 #include "gstopencvutils.h"
 #include "gstfaceblur.h"
 
-GST_DEBUG_CATEGORY_STATIC (gst_faceblur_debug);
-#define GST_CAT_DEFAULT gst_faceblur_debug
+GST_DEBUG_CATEGORY_STATIC (gst_face_blur_debug);
+#define GST_CAT_DEFAULT gst_face_blur_debug
 
 #define DEFAULT_PROFILE "/usr/share/opencv/haarcascades/haarcascade_frontalface_default.xml"
 
@@ -97,23 +97,23 @@ static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",
     GST_STATIC_CAPS (GST_VIDEO_CAPS_RGB)
     );
 
-GST_BOILERPLATE (Gstfaceblur, gst_faceblur, GstElement, GST_TYPE_ELEMENT);
+GST_BOILERPLATE (GstFaceBlur, gst_face_blur, GstElement, GST_TYPE_ELEMENT);
 
-static void gst_faceblur_set_property (GObject * object, guint prop_id,
+static void gst_face_blur_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
-static void gst_faceblur_get_property (GObject * object, guint prop_id,
+static void gst_face_blur_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 
-static gboolean gst_faceblur_set_caps (GstPad * pad, GstCaps * caps);
-static GstFlowReturn gst_faceblur_chain (GstPad * pad, GstBuffer * buf);
+static gboolean gst_face_blur_set_caps (GstPad * pad, GstCaps * caps);
+static GstFlowReturn gst_face_blur_chain (GstPad * pad, GstBuffer * buf);
 
-static void gst_faceblur_load_profile (Gstfaceblur * filter);
+static void gst_face_blur_load_profile (GstFaceBlur * filter);
 
 /* Clean up */
 static void
-gst_faceblur_finalize (GObject * obj)
+gst_face_blur_finalize (GObject * obj)
 {
-  Gstfaceblur *filter = GST_FACEBLUR (obj);
+  GstFaceBlur *filter = GST_FACE_BLUR (obj);
 
   if (filter->cvImage) {
     cvReleaseImage (&filter->cvImage);
@@ -128,7 +128,7 @@ gst_faceblur_finalize (GObject * obj)
 
 /* GObject vmethod implementations */
 static void
-gst_faceblur_base_init (gpointer gclass)
+gst_face_blur_base_init (gpointer gclass)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (gclass);
 
@@ -146,16 +146,16 @@ gst_faceblur_base_init (gpointer gclass)
 
 /* initialize the faceblur's class */
 static void
-gst_faceblur_class_init (GstfaceblurClass * klass)
+gst_face_blur_class_init (GstFaceBlurClass * klass)
 {
   GObjectClass *gobject_class;
 
   gobject_class = (GObjectClass *) klass;
   parent_class = g_type_class_peek_parent (klass);
 
-  gobject_class->finalize = GST_DEBUG_FUNCPTR (gst_faceblur_finalize);
-  gobject_class->set_property = gst_faceblur_set_property;
-  gobject_class->get_property = gst_faceblur_get_property;
+  gobject_class->finalize = GST_DEBUG_FUNCPTR (gst_face_blur_finalize);
+  gobject_class->set_property = gst_face_blur_set_property;
+  gobject_class->get_property = gst_face_blur_get_property;
 
   g_object_class_install_property (gobject_class, PROP_PROFILE,
       g_param_spec_string ("profile", "Profile",
@@ -169,15 +169,15 @@ gst_faceblur_class_init (GstfaceblurClass * klass)
  * initialize instance structure
  */
 static void
-gst_faceblur_init (Gstfaceblur * filter, GstfaceblurClass * gclass)
+gst_face_blur_init (GstFaceBlur * filter, GstFaceBlurClass * gclass)
 {
   filter->sinkpad = gst_pad_new_from_static_template (&sink_factory, "sink");
   gst_pad_set_setcaps_function (filter->sinkpad,
-      GST_DEBUG_FUNCPTR (gst_faceblur_set_caps));
+      GST_DEBUG_FUNCPTR (gst_face_blur_set_caps));
   gst_pad_set_getcaps_function (filter->sinkpad,
       GST_DEBUG_FUNCPTR (gst_pad_proxy_getcaps));
   gst_pad_set_chain_function (filter->sinkpad,
-      GST_DEBUG_FUNCPTR (gst_faceblur_chain));
+      GST_DEBUG_FUNCPTR (gst_face_blur_chain));
 
   filter->srcpad = gst_pad_new_from_static_template (&src_factory, "src");
   gst_pad_set_getcaps_function (filter->srcpad,
@@ -186,20 +186,20 @@ gst_faceblur_init (Gstfaceblur * filter, GstfaceblurClass * gclass)
   gst_element_add_pad (GST_ELEMENT (filter), filter->sinkpad);
   gst_element_add_pad (GST_ELEMENT (filter), filter->srcpad);
   filter->profile = g_strdup (DEFAULT_PROFILE);
-  gst_faceblur_load_profile (filter);
+  gst_face_blur_load_profile (filter);
 }
 
 static void
-gst_faceblur_set_property (GObject * object, guint prop_id,
+gst_face_blur_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec)
 {
-  Gstfaceblur *filter = GST_FACEBLUR (object);
+  GstFaceBlur *filter = GST_FACE_BLUR (object);
 
   switch (prop_id) {
     case PROP_PROFILE:
       g_free (filter->profile);
       filter->profile = g_value_dup_string (value);
-      gst_faceblur_load_profile (filter);
+      gst_face_blur_load_profile (filter);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -208,10 +208,10 @@ gst_faceblur_set_property (GObject * object, guint prop_id,
 }
 
 static void
-gst_faceblur_get_property (GObject * object, guint prop_id,
+gst_face_blur_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec)
 {
-  Gstfaceblur *filter = GST_FACEBLUR (object);
+  GstFaceBlur *filter = GST_FACE_BLUR (object);
 
   switch (prop_id) {
     case PROP_PROFILE:
@@ -227,14 +227,14 @@ gst_faceblur_get_property (GObject * object, guint prop_id,
 
 /* this function handles the link with other elements */
 static gboolean
-gst_faceblur_set_caps (GstPad * pad, GstCaps * caps)
+gst_face_blur_set_caps (GstPad * pad, GstCaps * caps)
 {
-  Gstfaceblur *filter;
+  GstFaceBlur *filter;
   GstPad *otherpad;
   gint width, height;
   GstStructure *structure;
 
-  filter = GST_FACEBLUR (gst_pad_get_parent (pad));
+  filter = GST_FACE_BLUR (gst_pad_get_parent (pad));
   structure = gst_caps_get_structure (caps, 0);
   gst_structure_get_int (structure, "width", &width);
   gst_structure_get_int (structure, "height", &height);
@@ -253,13 +253,13 @@ gst_faceblur_set_caps (GstPad * pad, GstCaps * caps)
  * this function does the actual processing
  */
 static GstFlowReturn
-gst_faceblur_chain (GstPad * pad, GstBuffer * buf)
+gst_face_blur_chain (GstPad * pad, GstBuffer * buf)
 {
-  Gstfaceblur *filter;
+  GstFaceBlur *filter;
   CvSeq *faces;
   int i;
 
-  filter = GST_FACEBLUR (GST_OBJECT_PARENT (pad));
+  filter = GST_FACE_BLUR (GST_OBJECT_PARENT (pad));
 
   filter->cvImage->imageData = (char *) GST_BUFFER_DATA (buf);
 
@@ -294,7 +294,7 @@ gst_faceblur_chain (GstPad * pad, GstBuffer * buf)
 
 
 static void
-gst_faceblur_load_profile (Gstfaceblur * filter)
+gst_face_blur_load_profile (GstFaceBlur * filter)
 {
   filter->cvCascade =
       (CvHaarClassifierCascade *) cvLoad (filter->profile, 0, 0, 0);
@@ -309,12 +309,12 @@ gst_faceblur_load_profile (Gstfaceblur * filter)
  * register the element factories and other features
  */
 gboolean
-gst_faceblur_plugin_init (GstPlugin * plugin)
+gst_face_blur_plugin_init (GstPlugin * plugin)
 {
   /* debug category for filtering log messages */
-  GST_DEBUG_CATEGORY_INIT (gst_faceblur_debug, "faceblur",
+  GST_DEBUG_CATEGORY_INIT (gst_face_blur_debug, "faceblur",
       0, "Blurs faces in images and videos");
 
   return gst_element_register (plugin, "faceblur", GST_RANK_NONE,
-      GST_TYPE_FACEBLUR);
+      GST_TYPE_FACE_BLUR);
 }

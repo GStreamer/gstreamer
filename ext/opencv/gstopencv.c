@@ -58,22 +58,22 @@ plugin_init (GstPlugin * plugin)
   if (!gst_cv_sobel_plugin_init (plugin))
     return FALSE;
 
-  if (!gst_edgedetect_plugin_init (plugin))
+  if (!gst_edge_detect_plugin_init (plugin))
     return FALSE;
 
-  if (!gst_faceblur_plugin_init (plugin))
+  if (!gst_face_blur_plugin_init (plugin))
     return FALSE;
 
-  if (!gst_facedetect_plugin_init (plugin))
+  if (!gst_face_detect_plugin_init (plugin))
     return FALSE;
 
-  if (!gst_motioncells_plugin_init (plugin))
+  if (!gst_motion_cells_plugin_init (plugin))
     return FALSE;
 
-  if (!gst_pyramidsegment_plugin_init (plugin))
+  if (!gst_pyramid_segment_plugin_init (plugin))
     return FALSE;
 
-  if (!gst_templatematch_plugin_init (plugin))
+  if (!gst_template_match_plugin_init (plugin))
     return FALSE;
 
   if (!gst_opencv_text_overlay_plugin_init (plugin))

@@ -501,7 +501,8 @@ gst_celt_enc_encode (GstCeltEnc * enc, GstBuffer * buf)
 #endif
 
   if (outsize < 0) {
-    GST_ERROR_OBJECT (enc, "Encoding failed: %d", outsize);
+    GST_ELEMENT_ERROR (enc, STREAM, ENCODE, (NULL),
+        ("encoding failed: %d", outsize));
     ret = GST_FLOW_ERROR;
     goto done;
   }

@@ -53,6 +53,7 @@ struct _GstOpusDec {
 
   int sample_rate;
   int n_channels;
+  guint32 pre_skip;
 };
 
 struct _GstOpusDecClass {

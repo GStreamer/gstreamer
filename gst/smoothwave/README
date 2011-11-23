@@ -1,6 +1,0 @@
-This is a home-grown visualization, with a couple lines of code copied
-from synaesthesia.  It draws the waveform in the bitmap, then fades out
-the entire bitmap so older waveforms disappear.  It looks OK, but it's
-grayscale so far (haven't solved the cmap problems, note all the commented
-out code).  I'm going to try to make a much better version as time goes
-on.

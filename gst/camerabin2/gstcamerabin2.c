@@ -984,6 +984,10 @@ gst_camera_bin_video_reset_elements (gpointer u_data)
   /* reset element states to clear eos/flushing pads */
   gst_element_set_state (camerabin->video_encodebin, GST_STATE_READY);
   gst_element_set_state (camerabin->videobin_capsfilter, GST_STATE_READY);
+  if (camerabin->video_filter) {
+    gst_element_set_state (camerabin->video_filter, GST_STATE_READY);
+    gst_element_sync_state_with_parent (camerabin->video_filter);
+  }
   gst_element_sync_state_with_parent (camerabin->videobin_capsfilter);
   gst_element_sync_state_with_parent (camerabin->video_encodebin);
 
@@ -998,6 +1002,11 @@ gst_camera_bin_video_reset_elements (gpointer u_data)
      * Also, we don't reinit the audiosrc to keep audio devices from being open
      * and running until we really need them */
     gst_element_set_state (camerabin->audio_src, GST_STATE_NULL);
+
+    if (camerabin->audio_filter) {
+      gst_element_set_state (camerabin->audio_filter, GST_STATE_READY);
+      gst_element_sync_state_with_parent (camerabin->audio_filter);
+    }
 
     gst_element_sync_state_with_parent (camerabin->audio_capsfilter);
     gst_element_sync_state_with_parent (camerabin->audio_volume);

@@ -119,14 +119,6 @@ static GstFlowReturn gst_cv_smooth_transform_ip (GstOpencvVideoFilter *
 static GstFlowReturn gst_cv_smooth_transform (GstOpencvVideoFilter * filter,
     GstBuffer * buf, IplImage * img, GstBuffer * outbuf, IplImage * outimg);
 
-/* Clean up */
-static void
-gst_cv_smooth_finalize (GObject * obj)
-{
-  G_OBJECT_CLASS (parent_class)->finalize (obj);
-}
-
-
 /* GObject vmethod implementations */
 
 static void
@@ -166,7 +158,6 @@ gst_cv_smooth_class_init (GstCvSmoothClass * klass)
 
   parent_class = g_type_class_peek_parent (klass);
 
-  gobject_class->finalize = GST_DEBUG_FUNCPTR (gst_cv_smooth_finalize);
   gobject_class->set_property = gst_cv_smooth_set_property;
   gobject_class->get_property = gst_cv_smooth_get_property;
 

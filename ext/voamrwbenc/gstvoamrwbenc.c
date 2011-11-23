@@ -109,31 +109,15 @@ static GstStaticPadTemplate src_template = GST_STATIC_PAD_TEMPLATE ("src",
 GST_DEBUG_CATEGORY_STATIC (gst_voamrwbenc_debug);
 #define GST_CAT_DEFAULT gst_voamrwbenc_debug
 
-static void gst_voamrwbenc_finalize (GObject * object);
+static gboolean gst_voamrwbenc_start (GstAudioEncoder * enc);
+static gboolean gst_voamrwbenc_stop (GstAudioEncoder * enc);
+static gboolean gst_voamrwbenc_set_format (GstAudioEncoder * enc,
+    GstAudioInfo * info);
+static GstFlowReturn gst_voamrwbenc_handle_frame (GstAudioEncoder * enc,
+    GstBuffer * in_buf);
 
-static GstFlowReturn gst_voamrwbenc_chain (GstPad * pad, GstBuffer * buffer);
-static gboolean gst_voamrwbenc_setcaps (GstPad * pad, GstCaps * caps);
-static GstStateChangeReturn gst_voamrwbenc_state_change (GstElement * element,
-    GstStateChange transition);
-
-static void
-_do_init (GType object_type)
-{
-  const GInterfaceInfo preset_interface_info = {
-    NULL,                       /* interface init */
-    NULL,                       /* interface finalize */
-    NULL                        /* interface_data */
-  };
-
-  g_type_add_interface_static (object_type, GST_TYPE_PRESET,
-      &preset_interface_info);
-
-  GST_DEBUG_CATEGORY_INIT (gst_voamrwbenc_debug, "amrwbenc", 0,
-      "AMR-WB audio encoder");
-}
-
-GST_BOILERPLATE_FULL (GstVoAmrWbEnc, gst_voamrwbenc, GstElement,
-    GST_TYPE_ELEMENT, _do_init);
+GST_BOILERPLATE (GstVoAmrWbEnc, gst_voamrwbenc, GstAudioEncoder,
+    GST_TYPE_AUDIO_ENCODER);
 
 static void
 gst_voamrwbenc_set_property (GObject * object, guint prop_id,
@@ -191,71 +175,74 @@ static void
 gst_voamrwbenc_class_init (GstVoAmrWbEncClass * klass)
 {
   GObjectClass *object_class = G_OBJECT_CLASS (klass);
-  GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
+  GstAudioEncoderClass *base_class = GST_AUDIO_ENCODER_CLASS (klass);
 
-  object_class->finalize = gst_voamrwbenc_finalize;
   object_class->set_property = gst_voamrwbenc_set_property;
   object_class->get_property = gst_voamrwbenc_get_property;
+
+  base_class->start = GST_DEBUG_FUNCPTR (gst_voamrwbenc_start);
+  base_class->stop = GST_DEBUG_FUNCPTR (gst_voamrwbenc_stop);
+  base_class->set_format = GST_DEBUG_FUNCPTR (gst_voamrwbenc_set_format);
+  base_class->handle_frame = GST_DEBUG_FUNCPTR (gst_voamrwbenc_handle_frame);
 
   g_object_class_install_property (object_class, PROP_BANDMODE,
       g_param_spec_enum ("band-mode", "Band Mode",
           "Encoding Band Mode (Kbps)", GST_VOAMRWBENC_BANDMODE_TYPE,
           BANDMODE_DEFAULT,
           G_PARAM_READWRITE | G_PARAM_CONSTRUCT | G_PARAM_STATIC_STRINGS));
-
-  element_class->change_state = GST_DEBUG_FUNCPTR (gst_voamrwbenc_state_change);
 }
 
 static void
 gst_voamrwbenc_init (GstVoAmrWbEnc * amrwbenc, GstVoAmrWbEncClass * klass)
 {
-  /* create the sink pad */
-  amrwbenc->sinkpad = gst_pad_new_from_static_template (&sink_template, "sink");
-  gst_pad_set_setcaps_function (amrwbenc->sinkpad, gst_voamrwbenc_setcaps);
-  gst_pad_set_chain_function (amrwbenc->sinkpad, gst_voamrwbenc_chain);
-  gst_element_add_pad (GST_ELEMENT (amrwbenc), amrwbenc->sinkpad);
-
-  /* create the src pad */
-  amrwbenc->srcpad = gst_pad_new_from_static_template (&src_template, "src");
-  gst_pad_use_fixed_caps (amrwbenc->srcpad);
-  gst_element_add_pad (GST_ELEMENT (amrwbenc), amrwbenc->srcpad);
-
-  amrwbenc->adapter = gst_adapter_new ();
-
   /* init rest */
   amrwbenc->handle = NULL;
   amrwbenc->channels = 0;
   amrwbenc->rate = 0;
-  amrwbenc->ts = 0;
-}
-
-static void
-gst_voamrwbenc_finalize (GObject * object)
-{
-  GstVoAmrWbEnc *amrwbenc;
-
-  amrwbenc = GST_VOAMRWBENC (object);
-
-  g_object_unref (G_OBJECT (amrwbenc->adapter));
-  amrwbenc->adapter = NULL;
-
-  G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
 static gboolean
-gst_voamrwbenc_setcaps (GstPad * pad, GstCaps * caps)
+gst_voamrwbenc_start (GstAudioEncoder * enc)
 {
-  GstStructure *structure;
+  GstVoAmrWbEnc *voamrwbenc = GST_VOAMRWBENC (enc);
+
+  GST_DEBUG_OBJECT (enc, "start");
+
+  if (!(voamrwbenc->handle = E_IF_init ()))
+    return FALSE;
+
+  voamrwbenc->rate = 0;
+  voamrwbenc->channels = 0;
+
+  return TRUE;
+}
+
+static gboolean
+gst_voamrwbenc_stop (GstAudioEncoder * enc)
+{
+  GstVoAmrWbEnc *voamrwbenc = GST_VOAMRWBENC (enc);
+
+  GST_DEBUG_OBJECT (enc, "stop");
+
+  if (voamrwbenc->handle) {
+    E_IF_exit (voamrwbenc->handle);
+    voamrwbenc->handle = NULL;
+  }
+
+  return TRUE;
+}
+
+static gboolean
+gst_voamrwbenc_set_format (GstAudioEncoder * benc, GstAudioInfo * info)
+{
   GstVoAmrWbEnc *amrwbenc;
   GstCaps *copy;
 
-  amrwbenc = GST_VOAMRWBENC (GST_PAD_PARENT (pad));
-
-  structure = gst_caps_get_structure (caps, 0);
+  amrwbenc = GST_VOAMRWBENC (benc);
 
   /* get channel count */
-  gst_structure_get_int (structure, "channels", &amrwbenc->channels);
-  gst_structure_get_int (structure, "rate", &amrwbenc->rate);
+  amrwbenc->channels = GST_AUDIO_INFO_CHANNELS (info);
+  amrwbenc->rate = GST_AUDIO_INFO_RATE (info);
 
   /* this is not wrong but will sound bad */
   if (amrwbenc->channels != 1) {
@@ -270,116 +257,59 @@ gst_voamrwbenc_setcaps (GstPad * pad, GstCaps * caps)
       "channels", G_TYPE_INT, amrwbenc->channels,
       "rate", G_TYPE_INT, amrwbenc->rate, NULL);
 
-  gst_pad_set_caps (amrwbenc->srcpad, copy);
+  gst_pad_set_caps (GST_AUDIO_ENCODER_SRC_PAD (amrwbenc), copy);
   gst_caps_unref (copy);
+
+  /* report needs to base class: one frame at a time */
+  gst_audio_encoder_set_frame_samples_min (benc, L_FRAME16k);
+  gst_audio_encoder_set_frame_samples_max (benc, L_FRAME16k);
+  gst_audio_encoder_set_frame_max (benc, 1);
 
   return TRUE;
 }
 
 static GstFlowReturn
-gst_voamrwbenc_chain (GstPad * pad, GstBuffer * buffer)
+gst_voamrwbenc_handle_frame (GstAudioEncoder * benc, GstBuffer * buffer)
 {
   GstVoAmrWbEnc *amrwbenc;
   GstFlowReturn ret = GST_FLOW_OK;
   const int buffer_size = sizeof (short) * L_FRAME16k;
+  GstBuffer *out;
+  gint outsize;
 
-  amrwbenc = GST_VOAMRWBENC (gst_pad_get_parent (pad));
+  amrwbenc = GST_VOAMRWBENC (benc);
 
-  g_return_val_if_fail (amrwbenc->handle, GST_FLOW_WRONG_STATE);
+  g_return_val_if_fail (amrwbenc->handle, GST_FLOW_NOT_NEGOTIATED);
 
   if (amrwbenc->rate == 0 || amrwbenc->channels == 0) {
     ret = GST_FLOW_NOT_NEGOTIATED;
     goto done;
   }
 
-  /* discontinuity clears adapter, FIXME, maybe we can set some
-   * encoder flag to mask the discont. */
-  if (GST_BUFFER_FLAG_IS_SET (buffer, GST_BUFFER_FLAG_DISCONT)) {
-    gst_adapter_clear (amrwbenc->adapter);
-    amrwbenc->ts = 0;
-    amrwbenc->discont = TRUE;
+  /* we don't deal with squeezing remnants, so simply discard those */
+  if (G_UNLIKELY (buffer == NULL)) {
+    GST_DEBUG_OBJECT (amrwbenc, "no data");
+    goto done;
   }
 
-  if (GST_BUFFER_TIMESTAMP_IS_VALID (buffer))
-    amrwbenc->ts = GST_BUFFER_TIMESTAMP (buffer);
-
-  ret = GST_FLOW_OK;
-  gst_adapter_push (amrwbenc->adapter, buffer);
-
-  /* Collect samples until we have enough for an output frame */
-  while (gst_adapter_available (amrwbenc->adapter) >= buffer_size) {
-    GstBuffer *out;
-    guint8 *data;
-    gint outsize;
-
-    out = gst_buffer_new_and_alloc (buffer_size);
-    GST_BUFFER_DURATION (out) = GST_SECOND * L_FRAME16k /
-        (amrwbenc->rate * amrwbenc->channels);
-    GST_BUFFER_TIMESTAMP (out) = amrwbenc->ts;
-    if (amrwbenc->ts != -1) {
-      amrwbenc->ts += GST_BUFFER_DURATION (out);
-    }
-    if (amrwbenc->discont) {
-      GST_BUFFER_FLAG_SET (out, GST_BUFFER_FLAG_DISCONT);
-      amrwbenc->discont = FALSE;
-    }
-    gst_buffer_set_caps (out, gst_pad_get_caps (amrwbenc->srcpad));
-
-    data = (guint8 *) gst_adapter_peek (amrwbenc->adapter, buffer_size);
-
-    /* encode */
-    outsize =
-        E_IF_encode (amrwbenc->handle, amrwbenc->bandmode, (const short *) data,
-        (unsigned char *) GST_BUFFER_DATA (out), 0);
-
-    gst_adapter_flush (amrwbenc->adapter, buffer_size);
-    GST_BUFFER_SIZE (out) = outsize;
-
-    /* play */
-    if ((ret = gst_pad_push (amrwbenc->srcpad, out)) != GST_FLOW_OK)
-      break;
+  if (G_UNLIKELY (GST_BUFFER_SIZE (buffer) < buffer_size)) {
+    GST_DEBUG_OBJECT (amrwbenc, "discarding trailing data %d",
+        buffer ? GST_BUFFER_SIZE (buffer) : 0);
+    ret = gst_audio_encoder_finish_frame (benc, NULL, -1);
+    goto done;
   }
+
+  out = gst_buffer_new_and_alloc (buffer_size);
+  /* encode */
+  outsize = E_IF_encode (amrwbenc->handle, amrwbenc->bandmode,
+      (const short *) GST_BUFFER_DATA (buffer),
+      (unsigned char *) GST_BUFFER_DATA (out), 0);
+
+  GST_LOG_OBJECT (amrwbenc, "encoded to %d bytes", outsize);
+  GST_BUFFER_SIZE (out) = outsize;
+
+  ret = gst_audio_encoder_finish_frame (benc, out, L_FRAME16k);
 
 done:
-
-  gst_object_unref (amrwbenc);
-  return ret;
-
-}
-
-static GstStateChangeReturn
-gst_voamrwbenc_state_change (GstElement * element, GstStateChange transition)
-{
-  GstVoAmrWbEnc *amrwbenc;
-  GstStateChangeReturn ret;
-
-  amrwbenc = GST_VOAMRWBENC (element);
-
-  switch (transition) {
-    case GST_STATE_CHANGE_NULL_TO_READY:
-      if (!(amrwbenc->handle = E_IF_init ()))
-        return GST_STATE_CHANGE_FAILURE;
-      break;
-    case GST_STATE_CHANGE_READY_TO_PAUSED:
-      amrwbenc->rate = 0;
-      amrwbenc->channels = 0;
-      amrwbenc->ts = 0;
-      amrwbenc->discont = FALSE;
-      gst_adapter_clear (amrwbenc->adapter);
-      break;
-    default:
-      break;
-  }
-
-  ret = GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
-
-  switch (transition) {
-    case GST_STATE_CHANGE_READY_TO_NULL:
-      E_IF_exit (amrwbenc->handle);
-      break;
-    default:
-      break;
-  }
-
   return ret;
 }

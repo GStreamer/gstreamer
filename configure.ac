@@ -296,7 +296,7 @@ dnl Make sure you have a space before and after all plugins
 GST_PLUGINS_NONPORTED=" adpcmdec adpcmenc aiff asfmux \
  autoconvert camerabin cdxaparse coloreffects \
  dccp debugutils dtmf faceoverlay festival \
- fieldanalysis freeze frei0r gaudieffects geometrictransform h264parse \
+ fieldanalysis freeverb freeze frei0r gaudieffects geometrictransform h264parse \
  hdvparse hls id3tag inter interlace ivfparse jpegformat jp2kdecimator \
  kate liveadder legacyresample librfb mpegdemux mpegtsmux \
  mpegpsmux mpegvideoparse mve mxf mythtv nsf nuvdemux \
@@ -306,7 +306,7 @@ GST_PLUGINS_NONPORTED=" adpcmdec adpcmenc aiff asfmux \
  decklink fbdev linsys shm vcd \
  voaacenc apexsink bz2 camerabin2 cdaudio celt cog curl dc1394 dirac directfb dts resindvd \
  gsettings gsm jp2k ladspa modplug mpeg2enc mplex mimic \
- musepack musicbrainz nas neon ofa openal rsvg schro sdl sndfile soundtouch spandsp timidity \
+ musepack musicbrainz nas neon ofa openal rsvg schro sdl smooth sndfile soundtouch spandsp timidity \
  wildmidi xvid "
 AC_SUBST(GST_PLUGINS_NONPORTED)
 
@@ -332,6 +332,7 @@ AG_GST_CHECK_PLUGIN(faceoverlay)
 AG_GST_CHECK_PLUGIN(festival)
 AG_GST_CHECK_PLUGIN(fieldanalysis)
 AG_GST_CHECK_PLUGIN(freeze)
+AG_GST_CHECK_PLUGIN(freeverb)
 AG_GST_CHECK_PLUGIN(frei0r)
 AG_GST_CHECK_PLUGIN(gaudieffects)
 AG_GST_CHECK_PLUGIN(geometrictransform)
@@ -370,6 +371,7 @@ AG_GST_CHECK_PLUGIN(sdi)
 AG_GST_CHECK_PLUGIN(sdp)
 AG_GST_CHECK_PLUGIN(segmentclip)
 AG_GST_CHECK_PLUGIN(siren)
+AG_GST_CHECK_PLUGIN(smooth)
 AG_GST_CHECK_PLUGIN(speed)
 AG_GST_CHECK_PLUGIN(subenc)
 AG_GST_CHECK_PLUGIN(stereo)
@@ -1925,6 +1927,7 @@ gst/faceoverlay/Makefile
 gst/festival/Makefile
 gst/fieldanalysis/Makefile
 gst/freeze/Makefile
+gst/freeverb/Makefile
 gst/frei0r/Makefile
 gst/gaudieffects/Makefile
 gst/geometrictransform/Makefile
@@ -1964,6 +1967,7 @@ gst/sdi/Makefile
 gst/sdp/Makefile
 gst/segmentclip/Makefile
 gst/siren/Makefile
+gst/smooth/Makefile
 gst/speed/Makefile
 gst/subenc/Makefile
 gst/stereo/Makefile

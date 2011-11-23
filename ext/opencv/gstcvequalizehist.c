@@ -70,13 +70,6 @@ static GstFlowReturn gst_cv_equalize_hist_transform (GstOpencvVideoFilter *
     filter, GstBuffer * buf, IplImage * img, GstBuffer * outbuf,
     IplImage * outimg);
 
-/* Clean up */
-static void
-gst_cv_equalize_hist_finalize (GObject * obj)
-{
-  G_OBJECT_CLASS (parent_class)->finalize (obj);
-}
-
 
 /* GObject vmethod implementations */
 static void
@@ -99,14 +92,11 @@ gst_cv_equalize_hist_base_init (gpointer gclass)
 static void
 gst_cv_equalize_hist_class_init (GstCvEqualizeHistClass * klass)
 {
-  GObjectClass *gobject_class;
   GstOpencvVideoFilterClass *gstopencvbasefilter_class;
 
-  gobject_class = (GObjectClass *) klass;
   gstopencvbasefilter_class = (GstOpencvVideoFilterClass *) klass;
 
   parent_class = g_type_class_peek_parent (klass);
-  gobject_class->finalize = GST_DEBUG_FUNCPTR (gst_cv_equalize_hist_finalize);
   gstopencvbasefilter_class->cv_trans_func = gst_cv_equalize_hist_transform;
 }
 

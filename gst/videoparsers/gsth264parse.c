@@ -539,16 +539,16 @@ gst_h264_parse_collect_nal (GstH264Parse * h264parse, const guint8 * data,
   GstH264NalUnitType nal_type = nalu->type;
   GstH264NalUnit nnalu;
 
+  if (h264parse->align == GST_H264_PARSE_ALIGN_NAL) {
+    return TRUE;
+  }
+
   GST_DEBUG_OBJECT (h264parse, "parsing collected nal");
   parse_res = gst_h264_parser_identify_nalu (h264parse->nalparser, data,
       nalu->offset + nalu->size, size, &nnalu);
 
   if (parse_res == GST_H264_PARSER_ERROR)
     return FALSE;
-
-  if (h264parse->align == GST_H264_PARSE_ALIGN_NAL) {
-    return TRUE;
-  }
 
   /* determine if AU complete */
   GST_LOG_OBJECT (h264parse, "nal type: %d", nal_type);
@@ -633,6 +633,16 @@ gst_h264_parse_check_valid_frame (GstBaseParse * parse,
             nalu.offset + nalu.size);
         if (!h264parse->nalu.size && !h264parse->nalu.valid)
           h264parse->nalu = nalu;
+        /* need 2 bytes of next nal */
+        if (nalu.offset + nalu.size + 4 + 2 > size) {
+          if (GST_BASE_PARSE_DRAINING (parse)) {
+            drain = TRUE;
+          } else {
+            GST_DEBUG_OBJECT (h264parse, "need more bytes of next nal");
+            current_off = nalu.sc_offset;
+            goto more;
+          }
+        }
         break;
       case GST_H264_PARSER_BROKEN_LINK:
         return FALSE;
@@ -653,7 +663,7 @@ gst_h264_parse_check_valid_frame (GstBaseParse * parse,
           *skipsize = nalu.offset;
 
           GST_DEBUG_OBJECT (h264parse, "skipping broken nal");
-          return FALSE;
+          goto invalid;
         } else {
           nalu.size = 0;
           goto end;
@@ -675,7 +685,7 @@ gst_h264_parse_check_valid_frame (GstBaseParse * parse,
           /*  Can't parse the nalu */
           if (size - h264parse->nalu.offset < 2) {
             *skipsize = nalu.offset;
-            return FALSE;
+            goto invalid;
           }
 
           /* We parse it anyway */
@@ -691,17 +701,14 @@ gst_h264_parse_check_valid_frame (GstBaseParse * parse,
         data, nalu.offset, nalu.size);
 
     gst_h264_parse_process_nal (h264parse, &nalu);
-    if (gst_h264_parse_collect_nal (h264parse, data, size, &nalu) || drain)
+    /* if no next nal, we know it's complete here */
+    if (drain || gst_h264_parse_collect_nal (h264parse, data, size, &nalu))
       break;
   }
 
 end:
-  /* FIXME this shouldnt be needed */
-  if (h264parse->nalu.sc_offset > 0 && data[h264parse->nalu.sc_offset - 1] == 0)
-    h264parse->nalu.sc_offset--;
-
   *skipsize = h264parse->nalu.sc_offset;
-  *framesize = nalu.offset + nalu.size - h264parse->nalu.sc_offset;     /* CHECKME */
+  *framesize = nalu.offset + nalu.size - h264parse->nalu.sc_offset;
   h264parse->current_off = current_off;
 
   return TRUE;
@@ -715,6 +722,10 @@ more:
   if (!h264parse->nalu.size) {
     /* skip up to initial startcode */
     *skipsize = h264parse->nalu.sc_offset;
+    /* but mind some stuff will have been skipped */
+    g_assert (current_off >= *skipsize);
+    current_off -= *skipsize;
+    h264parse->nalu.sc_offset = 0;
   } else {
     *skipsize = 0;
   }
@@ -722,6 +733,10 @@ more:
   /* Restart parsing from here next time */
   h264parse->current_off = current_off;
 
+  return FALSE;
+
+invalid:
+  gst_h264_parse_reset_frame (h264parse);
   return FALSE;
 }
 
@@ -1354,16 +1369,17 @@ gst_h264_parse_get_caps (GstBaseParse * parse)
       GstStructure *s = gst_caps_get_structure (peercaps, i);
       gst_structure_remove_field (s, "alignment");
       gst_structure_remove_field (s, "stream-format");
+      gst_structure_remove_field (s, "parsed");
     }
 
     res =
         gst_caps_intersect_full (peercaps,
-        gst_pad_get_pad_template_caps (GST_BASE_PARSE_SRC_PAD (parse)),
+        gst_pad_get_pad_template_caps (GST_BASE_PARSE_SINK_PAD (parse)),
         GST_CAPS_INTERSECT_FIRST);
     gst_caps_unref (peercaps);
   } else {
     res =
-        gst_caps_copy (gst_pad_get_pad_template_caps (GST_BASE_PARSE_SRC_PAD
+        gst_caps_copy (gst_pad_get_pad_template_caps (GST_BASE_PARSE_SINK_PAD
             (parse)));
   }
 

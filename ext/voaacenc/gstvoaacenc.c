@@ -91,18 +91,128 @@ static GstStaticPadTemplate src_template = GST_STATIC_PAD_TEMPLATE ("src",
 GST_DEBUG_CATEGORY_STATIC (gst_voaacenc_debug);
 #define GST_CAT_DEFAULT gst_voaacenc_debug
 
-static void gst_voaacenc_finalize (GObject * object);
-
-static GstFlowReturn gst_voaacenc_chain (GstPad * pad, GstBuffer * buffer);
-static gboolean gst_voaacenc_setcaps (GstPad * pad, GstCaps * caps);
-static GstStateChangeReturn gst_voaacenc_state_change (GstElement * element,
-    GstStateChange transition);
 static gboolean voaacenc_core_init (GstVoAacEnc * voaacenc);
 static gboolean voaacenc_core_set_parameter (GstVoAacEnc * voaacenc);
 static void voaacenc_core_uninit (GstVoAacEnc * voaacenc);
-static GstCaps *gst_voaacenc_getcaps (GstPad * pad);
-static GstCaps *gst_voaacenc_create_source_pad_caps (GstVoAacEnc * voaacenc);
-static gint voaacenc_get_rate_index (gint rate);
+
+static gboolean gst_voaacenc_start (GstAudioEncoder * enc);
+static gboolean gst_voaacenc_stop (GstAudioEncoder * enc);
+static gboolean gst_voaacenc_set_format (GstAudioEncoder * enc,
+    GstAudioInfo * info);
+static GstFlowReturn gst_voaacenc_handle_frame (GstAudioEncoder * enc,
+    GstBuffer * in_buf);
+static GstCaps *gst_voaacenc_getcaps (GstAudioEncoder * enc);
+
+GST_BOILERPLATE (GstVoAacEnc, gst_voaacenc, GstAudioEncoder,
+    GST_TYPE_AUDIO_ENCODER);
+
+static void
+gst_voaacenc_set_property (GObject * object, guint prop_id,
+    const GValue * value, GParamSpec * pspec)
+{
+  GstVoAacEnc *self = GST_VOAACENC (object);
+
+  switch (prop_id) {
+    case PROP_BITRATE:
+      self->bitrate = g_value_get_int (value);
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
+  }
+  return;
+}
+
+static void
+gst_voaacenc_get_property (GObject * object, guint prop_id,
+    GValue * value, GParamSpec * pspec)
+{
+  GstVoAacEnc *self = GST_VOAACENC (object);
+
+  switch (prop_id) {
+    case PROP_BITRATE:
+      g_value_set_int (value, self->bitrate);
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
+  }
+  return;
+}
+
+static void
+gst_voaacenc_base_init (gpointer klass)
+{
+  GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
+
+  gst_element_class_add_pad_template (element_class,
+      gst_static_pad_template_get (&sink_template));
+  gst_element_class_add_pad_template (element_class,
+      gst_static_pad_template_get (&src_template));
+
+  gst_element_class_set_details_simple (element_class, "AAC audio encoder",
+      "Codec/Encoder/Audio", "AAC audio encoder", "Kan Hu <kan.hu@linaro.org>");
+}
+
+static void
+gst_voaacenc_class_init (GstVoAacEncClass * klass)
+{
+  GObjectClass *object_class = G_OBJECT_CLASS (klass);
+  GstAudioEncoderClass *base_class = GST_AUDIO_ENCODER_CLASS (klass);
+
+  object_class->set_property = GST_DEBUG_FUNCPTR (gst_voaacenc_set_property);
+  object_class->get_property = GST_DEBUG_FUNCPTR (gst_voaacenc_get_property);
+
+  base_class->start = GST_DEBUG_FUNCPTR (gst_voaacenc_start);
+  base_class->stop = GST_DEBUG_FUNCPTR (gst_voaacenc_stop);
+  base_class->set_format = GST_DEBUG_FUNCPTR (gst_voaacenc_set_format);
+  base_class->handle_frame = GST_DEBUG_FUNCPTR (gst_voaacenc_handle_frame);
+  base_class->getcaps = GST_DEBUG_FUNCPTR (gst_voaacenc_getcaps);
+
+  g_object_class_install_property (object_class, PROP_BITRATE,
+      g_param_spec_int ("bitrate",
+          "Bitrate",
+          "Target Audio Bitrate",
+          0, G_MAXINT, VOAAC_ENC_DEFAULT_BITRATE,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+}
+
+static void
+gst_voaacenc_init (GstVoAacEnc * voaacenc, GstVoAacEncClass * klass)
+{
+  voaacenc->bitrate = VOAAC_ENC_DEFAULT_BITRATE;
+  voaacenc->output_format = VOAAC_ENC_DEFAULT_OUTPUTFORMAT;
+
+  /* init rest */
+  voaacenc->handle = NULL;
+}
+
+static gboolean
+gst_voaacenc_start (GstAudioEncoder * enc)
+{
+  GstVoAacEnc *voaacenc = GST_VOAACENC (enc);
+
+  GST_DEBUG_OBJECT (enc, "start");
+
+  if (voaacenc_core_init (voaacenc) == FALSE)
+    return FALSE;
+
+  voaacenc->rate = 0;
+  voaacenc->channels = 0;
+
+  return TRUE;
+}
+
+static gboolean
+gst_voaacenc_stop (GstAudioEncoder * enc)
+{
+  GstVoAacEnc *voaacenc = GST_VOAACENC (enc);
+
+  GST_DEBUG_OBJECT (enc, "stop");
+  voaacenc_core_uninit (voaacenc);
+
+  return TRUE;
+}
 
 static gpointer
 gst_voaacenc_generate_sink_caps (gpointer data)
@@ -200,134 +310,13 @@ gst_voaacenc_get_sink_caps (void)
   g_once (&g_once, gst_voaacenc_generate_sink_caps, NULL);
   caps = g_once.retval;
 
-  return gst_caps_ref (caps);
+  return caps;
 }
 
-static void
-_do_init (GType object_type)
+static GstCaps *
+gst_voaacenc_getcaps (GstAudioEncoder * benc)
 {
-  const GInterfaceInfo preset_interface_info = {
-    NULL,                       /* interface init */
-    NULL,                       /* interface finalize */
-    NULL                        /* interface_data */
-  };
-
-  g_type_add_interface_static (object_type, GST_TYPE_PRESET,
-      &preset_interface_info);
-
-  GST_DEBUG_CATEGORY_INIT (gst_voaacenc_debug, "voaacenc", 0,
-      "AAC audio encoder");
-}
-
-GST_BOILERPLATE_FULL (GstVoAacEnc, gst_voaacenc, GstElement, GST_TYPE_ELEMENT,
-    _do_init);
-
-static void
-gst_voaacenc_set_property (GObject * object, guint prop_id,
-    const GValue * value, GParamSpec * pspec)
-{
-  GstVoAacEnc *self = GST_VOAACENC (object);
-
-  switch (prop_id) {
-    case PROP_BITRATE:
-      self->bitrate = g_value_get_int (value);
-      break;
-    default:
-      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
-      break;
-  }
-  return;
-}
-
-static void
-gst_voaacenc_get_property (GObject * object, guint prop_id,
-    GValue * value, GParamSpec * pspec)
-{
-  GstVoAacEnc *self = GST_VOAACENC (object);
-
-  switch (prop_id) {
-    case PROP_BITRATE:
-      g_value_set_int (value, self->bitrate);
-      break;
-    default:
-      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
-      break;
-  }
-  return;
-}
-
-static void
-gst_voaacenc_base_init (gpointer klass)
-{
-  GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
-
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&sink_template));
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&src_template));
-
-  gst_element_class_set_details_simple (element_class, "AAC audio encoder",
-      "Codec/Encoder/Audio", "AAC audio encoder", "Kan Hu <kan.hu@linaro.org>");
-}
-
-static void
-gst_voaacenc_class_init (GstVoAacEncClass * klass)
-{
-  GObjectClass *object_class = G_OBJECT_CLASS (klass);
-  GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
-
-  object_class->set_property = GST_DEBUG_FUNCPTR (gst_voaacenc_set_property);
-  object_class->get_property = GST_DEBUG_FUNCPTR (gst_voaacenc_get_property);
-  object_class->finalize = GST_DEBUG_FUNCPTR (gst_voaacenc_finalize);
-
-  g_object_class_install_property (object_class, PROP_BITRATE,
-      g_param_spec_int ("bitrate",
-          "Bitrate",
-          "Target Audio Bitrate",
-          0, G_MAXINT, VOAAC_ENC_DEFAULT_BITRATE,
-          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
-
-  element_class->change_state = GST_DEBUG_FUNCPTR (gst_voaacenc_state_change);
-}
-
-static void
-gst_voaacenc_init (GstVoAacEnc * voaacenc, GstVoAacEncClass * klass)
-{
-  /* create the sink pad */
-  voaacenc->sinkpad = gst_pad_new_from_static_template (&sink_template, "sink");
-  gst_pad_set_setcaps_function (voaacenc->sinkpad,
-      GST_DEBUG_FUNCPTR (gst_voaacenc_setcaps));
-  gst_pad_set_getcaps_function (voaacenc->sinkpad,
-      GST_DEBUG_FUNCPTR (gst_voaacenc_getcaps));
-  gst_pad_set_chain_function (voaacenc->sinkpad,
-      GST_DEBUG_FUNCPTR (gst_voaacenc_chain));
-  gst_element_add_pad (GST_ELEMENT (voaacenc), voaacenc->sinkpad);
-
-  /* create the src pad */
-  voaacenc->srcpad = gst_pad_new_from_static_template (&src_template, "src");
-  gst_pad_use_fixed_caps (voaacenc->srcpad);
-  gst_element_add_pad (GST_ELEMENT (voaacenc), voaacenc->srcpad);
-
-  voaacenc->adapter = gst_adapter_new ();
-
-  voaacenc->bitrate = VOAAC_ENC_DEFAULT_BITRATE;
-  voaacenc->output_format = VOAAC_ENC_DEFAULT_OUTPUTFORMAT;
-
-  /* init rest */
-  voaacenc->handle = NULL;
-}
-
-static void
-gst_voaacenc_finalize (GObject * object)
-{
-  GstVoAacEnc *voaacenc;
-
-  voaacenc = GST_VOAACENC (object);
-
-  g_object_unref (G_OBJECT (voaacenc->adapter));
-  voaacenc->adapter = NULL;
-
-  G_OBJECT_CLASS (parent_class)->finalize (object);
+  return gst_audio_encoder_proxy_getcaps (benc, gst_voaacenc_get_sink_caps ());
 }
 
 /* check downstream caps to configure format */
@@ -336,7 +325,7 @@ gst_voaacenc_negotiate (GstVoAacEnc * voaacenc)
 {
   GstCaps *caps;
 
-  caps = gst_pad_get_allowed_caps (voaacenc->srcpad);
+  caps = gst_pad_get_allowed_caps (GST_AUDIO_ENCODER_SRC_PAD (voaacenc));
 
   GST_DEBUG_OBJECT (voaacenc, "allowed caps: %" GST_PTR_FORMAT, caps);
 
@@ -362,184 +351,20 @@ gst_voaacenc_negotiate (GstVoAacEnc * voaacenc)
     gst_caps_unref (caps);
 }
 
-static GstCaps *
-gst_voaacenc_getcaps (GstPad * pad)
+static gint
+gst_voaacenc_get_rate_index (gint rate)
 {
-  return gst_voaacenc_get_sink_caps ();
-}
-
-
-static gboolean
-gst_voaacenc_setcaps (GstPad * pad, GstCaps * caps)
-{
-  gboolean ret = FALSE;
-  GstStructure *structure;
-  GstVoAacEnc *voaacenc;
-  GstCaps *src_caps;
-
-  voaacenc = GST_VOAACENC (GST_PAD_PARENT (pad));
-
-  structure = gst_caps_get_structure (caps, 0);
-
-  /* get channel count */
-  gst_structure_get_int (structure, "channels", &voaacenc->channels);
-  gst_structure_get_int (structure, "rate", &voaacenc->rate);
-
-  /* precalc duration as it's constant now */
-  voaacenc->duration =
-      gst_util_uint64_scale_int (1024, GST_SECOND, voaacenc->rate);
-  voaacenc->inbuf_size = voaacenc->channels * 2 * 1024;
-
-  gst_voaacenc_negotiate (voaacenc);
-
-  /* create reverse caps */
-  src_caps = gst_voaacenc_create_source_pad_caps (voaacenc);
-
-  if (src_caps) {
-    gst_pad_set_caps (voaacenc->srcpad, src_caps);
-    gst_caps_unref (src_caps);
-    ret = voaacenc_core_set_parameter (voaacenc);
-  }
-  return ret;
-}
-
-static GstFlowReturn
-gst_voaacenc_chain (GstPad * pad, GstBuffer * buffer)
-{
-  GstVoAacEnc *voaacenc;
-  GstFlowReturn ret;
-  guint64 timestamp, distance = 0;
-
-  voaacenc = GST_VOAACENC (GST_PAD_PARENT (pad));
-
-  g_return_val_if_fail (voaacenc->handle, GST_FLOW_WRONG_STATE);
-
-  if (voaacenc->rate == 0 || voaacenc->channels == 0)
-    goto not_negotiated;
-
-  /* discontinuity clears adapter, FIXME, maybe we can set some
-   * encoder flag to mask the discont. */
-  if (GST_BUFFER_FLAG_IS_SET (buffer, GST_BUFFER_FLAG_DISCONT)) {
-    gst_adapter_clear (voaacenc->adapter);
-    voaacenc->discont = TRUE;
-  }
-
-  ret = GST_FLOW_OK;
-  gst_adapter_push (voaacenc->adapter, buffer);
-
-  /* Collect samples until we have enough for an output frame */
-  while (gst_adapter_available (voaacenc->adapter) >= voaacenc->inbuf_size) {
-    GstBuffer *out;
-    guint8 *data;
-    VO_CODECBUFFER input = { 0 }
-    , output = {
-    0};
-    VO_AUDIO_OUTPUTINFO output_info = { {0}
-    };
-
-
-    /* max size */
-    if ((ret =
-            gst_pad_alloc_buffer_and_set_caps (voaacenc->srcpad, 0,
-                voaacenc->inbuf_size, GST_PAD_CAPS (voaacenc->srcpad),
-                &out)) != GST_FLOW_OK) {
-      return ret;
+  static const gint rate_table[] = {
+    96000, 88200, 64000, 48000, 44100, 32000,
+    24000, 22050, 16000, 12000, 11025, 8000
+  };
+  gint i;
+  for (i = 0; i < G_N_ELEMENTS (rate_table); ++i) {
+    if (rate == rate_table[i]) {
+      return i;
     }
-
-    output.Buffer = GST_BUFFER_DATA (out);
-    output.Length = voaacenc->inbuf_size;
-
-    if (voaacenc->discont) {
-      GST_BUFFER_FLAG_SET (out, GST_BUFFER_FLAG_DISCONT);
-      voaacenc->discont = FALSE;
-    }
-
-    data =
-        (guint8 *) gst_adapter_peek (voaacenc->adapter, voaacenc->inbuf_size);
-    input.Buffer = data;
-    input.Length = voaacenc->inbuf_size;
-    voaacenc->codec_api.SetInputData (voaacenc->handle, &input);
-
-    /* encode */
-    if (voaacenc->codec_api.GetOutputData (voaacenc->handle, &output,
-            &output_info) != VO_ERR_NONE) {
-      gst_buffer_unref (out);
-      return GST_FLOW_ERROR;
-    }
-
-    /* get timestamp from adapter */
-    timestamp = gst_adapter_prev_timestamp (voaacenc->adapter, &distance);
-
-    if (G_LIKELY (GST_CLOCK_TIME_IS_VALID (timestamp))) {
-      GST_BUFFER_TIMESTAMP (out) =
-          timestamp +
-          GST_FRAMES_TO_CLOCK_TIME (distance / voaacenc->channels /
-          VOAAC_ENC_BITS_PER_SAMPLE, voaacenc->rate);
-    }
-
-    GST_BUFFER_DURATION (out) =
-        GST_FRAMES_TO_CLOCK_TIME (voaacenc->inbuf_size / voaacenc->channels /
-        VOAAC_ENC_BITS_PER_SAMPLE, voaacenc->rate);
-
-    GST_LOG_OBJECT (voaacenc, "Pushing out buffer time: %" GST_TIME_FORMAT
-        " duration: %" GST_TIME_FORMAT,
-        GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (out)),
-        GST_TIME_ARGS (GST_BUFFER_DURATION (out)));
-
-    GST_BUFFER_SIZE (out) = output.Length;
-
-    /* flush the among of data we have peek */
-    gst_adapter_flush (voaacenc->adapter, voaacenc->inbuf_size);
-
-    /* play */
-    if ((ret = gst_pad_push (voaacenc->srcpad, out)) != GST_FLOW_OK)
-      break;
   }
-  return ret;
-
-  /* ERRORS */
-not_negotiated:
-  {
-    GST_ELEMENT_ERROR (voaacenc, STREAM, TYPE_NOT_FOUND,
-        (NULL), ("unknown type"));
-    return GST_FLOW_NOT_NEGOTIATED;
-  }
-}
-
-static GstStateChangeReturn
-gst_voaacenc_state_change (GstElement * element, GstStateChange transition)
-{
-  GstVoAacEnc *voaacenc;
-  GstStateChangeReturn ret;
-
-  voaacenc = GST_VOAACENC (element);
-
-  switch (transition) {
-    case GST_STATE_CHANGE_NULL_TO_READY:
-      if (voaacenc_core_init (voaacenc) == FALSE)
-        return GST_STATE_CHANGE_FAILURE;
-      break;
-    case GST_STATE_CHANGE_READY_TO_PAUSED:
-      voaacenc->rate = 0;
-      voaacenc->channels = 0;
-      voaacenc->discont = FALSE;
-      gst_adapter_clear (voaacenc->adapter);
-      break;
-    default:
-      break;
-  }
-
-  ret = GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
-
-  switch (transition) {
-    case GST_STATE_CHANGE_READY_TO_NULL:
-      voaacenc_core_uninit (voaacenc);
-      gst_adapter_clear (voaacenc->adapter);
-      break;
-    default:
-      break;
-  }
-  return ret;
+  return -1;
 }
 
 static GstCaps *
@@ -550,7 +375,7 @@ gst_voaacenc_create_source_pad_caps (GstVoAacEnc * voaacenc)
   gint index;
   guint8 data[VOAAC_ENC_CODECDATA_LEN];
 
-  if ((index = voaacenc_get_rate_index (voaacenc->rate)) >= 0) {
+  if ((index = gst_voaacenc_get_rate_index (voaacenc->rate)) >= 0) {
     /* LC profile only */
     data[0] = ((0x02 << 3) | (index >> 1));
     data[1] = ((index & 0x01) << 7) | (voaacenc->channels << 3);
@@ -578,6 +403,124 @@ gst_voaacenc_create_source_pad_caps (GstVoAacEnc * voaacenc)
   }
 
   return caps;
+}
+
+static gboolean
+gst_voaacenc_set_format (GstAudioEncoder * benc, GstAudioInfo * info)
+{
+  gboolean ret = FALSE;
+  GstVoAacEnc *voaacenc;
+  GstCaps *src_caps;
+
+  voaacenc = GST_VOAACENC (benc);
+
+  /* get channel count */
+  voaacenc->channels = GST_AUDIO_INFO_CHANNELS (info);
+  voaacenc->rate = GST_AUDIO_INFO_RATE (info);
+
+  /* precalc buffer size as it's constant now */
+  voaacenc->inbuf_size = voaacenc->channels * 2 * 1024;
+
+  gst_voaacenc_negotiate (voaacenc);
+
+  /* create reverse caps */
+  src_caps = gst_voaacenc_create_source_pad_caps (voaacenc);
+
+  if (src_caps) {
+    gst_pad_set_caps (GST_AUDIO_ENCODER_SRC_PAD (voaacenc), src_caps);
+    gst_caps_unref (src_caps);
+    ret = voaacenc_core_set_parameter (voaacenc);
+  }
+
+  /* report needs to base class */
+  gst_audio_encoder_set_frame_samples_min (benc, 1024);
+  gst_audio_encoder_set_frame_samples_max (benc, 1024);
+  gst_audio_encoder_set_frame_max (benc, 1);
+
+  return ret;
+}
+
+static GstFlowReturn
+gst_voaacenc_handle_frame (GstAudioEncoder * benc, GstBuffer * buf)
+{
+  GstVoAacEnc *voaacenc;
+  GstFlowReturn ret = GST_FLOW_OK;
+  GstBuffer *out;
+  VO_AUDIO_OUTPUTINFO output_info = { {0} };
+  VO_CODECBUFFER input = { 0 };
+  VO_CODECBUFFER output = { 0 };
+
+  voaacenc = GST_VOAACENC (benc);
+
+  g_return_val_if_fail (voaacenc->handle, GST_FLOW_NOT_NEGOTIATED);
+
+  if (voaacenc->rate == 0 || voaacenc->channels == 0)
+    goto not_negotiated;
+
+  /* we don't deal with squeezing remnants, so simply discard those */
+  if (G_UNLIKELY (buf == NULL)) {
+    GST_DEBUG_OBJECT (benc, "no data");
+    goto exit;
+  }
+
+  if (G_UNLIKELY (GST_BUFFER_SIZE (buf) < voaacenc->inbuf_size)) {
+    GST_DEBUG_OBJECT (voaacenc, "discarding trailing data %d",
+        buf ? GST_BUFFER_SIZE (buf) : 0);
+    ret = gst_audio_encoder_finish_frame (benc, NULL, -1);
+    goto exit;
+  }
+
+  /* max size */
+  if ((ret =
+          gst_pad_alloc_buffer_and_set_caps (GST_AUDIO_ENCODER_SRC_PAD
+              (voaacenc), 0, voaacenc->inbuf_size,
+              GST_PAD_CAPS (GST_AUDIO_ENCODER_SRC_PAD (voaacenc)),
+              &out)) != GST_FLOW_OK) {
+    goto exit;
+  }
+
+  output.Buffer = GST_BUFFER_DATA (out);
+  output.Length = voaacenc->inbuf_size;
+
+  g_assert (GST_BUFFER_SIZE (buf) == voaacenc->inbuf_size);
+  input.Buffer = GST_BUFFER_DATA (buf);
+  input.Length = voaacenc->inbuf_size;
+  voaacenc->codec_api.SetInputData (voaacenc->handle, &input);
+
+  /* encode */
+  if (voaacenc->codec_api.GetOutputData (voaacenc->handle, &output,
+          &output_info) != VO_ERR_NONE) {
+    gst_buffer_unref (out);
+    goto encode_failed;
+  }
+
+  GST_LOG_OBJECT (voaacenc, "encoded to %d bytes", output.Length);
+  GST_BUFFER_SIZE (out) = output.Length;
+
+  GST_LOG_OBJECT (voaacenc, "Pushing out buffer time: %" GST_TIME_FORMAT
+      " duration: %" GST_TIME_FORMAT,
+      GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (out)),
+      GST_TIME_ARGS (GST_BUFFER_DURATION (out)));
+
+  ret = gst_audio_encoder_finish_frame (benc, out, 1024);
+
+exit:
+  return ret;
+
+  /* ERRORS */
+not_negotiated:
+  {
+    GST_ELEMENT_ERROR (voaacenc, STREAM, TYPE_NOT_FOUND,
+        (NULL), ("unknown type"));
+    ret = GST_FLOW_NOT_NEGOTIATED;
+    goto exit;
+  }
+encode_failed:
+  {
+    GST_ELEMENT_ERROR (voaacenc, STREAM, ENCODE, (NULL), ("encode failed"));
+    ret = GST_FLOW_ERROR;
+    goto exit;
+  }
 }
 
 static VO_U32
@@ -671,20 +614,4 @@ voaacenc_core_uninit (GstVoAacEnc * voaacenc)
     voaacenc->codec_api.Uninit (voaacenc->handle);
     voaacenc->handle = NULL;
   }
-}
-
-static gint
-voaacenc_get_rate_index (gint rate)
-{
-  static const gint rate_table[] = {
-    96000, 88200, 64000, 48000, 44100, 32000,
-    24000, 22050, 16000, 12000, 11025, 8000
-  };
-  gint i;
-  for (i = 0; i < G_N_ELEMENTS (rate_table); ++i) {
-    if (rate == rate_table[i]) {
-      return i;
-    }
-  }
-  return -1;
 }

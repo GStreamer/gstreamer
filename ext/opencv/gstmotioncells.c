@@ -61,12 +61,14 @@
 
 #include <stdio.h>
 #include <string.h>
-#include <glib.h>
-#include "gstmotioncells.h"
-#include "motioncells_wrapper.h"
 #include <sys/time.h>
 #include <time.h>
 #include <limits.h>
+
+#include <glib.h>
+#include "gstmotioncells.h"
+#include "motioncells_wrapper.h"
+#include <gst/video/video.h>
 
 GST_DEBUG_CATEGORY_STATIC (gst_motion_cells_debug);
 #define GST_CAT_DEFAULT gst_motion_cells_debug
@@ -139,10 +141,14 @@ enum
 /* the capabilities of the inputs and outputs.
  */
 static GstStaticPadTemplate sink_factory = GST_STATIC_PAD_TEMPLATE ("sink",
-    GST_PAD_SINK, GST_PAD_ALWAYS, GST_STATIC_CAPS ("video/x-raw-rgb"));
+    GST_PAD_SINK,
+    GST_PAD_ALWAYS,
+    GST_STATIC_CAPS (GST_VIDEO_CAPS_RGB));
 
 static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",
-    GST_PAD_SRC, GST_PAD_ALWAYS, GST_STATIC_CAPS ("video/x-raw-rgb"));
+    GST_PAD_SRC,
+    GST_PAD_ALWAYS,
+    GST_STATIC_CAPS (GST_VIDEO_CAPS_RGB));
 
 GST_BOILERPLATE (GstMotioncells, gst_motion_cells, GstElement,
     GST_TYPE_ELEMENT);
@@ -1092,7 +1098,7 @@ gst_motion_cells_chain (GstPad * pad, GstBuffer * buf)
  * register the element factories and other features
  */
 gboolean
-gst_motioncells_plugin_init (GstPlugin * plugin)
+gst_motion_cells_plugin_init (GstPlugin * plugin)
 {
   /* debug category for fltering log messages */
   GST_DEBUG_CATEGORY_INIT (gst_motion_cells_debug,

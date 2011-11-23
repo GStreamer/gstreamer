@@ -52,6 +52,9 @@ struct _GstOpusEnc {
 
   OpusEncoder          *state;
 
+  /* Locks those properties which may be changed at play time */
+  GMutex               *property_lock;
+
   /* properties */
   gboolean              audio_or_voip;
   gint                  bitrate;
@@ -63,6 +66,7 @@ struct _GstOpusEnc {
   gboolean              inband_fec;
   gboolean              dtx;
   gint                  packet_loss_percentage;
+  guint                 max_payload_size;
 
   gint                  frame_samples;
   gint                  n_channels;

@@ -43,28 +43,28 @@
  * Boston, MA 02111-1307, USA.
  */
 
-#ifndef __GST_PYRAMIDSEGMENT_H__
-#define __GST_PYRAMIDSEGMENT_H__
+#ifndef __GST_PYRAMID_SEGMENT_H__
+#define __GST_PYRAMID_SEGMENT_H__
 
 #include <gst/gst.h>
 #include <cv.h>
 
 G_BEGIN_DECLS
 /* #defines don't like whitespacey bits */
-#define GST_TYPE_PYRAMIDSEGMENT \
-  (gst_pyramidsegment_get_type())
-#define GST_PYRAMIDSEGMENT(obj) \
-  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_PYRAMIDSEGMENT,Gstpyramidsegment))
-#define GST_PYRAMIDSEGMENT_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_PYRAMIDSEGMENT,GstpyramidsegmentClass))
-#define GST_IS_PYRAMIDSEGMENT(obj) \
-  (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_PYRAMIDSEGMENT))
-#define GST_IS_PYRAMIDSEGMENT_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_PYRAMIDSEGMENT))
-typedef struct _Gstpyramidsegment Gstpyramidsegment;
-typedef struct _GstpyramidsegmentClass GstpyramidsegmentClass;
+#define GST_TYPE_PYRAMID_SEGMENT \
+  (gst_pyramid_segment_get_type())
+#define GST_PYRAMID_SEGMENT(obj) \
+  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_PYRAMID_SEGMENT,GstPyramidSegment))
+#define GST_PYRAMID_SEGMENT_CLASS(klass) \
+  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_PYRAMID_SEGMENT,GstPyramidSegmentClass))
+#define GST_IS_PYRAMID_SEGMENT(obj) \
+  (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_PYRAMID_SEGMENT))
+#define GST_IS_PYRAMID_SEGMENT_CLASS(klass) \
+  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_PYRAMID_SEGMENT))
+typedef struct _GstPyramidSegment GstPyramidSegment;
+typedef struct _GstPyramidSegmentClass GstPyramidSegmentClass;
 
-struct _Gstpyramidsegment
+struct _GstPyramidSegment
 {
   GstElement element;
 
@@ -83,14 +83,14 @@ struct _Gstpyramidsegment
   int level;
 };
 
-struct _GstpyramidsegmentClass
+struct _GstPyramidSegmentClass
 {
   GstElementClass parent_class;
 };
 
-GType gst_pyramidsegment_get_type (void);
+GType gst_pyramid_segment_get_type (void);
 
-gboolean gst_pyramidsegment_plugin_init (GstPlugin * plugin);
+gboolean gst_pyramid_segment_plugin_init (GstPlugin * plugin);
 
 G_END_DECLS
-#endif /* __GST_PYRAMIDSEGMENT_H__ */
+#endif /* __GST_PYRAMID_SEGMENT_H__ */

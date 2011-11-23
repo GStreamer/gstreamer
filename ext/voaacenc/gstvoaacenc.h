@@ -21,10 +21,10 @@
 #define __GST_VOAACENC_H__
 
 #include <gst/gst.h>
+#include <gst/audio/gstaudioencoder.h>
+
 #include <vo-aacenc/voAAC.h>
 #include <vo-aacenc/cmnMemory.h>
-
-#include <gst/base/gstadapter.h>
 
 G_BEGIN_DECLS
 
@@ -43,13 +43,9 @@ typedef struct _GstVoAacEnc GstVoAacEnc;
 typedef struct _GstVoAacEncClass GstVoAacEncClass;
 
 struct _GstVoAacEnc {
-  GstElement element;
+  GstAudioEncoder element;
 
-  /* pads */
-  GstPad *sinkpad, *srcpad;
   gboolean discont;
-
-  GstAdapter *adapter;
 
   /* desired bitrate */
   gint bitrate;
@@ -58,7 +54,6 @@ struct _GstVoAacEnc {
   gint channels;
   gint rate;
   gint output_format;
-  gint duration;
 
   gint inbuf_size;
 
@@ -70,7 +65,7 @@ struct _GstVoAacEnc {
 };
 
 struct _GstVoAacEncClass {
-  GstElementClass parent_class;
+  GstAudioEncoderClass parent_class;
 };
 
 GType gst_voaacenc_get_type (void);

@@ -103,13 +103,6 @@ static GstCaps *gst_cv_sobel_transform_caps (GstBaseTransform * trans,
 static GstFlowReturn gst_cv_sobel_transform (GstOpencvVideoFilter * filter,
     GstBuffer * buf, IplImage * img, GstBuffer * outbuf, IplImage * outimg);
 
-/* Clean up */
-static void
-gst_cv_sobel_finalize (GObject * obj)
-{
-  G_OBJECT_CLASS (parent_class)->finalize (obj);
-}
-
 /* GObject vmethod implementations */
 
 static void
@@ -143,7 +136,6 @@ gst_cv_sobel_class_init (GstCvSobelClass * klass)
 
   parent_class = g_type_class_peek_parent (klass);
 
-  gobject_class->finalize = GST_DEBUG_FUNCPTR (gst_cv_sobel_finalize);
   gobject_class->set_property = gst_cv_sobel_set_property;
   gobject_class->get_property = gst_cv_sobel_get_property;
 
