@@ -33,9 +33,15 @@ G_BEGIN_DECLS
 typedef struct _GstSpaceScope GstSpaceScope;
 typedef struct _GstSpaceScopeClass GstSpaceScopeClass;
 
+typedef void (*GstSpaceScopeProcessFunc) (GstBaseAudioVisualizer *, guint32 *, gint16 *, guint);
+
 struct _GstSpaceScope
 {
   GstBaseAudioVisualizer parent;
+
+  /* < private > */
+  GstSpaceScopeProcessFunc process;
+  gint style;
 };
 
 struct _GstSpaceScopeClass
