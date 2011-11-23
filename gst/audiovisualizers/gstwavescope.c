@@ -184,15 +184,16 @@ gst_wave_scope_get_property (GObject * object, guint prop_id,
   }
 }
 
+#include "gstdrawhelpers.h"
+
 static void
 render_dots (GstBaseAudioVisualizer * scope, guint32 * vdata, gint16 * adata,
     guint num_samples)
 {
   gint channels = scope->channels;
-  guint i, c, s, x = 0, y, oy;
+  guint i, c, s, x, y, oy;
   gfloat dx, dy;
   guint w = scope->width;
-  guint off;
 
   /* draw dots */
   dx = (gfloat) w / (gfloat) num_samples;
@@ -204,31 +205,8 @@ render_dots (GstBaseAudioVisualizer * scope, guint32 * vdata, gint16 * adata,
       x = (guint) ((gfloat) i * dx);
       y = (guint) (oy + (gfloat) adata[s] * dy);
       s += channels;
-      off = (y * w) + x;
-      vdata[off] = 0x00FFFFFF;
+      draw_dot (vdata, x, y, w, 0x00FFFFFF);
     }
-  }
-}
-
-static void
-draw_line (guint32 * vdata, guint x1, guint x2, guint y1, guint y2, guint w)
-{
-  guint i, j, x, y, off;
-  gint dx = x2 - x1;
-  gint dy = y2 - y1;
-  gfloat f;
-
-  if (abs (dx) > abs (dy)) {
-    j = abs (dx);
-  } else {
-    j = abs (dy);
-  }
-  for (i = 0; i < j; i++) {
-    f = (gfloat) i / (gfloat) j;
-    x = x1 + dx * f;
-    y = y1 + dy * f;
-    off = (y * w) + x;
-    vdata[off] = 0x00FFFFFF;
   }
 }
 
@@ -237,7 +215,7 @@ render_lines (GstBaseAudioVisualizer * scope, guint32 * vdata, gint16 * adata,
     guint num_samples)
 {
   gint channels = scope->channels;
-  guint i, c, s, x = 0, y, oy;
+  guint i, c, s, x, y, oy;
   gfloat dx, dy;
   guint w = scope->width;
   gint x2, y2;
@@ -254,7 +232,7 @@ render_lines (GstBaseAudioVisualizer * scope, guint32 * vdata, gint16 * adata,
       x = (guint) ((gfloat) i * dx);
       y = (guint) (oy + (gfloat) adata[s] * dy);
       s += channels;
-      draw_line (vdata, x2, x, y2, y, w);
+      draw_line (vdata, x2, x, y2, y, w, 0x00FFFFFF);
       x2 = x;
       y2 = y;
     }
