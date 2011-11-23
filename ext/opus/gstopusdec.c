@@ -41,9 +41,10 @@
 #  include "config.h"
 #endif
 
-#include "gstopusdec.h"
 #include <string.h>
 #include <gst/tag/tag.h>
+#include "gstopusheader.h"
+#include "gstopusdec.h"
 
 GST_DEBUG_CATEGORY_STATIC (opusdec_debug);
 #define GST_CAT_DEFAULT opusdec_debug
@@ -114,6 +115,8 @@ gst_opus_dec_reset (GstOpusDec * dec)
 
   gst_buffer_replace (&dec->streamheader, NULL);
   gst_buffer_replace (&dec->vorbiscomment, NULL);
+
+  dec->pre_skip = 0;
 }
 
 static void
@@ -151,8 +154,16 @@ gst_opus_dec_stop (GstAudioDecoder * dec)
 static GstFlowReturn
 gst_opus_dec_parse_header (GstOpusDec * dec, GstBuffer * buf)
 {
+  g_return_val_if_fail (gst_opus_header_is_header (buf, "OpusHead", 8),
+      GST_FLOW_ERROR);
+  g_return_val_if_fail (GST_BUFFER_SIZE (buf) >= 19, GST_FLOW_ERROR);
+
+  dec->pre_skip = GST_READ_UINT16_LE (GST_BUFFER_DATA (buf) + 10);
+  GST_INFO_OBJECT (dec, "Found pre-skip of %u samples", dec->pre_skip);
+
   return GST_FLOW_OK;
 }
+
 
 static GstFlowReturn
 gst_opus_dec_parse_comments (GstOpusDec * dec, GstBuffer * buf)
@@ -235,11 +246,18 @@ opus_dec_chain_parse_data (GstOpusDec * dec, GstBuffer * buf)
     size = 0;
   }
 
-  samples =
-      opus_packet_get_samples_per_frame (data,
-      dec->sample_rate) * opus_packet_get_nb_frames (data, size);
-  GST_DEBUG ("bandwidth %d", opus_packet_get_bandwidth (data));
-  GST_DEBUG ("samples %d", samples);
+  if (data) {
+    samples =
+        opus_packet_get_samples_per_frame (data,
+        dec->sample_rate) * opus_packet_get_nb_frames (data, size);
+    packet_size = samples * dec->n_channels * 2;
+    GST_DEBUG_OBJECT (dec, "bandwidth %d", opus_packet_get_bandwidth (data));
+    GST_DEBUG_OBJECT (dec, "samples %d", samples);
+  } else {
+    /* use maximum size (120 ms) as we do now know in advance how many samples
+       will be returned */
+    samples = 120 * dec->sample_rate / 1000;
+  }
 
   packet_size = samples * dec->n_channels * 2;
   outbuf = gst_buffer_new_and_alloc (packet_size);
@@ -249,8 +267,6 @@ opus_dec_chain_parse_data (GstOpusDec * dec, GstBuffer * buf)
 
   out_data = (gint16 *) gst_buffer_map (outbuf, &out_size, NULL, GST_MAP_WRITE);
 
-  GST_LOG_OBJECT (dec, "decoding %d samples, in size %u", samples, size);
-
   n = opus_decode (dec->state, data, size, out_data, samples, 0);
   gst_buffer_unmap (buf, data, size);
   gst_buffer_unmap (outbuf, out_data, out_size);
@@ -259,6 +275,25 @@ opus_dec_chain_parse_data (GstOpusDec * dec, GstBuffer * buf)
     return GST_FLOW_ERROR;
   }
   GST_DEBUG_OBJECT (dec, "decoded %d samples", n);
+  GST_BUFFER_SIZE (outbuf) = n * 2 * dec->n_channels;
+
+  /* Skip any samples that need skipping */
+  if (dec->pre_skip > 0) {
+    guint scaled_pre_skip = dec->pre_skip * dec->sample_rate / 48000;
+    guint skip = scaled_pre_skip > n ? n : scaled_pre_skip;
+    guint scaled_skip = skip * 48000 / dec->sample_rate;
+    GST_BUFFER_SIZE (outbuf) -= skip * 2 * dec->n_channels;
+    GST_BUFFER_DATA (outbuf) += skip * 2 * dec->n_channels;
+    dec->pre_skip -= scaled_skip;
+    GST_INFO_OBJECT (dec,
+        "Skipping %u samples (%u at 48000 Hz, %u left to skip)", skip,
+        scaled_skip, dec->pre_skip);
+
+    if (GST_BUFFER_SIZE (outbuf) == 0) {
+      gst_buffer_unref (outbuf);
+      outbuf = NULL;
+    }
+  }
 
   res = gst_audio_decoder_finish_frame (GST_AUDIO_DECODER (dec), outbuf, 1);
 
@@ -337,21 +372,6 @@ memcmp_buffers (GstBuffer * buf1, GstBuffer * buf2)
   return res;
 }
 
-static gboolean
-gst_opus_dec_is_header (GstBuffer * buf, const char *magic, guint magic_size)
-{
-  guint8 *data;
-  gsize size;
-  gboolean ret;
-
-  data = gst_buffer_map (buf, &size, NULL, GST_MAP_READ);
-  if (!data)
-    return FALSE;
-  ret = (size >= magic_size && !memcmp (magic, data, magic_size));
-  gst_buffer_unmap (buf, data, size);
-  return ret;
-}
-
 static GstFlowReturn
 gst_opus_dec_handle_frame (GstAudioDecoder * adec, GstBuffer * buf)
 {
@@ -384,10 +404,10 @@ gst_opus_dec_handle_frame (GstAudioDecoder * adec, GstBuffer * buf)
     }
   } else {
     /* Otherwise fall back to packet counting and assume that the
-     * first two packets are the headers. */
+     * first two packets might be the headers, checking magic. */
     switch (dec->packetno) {
       case 0:
-        if (gst_opus_dec_is_header (buf, "OpusHead", 8)) {
+        if (gst_opus_header_is_header (buf, "OpusHead", 8)) {
           GST_DEBUG_OBJECT (dec, "found streamheader");
           res = gst_opus_dec_parse_header (dec, buf);
           gst_audio_decoder_finish_frame (adec, NULL, 1);
@@ -396,7 +416,7 @@ gst_opus_dec_handle_frame (GstAudioDecoder * adec, GstBuffer * buf)
         }
         break;
       case 1:
-        if (gst_opus_dec_is_header (buf, "OpusTags", 8)) {
+        if (gst_opus_header_is_header (buf, "OpusTags", 8)) {
           GST_DEBUG_OBJECT (dec, "counted vorbiscomments");
           res = gst_opus_dec_parse_comments (dec, buf);
           gst_audio_decoder_finish_frame (adec, NULL, 1);
