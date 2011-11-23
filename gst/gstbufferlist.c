@@ -210,6 +210,7 @@ gst_buffer_list_foreach (GstBufferList * list, GstBufferListFunc func,
     if (buf != buf_ret) {
       if (buf_ret == NULL) {
         g_array_remove_index (list->array, i);
+        len--;
       } else {
         g_array_index (list->array, GstBuffer *, i) = buf_ret;
       }
