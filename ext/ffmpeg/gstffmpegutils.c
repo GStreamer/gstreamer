@@ -466,7 +466,7 @@ gst_ffmpeg_auto_max_threads (void)
       int mib[] = { CTL_HW, HW_NCPU };
       size_t dataSize = sizeof (int);
 
-      if (sysctl (mib, 2, &n_threads, &dataSize, NULL, 0)) {
+      if (sysctl (mib, 2, &n, &dataSize, NULL, 0)) {
         n = 1;
       }
     }
