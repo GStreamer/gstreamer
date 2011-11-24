@@ -214,20 +214,21 @@ render_lines (GstBaseAudioVisualizer * scope, guint32 * vdata, gint16 * adata,
   guint i, s, x, y, ox, oy;
   gfloat dx, dy;
   guint w = scope->width;
+  guint h = scope->height;
   gint x2, y2;
 
   /* draw lines 1st channel x, 2nd channel y */
-  dx = scope->width / 65536.0;
-  ox = scope->width / 2;
-  dy = scope->height / 65536.0;
-  oy = scope->height / 2;
+  dx = (w - 1) / 65536.0;
+  ox = (w - 1) / 2;
+  dy = (h - 1) / 65536.0;
+  oy = (h - 1) / 2;
   s = 0;
   x2 = (guint) (ox + (gfloat) adata[s++] * dx);
   y2 = (guint) (oy + (gfloat) adata[s++] * dy);
   for (i = 1; i < num_samples; i++) {
     x = (guint) (ox + (gfloat) adata[s++] * dx);
     y = (guint) (oy + (gfloat) adata[s++] * dy);
-    draw_line (vdata, x2, x, y2, y, w, 0x00FFFFFF);
+    draw_line_aa (vdata, x2, x, y2, y, w, 0x00FFFFFF);
     x2 = x;
     y2 = y;
   }
