@@ -76,10 +76,11 @@ setup_vp8dec (const gchar * src_caps_str)
   gst_element_add_pad (bin, ghostpad);
   gst_object_unref (targetpad);
 
-  srcpad = gst_check_setup_src_pad (bin, &srctemplate, srccaps);
-  sinkpad = gst_check_setup_sink_pad (bin, &sinktemplate, NULL);
+  srcpad = gst_check_setup_src_pad (bin, &srctemplate);
+  sinkpad = gst_check_setup_sink_pad (bin, &sinktemplate);
   gst_pad_set_active (srcpad, TRUE);
   gst_pad_set_active (sinkpad, TRUE);
+  fail_unless (gst_pad_set_caps (srcpad, srccaps));
 
   bus = gst_bus_new ();
   gst_element_set_bus (bin, bus);

@@ -51,10 +51,11 @@ setup_vp8enc (const gchar * src_caps_str)
 
   vp8enc = gst_check_setup_element ("vp8enc");
   fail_unless (vp8enc != NULL);
-  srcpad = gst_check_setup_src_pad (vp8enc, &srctemplate, srccaps);
-  sinkpad = gst_check_setup_sink_pad (vp8enc, &sinktemplate, NULL);
+  srcpad = gst_check_setup_src_pad (vp8enc, &srctemplate);
+  sinkpad = gst_check_setup_sink_pad (vp8enc, &sinktemplate);
   gst_pad_set_active (srcpad, TRUE);
   gst_pad_set_active (sinkpad, TRUE);
+  fail_unless (gst_pad_set_caps (srcpad, srccaps));
 
   bus = gst_bus_new ();
   gst_element_set_bus (vp8enc, bus);
