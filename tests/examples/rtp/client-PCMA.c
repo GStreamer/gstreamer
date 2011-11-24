@@ -184,7 +184,7 @@ main (int argc, char *argv[])
   g_assert (res == TRUE);
 
   /* the rtpbin element */
-  rtpbin = gst_element_factory_make ("gstrtpbin", "rtpbin");
+  rtpbin = gst_element_factory_make ("rtpbin", "rtpbin");
   g_assert (rtpbin);
 
   gst_bin_add (GST_BIN (pipeline), rtpbin);

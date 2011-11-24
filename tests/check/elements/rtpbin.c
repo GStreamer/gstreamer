@@ -29,7 +29,7 @@ GST_START_TEST (test_cleanup_send)
   GObject *session;
   gint count = 2;
 
-  rtpbin = gst_element_factory_make ("gstrtpbin", "rtpbin");
+  rtpbin = gst_element_factory_make ("rtpbin", "rtpbin");
 
   while (count--) {
     /* request session 0 */
@@ -231,7 +231,7 @@ GST_START_TEST (test_cleanup_recv)
 
   init_data (&data);
 
-  rtpbin = gst_element_factory_make ("gstrtpbin", "rtpbin");
+  rtpbin = gst_element_factory_make ("rtpbin", "rtpbin");
 
   g_signal_connect (rtpbin, "pad-added", (GCallback) pad_added_cb, &data);
   g_signal_connect (rtpbin, "pad-removed", (GCallback) pad_removed_cb, &data);
@@ -306,7 +306,7 @@ GST_START_TEST (test_cleanup_recv2)
 
   init_data (&data);
 
-  rtpbin = gst_element_factory_make ("gstrtpbin", "rtpbin");
+  rtpbin = gst_element_factory_make ("rtpbin", "rtpbin");
 
   g_signal_connect (rtpbin, "pad-added", (GCallback) pad_added_cb, &data);
   g_signal_connect (rtpbin, "pad-removed", (GCallback) pad_removed_cb, &data);
@@ -382,7 +382,7 @@ GST_START_TEST (test_request_pad_by_template_name)
   GstElement *rtpbin;
   GstPad *rtp_sink1, *rtp_sink2, *rtp_sink3;
 
-  rtpbin = gst_element_factory_make ("gstrtpbin", "rtpbin");
+  rtpbin = gst_element_factory_make ("rtpbin", "rtpbin");
   rtp_sink1 = gst_element_get_request_pad (rtpbin, "recv_rtp_sink_%u");
   fail_unless (rtp_sink1 != NULL);
   fail_unless_equals_string (GST_PAD_NAME (rtp_sink1), "recv_rtp_sink_0");
@@ -417,7 +417,7 @@ GST_END_TEST;
 static Suite *
 gstrtpbin_suite (void)
 {
-  Suite *s = suite_create ("gstrtpbin");
+  Suite *s = suite_create ("rtpbin");
   TCase *tc_chain = tcase_create ("general");
 
   suite_add_tcase (s, tc_chain);

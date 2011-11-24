@@ -555,10 +555,10 @@ create_session (GstRtpBin * rtpbin, gint id)
   GstElement *session, *demux;
   GstState target;
 
-  if (!(session = gst_element_factory_make ("gstrtpsession", NULL)))
+  if (!(session = gst_element_factory_make ("rtpsession", NULL)))
     goto no_session;
 
-  if (!(demux = gst_element_factory_make ("gstrtpssrcdemux", NULL)))
+  if (!(demux = gst_element_factory_make ("rtpssrcdemux", NULL)))
     goto no_demux;
 
   sess = g_new0 (GstRtpBinSession, 1);
@@ -615,13 +615,13 @@ create_session (GstRtpBin * rtpbin, gint id)
   /* ERRORS */
 no_session:
   {
-    g_warning ("gstrtpbin: could not create gstrtpsession element");
+    g_warning ("rtpbin: could not create gstrtpsession element");
     return NULL;
   }
 no_demux:
   {
     gst_object_unref (session);
-    g_warning ("gstrtpbin: could not create gstrtpssrcdemux element");
+    g_warning ("rtpbin: could not create gstrtpssrcdemux element");
     return NULL;
   }
 }
@@ -1403,11 +1403,11 @@ create_stream (GstRtpBinSession * session, guint32 ssrc)
 
   rtpbin = session->bin;
 
-  if (!(buffer = gst_element_factory_make ("gstrtpjitterbuffer", NULL)))
+  if (!(buffer = gst_element_factory_make ("rtpjitterbuffer", NULL)))
     goto no_jitterbuffer;
 
   if (!rtpbin->ignore_pt)
-    if (!(demux = gst_element_factory_make ("gstrtpptdemux", NULL)))
+    if (!(demux = gst_element_factory_make ("rtpptdemux", NULL)))
       goto no_demux;
 
 
@@ -1471,13 +1471,13 @@ create_stream (GstRtpBinSession * session, guint32 ssrc)
   /* ERRORS */
 no_jitterbuffer:
   {
-    g_warning ("gstrtpbin: could not create gstrtpjitterbuffer element");
+    g_warning ("rtpbin: could not create gstrtpjitterbuffer element");
     return NULL;
   }
 no_demux:
   {
     gst_object_unref (buffer);
-    g_warning ("gstrtpbin: could not create gstrtpptdemux element");
+    g_warning ("rtpbin: could not create gstrtpptdemux element");
     return NULL;
   }
 }
@@ -2646,7 +2646,7 @@ create_recv_rtp (GstRtpBin * rtpbin, GstPadTemplate * templ, const gchar * name)
   /* ERRORS */
 no_name:
   {
-    g_warning ("gstrtpbin: invalid name given");
+    g_warning ("rtpbin: invalid name given");
     return NULL;
   }
 create_error:
@@ -2656,12 +2656,12 @@ create_error:
   }
 pad_failed:
   {
-    g_warning ("gstrtpbin: failed to get session pad");
+    g_warning ("rtpbin: failed to get session pad");
     return NULL;
   }
 link_failed:
   {
-    g_warning ("gstrtpbin: failed to link pads");
+    g_warning ("rtpbin: failed to link pads");
     return NULL;
   }
 }
@@ -2757,7 +2757,7 @@ create_recv_rtcp (GstRtpBin * rtpbin, GstPadTemplate * templ,
   /* ERRORS */
 no_name:
   {
-    g_warning ("gstrtpbin: invalid name given");
+    g_warning ("rtpbin: invalid name given");
     return NULL;
   }
 create_error:
@@ -2767,12 +2767,12 @@ create_error:
   }
 pad_failed:
   {
-    g_warning ("gstrtpbin: failed to get session pad");
+    g_warning ("rtpbin: failed to get session pad");
     return NULL;
   }
 link_failed:
   {
-    g_warning ("gstrtpbin: failed to link pads");
+    g_warning ("rtpbin: failed to link pads");
     return NULL;
   }
 }
@@ -2858,7 +2858,7 @@ create_send_rtp (GstRtpBin * rtpbin, GstPadTemplate * templ, const gchar * name)
   /* ERRORS */
 no_name:
   {
-    g_warning ("gstrtpbin: invalid name given");
+    g_warning ("rtpbin: invalid name given");
     return NULL;
   }
 create_error:
@@ -2868,13 +2868,12 @@ create_error:
   }
 pad_failed:
   {
-    g_warning ("gstrtpbin: failed to get session pad for session %d", sessid);
+    g_warning ("rtpbin: failed to get session pad for session %d", sessid);
     return NULL;
   }
 no_srcpad:
   {
-    g_warning ("gstrtpbin: failed to get rtp source pad for session %d",
-        sessid);
+    g_warning ("rtpbin: failed to get rtp source pad for session %d", sessid);
     return NULL;
   }
 }
@@ -2944,17 +2943,17 @@ create_rtcp (GstRtpBin * rtpbin, GstPadTemplate * templ, const gchar * name)
   /* ERRORS */
 no_name:
   {
-    g_warning ("gstrtpbin: invalid name given");
+    g_warning ("rtpbin: invalid name given");
     return NULL;
   }
 no_session:
   {
-    g_warning ("gstrtpbin: session with id %d does not exist", sessid);
+    g_warning ("rtpbin: session with id %d does not exist", sessid);
     return NULL;
   }
 pad_failed:
   {
-    g_warning ("gstrtpbin: failed to get rtcp pad for session %d", sessid);
+    g_warning ("rtpbin: failed to get rtcp pad for session %d", sessid);
     return NULL;
   }
 }
@@ -3088,7 +3087,7 @@ wrong_template:
   {
     g_free (pad_name);
     GST_RTP_BIN_UNLOCK (rtpbin);
-    g_warning ("gstrtpbin: this is not our template");
+    g_warning ("rtpbin: this is not our template");
     return NULL;
   }
 }
@@ -3138,7 +3137,7 @@ gst_rtp_bin_release_pad (GstElement * element, GstPad * pad)
 unknown_pad:
   {
     GST_RTP_BIN_UNLOCK (rtpbin);
-    g_warning ("gstrtpbin: %s:%s is not one of our request pads",
+    g_warning ("rtpbin: %s:%s is not one of our request pads",
         GST_DEBUG_PAD_NAME (pad));
     return;
   }

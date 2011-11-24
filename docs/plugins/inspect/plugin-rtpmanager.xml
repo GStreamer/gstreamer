@@ -1,5 +1,5 @@
 <plugin>
-  <name>gstrtpmanager</name>
+  <name>rtpmanager</name>
   <description>RTP session management plugin library</description>
   <filename>../../gst/rtpmanager/.libs/libgstrtpmanager.so</filename>
   <basename>libgstrtpmanager.so</basename>
@@ -10,7 +10,7 @@
   <origin>Unknown package origin</origin>
   <elements>
     <element>
-      <name>gstrtpbin</name>
+      <name>rtpbin</name>
       <longname>RTP Bin</longname>
       <class>Filter/Network/RTP</class>
       <description>Real-Time Transport Protocol bin</description>
@@ -55,7 +55,7 @@
       </pads>
     </element>
     <element>
-      <name>gstrtpjitterbuffer</name>
+      <name>rtpjitterbuffer</name>
       <longname>RTP packet jitter-buffer</longname>
       <class>Filter/Network/RTP</class>
       <description>A buffer that deals with network jitter and other transmission faults</description>
@@ -82,7 +82,7 @@
       </pads>
     </element>
     <element>
-      <name>gstrtpptdemux</name>
+      <name>rtpptdemux</name>
       <longname>RTP Demux</longname>
       <class>Demux/Network/RTP</class>
       <description>Parses codec streams transmitted in the same RTP session</description>
@@ -103,7 +103,7 @@
       </pads>
     </element>
     <element>
-      <name>gstrtpsession</name>
+      <name>rtpsession</name>
       <longname>RTP Session</longname>
       <class>Filter/Network/RTP</class>
       <description>Implement an RTP session</description>
@@ -154,7 +154,7 @@
       </pads>
     </element>
     <element>
-      <name>gstrtpssrcdemux</name>
+      <name>rtpssrcdemux</name>
       <longname>RTP SSRC Demux</longname>
       <class>Demux/Network/RTP</class>
       <description>Splits RTP streams based on the SSRC</description>

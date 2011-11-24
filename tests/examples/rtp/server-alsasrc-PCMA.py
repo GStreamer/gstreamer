@@ -4,7 +4,7 @@ import gobject, pygst
 pygst.require("0.10")
 import gst 
 
-#gst-launch -v gstrtpbin name=rtpbin audiotestsrc ! audioconvert ! alawenc ! rtppcmapay ! rtpbin.send_rtp_sink_0 \
+#gst-launch -v rtpbin name=rtpbin audiotestsrc ! audioconvert ! alawenc ! rtppcmapay ! rtpbin.send_rtp_sink_0 \
 #                rtpbin.send_rtp_src_0 ! udpsink port=10000 host=xxx.xxx.xxx.xxx \
 #                rtpbin.send_rtcp_src_0 ! udpsink port=10001 host=xxx.xxx.xxx.xxx sync=false async=false \
 #                udpsrc port=10002 ! rtpbin.recv_rtcp_sink_0 
@@ -37,7 +37,7 @@ pipeline.add(audiosrc, audioconv, audiores, audioenc, audiopay)
 res = gst.element_link_many(audiosrc, audioconv, audiores, audioenc, audiopay)
 
 # the rtpbin element
-rtpbin = gst.element_factory_make('gstrtpbin', 'rtpbin')
+rtpbin = gst.element_factory_make('rtpbin', 'rtpbin')
 
 pipeline.add(rtpbin) 
 

@@ -35,7 +35,7 @@ RTP_RECV_PORT = 5002
 RTCP_RECV_PORT = 5003
 RTCP_SEND_PORT = 5007 
 
-#gst-launch -v gstrtpbin name=rtpbin                                                \
+#gst-launch -v rtpbin name=rtpbin                                                \
 #       udpsrc caps=$AUDIO_CAPS port=$RTP_RECV_PORT ! rtpbin.recv_rtp_sink_0              \
 #             rtpbin. ! rtppcmadepay ! alawdec ! audioconvert ! audioresample ! autoaudiosink \
 #           udpsrc port=$RTCP_RECV_PORT ! rtpbin.recv_rtcp_sink_0                              \
@@ -84,7 +84,7 @@ pipeline.add(audiodepay, audiodec, audioconv, audiores, audiosink)
 res = gst.element_link_many(audiodepay, audiodec, audioconv, audiores, audiosink)
 
 # the rtpbin element
-rtpbin = gst.element_factory_make('gstrtpbin', 'rtpbin') 
+rtpbin = gst.element_factory_make('rtpbin', 'rtpbin')
 
 pipeline.add(rtpbin)
 
