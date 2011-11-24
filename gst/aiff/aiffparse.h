@@ -113,6 +113,9 @@ struct _GstAiffParse {
 
   /* discont after seek */
   gboolean discont;
+
+  /* tags */
+  GstTagList *tags;
 };
 
 struct _GstAiffParseClass {

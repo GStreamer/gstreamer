@@ -22,6 +22,8 @@
 #include "config.h"
 #endif
 
+#include <gst/tag/tag.h>
+
 #include <gst/gst-i18n-plugin.h>
 
 #include "aiffparse.h"
@@ -53,6 +55,8 @@ plugin_init (GstPlugin * plugin)
       GST_TYPE_AIFF_PARSE);
   ret &= gst_element_register (plugin, "aiffmux", GST_RANK_PRIMARY,
       GST_TYPE_AIFF_MUX);
+
+  gst_tag_register_musicbrainz_tags ();
 
   return ret;
 }
