@@ -107,10 +107,6 @@ enum
   PROP_PROXY_ID,
   PROP_PROXY_PW,
   PROP_COOKIES,
-  PROP_IRADIO_NAME,
-  PROP_IRADIO_GENRE,
-  PROP_IRADIO_URL,
-  PROP_IRADIO_TITLE,
   PROP_TIMEOUT,
   PROP_EXTRA_HEADERS
 };
@@ -243,30 +239,6 @@ gst_soup_http_src_class_init (GstSoupHTTPSrcClass * klass)
           "Extra headers to append to the HTTP request",
           GST_TYPE_STRUCTURE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
-  /* icecast stuff */
-  g_object_class_install_property (gobject_class,
-      PROP_IRADIO_NAME,
-      g_param_spec_string ("iradio-name",
-          "iradio-name", "Name of the stream", NULL,
-          G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
-  g_object_class_install_property (gobject_class,
-      PROP_IRADIO_GENRE,
-      g_param_spec_string ("iradio-genre",
-          "iradio-genre", "Genre of the stream", NULL,
-          G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
-  g_object_class_install_property (gobject_class,
-      PROP_IRADIO_URL,
-      g_param_spec_string ("iradio-url",
-          "iradio-url",
-          "Homepage URL for radio stream", NULL,
-          G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
-  g_object_class_install_property (gobject_class,
-      PROP_IRADIO_TITLE,
-      g_param_spec_string ("iradio-title",
-          "iradio-title",
-          "Name of currently playing song", NULL,
-          G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
-
   gst_element_class_add_pad_template (gstelement_class,
       gst_static_pad_template_get (&srctemplate));
 
@@ -310,8 +282,6 @@ gst_soup_http_src_reset (GstSoupHTTPSrc * src)
   src->iradio_genre = NULL;
   g_free (src->iradio_url);
   src->iradio_url = NULL;
-  g_free (src->iradio_title);
-  src->iradio_title = NULL;
 }
 
 static void
@@ -487,18 +457,6 @@ gst_soup_http_src_get_property (GObject * object, guint prop_id,
       break;
     case PROP_IS_LIVE:
       g_value_set_boolean (value, gst_base_src_is_live (GST_BASE_SRC (src)));
-      break;
-    case PROP_IRADIO_NAME:
-      g_value_set_string (value, src->iradio_name);
-      break;
-    case PROP_IRADIO_GENRE:
-      g_value_set_string (value, src->iradio_genre);
-      break;
-    case PROP_IRADIO_URL:
-      g_value_set_string (value, src->iradio_url);
-      break;
-    case PROP_IRADIO_TITLE:
-      g_value_set_string (value, src->iradio_title);
       break;
     case PROP_USER_ID:
       g_value_set_string (value, src->user_id);
@@ -796,7 +754,6 @@ gst_soup_http_src_got_headers_cb (SoupMessage * msg, GstSoupHTTPSrc * src)
     g_free (src->iradio_name);
     src->iradio_name = gst_soup_http_src_unicodify (value);
     if (src->iradio_name) {
-      g_object_notify (G_OBJECT (src), "iradio-name");
       gst_tag_list_add (tag_list, GST_TAG_MERGE_REPLACE, GST_TAG_ORGANIZATION,
           src->iradio_name, NULL);
     }
@@ -807,7 +764,6 @@ gst_soup_http_src_got_headers_cb (SoupMessage * msg, GstSoupHTTPSrc * src)
     g_free (src->iradio_genre);
     src->iradio_genre = gst_soup_http_src_unicodify (value);
     if (src->iradio_genre) {
-      g_object_notify (G_OBJECT (src), "iradio-genre");
       gst_tag_list_add (tag_list, GST_TAG_MERGE_REPLACE, GST_TAG_GENRE,
           src->iradio_genre, NULL);
     }
@@ -817,7 +773,6 @@ gst_soup_http_src_got_headers_cb (SoupMessage * msg, GstSoupHTTPSrc * src)
     g_free (src->iradio_url);
     src->iradio_url = gst_soup_http_src_unicodify (value);
     if (src->iradio_url) {
-      g_object_notify (G_OBJECT (src), "iradio-url");
       gst_tag_list_add (tag_list, GST_TAG_MERGE_REPLACE, GST_TAG_LOCATION,
           src->iradio_url, NULL);
     }
