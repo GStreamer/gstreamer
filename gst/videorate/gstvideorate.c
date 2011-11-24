@@ -89,6 +89,8 @@ enum
 #define DEFAULT_DROP_ONLY       FALSE
 #define DEFAULT_AVERAGE_PERIOD  0
 #define DEFAULT_MAX_RATE        G_MAXINT
+#define DEFAULT_FORCE_FPS_N     -1
+#define DEFAULT_FORCE_FPS_D     1
 
 enum
 {
@@ -102,7 +104,8 @@ enum
   ARG_SKIP_TO_FIRST,
   ARG_DROP_ONLY,
   ARG_AVERAGE_PERIOD,
-  ARG_MAX_RATE
+  ARG_MAX_RATE,
+  ARG_FORCE_FPS
       /* FILL ME */
 };
 
@@ -270,6 +273,19 @@ gst_video_rate_class_init (GstVideoRateClass * klass)
           "(in frames per second, implies drop-only)",
           1, G_MAXINT, DEFAULT_MAX_RATE,
           G_PARAM_READWRITE | G_PARAM_CONSTRUCT | G_PARAM_STATIC_STRINGS));
+
+  /**
+   * GstVideoRate:force-fps:
+   *
+   * Forced output framerate
+   *
+   * Since: 0.10.36
+   */
+  g_object_class_install_property (object_class, ARG_FORCE_FPS,
+      gst_param_spec_fraction ("force-fps", "Force output framerate",
+          "Force output framerate (negative means negotiate via caps)",
+          -1, 1, G_MAXINT, 1, DEFAULT_FORCE_FPS_N, DEFAULT_FORCE_FPS_D,
+          G_PARAM_READWRITE | G_PARAM_CONSTRUCT | G_PARAM_STATIC_STRINGS));
 }
 
 static void
@@ -389,7 +405,16 @@ gst_video_rate_transform_caps (GstBaseTransform * trans,
   s = gst_caps_get_structure (ret, 0);
   s2 = gst_structure_copy (s);
 
-  if (videorate->drop_only) {
+  if (videorate->force_fps_n >= 0 && videorate->force_fps_d >= 0) {
+    if (direction == GST_PAD_SINK) {
+      gst_caps_remove_structure (ret, 0);
+      gst_structure_set (s2, "framerate", GST_TYPE_FRACTION,
+          videorate->force_fps_n, videorate->force_fps_d, NULL);
+    } else {
+      gst_structure_set (s2, "framerate", GST_TYPE_FRACTION_RANGE, 0, 1,
+          G_MAXINT, 1, NULL);
+    }
+  } else if (videorate->drop_only) {
     gint min_num = 0, min_denom = 1;
     gint max_num = G_MAXINT, max_denom = 1;
 
@@ -563,6 +588,8 @@ gst_video_rate_init (GstVideoRate * videorate, GstVideoRateClass * klass)
   videorate->average_period = DEFAULT_AVERAGE_PERIOD;
   videorate->average_period_set = DEFAULT_AVERAGE_PERIOD;
   videorate->max_rate = DEFAULT_MAX_RATE;
+  videorate->force_fps_n = DEFAULT_FORCE_FPS_N;
+  videorate->force_fps_d = DEFAULT_FORCE_FPS_D;
 
   videorate->from_rate_numerator = 0;
   videorate->from_rate_denominator = 0;
@@ -1176,6 +1203,11 @@ gst_video_rate_set_property (GObject * object,
       g_atomic_int_set (&videorate->max_rate, g_value_get_int (value));
       goto reconfigure;
       break;
+    case ARG_FORCE_FPS:
+      videorate->force_fps_n = gst_value_get_fraction_numerator (value);
+      videorate->force_fps_d = gst_value_get_fraction_denominator (value);
+      goto reconfigure;
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -1225,6 +1257,10 @@ gst_video_rate_get_property (GObject * object,
       break;
     case ARG_MAX_RATE:
       g_value_set_int (value, g_atomic_int_get (&videorate->max_rate));
+      break;
+    case ARG_FORCE_FPS:
+      gst_value_set_fraction (value, videorate->force_fps_n,
+          videorate->force_fps_d);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);

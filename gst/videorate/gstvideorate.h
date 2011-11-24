@@ -76,6 +76,7 @@ struct _GstVideoRate
   gboolean skip_to_first;
   gboolean drop_only;
   guint64 average_period_set;
+  gint force_fps_n, force_fps_d;
 
   volatile int max_rate;
 };
