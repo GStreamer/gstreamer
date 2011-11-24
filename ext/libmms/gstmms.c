@@ -92,12 +92,13 @@ gst_mms_class_init (GstMMSClass * klass)
           "Host URL to connect to. Accepted are mms://, mmsu://, mmst:// URL types",
           NULL, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
+  /* Note: connection-speed is intentionaly limited to G_MAXINT as libmms
+   * uses int for it */
   g_object_class_install_property (gobject_class, PROP_CONNECTION_SPEED,
-      g_param_spec_uint ("connection-speed", "Connection Speed",
+      g_param_spec_uint64 ("connection-speed", "Connection Speed",
           "Network connection speed in kbps (0 = unknown)",
           0, G_MAXINT / 1000, DEFAULT_CONNECTION_SPEED,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
-  /* Note: connection-speed is intentionaly limited to G_MAXINT as libmms use int for it */
 
   gst_element_class_add_pad_template (gstelement_class,
       gst_static_pad_template_get (&src_factory));
@@ -480,7 +481,7 @@ gst_mms_set_property (GObject * object, guint prop_id,
       break;
     case PROP_CONNECTION_SPEED:
       GST_OBJECT_LOCK (mmssrc);
-      mmssrc->connection_speed = g_value_get_uint (value) * 1000;
+      mmssrc->connection_speed = g_value_get_uint64 (value) * 1000;
       GST_OBJECT_UNLOCK (mmssrc);
       break;
     default:
@@ -502,7 +503,7 @@ gst_mms_get_property (GObject * object, guint prop_id,
         g_value_set_string (value, mmssrc->uri_name);
       break;
     case PROP_CONNECTION_SPEED:
-      g_value_set_uint (value, mmssrc->connection_speed / 1000);
+      g_value_set_uint64 (value, mmssrc->connection_speed / 1000);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);

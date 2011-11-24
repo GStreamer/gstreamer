@@ -32,7 +32,7 @@ struct _GstMMS
 
   gchar  *uri_name;
   gchar  *current_connection_uri_name;
-  guint  connection_speed;
+  guint64  connection_speed;
   
   mmsx_t *connection;
 };
