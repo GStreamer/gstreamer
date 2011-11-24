@@ -65,8 +65,8 @@ setup_amplify (void)
 
   GST_DEBUG ("setup_amplify");
   amplify = gst_check_setup_element ("audioamplify");
-  mysrcpad = gst_check_setup_src_pad (amplify, &srctemplate, NULL);
-  mysinkpad = gst_check_setup_sink_pad (amplify, &sinktemplate, NULL);
+  mysrcpad = gst_check_setup_src_pad (amplify, &srctemplate);
+  mysinkpad = gst_check_setup_sink_pad (amplify, &sinktemplate);
   gst_pad_set_active (mysrcpad, TRUE);
   gst_pad_set_active (mysinkpad, TRUE);
 

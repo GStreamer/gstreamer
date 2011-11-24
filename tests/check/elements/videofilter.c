@@ -61,9 +61,9 @@ setup_filter (const gchar * name, const gchar * prop, va_list var_args)
   GST_DEBUG ("setup_element");
   element = gst_check_setup_element (name);
   g_object_set_valist (G_OBJECT (element), prop, var_args);
-  mysrcpad = gst_check_setup_src_pad (element, &srctemplate, NULL);
+  mysrcpad = gst_check_setup_src_pad (element, &srctemplate);
   gst_pad_set_active (mysrcpad, TRUE);
-  mysinkpad = gst_check_setup_sink_pad (element, &sinktemplate, NULL);
+  mysinkpad = gst_check_setup_sink_pad (element, &sinktemplate);
   gst_pad_set_active (mysinkpad, TRUE);
 
   return element;

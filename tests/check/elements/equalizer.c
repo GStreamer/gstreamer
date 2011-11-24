@@ -62,8 +62,8 @@ setup_equalizer (void)
 
   GST_DEBUG ("setup_equalizer");
   equalizer = gst_check_setup_element ("equalizer-nbands");
-  mysrcpad = gst_check_setup_src_pad (equalizer, &srctemplate, NULL);
-  mysinkpad = gst_check_setup_sink_pad (equalizer, &sinktemplate, NULL);
+  mysrcpad = gst_check_setup_src_pad (equalizer, &srctemplate);
+  mysinkpad = gst_check_setup_sink_pad (equalizer, &sinktemplate);
   gst_pad_set_active (mysrcpad, TRUE);
   gst_pad_set_active (mysinkpad, TRUE);
 

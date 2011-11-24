@@ -43,8 +43,8 @@ setup_alphacolor (void)
   GstElement *alphacolor;
 
   alphacolor = gst_check_setup_element ("alphacolor");
-  mysrcpad = gst_check_setup_src_pad (alphacolor, &srctemplate, NULL);
-  mysinkpad = gst_check_setup_sink_pad (alphacolor, &sinktemplate, NULL);
+  mysrcpad = gst_check_setup_src_pad (alphacolor, &srctemplate);
+  mysinkpad = gst_check_setup_sink_pad (alphacolor, &sinktemplate);
 
   gst_pad_set_active (mysrcpad, TRUE);
   gst_pad_set_active (mysinkpad, TRUE);

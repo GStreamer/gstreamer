@@ -150,10 +150,12 @@ setup_element (const gchar * factory, GstStaticPadTemplate * sink_template,
   GstBus *bus;
 
   element = gst_check_setup_element (factory);
-  srcpad = gst_check_setup_src_pad (element, src_template, src_caps);
-  sinkpad = gst_check_setup_sink_pad (element, sink_template, sink_caps);
+  srcpad = gst_check_setup_src_pad (element, src_template);
+  sinkpad = gst_check_setup_sink_pad (element, sink_template);
   gst_pad_set_active (srcpad, TRUE);
   gst_pad_set_active (sinkpad, TRUE);
+  fail_unless (gst_pad_set_caps (srcpad, src_caps));
+  fail_unless (gst_pad_set_caps (sinkpad, sink_caps));
 
   bus = gst_bus_new ();
   gst_element_set_bus (element, bus);

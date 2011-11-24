@@ -87,8 +87,8 @@ setup_spectrum (void)
 
   GST_DEBUG ("setup_spectrum");
   spectrum = gst_check_setup_element ("spectrum");
-  mysrcpad = gst_check_setup_src_pad (spectrum, &srctemplate, NULL);
-  mysinkpad = gst_check_setup_sink_pad (spectrum, &sinktemplate, NULL);
+  mysrcpad = gst_check_setup_src_pad (spectrum, &srctemplate);
+  mysinkpad = gst_check_setup_sink_pad (spectrum, &sinktemplate);
   gst_pad_set_active (mysrcpad, TRUE);
   gst_pad_set_active (mysinkpad, TRUE);
 

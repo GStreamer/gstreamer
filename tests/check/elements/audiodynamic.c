@@ -65,8 +65,8 @@ setup_dynamic (void)
 
   GST_DEBUG ("setup_dynamic");
   dynamic = gst_check_setup_element ("audiodynamic");
-  mysrcpad = gst_check_setup_src_pad (dynamic, &srctemplate, NULL);
-  mysinkpad = gst_check_setup_sink_pad (dynamic, &sinktemplate, NULL);
+  mysrcpad = gst_check_setup_src_pad (dynamic, &srctemplate);
+  mysinkpad = gst_check_setup_sink_pad (dynamic, &sinktemplate);
   gst_pad_set_active (mysrcpad, TRUE);
   gst_pad_set_active (mysinkpad, TRUE);
 

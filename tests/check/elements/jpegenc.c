@@ -67,8 +67,8 @@ setup_jpegenc (GstStaticPadTemplate * sinktemplate)
 
   GST_DEBUG ("setup_jpegenc");
   jpegenc = gst_check_setup_element ("jpegenc");
-  mysinkpad = gst_check_setup_sink_pad (jpegenc, sinktemplate, NULL);
-  mysrcpad = gst_check_setup_src_pad (jpegenc, &any_srctemplate, NULL);
+  mysinkpad = gst_check_setup_sink_pad (jpegenc, sinktemplate);
+  mysrcpad = gst_check_setup_src_pad (jpegenc, &any_srctemplate);
   gst_pad_set_active (mysrcpad, TRUE);
   gst_pad_set_active (mysinkpad, TRUE);
 

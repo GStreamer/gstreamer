@@ -69,8 +69,8 @@ setup_audiowsincband (void)
 
   GST_DEBUG ("setup_audiowsincband");
   audiowsincband = gst_check_setup_element ("audiowsincband");
-  mysrcpad = gst_check_setup_src_pad (audiowsincband, &srctemplate, NULL);
-  mysinkpad = gst_check_setup_sink_pad (audiowsincband, &sinktemplate, NULL);
+  mysrcpad = gst_check_setup_src_pad (audiowsincband, &srctemplate);
+  mysinkpad = gst_check_setup_sink_pad (audiowsincband, &sinktemplate);
   gst_pad_set_active (mysrcpad, TRUE);
   gst_pad_set_active (mysinkpad, TRUE);
 

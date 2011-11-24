@@ -63,8 +63,8 @@ setup_level (void)
 
   GST_DEBUG ("setup_level");
   level = gst_check_setup_element ("level");
-  mysrcpad = gst_check_setup_src_pad (level, &srctemplate, NULL);
-  mysinkpad = gst_check_setup_sink_pad (level, &sinktemplate, NULL);
+  mysrcpad = gst_check_setup_src_pad (level, &srctemplate);
+  mysinkpad = gst_check_setup_sink_pad (level, &sinktemplate);
   gst_pad_set_active (mysrcpad, TRUE);
   gst_pad_set_active (mysinkpad, TRUE);
 

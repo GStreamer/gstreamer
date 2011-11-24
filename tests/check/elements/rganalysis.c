@@ -155,8 +155,8 @@ setup_rganalysis (void)
 
   GST_DEBUG ("setup_rganalysis");
   analysis = gst_check_setup_element ("rganalysis");
-  mysrcpad = gst_check_setup_src_pad (analysis, &srctemplate, NULL);
-  mysinkpad = gst_check_setup_sink_pad (analysis, &sinktemplate, NULL);
+  mysrcpad = gst_check_setup_src_pad (analysis, &srctemplate);
+  mysinkpad = gst_check_setup_sink_pad (analysis, &sinktemplate);
   gst_pad_set_active (mysrcpad, TRUE);
   gst_pad_set_active (mysinkpad, TRUE);
 

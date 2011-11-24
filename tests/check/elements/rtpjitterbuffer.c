@@ -94,8 +94,8 @@ setup_jitterbuffer (gint num_buffers)
      GST_INFO_OBJECT (jitterbuffer, "set latency to %u ms", latency);
    */
 
-  mysrcpad = gst_check_setup_src_pad (jitterbuffer, &srctemplate, NULL);
-  mysinkpad = gst_check_setup_sink_pad (jitterbuffer, &sinktemplate, NULL);
+  mysrcpad = gst_check_setup_src_pad (jitterbuffer, &srctemplate);
+  mysinkpad = gst_check_setup_sink_pad (jitterbuffer, &sinktemplate);
   gst_pad_set_active (mysrcpad, TRUE);
   gst_pad_set_active (mysinkpad, TRUE);
 

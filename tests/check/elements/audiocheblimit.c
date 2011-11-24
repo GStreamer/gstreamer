@@ -70,8 +70,8 @@ setup_audiocheblimit (void)
 
   GST_DEBUG ("setup_audiocheblimit");
   audiocheblimit = gst_check_setup_element ("audiocheblimit");
-  mysrcpad = gst_check_setup_src_pad (audiocheblimit, &srctemplate, NULL);
-  mysinkpad = gst_check_setup_sink_pad (audiocheblimit, &sinktemplate, NULL);
+  mysrcpad = gst_check_setup_src_pad (audiocheblimit, &srctemplate);
+  mysinkpad = gst_check_setup_sink_pad (audiocheblimit, &sinktemplate);
   gst_pad_set_active (mysrcpad, TRUE);
   gst_pad_set_active (mysinkpad, TRUE);
 

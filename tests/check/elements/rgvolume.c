@@ -66,8 +66,8 @@ setup_rgvolume (void)
 
   GST_DEBUG ("setup_rgvolume");
   element = gst_check_setup_element ("rgvolume");
-  mysrcpad = gst_check_setup_src_pad (element, &srctemplate, NULL);
-  mysinkpad = gst_check_setup_sink_pad (element, &sinktemplate, NULL);
+  mysrcpad = gst_check_setup_src_pad (element, &srctemplate);
+  mysinkpad = gst_check_setup_sink_pad (element, &sinktemplate);
 
   /* Capture events, to test tag filtering behavior: */
   gst_pad_set_event_function (mysinkpad, event_func);

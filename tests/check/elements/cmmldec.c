@@ -138,8 +138,8 @@ setup_cmmldec (void)
 {
   GST_DEBUG ("setup_cmmldec");
   cmmldec = gst_check_setup_element ("cmmldec");
-  srcpad = gst_check_setup_src_pad (cmmldec, &srctemplate, NULL);
-  sinkpad = gst_check_setup_sink_pad (cmmldec, &sinktemplate, NULL);
+  srcpad = gst_check_setup_src_pad (cmmldec, &srctemplate);
+  sinkpad = gst_check_setup_sink_pad (cmmldec, &sinktemplate);
   gst_pad_set_active (srcpad, TRUE);
   gst_pad_set_active (sinkpad, TRUE);
 

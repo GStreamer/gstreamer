@@ -157,8 +157,8 @@ setup_cmmlenc (void)
   GST_DEBUG ("setup_cmmlenc");
 
   cmmlenc = gst_check_setup_element ("cmmlenc");
-  srcpad = gst_check_setup_src_pad (cmmlenc, &srctemplate, NULL);
-  sinkpad = gst_check_setup_sink_pad (cmmlenc, &sinktemplate, NULL);
+  srcpad = gst_check_setup_src_pad (cmmlenc, &srctemplate);
+  sinkpad = gst_check_setup_sink_pad (cmmlenc, &sinktemplate);
   gst_pad_set_active (srcpad, TRUE);
   gst_pad_set_active (sinkpad, TRUE);
 

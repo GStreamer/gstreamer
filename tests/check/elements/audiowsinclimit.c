@@ -69,8 +69,8 @@ setup_audiowsinclimit (void)
 
   GST_DEBUG ("setup_audiowsinclimit");
   audiowsinclimit = gst_check_setup_element ("audiowsinclimit");
-  mysrcpad = gst_check_setup_src_pad (audiowsinclimit, &srctemplate, NULL);
-  mysinkpad = gst_check_setup_sink_pad (audiowsinclimit, &sinktemplate, NULL);
+  mysrcpad = gst_check_setup_src_pad (audiowsinclimit, &srctemplate);
+  mysinkpad = gst_check_setup_sink_pad (audiowsinclimit, &sinktemplate);
   gst_pad_set_active (mysrcpad, TRUE);
   gst_pad_set_active (mysinkpad, TRUE);
 

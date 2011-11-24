@@ -48,8 +48,8 @@ setup_capssetter (void)
   GST_DEBUG ("setup_capssetter");
 
   capssetter = gst_check_setup_element ("capssetter");
-  mysrcpad = gst_check_setup_src_pad (capssetter, &srctemplate, NULL);
-  mysinkpad = gst_check_setup_sink_pad (capssetter, &sinktemplate, NULL);
+  mysrcpad = gst_check_setup_src_pad (capssetter, &srctemplate);
+  mysinkpad = gst_check_setup_sink_pad (capssetter, &sinktemplate);
   gst_pad_set_active (mysrcpad, TRUE);
   gst_pad_set_active (mysinkpad, TRUE);
 

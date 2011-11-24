@@ -123,7 +123,7 @@ setup_avimux (GstStaticPadTemplate * srctemplate, const gchar * sinkname)
   GST_DEBUG ("setup_avimux");
   avimux = gst_check_setup_element ("avimux");
   mysrcpad = setup_src_pad (avimux, srctemplate, NULL, sinkname);
-  mysinkpad = gst_check_setup_sink_pad (avimux, &sinktemplate, NULL);
+  mysinkpad = gst_check_setup_sink_pad (avimux, &sinktemplate);
   gst_pad_set_active (mysrcpad, TRUE);
   gst_pad_set_active (mysinkpad, TRUE);
 

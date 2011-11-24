@@ -54,8 +54,8 @@ setup_rglimiter (void)
 
   GST_DEBUG ("setup_rglimiter");
   element = gst_check_setup_element ("rglimiter");
-  mysrcpad = gst_check_setup_src_pad (element, &srctemplate, NULL);
-  mysinkpad = gst_check_setup_sink_pad (element, &sinktemplate, NULL);
+  mysrcpad = gst_check_setup_src_pad (element, &srctemplate);
+  mysinkpad = gst_check_setup_sink_pad (element, &sinktemplate);
   gst_pad_set_active (mysrcpad, TRUE);
   gst_pad_set_active (mysinkpad, TRUE);
 

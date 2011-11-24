@@ -85,8 +85,8 @@ setup_panorama_m (void)
 
   GST_DEBUG ("setup_panorama");
   panorama = gst_check_setup_element ("audiopanorama");
-  mysrcpad = gst_check_setup_src_pad (panorama, &msrctemplate, NULL);
-  mysinkpad = gst_check_setup_sink_pad (panorama, &sinktemplate, NULL);
+  mysrcpad = gst_check_setup_src_pad (panorama, &msrctemplate);
+  mysinkpad = gst_check_setup_sink_pad (panorama, &sinktemplate);
   gst_pad_set_active (mysrcpad, TRUE);
   gst_pad_set_active (mysinkpad, TRUE);
 
@@ -100,8 +100,8 @@ setup_panorama_s (void)
 
   GST_DEBUG ("setup_panorama");
   panorama = gst_check_setup_element ("audiopanorama");
-  mysrcpad = gst_check_setup_src_pad (panorama, &ssrctemplate, NULL);
-  mysinkpad = gst_check_setup_sink_pad (panorama, &sinktemplate, NULL);
+  mysrcpad = gst_check_setup_src_pad (panorama, &ssrctemplate);
+  mysinkpad = gst_check_setup_sink_pad (panorama, &sinktemplate);
   gst_pad_set_active (mysrcpad, TRUE);
   gst_pad_set_active (mysinkpad, TRUE);
 

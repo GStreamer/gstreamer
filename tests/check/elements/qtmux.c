@@ -161,7 +161,7 @@ setup_qtmux (GstStaticPadTemplate * srctemplate, const gchar * sinkname)
   GST_DEBUG ("setup_qtmux");
   qtmux = gst_check_setup_element ("qtmux");
   mysrcpad = setup_src_pad (qtmux, srctemplate, NULL, sinkname);
-  mysinkpad = gst_check_setup_sink_pad (qtmux, &sinktemplate, NULL);
+  mysinkpad = gst_check_setup_sink_pad (qtmux, &sinktemplate);
   gst_pad_set_active (mysrcpad, TRUE);
   gst_pad_set_active (mysinkpad, TRUE);
 

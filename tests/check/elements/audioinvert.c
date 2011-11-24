@@ -64,8 +64,8 @@ setup_invert (void)
 
   GST_DEBUG ("setup_invert");
   invert = gst_check_setup_element ("audioinvert");
-  mysrcpad = gst_check_setup_src_pad (invert, &srctemplate, NULL);
-  mysinkpad = gst_check_setup_sink_pad (invert, &sinktemplate, NULL);
+  mysrcpad = gst_check_setup_src_pad (invert, &srctemplate);
+  mysinkpad = gst_check_setup_sink_pad (invert, &sinktemplate);
   gst_pad_set_active (mysrcpad, TRUE);
   gst_pad_set_active (mysinkpad, TRUE);
 

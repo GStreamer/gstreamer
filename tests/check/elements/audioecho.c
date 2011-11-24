@@ -60,8 +60,8 @@ setup_echo (void)
 
   GST_DEBUG ("setup_echo");
   echo = gst_check_setup_element ("audioecho");
-  mysrcpad = gst_check_setup_src_pad (echo, &srctemplate, NULL);
-  mysinkpad = gst_check_setup_sink_pad (echo, &sinktemplate, NULL);
+  mysrcpad = gst_check_setup_src_pad (echo, &srctemplate);
+  mysinkpad = gst_check_setup_sink_pad (echo, &sinktemplate);
   gst_pad_set_active (mysrcpad, TRUE);
   gst_pad_set_active (mysinkpad, TRUE);
 

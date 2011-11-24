@@ -70,18 +70,20 @@ static GstElement *
 setup_avisubtitle (void)
 {
   GstElement *avisubtitle;
-  GstCaps *caps;
+  GstCaps *sinkcaps, *srccaps;
 
   GST_DEBUG ("setup_avisubtitle");
   avisubtitle = gst_check_setup_element ("avisubtitle");
-  caps = gst_caps_new_simple ("application/x-subtitle", NULL);
-  mysinkpad = gst_check_setup_sink_pad (avisubtitle, &sink_template, caps);
-  gst_caps_unref (caps);
-  caps = gst_caps_new_simple ("application/x-subtitle-avi", NULL);
-  mysrcpad = gst_check_setup_src_pad (avisubtitle, &src_template, caps);
-  gst_caps_unref (caps);
+  sinkcaps = gst_caps_new_empty_simple ("application/x-subtitle");
+  mysinkpad = gst_check_setup_sink_pad (avisubtitle, &sink_template);
+  srccaps = gst_caps_new_empty_simple ("application/x-subtitle-avi");
+  mysrcpad = gst_check_setup_src_pad (avisubtitle, &src_template);
   gst_pad_set_active (mysinkpad, TRUE);
   gst_pad_set_active (mysrcpad, TRUE);
+  fail_unless (gst_pad_set_caps (mysinkpad, sinkcaps));
+  fail_unless (gst_pad_set_caps (mysrcpad, srccaps));
+  gst_caps_unref (sinkcaps);
+  gst_caps_unref (srccaps);
   return avisubtitle;
 }
 

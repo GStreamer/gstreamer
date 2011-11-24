@@ -103,7 +103,7 @@ static GstElement *
 create_icydemux (void)
 {
   icydemux = gst_check_setup_element ("icydemux");
-  srcpad = gst_check_setup_src_pad (icydemux, &srctemplate, NULL);
+  srcpad = gst_check_setup_src_pad (icydemux, &srctemplate);
 
   g_signal_connect (icydemux, "pad-added", G_CALLBACK (icydemux_found_pad),
       NULL);

@@ -57,8 +57,8 @@ setup_y4menc (void)
 
   GST_DEBUG ("setup_y4menc");
   y4menc = gst_check_setup_element ("y4menc");
-  mysrcpad = gst_check_setup_src_pad (y4menc, &srctemplate, NULL);
-  mysinkpad = gst_check_setup_sink_pad (y4menc, &sinktemplate, NULL);
+  mysrcpad = gst_check_setup_src_pad (y4menc, &srctemplate);
+  mysinkpad = gst_check_setup_sink_pad (y4menc, &sinktemplate);
   gst_pad_set_active (mysrcpad, TRUE);
   gst_pad_set_active (mysinkpad, TRUE);
 
