@@ -1941,7 +1941,7 @@ convert_YUY2_I420 (VideoConvert * convert, GstVideoFrame * dest,
   }
 
   /* now handle last line */
-  if (convert->width & 1) {
+  if (convert->height & 1) {
     getline_YUY2 (convert, convert->tmpline, src, convert->height - 1);
     putline_I420 (convert, dest, convert->tmpline, convert->height - 1);
   }
@@ -1954,10 +1954,10 @@ convert_YUY2_AYUV (VideoConvert * convert, GstVideoFrame * dest,
   cogorc_convert_YUY2_AYUV (FRAME_GET_LINE (dest, 0, 0),
       FRAME_GET_STRIDE (dest, 0), FRAME_GET_LINE (src, 0, 0),
       FRAME_GET_STRIDE (src, 0), (convert->width + 1) / 2,
-      convert->width & 1 ? convert->height - 1 : convert->height);
+      convert->height & 1 ? convert->height - 1 : convert->height);
 
   /* now handle last line */
-  if (convert->width & 1) {
+  if (convert->height & 1) {
     getline_YUY2 (convert, convert->tmpline, src, convert->height - 1);
     putline_AYUV (convert, dest, convert->tmpline, convert->height - 1);
   }
@@ -2015,10 +2015,10 @@ convert_UYVY_AYUV (VideoConvert * convert, GstVideoFrame * dest,
   cogorc_convert_UYVY_AYUV (FRAME_GET_LINE (dest, 0, 0),
       FRAME_GET_STRIDE (dest, 0), FRAME_GET_LINE (src, 0, 0),
       FRAME_GET_STRIDE (src, 0), (convert->width + 1) / 2,
-      convert->width & 1 ? convert->height - 1 : convert->height);
+      convert->height & 1 ? convert->height - 1 : convert->height);
 
   /* now handle last line */
-  if (convert->width & 1) {
+  if (convert->height & 1) {
     getline_UYVY (convert, convert->tmpline, src, convert->height - 1);
     putline_AYUV (convert, dest, convert->tmpline, convert->height - 1);
   }
@@ -2095,7 +2095,7 @@ convert_AYUV_Y42B (VideoConvert * convert, GstVideoFrame * dest,
       FRAME_GET_STRIDE (dest, 1), FRAME_GET_LINE (dest, 2, 0),
       FRAME_GET_STRIDE (dest, 2), FRAME_GET_LINE (src, 0, 0),
       FRAME_GET_STRIDE (src, 0), (convert->width + 1) / 2,
-      convert->width & 1 ? convert->height - 1 : convert->height);
+      convert->height & 1 ? convert->height - 1 : convert->height);
 
   /* now handle last line */
   if (convert->height & 1) {
