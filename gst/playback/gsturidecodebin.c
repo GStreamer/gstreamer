@@ -1198,7 +1198,9 @@ static const gchar *download_media[] = {
 static GstElement *
 gen_source_element (GstURIDecodeBin * decoder)
 {
+  GObjectClass *source_class;
   GstElement *source;
+  GParamSpec *pspec;
 
   if (!decoder->uri)
     goto no_uri;
@@ -1223,25 +1225,34 @@ gen_source_element (GstURIDecodeBin * decoder)
   decoder->need_queue = IS_QUEUE_URI (decoder->uri);
   GST_LOG_OBJECT (decoder, "source needs queue: %d", decoder->need_queue);
 
+  source_class = G_OBJECT_GET_CLASS (source);
+
   /* make HTTP sources send extra headers so we get icecast
    * metadata in case the stream is an icecast stream */
   if (!strncmp (decoder->uri, "http://", 7) &&
-      g_object_class_find_property (G_OBJECT_GET_CLASS (source),
-          "iradio-mode")) {
+      g_object_class_find_property (source_class, "iradio-mode")) {
     GST_LOG_OBJECT (decoder, "configuring iradio-mode");
     g_object_set (source, "iradio-mode", TRUE, NULL);
   }
 
-  if (g_object_class_find_property (G_OBJECT_GET_CLASS (source),
-          "connection-speed")) {
-    GST_DEBUG_OBJECT (decoder,
-        "setting connection-speed=%d to source element",
-        decoder->connection_speed / 1000);
-    g_object_set (source, "connection-speed",
-        decoder->connection_speed / 1000, NULL);
+  pspec = g_object_class_find_property (source_class, "connection-speed");
+  if (pspec != NULL) {
+    if (G_PARAM_SPEC_VALUE_TYPE (pspec) == G_TYPE_UINT64 ||
+        G_PARAM_SPEC_VALUE_TYPE (pspec) == G_TYPE_INT64) {
+      GST_DEBUG_OBJECT (decoder,
+          "setting connection-speed=%" G_GUINT64_FORMAT " on source element %s",
+          decoder->connection_speed / 1000, G_OBJECT_TYPE_NAME (source));
+
+      g_object_set (source, "connection-speed",
+          decoder->connection_speed / 1000, NULL);
+    } else {
+      g_warning ("connection-speed property of '%s' is not a 64-bit int type",
+          G_OBJECT_TYPE_NAME (source));
+    }
   }
-  if (g_object_class_find_property (G_OBJECT_GET_CLASS (source),
-          "subtitle-encoding")) {
+
+  pspec = g_object_class_find_property (source_class, "subtitle-encoding");
+  if (pspec != NULL && G_PARAM_SPEC_VALUE_TYPE (pspec) == G_TYPE_STRING) {
     GST_DEBUG_OBJECT (decoder,
         "setting subtitle-encoding=%s to source element", decoder->encoding);
     g_object_set (source, "subtitle-encoding", decoder->encoding, NULL);
