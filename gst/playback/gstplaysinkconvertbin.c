@@ -319,13 +319,25 @@ gst_play_sink_convert_bin_sink_setcaps (GstPad * pad, GstCaps * caps)
 
   GST_DEBUG_OBJECT (self, "raw %d, self->raw %d, blocked %d",
       raw, self->raw, gst_pad_is_blocked (self->sink_proxypad));
+
   if (raw) {
-    if (!self->raw && !gst_pad_is_blocked (self->sink_proxypad)) {
-      GST_DEBUG_OBJECT (self, "Changing caps from non-raw to raw");
-      reconfigure = TRUE;
-      gst_pad_set_blocked_async_full (self->sink_proxypad, TRUE,
-          (GstPadBlockCallback) pad_blocked_cb, gst_object_ref (self),
-          (GDestroyNotify) gst_object_unref);
+    if (!gst_pad_is_blocked (self->sink_proxypad)) {
+      GstPad *target = gst_ghost_pad_get_target (GST_GHOST_PAD (self->sinkpad));
+
+      if (!self->raw || (target && !gst_pad_accept_caps (target, caps))) {
+        if (!self->raw)
+          GST_DEBUG_OBJECT (self, "Changing caps from non-raw to raw");
+        else
+          GST_DEBUG_OBJECT (self, "Changing caps in an incompatible way");
+
+        reconfigure = TRUE;
+        gst_pad_set_blocked_async_full (self->sink_proxypad, TRUE,
+            (GstPadBlockCallback) pad_blocked_cb, gst_object_ref (self),
+            (GDestroyNotify) gst_object_unref);
+      }
+
+      if (target)
+        gst_object_unref (target);
     }
   } else {
     if (self->raw && !gst_pad_is_blocked (self->sink_proxypad)) {
