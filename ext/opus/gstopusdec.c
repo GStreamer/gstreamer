@@ -45,6 +45,7 @@
 #include <string.h>
 #include <gst/tag/tag.h>
 #include "gstopusheader.h"
+#include "gstopuscommon.h"
 #include "gstopusdec.h"
 
 GST_DEBUG_CATEGORY_STATIC (opusdec_debug);
@@ -56,7 +57,7 @@ GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("audio/x-raw-int, "
         "rate = (int) { 48000, 24000, 16000, 12000, 8000 }, "
-        "channels = (int) [ 1, 2 ], "
+        "channels = (int) [ 1, 8 ], "
         "endianness = (int) BYTE_ORDER, "
         "signed = (boolean) true, " "width = (int) 16, " "depth = (int) 16")
     );
@@ -217,26 +218,91 @@ gst_opus_dec_get_r128_volume (gint16 r128_gain)
 static GstFlowReturn
 gst_opus_dec_parse_header (GstOpusDec * dec, GstBuffer * buf)
 {
-  g_return_val_if_fail (gst_opus_header_is_header (buf, "OpusHead", 8),
-      GST_FLOW_ERROR);
-  g_return_val_if_fail (GST_BUFFER_SIZE (buf) >= 19, GST_FLOW_ERROR);
+  const guint8 *data = GST_BUFFER_DATA (buf);
+  GstCaps *caps;
+  GstStructure *s;
+  const GstAudioChannelPosition *pos = NULL;
 
-  dec->pre_skip = GST_READ_UINT16_LE (GST_BUFFER_DATA (buf) + 10);
-  dec->r128_gain = GST_READ_UINT16_LE (GST_BUFFER_DATA (buf) + 14);
+  g_return_val_if_fail (gst_opus_header_is_id_header (buf), GST_FLOW_ERROR);
+  g_return_val_if_fail (dec->n_channels != data[9], GST_FLOW_ERROR);
+
+  dec->n_channels = data[9];
+  dec->pre_skip = GST_READ_UINT16_LE (data + 10);
+  dec->r128_gain = GST_READ_UINT16_LE (data + 14);
   dec->r128_gain_volume = gst_opus_dec_get_r128_volume (dec->r128_gain);
   GST_INFO_OBJECT (dec,
       "Found pre-skip of %u samples, R128 gain %d (volume %f)",
       dec->pre_skip, dec->r128_gain, dec->r128_gain_volume);
 
-  dec->channel_mapping_family = GST_BUFFER_DATA (buf)[18];
-  if (dec->channel_mapping_family != 0) {
-    GST_ELEMENT_ERROR (dec, STREAM, DECODE,
-        ("Decoding error: unsupported channel nmapping family %d",
-            dec->channel_mapping_family), (NULL));
-    return GST_FLOW_ERROR;
+  dec->channel_mapping_family = data[18];
+  if (dec->channel_mapping_family == 0) {
+    /* implicit mapping */
+    GST_INFO_OBJECT (dec, "Channel mapping family 0, implicit mapping");
+    dec->n_streams = dec->n_stereo_streams = 1;
+    dec->channel_mapping[0] = 0;
+    dec->channel_mapping[1] = 1;
+  } else {
+    dec->n_streams = data[19];
+    dec->n_stereo_streams = data[20];
+    memcpy (dec->channel_mapping, data + 21, dec->n_channels);
+
+    if (dec->channel_mapping_family == 1) {
+      GST_INFO_OBJECT (dec, "Channel mapping family 1, Vorbis mapping");
+      switch (dec->n_channels) {
+        case 1:
+        case 2:
+          /* nothing */
+          break;
+        case 3:
+        case 4:
+        case 5:
+        case 6:
+        case 7:
+        case 8:
+          pos = gst_opus_channel_positions[dec->n_channels - 1];
+          break;
+        default:{
+          gint i;
+          GstAudioChannelPosition *posn =
+              g_new (GstAudioChannelPosition, dec->n_channels);
+
+          GST_ELEMENT_WARNING (GST_ELEMENT (dec), STREAM, DECODE,
+              (NULL), ("Using NONE channel layout for more than 8 channels"));
+
+          for (i = 0; i < dec->n_channels; i++)
+            posn[i] = GST_AUDIO_CHANNEL_POSITION_NONE;
+
+          pos = posn;
+        }
+      }
+    } else {
+      GST_INFO_OBJECT (dec, "Channel mapping family %d",
+          dec->channel_mapping_family);
+    }
   }
-  dec->channel_mapping[0] = 0;
-  dec->channel_mapping[1] = 1;
+
+  /* negotiate width with downstream */
+  caps = gst_pad_get_allowed_caps (GST_AUDIO_DECODER_SRC_PAD (dec));
+  s = gst_caps_get_structure (caps, 0);
+  gst_structure_fixate_field_nearest_int (s, "rate", 48000);
+  gst_structure_get_int (s, "rate", &dec->sample_rate);
+  gst_structure_fixate_field_nearest_int (s, "channels", dec->n_channels);
+  gst_structure_get_int (s, "channels", &dec->n_channels);
+
+  GST_INFO_OBJECT (dec, "Negotiated %d channels, %d Hz", dec->n_channels,
+      dec->sample_rate);
+
+  if (pos) {
+    gst_audio_set_channel_positions (gst_caps_get_structure (caps, 0), pos);
+  }
+
+  if (dec->n_channels > 8) {
+    g_free ((GstAudioChannelPosition *) pos);
+  }
+
+  GST_INFO_OBJECT (dec, "Setting src caps to %" GST_PTR_FORMAT, caps);
+  gst_pad_set_caps (GST_AUDIO_DECODER_SRC_PAD (dec), caps);
+  gst_caps_unref (caps);
 
   return GST_FLOW_OK;
 }
@@ -246,48 +312,6 @@ static GstFlowReturn
 gst_opus_dec_parse_comments (GstOpusDec * dec, GstBuffer * buf)
 {
   return GST_FLOW_OK;
-}
-
-static void
-gst_opus_dec_setup_from_peer_caps (GstOpusDec * dec)
-{
-  GstPad *srcpad, *peer;
-  GstStructure *s;
-  GstCaps *caps;
-  const GstCaps *template_caps;
-  const GstCaps *peer_caps;
-
-  srcpad = GST_AUDIO_DECODER_SRC_PAD (dec);
-  peer = gst_pad_get_peer (srcpad);
-
-  if (peer) {
-    template_caps = gst_pad_get_pad_template_caps (srcpad);
-    peer_caps = gst_pad_get_caps (peer);
-    GST_DEBUG_OBJECT (dec, "Peer caps: %" GST_PTR_FORMAT, peer_caps);
-    caps = gst_caps_intersect (template_caps, peer_caps);
-    gst_pad_fixate_caps (peer, caps);
-    GST_DEBUG_OBJECT (dec, "Fixated caps: %" GST_PTR_FORMAT, caps);
-
-    s = gst_caps_get_structure (caps, 0);
-    if (!gst_structure_get_int (s, "channels", &dec->n_channels)) {
-      dec->n_channels = 2;
-      GST_WARNING_OBJECT (dec, "Failed to get channels, using default %d",
-          dec->n_channels);
-    } else {
-      GST_DEBUG_OBJECT (dec, "Got channels %d", dec->n_channels);
-    }
-    if (!gst_structure_get_int (s, "rate", &dec->sample_rate)) {
-      dec->sample_rate = 48000;
-      GST_WARNING_OBJECT (dec, "Failed to get rate, using default %d",
-          dec->sample_rate);
-    } else {
-      GST_DEBUG_OBJECT (dec, "Got sample rate %d", dec->sample_rate);
-    }
-
-    gst_pad_set_caps (GST_AUDIO_DECODER_SRC_PAD (dec), caps);
-  } else {
-    GST_WARNING_OBJECT (dec, "Failed to get src pad peer");
-  }
 }
 
 static GstFlowReturn
@@ -304,12 +328,11 @@ opus_dec_chain_parse_data (GstOpusDec * dec, GstBuffer * buffer)
   GstBuffer *buf;
 
   if (dec->state == NULL) {
-    gst_opus_dec_setup_from_peer_caps (dec);
-
     GST_DEBUG_OBJECT (dec, "Creating decoder with %d channels, %d Hz",
         dec->n_channels, dec->sample_rate);
     dec->state = opus_multistream_decoder_create (dec->sample_rate,
-        dec->n_channels, 1, 1, dec->channel_mapping, &err);
+        dec->n_channels, dec->n_streams, dec->n_stereo_streams,
+        dec->channel_mapping, &err);
     if (!dec->state || err != OPUS_OK)
       goto creation_failed;
   }

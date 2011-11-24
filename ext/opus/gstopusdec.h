@@ -55,6 +55,9 @@ struct _GstOpusDec {
   int n_channels;
   guint32 pre_skip;
   gint16 r128_gain;
+
+  guint8 n_streams;
+  guint8 n_stereo_streams;
   guint8 channel_mapping_family;
   guint8 channel_mapping[256];
 
