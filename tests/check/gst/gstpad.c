@@ -20,6 +20,7 @@
  */
 
 #include <gst/check/gstcheck.h>
+#include <glib/gthread.h>
 
 GST_START_TEST (test_link)
 {
@@ -1012,6 +1013,60 @@ GST_START_TEST (test_block_async)
 
 GST_END_TEST;
 
+static GstPadProbeReturn
+block_async_cb_return_ok (GstPad * pad, GstPadProbeInfo * info,
+    gpointer user_data)
+{
+  return GST_PAD_PROBE_OK;
+}
+
+static gpointer
+push_buffer_async (GstPad * pad)
+{
+  return GINT_TO_POINTER (gst_pad_push (pad, gst_buffer_new ()));
+}
+
+static void
+test_pad_blocking_with_type (GstPadProbeType type)
+{
+  GstPad *pad;
+  GThread *thread;
+  GstFlowReturn ret;
+
+  pad = gst_pad_new ("src", GST_PAD_SRC);
+  fail_unless (pad != NULL);
+
+  gst_pad_set_active (pad, TRUE);
+  id = gst_pad_add_probe (pad, type, block_async_cb_return_ok, NULL, NULL);
+
+
+  thread = g_thread_create ((GThreadFunc) push_buffer_async, pad, TRUE, NULL);
+  g_usleep (100000);
+
+  gst_pad_push_event (pad, gst_event_new_flush_start ());
+  gst_pad_push_event (pad, gst_event_new_flush_stop (FALSE));
+
+  ret = GPOINTER_TO_INT (g_thread_join (thread));
+
+  fail_if (ret == GST_FLOW_NOT_LINKED);
+
+  gst_object_unref (pad);
+}
+
+GST_START_TEST (test_pad_blocking_with_probe_type_block)
+{
+  test_pad_blocking_with_type (GST_PAD_PROBE_TYPE_BLOCK);
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_pad_blocking_with_probe_type_blocking)
+{
+  test_pad_blocking_with_type (GST_PAD_PROBE_TYPE_BLOCKING);
+}
+
+GST_END_TEST;
+
 #if 0
 static void
 block_async_second (GstPad * pad, gboolean blocked, gpointer user_data)
@@ -1284,6 +1339,8 @@ gst_pad_suite (void)
   tcase_add_test (tc_chain, test_src_unref_unlink);
   tcase_add_test (tc_chain, test_sink_unref_unlink);
   tcase_add_test (tc_chain, test_block_async);
+  tcase_add_test (tc_chain, test_pad_blocking_with_probe_type_block);
+  tcase_add_test (tc_chain, test_pad_blocking_with_probe_type_blocking);
 #if 0
   tcase_add_test (tc_chain, test_block_async_replace_callback);
 #endif
