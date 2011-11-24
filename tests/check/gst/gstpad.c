@@ -297,6 +297,72 @@ GST_START_TEST (test_sticky_caps_unlinked)
 
 GST_END_TEST;
 
+/* Same as test_sticky_caps_unlinked except that the source pad
+ * has a template of ANY and we will attempt to push
+ * incompatible caps */
+GST_START_TEST (test_sticky_caps_unlinked_incompatible)
+{
+  GstCaps *caps, *failcaps;
+  GstPadTemplate *src_template, *sink_template;
+  GstPad *src, *sink;
+  GstEvent *event;
+
+  /* Source pad has ANY caps
+   * Sink pad has foobar caps
+   * We will push the pony express caps (which should fail)
+   */
+  caps = gst_caps_from_string ("foo/bar, dummy=(int){1, 2}");
+  src_template = gst_pad_template_new ("src", GST_PAD_SRC,
+      GST_PAD_ALWAYS, gst_caps_new_any ());
+  sink_template = gst_pad_template_new ("sink", GST_PAD_SINK,
+      GST_PAD_ALWAYS, caps);
+  gst_caps_unref (caps);
+
+  src = gst_pad_new_from_template (src_template, "src");
+  fail_if (src == NULL);
+  sink = gst_pad_new_from_template (sink_template, "sink");
+  fail_if (sink == NULL);
+  gst_pad_set_event_function (sink, sticky_event);
+  gst_pad_set_chain_function (sink, gst_check_chain_func);
+
+  gst_object_unref (src_template);
+  gst_object_unref (sink_template);
+
+  failcaps = gst_caps_from_string ("pony/express, failure=(boolean)true");
+  ASSERT_CAPS_REFCOUNT (failcaps, "caps", 1);
+
+  event = gst_event_new_caps (failcaps);
+  gst_pad_set_active (src, TRUE);
+  /* The pad isn't linked yet, and anything matches the source pad template
+   * (which is ANY) */
+  fail_unless (gst_pad_push_event (src, event) == TRUE);
+  fail_unless (event_caps == NULL);
+
+  /* Linking and activating will not forward the sticky event yet... */
+  fail_unless (GST_PAD_LINK_SUCCESSFUL (gst_pad_link (src, sink)));
+  gst_pad_set_active (sink, TRUE);
+  fail_unless (event_caps == NULL);
+
+  /* ...but the first buffer will and should FAIL since the caps 
+   * are not compatible */
+  fail_unless (gst_pad_push (src,
+          gst_buffer_new ()) == GST_FLOW_NOT_NEGOTIATED);
+  /* We shouldn't have received the caps event since it's incompatible */
+  fail_unless (event_caps == NULL);
+  /* We shouldn't have received any buffers since caps are incompatible */
+  fail_unless_equals_int (g_list_length (buffers), 0);
+
+  gst_caps_replace (&caps, NULL);
+  gst_caps_replace (&event_caps, NULL);
+
+  ASSERT_OBJECT_REFCOUNT (src, "src", 1);
+  ASSERT_OBJECT_REFCOUNT (sink, "sink", 1);
+  gst_object_unref (src);
+  gst_object_unref (sink);
+}
+
+GST_END_TEST;
+
 /* Like test_sticky_caps_unlinked, but link before caps: */
 
 GST_START_TEST (test_sticky_caps_flushing)
@@ -1205,6 +1271,7 @@ gst_pad_suite (void)
   tcase_add_test (tc_chain, test_refcount);
   tcase_add_test (tc_chain, test_get_allowed_caps);
   tcase_add_test (tc_chain, test_sticky_caps_unlinked);
+  tcase_add_test (tc_chain, test_sticky_caps_unlinked_incompatible);
   tcase_add_test (tc_chain, test_sticky_caps_flushing);
   tcase_add_test (tc_chain, test_link_unlink_threaded);
   tcase_add_test (tc_chain, test_name_is_valid);
