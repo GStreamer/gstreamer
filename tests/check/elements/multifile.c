@@ -40,19 +40,19 @@ run_pipeline (GstElement * pipeline)
   gst_element_set_state (pipeline, GST_STATE_NULL);
 }
 
+#if !GLIB_CHECK_VERSION(2,26,0)
 static gchar *
-g_mkdtemp (const gchar * template)
+g_mkdtemp (gchar * template)
 {
-  gchar *s;
   gchar *tmpdir;
 
-  s = g_strdup (template);
-  tmpdir = mkdtemp (s);
+  tmpdir = mkdtemp (template);
   if (tmpdir == NULL) {
-    g_free (s);
+    g_free (template);
   }
   return tmpdir;
 }
+#endif
 
 GST_START_TEST (test_multifilesink_key_frame)
 {
@@ -93,7 +93,6 @@ GST_START_TEST (test_multifilesink_key_frame)
 
   g_free (mfs_pattern);
   g_free (my_tmpdir);
-  g_free (template);
 }
 
 GST_END_TEST;
@@ -144,7 +143,6 @@ GST_START_TEST (test_multifilesink_max_files)
 
   g_free (mfs_pattern);
   g_free (my_tmpdir);
-  g_free (template);
 }
 
 GST_END_TEST;
@@ -202,7 +200,6 @@ GST_START_TEST (test_multifilesrc)
 
   g_free (mfs_pattern);
   g_free (my_tmpdir);
-  g_free (template);
 }
 
 GST_END_TEST;
