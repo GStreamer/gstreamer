@@ -1730,8 +1730,6 @@ single_queue_overrun_cb (GstDataQueue * dq, GstSingleQueue * sq)
             "Another queue is empty, bumping single queue %d max visible to %d",
             sq->id, sq->max_size.visible);
       }
-      GST_MULTI_QUEUE_MUTEX_UNLOCK (mq);
-      goto beach;
     }
     /* check if we reached the hard time/bytes limits */
     gst_data_queue_get_level (oq->queue, &ssize);
@@ -1765,7 +1763,6 @@ single_queue_overrun_cb (GstDataQueue * dq, GstSingleQueue * sq)
     g_signal_emit (mq, gst_multi_queue_signals[SIGNAL_OVERRUN], 0);
   }
 
-beach:
   return;
 }
 
