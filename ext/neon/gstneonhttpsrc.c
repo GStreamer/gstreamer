@@ -52,10 +52,6 @@ static GstStaticPadTemplate srctemplate = GST_STATIC_PAD_TEMPLATE ("src",
 #define DEFAULT_LOCATION             "http://"HTTP_DEFAULT_HOST":"G_STRINGIFY(HTTP_DEFAULT_PORT)
 #define DEFAULT_PROXY                ""
 #define DEFAULT_USER_AGENT           "GStreamer neonhttpsrc"
-#define DEFAULT_IRADIO_MODE          FALSE
-#define DEFAULT_IRADIO_NAME          NULL
-#define DEFAULT_IRADIO_GENRE         NULL
-#define DEFAULT_IRADIO_URL           NULL
 #define DEFAULT_AUTOMATIC_REDIRECT   TRUE
 #define DEFAULT_ACCEPT_SELF_SIGNED   FALSE
 #define DEFAULT_NEON_HTTP_DEBUG      FALSE
@@ -69,9 +65,6 @@ enum
   PROP_PROXY,
   PROP_USER_AGENT,
   PROP_COOKIES,
-  PROP_IRADIO_NAME,
-  PROP_IRADIO_GENRE,
-  PROP_IRADIO_URL,
   PROP_AUTOMATIC_REDIRECT,
   PROP_ACCEPT_SELF_SIGNED,
   PROP_CONNECT_TIMEOUT,
@@ -190,25 +183,6 @@ gst_neonhttp_src_class_init (GstNeonhttpSrcClass * klass)
       g_param_spec_boxed ("cookies", "Cookies", "HTTP request cookies",
           G_TYPE_STRV, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
-  g_object_class_install_property (gobject_class,
-      PROP_IRADIO_NAME,
-      g_param_spec_string ("iradio-name",
-          "iradio-name", "Name of the stream", NULL,
-          G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
-
-  g_object_class_install_property (gobject_class,
-      PROP_IRADIO_GENRE,
-      g_param_spec_string ("iradio-genre",
-          "iradio-genre", "Genre of the stream", NULL,
-          G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
-
-  g_object_class_install_property (gobject_class,
-      PROP_IRADIO_URL,
-      g_param_spec_string ("iradio-url",
-          "iradio-url",
-          "Homepage URL for radio stream", NULL,
-          G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
-
   g_object_class_install_property
       (gobject_class, PROP_AUTOMATIC_REDIRECT,
       g_param_spec_boolean ("automatic-redirect", "automatic-redirect",
@@ -276,9 +250,9 @@ gst_neonhttp_src_init (GstNeonhttpSrc * src, GstNeonhttpSrcClass * g_class)
   const gchar *str;
 
   src->neon_http_debug = DEFAULT_NEON_HTTP_DEBUG;
-  src->iradio_name = DEFAULT_IRADIO_NAME;
-  src->iradio_genre = DEFAULT_IRADIO_GENRE;
-  src->iradio_url = DEFAULT_IRADIO_URL;
+  src->iradio_name = NULL;
+  src->iradio_genre = NULL;
+  src->iradio_url = NULL;
   src->user_agent = g_strdup (DEFAULT_USER_AGENT);
   src->automatic_redirect = DEFAULT_AUTOMATIC_REDIRECT;
   src->accept_self_signed = DEFAULT_ACCEPT_SELF_SIGNED;
@@ -466,15 +440,6 @@ gst_neonhttp_src_get_property (GObject * object, guint prop_id,
     case PROP_COOKIES:
       g_value_set_boxed (value, neonhttpsrc->cookies);
       break;
-    case PROP_IRADIO_NAME:
-      g_value_set_string (value, neonhttpsrc->iradio_name);
-      break;
-    case PROP_IRADIO_GENRE:
-      g_value_set_string (value, neonhttpsrc->iradio_genre);
-      break;
-    case PROP_IRADIO_URL:
-      g_value_set_string (value, neonhttpsrc->iradio_url);
-      break;
     case PROP_AUTOMATIC_REDIRECT:
       g_value_set_boolean (value, neonhttpsrc->automatic_redirect);
       break;
@@ -612,6 +577,7 @@ gst_neonhttp_src_start (GstBaseSrc * bsrc)
       }
     }
 
+    /* FIXME: send tags with name, genre, url */
     str_value = ne_get_response_header (src->request, "icy-name");
     if (str_value) {
       if (src->iradio_name) {
