@@ -182,11 +182,14 @@ GST_START_TEST (test_get_allowed_caps)
 
   sink = gst_pad_new ("sink", GST_PAD_SINK);
   gst_pad_set_active (src, TRUE);
+  /* source pad is active and will accept the caps event */
   fail_unless (gst_pad_set_caps (src, caps) == TRUE);
+  /* sink pad is not active and will refuse the caps event */
   fail_if (gst_pad_set_caps (sink, caps) == TRUE);
   ASSERT_CAPS_REFCOUNT (caps, "caps", 2);
 
   gst_pad_set_active (sink, TRUE);
+  /* sink pad is now active and will accept the caps event */
   fail_unless (gst_pad_set_caps (sink, caps) == TRUE);
   ASSERT_CAPS_REFCOUNT (caps, "caps", 3);
 
@@ -239,6 +242,8 @@ sticky_event (GstPad * pad, GstObject * parent, GstEvent * event)
   return TRUE;
 }
 
+/* Tests whether caps get properly forwarded when pads
+   are initially unlinked */
 GST_START_TEST (test_sticky_caps_unlinked)
 {
   GstCaps *caps;
@@ -325,7 +330,9 @@ GST_START_TEST (test_sticky_caps_flushing)
 
   event = gst_event_new_caps (caps);
   gst_pad_set_active (src, TRUE);
+  /* The caps event gets accepted by the source pad (and stored) */
   fail_unless (gst_pad_push_event (src, event) == TRUE);
+  /* But wasn't forwarded since the sink pad is flushing (not activated) */
   fail_unless (event_caps == NULL);
 
   /* Activating will not forward the sticky event yet... */
