@@ -95,13 +95,20 @@ GST_STATIC_PAD_TEMPLATE ("src",
 
 /* class initialization */
 
-GST_BOILERPLATE (GstDiracParse, gst_dirac_parse, GstBaseParse,
-    GST_TYPE_BASE_PARSE);
+#define parent_class gst_dirac_parse_parent_class
+G_DEFINE_TYPE (GstDiracParse, gst_dirac_parse, GST_TYPE_BASE_PARSE);
 
 static void
-gst_dirac_parse_base_init (gpointer g_class)
+gst_dirac_parse_class_init (GstDiracParseClass * klass)
 {
-  GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
+  GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
+  GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
+  GstBaseParseClass *base_parse_class = GST_BASE_PARSE_CLASS (klass);
+
+  gobject_class->set_property = gst_dirac_parse_set_property;
+  gobject_class->get_property = gst_dirac_parse_get_property;
+  gobject_class->dispose = gst_dirac_parse_dispose;
+  gobject_class->finalize = gst_dirac_parse_finalize;
 
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&gst_dirac_parse_src_template));
@@ -111,18 +118,7 @@ gst_dirac_parse_base_init (gpointer g_class)
   gst_element_class_set_details_simple (element_class, "Dirac parser",
       "Codec/Parser/Video", "Parses Dirac streams",
       "David Schleef <ds@schleef.org>");
-}
 
-static void
-gst_dirac_parse_class_init (GstDiracParseClass * klass)
-{
-  GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
-  GstBaseParseClass *base_parse_class = GST_BASE_PARSE_CLASS (klass);
-
-  gobject_class->set_property = gst_dirac_parse_set_property;
-  gobject_class->get_property = gst_dirac_parse_get_property;
-  gobject_class->dispose = gst_dirac_parse_dispose;
-  gobject_class->finalize = gst_dirac_parse_finalize;
   base_parse_class->start = GST_DEBUG_FUNCPTR (gst_dirac_parse_start);
   base_parse_class->stop = GST_DEBUG_FUNCPTR (gst_dirac_parse_stop);
   base_parse_class->set_sink_caps =
@@ -140,11 +136,9 @@ gst_dirac_parse_class_init (GstDiracParseClass * klass)
 }
 
 static void
-gst_dirac_parse_init (GstDiracParse * diracparse,
-    GstDiracParseClass * diracparse_class)
+gst_dirac_parse_init (GstDiracParse * diracparse)
 {
   gst_base_parse_set_min_frame_size (GST_BASE_PARSE (diracparse), 13);
-
 }
 
 void
@@ -219,37 +213,38 @@ static gboolean
 gst_dirac_parse_check_valid_frame (GstBaseParse * parse,
     GstBaseParseFrame * frame, guint * framesize, gint * skipsize)
 {
-  GstByteReader reader = GST_BYTE_READER_INIT_FROM_BUFFER (frame->buffer);
   int off;
   guint32 next_header;
   guint8 *data;
-  int size;
+  gsize size;
   gboolean have_picture = FALSE;
   int offset;
 
-  data = GST_BUFFER_DATA (frame->buffer);
-  size = GST_BUFFER_SIZE (frame->buffer);
+  data = gst_buffer_map (frame->buffer, &size, NULL, GST_MAP_READ);
 
   if (G_UNLIKELY (size < 13))
-    return FALSE;
+    goto out;
 
   GST_DEBUG ("%d: %02x %02x %02x %02x", size, data[0], data[1], data[2],
       data[3]);
 
   if (GST_READ_UINT32_BE (data) != 0x42424344) {
+    GstByteReader reader;
+
+    gst_byte_reader_init (&reader, data, size);
     off = gst_byte_reader_masked_scan_uint32 (&reader, 0xffffffff,
-        0x42424344, 0, GST_BUFFER_SIZE (frame->buffer));
+        0x42424344, 0, size);
 
     if (off < 0) {
-      *skipsize = GST_BUFFER_SIZE (frame->buffer) - 3;
-      return FALSE;
+      *skipsize = size - 3;
+      goto out;
     }
 
     GST_LOG_OBJECT (parse, "possible sync at buffer offset %d", off);
 
     GST_DEBUG ("skipping %d", off);
     *skipsize = off;
-    return FALSE;
+    goto out;
   }
 
   /* have sync, parse chunks */
@@ -260,7 +255,7 @@ gst_dirac_parse_check_valid_frame (GstBaseParse * parse,
 
     if (offset + 13 >= size) {
       *framesize = offset + 13;
-      return FALSE;
+      goto out;
     }
 
     GST_DEBUG ("chunk type %02x", data[offset + 4]);
@@ -268,7 +263,7 @@ gst_dirac_parse_check_valid_frame (GstBaseParse * parse,
     if (GST_READ_UINT32_BE (data + offset) != 0x42424344) {
       GST_DEBUG ("bad header");
       *skipsize = 3;
-      return FALSE;
+      goto out;
     }
 
     next_header = GST_READ_UINT32_BE (data + offset + 5);
@@ -283,14 +278,20 @@ gst_dirac_parse_check_valid_frame (GstBaseParse * parse,
     offset += next_header;
     if (offset >= size) {
       *framesize = offset;
-      return FALSE;
+      goto out;
     }
   }
+
+  gst_buffer_unmap (frame->buffer, data, size);
 
   *framesize = offset;
   GST_DEBUG ("framesize %d", *framesize);
 
   return TRUE;
+
+out:
+  gst_buffer_unmap (frame->buffer, data, size);
+  return FALSE;
 }
 
 static GstFlowReturn
@@ -298,14 +299,13 @@ gst_dirac_parse_parse_frame (GstBaseParse * parse, GstBaseParseFrame * frame)
 {
   GstDiracParse *diracparse = GST_DIRAC_PARSE (parse);
   guint8 *data;
-  int size;
+  gsize size;
 
   /* Called when processing incoming buffers.  Function should parse
      a checked frame. */
   /* MUST implement */
 
-  data = GST_BUFFER_DATA (frame->buffer);
-  size = GST_BUFFER_SIZE (frame->buffer);
+  data = gst_buffer_map (frame->buffer, &size, NULL, GST_MAP_READ);
 
   //GST_ERROR("got here %d", size);
 
@@ -339,8 +339,7 @@ gst_dirac_parse_parse_frame (GstBaseParse * parse, GstBaseParseFrame * frame)
     }
   }
 
-  gst_buffer_set_caps (frame->buffer,
-      GST_PAD_CAPS (GST_BASE_PARSE_SRC_PAD (parse)));
+  gst_buffer_unmap (frame->buffer, data, size);
 
   gst_base_parse_set_min_frame_size (parse, 13);
 

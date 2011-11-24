@@ -61,8 +61,8 @@ enum
   PROP_LAST
 };
 
-GST_BOILERPLATE (GstMpegvParse, gst_mpegv_parse, GstBaseParse,
-    GST_TYPE_BASE_PARSE);
+#define parent_class gst_mpegv_parse_parent_class
+G_DEFINE_TYPE (GstMpegvParse, gst_mpegv_parse, GST_TYPE_BASE_PARSE);
 
 static gboolean gst_mpegv_parse_start (GstBaseParse * parse);
 static gboolean gst_mpegv_parse_stop (GstBaseParse * parse);
@@ -78,28 +78,6 @@ static void gst_mpegv_parse_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
 static void gst_mpegv_parse_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
-
-static void
-gst_mpegv_parse_base_init (gpointer klass)
-{
-  GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
-
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&src_template));
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&sink_template));
-
-  gst_element_class_set_details_simple (element_class,
-      "MPEG video elementary stream parser",
-      "Codec/Parser/Video",
-      "Parses and frames MPEG-1 and MPEG-2 elementary video streams",
-      "Wim Taymans <wim.taymans@ccollabora.co.uk>, "
-      "Jan Schmidt <thaytan@mad.scientist.com>, "
-      "Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>");
-
-  GST_DEBUG_CATEGORY_INIT (mpegv_parse_debug, "mpegvideoparse", 0,
-      "MPEG-1/2 video parser");
-}
 
 static void
 gst_mpegv_parse_set_property (GObject * object, guint property_id,
@@ -141,7 +119,11 @@ static void
 gst_mpegv_parse_class_init (GstMpegvParseClass * klass)
 {
   GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
+  GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
   GstBaseParseClass *parse_class = GST_BASE_PARSE_CLASS (klass);
+
+  GST_DEBUG_CATEGORY_INIT (mpegv_parse_debug, "mpegvideoparse", 0,
+      "MPEG-1/2 video parser");
 
   parent_class = g_type_class_peek_parent (klass);
 
@@ -159,6 +141,19 @@ gst_mpegv_parse_class_init (GstMpegvParseClass * klass)
           "Split frame when encountering GOP", DEFAULT_PROP_GOP_SPLIT,
           G_PARAM_CONSTRUCT | G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
+  gst_element_class_add_pad_template (element_class,
+      gst_static_pad_template_get (&src_template));
+  gst_element_class_add_pad_template (element_class,
+      gst_static_pad_template_get (&sink_template));
+
+  gst_element_class_set_details_simple (element_class,
+      "MPEG video elementary stream parser",
+      "Codec/Parser/Video",
+      "Parses and frames MPEG-1 and MPEG-2 elementary video streams",
+      "Wim Taymans <wim.taymans@ccollabora.co.uk>, "
+      "Jan Schmidt <thaytan@mad.scientist.com>, "
+      "Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>");
+
   /* Override BaseParse vfuncs */
   parse_class->start = GST_DEBUG_FUNCPTR (gst_mpegv_parse_start);
   parse_class->stop = GST_DEBUG_FUNCPTR (gst_mpegv_parse_stop);
@@ -171,7 +166,7 @@ gst_mpegv_parse_class_init (GstMpegvParseClass * klass)
 }
 
 static void
-gst_mpegv_parse_init (GstMpegvParse * parse, GstMpegvParseClass * g_class)
+gst_mpegv_parse_init (GstMpegvParse * parse)
 {
   parse->mpeg_version = 0;
 }
@@ -231,16 +226,21 @@ gst_mpegv_parse_process_config (GstMpegvParse * mpvparse, GstBuffer * buf,
     guint size)
 {
   GList *tmp;
-  guint8 *data = GST_BUFFER_DATA (buf);
-  data = data + mpvparse->seq_offset;
+  guint8 *buf_data, *data;
+  gsize buf_size;
+
+  buf_data = gst_buffer_map (buf, &buf_size, NULL, GST_MAP_READ);
+  data = buf_data + mpvparse->seq_offset;
 
   /* only do stuff if something new */
-  if (mpvparse->config && size == GST_BUFFER_SIZE (mpvparse->config) &&
-      memcmp (GST_BUFFER_DATA (mpvparse->config), data, size) == 0)
+  if (mpvparse->config && size == gst_buffer_get_size (mpvparse->config) &&
+      gst_buffer_memcmp (mpvparse->config, 0, data, size) == 0) {
+    gst_buffer_unmap (buf, buf_data, buf_size);
     return TRUE;
+  }
 
   if (gst_mpeg_video_parse_sequence_header (&mpvparse->sequencehdr, data,
-          GST_BUFFER_SIZE (buf) - mpvparse->seq_offset, 0)) {
+          buf_size - mpvparse->seq_offset, 0)) {
     if (mpvparse->fps_num == 0 || mpvparse->fps_den == 0) {
       mpvparse->fps_num = mpvparse->sequencehdr.fps_n;
       mpvparse->fps_den = mpvparse->sequencehdr.fps_d;
@@ -249,6 +249,7 @@ gst_mpegv_parse_process_config (GstMpegvParse * mpvparse, GstBuffer * buf,
     GST_DEBUG_OBJECT (mpvparse,
         "failed to parse config data (size %d) at offset %d",
         size, mpvparse->seq_offset);
+    gst_buffer_unmap (buf, buf_data, buf_size);
     return FALSE;
   }
 
@@ -266,8 +267,7 @@ gst_mpegv_parse_process_config (GstMpegvParse * mpvparse, GstBuffer * buf,
         mpvparse->mpeg_version = 2;
 
         if (gst_mpeg_video_parse_sequence_extension (&mpvparse->sequenceext,
-                GST_BUFFER_DATA (buf), GST_BUFFER_SIZE (buf),
-                tpoffsz->offset)) {
+                buf_data, buf_size, tpoffsz->offset)) {
           mpvparse->fps_num =
               mpvparse->sequencehdr.fps_n * (mpvparse->sequenceext.fps_n_ext +
               1) * 2;
@@ -284,10 +284,12 @@ gst_mpegv_parse_process_config (GstMpegvParse * mpvparse, GstBuffer * buf,
     gst_buffer_unref (mpvparse->config);
 
   mpvparse->config = gst_buffer_new_and_alloc (size);
-  memcpy (GST_BUFFER_DATA (mpvparse->config), data, size);
+  gst_buffer_fill (mpvparse->config, 0, data, size);
 
   /* trigger src caps update */
   mpvparse->update_caps = TRUE;
+
+  gst_buffer_unmap (buf, buf_data, buf_size);
 
   return TRUE;
 }
@@ -354,8 +356,12 @@ static void
 parse_picture_extension (GstMpegvParse * mpvparse, GstBuffer * buf, guint off)
 {
   GstMpegVideoPictureExt ext;
-  if (gst_mpeg_video_parse_picture_extension (&ext, GST_BUFFER_DATA (buf),
-          GST_BUFFER_SIZE (buf), off)) {
+  gpointer data;
+  gsize size;
+
+  data = gst_buffer_map (buf, &size, NULL, GST_MAP_READ);
+
+  if (gst_mpeg_video_parse_picture_extension (&ext, data, size, off)) {
     mpvparse->frame_repeat_count = 1;
 
     if (ext.repeat_first_field) {
@@ -369,6 +375,8 @@ parse_picture_extension (GstMpegvParse * mpvparse, GstBuffer * buf, guint off)
       }
     }
   }
+
+  gst_buffer_unmap (buf, data, size);
 }
 
 /* caller guarantees at least start code in @buf at @off */
@@ -380,7 +388,7 @@ gst_mpegv_parse_process_sc (GstMpegvParse * mpvparse,
 {
   gboolean ret = FALSE, packet = TRUE;
 
-  g_return_val_if_fail (buf && GST_BUFFER_SIZE (buf) >= 4, FALSE);
+  g_return_val_if_fail (buf && gst_buffer_get_size (buf) >= 4, FALSE);
 
   GST_LOG_OBJECT (mpvparse, "process startcode %x (%s)", code,
       picture_start_code_name (code));
@@ -427,14 +435,19 @@ gst_mpegv_parse_process_sc (GstMpegvParse * mpvparse,
 
   /* extract some picture info if there is any in the frame being terminated */
   if (ret && mpvparse->pic_offset >= 0 && mpvparse->pic_offset < off) {
+    gsize size;
+    gpointer data = gst_buffer_map (buf, &size, NULL, GST_MAP_READ);
+
     if (gst_mpeg_video_parse_picture_header (&mpvparse->pichdr,
-            GST_BUFFER_DATA (buf), GST_BUFFER_SIZE (buf), mpvparse->pic_offset))
+            data, size, mpvparse->pic_offset))
       GST_LOG_OBJECT (mpvparse, "picture_coding_type %d (%s), ending"
           "frame of size %d", mpvparse->pichdr.pic_type,
           picture_type_name (mpvparse->pichdr.pic_type), off - 4);
     else
       GST_LOG_OBJECT (mpvparse, "Couldn't parse picture at offset %d",
           mpvparse->pic_offset);
+
+    gst_buffer_unmap (buf, data, size);
   }
 
   return ret;
@@ -487,14 +500,17 @@ gst_mpegv_parse_check_valid_frame (GstBaseParse * parse,
   gboolean ret = FALSE;
   GList *tmp;
   gint off = 0, fsize = -1;
+  gpointer buf_data;
+  gsize buf_size;
 
   update_frame_parsing_status (mpvparse, frame);
 
   if (mpvparse->last_sc >= 0)
     off = mpvparse->last_sc;
 
-  mpvparse->typeoffsize =
-      gst_mpeg_video_parse (GST_BUFFER_DATA (buf), GST_BUFFER_SIZE (buf), off);
+  buf_data = gst_buffer_map (buf, &buf_size, NULL, GST_MAP_READ);
+  mpvparse->typeoffsize = gst_mpeg_video_parse (buf_data, buf_size, off);
+  gst_buffer_unmap (buf, buf_data, buf_size);
 
   /* No sc found */
   if (mpvparse->typeoffsize == NULL)
@@ -531,15 +547,15 @@ end:
     *framesize = fsize;
     ret = TRUE;
   } else if (GST_BASE_PARSE_DRAINING (parse)) {
-    *framesize = GST_BUFFER_SIZE (buf);
+    *framesize = buf_size;
     ret = TRUE;
 
   } else {
     /* resume scan where we left it */
     if (!mpvparse->last_sc)
-      *skipsize = mpvparse->last_sc = GST_BUFFER_SIZE (buf) - 3;
+      *skipsize = mpvparse->last_sc = buf_size - 3;
     else if (mpvparse->typeoffsize)
-      mpvparse->last_sc = GST_BUFFER_SIZE (buf) - 3;
+      mpvparse->last_sc = buf_size - 3;
     else
       *skipsize = 0;
 
@@ -561,16 +577,16 @@ gst_mpegv_parse_update_src_caps (GstMpegvParse * mpvparse)
   GstCaps *caps = NULL;
 
   /* only update if no src caps yet or explicitly triggered */
-  if (G_LIKELY (GST_PAD_CAPS (GST_BASE_PARSE_SRC_PAD (mpvparse)) &&
+  if (G_LIKELY (gst_pad_has_current_caps (GST_BASE_PARSE_SRC_PAD (mpvparse)) &&
           !mpvparse->update_caps))
     return;
 
   /* carry over input caps as much as possible; override with our own stuff */
-  caps = GST_PAD_CAPS (GST_BASE_PARSE_SINK_PAD (mpvparse));
+  caps = gst_pad_get_current_caps (GST_BASE_PARSE_SINK_PAD (mpvparse));
   if (caps) {
-    caps = gst_caps_copy (caps);
+    caps = gst_caps_make_writable (caps);
   } else {
-    caps = gst_caps_new_simple ("video/mpeg", NULL);
+    caps = gst_caps_new_empty_simple ("video/mpeg");
   }
 
   /* typically we don't output buffers until we have properly parsed some
@@ -722,13 +738,11 @@ gst_mpegv_parse_pre_push_frame (GstBaseParse * parse, GstBaseParseFrame * frame)
 
     /* codec tag */
     codec = g_strdup_printf ("MPEG %d Video", mpvparse->mpeg_version);
-    taglist = gst_tag_list_new ();
-    gst_tag_list_add (taglist, GST_TAG_MERGE_REPLACE,
-        GST_TAG_VIDEO_CODEC, codec, NULL);
+    taglist = gst_tag_list_new (GST_TAG_VIDEO_CODEC, codec, NULL);
     g_free (codec);
 
-    gst_element_found_tags_for_pad (GST_ELEMENT (mpvparse),
-        GST_BASE_PARSE_SRC_PAD (mpvparse), taglist);
+    gst_pad_push_event (GST_BASE_PARSE_SRC_PAD (mpvparse),
+        gst_event_new_tag (taglist));
 
     mpvparse->send_codec_tag = FALSE;
   }
@@ -756,7 +770,7 @@ gst_mpegv_parse_set_caps (GstBaseParse * parse, GstCaps * caps)
     /* best possible parse attempt,
      * src caps are based on sink caps so it will end up in there
      * whether sucessful or not */
-    gst_mpegv_parse_process_config (mpvparse, buf, GST_BUFFER_SIZE (buf));
+    gst_mpegv_parse_process_config (mpvparse, buf, gst_buffer_get_size (buf));
   }
 
   /* let's not interfere and accept regardless of config parsing success */

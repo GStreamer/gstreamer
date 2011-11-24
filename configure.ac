@@ -302,7 +302,7 @@ GST_PLUGINS_NONPORTED=" adpcmdec adpcmenc aiff asfmux \
  mpegpsmux mpegvideoparse mve mxf mythtv nsf nuvdemux \
  patchdetect pcapparse pnm rawparse real removesilence rtpmux rtpvp8 scaletempo \
  sdi segmentclip siren speed subenc stereo tta videofilters \
- videomaxrate videomeasure videoparsers videosignal vmnc \
+ videomaxrate videomeasure videosignal vmnc \
  decklink fbdev linsys shm vcd \
  voaacenc apexsink bz2 camerabin2 cdaudio celt cog curl dc1394 dirac directfb dts resindvd \
  gsettings gsm jp2k ladspa modplug mpeg2enc mplex mimic \

@@ -48,7 +48,7 @@ GST_STATIC_PAD_TEMPLATE ("sink", GST_PAD_SINK,
     GST_STATIC_CAPS ("video/x-h263, variant = (string) itu")
     );
 
-GST_BOILERPLATE (GstH263Parse, gst_h263_parse, GstElement, GST_TYPE_BASE_PARSE);
+G_DEFINE_TYPE (GstH263Parse, gst_h263_parse, GST_TYPE_BASE_PARSE);
 
 static gboolean gst_h263_parse_start (GstBaseParse * parse);
 static gboolean gst_h263_parse_stop (GstBaseParse * parse);
@@ -60,9 +60,12 @@ static GstFlowReturn gst_h263_parse_parse_frame (GstBaseParse * parse,
     GstBaseParseFrame * frame);
 
 static void
-gst_h263_parse_base_init (gpointer g_class)
+gst_h263_parse_class_init (GstH263ParseClass * klass)
 {
-  GstElementClass *gstelement_class = GST_ELEMENT_CLASS (g_class);
+  GstElementClass *gstelement_class = GST_ELEMENT_CLASS (klass);
+  GstBaseParseClass *parse_class = GST_BASE_PARSE_CLASS (klass);
+
+  GST_DEBUG_CATEGORY_INIT (h263_parse_debug, "h263parse", 0, "h263 parser");
 
   gst_element_class_add_pad_template (gstelement_class,
       gst_static_pad_template_get (&srctemplate));
@@ -74,14 +77,6 @@ gst_h263_parse_base_init (gpointer g_class)
       "Arun Raghavan <arun.raghavan@collabora.co.uk>,"
       "Edward Hervey <edward.hervey@collabora.co.uk>");
 
-  GST_DEBUG_CATEGORY_INIT (h263_parse_debug, "h263parse", 0, "h263 parser");
-}
-
-static void
-gst_h263_parse_class_init (GstH263ParseClass * klass)
-{
-  GstBaseParseClass *parse_class = GST_BASE_PARSE_CLASS (klass);
-
   /* Override BaseParse vfuncs */
   parse_class->start = GST_DEBUG_FUNCPTR (gst_h263_parse_start);
   parse_class->stop = GST_DEBUG_FUNCPTR (gst_h263_parse_stop);
@@ -92,7 +87,7 @@ gst_h263_parse_class_init (GstH263ParseClass * klass)
 }
 
 static void
-gst_h263_parse_init (GstH263Parse * h263parse, GstH263ParseClass * g_class)
+gst_h263_parse_init (GstH263Parse * h263parse)
 {
 }
 
@@ -153,10 +148,13 @@ gst_h263_parse_sink_event (GstBaseParse * parse, GstEvent * event)
 static guint
 find_psc (GstBuffer * buffer, guint skip)
 {
+  guint8 *buf_data;
+  gsize buf_size;
   GstByteReader br;
   guint psc_pos = -1, psc;
 
-  gst_byte_reader_init_from_buffer (&br, buffer);
+  buf_data = gst_buffer_map (buffer, &buf_size, NULL, GST_MAP_READ);
+  gst_byte_reader_init (&br, buf_data, buf_size);
 
   if (!gst_byte_reader_set_pos (&br, skip))
     goto out;
@@ -174,6 +172,7 @@ find_psc (GstBuffer * buffer, guint skip)
   }
 
 out:
+  gst_buffer_unmap (buffer, buf_data, buf_size);
   return psc_pos;
 }
 
@@ -187,16 +186,16 @@ gst_h263_parse_set_src_caps (GstH263Parse * h263parse,
 
   g_assert (h263parse->state == PASSTHROUGH || h263parse->state == GOT_HEADER);
 
-  caps = GST_PAD_CAPS (GST_BASE_PARSE_SINK_PAD (h263parse));
+  caps = gst_pad_get_current_caps (GST_BASE_PARSE_SINK_PAD (h263parse));
   if (caps) {
-    caps = gst_caps_copy (caps);
+    caps = gst_caps_make_writable (caps);
   } else {
     caps = gst_caps_new_simple ("video/x-h263",
         "variant", G_TYPE_STRING, "itu", NULL);
   }
   gst_caps_set_simple (caps, "parsed", G_TYPE_BOOLEAN, TRUE, NULL);
 
-  sink_caps = GST_PAD_CAPS (GST_BASE_PARSE_SINK_PAD (h263parse));
+  sink_caps = gst_pad_get_current_caps (GST_BASE_PARSE_SINK_PAD (h263parse));
   if (sink_caps && (st = gst_caps_get_structure (sink_caps, 0)) &&
       gst_structure_get_fraction (st, "framerate", &fr_num, &fr_denom)) {
     /* Got it in caps - nothing more to do */
@@ -253,19 +252,21 @@ gst_h263_parse_check_valid_frame (GstBaseParse * parse,
   GstH263Parse *h263parse;
   GstBuffer *buffer;
   guint psc_pos, next_psc_pos;
+  gsize size;
 
   h263parse = GST_H263_PARSE (parse);
   buffer = frame->buffer;
+  size = gst_buffer_get_size (buffer);
 
-  if (GST_BUFFER_SIZE (buffer) < 3)
+  if (size < 3)
     return FALSE;
 
   psc_pos = find_psc (buffer, 0);
 
   if (psc_pos == -1) {
     /* PSC not found, need more data */
-    if (GST_BUFFER_SIZE (buffer) > 3)
-      psc_pos = GST_BUFFER_SIZE (buffer) - 3;
+    if (size > 3)
+      psc_pos = size - 3;
     else
       psc_pos = 0;
     goto more;
@@ -278,7 +279,7 @@ gst_h263_parse_check_valid_frame (GstBaseParse * parse,
   if (next_psc_pos == -1) {
     if (GST_BASE_PARSE_DRAINING (parse))
       /* FLUSH/EOS, it's okay if we can't find the next frame */
-      next_psc_pos = GST_BUFFER_SIZE (buffer);
+      next_psc_pos = size;
     else
       goto more;
   }
@@ -346,9 +347,6 @@ gst_h263_parse_parse_frame (GstBaseParse * parse, GstBaseParseFrame * frame)
   }
 
   /* h263parse->state is now GOT_HEADER */
-
-  gst_buffer_set_caps (buffer,
-      GST_PAD_CAPS (GST_BASE_PARSE_SRC_PAD (GST_BASE_PARSE (h263parse))));
 
   if (gst_h263_parse_is_delta_unit (&params))
     GST_BUFFER_FLAG_UNSET (buffer, GST_BUFFER_FLAG_DELTA_UNIT);
