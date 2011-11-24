@@ -50,7 +50,7 @@ setup_audiotestsrc (void)
 
   GST_DEBUG ("setup_audiotestsrc");
   audiotestsrc = gst_check_setup_element ("audiotestsrc");
-  mysinkpad = gst_check_setup_sink_pad (audiotestsrc, &sinktemplate, NULL);
+  mysinkpad = gst_check_setup_sink_pad (audiotestsrc, &sinktemplate);
   gst_pad_set_active (mysinkpad, TRUE);
 
   return audiotestsrc;

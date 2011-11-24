@@ -96,8 +96,8 @@ setup_vorbistag (void)
 
   GST_DEBUG ("setup_vorbistag");
   vorbistag = gst_check_setup_element ("vorbistag");
-  mysrcpad = gst_check_setup_src_pad (vorbistag, &srctemplate, NULL);
-  mysinkpad = gst_check_setup_sink_pad (vorbistag, &sinktemplate, NULL);
+  mysrcpad = gst_check_setup_src_pad (vorbistag, &srctemplate);
+  mysinkpad = gst_check_setup_sink_pad (vorbistag, &sinktemplate);
   gst_pad_set_active (mysrcpad, TRUE);
   gst_pad_set_active (mysinkpad, TRUE);
 

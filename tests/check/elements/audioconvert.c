@@ -64,8 +64,8 @@ setup_audioconvert (GstCaps * outcaps)
   audioconvert = gst_check_setup_element ("audioconvert");
   g_object_set (G_OBJECT (audioconvert), "dithering", 0, NULL);
   g_object_set (G_OBJECT (audioconvert), "noise-shaping", 0, NULL);
-  mysrcpad = gst_check_setup_src_pad (audioconvert, &srctemplate, NULL);
-  mysinkpad = gst_check_setup_sink_pad (audioconvert, &sinktemplate, NULL);
+  mysrcpad = gst_check_setup_src_pad (audioconvert, &srctemplate);
+  mysinkpad = gst_check_setup_sink_pad (audioconvert, &sinktemplate);
   /* this installs a getcaps func that will always return the caps we set
    * later */
   gst_pad_use_fixed_caps (mysinkpad);
