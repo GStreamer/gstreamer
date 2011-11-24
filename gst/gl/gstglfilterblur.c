@@ -54,7 +54,7 @@ static void gst_gl_filterblur_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 static void gst_gl_filter_filterblur_reset (GstGLFilter * filter);
 
-static void gst_gl_filterblur_init_shader (GstGLFilter * filter);
+static gboolean gst_gl_filterblur_init_shader (GstGLFilter * filter);
 static gboolean gst_gl_filterblur_filter (GstGLFilter * filter,
     GstGLBuffer * inbuf, GstGLBuffer * outbuf);
 static void gst_gl_filterblur_hcallback (gint width, gint height, guint texture,
@@ -167,18 +167,20 @@ gst_gl_filterblur_get_property (GObject * object, guint prop_id,
   }
 }
 
-static void
+static gboolean
 gst_gl_filterblur_init_shader (GstGLFilter * filter)
 {
   GstGLFilterBlur *blur_filter = GST_GL_FILTERBLUR (filter);
 
   //blocking call, wait the opengl thread has compiled the shader
-  gst_gl_display_gen_shader (filter->display, 0, hconv7_fragment_source,
-      &blur_filter->shader0);
+  if (!gst_gl_display_gen_shader (filter->display, 0, hconv7_fragment_source,
+          &blur_filter->shader0));
+  return FALSE;
 
   //blocking call, wait the opengl thread has compiled the shader
-  gst_gl_display_gen_shader (filter->display, 0, vconv7_fragment_source,
-      &blur_filter->shader1);
+  if (!gst_gl_display_gen_shader (filter->display, 0, vconv7_fragment_source,
+          &blur_filter->shader1));
+  return FALSE;
 }
 
 static gboolean

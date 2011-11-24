@@ -58,7 +58,7 @@ static void gst_gl_filter_laplacian_get_property (GObject * object,
     guint prop_id, GValue * value, GParamSpec * pspec);
 
 static void gst_gl_filter_laplacian_reset (GstGLFilter * filter);
-static void gst_gl_filter_laplacian_init_shader (GstGLFilter * filter);
+static gboolean gst_gl_filter_laplacian_init_shader (GstGLFilter * filter);
 static gboolean gst_gl_filter_laplacian_filter (GstGLFilter * filter,
     GstGLBuffer * inbuf, GstGLBuffer * outbuf);
 static void gst_gl_filter_laplacian_callback (gint width, gint height,
@@ -163,14 +163,14 @@ gst_gl_filter_laplacian_get_property (GObject * object, guint prop_id,
   }
 }
 
-static void
+static gboolean
 gst_gl_filter_laplacian_init_shader (GstGLFilter * filter)
 {
   GstGLFilterLaplacian *laplacian_filter = GST_GL_FILTER_LAPLACIAN (filter);
 
   //blocking call, wait the opengl thread has compiled the shader
-  gst_gl_display_gen_shader (filter->display, 0, convolution_fragment_source,
-      &laplacian_filter->shader);
+  return gst_gl_display_gen_shader (filter->display, 0,
+      convolution_fragment_source, &laplacian_filter->shader);
 }
 
 static gboolean

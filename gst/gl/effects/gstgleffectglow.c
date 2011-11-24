@@ -38,8 +38,14 @@ gst_gl_effects_glow_step_one (gint width, gint height, guint texture,
     g_hash_table_insert (effects->shaderstable, "glow0", shader);
   }
 
-  g_return_if_fail (gst_gl_shader_compile_and_check (shader,
-          luma_threshold_fragment_source, GST_GL_SHADER_FRAGMENT_SOURCE));
+  if (!gst_gl_shader_compile_and_check (shader,
+          luma_threshold_fragment_source, GST_GL_SHADER_FRAGMENT_SOURCE)) {
+    gst_gl_display_set_error (GST_GL_FILTER (effects)->display,
+        "Failed to initialize luma threshold shader");
+    GST_ELEMENT_ERROR (effects, RESOURCE, NOT_FOUND,
+        (GST_GL_DISPLAY_ERR_MSG (GST_GL_FILTER (effects)->display)), (NULL));
+    return;
+  }
 
   glMatrixMode (GL_PROJECTION);
   glLoadIdentity ();
@@ -74,8 +80,14 @@ gst_gl_effects_glow_step_two (gint width, gint height, guint texture,
     kernel_ready = TRUE;
   }
 
-  g_return_if_fail (gst_gl_shader_compile_and_check (shader,
-          hconv7_fragment_source, GST_GL_SHADER_FRAGMENT_SOURCE));
+  if (!gst_gl_shader_compile_and_check (shader,
+          hconv7_fragment_source, GST_GL_SHADER_FRAGMENT_SOURCE)) {
+    gst_gl_display_set_error (GST_GL_FILTER (effects)->display,
+        "Failed to initialize hconv7 shader");
+    GST_ELEMENT_ERROR (effects, RESOURCE, NOT_FOUND,
+        (GST_GL_DISPLAY_ERR_MSG (GST_GL_FILTER (effects)->display)), (NULL));
+    return;
+  }
 
   glMatrixMode (GL_PROJECTION);
   glLoadIdentity ();
@@ -107,8 +119,14 @@ gst_gl_effects_glow_step_three (gint width, gint height, guint texture,
     g_hash_table_insert (effects->shaderstable, "glow2", shader);
   }
 
-  g_return_if_fail (gst_gl_shader_compile_and_check (shader,
-          vconv7_fragment_source, GST_GL_SHADER_FRAGMENT_SOURCE));
+  if (!gst_gl_shader_compile_and_check (shader,
+          vconv7_fragment_source, GST_GL_SHADER_FRAGMENT_SOURCE)) {
+    gst_gl_display_set_error (GST_GL_FILTER (effects)->display,
+        "Failed to initialize vcon7 shader");
+    GST_ELEMENT_ERROR (effects, RESOURCE, NOT_FOUND,
+        (GST_GL_DISPLAY_ERR_MSG (GST_GL_FILTER (effects)->display)), (NULL));
+    return;
+  }
 
   glMatrixMode (GL_PROJECTION);
   glLoadIdentity ();
@@ -140,8 +158,14 @@ gst_gl_effects_glow_step_four (gint width, gint height, guint texture,
     g_hash_table_insert (effects->shaderstable, "glow3", shader);
   }
 
-  g_return_if_fail (gst_gl_shader_compile_and_check (shader,
-          sum_fragment_source, GST_GL_SHADER_FRAGMENT_SOURCE));
+  if (!gst_gl_shader_compile_and_check (shader,
+          sum_fragment_source, GST_GL_SHADER_FRAGMENT_SOURCE)) {
+    gst_gl_display_set_error (GST_GL_FILTER (effects)->display,
+        "Failed to initialize sum shader");
+    GST_ELEMENT_ERROR (effects, RESOURCE, NOT_FOUND,
+        (GST_GL_DISPLAY_ERR_MSG (GST_GL_FILTER (effects)->display)), (NULL));
+    return;
+  }
 
   glMatrixMode (GL_PROJECTION);
   glLoadIdentity ();

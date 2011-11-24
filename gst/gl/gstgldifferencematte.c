@@ -98,16 +98,45 @@ gst_gl_differencematte_init_gl_resources (GstGLFilter * filter)
     differencematte->shader[i] = gst_gl_shader_new ();
   }
 
-  g_return_if_fail (gst_gl_shader_compile_and_check (differencematte->shader[0],
-          difference_fragment_source, GST_GL_SHADER_FRAGMENT_SOURCE));
-  g_return_if_fail (gst_gl_shader_compile_and_check (differencematte->shader[1],
-          hconv7_fragment_source, GST_GL_SHADER_FRAGMENT_SOURCE));
+  if (!gst_gl_shader_compile_and_check (differencematte->shader[0],
+          difference_fragment_source, GST_GL_SHADER_FRAGMENT_SOURCE)) {
+    gst_gl_display_set_error (GST_GL_FILTER (differencematte)->display,
+        "Failed to initialize difference shader");
+    GST_ELEMENT_ERROR (differencematte, RESOURCE, NOT_FOUND,
+        (GST_GL_DISPLAY_ERR_MSG (GST_GL_FILTER (differencematte)->display)),
+        (NULL));
+    return;
+  }
 
-  g_return_if_fail (gst_gl_shader_compile_and_check (differencematte->shader[2],
-          vconv7_fragment_source, GST_GL_SHADER_FRAGMENT_SOURCE));
+  if (!gst_gl_shader_compile_and_check (differencematte->shader[1],
+          hconv7_fragment_source, GST_GL_SHADER_FRAGMENT_SOURCE)) {
+    gst_gl_display_set_error (GST_GL_FILTER (differencematte)->display,
+        "Failed to initialize hconv7 shader");
+    GST_ELEMENT_ERROR (differencematte, RESOURCE, NOT_FOUND,
+        (GST_GL_DISPLAY_ERR_MSG (GST_GL_FILTER (differencematte)->display)),
+        (NULL));
+    return;
+  }
 
-  g_return_if_fail (gst_gl_shader_compile_and_check (differencematte->shader[3],
-          texture_interp_fragment_source, GST_GL_SHADER_FRAGMENT_SOURCE));
+  if (!gst_gl_shader_compile_and_check (differencematte->shader[2],
+          vconv7_fragment_source, GST_GL_SHADER_FRAGMENT_SOURCE)) {
+    gst_gl_display_set_error (GST_GL_FILTER (differencematte)->display,
+        "Failed to initialize vconv7 shader");
+    GST_ELEMENT_ERROR (differencematte, RESOURCE, NOT_FOUND,
+        (GST_GL_DISPLAY_ERR_MSG (GST_GL_FILTER (differencematte)->display)),
+        (NULL));
+    return;
+  }
+
+  if (!gst_gl_shader_compile_and_check (differencematte->shader[3],
+          texture_interp_fragment_source, GST_GL_SHADER_FRAGMENT_SOURCE)) {
+    gst_gl_display_set_error (GST_GL_FILTER (differencematte)->display,
+        "Failed to initialize interp shader");
+    GST_ELEMENT_ERROR (differencematte, RESOURCE, NOT_FOUND,
+        (GST_GL_DISPLAY_ERR_MSG (GST_GL_FILTER (differencematte)->display)),
+        (NULL));
+    return;
+  }
 }
 
 /* free resources that need a gl context */

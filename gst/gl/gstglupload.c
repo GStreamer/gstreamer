@@ -298,8 +298,12 @@ gst_gl_upload_start (GstBaseTransform * bt)
     else {
       /* this gl filter is a sink in terms of the gl chain */
       upload->display = gst_gl_display_new ();
-      gst_gl_display_create_context (upload->display,
+      isPerformed = gst_gl_display_create_context (upload->display,
           upload->external_gl_context);
+
+      if (!isPerformed)
+        GST_ELEMENT_ERROR (upload, RESOURCE, NOT_FOUND,
+            (GST_GL_DISPLAY_ERR_MSG (upload->display)), (NULL));
     }
   }
 
@@ -499,9 +503,13 @@ gst_gl_upload_set_caps (GstBaseTransform * bt, GstCaps * incaps,
     return FALSE;
   }
   //init colorspace conversion if needed
-  gst_gl_display_init_upload (upload->display, upload->video_format,
+  ret = gst_gl_display_init_upload (upload->display, upload->video_format,
       upload->gl_width, upload->gl_height,
       upload->video_width, upload->video_height);
+
+  if (!ret)
+    GST_ELEMENT_ERROR (upload, RESOURCE, NOT_FOUND,
+        (GST_GL_DISPLAY_ERR_MSG (upload->display)), (NULL));
 
   return ret;
 }

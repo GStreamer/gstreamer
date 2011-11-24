@@ -63,7 +63,7 @@ static void gst_gl_filter_glass_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 
 static void gst_gl_filter_glass_reset (GstGLFilter * filter);
-static void gst_gl_filter_glass_init_shader (GstGLFilter * filter);
+static gboolean gst_gl_filter_glass_init_shader (GstGLFilter * filter);
 static gboolean gst_gl_filter_glass_filter (GstGLFilter * filter,
     GstGLBuffer * inbuf, GstGLBuffer * outbuf);
 
@@ -166,13 +166,13 @@ gst_gl_filter_glass_get_property (GObject * object, guint prop_id,
   }
 }
 
-static void
+static gboolean
 gst_gl_filter_glass_init_shader (GstGLFilter * filter)
 {
   GstGLFilterGlass *glass_filter = GST_GL_FILTER_GLASS (filter);
 
   //blocking call, wait the opengl thread has compiled the shader
-  gst_gl_display_gen_shader (filter->display, 0, glass_fragment_source,
+  return gst_gl_display_gen_shader (filter->display, 0, glass_fragment_source,
       &glass_filter->shader);
 }
 

@@ -60,7 +60,7 @@ static void gst_gl_filtersobel_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 static void gst_gl_filter_filtersobel_reset (GstGLFilter * filter);
 
-static void gst_gl_filtersobel_init_shader (GstGLFilter * filter);
+static gboolean gst_gl_filtersobel_init_shader (GstGLFilter * filter);
 static gboolean gst_gl_filtersobel_filter (GstGLFilter * filter,
     GstGLBuffer * inbuf, GstGLBuffer * outbuf);
 
@@ -192,20 +192,27 @@ gst_gl_filtersobel_get_property (GObject * object, guint prop_id,
   }
 }
 
-static void
+static gboolean
 gst_gl_filtersobel_init_shader (GstGLFilter * filter)
 {
   GstGLFilterSobel *filtersobel = GST_GL_FILTERSOBEL (filter);
+  gboolean ret = TRUE;
 
   //blocking call, wait the opengl thread has compiled the shader
-  gst_gl_display_gen_shader (filter->display, 0, desaturate_fragment_source,
+  ret =
+      gst_gl_display_gen_shader (filter->display, 0, desaturate_fragment_source,
       &filtersobel->desat);
-  gst_gl_display_gen_shader (filter->display, 0,
+  ret &=
+      gst_gl_display_gen_shader (filter->display, 0,
       sep_sobel_hconv3_fragment_source, &filtersobel->hconv);
-  gst_gl_display_gen_shader (filter->display, 0,
+  ret &=
+      gst_gl_display_gen_shader (filter->display, 0,
       sep_sobel_vconv3_fragment_source, &filtersobel->vconv);
-  gst_gl_display_gen_shader (filter->display, 0,
+  ret &=
+      gst_gl_display_gen_shader (filter->display, 0,
       sep_sobel_length_fragment_source, &filtersobel->len);
+
+  return ret;
 }
 
 static gboolean

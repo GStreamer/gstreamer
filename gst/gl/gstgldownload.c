@@ -255,7 +255,11 @@ gst_gl_download_start (GstBaseTransform * bt)
   GstGLDownload *download = GST_GL_DOWNLOAD (bt);
 
   download->display = gst_gl_display_new ();
-  gst_gl_display_create_context (download->display, 0);
+  if (!gst_gl_display_create_context (download->display, 0)) {
+    GST_ELEMENT_ERROR (download, RESOURCE, NOT_FOUND,
+        (GST_GL_DISPLAY_ERR_MSG (download->display)), (NULL));
+    return FALSE;
+  }
 
   return TRUE;
 }
@@ -346,8 +350,11 @@ gst_gl_download_set_caps (GstBaseTransform * bt, GstCaps * incaps,
     return FALSE;
   }
   //blocking call, init color space conversion if needed
-  gst_gl_display_init_download (download->display, download->video_format,
+  ret = gst_gl_display_init_download (download->display, download->video_format,
       download->width, download->height);
+  if (!ret)
+    GST_ELEMENT_ERROR (download, RESOURCE, NOT_FOUND,
+        (GST_GL_DISPLAY_ERR_MSG (download->display)), (NULL));
 
   return ret;
 }

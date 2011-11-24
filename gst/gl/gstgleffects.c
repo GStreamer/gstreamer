@@ -58,7 +58,7 @@ static void gst_gl_effects_get_property (GObject * object, guint prop_id,
 static void gst_gl_effects_init_resources (GstGLFilter * filter);
 static void gst_gl_effects_reset_resources (GstGLFilter * filter);
 
-static void gst_gl_effects_on_init_gl_context (GstGLFilter * filter);
+static gboolean gst_gl_effects_on_init_gl_context (GstGLFilter * filter);
 
 static void gst_gl_effects_ghash_func_clean (gpointer key, gpointer value,
     gpointer data);
@@ -431,12 +431,12 @@ gst_gl_effects_init_resources (GstGLFilter * filter)
   }
 }
 
-static void
+static gboolean
 gst_gl_effects_on_init_gl_context (GstGLFilter * filter)
 {
   //check that your hardware supports shader
   //if not the pipeline correctly shut down
-  gst_gl_display_gen_shader (filter->display, 0, 0, NULL);
+  return gst_gl_display_gen_shader (filter->display, 0, 0, NULL);
 }
 
 static gboolean

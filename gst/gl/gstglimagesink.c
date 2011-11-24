@@ -414,10 +414,16 @@ gst_glimage_sink_change_state (GstElement * element, GstStateChange transition)
       break;
     case GST_STATE_CHANGE_READY_TO_PAUSED:
       if (!glimage_sink->display) {
+        gboolean ok = FALSE;
         glimage_sink->display = gst_gl_display_new ();
 
         /* init opengl context */
-        gst_gl_display_create_context (glimage_sink->display, 0);
+        ok = gst_gl_display_create_context (glimage_sink->display, 0);
+        if (!ok) {
+          GST_ELEMENT_ERROR (glimage_sink, RESOURCE, NOT_FOUND,
+              (GST_GL_DISPLAY_ERR_MSG (glimage_sink->display)), (NULL));
+          return GST_STATE_CHANGE_FAILURE;
+        }
       }
       break;
     case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
@@ -517,8 +523,14 @@ gst_glimage_sink_set_caps (GstBaseSink * bsink, GstCaps * caps)
       return FALSE;
 
     /* init colorspace conversion if needed */
-    gst_gl_display_init_upload (glimage_sink->display, format,
+    ok = gst_gl_display_init_upload (glimage_sink->display, format,
         width, height, width, height);
+
+    if (!ok) {
+      GST_ELEMENT_ERROR (glimage_sink, RESOURCE, NOT_FOUND,
+          (GST_GL_DISPLAY_ERR_MSG (glimage_sink->display)), (NULL));
+      return FALSE;
+    }
   }
 
   gst_gl_display_set_client_reshape_callback (glimage_sink->display,
@@ -637,8 +649,11 @@ gst_glimage_sink_render (GstBaseSink * bsink, GstBuffer * buf)
           glimage_sink->window_width, glimage_sink->window_height,
           glimage_sink->keep_aspect_ratio))
     return GST_FLOW_OK;
-  else
-    return GST_FLOW_UNEXPECTED;
+  else {
+    GST_ELEMENT_ERROR (glimage_sink, RESOURCE, NOT_FOUND,
+        (GST_GL_DISPLAY_ERR_MSG (glimage_sink->display)), (NULL));
+    return GST_FLOW_ERROR;
+  }
 }
 
 

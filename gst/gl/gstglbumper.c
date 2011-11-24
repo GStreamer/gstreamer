@@ -67,7 +67,7 @@ static void gst_gl_bumper_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 
 static void gst_gl_bumper_reset (GstGLFilter * filter);
-static void gst_gl_bumper_init_shader (GstGLFilter * filter);
+static gboolean gst_gl_bumper_init_shader (GstGLFilter * filter);
 static gboolean gst_gl_bumper_filter (GstGLFilter * filter,
     GstGLBuffer * inbuf, GstGLBuffer * outbuf);
 static void gst_gl_bumper_callback (gint width, gint height, guint texture,
@@ -349,13 +349,13 @@ gst_gl_bumper_get_property (GObject * object, guint prop_id,
   }
 }
 
-static void
+static gboolean
 gst_gl_bumper_init_shader (GstGLFilter * filter)
 {
   GstGLBumper *bumper = GST_GL_BUMPER (filter);
 
   //blocking call, wait the opengl thread has compiled the shader
-  gst_gl_display_gen_shader (filter->display, bumper_v_src, bumper_f_src,
+  return gst_gl_display_gen_shader (filter->display, bumper_v_src, bumper_f_src,
       &bumper->shader);
 }
 

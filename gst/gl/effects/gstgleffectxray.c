@@ -54,8 +54,14 @@ gst_gl_effects_xray_step_two (gint width, gint height, guint texture,
     kernel_ready = TRUE;
   }
 
-  g_return_if_fail (gst_gl_shader_compile_and_check (shader,
-          hconv7_fragment_source, GST_GL_SHADER_FRAGMENT_SOURCE));
+  if (!gst_gl_shader_compile_and_check (shader,
+          hconv7_fragment_source, GST_GL_SHADER_FRAGMENT_SOURCE)) {
+    gst_gl_display_set_error (GST_GL_FILTER (effects)->display,
+        "Failed to initialize hconv7 shader");
+    GST_ELEMENT_ERROR (effects, RESOURCE, NOT_FOUND,
+        (GST_GL_DISPLAY_ERR_MSG (GST_GL_FILTER (effects)->display)), (NULL));
+    return;
+  }
 
   glMatrixMode (GL_PROJECTION);
   glLoadIdentity ();
@@ -87,8 +93,14 @@ gst_gl_effects_xray_step_three (gint width, gint height, guint texture,
     g_hash_table_insert (effects->shaderstable, "xray2", shader);
   }
 
-  g_return_if_fail (gst_gl_shader_compile_and_check (shader,
-          vconv7_fragment_source, GST_GL_SHADER_FRAGMENT_SOURCE));
+  if (!gst_gl_shader_compile_and_check (shader,
+          vconv7_fragment_source, GST_GL_SHADER_FRAGMENT_SOURCE)) {
+    gst_gl_display_set_error (GST_GL_FILTER (effects)->display,
+        "Failed to initialize vconv7 shader");
+    GST_ELEMENT_ERROR (effects, RESOURCE, NOT_FOUND,
+        (GST_GL_DISPLAY_ERR_MSG (GST_GL_FILTER (effects)->display)), (NULL));
+    return;
+  }
 
   glMatrixMode (GL_PROJECTION);
   glLoadIdentity ();
@@ -121,8 +133,14 @@ gst_gl_effects_xray_desaturate (gint width, gint height, guint texture,
     g_hash_table_insert (effects->shaderstable, "xray_desat", shader);
   }
 
-  g_return_if_fail (gst_gl_shader_compile_and_check (shader,
-          desaturate_fragment_source, GST_GL_SHADER_FRAGMENT_SOURCE));
+  if (!gst_gl_shader_compile_and_check (shader,
+          desaturate_fragment_source, GST_GL_SHADER_FRAGMENT_SOURCE)) {
+    gst_gl_display_set_error (GST_GL_FILTER (effects)->display,
+        "Failed to initialize desaturate shader");
+    GST_ELEMENT_ERROR (effects, RESOURCE, NOT_FOUND,
+        (GST_GL_DISPLAY_ERR_MSG (GST_GL_FILTER (effects)->display)), (NULL));
+    return;
+  }
 
   glMatrixMode (GL_PROJECTION);
   glLoadIdentity ();
@@ -152,8 +170,14 @@ gst_gl_effects_xray_sobel_hconv (gint width, gint height, guint texture,
     g_hash_table_insert (effects->shaderstable, "xray_sob_hconv", shader);
   }
 
-  g_return_if_fail (gst_gl_shader_compile_and_check (shader,
-          sep_sobel_hconv3_fragment_source, GST_GL_SHADER_FRAGMENT_SOURCE));
+  if (!gst_gl_shader_compile_and_check (shader,
+          sep_sobel_hconv3_fragment_source, GST_GL_SHADER_FRAGMENT_SOURCE)) {
+    gst_gl_display_set_error (GST_GL_FILTER (effects)->display,
+        "Failed to initialize sobel hvonc3 shader");
+    GST_ELEMENT_ERROR (effects, RESOURCE, NOT_FOUND,
+        (GST_GL_DISPLAY_ERR_MSG (GST_GL_FILTER (effects)->display)), (NULL));
+    return;
+  }
 
   glMatrixMode (GL_PROJECTION);
   glLoadIdentity ();
@@ -183,8 +207,14 @@ gst_gl_effects_xray_sobel_vconv (gint width, gint height, guint texture,
     g_hash_table_insert (effects->shaderstable, "xray_sob_vconv", shader);
   }
 
-  g_return_if_fail (gst_gl_shader_compile_and_check (shader,
-          sep_sobel_vconv3_fragment_source, GST_GL_SHADER_FRAGMENT_SOURCE));
+  if (!gst_gl_shader_compile_and_check (shader,
+          sep_sobel_vconv3_fragment_source, GST_GL_SHADER_FRAGMENT_SOURCE)) {
+    gst_gl_display_set_error (GST_GL_FILTER (effects)->display,
+        "Failed to initialize sobel vconv3 shader");
+    GST_ELEMENT_ERROR (effects, RESOURCE, NOT_FOUND,
+        (GST_GL_DISPLAY_ERR_MSG (GST_GL_FILTER (effects)->display)), (NULL));
+    return;
+  }
 
   glMatrixMode (GL_PROJECTION);
   glLoadIdentity ();
@@ -214,8 +244,14 @@ gst_gl_effects_xray_sobel_length (gint width, gint height, guint texture,
     g_hash_table_insert (effects->shaderstable, "xray_sob_len", shader);
   }
 
-  g_return_if_fail (gst_gl_shader_compile_and_check (shader,
-          sep_sobel_length_fragment_source, GST_GL_SHADER_FRAGMENT_SOURCE));
+  if (!gst_gl_shader_compile_and_check (shader,
+          sep_sobel_length_fragment_source, GST_GL_SHADER_FRAGMENT_SOURCE)) {
+    gst_gl_display_set_error (GST_GL_FILTER (effects)->display,
+        "Failed to initialize seobel length shader");
+    GST_ELEMENT_ERROR (effects, RESOURCE, NOT_FOUND,
+        (GST_GL_DISPLAY_ERR_MSG (GST_GL_FILTER (effects)->display)), (NULL));
+    return;
+  }
 
   glMatrixMode (GL_PROJECTION);
   glLoadIdentity ();
@@ -248,8 +284,14 @@ gst_gl_effects_xray_step_five (gint width, gint height, guint texture,
     g_hash_table_insert (effects->shaderstable, "xray4", shader);
   }
 
-  g_return_if_fail (gst_gl_shader_compile_and_check (shader,
-          multiply_fragment_source, GST_GL_SHADER_FRAGMENT_SOURCE));
+  if (!gst_gl_shader_compile_and_check (shader,
+          multiply_fragment_source, GST_GL_SHADER_FRAGMENT_SOURCE)) {
+    gst_gl_display_set_error (GST_GL_FILTER (effects)->display,
+        "Failed to initialize multiply shader");
+    GST_ELEMENT_ERROR (effects, RESOURCE, NOT_FOUND,
+        (GST_GL_DISPLAY_ERR_MSG (GST_GL_FILTER (effects)->display)), (NULL));
+    return;
+  }
 
   glMatrixMode (GL_PROJECTION);
   glLoadIdentity ();

@@ -76,7 +76,7 @@ static gboolean gst_gl_filter_cube_set_caps (GstGLFilter * filter,
     GstCaps * incaps, GstCaps * outcaps);
 #ifdef OPENGL_ES2
 static void gst_gl_filter_cube_reset (GstGLFilter * filter);
-static void gst_gl_filter_cube_init_shader (GstGLFilter * filter);
+static gboolean gst_gl_filter_cube_init_shader (GstGLFilter * filter);
 #endif
 static gboolean gst_gl_filter_cube_filter (GstGLFilter * filter,
     GstGLBuffer * inbuf, GstGLBuffer * outbuf);
@@ -266,13 +266,13 @@ gst_gl_filter_cube_reset (GstGLFilter * filter)
   gst_gl_display_del_shader (filter->display, cube_filter->shader);
 }
 
-static void
+static gboolean
 gst_gl_filter_cube_init_shader (GstGLFilter * filter)
 {
   GstGLFilterCube *cube_filter = GST_GL_FILTER_CUBE (filter);
 
   //blocking call, wait the opengl thread has compiled the shader
-  gst_gl_display_gen_shader (filter->display, cube_v_src, cube_f_src,
+  return gst_gl_display_gen_shader (filter->display, cube_v_src, cube_f_src,
       &cube_filter->shader);
 }
 #endif

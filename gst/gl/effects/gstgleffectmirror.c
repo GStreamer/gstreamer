@@ -42,10 +42,14 @@ gst_gl_effects_mirror_callback (gint width, gint height, guint texture,
 
       gst_gl_shader_compile (shader, &error);
       if (error) {
-        GST_ERROR ("%s", error->message);
+        gst_gl_display_set_error (GST_GL_FILTER (effects)->display,
+            "Failed to initialize mirror shader, %s", error->message);
         g_error_free (error);
         error = NULL;
         gst_gl_shader_use (NULL);
+        GST_ELEMENT_ERROR (effects, RESOURCE, NOT_FOUND,
+            (GST_GL_DISPLAY_ERR_MSG (GST_GL_FILTER (effects)->display)),
+            (NULL));
       } else {
         effects->draw_attr_position_loc =
             gst_gl_shader_get_attribute_location (shader, "a_position");
@@ -55,10 +59,15 @@ gst_gl_effects_mirror_callback (gint width, gint height, guint texture,
     }
 #endif
   }
-
 #ifndef OPENGL_ES2
-  g_return_if_fail (gst_gl_shader_compile_and_check (shader,
-          mirror_fragment_source, GST_GL_SHADER_FRAGMENT_SOURCE));
+  if (!gst_gl_shader_compile_and_check (shader,
+          mirror_fragment_source, GST_GL_SHADER_FRAGMENT_SOURCE)) {
+    gst_gl_display_set_error (GST_GL_FILTER (effects)->display,
+        "Failed to initialize mirror shader");
+    GST_ELEMENT_ERROR (effects, RESOURCE, NOT_FOUND,
+        (GST_GL_DISPLAY_ERR_MSG (GST_GL_FILTER (effects)->display)), (NULL));
+    return;
+  }
 
   glMatrixMode (GL_PROJECTION);
   glLoadIdentity ();

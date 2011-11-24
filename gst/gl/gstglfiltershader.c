@@ -78,7 +78,7 @@ static void gst_gl_filter_filtershader_reset (GstGLFilter * filter);
 
 static void gst_gl_filtershader_load_shader (char *filename, char **storage);
 static void gst_gl_filtershader_load_variables (char *filename, char **storage);
-static void gst_gl_filtershader_init_shader (GstGLFilter * filter);
+static gboolean gst_gl_filtershader_init_shader (GstGLFilter * filter);
 static gboolean gst_gl_filtershader_filter (GstGLFilter * filter,
     GstGLBuffer * inbuf, GstGLBuffer * outbuf);
 static void gst_gl_filtershader_hcallback (gint width, gint height,
@@ -327,7 +327,7 @@ gst_gl_filtershader_variables_parse (GstGLShader * shader, gchar * variables)
 }
 
 
-static void
+static gboolean
 gst_gl_filtershader_init_shader (GstGLFilter * filter)
 {
 
@@ -337,13 +337,9 @@ gst_gl_filtershader_init_shader (GstGLFilter * filter)
       &hfilter_fragment_source);
 
   //blocking call, wait the opengl thread has compiled the shader
-  gst_gl_display_gen_shader (filter->display, 0, hfilter_fragment_source,
-      &filtershader->shader0);
-
-  if (!filtershader->shader0) {
-    GST_ERROR ("Fragment Shader compilation failed.");
-    exit (1);
-  }
+  if (!gst_gl_display_gen_shader (filter->display, 0, hfilter_fragment_source,
+          &filtershader->shader0));
+  return FALSE;
 
   filtershader->compiled = 1;
 

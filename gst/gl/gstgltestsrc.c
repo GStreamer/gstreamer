@@ -364,11 +364,9 @@ no_framerate:
 static gboolean
 gst_gl_test_src_setcaps (GstBaseSrc * bsrc, GstCaps * caps)
 {
-  gboolean res;
+  gboolean res = FALSE;
   gint width, height, rate_denominator, rate_numerator;
-  GstGLTestSrc *gltestsrc;
-
-  gltestsrc = GST_GL_TEST_SRC (bsrc);
+  GstGLTestSrc *gltestsrc = GST_GL_TEST_SRC (bsrc);
 
   GST_DEBUG ("setcaps");
 
@@ -387,8 +385,12 @@ gst_gl_test_src_setcaps (GstBaseSrc * bsrc, GstCaps * caps)
         gltestsrc->rate_numerator, gltestsrc->rate_denominator);
 
 
-    gst_gl_display_gen_fbo (gltestsrc->display, gltestsrc->width,
+    res = gst_gl_display_gen_fbo (gltestsrc->display, gltestsrc->width,
         gltestsrc->height, &gltestsrc->fbo, &gltestsrc->depthbuffer);
+
+    if (!res)
+      GST_ELEMENT_ERROR (gltestsrc, RESOURCE, NOT_FOUND,
+          (GST_GL_DISPLAY_ERR_MSG (gltestsrc->display)), (NULL));
   }
   return res;
 }
@@ -643,7 +645,11 @@ gst_gl_test_src_start (GstBaseSrc * basesrc)
     else {
       /* this gl filter is a sink in terms of the gl chain */
       src->display = gst_gl_display_new ();
-      gst_gl_display_create_context (src->display, 0);
+      isPerformed = gst_gl_display_create_context (src->display, 0);
+
+      if (!isPerformed)
+        GST_ELEMENT_ERROR (src, RESOURCE, NOT_FOUND,
+            (GST_GL_DISPLAY_ERR_MSG (src->display)), (NULL));
     }
   }
 

@@ -390,18 +390,32 @@ gst_gl_colorscale_set_caps (GstBaseTransform * bt, GstCaps * incaps,
   colorscale->display = gst_gl_display_new ();
 
   //init unvisible opengl context
-  gst_gl_display_create_context (colorscale->display, 0);
+  ret = gst_gl_display_create_context (colorscale->display, 0);
 
+  if (!ret) {
+    GST_ELEMENT_ERROR (colorscale, RESOURCE, NOT_FOUND,
+        (GST_GL_DISPLAY_ERR_MSG (colorscale->display)), (NULL));
+    return FALSE;
+  }
   //blocking call, init colorspace conversion if needed
-  gst_gl_display_init_upload (colorscale->display,
+  ret = gst_gl_display_init_upload (colorscale->display,
       colorscale->input_video_format, colorscale->output_video_width,
       colorscale->output_video_height, colorscale->input_video_width,
       colorscale->input_video_height);
 
+  if (!ret) {
+    GST_ELEMENT_ERROR (colorscale, RESOURCE, NOT_FOUND,
+        (GST_GL_DISPLAY_ERR_MSG (colorscale->display)), (NULL));
+    return FALSE;
+  }
   //blocking call, init colorspace conversion if needed
-  gst_gl_display_init_download (colorscale->display,
+  ret = gst_gl_display_init_download (colorscale->display,
       colorscale->output_video_format, colorscale->output_video_width,
       colorscale->output_video_height);
+
+  if (!ret)
+    GST_ELEMENT_ERROR (colorscale, RESOURCE, NOT_FOUND,
+        (GST_GL_DISPLAY_ERR_MSG (colorscale->display)), (NULL));
 
   return ret;
 }
