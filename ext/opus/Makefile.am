@@ -1,6 +1,6 @@
 plugin_LTLIBRARIES = libgstopus.la
 
-libgstopus_la_SOURCES = gstopus.c gstopusdec.c gstopusenc.c gstopusparse.c gstopusheader.c
+libgstopus_la_SOURCES = gstopus.c gstopusdec.c gstopusenc.c gstopusparse.c gstopusheader.c gstopuscommon.c
 libgstopus_la_CFLAGS = \
         -DGST_USE_UNSTABLE_API \
 	$(GST_PLUGINS_BASE_CFLAGS) \
@@ -15,4 +15,4 @@ libgstopus_la_LIBADD = \
 libgstopus_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS) $(LIBM)
 libgstopus_la_LIBTOOLFLAGS = --tag=disable-static
 
-noinst_HEADERS = gstopusenc.h gstopusdec.h gstopusparse.h gstopusheader.h
+noinst_HEADERS = gstopusenc.h gstopusdec.h gstopusparse.h gstopusheader.h gstopuscommon.h

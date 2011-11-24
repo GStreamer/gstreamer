@@ -27,7 +27,8 @@
 #include "gstopusheader.h"
 
 static GstBuffer *
-gst_opus_enc_create_id_buffer (gint nchannels, gint sample_rate)
+gst_opus_enc_create_id_buffer (gint nchannels, gint sample_rate,
+    guint8 channel_mapping_family, const guint8 * channel_mapping)
 {
   GstBuffer *buffer;
   GstByteWriter bw;
@@ -41,7 +42,12 @@ gst_opus_enc_create_id_buffer (gint nchannels, gint sample_rate)
   gst_byte_writer_put_uint16_le (&bw, 0);       /* pre-skip *//* TODO: endianness ? */
   gst_byte_writer_put_uint32_le (&bw, sample_rate);
   gst_byte_writer_put_uint16_le (&bw, 0);       /* output gain *//* TODO: endianness ? */
-  gst_byte_writer_put_uint8 (&bw, 0);   /* channel mapping *//* TODO: what is this ? */
+  gst_byte_writer_put_uint8 (&bw, channel_mapping_family);
+  if (channel_mapping_family > 0) {
+    gst_byte_writer_put_uint8 (&bw, (nchannels + 1) / 2);
+    gst_byte_writer_put_uint8 (&bw, nchannels / 2);
+    gst_byte_writer_put_data (&bw, channel_mapping, nchannels);
+  }
 
   buffer = gst_byte_writer_reset_and_get_buffer (&bw);
 
@@ -136,23 +142,11 @@ _gst_caps_set_buffer_array (GstCaps * caps, const gchar * field,
 }
 
 void
-gst_opus_header_create_caps (GstCaps ** caps, GSList ** headers, gint nchannels,
-    gint sample_rate, const GstTagList * tags)
+gst_opus_header_create_caps_from_headers (GstCaps ** caps, GSList ** headers,
+    GstBuffer * buf1, GstBuffer * buf2)
 {
-  GstBuffer *buf1, *buf2;
-
   g_return_if_fail (caps);
   g_return_if_fail (headers && !*headers);
-  g_return_if_fail (nchannels > 0);
-  g_return_if_fail (sample_rate >= 0);  /* 0 -> unset */
-
-  /* Opus streams in Ogg begin with two headers; the initial header (with
-     most of the codec setup parameters) which is mandated by the Ogg
-     bitstream spec.  The second header holds any comment fields. */
-
-  /* create header buffers */
-  buf1 = gst_opus_enc_create_id_buffer (nchannels, sample_rate);
-  buf2 = gst_opus_enc_create_metadata_buffer (tags);
 
   /* mark and put on caps */
   *caps = gst_caps_from_string ("audio/x-opus");
@@ -162,9 +156,75 @@ gst_opus_header_create_caps (GstCaps ** caps, GSList ** headers, gint nchannels,
   *headers = g_slist_prepend (*headers, buf1);
 }
 
+void
+gst_opus_header_create_caps (GstCaps ** caps, GSList ** headers, gint nchannels,
+    gint sample_rate, guint8 channel_mapping_family,
+    const guint8 * channel_mapping, const GstTagList * tags)
+{
+  GstBuffer *buf1, *buf2;
+
+  g_return_if_fail (caps);
+  g_return_if_fail (headers && !*headers);
+  g_return_if_fail (nchannels > 0);
+  g_return_if_fail (sample_rate >= 0);  /* 0 -> unset */
+  g_return_if_fail (channel_mapping_family == 0 || channel_mapping);
+
+  /* Opus streams in Ogg begin with two headers; the initial header (with
+     most of the codec setup parameters) which is mandated by the Ogg
+     bitstream spec.  The second header holds any comment fields. */
+
+  /* create header buffers */
+  buf1 =
+      gst_opus_enc_create_id_buffer (nchannels, sample_rate,
+      channel_mapping_family, channel_mapping);
+  buf2 = gst_opus_enc_create_metadata_buffer (tags);
+
+  gst_opus_header_create_caps_from_headers (caps, headers, buf1, buf2);
+}
+
 gboolean
 gst_opus_header_is_header (GstBuffer * buf, const char *magic, guint magic_size)
 {
   return (GST_BUFFER_SIZE (buf) >= magic_size
       && !memcmp (magic, GST_BUFFER_DATA (buf), magic_size));
+}
+
+gboolean
+gst_opus_header_is_id_header (GstBuffer * buf)
+{
+  gsize size = GST_BUFFER_SIZE (buf);
+  const guint8 *data = GST_BUFFER_DATA (buf);
+  guint8 channels, channel_mapping_family, n_streams, n_stereo_streams;
+
+  if (size < 19)
+    return FALSE;
+  if (!gst_opus_header_is_header (buf, "OpusHead", 8))
+    return FALSE;
+  channels = data[9];
+  if (channels == 0)
+    return FALSE;
+  channel_mapping_family = data[18];
+  if (channel_mapping_family == 0) {
+    if (channels > 2)
+      return FALSE;
+  } else {
+    channels = data[9];
+    if (size < 21 + channels)
+      return FALSE;
+    n_streams = data[19];
+    n_stereo_streams = data[20];
+    if (n_streams == 0)
+      return FALSE;
+    if (n_stereo_streams > n_streams)
+      return FALSE;
+    if (n_streams + n_stereo_streams > 255)
+      return FALSE;
+  }
+  return TRUE;
+}
+
+gboolean
+gst_opus_header_is_comment_header (GstBuffer * buf)
+{
+  return gst_opus_header_is_header (buf, "OpusTags", 8);
 }

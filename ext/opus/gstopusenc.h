@@ -77,6 +77,9 @@ struct _GstOpusEnc {
   GSList                *headers;
 
   GstTagList            *tags;
+
+  guint8                channel_mapping_family;
+  guint8                channel_mapping[256];
 };
 
 struct _GstOpusEncClass {

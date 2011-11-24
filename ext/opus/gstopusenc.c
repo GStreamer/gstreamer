@@ -49,6 +49,7 @@
 #include <gst/gsttagsetter.h>
 #include <gst/audio/audio.h>
 #include "gstopusheader.h"
+#include "gstopuscommon.h"
 #include "gstopusenc.h"
 
 GST_DEBUG_CATEGORY_STATIC (opusenc_debug);
@@ -116,8 +117,8 @@ static GstStaticPadTemplate sink_factory = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("audio/x-raw-int, "
-        "rate = (int) { 8000, 12000, 16000, 24000, 48000 }, "
-        "channels = (int) [ 1, 2 ], "
+        "rate = (int) { 48000, 24000, 16000, 12000, 8000 }, "
+        "channels = (int) [ 1, 8 ], "
         "endianness = (int) BYTE_ORDER, "
         "signed = (boolean) TRUE, " "width = (int) 16, " "depth = (int) 16")
     );
@@ -419,6 +420,82 @@ gst_opus_enc_get_frame_samples (GstOpusEnc * enc)
   return frame_samples;
 }
 
+static void
+gst_opus_enc_setup_channel_mapping (GstOpusEnc * enc, const GstAudioInfo * info)
+{
+#define MAPS(idx,pos) (GST_AUDIO_INFO_POSITION (info, (idx)) == GST_AUDIO_CHANNEL_POSITION_##pos)
+
+  int n;
+
+  GST_DEBUG_OBJECT (enc, "Setting up channel mapping for %d channels",
+      enc->n_channels);
+
+  /* Start by setting up a default trivial mapping */
+  for (n = 0; n < 255; ++n)
+    enc->channel_mapping[n] = n;
+
+  /* For one channel, use the basic RTP mapping */
+  if (enc->n_channels == 1) {
+    GST_INFO_OBJECT (enc, "Mono, trivial RTP mapping");
+    enc->channel_mapping_family = 0;
+    enc->channel_mapping[0] = 0;
+    return;
+  }
+
+  /* For two channels, use the basic RTP mapping if the channels are
+     mapped as left/right. */
+  if (enc->n_channels == 2) {
+    if (MAPS (0, FRONT_LEFT) && MAPS (1, FRONT_RIGHT)) {
+      GST_INFO_OBJECT (enc, "Stereo, canonical mapping");
+      enc->channel_mapping_family = 0;
+      /* The channel mapping is implicit for family 0, that's why we do not
+         attempt to create one for right/left - this will be mapped to the
+         Vorbis mapping below. */
+    } else {
+      GST_DEBUG_OBJECT (enc, "Stereo, but not canonical mapping, continuing");
+    }
+  }
+
+  /* For channels between 1 and 8, we use the Vorbis mapping if we can
+     find a permutation that matches it. Mono will have been taken care
+     of earlier, but this code also handles it. */
+  if (enc->n_channels >= 1 && enc->n_channels <= 8) {
+    GST_DEBUG_OBJECT (enc,
+        "In range for the Vorbis mapping, checking channel positions");
+    for (n = 0; n < enc->n_channels; ++n) {
+      GstAudioChannelPosition pos = GST_AUDIO_INFO_POSITION (info, n);
+      int c;
+
+      GST_DEBUG_OBJECT (enc, "Channel %d has position %d", n, pos);
+      for (c = 0; c < enc->n_channels; ++c) {
+        if (gst_opus_channel_positions[enc->n_channels - 1][c] == pos) {
+          GST_DEBUG_OBJECT (enc, "Found in Vorbis mapping as channel %d", c);
+          break;
+        }
+      }
+      if (c == enc->n_channels) {
+        /* We did not find that position, so use undefined */
+        GST_WARNING_OBJECT (enc,
+            "Position %d not found in Vorbis mapping, using unknown mapping",
+            pos);
+        enc->channel_mapping_family = 255;
+        return;
+      }
+      GST_DEBUG_OBJECT (enc, "Mapping output channel %d to %d", c, n);
+      enc->channel_mapping[c] = n;
+    }
+    GST_INFO_OBJECT (enc, "Permutation found, using Vorbis mapping");
+    enc->channel_mapping_family = 1;
+    return;
+  }
+
+  /* For other cases, we use undefined, with the default trivial mapping */
+  GST_WARNING_OBJECT (enc, "Unknown mapping");
+  enc->channel_mapping_family = 255;
+
+#undef MAPS
+}
+
 static gboolean
 gst_opus_enc_set_format (GstAudioEncoder * benc, GstAudioInfo * info)
 {
@@ -430,6 +507,7 @@ gst_opus_enc_set_format (GstAudioEncoder * benc, GstAudioInfo * info)
 
   enc->n_channels = GST_AUDIO_INFO_CHANNELS (info);
   enc->sample_rate = GST_AUDIO_INFO_RATE (info);
+  gst_opus_enc_setup_channel_mapping (enc, info);
   GST_DEBUG_OBJECT (benc, "Setup with %d channels, %d Hz", enc->n_channels,
       enc->sample_rate);
 
@@ -455,17 +533,12 @@ static gboolean
 gst_opus_enc_setup (GstOpusEnc * enc)
 {
   int error = OPUS_OK;
-  unsigned char mapping[256];
-  int n;
 
   GST_DEBUG_OBJECT (enc, "setup");
 
-  for (n = 0; n < enc->n_channels; ++n)
-    mapping[n] = n;
-
   enc->state =
       opus_multistream_encoder_create (enc->sample_rate, enc->n_channels,
-      (enc->n_channels + 1) / 2, enc->n_channels / 2, mapping,
+      (enc->n_channels + 1) / 2, enc->n_channels / 2, enc->channel_mapping,
       enc->audio_or_voip ? OPUS_APPLICATION_AUDIO : OPUS_APPLICATION_VOIP,
       &error);
   if (!enc->state || error != OPUS_OK)
@@ -557,18 +630,19 @@ gst_opus_enc_encode (GstOpusEnc * enc, GstBuffer * buf)
     GstBuffer *outbuf;
 
     ret = gst_pad_alloc_buffer_and_set_caps (GST_AUDIO_ENCODER_SRC_PAD (enc),
-        GST_BUFFER_OFFSET_NONE, enc->max_payload_size,
+        GST_BUFFER_OFFSET_NONE, enc->max_payload_size * enc->n_channels,
         GST_PAD_CAPS (GST_AUDIO_ENCODER_SRC_PAD (enc)), &outbuf);
 
     if (GST_FLOW_OK != ret)
       goto done;
 
     GST_DEBUG_OBJECT (enc, "encoding %d samples (%d bytes)",
-        enc->frame_samples);
+        enc->frame_samples, (int) bytes);
 
     outsize =
         opus_multistream_encode (enc->state, (const gint16 *) data,
-        enc->frame_samples, GST_BUFFER_DATA (outbuf), enc->max_payload_size);
+        enc->frame_samples, GST_BUFFER_DATA (outbuf),
+        enc->max_payload_size * enc->n_channels);
 
     if (outsize < 0) {
       GST_ERROR_OBJECT (enc, "Encoding failed: %d", outsize);
@@ -582,6 +656,7 @@ gst_opus_enc_encode (GstOpusEnc * enc, GstBuffer * buf)
       goto done;
     }
 
+    GST_DEBUG_OBJECT (enc, "Output packet is %u bytes", outsize);
     GST_BUFFER_SIZE (outbuf) = outsize;
 
     ret =
@@ -621,7 +696,8 @@ gst_opus_enc_handle_frame (GstAudioEncoder * benc, GstBuffer * buf)
     enc->headers = NULL;
 
     gst_opus_header_create_caps (&caps, &enc->headers, enc->n_channels,
-        enc->sample_rate, gst_tag_setter_get_tag_list (GST_TAG_SETTER (enc)));
+        enc->sample_rate, enc->channel_mapping_family, enc->channel_mapping,
+        gst_tag_setter_get_tag_list (GST_TAG_SETTER (enc)));
 
 
     /* negotiate with these caps */
