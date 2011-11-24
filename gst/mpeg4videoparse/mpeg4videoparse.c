@@ -72,6 +72,7 @@ static GstFlowReturn gst_mpeg4vparse_parse_frame (GstBaseParse * parse,
 static GstFlowReturn gst_mpeg4vparse_pre_push_frame (GstBaseParse * parse,
     GstBaseParseFrame * frame);
 static gboolean gst_mpeg4vparse_set_caps (GstBaseParse * parse, GstCaps * caps);
+static GstCaps *gst_mpeg4vparse_get_caps (GstBaseParse * parse);
 
 static void gst_mpeg4vparse_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
@@ -164,6 +165,7 @@ gst_mpeg4vparse_class_init (GstMpeg4VParseClass * klass)
   parse_class->pre_push_frame =
       GST_DEBUG_FUNCPTR (gst_mpeg4vparse_pre_push_frame);
   parse_class->set_sink_caps = GST_DEBUG_FUNCPTR (gst_mpeg4vparse_set_caps);
+  parse_class->get_sink_caps = GST_DEBUG_FUNCPTR (gst_mpeg4vparse_get_caps);
 }
 
 static void
@@ -602,6 +604,39 @@ gst_mpeg4vparse_set_caps (GstBaseParse * parse, GstCaps * caps)
 
   /* let's not interfere and accept regardless of config parsing success */
   return TRUE;
+}
+
+static GstCaps *
+gst_mpeg4vparse_get_caps (GstBaseParse * parse)
+{
+  GstCaps *peercaps;
+  GstCaps *res;
+
+  peercaps = gst_pad_get_allowed_caps (GST_BASE_PARSE_SRC_PAD (parse));
+  if (peercaps) {
+    guint i, n;
+
+    /* Remove the parsed field */
+    peercaps = gst_caps_make_writable (peercaps);
+    n = gst_caps_get_size (peercaps);
+    for (i = 0; i < n; i++) {
+      GstStructure *s = gst_caps_get_structure (peercaps, i);
+
+      gst_structure_remove_field (s, "parsed");
+    }
+
+    res =
+        gst_caps_intersect_full (peercaps,
+        gst_pad_get_pad_template_caps (GST_BASE_PARSE_SRC_PAD (parse)),
+        GST_CAPS_INTERSECT_FIRST);
+    gst_caps_unref (peercaps);
+  } else {
+    res =
+        gst_caps_copy (gst_pad_get_pad_template_caps (GST_BASE_PARSE_SRC_PAD
+            (parse)));
+  }
+
+  return res;
 }
 
 static gboolean
