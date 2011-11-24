@@ -69,27 +69,18 @@ GST_DEBUG_CATEGORY_STATIC (aacparse_debug);
 
 #define AAC_FRAME_DURATION(parse) (GST_SECOND/parse->frames_per_sec)
 
-gboolean gst_aac_parse_start (GstBaseParse * parse);
-gboolean gst_aac_parse_stop (GstBaseParse * parse);
+static gboolean gst_aac_parse_start (GstBaseParse * parse);
+static gboolean gst_aac_parse_stop (GstBaseParse * parse);
 
 static gboolean gst_aac_parse_sink_setcaps (GstBaseParse * parse,
     GstCaps * caps);
 static GstCaps *gst_aac_parse_sink_getcaps (GstBaseParse * parse);
 
-gboolean gst_aac_parse_check_valid_frame (GstBaseParse * parse,
+static gboolean gst_aac_parse_check_valid_frame (GstBaseParse * parse,
     GstBaseParseFrame * frame, guint * size, gint * skipsize);
 
-GstFlowReturn gst_aac_parse_parse_frame (GstBaseParse * parse,
+static GstFlowReturn gst_aac_parse_parse_frame (GstBaseParse * parse,
     GstBaseParseFrame * frame);
-
-gboolean gst_aac_parse_convert (GstBaseParse * parse,
-    GstFormat src_format,
-    gint64 src_value, GstFormat dest_format, gint64 * dest_value);
-
-gint gst_aac_parse_get_frame_overhead (GstBaseParse * parse,
-    GstBuffer * buffer);
-
-gboolean gst_aac_parse_event (GstBaseParse * parse, GstEvent * event);
 
 #define _do_init(bla) \
     GST_DEBUG_CATEGORY_INIT (aacparse_debug, "aacparse", 0, \
@@ -577,7 +568,7 @@ gst_aac_parse_detect_stream (GstAacParse * aacparse,
  *
  * Returns: TRUE if buffer contains a valid frame.
  */
-gboolean
+static gboolean
 gst_aac_parse_check_valid_frame (GstBaseParse * parse,
     GstBaseParseFrame * frame, guint * framesize, gint * skipsize)
 {
@@ -650,7 +641,7 @@ gst_aac_parse_check_valid_frame (GstBaseParse * parse,
  * Returns: GST_FLOW_OK if frame was successfully parsed and can be pushed
  *          forward. Otherwise appropriate error is returned.
  */
-GstFlowReturn
+static GstFlowReturn
 gst_aac_parse_parse_frame (GstBaseParse * parse, GstBaseParseFrame * frame)
 {
   GstAacParse *aacparse;
@@ -698,7 +689,7 @@ gst_aac_parse_parse_frame (GstBaseParse * parse, GstBaseParseFrame * frame)
  *
  * Returns: TRUE if startup succeeded.
  */
-gboolean
+static gboolean
 gst_aac_parse_start (GstBaseParse * parse)
 {
   GstAacParse *aacparse;
@@ -719,7 +710,7 @@ gst_aac_parse_start (GstBaseParse * parse)
  *
  * Returns: TRUE is stopping succeeded.
  */
-gboolean
+static gboolean
 gst_aac_parse_stop (GstBaseParse * parse)
 {
   GST_DEBUG ("stop");
