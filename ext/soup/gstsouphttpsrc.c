@@ -107,7 +107,6 @@ enum
   PROP_PROXY_ID,
   PROP_PROXY_PW,
   PROP_COOKIES,
-  PROP_IRADIO_MODE,
   PROP_IRADIO_NAME,
   PROP_IRADIO_GENRE,
   PROP_IRADIO_URL,
@@ -246,12 +245,6 @@ gst_soup_http_src_class_init (GstSoupHTTPSrcClass * klass)
 
   /* icecast stuff */
   g_object_class_install_property (gobject_class,
-      PROP_IRADIO_MODE,
-      g_param_spec_boolean ("iradio-mode",
-          "iradio-mode",
-          "Enable internet radio mode (extraction of shoutcast/icecast metadata)",
-          FALSE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
-  g_object_class_install_property (gobject_class,
       PROP_IRADIO_NAME,
       g_param_spec_string ("iradio-name",
           "iradio-name", "Name of the stream", NULL,
@@ -334,7 +327,6 @@ gst_soup_http_src_init (GstSoupHTTPSrc * src)
   src->proxy_id = NULL;
   src->proxy_pw = NULL;
   src->cookies = NULL;
-  src->iradio_mode = FALSE;
   src->loop = NULL;
   src->context = NULL;
   src->session = NULL;
@@ -397,9 +389,6 @@ gst_soup_http_src_set_property (GObject * object, guint prop_id,
       if (src->user_agent)
         g_free (src->user_agent);
       src->user_agent = g_value_dup_string (value);
-      break;
-    case PROP_IRADIO_MODE:
-      src->iradio_mode = g_value_get_boolean (value);
       break;
     case PROP_AUTOMATIC_REDIRECT:
       src->automatic_redirect = g_value_get_boolean (value);
@@ -498,9 +487,6 @@ gst_soup_http_src_get_property (GObject * object, guint prop_id,
       break;
     case PROP_IS_LIVE:
       g_value_set_boolean (value, gst_base_src_is_live (GST_BASE_SRC (src)));
-      break;
-    case PROP_IRADIO_MODE:
-      g_value_set_boolean (value, src->iradio_mode);
       break;
     case PROP_IRADIO_NAME:
       g_value_set_string (value, src->iradio_name);
@@ -1122,10 +1108,8 @@ gst_soup_http_src_build_message (GstSoupHTTPSrc * src)
   src->session_io_status = GST_SOUP_HTTP_SRC_SESSION_IO_STATUS_IDLE;
   soup_message_headers_append (src->msg->request_headers, "Connection",
       "close");
-  if (src->iradio_mode) {
-    soup_message_headers_append (src->msg->request_headers, "icy-metadata",
-        "1");
-  }
+  soup_message_headers_append (src->msg->request_headers, "icy-metadata", "1");
+
   if (src->cookies) {
     gchar **cookie;
 
