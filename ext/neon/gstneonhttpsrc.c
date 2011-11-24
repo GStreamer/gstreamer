@@ -69,7 +69,6 @@ enum
   PROP_PROXY,
   PROP_USER_AGENT,
   PROP_COOKIES,
-  PROP_IRADIO_MODE,
   PROP_IRADIO_NAME,
   PROP_IRADIO_GENRE,
   PROP_IRADIO_URL,
@@ -191,12 +190,6 @@ gst_neonhttp_src_class_init (GstNeonhttpSrcClass * klass)
       g_param_spec_boxed ("cookies", "Cookies", "HTTP request cookies",
           G_TYPE_STRV, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
-  g_object_class_install_property
-      (gobject_class, PROP_IRADIO_MODE,
-      g_param_spec_boolean ("iradio-mode", "iradio-mode",
-          "Enable internet radio mode (extraction of shoutcast/icecast metadata)",
-          FALSE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
-
   g_object_class_install_property (gobject_class,
       PROP_IRADIO_NAME,
       g_param_spec_string ("iradio-name",
@@ -283,7 +276,6 @@ gst_neonhttp_src_init (GstNeonhttpSrc * src, GstNeonhttpSrcClass * g_class)
   const gchar *str;
 
   src->neon_http_debug = DEFAULT_NEON_HTTP_DEBUG;
-  src->iradio_mode = DEFAULT_IRADIO_MODE;
   src->iradio_name = DEFAULT_IRADIO_NAME;
   src->iradio_genre = DEFAULT_IRADIO_GENRE;
   src->iradio_url = DEFAULT_IRADIO_URL;
@@ -406,9 +398,6 @@ gst_neonhttp_src_set_property (GObject * object, guint prop_id,
         g_strfreev (src->cookies);
       src->cookies = (gchar **) g_value_dup_boxed (value);
       break;
-    case PROP_IRADIO_MODE:
-      src->iradio_mode = g_value_get_boolean (value);
-      break;
     case PROP_AUTOMATIC_REDIRECT:
       src->automatic_redirect = g_value_get_boolean (value);
       break;
@@ -476,9 +465,6 @@ gst_neonhttp_src_get_property (GObject * object, guint prop_id,
       break;
     case PROP_COOKIES:
       g_value_set_boxed (value, neonhttpsrc->cookies);
-      break;
-    case PROP_IRADIO_MODE:
-      g_value_set_boolean (value, neonhttpsrc->iradio_mode);
       break;
     case PROP_IRADIO_NAME:
       g_value_set_string (value, neonhttpsrc->iradio_name);
@@ -608,7 +594,7 @@ gst_neonhttp_src_start (GstBaseSrc * bsrc)
   else
     src->content_size = -1;
 
-  if (src->iradio_mode) {
+  if (TRUE) {
     /* Icecast stuff */
     const gchar *str_value;
     gint gint_value;
@@ -962,9 +948,7 @@ gst_neonhttp_src_send_request_and_redirect (GstNeonhttpSrc * src,
       ne_add_request_header (request, "Cookies", *c);
     }
 
-    if (src->iradio_mode) {
-      ne_add_request_header (request, "icy-metadata", "1");
-    }
+    ne_add_request_header (request, "icy-metadata", "1");
 
     if (offset > 0) {
       ne_print_request_header (request, "Range",
