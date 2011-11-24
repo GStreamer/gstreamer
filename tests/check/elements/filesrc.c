@@ -73,7 +73,7 @@ setup_filesrc (void)
 
   GST_DEBUG ("setup_filesrc");
   filesrc = gst_check_setup_element ("filesrc");
-  mysinkpad = gst_check_setup_sink_pad (filesrc, &sinktemplate, NULL);
+  mysinkpad = gst_check_setup_sink_pad (filesrc, &sinktemplate);
   gst_pad_set_event_function (mysinkpad, event_func);
   gst_pad_set_active (mysinkpad, TRUE);
 

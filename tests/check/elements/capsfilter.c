@@ -50,7 +50,7 @@ GST_START_TEST (test_unfixed_downstream_caps)
   gst_bin_add_many (GST_BIN (pipe), src, filter, NULL);
   fail_unless (gst_element_link (src, filter));
 
-  mysinkpad = gst_check_setup_sink_pad (filter, &sinktemplate, NULL);
+  mysinkpad = gst_check_setup_sink_pad (filter, &sinktemplate);
   gst_pad_set_active (mysinkpad, TRUE);
 
   fail_unless_equals_int (gst_element_set_state (pipe, GST_STATE_PLAYING),

@@ -62,8 +62,8 @@ setup_identity (void)
   GST_DEBUG ("setup_identity");
 
   identity = gst_check_setup_element ("identity");
-  mysrcpad = gst_check_setup_src_pad (identity, &srctemplate, NULL);
-  mysinkpad = gst_check_setup_sink_pad (identity, &sinktemplate, NULL);
+  mysrcpad = gst_check_setup_src_pad (identity, &srctemplate);
+  mysinkpad = gst_check_setup_sink_pad (identity, &sinktemplate);
   gst_pad_set_event_function (mysinkpad, event_func);
   gst_pad_set_active (mysrcpad, TRUE);
   gst_pad_set_active (mysinkpad, TRUE);

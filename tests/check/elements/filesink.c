@@ -48,7 +48,7 @@ setup_filesink (void)
 
   GST_DEBUG ("setup_filesink");
   filesink = gst_check_setup_element ("filesink");
-  mysrcpad = gst_check_setup_src_pad (filesink, &srctemplate, NULL);
+  mysrcpad = gst_check_setup_src_pad (filesink, &srctemplate);
   gst_pad_set_active (mysrcpad, TRUE);
   return filesink;
 }

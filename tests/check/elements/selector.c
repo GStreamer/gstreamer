@@ -241,7 +241,7 @@ run_output_selector_buffer_count (gint num_output_pads,
   gint i = 0;
   GList *output_pads = NULL, *input_pads = NULL;
   GstElement *sel = gst_check_setup_element ("output-selector");
-  GstPad *input_pad = gst_check_setup_src_pad (sel, &srctemplate, NULL);
+  GstPad *input_pad = gst_check_setup_src_pad (sel, &srctemplate);
 
   input_pads = g_list_append (input_pads, input_pad);
   gst_pad_set_active (input_pad, TRUE);
@@ -308,7 +308,7 @@ run_input_selector_buffer_count (gint num_input_pads,
   gint i = 0, probe_id = 0;
   GList *input_pads = NULL, *output_pads = NULL;
   GstElement *sel = gst_check_setup_element ("input-selector");
-  GstPad *output_pad = gst_check_setup_sink_pad (sel, &sinktemplate, NULL);
+  GstPad *output_pad = gst_check_setup_sink_pad (sel, &sinktemplate);
 
   output_pads = g_list_append (output_pads, output_pad);
   gst_pad_set_active (output_pad, TRUE);
@@ -434,7 +434,7 @@ static void
 setup_output_selector (void)
 {
   sel = gst_check_setup_element ("output-selector");
-  input_pad = gst_check_setup_src_pad (sel, &srctemplate, NULL);
+  input_pad = gst_check_setup_src_pad (sel, &srctemplate);
   gst_pad_set_active (input_pad, TRUE);
 
   output_pads = g_list_append (output_pads, setup_output_pad (sel,

@@ -97,7 +97,7 @@ setup (void)
   queue = gst_check_setup_element ("queue");
   g_signal_connect (queue, "underrun", G_CALLBACK (queue_underrun), NULL);
 
-  mysrcpad = gst_check_setup_src_pad (queue, &srctemplate, NULL);
+  mysrcpad = gst_check_setup_src_pad (queue, &srctemplate);
   gst_pad_set_active (mysrcpad, TRUE);
 
   mysinkpad = NULL;
@@ -167,7 +167,7 @@ GST_START_TEST (test_non_leaky_underrun)
 {
   g_signal_connect (queue, "overrun", G_CALLBACK (queue_overrun), NULL);
   g_object_set (G_OBJECT (queue), "max-size-buffers", 2, NULL);
-  mysinkpad = gst_check_setup_sink_pad (queue, &sinktemplate, NULL);
+  mysinkpad = gst_check_setup_sink_pad (queue, &sinktemplate);
   gst_pad_set_active (mysinkpad, TRUE);
 
   GST_DEBUG ("starting");

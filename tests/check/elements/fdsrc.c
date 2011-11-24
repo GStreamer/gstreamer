@@ -56,7 +56,7 @@ setup_fdsrc (void)
 
   GST_DEBUG ("setup_fdsrc");
   fdsrc = gst_check_setup_element ("fdsrc");
-  mysinkpad = gst_check_setup_sink_pad (fdsrc, &sinktemplate, NULL);
+  mysinkpad = gst_check_setup_sink_pad (fdsrc, &sinktemplate);
   gst_pad_set_event_function (mysinkpad, event_func);
   gst_pad_set_active (mysinkpad, TRUE);
   return fdsrc;

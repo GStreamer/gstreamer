@@ -53,7 +53,7 @@ setup_fakesrc (void)
 
   GST_DEBUG ("setup_fakesrc");
   fakesrc = gst_check_setup_element ("fakesrc");
-  mysinkpad = gst_check_setup_sink_pad (fakesrc, &sinktemplate, NULL);
+  mysinkpad = gst_check_setup_sink_pad (fakesrc, &sinktemplate);
   gst_pad_set_event_function (mysinkpad, event_func);
   gst_pad_set_active (mysinkpad, TRUE);
   have_eos = FALSE;

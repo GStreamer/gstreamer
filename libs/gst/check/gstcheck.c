@@ -197,19 +197,10 @@ gst_check_teardown_element (GstElement * element)
   gst_object_unref (element);
 }
 
-/* FIXME: set_caps isn't that useful
- */
 GstPad *
-gst_check_setup_src_pad (GstElement * element,
-    GstStaticPadTemplate * tmpl, GstCaps * caps)
+gst_check_setup_src_pad (GstElement * element, GstStaticPadTemplate * tmpl)
 {
-  GstPad *srcpad;
-
-  srcpad = gst_check_setup_src_pad_by_name (element, tmpl, "sink");
-  if (caps)
-    fail_unless (gst_pad_push_event (srcpad, gst_event_new_caps (caps)),
-        "could not set caps on pad");
-  return srcpad;
+  return gst_check_setup_src_pad_by_name (element, tmpl, "sink");
 }
 
 GstPad *
@@ -277,19 +268,10 @@ gst_check_teardown_src_pad (GstElement * element)
   gst_check_teardown_pad_by_name (element, "sink");
 }
 
-/* FIXME: set_caps isn't that useful; might want to check if fixed,
- * then use set_use_fixed or somesuch */
 GstPad *
-gst_check_setup_sink_pad (GstElement * element, GstStaticPadTemplate * tmpl,
-    GstCaps * caps)
+gst_check_setup_sink_pad (GstElement * element, GstStaticPadTemplate * tmpl)
 {
-  GstPad *sinkpad;
-
-  sinkpad = gst_check_setup_sink_pad_by_name (element, tmpl, "src");
-  if (caps)
-    fail_unless (gst_pad_send_event (sinkpad, gst_event_new_caps (caps)),
-        "Could not set pad caps");
-  return sinkpad;
+  return gst_check_setup_sink_pad_by_name (element, tmpl, "src");
 }
 
 GstPad *
