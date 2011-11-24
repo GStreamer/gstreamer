@@ -937,7 +937,7 @@ gst_sdp_demux_configure_manager (GstSDPDemux * demux, char *rtsp_sdp)
         g_signal_connect (demux->session, "no-more-pads",
         (GCallback) rtsp_session_no_more_pads, demux);
   } else {
-    if (!(demux->session = gst_element_factory_make ("gstrtpbin", NULL)))
+    if (!(demux->session = gst_element_factory_make ("rtpbin", NULL)))
       goto manager_failed;
 
     /* connect to signals if we did not already do so */
