@@ -39,9 +39,9 @@ gst_opus_enc_create_id_buffer (gint nchannels, gint sample_rate,
   gst_byte_writer_put_data (&bw, (const guint8 *) "OpusHead", 8);
   gst_byte_writer_put_uint8 (&bw, 0);   /* version number */
   gst_byte_writer_put_uint8 (&bw, nchannels);
-  gst_byte_writer_put_uint16_le (&bw, 0);       /* pre-skip *//* TODO: endianness ? */
+  gst_byte_writer_put_uint16_le (&bw, 0);       /* pre-skip */
   gst_byte_writer_put_uint32_le (&bw, sample_rate);
-  gst_byte_writer_put_uint16_le (&bw, 0);       /* output gain *//* TODO: endianness ? */
+  gst_byte_writer_put_uint16_le (&bw, 0);       /* output gain */
   gst_byte_writer_put_uint8 (&bw, channel_mapping_family);
   if (channel_mapping_family > 0) {
     gst_byte_writer_put_uint8 (&bw, (nchannels + 1) / 2);
