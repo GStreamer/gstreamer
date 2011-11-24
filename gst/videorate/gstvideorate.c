@@ -94,18 +94,18 @@ enum
 
 enum
 {
-  ARG_0,
-  ARG_IN,
-  ARG_OUT,
-  ARG_DUP,
-  ARG_DROP,
-  ARG_SILENT,
-  ARG_NEW_PREF,
-  ARG_SKIP_TO_FIRST,
-  ARG_DROP_ONLY,
-  ARG_AVERAGE_PERIOD,
-  ARG_MAX_RATE,
-  ARG_FORCE_FPS
+  PROP_0,
+  PROP_IN,
+  PROP_OUT,
+  PROP_DUP,
+  PROP_DROP,
+  PROP_SILENT,
+  PROP_NEW_PREF,
+  PROP_SKIP_TO_FIRST,
+  PROP_DROP_ONLY,
+  PROP_AVERAGE_PERIOD,
+  PROP_MAX_RATE,
+  PROP_FORCE_FPS
       /* FILL ME */
 };
 
@@ -198,25 +198,25 @@ gst_video_rate_class_init (GstVideoRateClass * klass)
   base_class->fixate_caps = GST_DEBUG_FUNCPTR (gst_video_rate_fixate_caps);
   base_class->query = GST_DEBUG_FUNCPTR (gst_video_rate_query);
 
-  g_object_class_install_property (object_class, ARG_IN,
+  g_object_class_install_property (object_class, PROP_IN,
       g_param_spec_uint64 ("in", "In",
           "Number of input frames", 0, G_MAXUINT64, 0,
           G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
-  g_object_class_install_property (object_class, ARG_OUT,
+  g_object_class_install_property (object_class, PROP_OUT,
       g_param_spec_uint64 ("out", "Out", "Number of output frames", 0,
           G_MAXUINT64, 0, G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
   pspec_duplicate = g_param_spec_uint64 ("duplicate", "Duplicate",
       "Number of duplicated frames", 0, G_MAXUINT64, 0,
       G_PARAM_READABLE | G_PARAM_STATIC_STRINGS);
-  g_object_class_install_property (object_class, ARG_DUP, pspec_duplicate);
+  g_object_class_install_property (object_class, PROP_DUP, pspec_duplicate);
   pspec_drop = g_param_spec_uint64 ("drop", "Drop", "Number of dropped frames",
       0, G_MAXUINT64, 0, G_PARAM_READABLE | G_PARAM_STATIC_STRINGS);
-  g_object_class_install_property (object_class, ARG_DROP, pspec_drop);
-  g_object_class_install_property (object_class, ARG_SILENT,
+  g_object_class_install_property (object_class, PROP_DROP, pspec_drop);
+  g_object_class_install_property (object_class, PROP_SILENT,
       g_param_spec_boolean ("silent", "silent",
           "Don't emit notify for dropped and duplicated frames", DEFAULT_SILENT,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
-  g_object_class_install_property (object_class, ARG_NEW_PREF,
+  g_object_class_install_property (object_class, PROP_NEW_PREF,
       g_param_spec_double ("new-pref", "New Pref",
           "Value indicating how much to prefer new frames (unused)", 0.0, 1.0,
           DEFAULT_NEW_PREF, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
@@ -228,7 +228,7 @@ gst_video_rate_class_init (GstVideoRateClass * klass)
    *
    * Since: 0.10.25
    */
-  g_object_class_install_property (object_class, ARG_SKIP_TO_FIRST,
+  g_object_class_install_property (object_class, PROP_SKIP_TO_FIRST,
       g_param_spec_boolean ("skip-to-first", "Skip to first buffer",
           "Don't produce buffers before the first one we receive",
           DEFAULT_SKIP_TO_FIRST, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
@@ -240,7 +240,7 @@ gst_video_rate_class_init (GstVideoRateClass * klass)
    *
    * Since: 0.10.36
    */
-  g_object_class_install_property (object_class, ARG_DROP_ONLY,
+  g_object_class_install_property (object_class, PROP_DROP_ONLY,
       g_param_spec_boolean ("drop-only", "Only Drop",
           "Only drop frames, no duplicates are produced",
           DEFAULT_DROP_ONLY, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
@@ -254,7 +254,7 @@ gst_video_rate_class_init (GstVideoRateClass * klass)
    *
    * Since: 0.10.36
    */
-  g_object_class_install_property (object_class, ARG_AVERAGE_PERIOD,
+  g_object_class_install_property (object_class, PROP_AVERAGE_PERIOD,
       g_param_spec_uint64 ("average-period", "Period over which to average",
           "Period over which to average the framerate (in ns) (0 = disabled)",
           0, G_MAXINT64, DEFAULT_AVERAGE_PERIOD,
@@ -267,7 +267,7 @@ gst_video_rate_class_init (GstVideoRateClass * klass)
    *
    * Since: 0.10.36
    */
-  g_object_class_install_property (object_class, ARG_MAX_RATE,
+  g_object_class_install_property (object_class, PROP_MAX_RATE,
       g_param_spec_int ("max-rate", "maximum framerate",
           "Maximum framerate allowed to pass through "
           "(in frames per second, implies drop-only)",
@@ -281,7 +281,7 @@ gst_video_rate_class_init (GstVideoRateClass * klass)
    *
    * Since: 0.10.36
    */
-  g_object_class_install_property (object_class, ARG_FORCE_FPS,
+  g_object_class_install_property (object_class, PROP_FORCE_FPS,
       gst_param_spec_fraction ("force-fps", "Force output framerate",
           "Force output framerate (negative means negotiate via caps)",
           -1, 1, G_MAXINT, 1, DEFAULT_FORCE_FPS_N, DEFAULT_FORCE_FPS_D,
@@ -1183,27 +1183,27 @@ gst_video_rate_set_property (GObject * object,
 
   GST_OBJECT_LOCK (videorate);
   switch (prop_id) {
-    case ARG_SILENT:
+    case PROP_SILENT:
       videorate->silent = g_value_get_boolean (value);
       break;
-    case ARG_NEW_PREF:
+    case PROP_NEW_PREF:
       videorate->new_pref = g_value_get_double (value);
       break;
-    case ARG_SKIP_TO_FIRST:
+    case PROP_SKIP_TO_FIRST:
       videorate->skip_to_first = g_value_get_boolean (value);
       break;
-    case ARG_DROP_ONLY:
+    case PROP_DROP_ONLY:
       videorate->drop_only = g_value_get_boolean (value);
       goto reconfigure;
       break;
-    case ARG_AVERAGE_PERIOD:
+    case PROP_AVERAGE_PERIOD:
       videorate->average_period_set = g_value_get_uint64 (value);
       break;
-    case ARG_MAX_RATE:
+    case PROP_MAX_RATE:
       g_atomic_int_set (&videorate->max_rate, g_value_get_int (value));
       goto reconfigure;
       break;
-    case ARG_FORCE_FPS:
+    case PROP_FORCE_FPS:
       videorate->force_fps_n = gst_value_get_fraction_numerator (value);
       videorate->force_fps_d = gst_value_get_fraction_denominator (value);
       goto reconfigure;
@@ -1228,37 +1228,37 @@ gst_video_rate_get_property (GObject * object,
 
   GST_OBJECT_LOCK (videorate);
   switch (prop_id) {
-    case ARG_IN:
+    case PROP_IN:
       g_value_set_uint64 (value, videorate->in);
       break;
-    case ARG_OUT:
+    case PROP_OUT:
       g_value_set_uint64 (value, videorate->out);
       break;
-    case ARG_DUP:
+    case PROP_DUP:
       g_value_set_uint64 (value, videorate->dup);
       break;
-    case ARG_DROP:
+    case PROP_DROP:
       g_value_set_uint64 (value, videorate->drop);
       break;
-    case ARG_SILENT:
+    case PROP_SILENT:
       g_value_set_boolean (value, videorate->silent);
       break;
-    case ARG_NEW_PREF:
+    case PROP_NEW_PREF:
       g_value_set_double (value, videorate->new_pref);
       break;
-    case ARG_SKIP_TO_FIRST:
+    case PROP_SKIP_TO_FIRST:
       g_value_set_boolean (value, videorate->skip_to_first);
       break;
-    case ARG_DROP_ONLY:
+    case PROP_DROP_ONLY:
       g_value_set_boolean (value, videorate->drop_only);
       break;
-    case ARG_AVERAGE_PERIOD:
+    case PROP_AVERAGE_PERIOD:
       g_value_set_uint64 (value, videorate->average_period_set);
       break;
-    case ARG_MAX_RATE:
+    case PROP_MAX_RATE:
       g_value_set_int (value, g_atomic_int_get (&videorate->max_rate));
       break;
-    case ARG_FORCE_FPS:
+    case PROP_FORCE_FPS:
       gst_value_set_fraction (value, videorate->force_fps_n,
           videorate->force_fps_d);
       break;
