@@ -394,6 +394,22 @@ gst_play_sink_convert_bin_getcaps (GstPad * pad)
 
   gst_object_unref (self);
 
+  GST_DEBUG_OBJECT (pad, "Returning caps %" GST_PTR_FORMAT, ret);
+
+  return ret;
+}
+
+static gboolean
+gst_play_sink_convert_bin_acceptcaps (GstPad * pad, GstCaps * caps)
+{
+  GstCaps *allowed_caps;
+  gboolean ret;
+
+  allowed_caps = gst_pad_get_caps_reffed (pad);
+  /* FIXME 0.11: Should be a subset check now */
+  ret = gst_caps_can_intersect (caps, allowed_caps);
+  gst_caps_unref (allowed_caps);
+
   return ret;
 }
 
@@ -561,6 +577,8 @@ gst_play_sink_convert_bin_init (GstPlaySinkConvertBin * self)
       GST_DEBUG_FUNCPTR (gst_play_sink_convert_bin_sink_setcaps));
   gst_pad_set_getcaps_function (self->sinkpad,
       GST_DEBUG_FUNCPTR (gst_play_sink_convert_bin_getcaps));
+  gst_pad_set_acceptcaps_function (self->sinkpad,
+      GST_DEBUG_FUNCPTR (gst_play_sink_convert_bin_acceptcaps));
 
   self->sink_proxypad =
       GST_PAD_CAST (gst_proxy_pad_get_internal (GST_PROXY_PAD (self->sinkpad)));
@@ -572,6 +590,8 @@ gst_play_sink_convert_bin_init (GstPlaySinkConvertBin * self)
   self->srcpad = gst_ghost_pad_new_no_target_from_template ("src", templ);
   gst_pad_set_getcaps_function (self->srcpad,
       GST_DEBUG_FUNCPTR (gst_play_sink_convert_bin_getcaps));
+  gst_pad_set_acceptcaps_function (self->srcpad,
+      GST_DEBUG_FUNCPTR (gst_play_sink_convert_bin_acceptcaps));
   gst_element_add_pad (GST_ELEMENT_CAST (self), self->srcpad);
   gst_object_unref (templ);
 
