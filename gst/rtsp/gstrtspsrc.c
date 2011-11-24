@@ -353,9 +353,9 @@ gst_rtspsrc_class_init (GstRTSPSrcClass * klass)
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_class, PROP_CONNECTION_SPEED,
-      g_param_spec_uint ("connection-speed", "Connection Speed",
+      g_param_spec_uint64 ("connection-speed", "Connection Speed",
           "Network connection speed in kbps (0 = unknown)",
-          0, G_MAXINT / 1000, DEFAULT_CONNECTION_SPEED,
+          0, G_MAXUINT64 / 1000, DEFAULT_CONNECTION_SPEED,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_class, PROP_NAT_METHOD,
@@ -663,7 +663,7 @@ gst_rtspsrc_set_property (GObject * object, guint prop_id, const GValue * value,
       rtspsrc->latency = g_value_get_uint (value);
       break;
     case PROP_CONNECTION_SPEED:
-      rtspsrc->connection_speed = g_value_get_uint (value);
+      rtspsrc->connection_speed = g_value_get_uint64 (value);
       break;
     case PROP_NAT_METHOD:
       rtspsrc->nat_method = g_value_get_enum (value);
@@ -753,7 +753,7 @@ gst_rtspsrc_get_property (GObject * object, guint prop_id, GValue * value,
       g_value_set_uint (value, rtspsrc->latency);
       break;
     case PROP_CONNECTION_SPEED:
-      g_value_set_uint (value, rtspsrc->connection_speed);
+      g_value_set_uint64 (value, rtspsrc->connection_speed);
       break;
     case PROP_NAT_METHOD:
       g_value_set_enum (value, rtspsrc->nat_method);
