@@ -372,7 +372,7 @@ struct _GstPlayBin
   GstSourceGroup *next_group;   /* pointer to the next group */
 
   /* properties */
-  guint connection_speed;       /* connection speed in bits/sec (0 = unknown) */
+  guint64 connection_speed;     /* connection speed in bits/sec (0 = unknown) */
   gint current_video;           /* the currently selected stream */
   gint current_audio;           /* the currently selected stream */
   gint current_text;            /* the currently selected stream */
@@ -774,9 +774,9 @@ gst_play_bin_class_init (GstPlayBinClass * klass)
           G_PARAM_WRITABLE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_klass, PROP_CONNECTION_SPEED,
-      g_param_spec_uint ("connection-speed", "Connection Speed",
+      g_param_spec_uint64 ("connection-speed", "Connection Speed",
           "Network connection speed in kbps (0 = unknown)",
-          0, G_MAXUINT / 1000, DEFAULT_CONNECTION_SPEED,
+          0, G_MAXUINT64 / 1000, DEFAULT_CONNECTION_SPEED,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_klass, PROP_BUFFER_SIZE,
@@ -1911,7 +1911,7 @@ gst_play_bin_set_property (GObject * object, guint prop_id,
       break;
     case PROP_CONNECTION_SPEED:
       GST_PLAY_BIN_LOCK (playbin);
-      playbin->connection_speed = g_value_get_uint (value) * 1000;
+      playbin->connection_speed = g_value_get_uint64 (value) * 1000;
       GST_PLAY_BIN_UNLOCK (playbin);
       break;
     case PROP_BUFFER_SIZE:
@@ -2082,7 +2082,7 @@ gst_play_bin_get_property (GObject * object, guint prop_id, GValue * value,
       break;
     case PROP_CONNECTION_SPEED:
       GST_PLAY_BIN_LOCK (playbin);
-      g_value_set_uint (value, playbin->connection_speed / 1000);
+      g_value_set_uint64 (value, playbin->connection_speed / 1000);
       GST_PLAY_BIN_UNLOCK (playbin);
       break;
     case PROP_BUFFER_SIZE:

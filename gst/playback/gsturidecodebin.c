@@ -80,7 +80,7 @@ struct _GstURIDecodeBin
   GList *factories;             /* factories we can use for selecting elements */
 
   gchar *uri;
-  guint connection_speed;
+  guint64 connection_speed;
   GstCaps *caps;
   gchar *encoding;
 
@@ -366,9 +366,9 @@ gst_uri_decode_bin_class_init (GstURIDecodeBinClass * klass)
           GST_TYPE_ELEMENT, G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_class, PROP_CONNECTION_SPEED,
-      g_param_spec_uint ("connection-speed", "Connection Speed",
+      g_param_spec_uint64 ("connection-speed", "Connection Speed",
           "Network connection speed in kbps (0 = unknown)",
-          0, G_MAXUINT / 1000, DEFAULT_CONNECTION_SPEED,
+          0, G_MAXUINT64 / 1000, DEFAULT_CONNECTION_SPEED,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_class, PROP_CAPS,
@@ -732,7 +732,7 @@ gst_uri_decode_bin_set_property (GObject * object, guint prop_id,
       break;
     case PROP_CONNECTION_SPEED:
       GST_OBJECT_LOCK (dec);
-      dec->connection_speed = g_value_get_uint (value) * 1000;
+      dec->connection_speed = g_value_get_uint64 (value) * 1000;
       GST_OBJECT_UNLOCK (dec);
       break;
     case PROP_CAPS:
@@ -788,7 +788,7 @@ gst_uri_decode_bin_get_property (GObject * object, guint prop_id,
       break;
     case PROP_CONNECTION_SPEED:
       GST_OBJECT_LOCK (dec);
-      g_value_set_uint (value, dec->connection_speed / 1000);
+      g_value_set_uint64 (value, dec->connection_speed / 1000);
       GST_OBJECT_UNLOCK (dec);
       break;
     case PROP_CAPS:
