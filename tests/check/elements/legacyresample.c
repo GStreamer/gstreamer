@@ -71,8 +71,9 @@ setup_legacyresample (int channels, int inrate, int outrate)
           GST_STATE_PAUSED) == GST_STATE_CHANGE_SUCCESS,
       "could not set to paused");
 
-  mysrcpad = gst_check_setup_src_pad (legacyresample, &srctemplate, caps);
-  gst_pad_set_caps (mysrcpad, caps);
+  mysrcpad = gst_check_setup_src_pad (legacyresample, &srctemplate);
+  gst_pad_set_active (mysrcpad, TRUE);
+  fail_unless (gst_pad_set_caps (mysrcpad, caps));
   gst_caps_unref (caps);
 
   caps = gst_caps_from_string (RESAMPLE_CAPS_TEMPLATE_STRING);
@@ -81,15 +82,13 @@ setup_legacyresample (int channels, int inrate, int outrate)
       "rate", G_TYPE_INT, outrate, NULL);
   fail_unless (gst_caps_is_fixed (caps));
 
-  mysinkpad = gst_check_setup_sink_pad (legacyresample, &sinktemplate, caps);
+  mysinkpad = gst_check_setup_sink_pad (legacyresample, &sinktemplate);
+  gst_pad_set_active (mysinkpad, TRUE);
   /* this installs a getcaps func that will always return the caps we set
    * later */
-  gst_pad_set_caps (mysinkpad, caps);
+  fail_unless (gst_pad_set_caps (mysinkpad, caps));
   gst_pad_use_fixed_caps (mysinkpad);
   gst_caps_unref (caps);
-
-  gst_pad_set_active (mysinkpad, TRUE);
-  gst_pad_set_active (mysrcpad, TRUE);
 
   return legacyresample;
 }

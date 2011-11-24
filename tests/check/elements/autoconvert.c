@@ -115,9 +115,9 @@ GST_START_TEST (test_autoconvert_simple)
 
   set_autoconvert_factories (autoconvert);
 
-  test_src_pad = gst_check_setup_src_pad (autoconvert, &src_factory, NULL);
+  test_src_pad = gst_check_setup_src_pad (autoconvert, &src_factory);
   gst_pad_set_active (test_src_pad, TRUE);
-  test_sink_pad = gst_check_setup_sink_pad (autoconvert, &sink_factory, NULL);
+  test_sink_pad = gst_check_setup_sink_pad (autoconvert, &sink_factory);
   gst_pad_set_active (test_sink_pad, TRUE);
 
   gst_element_set_state (GST_ELEMENT_CAST (autoconvert), GST_STATE_PLAYING);

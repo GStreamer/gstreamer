@@ -126,8 +126,8 @@ GST_START_TEST (count_in_out)
 
   /* setup up */
   elem = gst_check_setup_element ("testscope");
-  srcpad = gst_check_setup_src_pad (elem, &srctemplate, NULL);
-  sinkpad = gst_check_setup_sink_pad (elem, &sinktemplate, NULL);
+  srcpad = gst_check_setup_src_pad (elem, &srctemplate);
+  sinkpad = gst_check_setup_sink_pad (elem, &sinktemplate);
   gst_pad_set_active (srcpad, TRUE);
   gst_pad_set_active (sinkpad, TRUE);
   fail_unless (gst_element_set_state (elem,

@@ -128,7 +128,7 @@ setup_asfmux (GstStaticPadTemplate * srctemplate, const gchar * sinkname)
   asfmux = gst_check_setup_element ("asfmux");
 
   mysrcpad = setup_src_pad (asfmux, srctemplate, NULL, sinkname);
-  mysinkpad = gst_check_setup_sink_pad (asfmux, &sinktemplate, NULL);
+  mysinkpad = gst_check_setup_sink_pad (asfmux, &sinktemplate);
   gst_pad_set_active (mysrcpad, TRUE);
   gst_pad_set_active (mysinkpad, TRUE);
   return asfmux;
