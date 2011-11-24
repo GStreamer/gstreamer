@@ -74,6 +74,7 @@ gboolean gst_aac_parse_stop (GstBaseParse * parse);
 
 static gboolean gst_aac_parse_sink_setcaps (GstBaseParse * parse,
     GstCaps * caps);
+static GstCaps *gst_aac_parse_sink_getcaps (GstBaseParse * parse);
 
 gboolean gst_aac_parse_check_valid_frame (GstBaseParse * parse,
     GstBaseParseFrame * frame, guint * size, gint * skipsize);
@@ -144,6 +145,7 @@ gst_aac_parse_class_init (GstAacParseClass * klass)
   parse_class->start = GST_DEBUG_FUNCPTR (gst_aac_parse_start);
   parse_class->stop = GST_DEBUG_FUNCPTR (gst_aac_parse_stop);
   parse_class->set_sink_caps = GST_DEBUG_FUNCPTR (gst_aac_parse_sink_setcaps);
+  parse_class->get_sink_caps = GST_DEBUG_FUNCPTR (gst_aac_parse_sink_getcaps);
   parse_class->parse_frame = GST_DEBUG_FUNCPTR (gst_aac_parse_parse_frame);
   parse_class->check_valid_frame =
       GST_DEBUG_FUNCPTR (gst_aac_parse_check_valid_frame);
@@ -722,4 +724,37 @@ gst_aac_parse_stop (GstBaseParse * parse)
 {
   GST_DEBUG ("stop");
   return TRUE;
+}
+
+static GstCaps *
+gst_aac_parse_sink_getcaps (GstBaseParse * parse)
+{
+  GstCaps *peercaps;
+  GstCaps *res;
+
+  peercaps = gst_pad_get_allowed_caps (GST_BASE_PARSE_SRC_PAD (parse));
+  if (peercaps) {
+    guint i, n;
+
+    /* Remove the framed field */
+    peercaps = gst_caps_make_writable (peercaps);
+    n = gst_caps_get_size (peercaps);
+    for (i = 0; i < n; i++) {
+      GstStructure *s = gst_caps_get_structure (peercaps, i);
+
+      gst_structure_remove_field (s, "framed");
+    }
+
+    res =
+        gst_caps_intersect_full (peercaps,
+        gst_pad_get_pad_template_caps (GST_BASE_PARSE_SRC_PAD (parse)),
+        GST_CAPS_INTERSECT_FIRST);
+    gst_caps_unref (peercaps);
+  } else {
+    res =
+        gst_caps_copy (gst_pad_get_pad_template_caps (GST_BASE_PARSE_SRC_PAD
+            (parse)));
+  }
+
+  return res;
 }
