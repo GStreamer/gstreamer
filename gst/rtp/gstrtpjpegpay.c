@@ -314,13 +314,13 @@ gst_rtp_jpeg_pay_setcaps (GstBaseRTPPayload * basepayload, GstCaps * caps)
     if (height <= 0 || height > 2040)
       goto invalid_dimension;
   }
-  pay->height = height / 8;
+  pay->height = GST_ROUND_UP_8 (height) / 8;
 
   if (gst_structure_get_int (caps_structure, "width", &width)) {
     if (width <= 0 || width > 2040)
       goto invalid_dimension;
   }
-  pay->width = width / 8;
+  pay->width = GST_ROUND_UP_8 (width) / 8;
 
   gst_basertppayload_set_options (basepayload, "video", TRUE, "JPEG", 90000);
   res = gst_basertppayload_set_outcaps (basepayload, NULL);
@@ -459,8 +459,8 @@ gst_rtp_jpeg_pay_read_sof (GstRtpJPEGPay * pay, const guint8 * data,
   if (width == 0 || width > 2040)
     goto invalid_dimension;
 
-  pay->height = height / 8;
-  pay->width = width / 8;
+  pay->height = GST_ROUND_UP_8 (height) / 8;
+  pay->width = GST_ROUND_UP_8 (width) / 8;
 
   /* we only support 3 components */
   if (data[off++] != 3)
