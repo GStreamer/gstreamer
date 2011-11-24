@@ -263,8 +263,12 @@ gst_gl_filter_start (GstBaseTransform * bt)
     else {
       /* this gl filter is a sink in terms of the gl chain */
       filter->display = gst_gl_display_new ();
-      gst_gl_display_create_context (filter->display,
+      isPerformed = gst_gl_display_create_context (filter->display,
           filter->external_gl_context);
+
+      if (!isPerformed)
+        GST_ELEMENT_ERROR (filter, RESOURCE, NOT_FOUND,
+            (GST_GL_DISPLAY_ERR_MSG (filter->display)), (NULL));
     }
   }
 
@@ -391,22 +395,39 @@ gst_gl_filter_set_caps (GstBaseTransform * bt, GstCaps * incaps,
 
   ret = gst_gl_buffer_parse_caps (outcaps, &filter->width, &filter->height);
 
+  if (!ret) {
+    GST_DEBUG ("bad caps");
+    return FALSE;
+  }
   //blocking call, generate a FBO
-  gst_gl_display_gen_fbo (filter->display, filter->width, filter->height,
+  ret = gst_gl_display_gen_fbo (filter->display, filter->width, filter->height,
       &filter->fbo, &filter->depthbuffer);
+
+  if (!ret) {
+    GST_ELEMENT_ERROR (filter, RESOURCE, NOT_FOUND,
+        (GST_GL_DISPLAY_ERR_MSG (filter->display)), (NULL));
+    return FALSE;
+  }
 
   if (filter_class->display_init_cb != NULL) {
     gst_gl_display_thread_add (filter->display, gst_gl_filter_start_gl, filter);
   }
 
   if (filter_class->onInitFBO)
-    filter_class->onInitFBO (filter);
-
-  if (filter_class->set_caps)
-    filter_class->set_caps (filter, incaps, outcaps);
+    ret = filter_class->onInitFBO (filter);
 
   if (!ret) {
-    GST_DEBUG ("bad caps");
+    GST_ELEMENT_ERROR (filter, RESOURCE, NOT_FOUND,
+        (GST_GL_DISPLAY_ERR_MSG (filter->display)), (NULL));
+    return FALSE;
+  }
+
+  if (filter_class->set_caps)
+    ret = filter_class->set_caps (filter, incaps, outcaps);
+
+  if (!ret) {
+    GST_ELEMENT_ERROR (filter, RESOURCE, NOT_FOUND,
+        (GST_GL_DISPLAY_ERR_MSG (filter->display)), (NULL));
     return FALSE;
   }
 

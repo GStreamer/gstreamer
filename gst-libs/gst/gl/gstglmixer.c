@@ -627,12 +627,18 @@ gst_gl_mixer_query (GstPad * pad, GstQuery * query)
 
           gst_gl_display_activate_gl_context (foreign_display, FALSE);
 
-          gst_gl_display_create_context (sink_pad->display, foreign_gl_context);
+          res =
+              gst_gl_display_create_context (sink_pad->display,
+              foreign_gl_context);
 
           gst_gl_display_activate_gl_context (foreign_display, TRUE);
 
-          gst_structure_set (structure, "gstgldisplay", G_TYPE_POINTER,
-              sink_pad->display, NULL);
+          if (res)
+            gst_structure_set (structure, "gstgldisplay", G_TYPE_POINTER,
+                sink_pad->display, NULL);
+          else
+            GST_ELEMENT_ERROR (mix, RESOURCE, NOT_FOUND,
+                (GST_GL_DISPLAY_ERR_MSG (sink_pad->display)), (NULL));
 
           /* does not work:
            * res = gst_pad_query_default (GST_PAD_CAST (sink_pad), query);*/
@@ -695,8 +701,13 @@ gst_gl_mixer_setcaps (GstPad * pad, GstCaps * caps)
 
   GST_GL_MIXER_STATE_UNLOCK (mix);
 
-  gst_gl_display_gen_fbo (mix->display, mix->width, mix->height,
-      &mix->fbo, &mix->depthbuffer);
+  if (!gst_gl_display_gen_fbo (mix->display, mix->width, mix->height,
+          &mix->fbo, &mix->depthbuffer)) {
+    GST_ELEMENT_ERROR (mix, RESOURCE, NOT_FOUND,
+        (GST_GL_DISPLAY_ERR_MSG (mix->display)), (NULL));
+    gst_object_unref (mix);
+    return FALSE;
+  }
 
   if (mixer_class->set_caps)
     mixer_class->set_caps (mix, caps);

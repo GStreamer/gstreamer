@@ -40,6 +40,7 @@ G_BEGIN_DECLS
   (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_GL_DISPLAY))
 #define GST_IS_GL_DISPLAY_CLASS(klass)				\
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_GL_DISPLAY))
+#define GST_GL_DISPLAY_CAST(obj) ((GstGLDisplay*)(obj))
 
 typedef struct _GstGLDisplay GstGLDisplay;
 typedef struct _GstGLDisplayClass GstGLDisplayClass;
@@ -76,6 +77,8 @@ typedef void (*GstGLDisplayThreadFunc) (GstGLDisplay * display, gpointer data);
 //opengl scene callback
 typedef void (*GLCB) (gint, gint, guint, gpointer stuff);
 typedef void (*GLCB_V2) (gpointer stuff);
+
+#define GST_GL_DISPLAY_ERR_MSG(obj) (GST_GL_DISPLAY_CAST(obj)->error_message)
 
 struct _GstGLDisplay
 {
@@ -224,6 +227,8 @@ struct _GstGLDisplay
   GstGLShader *shader_download_RGB;
 #endif
 
+  gchar *error_message;
+
 };
 
 
@@ -240,7 +245,7 @@ GType gst_gl_display_get_type (void);
 //------------------------------------------------------------
 GstGLDisplay *gst_gl_display_new (void);
 
-void gst_gl_display_create_context (GstGLDisplay * display,
+gboolean gst_gl_display_create_context (GstGLDisplay * display,
     gulong external_gl_context);
 gboolean gst_gl_display_redisplay (GstGLDisplay * display, GLuint texture,
     gint gl_width, gint gl_height, gint window_width, gint window_height,
@@ -254,17 +259,17 @@ void gst_gl_display_gen_texture (GstGLDisplay * display, GLuint * pTexture,
 void gst_gl_display_del_texture (GstGLDisplay * display, GLuint texture,
     GLint width, GLint height);
 
-void gst_gl_display_init_upload (GstGLDisplay * display,
+gboolean gst_gl_display_init_upload (GstGLDisplay * display,
     GstVideoFormat video_format, guint gl_width, guint gl_height,
     gint video_width, gint video_height);
 gboolean gst_gl_display_do_upload (GstGLDisplay * display, GLuint texture,
     gint data_width, gint data_height, gpointer data);
-void gst_gl_display_init_download (GstGLDisplay * display,
+gboolean gst_gl_display_init_download (GstGLDisplay * display,
     GstVideoFormat video_format, gint width, gint height);
 gboolean gst_gl_display_do_download (GstGLDisplay * display, GLuint texture,
     gint width, gint height, gpointer data);
 
-void gst_gl_display_gen_fbo (GstGLDisplay * display, gint width, gint height,
+gboolean gst_gl_display_gen_fbo (GstGLDisplay * display, gint width, gint height,
     GLuint * fbo, GLuint * depthbuffer);
 gboolean gst_gl_display_use_fbo (GstGLDisplay * display, gint texture_fbo_width,
     gint texture_fbo_height, GLuint fbo, GLuint depth_buffer,
@@ -278,7 +283,7 @@ gboolean gst_gl_display_use_fbo_v2 (GstGLDisplay * display, gint texture_fbo_wid
 void gst_gl_display_del_fbo (GstGLDisplay * display, GLuint fbo,
     GLuint depth_buffer);
 
-void gst_gl_display_gen_shader (GstGLDisplay * display,
+gboolean gst_gl_display_gen_shader (GstGLDisplay * display,
     const gchar * shader_vertex_source,
     const gchar * shader_fragment_source, GstGLShader ** shader);
 void gst_gl_display_del_shader (GstGLDisplay * display, GstGLShader * shader);
@@ -291,6 +296,9 @@ void gst_gl_display_set_client_data (GstGLDisplay * display, gpointer data);
 
 gulong gst_gl_display_get_internal_gl_context (GstGLDisplay * display);
 void gst_gl_display_activate_gl_context (GstGLDisplay * display, gboolean activate);
+
+/* Must be called inside a lock/unlock on display, or within the glthread */
+void gst_gl_display_set_error (GstGLDisplay * display, const char * format, ...);
 
 G_END_DECLS
 

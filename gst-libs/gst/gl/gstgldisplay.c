@@ -466,6 +466,8 @@ gst_gl_display_init (GstGLDisplay * display, GstGLDisplayClass * klass)
       "  gl_FragColor = texture2D( s_texture, v_texCoord );\n"
       "}                                                   \n";
 #endif
+
+  display->error_message = NULL;
 }
 
 static void
@@ -532,6 +534,11 @@ gst_gl_display_finalize (GObject * object)
     display->use_fbo_scene_cb_v2 = NULL;
   if (display->use_fbo_stuff)
     display->use_fbo_stuff = NULL;
+
+  if (display->error_message) {
+    g_free (display->error_message);
+    display->error_message = NULL;
+  }
 }
 
 
@@ -540,6 +547,22 @@ gst_gl_display_finalize (GObject * object)
 //------------------------------------------------------------
 
 /* Called in the gl thread */
+
+void
+gst_gl_display_set_error (GstGLDisplay * display, const char *format, ...)
+{
+  va_list args;
+
+  if (display->error_message)
+    g_free (display->error_message);
+
+  va_start (args, format);
+  display->error_message = g_strdup_vprintf (format, args);
+  va_end (args);
+
+  display->isAlive = FALSE;
+}
+
 gpointer
 gst_gl_display_thread_create_context (GstGLDisplay * display)
 {
@@ -549,8 +572,7 @@ gst_gl_display_thread_create_context (GstGLDisplay * display)
   display->gl_window = gst_gl_window_new (display->external_gl_context);
 
   if (!display->gl_window) {
-    display->isAlive = FALSE;
-    GST_ERROR_OBJECT (display, "Failed to create gl window");
+    gst_gl_display_set_error (display, "Failed to create gl window");
     g_cond_signal (display->cond_create_context);
     gst_gl_display_unlock (display);
     return NULL;
@@ -563,9 +585,8 @@ gst_gl_display_thread_create_context (GstGLDisplay * display)
 #endif
   if (err != GLEW_OK) {
 #ifndef OPENGL_ES2
-    GST_ERROR_OBJECT (display, "Failed to init GLEW: %s",
+    gst_gl_display_set_error (display, "Failed to init GLEW: %s",
         glewGetErrorString (err));
-    display->isAlive = FALSE;
 #endif
   } else {
     //OpenGL > 1.2.0 and Glew > 1.4.0
@@ -600,13 +621,12 @@ gst_gl_display_thread_create_context (GstGLDisplay * display)
             && opengl_version_minor < 2) || (GLEW_VERSION_MAJOR < 2
             && GLEW_VERSION_MAJOR >= 1 && GLEW_VERSION_MINOR < 4)) {
       //turn off the pipeline, the old drivers are not yet supported
-      GST_WARNING ("Required OpenGL >= 1.2.0 and Glew >= 1.4.0");
-      display->isAlive = FALSE;
+      gst_gl_display_set_error (display,
+          "Required OpenGL >= 1.2.0 and Glew >= 1.4.0");
     }
 #else
     if (!GL_ES_VERSION_2_0) {
-      GST_WARNING ("Required OpenGL ES > 2.0");
-      display->isAlive = FALSE;
+      gst_gl_display_set_error (display, "Required OpenGL ES > 2.0");
     }
 #endif
   }
@@ -788,11 +808,10 @@ gst_gl_display_thread_init_redisplay (GstGLDisplay * display)
 
   gst_gl_shader_compile (display->redisplay_shader, &error);
   if (error) {
-    GST_ERROR ("%s", error->message);
+    gst_gl_display_set_error (display, "%s", error->message);
     g_error_free (error);
     error = NULL;
     gst_gl_shader_use (NULL);
-    display->isAlive = FALSE;
   } else {
     display->redisplay_attr_position_loc =
         gst_gl_shader_get_attribute_location (display->redisplay_shader,
@@ -861,7 +880,8 @@ gst_gl_display_thread_init_upload (GstGLDisplay * display)
 #ifndef OPENGL_ES2
             if (!gst_gl_shader_compile_and_check (display->shader_upload_YUY2,
                     text_shader_upload_YUY2, GST_GL_SHADER_FRAGMENT_SOURCE)) {
-              display->isAlive = FALSE;
+              gst_gl_display_set_error (display,
+                  "Failed to initialize shader for uploading YUY2");
               g_object_unref (G_OBJECT (display->shader_upload_YUY2));
               display->shader_upload_YUY2 = NULL;
             }
@@ -873,11 +893,10 @@ gst_gl_display_thread_init_upload (GstGLDisplay * display)
 
             gst_gl_shader_compile (display->shader_upload_YUY2, &error);
             if (error) {
-              GST_ERROR ("%s", error->message);
+              gst_gl_display_set_error (display, "%s", error->message);
               g_error_free (error);
               error = NULL;
               gst_gl_shader_use (NULL);
-              display->isAlive = FALSE;
               g_object_unref (G_OBJECT (display->shader_upload_YUY2));
               display->shader_upload_YUY2 = NULL;
             } else {
@@ -906,7 +925,8 @@ gst_gl_display_thread_init_upload (GstGLDisplay * display)
 #ifndef OPENGL_ES2
             if (!gst_gl_shader_compile_and_check (display->shader_upload_UYVY,
                     text_shader_upload_UYVY, GST_GL_SHADER_FRAGMENT_SOURCE)) {
-              display->isAlive = FALSE;
+              gst_gl_display_set_error (display,
+                  "Failed to initialize shader for uploading UYVY");
               g_object_unref (G_OBJECT (display->shader_upload_UYVY));
               display->shader_upload_UYVY = NULL;
             }
@@ -918,11 +938,10 @@ gst_gl_display_thread_init_upload (GstGLDisplay * display)
 
             gst_gl_shader_compile (display->shader_upload_UYVY, &error);
             if (error) {
-              GST_ERROR ("%s", error->message);
+              gst_gl_display_set_error (display, "%s", error->message);
               g_error_free (error);
               error = NULL;
               gst_gl_shader_use (NULL);
-              display->isAlive = FALSE;
               g_object_unref (G_OBJECT (display->shader_upload_UYVY));
               display->shader_upload_UYVY = NULL;
             } else {
@@ -960,7 +979,8 @@ gst_gl_display_thread_init_upload (GstGLDisplay * display)
             if (!gst_gl_shader_compile_and_check
                 (display->shader_upload_I420_YV12, text_shader_upload_I420_YV12,
                     GST_GL_SHADER_FRAGMENT_SOURCE)) {
-              display->isAlive = FALSE;
+              gst_gl_display_set_error (display,
+                  "Failed to initialize shader for uploading I420 or YV12");
               g_object_unref (G_OBJECT (display->shader_upload_I420_YV12));
               display->shader_upload_I420_YV12 = NULL;
             }
@@ -972,11 +992,10 @@ gst_gl_display_thread_init_upload (GstGLDisplay * display)
 
             gst_gl_shader_compile (display->shader_upload_I420_YV12, &error);
             if (error) {
-              GST_ERROR ("%s", error->message);
+              gst_gl_display_set_error (display, "%s", error->message);
               g_error_free (error);
               error = NULL;
               gst_gl_shader_use (NULL);
-              display->isAlive = FALSE;
               g_object_unref (G_OBJECT (display->shader_upload_I420_YV12));
               display->shader_upload_I420_YV12 = NULL;
             } else {
@@ -998,7 +1017,8 @@ gst_gl_display_thread_init_upload (GstGLDisplay * display)
             if (!gst_gl_shader_compile_and_check (display->shader_upload_AYUV,
                     display->text_shader_upload_AYUV,
                     GST_GL_SHADER_FRAGMENT_SOURCE)) {
-              display->isAlive = FALSE;
+              gst_gl_display_set_error (display,
+                  "Failed to initialize shader for uploading AYUV");
               g_object_unref (G_OBJECT (display->shader_upload_AYUV));
               display->shader_upload_AYUV = NULL;
             }
@@ -1010,11 +1030,10 @@ gst_gl_display_thread_init_upload (GstGLDisplay * display)
 
             gst_gl_shader_compile (display->shader_upload_AYUV, &error);
             if (error) {
-              GST_ERROR ("%s", error->message);
+              gst_gl_display_set_error (display, "%s", error->message);
               g_error_free (error);
               error = NULL;
               gst_gl_shader_use (NULL);
-              display->isAlive = FALSE;
               g_object_unref (G_OBJECT (display->shader_upload_AYUV));
               display->shader_upload_AYUV = NULL;
             } else {
@@ -1055,9 +1074,8 @@ gst_gl_display_thread_init_upload (GstGLDisplay * display)
           case GST_VIDEO_FORMAT_AYUV:
             //turn off the pipeline because
             //MESA only support YUY2 and UYVY
-            GST_WARNING
-                ("Your MESA version only supports YUY2 and UYVY (GLSL is required for others yuv formats");
-            display->isAlive = FALSE;
+            gst_gl_display_set_error (display,
+                "Your MESA version only supports YUY2 and UYVY (GLSL is required for others yuv formats)");
             break;
           default:
             g_assert_not_reached ();
@@ -1074,16 +1092,12 @@ gst_gl_display_thread_init_upload (GstGLDisplay * display)
             GST_GL_DISPLAY_CONVERSION_MATRIX;
 
         //turn off the pipeline because we do not support it yet
-        GST_WARNING
-            ("Colorspace conversion using Color Matrix is not yet supported");
-        display->isAlive = FALSE;
+        gst_gl_display_set_error (display,
+            "Colorspace conversion using Color Matrix is not yet supported");
       } else {
-        GST_WARNING ("Context, ARB_fragment_shader supported: no");
-        GST_WARNING ("Context, GLEW_ARB_imaging supported: no");
-        GST_WARNING ("Context, GLEW_MESA_ycbcr_texture supported: no");
-
         //turn off the pipeline because colorspace conversion is not possible
-        display->isAlive = FALSE;
+        gst_gl_display_set_error (display,
+            "ARB_fragment_shader supported, GLEW_ARB_imaging supported, GLEW_MESA_ycbcr_texture supported, not supported");
       }
     }
       break;
@@ -1298,8 +1312,8 @@ gst_gl_display_thread_init_download (GstGLDisplay * display)
       } else {
         //turn off the pipeline because Frame buffer object is a requirement when using filters
         //or when using GLSL colorspace conversion
-        GST_WARNING ("Context, EXT_framebuffer_object supported: no");
-        display->isAlive = FALSE;
+        gst_gl_display_set_error (display,
+            "Context, EXT_framebuffer_object supported: no");
       }
     }
       break;
@@ -1332,11 +1346,10 @@ gst_gl_display_thread_init_download (GstGLDisplay * display)
 
       gst_gl_shader_compile (display->shader_download_RGB, &error);
       if (error) {
-        GST_ERROR ("%s", error->message);
+        gst_gl_display_set_error (display, "%s", error->message);
         g_error_free (error);
         error = NULL;
         gst_gl_shader_use (NULL);
-        display->isAlive = FALSE;
         g_object_unref (G_OBJECT (display->shader_download_RGB));
         display->shader_download_RGB = NULL;
       } else {
@@ -1376,7 +1389,8 @@ gst_gl_display_thread_init_download (GstGLDisplay * display)
 #ifndef OPENGL_ES2
             if (!gst_gl_shader_compile_and_check (display->shader_download_YUY2,
                     text_shader_download_YUY2, GST_GL_SHADER_FRAGMENT_SOURCE)) {
-              display->isAlive = FALSE;
+              gst_gl_display_set_error (display,
+                  "Failed to initialize shader for downloading YUY2");
               g_object_unref (G_OBJECT (display->shader_download_YUY2));
               display->shader_download_YUY2 = NULL;
             }
@@ -1388,11 +1402,10 @@ gst_gl_display_thread_init_download (GstGLDisplay * display)
 
             gst_gl_shader_compile (display->shader_download_YUY2, &error);
             if (error) {
-              GST_ERROR ("%s", error->message);
+              gst_gl_display_set_error (display, "%s", error->message);
               g_error_free (error);
               error = NULL;
               gst_gl_shader_use (NULL);
-              display->isAlive = FALSE;
               g_object_unref (G_OBJECT (display->shader_download_YUY2));
               display->shader_download_YUY2 = NULL;
             } else {
@@ -1417,7 +1430,8 @@ gst_gl_display_thread_init_download (GstGLDisplay * display)
 #ifndef OPENGL_ES2
             if (!gst_gl_shader_compile_and_check (display->shader_download_UYVY,
                     text_shader_download_UYVY, GST_GL_SHADER_FRAGMENT_SOURCE)) {
-              display->isAlive = FALSE;
+              gst_gl_display_set_error (display,
+                  "Failed to initialize shader for downloading UYVY");
               g_object_unref (G_OBJECT (display->shader_download_UYVY));
               display->shader_download_UYVY = NULL;
             }
@@ -1429,11 +1443,10 @@ gst_gl_display_thread_init_download (GstGLDisplay * display)
 
             gst_gl_shader_compile (display->shader_download_UYVY, &error);
             if (error) {
-              GST_ERROR ("%s", error->message);
+              gst_gl_display_set_error (display, "%s", error->message);
               g_error_free (error);
               error = NULL;
               gst_gl_shader_use (NULL);
-              display->isAlive = FALSE;
               g_object_unref (G_OBJECT (display->shader_download_UYVY));
               display->shader_download_UYVY = NULL;
             } else {
@@ -1455,7 +1468,8 @@ gst_gl_display_thread_init_download (GstGLDisplay * display)
                 (display->shader_download_I420_YV12,
                     display->text_shader_download_I420_YV12,
                     GST_GL_SHADER_FRAGMENT_SOURCE)) {
-              display->isAlive = FALSE;
+              gst_gl_display_set_error (display,
+                  "Failed to initialize shader for downloading I420 or YV12");
               g_object_unref (G_OBJECT (display->shader_download_I420_YV12));
               display->shader_download_I420_YV12 = NULL;
             }
@@ -1467,7 +1481,8 @@ gst_gl_display_thread_init_download (GstGLDisplay * display)
             if (!gst_gl_shader_compile_and_check (display->shader_download_AYUV,
                     display->text_shader_download_AYUV,
                     GST_GL_SHADER_FRAGMENT_SOURCE)) {
-              display->isAlive = FALSE;
+              gst_gl_display_set_error (display,
+                  "Failed to initialize shader for downloading AYUV");
               g_object_unref (G_OBJECT (display->shader_download_AYUV));
               display->shader_download_AYUV = NULL;
             }
@@ -1479,11 +1494,10 @@ gst_gl_display_thread_init_download (GstGLDisplay * display)
 
             gst_gl_shader_compile (display->shader_download_AYUV, &error);
             if (error) {
-              GST_ERROR ("%s", error->message);
+              gst_gl_display_set_error (display, "%s", error->message);
               g_error_free (error);
               error = NULL;
               gst_gl_shader_use (NULL);
-              display->isAlive = FALSE;
               g_object_unref (G_OBJECT (display->shader_download_AYUV));
               display->shader_download_AYUV = NULL;
             } else {
@@ -1501,8 +1515,8 @@ gst_gl_display_thread_init_download (GstGLDisplay * display)
         }
       } else {
         //turn off the pipeline because colorspace conversion is not possible
-        GST_WARNING ("Context, ARB_fragment_shader supported: no");
-        display->isAlive = FALSE;
+        gst_gl_display_set_error (display,
+            "Context, ARB_fragment_shader supported: no");
       }
     }
       break;
@@ -1555,8 +1569,8 @@ gst_gl_display_thread_gen_fbo (GstGLDisplay * display)
 
   if (!GLEW_EXT_framebuffer_object) {
     //turn off the pipeline because Frame buffer object is a not present
-    GST_WARNING ("Context, EXT_framebuffer_object supported: no");
-    display->isAlive = FALSE;
+    gst_gl_display_set_error (display,
+        "Context, EXT_framebuffer_object not supported");
     return;
   }
   //setup FBO
@@ -1752,7 +1766,6 @@ gst_gl_display_thread_gen_shader (GstGLDisplay * display)
   if (GLEW_ARB_fragment_shader) {
     if (display->gen_shader_vertex_source ||
         display->gen_shader_fragment_source) {
-      gboolean isAlive = TRUE;
       GError *error = NULL;
 
       display->gen_shader = gst_gl_shader_new ();
@@ -1767,22 +1780,17 @@ gst_gl_display_thread_gen_shader (GstGLDisplay * display)
 
       gst_gl_shader_compile (display->gen_shader, &error);
       if (error) {
-        GST_ERROR ("%s", error->message);
+        gst_gl_display_set_error (display, "%s", error->message);
         g_error_free (error);
         error = NULL;
         gst_gl_shader_use (NULL);
-        isAlive = FALSE;
-      }
-
-      if (!isAlive) {
-        display->isAlive = FALSE;
         g_object_unref (G_OBJECT (display->gen_shader));
         display->gen_shader = NULL;
       }
     }
   } else {
-    GST_WARNING ("One of the filter required ARB_fragment_shader");
-    display->isAlive = FALSE;
+    gst_gl_display_set_error (display,
+        "One of the filter required ARB_fragment_shader");
     display->gen_shader = NULL;
   }
 }
@@ -1956,9 +1964,7 @@ gst_gl_display_on_draw (GstGLDisplay * display)
 void
 gst_gl_display_on_close (GstGLDisplay * display)
 {
-  GST_INFO ("on close");
-
-  display->isAlive = FALSE;
+  gst_gl_display_set_error (display, "Output window was closed");
 }
 
 
@@ -2143,10 +2149,12 @@ gst_gl_display_new (void)
 
 
 /* Create an opengl context (one context for one GstGLDisplay) */
-void
+gboolean
 gst_gl_display_create_context (GstGLDisplay * display,
     gulong external_gl_context)
 {
+  gboolean isAlive = FALSE;
+
   gst_gl_display_lock (display);
 
   if (!display->gl_window) {
@@ -2161,7 +2169,11 @@ gst_gl_display_create_context (GstGLDisplay * display,
     GST_INFO ("gl thread created");
   }
 
+  isAlive = display->isAlive;
+
   gst_gl_display_unlock (display);
+
+  return isAlive;
 }
 
 
@@ -2192,6 +2204,7 @@ gst_gl_display_redisplay (GstGLDisplay * display, GLuint texture,
     display->keep_aspect_ratio = keep_aspect_ratio;
     if (display->gl_window)
       gst_gl_window_draw (display->gl_window, window_width, window_height);
+    isAlive = display->isAlive;
   }
   gst_gl_display_unlock (display);
 
@@ -2266,10 +2279,12 @@ gst_gl_display_del_texture (GstGLDisplay * display, GLuint texture, GLint width,
 
 
 /* Called by the first gl element of a video/x-raw-gl flow */
-void
+gboolean
 gst_gl_display_init_upload (GstGLDisplay * display, GstVideoFormat video_format,
     guint gl_width, guint gl_height, gint video_width, gint video_height)
 {
+  gboolean isAlive = FALSE;
+
   gst_gl_display_lock (display);
   display->upload_video_format = video_format;
   display->upload_width = gl_width;
@@ -2278,7 +2293,10 @@ gst_gl_display_init_upload (GstGLDisplay * display, GstVideoFormat video_format,
   display->upload_data_height = video_height;
   gst_gl_window_send_message (display->gl_window,
       GST_GL_WINDOW_CB (gst_gl_display_thread_init_upload), display);
+  isAlive = display->isAlive;
   gst_gl_display_unlock (display);
+
+  return isAlive;
 }
 
 
@@ -2298,6 +2316,7 @@ gst_gl_display_do_upload (GstGLDisplay * display, GLuint texture,
     display->upload_data = data;
     gst_gl_window_send_message (display->gl_window,
         GST_GL_WINDOW_CB (gst_gl_display_thread_do_upload), display);
+    isAlive = display->isAlive;
   }
   gst_gl_display_unlock (display);
 
@@ -2306,17 +2325,22 @@ gst_gl_display_do_upload (GstGLDisplay * display, GLuint texture,
 
 
 /* Called by the gldownload and glcolorscale element */
-void
+gboolean
 gst_gl_display_init_download (GstGLDisplay * display,
     GstVideoFormat video_format, gint width, gint height)
 {
+  gboolean isAlive = FALSE;
+
   gst_gl_display_lock (display);
   display->download_video_format = video_format;
   display->download_width = width;
   display->download_height = height;
   gst_gl_window_send_message (display->gl_window,
       GST_GL_WINDOW_CB (gst_gl_display_thread_init_download), display);
+  isAlive = display->isAlive;
   gst_gl_display_unlock (display);
+
+  return isAlive;
 }
 
 
@@ -2337,6 +2361,7 @@ gst_gl_display_do_download (GstGLDisplay * display, GLuint texture,
     display->ouput_texture_height = height;
     gst_gl_window_send_message (display->gl_window,
         GST_GL_WINDOW_CB (gst_gl_display_thread_do_download), display);
+    isAlive = display->isAlive;
   }
   gst_gl_display_unlock (display);
 
@@ -2345,10 +2370,12 @@ gst_gl_display_do_download (GstGLDisplay * display, GLuint texture,
 
 
 /* Called by gltestsrc and glfilter */
-void
+gboolean
 gst_gl_display_gen_fbo (GstGLDisplay * display, gint width, gint height,
     GLuint * fbo, GLuint * depthbuffer)
 {
+  gboolean isAlive = FALSE;
+
   gst_gl_display_lock (display);
   if (display->isAlive) {
     display->gen_fbo_width = width;
@@ -2357,8 +2384,11 @@ gst_gl_display_gen_fbo (GstGLDisplay * display, gint width, gint height,
         GST_GL_WINDOW_CB (gst_gl_display_thread_gen_fbo), display);
     *fbo = display->generated_fbo;
     *depthbuffer = display->generated_depth_buffer;
+    isAlive = display->isAlive;
   }
   gst_gl_display_unlock (display);
+
+  return isAlive;
 }
 
 
@@ -2400,6 +2430,7 @@ gst_gl_display_use_fbo (GstGLDisplay * display, gint texture_fbo_width,
     display->input_texture = input_texture;
     gst_gl_window_send_message (display->gl_window,
         GST_GL_WINDOW_CB (gst_gl_display_thread_use_fbo), display);
+    isAlive = display->isAlive;
   }
   gst_gl_display_unlock (display);
 
@@ -2425,6 +2456,7 @@ gst_gl_display_use_fbo_v2 (GstGLDisplay * display, gint texture_fbo_width,
     display->use_fbo_stuff = stuff;
     gst_gl_window_send_message (display->gl_window,
         GST_GL_WINDOW_CB (gst_gl_display_thread_use_fbo_v2), display);
+    isAlive = display->isAlive;
   }
   gst_gl_display_unlock (display);
 
@@ -2445,22 +2477,27 @@ gst_gl_display_del_fbo (GstGLDisplay * display, GLuint fbo, GLuint depth_buffer)
 
 
 /* Called by glfilter */
-void
+gboolean
 gst_gl_display_gen_shader (GstGLDisplay * display,
     const gchar * shader_vertex_source,
     const gchar * shader_fragment_source, GstGLShader ** shader)
 {
+  gboolean isAlive = FALSE;
+
   gst_gl_display_lock (display);
   display->gen_shader_vertex_source = shader_vertex_source;
   display->gen_shader_fragment_source = shader_fragment_source;
   gst_gl_window_send_message (display->gl_window,
       GST_GL_WINDOW_CB (gst_gl_display_thread_gen_shader), display);
+  isAlive = display->isAlive;
   if (shader)
     *shader = display->gen_shader;
   display->gen_shader = NULL;
   display->gen_shader_vertex_source = NULL;
   display->gen_shader_fragment_source = NULL;
   gst_gl_display_unlock (display);
+
+  return isAlive;
 }
 
 
@@ -2611,8 +2648,8 @@ gst_gl_display_thread_init_upload_fbo (GstGLDisplay * display)
     gst_gl_display_thread_do_upload_make (display);
   } else {
     //turn off the pipeline because Frame buffer object is a not present
-    GST_WARNING ("Context, EXT_framebuffer_object supported: no");
-    display->isAlive = FALSE;
+    gst_gl_display_set_error (display,
+        "Context, EXT_framebuffer_object supported: no");
   }
 }
 
