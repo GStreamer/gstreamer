@@ -179,12 +179,12 @@ gst_play_sink_audio_convert_class_init (GstPlaySinkAudioConvertClass * klass)
   g_object_class_install_property (gobject_class, PROP_USE_CONVERTERS,
       g_param_spec_boolean ("use-converters", "Use converters",
           "Whether to use conversion elements", FALSE,
-          G_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY | G_PARAM_STATIC_STRINGS));
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_class, PROP_USE_VOLUME,
       g_param_spec_boolean ("use-volume", "Use volume",
           "Whether to use a volume element", FALSE,
-          G_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY | G_PARAM_STATIC_STRINGS));
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   gst_element_class_set_details_simple (gstelement_class,
       "Player Sink Audio Converter", "Audio/Bin/Converter",
