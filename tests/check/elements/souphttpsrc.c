@@ -364,7 +364,6 @@ GST_START_TEST (test_icy_stream)
 
   src = gst_element_factory_make ("souphttpsrc", NULL);
   fail_unless (src != NULL);
-  g_object_set (src, "iradio-mode", TRUE, NULL);
 
   sink = gst_element_factory_make ("fakesink", NULL);
   fail_unless (sink != NULL);
