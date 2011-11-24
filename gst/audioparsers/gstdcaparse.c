@@ -479,7 +479,7 @@ gst_dca_parse_get_sink_caps (GstBaseParse * parse)
     gst_caps_unref (peercaps);
   } else {
     res =
-        gst_caps_copy (gst_pad_get_pad_template_caps (GST_BASE_PARSE_SRC_PAD
+        gst_caps_copy (gst_pad_get_pad_template_caps (GST_BASE_PARSE_SINK_PAD
             (parse)));
   }
 
