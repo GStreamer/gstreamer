@@ -51,8 +51,8 @@ setup_xingmux ()
 
   GST_DEBUG ("setup_xingmux");
   xingmux = gst_check_setup_element ("xingmux");
-  mysrcpad = gst_check_setup_src_pad (xingmux, &srctemplate, NULL);
-  mysinkpad = gst_check_setup_sink_pad (xingmux, &sinktemplate, NULL);
+  mysrcpad = gst_check_setup_src_pad (xingmux, &srctemplate);
+  mysinkpad = gst_check_setup_sink_pad (xingmux, &sinktemplate);
   gst_pad_set_active (mysrcpad, TRUE);
   gst_pad_set_active (mysinkpad, TRUE);
 
