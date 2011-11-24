@@ -387,6 +387,10 @@ print_element_properties_info (GstElement * element)
         n_print ("%-23.23s Unsigned Long. ", "");
         g_print ("Range: %lu - %lu Default: %lu ",
             pulong->minimum, pulong->maximum, g_value_get_ulong (&value));
+
+        GST_ERROR ("%s: property '%s' of type char: consider changing to "
+            "uint/uint64", GST_OBJECT_NAME (element),
+            g_param_spec_get_name (param));
         break;
       }
       case G_TYPE_LONG:
@@ -396,6 +400,10 @@ print_element_properties_info (GstElement * element)
         n_print ("%-23.23s Long. ", "");
         g_print ("Range: %ld - %ld Default: %ld ",
             plong->minimum, plong->maximum, g_value_get_long (&value));
+
+        GST_ERROR ("%s: property '%s' of type long: consider changing to "
+            "int/int64", GST_OBJECT_NAME (element),
+            g_param_spec_get_name (param));
         break;
       }
       case G_TYPE_UINT:
@@ -454,6 +462,12 @@ print_element_properties_info (GstElement * element)
             pdouble->minimum, pdouble->maximum, g_value_get_double (&value));
         break;
       }
+      case G_TYPE_CHAR:
+      case G_TYPE_UCHAR:
+        GST_ERROR ("%s: property '%s' of type char: consider changing to "
+            "int/string", GST_OBJECT_NAME (element),
+            g_param_spec_get_name (param));
+        /* fall through */
       default:
         if (param->value_type == GST_TYPE_CAPS) {
           const GstCaps *caps = gst_value_get_caps (&value);
