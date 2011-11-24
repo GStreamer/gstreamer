@@ -1072,6 +1072,76 @@ GST_START_TEST (test_pad_blocking_with_probe_type_blocking)
 
 GST_END_TEST;
 
+static gboolean got_notify;
+
+static void
+caps_notify (GstPad * pad, GParamSpec * spec, gpointer data)
+{
+  got_notify = TRUE;
+}
+
+static void
+test_queue_src_caps_notify (gboolean link_queue)
+{
+  GstElement *queue;
+  GstPad *src, *sink, *another_pad;
+
+  queue = gst_element_factory_make ("queue", NULL);
+  fail_unless (queue != NULL);
+
+  src = gst_element_get_static_pad (queue, "src");
+  fail_unless (src != NULL);
+
+  sink = gst_element_get_static_pad (queue, "sink");
+  fail_unless (sink != NULL);
+
+  if (link_queue) {
+    another_pad = gst_pad_new ("sink", GST_PAD_SINK);
+    fail_unless (another_pad != NULL);
+    gst_pad_set_active (another_pad, TRUE);
+
+    gst_pad_link_full (src, another_pad, GST_PAD_LINK_CHECK_NOTHING);
+  } else {
+    another_pad = NULL;
+  }
+
+  gst_element_set_state (queue, GST_STATE_PLAYING);
+
+  got_notify = FALSE;
+
+  g_signal_connect (src, "notify::caps", G_CALLBACK (caps_notify), NULL);
+
+  gst_pad_send_event (sink, gst_event_new_caps (gst_caps_from_string ("caps")));
+
+  g_usleep (10000);
+
+  fail_unless (got_notify == TRUE);
+
+  gst_element_set_state (queue, GST_STATE_NULL);
+
+  gst_object_unref (src);
+  gst_object_unref (sink);
+  gst_object_unref (queue);
+  if (another_pad) {
+    gst_object_unref (another_pad);
+  }
+}
+
+GST_START_TEST (test_queue_src_caps_notify_linked)
+{
+  test_queue_src_caps_notify (TRUE);
+}
+
+GST_END_TEST
+GST_START_TEST (test_queue_src_caps_notify_not_linked)
+{
+  /* This test will fail because queue doesn't set the caps
+     on src pad unless it is linked */
+  test_queue_src_caps_notify (FALSE);
+}
+
+GST_END_TEST;
+
 #if 0
 static void
 block_async_second (GstPad * pad, gboolean blocked, gpointer user_data)
@@ -1346,6 +1416,8 @@ gst_pad_suite (void)
   tcase_add_test (tc_chain, test_block_async);
   tcase_add_test (tc_chain, test_pad_blocking_with_probe_type_block);
   tcase_add_test (tc_chain, test_pad_blocking_with_probe_type_blocking);
+  tcase_add_test (tc_chain, test_queue_src_caps_notify_linked);
+  tcase_add_test (tc_chain, test_queue_src_caps_notify_not_linked);
 #if 0
   tcase_add_test (tc_chain, test_block_async_replace_callback);
 #endif
