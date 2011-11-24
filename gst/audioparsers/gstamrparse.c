@@ -71,16 +71,16 @@ static const gint block_size_wb[16] =
 #define AMR_FRAME_DURATION (GST_SECOND/AMR_FRAMES_PER_SECOND)
 #define AMR_MIME_HEADER_SIZE 9
 
-gboolean gst_amr_parse_start (GstBaseParse * parse);
-gboolean gst_amr_parse_stop (GstBaseParse * parse);
+static gboolean gst_amr_parse_start (GstBaseParse * parse);
+static gboolean gst_amr_parse_stop (GstBaseParse * parse);
 
 static gboolean gst_amr_parse_sink_setcaps (GstBaseParse * parse,
     GstCaps * caps);
 
-gboolean gst_amr_parse_check_valid_frame (GstBaseParse * parse,
+static gboolean gst_amr_parse_check_valid_frame (GstBaseParse * parse,
     GstBaseParseFrame * frame, guint * framesize, gint * skipsize);
 
-GstFlowReturn gst_amr_parse_parse_frame (GstBaseParse * parse,
+static GstFlowReturn gst_amr_parse_parse_frame (GstBaseParse * parse,
     GstBaseParseFrame * frame);
 
 #define _do_init(bla) \
@@ -89,7 +89,6 @@ GstFlowReturn gst_amr_parse_parse_frame (GstBaseParse * parse,
 
 GST_BOILERPLATE_FULL (GstAmrParse, gst_amr_parse, GstBaseParse,
     GST_TYPE_BASE_PARSE, _do_init);
-
 
 /**
  * gst_amr_parse_base_init:
@@ -265,7 +264,7 @@ gst_amr_parse_parse_header (GstAmrParse * amrparse,
  *
  * Returns: TRUE if the given data contains valid frame.
  */
-gboolean
+static gboolean
 gst_amr_parse_check_valid_frame (GstBaseParse * parse,
     GstBaseParseFrame * frame, guint * framesize, gint * skipsize)
 {
@@ -346,7 +345,7 @@ gst_amr_parse_check_valid_frame (GstBaseParse * parse,
  *
  * Returns: #GstFlowReturn defining the parsing status.
  */
-GstFlowReturn
+static GstFlowReturn
 gst_amr_parse_parse_frame (GstBaseParse * parse, GstBaseParseFrame * frame)
 {
   return GST_FLOW_OK;
@@ -361,7 +360,7 @@ gst_amr_parse_parse_frame (GstBaseParse * parse, GstBaseParseFrame * frame)
  *
  * Returns: TRUE on success.
  */
-gboolean
+static gboolean
 gst_amr_parse_start (GstBaseParse * parse)
 {
   GstAmrParse *amrparse;
@@ -382,7 +381,7 @@ gst_amr_parse_start (GstBaseParse * parse)
  *
  * Returns: TRUE on success.
  */
-gboolean
+static gboolean
 gst_amr_parse_stop (GstBaseParse * parse)
 {
   GstAmrParse *amrparse;
