@@ -84,7 +84,8 @@ static guint basecamerasrc_signals[LAST_SIGNAL];
 GST_DEBUG_CATEGORY (base_camera_src_debug);
 #define GST_CAT_DEFAULT base_camera_src_debug
 
-GST_BOILERPLATE (GstBaseCameraSrc, gst_base_camera_src, GstBin, GST_TYPE_BIN);
+#define parent_class gst_base_camera_src_parent_class
+G_DEFINE_TYPE (GstBaseCameraSrc, gst_base_camera_src, GST_TYPE_BIN);
 
 static GstStaticPadTemplate vfsrc_template =
 GST_STATIC_PAD_TEMPLATE (GST_BASE_CAMERA_SRC_VIEWFINDER_PAD_NAME,
@@ -480,32 +481,13 @@ gst_base_camera_src_change_state (GstElement * element,
 }
 
 static void
-gst_base_camera_src_base_init (gpointer g_class)
-{
-  GstElementClass *gstelement_class = GST_ELEMENT_CLASS (g_class);
-
-  GST_DEBUG_CATEGORY_INIT (base_camera_src_debug, "base_camera_src", 0,
-      "Base camera src");
-
-  gst_element_class_set_details_simple (gstelement_class,
-      "Base class for camerabin src bin", "Source/Video",
-      "Abstracts capture device for camerabin2", "Rob Clark <rob@ti.com>");
-
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&vfsrc_template));
-
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&imgsrc_template));
-
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&vidsrc_template));
-}
-
-static void
 gst_base_camera_src_class_init (GstBaseCameraSrcClass * klass)
 {
   GObjectClass *gobject_class;
   GstElementClass *gstelement_class;
+
+  GST_DEBUG_CATEGORY_INIT (base_camera_src_debug, "base_camera_src", 0,
+      "Base camera src");
 
   gobject_class = G_OBJECT_CLASS (klass);
   gstelement_class = GST_ELEMENT_CLASS (klass);
@@ -586,11 +568,23 @@ gst_base_camera_src_class_init (GstBaseCameraSrcClass * klass)
       NULL, NULL, g_cclosure_marshal_VOID__VOID, G_TYPE_NONE, 0);
 
   gstelement_class->change_state = gst_base_camera_src_change_state;
+
+  gst_element_class_set_details_simple (gstelement_class,
+      "Base class for camerabin src bin", "Source/Video",
+      "Abstracts capture device for camerabin2", "Rob Clark <rob@ti.com>");
+
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&vfsrc_template));
+
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&imgsrc_template));
+
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&vidsrc_template));
 }
 
 static void
-gst_base_camera_src_init (GstBaseCameraSrc * self,
-    GstBaseCameraSrcClass * klass)
+gst_base_camera_src_init (GstBaseCameraSrc * self)
 {
   self->width = DEFAULT_WIDTH;
   self->height = DEFAULT_HEIGHT;
