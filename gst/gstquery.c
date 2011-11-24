@@ -2123,7 +2123,7 @@ gst_query_parse_accept_caps_result (GstQuery * query, gboolean * result)
 
 /**
  * gst_query_new_caps
- * @filer: a filter
+ * @filter: a filter
  *
  * Constructs a new query object for querying the caps.
  *
