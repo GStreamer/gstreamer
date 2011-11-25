@@ -23,11 +23,6 @@
 #ifndef _GST_AUDIO_DECODER_H_
 #define _GST_AUDIO_DECODER_H_
 
-#ifndef GST_USE_UNSTABLE_API
-#warning "GstAudioDecoder is unstable API and may change in future."
-#warning "You can define GST_USE_UNSTABLE_API to avoid this warning."
-#endif
-
 #include <gst/gst.h>
 #include <gst/audio/audio.h>
 #include <gst/base/gstadapter.h>

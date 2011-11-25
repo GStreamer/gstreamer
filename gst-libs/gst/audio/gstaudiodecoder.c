@@ -149,7 +149,6 @@
 #include "config.h"
 #endif
 
-#define GST_USE_UNSTABLE_API
 #include "gstaudiodecoder.h"
 #include <gst/pbutils/descriptions.h>
 

@@ -151,7 +151,6 @@
 #  include "config.h"
 #endif
 
-#define GST_USE_UNSTABLE_API
 #include "gstaudioencoder.h"
 #include <gst/base/gstadapter.h>
 #include <gst/audio/audio.h>
