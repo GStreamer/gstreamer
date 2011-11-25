@@ -142,6 +142,8 @@ gst_play_sink_convert_bin_add_identity (GstPlaySinkConvertBin * self)
 
         );
   } else {
+    g_object_set (self->identity, "silent", TRUE, "signal-handoffs", FALSE,
+        NULL);
     gst_bin_add (GST_BIN_CAST (self), self->identity);
   }
 }
