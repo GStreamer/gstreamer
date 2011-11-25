@@ -37,6 +37,7 @@
 #  include "config.h"
 #endif
 
+#include <string.h>
 #include <opus/opus.h>
 #include "gstopusheader.h"
 #include "gstopusparse.h"
@@ -107,6 +108,7 @@ static gboolean
 gst_opus_parse_start (GstBaseParse * base)
 {
   GstOpusParse *parse = GST_OPUS_PARSE (base);
+  GstCaps *caps;
 
   caps = gst_caps_new_empty_simple ("audio/x-opus");
   gst_pad_set_caps (GST_BASE_PARSE_SRC_PAD (GST_BASE_PARSE (parse)), caps);
@@ -140,7 +142,6 @@ gst_opus_parse_check_valid_frame (GstBaseParse * base,
   gsize size;
   guint32 packet_size;
   int ret = FALSE;
-  int channels;
   const unsigned char *frames[48];
   unsigned char toc;
   short frame_sizes[48];
@@ -155,8 +156,8 @@ gst_opus_parse_check_valid_frame (GstBaseParse * base,
   GST_DEBUG_OBJECT (parse, "Checking for frame, %u bytes in buffer", size);
 
   /* check for headers */
-  is_idheader = gst_opus_header_is_header (frame->buffer, "OpusHead", 8);
-  is_commentheader = gst_opus_header_is_header (frame->buffer, "OpusTags", 8);
+  is_idheader = gst_opus_header_is_id_header (frame->buffer);
+  is_commentheader = gst_opus_header_is_comment_header (frame->buffer);
   is_header = is_idheader || is_commentheader;
 
   if (!is_header) {
@@ -194,27 +195,6 @@ gst_opus_parse_check_valid_frame (GstBaseParse * base,
 
     packet_offset = 8;
     data += packet_offset;
-  }
-
-  if (!parse->header_sent) {
-    GstCaps *caps;
-
-    /* Opus streams can decode to 1 or 2 channels, so use the header
-       value if we have one, or 2 otherwise */
-    if (is_idheader) {
-      channels = data[9];
-    } else {
-      channels = 2;
-    }
-
-    g_slist_foreach (parse->headers, (GFunc) gst_buffer_unref, NULL);
-    parse->headers = NULL;
-
-    gst_opus_header_create_caps (&caps, &parse->headers, channels, 0, NULL);
-
-    gst_pad_set_caps (GST_BASE_PARSE_SRC_PAD (parse), caps);
-
-    parse->header_sent = TRUE;
   }
 
   if (is_header) {
@@ -295,23 +275,71 @@ gst_opus_parse_parse_frame (GstBaseParse * base, GstBaseParseFrame * frame)
 {
   guint64 duration;
   GstOpusParse *parse;
+  gboolean is_idheader, is_commentheader;
+  guint8 *data;
+  gsize size;
 
   parse = GST_OPUS_PARSE (base);
 
-  if (gst_opus_header_is_header (frame->buffer, "OpusHead", 8)
-      || gst_opus_header_is_header (frame->buffer, "OpusTags", 8)) {
-    GST_BUFFER_TIMESTAMP (frame->buffer) = 0;
-    GST_BUFFER_DURATION (frame->buffer) = GST_CLOCK_TIME_NONE;
-    GST_BUFFER_OFFSET_END (frame->buffer) = GST_CLOCK_TIME_NONE;
-    GST_BUFFER_OFFSET (frame->buffer) = GST_CLOCK_TIME_NONE;
-    return GST_FLOW_OK;
+  is_idheader = gst_opus_header_is_id_header (frame->buffer);
+  is_commentheader = gst_opus_header_is_comment_header (frame->buffer);
+
+  if (!parse->header_sent) {
+    GstCaps *caps;
+    guint8 channels, channel_mapping_family, channel_mapping[256];
+
+    data = gst_buffer_map (frame->buffer, &size, NULL, GST_MAP_READ);
+
+    /* FIXME : Check available size ? */
+
+    /* Opus streams can decode to 1 or 2 channels, so use the header
+       value if we have one, or 2 otherwise */
+    if (is_idheader) {
+      channels = data[9];
+      channel_mapping_family = data[18];
+      /* header probing will already have done the size check */
+      memcpy (channel_mapping, data + 21, channels);
+      gst_buffer_unmap (frame->buffer, data, size);
+      gst_buffer_replace (&parse->id_header, frame->buffer);
+      GST_DEBUG_OBJECT (parse, "Found ID header, keeping");
+      return GST_BASE_PARSE_FLOW_DROPPED;
+    } else if (is_commentheader) {
+      gst_buffer_unmap (frame->buffer, data, size);
+      gst_buffer_replace (&parse->comment_header, frame->buffer);
+      GST_DEBUG_OBJECT (parse, "Found comment header, keeping");
+      return GST_BASE_PARSE_FLOW_DROPPED;
+    }
+    gst_buffer_unmap (frame->buffer, data, size);
+
+    g_slist_foreach (parse->headers, (GFunc) gst_buffer_unref, NULL);
+    parse->headers = NULL;
+
+    if (parse->id_header && parse->comment_header) {
+      gst_opus_header_create_caps_from_headers (&caps, &parse->headers,
+          parse->id_header, parse->comment_header);
+    } else {
+      GST_INFO_OBJECT (parse,
+          "No headers, blindly setting up canonical stereo");
+      channels = 2;
+      channel_mapping_family = 0;
+      channel_mapping[0] = 0;
+      channel_mapping[1] = 1;
+      gst_opus_header_create_caps (&caps, &parse->headers, channels, 0,
+          channel_mapping_family, channel_mapping, NULL);
+    }
+
+    gst_buffer_replace (&parse->id_header, NULL);
+    gst_buffer_replace (&parse->comment_header, NULL);
+
+    gst_pad_set_caps (GST_BASE_PARSE_SRC_PAD (parse), caps);
+    parse->header_sent = TRUE;
   }
 
   GST_BUFFER_TIMESTAMP (frame->buffer) = parse->next_ts;
 
-  duration =
-      packet_duration_opus (GST_BUFFER_DATA (frame->buffer),
-      GST_BUFFER_SIZE (frame->buffer));
+  data = gst_buffer_map (frame->buffer, &size, NULL, GST_MAP_READ);
+  duration = packet_duration_opus (data, size);
+  gst_buffer_unmap (frame->buffer, data, size);
   parse->next_ts += duration;
 
   GST_BUFFER_DURATION (frame->buffer) = duration;

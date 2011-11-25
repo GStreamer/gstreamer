@@ -229,6 +229,8 @@ if test "x$BUILD_EXAMPLES" = "xyes"; then
 fi
 AM_CONDITIONAL(HAVE_GTK, test "x$HAVE_GTK" = "xyes")
 
+
+
 dnl Needed for GtkBuilder to autoconnect signals
 PKG_CHECK_MODULES(GMODULE_EXPORT, gmodule-export-2.0, HAVE_GMODULE_EXPORT=yes, HAVE_GMODULE_EXPORT=no)
 
@@ -1418,6 +1420,20 @@ AG_GST_CHECK_FEATURE(OPUS, [opus], opus, [
   AC_SUBST(OPUS_LIBS)
 ])
 
+dnl *** pvr ***
+translit(dnm, m, l) AM_CONDITIONAL(USE_PVR, true)
+AG_GST_CHECK_FEATURE(PVR, [pvrvideosink], pvr, [
+  PKG_CHECK_MODULES([PVR], [libtimemmgr], HAVE_PVR=yes, HAVE_PVR=no)
+  AC_SUBST(PVR_CFLAGS)
+  AC_SUBST(PVR_LIBS)
+])
+
+ AC_ARG_WITH([pvr-external-headers],
+              AC_HELP_STRING([--with-pvr-external-headers], [Use system installed PVR2D headers]),
+              [AS_IF([test "x$with_pvr_external_headers" = "xno"],
+                     [PVR_CFLAGS="$PVR_CFLAGS -I\$(srcdir)/pvr_includes"])],
+              [PVR_CFLAGS="$PVR_CFLAGS -I\$(srcdir)/pvr_includes"])
+
 dnl *** rsvg ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_RSVG, true)
 AG_GST_CHECK_FEATURE(RSVG, [rsvg decoder], rsvg, [
@@ -1809,6 +1825,7 @@ AM_CONDITIONAL(USE_OFA, false)
 AM_CONDITIONAL(USE_OPENAL, false)
 AM_CONDITIONAL(USE_OPENCV, false)
 AM_CONDITIONAL(USE_OPUS, false)
+AM_CONDITIONAL(USE_PVR, false)
 AM_CONDITIONAL(USE_RSVG, false)
 AM_CONDITIONAL(USE_TIMIDITY, false)
 AM_CONDITIONAL(USE_WILDMIDI, false)
@@ -2008,6 +2025,7 @@ sys/vcd/Makefile
 sys/vdpau/Makefile
 sys/vdpau/gstvdp/Makefile
 sys/vdpau/basevideodecoder/Makefile
+sys/pvr2d/Makefile
 sys/wasapi/Makefile
 sys/wininet/Makefile
 sys/winks/Makefile

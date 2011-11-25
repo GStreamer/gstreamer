@@ -58,6 +58,8 @@ static gboolean gst_h263_parse_check_valid_frame (GstBaseParse * parse,
     GstBaseParseFrame * frame, guint * framesize, gint * skipsize);
 static GstFlowReturn gst_h263_parse_parse_frame (GstBaseParse * parse,
     GstBaseParseFrame * frame);
+static GstCaps *gst_h263_parse_get_sink_caps (GstBaseParse * parse,
+    GstCaps * filter);
 
 static void
 gst_h263_parse_class_init (GstH263ParseClass * klass)
@@ -84,6 +86,7 @@ gst_h263_parse_class_init (GstH263ParseClass * klass)
   parse_class->check_valid_frame =
       GST_DEBUG_FUNCPTR (gst_h263_parse_check_valid_frame);
   parse_class->parse_frame = GST_DEBUG_FUNCPTR (gst_h263_parse_parse_frame);
+  parse_class->get_sink_caps = GST_DEBUG_FUNCPTR (gst_h263_parse_get_sink_caps);
 }
 
 static void
@@ -354,6 +357,38 @@ gst_h263_parse_parse_frame (GstBaseParse * parse, GstBaseParseFrame * frame)
     GST_BUFFER_FLAG_SET (buffer, GST_BUFFER_FLAG_DELTA_UNIT);
 
 out:
+
+  return res;
+}
+
+static GstCaps *
+gst_h263_parse_get_sink_caps (GstBaseParse * parse, GstCaps * filter)
+{
+  GstCaps *peercaps;
+  GstCaps *res;
+
+  peercaps = gst_pad_get_allowed_caps (GST_BASE_PARSE_SRC_PAD (parse));
+  if (peercaps) {
+    guint i, n;
+
+    /* Remove parsed field */
+    peercaps = gst_caps_make_writable (peercaps);
+    n = gst_caps_get_size (peercaps);
+    for (i = 0; i < n; i++) {
+      GstStructure *s = gst_caps_get_structure (peercaps, i);
+      gst_structure_remove_field (s, "parsed");
+    }
+
+    res =
+        gst_caps_intersect_full (peercaps,
+        gst_pad_get_pad_template_caps (GST_BASE_PARSE_SINK_PAD (parse)),
+        GST_CAPS_INTERSECT_FIRST);
+    gst_caps_unref (peercaps);
+  } else {
+    res =
+        gst_caps_copy (gst_pad_get_pad_template_caps (GST_BASE_PARSE_SINK_PAD
+            (parse)));
+  }
 
   return res;
 }

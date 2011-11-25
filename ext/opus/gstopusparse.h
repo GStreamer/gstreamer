@@ -46,6 +46,8 @@ struct _GstOpusParse {
   gboolean header_sent;
   GSList *headers;
   GstClockTime next_ts;
+  GstBuffer *id_header;
+  GstBuffer *comment_header;
 };
 
 struct _GstOpusParseClass {

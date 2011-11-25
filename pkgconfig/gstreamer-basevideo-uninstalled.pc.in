@@ -1,6 +1,6 @@
 prefix=
 exec_prefix=
-libdir=${pcfiledir}/../gst-libs/gst/basevideo
+libdir=${pcfiledir}/../gst-libs/gst/video
 includedir=${pcfiledir}/../gst-libs
 
 Name: GStreamer base video, Uninstalled

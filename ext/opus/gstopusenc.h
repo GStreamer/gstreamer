@@ -26,7 +26,7 @@
 #include <gst/gst.h>
 #include <gst/audio/gstaudioencoder.h>
 
-#include <opus/opus.h>
+#include <opus/opus_multistream.h>
 
 G_BEGIN_DECLS
 
@@ -50,7 +50,7 @@ typedef struct _GstOpusEncClass GstOpusEncClass;
 struct _GstOpusEnc {
   GstAudioEncoder       element;
 
-  OpusEncoder          *state;
+  OpusMSEncoder        *state;
 
   /* Locks those properties which may be changed at play time */
   GMutex               *property_lock;
@@ -72,12 +72,14 @@ struct _GstOpusEnc {
   gint                  n_channels;
   gint                  sample_rate;
 
-  gboolean              setup;
   gboolean              header_sent;
 
   GSList                *headers;
 
   GstTagList            *tags;
+
+  guint8                channel_mapping_family;
+  guint8                channel_mapping[256];
 };
 
 struct _GstOpusEncClass {

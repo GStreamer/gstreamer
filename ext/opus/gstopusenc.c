@@ -49,6 +49,7 @@
 #include <gst/gsttagsetter.h>
 #include <gst/audio/audio.h>
 #include "gstopusheader.h"
+#include "gstopuscommon.h"
 #include "gstopusenc.h"
 
 GST_DEBUG_CATEGORY_STATIC (opusenc_debug);
@@ -177,9 +178,6 @@ static gint64 gst_opus_enc_get_latency (GstOpusEnc * enc);
 
 static GstFlowReturn gst_opus_enc_encode (GstOpusEnc * enc, GstBuffer * buffer);
 
-static GstFlowReturn gst_opus_enc_encode (GstOpusEnc * enc, GstBuffer * buf);
-static gint64 gst_opus_enc_get_latency (GstOpusEnc * enc);
-
 #define gst_opus_enc_parent_class parent_class
 G_DEFINE_TYPE_WITH_CODE (GstOpusEnc, gst_opus_enc, GST_TYPE_AUDIO_ENCODER,
     G_IMPLEMENT_INTERFACE (GST_TYPE_TAG_SETTER, NULL);
@@ -199,11 +197,11 @@ gst_opus_enc_class_init (GstOpusEncClass * klass)
   gobject_class->set_property = gst_opus_enc_set_property;
   gobject_class->get_property = gst_opus_enc_get_property;
 
-  gst_element_class_add_pad_template (element_class,
+  gst_element_class_add_pad_template (gstelement_class,
       gst_static_pad_template_get (&src_factory));
-  gst_element_class_add_pad_template (element_class,
+  gst_element_class_add_pad_template (gstelement_class,
       gst_static_pad_template_get (&sink_factory));
-  gst_element_class_set_details_simple (element_class, "Opus audio encoder",
+  gst_element_class_set_details_simple (gstelement_class, "Opus audio encoder",
       "Codec/Encoder/Audio",
       "Encodes audio in Opus format",
       "Sebastian Dröge <sebastian.droege@collabora.co.uk>");
@@ -290,7 +288,7 @@ gst_opus_enc_finalize (GObject * object)
 }
 
 static void
-gst_opus_enc_init (GstOpusEnc * enc, GstOpusEncClass * klass)
+gst_opus_enc_init (GstOpusEnc * enc)
 {
   GstAudioEncoder *benc = GST_AUDIO_ENCODER (enc);
 
@@ -324,7 +322,7 @@ gst_opus_enc_start (GstAudioEncoder * benc)
   GstOpusEnc *enc = GST_OPUS_ENC (benc);
 
   GST_DEBUG_OBJECT (enc, "start");
-  enc->tags = gst_tag_list_new ();
+  enc->tags = gst_tag_list_new_empty ();
   enc->header_sent = FALSE;
 
   return TRUE;
@@ -338,7 +336,7 @@ gst_opus_enc_stop (GstAudioEncoder * benc)
   GST_DEBUG_OBJECT (enc, "stop");
   enc->header_sent = FALSE;
   if (enc->state) {
-    opus_encoder_destroy (enc->state);
+    opus_multistream_encoder_destroy (enc->state);
     enc->state = NULL;
   }
   gst_tag_list_free (enc->tags);
@@ -402,6 +400,82 @@ gst_opus_enc_get_frame_samples (GstOpusEnc * enc)
   return frame_samples;
 }
 
+static void
+gst_opus_enc_setup_channel_mapping (GstOpusEnc * enc, const GstAudioInfo * info)
+{
+#define MAPS(idx,pos) (GST_AUDIO_INFO_POSITION (info, (idx)) == GST_AUDIO_CHANNEL_POSITION_##pos)
+
+  int n;
+
+  GST_DEBUG_OBJECT (enc, "Setting up channel mapping for %d channels",
+      enc->n_channels);
+
+  /* Start by setting up a default trivial mapping */
+  for (n = 0; n < 255; ++n)
+    enc->channel_mapping[n] = n;
+
+  /* For one channel, use the basic RTP mapping */
+  if (enc->n_channels == 1) {
+    GST_INFO_OBJECT (enc, "Mono, trivial RTP mapping");
+    enc->channel_mapping_family = 0;
+    enc->channel_mapping[0] = 0;
+    return;
+  }
+
+  /* For two channels, use the basic RTP mapping if the channels are
+     mapped as left/right. */
+  if (enc->n_channels == 2) {
+    if (MAPS (0, FRONT_LEFT) && MAPS (1, FRONT_RIGHT)) {
+      GST_INFO_OBJECT (enc, "Stereo, canonical mapping");
+      enc->channel_mapping_family = 0;
+      /* The channel mapping is implicit for family 0, that's why we do not
+         attempt to create one for right/left - this will be mapped to the
+         Vorbis mapping below. */
+    } else {
+      GST_DEBUG_OBJECT (enc, "Stereo, but not canonical mapping, continuing");
+    }
+  }
+
+  /* For channels between 1 and 8, we use the Vorbis mapping if we can
+     find a permutation that matches it. Mono will have been taken care
+     of earlier, but this code also handles it. */
+  if (enc->n_channels >= 1 && enc->n_channels <= 8) {
+    GST_DEBUG_OBJECT (enc,
+        "In range for the Vorbis mapping, checking channel positions");
+    for (n = 0; n < enc->n_channels; ++n) {
+      GstAudioChannelPosition pos = GST_AUDIO_INFO_POSITION (info, n);
+      int c;
+
+      GST_DEBUG_OBJECT (enc, "Channel %d has position %d", n, pos);
+      for (c = 0; c < enc->n_channels; ++c) {
+        if (gst_opus_channel_positions[enc->n_channels - 1][c] == pos) {
+          GST_DEBUG_OBJECT (enc, "Found in Vorbis mapping as channel %d", c);
+          break;
+        }
+      }
+      if (c == enc->n_channels) {
+        /* We did not find that position, so use undefined */
+        GST_WARNING_OBJECT (enc,
+            "Position %d not found in Vorbis mapping, using unknown mapping",
+            pos);
+        enc->channel_mapping_family = 255;
+        return;
+      }
+      GST_DEBUG_OBJECT (enc, "Mapping output channel %d to %d", c, n);
+      enc->channel_mapping[c] = n;
+    }
+    GST_INFO_OBJECT (enc, "Permutation found, using Vorbis mapping");
+    enc->channel_mapping_family = 1;
+    return;
+  }
+
+  /* For other cases, we use undefined, with the default trivial mapping */
+  GST_WARNING_OBJECT (enc, "Unknown mapping");
+  enc->channel_mapping_family = 255;
+
+#undef MAPS
+}
+
 static gboolean
 gst_opus_enc_set_format (GstAudioEncoder * benc, GstAudioInfo * info)
 {
@@ -413,12 +487,13 @@ gst_opus_enc_set_format (GstAudioEncoder * benc, GstAudioInfo * info)
 
   enc->n_channels = GST_AUDIO_INFO_CHANNELS (info);
   enc->sample_rate = GST_AUDIO_INFO_RATE (info);
+  gst_opus_enc_setup_channel_mapping (enc, info);
   GST_DEBUG_OBJECT (benc, "Setup with %d channels, %d Hz", enc->n_channels,
       enc->sample_rate);
 
   /* handle reconfigure */
   if (enc->state) {
-    opus_encoder_destroy (enc->state);
+    opus_multistream_encoder_destroy (enc->state);
     enc->state = NULL;
   }
   if (!gst_opus_enc_setup (enc))
@@ -441,28 +516,29 @@ gst_opus_enc_setup (GstOpusEnc * enc)
 
   GST_DEBUG_OBJECT (enc, "setup");
 
-  enc->setup = FALSE;
-
-  enc->state = opus_encoder_create (enc->sample_rate, enc->n_channels,
+  enc->state =
+      opus_multistream_encoder_create (enc->sample_rate, enc->n_channels,
+      (enc->n_channels + 1) / 2, enc->n_channels / 2, enc->channel_mapping,
       enc->audio_or_voip ? OPUS_APPLICATION_AUDIO : OPUS_APPLICATION_VOIP,
       &error);
   if (!enc->state || error != OPUS_OK)
     goto encoder_creation_failed;
 
-  opus_encoder_ctl (enc->state, OPUS_SET_BITRATE (enc->bitrate), 0);
-  opus_encoder_ctl (enc->state, OPUS_SET_BANDWIDTH (enc->bandwidth), 0);
-  opus_encoder_ctl (enc->state, OPUS_SET_VBR (!enc->cbr), 0);
-  opus_encoder_ctl (enc->state, OPUS_SET_VBR_CONSTRAINT (enc->constrained_vbr),
+  opus_multistream_encoder_ctl (enc->state, OPUS_SET_BITRATE (enc->bitrate), 0);
+  opus_multistream_encoder_ctl (enc->state, OPUS_SET_BANDWIDTH (enc->bandwidth),
       0);
-  opus_encoder_ctl (enc->state, OPUS_SET_COMPLEXITY (enc->complexity), 0);
-  opus_encoder_ctl (enc->state, OPUS_SET_INBAND_FEC (enc->inband_fec), 0);
-  opus_encoder_ctl (enc->state, OPUS_SET_DTX (enc->dtx), 0);
-  opus_encoder_ctl (enc->state,
+  opus_multistream_encoder_ctl (enc->state, OPUS_SET_VBR (!enc->cbr), 0);
+  opus_multistream_encoder_ctl (enc->state,
+      OPUS_SET_VBR_CONSTRAINT (enc->constrained_vbr), 0);
+  opus_multistream_encoder_ctl (enc->state,
+      OPUS_SET_COMPLEXITY (enc->complexity), 0);
+  opus_multistream_encoder_ctl (enc->state,
+      OPUS_SET_INBAND_FEC (enc->inband_fec), 0);
+  opus_multistream_encoder_ctl (enc->state, OPUS_SET_DTX (enc->dtx), 0);
+  opus_multistream_encoder_ctl (enc->state,
       OPUS_SET_PACKET_LOSS_PERC (enc->packet_loss_percentage), 0);
 
   GST_LOG_OBJECT (enc, "we have frame size %d", enc->frame_size);
-
-  enc->setup = TRUE;
 
   return TRUE;
 
@@ -501,7 +577,7 @@ gst_opus_enc_sink_event (GstAudioEncoder * benc, GstEvent * event)
 static GstFlowReturn
 gst_opus_enc_encode (GstOpusEnc * enc, GstBuffer * buf)
 {
-  guint8 *bdata, *data, *mdata = NULL;
+  guint8 *bdata = NULL, *data, *mdata = NULL;
   gsize bsize, size;
   gsize bytes = enc->frame_samples * enc->n_channels * 2;
   gint ret = GST_FLOW_OK;
@@ -535,17 +611,17 @@ gst_opus_enc_encode (GstOpusEnc * enc, GstBuffer * buf)
     gsize out_size;
     GstBuffer *outbuf;
 
-    outbuf = gst_buffer_new_and_alloc (enc->max_payload_size);
+    outbuf = gst_buffer_new_and_alloc (enc->max_payload_size * enc->n_channels);
     if (!outbuf)
       goto done;
 
     GST_DEBUG_OBJECT (enc, "encoding %d samples (%d bytes)",
-        enc->frame_samples);
+        enc->frame_samples, (int) bytes);
 
     out_data = gst_buffer_map (outbuf, &out_size, NULL, GST_MAP_WRITE);
     encoded_size =
-        opus_encode (enc->state, (const gint16 *) data, enc->frame_samples,
-        out_data, enc->max_payload_size);
+        opus_multistream_encode (enc->state, (const gint16 *) data,
+        enc->frame_samples, out_data, enc->max_payload_size * enc->n_channels);
     gst_buffer_unmap (outbuf, out_data, out_size);
 
     if (encoded_size < 0) {
@@ -555,12 +631,13 @@ gst_opus_enc_encode (GstOpusEnc * enc, GstBuffer * buf)
     } else if (encoded_size > enc->max_payload_size) {
       GST_WARNING_OBJECT (enc,
           "Encoded size %d is higher than max payload size (%d bytes)",
-          outsize, enc->max_payload_size);
+          out_size, enc->max_payload_size);
       ret = GST_FLOW_ERROR;
       goto done;
     }
 
-    GST_BUFFER_SIZE (outbuf) = outsize;
+    GST_DEBUG_OBJECT (enc, "Output packet is %u bytes", encoded_size);
+    gst_buffer_set_size (outbuf, encoded_size);
 
     ret =
         gst_audio_encoder_finish_frame (GST_AUDIO_ENCODER (enc), outbuf,
@@ -601,7 +678,8 @@ gst_opus_enc_handle_frame (GstAudioEncoder * benc, GstBuffer * buf)
     enc->headers = NULL;
 
     gst_opus_header_create_caps (&caps, &enc->headers, enc->n_channels,
-        enc->sample_rate, gst_tag_setter_get_tag_list (GST_TAG_SETTER (enc)));
+        enc->sample_rate, enc->channel_mapping_family, enc->channel_mapping,
+        gst_tag_setter_get_tag_list (GST_TAG_SETTER (enc)));
 
 
     /* negotiate with these caps */
@@ -613,7 +691,7 @@ gst_opus_enc_handle_frame (GstAudioEncoder * benc, GstBuffer * buf)
   }
 
   GST_DEBUG_OBJECT (enc, "received buffer %p of %u bytes", buf,
-      buf ? GST_BUFFER_SIZE (buf) : 0);
+      buf ? gst_buffer_get_size (buf) : 0);
 
   ret = gst_opus_enc_encode (enc, buf);
 
@@ -684,7 +762,7 @@ gst_opus_enc_set_property (GObject * object, guint prop_id,
   g_mutex_lock (enc->property_lock); \
   enc->prop = g_value_get_##type (value); \
   if (enc->state) { \
-    opus_encoder_ctl (enc->state, OPUS_SET_##ctl (enc->prop)); \
+    opus_multistream_encoder_ctl (enc->state, OPUS_SET_##ctl (enc->prop)); \
   } \
   g_mutex_unlock (enc->property_lock); \
 } while(0)
@@ -710,7 +788,7 @@ gst_opus_enc_set_property (GObject * object, guint prop_id,
       /* this one has an opposite meaning to the opus ctl... */
       g_mutex_lock (enc->property_lock);
       enc->cbr = g_value_get_boolean (value);
-      opus_encoder_ctl (enc->state, OPUS_SET_VBR (!enc->cbr));
+      opus_multistream_encoder_ctl (enc->state, OPUS_SET_VBR (!enc->cbr));
       g_mutex_unlock (enc->property_lock);
       break;
     case PROP_CONSTRAINED_VBR:
