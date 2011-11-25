@@ -484,6 +484,7 @@ GST_START_TEST (test_push_unlinked)
   caps = gst_caps_from_string ("foo/bar");
 
   /* pushing on an inactive pad will return wrong state */
+  GST_DEBUG ("push buffer inactive");
   buffer = gst_buffer_new ();
   gst_buffer_ref (buffer);
   fail_unless (gst_pad_push (src, buffer) == GST_FLOW_WRONG_STATE);
@@ -491,10 +492,12 @@ GST_START_TEST (test_push_unlinked)
   gst_buffer_unref (buffer);
 
   gst_pad_set_active (src, TRUE);
+  GST_DEBUG ("push caps event inactive");
   gst_pad_set_caps (src, caps);
   ASSERT_CAPS_REFCOUNT (caps, "caps", 2);
 
   /* pushing on an unlinked pad will drop the buffer */
+  GST_DEBUG ("push buffer unlinked");
   buffer = gst_buffer_new ();
   gst_buffer_ref (buffer);
   fail_unless (gst_pad_push (src, buffer) == GST_FLOW_NOT_LINKED);
@@ -503,6 +506,7 @@ GST_START_TEST (test_push_unlinked)
 
   /* adding a probe that returns _DROP will drop the buffer without trying
    * to chain */
+  GST_DEBUG ("push buffer drop");
   id = gst_pad_add_probe (src, GST_PAD_PROBE_TYPE_BUFFER,
       _probe_handler, GINT_TO_POINTER (0), NULL);
   buffer = gst_buffer_new ();
@@ -514,6 +518,7 @@ GST_START_TEST (test_push_unlinked)
 
   /* adding a probe that returns _OK will still chain the buffer,
    * and hence drop because pad is unlinked */
+  GST_DEBUG ("push buffer ok");
   id = gst_pad_add_probe (src, GST_PAD_PROBE_TYPE_BUFFER,
       _probe_handler, GINT_TO_POINTER (1), NULL);
   buffer = gst_buffer_new ();
@@ -1041,14 +1046,21 @@ test_pad_blocking_with_type (GstPadProbeType type)
 
 
   thread = g_thread_create ((GThreadFunc) push_buffer_async, pad, TRUE, NULL);
-  g_usleep (100000);
 
+  /* wait for the block */
+  while (!gst_pad_is_blocking (pad)) {
+    g_usleep (100000);
+  }
+
+  /* stop with flushing */
   gst_pad_push_event (pad, gst_event_new_flush_start ());
-  gst_pad_push_event (pad, gst_event_new_flush_stop (FALSE));
 
+  /* get return value from push */
   ret = GPOINTER_TO_INT (g_thread_join (thread));
-
-  fail_if (ret == GST_FLOW_NOT_LINKED);
+  /* unflush now */
+  gst_pad_push_event (pad, gst_event_new_flush_stop (FALSE));
+  /* must be wrong state */
+  fail_unless (ret == GST_FLOW_WRONG_STATE);
 
   gst_object_unref (pad);
 }

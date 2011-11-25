@@ -2807,9 +2807,9 @@ probe_hook_marshal (GHook * hook, ProbeMarshall * data)
   /* one of the scheduling types */
   if ((flags & GST_PAD_PROBE_TYPE_SCHEDULING & type) == 0)
     goto no_match;
-  /* all of the blocking types must match */
-  if ((flags & GST_PAD_PROBE_TYPE_BLOCKING) !=
-      (type & GST_PAD_PROBE_TYPE_BLOCKING))
+  /* one of the blocking types must match */
+  if ((type & GST_PAD_PROBE_TYPE_BLOCKING) &&
+      (flags & GST_PAD_PROBE_TYPE_BLOCKING & type) == 0)
     goto no_match;
 
   GST_CAT_LOG_OBJECT (GST_CAT_SCHEDULING, pad,
@@ -3475,6 +3475,8 @@ gst_pad_push_data (GstPad * pad, GstPadProbeType type, void *data)
   if (G_UNLIKELY (GST_PAD_HAS_PENDING_EVENTS (pad))) {
     GST_OBJECT_FLAG_UNSET (pad, GST_PAD_FLAG_PENDING_EVENTS);
 
+    GST_DEBUG_OBJECT (pad, "pushing all sticky events");
+
     ret = GST_FLOW_OK;
     events_foreach (pad, push_sticky, &ret);
     if (ret != GST_FLOW_OK)
@@ -3639,6 +3641,8 @@ gst_pad_get_range_unchecked (GstPad * pad, guint64 offset, guint size,
 
   if (G_UNLIKELY (GST_PAD_HAS_PENDING_EVENTS (pad))) {
     GST_OBJECT_FLAG_UNSET (pad, GST_PAD_FLAG_PENDING_EVENTS);
+
+    GST_DEBUG_OBJECT (pad, "pushing all sticky events");
 
     ret = GST_FLOW_OK;
     events_foreach (pad, push_sticky, &ret);
