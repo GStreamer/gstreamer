@@ -188,6 +188,7 @@ gst_base_video_encoder_reset (GstBaseVideoEncoder * base_video_encoder)
     gst_event_unref (base_video_encoder->force_keyunit_event);
     base_video_encoder->force_keyunit_event = NULL;
   }
+  gst_buffer_replace (&base_video_encoder->headers, NULL);
 
   g_list_foreach (base_video_encoder->current_frame_events,
       (GFunc) gst_event_unref, NULL);
@@ -226,9 +227,18 @@ gst_base_video_encoder_init (GstBaseVideoEncoder * base_video_encoder,
       GST_DEBUG_FUNCPTR (gst_base_video_encoder_src_event));
 
   base_video_encoder->a.at_eos = FALSE;
+  base_video_encoder->headers = NULL;
 
   /* encoder is expected to do so */
   base_video_encoder->sink_clipping = TRUE;
+}
+
+void
+gst_base_video_encoder_set_headers (GstBaseVideoEncoder * base_video_encoder,
+    GstBuffer * headers)
+{
+  GST_DEBUG_OBJECT (base_video_encoder, "new headers %p", headers);
+  gst_buffer_replace (&base_video_encoder->headers, headers);
 }
 
 static gboolean
@@ -439,7 +449,12 @@ done:
 static void
 gst_base_video_encoder_finalize (GObject * object)
 {
+  GstBaseVideoEncoder *base_video_encoder;
+
   GST_DEBUG_OBJECT (object, "finalize");
+
+  base_video_encoder = GST_BASE_VIDEO_ENCODER (object);
+  gst_buffer_replace (&base_video_encoder->headers, NULL);
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
@@ -515,9 +530,15 @@ gst_base_video_encoder_sink_eventfunc (GstBaseVideoEncoder * base_video_encoder,
       if (gst_structure_has_name (s, "GstForceKeyUnit")) {
         GST_OBJECT_LOCK (base_video_encoder);
         base_video_encoder->force_keyframe = TRUE;
+        if (!gst_structure_get_boolean (s, "all-headers",
+                &base_video_encoder->force_keyframe_headers))
+          base_video_encoder->force_keyframe_headers = FALSE;
+
         if (base_video_encoder->force_keyunit_event)
           gst_event_unref (base_video_encoder->force_keyunit_event);
         base_video_encoder->force_keyunit_event = gst_event_copy (event);
+        GST_DEBUG_OBJECT (base_video_encoder, "GstForceKeyUnit, all-headers %d",
+            base_video_encoder->force_keyframe_headers);
         GST_OBJECT_UNLOCK (base_video_encoder);
         gst_event_unref (event);
         ret = TRUE;
@@ -602,9 +623,14 @@ gst_base_video_encoder_src_event (GstPad * pad, GstEvent * event)
       if (gst_structure_has_name (s, "GstForceKeyUnit")) {
         GST_OBJECT_LOCK (base_video_encoder);
         base_video_encoder->force_keyframe = TRUE;
+        if (!gst_structure_get_boolean (s, "all-headers",
+                &base_video_encoder->force_keyframe_headers))
+          base_video_encoder->force_keyframe_headers = FALSE;
         GST_OBJECT_UNLOCK (base_video_encoder);
 
         gst_event_unref (event);
+        GST_DEBUG_OBJECT (base_video_encoder, "GstForceKeyUnit, all-headers %d",
+            base_video_encoder->force_keyframe_headers);
         ret = TRUE;
       } else {
         ret =
@@ -841,6 +867,7 @@ gst_base_video_encoder_finish_frame (GstBaseVideoEncoder * base_video_encoder,
   GstFlowReturn ret = GST_FLOW_OK;
   GstBaseVideoEncoderClass *base_video_encoder_class;
   GList *l;
+  GstBuffer *headers = NULL;
 
   base_video_encoder_class =
       GST_BASE_VIDEO_ENCODER_GET_CLASS (base_video_encoder);
@@ -910,7 +937,15 @@ gst_base_video_encoder_finish_frame (GstBaseVideoEncoder * base_video_encoder,
   }
 
   if (frame->is_sync_point) {
-    GST_LOG_OBJECT (base_video_encoder, "key frame");
+    if (base_video_encoder->force_keyframe_headers) {
+      GST_DEBUG_OBJECT (base_video_encoder, "force_keyframe_headers");
+      if (base_video_encoder->headers) {
+        gst_buffer_ref (base_video_encoder->headers);
+        headers = base_video_encoder->headers;
+      }
+      base_video_encoder->force_keyframe_headers = FALSE;
+    }
+    GST_LOG_OBJECT (base_video_encoder, "key frame, headers %p", headers);
     base_video_encoder->distance_from_sync = 0;
     GST_BUFFER_FLAG_UNSET (frame->src_buffer, GST_BUFFER_FLAG_DELTA_UNIT);
   } else {
@@ -933,6 +968,12 @@ gst_base_video_encoder_finish_frame (GstBaseVideoEncoder * base_video_encoder,
   GST_BUFFER_DURATION (frame->src_buffer) = frame->presentation_duration;
   GST_BUFFER_OFFSET (frame->src_buffer) = frame->decode_timestamp;
 
+  if (G_UNLIKELY (headers)) {
+    GST_BUFFER_TIMESTAMP (headers) = frame->presentation_timestamp;
+    GST_BUFFER_DURATION (headers) = 0;
+    GST_BUFFER_OFFSET (headers) = frame->decode_timestamp;
+  }
+
   /* update rate estimate */
   GST_BASE_VIDEO_CODEC (base_video_encoder)->bytes +=
       GST_BUFFER_SIZE (frame->src_buffer);
@@ -952,6 +993,12 @@ gst_base_video_encoder_finish_frame (GstBaseVideoEncoder * base_video_encoder,
 
   gst_buffer_set_caps (GST_BUFFER (frame->src_buffer),
       GST_PAD_CAPS (GST_BASE_VIDEO_CODEC_SRC_PAD (base_video_encoder)));
+
+  if (G_UNLIKELY (headers)) {
+    gst_buffer_set_caps (headers,
+        GST_PAD_CAPS (GST_BASE_VIDEO_CODEC_SRC_PAD (base_video_encoder)));
+    gst_pad_push (GST_BASE_VIDEO_CODEC_SRC_PAD (base_video_encoder), headers);
+  }
 
   if (base_video_encoder_class->shape_output) {
     ret = base_video_encoder_class->shape_output (base_video_encoder, frame);
