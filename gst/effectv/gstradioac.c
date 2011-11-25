@@ -139,9 +139,9 @@ GST_BOILERPLATE (GstRadioacTV, gst_radioactv, GstVideoFilter,
     GST_TYPE_VIDEO_FILTER);
 
 #if G_BYTE_ORDER == G_LITTLE_ENDIAN
-#define CAPS_STR GST_VIDEO_CAPS_RGBx
+#define CAPS_STR GST_VIDEO_CAPS_RGBx "; " GST_VIDEO_CAPS_BGRx
 #else
-#define CAPS_STR GST_VIDEO_CAPS_xBGR
+#define CAPS_STR GST_VIDEO_CAPS_xBGR "; " GST_VIDEO_CAPS_xRGB
 #endif
 
 static GstStaticPadTemplate gst_radioactv_src_template =
