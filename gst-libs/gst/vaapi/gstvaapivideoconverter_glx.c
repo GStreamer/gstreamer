@@ -121,6 +121,8 @@ gst_vaapi_video_converter_glx_upload (GstSurfaceConverter *converter,
   GstVaapiSurface *surface = gst_vaapi_video_buffer_get_surface (
       GST_VAAPI_VIDEO_BUFFER (buffer));
   GstVaapiDisplay *new_dpy, *old_dpy;
+  GstVideoOverlayComposition * const composition =
+    gst_video_buffer_get_overlay_composition (GST_BUFFER (buffer));
 
   new_dpy = gst_vaapi_object_get_display (GST_VAAPI_OBJECT (surface));
   old_dpy = gst_vaapi_object_get_display (GST_VAAPI_OBJECT (priv->texture));
@@ -133,6 +135,9 @@ gst_vaapi_video_converter_glx_upload (GstSurfaceConverter *converter,
                                                         GL_TEXTURE_2D,
                                                         GL_BGRA);
   }
+
+  if (!gst_vaapi_surface_update_composition (surface, composition))
+        GST_WARNING ("could not update subtitles");
 
   return gst_vaapi_texture_put_surface (priv->texture, surface,
       GST_VAAPI_PICTURE_STRUCTURE_FRAME);
