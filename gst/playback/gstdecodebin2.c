@@ -400,6 +400,7 @@ struct _GstDecodeChain
   GstPad *pad;                  /* srcpad that caused creation of this chain */
 
   gboolean demuxer;             /* TRUE if elements->data is a demuxer */
+  gboolean seekable;            /* TRUE if this chain ends on a demuxer and is seekable */
   GList *elements;              /* All elements in this group, first
                                    is the latest and most downstream element */
 
@@ -2401,7 +2402,8 @@ no_more_pads_cb (GstElement * element, GstDecodeChain * chain)
    * we can probably set its buffering state to playing now */
   GST_DEBUG_OBJECT (group->dbin, "Setting group %p multiqueue to "
       "'playing' buffering mode", group);
-  decodebin_set_queue_size (group->dbin, group->multiqueue, FALSE, TRUE);
+  decodebin_set_queue_size (group->dbin, group->multiqueue, FALSE,
+      (group->parent ? group->parent->seekable : TRUE));
   CHAIN_MUTEX_UNLOCK (chain);
 
   EXPOSE_LOCK (chain->dbin);
@@ -2927,7 +2929,7 @@ gst_decode_group_new (GstDecodeBin * dbin, GstDecodeChain * parent)
         ((GstDecodeElement *) parent->elements->data)->element;
     GstPad *pad = gst_element_get_static_pad (element, "sink");
     if (pad) {
-      seekable = check_upstream_seekable (dbin, pad);
+      seekable = parent->seekable = check_upstream_seekable (dbin, pad);
       gst_object_unref (pad);
     }
   }
