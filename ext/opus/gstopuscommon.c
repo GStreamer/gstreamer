@@ -70,3 +70,19 @@ const GstAudioChannelPosition gst_opus_channel_positions[][8] = {
         GST_AUDIO_CHANNEL_POSITION_REAR_RIGHT,
       GST_AUDIO_CHANNEL_POSITION_LFE},
 };
+
+const char *gst_opus_channel_names[] = {
+  "mono",
+  "front left",
+  "front right",
+  "rear center",
+  "rear left",
+  "rear right",
+  "lfe",
+  "front center",
+  "front left of center",
+  "front right of center",
+  "side left",
+  "side right",
+  "none"
+};

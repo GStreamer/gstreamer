@@ -294,6 +294,7 @@ gst_opus_dec_parse_header (GstOpusDec * dec, GstBuffer * buf)
       dec->sample_rate);
 
   if (pos) {
+    GST_DEBUG_OBJECT (dec, "Setting channel positions on caps");
     gst_audio_set_channel_positions (gst_caps_get_structure (caps, 0), pos);
   }
 
