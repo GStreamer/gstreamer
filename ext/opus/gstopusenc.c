@@ -466,7 +466,8 @@ gst_opus_enc_setup_channel_mapping (GstOpusEnc * enc, const GstAudioInfo * info)
       GstAudioChannelPosition pos = GST_AUDIO_INFO_POSITION (info, n);
       int c;
 
-      GST_DEBUG_OBJECT (enc, "Channel %d has position %d", n, pos);
+      GST_DEBUG_OBJECT (enc, "Channel %d has position %d (%s)", n, pos,
+          gst_opus_channel_names[pos]);
       for (c = 0; c < enc->n_channels; ++c) {
         if (gst_opus_channel_positions[enc->n_channels - 1][c] == pos) {
           GST_DEBUG_OBJECT (enc, "Found in Vorbis mapping as channel %d", c);
@@ -476,12 +477,13 @@ gst_opus_enc_setup_channel_mapping (GstOpusEnc * enc, const GstAudioInfo * info)
       if (c == enc->n_channels) {
         /* We did not find that position, so use undefined */
         GST_WARNING_OBJECT (enc,
-            "Position %d not found in Vorbis mapping, using unknown mapping",
-            pos);
+            "Position %d (%s) not found in Vorbis mapping, using unknown mapping",
+            pos, gst_opus_channel_positions[pos]);
         enc->channel_mapping_family = 255;
         return;
       }
-      GST_DEBUG_OBJECT (enc, "Mapping output channel %d to %d", c, n);
+      GST_DEBUG_OBJECT (enc, "Mapping output channel %d to %d (%s)", c, n,
+          gst_opus_channel_names[pos]);
       enc->channel_mapping[c] = n;
     }
     GST_INFO_OBJECT (enc, "Permutation found, using Vorbis mapping");

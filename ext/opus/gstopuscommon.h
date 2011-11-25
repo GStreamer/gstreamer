@@ -27,6 +27,7 @@
 G_BEGIN_DECLS
 
 extern const GstAudioChannelPosition gst_opus_channel_positions[][8];
+extern const char *gst_opus_channel_names[];
 
 G_END_DECLS
 
