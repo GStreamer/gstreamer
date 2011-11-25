@@ -279,16 +279,11 @@ gst_opus_parse_parse_frame (GstBaseParse * base, GstBaseParseFrame * frame)
 
   if (!parse->header_sent) {
     GstCaps *caps;
-    guint8 channels, channel_mapping_family, channel_mapping[256];
-    const guint8 *data = GST_BUFFER_DATA (frame->buffer);
+    guint8 channels;
 
     /* Opus streams can decode to 1 or 2 channels, so use the header
        value if we have one, or 2 otherwise */
     if (is_idheader) {
-      channels = data[9];
-      channel_mapping_family = data[18];
-      /* header probing will already have done the size check */
-      memcpy (channel_mapping, GST_BUFFER_DATA (frame->buffer) + 21, channels);
       gst_buffer_replace (&parse->id_header, frame->buffer);
       GST_DEBUG_OBJECT (parse, "Found ID header, keeping");
       return GST_BASE_PARSE_FLOW_DROPPED;
@@ -305,6 +300,7 @@ gst_opus_parse_parse_frame (GstBaseParse * base, GstBaseParseFrame * frame)
       gst_opus_header_create_caps_from_headers (&caps, &parse->headers,
           parse->id_header, parse->comment_header);
     } else {
+      guint8 channel_mapping_family, channel_mapping[256];
       GST_INFO_OBJECT (parse,
           "No headers, blindly setting up canonical stereo");
       channels = 2;
