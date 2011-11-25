@@ -265,6 +265,7 @@ struct _GstVaapiDecoderH264Private {
     guint                       RefPicList0_count;
     GstVaapiPictureH264        *RefPicList1[32];
     guint                       RefPicList1_count;
+    guint                       nal_length_size;
     guint                       width;
     guint                       height;
     guint                       mb_x;
@@ -1810,11 +1811,77 @@ decode_buffer(GstVaapiDecoderH264 *decoder, GstBuffer *buffer)
     return status;
 }
 
+static GstVaapiDecoderStatus
+decode_codec_data(GstVaapiDecoderH264 *decoder, GstBuffer *buffer)
+{
+    GstVaapiDecoderH264Private * const priv = decoder->priv;
+    GstVaapiDecoderStatus status;
+    GstH264NalUnit nalu;
+    GstH264ParserResult result;
+    guchar *buf;
+    guint buf_size;
+    guint i, ofs, num_sps, num_pps;
+
+    buf      = GST_BUFFER_DATA(buffer);
+    buf_size = GST_BUFFER_SIZE(buffer);
+    if (!buf || buf_size == 0)
+        return GST_VAAPI_DECODER_STATUS_SUCCESS;
+
+    if (buf_size < 8)
+        return GST_VAAPI_DECODER_STATUS_ERROR_NO_DATA;
+
+    if (buf[0] != 1) {
+        GST_DEBUG("failed to decode codec-data, not in avcC format");
+        return GST_VAAPI_DECODER_STATUS_ERROR_BITSTREAM_PARSER;
+    }
+
+    priv->nal_length_size = (buf[4] & 0x03) + 1;
+
+    num_sps = buf[5] & 0x1f;
+    ofs = 6;
+
+    for (i = 0; i < num_sps; i++) {
+        result = gst_h264_parser_identify_nalu_avc(
+            priv->parser,
+            buf, ofs, buf_size, 2,
+            &nalu
+        );
+        if (result != GST_H264_PARSER_OK)
+            return get_status(result);
+
+        status = decode_sps(decoder, &nalu);
+        if (status != GST_VAAPI_DECODER_STATUS_SUCCESS)
+            return status;
+        ofs = nalu.offset + nalu.size;
+    }
+
+    num_pps = buf[ofs];
+    ofs++;
+
+    for (i = 0; i < num_pps; i++) {
+        result = gst_h264_parser_identify_nalu_avc(
+            priv->parser,
+            buf, ofs, buf_size, 2,
+            &nalu
+        );
+        if (result != GST_H264_PARSER_OK)
+            return get_status(result);
+
+        status = decode_pps(decoder, &nalu);
+        if (status != GST_VAAPI_DECODER_STATUS_SUCCESS)
+            return status;
+        ofs = nalu.offset + nalu.size;
+    }
+    return status;
+}
+
 GstVaapiDecoderStatus
 gst_vaapi_decoder_h264_decode(GstVaapiDecoder *base, GstBuffer *buffer)
 {
     GstVaapiDecoderH264 * const decoder = GST_VAAPI_DECODER_H264(base);
     GstVaapiDecoderH264Private * const priv = decoder->priv;
+    GstVaapiDecoderStatus status;
+    GstBuffer *codec_data;
 
     g_return_val_if_fail(priv->is_constructed,
                          GST_VAAPI_DECODER_STATUS_ERROR_INIT_FAILED);
@@ -1823,8 +1890,15 @@ gst_vaapi_decoder_h264_decode(GstVaapiDecoder *base, GstBuffer *buffer)
         priv->is_opened = gst_vaapi_decoder_h264_open(decoder, buffer);
         if (!priv->is_opened)
             return GST_VAAPI_DECODER_STATUS_ERROR_UNSUPPORTED_CODEC;
-    }
-    return decode_buffer(decoder, buffer);
+
+        codec_data = GST_VAAPI_DECODER_CODEC_DATA(decoder);
+        if (codec_data) {
+            status = decode_codec_data(decoder, codec_data);
+            if (status != GST_VAAPI_DECODER_STATUS_SUCCESS)
+                return status;
+        }
+     }
+     return decode_buffer(decoder, buffer);
 }
 
 static void
@@ -1883,6 +1957,7 @@ gst_vaapi_decoder_h264_init(GstVaapiDecoderH264 *decoder)
     priv->list_count            = 0;
     priv->RefPicList0_count     = 0;
     priv->RefPicList1_count     = 0;
+    priv->nal_length_size       = 0;
     priv->width                 = 0;
     priv->height                = 0;
     priv->mb_x                  = 0;
