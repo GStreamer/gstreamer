@@ -29,6 +29,7 @@
 
 #include <gst/gst.h>
 
+#include <gst/video/video.h>
 #include <gst/video/gstvideofilter.h>
 
 G_BEGIN_DECLS
@@ -53,6 +54,7 @@ struct _GstRadioacTV
 
   /* < private > */
   gint width, height;
+  GstVideoFormat format;
 
   gint mode;
   gint color;
