@@ -3121,8 +3121,8 @@ gst_pad_query_accept_caps (GstPad * pad, GstCaps * caps)
 
   query = gst_query_new_accept_caps (caps);
   if (gst_pad_query (pad, query)) {
-    GST_DEBUG_OBJECT (pad, "query returned %d", res);
     gst_query_parse_accept_caps_result (query, &res);
+    GST_DEBUG_OBJECT (pad, "query returned %d", res);
   }
   gst_query_unref (query);
 
@@ -3150,8 +3150,8 @@ gst_pad_peer_query_accept_caps (GstPad * pad, GstCaps * caps)
 
   query = gst_query_new_accept_caps (caps);
   if (gst_pad_peer_query (pad, query)) {
-    GST_DEBUG_OBJECT (pad, "query returned %d", res);
     gst_query_parse_accept_caps_result (query, &res);
+    GST_DEBUG_OBJECT (pad, "query returned %d", res);
   }
   gst_query_unref (query);
 
