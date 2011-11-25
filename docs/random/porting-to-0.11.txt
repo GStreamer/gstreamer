@@ -324,7 +324,9 @@ The 0.11 porting guide
     a handle to a GstStructure.
 
 * GstCaps
-    Is now a boxed type derived from GstMiniObject. 
+    Is now a boxed type derived from GstMiniObject.
+
+    GST_VIDEO_CAPS_xxx -> GST_VIDEO_CAPS_MAKE(xxx)
 
 * GstSegment
     abs_rate was removed from the public fields, it can be trivially calculated
@@ -353,7 +355,6 @@ The 0.11 porting guide
     gst_type_find_peek() returns a const guint8 * now.
 
 * GstTask
-
     gst_task_create() -> gst_task_new()
 
 * GstAdapter
