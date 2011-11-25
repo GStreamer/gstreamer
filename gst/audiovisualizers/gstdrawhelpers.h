@@ -24,6 +24,20 @@
   _vd[(_y * _st) + _x] = _c;                                                   \
 } G_STMT_END
 
+#define draw_dot_aa(_vd, _x, _y, _st, _c, _f)  G_STMT_START {                  \
+  guint32 _oc, _nc, _c1, _c2, _c3;                                             \
+                                                                               \
+  _oc = _vd[(_y * _st) + _x];                                                  \
+  _c3 = (_oc & 0xff) + ((_c & 0xff) * _f);                                     \
+  _c3 = MIN(_c3, 255);                                                         \
+  _c2 = ((_oc & 0xff00) >> 8) + (((_c & 0xff00) >> 8) * _f);                   \
+  _c2 = MIN(_c2, 255);                                                         \
+  _c1 = ((_oc & 0xff0000) >> 16) + (((_c & 0xff0000) >> 16) * _f);             \
+  _c1 = MIN(_c1, 255);                                                         \
+  _nc = (_c1 << 16) | (_c2 << 8) | _c3;                                 \
+  _vd[(_y * _st) + _x] = _nc;                                                  \
+} G_STMT_END
+
 #define draw_line(_vd, _x1, _x2, _y1, _y2, _st, _c) G_STMT_START {             \
   guint _i, _j, _x, _y;                                                        \
   gint _dx = _x2 - _x1, _dy = _y2 - _y1;                                       \
@@ -42,7 +56,6 @@
   guint _i, _j, _x, _y;                                                        \
   gint _dx = _x2 - _x1, _dy = _y2 - _y1;                                       \
   gfloat _f, _rx, _ry, _fx, _fy;                                               \
-  guint32 _oc, _nc, _c1, _c2, _c3;                                             \
                                                                                \
   _j = abs (_dx) > abs (_dy) ? abs (_dx) : abs (_dy);                          \
   for (_i = 0; _i < _j; _i++) {                                                \
@@ -55,48 +68,16 @@
     _fy = _ry - (gfloat)_y;                                                    \
                                                                                \
     _f = ((1.0 - _fx) + (1.0 - _fy)) / 2.0;                                    \
-    _oc = _vd[(_y * _st) + _x];                                                \
-    _c3 = (_oc & 0xff) + ((_c & 0xff) * _f);                                   \
-    _c3 = MIN(_c3, 255);                                                       \
-    _c2 = ((_oc & 0xff00) >> 8) + (((_c & 0xff00) >> 8) * _f);                 \
-    _c2 = MIN(_c2, 255);                                                       \
-    _c1 = ((_oc & 0xff0000) >> 16) + (((_c & 0xff0000) >> 16) * _f);           \
-    _c1 = MIN(_c1, 255);                                                       \
-    _nc = 0x00 | (_c1 << 16) | (_c2 << 8) | _c3;                               \
-    _vd[(_y * _st) + _x] = _nc;                                                \
+    draw_dot_aa (_vd, _x, _y, _st, _c, _f);                                    \
                                                                                \
     _f = (_fx + (1.0 - _fy)) / 2.0;                                            \
-    _oc = _vd[(_y * _st) + _x + 1];                                            \
-    _c3 = (_oc & 0xff) + ((_c & 0xff) * _f);                                   \
-    _c3 = MIN(_c3, 255);                                                       \
-    _c2 = ((_oc & 0xff00) >> 8) + (((_c & 0xff00) >> 8) * _f);                 \
-    _c2 = MIN(_c2, 255);                                                       \
-    _c1 = ((_oc & 0xff0000) >> 16) + (((_c & 0xff0000) >> 16) * _f);           \
-    _c1 = MIN(_c1, 255);                                                       \
-    _nc = 0x00 | (_c1 << 16) | (_c2 << 8) | _c3;                               \
-    _vd[(_y * _st) + _x + 1] = _nc;                                            \
+    draw_dot_aa (_vd, (_x + 1), _y, _st, _c, _f);                              \
                                                                                \
     _f = ((1.0 - _fx) + _fy) / 2.0;                                            \
-    _oc = _vd[((_y + 1) * _st) + _x];                                          \
-    _c3 = (_oc & 0xff) + ((_c & 0xff) * _f);                                   \
-    _c3 = MIN(_c3, 255);                                                       \
-    _c2 = ((_oc & 0xff00) >> 8) + (((_c & 0xff00) >> 8) * _f);                 \
-    _c2 = MIN(_c2, 255);                                                       \
-    _c1 = ((_oc & 0xff0000) >> 16) + (((_c & 0xff0000) >> 16) * _f);           \
-    _c1 = MIN(_c1, 255);                                                       \
-    _nc = 0x00 | (_c1 << 16) | (_c2 << 8) | _c3;                               \
-    _vd[((_y + 1) * _st) + _x] = _nc;                                          \
+    draw_dot_aa (_vd, _x, (_y + 1), _st, _c, _f);                              \
                                                                                \
     _f = (_fx + _fy) / 2.0;                                                    \
-    _oc = _vd[((_y + 1) * _st) + _x + 1];                                      \
-    _c3 = (_oc & 0xff) + ((_c & 0xff) * _f);                                   \
-    _c3 = MIN(_c3, 255);                                                       \
-    _c2 = ((_oc & 0xff00) >> 8) + (((_c & 0xff00) >> 8) * _f);                 \
-    _c2 = MIN(_c2, 255);                                                       \
-    _c1 = ((_oc & 0xff0000) >> 16) + (((_c & 0xff0000) >> 16) * _f);           \
-    _c1 = MIN(_c1, 255);                                                       \
-    _nc = 0x00 | (_c1 << 16) | (_c2 << 8) | _c3;                               \
-    _vd[((_y + 1) * _st) + _x + 1] = _nc;                                      \
+    draw_dot_aa (_vd, (_x + 1), (_y + 1), _st, _c, _f);                        \
   }                                                                            \
 } G_STMT_END
 
