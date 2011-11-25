@@ -24,6 +24,7 @@ GstSdp-@GST_MAJORMINOR@.gir: $(INTROSPECTION_SCANNER) libgstsdp-@GST_MAJORMINOR@
 		$(INTROSPECTION_SCANNER) -v --namespace GstSdp \
 		--nsversion=@GST_MAJORMINOR@ \
 		--strip-prefix=Gst \
+		--warn-all \
 		$(gir_cincludes) \
 		-DGST_USE_UNSTABLE_API \
 		-I$(top_srcdir)/gst-libs \

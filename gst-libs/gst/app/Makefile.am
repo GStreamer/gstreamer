@@ -44,6 +44,7 @@ GstApp-@GST_MAJORMINOR@.gir: $(INTROSPECTION_SCANNER) libgstapp-@GST_MAJORMINOR@
 		$(INTROSPECTION_SCANNER) -v --namespace GstApp \
 		--nsversion=@GST_MAJORMINOR@ \
 		--strip-prefix=Gst \
+		--warn-all \
 		$(gir_cincludes) \
 		-DGST_USE_UNSTABLE_API \
 		-I$(top_srcdir)/gst-libs \

@@ -13,8 +13,8 @@ libgstrtp_@GST_MAJORMINOR@_la_SOURCES = gstrtpbuffer.c \
 			        gstrtcpbuffer.c \
 			        gstrtppayloads.c \
 			        gstrtpbaseaudiopayload.c \
-  				gstrtpbasepayload.c \
-  				gstrtpbasedepayload.c
+				gstrtpbasepayload.c \
+				gstrtpbasedepayload.c
 
 libgstrtp_@GST_MAJORMINOR@_la_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(GST_BASE_CFLAGS) $(GST_CFLAGS)
 libgstrtp_@GST_MAJORMINOR@_la_LIBADD = $(GST_BASE_LIBS) $(GST_LIBS)
@@ -33,6 +33,7 @@ GstRtp-@GST_MAJORMINOR@.gir: $(INTROSPECTION_SCANNER) libgstrtp-@GST_MAJORMINOR@
 		$(INTROSPECTION_SCANNER) -v --namespace GstRtp \
 		--nsversion=@GST_MAJORMINOR@ \
 		--strip-prefix=Gst \
+		--warn-all \
 		$(gir_cincludes) \
 		-DGST_USE_UNSTABLE_API \
 		-I$(top_srcdir)/gst-libs \
