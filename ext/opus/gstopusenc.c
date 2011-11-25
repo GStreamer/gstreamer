@@ -532,13 +532,17 @@ gst_opus_enc_set_format (GstAudioEncoder * benc, GstAudioInfo * info)
 static gboolean
 gst_opus_enc_setup (GstOpusEnc * enc)
 {
-  int error = OPUS_OK;
+  int error = OPUS_OK, n;
+  guint8 trivial_mapping[256];
 
   GST_DEBUG_OBJECT (enc, "setup");
 
+  for (n = 0; n < 256; ++n)
+    trivial_mapping[n] = n;
+
   enc->state =
       opus_multistream_encoder_create (enc->sample_rate, enc->n_channels,
-      (enc->n_channels + 1) / 2, enc->n_channels / 2, enc->channel_mapping,
+      (enc->n_channels + 1) / 2, enc->n_channels / 2, trivial_mapping,
       enc->audio_or_voip ? OPUS_APPLICATION_AUDIO : OPUS_APPLICATION_VOIP,
       &error);
   if (!enc->state || error != OPUS_OK)
