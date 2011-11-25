@@ -57,6 +57,12 @@ else
 check_voaacenc =
 endif
 
+if USE_VOAMRWBENC
+check_voamrwbenc = elements/voamrwbenc
+else
+check_voamrwbenc =
+endif
+
 if USE_EXIF
 check_jifmux = elements/jifmux
 else
@@ -162,6 +168,7 @@ check_PROGRAMS = \
 	$(check_faac)  \
 	$(check_faad)  \
 	$(check_voaacenc) \
+	$(check_voamrwbenc) \
 	$(check_mpeg2enc)  \
 	$(check_mplex)     \
 	$(check_ofa)        \
