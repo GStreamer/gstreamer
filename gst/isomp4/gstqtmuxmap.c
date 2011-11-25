@@ -201,7 +201,7 @@ GstQTMuxFormatProp gst_qt_mux_format_list[] = {
         "ismlmux",
         "ISML",
         "GstISMLMux",
-        GST_STATIC_CAPS ("video/quicktime, variant = (string) iso"),
+        GST_STATIC_CAPS ("video/quicktime, variant = (string) iso-fragmented"),
         GST_STATIC_CAPS (MPEG4V_CAPS "; " H264_CAPS),
         GST_STATIC_CAPS (MP3_CAPS "; " AAC_CAPS)
       }
