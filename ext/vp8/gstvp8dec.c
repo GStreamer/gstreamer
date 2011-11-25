@@ -473,7 +473,7 @@ gst_vp8_dec_handle_frame (GstBaseVideoDecoder * decoder,
     if (deadline < 0) {
       GST_LOG_OBJECT (dec, "Skipping late frame (%f s past deadline)",
           (double) -deadline / GST_SECOND);
-      gst_base_video_decoder_finish_frame (decoder, frame);
+      gst_base_video_decoder_drop_frame (decoder, frame);
     } else {
       ret = gst_base_video_decoder_alloc_src_frame (decoder, frame);
 
