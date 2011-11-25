@@ -44,8 +44,8 @@ gst_opus_enc_create_id_buffer (gint nchannels, gint sample_rate,
   gst_byte_writer_put_uint16_le (&bw, 0);       /* output gain */
   gst_byte_writer_put_uint8 (&bw, channel_mapping_family);
   if (channel_mapping_family > 0) {
-    gst_byte_writer_put_uint8 (&bw, (nchannels + 1) / 2);
-    gst_byte_writer_put_uint8 (&bw, nchannels / 2);
+    gst_byte_writer_put_uint8 (&bw, nchannels);
+    gst_byte_writer_put_uint8 (&bw, 0);
     gst_byte_writer_put_data (&bw, channel_mapping, nchannels);
   }
 

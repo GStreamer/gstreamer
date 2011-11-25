@@ -544,7 +544,7 @@ gst_opus_enc_setup (GstOpusEnc * enc)
 
   enc->state =
       opus_multistream_encoder_create (enc->sample_rate, enc->n_channels,
-      (enc->n_channels + 1) / 2, enc->n_channels / 2, trivial_mapping,
+      enc->n_channels, 0, trivial_mapping,
       enc->audio_or_voip ? OPUS_APPLICATION_AUDIO : OPUS_APPLICATION_VOIP,
       &error);
   if (!enc->state || error != OPUS_OK)
