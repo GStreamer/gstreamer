@@ -85,6 +85,7 @@ struct _GstBaseVideoEncoder
   int               distance_from_sync;
 
   gboolean          force_keyframe;
+  gboolean          force_keyframe_headers;
 
   /*< private >*/
   /* FIXME move to real private part ?
@@ -96,6 +97,7 @@ struct _GstBaseVideoEncoder
 
   GstEvent         *force_keyunit_event;
   GList            *current_frame_events;
+  GstBuffer        *headers;
 
   union {
     void *padding;
@@ -178,7 +180,8 @@ void                   gst_base_video_encoder_set_latency (GstBaseVideoEncoder *
                                                            GstClockTime min_latency, GstClockTime max_latency);
 void                   gst_base_video_encoder_set_latency_fields (GstBaseVideoEncoder *base_video_encoder,
                                                                   int n_fields);
-
+void                   gst_base_video_encoder_set_headers (GstBaseVideoEncoder *base_video_encoder,
+                                                                  GstBuffer *headers);
 G_END_DECLS
 
 #endif
