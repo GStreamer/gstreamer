@@ -36,11 +36,11 @@ static void gst_omx_aac_enc_set_property (GObject * object, guint prop_id,
 static void gst_omx_aac_enc_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 static gboolean gst_omx_aac_enc_set_format (GstOMXAudioEnc * enc,
-    GstOMXPort * port, GstAudioState * state);
+    GstOMXPort * port, GstAudioInfo * info);
 static GstCaps *gst_omx_aac_enc_get_caps (GstOMXAudioEnc * enc,
-    GstOMXPort * port, GstAudioState * state);
+    GstOMXPort * port, GstAudioInfo * info);
 static guint gst_omx_aac_enc_get_num_samples (GstOMXAudioEnc * enc,
-    GstOMXPort * port, GstAudioState * state, GstOMXBuffer * buf);
+    GstOMXPort * port, GstAudioInfo * info, GstOMXBuffer * buf);
 
 enum
 {
@@ -228,7 +228,7 @@ gst_omx_aac_enc_get_property (GObject * object, guint prop_id, GValue * value,
 
 static gboolean
 gst_omx_aac_enc_set_format (GstOMXAudioEnc * enc, GstOMXPort * port,
-    GstAudioState * state)
+    GstAudioInfo * info)
 {
   GstOMXAACEnc *self = GST_OMX_AAC_ENC (enc);
   OMX_AUDIO_PARAM_AACPROFILETYPE aac_profile;
@@ -250,7 +250,7 @@ gst_omx_aac_enc_set_format (GstOMXAudioEnc * enc, GstOMXPort * port,
     return FALSE;
   }
 
-  peercaps = gst_pad_peer_get_caps (GST_BASE_AUDIO_ENCODER_SRC_PAD (self));
+  peercaps = gst_pad_peer_get_caps (GST_AUDIO_ENCODER_SRC_PAD (self));
   if (peercaps) {
     GstCaps *intersection;
     GstStructure *s;
@@ -259,7 +259,7 @@ gst_omx_aac_enc_set_format (GstOMXAudioEnc * enc, GstOMXPort * port,
 
     intersection =
         gst_caps_intersect (peercaps,
-        gst_pad_get_pad_template_caps (GST_BASE_AUDIO_ENCODER_SRC_PAD (self)));
+        gst_pad_get_pad_template_caps (GST_AUDIO_ENCODER_SRC_PAD (self)));
     gst_caps_unref (peercaps);
     if (gst_caps_is_empty (intersection)) {
       gst_caps_unref (intersection);
@@ -340,7 +340,7 @@ gst_omx_aac_enc_set_format (GstOMXAudioEnc * enc, GstOMXPort * port,
 
 static GstCaps *
 gst_omx_aac_enc_get_caps (GstOMXAudioEnc * enc, GstOMXPort * port,
-    GstAudioState * state)
+    GstAudioInfo * info)
 {
   GstCaps *caps;
   OMX_ERRORTYPE err;
@@ -437,7 +437,7 @@ gst_omx_aac_enc_get_caps (GstOMXAudioEnc * enc, GstOMXPort * port,
 
 static guint
 gst_omx_aac_enc_get_num_samples (GstOMXAudioEnc * enc, GstOMXPort * port,
-    GstAudioState * state, GstOMXBuffer * buf)
+    GstAudioInfo * info, GstOMXBuffer * buf)
 {
   /* FIXME: Depends on the profile at least */
   return 1024;

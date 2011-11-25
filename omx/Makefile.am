@@ -16,10 +16,7 @@ libgstopenmax_la_SOURCES = \
 	gstbasevideocodec.c \
 	gstbasevideodecoder.c \
 	gstbasevideoencoder.c \
-	gstbasevideoutils.c \
-	gstbaseaudiodecoder.c \
-	gstbaseaudioencoder.c \
-	gstbaseaudioutils.c
+	gstbasevideoutils.c
 
 noinst_HEADERS = \
 	gstomx.h \
@@ -37,10 +34,7 @@ noinst_HEADERS = \
 	gstbasevideocodec.h \
 	gstbasevideodecoder.h \
 	gstbasevideoencoder.h \
-	gstbasevideoutils.h \
-	gstbaseaudiodecoder.h \
-	gstbaseaudioencoder.h \
-	gstbaseaudioutils.h
+	gstbasevideoutils.h
 
 fixbaseclasses = \
         -DGstBaseVideoCodec=OMXBaseVideoCodec \
@@ -48,11 +42,7 @@ fixbaseclasses = \
         -DGstBaseVideoEncoder=OMXBaseVideoEncoder \
         -DGstBaseVideoEncoderClass=OMXBaseVideoEncoderClass \
         -DGstBaseVideoDecoder=OMXBaseVideoDecoder \
-        -DGstBaseVideoDecoderClass=OMXBaseVideoDecoderClass \
-	-DGstBaseAudioDecoder=OMXBaseAudioDecoder \
-	-DGstBaseAudioDecoderClass=OMXBaseAudioDecoderClass \
-	-DGstBaseAudioEncoder=OMXBaseAudioEncoder \
-	-DGstBaseAudioEncoderClass=OMXBaseAudioEncoderClass
+        -DGstBaseVideoDecoderClass=OMXBaseVideoDecoderClass
 
 libgstopenmax_la_CFLAGS = \
 	-DGST_USE_UNSTABLE_API=1 \

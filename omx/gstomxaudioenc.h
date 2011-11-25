@@ -22,7 +22,7 @@
 #define __GST_OMX_AUDIO_ENC_H__
 
 #include <gst/gst.h>
-#include "gstbaseaudioencoder.h"
+#include <gst/audio/gstaudioencoder.h>
 
 #include "gstomx.h"
 
@@ -46,7 +46,7 @@ typedef struct _GstOMXAudioEncClass GstOMXAudioEncClass;
 
 struct _GstOMXAudioEnc
 {
-  GstBaseAudioEncoder parent;
+  GstAudioEncoder parent;
 
   /* < protected > */
   GstOMXCore *core;
@@ -72,7 +72,7 @@ struct _GstOMXAudioEnc
 
 struct _GstOMXAudioEncClass
 {
-  GstBaseAudioEncoderClass parent_class;
+  GstAudioEncoderClass parent_class;
 
   const gchar *core_name;
   const gchar *component_name;
@@ -85,9 +85,9 @@ struct _GstOMXAudioEncClass
 
   guint64 hacks;
 
-  gboolean (*set_format)       (GstOMXAudioEnc * self, GstOMXPort * port, GstAudioState * state);
-  GstCaps *(*get_caps)         (GstOMXAudioEnc * self, GstOMXPort * port, GstAudioState * state);
-  guint    (*get_num_samples)  (GstOMXAudioEnc * self, GstOMXPort * port, GstAudioState * state, GstOMXBuffer * buffer);
+  gboolean (*set_format)       (GstOMXAudioEnc * self, GstOMXPort * port, GstAudioInfo * info);
+  GstCaps *(*get_caps)         (GstOMXAudioEnc * self, GstOMXPort * port, GstAudioInfo * info);
+  guint    (*get_num_samples)  (GstOMXAudioEnc * self, GstOMXPort * port, GstAudioInfo * info, GstOMXBuffer * buffer);
 };
 
 GType gst_omx_audio_enc_get_type (void);
