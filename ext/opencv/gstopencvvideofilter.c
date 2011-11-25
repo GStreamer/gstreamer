@@ -167,6 +167,7 @@ gst_opencv_video_filter_transform (GstBaseTransform * trans,
 {
   GstOpencvVideoFilter *transform;
   GstOpencvVideoFilterClass *fclass;
+  GstFlowReturn ret;
 
   transform = GST_OPENCV_VIDEO_FILTER (trans);
   fclass = GST_OPENCV_VIDEO_FILTER_GET_CLASS (transform);
@@ -175,10 +176,18 @@ gst_opencv_video_filter_transform (GstBaseTransform * trans,
   g_return_val_if_fail (transform->cvImage != NULL, GST_FLOW_ERROR);
   g_return_val_if_fail (transform->out_cvImage != NULL, GST_FLOW_ERROR);
 
-  transform->cvImage->imageData = (char *) GST_BUFFER_DATA (inbuf);
-  transform->out_cvImage->imageData = (char *) GST_BUFFER_DATA (outbuf);
-  return fclass->cv_trans_func (transform, inbuf, transform->cvImage, outbuf,
+  transform->cvImage->imageData = (char *) gst_buffer_map (inbuf,
+      NULL, NULL, GST_MAP_READ);
+  transform->out_cvImage->imageData = (char *) gst_buffer_map (outbuf,
+      NULL, NULL, GST_MAP_WRITE);
+
+  ret = fclass->cv_trans_func (transform, inbuf, transform->cvImage, outbuf,
       transform->out_cvImage);
+
+  gst_buffer_unmap (inbuf, transform->cvImage->imageData, -1);
+  gst_buffer_unmap (outbuf, transform->out_cvImage->imageData, -1);
+
+  return ret;
 }
 
 static GstFlowReturn
@@ -187,6 +196,7 @@ gst_opencv_video_filter_transform_ip (GstBaseTransform * trans,
 {
   GstOpencvVideoFilter *transform;
   GstOpencvVideoFilterClass *fclass;
+  GstFlowReturn ret;
 
   transform = GST_OPENCV_VIDEO_FILTER (trans);
   fclass = GST_OPENCV_VIDEO_FILTER_GET_CLASS (transform);
@@ -198,10 +208,15 @@ gst_opencv_video_filter_transform_ip (GstBaseTransform * trans,
    * level */
   buffer = gst_buffer_make_writable (buffer);
 
-  transform->cvImage->imageData = (char *) GST_BUFFER_DATA (buffer);
+  transform->cvImage->imageData = (char *) gst_buffer_map (buffer,
+      NULL, NULL, GST_MAP_READWRITE);
 
   /* FIXME how to release buffer? */
-  return fclass->cv_trans_ip_func (transform, buffer, transform->cvImage);
+  ret = fclass->cv_trans_ip_func (transform, buffer, transform->cvImage);
+
+  gst_buffer_unmap (buffer, transform->cvImage->imageData, -1);
+
+  return ret;
 }
 
 static gboolean
