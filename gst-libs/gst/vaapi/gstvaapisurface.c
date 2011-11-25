@@ -78,22 +78,29 @@ destroy_subpicture_cb(gpointer subpicture, gpointer surface)
 }
 
 static void
-gst_vaapi_surface_destroy(GstVaapiSurface *surface)
+gst_vaapi_surface_destroy_subpictures(GstVaapiSurface *surface)
 {
-    GstVaapiDisplay * const display = GST_VAAPI_OBJECT_DISPLAY(surface);
     GstVaapiSurfacePrivate * const priv = surface->priv;
-    VASurfaceID surface_id;
-    VAStatus status;
-
-    surface_id = GST_VAAPI_OBJECT_ID(surface);
-    GST_DEBUG("surface %" GST_VAAPI_ID_FORMAT, GST_VAAPI_ID_ARGS(surface_id));
 
     if (priv->subpictures) {
         g_ptr_array_foreach(priv->subpictures, destroy_subpicture_cb, surface);
         g_ptr_array_free(priv->subpictures, TRUE);
         priv->subpictures = NULL;
     }
+}
 
+static void
+gst_vaapi_surface_destroy(GstVaapiSurface *surface)
+{
+    GstVaapiDisplay * const display = GST_VAAPI_OBJECT_DISPLAY(surface);
+    VASurfaceID surface_id;
+    VAStatus status;
+
+    surface_id = GST_VAAPI_OBJECT_ID(surface);
+    GST_DEBUG("surface %" GST_VAAPI_ID_FORMAT, GST_VAAPI_ID_ARGS(surface_id));
+
+    gst_vaapi_surface_destroy_subpictures(surface);
+  
     if (surface_id != VA_INVALID_SURFACE) {
         GST_VAAPI_DISPLAY_LOCK(display);
         status = vaDestroySurfaces(
@@ -788,5 +795,79 @@ gst_vaapi_surface_query_status(
 
     if (pstatus)
         *pstatus = to_GstVaapiSurfaceStatus(surface_status);
+    return TRUE;
+}
+
+/**
+ * gst_vaapi_surface_update_composition:
+ * @surface: a #GstVaapiSurface
+ * @compostion: a #GstVideoOverlayCompositon
+ *
+ * Helper to update the subpictures from #GstVideoOverlayCompositon. Sending
+ * a NULL composition will clear all the current subpictures. Note that this
+ * method will clear existing subpictures.
+ *
+ * Return value: %TRUE on success
+ */
+gboolean
+gst_vaapi_surface_update_composition(
+    GstVaapiSurface *surface,
+    GstVideoOverlayComposition *composition
+)
+{
+    GstVaapiDisplay *display;
+    guint n, nb_rectangles;
+
+    g_return_val_if_fail(GST_VAAPI_IS_SURFACE(surface), FALSE);
+
+    display = GST_VAAPI_OBJECT_DISPLAY(surface);
+    if (!display)
+        return FALSE;
+
+    /* Clear current subpictures */
+    gst_vaapi_surface_destroy_subpictures(surface);
+
+    if (!composition)
+        return TRUE;
+
+    nb_rectangles = gst_video_overlay_composition_n_rectangles (composition);
+
+    /* Overlay all the rectangles cantained in the overlay composition */
+    for (n = 0; n < nb_rectangles; ++n) {
+        GstBuffer *buf;
+        GstVideoOverlayRectangle *rect;
+        guint stride;
+        GstVaapiImage *subtitle_image;
+        GstVaapiRectangle sub_rect;
+        GstVaapiSubpicture *subpicture;
+
+        rect = gst_video_overlay_composition_get_rectangle (composition, n);
+        buf = gst_video_overlay_rectangle_get_pixels_argb (rect,
+                &stride, GST_VIDEO_OVERLAY_FORMAT_FLAG_NONE);
+
+        gst_video_overlay_rectangle_get_render_rectangle (rect,
+                (gint *)&sub_rect.x, (gint *)&sub_rect.y,
+                &sub_rect.width, &sub_rect.height);
+        subtitle_image = gst_vaapi_image_new (display,
+                GST_VAAPI_IMAGE_RGBA, sub_rect.width, sub_rect.height);
+
+        if (!gst_vaapi_image_update_from_buffer (subtitle_image, buf, &sub_rect)) {
+            GST_WARNING ("could not update VA image with subtitle data");
+            return FALSE;
+        }
+
+        subpicture = gst_vaapi_subpicture_new (subtitle_image);
+        g_object_unref (subtitle_image);
+
+        if (!gst_vaapi_surface_associate_subpicture (surface, subpicture,
+                    NULL, &sub_rect)) {
+            GST_WARNING ("could not render overlay rectangle %p", rect);
+            g_object_unref (subpicture);
+            return FALSE;
+        }
+
+        g_object_unref (subpicture);
+    }
+
     return TRUE;
 }

@@ -28,6 +28,7 @@
 #include <gst/vaapi/gstvaapiimage.h>
 #include <gst/vaapi/gstvaapisubpicture.h>
 #include <gst/video/gstsurfacebuffer.h>
+#include <gst/video/video-overlay-composition.h>
 
 G_BEGIN_DECLS
 
@@ -226,6 +227,12 @@ gboolean
 gst_vaapi_surface_query_status(
     GstVaapiSurface       *surface,
     GstVaapiSurfaceStatus *pstatus
+);
+
+gboolean
+gst_vaapi_surface_update_composition(
+    GstVaapiSurface *surface,
+    GstVideoOverlayComposition *composition
 );
 
 G_END_DECLS
