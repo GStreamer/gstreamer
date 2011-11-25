@@ -41,9 +41,11 @@
 #  include "config.h"
 #endif
 
+#include <math.h>
 #include <string.h>
 #include <gst/tag/tag.h>
 #include "gstopusheader.h"
+#include "gstopuscommon.h"
 #include "gstopusdec.h"
 
 GST_DEBUG_CATEGORY_STATIC (opusdec_debug);
@@ -54,9 +56,9 @@ GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("audio/x-raw, "
-        "format = (string) { S16LE }, "
+        "format = (string) { " GST_AUDIO_NE (S16) " }, "
         "rate = (int) { 8000, 12000, 16000, 24000, 48000 }, "
-        "channels = (int) [ 1, 2 ] ")
+        "channels = (int) [ 1, 8 ] ")
     );
 
 static GstStaticPadTemplate opus_dec_sink_factory =
@@ -68,6 +70,19 @@ GST_STATIC_PAD_TEMPLATE ("sink",
 
 G_DEFINE_TYPE (GstOpusDec, gst_opus_dec, GST_TYPE_AUDIO_DECODER);
 
+#define DB_TO_LINEAR(x) pow (10., (x) / 20.)
+
+#define DEFAULT_USE_INBAND_FEC FALSE
+#define DEFAULT_APPLY_GAIN TRUE
+
+enum
+{
+  PROP_0,
+  PROP_USE_INBAND_FEC,
+  PROP_APPLY_GAIN
+};
+
+
 static GstFlowReturn gst_opus_dec_parse_header (GstOpusDec * dec,
     GstBuffer * buf);
 static gboolean gst_opus_dec_start (GstAudioDecoder * dec);
@@ -76,15 +91,25 @@ static GstFlowReturn gst_opus_dec_handle_frame (GstAudioDecoder * dec,
     GstBuffer * buffer);
 static gboolean gst_opus_dec_set_format (GstAudioDecoder * bdec,
     GstCaps * caps);
+static void gst_opus_dec_get_property (GObject * object, guint prop_id,
+    GValue * value, GParamSpec * pspec);
+static void gst_opus_dec_set_property (GObject * object, guint prop_id,
+    const GValue * value, GParamSpec * pspec);
+
 
 static void
 gst_opus_dec_class_init (GstOpusDecClass * klass)
 {
+  GObjectClass *gobject_class;
   GstAudioDecoderClass *adclass;
   GstElementClass *element_class;
 
+  gobject_class = (GObjectClass *) klass;
   adclass = (GstAudioDecoderClass *) klass;
   element_class = (GstElementClass *) klass;
+
+  gobject_class->set_property = gst_opus_dec_set_property;
+  gobject_class->get_property = gst_opus_dec_get_property;
 
   adclass->start = GST_DEBUG_FUNCPTR (gst_opus_dec_start);
   adclass->stop = GST_DEBUG_FUNCPTR (gst_opus_dec_stop);
@@ -99,6 +124,15 @@ gst_opus_dec_class_init (GstOpusDecClass * klass)
       "Codec/Decoder/Audio",
       "decode opus streams to audio",
       "Sebastian Dröge <sebastian.droege@collabora.co.uk>");
+  g_object_class_install_property (gobject_class, PROP_USE_INBAND_FEC,
+      g_param_spec_boolean ("use-inband-fec", "Use in-band FEC",
+          "Use forward error correction if available", DEFAULT_USE_INBAND_FEC,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  g_object_class_install_property (gobject_class, PROP_APPLY_GAIN,
+      g_param_spec_boolean ("apply-gain", "Apply gain",
+          "Apply gain if any is specified in the header", DEFAULT_APPLY_GAIN,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   GST_DEBUG_CATEGORY_INIT (opusdec_debug, "opusdec", 0,
       "opus decoding element");
@@ -109,14 +143,17 @@ gst_opus_dec_reset (GstOpusDec * dec)
 {
   dec->packetno = 0;
   if (dec->state) {
-    opus_decoder_destroy (dec->state);
+    opus_multistream_decoder_destroy (dec->state);
     dec->state = NULL;
   }
 
   gst_buffer_replace (&dec->streamheader, NULL);
   gst_buffer_replace (&dec->vorbiscomment, NULL);
+  gst_buffer_replace (&dec->last_buffer, NULL);
+  dec->primed = FALSE;
 
   dec->pre_skip = 0;
+  dec->r128_gain = 0;
 }
 
 static void
@@ -124,6 +161,8 @@ gst_opus_dec_init (GstOpusDec * dec)
 {
   dec->sample_rate = 0;
   dec->n_channels = 0;
+  dec->use_inband_fec = FALSE;
+  dec->apply_gain = DEFAULT_APPLY_GAIN;
 
   gst_opus_dec_reset (dec);
 }
@@ -138,6 +177,11 @@ gst_opus_dec_start (GstAudioDecoder * dec)
   /* we know about concealment */
   gst_audio_decoder_set_plc_aware (dec, TRUE);
 
+  if (odec->use_inband_fec) {
+    gst_audio_decoder_set_latency (dec, 2 * GST_MSECOND + GST_MSECOND / 2,
+        120 * GST_MSECOND);
+  }
+
   return TRUE;
 }
 
@@ -151,15 +195,111 @@ gst_opus_dec_stop (GstAudioDecoder * dec)
   return TRUE;
 }
 
+static double
+gst_opus_dec_get_r128_gain (gint16 r128_gain)
+{
+  return r128_gain / (double) (1 << 8);
+}
+
+static double
+gst_opus_dec_get_r128_volume (gint16 r128_gain)
+{
+  return DB_TO_LINEAR (gst_opus_dec_get_r128_gain (r128_gain));
+}
+
 static GstFlowReturn
 gst_opus_dec_parse_header (GstOpusDec * dec, GstBuffer * buf)
 {
-  g_return_val_if_fail (gst_opus_header_is_header (buf, "OpusHead", 8),
-      GST_FLOW_ERROR);
-  g_return_val_if_fail (GST_BUFFER_SIZE (buf) >= 19, GST_FLOW_ERROR);
+  const guint8 *data;
+  GstCaps *caps;
+  GstStructure *s;
+  const GstAudioChannelPosition *pos = NULL;
 
-  dec->pre_skip = GST_READ_UINT16_LE (GST_BUFFER_DATA (buf) + 10);
-  GST_INFO_OBJECT (dec, "Found pre-skip of %u samples", dec->pre_skip);
+  g_return_val_if_fail (gst_opus_header_is_id_header (buf), GST_FLOW_ERROR);
+
+  data = gst_buffer_map (buf, NULL, NULL, GST_MAP_READ);
+
+  g_return_val_if_fail (dec->n_channels != data[9], GST_FLOW_ERROR);
+
+  dec->n_channels = data[9];
+  dec->pre_skip = GST_READ_UINT16_LE (data + 10);
+  dec->r128_gain = GST_READ_UINT16_LE (data + 14);
+  dec->r128_gain_volume = gst_opus_dec_get_r128_volume (dec->r128_gain);
+  GST_INFO_OBJECT (dec,
+      "Found pre-skip of %u samples, R128 gain %d (volume %f)",
+      dec->pre_skip, dec->r128_gain, dec->r128_gain_volume);
+
+  dec->channel_mapping_family = data[18];
+  if (dec->channel_mapping_family == 0) {
+    /* implicit mapping */
+    GST_INFO_OBJECT (dec, "Channel mapping family 0, implicit mapping");
+    dec->n_streams = dec->n_stereo_streams = 1;
+    dec->channel_mapping[0] = 0;
+    dec->channel_mapping[1] = 1;
+  } else {
+    dec->n_streams = data[19];
+    dec->n_stereo_streams = data[20];
+    memcpy (dec->channel_mapping, data + 21, dec->n_channels);
+
+    if (dec->channel_mapping_family == 1) {
+      GST_INFO_OBJECT (dec, "Channel mapping family 1, Vorbis mapping");
+      switch (dec->n_channels) {
+        case 1:
+        case 2:
+          /* nothing */
+          break;
+        case 3:
+        case 4:
+        case 5:
+        case 6:
+        case 7:
+        case 8:
+          pos = gst_opus_channel_positions[dec->n_channels - 1];
+          break;
+        default:{
+          gint i;
+          GstAudioChannelPosition *posn =
+              g_new (GstAudioChannelPosition, dec->n_channels);
+
+          GST_ELEMENT_WARNING (GST_ELEMENT (dec), STREAM, DECODE,
+              (NULL), ("Using NONE channel layout for more than 8 channels"));
+
+          for (i = 0; i < dec->n_channels; i++)
+            posn[i] = GST_AUDIO_CHANNEL_POSITION_NONE;
+
+          pos = posn;
+        }
+      }
+    } else {
+      GST_INFO_OBJECT (dec, "Channel mapping family %d",
+          dec->channel_mapping_family);
+    }
+  }
+
+  /* negotiate width with downstream */
+  caps = gst_pad_get_allowed_caps (GST_AUDIO_DECODER_SRC_PAD (dec));
+  s = gst_caps_get_structure (caps, 0);
+  gst_structure_fixate_field_nearest_int (s, "rate", 48000);
+  gst_structure_get_int (s, "rate", &dec->sample_rate);
+  gst_structure_fixate_field_nearest_int (s, "channels", dec->n_channels);
+  gst_structure_get_int (s, "channels", &dec->n_channels);
+
+  GST_INFO_OBJECT (dec, "Negotiated %d channels, %d Hz", dec->n_channels,
+      dec->sample_rate);
+
+  if (pos) {
+    gst_audio_set_channel_positions (gst_caps_get_structure (caps, 0), pos);
+  }
+
+  if (dec->n_channels > 8) {
+    g_free ((GstAudioChannelPosition *) pos);
+  }
+
+  GST_INFO_OBJECT (dec, "Setting src caps to %" GST_PTR_FORMAT, caps);
+  gst_pad_set_caps (GST_AUDIO_DECODER_SRC_PAD (dec), caps);
+  gst_caps_unref (caps);
+
+  gst_buffer_unmap (buf, (guint8 *) data, -1);
 
   return GST_FLOW_OK;
 }
@@ -171,50 +311,8 @@ gst_opus_dec_parse_comments (GstOpusDec * dec, GstBuffer * buf)
   return GST_FLOW_OK;
 }
 
-static void
-gst_opus_dec_setup_from_peer_caps (GstOpusDec * dec)
-{
-  GstPad *srcpad, *peer;
-  GstStructure *s;
-  GstCaps *caps;
-  const GstCaps *template_caps;
-  const GstCaps *peer_caps;
-
-  srcpad = GST_AUDIO_DECODER_SRC_PAD (dec);
-  peer = gst_pad_get_peer (srcpad);
-
-  if (peer) {
-    template_caps = gst_pad_get_pad_template_caps (srcpad);
-    peer_caps = gst_pad_get_caps (peer);
-    GST_DEBUG_OBJECT (dec, "Peer caps: %" GST_PTR_FORMAT, peer_caps);
-    caps = gst_caps_intersect (template_caps, peer_caps);
-    gst_pad_fixate_caps (peer, caps);
-    GST_DEBUG_OBJECT (dec, "Fixated caps: %" GST_PTR_FORMAT, caps);
-
-    s = gst_caps_get_structure (caps, 0);
-    if (!gst_structure_get_int (s, "channels", &dec->n_channels)) {
-      dec->n_channels = 2;
-      GST_WARNING_OBJECT (dec, "Failed to get channels, using default %d",
-          dec->n_channels);
-    } else {
-      GST_DEBUG_OBJECT (dec, "Got channels %d", dec->n_channels);
-    }
-    if (!gst_structure_get_int (s, "rate", &dec->sample_rate)) {
-      dec->sample_rate = 48000;
-      GST_WARNING_OBJECT (dec, "Failed to get rate, using default %d",
-          dec->sample_rate);
-    } else {
-      GST_DEBUG_OBJECT (dec, "Got sample rate %d", dec->sample_rate);
-    }
-
-    gst_audio_decoder_set_outcaps (GST_AUDIO_DECODER (dec), caps);
-  } else {
-    GST_WARNING_OBJECT (dec, "Failed to get src pad peer");
-  }
-}
-
 static GstFlowReturn
-opus_dec_chain_parse_data (GstOpusDec * dec, GstBuffer * buf)
+opus_dec_chain_parse_data (GstOpusDec * dec, GstBuffer * buffer)
 {
   GstFlowReturn res = GST_FLOW_OK;
   gsize size, out_size;
@@ -224,42 +322,51 @@ opus_dec_chain_parse_data (GstOpusDec * dec, GstBuffer * buf)
   int n, err;
   int samples;
   unsigned int packet_size;
+  GstBuffer *buf;
 
   if (dec->state == NULL) {
-    gst_opus_dec_setup_from_peer_caps (dec);
-
     GST_DEBUG_OBJECT (dec, "Creating decoder with %d channels, %d Hz",
         dec->n_channels, dec->sample_rate);
-    dec->state = opus_decoder_create (dec->sample_rate, dec->n_channels, &err);
+    dec->state = opus_multistream_decoder_create (dec->sample_rate,
+        dec->n_channels, dec->n_streams, dec->n_stereo_streams,
+        dec->channel_mapping, &err);
     if (!dec->state || err != OPUS_OK)
       goto creation_failed;
   }
 
+  if (buffer) {
+    GST_DEBUG_OBJECT (dec, "Received buffer of size %u",
+        gst_buffer_get_size (buffer));
+  } else {
+    GST_DEBUG_OBJECT (dec, "Received missing buffer");
+  }
+
+  /* if using in-band FEC, we introdude one extra frame's delay as we need
+     to potentially wait for next buffer to decode a missing buffer */
+  if (dec->use_inband_fec && !dec->primed) {
+    GST_DEBUG_OBJECT (dec, "First buffer received in FEC mode, early out");
+    goto done;
+  }
+
+  /* That's the buffer we'll be sending to the opus decoder. */
+  buf = dec->use_inband_fec && dec->last_buffer ? dec->last_buffer : buffer;
+
   if (buf) {
     data = gst_buffer_map (buf, &size, NULL, GST_MAP_READ);
 
-    GST_DEBUG_OBJECT (dec, "received buffer of size %u", size);
+    GST_DEBUG_OBJECT (dec, "Using buffer of size %u", size);
   } else {
     /* concealment data, pass NULL as the bits parameters */
-    GST_DEBUG_OBJECT (dec, "creating concealment data");
+    GST_DEBUG_OBJECT (dec, "Using NULL buffer");
     data = NULL;
     size = 0;
   }
 
-  if (data) {
-    samples =
-        opus_packet_get_samples_per_frame (data,
-        dec->sample_rate) * opus_packet_get_nb_frames (data, size);
-    packet_size = samples * dec->n_channels * 2;
-    GST_DEBUG_OBJECT (dec, "bandwidth %d", opus_packet_get_bandwidth (data));
-    GST_DEBUG_OBJECT (dec, "samples %d", samples);
-  } else {
-    /* use maximum size (120 ms) as we do now know in advance how many samples
-       will be returned */
-    samples = 120 * dec->sample_rate / 1000;
-  }
-
+  /* use maximum size (120 ms) as the number of returned samples is
+     not constant over the stream. */
+  samples = 120 * dec->sample_rate / 1000;
   packet_size = samples * dec->n_channels * 2;
+
   outbuf = gst_buffer_new_and_alloc (packet_size);
   if (!outbuf) {
     goto buffer_failed;
@@ -267,38 +374,80 @@ opus_dec_chain_parse_data (GstOpusDec * dec, GstBuffer * buf)
 
   out_data = (gint16 *) gst_buffer_map (outbuf, &out_size, NULL, GST_MAP_WRITE);
 
-  n = opus_decode (dec->state, data, size, out_data, samples, 0);
+  if (dec->use_inband_fec) {
+    if (dec->last_buffer) {
+      /* normal delayed decode */
+      n = opus_multistream_decode (dec->state, data, size, out_data, samples,
+          0);
+    } else {
+      /* FEC reconstruction decode */
+      n = opus_multistream_decode (dec->state, data, size, out_data, samples,
+          1);
+    }
+  } else {
+    /* normal decode */
+    n = opus_multistream_decode (dec->state, data, size, out_data, samples, 0);
+  }
   gst_buffer_unmap (buf, data, size);
   gst_buffer_unmap (outbuf, out_data, out_size);
+
   if (n < 0) {
     GST_ELEMENT_ERROR (dec, STREAM, DECODE, ("Decoding error: %d", n), (NULL));
     return GST_FLOW_ERROR;
   }
   GST_DEBUG_OBJECT (dec, "decoded %d samples", n);
-  GST_BUFFER_SIZE (outbuf) = n * 2 * dec->n_channels;
+  gst_buffer_set_size (outbuf, n * 2 * dec->n_channels);
 
   /* Skip any samples that need skipping */
   if (dec->pre_skip > 0) {
     guint scaled_pre_skip = dec->pre_skip * dec->sample_rate / 48000;
     guint skip = scaled_pre_skip > n ? n : scaled_pre_skip;
     guint scaled_skip = skip * 48000 / dec->sample_rate;
-    GST_BUFFER_SIZE (outbuf) -= skip * 2 * dec->n_channels;
-    GST_BUFFER_DATA (outbuf) += skip * 2 * dec->n_channels;
+
+    gst_buffer_resize (outbuf, skip * 2 * dec->n_channels, -1);
     dec->pre_skip -= scaled_skip;
     GST_INFO_OBJECT (dec,
         "Skipping %u samples (%u at 48000 Hz, %u left to skip)", skip,
         scaled_skip, dec->pre_skip);
 
-    if (GST_BUFFER_SIZE (outbuf) == 0) {
+    if (gst_buffer_get_size (outbuf) == 0) {
       gst_buffer_unref (outbuf);
       outbuf = NULL;
     }
+  }
+
+  /* Apply gain */
+  /* Would be better off leaving this to a volume element, as this is
+     a naive conversion that does too many int/float conversions.
+     However, we don't have control over the pipeline...
+     So make it optional if the user program wants to use a volume,
+     but do it by default so the correct volume goes out by default */
+  if (dec->apply_gain && outbuf && dec->r128_gain) {
+    gsize rsize;
+    unsigned int i, nsamples;
+    double volume = dec->r128_gain_volume;
+    gint16 *samples =
+        (gint16 *) gst_buffer_map (outbuf, &rsize, NULL, GST_MAP_READWRITE);
+
+    GST_DEBUG_OBJECT (dec, "Applying gain: volume %f", volume);
+    nsamples = rsize / 2;
+    for (i = 0; i < nsamples; ++i) {
+      int sample = (int) (samples[i] * volume + 0.5);
+      samples[i] = sample < -32768 ? -32768 : sample > 32767 ? 32767 : sample;
+    }
+    gst_buffer_unmap (outbuf, samples, rsize);
   }
 
   res = gst_audio_decoder_finish_frame (GST_AUDIO_DECODER (dec), outbuf, 1);
 
   if (res != GST_FLOW_OK)
     GST_DEBUG_OBJECT (dec, "flow: %s", gst_flow_get_name (res));
+
+done:
+  if (dec->use_inband_fec) {
+    gst_buffer_replace (&dec->last_buffer, buffer);
+    dec->primed = TRUE;
+  }
 
   return res;
 
@@ -435,4 +584,42 @@ gst_opus_dec_handle_frame (GstAudioDecoder * adec, GstBuffer * buf)
   dec->packetno++;
 
   return res;
+}
+
+static void
+gst_opus_dec_get_property (GObject * object, guint prop_id, GValue * value,
+    GParamSpec * pspec)
+{
+  GstOpusDec *dec = GST_OPUS_DEC (object);
+
+  switch (prop_id) {
+    case PROP_USE_INBAND_FEC:
+      g_value_set_boolean (value, dec->use_inband_fec);
+      break;
+    case PROP_APPLY_GAIN:
+      g_value_set_boolean (value, dec->apply_gain);
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
+  }
+}
+
+static void
+gst_opus_dec_set_property (GObject * object, guint prop_id,
+    const GValue * value, GParamSpec * pspec)
+{
+  GstOpusDec *dec = GST_OPUS_DEC (object);
+
+  switch (prop_id) {
+    case PROP_USE_INBAND_FEC:
+      dec->use_inband_fec = g_value_get_boolean (value);
+      break;
+    case PROP_APPLY_GAIN:
+      dec->apply_gain = g_value_get_boolean (value);
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
+  }
 }

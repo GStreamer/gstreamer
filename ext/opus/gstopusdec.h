@@ -23,7 +23,7 @@
 
 #include <gst/gst.h>
 #include <gst/audio/gstaudiodecoder.h>
-#include <opus/opus.h>
+#include <opus/opus_multistream.h>
 
 G_BEGIN_DECLS
 
@@ -44,7 +44,7 @@ typedef struct _GstOpusDecClass GstOpusDecClass;
 struct _GstOpusDec {
   GstAudioDecoder       element;
 
-  OpusDecoder          *state;
+  OpusMSDecoder        *state;
 
   guint64               packetno;
 
@@ -54,6 +54,19 @@ struct _GstOpusDec {
   int sample_rate;
   int n_channels;
   guint32 pre_skip;
+  gint16 r128_gain;
+
+  guint8 n_streams;
+  guint8 n_stereo_streams;
+  guint8 channel_mapping_family;
+  guint8 channel_mapping[256];
+
+  gboolean apply_gain;
+  double r128_gain_volume;
+
+  gboolean use_inband_fec;
+  GstBuffer *last_buffer;
+  gboolean primed;
 };
 
 struct _GstOpusDecClass {
