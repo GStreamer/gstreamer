@@ -352,6 +352,7 @@ gst_vaapiconvert_init(GstVaapiConvert *convert, GstVaapiConvertClass *klass)
         sinkpad,
         gst_vaapiconvert_sinkpad_buffer_alloc
     );
+    gst_pad_set_query_function(sinkpad, gst_vaapiconvert_query);
     g_object_unref(sinkpad);
 
     /* Override query on src pad */

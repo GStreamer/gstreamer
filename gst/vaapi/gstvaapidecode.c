@@ -687,6 +687,7 @@ gst_vaapidecode_init(GstVaapiDecode *decode, GstVaapiDecodeClass *klass)
     gst_pad_set_setcaps_function(decode->sinkpad, gst_vaapidecode_set_caps);
     gst_pad_set_chain_function(decode->sinkpad, gst_vaapidecode_chain);
     gst_pad_set_event_function(decode->sinkpad, gst_vaapidecode_sink_event);
+    gst_pad_set_query_function(decode->sinkpad, gst_vaapidecode_query);
     gst_element_add_pad(GST_ELEMENT(decode), decode->sinkpad);
 
     /* Pad through which data goes out of the element */
