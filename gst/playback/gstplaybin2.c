@@ -825,6 +825,8 @@ gst_play_bin_class_init (GstPlayBinClass * klass)
    *
    * This signal is emitted when the current uri is about to finish. You can
    * set the uri and suburi to make sure that playback continues.
+   *
+   * This signal is emitted from the context of a GStreamer streaming thread.
    */
   gst_play_bin_signals[SIGNAL_ABOUT_TO_FINISH] =
       g_signal_new ("about-to-finish", G_TYPE_FROM_CLASS (klass),
@@ -839,7 +841,12 @@ gst_play_bin_class_init (GstPlayBinClass * klass)
    * This signal is emitted whenever the number or order of the video
    * streams has changed. The application will most likely want to select
    * a new video stream.
+   *
+   * This signal is usually emitted from the context of a GStreamer streaming
+   * thread. You can use gst_message_new_application() and
+   * gst_element_post_message() to notify your application's main thread.
    */
+  /* FIXME 0.11: turn video-changed signal into message? */
   gst_play_bin_signals[SIGNAL_VIDEO_CHANGED] =
       g_signal_new ("video-changed", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST,
@@ -852,7 +859,12 @@ gst_play_bin_class_init (GstPlayBinClass * klass)
    * This signal is emitted whenever the number or order of the audio
    * streams has changed. The application will most likely want to select
    * a new audio stream.
+   *
+   * This signal may be emitted from the context of a GStreamer streaming thread.
+   * You can use gst_message_new_application() and gst_element_post_message()
+   * to notify your application's main thread.
    */
+  /* FIXME 0.11: turn audio-changed signal into message? */
   gst_play_bin_signals[SIGNAL_AUDIO_CHANGED] =
       g_signal_new ("audio-changed", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST,
@@ -865,7 +877,12 @@ gst_play_bin_class_init (GstPlayBinClass * klass)
    * This signal is emitted whenever the number or order of the text
    * streams has changed. The application will most likely want to select
    * a new text stream.
+   *
+   * This signal may be emitted from the context of a GStreamer streaming thread.
+   * You can use gst_message_new_application() and gst_element_post_message()
+   * to notify your application's main thread.
    */
+  /* FIXME 0.11: turn text-changed signal into message? */
   gst_play_bin_signals[SIGNAL_TEXT_CHANGED] =
       g_signal_new ("text-changed", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST,
@@ -879,6 +896,10 @@ gst_play_bin_class_init (GstPlayBinClass * klass)
    *
    * This signal is emitted whenever the tags of a video stream have changed.
    * The application will most likely want to get the new tags.
+   *
+   * This signal may be emitted from the context of a GStreamer streaming thread.
+   * You can use gst_message_new_application() and gst_element_post_message()
+   * to notify your application's main thread.
    *
    * Since: 0.10.24
    */
@@ -896,6 +917,10 @@ gst_play_bin_class_init (GstPlayBinClass * klass)
    * This signal is emitted whenever the tags of an audio stream have changed.
    * The application will most likely want to get the new tags.
    *
+   * This signal may be emitted from the context of a GStreamer streaming thread.
+   * You can use gst_message_new_application() and gst_element_post_message()
+   * to notify your application's main thread.
+   *
    * Since: 0.10.24
    */
   gst_play_bin_signals[SIGNAL_AUDIO_TAGS_CHANGED] =
@@ -911,6 +936,10 @@ gst_play_bin_class_init (GstPlayBinClass * klass)
    *
    * This signal is emitted whenever the tags of a text stream have changed.
    * The application will most likely want to get the new tags.
+   *
+   * This signal may be emitted from the context of a GStreamer streaming thread.
+   * You can use gst_message_new_application() and gst_element_post_message()
+   * to notify your application's main thread.
    *
    * Since: 0.10.24
    */
@@ -930,6 +959,9 @@ gst_play_bin_class_init (GstPlayBinClass * klass)
    * proxy server for an http source, or set the device and read speed for
    * an audio cd source). This is functionally equivalent to connecting to
    * the notify::source signal, but more convenient.
+   *
+   * This signal is usually emitted from the context of a GStreamer streaming
+   * thread.
    *
    * Since: 0.10.33
    */
