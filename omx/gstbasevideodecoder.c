@@ -1398,9 +1398,12 @@ gst_base_video_decoder_prepare_finish_frame (GstBaseVideoDecoder *
       break;
   }
 
-  for (l = g_list_last (events); l; l = l->prev)
+  for (l = g_list_last (events); l; l = l->prev) {
+    GST_LOG_OBJECT (base_video_decoder, "pushing %s event",
+        GST_EVENT_TYPE_NAME (l->data));
     gst_pad_push_event (GST_BASE_VIDEO_CODEC_SRC_PAD (base_video_decoder),
         l->data);
+  }
   g_list_free (events);
 
   if (GST_CLOCK_TIME_IS_VALID (frame->presentation_timestamp)) {
