@@ -218,11 +218,9 @@ static void
 gst_opus_enc_class_init (GstOpusEncClass * klass)
 {
   GObjectClass *gobject_class;
-  GstElementClass *gstelement_class;
   GstAudioEncoderClass *base_class;
 
   gobject_class = (GObjectClass *) klass;
-  gstelement_class = (GstElementClass *) klass;
   base_class = (GstAudioEncoderClass *) klass;
 
   gobject_class->set_property = gst_opus_enc_set_property;

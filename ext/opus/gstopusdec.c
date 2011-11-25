@@ -118,11 +118,9 @@ gst_opus_dec_class_init (GstOpusDecClass * klass)
 {
   GObjectClass *gobject_class;
   GstAudioDecoderClass *adclass;
-  GstElementClass *gstelement_class;
 
   gobject_class = (GObjectClass *) klass;
   adclass = (GstAudioDecoderClass *) klass;
-  gstelement_class = (GstElementClass *) klass;
 
   gobject_class->set_property = gst_opus_dec_set_property;
   gobject_class->get_property = gst_opus_dec_get_property;
