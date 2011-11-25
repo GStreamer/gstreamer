@@ -144,11 +144,7 @@ initDistTable (GstWarpTV * filter)
 {
   gint32 halfw, halfh, *distptr;
   gint x, y;
-#ifdef PS2
   float m;
-#else
-  float m;
-#endif
 
   halfw = filter->width >> 1;
   halfh = filter->height >> 1;
