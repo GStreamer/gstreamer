@@ -46,8 +46,8 @@ typedef struct {
   guint bit;   /* Bit position in the current byte */
 } GstBitReader;
 
-GstBitReader * gst_bit_reader_new (const guint8 *data, guint size);
-GstBitReader * gst_bit_reader_new_from_buffer (const GstBuffer *buffer);
+GstBitReader * gst_bit_reader_new (const guint8 *data, guint size) G_GNUC_MALLOC;
+GstBitReader * gst_bit_reader_new_from_buffer (const GstBuffer *buffer) G_GNUC_MALLOC;
 void gst_bit_reader_free (GstBitReader *reader);
 
 void gst_bit_reader_init (GstBitReader *reader, const guint8 *data, guint size);

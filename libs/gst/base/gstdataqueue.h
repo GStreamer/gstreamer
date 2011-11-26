@@ -158,12 +158,12 @@ struct _GstDataQueueClass
 GType gst_data_queue_get_type (void);
 
 GstDataQueue * gst_data_queue_new            (GstDataQueueCheckFullFunction checkfull,
-                                              gpointer checkdata);
+                                              gpointer checkdata) G_GNUC_MALLOC;
 
 GstDataQueue * gst_data_queue_new_full       (GstDataQueueCheckFullFunction checkfull,
 					      GstDataQueueFullCallback fullcallback,
 					      GstDataQueueEmptyCallback emptycallback,
-					      gpointer checkdata);
+					      gpointer checkdata) G_GNUC_MALLOC;
 
 gboolean       gst_data_queue_push           (GstDataQueue * queue, GstDataQueueItem * item);
 gboolean       gst_data_queue_pop            (GstDataQueue * queue, GstDataQueueItem ** item);

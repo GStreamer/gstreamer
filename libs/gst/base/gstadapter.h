@@ -79,7 +79,7 @@ struct _GstAdapterClass {
 
 GType                   gst_adapter_get_type            (void);
 
-GstAdapter *            gst_adapter_new                 (void);
+GstAdapter *            gst_adapter_new                 (void) G_GNUC_MALLOC;
 
 void                    gst_adapter_clear               (GstAdapter *adapter);
 void                    gst_adapter_push                (GstAdapter *adapter, GstBuffer* buf);
