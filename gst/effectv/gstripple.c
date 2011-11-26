@@ -311,9 +311,9 @@ gst_rippletv_transform (GstBaseTransform * trans, GstBuffer * in,
   guint32 *src, *dest;
   GstVideoFrame in_frame, out_frame;
   gint x, y, i;
-  gint dx, dy;
+  gint dx, dy, o_dx;
   gint h, v;
-  gint width, height;
+  gint m_w, m_h, v_w, v_h;
   gint *p, *q, *r;
   gint8 *vp;
   GstClockTime timestamp, stream_time;
@@ -344,22 +344,24 @@ gst_rippletv_transform (GstBaseTransform * trans, GstBuffer * in,
   else
     motiondetect (filter, src);
 
+  m_w = filter->map_w;
+  m_h = filter->map_h;
+  v_w = GST_VIDEO_FRAME_WIDTH (&in_frame);
+  v_h = GST_VIDEO_FRAME_HEIGHT (&in_frame);
+
   /* simulate surface wave */
-  width = filter->map_w;
-  height = filter->map_h;
 
   /* This function is called only 30 times per second. To increase a speed
    * of wave, iterates this loop several times. */
   for (i = loopnum; i > 0; i--) {
     /* wave simulation */
-    p = filter->map1 + width + 1;
-    q = filter->map2 + width + 1;
-    r = filter->map3 + width + 1;
-    for (y = height - 2; y > 0; y--) {
-      for (x = width - 2; x > 0; x--) {
-        h = *(p - width - 1) + *(p - width + 1) + *(p + width - 1) + *(p +
-            width + 1)
-            + *(p - width) + *(p - 1) + *(p + 1) + *(p + width) - (*p) * 9;
+    p = filter->map1 + m_w + 1;
+    q = filter->map2 + m_w + 1;
+    r = filter->map3 + m_w + 1;
+    for (y = m_h - 2; y > 0; y--) {
+      for (x = m_w - 2; x > 0; x--) {
+        h = *(p - m_w - 1) + *(p - m_w + 1) + *(p + m_w - 1) + *(p + m_w + 1)
+            + *(p - m_w) + *(p - 1) + *(p + 1) + *(p + m_w) - (*p) * 9;
         h = h >> 3;
         v = *p - *q;
         v += h - (v >> decay);
@@ -374,11 +376,11 @@ gst_rippletv_transform (GstBaseTransform * trans, GstBuffer * in,
     }
 
     /* low pass filter */
-    p = filter->map3 + width + 1;
-    q = filter->map2 + width + 1;
-    for (y = height - 2; y > 0; y--) {
-      for (x = width - 2; x > 0; x--) {
-        h = *(p - width) + *(p - 1) + *(p + 1) + *(p + width) + (*p) * 60;
+    p = filter->map3 + m_w + 1;
+    q = filter->map2 + m_w + 1;
+    for (y = m_h - 2; y > 0; y--) {
+      for (x = m_w - 2; x > 0; x--) {
+        h = *(p - m_w) + *(p - 1) + *(p + 1) + *(p + m_w) + (*p) * 60;
         *q = h >> 6;
         p++;
         q++;
@@ -394,12 +396,12 @@ gst_rippletv_transform (GstBaseTransform * trans, GstBuffer * in,
 
   vp = filter->vtable;
   p = filter->map1;
-  for (y = height - 1; y > 0; y--) {
-    for (x = width - 1; x > 0; x--) {
+  for (y = m_h - 1; y > 0; y--) {
+    for (x = m_w - 1; x > 0; x--) {
       /* difference of the height between two voxel. They are twiced to
        * emphasise the wave. */
       vp[0] = sqrtable[((p[0] - p[1]) >> (point - 1)) & 0xff];
-      vp[1] = sqrtable[((p[0] - p[width]) >> (point - 1)) & 0xff];
+      vp[1] = sqrtable[((p[0] - p[m_w]) >> (point - 1)) & 0xff];
       p++;
       vp += 2;
     }
@@ -407,48 +409,34 @@ gst_rippletv_transform (GstBaseTransform * trans, GstBuffer * in,
     vp += 2;
   }
 
-  width = GST_VIDEO_FRAME_WIDTH (&in_frame);
-  height = GST_VIDEO_FRAME_HEIGHT (&in_frame);
   vp = filter->vtable;
 
   /* draw refracted image. The vector table is stretched. */
-  for (y = 0; y < height; y += 2) {
-    for (x = 0; x < width; x += 2) {
+  for (y = 0; y < v_h; y += 2) {
+    for (x = 0; x < v_w; x += 2) {
       h = (gint) vp[0];
       v = (gint) vp[1];
       dx = x + h;
       dy = y + v;
-      if (dx < 0)
-        dx = 0;
-      if (dy < 0)
-        dy = 0;
-      if (dx >= width)
-        dx = width - 1;
-      if (dy >= height)
-        dy = height - 1;
-      dest[0] = src[dy * width + dx];
+      dx = CLAMP (dx, 0, (v_w - 1));
+      dy = CLAMP (dy, 0, (v_h - 1));
+      dest[0] = src[dy * v_w + dx];
 
-      i = dx;
+      o_dx = dx;
 
       dx = x + 1 + (h + (gint) vp[2]) / 2;
-      if (dx < 0)
-        dx = 0;
-      if (dx >= width)
-        dx = width - 1;
-      dest[1] = src[dy * width + dx];
+      dx = CLAMP (dx, 0, (v_w - 1));
+      dest[1] = src[dy * v_w + dx];
 
-      dy = y + 1 + (v + (gint) vp[filter->map_w * 2 + 1]) / 2;
-      if (dy < 0)
-        dy = 0;
-      if (dy >= height)
-        dy = height - 1;
-      dest[width] = src[dy * width + i];
+      dy = y + 1 + (v + (gint) vp[m_w * 2 + 1]) / 2;
+      dy = CLAMP (dy, 0, (v_h - 1));
+      dest[v_w] = src[dy * v_w + o_dx];
 
-      dest[width + 1] = src[dy * width + dx];
+      dest[v_w + 1] = src[dy * v_w + dx];
       dest += 2;
       vp += 2;
     }
-    dest += width;
+    dest += v_w;
     vp += 2;
   }
   GST_OBJECT_UNLOCK (filter);
@@ -493,9 +481,11 @@ gst_rippletv_set_caps (GstBaseTransform * btrans, GstCaps * incaps,
   filter->map_h = height / 2 + 1;
   filter->map_w = width / 2 + 1;
 
+  /* we over allocate the buffers, as the render code does not handle clipping
+   * very well */
   if (filter->map)
     g_free (filter->map);
-  filter->map = g_new0 (gint, filter->map_h * filter->map_w * 3);
+  filter->map = g_new0 (gint, (1 + filter->map_h) * filter->map_w * 3);
 
   filter->map1 = filter->map;
   filter->map2 = filter->map + filter->map_w * filter->map_h;
@@ -503,15 +493,15 @@ gst_rippletv_set_caps (GstBaseTransform * btrans, GstCaps * incaps,
 
   if (filter->vtable)
     g_free (filter->vtable);
-  filter->vtable = g_new0 (gint8, filter->map_h * filter->map_w * 2);
+  filter->vtable = g_new0 (gint8, (1 + filter->map_h) * filter->map_w * 2);
 
   if (filter->background)
     g_free (filter->background);
-  filter->background = g_new0 (gint16, width * height);
+  filter->background = g_new0 (gint16, width * (height + 1));
 
   if (filter->diff)
     g_free (filter->diff);
-  filter->diff = g_new0 (guint8, width * height);
+  filter->diff = g_new0 (guint8, width * (height + 1));
   GST_OBJECT_UNLOCK (filter);
 
   return TRUE;
@@ -650,6 +640,7 @@ gst_rippletv_init (GstRippleTV * filter)
 {
   filter->mode = DEFAULT_MODE;
 
+  /* FIXME: remove this when memory corruption after resizes are fixed */
   gst_pad_use_fixed_caps (GST_BASE_TRANSFORM_SRC_PAD (filter));
   gst_pad_use_fixed_caps (GST_BASE_TRANSFORM_SINK_PAD (filter));
 }

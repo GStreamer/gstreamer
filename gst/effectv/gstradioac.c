@@ -131,14 +131,15 @@ enum
 #define RATIO 0.95
 
 static guint32 palettes[COLORS * PATTERN];
+static gint swap_tab[] = { 2, 1, 0, 3 };
 
 #define gst_radioactv_parent_class parent_class
 G_DEFINE_TYPE (GstRadioacTV, gst_radioactv, GST_TYPE_VIDEO_FILTER);
 
 #if G_BYTE_ORDER == G_LITTLE_ENDIAN
-#define CAPS_STR GST_VIDEO_CAPS_MAKE ("RGBx")
+#define CAPS_STR GST_VIDEO_CAPS_MAKE ("{ RGBx, BGRx }")
 #else
-#define CAPS_STR GST_VIDEO_CAPS_MAKE ("xBGR")
+#define CAPS_STR GST_VIDEO_CAPS_MAKE ("{ xBGR, xRGB }")
 #endif
 
 static GstStaticPadTemplate gst_radioactv_src_template =
@@ -162,18 +163,20 @@ makePalette (void)
 
 #define DELTA (255/(COLORS/2-1))
 
+  /* red, gree, blue */
   for (i = 0; i < COLORS / 2; i++) {
     palettes[i] = i * DELTA;
     palettes[COLORS + i] = (i * DELTA) << 8;
     palettes[COLORS * 2 + i] = (i * DELTA) << 16;
   }
   for (i = 0; i < COLORS / 2; i++) {
-    palettes[+i + COLORS / 2] = 255 | (i * DELTA) << 16 | (i * DELTA) << 8;
+    palettes[i + COLORS / 2] = 255 | (i * DELTA) << 16 | (i * DELTA) << 8;
     palettes[COLORS + i + COLORS / 2] =
         (255 << 8) | (i * DELTA) << 16 | i * DELTA;
     palettes[COLORS * 2 + i + COLORS / 2] =
         (255 << 16) | (i * DELTA) << 8 | i * DELTA;
   }
+  /* white */
   for (i = 0; i < COLORS; i++) {
     palettes[COLORS * 3 + i] = (255 * i / COLORS) * 0x10101;
   }
@@ -347,7 +350,19 @@ gst_radioactv_transform (GstBaseTransform * trans, GstBuffer * in,
   height = GST_VIDEO_FRAME_HEIGHT (&in_frame);
 
   GST_OBJECT_LOCK (filter);
-  palette = &palettes[COLORS * filter->color];
+#if G_BYTE_ORDER == G_LITTLE_ENDIAN
+  if (GST_VIDEO_FRAME_FORMAT (&in_frame) == GST_VIDEO_FORMAT_RGBx) {
+    palette = &palettes[COLORS * filter->color];
+  } else {
+    palette = &palettes[COLORS * swap_tab[filter->color]];
+  }
+#else
+  if (GST_VIDEO_FRAME_FORMAT (&in_frame) == GST_VIDEO_FORMAT_xBGR) {
+    palette = &palettes[COLORS * filter->color];
+  } else {
+    palette = &palettes[COLORS * swap_tab[filter->color]];
+  }
+#endif
   diff = filter->diff;
 
   if (filter->mode == 3 && filter->trigger)
@@ -643,7 +658,4 @@ gst_radioactv_init (GstRadioacTV * filter)
   filter->color = DEFAULT_COLOR;
   filter->interval = DEFAULT_INTERVAL;
   filter->trigger = DEFAULT_TRIGGER;
-
-  gst_pad_use_fixed_caps (GST_BASE_TRANSFORM_SRC_PAD (filter));
-  gst_pad_use_fixed_caps (GST_BASE_TRANSFORM_SINK_PAD (filter));
 }

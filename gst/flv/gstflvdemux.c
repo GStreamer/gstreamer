@@ -781,10 +781,10 @@ gst_flv_demux_push_tags (GstFlvDemux * demux)
 }
 
 static void
-gst_flv_demux_update_resync (GstFlvDemux * demux, guint32 pts, guint32 * last,
-    GstClockTime * offset)
+gst_flv_demux_update_resync (GstFlvDemux * demux, guint32 pts, gboolean discont,
+    guint32 * last, GstClockTime * offset)
 {
-  if (ABS (pts - *last) >= RESYNC_THRESHOLD) {
+  if (!discont && ABS (pts - *last) >= RESYNC_THRESHOLD) {
     /* Theoretically, we should use substract the duration of the last buffer,
        but this demuxer sends no durations on buffers, not sure if it cannot
        know, or just does not care to calculate. */
@@ -992,8 +992,8 @@ gst_flv_demux_parse_tag_audio (GstFlvDemux * demux, GstBuffer * buffer)
   }
 
   /* detect (and deem to be resyncs)  large pts gaps */
-  gst_flv_demux_update_resync (demux, pts, &demux->last_audio_pts,
-      &demux->audio_time_offset);
+  gst_flv_demux_update_resync (demux, pts, demux->audio_need_discont,
+      &demux->last_audio_pts, &demux->audio_time_offset);
 
   /* Fill buffer with data */
   GST_BUFFER_TIMESTAMP (outbuf) = pts * GST_MSECOND + demux->audio_time_offset;
@@ -1369,8 +1369,8 @@ gst_flv_demux_parse_tag_video (GstFlvDemux * demux, GstBuffer * buffer)
   }
 
   /* detect (and deem to be resyncs)  large pts gaps */
-  gst_flv_demux_update_resync (demux, pts, &demux->last_video_pts,
-      &demux->video_time_offset);
+  gst_flv_demux_update_resync (demux, pts, demux->video_need_discont,
+      &demux->last_video_pts, &demux->video_time_offset);
 
   /* Fill buffer with data */
   GST_BUFFER_TIMESTAMP (outbuf) = pts * GST_MSECOND + demux->video_time_offset;

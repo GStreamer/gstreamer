@@ -69,16 +69,18 @@ GST_DEBUG_CATEGORY_STATIC (aacparse_debug);
 
 #define AAC_FRAME_DURATION(parse) (GST_SECOND/parse->frames_per_sec)
 
-gboolean gst_aac_parse_start (GstBaseParse * parse);
-gboolean gst_aac_parse_stop (GstBaseParse * parse);
+static gboolean gst_aac_parse_start (GstBaseParse * parse);
+static gboolean gst_aac_parse_stop (GstBaseParse * parse);
 
 static gboolean gst_aac_parse_sink_setcaps (GstBaseParse * parse,
     GstCaps * caps);
+static GstCaps *gst_aac_parse_sink_getcaps (GstBaseParse * parse,
+    GstCaps * filter);
 
-gboolean gst_aac_parse_check_valid_frame (GstBaseParse * parse,
+static gboolean gst_aac_parse_check_valid_frame (GstBaseParse * parse,
     GstBaseParseFrame * frame, guint * size, gint * skipsize);
 
-GstFlowReturn gst_aac_parse_parse_frame (GstBaseParse * parse,
+static GstFlowReturn gst_aac_parse_parse_frame (GstBaseParse * parse,
     GstBaseParseFrame * frame);
 
 gboolean gst_aac_parse_convert (GstBaseParse * parse,
@@ -131,6 +133,7 @@ gst_aac_parse_class_init (GstAacParseClass * klass)
   parse_class->start = GST_DEBUG_FUNCPTR (gst_aac_parse_start);
   parse_class->stop = GST_DEBUG_FUNCPTR (gst_aac_parse_stop);
   parse_class->set_sink_caps = GST_DEBUG_FUNCPTR (gst_aac_parse_sink_setcaps);
+  parse_class->get_sink_caps = GST_DEBUG_FUNCPTR (gst_aac_parse_sink_getcaps);
   parse_class->parse_frame = GST_DEBUG_FUNCPTR (gst_aac_parse_parse_frame);
   parse_class->check_valid_frame =
       GST_DEBUG_FUNCPTR (gst_aac_parse_check_valid_frame);
@@ -568,7 +571,7 @@ gst_aac_parse_detect_stream (GstAacParse * aacparse,
  *
  * Returns: TRUE if buffer contains a valid frame.
  */
-gboolean
+static gboolean
 gst_aac_parse_check_valid_frame (GstBaseParse * parse,
     GstBaseParseFrame * frame, guint * framesize, gint * skipsize)
 {
@@ -643,7 +646,7 @@ gst_aac_parse_check_valid_frame (GstBaseParse * parse,
  * Returns: GST_FLOW_OK if frame was successfully parsed and can be pushed
  *          forward. Otherwise appropriate error is returned.
  */
-GstFlowReturn
+static GstFlowReturn
 gst_aac_parse_parse_frame (GstBaseParse * parse, GstBaseParseFrame * frame)
 {
   GstAacParse *aacparse;
@@ -700,7 +703,7 @@ gst_aac_parse_parse_frame (GstBaseParse * parse, GstBaseParseFrame * frame)
  *
  * Returns: TRUE if startup succeeded.
  */
-gboolean
+static gboolean
 gst_aac_parse_start (GstBaseParse * parse)
 {
   GstAacParse *aacparse;
@@ -721,9 +724,44 @@ gst_aac_parse_start (GstBaseParse * parse)
  *
  * Returns: TRUE is stopping succeeded.
  */
-gboolean
+static gboolean
 gst_aac_parse_stop (GstBaseParse * parse)
 {
   GST_DEBUG ("stop");
   return TRUE;
+}
+
+static GstCaps *
+gst_aac_parse_sink_getcaps (GstBaseParse * parse, GstCaps * filter)
+{
+  GstCaps *peercaps;
+  GstCaps *res;
+
+  /* FIXME: handle filter caps */
+
+  peercaps = gst_pad_get_allowed_caps (GST_BASE_PARSE_SRC_PAD (parse));
+  if (peercaps) {
+    guint i, n;
+
+    /* Remove the framed field */
+    peercaps = gst_caps_make_writable (peercaps);
+    n = gst_caps_get_size (peercaps);
+    for (i = 0; i < n; i++) {
+      GstStructure *s = gst_caps_get_structure (peercaps, i);
+
+      gst_structure_remove_field (s, "framed");
+    }
+
+    res =
+        gst_caps_intersect_full (peercaps,
+        gst_pad_get_pad_template_caps (GST_BASE_PARSE_SRC_PAD (parse)),
+        GST_CAPS_INTERSECT_FIRST);
+    gst_caps_unref (peercaps);
+  } else {
+    res =
+        gst_caps_copy (gst_pad_get_pad_template_caps (GST_BASE_PARSE_SINK_PAD
+            (parse)));
+  }
+
+  return res;
 }

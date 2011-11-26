@@ -133,11 +133,7 @@ initDistTable (GstWarpTV * filter, gint width, gint height)
 {
   gint32 halfw, halfh, *distptr;
   gint x, y;
-#ifdef PS2
   float m;
-#else
-  float m;
-#endif
 
   halfw = width >> 1;
   halfh = height >> 1;
@@ -304,6 +300,5 @@ gst_warptv_class_init (GstWarpTVClass * klass)
 static void
 gst_warptv_init (GstWarpTV * warptv)
 {
-  gst_pad_use_fixed_caps (GST_BASE_TRANSFORM_SRC_PAD (warptv));
-  gst_pad_use_fixed_caps (GST_BASE_TRANSFORM_SINK_PAD (warptv));
+  /* nothing to do */
 }

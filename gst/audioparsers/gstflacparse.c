@@ -201,6 +201,8 @@ static GstFlowReturn gst_flac_parse_pre_push_frame (GstBaseParse * parse,
 static gboolean gst_flac_parse_convert (GstBaseParse * parse,
     GstFormat src_format, gint64 src_value, GstFormat dest_format,
     gint64 * dest_value);
+static GstCaps *gst_flac_parse_get_sink_caps (GstBaseParse * parse,
+    GstCaps * filter);
 
 #define gst_flac_parse_parent_class parent_class
 G_DEFINE_TYPE (GstFlacParse, gst_flac_parse, GST_TYPE_BASE_PARSE);
@@ -233,6 +235,8 @@ gst_flac_parse_class_init (GstFlacParseClass * klass)
   baseparse_class->pre_push_frame =
       GST_DEBUG_FUNCPTR (gst_flac_parse_pre_push_frame);
   baseparse_class->convert = GST_DEBUG_FUNCPTR (gst_flac_parse_convert);
+  baseparse_class->get_sink_caps =
+      GST_DEBUG_FUNCPTR (gst_flac_parse_get_sink_caps);
 
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&src_factory));
@@ -1501,4 +1505,39 @@ gst_flac_parse_convert (GstBaseParse * parse,
 
   return GST_BASE_PARSE_CLASS (parent_class)->convert (parse, src_format,
       src_value, dest_format, dest_value);
+}
+
+static GstCaps *
+gst_flac_parse_get_sink_caps (GstBaseParse * parse, GstCaps * filter)
+{
+  GstCaps *peercaps;
+  GstCaps *res;
+
+  /* FIXME: handle filter caps */
+
+  peercaps = gst_pad_get_allowed_caps (GST_BASE_PARSE_SRC_PAD (parse));
+  if (peercaps) {
+    guint i, n;
+
+    /* Remove the framed field */
+    peercaps = gst_caps_make_writable (peercaps);
+    n = gst_caps_get_size (peercaps);
+    for (i = 0; i < n; i++) {
+      GstStructure *s = gst_caps_get_structure (peercaps, i);
+
+      gst_structure_remove_field (s, "framed");
+    }
+
+    res =
+        gst_caps_intersect_full (peercaps,
+        gst_pad_get_pad_template_caps (GST_BASE_PARSE_SRC_PAD (parse)),
+        GST_CAPS_INTERSECT_FIRST);
+    gst_caps_unref (peercaps);
+  } else {
+    res =
+        gst_caps_copy (gst_pad_get_pad_template_caps (GST_BASE_PARSE_SINK_PAD
+            (parse)));
+  }
+
+  return res;
 }

@@ -71,16 +71,18 @@ static const gint block_size_wb[16] =
 #define AMR_FRAME_DURATION (GST_SECOND/AMR_FRAMES_PER_SECOND)
 #define AMR_MIME_HEADER_SIZE 9
 
-gboolean gst_amr_parse_start (GstBaseParse * parse);
-gboolean gst_amr_parse_stop (GstBaseParse * parse);
+static gboolean gst_amr_parse_start (GstBaseParse * parse);
+static gboolean gst_amr_parse_stop (GstBaseParse * parse);
 
 static gboolean gst_amr_parse_sink_setcaps (GstBaseParse * parse,
     GstCaps * caps);
+static GstCaps *gst_amr_parse_sink_getcaps (GstBaseParse * parse,
+    GstCaps * filter);
 
-gboolean gst_amr_parse_check_valid_frame (GstBaseParse * parse,
+static gboolean gst_amr_parse_check_valid_frame (GstBaseParse * parse,
     GstBaseParseFrame * frame, guint * framesize, gint * skipsize);
 
-GstFlowReturn gst_amr_parse_parse_frame (GstBaseParse * parse,
+static GstFlowReturn gst_amr_parse_parse_frame (GstBaseParse * parse,
     GstBaseParseFrame * frame);
 
 G_DEFINE_TYPE (GstAmrParse, gst_amr_parse, GST_TYPE_BASE_PARSE);
@@ -112,6 +114,7 @@ gst_amr_parse_class_init (GstAmrParseClass * klass)
   parse_class->start = GST_DEBUG_FUNCPTR (gst_amr_parse_start);
   parse_class->stop = GST_DEBUG_FUNCPTR (gst_amr_parse_stop);
   parse_class->set_sink_caps = GST_DEBUG_FUNCPTR (gst_amr_parse_sink_setcaps);
+  parse_class->get_sink_caps = GST_DEBUG_FUNCPTR (gst_amr_parse_sink_getcaps);
   parse_class->parse_frame = GST_DEBUG_FUNCPTR (gst_amr_parse_parse_frame);
   parse_class->check_valid_frame =
       GST_DEBUG_FUNCPTR (gst_amr_parse_check_valid_frame);
@@ -251,7 +254,7 @@ gst_amr_parse_parse_header (GstAmrParse * amrparse,
  *
  * Returns: TRUE if the given data contains valid frame.
  */
-gboolean
+static gboolean
 gst_amr_parse_check_valid_frame (GstBaseParse * parse,
     GstBaseParseFrame * frame, guint * framesize, gint * skipsize)
 {
@@ -338,7 +341,7 @@ done:
  *
  * Returns: #GstFlowReturn defining the parsing status.
  */
-GstFlowReturn
+static GstFlowReturn
 gst_amr_parse_parse_frame (GstBaseParse * parse, GstBaseParseFrame * frame)
 {
   return GST_FLOW_OK;
@@ -353,7 +356,7 @@ gst_amr_parse_parse_frame (GstBaseParse * parse, GstBaseParseFrame * frame)
  *
  * Returns: TRUE on success.
  */
-gboolean
+static gboolean
 gst_amr_parse_start (GstBaseParse * parse)
 {
   GstAmrParse *amrparse;
@@ -374,7 +377,7 @@ gst_amr_parse_start (GstBaseParse * parse)
  *
  * Returns: TRUE on success.
  */
-gboolean
+static gboolean
 gst_amr_parse_stop (GstBaseParse * parse)
 {
   GstAmrParse *amrparse;
@@ -384,4 +387,42 @@ gst_amr_parse_stop (GstBaseParse * parse)
   amrparse->need_header = TRUE;
   amrparse->header = 0;
   return TRUE;
+}
+
+static GstCaps *
+gst_amr_parse_sink_getcaps (GstBaseParse * parse, GstCaps * filter)
+{
+  GstCaps *peercaps;
+  GstCaps *res;
+
+  /* FIXME: handle filter caps */
+
+  peercaps = gst_pad_get_allowed_caps (GST_BASE_PARSE_SRC_PAD (parse));
+  if (peercaps) {
+    guint i, n;
+
+    /* Rename structure names */
+    peercaps = gst_caps_make_writable (peercaps);
+    n = gst_caps_get_size (peercaps);
+    for (i = 0; i < n; i++) {
+      GstStructure *s = gst_caps_get_structure (peercaps, i);
+
+      if (gst_structure_has_name (s, "audio/AMR"))
+        gst_structure_set_name (s, "audio/x-amr-nb-sh");
+      else
+        gst_structure_set_name (s, "audio/x-amr-wb-sh");
+    }
+
+    res =
+        gst_caps_intersect_full (peercaps,
+        gst_pad_get_pad_template_caps (GST_BASE_PARSE_SRC_PAD (parse)),
+        GST_CAPS_INTERSECT_FIRST);
+    gst_caps_unref (peercaps);
+  } else {
+    res =
+        gst_caps_copy (gst_pad_get_pad_template_caps (GST_BASE_PARSE_SINK_PAD
+            (parse)));
+  }
+
+  return res;
 }

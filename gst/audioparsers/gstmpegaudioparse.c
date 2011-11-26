@@ -100,6 +100,8 @@ static GstFlowReturn gst_mpeg_audio_parse_pre_push_frame (GstBaseParse * parse,
 static gboolean gst_mpeg_audio_parse_convert (GstBaseParse * parse,
     GstFormat src_format, gint64 src_value,
     GstFormat dest_format, gint64 * dest_value);
+static GstCaps *gst_mpeg_audio_parse_get_sink_caps (GstBaseParse * parse,
+    GstCaps * filter);
 
 #define gst_mpeg_audio_parse_parent_class parent_class
 G_DEFINE_TYPE (GstMpegAudioParse, gst_mpeg_audio_parse, GST_TYPE_BASE_PARSE);
@@ -161,6 +163,8 @@ gst_mpeg_audio_parse_class_init (GstMpegAudioParseClass * klass)
   parse_class->pre_push_frame =
       GST_DEBUG_FUNCPTR (gst_mpeg_audio_parse_pre_push_frame);
   parse_class->convert = GST_DEBUG_FUNCPTR (gst_mpeg_audio_parse_convert);
+  parse_class->get_sink_caps =
+      GST_DEBUG_FUNCPTR (gst_mpeg_audio_parse_get_sink_caps);
 
   /* register tags */
 #define GST_TAG_CRC      "has-crc"
@@ -1287,4 +1291,39 @@ gst_mpeg_audio_parse_pre_push_frame (GstBaseParse * parse,
   frame->flags |= GST_BASE_PARSE_FRAME_FLAG_CLIP;
 
   return GST_FLOW_OK;
+}
+
+static GstCaps *
+gst_mpeg_audio_parse_get_sink_caps (GstBaseParse * parse, GstCaps * filter)
+{
+  GstCaps *peercaps;
+  GstCaps *res;
+
+  /* FIXME: handle filter caps */
+
+  peercaps = gst_pad_get_allowed_caps (GST_BASE_PARSE_SRC_PAD (parse));
+  if (peercaps) {
+    guint i, n;
+
+    /* Remove the parsed field */
+    peercaps = gst_caps_make_writable (peercaps);
+    n = gst_caps_get_size (peercaps);
+    for (i = 0; i < n; i++) {
+      GstStructure *s = gst_caps_get_structure (peercaps, i);
+
+      gst_structure_remove_field (s, "parsed");
+    }
+
+    res =
+        gst_caps_intersect_full (peercaps,
+        gst_pad_get_pad_template_caps (GST_BASE_PARSE_SRC_PAD (parse)),
+        GST_CAPS_INTERSECT_FIRST);
+    gst_caps_unref (peercaps);
+  } else {
+    res =
+        gst_caps_copy (gst_pad_get_pad_template_caps (GST_BASE_PARSE_SINK_PAD
+            (parse)));
+  }
+
+  return res;
 }

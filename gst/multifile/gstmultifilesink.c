@@ -594,6 +594,7 @@ gst_multi_file_sink_ensure_max_files (GstMultiFileSink * multifilesink)
       multifilesink->n_files >= multifilesink->max_files) {
     filename = multifilesink->files->data;
     g_remove (filename);
+    g_free (filename);
     multifilesink->files = g_slist_delete_link (multifilesink->files,
         multifilesink->files);
     multifilesink->n_files -= 1;
