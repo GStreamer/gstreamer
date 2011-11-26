@@ -836,13 +836,6 @@ gst_iir_equalizer_transform_ip (GstBaseTransform * btrans, GstBuffer * buf)
   if (G_UNLIKELY (filter->format.channels < 1 || equ->process == NULL))
     return GST_FLOW_NOT_NEGOTIATED;
 
-  BANDS_LOCK (equ);
-  if (equ->need_new_coefficients) {
-    update_coefficients (equ);
-    set_passthrough (equ);
-  }
-  BANDS_UNLOCK (equ);
-
   if (gst_base_transform_is_passthrough (btrans))
     return GST_FLOW_OK;
 
@@ -850,8 +843,23 @@ gst_iir_equalizer_transform_ip (GstBaseTransform * btrans, GstBuffer * buf)
   timestamp =
       gst_segment_to_stream_time (&btrans->segment, GST_FORMAT_TIME, timestamp);
 
-  if (GST_CLOCK_TIME_IS_VALID (timestamp))
+  if (GST_CLOCK_TIME_IS_VALID (timestamp)) {
+    GstIirEqualizerBand **filters = equ->bands;
+    guint f, nf = equ->freq_band_count;
+
     gst_object_sync_values (G_OBJECT (equ), timestamp);
+    /* sync values for bands too */
+    for (f = 0; f < nf; f++) {
+      gst_object_sync_values (G_OBJECT (filters[f]), timestamp);
+    }
+  }
+
+  BANDS_LOCK (equ);
+  if (equ->need_new_coefficients) {
+    update_coefficients (equ);
+    set_passthrough (equ);
+  }
+  BANDS_UNLOCK (equ);
 
   equ->process (equ, GST_BUFFER_DATA (buf), GST_BUFFER_SIZE (buf),
       filter->format.channels);
