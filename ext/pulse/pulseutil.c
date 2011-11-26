@@ -156,7 +156,6 @@ gst_pulse_fill_sample_spec (GstAudioRingBufferSpec * spec, pa_sample_spec * ss)
   return TRUE;
 }
 
-#ifdef HAVE_PULSE_1_0
 gboolean
 gst_pulse_fill_format_info (GstAudioRingBufferSpec * spec, pa_format_info ** f,
     guint * channels)
@@ -210,7 +209,6 @@ fail:
     pa_format_info_free (format);
   return FALSE;
 }
-#endif
 
 /* PATH_MAX is not defined everywhere, e.g. on GNU Hurd */
 #ifndef PATH_MAX

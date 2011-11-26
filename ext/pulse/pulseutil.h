@@ -33,10 +33,8 @@
 
 gboolean gst_pulse_fill_sample_spec (GstAudioRingBufferSpec * spec,
     pa_sample_spec * ss);
-#ifdef HAVE_PULSE_1_0
 gboolean gst_pulse_fill_format_info (GstAudioRingBufferSpec * spec,
     pa_format_info ** f, guint * channels);
-#endif
 
 gchar *gst_pulse_client_name (void);
 

@@ -43,9 +43,7 @@
 
 #include <gst/base/gstbasesrc.h>
 #include <gst/gsttaglist.h>
-#ifdef HAVE_PULSE_1_0
 #include <gst/interfaces/streamvolume.h>
-#endif
 
 #include "pulsesrc.h"
 #include "pulseutil.h"
@@ -58,11 +56,9 @@ GST_DEBUG_CATEGORY_EXTERN (pulse_debug);
 #define DEFAULT_DEVICE            NULL
 #define DEFAULT_DEVICE_NAME       NULL
 
-#ifdef HAVE_PULSE_1_0
 #define DEFAULT_VOLUME          1.0
 #define DEFAULT_MUTE            FALSE
 #define MAX_VOLUME              10.0
-#endif
 
 enum
 {
@@ -73,10 +69,8 @@ enum
   PROP_CLIENT,
   PROP_STREAM_PROPERTIES,
   PROP_SOURCE_OUTPUT_INDEX,
-#ifdef HAVE_PULSE_1_0
   PROP_VOLUME,
   PROP_MUTE,
-#endif
   PROP_LAST
 };
 
@@ -245,14 +239,10 @@ gst_pulsesrc_class_init (GstPulseSrcClass * klass)
   gst_element_class_add_pad_template (gstelement_class,
       gst_static_pad_template_get (&pad_template));
 
-#ifdef HAVE_PULSE_1_0
   /**
    * GstPulseSrc:volume
    *
-   * The volume of the record stream. Only works when using PulseAudio 1.0 or
-   * later.
-   *
-   * Since: 0.10.36
+   * The volume of the record stream.
    */
   g_object_class_install_property (gobject_class,
       PROP_VOLUME, g_param_spec_double ("volume", "Volume",
@@ -263,16 +253,12 @@ gst_pulsesrc_class_init (GstPulseSrcClass * klass)
   /**
    * GstPulseSrc:mute
    *
-   * Whether the stream is muted or not. Only works when using PulseAudio 1.0
-   * or later.
-   *
-   * Since: 0.10.36
+   * Whether the stream is muted or not.
    */
   g_object_class_install_property (gobject_class,
       PROP_MUTE, g_param_spec_boolean ("mute", "Mute",
           "Mute state of this stream",
           DEFAULT_MUTE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
-#endif
 }
 
 static void
@@ -297,7 +283,6 @@ gst_pulsesrc_init (GstPulseSrc * pulsesrc)
   pulsesrc->paused = TRUE;
   pulsesrc->in_read = FALSE;
 
-#ifdef HAVE_PULSE_1_0
   pulsesrc->volume = DEFAULT_VOLUME;
   pulsesrc->volume_set = FALSE;
 
@@ -305,7 +290,6 @@ gst_pulsesrc_init (GstPulseSrc * pulsesrc)
   pulsesrc->mute_set = FALSE;
 
   pulsesrc->notify = 0;
-#endif
 
   pulsesrc->mixer = NULL;
 
@@ -346,9 +330,7 @@ gst_pulsesrc_destroy_context (GstPulseSrc * pulsesrc)
 
     /* Make sure we don't get any further callbacks */
     pa_context_set_state_callback (pulsesrc->context, NULL, NULL);
-#ifdef HAVE_PULSE_1_0
     pa_context_set_subscribe_callback (pulsesrc->context, NULL, NULL);
-#endif
 
     pa_context_unref (pulsesrc->context);
 
@@ -469,7 +451,6 @@ no_mainloop:
   }
 }
 
-#ifdef HAVE_PULSE_1_0
 static void
 gst_pulsesrc_source_output_info_cb (pa_context * c,
     const pa_source_output_info * i, int eol, void *userdata)
@@ -721,7 +702,6 @@ mute_failed:
     goto unlock;
   }
 }
-#endif
 
 static void
 gst_pulsesrc_set_property (GObject * object,
@@ -759,14 +739,12 @@ gst_pulsesrc_set_property (GObject * object,
         pa_proplist_free (pulsesrc->proplist);
       pulsesrc->proplist = gst_pulse_make_proplist (pulsesrc->properties);
       break;
-#ifdef HAVE_PULSE_1_0
     case PROP_VOLUME:
       gst_pulsesrc_set_stream_volume (pulsesrc, g_value_get_double (value));
       break;
     case PROP_MUTE:
       gst_pulsesrc_set_stream_mute (pulsesrc, g_value_get_boolean (value));
       break;
-#endif
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -799,14 +777,12 @@ gst_pulsesrc_get_property (GObject * object,
     case PROP_SOURCE_OUTPUT_INDEX:
       g_value_set_uint (value, pulsesrc->source_output_idx);
       break;
-#ifdef HAVE_PULSE_1_0
     case PROP_VOLUME:
       g_value_set_double (value, gst_pulsesrc_get_stream_volume (pulsesrc));
       break;
     case PROP_MUTE:
       g_value_set_boolean (value, gst_pulsesrc_get_stream_mute (pulsesrc));
       break;
-#endif
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -900,7 +876,6 @@ gst_pulsesrc_stream_overflow_cb (pa_stream * s, void *userdata)
   GST_WARNING_OBJECT (GST_PULSESRC_CAST (userdata), "Got overflow");
 }
 
-#ifdef HAVE_PULSE_1_0
 static void
 gst_pulsesrc_context_subscribe_cb (pa_context * c,
     pa_subscription_event_type_t t, uint32_t idx, void *userdata)
@@ -922,7 +897,6 @@ gst_pulsesrc_context_subscribe_cb (pa_context * c,
   /* inform streaming thread to notify */
   g_atomic_int_compare_and_exchange (&psrc->notify, 0, 1);
 }
-#endif
 
 static gboolean
 gst_pulsesrc_open (GstAudioSrc * asrc)
@@ -946,10 +920,8 @@ gst_pulsesrc_open (GstAudioSrc * asrc)
 
   pa_context_set_state_callback (pulsesrc->context,
       gst_pulsesrc_context_state_cb, pulsesrc);
-#ifdef HAVE_PULSE_1_0
   pa_context_set_subscribe_callback (pulsesrc->context,
       gst_pulsesrc_context_subscribe_cb, pulsesrc);
-#endif
 
   GST_DEBUG_OBJECT (pulsesrc, "connect to server %s",
       GST_STR_NULL (pulsesrc->server));
@@ -1031,12 +1003,10 @@ gst_pulsesrc_read (GstAudioSrc * asrc, gpointer data, guint length)
   pa_threaded_mainloop_lock (pulsesrc->mainloop);
   pulsesrc->in_read = TRUE;
 
-#ifdef HAVE_PULSE_1_0
   if (g_atomic_int_compare_and_exchange (&pulsesrc->notify, 1, 0)) {
     g_object_notify (G_OBJECT (pulsesrc), "volume");
     g_object_notify (G_OBJECT (pulsesrc), "mute");
   }
-#endif
 
   if (pulsesrc->paused)
     goto was_paused;
@@ -1352,13 +1322,10 @@ gst_pulsesrc_prepare (GstAudioSrc * asrc, GstAudioRingBufferSpec * spec)
   const pa_buffer_attr *actual;
   GstPulseSrc *pulsesrc = GST_PULSESRC_CAST (asrc);
   pa_stream_flags_t flags;
-#ifdef HAVE_PULSE_1_0
   pa_operation *o;
-#endif
 
   pa_threaded_mainloop_lock (pulsesrc->mainloop);
 
-#ifdef HAVE_PULSE_1_0
   /* enable event notifications */
   GST_LOG_OBJECT (pulsesrc, "subscribing to context events");
   if (!(o = pa_context_subscribe (pulsesrc->context,
@@ -1370,7 +1337,6 @@ gst_pulsesrc_prepare (GstAudioSrc * asrc, GstAudioRingBufferSpec * spec)
   }
 
   pa_operation_unref (o);
-#endif
 
   wanted.maxlength = -1;
   wanted.tlength = -1;
@@ -1388,10 +1354,8 @@ gst_pulsesrc_prepare (GstAudioSrc * asrc, GstAudioRingBufferSpec * spec)
       PA_STREAM_NOT_MONOTONIC | PA_STREAM_ADJUST_LATENCY |
       PA_STREAM_START_CORKED;
 
-#ifdef HAVE_PULSE_1_0
   if (pulsesrc->mute_set && pulsesrc->mute)
     flags |= PA_STREAM_START_MUTED;
-#endif
 
   if (pa_stream_connect_record (pulsesrc->stream, pulsesrc->device, &wanted,
           flags) < 0) {
@@ -1420,12 +1384,10 @@ gst_pulsesrc_prepare (GstAudioSrc * asrc, GstAudioRingBufferSpec * spec)
   pulsesrc->source_output_idx = pa_stream_get_index (pulsesrc->stream);
   g_object_notify (G_OBJECT (pulsesrc), "source-output-index");
 
-#ifdef HAVE_PULSE_1_0
   if (pulsesrc->volume_set) {
     gst_pulsesrc_set_stream_volume (pulsesrc, pulsesrc->volume);
     pulsesrc->volume_set = FALSE;
   }
-#endif
 
   /* get the actual buffering properties now */
   actual = pa_stream_get_buffer_attr (pulsesrc->stream);

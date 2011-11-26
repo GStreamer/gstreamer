@@ -49,7 +49,7 @@
 #include "config.h"
 #endif
 
-#ifdef HAVE_PULSE_1_0
+/* FIXME 0.11: pulseaudiosink helper bin must die */
 
 #include <gst/pbutils/pbutils.h>
 #include <gst/gst-i18n-plugin.h>
@@ -958,5 +958,3 @@ gst_pulse_audio_sink_change_state (GstElement * element,
 out:
   return ret;
 }
-
-#endif /* HAVE_PULSE_1_0 */

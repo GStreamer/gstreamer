@@ -77,12 +77,10 @@ struct _GstPulseSink
   GstStructure *properties;
   pa_proplist *proplist;
 
-#ifdef HAVE_PULSE_1_0
   GMutex *sink_formats_lock;
   GList *sink_formats;
   volatile gint format_lost;
   GstClockTime format_lost_time;
-#endif
 };
 
 struct _GstPulseSinkClass
@@ -111,7 +109,6 @@ GType gst_pulsesink_get_type (void);
     "audio/x-mulaw, " \
       "rate = (int) [ 1, MAX], " "channels = (int) [ 1, 32 ];"
 
-#ifdef HAVE_PULSE_1_0
 #define _PULSE_SINK_CAPS_1_0 \
     "audio/x-ac3, framed = (boolean) true;" \
     "audio/x-eac3, framed = (boolean) true; " \
@@ -119,15 +116,12 @@ GType gst_pulsesink_get_type (void);
       "block-size = (int) { 512, 1024, 2048 }; " \
     "audio/mpeg, mpegversion = (int) 1, " \
       "mpegaudioversion = (int) [ 1, 2 ], parsed = (boolean) true;"
-#else
-#define _PULSE_SINK_CAPS_1_0 ""
-#endif
 
 #define PULSE_SINK_TEMPLATE_CAPS \
   _PULSE_SINK_CAPS_COMMON \
   _PULSE_SINK_CAPS_1_0
 
-#ifdef HAVE_PULSE_1_0
+/* FIXME 0.11: pulseaudiosink helper bin must die */
 
 #define GST_TYPE_PULSE_AUDIO_SINK \
   (gst_pulse_audio_sink_get_type())
@@ -143,8 +137,6 @@ GType gst_pulsesink_get_type (void);
   ((GstPulseAudioSink *)(obj))
 
 GType gst_pulse_audio_sink_get_type (void);
-
-#endif /* HAVE_PULSE_1_0 */
 
 G_END_DECLS
 
