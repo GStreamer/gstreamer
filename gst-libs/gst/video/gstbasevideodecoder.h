@@ -188,6 +188,10 @@ struct _GstBaseVideoDecoder
    * GST_META_API_VIDEO_CROP */
   gboolean use_cropping;
 
+  /* qos messages: frames dropped/processed */
+  guint             dropped;
+  guint             processed;
+
   /* FIXME before moving to base */
   void             *padding[GST_PADDING_LARGE];
 };
@@ -272,6 +276,8 @@ GstClockTimeDiff gst_base_video_decoder_get_max_decode_time (
                                     GstBaseVideoDecoder *base_video_decoder,
                                     GstVideoFrameState *frame);
 GstFlowReturn    gst_base_video_decoder_finish_frame (GstBaseVideoDecoder *base_video_decoder,
+                                    GstVideoFrameState *frame);
+GstFlowReturn    gst_base_video_decoder_drop_frame (GstBaseVideoDecoder *dec,
                                     GstVideoFrameState *frame);
 
 GType            gst_base_video_decoder_get_type (void);

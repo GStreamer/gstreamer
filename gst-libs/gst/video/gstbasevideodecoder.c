@@ -954,6 +954,9 @@ gst_base_video_decoder_reset (GstBaseVideoDecoder * base_video_decoder,
     base_video_decoder->current_frame = NULL;
   }
 
+  base_video_decoder->dropped = 0;
+  base_video_decoder->processed = 0;
+
   GST_BASE_VIDEO_CODEC (base_video_decoder)->system_frame_number = 0;
   base_video_decoder->base_picture_number = 0;
 
@@ -1349,29 +1352,11 @@ gst_base_video_decoder_new_frame (GstBaseVideoDecoder * base_video_decoder)
   return frame;
 }
 
-/**
- * gst_base_video_decoder_finish_frame:
- * @base_video_decoder: a #GstBaseVideoDecoder
- * @frame: a decoded #GstVideoFrameState
- *
- * @frame should have a valid decoded data buffer, whose metadata fields
- * are then appropriately set according to frame data and pushed downstream.
- * If no output data is provided, @frame is considered skipped.
- * In any case, the frame is considered finished and released.
- *
- * Returns: a #GstFlowReturn resulting from sending data downstream
- */
-GstFlowReturn
-gst_base_video_decoder_finish_frame (GstBaseVideoDecoder * base_video_decoder,
-    GstVideoFrameState * frame)
+static void
+gst_base_video_decoder_prepare_finish_frame (GstBaseVideoDecoder *
+    base_video_decoder, GstVideoFrameState * frame)
 {
-  GstVideoState *state = &GST_BASE_VIDEO_CODEC (base_video_decoder)->state;
-  GstBuffer *src_buffer;
-  GstFlowReturn ret = GST_FLOW_OK;
   GList *l, *events = NULL;
-
-  GST_LOG_OBJECT (base_video_decoder, "finish frame");
-  GST_BASE_VIDEO_CODEC_STREAM_LOCK (base_video_decoder);
 
 #ifndef GST_DISABLE_GST_DEBUG
   GST_LOG_OBJECT (base_video_decoder,
@@ -1398,9 +1383,12 @@ gst_base_video_decoder_finish_frame (GstBaseVideoDecoder * base_video_decoder,
       break;
   }
 
-  for (l = g_list_last (events); l; l = l->prev)
+  for (l = g_list_last (events); l; l = l->prev) {
+    GST_LOG_OBJECT (base_video_decoder, "pushing %s event",
+        GST_EVENT_TYPE_NAME (l->data));
     gst_pad_push_event (GST_BASE_VIDEO_CODEC_SRC_PAD (base_video_decoder),
         l->data);
+  }
   g_list_free (events);
 
   if (GST_CLOCK_TIME_IS_VALID (frame->presentation_timestamp)) {
@@ -1459,8 +1447,106 @@ gst_base_video_decoder_finish_frame (GstBaseVideoDecoder * base_video_decoder,
     }
   }
   base_video_decoder->last_timestamp = frame->presentation_timestamp;
+}
 
-  /* no buffer data means this frame is skipped/dropped */
+static void
+gst_base_video_decoder_do_finish_frame (GstBaseVideoDecoder * dec,
+    GstVideoFrameState * frame)
+{
+  GST_BASE_VIDEO_CODEC (dec)->frames =
+      g_list_remove (GST_BASE_VIDEO_CODEC (dec)->frames, frame);
+
+  if (frame->src_buffer)
+    gst_buffer_unref (frame->src_buffer);
+
+  gst_base_video_codec_free_frame (frame);
+}
+
+/**
+ * gst_base_video_decoder_drop_frame:
+ * @dec: a #GstBaseVideoDecoder
+ * @frame: the #GstVideoFrame to drop
+ *
+ * Similar to gst_base_video_decoder_finish_frame(), but drops @frame in any
+ * case and posts a QoS message with the frame's details on the bus.
+ * In any case, the frame is considered finished and released.
+ *
+ * Returns: a #GstFlowReturn, usually GST_FLOW_OK.
+ *
+ * Since: 0.10.23
+ */
+GstFlowReturn
+gst_base_video_decoder_drop_frame (GstBaseVideoDecoder * dec,
+    GstVideoFrameState * frame)
+{
+  GstClockTime stream_time, jitter, earliest_time, qostime, timestamp;
+  GstSegment *segment;
+  GstMessage *qos_msg;
+  gdouble proportion;
+
+  GST_LOG_OBJECT (dec, "drop frame");
+
+  GST_BASE_VIDEO_CODEC_STREAM_LOCK (dec);
+
+  gst_base_video_decoder_prepare_finish_frame (dec, frame);
+
+  GST_DEBUG_OBJECT (dec, "dropping frame %" GST_TIME_FORMAT,
+      GST_TIME_ARGS (frame->presentation_timestamp));
+
+  dec->dropped++;
+
+  /* post QoS message */
+  timestamp = frame->presentation_timestamp;
+  proportion = GST_BASE_VIDEO_CODEC (dec)->proportion;
+  segment = &GST_BASE_VIDEO_CODEC (dec)->segment;
+  stream_time =
+      gst_segment_to_stream_time (segment, GST_FORMAT_TIME, timestamp);
+  qostime = gst_segment_to_running_time (segment, GST_FORMAT_TIME, timestamp);
+  earliest_time = GST_BASE_VIDEO_CODEC (dec)->earliest_time;
+  jitter = GST_CLOCK_DIFF (qostime, earliest_time);
+  qos_msg = gst_message_new_qos (GST_OBJECT_CAST (dec), FALSE,
+      qostime, stream_time, timestamp, GST_CLOCK_TIME_NONE);
+  gst_message_set_qos_values (qos_msg, jitter, proportion, 1000000);
+  gst_message_set_qos_stats (qos_msg, GST_FORMAT_BUFFERS,
+      dec->processed, dec->dropped);
+  gst_element_post_message (GST_ELEMENT_CAST (dec), qos_msg);
+
+  /* now free the frame */
+  gst_base_video_decoder_do_finish_frame (dec, frame);
+
+  GST_BASE_VIDEO_CODEC_STREAM_UNLOCK (dec);
+
+  return GST_FLOW_OK;
+}
+
+/**
+ * gst_base_video_decoder_finish_frame:
+ * @base_video_decoder: a #GstBaseVideoDecoder
+ * @frame: a decoded #GstVideoFrameState
+ *
+ * @frame should have a valid decoded data buffer, whose metadata fields
+ * are then appropriately set according to frame data and pushed downstream.
+ * If no output data is provided, @frame is considered skipped.
+ * In any case, the frame is considered finished and released.
+ *
+ * Returns: a #GstFlowReturn resulting from sending data downstream
+ */
+GstFlowReturn
+gst_base_video_decoder_finish_frame (GstBaseVideoDecoder * base_video_decoder,
+    GstVideoFrameState * frame)
+{
+  GstVideoState *state = &GST_BASE_VIDEO_CODEC (base_video_decoder)->state;
+  GstBuffer *src_buffer;
+  GstFlowReturn ret = GST_FLOW_OK;
+
+  GST_LOG_OBJECT (base_video_decoder, "finish frame");
+  GST_BASE_VIDEO_CODEC_STREAM_LOCK (base_video_decoder);
+
+  gst_base_video_decoder_prepare_finish_frame (base_video_decoder, frame);
+
+  base_video_decoder->processed++;
+
+  /* no buffer data means this frame is skipped */
   if (!frame->src_buffer) {
     GST_DEBUG_OBJECT (base_video_decoder, "skipping frame %" GST_TIME_FORMAT,
         GST_TIME_ARGS (frame->presentation_timestamp));
@@ -1566,9 +1652,8 @@ gst_base_video_decoder_finish_frame (GstBaseVideoDecoder * base_video_decoder,
   }
 
 done:
-  GST_BASE_VIDEO_CODEC (base_video_decoder)->frames =
-      g_list_remove (GST_BASE_VIDEO_CODEC (base_video_decoder)->frames, frame);
-  gst_base_video_codec_free_frame (frame);
+
+  gst_base_video_decoder_do_finish_frame (base_video_decoder, frame);
 
   GST_BASE_VIDEO_CODEC_STREAM_UNLOCK (base_video_decoder);
 

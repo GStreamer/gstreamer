@@ -187,11 +187,9 @@ static void
 gst_opus_enc_class_init (GstOpusEncClass * klass)
 {
   GObjectClass *gobject_class;
-  GstElementClass *gstelement_class;
   GstAudioEncoderClass *base_class;
 
   gobject_class = (GObjectClass *) klass;
-  gstelement_class = (GstElementClass *) klass;
   base_class = (GstAudioEncoderClass *) klass;
 
   gobject_class->set_property = gst_opus_enc_set_property;
@@ -446,7 +444,8 @@ gst_opus_enc_setup_channel_mapping (GstOpusEnc * enc, const GstAudioInfo * info)
       GstAudioChannelPosition pos = GST_AUDIO_INFO_POSITION (info, n);
       int c;
 
-      GST_DEBUG_OBJECT (enc, "Channel %d has position %d", n, pos);
+      GST_DEBUG_OBJECT (enc, "Channel %d has position %d (%s)", n, pos,
+          gst_opus_channel_names[pos]);
       for (c = 0; c < enc->n_channels; ++c) {
         if (gst_opus_channel_positions[enc->n_channels - 1][c] == pos) {
           GST_DEBUG_OBJECT (enc, "Found in Vorbis mapping as channel %d", c);
@@ -456,12 +455,13 @@ gst_opus_enc_setup_channel_mapping (GstOpusEnc * enc, const GstAudioInfo * info)
       if (c == enc->n_channels) {
         /* We did not find that position, so use undefined */
         GST_WARNING_OBJECT (enc,
-            "Position %d not found in Vorbis mapping, using unknown mapping",
-            pos);
+            "Position %d (%s) not found in Vorbis mapping, using unknown mapping",
+            pos, gst_opus_channel_positions[pos]);
         enc->channel_mapping_family = 255;
         return;
       }
-      GST_DEBUG_OBJECT (enc, "Mapping output channel %d to %d", c, n);
+      GST_DEBUG_OBJECT (enc, "Mapping output channel %d to %d (%s)", c, n,
+          gst_opus_channel_names[pos]);
       enc->channel_mapping[c] = n;
     }
     GST_INFO_OBJECT (enc, "Permutation found, using Vorbis mapping");
@@ -512,13 +512,17 @@ gst_opus_enc_set_format (GstAudioEncoder * benc, GstAudioInfo * info)
 static gboolean
 gst_opus_enc_setup (GstOpusEnc * enc)
 {
-  int error = OPUS_OK;
+  int error = OPUS_OK, n;
+  guint8 trivial_mapping[256];
 
   GST_DEBUG_OBJECT (enc, "setup");
 
+  for (n = 0; n < 256; ++n)
+    trivial_mapping[n] = n;
+
   enc->state =
       opus_multistream_encoder_create (enc->sample_rate, enc->n_channels,
-      (enc->n_channels + 1) / 2, enc->n_channels / 2, enc->channel_mapping,
+      enc->n_channels, 0, trivial_mapping,
       enc->audio_or_voip ? OPUS_APPLICATION_AUDIO : OPUS_APPLICATION_VOIP,
       &error);
   if (!enc->state || error != OPUS_OK)

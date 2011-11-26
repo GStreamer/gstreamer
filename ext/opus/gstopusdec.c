@@ -219,7 +219,8 @@ gst_opus_dec_parse_header (GstOpusDec * dec, GstBuffer * buf)
 
   data = gst_buffer_map (buf, NULL, NULL, GST_MAP_READ);
 
-  g_return_val_if_fail (dec->n_channels != data[9], GST_FLOW_ERROR);
+  g_return_val_if_fail (dec->n_channels == 0
+      || dec->n_channels == data[9], GST_FLOW_ERROR);
 
   dec->n_channels = data[9];
   dec->pre_skip = GST_READ_UINT16_LE (data + 10);
@@ -288,6 +289,7 @@ gst_opus_dec_parse_header (GstOpusDec * dec, GstBuffer * buf)
       dec->sample_rate);
 
   if (pos) {
+    GST_DEBUG_OBJECT (dec, "Setting channel positions on caps");
     gst_audio_set_channel_positions (gst_caps_get_structure (caps, 0), pos);
   }
 
