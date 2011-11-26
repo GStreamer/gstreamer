@@ -53,10 +53,13 @@ typedef struct _GstMatroskaMetaSeekIndex {
   guint64  pos;
 } GstMatroskaMetaSeekIndex;
 
+typedef gboolean (*GstMatroskaCapsFunc) (GstPad *pad, GstCaps *caps);
+
 /* all information needed for one matroska stream */
 typedef struct
 {
   GstCollectData collect;       /* we extend the CollectData */
+  GstMatroskaCapsFunc capsfunc;
   GstMatroskaTrackContext *track;
 
   GstBuffer *buffer;            /* the queued buffer for this pad */

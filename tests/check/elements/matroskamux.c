@@ -163,12 +163,21 @@ static GstElement *
 setup_matroskamux (GstStaticPadTemplate * srctemplate)
 {
   GstElement *matroskamux;
+  GstSegment segment;
 
   GST_DEBUG ("setup_matroskamux");
   matroskamux = gst_check_setup_element ("matroskamux");
   g_object_set (matroskamux, "version", 1, NULL);
   mysrcpad = setup_src_pad (matroskamux, srctemplate, NULL);
   mysinkpad = setup_sink_pad (matroskamux, &sinktemplate, NULL);
+
+  fail_unless (gst_element_set_state (matroskamux,
+          GST_STATE_PLAYING) == GST_STATE_CHANGE_SUCCESS,
+      "could not set to playing");
+
+  gst_segment_init (&segment, GST_FORMAT_TIME);
+  fail_unless (gst_pad_push_event (mysrcpad,
+          gst_event_new_segment (&segment)), "Segment event rejected");
 
   return matroskamux;
 }
@@ -187,8 +196,8 @@ cleanup_matroskamux (GstElement * matroskamux)
 static void
 check_buffer_data (GstBuffer * buffer, void *data, size_t data_size)
 {
-  fail_unless (GST_BUFFER_SIZE (buffer) == data_size);
-  fail_unless (memcmp (data, GST_BUFFER_DATA (buffer), data_size) == 0);
+  fail_unless (gst_buffer_get_size (buffer) == data_size);
+  fail_unless (gst_buffer_memcmp (buffer, 0, data, data_size) == 0);
 }
 
 GST_START_TEST (test_ebml_header)
@@ -207,11 +216,8 @@ GST_START_TEST (test_ebml_header)
   };
 
   matroskamux = setup_matroskamux (&srcac3template);
-  fail_unless (gst_element_set_state (matroskamux,
-          GST_STATE_PLAYING) == GST_STATE_CHANGE_SUCCESS,
-      "could not set to playing");
 
-  inbuffer = gst_buffer_new_and_alloc (1);
+  inbuffer = gst_buffer_new_allocate (NULL, 1, 0);
   ASSERT_BUFFER_REFCOUNT (inbuffer, "inbuffer", 1);
   fail_unless (gst_pad_push (mysrcpad, inbuffer) == GST_FLOW_OK);
   num_buffers = g_list_length (buffers);
@@ -259,14 +265,12 @@ GST_START_TEST (test_vorbis_header)
   };
 
   matroskamux = setup_matroskamux (&srcvorbistemplate);
-  fail_unless (gst_element_set_state (matroskamux,
-          GST_STATE_PLAYING) == GST_STATE_CHANGE_SUCCESS,
-      "could not set to playing");
 
-  inbuffer = gst_buffer_new_and_alloc (1);
   caps = gst_caps_from_string (VORBIS_CAPS_STRING);
-  gst_buffer_set_caps (inbuffer, caps);
+  fail_unless (gst_pad_set_caps (mysrcpad, caps));
   gst_caps_unref (caps);
+
+  inbuffer = gst_buffer_new_allocate (NULL, 1, 0);
   ASSERT_BUFFER_REFCOUNT (inbuffer, "inbuffer", 1);
 
   fail_unless (gst_pad_push (mysrcpad, inbuffer) == GST_FLOW_OK);
@@ -274,14 +278,16 @@ GST_START_TEST (test_vorbis_header)
 
   for (i = 0; i < num_buffers; ++i) {
     gint j;
+    gsize buffer_size;
 
     outbuffer = GST_BUFFER (buffers->data);
     fail_if (outbuffer == NULL);
+    buffer_size = gst_buffer_get_size (outbuffer);
     buffers = g_list_remove (buffers, outbuffer);
 
-    if (!vorbis_header_found && GST_BUFFER_SIZE (outbuffer) >= sizeof (data)) {
-      for (j = 0; j <= GST_BUFFER_SIZE (outbuffer) - sizeof (data); j++) {
-        if (memcmp (GST_BUFFER_DATA (outbuffer) + j, data, sizeof (data)) == 0) {
+    if (!vorbis_header_found && buffer_size >= sizeof (data)) {
+      for (j = 0; j <= buffer_size - sizeof (data); j++) {
+        if (gst_buffer_memcmp (outbuffer, j, data, sizeof (data)) == 0) {
           vorbis_header_found = TRUE;
           break;
         }
@@ -307,6 +313,7 @@ GST_START_TEST (test_block_group)
 {
   GstElement *matroskamux;
   GstBuffer *inbuffer, *outbuffer;
+  guint8 *indata;
   GstCaps *caps;
   int num_buffers;
   int i;
@@ -317,16 +324,14 @@ GST_START_TEST (test_block_group)
   guint8 data1[] = { 0x42 };
 
   matroskamux = setup_matroskamux (&srcac3template);
-  fail_unless (gst_element_set_state (matroskamux,
-          GST_STATE_PLAYING) == GST_STATE_CHANGE_SUCCESS,
-      "could not set to playing");
+
+  caps = gst_caps_from_string (AC3_CAPS_STRING);
+  fail_unless (gst_pad_set_caps (mysrcpad, caps));
+  gst_caps_unref (caps);
 
   /* Generate the header */
-  inbuffer = gst_buffer_new_and_alloc (1);
+  inbuffer = gst_buffer_new_allocate (NULL, 1, 0);
   GST_BUFFER_TIMESTAMP (inbuffer) = 0;
-  caps = gst_caps_from_string (AC3_CAPS_STRING);
-  gst_buffer_set_caps (inbuffer, caps);
-  gst_caps_unref (caps);
   ASSERT_BUFFER_REFCOUNT (inbuffer, "inbuffer", 1);
 
   fail_unless_equals_int (gst_pad_push (mysrcpad, inbuffer), GST_FLOW_OK);
@@ -346,12 +351,10 @@ GST_START_TEST (test_block_group)
   buffers = NULL;
 
   /* Now push a buffer */
-  inbuffer = gst_buffer_new_and_alloc (1);
-  GST_BUFFER_DATA (inbuffer)[0] = 0x42;
+  indata = g_malloc (1);
+  inbuffer = gst_buffer_new_wrapped (indata, 1);
+  indata[0] = 0x42;
   GST_BUFFER_TIMESTAMP (inbuffer) = 1000000;
-  caps = gst_caps_from_string (AC3_CAPS_STRING);
-  gst_buffer_set_caps (inbuffer, caps);
-  gst_caps_unref (caps);
   ASSERT_BUFFER_REFCOUNT (inbuffer, "inbuffer", 1);
 
   fail_unless (gst_pad_push (mysrcpad, inbuffer) == GST_FLOW_OK);
@@ -396,11 +399,8 @@ GST_START_TEST (test_reset)
   int i;
 
   matroskamux = setup_matroskamux (&srcac3template);
-  fail_unless (gst_element_set_state (matroskamux,
-          GST_STATE_PLAYING) == GST_STATE_CHANGE_SUCCESS,
-      "could not set to playing");
 
-  inbuffer = gst_buffer_new_and_alloc (1);
+  inbuffer = gst_buffer_new_allocate (NULL, 1, 0);
   ASSERT_BUFFER_REFCOUNT (inbuffer, "inbuffer", 1);
   fail_unless (gst_pad_push (mysrcpad, inbuffer) == GST_FLOW_OK);
   num_buffers = g_list_length (buffers);
@@ -414,7 +414,7 @@ GST_START_TEST (test_reset)
           GST_STATE_PLAYING) == GST_STATE_CHANGE_SUCCESS,
       "could not set to playing");
 
-  inbuffer = gst_buffer_new_and_alloc (1);
+  inbuffer = gst_buffer_new_allocate (NULL, 1, 0);
   ASSERT_BUFFER_REFCOUNT (inbuffer, "inbuffer", 1);
   fail_unless (gst_pad_push (mysrcpad, inbuffer) == GST_FLOW_OK);
   num_buffers = g_list_length (buffers);

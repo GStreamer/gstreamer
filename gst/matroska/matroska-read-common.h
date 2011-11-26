@@ -81,6 +81,7 @@ typedef struct _GstMatroskaReadCommon {
 
   /* pull mode caching */
   GstBuffer *cached_buffer;
+  guint8 *cached_data;
 
   /* push and pull mode */
   guint64                  offset;
@@ -90,8 +91,8 @@ typedef struct _GstMatroskaReadCommon {
 } GstMatroskaReadCommon;
 
 GstFlowReturn gst_matroska_decode_content_encodings (GArray * encodings);
-gboolean gst_matroska_decode_data (GArray * encodings, guint8 ** data_out,
-    guint * size_out, GstMatroskaTrackEncodingScope scope, gboolean free);
+gboolean gst_matroska_decode_data (GArray * encodings, gpointer * data_out,
+    gsize * size_out, GstMatroskaTrackEncodingScope scope, gboolean free);
 gint gst_matroska_index_seek_find (GstMatroskaIndex * i1, GstClockTime * time,
     gpointer user_data);
 GstMatroskaIndex * gst_matroska_read_common_do_index_seek (

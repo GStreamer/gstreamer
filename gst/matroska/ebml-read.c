@@ -164,6 +164,7 @@ gst_ebml_read_init (GstEbmlRead * ebml, GstElement * el, GstBuffer * buf,
     guint64 offset)
 {
   GstEbmlMaster m;
+  gsize buf_size;
 
   g_return_if_fail (el);
   g_return_if_fail (buf);
@@ -171,9 +172,10 @@ gst_ebml_read_init (GstEbmlRead * ebml, GstElement * el, GstBuffer * buf,
   ebml->el = el;
   ebml->offset = offset;
   ebml->buf = buf;
+  ebml->buf_data = gst_buffer_map (buf, &buf_size, NULL, GST_MAP_READ);
   ebml->readers = g_array_sized_new (FALSE, FALSE, sizeof (GstEbmlMaster), 10);
   m.offset = ebml->offset;
-  gst_byte_reader_init (&m.br, GST_BUFFER_DATA (buf), GST_BUFFER_SIZE (buf));
+  gst_byte_reader_init (&m.br, ebml->buf_data, buf_size);
   g_array_append_val (ebml->readers, m);
 }
 
@@ -183,8 +185,10 @@ gst_ebml_read_clear (GstEbmlRead * ebml)
   if (ebml->readers)
     g_array_free (ebml->readers, TRUE);
   ebml->readers = NULL;
-  if (ebml->buf)
+  if (ebml->buf) {
+    gst_buffer_unmap (ebml->buf, ebml->buf_data, -1);
     gst_buffer_unref (ebml->buf);
+  }
   ebml->buf = NULL;
   ebml->el = NULL;
 }
@@ -334,7 +338,8 @@ gst_ebml_read_buffer (GstEbmlRead * ebml, guint32 * id, GstBuffer ** buf)
 
     offset = gst_ebml_read_get_pos (ebml) - ebml->offset;
     if (G_LIKELY (gst_byte_reader_skip (gst_ebml_read_br (ebml), length))) {
-      *buf = gst_buffer_create_sub (ebml->buf, offset, length);
+      *buf = gst_buffer_copy_region (ebml->buf, GST_BUFFER_COPY_ALL,
+          offset, length);
     } else {
       *buf = NULL;
       return GST_FLOW_PARSE;

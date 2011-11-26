@@ -111,16 +111,14 @@ static gboolean gst_matroska_parse_element_query (GstElement * element,
 static gboolean gst_matroska_parse_handle_seek_event (GstMatroskaParse * parse,
     GstPad * pad, GstEvent * event);
 static gboolean gst_matroska_parse_handle_src_event (GstPad * pad,
-    GstEvent * event);
-static const GstQueryType *gst_matroska_parse_get_src_query_types (GstPad *
-    pad);
+    GstObject * parent, GstEvent * event);
 static gboolean gst_matroska_parse_handle_src_query (GstPad * pad,
-    GstQuery * query);
+    GstObject * parent, GstQuery * query);
 
 static gboolean gst_matroska_parse_handle_sink_event (GstPad * pad,
-    GstEvent * event);
+    GstObject * parent, GstEvent * event);
 static GstFlowReturn gst_matroska_parse_chain (GstPad * pad,
-    GstBuffer * buffer);
+    GstObject * parent, GstBuffer * buffer);
 
 static GstStateChangeReturn
 gst_matroska_parse_change_state (GstElement * element,
@@ -135,24 +133,8 @@ static gboolean perform_seek_to_offset (GstMatroskaParse * parse,
     guint64 offset);
 
 GType gst_matroska_parse_get_type (void);
-GST_BOILERPLATE (GstMatroskaParse, gst_matroska_parse, GstElement,
-    GST_TYPE_ELEMENT);
-
-static void
-gst_matroska_parse_base_init (gpointer klass)
-{
-  GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
-
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&src_templ));
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&sink_templ));
-
-  gst_element_class_set_details_simple (element_class, "Matroska parser",
-      "Codec/Parser",
-      "Parses Matroska/WebM streams into video/audio/subtitles",
-      "GStreamer maintainers <gstreamer-devel@lists.sourceforge.net>");
-}
+#define parent_class gst_matroska_parse_parent_class
+G_DEFINE_TYPE (GstMatroskaParse, gst_matroska_parse, GST_TYPE_ELEMENT);
 
 static void
 gst_matroska_parse_finalize (GObject * object)
@@ -196,11 +178,20 @@ gst_matroska_parse_class_init (GstMatroskaParseClass * klass)
       GST_DEBUG_FUNCPTR (gst_matroska_parse_set_index);
   gstelement_class->get_index =
       GST_DEBUG_FUNCPTR (gst_matroska_parse_get_index);
+
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&src_templ));
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&sink_templ));
+
+  gst_element_class_set_details_simple (gstelement_class,
+      "Matroska parser", "Codec/Parser",
+      "Parses Matroska/WebM streams into video/audio/subtitles",
+      "GStreamer maintainers <gstreamer-devel@lists.sourceforge.net>");
 }
 
 static void
-gst_matroska_parse_init (GstMatroskaParse * parse,
-    GstMatroskaParseClass * klass)
+gst_matroska_parse_init (GstMatroskaParse * parse)
 {
   parse->common.sinkpad = gst_pad_new_from_static_template (&sink_templ,
       "sink");
@@ -213,8 +204,6 @@ gst_matroska_parse_init (GstMatroskaParse * parse,
   parse->srcpad = gst_pad_new_from_static_template (&src_templ, "src");
   gst_pad_set_event_function (parse->srcpad,
       GST_DEBUG_FUNCPTR (gst_matroska_parse_handle_src_event));
-  gst_pad_set_query_type_function (parse->srcpad,
-      GST_DEBUG_FUNCPTR (gst_matroska_parse_get_src_query_types));
   gst_pad_set_query_function (parse->srcpad,
       GST_DEBUG_FUNCPTR (gst_matroska_parse_handle_src_query));
   gst_pad_use_fixed_caps (parse->srcpad);
@@ -374,7 +363,7 @@ gst_matroska_parse_reset (GstElement * element)
   if (parse->common.global_tags) {
     gst_tag_list_free (parse->common.global_tags);
   }
-  parse->common.global_tags = gst_tag_list_new ();
+  parse->common.global_tags = gst_tag_list_new_empty ();
 
   if (parse->common.cached_buffer) {
     gst_buffer_unref (parse->common.cached_buffer);
@@ -1078,19 +1067,6 @@ gst_matroska_parse_add_stream (GstMatroskaParse * parse, GstEbmlRead * ebml)
   return ret;
 }
 
-static const GstQueryType *
-gst_matroska_parse_get_src_query_types (GstPad * pad)
-{
-  static const GstQueryType query_types[] = {
-    GST_QUERY_POSITION,
-    GST_QUERY_DURATION,
-    GST_QUERY_SEEKING,
-    0
-  };
-
-  return query_types;
-}
-
 static gboolean
 gst_matroska_parse_query (GstMatroskaParse * parse, GstPad * pad,
     GstQuery * query)
@@ -1115,7 +1091,7 @@ gst_matroska_parse_query (GstMatroskaParse * parse, GstPad * pad,
           gst_query_set_position (query, GST_FORMAT_TIME, context->pos);
         else
           gst_query_set_position (query, GST_FORMAT_TIME,
-              parse->common.segment.last_stop);
+              parse->common.segment.position);
         GST_OBJECT_UNLOCK (parse);
       } else if (format == GST_FORMAT_DEFAULT && context
           && context->default_duration) {
@@ -1175,7 +1151,7 @@ gst_matroska_parse_query (GstMatroskaParse * parse, GstPad * pad,
       break;
     }
     default:
-      res = gst_pad_query_default (pad, query);
+      res = gst_pad_query_default (pad, (GstObject *) parse, query);
       break;
   }
 
@@ -1189,14 +1165,13 @@ gst_matroska_parse_element_query (GstElement * element, GstQuery * query)
 }
 
 static gboolean
-gst_matroska_parse_handle_src_query (GstPad * pad, GstQuery * query)
+gst_matroska_parse_handle_src_query (GstPad * pad, GstObject * parent,
+    GstQuery * query)
 {
   gboolean ret;
-  GstMatroskaParse *parse = GST_MATROSKA_PARSE (gst_pad_get_parent (pad));
+  GstMatroskaParse *parse = GST_MATROSKA_PARSE (parent);
 
   ret = gst_matroska_parse_query (parse, pad, query);
-
-  gst_object_unref (parse);
 
   return ret;
 }
@@ -1248,6 +1223,8 @@ gst_matroska_parse_search_cluster (GstMatroskaParse * parse, gint64 * pos)
   GstFlowReturn ret = GST_FLOW_OK;
   const guint chunk = 64 * 1024;
   GstBuffer *buf = NULL;
+  gpointer data;
+  gsize size;
   guint64 length;
   guint32 id;
   guint needed;
@@ -1263,13 +1240,13 @@ gst_matroska_parse_search_cluster (GstMatroskaParse * parse, gint64 * pos)
     if (ret != GST_FLOW_OK)
       break;
     GST_DEBUG_OBJECT (parse, "read buffer size %d at offset %" G_GINT64_FORMAT,
-        GST_BUFFER_SIZE (buf), newpos);
-    gst_byte_reader_init_from_buffer (&reader, buf);
+        gst_buffer_get_size (buf), newpos);
+    data = gst_buffer_map (buf, &size, NULL, GST_MAP_READ);
+    gst_byte_reader_init (&reader, data, size);
     cluster_pos = 0;
   resume:
     cluster_pos = gst_byte_reader_masked_scan_uint32 (&reader, 0xffffffff,
-        GST_MATROSKA_ID_CLUSTER, cluster_pos,
-        GST_BUFFER_SIZE (buf) - cluster_pos);
+        GST_MATROSKA_ID_CLUSTER, cluster_pos, size - cluster_pos);
     if (cluster_pos >= 0) {
       newpos += cluster_pos;
       GST_DEBUG_OBJECT (parse,
@@ -1311,13 +1288,15 @@ gst_matroska_parse_search_cluster (GstMatroskaParse * parse, gint64 * pos)
       goto resume;
     } else {
       /* partial cluster id may have been in tail of buffer */
-      newpos += MAX (GST_BUFFER_SIZE (buf), 4) - 3;
+      newpos += MAX (size, 4) - 3;
+      gst_buffer_unmap (buf, data, size);
       gst_buffer_unref (buf);
       buf = NULL;
     }
   }
 
   if (buf) {
+    gst_buffer_unmap (buf, data, size);
     gst_buffer_unref (buf);
     buf = NULL;
   }
@@ -1362,7 +1341,7 @@ gst_matroska_parse_handle_seek_event (GstMatroskaParse * parse,
 
   if (event) {
     GST_DEBUG_OBJECT (parse, "configuring seek");
-    gst_segment_set_seek (&seeksegment, rate, format, flags,
+    gst_segment_do_seek (&seeksegment, rate, format, flags,
         cur_type, cur, stop_type, stop, &update);
   }
 
@@ -1371,7 +1350,7 @@ gst_matroska_parse_handle_seek_event (GstMatroskaParse * parse,
   /* check sanity before we start flushing and all that */
   GST_OBJECT_LOCK (parse);
   if ((entry = gst_matroska_read_common_do_index_seek (&parse->common, track,
-              seeksegment.last_stop, &parse->seek_index, &parse->seek_entry)) ==
+              seeksegment.position, &parse->seek_index, &parse->seek_entry)) ==
       NULL) {
     /* pull mode without index can scan later on */
     GST_DEBUG_OBJECT (parse, "No matching seek entry in index");
@@ -1473,9 +1452,10 @@ gst_matroska_parse_handle_seek_push (GstMatroskaParse * parse, GstPad * pad,
 }
 
 static gboolean
-gst_matroska_parse_handle_src_event (GstPad * pad, GstEvent * event)
+gst_matroska_parse_handle_src_event (GstPad * pad, GstObject * parent,
+    GstEvent * event)
 {
-  GstMatroskaParse *parse = GST_MATROSKA_PARSE (gst_pad_get_parent (pad));
+  GstMatroskaParse *parse = GST_MATROSKA_PARSE (parent);
   gboolean res = TRUE;
 
   switch (GST_EVENT_TYPE (event)) {
@@ -1499,7 +1479,7 @@ gst_matroska_parse_handle_src_event (GstPad * pad, GstEvent * event)
         GstClockTimeDiff diff;
         GstClockTime timestamp;
 
-        gst_event_parse_qos (event, &proportion, &diff, &timestamp);
+        gst_event_parse_qos (event, NULL, &proportion, &diff, &timestamp);
 
         GST_OBJECT_LOCK (parse);
         videocontext->earliest_time = timestamp + diff;
@@ -1521,8 +1501,6 @@ gst_matroska_parse_handle_src_event (GstPad * pad, GstEvent * event)
       res = gst_pad_push_event (parse->common.sinkpad, event);
       break;
   }
-
-  gst_object_unref (parse);
 
   return res;
 }
@@ -1635,6 +1613,8 @@ gst_matroska_parse_parse_blockgroup_or_simpleblock (GstMatroskaParse * parse,
   guint32 id;
   guint64 block_duration = 0;
   GstBuffer *buf = NULL;
+  gpointer buf_data = NULL;
+  gsize buf_size = 0;
   gint stream_num = -1, n, laces = 0;
   guint size = 0;
   gint *lace_size = NULL;
@@ -1668,8 +1648,10 @@ gst_matroska_parse_parse_blockgroup_or_simpleblock (GstMatroskaParse * parse,
         if ((ret = gst_ebml_read_buffer (ebml, &id, &buf)) != GST_FLOW_OK)
           break;
 
-        data = GST_BUFFER_DATA (buf);
-        size = GST_BUFFER_SIZE (buf);
+        buf_data = gst_buffer_map (buf, &buf_size, NULL, GST_MAP_READ);
+
+        data = buf_data;
+        size = buf_size;
 
         /* first byte(s): blocknum */
         if ((n = gst_matroska_ebmlnum_uint (data, size, &num)) < 0)
@@ -1873,18 +1855,18 @@ gst_matroska_parse_parse_blockgroup_or_simpleblock (GstMatroskaParse * parse,
     }
     /* need to refresh segment info ASAP */
     if (GST_CLOCK_TIME_IS_VALID (lace_time) && parse->need_newsegment) {
+      GstSegment segment;
       GST_DEBUG_OBJECT (parse,
           "generating segment starting at %" GST_TIME_FORMAT,
           GST_TIME_ARGS (lace_time));
       /* pretend we seeked here */
-      gst_segment_set_seek (&parse->common.segment, parse->common.segment.rate,
+      gst_segment_do_seek (&parse->common.segment, parse->common.segment.rate,
           GST_FORMAT_TIME, 0, GST_SEEK_TYPE_SET, lace_time,
           GST_SEEK_TYPE_SET, GST_CLOCK_TIME_NONE, NULL);
       /* now convey our segment notion downstream */
-      gst_matroska_parse_send_event (parse, gst_event_new_new_segment (FALSE,
-              parse->common.segment.rate, parse->common.segment.format,
-              parse->common.segment.start, parse->common.segment.stop,
-              parse->common.segment.start));
+      segment = parse->common.segment;
+      segment.position = segment.start;
+      gst_matroska_parse_send_event (parse, gst_event_new_segment (&segment));
       parse->need_newsegment = FALSE;
     }
 
@@ -2134,8 +2116,10 @@ gst_matroska_parse_parse_blockgroup_or_simpleblock (GstMatroskaParse * parse,
   }
 
 done:
-  if (buf)
+  if (buf) {
+    gst_buffer_unmap (buf, buf_data, buf_size);
     gst_buffer_unref (buf);
+  }
   g_free (lace_size);
 
   return ret;
@@ -2419,10 +2403,9 @@ gst_matroska_parse_check_seekability (GstMatroskaParse * parse)
 
   /* try harder to query upstream size if we didn't get it the first time */
   if (seekable && stop == -1) {
-    GstFormat fmt = GST_FORMAT_BYTES;
-
     GST_DEBUG_OBJECT (parse, "doing duration query to fix up unset stop");
-    gst_pad_query_peer_duration (parse->common.sinkpad, &fmt, &stop);
+    gst_pad_peer_query_duration (parse->common.sinkpad, GST_FORMAT_BYTES,
+        &stop);
   }
 
   /* if upstream doesn't know the size, it's likely that it's not seekable in
@@ -2506,14 +2489,15 @@ gst_matroska_parse_accumulate_streamheader (GstMatroskaParse * parse,
     GstBuffer *buf;
 
     buf = gst_buffer_span (parse->streamheader, 0, buffer,
-        GST_BUFFER_SIZE (parse->streamheader) + GST_BUFFER_SIZE (buffer));
+        gst_buffer_get_size (parse->streamheader) +
+        gst_buffer_get_size (buffer));
     gst_buffer_unref (parse->streamheader);
     parse->streamheader = buf;
   } else {
     parse->streamheader = gst_buffer_ref (buffer);
   }
 
-  GST_DEBUG ("%d", GST_BUFFER_SIZE (parse->streamheader));
+  GST_DEBUG ("%d", gst_buffer_get_size (parse->streamheader));
 }
 
 static GstFlowReturn
@@ -2529,7 +2513,7 @@ gst_matroska_parse_output (GstMatroskaParse * parse, GstBuffer * buffer,
     GValue bufval = { 0 };
     GstBuffer *buf;
 
-    caps = gst_caps_new_simple ("video/x-matroska", NULL);
+    caps = gst_caps_new_empty_simple ("video/x-matroska");
     s = gst_caps_get_structure (caps, 0);
     g_value_init (&streamheader, GST_TYPE_ARRAY);
     g_value_init (&bufval, GST_TYPE_BUFFER);
@@ -2545,7 +2529,6 @@ gst_matroska_parse_output (GstMatroskaParse * parse, GstBuffer * buffer,
     gst_pad_set_caps (parse->srcpad, caps);
 
     buf = gst_buffer_copy (parse->streamheader);
-    gst_buffer_set_caps (buf, caps);
     gst_caps_unref (caps);
 
     GST_BUFFER_FLAG_SET (buf, GST_BUFFER_FLAG_DISCONT);
@@ -2567,7 +2550,6 @@ gst_matroska_parse_output (GstMatroskaParse * parse, GstBuffer * buffer,
   } else {
     GST_BUFFER_TIMESTAMP (buffer) = parse->last_timestamp;
   }
-  gst_buffer_set_caps (buffer, GST_PAD_CAPS (parse->srcpad));
   ret = gst_pad_push (parse->srcpad, gst_buffer_ref (buffer));
 
   return ret;
@@ -3028,9 +3010,9 @@ perform_seek_to_offset (GstMatroskaParse * parse, guint64 offset)
 }
 
 static GstFlowReturn
-gst_matroska_parse_chain (GstPad * pad, GstBuffer * buffer)
+gst_matroska_parse_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
 {
-  GstMatroskaParse *parse = GST_MATROSKA_PARSE (GST_PAD_PARENT (pad));
+  GstMatroskaParse *parse = GST_MATROSKA_PARSE (parent);
   guint available;
   GstFlowReturn ret = GST_FLOW_OK;
   guint needed = 0;
@@ -3075,7 +3057,8 @@ next:
 }
 
 static gboolean
-gst_matroska_parse_handle_sink_event (GstPad * pad, GstEvent * event)
+gst_matroska_parse_handle_sink_event (GstPad * pad, GstObject * parent,
+    GstEvent * event)
 {
   gboolean res = TRUE;
   GstMatroskaParse *parse = GST_MATROSKA_PARSE (GST_PAD_PARENT (pad));
@@ -3084,23 +3067,15 @@ gst_matroska_parse_handle_sink_event (GstPad * pad, GstEvent * event)
       "have event type %s: %p on sink pad", GST_EVENT_TYPE_NAME (event), event);
 
   switch (GST_EVENT_TYPE (event)) {
-    case GST_EVENT_NEWSEGMENT:
+    case GST_EVENT_SEGMENT:
     {
-      GstFormat format;
-      gdouble rate, arate;
-      gint64 start, stop, time = 0;
-      gboolean update;
-      GstSegment segment;
+      const GstSegment *segment;
 
       /* some debug output */
-      gst_segment_init (&segment, GST_FORMAT_UNDEFINED);
-      gst_event_parse_new_segment_full (event, &update, &rate, &arate, &format,
-          &start, &stop, &time);
-      gst_segment_set_newsegment_full (&segment, update, rate, arate, format,
-          start, stop, time);
+      gst_event_parse_segment (event, &segment);
       GST_DEBUG_OBJECT (parse,
-          "received format %d newsegment %" GST_SEGMENT_FORMAT, format,
-          &segment);
+          "received format %d newsegment %" GST_SEGMENT_FORMAT,
+          segment->format, segment);
 
       if (parse->common.state < GST_MATROSKA_READ_STATE_DATA) {
         GST_DEBUG_OBJECT (parse, "still starting");
@@ -3108,7 +3083,7 @@ gst_matroska_parse_handle_sink_event (GstPad * pad, GstEvent * event)
       }
 
       /* we only expect a BYTE segment, e.g. following a seek */
-      if (format != GST_FORMAT_BYTES) {
+      if (segment->format != GST_FORMAT_BYTES) {
         GST_DEBUG_OBJECT (parse, "unsupported segment format, ignoring");
         goto exit;
       }
@@ -3117,15 +3092,15 @@ gst_matroska_parse_handle_sink_event (GstPad * pad, GstEvent * event)
       /* clear current segment leftover */
       gst_adapter_clear (parse->common.adapter);
       /* and some streaming setup */
-      parse->common.offset = start;
+      parse->common.offset = segment->start;
       /* do not know where we are;
        * need to come across a cluster and generate newsegment */
-      parse->common.segment.last_stop = GST_CLOCK_TIME_NONE;
+      parse->common.segment.position = GST_CLOCK_TIME_NONE;
       parse->cluster_time = GST_CLOCK_TIME_NONE;
       parse->cluster_offset = 0;
       parse->need_newsegment = TRUE;
       /* but keep some of the upstream segment */
-      parse->common.segment.rate = rate;
+      parse->common.segment.rate = segment->rate;
     exit:
       /* chain will send initial newsegment after pads have been added,
        * or otherwise come up with one */
@@ -3155,13 +3130,13 @@ gst_matroska_parse_handle_sink_event (GstPad * pad, GstEvent * event)
       gst_matroska_read_common_reset_streams (&parse->common,
           GST_CLOCK_TIME_NONE, TRUE);
       GST_OBJECT_UNLOCK (parse);
-      parse->common.segment.last_stop = GST_CLOCK_TIME_NONE;
+      parse->common.segment.position = GST_CLOCK_TIME_NONE;
       parse->cluster_time = GST_CLOCK_TIME_NONE;
       parse->cluster_offset = 0;
       /* fall-through */
     }
     default:
-      res = gst_pad_event_default (pad, event);
+      res = gst_pad_event_default (pad, parent, event);
       break;
   }
 

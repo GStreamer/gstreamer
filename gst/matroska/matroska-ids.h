@@ -486,10 +486,10 @@ struct _GstMatroskaTrackContext {
 
   /* some often-used info */
   gchar        *codec_id, *codec_name, *name, *language;
-  guint8       *codec_priv;
-  guint         codec_priv_size;
-  guint8       *codec_state;
-  guint         codec_state_size;
+  gpointer      codec_priv;
+  gsize         codec_priv_size;
+  gpointer      codec_state;
+  gsize         codec_state_size;
   GstMatroskaTrackType type;
   guint         uid, num;
   GstMatroskaTrackFlags flags;

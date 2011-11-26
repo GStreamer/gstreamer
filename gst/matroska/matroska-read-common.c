@@ -58,7 +58,7 @@ GST_DEBUG_CATEGORY (matroskareadcommon_debug);
 
 static gboolean
 gst_matroska_decompress_data (GstMatroskaTrackEncoding * enc,
-    guint8 ** data_out, guint * size_out,
+    gpointer * data_out, gsize * size_out,
     GstMatroskaTrackCompressionAlgorithm algo)
 {
   guint8 *new_data = NULL;
@@ -237,8 +237,8 @@ gst_matroska_decode_content_encodings (GArray * encodings)
   for (i = 0; i < encodings->len; i++) {
     GstMatroskaTrackEncoding *enc =
         &g_array_index (encodings, GstMatroskaTrackEncoding, i);
-    guint8 *data = NULL;
-    guint size;
+    gpointer data = NULL;
+    gsize size;
 
     if ((enc->scope & GST_MATROSKA_TRACK_ENCODING_SCOPE_NEXT_CONTENT_ENCODING)
         == 0)
@@ -270,11 +270,11 @@ gst_matroska_decode_content_encodings (GArray * encodings)
 }
 
 gboolean
-gst_matroska_decode_data (GArray * encodings, guint8 ** data_out,
-    guint * size_out, GstMatroskaTrackEncodingScope scope, gboolean free)
+gst_matroska_decode_data (GArray * encodings, gpointer * data_out,
+    gsize * size_out, GstMatroskaTrackEncodingScope scope, gboolean free)
 {
-  guint8 *data;
-  guint size;
+  gpointer data;
+  gsize size;
   gboolean ret = TRUE;
   gint i;
 
@@ -288,8 +288,8 @@ gst_matroska_decode_data (GArray * encodings, guint8 ** data_out,
   for (i = 0; i < encodings->len; i++) {
     GstMatroskaTrackEncoding *enc =
         &g_array_index (encodings, GstMatroskaTrackEncoding, i);
-    guint8 *new_data = NULL;
-    guint new_size = 0;
+    gpointer new_data = NULL;
+    gsize new_size = 0;
 
     if ((enc->scope & scope) == 0)
       continue;
@@ -430,21 +430,31 @@ gst_matroska_read_common_found_global_tag (GstMatroskaReadCommon * common,
     gst_tag_list_insert (common->global_tags, taglist, GST_TAG_MERGE_APPEND);
     gst_tag_list_free (taglist);
   } else {
+    GstEvent *tag_event = gst_event_new_tag (taglist);
+    gint i;
+
     /* hm, already sent, no need to cache and wait anymore */
     GST_DEBUG_OBJECT (common, "Sending late global tags %" GST_PTR_FORMAT,
         taglist);
-    gst_element_found_tags (el, taglist);
+
+    for (i = 0; i < common->src->len; i++) {
+      GstMatroskaTrackContext *stream;
+
+      stream = g_ptr_array_index (common->src, i);
+      gst_pad_push_event (stream->pad, gst_event_ref (tag_event));
+    }
+
+    gst_event_unref (tag_event);
   }
 }
 
 gint64
 gst_matroska_read_common_get_length (GstMatroskaReadCommon * common)
 {
-  GstFormat fmt = GST_FORMAT_BYTES;
   gint64 end = -1;
 
-  if (!gst_pad_query_peer_duration (common->sinkpad, &fmt, &end) ||
-      fmt != GST_FORMAT_BYTES || end < 0)
+  if (!gst_pad_peer_query_duration (common->sinkpad, GST_FORMAT_BYTES,
+          &end) || end < 0)
     GST_DEBUG_OBJECT (common, "no upstream length");
 
   return end;
@@ -569,7 +579,7 @@ gst_matroska_read_common_parse_attached_file (GstMatroskaReadCommon * common,
   if (filename && mimetype && data && datalen > 0) {
     GstTagImageType image_type = GST_TAG_IMAGE_TYPE_NONE;
     GstBuffer *tagbuffer = NULL;
-    GstCaps *caps;
+    /* GstCaps *caps; */
     gchar *filename_lc = g_utf8_strdown (filename, -1);
 
     GST_DEBUG_OBJECT (common, "Creating tag for attachment with "
@@ -600,31 +610,32 @@ gst_matroska_read_common_parse_attached_file (GstMatroskaReadCommon * common,
 
       if (!tagbuffer)
         image_type = GST_TAG_IMAGE_TYPE_NONE;
+      else
+        data = NULL;
     }
 
     /* if this failed create an attachment buffer */
     if (!tagbuffer) {
-      tagbuffer = gst_buffer_new_and_alloc (datalen);
+      tagbuffer = gst_buffer_new_wrapped (g_memdup (data, datalen), datalen);
 
-      memcpy (GST_BUFFER_DATA (tagbuffer), data, datalen);
-      GST_BUFFER_SIZE (tagbuffer) = datalen;
-
-      caps = gst_type_find_helper_for_buffer (NULL, tagbuffer, NULL);
-      if (caps == NULL)
-        caps = gst_caps_new_simple (mimetype, NULL);
-      gst_buffer_set_caps (tagbuffer, caps);
-      gst_caps_unref (caps);
+      /* FIXME: We can't attach caps to buffers in 0.11. */
+      /* caps = gst_type_find_helper_for_buffer (NULL, tagbuffer, NULL); */
+      /* if (caps == NULL) */
+      /*   caps = gst_caps_new_simple (mimetype, NULL); */
+      /* gst_buffer_set_caps (tagbuffer, caps); */
+      /* gst_caps_unref (caps); */
     }
 
+    /* FIXME: We can't attach caps to buffers in 0.11. */
     /* Set filename and description on the caps */
-    caps = GST_BUFFER_CAPS (tagbuffer);
-    gst_caps_set_simple (caps, "filename", G_TYPE_STRING, filename, NULL);
-    if (description)
-      gst_caps_set_simple (caps, "description", G_TYPE_STRING, description,
-          NULL);
+    /* caps = GST_BUFFER_CAPS (tagbuffer); */
+    /* gst_caps_set_simple (caps, "filename", G_TYPE_STRING, filename, NULL); */
+    /* if (description) */
+    /*   gst_caps_set_simple (caps, "description", G_TYPE_STRING, description, */
+    /*       NULL); */
 
-    GST_DEBUG_OBJECT (common,
-        "Created attachment buffer with caps: %" GST_PTR_FORMAT, caps);
+    /* GST_DEBUG_OBJECT (common, */
+    /*     "Created attachment buffer with caps: %" GST_PTR_FORMAT, caps); */
 
     /* and append to the tag list */
     if (image_type != GST_TAG_IMAGE_TYPE_NONE)
@@ -658,7 +669,7 @@ gst_matroska_read_common_parse_attachments (GstMatroskaReadCommon * common,
     return ret;
   }
 
-  taglist = gst_tag_list_new ();
+  taglist = gst_tag_list_new_empty ();
 
   while (ret == GST_FLOW_OK && gst_ebml_read_has_remaining (ebml, 1, TRUE)) {
     if ((ret = gst_ebml_peek_id (ebml, &id)) != GST_FLOW_OK)
@@ -1280,9 +1291,7 @@ gst_matroska_read_common_parse_info (GstMatroskaReadCommon * common,
           break;
 
         GST_DEBUG_OBJECT (common, "Title: %s", GST_STR_NULL (text));
-        taglist = gst_tag_list_new ();
-        gst_tag_list_add (taglist, GST_TAG_MERGE_APPEND, GST_TAG_TITLE, text,
-            NULL);
+        taglist = gst_tag_list_new (GST_TAG_TITLE, text, NULL);
         gst_matroska_read_common_found_global_tag (common, el, taglist);
         g_free (text);
         break;
@@ -1313,7 +1322,7 @@ gst_matroska_read_common_parse_info (GstMatroskaReadCommon * common,
     dur_u = gst_gdouble_to_guint64 (dur_f *
         gst_guint64_to_gdouble (common->time_scale));
     if (GST_CLOCK_TIME_IS_VALID (dur_u) && dur_u <= G_MAXINT64)
-      gst_segment_set_duration (&common->segment, GST_FORMAT_TIME, dur_u);
+      common->segment.duration = dur_u;
   }
 
   DEBUG_ELEMENT_STOP (common, ebml, "SegmentInfo", ret);
@@ -1518,7 +1527,7 @@ gst_matroska_read_common_parse_metadata (GstMatroskaReadCommon * common,
     return ret;
   }
 
-  taglist = gst_tag_list_new ();
+  taglist = gst_tag_list_new_empty ();
 
   while (ret == GST_FLOW_OK && gst_ebml_read_has_remaining (ebml, 1, TRUE)) {
     if ((ret = gst_ebml_peek_id (ebml, &id)) != GST_FLOW_OK)
@@ -1551,7 +1560,8 @@ static GstFlowReturn
 gst_matroska_read_common_peek_adapter (GstMatroskaReadCommon * common, guint
     peek, const guint8 ** data)
 {
-  *data = gst_adapter_peek (common->adapter, peek);
+  /* Caller needs to gst_adapter_unmap. */
+  *data = gst_adapter_map (common->adapter, peek);
   if (*data == NULL)
     return GST_FLOW_UNEXPECTED;
 
@@ -1571,19 +1581,26 @@ gst_matroska_read_common_peek_bytes (GstMatroskaReadCommon * common, guint64
    * We do it mainly to avoid pulling buffers of 1 byte all the time */
   if (common->cached_buffer) {
     guint64 cache_offset = GST_BUFFER_OFFSET (common->cached_buffer);
-    guint cache_size = GST_BUFFER_SIZE (common->cached_buffer);
+    gsize cache_size = gst_buffer_get_size (common->cached_buffer);
 
     if (cache_offset <= common->offset &&
         (common->offset + size) <= (cache_offset + cache_size)) {
       if (p_buf)
-        *p_buf = gst_buffer_create_sub (common->cached_buffer,
-            common->offset - cache_offset, size);
-      if (bytes)
-        *bytes = GST_BUFFER_DATA (common->cached_buffer) + common->offset -
-            cache_offset;
+        *p_buf = gst_buffer_copy_region (common->cached_buffer,
+            GST_BUFFER_COPY_ALL, common->offset - cache_offset, size);
+      if (bytes) {
+        if (!common->cached_data)
+          common->cached_data = gst_buffer_map (common->cached_buffer,
+              NULL, NULL, GST_MAP_READ);
+        *bytes = common->cached_data + common->offset - cache_offset;
+      }
       return GST_FLOW_OK;
     }
     /* not enough data in the cache, free cache and get a new one */
+    if (common->cached_data) {
+      gst_buffer_unmap (common->cached_buffer, common->cached_data, -1);
+      common->cached_data = NULL;
+    }
     gst_buffer_unref (common->cached_buffer);
     common->cached_buffer = NULL;
   }
@@ -1596,11 +1613,15 @@ gst_matroska_read_common_peek_bytes (GstMatroskaReadCommon * common, guint64
     return ret;
   }
 
-  if (GST_BUFFER_SIZE (common->cached_buffer) >= size) {
+  if (gst_buffer_get_size (common->cached_buffer) >= size) {
     if (p_buf)
-      *p_buf = gst_buffer_create_sub (common->cached_buffer, 0, size);
-    if (bytes)
-      *bytes = GST_BUFFER_DATA (common->cached_buffer);
+      *p_buf = gst_buffer_copy_region (common->cached_buffer,
+          GST_BUFFER_COPY_ALL, 0, size);
+    if (bytes) {
+      common->cached_data = gst_buffer_map (common->cached_buffer,
+          NULL, NULL, GST_MAP_READ);
+      *bytes = common->cached_data;
+    }
     return GST_FLOW_OK;
   }
 
@@ -1621,10 +1642,10 @@ gst_matroska_read_common_peek_bytes (GstMatroskaReadCommon * common, guint64
     return ret;
   }
 
-  if (GST_BUFFER_SIZE (common->cached_buffer) < size) {
+  if (gst_buffer_get_size (common->cached_buffer) < size) {
     GST_WARNING_OBJECT (common, "Dropping short buffer at offset %"
         G_GUINT64_FORMAT ": wanted %u bytes, got %u bytes", common->offset,
-        size, GST_BUFFER_SIZE (common->cached_buffer));
+        size, gst_buffer_get_size (common->cached_buffer));
 
     gst_buffer_unref (common->cached_buffer);
     common->cached_buffer = NULL;
@@ -1636,9 +1657,13 @@ gst_matroska_read_common_peek_bytes (GstMatroskaReadCommon * common, guint64
   }
 
   if (p_buf)
-    *p_buf = gst_buffer_create_sub (common->cached_buffer, 0, size);
-  if (bytes)
-    *bytes = GST_BUFFER_DATA (common->cached_buffer);
+    *p_buf = gst_buffer_copy_region (common->cached_buffer,
+        GST_BUFFER_COPY_ALL, 0, size);
+  if (bytes) {
+    common->cached_data = gst_buffer_map (common->cached_buffer,
+        NULL, NULL, GST_MAP_READ);
+    *bytes = common->cached_data;
+  }
 
   return GST_FLOW_OK;
 }
@@ -1664,9 +1689,15 @@ GstFlowReturn
 gst_matroska_read_common_peek_id_length_push (GstMatroskaReadCommon * common,
     GstElement * el, guint32 * _id, guint64 * _length, guint * _needed)
 {
-  return gst_ebml_peek_id_length (_id, _length, _needed,
+  GstFlowReturn ret;
+
+  ret = gst_ebml_peek_id_length (_id, _length, _needed,
       (GstPeekData) gst_matroska_read_common_peek_adapter, (gpointer) common,
       el, common->offset);
+
+  gst_adapter_unmap (common->adapter);
+
+  return ret;
 }
 
 static GstFlowReturn

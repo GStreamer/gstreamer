@@ -87,7 +87,7 @@ typedef struct _GstMatroskaDemux {
   gboolean                 building_index;
   guint64                  index_offset;
   GstEvent                *seek_event;
-  gboolean                 need_newsegment;
+  gboolean                 need_segment;
 
   /* reverse playback */
   GArray                  *seek_index;
