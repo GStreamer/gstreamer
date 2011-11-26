@@ -80,7 +80,6 @@ GstAudio-@GST_MAJORMINOR@.gir: $(INTROSPECTION_SCANNER) libgstaudio-@GST_MAJORMI
 		--nsversion=@GST_MAJORMINOR@ \
 		--warn-all \
 		--strip-prefix=Gst \
-		-DGST_USE_UNSTABLE_API \
 		-I$(top_srcdir)/gst-libs \
 		-I$(top_builddir)/gst-libs \
 		$(gir_cincludes) \

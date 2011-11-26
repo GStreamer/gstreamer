@@ -145,6 +145,10 @@ struct _GstOggDemux
   gboolean need_chains;
   gboolean resync;
 
+  /* keep track of how large pages and packets are,
+     useful for skewing when seeking */
+  guint64 max_packet_size, max_page_size;
+
   /* state */
   GMutex *chain_lock;           /* we need the lock to protect the chains */
   GArray *chains;               /* list of chains we know */
@@ -185,8 +189,14 @@ struct _GstOggDemux
   GstSeekFlags push_seek_flags;
   GstEvent *push_mode_seek_delayed_event;
   gboolean push_disable_seeking;
+  gboolean seek_secant;
+  gboolean seek_undershot;
+  GstClockTime push_prev_seek_time;
 
   gint push_bisection_steps[2];
+  gint stats_bisection_steps[2];
+  gint stats_bisection_max_steps[2];
+  gint stats_nbisections;
 
   /* ogg stuff */
   ogg_sync_state sync;

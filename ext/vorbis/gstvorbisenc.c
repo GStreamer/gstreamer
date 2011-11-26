@@ -65,7 +65,7 @@ GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("audio/x-raw, "
         "format = (string) " GST_AUDIO_NE (F32) ", "
-        "rate = (int) [ 1, 200000 ], " "channels = (int) [ 1, 256 ]")
+        "rate = (int) [ 1, 200000 ], " "channels = (int) [ 1, 255 ]")
     );
 
 static GstStaticPadTemplate vorbis_enc_src_factory =
@@ -295,7 +295,7 @@ gst_vorbis_enc_generate_sink_caps (void)
   gst_caps_append_structure (caps, gst_structure_new ("audio/x-raw",
           "format", G_TYPE_STRING, GST_AUDIO_NE (F32),
           "rate", GST_TYPE_INT_RANGE, 1, 200000,
-          "channels", GST_TYPE_INT_RANGE, 9, 256, NULL));
+          "channels", GST_TYPE_INT_RANGE, 9, 255, NULL));
 
   return caps;
 }

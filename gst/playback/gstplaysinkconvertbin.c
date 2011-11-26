@@ -137,7 +137,8 @@ gst_play_sink_convert_bin_add_identity (GstPlaySinkConvertBin * self)
 
         );
   } else {
-    g_object_set (self->identity, "silent", TRUE, NULL);
+    g_object_set (self->identity, "silent", TRUE, "signal-handoffs", FALSE,
+        NULL);
     gst_bin_add (GST_BIN_CAST (self), self->identity);
   }
 }
@@ -335,11 +336,23 @@ gst_play_sink_convert_bin_sink_setcaps (GstPlaySinkConvertBin * self,
 
   GST_DEBUG_OBJECT (self, "raw %d, self->raw %d, blocked %d",
       raw, self->raw, gst_pad_is_blocked (self->sink_proxypad));
+
   if (raw) {
-    if (!self->raw && !gst_pad_is_blocked (self->sink_proxypad)) {
-      GST_DEBUG_OBJECT (self, "Changing caps from non-raw to raw");
-      reconfigure = TRUE;
-      block_proxypad (self);
+    if (!gst_pad_is_blocked (self->sink_proxypad)) {
+      GstPad *target = gst_ghost_pad_get_target (GST_GHOST_PAD (self->sinkpad));
+
+      if (!self->raw || (target && !gst_pad_query_accept_caps (target, caps))) {
+        if (!self->raw)
+          GST_DEBUG_OBJECT (self, "Changing caps from non-raw to raw");
+        else
+          GST_DEBUG_OBJECT (self, "Changing caps in an incompatible way");
+
+        reconfigure = TRUE;
+        block_proxypad (self);
+      }
+
+      if (target)
+        gst_object_unref (target);
     }
   } else {
     if (self->raw && !gst_pad_is_blocked (self->sink_proxypad)) {
@@ -402,6 +415,22 @@ gst_play_sink_convert_bin_getcaps (GstPad * pad, GstCaps * filter)
 
   gst_object_unref (self);
 
+  GST_DEBUG_OBJECT (pad, "Returning caps %" GST_PTR_FORMAT, ret);
+
+  return ret;
+}
+
+static gboolean
+gst_play_sink_convert_bin_acceptcaps (GstPad * pad, GstCaps * caps)
+{
+  GstCaps *allowed_caps;
+  gboolean ret;
+
+  allowed_caps = gst_pad_query_caps (pad, NULL);
+  /* FIXME 0.11: Should be a subset check now */
+  ret = gst_caps_can_intersect (caps, allowed_caps);
+  gst_caps_unref (allowed_caps);
+
   return ret;
 }
 
@@ -412,6 +441,16 @@ gst_play_sink_convert_bin_query (GstPad * pad, GstObject * parent,
   gboolean res = FALSE;
 
   switch (GST_QUERY_TYPE (query)) {
+    case GST_QUERY_ACCEPT_CAPS:
+    {
+      GstCaps *caps;
+
+      gst_query_parse_accept_caps (query, &caps);
+      gst_query_set_accept_caps_result (query,
+          gst_play_sink_convert_bin_acceptcaps (pad, caps));
+      res = TRUE;
+      break;
+    }
     case GST_QUERY_CAPS:
     {
       GstCaps *filter, *caps;
