@@ -1146,11 +1146,17 @@ gst_base_parse_sink_query (GstPad * pad, GstObject * parent, GstQuery * query)
 
         res = TRUE;
       } else {
-        GstCaps *caps, *filter;
+        GstCaps *caps, *template_caps, *filter;
 
         gst_query_parse_caps (query, &filter);
-        caps = gst_caps_copy (gst_pad_get_pad_template_caps (pad));
-        gst_caps_intersect_full (filter, caps, GST_CAPS_INTERSECT_FIRST);
+        template_caps = gst_pad_get_pad_template_caps (pad);
+        if (filter != NULL) {
+          caps =
+              gst_caps_intersect_full (filter, template_caps,
+              GST_CAPS_INTERSECT_FIRST);
+        } else {
+          caps = gst_caps_copy (template_caps);
+        }
         gst_query_set_caps_result (query, caps);
         gst_caps_unref (caps);
 
