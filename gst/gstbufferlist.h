@@ -218,7 +218,7 @@ GstBuffer *              gst_buffer_list_get                   (GstBufferList *l
 
 /* iterator */
 GType                    gst_buffer_list_iterator_get_type     (void);
-GstBufferListIterator *  gst_buffer_list_iterate               (GstBufferList *list);
+GstBufferListIterator *  gst_buffer_list_iterate               (GstBufferList *list) G_GNUC_MALLOC;
 void                     gst_buffer_list_iterator_free         (GstBufferListIterator *it);
 
 guint                    gst_buffer_list_iterator_n_buffers    (const GstBufferListIterator *it);

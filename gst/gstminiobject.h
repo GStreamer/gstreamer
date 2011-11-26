@@ -188,8 +188,8 @@ struct _GstMiniObjectClass {
 
 GType 		gst_mini_object_get_type 	(void);
 
-GstMiniObject* 	gst_mini_object_new 		(GType type);
-GstMiniObject* 	gst_mini_object_copy 		(const GstMiniObject *mini_object);
+GstMiniObject* 	gst_mini_object_new 		(GType type) G_GNUC_MALLOC;
+GstMiniObject* 	gst_mini_object_copy 		(const GstMiniObject *mini_object) G_GNUC_MALLOC;
 gboolean 	gst_mini_object_is_writable 	(const GstMiniObject *mini_object);
 GstMiniObject*  gst_mini_object_make_writable 	(GstMiniObject *mini_object);
 
@@ -232,7 +232,7 @@ GType gst_param_spec_mini_object_get_type (void);
 
 GParamSpec* 	gst_param_spec_mini_object 	(const char *name, const char *nick,
     						 const char *blurb, GType object_type, 
-						 GParamFlags flags);
+						 GParamFlags flags) G_GNUC_MALLOC;
 
 /* GValue stuff */
 

@@ -65,7 +65,7 @@ GstProxyPad*     gst_proxy_pad_get_internal     (GstProxyPad *pad);
 const GstQueryType* gst_proxy_pad_query_type_default             (GstPad *pad);
 gboolean            gst_proxy_pad_event_default                  (GstPad *pad, GstEvent *event);
 gboolean            gst_proxy_pad_query_default                  (GstPad *pad, GstQuery *query);
-GstIterator*        gst_proxy_pad_iterate_internal_links_default (GstPad *pad);
+GstIterator*        gst_proxy_pad_iterate_internal_links_default (GstPad *pad) G_GNUC_MALLOC;
 GstFlowReturn       gst_proxy_pad_bufferalloc_default            (GstPad *pad, guint64 offset, guint size, GstCaps *caps, GstBuffer **buf);
 GstFlowReturn       gst_proxy_pad_chain_default                  (GstPad *pad, GstBuffer *buffer);
 GstFlowReturn       gst_proxy_pad_chain_list_default             (GstPad *pad, GstBufferList *list);
@@ -112,11 +112,11 @@ struct _GstGhostPadClass
 
 GType		 gst_ghost_pad_get_type 	(void);
 
-GstPad*		 gst_ghost_pad_new		(const gchar *name, GstPad *target);
-GstPad*		 gst_ghost_pad_new_no_target	(const gchar *name, GstPadDirection dir);
+GstPad*		 gst_ghost_pad_new		(const gchar *name, GstPad *target) G_GNUC_MALLOC;
+GstPad*		 gst_ghost_pad_new_no_target	(const gchar *name, GstPadDirection dir) G_GNUC_MALLOC;
 
-GstPad*		 gst_ghost_pad_new_from_template (const gchar *name, GstPad * target, GstPadTemplate * templ);
-GstPad*		 gst_ghost_pad_new_no_target_from_template (const gchar *name, GstPadTemplate * templ);
+GstPad*		 gst_ghost_pad_new_from_template (const gchar *name, GstPad * target, GstPadTemplate * templ) G_GNUC_MALLOC;
+GstPad*		 gst_ghost_pad_new_no_target_from_template (const gchar *name, GstPadTemplate * templ) G_GNUC_MALLOC;
 
 GstPad*		 gst_ghost_pad_get_target	(GstGhostPad *gpad);
 gboolean	 gst_ghost_pad_set_target	(GstGhostPad *gpad, GstPad *newtarget);

@@ -182,7 +182,7 @@ GType			gst_static_pad_template_get_type	(void);
 
 GstPadTemplate*		gst_pad_template_new			(const gchar *name_template,
 								 GstPadDirection direction, GstPadPresence presence,
-								 GstCaps *caps);
+								 GstCaps *caps) G_GNUC_MALLOC;
 
 GstPadTemplate *	gst_static_pad_template_get             (GstStaticPadTemplate *pad_template);
 GstCaps*		gst_static_pad_template_get_caps	(GstStaticPadTemplate *templ);

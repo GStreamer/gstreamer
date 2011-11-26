@@ -63,13 +63,13 @@ struct _GstIndexFactoryClass {
 GType 			gst_index_factory_get_type 	(void);
 
 GstIndexFactory*	gst_index_factory_new 		(const gchar *name,
-							 const gchar *longdesc, GType type);
+							 const gchar *longdesc, GType type) G_GNUC_MALLOC;
 void 			gst_index_factory_destroy	(GstIndexFactory *factory);
 
 GstIndexFactory*	gst_index_factory_find		(const gchar *name);
 
-GstIndex*		gst_index_factory_create 	(GstIndexFactory *factory);
-GstIndex*		gst_index_factory_make   	(const gchar *name);
+GstIndex*		gst_index_factory_create 	(GstIndexFactory *factory) G_GNUC_MALLOC;
+GstIndex*		gst_index_factory_make   	(const gchar *name) G_GNUC_MALLOC;
 
 G_END_DECLS
 

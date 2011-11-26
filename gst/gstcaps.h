@@ -208,18 +208,18 @@ struct _GstStaticCaps {
 };
 
 GType             gst_caps_get_type                (void);
-GstCaps *         gst_caps_new_empty               (void);
-GstCaps *         gst_caps_new_any                 (void);
+GstCaps *         gst_caps_new_empty               (void) G_GNUC_MALLOC;
+GstCaps *         gst_caps_new_any                 (void) G_GNUC_MALLOC;
 GstCaps *         gst_caps_new_simple              (const char    *media_type,
                                                     const char    *fieldname,
-                                                    ...);
-GstCaps *         gst_caps_new_full                (GstStructure  *struct1, ...);
+                                                    ...) G_GNUC_MALLOC;
+GstCaps *         gst_caps_new_full                (GstStructure  *struct1, ...) G_GNUC_MALLOC;
 GstCaps *         gst_caps_new_full_valist         (GstStructure  *structure,
-                                                    va_list        var_args);
+                                                    va_list        var_args) G_GNUC_MALLOC;
 
 /* reference counting */
 GstCaps *         gst_caps_ref                     (GstCaps       *caps);
-GstCaps *         gst_caps_copy                    (const GstCaps *caps);
+GstCaps *         gst_caps_copy                    (const GstCaps *caps) G_GNUC_MALLOC;
 GstCaps *         gst_caps_make_writable           (GstCaps       *caps) G_GNUC_WARN_UNUSED_RESULT;
 void              gst_caps_unref                   (GstCaps       *caps);
 
@@ -240,8 +240,8 @@ guint             gst_caps_get_size                (const GstCaps *caps);
 GstStructure *    gst_caps_get_structure           (const GstCaps *caps,
                                                     guint          index);
 GstStructure *    gst_caps_steal_structure         (GstCaps *caps,
-                                                    guint          index);
-GstCaps *         gst_caps_copy_nth                (const GstCaps *caps, guint nth);
+                                                    guint          index) G_GNUC_WARN_UNUSED_RESULT;
+GstCaps *         gst_caps_copy_nth                (const GstCaps *caps, guint nth) G_GNUC_MALLOC;
 void              gst_caps_truncate                (GstCaps       *caps);
 void              gst_caps_set_value               (GstCaps       *caps,
                                                     const char    *field,
@@ -274,15 +274,15 @@ gboolean          gst_caps_is_strictly_equal	   (const GstCaps *caps1,
 
 /* operations */
 GstCaps *         gst_caps_intersect               (const GstCaps *caps1,
-						    const GstCaps *caps2);
+						    const GstCaps *caps2) G_GNUC_MALLOC;
 GstCaps *         gst_caps_intersect_full          (const GstCaps *caps1,
 						    const GstCaps *caps2,
-                                                    GstCapsIntersectMode mode);
+                                                    GstCapsIntersectMode mode) G_GNUC_MALLOC;
 GstCaps *         gst_caps_subtract		   (const GstCaps *minuend,
-						    const GstCaps *subtrahend);
+						    const GstCaps *subtrahend) G_GNUC_MALLOC;
 GstCaps *         gst_caps_union                   (const GstCaps *caps1,
-						    const GstCaps *caps2);
-GstCaps *         gst_caps_normalize               (const GstCaps *caps);
+						    const GstCaps *caps2) G_GNUC_MALLOC;
+GstCaps *         gst_caps_normalize               (const GstCaps *caps) G_GNUC_MALLOC;
 gboolean          gst_caps_do_simplify             (GstCaps       *caps);
 
 #if !defined(GST_DISABLE_LOADSAVE) && !defined(GST_DISABLE_DEPRECATED)
@@ -294,8 +294,8 @@ GstCaps *         gst_caps_load_thyself            (xmlNodePtr     parent);
 /* utility */
 void              gst_caps_replace                 (GstCaps      **caps,
                                                     GstCaps       *newcaps);
-gchar *           gst_caps_to_string               (const GstCaps *caps);
-GstCaps *         gst_caps_from_string             (const gchar   *string);
+gchar *           gst_caps_to_string               (const GstCaps *caps) G_GNUC_MALLOC;
+GstCaps *         gst_caps_from_string             (const gchar   *string) G_GNUC_MALLOC;
 
 G_END_DECLS
 

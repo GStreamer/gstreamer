@@ -89,7 +89,7 @@ struct _GstPipelineClass {
 };
 
 GType		gst_pipeline_get_type		(void);
-GstElement*	gst_pipeline_new		(const gchar *name);
+GstElement*	gst_pipeline_new		(const gchar *name) G_GNUC_MALLOC;
 
 GstBus*		gst_pipeline_get_bus		(GstPipeline *pipeline);
 

@@ -78,9 +78,9 @@ struct _GstPresetInterface
 
 GType gst_preset_get_type(void);
 
-gchar**      gst_preset_get_preset_names   (GstPreset *preset);
+gchar**      gst_preset_get_preset_names   (GstPreset *preset) G_GNUC_MALLOC;
 
-gchar**      gst_preset_get_property_names (GstPreset *preset);
+gchar**      gst_preset_get_property_names (GstPreset *preset) G_GNUC_MALLOC;
 
 gboolean     gst_preset_load_preset        (GstPreset *preset, const gchar *name);
 gboolean     gst_preset_save_preset        (GstPreset *preset, const gchar *name);

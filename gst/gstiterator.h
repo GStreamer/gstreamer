@@ -229,7 +229,7 @@ GstIterator*		gst_iterator_new		(guint size,
 							 GstIteratorNextFunction next,
 							 GstIteratorItemFunction item,
 							 GstIteratorResyncFunction resync,
-							 GstIteratorFreeFunction free);
+							 GstIteratorFreeFunction free) G_GNUC_MALLOC;
 
 GstIterator*		gst_iterator_new_list		(GType type,
 							 GMutex *lock,
@@ -237,12 +237,12 @@ GstIterator*		gst_iterator_new_list		(GType type,
 							 GList **list,
 							 gpointer owner,
 							 GstIteratorItemFunction item,
-							 GstIteratorDisposeFunction free);
+							 GstIteratorDisposeFunction free) G_GNUC_MALLOC;
 
 GstIterator*            gst_iterator_new_single         (GType type,
                                                          gpointer object,
                                                          GstCopyFunction copy,
-                                                         GFreeFunc free);
+                                                         GFreeFunc free) G_GNUC_MALLOC;
 
 /* using iterators */
 GstIteratorResult	gst_iterator_next		(GstIterator *it, gpointer *elem);
@@ -253,7 +253,7 @@ void			gst_iterator_push		(GstIterator *it, GstIterator *other);
 
 /* higher-order functions that operate on iterators */
 GstIterator*		gst_iterator_filter		(GstIterator *it, GCompareFunc func,
-                                                         gpointer user_data);
+                                                         gpointer user_data) G_GNUC_MALLOC;
 GstIteratorResult	gst_iterator_fold		(GstIterator *it,
                                                          GstIteratorFoldFunction func,
                                                          GValue *ret, gpointer user_data);

@@ -300,9 +300,9 @@ struct _GstBufferClass {
 GType       gst_buffer_get_type (void);
 
 /* allocation */
-GstBuffer * gst_buffer_new               (void);
-GstBuffer * gst_buffer_new_and_alloc     (guint size);
-GstBuffer * gst_buffer_try_new_and_alloc (guint size);
+GstBuffer * gst_buffer_new               (void) G_GNUC_MALLOC;
+GstBuffer * gst_buffer_new_and_alloc     (guint size) G_GNUC_MALLOC;
+GstBuffer * gst_buffer_try_new_and_alloc (guint size) G_GNUC_MALLOC;
 
 /**
  * gst_buffer_set_data:
@@ -490,11 +490,11 @@ GstCaps*        gst_buffer_get_caps             (GstBuffer *buffer);
 void            gst_buffer_set_caps             (GstBuffer *buffer, GstCaps *caps);
 
 /* creating a subbuffer */
-GstBuffer*      gst_buffer_create_sub           (GstBuffer *parent, guint offset, guint size);
+GstBuffer*      gst_buffer_create_sub           (GstBuffer *parent, guint offset, guint size) G_GNUC_MALLOC;
 
 /* span, two buffers, intelligently */
 gboolean        gst_buffer_is_span_fast         (GstBuffer *buf1, GstBuffer *buf2);
-GstBuffer*      gst_buffer_span                 (GstBuffer *buf1, guint32 offset, GstBuffer *buf2, guint32 len);
+GstBuffer*      gst_buffer_span                 (GstBuffer *buf1, guint32 offset, GstBuffer *buf2, guint32 len) G_GNUC_MALLOC;
 
 /**
  * gst_value_set_buffer:

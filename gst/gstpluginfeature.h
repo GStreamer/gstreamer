@@ -143,7 +143,7 @@ guint           gst_plugin_feature_get_rank             (GstPluginFeature *featu
 const gchar    *gst_plugin_feature_get_name             (GstPluginFeature *feature);
 
 void            gst_plugin_feature_list_free            (GList *list);
-GList          *gst_plugin_feature_list_copy            (GList *list);
+GList          *gst_plugin_feature_list_copy            (GList *list) G_GNUC_MALLOC;
 void            gst_plugin_feature_list_debug           (GList *list);
 
 /**
