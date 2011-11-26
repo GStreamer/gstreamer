@@ -63,8 +63,8 @@ typedef struct {
  */
 #define GST_POLL_FD_INIT  { -1, -1 }
 
-GstPoll*        gst_poll_new              (gboolean controllable);
-GstPoll*        gst_poll_new_timer        (void);
+GstPoll*        gst_poll_new              (gboolean controllable) G_GNUC_MALLOC;
+GstPoll*        gst_poll_new_timer        (void) G_GNUC_MALLOC;
 void            gst_poll_free             (GstPoll *set);
 
 void            gst_poll_get_read_gpollfd (GstPoll *set, GPollFD *fd);

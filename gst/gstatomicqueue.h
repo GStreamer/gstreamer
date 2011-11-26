@@ -39,7 +39,7 @@ G_BEGIN_DECLS
 typedef struct _GstAtomicQueue GstAtomicQueue;
 
 
-GstAtomicQueue *   gst_atomic_queue_new         (guint initial_size);
+GstAtomicQueue *   gst_atomic_queue_new         (guint initial_size) G_GNUC_MALLOC;
 
 void               gst_atomic_queue_ref         (GstAtomicQueue * queue);
 void               gst_atomic_queue_unref       (GstAtomicQueue * queue);

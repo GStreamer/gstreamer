@@ -126,26 +126,26 @@ gboolean        gst_uri_protocol_is_valid       (const gchar * protocol);
 gboolean        gst_uri_protocol_is_supported   (const GstURIType type,
                                                  const gchar *protocol);
 gboolean        gst_uri_is_valid                (const gchar * uri);
-gchar *         gst_uri_get_protocol            (const gchar * uri);
+gchar *         gst_uri_get_protocol            (const gchar * uri) G_GNUC_MALLOC;
 gboolean        gst_uri_has_protocol            (const gchar * uri,
                                                  const gchar * protocol);
-gchar *         gst_uri_get_location            (const gchar * uri);
+gchar *         gst_uri_get_location            (const gchar * uri) G_GNUC_MALLOC;
 gchar *         gst_uri_construct               (const gchar * protocol,
-                                                 const gchar * location);
+                                                 const gchar * location) G_GNUC_MALLOC;
 
 gchar *         gst_filename_to_uri             (const gchar * filename,
-                                                 GError     ** error);
+                                                 GError     ** error) G_GNUC_MALLOC;
 
 GstElement *    gst_element_make_from_uri       (const GstURIType type,
                                                  const gchar *    uri,
-                                                 const gchar *    elementname);
+                                                 const gchar *    elementname) G_GNUC_MALLOC;
 
 /* accessing the interface */
 GType                 gst_uri_handler_get_type (void);
 
 GstURIType            gst_uri_handler_get_uri_type  (GstURIHandler * handler);
 const gchar * const * gst_uri_handler_get_protocols (GstURIHandler * handler);
-gchar *               gst_uri_handler_get_uri       (GstURIHandler * handler);
+gchar *               gst_uri_handler_get_uri       (GstURIHandler * handler) G_GNUC_MALLOC;
 gboolean              gst_uri_handler_set_uri       (GstURIHandler * handler,
                                                      const gchar   * uri,
                                                      GError       ** error);

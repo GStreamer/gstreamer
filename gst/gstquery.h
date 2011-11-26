@@ -160,7 +160,7 @@ gboolean        gst_query_types_contains       (const GstQueryType *types,
 
 const GstQueryTypeDefinition*
                 gst_query_type_get_details         (GstQueryType type);
-GstIterator*    gst_query_type_iterate_definitions (void);
+GstIterator*    gst_query_type_iterate_definitions (void) G_GNUC_MALLOC;
 
 /* refcounting */
 /**
@@ -254,43 +254,43 @@ gst_query_copy (const GstQuery * q)
 
 
 /* application specific query */
-GstQuery *      gst_query_new_custom            (GstQueryType type, GstStructure *structure);
+GstQuery *      gst_query_new_custom            (GstQueryType type, GstStructure *structure) G_GNUC_MALLOC;
 const GstStructure *
                 gst_query_get_structure         (GstQuery *query);
 GstStructure *  gst_query_writable_structure    (GstQuery *query);
 
 /* position query */
-GstQuery*       gst_query_new_position          (GstFormat format);
+GstQuery*       gst_query_new_position          (GstFormat format) G_GNUC_MALLOC;
 void            gst_query_set_position          (GstQuery *query, GstFormat format, gint64 cur);
 void            gst_query_parse_position        (GstQuery *query, GstFormat *format, gint64 *cur);
 
 /* duration query */
-GstQuery*       gst_query_new_duration          (GstFormat format);
+GstQuery*       gst_query_new_duration          (GstFormat format) G_GNUC_MALLOC;
 void            gst_query_set_duration          (GstQuery *query, GstFormat format, gint64 duration);
 void            gst_query_parse_duration        (GstQuery *query, GstFormat *format, gint64 *duration);
 
 /* latency query */
-GstQuery*       gst_query_new_latency           (void);
+GstQuery*       gst_query_new_latency           (void) G_GNUC_MALLOC;
 void            gst_query_set_latency           (GstQuery *query, gboolean live, GstClockTime min_latency,
                                                  GstClockTime max_latency);
 void            gst_query_parse_latency         (GstQuery *query, gboolean *live, GstClockTime *min_latency,
                                                  GstClockTime *max_latency);
 
 /* convert query */
-GstQuery*       gst_query_new_convert           (GstFormat src_format, gint64 value, GstFormat dest_format);
+GstQuery*       gst_query_new_convert           (GstFormat src_format, gint64 value, GstFormat dest_format) G_GNUC_MALLOC;
 void            gst_query_set_convert           (GstQuery *query, GstFormat src_format, gint64 src_value,
                                                  GstFormat dest_format, gint64 dest_value);
 void            gst_query_parse_convert         (GstQuery *query, GstFormat *src_format, gint64 *src_value,
                                                  GstFormat *dest_format, gint64 *dest_value);
 /* segment query */
-GstQuery*       gst_query_new_segment           (GstFormat format);
+GstQuery*       gst_query_new_segment           (GstFormat format) G_GNUC_MALLOC;
 void            gst_query_set_segment           (GstQuery *query, gdouble rate, GstFormat format,
                                                  gint64 start_value, gint64 stop_value);
 void            gst_query_parse_segment         (GstQuery *query, gdouble *rate, GstFormat *format,
                                                  gint64 *start_value, gint64 *stop_value);
 
 /* seeking query */
-GstQuery*       gst_query_new_seeking           (GstFormat format);
+GstQuery*       gst_query_new_seeking           (GstFormat format) G_GNUC_MALLOC;
 void            gst_query_set_seeking           (GstQuery *query, GstFormat format,
                                                  gboolean seekable,
                                                  gint64 segment_start,
@@ -300,7 +300,7 @@ void            gst_query_parse_seeking         (GstQuery *query, GstFormat *for
                                                  gint64 *segment_start,
                                                  gint64 *segment_end);
 /* formats query */
-GstQuery*       gst_query_new_formats           (void);
+GstQuery*       gst_query_new_formats           (void) G_GNUC_MALLOC;
 void            gst_query_set_formats           (GstQuery *query, gint n_formats, ...);
 void            gst_query_set_formatsv          (GstQuery *query, gint n_formats, const GstFormat *formats);
 void            gst_query_parse_n_formats       (GstQuery *query, guint *n_formats);
@@ -323,7 +323,7 @@ typedef enum {
   GST_BUFFERING_LIVE
 } GstBufferingMode;
 
-GstQuery*       gst_query_new_buffering           (GstFormat format);
+GstQuery*       gst_query_new_buffering           (GstFormat format) G_GNUC_MALLOC;
 void            gst_query_set_buffering_percent   (GstQuery *query, gboolean busy, gint percent);
 void            gst_query_parse_buffering_percent (GstQuery *query, gboolean *busy, gint *percent);
 
@@ -349,12 +349,12 @@ gboolean        gst_query_parse_nth_buffering_range (GstQuery *query,
                                                      gint64 *stop);
 
 /* URI query */
-GstQuery *      gst_query_new_uri                 (void);
+GstQuery *      gst_query_new_uri                 (void) G_GNUC_MALLOC;
 void            gst_query_parse_uri               (GstQuery *query, gchar **uri);
 void            gst_query_set_uri                 (GstQuery *query, const gchar *uri);
 
 /* allocation query */
-GstQuery *      gst_query_new_allocation          (GstCaps *caps, gboolean need_pool);
+GstQuery *      gst_query_new_allocation          (GstCaps *caps, gboolean need_pool) G_GNUC_MALLOC;
 void            gst_query_parse_allocation        (GstQuery *query, GstCaps **caps, gboolean *need_pool);
 
 void            gst_query_set_allocation_params   (GstQuery *query, guint size, guint min_buffers,
@@ -386,7 +386,7 @@ typedef enum {
   GST_SCHEDULING_FLAG_SEQUENTIAL    = (1 << 1)
 } GstSchedulingFlags;
 
-GstQuery *      gst_query_new_scheduling          (void);
+GstQuery *      gst_query_new_scheduling          (void) G_GNUC_MALLOC;
 
 void            gst_query_set_scheduling          (GstQuery *query, GstSchedulingFlags flags,
                                                    gint minsize, gint maxsize, gint align);
@@ -399,13 +399,13 @@ GstPadMode      gst_query_parse_nth_scheduling_mode (GstQuery *query, guint inde
 gboolean        gst_query_has_scheduling_mode       (GstQuery *query, GstPadMode mode);
 
 /* accept-caps query */
-GstQuery *      gst_query_new_accept_caps          (GstCaps *caps);
+GstQuery *      gst_query_new_accept_caps          (GstCaps *caps) G_GNUC_MALLOC;
 void            gst_query_parse_accept_caps        (GstQuery *query, GstCaps **caps);
 void            gst_query_set_accept_caps_result   (GstQuery *query, gboolean result);
 void            gst_query_parse_accept_caps_result (GstQuery *query, gboolean *result);
 
 /* caps query */
-GstQuery *      gst_query_new_caps                 (GstCaps *filter);
+GstQuery *      gst_query_new_caps                 (GstCaps *filter) G_GNUC_MALLOC;
 void            gst_query_parse_caps               (GstQuery *query, GstCaps **filter);
 
 void            gst_query_set_caps_result          (GstQuery *query, GstCaps *caps);

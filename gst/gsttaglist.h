@@ -198,15 +198,15 @@ GstTagFlag             gst_tag_get_flag        (const gchar * tag);
 gboolean               gst_tag_is_fixed        (const gchar * tag);
 
 /* tag lists */
-GstTagList * gst_tag_list_new_empty         (void);
-GstTagList * gst_tag_list_new               (const gchar * tag, ...);
-GstTagList * gst_tag_list_new_valist        (va_list var_args);
+GstTagList * gst_tag_list_new_empty         (void) G_GNUC_MALLOC;
+GstTagList * gst_tag_list_new               (const gchar * tag, ...) G_GNUC_MALLOC;
+GstTagList * gst_tag_list_new_valist        (va_list var_args) G_GNUC_MALLOC;
 
-gchar      * gst_tag_list_to_string         (const GstTagList * list);
-GstTagList * gst_tag_list_new_from_string   (const gchar      * str);
+gchar      * gst_tag_list_to_string         (const GstTagList * list) G_GNUC_MALLOC;
+GstTagList * gst_tag_list_new_from_string   (const gchar      * str) G_GNUC_MALLOC;
 
 gboolean     gst_is_tag_list                (gconstpointer p);
-GstTagList * gst_tag_list_copy              (const GstTagList * list);
+GstTagList * gst_tag_list_copy              (const GstTagList * list) G_GNUC_MALLOC;
 gboolean     gst_tag_list_is_empty          (const GstTagList * list);
 gboolean     gst_tag_list_is_equal          (const GstTagList * list1,
                                              const GstTagList * list2);
@@ -215,7 +215,7 @@ void         gst_tag_list_insert            (GstTagList       * into,
                                              GstTagMergeMode    mode);
 GstTagList * gst_tag_list_merge             (const GstTagList * list1,
                                              const GstTagList * list2,
-                                             GstTagMergeMode    mode);
+                                             GstTagMergeMode    mode) G_GNUC_MALLOC;
 void         gst_tag_list_free              (GstTagList       * list);
 guint        gst_tag_list_get_tag_size      (const GstTagList * list,
                                              const gchar      * tag);

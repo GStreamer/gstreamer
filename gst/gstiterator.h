@@ -236,19 +236,19 @@ GstIterator*            gst_iterator_new                (guint size,
                                                          GstIteratorNextFunction next,
                                                          GstIteratorItemFunction item,
                                                          GstIteratorResyncFunction resync,
-                                                         GstIteratorFreeFunction free);
+                                                         GstIteratorFreeFunction free) G_GNUC_MALLOC;
 
 GstIterator*            gst_iterator_new_list           (GType type,
                                                          GMutex *lock,
                                                          guint32 *master_cookie,
                                                          GList **list,
                                                          GObject * owner,
-                                                         GstIteratorItemFunction item);
+                                                         GstIteratorItemFunction item) G_GNUC_MALLOC;
 
 GstIterator*            gst_iterator_new_single         (GType type,
-                                                         const GValue * object);
+                                                         const GValue * object) G_GNUC_MALLOC;
 
-GstIterator*            gst_iterator_copy               (const GstIterator *it);
+GstIterator*            gst_iterator_copy               (const GstIterator *it) G_GNUC_MALLOC;
 
 /* using iterators */
 GstIteratorResult       gst_iterator_next               (GstIterator *it, GValue * elem);
@@ -259,7 +259,7 @@ void                    gst_iterator_push               (GstIterator *it, GstIte
 
 /* higher-order functions that operate on iterators */
 GstIterator*            gst_iterator_filter             (GstIterator *it, GCompareFunc func,
-                                                         const GValue * user_data);
+                                                         const GValue * user_data) G_GNUC_MALLOC;
 GstIteratorResult       gst_iterator_fold               (GstIterator *it,
                                                          GstIteratorFoldFunction func,
                                                          GValue *ret, gpointer user_data);

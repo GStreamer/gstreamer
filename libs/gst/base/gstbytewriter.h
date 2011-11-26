@@ -51,9 +51,9 @@ typedef struct {
   gpointer _gst_reserved[GST_PADDING];
 } GstByteWriter;
 
-GstByteWriter * gst_byte_writer_new             (void);
-GstByteWriter * gst_byte_writer_new_with_size   (guint size, gboolean fixed);
-GstByteWriter * gst_byte_writer_new_with_data   (guint8 *data, guint size, gboolean initialized);
+GstByteWriter * gst_byte_writer_new             (void) G_GNUC_MALLOC;
+GstByteWriter * gst_byte_writer_new_with_size   (guint size, gboolean fixed) G_GNUC_MALLOC;
+GstByteWriter * gst_byte_writer_new_with_data   (guint8 *data, guint size, gboolean initialized) G_GNUC_MALLOC;
 
 void            gst_byte_writer_init            (GstByteWriter *writer);
 void            gst_byte_writer_init_with_size  (GstByteWriter *writer, guint size, gboolean fixed);
@@ -62,11 +62,11 @@ void            gst_byte_writer_init_with_data  (GstByteWriter *writer, guint8 *
 
 void            gst_byte_writer_free                    (GstByteWriter *writer);
 guint8 *        gst_byte_writer_free_and_get_data       (GstByteWriter *writer);
-GstBuffer *     gst_byte_writer_free_and_get_buffer     (GstByteWriter *writer);
+GstBuffer *     gst_byte_writer_free_and_get_buffer     (GstByteWriter *writer) G_GNUC_MALLOC;
 
 void            gst_byte_writer_reset                   (GstByteWriter *writer);
 guint8 *        gst_byte_writer_reset_and_get_data      (GstByteWriter *writer);
-GstBuffer *     gst_byte_writer_reset_and_get_buffer    (GstByteWriter *writer);
+GstBuffer *     gst_byte_writer_reset_and_get_buffer    (GstByteWriter *writer) G_GNUC_MALLOC;
 
 /**
  * gst_byte_writer_get_pos:

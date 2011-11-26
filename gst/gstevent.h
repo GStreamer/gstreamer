@@ -428,7 +428,7 @@ gst_event_copy (const GstEvent * event)
 GType           gst_event_get_type              (void);
 
 /* custom event */
-GstEvent*       gst_event_new_custom            (GstEventType type, GstStructure *structure);
+GstEvent*       gst_event_new_custom            (GstEventType type, GstStructure *structure) G_GNUC_MALLOC;
 
 const GstStructure *
                 gst_event_get_structure         (GstEvent *event);
@@ -441,67 +441,67 @@ guint32         gst_event_get_seqnum            (GstEvent *event);
 void            gst_event_set_seqnum            (GstEvent *event, guint32 seqnum);
 
 /* flush events */
-GstEvent *      gst_event_new_flush_start       (void);
+GstEvent *      gst_event_new_flush_start       (void) G_GNUC_MALLOC;
 
-GstEvent *      gst_event_new_flush_stop        (gboolean reset_time);
+GstEvent *      gst_event_new_flush_stop        (gboolean reset_time) G_GNUC_MALLOC;
 void            gst_event_parse_flush_stop      (GstEvent *event, gboolean *reset_time);
 
 /* EOS event */
-GstEvent *      gst_event_new_eos               (void);
+GstEvent *      gst_event_new_eos               (void) G_GNUC_MALLOC;
 
 /* Caps events */
-GstEvent *      gst_event_new_caps              (GstCaps *caps);
+GstEvent *      gst_event_new_caps              (GstCaps *caps) G_GNUC_MALLOC;
 void            gst_event_parse_caps            (GstEvent *event, GstCaps **caps);
 
 /* segment event */
-GstEvent*       gst_event_new_segment           (const GstSegment *segment);
+GstEvent*       gst_event_new_segment           (const GstSegment *segment) G_GNUC_MALLOC;
 void            gst_event_parse_segment         (GstEvent *event, const GstSegment **segment);
 void            gst_event_copy_segment          (GstEvent *event, GstSegment *segment);
 
 /* tag event */
-GstEvent*       gst_event_new_tag               (GstTagList *taglist);
+GstEvent*       gst_event_new_tag               (GstTagList *taglist) G_GNUC_MALLOC;
 void            gst_event_parse_tag             (GstEvent *event, GstTagList **taglist);
 
 /* buffer */
 GstEvent *      gst_event_new_buffer_size       (GstFormat format, gint64 minsize, gint64 maxsize,
-                                                 gboolean async);
+                                                 gboolean async) G_GNUC_MALLOC;
 void            gst_event_parse_buffer_size     (GstEvent *event, GstFormat *format, gint64 *minsize,
                                                  gint64 *maxsize, gboolean *async);
 
 /* sink message */
-GstEvent*       gst_event_new_sink_message      (GstMessage *msg);
+GstEvent*       gst_event_new_sink_message      (GstMessage *msg) G_GNUC_MALLOC;
 void            gst_event_parse_sink_message    (GstEvent *event, GstMessage **msg);
 
 /* QOS events */
 GstEvent*       gst_event_new_qos               (GstQOSType type, gdouble proportion,
-                                                 GstClockTimeDiff diff, GstClockTime timestamp);
+                                                 GstClockTimeDiff diff, GstClockTime timestamp) G_GNUC_MALLOC;
 void            gst_event_parse_qos             (GstEvent *event, GstQOSType *type,
                                                  gdouble *proportion, GstClockTimeDiff *diff,
                                                  GstClockTime *timestamp);
 /* seek event */
 GstEvent*       gst_event_new_seek              (gdouble rate, GstFormat format, GstSeekFlags flags,
                                                  GstSeekType start_type, gint64 start,
-                                                 GstSeekType stop_type, gint64 stop);
+                                                 GstSeekType stop_type, gint64 stop) G_GNUC_MALLOC;
 void            gst_event_parse_seek            (GstEvent *event, gdouble *rate, GstFormat *format,
                                                  GstSeekFlags *flags,
                                                  GstSeekType *start_type, gint64 *start,
                                                  GstSeekType *stop_type, gint64 *stop);
 
 /* navigation event */
-GstEvent*       gst_event_new_navigation        (GstStructure *structure);
+GstEvent*       gst_event_new_navigation        (GstStructure *structure) G_GNUC_MALLOC;
 
 /* latency event */
-GstEvent*       gst_event_new_latency           (GstClockTime latency);
+GstEvent*       gst_event_new_latency           (GstClockTime latency) G_GNUC_MALLOC;
 void            gst_event_parse_latency         (GstEvent *event, GstClockTime *latency);
 
 /* step event */
 GstEvent*       gst_event_new_step              (GstFormat format, guint64 amount, gdouble rate,
-                                                 gboolean flush, gboolean intermediate);
+                                                 gboolean flush, gboolean intermediate) G_GNUC_MALLOC;
 void            gst_event_parse_step            (GstEvent *event, GstFormat *format, guint64 *amount,
                                                  gdouble *rate, gboolean *flush, gboolean *intermediate);
 
 /* renegotiate event */
-GstEvent*       gst_event_new_reconfigure       (void);
+GstEvent*       gst_event_new_reconfigure       (void) G_GNUC_MALLOC;
 
 G_END_DECLS
 

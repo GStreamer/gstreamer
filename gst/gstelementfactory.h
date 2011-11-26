@@ -96,8 +96,8 @@ gboolean                gst_element_factory_has_interface       (GstElementFacto
                                                                  const gchar *interfacename);
 
 GstElement*             gst_element_factory_create              (GstElementFactory *factory,
-                                                                 const gchar *name);
-GstElement*             gst_element_factory_make                (const gchar *factoryname, const gchar *name);
+                                                                 const gchar *name) G_GNUC_MALLOC;
+GstElement*             gst_element_factory_make                (const gchar *factoryname, const gchar *name) G_GNUC_MALLOC;
 
 gboolean                gst_element_register                    (GstPlugin *plugin, const gchar *name,
                                                                  guint rank, GType type);
@@ -234,12 +234,12 @@ gboolean      gst_element_factory_list_is_type      (GstElementFactory *factory,
                                                      GstElementFactoryListType type);
 
 GList *       gst_element_factory_list_get_elements (GstElementFactoryListType type,
-                                                     GstRank minrank);
+                                                     GstRank minrank) G_GNUC_MALLOC;
 
 
 GList *       gst_element_factory_list_filter       (GList *list, const GstCaps *caps,
                                                      GstPadDirection direction,
-                                                     gboolean subsetonly);
+                                                     gboolean subsetonly) G_GNUC_MALLOC;
 G_END_DECLS
 
 #endif /* __GST_ELEMENT_FACTORY_H__ */

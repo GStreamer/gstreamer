@@ -49,7 +49,7 @@ typedef struct {
   gpointer _gst_reserved[GST_PADDING];
 } GstBitReader;
 
-GstBitReader *  gst_bit_reader_new              (const guint8 *data, guint size);
+GstBitReader *  gst_bit_reader_new              (const guint8 *data, guint size) G_GNUC_MALLOC;
 void            gst_bit_reader_free             (GstBitReader *reader);
 
 void            gst_bit_reader_init             (GstBitReader *reader, const guint8 *data, guint size);

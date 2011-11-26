@@ -436,7 +436,7 @@ void            gst_value_register              (const GstValueTable   *table);
 void            gst_value_init_and_copy         (GValue                *dest,
                                                  const GValue          *src);
 
-gchar *         gst_value_serialize             (const GValue          *value);
+gchar *         gst_value_serialize             (const GValue          *value) G_GNUC_MALLOC;
 gboolean        gst_value_deserialize           (GValue                *dest,
                                                  const gchar           *src);
 

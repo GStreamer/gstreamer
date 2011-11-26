@@ -85,18 +85,18 @@ struct _GstStructure {
 
 GType                   gst_structure_get_type             (void);
 
-GstStructure *          gst_structure_new_empty            (const gchar *            name);
-GstStructure *          gst_structure_new_id_empty         (GQuark                   quark);
+GstStructure *          gst_structure_new_empty            (const gchar *            name) G_GNUC_MALLOC;
+GstStructure *          gst_structure_new_id_empty         (GQuark                   quark) G_GNUC_MALLOC;
 GstStructure *          gst_structure_new                  (const gchar *            name,
 					                    const gchar *            firstfield,
-							    ...) G_GNUC_NULL_TERMINATED;
+							    ...) G_GNUC_NULL_TERMINATED  G_GNUC_MALLOC;
 GstStructure *          gst_structure_new_valist           (const gchar *            name,
 						            const gchar *            firstfield,
-							    va_list                  varargs);
+							    va_list                  varargs) G_GNUC_MALLOC;
 GstStructure *          gst_structure_new_id               (GQuark                   name_quark,
                                                             GQuark                   field_quark,
-                                                            ...);
-GstStructure *          gst_structure_copy                 (const GstStructure      *structure);
+                                                            ...) G_GNUC_MALLOC;
+GstStructure *          gst_structure_copy                 (const GstStructure      *structure) G_GNUC_MALLOC;
 gboolean		gst_structure_set_parent_refcount  (GstStructure            *structure,
                                                             gint                    *refcount);
 void                    gst_structure_free                 (GstStructure            *structure);
@@ -220,9 +220,9 @@ gboolean                gst_structure_get_fraction         (const GstStructure  
 							    gint *value_numerator,
 							    gint *value_denominator);
 
-gchar *                 gst_structure_to_string            (const GstStructure      *structure);
+gchar *                 gst_structure_to_string            (const GstStructure      *structure) G_GNUC_MALLOC;
 GstStructure *          gst_structure_from_string          (const gchar             *string,
-							    gchar                  **end);
+							    gchar                  **end) G_GNUC_MALLOC;
 
 gboolean                 gst_structure_fixate_field_nearest_int    (GstStructure *structure,
 									 const char   *field_name,
@@ -251,7 +251,7 @@ gboolean                 gst_structure_is_subset(const GstStructure *subset,
 gboolean                 gst_structure_can_intersect(const GstStructure *struct1,
 						     const GstStructure *struct2);
 GstStructure*            gst_structure_intersect (const GstStructure *struct1,
-                                                  const GstStructure *struct2);
+                                                  const GstStructure *struct2)  G_GNUC_MALLOC;
 void                     gst_structure_fixate    (GstStructure *structure);
 
 G_END_DECLS

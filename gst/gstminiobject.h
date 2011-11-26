@@ -198,7 +198,7 @@ struct _GstMiniObject {
 void            gst_mini_object_init            (GstMiniObject *mini_object,
                                                  GType type, gsize size);
 
-GstMiniObject * gst_mini_object_copy		(const GstMiniObject *mini_object);
+GstMiniObject * gst_mini_object_copy		(const GstMiniObject *mini_object) G_GNUC_MALLOC;
 gboolean        gst_mini_object_is_writable	(const GstMiniObject *mini_object);
 GstMiniObject * gst_mini_object_make_writable	(GstMiniObject *mini_object);
 
