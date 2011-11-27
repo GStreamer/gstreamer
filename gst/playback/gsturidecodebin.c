@@ -2156,7 +2156,8 @@ handle_redirect_message (GstURIDecodeBin * dec, GstMessage * msg)
   const GstStructure *structure;
 
   GST_DEBUG_OBJECT (dec, "redirect message: %" GST_PTR_FORMAT, msg);
-  GST_DEBUG_OBJECT (dec, "connection speed: %u", dec->connection_speed);
+  GST_DEBUG_OBJECT (dec, "connection speed: %" G_GUINT64_FORMAT,
+      dec->connection_speed);
 
   structure = gst_message_get_structure (msg);
   if (dec->connection_speed == 0 || structure == NULL)
