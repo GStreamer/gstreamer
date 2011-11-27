@@ -127,7 +127,7 @@ typedef enum {
  */
 #define GST_STATIC_CAPS(string) \
 { \
-  /* miniobject */ { { 0, 0, 0, 0, NULL, NULL, NULL }, \
+  /* miniobject */ { { 0, 0, 0, 0, NULL, NULL, NULL, 0, NULL }, \
   /* caps */ NULL }, \
   /* string */ string, \
   GST_PADDING_INIT \
