@@ -229,8 +229,8 @@ gst_dirac_parse_check_valid_frame (GstBaseParse * parse,
   if (G_UNLIKELY (size < 13))
     goto out;
 
-  GST_DEBUG ("%d: %02x %02x %02x %02x", size, data[0], data[1], data[2],
-      data[3]);
+  GST_DEBUG ("%" G_GSIZE_FORMAT ": %02x %02x %02x %02x", size, data[0], data[1],
+      data[2], data[3]);
 
   if (GST_READ_UINT32_BE (data) != 0x42424344) {
     GstByteReader reader;

@@ -680,8 +680,8 @@ gst_h264_parse_check_valid_frame (GstBaseParse * parse,
 
         if (GST_BASE_PARSE_DRAINING (parse)) {
           drain = TRUE;
-          GST_DEBUG_OBJECT (h264parse, "draining NAL %u %u %u", size,
-              h264parse->nalu.offset, h264parse->nalu.size);
+          GST_DEBUG_OBJECT (h264parse, "draining NAL %" G_GSIZE_FORMAT " %u %u",
+              size, h264parse->nalu.offset, h264parse->nalu.size);
           /*  Can't parse the nalu */
           if (size - h264parse->nalu.offset < 2) {
             *skipsize = nalu.offset;
@@ -1357,7 +1357,7 @@ gst_h264_parse_set_caps (GstBaseParse * parse, GstCaps * caps)
   /* ERRORS */
 avcc_too_small:
   {
-    GST_DEBUG_OBJECT (h264parse, "avcC size %u < 8", size);
+    GST_DEBUG_OBJECT (h264parse, "avcC size %" G_GSIZE_FORMAT " < 8", size);
     goto refuse_caps;
   }
 wrong_version:
