@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good 0.10.25.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2011-08-08 15:23+0100\n"
+"POT-Creation-Date: 2011-11-26 13:52+0000\n"
 "PO-Revision-Date: 2010-11-04 01:21+0100\n"
 "Last-Translator: Gabor Kelemen <kelemeng@gnome.hu>\n"
 "Language-Team: Hungarian <translation-team-hu@lists.sourceforge.net>\n"
@@ -26,11 +26,11 @@ msgstr ""
 msgid "'%s' by '%s'"
 msgstr "„%s” ettől: „%s”"
 
-msgid "Internal data stream error."
-msgstr "Belső adatfolyam-hiba."
-
 msgid "Failed to decode JPEG image"
 msgstr "A JPEG kép visszafejtése meghiúsult"
+
+msgid "Internal data stream error."
+msgstr "Belső adatfolyam-hiba."
 
 msgid "Could not connect to server"
 msgstr "Nem lehet csatlakozni a kiszolgálóhoz"
@@ -560,6 +560,10 @@ msgstr ""
 
 #, fuzzy, c-format
 msgid "Device '%s' does not support video capture"
+msgstr "A(z) „%s” eszköz nem kimeneti eszköz."
+
+#, fuzzy, c-format
+msgid "Device '%s' is busy"
 msgstr "A(z) „%s” eszköz nem kimeneti eszköz."
 
 #, fuzzy, c-format

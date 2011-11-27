@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good 0.10.28.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2011-08-08 15:23+0100\n"
+"POT-Creation-Date: 2011-11-26 13:52+0000\n"
 "PO-Revision-Date: 2011-04-26 20:15+0900\n"
 "Last-Translator: Makoto Kato <makoto.kt@gmail.com>\n"
 "Language-Team: Japanese <translation-team-ja@lists.sourceforge.net>\n"
@@ -23,11 +23,11 @@ msgstr ""
 msgid "'%s' by '%s'"
 msgstr ""
 
-msgid "Internal data stream error."
-msgstr "内部データストリームエラー"
-
 msgid "Failed to decode JPEG image"
 msgstr "JPEG画像のデコードに失敗しました"
+
+msgid "Internal data stream error."
+msgstr "内部データストリームエラー"
 
 msgid "Could not connect to server"
 msgstr "サーバーへ接続できません"
@@ -589,6 +589,10 @@ msgstr ""
 
 #, fuzzy, c-format
 msgid "Device '%s' does not support video capture"
+msgstr "デバイス '%s' は出力デバイスではありません"
+
+#, fuzzy, c-format
+msgid "Device '%s' is busy"
 msgstr "デバイス '%s' は出力デバイスではありません"
 
 #, c-format

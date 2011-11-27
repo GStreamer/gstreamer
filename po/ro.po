@@ -5,7 +5,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good 0.10.23.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2011-08-08 15:23+0100\n"
+"POT-Creation-Date: 2011-11-26 13:52+0000\n"
 "PO-Revision-Date: 2010-08-16 03:22+0300\n"
 "Last-Translator: Lucian Adrian Grijincu <lucian.grijincu@gmail.com>\n"
 "Language-Team: Romanian <translation-team-ro@lists.sourceforge.net>\n"
@@ -23,11 +23,11 @@ msgstr ""
 msgid "'%s' by '%s'"
 msgstr "„%s” de „%s”"
 
-msgid "Internal data stream error."
-msgstr "Eroare internă a fluxului de date."
-
 msgid "Failed to decode JPEG image"
 msgstr "Nu s-a putut decoda imaginea JPEG"
+
+msgid "Internal data stream error."
+msgstr "Eroare internă a fluxului de date."
 
 msgid "Could not connect to server"
 msgstr "Nu se poate stabili o conexiune la server"
@@ -562,6 +562,10 @@ msgstr ""
 
 #, fuzzy, c-format
 msgid "Device '%s' does not support video capture"
+msgstr "Dispozitivul „%s” nu este un dispozitiv de ieșire."
+
+#, fuzzy, c-format
+msgid "Device '%s' is busy"
 msgstr "Dispozitivul „%s” nu este un dispozitiv de ieșire."
 
 #, fuzzy, c-format

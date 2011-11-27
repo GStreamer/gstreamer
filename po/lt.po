@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good 0.10.23.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2011-08-08 15:23+0100\n"
+"POT-Creation-Date: 2011-11-26 13:52+0000\n"
 "PO-Revision-Date: 2010-07-16 19:34+0300\n"
 "Last-Translator: Žygimantas Beručka <uid0@akl.lt>\n"
 "Language-Team: Lithuanian <komp_lt@konferencijos.lt>\n"
@@ -24,11 +24,11 @@ msgstr ""
 msgid "'%s' by '%s'"
 msgstr "„%s“ atlieka „%s“"
 
-msgid "Internal data stream error."
-msgstr "Vidinė duomenų srauto klaida."
-
 msgid "Failed to decode JPEG image"
 msgstr "Nepavyko dekoduoti JPEG paveikslėlio"
+
+msgid "Internal data stream error."
+msgstr "Vidinė duomenų srauto klaida."
 
 msgid "Could not connect to server"
 msgstr "Nepavyko prisijungti prie serverio"
@@ -553,6 +553,10 @@ msgstr "Įrenginio „%s“ tvarkyklė nepalaiko jokių žinomų įrašymo būd�
 
 #, fuzzy, c-format
 msgid "Device '%s' does not support video capture"
+msgstr "Įrenginys „%s“ nėra išvesties įrenginys."
+
+#, fuzzy, c-format
+msgid "Device '%s' is busy"
 msgstr "Įrenginys „%s“ nėra išvesties įrenginys."
 
 #, fuzzy, c-format

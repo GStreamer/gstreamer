@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good 0.10.28.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2011-08-08 15:23+0100\n"
+"POT-Creation-Date: 2011-11-26 13:52+0000\n"
 "PO-Revision-Date: 2011-04-26 22:35+0300\n"
 "Last-Translator: Alexander Shopov <ash@kambanaria.org>\n"
 "Language-Team: Bulgarian <dict@fsa-bg.org>\n"
@@ -23,11 +23,11 @@ msgstr ""
 msgid "'%s' by '%s'"
 msgstr "„%s“ от „%s“"
 
-msgid "Internal data stream error."
-msgstr "Вътрешна грешка на потока от данни."
-
 msgid "Failed to decode JPEG image"
 msgstr "Неуспешно декодиране на изображение, формат JPEG."
+
+msgid "Internal data stream error."
+msgstr "Вътрешна грешка на потока от данни."
 
 msgid "Could not connect to server"
 msgstr "Не може да се осъществи връзка към сървър."
@@ -550,6 +550,10 @@ msgstr "Драйверът за устройството „%s“ не подд�
 
 #, fuzzy, c-format
 msgid "Device '%s' does not support video capture"
+msgstr "Устройството „%s“ не е изходно устройство."
+
+#, fuzzy, c-format
+msgid "Device '%s' is busy"
 msgstr "Устройството „%s“ не е изходно устройство."
 
 #, fuzzy, c-format

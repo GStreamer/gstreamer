@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good 0.10.23.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2011-08-08 15:23+0100\n"
+"POT-Creation-Date: 2011-11-26 13:52+0000\n"
 "PO-Revision-Date: 2010-07-07 11:53+0100\n"
 "Last-Translator: Rihards Priedītis <rprieditis@gmail.com>\n"
 "Language-Team: Latvian <translation-team-lv@lists.sourceforge.net>\n"
@@ -24,11 +24,11 @@ msgstr ""
 msgid "'%s' by '%s'"
 msgstr "\"%s\"ko \"%s\""
 
-msgid "Internal data stream error."
-msgstr "Iekšējās datu plūsmas kļūda."
-
 msgid "Failed to decode JPEG image"
 msgstr "Neizdevās atkodēt JPEG attēlu"
+
+msgid "Internal data stream error."
+msgstr "Iekšējās datu plūsmas kļūda."
 
 msgid "Could not connect to server"
 msgstr "Nevar savienoties ar serveri"
@@ -556,6 +556,10 @@ msgstr ""
 
 #, fuzzy, c-format
 msgid "Device '%s' does not support video capture"
+msgstr "Ierīce \"%s\" nav izvades ierīce."
+
+#, fuzzy, c-format
+msgid "Device '%s' is busy"
 msgstr "Ierīce \"%s\" nav izvades ierīce."
 
 #, fuzzy, c-format

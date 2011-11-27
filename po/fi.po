@@ -11,7 +11,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good 0.10.25.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2011-08-08 15:23+0100\n"
+"POT-Creation-Date: 2011-11-26 13:52+0000\n"
 "PO-Revision-Date: 2010-11-17 23:03+0200\n"
 "Last-Translator: Tommi Vainikainen <Tommi.Vainikainen@iki.fi>\n"
 "Language-Team: Finnish <translation-team-fi@lists.sourceforge.net>\n"
@@ -26,11 +26,11 @@ msgstr ""
 msgid "'%s' by '%s'"
 msgstr "”%s” artistilta ”%s”"
 
-msgid "Internal data stream error."
-msgstr "Sisäisen tietovirran virhe."
-
 msgid "Failed to decode JPEG image"
 msgstr "JPEG-kuvan purku epäonnistui"
+
+msgid "Internal data stream error."
+msgstr "Sisäisen tietovirran virhe."
 
 msgid "Could not connect to server"
 msgstr "Palvelimeen ei saatu yhteyttä"
@@ -557,6 +557,10 @@ msgstr "Laitteen ”%s” ajuri ei tue mitään tunnettua kaappaustapaa."
 
 #, fuzzy, c-format
 msgid "Device '%s' does not support video capture"
+msgstr "Laite ”%s” ei ole ulostulolaite."
+
+#, fuzzy, c-format
+msgid "Device '%s' is busy"
 msgstr "Laite ”%s” ei ole ulostulolaite."
 
 #, fuzzy, c-format

@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good 0.10.26.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2011-08-08 15:23+0100\n"
+"POT-Creation-Date: 2011-11-26 13:52+0000\n"
 "PO-Revision-Date: 2011-01-09 21:20+0100\n"
 "Last-Translator: Fran Diéguez <frandieguez@ubuntu.com>\n"
 "Language-Team: Galician <proxecto@trasno.net>\n"
@@ -22,11 +22,11 @@ msgstr ""
 msgid "'%s' by '%s'"
 msgstr "«%s» por «%s»"
 
-msgid "Internal data stream error."
-msgstr "Produciuse un erro no fluxo de datos interno."
-
 msgid "Failed to decode JPEG image"
 msgstr "Produciuse un erro ao descodificar a imaxe JPEG"
+
+msgid "Internal data stream error."
+msgstr "Produciuse un erro no fluxo de datos interno."
 
 msgid "Could not connect to server"
 msgstr "Non foi posíbel conectarse ao servidor"
@@ -560,6 +560,10 @@ msgstr ""
 
 #, fuzzy, c-format
 msgid "Device '%s' does not support video capture"
+msgstr "O dispositivo «%s» non é un dispositivo de captura."
+
+#, fuzzy, c-format
+msgid "Device '%s' is busy"
 msgstr "O dispositivo «%s» non é un dispositivo de captura."
 
 #, fuzzy, c-format

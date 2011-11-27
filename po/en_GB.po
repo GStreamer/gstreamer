@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins 0.8.1\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2011-08-08 15:23+0100\n"
+"POT-Creation-Date: 2011-11-26 13:52+0000\n"
 "PO-Revision-Date: 2004-04-26 10:41-0400\n"
 "Last-Translator: Gareth Owen <gowen72@yahoo.com>\n"
 "Language-Team: English (British) <en_gb@li.org>\n"
@@ -20,10 +20,10 @@ msgstr ""
 msgid "'%s' by '%s'"
 msgstr ""
 
-msgid "Internal data stream error."
+msgid "Failed to decode JPEG image"
 msgstr ""
 
-msgid "Failed to decode JPEG image"
+msgid "Internal data stream error."
 msgstr ""
 
 #, fuzzy
@@ -559,6 +559,10 @@ msgstr ""
 
 #, fuzzy, c-format
 msgid "Device '%s' does not support video capture"
+msgstr "Device \"%s\" is not a capture device."
+
+#, fuzzy, c-format
+msgid "Device '%s' is busy"
 msgstr "Device \"%s\" is not a capture device."
 
 #, fuzzy, c-format

@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good 0.9.7\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2011-08-08 15:23+0100\n"
+"POT-Creation-Date: 2011-11-26 13:52+0000\n"
 "PO-Revision-Date: 2005-12-04 21:54+0100\n"
 "Last-Translator: Jordi Mallach <jordi@sindominio.net>\n"
 "Language-Team: Catalan <ca@dodds.net>\n"
@@ -21,11 +21,11 @@ msgstr ""
 msgid "'%s' by '%s'"
 msgstr ""
 
-msgid "Internal data stream error."
-msgstr "S'ha produït un error intern de flux de dades."
-
 msgid "Failed to decode JPEG image"
 msgstr ""
+
+msgid "Internal data stream error."
+msgstr "S'ha produït un error intern de flux de dades."
 
 msgid "Could not connect to server"
 msgstr ""
@@ -552,6 +552,10 @@ msgstr ""
 
 #, c-format
 msgid "Device '%s' does not support video capture"
+msgstr ""
+
+#, c-format
+msgid "Device '%s' is busy"
 msgstr ""
 
 #, c-format

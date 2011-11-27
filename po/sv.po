@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good 0.10.26.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2011-08-08 15:23+0100\n"
+"POT-Creation-Date: 2011-11-26 13:52+0000\n"
 "PO-Revision-Date: 2011-01-09 19:36+0100\n"
 "Last-Translator: Daniel Nylander <po@danielnylander.se>\n"
 "Language-Team: Swedish <tp-sv@listor.tp-sv.se>\n"
@@ -22,11 +22,11 @@ msgstr ""
 msgid "'%s' by '%s'"
 msgstr "\"%s\" av \"%s\""
 
-msgid "Internal data stream error."
-msgstr "Internt fel i dataström."
-
 msgid "Failed to decode JPEG image"
 msgstr "Misslyckades med att avkoda JPEG-bild"
+
+msgid "Internal data stream error."
+msgstr "Internt fel i dataström."
 
 msgid "Could not connect to server"
 msgstr "Kunde inte ansluta till servern"
@@ -555,6 +555,10 @@ msgstr "Drivrutinen för enheten \"%s\" saknar stöd för någon känd fångstme
 
 #, fuzzy, c-format
 msgid "Device '%s' does not support video capture"
+msgstr "Enheten \"%s\" är ingen utgångsenhet."
+
+#, fuzzy, c-format
+msgid "Device '%s' is busy"
 msgstr "Enheten \"%s\" är ingen utgångsenhet."
 
 #, c-format
