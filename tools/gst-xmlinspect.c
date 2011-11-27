@@ -438,7 +438,9 @@ static gint
 print_element_info (GstElementFactory * factory)
 {
   GstElement *element;
+#ifndef GST_DISABLE_LOADSAVE
   GstObjectClass *gstobject_class;
+#endif
   GstElementClass *gstelement_class;
   GList *pads;
   GstPad *pad;
@@ -453,7 +455,9 @@ print_element_info (GstElementFactory * factory)
   PUT_START_TAG (0, "element");
   PUT_ESCAPED (1, "name", GST_PLUGIN_FEATURE_NAME (factory));
 
+#ifndef GST_DISABLE_LOADSAVE
   gstobject_class = GST_OBJECT_CLASS (G_OBJECT_GET_CLASS (element));
+#endif
   gstelement_class = GST_ELEMENT_CLASS (G_OBJECT_GET_CLASS (element));
 
   PUT_START_TAG (1, "details");

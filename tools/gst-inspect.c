@@ -664,22 +664,28 @@ print_element_flag_info (GstElement * element)
 static void
 print_implementation_info (GstElement * element)
 {
-  GstObjectClass *gstobject_class;
-  GstElementClass *gstelement_class;
-
-  gstobject_class = GST_OBJECT_CLASS (G_OBJECT_GET_CLASS (element));
-  gstelement_class = GST_ELEMENT_CLASS (G_OBJECT_GET_CLASS (element));
-
   n_print ("\n");
   n_print ("Element Implementation:\n");
 
-  n_print ("  Has change_state() function: %s\n",
-      GST_DEBUG_FUNCPTR_NAME (gstelement_class->change_state));
+  {
+    GstElementClass *gstelement_class;
+
+    gstelement_class = GST_ELEMENT_CLASS (G_OBJECT_GET_CLASS (element));
+
+    n_print ("  Has change_state() function: %s\n",
+        GST_DEBUG_FUNCPTR_NAME (gstelement_class->change_state));
+  }
 #ifndef GST_DISABLE_LOADSAVE
-  n_print ("  Has custom save_thyself() function: %s\n",
-      GST_DEBUG_FUNCPTR_NAME (gstobject_class->save_thyself));
-  n_print ("  Has custom restore_thyself() function: %s\n",
-      GST_DEBUG_FUNCPTR_NAME (gstobject_class->restore_thyself));
+  {
+    GstObjectClass *gstobject_class;
+
+    gstobject_class = GST_OBJECT_CLASS (G_OBJECT_GET_CLASS (element));
+
+    n_print ("  Has custom save_thyself() function: %s\n",
+        GST_DEBUG_FUNCPTR_NAME (gstobject_class->save_thyself));
+    n_print ("  Has custom restore_thyself() function: %s\n",
+        GST_DEBUG_FUNCPTR_NAME (gstobject_class->restore_thyself));
+  }
 #endif
 }
 

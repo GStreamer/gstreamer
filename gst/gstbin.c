@@ -401,14 +401,12 @@ _gst_boolean_accumulator (GSignalInvocationHint * ihint,
 static void
 gst_bin_class_init (GstBinClass * klass)
 {
-  GObjectClass *gobject_class;
-  GstObjectClass *gstobject_class;
-  GstElementClass *gstelement_class;
+  GObjectClass *gobject_class = (GObjectClass *) klass;
+#if !defined(GST_DISABLE_LOADSAVE) && !defined(GST_REMOVE_DEPRECATED)
+  GstObjectClass *gstobject_class = (GstObjectClass *) klass;
+#endif
+  GstElementClass *gstelement_class = (GstElementClass *) klass;
   GError *err;
-
-  gobject_class = (GObjectClass *) klass;
-  gstobject_class = (GstObjectClass *) klass;
-  gstelement_class = (GstElementClass *) klass;
 
   g_type_class_add_private (klass, sizeof (GstBinPrivate));
 

@@ -192,11 +192,10 @@ gst_element_get_type (void)
 static void
 gst_element_class_init (GstElementClass * klass)
 {
-  GObjectClass *gobject_class;
-  GstObjectClass *gstobject_class;
-
-  gobject_class = (GObjectClass *) klass;
-  gstobject_class = (GstObjectClass *) klass;
+  GObjectClass *gobject_class = (GObjectClass *) klass;
+#if !defined(GST_DISABLE_LOADSAVE) && !defined(GST_REMOVE_DEPRECATED)
+  GstObjectClass *gstobject_class = (GstObjectClass *) klass;
+#endif
 
   parent_class = g_type_class_peek_parent (klass);
 
