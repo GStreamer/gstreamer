@@ -57,6 +57,7 @@
 
 #include "aiffparse.h"
 #include <gst/audio/audio.h>
+#include <gst/tag/tag.h>
 #include <gst/gst-i18n-plugin.h>
 
 GST_DEBUG_CATEGORY (aiffparse_debug);
@@ -162,6 +163,11 @@ gst_aiff_parse_reset (GstAiffParse * aiff)
   if (aiff->adapter) {
     gst_adapter_clear (aiff->adapter);
     aiff->adapter = NULL;
+  }
+
+  if (aiff->tags != NULL) {
+    gst_tag_list_free (aiff->tags);
+    aiff->tags = NULL;
   }
 }
 
@@ -892,6 +898,38 @@ gst_aiff_parse_stream_headers (GstAiffParse * aiff)
         }
         break;
       }
+      case GST_MAKE_FOURCC ('I', 'D', '3', ' '):{
+        GstTagList *tags;
+
+        if (aiff->streaming) {
+          if (!gst_aiff_parse_peek_chunk (aiff, &tag, &size))
+            return GST_FLOW_OK;
+
+          gst_adapter_flush (aiff->adapter, 8);
+          aiff->offset += 8;
+
+          buf = gst_adapter_take_buffer (aiff->adapter, size);
+        } else {
+          if ((res = gst_aiff_parse_read_chunk (aiff,
+                      &aiff->offset, &tag, &buf)) != GST_FLOW_OK)
+            return res;
+        }
+
+        GST_LOG_OBJECT (aiff, "ID3 chunk of size %u", GST_BUFFER_SIZE (buf));
+
+        tags = gst_tag_list_from_id3v2_tag (buf);
+        gst_buffer_unref (buf);
+
+        GST_INFO_OBJECT (aiff, "ID3 tags: %" GST_PTR_FORMAT, tags);
+
+        if (aiff->tags == NULL) {
+          aiff->tags = tags;
+        } else {
+          gst_tag_list_insert (aiff->tags, tags, GST_TAG_MERGE_APPEND);
+          gst_tag_list_free (tags);
+        }
+        break;
+      }
       default:
         gst_aiff_parse_ignore_chunk (aiff, buf, tag, size);
     }
@@ -1116,6 +1154,11 @@ iterate_adapter:
   if (G_UNLIKELY (aiff->start_segment != NULL)) {
     gst_pad_push_event (aiff->srcpad, aiff->start_segment);
     aiff->start_segment = NULL;
+  }
+  if (G_UNLIKELY (aiff->tags != NULL)) {
+    gst_element_found_tags_for_pad (GST_ELEMENT_CAST (aiff), aiff->srcpad,
+        aiff->tags);
+    aiff->tags = NULL;
   }
 
   obtained = GST_BUFFER_SIZE (buf);
