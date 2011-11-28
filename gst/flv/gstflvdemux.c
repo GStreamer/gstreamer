@@ -3252,6 +3252,8 @@ gst_flv_demux_init (GstFlvDemux * demux)
 
   demux->own_index = FALSE;
 
+  GST_OBJECT_FLAG_SET (demux, GST_ELEMENT_FLAG_INDEXABLE);
+
   gst_flv_demux_cleanup (demux);
 }
 

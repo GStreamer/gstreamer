@@ -185,6 +185,8 @@ gst_avi_demux_init (GstAviDemux * avi)
   avi->adapter = gst_adapter_new ();
 
   gst_avi_demux_reset (avi);
+
+  GST_OBJECT_FLAG_SET (avi, GST_ELEMENT_FLAG_INDEXABLE);
 }
 
 static void
@@ -4206,7 +4208,7 @@ avi_demux_handle_seek_push (GstAviDemux * avi, GstPad * pad, GstEvent * event)
   gst_segment_do_seek (&seeksegment, rate, format, flags,
       cur_type, cur, stop_type, stop, &update);
 
-  keyframe = !!(flags & GST_SEEK_FLAG_KEY_UNIT);
+  keyframe = ! !(flags & GST_SEEK_FLAG_KEY_UNIT);
   cur = seeksegment.position;
 
   GST_DEBUG_OBJECT (avi,

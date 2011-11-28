@@ -445,7 +445,6 @@ gst_qtdemux_class_init (GstQTDemuxClass * klass)
   gobject_class->dispose = gst_qtdemux_dispose;
 
   gstelement_class->change_state = GST_DEBUG_FUNCPTR (gst_qtdemux_change_state);
-
   gstelement_class->set_index = GST_DEBUG_FUNCPTR (gst_qtdemux_set_index);
   gstelement_class->get_index = GST_DEBUG_FUNCPTR (gst_qtdemux_get_index);
 
@@ -492,6 +491,8 @@ gst_qtdemux_init (GstQTDemux * qtdemux)
   qtdemux->mdatoffset = GST_CLOCK_TIME_NONE;
   qtdemux->mdatbuffer = NULL;
   gst_segment_init (&qtdemux->segment, GST_FORMAT_TIME);
+
+  GST_OBJECT_FLAG_SET (qtdemux, GST_ELEMENT_FLAG_INDEXABLE);
 }
 
 static void

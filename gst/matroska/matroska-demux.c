@@ -226,7 +226,6 @@ gst_matroska_demux_class_init (GstMatroskaDemuxClass * klass)
       GST_DEBUG_FUNCPTR (gst_matroska_demux_element_send_event);
   gstelement_class->query =
       GST_DEBUG_FUNCPTR (gst_matroska_demux_element_query);
-
   gstelement_class->set_index =
       GST_DEBUG_FUNCPTR (gst_matroska_demux_set_index);
   gstelement_class->get_index =
@@ -274,6 +273,8 @@ gst_matroska_demux_init (GstMatroskaDemux * demux)
 
   /* property defaults */
   demux->max_gap_time = DEFAULT_MAX_GAP_TIME;
+
+  GST_OBJECT_FLAG_SET (demux, GST_ELEMENT_FLAG_INDEXABLE);
 
   /* finish off */
   gst_matroska_demux_reset (GST_ELEMENT (demux));
@@ -1472,7 +1473,8 @@ gst_matroska_demux_send_event (GstMatroskaDemux * demux, GstEvent * event)
       GST_DEBUG_OBJECT (demux, "Sending pending_tags %p for pad %s:%s : %"
           GST_PTR_FORMAT, stream->pending_tags,
           GST_DEBUG_PAD_NAME (stream->pad), stream->pending_tags);
-      gst_pad_push_event (stream->pad, gst_event_new_tag (stream->pending_tags));
+      gst_pad_push_event (stream->pad,
+          gst_event_new_tag (stream->pending_tags));
       stream->pending_tags = NULL;
     }
   }
@@ -2158,7 +2160,8 @@ gst_matroska_demux_handle_seek_push (GstMatroskaDemux * demux, GstPad * pad,
 }
 
 static gboolean
-gst_matroska_demux_handle_src_event (GstPad * pad, GstObject * parent, GstEvent * event)
+gst_matroska_demux_handle_src_event (GstPad * pad, GstObject * parent,
+    GstEvent * event)
 {
   GstMatroskaDemux *demux = GST_MATROSKA_DEMUX (parent);
   gboolean res = TRUE;
@@ -3496,8 +3499,8 @@ gst_matroska_demux_parse_blockgroup_or_simpleblock (GstMatroskaDemux * demux,
             /* align segment view with downstream,
              * prevents double-counting base time when closing segment */
             /* FIXME: in 0.10, the segment base/accum got updated here, but
-	     * maybe we don't need that because of the double accounting
-	     * mentioned above? */
+             * maybe we don't need that because of the double accounting
+             * mentioned above? */
             demux->common.segment = segment;
           }
         }
@@ -4693,13 +4696,13 @@ gst_matroska_demux_sink_activate_mode (GstPad * sinkpad, GstObject * parent,
   switch (mode) {
     case GST_PAD_MODE_PULL:
       if (active) {
-	/* if we have a scheduler we can start the task */
-	demux->segment_running = TRUE;
-	gst_pad_start_task (sinkpad, (GstTaskFunction) gst_matroska_demux_loop,
-	    sinkpad);
+        /* if we have a scheduler we can start the task */
+        demux->segment_running = TRUE;
+        gst_pad_start_task (sinkpad, (GstTaskFunction) gst_matroska_demux_loop,
+            sinkpad);
       } else {
-	demux->segment_running = FALSE;
-	gst_pad_stop_task (sinkpad);
+        demux->segment_running = FALSE;
+        gst_pad_stop_task (sinkpad);
       }
       return TRUE;
     case GST_PAD_MODE_PUSH:

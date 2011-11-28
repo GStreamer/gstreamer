@@ -220,6 +220,8 @@ gst_matroska_parse_init (GstMatroskaParse * parse)
 
   parse->common.adapter = gst_adapter_new ();
 
+  GST_OBJECT_FLAG_SET (parse, GST_ELEMENT_FLAG_INDEXABLE);
+
   /* finish off */
   gst_matroska_parse_reset (GST_ELEMENT (parse));
 }
