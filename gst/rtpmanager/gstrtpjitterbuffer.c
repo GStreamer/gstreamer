@@ -495,6 +495,8 @@ gst_rtp_jitter_buffer_init (GstRtpJitterBuffer * jitterbuffer)
 
   gst_element_add_pad (GST_ELEMENT (jitterbuffer), priv->srcpad);
   gst_element_add_pad (GST_ELEMENT (jitterbuffer), priv->sinkpad);
+
+  GST_OBJECT_FLAG_SET (jitterbuffer, GST_ELEMENT_FLAG_PROVIDE_CLOCK);
 }
 
 static void

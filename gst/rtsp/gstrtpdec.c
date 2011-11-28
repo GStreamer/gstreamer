@@ -389,7 +389,6 @@ gst_rtp_dec_class_init (GstRTPDecClass * g_class)
       NULL, NULL, gst_rtp_dec_marshal_VOID__UINT_UINT, G_TYPE_NONE, 2,
       G_TYPE_UINT, G_TYPE_UINT);
 
-
   gstelement_class->provide_clock =
       GST_DEBUG_FUNCPTR (gst_rtp_dec_provide_clock);
   gstelement_class->change_state = GST_DEBUG_FUNCPTR (gst_rtp_dec_change_state);
@@ -419,6 +418,8 @@ gst_rtp_dec_init (GstRTPDec * rtpdec)
 {
   rtpdec->provided_clock = gst_system_clock_obtain ();
   rtpdec->latency = DEFAULT_LATENCY_MS;
+
+  GST_OBJECT_FLAG_SET (rtpdec, GST_ELEMENT_FLAG_PROVIDE_CLOCK);
 }
 
 static void
