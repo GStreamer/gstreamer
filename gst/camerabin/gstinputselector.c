@@ -745,10 +745,10 @@ gst_input_selector_base_init (GstInputSelectorClass * klass)
       "Julien Moutte <julien@moutte.net>, "
       "Jan Schmidt <thaytan@mad.scientist.com>, "
       "Wim Taymans <wim.taymans@gmail.com>");
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&gst_input_selector_sink_factory));
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&gst_input_selector_src_factory));
+  gst_element_class_add_static_pad_template (element_class,
+      &gst_input_selector_sink_factory);
+  gst_element_class_add_static_pad_template (element_class,
+      &gst_input_selector_src_factory);
 }
 
 static void

@@ -118,6 +118,7 @@ gst_vtenc_base_init (GstVTEncClass * klass)
           "framerate", GST_TYPE_FRACTION_RANGE,
           min_fps_n, min_fps_d, max_fps_n, max_fps_d, NULL));
   gst_element_class_add_pad_template (element_class, sink_template);
+  gst_object_unref (sink_template);
 
   src_caps = gst_caps_new_simple (codec_details->mimetype,
       "width", GST_TYPE_INT_RANGE, min_width, max_width,
@@ -131,6 +132,7 @@ gst_vtenc_base_init (GstVTEncClass * klass)
   src_template = gst_pad_template_new ("src", GST_PAD_SRC, GST_PAD_ALWAYS,
       src_caps);
   gst_element_class_add_pad_template (element_class, src_template);
+  gst_object_unref (src_template);
 }
 
 static void

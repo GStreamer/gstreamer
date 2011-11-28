@@ -627,8 +627,8 @@ gst_real_video_dec_base_init (gpointer g_class)
 {
   GstElementClass *ec = GST_ELEMENT_CLASS (g_class);
 
-  gst_element_class_add_pad_template (ec, gst_static_pad_template_get (&snk_t));
-  gst_element_class_add_pad_template (ec, gst_static_pad_template_get (&src_t));
+  gst_element_class_add_static_pad_template (ec, &snk_t);
+  gst_element_class_add_static_pad_template (ec, &src_t);
   gst_element_class_set_details_simple (ec, "RealVideo decoder",
       "Codec/Decoder/Video", "Decoder for RealVideo streams",
       "Lutz Mueller <lutz@topfrose.de>");

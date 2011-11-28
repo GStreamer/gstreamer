@@ -970,8 +970,7 @@ qtwrapper_audio_decoder_base_init (QTWrapperAudioDecoderClass * klass)
   klass->sinktempl = gst_pad_template_new ("sink", GST_PAD_SINK,
       GST_PAD_ALWAYS, params->sinkcaps);
   gst_element_class_add_pad_template (element_class, klass->sinktempl);
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&src_templ));
+  gst_element_class_add_static_pad_template (element_class, &src_templ);
 
   /* Store class-global values */
   klass->componentSubType = desc.componentSubType;

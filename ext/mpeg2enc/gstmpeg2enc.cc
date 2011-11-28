@@ -126,10 +126,9 @@ gst_mpeg2enc_base_init (gpointer klass)
       "Andrew Stevens <andrew.stevens@nexgo.de>\n"
       "Ronald Bultje <rbultje@ronald.bitfreak.net>");
 
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&src_template));
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&sink_template));
+  gst_element_class_add_static_pad_template (element_class, &src_template);
+  gst_element_class_add_static_pad_template (element_class,
+      &sink_template);
 }
 
 static void

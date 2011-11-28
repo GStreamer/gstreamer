@@ -97,13 +97,12 @@ gst_mxf_mux_base_init (gpointer g_class)
   GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
   const GstPadTemplate **p;
 
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&src_templ));
+  gst_element_class_add_static_pad_template (element_class, &src_templ);
 
   p = mxf_essence_element_writer_get_pad_templates ();
   while (p && *p) {
     gst_element_class_add_pad_template (element_class,
-        (GstPadTemplate *) gst_object_ref (GST_OBJECT (*p)));
+        (GstPadTemplate *) (GST_OBJECT (*p)));
     p++;
   }
 

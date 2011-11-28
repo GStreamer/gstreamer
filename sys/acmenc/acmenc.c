@@ -470,10 +470,10 @@ acmenc_base_init (ACMEncClass * klass)
   gchar *shortname, *longname, *detail, *description;
   MMRESULT res;
 
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&acmenc_sink_template));
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&acmenc_src_template));
+  gst_element_class_add_static_pad_template (element_class,
+      &acmenc_sink_template);
+  gst_element_class_add_static_pad_template (element_class,
+      &acmenc_src_template);
   params =
       (ACMEncParams *) g_type_get_qdata (G_OBJECT_CLASS_TYPE (klass),
       ACMENC_PARAMS_QDATA);

@@ -64,8 +64,7 @@ gst_switch_sink_class_init (GstSwitchSinkClass * klass)
   /* Provide a default pad template if the child didn't */
   child_pad_templ = gst_element_class_get_pad_template (eklass, "sink");
   if (child_pad_templ == NULL) {
-    gst_element_class_add_pad_template (eklass,
-        gst_static_pad_template_get (&sink_template));
+    gst_element_class_add_static_pad_template (eklass, &sink_template);
   }
 }
 

@@ -158,10 +158,10 @@ gst_live_adder_base_init (gpointer klass)
 {
   GstElementClass *gstelement_class = (GstElementClass *) klass;
 
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&gst_live_adder_src_template));
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&gst_live_adder_sink_template));
+  gst_element_class_add_static_pad_template (gstelement_class,
+      &gst_live_adder_src_template);
+  gst_element_class_add_static_pad_template (gstelement_class,
+      &gst_live_adder_sink_template);
   gst_element_class_set_details_simple (gstelement_class, "Live Adder element",
       "Generic/Audio",
       "Mixes live/discontinuous audio streams",

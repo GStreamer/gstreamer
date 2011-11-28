@@ -870,8 +870,8 @@ gst_vdp_h264_dec_base_init (gpointer g_class)
       "Decode h264 stream with vdpau",
       "Carl-Anton Ingmarsson <ca.ingmarsson@gmail.com>");
 
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&sink_template));
+  gst_element_class_add_static_pad_template (element_class,
+      &sink_template);
 }
 
 static void

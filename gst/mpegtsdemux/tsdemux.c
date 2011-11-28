@@ -243,14 +243,14 @@ gst_ts_demux_base_init (gpointer klass)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
 
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&video_template));
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&audio_template));
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&subpicture_template));
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&private_template));
+  gst_element_class_add_static_pad_template (element_class,
+      &video_template);
+  gst_element_class_add_static_pad_template (element_class,
+      &audio_template);
+  gst_element_class_add_static_pad_template (element_class,
+      &subpicture_template);
+  gst_element_class_add_static_pad_template (element_class,
+      &private_template);
 
   gst_element_class_set_details_simple (element_class,
       "MPEG transport stream demuxer",

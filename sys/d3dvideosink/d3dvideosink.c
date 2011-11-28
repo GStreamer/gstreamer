@@ -278,8 +278,8 @@ gst_d3dvideosink_base_init (gpointer klass)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
 
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&sink_template));
+  gst_element_class_add_static_pad_template (element_class,
+      &sink_template);
 
   gst_element_class_set_details_simple (element_class, "Direct3D video sink",
       "Sink/Video",

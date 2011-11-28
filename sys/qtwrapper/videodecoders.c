@@ -171,8 +171,7 @@ qtwrapper_video_decoder_base_init (QTWrapperVideoDecoderClass * klass)
       GST_PAD_ALWAYS, params->sinkcaps);
 
   gst_element_class_add_pad_template (element_class, klass->sinktempl);
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&src_templ));
+  gst_element_class_add_static_pad_template (element_class, &src_templ);
 
   /* Store class-global values */
   klass->component = params->component;

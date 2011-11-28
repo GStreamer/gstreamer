@@ -218,10 +218,10 @@ gst_vt_h264_dec_bin_base_init (gpointer gclass)
       "VideoToolbox H.264 decoder bin",
       "Ole André Vadla Ravnås <oravnas@cisco.com>");
 
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&vth264decbin_sink_template));
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&vth264decbin_src_template));
+  gst_element_class_add_static_pad_template (element_class,
+      &vth264decbin_sink_template);
+  gst_element_class_add_static_pad_template (element_class,
+      &vth264decbin_src_template);
 }
 
 static void

@@ -153,12 +153,15 @@ static void
 gst_decklink_src_base_init (gpointer g_class)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
+  GstPadTemplate *pad_template;
 
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&gst_decklink_src_audio_src_template));
-  gst_element_class_add_pad_template (element_class,
+  gst_element_class_add_static_pad_template (element_class,
+      &gst_decklink_src_audio_src_template);
+  pad_template =
       gst_pad_template_new ("videosrc", GST_PAD_SRC, GST_PAD_ALWAYS,
-          gst_decklink_mode_get_template_caps ()));
+      gst_decklink_mode_get_template_caps ());
+  gst_element_class_add_pad_template (element_class, pad_template);
+  gst_object_unref (pad_template);
 
   gst_element_class_set_details_simple (element_class, "Decklink source",
       "Source/Video", "DeckLink Source", "David Schleef <ds@entropywave.com>");

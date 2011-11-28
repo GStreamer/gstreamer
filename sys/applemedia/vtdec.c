@@ -89,6 +89,7 @@ gst_vtdec_base_init (GstVTDecClass * klass)
   sink_template = gst_pad_template_new ("sink", GST_PAD_SINK, GST_PAD_ALWAYS,
       sink_caps);
   gst_element_class_add_pad_template (element_class, sink_template);
+  gst_object_unref (sink_template);
 
   src_template = gst_pad_template_new ("src",
       GST_PAD_SRC,
@@ -100,6 +101,7 @@ gst_vtdec_base_init (GstVTDecClass * klass)
           "framerate", GST_TYPE_FRACTION_RANGE,
           min_fps_n, min_fps_d, max_fps_n, max_fps_d, NULL));
   gst_element_class_add_pad_template (element_class, src_template);
+  gst_object_unref (src_template);
 }
 
 static void

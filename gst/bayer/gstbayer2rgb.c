@@ -171,18 +171,23 @@ static void
 gst_bayer2rgb_base_init (gpointer klass)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
+  GstPadTemplate *pad_template;
 
   gst_element_class_set_details_simple (element_class,
       "Bayer to RGB decoder for cameras", "Filter/Converter/Video",
       "Converts video/x-raw-bayer to video/x-raw-rgb",
       "William Brack <wbrack@mmm.com.hk>");
 
-  gst_element_class_add_pad_template (element_class,
+  pad_template =
       gst_pad_template_new ("src", GST_PAD_SRC, GST_PAD_ALWAYS,
-          gst_caps_from_string (SRC_CAPS)));
-  gst_element_class_add_pad_template (element_class,
+      gst_caps_from_string (SRC_CAPS));
+  gst_element_class_add_pad_template (element_class, pad_template);
+  gst_object_unref (pad_template);
+  pad_template =
       gst_pad_template_new ("sink", GST_PAD_SINK, GST_PAD_ALWAYS,
-          gst_caps_from_string (SINK_CAPS)));
+      gst_caps_from_string (SINK_CAPS));
+  gst_element_class_add_pad_template (element_class, pad_template);
+  gst_object_unref (pad_template);
 }
 
 static void

@@ -104,16 +104,18 @@ static void
 gst_dc1394_base_init (gpointer g_class)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
+  GstPadTemplate *pad_template;
 
   gst_element_class_set_details_simple (element_class, "1394 IIDC Video Source",
       "Source/Video",
       "libdc1394 based source, supports 1394 IIDC cameras",
       "Antoine Tremblay <hexa00@gmail.com>");
 
-  gst_element_class_add_pad_template (element_class,
+  pad_template =
       gst_pad_template_new ("src", GST_PAD_SRC, GST_PAD_ALWAYS,
-          gst_dc1394_get_all_dc1394_caps ()));
-
+      gst_dc1394_get_all_dc1394_caps ());
+  gst_element_class_add_pad_template (element_class, pad_template);
+  gst_object_unref (pad_template);
 }
 
 static void

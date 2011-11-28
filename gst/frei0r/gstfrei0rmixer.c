@@ -675,22 +675,26 @@ gst_frei0r_mixer_class_init (GstFrei0rMixerClass * klass,
       gst_pad_template_new ("src", GST_PAD_SRC, GST_PAD_ALWAYS,
       gst_caps_ref (caps));
   gst_element_class_add_pad_template (gstelement_class, templ);
+  gst_object_unref (templ);
 
   templ =
       gst_pad_template_new ("sink_0", GST_PAD_SINK, GST_PAD_ALWAYS,
       gst_caps_ref (caps));
   gst_element_class_add_pad_template (gstelement_class, templ);
+  gst_object_unref (templ);
 
   templ =
       gst_pad_template_new ("sink_1", GST_PAD_SINK, GST_PAD_ALWAYS,
       gst_caps_ref (caps));
   gst_element_class_add_pad_template (gstelement_class, templ);
+  gst_object_unref (templ);
 
   if (klass->info->plugin_type == F0R_PLUGIN_TYPE_MIXER3) {
     templ =
         gst_pad_template_new ("sink_2", GST_PAD_SINK, GST_PAD_ALWAYS,
         gst_caps_ref (caps));
     gst_element_class_add_pad_template (gstelement_class, templ);
+    gst_object_unref (templ);
   }
   gst_caps_unref (caps);
 

@@ -1190,12 +1190,14 @@ gst_vdp_vpp_base_init (gpointer gclass)
   src_template = gst_pad_template_new ("src", GST_PAD_SRC, GST_PAD_ALWAYS,
       src_caps);
   gst_element_class_add_pad_template (element_class, src_template);
+  gst_object_unref (src_template);
 
   /* SINK PAD */
   sink_caps = gst_vdp_video_buffer_get_caps (FALSE, 0);
   sink_template = gst_pad_template_new ("sink", GST_PAD_SINK, GST_PAD_ALWAYS,
       sink_caps);
   gst_element_class_add_pad_template (element_class, sink_template);
+  gst_object_unref (sink_template);
 }
 
 /* initialize the vdpaumpegdecoder's class */

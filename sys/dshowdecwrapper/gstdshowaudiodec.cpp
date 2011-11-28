@@ -349,6 +349,9 @@ gst_dshowaudiodec_base_init (gpointer klass)
   /* register */
   gst_element_class_add_pad_template (element_class, src);
   gst_element_class_add_pad_template (element_class, sink);
+
+  gst_object_unref (src);
+  gst_object_unref (sink);
 }
 
 static void

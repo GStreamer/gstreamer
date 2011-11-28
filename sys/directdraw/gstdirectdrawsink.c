@@ -386,8 +386,8 @@ gst_directdraw_sink_base_init (gpointer g_class)
       "Sink/Video",
       "Output to a video card via Direct Draw",
       "Sebastien Moutte <sebastien@moutte.net>");
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&directdrawsink_sink_factory));
+  gst_element_class_add_static_pad_template (element_class,
+      &directdrawsink_sink_factory);
 }
 
 static void

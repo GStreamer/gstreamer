@@ -156,8 +156,8 @@ gst_directsound_src_base_init (gpointer g_class)
       "Capture from a soundcard via DIRECTSOUND",
       "Joni Valtanen <joni.valtanen@movial.fi>");
 
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&directsound_src_src_factory));
+  gst_element_class_add_static_pad_template (element_class,
+      &directsound_src_src_factory);
 }
 
 

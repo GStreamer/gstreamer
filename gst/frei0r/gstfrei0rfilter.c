@@ -206,9 +206,11 @@ gst_frei0r_filter_class_init (GstFrei0rFilterClass * klass,
       gst_pad_template_new ("src", GST_PAD_SRC, GST_PAD_ALWAYS,
       gst_caps_ref (caps));
   gst_element_class_add_pad_template (gstelement_class, templ);
+  gst_object_unref (templ);
 
   templ = gst_pad_template_new ("sink", GST_PAD_SINK, GST_PAD_ALWAYS, caps);
   gst_element_class_add_pad_template (gstelement_class, templ);
+  gst_object_unref (templ);
 
   gsttrans_class->set_caps = GST_DEBUG_FUNCPTR (gst_frei0r_filter_set_caps);
   gsttrans_class->stop = GST_DEBUG_FUNCPTR (gst_frei0r_filter_stop);

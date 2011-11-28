@@ -135,10 +135,10 @@ gst_legacyresample_base_init (gpointer g_class)
 {
   GstElementClass *gstelement_class = GST_ELEMENT_CLASS (g_class);
 
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&gst_legacyresample_src_template));
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&gst_legacyresample_sink_template));
+  gst_element_class_add_static_pad_template (gstelement_class,
+      &gst_legacyresample_src_template);
+  gst_element_class_add_static_pad_template (gstelement_class,
+      &gst_legacyresample_sink_template);
 
   gst_element_class_set_details_simple (gstelement_class, "Audio scaler",
       "Filter/Converter/Audio",

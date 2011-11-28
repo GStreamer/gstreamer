@@ -110,12 +110,11 @@ gst_system_encode_base_init (GstMPEG1SystemEncodeClass * klass)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
 
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&src_factory));
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&audio_sink_factory));
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&video_sink_factory));
+  gst_element_class_add_static_pad_template (element_class, &src_factory);
+  gst_element_class_add_static_pad_template (element_class,
+      &audio_sink_factory);
+  gst_element_class_add_static_pad_template (element_class,
+      &video_sink_factory);
   gst_element_class_set_details_simple (element_class, "MPEG-1 muxer",
       "Codec/Muxer",
       "Multiplexes MPEG-1 Streams", "Wim Taymans <wim.taymans@chello.be>");

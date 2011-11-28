@@ -79,17 +79,22 @@ gst_video_filter2_base_init (gpointer g_class)
   GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
   int i;
   GstCaps *caps = NULL;
+  GstPadTemplate *pad_template;
 
   caps = gst_caps_new_empty ();
   for (i = GST_VIDEO_FORMAT_I420; i <= GST_VIDEO_FORMAT_I420; i++) {
     gst_caps_append (caps, gst_video_format_new_template_caps (i));
   }
 
-  gst_element_class_add_pad_template (element_class,
+  pad_template =
       gst_pad_template_new ("src", GST_PAD_SRC, GST_PAD_ALWAYS,
-          gst_caps_ref (caps)));
-  gst_element_class_add_pad_template (element_class,
-      gst_pad_template_new ("sink", GST_PAD_SINK, GST_PAD_ALWAYS, caps));
+      gst_caps_ref (caps));
+  gst_element_class_add_pad_template (element_class, pad_template);
+  gst_object_unref (pad_template);
+  pad_template =
+      gst_pad_template_new ("sink", GST_PAD_SINK, GST_PAD_ALWAYS, caps);
+  gst_element_class_add_pad_template (element_class, pad_template);
+  gst_object_unref (pad_template);
 }
 
 static void

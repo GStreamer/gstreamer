@@ -84,10 +84,8 @@ gst_ivf_parse_base_init (gpointer gclass)
       "Codec/Demuxer",
       "Demuxes a IVF stream", "Philip Jägenstedt <philipj@opera.com>");
 
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&src_factory));
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&sink_factory));
+  gst_element_class_add_static_pad_template (element_class, &src_factory);
+  gst_element_class_add_static_pad_template (element_class, &sink_factory);
 }
 
 /* initialize the ivfparse's class */

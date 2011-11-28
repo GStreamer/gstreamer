@@ -366,6 +366,7 @@ gst_frei0r_src_class_init (GstFrei0rSrcClass * klass,
 
   templ = gst_pad_template_new ("src", GST_PAD_SRC, GST_PAD_ALWAYS, caps);
   gst_element_class_add_pad_template (gstelement_class, templ);
+  gst_object_unref (templ);
 
   gstbasesrc_class->set_caps = gst_frei0r_src_set_caps;
   gstbasesrc_class->get_caps = gst_frei0r_src_get_caps;

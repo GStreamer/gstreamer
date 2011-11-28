@@ -136,10 +136,8 @@ gst_field_analysis_base_init (gpointer gclass)
       "Analyse fields from video frames to identify if they are progressive/telecined/interlaced",
       "Robert Swain <robert.swain@collabora.co.uk>");
 
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&src_factory));
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&sink_factory));
+  gst_element_class_add_static_pad_template (element_class, &src_factory);
+  gst_element_class_add_static_pad_template (element_class, &sink_factory);
 }
 
 typedef enum

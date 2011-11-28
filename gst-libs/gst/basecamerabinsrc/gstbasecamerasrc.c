@@ -491,14 +491,14 @@ gst_base_camera_src_base_init (gpointer g_class)
       "Base class for camerabin src bin", "Source/Video",
       "Abstracts capture device for camerabin2", "Rob Clark <rob@ti.com>");
 
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&vfsrc_template));
+  gst_element_class_add_static_pad_template (gstelement_class,
+      &vfsrc_template);
 
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&imgsrc_template));
+  gst_element_class_add_static_pad_template (gstelement_class,
+      &imgsrc_template);
 
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&vidsrc_template));
+  gst_element_class_add_static_pad_template (gstelement_class,
+      &vidsrc_template);
 }
 
 static void

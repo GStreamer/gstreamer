@@ -118,8 +118,8 @@ gst_flite_test_src_base_init (gpointer g_class)
   GST_DEBUG_CATEGORY_INIT (flite_test_src_debug, "flitetestsrc", 0,
       "Flite Audio Test Source");
 
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&gst_flite_test_src_src_template));
+  gst_element_class_add_static_pad_template (element_class,
+      &gst_flite_test_src_src_template);
   gst_element_class_set_details_simple (element_class,
       "Flite speech test source", "Source/Audio",
       "Creates audio test signals identifying channels",

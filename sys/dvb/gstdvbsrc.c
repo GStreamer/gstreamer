@@ -313,8 +313,8 @@ gst_dvbsrc_base_init (gpointer gclass)
   GstDvbSrcClass *klass = (GstDvbSrcClass *) gclass;
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
 
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&ts_src_factory));
+  gst_element_class_add_static_pad_template (element_class,
+      &ts_src_factory);
 
   gst_element_class_set_details_simple (element_class, "DVB Source",
       "Source/Video",

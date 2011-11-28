@@ -75,10 +75,10 @@ gst_spectra_scope_base_init (gpointer g_class)
       "Frequency spectrum scope", "Visualization",
       "Simple frequency spectrum scope", "Stefan Kost <ensonic@users.sf.net>");
 
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&gst_spectra_scope_src_template));
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&gst_spectra_scope_sink_template));
+  gst_element_class_add_static_pad_template (element_class,
+      &gst_spectra_scope_src_template);
+  gst_element_class_add_static_pad_template (element_class,
+      &gst_spectra_scope_sink_template);
 }
 
 static void

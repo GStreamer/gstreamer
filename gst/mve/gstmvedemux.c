@@ -1090,12 +1090,12 @@ gst_mve_demux_base_init (GstMveDemuxClass * klass)
 
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
 
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&sink_template));
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&vidsrc_template));
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&audsrc_template));
+  gst_element_class_add_static_pad_template (element_class,
+      &sink_template);
+  gst_element_class_add_static_pad_template (element_class,
+      &vidsrc_template);
+  gst_element_class_add_static_pad_template (element_class,
+      &audsrc_template);
   gst_element_class_set_details_simple (element_class, "MVE Demuxer",
       "Codec/Demuxer",
       "Demultiplex an Interplay movie (MVE) stream into audio and video",

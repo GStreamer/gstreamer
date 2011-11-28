@@ -75,8 +75,8 @@ gst_raw_parse_base_init (gpointer g_class)
   GST_DEBUG_CATEGORY_INIT (gst_raw_parse_debug, "rawparse", 0,
       "rawparse element");
 
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&gst_raw_parse_sink_pad_template));
+  gst_element_class_add_static_pad_template (gstelement_class,
+      &gst_raw_parse_sink_pad_template);
 }
 
 static void
@@ -154,14 +154,17 @@ gst_raw_parse_class_set_src_pad_template (GstRawParseClass * klass,
     const GstCaps * allowed_caps)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
+  GstPadTemplate *pad_template;
 
   g_return_if_fail (GST_IS_RAW_PARSE_CLASS (klass));
   g_return_if_fail (allowed_caps != NULL);
   g_return_if_fail (GST_IS_CAPS (allowed_caps));
 
-  gst_element_class_add_pad_template (element_class,
+  pad_template =
       gst_pad_template_new ("src", GST_PAD_SRC, GST_PAD_ALWAYS,
-          gst_caps_copy (allowed_caps)));
+      gst_caps_copy (allowed_caps));
+  gst_element_class_add_pad_template (element_class, pad_template);
+  gst_object_unref (pad_template);
 }
 
 void

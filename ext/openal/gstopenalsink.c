@@ -162,15 +162,14 @@ static void
 gst_openal_sink_base_init (gpointer gclass)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (gclass);
-  GstPadTemplate *pad_template;
 
   gst_element_class_set_details_simple (element_class, "Audio sink (OpenAL)",
       "Sink/Audio",
       "Output to a sound device via OpenAL",
       "Chris Robinson <chris.kcat@gmail.com>");
 
-  pad_template = gst_static_pad_template_get (&openalsink_sink_factory);
-  gst_element_class_add_pad_template (element_class, pad_template);
+  gst_element_class_add_static_pad_template (element_class,
+      &openalsink_sink_factory);
 }
 
 /* initialize the plugin's class */
