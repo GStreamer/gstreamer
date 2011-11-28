@@ -23,6 +23,8 @@
 #ifndef __GST_FFT_H__
 #define __GST_FFT_H__
 
+G_BEGIN_DECLS
+
 /**
  * GstFFTWindow:
  * @GST_FFT_WINDOW_RECTANGULAR: Rectangular window
@@ -45,5 +47,7 @@ typedef enum
 /* Functions */
 
 gint gst_fft_next_fast_length (gint n) G_GNUC_CONST;
+
+G_END_DECLS
 
 #endif /* __GST_FFT_H__ */
