@@ -432,7 +432,7 @@ gst_base_src_init (GstBaseSrc * basesrc, gpointer g_class)
   g_atomic_int_set (&basesrc->priv->have_events, FALSE);
 
   GST_OBJECT_FLAG_UNSET (basesrc, GST_BASE_SRC_STARTED);
-  GST_OBJECT_FLAG_SET (basesrc, GST_ELEMENT_IS_SOURCE);
+  GST_OBJECT_FLAG_SET (basesrc, GST_ELEMENT_FLAG_SOURCE);
 
   GST_DEBUG_OBJECT (basesrc, "init done");
 }

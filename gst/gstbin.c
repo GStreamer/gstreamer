@@ -1058,8 +1058,8 @@ gst_bin_add_func (GstBin * bin, GstElement * element)
   /* get the element name to make sure it is unique in this bin. */
   GST_OBJECT_LOCK (element);
   elem_name = g_strdup (GST_ELEMENT_NAME (element));
-  is_sink = GST_OBJECT_FLAG_IS_SET (element, GST_ELEMENT_IS_SINK);
-  is_source = GST_OBJECT_FLAG_IS_SET (element, GST_ELEMENT_IS_SOURCE);
+  is_sink = GST_OBJECT_FLAG_IS_SET (element, GST_ELEMENT_FLAG_SINK);
+  is_source = GST_OBJECT_FLAG_IS_SET (element, GST_ELEMENT_FLAG_SOURCE);
   GST_OBJECT_UNLOCK (element);
 
   GST_OBJECT_LOCK (bin);
@@ -1080,12 +1080,12 @@ gst_bin_add_func (GstBin * bin, GstElement * element)
   if (is_sink) {
     GST_CAT_DEBUG_OBJECT (GST_CAT_PARENTAGE, bin, "element \"%s\" was sink",
         elem_name);
-    GST_OBJECT_FLAG_SET (bin, GST_ELEMENT_IS_SINK);
+    GST_OBJECT_FLAG_SET (bin, GST_ELEMENT_FLAG_SINK);
   }
   if (is_source) {
     GST_CAT_DEBUG_OBJECT (GST_CAT_PARENTAGE, bin, "element \"%s\" was source",
         elem_name);
-    GST_OBJECT_FLAG_SET (bin, GST_ELEMENT_IS_SOURCE);
+    GST_OBJECT_FLAG_SET (bin, GST_ELEMENT_FLAG_SOURCE);
   }
   if (gst_element_provides_clock (element)) {
     GST_DEBUG_OBJECT (bin, "element \"%s\" can provide a clock", elem_name);
@@ -1268,14 +1268,15 @@ gst_bin_remove_func (GstBin * bin, GstElement * element)
   GST_OBJECT_LOCK (element);
   /* Check if the element is already being removed and immediately
    * return */
-  if (G_UNLIKELY (GST_OBJECT_FLAG_IS_SET (element, GST_ELEMENT_UNPARENTING)))
+  if (G_UNLIKELY (GST_OBJECT_FLAG_IS_SET (element,
+              GST_ELEMENT_FLAG_UNPARENTING)))
     goto already_removing;
 
-  GST_OBJECT_FLAG_SET (element, GST_ELEMENT_UNPARENTING);
+  GST_OBJECT_FLAG_SET (element, GST_ELEMENT_FLAG_UNPARENTING);
   /* grab element name so we can print it */
   elem_name = g_strdup (GST_ELEMENT_NAME (element));
-  is_sink = GST_OBJECT_FLAG_IS_SET (element, GST_ELEMENT_IS_SINK);
-  is_source = GST_OBJECT_FLAG_IS_SET (element, GST_ELEMENT_IS_SOURCE);
+  is_sink = GST_OBJECT_FLAG_IS_SET (element, GST_ELEMENT_FLAG_SINK);
+  is_source = GST_OBJECT_FLAG_IS_SET (element, GST_ELEMENT_FLAG_SOURCE);
   GST_OBJECT_UNLOCK (element);
 
   /* unlink all linked pads */
@@ -1303,8 +1304,8 @@ gst_bin_remove_func (GstBin * bin, GstElement * element)
       gboolean child_sink, child_source;
 
       GST_OBJECT_LOCK (child);
-      child_sink = GST_OBJECT_FLAG_IS_SET (child, GST_ELEMENT_IS_SINK);
-      child_source = GST_OBJECT_FLAG_IS_SET (child, GST_ELEMENT_IS_SOURCE);
+      child_sink = GST_OBJECT_FLAG_IS_SET (child, GST_ELEMENT_FLAG_SINK);
+      child_source = GST_OBJECT_FLAG_IS_SET (child, GST_ELEMENT_FLAG_SOURCE);
       /* when we remove a sink, check if there are other sinks. */
       if (is_sink && !othersink && child_sink)
         othersink = TRUE;
@@ -1330,12 +1331,12 @@ gst_bin_remove_func (GstBin * bin, GstElement * element)
   if (is_sink && !othersink) {
     /* we're not a sink anymore */
     GST_DEBUG_OBJECT (bin, "we removed the last sink");
-    GST_OBJECT_FLAG_UNSET (bin, GST_ELEMENT_IS_SINK);
+    GST_OBJECT_FLAG_UNSET (bin, GST_ELEMENT_FLAG_SINK);
   }
   if (is_source && !othersource) {
     /* we're not a source anymore */
     GST_DEBUG_OBJECT (bin, "we removed the last source");
-    GST_OBJECT_FLAG_UNSET (bin, GST_ELEMENT_IS_SOURCE);
+    GST_OBJECT_FLAG_UNSET (bin, GST_ELEMENT_FLAG_SOURCE);
   }
 
 
@@ -1467,7 +1468,7 @@ no_state_recalc:
   gst_object_unparent (GST_OBJECT_CAST (element));
 
   GST_OBJECT_LOCK (element);
-  GST_OBJECT_FLAG_UNSET (element, GST_ELEMENT_UNPARENTING);
+  GST_OBJECT_FLAG_UNSET (element, GST_ELEMENT_FLAG_UNPARENTING);
   GST_OBJECT_UNLOCK (element);
 
   g_signal_emit (bin, gst_bin_signals[ELEMENT_REMOVED], 0, element);
@@ -1629,7 +1630,7 @@ bin_element_is_sink (GstElement * child, GstBin * bin)
   /* we lock the child here for the remainder of the function to
    * get its name and flag safely. */
   GST_OBJECT_LOCK (child);
-  is_sink = GST_OBJECT_FLAG_IS_SET (child, GST_ELEMENT_IS_SINK);
+  is_sink = GST_OBJECT_FLAG_IS_SET (child, GST_ELEMENT_FLAG_SINK);
 
   GST_CAT_DEBUG_OBJECT (GST_CAT_STATES, bin,
       "child %s %s sink", GST_OBJECT_NAME (child), is_sink ? "is" : "is not");
@@ -1652,7 +1653,7 @@ sink_iterator_filter (const GValue * vchild, GValue * vbin)
  * @bin: a #GstBin
  *
  * Gets an iterator for all elements in the bin that have the
- * #GST_ELEMENT_IS_SINK flag set.
+ * #GST_ELEMENT_FLAG_SINK flag set.
  *
  * Each element yielded by the iterator will have its refcount increased, so
  * unref after use.
@@ -1692,7 +1693,7 @@ bin_element_is_src (GstElement * child, GstBin * bin)
   /* we lock the child here for the remainder of the function to
    * get its name and other info safely. */
   GST_OBJECT_LOCK (child);
-  is_src = GST_OBJECT_FLAG_IS_SET (child, GST_ELEMENT_IS_SOURCE);
+  is_src = GST_OBJECT_FLAG_IS_SET (child, GST_ELEMENT_FLAG_SOURCE);
 
   GST_CAT_DEBUG_OBJECT (GST_CAT_STATES, bin,
       "child %s %s src", GST_OBJECT_NAME (child), is_src ? "is" : "is not");
@@ -1715,7 +1716,7 @@ src_iterator_filter (const GValue * vchild, GValue * vbin)
  * @bin: a #GstBin
  *
  * Gets an iterator for all elements in the bin that have the
- * #GST_ELEMENT_IS_SOURCE flag set.
+ * #GST_ELEMENT_FLAG_SOURCE flag set.
  *
  * Each element yielded by the iterator will have its refcount increased, so
  * unref after use.
@@ -1866,7 +1867,7 @@ reset_degree (GstElement * element, GstBinSortIterator * bit)
 
   /* sinks are added right away */
   GST_OBJECT_LOCK (element);
-  is_sink = GST_OBJECT_FLAG_IS_SET (element, GST_ELEMENT_IS_SINK);
+  is_sink = GST_OBJECT_FLAG_IS_SET (element, GST_ELEMENT_FLAG_SINK);
   GST_OBJECT_UNLOCK (element);
 
   if (is_sink) {
@@ -2135,7 +2136,7 @@ gst_bin_element_set_state (GstBin * bin, GstElement * element,
   GST_ELEMENT_START_TIME (element) = start_time;
   element->base_time = base_time;
   /* peel off the locked flag */
-  locked = GST_OBJECT_FLAG_IS_SET (element, GST_ELEMENT_LOCKED_STATE);
+  locked = GST_ELEMENT_IS_LOCKED_STATE (element);
   /* Get the previous set_state result to preserve NO_PREROLL and ASYNC */
   ret = GST_STATE_RETURN (element);
   child_current = GST_STATE (element);

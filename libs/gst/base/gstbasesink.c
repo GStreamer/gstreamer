@@ -668,7 +668,7 @@ gst_base_sink_init (GstBaseSink * basesink, gpointer g_class)
   g_atomic_int_set (&priv->enable_last_buffer, DEFAULT_ENABLE_LAST_BUFFER);
   priv->throttle_time = DEFAULT_THROTTLE_TIME;
 
-  GST_OBJECT_FLAG_SET (basesink, GST_ELEMENT_IS_SINK);
+  GST_OBJECT_FLAG_SET (basesink, GST_ELEMENT_FLAG_SINK);
 }
 
 static void

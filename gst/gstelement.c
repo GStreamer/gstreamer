@@ -1835,7 +1835,7 @@ gst_element_is_locked_state (GstElement * element)
   g_return_val_if_fail (GST_IS_ELEMENT (element), FALSE);
 
   GST_OBJECT_LOCK (element);
-  result = GST_OBJECT_FLAG_IS_SET (element, GST_ELEMENT_LOCKED_STATE);
+  result = GST_ELEMENT_IS_LOCKED_STATE (element);
   GST_OBJECT_UNLOCK (element);
 
   return result;
@@ -1862,7 +1862,7 @@ gst_element_set_locked_state (GstElement * element, gboolean locked_state)
   g_return_val_if_fail (GST_IS_ELEMENT (element), FALSE);
 
   GST_OBJECT_LOCK (element);
-  old = GST_OBJECT_FLAG_IS_SET (element, GST_ELEMENT_LOCKED_STATE);
+  old = GST_ELEMENT_IS_LOCKED_STATE (element);
 
   if (G_UNLIKELY (old == locked_state))
     goto was_ok;
@@ -1870,11 +1870,11 @@ gst_element_set_locked_state (GstElement * element, gboolean locked_state)
   if (locked_state) {
     GST_CAT_DEBUG (GST_CAT_STATES, "locking state of element %s",
         GST_ELEMENT_NAME (element));
-    GST_OBJECT_FLAG_SET (element, GST_ELEMENT_LOCKED_STATE);
+    GST_OBJECT_FLAG_SET (element, GST_ELEMENT_FLAG_LOCKED_STATE);
   } else {
     GST_CAT_DEBUG (GST_CAT_STATES, "unlocking state of element %s",
         GST_ELEMENT_NAME (element));
-    GST_OBJECT_FLAG_UNSET (element, GST_ELEMENT_LOCKED_STATE);
+    GST_OBJECT_FLAG_UNSET (element, GST_ELEMENT_FLAG_LOCKED_STATE);
   }
   GST_OBJECT_UNLOCK (element);
 
@@ -2853,7 +2853,7 @@ not_null:
   {
     gboolean is_locked;
 
-    is_locked = GST_OBJECT_FLAG_IS_SET (element, GST_ELEMENT_LOCKED_STATE);
+    is_locked = GST_ELEMENT_IS_LOCKED_STATE (element);
     g_critical
         ("\nTrying to dispose element %s, but it is in %s%s instead of the NULL"
         " state.\n"

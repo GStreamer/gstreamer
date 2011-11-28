@@ -315,23 +315,23 @@ typedef enum /*< flags=0 >*/
 
 /**
  * GstElementFlags:
- * @GST_ELEMENT_LOCKED_STATE: ignore state changes from parent
- * @GST_ELEMENT_IS_SINK: the element is a sink
- * @GST_ELEMENT_UNPARENTING: Child is being removed from the parent bin.
+ * @GST_ELEMENT_FLAG_UNPARENTING: Child is being removed from the parent bin.
  *  gst_bin_remove() on a child already being removed immediately returns FALSE
- * @GST_ELEMENT_IS_SOURCE: the element is a source. Since 0.10.31
+ * @GST_ELEMENT_FLAG_LOCKED_STATE: ignore state changes from parent
+ * @GST_ELEMENT_FLAG_SINK: the element is a sink
+ * @GST_ELEMENT_FLAG_SOURCE: the element is a source. Since 0.10.31
  * @GST_ELEMENT_FLAG_LAST: offset to define more flags
  *
  * The standard flags that an element may have.
  */
 typedef enum
 {
-  GST_ELEMENT_LOCKED_STATE      = (GST_OBJECT_FLAG_LAST << 0),
-  GST_ELEMENT_IS_SINK           = (GST_OBJECT_FLAG_LAST << 1),
-  GST_ELEMENT_UNPARENTING       = (GST_OBJECT_FLAG_LAST << 2),
-  GST_ELEMENT_IS_SOURCE         = (GST_OBJECT_FLAG_LAST << 3),
+  GST_ELEMENT_FLAG_UNPARENTING    = (GST_OBJECT_FLAG_LAST << 0),
+  GST_ELEMENT_FLAG_LOCKED_STATE   = (GST_OBJECT_FLAG_LAST << 1),
+  GST_ELEMENT_FLAG_SINK           = (GST_OBJECT_FLAG_LAST << 2),
+  GST_ELEMENT_FLAG_SOURCE         = (GST_OBJECT_FLAG_LAST << 3),
   /* padding */
-  GST_ELEMENT_FLAG_LAST         = (GST_OBJECT_FLAG_LAST << 16)
+  GST_ELEMENT_FLAG_LAST           = (GST_OBJECT_FLAG_LAST << 16)
 } GstElementFlags;
 
 /**
@@ -341,7 +341,7 @@ typedef enum
  * Check if the element is in the locked state and therefore will ignore state
  * changes from its parent object.
  */
-#define GST_ELEMENT_IS_LOCKED_STATE(elem)        (GST_OBJECT_FLAG_IS_SET(elem,GST_ELEMENT_LOCKED_STATE))
+#define GST_ELEMENT_IS_LOCKED_STATE(elem)        (GST_OBJECT_FLAG_IS_SET(elem,GST_ELEMENT_FLAG_LOCKED_STATE))
 
 /**
  * GST_ELEMENT_NAME:
