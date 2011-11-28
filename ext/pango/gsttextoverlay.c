@@ -368,16 +368,16 @@ gst_text_overlay_base_init (gpointer g_class)
   GstTextOverlayClass *klass = GST_TEXT_OVERLAY_CLASS (g_class);
   PangoFontMap *fontmap;
 
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&src_template_factory));
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&video_sink_template_factory));
+  gst_element_class_add_static_pad_template (element_class,
+      &src_template_factory);
+  gst_element_class_add_static_pad_template (element_class,
+      &video_sink_template_factory);
 
   /* ugh */
   if (!GST_IS_TIME_OVERLAY_CLASS (g_class) &&
       !GST_IS_CLOCK_OVERLAY_CLASS (g_class)) {
-    gst_element_class_add_pad_template (element_class,
-        gst_static_pad_template_get (&text_sink_template_factory));
+    gst_element_class_add_static_pad_template (element_class,
+        &text_sink_template_factory);
   }
 
   gst_element_class_set_details_simple (element_class, "Text overlay",

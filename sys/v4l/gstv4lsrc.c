@@ -77,8 +77,8 @@ gst_v4lsrc_base_init (gpointer g_class)
       "Reads raw frames from a video4linux device",
       "GStreamer maintainers <gstreamer-devel@lists.sourceforge.net>");
 
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&v4l_src_template));
+  gst_element_class_add_static_pad_template (gstelement_class,
+      &v4l_src_template);
 }
 
 static void

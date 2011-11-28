@@ -144,8 +144,8 @@ gst_v4lmjpegsrc_base_init (gpointer g_class)
       "Reads MJPEG-encoded frames from a zoran MJPEG/video4linux device",
       "GStreamer maintainers <gstreamer-devel@lists.sourceforge.net>");
 
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&src_template));
+  gst_element_class_add_static_pad_template (gstelement_class,
+      &src_template);
 }
 
 static void

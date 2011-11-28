@@ -642,8 +642,8 @@ gst_test_reverse_negotiation_sink_base_init (gpointer g_class)
       "Test Reverse Negotiation Sink",
       "Sink",
       "Some test sink", "Sebastian Dröge <sebastian.droege@collabora.co.uk>");
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&sinktemplate));
+  gst_element_class_add_static_pad_template (gstelement_class,
+      &sinktemplate);
 }
 
 static void

@@ -79,13 +79,11 @@ static void
 gst_vorbis_dec_base_init (gpointer g_class)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
-  GstPadTemplate *src_template, *sink_template;
 
-  src_template = gst_static_pad_template_get (&vorbis_dec_src_factory);
-  gst_element_class_add_pad_template (element_class, src_template);
-
-  sink_template = gst_static_pad_template_get (&vorbis_dec_sink_factory);
-  gst_element_class_add_pad_template (element_class, sink_template);
+  gst_element_class_add_static_pad_template (element_class,
+      &vorbis_dec_src_factory);
+  gst_element_class_add_static_pad_template (element_class,
+      &vorbis_dec_sink_factory);
 
   gst_element_class_set_details_simple (element_class,
       "Vorbis audio decoder", "Codec/Decoder/Audio",

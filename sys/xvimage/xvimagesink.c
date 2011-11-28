@@ -3536,8 +3536,8 @@ gst_xvimagesink_base_init (gpointer g_class)
       "Video sink", "Sink/Video",
       "A Xv based videosink", "Julien Moutte <julien@moutte.net>");
 
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&gst_xvimagesink_sink_template_factory));
+  gst_element_class_add_static_pad_template (element_class,
+      &gst_xvimagesink_sink_template_factory);
 }
 
 static void

@@ -102,10 +102,10 @@ gst_gdp_pay_base_init (gpointer g_class)
       "Payloads GStreamer Data Protocol buffers",
       "Thomas Vander Stichele <thomas at apestaart dot org>");
 
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&gdp_pay_sink_template));
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&gdp_pay_src_template));
+  gst_element_class_add_static_pad_template (element_class,
+      &gdp_pay_sink_template);
+  gst_element_class_add_static_pad_template (element_class,
+      &gdp_pay_src_template);
 }
 
 static void

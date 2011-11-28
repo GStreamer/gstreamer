@@ -279,8 +279,8 @@ gst_ogm_audio_parse_base_init (GstOgmParseClass * klass)
       "parse an OGM audio header and stream",
       "GStreamer maintainers <gstreamer-devel@lists.sourceforge.net>");
 
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&sink_factory_audio));
+  gst_element_class_add_static_pad_template (element_class,
+      &sink_factory_audio);
   audio_src_templ = gst_pad_template_new ("src",
       GST_PAD_SRC, GST_PAD_SOMETIMES, caps);
   gst_element_class_add_pad_template (element_class, audio_src_templ);
@@ -297,8 +297,8 @@ gst_ogm_video_parse_base_init (GstOgmParseClass * klass)
       "parse an OGM video header and stream",
       "GStreamer maintainers <gstreamer-devel@lists.sourceforge.net>");
 
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&sink_factory_video));
+  gst_element_class_add_static_pad_template (element_class,
+      &sink_factory_video);
   video_src_templ = gst_pad_template_new ("src",
       GST_PAD_SRC, GST_PAD_SOMETIMES, caps);
   gst_element_class_add_pad_template (element_class, video_src_templ);

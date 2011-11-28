@@ -131,8 +131,7 @@ gst_gnome_vfs_sink_base_init (gpointer g_class)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
 
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&sinktemplate));
+  gst_element_class_add_static_pad_template (element_class, &sinktemplate);
 
   gst_element_class_set_details_simple (element_class,
       "GnomeVFS Sink", "Sink/File",

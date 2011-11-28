@@ -223,10 +223,9 @@ test_mpeg_audio_parse_base_init (gpointer klass)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
 
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&sink_template));
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&src_template));
+  gst_element_class_add_static_pad_template (element_class,
+      &sink_template);
+  gst_element_class_add_static_pad_template (element_class, &src_template);
 
   gst_element_class_set_details_simple (element_class, "MPEG1 Audio Parser",
       "Codec/Parser/Audio", "Pretends to parse mpeg1 audio stream",
@@ -391,10 +390,8 @@ gst_fake_h264_parser_base_init (gpointer klass)
           "stream-format=(string) { avc, byte-stream }"));
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
 
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&sink_templ));
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&src_templ));
+  gst_element_class_add_static_pad_template (element_class, &sink_templ);
+  gst_element_class_add_static_pad_template (element_class, &src_templ);
   gst_element_class_set_details_simple (element_class,
       "FakeH264Parser", "Codec/Parser/Converter/Video", "yep", "me");
 }
@@ -492,10 +489,8 @@ gst_fake_h264_decoder_base_init (gpointer klass)
       GST_STATIC_CAPS ("video/x-raw-yuv"));
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
 
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&sink_templ));
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&src_templ));
+  gst_element_class_add_static_pad_template (element_class, &sink_templ);
+  gst_element_class_add_static_pad_template (element_class, &src_templ);
   gst_element_class_set_details_simple (element_class,
       "FakeH264Decoder", "Codec/Decoder/Video", "yep", "me");
 }

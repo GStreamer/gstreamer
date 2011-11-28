@@ -194,10 +194,8 @@ gst_visual_class_init (gpointer g_class, gpointer class_data)
         klass->plugin->info->name, klass->plugin->info->version);
 
     /* FIXME: improve to only register what plugin supports? */
-    gst_element_class_add_pad_template (element,
-        gst_static_pad_template_get (&src_template));
-    gst_element_class_add_pad_template (element,
-        gst_static_pad_template_get (&sink_template));
+    gst_element_class_add_static_pad_template (element, &src_template);
+    gst_element_class_add_static_pad_template (element, &sink_template);
     gst_element_class_set_details_simple (element,
         longname, "Visualization",
         klass->plugin->info->about, "Benjamin Otte <otte@gnome.org>");

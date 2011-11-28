@@ -229,15 +229,18 @@ static void
 gst_video_scale_base_init (gpointer g_class)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
+  GstPadTemplate *pad_template;
 
   gst_element_class_set_details_simple (element_class,
       "Video scaler", "Filter/Converter/Video/Scaler",
       "Resizes video", "Wim Taymans <wim.taymans@chello.be>");
 
-  gst_element_class_add_pad_template (element_class,
-      gst_video_scale_sink_template_factory ());
-  gst_element_class_add_pad_template (element_class,
-      gst_video_scale_src_template_factory ());
+  pad_template = gst_video_scale_sink_template_factory ();
+  gst_element_class_add_pad_template (element_class, pad_template);
+  gst_object_unref (pad_template);
+  pad_template = gst_video_scale_src_template_factory ();
+  gst_element_class_add_pad_template (element_class, pad_template);
+  gst_object_unref (pad_template);
 }
 
 static void

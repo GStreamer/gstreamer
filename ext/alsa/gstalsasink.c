@@ -172,8 +172,8 @@ gst_alsasink_base_init (gpointer g_class)
       "Audio sink (ALSA)", "Sink/Audio",
       "Output to a sound card via ALSA", "Wim Taymans <wim@fluendo.com>");
 
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&alsasink_sink_factory));
+  gst_element_class_add_static_pad_template (element_class,
+      &alsasink_sink_factory);
 }
 
 static void

@@ -55,8 +55,7 @@ gst_gio_base_sink_base_init (gpointer gclass)
   GST_DEBUG_CATEGORY_INIT (gst_gio_base_sink_debug, "gio_base_sink", 0,
       "GIO base sink");
 
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&sink_factory));
+  gst_element_class_add_static_pad_template (element_class, &sink_factory);
 }
 
 static void
