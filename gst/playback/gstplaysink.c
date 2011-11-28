@@ -525,7 +525,7 @@ gst_play_sink_init (GstPlaySink * playsink)
       GST_ELEMENT_CAST (playsink->stream_synchronizer));
 
   g_static_rec_mutex_init (&playsink->lock);
-  GST_OBJECT_FLAG_SET (playsink, GST_ELEMENT_IS_SINK);
+  GST_OBJECT_FLAG_SET (playsink, GST_ELEMENT_FLAG_SINK);
 }
 
 static void
@@ -932,7 +932,7 @@ add_chain (GstPlayChain * chain, gboolean add)
   else {
     gst_bin_remove (GST_BIN_CAST (chain->playsink), chain->bin);
     /* we don't want to lose our sink status */
-    GST_OBJECT_FLAG_SET (chain->playsink, GST_ELEMENT_IS_SINK);
+    GST_OBJECT_FLAG_SET (chain->playsink, GST_ELEMENT_FLAG_SINK);
   }
 
   chain->added = add;
@@ -968,7 +968,7 @@ element_is_sink (GstElement * element)
   gboolean is_sink;
 
   GST_OBJECT_LOCK (element);
-  is_sink = GST_OBJECT_FLAG_IS_SET (element, GST_ELEMENT_IS_SINK);
+  is_sink = GST_OBJECT_FLAG_IS_SET (element, GST_ELEMENT_FLAG_SINK);
   GST_OBJECT_UNLOCK (element);
 
   GST_DEBUG_OBJECT (element, "is a sink: %s", (is_sink) ? "yes" : "no");
