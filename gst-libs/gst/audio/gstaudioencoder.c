@@ -465,6 +465,9 @@ gst_audio_encoder_finalize (GObject * object)
  * are considered discarded, e.g. as a result of discontinuous transmission,
  * and a discontinuity is marked.
  *
+ * Note that samples received in gst_audio_encoder_handle_frame()
+ * may be invalidated by a call to this function.
+ *
  * Returns: a #GstFlowReturn that should be escalated to caller (of caller)
  *
  * Since: 0.10.36

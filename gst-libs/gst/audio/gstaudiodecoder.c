@@ -744,6 +744,27 @@ again:
   return ret;
 }
 
+/**
+ * gst_audio_decoder_finish_frame:
+ * @dec: a #GstAudioDecoder
+ * @buf: decoded data
+ * @frames: number of decoded frames represented by decoded data
+ *
+ * Collects decoded data and pushes it downstream.
+ *
+ * @buf may be NULL in which case the indicated number of frames
+ * are discarded and considered to have produced no output
+ * (e.g. lead-in or setup frames).
+ * Otherwise, source pad caps must be set when it is called with valid
+ * data in @buf.
+ *
+ * Note that a frame received in gst_audio_decoder_handle_frame() may be
+ * invalidated by a call to this function.
+ *
+ * Returns: a #GstFlowReturn that should be escalated to caller (of caller)
+ *
+ * Since: 0.10.36
+ */
 GstFlowReturn
 gst_audio_decoder_finish_frame (GstAudioDecoder * dec, GstBuffer * buf,
     gint frames)
@@ -827,14 +848,14 @@ gst_audio_decoder_finish_frame (GstAudioDecoder * dec, GstBuffer * buf,
     frames--;
   }
 
+  if (G_UNLIKELY (!buf))
+    goto exit;
+
   /* lock on */
   if (G_UNLIKELY (!GST_CLOCK_TIME_IS_VALID (priv->base_ts))) {
     priv->base_ts = ts;
     GST_DEBUG_OBJECT (dec, "base_ts now %" GST_TIME_FORMAT, GST_TIME_ARGS (ts));
   }
-
-  if (G_UNLIKELY (!buf))
-    goto exit;
 
   /* slightly convoluted approach caters for perfect ts if subclass desires */
   if (GST_CLOCK_TIME_IS_VALID (ts)) {
