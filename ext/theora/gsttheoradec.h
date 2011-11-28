@@ -25,7 +25,6 @@
 #endif
 
 #include <gst/gst.h>
-#include <gst/video/video.h>
 #include <theora/theoradec.h>
 #include <string.h>
 
@@ -98,8 +97,11 @@ struct _GstTheoraDec
   gboolean discont;
   guint32 seqnum;
 
-  /* QoS stuff */
-  GstVideoQoSTracker qt;
+  /* QoS stuff */ /* with LOCK*/
+  gdouble proportion;
+  GstClockTime earliest_time;
+  guint64 processed;
+  guint64 dropped;
 
   gboolean have_par;
   gint par_num;
