@@ -132,7 +132,7 @@ gst_auto_audio_src_clear_kid (GstAutoAudioSrc * src)
     src->kid = NULL;
 
     /* Don't lose SOURCE flag */
-    GST_OBJECT_FLAG_SET (src, GST_ELEMENT_IS_SOURCE);
+    GST_OBJECT_FLAG_SET (src, GST_ELEMENT_FLAG_SOURCE);
   }
 }
 
@@ -171,7 +171,7 @@ gst_auto_audio_src_init (GstAutoAudioSrc * src)
   src->filter_caps = gst_static_caps_get (&raw_caps);
 
   /* mark as source */
-  GST_OBJECT_FLAG_SET (src, GST_ELEMENT_IS_SOURCE);
+  GST_OBJECT_FLAG_SET (src, GST_ELEMENT_FLAG_SOURCE);
 }
 
 static gboolean

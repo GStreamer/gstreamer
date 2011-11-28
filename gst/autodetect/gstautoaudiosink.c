@@ -129,7 +129,7 @@ gst_auto_audio_sink_clear_kid (GstAutoAudioSink * sink)
     gst_bin_remove (GST_BIN (sink), sink->kid);
     sink->kid = NULL;
     /* Don't lose the SINK flag */
-    GST_OBJECT_FLAG_SET (sink, GST_ELEMENT_IS_SINK);
+    GST_OBJECT_FLAG_SET (sink, GST_ELEMENT_FLAG_SINK);
   }
 }
 
@@ -168,7 +168,7 @@ gst_auto_audio_sink_init (GstAutoAudioSink * sink)
   sink->filter_caps = gst_static_caps_get (&raw_caps);
 
   /* mark as sink */
-  GST_OBJECT_FLAG_SET (sink, GST_ELEMENT_IS_SINK);
+  GST_OBJECT_FLAG_SET (sink, GST_ELEMENT_FLAG_SINK);
 }
 
 static gboolean
