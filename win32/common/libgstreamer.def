@@ -352,7 +352,6 @@ EXPORTS
 	gst_element_get_state
 	gst_element_get_static_pad
 	gst_element_get_type
-	gst_element_is_indexable
 	gst_element_is_locked_state
 	gst_element_iterate_pads
 	gst_element_iterate_sink_pads

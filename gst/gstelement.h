@@ -320,6 +320,9 @@ typedef enum /*< flags=0 >*/
  * @GST_ELEMENT_FLAG_LOCKED_STATE: ignore state changes from parent
  * @GST_ELEMENT_FLAG_SINK: the element is a sink
  * @GST_ELEMENT_FLAG_SOURCE: the element is a source. Since 0.10.31
+ * @GST_ELEMENT_FLAG_PROVIDE_CLOCK: the element can provide a clock
+ * @GST_ELEMENT_FLAG_REQUIRE_CLOCK: the element requires a clock
+ * @GST_ELEMENT_FLAG_INDEXABLE: the element can use an index
  * @GST_ELEMENT_FLAG_LAST: offset to define more flags
  *
  * The standard flags that an element may have.
@@ -332,6 +335,7 @@ typedef enum
   GST_ELEMENT_FLAG_SOURCE         = (GST_OBJECT_FLAG_LAST << 3),
   GST_ELEMENT_FLAG_PROVIDE_CLOCK  = (GST_OBJECT_FLAG_LAST << 4),
   GST_ELEMENT_FLAG_REQUIRE_CLOCK  = (GST_OBJECT_FLAG_LAST << 5),
+  GST_ELEMENT_FLAG_INDEXABLE      = (GST_OBJECT_FLAG_LAST << 6),
   /* padding */
   GST_ELEMENT_FLAG_LAST           = (GST_OBJECT_FLAG_LAST << 16)
 } GstElementFlags;
@@ -736,7 +740,6 @@ void                    gst_element_set_start_time      (GstElement *element, Gs
 GstClockTime            gst_element_get_start_time      (GstElement *element);
 
 /* indexes */
-gboolean                gst_element_is_indexable        (GstElement *element);
 void                    gst_element_set_index           (GstElement *element, GstIndex *index);
 GstIndex*               gst_element_get_index           (GstElement *element);
 

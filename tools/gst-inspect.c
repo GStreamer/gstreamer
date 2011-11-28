@@ -696,7 +696,7 @@ print_clocking_info (GstElement * element)
 static void
 print_index_info (GstElement * element)
 {
-  if (gst_element_is_indexable (element)) {
+  if (GST_OBJECT_FLAG_IS_SET (element, GST_ELEMENT_FLAG_INDEXABLE)) {
     n_print ("\n");
     n_print ("Indexing capabilities:\n");
     n_print ("  element can do indexing\n");
