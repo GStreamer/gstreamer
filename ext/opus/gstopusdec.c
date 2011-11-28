@@ -414,11 +414,11 @@ opus_dec_chain_parse_data (GstOpusDec * dec, GstBuffer * buffer)
     GST_INFO_OBJECT (dec,
         "Skipping %u samples (%u at 48000 Hz, %u left to skip)", skip,
         scaled_skip, dec->pre_skip);
+  }
 
-    if (GST_BUFFER_SIZE (outbuf) == 0) {
-      gst_buffer_unref (outbuf);
-      outbuf = NULL;
-    }
+  if (GST_BUFFER_SIZE (outbuf) == 0) {
+    gst_buffer_unref (outbuf);
+    outbuf = NULL;
   }
 
   /* Apply gain */
