@@ -262,6 +262,8 @@ gst_audio_cd_src_init (GstAudioCdSrc * src)
   gst_base_src_set_format (GST_BASE_SRC (src), GST_FORMAT_TIME);
   gst_base_src_set_live (GST_BASE_SRC (src), FALSE);
 
+  GST_OBJECT_FLAG_SET (src, GST_ELEMENT_FLAG_INDEXABLE);
+
   src->device = NULL;
   src->mode = GST_AUDIO_CD_SRC_MODE_NORMAL;
   src->uri_track = -1;
