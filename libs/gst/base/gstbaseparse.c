@@ -562,6 +562,8 @@ gst_base_parse_init (GstBaseParse * parse, GstBaseParseClass * bclass)
   /* init state */
   gst_base_parse_reset (parse);
   GST_DEBUG_OBJECT (parse, "init ok");
+
+  GST_OBJECT_FLAG_SET (parse, GST_ELEMENT_FLAG_INDEXABLE);
 }
 
 static GstBaseParseFrame *
