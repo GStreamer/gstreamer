@@ -2400,7 +2400,7 @@ next:
       data = gst_queue2_dequeue_on_eos (queue, &item_type);
       if (data != NULL)
         goto next;
-      /* Since we will still accept EOS and NEWSEGMENT we return _FLOW_OK
+      /* Since we will still accept EOS and SEGMENT we return _FLOW_OK
        * to the caller so that the task function does not shut down */
       result = GST_FLOW_OK;
     }
@@ -2445,7 +2445,7 @@ next:
       data = gst_queue2_dequeue_on_eos (queue, &item_type);
       if (data != NULL)
         goto next;
-      /* Since we will still accept EOS and NEWSEGMENT we return _FLOW_OK
+      /* Since we will still accept EOS and SEGMENT we return _FLOW_OK
        * to the caller so that the task function does not shut down */
       result = GST_FLOW_OK;
     }
