@@ -181,8 +181,8 @@ gst_oss_sink_base_init (gpointer g_class)
       "Erik Walthinsen <omega@cse.ogi.edu>, "
       "Wim Taymans <wim.taymans@chello.be>");
 
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&osssink_sink_factory));
+  gst_element_class_add_static_pad_template (element_class,
+      &osssink_sink_factory);
 }
 
 static void

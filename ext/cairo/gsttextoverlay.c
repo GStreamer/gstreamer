@@ -132,12 +132,12 @@ gst_text_overlay_base_init (gpointer g_class)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
 
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&cairo_text_overlay_src_template_factory));
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&video_sink_template_factory));
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&text_sink_template_factory));
+  gst_element_class_add_static_pad_template (element_class,
+      &cairo_text_overlay_src_template_factory);
+  gst_element_class_add_static_pad_template (element_class,
+      &video_sink_template_factory);
+  gst_element_class_add_static_pad_template (element_class,
+      &text_sink_template_factory);
 
   gst_element_class_set_details_simple (element_class, "Text overlay",
       "Filter/Editor/Video",

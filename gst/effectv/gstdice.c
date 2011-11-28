@@ -289,10 +289,10 @@ gst_dicetv_base_init (gpointer g_class)
       "'Dices' the screen up into many small squares",
       "Wim Taymans <wim.taymans@chello.be>");
 
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&gst_dicetv_sink_template));
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&gst_dicetv_src_template));
+  gst_element_class_add_static_pad_template (element_class,
+      &gst_dicetv_sink_template);
+  gst_element_class_add_static_pad_template (element_class,
+      &gst_dicetv_src_template);
 }
 
 static void

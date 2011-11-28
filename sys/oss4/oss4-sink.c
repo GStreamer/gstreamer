@@ -134,6 +134,7 @@ gst_oss4_sink_base_init (gpointer g_class)
   templ = gst_pad_template_new ("sink", GST_PAD_SINK, GST_PAD_ALWAYS,
       gst_oss4_audio_get_template_caps ());
   gst_element_class_add_pad_template (element_class, templ);
+  gst_object_unref (templ);
 }
 
 static void

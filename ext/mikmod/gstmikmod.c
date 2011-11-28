@@ -128,10 +128,10 @@ gst_mikmod_base_init (gpointer g_class)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
 
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&mikmod_src_factory));
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&mikmod_sink_factory));
+  gst_element_class_add_static_pad_template (element_class,
+      &mikmod_src_factory);
+  gst_element_class_add_static_pad_template (element_class,
+      &mikmod_sink_factory);
   gst_element_class_set_details_simple (element_class, "MikMod audio decoder",
       "Codec/Decoder/Audio",
       "Module decoder based on libmikmod", "Jeremy SIMON <jsimon13@yahoo.fr>");

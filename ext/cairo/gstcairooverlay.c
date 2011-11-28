@@ -194,10 +194,10 @@ gst_cairo_overlay_base_init (gpointer g_class)
       "Render overlay on a video stream using Cairo",
       "Jon Nordby <jononor@gmail.com>");
 
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&gst_cairo_overlay_sink_template));
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&gst_cairo_overlay_src_template));
+  gst_element_class_add_static_pad_template (element_class,
+      &gst_cairo_overlay_sink_template);
+  gst_element_class_add_static_pad_template (element_class,
+      &gst_cairo_overlay_src_template);
 }
 
 static void

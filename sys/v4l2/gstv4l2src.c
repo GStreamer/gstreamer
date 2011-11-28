@@ -221,6 +221,7 @@ gst_v4l2src_base_init (gpointer g_class)
 {
   GstElementClass *gstelement_class = GST_ELEMENT_CLASS (g_class);
   GstV4l2SrcClass *gstv4l2src_class = GST_V4L2SRC_CLASS (g_class);
+  GstPadTemplate *pad_template;
 
   gstv4l2src_class->v4l2_class_devices = NULL;
 
@@ -232,10 +233,11 @@ gst_v4l2src_base_init (gpointer g_class)
       "Edgard Lima <edgard.lima@indt.org.br>,"
       " Stefan Kost <ensonic@users.sf.net>");
 
-  gst_element_class_add_pad_template
-      (gstelement_class,
+  pad_template =
       gst_pad_template_new ("src", GST_PAD_SRC, GST_PAD_ALWAYS,
-          gst_v4l2_object_get_all_caps ()));
+      gst_v4l2_object_get_all_caps ());
+  gst_element_class_add_pad_template (gstelement_class, pad_template);
+  gst_object_unref (pad_template);
 }
 
 static void

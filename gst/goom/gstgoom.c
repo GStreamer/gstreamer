@@ -137,10 +137,9 @@ gst_goom_base_init (GstGoomClass * klass)
       "Visualization",
       "Takes frames of data and outputs video frames using the GOOM filter",
       "Wim Taymans <wim@fluendo.com>");
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&sink_template));
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&src_template));
+  gst_element_class_add_static_pad_template (element_class,
+      &sink_template);
+  gst_element_class_add_static_pad_template (element_class, &src_template);
 }
 
 static void

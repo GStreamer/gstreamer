@@ -160,8 +160,8 @@ gst_shout2send_base_init (GstShout2sendClass * klass)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
 
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&sink_template));
+  gst_element_class_add_static_pad_template (element_class,
+      &sink_template);
   gst_element_class_set_details_simple (element_class, "Icecast network sink",
       "Sink/Network", "Sends data to an icecast server",
       "Wim Taymans <wim.taymans@chello.be>, "

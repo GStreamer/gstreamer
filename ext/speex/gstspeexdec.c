@@ -97,10 +97,10 @@ gst_speex_dec_base_init (gpointer g_class)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
 
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&speex_dec_src_factory));
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&speex_dec_sink_factory));
+  gst_element_class_add_static_pad_template (element_class,
+      &speex_dec_src_factory);
+  gst_element_class_add_static_pad_template (element_class,
+      &speex_dec_sink_factory);
   gst_element_class_set_details_simple (element_class, "Speex audio decoder",
       "Codec/Decoder/Audio",
       "decode speex streams to audio", "Wim Taymans <wim@fluendo.com>");

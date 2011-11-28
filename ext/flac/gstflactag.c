@@ -117,10 +117,10 @@ gst_flac_tag_base_init (gpointer g_class)
       "Formatter/Metadata",
       "Rewrite tags in a FLAC file", "Christophe Fergeau <teuf@gnome.org>");
 
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&flac_tag_sink_template));
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&flac_tag_src_template));
+  gst_element_class_add_static_pad_template (element_class,
+      &flac_tag_sink_template);
+  gst_element_class_add_static_pad_template (element_class,
+      &flac_tag_src_template);
 
   GST_DEBUG_CATEGORY_INIT (flactag_debug, "flactag", 0, "flac tag rewriter");
 }

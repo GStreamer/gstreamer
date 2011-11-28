@@ -681,8 +681,8 @@ gst_jack_audio_sink_base_init (gpointer g_class)
       "Sink/Audio", "Output audio to a JACK server",
       "Wim Taymans <wim.taymans@gmail.com>");
 
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&jackaudiosink_sink_factory));
+  gst_element_class_add_static_pad_template (element_class,
+      &jackaudiosink_sink_factory);
 }
 
 static void

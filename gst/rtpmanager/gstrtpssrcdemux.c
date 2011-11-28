@@ -226,14 +226,14 @@ gst_rtp_ssrc_demux_base_init (gpointer g_class)
 {
   GstElementClass *gstelement_klass = GST_ELEMENT_CLASS (g_class);
 
-  gst_element_class_add_pad_template (gstelement_klass,
-      gst_static_pad_template_get (&rtp_ssrc_demux_sink_template));
-  gst_element_class_add_pad_template (gstelement_klass,
-      gst_static_pad_template_get (&rtp_ssrc_demux_rtcp_sink_template));
-  gst_element_class_add_pad_template (gstelement_klass,
-      gst_static_pad_template_get (&rtp_ssrc_demux_src_template));
-  gst_element_class_add_pad_template (gstelement_klass,
-      gst_static_pad_template_get (&rtp_ssrc_demux_rtcp_src_template));
+  gst_element_class_add_static_pad_template (gstelement_klass,
+      &rtp_ssrc_demux_sink_template);
+  gst_element_class_add_static_pad_template (gstelement_klass,
+      &rtp_ssrc_demux_rtcp_sink_template);
+  gst_element_class_add_static_pad_template (gstelement_klass,
+      &rtp_ssrc_demux_src_template);
+  gst_element_class_add_static_pad_template (gstelement_klass,
+      &rtp_ssrc_demux_rtcp_src_template);
 
   gst_element_class_set_details_simple (gstelement_klass, "RTP SSRC Demux",
       "Demux/Network/RTP",

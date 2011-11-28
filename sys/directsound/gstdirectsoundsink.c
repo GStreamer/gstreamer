@@ -260,8 +260,8 @@ gst_directsound_sink_base_init (gpointer g_class)
       "Direct Sound Audio Sink", "Sink/Audio",
       "Output to a sound card via Direct Sound",
       "Sebastien Moutte <sebastien@moutte.net>");
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&directsoundsink_sink_factory));
+  gst_element_class_add_static_pad_template (element_class,
+      &directsoundsink_sink_factory);
 }
 
 static void

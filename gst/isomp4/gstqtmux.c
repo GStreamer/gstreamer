@@ -262,17 +262,20 @@ gst_qt_mux_base_init (gpointer g_class)
   srctempl = gst_pad_template_new ("src", GST_PAD_SRC,
       GST_PAD_ALWAYS, params->src_caps);
   gst_element_class_add_pad_template (element_class, srctempl);
+  gst_object_unref (srctempl);
 
   if (params->audio_sink_caps) {
     audiosinktempl = gst_pad_template_new ("audio_%d",
         GST_PAD_SINK, GST_PAD_REQUEST, params->audio_sink_caps);
     gst_element_class_add_pad_template (element_class, audiosinktempl);
+    gst_object_unref (audiosinktempl);
   }
 
   if (params->video_sink_caps) {
     videosinktempl = gst_pad_template_new ("video_%d",
         GST_PAD_SINK, GST_PAD_REQUEST, params->video_sink_caps);
     gst_element_class_add_pad_template (element_class, videosinktempl);
+    gst_object_unref (videosinktempl);
   }
 
   klass->format = params->prop->format;

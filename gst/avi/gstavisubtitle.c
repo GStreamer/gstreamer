@@ -309,10 +309,9 @@ gst_avi_subtitle_base_init (gpointer klass)
   GST_DEBUG_CATEGORY_INIT (avisubtitle_debug, "avisubtitle", 0,
       "parse avi subtitle stream");
 
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&sink_template));
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&src_template));
+  gst_element_class_add_static_pad_template (element_class,
+      &sink_template);
+  gst_element_class_add_static_pad_template (element_class, &src_template);
 
   gst_element_class_set_details_simple (element_class,
       "Avi subtitle parser", "Codec/Parser/Subtitle",

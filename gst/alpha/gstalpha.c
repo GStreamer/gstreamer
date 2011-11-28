@@ -226,10 +226,10 @@ gst_alpha_base_init (gpointer g_class)
       "Edward Hervey <edward.hervey@collabora.co.uk>\n"
       "Jan Schmidt <thaytan@noraisin.net>");
 
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&gst_alpha_sink_template));
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&gst_alpha_src_template));
+  gst_element_class_add_static_pad_template (element_class,
+      &gst_alpha_sink_template);
+  gst_element_class_add_static_pad_template (element_class,
+      &gst_alpha_src_template);
 
   GST_DEBUG_CATEGORY_INIT (gst_alpha_debug, "alpha", 0,
       "alpha - Element for adding alpha channel to streams");

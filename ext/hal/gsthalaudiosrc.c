@@ -76,8 +76,7 @@ gst_hal_audio_src_base_init (gpointer klass)
       GST_PAD_ALWAYS,
       GST_STATIC_CAPS_ANY);
 
-  gst_element_class_add_pad_template (eklass,
-      gst_static_pad_template_get (&src_template));
+  gst_element_class_add_static_pad_template (eklass, &src_template);
   gst_element_class_set_details_simple (eklass, "HAL audio source",
       "Source/Audio",
       "Audio source for sound device access via HAL",

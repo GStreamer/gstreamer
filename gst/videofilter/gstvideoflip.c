@@ -1051,10 +1051,10 @@ gst_video_flip_base_init (gpointer g_class)
       "Filter/Effect/Video",
       "Flips and rotates video", "David Schleef <ds@schleef.org>");
 
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&gst_video_flip_sink_template));
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&gst_video_flip_src_template));
+  gst_element_class_add_static_pad_template (element_class,
+      &gst_video_flip_sink_template);
+  gst_element_class_add_static_pad_template (element_class,
+      &gst_video_flip_src_template);
 }
 
 static void

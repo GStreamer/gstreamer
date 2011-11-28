@@ -87,6 +87,9 @@ gst_mng_enc_base_init (gpointer g_class)
   gst_element_class_set_details_simple (element_class, "MNG video encoder",
       "Codec/Encoder/Video",
       "Encode a video frame to an .mng video", "Wim Taymans <wim@fluendo.com>");
+
+  gst_object_unref (mngenc_src_template);
+  gst_object_unref (mngenc_sink_template);
 }
 
 static void

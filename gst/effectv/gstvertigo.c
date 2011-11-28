@@ -289,10 +289,10 @@ gst_vertigotv_base_init (gpointer g_class)
       "A loopback alpha blending effector with rotating and scaling",
       "Wim Taymans <wim.taymans@chello.be>");
 
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&gst_vertigotv_sink_template));
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&gst_vertigotv_src_template));
+  gst_element_class_add_static_pad_template (element_class,
+      &gst_vertigotv_sink_template);
+  gst_element_class_add_static_pad_template (element_class,
+      &gst_vertigotv_src_template);
 }
 
 static void

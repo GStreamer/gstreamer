@@ -122,10 +122,10 @@ gst_pixbufscale_base_init (gpointer g_class)
       "Wim Taymans <wim.taymans@chello.be>, "
       "Renato Filho <renato.filho@indt.org.br>");
 
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&gst_pixbufscale_src_template));
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&gst_pixbufscale_sink_template));
+  gst_element_class_add_static_pad_template (element_class,
+      &gst_pixbufscale_src_template);
+  gst_element_class_add_static_pad_template (element_class,
+      &gst_pixbufscale_sink_template);
 }
 
 static void

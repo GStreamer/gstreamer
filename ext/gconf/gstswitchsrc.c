@@ -60,8 +60,7 @@ gst_switch_src_class_init (GstSwitchSrcClass * klass)
   /* Provide a default pad template if the child didn't */
   child_pad_templ = gst_element_class_get_pad_template (eklass, "src");
   if (child_pad_templ == NULL) {
-    gst_element_class_add_pad_template (eklass,
-        gst_static_pad_template_get (&src_template));
+    gst_element_class_add_static_pad_template (eklass, &src_template);
   }
 }
 
