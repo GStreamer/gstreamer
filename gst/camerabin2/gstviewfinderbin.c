@@ -206,21 +206,22 @@ gst_viewfinder_bin_create_elements (GstViewfinderBin * vfbin)
     gst_ghost_pad_set_target (GST_GHOST_PAD (vfbin->ghostpad), NULL);
 
     /* add the elements, user wants them */
-    csp =
-        gst_camerabin_create_and_add_element (GST_BIN (vfbin),
-        "ffmpegcolorspace", "vfbin-csp");
+    csp = gst_element_factory_make ("ffmpegcolorspace", "vfbin-csp");
     if (!csp) {
       missing_element_name = "ffmpegcolorspace";
       goto missing_element;
     }
+    gst_bin_add (GST_BIN (vfbin), csp);
 
-    videoscale =
-        gst_camerabin_create_and_add_element (GST_BIN (vfbin), "videoscale",
-        "vfbin-videoscale");
+    videoscale = gst_element_factory_make ("videoscale", "vfbin->videoscale");
     if (!videoscale) {
       missing_element_name = "videoscale";
       goto missing_element;
     }
+    gst_bin_add (GST_BIN (vfbin), videoscale);
+
+    gst_element_link_pads_full (csp, "src", videoscale, "sink",
+        GST_PAD_LINK_CHECK_NOTHING);
 
     vfbin->elements_created = TRUE;
     GST_DEBUG_OBJECT (vfbin, "Elements succesfully created and linked");
@@ -238,7 +239,8 @@ gst_viewfinder_bin_create_elements (GstViewfinderBin * vfbin)
       unref = TRUE;
     }
 
-    if (!gst_element_link_pads (videoscale, "src", vfbin->video_sink, "sink")) {
+    if (!gst_element_link_pads_full (videoscale, "src", vfbin->video_sink,
+            "sink", GST_PAD_LINK_CHECK_CAPS)) {
       GST_ELEMENT_ERROR (vfbin, CORE, NEGOTIATION, (NULL),
           ("linking videoscale and viewfindersink failed"));
     }
