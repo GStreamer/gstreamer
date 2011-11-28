@@ -95,7 +95,6 @@ struct _GstBaseVideoEncoder
   gint64            min_latency;
   gint64            max_latency;
 
-  GstEvent         *force_keyunit_event;
   GList            *current_frame_events;
   GstBuffer        *headers;
 
