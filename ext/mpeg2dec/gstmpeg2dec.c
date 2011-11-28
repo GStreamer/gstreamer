@@ -192,6 +192,8 @@ gst_mpeg2dec_init (GstMpeg2dec * mpeg2dec)
   mpeg2dec->error_count = 0;
   mpeg2dec->can_allocate_aligned = TRUE;
 
+  GST_OBJECT_FLAG_SET (mpeg2dec, GST_ELEMENT_FLAG_INDEXABLE);
+
   /* initialize the mpeg2dec acceleration */
 }
 
