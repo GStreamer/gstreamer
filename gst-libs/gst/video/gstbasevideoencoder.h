@@ -85,8 +85,6 @@ struct _GstBaseVideoEncoder
   int               distance_from_sync;
 
   gboolean          force_keyframe;
-  gboolean          force_keyframe_pending;
-  gboolean          force_keyframe_headers;
 
   /*< private >*/
   /* FIXME move to real private part ?
@@ -97,7 +95,11 @@ struct _GstBaseVideoEncoder
   gint64            max_latency;
 
   GList            *current_frame_events;
+
   GstBuffer        *headers;
+
+  gboolean          force_keyframe_pending;
+  gboolean          force_keyframe_headers;
 
   union {
     void *padding;
