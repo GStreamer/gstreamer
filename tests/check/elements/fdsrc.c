@@ -41,12 +41,10 @@ event_func (GstPad * pad, GstObject * parent, GstEvent * event)
 {
   if (GST_EVENT_TYPE (event) == GST_EVENT_EOS) {
     have_eos = TRUE;
-    gst_event_unref (event);
-    return TRUE;
   }
 
   gst_event_unref (event);
-  return FALSE;
+  return TRUE;
 }
 
 static GstElement *
