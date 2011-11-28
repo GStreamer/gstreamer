@@ -184,10 +184,6 @@ gst_base_video_encoder_reset (GstBaseVideoEncoder * base_video_encoder)
   base_video_encoder->min_latency = 0;
   base_video_encoder->max_latency = 0;
 
-  if (base_video_encoder->force_keyunit_event) {
-    gst_event_unref (base_video_encoder->force_keyunit_event);
-    base_video_encoder->force_keyunit_event = NULL;
-  }
   gst_buffer_replace (&base_video_encoder->headers, NULL);
 
   g_list_foreach (base_video_encoder->current_frame_events,
@@ -534,9 +530,6 @@ gst_base_video_encoder_sink_eventfunc (GstBaseVideoEncoder * base_video_encoder,
                 &base_video_encoder->force_keyframe_headers))
           base_video_encoder->force_keyframe_headers = FALSE;
 
-        if (base_video_encoder->force_keyunit_event)
-          gst_event_unref (base_video_encoder->force_keyunit_event);
-        base_video_encoder->force_keyunit_event = gst_event_copy (event);
         GST_DEBUG_OBJECT (base_video_encoder, "GstForceKeyUnit, all-headers %d",
             base_video_encoder->force_keyframe_headers);
         GST_OBJECT_UNLOCK (base_video_encoder);
@@ -919,17 +912,8 @@ gst_base_video_encoder_finish_frame (GstBaseVideoEncoder * base_video_encoder,
         (base_video_encoder)->segment, GST_FORMAT_TIME,
         frame->presentation_timestamp);
 
-    /* re-use upstream event if any so it also conveys any additional
-     * info upstream arranged in there */
-    GST_OBJECT_LOCK (base_video_encoder);
-    if (base_video_encoder->force_keyunit_event) {
-      ev = base_video_encoder->force_keyunit_event;
-      base_video_encoder->force_keyunit_event = NULL;
-    } else {
-      ev = gst_event_new_custom (GST_EVENT_CUSTOM_DOWNSTREAM,
-          gst_structure_new ("GstForceKeyUnit", NULL));
-    }
-    GST_OBJECT_UNLOCK (base_video_encoder);
+    ev = gst_event_new_custom (GST_EVENT_CUSTOM_DOWNSTREAM,
+        gst_structure_new ("GstForceKeyUnit", NULL));
 
     gst_structure_set (ev->structure,
         "timestamp", G_TYPE_UINT64, frame->presentation_timestamp,
