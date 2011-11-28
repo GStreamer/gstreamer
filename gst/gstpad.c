@@ -145,6 +145,11 @@ static gboolean gst_pad_activate_default (GstPad * pad, GstObject * parent);
 static GstFlowReturn gst_pad_chain_list_default (GstPad * pad,
     GstObject * parent, GstBufferList * list);
 
+static GstFlowReturn gst_pad_send_event_unchecked (GstPad * pad,
+    GstEvent * event, GstPadProbeType type);
+static GstFlowReturn gst_pad_push_event_unchecked (GstPad * pad,
+    GstEvent * event, GstPadProbeType type, gboolean * stored);
+
 static guint gst_pad_signals[LAST_SIGNAL] = { 0 };
 
 static GParamSpec *pspec_caps = NULL;
@@ -3238,8 +3243,8 @@ probe_stopped:
 static gboolean
 push_sticky (GstPad * pad, PadEvent * ev, gpointer user_data)
 {
-  gboolean res;
   GstFlowReturn *data = user_data;
+  gboolean stored;
 
   if (ev->received) {
     GST_DEBUG_OBJECT (pad, "event %s was already received",
@@ -3248,13 +3253,11 @@ push_sticky (GstPad * pad, PadEvent * ev, gpointer user_data)
   }
   GST_OBJECT_UNLOCK (pad);
 
-  res = gst_pad_push_event (pad, gst_event_ref (ev->event));
+  *data = gst_pad_push_event_unchecked (pad, gst_event_ref (ev->event),
+      GST_PAD_PROBE_TYPE_EVENT_DOWNSTREAM, &stored);
 
   GST_OBJECT_LOCK (pad);
-  if (!res)
-    *data = GST_FLOW_ERROR;
-
-  return res;
+  return *data != GST_FLOW_OK;
 }
 
 /* this is the chain function that does not perform the additional argument
@@ -3524,7 +3527,8 @@ flushing:
   }
 events_error:
   {
-    GST_CAT_LOG_OBJECT (GST_CAT_SCHEDULING, pad, "error pushing events");
+    GST_CAT_LOG_OBJECT (GST_CAT_SCHEDULING, pad,
+        "error pushing events, return %s", gst_flow_get_name (ret));
     GST_OBJECT_UNLOCK (pad);
     gst_mini_object_unref (GST_MINI_OBJECT_CAST (data));
     return ret;
@@ -3962,56 +3966,25 @@ gst_pad_store_sticky_event (GstPad * pad, GstEvent * event, gboolean locked)
   return res;
 }
 
-/**
- * gst_pad_push_event:
- * @pad: a #GstPad to push the event to.
- * @event: (transfer full): the #GstEvent to send to the pad.
- *
- * Sends the event to the peer of the given pad. This function is
- * mainly used by elements to send events to their peer
- * elements.
- *
- * This function takes owership of the provided event so you should
- * gst_event_ref() it if you want to reuse the event after this call.
- *
- * Returns: TRUE if the event was handled.
- *
- * MT safe.
- */
-gboolean
-gst_pad_push_event (GstPad * pad, GstEvent * event)
+static GstFlowReturn
+gst_pad_push_event_unchecked (GstPad * pad, GstEvent * event,
+    GstPadProbeType type, gboolean * stored)
 {
   GstFlowReturn ret;
   GstPad *peerpad;
-  gboolean result;
-  gboolean stored = FALSE;
-  GstPadProbeType type;
+  GstEventType event_type;
   gboolean sticky;
 
-  g_return_val_if_fail (GST_IS_PAD (pad), FALSE);
-  g_return_val_if_fail (event != NULL, FALSE);
-  g_return_val_if_fail (GST_IS_EVENT (event), FALSE);
-
-  if (GST_PAD_IS_SRC (pad)) {
-    if (G_UNLIKELY (!GST_EVENT_IS_DOWNSTREAM (event)))
-      goto wrong_direction;
-    sticky = GST_EVENT_IS_STICKY (event);
-    type = GST_PAD_PROBE_TYPE_EVENT_DOWNSTREAM;
-  } else if (GST_PAD_IS_SINK (pad)) {
-    if (G_UNLIKELY (!GST_EVENT_IS_UPSTREAM (event)))
-      goto wrong_direction;
-    /* events pushed on sinkpad never are sticky */
-    sticky = FALSE;
-    type = GST_PAD_PROBE_TYPE_EVENT_UPSTREAM;
-  } else
-    goto unknown_direction;
+  sticky = GST_EVENT_IS_STICKY (event);
 
   GST_OBJECT_LOCK (pad);
 
   /* Two checks to be made:
    * . (un)set the FLUSHING flag for flushing events,
    * . handle pad blocking */
-  switch (GST_EVENT_TYPE (event)) {
+  event_type = GST_EVENT_TYPE (event);
+  *stored = FALSE;
+  switch (event_type) {
     case GST_EVENT_FLUSH_START:
       GST_PAD_SET_FLUSHING (pad);
 
@@ -4052,7 +4025,7 @@ gst_pad_push_event (GstPad * pad, GstEvent * event)
           GST_DEBUG_OBJECT (pad, "event %s updated",
               GST_EVENT_TYPE_NAME (event));
         }
-        stored = TRUE;
+        *stored = TRUE;
       }
 
       switch (GST_EVENT_TYPE (event)) {
@@ -4089,19 +4062,19 @@ gst_pad_push_event (GstPad * pad, GstEvent * event)
   GST_LOG_OBJECT (pad, "sending event %p (%s) to peerpad %" GST_PTR_FORMAT,
       event, GST_EVENT_TYPE_NAME (event), peerpad);
 
-  result = gst_pad_send_event (peerpad, event);
+  ret = gst_pad_send_event_unchecked (peerpad, event, type);
 
   /* Note: we gave away ownership of the event at this point but we can still
    * print the old pointer */
   GST_LOG_OBJECT (pad,
-      "sent event %p to peerpad %" GST_PTR_FORMAT ", result %d", event, peerpad,
-      result);
+      "sent event %p to peerpad %" GST_PTR_FORMAT ", ret %s", event, peerpad,
+      gst_flow_get_name (ret));
 
   gst_object_unref (peerpad);
 
   GST_OBJECT_LOCK (pad);
   if (sticky) {
-    if (result) {
+    if (ret == GST_FLOW_OK) {
       PadEvent *ev;
 
       if ((ev = find_event (pad, event)))
@@ -4117,11 +4090,98 @@ gst_pad_push_event (GstPad * pad, GstEvent * event)
   if (pad->priv->using == 0) {
     /* pad is not active anymore, trigger idle callbacks */
     PROBE_NO_DATA (pad, GST_PAD_PROBE_TYPE_PUSH | GST_PAD_PROBE_TYPE_IDLE,
-        idle_probe_stopped, GST_FLOW_OK);
+        idle_probe_stopped, ret);
   }
   GST_OBJECT_UNLOCK (pad);
 
-  return result | stored;
+  return ret;
+
+  /* ERROR handling */
+flushed:
+  {
+    GST_DEBUG_OBJECT (pad, "We're flushing");
+    GST_OBJECT_UNLOCK (pad);
+    gst_event_unref (event);
+    return GST_FLOW_WRONG_STATE;
+  }
+probe_stopped:
+  {
+    GST_OBJECT_FLAG_SET (pad, GST_PAD_FLAG_PENDING_EVENTS);
+    GST_OBJECT_UNLOCK (pad);
+    gst_event_unref (event);
+
+    switch (ret) {
+      case GST_FLOW_CUSTOM_SUCCESS:
+        GST_DEBUG_OBJECT (pad, "dropped event");
+        ret = GST_FLOW_OK;
+        break;
+      default:
+        GST_DEBUG_OBJECT (pad, "en error occured %s", gst_flow_get_name (ret));
+        break;
+    }
+    return ret;
+  }
+not_linked:
+  {
+    GST_DEBUG_OBJECT (pad, "Dropping event because pad is not linked");
+    GST_OBJECT_FLAG_SET (pad, GST_PAD_FLAG_PENDING_EVENTS);
+    GST_OBJECT_UNLOCK (pad);
+    gst_event_unref (event);
+    return sticky ? GST_FLOW_OK : GST_FLOW_NOT_LINKED;
+  }
+idle_probe_stopped:
+  {
+    GST_DEBUG_OBJECT (pad, "Idle probe returned %s", gst_flow_get_name (ret));
+    GST_OBJECT_UNLOCK (pad);
+    return ret;
+  }
+}
+
+/**
+ * gst_pad_push_event:
+ * @pad: a #GstPad to push the event to.
+ * @event: (transfer full): the #GstEvent to send to the pad.
+ *
+ * Sends the event to the peer of the given pad. This function is
+ * mainly used by elements to send events to their peer
+ * elements.
+ *
+ * This function takes owership of the provided event so you should
+ * gst_event_ref() it if you want to reuse the event after this call.
+ *
+ * Returns: TRUE if the event was handled.
+ *
+ * MT safe.
+ */
+gboolean
+gst_pad_push_event (GstPad * pad, GstEvent * event)
+{
+  gboolean res;
+  GstPadProbeType type;
+  gboolean stored;
+
+  g_return_val_if_fail (GST_IS_PAD (pad), FALSE);
+  g_return_val_if_fail (event != NULL, FALSE);
+  g_return_val_if_fail (GST_IS_EVENT (event), FALSE);
+
+  if (GST_PAD_IS_SRC (pad)) {
+    if (G_UNLIKELY (!GST_EVENT_IS_DOWNSTREAM (event)))
+      goto wrong_direction;
+    type = GST_PAD_PROBE_TYPE_EVENT_DOWNSTREAM;
+  } else if (GST_PAD_IS_SINK (pad)) {
+    if (G_UNLIKELY (!GST_EVENT_IS_UPSTREAM (event)))
+      goto wrong_direction;
+    /* events pushed on sinkpad never are sticky */
+    type = GST_PAD_PROBE_TYPE_EVENT_UPSTREAM;
+  } else
+    goto unknown_direction;
+
+  if (gst_pad_push_event_unchecked (pad, event, type, &stored) != GST_FLOW_OK)
+    res = stored ? TRUE : FALSE;
+  else
+    res = TRUE;
+
+  return res;
 
   /* ERROR handling */
 wrong_direction:
@@ -4136,36 +4196,6 @@ unknown_direction:
     g_warning ("pad %s:%s has invalid direction", GST_DEBUG_PAD_NAME (pad));
     gst_event_unref (event);
     return FALSE;
-  }
-flushed:
-  {
-    GST_DEBUG_OBJECT (pad, "We're flushing");
-    GST_OBJECT_UNLOCK (pad);
-    gst_event_unref (event);
-    return stored;
-  }
-probe_stopped:
-  {
-    GST_DEBUG_OBJECT (pad, "Probe returned %s", gst_flow_get_name (ret));
-    GST_OBJECT_FLAG_SET (pad, GST_PAD_FLAG_PENDING_EVENTS);
-    GST_OBJECT_UNLOCK (pad);
-    gst_event_unref (event);
-    return stored;
-  }
-idle_probe_stopped:
-  {
-    GST_DEBUG_OBJECT (pad, "Idle probe returned %s", gst_flow_get_name (ret));
-    GST_OBJECT_UNLOCK (pad);
-    gst_event_unref (event);
-    return stored;
-  }
-not_linked:
-  {
-    GST_DEBUG_OBJECT (pad, "Dropping event because pad is not linked");
-    GST_OBJECT_FLAG_SET (pad, GST_PAD_FLAG_PENDING_EVENTS);
-    GST_OBJECT_UNLOCK (pad);
-    gst_event_unref (event);
-    return stored;
   }
 }
 
@@ -4204,64 +4234,24 @@ not_accepted:
   }
 }
 
-/**
- * gst_pad_send_event:
- * @pad: a #GstPad to send the event to.
- * @event: (transfer full): the #GstEvent to send to the pad.
- *
- * Sends the event to the pad. This function can be used
- * by applications to send events in the pipeline.
- *
- * If @pad is a source pad, @event should be an upstream event. If @pad is a
- * sink pad, @event should be a downstream event. For example, you would not
- * send a #GST_EVENT_EOS on a src pad; EOS events only propagate downstream.
- * Furthermore, some downstream events have to be serialized with data flow,
- * like EOS, while some can travel out-of-band, like #GST_EVENT_FLUSH_START. If
- * the event needs to be serialized with data flow, this function will take the
- * pad's stream lock while calling its event function.
- *
- * To find out whether an event type is upstream, downstream, or downstream and
- * serialized, see #GstEventTypeFlags, gst_event_type_get_flags(),
- * #GST_EVENT_IS_UPSTREAM, #GST_EVENT_IS_DOWNSTREAM, and
- * #GST_EVENT_IS_SERIALIZED. Note that in practice that an application or
- * plugin doesn't need to bother itself with this information; the core handles
- * all necessary locks and checks.
- *
- * This function takes owership of the provided event so you should
- * gst_event_ref() it if you want to reuse the event after this call.
- *
- * Returns: TRUE if the event was handled.
- */
-gboolean
-gst_pad_send_event (GstPad * pad, GstEvent * event)
+static GstFlowReturn
+gst_pad_send_event_unchecked (GstPad * pad, GstEvent * event,
+    GstPadProbeType type)
 {
   GstFlowReturn ret;
-  gboolean result = FALSE;
+  GstEventType event_type;
   gboolean serialized, need_unlock = FALSE, sticky;
   GstPadEventFunction eventfunc;
   GstObject *parent;
-  GstPadProbeType type;
-
-  g_return_val_if_fail (GST_IS_PAD (pad), FALSE);
-  g_return_val_if_fail (event != NULL, FALSE);
-
-  if (GST_PAD_IS_SINK (pad)) {
-    if (G_UNLIKELY (!GST_EVENT_IS_DOWNSTREAM (event)))
-      goto wrong_direction;
-    serialized = GST_EVENT_IS_SERIALIZED (event);
-    sticky = GST_EVENT_IS_STICKY (event);
-    type = GST_PAD_PROBE_TYPE_EVENT_DOWNSTREAM;
-  } else if (GST_PAD_IS_SRC (pad)) {
-    if (G_UNLIKELY (!GST_EVENT_IS_UPSTREAM (event)))
-      goto wrong_direction;
-    /* events on srcpad never are serialized and sticky */
-    serialized = sticky = FALSE;
-    type = GST_PAD_PROBE_TYPE_EVENT_UPSTREAM;
-  } else
-    goto unknown_direction;
 
   GST_OBJECT_LOCK (pad);
-  switch (GST_EVENT_TYPE (event)) {
+  if (GST_PAD_IS_SINK (pad))
+    serialized = GST_EVENT_IS_SERIALIZED (event);
+  else
+    serialized = FALSE;
+  sticky = GST_EVENT_IS_STICKY (event);
+  event_type = GST_EVENT_TYPE (event);
+  switch (event_type) {
     case GST_EVENT_FLUSH_START:
       GST_CAT_DEBUG_OBJECT (GST_CAT_EVENT, pad,
           "have event type %d (FLUSH_START)", GST_EVENT_TYPE (event));
@@ -4333,29 +4323,155 @@ gst_pad_send_event (GstPad * pad, GstEvent * event)
   ACQUIRE_PARENT (pad, parent, no_parent);
   GST_OBJECT_UNLOCK (pad);
 
-  if (G_UNLIKELY (pre_eventfunc_check (pad, event) != GST_FLOW_OK))
+  ret = pre_eventfunc_check (pad, event);
+  if (G_UNLIKELY (ret != GST_FLOW_OK))
     goto precheck_failed;
 
   if (sticky)
     gst_event_ref (event);
 
-  result = eventfunc (pad, parent, event);
-
+  if (eventfunc (pad, parent, event)) {
+    ret = GST_FLOW_OK;
+  } else {
+    /* something went wrong */
+    switch (event_type) {
+      case GST_EVENT_CAPS:
+        ret = GST_FLOW_NOT_NEGOTIATED;
+        break;
+      default:
+        ret = GST_FLOW_ERROR;
+        break;
+    }
+  }
   RELEASE_PARENT (parent);
 
+  GST_DEBUG_OBJECT (pad, "sent event, ret %s", gst_flow_get_name (ret));
+
   if (sticky) {
-    if (result)
+    if (ret == GST_FLOW_OK) {
       /* after the event function accepted the event, we can store the sticky
        * event on the pad */
       gst_pad_store_sticky_event (pad, event, FALSE);
-
+    }
     gst_event_unref (event);
   }
 
   if (need_unlock)
     GST_PAD_STREAM_UNLOCK (pad);
 
-  GST_DEBUG_OBJECT (pad, "sent event, result %d", result);
+  return ret;
+
+  /* ERROR handling */
+flushing:
+  {
+    GST_OBJECT_UNLOCK (pad);
+    if (need_unlock)
+      GST_PAD_STREAM_UNLOCK (pad);
+    GST_CAT_INFO_OBJECT (GST_CAT_EVENT, pad,
+        "Received event on flushing pad. Discarding");
+    gst_event_unref (event);
+    return GST_FLOW_WRONG_STATE;
+  }
+probe_stopped:
+  {
+    GST_OBJECT_UNLOCK (pad);
+    if (need_unlock)
+      GST_PAD_STREAM_UNLOCK (pad);
+    gst_event_unref (event);
+
+    switch (ret) {
+      case GST_FLOW_CUSTOM_SUCCESS:
+        GST_DEBUG_OBJECT (pad, "dropped event");
+        ret = GST_FLOW_OK;
+        break;
+      default:
+        GST_DEBUG_OBJECT (pad, "en error occured %s", gst_flow_get_name (ret));
+        break;
+    }
+    return ret;
+  }
+no_function:
+  {
+    g_warning ("pad %s:%s has no event handler, file a bug.",
+        GST_DEBUG_PAD_NAME (pad));
+    GST_OBJECT_UNLOCK (pad);
+    if (need_unlock)
+      GST_PAD_STREAM_UNLOCK (pad);
+    gst_event_unref (event);
+    return GST_FLOW_NOT_SUPPORTED;
+  }
+no_parent:
+  {
+    GST_DEBUG_OBJECT (pad, "no parent");
+    GST_OBJECT_UNLOCK (pad);
+    if (need_unlock)
+      GST_PAD_STREAM_UNLOCK (pad);
+    gst_event_unref (event);
+    return GST_FLOW_WRONG_STATE;
+  }
+precheck_failed:
+  {
+    GST_DEBUG_OBJECT (pad, "pre event check failed");
+    RELEASE_PARENT (parent);
+    if (need_unlock)
+      GST_PAD_STREAM_UNLOCK (pad);
+    gst_event_unref (event);
+    return ret;
+  }
+}
+
+/**
+ * gst_pad_send_event:
+ * @pad: a #GstPad to send the event to.
+ * @event: (transfer full): the #GstEvent to send to the pad.
+ *
+ * Sends the event to the pad. This function can be used
+ * by applications to send events in the pipeline.
+ *
+ * If @pad is a source pad, @event should be an upstream event. If @pad is a
+ * sink pad, @event should be a downstream event. For example, you would not
+ * send a #GST_EVENT_EOS on a src pad; EOS events only propagate downstream.
+ * Furthermore, some downstream events have to be serialized with data flow,
+ * like EOS, while some can travel out-of-band, like #GST_EVENT_FLUSH_START. If
+ * the event needs to be serialized with data flow, this function will take the
+ * pad's stream lock while calling its event function.
+ *
+ * To find out whether an event type is upstream, downstream, or downstream and
+ * serialized, see #GstEventTypeFlags, gst_event_type_get_flags(),
+ * #GST_EVENT_IS_UPSTREAM, #GST_EVENT_IS_DOWNSTREAM, and
+ * #GST_EVENT_IS_SERIALIZED. Note that in practice that an application or
+ * plugin doesn't need to bother itself with this information; the core handles
+ * all necessary locks and checks.
+ *
+ * This function takes owership of the provided event so you should
+ * gst_event_ref() it if you want to reuse the event after this call.
+ *
+ * Returns: TRUE if the event was handled.
+ */
+gboolean
+gst_pad_send_event (GstPad * pad, GstEvent * event)
+{
+  gboolean result;
+  GstPadProbeType type;
+
+  g_return_val_if_fail (GST_IS_PAD (pad), FALSE);
+  g_return_val_if_fail (event != NULL, FALSE);
+
+  if (GST_PAD_IS_SINK (pad)) {
+    if (G_UNLIKELY (!GST_EVENT_IS_DOWNSTREAM (event)))
+      goto wrong_direction;
+    type = GST_PAD_PROBE_TYPE_EVENT_DOWNSTREAM;
+  } else if (GST_PAD_IS_SRC (pad)) {
+    if (G_UNLIKELY (!GST_EVENT_IS_UPSTREAM (event)))
+      goto wrong_direction;
+    type = GST_PAD_PROBE_TYPE_EVENT_UPSTREAM;
+  } else
+    goto unknown_direction;
+
+  if (gst_pad_send_event_unchecked (pad, event, type) != GST_FLOW_OK)
+    result = FALSE;
+  else
+    result = TRUE;
 
   return result;
 
@@ -4370,53 +4486,6 @@ wrong_direction:
 unknown_direction:
   {
     g_warning ("pad %s:%s has invalid direction", GST_DEBUG_PAD_NAME (pad));
-    gst_event_unref (event);
-    return FALSE;
-  }
-no_function:
-  {
-    g_warning ("pad %s:%s has no event handler, file a bug.",
-        GST_DEBUG_PAD_NAME (pad));
-    GST_OBJECT_UNLOCK (pad);
-    if (need_unlock)
-      GST_PAD_STREAM_UNLOCK (pad);
-    gst_event_unref (event);
-    return FALSE;
-  }
-precheck_failed:
-  {
-    GST_DEBUG_OBJECT (pad, "pre event check failed");
-    RELEASE_PARENT (parent);
-    if (need_unlock)
-      GST_PAD_STREAM_UNLOCK (pad);
-    gst_event_unref (event);
-    return FALSE;
-  }
-no_parent:
-  {
-    GST_DEBUG_OBJECT (pad, "no parent");
-    GST_OBJECT_UNLOCK (pad);
-    if (need_unlock)
-      GST_PAD_STREAM_UNLOCK (pad);
-    gst_event_unref (event);
-    return FALSE;
-  }
-flushing:
-  {
-    GST_OBJECT_UNLOCK (pad);
-    if (need_unlock)
-      GST_PAD_STREAM_UNLOCK (pad);
-    GST_CAT_INFO_OBJECT (GST_CAT_EVENT, pad,
-        "Received event on flushing pad. Discarding");
-    gst_event_unref (event);
-    return FALSE;
-  }
-probe_stopped:
-  {
-    GST_DEBUG_OBJECT (pad, "probe returned %s", gst_flow_get_name (ret));
-    GST_OBJECT_UNLOCK (pad);
-    if (need_unlock)
-      GST_PAD_STREAM_UNLOCK (pad);
     gst_event_unref (event);
     return FALSE;
   }
