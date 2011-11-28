@@ -381,10 +381,10 @@ gst_post_proc_base_init (GstPostProcClass * klass)
   g_free (longname);
   g_free (description);
 
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&gst_post_proc_src_template));
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&gst_post_proc_sink_template));
+  gst_element_class_add_static_pad_template (element_class,
+      &gst_post_proc_src_template);
+  gst_element_class_add_static_pad_template (element_class,
+      &gst_post_proc_sink_template);
 
   klass->filterid = ppidx;
 }
