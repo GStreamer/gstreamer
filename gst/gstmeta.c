@@ -42,13 +42,21 @@ _priv_gst_meta_initialize (void)
 }
 
 /**
- * gst_meta_register_info:
- * @info: a #GstMetaInfo
+ * gst_meta_register:
+ * @api: the name of the #GstMeta API
+ * @impl: the name of the #GstMeta implementation
+ * @size: the size of the #GstMeta structure
+ * @init_func: a #GstMetaInitFunction
+ * @free_func: a #GstMetaFreeFunction
+ * @copy_func: a #GstMetaCopyFunction
+ * @transform_func: a #GstMetaTransformFunction
  *
- * Register a #GstMetaInfo. The same @info can be retrieved later with
- * gst_meta_get_info() by using @impl as the key.
+ * Register a new #GstMeta implementation.
  *
- * Returns: a #GstMetaInfo that can be used to access metadata.
+ * The same @info can be retrieved later with gst_meta_get_info() by using
+ * @impl as the key.
+ *
+ * Returns: (transfer none): a #GstMetaInfo that can be used to access metadata.
  */
 
 const GstMetaInfo *
@@ -85,11 +93,11 @@ gst_meta_register (const gchar * api, const gchar * impl, gsize size,
  * gst_meta_get_info:
  * @impl: the name
  *
- * Lookup a previously registered meta info structure by its implementor name
+ * Lookup a previously registered meta info structure by its implementation name
  * @impl.
  *
- * Returns: a #GstMetaInfo with @impl or #NULL when no such metainfo
- * exists.
+ * Returns: (transfer none): a #GstMetaInfo with @impl, or #NULL when no such
+ * metainfo exists.
  */
 const GstMetaInfo *
 gst_meta_get_info (const gchar * impl)
