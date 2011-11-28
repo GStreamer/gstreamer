@@ -122,6 +122,7 @@ static GstEventQuarks event_quarks[] = {
   {GST_EVENT_CUSTOM_UPSTREAM, "custom-upstream", 0},
   {GST_EVENT_CUSTOM_DOWNSTREAM, "custom-downstream", 0},
   {GST_EVENT_CUSTOM_DOWNSTREAM_OOB, "custom-downstream-oob", 0},
+  {GST_EVENT_CUSTOM_DOWNSTREAM_STICKY, "custom-downstream-sticky", 0},
   {GST_EVENT_CUSTOM_BOTH, "custom-both", 0},
   {GST_EVENT_CUSTOM_BOTH_OOB, "custom-both-oob", 0},
 
