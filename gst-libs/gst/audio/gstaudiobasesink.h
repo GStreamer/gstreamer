@@ -121,7 +121,6 @@ struct _GstAudioBaseSink {
   guint64             next_sample;
 
   /* clock */
-  gboolean            provide_clock;
   GstClock           *provided_clock;
 
   /* with g_atomic_; currently rendering eos */

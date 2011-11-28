@@ -73,8 +73,6 @@ gst_audio_base_src_slave_method_get_type (void)
 
 struct _GstAudioBaseSrcPrivate
 {
-  gboolean provide_clock;
-
   /* the clock slaving algorithm in use */
   GstAudioBaseSrcSlaveMethod slave_method;
 };
@@ -240,7 +238,10 @@ gst_audio_base_src_init (GstAudioBaseSrc * audiobasesrc)
 
   audiobasesrc->buffer_time = DEFAULT_BUFFER_TIME;
   audiobasesrc->latency_time = DEFAULT_LATENCY_TIME;
-  audiobasesrc->priv->provide_clock = DEFAULT_PROVIDE_CLOCK;
+  if (DEFAULT_PROVIDE_CLOCK)
+    GST_OBJECT_FLAG_SET (audiobasesrc, GST_ELEMENT_FLAG_PROVIDE_CLOCK);
+  else
+    GST_OBJECT_FLAG_UNSET (audiobasesrc, GST_ELEMENT_FLAG_PROVIDE_CLOCK);
   audiobasesrc->priv->slave_method = DEFAULT_SLAVE_METHOD;
   /* reset blocksize we use latency time to calculate a more useful 
    * value based on negotiated format. */
@@ -249,6 +250,7 @@ gst_audio_base_src_init (GstAudioBaseSrc * audiobasesrc)
   audiobasesrc->clock = gst_audio_clock_new ("GstAudioSrcClock",
       (GstAudioClockGetTimeFunc) gst_audio_base_src_get_time, audiobasesrc,
       NULL);
+
 
   /* we are always a live source */
   gst_base_src_set_live (GST_BASE_SRC (audiobasesrc), TRUE);
@@ -295,7 +297,7 @@ gst_audio_base_src_provide_clock (GstElement * elem)
     goto wrong_state;
 
   GST_OBJECT_LOCK (src);
-  if (!src->priv->provide_clock)
+  if (!GST_OBJECT_FLAG_IS_SET (src, GST_ELEMENT_FLAG_PROVIDE_CLOCK))
     goto clock_disabled;
 
   clock = GST_CLOCK_CAST (gst_object_ref (src->clock));
@@ -364,7 +366,10 @@ gst_audio_base_src_set_provide_clock (GstAudioBaseSrc * src, gboolean provide)
   g_return_if_fail (GST_IS_AUDIO_BASE_SRC (src));
 
   GST_OBJECT_LOCK (src);
-  src->priv->provide_clock = provide;
+  if (provide)
+    GST_OBJECT_FLAG_SET (src, GST_ELEMENT_FLAG_PROVIDE_CLOCK);
+  else
+    GST_OBJECT_FLAG_UNSET (src, GST_ELEMENT_FLAG_PROVIDE_CLOCK);
   GST_OBJECT_UNLOCK (src);
 }
 
@@ -387,7 +392,7 @@ gst_audio_base_src_get_provide_clock (GstAudioBaseSrc * src)
   g_return_val_if_fail (GST_IS_AUDIO_BASE_SRC (src), FALSE);
 
   GST_OBJECT_LOCK (src);
-  result = src->priv->provide_clock;
+  result = GST_OBJECT_FLAG_IS_SET (src, GST_ELEMENT_FLAG_PROVIDE_CLOCK);
   GST_OBJECT_UNLOCK (src);
 
   return result;
@@ -398,7 +403,7 @@ gst_audio_base_src_get_provide_clock (GstAudioBaseSrc * src)
  * @src: a #GstAudioBaseSrc
  * @method: the new slave method
  *
- * Controls how clock slaving will be performed in @src. 
+ * Controls how clock slaving will be performed in @src.
  *
  * Since: 0.10.20
  */

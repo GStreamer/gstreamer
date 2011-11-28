@@ -305,7 +305,6 @@ gst_audio_base_sink_init (GstAudioBaseSink * audiobasesink)
 
   audiobasesink->buffer_time = DEFAULT_BUFFER_TIME;
   audiobasesink->latency_time = DEFAULT_LATENCY_TIME;
-  audiobasesink->provide_clock = DEFAULT_PROVIDE_CLOCK;
   audiobasesink->priv->slave_method = DEFAULT_SLAVE_METHOD;
   audiobasesink->priv->drift_tolerance = DEFAULT_DRIFT_TOLERANCE;
   audiobasesink->priv->alignment_threshold = DEFAULT_ALIGNMENT_THRESHOLD;
@@ -320,6 +319,10 @@ gst_audio_base_sink_init (GstAudioBaseSink * audiobasesink)
   basesink->can_activate_pull = DEFAULT_CAN_ACTIVATE_PULL;
 
   gst_base_sink_set_last_buffer_enabled (basesink, FALSE);
+  if (DEFAULT_PROVIDE_CLOCK)
+    GST_OBJECT_FLAG_SET (basesink, GST_ELEMENT_FLAG_PROVIDE_CLOCK);
+  else
+    GST_OBJECT_FLAG_UNSET (basesink, GST_ELEMENT_FLAG_PROVIDE_CLOCK);
 }
 
 static void
@@ -360,7 +363,7 @@ gst_audio_base_sink_provide_clock (GstElement * elem)
     goto wrong_state;
 
   GST_OBJECT_LOCK (sink);
-  if (!sink->provide_clock)
+  if (!GST_OBJECT_FLAG_IS_SET (sink, GST_ELEMENT_FLAG_PROVIDE_CLOCK))
     goto clock_disabled;
 
   clock = GST_CLOCK_CAST (gst_object_ref (sink->provided_clock));
@@ -563,7 +566,10 @@ gst_audio_base_sink_set_provide_clock (GstAudioBaseSink * sink,
   g_return_if_fail (GST_IS_AUDIO_BASE_SINK (sink));
 
   GST_OBJECT_LOCK (sink);
-  sink->provide_clock = provide;
+  if (provide)
+    GST_OBJECT_FLAG_SET (sink, GST_ELEMENT_FLAG_PROVIDE_CLOCK);
+  else
+    GST_OBJECT_FLAG_UNSET (sink, GST_ELEMENT_FLAG_PROVIDE_CLOCK);
   GST_OBJECT_UNLOCK (sink);
 }
 
@@ -586,7 +592,7 @@ gst_audio_base_sink_get_provide_clock (GstAudioBaseSink * sink)
   g_return_val_if_fail (GST_IS_AUDIO_BASE_SINK (sink), FALSE);
 
   GST_OBJECT_LOCK (sink);
-  result = sink->provide_clock;
+  result = GST_OBJECT_FLAG_IS_SET (sink, GST_ELEMENT_FLAG_PROVIDE_CLOCK);
   GST_OBJECT_UNLOCK (sink);
 
   return result;
