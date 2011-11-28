@@ -1100,10 +1100,6 @@ gst_audio_resample_process (GstAudioResample * resample, GstBuffer * inbuf,
       GST_TIME_ARGS (GST_BUFFER_DURATION (outbuf)),
       GST_BUFFER_OFFSET (outbuf), GST_BUFFER_OFFSET_END (outbuf));
 
-  if (out_processed == 0) {
-    GST_DEBUG_OBJECT (resample, "buffer dropped");
-    return GST_BASE_TRANSFORM_FLOW_DROPPED;
-  }
   return GST_FLOW_OK;
 }
 
