@@ -35,8 +35,3 @@ EXPORTS
 	gst_video_parse_caps_pixel_aspect_ratio
 	gst_video_sink_center_rect
 	gst_video_sink_get_type
-	gst_video_qos_tracker_init
-	gst_video_qos_tracker_reset
-	gst_video_qos_tracker_update
-	gst_video_qos_tracker_process_frame
-	gst_video_qos_tracker_clear

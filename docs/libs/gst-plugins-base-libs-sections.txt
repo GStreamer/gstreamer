@@ -2305,12 +2305,6 @@ gst_video_event_parse_still_frame
 <SUBSECTION Standard>
 gst_video_format_get_type
 GST_TYPE_VIDEO_FORMAT
-GstVideoQoSTracker
-gst_video_qos_tracker_init
-gst_video_qos_tracker_reset
-gst_video_qos_tracker_update
-gst_video_qos_tracker_process_frame
-gst_video_qos_tracker_clear
 </SECTION>
 
 <SECTION>
