@@ -173,7 +173,9 @@ struct _GstAudioDecoder
  *                  frames as defined by audio format.
  * @handle_frame:   Provides input data (or NULL to clear any remaining data)
  *                  to subclass.  Input data ref management is performed by
- *                  base class, subclass should not care or intervene.
+ *                  base class, subclass should not care or intervene,
+ *                  and input data is only valid until next call to base class,
+ *                  most notably a call to gst_audio_decoder_finish_frame().
  * @flush:          Optional.
  *                  Instructs subclass to clear any codec caches and discard
  *                  any pending samples and not yet returned encoded data.
