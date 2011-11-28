@@ -192,11 +192,11 @@ gst_viewfinder_bin_create_elements (GstViewfinderBin * vfbin)
     /* remove the elements, user doesn't want them */
 
     gst_ghost_pad_set_target (GST_GHOST_PAD (vfbin->ghostpad), NULL);
-    csp = gst_bin_get_by_name (GST_BIN (vfbin), "vfbin-csp");
-    videoscale = gst_bin_get_by_name (GST_BIN (vfbin), "vfbin-videoscale");
+    csp = gst_bin_get_by_name (GST_BIN_CAST (vfbin), "vfbin-csp");
+    videoscale = gst_bin_get_by_name (GST_BIN_CAST (vfbin), "vfbin-videoscale");
 
-    gst_bin_remove (GST_BIN (vfbin), csp);
-    gst_bin_remove (GST_BIN (vfbin), videoscale);
+    gst_bin_remove (GST_BIN_CAST (vfbin), csp);
+    gst_bin_remove (GST_BIN_CAST (vfbin), videoscale);
 
     gst_object_unref (csp);
     gst_object_unref (videoscale);
@@ -211,14 +211,14 @@ gst_viewfinder_bin_create_elements (GstViewfinderBin * vfbin)
       missing_element_name = "ffmpegcolorspace";
       goto missing_element;
     }
-    gst_bin_add (GST_BIN (vfbin), csp);
+    gst_bin_add (GST_BIN_CAST (vfbin), csp);
 
     videoscale = gst_element_factory_make ("videoscale", "vfbin->videoscale");
     if (!videoscale) {
       missing_element_name = "videoscale";
       goto missing_element;
     }
-    gst_bin_add (GST_BIN (vfbin), videoscale);
+    gst_bin_add (GST_BIN_CAST (vfbin), videoscale);
 
     gst_element_link_pads_full (csp, "src", videoscale, "sink",
         GST_PAD_LINK_CHECK_NOTHING);
