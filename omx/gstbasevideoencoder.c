@@ -179,6 +179,7 @@ gst_base_video_encoder_reset (GstBaseVideoEncoder * base_video_encoder)
   base_video_encoder->presentation_frame_number = 0;
   base_video_encoder->distance_from_sync = 0;
   base_video_encoder->force_keyframe = FALSE;
+  base_video_encoder->force_keyframe_pending = FALSE;
 
   base_video_encoder->drained = TRUE;
   base_video_encoder->min_latency = 0;
@@ -782,6 +783,7 @@ gst_base_video_encoder_chain (GstPad * pad, GstBuffer * buf)
   base_video_encoder->presentation_frame_number++;
   frame->force_keyframe = base_video_encoder->force_keyframe;
   base_video_encoder->force_keyframe = FALSE;
+  base_video_encoder->force_keyframe_pending = TRUE;
 
   GST_BASE_VIDEO_CODEC (base_video_encoder)->frames =
       g_list_append (GST_BASE_VIDEO_CODEC (base_video_encoder)->frames, frame);
@@ -888,10 +890,19 @@ gst_base_video_encoder_finish_frame (GstBaseVideoEncoder * base_video_encoder,
       break;
   }
 
-  if (frame->force_keyframe) {
+  /* no buffer data means this frame is skipped/dropped */
+  if (!frame->src_buffer) {
+    GST_DEBUG_OBJECT (base_video_encoder, "skipping frame %" GST_TIME_FORMAT,
+        GST_TIME_ARGS (frame->presentation_timestamp));
+    goto done;
+  }
+
+  if (frame->is_sync_point && base_video_encoder->force_keyframe_pending) {
     GstClockTime stream_time;
     GstClockTime running_time;
     GstEvent *ev;
+
+    base_video_encoder->force_keyframe_pending = FALSE;
 
     running_time =
         gst_segment_to_running_time (&GST_BASE_VIDEO_CODEC
@@ -911,25 +922,18 @@ gst_base_video_encoder_finish_frame (GstBaseVideoEncoder * base_video_encoder,
         "running-time", G_TYPE_UINT64, running_time, NULL);
 
     gst_pad_push_event (GST_BASE_VIDEO_CODEC_SRC_PAD (base_video_encoder), ev);
-  }
 
-  /* no buffer data means this frame is skipped/dropped */
-  if (!frame->src_buffer) {
-    GST_DEBUG_OBJECT (base_video_encoder, "skipping frame %" GST_TIME_FORMAT,
-        GST_TIME_ARGS (frame->presentation_timestamp));
-    goto done;
-  }
-
-  if (frame->is_sync_point) {
     if (base_video_encoder->force_keyframe_headers) {
       GST_DEBUG_OBJECT (base_video_encoder, "force_keyframe_headers");
       if (base_video_encoder->headers) {
-        gst_buffer_ref (base_video_encoder->headers);
-        headers = base_video_encoder->headers;
+        headers = gst_buffer_ref (base_video_encoder->headers);
       }
       base_video_encoder->force_keyframe_headers = FALSE;
     }
     GST_LOG_OBJECT (base_video_encoder, "key frame, headers %p", headers);
+  }
+
+  if (frame->is_sync_point) {
     base_video_encoder->distance_from_sync = 0;
     GST_BUFFER_FLAG_UNSET (frame->src_buffer, GST_BUFFER_FLAG_DELTA_UNIT);
   } else {
