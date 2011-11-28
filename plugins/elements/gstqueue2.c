@@ -2400,6 +2400,9 @@ next:
       data = gst_queue2_dequeue_on_eos (queue, &item_type);
       if (data != NULL)
         goto next;
+      /* Since we will still accept EOS and NEWSEGMENT we return _FLOW_OK
+       * to the caller so that the task function does not shut down */
+      result = GST_FLOW_OK;
     }
   } else if (item_type == GST_QUEUE2_ITEM_TYPE_EVENT) {
     GstEvent *event = GST_EVENT_CAST (data);
@@ -2442,6 +2445,9 @@ next:
       data = gst_queue2_dequeue_on_eos (queue, &item_type);
       if (data != NULL)
         goto next;
+      /* Since we will still accept EOS and NEWSEGMENT we return _FLOW_OK
+       * to the caller so that the task function does not shut down */
+      result = GST_FLOW_OK;
     }
   }
   return result;
