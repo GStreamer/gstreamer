@@ -369,7 +369,6 @@ EXPORTS
 	gst_element_no_more_pads
 	gst_element_post_message
 	gst_element_provide_clock
-	gst_element_provides_clock
 	gst_element_query
 	gst_element_query_convert
 	gst_element_query_duration
@@ -378,7 +377,6 @@ EXPORTS
 	gst_element_release_request_pad
 	gst_element_remove_pad
 	gst_element_request_pad
-	gst_element_requires_clock
 	gst_element_seek
 	gst_element_seek_simple
 	gst_element_send_event
