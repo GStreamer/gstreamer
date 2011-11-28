@@ -723,13 +723,13 @@ apply_buffer (GstQueue2 * queue, GstBuffer * buffer, GstSegment * segment,
   update_time_level (queue);
 }
 
-static GstBufferListItem
-buffer_list_apply_time (GstBuffer ** buf, guint group, guint idx, gpointer data)
+static gboolean
+buffer_list_apply_time (GstBuffer ** buf, guint idx, gpointer data)
 {
   GstClockTime *timestamp = data;
 
-  GST_TRACE ("buffer %u in group %u has ts %" GST_TIME_FORMAT
-      " duration %" GST_TIME_FORMAT, idx, group,
+  GST_TRACE ("buffer %u has ts %" GST_TIME_FORMAT
+      " duration %" GST_TIME_FORMAT, idx,
       GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (*buf)),
       GST_TIME_ARGS (GST_BUFFER_DURATION (*buf)));
 
@@ -740,7 +740,7 @@ buffer_list_apply_time (GstBuffer ** buf, guint group, guint idx, gpointer data)
     *timestamp += GST_BUFFER_DURATION (*buf);
 
   GST_TRACE ("ts now %" GST_TIME_FORMAT, GST_TIME_ARGS (*timestamp));
-  return GST_BUFFER_LIST_CONTINUE;
+  return TRUE;
 }
 
 /* take a buffer list and update segment, updating the time level of the queue */
@@ -751,14 +751,14 @@ apply_buffer_list (GstQueue2 * queue, GstBufferList * buffer_list,
   GstClockTime timestamp;
 
   /* if no timestamp is set, assume it's continuous with the previous time */
-  timestamp = segment->last_stop;
+  timestamp = segment->position;
 
   gst_buffer_list_foreach (buffer_list, buffer_list_apply_time, &timestamp);
 
   GST_DEBUG_OBJECT (queue, "last_stop updated to %" GST_TIME_FORMAT,
       GST_TIME_ARGS (timestamp));
 
-  gst_segment_set_last_stop (segment, GST_FORMAT_TIME, timestamp);
+  segment->position = timestamp;
 
   if (is_sink)
     queue->sink_tainted = TRUE;
@@ -1798,33 +1798,32 @@ handle_error:
   }
 }
 
-static GstBufferListItem
-buffer_list_create_write (GstBuffer ** buf, guint group, guint idx, gpointer q)
+static gboolean
+buffer_list_create_write (GstBuffer ** buf, guint idx, gpointer q)
 {
   GstQueue2 *queue = q;
 
-  GST_TRACE_OBJECT (queue, "writing buffer %u in group %u of size %u bytes",
-      idx, group, GST_BUFFER_SIZE (*buf));
+  GST_TRACE_OBJECT (queue,
+      "writing buffer %u of size %" G_GSIZE_FORMAT " bytes", idx,
+      gst_buffer_get_size (*buf));
 
   if (!gst_queue2_create_write (queue, *buf)) {
     GST_INFO_OBJECT (queue, "create_write() returned FALSE, bailing out");
-    return GST_BUFFER_LIST_END;
+    return FALSE;
   }
-
-  return GST_BUFFER_LIST_CONTINUE;
+  return TRUE;
 }
 
-static GstBufferListItem
-buffer_list_calc_size (GstBuffer ** buf, guint group, guint idx, gpointer data)
+static gboolean
+buffer_list_calc_size (GstBuffer ** buf, guint idx, gpointer data)
 {
   guint *p_size = data;
-  guint buf_size;
+  gsize buf_size;
 
-  buf_size = GST_BUFFER_SIZE (*buf);
-  GST_TRACE ("buffer %u in group %u has size %u", idx, group, buf_size);
+  buf_size = gst_buffer_get_size (*buf);
+  GST_TRACE ("buffer %u in has size %" G_GSIZE_FORMAT, idx, buf_size);
   *p_size += buf_size;
-
-  return GST_BUFFER_LIST_CONTINUE;
+  return TRUE;
 }
 
 /* enqueue an item an update the level stats */
@@ -2292,7 +2291,7 @@ gst_queue2_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
 
   GST_CAT_LOG_OBJECT (queue_dataflow, queue, "received buffer %p of "
       "size %" G_GSIZE_FORMAT ", time %" GST_TIME_FORMAT ", duration %"
-      GST_TIME_FORMAT, buffer, GST_BUFFER_SIZE (buffer),
+      GST_TIME_FORMAT, buffer, gst_buffer_get_size (buffer),
       GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buffer)),
       GST_TIME_ARGS (GST_BUFFER_DURATION (buffer)));
 
@@ -2418,18 +2417,22 @@ next:
     GST_QUEUE2_MUTEX_LOCK_CHECK (queue, queue->srcresult, out_flushing);
   } else if (item_type == GST_QUEUE2_ITEM_TYPE_BUFFER_LIST) {
     GstBufferList *buffer_list;
+#if 0
     GstBuffer *first_buf;
     GstCaps *caps;
+#endif
 
     buffer_list = GST_BUFFER_LIST_CAST (data);
 
-    first_buf = gst_buffer_list_get (buffer_list, 0, 0);
+#if 0
+    first_buf = gst_buffer_list_get (buffer_list, 0);
     caps = (first_buf != NULL) ? GST_BUFFER_CAPS (first_buf) : NULL;
 
     /* set caps before pushing the buffer so that core does not try to do
      * something fancy to check if this is possible. */
     if (caps && caps != GST_PAD_CAPS (queue->srcpad))
       gst_pad_set_caps (queue->srcpad, caps);
+#endif
 
     result = gst_pad_push_list (queue->srcpad, buffer_list);
 
