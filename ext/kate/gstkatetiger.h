@@ -49,6 +49,7 @@
 #include <kate/kate.h>
 #include <tiger/tiger.h>
 #include <gst/gst.h>
+#include <gst/video/video.h>
 #include "gstkateutil.h"
 
 G_BEGIN_DECLS
@@ -90,9 +91,11 @@ struct _GstKateTiger
   guchar default_background_a;
   gboolean silent;
 
+  GstVideoFormat video_format;
   gint video_width;
   gint video_height;
   gboolean swap_rgb;
+  guint8 *render_buffer;
 
   GMutex *mutex;
   GCond *cond;

@@ -164,8 +164,8 @@ gst_mpeg4_params_parse_vo (MPEG4Params * params, GstBitReader * br)
     int n;
 
     /* Length of the time increment is the minimal number of bits needed to
-     * represent time_increment_resolution */
-    for (n = 0; (time_increment_resolution >> n) != 0; n++);
+     * represent time_increment_resolution-1 */
+    for (n = 0; ((time_increment_resolution - 1) >> n) != 0; n++);
     GET_BITS (br, n, &bits);
 
     fixed_time_increment = bits;
