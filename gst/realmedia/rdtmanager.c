@@ -441,7 +441,7 @@ gst_rdt_manager_class_init (GstRDTManagerClass * g_class)
    * GstRDTManager::on-bye-ssrc:
    * @rtpbin: the object which received the signal
    * @session: the session
-   * @ssrc: the SSRC 
+   * @ssrc: the SSRC
    *
    * Notify of an SSRC that became inactive because of a BYE packet.
    */
@@ -454,7 +454,7 @@ gst_rdt_manager_class_init (GstRDTManagerClass * g_class)
    * GstRDTManager::on-bye-timeout:
    * @rtpbin: the object which received the signal
    * @session: the session
-   * @ssrc: the SSRC 
+   * @ssrc: the SSRC
    *
    * Notify of an SSRC that has timed out because of BYE
    */
@@ -467,7 +467,7 @@ gst_rdt_manager_class_init (GstRDTManagerClass * g_class)
    * GstRDTManager::on-timeout:
    * @rtpbin: the object which received the signal
    * @session: the session
-   * @ssrc: the SSRC 
+   * @ssrc: the SSRC
    *
    * Notify of an SSRC that has timed out
    */
@@ -510,6 +510,7 @@ gst_rdt_manager_init (GstRDTManager * rdtmanager)
 {
   rdtmanager->provided_clock = gst_system_clock_obtain ();
   rdtmanager->latency = DEFAULT_LATENCY_MS;
+  GST_OBJECT_FLAG_SET (rdtmanager, GST_ELEMENT_FLAG_PROVIDE_CLOCK);
 }
 
 static void
