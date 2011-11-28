@@ -215,7 +215,7 @@ typedef struct
 {
   size_t bomlen;
   const char *const bom;
-  gboolean (*checker) (const guint8 *, gint, gint);
+    gboolean (*checker) (const guint8 *, gint, gint);
   int boost;
   int endianness;
 } GstUnicodeTester;
@@ -288,7 +288,7 @@ unicode_type_find (GstTypeFind * tf, const GstUnicodeTester * tester,
   const guint8 *data = gst_type_find_peek (tf, 0, len);
   int prob = -1;
   const gint max_scan_size = 256 * 1024;
-  int endianness;
+  int endianness = 0;
 
   if (!data) {
     len = 2;
