@@ -1794,8 +1794,10 @@ gst_camera_bin_create_elements (GstCameraBin2 * camera)
     gst_bin_add (GST_BIN_CAST (camera),
         gst_object_ref (camera->audio_capsfilter));
 
-    gst_element_link_many (camera->audio_src, camera->audio_volume,
-        camera->audio_capsfilter, NULL);
+    gst_element_link_pads_full (camera->audio_src, "src",
+        camera->audio_volume, "sink", GST_PAD_LINK_CHECK_CAPS);
+    gst_element_link_pads_full (camera->audio_volume, "src",
+        camera->audio_capsfilter, "sink", GST_PAD_LINK_CHECK_CAPS);
 
     srcpad = gst_element_get_static_pad (camera->audio_src, "src");
 
