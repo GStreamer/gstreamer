@@ -1172,10 +1172,11 @@ gst_text_overlay_adjust_values_with_fontdesc (GstTextOverlay * overlay,
 }
 
 #define CAIRO_UNPREMULTIPLY(a,r,g,b) G_STMT_START { \
-  b = (a > 0) ? MIN ((b * 255 + a / 2) / a, 255) : 0; \
-  g = (a > 0) ? MIN ((g * 255 + a / 2) / a, 255) : 0; \
-  r = (a > 0) ? MIN ((r * 255 + a / 2) / a, 255) : 0; \
+  *b = (a > 0) ? MIN ((*b * 255 + a / 2) / a, 255) : 0; \
+  *g = (a > 0) ? MIN ((*g * 255 + a / 2) / a, 255) : 0; \
+  *r = (a > 0) ? MIN ((*r * 255 + a / 2) / a, 255) : 0; \
 } G_STMT_END
+
 static void
 gst_text_overlay_get_pos (GstTextOverlay * overlay, gint * xpos, gint * ypos)
 {
@@ -1239,6 +1240,23 @@ gst_text_overlay_get_pos (GstTextOverlay * overlay, gint * xpos, gint * ypos)
       break;
   }
   *ypos += overlay->deltay;
+}
+
+static inline void
+gst_text_overlay_unpremultiply (GstTextOverlay * overlay)
+{
+  guint i, j;
+  guint8 *pimage, *text_image = GST_BUFFER_DATA (overlay->text_image);
+
+  for (i = 0; i < overlay->image_height; i++) {
+    pimage = text_image + 4 * (i * overlay->image_width);
+    for (j = 0; j < overlay->image_width; j++) {
+      CAIRO_UNPREMULTIPLY (pimage[CAIRO_ARGB_A], &pimage[CAIRO_ARGB_R],
+          &pimage[CAIRO_ARGB_G], &pimage[CAIRO_ARGB_B]);
+
+      pimage += 4;
+    }
+  }
 }
 
 static inline void
@@ -1419,6 +1437,9 @@ gst_text_overlay_render_pangocairo (GstTextOverlay * overlay,
 
   g_mutex_unlock (GST_TEXT_OVERLAY_GET_CLASS (overlay)->pango_lock);
 
+  /* As the GstVideoOverlayComposition supports only unpremultiply ARGB,
+   * we need to unpermultiply it */
+  gst_text_overlay_unpremultiply (overlay);
   gst_text_overlay_set_composition (overlay);
 }
 
