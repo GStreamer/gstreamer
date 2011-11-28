@@ -226,6 +226,8 @@ check_utf16 (const guint8 * data, gint len, gint endianness)
   GstByteReader br;
   guint16 high, low;
 
+  low = high = 0;
+
   if (len & 1)
     return FALSE;
 
