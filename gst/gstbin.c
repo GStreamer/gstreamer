@@ -1045,7 +1045,7 @@ gst_bin_add_func (GstBin * bin, GstElement * element)
 {
   gchar *elem_name;
   GstIterator *it;
-  gboolean is_sink, is_source;
+  gboolean is_sink, is_source, provides_clock;
   GstMessage *clock_message = NULL, *async_message = NULL;
   GstStateChangeReturn ret;
 
@@ -1060,6 +1060,8 @@ gst_bin_add_func (GstBin * bin, GstElement * element)
   elem_name = g_strdup (GST_ELEMENT_NAME (element));
   is_sink = GST_OBJECT_FLAG_IS_SET (element, GST_ELEMENT_FLAG_SINK);
   is_source = GST_OBJECT_FLAG_IS_SET (element, GST_ELEMENT_FLAG_SOURCE);
+  provides_clock =
+      GST_OBJECT_FLAG_IS_SET (element, GST_ELEMENT_FLAG_PROVIDE_CLOCK);
   GST_OBJECT_UNLOCK (element);
 
   GST_OBJECT_LOCK (bin);
@@ -1087,7 +1089,7 @@ gst_bin_add_func (GstBin * bin, GstElement * element)
         elem_name);
     GST_OBJECT_FLAG_SET (bin, GST_ELEMENT_FLAG_SOURCE);
   }
-  if (gst_element_provides_clock (element)) {
+  if (provides_clock) {
     GST_DEBUG_OBJECT (bin, "element \"%s\" can provide a clock", elem_name);
     clock_message =
         gst_message_new_clock_provide (GST_OBJECT_CAST (element), NULL, TRUE);

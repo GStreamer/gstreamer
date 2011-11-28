@@ -662,9 +662,14 @@ print_implementation_info (GstElement * element)
 static void
 print_clocking_info (GstElement * element)
 {
-  if (!gst_element_requires_clock (element) &&
-      !(gst_element_provides_clock (element) &&
-          gst_element_get_clock (element))) {
+  gboolean requires_clock, provides_clock;
+
+  requires_clock =
+      GST_OBJECT_FLAG_IS_SET (element, GST_ELEMENT_FLAG_REQUIRE_CLOCK);
+  provides_clock =
+      GST_OBJECT_FLAG_IS_SET (element, GST_ELEMENT_FLAG_PROVIDE_CLOCK);
+
+  if (!requires_clock && !provides_clock) {
     n_print ("\n");
     n_print ("Element has no clocking capabilities.");
     return;
@@ -672,17 +677,18 @@ print_clocking_info (GstElement * element)
 
   n_print ("\n");
   n_print ("Clocking Interaction:\n");
-  if (gst_element_requires_clock (element)) {
+  if (requires_clock) {
     n_print ("  element requires a clock\n");
   }
 
-  if (gst_element_provides_clock (element)) {
+  if (provides_clock) {
     GstClock *clock;
 
     clock = gst_element_get_clock (element);
-    if (clock)
+    if (clock) {
       n_print ("  element provides a clock: %s\n", GST_OBJECT_NAME (clock));
-    else
+      gst_object_unref (clock);
+    } else
       n_print ("  element is supposed to provide a clock but returned NULL\n");
   }
 }

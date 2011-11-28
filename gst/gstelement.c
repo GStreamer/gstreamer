@@ -327,54 +327,6 @@ gst_element_release_request_pad (GstElement * element, GstPad * pad)
 }
 
 /**
- * gst_element_requires_clock:
- * @element: a #GstElement to query
- *
- * Query if the element requires a clock.
- *
- * Returns: %TRUE if the element requires a clock
- *
- * MT safe.
- */
-gboolean
-gst_element_requires_clock (GstElement * element)
-{
-  gboolean result;
-
-  g_return_val_if_fail (GST_IS_ELEMENT (element), FALSE);
-
-  result = (GST_ELEMENT_GET_CLASS (element)->set_clock != NULL);
-
-  return result;
-}
-
-/**
- * gst_element_provides_clock:
- * @element: a #GstElement to query
- *
- * Query if the element provides a clock. A #GstClock provided by an
- * element can be used as the global #GstClock for the pipeline.
- * An element that can provide a clock is only required to do so in the PAUSED
- * state, this means when it is fully negotiated and has allocated the resources
- * to operate the clock.
- *
- * Returns: %TRUE if the element provides a clock
- *
- * MT safe.
- */
-gboolean
-gst_element_provides_clock (GstElement * element)
-{
-  gboolean result;
-
-  g_return_val_if_fail (GST_IS_ELEMENT (element), FALSE);
-
-  result = (GST_ELEMENT_GET_CLASS (element)->provide_clock != NULL);
-
-  return result;
-}
-
-/**
  * gst_element_provide_clock:
  * @element: a #GstElement to query
  *

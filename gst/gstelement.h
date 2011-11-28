@@ -330,6 +330,8 @@ typedef enum
   GST_ELEMENT_FLAG_LOCKED_STATE   = (GST_OBJECT_FLAG_LAST << 1),
   GST_ELEMENT_FLAG_SINK           = (GST_OBJECT_FLAG_LAST << 2),
   GST_ELEMENT_FLAG_SOURCE         = (GST_OBJECT_FLAG_LAST << 3),
+  GST_ELEMENT_FLAG_PROVIDE_CLOCK  = (GST_OBJECT_FLAG_LAST << 4),
+  GST_ELEMENT_FLAG_REQUIRE_CLOCK  = (GST_OBJECT_FLAG_LAST << 5),
   /* padding */
   GST_ELEMENT_FLAG_LAST           = (GST_OBJECT_FLAG_LAST << 16)
 } GstElementFlags;
@@ -725,8 +727,6 @@ GType                   gst_element_get_type            (void);
 #define                 gst_element_set_parent(elem,parent)     gst_object_set_parent(GST_OBJECT_CAST(elem),parent)
 
 /* clocking */
-gboolean                gst_element_requires_clock      (GstElement *element);
-gboolean                gst_element_provides_clock      (GstElement *element);
 GstClock*               gst_element_provide_clock       (GstElement *element);
 GstClock*               gst_element_get_clock           (GstElement *element);
 gboolean                gst_element_set_clock           (GstElement *element, GstClock *clock);
