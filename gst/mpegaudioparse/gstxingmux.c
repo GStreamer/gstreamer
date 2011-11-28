@@ -390,10 +390,10 @@ gst_xing_mux_base_init (gpointer g_class)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
 
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&gst_xing_mux_src_template));
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&gst_xing_mux_sink_template));
+  gst_element_class_add_static_pad_template (element_class,
+      &gst_xing_mux_src_template);
+  gst_element_class_add_static_pad_template (element_class,
+      &gst_xing_mux_sink_template);
 
   GST_DEBUG_CATEGORY_INIT (xing_mux_debug, "xingmux", 0, "Xing Header Muxer");
 

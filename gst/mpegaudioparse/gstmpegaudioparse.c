@@ -290,10 +290,10 @@ gst_mp3parse_base_init (gpointer klass)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
 
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&mp3_sink_template));
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&mp3_src_template));
+  gst_element_class_add_static_pad_template (element_class,
+      &mp3_sink_template);
+  gst_element_class_add_static_pad_template (element_class,
+      &mp3_src_template);
 
   GST_DEBUG_CATEGORY_INIT (mp3parse_debug, "mp3parse", 0, "MPEG Audio Parser");
 

@@ -161,10 +161,10 @@ gst_mpeg_parse_class_init (GstMPEGParseClass * klass)
   /* FIXME: this is a hack.  We add the pad templates here instead
    * in the base_init function, since the derived class (mpegdemux)
    * uses different pads.  IMO, this is wrong. */
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&src_factory));
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&sink_factory));
+  gst_element_class_add_static_pad_template (gstelement_class,
+      &src_factory);
+  gst_element_class_add_static_pad_template (gstelement_class,
+      &sink_factory);
 
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_MAX_SCR_GAP,
       g_param_spec_int ("max-scr-gap", "Max SCR gap",

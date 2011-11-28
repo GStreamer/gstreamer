@@ -135,10 +135,10 @@ ac3iec_base_init (gpointer g_class)
       "Codec/Muxer/Audio",
       "Pads AC3 frames into IEC958 frames suitable for a raw S/PDIF interface",
       "Martin Soto <martinsoto@users.sourceforge.net>");
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&ac3iec_sink_template));
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&ac3iec_src_template));
+  gst_element_class_add_static_pad_template (element_class,
+      &ac3iec_sink_template);
+  gst_element_class_add_static_pad_template (element_class,
+      &ac3iec_src_template);
 }
 
 
