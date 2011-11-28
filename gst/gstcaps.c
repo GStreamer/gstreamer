@@ -85,7 +85,7 @@
 
 /* same as gst_caps_is_any () */
 #define CAPS_IS_ANY(caps)				\
-  (GST_CAPS_FLAGS(caps) & GST_CAPS_FLAGS_ANY)
+  (GST_CAPS_FLAGS(caps) & GST_CAPS_FLAG_ANY)
 
 /* same as gst_caps_is_empty () */
 #define CAPS_IS_EMPTY(caps)				\
@@ -227,7 +227,7 @@ gst_caps_new_any (void)
 {
   GstCaps *caps = gst_caps_new_empty ();
 
-  GST_CAPS_FLAG_SET (caps, GST_CAPS_FLAGS_ANY);
+  GST_CAPS_FLAG_SET (caps, GST_CAPS_FLAG_ANY);
 
   return caps;
 }
@@ -508,7 +508,7 @@ gst_caps_append (GstCaps * caps1, GstCaps * caps2)
 
   if (G_UNLIKELY (CAPS_IS_ANY (caps1) || CAPS_IS_ANY (caps2))) {
     /* FIXME: this leaks */
-    GST_CAPS_FLAGS (caps1) |= GST_CAPS_FLAGS_ANY;
+    GST_CAPS_FLAGS (caps1) |= GST_CAPS_FLAG_ANY;
     for (i = GST_CAPS_LEN (caps2) - 1; i >= 0; i--) {
       structure = gst_caps_remove_and_get_structure (caps2, i);
       gst_structure_free (structure);
@@ -552,7 +552,7 @@ gst_caps_merge (GstCaps * caps1, GstCaps * caps2)
       gst_structure_free (structure);
     }
   } else if (G_UNLIKELY (CAPS_IS_ANY (caps2))) {
-    GST_CAPS_FLAGS (caps1) |= GST_CAPS_FLAGS_ANY;
+    GST_CAPS_FLAGS (caps1) |= GST_CAPS_FLAG_ANY;
     for (i = GST_CAPS_LEN (caps1) - 1; i >= 0; i--) {
       structure = gst_caps_remove_and_get_structure (caps1, i);
       gst_structure_free (structure);
@@ -1940,7 +1940,7 @@ gst_caps_from_string_inplace (GstCaps * caps, const gchar * string)
   gchar *s;
 
   if (strcmp ("ANY", string) == 0) {
-    GST_CAPS_FLAGS (caps) = GST_CAPS_FLAGS_ANY;
+    GST_CAPS_FLAGS (caps) = GST_CAPS_FLAG_ANY;
     return TRUE;
   }
   if (strcmp ("EMPTY", string) == 0) {

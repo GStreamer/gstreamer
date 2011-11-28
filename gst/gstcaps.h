@@ -38,13 +38,13 @@ extern GType _gst_caps_type;
 
 /**
  * GstCapsFlags:
- * @GST_CAPS_FLAGS_ANY: Caps has no specific content, but can contain
+ * @GST_CAPS_FLAG_ANY: Caps has no specific content, but can contain
  *    anything.
  *
  * Extra flags for a caps.
  */
 typedef enum {
-  GST_CAPS_FLAGS_ANY	= (GST_MINI_OBJECT_FLAG_LAST << 0)
+  GST_CAPS_FLAG_ANY	= (GST_MINI_OBJECT_FLAG_LAST << 0)
 } GstCapsFlags;
 
 /**
