@@ -234,6 +234,8 @@ struct _GstMpegTSDemux {
 
   /* Number of expected pads which have not been added yet */
   gint              pending_pads;
+
+  gboolean          tried_adding_pads;
 };
 
 struct _GstMpegTSDemuxClass {

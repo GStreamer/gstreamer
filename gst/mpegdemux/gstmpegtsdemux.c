@@ -1094,6 +1094,68 @@ gst_mpegts_demux_sync_streams (GstMpegTSDemux * demux, GstClockTime time)
   }
 }
 
+/* Attempts to add all known streams.
+   Returns TRUE if all could be added, FALSE otherwise.
+ */
+static gboolean
+gst_mpegts_demux_add_all_streams (GstMpegTSDemux * demux, GstClockTime pts)
+{
+  guint i;
+  GstPad *srcpad;
+  gboolean all_added = TRUE;
+
+  /* When adding a stream, require either a valid base PCR, or a valid PTS */
+  if (!gst_mpegts_demux_setup_base_pts (demux, pts)) {
+    GST_ERROR ("Can't set base pts");
+    return FALSE;
+  }
+
+  for (i = 0; i < MPEGTS_MAX_PID + 1; i++) {
+    GstMpegTSStream *stream = demux->streams[i];
+    if (!stream || stream->pad)
+      continue;
+
+    GST_DEBUG_OBJECT (demux, "Trying to add pad for PID 0x%04x", stream->PID);
+
+    if (demux->current_PMT == 0) {
+      if (G_UNLIKELY (stream->flags & MPEGTS_STREAM_FLAG_STREAM_TYPE_UNKNOWN)) {
+        GST_DEBUG_OBJECT (demux,
+            "Stream flagged as unknown, cannot be added now");
+        all_added = FALSE;
+        continue;
+      }
+    }
+    if (!gst_mpegts_demux_fill_stream (stream, stream->filter.id,
+            stream->stream_type)) {
+      GST_ERROR ("Unknown type for PID 0x%04x", stream->PID);
+      /* ignore */
+      continue;
+    }
+
+    GST_DEBUG_OBJECT (demux,
+        "New stream 0x%04x of type 0x%02x with caps %" GST_PTR_FORMAT,
+        stream->PID, stream->stream_type, GST_PAD_CAPS (stream->pad));
+
+    srcpad = stream->pad;
+
+    /* activate and add */
+    gst_pad_set_active (srcpad, TRUE);
+    gst_element_add_pad (GST_ELEMENT_CAST (demux), srcpad);
+    demux->need_no_more_pads = TRUE;
+
+    stream->discont = TRUE;
+
+    /* send new_segment */
+    gst_mpegts_demux_send_new_segment (demux, stream, pts);
+
+    /* send tags */
+    gst_mpegts_demux_send_tags_for_stream (demux, stream);
+
+  }
+
+  return all_added;
+}
+
 static GstFlowReturn
 gst_mpegts_demux_data_cb (GstPESFilter * filter, gboolean first,
     GstBuffer * buffer, GstMpegTSStream * stream)
@@ -1127,8 +1189,8 @@ gst_mpegts_demux_data_cb (GstPESFilter * filter, gboolean first,
        * to drop. */
       if (stream->PMT_pid <= MPEGTS_MAX_PID && demux->streams[stream->PMT_pid]
           && demux->streams[demux->streams[stream->PMT_pid]->PMT.PCR_PID]
-          && demux->streams[demux->streams[stream->PMT_pid]->PMT.
-              PCR_PID]->discont_PCR) {
+          && demux->streams[demux->streams[stream->PMT_pid]->PMT.PCR_PID]->
+          discont_PCR) {
         GST_WARNING_OBJECT (demux, "middle of discont, dropping");
         goto bad_timestamp;
       }
@@ -1149,8 +1211,8 @@ gst_mpegts_demux_data_cb (GstPESFilter * filter, gboolean first,
          */
         if (stream->PMT_pid <= MPEGTS_MAX_PID && demux->streams[stream->PMT_pid]
             && demux->streams[demux->streams[stream->PMT_pid]->PMT.PCR_PID]
-            && demux->streams[demux->streams[stream->PMT_pid]->PMT.
-                PCR_PID]->last_PCR > 0) {
+            && demux->streams[demux->streams[stream->PMT_pid]->PMT.PCR_PID]->
+            last_PCR > 0) {
           GST_DEBUG_OBJECT (demux, "timestamps wrapped before noticed in PCR");
           time = MPEGTIME_TO_GSTTIME (pts) + stream->base_time +
               MPEGTIME_TO_GSTTIME ((guint64) (1) << 33);
@@ -1248,7 +1310,25 @@ gst_mpegts_demux_data_cb (GstPESFilter * filter, gboolean first,
   GST_BUFFER_TIMESTAMP (buffer) = time;
 
   /* check if we have a pad already */
+  if (!demux->tried_adding_pads) {
+    GST_DEBUG_OBJECT (demux, "Trying to add all pads now");
+    if (gst_mpegts_demux_add_all_streams (demux, pts)) {
+      /* We managed to add all pads, so we can signal no-more-pads safely.
+         If not, we'll add pads as we get data for them, and will end up
+         hitting decodebin2's overrun threshold (if using decodebin2) */
+      GST_DEBUG_OBJECT (demux, "All pads added, we can signal no-more-pads");
+      gst_element_no_more_pads (GST_ELEMENT (demux));
+    } else {
+      GST_DEBUG_OBJECT (demux,
+          "All pads could not be added, we will not signal no-more-pads");
+    }
+    demux->tried_adding_pads = TRUE;
+  }
+
+
+  srcpad = stream->pad;
   if (srcpad == NULL) {
+    GST_DEBUG_OBJECT (demux, "srcpad is NULL, trying to add pad");
     /* When adding a stream, require either a valid base PCR, or a valid PTS */
     if (!gst_mpegts_demux_setup_base_pts (demux, pts))
       goto bad_timestamp;
