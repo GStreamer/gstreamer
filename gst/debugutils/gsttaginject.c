@@ -134,6 +134,10 @@ gst_tag_inject_class_init (GstTagInjectClass * klass)
 static void
 gst_tag_inject_init (GstTagInject * self, GstTagInjectClass * g_class)
 {
+  GstBaseTransform *trans = GST_BASE_TRANSFORM (self);
+
+  gst_base_transform_set_gap_aware (trans, TRUE);
+
   self->tags = NULL;
 }
 
