@@ -353,7 +353,6 @@ GST_START_TEST (test_sticky_caps_unlinked_incompatible)
   /* We shouldn't have received any buffers since caps are incompatible */
   fail_unless_equals_int (g_list_length (buffers), 0);
 
-  gst_caps_replace (&caps, NULL);
   gst_caps_replace (&event_caps, NULL);
 
   ASSERT_OBJECT_REFCOUNT (src, "src", 1);
