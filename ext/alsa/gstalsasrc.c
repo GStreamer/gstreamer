@@ -278,12 +278,12 @@ gst_alsasrc_get_timestamp (GstAlsaSrc * src)
   /* get high resolution time stamp from driver */
   snd_pcm_status_get_htstamp (status, &htstamp);
   timestamp = GST_TIMESPEC_TO_TIME (htstamp);
-  if (!timestamp) {
+  if (timestamp == 0) {
     GST_INFO_OBJECT (src,
         "This alsa source does support high resolution timestamps");
     snd_pcm_status_get_tstamp (status, &tstamp);
     timestamp = GST_TIMEVAL_TO_TIME (tstamp);
-    if (!timestamp) {
+    if (timestamp == 0) {
       GST_INFO_OBJECT (src,
           "This alsa source does support low resolution timestamps");
       timestamp = gst_util_get_timestamp ();
