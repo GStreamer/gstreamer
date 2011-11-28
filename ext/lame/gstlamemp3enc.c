@@ -215,10 +215,10 @@ gst_lamemp3enc_base_init (gpointer g_class)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
 
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&gst_lamemp3enc_src_template));
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&gst_lamemp3enc_sink_template));
+  gst_element_class_add_static_pad_template (element_class,
+      &gst_lamemp3enc_src_template);
+  gst_element_class_add_static_pad_template (element_class,
+      &gst_lamemp3enc_sink_template);
   gst_element_class_set_details_simple (element_class, "L.A.M.E. mp3 encoder",
       "Codec/Encoder/Audio",
       "High-quality free MP3 encoder",
