@@ -85,6 +85,7 @@ struct _GstBaseVideoEncoder
   int               distance_from_sync;
 
   gboolean          force_keyframe;
+  gboolean          force_keyframe_pending;
   gboolean          force_keyframe_headers;
 
   /*< private >*/
