@@ -927,6 +927,7 @@ gst_base_video_encoder_finish_frame (GstBaseVideoEncoder * base_video_encoder,
       GST_DEBUG_OBJECT (base_video_encoder, "force_keyframe_headers");
       if (base_video_encoder->headers) {
         headers = gst_buffer_ref (base_video_encoder->headers);
+        headers = gst_buffer_make_writable (headers);
       }
       base_video_encoder->force_keyframe_headers = FALSE;
     }
