@@ -567,10 +567,14 @@ gboolean gst_video_event_parse_downstream_force_key_unit (GstEvent * event,
                                                           gboolean * all_headers,
                                                           guint * count);
 
-GstEvent * gst_video_event_new_upstream_force_key_unit (gboolean all_headers);
+GstEvent * gst_video_event_new_upstream_force_key_unit (GstClockTime running_time,
+                                                        gboolean all_headers,
+                                                        guint count);
 
 gboolean gst_video_event_parse_upstream_force_key_unit (GstEvent * event,
-                                                        gboolean * all_headers);
+                                                        GstClockTime * running_time,
+                                                        gboolean * all_headers,
+                                                        guint * count);
 
 gboolean gst_video_event_is_force_key_unit(GstEvent *event);
 
