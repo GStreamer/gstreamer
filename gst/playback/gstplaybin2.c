@@ -3237,6 +3237,11 @@ sink_accepts_caps (GstElement * sink, GstCaps * caps)
   return TRUE;
 }
 
+static GstStaticCaps raw_audio_caps = GST_STATIC_CAPS ("audio/x-raw-int; "
+    "audio/x-raw-float");
+static GstStaticCaps raw_video_caps = GST_STATIC_CAPS ("video/x-raw-rgb; "
+    "video/x-raw-yuv; " "video/x-raw-gray");
+
 /* We are asked to select an element. See if the next element to check
  * is a sink. If this is the case, we see if the sink works by setting it to
  * READY. If the sink works, we return SELECT_EXPOSE to make decodebin
@@ -3285,9 +3290,34 @@ autoplug_select_cb (GstElement * decodebin, GstPad * pad,
         sink = group->video_sink;
 
       if ((sinkpad = gst_element_get_static_pad (sink, "sink"))) {
+        GstPlayFlags flags = gst_play_bin_get_flags (playbin);
+        GstCaps *raw_caps =
+            (isaudiodec) ? gst_static_caps_get (&raw_audio_caps) :
+            gst_static_caps_get (&raw_video_caps);
+
         caps = gst_pad_get_caps_reffed (sinkpad);
 
-        compatible = gst_element_factory_can_src_any_caps (factory, caps);
+        /* If the sink supports raw audio/video, we first check
+         * if the decoder could output any raw audio/video format
+         * and assume it is compatible with the sink then. We don't
+         * do a complete compatibility check here if converters
+         * are plugged between the decoder and the sink because
+         * the converters will convert between raw formats and
+         * even if the decoder format is not supported by the decoder
+         * a converter will convert it.
+         *
+         * We assume here that the converters can convert between
+         * any raw format.
+         */
+        if ((isaudiodec && !(flags & GST_PLAY_FLAG_NATIVE_AUDIO)
+                && gst_caps_can_intersect (caps, raw_caps)) || (!isaudiodec
+                && !(flags & GST_PLAY_FLAG_NATIVE_VIDEO)
+                && gst_caps_can_intersect (caps, raw_caps))) {
+          compatible = gst_element_factory_can_src_any_caps (factory, raw_caps)
+              || gst_element_factory_can_src_any_caps (factory, caps);
+        } else {
+          compatible = gst_element_factory_can_src_any_caps (factory, caps);
+        }
 
         gst_object_unref (sinkpad);
         gst_caps_unref (caps);
