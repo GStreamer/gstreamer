@@ -1141,6 +1141,10 @@ gst_adder_collected (GstCollectPads * pads, gpointer user_data)
       GST_LOG_OBJECT (adder, "channel %p: preparing output buffer of %d bytes",
           collect_data, outsize);
 
+      /* make data and metadata writable, can simply return the inbuf when we
+       * are the only one referencing this buffer. If this is the last (and
+       * only) GAP buffer, it will automatically copy the GAP flag. */
+      outbuf = gst_buffer_make_writable (inbuf);
       outdata = gst_buffer_map (outbuf, NULL, NULL, GST_MAP_WRITE);
     } else {
       if (!is_gap) {
