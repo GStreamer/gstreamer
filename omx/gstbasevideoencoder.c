@@ -520,18 +520,15 @@ gst_base_video_encoder_sink_eventfunc (GstBaseVideoEncoder * base_video_encoder,
     }
     case GST_EVENT_CUSTOM_DOWNSTREAM:
     {
-      const GstStructure *s;
-
-      s = gst_event_get_structure (event);
-
-      if (gst_structure_has_name (s, "GstForceKeyUnit")) {
+      if (gst_video_event_is_force_key_unit (event)) {
         GST_OBJECT_LOCK (base_video_encoder);
-        base_video_encoder->force_keyframe = TRUE;
-        if (!gst_structure_get_boolean (s, "all-headers",
-                &base_video_encoder->force_keyframe_headers))
-          base_video_encoder->force_keyframe_headers = FALSE;
 
-        GST_DEBUG_OBJECT (base_video_encoder, "GstForceKeyUnit, all-headers %d",
+        base_video_encoder->force_keyframe = TRUE;
+        gst_video_event_parse_downstream_force_key_unit (event, NULL, NULL,
+            NULL, &base_video_encoder->force_keyframe_headers, NULL);
+
+        GST_DEBUG_OBJECT (base_video_encoder,
+            "force-keyunit event, all-headers %d",
             base_video_encoder->force_keyframe_headers);
         GST_OBJECT_UNLOCK (base_video_encoder);
         gst_event_unref (event);
@@ -610,20 +607,16 @@ gst_base_video_encoder_src_event (GstPad * pad, GstEvent * event)
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_CUSTOM_UPSTREAM:
     {
-      const GstStructure *s;
-
-      s = gst_event_get_structure (event);
-
-      if (gst_structure_has_name (s, "GstForceKeyUnit")) {
+      if (gst_video_event_is_force_key_unit (event)) {
         GST_OBJECT_LOCK (base_video_encoder);
         base_video_encoder->force_keyframe = TRUE;
-        if (!gst_structure_get_boolean (s, "all-headers",
-                &base_video_encoder->force_keyframe_headers))
-          base_video_encoder->force_keyframe_headers = FALSE;
+        gst_video_event_parse_upstream_force_key_unit (event, NULL,
+            &base_video_encoder->force_keyframe_headers, NULL);
         GST_OBJECT_UNLOCK (base_video_encoder);
 
         gst_event_unref (event);
-        GST_DEBUG_OBJECT (base_video_encoder, "GstForceKeyUnit, all-headers %d",
+        GST_DEBUG_OBJECT (base_video_encoder,
+            "force-keyunit event, all-headers %d",
             base_video_encoder->force_keyframe_headers);
         ret = TRUE;
       } else {
@@ -913,13 +906,10 @@ gst_base_video_encoder_finish_frame (GstBaseVideoEncoder * base_video_encoder,
         (base_video_encoder)->segment, GST_FORMAT_TIME,
         frame->presentation_timestamp);
 
-    ev = gst_event_new_custom (GST_EVENT_CUSTOM_DOWNSTREAM,
-        gst_structure_new ("GstForceKeyUnit", NULL));
-
-    gst_structure_set (ev->structure,
-        "timestamp", G_TYPE_UINT64, frame->presentation_timestamp,
-        "stream-time", G_TYPE_UINT64, stream_time,
-        "running-time", G_TYPE_UINT64, running_time, NULL);
+    /* FIXME: Use the correct count */
+    ev = gst_video_event_new_downstream_force_key_unit
+        (frame->presentation_timestamp, stream_time, running_time,
+        base_video_encoder->force_keyframe_headers, 0);
 
     gst_pad_push_event (GST_BASE_VIDEO_CODEC_SRC_PAD (base_video_encoder), ev);
 
