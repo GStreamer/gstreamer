@@ -394,6 +394,7 @@ gst_queue_init (GstQueue * queue)
   gst_pad_set_event_function (queue->sinkpad, gst_queue_handle_sink_event);
   gst_pad_set_query_function (queue->sinkpad, gst_queue_handle_sink_query);
   gst_pad_set_link_function (queue->sinkpad, gst_queue_link_sink);
+  GST_PAD_SET_PROXY_CAPS (queue->sinkpad);
   gst_element_add_pad (GST_ELEMENT (queue), queue->sinkpad);
 
   queue->srcpad = gst_pad_new_from_static_template (&srctemplate, "src");
@@ -403,6 +404,7 @@ gst_queue_init (GstQueue * queue)
   gst_pad_set_link_function (queue->srcpad, gst_queue_link_src);
   gst_pad_set_event_function (queue->srcpad, gst_queue_handle_src_event);
   gst_pad_set_query_function (queue->srcpad, gst_queue_handle_src_query);
+  GST_PAD_SET_PROXY_CAPS (queue->srcpad);
   gst_element_add_pad (GST_ELEMENT (queue), queue->srcpad);
 
   GST_QUEUE_CLEAR_LEVEL (queue->cur_level);
