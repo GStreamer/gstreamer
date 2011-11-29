@@ -263,6 +263,11 @@ gst_adder_setcaps (GstAdder * adder, GstPad * pad, GstCaps * caps)
   IterData idata;
   gboolean done;
 
+  /* this get called recursively due to gst_iterator_foreach  calling
+   * gst_pad_set_caps() */
+  if (adder->in_setcaps)
+    return TRUE;
+
   GST_LOG_OBJECT (adder, "setting caps pad %p,%s to %" GST_PTR_FORMAT, pad,
       GST_PAD_NAME (pad), caps);
 
@@ -273,6 +278,7 @@ gst_adder_setcaps (GstAdder * adder, GstPad * pad, GstCaps * caps)
   idata.caps = caps;
   idata.pad = pad;
 
+  adder->in_setcaps = TRUE;
   done = FALSE;
   while (!done) {
     ires = gst_iterator_foreach (it, (GstIteratorForeachFunction) setcapsfunc,
@@ -287,6 +293,10 @@ gst_adder_setcaps (GstAdder * adder, GstPad * pad, GstCaps * caps)
         break;
     }
   }
+  adder->in_setcaps = FALSE;
+
+  GST_LOG_OBJECT (adder, "handle caps changes on pad %p,%s to %" GST_PTR_FORMAT,
+      pad, GST_PAD_NAME (pad), caps);
 
   if (!gst_audio_info_from_caps (&info, caps))
     goto invalid_format;

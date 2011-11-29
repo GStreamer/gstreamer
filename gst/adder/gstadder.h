@@ -77,6 +77,8 @@ struct _GstAdder {
 
   /* Pending inline events */
   GList *pending_events;
+  
+  gboolean in_setcaps;
 };
 
 struct _GstAdderClass {
