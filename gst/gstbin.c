@@ -1045,7 +1045,7 @@ gst_bin_add_func (GstBin * bin, GstElement * element)
 {
   gchar *elem_name;
   GstIterator *it;
-  gboolean is_sink, is_source, provides_clock;
+  gboolean is_sink, is_source, provides_clock, requires_clock;
   GstMessage *clock_message = NULL, *async_message = NULL;
   GstStateChangeReturn ret;
 
@@ -1062,6 +1062,8 @@ gst_bin_add_func (GstBin * bin, GstElement * element)
   is_source = GST_OBJECT_FLAG_IS_SET (element, GST_ELEMENT_FLAG_SOURCE);
   provides_clock =
       GST_OBJECT_FLAG_IS_SET (element, GST_ELEMENT_FLAG_PROVIDE_CLOCK);
+  requires_clock =
+      GST_OBJECT_FLAG_IS_SET (element, GST_ELEMENT_FLAG_REQUIRE_CLOCK);
   GST_OBJECT_UNLOCK (element);
 
   GST_OBJECT_LOCK (bin);
@@ -1093,6 +1095,11 @@ gst_bin_add_func (GstBin * bin, GstElement * element)
     GST_DEBUG_OBJECT (bin, "element \"%s\" can provide a clock", elem_name);
     clock_message =
         gst_message_new_clock_provide (GST_OBJECT_CAST (element), NULL, TRUE);
+    GST_OBJECT_FLAG_SET (bin, GST_ELEMENT_FLAG_PROVIDE_CLOCK);
+  }
+  if (requires_clock) {
+    GST_DEBUG_OBJECT (bin, "element \"%s\" requires a clock", elem_name);
+    GST_OBJECT_FLAG_SET (bin, GST_ELEMENT_FLAG_REQUIRE_CLOCK);
   }
 
   bin->children = g_list_prepend (bin->children, element);
@@ -1257,7 +1264,8 @@ gst_bin_remove_func (GstBin * bin, GstElement * element)
 {
   gchar *elem_name;
   GstIterator *it;
-  gboolean is_sink, is_source, othersink, othersource, found;
+  gboolean is_sink, is_source, provides_clock, requires_clock;
+  gboolean othersink, othersource, otherprovider, otherrequirer, found;
   GstMessage *clock_message = NULL;
   GstClock **provided_clock_p;
   GstElement **clock_provider_p;
@@ -1279,6 +1287,10 @@ gst_bin_remove_func (GstBin * bin, GstElement * element)
   elem_name = g_strdup (GST_ELEMENT_NAME (element));
   is_sink = GST_OBJECT_FLAG_IS_SET (element, GST_ELEMENT_FLAG_SINK);
   is_source = GST_OBJECT_FLAG_IS_SET (element, GST_ELEMENT_FLAG_SOURCE);
+  provides_clock =
+      GST_OBJECT_FLAG_IS_SET (element, GST_ELEMENT_FLAG_PROVIDE_CLOCK);
+  requires_clock =
+      GST_OBJECT_FLAG_IS_SET (element, GST_ELEMENT_FLAG_REQUIRE_CLOCK);
   GST_OBJECT_UNLOCK (element);
 
   /* unlink all linked pads */
@@ -1290,6 +1302,8 @@ gst_bin_remove_func (GstBin * bin, GstElement * element)
   found = FALSE;
   othersink = FALSE;
   othersource = FALSE;
+  otherprovider = FALSE;
+  otherrequirer = FALSE;
   have_no_preroll = FALSE;
   /* iterate the elements, we collect which ones are async and no_preroll. We
    * also remove the element when we find it. */
@@ -1303,16 +1317,24 @@ gst_bin_remove_func (GstBin * bin, GstElement * element)
       /* remove the element */
       bin->children = g_list_delete_link (bin->children, walk);
     } else {
-      gboolean child_sink, child_source;
+      gboolean child_sink, child_source, child_provider, child_requirer;
 
       GST_OBJECT_LOCK (child);
       child_sink = GST_OBJECT_FLAG_IS_SET (child, GST_ELEMENT_FLAG_SINK);
       child_source = GST_OBJECT_FLAG_IS_SET (child, GST_ELEMENT_FLAG_SOURCE);
+      child_provider =
+          GST_OBJECT_FLAG_IS_SET (child, GST_ELEMENT_FLAG_PROVIDE_CLOCK);
+      child_requirer =
+          GST_OBJECT_FLAG_IS_SET (child, GST_ELEMENT_FLAG_REQUIRE_CLOCK);
       /* when we remove a sink, check if there are other sinks. */
       if (is_sink && !othersink && child_sink)
         othersink = TRUE;
       if (is_source && !othersource && child_source)
         othersource = TRUE;
+      if (provides_clock && !otherprovider && child_provider)
+        otherprovider = TRUE;
+      if (requires_clock && !otherrequirer && child_requirer)
+        otherrequirer = TRUE;
       /* check if we have NO_PREROLL children */
       if (GST_STATE_RETURN (child) == GST_STATE_CHANGE_NO_PREROLL)
         have_no_preroll = TRUE;
@@ -1340,7 +1362,16 @@ gst_bin_remove_func (GstBin * bin, GstElement * element)
     GST_DEBUG_OBJECT (bin, "we removed the last source");
     GST_OBJECT_FLAG_UNSET (bin, GST_ELEMENT_FLAG_SOURCE);
   }
-
+  if (provides_clock && !otherprovider) {
+    /* we're not a clock provider anymore */
+    GST_DEBUG_OBJECT (bin, "we removed the last clock provider");
+    GST_OBJECT_FLAG_UNSET (bin, GST_ELEMENT_FLAG_PROVIDE_CLOCK);
+  }
+  if (requires_clock && !otherrequirer) {
+    /* we're not a clock requirer anymore */
+    GST_DEBUG_OBJECT (bin, "we removed the last clock requirer");
+    GST_OBJECT_FLAG_UNSET (bin, GST_ELEMENT_FLAG_REQUIRE_CLOCK);
+  }
 
   /* if the clock provider for this element is removed, we lost
    * the clock as well, we need to inform the parent of this
