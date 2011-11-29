@@ -25,7 +25,7 @@
 #define __GST_V4L2_COLOR_BALANCE_H__
 
 #include <gst/gst.h>
-#include <gst/interfaces/colorbalance.h>
+#include <gst/video/colorbalance.h>
 #include "v4l2_calls.h"
 
 G_BEGIN_DECLS

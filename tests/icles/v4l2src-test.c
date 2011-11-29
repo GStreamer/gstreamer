@@ -25,8 +25,8 @@
 
 #include <gst/gst.h>
 #include <gst/interfaces/tuner.h>
-#include <gst/interfaces/colorbalance.h>
-#include <gst/interfaces/videoorientation.h>
+#include <gst/video/colorbalance.h>
+#include <gst/video/videoorientation.h>
 
 GstElement *pipeline, *source, *sink;
 GMainLoop *loop;

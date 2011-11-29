@@ -24,7 +24,7 @@
 #define __GST_V4L2_VIDORIENT_H__
 
 #include <gst/gst.h>
-#include <gst/interfaces/videoorientation.h>
+#include <gst/video/videoorientation.h>
 
 #include "gstv4l2object.h"
 

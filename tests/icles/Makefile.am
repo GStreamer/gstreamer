@@ -12,7 +12,9 @@ V4L2_TESTS = v4l2src-test
 
 v4l2src_test_SOURCES = v4l2src-test.c
 v4l2src_test_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(GST_CFLAGS)
-v4l2src_test_LDADD = $(GST_PLUGINS_BASE_LIBS) -lgstinterfaces-$(GST_MAJORMINOR) $(GST_LIBS)
+v4l2src_test_LDADD = $(GST_PLUGINS_BASE_LIBS) \
+		     -lgstvideo-$(GST_MAJORMINOR) \
+		     -lgstinterfaces-$(GST_MAJORMINOR) $(GST_LIBS)
 
 else
 V4L2_TESTS =

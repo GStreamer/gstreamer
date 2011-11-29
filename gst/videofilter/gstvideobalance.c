@@ -49,7 +49,7 @@
 #include "gstvideobalance.h"
 #include <string.h>
 
-#include <gst/interfaces/colorbalance.h>
+#include <gst/video/colorbalance.h>
 
 GST_DEBUG_CATEGORY_STATIC (videobalance_debug);
 #define GST_CAT_DEFAULT videobalance_debug
