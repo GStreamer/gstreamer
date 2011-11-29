@@ -84,8 +84,6 @@ struct _GstBaseVideoEncoder
   guint64           presentation_frame_number;
   int               distance_from_sync;
 
-  gboolean          force_keyframe;
-
   /*< private >*/
   /* FIXME move to real private part ?
    * (and introduce a context ?) */
@@ -99,8 +97,7 @@ struct _GstBaseVideoEncoder
 
   GstBuffer        *headers;
 
-  gboolean          force_keyframe_pending;
-  gboolean          force_keyframe_headers;
+  GList            *force_key_unit; /* List of pending forced keyunits */
 
   void             *padding[GST_PADDING_LARGE];
 };
