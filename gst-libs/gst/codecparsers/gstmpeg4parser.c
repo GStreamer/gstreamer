@@ -121,7 +121,7 @@ static const guint8 mpeg4_zigzag_8x8[64] = {
   53, 60, 61, 54, 47, 55, 62, 63
 };
 
-static VLCTable mpeg4_dmv_size_vlc_table[] = {
+static const VLCTable mpeg4_dmv_size_vlc_table[] = {
   {0x00, 2, 0},
   {0x02, 3, 1},
   {0x03, 3, 2},
@@ -429,8 +429,6 @@ gst_mpeg4_parse (GstMpeg4Packet * packet, gboolean skip_user_data,
 
   g_return_val_if_fail (packet != NULL, GST_MPEG4_PARSER_ERROR);
 
-  ensure_debug_category ();
-
   if (size - offset <= 4) {
     GST_DEBUG ("Can't parse, buffer is to small size %d at offset %d", size,
         offset);
@@ -511,8 +509,6 @@ gst_h263_parse (GstMpeg4Packet * packet,
   gst_byte_reader_init (&br, data, size);
 
   g_return_val_if_fail (packet != NULL, GST_MPEG4_PARSER_ERROR);
-
-  ensure_debug_category ();
 
   if (size - offset < 3) {
     GST_DEBUG ("Can't parse, buffer is to small size %d at offset %d", size,
@@ -656,11 +652,11 @@ gst_mpeg4_parse_visual_object_sequence (GstMpeg4VisualObjectSequence * vos,
       vos->level = GST_MPEG4_LEVEL2;
       break;
     case 0x81:
-      vos->profile = GST_MPEG4_PROFILE_HYBRYD;
+      vos->profile = GST_MPEG4_PROFILE_HYBRID;
       vos->level = GST_MPEG4_LEVEL1;
       break;
     case 0x82:
-      vos->profile = GST_MPEG4_PROFILE_HYBRYD;
+      vos->profile = GST_MPEG4_PROFILE_HYBRID;
       vos->level = GST_MPEG4_LEVEL2;
       break;
     case 0x91:

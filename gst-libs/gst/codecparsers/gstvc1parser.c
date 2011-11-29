@@ -1657,8 +1657,6 @@ gst_vc1_identify_next_bdu (const guint8 * data, gsize size, GstVC1BDU * bdu)
 
   g_return_val_if_fail (bdu != NULL, GST_VC1_PARSER_ERROR);
 
-  ensure_debug_category ();
-
   if (size < 4) {
     GST_DEBUG ("Can't parse, buffer has too small size %" G_GSSIZE_FORMAT,
         size);
@@ -1719,8 +1717,6 @@ gst_vc1_parse_sequence_layer (const guint8 * data, gsize size,
 
   g_return_val_if_fail (seqlayer != NULL, GST_VC1_PARSER_ERROR);
 
-  ensure_debug_category ();
-
   READ_UINT32 (&br, tmp, 8);
   if (tmp != 0xC5)
     goto failed;
@@ -1773,9 +1769,6 @@ gst_vc1_parse_sequence_header_struct_a (const guint8 * data,
 
   g_return_val_if_fail (structa != NULL, GST_VC1_PARSER_ERROR);
 
-  ensure_debug_category ();
-
-
   return parse_sequence_header_struct_a (&br, structa);
 }
 
@@ -1796,8 +1789,6 @@ gst_vc1_parse_sequence_header_struct_b (const guint8 * data,
   GstBitReader br = GST_BIT_READER_INIT (data, size);
 
   g_return_val_if_fail (structb != NULL, GST_VC1_PARSER_ERROR);
-
-  ensure_debug_category ();
 
   return parse_sequence_header_struct_b (&br, structb);
 }
@@ -1820,8 +1811,6 @@ gst_vc1_parse_sequence_header_struct_c (const guint8 * data, gsize size,
 
   g_return_val_if_fail (structc != NULL, GST_VC1_PARSER_ERROR);
 
-  ensure_debug_category ();
-
   return parse_sequence_header_struct_c (&br, structc);
 }
 
@@ -1842,8 +1831,6 @@ gst_vc1_parse_sequence_header (const guint8 * data, gsize size,
   GstBitReader br = GST_BIT_READER_INIT (data, size);
 
   g_return_val_if_fail (seqhdr != NULL, GST_VC1_PARSER_ERROR);
-
-  ensure_debug_category ();
 
   if (parse_sequence_header_struct_c (&br, &seqhdr->struct_c) ==
       GST_VC1_PARSER_ERROR)
@@ -1887,8 +1874,6 @@ gst_vc1_parse_entry_point_header (const guint8 * data, gsize size,
   GstVC1AdvancedSeqHdr *advanced = &seqhdr->advanced;
 
   g_return_val_if_fail (entrypoint != NULL, GST_VC1_PARSER_ERROR);
-
-  ensure_debug_category ();
 
   gst_bit_reader_init (&br, data, size);
 
@@ -2012,8 +1997,6 @@ gst_vc1_parse_frame_header (const guint8 * data, gsize size,
   GstBitReader br;
   GstVC1ParserResult result;
 
-  ensure_debug_category ();
-
   gst_bit_reader_init (&br, data, size);
 
   if (seqhdr->profile == GST_VC1_PROFILE_ADVANCED)
@@ -2045,8 +2028,6 @@ gst_vc1_parse_field_header (const guint8 * data, gsize size,
 {
   GstBitReader br;
   GstVC1ParserResult result;
-
-  ensure_debug_category ();
 
   gst_bit_reader_init (&br, data, size);
 
