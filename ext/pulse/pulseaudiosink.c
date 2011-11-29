@@ -872,7 +872,6 @@ gst_pulse_audio_sink_sink_setcaps (GstPad * pad, GstCaps * caps)
 
   GST_PULSE_AUDIO_SINK_UNLOCK (pbin);
 
-  gst_caps_unref (caps);
   gst_object_unref (pbin);
 
   return ret;
