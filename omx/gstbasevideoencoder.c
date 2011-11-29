@@ -859,6 +859,7 @@ gst_base_video_encoder_chain (GstPad * pad, GstBuffer * buf)
           "Forcing a key unit at running time %" GST_TIME_FORMAT,
           GST_TIME_ARGS (running_time));
       frame->force_keyframe = TRUE;
+      frame->force_keyframe_headers = fevt->all_headers;
       fevt->pending = TRUE;
     }
   }
