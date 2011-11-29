@@ -300,7 +300,6 @@ enum
 #define DEFAULT_CAN_ACTIVATE_PULL FALSE /* fixme: enable me */
 #define DEFAULT_CAN_ACTIVATE_PUSH TRUE
 
-#define DEFAULT_PREROLL_QUEUE_LEN   0
 #define DEFAULT_SYNC                TRUE
 #define DEFAULT_MAX_LATENESS        -1
 #define DEFAULT_QOS                 FALSE
@@ -314,7 +313,6 @@ enum
 enum
 {
   PROP_0,
-  PROP_PREROLL_QUEUE_LEN,
   PROP_SYNC,
   PROP_MAX_LATENESS,
   PROP_QOS,
