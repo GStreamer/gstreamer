@@ -90,6 +90,7 @@ struct _GstBaseVideoEncoder
   /* FIXME move to real private part ?
    * (and introduce a context ?) */
   gboolean          drained;
+  gboolean          at_eos;
 
   gint64            min_latency;
   gint64            max_latency;
@@ -101,13 +102,7 @@ struct _GstBaseVideoEncoder
   gboolean          force_keyframe_pending;
   gboolean          force_keyframe_headers;
 
-  union {
-    void *padding;
-    gboolean at_eos;
-  } a;
-
-  /* FIXME before moving to base */
-  void             *padding[GST_PADDING_LARGE-1];
+  void             *padding[GST_PADDING_LARGE];
 };
 
 /**

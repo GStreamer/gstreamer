@@ -223,7 +223,7 @@ gst_base_video_encoder_init (GstBaseVideoEncoder * base_video_encoder,
   gst_pad_set_event_function (pad,
       GST_DEBUG_FUNCPTR (gst_base_video_encoder_src_event));
 
-  base_video_encoder->a.at_eos = FALSE;
+  base_video_encoder->at_eos = FALSE;
   base_video_encoder->headers = NULL;
 
   /* encoder is expected to do so */
@@ -472,7 +472,7 @@ gst_base_video_encoder_sink_eventfunc (GstBaseVideoEncoder * base_video_encoder,
       GstFlowReturn flow_ret;
 
       GST_BASE_VIDEO_CODEC_STREAM_LOCK (base_video_encoder);
-      base_video_encoder->a.at_eos = TRUE;
+      base_video_encoder->at_eos = TRUE;
 
       if (base_video_encoder_class->finish) {
         flow_ret = base_video_encoder_class->finish (base_video_encoder);
@@ -510,7 +510,7 @@ gst_base_video_encoder_sink_eventfunc (GstBaseVideoEncoder * base_video_encoder,
         break;
       }
 
-      base_video_encoder->a.at_eos = FALSE;
+      base_video_encoder->at_eos = FALSE;
 
       gst_segment_set_newsegment_full (&GST_BASE_VIDEO_CODEC
           (base_video_encoder)->segment, update, rate, applied_rate, format,
@@ -746,7 +746,7 @@ gst_base_video_encoder_chain (GstPad * pad, GstBuffer * buf)
       GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buf)),
       GST_TIME_ARGS (GST_BUFFER_DURATION (buf)));
 
-  if (base_video_encoder->a.at_eos) {
+  if (base_video_encoder->at_eos) {
     ret = GST_FLOW_UNEXPECTED;
     goto done;
   }
