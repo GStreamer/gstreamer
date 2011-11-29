@@ -257,7 +257,6 @@ setcapsfunc (const GValue * item, IterData * data)
 static gboolean
 gst_adder_setcaps (GstAdder * adder, GstPad * pad, GstCaps * caps)
 {
-  GstAudioInfo info;
   GstIterator *it;
   GstIteratorResult ires;
   IterData idata;
@@ -298,10 +297,10 @@ gst_adder_setcaps (GstAdder * adder, GstPad * pad, GstCaps * caps)
   GST_LOG_OBJECT (adder, "handle caps changes on pad %p,%s to %" GST_PTR_FORMAT,
       pad, GST_PAD_NAME (pad), caps);
 
-  if (!gst_audio_info_from_caps (&info, caps))
+  if (!gst_audio_info_from_caps (&adder->info, caps))
     goto invalid_format;
 
-  switch (GST_AUDIO_INFO_FORMAT (&info)) {
+  switch (GST_AUDIO_INFO_FORMAT (&adder->info)) {
     case GST_AUDIO_FORMAT_S8:
       adder->func = (GstAdderFunction) add_int8;
       break;
@@ -1097,8 +1096,8 @@ gst_adder_collected (GstCollectPads * pads, gpointer user_data)
   bpf = GST_AUDIO_INFO_BPF (&adder->info);
 
   GST_LOG_OBJECT (adder,
-      "starting to cycle through channels, %d bytes available (bps = %d)",
-      outsize, bpf);
+      "starting to cycle through channels, %d bytes available (bps = %d, bpf = %d)",
+      outsize, bps, bpf);
 
   for (collected = pads->data; collected; collected = next) {
     GstCollectData *collect_data;
