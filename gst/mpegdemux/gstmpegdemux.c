@@ -1607,7 +1607,7 @@ gst_flups_demux_parse_pack_start (GstFluPSDemux * demux)
 
   /* adjustment of the SCR */
   if (G_LIKELY (demux->current_scr != G_MAXUINT64)) {
-    gint64 diff;
+    guint64 diff;
     guint64 old_scr, old_mux_rate, bss, adjust = 0;
 
     /* keep SCR of the previous packet */
