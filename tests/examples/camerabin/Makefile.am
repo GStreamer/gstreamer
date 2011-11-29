@@ -15,6 +15,7 @@ gst_camera_LDADD   = \
         $(top_builddir)/gst-libs/gst/interfaces/libgstphotography-@GST_MAJORMINOR@.la \
         $(GST_PLUGINS_BASE_LIBS) \
         -lgstinterfaces-@GST_MAJORMINOR@ \
+        -lgstvideo-@GST_MAJORMINOR@ \
         $(GST_LIBS) \
 	$(GTK_LIBS) \
 	$(GMODULE_EXPORT_LIBS)
@@ -40,6 +41,7 @@ gst_camerabin_test_CFLAGS  = $(GST_CFLAGS) $(GST_PLUGINS_BASE_CFLAGS) $(GST_PLUG
 gst_camerabin_test_LDADD   = \
 	$(top_builddir)/gst-libs/gst/interfaces/libgstphotography-@GST_MAJORMINOR@.la \
 	-lgstinterfaces-@GST_MAJORMINOR@ \
+        -lgstvideo-@GST_MAJORMINOR@ \
 	$(GST_LIBS) \
 	$(GST_PLUGINS_BASE_LIBS) \
 	$(X11_LIBS)

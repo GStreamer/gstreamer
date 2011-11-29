@@ -32,7 +32,7 @@
 #include "gst-camera2.h"
 
 #include <gst/gst.h>
-#include <gst/interfaces/videooverlay.h>
+#include <gst/video/videooverlay.h>
 #include <gtk/gtk.h>
 #include <gdk/gdkx.h>
 #include <gdk/gdkkeysyms.h>

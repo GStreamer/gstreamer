@@ -30,7 +30,7 @@
 #include <gst/gst.h>
 #include <gst/gstbin.h>
 #include <gst/interfaces/photography.h>
-#include <gst/interfaces/colorbalance.h>
+#include <gst/video/colorbalance.h>
 #include "gstcamerabin-enum.h"
 #include "gstcamerabinpreview.h"
 

@@ -105,7 +105,7 @@
 #define GST_USE_UNSTABLE_API 1
 
 #include <gst/gst.h>
-#include <gst/interfaces/videooverlay.h>
+#include <gst/video/videooverlay.h>
 #include <gst/interfaces/photography.h>
 #include <string.h>
 #include <sys/time.h>
