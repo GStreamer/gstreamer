@@ -25,7 +25,7 @@
 
 #include <glib.h>
 #include <gst/gst.h>
-#include <gst/interfaces/videooverlay.h>
+#include <gst/video/videooverlay.h>
 
 #include <QApplication>
 #include <QTimer>

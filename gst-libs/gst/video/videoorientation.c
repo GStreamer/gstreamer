@@ -24,7 +24,7 @@
 #endif
 
 #include "videoorientation.h"
-#include "interfaces-marshal.h"
+#include "video-marshal.h"
 
 #include <string.h>
 

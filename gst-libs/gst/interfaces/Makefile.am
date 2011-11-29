@@ -3,8 +3,6 @@ libgstinterfacesincludedir = \
         $(includedir)/gstreamer-@GST_MAJORMINOR@/gst/interfaces
 
 headers_interfaces = 		\
-	colorbalance.h		\
-	colorbalancechannel.h	\
 	mixer.h			\
 	mixeroptions.h		\
 	mixertrack.h		\
@@ -13,9 +11,7 @@ headers_interfaces = 		\
 	streamvolume.h          \
 	tuner.h			\
 	tunernorm.h		\
-	tunerchannel.h		\
-	videoorientation.h	\
-	videooverlay.h
+	tunerchannel.h
 
 # variables used for enum/marshal generation
 glib_enum_headers = $(headers_interfaces)
@@ -38,8 +34,6 @@ nodist_libgstinterfacesinclude_HEADERS = \
 	interfaces-enumtypes.h
 
 libgstinterfaces_@GST_MAJORMINOR@_la_SOURCES = \
-	colorbalance.c		\
-	colorbalancechannel.c	\
 	mixer.c			\
 	mixeroptions.c		\
 	mixertrack.c		\
@@ -48,9 +42,7 @@ libgstinterfaces_@GST_MAJORMINOR@_la_SOURCES = \
 	streamvolume.c          \
 	tuner.c			\
 	tunernorm.c		\
-	tunerchannel.c		\
-	videoorientation.c	\
-	videooverlay.c
+	tunerchannel.c
 
 nodist_libgstinterfaces_@GST_MAJORMINOR@_la_SOURCES = 	\
 	$(built_sources)				\

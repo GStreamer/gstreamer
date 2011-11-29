@@ -38,14 +38,11 @@
 #include <gst/fft/gstffts32.h>
 #include <gst/fft/gstfftf32.h>
 #include <gst/fft/gstfftf64.h>
-#include <gst/interfaces/colorbalance.h>
 #include <gst/interfaces/mixer.h>
 #include <gst/interfaces/navigation.h>
 #include <gst/interfaces/propertyprobe.h>
 #include <gst/interfaces/streamvolume.h>
 #include <gst/interfaces/tuner.h>
-#include <gst/interfaces/videoorientation.h>
-#include <gst/interfaces/videooverlay.h>
 #include <gst/pbutils/pbutils.h>
 #include <gst/riff/riff-media.h>
 #include <gst/riff/riff-read.h>
@@ -69,6 +66,9 @@
 #include <gst/video/video.h>
 #include <gst/video/gstvideofilter.h>
 #include <gst/video/gstvideosink.h>
+#include <gst/video/colorbalance.h>
+#include <gst/video/videoorientation.h>
+#include <gst/video/videooverlay.h>
 
 /* initial version of the file was generated using:
  * grep -A1 "<STRUCT>" ../../docs/libs/gst-plugins-base-libs-decl.txt | \

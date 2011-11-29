@@ -115,9 +115,9 @@
 
 /* Our interfaces */
 #include <gst/interfaces/navigation.h>
-#include <gst/interfaces/videooverlay.h>
-#include <gst/interfaces/colorbalance.h>
 #include <gst/interfaces/propertyprobe.h>
+#include <gst/video/videooverlay.h>
+#include <gst/video/colorbalance.h>
 /* Helper functions */
 #include <gst/video/gstvideometa.h>
 

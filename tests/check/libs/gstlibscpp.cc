@@ -47,8 +47,6 @@
 #include <gst/fft/gstffts16.h>
 #include <gst/fft/gstffts32.h>
 
-#include <gst/interfaces/colorbalancechannel.h>
-#include <gst/interfaces/colorbalance.h>
 #include <gst/interfaces/interfaces-enumtypes.h>
 #include <gst/interfaces/interfaces-marshal.h>
 #include <gst/interfaces/mixer.h>
@@ -60,8 +58,6 @@
 #include <gst/interfaces/tunerchannel.h>
 #include <gst/interfaces/tuner.h>
 #include <gst/interfaces/tunernorm.h>
-#include <gst/interfaces/videoorientation.h>
-#include <gst/interfaces/videooverlay.h>
 
 #include <gst/pbutils/codec-utils.h>
 #include <gst/pbutils/descriptions.h>
@@ -106,7 +102,12 @@
 #include <gst/video/gstvideofilter.h>
 #include <gst/video/gstvideosink.h>
 #include <gst/video/video-enumtypes.h>
+#include <gst/video/video-marshal.h>
 #include <gst/video/video.h>
+#include <gst/video/colorbalancechannel.h>
+#include <gst/video/colorbalance.h>
+#include <gst/video/videoorientation.h>
+#include <gst/video/videooverlay.h>
 
 /* we mostly just want to make sure that our library headers don't
  * contain anything a C++ compiler might not like */

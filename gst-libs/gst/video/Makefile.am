@@ -1,19 +1,31 @@
 # variables used for enum/marshal generation
-glib_enum_headers = video.h
+glib_enum_headers = video.h colorbalance.h
 glib_enum_define = GST_VIDEO
 glib_gen_prefix = gst_video
 glib_gen_basename = video
 
-built_sources = video-enumtypes.c
-built_headers = video-enumtypes.h
+built_sources = video-enumtypes.c video-marshal.c
+built_headers = video-enumtypes.h video-marshal.h
 BUILT_SOURCES = $(built_sources) $(built_headers)
 
 lib_LTLIBRARIES = libgstvideo-@GST_MAJORMINOR@.la
 
 CLEANFILES = $(BUILT_SOURCES)
 
+EXTRA_DIST = video-marshal.list
+
 libgstvideo_@GST_MAJORMINOR@_la_SOURCES = \
-	video.c gstvideosink.c gstvideofilter.c convertframe.c gstvideometa.c gstvideopool.c
+	colorbalance.c   	\
+	colorbalancechannel.c   \
+	video.c          	\
+	gstvideosink.c   	\
+	gstvideofilter.c 	\
+	convertframe.c   	\
+	gstvideometa.c   	\
+	gstvideopool.c		\
+	videoorientation.c	\
+	videooverlay.c
+
 nodist_libgstvideo_@GST_MAJORMINOR@_la_SOURCES = $(BUILT_SOURCES)
 
 libgstvideo_@GST_MAJORMINOR@includedir = $(includedir)/gstreamer-@GST_MAJORMINOR@/gst/video

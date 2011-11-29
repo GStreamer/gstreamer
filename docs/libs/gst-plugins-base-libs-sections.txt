@@ -565,7 +565,7 @@ KISS_FFT_F64_SIN
 
 <SECTION>
 <FILE>gstcolorbalance</FILE>
-<INCLUDE>gst/interfaces/color.h</INCLUDE>
+<INCLUDE>gst/video/colorbalance.h</INCLUDE>
 GstColorBalance
 GstColorBalanceInterface
 GstColorBalanceType
@@ -587,7 +587,7 @@ gst_color_balance_type_get_type
 
 <SECTION>
 <FILE>gstcolorbalancechannel</FILE>
-<INCLUDE>gst/interfaces/colorbalancechannel.h</INCLUDE>
+<INCLUDE>gst/video/colorbalancechannel.h</INCLUDE>
 GstColorBalanceChannel
 GstColorBalanceChannelClass
 <SUBSECTION Standard>
@@ -862,7 +862,7 @@ gst_tuner_norm_get_type
 
 <SECTION>
 <FILE>gstvideoorientation</FILE>
-<INCLUDE>gst/interfaces/videoorientation.h</INCLUDE>
+<INCLUDE>gst/video/videoorientation.h</INCLUDE>
 GstVideoOrientation
 GstVideoOrientationInterface
 gst_video_orientation_get_hcenter
@@ -883,7 +883,7 @@ gst_video_orientation_get_type
 
 <SECTION>
 <FILE>gstvideooverlay</FILE>
-<INCLUDE>gst/interfaces/videooverlay.h</INCLUDE>
+<INCLUDE>gst/video/videooverlay.h</INCLUDE>
 GstXOverlay
 GstXOverlayIface
 gst_video_overlay_got_window_handle

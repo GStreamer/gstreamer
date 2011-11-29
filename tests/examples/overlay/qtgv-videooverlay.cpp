@@ -28,7 +28,7 @@
 #include <QApplication>
 #include <QTimer>
 
-#include <gst/interfaces/videooverlay.h>
+#include <gst/video/videooverlay.h>
 
 SinkPipeline::SinkPipeline(QGraphicsView *parent) : QObject(parent)
 {

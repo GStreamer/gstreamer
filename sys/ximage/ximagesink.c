@@ -105,7 +105,7 @@
 
 /* Our interfaces */
 #include <gst/interfaces/navigation.h>
-#include <gst/interfaces/videooverlay.h>
+#include <gst/video/videooverlay.h>
 
 #include <gst/video/gstvideometa.h>
 

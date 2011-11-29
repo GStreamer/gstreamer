@@ -22,9 +22,6 @@ gst_audio_base_src_get_type
 #include <gst/audio/gstaudioringbuffer.h>
 gst_audio_ring_buffer_get_type
 
-#include <gst/interfaces/colorbalance.h>
-gst_color_balance_get_type
-gst_color_balance_channel_get_type
 #include <gst/interfaces/mixer.h>
 gst_mixer_get_type
 gst_mixer_options_get_type
@@ -39,10 +36,6 @@ gst_tuner_channel_get_type
 gst_tuner_norm_get_type
 #include <gst/interfaces/streamvolume.h>
 gst_stream_volume_get_type
-#include <gst/interfaces/videoorientation.h>
-gst_video_orientation_get_type
-#include <gst/interfaces/videooverlay.h>
-gst_video_overlay_get_type
 
 
 #include <gst/rtp/gstrtpbasedepayload.h>
@@ -57,6 +50,13 @@ gst_rtp_base_audio_payload_get_type
 gst_video_filter_get_type
 #include <gst/video/gstvideosink.h>
 gst_video_sink_get_type
+#include <gst/video/colorbalance.h>
+gst_color_balance_get_type
+gst_color_balance_channel_get_type
+#include <gst/video/videoorientation.h>
+gst_video_orientation_get_type
+#include <gst/video/videooverlay.h>
+gst_video_overlay_get_type
 
 #include <gst/pbutils/pbutils.h>
 gst_discoverer_get_type
