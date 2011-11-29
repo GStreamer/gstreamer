@@ -341,7 +341,17 @@ gst_omx_h264_enc_handle_output_frame (GstOMXVideoEnc * self, GstOMXPort * port,
     if (buf->omx_buf->nFilledLen >= 4 &&
         GST_READ_UINT32_BE (buf->omx_buf->pBuffer +
             buf->omx_buf->nOffset) == 0x00000001) {
+      GstBuffer *hdrs;
+
+      GST_DEBUG_OBJECT (self, "got codecconfig in byte-stream format");
       buf->omx_buf->nFlags &= ~OMX_BUFFERFLAG_CODECCONFIG;
+
+      hdrs = gst_buffer_new_and_alloc (buf->omx_buf->nFilledLen);
+      memcpy (GST_BUFFER_DATA (hdrs),
+          buf->omx_buf->pBuffer + buf->omx_buf->nOffset,
+          buf->omx_buf->nFilledLen);
+      gst_base_video_encoder_set_headers (GST_BASE_VIDEO_ENCODER (self), hdrs);
+      gst_buffer_unref (hdrs);
     }
   }
 
