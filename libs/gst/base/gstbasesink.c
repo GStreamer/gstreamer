@@ -2411,8 +2411,7 @@ gst_base_sink_wait_eos (GstBaseSink * sink, GstClockTime time,
     GST_DEBUG_OBJECT (sink, "possibly waiting for clock to reach %"
         GST_TIME_FORMAT, GST_TIME_ARGS (time));
 
-    /* compensate for latency and ts_offset. We don't adjust for render delay
-     * because we don't interact with the device on EOS normally. */
+    /* compensate for latency, ts_offset and render delay */
     stime = gst_base_sink_adjust_time (sink, time);
 
     /* wait for the clock, this can be interrupted because we got shut down or
@@ -2562,14 +2561,6 @@ again:
 
   /* adjust for latency */
   stime = gst_base_sink_adjust_time (basesink, rstart);
-
-  /* adjust for render-delay, avoid underflows */
-  if (GST_CLOCK_TIME_IS_VALID (stime)) {
-    if (stime > priv->render_delay)
-      stime -= priv->render_delay;
-    else
-      stime = 0;
-  }
 
   /* preroll done, we can sync since we are in PLAYING now. */
   GST_DEBUG_OBJECT (basesink, "possibly waiting for clock to reach %"
