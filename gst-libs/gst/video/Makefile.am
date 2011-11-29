@@ -30,7 +30,15 @@ nodist_libgstvideo_@GST_MAJORMINOR@_la_SOURCES = $(BUILT_SOURCES)
 
 libgstvideo_@GST_MAJORMINOR@includedir = $(includedir)/gstreamer-@GST_MAJORMINOR@/gst/video
 libgstvideo_@GST_MAJORMINOR@include_HEADERS = \
-	video.h gstvideosink.h gstvideofilter.h gstvideometa.h gstvideopool.h
+	colorbalance.h 		\
+	colorbalancechannel.h	\
+	video.h			\
+	gstvideosink.h 		\
+	gstvideofilter.h	\
+	gstvideometa.h		\
+	gstvideopool.h		\
+	videoorientation.h 	\
+	videooverlay.h
 nodist_libgstvideo_@GST_MAJORMINOR@include_HEADERS = $(built_headers)
 
 libgstvideo_@GST_MAJORMINOR@_la_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(GST_BASE_CFLAGS) $(GST_CFLAGS)
