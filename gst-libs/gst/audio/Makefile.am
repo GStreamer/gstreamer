@@ -14,6 +14,8 @@ BUILT_SOURCES = $(built_sources) $(built_headers)
 lib_LTLIBRARIES = \
 	libgstaudio-@GST_MAJORMINOR@.la
 
+EXTRA_DIST = audio-marshal.list
+
 CLEANFILES = $(BUILT_SOURCES)
 
 # FIXME 0.11: rename GstBaseAudioSink to GstAudioBaseSink or merge with GstAudioSink
