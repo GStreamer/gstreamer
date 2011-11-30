@@ -42,6 +42,11 @@ G_BEGIN_DECLS
  *  that could lead to problems or weird behaviour later on. An example of this
  *  would be clocking issues ("your computer is pretty slow") or broken input
  *  data ("Can't synchronize to stream.")
+ * @GST_LEVEL_FIXME: Fixme messages are messages that indicate that something
+ *  in the executed code path is not fully implemented or handled yet. Note
+ *  that this does not replace proper error handling in any way, the purpose
+ *  of this message is to make it easier to spot incomplete/unfinished pieces
+ *  of code when reading the debug log. (Since: 0.10.23)
  * @GST_LEVEL_INFO: Informational messages should be used to keep the developer
  *  updated about what is happening.
  *  Examples where this should be used are when a typefind function has
@@ -58,11 +63,6 @@ G_BEGIN_DECLS
  *  should never output anything else but LOG messages. Use this log level to
  *  log recurring information in chain functions and loop functions, for
  *  example.
- * @GST_LEVEL_FIXME: Fixme messages are messages that indicate that something
- *  in the executed code path is not fully implemented or handled yet. Note
- *  that this does not replace proper error handling in any way, the purpose
- *  of this message is to make it easier to spot incomplete/unfinished pieces
- *  of code when reading the debug log. (Since: 0.10.23)
  * @GST_LEVEL_TRACE: Tracing-related messages (Since: 0.10.30)
  *  Examples for this are referencing/dereferencing of objects.
  * @GST_LEVEL_MEMDUMP: memory dump messages are used to log (small) chunks of
@@ -75,12 +75,12 @@ G_BEGIN_DECLS
  */
 typedef enum {
   GST_LEVEL_NONE = 0,
-  GST_LEVEL_ERROR,
-  GST_LEVEL_WARNING,
-  GST_LEVEL_INFO,
-  GST_LEVEL_DEBUG,
-  GST_LEVEL_LOG,
-  GST_LEVEL_FIXME = 6,
+  GST_LEVEL_ERROR = 1,
+  GST_LEVEL_WARNING = 2,
+  GST_LEVEL_FIXME = 3,
+  GST_LEVEL_INFO = 4,
+  GST_LEVEL_DEBUG = 5,
+  GST_LEVEL_LOG = 6,
   GST_LEVEL_TRACE = 7,
   /* add more */
   GST_LEVEL_MEMDUMP = 9,
