@@ -1,47 +1,6 @@
 EXPORTS
-	gst_color_balance_channel_get_type
-	gst_color_balance_get_balance_type
-	gst_color_balance_get_type
-	gst_color_balance_get_value
-	gst_color_balance_list_channels
-	gst_color_balance_set_value
-	gst_color_balance_type_get_type
-	gst_color_balance_value_changed
-	gst_interfaces_marshal_VOID__OBJECT_BOOLEAN
 	gst_interfaces_marshal_VOID__OBJECT_INT
-	gst_interfaces_marshal_VOID__OBJECT_POINTER
-	gst_interfaces_marshal_VOID__OBJECT_STRING
 	gst_interfaces_marshal_VOID__OBJECT_ULONG
-	gst_is_video_overlay_prepare_window_handle_message
-	gst_mixer_flags_get_type
-	gst_mixer_get_mixer_flags
-	gst_mixer_get_mixer_type
-	gst_mixer_get_option
-	gst_mixer_get_type
-	gst_mixer_get_volume
-	gst_mixer_list_tracks
-	gst_mixer_message_get_type
-	gst_mixer_message_parse_mute_toggled
-	gst_mixer_message_parse_option_changed
-	gst_mixer_message_parse_options_list_changed
-	gst_mixer_message_parse_record_toggled
-	gst_mixer_message_parse_volume_changed
-	gst_mixer_message_type_get_type
-	gst_mixer_mixer_changed
-	gst_mixer_mute_toggled
-	gst_mixer_option_changed
-	gst_mixer_options_get_type
-	gst_mixer_options_get_values
-	gst_mixer_options_list_changed
-	gst_mixer_record_toggled
-	gst_mixer_set_mute
-	gst_mixer_set_option
-	gst_mixer_set_record
-	gst_mixer_set_volume
-	gst_mixer_track_flags_get_type
-	gst_mixer_track_get_type
-	gst_mixer_type_get_type
-	gst_mixer_volume_changed
 	gst_navigation_command_get_type
 	gst_navigation_event_get_type
 	gst_navigation_event_parse_command
@@ -82,13 +41,6 @@ EXPORTS
 	gst_property_probe_probe_and_get_values_name
 	gst_property_probe_probe_property
 	gst_property_probe_probe_property_name
-	gst_stream_volume_convert_volume
-	gst_stream_volume_format_get_type
-	gst_stream_volume_get_mute
-	gst_stream_volume_get_type
-	gst_stream_volume_get_volume
-	gst_stream_volume_set_mute
-	gst_stream_volume_set_volume
 	gst_tuner_channel_changed
 	gst_tuner_channel_flags_get_type
 	gst_tuner_channel_get_type
@@ -108,19 +60,3 @@ EXPORTS
 	gst_tuner_set_norm
 	gst_tuner_signal_changed
 	gst_tuner_signal_strength
-	gst_video_orientation_get_hcenter
-	gst_video_orientation_get_hflip
-	gst_video_orientation_get_type
-	gst_video_orientation_get_vcenter
-	gst_video_orientation_get_vflip
-	gst_video_orientation_set_hcenter
-	gst_video_orientation_set_hflip
-	gst_video_orientation_set_vcenter
-	gst_video_orientation_set_vflip
-	gst_video_overlay_expose
-	gst_video_overlay_get_type
-	gst_video_overlay_got_window_handle
-	gst_video_overlay_handle_events
-	gst_video_overlay_prepare_window_handle
-	gst_video_overlay_set_render_rectangle
-	gst_video_overlay_set_window_handle

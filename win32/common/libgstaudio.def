@@ -97,6 +97,8 @@ EXPORTS
 	gst_audio_info_new
 	gst_audio_info_set_format
 	gst_audio_info_to_caps
+	gst_audio_marshal_VOID__OBJECT_INT
+	gst_audio_marshal_VOID__OBJECT_ULONG
 	gst_audio_ring_buffer_acquire
 	gst_audio_ring_buffer_activate
 	gst_audio_ring_buffer_advance
@@ -134,3 +136,34 @@ EXPORTS
 	gst_audio_sink_get_type
 	gst_audio_src_get_type
 	gst_buffer_format_type_get_type
+	gst_mixer_get_mixer_flags
+	gst_mixer_get_mixer_type
+	gst_mixer_get_option
+	gst_mixer_get_type
+	gst_mixer_get_volume
+	gst_mixer_list_tracks
+	gst_mixer_message_get_type
+	gst_mixer_message_parse_mute_toggled
+	gst_mixer_message_parse_option_changed
+	gst_mixer_message_parse_options_list_changed
+	gst_mixer_message_parse_record_toggled
+	gst_mixer_message_parse_volume_changed
+	gst_mixer_mixer_changed
+	gst_mixer_mute_toggled
+	gst_mixer_option_changed
+	gst_mixer_options_get_type
+	gst_mixer_options_get_values
+	gst_mixer_options_list_changed
+	gst_mixer_record_toggled
+	gst_mixer_set_mute
+	gst_mixer_set_option
+	gst_mixer_set_record
+	gst_mixer_set_volume
+	gst_mixer_track_get_type
+	gst_mixer_volume_changed
+	gst_stream_volume_convert_volume
+	gst_stream_volume_get_mute
+	gst_stream_volume_get_type
+	gst_stream_volume_get_volume
+	gst_stream_volume_set_mute
+	gst_stream_volume_set_volume

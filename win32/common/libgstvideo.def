@@ -4,6 +4,15 @@ EXPORTS
 	gst_buffer_get_video_meta_id
 	gst_buffer_pool_config_get_video_alignment
 	gst_buffer_pool_config_set_video_alignment
+	gst_color_balance_channel_get_type
+	gst_color_balance_get_balance_type
+	gst_color_balance_get_type
+	gst_color_balance_get_value
+	gst_color_balance_list_channels
+	gst_color_balance_set_value
+	gst_color_balance_type_get_type
+	gst_color_balance_value_changed
+	gst_is_video_overlay_prepare_window_handle_message
 	gst_video_buffer_flags_get_type
 	gst_video_calculate_display_ratio
 	gst_video_chroma_site_get_type
@@ -36,9 +45,26 @@ EXPORTS
 	gst_video_info_init
 	gst_video_info_set_format
 	gst_video_info_to_caps
+	gst_video_marshal_VOID__OBJECT_INT
 	gst_video_meta_get_info
 	gst_video_meta_map
 	gst_video_meta_unmap
+	gst_video_orientation_get_hcenter
+	gst_video_orientation_get_hflip
+	gst_video_orientation_get_type
+	gst_video_orientation_get_vcenter
+	gst_video_orientation_get_vflip
+	gst_video_orientation_set_hcenter
+	gst_video_orientation_set_hflip
+	gst_video_orientation_set_vcenter
+	gst_video_orientation_set_vflip
+	gst_video_overlay_expose
+	gst_video_overlay_get_type
+	gst_video_overlay_got_window_handle
+	gst_video_overlay_handle_events
+	gst_video_overlay_prepare_window_handle
+	gst_video_overlay_set_render_rectangle
+	gst_video_overlay_set_window_handle
 	gst_video_parse_caps_palette
 	gst_video_sink_center_rect
 	gst_video_sink_get_type
