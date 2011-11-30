@@ -43,7 +43,7 @@
 
 #include <gst/base/gstbasesrc.h>
 #include <gst/gsttaglist.h>
-#include <gst/interfaces/streamvolume.h>
+#include <gst/audio/streamvolume.h>
 
 #include "pulsesrc.h"
 #include "pulseutil.h"

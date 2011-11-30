@@ -52,7 +52,7 @@
 
 #include <gst/base/gstbasesink.h>
 #include <gst/gsttaglist.h>
-#include <gst/interfaces/streamvolume.h>
+#include <gst/audio/streamvolume.h>
 #include <gst/gst-i18n-plugin.h>
 #include <gst/audio/gstaudioiec61937.h>
 

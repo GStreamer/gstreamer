@@ -25,7 +25,7 @@
 #define __GST_PULSEMIXERCTRL_H__
 
 #include <gst/gst.h>
-#include <gst/interfaces/mixer.h>
+#include <gst/audio/mixer.h>
 
 #include <pulse/pulseaudio.h>
 #include <pulse/thread-mainloop.h>
