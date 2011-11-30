@@ -33,15 +33,15 @@
 #include <gst/audio/gstaudiosink.h>
 #include <gst/audio/gstaudioringbuffer.h>
 #include <gst/audio/multichannel.h>
+#include <gst/audio/mixer.h>
+#include <gst/audio/streamvolume.h>
 #include <gst/fft/gstfft.h>
 #include <gst/fft/gstffts16.h>
 #include <gst/fft/gstffts32.h>
 #include <gst/fft/gstfftf32.h>
 #include <gst/fft/gstfftf64.h>
-#include <gst/interfaces/mixer.h>
 #include <gst/interfaces/navigation.h>
 #include <gst/interfaces/propertyprobe.h>
-#include <gst/interfaces/streamvolume.h>
 #include <gst/interfaces/tuner.h>
 #include <gst/pbutils/pbutils.h>
 #include <gst/riff/riff-media.h>

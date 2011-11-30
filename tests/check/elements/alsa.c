@@ -24,7 +24,7 @@
 
 #include <gst/check/gstcheck.h>
 #include <gst/interfaces/propertyprobe.h>
-#include <gst/interfaces/mixer.h>
+#include <gst/audio/mixer.h>
 
 /* just a simple test that runs device probing on
  * an alsasrc, alsasink and alsamixer instance */

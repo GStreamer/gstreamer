@@ -26,7 +26,7 @@
 
 #include <gst/check/gstcheck.h>
 
-#include <gst/interfaces/mixer.h>
+#include <gst/audio/mixer.h>
 
 #include <string.h>
 

@@ -252,7 +252,7 @@ libs_mixer_CFLAGS = \
         $(AM_CFLAGS)
 
 libs_mixer_LDADD = \
-	$(top_builddir)/gst-libs/gst/interfaces/libgstinterfaces-@GST_MAJORMINOR@.la \
+	$(top_builddir)/gst-libs/gst/audio/libgstaudio-@GST_MAJORMINOR@.la \
         $(GST_BASE_LIBS) \
         $(LDADD)
 
@@ -337,6 +337,7 @@ elements_alsa_CFLAGS = \
 
 elements_alsa_LDADD = \
 	$(top_builddir)/gst-libs/gst/interfaces/libgstinterfaces-@GST_MAJORMINOR@.la \
+	$(top_builddir)/gst-libs/gst/audio/libgstaudio-@GST_MAJORMINOR@.la \
 	$(LDADD)
 
 elements_audioconvert_CFLAGS = \
@@ -362,7 +363,7 @@ elements_gdppay_LDADD = $(GST_GDP_LIBS) $(LDADD)
 elements_playbin_LDADD = $(GST_BASE_LIBS) $(LDADD)
 elements_playbin_CFLAGS = $(GST_BASE_CFLAGS) $(AM_CFLAGS)
 
-elements_playbin_compressed_LDADD = $(top_builddir)/gst-libs/gst/interfaces/libgstinterfaces-@GST_MAJORMINOR@.la $(GST_BASE_LIBS) $(LDADD)
+elements_playbin_compressed_LDADD = $(top_builddir)/gst-libs/gst/audio/libgstaudio-@GST_MAJORMINOR@.la $(GST_BASE_LIBS) $(LDADD)
 elements_playbin_compressed_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(GST_BASE_CFLAGS) $(AM_CFLAGS)
 
 elements_decodebin_LDADD = $(GST_BASE_LIBS) $(LDADD)

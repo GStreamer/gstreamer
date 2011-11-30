@@ -26,7 +26,7 @@
 #include <gst/check/gstcheck.h>
 #include <gst/base/gstpushsrc.h>
 #include <gst/base/gstbasesink.h>
-#include <gst/interfaces/streamvolume.h>
+#include <gst/audio/streamvolume.h>
 
 #ifndef GST_DISABLE_REGISTRY
 
