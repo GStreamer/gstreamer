@@ -39,7 +39,7 @@
 #include <gdk/gdkwin32.h>
 #endif
 
-#include <gst/interfaces/videooverlay.h>
+#include <gst/video/videooverlay.h>
 
 GST_DEBUG_CATEGORY_STATIC (seek_debug);
 #define GST_CAT_DEFAULT (seek_debug)

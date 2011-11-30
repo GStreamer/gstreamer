@@ -32,7 +32,7 @@
 #include <gtk/gtk.h>
 
 #include <gst/gst.h>
-#include <gst/interfaces/videooverlay.h>
+#include <gst/video/videooverlay.h>
 #include <gst/video/gstvideosink.h>
 
 static struct
