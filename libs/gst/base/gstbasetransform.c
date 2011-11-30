@@ -1882,26 +1882,28 @@ gst_base_transform_buffer_alloc (GstPad * pad, guint64 offset, guint size,
     /* check if we actually handle this format on the sinkpad */
     if (sink_suggest) {
       const GstCaps *templ;
+      GstCaps *peercaps;
 
-      if (!gst_caps_is_fixed (sink_suggest)) {
-        GstCaps *peercaps;
+      /* Always intersect with the peer caps to get correct
+       * and complete caps. The suggested caps could be incomplete,
+       * for example video/x-raw-yuv without any fields at all.
+       */
+      peercaps =
+          gst_pad_peer_get_caps_reffed (GST_BASE_TRANSFORM_SINK_PAD (trans));
+      if (peercaps) {
+        GstCaps *intersect;
 
+        intersect =
+            gst_caps_intersect_full (sink_suggest, peercaps,
+            GST_CAPS_INTERSECT_FIRST);
+        gst_caps_unref (peercaps);
+        gst_caps_unref (sink_suggest);
+        sink_suggest = intersect;
+      }
+
+      if (!gst_caps_is_fixed (sink_suggest) || gst_caps_is_empty (sink_suggest)) {
         GST_DEBUG_OBJECT (trans, "Suggested caps is not fixed: %"
             GST_PTR_FORMAT, sink_suggest);
-
-        peercaps =
-            gst_pad_peer_get_caps_reffed (GST_BASE_TRANSFORM_SINK_PAD (trans));
-        /* try fixating by intersecting with peer caps */
-        if (peercaps) {
-          GstCaps *intersect;
-
-          intersect =
-              gst_caps_intersect_full (sink_suggest, peercaps,
-              GST_CAPS_INTERSECT_FIRST);
-          gst_caps_unref (peercaps);
-          gst_caps_unref (sink_suggest);
-          sink_suggest = intersect;
-        }
 
         if (gst_caps_is_empty (sink_suggest))
           goto not_supported;
