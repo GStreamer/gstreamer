@@ -14,7 +14,7 @@
       <longname>Video gamma correction</longname>
       <class>Filter/Effect/Video</class>
       <description>Adjusts gamma on a video stream</description>
-      <author>Arwed v. Merkatz &lt;v.merkatz@gmx.net</author>
+      <author>Arwed v. Merkatz &lt;v.merkatz@gmx.net&gt;</author>
       <pads>
         <caps>
           <name>sink</name>

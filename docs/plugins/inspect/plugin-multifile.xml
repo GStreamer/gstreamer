@@ -39,5 +39,20 @@
         </caps>
       </pads>
     </element>
+    <element>
+      <name>splitfilesrc</name>
+      <longname>Split-File Source</longname>
+      <class>Source/File</class>
+      <description>Read a sequentially named set of files as if it was one large file</description>
+      <author>Tim-Philipp Müller &lt;tim.muller@collabora.co.uk&gt;</author>
+      <pads>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>ANY</details>
+        </caps>
+      </pads>
+    </element>
   </elements>
 </plugin>

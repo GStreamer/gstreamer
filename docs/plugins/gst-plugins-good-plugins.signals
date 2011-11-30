@@ -14,7 +14,7 @@ GstGSMEnc *gstgsmenc
 <SIGNAL>
 <NAME>GstMultiUDPSink::add</NAME>
 <RETURNS>void</RETURNS>
-<FLAGS>l</FLAGS>
+<FLAGS>la</FLAGS>
 GstMultiUDPSink *gstmultiudpsink
 gchar *arg1
 gint  arg2
@@ -23,7 +23,7 @@ gint  arg2
 <SIGNAL>
 <NAME>GstMultiUDPSink::clear</NAME>
 <RETURNS>void</RETURNS>
-<FLAGS>l</FLAGS>
+<FLAGS>la</FLAGS>
 GstMultiUDPSink *gstmultiudpsink
 </SIGNAL>
 
@@ -48,7 +48,7 @@ gint  arg2
 <SIGNAL>
 <NAME>GstMultiUDPSink::get-stats</NAME>
 <RETURNS>GValueArray*</RETURNS>
-<FLAGS>l</FLAGS>
+<FLAGS>la</FLAGS>
 GstMultiUDPSink *gstmultiudpsink
 gchar *arg1
 gint  arg2
@@ -57,7 +57,7 @@ gint  arg2
 <SIGNAL>
 <NAME>GstMultiUDPSink::remove</NAME>
 <RETURNS>void</RETURNS>
-<FLAGS>l</FLAGS>
+<FLAGS>la</FLAGS>
 GstMultiUDPSink *gstmultiudpsink
 gchar *arg1
 gint  arg2
