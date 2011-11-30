@@ -494,7 +494,7 @@ gst_encoding_video_profile_class_init (GObjectClass * klass)
  *
  * Returns: The pass number if this is part of a multi-pass profile. Starts at
  * 1 for multi-pass. 0 if this is not a multi-pass profile
- **/
+ */
 guint
 gst_encoding_video_profile_get_pass (GstEncodingVideoProfile * prof)
 {
