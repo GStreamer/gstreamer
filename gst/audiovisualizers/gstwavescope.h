@@ -42,6 +42,9 @@ struct _GstWaveScope
   /* < private > */
   GstWaveScopeProcessFunc process;
   gint style;
+
+  /* filter specific data */
+  gdouble *flt;
 };
 
 struct _GstWaveScopeClass
