@@ -957,6 +957,7 @@ gpointer      gst_util_array_binary_search      (gpointer array, guint num_eleme
 
 /* fraction operations */
 gint          gst_util_greatest_common_divisor  (gint a, gint b);
+gint64        gst_util_greatest_common_divisor_int64 (gint64 a, gint64 b);
 
 void          gst_util_fraction_to_double       (gint src_n, gint src_d, gdouble *dest);
 void          gst_util_double_to_fraction       (gdouble src, gint *dest_n, gint *dest_d);

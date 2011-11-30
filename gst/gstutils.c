@@ -3522,6 +3522,32 @@ gst_util_greatest_common_divisor (gint a, gint b)
 }
 
 /**
+ * gst_util_greatest_common_divisor_int64:
+ * @a: First value as #gint64
+ * @b: Second value as #gint64
+ *
+ * Calculates the greatest common divisor of @a
+ * and @b.
+ *
+ * Returns: Greatest common divisor of @a and @b
+ *
+ * Since: 0.11.0
+ */
+gint64
+gst_util_greatest_common_divisor_int64 (gint64 a, gint64 b)
+{
+  while (b != 0) {
+    gint64 temp = a;
+
+    a = b;
+    b = temp % b;
+  }
+
+  return ABS (a);
+}
+
+
+/**
  * gst_util_fraction_to_double:
  * @src_n: Fraction numerator as #gint
  * @src_d: Fraction denominator #gint
