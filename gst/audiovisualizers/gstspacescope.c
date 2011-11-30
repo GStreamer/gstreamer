@@ -271,7 +271,6 @@ render_lines (GstBaseAudioVisualizer * base, guint32 * vdata, gint16 * adata,
   f2r_l += (f2r_m * CUTOFF_2);                                                 \
 } G_STMT_END
 
-
 static void
 render_color_dots (GstBaseAudioVisualizer * base, guint32 * vdata,
     gint16 * adata, guint num_samples)
