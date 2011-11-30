@@ -25,17 +25,14 @@
  * had to be split into multiple parts due to filesystem file size limitations,
  * for example.
  *
- * The files to select are chosen via the location property, which takes a
- * regular expression (note: shell-style wildcards will not work). If the
- * location is an absolute path or contains directory components, only the
- * base file name part will be considered a regular expression. The results
- * will be sorted. The location may include directory components, but the
- * regular expression to select the files can only be in the filename part.
+ * The files to select are chosen via the location property, which supports
+ * (and expects) shell-style wildcards (but only for the filename, not for
+ * directories). The results will be sorted.
  *
  * <refsect2>
  * <title>Example launch line</title>
  * |[
- * gst-launch splitfilesrc location="/path/to/part-.*.mpg" ! decodebin ! ... \
+ * gst-launch splitfilesrc location="/path/to/part-*.mpg" ! decodebin ! ... \
  * ]| Plays the different parts as if they were one single MPEG file.
  * </refsect2>
  *
@@ -51,8 +48,15 @@
 #endif
 
 #include "gstsplitfilesrc.h"
+#include "patternspec.h"
 
 #include <string.h>
+
+#ifdef G_OS_WIN32
+#define DEFAULT_PATTERN_MATCH_MODE MATCH_MODE_UTF8
+#else
+#define DEFAULT_PATTERN_MATCH_MODE MATCH_MODE_AUTO
+#endif
 
 enum
 {
@@ -105,6 +109,12 @@ gst_split_file_src_base_init (gpointer g_class)
       "Tim-Philipp Müller <tim.muller@collabora.co.uk>");
 }
 
+#ifdef G_OS_WIN32
+#define WIN32_BLURB " Location string must be in UTF-8 encoding (on Windows)."
+#else
+#define WIN32_BLURB             /* nothing */
+#endif
+
 static void
 gst_split_file_src_class_init (GstSplitFileSrcClass * klass)
 {
@@ -115,16 +125,12 @@ gst_split_file_src_class_init (GstSplitFileSrcClass * klass)
   gobject_class->get_property = gst_split_file_src_get_property;
   gobject_class->finalize = gst_split_file_src_finalize;
 
-  /* We're using a regular expression here instead of wildcards, because
-   * GPatternSpec can only handle UTF-8 and filenames on unix tend to be
-   * just bytes and are often ISO-8859-X, and we don't feel like
-   * re-inventing GPatternSpec */
   g_object_class_install_property (gobject_class, PROP_LOCATION,
       g_param_spec_string ("location", "File Location",
-          "Regular expression to create file names of the input files. If "
+          "Wildcard pattern to match file names of the input files. If "
           "the location is an absolute path or contains directory components, "
-          "only the base file name part will be considered a regular "
-          "expression. The results will be sorted.",
+          "only the base file name part will be considered for pattern "
+          "matching. The results will be sorted." WIN32_BLURB,
           DEFAULT_LOCATION, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   gstbasesrc_class->start = GST_DEBUG_FUNCPTR (gst_split_file_src_start);
@@ -203,6 +209,12 @@ gst_split_file_src_set_property (GObject * object, guint prop_id,
       GST_OBJECT_LOCK (src);
       g_free (src->location);
       src->location = g_value_dup_string (value);
+#ifdef G_OS_WIN32
+      if (!g_utf8_validate (src->location, -1, NULL)) {
+        g_warning ("splitfilesrc 'location' property must be in UTF-8 "
+            "encoding on Windows");
+      }
+#endif
       GST_OBJECT_UNLOCK (src);
       break;
     default:
@@ -239,10 +251,9 @@ static gchar **
 gst_split_file_src_find_files (GstSplitFileSrc * src, const gchar * dirname,
     const gchar * basename, GError ** err)
 {
+  PatternSpec *pspec;
   GPtrArray *files;
-  GRegex *regex;
   const gchar *name;
-  gchar *regex_string;
   GDir *dir;
 
   if (dirname == NULL || basename == NULL)
@@ -255,25 +266,20 @@ gst_split_file_src_find_files (GstSplitFileSrc * src, const gchar * dirname,
   if (dir == NULL)
     return NULL;
 
-  /* we want the filename to be the whole filename, not just some match
-   * in the middle of the filename */
-  if (g_str_has_suffix (basename, "$"))
-    regex_string = g_strdup (basename);
-  else
-    regex_string = g_strconcat (basename, "$", NULL);
+  if (DEFAULT_PATTERN_MATCH_MODE == MATCH_MODE_UTF8 &&
+      !g_utf8_validate (basename, -1, NULL)) {
+    goto not_utf8;
+  }
 
-  regex = g_regex_new (regex_string, G_REGEX_RAW, (GRegexMatchFlags) 0, err);
-  g_free (regex_string);
-
-  if (regex == NULL)
-    goto regex_fail;
+  /* mode will be AUTO on linux/unix and UTF8 on win32 */
+  pspec = pattern_spec_new (basename, DEFAULT_PATTERN_MATCH_MODE);
 
   files = g_ptr_array_new ();
 
   while ((name = g_dir_read_name (dir))) {
     GST_TRACE_OBJECT (src, "check: %s", name);
-    if (g_regex_match (regex, name, (GRegexMatchFlags) 0, NULL)) {
-      GST_LOG_OBJECT (src, "match: %s", name);
+    if (pattern_match_string (pspec, name)) {
+      GST_DEBUG_OBJECT (src, "match: %s", name);
       g_ptr_array_add (files, g_build_filename (dirname, name, NULL));
     }
   }
@@ -284,7 +290,7 @@ gst_split_file_src_find_files (GstSplitFileSrc * src, const gchar * dirname,
   g_ptr_array_sort (files, (GCompareFunc) gst_split_file_src_array_sortfunc);
   g_ptr_array_add (files, NULL);
 
-  g_regex_unref (regex);
+  pattern_spec_free (pspec);
   g_dir_close (dir);
 
   return (gchar **) g_ptr_array_free (files, FALSE);
@@ -296,21 +302,21 @@ invalid_location:
         "No filename specified.");
     return NULL;
   }
-regex_fail:
+not_utf8:
   {
-    GST_WARNING_OBJECT (src, "g_regex_new() failed: %s", (*err)->message);
     g_dir_close (dir);
+    g_set_error_literal (err, G_FILE_ERROR, G_FILE_ERROR_INVAL,
+        "Filename pattern must be UTF-8 on Windows.");
     return NULL;
   }
 no_matches:
   {
-    g_regex_unref (regex);
+    pattern_spec_free (pspec);
     g_dir_close (dir);
     g_set_error_literal (err, G_FILE_ERROR, G_FILE_ERROR_NOENT,
         "Found no files matching the pattern.");
     return NULL;
   }
-
 }
 
 static gboolean
