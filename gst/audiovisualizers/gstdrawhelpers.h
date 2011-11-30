@@ -24,8 +24,12 @@
   _vd[(_y * _st) + _x] = _c;                                                   \
 } G_STMT_END
 
+#define draw_dot_c(_vd, _x, _y, _st, _c) G_STMT_START {                        \
+  _vd[(_y * _st) + _x] |= _c;                                                  \
+} G_STMT_END
+
 #define draw_dot_aa(_vd, _x, _y, _st, _c, _f)  G_STMT_START {                  \
-  guint32 _oc, _nc, _c1, _c2, _c3;                                             \
+  guint32 _oc, _c1, _c2, _c3;                                                  \
                                                                                \
   _oc = _vd[(_y * _st) + _x];                                                  \
   _c3 = (_oc & 0xff) + ((_c & 0xff) * _f);                                     \
@@ -34,8 +38,7 @@
   _c2 = MIN(_c2, 255);                                                         \
   _c1 = ((_oc & 0xff0000) >> 16) + (((_c & 0xff0000) >> 16) * _f);             \
   _c1 = MIN(_c1, 255);                                                         \
-  _nc = (_c1 << 16) | (_c2 << 8) | _c3;                                 \
-  _vd[(_y * _st) + _x] = _nc;                                                  \
+  _vd[(_y * _st) + _x] = (_c1 << 16) | (_c2 << 8) | _c3;                       \
 } G_STMT_END
 
 #define draw_line(_vd, _x1, _x2, _y1, _y2, _st, _c) G_STMT_START {             \
