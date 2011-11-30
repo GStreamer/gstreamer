@@ -356,8 +356,8 @@ ges_timeline_filesource_create_track_object (GESTimelineObject * obj,
 
   if (priv->is_image) {
     if (track->type != GES_TRACK_TYPE_VIDEO) {
-      GST_DEBUG ("Object is still image, creating silent audio source");
-      res = (GESTrackObject *) ges_track_audio_test_source_new ();
+      GST_DEBUG ("Object is still image, not adding any audio source");
+      return NULL;
     } else {
       GST_DEBUG ("Creating a GESTrackImageSource");
       res = (GESTrackObject *) ges_track_image_source_new (priv->uri);
