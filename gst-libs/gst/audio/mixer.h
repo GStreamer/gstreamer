@@ -23,9 +23,8 @@
 #define __GST_MIXER_H__
 
 #include <gst/gst.h>
-#include <gst/interfaces/mixeroptions.h>
-#include <gst/interfaces/mixertrack.h>
-#include <gst/interfaces/interfaces-enumtypes.h>
+#include <gst/audio/mixeroptions.h>
+#include <gst/audio/mixertrack.h>
 
 G_BEGIN_DECLS
 

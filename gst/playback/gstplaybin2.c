@@ -222,7 +222,7 @@
 
 #include <gst/gst-i18n-plugin.h>
 #include <gst/pbutils/pbutils.h>
-#include <gst/interfaces/streamvolume.h>
+#include <gst/audio/streamvolume.h>
 
 #include "gstplay-enum.h"
 #include "gstplay-marshal.h"

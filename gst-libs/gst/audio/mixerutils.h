@@ -21,7 +21,7 @@
 #define __GST_AUDIO_MIXERUTILS_H__
 
 #include <gst/gst.h>
-#include <gst/interfaces/mixer.h>
+#include <gst/audio/mixer.h>
 
 G_BEGIN_DECLS
 

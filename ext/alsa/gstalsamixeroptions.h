@@ -22,7 +22,7 @@
 
 
 #include "gstalsa.h"
-#include <gst/interfaces/mixeroptions.h>
+#include <gst/audio/mixeroptions.h>
 
 
 G_BEGIN_DECLS

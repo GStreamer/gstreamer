@@ -7,8 +7,8 @@ glib_enum_define = GST_AUDIO
 glib_gen_prefix = gst_audio
 glib_gen_basename = audio
 
-built_sources = audio-enumtypes.c
-built_headers = audio-enumtypes.h
+built_sources = audio-enumtypes.c audio-marshal.c
+built_headers = audio-enumtypes.h audio-marshal.h
 BUILT_SOURCES = $(built_sources) $(built_headers)
 
 lib_LTLIBRARIES = \
@@ -21,6 +21,9 @@ libgstaudio_@GST_MAJORMINOR@_la_SOURCES = \
 	audio.c \
 	gstaudioringbuffer.c \
 	gstaudioclock.c \
+	mixer.c \
+	mixeroptions.c \
+	mixertrack.c \
 	mixerutils.c \
 	multichannel.c \
 	gstaudiocdsrc.c \
@@ -31,7 +34,9 @@ libgstaudio_@GST_MAJORMINOR@_la_SOURCES = \
 	gstaudiofilter.c \
 	gstaudiosink.c \
 	gstaudiosrc.c \
+	streamvolume.c \
 	gstaudioiec61937.c
+
 nodist_libgstaudio_@GST_MAJORMINOR@_la_SOURCES = $(built_sources) $(built_headers)
 
 libgstaudio_@GST_MAJORMINOR@includedir = $(includedir)/gstreamer-@GST_MAJORMINOR@/gst/audio
@@ -47,8 +52,12 @@ libgstaudio_@GST_MAJORMINOR@include_HEADERS = \
 	gstaudiobasesrc.h \
 	gstaudiosink.h \
 	gstaudiosrc.h \
+	mixer.h \
+	mixeroptions.h \
+	mixertrack.h \
 	mixerutils.h \
 	multichannel.h \
+	streamvolume.h \
 	gstaudioiec61937.h
 
 nodist_libgstaudio_@GST_MAJORMINOR@include_HEADERS = \

@@ -23,7 +23,7 @@
 
 #include "gstalsa.h"
 
-#include <gst/interfaces/mixer.h>
+#include <gst/audio/mixer.h>
 #include "gstalsamixeroptions.h"
 #include "gstalsamixertrack.h"
 

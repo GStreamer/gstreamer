@@ -601,7 +601,7 @@ gst_color_balance_channel_get_type
 
 <SECTION>
 <FILE>gstmixer</FILE>
-<INCLUDE>gst/interfaces/mixer.h</INCLUDE>
+<INCLUDE>gst/audio/mixer.h</INCLUDE>
 GstMixer
 GstMixerType
 GstMixerFlags
@@ -654,7 +654,7 @@ gst_stream_volume_format_get_type
 
 <SECTION>
 <FILE>gstmixeroptions</FILE>
-<INCLUDE>gst/interfaces/mixer.h</INCLUDE>
+<INCLUDE>gst/audio/mixer.h</INCLUDE>
 GstMixerOptions
 gst_mixer_options_get_values
 <SUBSECTION Standard>
@@ -670,7 +670,7 @@ gst_mixer_options_get_type
 
 <SECTION>
 <FILE>gstmixertrack</FILE>
-<INCLUDE>gst/interfaces/mixer.h</INCLUDE>
+<INCLUDE>gst/audio/mixer.h</INCLUDE>
 GstMixerTrack
 GstMixerTrackFlags
 GST_MIXER_TRACK_HAS_FLAG
@@ -772,7 +772,7 @@ gst_property_probe_get_type
 
 <SECTION>
 <FILE>gststreamvolume</FILE>
-<INCLUDE>gst/interfaces/streamvolume.h</INCLUDE>
+<INCLUDE>gst/audio/streamvolume.h</INCLUDE>
 GstStreamVolume
 GstStreamVolumeFormat
 

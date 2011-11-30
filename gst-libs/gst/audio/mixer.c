@@ -24,7 +24,7 @@
 #endif
 
 #include "mixer.h"
-#include "interfaces-marshal.h"
+#include "audio-marshal.h"
 
 #define GST_MIXER_MESSAGE_NAME "gst-mixer-message"
 
