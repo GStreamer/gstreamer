@@ -413,18 +413,18 @@ gst_rippletv_transform (GstBaseTransform * trans, GstBuffer * in,
       v = (gint) vp[1];
       dx = x + h;
       dy = y + v;
-      dx = CLAMP (dx, 0, (v_w - 1));
-      dy = CLAMP (dy, 0, (v_h - 1));
+      dx = CLAMP (dx, 0, (v_w - 2));
+      dy = CLAMP (dy, 0, (v_h - 2));
       dest[0] = src[dy * v_w + dx];
 
       o_dx = dx;
 
       dx = x + 1 + (h + (gint) vp[2]) / 2;
-      dx = CLAMP (dx, 0, (v_w - 1));
+      dx = CLAMP (dx, 0, (v_w - 2));
       dest[1] = src[dy * v_w + dx];
 
       dy = y + 1 + (v + (gint) vp[m_w * 2 + 1]) / 2;
-      dy = CLAMP (dy, 0, (v_h - 1));
+      dy = CLAMP (dy, 0, (v_h - 2));
       dest[v_w] = src[dy * v_w + o_dx];
 
       dest[v_w + 1] = src[dy * v_w + dx];
