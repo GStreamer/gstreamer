@@ -3,9 +3,8 @@ video-rate. It receives audio-data at the sampling-rate. It needs to render
 video-frames at frame-rate. The rendering needs n audio samples (depends on
 subclass). The baseclass takes care of that.
 
-Some effects could be enhanced by running geometrictransform elements
-afterwards. A blur and/or videozoom element would be great (vertigotv looks
-great but has some negotiation issues).
+Some effects could be enhanced by running geometrictransform/effecttc elements
+afterwards.
 
 = Feedback =
 * put 'Audio' to klass as well ?
@@ -36,16 +35,34 @@ spectrascope - done
 spacescope - stereo wavescope
 - left->x, right->y - done
 - polar mapping
-multiscope :
-- like wave/space scope, but run the signal through two filters to split it into
-  bass, mid and high (200 Hz, 2000 Hz)
-- draw 3 wave-scopes into red/gree/blue
-- when drawing only draw that component to mix colors
-- eventually use the spacescope-position to rotate/shift the wave
+wavescope
+- we could have a bouncing line as a base, like a quix:
+  - two dots moving on a linear path and getting a new random dx,dy when hitting
+    a border
+  - the abs(dx/dy) - speed of movement - could be scaled by the sound level
+  - we would need to rotate, stretch and clip the waveform drawing to fit the
+    line
+  - we could scratch the rotate part and just stretch/squeeze x and shift/clip y
+
+xxxscope
+- have a matrix of source and drawing-functions
+  - sources: audio, spectrum, audio-low, audio-mid, audio-hi
+  - drawing: waves (style, color), space (style,color)
+- have the usual shade and move operations
+- have a way to draw each operator in one or more color-channels
+- we could calculate the sound-level (like in level element) and modulate
+  colors/movements
+  - for filtered low/mid/hi audio we could use different peak-falloffs
 
 = TODO =
 - element maker template
 - test for baseclass
+
+- we probably want a VisBin like the gnome video effects
+- this way we can specify pipeline fragments
+- VisBin can use a videomixer to switch effects based on time or song
+- VisBin can e.g. control a text-overlay to render the title into the 
+  visualisation for a while
 
 = Test it =
 
@@ -55,6 +72,7 @@ GST_PLUGIN_PATH=$GST_PLUGIN_PATH:$PWD gst-inspect scopes
 
 GST_PLUGIN_PATH=$GST_PLUGIN_PATH:$PWD gst-launch audiotestsrc ! audioconvert ! wavescope ! colorspace ! ximagesink
 GST_PLUGIN_PATH=$GST_PLUGIN_PATH:$PWD gst-launch filesrc location=$HOME/Music/1.mp3 ! decodebin2 ! audioconvert ! wavescope ! colorspace ! ximagesink
+GST_PLUGIN_PATH=$GST_PLUGIN_PATH:$PWD gst-launch filesrc location=$HOME/Music/1.mp3 ! decodebin2 ! audioconvert ! wavescope style=lines shade-amount=0x00080402 ! edgetv ! vertigotv ! ximagesink
 
 GST_PLUGIN_PATH=$GST_PLUGIN_PATH:$PWD gst-launch filesrc location=$HOME/Music/1.mp3 ! decodebin2 ! audioconvert ! spacescope style=lines shade-amount=0x00080402 ! ximagesink
 GST_PLUGIN_PATH=$GST_PLUGIN_PATH:$PWD gst-launch filesrc location=$HOME/Music/1.mp3 ! decodebin2 ! audioconvert ! spacescope style=lines shade-amount=0x00080402 ! vertigotv ! ximagesink
