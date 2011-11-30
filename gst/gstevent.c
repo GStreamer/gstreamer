@@ -589,6 +589,7 @@ gst_event_new_new_segment_full (gboolean update, gdouble rate,
 
   g_return_val_if_fail (rate != 0.0, NULL);
   g_return_val_if_fail (applied_rate != 0.0, NULL);
+  g_return_val_if_fail (format != GST_FORMAT_UNDEFINED, NULL);
 
   if (format == GST_FORMAT_TIME) {
     GST_CAT_INFO (GST_CAT_EVENT,
