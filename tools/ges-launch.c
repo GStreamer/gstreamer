@@ -399,11 +399,13 @@ main (int argc, gchar ** argv)
   gchar *video_restriction = (gchar *) "ANY";
   gchar *audio_preset = NULL;
   gchar *video_preset = NULL;
+  gchar *exclude_args = NULL;
   static gboolean render = FALSE;
   static gboolean smartrender = FALSE;
   static gboolean list_transitions = FALSE;
   static gboolean list_patterns = FALSE;
   static gdouble thumbinterval = 0;
+  static gboolean verbose = FALSE;
   gchar *save_path = NULL;
   gchar *load_path = NULL;
   GOptionEntry options[] = {
@@ -437,6 +439,10 @@ main (int argc, gchar ** argv)
         "Save project to file before rendering", "<path>"},
     {"load", 'q', 0, G_OPTION_ARG_STRING, &load_path,
         "Load project from file before rendering", "<path>"},
+    {"verbose", 0, 0, G_OPTION_ARG_NONE, &verbose,
+        "Output status information and property notifications", NULL},
+    {"exclude", 'X', 0, G_OPTION_ARG_NONE, &exclude_args,
+        "Do not output status information of TYPE", "TYPE1,TYPE2,..."},
     {NULL}
   };
   GOptionContext *ctx;
@@ -518,6 +524,13 @@ main (int argc, gchar ** argv)
     gst_encoding_profile_unref (prof);
   } else {
     ges_timeline_pipeline_set_mode (pipeline, TIMELINE_MODE_PREVIEW);
+  }
+
+  if (verbose) {
+    gchar **exclude_list =
+        exclude_args ? g_strsplit (exclude_args, ",", 0) : NULL;
+    g_signal_connect (pipeline, "deep-notify",
+        G_CALLBACK (gst_object_default_deep_notify), exclude_list);
   }
 
   /* Play the pipeline */
