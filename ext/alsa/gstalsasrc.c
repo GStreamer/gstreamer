@@ -251,8 +251,7 @@ static GstClockTime
 gst_alsasrc_get_timestamp (GstAlsaSrc * src)
 {
   snd_pcm_status_t *status;
-  snd_htimestamp_t htstamp;
-  snd_timestamp_t tstamp;
+  snd_htimestamp_t tstamp;
   GstClockTime timestamp;
   snd_pcm_uframes_t availmax;
   gint64 offset;
@@ -276,19 +275,8 @@ gst_alsasrc_get_timestamp (GstAlsaSrc * src)
   }
 
   /* get high resolution time stamp from driver */
-  snd_pcm_status_get_htstamp (status, &htstamp);
-  timestamp = GST_TIMESPEC_TO_TIME (htstamp);
-  if (!timestamp) {
-    GST_INFO_OBJECT (src,
-        "This alsa source does support high resolution timestamps");
-    snd_pcm_status_get_tstamp (status, &tstamp);
-    timestamp = GST_TIMEVAL_TO_TIME (tstamp);
-    if (!timestamp) {
-      GST_INFO_OBJECT (src,
-          "This alsa source does support low resolution timestamps");
-      timestamp = gst_util_get_timestamp ();
-    }
-  }
+  snd_pcm_status_get_htstamp (status, &tstamp);
+  timestamp = GST_TIMESPEC_TO_TIME (tstamp);
   GST_DEBUG_OBJECT (src, "Base ts: %" GST_TIME_FORMAT,
       GST_TIME_ARGS (timestamp));
   if (timestamp == 0) {
