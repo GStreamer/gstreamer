@@ -1155,6 +1155,7 @@ EXPORTS
 	gst_util_gdouble_to_guint64
 	gst_util_get_timestamp
 	gst_util_greatest_common_divisor
+	gst_util_greatest_common_divisor_int64
 	gst_util_guint64_to_gdouble
 	gst_util_seqnum_compare
 	gst_util_seqnum_next
@@ -1190,12 +1191,15 @@ EXPORTS
 	gst_value_get_fraction_range_min
 	gst_value_get_int64_range_max
 	gst_value_get_int64_range_min
+	gst_value_get_int64_range_step
 	gst_value_get_int_range_max
 	gst_value_get_int_range_min
+	gst_value_get_int_range_step
 	gst_value_get_structure
 	gst_value_init_and_copy
 	gst_value_intersect
 	gst_value_is_fixed
+	gst_value_is_subset
 	gst_value_list_append_value
 	gst_value_list_concat
 	gst_value_list_get_size
@@ -1215,7 +1219,9 @@ EXPORTS
 	gst_value_set_fraction_range
 	gst_value_set_fraction_range_full
 	gst_value_set_int64_range
+	gst_value_set_int64_range_step
 	gst_value_set_int_range
+	gst_value_set_int_range_step
 	gst_value_set_structure
 	gst_value_subtract
 	gst_value_union

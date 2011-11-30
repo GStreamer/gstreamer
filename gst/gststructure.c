@@ -1900,8 +1900,9 @@ gst_structure_parse_range (gchar * s, gchar ** after, GValue * value,
 {
   GValue value1 = { 0 };
   GValue value2 = { 0 };
+  GValue value3 = { 0 };
   GType range_type;
-  gboolean ret;
+  gboolean ret, have_step = FALSE;
 
   if (*s != '[')
     return FALSE;
@@ -1928,11 +1929,33 @@ gst_structure_parse_range (gchar * s, gchar ** after, GValue * value,
   while (g_ascii_isspace (*s))
     s++;
 
+  /* optional step for int and int64 */
+  if (G_VALUE_TYPE (&value1) == G_TYPE_INT
+      || G_VALUE_TYPE (&value1) == G_TYPE_INT64) {
+    if (*s == ',') {
+      s++;
+
+      while (g_ascii_isspace (*s))
+        s++;
+
+      ret = gst_structure_parse_value (s, &s, &value3, type);
+      if (ret == FALSE)
+        return FALSE;
+
+      while (g_ascii_isspace (*s))
+        s++;
+
+      have_step = TRUE;
+    }
+  }
+
   if (*s != ']')
     return FALSE;
   s++;
 
   if (G_VALUE_TYPE (&value1) != G_VALUE_TYPE (&value2))
+    return FALSE;
+  if (have_step && G_VALUE_TYPE (&value1) != G_VALUE_TYPE (&value3))
     return FALSE;
 
   if (G_VALUE_TYPE (&value1) == G_TYPE_DOUBLE) {
@@ -1944,13 +1967,26 @@ gst_structure_parse_range (gchar * s, gchar ** after, GValue * value,
   } else if (G_VALUE_TYPE (&value1) == G_TYPE_INT) {
     range_type = GST_TYPE_INT_RANGE;
     g_value_init (value, range_type);
-    gst_value_set_int_range (value, gst_g_value_get_int_unchecked (&value1),
-        gst_g_value_get_int_unchecked (&value2));
+    if (have_step)
+      gst_value_set_int_range_step (value,
+          gst_g_value_get_int_unchecked (&value1),
+          gst_g_value_get_int_unchecked (&value2),
+          gst_g_value_get_int_unchecked (&value3));
+    else
+      gst_value_set_int_range (value, gst_g_value_get_int_unchecked (&value1),
+          gst_g_value_get_int_unchecked (&value2));
   } else if (G_VALUE_TYPE (&value1) == G_TYPE_INT64) {
     range_type = GST_TYPE_INT64_RANGE;
     g_value_init (value, range_type);
-    gst_value_set_int64_range (value, gst_g_value_get_int64_unchecked (&value1),
-        gst_g_value_get_int64_unchecked (&value2));
+    if (have_step)
+      gst_value_set_int64_range_step (value,
+          gst_g_value_get_int64_unchecked (&value1),
+          gst_g_value_get_int64_unchecked (&value2),
+          gst_g_value_get_int64_unchecked (&value3));
+    else
+      gst_value_set_int64_range (value,
+          gst_g_value_get_int64_unchecked (&value1),
+          gst_g_value_get_int64_unchecked (&value2));
   } else if (G_VALUE_TYPE (&value1) == GST_TYPE_FRACTION) {
     range_type = GST_TYPE_FRACTION_RANGE;
     g_value_init (value, range_type);
@@ -3132,32 +3168,7 @@ gst_caps_structure_is_subset_field (GQuark field_id, const GValue * value,
   if (comparison != GST_VALUE_UNORDERED)
     return FALSE;
 
-  /*
-   * 1 - [1,2] = empty
-   * -> !subset
-   *
-   * [1,2] - 1 = 2
-   *  -> 1 - [1,2] = empty
-   *  -> subset
-   *
-   * [1,3] - [1,2] = 3
-   * -> [1,2] - [1,3] = empty
-   * -> subset
-   *
-   * {1,2} - {1,3} = 2
-   * -> {1,3} - {1,2} = 3
-   * -> !subset
-   *
-   *  First caps subtraction needs to return a non-empty set, second
-   *  subtractions needs to give en empty set.
-   *  Both substractions are switched below, as it's faster that way.
-   */
-  if (!gst_value_subtract (NULL, value, other)) {
-    if (gst_value_subtract (NULL, other, value)) {
-      return TRUE;
-    }
-  }
-  return FALSE;
+  return gst_value_is_subset (value, other);
 }
 
 /**

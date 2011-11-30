@@ -476,15 +476,25 @@ const GValue *  gst_value_array_get_value       (const GValue   *value,
 void            gst_value_set_int_range         (GValue         *value,
                                                  gint           start,
                                                  gint           end);
+void            gst_value_set_int_range_step    (GValue         *value,
+                                                 gint           start,
+                                                 gint           end,
+                                                 gint           step);
 gint            gst_value_get_int_range_min     (const GValue   *value);
 gint            gst_value_get_int_range_max     (const GValue   *value);
+gint            gst_value_get_int_range_step    (const GValue   *value);
 
 /* int64 range */
 void            gst_value_set_int64_range       (GValue         *value,
                                                  gint64         start,
                                                  gint64         end);
+void            gst_value_set_int64_range_step  (GValue         *value,
+                                                 gint64         start,
+                                                 gint64         end,
+                                                 gint64         step);
 gint64          gst_value_get_int64_range_min   (const GValue   *value);
 gint64          gst_value_get_int64_range_max   (const GValue   *value);
+gint64          gst_value_get_int64_range_step  (const GValue   *value);
 
 /* double range */
 void            gst_value_set_double_range      (GValue         *value,
@@ -539,6 +549,9 @@ gint            gst_value_compare               (const GValue   *value1,
                                                  const GValue   *value2);
 gboolean        gst_value_can_compare           (const GValue   *value1,
                                                  const GValue   *value2);
+gboolean        gst_value_is_subset             (const GValue   *value1,
+                                                 const GValue   *value2);
+
 /* union */
 gboolean        gst_value_union                 (GValue         *dest,
                                                  const GValue   *value1,
