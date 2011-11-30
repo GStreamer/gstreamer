@@ -1344,12 +1344,12 @@ gst_play_bin_set_uri (GstPlayBin * playbin, const gchar * uri)
 
   if (!gst_playbin_uri_is_valid (playbin, uri)) {
     if (g_str_has_prefix (uri, "file:")) {
-      GST_ERROR_OBJECT (playbin, "malformed file URI '%s' - make sure to "
-          "escape spaces and non-ASCII characters properly and specify an "
-          "absolute path. Use gst_filename_to_uri() to convert filenames "
+      GST_WARNING_OBJECT (playbin, "not entirely correct file URI '%s' - make "
+          "sure to escape spaces and non-ASCII characters properly and specify "
+          "an absolute path. Use gst_filename_to_uri() to convert filenames "
           "to URIs", uri);
     } else {
-      GST_ERROR_OBJECT (playbin, "malformed URI '%s'", uri);
+      /* GST_ERROR_OBJECT (playbin, "malformed URI '%s'", uri); */
     }
   }
 
