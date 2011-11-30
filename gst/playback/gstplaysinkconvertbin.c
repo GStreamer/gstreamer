@@ -84,16 +84,18 @@ distribute_running_time (GstElement * element, const GstSegment * segment)
   gst_pad_send_event (pad, gst_event_new_flush_start ());
   gst_pad_send_event (pad, gst_event_new_flush_stop ());
 
-  if (segment->accum) {
+  if (segment->accum && segment->format != GST_FORMAT_UNDEFINED) {
     event = gst_event_new_new_segment_full (FALSE, segment->rate,
         segment->applied_rate, segment->format, 0, segment->accum, 0);
     gst_pad_send_event (pad, event);
   }
 
-  event = gst_event_new_new_segment_full (FALSE, segment->rate,
-      segment->applied_rate, segment->format,
-      segment->start, segment->stop, segment->time);
-  gst_pad_send_event (pad, event);
+  if (segment->format != GST_FORMAT_UNDEFINED) {
+    event = gst_event_new_new_segment_full (FALSE, segment->rate,
+        segment->applied_rate, segment->format,
+        segment->start, segment->stop, segment->time);
+    gst_pad_send_event (pad, event);
+  }
 
   gst_object_unref (pad);
 }
