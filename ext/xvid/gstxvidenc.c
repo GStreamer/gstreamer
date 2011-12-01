@@ -51,25 +51,7 @@ static GstStaticPadTemplate sink_template = GST_STATIC_PAD_TEMPLATE ("sink",
 static GstStaticPadTemplate src_template = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("video/x-xvid, "
-        "width = (int) [ 0, MAX ], "
-        "height = (int) [ 0, MAX ], "
-        "framerate = (fraction) [ 0/1, MAX ], "
-        "profile = (string) simple, "
-        "level = (string) { 0, 1, 2, 3, 4a, 5, 6 };"
-        "video/x-xvid, "
-        "width = (int) [ 0, MAX ], "
-        "height = (int) [ 0, MAX ], "
-        "framerate = (fraction) [ 0/1, MAX ], "
-        "profile = (string) advanced-real-time-simple, "
-        "level = (string) { 1, 2, 3, 4 };"
-        "video/x-xvid, "
-        "width = (int) [ 0, MAX ], "
-        "height = (int) [ 0, MAX ], "
-        "framerate = (fraction) [ 0/1, MAX ], "
-        "profile = (string) advanced-simple, "
-        "level = (string) { 0, 1, 2, 3, 4 };"
-        "video/mpeg, "
+    GST_STATIC_CAPS ("video/mpeg, "
         "mpegversion = (int) 4, "
         "systemstream = (boolean) FALSE, "
         "width = (int) [ 0, MAX ], "
@@ -93,14 +75,13 @@ static GstStaticPadTemplate src_template = GST_STATIC_PAD_TEMPLATE ("src",
         "framerate = (fraction) [ 0/1, MAX ], "
         "profile = (string) advanced-simple, "
         "level = (string) { 0, 1, 2, 3, 4 };"
-        "video/x-xvid, "
-        "width = (int) [ 0, MAX ], "
-        "height = (int) [ 0, MAX ], "
-        "framerate = (fraction) [ 0/1, MAX ];"
         "video/mpeg, "
         "mpegversion = (int) 4, "
         "systemstream = (boolean) FALSE, "
-        "width = (int) [ 0, MAX ], " "height = (int) [ 0, MAX ];")
+        "width = (int) [ 0, MAX ], " "height = (int) [ 0, MAX ]; "
+        "video/x-xvid, "
+        "width = (int) [ 0, MAX ], "
+        "height = (int) [ 0, MAX ], " "framerate = (fraction) [ 0/1, MAX ];")
     );
 
 
