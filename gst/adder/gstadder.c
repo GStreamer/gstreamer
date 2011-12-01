@@ -1016,8 +1016,14 @@ gst_adder_do_clip (GstCollectPads * pads, GstCollectData * data,
 {
   GstAdder *adder = GST_ADDER (user_data);
 
-  buffer = gst_audio_buffer_clip (buffer, &data->segment, adder->rate,
-      adder->bps);
+  /* in 0.10 the application might need to seek on newly added source-branches
+   * to make it send a newsegment, that is hard to sync and so the segment might
+   * not be initialized. Check this here to not trigger the assertion
+   */
+  if (data->segment.format != GST_FORMAT_UNDEFINED) {
+    buffer = gst_audio_buffer_clip (buffer, &data->segment, adder->rate,
+        adder->bps);
+  }
 
   return buffer;
 }
