@@ -456,7 +456,9 @@ ges_track_add_object (GESTrack * track, GESTrackObject * object)
     return FALSE;
   }
 
-  GST_DEBUG ("Adding object to ourself");
+  GST_DEBUG ("Adding object %s to ourself %s",
+      GST_OBJECT_NAME (ges_track_object_get_gnlobject (object)),
+      GST_OBJECT_NAME (track->priv->composition));
 
   if (G_UNLIKELY (!gst_bin_add (GST_BIN (track->priv->composition),
               ges_track_object_get_gnlobject (object)))) {

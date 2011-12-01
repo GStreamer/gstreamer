@@ -444,7 +444,7 @@ ges_timeline_object_create_track_objects_func (GESTimelineObject * object,
 
   result = ges_timeline_object_create_track_object (object, track);
   if (!result) {
-    GST_WARNING ("couldn't create track object");
+    GST_DEBUG ("Did not create track object");
     return FALSE;
   }
   ges_track_object_set_timeline_object (result, object);
