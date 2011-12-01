@@ -24,6 +24,7 @@
 #include <glib-object.h>
 #include <gst/gst.h>
 #include <ges/ges-types.h>
+#include <ges/ges-track.h>
 
 G_BEGIN_DECLS
 
@@ -281,6 +282,13 @@ gboolean
 ges_timeline_object_set_top_effect_priority (GESTimelineObject *object,
 					     GESTrackEffect *effect,
 					     guint newpriority);
+
+GESTrackType
+ges_timeline_object_get_supported_formats (GESTimelineObject * self);
+
+void
+ges_timeline_object_set_supported_formats (GESTimelineObject * self,
+					    GESTrackType supportedformats);
 
 G_END_DECLS
 

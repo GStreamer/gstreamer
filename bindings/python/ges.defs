@@ -674,6 +674,15 @@
   )
 )
 
+(define-method set_supported_formats
+  (of-object "GESTimelineObject")
+  (c-name "ges_timeline_object_set_supported_formats")
+  (return-type "none")
+  (parameters
+    '("GESTrackType" "supportedformats")
+  )
+)
+
 (define-method set_is_image
   (of-object "GESTimelineFileSource")
   (c-name "ges_timeline_filesource_set_is_image")
@@ -705,6 +714,12 @@
   (of-object "GESTimelineFileSource")
   (c-name "ges_timeline_filesource_get_uri")
   (return-type "const-gchar*")
+)
+
+(define-method get_supported_formats
+  (of-object "GESTimelineObject")
+  (c-name "ges_timeline_object_get_supported_formats")
+  (return-type "GESTrackType")
 )
 
 (define-method get_supported_formats

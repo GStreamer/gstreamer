@@ -44,10 +44,6 @@ struct _GESTimelineFileSourcePrivate
   gboolean is_image;
 
   guint64 maxduration;
-
-  /* The formats supported by this filesource
-   * TODO : Could maybe be moved to a parent class */
-  GESTrackType supportedformats;
 };
 
 enum
@@ -56,7 +52,6 @@ enum
   PROP_URI,
   PROP_MAX_DURATION,
   PROP_MUTE,
-  PROP_SUPPORTED_FORMATS,
   PROP_IS_IMAGE,
 };
 
@@ -80,9 +75,6 @@ ges_timeline_filesource_get_property (GObject * object, guint property_id,
       break;
     case PROP_MAX_DURATION:
       g_value_set_uint64 (value, priv->maxduration);
-      break;
-    case PROP_SUPPORTED_FORMATS:
-      g_value_set_flags (value, priv->supportedformats);
       break;
     case PROP_IS_IMAGE:
       g_value_set_boolean (value, priv->is_image);
@@ -108,10 +100,6 @@ ges_timeline_filesource_set_property (GObject * object, guint property_id,
     case PROP_MAX_DURATION:
       ges_timeline_filesource_set_max_duration (tfs,
           g_value_get_uint64 (value));
-      break;
-    case PROP_SUPPORTED_FORMATS:
-      ges_timeline_filesource_set_supported_formats (tfs,
-          g_value_get_flags (value));
       break;
     case PROP_IS_IMAGE:
       ges_timeline_filesource_set_is_image (tfs, g_value_get_boolean (value));
@@ -174,16 +162,6 @@ ges_timeline_filesource_class_init (GESTimelineFileSourceClass * klass)
   g_object_class_install_property (object_class, PROP_MUTE,
       g_param_spec_boolean ("mute", "Mute", "Mute audio track",
           FALSE, G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
-
-  /**
-   * GESTimelineFileSource:supported-formats:
-   *
-   * The formats supported by the filesource.
-   */
-  g_object_class_install_property (object_class, PROP_SUPPORTED_FORMATS,
-      g_param_spec_flags ("supported-formats", "Supported formats",
-          "Formats supported by the file", GES_TYPE_TRACK_TYPE,
-          GES_TRACK_TYPE_UNKNOWN, G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
 
   /**
    * GESTimelineFileSource:is-image:
@@ -276,7 +254,8 @@ void
 ges_timeline_filesource_set_supported_formats (GESTimelineFileSource * self,
     GESTrackType supportedformats)
 {
-  self->priv->supportedformats = supportedformats;
+  ges_timeline_object_set_supported_formats (GES_TIMELINE_OBJECT (self),
+      supportedformats);
 }
 
 /**
@@ -360,7 +339,7 @@ ges_timeline_filesource_get_uri (GESTimelineFileSource * self)
 GESTrackType
 ges_timeline_filesource_get_supported_formats (GESTimelineFileSource * self)
 {
-  return self->priv->supportedformats;
+  return ges_timeline_object_get_supported_formats (GES_TIMELINE_OBJECT (self));
 }
 
 static GESTrackObject *
@@ -370,7 +349,7 @@ ges_timeline_filesource_create_track_object (GESTimelineObject * obj,
   GESTimelineFileSourcePrivate *priv = GES_TIMELINE_FILE_SOURCE (obj)->priv;
   GESTrackObject *res;
 
-  if (!(priv->supportedformats & track->type)) {
+  if (!(ges_timeline_object_get_supported_formats (obj) & track->type)) {
     GST_DEBUG ("We don't support this track format");
     return NULL;
   }
