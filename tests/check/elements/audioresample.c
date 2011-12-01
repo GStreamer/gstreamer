@@ -1045,6 +1045,7 @@ run_fft_pipeline (int inrate, int outrate, int quality, int width, gboolean fp,
 
   /* cleanup */
   gst_buffer_unref (inbuffer);
+  gst_caps_unref (caps);
   cleanup_audioresample (audioresample);
 }
 
