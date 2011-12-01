@@ -5401,7 +5401,7 @@ gst_matroska_demux_subtitle_caps (GstMatroskaTrackSubtitleContext *
   } else if (!strcmp (codec_id, GST_MATROSKA_CODEC_ID_SUBTITLE_SSA)) {
     caps = gst_caps_new_simple ("application/x-ssa", NULL);
     context->postprocess_frame = gst_matroska_demux_check_subtitle_buffer;
-    subtitlecontext->check_markup = TRUE;
+    subtitlecontext->check_markup = FALSE;
   } else if (!strcmp (codec_id, GST_MATROSKA_CODEC_ID_SUBTITLE_ASS)) {
     caps = gst_caps_new_simple ("application/x-ass", NULL);
     context->postprocess_frame = gst_matroska_demux_check_subtitle_buffer;
