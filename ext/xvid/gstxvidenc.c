@@ -53,12 +53,54 @@ static GstStaticPadTemplate src_template = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("video/x-xvid, "
         "width = (int) [ 0, MAX ], "
-        "height = (int) [ 0, MAX ], " "framerate = (fraction) [ 0/1, MAX ]; "
+        "height = (int) [ 0, MAX ], "
+        "framerate = (fraction) [ 0/1, MAX ], "
+        "profile = (string) simple, "
+        "level = (string) { 0, 1, 2, 3, 4a, 5, 6 };"
+        "video/x-xvid, "
+        "width = (int) [ 0, MAX ], "
+        "height = (int) [ 0, MAX ], "
+        "framerate = (fraction) [ 0/1, MAX ], "
+        "profile = (string) advanced-real-time-simple, "
+        "level = (string) { 1, 2, 3, 4 };"
+        "video/x-xvid, "
+        "width = (int) [ 0, MAX ], "
+        "height = (int) [ 0, MAX ], "
+        "framerate = (fraction) [ 0/1, MAX ], "
+        "profile = (string) advanced-simple, "
+        "level = (string) { 0, 1, 2, 3, 4 };"
         "video/mpeg, "
         "mpegversion = (int) 4, "
         "systemstream = (boolean) FALSE, "
         "width = (int) [ 0, MAX ], "
-        "height = (int) [ 0, MAX ], " "framerate = (fraction) [ 0/1, MAX ]")
+        "height = (int) [ 0, MAX ], "
+        "framerate = (fraction) [ 0/1, MAX ], "
+        "profile = (string) simple, "
+        "level = (string) { 0, 1, 2, 3, 4a, 5, 6 };"
+        "video/mpeg, "
+        "mpegversion = (int) 4, "
+        "systemstream = (boolean) FALSE, "
+        "width = (int) [ 0, MAX ], "
+        "height = (int) [ 0, MAX ], "
+        "framerate = (fraction) [ 0/1, MAX ], "
+        "profile = (string) advanced-real-time-simple, "
+        "level = (string) { 1, 2, 3, 4 };"
+        "video/mpeg, "
+        "mpegversion = (int) 4, "
+        "systemstream = (boolean) FALSE, "
+        "width = (int) [ 0, MAX ], "
+        "height = (int) [ 0, MAX ], "
+        "framerate = (fraction) [ 0/1, MAX ], "
+        "profile = (string) advanced-simple, "
+        "level = (string) { 0, 1, 2, 3, 4 };"
+        "video/x-xvid, "
+        "width = (int) [ 0, MAX ], "
+        "height = (int) [ 0, MAX ], "
+        "framerate = (fraction) [ 0/1, MAX ];"
+        "video/mpeg, "
+        "mpegversion = (int) 4, "
+        "systemstream = (boolean) FALSE, "
+        "width = (int) [ 0, MAX ], " "height = (int) [ 0, MAX ];")
     );
 
 
@@ -579,11 +621,97 @@ gst_xvidenc_setup (GstXvidEnc * xvidenc)
   xvid_enc_create_t xenc;
   xvid_enc_plugin_t xplugin[2];
   gint ret;
+  GstCaps *allowed_caps;
+  gint profile = -1;
+
+  /* Negotiate profile/level with downstream */
+  allowed_caps = gst_pad_get_allowed_caps (xvidenc->srcpad);
+  if (allowed_caps && !gst_caps_is_empty (allowed_caps)) {
+    const gchar *profile_str, *level_str;
+
+    allowed_caps = gst_caps_make_writable (allowed_caps);
+    gst_caps_truncate (allowed_caps);
+
+    profile_str =
+        gst_structure_get_string (gst_caps_get_structure (allowed_caps, 0),
+        "profile");
+    level_str =
+        gst_structure_get_string (gst_caps_get_structure (allowed_caps, 0),
+        "level");
+    if (profile_str) {
+      if (g_str_equal (profile_str, "simple")) {
+        if (!level_str) {
+          profile = XVID_PROFILE_S_L0;
+        } else if (g_str_equal (level_str, "0")) {
+          profile = XVID_PROFILE_S_L0;
+        } else if (g_str_equal (level_str, "1")) {
+          profile = XVID_PROFILE_S_L1;
+        } else if (g_str_equal (level_str, "2")) {
+          profile = XVID_PROFILE_S_L2;
+        } else if (g_str_equal (level_str, "3")) {
+          profile = XVID_PROFILE_S_L3;
+        } else if (g_str_equal (level_str, "4a")) {
+          profile = XVID_PROFILE_S_L4a;
+        } else if (g_str_equal (level_str, "5")) {
+          profile = XVID_PROFILE_S_L5;
+        } else if (g_str_equal (level_str, "6")) {
+          profile = XVID_PROFILE_S_L6;
+        } else {
+          GST_ERROR_OBJECT (xvidenc,
+              "Invalid profile/level combination (%s %s)", profile_str,
+              level_str);
+        }
+      } else if (g_str_equal (profile_str, "advanced-real-time-simple")) {
+        if (!level_str) {
+          profile = XVID_PROFILE_ARTS_L1;
+        } else if (g_str_equal (level_str, "1")) {
+          profile = XVID_PROFILE_ARTS_L1;
+        } else if (g_str_equal (level_str, "2")) {
+          profile = XVID_PROFILE_ARTS_L2;
+        } else if (g_str_equal (level_str, "3")) {
+          profile = XVID_PROFILE_ARTS_L3;
+        } else if (g_str_equal (level_str, "4")) {
+          profile = XVID_PROFILE_ARTS_L4;
+        } else {
+          GST_ERROR_OBJECT (xvidenc,
+              "Invalid profile/level combination (%s %s)", profile_str,
+              level_str);
+        }
+      } else if (g_str_equal (profile_str, "advanced-simple")) {
+        if (!level_str) {
+          profile = XVID_PROFILE_AS_L0;
+        } else if (g_str_equal (level_str, "0")) {
+          profile = XVID_PROFILE_AS_L0;
+        } else if (g_str_equal (level_str, "1")) {
+          profile = XVID_PROFILE_AS_L1;
+        } else if (g_str_equal (level_str, "2")) {
+          profile = XVID_PROFILE_AS_L2;
+        } else if (g_str_equal (level_str, "3")) {
+          profile = XVID_PROFILE_AS_L3;
+        } else if (g_str_equal (level_str, "4")) {
+          profile = XVID_PROFILE_AS_L4;
+        } else {
+          GST_ERROR_OBJECT (xvidenc,
+              "Invalid profile/level combination (%s %s)", profile_str,
+              level_str);
+        }
+      } else {
+        GST_ERROR_OBJECT (xvidenc, "Invalid profile (%s)", profile_str);
+      }
+    }
+  }
+  if (allowed_caps)
+    gst_caps_unref (allowed_caps);
+
+  if (profile != -1) {
+    xvidenc->profile = profile;
+    g_object_notify (G_OBJECT (xvidenc), "profile");
+  }
 
   /* see xvid.h for the meaning of all this. */
   gst_xvid_init_struct (xenc);
 
-  xenc.profile = xvidenc->profile;
+  xenc.profile = xvidenc->used_profile = xvidenc->profile;
   xenc.width = xvidenc->width;
   xenc.height = xvidenc->height;
   xenc.max_bframes = xvidenc->max_bframes;
@@ -783,6 +911,78 @@ gst_xvidenc_setcaps (GstPad * pad, GstCaps * vscaps)
         xvidenc->par_width, xvidenc->par_height, NULL);
     /* just to be sure */
     gst_pad_fixate_caps (xvidenc->srcpad, new_caps);
+
+    if (xvidenc->used_profile != 0) {
+      switch (xvidenc->used_profile) {
+        case XVID_PROFILE_S_L0:
+          gst_caps_set_simple (new_caps, "profile", G_TYPE_STRING, "simple",
+              "level", G_TYPE_STRING, "0", NULL);
+          break;
+        case XVID_PROFILE_S_L1:
+          gst_caps_set_simple (new_caps, "profile", G_TYPE_STRING, "simple",
+              "level", G_TYPE_STRING, "1", NULL);
+          break;
+        case XVID_PROFILE_S_L2:
+          gst_caps_set_simple (new_caps, "profile", G_TYPE_STRING, "simple",
+              "level", G_TYPE_STRING, "2", NULL);
+          break;
+        case XVID_PROFILE_S_L3:
+          gst_caps_set_simple (new_caps, "profile", G_TYPE_STRING, "simple",
+              "level", G_TYPE_STRING, "3", NULL);
+          break;
+        case XVID_PROFILE_S_L4a:
+          gst_caps_set_simple (new_caps, "profile", G_TYPE_STRING, "simple",
+              "level", G_TYPE_STRING, "4a", NULL);
+          break;
+        case XVID_PROFILE_S_L5:
+          gst_caps_set_simple (new_caps, "profile", G_TYPE_STRING, "simple",
+              "level", G_TYPE_STRING, "5", NULL);
+          break;
+        case XVID_PROFILE_S_L6:
+          gst_caps_set_simple (new_caps, "profile", G_TYPE_STRING, "simple",
+              "level", G_TYPE_STRING, "6", NULL);
+          break;
+        case XVID_PROFILE_ARTS_L1:
+          gst_caps_set_simple (new_caps, "profile", G_TYPE_STRING,
+              "advanced-real-time-simple", "level", G_TYPE_STRING, "1", NULL);
+          break;
+        case XVID_PROFILE_ARTS_L2:
+          gst_caps_set_simple (new_caps, "profile", G_TYPE_STRING,
+              "advanced-real-time-simple", "level", G_TYPE_STRING, "2", NULL);
+          break;
+        case XVID_PROFILE_ARTS_L3:
+          gst_caps_set_simple (new_caps, "profile", G_TYPE_STRING,
+              "advanced-real-time-simple", "level", G_TYPE_STRING, "3", NULL);
+          break;
+        case XVID_PROFILE_ARTS_L4:
+          gst_caps_set_simple (new_caps, "profile", G_TYPE_STRING,
+              "advanced-real-time-simple", "level", G_TYPE_STRING, "4", NULL);
+          break;
+        case XVID_PROFILE_AS_L0:
+          gst_caps_set_simple (new_caps, "profile", G_TYPE_STRING,
+              "advanced-simple", "level", G_TYPE_STRING, "0", NULL);
+          break;
+        case XVID_PROFILE_AS_L1:
+          gst_caps_set_simple (new_caps, "profile", G_TYPE_STRING,
+              "advanced-simple", "level", G_TYPE_STRING, "1", NULL);
+          break;
+        case XVID_PROFILE_AS_L2:
+          gst_caps_set_simple (new_caps, "profile", G_TYPE_STRING,
+              "advanced-simple", "level", G_TYPE_STRING, "2", NULL);
+          break;
+        case XVID_PROFILE_AS_L3:
+          gst_caps_set_simple (new_caps, "profile", G_TYPE_STRING,
+              "advanced-simple", "level", G_TYPE_STRING, "3", NULL);
+          break;
+        case XVID_PROFILE_AS_L4:
+          gst_caps_set_simple (new_caps, "profile", G_TYPE_STRING,
+              "advanced-simple", "level", G_TYPE_STRING, "4", NULL);
+          break;
+        default:
+          g_assert_not_reached ();
+          break;
+      }
+    }
 
     /* src pad should accept anyway */
     ret = gst_pad_set_caps (xvidenc->srcpad, new_caps);
