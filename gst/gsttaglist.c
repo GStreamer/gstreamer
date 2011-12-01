@@ -270,12 +270,12 @@ _priv_gst_tag_initialize (void)
   gst_tag_register (GST_TAG_LANGUAGE_CODE, GST_TAG_FLAG_META, G_TYPE_STRING,
       _("language code"),
       _("language code for this stream, conforming to ISO-639-1"), NULL);
-  gst_tag_register (GST_TAG_IMAGE, GST_TAG_FLAG_META, GST_TYPE_BUFFER,
+  gst_tag_register (GST_TAG_IMAGE, GST_TAG_FLAG_META, GST_TYPE_SAMPLE,
       _("image"), _("image related to this stream"), gst_tag_merge_use_first);
-  gst_tag_register (GST_TAG_PREVIEW_IMAGE, GST_TAG_FLAG_META, GST_TYPE_BUFFER,
+  gst_tag_register (GST_TAG_PREVIEW_IMAGE, GST_TAG_FLAG_META, GST_TYPE_SAMPLE,
       /* TRANSLATORS: 'preview image' = image that shows a preview of the full image */
       _("preview image"), _("preview image related to this stream"), NULL);
-  gst_tag_register (GST_TAG_ATTACHMENT, GST_TAG_FLAG_META, GST_TYPE_BUFFER,
+  gst_tag_register (GST_TAG_ATTACHMENT, GST_TAG_FLAG_META, GST_TYPE_SAMPLE,
       _("attachment"), _("file attached to this stream"),
       gst_tag_merge_use_first);
   gst_tag_register (GST_TAG_BEATS_PER_MINUTE, GST_TAG_FLAG_META, G_TYPE_DOUBLE,

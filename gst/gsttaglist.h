@@ -24,6 +24,7 @@
 #define __GST_TAGLIST_H__
 
 #include <gst/gstdatetime.h>
+#include <gst/gstsample.h>
 #include <gst/gstbuffer.h>
 #include <gst/glib-compat.h>
 
@@ -719,7 +720,7 @@ gboolean     gst_tag_list_get_buffer_index  (const GstTagList * list,
 /**
  * GST_TAG_IMAGE:
  *
- * image (buffer) (buffer caps should specify the content type and preferably
+ * image (sample) (sample caps should specify the content type and preferably
  * also set "image-type" field as #GstTagImageType)
  *
  * Since: 0.10.6
@@ -729,7 +730,7 @@ gboolean     gst_tag_list_get_buffer_index  (const GstTagList * list,
  * GST_TAG_PREVIEW_IMAGE:
  *
  * image that is meant for preview purposes, e.g. small icon-sized version
- * (buffer) (buffer caps should specify the content type)
+ * (sample) (sample caps should specify the content type)
  *
  * Since: 0.10.7
  */
@@ -738,7 +739,7 @@ gboolean     gst_tag_list_get_buffer_index  (const GstTagList * list,
 /**
  * GST_TAG_ATTACHMENT:
  *
- * generic file attachment (buffer) (buffer caps should specify the content
+ * generic file attachment (sample) (sample caps should specify the content
  * type and if possible set "filename" to the file name of the
  * attachment)
  *
