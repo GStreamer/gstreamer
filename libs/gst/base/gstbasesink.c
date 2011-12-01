@@ -240,11 +240,12 @@ struct _GstBaseSinkPrivate
   gboolean have_latency;
 
   /* the last buffer we prerolled or rendered. Useful for making snapshots */
-  gint enable_last_buffer;      /* atomic */
+  gint enable_last_sample;      /* atomic */
   GstBuffer *last_buffer;
+  GstCaps *last_caps;
 
-  /* caps for pull based scheduling */
-  GstCaps *pull_caps;
+  /* negotiated caps */
+  GstCaps *caps;
 
   /* blocksize for pulling */
   guint blocksize;
@@ -307,7 +308,7 @@ enum
 #define DEFAULT_TS_OFFSET           0
 #define DEFAULT_BLOCKSIZE           4096
 #define DEFAULT_RENDER_DELAY        0
-#define DEFAULT_ENABLE_LAST_BUFFER  TRUE
+#define DEFAULT_ENABLE_LAST_SAMPLE  TRUE
 #define DEFAULT_THROTTLE_TIME       0
 
 enum
@@ -318,8 +319,8 @@ enum
   PROP_QOS,
   PROP_ASYNC,
   PROP_TS_OFFSET,
-  PROP_ENABLE_LAST_BUFFER,
-  PROP_LAST_BUFFER,
+  PROP_ENABLE_LAST_SAMPLE,
+  PROP_LAST_SAMPLE,
   PROP_BLOCKSIZE,
   PROP_RENDER_DELAY,
   PROP_THROTTLE_TIME,
@@ -473,22 +474,22 @@ gst_base_sink_class_init (GstBaseSinkClass * klass)
           DEFAULT_TS_OFFSET, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   /**
-   * GstBaseSink:enable-last-buffer
+   * GstBaseSink:enable-last-sample
    *
-   * Enable the last-buffer property. If FALSE, basesink doesn't keep a
-   * reference to the last buffer arrived and the last-buffer property is always
+   * Enable the last-sample property. If FALSE, basesink doesn't keep a
+   * reference to the last buffer arrived and the last-sample property is always
    * set to NULL. This can be useful if you need buffers to be released as soon
    * as possible, eg. if you're using a buffer pool.
    *
    * Since: 0.10.30
    */
-  g_object_class_install_property (gobject_class, PROP_ENABLE_LAST_BUFFER,
-      g_param_spec_boolean ("enable-last-buffer", "Enable Last Buffer",
-          "Enable the last-buffer property", DEFAULT_ENABLE_LAST_BUFFER,
+  g_object_class_install_property (gobject_class, PROP_ENABLE_LAST_SAMPLE,
+      g_param_spec_boolean ("enable-last-sample", "Enable Last Buffer",
+          "Enable the last-sample property", DEFAULT_ENABLE_LAST_SAMPLE,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   /**
-   * GstBaseSink:last-buffer
+   * GstBaseSink:last-sample
    *
    * The last buffer that arrived in the sink and was used for preroll or for
    * rendering. This property can be used to generate thumbnails. This property
@@ -496,9 +497,9 @@ gst_base_sink_class_init (GstBaseSinkClass * klass)
    *
    * Since: 0.10.15
    */
-  g_object_class_install_property (gobject_class, PROP_LAST_BUFFER,
-      g_param_spec_boxed ("last-buffer", "Last Buffer",
-          "The last buffer received in the sink", GST_TYPE_BUFFER,
+  g_object_class_install_property (gobject_class, PROP_LAST_SAMPLE,
+      g_param_spec_boxed ("last-sample", "Last Sample",
+          "The last sample received in the sink", GST_TYPE_SAMPLE,
           G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
   /**
    * GstBaseSink:blocksize
@@ -663,7 +664,7 @@ gst_base_sink_init (GstBaseSink * basesink, gpointer g_class)
   priv->render_delay = DEFAULT_RENDER_DELAY;
   priv->blocksize = DEFAULT_BLOCKSIZE;
   priv->cached_clock_id = NULL;
-  g_atomic_int_set (&priv->enable_last_buffer, DEFAULT_ENABLE_LAST_BUFFER);
+  g_atomic_int_set (&priv->enable_last_sample, DEFAULT_ENABLE_LAST_SAMPLE);
   priv->throttle_time = DEFAULT_THROTTLE_TIME;
 
   GST_OBJECT_FLAG_SET (basesink, GST_ELEMENT_FLAG_SINK);
@@ -915,32 +916,34 @@ gst_base_sink_get_ts_offset (GstBaseSink * sink)
 }
 
 /**
- * gst_base_sink_get_last_buffer:
+ * gst_base_sink_get_last_sample:
  * @sink: the sink
  *
- * Get the last buffer that arrived in the sink and was used for preroll or for
+ * Get the last sample that arrived in the sink and was used for preroll or for
  * rendering. This property can be used to generate thumbnails.
  *
- * The #GstCaps on the buffer can be used to determine the type of the buffer.
+ * The #GstCaps on the sample can be used to determine the type of the buffer.
  *
- * Free-function: gst_buffer_unref
+ * Free-function: gst_sample_unref
  *
- * Returns: (transfer full): a #GstBuffer. gst_buffer_unref() after usage.
+ * Returns: (transfer full): a #GstSample. gst_sample_unref() after usage.
  *     This function returns NULL when no buffer has arrived in the sink yet
  *     or when the sink is not in PAUSED or PLAYING.
  *
  * Since: 0.10.15
  */
-GstBuffer *
-gst_base_sink_get_last_buffer (GstBaseSink * sink)
+GstSample *
+gst_base_sink_get_last_sample (GstBaseSink * sink)
 {
-  GstBuffer *res;
+  GstSample *res = NULL;
 
   g_return_val_if_fail (GST_IS_BASE_SINK (sink), NULL);
 
   GST_OBJECT_LOCK (sink);
-  if ((res = sink->priv->last_buffer))
-    gst_buffer_ref (res);
+  if (sink->priv->last_buffer) {
+    res = gst_sample_new (sink->priv->last_buffer,
+        sink->priv->last_caps, &sink->segment, NULL);
+  }
   GST_OBJECT_UNLOCK (sink);
 
   return res;
@@ -958,6 +961,11 @@ gst_base_sink_set_last_buffer_unlocked (GstBaseSink * sink, GstBuffer * buffer)
     if (G_LIKELY (buffer))
       gst_buffer_ref (buffer);
     sink->priv->last_buffer = buffer;
+    if (buffer)
+      /* copy over the caps */
+      gst_caps_replace (&sink->priv->last_caps, sink->priv->caps);
+    else
+      gst_caps_replace (&sink->priv->last_caps, NULL);
   } else {
     old = NULL;
   }
@@ -973,7 +981,7 @@ gst_base_sink_set_last_buffer_unlocked (GstBaseSink * sink, GstBuffer * buffer)
 static void
 gst_base_sink_set_last_buffer (GstBaseSink * sink, GstBuffer * buffer)
 {
-  if (!g_atomic_int_get (&sink->priv->enable_last_buffer))
+  if (!g_atomic_int_get (&sink->priv->enable_last_sample))
     return;
 
   GST_OBJECT_LOCK (sink);
@@ -982,22 +990,22 @@ gst_base_sink_set_last_buffer (GstBaseSink * sink, GstBuffer * buffer)
 }
 
 /**
- * gst_base_sink_set_last_buffer_enabled:
+ * gst_base_sink_set_last_sample_enabled:
  * @sink: the sink
- * @enabled: the new enable-last-buffer value.
+ * @enabled: the new enable-last-sample value.
  *
- * Configures @sink to store the last received buffer in the last-buffer
+ * Configures @sink to store the last received sample in the last-sample
  * property.
  *
  * Since: 0.10.30
  */
 void
-gst_base_sink_set_last_buffer_enabled (GstBaseSink * sink, gboolean enabled)
+gst_base_sink_set_last_sample_enabled (GstBaseSink * sink, gboolean enabled)
 {
   g_return_if_fail (GST_IS_BASE_SINK (sink));
 
   /* Only take lock if we change the value */
-  if (g_atomic_int_compare_and_exchange (&sink->priv->enable_last_buffer,
+  if (g_atomic_int_compare_and_exchange (&sink->priv->enable_last_sample,
           !enabled, enabled) && !enabled) {
     GST_OBJECT_LOCK (sink);
     gst_base_sink_set_last_buffer_unlocked (sink, NULL);
@@ -1006,22 +1014,22 @@ gst_base_sink_set_last_buffer_enabled (GstBaseSink * sink, gboolean enabled)
 }
 
 /**
- * gst_base_sink_is_last_buffer_enabled:
+ * gst_base_sink_is_last_sample_enabled:
  * @sink: the sink
  *
- * Checks if @sink is currently configured to store the last received buffer in
- * the last-buffer property.
+ * Checks if @sink is currently configured to store the last received sample in
+ * the last-sample property.
  *
- * Returns: TRUE if the sink is configured to store the last received buffer.
+ * Returns: TRUE if the sink is configured to store the last received sample.
  *
  * Since: 0.10.30
  */
 gboolean
-gst_base_sink_is_last_buffer_enabled (GstBaseSink * sink)
+gst_base_sink_is_last_sample_enabled (GstBaseSink * sink)
 {
   g_return_val_if_fail (GST_IS_BASE_SINK (sink), FALSE);
 
-  return g_atomic_int_get (&sink->priv->enable_last_buffer);
+  return g_atomic_int_get (&sink->priv->enable_last_sample);
 }
 
 /**
@@ -1335,8 +1343,8 @@ gst_base_sink_set_property (GObject * object, guint prop_id,
     case PROP_RENDER_DELAY:
       gst_base_sink_set_render_delay (sink, g_value_get_uint64 (value));
       break;
-    case PROP_ENABLE_LAST_BUFFER:
-      gst_base_sink_set_last_buffer_enabled (sink, g_value_get_boolean (value));
+    case PROP_ENABLE_LAST_SAMPLE:
+      gst_base_sink_set_last_sample_enabled (sink, g_value_get_boolean (value));
       break;
     case PROP_THROTTLE_TIME:
       gst_base_sink_set_throttle_time (sink, g_value_get_uint64 (value));
@@ -1369,11 +1377,11 @@ gst_base_sink_get_property (GObject * object, guint prop_id, GValue * value,
     case PROP_TS_OFFSET:
       g_value_set_int64 (value, gst_base_sink_get_ts_offset (sink));
       break;
-    case PROP_LAST_BUFFER:
-      gst_value_take_buffer (value, gst_base_sink_get_last_buffer (sink));
+    case PROP_LAST_SAMPLE:
+      gst_value_take_buffer (value, gst_base_sink_get_last_sample (sink));
       break;
-    case PROP_ENABLE_LAST_BUFFER:
-      g_value_set_boolean (value, gst_base_sink_is_last_buffer_enabled (sink));
+    case PROP_ENABLE_LAST_SAMPLE:
+      g_value_set_boolean (value, gst_base_sink_is_last_sample_enabled (sink));
       break;
     case PROP_BLOCKSIZE:
       g_value_set_uint (value, gst_base_sink_get_blocksize (sink));
@@ -3346,6 +3354,11 @@ gst_base_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
       if (bclass->set_caps)
         result = bclass->set_caps (basesink, caps);
 
+      if (result) {
+        GST_OBJECT_LOCK (basesink);
+        gst_caps_replace (&basesink->priv->caps, caps);
+        GST_OBJECT_UNLOCK (basesink);
+      }
       gst_event_unref (event);
       break;
     }
@@ -4161,7 +4174,7 @@ gst_base_sink_pad_activate (GstPad * pad, GstObject * parent)
   if (!gst_pad_activate_mode (pad, GST_PAD_MODE_PULL, TRUE)) {
     /* clear any pending caps */
     GST_OBJECT_LOCK (basesink);
-    gst_caps_replace (&basesink->priv->pull_caps, NULL);
+    gst_caps_replace (&basesink->priv->caps, NULL);
     GST_OBJECT_UNLOCK (basesink);
     GST_DEBUG_OBJECT (basesink, "failed to activate in pull mode");
     goto fallback;
@@ -4252,10 +4265,6 @@ gst_base_sink_negotiate_pull (GstBaseSink * basesink)
               gst_event_new_caps (caps)))
         goto could_not_set_caps;
 
-      GST_OBJECT_LOCK (basesink);
-      gst_caps_replace (&basesink->priv->pull_caps, caps);
-      GST_OBJECT_UNLOCK (basesink);
-
       result = TRUE;
     }
   }
@@ -4332,10 +4341,6 @@ gst_base_sink_pad_activate_pull (GstPad * pad, GstObject * parent,
       if (bclass->activate_pull)
         result &= bclass->activate_pull (basesink, FALSE);
       basesink->pad_mode = GST_PAD_MODE_NONE;
-      /* clear any pending caps */
-      GST_OBJECT_LOCK (basesink);
-      gst_caps_replace (&basesink->priv->pull_caps, NULL);
-      GST_OBJECT_UNLOCK (basesink);
     }
   }
 
@@ -5076,6 +5081,7 @@ gst_base_sink_change_state (GstElement * element, GstStateChange transition)
         gst_clock_id_unref (priv->cached_clock_id);
         priv->cached_clock_id = NULL;
       }
+      gst_caps_replace (&basesink->priv->caps, NULL);
       GST_OBJECT_UNLOCK (basesink);
 
       gst_base_sink_set_last_buffer (basesink, NULL);

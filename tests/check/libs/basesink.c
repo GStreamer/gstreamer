@@ -25,12 +25,12 @@
 #include <gst/check/gstcheck.h>
 #include <gst/base/gstbasesink.h>
 
-GST_START_TEST (basesink_last_buffer_enabled)
+GST_START_TEST (basesink_last_sample_enabled)
 {
   GstElement *src, *sink, *pipeline;
   GstBus *bus;
   GstMessage *msg;
-  GstBuffer *last_buffer;
+  GstSample *last_sample;
 
   pipeline = gst_pipeline_new ("pipeline");
   sink = gst_element_factory_make ("fakesink", "sink");
@@ -42,7 +42,7 @@ GST_START_TEST (basesink_last_buffer_enabled)
 
   bus = gst_element_get_bus (pipeline);
 
-  /* try with enable-last-buffer set to TRUE */
+  /* try with enable-last-sample set to TRUE */
   g_object_set (src, "num-buffers", 1, NULL);
   fail_unless (gst_element_set_state (pipeline, GST_STATE_PLAYING)
       != GST_STATE_CHANGE_FAILURE);
@@ -52,19 +52,19 @@ GST_START_TEST (basesink_last_buffer_enabled)
   fail_unless (GST_MESSAGE_TYPE (msg) == GST_MESSAGE_EOS);
   gst_message_unref (msg);
 
-  /* last-buffer should be != NULL */
-  fail_unless (gst_base_sink_is_last_buffer_enabled (GST_BASE_SINK (sink))
+  /* last-sample should be != NULL */
+  fail_unless (gst_base_sink_is_last_sample_enabled (GST_BASE_SINK (sink))
       == TRUE);
-  g_object_get (sink, "last-buffer", &last_buffer, NULL);
-  fail_unless (last_buffer != NULL);
-  gst_buffer_unref (last_buffer);
+  g_object_get (sink, "last-sample", &last_sample, NULL);
+  fail_unless (last_sample != NULL);
+  gst_sample_unref (last_sample);
 
-  /* set enable-last-buffer to FALSE now, this should set last-buffer to NULL */
-  g_object_set (sink, "enable-last-buffer", FALSE, NULL);
-  fail_unless (gst_base_sink_is_last_buffer_enabled (GST_BASE_SINK (sink))
+  /* set enable-last-sample to FALSE now, this should set last-sample to NULL */
+  g_object_set (sink, "enable-last-sample", FALSE, NULL);
+  fail_unless (gst_base_sink_is_last_sample_enabled (GST_BASE_SINK (sink))
       == FALSE);
-  g_object_get (sink, "last-buffer", &last_buffer, NULL);
-  fail_unless (last_buffer == NULL);
+  g_object_get (sink, "last-sample", &last_sample, NULL);
+  fail_unless (last_sample == NULL);
 
   gst_element_set_state (pipeline, GST_STATE_NULL);
 
@@ -76,12 +76,12 @@ GST_START_TEST (basesink_last_buffer_enabled)
 
 GST_END_TEST;
 
-GST_START_TEST (basesink_last_buffer_disabled)
+GST_START_TEST (basesink_last_sample_disabled)
 {
   GstElement *src, *sink, *pipeline;
   GstBus *bus;
   GstMessage *msg;
-  GstBuffer *last_buffer;
+  GstSample *last_sample;
 
   pipeline = gst_pipeline_new ("pipeline");
   sink = gst_element_factory_make ("fakesink", "sink");
@@ -93,9 +93,9 @@ GST_START_TEST (basesink_last_buffer_disabled)
 
   bus = gst_element_get_bus (pipeline);
 
-  /* set enable-last-buffer to FALSE */
+  /* set enable-last-sample to FALSE */
   g_object_set (src, "num-buffers", 1, NULL);
-  gst_base_sink_set_last_buffer_enabled (GST_BASE_SINK (sink), FALSE);
+  gst_base_sink_set_last_sample_enabled (GST_BASE_SINK (sink), FALSE);
   gst_element_set_state (pipeline, GST_STATE_PLAYING);
   msg = gst_bus_poll (bus, GST_MESSAGE_EOS | GST_MESSAGE_ERROR, -1);
   fail_unless (msg != NULL);
@@ -103,9 +103,9 @@ GST_START_TEST (basesink_last_buffer_disabled)
   fail_unless (GST_MESSAGE_TYPE (msg) == GST_MESSAGE_EOS);
   gst_message_unref (msg);
 
-  /* last-buffer should be NULL */
-  g_object_get (sink, "last-buffer", &last_buffer, NULL);
-  fail_unless (last_buffer == NULL);
+  /* last-sample should be NULL */
+  g_object_get (sink, "last-sample", &last_sample, NULL);
+  fail_unless (last_sample == NULL);
 
   gst_element_set_state (pipeline, GST_STATE_NULL);
 
@@ -124,8 +124,8 @@ gst_basesrc_suite (void)
   TCase *tc = tcase_create ("general");
 
   suite_add_tcase (s, tc);
-  tcase_add_test (tc, basesink_last_buffer_enabled);
-  tcase_add_test (tc, basesink_last_buffer_disabled);
+  tcase_add_test (tc, basesink_last_sample_enabled);
+  tcase_add_test (tc, basesink_last_sample_disabled);
 
   return s;
 }

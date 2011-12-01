@@ -34,7 +34,7 @@ EXPORTS
 	gst_base_parse_set_syncable
 	gst_base_sink_do_preroll
 	gst_base_sink_get_blocksize
-	gst_base_sink_get_last_buffer
+	gst_base_sink_get_last_sample
 	gst_base_sink_get_latency
 	gst_base_sink_get_max_lateness
 	gst_base_sink_get_render_delay
@@ -43,12 +43,12 @@ EXPORTS
 	gst_base_sink_get_ts_offset
 	gst_base_sink_get_type
 	gst_base_sink_is_async_enabled
-	gst_base_sink_is_last_buffer_enabled
+	gst_base_sink_is_last_sample_enabled
 	gst_base_sink_is_qos_enabled
 	gst_base_sink_query_latency
 	gst_base_sink_set_async_enabled
 	gst_base_sink_set_blocksize
-	gst_base_sink_set_last_buffer_enabled
+	gst_base_sink_set_last_sample_enabled
 	gst_base_sink_set_max_lateness
 	gst_base_sink_set_qos_enabled
 	gst_base_sink_set_render_delay
