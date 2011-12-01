@@ -79,20 +79,20 @@ bus_callback (GstBus * bus, GstMessage * message, gpointer user_data)
 }
 
 static GstFlowReturn
-gst_camerabin_preview_pipeline_new_buffer (GstAppSink * appsink,
+gst_camerabin_preview_pipeline_new_sample (GstAppSink * appsink,
     gpointer user_data)
 {
-  GstBuffer *buffer;
+  GstSample *sample;
   GstStructure *s;
   GstMessage *msg;
   GstCameraBinPreviewPipelineData *data;
 
   data = user_data;
 
-  buffer = gst_app_sink_pull_buffer (appsink);
+  sample = gst_app_sink_pull_sample (appsink);
   s = gst_structure_new (GST_BASE_CAMERA_SRC_PREVIEW_MESSAGE_NAME,
-      "buffer", GST_TYPE_BUFFER, buffer, NULL);
-  gst_buffer_unref (buffer);
+      "sample", GST_TYPE_SAMPLE, sample, NULL);
+  gst_sample_unref (sample);
   msg = gst_message_new_element (GST_OBJECT (data->element), s);
 
   GST_DEBUG_OBJECT (data->element, "sending message with preview image");
@@ -181,7 +181,7 @@ gst_camerabin_create_preview_pipeline (GstElement * element,
     goto error;
   }
 
-  callbacks.new_buffer = gst_camerabin_preview_pipeline_new_buffer;
+  callbacks.new_sample = gst_camerabin_preview_pipeline_new_sample;
   gst_app_sink_set_callbacks ((GstAppSink *) data->appsink, &callbacks, data,
       NULL);
 
