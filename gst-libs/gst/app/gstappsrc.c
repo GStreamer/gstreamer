@@ -217,6 +217,7 @@ static void gst_app_src_get_property (GObject * object, guint prop_id,
 static void gst_app_src_set_latencies (GstAppSrc * appsrc,
     gboolean do_min, guint64 min, gboolean do_max, guint64 max);
 
+static gboolean gst_app_src_negotiate (GstBaseSrc * basesrc);
 static GstFlowReturn gst_app_src_create (GstBaseSrc * bsrc,
     guint64 offset, guint size, GstBuffer ** buf);
 static gboolean gst_app_src_start (GstBaseSrc * bsrc);
@@ -444,7 +445,7 @@ gst_app_src_class_init (GstAppSrcClass * klass)
   gst_app_src_signals[SIGNAL_PUSH_BUFFER] =
       g_signal_new ("push-buffer", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST | G_SIGNAL_ACTION, G_STRUCT_OFFSET (GstAppSrcClass,
-          push_buffer), NULL, NULL, __gst_app_marshal_ENUM__OBJECT,
+          push_buffer), NULL, NULL, __gst_app_marshal_ENUM__BOXED,
       GST_TYPE_FLOW_RETURN, 1, GST_TYPE_BUFFER);
 
    /**
@@ -466,6 +467,7 @@ gst_app_src_class_init (GstAppSrcClass * klass)
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&gst_app_src_template));
 
+  basesrc_class->negotiate = gst_app_src_negotiate;
   basesrc_class->create = gst_app_src_create;
   basesrc_class->start = gst_app_src_start;
   basesrc_class->stop = gst_app_src_stop;
@@ -899,6 +901,28 @@ gst_app_src_emit_need_data (GstAppSrc * appsrc, guint size)
   /* we can be flushing now because we released the lock */
 }
 
+static gboolean
+gst_app_src_negotiate (GstBaseSrc * basesrc)
+{
+  GstAppSrc *appsrc = GST_APP_SRC_CAST (basesrc);
+  GstAppSrcPrivate *priv = appsrc->priv;
+  GstCaps *caps;
+  gboolean result;
+
+  GST_OBJECT_LOCK (appsrc);
+  if ((caps = priv->caps))
+    gst_caps_ref (caps);
+  GST_OBJECT_UNLOCK (appsrc);
+
+  if (caps) {
+    result = gst_base_src_set_caps (basesrc, caps);
+    gst_caps_unref (caps);
+  } else {
+    result = GST_BASE_SRC_CLASS (parent_class)->negotiate (basesrc);
+  }
+  return result;
+}
+
 static GstFlowReturn
 gst_app_src_create (GstBaseSrc * bsrc, guint64 offset, guint size,
     GstBuffer ** buf)
@@ -906,10 +930,8 @@ gst_app_src_create (GstBaseSrc * bsrc, guint64 offset, guint size,
   GstAppSrc *appsrc = GST_APP_SRC_CAST (bsrc);
   GstAppSrcPrivate *priv = appsrc->priv;
   GstFlowReturn ret;
-  GstCaps *caps;
 
   GST_OBJECT_LOCK (appsrc);
-  caps = priv->caps ? gst_caps_ref (priv->caps) : NULL;
   if (G_UNLIKELY (priv->size != bsrc->segment.duration &&
           bsrc->segment.format == GST_FORMAT_BYTES)) {
     GST_DEBUG_OBJECT (appsrc,
@@ -1001,8 +1023,6 @@ gst_app_src_create (GstBaseSrc * bsrc, guint64 offset, guint size,
     g_cond_wait (priv->cond, priv->mutex);
   }
   g_mutex_unlock (priv->mutex);
-  if (caps)
-    gst_caps_unref (caps);
   return ret;
 
   /* ERRORS */
@@ -1010,23 +1030,17 @@ flushing:
   {
     GST_DEBUG_OBJECT (appsrc, "we are flushing");
     g_mutex_unlock (priv->mutex);
-    if (caps)
-      gst_caps_unref (caps);
     return GST_FLOW_WRONG_STATE;
   }
 eos:
   {
     GST_DEBUG_OBJECT (appsrc, "we are EOS");
     g_mutex_unlock (priv->mutex);
-    if (caps)
-      gst_caps_unref (caps);
     return GST_FLOW_EOS;
   }
 seek_error:
   {
     g_mutex_unlock (priv->mutex);
-    if (caps)
-      gst_caps_unref (caps);
     GST_ELEMENT_ERROR (appsrc, RESOURCE, READ, ("failed to seek"),
         GST_ERROR_SYSTEM);
     return GST_FLOW_ERROR;
