@@ -19,6 +19,32 @@
 
 #include "gstvideometa.h"
 
+static void
+gst_video_meta_copy (GstBuffer * dest, GstMeta * meta,
+    GstBuffer * buffer, gsize offset, gsize size)
+{
+  GstVideoMeta *dmeta, *smeta;
+  guint i;
+
+  smeta = (GstVideoMeta *) meta;
+
+  dmeta =
+      (GstVideoMeta *) gst_buffer_add_meta (dest, GST_VIDEO_META_INFO, NULL);
+  dmeta->buffer = dest;
+
+  dmeta->flags = smeta->flags;
+  dmeta->id = smeta->id;
+  dmeta->format = smeta->format;
+  dmeta->width = smeta->width;
+  dmeta->height = smeta->height;
+
+  dmeta->n_planes = smeta->n_planes;
+  for (i = 0; i < dmeta->n_planes; i++) {
+    dmeta->offset[i] = smeta->offset[i];
+    dmeta->stride[i] = smeta->stride[i];
+  }
+}
+
 /* video metadata */
 const GstMetaInfo *
 gst_video_meta_get_info (void)
@@ -30,7 +56,7 @@ gst_video_meta_get_info (void)
         sizeof (GstVideoMeta),
         (GstMetaInitFunction) NULL,
         (GstMetaFreeFunction) NULL,
-        (GstMetaCopyFunction) NULL, (GstMetaTransformFunction) NULL);
+        gst_video_meta_copy, (GstMetaTransformFunction) NULL);
   }
   return video_meta_info;
 }
@@ -238,6 +264,21 @@ gst_video_meta_unmap (GstVideoMeta * meta, guint plane, gpointer data)
   return TRUE;
 }
 
+static void
+gst_video_crop_meta_copy (GstBuffer * dest, GstMeta * meta,
+    GstBuffer * buffer, gsize offset, gsize size)
+{
+  GstVideoCropMeta *dmeta, *smeta;
+
+  smeta = (GstVideoCropMeta *) meta;
+  dmeta = gst_buffer_add_video_crop_meta (dest);
+
+  dmeta->x = smeta->x;
+  dmeta->y = smeta->y;
+  dmeta->width = smeta->width;
+  dmeta->height = smeta->height;
+}
+
 const GstMetaInfo *
 gst_video_crop_meta_get_info (void)
 {
@@ -247,7 +288,7 @@ gst_video_crop_meta_get_info (void)
     video_crop_meta_info =
         gst_meta_register (GST_VIDEO_CROP_META_API, "GstVideoCropMeta",
         sizeof (GstVideoCropMeta), (GstMetaInitFunction) NULL,
-        (GstMetaFreeFunction) NULL, (GstMetaCopyFunction) NULL,
+        (GstMetaFreeFunction) NULL, gst_video_crop_meta_copy,
         (GstMetaTransformFunction) NULL);
   }
   return video_crop_meta_info;
