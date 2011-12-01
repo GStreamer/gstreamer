@@ -79,8 +79,9 @@ static void gst_video_convert_get_property (GObject * object,
 
 static gboolean gst_video_convert_set_caps (GstBaseTransform * btrans,
     GstCaps * incaps, GstCaps * outcaps);
-static gboolean gst_video_convert_get_unit_size (GstBaseTransform * btrans,
-    GstCaps * caps, gsize * size);
+static gboolean gst_video_convert_transform_size (GstBaseTransform * btrans,
+    GstPadDirection direction, GstCaps * caps, gsize size,
+    GstCaps * othercaps, gsize * othersize);
 static GstFlowReturn gst_video_convert_transform (GstBaseTransform * btrans,
     GstBuffer * inbuf, GstBuffer * outbuf);
 
@@ -366,8 +367,8 @@ gst_video_convert_class_init (GstVideoConvertClass * klass)
       GST_DEBUG_FUNCPTR (gst_video_convert_transform_caps);
   gstbasetransform_class->set_caps =
       GST_DEBUG_FUNCPTR (gst_video_convert_set_caps);
-  gstbasetransform_class->get_unit_size =
-      GST_DEBUG_FUNCPTR (gst_video_convert_get_unit_size);
+  gstbasetransform_class->transform_size =
+      GST_DEBUG_FUNCPTR (gst_video_convert_transform_size);
   gstbasetransform_class->decide_allocation =
       GST_DEBUG_FUNCPTR (gst_video_convert_decide_allocation);
   gstbasetransform_class->transform =
@@ -424,18 +425,18 @@ gst_video_convert_get_property (GObject * object, guint property_id,
 }
 
 static gboolean
-gst_video_convert_get_unit_size (GstBaseTransform * btrans, GstCaps * caps,
-    gsize * size)
+gst_video_convert_transform_size (GstBaseTransform * btrans,
+    GstPadDirection direction, GstCaps * caps, gsize size,
+    GstCaps * othercaps, gsize * othersize)
 {
   gboolean ret = TRUE;
   GstVideoInfo info;
 
   g_assert (size);
 
-  ret = gst_video_info_from_caps (&info, caps);
-  if (ret) {
-    *size = info.size;
-  }
+  ret = gst_video_info_from_caps (&info, othercaps);
+  if (ret)
+    *othersize = info.size;
 
   return ret;
 }
