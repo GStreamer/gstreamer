@@ -192,16 +192,21 @@ ges_tl_transition_create_track_object (GESTimelineObject * obj,
   GESTimelineStandardTransition *transition =
       (GESTimelineStandardTransition *) obj;
   GESTrackObject *res;
+  GESTrackType supportedformats;
 
   GST_DEBUG ("Creating a GESTrackTransition");
 
-  if (track->type == GES_TRACK_TYPE_VIDEO) {
+  supportedformats = ges_timeline_object_get_supported_formats (obj);
+  if (track->type == GES_TRACK_TYPE_VIDEO &&
+      (supportedformats == GES_TRACK_TYPE_UNKNOWN ||
+          supportedformats & GES_TRACK_TYPE_VIDEO)) {
     res = GES_TRACK_OBJECT (ges_track_video_transition_new ());
     ges_track_video_transition_set_transition_type ((GESTrackVideoTransition *)
         res, transition->vtype);
-  }
 
-  else if (track->type == GES_TRACK_TYPE_AUDIO) {
+  } else if (track->type == GES_TRACK_TYPE_AUDIO &&
+      (supportedformats == GES_TRACK_TYPE_UNKNOWN ||
+          supportedformats & GES_TRACK_TYPE_AUDIO)) {
     res = GES_TRACK_OBJECT (ges_track_audio_transition_new ());
   }
 
