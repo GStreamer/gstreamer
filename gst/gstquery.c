@@ -1151,7 +1151,7 @@ gst_query_parse_nth_format (GstQuery * query, guint nth, GstFormat * format)
 }
 
 /**
- * gst_query_new_buffering
+ * gst_query_new_buffering:
  * @format: the default #GstFormat for the new query
  *
  * Constructs a new query object for querying the buffering status of
@@ -1189,7 +1189,7 @@ gst_query_new_buffering (GstFormat format)
 }
 
 /**
- * gst_query_set_buffering_percent
+ * gst_query_set_buffering_percent:
  * @query: A valid #GstQuery of type GST_QUERY_BUFFERING.
  * @busy: if buffering is busy
  * @percent: a buffering percent
@@ -1215,7 +1215,7 @@ gst_query_set_buffering_percent (GstQuery * query, gboolean busy, gint percent)
 }
 
 /**
- * gst_query_parse_buffering_percent
+ * gst_query_parse_buffering_percent:
  * @query: A valid #GstQuery of type GST_QUERY_BUFFERING.
  * @busy: (out) (allow-none): if buffering is busy, or NULL
  * @percent: (out) (allow-none): a buffering percent, or NULL
@@ -1381,7 +1381,7 @@ gst_query_parse_buffering_range (GstQuery * query, GstFormat * format,
 }
 
 /**
- * gst_query_add_buffering_range
+ * gst_query_add_buffering_range:
  * @query: a GST_QUERY_BUFFERING type query #GstQuery
  * @start: start position of the range
  * @stop: stop position of the range
@@ -1425,7 +1425,7 @@ gst_query_add_buffering_range (GstQuery * query, gint64 start, gint64 stop)
 }
 
 /**
- * gst_query_get_n_buffering_ranges
+ * gst_query_get_n_buffering_ranges:
  * @query: a GST_QUERY_BUFFERING type query #GstQuery
  *
  * Retrieve the number of values currently stored in the
@@ -1451,7 +1451,7 @@ gst_query_get_n_buffering_ranges (GstQuery * query)
 
 
 /**
- * gst_query_parse_nth_buffering_range
+ * gst_query_parse_nth_buffering_range:
  * @query: a GST_QUERY_BUFFERING type query #GstQuery
  * @index: position in the buffered-ranges array to read
  * @start: (out) (allow-none): the start position to set, or NULL
@@ -1565,7 +1565,7 @@ gst_query_parse_uri (GstQuery * query, gchar ** uri)
 }
 
 /**
- * gst_query_new_allocation
+ * gst_query_new_allocation:
  * @caps: the negotiated caps
  * @need_pool: return a pool
  *
@@ -1596,6 +1596,16 @@ gst_query_new_allocation (GstCaps * caps, gboolean need_pool)
   return query;
 }
 
+/**
+ * gst_query_parse_allocation:
+ * @query: a #GstQuery
+ * @caps: (out callee-allocates) (allow-none): The #GstCaps
+ * @need_pool: (out) (allow-none): Whether a #GstBufferPool is needed
+ *
+ * Parse an allocation query, writing the requested caps in @caps and
+ * whether a pool is needed in @need_pool, if the respective parameters
+ * are non-NULL.
+ */
 void
 gst_query_parse_allocation (GstQuery * query, GstCaps ** caps,
     gboolean * need_pool)
@@ -1611,7 +1621,7 @@ gst_query_parse_allocation (GstQuery * query, GstCaps ** caps,
 }
 
 /**
- * gst_query_set_allocation_params
+ * gst_query_set_allocation_params:
  * @query: A valid #GstQuery of type GST_QUERY_ALLOCATION.
  * @size: the size
  * @min_buffers: the min buffers
@@ -1645,7 +1655,7 @@ gst_query_set_allocation_params (GstQuery * query, guint size,
 }
 
 /**
- * gst_query_parse_allocation_params
+ * gst_query_parse_allocation_params:
  * @query: A valid #GstQuery of type GST_QUERY_ALLOCATION.
  * @size: the size
  * @min_buffers: the min buffers
@@ -1676,7 +1686,7 @@ gst_query_parse_allocation_params (GstQuery * query, guint * size,
 }
 
 /**
- * gst_query_add_allocation_meta
+ * gst_query_add_allocation_meta:
  * @query: a GST_QUERY_ALLOCATION type query #GstQuery
  * @api: the metadata API
  *
@@ -1726,7 +1736,7 @@ gst_query_get_n_allocation_metas (GstQuery * query)
 }
 
 /**
- * gst_query_parse_nth_allocation_meta
+ * gst_query_parse_nth_allocation_meta:
  * @query: a GST_QUERY_ALLOCATION type query #GstQuery
  * @index: position in the metadata API array to read
  *
@@ -1755,7 +1765,7 @@ gst_query_parse_nth_allocation_meta (GstQuery * query, guint index)
 }
 
 /**
- * gst_query_has_allocation_meta
+ * gst_query_has_allocation_meta:
  * @query: a GST_QUERY_ALLOCATION type query #GstQuery
  * @api: the metadata API
  *
@@ -1786,7 +1796,7 @@ gst_query_has_allocation_meta (GstQuery * query, const gchar * api)
 }
 
 /**
- * gst_query_add_allocation_memory
+ * gst_query_add_allocation_memory:
  * @query: a GST_QUERY_ALLOCATION type query #GstQuery
  * @alloc: the memory allocator
  *
@@ -1838,7 +1848,7 @@ gst_query_get_n_allocation_memories (GstQuery * query)
 }
 
 /**
- * gst_query_parse_nth_allocation_memory
+ * gst_query_parse_nth_allocation_memory:
  * @query: a GST_QUERY_ALLOCATION type query #GstQuery
  * @index: position in the allocator array to read
  *
@@ -1867,7 +1877,7 @@ gst_query_parse_nth_allocation_memory (GstQuery * query, guint index)
 }
 
 /**
- * gst_query_new_scheduling
+ * gst_query_new_scheduling:
  *
  * Constructs a new query object for querying the scheduling properties.
  *
@@ -1892,7 +1902,7 @@ gst_query_new_scheduling (void)
 }
 
 /**
- * gst_query_set_scheduling
+ * gst_query_set_scheduling:
  * @query: A valid #GstQuery of type GST_QUERY_SCHEDULING.
  * @flags: #GstSchedulingFlags
  * @minsize: the suggested minimum size of pull requests
@@ -1919,7 +1929,7 @@ gst_query_set_scheduling (GstQuery * query, GstSchedulingFlags flags,
 }
 
 /**
- * gst_query_parse_scheduling
+ * gst_query_parse_scheduling:
  * @query: A valid #GstQuery of type GST_QUERY_SCHEDULING.
  * @flags: #GstSchedulingFlags
  * @minsize: the suggested minimum size of pull requests
@@ -1945,7 +1955,7 @@ gst_query_parse_scheduling (GstQuery * query, GstSchedulingFlags * flags,
 }
 
 /**
- * gst_query_add_scheduling_mode
+ * gst_query_add_scheduling_mode:
  * @query: a GST_QUERY_SCHEDULING type query #GstQuery
  * @mode: a #GstPadMode
  *
@@ -1994,7 +2004,7 @@ gst_query_get_n_scheduling_modes (GstQuery * query)
 }
 
 /**
- * gst_query_parse_nth_scheduling_mode
+ * gst_query_parse_nth_scheduling_mode:
  * @query: a GST_QUERY_SCHEDULING type query #GstQuery
  * @index: position in the scheduling modes array to read
  *
@@ -2023,7 +2033,7 @@ gst_query_parse_nth_scheduling_mode (GstQuery * query, guint index)
 }
 
 /**
- * gst_query_has_scheduling_mode
+ * gst_query_has_scheduling_mode:
  * @query: a GST_QUERY_SCHEDULING type query #GstQuery
  * @mode: the scheduling mode
  *
@@ -2053,7 +2063,7 @@ gst_query_has_scheduling_mode (GstQuery * query, GstPadMode mode)
 }
 
 /**
- * gst_query_new_accept_caps
+ * gst_query_new_accept_caps:
  * @caps: a #GstCaps
  *
  * Constructs a new query object for querying if @caps are accepted.
@@ -2122,7 +2132,7 @@ gst_query_parse_accept_caps_result (GstQuery * query, gboolean * result)
 }
 
 /**
- * gst_query_new_caps
+ * gst_query_new_caps:
  * @filter: a filter
  *
  * Constructs a new query object for querying the caps.
