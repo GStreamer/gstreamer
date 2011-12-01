@@ -334,7 +334,7 @@ gst_tag_id3_genre_get (const guint id)
  *    the APIC frame (0 = unknown/other)
  *
  * Adds an image from an ID3 APIC frame (or similar, such as used in FLAC)
- * to the given tag list. Also see gst_tag_image_data_to_image_buffer() for
+ * to the given tag list. Also see gst_tag_image_data_to_image_sample() for
  * more information on image tags in GStreamer.
  *
  * Returns: %TRUE if the image was processed, otherwise %FALSE
@@ -347,7 +347,7 @@ gst_tag_list_add_id3_image (GstTagList * tag_list, const guint8 * image_data,
 {
   GstTagImageType tag_image_type;
   const gchar *tag_name;
-  GstBuffer *image;
+  GstSample *image;
 
   g_return_val_if_fail (GST_IS_TAG_LIST (tag_list), FALSE);
   g_return_val_if_fail (image_data != NULL, FALSE);
@@ -369,13 +369,13 @@ gst_tag_list_add_id3_image (GstTagList * tag_list, const guint8 * image_data,
       tag_image_type = GST_TAG_IMAGE_TYPE_UNDEFINED;
   }
 
-  image = gst_tag_image_data_to_image_buffer (image_data, image_data_len,
+  image = gst_tag_image_data_to_image_sample (image_data, image_data_len,
       tag_image_type);
 
   if (image == NULL)
     return FALSE;
 
   gst_tag_list_add (tag_list, GST_TAG_MERGE_APPEND, tag_name, image, NULL);
-  gst_buffer_unref (image);
+  gst_sample_unref (image);
   return TRUE;
 }

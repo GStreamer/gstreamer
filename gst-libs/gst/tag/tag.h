@@ -59,18 +59,6 @@ G_BEGIN_DECLS
  */
 #define GST_TAG_MUSICBRAINZ_TRMID	"musicbrainz-trmid"
 
-/* FIXME 0.11: remove GST_TAG_MUSICBRAINZ_SORTNAME */
-#ifndef GST_DISABLE_DEPRECATED
-/**
- * GST_TAG_MUSICBRAINZ_SORTNAME
- *
- * MusicBrainz artist sort name
- *
- * Deprecated.  Use GST_TAG_ARTIST_SORTNAME instead.
- */
-#define GST_TAG_MUSICBRAINZ_SORTNAME	GST_TAG_ARTIST_SORTNAME
-#endif
-
 /**
  * GST_TAG_CMML_STREAM
  *
@@ -388,7 +376,7 @@ G_BEGIN_DECLS
 /**
  * GstTagImageType:
  * @GST_TAG_IMAGE_TYPE_NONE                  : No image type. Can be used to
- *      tell functions such as gst_tag_image_data_to_image_buffer() that no
+ *      tell functions such as gst_tag_image_data_to_image_sample() that no
  *      image type should be set. (Since: 0.10.20)
  * @GST_TAG_IMAGE_TYPE_UNDEFINED             : Undefined/other image type
  * @GST_TAG_IMAGE_TYPE_FRONT_COVER           : Cover (front)
@@ -536,7 +524,7 @@ gchar                 * gst_tag_freeform_string_to_utf8 (const gchar  * data,
                                                          gint           size,
                                                          const gchar ** env_vars);
 
-GstBuffer             * gst_tag_image_data_to_image_buffer (const guint8   * image_data,
+GstSample             * gst_tag_image_data_to_image_sample (const guint8   * image_data,
                                                             guint            image_data_len,
                                                             GstTagImageType  image_type);
 

@@ -318,7 +318,7 @@ static void
 gst_vorbis_tag_add_coverart (GstTagList * tags, gchar * img_data_base64,
     gint base64_len)
 {
-  GstBuffer *img;
+  GstSample *img;
   gsize img_len;
 
   if (base64_len < 2)
@@ -332,7 +332,7 @@ gst_vorbis_tag_add_coverart (GstTagList * tags, gchar * img_data_base64,
     goto decode_failed;
 
   img =
-      gst_tag_image_data_to_image_buffer ((const guint8 *) img_data_base64,
+      gst_tag_image_data_to_image_sample ((const guint8 *) img_data_base64,
       img_len, GST_TAG_IMAGE_TYPE_NONE);
 
   if (img == NULL)
@@ -341,7 +341,7 @@ gst_vorbis_tag_add_coverart (GstTagList * tags, gchar * img_data_base64,
   gst_tag_list_add (tags, GST_TAG_MERGE_APPEND,
       GST_TAG_PREVIEW_IMAGE, img, NULL);
 
-  gst_buffer_unref (img);
+  gst_sample_unref (img);
   return;
 
 /* ERRORS */

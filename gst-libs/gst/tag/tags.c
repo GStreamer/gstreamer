@@ -527,14 +527,14 @@ beach:
 }
 
 /**
- * gst_tag_image_data_to_image_buffer:
+ * gst_tag_image_data_to_image_sample:
  * @image_data: the (encoded) image
  * @image_data_len: the length of the encoded image data at @image_data
  * @image_type: type of the image, or #GST_TAG_IMAGE_TYPE_UNDEFINED. Pass
  *     #GST_TAG_IMAGE_TYPE_NONE if no image type should be set at all (e.g.
  *     for preview images)
  *
- * Helper function for tag-reading plugins to create a #GstBuffer suitable to
+ * Helper function for tag-reading plugins to create a #GstSample suitable to
  * add to a #GstTagList as an image tag (such as #GST_TAG_IMAGE or
  * #GST_TAG_PREVIEW_IMAGE) from the encoded image data and an (optional) image
  * type.
@@ -546,9 +546,9 @@ beach:
  * back cover, artist, etc.). The image data may also be an URI to the image
  * rather than the image itself.
  *
- * In GStreamer, image tags are #GstBuffer<!-- -->s containing the raw image
- * data, with the buffer caps describing the content type of the image
- * (e.g. image/jpeg, image/png, text/uri-list). The buffer caps may contain
+ * In GStreamer, image tags are #GstSample<!-- -->s containing the raw image
+ * data, with the sample caps describing the content type of the image
+ * (e.g. image/jpeg, image/png, text/uri-list). The sample info may contain
  * an additional 'image-type' field of #GST_TYPE_TAG_IMAGE_TYPE to describe
  * the type of image (front cover, back cover etc.). #GST_TAG_PREVIEW_IMAGE
  * tags should not carry an image type, their type is already indicated via
@@ -557,18 +557,20 @@ beach:
  * This function will do various checks and typefind the encoded image
  * data (we can't trust the declared mime type).
  *
- * Returns: a newly-allocated image buffer for use in tag lists, or NULL
+ * Returns: a newly-allocated image sample for use in tag lists, or NULL
  *
  * Since: 0.10.20
  */
-GstBuffer *
-gst_tag_image_data_to_image_buffer (const guint8 * image_data,
+GstSample *
+gst_tag_image_data_to_image_sample (const guint8 * image_data,
     guint image_data_len, GstTagImageType image_type)
 {
   const gchar *name;
   GstBuffer *image;
+  GstSample *sample;
   GstCaps *caps;
   guint8 *data;
+  GstStructure *info = NULL;
 
   g_return_val_if_fail (image_data != NULL, NULL);
   g_return_val_if_fail (image_data_len > 0, NULL);
@@ -612,15 +614,14 @@ gst_tag_image_data_to_image_buffer (const guint8 * image_data,
 
   if (image_type != GST_TAG_IMAGE_TYPE_NONE) {
     GST_LOG ("Setting image type: %d", image_type);
-    caps = gst_caps_make_writable (caps);
-    gst_caps_set_simple (caps, "image-type", GST_TYPE_TAG_IMAGE_TYPE,
-        image_type, NULL);
+    info = gst_structure_new ("GstTagImageInfo",
+        "image-type", GST_TYPE_TAG_IMAGE_TYPE, image_type, NULL);
   }
-
-  g_warning ("extra image data can't be set");
+  sample = gst_sample_new (image, caps, NULL, info);
+  gst_buffer_unref (image);
   gst_caps_unref (caps);
 
-  return image;
+  return sample;
 
 /* ERRORS */
 no_type:
