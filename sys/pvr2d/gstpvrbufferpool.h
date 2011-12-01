@@ -26,63 +26,56 @@
 
 G_BEGIN_DECLS
 
-GType gst_ducati_buffer_get_type (void);
-#define GST_TYPE_DUCATIBUFFER (gst_ducati_buffer_get_type())
-#define GST_IS_DUCATIBUFFER(obj) \
-  (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_DUCATIBUFFER))
-#define GST_DUCATIBUFFER(obj) \
-  (G_TYPE_CHECK_INSTANCE_CAST ((obj), GST_TYPE_DUCATIBUFFER, GstDucatiBuffer))
+typedef struct _GstPVRMeta GstPVRMeta;
 
-GType gst_pvr_bufferpool_get_type (void);
-#define GST_TYPE_PVRBUFFERPOOL (gst_pvr_bufferpool_get_type())
-#define GST_IS_PVRBUFFERPOOL(obj) \
-  (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_PVRBUFFERPOOL))
-#define GST_PVRBUFFERPOOL(obj) \
-  (G_TYPE_CHECK_INSTANCE_CAST ((obj), GST_TYPE_PVRBUFFERPOOL, \
-                               GstPvrBufferPool))
+typedef struct _GstPVRBufferPool GstPVRBufferPool;
+typedef struct _GstPVRBufferPoolClass GstPVRBufferPoolClass;
 
-typedef struct _GstPvrBufferPool GstPvrBufferPool;
-typedef struct _GstDucatiBuffer GstDucatiBuffer;
+#include "gstpvrvideosink.h"
 
-struct _GstPvrBufferPool
+const GstMetaInfo * gst_pvr_meta_get_info (void);
+#define GST_PVR_META_INFO  (gst_pvr_meta_get_info())
+
+#define gst_buffer_get_pvr_meta(b) ((GstPVRMeta*)gst_buffer_get_meta((b),GST_PVR_META_INFO))
+
+struct _GstPVRMeta
 {
-  GstMiniObject parent;
+  GstMeta meta;
+
+  PVR2DMEMINFO *src_mem;	/* Memory wrapped by pvr */
+  GstElement *sink;		/* sink, holds a ref */
+};
+
+GstPVRMeta *
+gst_buffer_add_pvr_meta(GstBuffer *buffer, GstElement *pvrsink);
+
+#define GST_TYPE_PVR_BUFFER_POOL      (gst_pvr_buffer_pool_get_type())
+#define GST_IS_PVR_BUFFER_POOL(obj)   (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_PVR_BUFFER_POOL))
+#define GST_PVR_BUFFER_POOL(obj)      (G_TYPE_CHECK_INSTANCE_CAST ((obj), GST_TYPE_PVR_BUFFER_POOL, GstPVRBufferPool))
+#define GST_PVR_BUFFER_POOL_CAST(obj) ((GstPVRBufferPool*)(obj))
+
+struct _GstPVRBufferPool
+{
+  GstBufferPool parent;
 
   /* output (padded) size including any codec padding: */
   gint padded_width, padded_height;
-  gint size;
-  PVR2DCONTEXTHANDLE pvr_context;
+  guint size, align;
+
+  GstElement *pvrsink;
 
   GstCaps *caps;
-  GMutex *lock;
-  gboolean running;  /* with lock */
-  GstElement *element;  /* the element that owns us.. */
-  GQueue *free_buffers;
-  GQueue *used_buffers;
-  guint buffer_count;
+  GstVideoInfo info;
+  gboolean add_metavideo;
 };
 
-GstPvrBufferPool * gst_pvr_bufferpool_new (GstElement * element,
-    GstCaps * caps, gint num_buffers, gint size,
-    PVR2DCONTEXTHANDLE pvr_context);
-void gst_pvr_bufferpool_stop_running (GstPvrBufferPool * pool, gboolean unwrap);
-GstDucatiBuffer * gst_pvr_bufferpool_get (GstPvrBufferPool * self,
-    GstBuffer * orig);
-
-#define GST_PVR_BUFFERPOOL_LOCK(self)     g_mutex_lock ((self)->lock)
-#define GST_PVR_BUFFERPOOL_UNLOCK(self)   g_mutex_unlock ((self)->lock)
-
-struct _GstDucatiBuffer {
-  GstBuffer parent;
-
-  GstPvrBufferPool *pool; /* buffer-pool that this buffer belongs to */
-  GstBuffer       *orig;     /* original buffer, if we need to copy output */
-  PVR2DMEMINFO *src_mem; /* Memory wrapped by pvr */
-  gboolean wrapped;
+struct _GstPVRBufferPoolClass
+{
+  GstBufferPoolClass parent_class;
 };
 
-GstBuffer * gst_ducati_buffer_get (GstDucatiBuffer * self);
-PVR2DMEMINFO * gst_ducati_buffer_get_meminfo (GstDucatiBuffer * self);
+GType gst_pvr_buffer_pool_get_type (void);
+GstBufferPool *gst_pvr_buffer_pool_new (GstElement *pvrsink);
 
 G_END_DECLS
 

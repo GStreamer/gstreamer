@@ -1,6 +1,8 @@
 /*
  * GStreamer
  * Copyright (c) 2010, Texas Instruments Incorporated
+ * Copyright (c) 2011, Collabora Ltd
+ *  @author: Edward Hervey <edward@collabora.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -17,304 +19,351 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+
 #include "gstpvrbufferpool.h"
+
+/* Debugging category */
+#include <gst/gstinfo.h>
+
+/* Helper functions */
+#include <gst/video/video.h>
+#include <gst/video/gstvideometa.h>
+#include <gst/video/gstvideopool.h>
+
 
 GST_DEBUG_CATEGORY_EXTERN (gst_debug_pvrvideosink);
 #define GST_CAT_DEFAULT gst_debug_pvrvideosink
 
-/*
- * GstDucatiBuffer
- */
-
-static GstBufferClass *buffer_parent_class;
-
-/* Get the original buffer, or whatever is the best output buffer.
- * Consumes the input reference, produces the output reference
- */
-GstBuffer *
-gst_ducati_buffer_get (GstDucatiBuffer * self)
-{
-  if (self->orig) {
-    // TODO copy to orig buffer.. if needed.
-    gst_buffer_unref (self->orig);
-    self->orig = NULL;
-  }
-  return GST_BUFFER (self);
-}
-
-PVR2DMEMINFO *
-gst_ducati_buffer_get_meminfo (GstDucatiBuffer * self)
-{
-  return self->src_mem;
-}
-
-
-static GstDucatiBuffer *
-gst_ducati_buffer_new (GstPvrBufferPool * pool)
-{
-  PVR2DERROR pvr_error;
-  GstDucatiBuffer *self = (GstDucatiBuffer *)
-      gst_mini_object_new (GST_TYPE_DUCATIBUFFER);
-
-  GST_LOG_OBJECT (pool->element, "creating buffer %p in pool %p", self, pool);
-
-  self->pool = (GstPvrBufferPool *)
-      gst_mini_object_ref (GST_MINI_OBJECT (pool));
-
-  GST_BUFFER_DATA (self) = gst_ducati_alloc_1d (pool->size);
-  GST_BUFFER_SIZE (self) = pool->size;
-  GST_LOG_OBJECT (pool->element, "width=%d, height=%d and size=%d",
-      pool->padded_width, pool->padded_height, pool->size);
-
-  pvr_error =
-      PVR2DMemWrap (pool->pvr_context, GST_BUFFER_DATA (self), 0, pool->size,
-      NULL, &(self->src_mem));
-  if (pvr_error != PVR2D_OK) {
-    GST_LOG_OBJECT (pool->element, "Failed to Wrap buffer memory"
-        "returned %d", pvr_error);
-  } else {
-    self->wrapped = TRUE;
-  }
-
-  gst_buffer_set_caps (GST_BUFFER (self), pool->caps);
-
-  return self;
-}
-
-
 static void
-gst_ducati_buffer_finalize (GstDucatiBuffer * self)
+gst_pvr_meta_free (GstPVRMeta * meta, GstBuffer * buffer)
 {
-  PVR2DERROR pvr_error;
-  GstPvrBufferPool *pool = self->pool;
-  gboolean resuscitated = FALSE;
+  GstPVRVideoSink *pvrsink = (GstPVRVideoSink *) meta->sink;
 
-  GST_LOG_OBJECT (pool->element, "finalizing buffer %p", self);
+  GST_LOG ("Releasing PVRMeta for buffer %p (src_mem:%p)",
+      buffer, meta->src_mem);
 
-  GST_PVR_BUFFERPOOL_LOCK (pool);
-  g_queue_remove (pool->used_buffers, self);
-  if (pool->running) {
-    resuscitated = TRUE;
+  if (meta->src_mem) {
+    PVR2DERROR pvr_error;
 
-    GST_LOG_OBJECT (pool->element, "reviving buffer %p", self);
-
-    g_queue_push_head (pool->free_buffers, self);
-  } else {
-    GST_LOG_OBJECT (pool->element, "the pool is shutting down");
-  }
-  GST_PVR_BUFFERPOOL_UNLOCK (pool);
-
-  if (resuscitated) {
-    GST_LOG_OBJECT (pool->element, "reviving buffer %p, %d", self, index);
-    gst_buffer_ref (GST_BUFFER (self));
-    GST_BUFFER_SIZE (self) = 0;
-  }
-
-  if (!resuscitated) {
-    GST_LOG_OBJECT (pool->element,
-        "buffer %p (data %p, len %u) not recovered, freeing",
-        self, GST_BUFFER_DATA (self), GST_BUFFER_SIZE (self));
-
-    if (self->wrapped) {
-      pvr_error = PVR2DMemFree (pool->pvr_context, self->src_mem);
-      if (pvr_error != PVR2D_OK) {
-        GST_ERROR_OBJECT (pool->element, "Failed to Unwrap buffer memory"
-            "returned %d", pvr_error);
-      }
-      self->wrapped = FALSE;
+    GST_OBJECT_LOCK (pvrsink);
+    if (pvrsink->dcontext == NULL || pvrsink->dcontext->pvr_context == NULL) {
+      GST_OBJECT_UNLOCK (pvrsink);
+      goto done;
     }
-    MemMgr_Free ((void *) GST_BUFFER_DATA (self));
-    GST_BUFFER_DATA (self) = NULL;
-    gst_mini_object_unref (GST_MINI_OBJECT (pool));
-    GST_MINI_OBJECT_CLASS (buffer_parent_class)->finalize (GST_MINI_OBJECT
-        (self));
+    pvr_error = PVR2DMemFree (pvrsink->dcontext->pvr_context, meta->src_mem);
+    GST_OBJECT_UNLOCK (pvrsink);
+
+    if (pvr_error != PVR2D_OK)
+      GST_ERROR ("Failed to unwrap PVR memory buffer. Error : %s",
+          gst_pvr2d_error_get_string (pvr_error));
   }
+
+done:
+  gst_pvrvideosink_untrack_buffer (pvrsink, buffer);
+  gst_object_unref (pvrsink);
 }
 
-static void
-gst_ducati_buffer_class_init (gpointer g_class, gpointer class_data)
+const GstMetaInfo *
+gst_pvr_meta_get_info (void)
 {
-  GstMiniObjectClass *mini_object_class = GST_MINI_OBJECT_CLASS (g_class);
+  static const GstMetaInfo *pvr_meta_info = NULL;
 
-  buffer_parent_class = g_type_class_peek_parent (g_class);
+  if (pvr_meta_info == NULL) {
+    pvr_meta_info = gst_meta_register ("GstPVRMeta", "GstPVRMeta",
+        sizeof (GstPVRMeta),
+        (GstMetaInitFunction) NULL,
+        (GstMetaFreeFunction) gst_pvr_meta_free,
+        (GstMetaCopyFunction) NULL, (GstMetaTransformFunction) NULL);
+  }
+  return pvr_meta_info;
 
-  mini_object_class->finalize = (GstMiniObjectFinalizeFunction)
-      GST_DEBUG_FUNCPTR (gst_ducati_buffer_finalize);
 }
 
-GType
-gst_ducati_buffer_get_type (void)
+/* Wrap existing buffers */
+GstPVRMeta *
+gst_buffer_add_pvr_meta (GstBuffer * buffer, GstElement * sink)
 {
-  static GType type;
+  guint8 *data;
+  gsize size;
+  GstPVRMeta *meta;
+  PVR2DERROR pvr_error;
+  GstPVRVideoSink *pvrsink = (GstPVRVideoSink *) sink;
 
-  if (G_UNLIKELY (type == 0)) {
-    static const GTypeInfo info = {
-      .class_size = sizeof (GstBufferClass),
-      .class_init = gst_ducati_buffer_class_init,
-      .instance_size = sizeof (GstDucatiBuffer),
-    };
-    type = g_type_register_static (GST_TYPE_BUFFER,
-        "GstDucatiBufferPvrsink", &info, 0);
+  g_return_val_if_fail (gst_buffer_n_memory (buffer) > 0, NULL);
+  g_return_val_if_fail (pvrsink != NULL, NULL);
+
+  GST_LOG_OBJECT (pvrsink, "Adding PVRMeta to buffer %p", buffer);
+
+  /* Add the meta */
+  meta = (GstPVRMeta *) gst_buffer_add_meta (buffer, GST_PVR_META_INFO, NULL);
+  meta->src_mem = NULL;
+  meta->sink = gst_object_ref (pvrsink);
+  gst_pvrvideosink_track_buffer (pvrsink, buffer);
+
+  data = gst_buffer_map (buffer, &size, NULL, GST_MAP_READ);
+
+  GST_LOG_OBJECT (pvrsink, "data:%p, size:%" G_GSIZE_FORMAT, data, size);
+
+  GST_OBJECT_LOCK (pvrsink);
+  if (pvrsink->dcontext == NULL || pvrsink->dcontext->pvr_context == NULL)
+    goto no_pvr_context;
+  /* Map the memory and wrap it */
+  pvr_error =
+      PVR2DMemWrap (pvrsink->dcontext->pvr_context, data, 0, size, NULL,
+      &(meta->src_mem));
+  GST_OBJECT_UNLOCK (pvrsink);
+
+  gst_buffer_unmap (buffer, data, size);
+
+  if (pvr_error != PVR2D_OK)
+    goto wrap_error;
+
+  return meta;
+
+wrap_error:
+  {
+    GST_WARNING_OBJECT (pvrsink, "Failed to Wrap buffer memory. Error : %s",
+        gst_pvr2d_error_get_string (pvr_error));
+    gst_buffer_remove_meta (buffer, (GstMeta *) meta);
+
+    return NULL;
   }
-  return type;
+
+no_pvr_context:
+  {
+    GST_OBJECT_UNLOCK (pvrsink);
+    GST_WARNING_OBJECT (pvrsink, "No PVR2D context available");
+    gst_buffer_remove_meta (buffer, (GstMeta *) meta);
+    return NULL;
+  }
 }
 
 /*
  * GstDucatiBufferPool
  */
+static void gst_pvr_buffer_pool_finalize (GObject * object);
 
-static GstMiniObjectClass *bufferpool_parent_class = NULL;
+#define gst_pvr_buffer_pool_parent_class parent_class
+G_DEFINE_TYPE (GstPVRBufferPool, gst_pvr_buffer_pool, GST_TYPE_BUFFER_POOL);
+static const gchar **
+pvr_buffer_pool_get_options (GstBufferPool * pool)
+{
+  static const gchar *options[] = { GST_BUFFER_POOL_OPTION_VIDEO_META,
+    GST_BUFFER_POOL_OPTION_VIDEO_ALIGNMENT, NULL
+  };
+
+  return options;
+}
+
+static gboolean
+pvr_buffer_pool_set_config (GstBufferPool * pool, GstStructure * config)
+{
+  GstPVRBufferPool *pvrpool = GST_PVR_BUFFER_POOL_CAST (pool);
+  GstVideoInfo info;
+  guint size, align;
+  gboolean ret;
+  const GstCaps *caps;
+
+  if (!gst_buffer_pool_config_get (config, &caps, &size, NULL, NULL, NULL,
+          &align))
+    goto wrong_config;
+
+  if (caps == NULL)
+    goto no_caps;
+
+  /* now parse the caps from the config */
+  if (!gst_video_info_from_caps (&info, caps))
+    goto wrong_caps;
+
+  GST_LOG_OBJECT (pool, "%dx%d, size:%u, align:%u caps %" GST_PTR_FORMAT,
+      info.width, info.height, size, align, caps);
+
+  if (pvrpool->caps)
+    gst_caps_unref (pvrpool->caps);
+  pvrpool->caps = gst_caps_copy (caps);
+  pvrpool->info = info;
+  pvrpool->size = size;
+  pvrpool->align = align;
+  pvrpool->padded_width = GST_VIDEO_INFO_WIDTH (&info);
+  pvrpool->padded_height = GST_VIDEO_INFO_HEIGHT (&info);
+
+  /* enable metadata based on config of the pool */
+  pvrpool->add_metavideo =
+      gst_buffer_pool_config_has_option (config,
+      GST_BUFFER_POOL_OPTION_VIDEO_META);
+
+#if 0
+  /* parse extra alignment info */
+  priv->need_alignment = gst_buffer_pool_config_has_option (config,
+      GST_BUFFER_POOL_OPTION_VIDEO_ALIGNMENT);
+
+  if (priv->need_alignment) {
+    gst_buffer_pool_config_get_video_alignment (config, &priv->align);
+
+    GST_LOG_OBJECT (pool, "padding %u-%ux%u-%u", priv->align.padding_top,
+        priv->align.padding_left, priv->align.padding_left,
+        priv->align.padding_bottom);
+
+    /* we need the video metadata too now */
+    priv->add_metavideo = TRUE;
+  }
+
+  /* add the padding */
+  priv->padded_width =
+      GST_VIDEO_INFO_WIDTH (&info) + priv->align.padding_left +
+      priv->align.padding_right;
+  priv->padded_height =
+      GST_VIDEO_INFO_HEIGHT (&info) + priv->align.padding_top +
+      priv->align.padding_bottom;
+#endif
+
+  GST_DEBUG_OBJECT (pool, "before calling parent class");
+
+  ret = GST_BUFFER_POOL_CLASS (parent_class)->set_config (pool, config);
+
+  GST_DEBUG_OBJECT (pool, "parent_class returned %d", ret);
+
+  return ret;
+
+  /* ERRORS */
+wrong_config:
+  {
+    GST_WARNING_OBJECT (pool, "invalid config");
+    return FALSE;
+  }
+no_caps:
+  {
+    GST_WARNING_OBJECT (pool, "no caps in config");
+    return FALSE;
+  }
+wrong_caps:
+  {
+    GST_WARNING_OBJECT (pool,
+        "failed getting geometry from caps %" GST_PTR_FORMAT, caps);
+    return FALSE;
+  }
+}
+
+/* This function handles GstXImageBuffer creation depending on XShm availability */
+static GstFlowReturn
+pvr_buffer_pool_alloc (GstBufferPool * pool, GstBuffer ** buffer,
+    GstBufferPoolParams * params)
+{
+  GstPVRBufferPool *pvrpool = GST_PVR_BUFFER_POOL_CAST (pool);
+  GstVideoInfo *info;
+  GstBuffer *pvr;
+  GstPVRMeta *meta;
+
+  info = &pvrpool->info;
+
+  pvr = gst_buffer_new_allocate (NULL, pvrpool->size, pvrpool->align);
+  meta = gst_buffer_add_pvr_meta (pvr, pvrpool->pvrsink);
+  if (meta == NULL) {
+    gst_buffer_unref (pvr);
+    goto no_buffer;
+  }
+
+  if (pvrpool->add_metavideo) {
+    GstVideoMeta *meta;
+
+    GST_DEBUG_OBJECT (pool, "adding GstVideoMeta");
+    /* these are just the defaults for now */
+    meta = gst_buffer_add_video_meta (pvr, 0, GST_VIDEO_INFO_FORMAT (info),
+        pvrpool->padded_width, pvrpool->padded_height);
+    if (G_UNLIKELY (meta == NULL))
+      GST_WARNING_OBJECT (pool, "Failed to add GstVideoMeta");
+
+#if 0
+    const GstVideoFormatInfo *vinfo = info->finfo;
+    gint i;
+
+    if (pvrpool->need_alignment) {
+      meta->width = GST_VIDEO_INFO_WIDTH (&pvrpool->info);
+      meta->height = GST_VIDEO_INFO_HEIGHT (&pvrpool->info);
+
+      /* FIXME, not quite correct, NV12 would apply the vedge twice on the second
+       * plane */
+      for (i = 0; i < GST_VIDEO_INFO_N_COMPONENTS (info); i++) {
+        gint vedge, hedge, plane;
+
+        hedge =
+            GST_VIDEO_FORMAT_INFO_SCALE_WIDTH (vinfo, i,
+            pvrpool->align.padding_left);
+        vedge =
+            GST_VIDEO_FORMAT_INFO_SCALE_HEIGHT (vinfo, i,
+            pvrpool->align.padding_top);
+        plane = GST_VIDEO_FORMAT_INFO_PLANE (vinfo, i);
+
+        GST_LOG_OBJECT (pool, "comp %d, plane %d: hedge %d, vedge %d", i,
+            plane, hedge, vedge);
+
+        meta->offset[plane] += (vedge * meta->stride[plane]) + hedge;
+      }
+    }
+#endif
+  }
+
+  *buffer = pvr;
+
+  return GST_FLOW_OK;
+
+  /* ERROR */
+no_buffer:
+  {
+    GST_WARNING_OBJECT (pool, "can't create image");
+    return GST_FLOW_ERROR;
+  }
+}
 
 /** create new bufferpool
- * @element : the element that owns this pool
- * @caps:  the caps to set on the buffer
- * @num_buffers:  the requested number of buffers in the pool
  */
-GstPvrBufferPool *
-gst_pvr_bufferpool_new (GstElement * element, GstCaps * caps, gint num_buffers,
-    gint size, PVR2DCONTEXTHANDLE pvr_context)
+GstBufferPool *
+gst_pvr_buffer_pool_new (GstElement * pvrsink)
 {
-  GstPvrBufferPool *self = (GstPvrBufferPool *)
-      gst_mini_object_new (GST_TYPE_PVRBUFFERPOOL);
-  GstStructure *s = gst_caps_get_structure (caps, 0);
+  GstPVRBufferPool *pool;
 
-  self->element = gst_object_ref (element);
-  gst_structure_get_int (s, "width", &self->padded_width);
-  gst_structure_get_int (s, "height", &self->padded_height);
-  self->caps = gst_caps_ref (caps);
-  self->size = size;
-  self->pvr_context = pvr_context;
+  g_return_val_if_fail (GST_IS_PVRVIDEOSINK (pvrsink), NULL);
 
-  self->free_buffers = g_queue_new ();
-  self->used_buffers = g_queue_new ();
-  self->lock = g_mutex_new ();
-  self->running = TRUE;
+  GST_DEBUG_OBJECT (pvrsink, "Creating new GstPVRBufferPool");
 
-  return self;
+  pool = g_object_new (GST_TYPE_PVR_BUFFER_POOL, NULL);
+  pool->pvrsink = gst_object_ref (pvrsink);
+
+  return GST_BUFFER_POOL_CAST (pool);
 }
 
 static void
-unwrap_buffer (gpointer buffer, gpointer user_data)
+gst_pvr_buffer_pool_class_init (GstPVRBufferPoolClass * klass)
 {
-  PVR2DERROR pvr_error;
-  GstDucatiBuffer *buf = GST_DUCATIBUFFER (buffer);
-  GstPvrBufferPool *pool = (GstPvrBufferPool *) user_data;
+  GObjectClass *gobject_class = (GObjectClass *) klass;
+  GstBufferPoolClass *gstbufferpool_class = (GstBufferPoolClass *) klass;
 
-  if (buf->wrapped) {
-    pvr_error = PVR2DMemFree (pool->pvr_context, buf->src_mem);
-    if (pvr_error != PVR2D_OK) {
-      GST_ERROR_OBJECT (pool->element, "Failed to Unwrap buffer memory"
-          "returned %d", pvr_error);
-    }
-    buf->wrapped = FALSE;
-  }
-}
+  gobject_class->finalize = gst_pvr_buffer_pool_finalize;
 
-void
-gst_pvr_bufferpool_stop_running (GstPvrBufferPool * self, gboolean unwrap)
-{
-  gboolean empty = FALSE;
-
-  g_return_if_fail (self);
-
-  GST_PVR_BUFFERPOOL_LOCK (self);
-  self->running = FALSE;
-  GST_PVR_BUFFERPOOL_UNLOCK (self);
-
-  GST_DEBUG_OBJECT (self->element, "free available buffers");
-
-  /* free all buffers on the freelist */
-  while (!empty) {
-    GstDucatiBuffer *buf;
-    GST_PVR_BUFFERPOOL_LOCK (self);
-    buf = g_queue_pop_head (self->free_buffers);
-    GST_PVR_BUFFERPOOL_UNLOCK (self);
-    if (buf)
-      gst_buffer_unref (GST_BUFFER (buf));
-    else
-      empty = TRUE;
-  }
-
-  if (unwrap)
-    g_queue_foreach (self->used_buffers, unwrap_buffer, self);
-
-  gst_mini_object_unref (GST_MINI_OBJECT (self));
-}
-
-/** get buffer from bufferpool, allocate new buffer if needed */
-GstDucatiBuffer *
-gst_pvr_bufferpool_get (GstPvrBufferPool * self, GstBuffer * orig)
-{
-  GstDucatiBuffer *buf = NULL;
-
-  g_return_val_if_fail (self, NULL);
-
-  GST_PVR_BUFFERPOOL_LOCK (self);
-  if (self->running) {
-    /* re-use a buffer off the freelist if any are available
-     */
-    buf = g_queue_pop_head (self->free_buffers);
-    if (!buf)
-      buf = gst_ducati_buffer_new (self);
-    buf->orig = orig;
-    g_queue_push_head (self->used_buffers, buf);
-  }
-  GST_PVR_BUFFERPOOL_UNLOCK (self);
-
-  if (buf && orig) {
-    GST_BUFFER_TIMESTAMP (buf) = GST_BUFFER_TIMESTAMP (orig);
-    GST_BUFFER_DURATION (buf) = GST_BUFFER_DURATION (orig);
-  }
-  GST_BUFFER_SIZE (buf) = self->size;
-
-  return buf;
+  gstbufferpool_class->get_options = pvr_buffer_pool_get_options;
+  gstbufferpool_class->set_config = pvr_buffer_pool_set_config;
+  gstbufferpool_class->alloc_buffer = pvr_buffer_pool_alloc;
 }
 
 static void
-gst_pvr_bufferpool_finalize (GstPvrBufferPool * self)
+gst_pvr_buffer_pool_init (GstPVRBufferPool * pool)
 {
-  GST_DEBUG_OBJECT (self->element, "destroy bufferpool");
-  g_mutex_free (self->lock);
-  self->lock = NULL;
 
-  g_queue_free (self->free_buffers);
-  self->free_buffers = NULL;
-  g_queue_free (self->used_buffers);
-  self->used_buffers = NULL;
-
-  gst_caps_unref (self->caps);
-  self->caps = NULL;
-  gst_object_unref (self->element);
-  self->element = NULL;
-
-  GST_MINI_OBJECT_CLASS (bufferpool_parent_class)->finalize (GST_MINI_OBJECT
-      (self));
 }
 
 static void
-gst_pvr_bufferpool_class_init (gpointer g_class, gpointer class_data)
+gst_pvr_buffer_pool_finalize (GObject * object)
 {
-  GstMiniObjectClass *mini_object_class = GST_MINI_OBJECT_CLASS (g_class);
+  GstPVRBufferPool *pool = GST_PVR_BUFFER_POOL_CAST (object);
 
-  bufferpool_parent_class = g_type_class_peek_parent (g_class);
+  GST_LOG_OBJECT (pool, "finalize PVR buffer pool %p", pool);
 
-  mini_object_class->finalize = (GstMiniObjectFinalizeFunction)
-      GST_DEBUG_FUNCPTR (gst_pvr_bufferpool_finalize);
-}
+  if (pool->caps)
+    gst_caps_unref (pool->caps);
+  gst_object_unref (pool->pvrsink);
 
-GType
-gst_pvr_bufferpool_get_type (void)
-{
-  static GType type;
-
-  if (G_UNLIKELY (type == 0)) {
-    static const GTypeInfo info = {
-      .class_size = sizeof (GstMiniObjectClass),
-      .class_init = gst_pvr_bufferpool_class_init,
-      .instance_size = sizeof (GstPvrBufferPool),
-    };
-    type = g_type_register_static (GST_TYPE_MINI_OBJECT,
-        "GstPvrBufferPool", &info, 0);
-  }
-  return type;
+  G_OBJECT_CLASS (gst_pvr_buffer_pool_parent_class)->finalize (object);
 }

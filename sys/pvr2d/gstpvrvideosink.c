@@ -3,6 +3,7 @@
  * Copyright (C) 2011 Collabora Ltda
  * Copyright (C) 2011 Texas Instruments
  *  @author: Luciana Fujii Pontello <luciana.fujii@collabora.co.uk>
+ *  @author: Edward Hervey <edward@collabora.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -22,10 +23,12 @@
 
 /* Object header */
 #include "gstpvrvideosink.h"
-
 #include "gstpvrbufferpool.h"
+
 #include <gst/video/gstvideosink.h>
-#include <gst/interfaces/xoverlay.h>
+#include <gst/video/videooverlay.h>
+/* Helper functions */
+#include <gst/video/gstvideometa.h>
 
 /* Debugging category */
 #include <gst/gstinfo.h>
@@ -37,7 +40,6 @@
 #include <servicesext.h>
 
 #define DEFAULT_QUEUE_SIZE 12
-#define DEFAULT_MIN_QUEUED_BUFS 1
 
 GST_DEBUG_CATEGORY_EXTERN (gst_debug_pvrvideosink);
 #define GST_CAT_DEFAULT gst_debug_pvrvideosink
@@ -55,23 +57,27 @@ GST_DEBUG_CATEGORY_EXTERN (gst_debug_pvrvideosink);
 /* end of internal definitions */
 
 static void gst_pvrvideosink_reset (GstPVRVideoSink * pvrvideosink);
-static GstFlowReturn gst_pvrvideosink_buffer_alloc (GstBaseSink * bsink,
-    guint64 offset, guint size, GstCaps * caps, GstBuffer ** buf);
 static void gst_pvrvideosink_xwindow_draw_borders (GstPVRVideoSink *
     pvrvideosink, GstXWindow * xwindow, GstVideoRectangle rect);
-static void gst_pvrvideosink_expose (GstXOverlay * overlay);
+static void gst_pvrvideosink_expose (GstVideoOverlay * overlay);
 static void gst_pvrvideosink_xwindow_destroy (GstPVRVideoSink * pvrvideosink,
     GstXWindow * xwindow);
+static void gst_pvrvideosink_dcontext_free (GstDrawContext * dcontext);
+
+static void gst_pvrvideosink_videooverlay_init (GstVideoOverlayInterface *
+    iface);
+
+#define gst_pvrvideosink_parent_class parent_class
+G_DEFINE_TYPE_WITH_CODE (GstPVRVideoSink, gst_pvrvideosink, GST_TYPE_VIDEO_SINK,
+    G_IMPLEMENT_INTERFACE (GST_TYPE_VIDEO_OVERLAY,
+        gst_pvrvideosink_videooverlay_init));
+
 
 static GstStaticPadTemplate gst_pvrvideosink_sink_template_factory =
 GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("video/x-raw-yuv, "
-        "format = (fourcc) NV12, "
-        "width = " GST_VIDEO_SIZE_RANGE ", "
-        "height = " GST_VIDEO_SIZE_RANGE ", "
-        "framerate = " GST_VIDEO_FPS_RANGE));
+    GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE ("NV12")));
 
 enum
 {
@@ -81,8 +87,6 @@ enum
   PROP_WINDOW_HEIGHT
 };
 
-static GstVideoSinkClass *parent_class = NULL;
-
 /* ============================================================= */
 /*                                                               */
 /*                       Private Methods                         */
@@ -90,12 +94,6 @@ static GstVideoSinkClass *parent_class = NULL;
 /* ============================================================= */
 
 /* pvrvideo buffers */
-
-#define GST_TYPE_PVRVIDEO_BUFFER (gst_pvrvideo_buffer_get_type())
-
-#define GST_IS_PVRVIDEO_BUFFER(obj) (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_PVRVIDEO_BUFFER))
-#define GST_PVRVIDEO_BUFFER(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), GST_TYPE_PVRVIDEO_BUFFER, GstPVRVideoBuffer))
-#define GST_PVRVIDEO_BUFFER_GET_CLASS(obj)  (G_TYPE_INSTANCE_GET_CLASS ((obj), GST_TYPE_PVRVIDEO_BUFFER, GstPVRVideoBufferClass))
 
 static void
 gst_pvrvideosink_xwindow_update_geometry (GstPVRVideoSink * pvrvideosink)
@@ -126,17 +124,16 @@ gst_pvrvideosink_xwindow_update_geometry (GstPVRVideoSink * pvrvideosink)
   }
   if (pvrvideosink->dcontext != NULL) {
     glerror =
-        pvrvideosink->dcontext->
-        wsegl_table->pfnWSEGL_DeleteDrawable (pvrvideosink->dcontext->
-        drawable_handle);
+        pvrvideosink->dcontext->wsegl_table->
+        pfnWSEGL_DeleteDrawable (pvrvideosink->dcontext->drawable_handle);
     if (glerror != WSEGL_SUCCESS) {
       GST_ERROR_OBJECT (pvrvideosink, "Error destroying drawable");
       return;
     }
     glerror =
-        pvrvideosink->dcontext->
-        wsegl_table->pfnWSEGL_CreateWindowDrawable (pvrvideosink->dcontext->
-        display_handle, pvrvideosink->dcontext->glconfig,
+        pvrvideosink->dcontext->wsegl_table->
+        pfnWSEGL_CreateWindowDrawable (pvrvideosink->dcontext->display_handle,
+        pvrvideosink->dcontext->glconfig,
         &pvrvideosink->dcontext->drawable_handle,
         (NativeWindowType) pvrvideosink->xwindow->window,
         &pvrvideosink->dcontext->rotation);
@@ -145,9 +142,9 @@ gst_pvrvideosink_xwindow_update_geometry (GstPVRVideoSink * pvrvideosink)
       return;
     }
     glerror =
-        pvrvideosink->dcontext->
-        wsegl_table->pfnWSEGL_GetDrawableParameters (pvrvideosink->dcontext->
-        drawable_handle, &source_params, &pvrvideosink->render_params);
+        pvrvideosink->dcontext->wsegl_table->
+        pfnWSEGL_GetDrawableParameters (pvrvideosink->dcontext->drawable_handle,
+        &source_params, &pvrvideosink->render_params);
     if (glerror != WSEGL_SUCCESS) {
       GST_ERROR_OBJECT (pvrvideosink, "Error getting Drawable params");
       return;
@@ -198,7 +195,7 @@ gst_pvrvideosink_handle_xevents (GstPVRVideoSink * pvrvideosink)
     g_mutex_unlock (pvrvideosink->dcontext->x_lock);
     g_mutex_unlock (pvrvideosink->flow_lock);
 
-    gst_pvrvideosink_expose (GST_X_OVERLAY (pvrvideosink));
+    gst_pvrvideosink_expose (GST_VIDEO_OVERLAY (pvrvideosink));
 
     g_mutex_lock (pvrvideosink->flow_lock);
     g_mutex_lock (pvrvideosink->dcontext->x_lock);
@@ -284,58 +281,108 @@ gst_pvrvideosink_manage_event_thread (GstPVRVideoSink * pvrvideosink)
 static GstDrawContext *
 gst_pvrvideosink_get_dcontext (GstPVRVideoSink * pvrvideosink)
 {
-  GstDrawContext *dcontext;
+  GstDrawContext *dcontext = NULL;
   PVR2DERROR pvr_error;
   gint refresh_rate;
   DRI2WSDisplay *displayImpl;
   WSEGLError glerror;
   const WSEGLCaps *glcaps;
 
+  GST_DEBUG_OBJECT (pvrvideosink, "Getting draw context");
+
   dcontext = g_new0 (GstDrawContext, 1);
-  dcontext->p_blt_info = 0;
   dcontext->x_lock = g_mutex_new ();
 
   dcontext->p_blt_info = g_new0 (PVR2D_3DBLT_EXT, 1);
-  if (!dcontext->p_blt_info) {
-    GST_ERROR_OBJECT (pvrvideosink, "Alloc of bltinfo failed");
-    return NULL;
-  }
+  if (!dcontext->p_blt_info)
+    goto p_blt_info_alloc_failed;
+
   dcontext->p_blt2d_info = g_new0 (PVR2DBLTINFO, 1);
 
+  GST_LOG_OBJECT (pvrvideosink, "Opening X Display");
   dcontext->x_display = XOpenDisplay (NULL);
 
+  if (dcontext->x_display == NULL)
+    goto fail_open_display;
+
+  GST_LOG_OBJECT (pvrvideosink, "WSEGL_GetFunctionTablePointer()");
   dcontext->wsegl_table = WSEGL_GetFunctionTablePointer ();
+
+  GST_LOG_OBJECT (pvrvideosink, "pfnWSEGL_IsDisplayValid()");
   glerror = dcontext->wsegl_table->pfnWSEGL_IsDisplayValid (
       (NativeDisplayType) dcontext->x_display);
 
-  if (glerror != WSEGL_SUCCESS) {
-    GST_ERROR_OBJECT (pvrvideosink, "Display is not valid");
-    return NULL;
-  }
+  if (glerror != WSEGL_SUCCESS)
+    goto display_invalid;
+
+  GST_LOG_OBJECT (pvrvideosink, "pfnWSEGL_InitialiseDisplay()");
 
   glerror = dcontext->wsegl_table->pfnWSEGL_InitialiseDisplay (
       (NativeDisplayType) dcontext->x_display, &dcontext->display_handle,
       &glcaps, &dcontext->glconfig);
-  if (glerror != WSEGL_SUCCESS) {
-    GST_ERROR_OBJECT (pvrvideosink, "Error initializing display");
-    return NULL;
-  }
+  if (glerror != WSEGL_SUCCESS)
+    goto display_init_failed;
 
   displayImpl = (DRI2WSDisplay *) dcontext->display_handle;
   dcontext->pvr_context = displayImpl->hContext;
 
+  GST_LOG_OBJECT (pvrvideosink, "PVR2DGetScreenMode()");
+
   pvr_error = PVR2DGetScreenMode (dcontext->pvr_context,
       &dcontext->display_format, &dcontext->display_width,
       &dcontext->display_height, &dcontext->stride, &refresh_rate);
-  if (pvr_error != PVR2D_OK) {
-    GST_ERROR_OBJECT (pvrvideosink, "Failed) to get screen mode"
-        "returned %d", pvr_error);
-    return NULL;
-  }
+  if (pvr_error != PVR2D_OK)
+    goto screen_mode_failed;
+
+  GST_DEBUG_OBJECT (pvrvideosink,
+      "Got format:%d, width:%d, height:%d, stride:%d, refresh_rate:%d",
+      dcontext->display_format, dcontext->display_width,
+      dcontext->display_height, dcontext->stride, refresh_rate);
+
   dcontext->screen_num = DefaultScreen (dcontext->x_display);
   dcontext->black = XBlackPixel (dcontext->x_display, dcontext->screen_num);
 
+  GST_DEBUG_OBJECT (pvrvideosink, "Returning dcontext %p", dcontext);
+
   return dcontext;
+
+p_blt_info_alloc_failed:
+  {
+    GST_ERROR_OBJECT (pvrvideosink, "Alloc of bltinfo failed");
+    gst_pvrvideosink_dcontext_free (dcontext);
+    return NULL;
+  }
+
+fail_open_display:
+  {
+    GST_ERROR_OBJECT (pvrvideosink, "Failed to open X Display");
+    gst_pvrvideosink_dcontext_free (dcontext);
+    return NULL;
+  }
+
+display_invalid:
+  {
+    GST_ERROR_OBJECT (pvrvideosink, "Display is not valid (glerror:%d)",
+        glerror);
+    gst_pvrvideosink_dcontext_free (dcontext);
+    return NULL;
+  }
+
+display_init_failed:
+  {
+    GST_ERROR_OBJECT (pvrvideosink, "Error initializing display (glerror:%d)",
+        glerror);
+    gst_pvrvideosink_dcontext_free (dcontext);
+    return NULL;
+  }
+
+screen_mode_failed:
+  {
+    GST_ERROR_OBJECT (pvrvideosink, "Failed to get screen mode. error : %s",
+        gst_pvr2d_error_get_string (pvr_error));
+    gst_pvrvideosink_dcontext_free (dcontext);
+    return NULL;
+  }
 }
 
 static void
@@ -438,8 +485,9 @@ gst_pvrvideosink_create_window (GstPVRVideoSink * pvrvideosink, gint width,
   g_mutex_unlock (pvrvideosink->dcontext->x_lock);
 
   glerror =
-      dcontext->wsegl_table->pfnWSEGL_CreateWindowDrawable (dcontext->
-      display_handle, dcontext->glconfig, &(dcontext->drawable_handle),
+      dcontext->wsegl_table->
+      pfnWSEGL_CreateWindowDrawable (dcontext->display_handle,
+      dcontext->glconfig, &(dcontext->drawable_handle),
       (NativeWindowType) xwindow->window, &(dcontext->rotation));
 
   if (glerror != WSEGL_SUCCESS) {
@@ -447,8 +495,9 @@ gst_pvrvideosink_create_window (GstPVRVideoSink * pvrvideosink, gint width,
     return NULL;
   }
   glerror =
-      dcontext->wsegl_table->pfnWSEGL_GetDrawableParameters (dcontext->
-      drawable_handle, &source_params, &pvrvideosink->render_params);
+      dcontext->wsegl_table->
+      pfnWSEGL_GetDrawableParameters (dcontext->drawable_handle, &source_params,
+      &pvrvideosink->render_params);
   client_mem_info =
       (PVRSRV_CLIENT_MEM_INFO *) pvrvideosink->render_params.hPrivateData;
   PVR2DMEMINFO_INITIALISE (&dcontext->dst_mem, client_mem_info);
@@ -462,39 +511,38 @@ gst_pvrvideosink_blit (GstPVRVideoSink * pvrvideosink, GstBuffer * buffer)
 {
   PVR2DERROR pvr_error;
   GstDrawContext *dcontext = pvrvideosink->dcontext;
-  GstCaps *caps;
-  GstStructure *structure;
   gint video_width;
   gint video_height;
-  gboolean ret;
   gboolean draw_border = FALSE;
   PPVR2D_3DBLT_EXT p_blt_3d;
   PVR2DMEMINFO *src_mem;
-  PVR2DFORMAT pvr_format = pvrvideosink->format == GST_VIDEO_FORMAT_NV12 ?
-      PVR2D_YUV420_2PLANE : PVR2D_ARGB8888;
+  PVR2DFORMAT pvr_format;
   GstVideoRectangle result;
+  GstPVRMeta *meta;
+  GstVideoCropMeta *cropmeta;
 
-  GST_DEBUG_OBJECT (pvrvideosink, "begin");
+  GST_DEBUG_OBJECT (pvrvideosink, "buffer %p", buffer);
+
+  pvr_format =
+      GST_VIDEO_INFO_FORMAT (&pvrvideosink->info) ==
+      GST_VIDEO_FORMAT_NV12 ? PVR2D_YUV420_2PLANE : PVR2D_ARGB8888;
+
   g_mutex_lock (pvrvideosink->flow_lock);
   if (buffer == NULL)
     buffer = pvrvideosink->current_buffer;
 
-  if (buffer == NULL) {
-    g_mutex_unlock (pvrvideosink->flow_lock);
-    return;
-  }
+  if (buffer == NULL)
+    goto done;
 
-  caps = GST_BUFFER_CAPS (buffer);
-  src_mem = gst_ducati_buffer_get_meminfo ((GstDucatiBuffer *) buffer);
+  meta = gst_buffer_get_pvr_meta (buffer);
+  if (G_UNLIKELY (meta == NULL))
+    goto no_pvr_meta;
+
+  src_mem = meta->src_mem;
   p_blt_3d = dcontext->p_blt_info;
 
-  structure = gst_caps_get_structure (caps, 0);
-  ret = gst_structure_get_int (structure, "width", &video_width);
-  ret &= gst_structure_get_int (structure, "height", &video_height);
-  if (!ret) {
-    GST_ERROR_OBJECT (pvrvideosink, "Failed to get dimensions of the buffer");
-    goto done;
-  }
+  video_width = GST_VIDEO_SINK_WIDTH (pvrvideosink);
+  video_height = GST_VIDEO_SINK_HEIGHT (pvrvideosink);
 
   g_mutex_lock (pvrvideosink->dcontext->x_lock);
 
@@ -531,9 +579,7 @@ gst_pvrvideosink_blit (GstPVRVideoSink * pvrvideosink, GstBuffer * buffer)
 
   p_blt_3d->sDst.pSurfMemInfo = &dcontext->dst_mem;
   p_blt_3d->sDst.SurfOffset = 0;
-  p_blt_3d->sDst.Stride =
-      gst_video_format_get_row_stride (GST_VIDEO_FORMAT_BGRx, 0,
-      pvrvideosink->render_params.ui32Stride);
+  p_blt_3d->sDst.Stride = 4 * pvrvideosink->render_params.ui32Stride;
   p_blt_3d->sDst.Format = PVR2D_ARGB8888;
   p_blt_3d->sDst.SurfWidth = pvrvideosink->xwindow->width;
   p_blt_3d->sDst.SurfHeight = pvrvideosink->xwindow->height;
@@ -545,56 +591,41 @@ gst_pvrvideosink_blit (GstPVRVideoSink * pvrvideosink, GstBuffer * buffer)
 
   p_blt_3d->sSrc.pSurfMemInfo = src_mem;
   p_blt_3d->sSrc.SurfOffset = 0;
-  p_blt_3d->sSrc.Stride = pvrvideosink->rowstride;
+  p_blt_3d->sSrc.Stride = GST_VIDEO_INFO_COMP_STRIDE (&pvrvideosink->info, 0);
   p_blt_3d->sSrc.Format = pvr_format;
   p_blt_3d->sSrc.SurfWidth = video_width;
   p_blt_3d->sSrc.SurfHeight = video_height;
 
-  p_blt_3d->rcSource.left = 0;
-  p_blt_3d->rcSource.top = 0;
-  p_blt_3d->rcSource.right = video_width;
-  p_blt_3d->rcSource.bottom = video_height;
+  /* If buffer has crop information, use that */
+  if ((cropmeta = gst_buffer_get_video_crop_meta (buffer))) {
+    p_blt_3d->rcSource.left = cropmeta->x;
+    p_blt_3d->rcSource.top = cropmeta->y;
+    p_blt_3d->rcSource.right = cropmeta->x + cropmeta->width;
+    p_blt_3d->rcSource.bottom = cropmeta->y + cropmeta->height;
+  } else {
+    p_blt_3d->rcSource.left = 0;
+    p_blt_3d->rcSource.top = 0;
+    p_blt_3d->rcSource.right = video_width;
+    p_blt_3d->rcSource.bottom = video_height;
+  }
 
   p_blt_3d->hUseCode = NULL;
 
-  if (pvrvideosink->format == GST_VIDEO_FORMAT_NV12)
+  if (GST_VIDEO_INFO_FORMAT (&pvrvideosink->info) == GST_VIDEO_FORMAT_NV12)
     p_blt_3d->bDisableDestInput = TRUE;
   else
     /* blit fails for RGB without this... not sure why yet... */
     p_blt_3d->bDisableDestInput = FALSE;
 
+  GST_DEBUG_OBJECT (pvrvideosink, "about to blit");
+
   pvr_error = PVR2DBlt3DExt (pvrvideosink->dcontext->pvr_context,
       dcontext->p_blt_info);
 
-  switch (pvr_error) {
-    case PVR2D_OK:
-      break;
-    case PVR2DERROR_DEVICE_UNAVAILABLE:
-      GST_ERROR_OBJECT (pvrvideosink, "Failed to blit, device unavailable");
-      goto done;
-      break;
-    case PVR2DERROR_INVALID_CONTEXT:
-      GST_ERROR_OBJECT (pvrvideosink, "Failed to blit, invalid context");
-      goto done;
-      break;
-    case PVR2DERROR_INVALID_PARAMETER:
-      GST_ERROR_OBJECT (pvrvideosink, "Failed to blit, invalid parameter");
-      goto done;
-      break;
-    case PVR2DERROR_HW_FEATURE_NOT_SUPPORTED:
-      GST_ERROR_OBJECT (pvrvideosink, "Failed to blit, "
-          "hardware feature not supported");
-      goto done;
-      break;
-    case PVR2DERROR_GENERIC_ERROR:
-      GST_ERROR_OBJECT (pvrvideosink, "Failed to blit, generic error");
-      goto done;
-      break;
-    default:
-      GST_ERROR_OBJECT (pvrvideosink, "Failed to blit, "
-          "undefined error %d", pvr_error);
-      goto done;
-      break;
+  if (pvr_error != PVR2D_OK) {
+    GST_ERROR_OBJECT (pvrvideosink, "Failed to blit. Error : %s",
+        gst_pvr2d_error_get_string (pvr_error));
+    goto done;
   }
   dcontext->wsegl_table->pfnWSEGL_SwapDrawable (dcontext->drawable_handle, 1);
 
@@ -608,19 +639,35 @@ gst_pvrvideosink_blit (GstPVRVideoSink * pvrvideosink, GstBuffer * buffer)
 done:
   GST_DEBUG_OBJECT (pvrvideosink, "end");
   g_mutex_unlock (pvrvideosink->flow_lock);
+  return;
+
+  /* Error cases */
+
+no_pvr_meta:
+  {
+    g_mutex_unlock (pvrvideosink->flow_lock);
+    GST_ERROR_OBJECT (pvrvideosink, "Got a buffer without GstPVRMeta");
+    return;
+  }
 }
 
 static void
 gst_pvrvideosink_destroy_drawable (GstPVRVideoSink * pvrvideosink)
 {
-  if (pvrvideosink->dcontext != NULL) {
-    if (pvrvideosink->dcontext->drawable_handle)
-      pvrvideosink->dcontext->
-          wsegl_table->pfnWSEGL_DeleteDrawable (pvrvideosink->dcontext->
-          drawable_handle);
+  GST_DEBUG_OBJECT (pvrvideosink, "dcontext : %p", pvrvideosink->dcontext);
 
-    pvrvideosink->dcontext->wsegl_table->pfnWSEGL_CloseDisplay (pvrvideosink->
-        dcontext->display_handle);
+  if (pvrvideosink->dcontext != NULL) {
+    if (pvrvideosink->dcontext->drawable_handle) {
+      GST_DEBUG_OBJECT (pvrvideosink, "Deleting Drawable (drawable_handle:%p)",
+          pvrvideosink->dcontext->drawable_handle);
+      pvrvideosink->dcontext->wsegl_table->
+          pfnWSEGL_DeleteDrawable (pvrvideosink->dcontext->drawable_handle);
+    }
+
+    GST_DEBUG_OBJECT (pvrvideosink, "Closing display (display_handle:%p)",
+        pvrvideosink->dcontext->display_handle);
+    pvrvideosink->dcontext->wsegl_table->
+        pfnWSEGL_CloseDisplay (pvrvideosink->dcontext->display_handle);
   }
 }
 
@@ -641,9 +688,7 @@ gst_pvrvideosink_pvrfill_rectangle (GstPVRVideoSink * pvrvideosink,
   p_blt2d_info->BlitFlags = PVR2D_BLIT_DISABLE_ALL;
   p_blt2d_info->DstOffset = 0;
   p_blt2d_info->CopyCode = PVR2DROPclear;
-  p_blt2d_info->DstStride =
-      gst_video_format_get_row_stride (GST_VIDEO_FORMAT_BGRx, 0,
-      pvrvideosink->render_params.ui32Stride);
+  p_blt2d_info->DstStride = 4 * pvrvideosink->render_params.ui32Stride;
   p_blt2d_info->DstFormat = PVR2D_ARGB8888;
   p_blt2d_info->DstSurfWidth = pvrvideosink->xwindow->width;
   p_blt2d_info->DstSurfHeight = pvrvideosink->xwindow->height;
@@ -654,35 +699,10 @@ gst_pvrvideosink_pvrfill_rectangle (GstPVRVideoSink * pvrvideosink,
 
   pvr_error = PVR2DBlt (pvrvideosink->dcontext->pvr_context, p_blt2d_info);
 
-  switch (pvr_error) {
-    case PVR2D_OK:
-      break;
-    case PVR2DERROR_DEVICE_UNAVAILABLE:
-      GST_ERROR_OBJECT (pvrvideosink, "Failed to blit, device unavailable");
-      goto done;
-      break;
-    case PVR2DERROR_INVALID_CONTEXT:
-      GST_ERROR_OBJECT (pvrvideosink, "Failed to blit, invalid context");
-      goto done;
-      break;
-    case PVR2DERROR_INVALID_PARAMETER:
-      GST_ERROR_OBJECT (pvrvideosink, "Failed to blit, invalid parameter");
-      goto done;
-      break;
-    case PVR2DERROR_HW_FEATURE_NOT_SUPPORTED:
-      GST_ERROR_OBJECT (pvrvideosink, "Failed to blit, "
-          "hardware feature not supported");
-      goto done;
-      break;
-    case PVR2DERROR_GENERIC_ERROR:
-      GST_ERROR_OBJECT (pvrvideosink, "Failed to blit, generic error");
-      goto done;
-      break;
-    default:
-      GST_ERROR_OBJECT (pvrvideosink, "Failed to blit, "
-          "undefined error %d", pvr_error);
-      goto done;
-      break;
+  if (pvr_error != PVR2D_OK) {
+    GST_ERROR_OBJECT (pvrvideosink, "Failed to blit. Error : %s",
+        gst_pvr2d_error_get_string (pvr_error));
+    goto done;
   }
   dcontext->wsegl_table->pfnWSEGL_SwapDrawable (dcontext->drawable_handle, 1);
 
@@ -744,112 +764,106 @@ static gboolean
 gst_pvrvideosink_setcaps (GstBaseSink * bsink, GstCaps * caps)
 {
   GstPVRVideoSink *pvrvideosink;
-  gboolean ret = TRUE;
+  GstVideoInfo info;
   GstStructure *structure;
-  gint new_width, new_height;
-  const GValue *fps;
-  GstQuery *query;
+  GstBufferPool *oldpool, *newpool;
 
   pvrvideosink = GST_PVRVIDEOSINK (bsink);
 
   GST_DEBUG_OBJECT (pvrvideosink,
-      "sinkconnect possible caps with given caps %", caps);
+      "sinkconnect possible caps with given caps %" GST_PTR_FORMAT, caps);
 
-  structure = gst_caps_get_structure (caps, 0);
+  if (!gst_video_info_from_caps (&info, caps))
+    goto invalid_format;
 
-  ret = gst_video_format_parse_caps_strided (caps, &pvrvideosink->format,
-      &new_width, &new_height, &pvrvideosink->rowstride);
-  if (pvrvideosink->rowstride == 0)
-    pvrvideosink->rowstride =
-        gst_video_format_get_row_stride (pvrvideosink->format, 0, new_width);
-  fps = gst_structure_get_value (structure, "framerate");
-  ret &= (fps != NULL);
-  if (!ret) {
-    GST_ERROR_OBJECT (pvrvideosink, "problem at parsing caps");
-    return FALSE;
-  }
-
-  if (pvrvideosink->current_caps) {
-    GST_DEBUG_OBJECT (pvrvideosink, "already have caps set");
-    if (gst_caps_is_equal (pvrvideosink->current_caps, caps)) {
-      GST_DEBUG_OBJECT (pvrvideosink, "caps are equal!");
-      return TRUE;
-    }
-    GST_DEBUG_OBJECT (pvrvideosink, "caps are different");
-  }
-
-  g_mutex_lock (pvrvideosink->pool_lock);
-  if (pvrvideosink->buffer_pool) {
-    if (!gst_caps_is_equal (pvrvideosink->buffer_pool->caps, caps)) {
-      GST_INFO_OBJECT (pvrvideosink, "in set caps, pool->caps != caps");
-      gst_pvr_bufferpool_stop_running (pvrvideosink->buffer_pool, FALSE);
-      pvrvideosink->buffer_pool = NULL;
-    }
-  }
-  g_mutex_unlock (pvrvideosink->pool_lock);
-
-  /* query to find if anyone upstream using these buffers has any
-   * minimum requirements:
-   */
-  query = gst_query_new_buffers (caps);
-  if (gst_element_query (GST_ELEMENT (pvrvideosink), query)) {
-    gint min_buffers;
-
-    gst_query_parse_buffers_count (query, &min_buffers);
-
-    GST_DEBUG_OBJECT (pvrvideosink, "min_buffers=%d", min_buffers);
-
-    /* XXX need to account for some buffers used by queue, etc.. probably
-     * queue should handle query, pass on to sink pad, and then add some
-     * number of buffers to the min, so this value is dynamic depending
-     * on the pipeline?
-     */
-    if (min_buffers != -1) {
-      min_buffers += 3 + pvrvideosink->min_queued_bufs;
-      pvrvideosink->num_buffers_can_change = FALSE;
-    }
-
-    if (min_buffers > pvrvideosink->num_buffers) {
-      pvrvideosink->num_buffers = min_buffers;
-    }
-  }
-  gst_query_unref (query);
+  GST_VIDEO_SINK_WIDTH (pvrvideosink) = info.width;
+  GST_VIDEO_SINK_HEIGHT (pvrvideosink) = info.height;
 
   /* Notify application to set xwindow id now */
   g_mutex_lock (pvrvideosink->flow_lock);
   if (!pvrvideosink->xwindow) {
     g_mutex_unlock (pvrvideosink->flow_lock);
-    gst_x_overlay_prepare_xwindow_id (GST_X_OVERLAY (pvrvideosink));
+    gst_video_overlay_prepare_window_handle (GST_VIDEO_OVERLAY (pvrvideosink));
   } else {
     g_mutex_unlock (pvrvideosink->flow_lock);
   }
-  GST_VIDEO_SINK_WIDTH (pvrvideosink) = new_width;
-  GST_VIDEO_SINK_HEIGHT (pvrvideosink) = new_height;
 
   g_mutex_lock (pvrvideosink->flow_lock);
   if (!pvrvideosink->xwindow)
     pvrvideosink->xwindow = gst_pvrvideosink_create_window (pvrvideosink,
-        new_width, new_height);
+        GST_VIDEO_SINK_WIDTH (pvrvideosink),
+        GST_VIDEO_SINK_HEIGHT (pvrvideosink));
   g_mutex_unlock (pvrvideosink->flow_lock);
 
-  pvrvideosink->fps_n = gst_value_get_fraction_numerator (fps);
-  pvrvideosink->fps_d = gst_value_get_fraction_denominator (fps);
+  pvrvideosink->info = info;
 
-  pvrvideosink->current_caps = gst_caps_ref (caps);
+  /* After a resize, we want to redraw the borders in case the new frame size
+   * doesn't cover the same area */
+  pvrvideosink->redraw_borders = TRUE;
+
+  /* create a new pool for the new configuration */
+  newpool = gst_pvr_buffer_pool_new (GST_ELEMENT_CAST (pvrvideosink));
+
+  /* PVR needs at least 3 buffers */
+  structure = gst_buffer_pool_get_config (newpool);
+  gst_buffer_pool_config_set (structure, caps, GST_VIDEO_INFO_SIZE (&info), 3,
+      0, 0, 15);
+  if (!gst_buffer_pool_set_config (newpool, structure))
+    goto config_failed;
+
+  oldpool = pvrvideosink->pool;
+  pvrvideosink->pool = newpool;
+  g_mutex_unlock (pvrvideosink->flow_lock);
+
+  /* unref the old sink */
+  if (oldpool) {
+    /* we don't deactivate, some elements might still be using it, it will
+     * be deactivated when the last ref is gone */
+    gst_object_unref (oldpool);
+  }
 
   return TRUE;
+
+config_failed:
+  {
+    GST_ERROR_OBJECT (pvrvideosink, "failed to set config.");
+    g_mutex_unlock (pvrvideosink->flow_lock);
+    return FALSE;
+  }
+
+invalid_format:
+  {
+    GST_DEBUG_OBJECT (pvrvideosink,
+        "Could not locate image format from caps %" GST_PTR_FORMAT, caps);
+    return FALSE;
+  }
 }
 
 static GstCaps *
-gst_pvrvideosink_getcaps (GstBaseSink * bsink)
+gst_pvrvideosink_getcaps (GstBaseSink * bsink, GstCaps * filter)
 {
   GstPVRVideoSink *pvrvideosink;
   GstCaps *caps;
 
+  GST_DEBUG_OBJECT (bsink, "filter:%" GST_PTR_FORMAT, filter);
+
   pvrvideosink = GST_PVRVIDEOSINK (bsink);
 
-  caps = gst_caps_copy (gst_pad_get_pad_template_caps (GST_BASE_SINK
-          (pvrvideosink)->sinkpad));
+  /* FIXME : If we have curently configured caps, we should return those
+   * intersected with the filter*/
+
+  caps = gst_pad_get_pad_template_caps (GST_BASE_SINK (pvrvideosink)->sinkpad);
+  if (filter) {
+    GstCaps *intersection;
+
+    intersection =
+        gst_caps_intersect_full (filter, caps, GST_CAPS_INTERSECT_FIRST);
+    gst_caps_unref (caps);
+    caps = intersection;
+  }
+
+  GST_DEBUG_OBJECT (bsink, "Returning %" GST_PTR_FORMAT, caps);
+
   return caps;
 }
 
@@ -875,14 +889,8 @@ gst_pvrvideosink_change_state (GstElement * element, GstStateChange transition)
       gst_pvrvideosink_manage_event_thread (pvrvideosink);
       break;
     case GST_STATE_CHANGE_READY_TO_PAUSED:
-      g_mutex_lock (pvrvideosink->pool_lock);
-      pvrvideosink->pool_invalid = FALSE;
-      g_mutex_unlock (pvrvideosink->pool_lock);
       break;
     case GST_STATE_CHANGE_PAUSED_TO_READY:
-      g_mutex_lock (pvrvideosink->pool_lock);
-      pvrvideosink->pool_invalid = TRUE;
-      g_mutex_unlock (pvrvideosink->pool_lock);
       break;
     case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
       break;
@@ -896,8 +904,6 @@ gst_pvrvideosink_change_state (GstElement * element, GstStateChange transition)
     case GST_STATE_CHANGE_PLAYING_TO_PAUSED:
       break;
     case GST_STATE_CHANGE_PAUSED_TO_READY:
-      pvrvideosink->fps_n = 0;
-      pvrvideosink->fps_d = 1;
       GST_VIDEO_SINK_WIDTH (pvrvideosink) = 0;
       GST_VIDEO_SINK_HEIGHT (pvrvideosink) = 0;
       break;
@@ -924,185 +930,125 @@ gst_pvrvideosink_get_times (GstBaseSink * bsink, GstBuffer * buf,
     if (GST_BUFFER_DURATION_IS_VALID (buf)) {
       *end = *start + GST_BUFFER_DURATION (buf);
     } else {
-      if (pvrvideosink->fps_n > 0) {
-        *end = *start +
-            gst_util_uint64_scale_int (GST_SECOND, pvrvideosink->fps_d,
-            pvrvideosink->fps_n);
+      gint fps_n, fps_d;
+      fps_n = GST_VIDEO_INFO_FPS_N (&pvrvideosink->info);
+      fps_d = GST_VIDEO_INFO_FPS_D (&pvrvideosink->info);
+      if (fps_n > 0) {
+        *end = *start + gst_util_uint64_scale_int (GST_SECOND, fps_d, fps_n);
       }
     }
   }
 }
 
 static GstFlowReturn
-gst_pvrvideosink_show_frame (GstBaseSink * vsink, GstBuffer * buf)
+gst_pvrvideosink_show_frame (GstVideoSink * vsink, GstBuffer * buf)
 {
-  GstPVRVideoSink *pvrvideosink;
-  GstBuffer *newbuf = NULL;
-  g_return_val_if_fail (buf != NULL, GST_FLOW_ERROR);
-
-  pvrvideosink = GST_PVRVIDEOSINK (vsink);
+  GstPVRVideoSink *pvrvideosink = GST_PVRVIDEOSINK (vsink);
+  GstPVRMeta *meta;
 
   GST_DEBUG_OBJECT (pvrvideosink, "render buffer: %p", buf);
 
-  if (!GST_IS_BUFFER (buf)) {
-    GstFlowReturn ret;
+  meta = gst_buffer_get_pvr_meta (buf);
 
-    /* special case check for sub-buffers:  In certain cases, places like
-     * GstBaseTransform, which might check that the buffer is writable
-     * before copying metadata, timestamp, and such, will find that the
-     * buffer has more than one reference to it.  In these cases, they
-     * will create a sub-buffer with an offset=0 and length equal to the
-     * original buffer size.
-     *
-     * This could happen in two scenarios: (1) a tee in the pipeline, and
-     * (2) because the refcnt is incremented in gst_mini_object_free()
-     * before the finalize function is called, and decremented after it
-     * returns..  but returning this buffer to the buffer pool in the
-     * finalize function, could wake up a thread blocked in _buffer_alloc()
-     * which could run and get a buffer w/ refcnt==2 before the thread
-     * originally unref'ing the buffer returns from finalize function and
-     * decrements the refcnt back to 1!
-     */
-    if (buf->parent &&
-        (GST_BUFFER_DATA (buf) == GST_BUFFER_DATA (buf->parent)) &&
-        (GST_BUFFER_SIZE (buf) == GST_BUFFER_SIZE (buf->parent))) {
-      GST_DEBUG_OBJECT (pvrvideosink, "I have a sub-buffer!");
-      return gst_pvrvideosink_show_frame (vsink, buf->parent);
-    }
-
-    GST_DEBUG_OBJECT (pvrvideosink,
-        "slow-path.. I got a %s so I need to memcpy",
-        g_type_name (G_OBJECT_TYPE (buf)));
-
-    ret = gst_pvrvideosink_buffer_alloc (GST_BASE_SINK (vsink),
-        GST_BUFFER_OFFSET (buf), GST_BUFFER_SIZE (buf), GST_BUFFER_CAPS (buf),
-        &newbuf);
-
-    if (GST_FLOW_OK != ret) {
-      GST_DEBUG_OBJECT (pvrvideosink, "dropping frame!!");
-      return GST_FLOW_OK;
-    }
-
-    memcpy (GST_BUFFER_DATA (newbuf),
-        GST_BUFFER_DATA (buf),
-        MIN (GST_BUFFER_SIZE (newbuf), GST_BUFFER_SIZE (buf)));
-
-    GST_DEBUG_OBJECT (pvrvideosink, "render copied buffer: %p", newbuf);
-
-    buf = newbuf;
+  if (G_UNLIKELY (meta == NULL)) {
+    meta = gst_buffer_add_pvr_meta (buf, GST_ELEMENT_CAST (pvrvideosink));
+    if (meta == NULL)
+      goto meta_failure;
   }
 
   gst_pvrvideosink_blit (pvrvideosink, buf);
 
-  if (newbuf) {
-    gst_buffer_unref (newbuf);
-  }
-
   return GST_FLOW_OK;
+
+meta_failure:
+  {
+    GST_WARNING_OBJECT (pvrvideosink, "Failed to map incoming buffer");
+    return GST_FLOW_ERROR;
+  }
 }
 
-
-/* Buffer management
- *
- * The buffer_alloc function must either return a buffer with given size and
- * caps or create a buffer with different caps attached to the buffer. This
- * last option is called reverse negotiation, ie, where the sink suggests a
- * different format from the upstream peer. 
- *
- * We try to do reverse negotiation when our geometry changes and we like a
- * resized buffer.
- */
-static GstFlowReturn
-gst_pvrvideosink_buffer_alloc (GstBaseSink * bsink, guint64 offset, guint size,
-    GstCaps * caps, GstBuffer ** buf)
+static gboolean
+gst_pvrvideosink_propose_allocation (GstBaseSink * bsink, GstQuery * query)
 {
-  GstPVRVideoSink *pvrvideosink;
-  GstDucatiBuffer *pvrvideo = NULL;
-  GstStructure *structure = NULL;
-  GstFlowReturn ret = GST_FLOW_OK;
-  gint width, height;
+  GstPVRVideoSink *pvrvideosink = (GstPVRVideoSink *) bsink;
+  GstBufferPool *pool;
+  GstStructure *config;
+  GstCaps *caps;
+  guint size;
+  gboolean need_pool;
 
-  pvrvideosink = GST_PVRVIDEOSINK (bsink);
+  gst_query_parse_allocation (query, &caps, &need_pool);
 
-  GST_DEBUG_OBJECT (pvrvideosink, "begin");
+  if (caps == NULL)
+    goto no_caps;
 
-  if (G_UNLIKELY (!caps)) {
-    GST_WARNING_OBJECT (pvrvideosink,
-        "have no caps, doing fallback allocation");
-    *buf = NULL;
-    ret = GST_FLOW_OK;
-    goto beach;
-  }
+  g_mutex_lock (pvrvideosink->flow_lock);
+  if ((pool = pvrvideosink->pool))
+    gst_object_ref (pool);
+  g_mutex_unlock (pvrvideosink->flow_lock);
 
-  g_mutex_lock (pvrvideosink->pool_lock);
-  if (G_UNLIKELY (pvrvideosink->pool_invalid)) {
-    GST_DEBUG_OBJECT (pvrvideosink, "the pool is flushing");
-    ret = GST_FLOW_WRONG_STATE;
-    g_mutex_unlock (pvrvideosink->pool_lock);
-    goto beach;
-  } else {
-    g_mutex_unlock (pvrvideosink->pool_lock);
-  }
+  if (pool != NULL) {
+    const GstCaps *pcaps;
 
-  GST_LOG_OBJECT (pvrvideosink,
-      "a buffer of %d bytes was requested with caps %" GST_PTR_FORMAT
-      " and offset %" G_GUINT64_FORMAT, size, caps, offset);
+    /* we had a pool, check caps */
+    GST_DEBUG_OBJECT (pvrvideosink, "check existing pool caps");
+    config = gst_buffer_pool_get_config (pool);
+    gst_buffer_pool_config_get (config, &pcaps, &size, NULL, NULL, NULL, NULL);
 
-  /* get struct to see what is requested */
-  structure = gst_caps_get_structure (caps, 0);
-  if (!gst_structure_get_int (structure, "width", &width) ||
-      !gst_structure_get_int (structure, "height", &height)) {
-    GST_WARNING_OBJECT (pvrvideosink, "invalid caps for buffer allocation %"
-        GST_PTR_FORMAT, caps);
-    ret = GST_FLOW_NOT_NEGOTIATED;
-    goto beach;
-  }
-
-  g_mutex_lock (pvrvideosink->pool_lock);
-  /* initialize the buffer pool if not initialized yet */
-  if (G_UNLIKELY (!pvrvideosink->buffer_pool ||
-          pvrvideosink->buffer_pool->size != size)) {
-    if (pvrvideosink->buffer_pool) {
-      GST_INFO_OBJECT (pvrvideosink, "in buffer alloc, pool->size != size");
-      gst_pvr_bufferpool_stop_running (pvrvideosink->buffer_pool, FALSE);
-    }
-
-    GST_LOG_OBJECT (pvrvideosink, "Creating a buffer pool with %d buffers",
-        pvrvideosink->num_buffers);
-    if (!(pvrvideosink->buffer_pool =
-            gst_pvr_bufferpool_new (GST_ELEMENT (pvrvideosink),
-                caps, pvrvideosink->num_buffers, size,
-                pvrvideosink->dcontext->pvr_context))) {
-      g_mutex_unlock (pvrvideosink->pool_lock);
-      return GST_FLOW_ERROR;
+    if (!gst_caps_is_equal (caps, pcaps)) {
+      GST_DEBUG_OBJECT (pvrvideosink, "pool has different caps");
+      /* different caps, we can't use this pool */
+      gst_object_unref (pool);
+      pool = NULL;
     }
   }
-  pvrvideo = gst_pvr_bufferpool_get (pvrvideosink->buffer_pool, NULL);
-  g_mutex_unlock (pvrvideosink->pool_lock);
 
-  *buf = GST_BUFFER_CAST (pvrvideo);
+  if (pool == NULL && need_pool) {
+    GstVideoInfo info;
 
-beach:
-  return ret;
+    GST_DEBUG_OBJECT (pvrvideosink, "create new pool");
+    pool = gst_pvr_buffer_pool_new (GST_ELEMENT_CAST (pvrvideosink));
+
+    if (!gst_video_info_from_caps (&info, caps))
+      goto invalid_caps;
+
+    /* the normal size of a frame */
+    size = info.size;
+
+    config = gst_buffer_pool_get_config (pool);
+    gst_buffer_pool_config_set (config, caps, size, 0, 0, 0, 0);
+    if (!gst_buffer_pool_set_config (pool, config))
+      goto config_failed;
+  }
+  /* we need at least 3 buffers */
+  gst_query_set_allocation_params (query, size, 3, 0, 0, 0, pool);
+
+  /* we also support various metadata */
+  gst_query_add_allocation_meta (query, GST_VIDEO_CROP_META_API);
+
+  gst_object_unref (pool);
+
+  return TRUE;
+
+  /* ERRORS */
+no_caps:
+  {
+    GST_DEBUG_OBJECT (bsink, "no caps specified");
+    return FALSE;
+  }
+invalid_caps:
+  {
+    GST_DEBUG_OBJECT (bsink, "invalid caps specified");
+    return FALSE;
+  }
+config_failed:
+  {
+    GST_DEBUG_OBJECT (bsink, "failed setting config");
+    return FALSE;
+  }
 }
 
 /* Interfaces stuff */
-
-static gboolean
-gst_pvrvideosink_interface_supported (GstImplementsInterface * iface,
-    GType type)
-{
-  if (type == GST_TYPE_X_OVERLAY)
-    return TRUE;
-  else
-    return FALSE;
-}
-
-static void
-gst_pvrvideosink_interface_init (GstImplementsInterfaceClass * klass)
-{
-  klass->supported = gst_pvrvideosink_interface_supported;
-}
 
 /* This function destroys a GstXWindow */
 static void
@@ -1129,9 +1075,9 @@ gst_pvrvideosink_xwindow_destroy (GstPVRVideoSink * pvrvideosink,
 }
 
 static void
-gst_pvrvideosink_set_window_handle (GstXOverlay * overlay, guintptr id)
+gst_pvrvideosink_set_window_handle (GstVideoOverlay * overlay, guintptr id)
 {
-  XID xwindow_id = id;
+  XID window_handle = id;
   GstPVRVideoSink *pvrvideosink = GST_PVRVIDEOSINK (overlay);
   GstXWindow *xwindow = NULL;
 
@@ -1140,7 +1086,7 @@ gst_pvrvideosink_set_window_handle (GstXOverlay * overlay, guintptr id)
   g_mutex_lock (pvrvideosink->flow_lock);
 
   /* If we already use that window return */
-  if (pvrvideosink->xwindow && (xwindow_id == pvrvideosink->xwindow->window)) {
+  if (pvrvideosink->xwindow && (window_handle == pvrvideosink->xwindow->window)) {
     g_mutex_unlock (pvrvideosink->flow_lock);
     return;
   }
@@ -1153,14 +1099,6 @@ gst_pvrvideosink_set_window_handle (GstXOverlay * overlay, guintptr id)
     return;
   }
 
-  /* Clear image pool as the images are unusable anyway */
-  g_mutex_lock (pvrvideosink->pool_lock);
-  if (pvrvideosink->buffer_pool) {
-    gst_pvr_bufferpool_stop_running (pvrvideosink->buffer_pool, FALSE);
-    pvrvideosink->buffer_pool = NULL;
-  }
-  g_mutex_unlock (pvrvideosink->pool_lock);
-
   /* If a window is there already we destroy it */
   if (pvrvideosink->xwindow) {
     gst_pvrvideosink_xwindow_destroy (pvrvideosink, pvrvideosink->xwindow);
@@ -1168,14 +1106,14 @@ gst_pvrvideosink_set_window_handle (GstXOverlay * overlay, guintptr id)
   }
 
   /* If the xid is 0 we will create an internal one in buffer_alloc */
-  if (xwindow_id != 0) {
+  if (window_handle != 0) {
     XWindowAttributes attr;
     WSEGLError glerror;
     WSEGLDrawableParams source_params;
     PVRSRV_CLIENT_MEM_INFO *client_mem_info;
 
     xwindow = g_new0 (GstXWindow, 1);
-    xwindow->window = xwindow_id;
+    xwindow->window = window_handle;
 
     /* Set the event we want to receive and create a GC */
     g_mutex_lock (pvrvideosink->dcontext->x_lock);
@@ -1203,9 +1141,9 @@ gst_pvrvideosink_set_window_handle (GstXOverlay * overlay, guintptr id)
     g_mutex_unlock (pvrvideosink->dcontext->x_lock);
 
     glerror =
-        pvrvideosink->dcontext->
-        wsegl_table->pfnWSEGL_CreateWindowDrawable (pvrvideosink->dcontext->
-        display_handle, pvrvideosink->dcontext->glconfig,
+        pvrvideosink->dcontext->wsegl_table->
+        pfnWSEGL_CreateWindowDrawable (pvrvideosink->dcontext->display_handle,
+        pvrvideosink->dcontext->glconfig,
         &(pvrvideosink->dcontext->drawable_handle),
         (NativeWindowType) xwindow->window,
         &(pvrvideosink->dcontext->rotation));
@@ -1215,9 +1153,9 @@ gst_pvrvideosink_set_window_handle (GstXOverlay * overlay, guintptr id)
       return;
     }
     glerror =
-        pvrvideosink->dcontext->
-        wsegl_table->pfnWSEGL_GetDrawableParameters (pvrvideosink->dcontext->
-        drawable_handle, &source_params, &pvrvideosink->render_params);
+        pvrvideosink->dcontext->wsegl_table->
+        pfnWSEGL_GetDrawableParameters (pvrvideosink->dcontext->drawable_handle,
+        &source_params, &pvrvideosink->render_params);
 
     client_mem_info =
         (PVRSRV_CLIENT_MEM_INFO *) pvrvideosink->render_params.hPrivateData;
@@ -1231,7 +1169,7 @@ gst_pvrvideosink_set_window_handle (GstXOverlay * overlay, guintptr id)
 }
 
 static void
-gst_pvrvideosink_expose (GstXOverlay * overlay)
+gst_pvrvideosink_expose (GstVideoOverlay * overlay)
 {
   GstPVRVideoSink *pvrvideosink = GST_PVRVIDEOSINK (overlay);
 
@@ -1239,7 +1177,7 @@ gst_pvrvideosink_expose (GstXOverlay * overlay)
 }
 
 static void
-gst_pvrvideosink_set_event_handling (GstXOverlay * overlay,
+gst_pvrvideosink_set_event_handling (GstVideoOverlay * overlay,
     gboolean handle_events)
 {
   GstPVRVideoSink *pvrvideosink = GST_PVRVIDEOSINK (overlay);
@@ -1262,8 +1200,8 @@ gst_pvrvideosink_set_event_handling (GstXOverlay * overlay,
 }
 
 static void
-gst_pvrvideosink_set_render_rectangle (GstXOverlay * overlay, gint x, gint y,
-    gint width, gint height)
+gst_pvrvideosink_set_render_rectangle (GstVideoOverlay * overlay, gint x,
+    gint y, gint width, gint height)
 {
   GstPVRVideoSink *pvrvideosink = GST_PVRVIDEOSINK (overlay);
 
@@ -1284,7 +1222,7 @@ gst_pvrvideosink_set_render_rectangle (GstXOverlay * overlay, gint x, gint y,
 }
 
 static void
-gst_pvrvideosink_xoverlay_init (GstXOverlayClass * iface)
+gst_pvrvideosink_videooverlay_init (GstVideoOverlayInterface * iface)
 {
   iface->set_window_handle = gst_pvrvideosink_set_window_handle;
   iface->expose = gst_pvrvideosink_expose;
@@ -1338,10 +1276,71 @@ gst_pvrvideosink_get_property (GObject * object, guint prop_id,
   }
 }
 
+void
+gst_pvrvideosink_track_buffer (GstPVRVideoSink * pvrsink, GstBuffer * buffer)
+{
+  GST_DEBUG_OBJECT (pvrsink, "Adding buffer %p to tracked buffers", buffer);
+  pvrsink->metabuffers = g_list_prepend (pvrsink->metabuffers, buffer);
+}
+
+void
+gst_pvrvideosink_untrack_buffer (GstPVRVideoSink * pvrsink, GstBuffer * buffer)
+{
+  GST_DEBUG_OBJECT (pvrsink, "Removing buffer %p from tracked buffers", buffer);
+  pvrsink->metabuffers = g_list_remove_all (pvrsink->metabuffers, buffer);
+}
+
+static void
+gst_pvrvideosink_release_pvr_metas (GstPVRVideoSink * pvrsink)
+{
+  GstBuffer *buf;
+  GstPVRMeta *pvrmeta;
+
+  GST_DEBUG_OBJECT (pvrsink, "Releasing pending PVR metas");
+
+  while (pvrsink->metabuffers) {
+    buf = (GstBuffer *) pvrsink->metabuffers->data;
+
+    pvrmeta = gst_buffer_get_pvr_meta (buf);
+    if (pvrmeta)
+      gst_buffer_remove_meta (buf, (GstMeta *) pvrmeta);
+  }
+
+  GST_DEBUG_OBJECT (pvrsink, "Done");
+}
+
+static void
+gst_pvrvideosink_dcontext_free (GstDrawContext * dcontext)
+{
+  GST_DEBUG ("Freeing dcontext %p", dcontext);
+
+  if (dcontext->p_blt_info)
+    g_free (dcontext->p_blt_info);
+
+  if (dcontext->p_blt2d_info)
+    g_free (dcontext->p_blt2d_info);
+
+  if (dcontext->x_lock)
+    g_mutex_lock (dcontext->x_lock);
+  if (dcontext->x_display) {
+    GST_LOG ("Closing display");
+    XCloseDisplay (dcontext->x_display);
+  }
+  if (dcontext->x_lock) {
+    g_mutex_unlock (dcontext->x_lock);
+    g_mutex_free (dcontext->x_lock);
+  }
+
+  g_free (dcontext);
+}
+
 static void
 gst_pvrvideosink_dcontext_clear (GstPVRVideoSink * pvrvideosink)
 {
   GstDrawContext *dcontext;
+
+  GST_DEBUG_OBJECT (pvrvideosink, "Clearing dcontext %p",
+      pvrvideosink->dcontext);
 
   GST_OBJECT_LOCK (pvrvideosink);
   if (!pvrvideosink->dcontext) {
@@ -1353,21 +1352,15 @@ gst_pvrvideosink_dcontext_clear (GstPVRVideoSink * pvrvideosink)
   pvrvideosink->dcontext = NULL;
   GST_OBJECT_UNLOCK (pvrvideosink);
 
-  if (dcontext->p_blt_info)
-    g_free (dcontext->p_blt_info);
-
-  g_mutex_lock (dcontext->x_lock);
-  XCloseDisplay (dcontext->x_display);
-  g_mutex_unlock (dcontext->x_lock);
-  g_mutex_free (dcontext->x_lock);
-
-  g_free (dcontext);
+  gst_pvrvideosink_dcontext_free (dcontext);
 }
 
 static void
 gst_pvrvideosink_reset (GstPVRVideoSink * pvrvideosink)
 {
   GThread *thread;
+
+  GST_DEBUG_OBJECT (pvrvideosink, "Resetting");
 
   GST_OBJECT_LOCK (pvrvideosink);
   pvrvideosink->running = FALSE;
@@ -1379,22 +1372,23 @@ gst_pvrvideosink_reset (GstPVRVideoSink * pvrvideosink)
     g_thread_join (thread);
 
   if (pvrvideosink->current_buffer) {
+    GST_LOG_OBJECT (pvrvideosink, "Removing cached buffer");
     gst_buffer_unref (pvrvideosink->current_buffer);
     pvrvideosink->current_buffer = NULL;
   }
 
-  g_mutex_lock (pvrvideosink->pool_lock);
-  pvrvideosink->pool_invalid = TRUE;
-  if (pvrvideosink->buffer_pool) {
-    gst_pvr_bufferpool_stop_running (pvrvideosink->buffer_pool, TRUE);
-    pvrvideosink->buffer_pool = NULL;
+  if (pvrvideosink->pool) {
+    GST_LOG_OBJECT (pvrvideosink, "Unreffing pool");
+    gst_object_unref (pvrvideosink->pool);
+    pvrvideosink->pool = NULL;
   }
-  g_mutex_unlock (pvrvideosink->pool_lock);
   memset (&pvrvideosink->render_params, 0, sizeof (WSEGLDrawableParams));
 
   pvrvideosink->render_rect.x = pvrvideosink->render_rect.y = 0;
   pvrvideosink->render_rect.w = pvrvideosink->render_rect.h = 0;
   pvrvideosink->have_render_rect = FALSE;
+
+  gst_pvrvideosink_release_pvr_metas (pvrvideosink);
 
   gst_pvrvideosink_destroy_drawable (pvrvideosink);
 
@@ -1419,10 +1413,6 @@ gst_pvrvideosink_finalize (GObject * object)
     g_mutex_free (pvrvideosink->flow_lock);
     pvrvideosink->flow_lock = NULL;
   }
-  if (pvrvideosink->pool_lock) {
-    g_mutex_free (pvrvideosink->pool_lock);
-    pvrvideosink->pool_lock = NULL;
-  }
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
@@ -1432,19 +1422,11 @@ gst_pvrvideosink_init (GstPVRVideoSink * pvrvideosink)
 {
   pvrvideosink->running = FALSE;
 
-  pvrvideosink->fps_n = 0;
-  pvrvideosink->fps_d = 1;
-
   pvrvideosink->flow_lock = g_mutex_new ();
-  pvrvideosink->pool_lock = g_mutex_new ();
-  pvrvideosink->buffer_pool = NULL;
-  pvrvideosink->pool_invalid = TRUE;
+  pvrvideosink->pool = NULL;
 
   pvrvideosink->keep_aspect = FALSE;
   pvrvideosink->current_caps = NULL;
-  pvrvideosink->num_buffers = DEFAULT_QUEUE_SIZE;
-  pvrvideosink->num_buffers_can_change = TRUE;
-  pvrvideosink->min_queued_bufs = DEFAULT_MIN_QUEUED_BUFS;
   pvrvideosink->dcontext = NULL;
   pvrvideosink->xwindow = NULL;
   pvrvideosink->redraw_borders = TRUE;
@@ -1454,29 +1436,17 @@ gst_pvrvideosink_init (GstPVRVideoSink * pvrvideosink)
 }
 
 static void
-gst_pvrvideosink_base_init (gpointer g_class)
-{
-  GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
-
-  gst_element_class_set_details_simple (element_class,
-      "PVR Video sink", "Sink/Video",
-      "A PVR videosink",
-      "Luciana Fujii Pontello <luciana.fujii@collabora.co.uk");
-
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&gst_pvrvideosink_sink_template_factory));
-}
-
-static void
 gst_pvrvideosink_class_init (GstPVRVideoSinkClass * klass)
 {
   GObjectClass *gobject_class;
   GstElementClass *gstelement_class;
   GstBaseSinkClass *gstbasesink_class;
+  GstVideoSinkClass *videosink_class;
 
   gobject_class = (GObjectClass *) klass;
   gstelement_class = (GstElementClass *) klass;
   gstbasesink_class = (GstBaseSinkClass *) klass;
+  videosink_class = (GstVideoSinkClass *) klass;
 
   parent_class = g_type_class_peek_parent (klass);
 
@@ -1490,59 +1460,21 @@ gst_pvrvideosink_class_init (GstPVRVideoSinkClass * klass)
           "original aspect ratio", FALSE,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
+  gst_element_class_set_details_simple (gstelement_class,
+      "PVR Video sink", "Sink/Video",
+      "A PVR videosink",
+      "Luciana Fujii Pontello <luciana.fujii@collabora.co.uk");
+
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&gst_pvrvideosink_sink_template_factory));
+
   gstelement_class->change_state = gst_pvrvideosink_change_state;
 
   gstbasesink_class->set_caps = GST_DEBUG_FUNCPTR (gst_pvrvideosink_setcaps);
   gstbasesink_class->get_caps = GST_DEBUG_FUNCPTR (gst_pvrvideosink_getcaps);
-  gstbasesink_class->buffer_alloc =
-      GST_DEBUG_FUNCPTR (gst_pvrvideosink_buffer_alloc);
+  gstbasesink_class->propose_allocation =
+      GST_DEBUG_FUNCPTR (gst_pvrvideosink_propose_allocation);
   gstbasesink_class->get_times = GST_DEBUG_FUNCPTR (gst_pvrvideosink_get_times);
 
-  gstbasesink_class->render = GST_DEBUG_FUNCPTR (gst_pvrvideosink_show_frame);
-}
-
-/* ============================================================= */
-/*                                                               */
-/*                       Public Methods                          */
-/*                                                               */
-/* ============================================================= */
-
-/* =========================================== */
-/*                                             */
-/*          Object typing & Creation           */
-/*                                             */
-/* =========================================== */
-
-GType
-gst_pvrvideosink_get_type (void)
-{
-  static GType pvrvideosink_type = 0;
-
-  if (!pvrvideosink_type) {
-    static const GTypeInfo pvrvideosink_info = {
-      sizeof (GstPVRVideoSinkClass),
-      gst_pvrvideosink_base_init,
-      NULL,
-      (GClassInitFunc) gst_pvrvideosink_class_init,
-      NULL,
-      NULL,
-      sizeof (GstPVRVideoSink), 0, (GInstanceInitFunc) gst_pvrvideosink_init,
-    };
-    static const GInterfaceInfo iface_info = {
-      (GInterfaceInitFunc) gst_pvrvideosink_interface_init, NULL, NULL,
-    };
-    static const GInterfaceInfo overlay_info = {
-      (GInterfaceInitFunc) gst_pvrvideosink_xoverlay_init, NULL, NULL,
-    };
-
-    pvrvideosink_type = g_type_register_static (GST_TYPE_VIDEO_SINK,
-        "GstPVRVideoSink", &pvrvideosink_info, 0);
-
-    g_type_add_interface_static (pvrvideosink_type,
-        GST_TYPE_IMPLEMENTS_INTERFACE, &iface_info);
-    g_type_add_interface_static (pvrvideosink_type, GST_TYPE_X_OVERLAY,
-        &overlay_info);
-  }
-
-  return pvrvideosink_type;
+  videosink_class->show_frame = GST_DEBUG_FUNCPTR (gst_pvrvideosink_show_frame);
 }

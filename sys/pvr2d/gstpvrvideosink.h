@@ -25,7 +25,6 @@
 
 #include <gst/video/gstvideosink.h>
 #include <gst/video/video.h>
-#include "gstpvrbufferpool.h"
 
 #include <string.h>
 #include <math.h>
@@ -98,7 +97,6 @@ struct _GstXWindow
  * @fps_d: the framerate fraction denominator
  * @flow_lock: used to protect data flow routines from external calls such as
  * events from @event_thread or methods from the #GstXOverlay interface
- * @pool_lock: used to protect the buffer pool
  * @x_lock: used to protect X calls
  * @buffer_pool: a list of #GstPVRVideoBuffer that could be reused at next buffer
  * allocation call
@@ -115,20 +113,12 @@ struct _GstPVRVideoSink
   gboolean running;
 
   /* Framerate numerator and denominator */
-  GstVideoFormat format;
-  gint fps_n;
-  gint fps_d;
-  gint rowstride;
+  GstVideoInfo info;
 
   GThread *event_thread;
   GMutex *flow_lock;
 
-  GMutex *pool_lock;
-  GstPvrBufferPool *buffer_pool;
-  gboolean pool_invalid;
-  gint num_buffers;
-  gboolean num_buffers_can_change;
-  gint min_queued_bufs;
+  GstBufferPool *pool;
 
   gboolean keep_aspect;
 
@@ -143,6 +133,9 @@ struct _GstPVRVideoSink
   gboolean redraw_borders;
   GstBuffer *current_buffer;
 
+  /* List of buffer using GstPVRMeta on ourselves */
+  GList *metabuffers;
+
   WSEGLDrawableParams render_params;
 };
 
@@ -152,6 +145,9 @@ struct _GstPVRVideoSinkClass
 };
 
 GType gst_pvrvideosink_get_type (void);
+
+void gst_pvrvideosink_track_buffer (GstPVRVideoSink * pvrsink, GstBuffer * buffer);
+void gst_pvrvideosink_untrack_buffer (GstPVRVideoSink * pvrsink, GstBuffer * buffer);
 
 G_END_DECLS
 #endif /* __GST_PVRVIDEOSINK_H__ */

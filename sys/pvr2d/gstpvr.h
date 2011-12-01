@@ -26,6 +26,8 @@
 #include <tiler.h>
 #include <tilermem.h>
 #include <memmgr.h>
+#include "pvr2d.h"
+
 
 #include <gst/gst.h>
 
@@ -36,6 +38,8 @@ G_BEGIN_DECLS
 
 void * gst_ducati_alloc_1d (gint sz);
 void * gst_ducati_alloc_2d (gint width, gint height, guint * sz);
+
+const gchar * gst_pvr2d_error_get_string (PVR2DERROR code);
 
 G_END_DECLS
 

@@ -69,6 +69,34 @@ gst_ducati_alloc_2d (gint width, gint height, guint * sz)
   return MemMgr_Alloc (block, 2);
 }
 
+static struct
+{
+  PVR2DERROR code;
+  const gchar *errstring;
+} pvr2derrorcodestring[] = {
+  {
+  PVR2D_OK, "OK (0)"}, {
+  PVR2DERROR_INVALID_PARAMETER, "Invalid Parameter (-1)"}, {
+  PVR2DERROR_DEVICE_UNAVAILABLE, "Device Unavailable (-2)"}, {
+  PVR2DERROR_INVALID_CONTEXT, "Invalid Context (-3)"}, {
+  PVR2DERROR_MEMORY_UNAVAILABLE, "Memory Unavailable (-4)"}, {
+  PVR2DERROR_DEVICE_NOT_PRESENT, "Device not present (-5)"}, {
+  PVR2DERROR_IOCTL_ERROR, "ioctl Error (-6)"}, {
+  PVR2DERROR_GENERIC_ERROR, "Generic Error (-7)"}, {
+  PVR2DERROR_BLT_NOTCOMPLETE, "blt not complete (-8)"}, {
+  PVR2DERROR_HW_FEATURE_NOT_SUPPORTED, "Hardware feature not supported (-9)"}, {
+  PVR2DERROR_NOT_YET_IMPLEMENTED, "Not yet implemented (-10)"}, {
+  PVR2DERROR_MAPPING_FAILED, "Mapping failed (-11)"}
+};
+
+const gchar *
+gst_pvr2d_error_get_string (PVR2DERROR code)
+{
+  if (code <= PVR2D_OK && code >= PVR2DERROR_MAPPING_FAILED)
+    return pvr2derrorcodestring[PVR2D_OK - code].errstring;
+  return "Uknown Error";
+}
+
 /* PACKAGE: this is usually set by autotools depending on some _INIT macro
  * in configure.ac and then written into and defined in config.h, but we can
  * just set it ourselves here in case someone doesn't use autotools to
