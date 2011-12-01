@@ -207,7 +207,7 @@ ges_timeline_layer_init (GESTimelineLayer * self)
   self->priv->priority = 0;
   self->priv->auto_transition = FALSE;
   self->min_gnl_priority = 0;
-  self->max_gnl_priority = 9;
+  self->max_gnl_priority = LAYER_HEIGHT;
 }
 
 /**
@@ -249,20 +249,6 @@ objects_start_compare (GESTimelineObject * a, GESTimelineObject * b)
   return 0;
 }
 
-/**
- * ges_timeline_layer_add_object:
- * @layer: a #GESTimelineLayer
- * @object: (transfer full): the #GESTimelineObject to add.
- *
- * Adds the given object to the layer. Sets the object's parent, and thus
- * takes ownership of the object.
- *
- * An object can only be added to one layer.
- *
- * Returns: TRUE if the object was properly added to the layer, or FALSE
- * if the @layer refuses to add the object.
- */
-
 static GList *
 track_get_by_layer (GESTimelineLayer * layer, GESTrack * track)
 {
@@ -285,6 +271,19 @@ track_get_by_layer (GESTimelineLayer * layer, GESTrack * track)
   return return_list;
 }
 
+/**
+ * ges_timeline_layer_add_object:
+ * @layer: a #GESTimelineLayer
+ * @object: (transfer full): the #GESTimelineObject to add.
+ *
+ * Adds the given object to the layer. Sets the object's parent, and thus
+ * takes ownership of the object.
+ *
+ * An object can only be added to one layer.
+ *
+ * Returns: TRUE if the object was properly added to the layer, or FALSE
+ * if the @layer refuses to add the object.
+ */
 gboolean
 ges_timeline_layer_add_object (GESTimelineLayer * layer,
     GESTimelineObject * object)
