@@ -728,7 +728,7 @@ gst_omx_video_dec_loop (GstOMXVideoDec * self)
         "Frame is too late, dropping (deadline %" GST_TIME_FORMAT ")",
         GST_TIME_ARGS (-deadline));
     flow_ret =
-        gst_base_video_decoder_finish_frame (GST_BASE_VIDEO_DECODER (self),
+        gst_base_video_decoder_drop_frame (GST_BASE_VIDEO_DECODER (self),
         frame);
   } else if (!frame && buf->omx_buf->nFilledLen > 0) {
     GstBuffer *outbuf;
