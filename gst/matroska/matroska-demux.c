@@ -2757,9 +2757,9 @@ gst_matroska_demux_add_wvpk_header (GstElement * element,
     *buf = newbuf;
     audiocontext->wvpk_block_index += block_samples;
   } else {
-    guint8 *outdata;
+    guint8 *outdata = NULL;
     guint outpos = 0;
-    gsize buf_size, size, out_size;
+    gsize buf_size, size, out_size = 0;
     guint32 block_samples, flags, crc, blocksize;
 
     buf_data = gst_buffer_map (*buf, &buf_size, NULL, GST_MAP_READ);
@@ -2790,6 +2790,8 @@ gst_matroska_demux_add_wvpk_header (GstElement * element,
 
       if (blocksize == 0 || size < blocksize)
         break;
+
+      g_assert ((newbuf == NULL) == (outdata == NULL));
 
       if (newbuf == NULL) {
         out_size = sizeof (Wavpack4Header) + blocksize;
