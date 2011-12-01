@@ -47,6 +47,9 @@ Makefile
 /gst-libs/gst/tag/mklangtables
 /gst-libs/gst/tag/mklicensestables
 
+/gst-libs/gst/audio/audio-marshal.[ch]
+/gst-libs/gst/video/video-marshal.[ch]
+
 tmp-orc.c
 gst*orc.h
 tests/check/orc
