@@ -323,12 +323,14 @@ gst_buffer_copy_into (GstBuffer * dest, GstBuffer * src,
     }
   }
 
-  for (walk = GST_BUFFER_META (src); walk; walk = walk->next) {
-    GstMeta *meta = &walk->meta;
-    const GstMetaInfo *info = meta->info;
+  if (flags & GST_BUFFER_COPY_META) {
+    for (walk = GST_BUFFER_META (src); walk; walk = walk->next) {
+      GstMeta *meta = &walk->meta;
+      const GstMetaInfo *info = meta->info;
 
-    if (info->copy_func)
-      info->copy_func (dest, meta, src, offset, size);
+      if (info->copy_func)
+        info->copy_func (dest, meta, src, offset, size);
+    }
   }
 }
 

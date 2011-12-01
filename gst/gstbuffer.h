@@ -393,6 +393,8 @@ gst_buffer_copy (const GstBuffer * buf)
  * and appended to already existing memory
  * @GST_BUFFER_COPY_MERGE: flag indicating that buffer memory should be
  * merged
+ * @GST_BUFFER_COPY_META: flag indicating that buffer meta should be
+ * copied
  *
  * A set of flags that can be provided to the gst_buffer_copy_into()
  * function to specify which items should be copied.
@@ -401,8 +403,9 @@ typedef enum {
   GST_BUFFER_COPY_NONE           = 0,
   GST_BUFFER_COPY_FLAGS          = (1 << 0),
   GST_BUFFER_COPY_TIMESTAMPS     = (1 << 1),
-  GST_BUFFER_COPY_MEMORY         = (1 << 2),
-  GST_BUFFER_COPY_MERGE          = (1 << 3)
+  GST_BUFFER_COPY_META           = (1 << 2),
+  GST_BUFFER_COPY_MEMORY         = (1 << 3),
+  GST_BUFFER_COPY_MERGE          = (1 << 4)
 } GstBufferCopyFlags;
 
 /**
@@ -411,7 +414,8 @@ typedef enum {
  * Combination of all possible metadata fields that can be copied with
  * gst_buffer_copy_into().
  */
-#define GST_BUFFER_COPY_METADATA       (GST_BUFFER_COPY_FLAGS | GST_BUFFER_COPY_TIMESTAMPS)
+#define GST_BUFFER_COPY_METADATA       (GST_BUFFER_COPY_FLAGS | GST_BUFFER_COPY_TIMESTAMPS |\
+                                        GST_BUFFER_COPY_META)
 
 /**
  * GST_BUFFER_COPY_ALL:
