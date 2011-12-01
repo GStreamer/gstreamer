@@ -174,7 +174,7 @@ gst_sample_get_caps (GstSample * sample)
  * Returns: (transfer none): the segment of @sample.
  *  The segment remains valid as long as @sample is valid.
  */
-const GstSegment *
+GstSegment *
 gst_sample_get_segment (GstSample * sample)
 {
   g_return_val_if_fail (GST_IS_SAMPLE (sample), NULL);

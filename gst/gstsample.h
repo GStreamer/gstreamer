@@ -63,7 +63,7 @@ GstSample *          gst_sample_new           (GstBuffer          *buffer,
 
 GstBuffer *          gst_sample_get_buffer    (GstSample *sample);
 GstCaps *            gst_sample_get_caps      (GstSample *sample);
-const GstSegment *   gst_sample_get_segment   (GstSample *sample);
+GstSegment *         gst_sample_get_segment   (GstSample *sample);
 const GstStructure * gst_sample_get_info      (GstSample *sample);
 
 /* refcounting */
