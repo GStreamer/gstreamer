@@ -318,7 +318,7 @@ gst_audio_base_sink_init (GstAudioBaseSink * audiobasesink)
   basesink->can_activate_push = TRUE;
   basesink->can_activate_pull = DEFAULT_CAN_ACTIVATE_PULL;
 
-  gst_base_sink_set_last_buffer_enabled (basesink, FALSE);
+  gst_base_sink_set_last_sample_enabled (basesink, FALSE);
   if (DEFAULT_PROVIDE_CLOCK)
     GST_OBJECT_FLAG_SET (basesink, GST_ELEMENT_FLAG_PROVIDE_CLOCK);
   else

@@ -44,7 +44,7 @@
  * meta info (tag) extraction
  * </listitem>
  * <listitem>
- * easy access to the last video frame
+ * easy access to the last video sample
  * </listitem>
  * <listitem>
  * buffering when playing streams over a network
@@ -436,8 +436,8 @@ struct _GstPlayBinClass
   GstTagList *(*get_audio_tags) (GstPlayBin * playbin, gint stream);
   GstTagList *(*get_text_tags) (GstPlayBin * playbin, gint stream);
 
-  /* get the last video frame and convert it to the given caps */
-  GstBuffer *(*convert_frame) (GstPlayBin * playbin, GstCaps * caps);
+  /* get the last video sample and convert it to the given caps */
+  GstSample *(*convert_sample) (GstPlayBin * playbin, GstCaps * caps);
 
   /* get audio/video/text pad for a stream */
   GstPad *(*get_video_pad) (GstPlayBin * playbin, gint stream);
@@ -491,7 +491,7 @@ enum
   PROP_TEXT_SINK,
   PROP_VOLUME,
   PROP_MUTE,
-  PROP_FRAME,
+  PROP_SAMPLE,
   PROP_FONT_DESC,
   PROP_CONNECTION_SPEED,
   PROP_BUFFER_SIZE,
@@ -505,7 +505,7 @@ enum
 enum
 {
   SIGNAL_ABOUT_TO_FINISH,
-  SIGNAL_CONVERT_FRAME,
+  SIGNAL_CONVERT_SAMPLE,
   SIGNAL_VIDEO_CHANGED,
   SIGNAL_AUDIO_CHANGED,
   SIGNAL_TEXT_CHANGED,
@@ -544,7 +544,7 @@ static GstTagList *gst_play_bin_get_audio_tags (GstPlayBin * playbin,
 static GstTagList *gst_play_bin_get_text_tags (GstPlayBin * playbin,
     gint stream);
 
-static GstBuffer *gst_play_bin_convert_frame (GstPlayBin * playbin,
+static GstSample *gst_play_bin_convert_sample (GstPlayBin * playbin,
     GstCaps * caps);
 
 static GstPad *gst_play_bin_get_video_pad (GstPlayBin * playbin, gint stream);
@@ -756,16 +756,17 @@ gst_play_bin_class_init (GstPlayBinClass * klass)
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   /**
-   * GstPlayBin:frame:
+   * GstPlayBin:sample:
    * @playbin: a #GstPlayBin
    *
-   * Get the currently rendered or prerolled frame in the video sink.
-   * The #GstCaps on the buffer will describe the format of the buffer.
+   * Get the currently rendered or prerolled sample in the video sink.
+   * The #GstCaps in the sample will describe the format of the buffer.
    */
-  g_object_class_install_property (gobject_klass, PROP_FRAME,
-      g_param_spec_boxed ("frame", "Frame",
-          "The last frame (NULL = no video available)",
-          GST_TYPE_BUFFER, G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
+  g_object_class_install_property (gobject_klass, PROP_SAMPLE,
+      g_param_spec_boxed ("sample", "Sample",
+          "The last sample (NULL = no video available)",
+          GST_TYPE_SAMPLE, G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
+
   g_object_class_install_property (gobject_klass, PROP_FONT_DESC,
       g_param_spec_string ("subtitle-font-desc",
           "Subtitle font description",
@@ -1019,7 +1020,7 @@ gst_play_bin_class_init (GstPlayBinClass * klass)
       G_STRUCT_OFFSET (GstPlayBinClass, get_text_tags), NULL, NULL,
       gst_play_marshal_BOXED__INT, GST_TYPE_TAG_LIST, 1, G_TYPE_INT);
   /**
-   * GstPlayBin::convert-frame
+   * GstPlayBin::convert-sample
    * @playbin: a #GstPlayBin
    * @caps: the target format of the frame
    *
@@ -1033,11 +1034,11 @@ gst_play_bin_class_init (GstPlayBinClass * klass)
    * %NULL is returned when no current buffer can be retrieved or when the
    * conversion failed.
    */
-  gst_play_bin_signals[SIGNAL_CONVERT_FRAME] =
-      g_signal_new ("convert-frame", G_TYPE_FROM_CLASS (klass),
+  gst_play_bin_signals[SIGNAL_CONVERT_SAMPLE] =
+      g_signal_new ("convert-sample", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST | G_SIGNAL_ACTION,
-      G_STRUCT_OFFSET (GstPlayBinClass, convert_frame), NULL, NULL,
-      gst_play_marshal_BUFFER__BOXED, GST_TYPE_BUFFER, 1, GST_TYPE_CAPS);
+      G_STRUCT_OFFSET (GstPlayBinClass, convert_sample), NULL, NULL,
+      gst_play_marshal_SAMPLE__BOXED, GST_TYPE_SAMPLE, 1, GST_TYPE_CAPS);
 
   /**
    * GstPlayBin::get-video-pad
@@ -1095,7 +1096,7 @@ gst_play_bin_class_init (GstPlayBinClass * klass)
   klass->get_audio_tags = gst_play_bin_get_audio_tags;
   klass->get_text_tags = gst_play_bin_get_text_tags;
 
-  klass->convert_frame = gst_play_bin_convert_frame;
+  klass->convert_sample = gst_play_bin_convert_sample;
 
   klass->get_video_pad = gst_play_bin_get_video_pad;
   klass->get_audio_pad = gst_play_bin_get_audio_pad;
@@ -1524,10 +1525,10 @@ gst_play_bin_get_text_tags (GstPlayBin * playbin, gint stream)
   return result;
 }
 
-static GstBuffer *
-gst_play_bin_convert_frame (GstPlayBin * playbin, GstCaps * caps)
+static GstSample *
+gst_play_bin_convert_sample (GstPlayBin * playbin, GstCaps * caps)
 {
-  return gst_play_sink_convert_frame (playbin->playsink, caps);
+  return gst_play_sink_convert_sample (playbin->playsink, caps);
 }
 
 /* Returns current stream number, or -1 if none has been selected yet */
@@ -2104,9 +2105,9 @@ gst_play_bin_get_property (GObject * object, guint prop_id, GValue * value,
     case PROP_MUTE:
       g_value_set_boolean (value, gst_play_sink_get_mute (playbin->playsink));
       break;
-    case PROP_FRAME:
-      gst_value_take_buffer (value,
-          gst_play_sink_get_last_frame (playbin->playsink));
+    case PROP_SAMPLE:
+      gst_value_take_sample (value,
+          gst_play_sink_get_last_sample (playbin->playsink));
       break;
     case PROP_FONT_DESC:
       g_value_take_string (value,

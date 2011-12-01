@@ -1143,26 +1143,24 @@ volume_notify_cb (GstElement * pipeline, GParamSpec * arg, gpointer user_dat)
 static void
 shot_cb (GtkButton * button, gpointer data)
 {
-  GstBuffer *buffer;
+  GstSample *sample = NULL;
   GstCaps *caps;
 
+  GST_DEBUG ("taking snapshot");
+
   /* convert to our desired format (RGB24) */
-  caps = gst_caps_new_simple ("video/x-raw-rgb",
-      "bpp", G_TYPE_INT, 24, "depth", G_TYPE_INT, 24,
+  caps = gst_caps_new_simple ("video/x-raw", "format", G_TYPE_STRING, "RGB",
       /* Note: we don't ask for a specific width/height here, so that
        * videoscale can adjust dimensions from a non-1/1 pixel aspect
        * ratio to a 1/1 pixel-aspect-ratio */
-      "pixel-aspect-ratio", GST_TYPE_FRACTION, 1, 1,
-      "endianness", G_TYPE_INT, G_BIG_ENDIAN,
-      "red_mask", G_TYPE_INT, 0xff0000,
-      "green_mask", G_TYPE_INT, 0x00ff00,
-      "blue_mask", G_TYPE_INT, 0x0000ff, NULL);
+      "pixel-aspect-ratio", GST_TYPE_FRACTION, 1, 1, NULL);
 
-  /* convert the latest frame to the requested format */
-  g_signal_emit_by_name (pipeline, "convert-frame", caps, &buffer);
+  /* convert the latest sample to the requested format */
+  g_signal_emit_by_name (pipeline, "convert-sample", caps, &sample);
   gst_caps_unref (caps);
 
-  if (buffer) {
+  if (sample) {
+    GstBuffer *buffer;
     GstCaps *caps;
     GstStructure *s;
     gboolean res;
@@ -1176,11 +1174,7 @@ shot_cb (GtkButton * button, gpointer data)
      * that it can only be an rgb buffer. The only thing we have not specified
      * on the caps is the height, which is dependant on the pixel-aspect-ratio
      * of the source material */
-#if 0
-    caps = GST_BUFFER_CAPS (buffer);
-#endif
-    /* FIXME, need to get the caps of the buffer somehow */
-    caps = NULL;
+    caps = gst_sample_get_caps (sample);
     if (!caps) {
       g_warning ("could not get snapshot format\n");
       goto done;
@@ -1197,6 +1191,7 @@ shot_cb (GtkButton * button, gpointer data)
 
     /* create pixmap from buffer and save, gstreamer video buffers have a stride
      * that is rounded up to the nearest multiple of 4 */
+    buffer = gst_sample_get_buffer (sample);
     data = gst_buffer_map (buffer, &size, NULL, GST_MAP_READ);
     pixbuf = gdk_pixbuf_new_from_data (data,
         GDK_COLORSPACE_RGB, FALSE, 8, width, height,
@@ -1207,7 +1202,7 @@ shot_cb (GtkButton * button, gpointer data)
     gst_buffer_unmap (buffer, data, size);
 
   done:
-    gst_buffer_unref (buffer);
+    gst_sample_unref (sample);
   }
 }
 

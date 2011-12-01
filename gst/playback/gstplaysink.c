@@ -210,7 +210,7 @@ struct _GstPlaySinkClass
 
     gboolean (*reconfigure) (GstPlaySink * playsink);
 
-  GstBuffer *(*convert_frame) (GstPlaySink * playsink, GstCaps * caps);
+  GstSample *(*convert_sample) (GstPlaySink * playsink, GstCaps * caps);
 };
 
 
@@ -252,7 +252,7 @@ enum
   PROP_FONT_DESC,
   PROP_SUBTITLE_ENCODING,
   PROP_VIS_PLUGIN,
-  PROP_FRAME,
+  PROP_SAMPLE,
   PROP_AV_OFFSET,
   PROP_VIDEO_SINK,
   PROP_AUDIO_SINK,
@@ -292,18 +292,18 @@ static void notify_mute_cb (GObject * object, GParamSpec * pspec,
 static void update_av_offset (GstPlaySink * playsink);
 
 void
-gst_play_marshal_BUFFER__BOXED (GClosure * closure,
+gst_play_marshal_SAMPLE__BOXED (GClosure * closure,
     GValue * return_value G_GNUC_UNUSED,
     guint n_param_values,
     const GValue * param_values,
     gpointer invocation_hint G_GNUC_UNUSED, gpointer marshal_data)
 {
-  typedef GstBuffer *(*GMarshalFunc_OBJECT__BOXED) (gpointer data1,
+  typedef GstSample *(*GMarshalFunc_OBJECT__BOXED) (gpointer data1,
       gpointer arg_1, gpointer data2);
   register GMarshalFunc_OBJECT__BOXED callback;
   register GCClosure *cc = (GCClosure *) closure;
   register gpointer data1, data2;
-  GstBuffer *v_return;
+  GstSample *v_return;
   g_return_if_fail (return_value != NULL);
   g_return_if_fail (n_param_values == 2);
 
@@ -319,7 +319,7 @@ gst_play_marshal_BUFFER__BOXED (GClosure * closure,
 
   v_return = callback (data1, g_value_get_boxed (param_values + 1), data2);
 
-  gst_value_take_buffer (return_value, v_return);
+  gst_value_take_sample (return_value, v_return);
 }
 
 /* static guint gst_play_sink_signals[LAST_SIGNAL] = { 0 }; */
@@ -386,17 +386,15 @@ gst_play_sink_class_init (GstPlaySinkClass * klass)
           "the visualization element to use (NULL = default)",
           GST_TYPE_ELEMENT, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   /**
-   * GstPlaySink:frame:
+   * GstPlaySink:sample:
    *
-   * Get the currently rendered or prerolled frame in the video sink.
-   * The #GstCaps on the buffer will describe the format of the buffer.
-   *
-   * Since: 0.10.30
+   * Get the currently rendered or prerolled sample in the video sink.
+   * The #GstCaps in the sample will describe the format of the buffer.
    */
-  g_object_class_install_property (gobject_klass, PROP_FRAME,
-      g_param_spec_boxed ("frame", "Frame",
-          "The last frame (NULL = no video available)",
-          GST_TYPE_BUFFER, G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
+  g_object_class_install_property (gobject_klass, PROP_SAMPLE,
+      g_param_spec_boxed ("sample", "Sample",
+          "The last sample (NULL = no video available)",
+          GST_TYPE_SAMPLE, G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
   /**
    * GstPlaySink:av-offset:
    *
@@ -455,26 +453,24 @@ gst_play_sink_class_init (GstPlaySinkClass * klass)
           reconfigure), NULL, NULL, gst_marshal_BOOLEAN__VOID, G_TYPE_BOOLEAN,
       0, G_TYPE_NONE);
   /**
-   * GstPlaySink::convert-frame
+   * GstPlaySink::convert-sample
    * @playsink: a #GstPlaySink
-   * @caps: the target format of the frame
+   * @caps: the target format of the sample
    *
-   * Action signal to retrieve the currently playing video frame in the format
+   * Action signal to retrieve the currently playing video sample in the format
    * specified by @caps.
    * If @caps is %NULL, no conversion will be performed and this function is
-   * equivalent to the #GstPlaySink::frame property.
+   * equivalent to the #GstPlaySink::sample property.
    *
-   * Returns: a #GstBuffer of the current video frame converted to #caps.
-   * The caps on the buffer will describe the final layout of the buffer data.
-   * %NULL is returned when no current buffer can be retrieved or when the
+   * Returns: a #GstSample of the current video sample converted to #caps.
+   * The caps in the sample will describe the final layout of the buffer data.
+   * %NULL is returned when no current sample can be retrieved or when the
    * conversion failed.
-   *
-   * Since: 0.10.30
    */
-  g_signal_new ("convert-frame", G_TYPE_FROM_CLASS (klass),
+  g_signal_new ("convert-sample", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST | G_SIGNAL_ACTION,
-      G_STRUCT_OFFSET (GstPlaySinkClass, convert_frame), NULL, NULL,
-      gst_play_marshal_BUFFER__BOXED, GST_TYPE_BUFFER, 1, GST_TYPE_CAPS);
+      G_STRUCT_OFFSET (GstPlaySinkClass, convert_sample), NULL, NULL,
+      gst_play_marshal_SAMPLE__BOXED, GST_TYPE_SAMPLE, 1, GST_TYPE_CAPS);
 
   gst_element_class_add_pad_template (gstelement_klass,
       gst_static_pad_template_get (&audiorawtemplate));
@@ -503,7 +499,7 @@ gst_play_sink_class_init (GstPlaySinkClass * klass)
       GST_DEBUG_FUNCPTR (gst_play_sink_handle_message);
 
   klass->reconfigure = GST_DEBUG_FUNCPTR (gst_play_sink_reconfigure);
-  klass->convert_frame = GST_DEBUG_FUNCPTR (gst_play_sink_convert_frame);
+  klass->convert_sample = GST_DEBUG_FUNCPTR (gst_play_sink_convert_sample);
 }
 
 static void
@@ -2797,24 +2793,24 @@ gst_play_sink_get_av_offset (GstPlaySink * playsink)
 }
 
 /**
- * gst_play_sink_get_last_frame:
+ * gst_play_sink_get_last_sample:
  * @playsink: a #GstPlaySink
  *
- * Get the last displayed frame from @playsink. This frame is in the native
- * format of the sink element, the caps on the result buffer contain the format
+ * Get the last displayed sample from @playsink. This sample is in the native
+ * format of the sink element, the caps in the result sample contain the format
  * of the frame data.
  *
- * Returns: a #GstBuffer with the frame data or %NULL when no video frame is
+ * Returns: a #GstSample with the frame data or %NULL when no video frame is
  * available.
  */
-GstBuffer *
-gst_play_sink_get_last_frame (GstPlaySink * playsink)
+GstSample *
+gst_play_sink_get_last_sample (GstPlaySink * playsink)
 {
-  GstBuffer *result = NULL;
+  GstSample *result = NULL;
   GstPlayVideoChain *chain;
 
   GST_PLAY_SINK_LOCK (playsink);
-  GST_DEBUG_OBJECT (playsink, "taking last frame");
+  GST_DEBUG_OBJECT (playsink, "taking last sample");
   /* get the video chain if we can */
   if ((chain = (GstPlayVideoChain *) playsink->videochain)) {
     GST_DEBUG_OBJECT (playsink, "found video chain");
@@ -2827,9 +2823,9 @@ gst_play_sink_get_last_frame (GstPlaySink * playsink)
       /* find and get the last-buffer property now */
       if ((elem =
               gst_play_sink_find_property (playsink, chain->sink,
-                  "last-buffer", GST_TYPE_BUFFER))) {
-        GST_DEBUG_OBJECT (playsink, "getting last-buffer property");
-        g_object_get (elem, "last-buffer", &result, NULL);
+                  "last-sample", GST_TYPE_SAMPLE))) {
+        GST_DEBUG_OBJECT (playsink, "getting last-sample property");
+        g_object_get (elem, "last-sample", &result, NULL);
         gst_object_unref (elem);
       }
     }
@@ -2840,7 +2836,7 @@ gst_play_sink_get_last_frame (GstPlaySink * playsink)
 }
 
 /**
- * gst_play_sink_convert_frame:
+ * gst_play_sink_convert_sample:
  * @playsink: a #GstPlaySink
  * @caps: a #GstCaps
  *
@@ -2852,28 +2848,36 @@ gst_play_sink_get_last_frame (GstPlaySink * playsink)
  * Returns: a #GstBuffer with the frame data or %NULL when no video frame is
  * available or when the conversion failed.
  */
-GstBuffer *
-gst_play_sink_convert_frame (GstPlaySink * playsink, GstCaps * caps)
+GstSample *
+gst_play_sink_convert_sample (GstPlaySink * playsink, GstCaps * caps)
 {
-  GstBuffer *result;
+  GstSample *result;
+  GError *err = NULL;
 
-  result = gst_play_sink_get_last_frame (playsink);
+  result = gst_play_sink_get_last_sample (playsink);
   if (result != NULL && caps != NULL) {
-    GstBuffer *temp;
-    GError *err = NULL;
+    GstSample *temp;
 
-    /* FIXME, need to get the input buffer caps */
-    temp = gst_video_convert_frame (result, NULL, caps, 25 * GST_SECOND, &err);
-    gst_buffer_unref (result);
-    if (temp == NULL && err) {
-      /* I'm really uncertain whether we should make playsink post an error
-       * on the bus or not. It's not like it's a critical issue regarding
-       * playsink behaviour. */
-      GST_ERROR ("Error converting frame: %s", err->message);
-    }
+    temp = gst_video_convert_sample (result, caps, 25 * GST_SECOND, &err);
+    if (temp == NULL && err)
+      goto error;
+
+    gst_sample_unref (result);
     result = temp;
   }
   return result;
+
+  /* ERRORS */
+error:
+  {
+    /* I'm really uncertain whether we should make playsink post an error
+     * on the bus or not. It's not like it's a critical issue regarding
+     * playsink behaviour. */
+    GST_ERROR ("Error converting frame: %s", err->message);
+    gst_sample_unref (result);
+    g_error_free (err);
+    return NULL;
+  }
 }
 
 static gboolean
@@ -3700,8 +3704,8 @@ gst_play_sink_get_property (GObject * object, guint prop_id,
     case PROP_VIS_PLUGIN:
       g_value_take_object (value, gst_play_sink_get_vis_plugin (playsink));
       break;
-    case PROP_FRAME:
-      gst_value_take_buffer (value, gst_play_sink_get_last_frame (playsink));
+    case PROP_SAMPLE:
+      gst_value_take_sample (value, gst_play_sink_get_last_sample (playsink));
       break;
     case PROP_AV_OFFSET:
       g_value_set_int64 (value, gst_play_sink_get_av_offset (playsink));

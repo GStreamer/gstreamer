@@ -144,13 +144,15 @@ build_convert_frame_pipeline (GstElement ** src_element,
     goto link_failed;
 
   GST_DEBUG ("linking csp->vscale");
-  if (!gst_element_link_pads (csp, "src", vscale, "sink"))
+  if (!gst_element_link_pads_full (csp, "src", vscale, "sink",
+          GST_PAD_LINK_CHECK_NOTHING))
     goto link_failed;
 
   if (caps_are_raw (to_caps)) {
     GST_DEBUG ("linking vscale->sink");
 
-    if (!gst_element_link_pads (vscale, "src", sink, "sink"))
+    if (!gst_element_link_pads_full (vscale, "src", sink, "sink",
+            GST_PAD_LINK_CHECK_NOTHING))
       goto link_failed;
   } else {
     encoder = get_encoder (to_caps, &error);
@@ -230,9 +232,8 @@ link_failed:
 }
 
 /**
- * gst_video_convert_frame:
- * @buf: a #GstBuffer
- * @from_caps: the #GstCaps to convert from
+ * gst_video_convert_sample:
+ * @sample: a #GstSample
  * @to_caps: the #GstCaps to convert to
  * @timeout: the maximum amount of time allowed for the processing.
  * @error: pointer to a #GError. Can be %NULL.
@@ -243,28 +244,35 @@ link_failed:
  *
  * The width, height and pixel-aspect-ratio can also be specified in the output caps.
  *
- * Returns: The converted #GstBuffer, or %NULL if an error happened (in which case @err
+ * Returns: The converted #GstSample, or %NULL if an error happened (in which case @err
  * will point to the #GError).
  *
  * Since: 0.10.31
  *
  */
-GstBuffer *
-gst_video_convert_frame (GstBuffer * buf, GstCaps * from_caps,
-    const GstCaps * to_caps, GstClockTime timeout, GError ** error)
+GstSample *
+gst_video_convert_sample (GstSample * sample, const GstCaps * to_caps,
+    GstClockTime timeout, GError ** error)
 {
   GstMessage *msg;
-  GstBuffer *result = NULL;
+  GstBuffer *buf;
+  GstSample *result = NULL;
   GError *err = NULL;
   GstBus *bus;
-  GstCaps *to_caps_copy = NULL;
+  GstCaps *from_caps, *to_caps_copy = NULL;
   GstFlowReturn ret;
   GstElement *pipeline, *src, *sink;
   guint i, n;
 
-  g_return_val_if_fail (buf != NULL, NULL);
+  g_return_val_if_fail (sample != NULL, NULL);
   g_return_val_if_fail (to_caps != NULL, NULL);
+
+  buf = gst_sample_get_buffer (sample);
+  g_return_val_if_fail (buf != NULL, NULL);
+
+  from_caps = gst_sample_get_caps (sample);
   g_return_val_if_fail (from_caps != NULL, NULL);
+
 
   to_caps_copy = gst_caps_new_empty ();
   n = gst_caps_get_size (to_caps);
@@ -364,28 +372,30 @@ typedef struct
 {
   GMutex *mutex;
   GstElement *pipeline;
-  GstVideoConvertFrameCallback callback;
+  GstVideoConvertSampleCallback callback;
   gpointer user_data;
   GDestroyNotify destroy_notify;
   GMainContext *context;
-  GstBuffer *buffer;
+  GstSample *sample;
+  //GstBuffer *buffer;
   gulong timeout_id;
   gboolean finished;
-} GstVideoConvertFrameContext;
+} GstVideoConvertSampleContext;
 
 typedef struct
 {
-  GstVideoConvertFrameCallback callback;
-  GstBuffer *buffer;
+  GstVideoConvertSampleCallback callback;
+  GstSample *sample;
+  //GstBuffer *buffer;
   GError *error;
   gpointer user_data;
   GDestroyNotify destroy_notify;
 
-  GstVideoConvertFrameContext *context;
-} GstVideoConvertFrameCallbackContext;
+  GstVideoConvertSampleContext *context;
+} GstVideoConvertSampleCallbackContext;
 
 static void
-gst_video_convert_frame_context_free (GstVideoConvertFrameContext * ctx)
+gst_video_convert_frame_context_free (GstVideoConvertSampleContext * ctx)
 {
   /* Wait until all users of the mutex are done */
   g_mutex_lock (ctx->mutex);
@@ -393,29 +403,31 @@ gst_video_convert_frame_context_free (GstVideoConvertFrameContext * ctx)
   g_mutex_free (ctx->mutex);
   if (ctx->timeout_id)
     g_source_remove (ctx->timeout_id);
-  if (ctx->buffer)
-    gst_buffer_unref (ctx->buffer);
+  //if (ctx->buffer)
+  //  gst_buffer_unref (ctx->buffer);
+  if (ctx->sample)
+    gst_sample_unref (ctx->sample);
   g_main_context_unref (ctx->context);
 
   gst_element_set_state (ctx->pipeline, GST_STATE_NULL);
   gst_object_unref (ctx->pipeline);
 
-  g_slice_free (GstVideoConvertFrameContext, ctx);
+  g_slice_free (GstVideoConvertSampleContext, ctx);
 }
 
 static void
     gst_video_convert_frame_callback_context_free
-    (GstVideoConvertFrameCallbackContext * ctx)
+    (GstVideoConvertSampleCallbackContext * ctx)
 {
   if (ctx->context)
     gst_video_convert_frame_context_free (ctx->context);
-  g_slice_free (GstVideoConvertFrameCallbackContext, ctx);
+  g_slice_free (GstVideoConvertSampleCallbackContext, ctx);
 }
 
 static gboolean
-convert_frame_dispatch_callback (GstVideoConvertFrameCallbackContext * ctx)
+convert_frame_dispatch_callback (GstVideoConvertSampleCallbackContext * ctx)
 {
-  ctx->callback (ctx->buffer, ctx->error, ctx->user_data);
+  ctx->callback (ctx->sample, ctx->error, ctx->user_data);
 
   if (ctx->destroy_notify)
     ctx->destroy_notify (ctx->user_data);
@@ -424,21 +436,22 @@ convert_frame_dispatch_callback (GstVideoConvertFrameCallbackContext * ctx)
 }
 
 static void
-convert_frame_finish (GstVideoConvertFrameContext * context, GstBuffer * buffer,
-    GError * error)
+convert_frame_finish (GstVideoConvertSampleContext * context,
+    GstSample * sample, GError * error)
 {
   GSource *source;
-  GstVideoConvertFrameCallbackContext *ctx;
+  GstVideoConvertSampleCallbackContext *ctx;
 
   if (context->timeout_id)
     g_source_remove (context->timeout_id);
   context->timeout_id = 0;
 
-  ctx = g_slice_new (GstVideoConvertFrameCallbackContext);
+  ctx = g_slice_new (GstVideoConvertSampleCallbackContext);
   ctx->callback = context->callback;
   ctx->user_data = context->user_data;
   ctx->destroy_notify = context->destroy_notify;
-  ctx->buffer = buffer;
+  ctx->sample = sample;
+  //ctx->buffer = buffer;
   ctx->error = error;
   ctx->context = context;
 
@@ -453,7 +466,7 @@ convert_frame_finish (GstVideoConvertFrameContext * context, GstBuffer * buffer,
 }
 
 static gboolean
-convert_frame_timeout_callback (GstVideoConvertFrameContext * context)
+convert_frame_timeout_callback (GstVideoConvertSampleContext * context)
 {
   GError *error;
 
@@ -476,7 +489,7 @@ done:
 
 static gboolean
 convert_frame_bus_callback (GstBus * bus, GstMessage * message,
-    GstVideoConvertFrameContext * context)
+    GstVideoConvertSampleContext * context)
 {
   g_mutex_lock (context->mutex);
 
@@ -510,19 +523,21 @@ done:
 
 static void
 convert_frame_need_data_callback (GstElement * src, guint size,
-    GstVideoConvertFrameContext * context)
+    GstVideoConvertSampleContext * context)
 {
   GstFlowReturn ret = GST_FLOW_ERROR;
   GError *error;
+  GstBuffer *buffer;
 
   g_mutex_lock (context->mutex);
 
   if (context->finished)
     goto done;
 
-  g_signal_emit_by_name (src, "push-buffer", context->buffer, &ret);
-  gst_buffer_unref (context->buffer);
-  context->buffer = NULL;
+  buffer = gst_sample_get_buffer (context->sample);
+  g_signal_emit_by_name (src, "push-buffer", buffer, &ret);
+  gst_sample_unref (context->sample);
+  context->sample = NULL;
 
   if (ret != GST_FLOW_OK) {
     GST_ERROR ("Could not push video frame: %s", gst_flow_get_name (ret));
@@ -541,10 +556,10 @@ done:
 }
 
 static void
-convert_frame_new_buffer_callback (GstElement * sink,
-    GstVideoConvertFrameContext * context)
+convert_frame_new_preroll_callback (GstElement * sink,
+    GstVideoConvertSampleContext * context)
 {
-  GstBuffer *buf = NULL;
+  GstSample *sample = NULL;
   GError *error = NULL;
 
   g_mutex_lock (context->mutex);
@@ -552,14 +567,13 @@ convert_frame_new_buffer_callback (GstElement * sink,
   if (context->finished)
     goto done;
 
-  g_signal_emit_by_name (sink, "pull-preroll", &buf);
+  g_signal_emit_by_name (sink, "pull-preroll", &sample);
 
-  if (!buf) {
+  if (!sample) {
     error = g_error_new (GST_CORE_ERROR, GST_CORE_ERROR_FAILED,
-        "Could not get converted video frame");
+        "Could not get converted video sample");
   }
-
-  convert_frame_finish (context, buf, error);
+  convert_frame_finish (context, sample, error);
 
   g_signal_handlers_disconnect_by_func (sink, convert_frame_need_data_callback,
       context);
@@ -569,12 +583,11 @@ done:
 }
 
 /**
- * gst_video_convert_frame_async:
- * @buf: a #GstBuffer
- * @from_caps: the #GstCaps to convert from
+ * gst_video_convert_sample_async:
+ * @sample: a #GstSample
  * @to_caps: the #GstCaps to convert to
  * @timeout: the maximum amount of time allowed for the processing.
- * @callback: %GstVideoConvertFrameCallback that will be called after conversion.
+ * @callback: %GstVideoConvertSampleCallback that will be called after conversion.
  * @user_data: extra data that will be passed to the @callback
  * @destroy_notify: %GDestroyNotify to be called after @user_data is not needed anymore
  *
@@ -596,22 +609,28 @@ done:
  *
  */
 void
-gst_video_convert_frame_async (GstBuffer * buf, GstCaps * from_caps,
+gst_video_convert_sample_async (GstSample * sample,
     const GstCaps * to_caps, GstClockTime timeout,
-    GstVideoConvertFrameCallback callback, gpointer user_data,
+    GstVideoConvertSampleCallback callback, gpointer user_data,
     GDestroyNotify destroy_notify)
 {
   GMainContext *context = NULL;
   GError *error = NULL;
   GstBus *bus;
-  GstCaps *to_caps_copy = NULL;
+  GstBuffer *buf;
+  GstCaps *from_caps, *to_caps_copy = NULL;
   GstElement *pipeline, *src, *sink;
   guint i, n;
   GSource *source;
-  GstVideoConvertFrameContext *ctx;
+  GstVideoConvertSampleContext *ctx;
 
+  g_return_if_fail (sample != NULL);
+  buf = gst_sample_get_buffer (sample);
   g_return_if_fail (buf != NULL);
+
   g_return_if_fail (to_caps != NULL);
+
+  from_caps = gst_sample_get_caps (sample);
   g_return_if_fail (from_caps != NULL);
   g_return_if_fail (callback != NULL);
 
@@ -638,9 +657,10 @@ gst_video_convert_frame_async (GstBuffer * buf, GstCaps * from_caps,
 
   bus = gst_element_get_bus (pipeline);
 
-  ctx = g_slice_new0 (GstVideoConvertFrameContext);
+  ctx = g_slice_new0 (GstVideoConvertSampleContext);
   ctx->mutex = g_mutex_new ();
-  ctx->buffer = gst_buffer_ref (buf);
+  //ctx->buffer = gst_buffer_ref (buf);
+  ctx->sample = gst_sample_ref (sample);
   ctx->callback = callback;
   ctx->user_data = user_data;
   ctx->destroy_notify = destroy_notify;
@@ -659,7 +679,7 @@ gst_video_convert_frame_async (GstBuffer * buf, GstCaps * from_caps,
   g_signal_connect (src, "need-data",
       G_CALLBACK (convert_frame_need_data_callback), ctx);
   g_signal_connect (sink, "new-preroll",
-      G_CALLBACK (convert_frame_new_buffer_callback), ctx);
+      G_CALLBACK (convert_frame_new_preroll_callback), ctx);
 
   source = gst_bus_create_watch (bus);
   g_source_set_callback (source, (GSourceFunc) convert_frame_bus_callback,
@@ -676,16 +696,16 @@ gst_video_convert_frame_async (GstBuffer * buf, GstCaps * from_caps,
   /* ERRORS */
 no_pipeline:
   {
-    GstVideoConvertFrameCallbackContext *ctx;
+    GstVideoConvertSampleCallbackContext *ctx;
     GSource *source;
 
     gst_caps_unref (to_caps_copy);
 
-    ctx = g_slice_new0 (GstVideoConvertFrameCallbackContext);
+    ctx = g_slice_new0 (GstVideoConvertSampleCallbackContext);
     ctx->callback = callback;
     ctx->user_data = user_data;
     ctx->destroy_notify = destroy_notify;
-    ctx->buffer = NULL;
+    ctx->sample = NULL;
     ctx->error = error;
 
     source = g_timeout_source_new (0);

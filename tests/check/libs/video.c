@@ -667,7 +667,8 @@ GST_START_TEST (test_convert_frame)
 {
   GstVideoInfo vinfo;
   GstCaps *from_caps, *to_caps;
-  GstBuffer *from_buffer, *to_buffer;
+  GstBuffer *from_buffer;
+  GstSample *from_sample, *to_sample;
   GError *error = NULL;
   gint i;
   guint8 *data;
@@ -693,14 +694,16 @@ GST_START_TEST (test_convert_frame)
   vinfo.par_d = 1;
   from_caps = gst_video_info_to_caps (&vinfo);
 
+  from_sample = gst_sample_new (from_buffer, from_caps, NULL, NULL);
+
   to_caps =
       gst_caps_from_string
       ("something/that, does=(string)not, exist=(boolean)FALSE");
 
-  to_buffer =
-      gst_video_convert_frame (from_buffer, from_caps, to_caps,
+  to_sample =
+      gst_video_convert_sample (from_sample, to_caps,
       GST_CLOCK_TIME_NONE, &error);
-  fail_if (to_buffer != NULL);
+  fail_if (to_sample != NULL);
   fail_unless (error != NULL);
   g_error_free (error);
   error = NULL;
@@ -713,15 +716,16 @@ GST_START_TEST (test_convert_frame)
   vinfo.par_d = 2;
   to_caps = gst_video_info_to_caps (&vinfo);
 
-  to_buffer =
-      gst_video_convert_frame (from_buffer, from_caps, to_caps,
+  to_sample =
+      gst_video_convert_sample (from_sample, to_caps,
       GST_CLOCK_TIME_NONE, &error);
-  fail_unless (to_buffer != NULL);
+  fail_unless (to_sample != NULL);
   fail_unless (error == NULL);
 
   gst_buffer_unref (from_buffer);
   gst_caps_unref (from_caps);
-  gst_buffer_unref (to_buffer);
+  gst_sample_unref (from_sample);
+  gst_sample_unref (to_sample);
   gst_caps_unref (to_caps);
 }
 
@@ -730,15 +734,15 @@ GST_END_TEST;
 typedef struct
 {
   GMainLoop *loop;
-  GstBuffer *buffer;
+  GstSample *sample;
   GError *error;
 } ConvertFrameContext;
 
 static void
-convert_frame_async_callback (GstBuffer * buf, GError * err,
+convert_sample_async_callback (GstSample * sample, GError * err,
     ConvertFrameContext * cf_data)
 {
-  cf_data->buffer = buf;
+  cf_data->sample = sample;
   cf_data->error = err;
 
   g_main_loop_quit (cf_data->loop);
@@ -749,6 +753,7 @@ GST_START_TEST (test_convert_frame_async)
   GstVideoInfo vinfo;
   GstCaps *from_caps, *to_caps;
   GstBuffer *from_buffer;
+  GstSample *from_sample;
   gint i;
   guint8 *data;
   GMainLoop *loop;
@@ -781,14 +786,18 @@ GST_START_TEST (test_convert_frame_async)
 
   loop = cf_data.loop = g_main_loop_new (NULL, FALSE);
 
-  gst_video_convert_frame_async (from_buffer, from_caps, to_caps,
+  from_sample = gst_sample_new (from_buffer, from_caps, NULL, NULL);
+  gst_buffer_unref (from_buffer);
+  gst_caps_unref (from_caps);
+
+  gst_video_convert_sample_async (from_sample, to_caps,
       GST_CLOCK_TIME_NONE,
-      (GstVideoConvertFrameCallback) convert_frame_async_callback, &cf_data,
+      (GstVideoConvertSampleCallback) convert_sample_async_callback, &cf_data,
       NULL);
 
   g_main_loop_run (loop);
 
-  fail_if (cf_data.buffer != NULL);
+  fail_if (cf_data.sample != NULL);
   fail_unless (cf_data.error != NULL);
   g_error_free (cf_data.error);
   cf_data.error = NULL;
@@ -801,17 +810,15 @@ GST_START_TEST (test_convert_frame_async)
   vinfo.fps_n = 25;
   vinfo.fps_d = 1;
   to_caps = gst_video_info_to_caps (&vinfo);
-  gst_video_convert_frame_async (from_buffer, from_caps, to_caps,
+  gst_video_convert_sample_async (from_sample, to_caps,
       GST_CLOCK_TIME_NONE,
-      (GstVideoConvertFrameCallback) convert_frame_async_callback, &cf_data,
+      (GstVideoConvertSampleCallback) convert_sample_async_callback, &cf_data,
       NULL);
   g_main_loop_run (loop);
-  fail_unless (cf_data.buffer != NULL);
+  fail_unless (cf_data.sample != NULL);
   fail_unless (cf_data.error == NULL);
 
-  gst_buffer_unref (from_buffer);
-  gst_caps_unref (from_caps);
-  gst_buffer_unref (cf_data.buffer);
+  gst_sample_unref (cf_data.sample);
   gst_caps_unref (to_caps);
 
   g_main_loop_unref (loop);

@@ -705,20 +705,18 @@ GstEvent *     gst_video_event_new_still_frame   (gboolean in_still);
 gboolean       gst_video_event_parse_still_frame (GstEvent * event, gboolean * in_still);
 
 
-/* convert/encode video frame from one format to another */
+/* convert/encode video sample from one format to another */
 
-typedef void (*GstVideoConvertFrameCallback) (GstBuffer * buf, GError *error, gpointer user_data);
+typedef void (*GstVideoConvertSampleCallback) (GstSample * sample, GError *error, gpointer user_data);
 
-void           gst_video_convert_frame_async (GstBuffer                    * buf,
-                                              GstCaps                      * from_caps,
+void          gst_video_convert_sample_async (GstSample                    * sample,
                                               const GstCaps                * to_caps,
                                               GstClockTime                   timeout,
-                                              GstVideoConvertFrameCallback   callback,
+                                              GstVideoConvertSampleCallback  callback,
                                               gpointer                       user_data,
                                               GDestroyNotify                 destroy_notify);
 
-GstBuffer *    gst_video_convert_frame       (GstBuffer     * buf,
-                                              GstCaps       * from_caps,
+GstSample *   gst_video_convert_sample       (GstSample     * sample,
                                               const GstCaps * to_caps,
                                               GstClockTime    timeout,
                                               GError       ** error);

@@ -94,15 +94,15 @@ gchar *          gst_play_sink_get_subtitle_encoding  (GstPlaySink *playsink);
 void             gst_play_sink_set_av_offset  (GstPlaySink *playsink, gint64 av_offset);
 gint64           gst_play_sink_get_av_offset  (GstPlaySink *playsink);
 
-GstBuffer *      gst_play_sink_get_last_frame (GstPlaySink * playsink);
-GstBuffer *      gst_play_sink_convert_frame  (GstPlaySink * playsink, GstCaps * caps);
+GstSample *      gst_play_sink_get_last_sample (GstPlaySink * playsink);
+GstSample *      gst_play_sink_convert_sample  (GstPlaySink * playsink, GstCaps * caps);
 
 gboolean         gst_play_sink_reconfigure    (GstPlaySink * playsink);
 
 gboolean         gst_play_sink_plugin_init    (GstPlugin * plugin);
 
 void
-gst_play_marshal_BUFFER__BOXED (GClosure * closure,
+gst_play_marshal_SAMPLE__BOXED (GClosure * closure,
     GValue * return_value G_GNUC_UNUSED,
     guint n_param_values,
     const GValue * param_values,

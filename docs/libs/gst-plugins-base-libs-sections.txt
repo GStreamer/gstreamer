@@ -60,8 +60,7 @@ gst_app_sink_get_max_buffers
 gst_app_sink_set_drop
 gst_app_sink_get_drop
 gst_app_sink_pull_preroll
-gst_app_sink_pull_buffer
-gst_app_sink_pull_buffer_list
+gst_app_sink_pull_sample
 GstAppSinkCallbacks
 gst_app_sink_set_callbacks
 <SUBSECTION Standard>
@@ -2103,9 +2102,9 @@ gst_video_calculate_display_ratio
 gst_video_format_to_fourcc
 gst_video_format_from_fourcc
 gst_video_parse_caps_palette
-GstVideoConvertFrameCallback
-gst_video_convert_frame
-gst_video_convert_frame_async
+GstVideoConvertSampleCallback
+gst_video_convert_sample
+gst_video_convert_sample_async
 gst_video_event_new_still_frame
 gst_video_event_parse_still_frame
 <SUBSECTION Standard>
