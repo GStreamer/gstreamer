@@ -41,7 +41,7 @@ run_pipeline (GstElement * pipeline)
   gst_element_set_state (pipeline, GST_STATE_NULL);
 }
 
-#if !GLIB_CHECK_VERSION(2,26,0)
+#if !GLIB_CHECK_VERSION(2,30,0)
 static gchar *
 g_mkdtemp (gchar * template)
 {
@@ -145,6 +145,7 @@ GST_START_TEST (test_multifilesink_max_files)
   g_free (mfs_pattern);
   g_free (my_tmpdir);
 }
+
 GST_END_TEST;
 
 GST_START_TEST (test_multifilesink_key_unit)
@@ -200,7 +201,6 @@ GST_START_TEST (test_multifilesink_key_unit)
 
   g_free (mfs_pattern);
   g_free (my_tmpdir);
-  g_free (template);
   gst_object_unref (sink);
   gst_object_unref (mfs);
 }
