@@ -69,6 +69,7 @@
 #include <gst/gstpreset.h>
 #include <gst/gstquery.h>
 #include <gst/gstregistry.h>
+#include <gst/gstsample.h>
 #include <gst/gstsegment.h>
 #include <gst/gststructure.h>
 #include <gst/gstsystemclock.h>

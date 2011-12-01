@@ -105,6 +105,7 @@ void  _priv_gst_memory_initialize (void);
 void  _priv_gst_meta_initialize (void);
 void  _priv_gst_plugin_initialize (void);
 void  _priv_gst_query_initialize (void);
+void  _priv_gst_sample_initialize (void);
 void  _priv_gst_tag_initialize (void);
 void  _priv_gst_value_initialize (void);
 void  _priv_gst_debug_init (void);
