@@ -2226,6 +2226,7 @@ again:
   /* no timestamp set and we are at offset 0, we can timestamp with 0 */
   if (offset == 0 && src->segment.time == 0
       && GST_BUFFER_TIMESTAMP (*buf) == -1 && !src->is_live) {
+    GST_DEBUG_OBJECT (src, "setting first timestamp to 0");
     *buf = gst_buffer_make_writable (*buf);
     GST_BUFFER_TIMESTAMP (*buf) = 0;
   }
@@ -2519,6 +2520,7 @@ gst_base_src_loop (GstPad * pad)
   }
 
   if (G_UNLIKELY (src->priv->discont)) {
+    GST_INFO_OBJECT (src, "marking pending DISCONT");
     buf = gst_buffer_make_writable (buf);
     GST_BUFFER_FLAG_SET (buf, GST_BUFFER_FLAG_DISCONT);
     src->priv->discont = FALSE;
