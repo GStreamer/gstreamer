@@ -579,7 +579,9 @@ gst_matroska_read_common_parse_attached_file (GstMatroskaReadCommon * common,
   if (filename && mimetype && data && datalen > 0) {
     GstTagImageType image_type = GST_TAG_IMAGE_TYPE_NONE;
     GstBuffer *tagbuffer = NULL;
-    /* GstCaps *caps; */
+    GstSample *tagsample = NULL;
+    GstStructure *info = NULL;
+    GstCaps *caps = NULL;
     gchar *filename_lc = g_utf8_strdown (filename, -1);
 
     GST_DEBUG_OBJECT (common, "Creating tag for attachment with "
@@ -605,45 +607,49 @@ gst_matroska_read_common_parse_attached_file (GstMatroskaReadCommon * common,
 
     /* First try to create an image tag buffer from this */
     if (image_type != GST_TAG_IMAGE_TYPE_NONE) {
-      tagbuffer =
-          gst_tag_image_data_to_image_buffer (data, datalen, image_type);
+      tagsample =
+          gst_tag_image_data_to_image_sample (data, datalen, image_type);
 
-      if (!tagbuffer)
+      if (!tagsample)
         image_type = GST_TAG_IMAGE_TYPE_NONE;
-      else
+      else {
         data = NULL;
+        tagbuffer = gst_buffer_ref (gst_sample_get_buffer (tagsample));
+        caps = gst_caps_ref (gst_sample_get_caps (tagsample));
+        info = gst_structure_copy (gst_sample_get_info (tagsample));
+        gst_sample_unref (tagsample);
+      }
     }
 
     /* if this failed create an attachment buffer */
     if (!tagbuffer) {
       tagbuffer = gst_buffer_new_wrapped (g_memdup (data, datalen), datalen);
 
-      /* FIXME: We can't attach caps to buffers in 0.11. */
-      /* caps = gst_type_find_helper_for_buffer (NULL, tagbuffer, NULL); */
-      /* if (caps == NULL) */
-      /*   caps = gst_caps_new_simple (mimetype, NULL); */
-      /* gst_buffer_set_caps (tagbuffer, caps); */
-      /* gst_caps_unref (caps); */
+      caps = gst_type_find_helper_for_buffer (NULL, tagbuffer, NULL);
+      if (caps == NULL)
+        caps = gst_caps_new_empty_simple (mimetype);
     }
 
-    /* FIXME: We can't attach caps to buffers in 0.11. */
-    /* Set filename and description on the caps */
-    /* caps = GST_BUFFER_CAPS (tagbuffer); */
-    /* gst_caps_set_simple (caps, "filename", G_TYPE_STRING, filename, NULL); */
-    /* if (description) */
-    /*   gst_caps_set_simple (caps, "description", G_TYPE_STRING, description, */
-    /*       NULL); */
+    /* Set filename and description in the info */
+    if (info == NULL)
+      info = gst_structure_new_empty ("GstTagImageInfo");
 
-    /* GST_DEBUG_OBJECT (common, */
-    /*     "Created attachment buffer with caps: %" GST_PTR_FORMAT, caps); */
+    gst_structure_set (info, "filename", G_TYPE_STRING, filename, NULL);
+    if (description)
+      gst_structure_set (info, "description", G_TYPE_STRING, description, NULL);
+
+    tagsample = gst_sample_new (tagbuffer, caps, NULL, info);
+
+    GST_DEBUG_OBJECT (common,
+        "Created attachment sample: %" GST_PTR_FORMAT, tagsample);
 
     /* and append to the tag list */
     if (image_type != GST_TAG_IMAGE_TYPE_NONE)
-      gst_tag_list_add (taglist, GST_TAG_MERGE_APPEND, GST_TAG_IMAGE, tagbuffer,
+      gst_tag_list_add (taglist, GST_TAG_MERGE_APPEND, GST_TAG_IMAGE, tagsample,
           NULL);
     else
       gst_tag_list_add (taglist, GST_TAG_MERGE_APPEND, GST_TAG_ATTACHMENT,
-          tagbuffer, NULL);
+          tagsample, NULL);
   }
 
   g_free (filename);

@@ -231,6 +231,7 @@ static void
 check_unsync_v24 (const GstTagList * tags, const gchar * file)
 {
   const GValue *val;
+  GstSample *sample;
   GstBuffer *buf;
   gchar *album = NULL;
   gchar *title = NULL;
@@ -255,10 +256,12 @@ check_unsync_v24 (const GstTagList * tags, const gchar * file)
 
   val = gst_tag_list_get_value_index (tags, GST_TAG_IMAGE, 0);
   fail_unless (val != NULL);
-  fail_unless (GST_VALUE_HOLDS_BUFFER (val));
-  buf = gst_value_get_buffer (val);
+  fail_unless (GST_VALUE_HOLDS_SAMPLE (val));
+  sample = gst_value_get_sample (val);
+  fail_unless (sample != NULL);
+  fail_unless (gst_sample_get_caps (sample) != NULL);
+  buf = gst_sample_get_buffer (sample);
   fail_unless (buf != NULL);
-  /* FIXME 0.11: image buffer fail_unless (GST_BUFFER_CAPS (buf) != NULL); */
   data = gst_buffer_map (buf, &size, NULL, GST_MAP_READ);
   fail_unless_equals_int (size, 38022);
   /* check for jpeg start/end markers */
