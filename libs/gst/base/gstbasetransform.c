@@ -2028,7 +2028,9 @@ gst_base_transform_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
 
       /* apply DISCONT flag if the buffer is not yet marked as such */
       if (trans->priv->discont) {
+        GST_DEBUG_OBJECT (trans, "we have a pending DISCONT");
         if (!GST_BUFFER_IS_DISCONT (outbuf)) {
+          GST_DEBUG_OBJECT (trans, "marking DISCONT on output buffer");
           outbuf = gst_buffer_make_writable (outbuf);
           GST_BUFFER_FLAG_SET (outbuf, GST_BUFFER_FLAG_DISCONT);
         }
@@ -2038,12 +2040,14 @@ gst_base_transform_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
 
       ret = gst_pad_push (trans->srcpad, outbuf);
     } else {
+      GST_DEBUG_OBJECT (trans, "we got return %s", gst_flow_get_name (ret));
       gst_buffer_unref (outbuf);
     }
   }
 
   /* convert internal flow to OK and mark discont for the next buffer. */
   if (ret == GST_BASE_TRANSFORM_FLOW_DROPPED) {
+    GST_DEBUG_OBJECT (trans, "dropped a buffer, marking DISCONT");
     trans->priv->discont = TRUE;
     ret = GST_FLOW_OK;
   }
