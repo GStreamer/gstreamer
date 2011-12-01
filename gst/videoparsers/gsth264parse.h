@@ -60,6 +60,7 @@ struct _GstH264Parse
   gint fps_num, fps_den;
   gint aspect_ratio_idc;
   gint sar_width, sar_height;
+  gint upstream_par_n, upstream_par_d;
   GstBuffer *codec_data;
   guint nal_length_size;
   gboolean packetized;

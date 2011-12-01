@@ -99,10 +99,8 @@ gst_h264_parse_base_init (gpointer g_class)
 {
   GstElementClass *gstelement_class = GST_ELEMENT_CLASS (g_class);
 
-  gst_element_class_add_static_pad_template (gstelement_class,
-      &srctemplate);
-  gst_element_class_add_static_pad_template (gstelement_class,
-      &sinktemplate);
+  gst_element_class_add_static_pad_template (gstelement_class, &srctemplate);
+  gst_element_class_add_static_pad_template (gstelement_class, &sinktemplate);
 
   gst_element_class_set_details_simple (gstelement_class, "H.264 parser",
       "Codec/Parser/Converter/Video",
@@ -196,6 +194,8 @@ gst_h264_parse_reset (GstH264Parse * h264parse)
   h264parse->aspect_ratio_idc = 0;
   h264parse->sar_width = 0;
   h264parse->sar_height = 0;
+  h264parse->upstream_par_n = -1;
+  h264parse->upstream_par_d = -1;
   gst_buffer_replace (&h264parse->codec_data, NULL);
   h264parse->nal_length_size = 4;
   h264parse->packetized = FALSE;
@@ -819,6 +819,12 @@ gst_h264_parse_get_par (GstH264Parse * h264parse, gint * num, gint * den)
 {
   gint par_n, par_d;
 
+  if (h264parse->upstream_par_n != -1 && h264parse->upstream_par_d != -1) {
+    *num = h264parse->upstream_par_n;
+    *den = h264parse->upstream_par_d;
+    return;
+  }
+
   par_n = par_d = 0;
   switch (h264parse->aspect_ratio_idc) {
     case 0:
@@ -1359,8 +1365,8 @@ gst_h264_parse_set_caps (GstBaseParse * parse, GstCaps * caps)
   gst_structure_get_int (str, "height", &h264parse->height);
   gst_structure_get_fraction (str, "framerate", &h264parse->fps_num,
       &h264parse->fps_den);
-  gst_structure_get_fraction (str, "pixel-aspect-ratio", &h264parse->sar_width,
-      &h264parse->sar_height);
+  gst_structure_get_fraction (str, "pixel-aspect-ratio",
+      &h264parse->upstream_par_n, &h264parse->upstream_par_d);
 
   /* get upstream format and align from caps */
   gst_h264_parse_format_from_caps (caps, &format, &align);
