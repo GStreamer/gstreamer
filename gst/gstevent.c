@@ -654,6 +654,9 @@ gst_event_new_segment (const GstSegment * segment)
   GstEvent *event;
 
   g_return_val_if_fail (segment != NULL, NULL);
+  g_return_val_if_fail (segment->rate != 0.0, NULL);
+  g_return_val_if_fail (segment->applied_rate != 0.0, NULL);
+  g_return_val_if_fail (segment->format != GST_FORMAT_UNDEFINED, NULL);
 
   GST_CAT_INFO (GST_CAT_EVENT, "creating segment event %" GST_SEGMENT_FORMAT,
       segment);
