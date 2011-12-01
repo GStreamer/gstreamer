@@ -106,6 +106,9 @@ gst_xvidenc_profile_get_type (void)
       {XVID_PROFILE_S_L1, "S_L1", "Simple profile, L1"},
       {XVID_PROFILE_S_L2, "S_L2", "Simple profile, L2"},
       {XVID_PROFILE_S_L3, "S_L3", "Simple profile, L3"},
+      {XVID_PROFILE_S_L4a, "S_L4a", "Simple profile, L4a"},
+      {XVID_PROFILE_S_L5, "S_L5", "Simple profile, L5"},
+      {XVID_PROFILE_S_L6, "S_L6", "Simple profile, L6"},
       {XVID_PROFILE_ARTS_L1, "ARTS_L1",
           "Advanced real-time simple profile, L1"},
       {XVID_PROFILE_ARTS_L2, "ARTS_L2",
@@ -218,8 +221,7 @@ gst_xvidenc_base_init (GstXvidEncClass * klass)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
 
-  gst_element_class_add_static_pad_template (element_class,
-      &sink_template);
+  gst_element_class_add_static_pad_template (element_class, &sink_template);
   gst_element_class_add_static_pad_template (element_class, &src_template);
   gst_element_class_set_details_simple (element_class, "XviD video encoder",
       "Codec/Encoder/Video",
