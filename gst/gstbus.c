@@ -496,7 +496,7 @@ gst_bus_timed_pop_filtered (GstBus * bus, GstClockTime timeout,
     while ((message = g_queue_pop_head (bus->queue))) {
       GST_DEBUG_OBJECT (bus, "got message %p, %s from %s, type mask is %u",
           message, GST_MESSAGE_TYPE_NAME (message),
-          GST_OBJECT_NAME (GST_MESSAGE_SRC (message)), (guint) types);
+          GST_MESSAGE_SRC_NAME (message), (guint) types);
       if ((GST_MESSAGE_TYPE (message) & types) != 0) {
         /* exit the loop, we have a message */
         goto beach;
