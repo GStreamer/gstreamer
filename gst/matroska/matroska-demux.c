@@ -186,10 +186,8 @@ gst_matroska_demux_base_init (gpointer klass)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
 
-  gst_element_class_add_static_pad_template (element_class,
-      &video_src_templ);
-  gst_element_class_add_static_pad_template (element_class,
-      &audio_src_templ);
+  gst_element_class_add_static_pad_template (element_class, &video_src_templ);
+  gst_element_class_add_static_pad_template (element_class, &audio_src_templ);
   gst_element_class_add_static_pad_template (element_class,
       &subtitle_src_templ);
   gst_element_class_add_static_pad_template (element_class, &sink_templ);
@@ -1935,8 +1933,8 @@ gst_matroska_demux_handle_seek_event (GstMatroskaDemux * demux,
     }
   }
 
-  flush = !!(flags & GST_SEEK_FLAG_FLUSH);
-  keyunit = !!(flags & GST_SEEK_FLAG_KEY_UNIT);
+  flush = ! !(flags & GST_SEEK_FLAG_FLUSH);
+  keyunit = ! !(flags & GST_SEEK_FLAG_KEY_UNIT);
 
   GST_DEBUG_OBJECT (demux, "New segment %" GST_SEGMENT_FORMAT, &seeksegment);
 
@@ -2937,8 +2935,7 @@ gst_matroska_demux_check_subtitle_buffer (GstElement * element,
   GST_BUFFER_MALLOCDATA (newbuf) = (guint8 *) utf8;
   GST_BUFFER_DATA (newbuf) = (guint8 *) utf8;
   GST_BUFFER_SIZE (newbuf) = strlen (utf8);
-  gst_buffer_copy_metadata (newbuf, *buf,
-      GST_BUFFER_COPY_TIMESTAMPS | GST_BUFFER_COPY_FLAGS);
+  gst_buffer_copy_metadata (newbuf, *buf, GST_BUFFER_COPY_ALL);
   gst_buffer_unref (*buf);
 
   *buf = newbuf;
@@ -2958,8 +2955,7 @@ next:
     GST_BUFFER_MALLOCDATA (newbuf) = (guint8 *) utf8;
     GST_BUFFER_DATA (newbuf) = (guint8 *) utf8;
     GST_BUFFER_SIZE (newbuf) = strlen (utf8);
-    gst_buffer_copy_metadata (newbuf, *buf,
-        GST_BUFFER_COPY_TIMESTAMPS | GST_BUFFER_COPY_FLAGS);
+    gst_buffer_copy_metadata (newbuf, *buf, GST_BUFFER_COPY_ALL);
     gst_buffer_unref (*buf);
 
     *buf = newbuf;
