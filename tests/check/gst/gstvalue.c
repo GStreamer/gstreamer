@@ -2566,7 +2566,163 @@ GST_START_TEST (test_deserialize_int_range)
   g_free (str);
 }
 
-GST_END_TEST static Suite *
+GST_END_TEST;
+
+GST_START_TEST (test_stepped_range_collection)
+{
+  GstStructure *s;
+  const GValue *v;
+
+  s = gst_structure_new ("foo/bar", "range", GST_TYPE_INT_RANGE, 8, 12, NULL);
+  fail_unless (s != NULL);
+  v = gst_structure_get_value (s, "range");
+  fail_unless (v != NULL);
+  fail_unless (gst_value_get_int_range_min (v) == 8);
+  fail_unless (gst_value_get_int_range_max (v) == 12);
+  fail_unless (gst_value_get_int_range_step (v) == 1);
+  gst_structure_free (s);
+
+  s = gst_structure_new ("foo/bar", "range", GST_TYPE_INT64_RANGE, (gint64) 8,
+      (gint64) 12, NULL);
+  fail_unless (s != NULL);
+  v = gst_structure_get_value (s, "range");
+  fail_unless (v != NULL);
+  fail_unless (gst_value_get_int64_range_min (v) == 8);
+  fail_unless (gst_value_get_int64_range_max (v) == 12);
+  fail_unless (gst_value_get_int64_range_step (v) == 1);
+  gst_structure_free (s);
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_stepped_int_range_parsing)
+{
+  gchar *str;
+  guint n;
+  gchar *end = NULL;
+  GstStructure *s;
+
+  static const gchar *good_ranges[] = {
+    "[0, 1, 1]",
+    "[-2, 2, 2]",
+    "[16, 4096, 16]",
+  };
+
+  static const gchar *bad_ranges[] = {
+    "[0, 1, -1]",
+    "[1, 2, 2]",
+    "[2, 3, 2]",
+    "[0, 0, 0]",
+  };
+
+  /* check we can parse good ranges */
+  for (n = 0; n < G_N_ELEMENTS (good_ranges); ++n) {
+    str = g_strdup_printf ("foo/bar, range=%s", good_ranges[n]);
+    s = gst_structure_from_string (str, &end);
+    fail_unless (s != NULL);
+    fail_unless (*end == '\0');
+    gst_structure_free (s);
+    g_free (str);
+  }
+
+  /* check we cannot parse bad ranges */
+  for (n = 0; n < G_N_ELEMENTS (bad_ranges); ++n) {
+    str = g_strdup_printf ("foo/bar, range=%s", bad_ranges[n]);
+    ASSERT_CRITICAL (gst_structure_from_string (str, &end));
+    g_free (str);
+  }
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_stepped_int_range_ops)
+{
+  gchar *str1, *str2, *str3;
+  guint n;
+  GstStructure *s1, *s2, *s3;
+  const GValue *v1, *v2, *v3;
+
+  static const struct
+  {
+    const gchar *set1;
+    const gchar *op;
+    const gchar *set2;
+    const gchar *result;
+  } ranges[] = {
+    {"[16, 4096, 16]", "inter", "[100, 200, 10]", "160"},
+    {"[16, 4096, 16]", "inter", "[100, 200, 100]", NULL},
+    {"[16, 4096, 16]", "inter", "[0, 512, 256]", "[256, 512, 256]"},
+    {"[16, 32, 16]", "union", "[32, 96, 16]", "[16, 96, 16]"},
+    {"[16, 32, 16]", "union", "[48, 96, 16]", "[16, 96, 16]"},
+    {"[112, 192, 16]", "union", "[48, 96, 16]", "[48, 192, 16]"},
+    {"[16, 32, 16]", "union", "[64, 96, 16]", NULL},
+    {"[112, 192, 16]", "union", "[48, 96, 8]", NULL},
+  };
+
+  for (n = 0; n < G_N_ELEMENTS (ranges); ++n) {
+    gchar *end = NULL;
+    GValue dest = { 0 };
+    gboolean ret;
+
+    str1 = g_strdup_printf ("foo/bar, range=%s", ranges[n].set1);
+    s1 = gst_structure_from_string (str1, &end);
+    fail_unless (s1 != NULL);
+    fail_unless (*end == '\0');
+    v1 = gst_structure_get_value (s1, "range");
+    fail_unless (v1 != NULL);
+
+    str2 = g_strdup_printf ("foo/bar, range=%s", ranges[n].set2);
+    s2 = gst_structure_from_string (str2, &end);
+    fail_unless (s2 != NULL);
+    fail_unless (*end == '\0');
+    v2 = gst_structure_get_value (s2, "range");
+    fail_unless (v2 != NULL);
+
+    if (!strcmp (ranges[n].op, "inter")) {
+      ret = gst_value_intersect (&dest, v1, v2);
+    } else if (!strcmp (ranges[n].op, "union")) {
+      ret = gst_value_union (&dest, v1, v2);
+    } else {
+      fail_unless (FALSE);
+      ret = FALSE;
+    }
+
+    if (ranges[n].result) {
+      fail_unless (ret);
+    } else {
+      fail_unless (!ret);
+    }
+
+    if (ret) {
+      str3 = g_strdup_printf ("foo/bar, range=%s", ranges[n].result);
+      s3 = gst_structure_from_string (str3, &end);
+      fail_unless (s3 != NULL);
+      fail_unless (*end == '\0');
+      v3 = gst_structure_get_value (s3, "range");
+      fail_unless (v3 != NULL);
+
+      if (gst_value_compare (&dest, v3) != GST_VALUE_EQUAL) {
+        GST_ERROR ("%s %s %s yielded %s, expected %s", str1, ranges[n].op, str2,
+            gst_value_serialize (&dest), gst_value_serialize (v3));
+        fail_unless (FALSE);
+      }
+
+      gst_structure_free (s3);
+      g_free (str3);
+
+      g_value_unset (&dest);
+    }
+
+    gst_structure_free (s2);
+    g_free (str2);
+    gst_structure_free (s1);
+    g_free (str1);
+  }
+}
+
+GST_END_TEST;
+
+static Suite *
 gst_value_suite (void)
 {
   Suite *s = suite_create ("GstValue");
@@ -2606,6 +2762,9 @@ gst_value_suite (void)
   tcase_add_test (tc_chain, test_int64_range);
   tcase_add_test (tc_chain, test_serialize_int64_range);
   tcase_add_test (tc_chain, test_deserialize_int_range);
+  tcase_add_test (tc_chain, test_stepped_range_collection);
+  tcase_add_test (tc_chain, test_stepped_int_range_parsing);
+  tcase_add_test (tc_chain, test_stepped_int_range_ops);
 
   return s;
 }
