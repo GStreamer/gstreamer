@@ -415,7 +415,7 @@ gst_matroskamux_pad_class_init (GstPadClass * klass)
   gobject_class->get_property = gst_matroskamux_pad_get_property;
 
   g_object_class_install_property (gobject_class, PROP_PAD_FRAME_DURATION,
-      g_param_spec_boolean ("frame_duration", "Frame duration",
+      g_param_spec_boolean ("frame-duration", "Frame duration",
           "Default frame duration", DEFAULT_PAD_FRAME_DURATION,
           G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE | G_PARAM_STATIC_STRINGS));
 }
