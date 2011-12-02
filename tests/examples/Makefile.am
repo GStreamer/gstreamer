@@ -8,7 +8,7 @@ if USE_GIO
 GIO_SUBDIRS = gio
 endif
 
-SUBDIRS = app audio dynamic $(FT2_SUBDIRS) $(GIO_SUBDIRS) overlay playrec v4l encoding
+SUBDIRS = app audio dynamic fft $(FT2_SUBDIRS) $(GIO_SUBDIRS) overlay playrec v4l encoding
 
 DIST_SUBDIRS = app audio dynamic gio overlay seek snapshot playrec v4l encoding
 

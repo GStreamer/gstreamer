@@ -1015,6 +1015,7 @@ tests/examples/app/Makefile
 tests/examples/audio/Makefile
 tests/examples/dynamic/Makefile
 tests/examples/encoding/Makefile
+tests/examples/fft/Makefile
 tests/examples/gio/Makefile
 tests/examples/overlay/Makefile
 tests/examples/seek/Makefile
