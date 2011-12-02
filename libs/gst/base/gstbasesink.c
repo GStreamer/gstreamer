@@ -362,10 +362,12 @@ static gboolean gst_base_sink_send_event (GstElement * element,
     GstEvent * event);
 static gboolean default_element_query (GstElement * element, GstQuery * query);
 
-static GstCaps *gst_base_sink_get_caps (GstBaseSink * sink, GstCaps * caps);
-static gboolean gst_base_sink_set_caps (GstBaseSink * sink, GstCaps * caps);
-static void gst_base_sink_get_times (GstBaseSink * basesink, GstBuffer * buffer,
-    GstClockTime * start, GstClockTime * end);
+static GstCaps *gst_base_sink_default_get_caps (GstBaseSink * sink,
+    GstCaps * caps);
+static gboolean gst_base_sink_default_set_caps (GstBaseSink * sink,
+    GstCaps * caps);
+static void gst_base_sink_default_get_times (GstBaseSink * basesink,
+    GstBuffer * buffer, GstClockTime * start, GstClockTime * end);
 static gboolean gst_base_sink_set_flushing (GstBaseSink * basesink,
     GstPad * pad, gboolean flushing);
 static gboolean gst_base_sink_default_activate_pull (GstBaseSink * basesink,
@@ -396,7 +398,8 @@ static GstFlowReturn gst_base_sink_default_wait_eos (GstBaseSink * basesink,
 static gboolean gst_base_sink_event (GstPad * pad, GstObject * parent,
     GstEvent * event);
 
-static gboolean default_sink_query (GstBaseSink * sink, GstQuery * query);
+static gboolean gst_base_sink_default_query (GstBaseSink * sink,
+    GstQuery * query);
 
 static gboolean gst_base_sink_negotiate_pull (GstBaseSink * basesink);
 static void gst_base_sink_default_fixate (GstBaseSink * bsink, GstCaps * caps);
@@ -543,13 +546,13 @@ gst_base_sink_class_init (GstBaseSinkClass * klass)
   gstelement_class->send_event = GST_DEBUG_FUNCPTR (gst_base_sink_send_event);
   gstelement_class->query = GST_DEBUG_FUNCPTR (default_element_query);
 
-  klass->get_caps = GST_DEBUG_FUNCPTR (gst_base_sink_get_caps);
-  klass->set_caps = GST_DEBUG_FUNCPTR (gst_base_sink_set_caps);
+  klass->get_caps = GST_DEBUG_FUNCPTR (gst_base_sink_default_get_caps);
+  klass->set_caps = GST_DEBUG_FUNCPTR (gst_base_sink_default_set_caps);
   klass->fixate = GST_DEBUG_FUNCPTR (gst_base_sink_default_fixate);
   klass->activate_pull =
       GST_DEBUG_FUNCPTR (gst_base_sink_default_activate_pull);
-  klass->get_times = GST_DEBUG_FUNCPTR (gst_base_sink_get_times);
-  klass->query = GST_DEBUG_FUNCPTR (default_sink_query);
+  klass->get_times = GST_DEBUG_FUNCPTR (gst_base_sink_default_get_times);
+  klass->query = GST_DEBUG_FUNCPTR (gst_base_sink_default_query);
   klass->event = GST_DEBUG_FUNCPTR (gst_base_sink_default_event);
   klass->wait_eos = GST_DEBUG_FUNCPTR (gst_base_sink_default_wait_eos);
 
@@ -1398,13 +1401,13 @@ gst_base_sink_get_property (GObject * object, guint prop_id, GValue * value,
 
 
 static GstCaps *
-gst_base_sink_get_caps (GstBaseSink * sink, GstCaps * filter)
+gst_base_sink_default_get_caps (GstBaseSink * sink, GstCaps * filter)
 {
   return NULL;
 }
 
 static gboolean
-gst_base_sink_set_caps (GstBaseSink * sink, GstCaps * caps)
+gst_base_sink_default_set_caps (GstBaseSink * sink, GstCaps * caps)
 {
   return TRUE;
 }
@@ -1830,7 +1833,7 @@ again:
   if (!GST_CLOCK_TIME_IS_VALID (start)) {
     /* we don't need to sync but we still want to get the timestamps for
      * tracking the position */
-    gst_base_sink_get_times (basesink, buffer, &start, &stop);
+    gst_base_sink_default_get_times (basesink, buffer, &start, &stop);
     *do_sync = FALSE;
   } else {
     *do_sync = TRUE;
@@ -2014,8 +2017,8 @@ gst_base_sink_wait_clock (GstBaseSink * sink, GstClockTime time,
   /* FIXME: Casting to GstClockEntry only works because the types
    * are the same */
   if (G_LIKELY (sink->priv->cached_clock_id != NULL
-          && GST_CLOCK_ENTRY_CLOCK ((GstClockEntry *) sink->priv->
-              cached_clock_id) == clock)) {
+          && GST_CLOCK_ENTRY_CLOCK ((GstClockEntry *) sink->
+              priv->cached_clock_id) == clock)) {
     if (!gst_clock_single_shot_id_reinit (clock, sink->priv->cached_clock_id,
             time)) {
       gst_clock_id_unref (sink->priv->cached_clock_id);
@@ -3096,7 +3099,7 @@ after_eos:
  * timestamps on a buffer, subclasses can override
  */
 static void
-gst_base_sink_get_times (GstBaseSink * basesink, GstBuffer * buffer,
+gst_base_sink_default_get_times (GstBaseSink * basesink, GstBuffer * buffer,
     GstClockTime * start, GstClockTime * end)
 {
   GstClockTime timestamp, duration;
@@ -3199,7 +3202,7 @@ gst_base_sink_chain_unlocked (GstBaseSink * basesink, GstPad * pad,
   if (!GST_CLOCK_TIME_IS_VALID (start)) {
     /* if the subclass does not want sync, we use our own values so that we at
      * least clip the buffer to the segment */
-    gst_base_sink_get_times (basesink, sync_buf, &start, &end);
+    gst_base_sink_default_get_times (basesink, sync_buf, &start, &end);
   }
 
   GST_DEBUG_OBJECT (basesink, "got times start: %" GST_TIME_FORMAT
@@ -4588,7 +4591,7 @@ default_element_query (GstElement * element, GstQuery * query)
 
 
 static gboolean
-default_sink_query (GstBaseSink * basesink, GstQuery * query)
+gst_base_sink_default_query (GstBaseSink * basesink, GstQuery * query)
 {
   gboolean res;
   GstBaseSinkClass *bclass;
