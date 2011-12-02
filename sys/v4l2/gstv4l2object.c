@@ -1834,7 +1834,7 @@ gst_v4l2_object_probe_caps_for_format (GstV4l2Object * v4l2object,
         size.stepwise.step_height);
 
     for (w = size.stepwise.min_width, h = size.stepwise.min_height;
-        w < size.stepwise.max_width && h < size.stepwise.max_height;
+        w <= size.stepwise.max_width && h <= size.stepwise.max_height;
         w += size.stepwise.step_width, h += size.stepwise.step_height) {
       if (w == 0 || h == 0)
         continue;
