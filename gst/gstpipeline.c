@@ -408,7 +408,9 @@ gst_pipeline_change_state (GstElement * element, GstStateChange transition)
 
       /* running time changed, either with a PAUSED or a flush, we need to check
        * if there is a new clock & update the base time */
-      if (update_clock || last_start_time != start_time) {
+      /* only do this for top-level, however */
+      if (GST_OBJECT_PARENT (element) == NULL &&
+          (update_clock || last_start_time != start_time)) {
         GST_DEBUG_OBJECT (pipeline, "Need to update start_time");
 
         /* when going to PLAYING, select a clock when needed. If we just got
