@@ -599,7 +599,7 @@ gst_app_sink_event (GstBaseSink * sink, GstEvent * event)
     default:
       break;
   }
-  return TRUE;
+  return GST_BASE_SINK_CLASS (parent_class)->event (sink, event);
 }
 
 static GstFlowReturn

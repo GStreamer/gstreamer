@@ -249,8 +249,12 @@ gst_gio_base_sink_event (GstBaseSink * base_sink, GstEvent * event)
     default:
       break;
   }
-
-  return (ret == GST_FLOW_OK);
+  if (ret == GST_FLOW_OK)
+    return GST_BASE_SINK_CLASS (parent_class)->event (base_sink, event);
+  else {
+    gst_event_unref (event);
+    return FALSE;
+  }
 }
 
 static GstFlowReturn

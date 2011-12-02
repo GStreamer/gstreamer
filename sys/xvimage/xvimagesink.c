@@ -1936,10 +1936,7 @@ gst_xvimagesink_event (GstBaseSink * sink, GstEvent * event)
     default:
       break;
   }
-  if (GST_BASE_SINK_CLASS (parent_class)->event)
-    return GST_BASE_SINK_CLASS (parent_class)->event (sink, event);
-  else
-    return TRUE;
+  return GST_BASE_SINK_CLASS (parent_class)->event (sink, event);
 }
 
 static gboolean
