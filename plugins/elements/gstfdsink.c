@@ -576,13 +576,14 @@ gst_fd_sink_event (GstBaseSink * sink, GstEvent * event)
       break;
   }
 
-  return TRUE;
+  return GST_BASE_SINK_CLASS (parent_class)->event (sink, event);
 
 seek_failed:
   {
     GST_ELEMENT_ERROR (fdsink, RESOURCE, SEEK, (NULL),
         ("Error while seeking on file descriptor %d: %s",
             fdsink->fd, g_strerror (errno)));
+    gst_event_unref (event);
     return FALSE;
   }
 

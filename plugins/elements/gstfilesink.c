@@ -583,7 +583,7 @@ gst_file_sink_event (GstBaseSink * sink, GstEvent * event)
       break;
   }
 
-  return TRUE;
+  return GST_BASE_SINK_CLASS (parent_class)->event (sink, event);
 
   /* ERRORS */
 seek_failed:
@@ -591,6 +591,7 @@ seek_failed:
     GST_ELEMENT_ERROR (filesink, RESOURCE, SEEK,
         (_("Error while seeking in file \"%s\"."), filesink->filename),
         GST_ERROR_SYSTEM);
+    gst_event_unref (event);
     return FALSE;
   }
 flush_failed:
@@ -598,6 +599,7 @@ flush_failed:
     GST_ELEMENT_ERROR (filesink, RESOURCE, WRITE,
         (_("Error while writing to file \"%s\"."), filesink->filename),
         GST_ERROR_SYSTEM);
+    gst_event_unref (event);
     return FALSE;
   }
 }

@@ -425,11 +425,7 @@ gst_fake_sink_event (GstBaseSink * bsink, GstEvent * event)
     gst_fake_sink_notify_last_message (sink);
   }
 
-  if (GST_BASE_SINK_CLASS (parent_class)->event) {
-    return GST_BASE_SINK_CLASS (parent_class)->event (bsink, event);
-  } else {
-    return TRUE;
-  }
+  return GST_BASE_SINK_CLASS (parent_class)->event (bsink, event);
 }
 
 static GstFlowReturn
