@@ -2775,6 +2775,7 @@ gst_base_sink_render_object (GstBaseSink * basesink,
 {
   GstFlowReturn ret;
   GstBaseSinkClass *bclass;
+  gint do_qos;
   gboolean late, step_end;
   gpointer sync_obj;
   GstBaseSinkPrivate *priv;
@@ -2800,59 +2801,51 @@ again:
   if (G_UNLIKELY (ret != GST_FLOW_OK))
     goto sync_failed;
 
-  /* and now render, event or buffer/buffer list. */
-  if (G_LIKELY (OBJ_IS_BUFFERFULL (obj_type))) {
-    /* drop late buffers unconditionally, let's hope it's unlikely */
-    if (G_UNLIKELY (late))
-      goto dropped;
+  /* drop late buffers unconditionally, let's hope it's unlikely */
+  if (G_UNLIKELY (late))
+    goto dropped;
 
-    bclass = GST_BASE_SINK_GET_CLASS (basesink);
+  bclass = GST_BASE_SINK_GET_CLASS (basesink);
 
-    if (G_LIKELY ((OBJ_IS_BUFFERLIST (obj_type) && bclass->render_list) ||
-            (!OBJ_IS_BUFFERLIST (obj_type) && bclass->render))) {
-      gint do_qos;
+  /* read once, to get same value before and after */
+  do_qos = g_atomic_int_get (&priv->qos_enabled);
 
-      /* read once, to get same value before and after */
-      do_qos = g_atomic_int_get (&priv->qos_enabled);
+  GST_DEBUG_OBJECT (basesink, "rendering object %p", obj);
 
-      GST_DEBUG_OBJECT (basesink, "rendering object %p", obj);
+  /* record rendering time for QoS and stats */
+  if (do_qos)
+    gst_base_sink_do_render_stats (basesink, TRUE);
 
-      /* record rendering time for QoS and stats */
-      if (do_qos)
-        gst_base_sink_do_render_stats (basesink, TRUE);
+  if (!OBJ_IS_BUFFERLIST (obj_type)) {
+    GstBuffer *buf;
 
-      if (!OBJ_IS_BUFFERLIST (obj_type)) {
-        GstBuffer *buf;
+    /* For buffer lists do not set last buffer. Creating buffer
+     * with meaningful data can be done only with memcpy which will
+     * significantly affect performance */
+    buf = GST_BUFFER_CAST (obj);
+    gst_base_sink_set_last_buffer (basesink, buf);
 
-        /* For buffer lists do not set last buffer. Creating buffer
-         * with meaningful data can be done only with memcpy which will
-         * significantly affect performance */
-        buf = GST_BUFFER_CAST (obj);
-        gst_base_sink_set_last_buffer (basesink, buf);
-
-        ret = bclass->render (basesink, buf);
-      } else {
-        GstBufferList *buflist;
-
-        buflist = GST_BUFFER_LIST_CAST (obj);
-
-        ret = bclass->render_list (basesink, buflist);
-      }
-
-      if (do_qos)
-        gst_base_sink_do_render_stats (basesink, FALSE);
-
-      if (ret == GST_FLOW_STEP)
-        goto again;
-
-      if (G_UNLIKELY (basesink->flushing))
-        goto flushing;
-
-      priv->rendered++;
-    }
+    if (bclass->render)
+      ret = bclass->render (basesink, buf);
   } else {
-    g_return_val_if_reached (GST_FLOW_ERROR);
+    GstBufferList *buflist;
+
+    buflist = GST_BUFFER_LIST_CAST (obj);
+
+    if (bclass->render_list)
+      ret = bclass->render_list (basesink, buflist);
   }
+
+  if (do_qos)
+    gst_base_sink_do_render_stats (basesink, FALSE);
+
+  if (ret == GST_FLOW_STEP)
+    goto again;
+
+  if (G_UNLIKELY (basesink->flushing))
+    goto flushing;
+
+  priv->rendered++;
 
 done:
   if (step_end) {
@@ -2867,6 +2860,7 @@ done:
 
   GST_DEBUG_OBJECT (basesink, "object unref after render %p", obj);
   gst_mini_object_unref (GST_MINI_OBJECT_CAST (obj));
+
   return ret;
 
   /* ERRORS */
@@ -3358,6 +3352,7 @@ gst_base_sink_chain_unlocked (GstBaseSink * basesink, GstPad * pad,
   /* now we can process the buffer in the queue, this function takes ownership
    * of the buffer */
   result = gst_base_sink_render_object (basesink, obj_type, obj);
+
   return result;
 
   /* ERRORS */
