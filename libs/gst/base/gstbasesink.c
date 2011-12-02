@@ -2769,146 +2769,6 @@ gst_base_sink_do_render_stats (GstBaseSink * basesink, gboolean start)
  *
  * takes ownership of obj.
  */
-static GstFlowReturn
-gst_base_sink_render_object (GstBaseSink * basesink,
-    guint8 obj_type, gpointer obj)
-{
-  GstFlowReturn ret;
-  GstBaseSinkClass *bclass;
-  gint do_qos;
-  gboolean late, step_end;
-  gpointer sync_obj;
-  GstBaseSinkPrivate *priv;
-
-  priv = basesink->priv;
-
-  if (OBJ_IS_BUFFERLIST (obj_type)) {
-    /* If buffer list, use the first group buffer within the list
-     * for syncing */
-    sync_obj = gst_buffer_list_get (GST_BUFFER_LIST_CAST (obj), 0);
-    g_assert (NULL != sync_obj);
-  } else {
-    sync_obj = obj;
-  }
-
-again:
-  late = FALSE;
-  step_end = FALSE;
-
-  /* synchronize this object, non syncable objects return OK
-   * immediately. */
-  ret = gst_base_sink_do_sync (basesink, sync_obj, &late, &step_end, obj_type);
-  if (G_UNLIKELY (ret != GST_FLOW_OK))
-    goto sync_failed;
-
-  /* drop late buffers unconditionally, let's hope it's unlikely */
-  if (G_UNLIKELY (late))
-    goto dropped;
-
-  bclass = GST_BASE_SINK_GET_CLASS (basesink);
-
-  /* read once, to get same value before and after */
-  do_qos = g_atomic_int_get (&priv->qos_enabled);
-
-  GST_DEBUG_OBJECT (basesink, "rendering object %p", obj);
-
-  /* record rendering time for QoS and stats */
-  if (do_qos)
-    gst_base_sink_do_render_stats (basesink, TRUE);
-
-  if (!OBJ_IS_BUFFERLIST (obj_type)) {
-    GstBuffer *buf;
-
-    /* For buffer lists do not set last buffer. Creating buffer
-     * with meaningful data can be done only with memcpy which will
-     * significantly affect performance */
-    buf = GST_BUFFER_CAST (obj);
-    gst_base_sink_set_last_buffer (basesink, buf);
-
-    if (bclass->render)
-      ret = bclass->render (basesink, buf);
-  } else {
-    GstBufferList *buflist;
-
-    buflist = GST_BUFFER_LIST_CAST (obj);
-
-    if (bclass->render_list)
-      ret = bclass->render_list (basesink, buflist);
-  }
-
-  if (do_qos)
-    gst_base_sink_do_render_stats (basesink, FALSE);
-
-  if (ret == GST_FLOW_STEP)
-    goto again;
-
-  if (G_UNLIKELY (basesink->flushing))
-    goto flushing;
-
-  priv->rendered++;
-
-done:
-  if (step_end) {
-    /* the step ended, check if we need to activate a new step */
-    GST_DEBUG_OBJECT (basesink, "step ended");
-    stop_stepping (basesink, &basesink->segment, &priv->current_step,
-        priv->current_rstart, priv->current_rstop, basesink->eos);
-    goto again;
-  }
-
-  gst_base_sink_perform_qos (basesink, late);
-
-  GST_DEBUG_OBJECT (basesink, "object unref after render %p", obj);
-  gst_mini_object_unref (GST_MINI_OBJECT_CAST (obj));
-
-  return ret;
-
-  /* ERRORS */
-sync_failed:
-  {
-    GST_DEBUG_OBJECT (basesink, "do_sync returned %s", gst_flow_get_name (ret));
-    goto done;
-  }
-dropped:
-  {
-    priv->dropped++;
-    GST_DEBUG_OBJECT (basesink, "buffer late, dropping");
-
-    if (g_atomic_int_get (&priv->qos_enabled)) {
-      GstMessage *qos_msg;
-      GstClockTime timestamp, duration;
-
-      timestamp = GST_BUFFER_TIMESTAMP (GST_BUFFER_CAST (sync_obj));
-      duration = GST_BUFFER_DURATION (GST_BUFFER_CAST (sync_obj));
-
-      GST_CAT_DEBUG_OBJECT (GST_CAT_QOS, basesink,
-          "qos: dropped buffer rt %" GST_TIME_FORMAT ", st %" GST_TIME_FORMAT
-          ", ts %" GST_TIME_FORMAT ", dur %" GST_TIME_FORMAT,
-          GST_TIME_ARGS (priv->current_rstart),
-          GST_TIME_ARGS (priv->current_sstart), GST_TIME_ARGS (timestamp),
-          GST_TIME_ARGS (duration));
-      GST_CAT_DEBUG_OBJECT (GST_CAT_QOS, basesink,
-          "qos: rendered %" G_GUINT64_FORMAT ", dropped %" G_GUINT64_FORMAT,
-          priv->rendered, priv->dropped);
-
-      qos_msg =
-          gst_message_new_qos (GST_OBJECT_CAST (basesink), basesink->sync,
-          priv->current_rstart, priv->current_sstart, timestamp, duration);
-      gst_message_set_qos_values (qos_msg, priv->current_jitter, priv->avg_rate,
-          1000000);
-      gst_message_set_qos_stats (qos_msg, GST_FORMAT_BUFFERS, priv->rendered,
-          priv->dropped);
-      gst_element_post_message (GST_ELEMENT_CAST (basesink), qos_msg);
-    }
-    goto done;
-  }
-flushing:
-  {
-    GST_DEBUG_OBJECT (basesink, "we are flushing, ignore object");
-    gst_mini_object_unref (obj);
-    return GST_FLOW_WRONG_STATE;
-  }
-}
 
 /* with STREAM_LOCK, PREROLL_LOCK
  *
@@ -3276,7 +3136,7 @@ gst_base_sink_needs_preroll (GstBaseSink * basesink)
  *
  * Takes a buffer and compare the timestamps with the last segment.
  * If the buffer falls outside of the segment boundaries, drop it.
- * Else queue the buffer for preroll and rendering.
+ * Else send the buffer for preroll and rendering.
  *
  * This function takes ownership of the buffer.
  */
@@ -3285,22 +3145,25 @@ gst_base_sink_chain_unlocked (GstBaseSink * basesink, GstPad * pad,
     guint8 obj_type, gpointer obj)
 {
   GstBaseSinkClass *bclass;
-  GstFlowReturn result;
+  GstBaseSinkPrivate *priv = basesink->priv;
+  GstFlowReturn ret;
   GstClockTime start = GST_CLOCK_TIME_NONE, end = GST_CLOCK_TIME_NONE;
   GstSegment *segment;
-  GstBuffer *time_buf;
+  GstBuffer *sync_buf;
+  gint do_qos;
+  gboolean late, step_end;
 
   if (G_UNLIKELY (basesink->flushing))
     goto flushing;
 
-  if (G_UNLIKELY (basesink->priv->received_eos))
+  if (G_UNLIKELY (priv->received_eos))
     goto was_eos;
 
   if (OBJ_IS_BUFFERLIST (obj_type)) {
-    time_buf = gst_buffer_list_get (GST_BUFFER_LIST_CAST (obj), 0);
-    g_assert (NULL != time_buf);
+    sync_buf = gst_buffer_list_get (GST_BUFFER_LIST_CAST (obj), 0);
+    g_assert (NULL != sync_buf);
   } else {
-    time_buf = GST_BUFFER_CAST (obj);
+    sync_buf = GST_BUFFER_CAST (obj);
   }
 
   /* for code clarity */
@@ -3331,12 +3194,12 @@ gst_base_sink_chain_unlocked (GstBaseSink * basesink, GstPad * pad,
   /* check if the buffer needs to be dropped, we first ask the subclass for the
    * start and end */
   if (bclass->get_times)
-    bclass->get_times (basesink, time_buf, &start, &end);
+    bclass->get_times (basesink, sync_buf, &start, &end);
 
   if (!GST_CLOCK_TIME_IS_VALID (start)) {
     /* if the subclass does not want sync, we use our own values so that we at
      * least clip the buffer to the segment */
-    gst_base_sink_get_times (basesink, time_buf, &start, &end);
+    gst_base_sink_get_times (basesink, sync_buf, &start, &end);
   }
 
   GST_DEBUG_OBJECT (basesink, "got times start: %" GST_TIME_FORMAT
@@ -3349,11 +3212,69 @@ gst_base_sink_chain_unlocked (GstBaseSink * basesink, GstPad * pad,
       goto out_of_segment;
   }
 
-  /* now we can process the buffer in the queue, this function takes ownership
-   * of the buffer */
-  result = gst_base_sink_render_object (basesink, obj_type, obj);
+again:
+  late = FALSE;
+  step_end = FALSE;
 
-  return result;
+  /* synchronize this object, non syncable objects return OK
+   * immediately. */
+  ret = gst_base_sink_do_sync (basesink, GST_MINI_OBJECT_CAST (sync_buf),
+      &late, &step_end, obj_type);
+  if (G_UNLIKELY (ret != GST_FLOW_OK))
+    goto sync_failed;
+
+  /* drop late buffers unconditionally, let's hope it's unlikely */
+  if (G_UNLIKELY (late))
+    goto dropped;
+
+  /* read once, to get same value before and after */
+  do_qos = g_atomic_int_get (&priv->qos_enabled);
+
+  GST_DEBUG_OBJECT (basesink, "rendering object %p", obj);
+
+  /* record rendering time for QoS and stats */
+  if (do_qos)
+    gst_base_sink_do_render_stats (basesink, TRUE);
+
+  if (!OBJ_IS_BUFFERLIST (obj_type)) {
+    /* For buffer lists do not set last buffer. Creating buffer
+     * with meaningful data can be done only with memcpy which will
+     * significantly affect performance */
+    gst_base_sink_set_last_buffer (basesink, GST_BUFFER_CAST (obj));
+
+    if (bclass->render)
+      ret = bclass->render (basesink, GST_BUFFER_CAST (obj));
+  } else {
+    if (bclass->render_list)
+      ret = bclass->render_list (basesink, GST_BUFFER_LIST_CAST (obj));
+  }
+
+  if (do_qos)
+    gst_base_sink_do_render_stats (basesink, FALSE);
+
+  if (ret == GST_FLOW_STEP)
+    goto again;
+
+  if (G_UNLIKELY (basesink->flushing))
+    goto flushing;
+
+  priv->rendered++;
+
+done:
+  if (step_end) {
+    /* the step ended, check if we need to activate a new step */
+    GST_DEBUG_OBJECT (basesink, "step ended");
+    stop_stepping (basesink, &basesink->segment, &priv->current_step,
+        priv->current_rstart, priv->current_rstop, basesink->eos);
+    goto again;
+  }
+
+  gst_base_sink_perform_qos (basesink, late);
+
+  GST_DEBUG_OBJECT (basesink, "object unref after render %p", obj);
+  gst_mini_object_unref (GST_MINI_OBJECT_CAST (obj));
+
+  return ret;
 
   /* ERRORS */
 flushing:
@@ -3373,6 +3294,44 @@ out_of_segment:
     GST_DEBUG_OBJECT (basesink, "dropping buffer, out of clipping segment");
     gst_mini_object_unref (GST_MINI_OBJECT_CAST (obj));
     return GST_FLOW_OK;
+  }
+sync_failed:
+  {
+    GST_DEBUG_OBJECT (basesink, "do_sync returned %s", gst_flow_get_name (ret));
+    goto done;
+  }
+dropped:
+  {
+    priv->dropped++;
+    GST_DEBUG_OBJECT (basesink, "buffer late, dropping");
+
+    if (g_atomic_int_get (&priv->qos_enabled)) {
+      GstMessage *qos_msg;
+      GstClockTime timestamp, duration;
+
+      timestamp = GST_BUFFER_TIMESTAMP (GST_BUFFER_CAST (sync_buf));
+      duration = GST_BUFFER_DURATION (GST_BUFFER_CAST (sync_buf));
+
+      GST_CAT_DEBUG_OBJECT (GST_CAT_QOS, basesink,
+          "qos: dropped buffer rt %" GST_TIME_FORMAT ", st %" GST_TIME_FORMAT
+          ", ts %" GST_TIME_FORMAT ", dur %" GST_TIME_FORMAT,
+          GST_TIME_ARGS (priv->current_rstart),
+          GST_TIME_ARGS (priv->current_sstart), GST_TIME_ARGS (timestamp),
+          GST_TIME_ARGS (duration));
+      GST_CAT_DEBUG_OBJECT (GST_CAT_QOS, basesink,
+          "qos: rendered %" G_GUINT64_FORMAT ", dropped %" G_GUINT64_FORMAT,
+          priv->rendered, priv->dropped);
+
+      qos_msg =
+          gst_message_new_qos (GST_OBJECT_CAST (basesink), basesink->sync,
+          priv->current_rstart, priv->current_sstart, timestamp, duration);
+      gst_message_set_qos_values (qos_msg, priv->current_jitter, priv->avg_rate,
+          1000000);
+      gst_message_set_qos_stats (qos_msg, GST_FORMAT_BUFFERS, priv->rendered,
+          priv->dropped);
+      gst_element_post_message (GST_ELEMENT_CAST (basesink), qos_msg);
+    }
+    goto done;
   }
 }
 
