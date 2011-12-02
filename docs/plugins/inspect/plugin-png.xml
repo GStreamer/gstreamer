@@ -47,7 +47,7 @@
           <name>src</name>
           <direction>source</direction>
           <presence>always</presence>
-          <details>image/png, width=(int)[ 16, 4096 ], height=(int)[ 16, 4096 ], framerate=(fraction)[ 0/1, 2147483647/1 ]</details>
+          <details>image/png, width=(int)[ 16, 1000000 ], height=(int)[ 16, 1000000 ], framerate=(fraction)[ 0/1, 2147483647/1 ]</details>
         </caps>
       </pads>
     </element>

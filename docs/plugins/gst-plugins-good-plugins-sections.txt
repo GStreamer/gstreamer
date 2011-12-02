@@ -1912,6 +1912,20 @@ gst_speex_enc_get_type
 </SECTION>
 
 <SECTION>
+<FILE>element-splitfilesrc</FILE>
+<TITLE>splitfilesrc</TITLE>
+GstSplitFileSrc
+<SUBSECTION Standard>
+GstSplitFileSrcClass
+GST_SPLIT_FILE_SRC
+GST_SPLIT_FILE_SRC_CLASS
+GST_IS_SPLIT_FILE_SRC
+GST_IS_SPLIT_FILE_SRC_CLASS
+GST_TYPE_SPLIT_FILE_SRC
+gst_split_file_src_get_type
+</SECTION>
+
+<SECTION>
 <FILE>element-taginject</FILE>
 <TITLE>taginject</TITLE>
 GstTagInject

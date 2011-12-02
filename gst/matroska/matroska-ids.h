@@ -569,6 +569,8 @@ typedef struct _GstMatroskaTrackSubtitleContext {
   GstMatroskaTrackContext parent;
 
   gboolean    check_utf8;     /* buffers should be valid UTF-8 */
+  gboolean    check_markup;   /* check if buffers contain markup
+                               * or plaintext and escape characters */
   gboolean    invalid_utf8;   /* work around broken files      */
   gboolean    seen_markup_tag;  /* markup found in text */
 } GstMatroskaTrackSubtitleContext;

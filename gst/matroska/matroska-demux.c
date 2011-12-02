@@ -2935,29 +2935,34 @@ gst_matroska_demux_check_subtitle_buffer (GstElement * element,
 
   newbuf = gst_buffer_new_wrapped (utf8, strlen (utf8));
   gst_buffer_copy_into (newbuf, *buf,
-      GST_BUFFER_COPY_TIMESTAMPS | GST_BUFFER_COPY_FLAGS, 0, -1);
+      GST_BUFFER_COPY_TIMESTAMPS | GST_BUFFER_COPY_FLAGS | GST_BUFFER_COPY_META,
+      0, -1);
   gst_buffer_unmap (*buf, data, size);
+
   gst_buffer_unref (*buf);
 
   *buf = newbuf;
   data = gst_buffer_map (*buf, &size, NULL, GST_MAP_READ);
 
 next:
-  /* caps claim markup text, so we need to escape text,
-   * except if text is already markup and then needs no further escaping */
-  sub_stream->seen_markup_tag = sub_stream->seen_markup_tag ||
-      gst_matroska_demux_subtitle_chunk_has_tag (element, data);
+  if (sub_stream->check_markup) {
+    /* caps claim markup text, so we need to escape text,
+     * except if text is already markup and then needs no further escaping */
+    sub_stream->seen_markup_tag = sub_stream->seen_markup_tag ||
+        gst_matroska_demux_subtitle_chunk_has_tag (element, data);
 
-  if (!sub_stream->seen_markup_tag) {
-    utf8 = g_markup_escape_text (data, size);
+    if (!sub_stream->seen_markup_tag) {
+      utf8 = g_markup_escape_text (data, size);
 
-    newbuf = gst_buffer_new_wrapped (utf8, strlen (utf8));
-    gst_buffer_copy_into (newbuf, *buf,
-        GST_BUFFER_COPY_TIMESTAMPS | GST_BUFFER_COPY_FLAGS, 0, -1);
-    gst_buffer_unmap (*buf, data, size);
-    gst_buffer_unref (*buf);
+      newbuf = gst_buffer_new_wrapped (utf8, strlen (utf8));
+      gst_buffer_copy_into (newbuf, *buf,
+          GST_BUFFER_COPY_TIMESTAMPS | GST_BUFFER_COPY_FLAGS |
+          GST_BUFFER_COPY_META, 0, -1);
+      gst_buffer_unmap (*buf, data, size);
+      gst_buffer_unref (*buf);
 
-    *buf = newbuf;
+      *buf = newbuf;
+    }
   }
 
   return GST_FLOW_OK;
@@ -5448,15 +5453,19 @@ gst_matroska_demux_subtitle_caps (GstMatroskaTrackSubtitleContext *
     /* well, plain text simply does not have a lot of markup ... */
     caps = gst_caps_new_empty_simple ("text/x-pango-markup");
     context->postprocess_frame = gst_matroska_demux_check_subtitle_buffer;
+    subtitlecontext->check_markup = TRUE;
   } else if (!strcmp (codec_id, GST_MATROSKA_CODEC_ID_SUBTITLE_SSA)) {
     caps = gst_caps_new_empty_simple ("application/x-ssa");
     context->postprocess_frame = gst_matroska_demux_check_subtitle_buffer;
+    subtitlecontext->check_markup = FALSE;
   } else if (!strcmp (codec_id, GST_MATROSKA_CODEC_ID_SUBTITLE_ASS)) {
     caps = gst_caps_new_empty_simple ("application/x-ass");
     context->postprocess_frame = gst_matroska_demux_check_subtitle_buffer;
+    subtitlecontext->check_markup = FALSE;
   } else if (!strcmp (codec_id, GST_MATROSKA_CODEC_ID_SUBTITLE_USF)) {
     caps = gst_caps_new_empty_simple ("application/x-usf");
     context->postprocess_frame = gst_matroska_demux_check_subtitle_buffer;
+    subtitlecontext->check_markup = FALSE;
   } else if (!strcmp (codec_id, GST_MATROSKA_CODEC_ID_SUBTITLE_VOBSUB)) {
     caps = gst_caps_new_empty_simple ("video/x-dvd-subpicture");
     ((GstMatroskaTrackContext *) subtitlecontext)->send_dvd_event = TRUE;

@@ -155,7 +155,7 @@
       <longname>Random buffer size</longname>
       <class>Testing</class>
       <description>pull random sized buffers</description>
-      <author>Stefan Kost &lt;stefan.kost@nokia.com&gt;)</author>
+      <author>Stefan Kost &lt;stefan.kost@nokia.com&gt;</author>
       <pads>
         <caps>
           <name>sink</name>

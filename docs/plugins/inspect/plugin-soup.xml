@@ -1,6 +1,6 @@
 <plugin>
   <name>soup</name>
-  <description>libsoup HTTP client src</description>
+  <description>libsoup HTTP client src/sink</description>
   <filename>../../ext/soup/.libs/libgstsouphttpsrc.so</filename>
   <basename>libgstsouphttpsrc.so</basename>
   <version>0.10.30.1</version>
@@ -9,6 +9,21 @@
   <package>GStreamer Good Plug-ins git</package>
   <origin>Unknown package origin</origin>
   <elements>
+    <element>
+      <name>souphttpclientsink</name>
+      <longname>HTTP client sink</longname>
+      <class>Generic</class>
+      <description>Sends streams to HTTP server via PUT</description>
+      <author>David Schleef &lt;ds@entropywave.com&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>ANY</details>
+        </caps>
+      </pads>
+    </element>
     <element>
       <name>souphttpsrc</name>
       <longname>HTTP client source</longname>

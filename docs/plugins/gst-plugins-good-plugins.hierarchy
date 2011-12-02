@@ -15,6 +15,11 @@ GObject
       GstALawEnc
       GstAsteriskh263
       GstAuParse
+      GstAudioDecoder
+        GstSpeexDec
+      GstAudioEncoder
+        GstFlacEnc
+        GstSpeexEnc
       GstAviDemux
       GstAviMux
       GstAviSubtitle
@@ -111,10 +116,10 @@ GObject
         GstMultiUDPSink
           GstUDPSink
         GstShout2send
+        GstSoupHttpClientSink
         GstTest
         GstVideoSink
           GstGdkPixbufSink
-          GstV4l2Sink
       GstBaseSrc
         GstPushSrc
           GstBaseAudioSrc
@@ -130,6 +135,7 @@ GObject
           GstUDPSrc
           GstV4l2Src
           GstXImageSrc
+        GstSplitFileSrc
       GstBaseTransform
         GstAudioFilter
           GstAudioAmplify
@@ -195,6 +201,7 @@ GObject
         GstHalAudioSrc
         GstPipeline
           GstQTMoovRecover
+        GstPulseAudioSink
         GstPushFileSrc
         GstRTSPSrc
         GstRgVolume
@@ -217,7 +224,6 @@ GObject
       GstDeinterleave
       GstEFence
       GstFlacDec
-      GstFlacEnc
       GstFlacTag
       GstFlvDemux
       GstFlvMux
@@ -261,8 +267,6 @@ GObject
       GstShapeWipe
       GstSmokeDec
       GstSmokeEnc
-      GstSpeexDec
-      GstSpeexEnc
       GstTagDemux
         GstApeDemux
         GstID3Demux
@@ -300,6 +304,7 @@ GObject
   GstTunerChannel
   GstTunerNorm
   RTPSession
+  SoupSession
 GInterface
   GIcon
   GTypePlugin
@@ -307,7 +312,6 @@ GInterface
   GstColorBalance
   GstImplementsInterface
   GstMixer
-  GstNavigation
   GstPreset
   GstPropertyProbe
   GstStreamVolume
@@ -316,4 +320,3 @@ GInterface
   GstTuner
   GstURIHandler
   GstVideoOrientation
-  GstXOverlay

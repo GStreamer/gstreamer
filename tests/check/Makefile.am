@@ -239,14 +239,17 @@ elements_interleave_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(CFLAGS) $(AM_CFLAGS)
 elements_interleave_LDADD = $(GST_PLUGINS_BASE_LIBS) -lgstaudio-$(GST_MAJORMINOR) $(LDADD)
 
 elements_imagefreeze_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(GST_BASE_CFLAGS) $(AM_CFLAGS)
-elements_imagefreeze_LDADD = $(GST_BASE_LIBS) $(LDADD) -lgstvideo-$(GST_MAJORMINOR)
+elements_imagefreeze_LDADD = $(GST_PLUGINS_BASE_LIBS) -lgstvideo-$(GST_MAJORMINOR) $(GST_BASE_LIBS) $(LDADD)
 
 elements_jpegenc_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(GST_BASE_CFLAGS) $(AM_CFLAGS)
-elements_jpegenc_LDADD = $(GST_BASE_LIBS) $(LDADD) -lgstapp-0.10
+elements_jpegenc_LDADD = $(GST_PLUGINS_BASE_LIBS) -lgstapp-0.10 $(GST_BASE_LIBS) $(LDADD)
 
 elements_level_LDADD = $(LDADD) $(LIBM)
 
 elements_matroskamux_LDADD = $(GST_BASE_LIBS) $(LDADD) $(LIBM)
+
+elements_multifile_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(GST_CFLAGS) $(AM_CFLAGS)
+elements_multifile_LDADD = $(GST_PLUGINS_BASE_LIBS) -lgstvideo-$(GST_MAJORMINOR) $(GST_LIBS) $(LDADD) $(LIBM)
 
 elements_qtmux_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(GST_CFLAGS) $(AM_CFLAGS)
 elements_qtmux_LDADD = $(GST_PLUGINS_BASE_LIBS) -lgstpbutils-@GST_MAJORMINOR@ \
