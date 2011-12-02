@@ -1594,6 +1594,9 @@ AG_GST_CHECK_FEATURE(XVID, [xvid plugins], xvid, [
               #if XVID_API_MAJOR(XVID_API) != 4
               #error "Incompatible XviD API version"
               #endif
+	      #if XVID_API_MAJOR(XVID_API) == 4 && XVID_API_MINOR(XVID_API) < 3
+              #error "Incompatible XviD API version"
+	      #endif
           ],[ AC_MSG_RESULT(yes)
             XVID_LIBS="-lxvidcore $LIBM"
             AC_SUBST(XVID_LIBS)
