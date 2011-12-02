@@ -1750,7 +1750,7 @@ static gboolean
 gst_base_sink_get_sync_times (GstBaseSink * basesink, GstMiniObject * obj,
     GstClockTime * rsstart, GstClockTime * rsstop,
     GstClockTime * rrstart, GstClockTime * rrstop, gboolean * do_sync,
-    gboolean * stepped, GstSegment * segment, GstStepInfo * step,
+    gboolean * stepped, GstStepInfo * step,
     gboolean * step_end, guint8 obj_type)
 {
   GstBaseSinkClass *bclass;
@@ -1761,9 +1761,11 @@ gst_base_sink_get_sync_times (GstBaseSink * basesink, GstMiniObject * obj,
   GstClockTime sstart, sstop;   /* clipped timestamps converted to stream time */
   GstFormat format;
   GstBaseSinkPrivate *priv;
+  GstSegment *segment;
   gboolean eos;
 
   priv = basesink->priv;
+  segment = &basesink->segment;
 
   /* start with nothing */
   start = stop = GST_CLOCK_TIME_NONE;
@@ -2302,7 +2304,7 @@ do_step:
 
   /* get timing information for this object against the render segment */
   syncable = gst_base_sink_get_sync_times (basesink, obj,
-      &sstart, &sstop, &rstart, &rstop, &do_sync, &stepped, &basesink->segment,
+      &sstart, &sstop, &rstart, &rstop, &do_sync, &stepped,
       current, step_end, obj_type);
 
   if (G_UNLIKELY (stepped))
