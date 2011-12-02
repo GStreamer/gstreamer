@@ -300,6 +300,7 @@ gst_base_video_decoder_setcaps (GstBaseVideoDecoder * base_video_decoder,
   codec_data = gst_structure_get_value (structure, "codec_data");
   if (codec_data && G_VALUE_TYPE (codec_data) == GST_TYPE_BUFFER) {
     state.codec_data = GST_BUFFER (gst_value_get_buffer (codec_data));
+    gst_buffer_ref (state.codec_data);
   }
 
   if (base_video_decoder_class->set_format) {
@@ -308,8 +309,8 @@ gst_base_video_decoder_setcaps (GstBaseVideoDecoder * base_video_decoder,
   }
 
   if (ret) {
-    gst_buffer_replace (&GST_BASE_VIDEO_CODEC (base_video_decoder)->
-        state.codec_data, NULL);
+    gst_buffer_replace (&GST_BASE_VIDEO_CODEC (base_video_decoder)->state.
+        codec_data, NULL);
     gst_caps_replace (&GST_BASE_VIDEO_CODEC (base_video_decoder)->state.caps,
         NULL);
     GST_BASE_VIDEO_CODEC (base_video_decoder)->state = state;
