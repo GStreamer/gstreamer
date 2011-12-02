@@ -1664,7 +1664,7 @@ gst_v4l2_object_probe_caps_for_format_and_size (GstV4l2Object * v4l2object,
         num, denom);
     gst_value_set_fraction (&step, -num, denom);
 
-    while (gst_value_compare (&min, &max) <= 0) {
+    while (gst_value_compare (&min, &max) != GST_VALUE_GREATER_THAN) {
       GValue rate = { 0, };
 
       num = gst_value_get_fraction_numerator (&min);
