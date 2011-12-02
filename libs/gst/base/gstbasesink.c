@@ -174,14 +174,8 @@ typedef struct
   gboolean need_preroll;        /* if we need preroll after this step */
 } GstStepInfo;
 
-/* FIXME, some stuff in ABI.data and other in Private...
- * Make up your mind please.
- */
 struct _GstBaseSinkPrivate
 {
-  GQueue *preroll_queue;
-  gint preroll_queued;
-
   gint qos_enabled;             /* ATOMIC */
   gboolean async_enabled;
   GstClockTimeDiff ts_offset;
@@ -650,7 +644,6 @@ gst_base_sink_init (GstBaseSink * basesink, gpointer g_class)
   basesink->pad_mode = GST_PAD_MODE_NONE;
   basesink->preroll_lock = g_mutex_new ();
   basesink->preroll_cond = g_cond_new ();
-  priv->preroll_queue = g_queue_new ();
   priv->have_latency = FALSE;
 
   basesink->can_activate_push = DEFAULT_CAN_ACTIVATE_PUSH;
@@ -679,7 +672,6 @@ gst_base_sink_finalize (GObject * object)
 
   g_mutex_free (basesink->preroll_lock);
   g_cond_free (basesink->preroll_cond);
-  g_queue_free (basesink->priv->preroll_queue);
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
@@ -1415,20 +1407,11 @@ gst_base_sink_set_caps (GstBaseSink * sink, GstCaps * caps)
 static void
 gst_base_sink_preroll_queue_flush (GstBaseSink * basesink, GstPad * pad)
 {
-  GstMiniObject *obj;
-
-  GST_DEBUG_OBJECT (basesink, "flushing queue %p", basesink);
-  while ((obj = g_queue_pop_head (basesink->priv->preroll_queue))) {
-    GST_DEBUG_OBJECT (basesink, "popped %p", obj);
-    gst_mini_object_unref (obj);
-  }
   /* we can't have EOS anymore now */
   basesink->eos = FALSE;
   basesink->priv->received_eos = FALSE;
   basesink->have_preroll = FALSE;
   basesink->priv->step_unlock = FALSE;
-  basesink->eos_queued = FALSE;
-  basesink->priv->preroll_queued = 0;
   /* can't report latency anymore until we preroll again */
   if (basesink->priv->async_enabled) {
     GST_OBJECT_LOCK (basesink);
@@ -3064,7 +3047,6 @@ gst_base_sink_preroll_object (GstBaseSink * basesink, guint8 obj_type,
   if (G_LIKELY (OBJ_IS_BUFFERFULL (obj_type) && basesink->priv->call_preroll)) {
     GstBaseSinkClass *bclass;
     GstBuffer *buf;
-    GstClockTime timestamp;
 
     if (OBJ_IS_BUFFERLIST (obj_type)) {
       buf = gst_buffer_list_get (GST_BUFFER_LIST_CAST (obj), 0);
@@ -3073,10 +3055,8 @@ gst_base_sink_preroll_object (GstBaseSink * basesink, guint8 obj_type,
       buf = GST_BUFFER_CAST (obj);
     }
 
-    timestamp = GST_BUFFER_TIMESTAMP (buf);
-
     GST_DEBUG_OBJECT (basesink, "preroll buffer %" GST_TIME_FORMAT,
-        GST_TIME_ARGS (timestamp));
+        GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buf)));
 
     /*
      * For buffer lists do not set last buffer. Creating buffer
@@ -3130,78 +3110,11 @@ gst_base_sink_queue_object_unlocked (GstBaseSink * basesink, GstPad * pad,
     guint8 obj_type, gpointer obj, gboolean prerollable)
 {
   GstFlowReturn ret = GST_FLOW_OK;
-  gint length;
-  GQueue *q;
-
-  if (G_UNLIKELY (basesink->need_preroll)) {
-    if (G_LIKELY (prerollable))
-      basesink->priv->preroll_queued++;
-
-    length = basesink->priv->preroll_queued;
-
-    GST_DEBUG_OBJECT (basesink, "now %d prerolled items", length);
-
-    /* first prerollable item needs to finish the preroll */
-    if (length == 1) {
-      ret = gst_base_sink_preroll_object (basesink, obj_type, obj);
-      if (G_UNLIKELY (ret != GST_FLOW_OK))
-        goto preroll_failed;
-    }
-    /* need to recheck if we need preroll, commit state during preroll
-     * could have made us not need more preroll. */
-    if (G_UNLIKELY (basesink->need_preroll)) {
-      /* see if we can render now, if we can't add the object to the preroll
-       * queue. */
-      if (G_UNLIKELY (length <= 0))
-        goto more_preroll;
-    }
-  }
-  /* we can start rendering (or blocking) the queued object
-   * if any. */
-  q = basesink->priv->preroll_queue;
-  while (G_UNLIKELY (!g_queue_is_empty (q))) {
-    GstMiniObject *o;
-    guint8 ot;
-
-    o = g_queue_pop_head (q);
-    GST_DEBUG_OBJECT (basesink, "rendering queued object %p", o);
-
-    ot = get_object_type (o);
-
-    /* do something with the return value */
-    ret = gst_base_sink_render_object (basesink, pad, ot, o);
-    if (ret != GST_FLOW_OK)
-      goto dequeue_failed;
-  }
 
   /* now render the object */
   ret = gst_base_sink_render_object (basesink, pad, obj_type, obj);
-  basesink->priv->preroll_queued = 0;
 
   return ret;
-
-  /* special cases */
-preroll_failed:
-  {
-    GST_DEBUG_OBJECT (basesink, "preroll failed, reason %s",
-        gst_flow_get_name (ret));
-    gst_mini_object_unref (GST_MINI_OBJECT_CAST (obj));
-    return ret;
-  }
-more_preroll:
-  {
-    /* add object to the queue and return */
-    GST_DEBUG_OBJECT (basesink, "need more preroll data");
-    g_queue_push_tail (basesink->priv->preroll_queue, obj);
-    return GST_FLOW_OK;
-  }
-dequeue_failed:
-  {
-    GST_DEBUG_OBJECT (basesink, "rendering queued objects failed, reason %s",
-        gst_flow_get_name (ret));
-    gst_mini_object_unref (GST_MINI_OBJECT_CAST (obj));
-    return ret;
-  }
 }
 
 /* with STREAM_LOCK

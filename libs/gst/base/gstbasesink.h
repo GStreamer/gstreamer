@@ -82,7 +82,6 @@ struct _GstBaseSink {
   GMutex        *preroll_lock;
   GCond         *preroll_cond;
   gboolean       eos;
-  gboolean       eos_queued;
   gboolean       need_preroll;
   gboolean       have_preroll;
   gboolean       playing_async;
@@ -94,7 +93,6 @@ struct _GstBaseSink {
 
   /*< private >*/ /* with LOCK */
   GstClockID     clock_id;
-  GstClockTime   end_time;
   gboolean       sync;
   gboolean       flushing;
   gboolean       running;
