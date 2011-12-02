@@ -87,8 +87,10 @@ distribute_running_time (GstElement * element, const GstSegment * segment)
   gst_pad_send_event (pad, gst_event_new_flush_start ());
   gst_pad_send_event (pad, gst_event_new_flush_stop (FALSE));
 
-  event = gst_event_new_segment (segment);
-  gst_pad_send_event (pad, event);
+  if (segment->format != GST_FORMAT_UNDEFINED) {
+    event = gst_event_new_segment (segment);
+    gst_pad_send_event (pad, event);
+  }
 
   gst_object_unref (pad);
 }

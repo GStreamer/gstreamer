@@ -115,6 +115,8 @@ GST_START_TEST (test_basetime_calculation)
   gst_object_unref (pad);
   gst_element_set_state (p1, GST_STATE_NULL);
   gst_object_unref (p1);
+
+  g_main_loop_unref (loop);
 }
 
 GST_END_TEST;

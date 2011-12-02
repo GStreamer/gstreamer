@@ -24,8 +24,13 @@ EXPORTS
 	gst_video_convert_frame
 	gst_video_convert_frame_async
 	gst_video_crop_meta_get_info
+	gst_video_event_is_force_key_unit
+	gst_video_event_new_downstream_force_key_unit
 	gst_video_event_new_still_frame
+	gst_video_event_new_upstream_force_key_unit
+	gst_video_event_parse_downstream_force_key_unit
 	gst_video_event_parse_still_frame
+	gst_video_event_parse_upstream_force_key_unit
 	gst_video_filter_get_type
 	gst_video_flags_get_type
 	gst_video_format_flags_get_type

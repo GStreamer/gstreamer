@@ -87,12 +87,6 @@ static gboolean gst_alsasrc_close (GstAudioSrc * asrc);
 static guint gst_alsasrc_read (GstAudioSrc * asrc, gpointer data, guint length);
 static guint gst_alsasrc_delay (GstAudioSrc * asrc);
 static void gst_alsasrc_reset (GstAudioSrc * asrc);
-static GstStateChangeReturn gst_alsasrc_change_state (GstElement * element,
-    GstStateChange transition);
-static GstFlowReturn gst_alsasrc_create (GstBaseSrc * bsrc, guint64 offset,
-    guint length, GstBuffer ** outbuf);
-static GstClockTime gst_alsasrc_get_timestamp (GstAlsaSrc * src);
-
 
 /* AlsaSrc signals and args */
 enum
@@ -164,10 +158,7 @@ gst_alsasrc_class_init (GstAlsaSrcClass * klass)
   gst_element_class_add_pad_template (gstelement_class,
       gst_static_pad_template_get (&alsasrc_src_factory));
 
-  gstelement_class->change_state = GST_DEBUG_FUNCPTR (gst_alsasrc_change_state);
-
   gstbasesrc_class->get_caps = GST_DEBUG_FUNCPTR (gst_alsasrc_getcaps);
-  gstbasesrc_class->create = GST_DEBUG_FUNCPTR (gst_alsasrc_create);
 
   gstaudiosrc_class->open = GST_DEBUG_FUNCPTR (gst_alsasrc_open);
   gstaudiosrc_class->prepare = GST_DEBUG_FUNCPTR (gst_alsasrc_prepare);
@@ -191,87 +182,6 @@ gst_alsasrc_class_init (GstAlsaSrcClass * klass)
       g_param_spec_string ("card-name", "Card name",
           "Human-readable name of the sound card",
           DEFAULT_PROP_CARD_NAME, G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
-}
-
-static GstClockTime
-gst_alsasrc_get_timestamp (GstAlsaSrc * src)
-{
-  snd_pcm_status_t *status;
-  snd_htimestamp_t htstamp;
-  snd_timestamp_t tstamp;
-  GstClockTime timestamp;
-  snd_pcm_uframes_t availmax;
-  gint64 offset;
-
-  GST_DEBUG_OBJECT (src, "Getting alsa timestamp!");
-
-  if (!src) {
-    GST_ERROR_OBJECT (src, "No alsa handle created yet !");
-    return GST_CLOCK_TIME_NONE;
-  }
-
-  if (snd_pcm_status_malloc (&status) != 0) {
-    GST_ERROR_OBJECT (src, "snd_pcm_status_malloc failed");
-    return GST_CLOCK_TIME_NONE;
-  }
-
-  if (snd_pcm_status (src->handle, status) != 0) {
-    GST_ERROR_OBJECT (src, "snd_pcm_status failed");
-    snd_pcm_status_free (status);
-    return GST_CLOCK_TIME_NONE;
-  }
-
-  /* get high resolution time stamp from driver */
-  snd_pcm_status_get_htstamp (status, &htstamp);
-  timestamp = GST_TIMESPEC_TO_TIME (htstamp);
-  if (timestamp == 0) {
-    GST_INFO_OBJECT (src,
-        "This alsa source does support high resolution timestamps");
-    snd_pcm_status_get_tstamp (status, &tstamp);
-    timestamp = GST_TIMEVAL_TO_TIME (tstamp);
-    if (timestamp == 0) {
-      GST_INFO_OBJECT (src,
-          "This alsa source does support low resolution timestamps");
-      timestamp = gst_util_get_timestamp ();
-    }
-  }
-  GST_DEBUG_OBJECT (src, "Base ts: %" GST_TIME_FORMAT,
-      GST_TIME_ARGS (timestamp));
-  if (timestamp == 0) {
-    /* This timestamp is supposed to represent the last sample, so 0 (which
-       can be returned on some ALSA setups (such as mine)) must mean that it
-       is invalid, unless there's just one sample, but we'll ignore that. */
-    GST_WARNING_OBJECT (src,
-        "No timestamp returned from snd_pcm_status_get_htstamp");
-    return GST_CLOCK_TIME_NONE;
-  }
-
-  /* Max available frames sets the depth of the buffer */
-  availmax = snd_pcm_status_get_avail_max (status);
-
-  /* Compensate the fact that the timestamp references the last sample */
-  offset = -gst_util_uint64_scale_int (availmax * 2, GST_SECOND, src->rate);
-  /* Compensate for the delay until the package is available */
-  offset += gst_util_uint64_scale_int (snd_pcm_status_get_delay (status),
-      GST_SECOND, src->rate);
-
-  snd_pcm_status_free (status);
-
-  /* just in case, should not happen */
-  if (-offset > timestamp)
-    timestamp = 0;
-  else
-    timestamp -= offset;
-
-  /* Take first ts into account */
-  if (src->first_alsa_ts == GST_CLOCK_TIME_NONE) {
-    src->first_alsa_ts = timestamp;
-  }
-  timestamp -= src->first_alsa_ts;
-
-  GST_DEBUG_OBJECT (src, "ALSA timestamp : %" GST_TIME_FORMAT,
-      GST_TIME_ARGS (timestamp));
-  return timestamp;
 }
 
 static void
@@ -324,59 +234,6 @@ gst_alsasrc_get_property (GObject * object, guint prop_id,
   }
 }
 
-static GstStateChangeReturn
-gst_alsasrc_change_state (GstElement * element, GstStateChange transition)
-{
-  GstStateChangeReturn ret = GST_STATE_CHANGE_SUCCESS;
-  GstAudioBaseSrc *src = GST_AUDIO_BASE_SRC (element);
-  GstAlsaSrc *asrc = GST_ALSA_SRC (element);
-  GstClock *clk;
-
-  switch (transition) {
-      /* Show the compiler that we care */
-    case GST_STATE_CHANGE_NULL_TO_READY:
-    case GST_STATE_CHANGE_READY_TO_PAUSED:
-    case GST_STATE_CHANGE_PLAYING_TO_PAUSED:
-    case GST_STATE_CHANGE_PAUSED_TO_READY:
-    case GST_STATE_CHANGE_READY_TO_NULL:
-      break;
-
-    case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
-      clk = src->clock;
-      asrc->driver_timestamps = FALSE;
-      if (GST_IS_SYSTEM_CLOCK (clk)) {
-        gint clocktype;
-        g_object_get (clk, "clock-type", &clocktype, NULL);
-        if (clocktype == GST_CLOCK_TYPE_MONOTONIC) {
-          asrc->driver_timestamps = TRUE;
-        }
-      }
-      break;
-  }
-  ret = GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
-
-  return ret;
-}
-
-static GstFlowReturn
-gst_alsasrc_create (GstBaseSrc * bsrc, guint64 offset, guint length,
-    GstBuffer ** outbuf)
-{
-  GstFlowReturn ret = GST_FLOW_OK;
-  GstAlsaSrc *asrc = GST_ALSA_SRC (bsrc);
-
-  ret =
-      GST_BASE_SRC_CLASS (parent_class)->create (bsrc, offset, length, outbuf);
-  if (asrc->driver_timestamps == TRUE && *outbuf) {
-    GstClockTime ts = gst_alsasrc_get_timestamp (asrc);
-    if (GST_CLOCK_TIME_IS_VALID (ts)) {
-      GST_BUFFER_TIMESTAMP (*outbuf) = ts;
-    }
-  }
-
-  return ret;
-}
-
 static void
 gst_alsasrc_init (GstAlsaSrc * alsasrc)
 {
@@ -384,8 +241,6 @@ gst_alsasrc_init (GstAlsaSrc * alsasrc)
 
   alsasrc->device = g_strdup (DEFAULT_PROP_DEVICE);
   alsasrc->cached_caps = NULL;
-  alsasrc->driver_timestamps = FALSE;
-  alsasrc->first_alsa_ts = GST_CLOCK_TIME_NONE;
 
   alsasrc->alsa_lock = g_mutex_new ();
 }
@@ -1017,7 +872,6 @@ gst_alsasrc_reset (GstAudioSrc * asrc)
   GST_DEBUG_OBJECT (alsa, "prepare");
   CHECK (snd_pcm_prepare (alsa->handle), prepare_error);
   GST_DEBUG_OBJECT (alsa, "reset done");
-  alsa->first_alsa_ts = GST_CLOCK_TIME_NONE;
   GST_ALSA_SRC_UNLOCK (asrc);
 
   return;
