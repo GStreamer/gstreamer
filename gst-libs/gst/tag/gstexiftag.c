@@ -1549,7 +1549,7 @@ write_exif_ifd (const GstTagList * taglist, gboolean byte_order,
   else
     gst_byte_writer_put_uint16_be (&writer.tagwriter, writer.tags_total);
 
-  GST_DEBUG ("Number of tags rewriten to %d", writer.tags_total);
+  GST_DEBUG ("Number of tags rewritten to %d", writer.tags_total);
 
   /* now that we know the tag headers size, we can add the offsets */
   gst_exif_tag_rewrite_offsets (&writer.tagwriter, writer.byte_order,
@@ -2057,7 +2057,7 @@ deserialize_geo_coordinate (GstExifReader * exif_reader,
   }
 
   if (exiftag->exif_tag != next_tagdata.tag) {
-    GST_WARNING ("This is not a geo cordinate tag");
+    GST_WARNING ("This is not a geo coordinate tag");
     return ret;
   }
 

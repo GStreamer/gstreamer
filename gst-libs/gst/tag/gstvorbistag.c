@@ -647,7 +647,7 @@ gst_tag_to_metadata_block_picture (const gchar * tag,
  * Creates a new tag list that contains the information parsed out of a
  * vorbiscomment packet.
  *
- * Returns: A #GList of newly-allowcated key=value strings. Free with
+ * Returns: A #GList of newly-allocated key=value strings. Free with
  *          g_list_foreach (list, (GFunc) g_free, NULL) plus g_list_free (list)
  */
 GList *

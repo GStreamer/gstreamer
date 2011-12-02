@@ -2219,7 +2219,7 @@ gst_audio_base_sink_change_state (GstElement * element,
   /* ERRORS */
 open_failed:
   {
-    /* subclass must post a meaningfull error message */
+    /* subclass must post a meaningful error message */
     GST_DEBUG_OBJECT (sink, "open failed");
     return GST_STATE_CHANGE_FAILURE;
   }

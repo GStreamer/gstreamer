@@ -1906,7 +1906,7 @@ build_next (GstRTSPBuilder * builder, GstRTSPMessage * message,
           goto done;
 
         /* we have the complete body now, store in the message adjusting the
-         * length to include the traling '\0' */
+         * length to include the trailing '\0' */
         gst_rtsp_message_take_body (message,
             (guint8 *) builder->body_data, builder->body_len + 1);
         builder->body_data = NULL;

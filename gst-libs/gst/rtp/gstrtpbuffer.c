@@ -323,7 +323,7 @@ validate_data (guint8 * data, guint len, guint8 * payload, guint payload_len)
     guint8 *extpos;
     guint16 extlen;
 
-    /* this points to the extenstion bits and header length */
+    /* this points to the extension bits and header length */
     extpos = &data[header_len];
 
     /* skip the header and check that we have enough space */

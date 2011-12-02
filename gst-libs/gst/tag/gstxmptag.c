@@ -1411,7 +1411,7 @@ gst_tag_list_from_xmp_buffer (GstBuffer * buffer)
                 }
               } else {
                 XmpTag *xmp_tag = NULL;
-                /* FIXME: eventualy rewrite ns
+                /* FIXME: eventually rewrite ns
                  * find ':'
                  * check if ns before ':' is in ns_map and ns_map[i].gstreamer_ns!=NULL
                  * do 2 stage filter in tag_matches
@@ -1467,7 +1467,7 @@ gst_tag_list_from_xmp_buffer (GstBuffer * buffer)
              <dc:type><rdf:Bag><rdf:li>Image</rdf:li></rdf:Bag></dc:type>
              <dc:creator><rdf:Seq><rdf:li/></rdf:Seq></dc:creator>
            */
-          /* FIXME: eventualy rewrite ns */
+          /* FIXME: eventually rewrite ns */
 
           /* skip rdf tags for now */
           if (strncmp (part, "rdf:", 4)) {
@@ -1852,7 +1852,7 @@ gst_tag_list_to_xmp_buffer_full (const GstTagList * list, gboolean read_only,
   g_string_append (data, "</x:xmpmeta>\n");
 
   if (!read_only) {
-    /* the xmp spec recommand to add 2-4KB padding for in-place editable xmp */
+    /* the xmp spec recommends to add 2-4KB padding for in-place editable xmp */
     guint i;
 
     for (i = 0; i < 32; i++) {

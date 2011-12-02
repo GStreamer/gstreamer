@@ -1501,7 +1501,7 @@ not_started:
  *
  * Commit @in_samples samples pointed to by @data to the ringbuffer @buf. 
  *
- * @in_samples and @out_samples define the rate conversion to perform on the the
+ * @in_samples and @out_samples define the rate conversion to perform on the
  * samples in @data. For negative rates, @out_samples must be negative and
  * @in_samples positive.
  *

@@ -793,7 +793,7 @@ fakesink_handoff_cb (GstElement * object, GstBuffer * buffer, GstPad * pad,
     ctx->latency = 1000 - gst_buffer_get_size (buffer) / 8;
   }
 
-  /* Check if we have a perfectly timestampped stream */
+  /* Check if we have a perfectly timestamped stream */
   if (ctx->next_out_ts != GST_CLOCK_TIME_NONE)
     fail_unless (ctx->next_out_ts == GST_BUFFER_TIMESTAMP (buffer),
         "expected timestamp %" GST_TIME_FORMAT " got timestamp %"

@@ -1193,7 +1193,7 @@ gst_adder_collected (GstCollectPads * pads, gpointer user_data)
      * - currently we just set rate as received from last seek-event
      *
      * When seeking we set the start and stop positions as given in the seek
-     * event. We also adjust offset & timestamp acordingly.
+     * event. We also adjust offset & timestamp accordingly.
      * This basically ignores all newsegments sent by upstream.
      */
     event = gst_event_new_segment (&adder->segment);

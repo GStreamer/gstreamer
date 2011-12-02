@@ -634,7 +634,7 @@ gst_rtcp_packet_get_length (GstRTCPPacket * packet)
  * @ntptime: result NTP time
  * @rtptime: result RTP time
  * @packet_count: result packet count
- * @octet_count: result octect count
+ * @octet_count: result octet count
  *
  * Parse the SR sender info and store the values.
  */
@@ -675,7 +675,7 @@ gst_rtcp_packet_sr_get_sender_info (GstRTCPPacket * packet, guint32 * ssrc,
  * @ntptime: the NTP time
  * @rtptime: the RTP time
  * @packet_count: the packet count
- * @octet_count: the octect count
+ * @octet_count: the octet count
  *
  * Set the given values in the SR packet @packet.
  */
@@ -1158,7 +1158,7 @@ gst_rtcp_packet_sdes_next_entry (GstRTCPPacket * packet)
  *
  * When @type refers to a text item, @data will point to a UTF8 string. Note
  * that this UTF8 string is NOT null-terminated. Use
- * gst_rtcp_packet_sdes_copy_entry() to get a null-termined copy of the entry.
+ * gst_rtcp_packet_sdes_copy_entry() to get a null-terminated copy of the entry.
  *
  * Returns: %TRUE if there was valid data.
  */

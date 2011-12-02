@@ -538,7 +538,7 @@ gst_encoding_video_profile_set_pass (GstEncodingVideoProfile * prof, guint pass)
  * @prof: a #GstEncodingVideoProfile
  * @variableframerate: a boolean
  *
- * If set to %TRUE, then the incoming streamm will be allowed to have non-constant
+ * If set to %TRUE, then the incoming stream will be allowed to have non-constant
  * framerate. If set to %FALSE (default value), then the incoming stream will
  * be normalized by dropping/duplicating frames in order to produce a
  * constance framerate.

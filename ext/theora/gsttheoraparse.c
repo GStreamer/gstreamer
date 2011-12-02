@@ -328,7 +328,7 @@ theora_parse_set_streamheader (GstTheoraParse * parse)
   parse->shift = parse->info.keyframe_granule_shift;
 
   /* With libtheora-1.0beta1 the granulepos scheme was changed:
-   * where earlier the granulepos refered to the index/beginning
+   * where earlier the granulepos referred to the index/beginning
    * of a frame, it now refers to the end, which matches the use
    * in vorbis/speex. We check the bitstream version from the header so
    * we know which way to interpret the incoming granuepos

@@ -214,9 +214,9 @@ gst_app_sink_class_init (GstAppSinkClass * klass)
 
   /**
    * GstAppSink::eos:
-   * @appsink: the appsink element that emited the signal
+   * @appsink: the appsink element that emitted the signal
    *
-   * Signal that the end-of-stream has been reached. This signal is emited from
+   * Signal that the end-of-stream has been reached. This signal is emitted from
    * the steaming thread.
    */
   gst_app_sink_signals[SIGNAL_EOS] =
@@ -225,18 +225,18 @@ gst_app_sink_class_init (GstAppSinkClass * klass)
       NULL, NULL, g_cclosure_marshal_VOID__VOID, G_TYPE_NONE, 0, G_TYPE_NONE);
   /**
    * GstAppSink::new-preroll:
-   * @appsink: the appsink element that emited the signal
+   * @appsink: the appsink element that emitted the signal
    *
    * Signal that a new preroll sample is available.
    *
-   * This signal is emited from the steaming thread and only when the
+   * This signal is emitted from the steaming thread and only when the
    * "emit-signals" property is %TRUE.
    *
    * The new preroll sample can be retrieved with the "pull-preroll" action
    * signal or gst_app_sink_pull_preroll() either from this signal callback
    * or from any other thread.
    *
-   * Note that this signal is only emited when the "emit-signals" property is
+   * Note that this signal is only emitted when the "emit-signals" property is
    * set to %TRUE, which it is not by default for performance reasons.
    */
   gst_app_sink_signals[SIGNAL_NEW_PREROLL] =
@@ -249,14 +249,14 @@ gst_app_sink_class_init (GstAppSinkClass * klass)
    *
    * Signal that a new sample is available.
    *
-   * This signal is emited from the steaming thread and only when the
+   * This signal is emitted from the steaming thread and only when the
    * "emit-signals" property is %TRUE.
    *
    * The new sample can be retrieved with the "pull-sample" action
    * signal or gst_app_sink_pull_sample() either from this signal callback
    * or from any other thread.
    *
-   * Note that this signal is only emited when the "emit-signals" property is
+   * Note that this signal is only emitted when the "emit-signals" property is
    * set to %TRUE, which it is not by default for performance reasons.
    */
   gst_app_sink_signals[SIGNAL_NEW_SAMPLE] =
@@ -1211,7 +1211,7 @@ not_started:
  * This is an alternative to using the signals, it has lower overhead and is thus
  * less expensive, but also less flexible.
  *
- * If callbacks are installed, no signals will be emited for performance
+ * If callbacks are installed, no signals will be emitted for performance
  * reasons.
  *
  * Since: 0.10.23

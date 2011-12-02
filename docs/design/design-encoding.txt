@@ -16,13 +16,13 @@ A. Problems this proposal attempts to solve
 
 * Duplication of pipeline code for gstreamer-based applications
   wishing to encode and or mux streams, leading to subtle differences
-  and inconsistencies accross those applications.
+  and inconsistencies across those applications.
 
 * No unified system for describing encoding targets for applications
   in a user-friendly way.
 
 * No unified system for creating encoding targets for applications,
-  resulting in duplication of code accross all applications,
+  resulting in duplication of code across all applications,
   differences and inconsistencies that come with that duplication,
   and applications hardcoding element names and settings resulting in
   poor portability.

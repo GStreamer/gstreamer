@@ -3367,7 +3367,7 @@ gst_play_sink_send_event_to_sink (GstPlaySink * playsink, GstEvent * event)
   if (playsink->textchain && playsink->textchain->sink) {
     gst_event_ref (event);
     if ((res = gst_element_send_event (playsink->textchain->chain.bin, event))) {
-      GST_DEBUG_OBJECT (playsink, "Sent event succesfully to text sink");
+      GST_DEBUG_OBJECT (playsink, "Sent event successfully to text sink");
     } else {
       GST_DEBUG_OBJECT (playsink, "Event failed when sent to text sink");
     }
@@ -3376,7 +3376,7 @@ gst_play_sink_send_event_to_sink (GstPlaySink * playsink, GstEvent * event)
   if (playsink->videochain) {
     gst_event_ref (event);
     if ((res = gst_element_send_event (playsink->videochain->chain.bin, event))) {
-      GST_DEBUG_OBJECT (playsink, "Sent event succesfully to video sink");
+      GST_DEBUG_OBJECT (playsink, "Sent event successfully to video sink");
       goto done;
     }
     GST_DEBUG_OBJECT (playsink, "Event failed when sent to video sink");
@@ -3384,7 +3384,7 @@ gst_play_sink_send_event_to_sink (GstPlaySink * playsink, GstEvent * event)
   if (playsink->audiochain) {
     gst_event_ref (event);
     if ((res = gst_element_send_event (playsink->audiochain->chain.bin, event))) {
-      GST_DEBUG_OBJECT (playsink, "Sent event succesfully to audio sink");
+      GST_DEBUG_OBJECT (playsink, "Sent event successfully to audio sink");
       goto done;
     }
     GST_DEBUG_OBJECT (playsink, "Event failed when sent to audio sink");

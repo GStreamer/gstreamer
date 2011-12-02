@@ -50,7 +50,7 @@ typedef struct _GstAppSrcPrivate GstAppSrcPrivate;
  *    and when it is set to -1, any number of bytes can be pushed into @appsrc.
  * @enough_data: Called when appsrc has enough data. It is recommended that the
  *    application stops calling push-buffer until the need_data callback is
- *    emited again to avoid excessive buffer queueing.
+ *    emitted again to avoid excessive buffer queueing.
  * @seek_data: Called when a seek should be performed to the offset.
  *    The next push-buffer should produce buffers from the new @offset.
  *    This callback is only called for seekable stream types.

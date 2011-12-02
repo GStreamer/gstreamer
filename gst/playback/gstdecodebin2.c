@@ -165,7 +165,7 @@ struct _GstDecodeBin
   gboolean have_type;           /* if we received the have_type signal */
   guint have_type_id;           /* signal id for have-type from typefind */
 
-  gboolean async_pending;       /* async-start has been emited */
+  gboolean async_pending;       /* async-start has been emitted */
 
   GMutex *dyn_lock;             /* lock protecting pad blocking */
   gboolean shutdown;            /* if we are shutting down */
@@ -716,7 +716,7 @@ gst_decode_bin_class_init (GstDecodeBinClass * klass)
    *
    * This signal is emitted once decodebin has found all the possible
    * #GstElementFactory that can be used to handle the given @caps. For each of
-   * those factories, this signal is emited.
+   * those factories, this signal is emitted.
    *
    * The signal handler should return a #GST_TYPE_AUTOPLUG_SELECT_RESULT enum
    * value indicating what decodebin should do next.
@@ -817,7 +817,7 @@ gst_decode_bin_class_init (GstDecodeBinClass * klass)
   /**
    * GstDecodeBin:max-size-bytes
    *
-   * Max amount amount of bytes in the queue (0=automatic).
+   * Max amount of bytes in the queue (0=automatic).
    *
    * Since: 0.10.26
    */
@@ -829,7 +829,7 @@ gst_decode_bin_class_init (GstDecodeBinClass * klass)
   /**
    * GstDecodeBin:max-size-buffers
    *
-   * Max amount amount of buffers in the queue (0=automatic).
+   * Max amount of buffers in the queue (0=automatic).
    *
    * Since: 0.10.26
    */
@@ -841,7 +841,7 @@ gst_decode_bin_class_init (GstDecodeBinClass * klass)
   /**
    * GstDecodeBin:max-size-time
    *
-   * Max amount amount of time in the queue (in ns, 0=automatic).
+   * Max amount of time in the queue (in ns, 0=automatic).
    *
    * Since: 0.10.26
    */
@@ -3632,7 +3632,7 @@ gst_decode_bin_expose (GstDecodeBin * dbin)
 
   /* 4. Signal no-more-pads. This allows the application to hook stuff to the
    * exposed pads */
-  GST_LOG_OBJECT (dbin, "signalling no-more-pads");
+  GST_LOG_OBJECT (dbin, "signaling no-more-pads");
   gst_element_no_more_pads (GST_ELEMENT (dbin));
 
   /* 5. Send a custom element message with the stream topology */

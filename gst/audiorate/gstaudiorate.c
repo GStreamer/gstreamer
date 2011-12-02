@@ -544,7 +544,7 @@ gst_audio_rate_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
       GST_BUFFER_OFFSET_END (fill) = audiorate->next_offset;
 
       /* Use next timestamp, then calculate following timestamp based on 
-       * offset to get duration. Neccesary complexity to get 'perfect' 
+       * offset to get duration. Necessary complexity to get 'perfect' 
        * streams */
       GST_BUFFER_TIMESTAMP (fill) = audiorate->next_ts;
       audiorate->next_ts = gst_util_uint64_scale_int (audiorate->next_offset,

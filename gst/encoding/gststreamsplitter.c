@@ -367,7 +367,7 @@ resync:
 
     if (res) {
       /* FIXME : we need to switch properly */
-      GST_DEBUG_OBJECT (srcpad, "Setting caps on this pad was succesfull");
+      GST_DEBUG_OBJECT (srcpad, "Setting caps on this pad was successful");
       stream_splitter->current = srcpad;
       goto beach;
     }

@@ -37,7 +37,7 @@
  * byte buffers.
  *
  * The main way of handing data to the appsrc element is by calling the
- * gst_app_src_push_buffer() method or by emiting the push-buffer action signal.
+ * gst_app_src_push_buffer() method or by emitting the push-buffer action signal.
  * This will put the buffer onto a queue from which appsrc will read from in its
  * streaming thread. It is important to note that data transport will not happen
  * from the thread that performed the push-buffer call.
@@ -49,7 +49,7 @@
  * block the push-buffer method until free data becomes available again.
  *
  * When the internal queue is running out of data, the "need-data" signal is
- * emited, which signals the application that it should start pushing more data
+ * emitted, which signals the application that it should start pushing more data
  * into appsrc.
  *
  * In addition to the "need-data" and "enough-data" signals, appsrc can emit the
@@ -62,7 +62,7 @@
  * These signals allow the application to operate the appsrc in two different
  * ways:
  *
- * The push model, in which the application repeadedly calls the push-buffer method
+ * The push model, in which the application repeatedly calls the push-buffer method
  * with a new buffer. Optionally, the queue size in the appsrc can be controlled
  * with the enough-data and need-data signals by respectively stopping/starting
  * the push-buffer calls. This is a typical mode of operation for the
@@ -310,7 +310,7 @@ gst_app_src_class_init (GstAppSrcClass * klass)
   /**
    * GstAppSrc::block
    *
-   * When max-bytes are queued and after the enough-data signal has been emited,
+   * When max-bytes are queued and after the enough-data signal has been emitted,
    * block any further push-buffer calls until the amount of queued bytes drops
    * below the max-bytes limit.
    */
@@ -383,7 +383,7 @@ gst_app_src_class_init (GstAppSrcClass * klass)
 
   /**
    * GstAppSrc::need-data:
-   * @appsrc: the appsrc element that emited the signal
+   * @appsrc: the appsrc element that emitted the signal
    * @length: the amount of bytes needed.
    *
    * Signal that the source needs more data. In the callback or from another
@@ -402,11 +402,11 @@ gst_app_src_class_init (GstAppSrcClass * klass)
 
   /**
    * GstAppSrc::enough-data:
-   * @appsrc: the appsrc element that emited the signal
+   * @appsrc: the appsrc element that emitted the signal
    *
    * Signal that the source has enough data. It is recommended that the
    * application stops calling push-buffer until the need-data signal is
-   * emited again to avoid excessive buffer queueing.
+   * emitted again to avoid excessive buffer queueing.
    */
   gst_app_src_signals[SIGNAL_ENOUGH_DATA] =
       g_signal_new ("enough-data", G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_LAST,
@@ -415,7 +415,7 @@ gst_app_src_class_init (GstAppSrcClass * klass)
 
   /**
    * GstAppSrc::seek-data:
-   * @appsrc: the appsrc element that emited the signal
+   * @appsrc: the appsrc element that emitted the signal
    * @offset: the offset to seek to
    *
    * Seek to the given offset. The next push-buffer should produce buffers from
@@ -1008,7 +1008,7 @@ gst_app_src_create (GstBaseSrc * bsrc, guint64 offset, guint size,
        * random-access mode (where a buffer is normally pushed in the above
        * signal) we can still be empty because the pushed buffer got flushed or
        * when the application pushes the requested buffer later, we support both
-       * possiblities. */
+       * possibilities. */
       if (!g_queue_is_empty (priv->queue))
         continue;
 
@@ -1381,7 +1381,7 @@ gst_app_src_set_emit_signals (GstAppSrc * appsrc, gboolean emit)
  *
  * Check if appsrc will emit the "new-preroll" and "new-buffer" signals.
  *
- * Returns: %TRUE if @appsrc is emiting the "new-preroll" and "new-buffer"
+ * Returns: %TRUE if @appsrc is emitting the "new-preroll" and "new-buffer"
  * signals.
  *
  * Since: 0.10.23
@@ -1578,7 +1578,7 @@ flushing:
  * This is an alternative to using the signals, it has lower overhead and is thus
  * less expensive, but also less flexible.
  *
- * If callbacks are installed, no signals will be emited for performance
+ * If callbacks are installed, no signals will be emitted for performance
  * reasons.
  *
  * Since: 0.10.23

@@ -131,7 +131,7 @@ else
        echo "*** The FreeType test program failed to run.  If your system uses"
        echo "*** shared libraries and they are installed outside the normal"
        echo "*** system library path, make sure the variable LD_LIBRARY_PATH"
-       echo "*** (or whatever is appropiate for your system) is correctly set."
+       echo "*** (or whatever is appropriate for your system) is correctly set."
      fi
    fi
    FT2_CFLAGS=""

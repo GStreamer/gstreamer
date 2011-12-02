@@ -800,7 +800,7 @@ gst_alsa_mixer_set_record (GstAlsaMixer * mixer,
     snd_mixer_selem_set_capture_switch_all (alsa_track->element,
         record ? 1 : 0);
 
-    /* update all tracks in same exlusive cswitch group */
+    /* update all tracks in same exclusive cswitch group */
     if (alsa_track->alsa_flags & GST_ALSA_MIXER_TRACK_CSWITCH_EXCL) {
       GList *item;
 

@@ -1023,7 +1023,7 @@ DISCOVERER_INFO_ACCESSOR_CODE (duration, GstClockTime, GST_CLOCK_TIME_NONE);
  * gst_discoverer_info_get_seekable:
  * @info: a #GstDiscovererInfo
  *
- * Returns: the wheter the URI is seekable.
+ * Returns: the whether the URI is seekable.
  *
  * Since: 0.10.32
  */

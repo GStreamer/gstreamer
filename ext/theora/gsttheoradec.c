@@ -1509,7 +1509,7 @@ theora_dec_flush_decode (GstTheoraDec * dec)
   while (dec->queued) {
     GstBuffer *buf = GST_BUFFER_CAST (dec->queued->data);
 
-    /* iterate ouput queue an push downstream */
+    /* iterate output queue an push downstream */
     res = gst_pad_push (dec->srcpad, buf);
 
     dec->queued = g_list_delete_link (dec->queued, dec->queued);

@@ -82,7 +82,7 @@ Design:
 
   Whenever new samples are to be put into the ringbuffer, the position of the
   read pointer is taken. The required write position is taken and the diff
-  is made between the required qnd actual position. If the defference is <0,
+  is made between the required and actual position. If the difference is <0,
   the sample is too late. If the difference is bigger than segtotal, the
   writing part has to wait for the play pointer to advance. 
 

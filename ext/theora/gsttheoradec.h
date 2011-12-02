@@ -76,7 +76,7 @@ struct _GstTheoraDec
   GstBufferPool *pool;
   gboolean use_cropping;
 
-  /* telemetry debuging options */
+  /* telemetry debugging options */
   gint telemetry_mv;
   gint telemetry_mbmode;
   gint telemetry_qi;

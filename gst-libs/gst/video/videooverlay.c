@@ -423,7 +423,7 @@ gst_video_overlay_expose (GstVideoOverlay * overlay)
  * @handle_events: a #gboolean indicating if events should be handled or not.
  *
  * Tell an overlay that it should handle events from the window system. These
- * events are forwared upstream as navigation events. In some window system,
+ * events are forwarded upstream as navigation events. In some window system,
  * events are not propagated in the window hierarchy if a client is listening
  * for them. This method allows you to disable events handling completely
  * from the XOverlay.

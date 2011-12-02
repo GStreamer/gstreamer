@@ -411,7 +411,7 @@ Abstract
    byte indicates that extra information is added to the header. These
    fields of extra information is ordered as the flags that indicates
    them. The flags field is defined as follows (l and o left out because
-   ther resemblence to one and zero):
+   their resemblence to one and zero):
 
      %0abc0000 %0h00kmnp
 
