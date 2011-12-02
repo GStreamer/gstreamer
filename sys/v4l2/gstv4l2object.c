@@ -893,6 +893,8 @@ gst_v4l2_object_get_format_from_fourcc (GstV4l2Object * v4l2object,
 
 
 /* complete made up ranking, the values themselves are meaningless */
+/* These ranks MUST be X such that X<<15 fits on a signed int - see
+   the comment at the end of gst_v4l2_object_format_get_rank. */
 #define YUV_BASE_RANK     1000
 #define JPEG_BASE_RANK     500
 #define DV_BASE_RANK       200
