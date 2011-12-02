@@ -1403,25 +1403,6 @@ gst_base_sink_set_caps (GstBaseSink * sink, GstCaps * caps)
   return TRUE;
 }
 
-/* with PREROLL_LOCK, STREAM_LOCK */
-static void
-gst_base_sink_preroll_queue_flush (GstBaseSink * basesink, GstPad * pad)
-{
-  /* we can't have EOS anymore now */
-  basesink->eos = FALSE;
-  basesink->priv->received_eos = FALSE;
-  basesink->have_preroll = FALSE;
-  basesink->priv->step_unlock = FALSE;
-  /* can't report latency anymore until we preroll again */
-  if (basesink->priv->async_enabled) {
-    GST_OBJECT_LOCK (basesink);
-    basesink->priv->have_latency = FALSE;
-    GST_OBJECT_UNLOCK (basesink);
-  }
-  /* and signal any waiters now */
-  GST_BASE_SINK_PREROLL_SIGNAL (basesink);
-}
-
 /* with STREAM_LOCK, configures given segment with the event information. */
 static void
 gst_base_sink_configure_segment (GstBaseSink * basesink, GstPad * pad,
@@ -2045,8 +2026,8 @@ gst_base_sink_wait_clock (GstBaseSink * sink, GstClockTime time,
   /* FIXME: Casting to GstClockEntry only works because the types
    * are the same */
   if (G_LIKELY (sink->priv->cached_clock_id != NULL
-          && GST_CLOCK_ENTRY_CLOCK ((GstClockEntry *) sink->priv->
-              cached_clock_id) == clock)) {
+          && GST_CLOCK_ENTRY_CLOCK ((GstClockEntry *) sink->
+              priv->cached_clock_id) == clock)) {
     if (!gst_clock_single_shot_id_reinit (clock, sink->priv->cached_clock_id,
             time)) {
       gst_clock_id_unref (sink->priv->cached_clock_id);
@@ -3097,72 +3078,6 @@ stopping:
   }
 }
 
-/* with STREAM_LOCK, PREROLL_LOCK
- *
- * Queue an object for rendering.
- * The first prerollable object queued will complete the preroll. If the
- * preroll queue is filled, we render all the objects in the queue.
- *
- * This function takes ownership of the object.
- */
-static GstFlowReturn
-gst_base_sink_queue_object_unlocked (GstBaseSink * basesink, GstPad * pad,
-    guint8 obj_type, gpointer obj, gboolean prerollable)
-{
-  GstFlowReturn ret = GST_FLOW_OK;
-
-  /* now render the object */
-  ret = gst_base_sink_render_object (basesink, pad, obj_type, obj);
-
-  return ret;
-}
-
-/* with STREAM_LOCK
- *
- * This function grabs the PREROLL_LOCK and adds the object to
- * the queue.
- *
- * This function takes ownership of obj.
- *
- * Note: Only GstEvent seem to be passed to this private method
- */
-static GstFlowReturn
-gst_base_sink_queue_object (GstBaseSink * basesink, GstPad * pad,
-    GstMiniObject * obj, gboolean prerollable)
-{
-  GstFlowReturn ret;
-
-  GST_BASE_SINK_PREROLL_LOCK (basesink);
-  if (G_UNLIKELY (basesink->flushing))
-    goto flushing;
-
-  if (G_UNLIKELY (basesink->priv->received_eos))
-    goto was_eos;
-
-  ret =
-      gst_base_sink_queue_object_unlocked (basesink, pad, _PR_IS_EVENT, obj,
-      prerollable);
-  GST_BASE_SINK_PREROLL_UNLOCK (basesink);
-
-  return ret;
-
-  /* ERRORS */
-flushing:
-  {
-    GST_DEBUG_OBJECT (basesink, "sink is flushing");
-    GST_BASE_SINK_PREROLL_UNLOCK (basesink);
-    gst_mini_object_unref (obj);
-    return GST_FLOW_WRONG_STATE;
-  }
-was_eos:
-  {
-    GST_DEBUG_OBJECT (basesink, "we are EOS, dropping object, return EOS");
-    GST_BASE_SINK_PREROLL_UNLOCK (basesink);
-    gst_mini_object_unref (obj);
-    return GST_FLOW_EOS;
-  }
-}
-
 static void
 gst_base_sink_flush_start (GstBaseSink * basesink, GstPad * pad)
 {
@@ -3249,8 +3164,8 @@ gst_base_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
 
       /* EOS is a prerollable object, we call the unlocked version because it
        * does not check the received_eos flag. */
-      ret = gst_base_sink_queue_object_unlocked (basesink, pad,
-          _PR_IS_EVENT, GST_MINI_OBJECT_CAST (event), TRUE);
+      ret = gst_base_sink_render_object (basesink, pad,
+          _PR_IS_EVENT, GST_MINI_OBJECT_CAST (event));
       if (G_UNLIKELY (ret != GST_FLOW_OK))
         result = FALSE;
 
@@ -3295,8 +3210,8 @@ gst_base_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
           &basesink->clip_segment);
 
       ret =
-          gst_base_sink_queue_object_unlocked (basesink, pad,
-          _PR_IS_EVENT, GST_MINI_OBJECT_CAST (event), FALSE);
+          gst_base_sink_render_object (basesink, pad,
+          _PR_IS_EVENT, GST_MINI_OBJECT_CAST (event));
       if (G_UNLIKELY (ret != GST_FLOW_OK))
         result = FALSE;
       else {
@@ -3337,8 +3252,21 @@ gst_base_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
       /* other events are sent to queue or subclass depending on if they
        * are serialized. */
       if (GST_EVENT_IS_SERIALIZED (event)) {
-        gst_base_sink_queue_object (basesink, pad,
-            GST_MINI_OBJECT_CAST (event), FALSE);
+        GstFlowReturn ret;
+
+        GST_BASE_SINK_PREROLL_LOCK (basesink);
+        if (G_UNLIKELY (basesink->flushing))
+          goto flushing;
+
+        if (G_UNLIKELY (basesink->priv->received_eos))
+          goto after_eos;
+
+        ret = gst_base_sink_render_object (basesink, pad, _PR_IS_EVENT,
+            GST_MINI_OBJECT_CAST (event));
+        if (G_UNLIKELY (ret != GST_FLOW_OK))
+          result = FALSE;
+
+        GST_BASE_SINK_PREROLL_UNLOCK (basesink);
       } else {
         if (bclass->event)
           bclass->event (basesink, event);
@@ -3489,8 +3417,7 @@ gst_base_sink_chain_unlocked (GstBaseSink * basesink, GstPad * pad,
 
   /* now we can process the buffer in the queue, this function takes ownership
    * of the buffer */
-  result = gst_base_sink_queue_object_unlocked (basesink, pad,
-      obj_type, obj, TRUE);
+  result = gst_base_sink_render_object (basesink, pad, obj_type, obj);
   return result;
 
   /* ERRORS */
@@ -4009,7 +3936,20 @@ gst_base_sink_set_flushing (GstBaseSink * basesink, GstPad * pad,
      * also flush out the EOS state */
     GST_DEBUG_OBJECT (basesink,
         "flushing out data thread, need preroll to TRUE");
-    gst_base_sink_preroll_queue_flush (basesink, pad);
+
+    /* we can't have EOS anymore now */
+    basesink->eos = FALSE;
+    basesink->priv->received_eos = FALSE;
+    basesink->have_preroll = FALSE;
+    basesink->priv->step_unlock = FALSE;
+    /* can't report latency anymore until we preroll again */
+    if (basesink->priv->async_enabled) {
+      GST_OBJECT_LOCK (basesink);
+      basesink->priv->have_latency = FALSE;
+      GST_OBJECT_UNLOCK (basesink);
+    }
+    /* and signal any waiters now */
+    GST_BASE_SINK_PREROLL_SIGNAL (basesink);
   }
   GST_BASE_SINK_PREROLL_UNLOCK (basesink);
 
