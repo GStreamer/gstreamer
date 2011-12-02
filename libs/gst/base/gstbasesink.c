@@ -1403,23 +1403,6 @@ gst_base_sink_set_caps (GstBaseSink * sink, GstCaps * caps)
   return TRUE;
 }
 
-/* with STREAM_LOCK, configures given segment with the event information. */
-static void
-gst_base_sink_configure_segment (GstBaseSink * basesink, GstPad * pad,
-    GstEvent * event, GstSegment * segment)
-{
-  /* The segment is protected with both the STREAM_LOCK and the OBJECT_LOCK.
-   * We protect with the OBJECT_LOCK so that we can use the values to
-   * safely answer a POSITION query. */
-  GST_OBJECT_LOCK (basesink);
-  /* the newsegment event is needed to bring the buffer timestamps to the
-   * stream time and to drop samples outside of the playback segment. */
-  gst_event_copy_segment (event, segment);
-  GST_DEBUG_OBJECT (basesink, "configured SEGMENT %" GST_SEGMENT_FORMAT,
-      segment);
-  GST_OBJECT_UNLOCK (basesink);
-}
-
 /* with PREROLL_LOCK, STREAM_LOCK */
 static gboolean
 gst_base_sink_commit_state (GstBaseSink * basesink)
@@ -1653,9 +1636,6 @@ stop_stepping (GstBaseSink * sink, GstSegment * segment,
     segment->stop = current->start_stop;
   else
     segment->start = current->start_start;
-
-  /* the clip segment is used for position report in paused... */
-  gst_segment_copy_into (segment, &sink->clip_segment);
 
   /* post the step done when we know the stepped duration in TIME */
   message =
@@ -2026,8 +2006,8 @@ gst_base_sink_wait_clock (GstBaseSink * sink, GstClockTime time,
   /* FIXME: Casting to GstClockEntry only works because the types
    * are the same */
   if (G_LIKELY (sink->priv->cached_clock_id != NULL
-          && GST_CLOCK_ENTRY_CLOCK ((GstClockEntry *) sink->
-              priv->cached_clock_id) == clock)) {
+          && GST_CLOCK_ENTRY_CLOCK ((GstClockEntry *) sink->priv->
+              cached_clock_id) == clock)) {
     if (!gst_clock_single_shot_id_reinit (clock, sink->priv->cached_clock_id,
             time)) {
       gst_clock_id_unref (sink->priv->cached_clock_id);
@@ -2915,8 +2895,17 @@ again:
         }
         case GST_EVENT_SEGMENT:
           /* configure the segment */
-          gst_base_sink_configure_segment (basesink, pad, event,
+          /* The segment is protected with both the STREAM_LOCK and the OBJECT_LOCK.
+           * We protect with the OBJECT_LOCK so that we can use the values to
+           * safely answer a POSITION query. */
+          GST_OBJECT_LOCK (basesink);
+          /* the newsegment event is needed to bring the buffer timestamps to the
+           * stream time and to drop samples outside of the playback segment. */
+          gst_event_copy_segment (event, &basesink->segment);
+          GST_DEBUG_OBJECT (basesink, "configured SEGMENT %" GST_SEGMENT_FORMAT,
               &basesink->segment);
+          basesink->have_newsegment = TRUE;
+          GST_OBJECT_UNLOCK (basesink);
           break;
         case GST_EVENT_TAG:
         {
@@ -3126,7 +3115,6 @@ gst_base_sink_flush_stop (GstBaseSink * basesink, GstPad * pad,
     basesink->have_newsegment = FALSE;
     if (reset_time) {
       gst_segment_init (&basesink->segment, GST_FORMAT_UNDEFINED);
-      gst_segment_init (&basesink->clip_segment, GST_FORMAT_UNDEFINED);
     }
   }
   basesink->priv->reset_time = reset_time;
@@ -3203,22 +3191,12 @@ gst_base_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
       if (G_UNLIKELY (basesink->priv->received_eos))
         goto after_eos;
 
-      /* the new segment is a non prerollable item and does not block anything,
-       * we need to configure the current clipping segment and insert the event
-       * in the queue to serialize it with the buffers for rendering. */
-      gst_base_sink_configure_segment (basesink, pad, event,
-          &basesink->clip_segment);
-
       ret =
           gst_base_sink_render_object (basesink, pad,
           _PR_IS_EVENT, GST_MINI_OBJECT_CAST (event));
       if (G_UNLIKELY (ret != GST_FLOW_OK))
         result = FALSE;
-      else {
-        GST_OBJECT_LOCK (basesink);
-        basesink->have_newsegment = TRUE;
-        GST_OBJECT_UNLOCK (basesink);
-      }
+
       GST_BASE_SINK_PREROLL_UNLOCK (basesink);
       break;
     }
@@ -3352,7 +3330,7 @@ gst_base_sink_chain_unlocked (GstBaseSink * basesink, GstPad * pad,
   GstBaseSinkClass *bclass;
   GstFlowReturn result;
   GstClockTime start = GST_CLOCK_TIME_NONE, end = GST_CLOCK_TIME_NONE;
-  GstSegment *clip_segment;
+  GstSegment *segment;
   GstBuffer *time_buf;
 
   if (G_UNLIKELY (basesink->flushing))
@@ -3369,7 +3347,7 @@ gst_base_sink_chain_unlocked (GstBaseSink * basesink, GstPad * pad,
   }
 
   /* for code clarity */
-  clip_segment = &basesink->clip_segment;
+  segment = &basesink->segment;
 
   if (G_UNLIKELY (!basesink->have_newsegment)) {
     gboolean sync;
@@ -3383,8 +3361,8 @@ gst_base_sink_chain_unlocked (GstBaseSink * basesink, GstPad * pad,
 
     /* this means this sink will assume timestamps start from 0 */
     GST_OBJECT_LOCK (basesink);
-    clip_segment->start = 0;
-    clip_segment->stop = -1;
+    segment->start = 0;
+    segment->stop = -1;
     basesink->segment.start = 0;
     basesink->segment.stop = -1;
     basesink->have_newsegment = TRUE;
@@ -3408,9 +3386,8 @@ gst_base_sink_chain_unlocked (GstBaseSink * basesink, GstPad * pad,
       ", end: %" GST_TIME_FORMAT, GST_TIME_ARGS (start), GST_TIME_ARGS (end));
 
   /* a dropped buffer does not participate in anything */
-  if (GST_CLOCK_TIME_IS_VALID (start) &&
-      (clip_segment->format == GST_FORMAT_TIME)) {
-    if (G_UNLIKELY (!gst_segment_clip (clip_segment,
+  if (GST_CLOCK_TIME_IS_VALID (start) && (segment->format == GST_FORMAT_TIME)) {
+    if (G_UNLIKELY (!gst_segment_clip (segment,
                 GST_FORMAT_TIME, start, end, NULL, NULL)))
       goto out_of_segment;
   }
@@ -4161,7 +4138,6 @@ gst_base_sink_pad_activate_pull (GstPad * pad, GstObject * parent,
      * mode works just fine without having a newsegment before the
      * first buffer */
     gst_segment_init (&basesink->segment, GST_FORMAT_BYTES);
-    gst_segment_init (&basesink->clip_segment, GST_FORMAT_BYTES);
     GST_OBJECT_LOCK (basesink);
     basesink->have_newsegment = TRUE;
     GST_OBJECT_UNLOCK (basesink);
@@ -4171,7 +4147,6 @@ gst_base_sink_pad_activate_pull (GstPad * pad, GstObject * parent,
     if (result) {
       GST_DEBUG_OBJECT (basesink,
           "setting duration in bytes to %" G_GINT64_FORMAT, duration);
-      basesink->clip_segment.duration = duration;
       basesink->segment.duration = duration;
     } else {
       GST_DEBUG_OBJECT (basesink, "unknown duration");
@@ -4331,13 +4306,7 @@ gst_base_sink_get_position (GstBaseSink * basesink, GstFormat format,
     in_paused = TRUE;
   }
 
-  /* we don't use the clip segment in pull mode, when seeking we update the
-   * main segment directly with the new segment values without it having to be
-   * activated by the rendering after preroll */
-  if (basesink->pad_mode == GST_PAD_MODE_PUSH)
-    segment = &basesink->clip_segment;
-  else
-    segment = &basesink->segment;
+  segment = &basesink->segment;
 
   /* get the format in the segment */
   oformat = segment->format;
@@ -4781,7 +4750,6 @@ gst_base_sink_change_state (GstElement * element, GstStateChange transition)
       GST_DEBUG_OBJECT (basesink, "READY to PAUSED");
       basesink->have_newsegment = FALSE;
       gst_segment_init (&basesink->segment, GST_FORMAT_UNDEFINED);
-      gst_segment_init (&basesink->clip_segment, GST_FORMAT_UNDEFINED);
       basesink->offset = 0;
       basesink->have_preroll = FALSE;
       priv->step_unlock = FALSE;
