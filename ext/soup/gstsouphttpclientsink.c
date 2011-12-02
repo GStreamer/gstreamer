@@ -545,7 +545,7 @@ gst_soup_http_client_sink_event (GstBaseSink * sink, GstEvent * event)
     GST_DEBUG_OBJECT (souphttpsink, "finished eos");
   }
 
-  return TRUE;
+  return GST_BASE_SINK_CLASS (parent_class)->event (sink, event);
 }
 
 static GstFlowReturn

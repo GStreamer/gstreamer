@@ -180,7 +180,6 @@ gst_test_sink_event (GstBaseSink * basesink, GstEvent * event)
 {
   GstTestClass *klass = GST_TEST_GET_CLASS (basesink);
   GstTest *test = GST_TEST (basesink);
-  gboolean ret = FALSE;
 
   switch (GST_EVENT_TYPE (event)) {
 /*
@@ -217,14 +216,13 @@ gst_test_sink_event (GstBaseSink * basesink, GstEvent * event)
         }
       }
       g_object_thaw_notify (G_OBJECT (test));
-      ret = TRUE;
       break;
     }
     default:
       break;
   }
 
-  return ret;
+  return GST_BASE_SINK_CLASS (parent_class)->event (basesink, event);
 }
 
 static GstFlowReturn

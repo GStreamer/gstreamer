@@ -780,7 +780,6 @@ gst_multi_file_sink_event (GstBaseSink * sink, GstEvent * event)
 {
   GstMultiFileSink *multifilesink;
   gchar *filename;
-  gboolean res = TRUE;
 
   multifilesink = GST_MULTI_FILE_SINK (sink);
 
@@ -832,12 +831,16 @@ gst_multi_file_sink_event (GstBaseSink * sink, GstEvent * event)
   }
 
 out:
-  return res;
+  return GST_BASE_SINK_CLASS (parent_class)->event (sink, event);
 
+  /* ERRORS */
 stdio_write_error:
-  GST_ELEMENT_ERROR (multifilesink, RESOURCE, WRITE,
-      ("Error while writing to file."), (NULL));
-  return FALSE;
+  {
+    GST_ELEMENT_ERROR (multifilesink, RESOURCE, WRITE,
+        ("Error while writing to file."), (NULL));
+    gst_event_unref (event);
+    return FALSE;
+  }
 }
 
 static gboolean
