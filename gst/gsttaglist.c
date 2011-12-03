@@ -1397,63 +1397,7 @@ gst_tag_list_get_ ## name ## _index (const GstTagList *list,            \
   return ret;                                                           \
 }
 
-/* FIXME 0.11: maybe get rid of _get_char*(), _get_uchar*(), _get_long*(),
- * _get_ulong*() and _get_pointer*()? - they are not really useful/common
- * enough to warrant convenience accessor functions */
-
 #define COPY_FUNC /**/
-/**
- * gst_tag_list_get_char:
- * @list: a #GstTagList to get the tag from
- * @tag: tag to read out
- * @value: (out): location for the result
- *
- * Copies the contents for the given tag into the value, merging multiple values
- * into one if multiple values are associated with the tag.
- *
- * Returns: TRUE, if a value was copied, FALSE if the tag didn't exist in the
- *              given list.
- */
-/**
- * gst_tag_list_get_char_index:
- * @list: a #GstTagList to get the tag from
- * @tag: tag to read out
- * @index: number of entry to read out
- * @value: (out): location for the result
- *
- * Gets the value that is at the given index for the given tag in the given
- * list.
- *
- * Returns: TRUE, if a value was copied, FALSE if the tag didn't exist in the
- *              given list.
- */
-TAG_MERGE_FUNCS (char, gchar, TRUE);
-/**
- * gst_tag_list_get_uchar:
- * @list: a #GstTagList to get the tag from
- * @tag: tag to read out
- * @value: (out): location for the result
- *
- * Copies the contents for the given tag into the value, merging multiple values
- * into one if multiple values are associated with the tag.
- *
- * Returns: TRUE, if a value was copied, FALSE if the tag didn't exist in the
- *              given list.
- */
-/**
- * gst_tag_list_get_uchar_index:
- * @list: a #GstTagList to get the tag from
- * @tag: tag to read out
- * @index: number of entry to read out
- * @value: (out): location for the result
- *
- * Gets the value that is at the given index for the given tag in the given
- * list.
- *
- * Returns: TRUE, if a value was copied, FALSE if the tag didn't exist in the
- *              given list.
- */
-TAG_MERGE_FUNCS (uchar, guchar, TRUE);
 /**
  * gst_tag_list_get_boolean:
  * @list: a #GstTagList to get the tag from
