@@ -2500,6 +2500,11 @@ static void
 gst_matroska_parse_accumulate_streamheader (GstMatroskaParse * parse,
     GstBuffer * buffer)
 {
+  if (parse->pushed_headers) {
+    GST_WARNING_OBJECT (parse,
+        "Accumulating headers, but headers are already pushed");
+  }
+
   if (parse->streamheader) {
     GstBuffer *buf;
 
