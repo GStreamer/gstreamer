@@ -396,8 +396,6 @@ static void gst_base_sink_fixate (GstBaseSink * bsink, GstCaps * caps);
 static gboolean gst_base_sink_is_too_late (GstBaseSink * basesink,
     GstMiniObject * obj, GstClockTime rstart, GstClockTime rstop,
     GstClockReturn status, GstClockTimeDiff jitter);
-static GstFlowReturn gst_base_sink_preroll_object (GstBaseSink * basesink,
-    GstMiniObject * obj);
 
 static void
 gst_base_sink_class_init (GstBaseSinkClass * klass)
@@ -2003,8 +2001,8 @@ gst_base_sink_wait_clock (GstBaseSink * sink, GstClockTime time,
   /* FIXME: Casting to GstClockEntry only works because the types
    * are the same */
   if (G_LIKELY (sink->priv->cached_clock_id != NULL
-          && GST_CLOCK_ENTRY_CLOCK ((GstClockEntry *) sink->priv->
-              cached_clock_id) == clock)) {
+          && GST_CLOCK_ENTRY_CLOCK ((GstClockEntry *) sink->
+              priv->cached_clock_id) == clock)) {
     if (!gst_clock_single_shot_id_reinit (clock, sink->priv->cached_clock_id,
             time)) {
       gst_clock_id_unref (sink->priv->cached_clock_id);
@@ -2128,9 +2126,39 @@ gst_base_sink_do_preroll (GstBaseSink * sink, GstMiniObject * obj)
   while (G_UNLIKELY (sink->need_preroll)) {
     GST_DEBUG_OBJECT (sink, "prerolling object %p", obj);
 
-    ret = gst_base_sink_preroll_object (sink, obj);
-    if (ret != GST_FLOW_OK)
-      goto preroll_failed;
+    /* if it's a buffer, we need to call the preroll method */
+    if (sink->priv->call_preroll) {
+      GstBaseSinkClass *bclass;
+      GstBuffer *buf;
+
+      if (GST_IS_BUFFER_LIST (obj)) {
+        buf = gst_buffer_list_get (GST_BUFFER_LIST_CAST (obj), 0);
+        g_assert (NULL != buf);
+      } else if (GST_IS_BUFFER (obj)) {
+        buf = GST_BUFFER_CAST (obj);
+        /* For buffer lists do not set last buffer for now */
+        gst_base_sink_set_last_buffer (sink, buf);
+      } else {
+        goto no_call_preroll;
+      }
+
+      GST_DEBUG_OBJECT (sink, "preroll buffer %" GST_TIME_FORMAT,
+          GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buf)));
+
+      bclass = GST_BASE_SINK_GET_CLASS (sink);
+      if (bclass->preroll)
+        if ((ret = bclass->preroll (sink, buf)) != GST_FLOW_OK)
+          goto preroll_canceled;
+
+      sink->priv->call_preroll = FALSE;
+    }
+
+  no_call_preroll:
+    /* commit state */
+    if (G_LIKELY (sink->playing_async)) {
+      if (G_UNLIKELY (!gst_base_sink_commit_state (sink)))
+        goto stopping;
+    }
 
     /* need to recheck here because the commit state could have
      * made us not need the preroll anymore */
@@ -2144,6 +2172,17 @@ gst_base_sink_do_preroll (GstBaseSink * sink, GstMiniObject * obj)
   return GST_FLOW_OK;
 
   /* ERRORS */
+preroll_canceled:
+  {
+    GST_DEBUG_OBJECT (sink, "preroll failed, abort state");
+    gst_element_abort_state (GST_ELEMENT_CAST (sink));
+    return ret;
+  }
+stopping:
+  {
+    GST_DEBUG_OBJECT (sink, "stopping while commiting state");
+    return GST_FLOW_WRONG_STATE;
+  }
 preroll_failed:
   {
     GST_DEBUG_OBJECT (sink, "preroll failed: %s", gst_flow_get_name (ret));
@@ -2728,78 +2767,6 @@ gst_base_sink_do_render_stats (GstBaseSink * basesink, gboolean start)
 
     GST_CAT_DEBUG_OBJECT (GST_CAT_QOS, basesink,
         "avg_render: %" GST_TIME_FORMAT, GST_TIME_ARGS (priv->avg_render));
-  }
-}
-
-/* with STREAM_LOCK, PREROLL_LOCK,
- *
- * Synchronize the object on the clock and then render it.
- *
- * takes ownership of obj.
- */
-
-/* with STREAM_LOCK, PREROLL_LOCK
- *
- * Perform preroll on the given object. For buffers this means
- * calling the preroll subclass method.
- * If that succeeds, the state will be commited.
- *
- * function does not take ownership of obj.
- */
-static GstFlowReturn
-gst_base_sink_preroll_object (GstBaseSink * basesink, GstMiniObject * obj)
-{
-  GstFlowReturn ret;
-
-  GST_DEBUG_OBJECT (basesink, "prerolling object %p", obj);
-
-  /* if it's a buffer, we need to call the preroll method */
-  if (basesink->priv->call_preroll) {
-    GstBaseSinkClass *bclass;
-    GstBuffer *buf;
-
-    if (GST_IS_BUFFER_LIST (obj)) {
-      buf = gst_buffer_list_get (GST_BUFFER_LIST_CAST (obj), 0);
-      g_assert (NULL != buf);
-    } else if (GST_IS_BUFFER (obj)) {
-      buf = GST_BUFFER_CAST (obj);
-      /* For buffer lists do not set last buffer for now */
-      gst_base_sink_set_last_buffer (basesink, buf);
-    } else {
-      goto no_call_preroll;
-    }
-
-    GST_DEBUG_OBJECT (basesink, "preroll buffer %" GST_TIME_FORMAT,
-        GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buf)));
-
-    bclass = GST_BASE_SINK_GET_CLASS (basesink);
-    if (bclass->preroll)
-      if ((ret = bclass->preroll (basesink, buf)) != GST_FLOW_OK)
-        goto preroll_failed;
-
-    basesink->priv->call_preroll = FALSE;
-  }
-
-no_call_preroll:
-  /* commit state */
-  if (G_LIKELY (basesink->playing_async)) {
-    if (G_UNLIKELY (!gst_base_sink_commit_state (basesink)))
-      goto stopping;
-  }
-
-  return GST_FLOW_OK;
-
-  /* ERRORS */
-preroll_failed:
-  {
-    GST_DEBUG_OBJECT (basesink, "preroll failed, abort state");
-    gst_element_abort_state (GST_ELEMENT_CAST (basesink));
-    return ret;
-  }
-stopping:
-  {
-    GST_DEBUG_OBJECT (basesink, "stopping while commiting state");
-    return GST_FLOW_WRONG_STATE;
   }
 }
 
