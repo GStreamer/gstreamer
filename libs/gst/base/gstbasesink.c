@@ -2138,22 +2138,22 @@ gst_base_sink_do_preroll (GstBaseSink * sink, GstMiniObject * obj)
         buf = GST_BUFFER_CAST (obj);
         /* For buffer lists do not set last buffer for now */
         gst_base_sink_set_last_buffer (sink, buf);
-      } else {
-        goto no_call_preroll;
+      } else
+        buf = NULL;
+
+      if (buf) {
+        GST_DEBUG_OBJECT (sink, "preroll buffer %" GST_TIME_FORMAT,
+            GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buf)));
+
+        bclass = GST_BASE_SINK_GET_CLASS (sink);
+        if (bclass->preroll)
+          if ((ret = bclass->preroll (sink, buf)) != GST_FLOW_OK)
+            goto preroll_canceled;
+
+        sink->priv->call_preroll = FALSE;
       }
-
-      GST_DEBUG_OBJECT (sink, "preroll buffer %" GST_TIME_FORMAT,
-          GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buf)));
-
-      bclass = GST_BASE_SINK_GET_CLASS (sink);
-      if (bclass->preroll)
-        if ((ret = bclass->preroll (sink, buf)) != GST_FLOW_OK)
-          goto preroll_canceled;
-
-      sink->priv->call_preroll = FALSE;
     }
 
-  no_call_preroll:
     /* commit state */
     if (G_LIKELY (sink->playing_async)) {
       if (G_UNLIKELY (!gst_base_sink_commit_state (sink)))
