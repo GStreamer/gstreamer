@@ -41,8 +41,10 @@ main (int argc, char *argv[])
   if (argc != 2 || strcmp (argv[1], "-l"))
     return 1;
 
+#if !GLIB_CHECK_VERSION (2, 31, 0)
   if (!g_thread_supported ())
     g_thread_init (NULL);
+#endif
 
   my_argc = 2;
   my_argv = g_malloc (my_argc * sizeof (char *));
