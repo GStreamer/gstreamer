@@ -3031,9 +3031,12 @@ gst_base_sink_default_get_times (GstBaseSink * basesink, GstBuffer * buffer,
 {
   GstClockTime timestamp, duration;
 
-  timestamp = GST_BUFFER_TIMESTAMP (buffer);
-  if (GST_CLOCK_TIME_IS_VALID (timestamp)) {
+  /* first sync on DTS, else use PTS */
+  timestamp = GST_BUFFER_DTS (buffer);
+  if (!GST_CLOCK_TIME_IS_VALID (timestamp))
+    timestamp = GST_BUFFER_PTS (buffer);
 
+  if (GST_CLOCK_TIME_IS_VALID (timestamp)) {
     /* get duration to calculate end time */
     duration = GST_BUFFER_DURATION (buffer);
     if (GST_CLOCK_TIME_IS_VALID (duration)) {
