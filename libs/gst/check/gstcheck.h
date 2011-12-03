@@ -277,6 +277,17 @@ MAIN_INIT();							\
 MAIN_START_THREAD_FUNCTIONS(count, function, data);		\
 MAIN_SYNCHRONIZE();
 
+#if GLIB_CHECK_VERSION (2, 31, 0)
+#define g_thread_create gst_g_thread_create
+static inline GThread *
+gst_g_thread_create (GThreadFunc func, gpointer data, gboolean joinable,
+    GError **error)
+{
+  g_assert (joinable);
+  return g_thread_try_new ("gst-check", func, data, error);
+}
+#endif
+
 #define MAIN_INIT()			\
 G_STMT_START {				\
   _gst_check_threads_running = TRUE;	\

@@ -403,9 +403,15 @@ gst_net_time_provider_start (GstNetTimeProvider * self)
   gst_poll_add_fd (self->priv->fdset, &self->priv->sock);
   gst_poll_fd_ctl_read (self->priv->fdset, &self->priv->sock, TRUE);
 
+#if !GLIB_CHECK_VERSION (2, 31, 0)
   self->thread = g_thread_create (gst_net_time_provider_thread, self, TRUE,
       &error);
-  if (!self->thread)
+#else
+  self->thread = g_thread_try_new ("GstNetTimeProvider",
+      gst_net_time_provider_thread, self, &error);
+#endif
+
+  if (error != NULL)
     goto no_thread;
 
   return TRUE;
