@@ -662,7 +662,7 @@ dequeue_buffer (GstAppSink * appsink)
 
           gst_event_parse_caps (event, &caps);
           GST_DEBUG_OBJECT (appsink, "activating caps %" GST_PTR_FORMAT, caps);
-          gst_caps_replace (priv->last_caps, caps);
+          gst_caps_replace (&priv->last_caps, caps);
           break;
         }
         case GST_EVENT_SEGMENT:
@@ -1165,7 +1165,7 @@ gst_app_sink_pull_sample (GstAppSink * appsink)
     if (!priv->started)
       goto not_started;
 
-    if (priv->num_buffers == 0)
+    if (priv->num_buffers > 0)
       break;
 
     if (priv->is_eos)
