@@ -3260,7 +3260,7 @@ push_sticky (GstPad * pad, PadEvent * ev, gpointer user_data)
       GST_PAD_PROBE_TYPE_EVENT_DOWNSTREAM, &stored);
 
   GST_OBJECT_LOCK (pad);
-  return *data != GST_FLOW_OK;
+  return *data == GST_FLOW_OK;
 }
 
 /* this is the chain function that does not perform the additional argument
