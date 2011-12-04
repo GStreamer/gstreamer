@@ -1066,8 +1066,6 @@ EXPORTS
 	gst_tag_list_get_boolean_index
 	gst_tag_list_get_buffer
 	gst_tag_list_get_buffer_index
-	gst_tag_list_get_char
-	gst_tag_list_get_char_index
 	gst_tag_list_get_date
 	gst_tag_list_get_date_index
 	gst_tag_list_get_date_time
@@ -1086,8 +1084,6 @@ EXPORTS
 	gst_tag_list_get_string_index
 	gst_tag_list_get_tag_size
 	gst_tag_list_get_type
-	gst_tag_list_get_uchar
-	gst_tag_list_get_uchar_index
 	gst_tag_list_get_uint
 	gst_tag_list_get_uint64
 	gst_tag_list_get_uint64_index
