@@ -53,8 +53,8 @@ struct _GstAlsaMixer
   snd_mixer_t *         handle;
 
   GstTask *		task;
-  GStaticRecMutex *	task_mutex;
-  GStaticRecMutex *	rec_mutex;
+  GStaticRecMutex	task_mutex;
+  GStaticRecMutex	rec_mutex;
 
   int			pfd[2];
 
@@ -65,6 +65,8 @@ struct _GstAlsaMixer
   GstAlsaMixerDirection dir;
 };
 
+#define GST_ALSA_MIXER_LOCK(mixer)   g_static_rec_mutex_lock (&mixer->rec_mutex)
+#define GST_ALSA_MIXER_UNLOCK(mixer) g_static_rec_mutex_unlock (&mixer->rec_mutex)
 
 GstAlsaMixer*   gst_alsa_mixer_new              (const gchar *device,
                                                  GstAlsaMixerDirection dir);
