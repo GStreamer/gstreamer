@@ -2457,10 +2457,6 @@ gst_tag_list_remove_tag
 gst_tag_list_foreach
 gst_tag_list_get_value_index
 gst_tag_list_copy_value
-gst_tag_list_get_char
-gst_tag_list_get_char_index
-gst_tag_list_get_uchar
-gst_tag_list_get_uchar_index
 gst_tag_list_get_boolean
 gst_tag_list_get_boolean_index
 gst_tag_list_get_int
