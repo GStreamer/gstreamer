@@ -28,6 +28,9 @@
  * When defining own plugins, use the GST_BOILERPLATE ease gobject creation.
  */
 
+/* FIXME 0.11: suppress warnings for deprecated API such as GStaticRecMutex
+ * with newer GLib versions (>= 2.31.0) */
+#define GLIB_DISABLE_DEPRECATION_WARNINGS
 #include "gst_private.h"
 #include <stdio.h>
 #include <string.h>

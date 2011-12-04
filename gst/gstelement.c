@@ -79,6 +79,9 @@
  * Last reviewed on 2009-05-29 (0.10.24)
  */
 
+/* FIXME 0.11: suppress warnings for deprecated API such as GStaticRecMutex
+ * with newer GLib versions (>= 2.31.0) */
+#define GLIB_DISABLE_DEPRECATION_WARNINGS
 #include "gst_private.h"
 #include <glib.h>
 #include <stdarg.h>
