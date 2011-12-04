@@ -45,6 +45,8 @@
 #include <gst/video/video.h>
 #include <string.h>
 
+#include "gst/glib-compat-private.h"
+
 GST_DEBUG_CATEGORY_STATIC (subtitle_overlay_debug);
 #define GST_CAT_DEFAULT subtitle_overlay_debug
 
@@ -1617,8 +1619,7 @@ gst_subtitle_overlay_base_init (gpointer g_class)
 {
   GstElementClass *gstelement_class = GST_ELEMENT_CLASS (g_class);
 
-  gst_element_class_add_static_pad_template (gstelement_class,
-      &srctemplate);
+  gst_element_class_add_static_pad_template (gstelement_class, &srctemplate);
 
   gst_element_class_add_static_pad_template (gstelement_class,
       &video_sinktemplate);

@@ -96,6 +96,8 @@
 #include "gstplayback.h"
 #include "gstrawcaps.h"
 
+#include "gst/glib-compat-private.h"
+
 /* generic templates */
 static GstStaticPadTemplate decoder_bin_sink_template =
 GST_STATIC_PAD_TEMPLATE ("sink",

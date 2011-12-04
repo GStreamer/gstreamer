@@ -48,6 +48,8 @@
 #include "pbutils-marshal.h"
 #include "pbutils-private.h"
 
+#include "gst/glib-compat-private.h"
+
 GST_DEBUG_CATEGORY_STATIC (discoverer_debug);
 #define GST_CAT_DEFAULT discoverer_debug
 

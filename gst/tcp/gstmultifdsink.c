@@ -2883,8 +2883,14 @@ gst_multi_fd_sink_start (GstBaseSink * bsink)
   }
 
   this->running = TRUE;
+
+#if !GLIB_CHECK_VERSION (2, 31, 0)
   this->thread = g_thread_create ((GThreadFunc) gst_multi_fd_sink_thread,
       this, TRUE, NULL);
+#else
+  this->thread = g_thread_new ("multifdsink",
+      (GThreadFunc) gst_multi_fd_sink_thread, this);
+#endif
 
   GST_OBJECT_FLAG_SET (this, GST_MULTI_FD_SINK_OPEN);
 

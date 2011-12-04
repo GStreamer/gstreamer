@@ -93,6 +93,8 @@
 #include "gstrtspconnection.h"
 #include "gstrtspbase64.h"
 
+#include "gst/glib-compat-private.h"
+
 union gst_sockaddr
 {
   struct sockaddr sa;

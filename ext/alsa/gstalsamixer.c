@@ -35,6 +35,7 @@
 #endif
 
 #include "gstalsamixer.h"
+#include "gst/glib-compat-private.h"
 #include <errno.h>
 
 static void gst_alsa_mixer_update_option (GstAlsaMixer * mixer,

@@ -48,6 +48,7 @@
 
 #include "gstalsasrc.h"
 #include "gstalsadeviceprobe.h"
+#include "gst/glib-compat-private.h"
 
 #include <gst/gst-i18n-plugin.h>
 

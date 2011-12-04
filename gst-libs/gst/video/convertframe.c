@@ -22,6 +22,8 @@
 #include <string.h>
 #include "video.h"
 
+#include "gst/glib-compat-private.h"
+
 static gboolean
 caps_are_raw (const GstCaps * caps)
 {

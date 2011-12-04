@@ -92,6 +92,8 @@
 #include "gsttextrender.h"
 #include <string.h>
 
+#include "gst/glib-compat-private.h"
+
 /* FIXME:
  *  - use proper strides and offset for I420
  *  - if text is wider than the video picture, it does not get

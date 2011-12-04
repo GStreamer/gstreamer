@@ -45,6 +45,7 @@
 #include <string.h>
 #include <gst/gst.h>
 #include <gst/pbutils/pbutils.h>
+#include "gst/glib-compat-private.h"
 
 #include "gstplay-marshal.h"
 
