@@ -283,8 +283,10 @@ static inline GThread *
 gst_g_thread_create (GThreadFunc func, gpointer data, gboolean joinable,
     GError **error)
 {
-  g_assert (joinable);
-  return g_thread_try_new ("gst-check", func, data, error);
+  GThread *thread = g_thread_try_new ("gst-check", func, data, error);
+  if (!joinable)
+    g_thread_unref (thread);
+  return thread;
 }
 #define g_mutex_new gst_g_mutex_new
 static inline GMutex *
