@@ -2221,7 +2221,7 @@ void
 gst_query_intersect_caps_result (GstQuery * query, GstCaps * filter,
     GstCapsIntersectMode mode)
 {
-  GstCaps *res, *caps;
+  GstCaps *res, *caps = NULL;
 
   gst_query_parse_caps_result (query, &caps);
   res = gst_caps_intersect_full (filter, caps, GST_CAPS_INTERSECT_FIRST);
