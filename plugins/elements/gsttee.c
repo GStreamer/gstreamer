@@ -48,6 +48,7 @@
 #endif
 
 #include "gsttee.h"
+#include "gst/glib-compat-private.h"
 
 #include <string.h>
 

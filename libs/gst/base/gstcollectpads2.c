@@ -84,6 +84,8 @@
 
 #include "gstcollectpads2.h"
 
+#include "../../../gst/glib-compat-private.h"
+
 GST_DEBUG_CATEGORY_STATIC (collect_pads2_debug);
 #define GST_CAT_DEFAULT collect_pads2_debug
 

@@ -72,6 +72,7 @@
 
 #include "gstinfo.h"
 #include "gsttask.h"
+#include "glib-compat-private.h"
 
 #include <stdio.h>
 
@@ -276,8 +277,13 @@ gst_task_func (GstTask * task)
     goto no_lock;
   task->abidata.ABI.thread = tself;
   /* only update the priority when it was changed */
-  if (priv->prio_set)
+  if (priv->prio_set) {
+#if !GLIB_CHECK_VERSION (2, 31, 0)
     g_thread_set_priority (tself, priv->priority);
+#else
+    GST_INFO_OBJECT (task, "Thread priorities no longer have any effect");
+#endif
+  }
   GST_OBJECT_UNLOCK (task);
 
   /* fire the enter_thread callback when we need to */
@@ -333,7 +339,9 @@ exit:
   } else {
     /* restore normal priority when releasing back into the pool, we will not
      * touch the priority when a custom callback has been installed. */
+#if !GLIB_CHECK_VERSION (2, 31, 0)
     g_thread_set_priority (tself, G_THREAD_PRIORITY_NORMAL);
+#endif
   }
   /* now we allow messing with the lock again by setting the running flag to
    * FALSE. Together with the SIGNAL this is the sign for the _join() to
@@ -475,7 +483,11 @@ gst_task_set_priority (GstTask * task, GThreadPriority priority)
   if (thread != NULL) {
     /* if this task already has a thread, we can configure the priority right
      * away, else we do that when we assign a thread to the task. */
+#if !GLIB_CHECK_VERSION (2, 31, 0)
     g_thread_set_priority (thread, priority);
+#else
+    GST_INFO_OBJECT (task, "Thread priorities no longer have any effect");
+#endif
   }
   GST_OBJECT_UNLOCK (task);
 }

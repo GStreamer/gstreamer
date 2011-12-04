@@ -166,6 +166,7 @@
 #include <string.h>
 
 #include <gst/gst_private.h>
+#include <gst/glib-compat-private.h>
 
 #include "gstbasesrc.h"
 #include "gsttypefindhelper.h"

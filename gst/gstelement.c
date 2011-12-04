@@ -95,6 +95,7 @@
 #include "gstinfo.h"
 #include "gstvalue.h"
 #include "gst-i18n-lib.h"
+#include "glib-compat-private.h"
 
 /* Element signals and args */
 enum

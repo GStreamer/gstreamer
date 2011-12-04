@@ -284,7 +284,11 @@ struct _GstBaseParsePrivate
   GstIndex *index;
   gint index_id;
   gboolean own_index;
+#if !GLIB_CHECK_VERSION (2, 31, 0)
   GStaticMutex index_lock;
+#else
+  GMutex index_lock;
+#endif
 
   /* seek table entries only maintained if upstream is BYTE seekable */
   gboolean upstream_seekable;
@@ -332,6 +336,18 @@ typedef struct _GstBaseParseSeek
   gint64 offset;
   GstClockTime start_ts;
 } GstBaseParseSeek;
+
+#if !GLIB_CHECK_VERSION (2, 31, 0)
+#define GST_BASE_PARSE_INDEX_LOCK(parse) \
+  g_static_mutex_lock (&parse->priv->index_lock);
+#define GST_BASE_PARSE_INDEX_UNLOCK(parse) \
+  g_static_mutex_unlock (&parse->priv->index_lock);
+#else
+#define GST_BASE_PARSE_INDEX_LOCK(parse) \
+  g_mutex_lock (&parse->priv->index_lock);
+#define GST_BASE_PARSE_INDEX_UNLOCK(parse) \
+  g_mutex_unlock (&parse->priv->index_lock);
+#endif
 
 static GstElementClass *parent_class = NULL;
 
@@ -474,8 +490,11 @@ gst_base_parse_finalize (GObject * object)
     gst_object_unref (parse->priv->index);
     parse->priv->index = NULL;
   }
-
+#if !GLIB_CHECK_VERSION (2, 31, 0)
   g_static_mutex_free (&parse->priv->index_lock);
+#else
+  g_mutex_clear (&parse->priv->index_lock);
+#endif
 
   gst_base_parse_clear_queues (parse);
 
@@ -560,7 +579,11 @@ gst_base_parse_init (GstBaseParse * parse, GstBaseParseClass * bclass)
 
   parse->priv->pad_mode = GST_ACTIVATE_NONE;
 
+#if !GLIB_CHECK_VERSION (2, 31, 0)
   g_static_mutex_init (&parse->priv->index_lock);
+#else
+  g_mutex_init (&parse->priv->index_lock);
+#endif
 
   /* init state */
   gst_base_parse_reset (parse);
@@ -1488,11 +1511,11 @@ gst_base_parse_add_index_entry (GstBaseParse * parse, guint64 offset,
   associations[1].value = offset;
 
   /* index might change on-the-fly, although that would be nutty app ... */
-  g_static_mutex_lock (&parse->priv->index_lock);
+  GST_BASE_PARSE_INDEX_LOCK (parse);
   gst_index_add_associationv (parse->priv->index, parse->priv->index_id,
       (key) ? GST_ASSOCIATION_FLAG_KEY_UNIT : GST_ASSOCIATION_FLAG_DELTA_UNIT,
       2, (const GstIndexAssociation *) &associations);
-  g_static_mutex_unlock (&parse->priv->index_lock);
+  GST_BASE_PARSE_INDEX_UNLOCK (parse);
 
   if (key) {
     parse->priv->index_last_offset = offset;
@@ -3632,7 +3655,7 @@ gst_base_parse_find_offset (GstBaseParse * parse, GstClockTime time,
     goto exit;
   }
 
-  g_static_mutex_lock (&parse->priv->index_lock);
+  GST_BASE_PARSE_INDEX_LOCK (parse);
   if (parse->priv->index) {
     /* Let's check if we have an index entry for that time */
     entry = gst_index_get_assoc_entry (parse->priv->index,
@@ -3656,7 +3679,7 @@ gst_base_parse_find_offset (GstBaseParse * parse, GstClockTime time,
       ts = GST_CLOCK_TIME_NONE;
     }
   }
-  g_static_mutex_unlock (&parse->priv->index_lock);
+  GST_BASE_PARSE_INDEX_UNLOCK (parse);
 
 exit:
   if (_ts)
@@ -4007,7 +4030,7 @@ gst_base_parse_set_index (GstElement * element, GstIndex * index)
 {
   GstBaseParse *parse = GST_BASE_PARSE (element);
 
-  g_static_mutex_lock (&parse->priv->index_lock);
+  GST_BASE_PARSE_INDEX_LOCK (parse);
   if (parse->priv->index)
     gst_object_unref (parse->priv->index);
   if (index) {
@@ -4018,7 +4041,7 @@ gst_base_parse_set_index (GstElement * element, GstIndex * index)
   } else {
     parse->priv->index = NULL;
   }
-  g_static_mutex_unlock (&parse->priv->index_lock);
+  GST_BASE_PARSE_INDEX_UNLOCK (parse);
 }
 
 static GstIndex *
@@ -4027,10 +4050,10 @@ gst_base_parse_get_index (GstElement * element)
   GstBaseParse *parse = GST_BASE_PARSE (element);
   GstIndex *result = NULL;
 
-  g_static_mutex_lock (&parse->priv->index_lock);
+  GST_BASE_PARSE_INDEX_LOCK (parse);
   if (parse->priv->index)
     result = gst_object_ref (parse->priv->index);
-  g_static_mutex_unlock (&parse->priv->index_lock);
+  GST_BASE_PARSE_INDEX_UNLOCK (parse);
 
   return result;
 }
@@ -4047,7 +4070,7 @@ gst_base_parse_change_state (GstElement * element, GstStateChange transition)
     case GST_STATE_CHANGE_READY_TO_PAUSED:
       /* If this is our own index destroy it as the
        * old entries might be wrong for the new stream */
-      g_static_mutex_lock (&parse->priv->index_lock);
+      GST_BASE_PARSE_INDEX_LOCK (parse);
       if (parse->priv->own_index) {
         gst_object_unref (parse->priv->index);
         parse->priv->index = NULL;
@@ -4063,7 +4086,7 @@ gst_base_parse_change_state (GstElement * element, GstStateChange transition)
             &parse->priv->index_id);
         parse->priv->own_index = TRUE;
       }
-      g_static_mutex_unlock (&parse->priv->index_lock);
+      GST_BASE_PARSE_INDEX_UNLOCK (parse);
       break;
     default:
       break;

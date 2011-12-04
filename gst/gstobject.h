@@ -215,29 +215,48 @@ struct _GstObject {
  *
  * This macro will return the class lock used to protect deep_notify signal
  * emission on thread-unsafe glib versions (glib < 2.8).
+ *
+ * Deprecated: 0.10.36: Don't use this, it's not needed any longer.
  */
+#ifndef GST_DISABLE_DEPRECATED
 #define GST_CLASS_GET_LOCK(obj)         (GST_OBJECT_CLASS_CAST(obj)->lock)
+#endif
+
 /**
  * GST_CLASS_LOCK:
  * @obj: a #GstObjectClass
  *
  * Lock the class.
+ *
+ * Deprecated: 0.10.36: Don't use this, it's not needed any longer.
  */
+#ifndef GST_DISABLE_DEPRECATED
 #define GST_CLASS_LOCK(obj)             (g_static_rec_mutex_lock(GST_CLASS_GET_LOCK(obj)))
+#endif
+
 /**
  * GST_CLASS_TRYLOCK:
  * @obj: a #GstObjectClass
  *
  * Try to lock the class, returns TRUE if class could be locked.
+ *
+ * Deprecated: 0.10.36: Don't use this, it's not needed any longer.
  */
+#ifndef GST_DISABLE_DEPRECATED
 #define GST_CLASS_TRYLOCK(obj)          (g_static_rec_mutex_trylock(GST_CLASS_GET_LOCK(obj)))
+#endif
+
 /**
  * GST_CLASS_UNLOCK:
  * @obj: a #GstObjectClass
  *
  * Unlock the class.
+ *
+ * Deprecated: 0.10.36: Don't use this, it's not needed any longer.
  */
+#ifndef GST_DISABLE_DEPRECATED
 #define GST_CLASS_UNLOCK(obj)           (g_static_rec_mutex_unlock(GST_CLASS_GET_LOCK(obj)))
+#endif
 
 /**
  * GstObjectClass:
