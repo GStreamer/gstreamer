@@ -497,8 +497,10 @@ main (int argc, char **argv)
   };
   GOptionContext *ctx;
 
+#if !GLIB_CHECK_VERSION (2, 31, 0)
   if (!g_thread_supported ())
     g_thread_init (NULL);
+#endif
 
   ctx =
       g_option_context_new
