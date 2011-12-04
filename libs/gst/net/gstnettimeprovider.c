@@ -355,7 +355,7 @@ gst_net_time_provider_start (GstNetTimeProvider * self)
   socklen_t len;
   int port;
   gint ret;
-  GError *error;
+  GError *error = NULL;
 
   if ((ret = socket (AF_INET, SOCK_DGRAM, 0)) < 0)
     goto no_socket;

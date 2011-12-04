@@ -423,7 +423,7 @@ gst_net_client_clock_start (GstNetClientClock * self)
   struct sockaddr_in servaddr, myaddr;
   socklen_t len;
   gint ret;
-  GError *error;
+  GError *error = NULL;
 
   g_return_val_if_fail (self->address != NULL, FALSE);
   g_return_val_if_fail (self->servaddr == NULL, FALSE);
