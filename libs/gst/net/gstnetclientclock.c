@@ -416,7 +416,7 @@ gst_net_client_clock_start (GstNetClientClock * self)
   struct sockaddr_in servaddr, myaddr;
   socklen_t len;
   gint ret;
-  GError *error;
+  GError *error = NULL;
 
   g_return_val_if_fail (self->address != NULL, FALSE);
   g_return_val_if_fail (self->servaddr == NULL, FALSE);
@@ -450,9 +450,15 @@ gst_net_client_clock_start (GstNetClientClock * self)
   gst_poll_add_fd (self->priv->fdset, &self->priv->sock);
   gst_poll_fd_ctl_read (self->priv->fdset, &self->priv->sock, TRUE);
 
+#if !GLIB_CHECK_VERSION (2, 31, 0)
   self->thread = g_thread_create (gst_net_client_clock_thread, self, TRUE,
       &error);
-  if (!self->thread)
+#else
+  self->thread = g_thread_try_new ("GstNetClientClock",
+      gst_net_client_clock_thread, self, &error);
+#endif
+
+  if (error != NULL)
     goto no_thread;
 
   return TRUE;

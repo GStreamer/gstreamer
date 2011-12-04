@@ -109,6 +109,7 @@
 #include "gstclock.h"
 #include "gstinfo.h"
 #include "gstutils.h"
+#include "glib-compat-private.h"
 
 #ifndef GST_DISABLE_TRACE
 /* #define GST_WITH_ALLOC_TRACE */

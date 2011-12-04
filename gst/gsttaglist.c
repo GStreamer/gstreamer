@@ -73,13 +73,22 @@ typedef struct
 }
 GstTagInfo;
 
+#if GLIB_CHECK_VERSION (2, 31, 0)
+#define g_value_get_char g_value_get_schar
+#endif
+
+#if !GLIB_CHECK_VERSION (2, 31, 0)
 static GMutex *__tag_mutex;
+#define TAG_LOCK g_mutex_lock (__tag_mutex)
+#define TAG_UNLOCK g_mutex_unlock (__tag_mutex)
+#else
+static GMutex __tag_mutex;
+#define TAG_LOCK g_mutex_lock (&__tag_mutex)
+#define TAG_UNLOCK g_mutex_unlock (&__tag_mutex)
+#endif
 
 /* tags hash table: maps tag name string => GstTagInfo */
 static GHashTable *__tags;
-
-#define TAG_LOCK g_mutex_lock (__tag_mutex)
-#define TAG_UNLOCK g_mutex_unlock (__tag_mutex)
 
 GType
 gst_tag_list_get_type (void)
@@ -102,7 +111,11 @@ gst_tag_list_get_type (void)
 void
 _priv_gst_tag_initialize (void)
 {
+#if !GLIB_CHECK_VERSION (2, 31, 0)
   __tag_mutex = g_mutex_new ();
+#else
+  g_mutex_init (&__tag_mutex);
+#endif
   __tags = g_hash_table_new (g_str_hash, g_str_equal);
   gst_tag_register (GST_TAG_TITLE, GST_TAG_FLAG_META,
       G_TYPE_STRING,

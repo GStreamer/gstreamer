@@ -43,6 +43,8 @@
 #include "gstlfocontrolsource.h"
 #include "gstlfocontrolsourceprivate.h"
 
+#include "gst/glib-compat-private.h"
+
 #include <gst/math-compat.h>
 
 #define GST_CAT_DEFAULT controller_debug

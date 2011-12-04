@@ -111,6 +111,8 @@ static GstFlowReturn gst_identity_prepare_output_buffer (GstBaseTransform *
     trans, GstBuffer * in_buf, GstBuffer ** out_buf);
 static gboolean gst_identity_start (GstBaseTransform * trans);
 static gboolean gst_identity_stop (GstBaseTransform * trans);
+static GstStateChangeReturn gst_identity_change_state (GstElement * element,
+    GstStateChange transition);
 
 static guint gst_identity_signals[LAST_SIGNAL] = { 0 };
 
@@ -267,6 +269,8 @@ gst_identity_class_init (GstIdentityClass * klass)
   gst_element_class_add_pad_template (gstelement_class,
       gst_static_pad_template_get (&sinktemplate));
 
+  gstelement_class->change_state =
+      GST_DEBUG_FUNCPTR (gst_identity_change_state);
   gstbasetrans_class->sink_event = GST_DEBUG_FUNCPTR (gst_identity_sink_event);
   gstbasetrans_class->transform_ip =
       GST_DEBUG_FUNCPTR (gst_identity_transform_ip);
@@ -372,11 +376,22 @@ gst_identity_sink_event (GstBaseTransform * trans, GstEvent * event)
     identity->prev_offset = identity->prev_offset_end = GST_BUFFER_OFFSET_NONE;
   }
 
-  if (identity->single_segment && (GST_EVENT_TYPE (event) == GST_EVENT_SEGMENT)) {
+  if (identity->single_segment && GST_EVENT_TYPE (event) == GST_EVENT_SEGMENT) {
     /* eat up segments */
     gst_event_unref (event);
     ret = TRUE;
   } else {
+    if (GST_EVENT_TYPE (event) == GST_EVENT_FLUSH_START) {
+      GST_OBJECT_LOCK (identity);
+      if (identity->clock_id) {
+        GST_DEBUG_OBJECT (identity, "unlock clock wait");
+        gst_clock_id_unschedule (identity->clock_id);
+        gst_clock_id_unref (identity->clock_id);
+        identity->clock_id = NULL;
+      }
+      GST_OBJECT_UNLOCK (identity);
+    }
+
     ret = GST_BASE_TRANSFORM_CLASS (parent_class)->sink_event (trans, event);
   }
 
@@ -646,7 +661,6 @@ gst_identity_transform_ip (GstBaseTransform * trans, GstBuffer * buf)
       timestamp = runtimestamp + GST_ELEMENT (identity)->base_time;
 
       /* save id if we need to unlock */
-      /* FIXME: actually unlock this somewhere in the state changes */
       identity->clock_id = gst_clock_new_single_shot_id (clock, timestamp);
       GST_OBJECT_UNLOCK (identity);
 
@@ -835,4 +849,47 @@ gst_identity_stop (GstBaseTransform * trans)
   GST_OBJECT_UNLOCK (identity);
 
   return TRUE;
+}
+
+static GstStateChangeReturn
+gst_identity_change_state (GstElement * element, GstStateChange transition)
+{
+  GstStateChangeReturn ret;
+  GstIdentity *identity = GST_IDENTITY (element);
+
+  switch (transition) {
+    case GST_STATE_CHANGE_NULL_TO_READY:
+      break;
+    case GST_STATE_CHANGE_READY_TO_PAUSED:
+      break;
+    case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
+      break;
+    case GST_STATE_CHANGE_PAUSED_TO_READY:
+      GST_OBJECT_LOCK (identity);
+      if (identity->clock_id) {
+        GST_DEBUG_OBJECT (identity, "unlock clock wait");
+        gst_clock_id_unschedule (identity->clock_id);
+        gst_clock_id_unref (identity->clock_id);
+        identity->clock_id = NULL;
+      }
+      GST_OBJECT_UNLOCK (identity);
+      break;
+    default:
+      break;
+  }
+
+  ret = GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
+
+  switch (transition) {
+    case GST_STATE_CHANGE_PLAYING_TO_PAUSED:
+      break;
+    case GST_STATE_CHANGE_PAUSED_TO_READY:
+      break;
+    case GST_STATE_CHANGE_READY_TO_NULL:
+      break;
+    default:
+      break;
+  }
+
+  return ret;
 }

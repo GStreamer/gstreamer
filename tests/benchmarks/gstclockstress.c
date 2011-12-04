@@ -65,7 +65,12 @@ main (gint argc, gchar * argv[])
   for (t = 0; t < num_threads; t++) {
     GError *error = NULL;
 
+#if !GLIB_CHECK_VERSION (2, 31, 0)
     threads[t] = g_thread_create (run_test, sysclock, TRUE, &error);
+#else
+    threads[t] = g_thread_try_new ("clockstresstest", run_test,
+        sysclock, &error);
+#endif
     if (error) {
       printf ("ERROR: g_thread_create() %s\n", error->message);
       exit (-1);

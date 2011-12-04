@@ -61,6 +61,7 @@
 #include "gstqueue.h"
 
 #include "../../gst/gst-i18n-lib.h"
+#include "../../gst/glib-compat-private.h"
 
 static GstStaticPadTemplate sinktemplate = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,

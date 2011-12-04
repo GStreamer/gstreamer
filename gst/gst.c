@@ -360,6 +360,9 @@ gst_init_get_option_group (void)
     {NULL}
   };
 
+/* Since GLib 2.31.0 threading is always enabled and g_thread_init()
+ * is not needed any longer and deprecated */
+#if !GLIB_CHECK_VERSION (2, 31, 0)
   /* Since GLib 2.23.2 calling g_thread_init() 'late' is allowed and is
    * automatically done as part of g_type_init() */
   if (glib_check_version (2, 23, 3)) {
@@ -381,6 +384,7 @@ gst_init_get_option_group (void)
   } else {
     /* GLib >= 2.23.2 */
   }
+#endif
 
   group = g_option_group_new ("gst", _("GStreamer Options"),
       _("Show GStreamer Options"), NULL, NULL);
@@ -424,8 +428,10 @@ gst_init_check (int *argc, char **argv[], GError ** err)
 #endif
   gboolean res;
 
+#if !GLIB_CHECK_VERSION (2, 31, 0)
   if (!g_thread_get_initialized ())
     g_thread_init (NULL);
+#endif
 
   if (gst_initialized) {
     GST_DEBUG ("already initialized gst");
@@ -574,8 +580,10 @@ init_pre (GOptionContext * context, GOptionGroup * group, gpointer data,
 
   g_type_init ();
 
+#if !GLIB_CHECK_VERSION (2, 31, 0)
   /* we need threading to be enabled right here */
   g_assert (g_thread_get_initialized ());
+#endif
 
 #ifndef GST_DISABLE_GST_DEBUG
   _priv_gst_debug_init ();

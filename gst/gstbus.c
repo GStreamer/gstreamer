@@ -78,6 +78,7 @@
 #include "gstpoll.h"
 
 #include "gstbus.h"
+#include "glib-compat-private.h"
 
 #define GST_CAT_DEFAULT GST_CAT_BUS
 /* bus signals */

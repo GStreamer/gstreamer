@@ -33,6 +33,7 @@
 #include <gst/gst.h>
 #include "string.h"
 #include "gstdataqueue.h"
+#include "gst/glib-compat-private.h"
 
 GST_DEBUG_CATEGORY_STATIC (data_queue_debug);
 #define GST_CAT_DEFAULT (data_queue_debug)
