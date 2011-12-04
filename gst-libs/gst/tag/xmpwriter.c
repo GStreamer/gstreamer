@@ -47,8 +47,20 @@ static GQuark tag_xmp_writer_key;
 typedef struct
 {
   GSList *schemas;
+#if !GLIB_CHECK_VERSION (2, 31, 0)
   GStaticMutex lock;
+#else
+  GMutex lock;
+#endif
 } GstTagXmpWriterData;
+
+#if !GLIB_CHECK_VERSION (2, 31, 0)
+#define GST_TAG_XMP_WRITER_DATA_LOCK(data) g_static_mutex_lock(&data->lock)
+#define GST_TAG_XMP_WRITER_DATA_UNLOCK(data) g_static_mutex_unlock(&data->lock)
+#else
+#define GST_TAG_XMP_WRITER_DATA_LOCK(data) g_mutex_lock(&data->lock)
+#define GST_TAG_XMP_WRITER_DATA_UNLOCK(data) g_mutex_unlock(&data->lock)
+#endif
 
 GType
 gst_tag_xmp_writer_get_type (void)
@@ -116,8 +128,11 @@ gst_tag_xmp_writer_data_free (gpointer p)
     }
     g_slist_free (data->schemas);
   }
-
+#if !GLIB_CHECK_VERSION (2, 31, 0)
   g_static_mutex_free (&data->lock);
+#else
+  g_mutex_clear (&data->lock);
+#endif
 
   g_slice_free (GstTagXmpWriterData, data);
 }
@@ -129,22 +144,37 @@ gst_tag_xmp_writer_get_data (GstTagXmpWriter * xmpconfig)
 
   data = g_object_get_qdata (G_OBJECT (xmpconfig), tag_xmp_writer_key);
   if (!data) {
+    /* make sure no other thread is creating a GstTagData at the same time */
+#if !GLIB_CHECK_VERSION (2, 31, 0)
     static GStaticMutex create_mutex = G_STATIC_MUTEX_INIT;
 
-    /* make sure no other thread is creating a GstTagXmpWriterData at the same time */
     g_static_mutex_lock (&create_mutex);
+#else
+    static GMutex create_mutex; /* no initialisation required */
+
+    g_mutex_lock (&create_mutex);
+#endif
+
     data = g_object_get_qdata (G_OBJECT (xmpconfig), tag_xmp_writer_key);
     if (!data) {
       data = g_slice_new (GstTagXmpWriterData);
-      g_static_mutex_init (&data->lock);
 
+#if !GLIB_CHECK_VERSION (2, 31, 0)
+      g_static_mutex_init (&data->lock);
+#else
+      g_mutex_init (&data->lock);
+#endif
       data->schemas = NULL;
       gst_tag_xmp_writer_data_add_all_schemas_unlocked (data);
 
       g_object_set_qdata_full (G_OBJECT (xmpconfig), tag_xmp_writer_key, data,
           gst_tag_xmp_writer_data_free);
     }
+#if !GLIB_CHECK_VERSION (2, 31, 0)
     g_static_mutex_unlock (&create_mutex);
+#else
+    g_mutex_unlock (&create_mutex);
+#endif
   }
 
   return data;
@@ -168,9 +198,9 @@ gst_tag_xmp_writer_add_all_schemas (GstTagXmpWriter * config)
 
   data = gst_tag_xmp_writer_get_data (config);
 
-  g_static_mutex_lock (&data->lock);
+  GST_TAG_XMP_WRITER_DATA_LOCK (data);
   gst_tag_xmp_writer_data_add_all_schemas_unlocked (data);
-  g_static_mutex_unlock (&data->lock);
+  GST_TAG_XMP_WRITER_DATA_UNLOCK (data);
 }
 
 /**
@@ -191,9 +221,9 @@ gst_tag_xmp_writer_add_schema (GstTagXmpWriter * config, const gchar * schema)
 
   data = gst_tag_xmp_writer_get_data (config);
 
-  g_static_mutex_lock (&data->lock);
+  GST_TAG_XMP_WRITER_DATA_LOCK (data);
   gst_tag_xmp_writer_data_add_schema_unlocked (data, schema);
-  g_static_mutex_unlock (&data->lock);
+  GST_TAG_XMP_WRITER_DATA_UNLOCK (data);
 }
 
 /**
@@ -217,14 +247,14 @@ gst_tag_xmp_writer_has_schema (GstTagXmpWriter * config, const gchar * schema)
 
   data = gst_tag_xmp_writer_get_data (config);
 
-  g_static_mutex_lock (&data->lock);
+  GST_TAG_XMP_WRITER_DATA_LOCK (data);
   for (iter = data->schemas; iter; iter = g_slist_next (iter)) {
     if (strcmp ((const gchar *) iter->data, schema) == 0) {
       ret = TRUE;
       break;
     }
   }
-  g_static_mutex_unlock (&data->lock);
+  GST_TAG_XMP_WRITER_DATA_UNLOCK (data);
 
   return ret;
 }
@@ -250,7 +280,7 @@ gst_tag_xmp_writer_remove_schema (GstTagXmpWriter * config,
 
   data = gst_tag_xmp_writer_get_data (config);
 
-  g_static_mutex_lock (&data->lock);
+  GST_TAG_XMP_WRITER_DATA_LOCK (data);
   for (iter = data->schemas; iter; iter = g_slist_next (iter)) {
     if (strcmp ((const gchar *) iter->data, schema) == 0) {
       g_free (iter->data);
@@ -258,7 +288,7 @@ gst_tag_xmp_writer_remove_schema (GstTagXmpWriter * config,
       break;
     }
   }
-  g_static_mutex_unlock (&data->lock);
+  GST_TAG_XMP_WRITER_DATA_UNLOCK (data);
 }
 
 /**
@@ -280,7 +310,7 @@ gst_tag_xmp_writer_remove_all_schemas (GstTagXmpWriter * config)
 
   data = gst_tag_xmp_writer_get_data (config);
 
-  g_static_mutex_lock (&data->lock);
+  GST_TAG_XMP_WRITER_DATA_LOCK (data);
   if (data->schemas) {
     for (iter = data->schemas; iter; iter = g_slist_next (iter)) {
       g_free (iter->data);
@@ -288,7 +318,7 @@ gst_tag_xmp_writer_remove_all_schemas (GstTagXmpWriter * config)
     g_slist_free (data->schemas);
   }
   data->schemas = NULL;
-  g_static_mutex_unlock (&data->lock);
+  GST_TAG_XMP_WRITER_DATA_UNLOCK (data);
 }
 
 GstBuffer *
@@ -304,7 +334,7 @@ gst_tag_xmp_writer_tag_list_to_xmp_buffer (GstTagXmpWriter * config,
 
   data = gst_tag_xmp_writer_get_data (config);
 
-  g_static_mutex_lock (&data->lock);
+  GST_TAG_XMP_WRITER_DATA_LOCK (data);
   if (data->schemas) {
     gchar **array = g_new0 (gchar *, g_slist_length (data->schemas) + 1);
     if (array) {
@@ -316,7 +346,7 @@ gst_tag_xmp_writer_tag_list_to_xmp_buffer (GstTagXmpWriter * config,
       g_free (array);
     }
   }
-  g_static_mutex_unlock (&data->lock);
+  GST_TAG_XMP_WRITER_DATA_UNLOCK (data);
 
   return buf;
 }
