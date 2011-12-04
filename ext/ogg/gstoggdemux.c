@@ -39,6 +39,11 @@
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
+
+/* FIXME 0.11: suppress warnings for deprecated API such as GStaticRecMutex
+ * with newer GLib versions (>= 2.31.0) */
+#define GLIB_DISABLE_DEPRECATION_WARNINGS
+
 #include <string.h>
 #include <gst/gst-i18n-plugin.h>
 #include <gst/tag/tag.h>
