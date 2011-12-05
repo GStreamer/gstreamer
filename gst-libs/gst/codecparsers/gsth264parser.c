@@ -760,15 +760,18 @@ slice_parse_ref_pic_list_modification_1 (GstH264SliceHdr * slice,
   }
 
   READ_UINT8 (nr, *ref_pic_list_modification_flag, 1);
-  do {
-    READ_UE (nr, modification_of_pic_nums_idc);
-    if (modification_of_pic_nums_idc == 0 || modification_of_pic_nums_idc == 1) {
-      READ_UE_ALLOWED (nr, entries[i].value.abs_diff_pic_num_minus1, 0,
-          slice->max_pic_num - 1);
-    } else if (modification_of_pic_nums_idc == 2) {
-      READ_UE (nr, entries[i].value.long_term_pic_num);
-    }
-  } while (modification_of_pic_nums_idc != 3);
+  if (*ref_pic_list_modification_flag) {
+    do {
+      READ_UE (nr, modification_of_pic_nums_idc);
+      if (modification_of_pic_nums_idc == 0 ||
+          modification_of_pic_nums_idc == 1) {
+        READ_UE_ALLOWED (nr, entries[i].value.abs_diff_pic_num_minus1, 0,
+            slice->max_pic_num - 1);
+      } else if (modification_of_pic_nums_idc == 2) {
+        READ_UE (nr, entries[i].value.long_term_pic_num);
+      }
+    } while (modification_of_pic_nums_idc != 3);
+  }
 
   return TRUE;
 
