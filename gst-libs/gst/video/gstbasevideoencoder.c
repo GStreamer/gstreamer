@@ -132,7 +132,8 @@ static gboolean gst_base_video_encoder_src_query (GstPad * pad,
 
 #define gst_base_video_encoder_parent_class parent_class
 G_DEFINE_TYPE_WITH_CODE (GstBaseVideoEncoder, gst_base_video_encoder,
-    GST_TYPE_BASE_VIDEO_CODEC, G_IMPLEMENT_INTERFACE (GST_TYPE_PRESET, NULL););
+    GST_TYPE_BASE_VIDEO_CODEC, G_IMPLEMENT_INTERFACE (GST_TYPE_PRESET, NULL);
+    );
 
 static void
 gst_base_video_encoder_class_init (GstBaseVideoEncoderClass * klass)
@@ -231,14 +232,9 @@ gst_base_video_encoder_drain (GstBaseVideoEncoder * enc)
   /* everything should be away now */
   if (codec->frames) {
     /* not fatal/impossible though if subclass/codec eats stuff */
-    GST_WARNING_OBJECT (enc, "still %d frames left after draining",
-        g_list_length (codec->frames));
-#if 0
-    /* FIXME should do this, but subclass may come up with it later on ?
-     * and would then need refcounting or so on frames */
-    g_list_foreach (codec->frames,
-        (GFunc) gst_base_video_codec_free_frame, NULL);
-#endif
+    g_list_foreach (codec->frames, (GFunc) gst_video_frame_state_unref, NULL);
+    g_list_free (codec->frames);
+    codec->frames = NULL;
   }
 
   return ret;
@@ -966,7 +962,7 @@ done:
   GST_BASE_VIDEO_CODEC (base_video_encoder)->frames =
       g_list_remove (GST_BASE_VIDEO_CODEC (base_video_encoder)->frames, frame);
 
-  gst_base_video_codec_free_frame (frame);
+  gst_video_frame_state_unref (frame);
 
   GST_BASE_VIDEO_CODEC_STREAM_UNLOCK (base_video_encoder);
 

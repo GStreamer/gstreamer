@@ -908,16 +908,19 @@ gst_base_video_decoder_clear_queues (GstBaseVideoDecoder * dec)
   g_list_foreach (dec->gather, (GFunc) gst_mini_object_unref, NULL);
   g_list_free (dec->gather);
   dec->gather = NULL;
-  g_list_foreach (dec->decode, (GFunc) gst_base_video_codec_free_frame, NULL);
+  g_list_foreach (dec->decode, (GFunc) gst_video_frame_state_unref, NULL);
   g_list_free (dec->decode);
   dec->decode = NULL;
   g_list_foreach (dec->parse, (GFunc) gst_mini_object_unref, NULL);
   g_list_free (dec->parse);
   dec->parse = NULL;
-  g_list_foreach (dec->parse_gather, (GFunc) gst_base_video_codec_free_frame,
-      NULL);
+  g_list_foreach (dec->parse_gather, (GFunc) gst_video_frame_state_unref, NULL);
   g_list_free (dec->parse_gather);
   dec->parse_gather = NULL;
+  g_list_foreach (GST_BASE_VIDEO_CODEC (dec)->frames,
+      (GFunc) gst_video_frame_state_unref, NULL);
+  g_list_free (GST_BASE_VIDEO_CODEC (dec)->frames);
+  GST_BASE_VIDEO_CODEC (dec)->frames = NULL;
 }
 
 static void
@@ -951,7 +954,7 @@ gst_base_video_decoder_reset (GstBaseVideoDecoder * base_video_decoder,
   base_video_decoder->timestamps = NULL;
 
   if (base_video_decoder->current_frame) {
-    gst_base_video_codec_free_frame (base_video_decoder->current_frame);
+    gst_video_frame_state_unref (base_video_decoder->current_frame);
     base_video_decoder->current_frame = NULL;
   }
 
@@ -1081,8 +1084,10 @@ gst_base_video_decoder_flush_decode (GstBaseVideoDecoder * dec)
 
     next = g_list_next (walk);
     if (dec->current_frame)
-      gst_base_video_codec_free_frame (dec->current_frame);
+      gst_video_frame_state_unref (dec->current_frame);
     dec->current_frame = frame;
+    gst_video_frame_state_ref (dec->current_frame);
+
     /* decode buffer, resulting data prepended to queue */
     res = gst_base_video_decoder_have_frame_2 (dec);
 
@@ -1454,13 +1459,12 @@ static void
 gst_base_video_decoder_do_finish_frame (GstBaseVideoDecoder * dec,
     GstVideoFrameState * frame)
 {
-  GST_BASE_VIDEO_CODEC (dec)->frames =
-      g_list_remove (GST_BASE_VIDEO_CODEC (dec)->frames, frame);
+  gst_base_video_codec_remove_frame (GST_BASE_VIDEO_CODEC (dec), frame);
 
   if (frame->src_buffer)
     gst_buffer_unref (frame->src_buffer);
 
-  gst_base_video_codec_free_frame (frame);
+  gst_video_frame_state_unref (frame);
 }
 
 /**
@@ -1828,8 +1832,8 @@ gst_base_video_decoder_have_frame_2 (GstBaseVideoDecoder * base_video_decoder)
       GST_TIME_ARGS (frame->decode_timestamp));
   GST_LOG_OBJECT (base_video_decoder, "dist %d", frame->distance_from_sync);
 
-  GST_BASE_VIDEO_CODEC (base_video_decoder)->frames =
-      g_list_append (GST_BASE_VIDEO_CODEC (base_video_decoder)->frames, frame);
+  gst_base_video_codec_append_frame (GST_BASE_VIDEO_CODEC (base_video_decoder),
+      frame);
 
   frame->deadline =
       gst_segment_to_running_time (&GST_BASE_VIDEO_CODEC
@@ -1845,6 +1849,9 @@ gst_base_video_decoder_have_frame_2 (GstBaseVideoDecoder * base_video_decoder)
   }
 
 exit:
+  /* current frame has either been added to parse_gather or sent to
+     handle frame so there is no need to unref it */
+
   /* create new frame */
   base_video_decoder->current_frame =
       gst_base_video_decoder_new_frame (base_video_decoder);

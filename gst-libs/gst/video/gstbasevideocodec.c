@@ -47,11 +47,16 @@ static GstStateChangeReturn gst_base_video_codec_change_state (GstElement *
 
 static GstElementClass *parent_class = NULL;
 
+G_DEFINE_BOXED_TYPE (GstVideoFrameState, gst_video_frame_state,
+    (GBoxedCopyFunc) gst_video_frame_state_ref,
+    (GBoxedFreeFunc) gst_video_frame_state_unref)
+
 /* NOTE (Edward): Do not use G_DEFINE_* because we need to have
  * a GClassInitFunc called with the target class (which the macros
  * don't handle). */
-static void gst_base_video_codec_class_init (GstBaseVideoCodecClass * klass);
-static void gst_base_video_codec_init (GstBaseVideoCodec * dec,
+     static void gst_base_video_codec_class_init (GstBaseVideoCodecClass *
+    klass);
+     static void gst_base_video_codec_init (GstBaseVideoCodec * dec,
     GstBaseVideoCodecClass * klass);
 
 GType
@@ -137,7 +142,7 @@ gst_base_video_codec_reset (GstBaseVideoCodec * base_video_codec)
 
   GST_BASE_VIDEO_CODEC_STREAM_LOCK (base_video_codec);
   for (g = base_video_codec->frames; g; g = g_list_next (g)) {
-    gst_base_video_codec_free_frame ((GstVideoFrameState *) g->data);
+    gst_video_frame_state_unref ((GstVideoFrameState *) g->data);
   }
   g_list_free (base_video_codec->frames);
   base_video_codec->frames = NULL;
@@ -196,26 +201,33 @@ gst_base_video_codec_change_state (GstElement * element,
   return ret;
 }
 
-GstVideoFrameState *
-gst_base_video_codec_new_frame (GstBaseVideoCodec * base_video_codec)
+void
+gst_base_video_codec_append_frame (GstBaseVideoCodec * codec,
+    GstVideoFrameState * frame)
 {
-  GstVideoFrameState *frame;
+  g_return_if_fail (frame != NULL);
 
-  frame = g_slice_new0 (GstVideoFrameState);
-
-  GST_BASE_VIDEO_CODEC_STREAM_LOCK (base_video_codec);
-  frame->system_frame_number = base_video_codec->system_frame_number;
-  base_video_codec->system_frame_number++;
-  GST_BASE_VIDEO_CODEC_STREAM_UNLOCK (base_video_codec);
-
-  GST_LOG_OBJECT (base_video_codec, "Created new frame %p (sfn:%d)",
-      frame, frame->system_frame_number);
-
-  return frame;
+  gst_video_frame_state_ref (frame);
+  codec->frames = g_list_append (codec->frames, frame);
 }
 
 void
-gst_base_video_codec_free_frame (GstVideoFrameState * frame)
+gst_base_video_codec_remove_frame (GstBaseVideoCodec * codec,
+    GstVideoFrameState * frame)
+{
+  GList *link;
+
+  g_return_if_fail (frame != NULL);
+
+  link = g_list_find (codec->frames, frame);
+  if (link) {
+    gst_video_frame_state_unref ((GstVideoFrameState *) link->data);
+    codec->frames = g_list_delete_link (codec->frames, link);
+  }
+}
+
+static void
+_gst_video_frame_state_free (GstVideoFrameState * frame)
 {
   g_return_if_fail (frame != NULL);
 
@@ -236,4 +248,45 @@ gst_base_video_codec_free_frame (GstVideoFrameState * frame)
     frame->coder_hook_destroy_notify (frame->coder_hook);
 
   g_slice_free (GstVideoFrameState, frame);
+}
+
+GstVideoFrameState *
+gst_base_video_codec_new_frame (GstBaseVideoCodec * base_video_codec)
+{
+  GstVideoFrameState *frame;
+
+  frame = g_slice_new0 (GstVideoFrameState);
+
+  frame->ref_count = 1;
+
+  GST_BASE_VIDEO_CODEC_STREAM_LOCK (base_video_codec);
+  frame->system_frame_number = base_video_codec->system_frame_number;
+  base_video_codec->system_frame_number++;
+  GST_BASE_VIDEO_CODEC_STREAM_UNLOCK (base_video_codec);
+
+  GST_LOG_OBJECT (base_video_codec, "Created new frame %p (sfn:%d)",
+      frame, frame->system_frame_number);
+
+  return frame;
+}
+
+GstVideoFrameState *
+gst_video_frame_state_ref (GstVideoFrameState * frame)
+{
+  g_return_val_if_fail (frame != NULL, NULL);
+
+  g_atomic_int_inc (&frame->ref_count);
+
+  return frame;
+}
+
+void
+gst_video_frame_state_unref (GstVideoFrameState * frame)
+{
+  g_return_if_fail (frame != NULL);
+  g_return_if_fail (frame->ref_count > 0);
+
+  if (g_atomic_int_dec_and_test (&frame->ref_count)) {
+    _gst_video_frame_state_free (frame);
+  }
 }
