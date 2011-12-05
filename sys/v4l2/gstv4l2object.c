@@ -66,6 +66,8 @@ enum
   V4L2_STD_OBJECT_PROPS,
 };
 
+G_LOCK_DEFINE_STATIC (probe_lock);
+
 const GList *
 gst_v4l2_probe_get_properties (GstPropertyProbe * probe)
 {
@@ -74,13 +76,13 @@ gst_v4l2_probe_get_properties (GstPropertyProbe * probe)
 
   /* well, not perfect, but better than no locking at all.
    * In the worst case we leak a list node, so who cares? */
-  GST_CLASS_LOCK (GST_OBJECT_CLASS (klass));
+  G_LOCK (probe_lock);
 
   if (!list) {
     list = g_list_append (NULL, g_object_class_find_property (klass, "device"));
   }
 
-  GST_CLASS_UNLOCK (GST_OBJECT_CLASS (klass));
+  G_UNLOCK (probe_lock);
 
   return list;
 }
