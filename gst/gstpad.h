@@ -469,6 +469,10 @@ typedef enum
   /* flags to select scheduling mode */
   GST_PAD_PROBE_TYPE_PUSH             = (1 << 12),
   GST_PAD_PROBE_TYPE_PULL             = (1 << 13),
+  /* flag for event probes that want to handle flush events.
+     The probe can drop flush event which will mean that the rest
+     of the pipeline will not get flushed */
+  GST_PAD_PROBE_TYPE_HANDLE_FLUSH     = (1 << 14)
 } GstPadProbeType;
 
 #define GST_PAD_PROBE_TYPE_BLOCKING         (GST_PAD_PROBE_TYPE_IDLE | GST_PAD_PROBE_TYPE_BLOCK)

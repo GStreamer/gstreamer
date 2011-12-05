@@ -2818,6 +2818,10 @@ probe_hook_marshal (GHook * hook, ProbeMarshall * data)
   if ((type & GST_PAD_PROBE_TYPE_BLOCKING) &&
       (flags & GST_PAD_PROBE_TYPE_BLOCKING & type) == 0)
     goto no_match;
+  /* only probes that have GST_PAD_PROBE_TYPE_HANDLE_FLUSH set */
+  if ((type & GST_PAD_PROBE_TYPE_HANDLE_FLUSH) &&
+      (flags & GST_PAD_PROBE_TYPE_HANDLE_FLUSH & type) == 0)
+    goto no_match;
 
   GST_CAT_LOG_OBJECT (GST_CAT_SCHEDULING, pad,
       "hook %lu with flags 0x%08x matches", hook->hook_id, flags);
@@ -3990,15 +3994,9 @@ gst_pad_push_event_unchecked (GstPad * pad, GstEvent * event,
     case GST_EVENT_FLUSH_START:
       GST_PAD_SET_FLUSHING (pad);
 
-      if (G_UNLIKELY (GST_PAD_IS_BLOCKED (pad))) {
-        /* flush start will have set the FLUSHING flag and will then
-         * unlock all threads doing a GCond wait on the blocking pad. This
-         * will typically unblock the STREAMING thread blocked on a pad. */
-        GST_LOG_OBJECT (pad, "Pad is blocked, not forwarding flush-start, "
-            "doing block signal.");
-        GST_PAD_BLOCK_BROADCAST (pad);
-        goto flushed;
-      }
+      GST_PAD_BLOCK_BROADCAST (pad);
+      type |= GST_PAD_PROBE_TYPE_HANDLE_FLUSH;
+
       break;
     case GST_EVENT_FLUSH_STOP:
       GST_PAD_UNSET_FLUSHING (pad);
@@ -4007,10 +4005,8 @@ gst_pad_push_event_unchecked (GstPad * pad, GstEvent * event,
       GST_LOG_OBJECT (pad, "Removing pending EOS events");
       remove_event_by_type (pad, GST_EVENT_EOS);
 
-      if (G_UNLIKELY (GST_PAD_IS_BLOCKED (pad))) {
-        GST_LOG_OBJECT (pad, "Pad is blocked, not forwarding flush-stop");
-        goto flushed;
-      }
+      type |= GST_PAD_PROBE_TYPE_HANDLE_FLUSH;
+
       break;
     default:
     {
