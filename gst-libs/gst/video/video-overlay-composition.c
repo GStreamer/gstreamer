@@ -133,7 +133,12 @@ struct _GstVideoOverlayRectangle
 
   /* FIXME: we may also need a (private) way to cache converted/scaled
    * pixel blobs */
+#if !GLIB_CHECK_VERSION (2, 31, 0)
   GStaticMutex lock;
+#else
+  GMutex lock;
+#endif
+
   GList *scaled_rectangles;
 };
 
@@ -141,6 +146,14 @@ struct _GstVideoOverlayRectangleClass
 {
   GstMiniObjectClass parent_class;
 };
+
+#if !GLIB_CHECK_VERSION (2, 31, 0)
+#define GST_RECTANGLE_LOCK(rect)   g_static_mutex_lock(&rect->lock)
+#define GST_RECTANGLE_UNLOCK(rect) g_static_mutex_unlock(&rect->lock)
+#else
+#define GST_RECTANGLE_LOCK(rect)   g_mutex_lock(&rect->lock)
+#define GST_RECTANGLE_UNLOCK(rect) g_mutex_unlock(&rect->lock)
+#endif
 
 static void gst_video_overlay_composition_class_init (GstMiniObjectClass * k);
 static void gst_video_overlay_composition_finalize (GstMiniObject * comp);
@@ -628,8 +641,11 @@ gst_video_overlay_rectangle_finalize (GstMiniObject * mini_obj)
     rect->scaled_rectangles =
         g_list_delete_link (rect->scaled_rectangles, rect->scaled_rectangles);
   }
+#if !GLIB_CHECK_VERSION (2, 31, 0)
   g_static_mutex_free (&rect->lock);
-
+#else
+  g_mutex_clear (&rect->lock);
+#endif
   /* not chaining up to GstMiniObject's finalize for now, we know it's empty */
 }
 
@@ -645,7 +661,11 @@ gst_video_overlay_rectangle_instance_init (GstMiniObject * mini_obj)
 {
   GstVideoOverlayRectangle *rect = (GstVideoOverlayRectangle *) mini_obj;
 
+#if !GLIB_CHECK_VERSION (2, 31, 0)
   g_static_mutex_init (&rect->lock);
+#else
+  g_mutex_init (&rect->lock);
+#endif
 }
 
 /**
@@ -824,7 +844,7 @@ gst_video_overlay_rectangle_get_pixels_argb (GstVideoOverlayRectangle *
   }
 
   /* see if we've got one cached already */
-  g_static_mutex_lock (&rectangle->lock);
+  GST_RECTANGLE_LOCK (rectangle);
   for (l = rectangle->scaled_rectangles; l != NULL; l = l->next) {
     GstVideoOverlayRectangle *r = l->data;
 
@@ -836,7 +856,7 @@ gst_video_overlay_rectangle_get_pixels_argb (GstVideoOverlayRectangle *
       break;
     }
   }
-  g_static_mutex_unlock (&rectangle->lock);
+  GST_RECTANGLE_UNLOCK (rectangle);
 
   if (scaled_rect != NULL)
     goto done;
@@ -859,10 +879,10 @@ gst_video_overlay_rectangle_get_pixels_argb (GstVideoOverlayRectangle *
 
   gst_buffer_unref (buf);
 
-  g_static_mutex_lock (&rectangle->lock);
+  GST_RECTANGLE_LOCK (rectangle);
   rectangle->scaled_rectangles =
       g_list_prepend (rectangle->scaled_rectangles, scaled_rect);
-  g_static_mutex_unlock (&rectangle->lock);
+  GST_RECTANGLE_UNLOCK (rectangle);
 
 done:
 
