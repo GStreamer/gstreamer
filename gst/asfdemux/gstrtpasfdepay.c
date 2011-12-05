@@ -320,7 +320,7 @@ gst_rtp_asf_depay_process (GstRTPBaseDepayload * depayload, GstBuffer * buf)
   guint payload_len, hdr_len, offset;
   guint len_offs;
   GstClockTime timestamp;
-  GstRTPBuffer rtpbuf;
+  GstRTPBuffer rtpbuf = { NULL };
 
   depay = GST_RTP_ASF_DEPAY (depayload);
 
