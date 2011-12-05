@@ -306,8 +306,16 @@ gst_event_replace (GstEvent **old_event, GstEvent *new_event)
  *
  * Returns: the #GstEvent that was in @old_event
  */
-#define         gst_event_steal(old_event) \
-    GST_EVENT_CAST (gst_mini_object_steal ((GstMiniObject **)(old_event)))
+#ifdef _FOOL_GTK_DOC_
+G_INLINE_FUNC GstEvent * gst_event_steal (GstEvent **old_event);
+#endif
+
+static inline GstEvent *
+gst_event_steal (GstEvent **old_event)
+{
+  return GST_EVENT_CAST (gst_mini_object_steal ((GstMiniObject **) old_event));
+}
+
 /**
  * gst_event_take:
  * @old_event: (inout) (transfer full): pointer to a pointer to a #GstEvent
@@ -323,8 +331,15 @@ gst_event_replace (GstEvent **old_event, GstEvent *new_event)
  *
  * Returns: TRUE if @new_event was different from @old_event
  */
-#define         gst_event_take(old_event,new_event) \
-    gst_mini_object_take ((GstMiniObject **)(old_event), GST_MINI_OBJECT_CAST (new_event))
+#ifdef _FOOL_GTK_DOC_
+G_INLINE_FUNC gboolean gst_event_take (GstEvent **old_event, GstEvent *new_event);
+#endif
+
+static inline gboolean
+gst_event_take (GstEvent **old_event, GstEvent *new_event)
+{
+  return gst_mini_object_take ((GstMiniObject **) old_event, (GstMiniObject *) new_event);
+}
 
 /**
  * GstQOSType:

@@ -211,8 +211,7 @@ helper_find_suggest (gpointer data, GstTypeFindProbability probability,
   if (probability > helper->best_probability) {
     GstCaps *copy = gst_caps_copy (caps);
 
-    gst_caps_replace (&helper->caps, copy);
-    gst_caps_unref (copy);
+    gst_caps_take (&helper->caps, copy);
     helper->best_probability = probability;
   }
 }

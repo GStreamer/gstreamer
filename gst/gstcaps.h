@@ -286,9 +286,9 @@ gst_caps_copy (const GstCaps * caps)
 
 /**
  * gst_caps_replace:
- * @ocaps: (inout) (transfer full): pointer to a pointer to a #GstCaps to be
+ * @old_caps: (inout) (transfer full): pointer to a pointer to a #GstCaps to be
  *     replaced.
- * @ncaps: (transfer none) (allow-none): pointer to a #GstCaps that will
+ * @new_caps: (transfer none) (allow-none): pointer to a #GstCaps that will
  *     replace the caps pointed to by @ocaps.
  *
  * Modifies a pointer to a #GstCaps to point to a different #GstCaps. The
@@ -297,13 +297,41 @@ gst_caps_copy (const GstCaps * caps)
  * caps is unreffed, the new is reffed).
  *
  * Either @ncaps or the #GstCaps pointed to by @ocaps may be NULL.
+ *
+ * Returns: TRUE if @new_caps was different from @old_caps
  */
-#define         gst_caps_replace(ocaps,ncaps) \
-G_STMT_START {                                                                \
-  GstCaps **___ocapsaddr = (GstCaps **)(ocaps);         \
-  gst_mini_object_replace ((GstMiniObject **)___ocapsaddr, \
-      GST_MINI_OBJECT_CAST (ncaps));                       \
-} G_STMT_END
+#ifdef _FOOL_GTK_DOC_
+G_INLINE_FUNC gboolean gst_caps_replace (GstCaps **old_caps, GstCaps *new_caps);
+#endif
+
+static inline gboolean
+gst_caps_replace (GstCaps **old_caps, GstCaps *new_caps)
+{
+    return gst_mini_object_replace ((GstMiniObject **) old_caps, (GstMiniObject *) new_caps);
+}
+
+/**
+ * gst_caps_take:
+ * @old_caps: (inout) (transfer full): pointer to a pointer to a #GstCaps to be
+ *     replaced.
+ * @new_caps: (transfer full) (allow-none): pointer to a #GstCaps that will
+ *     replace the caps pointed to by @ocaps.
+ *
+ * Modifies a pointer to a #GstCaps to point to a different #GstCaps. This
+ * function is similar to gst_caps_replace() except that it takes ownership
+ * of @new_caps.
+ *
+ * Returns: TRUE if @new_caps was different from @old_caps
+ */
+#ifdef _FOOL_GTK_DOC_
+G_INLINE_FUNC gboolean gst_caps_take (GstCaps **old_caps, GstCaps *new_caps);
+#endif
+
+static inline gboolean
+gst_caps_take (GstCaps **old_caps, GstCaps *new_caps)
+{
+    return gst_mini_object_take ((GstMiniObject **) old_caps, (GstMiniObject *) new_caps);
+}
 
 /**
  * GstCaps:
