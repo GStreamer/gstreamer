@@ -176,6 +176,9 @@ gst_video_convert_decide_allocation (GstBaseTransform * trans, GstQuery * query)
         GST_BUFFER_POOL_OPTION_VIDEO_META);
     gst_buffer_pool_set_config (pool, config);
   }
+
+  gst_query_add_allocation_meta (query, GST_VIDEO_META_API);
+
   return TRUE;
 }
 
