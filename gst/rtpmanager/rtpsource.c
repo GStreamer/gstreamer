@@ -897,7 +897,7 @@ calculate_jitter (RTPSource * src, GstBuffer * buffer,
   gint32 diff;
   gint clock_rate;
   guint8 pt;
-  GstRTPBuffer rtp;
+  GstRTPBuffer rtp = { NULL };
 
   /* get arrival time */
   if ((running_time = arrival->running_time) == GST_CLOCK_TIME_NONE)
@@ -1026,7 +1026,7 @@ rtp_source_process_rtp (RTPSource * src, GstBuffer * buffer,
   guint16 seqnr, udelta;
   RTPSourceStats *stats;
   guint16 expected;
-  GstRTPBuffer rtp;
+  GstRTPBuffer rtp = { NULL };
 
   g_return_val_if_fail (RTP_IS_SOURCE (src), GST_FLOW_ERROR);
   g_return_val_if_fail (GST_IS_BUFFER (buffer), GST_FLOW_ERROR);
@@ -1171,7 +1171,7 @@ rtp_source_process_bye (RTPSource * src, const gchar * reason)
 static gboolean
 set_ssrc (GstBuffer ** buffer, guint idx, RTPSource * src)
 {
-  GstRTPBuffer rtp;
+  GstRTPBuffer rtp = { NULL };
 
   *buffer = gst_buffer_make_writable (*buffer);
   gst_rtp_buffer_map (*buffer, GST_MAP_WRITE, &rtp);
@@ -1206,7 +1206,7 @@ rtp_source_send_rtp (RTPSource * src, gpointer data, gboolean is_list,
   GstBuffer *buffer = NULL;
   guint packets;
   guint32 ssrc;
-  GstRTPBuffer rtp;
+  GstRTPBuffer rtp = { NULL };
 
   g_return_val_if_fail (RTP_IS_SOURCE (src), GST_FLOW_ERROR);
   g_return_val_if_fail (is_list || GST_IS_BUFFER (data), GST_FLOW_ERROR);

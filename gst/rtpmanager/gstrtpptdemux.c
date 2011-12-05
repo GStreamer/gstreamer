@@ -304,7 +304,7 @@ gst_rtp_pt_demux_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
   GstPad *srcpad;
   GstRtpPtDemuxPad *rtpdemuxpad;
   GstCaps *caps;
-  GstRTPBuffer rtp;
+  GstRTPBuffer rtp = {NULL};
 
   rtpdemux = GST_RTP_PT_DEMUX (parent);
 

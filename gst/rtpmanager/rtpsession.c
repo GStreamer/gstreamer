@@ -1696,7 +1696,7 @@ update_arrival_stats (RTPSession * sess, RTPArrivalStats * arrival,
     GstClockTime running_time, guint64 ntpnstime)
 {
   GstNetAddressMeta *meta;
-  GstRTPBuffer rtpb;
+  GstRTPBuffer rtpb = { NULL };
 
   /* get time of arrival */
   arrival->current_time = current_time;
@@ -1749,7 +1749,7 @@ rtp_session_process_rtp (RTPSession * sess, GstBuffer * buffer,
   guint32 csrcs[16];
   guint8 i, count;
   guint64 oldrate;
-  GstRTPBuffer rtp;
+  GstRTPBuffer rtp = { NULL };
 
   g_return_val_if_fail (RTP_IS_SESSION (sess), GST_FLOW_ERROR);
   g_return_val_if_fail (GST_IS_BUFFER (buffer), GST_FLOW_ERROR);
