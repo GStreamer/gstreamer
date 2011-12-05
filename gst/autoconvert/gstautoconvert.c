@@ -103,6 +103,8 @@ static GstPad *gst_auto_convert_get_internal_sinkpad (GstAutoConvert *
 static GstPad *gst_auto_convert_get_internal_srcpad (GstAutoConvert *
     autoconvert);
 
+static GstIterator *gst_auto_convert_iterate_internal_links (GstPad * pad);
+
 static gboolean gst_auto_convert_sink_setcaps (GstPad * pad, GstCaps * caps);
 static GstCaps *gst_auto_convert_sink_getcaps (GstPad * pad);
 static GstFlowReturn gst_auto_convert_sink_chain (GstPad * pad,
@@ -231,6 +233,8 @@ gst_auto_convert_init (GstAutoConvert * autoconvert,
       GST_DEBUG_FUNCPTR (gst_auto_convert_sink_query_type));
   gst_pad_set_bufferalloc_function (autoconvert->sinkpad,
       GST_DEBUG_FUNCPTR (gst_auto_convert_sink_buffer_alloc));
+  gst_pad_set_iterate_internal_links_function (autoconvert->sinkpad,
+      GST_DEBUG_FUNCPTR (gst_auto_convert_iterate_internal_links));
 
   gst_pad_set_event_function (autoconvert->srcpad,
       GST_DEBUG_FUNCPTR (gst_auto_convert_src_event));
@@ -238,6 +242,8 @@ gst_auto_convert_init (GstAutoConvert * autoconvert,
       GST_DEBUG_FUNCPTR (gst_auto_convert_src_query));
   gst_pad_set_query_type_function (autoconvert->srcpad,
       GST_DEBUG_FUNCPTR (gst_auto_convert_src_query_type));
+  gst_pad_set_iterate_internal_links_function (autoconvert->sinkpad,
+      GST_DEBUG_FUNCPTR (gst_auto_convert_iterate_internal_links));
 
   gst_element_add_pad (GST_ELEMENT (autoconvert), autoconvert->sinkpad);
   gst_element_add_pad (GST_ELEMENT (autoconvert), autoconvert->srcpad);
@@ -792,6 +798,32 @@ gst_auto_convert_activate_element (GstAutoConvert * autoconvert,
   }
 
   return TRUE;
+}
+
+static GstIterator *
+gst_auto_convert_iterate_internal_links (GstPad * pad)
+{
+  GstAutoConvert *autoconvert = GST_AUTO_CONVERT (gst_pad_get_parent (pad));
+  GstIterator *it = NULL;
+  GstPad *internal;
+
+  if (!autoconvert)
+    return NULL;
+
+  if (pad == autoconvert->sinkpad)
+    internal = gst_auto_convert_get_internal_srcpad (autoconvert);
+  else
+    internal = gst_auto_convert_get_internal_sinkpad (autoconvert);
+
+  if (internal) {
+    it = gst_iterator_new_single (GST_TYPE_PAD, internal,
+        (GstCopyFunction) gst_object_ref, (GFreeFunc) gst_object_unref);
+    gst_object_unref (internal);
+  }
+
+  gst_object_unref (autoconvert);
+
+  return it;
 }
 
 /*
