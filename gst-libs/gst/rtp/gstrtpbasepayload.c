@@ -746,7 +746,7 @@ find_timestamp (GstBuffer ** buffer, guint idx, HeaderData * data)
 static gboolean
 set_headers (GstBuffer ** buffer, guint group, guint idx, HeaderData * data)
 {
-  GstRTPBuffer rtp;
+  GstRTPBuffer rtp = { NULL, };
 
   gst_rtp_buffer_map (*buffer, GST_MAP_WRITE, &rtp);
   gst_rtp_buffer_set_ssrc (&rtp, data->ssrc);
