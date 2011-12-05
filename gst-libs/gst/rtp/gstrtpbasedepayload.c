@@ -248,7 +248,7 @@ gst_rtp_base_depayload_chain (GstPad * pad, GstObject * parent, GstBuffer * in)
   guint32 rtptime;
   gboolean discont;
   gint gap;
-  GstRTPBuffer rtp;
+  GstRTPBuffer rtp = { NULL };
 
   filter = GST_RTP_BASE_DEPAYLOAD (parent);
   priv = filter->priv;
