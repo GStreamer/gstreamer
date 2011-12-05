@@ -45,6 +45,9 @@ static void gst_base_video_codec_finalize (GObject * object);
 static GstStateChangeReturn gst_base_video_codec_change_state (GstElement *
     element, GstStateChange transition);
 
+G_DEFINE_BOXED_TYPE (GstVideoState, gst_video_frame,
+    (GBoxedCopyFunc) gst_video_frame_ref,
+    (GBoxedFreeFunc) gst_video_frame_unref);
 
 GST_BOILERPLATE (GstBaseVideoCodec, gst_base_video_codec, GstElement,
     GST_TYPE_ELEMENT);
@@ -109,7 +112,7 @@ gst_base_video_codec_reset (GstBaseVideoCodec * base_video_codec)
 
   GST_BASE_VIDEO_CODEC_STREAM_LOCK (base_video_codec);
   for (g = base_video_codec->frames; g; g = g_list_next (g)) {
-    gst_base_video_codec_free_frame ((GstVideoFrame *) g->data);
+    gst_video_frame_unref ((GstVideoFrame *) g->data);
   }
   g_list_free (base_video_codec->frames);
   base_video_codec->frames = NULL;
@@ -175,16 +178,21 @@ gst_base_video_codec_new_frame (GstBaseVideoCodec * base_video_codec)
 
   frame = g_slice_new0 (GstVideoFrame);
 
+  frame->ref_count = 1;
+
   GST_BASE_VIDEO_CODEC_STREAM_LOCK (base_video_codec);
   frame->system_frame_number = base_video_codec->system_frame_number;
   base_video_codec->system_frame_number++;
   GST_BASE_VIDEO_CODEC_STREAM_UNLOCK (base_video_codec);
 
+  GST_LOG_OBJECT (base_video_codec, "Created new frame %p (sfn:%d)",
+      frame, frame->system_frame_number);
+
   return frame;
 }
 
-void
-gst_base_video_codec_free_frame (GstVideoFrame * frame)
+static void
+_gst_video_frame_free (GstVideoFrame * frame)
 {
   g_return_if_fail (frame != NULL);
 
@@ -203,4 +211,25 @@ gst_base_video_codec_free_frame (GstVideoFrame * frame)
     frame->coder_hook_destroy_notify (frame->coder_hook);
 
   g_slice_free (GstVideoFrame, frame);
+}
+
+GstVideoFrame *
+gst_video_frame_ref (GstVideoFrame * frame)
+{
+  g_return_val_if_fail (frame != NULL, NULL);
+
+  g_atomic_int_inc (&frame->ref_count);
+
+  return frame;
+}
+
+void
+gst_video_frame_unref (GstVideoFrame * frame)
+{
+  g_return_if_fail (frame != NULL);
+  g_return_if_fail (frame->ref_count > 0);
+
+  if (g_atomic_int_dec_and_test (&frame->ref_count)) {
+    _gst_video_frame_free (frame);
+  }
 }
