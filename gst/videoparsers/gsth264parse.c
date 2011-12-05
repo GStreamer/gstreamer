@@ -619,8 +619,18 @@ gst_h264_parse_check_valid_frame (GstBaseParse * parse,
 
   GST_DEBUG_OBJECT (h264parse, "last parse position %u", current_off);
   while (TRUE) {
-    switch (gst_h264_parser_identify_nalu (nalparser, data, current_off,
-            size, &nalu)) {
+    GstH264ParserResult pres;
+
+    if (h264parse->packetized)
+      pres =
+          gst_h264_parser_identify_nalu_unchecked (nalparser, data, current_off,
+          size, &nalu);
+    else
+      pres =
+          gst_h264_parser_identify_nalu (nalparser, data, current_off, size,
+          &nalu);
+
+    switch (pres) {
       case GST_H264_PARSER_OK:
         GST_DEBUG_OBJECT (h264parse, "complete nal found. "
             "current offset: %u, Nal offset: %u, Nal Size: %u",
@@ -628,10 +638,12 @@ gst_h264_parse_check_valid_frame (GstBaseParse * parse,
 
         GST_DEBUG_OBJECT (h264parse, "current off. %u",
             nalu.offset + nalu.size);
+
         if (!h264parse->nalu.size && !h264parse->nalu.valid)
           h264parse->nalu = nalu;
+
         /* need 2 bytes of next nal */
-        if (nalu.offset + nalu.size + 4 + 2 > size) {
+        if (!h264parse->packetized && (nalu.offset + nalu.size + 4 + 2 > size)) {
           if (GST_BASE_PARSE_DRAINING (parse)) {
             drain = TRUE;
           } else {
@@ -701,6 +713,12 @@ gst_h264_parse_check_valid_frame (GstBaseParse * parse,
     /* if no next nal, we know it's complete here */
     if (drain || gst_h264_parse_collect_nal (h264parse, data, size, &nalu))
       break;
+
+    /* In packetized mode we know there's only on NALU in each input packet */
+    if (h264parse->packetized)
+      break;
+
+    GST_DEBUG_OBJECT (h264parse, "Looking for more");
   }
 
 end:
@@ -712,8 +730,8 @@ end:
 
 parsing_error:
   GST_DEBUG_OBJECT (h264parse, "error parsing Nal Unit");
-more:
 
+more:
   /* ask for best next available */
   *framesize = G_MAXUINT;
   if (!h264parse->nalu.size) {
