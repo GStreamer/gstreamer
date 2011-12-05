@@ -254,7 +254,7 @@ gst_rtp_xqt_depay_process (GstRTPBaseDepayload * depayload, GstBuffer * buf)
   GstRtpXQTDepay *rtpxqtdepay;
   GstBuffer *outbuf = NULL;
   gboolean m;
-  GstRTPBuffer rtp;
+  GstRTPBuffer rtp = { NULL };
 
   rtpxqtdepay = GST_RTP_XQT_DEPAY (depayload);
 
