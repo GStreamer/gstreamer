@@ -404,14 +404,11 @@ static void
 gst_h264_parse_process_nal (GstH264Parse * h264parse, GstH264NalUnit * nalu)
 {
   guint nal_type;
-  GstH264SliceHdr slice;
   GstH264PPS pps;
   GstH264SPS sps;
   GstH264SEIMessage sei;
-
-  gboolean slcparsed = FALSE;
+  gboolean slcparsed = FALSE, complete = FALSE;
   GstH264NalParser *nalparser = h264parse->nalparser;
-
 
   /* nothing to do for broken input */
   if (G_UNLIKELY (nalu->size < 2)) {
@@ -476,30 +473,36 @@ gst_h264_parse_process_nal (GstH264Parse * h264parse, GstH264NalUnit * nalu)
     case GST_H264_NAL_SLICE_DPB:
     case GST_H264_NAL_SLICE_DPC:
       slcparsed = TRUE;
-      if (gst_h264_parser_parse_slice_hdr (nalparser, nalu,
-              &slice, FALSE, FALSE) == GST_H264_PARSER_ERROR)
-        return;
+      /* don't need to parse the whole slice (header) here */
+      if (*(nalu->data + nalu->offset + 1) & 0x80) {
+        /* first_mb_in_slice == 0 completes a picture */
+        complete = TRUE;
+      }
 
       /* real frame data */
-      h264parse->frame_start |= (slice.first_mb_in_slice == 0);
+      h264parse->frame_start |= complete;
       /* if we need to sneak codec NALs into the stream,
        * this is a good place, so fake it as IDR
        * (which should be at start anyway) */
-      GST_DEBUG_OBJECT (h264parse, "frame start: %i first_mb_in_slice %i",
-          h264parse->frame_start, slice.first_mb_in_slice);
+      GST_DEBUG_OBJECT (h264parse,
+          "frame start: %i, first_mb_in_slice == 0: %d",
+          h264parse->frame_start, complete);
       if (G_LIKELY (!h264parse->push_codec))
         break;
       /* fall-through */
     case GST_H264_NAL_SLICE_IDR:
       if (!slcparsed) {
-        if (gst_h264_parser_parse_slice_hdr (nalparser, nalu,
-                &slice, FALSE, FALSE) == GST_H264_PARSER_ERROR)
-          return;
-        GST_DEBUG_OBJECT (h264parse, "frame start: %i first_mb_in_slice %i",
-            h264parse->frame_start, slice.first_mb_in_slice);
+        /* don't need to parse the whole slice (header) here */
+        if (*(nalu->data + nalu->offset + 1) & 0x80) {
+          /* first_mb_in_slice == 0 completes a picture */
+          complete = TRUE;
+        }
+        GST_DEBUG_OBJECT (h264parse,
+            "frame start: %i, first_mb_in_slice == 0: %d",
+            h264parse->frame_start, complete);
       }
       /* real frame data */
-      h264parse->frame_start |= (slice.first_mb_in_slice == 0);
+      h264parse->frame_start |= complete;
 
       /* mark where config needs to go if interval expired */
       /* mind replacement buffer if applicable */
@@ -511,9 +514,18 @@ gst_h264_parse_process_nal (GstH264Parse * h264parse, GstH264NalUnit * nalu)
         GST_DEBUG_OBJECT (h264parse, "marking IDR in frame at offset %d",
             h264parse->idr_pos);
       }
+#ifndef GST_DISABLE_GST_DEBUG
+      {
+        GstH264SliceHdr slice;
+        GstH264ParserResult pres;
 
-      GST_DEBUG_OBJECT (h264parse, "first MB: %u, slice type: %u",
-          slice.first_mb_in_slice, slice.type);
+        pres = gst_h264_parser_parse_slice_hdr (nalparser, nalu, &slice,
+            FALSE, FALSE);
+        GST_DEBUG_OBJECT (h264parse,
+            "parse result %d, first MB: %u, slice type: %u",
+            pres, slice.first_mb_in_slice, slice.type);
+      }
+#endif
       break;
     default:
       gst_h264_parser_parse_nal (nalparser, nalu);
