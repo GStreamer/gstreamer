@@ -110,6 +110,8 @@ struct _GstVideoState
 
 struct _GstVideoFrame
 {
+  gint ref_count;
+
   GstClockTime decode_timestamp;
   GstClockTime presentation_timestamp;
   GstClockTime presentation_duration;
@@ -179,10 +181,13 @@ struct _GstBaseVideoCodecClass
   void *padding[GST_PADDING_LARGE];
 };
 
+GType gst_video_frame_get_type (void);
 GType gst_base_video_codec_get_type (void);
 
 GstVideoFrame * gst_base_video_codec_new_frame (GstBaseVideoCodec *base_video_codec);
-void gst_base_video_codec_free_frame (GstVideoFrame *frame);
+
+GstVideoFrame * gst_video_frame_ref (GstVideoFrame * frame);
+void            gst_video_frame_unref (GstVideoFrame * frame);
 
 G_END_DECLS
 
