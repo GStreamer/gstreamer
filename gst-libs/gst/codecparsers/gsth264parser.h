@@ -678,6 +678,10 @@ GstH264ParserResult gst_h264_parser_identify_nalu     (GstH264NalParser *nalpars
                                                        const guint8 *data, guint offset,
                                                        gsize size, GstH264NalUnit *nalu);
 
+GstH264ParserResult gst_h264_parser_identify_nalu_unchecked (GstH264NalParser *nalparser,
+                                                       const guint8 *data, guint offset,
+                                                       gsize size, GstH264NalUnit *nalu);
+
 GstH264ParserResult gst_h264_parser_identify_nalu_avc (GstH264NalParser *nalparser, const guint8 *data,
                                                        guint offset, gsize size, guint8 nal_length_size,
                                                        GstH264NalUnit *nalu);

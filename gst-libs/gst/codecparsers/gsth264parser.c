@@ -1150,22 +1150,28 @@ gst_h264_nal_parser_free (GstH264NalParser * nalparser)
 }
 
 /**
- * gst_h264_parser_identify_nalu:
+ * gst_h264_parser_identify_nalu_unchecked:
  * @nalparser: a #GstH264NalParser
  * @data: The data to parse
  * @offset: the offset from which to parse @data
  * @size: the size of @data
  * @nalu: The #GstH264NalUnit where to store parsed nal headers
  *
- * Parses @data and fills @nalu from the next nalu data from @data
+ * Parses @data and fills @nalu from the next nalu data from @data.
+ *
+ * This differs from @gst_h264_parser_identify_nalu in that it doesn't
+ * check whether the packet is complete or not.
+ *
+ * Note: Only use this function if you already know the provided @data
+ * is a complete NALU, else use @gst_h264_parser_identify_nalu.
  *
  * Returns: a #GstH264ParserResult
  */
 GstH264ParserResult
-gst_h264_parser_identify_nalu (GstH264NalParser * nalparser,
+gst_h264_parser_identify_nalu_unchecked (GstH264NalParser * nalparser,
     const guint8 * data, guint offset, gsize size, GstH264NalUnit * nalu)
 {
-  gint off1, off2;
+  gint off1;
 
   if (size < offset + 4) {
     GST_DEBUG ("Can't parse, buffer has too small size %" G_GSIZE_FORMAT
@@ -1188,12 +1194,14 @@ gst_h264_parser_identify_nalu (GstH264NalParser * nalparser,
 
   nalu->valid = TRUE;
   nalu->sc_offset = offset + off1;
+
   /* sc might have 2 or 3 0-bytes */
   if (nalu->sc_offset > 0 && data[nalu->sc_offset - 1] == 00)
     nalu->sc_offset--;
 
   nalu->offset = offset + off1 + 3;
   nalu->data = (guint8 *) data;
+
   set_nalu_datas (nalu);
 
   if (nalu->type == GST_H264_NAL_SEQ_END ||
@@ -1202,6 +1210,37 @@ gst_h264_parser_identify_nalu (GstH264NalParser * nalparser,
     nalu->size = 0;
     return GST_H264_PARSER_OK;
   }
+
+  nalu->size = size - nalu->offset;
+
+  return GST_H264_PARSER_OK;
+}
+
+/**
+ * gst_h264_parser_identify_nalu:
+ * @nalparser: a #GstH264NalParser
+ * @data: The data to parse
+ * @offset: the offset from which to parse @data
+ * @size: the size of @data
+ * @nalu: The #GstH264NalUnit where to store parsed nal headers
+ *
+ * Parses @data and fills @nalu from the next nalu data from @data
+ *
+ * Returns: a #GstH264ParserResult
+ */
+GstH264ParserResult
+gst_h264_parser_identify_nalu (GstH264NalParser * nalparser,
+    const guint8 * data, guint offset, gsize size, GstH264NalUnit * nalu)
+{
+  GstH264ParserResult res;
+  gint off2;
+
+  res =
+      gst_h264_parser_identify_nalu_unchecked (nalparser, data, offset, size,
+      nalu);
+
+  if (res != GST_H264_PARSER_OK || nalu->size == 0)
+    goto beach;
 
   off2 = scan_for_start_codes (data + nalu->offset, size - nalu->offset);
   if (off2 < 0) {
@@ -1218,8 +1257,11 @@ gst_h264_parser_identify_nalu (GstH264NalParser * nalparser,
     return GST_H264_PARSER_BROKEN_DATA;
 
   GST_DEBUG ("Complete nal found. Off: %d, Size: %d", nalu->offset, nalu->size);
-  return GST_H264_PARSER_OK;
+
+beach:
+  return res;
 }
+
 
 /**
  * gst_h264_parser_identify_nalu_avc:
