@@ -390,9 +390,18 @@ gst_message_copy (const GstMessage * msg)
  * message is unreffed, the new one is reffed).
  *
  * Either @new_message or the #GstMessage pointed to by @old_message may be NULL.
+ *
+ * Returns: TRUE if @new_message was different from @old_message
  */
-#define         gst_message_replace(old_message,new_message) \
-    gst_mini_object_replace ((GstMiniObject **)(old_message), GST_MINI_OBJECT_CAST (new_message))
+#ifdef _FOOL_GTK_DOC_
+G_INLINE_FUNC gboolean gst_message_replace (GstMessage **old_message, GstMessage *new_message);
+#endif
+
+static inline gboolean
+gst_message_replace (GstMessage **old_message, GstMessage *new_message)
+{
+  return gst_mini_object_replace ((GstMiniObject **) old_message, (GstMiniObject *) new_message);
+}
 
 
 /* custom messages */

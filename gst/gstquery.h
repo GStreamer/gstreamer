@@ -248,10 +248,18 @@ gst_query_copy (const GstQuery * q)
  * query is unreffed, the new one is reffed).
  *
  * Either @new_query or the #GstQuery pointed to by @old_query may be NULL.
+ *
+ * Returns: TRUE if @new_query was different from @old_query
  */
-#define         gst_query_replace(old_query,new_query) \
-    gst_mini_object_replace ((GstMiniObject **)(old_query), GST_MINI_OBJECT_CAST (new_query))
+#ifdef _FOOL_GTK_DOC_
+G_INLINE_FUNC gboolean gst_query_replace (GstQuery **old_query, GstQuery *new_query);
+#endif
 
+static inline gboolean
+gst_query_replace (GstQuery **old_query, GstQuery *new_query)
+{
+  return gst_mini_object_replace ((GstMiniObject **) old_query, (GstMiniObject *) new_query);
+}
 
 /* application specific query */
 GstQuery *      gst_query_new_custom            (GstQueryType type, GstStructure *structure) G_GNUC_MALLOC;
