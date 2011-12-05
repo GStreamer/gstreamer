@@ -668,17 +668,14 @@ gst_element_get_bus
 gst_element_get_factory
 gst_element_set_index
 gst_element_get_index
-gst_element_is_indexable
 gst_element_set_name
 gst_element_get_name
 gst_element_set_parent
 gst_element_get_parent
 
 <SUBSECTION element-clocks>
-gst_element_requires_clock
 gst_element_set_clock
 gst_element_get_clock
-gst_element_provides_clock
 gst_element_provide_clock
 
 <SUBSECTION element-states>
