@@ -329,8 +329,8 @@ EmptyBufferDone (OMX_HANDLETYPE hComponent, OMX_PTR pAppData,
   /* Input buffer is empty again and can
    * be used to contain new input */
   g_mutex_lock (port->port_lock);
-  GST_DEBUG_OBJECT (comp->parent, "Port %u emptied buffer %p",
-      port->index, buf);
+  GST_DEBUG_OBJECT (comp->parent, "Port %u emptied buffer %p (%p)",
+      port->index, buf, buf->omx_buf->pBuffer);
   buf->used = FALSE;
 
   /* XXX: Some OMX implementations don't reset nOffset
@@ -379,7 +379,8 @@ FillBufferDone (OMX_HANDLETYPE hComponent, OMX_PTR pAppData,
   /* Output buffer contains output now or
    * the port was flushed */
   g_mutex_lock (port->port_lock);
-  GST_DEBUG_OBJECT (comp->parent, "Port %u filled buffer %p", port->index, buf);
+  GST_DEBUG_OBJECT (comp->parent, "Port %u filled buffer %p (%p)", port->index,
+      buf, buf->omx_buf->pBuffer);
   buf->used = FALSE;
   g_queue_push_tail (port->pending_buffers, buf);
   g_cond_broadcast (port->port_cond);
@@ -1022,8 +1023,8 @@ done:
     *buf = _buf;
   }
 
-  GST_DEBUG_OBJECT (comp->parent, "Acquired buffer %p from port %u: %d", _buf,
-      port->index, ret);
+  GST_DEBUG_OBJECT (comp->parent, "Acquired buffer %p (%p) from port %u: %d",
+      _buf, (_buf ? _buf->omx_buf->pBuffer : NULL), port->index, ret);
 
   return ret;
 }
@@ -1040,8 +1041,8 @@ gst_omx_port_release_buffer (GstOMXPort * port, GstOMXBuffer * buf)
 
   comp = port->comp;
 
-  GST_DEBUG_OBJECT (comp->parent, "Releasing buffer %p to port %u",
-      buf, port->index);
+  GST_DEBUG_OBJECT (comp->parent, "Releasing buffer %p (%p) to port %u",
+      buf, buf->omx_buf->pBuffer, port->index);
 
   g_mutex_lock (port->port_lock);
 
@@ -1219,10 +1220,13 @@ gst_omx_port_set_flushing (GstOMXPort * port, gboolean flush)
         err = OMX_FillThisBuffer (comp->handle, buf->omx_buf);
         if (err != OMX_ErrorNone) {
           GST_ERROR_OBJECT (comp->parent,
-              "Failed to pass buffer %p to port %u: %s (0x%08x)", buf,
-              port->index, gst_omx_error_to_string (err), err);
+              "Failed to pass buffer %p (%p) to port %u: %s (0x%08x)", buf,
+              buf->omx_buf->pBuffer, port->index,
+              gst_omx_error_to_string (err), err);
           goto error;
         }
+        GST_DEBUG_OBJECT (comp->parent, "Passed buffer %p (%p) to component",
+            buf, buf->omx_buf->pBuffer);
       }
     }
   }
@@ -1338,6 +1342,9 @@ gst_omx_port_allocate_buffers_unlocked (GstOMXPort * port)
       goto error;
     }
 
+    GST_DEBUG_OBJECT (comp->parent, "Allocated buffer %p (%p)", buf,
+        buf->omx_buf->pBuffer);
+
     g_assert (buf->omx_buf->pAppPrivate == buf);
 
     /* In the beginning all buffers are not owned by the component */
@@ -1424,6 +1431,8 @@ gst_omx_port_deallocate_buffers_unlocked (GstOMXPort * port)
     if (buf->omx_buf) {
       g_assert (buf == buf->omx_buf->pAppPrivate);
       buf->omx_buf->pAppPrivate = NULL;
+      GST_DEBUG_OBJECT (comp->parent, "Deallocating buffer %p (%p)", buf,
+          buf->omx_buf->pBuffer);
       tmp = OMX_FreeBuffer (comp->handle, port->index, buf->omx_buf);
       if (tmp != OMX_ErrorNone) {
         GST_ERROR_OBJECT (comp->parent,
@@ -1620,10 +1629,13 @@ gst_omx_port_set_enabled_unlocked (GstOMXPort * port, gboolean enabled)
         err = OMX_FillThisBuffer (comp->handle, buf->omx_buf);
         if (err != OMX_ErrorNone) {
           GST_ERROR_OBJECT (comp->parent,
-              "Failed to pass buffer %p to port %u: %s (0x%08x)", buf,
-              port->index, gst_omx_error_to_string (err), err);
+              "Failed to pass buffer %p (%p) to port %u: %s (0x%08x)", buf,
+              buf->omx_buf->pBuffer, port->index, gst_omx_error_to_string (err),
+              err);
           goto error;
         }
+        GST_DEBUG_OBJECT (comp->parent, "Passed buffer %p (%p) to component",
+            buf, buf->omx_buf->pBuffer);
       }
     }
   }
