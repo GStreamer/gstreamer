@@ -232,7 +232,7 @@ gst_rtp_qdm2_depay_process (GstRTPBaseDepayload * depayload, GstBuffer * buf)
   GstRtpQDM2Depay *rtpqdm2depay;
   GstBuffer *outbuf = NULL;
   guint16 seq;
-  GstRTPBuffer rtp;
+  GstRTPBuffer rtp = { NULL };
 
   rtpqdm2depay = GST_RTP_QDM2_DEPAY (depayload);
 

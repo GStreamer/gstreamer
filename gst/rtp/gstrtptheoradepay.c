@@ -407,7 +407,7 @@ gst_rtp_theora_depay_process (GstRTPBaseDepayload * depayload, GstBuffer * buf)
   guint8 *payload, *to_free = NULL;
   guint32 header, ident;
   guint8 F, TDT, packets;
-  GstRTPBuffer rtp;
+  GstRTPBuffer rtp = { NULL };
 
   rtptheoradepay = GST_RTP_THEORA_DEPAY (depayload);
 

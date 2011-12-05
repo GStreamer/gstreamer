@@ -488,7 +488,7 @@ gst_rtp_jpeg_depay_process (GstRTPBaseDepayload * depayload, GstBuffer * buf)
   guint type, width, height;
   guint16 dri, precision, length;
   guint8 *qtable;
-  GstRTPBuffer rtp;
+  GstRTPBuffer rtp = { NULL };
 
   rtpjpegdepay = GST_RTP_JPEG_DEPAY (depayload);
 

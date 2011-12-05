@@ -151,7 +151,7 @@ gst_rtp_mp2t_depay_process (GstRTPBaseDepayload * depayload, GstBuffer * buf)
   GstRtpMP2TDepay *rtpmp2tdepay;
   GstBuffer *outbuf;
   gint payload_len;
-  GstRTPBuffer rtp;
+  GstRTPBuffer rtp = { NULL };
 
   rtpmp2tdepay = GST_RTP_MP2T_DEPAY (depayload);
 

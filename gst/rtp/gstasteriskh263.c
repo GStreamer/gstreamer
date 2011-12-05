@@ -147,7 +147,7 @@ gst_asteriskh263_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
     guint32 timestamp;
     guint32 samples;
     guint16 asterisk_len;
-    GstRTPBuffer rtp;
+    GstRTPBuffer rtp = { NULL };
     guint8 *data;
 
     gst_rtp_buffer_map (buf, GST_MAP_READ, &rtp);

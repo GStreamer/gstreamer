@@ -217,7 +217,7 @@ gst_rtp_L16_depay_process (GstRTPBaseDepayload * depayload, GstBuffer * buf)
   GstBuffer *outbuf;
   gint payload_len;
   gboolean marker;
-  GstRTPBuffer rtp;
+  GstRTPBuffer rtp = { NULL };
 
   rtpL16depay = GST_RTP_L16_DEPAY (depayload);
 

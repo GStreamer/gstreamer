@@ -198,7 +198,7 @@ static GstBuffer *
 gst_rtp_speex_depay_process (GstRTPBaseDepayload * depayload, GstBuffer * buf)
 {
   GstBuffer *outbuf = NULL;
-  GstRTPBuffer rtp;
+  GstRTPBuffer rtp = { NULL };
 
   gst_rtp_buffer_map (buf, GST_MAP_READ, &rtp);
 

@@ -745,7 +745,7 @@ gst_rtp_jpeg_pay_handle_buffer (GstRTPBasePayload * basepayload,
     guint payload_size = (bytes_left < mtu ? bytes_left : mtu);
     guint header_size;
     GstBuffer *paybuf;
-    GstRTPBuffer rtp;
+    GstRTPBuffer rtp = { NULL };
 
     header_size = sizeof (jpeg_header) + quant_data_size;
     if (dri_found)

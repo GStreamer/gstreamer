@@ -247,7 +247,7 @@ gst_rtp_vraw_pay_handle_buffer (GstRTPBasePayload * payload, GstBuffer * buffer)
   gint field;
   GstVideoFrame frame;
   gint interlaced;
-  GstRTPBuffer rtp;
+  GstRTPBuffer rtp = { NULL, };
 
   rtpvrawpay = GST_RTP_VRAW_PAY (payload);
 

@@ -238,7 +238,7 @@ gst_rtp_speex_pay_handle_buffer (GstRTPBasePayload * basepayload,
   guint8 *payload, *data;
   GstClockTime timestamp, duration;
   GstFlowReturn ret;
-  GstRTPBuffer rtp;
+  GstRTPBuffer rtp = { NULL };
 
   rtpspeexpay = GST_RTP_SPEEX_PAY (basepayload);
 

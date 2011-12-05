@@ -292,7 +292,7 @@ gst_rtp_mp4a_depay_process (GstRTPBaseDepayload * depayload, GstBuffer * buf)
 {
   GstRtpMP4ADepay *rtpmp4adepay;
   GstBuffer *outbuf;
-  GstRTPBuffer rtp;
+  GstRTPBuffer rtp = { NULL };
   guint8 *bdata;
 
   rtpmp4adepay = GST_RTP_MP4A_DEPAY (depayload);

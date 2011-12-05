@@ -424,7 +424,7 @@ gst_rtp_mp4g_depay_process (GstRTPBaseDepayload * depayload, GstBuffer * buf)
   GstRtpMP4GDepay *rtpmp4gdepay;
   GstBuffer *outbuf = NULL;
   GstClockTime timestamp;
-  GstRTPBuffer rtp;
+  GstRTPBuffer rtp = { NULL };
 
   rtpmp4gdepay = GST_RTP_MP4G_DEPAY (depayload);
 

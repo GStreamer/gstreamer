@@ -140,7 +140,7 @@ static void
 gst_rtp_vorbis_pay_reset_packet (GstRtpVorbisPay * rtpvorbispay, guint8 VDT)
 {
   guint payload_len;
-  GstRTPBuffer rtp;
+  GstRTPBuffer rtp = { NULL };
 
   GST_LOG_OBJECT (rtpvorbispay, "reset packet");
 
@@ -178,7 +178,7 @@ gst_rtp_vorbis_pay_flush_packet (GstRtpVorbisPay * rtpvorbispay)
   GstFlowReturn ret;
   guint8 *payload;
   guint hlen;
-  GstRTPBuffer rtp;
+  GstRTPBuffer rtp = { NULL };
 
   /* check for empty packet */
   if (!rtpvorbispay->packet || rtpvorbispay->payload_pos <= 4)
@@ -484,7 +484,7 @@ gst_rtp_vorbis_pay_handle_buffer (GstRTPBasePayload * basepayload,
   guint plen;
   guint8 *ppos, *payload;
   gboolean fragmented;
-  GstRTPBuffer rtp;
+  GstRTPBuffer rtp = { NULL };
 
   rtpvorbispay = GST_RTP_VORBIS_PAY (basepayload);
 

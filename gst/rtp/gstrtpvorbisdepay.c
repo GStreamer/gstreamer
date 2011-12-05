@@ -443,7 +443,7 @@ gst_rtp_vorbis_depay_process (GstRTPBaseDepayload * depayload, GstBuffer * buf)
   guint8 *payload, *to_free = NULL;
   guint32 header, ident;
   guint8 F, VDT, packets;
-  GstRTPBuffer rtp;
+  GstRTPBuffer rtp = { NULL };
 
   rtpvorbisdepay = GST_RTP_VORBIS_DEPAY (depayload);
 

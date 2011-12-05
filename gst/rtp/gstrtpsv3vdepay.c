@@ -148,7 +148,7 @@ gst_rtp_sv3v_depay_process (GstRTPBaseDepayload * depayload, GstBuffer * buf)
   gboolean C, S, E;
   GstBuffer *outbuf = NULL;
   guint16 seq;
-  GstRTPBuffer rtp;
+  GstRTPBuffer rtp = { NULL };
 
   rtpsv3vdepay = GST_RTP_SV3V_DEPAY (depayload);
 

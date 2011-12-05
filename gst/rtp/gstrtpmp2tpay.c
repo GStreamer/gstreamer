@@ -121,7 +121,7 @@ gst_rtp_mp2t_pay_flush (GstRTPMP2TPay * rtpmp2tpay)
   guint8 *payload;
   GstFlowReturn ret;
   GstBuffer *outbuf;
-  GstRTPBuffer rtp;
+  GstRTPBuffer rtp = { NULL };
 
   avail = gst_adapter_available (rtpmp2tpay->adapter);
   outbuf = gst_rtp_buffer_new_allocate (avail, 0, 0);

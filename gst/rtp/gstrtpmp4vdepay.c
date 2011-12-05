@@ -164,7 +164,7 @@ gst_rtp_mp4v_depay_process (GstRTPBaseDepayload * depayload, GstBuffer * buf)
 {
   GstRtpMP4VDepay *rtpmp4vdepay;
   GstBuffer *outbuf = NULL;
-  GstRTPBuffer rtp;
+  GstRTPBuffer rtp = { NULL };
 
   rtpmp4vdepay = GST_RTP_MP4V_DEPAY (depayload);
 

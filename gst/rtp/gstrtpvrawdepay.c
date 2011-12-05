@@ -296,7 +296,7 @@ gst_rtp_vraw_depay_process (GstRTPBaseDepayload * depayload, GstBuffer * buf)
   guint32 timestamp;
   guint cont, ystride, uvstride, pgroup, payload_len;
   gint width, height, xinc, yinc;
-  GstRTPBuffer rtp;
+  GstRTPBuffer rtp = { NULL };
   GstVideoFrame frame;
 
   rtpvrawdepay = GST_RTP_VRAW_DEPAY (depayload);

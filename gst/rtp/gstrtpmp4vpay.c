@@ -278,7 +278,7 @@ gst_rtp_mp4v_pay_flush (GstRtpMP4VPay * rtpmp4vpay)
     guint towrite;
     guint payload_len;
     guint packet_len;
-    GstRTPBuffer rtp;
+    GstRTPBuffer rtp = { NULL };
 
     /* this will be the total lenght of the packet */
     packet_len = gst_rtp_buffer_calc_packet_len (avail, 0, 0);

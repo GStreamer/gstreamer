@@ -260,7 +260,7 @@ gst_rtp_qcelp_depay_process (GstRTPBaseDepayload * depayload, GstBuffer * buf)
   guint payload_len, offset, index;
   guint8 *payload;
   guint LLL, NNN;
-  GstRTPBuffer rtp;
+  GstRTPBuffer rtp = { NULL };
 
   depay = GST_RTP_QCELP_DEPAY (depayload);
 

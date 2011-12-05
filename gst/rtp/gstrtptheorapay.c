@@ -180,7 +180,7 @@ static void
 gst_rtp_theora_pay_reset_packet (GstRtpTheoraPay * rtptheorapay, guint8 TDT)
 {
   guint payload_len;
-  GstRTPBuffer rtp;
+  GstRTPBuffer rtp = { NULL };
 
   GST_DEBUG_OBJECT (rtptheorapay, "reset packet");
 
@@ -219,7 +219,7 @@ gst_rtp_theora_pay_flush_packet (GstRtpTheoraPay * rtptheorapay)
   GstFlowReturn ret;
   guint8 *payload;
   guint hlen;
-  GstRTPBuffer rtp;
+  GstRTPBuffer rtp = { NULL };
 
   /* check for empty packet */
   if (!rtptheorapay->packet || rtptheorapay->payload_pos <= 4)
@@ -539,7 +539,7 @@ gst_rtp_theora_pay_payload_buffer (GstRtpTheoraPay * rtptheorapay, guint8 TDT,
   guint plen;
   guint8 *ppos, *payload;
   gboolean fragmented;
-  GstRTPBuffer rtp;
+  GstRTPBuffer rtp = { NULL };
 
   /* size increases with packet length and 2 bytes size eader. */
   newduration = rtptheorapay->payload_duration;

@@ -105,7 +105,7 @@ static GstBuffer *
 gst_rtp_siren_depay_process (GstRTPBaseDepayload * depayload, GstBuffer * buf)
 {
   GstBuffer *outbuf;
-  GstRTPBuffer rtp;
+  GstRTPBuffer rtp = { NULL };
 
   gst_rtp_buffer_map (buf, GST_MAP_READ, &rtp);
   outbuf = gst_rtp_buffer_get_payload_buffer (&rtp);

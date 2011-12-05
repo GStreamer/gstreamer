@@ -368,7 +368,7 @@ gst_rtp_mp4a_pay_handle_buffer (GstRTPBasePayload * basepayload,
     guint8 *payload;
     guint payload_len;
     guint packet_len;
-    GstRTPBuffer rtp;
+    GstRTPBuffer rtp = { NULL };
 
     /* this will be the total lenght of the packet */
     packet_len = gst_rtp_buffer_calc_packet_len (size, 0, 0);
