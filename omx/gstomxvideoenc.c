@@ -1505,7 +1505,7 @@ buffer_fill_error:
   }
 }
 
-static gboolean
+static GstFlowReturn
 gst_omx_video_enc_finish (GstBaseVideoEncoder * encoder)
 {
   GstOMXVideoEnc *self;
@@ -1519,7 +1519,7 @@ gst_omx_video_enc_finish (GstBaseVideoEncoder * encoder)
   /* Don't send EOS buffer twice, this doesn't work */
   if (self->eos) {
     GST_DEBUG_OBJECT (self, "Component is already EOS");
-    return TRUE;
+    return GST_BASE_VIDEO_ENCODER_FLOW_DROPPED;
   }
   self->eos = TRUE;
 
@@ -1542,7 +1542,7 @@ gst_omx_video_enc_finish (GstBaseVideoEncoder * encoder)
 
   GST_BASE_VIDEO_CODEC_STREAM_LOCK (self);
 
-  return TRUE;
+  return GST_BASE_VIDEO_ENCODER_FLOW_DROPPED;
 }
 
 static GstFlowReturn
