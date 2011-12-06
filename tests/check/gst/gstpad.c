@@ -20,7 +20,6 @@
  */
 
 #include <gst/check/gstcheck.h>
-#include <glib/gthread.h>
 
 GST_START_TEST (test_link)
 {
