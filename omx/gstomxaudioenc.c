@@ -1005,7 +1005,7 @@ gst_omx_audio_enc_event (GstAudioEncoder * encoder, GstEvent * event)
     /* Don't send EOS buffer twice, this doesn't work */
     if (self->eos) {
       GST_DEBUG_OBJECT (self, "Component is already EOS");
-      return FALSE;
+      return TRUE;
     }
     self->eos = TRUE;
 
@@ -1033,10 +1033,10 @@ gst_omx_audio_enc_event (GstAudioEncoder * encoder, GstEvent * event)
 
     GST_AUDIO_ENCODER_STREAM_LOCK (self);
 
-    return FALSE;
+    return TRUE;
   }
 
-  return TRUE;
+  return FALSE;
 }
 
 static GstFlowReturn
