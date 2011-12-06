@@ -1854,7 +1854,7 @@ no_sync:
   data = gst_buffer_map (buf, &size, NULL, GST_MAP_READ);
   do {
     written =
-        gst_audio_ring_buffer_commit_full (ringbuf, &sample_offset,
+        gst_audio_ring_buffer_commit (ringbuf, &sample_offset,
         data + offset, samples, out_samples, &accum);
 
     GST_DEBUG_OBJECT (sink, "wrote %u of %u", written, samples);

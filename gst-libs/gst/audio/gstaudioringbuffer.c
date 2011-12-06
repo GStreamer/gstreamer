@@ -1491,7 +1491,7 @@ not_started:
 }
 
 /**
- * gst_audio_ring_buffer_commit_full:
+ * gst_audio_ring_buffer_commit:
  * @buf: the #GstAudioRingBuffer to commit
  * @sample: the sample position of the data
  * @data: the data to commit
@@ -1499,7 +1499,7 @@ not_started:
  * @out_samples: the number of samples to write to the ringbuffer
  * @accum: accumulator for rate conversion.
  *
- * Commit @in_samples samples pointed to by @data to the ringbuffer @buf. 
+ * Commit @in_samples samples pointed to by @data to the ringbuffer @buf.
  *
  * @in_samples and @out_samples define the rate conversion to perform on the
  * samples in @data. For negative rates, @out_samples must be negative and
@@ -1510,7 +1510,7 @@ not_started:
  * @sample in reverse order.
  *
  * @out_samples does not need to be a multiple of the segment size of the ringbuffer
- * although it is recommended for optimal performance. 
+ * although it is recommended for optimal performance.
  *
  * @accum will hold a temporary accumulator used in rate conversion and should be
  * set to 0 when this function is first called. In case the commit operation is
@@ -1526,7 +1526,7 @@ not_started:
  * Since: 0.10.11.
  */
 guint
-gst_audio_ring_buffer_commit_full (GstAudioRingBuffer * buf, guint64 * sample,
+gst_audio_ring_buffer_commit (GstAudioRingBuffer * buf, guint64 * sample,
     guchar * data, gint in_samples, gint out_samples, gint * accum)
 {
   GstAudioRingBufferClass *rclass;
@@ -1541,33 +1541,6 @@ gst_audio_ring_buffer_commit_full (GstAudioRingBuffer * buf, guint64 * sample,
 
   if (G_LIKELY (rclass->commit))
     res = rclass->commit (buf, sample, data, in_samples, out_samples, accum);
-
-  return res;
-}
-
-/**
- * gst_audio_ring_buffer_commit:
- * @buf: the #GstAudioRingBuffer to commit
- * @sample: the sample position of the data
- * @data: the data to commit
- * @len: the number of samples in the data to commit
- *
- * Same as gst_audio_ring_buffer_commit_full() but with a in_samples and out_samples
- * equal to @len, ignoring accum.
- *
- * Returns: The number of samples written to the ringbuffer or -1 on
- * error.
- *
- * MT safe.
- */
-guint
-gst_audio_ring_buffer_commit (GstAudioRingBuffer * buf, guint64 sample,
-    guchar * data, guint len)
-{
-  guint res;
-  guint64 samplep = sample;
-
-  res = gst_audio_ring_buffer_commit_full (buf, &samplep, data, len, len, NULL);
 
   return res;
 }

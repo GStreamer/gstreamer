@@ -313,9 +313,7 @@ void            gst_audio_ring_buffer_set_sample      (GstAudioRingBuffer *buf, 
 void            gst_audio_ring_buffer_clear_all       (GstAudioRingBuffer *buf);
 
 /* commit samples */
-guint           gst_audio_ring_buffer_commit          (GstAudioRingBuffer *buf, guint64 sample,
-                                                       guchar *data, guint len);
-guint           gst_audio_ring_buffer_commit_full     (GstAudioRingBuffer * buf, guint64 *sample,
+guint           gst_audio_ring_buffer_commit          (GstAudioRingBuffer * buf, guint64 *sample,
                                                        guchar * data, gint in_samples,
                                                        gint out_samples, gint * accum);
 
