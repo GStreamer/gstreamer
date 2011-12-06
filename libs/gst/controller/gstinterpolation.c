@@ -135,7 +135,7 @@ interpolate_none_get_##type (GstInterpolationControlSource *self, GstClockTime t
 \
 static gboolean \
 interpolate_none_get_##type##_value_array (GstInterpolationControlSource *self, \
-    GstClockTime timestamp, GstClockTime interval, guint n_values, gpointer *_values) \
+    GstClockTime timestamp, GstClockTime interval, guint n_values, gpointer _values) \
 { \
   guint i; \
   GstClockTime ts = timestamp; \
@@ -294,7 +294,7 @@ interpolate_trigger_get_##type (GstInterpolationControlSource *self, GstClockTim
 \
 static gboolean \
 interpolate_trigger_get_##type##_value_array (GstInterpolationControlSource *self, \
-    GstClockTime timestamp, GstClockTime interval, guint n_values, gpointer *_values) \
+    GstClockTime timestamp, GstClockTime interval, guint n_values, gpointer _values) \
 { \
   guint i; \
   GstClockTime ts = timestamp; \
@@ -455,7 +455,7 @@ interpolate_linear_get_##vtype (GstInterpolationControlSource *self, GstClockTim
 \
 static gboolean \
 interpolate_linear_get_##vtype##_value_array (GstInterpolationControlSource *self, \
-    GstClockTime timestamp, GstClockTime interval, guint n_values, gpointer *_values) \
+    GstClockTime timestamp, GstClockTime interval, guint n_values, gpointer _values) \
 { \
   guint i; \
   GstClockTime ts = timestamp; \
@@ -709,7 +709,7 @@ interpolate_cubic_get_##vtype (GstInterpolationControlSource *self, GstClockTime
 \
 static gboolean \
 interpolate_cubic_get_##vtype##_value_array (GstInterpolationControlSource *self, \
-    GstClockTime timestamp, GstClockTime interval, guint n_values, gpointer *_values) \
+    GstClockTime timestamp, GstClockTime interval, guint n_values, gpointer _values) \
 { \
   guint i; \
   GstClockTime ts = timestamp; \
