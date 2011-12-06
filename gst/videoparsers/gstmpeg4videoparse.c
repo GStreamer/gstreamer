@@ -89,8 +89,7 @@ gst_mpeg4vparse_base_init (gpointer klass)
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
 
   gst_element_class_add_static_pad_template (element_class, &src_template);
-  gst_element_class_add_static_pad_template (element_class,
-      &sink_template);
+  gst_element_class_add_static_pad_template (element_class, &sink_template);
 
   gst_element_class_set_details_simple (element_class,
       "MPEG 4 video elementary stream parser", "Codec/Parser/Video",
@@ -254,7 +253,7 @@ gst_mpeg4vparse_process_config (GstMpeg4VParse * mp4vparse,
 
   GST_LOG_OBJECT (mp4vparse, "Width/Height: %u/%u, "
       "time increment resolution: %u fixed time increment: %u",
-      mp4vparse->vol.height, mp4vparse->vol.width,
+      mp4vparse->vol.width, mp4vparse->vol.height,
       mp4vparse->vol.vop_time_increment_resolution,
       mp4vparse->vol.fixed_vop_time_increment);
 
@@ -404,8 +403,8 @@ retry:
   off = packet.offset;
 
   /* possible frame header, but not at offset 0? skip bytes before sync */
-  if (G_UNLIKELY (off > 4)) {
-    *skipsize = off;
+  if (G_UNLIKELY (off > 3)) {
+    *skipsize = off - 3;
     return FALSE;
   }
 
