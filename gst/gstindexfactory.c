@@ -88,7 +88,7 @@ gst_index_factory_new (const gchar * name, const gchar * longdesc, GType type)
   g_return_val_if_fail (name != NULL, NULL);
   factory = GST_INDEX_FACTORY (g_object_newv (GST_TYPE_INDEX_FACTORY, 0, NULL));
 
-  GST_PLUGIN_FEATURE_NAME (factory) = g_strdup (name);
+  gst_plugin_feature_set_name (GST_PLUGIN_FEATURE (factory), name);
   if (factory->longdesc)
     g_free (factory->longdesc);
   factory->longdesc = g_strdup (longdesc);
