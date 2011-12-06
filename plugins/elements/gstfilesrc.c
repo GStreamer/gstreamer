@@ -518,7 +518,7 @@ no_filename:
   {
     GST_ELEMENT_ERROR (src, RESOURCE, NOT_FOUND,
         (_("No file name specified for reading.")), (NULL));
-    return FALSE;
+    goto error_exit;
   }
 open_failed:
   {
@@ -533,29 +533,30 @@ open_failed:
             GST_ERROR_SYSTEM);
         break;
     }
-    return FALSE;
+    goto error_exit;
   }
 no_stat:
   {
     GST_ELEMENT_ERROR (src, RESOURCE, OPEN_READ,
         (_("Could not get info on \"%s\"."), src->filename), (NULL));
-    close (src->fd);
-    return FALSE;
+    goto error_close;
   }
 was_directory:
   {
     GST_ELEMENT_ERROR (src, RESOURCE, OPEN_READ,
         (_("\"%s\" is a directory."), src->filename), (NULL));
-    close (src->fd);
-    return FALSE;
+    goto error_close;
   }
 was_socket:
   {
     GST_ELEMENT_ERROR (src, RESOURCE, OPEN_READ,
         (_("File \"%s\" is a socket."), src->filename), (NULL));
-    close (src->fd);
-    return FALSE;
+    goto error_close;
   }
+error_close:
+  close (src->fd);
+error_exit:
+  return FALSE;
 }
 
 /* unmap and close the file */
