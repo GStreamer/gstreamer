@@ -52,6 +52,15 @@ G_BEGIN_DECLS
 typedef struct _GstMultiFileSink GstMultiFileSink;
 typedef struct _GstMultiFileSinkClass GstMultiFileSinkClass;
 
+/**
+ * GstMultiFileSinkNext:
+ * @GST_MULTI_FILE_SINK_NEXT_BUFFER: New file for each buffer
+ * @GST_MULTI_FILE_SINK_NEXT_DISCONT: New file after each discontinuity
+ * @GST_MULTI_FILE_SINK_NEXT_KEY_FRAME: New file at each key frame
+ *  (Useful for MPEG-TS segmenting)
+ *
+ * File splitting modes.
+ */
 typedef enum {
   GST_MULTI_FILE_SINK_NEXT_BUFFER,
   GST_MULTI_FILE_SINK_NEXT_DISCONT,
