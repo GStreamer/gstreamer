@@ -2818,9 +2818,9 @@ probe_hook_marshal (GHook * hook, ProbeMarshall * data)
   if ((type & GST_PAD_PROBE_TYPE_BLOCKING) &&
       (flags & GST_PAD_PROBE_TYPE_BLOCKING & type) == 0)
     goto no_match;
-  /* only probes that have GST_PAD_PROBE_TYPE_HANDLE_FLUSH set */
-  if ((type & GST_PAD_PROBE_TYPE_HANDLE_FLUSH) &&
-      (flags & GST_PAD_PROBE_TYPE_HANDLE_FLUSH & type) == 0)
+  /* only probes that have GST_PAD_PROBE_TYPE_EVENT_FLUSH set */
+  if ((type & GST_PAD_PROBE_TYPE_EVENT_FLUSH) &&
+      (flags & GST_PAD_PROBE_TYPE_EVENT_FLUSH & type) == 0)
     goto no_match;
 
   GST_CAT_LOG_OBJECT (GST_CAT_SCHEDULING, pad,
@@ -3995,8 +3995,7 @@ gst_pad_push_event_unchecked (GstPad * pad, GstEvent * event,
       GST_PAD_SET_FLUSHING (pad);
 
       GST_PAD_BLOCK_BROADCAST (pad);
-      type |= GST_PAD_PROBE_TYPE_HANDLE_FLUSH;
-
+      type |= GST_PAD_PROBE_TYPE_EVENT_FLUSH;
       break;
     case GST_EVENT_FLUSH_STOP:
       GST_PAD_UNSET_FLUSHING (pad);
@@ -4005,8 +4004,7 @@ gst_pad_push_event_unchecked (GstPad * pad, GstEvent * event,
       GST_LOG_OBJECT (pad, "Removing pending EOS events");
       remove_event_by_type (pad, GST_EVENT_EOS);
 
-      type |= GST_PAD_PROBE_TYPE_HANDLE_FLUSH;
-
+      type |= GST_PAD_PROBE_TYPE_EVENT_FLUSH;
       break;
     default:
     {

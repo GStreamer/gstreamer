@@ -444,6 +444,10 @@ typedef gboolean		(*GstPadForwardFunction)	(GstPad *pad, gpointer user_data);
  * @GST_PAD_PROBE_TYPE_BUFFER_LIST: probe buffer lists
  * @GST_PAD_PROBE_TYPE_EVENT_DOWNSTREAM: probe downstream events
  * @GST_PAD_PROBE_TYPE_EVENT_UPSTREAM: probe upstream events
+ * @GST_PAD_PROBE_TYPE_EVENT_FLUSH: probe flush events. This probe has to be
+ *     explicitly enabled and is not included in the
+ *     @@GST_PAD_PROBE_TYPE_EVENT_DOWNSTREAM or
+ *     @@GST_PAD_PROBE_TYPE_EVENT_UPSTREAM probe types.
  * @GST_PAD_PROBE_TYPE_QUERY_DOWNSTREAM: probe downstream queries
  * @GST_PAD_PROBE_TYPE_QUERY_UPSTREAM: probe upstream queries
  * @GST_PAD_PROBE_TYPE_PUSH: probe push
@@ -464,15 +468,12 @@ typedef enum
   GST_PAD_PROBE_TYPE_BUFFER_LIST      = (1 << 5),
   GST_PAD_PROBE_TYPE_EVENT_DOWNSTREAM = (1 << 6),
   GST_PAD_PROBE_TYPE_EVENT_UPSTREAM   = (1 << 7),
-  GST_PAD_PROBE_TYPE_QUERY_DOWNSTREAM = (1 << 8),
-  GST_PAD_PROBE_TYPE_QUERY_UPSTREAM   = (1 << 9),
+  GST_PAD_PROBE_TYPE_EVENT_FLUSH      = (1 << 8),
+  GST_PAD_PROBE_TYPE_QUERY_DOWNSTREAM = (1 << 9),
+  GST_PAD_PROBE_TYPE_QUERY_UPSTREAM   = (1 << 10),
   /* flags to select scheduling mode */
   GST_PAD_PROBE_TYPE_PUSH             = (1 << 12),
-  GST_PAD_PROBE_TYPE_PULL             = (1 << 13),
-  /* flag for event probes that want to handle flush events.
-     The probe can drop flush event which will mean that the rest
-     of the pipeline will not get flushed */
-  GST_PAD_PROBE_TYPE_HANDLE_FLUSH     = (1 << 14)
+  GST_PAD_PROBE_TYPE_PULL             = (1 << 13)
 } GstPadProbeType;
 
 #define GST_PAD_PROBE_TYPE_BLOCKING         (GST_PAD_PROBE_TYPE_IDLE | GST_PAD_PROBE_TYPE_BLOCK)
