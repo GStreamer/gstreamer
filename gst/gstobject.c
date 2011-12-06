@@ -1118,7 +1118,7 @@ gst_object_find_controlled_property (GstObject * self, const gchar * name)
       return prop;
     }
   }
-  GST_DEBUG ("controller does not (yet) manage property '%s'", name);
+  GST_DEBUG_OBJECT (self, "controller does not manage property '%s'", name);
 
   return NULL;
 }
@@ -1182,7 +1182,7 @@ gst_object_sync_values (GstObject * object, GstClockTime timestamp)
   g_return_val_if_fail (GST_IS_OBJECT (object), FALSE);
   g_return_val_if_fail (GST_CLOCK_TIME_IS_VALID (timestamp), FALSE);
 
-  GST_LOG ("sync_values");
+  GST_LOG_OBJECT (object, "sync_values");
 
   /* FIXME: this deadlocks */
   /* GST_OBJECT_LOCK (object); */
@@ -1194,7 +1194,8 @@ gst_object_sync_values (GstObject * object, GstClockTime timestamp)
     if (prop->disabled)
       continue;
 
-    GST_LOG ("property '%s' at ts=%" G_GUINT64_FORMAT, prop->name, timestamp);
+    GST_LOG_OBJECT (object, "property '%s' at ts=%" G_GUINT64_FORMAT,
+        prop->name, timestamp);
 
     /* we can make this faster
      * http://bugzilla.gnome.org/show_bug.cgi?id=536939
@@ -1212,7 +1213,7 @@ gst_object_sync_values (GstObject * object, GstClockTime timestamp)
         g_value_copy (&value, &prop->last_value);
       }
     } else {
-      GST_DEBUG ("no control value for param %s", prop->name);
+      GST_DEBUG_OBJECT (object, "no control value for param %s", prop->name);
     }
     g_value_unset (&value);
     ret &= val_ret;
