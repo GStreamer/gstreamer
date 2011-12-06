@@ -1607,7 +1607,7 @@ gst_rtp_h263_pay_flush (GstRtpH263Pay * rtph263pay)
   GST_DEBUG ("MTU: %d", context->mtu);
   rtph263pay->available_data = gst_adapter_available (rtph263pay->adapter);
   if (rtph263pay->available_data == 0) {
-    ret = GST_FLOW_RESEND;
+    ret = GST_FLOW_OK;
     goto end;
   }
 
