@@ -394,7 +394,7 @@ gst_mpeg4_next_resync (GstMpeg4Packet * packet,
   if (off2 == -1)
     return GST_MPEG4_PARSER_NO_PACKET_END;
 
-  packet->size = off1 - off2;
+  packet->size = off2 - off1;
 
   return GST_MPEG4_PARSER_OK;
 }
@@ -478,7 +478,11 @@ find_end:
     return GST_MPEG4_PARSER_NO_PACKET_END;
   }
 
-  packet->size = (gsize) off2 - off1 - 3;
+  if (packet->type == GST_MPEG4_RESYNC) {
+    packet->size = (gsize) off2 - off1;
+  } else {
+    packet->size = (gsize) off2 - off1 - 3;
+  }
 
   GST_DEBUG ("Complete packet of type %x found at: %d, Size: %" G_GSSIZE_FORMAT,
       packet->type, packet->offset, packet->size);
