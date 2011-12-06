@@ -980,6 +980,7 @@ gst_omx_video_enc_start (GstBaseVideoEncoder * encoder)
 
   self = GST_OMX_VIDEO_ENC (encoder);
 
+  self->last_upstream_ts = 0;
   self->eos = FALSE;
   self->downstream_flow_ret = GST_FLOW_OK;
   ret =
@@ -1181,6 +1182,7 @@ gst_omx_video_enc_reset (GstBaseVideoEncoder * encoder)
   gst_omx_port_set_flushing (self->out_port, FALSE);
 
   /* Start the srcpad loop again */
+  self->last_upstream_ts = 0;
   self->eos = FALSE;
   self->downstream_flow_ret = GST_FLOW_OK;
   gst_pad_start_task (GST_BASE_VIDEO_CODEC_SRC_PAD (self),
@@ -1448,6 +1450,7 @@ gst_omx_video_enc_handle_frame (GstBaseVideoEncoder * encoder,
     if (timestamp != GST_CLOCK_TIME_NONE) {
       buf->omx_buf->nTimeStamp =
           gst_util_uint64_scale (timestamp, OMX_TICKS_PER_SECOND, GST_SECOND);
+      self->last_upstream_ts = timestamp;
     }
 
     duration = frame->presentation_duration;
@@ -1455,6 +1458,7 @@ gst_omx_video_enc_handle_frame (GstBaseVideoEncoder * encoder,
       buf->omx_buf->nTickCount =
           gst_util_uint64_scale (buf->omx_buf->nFilledLen, duration,
           GST_BUFFER_SIZE (frame->sink_buffer));
+      self->last_upstream_ts += duration;
     }
 
     id = g_slice_new0 (BufferIdentification);
@@ -1533,6 +1537,11 @@ gst_omx_video_enc_finish (GstBaseVideoEncoder * encoder)
    * the EOS buffer arrives on the output port. */
   acq_ret = gst_omx_port_acquire_buffer (self->in_port, &buf);
   if (acq_ret == GST_OMX_ACQUIRE_BUFFER_OK) {
+    buf->omx_buf->nFilledLen = 0;
+    buf->omx_buf->nTimeStamp =
+        gst_util_uint64_scale (self->last_upstream_ts, OMX_TICKS_PER_SECOND,
+        GST_SECOND);
+    buf->omx_buf->nTickCount = 0;
     buf->omx_buf->nFlags |= OMX_BUFFERFLAG_EOS;
     gst_omx_port_release_buffer (self->in_port, buf);
     GST_DEBUG_OBJECT (self, "Sent EOS to the component");
@@ -1583,6 +1592,11 @@ gst_omx_video_enc_drain (GstOMXVideoEnc * self)
 
   g_mutex_lock (self->drain_lock);
   self->draining = TRUE;
+  buf->omx_buf->nFilledLen = 0;
+  buf->omx_buf->nTimeStamp =
+      gst_util_uint64_scale (self->last_upstream_ts, OMX_TICKS_PER_SECOND,
+      GST_SECOND);
+  buf->omx_buf->nTickCount = 0;
   buf->omx_buf->nFlags |= OMX_BUFFERFLAG_EOS;
   gst_omx_port_release_buffer (self->in_port, buf);
   GST_DEBUG_OBJECT (self, "Waiting until component is drained");
