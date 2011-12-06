@@ -983,7 +983,7 @@ gst_dvd_read_src_set_property (GObject * object, guint prop_id,
   gboolean started;
 
   GST_OBJECT_LOCK (src);
-  started = GST_OBJECT_FLAG_IS_SET (src, GST_BASE_SRC_STARTED);
+  started = GST_OBJECT_FLAG_IS_SET (src, GST_BASE_SRC_FLAG_STARTED);
 
   switch (prop_id) {
     case ARG_DEVICE:{
@@ -1538,7 +1538,7 @@ gst_dvd_read_src_src_query (GstBaseSrc * basesrc, GstQuery * query)
       gst_query_type_get_name (GST_QUERY_TYPE (query)));
 
   GST_OBJECT_LOCK (src);
-  started = (GST_OBJECT_FLAG_IS_SET (src, GST_BASE_SRC_STARTED));
+  started = (GST_OBJECT_FLAG_IS_SET (src, GST_BASE_SRC_FLAG_STARTED));
   GST_OBJECT_UNLOCK (src);
 
   if (!started) {
@@ -1708,7 +1708,7 @@ gst_dvd_read_src_uri_set_uri (GstURIHandler * handler, const gchar * uri,
       pos++;
     }
 
-    if (pos > 0 && GST_OBJECT_FLAG_IS_SET (src, GST_BASE_SRC_STARTED)) {
+    if (pos > 0 && GST_OBJECT_FLAG_IS_SET (src, GST_BASE_SRC_FLAG_STARTED)) {
       src->title = src->uri_title - 1;
       src->chapter = src->uri_chapter - 1;
       src->angle = src->uri_angle - 1;
