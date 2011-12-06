@@ -430,8 +430,8 @@ gst_mpeg4_parse (GstMpeg4Packet * packet, gboolean skip_user_data,
   g_return_val_if_fail (packet != NULL, GST_MPEG4_PARSER_ERROR);
 
   if (size - offset <= 4) {
-    GST_DEBUG ("Can't parse, buffer is to small size %d at offset %d", size,
-        offset);
+    GST_DEBUG ("Can't parse, buffer is to small size %" G_GSSIZE_FORMAT
+        " at offset %d", size, offset);
     return GST_MPEG4_PARSER_ERROR;
   }
 
@@ -479,7 +479,7 @@ find_end:
 
   packet->size = (gsize) off2 - off1 - 3;
 
-  GST_DEBUG ("Complete packet of type %x found at: %d, Size: %d",
+  GST_DEBUG ("Complete packet of type %x found at: %d, Size: %" G_GSSIZE_FORMAT,
       packet->type, packet->offset, packet->size);
   return GST_MPEG4_PARSER_OK;
 
@@ -511,8 +511,8 @@ gst_h263_parse (GstMpeg4Packet * packet,
   g_return_val_if_fail (packet != NULL, GST_MPEG4_PARSER_ERROR);
 
   if (size - offset < 3) {
-    GST_DEBUG ("Can't parse, buffer is to small size %d at offset %d", size,
-        offset);
+    GST_DEBUG ("Can't parse, buffer is to small size %" G_GSSIZE_FORMAT
+        " at offset %d", size, offset);
     return GST_MPEG4_PARSER_ERROR;
   }
 
@@ -537,7 +537,7 @@ gst_h263_parse (GstMpeg4Packet * packet,
 
   packet->size = (gsize) off2 - off1;
 
-  GST_DEBUG ("Complete packet found at: %d, Size: %d",
+  GST_DEBUG ("Complete packet found at: %d, Size: %" G_GSSIZE_FORMAT,
       packet->offset, packet->size);
 
   return GST_MPEG4_PARSER_OK;
@@ -953,10 +953,15 @@ gst_mpeg4_parse_video_object_layer (GstMpeg4VideoObjectLayer * vol,
         &vol->par_height);
 
   } else {
+    gint v;
+
     READ_UINT8 (&br, vol->par_width, 8);
-    CHECK_ALLOWED (vol->par_width, 1, 255);
+    v = vol->par_width;
+    CHECK_ALLOWED (v, 1, 255);
+
     READ_UINT8 (&br, vol->par_height, 8);
-    CHECK_ALLOWED (vol->par_height, 1, 255);
+    v = vol->par_height;
+    CHECK_ALLOWED (v, 1, 255);
   }
   GST_DEBUG ("Pixel aspect ratio %d/%d", vol->par_width, vol->par_width);
 
@@ -1023,7 +1028,11 @@ gst_mpeg4_parse_video_object_layer (GstMpeg4VideoObjectLayer * vol,
   MARKER_UNCHECKED (&br);
   vol->vop_time_increment_resolution =
       gst_bit_reader_get_bits_uint16_unchecked (&br, 16);
-  CHECK_ALLOWED (vol->vop_time_increment_resolution, 1, G_MAXUINT16);
+  if (vol->vop_time_increment_resolution < 1) {
+    GST_WARNING ("value not in allowed range. value: %d, range %d-%d",
+        vol->vop_time_increment_resolution, 1, G_MAXUINT16);
+    goto failed;
+  }
   vol->vop_time_increment_bits =
       g_bit_storage (vol->vop_time_increment_resolution);
 
