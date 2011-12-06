@@ -843,7 +843,11 @@ GST_START_TEST (test_overlay_composition)
   /* get scaled pixbuf and touch last byte */
   pix1 = gst_video_overlay_rectangle_get_pixels_argb (rect1, &stride,
       GST_VIDEO_OVERLAY_FORMAT_FLAG_NONE);
-  fail_unless_equals_int (*(GST_BUFFER_DATA (pix1) + (h * stride + w - 1)), 0);
+  fail_unless (GST_BUFFER_SIZE (pix1) > ((h - 1) * stride + (w * 4) - 1),
+      "size %u vs. last pixel offset %u", GST_BUFFER_SIZE (pix1),
+      ((h - 1) * stride + (w * 4) - 1));
+  fail_unless_equals_int (*(GST_BUFFER_DATA (pix1) + ((h - 1) * stride +
+              (w * 4) - 1)), 0);
 
   gst_video_overlay_rectangle_get_render_rectangle (rect2, &x, &y, &w, &h);
   fail_unless_equals_int (x, 50);
@@ -854,7 +858,11 @@ GST_START_TEST (test_overlay_composition)
   /* get scaled pixbuf and touch last byte */
   pix2 = gst_video_overlay_rectangle_get_pixels_argb (rect2, &stride,
       GST_VIDEO_OVERLAY_FORMAT_FLAG_NONE);
-  fail_unless_equals_int (*(GST_BUFFER_DATA (pix1) + (h * stride + w - 1)), 0);
+  fail_unless (GST_BUFFER_SIZE (pix2) > ((h - 1) * stride + (w * 4) - 1),
+      "size %u vs. last pixel offset %u", GST_BUFFER_SIZE (pix1),
+      ((h - 1) * stride + (w * 4) - 1));
+  fail_unless_equals_int (*(GST_BUFFER_DATA (pix2) + ((h - 1) * stride +
+              (w * 4) - 1)), 0);
 
   /* get scaled pixbuf again, should be the same buffer as before (caching) */
   pix1 = gst_video_overlay_rectangle_get_pixels_argb (rect2, &stride,
@@ -873,7 +881,11 @@ GST_START_TEST (test_overlay_composition)
   fail_unless_equals_int (h, 50);
 
   /* touch last byte */
-  fail_unless_equals_int (*(GST_BUFFER_DATA (pix1) + (h * stride + w - 1)), 0);
+  fail_unless (GST_BUFFER_SIZE (pix1) > ((h - 1) * stride + (w * 4) - 1),
+      "size %u vs. last pixel offset %u", GST_BUFFER_SIZE (pix1),
+      ((h - 1) * stride + (w * 4) - 1));
+  fail_unless_equals_int (*(GST_BUFFER_DATA (pix1) + ((h - 1) * stride +
+              (w * 4) - 1)), 0);
 
   /* test attaching and retrieving of compositions to/from buffers */
   buf = gst_buffer_new ();
