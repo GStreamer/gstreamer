@@ -154,17 +154,11 @@ main (gint argc, gchar * argv[])
   {
     GstClockTime sample_duration =
         gst_util_uint64_scale_int (1, GST_SECOND, 44100);
-    GstValueArray va = { "freq",
-      BLOCK_SIZE * NUM_CP,
-      sample_duration,
-      NULL
-    };
-
     gdouble *values = g_new0 (gdouble, BLOCK_SIZE * NUM_CP);
-    va.values = (gpointer *) values;
 
     bt = gst_util_get_timestamp ();
-    gst_control_source_get_value_array (GST_CONTROL_SOURCE (csource), 0, &va);
+    gst_control_source_get_value_array (GST_CONTROL_SOURCE (csource), 0,
+        sample_duration, BLOCK_SIZE * NUM_CP, (gpointer) values);
     ct = gst_util_get_timestamp ();
     g_free (values);
     elapsed = GST_CLOCK_DIFF (bt, ct);

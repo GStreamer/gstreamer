@@ -63,23 +63,6 @@ struct _GstTimedValue
 };
 
 /**
- * GstValueArray:
- * @property_name: the name of the property this array belongs to
- * @nbsamples: number of samples requested
- * @sample_interval: interval between each sample
- * @values: pointer to the array
- *
- * Structure to receive multiple values at once.
- */
-struct _GstValueArray
-{
-  const gchar *property_name;
-  gint         nbsamples;
-  GstClockTime sample_interval;
-  gpointer *values;
-};
-
-/**
  * GstControlSourceGetValue
  * @self: the #GstControlSource instance
  * @timestamp: timestamp for which a value should be calculated
@@ -90,20 +73,24 @@ struct _GstValueArray
  * Returns: %TRUE if the value was successfully calculated.
  *
  */
-typedef gboolean (* GstControlSourceGetValue) (GstControlSource *self, GstClockTime timestamp, GValue *value);
+typedef gboolean (* GstControlSourceGetValue) (GstControlSource *self, 
+    GstClockTime timestamp, GValue *value);
 
 /**
  * GstControlSourceGetValueArray
  * @self: the #GstControlSource instance
  * @timestamp: timestamp for which a value should be calculated
- * @value_array: array to put control-values in
+ * @interval: the time spacing between subsequent values
+ * @n_values: the number of values
+ * @values: array to put control-values in
  *
- * Function for returning a #GstValueArray for a given timestamp.
+ * Function for returning an array of values for starting at a given timestamp.
  *
  * Returns: %TRUE if the values were successfully calculated.
  *
  */
-typedef gboolean (* GstControlSourceGetValueArray) (GstControlSource *self, GstClockTime timestamp, GstValueArray *value_array);
+typedef gboolean (* GstControlSourceGetValueArray) (GstControlSource *self, 
+    GstClockTime timestamp, GstClockTime interval, guint n_values, gpointer *values);
 
 /**
  * GstControlSourceBind
@@ -159,7 +146,8 @@ GType gst_control_source_get_type (void);
 gboolean       gst_control_source_get_value             (GstControlSource *self, GstClockTime timestamp,
                                                          GValue *value);
 gboolean       gst_control_source_get_value_array       (GstControlSource *self, GstClockTime timestamp,
-                                                         GstValueArray *value_array);
+                                                         GstClockTime interval, guint n_values,
+                                                         gpointer *values);
 
 gboolean       gst_control_source_bind                  (GstControlSource *self, GParamSpec *pspec);
 

@@ -109,11 +109,11 @@ waveform_sine_get_##type (GstLFOControlSource *self, GstClockTime timestamp, \
 \
 static gboolean \
 waveform_sine_get_##type##_value_array (GstLFOControlSource *self, \
-   GstClockTime timestamp, GstValueArray * value_array) \
+   GstClockTime timestamp, GstClockTime interval, guint n_values, gpointer *_values) \
 { \
-  gint i; \
+  guint i; \
   GstClockTime ts = timestamp; \
-  g##type *values = (g##type *) value_array->values; \
+  g##type *values = (g##type *) _values; \
   g##type max, min; \
   gdouble amp, off, frequency; \
   GstClockTime timeshift, period; \
@@ -127,9 +127,9 @@ waveform_sine_get_##type##_value_array (GstLFOControlSource *self, \
   period = self->priv->period; \
   frequency = self->priv->frequency; \
   \
-  for(i = 0; i < value_array->nbsamples; i++) { \
+  for(i = 0; i < n_values; i++) { \
     *values = _sine_get_##type (self, max, min, amp, off, timeshift, period, frequency, ts); \
-    ts += value_array->sample_interval; \
+    ts += interval; \
     values++; \
   } \
   g_mutex_unlock (self->lock); \
@@ -210,11 +210,11 @@ waveform_square_get_##type (GstLFOControlSource *self, GstClockTime timestamp, \
 \
 static gboolean \
 waveform_square_get_##type##_value_array (GstLFOControlSource *self, \
-   GstClockTime timestamp, GstValueArray * value_array) \
+   GstClockTime timestamp, GstClockTime interval, guint n_values, gpointer *_values) \
 { \
-  gint i; \
+  guint i; \
   GstClockTime ts = timestamp; \
-  g##type *values = (g##type *) value_array->values; \
+  g##type *values = (g##type *) _values; \
   g##type max, min; \
   gdouble amp, off, frequency; \
   GstClockTime timeshift, period; \
@@ -228,9 +228,9 @@ waveform_square_get_##type##_value_array (GstLFOControlSource *self, \
   period = self->priv->period; \
   frequency = self->priv->frequency; \
   \
-  for(i = 0; i < value_array->nbsamples; i++) { \
+  for(i = 0; i < n_values; i++) { \
     *values = _square_get_##type (self, max, min, amp, off, timeshift, period, frequency, ts); \
-    ts += value_array->sample_interval; \
+    ts += interval; \
     values++; \
   } \
   g_mutex_unlock (self->lock); \
@@ -308,11 +308,11 @@ waveform_saw_get_##type (GstLFOControlSource *self, GstClockTime timestamp, \
 \
 static gboolean \
 waveform_saw_get_##type##_value_array (GstLFOControlSource *self, \
-   GstClockTime timestamp, GstValueArray * value_array) \
+   GstClockTime timestamp, GstClockTime interval, guint n_values, gpointer *_values) \
 { \
-  gint i; \
+  guint i; \
   GstClockTime ts = timestamp; \
-  g##type *values = (g##type *) value_array->values; \
+  g##type *values = (g##type *) _values; \
   g##type max, min; \
   gdouble amp, off, frequency; \
   GstClockTime timeshift, period; \
@@ -326,9 +326,9 @@ waveform_saw_get_##type##_value_array (GstLFOControlSource *self, \
   period = self->priv->period; \
   frequency = self->priv->frequency; \
   \
-  for(i = 0; i < value_array->nbsamples; i++) { \
+  for(i = 0; i < n_values; i++) { \
     *values = _saw_get_##type (self, max, min, amp, off, timeshift, period, frequency, ts); \
-    ts += value_array->sample_interval; \
+    ts += interval; \
     values++; \
   } \
   g_mutex_unlock (self->lock); \
@@ -406,11 +406,11 @@ waveform_rsaw_get_##type (GstLFOControlSource *self, GstClockTime timestamp, \
 \
 static gboolean \
 waveform_rsaw_get_##type##_value_array (GstLFOControlSource *self, \
-   GstClockTime timestamp, GstValueArray * value_array) \
+   GstClockTime timestamp, GstClockTime interval, guint n_values, gpointer *_values) \
 { \
-  gint i; \
+  guint i; \
   GstClockTime ts = timestamp; \
-  g##type *values = (g##type *) value_array->values; \
+  g##type *values = (g##type *) _values; \
   g##type max, min; \
   gdouble amp, off, frequency; \
   GstClockTime timeshift, period; \
@@ -424,9 +424,9 @@ waveform_rsaw_get_##type##_value_array (GstLFOControlSource *self, \
   period = self->priv->period; \
   frequency = self->priv->frequency; \
   \
-  for(i = 0; i < value_array->nbsamples; i++) { \
+  for(i = 0; i < n_values; i++) { \
     *values = _rsaw_get_##type (self, max, min, amp, off, timeshift, period, frequency, ts); \
-    ts += value_array->sample_interval; \
+    ts += interval; \
     values++; \
   } \
   g_mutex_unlock (self->lock); \
@@ -509,11 +509,11 @@ waveform_triangle_get_##type (GstLFOControlSource *self, GstClockTime timestamp,
 \
 static gboolean \
 waveform_triangle_get_##type##_value_array (GstLFOControlSource *self, \
-   GstClockTime timestamp, GstValueArray * value_array) \
+   GstClockTime timestamp, GstClockTime interval, guint n_values, gpointer *_values) \
 { \
-  gint i; \
+  guint i; \
   GstClockTime ts = timestamp; \
-  g##type *values = (g##type *) value_array->values; \
+  g##type *values = (g##type *) _values; \
   g##type max, min; \
   gdouble amp, off, frequency; \
   GstClockTime timeshift, period; \
@@ -527,9 +527,9 @@ waveform_triangle_get_##type##_value_array (GstLFOControlSource *self, \
   period = self->priv->period; \
   frequency = self->priv->frequency; \
   \
-  for(i = 0; i < value_array->nbsamples; i++) { \
+  for(i = 0; i < n_values; i++) { \
     *values = _triangle_get_##type (self, max, min, amp, off, timeshift, period, frequency, ts); \
-    ts += value_array->sample_interval; \
+    ts += interval; \
     values++; \
   } \
   g_mutex_unlock (self->lock); \

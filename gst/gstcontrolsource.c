@@ -120,12 +120,13 @@ gst_control_source_get_value (GstControlSource * self, GstClockTime timestamp,
  */
 gboolean
 gst_control_source_get_value_array (GstControlSource * self,
-    GstClockTime timestamp, GstValueArray * value_array)
+    GstClockTime timestamp, GstClockTime interval, guint n_values,
+    gpointer * values)
 {
   g_return_val_if_fail (GST_IS_CONTROL_SOURCE (self), FALSE);
 
   if (G_LIKELY (self->get_value_array)) {
-    return self->get_value_array (self, timestamp, value_array);
+    return self->get_value_array (self, timestamp, interval, n_values, values);
   } else {
     GST_ERROR ("Not bound to a specific property yet!");
     return FALSE;

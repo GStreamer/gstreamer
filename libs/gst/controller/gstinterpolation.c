@@ -135,18 +135,18 @@ interpolate_none_get_##type (GstInterpolationControlSource *self, GstClockTime t
 \
 static gboolean \
 interpolate_none_get_##type##_value_array (GstInterpolationControlSource *self, \
-    GstClockTime timestamp, GstValueArray * value_array) \
+    GstClockTime timestamp, GstClockTime interval, guint n_values, gpointer *_values) \
 { \
-  gint i; \
+  guint i; \
   GstClockTime ts = timestamp; \
   GstClockTime next_ts = 0; \
-  ctype *values = (ctype *) value_array->values; \
+  ctype *values = (ctype *) _values; \
   const GValue *ret_val = NULL; \
   ctype ret = 0; \
   GSequenceIter *iter1 = NULL, *iter2 = NULL; \
   \
   g_mutex_lock (self->lock); \
-  for(i = 0; i < value_array->nbsamples; i++) { \
+  for(i = 0; i < n_values; i++) { \
     if (!ret_val || ts >= next_ts) { \
       iter1 = gst_interpolation_control_source_find_control_point_iter (self, ts); \
       if (!iter1) { \
@@ -171,7 +171,7 @@ interpolate_none_get_##type##_value_array (GstInterpolationControlSource *self, 
       ret = g_value_get_##type (ret_val); \
     } \
     *values = ret; \
-    ts += value_array->sample_interval; \
+    ts += interval; \
     values++; \
   } \
   g_mutex_unlock (self->lock); \
@@ -294,19 +294,19 @@ interpolate_trigger_get_##type (GstInterpolationControlSource *self, GstClockTim
 \
 static gboolean \
 interpolate_trigger_get_##type##_value_array (GstInterpolationControlSource *self, \
-    GstClockTime timestamp, GstValueArray * value_array) \
+    GstClockTime timestamp, GstClockTime interval, guint n_values, gpointer *_values) \
 { \
-  gint i; \
+  guint i; \
   GstClockTime ts = timestamp; \
   GstClockTime next_ts = 0; \
-  ctype *values = (ctype *) value_array->values; \
+  ctype *values = (ctype *) _values; \
   const GValue *ret_val = NULL; \
   ctype ret = 0; \
   GSequenceIter *iter1 = NULL, *iter2 = NULL; \
   gboolean triggered = FALSE; \
   \
   g_mutex_lock (self->lock); \
-  for(i = 0; i < value_array->nbsamples; i++) { \
+  for(i = 0; i < n_values; i++) { \
     if (!ret_val || ts >= next_ts) { \
       iter1 = gst_interpolation_control_source_find_control_point_iter (self, ts); \
       if (!iter1) { \
@@ -344,7 +344,7 @@ interpolate_trigger_get_##type##_value_array (GstInterpolationControlSource *sel
       triggered = FALSE; \
     } \
     *values = ret; \
-    ts += value_array->sample_interval; \
+    ts += interval; \
     values++; \
   } \
   g_mutex_unlock (self->lock); \
@@ -455,12 +455,12 @@ interpolate_linear_get_##vtype (GstInterpolationControlSource *self, GstClockTim
 \
 static gboolean \
 interpolate_linear_get_##vtype##_value_array (GstInterpolationControlSource *self, \
-    GstClockTime timestamp, GstValueArray * value_array) \
+    GstClockTime timestamp, GstClockTime interval, guint n_values, gpointer *_values) \
 { \
-  gint i; \
+  guint i; \
   GstClockTime ts = timestamp; \
   GstClockTime next_ts = 0; \
-  g##vtype *values = (g##vtype *) value_array->values; \
+  g##vtype *values = (g##vtype *) _values; \
   GSequenceIter *iter1, *iter2 = NULL; \
   GstControlPoint *cp1 = NULL, *cp2 = NULL, cp = {0, }; \
   g##vtype val1 = 0, val2 = 0, min, max; \
@@ -474,7 +474,7 @@ interpolate_linear_get_##vtype##_value_array (GstInterpolationControlSource *sel
   min = g_value_get_##vtype (&self->priv->minimum_value); \
   max = g_value_get_##vtype (&self->priv->maximum_value); \
   \
-  for(i = 0; i < value_array->nbsamples; i++) { \
+  for(i = 0; i < n_values; i++) { \
     if (timestamp >= next_ts) { \
       iter1 = gst_interpolation_control_source_find_control_point_iter (self, ts); \
       if (!iter1) { \
@@ -499,7 +499,7 @@ interpolate_linear_get_##vtype##_value_array (GstInterpolationControlSource *sel
         val2 = g_value_get_##vtype (&cp2->value); \
     } \
     _interpolate_linear_internal_##vtype (cp1->timestamp, val1, (cp2 ? cp2->timestamp : GST_CLOCK_TIME_NONE), (cp2 ? val2 : 0), ts, min, max, values); \
-    ts += value_array->sample_interval; \
+    ts += interval; \
     values++; \
   } \
   g_mutex_unlock (self->lock); \
@@ -709,18 +709,18 @@ interpolate_cubic_get_##vtype (GstInterpolationControlSource *self, GstClockTime
 \
 static gboolean \
 interpolate_cubic_get_##vtype##_value_array (GstInterpolationControlSource *self, \
-    GstClockTime timestamp, GstValueArray * value_array) \
+    GstClockTime timestamp, GstClockTime interval, guint n_values, gpointer *_values) \
 { \
-  gint i; \
+  guint i; \
   GstClockTime ts = timestamp; \
   GstClockTime next_ts = 0; \
-  g##vtype *values = (g##vtype *) value_array->values; \
+  g##vtype *values = (g##vtype *) _values; \
   GSequenceIter *iter1, *iter2 = NULL; \
   GstControlPoint *cp1 = NULL, *cp2 = NULL, cp = {0, }; \
   g##vtype val1 = 0, val2 = 0, min, max; \
   \
   if (self->priv->nvalues <= 2) \
-    return interpolate_linear_get_##vtype##_value_array (self, timestamp, value_array); \
+    return interpolate_linear_get_##vtype##_value_array (self, timestamp, interval, n_values, values); \
   \
   g_mutex_lock (self->lock); \
   \
@@ -731,7 +731,7 @@ interpolate_cubic_get_##vtype##_value_array (GstInterpolationControlSource *self
   min = g_value_get_##vtype (&self->priv->minimum_value); \
   max = g_value_get_##vtype (&self->priv->maximum_value); \
   \
-  for(i = 0; i < value_array->nbsamples; i++) { \
+  for(i = 0; i < n_values; i++) { \
     if (timestamp >= next_ts) { \
       iter1 = gst_interpolation_control_source_find_control_point_iter (self, ts); \
       if (!iter1) { \
@@ -756,7 +756,7 @@ interpolate_cubic_get_##vtype##_value_array (GstInterpolationControlSource *self
         val2 = g_value_get_##vtype (&cp2->value); \
     } \
     _interpolate_cubic_get_##vtype (self, cp1, val1, cp2, val2, timestamp, min, max, values); \
-    ts += value_array->sample_interval; \
+    ts += interval; \
     values++; \
   } \
   g_mutex_unlock (self->lock); \

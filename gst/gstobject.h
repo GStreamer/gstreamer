@@ -250,8 +250,9 @@ GstControlSource *
 
 GValue *         gst_object_get_value           (GstObject * object, const gchar * property_name,
                                                  GstClockTime timestamp);
-gboolean         gst_object_get_value_array     (GstObject * object, GstClockTime timestamp,
-                                                 GstValueArray * value_array);
+gboolean         gst_object_get_value_array     (GstObject * object, const gchar * property_name,
+                                                 GstClockTime timestamp, GstClockTime interval,
+                                                 guint n_values, gpointer *values);
 
 GstClockTime     gst_object_get_control_rate    (GstObject * object);
 void             gst_object_set_control_rate    (GstObject * object, GstClockTime control_rate);

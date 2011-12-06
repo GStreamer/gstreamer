@@ -1429,36 +1429,39 @@ gst_object_get_value (GstObject * object, const gchar * property_name,
 /**
  * gst_object_get_value_array:
  * @object: the object that has controlled properties
+ * @property_name: the name of the property to get
  * @timestamp: the time that should be processed
- * @value_array: array to put control-values in
+ * @interval: the time spacing between subsequent values
+ * @n_values: the number of values
+ * @values: array to put control-values in
  *
- * Function to be able to get an array of values for one element properties
+ * Gets a number of values for the given controllered property starting at the
+ * requested time. The array @values need to hold enough space for @n_values of
+ * the same type as the objects property's type.
  *
- * If the GstValueArray->values array is NULL, it will be created by the function.
- * The type of the values in the array are the same as the property's type.
+ * This function is useful if one wants to e.g. draw a graph of the control
+ * curve or apply a control curve sample by sample.
  *
- * The g_object_* functions are just convenience functions for GObject
- *
- * Returns: %TRUE if the given array(s) could be filled, %FALSE otherwise
+ * Returns: %TRUE if the given array could be filled, %FALSE otherwise
  */
 gboolean
-gst_object_get_value_array (GstObject * object, GstClockTime timestamp,
-    GstValueArray * value_array)
+gst_object_get_value_array (GstObject * object, const gchar * property_name,
+    GstClockTime timestamp, GstClockTime interval, guint n_values,
+    gpointer * values)
 {
   gboolean res = FALSE;
   GstControlledProperty *prop;
 
   g_return_val_if_fail (GST_IS_OBJECT (object), FALSE);
+  g_return_val_if_fail (property_name, FALSE);
   g_return_val_if_fail (GST_CLOCK_TIME_IS_VALID (timestamp), FALSE);
-  g_return_val_if_fail (value_array, FALSE);
-  g_return_val_if_fail (value_array->property_name, FALSE);
-  g_return_val_if_fail (value_array->values, FALSE);
+  g_return_val_if_fail (GST_CLOCK_TIME_IS_VALID (interval), FALSE);
+  g_return_val_if_fail (values, FALSE);
 
   GST_OBJECT_LOCK (object);
-  if ((prop = gst_object_find_controlled_property (object,
-              value_array->property_name))) {
+  if ((prop = gst_object_find_controlled_property (object, property_name))) {
     res = gst_control_source_get_value_array (prop->csource, timestamp,
-        value_array);
+        interval, n_values, values);
   }
   GST_OBJECT_UNLOCK (object);
   return res;

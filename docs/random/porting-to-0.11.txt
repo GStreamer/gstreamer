@@ -444,5 +444,7 @@ The 0.11 porting guide
     gst_controller_set_property_disabled -> gst_object_set_controlled_property_disabled
 
     gst_object_get_value_arrays has been removed. Loop over the controlled
-    properties fetch the value array.
+    properties fetch the value array. Also GstValueArray is gone. The fields of
+    GstValueArray are now passed directly to gst_object_get_value_array as
+    arguments.
 
