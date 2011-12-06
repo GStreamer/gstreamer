@@ -762,11 +762,9 @@ gst_video_format_new_template_caps (GstVideoFormat format)
     gst_value_list_append_value (&value, &v);
     g_value_set_boolean (&v, FALSE);
     gst_value_list_append_value (&value, &v);
+    g_value_unset (&v);
 
-    gst_structure_set_value (structure, "interlaced", &value);
-
-    g_value_reset (&value);
-    g_value_reset (&v);
+    gst_structure_take_value (structure, "interlaced", &value);
   }
 
   return caps;
