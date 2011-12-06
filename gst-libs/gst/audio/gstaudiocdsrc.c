@@ -443,7 +443,8 @@ gst_audio_cd_src_convert (GstAudioCdSrc * src, GstFormat src_format,
     return TRUE;
   }
 
-  started = GST_OBJECT_FLAG_IS_SET (GST_BASE_SRC (src), GST_BASE_SRC_STARTED);
+  started =
+      GST_OBJECT_FLAG_IS_SET (GST_BASE_SRC (src), GST_BASE_SRC_FLAG_STARTED);
 
   if (src_format == track_format) {
     if (!started)
@@ -573,7 +574,7 @@ gst_audio_cd_src_query (GstBaseSrc * basesrc, GstQuery * query)
   GstAudioCdSrc *src = GST_AUDIO_CD_SRC (basesrc);
   gboolean started;
 
-  started = GST_OBJECT_FLAG_IS_SET (basesrc, GST_BASE_SRC_STARTED);
+  started = GST_OBJECT_FLAG_IS_SET (basesrc, GST_BASE_SRC_FLAG_STARTED);
 
   GST_LOG_OBJECT (src, "handling %s query",
       gst_query_type_get_name (GST_QUERY_TYPE (query)));
@@ -859,7 +860,7 @@ gst_audio_cd_src_handle_event (GstBaseSrc * basesrc, GstEvent * event)
       gdouble rate;
       gint64 start, stop;
 
-      if (!GST_OBJECT_FLAG_IS_SET (basesrc, GST_BASE_SRC_STARTED)) {
+      if (!GST_OBJECT_FLAG_IS_SET (basesrc, GST_BASE_SRC_FLAG_STARTED)) {
         GST_DEBUG_OBJECT (src, "seek failed: device not open");
         break;
       }
@@ -918,7 +919,7 @@ gst_audio_cd_src_uri_get_uri (GstURIHandler * handler)
    * existing URI perhaps? */
   g_free (src->uri);
 
-  if (GST_OBJECT_FLAG_IS_SET (GST_BASE_SRC (src), GST_BASE_SRC_STARTED)) {
+  if (GST_OBJECT_FLAG_IS_SET (GST_BASE_SRC (src), GST_BASE_SRC_FLAG_STARTED)) {
     src->uri =
         g_strdup_printf ("cdda://%s#%d", src->device,
         (src->uri_track > 0) ? src->uri_track : 1);
@@ -1416,20 +1417,11 @@ gst_audio_cd_src_start (GstBaseSrc * basesrc)
   g_free (device);
   device = NULL;
 
-  if (!ret) {
-    GST_DEBUG_OBJECT (basesrc, "failed to open device");
-    /* subclass (should have) posted an error message with the details */
-    gst_audio_cd_src_stop (basesrc);
-    return FALSE;
-  }
+  if (!ret)
+    goto open_failed;
 
-  if (src->num_tracks == 0 || src->tracks == NULL) {
-    GST_DEBUG_OBJECT (src, "no tracks");
-    GST_ELEMENT_ERROR (src, RESOURCE, OPEN_READ,
-        (_("This CD has no audio tracks")), (NULL));
-    gst_audio_cd_src_stop (basesrc);
-    return FALSE;
-  }
+  if (src->num_tracks == 0 || src->tracks == NULL)
+    goto no_tracks;
 
   /* need to calculate disc IDs before we ditch the data tracks */
   gst_audio_cd_src_calculate_cddb_id (src);
@@ -1456,13 +1448,8 @@ gst_audio_cd_src_start (GstBaseSrc * basesrc)
   while (src->num_tracks > 0 && !src->tracks[src->num_tracks - 1].is_audio)
     --src->num_tracks;
 
-  if (src->num_tracks == 0) {
-    GST_DEBUG_OBJECT (src, "no audio tracks");
-    GST_ELEMENT_ERROR (src, RESOURCE, OPEN_READ,
-        (_("This CD has no audio tracks")), (NULL));
-    gst_audio_cd_src_stop (basesrc);
-    return FALSE;
-  }
+  if (src->num_tracks == 0)
+    goto no_tracks;
 
   gst_audio_cd_src_add_tags (src);
 
@@ -1485,6 +1472,23 @@ gst_audio_cd_src_start (GstBaseSrc * basesrc)
   gst_audio_cd_src_update_duration (src);
 
   return TRUE;
+
+  /* ERRORS */
+open_failed:
+  {
+    GST_DEBUG_OBJECT (basesrc, "failed to open device");
+    /* subclass (should have) posted an error message with the details */
+    gst_audio_cd_src_stop (basesrc);
+    return FALSE;
+  }
+no_tracks:
+  {
+    GST_DEBUG_OBJECT (src, "no audio tracks");
+    GST_ELEMENT_ERROR (src, RESOURCE, OPEN_READ,
+        (_("This CD has no audio tracks")), (NULL));
+    gst_audio_cd_src_stop (basesrc);
+    return FALSE;
+  }
 }
 
 static void
