@@ -58,6 +58,8 @@ struct _GstOMXAudioEnc
    * the first buffer */
   gboolean started;
 
+  GstClockTime last_upstream_ts;
+
   /* TRUE if upstream is EOS */
   gboolean eos;
 
