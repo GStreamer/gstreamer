@@ -364,7 +364,8 @@ compute_resync_marker_size (const GstMpeg4VideoObjectPlane * vop,
  */
 static GstMpeg4ParseResult
 gst_mpeg4_next_resync (GstMpeg4Packet * packet,
-    const GstMpeg4VideoObjectPlane * vop, const guint8 * data, gsize size)
+    const GstMpeg4VideoObjectPlane * vop, const guint8 * data, gsize size,
+    gboolean first_resync_marker)
 {
   guint markersize = 0, off1, off2;
   guint32 mask = 0xff, pattern = 0xff;
@@ -377,7 +378,11 @@ gst_mpeg4_next_resync (GstMpeg4Packet * packet,
 
   markersize = compute_resync_marker_size (vop, &pattern, &mask);
 
-  off1 = gst_byte_reader_masked_scan_uint32 (&br, mask, pattern, 0, size);
+  if (first_resync_marker) {
+    off1 = 0;
+  } else {
+    off1 = gst_byte_reader_masked_scan_uint32 (&br, mask, pattern, 0, size);
+  }
 
   if (off1 == -1)
     return GST_MPEG4_PARSER_NO_PACKET;
@@ -425,6 +430,7 @@ gst_mpeg4_parse (GstMpeg4Packet * packet, gboolean skip_user_data,
   gint off1, off2;
   GstByteReader br;
   GstMpeg4ParseResult resync_res;
+  static guint first_resync_marker = TRUE;
 
   gst_byte_reader_init (&br, data, size);
 
@@ -438,7 +444,9 @@ gst_mpeg4_parse (GstMpeg4Packet * packet, gboolean skip_user_data,
 
   if (vop) {
     resync_res =
-        gst_mpeg4_next_resync (packet, vop, data + offset, size - offset);
+        gst_mpeg4_next_resync (packet, vop, data + offset, size - offset,
+        first_resync_marker);
+    first_resync_marker = FALSE;
 
     /*  We found a complet slice */
     if (resync_res == GST_MPEG4_PARSER_OK)
@@ -449,6 +457,8 @@ gst_mpeg4_parse (GstMpeg4Packet * packet, gboolean skip_user_data,
       goto find_end;
     } else if (resync_res == GST_MPEG4_PARSER_NO_PACKET)
       return resync_res;
+  } else {
+    first_resync_marker = TRUE;
   }
 
   off1 = gst_byte_reader_masked_scan_uint32 (&br, 0xffffff00, 0x00000100,
