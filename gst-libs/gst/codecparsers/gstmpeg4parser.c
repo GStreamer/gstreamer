@@ -389,7 +389,7 @@ gst_mpeg4_next_resync (GstMpeg4Packet * packet,
   packet->marker_size = markersize;
 
   off2 = gst_byte_reader_masked_scan_uint32 (&br, mask, pattern,
-      off1, size - off1);
+      off1 + 2, size - off1 - 2);
 
   if (off2 == -1)
     return GST_MPEG4_PARSER_NO_PACKET_END;
