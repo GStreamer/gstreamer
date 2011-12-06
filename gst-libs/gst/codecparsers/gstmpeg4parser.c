@@ -1616,7 +1616,7 @@ gst_mpeg4_parse_video_packet_header (GstMpeg4VideoPacketHdr * videopackethdr,
 
   CHECK_REMAINING (&br, markersize);
 
-  if (gst_bit_reader_get_bits_uint32_unchecked (&br, markersize) != 0x01)
+  if (gst_bit_reader_get_bits_uint32_unchecked (&br, markersize + 1) != 0x01)
     goto failed;
 
   if (vol->shape != GST_MPEG4_RECTANGULAR) {
