@@ -171,7 +171,6 @@ typedef struct
 
 static GstFlowQuarks flow_quarks[] = {
   {GST_FLOW_CUSTOM_SUCCESS, "custom-success", 0},
-  {GST_FLOW_RESEND, "resend", 0},
   {GST_FLOW_OK, "ok", 0},
   {GST_FLOW_NOT_LINKED, "not-linked", 0},
   {GST_FLOW_WRONG_STATE, "wrong-state", 0},

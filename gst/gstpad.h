@@ -125,8 +125,6 @@ typedef enum {
 
 /**
  * GstFlowReturn:
- * @GST_FLOW_RESEND:		 Resend buffer, possibly with new caps (not
- *                                 sent yet) (unused/unimplemented).
  * @GST_FLOW_OK:		 Data passing was ok.
  * @GST_FLOW_NOT_LINKED:	 Pad is not linked.
  * @GST_FLOW_WRONG_STATE:	 Pad is in wrong state.
@@ -164,7 +162,6 @@ typedef enum {
   GST_FLOW_CUSTOM_SUCCESS = 100,
 
   /* core predefined */
-  GST_FLOW_RESEND	  =  1,
   GST_FLOW_OK		  =  0,
   /* expected failures */
   GST_FLOW_NOT_LINKED     = -1,

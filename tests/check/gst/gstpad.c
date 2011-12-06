@@ -814,11 +814,6 @@ GST_START_TEST (test_flowreturn)
   quark = gst_flow_to_quark (ret);
   fail_if (strcmp (g_quark_to_string (quark), "eos"));
 
-  ret = GST_FLOW_RESEND;
-  fail_if (strcmp (gst_flow_get_name (ret), "resend"));
-  quark = gst_flow_to_quark (ret);
-  fail_if (strcmp (g_quark_to_string (quark), "resend"));
-
   /* custom returns */
   ret = GST_FLOW_CUSTOM_SUCCESS;
   fail_if (strcmp (gst_flow_get_name (ret), "custom-success"));
