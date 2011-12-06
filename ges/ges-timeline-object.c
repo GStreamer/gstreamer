@@ -108,6 +108,7 @@ enum
   EFFECT_ADDED,
   EFFECT_REMOVED,
   TRACK_OBJECT_ADDED,
+  TRACK_OBJECT_REMOVED,
   LAST_SIGNAL
 };
 
@@ -344,7 +345,7 @@ ges_timeline_object_class_init (GESTimelineObjectClass * klass)
   /**
    * GESTimelineObject::track-object-added
    * @object: the #GESTimelineObject
-   * @effect: the #GESTrackObject that was added.
+   * @tckobj: the #GESTrackObject that was added.
    *
    * Will be emitted after a track object was added to the object.
    *
@@ -352,6 +353,20 @@ ges_timeline_object_class_init (GESTimelineObjectClass * klass)
    */
   ges_timeline_object_signals[TRACK_OBJECT_ADDED] =
       g_signal_new ("track-object-added", G_TYPE_FROM_CLASS (klass),
+      G_SIGNAL_RUN_FIRST, 0, NULL, NULL, ges_marshal_VOID__OBJECT,
+      G_TYPE_NONE, 1, GES_TYPE_TRACK_OBJECT);
+
+  /**
+   * GESTimelineObject::track-object-removed
+   * @object: the #GESTimelineObject
+   * @tckobj: the #GESTrackObject that was removed.
+   *
+   * Will be emitted after a track object was added to the object.
+   *
+   * Since: 0.10.2
+   */
+  ges_timeline_object_signals[TRACK_OBJECT_REMOVED] =
+      g_signal_new ("track-object-removed", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_FIRST, 0, NULL, NULL, ges_marshal_VOID__OBJECT,
       G_TYPE_NONE, 1, GES_TYPE_TRACK_OBJECT);
 
@@ -619,7 +634,9 @@ ges_timeline_object_release_track_object (GESTimelineObject * object,
     /* emit 'object-removed' */
     g_signal_emit (object, ges_timeline_object_signals[EFFECT_REMOVED], 0,
         GES_TRACK_EFFECT (trackobject));
-  }
+  } else
+    g_signal_emit (object, ges_timeline_object_signals[TRACK_OBJECT_REMOVED], 0,
+        GES_TRACK_OBJECT (trackobject));
 
   ges_track_object_set_timeline_object (trackobject, NULL);
 
