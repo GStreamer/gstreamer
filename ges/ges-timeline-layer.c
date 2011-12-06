@@ -36,6 +36,9 @@
 
 #define LAYER_HEIGHT 10
 
+static void
+track_object_removed_cb (GESTimelineObject * object,
+    GESTrackObject * track_object, GESTimelineLayer * layer);
 static void track_object_added_cb (GESTimelineObject * object,
     GESTrackObject * track_object, GESTimelineLayer * layer);
 static void track_object_changed_cb (GESTrackObject * track_object,
@@ -312,6 +315,8 @@ ges_timeline_layer_add_object (GESTimelineLayer * layer,
     if (GES_IS_TIMELINE_SOURCE (object)) {
       g_signal_connect (G_OBJECT (object), "track-object-added",
           G_CALLBACK (track_object_added_cb), layer);
+      g_signal_connect (G_OBJECT (object), "track-object-removed",
+          G_CALLBACK (track_object_removed_cb), layer);
     }
   }
 
@@ -372,13 +377,12 @@ static void
 track_object_removed_cb (GESTimelineObject * object,
     GESTrackObject * track_object, GESTimelineLayer * layer)
 {
+
   if (GES_IS_TRACK_SOURCE (track_object)) {
     g_signal_handlers_disconnect_by_func (track_object, track_object_changed_cb,
         object);
     calculate_transitions (track_object, layer);
   }
-
-  g_object_unref (layer);
   return;
 }
 
