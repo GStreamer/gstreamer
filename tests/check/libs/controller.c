@@ -914,12 +914,11 @@ GST_END_TEST;
 /* test retrieval of an array of values with get_value_array() */
 GST_START_TEST (controller_interpolation_linear_value_array)
 {
-#if 0
   GstInterpolationControlSource *csource;
   GstElement *elem;
   gboolean res;
   GValue val_ulong = { 0, };
-  GstValueArray values = { NULL, };
+  gulong *values;
 
   elem = gst_element_factory_make ("testmonosource", "test_source");
 
@@ -948,22 +947,18 @@ GST_START_TEST (controller_interpolation_linear_value_array)
   fail_unless (res, NULL);
 
   /* now pull in values for some timestamps */
-  values.property_name = (char *) "ulong";
-  values.nbsamples = 3;
-  values.sample_interval = GST_SECOND;
-  values.values = (gpointer) g_new (gulong, 3);
+  values = g_new (gulong, 3);
 
   fail_unless (gst_control_source_get_value_array (GST_CONTROL_SOURCE (csource),
-          0, &values));
-  fail_unless_equals_int (((gulong *) values.values)[0], 0);
-  fail_unless_equals_int (((gulong *) values.values)[1], 50);
-  fail_unless_equals_int (((gulong *) values.values)[2], 100);
+          0, GST_SECOND, 3, (gpointer) values));
+  fail_unless_equals_int ((values)[0], 0);
+  fail_unless_equals_int ((values)[1], 50);
+  fail_unless_equals_int ((values)[2], 100);
 
   g_object_unref (csource);
 
-  g_free (values.values);
+  g_free (values);
   gst_object_unref (elem);
-#endif
 }
 
 GST_END_TEST;
