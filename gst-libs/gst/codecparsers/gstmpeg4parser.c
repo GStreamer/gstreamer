@@ -290,6 +290,7 @@ compute_resync_marker_size (const GstMpeg4VideoObjectPlane * vop,
     guint32 * pattern, guint32 * mask)
 {
   guint8 off;
+
   /* FIXME handle the binary only shape case */
   switch (vop->coding_type) {
     case (GST_MPEG4_I_VOP):
@@ -311,36 +312,36 @@ compute_resync_marker_size (const GstMpeg4VideoObjectPlane * vop,
   if (mask && pattern) {
     switch (off) {
       case 16:
-        *pattern = 0x00008;
-        *mask = 0xfffff;
+        *pattern = 0x00008000;
+        *mask = 0xffff8000;
         break;
       case 17:
-        *pattern = 0x00004;
-        *mask = 0xfffff;
+        *pattern = 0x00004000;
+        *mask = 0xffffc000;
         break;
       case 18:
-        *pattern = 0x00002;
-        *mask = 0xfffff;
+        *pattern = 0x00002000;
+        *mask = 0xffffe000;
         break;
       case 19:
-        *pattern = 0x00001;
-        *mask = 0xfffff;
+        *pattern = 0x00001000;
+        *mask = 0xfffff000;
         break;
       case 20:
-        *pattern = 0x000008;
-        *mask = 0xffffff;
+        *pattern = 0x0000080;
+        *mask = 0xfffff800;
         break;
       case 21:
-        *pattern = 0x000004;
-        *mask = 0xffffff;
+        *pattern = 0x00000400;
+        *mask = 0xfffffc00;
         break;
       case 22:
-        *pattern = 0x000002;
-        *mask = 0xffffff;
+        *pattern = 0x00000200;
+        *mask = 0xfffffe00;
         break;
       case 23:
-        *pattern = 0x000001;
-        *mask = 0xffffff;
+        *pattern = 0x00000100;
+        *mask = 0xffffff00;
         break;
     }
   }
@@ -907,6 +908,7 @@ gst_mpeg4_parse_video_object_layer (GstMpeg4VideoObjectLayer * vol,
     GstMpeg4VisualObject * vo, const guint8 * data, gsize size)
 {
   guint8 video_object_layer_start_code;
+
   /* Used for enums types */
   guint8 tmp;
   GstBitReader br = GST_BIT_READER_INIT (data, size);
