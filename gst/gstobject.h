@@ -250,8 +250,6 @@ GstControlSource *
 
 GValue *         gst_object_get_value           (GstObject * object, const gchar * property_name,
                                                  GstClockTime timestamp);
-gboolean         gst_object_get_value_arrays    (GstObject * object, GstClockTime timestamp,
-                                                 GSList * value_arrays);
 gboolean         gst_object_get_value_array     (GstObject * object, GstClockTime timestamp,
                                                  GstValueArray * value_array);
 

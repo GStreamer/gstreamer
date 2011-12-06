@@ -1427,40 +1427,6 @@ gst_object_get_value (GstObject * object, const gchar * property_name,
 }
 
 /**
- * gst_object_get_value_arrays:
- * @object: the object that has controlled properties
- * @timestamp: the time that should be processed
- * @value_arrays: list to return the control-values in
- *
- * Function to be able to get an array of values for one or more given element
- * properties.
- *
- * If the GstValueArray->values array in list nodes is NULL, it will be created
- * by the function.
- * The type of the values in the array are the same as the property's type.
- *
- * The g_object_* functions are just convenience functions for GObject
- *
- * Returns: %TRUE if the given array(s) could be filled, %FALSE otherwise
- */
-gboolean
-gst_object_get_value_arrays (GstObject * object, GstClockTime timestamp,
-    GSList * value_arrays)
-{
-  gboolean res = TRUE;
-  GSList *node;
-
-  g_return_val_if_fail (GST_IS_OBJECT (object), FALSE);
-  g_return_val_if_fail (GST_CLOCK_TIME_IS_VALID (timestamp), FALSE);
-  g_return_val_if_fail (value_arrays, FALSE);
-
-  for (node = value_arrays; (res && node); node = g_slist_next (node)) {
-    res = gst_object_get_value_array (object, timestamp, node->data);
-  }
-  return res;
-}
-
-/**
  * gst_object_get_value_array:
  * @object: the object that has controlled properties
  * @timestamp: the time that should be processed
