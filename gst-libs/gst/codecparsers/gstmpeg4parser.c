@@ -443,12 +443,12 @@ gst_mpeg4_parse (GstMpeg4Packet * packet, gboolean skip_user_data,
     /*  We found a complet slice */
     if (resync_res == GST_MPEG4_PARSER_OK)
       return resync_res;
-
     else if (resync_res == GST_MPEG4_PARSER_NO_PACKET_END) {
       /* It doesn't mean there is no standard packet end, look for it */
       off1 = packet->offset;
       goto find_end;
-    }
+    } else if (resync_res == GST_MPEG4_PARSER_NO_PACKET)
+      return resync_res;
   }
 
   off1 = gst_byte_reader_masked_scan_uint32 (&br, 0xffffff00, 0x00000100,
