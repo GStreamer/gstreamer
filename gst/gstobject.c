@@ -1448,7 +1448,7 @@ gst_object_get_value (GstObject * object, const gchar * property_name,
 gboolean
 gst_object_get_value_array (GstObject * object, const gchar * property_name,
     GstClockTime timestamp, GstClockTime interval, guint n_values,
-    gpointer * values)
+    gpointer values)
 {
   gboolean res = FALSE;
   GstControlledProperty *prop;

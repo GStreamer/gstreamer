@@ -90,7 +90,7 @@ typedef gboolean (* GstControlSourceGetValue) (GstControlSource *self,
  *
  */
 typedef gboolean (* GstControlSourceGetValueArray) (GstControlSource *self, 
-    GstClockTime timestamp, GstClockTime interval, guint n_values, gpointer *values);
+    GstClockTime timestamp, GstClockTime interval, guint n_values, gpointer values);
 
 /**
  * GstControlSourceBind
@@ -147,7 +147,7 @@ gboolean       gst_control_source_get_value             (GstControlSource *self,
                                                          GValue *value);
 gboolean       gst_control_source_get_value_array       (GstControlSource *self, GstClockTime timestamp,
                                                          GstClockTime interval, guint n_values,
-                                                         gpointer *values);
+                                                         gpointer values);
 
 gboolean       gst_control_source_bind                  (GstControlSource *self, GParamSpec *pspec);
 

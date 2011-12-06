@@ -121,7 +121,7 @@ gst_control_source_get_value (GstControlSource * self, GstClockTime timestamp,
 gboolean
 gst_control_source_get_value_array (GstControlSource * self,
     GstClockTime timestamp, GstClockTime interval, guint n_values,
-    gpointer * values)
+    gpointer values)
 {
   g_return_val_if_fail (GST_IS_CONTROL_SOURCE (self), FALSE);
 
