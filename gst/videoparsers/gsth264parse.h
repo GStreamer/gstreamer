@@ -105,6 +105,9 @@ struct _GstH264Parse
   /* props */
   gboolean split_packetized;
   guint interval;
+
+  GstClockTime pending_key_unit_ts;
+  GstEvent *force_key_unit_event;
 };
 
 struct _GstH264ParseClass
