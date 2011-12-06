@@ -379,7 +379,7 @@ gst_mpeg4_next_resync (GstMpeg4Packet * packet,
 
   off1 = gst_byte_reader_masked_scan_uint32 (&br, mask, pattern, 0, size);
 
-  if (off1 < 0)
+  if (off1 == -1)
     return GST_MPEG4_PARSER_NO_PACKET;
 
   GST_DEBUG ("Resync code found at %i", off1);
@@ -391,7 +391,7 @@ gst_mpeg4_next_resync (GstMpeg4Packet * packet,
   off2 = gst_byte_reader_masked_scan_uint32 (&br, mask, pattern,
       off1, size - off1);
 
-  if (off2 < 0)
+  if (off2 == -1)
     return GST_MPEG4_PARSER_NO_PACKET_END;
 
   packet->size = off1 - off2;
@@ -451,7 +451,7 @@ gst_mpeg4_parse (GstMpeg4Packet * packet, gboolean skip_user_data,
   off1 = gst_byte_reader_masked_scan_uint32 (&br, 0xffffff00, 0x00000100,
       offset, size - offset);
 
-  if (off1 < 0) {
+  if (off1 == -1) {
     GST_DEBUG ("No start code prefix in this buffer");
     return GST_MPEG4_PARSER_NO_PACKET;
   }
@@ -471,7 +471,7 @@ find_end:
   off2 = gst_byte_reader_masked_scan_uint32 (&br, 0xffffff00, 0x00000100,
       off1 + 4, size - off1 - 4);
 
-  if (off2 < 0) {
+  if (off2 == -1) {
     GST_DEBUG ("Packet start %d, No end found", off1 + 4);
 
     packet->size = G_MAXUINT;
@@ -519,7 +519,7 @@ gst_h263_parse (GstMpeg4Packet * packet,
 
   off1 = find_psc (&br);
 
-  if (off1 < 0) {
+  if (off1 == -1) {
     GST_DEBUG ("No start code prefix in this buffer");
     return GST_MPEG4_PARSER_NO_PACKET;
   }
@@ -529,7 +529,7 @@ gst_h263_parse (GstMpeg4Packet * packet,
 
   off2 = find_psc (&br);
 
-  if (off2 < 0) {
+  if (off2 == -1) {
     GST_DEBUG ("Packet start %d, No end found", off1);
 
     packet->size = G_MAXUINT;
