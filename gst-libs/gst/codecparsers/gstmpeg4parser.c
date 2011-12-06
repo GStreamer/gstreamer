@@ -444,8 +444,11 @@ gst_mpeg4_parse (GstMpeg4Packet * packet, gboolean skip_user_data,
     if (resync_res == GST_MPEG4_PARSER_OK)
       return resync_res;
 
-    else if (resync_res == GST_MPEG4_PARSER_OK)
+    else if (resync_res == GST_MPEG4_PARSER_NO_PACKET_END) {
+      /* It doesn't mean there is no standard packet end, look for it */
+      off1 = packet->offset;
       goto find_end;
+    }
   }
 
   off1 = gst_byte_reader_masked_scan_uint32 (&br, 0xffffff00, 0x00000100,
