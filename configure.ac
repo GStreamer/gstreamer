@@ -21,17 +21,13 @@ m4_define([gst_plugins_base_micro_version], [16])
 m4_define([gst_plugins_base_version],
           [gst_plugins_base_major_version.gst_plugins_base_minor_version.gst_plugins_base_micro_version])
 
+# VA-API minimum version number
+m4_define([va_api_x11_version], [0.31.0])
+m4_define([va_api_glx_version], [0.32.0])
+
 # libva package version number
-m4_define([libva_sds_version_0_29], [8])
-m4_define([libva_sds_package_version_0_29], [0.29-2+sds11])
-m4_define([libva_sds_version_0_30], [1])
-m4_define([libva_sds_package_version_0_30], [0.30-1+sds1])
-m4_define([libva_glx_sds_version_0_30], [5])
-m4_define([libva_glx_sds_package_version_0_30], [0.30.4-1+sds6])
-m4_define([libva_glx_sds_version_0_31], [1])
-m4_define([libva_glx_sds_package_version_0_31], [0.31.0-1+sds1])
-m4_define([libva_sds_version], [libva_glx_sds_version_0_31])
-m4_define([libva_sds_package_version], [libva_glx_sds_package_version_0_31])
+m4_define([libva_x11_package_version], [1.0.3])
+m4_define([libva_glx_package_version], [1.0.9])
 
 # gtk-doc version number
 # XXX: introspection annotations require gtk-doc >= 1.12
@@ -54,8 +50,8 @@ AC_SUBST(TODAY)
 GST_VAAPI_MAJOR_VERSION=gst_vaapi_major_version
 AC_SUBST(GST_VAAPI_MAJOR_VERSION)
 
-LIBVA_SDS_PACKAGE_VERSION=libva_sds_package_version
-AC_SUBST(LIBVA_SDS_PACKAGE_VERSION)
+LIBVA_PACKAGE_VERSION=libva_x11_package_version
+AC_SUBST(LIBVA_PACKAGE_VERSION)
 
 dnl Versions for GStreamer and plugins-base
 GST_MAJORMINOR=gst_major_minor_version
@@ -299,12 +295,7 @@ VA_VERSION=`$PKG_CONFIG --modversion libva`
 VA_MAJOR_VERSION=`echo "$VA_VERSION" | cut -d'.' -f1`
 VA_MINOR_VERSION=`echo "$VA_VERSION" | cut -d'.' -f2`
 VA_MICRO_VERSION=`echo "$VA_VERSION" | cut -d'.' -f3`
-VA_SDS_VERSION=`$PKG_CONFIG libva --variable sdsversion`
-
 VA_VERSION_STR="$VA_VERSION"
-if test -n "$VA_SDS_VERSION"; then
-    VA_VERSION_STR="$VA_VERSION_STR-sds$VA_SDS_VERSION"
-fi
 
 pkgconfigdir=${libdir}/pkgconfig
 AC_SUBST(pkgconfigdir)
