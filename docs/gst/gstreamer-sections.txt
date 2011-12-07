@@ -1999,6 +1999,8 @@ gst_preset_rename_preset
 gst_preset_delete_preset
 gst_preset_set_meta
 gst_preset_get_meta
+gst_preset_set_app_dir
+gst_preset_get_app_dir
 <SUBSECTION Standard>
 GST_PRESET
 GST_IS_PRESET

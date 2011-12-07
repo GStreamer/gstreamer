@@ -34,6 +34,13 @@
  * native preset format of those wrapped plugins.
  * One method that is useful to be overridden is gst_preset_get_property_names().
  * With that one can control which properties are saved and in which order.
+ *
+ * The default implementation supports presets located in a system directory, 
+ * application specific directory and in the users home directory. When getting
+ * a list of presets individual presets are read and overlaid in 1) system, 
+ * 2) application and 3) user order. Whenever an earlier entry is newer, the
+ * later entries will be updated. 
+ * 
  */
 /* FIXME:
  * - non racyness
@@ -106,10 +113,17 @@ GST_DEBUG_CATEGORY_STATIC (GST_CAT_DEFAULT);
 #define PRESET_HEADER_VERSION "version"
 
 static GQuark preset_user_path_quark = 0;
+static GQuark preset_app_path_quark = 0;
 static GQuark preset_system_path_quark = 0;
 static GQuark preset_quark = 0;
 
 /*static GQuark property_list_quark = 0;*/
+
+/* the application can set a custom path that is checked in addition to standart
+ * system and user dirs. This helps to develop new presets first local to the
+ * application.
+ */
+static gchar *preset_app_dir = NULL;
 
 /* default iface implementation */
 
@@ -119,16 +133,17 @@ static gboolean gst_preset_default_save_presets_file (GstPreset * preset);
  * preset_get_paths:
  * @preset: a #GObject that implements #GstPreset
  * @preset_user_path: location for path or %NULL
+ * @preset_app_path: location for path or %NULL
  * @preset_system_path: location for path or %NULL
  *
- * Fetch the preset_path for user local and system wide settings. Don't free
- * after use.
+ * Fetch the preset_path for user local, application specific and system wide
+ * settings. Don't free after use.
  *
  * Returns: %FALSE if no paths could be found.
  */
 static gboolean
 preset_get_paths (GstPreset * preset, const gchar ** preset_user_path,
-    const gchar ** preset_system_path)
+    const gchar ** preset_app_path, const gchar ** preset_system_path)
 {
   GType type = G_TYPE_FROM_INSTANCE (preset);
   gchar *preset_path;
@@ -159,6 +174,22 @@ preset_get_paths (GstPreset * preset, const gchar ** preset_user_path,
       g_type_set_qdata (type, preset_user_path_quark, preset_path);
     }
     *preset_user_path = preset_path;
+  }
+
+  if (preset_app_path) {
+    if (preset_app_dir) {
+      if (!(preset_path = g_type_get_qdata (type, preset_system_path_quark))) {
+        preset_path = g_strdup_printf ("%s" G_DIR_SEPARATOR_S "%s.prs",
+            preset_app_dir, element_name);
+        GST_INFO_OBJECT (preset, "application_preset_path: '%s'", preset_path);
+
+        /* cache the preset path to the type */
+        g_type_set_qdata (type, preset_app_path_quark, preset_path);
+      }
+      *preset_app_path = preset_path;
+    } else {
+      *preset_app_path = NULL;
+    }
   }
 
   if (preset_system_path) {
@@ -195,10 +226,30 @@ preset_skip_property (GParamSpec * property)
   return FALSE;
 }
 
-/* caller must free @preset_version after use */
+static guint64
+preset_parse_version (const gchar * str_version)
+{
+  guint major, minor, micro, nano;
+  gint num;
+
+  major = minor = micro = nano = 0;
+
+  /* parse version (e.g. 0.10.15.1) to guint64 */
+  num = sscanf (str_version, "%u.%u.%u.%u", &major, &minor, &micro, &nano);
+  /* make sure we have atleast "major.minor" */
+  if (num > 1) {
+    guint64 version;
+
+    version = ((((major << 8 | minor) << 8) | micro) << 8) | nano;
+    GST_DEBUG ("version %s -> %" G_GUINT64_FORMAT, str_version, version);
+    return version;
+  }
+  return G_GUINT64_CONSTANT (0);
+}
+
 static GKeyFile *
 preset_open_and_parse_header (GstPreset * preset, const gchar * preset_path,
-    gchar ** preset_version)
+    guint64 * preset_version)
 {
   GKeyFile *in;
   GError *error = NULL;
@@ -226,9 +277,12 @@ preset_open_and_parse_header (GstPreset * preset, const gchar * preset_path,
   g_free (name);
 
   /* get the version now so that the caller can check it */
-  if (preset_version)
-    *preset_version =
+  if (preset_version) {
+    gchar *str =
         g_key_file_get_value (in, PRESET_HEADER, PRESET_HEADER_VERSION, NULL);
+    *preset_version = preset_parse_version (str);
+    g_free (str);
+  }
 
   return in;
 
@@ -250,27 +304,6 @@ wrong_name:
     g_key_file_free (in);
     return NULL;
   }
-}
-
-static guint64
-preset_parse_version (const gchar * str_version)
-{
-  guint major, minor, micro, nano;
-  gint num;
-
-  major = minor = micro = nano = 0;
-
-  /* parse version (e.g. 0.10.15.1) to guint64 */
-  num = sscanf (str_version, "%u.%u.%u.%u", &major, &minor, &micro, &nano);
-  /* make sure we have atleast "major.minor" */
-  if (num > 1) {
-    guint64 version;
-
-    version = ((((major << 8 | minor) << 8) | micro) << 8) | nano;
-    GST_DEBUG ("version %s -> %" G_GUINT64_FORMAT, str_version, version);
-    return version;
-  }
-  return G_GUINT64_CONSTANT (0);
 }
 
 static void
@@ -331,56 +364,70 @@ preset_get_keyfile (GstPreset * preset)
 
   /* first see if the have a cached version for the type */
   if (!(presets = g_type_get_qdata (type, preset_quark))) {
-    const gchar *preset_user_path, *preset_system_path;
-    gchar *str_version_user = NULL, *str_version_system = NULL;
-    gboolean updated_from_system = FALSE;
-    GKeyFile *in_user, *in_system;
+    const gchar *preset_user_path, *preset_app_path, *preset_system_path;
+    guint64 version_system = G_GUINT64_CONSTANT (0);
+    guint64 version_app = G_GUINT64_CONSTANT (0);
+    guint64 version_user = G_GUINT64_CONSTANT (0);
+    guint64 version = G_GUINT64_CONSTANT (0);
+    gboolean merged = FALSE;
+    GKeyFile *in_user, *in_app = NULL, *in_system;
 
-    preset_get_paths (preset, &preset_user_path, &preset_system_path);
+    preset_get_paths (preset, &preset_user_path, &preset_app_path,
+        &preset_system_path);
 
-    /* try to load the user and system presets, we do this to get the versions
-     * of both files. */
+    /* try to load the user, app and system presets, we do this to get the
+     * versions of all files. */
     in_user = preset_open_and_parse_header (preset, preset_user_path,
-        &str_version_user);
+        &version_user);
+    if (preset_app_path) {
+      in_app = preset_open_and_parse_header (preset, preset_app_path,
+          &version_app);
+    }
     in_system = preset_open_and_parse_header (preset, preset_system_path,
-        &str_version_system);
+        &version_system);
 
     /* compare version to check for merge */
     if (in_system) {
-      /* keep system presets if there is no user preset or when the system
-       * version is higher than the user version. */
-      if (!in_user) {
-        presets = in_system;
-      } else if (preset_parse_version (str_version_system) >
-          preset_parse_version (str_version_user)) {
-        presets = in_system;
-        updated_from_system = TRUE;
+      presets = in_system;
+      version = version_system;
+    }
+    if (in_app) {
+      /* if system version is higher, merge */
+      if (version > version_app) {
+        preset_merge (presets, in_app);
+        g_key_file_free (in_app);
+      } else {
+        if (presets)
+          g_key_file_free (presets);
+        presets = in_app;
+        version = version_system;
       }
     }
     if (in_user) {
-      if (updated_from_system) {
-        /* merge user on top of system presets */
+      /* if system or app version is higher, merge */
+      if (version > version_user) {
         preset_merge (presets, in_user);
         g_key_file_free (in_user);
+        merged = TRUE;
       } else {
-        /* keep user presets */
+        if (presets)
+          g_key_file_free (presets);
         presets = in_user;
+        version = version_user;
       }
     }
-    if (!in_user && !in_system) {
-      /* we did not load a user or system presets file, create a new one */
+
+    if (!presets) {
+      /* we did not load a user, app or system presets file, create a new one */
       presets = g_key_file_new ();
       g_key_file_set_string (presets, PRESET_HEADER, PRESET_HEADER_ELEMENT_NAME,
           G_OBJECT_TYPE_NAME (preset));
     }
 
-    g_free (str_version_user);
-    g_free (str_version_system);
-
     /* attach the preset to the type */
     g_type_set_qdata (type, preset_quark, (gpointer) presets);
 
-    if (updated_from_system) {
+    if (merged) {
       gst_preset_default_save_presets_file (preset);
     }
   }
@@ -578,7 +625,7 @@ gst_preset_default_save_presets_file (GstPreset * preset)
   gchar *data;
   gsize data_size;
 
-  preset_get_paths (preset, &preset_path, NULL);
+  preset_get_paths (preset, &preset_path, NULL, NULL);
 
   /* get the presets from the type */
   if (!(presets = preset_get_keyfile (preset)))
@@ -1041,6 +1088,46 @@ gst_preset_get_meta (GstPreset * preset, const gchar * name, const gchar * tag,
   return GST_PRESET_GET_INTERFACE (preset)->get_meta (preset, name, tag, value);
 }
 
+/**
+ * gst_preset_set_app_dir:
+ * @app_dir: the application specific preset dir
+ *
+ * Sets an extra directory as an absolute path that should be considered when
+ * looking for presets. Any presets in the application dir will shadow the 
+ * system presets.
+ *
+ * Returns: %TRUE for success, %FALSE if the dir already has been set
+ *
+ * Since: 0.10.36
+ */
+gboolean
+gst_preset_set_app_dir (const gchar * app_dir)
+{
+  g_return_val_if_fail (app_dir, FALSE);
+
+  if (!preset_app_dir) {
+    preset_app_dir = g_strdup (app_dir);
+    return TRUE;
+  }
+  return FALSE;
+}
+
+/**
+ * gst_preset_get_app_dir:
+ *
+ * Gets the directory for application specific presets if set by the
+ * application.
+ *
+ * Returns: the directory or %NULL, don't free or modify the string
+ *
+ * Since: 0.10.36
+ */
+const gchar *
+gst_preset_get_app_dir (void)
+{
+  return preset_app_dir;
+}
+
 /* class internals */
 
 static void
@@ -1072,6 +1159,7 @@ gst_preset_base_init (gpointer g_class)
     preset_quark = g_quark_from_static_string ("GstPreset::presets");
     preset_user_path_quark =
         g_quark_from_static_string ("GstPreset::user_path");
+    preset_app_path_quark = g_quark_from_static_string ("GstPreset::app_path");
     preset_system_path_quark =
         g_quark_from_static_string ("GstPreset::system_path");
 
