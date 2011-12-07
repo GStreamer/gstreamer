@@ -483,6 +483,15 @@ ges_track_add_object (GESTrack * track, GESTrackObject * object)
   return TRUE;
 }
 
+/**
+ * ges_track_get_objects:
+ * @track: a #GESTrack
+ *
+ * Gets the #GESTrackObject contained in @track
+ *
+ * Returns: (transfer full) (element-type GESTrackObject): the list of
+ * #GESTrackObject present in the Track sorted by priority and start.
+ */
 GList *
 ges_track_get_objects (GESTrack * track)
 {
@@ -652,12 +661,12 @@ ges_track_get_timeline (GESTrack * track)
 
 /**
  * ges_track_enable_update:
- * @track : a #GESTrack
- * @enabled : TRUE if the composition must be updated, FALSE otherwise.
+ * @track: a #GESTrack
+ * @enabled: %TRUE if the composition must be updated, FALSE otherwise.
  *
  * Sets the @track 's composition update property to @enabled .
  *
- * Returns : True if success, FALSE otherwise.
+ * Returns: True if success, %FALSE otherwise.
  */
 gboolean
 ges_track_enable_update (GESTrack * track, gboolean enabled)

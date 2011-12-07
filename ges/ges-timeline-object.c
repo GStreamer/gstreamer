@@ -361,7 +361,7 @@ ges_timeline_object_class_init (GESTimelineObjectClass * klass)
    * @object: the #GESTimelineObject
    * @tckobj: the #GESTrackObject that was removed.
    *
-   * Will be emitted after a track object was added to the object.
+   * Will be emitted after a track object was removed from @object.
    *
    * Since: 0.10.2
    */

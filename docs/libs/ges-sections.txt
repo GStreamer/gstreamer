@@ -51,6 +51,8 @@ ges_track_add_object
 ges_track_remove_object
 ges_track_set_caps
 ges_track_get_caps
+ges_track_enable_update
+ges_track_get_objects
 <SUBSECTION Standard>
 GESTrackClass
 GESTrackPrivate
@@ -242,6 +244,7 @@ ges_timeline_add_track
 ges_timeline_remove_track
 ges_timeline_load_from_uri
 ges_timeline_save_to_uri
+ges_timeline_enable_update
 <SUBSECTION usage>
 ges_timeline_get_tracks
 ges_timeline_get_layers
@@ -270,6 +273,8 @@ ges_timeline_layer_remove_object
 ges_timeline_layer_set_priority
 ges_timeline_layer_get_priority
 ges_timeline_layer_get_objects
+ges_timeline_layer_get_auto_transition
+ges_timeline_layer_set_auto_transition
 <SUBSECTION Standard>
 GESTimelineLayerPrivate
 ges_timeline_layer_set_timeline
@@ -303,6 +308,7 @@ ges_timeline_object_move_to_layer
 ges_timeline_object_set_top_effect_priority
 ges_timeline_object_set_supported_formats
 ges_timeline_object_get_supported_formats
+ges_timeline_object_split
 <SUBSECTION Standard>
 GES_TIMELINE_OBJECT_DURATION
 GES_TIMELINE_OBJECT_INPOINT
@@ -344,6 +350,10 @@ ges_timeline_pipeline_preview_set_video_sink
 ges_timeline_pipeline_get_thumbnail_buffer
 ges_timeline_pipeline_get_thumbnail_rgb24
 ges_timeline_pipeline_save_thumbnail
+ges_timeline_pipeline_preview_get_audio_sink
+ges_timeline_pipeline_preview_get_video_sink
+ges_timeline_pipeline_preview_set_audio_sink
+ges_timeline_pipeline_preview_set_video_sink
 <SUBSECTION Standard>
 GESTimelinePipelineClass
 GESTimelinePipelinePrivate

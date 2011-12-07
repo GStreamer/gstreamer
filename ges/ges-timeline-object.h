@@ -291,7 +291,7 @@ ges_timeline_object_set_supported_formats (GESTimelineObject * self,
 					    GESTrackType supportedformats);
 
 GESTimelineObject *
-ges_timeline_object_split(GESTimelineObject * ref_object, gint64 position);
+ges_timeline_object_split(GESTimelineObject * self, gint64 position);
 
 G_END_DECLS
 

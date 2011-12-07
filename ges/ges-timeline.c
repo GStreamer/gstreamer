@@ -1110,12 +1110,12 @@ ges_timeline_get_layers (GESTimeline * timeline)
 
 /**
  * ges_timeline_enable_update:
- * @timeline : a #GESTimeline
- * @enabled : TRUE if the timeline must be updated, FALSE otherwise.
+ * @timeline: a #GESTimeline
+ * @enabled: TRUE if the timeline must be updated, FALSE otherwise.
  *
  * Calls the enable_update function of the tracks contained by the timeline.
  *
- * Returns : True if success, FALSE otherwise.
+ * Returns: True if success, FALSE otherwise.
  */
 gboolean
 ges_timeline_enable_update (GESTimeline * timeline, gboolean enabled)

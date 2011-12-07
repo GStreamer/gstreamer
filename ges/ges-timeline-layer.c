@@ -765,10 +765,10 @@ ges_timeline_layer_get_auto_transition (GESTimelineLayer * layer)
 /**
  * ges_timeline_layer_set_auto_transition:
  * @layer: a #GESTimelineLayer
- * @priority: whether the auto_transition is active
+ * @auto_transition: whether the auto_transition is active
  *
  * Sets the layer to the given @auto_transition. See the documentation of the
- * priority auto_transition for more information.
+ * property auto_transition for more information.
  */
 void
 ges_timeline_layer_set_auto_transition (GESTimelineLayer * layer,
