@@ -179,7 +179,7 @@ gst_output_selector_init (GstOutputSelector * sel,
   /* srcpad management */
   sel->active_srcpad = NULL;
   sel->nb_srcpads = 0;
-  gst_segment_init (&sel->segment, GST_FORMAT_TIME);
+  gst_segment_init (&sel->segment, GST_FORMAT_UNDEFINED);
   sel->pending_srcpad = NULL;
 
   sel->resend_latest = FALSE;
@@ -462,10 +462,12 @@ gst_output_selector_switch (GstOutputSelector * osel)
   osel->pending_srcpad = NULL;
   GST_OBJECT_UNLOCK (GST_OBJECT (osel));
 
-  /* Send NEWSEGMENT event and latest buffer if switching succeeded */
-  if (res) {
+  /* Send NEWSEGMENT event and latest buffer if switching succeeded
+   * and we already have a valid segment configured */
+  if (res && osel->segment.format != GST_FORMAT_UNDEFINED) {
     /* Send NEWSEGMENT to the pad we are going to switch to */
     seg = &osel->segment;
+
     /* If resending then mark newsegment start and position accordingly */
     if (osel->resend_latest && osel->latest_buffer &&
         GST_BUFFER_TIMESTAMP_IS_VALID (osel->latest_buffer)) {
