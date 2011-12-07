@@ -31,6 +31,7 @@
 #include "config.h"
 #include <gst/gst.h>
 #include <gst/video/video.h>
+#include <gst/gstutils_version.h>
 #include <gst/vaapi/gstvaapivideobuffer.h>
 #include <gst/vaapi/gstvaapivideosink.h>
 #include <gst/vaapi/gstvaapidisplay_x11.h>
@@ -43,6 +44,9 @@
 
 /* Supported interfaces */
 #include <gst/interfaces/xoverlay.h>
+
+#define HAVE_GST_XOVERLAY_SET_WINDOW_HANDLE \
+    GST_PLUGINS_BASE_CHECK_VERSION(0,10,31)
 
 #define GST_PLUGIN_NAME "vaapisink"
 #define GST_PLUGIN_DESC "A VA-API based videosink"
@@ -128,8 +132,8 @@ gst_vaapisink_ensure_window_xid(GstVaapiSink *sink, guintptr window_id);
 static GstFlowReturn
 gst_vaapisink_show_frame(GstBaseSink *base_sink, GstBuffer *buffer);
 
-static void
-gst_vaapisink_xoverlay_set_window_handle(GstXOverlay *overlay, guintptr window_id)
+static inline void
+_gst_vaapisink_xoverlay_set_xid(GstXOverlay *overlay, guintptr window_id)
 {
     GstVaapiSink * const sink = GST_VAAPISINK(overlay);
 
@@ -140,6 +144,20 @@ gst_vaapisink_xoverlay_set_window_handle(GstXOverlay *overlay, guintptr window_i
     sink->foreign_window = TRUE;
     gst_vaapisink_ensure_window_xid(sink, window_id);
 }
+
+#if HAVE_GST_XOVERLAY_SET_WINDOW_HANDLE
+static void
+gst_vaapisink_xoverlay_set_window_handle(GstXOverlay *overlay, guintptr window_id)
+{
+    _gst_vaapisink_xoverlay_set_xid(overlay, window_id);
+}
+#else
+static void
+gst_vaapisink_xoverlay_set_xid(GstXOverlay *overlay, XID xid)
+{
+    _gst_vaapisink_xoverlay_set_xid(overlay, xid);
+}
+#endif
 
 static void
 gst_vaapisink_xoverlay_expose(GstXOverlay *overlay)
@@ -157,7 +175,11 @@ gst_vaapisink_xoverlay_expose(GstXOverlay *overlay)
 static void
 gst_vaapisink_xoverlay_iface_init(GstXOverlayClass *iface)
 {
+#if HAVE_GST_XOVERLAY_SET_WINDOW_HANDLE
     iface->set_window_handle = gst_vaapisink_xoverlay_set_window_handle;
+#else
+    iface->set_xwindow_id    = gst_vaapisink_xoverlay_set_xid;
+#endif
     iface->expose            = gst_vaapisink_xoverlay_expose;
 }
 
