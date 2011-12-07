@@ -1,8 +1,8 @@
-gst-vaapi NEWS -- summary of changes.  2011-07-DD
+gst-vaapi NEWS -- summary of changes.  2011-12-07
 Copyright (C) 2010-2011 Splitted-Desktop Systems
 Copyright (C) 2011 Intel Corporation
 
-Version 0.2.7 - DD.Jul.2011
+Version 0.2.7 - 07.Dec.2011
 * Relicense plugins and tests to LGPL v2.1 (SDS)
 * Fix MPEG-2 decoding from TS & PS streams
 * Fix build with newer versions of FFmpeg
