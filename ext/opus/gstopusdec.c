@@ -38,12 +38,11 @@
  */
 
 #ifdef HAVE_CONFIG_H
-#  include "config.h"
+#include "config.h"
 #endif
 
 #include <math.h>
 #include <string.h>
-#include <gst/tag/tag.h>
 #include "gstopusheader.h"
 #include "gstopuscommon.h"
 #include "gstopusdec.h"
