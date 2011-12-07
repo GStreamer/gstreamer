@@ -198,6 +198,19 @@ selector_set_active_pad (GstElement * elem, GstPad * selpad)
   g_free (padname);
 }
 
+static void
+push_newsegment_events (GList * input_pads)
+{
+  GList *l;
+
+  for (l = input_pads; l; l = l->next) {
+    GstPad *pad = l->data;
+
+    gst_pad_push_event (pad, gst_event_new_new_segment_full (FALSE, 1.0, 1.0,
+            GST_FORMAT_BYTES, 0, -1, 0));
+  }
+}
+
 /* Push buffers and switch for each selector pad */
 static void
 push_switched_buffers (GList * input_pads,
@@ -254,6 +267,7 @@ run_output_selector_buffer_count (gint num_output_pads,
   fail_unless (gst_element_set_state (sel,
           GST_STATE_PLAYING) == GST_STATE_CHANGE_SUCCESS,
       "could not set to playing");
+  push_newsegment_events (input_pads);
   push_switched_buffers (input_pads, sel, output_pads, num_buffers_per_output);
   count_output_buffers (output_pads, num_buffers_per_output);
   fail_unless (gst_element_set_state (sel,
@@ -325,6 +339,7 @@ run_input_selector_buffer_count (gint num_input_pads,
   fail_unless (gst_element_set_state (sel,
           GST_STATE_PLAYING) == GST_STATE_CHANGE_SUCCESS,
       "could not set to playing");
+  push_newsegment_events (input_pads);
   push_switched_buffers (input_pads, sel, input_pads, num_buffers_per_input);
   count_output_buffers (output_pads, (num_input_pads * num_buffers_per_input));
   fail_unless (gst_element_set_state (sel,
