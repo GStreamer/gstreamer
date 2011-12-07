@@ -25,6 +25,9 @@
 #include "gstopusenc.h"
 #include "gstopusparse.h"
 
+#include "gstrtpopuspay.h"
+#include "gstrtpopusdepay.h"
+
 #include <gst/tag/tag.h>
 
 static gboolean
@@ -41,6 +44,14 @@ plugin_init (GstPlugin * plugin)
 
   if (!gst_element_register (plugin, "opusparse", GST_RANK_NONE,
           GST_TYPE_OPUS_PARSE))
+    return FALSE;
+
+  if (!gst_element_register (plugin, "rtpopusdepay", GST_RANK_NONE,
+          GST_TYPE_RTP_OPUS_DEPAY))
+    return FALSE;
+
+  if (!gst_element_register (plugin, "rtpopuspay", GST_RANK_NONE,
+          GST_TYPE_RTP_OPUS_PAY))
     return FALSE;
 
   gst_tag_register_musicbrainz_tags ();
