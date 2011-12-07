@@ -406,6 +406,9 @@ ges_timeline_object_create_track_object (GESTimelineObject * object,
   GESTimelineObjectClass *class;
   GESTrackObject *res;
 
+  g_return_val_if_fail (GES_IS_TIMELINE_OBJECT (object), NULL);
+  g_return_val_if_fail (GES_IS_TRACK (track), NULL);
+
   class = GES_TIMELINE_OBJECT_GET_CLASS (object);
 
   if (G_UNLIKELY (class->create_track_object == NULL)) {
@@ -437,6 +440,9 @@ ges_timeline_object_create_track_objects (GESTimelineObject * object,
     GESTrack * track)
 {
   GESTimelineObjectClass *klass;
+
+  g_return_val_if_fail (GES_IS_TIMELINE_OBJECT (object), FALSE);
+  g_return_val_if_fail (GES_IS_TRACK (track), FALSE);
 
   klass = GES_TIMELINE_OBJECT_GET_CLASS (object);
 
@@ -491,6 +497,9 @@ ges_timeline_object_add_track_object (GESTimelineObject * object, GESTrackObject
   GESTimelineObjectPrivate *priv = object->priv;
   gboolean is_effect = GES_IS_TRACK_EFFECT (trobj);
   GESTimelineObjectClass *klass = GES_TIMELINE_OBJECT_GET_CLASS (object);
+
+  g_return_val_if_fail (GES_IS_TIMELINE_OBJECT (object), FALSE);
+  g_return_val_if_fail (GES_IS_TRACK_OBJECT (trobj), FALSE);
 
   GST_LOG ("Got a TrackObject : %p , setting the timeline object as its"
       "creator. Is a TrackEffect %i", trobj, is_effect);
@@ -600,6 +609,9 @@ ges_timeline_object_release_track_object (GESTimelineObject * object,
   GList *tmp;
   ObjectMapping *mapping = NULL;
   GESTimelineObjectClass *klass = GES_TIMELINE_OBJECT_GET_CLASS (object);
+
+  g_return_val_if_fail (GES_IS_TIMELINE_OBJECT (object), FALSE);
+  g_return_val_if_fail (GES_IS_TRACK_OBJECT (trackobject), FALSE);
 
   GST_DEBUG ("object:%p, trackobject:%p", object, trackobject);
 
@@ -720,6 +732,8 @@ ges_timeline_object_set_start_internal (GESTimelineObject * object,
   GESTrackObject *tr;
   ObjectMapping *map;
 
+  g_return_val_if_fail (GES_IS_TIMELINE_OBJECT (object), FALSE);
+
   GST_DEBUG ("object:%p, start:%" GST_TIME_FORMAT,
       object, GST_TIME_ARGS (start));
 
@@ -769,6 +783,8 @@ ges_timeline_object_set_inpoint_internal (GESTimelineObject * object,
   GList *tmp;
   GESTrackObject *tr;
 
+  g_return_val_if_fail (GES_IS_TIMELINE_OBJECT (object), FALSE);
+
   GST_DEBUG ("object:%p, inpoint:%" GST_TIME_FORMAT,
       object, GST_TIME_ARGS (inpoint));
 
@@ -810,6 +826,8 @@ ges_timeline_object_set_duration_internal (GESTimelineObject * object,
   GList *tmp;
   GESTrackObject *tr;
 
+  g_return_val_if_fail (GES_IS_TIMELINE_OBJECT (object), FALSE);
+
   GST_DEBUG ("object:%p, duration:%" GST_TIME_FORMAT,
       object, GST_TIME_ARGS (duration));
 
@@ -850,11 +868,14 @@ ges_timeline_object_set_priority_internal (GESTimelineObject * object,
   GList *tmp;
   GESTrackObject *tr;
   ObjectMapping *map;
-  GESTimelineObjectPrivate *priv = object->priv;
+  GESTimelineObjectPrivate *priv;
   guint32 layer_min_gnl_prio, layer_max_gnl_prio;
+
+  g_return_val_if_fail (GES_IS_TIMELINE_OBJECT (object), FALSE);
 
   GST_DEBUG ("object:%p, priority:%" G_GUINT32_FORMAT, object, priority);
 
+  priv = object->priv;
   priv->ignore_notifies = TRUE;
 
   object->priv->ignore_notifies = TRUE;
@@ -909,6 +930,8 @@ void
 ges_timeline_object_set_moving_from_layer (GESTimelineObject * object,
     gboolean is_moving)
 {
+  g_return_if_fail (GES_IS_TRACK_OBJECT (object));
+
   object->priv->is_moving = is_moving;
 }
 
@@ -945,7 +968,12 @@ ges_timeline_object_move_to_layer (GESTimelineObject * object, GESTimelineLayer
     * layer)
 {
   gboolean ret;
-  GESTimelineLayer *current_layer = object->priv->layer;
+  GESTimelineLayer *current_layer;
+
+  g_return_val_if_fail (GES_IS_TIMELINE_OBJECT (object), FALSE);
+  g_return_val_if_fail (GES_IS_TIMELINE_LAYER (layer), FALSE);
+
+  current_layer = object->priv->layer;
 
   if (current_layer == NULL) {
     GST_DEBUG ("Not moving %p, only adding it to %p", object, layer);
@@ -1125,6 +1153,8 @@ ges_timeline_object_get_top_effects (GESTimelineObject * object)
   GList *tmp, *ret;
   guint i;
 
+  g_return_val_if_fail (GES_IS_TIMELINE_OBJECT (object), NULL);
+
   ret = NULL;
 
   for (tmp = object->priv->trackobjects, i = 0; i < object->priv->nb_effects;
@@ -1151,6 +1181,8 @@ gint
 ges_timeline_object_get_top_effect_position (GESTimelineObject * object,
     GESTrackEffect * effect)
 {
+  g_return_val_if_fail (GES_IS_TIMELINE_OBJECT (object), -1);
+
   return find_object_mapping (object,
       GES_TRACK_OBJECT (effect))->priority_offset;
 }
@@ -1172,12 +1204,18 @@ gboolean
 ges_timeline_object_set_top_effect_priority (GESTimelineObject * object,
     GESTrackEffect * effect, guint newpriority)
 {
-  GList *tmp;
   gint inc;
-  GESTrackObject *tck_obj = GES_TRACK_OBJECT (effect);
-  GESTimelineObjectPrivate *priv = object->priv;
+  GList *tmp;
+  guint current_prio;
+  GESTrackObject *tck_obj;
+  GESTimelineObjectPrivate *priv;
 
-  guint current_prio = ges_track_object_get_priority (tck_obj);
+  g_return_val_if_fail (GES_IS_TIMELINE_OBJECT (object), FALSE);
+
+  tck_obj = GES_TRACK_OBJECT (effect);
+  priv = object->priv;
+  current_prio = ges_track_object_get_priority (tck_obj);
+
   /*  We don't change the priority */
   if (current_prio == newpriority ||
       (G_UNLIKELY (ges_track_object_get_timeline_object (tck_obj) != object)))
