@@ -3525,6 +3525,9 @@ gst_base_parse_locate_time (GstBaseParse * parse, GstClockTime * _time,
   g_return_val_if_fail (_time != NULL, GST_FLOW_ERROR);
   g_return_val_if_fail (_offset != NULL, GST_FLOW_ERROR);
 
+  GST_DEBUG_OBJECT (parse, "Bisecting for time %" GST_TIME_FORMAT,
+      GST_TIME_ARGS (*_time));
+
   /* TODO also make keyframe aware if useful some day */
 
   time = *_time;
@@ -3547,8 +3550,16 @@ gst_base_parse_locate_time (GstBaseParse * parse, GstClockTime * _time,
   /* need initial positions; start and end */
   lpos = parse->priv->first_frame_offset;
   ltime = parse->priv->first_frame_ts;
-  htime = parse->priv->duration;
+  if (!gst_base_parse_get_duration (parse, GST_FORMAT_TIME, &htime)) {
+    GST_DEBUG_OBJECT (parse, "Unknown time duration, cannot bisect");
+    return GST_FLOW_ERROR;
+  }
   hpos = parse->priv->upstream_size;
+
+  GST_DEBUG_OBJECT (parse,
+      "Bisection initial bounds: bytes %" G_GINT64_FORMAT " %" G_GINT64_FORMAT
+      ", times %" GST_TIME_FORMAT " %" GST_TIME_FORMAT, lpos, htime,
+      GST_TIME_ARGS (ltime), GST_TIME_ARGS (htime));
 
   /* check preconditions are satisfied;
    * start and end are needed, except for special case where we scan for
