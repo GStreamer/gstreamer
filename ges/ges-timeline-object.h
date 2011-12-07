@@ -293,6 +293,8 @@ ges_timeline_object_set_supported_formats (GESTimelineObject * self,
 GESTimelineObject *
 ges_timeline_object_split(GESTimelineObject * self, gint64 position);
 
+void
+ges_timeline_object_objects_set_locked      (GESTimelineObject * object, gboolean locked);
 G_END_DECLS
 
 #endif /* _GES_TIMELINE_OBJECT */

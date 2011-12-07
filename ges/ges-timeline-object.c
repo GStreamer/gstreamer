@@ -1342,6 +1342,29 @@ ges_timeline_object_copy (GESTimelineObject * object, gboolean * deep)
   return ret;
 }
 
+/**
+ * ges_timeline_object_objects_set_locked:
+ * @object: the #GESTimelineObject
+ * @locked: whether the #GESTrackObject contained in @object are locked to it.
+ *
+ * Set the locking status of all the #GESTrackObject contained in @object to @locked.
+ * See the ges_track_object_set_locked documentation for more details.
+ *
+ * Since: 0.10.XX
+ */
+void
+ges_timeline_object_objects_set_locked (GESTimelineObject * object,
+    gboolean locked)
+{
+  GList *tmp;
+
+  g_return_if_fail (GES_IS_TIMELINE_OBJECT (object));
+
+  for (tmp = object->priv->mappings; tmp; tmp = g_list_next (tmp)) {
+    ges_track_object_set_locked (((ObjectMapping *) tmp->data)->object, locked);
+  }
+}
+
 static void
 update_height (GESTimelineObject * object)
 {

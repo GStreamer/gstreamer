@@ -1106,6 +1106,14 @@
 )
 
 
+(define-method objects_set_locked
+  (of-object "GESTimelineObject")
+  (c-name "ges_timeline_object_objects_set_locked")
+  (return-type "none")
+  (parameters
+    '("gboolean" "locked")
+  )
+)
 
 ;; From ges-timeline-operation.h
 
