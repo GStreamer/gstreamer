@@ -220,7 +220,7 @@ guint                        gst_video_overlay_composition_get_seqnum    (GstVid
 
 /* blend composition onto raw video buffer */
 
-void                         gst_video_overlay_composition_blend         (GstVideoOverlayComposition * comp,
+gboolean                     gst_video_overlay_composition_blend         (GstVideoOverlayComposition * comp,
                                                                           GstBuffer                  * video_buf);
 
 /* attach/retrieve composition from buffers */

@@ -478,25 +478,26 @@ gst_video_overlay_rectangle_needs_scaling (GstVideoOverlayRectangle * r)
  *
  * Since: 0.10.36
  */
-void
+gboolean
 gst_video_overlay_composition_blend (GstVideoOverlayComposition * comp,
     GstBuffer * video_buf)
 {
   GstBlendVideoFormatInfo video_info, rectangle_info;
   GstVideoFormat fmt;
+  gboolean ret = TRUE;
   guint n, num;
   int w, h;
 
-  g_return_if_fail (GST_IS_VIDEO_OVERLAY_COMPOSITION (comp));
-  g_return_if_fail (GST_IS_BUFFER (video_buf));
-  g_return_if_fail (gst_buffer_is_writable (video_buf));
-  g_return_if_fail (GST_BUFFER_CAPS (video_buf) != NULL);
+  g_return_val_if_fail (GST_IS_VIDEO_OVERLAY_COMPOSITION (comp), FALSE);
+  g_return_val_if_fail (GST_IS_BUFFER (video_buf), FALSE);
+  g_return_val_if_fail (gst_buffer_is_writable (video_buf), FALSE);
+  g_return_val_if_fail (GST_BUFFER_CAPS (video_buf) != NULL, FALSE);
 
   if (!gst_video_format_parse_caps (GST_BUFFER_CAPS (video_buf), &fmt, &w, &h)) {
     gchar *str = gst_caps_to_string (GST_BUFFER_CAPS (video_buf));
     g_warning ("%s: could not parse video buffer caps '%s'", GST_FUNCTION, str);
     g_free (str);
-    return;
+    return FALSE;
   }
 
   video_blend_format_info_init (&video_info, GST_BUFFER_DATA (video_buf),
@@ -525,7 +526,8 @@ gst_video_overlay_composition_blend (GstVideoOverlayComposition * comp,
           rect->render_width);
     }
 
-    if (!video_blend (&video_info, &rectangle_info, rect->x, rect->y)) {
+    ret = video_blend (&video_info, &rectangle_info, rect->x, rect->y);
+    if (!ret) {
       GST_WARNING ("Could not blend overlay rectangle onto video buffer");
     }
 
@@ -533,6 +535,8 @@ gst_video_overlay_composition_blend (GstVideoOverlayComposition * comp,
     if (needs_scaling)
       g_free (rectangle_info.pixels);
   }
+
+  return ret;
 }
 
 /**
