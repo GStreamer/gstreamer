@@ -217,7 +217,12 @@ static GstCaps *
 gst_opus_dec_negotiate (GstOpusDec * dec)
 {
   GstCaps *caps = gst_pad_get_allowed_caps (GST_AUDIO_DECODER_SRC_PAD (dec));
-  GstStructure *s = gst_caps_get_structure (caps, 0);
+  GstStructure *s;
+
+  caps = gst_caps_make_writable (caps);
+  gst_caps_truncate (caps);
+
+  s = gst_caps_get_structure (caps, 0);
   gst_structure_fixate_field_nearest_int (s, "rate", 48000);
   gst_structure_get_int (s, "rate", &dec->sample_rate);
   gst_structure_fixate_field_nearest_int (s, "channels", dec->n_channels);
