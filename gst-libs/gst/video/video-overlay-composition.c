@@ -602,6 +602,27 @@ copy:
   return writable_comp;
 }
 
+/**
+ * gst_video_overlay_composition_get_seqnum:
+ * @comp: a #GstVideoOverlayComposition
+ *
+ * Returns the sequence number of this composition. Sequence numbers are
+ * monotonically increasing and unique for overlay compositions and rectangles
+ * (meaning there will never be a rectangle with the same sequence number as
+ * a composition).
+ *
+ * Returns: the sequence number of @comp
+ *
+ * Since: 0.10.36
+ */
+guint
+gst_video_overlay_composition_get_seqnum (GstVideoOverlayComposition * comp)
+{
+  g_return_val_if_fail (GST_IS_VIDEO_OVERLAY_COMPOSITION (comp), 0);
+
+  return comp->seq_num;
+}
+
 /* ------------------------------ rectangles ------------------------------ -*/
 
 static void gst_video_overlay_rectangle_instance_init (GstMiniObject * miniobj);
@@ -957,4 +978,25 @@ gst_video_overlay_rectangle_copy (GstVideoOverlayRectangle * rectangle)
       rectangle->render_width, rectangle->render_height, 0);
 
   return copy;
+}
+
+/**
+ * gst_video_overlay_rectangle_get_seqnum:
+ * @rectangle: a #GstVideoOverlayRectangle
+ *
+ * Returns the sequence number of this rectangle. Sequence numbers are
+ * monotonically increasing and unique for overlay compositions and rectangles
+ * (meaning there will never be a rectangle with the same sequence number as
+ * a composition).
+ *
+ * Returns: the sequence number of @rectangle
+ *
+ * Since: 0.10.36
+ */
+guint
+gst_video_overlay_rectangle_get_seqnum (GstVideoOverlayRectangle * rectangle)
+{
+  g_return_val_if_fail (GST_IS_VIDEO_OVERLAY_RECTANGLE (rectangle), 0);
+
+  return rectangle->seq_num;
 }

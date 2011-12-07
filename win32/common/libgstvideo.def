@@ -39,6 +39,7 @@ EXPORTS
 	gst_video_overlay_composition_blend
 	gst_video_overlay_composition_copy
 	gst_video_overlay_composition_get_rectangle
+	gst_video_overlay_composition_get_seqnum
 	gst_video_overlay_composition_get_type
 	gst_video_overlay_composition_make_writable
 	gst_video_overlay_composition_n_rectangles
@@ -47,6 +48,7 @@ EXPORTS
 	gst_video_overlay_rectangle_get_pixels_argb
 	gst_video_overlay_rectangle_get_pixels_unscaled_argb
 	gst_video_overlay_rectangle_get_render_rectangle
+	gst_video_overlay_rectangle_get_seqnum
 	gst_video_overlay_rectangle_get_type
 	gst_video_overlay_rectangle_new_argb
 	gst_video_overlay_rectangle_set_render_rectangle

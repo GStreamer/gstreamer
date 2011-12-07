@@ -114,6 +114,8 @@ GstVideoOverlayRectangle *   gst_video_overlay_rectangle_new_argb (GstBuffer * p
 
 GstVideoOverlayRectangle *   gst_video_overlay_rectangle_copy     (GstVideoOverlayRectangle * rectangle);
 
+guint                        gst_video_overlay_rectangle_get_seqnum (GstVideoOverlayRectangle  * rectangle);
+
 void                         gst_video_overlay_rectangle_set_render_rectangle     (GstVideoOverlayRectangle  * rectangle,
                                                                                    gint                        render_x,
                                                                                    gint                        render_y,
@@ -213,6 +215,8 @@ void                         gst_video_overlay_composition_add_rectangle (GstVid
 guint                        gst_video_overlay_composition_n_rectangles  (GstVideoOverlayComposition * comp);
 
 GstVideoOverlayRectangle *   gst_video_overlay_composition_get_rectangle (GstVideoOverlayComposition * comp, guint n);
+
+guint                        gst_video_overlay_composition_get_seqnum    (GstVideoOverlayComposition * comp);
 
 /* blend composition onto raw video buffer */
 

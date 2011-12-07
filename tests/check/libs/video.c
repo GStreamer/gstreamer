@@ -783,6 +783,7 @@ GST_START_TEST (test_overlay_composition)
   GstVideoOverlayComposition *comp1, *comp2;
   GstVideoOverlayRectangle *rect1, *rect2;
   GstBuffer *pix1, *pix2, *buf;
+  guint seq1, seq2;
   guint w, h, stride;
   gint x, y;
 
@@ -800,6 +801,11 @@ GST_START_TEST (test_overlay_composition)
   fail_unless (gst_video_overlay_composition_get_rectangle (comp1, 0) == rect1);
   fail_unless (gst_video_overlay_composition_get_rectangle (comp1, 1) == NULL);
 
+  /* rectangle was created first, sequence number should be smaller */
+  seq1 = gst_video_overlay_rectangle_get_seqnum (rect1);
+  seq2 = gst_video_overlay_composition_get_seqnum (comp1);
+  fail_unless (seq1 < seq2);
+
   /* composition took own ref, so refcount is 2 now, so this should fail */
   ASSERT_CRITICAL (gst_video_overlay_rectangle_set_render_rectangle (rect1, 50,
           600, 300, 50));
@@ -812,6 +818,9 @@ GST_START_TEST (test_overlay_composition)
   fail_unless (gst_video_overlay_composition_n_rectangles (comp2) == 1);
   fail_unless (gst_video_overlay_composition_get_rectangle (comp2, 0) == rect1);
   fail_unless (gst_video_overlay_composition_get_rectangle (comp2, 1) == NULL);
+
+  fail_unless (seq1 < gst_video_overlay_composition_get_seqnum (comp2));
+  fail_unless (seq2 < gst_video_overlay_composition_get_seqnum (comp2));
 
   /* now refcount is 2 again because comp2 has also taken a ref, so must fail */
   ASSERT_CRITICAL (gst_video_overlay_rectangle_set_render_rectangle (rect1, 0,
