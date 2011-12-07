@@ -1,26 +1,27 @@
+ABOUT-NLS
+_stdint.h
 aclocal.m4
 autom4te.cache
+autoregen.sh
+compile
+config.guess
 config.h*
 config.log
-config.status
-config.guess
-config.sub
 config.rpath
+config.status
+config.sub
 configure
-libtool
-stamp-h
-stamp-h.in
-stamp-h1
+depcomp
 gst-element-check-*.m4
+gstreamer-vaapi-*.tar.gz
+install-sh
+libtool
 ltmain.sh
 missing
 mkinstalldirs
-compile
-install-sh
-depcomp
-autoregen.sh
-ABOUT-NLS
-_stdint.h
+stamp-h
+stamp-h.in
+stamp-h1
 
 /m4
 
@@ -34,6 +35,7 @@ Makefile
 *~
 *.swp
 
+debian.build/
 debian.upstream/changelog
 debian.upstream/control
 debian.upstream/gstreamer0.10-vaapi-doc.install
@@ -42,8 +44,16 @@ debian.upstream/libgstvaapi-dev.install
 debian.upstream/libgstvaapi-glx-0.install
 debian.upstream/libgstvaapi-x11-0.install
 debian.upstream/libgstvaapi0.install
+docs/reference/libs/html*
 docs/reference/libs/libs-docs.xml
+docs/reference/libs/tmpl*
+docs/reference/libs/xml*
+docs/reference/libs/*.stamp
+docs/reference/plugins/html*
 docs/reference/plugins/plugins-docs.xml
+docs/reference/plugins/tmpl*
+docs/reference/plugins/xml*
+docs/reference/plugins/*.stamp
 gst-libs/gst/vaapi/gstvaapimarshal.c
 gst-libs/gst/vaapi/gstvaapimarshal.h
 gst-libs/gst/vaapi/stamp-marshal
@@ -56,4 +66,3 @@ tests/test-display
 tests/test-surfaces
 tests/test-textures
 tests/test-windows
-
