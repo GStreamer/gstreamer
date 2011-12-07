@@ -94,7 +94,7 @@ gst_video_overlay_rectangle_unref (GstVideoOverlayRectangle * comp)
 
 /**
  * GstVideoOverlayFormatFlags:
- * @GST_VIDEO_OVERLAY_RECTANGLE_FLAG_NONE: no flags
+ * @GST_VIDEO_OVERLAY_FORMAT_FLAG_NONE: no flags
  *
  * Overlay format flags.
  *

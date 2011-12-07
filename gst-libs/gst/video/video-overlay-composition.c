@@ -20,7 +20,7 @@
  */
 
 /**
- * SECTION:video-overlay-composition
+ * SECTION:gstvideooverlaycomposition
  * @short_description: Video Buffer Overlay Compositions (Subtitles, Logos)
  *
  * <refsect2>
@@ -465,6 +465,19 @@ gst_video_overlay_rectangle_needs_scaling (GstVideoOverlayRectangle * r)
   return (r->width != r->render_width || r->height != r->render_height);
 }
 
+/**
+ * gst_video_overlay_composition_blend:
+ * @comp: a #GstVideoOverlayComposition
+ * @video_buf: a #GstBuffer containing raw video data in a supported format
+ *
+ * Blends the overlay rectangles in @comp on top of the raw video data
+ * contained in @video_buf. The data in @video_buf must be writable. If
+ * needed, use gst_buffer_make_writable() before calling this function to
+ * ensure a buffer is writable. @video_buf must also have valid raw video
+ * caps set on it.
+ *
+ * Since: 0.10.36
+ */
 void
 gst_video_overlay_composition_blend (GstVideoOverlayComposition * comp,
     GstBuffer * video_buf)

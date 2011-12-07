@@ -225,6 +225,7 @@
         <filename>-lgstvideo-&GST_MAJORMINOR;</filename> to the library flags.
       </para>
       <xi:include href="xml/gstvideo.xml" />
+      <xi:include href="xml/gstvideooverlaycomposition.xml" />
       <xi:include href="xml/gstvideofilter.xml" />
       <xi:include href="xml/gstvideosink.xml" />
     </chapter>
