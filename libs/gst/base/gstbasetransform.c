@@ -688,7 +688,7 @@ no_out_size:
 /* get the caps that can be handled by @pad. We perform:
  *
  *  - take the caps of peer of otherpad,
- *  - filter against the padtemplate of otherpad, 
+ *  - filter against the padtemplate of otherpad,
  *  - calculate all transforms of remaining caps
  *  - filter against template of @pad
  *
@@ -1439,7 +1439,7 @@ compute_upstream_suggestion (GstBaseTransform * trans, guint expsize,
  * This function can do renegotiation on the source pad
  *
  * The output buffer is always writable. outbuf can be equal to
- * inbuf, the caller should be prepared for this and perform 
+ * inbuf, the caller should be prepared for this and perform
  * appropriate refcounting.
  */
 static GstFlowReturn
@@ -1894,6 +1894,7 @@ gst_base_transform_buffer_alloc (GstPad * pad, guint64 offset, guint size,
        */
       peercaps =
           gst_pad_peer_get_caps_reffed (GST_BASE_TRANSFORM_SINK_PAD (trans));
+
       if (peercaps) {
         GstCaps *intersect;
 
@@ -1901,16 +1902,19 @@ gst_base_transform_buffer_alloc (GstPad * pad, guint64 offset, guint size,
             gst_caps_intersect_full (sink_suggest, peercaps,
             GST_CAPS_INTERSECT_FIRST);
         gst_caps_unref (peercaps);
+
+        /* If intersected caps is empty then just keep them empty. The
+         * code below will try to come up with possible caps if there
+         * are any */
         gst_caps_unref (sink_suggest);
         sink_suggest = intersect;
       }
 
-      if (!gst_caps_is_fixed (sink_suggest) || gst_caps_is_empty (sink_suggest)) {
-        GST_DEBUG_OBJECT (trans, "Suggested caps is not fixed: %"
-            GST_PTR_FORMAT, sink_suggest);
-
-        if (gst_caps_is_empty (sink_suggest))
-          goto not_supported;
+      /* If the suggested caps are not empty and not fixed, try to fixate them */
+      if (!gst_caps_is_fixed (sink_suggest)
+          && !gst_caps_is_empty (sink_suggest)) {
+        GST_DEBUG_OBJECT (trans,
+            "Suggested caps is not fixed: %" GST_PTR_FORMAT, sink_suggest);
 
         /* try the alloc caps if it is still not fixed */
         if (!gst_caps_is_fixed (sink_suggest)) {
@@ -1941,6 +1945,11 @@ gst_base_transform_buffer_alloc (GstPad * pad, guint64 offset, guint size,
             sink_suggest);
       }
 
+      /* Check if the suggested caps are compatible with our
+       * sinkpad template caps and if they're not (or were
+       * empty after intersecting with the peer caps above)
+       * we try to come up with any supported caps
+       */
       if (sink_suggest) {
         templ = gst_pad_get_pad_template_caps (pad);
 
@@ -2424,7 +2433,7 @@ no_qos:
 
   /* first try to allocate an output buffer based on the currently negotiated
    * format. While we call pad-alloc we could renegotiate the srcpad format or
-   * have a new suggestion for upstream buffer-alloc. 
+   * have a new suggestion for upstream buffer-alloc.
    * In any case, outbuf will contain a buffer suitable for doing the configured
    * transform after this function. */
   ret = gst_base_transform_prepare_output_buffer (trans, inbuf, outbuf);
@@ -2719,7 +2728,7 @@ gst_base_transform_activate (GstBaseTransform * trans, gboolean active)
     gst_base_transform_drop_delayed_events (trans);
 
     trans->have_same_caps = FALSE;
-    /* We can only reset the passthrough mode if the instance told us to 
+    /* We can only reset the passthrough mode if the instance told us to
        handle it in configure_caps */
     if (bclass->passthrough_on_same_caps) {
       gst_base_transform_set_passthrough (trans, FALSE);
