@@ -1381,6 +1381,43 @@ ges_timeline_object_copy (GESTimelineObject * object, gboolean * deep)
 }
 
 /**
+ * ges_timeline_object_set_supported_formats:
+ * @object: the #GESTimelineObject to set supported formats on
+ * @supportedformats: the #GESTrackType defining formats supported by @object
+ *
+ * Sets the formats supported by the file.
+ *
+ * Since: 0.10.XX
+ */
+void
+ges_timeline_object_set_supported_formats (GESTimelineObject * object,
+    GESTrackType supportedformats)
+{
+  g_return_if_fail (GES_IS_TIMELINE_OBJECT (object));
+
+  object->priv->supportedformats = supportedformats;
+}
+
+/**
+ * ges_timeline_object_get_supported_formats:
+ * @object: the #GESTimelineObject
+ *
+ * Get the formats supported by @object.
+ *
+ * Returns: The formats supported by @object.
+ *
+ * Since: 0.10.XX
+ */
+GESTrackType
+ges_timeline_object_get_supported_formats (GESTimelineObject * object)
+{
+  g_return_val_if_fail (GES_IS_TIMELINE_OBJECT (object),
+      GES_TRACK_TYPE_UNKNOWN);
+
+  return object->priv->supportedformats;
+}
+
+/**
  * ges_timeline_object_objects_set_locked:
  * @object: the #GESTimelineObject
  * @locked: whether the #GESTrackObject contained in @object are locked to it.
@@ -1430,38 +1467,6 @@ update_height (GESTimelineObject * object)
     g_object_notify (G_OBJECT (object), "height");
 #endif
   }
-}
-
-/**
- * ges_timeline_object_set_supported_formats:
- * @self: the #GESTimelineObject to set supported formats on
- * @supportedformats: the #GESTrackType defining formats supported by @self
- *
- * Sets the formats supported by the file.
- *
- * Since: 0.10.XX
- */
-void
-ges_timeline_object_set_supported_formats (GESTimelineObject * self,
-    GESTrackType supportedformats)
-{
-  self->priv->supportedformats = supportedformats;
-}
-
-/**
- * ges_timeline_object_get_supported_formats:
- * @self: the #GESTimelineObject
- *
- * Get the formats supported by @self.
- *
- * Returns: The formats supported by @self.
- *
- * Since: 0.10.XX
- */
-GESTrackType
-ges_timeline_object_get_supported_formats (GESTimelineObject * self)
-{
-  return self->priv->supportedformats;
 }
 
 /*
