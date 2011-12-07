@@ -146,6 +146,14 @@ PKG_CHECK_MODULES([GST_PLUGINS_BASE],
 AC_SUBST(GST_PLUGINS_BASE_CFLAGS)
 AC_SUBST(GST_PLUGINS_BASE_LIBS)
 
+V=`$PKG_CONFIG --modversion gstreamer-plugins-base-$GST_MAJORMINOR`
+GST_PLUGINS_BASE_MAJOR_VERSION=`echo "$V" | cut -d'.' -f1`
+GST_PLUGINS_BASE_MINOR_VERSION=`echo "$V" | cut -d'.' -f2`
+GST_PLUGINS_BASE_MICRO_VERSION=`echo "$V" | cut -d'.' -f3`
+AC_SUBST(GST_PLUGINS_BASE_MAJOR_VERSION)
+AC_SUBST(GST_PLUGINS_BASE_MINOR_VERSION)
+AC_SUBST(GST_PLUGINS_BASE_MICRO_VERSION)
+
 dnl Check for GStreamer base
 PKG_CHECK_MODULES([GST_BASE],
     [gstreamer-base-$GST_MAJORMINOR >= $GST_VERSION_REQUIRED]
@@ -328,6 +336,7 @@ debian.upstream/libgstvaapi-glx.install.in
     docs/reference/plugins/plugins-docs.xml
     gst-libs/Makefile
     gst-libs/gst/Makefile
+    gst-libs/gst/gstutils_version.h
     gst-libs/gst/vaapi/Makefile
     pkgconfig/Makefile
     pkgconfig/gstreamer-vaapi-$GST_MAJORMINOR.pc:\

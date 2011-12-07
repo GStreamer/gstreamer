@@ -54,6 +54,7 @@ docs/reference/plugins/plugins-docs.xml
 docs/reference/plugins/tmpl*
 docs/reference/plugins/xml*
 docs/reference/plugins/*.stamp
+gst-libs/gst/gstutils_version.h
 gst-libs/gst/vaapi/gstvaapimarshal.c
 gst-libs/gst/vaapi/gstvaapimarshal.h
 gst-libs/gst/vaapi/stamp-marshal
