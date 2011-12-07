@@ -83,7 +83,9 @@ INCLUDES = \
 	-I$(top_srcdir) \
 	-I$(top_srcdir)/gst-libs \
 	-I$(top_srcdir)/gst-libs/gst/vaapi \
-	$(GLIB_CFLAGS)
+	$(GLIB_CFLAGS) \
+	$(GST_CFLAGS) \
+	$(NULL)
 
 GTKDOC_LIBS = \
 	$(top_builddir)/gst-libs/gst/vaapi/libgstvaapi-$(GST_MAJORMINOR).la \
@@ -91,7 +93,9 @@ GTKDOC_LIBS = \
 	$(top_builddir)/gst/vaapidecode/libgstvaapidecode.la \
 	$(top_builddir)/gst/vaapiconvert/libgstvaapiconvert.la \
 	$(top_builddir)/gst/vaapisink/libgstvaapisink.la \
-	$(GLIB_LIBS)
+	$(GLIB_LIBS) \
+	$(GST_LIBS) \
+	$(NULL)
 
 # This includes the standard gtk-doc make rules, copied by gtkdocize.
 include $(top_srcdir)/gtk-doc.make

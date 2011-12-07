@@ -102,12 +102,14 @@ expand_content_files = \
 
 INCLUDES = \
 	$(GLIB_CFLAGS) \
+	$(GST_CFLAGS) \
 	-I$(top_srcdir) \
 	-I$(top_srcdir)/gst-libs \
 	-I$(top_srcdir)/gst-libs/gst/vaapi
 
 GTKDOC_LIBS = \
 	$(GLIB_LIBS) \
+	$(GST_LIBS) \
 	$(top_builddir)/gst-libs/gst/vaapi/libgstvaapi-$(GST_MAJORMINOR).la
 
 GTKDOC_LIBS += \

@@ -20,14 +20,19 @@ TEST_MIX_CFLAGS		+= $(TEST_GLX_CFLAGS)
 endif
 
 TEST_LIBS = \
+	$(GST_LIBS) \
 	$(top_builddir)/gst-libs/gst/vaapi/libgstvaapi-@GST_MAJORMINOR@.la
 
 TEST_X11_LIBS = \
 	$(X11_LIBS) \
+	$(GST_LIBS) \
+	$(LIBVA_X11_LIBS) \
 	$(top_builddir)/gst-libs/gst/vaapi/libgstvaapi-x11-@GST_MAJORMINOR@.la
 
 TEST_GLX_LIBS = \
 	$(GLX_LIBS) \
+	$(GST_LIBS) \
+	$(LIBVA_GLX_LIBS) \
 	$(top_builddir)/gst-libs/gst/vaapi/libgstvaapi-glx-@GST_MAJORMINOR@.la
 
 TEST_MIX_LIBS		= $(TEST_X11_LIBS)
