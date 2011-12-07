@@ -45,6 +45,7 @@ G_BEGIN_DECLS
  * @DSPAAC_HEADER_UNKNOWN: Unknown (not recognized) header.
  * @DSPAAC_HEADER_ADIF: ADIF header found.
  * @DSPAAC_HEADER_ADTS: ADTS header found.
+ * @DSPAAC_HEADER_LOAS: LOAS header found.
  * @DSPAAC_HEADER_NONE: Raw stream, no header.
  *
  * Type header enumeration set in #header_type.
@@ -54,6 +55,7 @@ typedef enum {
   DSPAAC_HEADER_UNKNOWN,
   DSPAAC_HEADER_ADIF,
   DSPAAC_HEADER_ADTS,
+  DSPAAC_HEADER_LOAS,
   DSPAAC_HEADER_NONE
 } GstAacHeaderType;
 
