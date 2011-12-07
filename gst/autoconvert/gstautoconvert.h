@@ -56,8 +56,6 @@ struct _GstAutoConvert
   GList *cached_events;
   GstSegment sink_segment;
   gboolean drop_newseg;
-
-  gboolean initial_identity;
 };
 
 struct _GstAutoConvertClass
