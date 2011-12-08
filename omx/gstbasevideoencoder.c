@@ -991,8 +991,8 @@ gst_base_video_encoder_finish_frame (GstBaseVideoEncoder * base_video_encoder,
     for (l = base_video_encoder->force_key_unit; l; l = l->next) {
       ForcedKeyUnitEvent *tmp = l->data;
 
-      /* Skip pending keyunits */
-      if (tmp->pending)
+      /* Skip non-pending keyunits */
+      if (!tmp->pending)
         continue;
 
       /* Simple case, keyunit ASAP */
@@ -1007,36 +1007,39 @@ gst_base_video_encoder_finish_frame (GstBaseVideoEncoder * base_video_encoder,
         break;
       }
     }
-    base_video_encoder->force_key_unit =
-        g_list_remove (base_video_encoder->force_key_unit, fevt);
+
+    if (fevt) {
+      base_video_encoder->force_key_unit =
+          g_list_remove (base_video_encoder->force_key_unit, fevt);
+    }
     GST_OBJECT_UNLOCK (base_video_encoder);
 
-    /* Should really be here */
-    g_assert (fevt);
+    if (fevt) {
+      stream_time =
+          gst_segment_to_stream_time (&GST_BASE_VIDEO_CODEC
+          (base_video_encoder)->segment, GST_FORMAT_TIME,
+          frame->presentation_timestamp);
 
-    stream_time =
-        gst_segment_to_stream_time (&GST_BASE_VIDEO_CODEC
-        (base_video_encoder)->segment, GST_FORMAT_TIME,
-        frame->presentation_timestamp);
+      ev = gst_video_event_new_downstream_force_key_unit
+          (frame->presentation_timestamp, stream_time, running_time,
+          fevt->all_headers, fevt->count);
 
-    ev = gst_video_event_new_downstream_force_key_unit
-        (frame->presentation_timestamp, stream_time, running_time,
-        fevt->all_headers, fevt->count);
+      gst_pad_push_event (GST_BASE_VIDEO_CODEC_SRC_PAD (base_video_encoder),
+          ev);
 
-    gst_pad_push_event (GST_BASE_VIDEO_CODEC_SRC_PAD (base_video_encoder), ev);
-
-    if (fevt->all_headers) {
-      if (base_video_encoder->headers) {
-        headers = gst_buffer_ref (base_video_encoder->headers);
-        headers = gst_buffer_make_writable (headers);
+      if (fevt->all_headers) {
+        if (base_video_encoder->headers) {
+          headers = gst_buffer_ref (base_video_encoder->headers);
+          headers = gst_buffer_make_writable (headers);
+        }
       }
-    }
 
-    GST_DEBUG_OBJECT (base_video_encoder,
-        "Forced key unit: running-time %" GST_TIME_FORMAT
-        ", all_headers %d, count %u",
-        GST_TIME_ARGS (running_time), fevt->all_headers, fevt->count);
-    forced_key_unit_event_free (fevt);
+      GST_DEBUG_OBJECT (base_video_encoder,
+          "Forced key unit: running-time %" GST_TIME_FORMAT
+          ", all_headers %d, count %u",
+          GST_TIME_ARGS (running_time), fevt->all_headers, fevt->count);
+      forced_key_unit_event_free (fevt);
+    }
   }
 
   if (frame->is_sync_point) {
