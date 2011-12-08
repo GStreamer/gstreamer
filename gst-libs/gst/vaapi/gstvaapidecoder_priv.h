@@ -23,7 +23,6 @@
 #define GST_VAAPI_DECODER_PRIV_H
 
 #include <glib.h>
-#include <gst/gsttask.h>
 #include <gst/vaapi/gstvaapidecoder.h>
 #include <gst/vaapi/gstvaapicontext.h>
 
