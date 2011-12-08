@@ -1030,7 +1030,7 @@ gst_base_video_encoder_finish_frame (GstBaseVideoEncoder * base_video_encoder,
       if (fevt->all_headers) {
         if (base_video_encoder->headers) {
           headers = gst_buffer_ref (base_video_encoder->headers);
-          headers = gst_buffer_make_writable (headers);
+          headers = gst_buffer_make_metadata_writable (headers);
         }
       }
 
