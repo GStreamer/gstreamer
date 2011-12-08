@@ -150,11 +150,26 @@ void
 gst_opus_header_create_caps_from_headers (GstCaps ** caps, GSList ** headers,
     GstBuffer * buf1, GstBuffer * buf2)
 {
+  int n_streams, family;
+
   g_return_if_fail (caps);
   g_return_if_fail (headers && !*headers);
+  g_return_if_fail (GST_BUFFER_SIZE (buf1) >= 19);
+
+  /* work out the number of streams */
+  family = GST_BUFFER_DATA (buf1)[18];
+  if (family == 0) {
+    n_streams = 1;
+  } else {
+    /* only included in the header for family > 0 */
+    g_return_if_fail (GST_BUFFER_SIZE (buf1) >= 20);
+    n_streams = GST_BUFFER_DATA (buf1)[19];
+  }
 
   /* mark and put on caps */
-  *caps = gst_caps_from_string ("audio/x-opus");
+  *caps =
+      gst_caps_new_simple ("audio/x-opus", "streams", G_TYPE_INT, n_streams,
+      NULL);
   *caps = _gst_caps_set_buffer_array (*caps, "streamheader", buf1, buf2, NULL);
 
   *headers = g_slist_prepend (*headers, buf2);
