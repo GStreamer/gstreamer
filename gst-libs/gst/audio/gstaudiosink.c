@@ -71,6 +71,8 @@
 
 #include "gstaudiosink.h"
 
+#include "gst/glib-compat-private.h"
+
 GST_DEBUG_CATEGORY_STATIC (gst_audio_sink_debug);
 #define GST_CAT_DEFAULT gst_audio_sink_debug
 
@@ -435,9 +437,16 @@ gst_audio_sink_ring_buffer_activate (GstAudioRingBuffer * buf, gboolean active)
     abuf->running = TRUE;
 
     GST_DEBUG_OBJECT (sink, "starting thread");
+
+#if !GLIB_CHECK_VERSION (2, 31, 0)
     sink->thread =
         g_thread_create ((GThreadFunc) audioringbuffer_thread_func, buf, TRUE,
         &error);
+#else
+    sink->thread = g_thread_try_new ("audiosink-ringbuffer",
+        (GThreadFunc) audioringbuffer_thread_func, buf, &error);
+#endif
+
     if (!sink->thread || error != NULL)
       goto thread_failed;
 

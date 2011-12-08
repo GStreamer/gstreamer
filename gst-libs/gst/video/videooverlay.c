@@ -140,6 +140,7 @@
  * <title>GstVideoOverlay and Gtk+</title>
  * <para>
  * |[
+ * #include &lt;gst/interfaces/xoverlay.h&gt;
  * #include &lt;gtk/gtk.h&gt;
  * #ifdef GDK_WINDOWING_X11
  * #include &lt;gdk/gdkx.h&gt;  // for GDK_WINDOW_XID
@@ -179,7 +180,7 @@
  * #endif
  *
  * #ifdef GDK_WINDOWING_X11
- *   video_window_xid = GDK_WINDOW_XID (video_window->window);
+ *   video_window_xid = GDK_WINDOW_XID (gtk_widget_get_window (video_window));
  * #endif
  * }
  * ...
@@ -207,7 +208,7 @@
  *   // realize window now so that the video window gets created and we can
  *   // obtain its XID before the pipeline is started up and the videosink
  *   // asks for the XID of the window to render onto
- *   gtk_widget_realize (window);
+ *   gtk_widget_realize (video_window);
  *
  *   // we should have the XID now
  *   g_assert (video_window_xid != 0);

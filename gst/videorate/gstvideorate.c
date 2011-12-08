@@ -139,6 +139,7 @@ static GstFlowReturn gst_video_rate_transform_ip (GstBaseTransform * trans,
     GstBuffer * buf);
 
 static gboolean gst_video_rate_start (GstBaseTransform * trans);
+static gboolean gst_video_rate_stop (GstBaseTransform * trans);
 
 
 static void gst_video_rate_set_property (GObject * object,
@@ -168,6 +169,7 @@ gst_video_rate_class_init (GstVideoRateClass * klass)
   base_class->transform_ip = GST_DEBUG_FUNCPTR (gst_video_rate_transform_ip);
   base_class->sink_event = GST_DEBUG_FUNCPTR (gst_video_rate_sink_event);
   base_class->start = GST_DEBUG_FUNCPTR (gst_video_rate_start);
+  base_class->stop = GST_DEBUG_FUNCPTR (gst_video_rate_stop);
   base_class->fixate_caps = GST_DEBUG_FUNCPTR (gst_video_rate_fixate_caps);
   base_class->query = GST_DEBUG_FUNCPTR (gst_video_rate_query);
 
@@ -1109,6 +1111,13 @@ invalid_buffer:
 
 static gboolean
 gst_video_rate_start (GstBaseTransform * trans)
+{
+  gst_video_rate_reset (GST_VIDEO_RATE (trans));
+  return TRUE;
+}
+
+static gboolean
+gst_video_rate_stop (GstBaseTransform * trans)
 {
   gst_video_rate_reset (GST_VIDEO_RATE (trans));
   return TRUE;

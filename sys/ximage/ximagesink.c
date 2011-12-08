@@ -115,6 +115,8 @@
 /* Debugging category */
 #include <gst/gstinfo.h>
 
+#include "gst/glib-compat-private.h"
+
 GST_DEBUG_CATEGORY_EXTERN (gst_debug_ximagesink);
 GST_DEBUG_CATEGORY_EXTERN (GST_CAT_PERFORMANCE);
 #define GST_CAT_DEFAULT gst_debug_ximagesink
@@ -738,8 +740,13 @@ gst_ximagesink_manage_event_thread (GstXImageSink * ximagesink)
       GST_DEBUG_OBJECT (ximagesink, "run xevent thread, expose %d, events %d",
           ximagesink->handle_expose, ximagesink->handle_events);
       ximagesink->running = TRUE;
+#if !GLIB_CHECK_VERSION (2, 31, 0)
       ximagesink->event_thread = g_thread_create (
           (GThreadFunc) gst_ximagesink_event_thread, ximagesink, TRUE, NULL);
+#else
+      ximagesink->event_thread = g_thread_try_new ("ximagesink-events",
+          (GThreadFunc) gst_ximagesink_event_thread, ximagesink, NULL);
+#endif
     }
   } else {
     if (ximagesink->event_thread) {

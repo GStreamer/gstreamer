@@ -76,6 +76,8 @@
 #include "gstapp-marshal.h"
 #include "gstappsink.h"
 
+#include "gst/glib-compat-private.h"
+
 struct _GstAppSinkPrivate
 {
   GstCaps *caps;

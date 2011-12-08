@@ -1,0 +1,498 @@
+.function orc_blend_little
+.flags 1d
+.dest 4 d guint8
+.source 4 s guint8
+.temp 4 t
+.temp 2 tw
+.temp 1 tb
+.temp 4 a
+.temp 8 d_wide
+.temp 8 s_wide
+.temp 8 a_wide
+.const 4 a_alpha 0x000000ff
+
+loadl t, s
+convlw tw, t
+convwb tb, tw
+splatbl a, tb
+x4 convubw a_wide, a
+x4 shruw a_wide, a_wide, 8
+x4 convubw s_wide, t
+loadl t, d
+x4 convubw d_wide, t
+x4 subw s_wide, s_wide, d_wide
+x4 mullw s_wide, s_wide, a_wide
+x4 div255w s_wide, s_wide
+x4 addw d_wide, d_wide, s_wide
+x4 convwb t, d_wide
+orl t, t, a_alpha
+storel d, t
+
+.function orc_blend_big
+.flags 1d
+.dest 4 d guint8
+.source 4 s guint8
+.temp 4 t
+.temp 4 t2
+.temp 2 tw
+.temp 1 tb
+.temp 4 a
+.temp 8 d_wide
+.temp 8 s_wide
+.temp 8 a_wide
+.const 4 a_alpha 0xff000000
+
+loadl t, s
+shrul t2, t, 24
+convlw tw, t2
+convwb tb, tw
+splatbl a, tb
+x4 convubw a_wide, a
+x4 shruw a_wide, a_wide, 8
+x4 convubw s_wide, t
+loadl t, d
+x4 convubw d_wide, t
+x4 subw s_wide, s_wide, d_wide
+x4 mullw s_wide, s_wide, a_wide
+x4 div255w s_wide, s_wide
+x4 addw d_wide, d_wide, s_wide
+x4 convwb t, d_wide
+orl t, t, a_alpha
+storel d, t
+
+.function cogorc_getline_I420
+.dest 4 d guint8
+.source 1 y guint8
+.source 1 u guint8
+.source 1 v guint8
+.const 1 c255 255
+.temp 2 uv
+.temp 2 ay
+.temp 1 tu
+.temp 1 tv
+
+loadupdb tu, u
+loadupdb tv, v
+mergebw uv, tu, tv
+mergebw ay, c255, y
+mergewl d, ay, uv
+
+
+.function cogorc_putline_I420
+.dest 2 y guint8
+.dest 1 u guint8
+.dest 1 v guint8
+.source 8 ayuv guint8
+.temp 4 ay
+.temp 4 uv
+.temp 2 uu
+.temp 2 vv
+.temp 1 t1
+.temp 1 t2
+
+x2 splitlw uv, ay, ayuv
+x2 select1wb y, ay
+x2 splitwb vv, uu, uv
+splitwb t1, t2, uu
+avgub u, t1, t2
+splitwb t1, t2, vv
+avgub v, t1, t2
+
+.function cogorc_getline_YUY2
+.dest 8 ayuv guint8
+.source 4 yuy2 guint8
+.const 2 c255 0xff
+.temp 2 yy
+.temp 2 uv
+.temp 4 ayay
+.temp 4 uvuv
+
+x2 splitwb uv, yy, yuy2
+x2 mergebw ayay, c255, yy
+mergewl uvuv, uv, uv
+x2 mergewl ayuv, ayay, uvuv
+
+
+.function cogorc_putline_YUY2
+.dest 4 yuy2 guint8
+.source 8 ayuv guint8
+.temp 2 yy
+.temp 2 uv1
+.temp 2 uv2
+.temp 4 ayay
+.temp 4 uvuv
+
+x2 splitlw uvuv, ayay, ayuv
+splitlw uv1, uv2, uvuv
+x2 avgub uv1, uv1, uv2
+x2 select1wb yy, ayay
+x2 mergebw yuy2, yy, uv1
+
+
+.function cogorc_putline_UYVY
+.dest 4 yuy2 guint8
+.source 8 ayuv guint8
+.temp 2 yy
+.temp 2 uv1
+.temp 2 uv2
+.temp 4 ayay
+.temp 4 uvuv
+
+x2 splitlw uvuv, ayay, ayuv
+splitlw uv1, uv2, uvuv
+x2 avgub uv1, uv1, uv2
+x2 select1wb yy, ayay
+x2 mergebw yuy2, uv1, yy
+
+
+.function cogorc_getline_UYVY
+.dest 8 ayuv guint8
+.source 4 uyvy guint8
+.const 2 c255 0xff
+.temp 2 yy
+.temp 2 uv
+.temp 4 ayay
+.temp 4 uvuv
+
+x2 splitwb yy, uv, uyvy
+x2 mergebw ayay, c255, yy
+mergewl uvuv, uv, uv
+x2 mergewl ayuv, ayay, uvuv
+
+
+.function cogorc_getline_YUV9
+.dest 8 d guint8
+.source 2 y guint8
+.source 1 u guint8
+.source 1 v guint8
+.const 1 c255 255
+.temp 2 tuv
+.temp 4 ay
+.temp 4 uv
+.temp 1 tu
+.temp 1 tv
+
+loadupdb tu, u
+loadupdb tv, v
+mergebw tuv, tu, tv
+mergewl uv, tuv, tuv
+x2 mergebw ay, c255, y
+x2 mergewl d, ay, uv
+
+
+.function cogorc_getline_Y42B
+.dest 8 ayuv guint8
+.source 2 yy guint8
+.source 1 u guint8
+.source 1 v guint8
+.const 1 c255 255
+.temp 2 uv
+.temp 2 ay
+.temp 4 uvuv
+.temp 4 ayay
+
+mergebw uv, u, v
+x2 mergebw ayay, c255, yy
+mergewl uvuv, uv, uv
+x2 mergewl ayuv, ayay, uvuv
+
+.function cogorc_putline_Y42B
+.dest 2 y guint8
+.dest 1 u guint8
+.dest 1 v guint8
+.source 8 ayuv guint8
+.temp 4 ayay
+.temp 4 uvuv
+.temp 2 uv1
+.temp 2 uv2
+
+x2 splitlw uvuv, ayay, ayuv
+splitlw uv1, uv2, uvuv
+x2 avgub uv1, uv1, uv2
+splitwb v, u, uv1
+x2 select1wb y, ayay
+
+
+.function cogorc_getline_Y444
+.dest 4 ayuv guint8
+.source 1 y guint8
+.source 1 u guint8
+.source 1 v guint8
+.const 1 c255 255
+.temp 2 uv
+.temp 2 ay
+
+mergebw uv, u, v
+mergebw ay, c255, y
+mergewl ayuv, ay, uv
+
+
+.function cogorc_putline_Y444
+.dest 1 y guint8
+.dest 1 u guint8
+.dest 1 v guint8
+.source 4 ayuv guint8
+.temp 2 ay
+.temp 2 uv
+
+splitlw uv, ay, ayuv
+splitwb v, u, uv
+select1wb y, ay
+
+.function cogorc_getline_Y800
+.dest 4 ayuv guint8
+.source 1 y guint8
+.const 1 c255 255
+.const 2 c0x8080 0x8080
+.temp 2 ay
+
+mergebw ay, c255, y
+mergewl ayuv, ay, c0x8080
+
+
+.function cogorc_putline_Y800
+.dest 1 y guint8
+.source 4 ayuv guint8
+.temp 2 ay
+
+select0lw ay, ayuv
+select1wb y, ay
+
+
+.function cogorc_putline_Y16
+.dest 2 y guint8
+.source 4 ayuv guint8
+.temp 2 ay
+.temp 1 yb
+
+select0lw ay, ayuv
+select1wb yb, ay
+convubw ay, yb
+shlw y, ay, 8
+
+
+.function cogorc_getline_Y16
+.dest 4 ayuv guint8
+.source 2 y guint8
+.const 1 c255 255
+.const 2 c0x8080 0x8080
+.temp 2 ay
+.temp 1 yb
+
+convhwb yb, y
+mergebw ay, c255, yb
+mergewl ayuv, ay, c0x8080
+
+.function cogorc_getline_BGRA
+.dest 4 argb guint8
+.source 4 bgra guint8
+
+swapl argb, bgra
+
+.function cogorc_putline_BGRA
+.dest 4 bgra guint8
+.source 4 argb guint8
+
+swapl bgra, argb
+
+.function cogorc_putline_RGBA
+.dest 4 rgba guint8
+.source 4 argb guint8
+.temp 1 a
+.temp 1 r
+.temp 1 g
+.temp 1 b
+.temp 2 rg
+.temp 2 ba
+.temp 2 ar
+.temp 2 gb
+
+splitlw gb, ar, argb
+splitwb b, g, gb
+splitwb r, a, ar
+mergebw ba, b, a
+mergebw rg, r, g
+mergewl rgba, rg, ba
+
+.function cogorc_getline_RGBA
+.dest 4 argb guint8
+.source 4 rgba guint8
+.temp 1 a
+.temp 1 r
+.temp 1 g
+.temp 1 b
+.temp 2 rg
+.temp 2 ba
+.temp 2 ar
+.temp 2 gb
+
+splitlw ba, rg, rgba
+splitwb g, r, rg
+splitwb a, b, ba
+mergebw ar, a, r
+mergebw gb, g, b
+mergewl argb, ar, gb
+
+
+.function cogorc_getline_ABGR
+.dest 4 argb guint8
+.source 4 abgr guint8
+.temp 1 a
+.temp 1 r
+.temp 1 g
+.temp 1 b
+.temp 2 gr
+.temp 2 ab
+.temp 2 ar
+.temp 2 gb
+
+splitlw gr, ab, abgr
+splitwb r, g, gr
+splitwb b, a, ab
+mergebw ar, a, r
+mergebw gb, g, b
+mergewl argb, ar, gb
+
+
+.function cogorc_putline_ABGR
+.dest 4 abgr guint8
+.source 4 argb guint8
+.temp 1 a
+.temp 1 r
+.temp 1 g
+.temp 1 b
+.temp 2 gr
+.temp 2 ab
+.temp 2 ar
+.temp 2 gb
+
+splitlw gb, ar, argb
+splitwb b, g, gb
+splitwb r, a, ar
+mergebw ab, a, b
+mergebw gr, g, r
+mergewl abgr, ab, gr
+
+.function cogorc_getline_NV12
+.dest 8 d guint8
+.source 2 y guint8
+.source 2 uv guint8
+.const 1 c255 255
+.temp 4 ay
+.temp 4 uvuv
+
+mergewl uvuv, uv, uv
+x2 mergebw ay, c255, y
+x2 mergewl d, ay, uvuv
+
+.function cogorc_putline_NV12
+.dest 2 y guint8
+.dest 2 uv guint8
+.source 8 ayuv guint8
+.temp 4 ay
+.temp 4 uvuv
+.temp 2 uv1
+.temp 2 uv2
+
+x2 splitlw uvuv, ay, ayuv
+x2 select1wb y, ay
+splitlw uv1, uv2, uvuv
+x2 avgub uv, uv1, uv2
+
+.function cogorc_getline_NV21
+.dest 8 d guint8
+.source 2 y guint8
+.source 2 vu guint8
+.const 1 c255 255
+.temp 2 uv
+.temp 4 ay
+.temp 4 uvuv
+
+swapw uv, vu
+mergewl uvuv, uv, uv
+x2 mergebw ay, c255, y
+x2 mergewl d, ay, uvuv
+
+
+.function cogorc_putline_NV21
+.dest 2 y guint8
+.dest 2 vu guint8
+.source 8 ayuv guint8
+.temp 4 ay
+.temp 4 uvuv
+.temp 2 uv1
+.temp 2 uv2
+.temp 2 uv
+
+x2 splitlw uvuv, ay, ayuv
+x2 select1wb y, ay
+splitlw uv1, uv2, uvuv
+x2 avgub uv, uv1, uv2
+swapw vu, uv
+
+
+.function cogorc_getline_A420
+.dest 4 d guint8
+.source 1 y guint8
+.source 1 u guint8
+.source 1 v guint8
+.source 1 a guint8
+.temp 2 uv
+.temp 2 ay
+.temp 1 tu
+.temp 1 tv
+
+loadupdb tu, u
+loadupdb tv, v
+mergebw uv, tu, tv
+mergebw ay, a, y
+mergewl d, ay, uv
+
+.function cogorc_putline_A420
+.dest 2 y guint8
+.dest 1 u guint8
+.dest 1 v guint8
+.dest 2 a guint8
+.source 8 ayuv guint8
+.temp 4 ay
+.temp 4 uv
+.temp 2 uu
+.temp 2 vv
+.temp 1 t1
+.temp 1 t2
+
+x2 splitlw uv, ay, ayuv
+x2 select1wb y, ay
+x2 select0wb a, ay
+x2 splitwb vv, uu, uv
+splitwb t1, t2, uu
+avgub u, t1, t2
+splitwb t1, t2, vv
+avgub v, t1, t2
+
+.function orc_resample_bilinear_u32
+.dest 4 d1 guint8
+.source 4 s1 guint8
+.param 4 p1
+.param 4 p2
+
+ldreslinl d1, s1, p1, p2
+
+.function orc_merge_linear_u8
+.dest 1 d1
+.source 1 s1
+.source 1 s2
+.param 1 p1
+.temp 2 t1
+.temp 2 t2
+.temp 1 a
+.temp 1 t
+
+loadb a, s1
+convubw t1, s1
+convubw t2, s2
+subw t2, t2, t1
+mullw t2, t2, p1
+addw t2, t2, 128
+convhwb t, t2
+addb d1, t, a

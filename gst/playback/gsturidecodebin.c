@@ -39,6 +39,8 @@
 #include "gstrawcaps.h"
 #include "gstplayback.h"
 
+#include "gst/glib-compat-private.h"
+
 #define GST_TYPE_URI_DECODE_BIN \
   (gst_uri_decode_bin_get_type())
 #define GST_URI_DECODE_BIN(obj) \

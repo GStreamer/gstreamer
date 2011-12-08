@@ -53,8 +53,13 @@ struct _GstAlsaMixer
   snd_mixer_t *         handle;
 
   GstTask *		task;
-  GStaticRecMutex *	task_mutex;
-  GStaticRecMutex *	rec_mutex;
+  GStaticRecMutex	task_mutex;
+
+#if !GLIB_CHECK_VERSION (2, 31, 0)
+  GStaticRecMutex	rec_mutex;
+#else
+  GRecMutex		rec_mutex;
+#endif
 
   int			pfd[2];
 
@@ -65,6 +70,13 @@ struct _GstAlsaMixer
   GstAlsaMixerDirection dir;
 };
 
+#if !GLIB_CHECK_VERSION (2, 31, 0)
+#define GST_ALSA_MIXER_LOCK(mixer)   g_static_rec_mutex_lock (&mixer->rec_mutex)
+#define GST_ALSA_MIXER_UNLOCK(mixer) g_static_rec_mutex_unlock (&mixer->rec_mutex)
+#else
+#define GST_ALSA_MIXER_LOCK(mixer)   g_rec_mutex_lock (&mixer->rec_mutex)
+#define GST_ALSA_MIXER_UNLOCK(mixer) g_rec_mutex_unlock (&mixer->rec_mutex)
+#endif
 
 GstAlsaMixer*   gst_alsa_mixer_new              (const gchar *device,
                                                  GstAlsaMixerDirection dir);

@@ -71,6 +71,8 @@
 
 #include "gstaudiosrc.h"
 
+#include "gst/glib-compat-private.h"
+
 GST_DEBUG_CATEGORY_STATIC (gst_audio_src_debug);
 #define GST_CAT_DEFAULT gst_audio_src_debug
 
@@ -395,10 +397,17 @@ gst_audio_src_ring_buffer_acquire (GstAudioRingBuffer * buf,
   abuf = GST_AUDIO_SRC_RING_BUFFER (buf);
   abuf->running = TRUE;
 
+  /* FIXME: handle thread creation failure */
+#if !GLIB_CHECK_VERSION (2, 31, 0)
   src->thread =
       g_thread_create ((GThreadFunc) audioringbuffer_thread_func, buf, TRUE,
       NULL);
-  GST_AUDIO_SRC_RING_BUFFER_WAIT (buf);
+#else
+  src->thread = g_thread_try_new ("audiosrc-ringbuffer",
+      (GThreadFunc) audioringbuffer_thread_func, buf, NULL);
+#endif
+
+  GST_AUDIO_RING_BUFFER_WAIT (buf);
 
   return result;
 

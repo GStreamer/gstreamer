@@ -80,8 +80,10 @@ find_video_sink (void)
 
 int main(int argc, char *argv[])
 {
+#if !GLIB_CHECK_VERSION (2, 31, 0)
   if (!g_thread_supported ())
     g_thread_init (NULL);
+#endif
 
   gst_init (&argc, &argv);
   QApplication app(argc, argv);

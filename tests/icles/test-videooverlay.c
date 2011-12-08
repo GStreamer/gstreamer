@@ -144,8 +144,10 @@ main (gint argc, gchar ** argv)
   gulong embed_xid = 0;
   gboolean force_aspect = FALSE, draw_borders = FALSE;
 
+#if !GLIB_CHECK_VERSION (2, 31, 0)
   if (!g_thread_supported ())
     g_thread_init (NULL);
+#endif
 
   gst_init (&argc, &argv);
   gtk_init (&argc, &argv);

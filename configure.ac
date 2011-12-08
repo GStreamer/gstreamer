@@ -185,7 +185,7 @@ CPPFLAGS="$ac_cppflags_save"
 AM_CONDITIONAL(HAVE_LIBXML_HTML, test "x$HAVE_LIBXML_HTML" = "xyes")
 
 dnl used in gst/tcp
-AC_CHECK_HEADERS([sys/socket.h], 
+AC_CHECK_HEADERS([sys/socket.h],
   HAVE_SYS_SOCKET_H="yes", HAVE_SYS_SOCKET_H="no")
 AM_CONDITIONAL(HAVE_SYS_SOCKET_H, test "x$HAVE_SYS_SOCKET_H" = "xyes")
 
@@ -537,7 +537,7 @@ AG_GST_CHECK_FEATURE(X, [X libraries and plugins],
   CFLAGS="$ac_cflags_save"
   CPPFLAGS="$ac_cppflags_save"
 ])
-  
+
 dnl Check for Xv extension
 translit(dnm, m, l) AM_CONDITIONAL(USE_XVIDEO, true)
 AG_GST_CHECK_FEATURE(XVIDEO, [X11 XVideo extensions],
@@ -549,24 +549,24 @@ dnl check for X Shm
 translit(dnm, m, l) AM_CONDITIONAL(USE_XSHM, true)
 AG_GST_CHECK_FEATURE(XSHM, [X Shared Memory extension], , [
   if test x$HAVE_X = xyes; then
-    AC_CHECK_LIB(Xext, XShmAttach, 
+    AC_CHECK_LIB(Xext, XShmAttach,
 		 HAVE_XSHM="yes", HAVE_XSHM="no",
-		 $X_LIBS) 
+		 $X_LIBS)
     if test "x$HAVE_XSHM" = "xyes"; then
       XSHM_LIBS="-lXext"
     else
       dnl On AIX, it is in XextSam instead, but we still need -lXext
-      AC_CHECK_LIB(XextSam, XShmAttach, 
+      AC_CHECK_LIB(XextSam, XShmAttach,
 		   HAVE_XSHM="yes", HAVE_XSHM="no",
-		   $X_LIBS) 
+		   $X_LIBS)
       if test "x$HAVE_XSHM" = "xyes"; then
 	XSHM_LIBS="-lXext -lXextSam"
       fi
     fi
   fi
-], , [ 
-  AC_SUBST(HAVE_XSHM) 
-  AC_SUBST(XSHM_LIBS) 
+], , [
+  AC_SUBST(HAVE_XSHM)
+  AC_SUBST(XSHM_LIBS)
 ])
 
 dnl *** ext plug-ins ***
@@ -597,17 +597,17 @@ AG_GST_CHECK_FEATURE(CDPARANOIA, [CDParanoia], cdparanoia, [
   PKG_CHECK_MODULES(CDPARANOIA, cdparanoia-3 >= 10.2, [
     HAVE_CDPARANOIA="yes"
   ], [
-    AG_GST_CHECK_LIBHEADER(CDPARANOIA, cdda_interface, 
-                        cdda_open, -lm, 
-                        cdda_interface.h, 
+    AG_GST_CHECK_LIBHEADER(CDPARANOIA, cdda_interface,
+                        cdda_open, -lm,
+                        cdda_interface.h,
                         CDPARANOIA_LIBS="-lcdda_interface -lcdda_paranoia"
                         HEADER_DIR="no"
                         FOUND_CDPARANOIA="yes")
     if test "x$FOUND_CDPARANOIA" != "xyes";
     then
-      AG_GST_CHECK_LIBHEADER(CDPARANOIA, cdda_interface, 
-                          cdda_open, -lm, 
-                          cdda/cdda_interface.h, 
+      AG_GST_CHECK_LIBHEADER(CDPARANOIA, cdda_interface,
+                          cdda_open, -lm,
+                          cdda/cdda_interface.h,
                           CDPARANOIA_LIBS="-lcdda_interface -lcdda_paranoia"
                           HEADER_DIR="yes"
                           FOUND_CDPARANOIA="yes")
@@ -934,6 +934,7 @@ tests/examples/app/Makefile
 tests/examples/audio/Makefile
 tests/examples/dynamic/Makefile
 tests/examples/encoding/Makefile
+tests/examples/fft/Makefile
 tests/examples/gio/Makefile
 tests/examples/overlay/Makefile
 tests/examples/seek/Makefile

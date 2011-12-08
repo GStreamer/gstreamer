@@ -102,6 +102,8 @@
 #include "gstapp-marshal.h"
 #include "gstappsrc.h"
 
+#include "gst/glib-compat-private.h"
+
 struct _GstAppSrcPrivate
 {
   GCond *cond;

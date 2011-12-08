@@ -101,6 +101,11 @@
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
+
+/* FIXME 0.11: suppress warnings for deprecated API such as GStaticRecMutex
+ * with newer GLib versions (>= 2.31.0) */
+#define GLIB_DISABLE_DEPRECATION_WARNINGS
+
 #include <gst/gst-i18n-plugin.h>
 
 #include <sys/ioctl.h>
@@ -2762,8 +2767,14 @@ gst_multi_fd_sink_start (GstBaseSink * bsink)
   }
 
   this->running = TRUE;
+
+#if !GLIB_CHECK_VERSION (2, 31, 0)
   this->thread = g_thread_create ((GThreadFunc) gst_multi_fd_sink_thread,
       this, TRUE, NULL);
+#else
+  this->thread = g_thread_new ("multifdsink",
+      (GThreadFunc) gst_multi_fd_sink_thread, this);
+#endif
 
   GST_OBJECT_FLAG_SET (this, GST_MULTI_FD_SINK_OPEN);
 

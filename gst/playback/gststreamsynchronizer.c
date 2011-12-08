@@ -21,7 +21,12 @@
 #include "config.h"
 #endif
 
+/* FIXME 0.11: suppress warnings for deprecated API such as GStaticRecMutex
+ * with newer GLib versions (>= 2.31.0) */
+#define GLIB_DISABLE_DEPRECATION_WARNINGS
+
 #include "gststreamsynchronizer.h"
+#include "gst/glib-compat-private.h"
 
 GST_DEBUG_CATEGORY_STATIC (stream_synchronizer_debug);
 #define GST_CAT_DEFAULT stream_synchronizer_debug

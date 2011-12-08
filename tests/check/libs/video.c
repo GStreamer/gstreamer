@@ -2,7 +2,7 @@
  *
  * Copyright (C) <2003> David A. Schleef <ds@schleef.org>
  * Copyright (C) <2006> Jan Schmidt <thaytan@mad.scientist.com>
- * Copyright (C) <2008> Tim-Philipp Müller <tim centricular net>
+ * Copyright (C) <2008,2011> Tim-Philipp Müller <tim centricular net>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -29,6 +29,7 @@
 #include <gst/check/gstcheck.h>
 
 #include <gst/video/video.h>
+#include <gst/video/video-overlay-composition.h>
 #include <string.h>
 
 /* These are from the current/old videotestsrc; we check our new public API
@@ -845,6 +846,151 @@ GST_START_TEST (test_video_size_from_caps)
 
 GST_END_TEST;
 
+#undef ASSERT_CRITICAL
+#define ASSERT_CRITICAL(code) while(0){}        /* nothing */
+
+GST_START_TEST (test_overlay_composition)
+{
+  GstVideoOverlayComposition *comp1, *comp2;
+  GstVideoOverlayRectangle *rect1, *rect2;
+  GstBuffer *pix1, *pix2, *buf;
+  guint seq1, seq2;
+  guint w, h, stride;
+  gint x, y;
+
+  pix1 = gst_buffer_new_and_alloc (200 * sizeof (guint32) * 50);
+  memset (GST_BUFFER_DATA (pix1), 0, GST_BUFFER_SIZE (pix1));
+
+  rect1 = gst_video_overlay_rectangle_new_argb (pix1, 200, 50, 200 * 4,
+      600, 50, 300, 50, GST_VIDEO_OVERLAY_FORMAT_FLAG_NONE);
+
+  gst_buffer_unref (pix1);
+  pix1 = NULL;
+
+  comp1 = gst_video_overlay_composition_new (rect1);
+  fail_unless (gst_video_overlay_composition_n_rectangles (comp1) == 1);
+  fail_unless (gst_video_overlay_composition_get_rectangle (comp1, 0) == rect1);
+  fail_unless (gst_video_overlay_composition_get_rectangle (comp1, 1) == NULL);
+
+  /* rectangle was created first, sequence number should be smaller */
+  seq1 = gst_video_overlay_rectangle_get_seqnum (rect1);
+  seq2 = gst_video_overlay_composition_get_seqnum (comp1);
+  fail_unless (seq1 < seq2);
+
+  /* composition took own ref, so refcount is 2 now, so this should fail */
+  ASSERT_CRITICAL (gst_video_overlay_rectangle_set_render_rectangle (rect1, 50,
+          600, 300, 50));
+
+  /* drop our ref, so refcount is 1 (we know it will continue to be valid) */
+  gst_video_overlay_rectangle_unref (rect1);
+  gst_video_overlay_rectangle_set_render_rectangle (rect1, 50, 600, 300, 50);
+
+  comp2 = gst_video_overlay_composition_new (rect1);
+  fail_unless (gst_video_overlay_composition_n_rectangles (comp2) == 1);
+  fail_unless (gst_video_overlay_composition_get_rectangle (comp2, 0) == rect1);
+  fail_unless (gst_video_overlay_composition_get_rectangle (comp2, 1) == NULL);
+
+  fail_unless (seq1 < gst_video_overlay_composition_get_seqnum (comp2));
+  fail_unless (seq2 < gst_video_overlay_composition_get_seqnum (comp2));
+
+  /* now refcount is 2 again because comp2 has also taken a ref, so must fail */
+  ASSERT_CRITICAL (gst_video_overlay_rectangle_set_render_rectangle (rect1, 0,
+          0, 1, 1));
+
+  /* this should make a copy of the rectangles so drop the original
+   * second ref on rect1 */
+  comp2 = gst_video_overlay_composition_make_writable (comp2);
+  gst_video_overlay_rectangle_set_render_rectangle (rect1, 51, 601, 301, 51);
+
+  rect2 = gst_video_overlay_composition_get_rectangle (comp2, 0);
+  fail_unless (gst_video_overlay_composition_n_rectangles (comp2) == 1);
+  fail_unless (gst_video_overlay_composition_get_rectangle (comp2, 0) == rect2);
+  fail_unless (gst_video_overlay_composition_get_rectangle (comp2, 1) == NULL);
+  fail_unless (rect1 != rect2);
+
+  gst_video_overlay_composition_add_rectangle (comp1, rect2);
+  gst_video_overlay_composition_ref (comp1);
+  ASSERT_CRITICAL (gst_video_overlay_composition_add_rectangle (comp1, rect2));
+  gst_video_overlay_composition_unref (comp1);
+
+  /* make sure the copy really worked */
+  gst_video_overlay_rectangle_get_render_rectangle (rect1, &x, &y, &w, &h);
+  fail_unless_equals_int (x, 51);
+  fail_unless_equals_int (y, 601);
+  fail_unless_equals_int (w, 301);
+  fail_unless_equals_int (h, 51);
+
+  /* get scaled pixbuf and touch last byte */
+  pix1 = gst_video_overlay_rectangle_get_pixels_argb (rect1, &stride,
+      GST_VIDEO_OVERLAY_FORMAT_FLAG_NONE);
+  fail_unless (GST_BUFFER_SIZE (pix1) > ((h - 1) * stride + (w * 4) - 1),
+      "size %u vs. last pixel offset %u", GST_BUFFER_SIZE (pix1),
+      ((h - 1) * stride + (w * 4) - 1));
+  fail_unless_equals_int (*(GST_BUFFER_DATA (pix1) + ((h - 1) * stride +
+              (w * 4) - 1)), 0);
+
+  gst_video_overlay_rectangle_get_render_rectangle (rect2, &x, &y, &w, &h);
+  fail_unless_equals_int (x, 50);
+  fail_unless_equals_int (y, 600);
+  fail_unless_equals_int (w, 300);
+  fail_unless_equals_int (h, 50);
+
+  /* get scaled pixbuf and touch last byte */
+  pix2 = gst_video_overlay_rectangle_get_pixels_argb (rect2, &stride,
+      GST_VIDEO_OVERLAY_FORMAT_FLAG_NONE);
+  fail_unless (GST_BUFFER_SIZE (pix2) > ((h - 1) * stride + (w * 4) - 1),
+      "size %u vs. last pixel offset %u", GST_BUFFER_SIZE (pix1),
+      ((h - 1) * stride + (w * 4) - 1));
+  fail_unless_equals_int (*(GST_BUFFER_DATA (pix2) + ((h - 1) * stride +
+              (w * 4) - 1)), 0);
+
+  /* get scaled pixbuf again, should be the same buffer as before (caching) */
+  pix1 = gst_video_overlay_rectangle_get_pixels_argb (rect2, &stride,
+      GST_VIDEO_OVERLAY_FORMAT_FLAG_NONE);
+  fail_unless (pix1 == pix2);
+
+  /* now compare the original unscaled ones */
+  pix1 = gst_video_overlay_rectangle_get_pixels_unscaled_argb (rect1, &w, &h,
+      &stride, GST_VIDEO_OVERLAY_FORMAT_FLAG_NONE);
+  pix2 = gst_video_overlay_rectangle_get_pixels_unscaled_argb (rect2, &w, &h,
+      &stride, GST_VIDEO_OVERLAY_FORMAT_FLAG_NONE);
+
+  /* the original pixel buffers should be identical */
+  fail_unless (pix1 == pix2);
+  fail_unless_equals_int (w, 200);
+  fail_unless_equals_int (h, 50);
+
+  /* touch last byte */
+  fail_unless (GST_BUFFER_SIZE (pix1) > ((h - 1) * stride + (w * 4) - 1),
+      "size %u vs. last pixel offset %u", GST_BUFFER_SIZE (pix1),
+      ((h - 1) * stride + (w * 4) - 1));
+  fail_unless_equals_int (*(GST_BUFFER_DATA (pix1) + ((h - 1) * stride +
+              (w * 4) - 1)), 0);
+
+  /* test attaching and retrieving of compositions to/from buffers */
+  buf = gst_buffer_new ();
+  fail_unless (gst_video_buffer_get_overlay_composition (buf) == NULL);
+
+  gst_buffer_ref (buf);
+  ASSERT_CRITICAL (gst_video_buffer_set_overlay_composition (buf, comp1));
+  gst_buffer_unref (buf);
+  gst_video_buffer_set_overlay_composition (buf, comp1);
+  fail_unless (gst_video_buffer_get_overlay_composition (buf) == comp1);
+  gst_video_buffer_set_overlay_composition (buf, comp2);
+  fail_unless (gst_video_buffer_get_overlay_composition (buf) == comp2);
+  gst_video_buffer_set_overlay_composition (buf, NULL);
+  fail_unless (gst_video_buffer_get_overlay_composition (buf) == NULL);
+
+  /* make sure the buffer cleans up its composition ref when unreffed */
+  gst_video_buffer_set_overlay_composition (buf, comp2);
+  gst_buffer_unref (buf);
+
+  gst_video_overlay_composition_unref (comp2);
+  gst_video_overlay_composition_unref (comp1);
+}
+
+GST_END_TEST;
+
 static Suite *
 video_suite (void)
 {
@@ -861,6 +1007,7 @@ video_suite (void)
   tcase_add_test (tc_chain, test_convert_frame);
   tcase_add_test (tc_chain, test_convert_frame_async);
   tcase_add_test (tc_chain, test_video_size_from_caps);
+  tcase_add_test (tc_chain, test_overlay_composition);
 
   return s;
 }
