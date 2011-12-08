@@ -440,7 +440,8 @@ gst_fake_src_event_handler (GstBaseSrc * basesrc, GstEvent * event)
       sstr = g_strdup ("");
 
     src->last_message =
-        g_strdup_printf ("event   ******* E (type: %d, %s) %p",
+        g_strdup_printf ("event   ******* (%s:%s) E (type: %d, %s) %p",
+        GST_DEBUG_PAD_NAME (GST_BASE_SRC_CAST (src)->srcpad),
         GST_EVENT_TYPE (event), sstr, event);
     g_free (sstr);
     GST_OBJECT_UNLOCK (src);
@@ -833,6 +834,7 @@ gst_fake_src_create (GstBaseSrc * basesrc, guint64 offset, guint length,
 
   if (!src->silent) {
     gchar ts_str[64], dur_str[64];
+    gchar flag_str[100];
 
     GST_OBJECT_LOCK (src);
     g_free (src->last_message);
@@ -851,12 +853,32 @@ gst_fake_src_create (GstBaseSrc * basesrc, guint64 offset, guint length,
       g_strlcpy (dur_str, "none", sizeof (dur_str));
     }
 
+    {
+      const char *flag_list[15] = {
+        "", "", "", "", "live", "decode-only", "discont", "resync", "corrupted",
+        "marker", "header", "gap", "droppable", "delta-unit", "in-caps"
+      };
+      int i;
+      char *end = flag_str;
+      end[0] = '\0';
+      for (i = 0; i < G_N_ELEMENTS (flag_list); i++) {
+        if (GST_MINI_OBJECT_CAST (buf)->flags & (1 << i)) {
+          strcpy (end, flag_list[i]);
+          end += strlen (end);
+          end[0] = ' ';
+          end[1] = '\0';
+          end++;
+        }
+      }
+    }
+
     src->last_message =
-        g_strdup_printf ("get      ******* > (%5d bytes, timestamp: %s"
+        g_strdup_printf ("create   ******* (%s:%s) (%u bytes, timestamp: %s"
         ", duration: %s, offset: %" G_GINT64_FORMAT ", offset_end: %"
-        G_GINT64_FORMAT ", flags: %d) %p", (gint) size, ts_str,
-        dur_str, GST_BUFFER_OFFSET (buf), GST_BUFFER_OFFSET_END (buf),
-        GST_MINI_OBJECT_CAST (buf)->flags, buf);
+        G_GINT64_FORMAT ", flags: %d %s) %p",
+        GST_DEBUG_PAD_NAME (GST_BASE_SRC_CAST (src)->srcpad), (guint) size,
+        ts_str, dur_str, GST_BUFFER_OFFSET (buf), GST_BUFFER_OFFSET_END (buf),
+        GST_MINI_OBJECT_CAST (buf)->flags, flag_str, buf);
     GST_OBJECT_UNLOCK (src);
 
 #if !GLIB_CHECK_VERSION(2,26,0)

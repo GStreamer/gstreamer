@@ -674,16 +674,19 @@ gst_selector_pad_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
   /* if we have a pending segment, push it out now */
   if (G_UNLIKELY (prev_active_sinkpad != active_sinkpad
           || selpad->segment_pending)) {
-    GST_DEBUG_OBJECT (pad,
-        "pushing pending NEWSEGMENT update %d, rate %lf, applied rate %lf, "
-        "format %d, " "%" G_GINT64_FORMAT " -- %" G_GINT64_FORMAT ", time %"
-        G_GINT64_FORMAT, FALSE, seg->rate, seg->applied_rate, seg->format,
-        seg->start, seg->stop, seg->time);
+    if (G_UNLIKELY (seg->format == GST_FORMAT_UNDEFINED)) {
+      GST_ERROR_OBJECT (pad, "Buffers arrived before NEWSEGMENT event");
+    } else {
+      GST_DEBUG_OBJECT (pad,
+          "pushing pending NEWSEGMENT update %d, rate %lf, applied rate %lf, "
+          "format %d, " "%" G_GINT64_FORMAT " -- %" G_GINT64_FORMAT ", time %"
+          G_GINT64_FORMAT, FALSE, seg->rate, seg->applied_rate, seg->format,
+          seg->start, seg->stop, seg->time);
 
-    start_event = gst_event_new_segment (seg);
-    gst_event_set_seqnum (start_event, selpad->segment_seqnum);
-
-    selpad->segment_pending = FALSE;
+      start_event = gst_event_new_segment (seg);
+      gst_event_set_seqnum (start_event, selpad->segment_seqnum);
+      selpad->segment_pending = FALSE;
+    }
   }
   GST_INPUT_SELECTOR_UNLOCK (sel);
 

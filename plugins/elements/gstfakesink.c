@@ -405,7 +405,8 @@ gst_fake_sink_event (GstBaseSink * bsink, GstEvent * event)
       structure = gst_message_get_structure (msg);
       sstr = gst_structure_to_string (structure);
       sink->last_message =
-          g_strdup_printf ("message ******* M (type: %d, %s) %p",
+          g_strdup_printf ("message ******* (%s:%s) M (type: %d, %s) %p",
+          GST_DEBUG_PAD_NAME (GST_BASE_SINK_CAST (sink)->sinkpad),
           GST_MESSAGE_TYPE (msg), sstr, msg);
       gst_message_unref (msg);
     } else {
@@ -416,7 +417,8 @@ gst_fake_sink_event (GstBaseSink * bsink, GstEvent * event)
       }
 
       sink->last_message =
-          g_strdup_printf ("event   ******* E (type: %d, %s) %p",
+          g_strdup_printf ("event   ******* (%s:%s) E (type: %d, %s) %p",
+          GST_DEBUG_PAD_NAME (GST_BASE_SINK_CAST (sink)->sinkpad),
           GST_EVENT_TYPE (event), sstr, event);
     }
     g_free (sstr);
@@ -493,15 +495,14 @@ gst_fake_sink_render (GstBaseSink * bsink, GstBuffer * buf)
     }
 
     {
-      const char *flag_list[12] = {
-        "ro", "media4", "", "",
-        "preroll", "discont", "incaps", "gap",
-        "delta_unit", "media1", "media2", "media3"
+      const char *flag_list[15] = {
+        "", "", "", "", "live", "decode-only", "discont", "resync", "corrupted",
+        "marker", "header", "gap", "droppable", "delta-unit", "in-caps"
       };
       int i;
       char *end = flag_str;
       end[0] = '\0';
-      for (i = 0; i < 12; i++) {
+      for (i = 0; i < G_N_ELEMENTS (flag_list); i++) {
         if (GST_MINI_OBJECT_CAST (buf)->flags & (1 << i)) {
           strcpy (end, flag_list[i]);
           end += strlen (end);
@@ -513,12 +514,13 @@ gst_fake_sink_render (GstBaseSink * bsink, GstBuffer * buf)
     }
 
     sink->last_message =
-        g_strdup_printf ("chain   ******* < (%5" G_GSIZE_FORMAT
-        " bytes, timestamp: %s" ", duration: %s, offset: %" G_GINT64_FORMAT
-        ", offset_end: %" G_GINT64_FORMAT ", flags: %d %s) %p",
-        gst_buffer_get_size (buf), ts_str, dur_str, GST_BUFFER_OFFSET (buf),
-        GST_BUFFER_OFFSET_END (buf), GST_MINI_OBJECT_CAST (buf)->flags,
-        flag_str, buf);
+        g_strdup_printf ("chain   ******* (%s:%s) (%u bytes, timestamp: %s"
+        ", duration: %s, offset: %" G_GINT64_FORMAT ", offset_end: %"
+        G_GINT64_FORMAT ", flags: %d %s) %p",
+        GST_DEBUG_PAD_NAME (GST_BASE_SINK_CAST (sink)->sinkpad),
+        (guint) gst_buffer_get_size (buf), ts_str,
+        dur_str, GST_BUFFER_OFFSET (buf), GST_BUFFER_OFFSET_END (buf),
+        GST_MINI_OBJECT_CAST (buf)->flags, flag_str, buf);
     GST_OBJECT_UNLOCK (sink);
 
     gst_fake_sink_notify_last_message (sink);
