@@ -1506,6 +1506,10 @@ gst_mpeg4_parse_video_plane_short_header (GstMpeg4VideoPlaneShortHdr *
   shorthdr->temporal_reference =
       gst_bit_reader_get_bits_uint8_unchecked (&br, 8);
   CHECK_MARKER (&br);
+  zero_bits = gst_bit_reader_get_bits_uint8_unchecked (&br, 1);
+  if (zero_bits != 0x00)
+    goto failed;
+
   shorthdr->split_screen_indicator =
       gst_bit_reader_get_bits_uint8_unchecked (&br, 1);
   shorthdr->document_camera_indicator =
