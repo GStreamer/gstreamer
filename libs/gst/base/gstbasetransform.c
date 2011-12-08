@@ -1962,7 +1962,20 @@ gst_base_transform_buffer_alloc (GstPad * pad, guint64 offset, guint size,
 
     templ = gst_pad_get_pad_template_caps (pad);
 
-    if (!gst_caps_can_intersect (sink_suggest, templ)) {
+    /* Fall back to the upstream caps if the suggested caps
+     * are not actually supported. Shouldn't really happen
+     */
+    if (suggest && !gst_caps_can_intersect (sink_suggest, templ)) {
+      GST_DEBUG_OBJECT (trans,
+          "Suggested caps not supported by sinkpad, using upstream caps");
+      gst_caps_replace (&sink_suggest, caps);
+      size_suggest = size;
+      suggest = FALSE;
+      new_caps = sink_suggest
+          && !gst_caps_is_equal (sink_suggest, priv->sink_alloc);
+    }
+
+    if (new_caps && (suggest || !gst_caps_can_intersect (sink_suggest, templ))) {
       GstCaps *allowed;
       GstCaps *peercaps;
 
