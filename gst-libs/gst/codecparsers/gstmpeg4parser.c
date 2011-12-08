@@ -1491,7 +1491,6 @@ gst_mpeg4_parse_video_plane_short_header (GstMpeg4VideoPlaneShortHdr *
     shorthdr, const guint8 * data, gsize size)
 {
   guint8 zero_bits;
-  guint32 gob_resync;
 
   GstBitReader br = GST_BIT_READER_INIT (data, size);
 
@@ -1577,26 +1576,6 @@ gst_mpeg4_parse_video_plane_short_header (GstMpeg4VideoPlaneShortHdr *
       READ_UINT8 (&br, shorthdr->psupp, 8);
 
   } while (shorthdr->pei == 1);
-
-  if (!gst_bit_reader_peek_bits_uint32 (&br, &gob_resync, 17))
-    goto failed;
-
-  /* gob_layer() */
-
-  /* Setting default values */
-  shorthdr->gob_header_empty = 1;
-  shorthdr->gob_number = 0;
-  shorthdr->gob_frame_id = 0;
-  shorthdr->quant_scale = 0;
-
-  if (gob_resync == 0x01) {
-    shorthdr->gob_header_empty = 0;
-
-    gst_bit_reader_skip_unchecked (&br, 17);
-    READ_UINT8 (&br, shorthdr->gob_number, 5);
-    READ_UINT8 (&br, shorthdr->gob_frame_id, 2);
-    READ_UINT8 (&br, shorthdr->quant_scale, 5);
-  }
 
   shorthdr->size = gst_bit_reader_get_pos (&br);
 
