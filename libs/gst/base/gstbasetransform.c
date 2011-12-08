@@ -1824,7 +1824,6 @@ gst_base_transform_buffer_alloc (GstPad * pad, guint64 offset, guint size,
     GstCaps * caps, GstBuffer ** buf)
 {
   GstBaseTransform *trans;
-  GstBaseTransformClass *klass;
   GstBaseTransformPrivate *priv;
   GstFlowReturn res;
   gboolean alloced = FALSE;
@@ -1835,7 +1834,6 @@ gst_base_transform_buffer_alloc (GstPad * pad, guint64 offset, guint size,
   trans = GST_BASE_TRANSFORM (gst_pad_get_parent (pad));
   if (G_UNLIKELY (trans == NULL))
     return GST_FLOW_WRONG_STATE;
-  klass = GST_BASE_TRANSFORM_GET_CLASS (trans);
   priv = trans->priv;
 
   GST_DEBUG_OBJECT (pad, "alloc with caps %p %" GST_PTR_FORMAT ", size %u",
@@ -1976,8 +1974,7 @@ gst_base_transform_buffer_alloc (GstPad * pad, guint64 offset, guint size,
     }
 
     if (new_caps && (suggest || !gst_caps_can_intersect (sink_suggest, templ))) {
-      GstCaps *allowed;
-      GstCaps *peercaps;
+      GstCaps *allowed, *peercaps;
 
       GST_DEBUG_OBJECT (trans,
           "Requested pad alloc caps are not supported: %" GST_PTR_FORMAT,
@@ -1990,25 +1987,47 @@ gst_base_transform_buffer_alloc (GstPad * pad, guint64 offset, guint size,
         GST_DEBUG_OBJECT (trans,
             "pads could agree on one of the following caps: " "%"
             GST_PTR_FORMAT, allowed);
-        allowed = gst_caps_make_writable (allowed);
 
-        if (klass->fixate_caps) {
-          peercaps =
-              gst_pad_get_allowed_caps (GST_BASE_TRANSFORM_SRC_PAD (trans));
-          klass->fixate_caps (trans, GST_PAD_SRC, peercaps, allowed);
+        /* Check which caps would be possible with downstream */
+        peercaps =
+            gst_pad_get_allowed_caps (GST_BASE_TRANSFORM_SRC_PAD (trans));
+        if (peercaps) {
+          GstCaps *tmp, *intersect;
+
+          tmp =
+              gst_base_transform_transform_caps (trans, GST_PAD_SRC, peercaps);
           gst_caps_unref (peercaps);
+          intersect = gst_caps_intersect (allowed, tmp);
+          gst_caps_unref (tmp);
+          gst_caps_unref (allowed);
+
+          if (gst_caps_is_empty (intersect)) {
+            gst_caps_unref (intersect);
+            goto not_supported;
+          }
+
+          allowed = intersect;
         }
+
+        allowed = gst_caps_make_writable (allowed);
 
         /* Fixate them to be safe if the subclass didn't do it */
         gst_caps_truncate (allowed);
         gst_pad_fixate_caps (pad, allowed);
+
+        if (!gst_caps_is_fixed (allowed)) {
+          GST_ERROR_OBJECT (trans, "Impossible to fixate any caps");
+          gst_caps_unref (allowed);
+          goto not_supported;
+        }
+
         gst_caps_replace (&sink_suggest, allowed);
         gst_caps_unref (allowed);
 
         suggest = TRUE;
         new_caps = !gst_caps_is_equal (sink_suggest, priv->sink_alloc);
 
-        GST_DEBUG_OBJECT (trans, "Fixated suggestion caps to %"
+        GST_DEBUG_OBJECT (trans, "Calculated new suggestion caps %"
             GST_PTR_FORMAT, sink_suggest);
       } else {
         if (allowed)
