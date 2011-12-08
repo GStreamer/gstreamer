@@ -524,7 +524,7 @@ gst_h263_parse (GstMpeg4Packet * packet,
   gint off1, off2;
   GstByteReader br;
 
-  gst_byte_reader_init (&br, data, size);
+  gst_byte_reader_init (&br, data + offset, size - offset);
 
   g_return_val_if_fail (packet != NULL, GST_MPEG4_PARSER_ERROR);
 
@@ -541,9 +541,10 @@ gst_h263_parse (GstMpeg4Packet * packet,
     return GST_MPEG4_PARSER_NO_PACKET;
   }
 
-  packet->offset = off1;
+  packet->offset = off1 + offset;
   packet->data = data;
 
+  gst_byte_reader_skip (&br, 3);
   off2 = find_psc (&br);
 
   if (off2 == -1) {
