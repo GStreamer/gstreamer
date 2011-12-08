@@ -1937,8 +1937,11 @@ gst_base_transform_buffer_alloc (GstPad * pad, guint64 offset, guint size,
         gst_pad_fixate_caps (GST_BASE_TRANSFORM_SINK_PAD (trans), sink_suggest);
 
         if (!gst_caps_is_fixed (sink_suggest)) {
-          gst_caps_unref (sink_suggest);
-          sink_suggest = NULL;
+          GST_DEBUG_OBJECT (trans,
+              "Impossible to fixate caps, using upstream caps");
+          gst_caps_replace (&sink_suggest, caps);
+          size_suggest = size;
+          suggest = FALSE;
         }
 
         GST_DEBUG_OBJECT (trans, "Caps fixed to: %" GST_PTR_FORMAT,
