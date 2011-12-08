@@ -357,9 +357,16 @@ opus_dec_chain_parse_data (GstOpusDec * dec, GstBuffer * buffer)
 
     GST_DEBUG_OBJECT (dec, "Creating decoder with %d channels, %d Hz",
         dec->n_channels, dec->sample_rate);
-    dec->state = opus_multistream_decoder_create (dec->sample_rate,
-        dec->n_channels, dec->n_streams, dec->n_stereo_streams,
-        dec->channel_mapping, &err);
+#ifndef GST_DISABLE_DEBUG
+    gst_opus_common_log_channel_mapping_table (GST_ELEMENT (dec), opusdec_debug,
+        "Mapping table", dec->n_channels, dec->channel_mapping);
+#endif
+
+    GST_DEBUG_OBJECT (dec, "%d streams, %d stereo", dec->n_streams,
+        dec->n_stereo_streams);
+    dec->state =
+        opus_multistream_decoder_create (dec->sample_rate, dec->n_channels,
+        dec->n_streams, dec->n_stereo_streams, dec->channel_mapping, &err);
     if (!dec->state || err != OPUS_OK)
       goto creation_failed;
   }
