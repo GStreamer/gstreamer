@@ -58,7 +58,7 @@ static GstStaticPadTemplate opus_parse_sink_factory =
 GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("audio/x-opus")
+    GST_STATIC_CAPS ("audio/x-opus, streams = (int) [ 1, 255 ]")
     );
 
 G_DEFINE_TYPE (GstOpusParse, gst_opus_parse, GST_TYPE_BASE_PARSE);
