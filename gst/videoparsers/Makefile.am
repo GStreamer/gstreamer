@@ -10,10 +10,10 @@ libgstvideoparsersbad_la_CFLAGS = \
 	$(GST_PLUGINS_BAD_CFLAGS) $(GST_PLUGINS_BASE_CFLAGS) \
 	-DGST_USE_UNSTABLE_API \
 	$(GST_BASE_CFLAGS) $(GST_CFLAGS)
-libgstvideoparsersbad_la_LIBADD = $(GST_PLUGINS_BASE_LIBS) \
+libgstvideoparsersbad_la_LIBADD = \
 	$(top_builddir)/gst-libs/gst/codecparsers/libgstcodecparsers-$(GST_MAJORMINOR).la \
-	$(GST_BASE_LIBS) -lgstpbutils-$(GST_MAJORMINOR) -lgstvideo-$(GST_MAJORMINOR) \
-	$(GST_LIBS)
+	$(GST_PLUGINS_BASE_LIBS) -lgstpbutils-$(GST_MAJORMINOR) -lgstvideo-$(GST_MAJORMINOR) \
+	$(GST_BASE_LIBS) $(GST_LIBS)
 libgstvideoparsersbad_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 libgstvideoparsersbad_la_LIBTOOLFLAGS = --tag=disable-static
 
