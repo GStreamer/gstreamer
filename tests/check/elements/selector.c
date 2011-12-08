@@ -201,13 +201,23 @@ selector_set_active_pad (GstElement * elem, GstPad * selpad)
 static void
 push_newsegment_events (GList * input_pads)
 {
+  GstSegment seg;
   GList *l;
+
+  seg.flags = GST_SEGMENT_FLAG_NONE;
+  seg.rate = seg.applied_rate = 1.0;
+  seg.format = GST_FORMAT_BYTES;
+  seg.base = 0;
+  seg.start = 0;
+  seg.stop = -1;
+  seg.time = 0;
+  seg.position = 0;
+  seg.duration = -1;
 
   for (l = input_pads; l; l = l->next) {
     GstPad *pad = l->data;
 
-    gst_pad_push_event (pad, gst_event_new_new_segment_full (FALSE, 1.0, 1.0,
-            GST_FORMAT_BYTES, 0, -1, 0));
+    gst_pad_push_event (pad, gst_event_new_segment (&seg));
   }
 }
 
