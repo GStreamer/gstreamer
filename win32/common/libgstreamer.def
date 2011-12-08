@@ -637,7 +637,6 @@ EXPORTS
 	gst_object_get_type
 	gst_object_get_value
 	gst_object_get_value_array
-	gst_object_get_value_arrays
 	gst_object_has_active_controlled_properties
 	gst_object_has_ancestor
 	gst_object_ref
