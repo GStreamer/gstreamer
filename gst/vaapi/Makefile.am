@@ -4,7 +4,7 @@ libgstvaapi_CFLAGS = \
 	$(LIBVA_CFLAGS)		\
 	-I$(top_srcdir)/gst-libs
 
-if USE_VAAPISINK_GLX
+if USE_VAAPI_GLX
 libgstvaapi_LIBS = \
 	$(top_builddir)/gst-libs/gst/vaapi/libgstvaapi-glx-$(GST_MAJORMINOR).la
 else
