@@ -326,6 +326,7 @@ gst_flac_parse_start (GstBaseParse * parse)
   flacparse->blocking_strategy = 0;
   flacparse->block_size = 0;
   flacparse->sample_number = 0;
+  flacparse->strategy_checked = FALSE;
 
   /* "fLaC" marker */
   gst_base_parse_set_min_frame_size (GST_BASE_PARSE (flacparse), 4);
@@ -536,11 +537,16 @@ gst_flac_parse_frame_header_is_valid (GstFlacParse * flacparse,
   /* Sanity check sample number against blocking strategy, as it seems
      some files claim fixed block size but supply sample numbers,
      rather than block numbers. */
-  if (set && blocking_strategy == 0 && block_size == sample_number) {
-    GST_WARNING_OBJECT (flacparse, "This file claims fixed block size, "
-        "but seems to be lying: assuming variable block size");
-    flacparse->force_variable_block_size = TRUE;
-    blocking_strategy = 1;
+  if (blocking_strategy == 0 && flacparse->block_size != 0) {
+    if (!flacparse->strategy_checked) {
+      if (block_size == sample_number) {
+        GST_WARNING_OBJECT (flacparse, "This file claims fixed block size, "
+            "but seems to be lying: assuming variable block size");
+        flacparse->force_variable_block_size = TRUE;
+        blocking_strategy = 1;
+      }
+      flacparse->strategy_checked = TRUE;
+    }
   }
 
   /* 

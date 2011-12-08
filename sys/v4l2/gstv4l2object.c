@@ -933,6 +933,8 @@ gst_v4l2_object_get_format_from_fourcc (GstV4l2Object * v4l2object,
 
 
 /* complete made up ranking, the values themselves are meaningless */
+/* These ranks MUST be X such that X<<15 fits on a signed int - see
+   the comment at the end of gst_v4l2_object_format_get_rank. */
 #define YUV_BASE_RANK     1000
 #define JPEG_BASE_RANK     500
 #define DV_BASE_RANK       200
@@ -1670,7 +1672,7 @@ gst_v4l2_object_probe_caps_for_format_and_size (GstV4l2Object * v4l2object,
         num, denom);
     gst_value_set_fraction (&step, -num, denom);
 
-    while (gst_value_compare (&min, &max) <= 0) {
+    while (gst_value_compare (&min, &max) != GST_VALUE_GREATER_THAN) {
       GValue rate = { 0, };
 
       num = gst_value_get_fraction_numerator (&min);
@@ -1840,7 +1842,7 @@ gst_v4l2_object_probe_caps_for_format (GstV4l2Object * v4l2object,
         size.stepwise.step_height);
 
     for (w = size.stepwise.min_width, h = size.stepwise.min_height;
-        w < size.stepwise.max_width && h < size.stepwise.max_height;
+        w <= size.stepwise.max_width && h <= size.stepwise.max_height;
         w += size.stepwise.step_width, h += size.stepwise.step_height) {
       if (w == 0 || h == 0)
         continue;

@@ -784,11 +784,11 @@ static void
 gst_flv_demux_update_resync (GstFlvDemux * demux, guint32 pts, gboolean discont,
     guint32 * last, GstClockTime * offset)
 {
-  if (!discont && ABS (pts - *last) >= RESYNC_THRESHOLD) {
+  gint32 dpts = pts - *last;
+  if (!discont && ABS (dpts) >= RESYNC_THRESHOLD) {
     /* Theoretically, we should use substract the duration of the last buffer,
        but this demuxer sends no durations on buffers, not sure if it cannot
        know, or just does not care to calculate. */
-    gint32 dpts = pts - *last;
     *offset -= dpts * GST_MSECOND;
     GST_WARNING_OBJECT (demux,
         "Large pts gap (%" G_GINT32_FORMAT " ms), assuming resync, offset now %"

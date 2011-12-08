@@ -2487,6 +2487,11 @@ static void
 gst_matroska_parse_accumulate_streamheader (GstMatroskaParse * parse,
     GstBuffer * buffer)
 {
+  if (parse->pushed_headers) {
+    GST_WARNING_OBJECT (parse,
+        "Accumulating headers, but headers are already pushed");
+  }
+
   if (parse->streamheader) {
     GstBuffer *buf;
 
@@ -2742,7 +2747,7 @@ gst_matroska_parse_parse_id (GstMatroskaParse * parse, guint32 id,
           GST_READ_CHECK (gst_matroska_parse_take (parse, read, &ebml));
           ret = gst_matroska_read_common_parse_metadata (&parse->common,
               GST_ELEMENT_CAST (parse), &ebml);
-          gst_matroska_parse_output (parse, ebml.buf, FALSE);
+          gst_matroska_parse_accumulate_streamheader (parse, ebml.buf);
           break;
         case GST_MATROSKA_ID_CHAPTERS:
           GST_READ_CHECK (gst_matroska_parse_take (parse, read, &ebml));
