@@ -159,6 +159,7 @@ gst_vaapidecode_update_src_caps(GstVaapiDecode *decode, GstCaps *caps)
     if (v_par)
         gst_structure_set_value(structure, "pixel-aspect-ratio", v_par);
 
+    gst_structure_set(structure, "type", G_TYPE_STRING, "vaapi", NULL);
     gst_structure_set(structure, "opengl", G_TYPE_BOOLEAN, USE_VAAPI_GLX, NULL);
 
     other_caps = gst_caps_copy(decode->srcpad_caps);

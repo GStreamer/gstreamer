@@ -488,6 +488,7 @@ gst_vaapiconvert_transform_caps(
     structure = gst_caps_get_structure(out_caps, 0);
     gst_structure_set_value(structure, "width", v_width);
     gst_structure_set_value(structure, "height", v_height);
+    gst_structure_set(structure, "type", G_TYPE_STRING, "vaapi", NULL);
     gst_structure_set(structure, "opengl", G_TYPE_BOOLEAN, USE_VAAPI_GLX, NULL);
     if (v_framerate)
         gst_structure_set_value(structure, "framerate", v_framerate);
