@@ -1497,7 +1497,10 @@ gst_mpeg4_parse_video_plane_short_header (GstMpeg4VideoPlaneShortHdr *
 
   g_return_val_if_fail (shorthdr != NULL, GST_MPEG4_PARSER_ERROR);
 
-  if (gst_bit_reader_get_remaining (&br) < 26)
+  if (gst_bit_reader_get_remaining (&br) < 48)
+    goto failed;
+
+  if (gst_bit_reader_get_bits_uint32_unchecked (&br, 22) != 0x20)
     goto failed;
 
   shorthdr->temporal_reference =
@@ -1518,26 +1521,31 @@ gst_mpeg4_parse_video_plane_short_header (GstMpeg4VideoPlaneShortHdr *
       shorthdr->vop_height = 96;
       shorthdr->num_macroblocks_in_gob = 8;
       shorthdr->num_gobs_in_vop = 6;
+      break;
     case 0x02:
       shorthdr->vop_width = 176;
       shorthdr->vop_height = 144;
       shorthdr->num_macroblocks_in_gob = 11;
       shorthdr->num_gobs_in_vop = 9;
+      break;
     case 0x03:
       shorthdr->vop_width = 352;
       shorthdr->vop_height = 288;
       shorthdr->num_macroblocks_in_gob = 22;
       shorthdr->num_gobs_in_vop = 18;
+      break;
     case 0x04:
       shorthdr->vop_width = 704;
       shorthdr->vop_height = 576;
       shorthdr->num_macroblocks_in_gob = 88;
       shorthdr->num_gobs_in_vop = 18;
+      break;
     case 0x05:
       shorthdr->vop_width = 1408;
       shorthdr->vop_height = 1152;
       shorthdr->num_macroblocks_in_gob = 352;
       shorthdr->num_gobs_in_vop = 18;
+      break;
     default:
       shorthdr->vop_width = 0;
       shorthdr->vop_height = 0;
