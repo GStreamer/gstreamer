@@ -273,7 +273,7 @@ find_psc (GstByteReader * br)
   /* Scan for the picture start code (22 bits - 0x0020) */
   while ((gst_byte_reader_get_remaining (br) >= 3)) {
     if (gst_byte_reader_peek_uint24_be (br, &psc) &&
-        ((psc & 0xffffc0) == 0x000080)) {
+        ((psc & 0xfffffc) == 0x000080)) {
       psc_pos = gst_byte_reader_get_pos (br);
       break;
     } else
