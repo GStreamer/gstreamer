@@ -191,6 +191,7 @@ static gboolean gst_mpegts_demux_src_event (GstPad * pad, GstEvent * event);
 static GstFlowReturn gst_mpegts_demux_chain (GstPad * pad, GstBuffer * buffer);
 static gboolean gst_mpegts_demux_sink_setcaps (GstPad * pad, GstCaps * caps);
 
+static gboolean gst_mpegts_demux_is_live (GstMpegTSDemux * demux);
 static GstClock *gst_mpegts_demux_provide_clock (GstElement * element);
 static gboolean gst_mpegts_demux_src_pad_query (GstPad * pad, GstQuery * query);
 static const GstQueryType *gst_mpegts_demux_src_pad_query_type (GstPad * pad);
@@ -1279,12 +1280,14 @@ gst_mpegts_demux_data_cb (GstPESFilter * filter, gboolean first,
 
   if (G_UNLIKELY (!GST_CLOCK_TIME_IS_VALID (demux->in_gap))) {
     if (GST_CLOCK_TIME_IS_VALID (demux->first_buf_ts)
-        && GST_CLOCK_TIME_IS_VALID (filter->pts)) {
+        && GST_CLOCK_TIME_IS_VALID (filter->pts)
+        && gst_mpegts_demux_is_live (demux)) {
       int i;
       GstClockTime pts = GST_CLOCK_TIME_NONE;
       for (i = 0; i < MPEGTS_MAX_PID + 1; i++) {
         GstMpegTSStream *stream = demux->streams[i];
-        if (stream && (pts == GST_CLOCK_TIME_NONE || stream->last_time < pts)) {
+        if (stream && stream->last_time > 0 && (pts == GST_CLOCK_TIME_NONE
+                || stream->last_time < pts)) {
           pts = stream->last_time;
         }
       }
@@ -2952,14 +2955,12 @@ gst_mpegts_demux_sink_event (GstPad * pad, GstEvent * event)
 }
 
 static gboolean
-gst_mpegts_demux_provides_clock (GstElement * element)
+gst_mpegts_demux_is_live (GstMpegTSDemux * demux)
 {
-  GstMpegTSDemux *demux;
   GstQuery *query;
   gboolean is_live = FALSE;
   GstPad *peer;
 
-  demux = GST_MPEGTS_DEMUX (element);
   query = gst_query_new_latency ();
   peer = gst_pad_get_peer (demux->sinkpad);
 
@@ -2971,6 +2972,12 @@ gst_mpegts_demux_provides_clock (GstElement * element)
   gst_query_unref (query);
 
   return is_live;
+}
+
+static gboolean
+gst_mpegts_demux_provides_clock (GstElement * element)
+{
+  return gst_mpegts_demux_is_live (GST_MPEGTS_DEMUX (element));
 }
 
 static GstClock *
