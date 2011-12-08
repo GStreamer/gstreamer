@@ -530,12 +530,12 @@ gst_vaapisink_buffer_alloc(
     /* ERRORS */
 error_invalid_caps:
     {
-        GST_DEBUG("failed to validate input caps");
+        GST_ERROR("failed to validate input caps");
         return GST_FLOW_UNEXPECTED;
     }
 error_create_buffer:
     {
-        GST_DEBUG("failed to create video buffer");
+        GST_ERROR("failed to create video buffer");
         return GST_FLOW_UNEXPECTED;
     }
 }
