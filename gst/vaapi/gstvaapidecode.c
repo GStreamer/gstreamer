@@ -455,6 +455,9 @@ gst_vaapidecode_change_state(GstElement *element, GstStateChange transition)
     GstStateChangeReturn ret = GST_STATE_CHANGE_SUCCESS;
 
     switch (transition) {
+    case GST_STATE_CHANGE_NULL_TO_READY:
+        decode->is_ready = TRUE;
+        break;
     case GST_STATE_CHANGE_READY_TO_PAUSED:
         break;
     case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
@@ -471,6 +474,14 @@ gst_vaapidecode_change_state(GstElement *element, GstStateChange transition)
     case GST_STATE_CHANGE_PLAYING_TO_PAUSED:
         break;
     case GST_STATE_CHANGE_PAUSED_TO_READY:
+        break;
+    case GST_STATE_CHANGE_READY_TO_NULL:
+        gst_vaapidecode_destroy(decode);
+        if (decode->display) {
+            g_object_unref(decode->display);
+            decode->display = NULL;
+        }
+        decode->is_ready = FALSE;
         break;
     default:
         break;
@@ -570,6 +581,9 @@ gst_vaapidecode_get_caps(GstPad *pad)
 {
     GstVaapiDecode * const decode = GST_VAAPIDECODE(GST_OBJECT_PARENT(pad));
 
+    if (!decode->is_ready)
+        return gst_static_pad_template_get_caps(&gst_vaapidecode_sink_factory);
+
     if (!gst_vaapidecode_ensure_allowed_caps(decode))
         return gst_caps_new_empty();
 
@@ -660,6 +674,7 @@ gst_vaapidecode_init(GstVaapiDecode *decode, GstVaapiDecodeClass *klass)
     decode->decoder_caps        = NULL;
     decode->allowed_caps        = NULL;
     decode->use_ffmpeg          = TRUE;
+    decode->is_ready            = FALSE;
 
     /* Pad through which data comes in to the element */
     decode->sinkpad = gst_pad_new_from_template(
