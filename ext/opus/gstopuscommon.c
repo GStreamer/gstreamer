@@ -17,6 +17,8 @@
  * Boston, MA 02111-1307, USA.
  */
 
+#include <stdio.h>
+#include <string.h>
 #include "gstopuscommon.h"
 
 /* http://www.xiph.org/vorbis/doc/Vorbis_I_spec.html#x1-800004.3.9 */
@@ -86,3 +88,19 @@ const char *gst_opus_channel_names[] = {
   "side right",
   "none"
 };
+
+void
+gst_opus_common_log_channel_mapping_table (GstElement * element,
+    GstDebugCategory * category, const char *msg, int n_channels,
+    const guint8 * table)
+{
+  char s[8 + 256 * 4] = "[ ";   /* enough for 256 times "255 " at most */
+  int n;
+
+  for (n = 0; n < n_channels; ++n) {
+    size_t len = strlen (s);
+    snprintf (s + len, sizeof (s) - len, "%d ", table[n]);
+  }
+  strcat (s, "]");
+  GST_CAT_LEVEL_LOG (category, GST_LEVEL_INFO, element, "%s: %s", msg, s);
+}
