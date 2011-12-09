@@ -82,7 +82,7 @@ typedef struct
 } GstRTSPTransMap;
 
 static const GstRTSPTransMap transports[] = {
-  {"rtp", GST_RTSP_TRANS_RTP, "application/x-rtp", {"gstrtpbin", "rtpdec"}},
+  {"rtp", GST_RTSP_TRANS_RTP, "application/x-rtp", {"rtpbin", "rtpdec"}},
   {"x-real-rdt", GST_RTSP_TRANS_RDT, "application/x-rdt", {"rdtmanager", NULL}},
   {"x-pn-tng", GST_RTSP_TRANS_RDT, "application/x-rdt", {"rdtmanager", NULL}},
   {NULL, GST_RTSP_TRANS_UNKNOWN, NULL, {NULL, NULL}}
