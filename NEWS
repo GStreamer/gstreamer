@@ -1,8 +1,8 @@
-gst-vaapi NEWS -- summary of changes.  2011-12-DD
+gst-vaapi NEWS -- summary of changes.  2011-12-09
 Copyright (C) 2010-2011 Splitted-Desktop Systems
 Copyright (C) 2011 Intel Corporation
 
-Version 0.3.0 - DD.Dec.2011
+Version 0.3.0 - 09.Dec.2011
 * Group all plugins into the same bundle
 * Use new XOverlay API (Sreerenj Balachandran)
 * Use new GstVideoContext and GstSurfaceBuffer API (Nicolas Dufresne)
