@@ -2450,7 +2450,7 @@ gst_base_src_loop (GstPad * pad)
   /* check if we need to renegotiate */
   if (gst_pad_check_reconfigure (pad)) {
     if (!gst_base_src_negotiate (src))
-      GST_DEBUG_OBJECT (src, "Failed to renegotiate");
+      goto not_negotiated;
   }
 
   GST_LIVE_LOCK (src);
@@ -2607,6 +2607,12 @@ done:
   return;
 
   /* special cases */
+not_negotiated:
+  {
+    GST_DEBUG_OBJECT (src, "Failed to renegotiate");
+    ret = GST_FLOW_NOT_NEGOTIATED;
+    goto pause;
+  }
 flushing:
   {
     GST_DEBUG_OBJECT (src, "we are flushing");
