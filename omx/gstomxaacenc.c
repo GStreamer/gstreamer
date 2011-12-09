@@ -338,6 +338,77 @@ gst_omx_aac_enc_set_format (GstOMXAudioEnc * enc, GstOMXPort * port,
   return TRUE;
 }
 
+typedef enum adts_sample_index__
+{
+  ADTS_SAMPLE_INDEX_96000 = 0x0,
+  ADTS_SAMPLE_INDEX_88200,
+  ADTS_SAMPLE_INDEX_64000,
+  ADTS_SAMPLE_INDEX_48000,
+  ADTS_SAMPLE_INDEX_44100,
+  ADTS_SAMPLE_INDEX_32000,
+  ADTS_SAMPLE_INDEX_24000,
+  ADTS_SAMPLE_INDEX_22050,
+  ADTS_SAMPLE_INDEX_16000,
+  ADTS_SAMPLE_INDEX_12000,
+  ADTS_SAMPLE_INDEX_11025,
+  ADTS_SAMPLE_INDEX_8000,
+  ADTS_SAMPLE_INDEX_7350,
+  ADTS_SAMPLE_INDEX_MAX
+} adts_sample_index;
+
+static adts_sample_index
+map_adts_sample_index (guint32 srate)
+{
+  adts_sample_index ret;
+
+  switch (srate) {
+
+    case 96000:
+      ret = ADTS_SAMPLE_INDEX_96000;
+      break;
+    case 88200:
+      ret = ADTS_SAMPLE_INDEX_88200;
+      break;
+    case 64000:
+      ret = ADTS_SAMPLE_INDEX_64000;
+      break;
+    case 48000:
+      ret = ADTS_SAMPLE_INDEX_48000;
+      break;
+    case 44100:
+      ret = ADTS_SAMPLE_INDEX_44100;
+      break;
+    case 32000:
+      ret = ADTS_SAMPLE_INDEX_32000;
+      break;
+    case 24000:
+      ret = ADTS_SAMPLE_INDEX_24000;
+      break;
+    case 22050:
+      ret = ADTS_SAMPLE_INDEX_22050;
+      break;
+    case 16000:
+      ret = ADTS_SAMPLE_INDEX_16000;
+      break;
+    case 12000:
+      ret = ADTS_SAMPLE_INDEX_12000;
+      break;
+    case 11025:
+      ret = ADTS_SAMPLE_INDEX_11025;
+      break;
+    case 8000:
+      ret = ADTS_SAMPLE_INDEX_8000;
+      break;
+    case 7350:
+      ret = ADTS_SAMPLE_INDEX_7350;
+      break;
+    default:
+      ret = ADTS_SAMPLE_INDEX_44100;
+      break;
+  }
+  return ret;
+}
+
 static GstCaps *
 gst_omx_aac_enc_get_caps (GstOMXAudioEnc * enc, GstOMXPort * port,
     GstAudioInfo * info)
@@ -432,7 +503,24 @@ gst_omx_aac_enc_get_caps (GstOMXAudioEnc * enc, GstOMXPort * port,
     gst_caps_set_simple (caps, "rate", G_TYPE_INT, aac_profile.nSampleRate,
         NULL);
 
+  if (aac_profile.eAACStreamFormat == OMX_AUDIO_AACStreamFormatRAW) {
+    GstBuffer *codec_data;
+    guint8 *cdata;
+    adts_sample_index sr_idx;
+
+    codec_data = gst_buffer_new_and_alloc (2);
+    cdata = GST_BUFFER_DATA (codec_data);
+    sr_idx = map_adts_sample_index (aac_profile.nSampleRate);
+    cdata[0] = ((aac_profile.eAACProfile & 0x1F) << 3) | ((sr_idx & 0xE) >> 1);
+    cdata[1] = ((sr_idx & 0x1) << 7) | ((aac_profile.nChannels & 0xF) << 3);
+
+    GST_DEBUG_OBJECT (enc, "setting new codec_data");
+    gst_caps_set_simple (caps, "codec_data", GST_TYPE_BUFFER, codec_data, NULL);
+
+    gst_buffer_unref (codec_data);
+  }
   return caps;
+
 }
 
 static guint
