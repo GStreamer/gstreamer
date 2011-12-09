@@ -55,6 +55,8 @@ struct _GstRTPBuffer
   gsize        maxsize;
 };
 
+#define GST_RTP_BUFFER_INIT {NULL,0,NULL,0,0}
+
 /* creating buffers */
 void            gst_rtp_buffer_allocate_data         (GstBuffer *buffer, guint payload_len,
                                                       guint8 pad_len, guint8 csrc_count);
