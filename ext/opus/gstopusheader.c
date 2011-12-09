@@ -151,6 +151,7 @@ gst_opus_header_create_caps_from_headers (GstCaps ** caps, GSList ** headers,
     GstBuffer * buf1, GstBuffer * buf2)
 {
   int n_streams, family;
+  gboolean multistream;
 
   g_return_if_fail (caps);
   g_return_if_fail (headers && !*headers);
@@ -167,9 +168,9 @@ gst_opus_header_create_caps_from_headers (GstCaps ** caps, GSList ** headers,
   }
 
   /* mark and put on caps */
-  *caps =
-      gst_caps_new_simple ("audio/x-opus", "streams", G_TYPE_INT, n_streams,
-      NULL);
+  multistream = n_streams > 1;
+  *caps = gst_caps_new_simple ("audio/x-opus",
+      "multistream", G_TYPE_BOOLEAN, multistream, NULL);
   *caps = _gst_caps_set_buffer_array (*caps, "streamheader", buf1, buf2, NULL);
 
   *headers = g_slist_prepend (*headers, buf2);

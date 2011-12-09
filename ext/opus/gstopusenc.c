@@ -126,7 +126,7 @@ static GstStaticPadTemplate sink_factory = GST_STATIC_PAD_TEMPLATE ("sink",
 static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("audio/x-opus, streams = (int) [1, 255 ]")
+    GST_STATIC_CAPS ("audio/x-opus")
     );
 
 #define DEFAULT_AUDIO           TRUE
@@ -161,6 +161,7 @@ static void gst_opus_enc_finalize (GObject * object);
 
 static gboolean gst_opus_enc_sink_event (GstAudioEncoder * benc,
     GstEvent * event);
+static GstCaps *gst_opus_enc_sink_getcaps (GstAudioEncoder * benc);
 static gboolean gst_opus_enc_setup (GstOpusEnc * enc);
 
 static void gst_opus_enc_get_property (GObject * object, guint prop_id,
@@ -229,6 +230,7 @@ gst_opus_enc_class_init (GstOpusEncClass * klass)
   base_class->set_format = GST_DEBUG_FUNCPTR (gst_opus_enc_set_format);
   base_class->handle_frame = GST_DEBUG_FUNCPTR (gst_opus_enc_handle_frame);
   base_class->event = GST_DEBUG_FUNCPTR (gst_opus_enc_sink_event);
+  base_class->getcaps = GST_DEBUG_FUNCPTR (gst_opus_enc_sink_getcaps);
 
   g_object_class_install_property (gobject_class, PROP_AUDIO,
       g_param_spec_boolean ("audio", "Audio or voice",
@@ -719,6 +721,68 @@ gst_opus_enc_sink_event (GstAudioEncoder * benc, GstEvent * event)
   }
 
   return FALSE;
+}
+
+static GstCaps *
+gst_opus_enc_sink_getcaps (GstAudioEncoder * benc)
+{
+  GstOpusEnc *enc;
+  GstCaps *caps;
+  GstCaps *peercaps = NULL;
+  GstCaps *intersect = NULL;
+  guint i;
+  gboolean allow_multistream;
+
+  enc = GST_OPUS_ENC (benc);
+
+  GST_DEBUG_OBJECT (enc, "sink getcaps");
+
+  peercaps = gst_pad_peer_get_caps (GST_AUDIO_ENCODER_SRC_PAD (benc));
+  if (!peercaps) {
+    GST_DEBUG_OBJECT (benc, "No peercaps, returning template sink caps");
+    return
+        gst_caps_copy (gst_pad_get_pad_template_caps
+        (GST_AUDIO_ENCODER_SINK_PAD (benc)));
+  }
+
+  intersect = gst_caps_intersect (peercaps,
+      gst_pad_get_pad_template_caps (GST_AUDIO_ENCODER_SRC_PAD (benc)));
+  gst_caps_unref (peercaps);
+
+  if (gst_caps_is_empty (intersect))
+    return intersect;
+
+  allow_multistream = FALSE;
+  for (i = 0; i < gst_caps_get_size (intersect); i++) {
+    GstStructure *s = gst_caps_get_structure (intersect, i);
+    gboolean multistream;
+    if (gst_structure_get_boolean (s, "multistream", &multistream)) {
+      if (multistream) {
+        allow_multistream = TRUE;
+      }
+    } else {
+      allow_multistream = TRUE;
+    }
+  }
+
+  gst_caps_unref (intersect);
+
+  caps =
+      gst_caps_copy (gst_pad_get_pad_template_caps (GST_AUDIO_ENCODER_SINK_PAD
+          (benc)));
+  if (!allow_multistream) {
+    GValue range = { 0 };
+    g_value_init (&range, GST_TYPE_INT_RANGE);
+    gst_value_set_int_range (&range, 1, 2);
+    for (i = 0; i < gst_caps_get_size (caps); i++) {
+      GstStructure *s = gst_caps_get_structure (caps, i);
+      gst_structure_set_value (s, "channels", &range);
+    }
+    g_value_unset (&range);
+  }
+
+  GST_DEBUG_OBJECT (enc, "Returning caps: %" GST_PTR_FORMAT, caps);
+  return caps;
 }
 
 static GstFlowReturn
