@@ -62,9 +62,9 @@ main (int argc, char *argv[])
    * element with pay%d names will be a stream */
   factory = gst_rtsp_media_factory_new ();
   gst_rtsp_media_factory_set_launch (factory, "( "
-      "videotestsrc ! video/x-raw-yuv,width=352,height=288,framerate=15/1 ! "
+      "videotestsrc ! video/x-raw,width=352,height=288,framerate=15/1 ! "
       "x264enc ! rtph264pay name=pay0 pt=96 "
-      "audiotestsrc ! audio/x-raw-int,rate=8000 ! "
+      "audiotestsrc ! audio/x-raw,rate=8000 ! "
       "alawenc ! rtppcmapay name=pay1 pt=97 " ")");
 
   /* make a new authentication manager */
@@ -80,7 +80,7 @@ main (int argc, char *argv[])
   /* make another factory */
   factory = gst_rtsp_media_factory_new ();
   gst_rtsp_media_factory_set_launch (factory, "( "
-      "videotestsrc ! video/x-raw-yuv,width=352,height=288,framerate=30/1 ! "
+      "videotestsrc ! video/x-raw,width=352,height=288,framerate=30/1 ! "
       "x264enc ! rtph264pay name=pay0 pt=96 )");
   /* make a new authentication manager */
   auth = gst_rtsp_auth_new ();
