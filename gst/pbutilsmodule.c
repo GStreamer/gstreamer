@@ -39,7 +39,7 @@ DL_EXPORT (void)
 initpbutils (void)
 {
   PyObject *m, *d;
-  PyObject *gst;
+  PyObject *gst G_GNUC_UNUSED;
 
   init_pygobject ();
 
