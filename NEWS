@@ -1,6 +1,14 @@
-gst-vaapi NEWS -- summary of changes.  2011-12-07
+gst-vaapi NEWS -- summary of changes.  2011-12-DD
 Copyright (C) 2010-2011 Splitted-Desktop Systems
 Copyright (C) 2011 Intel Corporation
+
+Version 0.3.0 - DD.Dec.2011
+* Group all plugins into the same bundle
+* Use new XOverlay API (Sreerenj Balachandran)
+* Use new GstVideoContext and GstSurfaceBuffer API (Nicolas Dufresne)
+* Fix vaapidecode sink caps if decoder is in NULL state (Sreerenj Balachandran)
+* Fix auto-plugging and downstream buffer allocation (Nicolas Dufresne)
+* Fix crash in VA display init if no VA configs were found (Nicolas Dufresne)
 
 Version 0.2.7 - 07.Dec.2011
 * Relicense plugins and tests to LGPL v2.1 (SDS)
