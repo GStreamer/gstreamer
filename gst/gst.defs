@@ -5888,6 +5888,19 @@
   )
 )
 
+(define-function preset_set_app_dir
+  (c-name "gst_preset_set_app_dir")
+  (return-type "gboolean")
+  (parameters
+    '("const-gchar*" "app_dir")
+  )
+)
+
+(define-function preset_get_app_dir
+  (c-name "gst_preset_get_app_dir")
+  (return-type "const-gchar*")
+)
+
 
 ;; From ../gstreamer/gst/gstquery.h
 
