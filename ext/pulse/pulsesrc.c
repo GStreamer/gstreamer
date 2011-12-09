@@ -66,7 +66,7 @@ enum
   PROP_SERVER,
   PROP_DEVICE,
   PROP_DEVICE_NAME,
-  PROP_CLIENT,
+  PROP_CLIENT_NAME,
   PROP_STREAM_PROPERTIES,
   PROP_SOURCE_OUTPUT_INDEX,
   PROP_VOLUME,
@@ -182,15 +182,13 @@ gst_pulsesrc_class_init (GstPulseSrcClass * klass)
 
   clientname = gst_pulse_client_name ();
   /**
-   * GstPulseSrc:client
+   * GstPulseSrc:client-name
    *
    * The PulseAudio client name to use.
-   *
-   * Since: 0.10.27
    */
   g_object_class_install_property (gobject_class,
-      PROP_CLIENT,
-      g_param_spec_string ("client", "Client",
+      PROP_CLIENT_NAME,
+      g_param_spec_string ("client-name", "Client Name",
           "The PulseAudio client_name_to_use", clientname,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS |
           GST_PARAM_MUTABLE_READY));
@@ -721,7 +719,7 @@ gst_pulsesrc_set_property (GObject * object,
       g_free (pulsesrc->device);
       pulsesrc->device = g_value_dup_string (value);
       break;
-    case PROP_CLIENT:
+    case PROP_CLIENT_NAME:
       g_free (pulsesrc->client_name);
       if (!g_value_get_string (value)) {
         GST_WARNING_OBJECT (pulsesrc,
@@ -768,7 +766,7 @@ gst_pulsesrc_get_property (GObject * object,
     case PROP_DEVICE_NAME:
       g_value_take_string (value, gst_pulsesrc_device_description (pulsesrc));
       break;
-    case PROP_CLIENT:
+    case PROP_CLIENT_NAME:
       g_value_set_string (value, pulsesrc->client_name);
       break;
     case PROP_STREAM_PROPERTIES:

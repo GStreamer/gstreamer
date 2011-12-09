@@ -79,7 +79,7 @@ enum
   PROP_DEVICE_NAME,
   PROP_VOLUME,
   PROP_MUTE,
-  PROP_CLIENT,
+  PROP_CLIENT_NAME,
   PROP_STREAM_PROPERTIES,
   PROP_LAST
 };
@@ -1815,16 +1815,14 @@ gst_pulsesink_class_init (GstPulseSinkClass * klass)
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   /**
-   * GstPulseSink:client
+   * GstPulseSink:client-name
    *
    * The PulseAudio client name to use.
-   *
-   * Since: 0.10.25
    */
   clientname = gst_pulse_client_name ();
   g_object_class_install_property (gobject_class,
-      PROP_CLIENT,
-      g_param_spec_string ("client", "Client",
+      PROP_CLIENT_NAME,
+      g_param_spec_string ("client-name", "Client Name",
           "The PulseAudio client name to use", clientname,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS |
           GST_PARAM_MUTABLE_READY));
@@ -2526,7 +2524,7 @@ gst_pulsesink_set_property (GObject * object,
     case PROP_MUTE:
       gst_pulsesink_set_mute (pulsesink, g_value_get_boolean (value));
       break;
-    case PROP_CLIENT:
+    case PROP_CLIENT_NAME:
       g_free (pulsesink->client_name);
       if (!g_value_get_string (value)) {
         GST_WARNING_OBJECT (pulsesink,
@@ -2573,7 +2571,7 @@ gst_pulsesink_get_property (GObject * object,
     case PROP_MUTE:
       g_value_set_boolean (value, gst_pulsesink_get_mute (pulsesink));
       break;
-    case PROP_CLIENT:
+    case PROP_CLIENT_NAME:
       g_value_set_string (value, pulsesink->client_name);
       break;
     case PROP_STREAM_PROPERTIES:
