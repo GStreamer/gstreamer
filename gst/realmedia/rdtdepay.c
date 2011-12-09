@@ -292,6 +292,7 @@ gst_rdt_depay_push (GstRDTDepay * rdtdepay, GstBuffer * buffer)
     rdtdepay->need_newsegment = FALSE;
   }
 
+  buffer = gst_buffer_make_metadata_writable (buffer);
   gst_buffer_set_caps (buffer, GST_PAD_CAPS (rdtdepay->srcpad));
 
   if (rdtdepay->discont) {
