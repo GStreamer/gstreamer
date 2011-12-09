@@ -184,6 +184,8 @@ struct _GstRTCPBuffer
   gsize        maxsize;
 };
 
+#define GST_RTCP_BUFFER_INIT { NULL, 0, NULL, 0, 0 }
+
 /**
  * GstRTCPPacket:
  * @rtcp: pointer to RTCP buffer
