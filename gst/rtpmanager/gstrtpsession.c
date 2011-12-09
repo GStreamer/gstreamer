@@ -1490,7 +1490,7 @@ gst_rtp_session_sink_setcaps (GstPad * pad, GstRtpSession * rtpsession,
   gst_rtp_session_cache_caps (rtpsession, caps);
   GST_RTP_SESSION_UNLOCK (rtpsession);
 
-  return TRUE;
+  return gst_pad_set_caps (rtpsession->recv_rtp_src, caps);
 }
 
 /* receive a packet from a sender, send it to the RTP session manager and
@@ -1793,8 +1793,7 @@ gst_rtp_session_setcaps_send_rtp (GstPad * pad, GstRtpSession * rtpsession,
     GST_DEBUG_OBJECT (rtpsession, "setting internal SSRC to %08x", ssrc);
     rtp_session_set_internal_ssrc (priv->session, ssrc);
   }
-
-  return TRUE;
+  return gst_pad_set_caps (rtpsession->send_rtp_src, caps);
 }
 
 /* Recieve an RTP packet or a list of packets to be send to the receivers,
