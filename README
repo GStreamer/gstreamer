@@ -43,10 +43,14 @@ Requirements
 
 Software requirements
 
-  * libgstreamer0.10-dev >= 0.10.10
-  * libgstreamer-plugins-base0.10-dev >= 0.10.16
-  * libva-dev >= 0.31.0-1+sds9 (VA/GLX)
-  * libavcodec-dev >= 0.6 or with <libavcodec/vaapi.h>
+  * libgstreamer0.10-dev >= 0.10.35.1
+      or with GstBaseSink::query()
+  * libgstreamer-plugins-base0.10-dev >= 0.10.35
+  * libgstreamer-plugins-bad0.10-dev >= 0.10.22.1
+      or with GstVideoContext, GstSurfaceBuffer
+  * libva-dev >= 1.0.3 (VA/GLX)
+  * libavcodec-dev >= 0.6
+      or with <libavcodec/vaapi.h>
 
 Hardware requirements
 
