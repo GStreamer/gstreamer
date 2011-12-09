@@ -32,7 +32,6 @@
 #include "gstvaapidecoder_priv.h"
 #include "gstvaapidisplay_priv.h"
 #include "gstvaapiobject_priv.h"
-#include "gstvaapiutils_tsb.h"
 
 #define DEBUG 1
 #include "gstvaapidebug.h"
@@ -68,7 +67,7 @@ struct _GstVaapiDecoderMpeg4Private {
     GstVaapiPicture                *next_picture;
     // backward reference pic
     GstVaapiPicture                *prev_picture;
-    GstVaapiTSB                    *tsb;
+    GstAdapter                     *adapter;
     GstBuffer                      *sub_buffer;
     GstClockTime                    seq_pts;
     GstClockTime                    gop_pts;
@@ -119,9 +118,10 @@ gst_vaapi_decoder_mpeg4_close(GstVaapiDecoderMpeg4 *decoder)
         priv->sub_buffer = NULL;
     }
 
-    if (priv->tsb) {
-        gst_vaapi_tsb_destroy(priv->tsb);
-        priv->tsb = NULL;
+    if (priv->adapter) {
+        gst_adapter_clear(priv->adapter);
+        g_object_unref(priv->adapter);
+        priv->adapter = NULL;
     }
 }
 
@@ -135,8 +135,8 @@ gst_vaapi_decoder_mpeg4_open(GstVaapiDecoderMpeg4 *decoder, GstBuffer *buffer)
 
     gst_vaapi_decoder_mpeg4_close(decoder);
 
-    priv->tsb = gst_vaapi_tsb_new();
-    if (!priv->tsb)
+    priv->adapter = gst_adapter_new();
+    if (!priv->adapter)
         return FALSE;
 
     priv->is_svh = 0;
@@ -324,7 +324,7 @@ decode_sequence(GstVaapiDecoderMpeg4 *decoder, const guint8 *buf, guint buf_size
         priv->profile = profile;
         priv->profile_changed = TRUE;
     }
-    priv->seq_pts = gst_vaapi_tsb_get_timestamp(priv->tsb);
+    priv->seq_pts = gst_adapter_prev_timestamp(priv->adapter, NULL);
     priv->calculate_pts_diff = TRUE;
 
     priv->size_changed          = TRUE;
@@ -862,7 +862,8 @@ decode_buffer(GstVaapiDecoderMpeg4 *decoder, GstBuffer *buffer)
     if (!buf && buf_size == 0)
         return decode_sequence_end(decoder);
 
-    gst_vaapi_tsb_push(priv->tsb, buffer);
+    gst_buffer_ref(buffer);
+    gst_adapter_push(priv->adapter, buffer);
 
     if (priv->sub_buffer) {
         buffer = gst_buffer_merge(priv->sub_buffer, buffer);
@@ -896,7 +897,8 @@ decode_buffer(GstVaapiDecoderMpeg4 *decoder, GstBuffer *buffer)
 
                 consumed_size = packet.offset + packet.size; 
                 pos += consumed_size; 
-                gst_vaapi_tsb_pop(priv->tsb, consumed_size);
+                if (gst_adapter_available(priv->adapter) >= pos)
+                    gst_adapter_flush(priv->adapter, pos);
             }
             else {
                 GST_WARNING("decode h263 packet failed\n");
@@ -915,7 +917,8 @@ decode_buffer(GstVaapiDecoderMpeg4 *decoder, GstBuffer *buffer)
             if (GST_VAAPI_DECODER_STATUS_SUCCESS == status) {
                 consumed_size = packet.offset + packet.size - pos; 
                 pos = packet.offset + packet.size; 
-                gst_vaapi_tsb_pop(priv->tsb, consumed_size);
+                if (gst_adapter_available(priv->adapter) >= pos)
+                    gst_adapter_flush(priv->adapter, pos);
             }
             else {
                 GST_WARNING("decode mp4 packet failed\n");
@@ -1051,7 +1054,7 @@ gst_vaapi_decoder_mpeg4_init(GstVaapiDecoderMpeg4 *decoder)
     priv->curr_picture          = NULL;
     priv->next_picture          = NULL;
     priv->prev_picture          = NULL;
-    priv->tsb                   = NULL;
+    priv->adapter               = NULL;
     priv->sub_buffer            = NULL;
     priv->seq_pts               = GST_CLOCK_TIME_NONE;
     priv->gop_pts               = GST_CLOCK_TIME_NONE;
