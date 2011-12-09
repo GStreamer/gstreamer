@@ -29,7 +29,9 @@
 #include <gst/check/gstcheck.h>
 
 #include <gst/video/video.h>
+#if 0
 #include <gst/video/video-overlay-composition.h>
+#endif
 #include <string.h>
 
 /* These are from the current/old videotestsrc; we check our new public API
@@ -849,6 +851,8 @@ GST_END_TEST;
 #undef ASSERT_CRITICAL
 #define ASSERT_CRITICAL(code) while(0){}        /* nothing */
 
+#if 0
+/* FIXME 0.11: port overlay composition to buffer meta */
 GST_START_TEST (test_overlay_composition)
 {
   GstVideoOverlayComposition *comp1, *comp2;
@@ -990,6 +994,7 @@ GST_START_TEST (test_overlay_composition)
 }
 
 GST_END_TEST;
+#endif
 
 static Suite *
 video_suite (void)
@@ -1007,7 +1012,10 @@ video_suite (void)
   tcase_add_test (tc_chain, test_convert_frame);
   tcase_add_test (tc_chain, test_convert_frame_async);
   tcase_add_test (tc_chain, test_video_size_from_caps);
+#if 0
+  /* FIXME 0.11: port overlay compositions */
   tcase_add_test (tc_chain, test_overlay_composition);
+#endif
 
   return s;
 }
