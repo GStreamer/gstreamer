@@ -281,7 +281,7 @@ check_utf32 (const guint8 * data, gint len, gint endianness)
 
 static void
 unicode_type_find (GstTypeFind * tf, const GstUnicodeTester * tester,
-    guint n_tester, const char *media_type)
+    guint n_tester, const char *media_type, gboolean require_bom)
 {
   size_t n;
   gint len = 4;
@@ -313,6 +313,8 @@ unicode_type_find (GstTypeFind * tf, const GstUnicodeTester * tester,
       if (!memcmp (data, tester[n].bom, tester[n].bomlen))
         bom_boost = tester[n].boost;
     }
+    if (require_bom && bom_boost == 0)
+      continue;
     if (!(*tester[n].checker) (data, len, tester[n].endianness))
       continue;
     tmpprob = GST_TYPE_FIND_POSSIBLE - 20 + bom_boost;
@@ -342,7 +344,7 @@ utf16_type_find (GstTypeFind * tf, gpointer unused)
     {2, "\xfe\xff", check_utf16, 20, G_BIG_ENDIAN},
   };
   unicode_type_find (tf, utf16tester, G_N_ELEMENTS (utf16tester),
-      "text/utf-16");
+      "text/utf-16", TRUE);
 }
 
 static GstStaticCaps utf32_caps = GST_STATIC_CAPS ("text/utf-32");
@@ -357,7 +359,7 @@ utf32_type_find (GstTypeFind * tf, gpointer unused)
     {4, "\x00\x00\xfe\xff", check_utf32, 20, G_BIG_ENDIAN}
   };
   unicode_type_find (tf, utf32tester, G_N_ELEMENTS (utf32tester),
-      "text/utf-32");
+      "text/utf-32", TRUE);
 }
 
 /*** text/uri-list ***/
