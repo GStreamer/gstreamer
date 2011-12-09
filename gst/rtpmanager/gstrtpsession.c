@@ -287,8 +287,10 @@ static GstPad *gst_rtp_session_request_new_pad (GstElement * element,
     GstPadTemplate * templ, const gchar * name, const GstCaps * caps);
 static void gst_rtp_session_release_pad (GstElement * element, GstPad * pad);
 
-static gboolean gst_rtp_session_sink_setcaps (GstPad * pad, GstCaps * caps);
-static gboolean gst_rtp_session_setcaps_send_rtp (GstPad * pad, GstCaps * caps);
+static gboolean gst_rtp_session_sink_setcaps (GstPad * pad,
+    GstRtpSession * rtpsession, GstCaps * caps);
+static gboolean gst_rtp_session_setcaps_send_rtp (GstPad * pad,
+    GstRtpSession * rtpsession, GstCaps * caps);
 
 static void gst_rtp_session_clear_pt_map (GstRtpSession * rtpsession);
 
@@ -1335,7 +1337,7 @@ gst_rtp_session_event_recv_rtp_sink (GstPad * pad, GstObject * parent,
 
       /* process */
       gst_event_parse_caps (event, &caps);
-      ret = gst_rtp_session_sink_setcaps (pad, caps);
+      ret = gst_rtp_session_sink_setcaps (pad, rtpsession, caps);
       /* and eat */
       gst_event_unref (event);
       break;
@@ -1481,17 +1483,12 @@ gst_rtp_session_iterate_internal_links (GstPad * pad, GstObject * parent)
 }
 
 static gboolean
-gst_rtp_session_sink_setcaps (GstPad * pad, GstCaps * caps)
+gst_rtp_session_sink_setcaps (GstPad * pad, GstRtpSession * rtpsession,
+    GstCaps * caps)
 {
-  GstRtpSession *rtpsession;
-
-  rtpsession = GST_RTP_SESSION (gst_pad_get_parent (pad));
-
   GST_RTP_SESSION_LOCK (rtpsession);
   gst_rtp_session_cache_caps (rtpsession, caps);
   GST_RTP_SESSION_UNLOCK (rtpsession);
-
-  gst_object_unref (rtpsession);
 
   return TRUE;
 }
@@ -1660,7 +1657,7 @@ gst_rtp_session_event_send_rtp_sink (GstPad * pad, GstObject * parent,
 
       /* process */
       gst_event_parse_caps (event, &caps);
-      ret = gst_rtp_session_setcaps_send_rtp (pad, caps);
+      ret = gst_rtp_session_setcaps_send_rtp (pad, rtpsession, caps);
       /* and eat */
       gst_event_unref (event);
       break;
@@ -1783,22 +1780,19 @@ gst_rtp_session_query_send_rtp (GstPad * pad, GstObject * parent,
 }
 
 static gboolean
-gst_rtp_session_setcaps_send_rtp (GstPad * pad, GstCaps * caps)
+gst_rtp_session_setcaps_send_rtp (GstPad * pad, GstRtpSession * rtpsession,
+    GstCaps * caps)
 {
-  GstRtpSession *rtpsession;
   GstRtpSessionPrivate *priv;
   GstStructure *s = gst_caps_get_structure (caps, 0);
   guint ssrc;
 
-  rtpsession = GST_RTP_SESSION (gst_pad_get_parent (pad));
   priv = rtpsession->priv;
 
   if (gst_structure_get_uint (s, "ssrc", &ssrc)) {
     GST_DEBUG_OBJECT (rtpsession, "setting internal SSRC to %08x", ssrc);
     rtp_session_set_internal_ssrc (priv->session, ssrc);
   }
-
-  gst_object_unref (rtpsession);
 
   return TRUE;
 }
