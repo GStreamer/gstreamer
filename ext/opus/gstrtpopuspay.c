@@ -37,7 +37,7 @@ static GstStaticPadTemplate gst_rtp_opus_pay_sink_template =
 GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("audio/x-opus")
+    GST_STATIC_CAPS ("audio/x-opus, multistream = (boolean) FALSE")
     );
 
 static GstStaticPadTemplate gst_rtp_opus_pay_src_template =
