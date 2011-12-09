@@ -147,6 +147,24 @@ PKG_CHECK_MODULES([GST],
 AC_SUBST(GST_CFLAGS)
 AC_SUBST(GST_LIBS)
 
+AC_CACHE_CHECK([for GstBaseSink::query hook], ac_cv_have_gst_base_sink_query, [
+    saved_CFLAGS="$CFLAGS"
+    CFLAGS="$CFLAGS $GST_CFLAGS"
+    saved_LIBS="$LIBS"
+    LIBS="$LIBS $GST_LIBS"
+    AC_TRY_COMPILE(
+        [#include <gst/base/gstbasesink.h>],
+        [GstBaseSinkClass klass; klass.query = NULL;],
+        [ac_cv_have_gst_base_sink_query="yes"],
+        [ac_cv_have_gst_base_sink_query="no"]
+    )
+    CFLAGS="$saved_CFLAGS"
+    LIBS="$saved_LIBS"
+])
+if test "$ac_cv_have_gst_base_sink_query" != "yes"; then
+    AC_MSG_ERROR([GstBaseSink does not contain the 'query' vfunc])
+fi
+
 dnl Check for GStreamer plugins-base
 PKG_CHECK_MODULES([GST_PLUGINS_BASE],
     [gstreamer-plugins-base-$GST_MAJORMINOR >= $GST_PLUGINS_BASE_VERSION_REQUIRED]
