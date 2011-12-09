@@ -717,6 +717,13 @@ gst_jack_audio_sink_class_init (GstJackAudioSinkClass * klass)
           "The Jack server to connect to (NULL = default)",
           DEFAULT_PROP_SERVER, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
+  /**
+   * GstJackAudioSink:client-name
+   *
+   * The client name to use.
+   *
+   * Since: 0.10.31
+   */
   g_object_class_install_property (gobject_class, PROP_CLIENT_NAME,
       g_param_spec_string ("client-name", "Client name",
           "The client name of the Jack instance (NULL = default)",
@@ -760,6 +767,12 @@ gst_jack_audio_sink_dispose (GObject * object)
   GstJackAudioSink *sink = GST_JACK_AUDIO_SINK (object);
 
   gst_caps_replace (&sink->caps, NULL);
+
+  if (sink->client_name != NULL) {
+    g_free (sink->client_name);
+    sink->client_name = NULL;
+  }
+
   G_OBJECT_CLASS (parent_class)->dispose (object);
 }
 

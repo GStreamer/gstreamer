@@ -737,6 +737,13 @@ gst_jack_audio_src_class_init (GstJackAudioSrcClass * klass)
           "The Jack server to connect to (NULL = default)",
           DEFAULT_PROP_SERVER, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
+  /**
+   * GstJackAudioSrc:client-name
+   *
+   * The client name to use.
+   *
+   * Since: 0.10.31
+   */
   g_object_class_install_property (gobject_class, PROP_CLIENT_NAME,
       g_param_spec_string ("client-name", "Client name",
           "The client name of the Jack instance (NULL = default)",
@@ -784,6 +791,12 @@ gst_jack_audio_src_dispose (GObject * object)
   GstJackAudioSrc *src = GST_JACK_AUDIO_SRC (object);
 
   gst_caps_replace (&src->caps, NULL);
+
+  if (src->client_name != NULL) {
+    g_free (src->client_name);
+    src->client_name = NULL;
+  }
+
   G_OBJECT_CLASS (parent_class)->dispose (object);
 }
 
