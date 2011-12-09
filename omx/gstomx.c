@@ -974,7 +974,7 @@ retry:
           "Output port %u needs reconfiguration but has buffers pending",
           port->index);
       _buf = g_queue_pop_head (port->pending_buffers);
-      g_assert (_buf != NULL);
+
       ret = GST_OMX_ACQUIRE_BUFFER_OK;
       goto done;
     }
@@ -1184,7 +1184,7 @@ gst_omx_port_set_flushing (GstOMXPort * port, gboolean flush)
     signalled = TRUE;
     last_error = OMX_ErrorNone;
     while (signalled && last_error == OMX_ErrorNone && !port->flushed
-        && port->buffers->len != g_queue_get_length (port->pending_buffers)) {
+        && port->buffers->len > g_queue_get_length (port->pending_buffers)) {
       signalled = g_cond_timed_wait (port->port_cond, port->port_lock, timeval);
 
       last_error = gst_omx_component_get_last_error (comp);
@@ -1210,6 +1210,9 @@ gst_omx_port_set_flushing (GstOMXPort * port, gboolean flush)
 
       /* Enqueue all buffers for the component to fill */
       while ((buf = g_queue_pop_head (port->pending_buffers))) {
+        if (!buf)
+          continue;
+
         g_assert (!buf->used);
 
         /* Reset all flags, some implementations don't
@@ -1548,8 +1551,7 @@ gst_omx_port_set_enabled_unlocked (GstOMXPort * port, gboolean enabled)
   signalled = TRUE;
   last_error = OMX_ErrorNone;
   while (signalled && last_error == OMX_ErrorNone && (port->buffers
-          && port->buffers->len !=
-          g_queue_get_length (port->pending_buffers))) {
+          && port->buffers->len > g_queue_get_length (port->pending_buffers))) {
     signalled = g_cond_timed_wait (port->port_cond, port->port_lock, timeval);
     last_error = gst_omx_component_get_last_error (comp);
   }
@@ -1619,6 +1621,9 @@ gst_omx_port_set_enabled_unlocked (GstOMXPort * port, gboolean enabled)
 
       /* Enqueue all buffers for the component to fill */
       while ((buf = g_queue_pop_head (port->pending_buffers))) {
+        if (!buf)
+          continue;
+
         g_assert (!buf->used);
 
         /* Reset all flags, some implementations don't
@@ -1954,6 +1959,8 @@ gst_omx_parse_hacks (gchar ** hacks)
       hacks_flags |= GST_OMX_HACK_SYNCFRAME_FLAG_NOT_USED;
     else if (g_str_equal (*hacks, "no-component-reconfigure"))
       hacks_flags |= GST_OMX_HACK_NO_COMPONENT_RECONFIGURE;
+    else if (g_str_equal (*hacks, "no-empty-eos-buffer"))
+      hacks_flags |= GST_OMX_HACK_NO_EMPTY_EOS_BUFFER;
     else
       GST_WARNING ("Unknown hack: %s", *hacks);
     hacks++;

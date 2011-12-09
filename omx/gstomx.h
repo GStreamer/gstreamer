@@ -60,6 +60,11 @@ G_BEGIN_DECLS
  */
 #define GST_OMX_HACK_NO_COMPONENT_RECONFIGURE                         G_GUINT64_CONSTANT (0x0000000000000010)
 
+/* If the component does not accept empty EOS buffers.
+ * Happens with Qualcomm's OpenMAX implementation.
+ */
+#define GST_OMX_HACK_NO_EMPTY_EOS_BUFFER                              G_GUINT64_CONSTANT (0x0000000000000020)
+
 
 typedef struct _GstOMXCore GstOMXCore;
 typedef struct _GstOMXPort GstOMXPort;
