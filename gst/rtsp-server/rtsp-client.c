@@ -445,8 +445,7 @@ link_stream (GstRTSPClient * client, GstRTSPSession * session,
 {
   GST_DEBUG ("client %p: linking stream %p", client, stream);
   gst_rtsp_session_stream_set_callbacks (stream, (GstRTSPSendFunc) do_send_data,
-      (GstRTSPSendFunc) do_send_data, (GstRTSPSendListFunc) do_send_data_list,
-      (GstRTSPSendListFunc) do_send_data_list, client, NULL);
+      (GstRTSPSendFunc) do_send_data, client, NULL);
   client->streams = g_list_prepend (client->streams, stream);
   /* make sure our session can't expire */
   gst_rtsp_session_prevent_expire (session);
@@ -457,8 +456,7 @@ unlink_stream (GstRTSPClient * client, GstRTSPSession * session,
     GstRTSPSessionStream * stream)
 {
   GST_DEBUG ("client %p: unlinking stream %p", client, stream);
-  gst_rtsp_session_stream_set_callbacks (stream, NULL, NULL, NULL, NULL, NULL,
-      NULL);
+  gst_rtsp_session_stream_set_callbacks (stream, NULL, NULL, NULL, NULL);
   client->streams = g_list_remove (client->streams, stream);
   /* our session can now expire */
   gst_rtsp_session_allow_expire (session);

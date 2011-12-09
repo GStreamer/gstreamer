@@ -394,7 +394,7 @@ pad_added_cb (GstElement * uribin, GstPad * pad, GstElement * element)
 
   /* get pad caps first, then call get_caps, then fail */
   if ((caps = gst_pad_get_current_caps (pad)) == NULL)
-    if ((caps = gst_pad_get_caps (pad, NULL)) == NULL)
+    if ((caps = gst_pad_query_caps (pad, NULL)) == NULL)
       goto no_caps;
 
   /* check for raw caps */
@@ -422,7 +422,7 @@ pad_added_cb (GstElement * uribin, GstPad * pad, GstElement * element)
     /* continue with new pad and caps */
     pad = gst_element_get_static_pad (convert, "src");
     if ((caps = gst_pad_get_current_caps (pad)) == NULL)
-      if ((caps = gst_pad_get_caps (pad, NULL)) == NULL)
+      if ((caps = gst_pad_query_caps (pad, NULL)) == NULL)
         goto no_caps;
   }
 

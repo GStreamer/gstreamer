@@ -42,7 +42,6 @@ typedef struct _GstRTSPMediaClass GstRTSPMediaClass;
 typedef struct _GstRTSPMediaTrans GstRTSPMediaTrans;
 
 typedef gboolean (*GstRTSPSendFunc)      (GstBuffer *buffer, guint8 channel, gpointer user_data);
-typedef gboolean (*GstRTSPSendListFunc)  (GstBufferList *blist, guint8 channel, gpointer user_data);
 typedef void     (*GstRTSPKeepAliveFunc) (gpointer user_data);
 
 /**
@@ -69,8 +68,6 @@ struct _GstRTSPMediaTrans {
 
   GstRTSPSendFunc      send_rtp;
   GstRTSPSendFunc      send_rtcp;
-  GstRTSPSendListFunc  send_rtp_list;
-  GstRTSPSendListFunc  send_rtcp_list;
   gpointer             user_data;
   GDestroyNotify       notify;
 
@@ -128,6 +125,7 @@ struct _GstRTSPMediaStream {
   GstElement   *udpsink[2];
   /* for TCP transport */
   GstElement   *appsrc[2];
+  GstElement   *appqueue[2];
   GstElement   *appsink[2];
 
   GstElement   *tee[2];

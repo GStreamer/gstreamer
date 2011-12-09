@@ -1197,17 +1197,19 @@ on_timeout (GObject * session, GObject * source, GstRTSPMediaStream * stream)
 }
 
 static GstFlowReturn
-handle_new_buffer (GstAppSink * sink, gpointer user_data)
+handle_new_sample (GstAppSink * sink, gpointer user_data)
 {
   GList *walk;
+  GstSample *sample;
   GstBuffer *buffer;
   GstRTSPMediaStream *stream;
 
-  buffer = gst_app_sink_pull_buffer (sink);
-  if (!buffer)
+  sample = gst_app_sink_pull_sample (sink);
+  if (!sample)
     return GST_FLOW_OK;
 
   stream = (GstRTSPMediaStream *) user_data;
+  buffer = gst_sample_get_buffer (sample);
 
   for (walk = stream->transports; walk; walk = g_list_next (walk)) {
     GstRTSPMediaTrans *tr = (GstRTSPMediaTrans *) walk->data;
@@ -1220,47 +1222,15 @@ handle_new_buffer (GstAppSink * sink, gpointer user_data)
         tr->send_rtcp (buffer, tr->transport->interleaved.max, tr->user_data);
     }
   }
-  gst_buffer_unref (buffer);
-
-  return GST_FLOW_OK;
-}
-
-static GstFlowReturn
-handle_new_buffer_list (GstAppSink * sink, gpointer user_data)
-{
-  GList *walk;
-  GstBufferList *blist;
-  GstRTSPMediaStream *stream;
-
-  blist = gst_app_sink_pull_buffer_list (sink);
-  if (!blist)
-    return GST_FLOW_OK;
-
-  stream = (GstRTSPMediaStream *) user_data;
-
-  for (walk = stream->transports; walk; walk = g_list_next (walk)) {
-    GstRTSPMediaTrans *tr = (GstRTSPMediaTrans *) walk->data;
-
-    if (GST_ELEMENT_CAST (sink) == stream->appsink[0]) {
-      if (tr->send_rtp_list)
-        tr->send_rtp_list (blist, tr->transport->interleaved.min,
-            tr->user_data);
-    } else {
-      if (tr->send_rtcp_list)
-        tr->send_rtcp_list (blist, tr->transport->interleaved.max,
-            tr->user_data);
-    }
-  }
-  gst_buffer_list_unref (blist);
+  gst_sample_unref (sample);
 
   return GST_FLOW_OK;
 }
 
 static GstAppSinkCallbacks sink_cb = {
   NULL,                         /* not interested in EOS */
-  NULL,                         /* not interested in preroll buffers */
-  handle_new_buffer,
-  handle_new_buffer_list
+  NULL,                         /* not interested in preroll samples */
+  handle_new_sample,
 };
 
 /* prepare the pipeline objects to handle @stream in @media */
@@ -1268,7 +1238,7 @@ static gboolean
 setup_stream (GstRTSPMediaStream * stream, guint idx, GstRTSPMedia * media)
 {
   gchar *name;
-  GstPad *pad, *teepad, *selpad;
+  GstPad *pad, *teepad, *queuepad, *selpad;
   GstPadLinkReturn ret;
   gint i;
 
@@ -1287,10 +1257,11 @@ setup_stream (GstRTSPMediaStream * stream, guint idx, GstRTSPMedia * media)
   /* create elements for the TCP transfer */
   for (i = 0; i < 2; i++) {
     stream->appsrc[i] = gst_element_factory_make ("appsrc", NULL);
+    stream->appqueue[i] = gst_element_factory_make ("queue", NULL);
     stream->appsink[i] = gst_element_factory_make ("appsink", NULL);
     g_object_set (stream->appsink[i], "async", FALSE, "sync", FALSE, NULL);
     g_object_set (stream->appsink[i], "emit-signals", FALSE, NULL);
-    g_object_set (stream->appsink[i], "preroll-queue-len", 1, NULL);
+    gst_bin_add (GST_BIN_CAST (media->pipeline), stream->appqueue[i]);
     gst_bin_add (GST_BIN_CAST (media->pipeline), stream->appsink[i]);
     gst_bin_add (GST_BIN_CAST (media->pipeline), stream->appsrc[i]);
     gst_app_sink_set_callbacks (GST_APP_SINK_CAST (stream->appsink[i]),
@@ -1298,19 +1269,19 @@ setup_stream (GstRTSPMediaStream * stream, guint idx, GstRTSPMedia * media)
   }
 
   /* hook up the stream to the RTP session elements. */
-  name = g_strdup_printf ("send_rtp_sink_%d", idx);
+  name = g_strdup_printf ("send_rtp_sink_%u", idx);
   stream->send_rtp_sink = gst_element_get_request_pad (media->rtpbin, name);
   g_free (name);
-  name = g_strdup_printf ("send_rtp_src_%d", idx);
+  name = g_strdup_printf ("send_rtp_src_%u", idx);
   stream->send_rtp_src = gst_element_get_static_pad (media->rtpbin, name);
   g_free (name);
-  name = g_strdup_printf ("send_rtcp_src_%d", idx);
+  name = g_strdup_printf ("send_rtcp_src_%u", idx);
   stream->send_rtcp_src = gst_element_get_request_pad (media->rtpbin, name);
   g_free (name);
-  name = g_strdup_printf ("recv_rtcp_sink_%d", idx);
+  name = g_strdup_printf ("recv_rtcp_sink_%u", idx);
   stream->recv_rtcp_sink = gst_element_get_request_pad (media->rtpbin, name);
   g_free (name);
-  name = g_strdup_printf ("recv_rtp_sink_%d", idx);
+  name = g_strdup_printf ("recv_rtp_sink_%u", idx);
   stream->recv_rtp_sink = gst_element_get_request_pad (media->rtpbin, name);
   g_free (name);
 
@@ -1345,17 +1316,23 @@ setup_stream (GstRTSPMediaStream * stream, guint idx, GstRTSPMedia * media)
   gst_object_unref (pad);
 
   /* link RTP sink, we're pretty sure this will work. */
-  teepad = gst_element_get_request_pad (stream->tee[0], "src%d");
+  teepad = gst_element_get_request_pad (stream->tee[0], "src_%u");
   pad = gst_element_get_static_pad (stream->udpsink[0], "sink");
   gst_pad_link (teepad, pad);
   gst_object_unref (pad);
   gst_object_unref (teepad);
 
-  teepad = gst_element_get_request_pad (stream->tee[0], "src%d");
-  pad = gst_element_get_static_pad (stream->appsink[0], "sink");
+  teepad = gst_element_get_request_pad (stream->tee[0], "src_%u");
+  pad = gst_element_get_static_pad (stream->appqueue[0], "sink");
   gst_pad_link (teepad, pad);
   gst_object_unref (pad);
   gst_object_unref (teepad);
+
+  queuepad = gst_element_get_static_pad (stream->appqueue[0], "src");
+  pad = gst_element_get_static_pad (stream->appsink[0], "sink");
+  gst_pad_link (queuepad, pad);
+  gst_object_unref (pad);
+  gst_object_unref (queuepad);
 
   /* make tee for RTCP */
   stream->tee[1] = gst_element_factory_make ("tee", NULL);
@@ -1366,17 +1343,23 @@ setup_stream (GstRTSPMediaStream * stream, guint idx, GstRTSPMedia * media)
   gst_object_unref (pad);
 
   /* link RTCP elements */
-  teepad = gst_element_get_request_pad (stream->tee[1], "src%d");
+  teepad = gst_element_get_request_pad (stream->tee[1], "src_%u");
   pad = gst_element_get_static_pad (stream->udpsink[1], "sink");
   gst_pad_link (teepad, pad);
   gst_object_unref (pad);
   gst_object_unref (teepad);
 
-  teepad = gst_element_get_request_pad (stream->tee[1], "src%d");
-  pad = gst_element_get_static_pad (stream->appsink[1], "sink");
+  teepad = gst_element_get_request_pad (stream->tee[1], "src_%u");
+  pad = gst_element_get_static_pad (stream->appqueue[1], "sink");
   gst_pad_link (teepad, pad);
   gst_object_unref (pad);
   gst_object_unref (teepad);
+
+  queuepad = gst_element_get_static_pad (stream->appqueue[1], "src");
+  pad = gst_element_get_static_pad (stream->appsink[1], "sink");
+  gst_pad_link (queuepad, pad);
+  gst_object_unref (pad);
+  gst_object_unref (queuepad);
 
   /* make selector for the RTP receivers */
   stream->selector[0] = gst_element_factory_make ("funnel", NULL);
@@ -1386,13 +1369,13 @@ setup_stream (GstRTSPMediaStream * stream, guint idx, GstRTSPMedia * media)
   gst_pad_link (pad, stream->recv_rtp_sink);
   gst_object_unref (pad);
 
-  selpad = gst_element_get_request_pad (stream->selector[0], "sink%d");
+  selpad = gst_element_get_request_pad (stream->selector[0], "sink_%u");
   pad = gst_element_get_static_pad (stream->udpsrc[0], "src");
   gst_pad_link (pad, selpad);
   gst_object_unref (pad);
   gst_object_unref (selpad);
 
-  selpad = gst_element_get_request_pad (stream->selector[0], "sink%d");
+  selpad = gst_element_get_request_pad (stream->selector[0], "sink_%u");
   pad = gst_element_get_static_pad (stream->appsrc[0], "src");
   gst_pad_link (pad, selpad);
   gst_object_unref (pad);
@@ -1406,13 +1389,13 @@ setup_stream (GstRTSPMediaStream * stream, guint idx, GstRTSPMedia * media)
   gst_pad_link (pad, stream->recv_rtcp_sink);
   gst_object_unref (pad);
 
-  selpad = gst_element_get_request_pad (stream->selector[1], "sink%d");
+  selpad = gst_element_get_request_pad (stream->selector[1], "sink_%u");
   pad = gst_element_get_static_pad (stream->udpsrc[1], "src");
   gst_pad_link (pad, selpad);
   gst_object_unref (pad);
   gst_object_unref (selpad);
 
-  selpad = gst_element_get_request_pad (stream->selector[1], "sink%d");
+  selpad = gst_element_get_request_pad (stream->selector[1], "sink_%u");
   pad = gst_element_get_static_pad (stream->appsrc[1], "src");
   gst_pad_link (pad, selpad);
   gst_object_unref (pad);
@@ -1701,9 +1684,9 @@ gst_rtsp_media_prepare (GstRTSPMedia * media)
   if (!media->reusable && media->reused)
     goto is_reused;
 
-  media->rtpbin = gst_element_factory_make ("gstrtpbin", NULL);
+  media->rtpbin = gst_element_factory_make ("rtpbin", NULL);
   if (media->rtpbin == NULL)
-    goto no_gstrtpbin;
+    goto no_rtpbin;
 
   GST_INFO ("preparing media %p", media);
 
@@ -1804,10 +1787,10 @@ is_reused:
     GST_WARNING ("can not reuse media %p", media);
     return FALSE;
   }
-no_gstrtpbin:
+no_rtpbin:
   {
-    GST_WARNING ("no gstrtpbin element");
-    g_warning ("failed to create element 'gstrtpbin', check your installation");
+    GST_WARNING ("no rtpbin element");
+    g_warning ("failed to create element 'rtpbin', check your installation");
     return FALSE;
   }
 state_failed:
