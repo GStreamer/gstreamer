@@ -51,6 +51,7 @@
 #endif
 #if USE_CODEC_PARSERS
 # include <gst/vaapi/gstvaapidecoder_mpeg2.h>
+# include <gst/vaapi/gstvaapidecoder_mpeg4.h>
 # include <gst/vaapi/gstvaapidecoder_vc1.h>
 #endif
 
@@ -315,9 +316,15 @@ gst_vaapidecode_create(GstVaapiDecode *decode, GstCaps *caps)
                 return FALSE;
             if (version == 2)
                 decode->decoder = gst_vaapi_decoder_mpeg2_new(dpy, caps);
+            else if (version == 4)
+                decode->decoder = gst_vaapi_decoder_mpeg4_new(dpy, caps);
         }
         else if (gst_structure_has_name(structure, "video/x-wmv"))
             decode->decoder = gst_vaapi_decoder_vc1_new(dpy, caps);
+        else if (gst_structure_has_name(structure, "video/x-h263") ||
+                 gst_structure_has_name(structure, "video/x-divx") ||
+                 gst_structure_has_name(structure, "video/x-xvid"))
+            decode->decoder = gst_vaapi_decoder_mpeg4_new(dpy, caps);
 #endif
     }
     if (!decode->decoder)
