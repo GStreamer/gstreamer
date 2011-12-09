@@ -26,15 +26,10 @@
 #include "config.h"
 #endif
 #include <gst/gst.h>
+#include <gst/audio/audio.h>
 
 #include "mulaw-decode.h"
 #include "mulaw-conversion.h"
-
-#if G_BYTE_ORDER == G_LITTLE_ENDIAN
-#define INT_FORMAT "S16LE"
-#else
-#define INT_FORMAT "S16BE"
-#endif
 
 extern GstStaticPadTemplate mulaw_dec_src_factory;
 extern GstStaticPadTemplate mulaw_dec_sink_factory;
@@ -77,7 +72,7 @@ mulawdec_setcaps (GstMuLawDec * mulawdec, GstCaps * caps)
     return FALSE;
 
   outcaps = gst_caps_new_simple ("audio/x-raw",
-      "format", G_TYPE_STRING, INT_FORMAT,
+      "format", G_TYPE_STRING, GST_AUDIO_NE (S16),
       "rate", G_TYPE_INT, rate, "channels", G_TYPE_INT, channels, NULL);
   ret = gst_pad_set_caps (mulawdec->srcpad, outcaps);
   gst_caps_unref (outcaps);
@@ -111,7 +106,7 @@ mulawdec_getcaps (GstPad * pad, GstCaps * filter)
     otherpad = mulawdec->srcpad;
   }
   /* get caps from the peer, this can return NULL when there is no peer */
-  othercaps = gst_pad_peer_query_caps (otherpad, filter);
+  othercaps = gst_pad_peer_query_caps (otherpad, NULL);
 
   /* get the template caps to make sure we return something acceptable */
   templ = gst_pad_get_pad_template_caps (pad);
@@ -134,8 +129,8 @@ mulawdec_getcaps (GstPad * pad, GstCaps * filter)
         gst_structure_remove_fields (structure, "format", NULL);
       } else {
         /* add fixed fields */
-        gst_structure_set (structure, "format", G_TYPE_STRING, INT_FORMAT,
-            NULL);
+        gst_structure_set (structure, "format", G_TYPE_STRING,
+            GST_AUDIO_NE (S16), NULL);
       }
     }
     /* filter against the allowed caps of the pad to return our result */
@@ -144,6 +139,13 @@ mulawdec_getcaps (GstPad * pad, GstCaps * filter)
   } else {
     /* there was no peer, return the template caps */
     result = gst_caps_copy (templ);
+  }
+  if (filter && result) {
+    GstCaps *temp;
+
+    temp = gst_caps_intersect (result, filter);
+    gst_caps_unref (result);
+    result = temp;
   }
   return result;
 }

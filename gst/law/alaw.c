@@ -20,20 +20,16 @@
 #include "config.h"
 #endif
 
+#include <gst/audio/audio.h>
+
 #include "alaw-encode.h"
 #include "alaw-decode.h"
-
-#if G_BYTE_ORDER == G_LITTLE_ENDIAN
-#define INT_FORMAT "S16LE"
-#else
-#define INT_FORMAT "S16BE"
-#endif
 
 GstStaticPadTemplate alaw_dec_src_factory = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("audio/x-raw, "
-        "format = (string) " INT_FORMAT ", "
+        "format = (string) " GST_AUDIO_NE (S16) ", "
         "rate = (int) [ 8000, 192000 ], " "channels = (int) [ 1, 2 ]")
     );
 
@@ -48,7 +44,7 @@ GstStaticPadTemplate alaw_enc_sink_factory = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("audio/x-raw, "
-        "format = (string) " INT_FORMAT ", "
+        "format = (string) " GST_AUDIO_NE (S16) ", "
         "rate = (int) [ 8000, 192000 ], " "channels = (int) [ 1, 2 ]")
     );
 

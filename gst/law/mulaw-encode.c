@@ -26,6 +26,8 @@
 #include "config.h"
 #endif
 #include <gst/gst.h>
+#include <gst/audio/audio.h>
+
 #include "mulaw-encode.h"
 #include "mulaw-conversion.h"
 
@@ -71,11 +73,11 @@ mulawenc_getcaps (GstPad * pad, GstCaps * filter)
     name = "audio/x-mulaw";
     otherpad = mulawenc->sinkpad;
   } else {
-    name = "audio/x-raw-int";
+    name = "audio/x-raw";
     otherpad = mulawenc->srcpad;
   }
   /* get caps from the peer, this can return NULL when there is no peer */
-  othercaps = gst_pad_peer_query_caps (otherpad, filter);
+  othercaps = gst_pad_peer_query_caps (otherpad, NULL);
 
   /* get the template caps to make sure we return something acceptable */
   templ = gst_pad_get_pad_template_caps (pad);
@@ -95,14 +97,11 @@ mulawenc_getcaps (GstPad * pad, GstCaps * filter)
 
       if (pad == mulawenc->srcpad) {
         /* remove the fields we don't want */
-        gst_structure_remove_fields (structure, "width", "depth", "endianness",
-            "signed", NULL);
+        gst_structure_remove_fields (structure, "format", NULL);
       } else {
         /* add fixed fields */
-        gst_structure_set (structure, "width", G_TYPE_INT, 16,
-            "depth", G_TYPE_INT, 16,
-            "endianness", G_TYPE_INT, G_BYTE_ORDER,
-            "signed", G_TYPE_BOOLEAN, TRUE, NULL);
+        gst_structure_set (structure, "format", G_TYPE_STRING,
+            GST_AUDIO_NE (S16), NULL);
       }
     }
     /* filter against the allowed caps of the pad to return our result */
@@ -112,6 +111,14 @@ mulawenc_getcaps (GstPad * pad, GstCaps * filter)
     /* there was no peer, return the template caps */
     result = gst_caps_copy (templ);
   }
+  if (filter && result) {
+    GstCaps *temp;
+
+    temp = gst_caps_intersect (result, filter);
+    gst_caps_unref (result);
+    result = temp;
+  }
+
   return result;
 }
 
