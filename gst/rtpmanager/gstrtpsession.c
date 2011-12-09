@@ -1335,7 +1335,7 @@ gst_rtp_session_event_recv_rtp_sink (GstPad * pad, GstObject * parent,
 
       /* process */
       gst_event_parse_caps (event, &caps);
-      gst_rtp_session_sink_setcaps (pad, caps);
+      ret = gst_rtp_session_sink_setcaps (pad, caps);
       /* and eat */
       gst_event_unref (event);
       break;
@@ -1660,7 +1660,7 @@ gst_rtp_session_event_send_rtp_sink (GstPad * pad, GstObject * parent,
 
       /* process */
       gst_event_parse_caps (event, &caps);
-      gst_rtp_session_setcaps_send_rtp (pad, caps);
+      ret = gst_rtp_session_setcaps_send_rtp (pad, caps);
       /* and eat */
       gst_event_unref (event);
       break;

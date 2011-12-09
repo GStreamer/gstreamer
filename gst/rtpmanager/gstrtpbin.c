@@ -1304,7 +1304,7 @@ gst_rtp_bin_handle_sync (GstElement * jitterbuffer, GstStructure * s,
   guint64 clock_base;
   guint64 extrtptime;
   GstBuffer *buffer;
-  GstRTCPBuffer rtcp = { NULL };
+  GstRTCPBuffer rtcp = { NULL, };
 
   bin = stream->bin;
 

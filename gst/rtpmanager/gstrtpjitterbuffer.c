@@ -1245,7 +1245,7 @@ gst_rtp_jitter_buffer_chain (GstPad * pad, GstObject * parent,
   gboolean tail;
   gint percent = -1;
   guint8 pt;
-  GstRTPBuffer rtp = { NULL };
+  GstRTPBuffer rtp = GST_RTP_BUFFER_INIT;
 
   jitterbuffer = GST_RTP_JITTER_BUFFER (parent);
 
@@ -1522,7 +1522,7 @@ compute_elapsed (GstRtpJitterBuffer * jitterbuffer, GstBuffer * outbuf)
   guint64 ext_time, elapsed;
   guint32 rtp_time;
   GstRtpJitterBufferPrivate *priv;
-  GstRTPBuffer rtp = { NULL };
+  GstRTPBuffer rtp = { NULL, };
 
   priv = jitterbuffer->priv;
   gst_rtp_buffer_map (outbuf, GST_MAP_READ, &rtp);
@@ -1569,7 +1569,7 @@ gst_rtp_jitter_buffer_loop (GstRtpJitterBuffer * jitterbuffer)
   GstClockID id;
   GstClockTime sync_time;
   gint percent = -1;
-  GstRTPBuffer rtp = { NULL };
+  GstRTPBuffer rtp = { NULL, };
 
   priv = jitterbuffer->priv;
 
@@ -1958,7 +1958,7 @@ gst_rtp_jitter_buffer_chain_rtcp (GstPad * pad, GstObject * parent,
   guint64 ext_rtptime, diff;
   guint32 rtptime;
   gboolean drop = FALSE;
-  GstRTCPBuffer rtcp = { NULL };
+  GstRTCPBuffer rtcp = { NULL, };
   guint64 clock_base;
 
   jitterbuffer = GST_RTP_JITTER_BUFFER (parent);

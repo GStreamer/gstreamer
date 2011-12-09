@@ -132,75 +132,6 @@ accumulate_trues (GSignalInvocationHint * ihint, GValue * return_accu,
 }
 
 static void
-gst_rtp_bin_marshal_BOOLEAN__MINIOBJECT_BOOLEAN (GClosure * closure,
-    GValue * return_value G_GNUC_UNUSED, guint n_param_values,
-    const GValue * param_values, gpointer invocation_hint G_GNUC_UNUSED,
-    gpointer marshal_data)
-{
-  typedef gboolean (*GMarshalFunc_BOOLEAN__MINIOBJECT_BOOLEAN) (gpointer data1,
-      gpointer arg_1, gboolean arg_2, gpointer data2);
-  register GMarshalFunc_BOOLEAN__MINIOBJECT_BOOLEAN callback;
-  register GCClosure *cc = (GCClosure *) closure;
-  register gpointer data1, data2;
-  gboolean v_return;
-
-  g_return_if_fail (return_value != NULL);
-  g_return_if_fail (n_param_values == 3);
-
-  if (G_CCLOSURE_SWAP_DATA (closure)) {
-    data1 = closure->data;
-    data2 = g_value_peek_pointer (param_values + 0);
-  } else {
-    data1 = g_value_peek_pointer (param_values + 0);
-    data2 = closure->data;
-  }
-  callback =
-      (GMarshalFunc_BOOLEAN__MINIOBJECT_BOOLEAN) (marshal_data ? marshal_data :
-      cc->callback);
-
-  v_return = callback (data1,
-      g_value_get_boxed (param_values + 1),
-      g_value_get_boolean (param_values + 2), data2);
-
-  g_value_set_boolean (return_value, v_return);
-}
-
-static void
-gst_rtp_bin_marshal_VOID__UINT_UINT_UINT_UINT_MINIOBJECT (GClosure * closure,
-    GValue * return_value G_GNUC_UNUSED, guint n_param_values,
-    const GValue * param_values, gpointer invocation_hint G_GNUC_UNUSED,
-    gpointer marshal_data)
-{
-  typedef void (*GMarshalFunc_VOID__UINT_UINT_UINT_UINT_MINIOBJECT) (gpointer
-      data1, guint arg_1, guint arg_2, guint arg_3, guint arg_4, gpointer arg_5,
-      gpointer data2);
-  register GMarshalFunc_VOID__UINT_UINT_UINT_UINT_MINIOBJECT callback;
-  register GCClosure *cc = (GCClosure *) closure;
-  register gpointer data1, data2;
-
-  g_return_if_fail (n_param_values == 6);
-
-  if (G_CCLOSURE_SWAP_DATA (closure)) {
-    data1 = closure->data;
-    data2 = g_value_peek_pointer (param_values + 0);
-  } else {
-    data1 = g_value_peek_pointer (param_values + 0);
-    data2 = closure->data;
-  }
-  callback =
-      (GMarshalFunc_VOID__UINT_UINT_UINT_UINT_MINIOBJECT) (marshal_data ?
-      marshal_data : cc->callback);
-
-  callback (data1,
-      g_value_get_uint (param_values + 1),
-      g_value_get_uint (param_values + 2),
-      g_value_get_uint (param_values + 3),
-      g_value_get_uint (param_values + 4),
-      g_value_get_boxed (param_values + 5), data2);
-}
-
-
-static void
 rtp_session_class_init (RTPSessionClass * klass)
 {
   GObjectClass *gobject_class;
@@ -348,8 +279,9 @@ rtp_session_class_init (RTPSessionClass * klass)
   rtp_session_signals[SIGNAL_ON_SENDING_RTCP] =
       g_signal_new ("on-sending-rtcp", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (RTPSessionClass, on_sending_rtcp),
-      accumulate_trues, NULL, gst_rtp_bin_marshal_BOOLEAN__MINIOBJECT_BOOLEAN,
-      G_TYPE_BOOLEAN, 2, GST_TYPE_BUFFER, G_TYPE_BOOLEAN);
+      accumulate_trues, NULL, gst_rtp_bin_marshal_BOOLEAN__BOXED_BOOLEAN,
+      G_TYPE_BOOLEAN, 2, GST_TYPE_BUFFER | G_SIGNAL_TYPE_STATIC_SCOPE,
+      G_TYPE_BOOLEAN);
 
   /**
    * RTPSession::on-feedback-rtcp:
@@ -364,11 +296,10 @@ rtp_session_class_init (RTPSessionClass * klass)
    *
    * Notify that a RTCP feedback packet has been received
    */
-
   rtp_session_signals[SIGNAL_ON_FEEDBACK_RTCP] =
       g_signal_new ("on-feedback-rtcp", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (RTPSessionClass, on_feedback_rtcp),
-      NULL, NULL, gst_rtp_bin_marshal_VOID__UINT_UINT_UINT_UINT_MINIOBJECT,
+      NULL, NULL, gst_rtp_bin_marshal_VOID__UINT_UINT_UINT_UINT_BOXED,
       G_TYPE_NONE, 5, G_TYPE_UINT, G_TYPE_UINT, G_TYPE_UINT, G_TYPE_UINT,
       GST_TYPE_BUFFER);
 
@@ -2360,7 +2291,7 @@ rtp_session_process_rtcp (RTPSession * sess, GstBuffer * buffer,
   gboolean more, is_bye = FALSE, do_sync = FALSE;
   RTPArrivalStats arrival;
   GstFlowReturn result = GST_FLOW_OK;
-  GstRTCPBuffer rtcp;
+  GstRTCPBuffer rtcp = { NULL, };
 
   g_return_val_if_fail (RTP_IS_SESSION (sess), GST_FLOW_ERROR);
   g_return_val_if_fail (GST_IS_BUFFER (buffer), GST_FLOW_ERROR);
@@ -2758,7 +2689,7 @@ session_start_rtcp (RTPSession * sess, ReportData * data)
 {
   GstRTCPPacket *packet = &data->packet;
   RTPSource *own = sess->source;
-  GstRTCPBuffer rtcp;
+  GstRTCPBuffer rtcp = { NULL, };
 
   data->rtcp = gst_rtcp_buffer_new (sess->mtu);
 
@@ -2941,7 +2872,7 @@ session_sdes (RTPSession * sess, ReportData * data)
   GstRTCPPacket *packet = &data->packet;
   const GstStructure *sdes;
   gint i, n_fields;
-  GstRTCPBuffer rtcp;
+  GstRTCPBuffer rtcp = { NULL, };
 
   gst_rtcp_buffer_map (data->rtcp, GST_MAP_WRITE, &rtcp);
 
@@ -3009,7 +2940,7 @@ static void
 session_bye (RTPSession * sess, ReportData * data)
 {
   GstRTCPPacket *packet = &data->packet;
-  GstRTCPBuffer rtcp;
+  GstRTCPBuffer rtcp = { NULL, };
 
   /* open packet */
   session_start_rtcp (sess, data);
@@ -3364,7 +3295,7 @@ static gboolean
 has_pli_compare_func (gconstpointer a, gconstpointer ignored)
 {
   GstRTCPPacket packet;
-  GstRTCPBuffer rtcp;
+  GstRTCPBuffer rtcp = { NULL, };
   gboolean ret = FALSE;
 
   gst_rtcp_buffer_map ((GstBuffer *) a, GST_MAP_READ, &rtcp);
@@ -3389,7 +3320,7 @@ rtp_session_on_sending_rtcp (RTPSession * sess, GstBuffer * buffer,
   gpointer key, value;
   gboolean started_fir = FALSE;
   GstRTCPPacket fir_rtcppacket;
-  GstRTCPBuffer rtcp;
+  GstRTCPBuffer rtcp = { NULL, };
 
   RTP_SESSION_LOCK (sess);
 

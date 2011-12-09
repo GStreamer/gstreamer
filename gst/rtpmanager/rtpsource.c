@@ -1037,11 +1037,6 @@ rtp_source_process_rtp (RTPSource * src, GstBuffer * buffer,
   seqnr = gst_rtp_buffer_get_seq (&rtp);
   gst_rtp_buffer_unmap (&rtp);
 
-  /* FIXME-0.11
-   * would be nice to be able to pass along with buffer */
-  g_assert_not_reached ();
-  /* rtp_source_update_caps (src, GST_BUFFER_CAPS (buffer)); */
-
   if (stats->cycles == -1) {
     GST_DEBUG ("received first buffer");
     /* first time we heard of this source */
@@ -1222,10 +1217,6 @@ rtp_source_send_rtp (RTPSource * src, gpointer data, gboolean is_list,
   } else {
     buffer = GST_BUFFER_CAST (data);
   }
-
-  /* FIXME-0.11 */
-  g_assert_not_reached ();
-  /* rtp_source_update_caps (src, GST_BUFFER_CAPS (buffer)); */
 
   /* we are a sender now */
   src->is_sender = TRUE;
