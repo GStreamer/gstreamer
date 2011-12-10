@@ -1,36 +1,39 @@
 # Serbian translation of gstreamer
 # Copyright (C) 2004, 2005 Free Software Foundation, Inc.
+# This file is distributed under the same license as the gstreamer package.
 # Danilo Segan <dsegan@gmx.net>, 2004, 2005.
-#
+# Мирослав Николић <miroslavnikolic@rocketmail.com>, 2011.
 msgid ""
 msgstr ""
-"Project-Id-Version: gstreamer 0.8.8\n"
+"Project-Id-Version: gstreamer-0.10.32.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2011-06-04 13:33+0100\n"
-"PO-Revision-Date: 2005-01-27 16:58+0100\n"
-"Last-Translator: Danilo Segan <dsegan@gmx.net>\n"
+"POT-Creation-Date: 2011-12-10 00:53+0000\n"
+"PO-Revision-Date: 2011-12-05 10:40+0200\n"
+"Last-Translator: Мирослав Николић <miroslavnikolic@rocketmail.com>\n"
 "Language-Team: Serbian <gnu@prevod.org>\n"
 "Language: sr\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Plural-Forms: nplurals=3;    plural=n%10==1 && n%100!=11 ? 0 :    n%10>=2 && "
-"n%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2;\n"
+"Plural-Forms: nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && n"
+"%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2);\n"
+"X-Generator: Virtaal 0.7.0\n"
+"X-Project-Style: gnome\n"
 
 msgid "Print the GStreamer version"
-msgstr "Испиши издање Гстримера"
+msgstr "Исписује издање Гстримера"
 
 msgid "Make all warnings fatal"
-msgstr "Учини сва упозорења кобним"
+msgstr "Чини сва упозорења кобним"
 
 msgid "Print available debug categories and exit"
-msgstr "Испиши доступне категорије за налажење грешака и заврши"
+msgstr "Исписује доступне категорије за уклањање грешака и излази"
 
 msgid ""
 "Default debug level from 1 (only error) to 5 (anything) or 0 for no output"
 msgstr ""
-"Подразумевани ниво опширности од 1 (само грешке) до 5 (све) или 0 (без "
-"излаза)"
+"Подразумевани ниво за уклањање грешака од 1 (само грешке) до 5 (све) или 0 "
+"(без излаза)"
 
 msgid "LEVEL"
 msgstr "НИВО"
@@ -39,181 +42,164 @@ msgid ""
 "Comma-separated list of category_name:level pairs to set specific levels for "
 "the individual categories. Example: GST_AUTOPLUG:5,GST_ELEMENT_*:3"
 msgstr ""
-"Запетом раздвојени списак парова име_категорије:ниво за постављање нарочитих "
+"Зарезом одвојен списак парова назив_категорије:ниво за постављање нарочитих "
 "нивоа за појединачне категорије. Пример: GST_AUTOPLUG:5,GST_ELEMENT_*:3"
 
 msgid "LIST"
 msgstr "СПИСАК"
 
 msgid "Disable colored debugging output"
-msgstr "Искључи обојени излаз за исправљање грешака"
+msgstr "Искључује обојени излаз за уклањање грешака"
 
 msgid "Disable debugging"
-msgstr "Искључи исправљање грешака"
+msgstr "Искључује уклањање грешака"
 
 msgid "Enable verbose plugin loading diagnostics"
-msgstr "Укључи опширну дијагностику при учитавању додатка"
+msgstr "Укључује опширну дијагностику учитавања прикључка"
 
 msgid "Colon-separated paths containing plugins"
-msgstr ""
+msgstr "Двотачком раздвојене путање које садрже прикључке"
 
 msgid "PATHS"
 msgstr "ПУТАЊЕ"
 
-#, fuzzy
 msgid ""
 "Comma-separated list of plugins to preload in addition to the list stored in "
 "environment variable GST_PLUGIN_PATH"
 msgstr ""
-"Запетом раздвојен списак додатака који се предучитавају поред списка из "
-"променљиве окружења GST_PLUGIN_PATH"
+"Зарезом раздвојен списак прикључака који ће бити унапред учитани као додатак "
+"списку који се чува у променљивој окружења GST_PLUGIN_PATH"
 
 msgid "PLUGINS"
 msgstr "ДОДАЦИ"
 
 msgid "Disable trapping of segmentation faults during plugin loading"
-msgstr "Искључи пресретање погрешних приступа меморији при учитавању додатака"
+msgstr ""
+"Искључује пресретање погрешних приступа меморији приликом учитавања прикључка"
 
 msgid "Disable updating the registry"
-msgstr ""
+msgstr "Искључује ажурирање регистра"
 
 msgid "Disable spawning a helper process while scanning the registry"
-msgstr ""
+msgstr "Искључује израђање помоћниковог процеса приликом претраживања регистра"
 
 msgid "GStreamer Options"
-msgstr ""
+msgstr "Опције Гстримера"
 
-#, fuzzy
 msgid "Show GStreamer Options"
-msgstr "Испиши издање Гстримера"
+msgstr "Приказује опције Гстримера"
 
 msgid "Unknown option"
-msgstr ""
+msgstr "Непозната опција"
 
 msgid "GStreamer encountered a general core library error."
-msgstr "ГСтример је наишао на општу грешку у основној библиотеци."
+msgstr "Гстример је наишао на општу грешку у основној библиотеци."
 
-#, fuzzy
 msgid ""
 "GStreamer developers were too lazy to assign an error code to this error."
 msgstr ""
-"Програмери ГСтримера су били сувише лењи да доделе код за ову грешку. "
-"Пријавите грешку."
+"Програмери Гстримера су били сувише лењи да доделе неки кôд за ову грешку."
 
-#, fuzzy
 msgid "Internal GStreamer error: code not implemented."
-msgstr "Унутрашња грешка у ГСтримеру: код није написан.  Пријавите грешку."
+msgstr "Унутрашња грешка Гстримера: кôд није примењен. "
 
 msgid ""
 "GStreamer error: state change failed and some element failed to post a "
 "proper error message with the reason for the failure."
 msgstr ""
+"Грешка Гстримера: промена стања није успела и неки елемент није успео да "
+"огласи сопствену поруку грешке са разлогом неуспеха."
 
-#, fuzzy
 msgid "Internal GStreamer error: pad problem."
-msgstr "Унутрашња грешка у ГСтримеру: неприлика са попуном.  Пријавите грешку."
+msgstr "Унутрашња грешка Гстримера: неприлика са попуном."
 
-#, fuzzy
 msgid "Internal GStreamer error: thread problem."
-msgstr "Унутрашња грешка у ГСтримеру: неприлика са нитима.  Пријавите грешку."
+msgstr "Унутрашња грешка Гстримера: неприлика са нитима."
 
-#, fuzzy
 msgid "Internal GStreamer error: negotiation problem."
-msgstr ""
-"Унутрашња грешка у ГСтримеру: неприлика у преговарању.  Пријавите грешку."
+msgstr "Унутрашња грешка Гстримера: неприлика у преговарању."
 
-#, fuzzy
 msgid "Internal GStreamer error: event problem."
-msgstr ""
-"Унутрашња грешка у ГСтримеру: неприлика са догађајем.  Пријавите грешку."
+msgstr "Унутрашња грешка Гстримера: неприлика са догађајем."
 
-#, fuzzy
 msgid "Internal GStreamer error: seek problem."
-msgstr ""
-"Унутрашња грешка у ГСтримеру: неприлика са тражењем.  Пријавите грешку."
+msgstr "Унутрашња грешка Гстримера: неприлика са тражењем."
 
 # bug: is "caps" short for "capabilities"? if so, it should be spelled completely
-#, fuzzy
 msgid "Internal GStreamer error: caps problem."
-msgstr ""
-"Унутрашња грешка у ГСтримеру: неприлика са могућностима.  Пријавите грешку."
+msgstr "Унутрашња грешка Гстримера: неприлика са могућностима."
 
-#, fuzzy
 msgid "Internal GStreamer error: tag problem."
-msgstr "Унутрашња грешка у ГСтримеру: неприлика са ознаком.  Пријавите грешку."
+msgstr "Унутрашња грешка Гстримера: неприлика са ознаком."
 
 msgid "Your GStreamer installation is missing a plug-in."
-msgstr ""
+msgstr "Вашој инсталацији Гстримера недостаје прикључак."
 
-#, fuzzy
 msgid "Internal GStreamer error: clock problem."
-msgstr ""
-"Унутрашња грешка у ГСтримеру: неприлика са тражењем.  Пријавите грешку."
+msgstr "Унутрашња грешка Гстримера: неприлика са сатом."
 
 msgid ""
 "This application is trying to use GStreamer functionality that has been "
 "disabled."
 msgstr ""
+"Овај програм покушава да користи функционалност Гстримера која је искључена."
 
 msgid "GStreamer encountered a general supporting library error."
-msgstr "ГСтример је наишао на општу грешку у библиотеци за подршку."
+msgstr "Гстример је наишао на општу грешку у библиотеци подршке."
 
 msgid "Could not initialize supporting library."
-msgstr "Не могу да покренем библиотеку за подршку."
+msgstr "Не могу да покренем библиотеку подршке."
 
 msgid "Could not close supporting library."
-msgstr "Не могу да затворим библиотеку за подршку."
+msgstr "Не могу да затворим библиотеку подршке."
 
-#, fuzzy
 msgid "Could not configure supporting library."
-msgstr "Не могу да затворим библиотеку за подршку."
+msgstr "Не могу да подесим библиотеку подршке."
 
 msgid "Encoding error."
-msgstr ""
+msgstr "Грешка кодирања."
 
-#, fuzzy
 msgid "GStreamer encountered a general resource error."
-msgstr "ГСтример је наишао на општу грешку у основној библиотеци."
+msgstr "Гстример је наишао на општу грешку изворишта."
 
 msgid "Resource not found."
-msgstr "Ресурс није нађен."
+msgstr "Извориште није нађено."
 
 msgid "Resource busy or not available."
-msgstr "Ресурс је заузет или недоступан."
+msgstr "Извориште је заузето или недоступно."
 
 msgid "Could not open resource for reading."
-msgstr "Не могу отворити ресурс ради читања."
+msgstr "Не могу да отворим извориште ради читања."
 
 msgid "Could not open resource for writing."
-msgstr "Не могу отворити ресурс ради уписа."
+msgstr "Не могу да отворим извориште ради уписа."
 
 msgid "Could not open resource for reading and writing."
-msgstr "Не могу отворити ресурс ради читања и писања."
+msgstr "Не могу да отворим извориште ради читања и писања."
 
 msgid "Could not close resource."
-msgstr "Не могу затворити ресурс."
+msgstr "Не могу да затворим извориште."
 
 msgid "Could not read from resource."
-msgstr "Не могу читати из ресурса."
+msgstr "Не могу да читам из изворишта."
 
 msgid "Could not write to resource."
-msgstr "Не могу уписати у ресурс."
+msgstr "Не могу да упишем у извориште."
 
 msgid "Could not perform seek on resource."
-msgstr "Не могу да поставим положај у ресурсу."
+msgstr "Не могу да извршим постављање на изворишту."
 
 msgid "Could not synchronize on resource."
-msgstr "Не могу да ускладим са ресурсом."
+msgstr "Не могу да ускладим са извориштем."
 
 msgid "Could not get/set settings from/on resource."
-msgstr "Не могу да сазнам/поставим подешавања из/у ресурсу."
+msgstr "Не могу да добавим/поставим подешавања из/у извориште."
 
 msgid "No space left on the resource."
-msgstr ""
+msgstr "Није преостало простора у изворишту."
 
-#, fuzzy
 msgid "GStreamer encountered a general stream error."
-msgstr "ГСтример је наишао на општу грешку у основној библиотеци."
+msgstr "Гстример је наишао на општу грешку тока."
 
 msgid "Element doesn't implement handling of this stream. Please file a bug."
 msgstr "Елемент не обезбеђује баратање овим током. Пријавите грешку."
@@ -241,17 +227,18 @@ msgstr "Не могу да разградим ток."
 msgid "Could not multiplex stream."
 msgstr "Не могу да изградим ток."
 
-#, fuzzy
 msgid "The stream is in the wrong format."
-msgstr "Ток је погрешног облика."
+msgstr "Ток је у погрешном облику."
 
 msgid "The stream is encrypted and decryption is not supported."
-msgstr ""
+msgstr "Ток је шифрован а дешифровање није подржано."
 
 msgid ""
 "The stream is encrypted and can't be decrypted because no suitable key has "
 "been supplied."
 msgstr ""
+"Ток је шифрован и не може бити дешифрован зато што није придодат "
+"одговарајући кључ."
 
 #, c-format
 msgid "No error message for domain %s."
@@ -259,36 +246,34 @@ msgstr "Нема поруке о грешци за домен %s."
 
 #, c-format
 msgid "No standard error message for domain %s and code %d."
-msgstr "Нема обичне поруке о грешци за домен %s и код %d."
+msgstr "Нема уобичајене поруке о грешци за домен %s и код %d."
 
 msgid "Selected clock cannot be used in pipeline."
-msgstr ""
+msgstr "Изабрани сат не може бити коришћен у спојци низа."
 
 msgid "title"
 msgstr "наслов"
 
 msgid "commonly used title"
-msgstr "обично коришћен наслов"
+msgstr "уобичајено коришћен наслов"
 
 msgid "title sortname"
-msgstr ""
+msgstr "назив наслова при ређању"
 
-#, fuzzy
 msgid "commonly used title for sorting purposes"
-msgstr "обично коришћен наслов"
+msgstr "уобичајено коришћен наслов за сврхе ређања"
 
 msgid "artist"
-msgstr "уметник"
+msgstr "извођач"
 
 msgid "person(s) responsible for the recording"
-msgstr "особе одговорне за снимак"
+msgstr "особе одговорне за снимање"
 
 msgid "artist sortname"
-msgstr ""
+msgstr "име извођача при ређању"
 
-#, fuzzy
 msgid "person(s) responsible for the recording for sorting purposes"
-msgstr "особе одговорне за снимак"
+msgstr "особе одговорне за снимање за сврхе ређања"
 
 msgid "album"
 msgstr "албум"
@@ -297,39 +282,34 @@ msgid "album containing this data"
 msgstr "албум који садржи ове податке"
 
 msgid "album sortname"
-msgstr ""
+msgstr "назив албума при ређању"
 
-#, fuzzy
 msgid "album containing this data for sorting purposes"
-msgstr "албум који садржи ове податке"
+msgstr "албум који садржи ове податке за сврхе ређања"
 
-#, fuzzy
 msgid "album artist"
-msgstr "уметник"
+msgstr "извођач албума"
 
 msgid "The artist of the entire album, as it should be displayed"
-msgstr ""
+msgstr "Извођач читавог албума, онако како треба бити приказан"
 
 msgid "album artist sortname"
-msgstr ""
+msgstr "име извођача албума при ређању"
 
 msgid "The artist of the entire album, as it should be sorted"
-msgstr ""
+msgstr "Извођач читавог албума, онако како треба бити поређан"
 
 msgid "date"
 msgstr "датум"
 
-#, fuzzy
 msgid "date the data was created (as a GDate structure)"
-msgstr "датум прављења података (као број Јулијанског дана)"
+msgstr "датум стварања података (као број Јулијанског дана)"
 
-#, fuzzy
 msgid "datetime"
-msgstr "датум"
+msgstr "датум и време"
 
-#, fuzzy
 msgid "date and time the data was created (as a GstDateTime structure)"
-msgstr "датум прављења података (као број Јулијанског дана)"
+msgstr "датум и време стварања података (као број Јулијанског дана)"
 
 msgid "genre"
 msgstr "жанр"
@@ -341,40 +321,39 @@ msgid "comment"
 msgstr "напомена"
 
 msgid "free text commenting the data"
-msgstr "текст у слободном облику о овим подацима"
+msgstr "слободан текст о овим подацима"
 
-#, fuzzy
 msgid "extended comment"
-msgstr "напомена"
+msgstr "додатна напомена"
 
-#, fuzzy
 msgid "free text commenting the data in key=value or key[en]=comment form"
-msgstr "текст у слободном облику о овим подацима"
+msgstr ""
+"слободан текст о овим подацима у облику кључ=вредност или кључ[en]=напомена"
 
 # можда „нумере“ уместо „песме“, пошто можемо имати и видео снимке
 msgid "track number"
-msgstr "број песме"
+msgstr "број нумере"
 
 msgid "track number inside a collection"
-msgstr "број песме у скупу"
+msgstr "број нумере у збирци"
 
 msgid "track count"
-msgstr "укупно песама"
+msgstr "укупно нумера"
 
 msgid "count of tracks inside collection this track belongs to"
-msgstr "укупно песама у скупу којем припада ова песма"
+msgstr "укупно нумера у збирци којој припада ова нумера"
 
 msgid "disc number"
 msgstr "број диска"
 
 msgid "disc number inside a collection"
-msgstr "број диска у скупу"
+msgstr "број диска у збирци"
 
 msgid "disc count"
 msgstr "укупно дискова"
 
 msgid "count of discs inside collection this disc belongs to"
-msgstr "укупно дискова у скупу којем припада овај диск"
+msgstr "укупно дискова у збирци којој припада овај диск"
 
 msgid "location"
 msgstr "положај"
@@ -383,12 +362,15 @@ msgid ""
 "Origin of media as a URI (location, where the original of the file or stream "
 "is hosted)"
 msgstr ""
+"Порекло медија дато као адреса (место, где се налази оригинална датотека или "
+"ток)"
 
 msgid "homepage"
-msgstr ""
+msgstr "матична страница"
 
 msgid "Homepage for this media (i.e. artist or movie homepage)"
 msgstr ""
+"Матична страница за овај медиј (нпр. матична страница извођача или филма)"
 
 msgid "description"
 msgstr "опис"
@@ -408,7 +390,8 @@ msgstr "МСКС"
 
 msgid "International Standard Recording Code - see http://www.ifpi.org/isrc/"
 msgstr ""
-"Међународни стандардни код за снимање — видети http://www.ifpi.org/isrc/"
+"Међународни стандардни код за снимање — погледајте „http://www.ifpi.org/"
+"isrc/“"
 
 msgid "organization"
 msgstr "организација"
@@ -419,20 +402,17 @@ msgstr "ауторска права"
 msgid "copyright notice of the data"
 msgstr "порука о ауторским правима за податке"
 
-#, fuzzy
 msgid "copyright uri"
-msgstr "ауторска права"
+msgstr "адреса ауторских права"
 
-#, fuzzy
 msgid "URI to the copyright notice of the data"
-msgstr "порука о ауторским правима за податке"
+msgstr "адреса до поруке о ауторским правима за податке"
 
-#, fuzzy
 msgid "encoded by"
-msgstr "кодирати"
+msgstr "кодирао"
 
 msgid "name of the encoding person or organization"
-msgstr ""
+msgstr "име особе или назив организације кодирања"
 
 msgid "contact"
 msgstr "контакт"
@@ -446,13 +426,11 @@ msgstr "дозвола"
 msgid "license of data"
 msgstr "дозвола за употребу података"
 
-#, fuzzy
 msgid "license uri"
-msgstr "дозвола"
+msgstr "адреса дозволе"
 
-#, fuzzy
 msgid "URI to the license of the data"
-msgstr "дозвола за употребу података"
+msgstr "адреса до дозволе за употребу података"
 
 msgid "performer"
 msgstr "извођач"
@@ -461,51 +439,46 @@ msgid "person(s) performing"
 msgstr "особе које изводе"
 
 msgid "composer"
-msgstr ""
+msgstr "састављач"
 
-#, fuzzy
 msgid "person(s) who composed the recording"
-msgstr "особе одговорне за снимак"
+msgstr "особе које су саставиле снимак"
 
 msgid "duration"
 msgstr "трајање"
 
 msgid "length in GStreamer time units (nanoseconds)"
-msgstr "дужина у временским јединицама ГСтримера (наносекундама)"
+msgstr "дужина у временским јединицама Гстримера (наносекундама)"
 
 msgid "codec"
-msgstr "кодирање"
+msgstr "кодек"
 
 msgid "codec the data is stored in"
-msgstr "на који начин су подаци кодирани"
+msgstr "кодек у коме су подаци сачувани"
 
 msgid "video codec"
-msgstr "видео кодирање"
+msgstr "видео кодек"
 
 msgid "codec the video data is stored in"
-msgstr "на који начин су видео подаци кодирани"
+msgstr "кодек у коме су видео подаци сачувани"
 
 msgid "audio codec"
-msgstr "звучно кодирање"
+msgstr "звучни кодек"
 
 msgid "codec the audio data is stored in"
-msgstr "на који начин су звучни подаци кодирани"
+msgstr "кодек у коме су звучни подаци сачувани"
 
-#, fuzzy
 msgid "subtitle codec"
-msgstr "видео кодирање"
+msgstr "кодек превода"
 
-#, fuzzy
 msgid "codec the subtitle data is stored in"
-msgstr "на који начин су видео подаци кодирани"
+msgstr "кодек у коме су подаци превода сачувани"
 
-#, fuzzy
 msgid "container format"
-msgstr "подаци за ступање у везу"
+msgstr "облик садржаоца"
 
-#, fuzzy
 msgid "container format the data is stored in"
-msgstr "на који начин су подаци кодирани"
+msgstr "облик садржаоца у коме су подаци сачувани"
 
 msgid "bitrate"
 msgstr "брзина битова"
@@ -532,281 +505,282 @@ msgid "maximum bitrate in bits/s"
 msgstr "највећа брзина битова у битовима по секунди"
 
 msgid "encoder"
-msgstr "кодирати"
+msgstr "кодер"
 
 msgid "encoder used to encode this stream"
-msgstr "како кодирати овај ток"
+msgstr "кодер коришћен за кодирање овог тока"
 
 msgid "encoder version"
-msgstr "издање кодирања"
+msgstr "издање кодера"
 
 msgid "version of the encoder used to encode this stream"
-msgstr "издање кодирања којим се кодира овај ток"
+msgstr "издање кодера коришћеног за кодирање овог тока"
 
 msgid "serial"
 msgstr "серија"
 
 msgid "serial number of track"
-msgstr "серијски број траке"
+msgstr "серијски број нумере"
 
 # bug: this is something strange
 msgid "replaygain track gain"
-msgstr "појачање песме при поновном пуштању"
+msgstr "појачање нумере појачања пуштања"
 
 msgid "track gain in db"
 msgstr "појачање песме у децибелима"
 
 msgid "replaygain track peak"
-msgstr "врхунац при поновном пуштању"
+msgstr "врхунац нумере појачања пуштања"
 
 msgid "peak of the track"
-msgstr "врхунац песме"
+msgstr "врхунац нумере"
 
 msgid "replaygain album gain"
-msgstr "појачање албума при поновном пуштању"
+msgstr "појачање албума појачања пуштања"
 
 msgid "album gain in db"
 msgstr "појачање албума у децибелима"
 
 msgid "replaygain album peak"
-msgstr "врхунац албума при поновном пуштању"
+msgstr "врхунац албума појачања пуштања"
 
 msgid "peak of the album"
 msgstr "врхунац албума"
 
-#, fuzzy
 msgid "replaygain reference level"
-msgstr "врхунац при поновном пуштању"
+msgstr "ниво подсетника појачања пуштања"
 
 msgid "reference level of track and album gain values"
-msgstr ""
+msgstr "подсетни ниво вредности појачања нумере и албума"
 
 msgid "language code"
-msgstr ""
+msgstr "шифра језика"
 
 msgid "language code for this stream, conforming to ISO-639-1"
-msgstr ""
+msgstr "шифра језика за овај ток, према стандарду ИСО-639-1"
 
 msgid "image"
-msgstr ""
+msgstr "слика"
 
-#, fuzzy
 msgid "image related to this stream"
-msgstr "како кодирати овај ток"
+msgstr "слика која се односи на овај ток"
 
 #. TRANSLATORS: 'preview image' = image that shows a preview of the full image
 msgid "preview image"
-msgstr ""
+msgstr "слика прегледа"
 
 msgid "preview image related to this stream"
-msgstr ""
+msgstr "слика прегледа која се односи на овај ток"
 
 msgid "attachment"
-msgstr ""
+msgstr "прилог"
 
-#, fuzzy
 msgid "file attached to this stream"
-msgstr "како кодирати овај ток"
+msgstr "датотека приложена уз овај ток"
 
 msgid "beats per minute"
-msgstr ""
+msgstr "тактова у минуту"
 
 msgid "number of beats per minute in audio"
-msgstr ""
+msgstr "број тактова у минуту у звуку"
 
 msgid "keywords"
-msgstr ""
+msgstr "кључне речи"
 
-#, fuzzy
 msgid "comma separated keywords describing the content"
-msgstr "кратак текст који описује садржај података"
+msgstr "зарезом одвојене кључне речи које описују садржај"
 
-#, fuzzy
 msgid "geo location name"
-msgstr "положај"
+msgstr "назив географског места"
 
 msgid ""
 "human readable descriptive location of where the media has been recorded or "
 "produced"
-msgstr ""
+msgstr "људима читљиво описно место где је медиј снимљен или произведен"
 
 msgid "geo location latitude"
-msgstr ""
+msgstr "латитуда гео положаја"
 
 msgid ""
 "geo latitude location of where the media has been recorded or produced in "
 "degrees according to WGS84 (zero at the equator, negative values for "
 "southern latitudes)"
 msgstr ""
+"географска ширина места у коме је медиј снимљен или произведен у степенима "
+"према стандарду „WGS84“ (нула на екватору, негативне вредности за јужне "
+"ширине)"
 
 msgid "geo location longitude"
-msgstr ""
+msgstr "лонгитуда гео положаја"
 
 msgid ""
 "geo longitude location of where the media has been recorded or produced in "
 "degrees according to WGS84 (zero at the prime meridian in Greenwich/UK,  "
 "negative values for western longitudes)"
 msgstr ""
+"географска дужина места у коме је медиј снимљен или произведен у степенима "
+"према стандарду „WGS84“ (нула на првом меридијану у Гринвичу/Велика "
+"Британија, негативне вредности за западне дужине)"
 
 msgid "geo location elevation"
-msgstr ""
+msgstr "издигнуће гео положаја"
 
 msgid ""
 "geo elevation of where the media has been recorded or produced in meters "
 "according to WGS84 (zero is average sea level)"
 msgstr ""
+"надморска висина места у коме је медиј снимљен или произведен у метрима "
+"према стандарду „WGS84“ (нула је просечни ниво мора)"
 
-#, fuzzy
 msgid "geo location country"
-msgstr "положај"
+msgstr "земља гео положаја"
 
 msgid "country (english name) where the media has been recorded or produced"
-msgstr ""
+msgstr "земља (енглески назив) у којој је медиј снимљен или произведен"
 
-#, fuzzy
 msgid "geo location city"
-msgstr "положај"
+msgstr "град гео положаја"
 
 msgid "city (english name) where the media has been recorded or produced"
-msgstr ""
+msgstr "град (енглески назив) у коме је медиј снимљен или произведен"
 
-#, fuzzy
 msgid "geo location sublocation"
-msgstr "положај"
+msgstr "потположај гео положаја"
 
 msgid ""
 "a location whithin a city where the media has been produced or created (e.g. "
 "the neighborhood)"
 msgstr ""
+"место унутар града у коме је медиј произведен или створен (нпр. суседство)"
 
-#, fuzzy
 msgid "geo location horizontal error"
-msgstr "положај"
+msgstr "водоравна грешка гео положаја"
 
 msgid "expected error of the horizontal positioning measures (in meters)"
-msgstr ""
+msgstr "очекивана грешка мерења водоравног позиционирања (у метрима)"
 
-#, fuzzy
 msgid "geo location movement speed"
-msgstr "положај"
+msgstr "брзина кретања гео положаја"
 
 msgid ""
 "movement speed of the capturing device while performing the capture in m/s"
 msgstr ""
+"брзина кретања уређаја за снимање приликом извршавања снимања у метрима у "
+"секунди"
 
-#, fuzzy
 msgid "geo location movement direction"
-msgstr "положај"
+msgstr "усмерење кретања гео положаја"
 
 msgid ""
 "indicates the movement direction of the device performing the capture of a "
 "media. It is represented as degrees in floating point representation, 0 "
 "means the geographic north, and increases clockwise"
 msgstr ""
+"означава усмерење кретања уређаја приликом снимања медија. Представља се у "
+"степенима са покретним зарезом, 0 значи северни пол, и повећава се у смеру "
+"казаљке на сату."
 
-#, fuzzy
 msgid "geo location capture direction"
-msgstr "положај"
+msgstr "усмерење снимања гео положаја"
 
 msgid ""
 "indicates the direction the device is pointing to when capturing  a media. "
 "It is represented as degrees in floating point  representation, 0 means the "
 "geographic north, and increases clockwise"
 msgstr ""
+"означава усмерење на које уређај указује приликом снимања медија. Представља "
+"се у степенима са покретним зарезом, 0 значи северни пол, и повећава се у "
+"смеру казаљке на сату."
 
 #. TRANSLATORS: 'show name' = 'TV/radio/podcast show name' here
 msgid "show name"
-msgstr ""
+msgstr "назив програма"
 
 msgid "Name of the tv/podcast/series show the media is from"
-msgstr ""
+msgstr "Назив програма телевизије/подемисије/серије из ког је медиј"
 
 #. TRANSLATORS: 'show sortname' = 'TV/radio/podcast show name as used for sorting purposes' here
 msgid "show sortname"
-msgstr ""
+msgstr "назив програма при ређању"
 
 msgid ""
 "Name of the tv/podcast/series show the media is from, for sorting purposes"
 msgstr ""
+"Назив програма телевизије/подемисије/серије из ког је медиј, за сврхе ређања"
 
-#, fuzzy
 msgid "episode number"
-msgstr "број диска"
+msgstr "број епизоде"
 
 msgid "The episode number in the season the media is part of"
-msgstr ""
+msgstr "Број епизоде сезоне којој припада медиј"
 
-#, fuzzy
 msgid "season number"
-msgstr "број диска"
+msgstr "број сезоне"
 
 msgid "The season number of the show the media is part of"
-msgstr ""
+msgstr "Број сезоне програма којој припада медиј"
 
-#, fuzzy
 msgid "lyrics"
-msgstr "дозвола"
+msgstr "стихови"
 
 msgid "The lyrics of the media, commonly used for songs"
-msgstr ""
+msgstr "Стихови медија, обично коришћени за песме"
 
 msgid "composer sortname"
-msgstr ""
+msgstr "назив састављача при ређању"
 
-#, fuzzy
 msgid "person(s) who composed the recording, for sorting purposes"
-msgstr "особе одговорне за снимак"
+msgstr "особе које су саставиле снимање, за сврхе ређања"
 
 msgid "grouping"
-msgstr ""
+msgstr "груписање"
 
 msgid ""
 "Groups related media that spans multiple tracks, like the different pieces "
 "of a concerto. It is a higher level than a track, but lower than an album"
 msgstr ""
+"Групише одговарајуће медије који обухватају више нумера, као различите "
+"делове концерта. То је виши ниво од нумере, али нижи од албума."
 
-#, fuzzy
 msgid "user rating"
-msgstr "трајање"
+msgstr "оцене корисника"
 
 msgid ""
 "Rating attributed by a user. The higher the rank, the more the user likes "
 "this media"
 msgstr ""
+"Оцене које су доделили корисници. Виши ли је пласман, то се већем броју "
+"корисника свиђа овај медиј."
 
 msgid "device manufacturer"
-msgstr ""
+msgstr "произвођач уређаја"
 
-#, fuzzy
 msgid "Manufacturer of the device used to create this media"
-msgstr "издање кодирања којим се кодира овај ток"
+msgstr "Произвођач уређаја који је коришћен за стварање овог медија"
 
 msgid "device model"
-msgstr ""
+msgstr "модел уређаја"
 
-#, fuzzy
 msgid "Model of the device used to create this media"
-msgstr "издање кодирања којим се кодира овај ток"
+msgstr "Модел уређаја који је коришћен за стварање овог медија"
 
-#, fuzzy
 msgid "application name"
-msgstr "положај"
+msgstr "назив апликације"
 
-#, fuzzy
 msgid "Application used to create the media"
-msgstr "издање кодирања којим се кодира овај ток"
+msgstr "Апликација која је коришћена за стварање медија"
 
 msgid "application data"
-msgstr ""
+msgstr "подаци апликације"
 
 msgid "Arbitrary application data to be serialized into the media"
-msgstr ""
+msgstr "Произвољни подаци апликације који ће бити запаковани у медиј"
 
 msgid "image orientation"
-msgstr ""
+msgstr "усмерење слике"
 
 msgid "How the image should be rotated or flipped before display"
-msgstr ""
+msgstr "Како би слика требала да буде окренута или изврнута пре приказивања"
 
 msgid ", "
 msgstr ", "
@@ -820,7 +794,7 @@ msgid ""
 "Additional debug info:\n"
 "%s\n"
 msgstr ""
-"Додатни подаци за исправку грешака:\n"
+"Додатни подаци за исправљање грешака:\n"
 "%s\n"
 
 #, c-format
@@ -855,7 +829,7 @@ msgid "link without source element"
 msgstr "веза без изворног елемента"
 
 msgid "link without sink element"
-msgstr "веза без завршног елемента"
+msgstr "веза без елемента усклађивања"
 
 #, c-format
 msgid "no source element for URI \"%s\""
@@ -867,40 +841,42 @@ msgstr "нема елемента за везивање адресе „%s“"
 
 #, c-format
 msgid "no sink element for URI \"%s\""
-msgstr "нема завршног елемента за адресу „%s“"
+msgstr "нема елемента усклађивања за адресу „%s“"
 
 #, c-format
 msgid "could not link sink element for URI \"%s\""
-msgstr "не могу да вежем завршни елемент за адресу „%s“"
+msgstr "не могу да вежем елемент усклађивања за адресу „%s“"
 
 msgid "empty pipeline not allowed"
-msgstr "није допуштен празан цевовод"
+msgstr "није допуштена празна спојка низа"
 
 msgid "Internal clock error."
-msgstr ""
+msgstr "Унутрашња грешка сата."
 
 msgid "Internal data flow error."
-msgstr ""
+msgstr "Унутрaшња грешка протока података."
 
 msgid "A lot of buffers are being dropped."
-msgstr ""
+msgstr "Много помоћне меморије је одбачено."
 
 msgid "Internal data flow problem."
-msgstr ""
+msgstr "Унутрaшњи проблем протока података."
 
 msgid "Internal data stream error."
-msgstr ""
+msgstr "Унутрашња грешка тока података."
 
 msgid "Filter caps"
-msgstr ""
+msgstr "Филтрира могућности"
 
 msgid ""
 "Restrict the possible allowed capabilities (NULL means ANY). Setting this "
 "property takes a reference to the supplied GstCaps object."
 msgstr ""
+"Умањује могуће допуштене могућности (НИШТА значи БИЛО КОЈА). Постављање овог "
+"својства поставља као орјентир придодати објекат Гст могућности."
 
 msgid "No file name specified for writing."
-msgstr "Није наведено име датотеке за упис."
+msgstr "Није наведен назив датотеке за упис."
 
 #, c-format
 msgid "Could not open file \"%s\" for writing."
@@ -910,53 +886,52 @@ msgstr "Не могу да отворим датотеку „%s“ ради у�
 msgid "Error closing file \"%s\"."
 msgstr "Грешка при затварању датотеке „%s“."
 
-#, fuzzy, c-format
+#, c-format
 msgid "Error while seeking in file \"%s\"."
-msgstr "Грешка при упису у датотеку „%s“."
+msgstr "Грешка приликом премотавања у датотеци „%s“."
 
 #, c-format
 msgid "Error while writing to file \"%s\"."
 msgstr "Грешка при упису у датотеку „%s“."
 
 msgid "No file name specified for reading."
-msgstr "Није наведено име датотеке за читање."
+msgstr "Није наведен назив датотеке за читање."
 
 #, c-format
 msgid "Could not open file \"%s\" for reading."
 msgstr "Не могу да отворим датотеку „%s“ ради читања."
 
-#, fuzzy, c-format
+#, c-format
 msgid "Could not get info on \"%s\"."
-msgstr "Не могу да сазнам/поставим подешавања из/у ресурсу."
+msgstr "Не могу да добавим податке на „%s“."
 
 #, c-format
 msgid "\"%s\" is a directory."
-msgstr "\"%s\" је директоријум."
+msgstr "„%s“ је директоријум."
 
 #, c-format
 msgid "File \"%s\" is a socket."
-msgstr "Датотека „%s“ је сокет."
+msgstr "Датотека „%s“ је прикључница."
 
 msgid "Failed after iterations as requested."
 msgstr "Неуспех након траженог броја покушаја."
 
 msgid "No Temp directory specified."
-msgstr ""
+msgstr "Није наведен привремени директоријум."
 
-#, fuzzy, c-format
+#, c-format
 msgid "Could not create temp file \"%s\"."
-msgstr "Не могу да сазнам/поставим подешавања из/у ресурсу."
+msgstr "Не могу да створим привремену датотеку „%s“."
 
-#, fuzzy
 msgid "Error while writing to download file."
-msgstr "Грешка при упису у датотеку „%s“."
+msgstr "Грешка при упису у датотеку преузимања."
 
 # bug: this should be full word
 msgid "caps"
 msgstr "могућности"
 
 msgid "detected capabilities in stream"
-msgstr "препознате могућности у току"
+msgstr "откривене могућности у току"
 
 msgid "minimum"
 msgstr "најмање"
@@ -965,77 +940,74 @@ msgid "maximum"
 msgstr "највише"
 
 msgid "force caps"
-msgstr ""
+msgstr "приморај могућности"
 
 msgid "force caps without doing a typefind"
-msgstr ""
+msgstr "приморај могућности без обављања претраге уписа"
 
-#, fuzzy
 msgid "Stream contains no data."
-msgstr "албум који садржи ове податке"
+msgstr "Овај ток не садржи податке."
 
 msgid "Implemented Interfaces:\n"
-msgstr ""
+msgstr "Примењени уређаји:\n"
 
 msgid "readable"
-msgstr ""
+msgstr "читљив"
 
-#, fuzzy
 msgid "writable"
-msgstr "наслов"
+msgstr "уписив"
 
 msgid "controllable"
-msgstr ""
+msgstr "управљив"
 
 msgid "changeable in NULL, READY, PAUSED or PLAYING state"
-msgstr ""
+msgstr "измењив у стање НИШТА, СПРЕМАН, ПАУЗИРАН или ПУШТАМ"
 
 msgid "changeable only in NULL, READY or PAUSED state"
-msgstr ""
+msgstr "измењив само у стање НИШТА, СПРЕМАН или ПАУЗИРАН"
 
 msgid "changeable only in NULL or READY state"
-msgstr ""
+msgstr "измењив само у стање НИШТА или СПРЕМАН"
 
 msgid "Blacklisted files:"
-msgstr ""
+msgstr "Забрањене датотеке:"
 
-#, fuzzy
 msgid "Total count: "
-msgstr "укупно песама"
+msgstr "Укупан број:"
 
 #, c-format
 msgid "%d blacklisted file"
 msgid_plural "%d blacklisted files"
-msgstr[0] ""
-msgstr[1] ""
-msgstr[2] ""
+msgstr[0] "%d забрањена датотека"
+msgstr[1] "%d забрањене датотеке"
+msgstr[2] "%d забрањених датотека"
 
 #, c-format
 msgid "%d plugin"
 msgid_plural "%d plugins"
-msgstr[0] ""
-msgstr[1] ""
-msgstr[2] ""
+msgstr[0] "%d прикључак"
+msgstr[1] "%d прикључка"
+msgstr[2] "%d прикључака"
 
 #, c-format
 msgid "%d blacklist entry"
 msgid_plural "%d blacklist entries"
-msgstr[0] ""
-msgstr[1] ""
-msgstr[2] ""
+msgstr[0] "%d забрањена ставка"
+msgstr[1] "%d забрањене ставке"
+msgstr[2] "%d забрањених ставки"
 
-#, fuzzy, c-format
+#, c-format
 msgid "%d feature"
 msgid_plural "%d features"
-msgstr[0] "одлика"
-msgstr[1] "одлике"
-msgstr[2] "одлика"
+msgstr[0] "%d одлика"
+msgstr[1] "%d одлике"
+msgstr[2] "%d одлика"
 
 msgid "Print all elements"
-msgstr "Испиши све елементе"
+msgstr "Исписује све елементе"
 
 msgid "Print list of blacklisted files"
-msgstr ""
+msgstr "Штампа списак забрањених даттека"
 
 msgid ""
 "Print a machine-parsable list of features the specified plugin or all "
@@ -1043,20 +1015,24 @@ msgid ""
 "                                       Useful in connection with external "
 "automatic plugin installation mechanisms"
 msgstr ""
+"Штампа машинама обрадив списак одлика које наведени прикључак или прикључци "
+"обезбеђују.\n"
+"                                       Корисно у везама са спољним "
+"самосталним механизмом инсталирања прикључка."
 
 msgid "List the plugin contents"
-msgstr ""
+msgstr "Наводи садржај прикључка"
 
 msgid "Print supported URI schemes, with the elements that implement them"
-msgstr ""
+msgstr "Штампа подржане шеме адреса, са елементима који их примењују."
 
-#, fuzzy, c-format
+#, c-format
 msgid "Could not load plugin file: %s\n"
-msgstr "Не могу да отворим датотеку „%s“ ради уписа."
+msgstr "Не могу да учитам датотеку прикључка: %s\n"
 
-#, fuzzy, c-format
+#, c-format
 msgid "No such element or plugin '%s'\n"
-msgstr "нема изворног елемента за адресу „%s“"
+msgstr "Нема таквог елемента или прикључка „%s“\n"
 
 msgid "Usage: gst-xmllaunch <file.xml> [ element.property=value ... ]\n"
 msgstr ""
@@ -1064,203 +1040,200 @@ msgstr ""
 
 #, c-format
 msgid "ERROR: parse of xml file '%s' failed.\n"
-msgstr "ГРЕШКА: неуспешно рашчлањивање xml датотеке „%s“.\n"
+msgstr "ГРЕШКА: није успело рашчлањивање хмл датотеке „%s“.\n"
 
 #, c-format
 msgid "ERROR: no toplevel pipeline element in file '%s'.\n"
-msgstr "ГРЕШКА: нема врховног елемента цевовода у датотеци „%s“.\n"
+msgstr "ГРЕШКА: нема елемента спојке низа највишег нивоа у датотеци „%s“.\n"
 
-#, fuzzy
 msgid "WARNING: only one toplevel element is supported at this time.\n"
-msgstr "УПОЗОРЕЊЕ: тренутно је подржан само један врховни елемент."
+msgstr "УПОЗОРЕЊЕ: тренутно је подржан само један елемент највишег нивоа.\n"
 
 #, c-format
 msgid "ERROR: could not parse command line argument %d: %s.\n"
-msgstr "ГРЕШКА: не могу да рашчланим %d. аргумент наредбе: %s.\n"
+msgstr "ГРЕШКА: не могу да обрадим аргумент линије наредби %d.: %s.\n"
 
 #, c-format
 msgid "WARNING: element named '%s' not found.\n"
-msgstr "УПОЗОРЕЊЕ: елемент са именом „%s“ није нађен.\n"
+msgstr "УПОЗОРЕЊЕ: елемент под називом „%s“ није нађен.\n"
 
 msgid "Index statistics"
-msgstr ""
+msgstr "Статистике пописа"
 
 #, c-format
 msgid "Got message #%u from element \"%s\" (%s): "
-msgstr ""
+msgstr "Добих поруку #%u од елемента „%s“ (%s): "
 
 #, c-format
 msgid "Got message #%u from pad \"%s:%s\" (%s): "
-msgstr ""
+msgstr "Добих поруку #%u од попуне „%s:%s“ (%s): "
 
 #, c-format
 msgid "Got message #%u from object \"%s\" (%s): "
-msgstr ""
+msgstr "Добих поруку #%u од објекта „%s“ (%s): "
 
 #, c-format
 msgid "Got message #%u (%s): "
-msgstr ""
+msgstr "Добих поруку #%u (%s): "
 
-#, fuzzy, c-format
+#, c-format
 msgid "Got EOS from element \"%s\".\n"
-msgstr "ГРЕШКА: из елемента %s: %s\n"
+msgstr "Добих ЕОС од елемента „%s“.\n"
 
 #, c-format
 msgid "FOUND TAG      : found by element \"%s\".\n"
-msgstr "НАЂОХ ОЗНАКУ   : нашао је елемент „%s“.\n"
+msgstr "НАЂОХ ОЗНАКУ   : нађена је елементом „%s“.\n"
 
-#, fuzzy, c-format
+#, c-format
 msgid "FOUND TAG      : found by pad \"%s:%s\".\n"
-msgstr "НАЂОХ ОЗНАКУ   : нашао је елемент „%s“.\n"
+msgstr "НАЂОХ ОЗНАКУ   : нађена је попуном „%s:%s“.\n"
 
-#, fuzzy, c-format
+#, c-format
 msgid "FOUND TAG      : found by object \"%s\".\n"
-msgstr "НАЂОХ ОЗНАКУ   : нашао је елемент „%s“.\n"
+msgstr "НАЂОХ ОЗНАКУ   : нађена је објектом „%s“.\n"
 
 msgid "FOUND TAG\n"
-msgstr ""
+msgstr "НАЂОХ ОЗНАКУ\n"
 
 #, c-format
 msgid ""
 "INFO:\n"
 "%s\n"
 msgstr ""
+"ПДАЦИ:\n"
+"%s\n"
 
-#, fuzzy, c-format
+#, c-format
 msgid "WARNING: from element %s: %s\n"
-msgstr "ГРЕШКА: из елемента %s: %s\n"
+msgstr "УПОЗРЕЊЕ: из елемента %s: %s\n"
 
 msgid "Prerolled, waiting for buffering to finish...\n"
-msgstr ""
+msgstr "Предувијено, чекам да заврши смештање у међумеморију…\n"
 
 msgid "buffering..."
-msgstr ""
+msgstr "смештам у међумеморију..."
 
 msgid "Done buffering, setting pipeline to PLAYING ...\n"
 msgstr ""
+"Обавио сам смештање у међумеморију, постављам спојку низа на ПУШТАМ ...\n"
 
 msgid "Buffering, setting pipeline to PAUSED ...\n"
-msgstr ""
+msgstr "Смештам у међумеморију, постављам спојку низа на ПАУЗИРАН ...\n"
 
 msgid "Redistribute latency...\n"
-msgstr ""
+msgstr "Расподељујем кашњење...\n"
 
 #, c-format
 msgid "Setting state to %s as requested by %s...\n"
-msgstr ""
+msgstr "Постављам стање на %s као што је затражио %s...\n"
 
 msgid "Interrupt: Stopping pipeline ...\n"
-msgstr ""
+msgstr "Прекид: Заустављам спојку низа ...\n"
 
 #, fuzzy, c-format
 msgid "Missing element: %s\n"
 msgstr "нема елемента „%s“"
 
 msgid "Output tags (also known as metadata)"
-msgstr "Излазне ознаке (такође познато и као метаподаци)"
+msgstr "Излазне ознаке (такође познате и као метаподаци)"
 
 msgid "Output status information and property notifications"
-msgstr "Испиши податке о стању и обавештења о особинама"
+msgstr "Исписује податке о стању и обавештења о особинама"
 
-#, fuzzy
 msgid "Do not print any progress information"
-msgstr "Не исписуј податке о стању за ВРСТУ"
+msgstr "Не исписује податке о напредовању"
 
 msgid "Output messages"
-msgstr ""
+msgstr "Излазне поруке"
 
 msgid "Do not output status information of TYPE"
-msgstr "Не исписуј податке о стању за ВРСТУ"
+msgstr "Не исписује податке о стању за ВРСТУ"
 
 msgid "TYPE1,TYPE2,..."
 msgstr "ВРСТА1,ВРСТА2,..."
 
 msgid "Save xml representation of pipeline to FILE and exit"
-msgstr "Сачувај xml облик цевовода у ДАТОТЕКУ и заврши"
+msgstr "Чува хмл облик спојке низа у ДАТОТЕКУ и излази"
 
 msgid "FILE"
 msgstr "ДАТОТЕКА"
 
 msgid "Do not install a fault handler"
-msgstr "Не постављај руковаоца грешкама"
+msgstr "Неће инсталирати руковаоца грешкама"
 
-#, fuzzy
 msgid "Do not install signal handlers for SIGUSR1 and SIGUSR2"
-msgstr "Не постављај руковаоца грешкама"
+msgstr "Неће инсталирати руковаоце сигнала за СИГУСР1 и СИГУСР2"
 
 msgid "Print alloc trace (if enabled at compile time)"
 msgstr "Испиши траг доделе меморије (ако је укључено при превођењу)"
 
 msgid "Force EOS on sources before shutting the pipeline down"
-msgstr ""
+msgstr "Приморај ЕОС на извору пре гашења спојке низа"
 
 msgid "Gather and print index statistics"
-msgstr ""
+msgstr "Прикупи и штампај статистике регистра"
 
 #, c-format
 msgid "ERROR: pipeline could not be constructed: %s.\n"
-msgstr "ГРЕШКА: не могу да саставим цевовод: %s.\n"
+msgstr "ГРЕШКА: не могу да саставим спојку низа: %s.\n"
 
 msgid "ERROR: pipeline could not be constructed.\n"
-msgstr "ГРЕШКА: не могу да саставим цевовод.\n"
+msgstr "ГРЕШКА: не могу да саставим спојку низа.\n"
 
 #, c-format
 msgid "WARNING: erroneous pipeline: %s\n"
-msgstr "УПОЗОРЕЊЕ: неисправан цевовод: %s\n"
+msgstr "УПОЗОРЕЊЕ: неисправна спојка низа: %s\n"
 
 msgid "ERROR: the 'pipeline' element wasn't found.\n"
-msgstr "ГРЕШКА: елемент „pipeline“ није нађен.\n"
+msgstr "ГРЕШКА: елемент „спојка низа“ није нађен.\n"
 
 msgid "Setting pipeline to PAUSED ...\n"
-msgstr ""
+msgstr "Постављам спојку низа на ПАУЗИРАН ...\n"
 
-#, fuzzy
 msgid "ERROR: Pipeline doesn't want to pause.\n"
-msgstr "ГРЕШКА: цевовод не жели да пусти.\n"
+msgstr "ГРЕШКА: Спојка низа не жели да иде на паузу.\n"
 
 msgid "Pipeline is live and does not need PREROLL ...\n"
-msgstr ""
+msgstr "Спојка низа је жива и не треба јој ПРЕРОЛ ...\n"
 
 msgid "Pipeline is PREROLLING ...\n"
-msgstr ""
+msgstr "Спојка низа врши ПРЕДУВИЈАЊЕ ...\n"
 
-#, fuzzy
 msgid "ERROR: pipeline doesn't want to preroll.\n"
-msgstr "ГРЕШКА: цевовод не жели да пусти.\n"
+msgstr "ГРЕШКА: спојка низа не жели да предувије.\n"
 
 msgid "Pipeline is PREROLLED ...\n"
-msgstr ""
+msgstr "Спојка низа је ПРЕДУВИЈЕНА ...\n"
 
 msgid "Setting pipeline to PLAYING ...\n"
-msgstr ""
+msgstr "Постављам спојку низа на ПУШТАМ ...\n"
 
 msgid "ERROR: pipeline doesn't want to play.\n"
-msgstr "ГРЕШКА: цевовод не жели да пусти.\n"
+msgstr "ГРЕШКА: спојка низа не жели да пусти.\n"
 
 msgid "EOS on shutdown enabled -- Forcing EOS on the pipeline\n"
-msgstr ""
+msgstr "ЕОС је укључен приликом гашења —— Присиљавам ЕОС на спојци низа\n"
 
 msgid "Waiting for EOS...\n"
-msgstr ""
+msgstr "Чекам на ЕОС...\n"
 
 msgid "EOS received - stopping pipeline...\n"
-msgstr ""
+msgstr "ЕОС је примљен — заустављам спојку низа…\n"
 
 msgid "An error happened while waiting for EOS\n"
-msgstr ""
+msgstr "Дошло је до грешке док сам чекао на ЕОС\n"
 
 msgid "Execution ended after %"
-msgstr ""
+msgstr "Извршење је окончано након %"
 
 msgid "Setting pipeline to READY ...\n"
-msgstr ""
+msgstr "Постављам спојку низа на СПРЕМАН ...\n"
 
 msgid "Setting pipeline to NULL ...\n"
-msgstr ""
+msgstr "Постављам спојку низа на НИШТА ...\n"
 
-#, fuzzy
 msgid "Freeing pipeline ...\n"
-msgstr "Покрећем цевовод...\n"
+msgstr "Ослобађам спојку низа...\n"
 
 #~ msgid "Disable accelerated CPU instructions"
 #~ msgstr "Искључи убрзане инструкције процесора"
