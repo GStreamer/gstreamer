@@ -109,6 +109,8 @@ gst_buffer_format_type_get_type (void)
       {GST_BUFTYPE_AC3, "GST_BUFTYPE_AC3", "ac3"},
       {GST_BUFTYPE_EAC3, "GST_BUFTYPE_EAC3", "eac3"},
       {GST_BUFTYPE_DTS, "GST_BUFTYPE_DTS", "dts"},
+      {GST_BUFTYPE_MPEG2_AAC, "GST_BUFTYPE_MPEG2_AAC", "mpeg2-aac"},
+      {GST_BUFTYPE_MPEG4_AAC, "GST_BUFTYPE_MPEG4_AAC", "mpeg4-aac"},
       {0, NULL, NULL}
     };
     GType g_define_type_id =
@@ -164,6 +166,8 @@ gst_buffer_format_get_type (void)
       {GST_AC3, "GST_AC3", "ac3"},
       {GST_EAC3, "GST_EAC3", "eac3"},
       {GST_DTS, "GST_DTS", "dts"},
+      {GST_MPEG2_AAC, "GST_MPEG2_AAC", "mpeg2-aac"},
+      {GST_MPEG4_AAC, "GST_MPEG4_AAC", "mpeg4-aac"},
       {0, NULL, NULL}
     };
     GType g_define_type_id = g_enum_register_static ("GstBufferFormat", values);
