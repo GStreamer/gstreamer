@@ -199,27 +199,28 @@ find_or_create_demux_pad_for_ssrc (GstRtpSsrcDemux * demux, guint32 ssrc)
 
   demux->srcpads = g_slist_prepend (demux->srcpads, demuxpad);
 
-  /* copy caps from input */
-  caps = gst_pad_get_current_caps (demux->rtp_sink);
-  gst_pad_set_caps (rtp_pad, caps);
-  gst_caps_unref (caps);
-  gst_pad_use_fixed_caps (rtp_pad);
-  caps = gst_pad_get_current_caps (demux->rtcp_sink);
-  gst_pad_set_caps (rtcp_pad, caps);
-  gst_caps_unref (caps);
-  gst_pad_use_fixed_caps (rtcp_pad);
-
-  gst_pad_set_event_function (rtp_pad, gst_rtp_ssrc_demux_src_event);
   gst_pad_set_query_function (rtp_pad, gst_rtp_ssrc_demux_src_query);
   gst_pad_set_iterate_internal_links_function (rtp_pad,
       gst_rtp_ssrc_demux_iterate_internal_links_src);
+  gst_pad_set_event_function (rtp_pad, gst_rtp_ssrc_demux_src_event);
+  gst_pad_use_fixed_caps (rtp_pad);
   gst_pad_set_active (rtp_pad, TRUE);
 
   gst_pad_set_event_function (rtcp_pad, gst_rtp_ssrc_demux_src_event);
   gst_pad_set_iterate_internal_links_function (rtcp_pad,
       gst_rtp_ssrc_demux_iterate_internal_links_src);
+  gst_pad_use_fixed_caps (rtcp_pad);
   gst_pad_set_active (rtcp_pad, TRUE);
 
+  /* copy caps from input */
+  if ((caps = gst_pad_get_current_caps (demux->rtp_sink))) {
+    gst_pad_set_caps (rtp_pad, caps);
+    gst_caps_unref (caps);
+  }
+  if ((caps = gst_pad_get_current_caps (demux->rtcp_sink))) {
+    gst_pad_set_caps (rtcp_pad, caps);
+    gst_caps_unref (caps);
+  }
   gst_element_add_pad (GST_ELEMENT_CAST (demux), rtp_pad);
   gst_element_add_pad (GST_ELEMENT_CAST (demux), rtcp_pad);
 
@@ -431,6 +432,7 @@ gst_rtp_ssrc_demux_sink_event (GstPad * pad, GstObject * parent,
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_FLUSH_STOP:
       gst_segment_init (&demux->segment, GST_FORMAT_UNDEFINED);
+      /* fallthrough */
     default:
     {
       GSList *walk;
@@ -703,7 +705,7 @@ gst_rtp_ssrc_demux_iterate_internal_links_src (GstPad * pad, GstObject * parent)
     g_value_set_object (&val, otherpad);
     it = gst_iterator_new_single (GST_TYPE_PAD, &val);
     g_value_unset (&val);
-    gst_object_unref (otherpad);
+
   }
   GST_PAD_UNLOCK (demux);
 
@@ -714,8 +716,8 @@ gst_rtp_ssrc_demux_iterate_internal_links_src (GstPad * pad, GstObject * parent)
 static gint
 src_pad_compare_func (gconstpointer a, gconstpointer b)
 {
-  GstPad *pad = GST_PAD (a);
-  const gchar *prefix = b;
+  GstPad *pad = GST_PAD (g_value_get_object (a));
+  const gchar *prefix = g_value_get_string (b);
   gint res = 1;
 
   GST_OBJECT_LOCK (pad);
@@ -744,7 +746,6 @@ gst_rtp_ssrc_demux_iterate_internal_links_sink (GstPad * pad,
     g_assert_not_reached ();
 
   it = gst_element_iterate_src_pads (GST_ELEMENT_CAST (demux));
-
   it = gst_iterator_filter (it, src_pad_compare_func, &gval);
 
   return it;
