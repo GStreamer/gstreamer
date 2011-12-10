@@ -1337,9 +1337,8 @@ gst_rtp_session_event_recv_rtp_sink (GstPad * pad, GstObject * parent,
 
       /* process */
       gst_event_parse_caps (event, &caps);
-      ret = gst_rtp_session_sink_setcaps (pad, rtpsession, caps);
-      /* and eat */
-      gst_event_unref (event);
+      gst_rtp_session_sink_setcaps (pad, rtpsession, caps);
+      ret = gst_pad_push_event (rtpsession->recv_rtp_src, event);
       break;
     }
     case GST_EVENT_FLUSH_STOP:
@@ -1490,7 +1489,7 @@ gst_rtp_session_sink_setcaps (GstPad * pad, GstRtpSession * rtpsession,
   gst_rtp_session_cache_caps (rtpsession, caps);
   GST_RTP_SESSION_UNLOCK (rtpsession);
 
-  return gst_pad_set_caps (rtpsession->recv_rtp_src, caps);
+  return TRUE;
 }
 
 /* receive a packet from a sender, send it to the RTP session manager and
@@ -1657,9 +1656,8 @@ gst_rtp_session_event_send_rtp_sink (GstPad * pad, GstObject * parent,
 
       /* process */
       gst_event_parse_caps (event, &caps);
-      ret = gst_rtp_session_setcaps_send_rtp (pad, rtpsession, caps);
-      /* and eat */
-      gst_event_unref (event);
+      gst_rtp_session_setcaps_send_rtp (pad, rtpsession, caps);
+      ret = gst_pad_push_event (rtpsession->send_rtp_src, event);
       break;
     }
     case GST_EVENT_FLUSH_STOP:
@@ -1718,15 +1716,14 @@ gst_rtp_session_event_send_rtp_sink (GstPad * pad, GstObject * parent,
 }
 
 static GstCaps *
-gst_rtp_session_getcaps_send_rtp (GstPad * pad, GstCaps * filter)
+gst_rtp_session_getcaps_send_rtp (GstPad * pad, GstRtpSession * rtpsession,
+    GstCaps * filter)
 {
-  GstRtpSession *rtpsession;
   GstRtpSessionPrivate *priv;
   GstCaps *result;
   GstStructure *s1, *s2;
   guint ssrc;
 
-  rtpsession = GST_RTP_SESSION (gst_pad_get_parent (pad));
   priv = rtpsession->priv;
 
   ssrc = rtp_session_get_internal_ssrc (priv->session);
@@ -1748,8 +1745,6 @@ gst_rtp_session_getcaps_send_rtp (GstPad * pad, GstCaps * filter)
 
   GST_DEBUG_OBJECT (rtpsession, "getting caps %" GST_PTR_FORMAT, result);
 
-  gst_object_unref (rtpsession);
-
   return result;
 }
 
@@ -1758,6 +1753,9 @@ gst_rtp_session_query_send_rtp (GstPad * pad, GstObject * parent,
     GstQuery * query)
 {
   gboolean res = FALSE;
+  GstRtpSession *rtpsession;
+
+  rtpsession = GST_RTP_SESSION (parent);
 
   switch (GST_QUERY_TYPE (query)) {
     case GST_QUERY_CAPS:
@@ -1765,7 +1763,7 @@ gst_rtp_session_query_send_rtp (GstPad * pad, GstObject * parent,
       GstCaps *filter, *caps;
 
       gst_query_parse_caps (query, &filter);
-      caps = gst_rtp_session_getcaps_send_rtp (pad, filter);
+      caps = gst_rtp_session_getcaps_send_rtp (pad, rtpsession, filter);
       gst_query_set_caps_result (query, caps);
       gst_caps_unref (caps);
       res = TRUE;
@@ -1793,7 +1791,7 @@ gst_rtp_session_setcaps_send_rtp (GstPad * pad, GstRtpSession * rtpsession,
     GST_DEBUG_OBJECT (rtpsession, "setting internal SSRC to %08x", ssrc);
     rtp_session_set_internal_ssrc (priv->session, ssrc);
   }
-  return gst_pad_set_caps (rtpsession->send_rtp_src, caps);
+  return TRUE;
 }
 
 /* Recieve an RTP packet or a list of packets to be send to the receivers,
