@@ -7,6 +7,7 @@ EXTRA_DIST = \
 	id3-577468-unsynced-tag.tag \
 	id3-588148-unsynced-v24.tag \
 	pcm16sine.flv \
+	pinknoise-vorbis.mkv \
 	test-cert.pem \
 	test-key.pem
 
