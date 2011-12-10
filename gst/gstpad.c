@@ -2496,7 +2496,7 @@ gst_pad_forward (GstPad * pad, GstPadForwardFunction forward,
         intpad = g_value_get_object (&item);
 
         /* if already pushed, skip. FIXME, find something faster to tag pads */
-        if (g_list_find (pushed_pads, intpad)) {
+        if (intpad == NULL || g_list_find (pushed_pads, intpad)) {
           g_value_reset (&item);
           break;
         }
