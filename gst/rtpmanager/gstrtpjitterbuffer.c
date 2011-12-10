@@ -1050,9 +1050,7 @@ gst_rtp_jitter_buffer_sink_event (GstPad * pad, GstObject * parent,
 
       /* set same caps on srcpad on success */
       if (ret)
-        gst_pad_set_caps (priv->srcpad, caps);
-
-      gst_event_unref (event);
+        ret = gst_pad_push_event (priv->srcpad, event);
       break;
     }
     case GST_EVENT_SEGMENT:
@@ -1124,6 +1122,7 @@ static gboolean
 gst_rtp_jitter_buffer_sink_rtcp_event (GstPad * pad, GstObject * parent,
     GstEvent * event)
 {
+  gboolean ret = TRUE;
   GstRtpJitterBuffer *jitterbuffer;
 
   jitterbuffer = GST_RTP_JITTER_BUFFER (parent);
@@ -1132,15 +1131,17 @@ gst_rtp_jitter_buffer_sink_rtcp_event (GstPad * pad, GstObject * parent,
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_FLUSH_START:
+      gst_event_unref (event);
       break;
     case GST_EVENT_FLUSH_STOP:
+      gst_event_unref (event);
       break;
     default:
+      ret = gst_pad_event_default (pad, parent, event);
       break;
   }
-  gst_event_unref (event);
 
-  return TRUE;
+  return ret;
 }
 
 /*
