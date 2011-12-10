@@ -2,14 +2,15 @@
 # Copyright (C) 2010 Fran Dieguez
 # This file is distributed under the same license as the gst-plugins-base package.
 # Fran Diéguez <frandieguez@ubuntu.com>, 2010, 2011.
+# Fran Dieguez <frandieguez@ubuntu.com>, 2011.
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-base 0.10.31.2\n"
+"Project-Id-Version: gst-plugins-base 0.10.32.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2011-08-20 12:18+0100\n"
-"PO-Revision-Date: 2011-01-09 21:20+0100\n"
-"Last-Translator: Fran Diéguez <frandieguez@ubuntu.com>\n"
+"POT-Creation-Date: 2011-12-10 01:13+0000\n"
+"PO-Revision-Date: 2011-09-05 12:48+0200\n"
+"Last-Translator: Fran Dieguez <frandieguez@ubuntu.com>\n"
 "Language-Team: Galician <proxecto@trasno.net>\n"
 "Language: gl\n"
 "MIME-Version: 1.0\n"
@@ -332,13 +333,11 @@ msgstr "modo de exposición da toma"
 msgid "The exposure mode used when capturing an image"
 msgstr "O modo de exposición usado ao tomar unha imaxe"
 
-#, fuzzy
 msgid "capturing exposure compensation"
-msgstr "modo de exposición da toma"
+msgstr "capturando a compensación de exposición"
 
-#, fuzzy
 msgid "The exposure compensation used when capturing an image"
-msgstr "O modo de exposición usado ao tomar unha imaxe"
+msgstr "A compensación de exposición usada ao capturar unha imaxe"
 
 msgid "capturing scene capture type"
 msgstr "tipo de escena usado na toma"
