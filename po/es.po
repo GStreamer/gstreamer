@@ -1,21 +1,21 @@
-# translation of gst-plugins-base-0.10.30.3.po to Español
+# translation of gst-plugins-base-0.10.32.2.po to Español
 # spanish translation for gst-plugins-base
 # This file is put in the public domain.
-# Jorge González González <aloriel@gmail.com>, 2007, 2008, 2009, 2010.
+# Jorge González <jorgegonz@svn.gnome.org>, 2007, 2008, 2009, 2010, 2011.
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-base 0.10.30.3\n"
+"Project-Id-Version: gst-plugins-base 0.10.32.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2011-08-20 12:18+0100\n"
-"PO-Revision-Date: 2010-11-02 15:40+0100\n"
+"POT-Creation-Date: 2011-12-10 01:13+0000\n"
+"PO-Revision-Date: 2011-10-02 15:46+0200\n"
 "Last-Translator: Jorge González González <aloriel@gmail.com>\n"
 "Language-Team: Spanish <es@li.org>\n"
 "Language: es\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"Plural-Forms: nplurals=2; plural=(n!=1);\n"
 
 msgid "Master"
 msgstr "Maestro"
@@ -331,13 +331,11 @@ msgstr "modo de exposición de la toma"
 msgid "The exposure mode used when capturing an image"
 msgstr "El modo de exposición usado al tomar una imagen"
 
-#, fuzzy
 msgid "capturing exposure compensation"
-msgstr "modo de exposición de la toma"
+msgstr "compensación de la exposición en la captura"
 
-#, fuzzy
 msgid "The exposure compensation used when capturing an image"
-msgstr "El modo de exposición usado al tomar una imagen"
+msgstr "La compensación de exposición usada al capturar una imagen"
 
 msgid "capturing scene capture type"
 msgstr "tipo de escena usado en la toma"

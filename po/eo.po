@@ -1,0 +1,605 @@
+# Esperanto translation for gst-plugins-base.
+# Copyright (C) 2011 Free Software Foundation, Inc.
+# This file is distributed under the same license as the gst-plugins-base package.
+# Kristjan SCHMIDT <kristjan.schmidt@googlemail.com>, 2011.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: gst-plugins-base 0.10.32.2\n"
+"Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
+"POT-Creation-Date: 2011-12-10 01:13+0000\n"
+"PO-Revision-Date: 2011-06-04 21:11+0100\n"
+"Last-Translator: Kristjan SCHMIDT <kristjan.schmidt@googlemail.com>\n"
+"Language-Team: Esperanto <translation-team-eo@lists.sourceforge.net>\n"
+"Language: eo\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+msgid "Master"
+msgstr "Ĉefa regilo"
+
+msgid "Bass"
+msgstr "Baso"
+
+msgid "Treble"
+msgstr ""
+
+msgid "PCM"
+msgstr ""
+
+msgid "Synth"
+msgstr "Sintezilo"
+
+msgid "Line-in"
+msgstr ""
+
+msgid "CD"
+msgstr "KD"
+
+msgid "Microphone"
+msgstr "Mikrofono"
+
+msgid "PC Speaker"
+msgstr "Komputila laŭtparolilo"
+
+msgid "Playback"
+msgstr "Reproduktado"
+
+msgid "Capture"
+msgstr "Kapti"
+
+msgid "Could not open device for playback in mono mode."
+msgstr "Ne eblis malfermi aparaton por reproduktado per unukanala reĝimo."
+
+msgid "Could not open device for playback in stereo mode."
+msgstr "Ne eblis malfermi aparaton por reproduktado per dukanala reĝimo."
+
+#, c-format
+msgid "Could not open device for playback in %d-channel mode."
+msgstr "Ne eblis malfermi la aparaton por reproduktado per %d-kanala reĝimo."
+
+msgid ""
+"Could not open audio device for playback. Device is being used by another "
+"application."
+msgstr ""
+"Ne eblis malfermi la sonaparaton por reproduktado. Ĝi estas uzate de alia "
+"aplikaĵo."
+
+msgid "Could not open audio device for playback."
+msgstr "Ne eblis malfermi la sonaparaton por reproduktado."
+
+msgid "Could not open device for recording in mono mode."
+msgstr "Ne eblis malfermi la aparaton por registrado per unukanala reĝimo."
+
+msgid "Could not open device for recording in stereo mode."
+msgstr "Ne eblis malfermi la aparaton por registrado per dukanala reĝimo."
+
+#, c-format
+msgid "Could not open device for recording in %d-channel mode"
+msgstr "Ne eblis malfermi la aparaton por registrado per %d-kanala reĝimo."
+
+msgid ""
+"Could not open audio device for recording. Device is being used by another "
+"application."
+msgstr ""
+"Ne eblis malfermi la aparaton por registrado. Ĝi estas uzate de alia "
+"aplikaĵo."
+
+msgid "Could not open audio device for recording."
+msgstr "Ne eblis malfermi sonaparaton por registrado."
+
+msgid "Could not open CD device for reading."
+msgstr "Ne eblis malfermi KD-aparaton por legado."
+
+msgid "Could not seek CD."
+msgstr "Ne eblis traserĉi la KD-n."
+
+msgid "Could not read CD."
+msgstr "Ne eblis legi la KD-n."
+
+#, c-format
+msgid "Could not open vfs file \"%s\" for writing: %s."
+msgstr "Ne eblis malfermi la vfs-dosieron \"%s\" por skribado: %s."
+
+msgid "No filename given"
+msgstr "Ne donis dosiernomon"
+
+#, c-format
+msgid "Could not close vfs file \"%s\"."
+msgstr "Ne eblis fermi vfs-dosieron \"%s\"."
+
+#, c-format
+msgid "Error while writing to file \"%s\"."
+msgstr "Eraro dum skribo al dosiero \"%s\"."
+
+msgid "Internal data stream error."
+msgstr "Interna datumflu-eraro."
+
+#, c-format
+msgid "A %s plugin is required to play this stream, but not installed."
+msgstr "%s-kromprogramo bezonatas, sed tia ne estas instalite."
+
+msgid "This appears to be a text file"
+msgstr "Tio ŝajnas esti tekstdosiero"
+
+msgid "Could not determine type of stream"
+msgstr "Ne eblis rekoni la tipon de la fluo"
+
+#, c-format
+msgid "Invalid subtitle URI \"%s\", subtitles disabled."
+msgstr "Nevalida subtekst-adreso \"%s\", subtekstoj estos elŝaltate."
+
+msgid "No URI specified to play from."
+msgstr ""
+
+#, c-format
+msgid "Invalid URI \"%s\"."
+msgstr "Nevalida URI \"%s\"."
+
+msgid "RTSP streams cannot be played yet."
+msgstr "Ankoraŭ ne eblas ludi RTSP-fluojn."
+
+msgid "Could not create \"decodebin\" element."
+msgstr "Ne eblis krei \"decodebin\"-elementon."
+
+msgid "Source element is invalid."
+msgstr "Font-elemento estas nevalide."
+
+msgid ""
+"Only a subtitle stream was detected. Either you are loading a subtitle file "
+"or some other type of text file, or the media file was not recognized."
+msgstr ""
+
+msgid ""
+"You do not have a decoder installed to handle this file. You might need to "
+"install the necessary plugins."
+msgstr ""
+
+msgid "This is not a media file"
+msgstr "Tio ne estas aŭdvidaĵa dosiero"
+
+msgid "A subtitle stream was detected, but no video stream."
+msgstr ""
+
+msgid "Both autovideosink and xvimagesink elements are missing."
+msgstr "Ambaŭ elementoj \"autovideosink\" kaj \"xvimagesink\" mankas."
+
+#, c-format
+msgid "Missing element '%s' - check your GStreamer installation."
+msgstr ""
+
+msgid "Both autoaudiosink and alsasink elements are missing."
+msgstr ""
+
+#, c-format
+msgid "Both autovideosink and %s elements are missing."
+msgstr ""
+
+msgid "The autovideosink element is missing."
+msgstr ""
+
+#, c-format
+msgid "Configured videosink %s is not working."
+msgstr ""
+
+#, c-format
+msgid "Both autovideosink and %s elements are not working."
+msgstr ""
+
+msgid "The autovideosink element is not working."
+msgstr ""
+
+msgid "Custom text sink element is not usable."
+msgstr ""
+
+msgid "No volume control found"
+msgstr "Ne trovis laŭtec-regilon"
+
+#, c-format
+msgid "Both autoaudiosink and %s elements are missing."
+msgstr ""
+
+msgid "The autoaudiosink element is missing."
+msgstr ""
+
+#, c-format
+msgid "Configured audiosink %s is not working."
+msgstr ""
+
+#, c-format
+msgid "Both autoaudiosink and %s elements are not working."
+msgstr ""
+
+msgid "The autoaudiosink element is not working."
+msgstr ""
+
+msgid "Can't play a text file without video or visualizations."
+msgstr ""
+
+#, c-format
+msgid "No decoder available for type '%s'."
+msgstr ""
+
+msgid "This stream type cannot be played yet."
+msgstr ""
+
+#, c-format
+msgid "No URI handler implemented for \"%s\"."
+msgstr ""
+
+#, c-format
+msgid "Error while sending data to \"%s:%d\"."
+msgstr "Eraro dum sendado de datumoj al \"%s:%d\"."
+
+#, c-format
+msgid "Error while sending gdp header data to \"%s:%d\"."
+msgstr ""
+
+#, c-format
+msgid "Error while sending gdp payload data to \"%s:%d\"."
+msgstr ""
+
+#, c-format
+msgid "Connection to %s:%d refused."
+msgstr ""
+
+msgid "Can't record audio fast enough"
+msgstr "Ne eblas registri la sonon sufiĉe rapide"
+
+msgid "Failed to read tag: not enough data"
+msgstr ""
+
+msgid "track ID"
+msgstr ""
+
+msgid "MusicBrainz track ID"
+msgstr ""
+
+msgid "artist ID"
+msgstr ""
+
+msgid "MusicBrainz artist ID"
+msgstr ""
+
+msgid "album ID"
+msgstr "album-ID"
+
+msgid "MusicBrainz album ID"
+msgstr ""
+
+msgid "album artist ID"
+msgstr ""
+
+msgid "MusicBrainz album artist ID"
+msgstr ""
+
+msgid "track TRM ID"
+msgstr ""
+
+msgid "MusicBrainz TRM ID"
+msgstr ""
+
+msgid "capturing shutter speed"
+msgstr ""
+
+msgid "Shutter speed used when capturing an image, in seconds"
+msgstr ""
+
+msgid "capturing focal ratio"
+msgstr ""
+
+msgid "Focal ratio (f-number) used when capturing the image"
+msgstr ""
+
+msgid "capturing focal length"
+msgstr ""
+
+msgid "Focal length of the lens used capturing the image, in mm"
+msgstr ""
+
+msgid "capturing digital zoom ratio"
+msgstr ""
+
+msgid "Digital zoom ratio used when capturing an image"
+msgstr ""
+
+msgid "capturing iso speed"
+msgstr ""
+
+msgid "The ISO speed used when capturing an image"
+msgstr ""
+
+msgid "capturing exposure program"
+msgstr ""
+
+msgid "The exposure program used when capturing an image"
+msgstr ""
+
+msgid "capturing exposure mode"
+msgstr ""
+
+msgid "The exposure mode used when capturing an image"
+msgstr ""
+
+msgid "capturing exposure compensation"
+msgstr ""
+
+msgid "The exposure compensation used when capturing an image"
+msgstr ""
+
+msgid "capturing scene capture type"
+msgstr ""
+
+msgid "The scene capture mode used when capturing an image"
+msgstr ""
+
+msgid "capturing gain adjustment"
+msgstr ""
+
+msgid "The overall gain adjustment applied on an image"
+msgstr ""
+
+msgid "capturing white balance"
+msgstr ""
+
+msgid "The white balance mode set when capturing an image"
+msgstr ""
+
+msgid "capturing contrast"
+msgstr ""
+
+msgid "The direction of contrast processing applied when capturing an image"
+msgstr ""
+
+msgid "capturing saturation"
+msgstr ""
+
+msgid "The direction of saturation processing applied when capturing an image"
+msgstr ""
+
+msgid "capturing sharpness"
+msgstr ""
+
+msgid "The direction of sharpness processing applied when capturing an image"
+msgstr ""
+
+msgid "capturing flash fired"
+msgstr ""
+
+msgid "If the flash fired while capturing an image"
+msgstr ""
+
+msgid "capturing flash mode"
+msgstr ""
+
+msgid "The selected flash mode while capturing an image"
+msgstr ""
+
+msgid "capturing metering mode"
+msgstr ""
+
+msgid ""
+"The metering mode used while determining exposure for capturing an image"
+msgstr ""
+
+msgid "capturing source"
+msgstr ""
+
+msgid "The source or type of device used for the capture"
+msgstr ""
+
+msgid "image horizontal ppi"
+msgstr ""
+
+msgid "Media (image/video) intended horizontal pixel density in ppi"
+msgstr ""
+
+msgid "image vertical ppi"
+msgstr ""
+
+msgid "Media (image/video) intended vertical pixel density in ppi"
+msgstr ""
+
+msgid "ID3v2 frame"
+msgstr ""
+
+msgid "unparsed id3v2 tag frame"
+msgstr ""
+
+msgid "This CD has no audio tracks"
+msgstr ""
+
+msgid "ID3 tag"
+msgstr ""
+
+msgid "APE tag"
+msgstr ""
+
+msgid "ICY internet radio"
+msgstr ""
+
+msgid "Apple Lossless Audio (ALAC)"
+msgstr ""
+
+msgid "Free Lossless Audio Codec (FLAC)"
+msgstr ""
+
+msgid "Lossless True Audio (TTA)"
+msgstr ""
+
+msgid "Windows Media Speech"
+msgstr ""
+
+msgid "CYUV Lossless"
+msgstr ""
+
+msgid "FFMpeg v1"
+msgstr "FFMpeg v1"
+
+msgid "Lossless MSZH"
+msgstr ""
+
+msgid "Uncompressed Gray Image"
+msgstr ""
+
+msgid "Run-length encoding"
+msgstr ""
+
+msgid "Sami subtitle format"
+msgstr ""
+
+msgid "TMPlayer subtitle format"
+msgstr ""
+
+msgid "Kate subtitle format"
+msgstr ""
+
+msgid "Uncompressed planar YUV 4:2:0"
+msgstr ""
+
+msgid "Uncompressed planar YVU 4:2:0"
+msgstr ""
+
+msgid "Uncompressed packed YUV 4:2:2"
+msgstr ""
+
+msgid "Uncompressed packed YUV 4:1:0"
+msgstr ""
+
+msgid "Uncompressed packed YVU 4:1:0"
+msgstr ""
+
+msgid "Uncompressed packed YUV 4:1:1"
+msgstr ""
+
+msgid "Uncompressed packed YUV 4:4:4"
+msgstr ""
+
+msgid "Uncompressed planar YUV 4:2:2"
+msgstr ""
+
+msgid "Uncompressed planar YUV 4:1:1"
+msgstr ""
+
+msgid "Uncompressed black and white Y-plane"
+msgstr ""
+
+msgid "Uncompressed YUV"
+msgstr ""
+
+#, c-format
+msgid "Uncompressed palettized %d-bit %s"
+msgstr ""
+
+#, c-format
+msgid "DivX MPEG-4 Version %d"
+msgstr "\"DivX MPEG-4\"-versio %d"
+
+#, c-format
+msgid "Raw %d-bit PCM audio"
+msgstr ""
+
+msgid "Raw PCM audio"
+msgstr ""
+
+#, c-format
+msgid "Raw %d-bit floating-point audio"
+msgstr ""
+
+msgid "Raw floating-point audio"
+msgstr ""
+
+msgid "Audio CD source"
+msgstr "Son-KD-fonto"
+
+msgid "DVD source"
+msgstr "DVD-fonto"
+
+msgid "Real Time Streaming Protocol (RTSP) source"
+msgstr ""
+
+msgid "Microsoft Media Server (MMS) protocol source"
+msgstr ""
+
+#, c-format
+msgid "%s protocol source"
+msgstr "%s protokolfonto"
+
+#, c-format
+msgid "%s video RTP depayloader"
+msgstr ""
+
+#, c-format
+msgid "%s audio RTP depayloader"
+msgstr ""
+
+#, c-format
+msgid "%s RTP depayloader"
+msgstr ""
+
+#, c-format
+msgid "%s demuxer"
+msgstr ""
+
+#, c-format
+msgid "%s decoder"
+msgstr ""
+
+#, c-format
+msgid "%s video RTP payloader"
+msgstr ""
+
+#, c-format
+msgid "%s audio RTP payloader"
+msgstr ""
+
+#, c-format
+msgid "%s RTP payloader"
+msgstr ""
+
+#, c-format
+msgid "%s muxer"
+msgstr ""
+
+#, c-format
+msgid "%s encoder"
+msgstr ""
+
+#, c-format
+msgid "GStreamer element %s"
+msgstr ""
+
+msgid "Unknown source element"
+msgstr "Nekonata fontelemento"
+
+msgid "Unknown sink element"
+msgstr ""
+
+msgid "Unknown element"
+msgstr "Nekonata elemento"
+
+msgid "Unknown decoder element"
+msgstr ""
+
+msgid "Unknown encoder element"
+msgstr ""
+
+msgid "Plugin or element of unknown type"
+msgstr ""
+
+msgid "No device specified."
+msgstr ""
+
+#, c-format
+msgid "Device \"%s\" does not exist."
+msgstr "Aparato \"%s\" ne ekzistas."
+
+#, c-format
+msgid "Device \"%s\" is already being used."
+msgstr "Aparato \"%s\" jam estas uzata."
+
+#, c-format
+msgid "Could not open device \"%s\" for reading and writing."
+msgstr "Ne eblis malfermi aparaton  \"%s\" por legado aŭ skribado."
