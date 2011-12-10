@@ -217,6 +217,7 @@ mpegpsmux_create_stream (MpegPsMux * mux, MpegPsPadData * ps_data, GstPad * pad)
   GstFlowReturn ret = GST_FLOW_ERROR;
   GstCaps *caps = gst_pad_get_negotiated_caps (pad);
   GstStructure *s;
+  gboolean is_video = FALSE;
 
   if (caps == NULL) {
     GST_DEBUG_OBJECT (pad, "Sink pad caps were not set before pushing");
@@ -229,6 +230,7 @@ mpegpsmux_create_stream (MpegPsMux * mux, MpegPsPadData * ps_data, GstPad * pad)
   if (gst_structure_has_name (s, "video/x-dirac")) {
     GST_DEBUG_OBJECT (pad, "Creating Dirac stream");
     ps_data->stream = psmux_create_stream (mux->psmux, PSMUX_ST_VIDEO_DIRAC);
+    is_video = TRUE;
   } else if (gst_structure_has_name (s, "audio/x-ac3")) {
     GST_DEBUG_OBJECT (pad, "Creating AC3 stream");
     ps_data->stream = psmux_create_stream (mux->psmux, PSMUX_ST_PS_AUDIO_AC3);
@@ -252,6 +254,7 @@ mpegpsmux_create_stream (MpegPsMux * mux, MpegPsPadData * ps_data, GstPad * pad)
       ps_data->codec_data = NULL;
     }
     ps_data->stream = psmux_create_stream (mux->psmux, PSMUX_ST_VIDEO_H264);
+    is_video = TRUE;
   } else if (gst_structure_has_name (s, "audio/mpeg")) {
     gint mpegversion;
     if (!gst_structure_get_int (s, "mpegversion", &mpegversion)) {
@@ -312,6 +315,7 @@ mpegpsmux_create_stream (MpegPsMux * mux, MpegPsPadData * ps_data, GstPad * pad)
       GST_DEBUG_OBJECT (pad, "Creating MPEG Video, version 4 stream");
       ps_data->stream = psmux_create_stream (mux->psmux, PSMUX_ST_VIDEO_MPEG4);
     }
+    is_video = TRUE;
   }
 
   if (ps_data->stream != NULL) {
@@ -327,6 +331,11 @@ mpegpsmux_create_stream (MpegPsMux * mux, MpegPsPadData * ps_data, GstPad * pad)
     psmux_stream_set_buffer_release_func (ps_data->stream, release_buffer_cb);
 
     ret = GST_FLOW_OK;
+
+    if (is_video && mux->video_stream_id == 0) {
+      mux->video_stream_id = ps_data->stream_id;
+      GST_INFO_OBJECT (mux, "video pad stream_id 0x%02x", mux->video_stream_id);
+    }
   }
 
 beach:
@@ -590,6 +599,8 @@ mpegpsmux_release_pad (GstElement * element, GstPad * pad)
       pad_data->codec_data = NULL;
     }
   }
+  if (pad_data->stream_id == mux->video_stream_id)
+    mux->video_stream_id = 0;
   GST_OBJECT_UNLOCK (pad);
 
   gst_collect_pads_remove_pad (mux->collect, pad);
