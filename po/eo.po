@@ -1,0 +1,1171 @@
+# Esperanto translation for gstreamer.
+# Copyright (C) 2011 Free Software Foundation, Inc.
+# This file is distributed under the same license as the gstreamer package.
+# Kristjan SCHMIDT <kristjan.schmidt@googlemail.com>, 2011.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: gstreamer 0.10.32.2\n"
+"Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
+"POT-Creation-Date: 2011-12-10 00:53+0000\n"
+"PO-Revision-Date: 2011-06-04 21:11+0100\n"
+"Last-Translator: Kristjan SCHMIDT <kristjan.schmidt@googlemail.com>\n"
+"Language-Team: Esperanto <translation-team-eo@lists.sourceforge.net>\n"
+"Language: eo\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+msgid "Print the GStreamer version"
+msgstr "Eligi la version de GStreamer"
+
+msgid "Make all warnings fatal"
+msgstr "Igi ĉiujn avertojn fatalaj"
+
+msgid "Print available debug categories and exit"
+msgstr "Eligi disponeblaj sencimig-koategorioj kaj eliri"
+
+msgid ""
+"Default debug level from 1 (only error) to 5 (anything) or 0 for no output"
+msgstr ""
+
+msgid "LEVEL"
+msgstr "NIVELO"
+
+msgid ""
+"Comma-separated list of category_name:level pairs to set specific levels for "
+"the individual categories. Example: GST_AUTOPLUG:5,GST_ELEMENT_*:3"
+msgstr ""
+
+msgid "LIST"
+msgstr "LISTO"
+
+msgid "Disable colored debugging output"
+msgstr ""
+
+msgid "Disable debugging"
+msgstr "Elŝalti sencimigon"
+
+msgid "Enable verbose plugin loading diagnostics"
+msgstr ""
+
+msgid "Colon-separated paths containing plugins"
+msgstr ""
+
+msgid "PATHS"
+msgstr "VOJOJ"
+
+msgid ""
+"Comma-separated list of plugins to preload in addition to the list stored in "
+"environment variable GST_PLUGIN_PATH"
+msgstr ""
+
+msgid "PLUGINS"
+msgstr "KROMPROGRAMOJ"
+
+msgid "Disable trapping of segmentation faults during plugin loading"
+msgstr ""
+
+msgid "Disable updating the registry"
+msgstr ""
+
+msgid "Disable spawning a helper process while scanning the registry"
+msgstr ""
+
+msgid "GStreamer Options"
+msgstr "Opcioj de GStreamer"
+
+msgid "Show GStreamer Options"
+msgstr "Montri la opcijon de GStreamer"
+
+msgid "Unknown option"
+msgstr "Nekonata opcio"
+
+msgid "GStreamer encountered a general core library error."
+msgstr ""
+
+msgid ""
+"GStreamer developers were too lazy to assign an error code to this error."
+msgstr ""
+
+msgid "Internal GStreamer error: code not implemented."
+msgstr ""
+
+msgid ""
+"GStreamer error: state change failed and some element failed to post a "
+"proper error message with the reason for the failure."
+msgstr ""
+
+msgid "Internal GStreamer error: pad problem."
+msgstr ""
+
+msgid "Internal GStreamer error: thread problem."
+msgstr ""
+
+msgid "Internal GStreamer error: negotiation problem."
+msgstr ""
+
+msgid "Internal GStreamer error: event problem."
+msgstr ""
+
+msgid "Internal GStreamer error: seek problem."
+msgstr ""
+
+msgid "Internal GStreamer error: caps problem."
+msgstr ""
+
+msgid "Internal GStreamer error: tag problem."
+msgstr ""
+
+msgid "Your GStreamer installation is missing a plug-in."
+msgstr ""
+
+msgid "Internal GStreamer error: clock problem."
+msgstr ""
+
+msgid ""
+"This application is trying to use GStreamer functionality that has been "
+"disabled."
+msgstr ""
+
+msgid "GStreamer encountered a general supporting library error."
+msgstr ""
+
+msgid "Could not initialize supporting library."
+msgstr ""
+
+msgid "Could not close supporting library."
+msgstr ""
+
+msgid "Could not configure supporting library."
+msgstr ""
+
+msgid "Encoding error."
+msgstr ""
+
+msgid "GStreamer encountered a general resource error."
+msgstr ""
+
+msgid "Resource not found."
+msgstr "Ne trovis risurcon."
+
+msgid "Resource busy or not available."
+msgstr "Risurco estas okupite aŭ ne disponeble."
+
+msgid "Could not open resource for reading."
+msgstr "Ne eblas melfermi la risurcon por legado."
+
+msgid "Could not open resource for writing."
+msgstr "Ne eblas melfermi la risurcon por skribado."
+
+msgid "Could not open resource for reading and writing."
+msgstr "Ne eblas melfermi la risurcon por legado kaj skribado."
+
+msgid "Could not close resource."
+msgstr "Ne eblas fermi la risurcon."
+
+msgid "Could not read from resource."
+msgstr "Ne eblas legi de la risurco."
+
+msgid "Could not write to resource."
+msgstr "Ne eblas skribi al la risurco."
+
+msgid "Could not perform seek on resource."
+msgstr ""
+
+msgid "Could not synchronize on resource."
+msgstr ""
+
+msgid "Could not get/set settings from/on resource."
+msgstr ""
+
+msgid "No space left on the resource."
+msgstr ""
+
+msgid "GStreamer encountered a general stream error."
+msgstr ""
+
+msgid "Element doesn't implement handling of this stream. Please file a bug."
+msgstr ""
+
+msgid "Could not determine type of stream."
+msgstr ""
+
+msgid "The stream is of a different type than handled by this element."
+msgstr ""
+
+msgid "There is no codec present that can handle the stream's type."
+msgstr ""
+
+msgid "Could not decode stream."
+msgstr ""
+
+msgid "Could not encode stream."
+msgstr ""
+
+msgid "Could not demultiplex stream."
+msgstr ""
+
+msgid "Could not multiplex stream."
+msgstr ""
+
+msgid "The stream is in the wrong format."
+msgstr ""
+
+msgid "The stream is encrypted and decryption is not supported."
+msgstr ""
+
+msgid ""
+"The stream is encrypted and can't be decrypted because no suitable key has "
+"been supplied."
+msgstr ""
+
+#, c-format
+msgid "No error message for domain %s."
+msgstr ""
+
+#, c-format
+msgid "No standard error message for domain %s and code %d."
+msgstr ""
+
+msgid "Selected clock cannot be used in pipeline."
+msgstr ""
+
+msgid "title"
+msgstr "titolo"
+
+msgid "commonly used title"
+msgstr ""
+
+msgid "title sortname"
+msgstr ""
+
+msgid "commonly used title for sorting purposes"
+msgstr ""
+
+msgid "artist"
+msgstr "artisto"
+
+msgid "person(s) responsible for the recording"
+msgstr ""
+
+msgid "artist sortname"
+msgstr ""
+
+msgid "person(s) responsible for the recording for sorting purposes"
+msgstr ""
+
+msgid "album"
+msgstr "albumo"
+
+msgid "album containing this data"
+msgstr ""
+
+msgid "album sortname"
+msgstr ""
+
+msgid "album containing this data for sorting purposes"
+msgstr ""
+
+msgid "album artist"
+msgstr "album-artisto"
+
+msgid "The artist of the entire album, as it should be displayed"
+msgstr ""
+
+msgid "album artist sortname"
+msgstr ""
+
+msgid "The artist of the entire album, as it should be sorted"
+msgstr ""
+
+msgid "date"
+msgstr "dato"
+
+msgid "date the data was created (as a GDate structure)"
+msgstr ""
+
+msgid "datetime"
+msgstr "datohoro"
+
+msgid "date and time the data was created (as a GstDateTime structure)"
+msgstr ""
+
+msgid "genre"
+msgstr "ĝenro"
+
+msgid "genre this data belongs to"
+msgstr ""
+
+msgid "comment"
+msgstr "komento"
+
+msgid "free text commenting the data"
+msgstr ""
+
+msgid "extended comment"
+msgstr ""
+
+msgid "free text commenting the data in key=value or key[en]=comment form"
+msgstr ""
+
+msgid "track number"
+msgstr ""
+
+msgid "track number inside a collection"
+msgstr ""
+
+msgid "track count"
+msgstr ""
+
+msgid "count of tracks inside collection this track belongs to"
+msgstr ""
+
+msgid "disc number"
+msgstr "disk-numero"
+
+msgid "disc number inside a collection"
+msgstr ""
+
+msgid "disc count"
+msgstr "disk-nombro"
+
+msgid "count of discs inside collection this disc belongs to"
+msgstr ""
+
+msgid "location"
+msgstr "loko"
+
+msgid ""
+"Origin of media as a URI (location, where the original of the file or stream "
+"is hosted)"
+msgstr ""
+
+msgid "homepage"
+msgstr "hejmpaĝo"
+
+msgid "Homepage for this media (i.e. artist or movie homepage)"
+msgstr ""
+
+msgid "description"
+msgstr "priskribo"
+
+msgid "short text describing the content of the data"
+msgstr ""
+
+msgid "version"
+msgstr "versio"
+
+msgid "version of this data"
+msgstr "versi de tiu datumo"
+
+msgid "ISRC"
+msgstr ""
+
+msgid "International Standard Recording Code - see http://www.ifpi.org/isrc/"
+msgstr ""
+
+msgid "organization"
+msgstr ""
+
+msgid "copyright"
+msgstr "kopirajto"
+
+msgid "copyright notice of the data"
+msgstr ""
+
+msgid "copyright uri"
+msgstr ""
+
+msgid "URI to the copyright notice of the data"
+msgstr ""
+
+msgid "encoded by"
+msgstr ""
+
+msgid "name of the encoding person or organization"
+msgstr ""
+
+msgid "contact"
+msgstr "kontakto"
+
+msgid "contact information"
+msgstr ""
+
+msgid "license"
+msgstr "permesilo"
+
+msgid "license of data"
+msgstr "permesilo de la datumoj"
+
+msgid "license uri"
+msgstr ""
+
+msgid "URI to the license of the data"
+msgstr ""
+
+msgid "performer"
+msgstr ""
+
+msgid "person(s) performing"
+msgstr ""
+
+msgid "composer"
+msgstr "komponisto"
+
+msgid "person(s) who composed the recording"
+msgstr ""
+
+msgid "duration"
+msgstr "daŭro"
+
+msgid "length in GStreamer time units (nanoseconds)"
+msgstr ""
+
+msgid "codec"
+msgstr "kodeko"
+
+msgid "codec the data is stored in"
+msgstr ""
+
+msgid "video codec"
+msgstr "video-kodeko"
+
+msgid "codec the video data is stored in"
+msgstr ""
+
+msgid "audio codec"
+msgstr "son-kodeko"
+
+msgid "codec the audio data is stored in"
+msgstr ""
+
+msgid "subtitle codec"
+msgstr "subtekst-kodeko"
+
+msgid "codec the subtitle data is stored in"
+msgstr ""
+
+msgid "container format"
+msgstr ""
+
+msgid "container format the data is stored in"
+msgstr ""
+
+msgid "bitrate"
+msgstr "bitrapido"
+
+msgid "exact or average bitrate in bits/s"
+msgstr ""
+
+msgid "nominal bitrate"
+msgstr ""
+
+msgid "nominal bitrate in bits/s"
+msgstr ""
+
+msgid "minimum bitrate"
+msgstr ""
+
+msgid "minimum bitrate in bits/s"
+msgstr ""
+
+msgid "maximum bitrate"
+msgstr ""
+
+msgid "maximum bitrate in bits/s"
+msgstr ""
+
+msgid "encoder"
+msgstr ""
+
+msgid "encoder used to encode this stream"
+msgstr ""
+
+msgid "encoder version"
+msgstr ""
+
+msgid "version of the encoder used to encode this stream"
+msgstr ""
+
+msgid "serial"
+msgstr ""
+
+msgid "serial number of track"
+msgstr ""
+
+msgid "replaygain track gain"
+msgstr ""
+
+msgid "track gain in db"
+msgstr ""
+
+msgid "replaygain track peak"
+msgstr ""
+
+msgid "peak of the track"
+msgstr ""
+
+msgid "replaygain album gain"
+msgstr ""
+
+msgid "album gain in db"
+msgstr ""
+
+msgid "replaygain album peak"
+msgstr ""
+
+msgid "peak of the album"
+msgstr ""
+
+msgid "replaygain reference level"
+msgstr ""
+
+msgid "reference level of track and album gain values"
+msgstr ""
+
+msgid "language code"
+msgstr "Lingvokodo"
+
+msgid "language code for this stream, conforming to ISO-639-1"
+msgstr ""
+
+msgid "image"
+msgstr "bildo"
+
+msgid "image related to this stream"
+msgstr ""
+
+#. TRANSLATORS: 'preview image' = image that shows a preview of the full image
+msgid "preview image"
+msgstr ""
+
+msgid "preview image related to this stream"
+msgstr ""
+
+msgid "attachment"
+msgstr "kunsendaĵo"
+
+msgid "file attached to this stream"
+msgstr ""
+
+msgid "beats per minute"
+msgstr ""
+
+msgid "number of beats per minute in audio"
+msgstr ""
+
+msgid "keywords"
+msgstr ""
+
+msgid "comma separated keywords describing the content"
+msgstr ""
+
+msgid "geo location name"
+msgstr ""
+
+msgid ""
+"human readable descriptive location of where the media has been recorded or "
+"produced"
+msgstr ""
+
+msgid "geo location latitude"
+msgstr ""
+
+msgid ""
+"geo latitude location of where the media has been recorded or produced in "
+"degrees according to WGS84 (zero at the equator, negative values for "
+"southern latitudes)"
+msgstr ""
+
+msgid "geo location longitude"
+msgstr ""
+
+msgid ""
+"geo longitude location of where the media has been recorded or produced in "
+"degrees according to WGS84 (zero at the prime meridian in Greenwich/UK,  "
+"negative values for western longitudes)"
+msgstr ""
+
+msgid "geo location elevation"
+msgstr ""
+
+msgid ""
+"geo elevation of where the media has been recorded or produced in meters "
+"according to WGS84 (zero is average sea level)"
+msgstr ""
+
+msgid "geo location country"
+msgstr ""
+
+msgid "country (english name) where the media has been recorded or produced"
+msgstr ""
+
+msgid "geo location city"
+msgstr ""
+
+msgid "city (english name) where the media has been recorded or produced"
+msgstr ""
+
+msgid "geo location sublocation"
+msgstr ""
+
+msgid ""
+"a location whithin a city where the media has been produced or created (e.g. "
+"the neighborhood)"
+msgstr ""
+
+msgid "geo location horizontal error"
+msgstr ""
+
+msgid "expected error of the horizontal positioning measures (in meters)"
+msgstr ""
+
+msgid "geo location movement speed"
+msgstr ""
+
+msgid ""
+"movement speed of the capturing device while performing the capture in m/s"
+msgstr ""
+
+msgid "geo location movement direction"
+msgstr ""
+
+msgid ""
+"indicates the movement direction of the device performing the capture of a "
+"media. It is represented as degrees in floating point representation, 0 "
+"means the geographic north, and increases clockwise"
+msgstr ""
+
+msgid "geo location capture direction"
+msgstr ""
+
+msgid ""
+"indicates the direction the device is pointing to when capturing  a media. "
+"It is represented as degrees in floating point  representation, 0 means the "
+"geographic north, and increases clockwise"
+msgstr ""
+
+#. TRANSLATORS: 'show name' = 'TV/radio/podcast show name' here
+msgid "show name"
+msgstr "montri nomon"
+
+msgid "Name of the tv/podcast/series show the media is from"
+msgstr ""
+
+#. TRANSLATORS: 'show sortname' = 'TV/radio/podcast show name as used for sorting purposes' here
+msgid "show sortname"
+msgstr ""
+
+msgid ""
+"Name of the tv/podcast/series show the media is from, for sorting purposes"
+msgstr ""
+
+msgid "episode number"
+msgstr ""
+
+msgid "The episode number in the season the media is part of"
+msgstr ""
+
+msgid "season number"
+msgstr ""
+
+msgid "The season number of the show the media is part of"
+msgstr ""
+
+msgid "lyrics"
+msgstr "lirikoj"
+
+msgid "The lyrics of the media, commonly used for songs"
+msgstr ""
+
+msgid "composer sortname"
+msgstr ""
+
+msgid "person(s) who composed the recording, for sorting purposes"
+msgstr ""
+
+msgid "grouping"
+msgstr "grupado"
+
+msgid ""
+"Groups related media that spans multiple tracks, like the different pieces "
+"of a concerto. It is a higher level than a track, but lower than an album"
+msgstr ""
+
+msgid "user rating"
+msgstr ""
+
+msgid ""
+"Rating attributed by a user. The higher the rank, the more the user likes "
+"this media"
+msgstr ""
+
+msgid "device manufacturer"
+msgstr ""
+
+msgid "Manufacturer of the device used to create this media"
+msgstr ""
+
+msgid "device model"
+msgstr ""
+
+msgid "Model of the device used to create this media"
+msgstr ""
+
+msgid "application name"
+msgstr ""
+
+msgid "Application used to create the media"
+msgstr ""
+
+msgid "application data"
+msgstr ""
+
+msgid "Arbitrary application data to be serialized into the media"
+msgstr ""
+
+msgid "image orientation"
+msgstr ""
+
+msgid "How the image should be rotated or flipped before display"
+msgstr ""
+
+msgid ", "
+msgstr ", "
+
+#, c-format
+msgid "ERROR: from element %s: %s\n"
+msgstr ""
+
+#, c-format
+msgid ""
+"Additional debug info:\n"
+"%s\n"
+msgstr ""
+
+#, c-format
+msgid "specified empty bin \"%s\", not allowed"
+msgstr ""
+
+#, c-format
+msgid "no bin \"%s\", skipping"
+msgstr ""
+
+#, c-format
+msgid "no property \"%s\" in element \"%s\""
+msgstr ""
+
+#, c-format
+msgid "could not set property \"%s\" in element \"%s\" to \"%s\""
+msgstr ""
+
+#, c-format
+msgid "could not link %s to %s"
+msgstr ""
+
+#, c-format
+msgid "no element \"%s\""
+msgstr "neniu elemento \"%s\""
+
+#, c-format
+msgid "could not parse caps \"%s\""
+msgstr ""
+
+msgid "link without source element"
+msgstr ""
+
+msgid "link without sink element"
+msgstr ""
+
+#, c-format
+msgid "no source element for URI \"%s\""
+msgstr ""
+
+#, c-format
+msgid "no element to link URI \"%s\" to"
+msgstr ""
+
+#, c-format
+msgid "no sink element for URI \"%s\""
+msgstr ""
+
+#, c-format
+msgid "could not link sink element for URI \"%s\""
+msgstr ""
+
+msgid "empty pipeline not allowed"
+msgstr ""
+
+msgid "Internal clock error."
+msgstr ""
+
+msgid "Internal data flow error."
+msgstr ""
+
+msgid "A lot of buffers are being dropped."
+msgstr ""
+
+msgid "Internal data flow problem."
+msgstr ""
+
+msgid "Internal data stream error."
+msgstr "Interna datumflu-eraro."
+
+msgid "Filter caps"
+msgstr ""
+
+msgid ""
+"Restrict the possible allowed capabilities (NULL means ANY). Setting this "
+"property takes a reference to the supplied GstCaps object."
+msgstr ""
+
+msgid "No file name specified for writing."
+msgstr ""
+
+#, c-format
+msgid "Could not open file \"%s\" for writing."
+msgstr "Ne eblis malfermi la dosieron \"%s\" por skribi."
+
+#, c-format
+msgid "Error closing file \"%s\"."
+msgstr "Eraro dum fermado de la dosiero \"%s\"."
+
+#, c-format
+msgid "Error while seeking in file \"%s\"."
+msgstr ""
+
+#, c-format
+msgid "Error while writing to file \"%s\"."
+msgstr "Eraro dum skribo al la dosiero \"%s\"."
+
+msgid "No file name specified for reading."
+msgstr ""
+
+#, c-format
+msgid "Could not open file \"%s\" for reading."
+msgstr ""
+
+#, c-format
+msgid "Could not get info on \"%s\"."
+msgstr ""
+
+#, c-format
+msgid "\"%s\" is a directory."
+msgstr "\"%s\" estas dosierujo."
+
+#, c-format
+msgid "File \"%s\" is a socket."
+msgstr ""
+
+msgid "Failed after iterations as requested."
+msgstr ""
+
+msgid "No Temp directory specified."
+msgstr ""
+
+#, c-format
+msgid "Could not create temp file \"%s\"."
+msgstr ""
+
+msgid "Error while writing to download file."
+msgstr ""
+
+msgid "caps"
+msgstr ""
+
+msgid "detected capabilities in stream"
+msgstr ""
+
+msgid "minimum"
+msgstr "minimumo"
+
+msgid "maximum"
+msgstr "maksimumo"
+
+msgid "force caps"
+msgstr ""
+
+msgid "force caps without doing a typefind"
+msgstr ""
+
+msgid "Stream contains no data."
+msgstr ""
+
+msgid "Implemented Interfaces:\n"
+msgstr ""
+
+msgid "readable"
+msgstr "legeble"
+
+msgid "writable"
+msgstr "skribeble"
+
+msgid "controllable"
+msgstr "regeble"
+
+msgid "changeable in NULL, READY, PAUSED or PLAYING state"
+msgstr ""
+
+msgid "changeable only in NULL, READY or PAUSED state"
+msgstr ""
+
+msgid "changeable only in NULL or READY state"
+msgstr ""
+
+msgid "Blacklisted files:"
+msgstr ""
+
+msgid "Total count: "
+msgstr ""
+
+#, c-format
+msgid "%d blacklisted file"
+msgid_plural "%d blacklisted files"
+msgstr[0] ""
+msgstr[1] ""
+
+#, c-format
+msgid "%d plugin"
+msgid_plural "%d plugins"
+msgstr[0] "%d kromprogramo"
+msgstr[1] "%d kromprogramoj"
+
+#, c-format
+msgid "%d blacklist entry"
+msgid_plural "%d blacklist entries"
+msgstr[0] ""
+msgstr[1] ""
+
+#, c-format
+msgid "%d feature"
+msgid_plural "%d features"
+msgstr[0] "%d trajto"
+msgstr[1] "%d trajtoj"
+
+msgid "Print all elements"
+msgstr "Eligi ĉiujn elementojn"
+
+msgid "Print list of blacklisted files"
+msgstr ""
+
+msgid ""
+"Print a machine-parsable list of features the specified plugin or all "
+"plugins provide.\n"
+"                                       Useful in connection with external "
+"automatic plugin installation mechanisms"
+msgstr ""
+
+msgid "List the plugin contents"
+msgstr ""
+
+msgid "Print supported URI schemes, with the elements that implement them"
+msgstr ""
+
+#, c-format
+msgid "Could not load plugin file: %s\n"
+msgstr ""
+
+#, c-format
+msgid "No such element or plugin '%s'\n"
+msgstr ""
+
+msgid "Usage: gst-xmllaunch <file.xml> [ element.property=value ... ]\n"
+msgstr ""
+
+#, c-format
+msgid "ERROR: parse of xml file '%s' failed.\n"
+msgstr ""
+
+#, c-format
+msgid "ERROR: no toplevel pipeline element in file '%s'.\n"
+msgstr ""
+
+msgid "WARNING: only one toplevel element is supported at this time.\n"
+msgstr ""
+
+#, c-format
+msgid "ERROR: could not parse command line argument %d: %s.\n"
+msgstr ""
+
+#, c-format
+msgid "WARNING: element named '%s' not found.\n"
+msgstr ""
+
+msgid "Index statistics"
+msgstr ""
+
+#, c-format
+msgid "Got message #%u from element \"%s\" (%s): "
+msgstr ""
+
+#, c-format
+msgid "Got message #%u from pad \"%s:%s\" (%s): "
+msgstr ""
+
+#, c-format
+msgid "Got message #%u from object \"%s\" (%s): "
+msgstr ""
+
+#, c-format
+msgid "Got message #%u (%s): "
+msgstr ""
+
+#, c-format
+msgid "Got EOS from element \"%s\".\n"
+msgstr ""
+
+#, c-format
+msgid "FOUND TAG      : found by element \"%s\".\n"
+msgstr ""
+
+#, c-format
+msgid "FOUND TAG      : found by pad \"%s:%s\".\n"
+msgstr ""
+
+#, c-format
+msgid "FOUND TAG      : found by object \"%s\".\n"
+msgstr ""
+
+msgid "FOUND TAG\n"
+msgstr ""
+
+#, c-format
+msgid ""
+"INFO:\n"
+"%s\n"
+msgstr ""
+"INFORMO:\n"
+"%s\n"
+
+#, c-format
+msgid "WARNING: from element %s: %s\n"
+msgstr "AVERTO: de elemento %s: %s\n"
+
+msgid "Prerolled, waiting for buffering to finish...\n"
+msgstr ""
+
+msgid "buffering..."
+msgstr "bufrado..."
+
+msgid "Done buffering, setting pipeline to PLAYING ...\n"
+msgstr ""
+
+msgid "Buffering, setting pipeline to PAUSED ...\n"
+msgstr ""
+
+msgid "Redistribute latency...\n"
+msgstr ""
+
+#, c-format
+msgid "Setting state to %s as requested by %s...\n"
+msgstr ""
+
+msgid "Interrupt: Stopping pipeline ...\n"
+msgstr ""
+
+#, fuzzy, c-format
+msgid "Missing element: %s\n"
+msgstr "neniu elemento \"%s\""
+
+msgid "Output tags (also known as metadata)"
+msgstr ""
+
+msgid "Output status information and property notifications"
+msgstr ""
+
+msgid "Do not print any progress information"
+msgstr ""
+
+msgid "Output messages"
+msgstr ""
+
+msgid "Do not output status information of TYPE"
+msgstr ""
+
+msgid "TYPE1,TYPE2,..."
+msgstr "TIPO1,TIPO2,..."
+
+msgid "Save xml representation of pipeline to FILE and exit"
+msgstr ""
+
+msgid "FILE"
+msgstr "DOSIERO"
+
+msgid "Do not install a fault handler"
+msgstr ""
+
+msgid "Do not install signal handlers for SIGUSR1 and SIGUSR2"
+msgstr ""
+
+msgid "Print alloc trace (if enabled at compile time)"
+msgstr ""
+
+msgid "Force EOS on sources before shutting the pipeline down"
+msgstr ""
+
+msgid "Gather and print index statistics"
+msgstr ""
+
+#, c-format
+msgid "ERROR: pipeline could not be constructed: %s.\n"
+msgstr ""
+
+msgid "ERROR: pipeline could not be constructed.\n"
+msgstr ""
+
+#, c-format
+msgid "WARNING: erroneous pipeline: %s\n"
+msgstr ""
+
+msgid "ERROR: the 'pipeline' element wasn't found.\n"
+msgstr ""
+
+msgid "Setting pipeline to PAUSED ...\n"
+msgstr ""
+
+msgid "ERROR: Pipeline doesn't want to pause.\n"
+msgstr ""
+
+msgid "Pipeline is live and does not need PREROLL ...\n"
+msgstr ""
+
+msgid "Pipeline is PREROLLING ...\n"
+msgstr ""
+
+msgid "ERROR: pipeline doesn't want to preroll.\n"
+msgstr ""
+
+msgid "Pipeline is PREROLLED ...\n"
+msgstr ""
+
+msgid "Setting pipeline to PLAYING ...\n"
+msgstr ""
+
+msgid "ERROR: pipeline doesn't want to play.\n"
+msgstr ""
+
+msgid "EOS on shutdown enabled -- Forcing EOS on the pipeline\n"
+msgstr ""
+
+msgid "Waiting for EOS...\n"
+msgstr ""
+
+msgid "EOS received - stopping pipeline...\n"
+msgstr ""
+
+msgid "An error happened while waiting for EOS\n"
+msgstr ""
+
+msgid "Execution ended after %"
+msgstr ""
+
+msgid "Setting pipeline to READY ...\n"
+msgstr ""
+
+msgid "Setting pipeline to NULL ...\n"
+msgstr ""
+
+msgid "Freeing pipeline ...\n"
+msgstr ""
