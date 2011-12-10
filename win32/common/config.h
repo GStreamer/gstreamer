@@ -43,13 +43,13 @@
 #define GST_LICENSE "LGPL"
 
 /* package name in plugins */
-#define GST_PACKAGE_NAME "GStreamer Good Plug-ins git"
+#define GST_PACKAGE_NAME "GStreamer Good Plug-ins prerelease"
 
 /* package origin */
 #define GST_PACKAGE_ORIGIN "Unknown package origin"
 
 /* GStreamer package release date/time for plugins as YYYY-MM-DD */
-#define GST_PACKAGE_RELEASE_DATETIME "2011-05-18T13:36Z"
+#define GST_PACKAGE_RELEASE_DATETIME "2011-12-10T02:14Z"
 
 /* struct v4l2_buffer missing */
 #undef GST_V4L2_MISSING_BUFDECL
@@ -277,23 +277,11 @@
 /* Define to enable pulseaudio plug-in (used by pulseaudio). */
 #undef HAVE_PULSE
 
-/* defined if pulseaudio >= 0.9.11 is available */
-#undef HAVE_PULSE_0_9_11
-
-/* defined if pulseaudio >= 0.9.12 is available */
-#undef HAVE_PULSE_0_9_12
-
-/* defined if pulseaudio >= 0.9.13 is available */
-#undef HAVE_PULSE_0_9_13
-
-/* defined if pulseaudio >= 0.9.15 is available */
-#undef HAVE_PULSE_0_9_15
-
-/* defined if pulseaudio >= 0.9.16 is available */
-#undef HAVE_PULSE_0_9_16
-
 /* defined if pulseaudio >= 0.9.20 is available */
 #undef HAVE_PULSE_0_9_20
+
+/* defined if pulseaudio >= 1.0 is available */
+#undef HAVE_PULSE_1_0
 
 /* Define if RDTSC is available */
 #undef HAVE_RDTSC
@@ -370,7 +358,7 @@
 /* Define to enable X11 XVideo extensions. */
 #undef HAVE_XVIDEO
 
-/* Define to enable zlib support for id3demux/qtdemux/matroska. */
+/* Define to enable zlib support for qtdemux/matroska. */
 #undef HAVE_ZLIB
 
 /* the host CPU */
@@ -396,7 +384,7 @@
 #define PACKAGE_NAME "GStreamer Good Plug-ins"
 
 /* Define to the full name and version of this package. */
-#define PACKAGE_STRING "GStreamer Good Plug-ins 0.10.30.1"
+#define PACKAGE_STRING "GStreamer Good Plug-ins 0.10.30.2"
 
 /* Define to the one symbol short name of this package. */
 #define PACKAGE_TARNAME "gst-plugins-good"
@@ -405,7 +393,7 @@
 #undef PACKAGE_URL
 
 /* Define to the version of this package. */
-#define PACKAGE_VERSION "0.10.30.1"
+#define PACKAGE_VERSION "0.10.30.2"
 
 /* directory where plugins are located */
 #ifdef _DEBUG
@@ -436,7 +424,7 @@
 #undef STDC_HEADERS
 
 /* Version number of package */
-#define VERSION "0.10.30.1"
+#define VERSION "0.10.30.2"
 
 /* old wavpack API */
 #undef WAVPACK_OLD_API
