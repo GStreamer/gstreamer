@@ -3,13 +3,14 @@
 #
 # Takao Fujiwara <takao.fujiwara@sun.com>, 2006.
 # Makoto Kato <makoto.kt@gmail.com>, 2009-2011.
+# Takeshi Hamasaki <hmatrjp@users.sourceforge.jp>, 2011
 msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good 0.10.28.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2011-05-10 09:38+0100\n"
-"PO-Revision-Date: 2011-04-26 20:15+0900\n"
-"Last-Translator: Makoto Kato <makoto.kt@gmail.com>\n"
+"POT-Creation-Date: 2011-12-10 02:18+0000\n"
+"PO-Revision-Date: 2011-08-28 23:59+0900\n"
+"Last-Translator: Takeshi Hamasaki <hmatrjp@users.sourceforge.jp>\n"
 "Language-Team: Japanese <translation-team-ja@lists.sourceforge.net>\n"
 "Language: ja\n"
 "MIME-Version: 1.0\n"
@@ -25,9 +26,9 @@ msgid "Failed to query sound server capabilities"
 msgstr "サウンドサーバーのケイパビリティのクエリーに失敗しました"
 
 #. TRANSLATORS: 'song title' by 'artist name'
-#, c-format
+#, fuzzy, c-format
 msgid "'%s' by '%s'"
-msgstr ""
+msgstr "対"
 
 msgid "Internal data stream error."
 msgstr "内部データストリームエラー"
@@ -54,8 +55,9 @@ msgid ""
 "A network error occured, or the server closed the connection unexpectedly."
 msgstr "ネットワークエラーが発生したか、サーバーが予期せず接続を閉じました。"
 
+#, fuzzy
 msgid "Server sent bad data."
-msgstr ""
+msgstr "データストリーム (サーバープッシュ型)"
 
 msgid "No URL set."
 msgstr "URLが指定されていません。"
@@ -95,14 +97,14 @@ msgstr ""
 "サポートしているストリームが見つかりません。Real メディアストリームのための"
 "GStreamer RTSP 拡張プラグインをインストールする必要があるかもしれません。"
 
-#, fuzzy
 msgid ""
 "No supported stream was found. You might need to allow more transport "
 "protocols or may otherwise be missing the right GStreamer RTSP extension "
 "plugin."
 msgstr ""
-"サポートしているストリームが見つかりません。正しい GStreamer RTSP 拡張プラグ"
-"インをインストールする必要があるかもしれません。"
+"サポートしているストリームが見つかりません。別の転送プロトコルをインストール"
+"する必要があるかもしれません。または、正しい GStreamer RTSP 拡張プラグインが"
+"ないのかもしれません。"
 
 msgid "Internal data flow error."
 msgstr "内部データフローエラー。"
@@ -282,14 +284,16 @@ msgstr "AUX 2出力"
 msgid "AUX Out"
 msgstr "AUX出力"
 
+#, fuzzy
 msgid "3D Depth"
-msgstr ""
+msgstr "最大深度: "
 
 msgid "3D Center"
 msgstr "3Dセンター"
 
+#, fuzzy
 msgid "3D Enhance"
-msgstr ""
+msgstr "色を強調しています"
 
 msgid "Telephone"
 msgstr "電話"
@@ -328,7 +332,7 @@ msgid "Loopback"
 msgstr "ループバック"
 
 msgid "Diagnostic"
-msgstr ""
+msgstr "診断"
 
 msgid "Bass Boost"
 msgstr "低音ブースト"
@@ -348,8 +352,9 @@ msgstr "モニターソース"
 msgid "Keyboard Beep"
 msgstr "キーボードビープ音"
 
+#, fuzzy
 msgid "Simulate Stereo"
-msgstr ""
+msgstr "彫金を表現します"
 
 msgid "Stereo"
 msgstr "ステレオ"
@@ -423,32 +428,39 @@ msgstr "オフ"
 msgid "Mute"
 msgstr "ミュート"
 
+#, fuzzy
 msgid "Fast"
-msgstr ""
+msgstr "速い"
 
 #. TRANSLATORS: "Very Low" is a quality setting here
+#, fuzzy
 msgid "Very Low"
-msgstr ""
+msgstr "低品位"
 
 #. TRANSLATORS: "Low" is a quality setting here
+#, fuzzy
 msgid "Low"
-msgstr ""
+msgstr "低音"
 
 #. TRANSLATORS: "Medium" is a quality setting here
+#, fuzzy
 msgid "Medium"
-msgstr ""
+msgstr "中音"
 
 #. TRANSLATORS: "High" is a quality setting here
+#, fuzzy
 msgid "High"
-msgstr ""
+msgstr "高音"
 
 #. TRANSLATORS: "Very High" is a quality setting here
+#, fuzzy
 msgid "Very High"
-msgstr ""
+msgstr "高品位"
 
 #. TRANSLATORS: "Production" is a quality setting here
+#, fuzzy
 msgid "Production"
-msgstr ""
+msgstr "プロダクション"
 
 msgid "Front Panel Microphone"
 msgstr "フロントパネルのマイクロフォン"
@@ -516,8 +528,9 @@ msgstr ""
 msgid "Yellow Front Panel Connector"
 msgstr ""
 
+#, fuzzy
 msgid "Spread Output"
-msgstr ""
+msgstr "情報出力:\n"
 
 msgid "Downmix"
 msgstr "ダウンミックス"
@@ -532,35 +545,33 @@ msgid "Virtual Mixer Channels"
 msgstr "仮想ミキサーチャンネル"
 
 #. TRANSLATORS: name + number of a volume mixer control
-#, c-format
+#, fuzzy, c-format
 msgid "%s %d Function"
-msgstr ""
+msgstr "機能"
 
 #. TRANSLATORS: name of a volume mixer control
-#, c-format
+#, fuzzy, c-format
 msgid "%s Function"
-msgstr ""
+msgstr "機能"
 
-#, fuzzy
 msgid ""
 "Could not open audio device for playback. This version of the Open Sound "
 "System is not supported by this element."
 msgstr ""
-"再生用にオーディオデバイスを開くことができませんでした。デバイスを開くための"
-"権限がありません。"
+"再生用にオーディオデバイスを開くことができませんでした。このバージョンの "
+"Open Sound System は、このエレメントによってサポートされていません。"
 
 msgid "Playback is not supported by this audio device."
-msgstr ""
+msgstr "再生はこのオーディオデバイスではサポートされていません。"
 
 msgid "Audio playback error."
-msgstr ""
+msgstr "オーディオ再生エラーです。"
 
 msgid "Recording is not supported by this audio device."
 msgstr "このオーディオデバイスによって録音はサポートされていません。"
 
-#, fuzzy
 msgid "Error recording from audio device."
-msgstr "デバイス %2$s から　%1$d バイト読み込み時にエラーが発生しました。"
+msgstr "オーディオデバイスからの録音時にエラーが発生しました。"
 
 # SUN REVIEWED
 msgid "Gain"
@@ -579,15 +590,15 @@ msgstr "予期しないフレームサイズ (%2$u ではなく %1$u) を取得�
 
 #, c-format
 msgid "Error reading %d bytes on device '%s'."
-msgstr "デバイス '%2$s' 上で %1$d バイトの読み込み時ににエラーが発生しました。"
+msgstr "デバイス '%2$s' 上で %1$d バイトの読み込み時にエラーが発生しました。"
 
 #, c-format
 msgid ""
 "Error getting capabilities for device '%s': It isn't a v4l2 driver. Check if "
 "it is a v4l1 driver."
 msgstr ""
-"デバイス '%s' ケイパビリティの取得時にエラーが発生しました: v412 ドライバでは"
-"ありません。もし v411 ドライバであれば、チェックしてください。"
+"デバイス '%s' ケイパビリティの取得時にエラーが発生しました: v4l2 ドライバでは"
+"ありません。v4l1 ドライバでないか、チェックしてください。"
 
 #, c-format
 msgid "Failed to query attributes of input %d in device %s"
@@ -597,17 +608,17 @@ msgstr "デバイス %2$s 内の入力 %1$d の属性のクエリーに失敗し
 msgid "Failed to get setting of tuner %d on device '%s'."
 msgstr "デバイス '%2$s' 上のチューナー %1$d の設定の取得に失敗しました。"
 
-#, c-format
+#, fuzzy, c-format
 msgid "Failed to query norm on device '%s'."
-msgstr ""
+msgstr "デバイス '%2$s' 上のチューナー %1$d の設定の取得に失敗しました。"
 
 #, c-format
 msgid "Failed getting controls attributes on device '%s'."
 msgstr "デバイス '%s' のコントロール属性の取得に失敗しました"
 
-#, c-format
+#, fuzzy, c-format
 msgid "Cannot identify device '%s'."
-msgstr ""
+msgstr "ミキサーデバイス'%s'を開けません"
 
 #, c-format
 msgid "This isn't a device '%s'."
@@ -626,9 +637,11 @@ msgstr "デバイス '%s' はキャプチャデバイスではありません"
 msgid "Device '%s' is not a output device."
 msgstr "デバイス '%s' は出力デバイスではありません"
 
-#, c-format
+#, fuzzy, c-format
 msgid "Failed to set norm for device '%s'."
 msgstr ""
+"デバイス '%3$s' 上のコントロール %2$d の値を %1$d へ設定することに失敗しまし"
+"た。"
 
 #, c-format
 msgid "Failed to get current tuner frequency for device '%s'."
@@ -638,9 +651,9 @@ msgstr "デバイス '%s' の現在のチューナーの周波数の取得に失
 msgid "Failed to set current tuner frequency for device '%s' to %lu Hz."
 msgstr "デバイス '%s' のチューナーの周波数の %lu Hz への設定に失敗しました"
 
-#, c-format
+#, fuzzy, c-format
 msgid "Failed to get signal strength for device '%s'."
-msgstr ""
+msgstr "デバイス '%s' の現在のチューナーの周波数の取得に失敗しました"
 
 #, c-format
 msgid "Failed to get value for control %d on device '%s'."
@@ -658,24 +671,26 @@ msgstr ""
 "デバイス '%s' 上の現在の入力の取得に失敗しました。ラジオデバイスかもしれませ"
 "ん"
 
-#, c-format
+#, fuzzy, c-format
 msgid "Failed to set input %d on device %s."
 msgstr ""
+"デバイス '%3$s' 上のコントロール %2$d の値を %1$d へ設定することに失敗しまし"
+"た。"
 
-#, fuzzy, c-format
+#, c-format
 msgid ""
 "Failed to get current output on device '%s'. May be it is a radio device"
 msgstr ""
-"デバイス '%s' 上の現在の入力の取得に失敗しました。ラジオデバイスかもしれませ"
+"デバイス '%s' 上の現在の出力の取得に失敗しました。ラジオデバイスかもしれませ"
 "ん"
 
-#, fuzzy, c-format
-msgid "Failed to set output %d on device %s."
-msgstr "デバイス '%2$s' 上のチューナー %1$d の設定の取得に失敗しました。"
-
 #, c-format
+msgid "Failed to set output %d on device %s."
+msgstr "出力%dをデバイス %s に設定できませんでした。"
+
+#, fuzzy, c-format
 msgid "Could not enqueue buffers in device '%s'."
-msgstr ""
+msgstr "デバイス '%s' からバッファをマップできません。"
 
 #, c-format
 msgid "Failed trying to get video frames from device '%s'."
@@ -704,10 +719,10 @@ msgstr ""
 "ません"
 
 msgid "Changing resolution at runtime is not yet supported."
-msgstr ""
+msgstr "実行時の解像度変更はサポートされていません。"
 
 msgid "Cannot operate without a clock"
-msgstr ""
+msgstr "クロックなしでは動作できません。"
 
 #~ msgid ""
 #~ "Failed trying to get video frames from device '%s'. Not enough memory."

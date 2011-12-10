@@ -3,12 +3,13 @@
 #
 # Arvis Lācis <arvis.lacis@inbox.lv>, 2009.
 # Rihards Prieditis <rprieditis@gmail.com>, 2010.
+# Rihards Prieditis <rprieditis@gmail.com>, 2011.
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-good 0.10.23.2\n"
+"Project-Id-Version: gst-plugins-good 0.10.28.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2011-05-10 09:38+0100\n"
-"PO-Revision-Date: 2010-07-07 11:53+0100\n"
+"POT-Creation-Date: 2011-12-10 02:18+0000\n"
+"PO-Revision-Date: 2011-09-02 11:23-0000\n"
 "Last-Translator: Rihards Priedītis <rprieditis@gmail.com>\n"
 "Language-Team: Latvian <translation-team-lv@lists.sourceforge.net>\n"
 "Language: lv\n"
@@ -40,28 +41,26 @@ msgid "Could not connect to server"
 msgstr "Nevar savienoties ar serveri"
 
 msgid "Server does not support seeking."
-msgstr ""
+msgstr "Serveris neatbalsta meklēšanu."
 
-#, fuzzy
 msgid "Could not resolve server name."
-msgstr "Nevar savienoties ar serveri"
+msgstr "Nevar atpazīt servera nosaukumu."
 
-#, fuzzy
 msgid "Could not establish connection to server."
-msgstr "Nevar izveidot savienojumu ar skaņas serveri"
+msgstr "Nevar izveidot savienojumu ar serveri."
 
 msgid "Secure connection setup failed."
-msgstr ""
+msgstr "Drošā savienojuma izveidošana neizdevās."
 
 msgid ""
 "A network error occured, or the server closed the connection unexpectedly."
-msgstr ""
+msgstr "Notika tīkla kļūda, vai serveris negaidīti aizvēra savienojumu."
 
 msgid "Server sent bad data."
-msgstr ""
+msgstr "Serveris nosūtija sliktus datus."
 
 msgid "No URL set."
-msgstr ""
+msgstr "URL nav uzstādīts."
 
 msgid "No or invalid input audio, AVI stream will be corrupt."
 msgstr "Nav neviena vai nederīgs ievades audio, AVI straume tiks bojāta."
@@ -76,7 +75,7 @@ msgid "This file is corrupt and cannot be played."
 msgstr "Šis fails ir bojāts un nevar tikt atskaņots."
 
 msgid "Invalid atom size."
-msgstr ""
+msgstr "Nederīgs atoma izmērs."
 
 msgid "This file is incomplete and cannot be played."
 msgstr "Šis pails ir nepabeigts un nevar tikt atskaņots."
@@ -629,16 +628,16 @@ msgstr ""
 msgid "Failed to set input %d on device %s."
 msgstr "Neizdevās uzstādīt ievadi %d uz ierīces %s."
 
-#, fuzzy, c-format
+#, c-format
 msgid ""
 "Failed to get current output on device '%s'. May be it is a radio device"
 msgstr ""
-"Neizdevās saņemt pašreizējo ievadi no ierīces \"%s\". Iespējams tā ir radio "
+"Neizdevās saņemt pašreizējo izvadu no ierīces \"%s\". Iespējams tā ir radio "
 "ierīce"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Failed to set output %d on device %s."
-msgstr "Neizdevās uzstādīt ievadi %d uz ierīces %s."
+msgstr "Neizdevās uzstādīt izvadu %d uz ierīces %s."
 
 #, c-format
 msgid "Could not enqueue buffers in device '%s'."
