@@ -633,7 +633,8 @@ wait_for_idle_state (void)
     if (idle)
       break;
 
-    g_usleep (GST_SECOND / 5);
+    GST_LOG ("waiting for idle state..");
+    g_usleep (G_USEC_PER_SEC / 5);
   }
   fail_unless (idle);
 }
@@ -816,6 +817,7 @@ GST_START_TEST (test_multiple_video_recordings)
 
     gst_caps_unref (caps);
 
+    GST_LOG ("starting #%d with caps %" GST_PTR_FORMAT, i, caps);
     g_signal_emit_by_name (camera, "start-capture", NULL);
 
     g_object_get (camera, "idle", &idle, NULL);
@@ -824,15 +826,20 @@ GST_START_TEST (test_multiple_video_recordings)
     g_timeout_add_seconds (VIDEO_DURATION, (GSourceFunc) g_main_loop_quit,
         main_loop);
     g_main_loop_run (main_loop);
+
+    GST_LOG ("stopping run %d", i);
     g_signal_emit_by_name (camera, "stop-capture", NULL);
 
     msg = wait_for_element_message (camera, "video-done", GST_CLOCK_TIME_NONE);
     fail_unless (msg != NULL);
     gst_message_unref (msg);
 
+    GST_LOG ("video done, checking preview image");
     check_preview_image (camera, video_filename, i);
 
+    GST_LOG ("waiting for idle state");
     wait_for_idle_state ();
+    GST_LOG ("finished run %d", i);
   }
   gst_element_set_state (GST_ELEMENT (camera), GST_STATE_NULL);
 
