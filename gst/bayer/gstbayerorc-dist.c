@@ -310,7 +310,7 @@ gst_bayer_horiz_upsample_unaligned (guint8 * ORC_RESTRICT d1,
     guint8 * ORC_RESTRICT d2, const guint8 * ORC_RESTRICT s1, int n)
 {
   OrcExecutor _ex, *ex = &_ex;
-  static int p_inited = 0;
+  static volatile int p_inited = 0;
   static OrcProgram *p = 0;
   void (*func) (OrcExecutor *);
 
@@ -535,7 +535,7 @@ gst_bayer_horiz_upsample (guint8 * ORC_RESTRICT d1, guint8 * ORC_RESTRICT d2,
     const guint8 * ORC_RESTRICT s1, int n)
 {
   OrcExecutor _ex, *ex = &_ex;
-  static int p_inited = 0;
+  static volatile int p_inited = 0;
   static OrcProgram *p = 0;
   void (*func) (OrcExecutor *);
 
@@ -854,7 +854,7 @@ gst_bayer_merge_bg_bgra (guint8 * ORC_RESTRICT d1,
     const guint8 * ORC_RESTRICT s5, const guint8 * ORC_RESTRICT s6, int n)
 {
   OrcExecutor _ex, *ex = &_ex;
-  static int p_inited = 0;
+  static volatile int p_inited = 0;
   static OrcProgram *p = 0;
   void (*func) (OrcExecutor *);
 
@@ -1181,7 +1181,7 @@ gst_bayer_merge_gr_bgra (guint8 * ORC_RESTRICT d1,
     const guint8 * ORC_RESTRICT s5, const guint8 * ORC_RESTRICT s6, int n)
 {
   OrcExecutor _ex, *ex = &_ex;
-  static int p_inited = 0;
+  static volatile int p_inited = 0;
   static OrcProgram *p = 0;
   void (*func) (OrcExecutor *);
 
@@ -1508,7 +1508,7 @@ gst_bayer_merge_bg_abgr (guint8 * ORC_RESTRICT d1,
     const guint8 * ORC_RESTRICT s5, const guint8 * ORC_RESTRICT s6, int n)
 {
   OrcExecutor _ex, *ex = &_ex;
-  static int p_inited = 0;
+  static volatile int p_inited = 0;
   static OrcProgram *p = 0;
   void (*func) (OrcExecutor *);
 
@@ -1835,7 +1835,7 @@ gst_bayer_merge_gr_abgr (guint8 * ORC_RESTRICT d1,
     const guint8 * ORC_RESTRICT s5, const guint8 * ORC_RESTRICT s6, int n)
 {
   OrcExecutor _ex, *ex = &_ex;
-  static int p_inited = 0;
+  static volatile int p_inited = 0;
   static OrcProgram *p = 0;
   void (*func) (OrcExecutor *);
 
@@ -2162,7 +2162,7 @@ gst_bayer_merge_bg_rgba (guint8 * ORC_RESTRICT d1,
     const guint8 * ORC_RESTRICT s5, const guint8 * ORC_RESTRICT s6, int n)
 {
   OrcExecutor _ex, *ex = &_ex;
-  static int p_inited = 0;
+  static volatile int p_inited = 0;
   static OrcProgram *p = 0;
   void (*func) (OrcExecutor *);
 
@@ -2489,7 +2489,7 @@ gst_bayer_merge_gr_rgba (guint8 * ORC_RESTRICT d1,
     const guint8 * ORC_RESTRICT s5, const guint8 * ORC_RESTRICT s6, int n)
 {
   OrcExecutor _ex, *ex = &_ex;
-  static int p_inited = 0;
+  static volatile int p_inited = 0;
   static OrcProgram *p = 0;
   void (*func) (OrcExecutor *);
 
@@ -2816,7 +2816,7 @@ gst_bayer_merge_bg_argb (guint8 * ORC_RESTRICT d1,
     const guint8 * ORC_RESTRICT s5, const guint8 * ORC_RESTRICT s6, int n)
 {
   OrcExecutor _ex, *ex = &_ex;
-  static int p_inited = 0;
+  static volatile int p_inited = 0;
   static OrcProgram *p = 0;
   void (*func) (OrcExecutor *);
 
@@ -3143,7 +3143,7 @@ gst_bayer_merge_gr_argb (guint8 * ORC_RESTRICT d1,
     const guint8 * ORC_RESTRICT s5, const guint8 * ORC_RESTRICT s6, int n)
 {
   OrcExecutor _ex, *ex = &_ex;
-  static int p_inited = 0;
+  static volatile int p_inited = 0;
   static OrcProgram *p = 0;
   void (*func) (OrcExecutor *);
 

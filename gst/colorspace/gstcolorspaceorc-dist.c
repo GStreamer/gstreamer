@@ -142,10 +142,10 @@ void orc_matrix3_000_u8 (guint8 * ORC_RESTRICT d1,
     const guint8 * ORC_RESTRICT s1, const guint8 * ORC_RESTRICT s2,
     const guint8 * ORC_RESTRICT s3, int p1, int p2, int p3, int p4, int p5,
     int n);
-void orc_pack_123x (guint32 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1,
+void orc_pack_123x (guint8 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1,
     const guint8 * ORC_RESTRICT s2, const guint8 * ORC_RESTRICT s3, int p1,
     int n);
-void orc_pack_x123 (guint32 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1,
+void orc_pack_x123 (guint8 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1,
     const guint8 * ORC_RESTRICT s2, const guint8 * ORC_RESTRICT s3, int p1,
     int n);
 void cogorc_combine2_u8 (guint8 * ORC_RESTRICT d1,
@@ -434,7 +434,7 @@ cogorc_memcpy_2d (guint8 * ORC_RESTRICT d1, int d1_stride,
     const guint8 * ORC_RESTRICT s1, int s1_stride, int n, int m)
 {
   OrcExecutor _ex, *ex = &_ex;
-  static int p_inited = 0;
+  static volatile int p_inited = 0;
   static OrcProgram *p = 0;
   void (*func) (OrcExecutor *);
 
@@ -538,7 +538,7 @@ cogorc_downsample_horiz_cosite_1tap (guint8 * ORC_RESTRICT d1,
     const guint8 * ORC_RESTRICT s1, int n)
 {
   OrcExecutor _ex, *ex = &_ex;
-  static int p_inited = 0;
+  static volatile int p_inited = 0;
   static OrcProgram *p = 0;
   void (*func) (OrcExecutor *);
 
@@ -749,7 +749,7 @@ cogorc_downsample_horiz_cosite_3tap (guint8 * ORC_RESTRICT d1,
     const guint8 * ORC_RESTRICT s1, const guint8 * ORC_RESTRICT s2, int n)
 {
   OrcExecutor _ex, *ex = &_ex;
-  static int p_inited = 0;
+  static volatile int p_inited = 0;
   static OrcProgram *p = 0;
   void (*func) (OrcExecutor *);
 
@@ -965,7 +965,7 @@ cogorc_downsample_420_jpeg (guint8 * ORC_RESTRICT d1,
     const guint8 * ORC_RESTRICT s1, const guint8 * ORC_RESTRICT s2, int n)
 {
   OrcExecutor _ex, *ex = &_ex;
-  static int p_inited = 0;
+  static volatile int p_inited = 0;
   static OrcProgram *p = 0;
   void (*func) (OrcExecutor *);
 
@@ -1090,7 +1090,7 @@ cogorc_downsample_vert_halfsite_2tap (guint8 * ORC_RESTRICT d1,
     const guint8 * ORC_RESTRICT s1, const guint8 * ORC_RESTRICT s2, int n)
 {
   OrcExecutor _ex, *ex = &_ex;
-  static int p_inited = 0;
+  static volatile int p_inited = 0;
   static OrcProgram *p = 0;
   void (*func) (OrcExecutor *);
 
@@ -1267,7 +1267,7 @@ cogorc_downsample_vert_cosite_3tap (guint8 * ORC_RESTRICT d1,
     const guint8 * ORC_RESTRICT s3, int n)
 {
   OrcExecutor _ex, *ex = &_ex;
-  static int p_inited = 0;
+  static volatile int p_inited = 0;
   static OrcProgram *p = 0;
   void (*func) (OrcExecutor *);
 
@@ -1500,7 +1500,7 @@ cogorc_downsample_vert_halfsite_4tap (guint8 * ORC_RESTRICT d1,
     const guint8 * ORC_RESTRICT s3, const guint8 * ORC_RESTRICT s4, int n)
 {
   OrcExecutor _ex, *ex = &_ex;
-  static int p_inited = 0;
+  static volatile int p_inited = 0;
   static OrcProgram *p = 0;
   void (*func) (OrcExecutor *);
 
@@ -1644,7 +1644,7 @@ cogorc_upsample_horiz_cosite_1tap (guint8 * ORC_RESTRICT d1,
     const guint8 * ORC_RESTRICT s1, int n)
 {
   OrcExecutor _ex, *ex = &_ex;
-  static int p_inited = 0;
+  static volatile int p_inited = 0;
   static OrcProgram *p = 0;
   void (*func) (OrcExecutor *);
 
@@ -1772,7 +1772,7 @@ cogorc_upsample_horiz_cosite (guint8 * ORC_RESTRICT d1,
     const guint8 * ORC_RESTRICT s1, const guint8 * ORC_RESTRICT s2, int n)
 {
   OrcExecutor _ex, *ex = &_ex;
-  static int p_inited = 0;
+  static volatile int p_inited = 0;
   static OrcProgram *p = 0;
   void (*func) (OrcExecutor *);
 
@@ -1882,7 +1882,7 @@ cogorc_upsample_vert_avgub (guint8 * ORC_RESTRICT d1,
     const guint8 * ORC_RESTRICT s1, const guint8 * ORC_RESTRICT s2, int n)
 {
   OrcExecutor _ex, *ex = &_ex;
-  static int p_inited = 0;
+  static volatile int p_inited = 0;
   static OrcProgram *p = 0;
   void (*func) (OrcExecutor *);
 
@@ -1984,7 +1984,7 @@ orc_unpack_yuyv_y (guint8 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1,
     int n)
 {
   OrcExecutor _ex, *ex = &_ex;
-  static int p_inited = 0;
+  static volatile int p_inited = 0;
   static OrcProgram *p = 0;
   void (*func) (OrcExecutor *);
 
@@ -2098,7 +2098,7 @@ orc_unpack_yuyv_u (guint8 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1,
     int n)
 {
   OrcExecutor _ex, *ex = &_ex;
-  static int p_inited = 0;
+  static volatile int p_inited = 0;
   static OrcProgram *p = 0;
   void (*func) (OrcExecutor *);
 
@@ -2215,7 +2215,7 @@ orc_unpack_yuyv_v (guint8 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1,
     int n)
 {
   OrcExecutor _ex, *ex = &_ex;
-  static int p_inited = 0;
+  static volatile int p_inited = 0;
   static OrcProgram *p = 0;
   void (*func) (OrcExecutor *);
 
@@ -2406,7 +2406,7 @@ orc_pack_yuyv (guint8 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1,
     const guint8 * ORC_RESTRICT s2, const guint8 * ORC_RESTRICT s3, int n)
 {
   OrcExecutor _ex, *ex = &_ex;
-  static int p_inited = 0;
+  static volatile int p_inited = 0;
   static OrcProgram *p = 0;
   void (*func) (OrcExecutor *);
 
@@ -2525,7 +2525,7 @@ orc_unpack_uyvy_y (guint8 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1,
     int n)
 {
   OrcExecutor _ex, *ex = &_ex;
-  static int p_inited = 0;
+  static volatile int p_inited = 0;
   static OrcProgram *p = 0;
   void (*func) (OrcExecutor *);
 
@@ -2639,7 +2639,7 @@ orc_unpack_uyvy_u (guint8 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1,
     int n)
 {
   OrcExecutor _ex, *ex = &_ex;
-  static int p_inited = 0;
+  static volatile int p_inited = 0;
   static OrcProgram *p = 0;
   void (*func) (OrcExecutor *);
 
@@ -2756,7 +2756,7 @@ orc_unpack_uyvy_v (guint8 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1,
     int n)
 {
   OrcExecutor _ex, *ex = &_ex;
-  static int p_inited = 0;
+  static volatile int p_inited = 0;
   static OrcProgram *p = 0;
   void (*func) (OrcExecutor *);
 
@@ -2947,7 +2947,7 @@ orc_pack_uyvy (guint8 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1,
     const guint8 * ORC_RESTRICT s2, const guint8 * ORC_RESTRICT s3, int n)
 {
   OrcExecutor _ex, *ex = &_ex;
-  static int p_inited = 0;
+  static volatile int p_inited = 0;
   static OrcProgram *p = 0;
   void (*func) (OrcExecutor *);
 
@@ -3128,7 +3128,7 @@ orc_matrix2_u8 (guint8 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1,
     const guint8 * ORC_RESTRICT s2, int p1, int p2, int p3, int n)
 {
   OrcExecutor _ex, *ex = &_ex;
-  static int p_inited = 0;
+  static volatile int p_inited = 0;
   static OrcProgram *p = 0;
   void (*func) (OrcExecutor *);
 
@@ -3351,7 +3351,7 @@ orc_matrix2_11_u8 (guint8 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1,
     const guint8 * ORC_RESTRICT s2, int p1, int p2, int n)
 {
   OrcExecutor _ex, *ex = &_ex;
-  static int p_inited = 0;
+  static volatile int p_inited = 0;
   static OrcProgram *p = 0;
   void (*func) (OrcExecutor *);
 
@@ -3590,7 +3590,7 @@ orc_matrix2_12_u8 (guint8 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1,
     const guint8 * ORC_RESTRICT s2, int p1, int p2, int n)
 {
   OrcExecutor _ex, *ex = &_ex;
-  static int p_inited = 0;
+  static volatile int p_inited = 0;
   static OrcProgram *p = 0;
   void (*func) (OrcExecutor *);
 
@@ -3825,7 +3825,7 @@ orc_matrix3_u8 (guint8 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1,
     int p2, int p3, int p4, int n)
 {
   OrcExecutor _ex, *ex = &_ex;
-  static int p_inited = 0;
+  static volatile int p_inited = 0;
   static OrcProgram *p = 0;
   void (*func) (OrcExecutor *);
 
@@ -4100,7 +4100,7 @@ orc_matrix3_100_u8 (guint8 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1,
     int p2, int p3, int n)
 {
   OrcExecutor _ex, *ex = &_ex;
-  static int p_inited = 0;
+  static volatile int p_inited = 0;
   static OrcProgram *p = 0;
   void (*func) (OrcExecutor *);
 
@@ -4350,7 +4350,7 @@ orc_matrix3_100_offset_u8 (guint8 * ORC_RESTRICT d1,
     int n)
 {
   OrcExecutor _ex, *ex = &_ex;
-  static int p_inited = 0;
+  static volatile int p_inited = 0;
   static OrcProgram *p = 0;
   void (*func) (OrcExecutor *);
 
@@ -4587,7 +4587,7 @@ orc_matrix3_000_u8 (guint8 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1,
     int p2, int p3, int p4, int p5, int n)
 {
   OrcExecutor _ex, *ex = &_ex;
-  static int p_inited = 0;
+  static volatile int p_inited = 0;
   static OrcProgram *p = 0;
   void (*func) (OrcExecutor *);
 
@@ -4660,7 +4660,7 @@ orc_matrix3_000_u8 (guint8 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1,
 /* orc_pack_123x */
 #ifdef DISABLE_ORC
 void
-orc_pack_123x (guint32 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1,
+orc_pack_123x (guint8 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1,
     const guint8 * ORC_RESTRICT s2, const guint8 * ORC_RESTRICT s3, int p1,
     int n)
 {
@@ -4780,12 +4780,12 @@ _backup_orc_pack_123x (OrcExecutor * ORC_RESTRICT ex)
 }
 
 void
-orc_pack_123x (guint32 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1,
+orc_pack_123x (guint8 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1,
     const guint8 * ORC_RESTRICT s2, const guint8 * ORC_RESTRICT s3, int p1,
     int n)
 {
   OrcExecutor _ex, *ex = &_ex;
-  static int p_inited = 0;
+  static volatile int p_inited = 0;
   static OrcProgram *p = 0;
   void (*func) (OrcExecutor *);
 
@@ -4834,7 +4834,7 @@ orc_pack_123x (guint32 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1,
 /* orc_pack_x123 */
 #ifdef DISABLE_ORC
 void
-orc_pack_x123 (guint32 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1,
+orc_pack_x123 (guint8 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1,
     const guint8 * ORC_RESTRICT s2, const guint8 * ORC_RESTRICT s3, int p1,
     int n)
 {
@@ -4954,12 +4954,12 @@ _backup_orc_pack_x123 (OrcExecutor * ORC_RESTRICT ex)
 }
 
 void
-orc_pack_x123 (guint32 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1,
+orc_pack_x123 (guint8 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1,
     const guint8 * ORC_RESTRICT s2, const guint8 * ORC_RESTRICT s3, int p1,
     int n)
 {
   OrcExecutor _ex, *ex = &_ex;
-  static int p_inited = 0;
+  static volatile int p_inited = 0;
   static OrcProgram *p = 0;
   void (*func) (OrcExecutor *);
 
@@ -5121,7 +5121,7 @@ cogorc_combine2_u8 (guint8 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1,
     const guint8 * ORC_RESTRICT s2, int p1, int p2, int n)
 {
   OrcExecutor _ex, *ex = &_ex;
-  static int p_inited = 0;
+  static volatile int p_inited = 0;
   static OrcProgram *p = 0;
   void (*func) (OrcExecutor *);
 
@@ -5340,7 +5340,7 @@ cogorc_convert_I420_UYVY (guint8 * ORC_RESTRICT d1, guint8 * ORC_RESTRICT d2,
     const guint8 * ORC_RESTRICT s3, const guint8 * ORC_RESTRICT s4, int n)
 {
   OrcExecutor _ex, *ex = &_ex;
-  static int p_inited = 0;
+  static volatile int p_inited = 0;
   static OrcProgram *p = 0;
   void (*func) (OrcExecutor *);
 
@@ -5551,7 +5551,7 @@ cogorc_convert_I420_YUY2 (guint8 * ORC_RESTRICT d1, guint8 * ORC_RESTRICT d2,
     const guint8 * ORC_RESTRICT s3, const guint8 * ORC_RESTRICT s4, int n)
 {
   OrcExecutor _ex, *ex = &_ex;
-  static int p_inited = 0;
+  static volatile int p_inited = 0;
   static OrcProgram *p = 0;
   void (*func) (OrcExecutor *);
 
@@ -5782,7 +5782,7 @@ cogorc_convert_I420_AYUV (guint8 * ORC_RESTRICT d1, guint8 * ORC_RESTRICT d2,
     const guint8 * ORC_RESTRICT s3, const guint8 * ORC_RESTRICT s4, int n)
 {
   OrcExecutor _ex, *ex = &_ex;
-  static int p_inited = 0;
+  static volatile int p_inited = 0;
   static OrcProgram *p = 0;
   void (*func) (OrcExecutor *);
 
@@ -6015,7 +6015,7 @@ cogorc_convert_YUY2_I420 (guint8 * ORC_RESTRICT d1, guint8 * ORC_RESTRICT d2,
     const guint8 * ORC_RESTRICT s1, const guint8 * ORC_RESTRICT s2, int n)
 {
   OrcExecutor _ex, *ex = &_ex;
-  static int p_inited = 0;
+  static volatile int p_inited = 0;
   static OrcProgram *p = 0;
   void (*func) (OrcExecutor *);
 
@@ -6137,7 +6137,7 @@ cogorc_convert_UYVY_YUY2 (guint8 * ORC_RESTRICT d1, int d1_stride,
     const guint8 * ORC_RESTRICT s1, int s1_stride, int n, int m)
 {
   OrcExecutor _ex, *ex = &_ex;
-  static int p_inited = 0;
+  static volatile int p_inited = 0;
   static OrcProgram *p = 0;
   void (*func) (OrcExecutor *);
 
@@ -6262,7 +6262,7 @@ cogorc_planar_chroma_420_422 (guint8 * ORC_RESTRICT d1, int d1_stride,
     int s1_stride, int n, int m)
 {
   OrcExecutor _ex, *ex = &_ex;
-  static int p_inited = 0;
+  static volatile int p_inited = 0;
   static OrcProgram *p = 0;
   void (*func) (OrcExecutor *);
 
@@ -6380,7 +6380,7 @@ cogorc_planar_chroma_420_444 (guint8 * ORC_RESTRICT d1, int d1_stride,
     int s1_stride, int n, int m)
 {
   OrcExecutor _ex, *ex = &_ex;
-  static int p_inited = 0;
+  static volatile int p_inited = 0;
   static OrcProgram *p = 0;
   void (*func) (OrcExecutor *);
 
@@ -6491,7 +6491,7 @@ cogorc_planar_chroma_422_444 (guint8 * ORC_RESTRICT d1, int d1_stride,
     const guint8 * ORC_RESTRICT s1, int s1_stride, int n, int m)
 {
   OrcExecutor _ex, *ex = &_ex;
-  static int p_inited = 0;
+  static volatile int p_inited = 0;
   static OrcProgram *p = 0;
   void (*func) (OrcExecutor *);
 
@@ -6615,7 +6615,7 @@ cogorc_planar_chroma_444_422 (guint8 * ORC_RESTRICT d1, int d1_stride,
     const guint8 * ORC_RESTRICT s1, int s1_stride, int n, int m)
 {
   OrcExecutor _ex, *ex = &_ex;
-  static int p_inited = 0;
+  static volatile int p_inited = 0;
   static OrcProgram *p = 0;
   void (*func) (OrcExecutor *);
 
@@ -6764,7 +6764,7 @@ cogorc_planar_chroma_444_420 (guint8 * ORC_RESTRICT d1, int d1_stride,
     const guint8 * ORC_RESTRICT s2, int s2_stride, int n, int m)
 {
   OrcExecutor _ex, *ex = &_ex;
-  static int p_inited = 0;
+  static volatile int p_inited = 0;
   static OrcProgram *p = 0;
   void (*func) (OrcExecutor *);
 
@@ -6889,7 +6889,7 @@ cogorc_planar_chroma_422_420 (guint8 * ORC_RESTRICT d1, int d1_stride,
     const guint8 * ORC_RESTRICT s2, int s2_stride, int n, int m)
 {
   OrcExecutor _ex, *ex = &_ex;
-  static int p_inited = 0;
+  static volatile int p_inited = 0;
   static OrcProgram *p = 0;
   void (*func) (OrcExecutor *);
 
@@ -7099,7 +7099,7 @@ cogorc_convert_YUY2_AYUV (guint8 * ORC_RESTRICT d1, int d1_stride,
     const guint8 * ORC_RESTRICT s1, int s1_stride, int n, int m)
 {
   OrcExecutor _ex, *ex = &_ex;
-  static int p_inited = 0;
+  static volatile int p_inited = 0;
   static OrcProgram *p = 0;
   void (*func) (OrcExecutor *);
 
@@ -7317,7 +7317,7 @@ cogorc_convert_UYVY_AYUV (guint8 * ORC_RESTRICT d1, int d1_stride,
     const guint8 * ORC_RESTRICT s1, int s1_stride, int n, int m)
 {
   OrcExecutor _ex, *ex = &_ex;
-  static int p_inited = 0;
+  static volatile int p_inited = 0;
   static OrcProgram *p = 0;
   void (*func) (OrcExecutor *);
 
@@ -7491,7 +7491,7 @@ cogorc_convert_YUY2_Y42B (guint8 * ORC_RESTRICT d1, int d1_stride,
     int d3_stride, const guint8 * ORC_RESTRICT s1, int s1_stride, int n, int m)
 {
   OrcExecutor _ex, *ex = &_ex;
-  static int p_inited = 0;
+  static volatile int p_inited = 0;
   static OrcProgram *p = 0;
   void (*func) (OrcExecutor *);
 
@@ -7663,7 +7663,7 @@ cogorc_convert_UYVY_Y42B (guint8 * ORC_RESTRICT d1, int d1_stride,
     int d3_stride, const guint8 * ORC_RESTRICT s1, int s1_stride, int n, int m)
 {
   OrcExecutor _ex, *ex = &_ex;
-  static int p_inited = 0;
+  static volatile int p_inited = 0;
   static OrcProgram *p = 0;
   void (*func) (OrcExecutor *);
 
@@ -7847,7 +7847,7 @@ cogorc_convert_YUY2_Y444 (guint8 * ORC_RESTRICT d1, int d1_stride,
     int d3_stride, const guint8 * ORC_RESTRICT s1, int s1_stride, int n, int m)
 {
   OrcExecutor _ex, *ex = &_ex;
-  static int p_inited = 0;
+  static volatile int p_inited = 0;
   static OrcProgram *p = 0;
   void (*func) (OrcExecutor *);
 
@@ -8037,7 +8037,7 @@ cogorc_convert_UYVY_Y444 (guint8 * ORC_RESTRICT d1, int d1_stride,
     int d3_stride, const guint8 * ORC_RESTRICT s1, int s1_stride, int n, int m)
 {
   OrcExecutor _ex, *ex = &_ex;
-  static int p_inited = 0;
+  static volatile int p_inited = 0;
   static OrcProgram *p = 0;
   void (*func) (OrcExecutor *);
 
@@ -8264,7 +8264,7 @@ cogorc_convert_UYVY_I420 (guint8 * ORC_RESTRICT d1, guint8 * ORC_RESTRICT d2,
     const guint8 * ORC_RESTRICT s1, const guint8 * ORC_RESTRICT s2, int n)
 {
   OrcExecutor _ex, *ex = &_ex;
-  static int p_inited = 0;
+  static volatile int p_inited = 0;
   static OrcProgram *p = 0;
   void (*func) (OrcExecutor *);
 
@@ -8624,7 +8624,7 @@ cogorc_convert_AYUV_I420 (guint8 * ORC_RESTRICT d1, int d1_stride,
     const guint8 * ORC_RESTRICT s2, int s2_stride, int n, int m)
 {
   OrcExecutor _ex, *ex = &_ex;
-  static int p_inited = 0;
+  static volatile int p_inited = 0;
   static OrcProgram *p = 0;
   void (*func) (OrcExecutor *);
 
@@ -8871,7 +8871,7 @@ cogorc_convert_AYUV_YUY2 (guint8 * ORC_RESTRICT d1, int d1_stride,
     const guint8 * ORC_RESTRICT s1, int s1_stride, int n, int m)
 {
   OrcExecutor _ex, *ex = &_ex;
-  static int p_inited = 0;
+  static volatile int p_inited = 0;
   static OrcProgram *p = 0;
   void (*func) (OrcExecutor *);
 
@@ -9093,7 +9093,7 @@ cogorc_convert_AYUV_UYVY (guint8 * ORC_RESTRICT d1, int d1_stride,
     const guint8 * ORC_RESTRICT s1, int s1_stride, int n, int m)
 {
   OrcExecutor _ex, *ex = &_ex;
-  static int p_inited = 0;
+  static volatile int p_inited = 0;
   static OrcProgram *p = 0;
   void (*func) (OrcExecutor *);
 
@@ -9323,7 +9323,7 @@ cogorc_convert_AYUV_Y42B (guint8 * ORC_RESTRICT d1, int d1_stride,
     int d3_stride, const guint8 * ORC_RESTRICT s1, int s1_stride, int n, int m)
 {
   OrcExecutor _ex, *ex = &_ex;
-  static int p_inited = 0;
+  static volatile int p_inited = 0;
   static OrcProgram *p = 0;
   void (*func) (OrcExecutor *);
 
@@ -9506,7 +9506,7 @@ cogorc_convert_AYUV_Y444 (guint8 * ORC_RESTRICT d1, int d1_stride,
     int d3_stride, const guint8 * ORC_RESTRICT s1, int s1_stride, int n, int m)
 {
   OrcExecutor _ex, *ex = &_ex;
-  static int p_inited = 0;
+  static volatile int p_inited = 0;
   static OrcProgram *p = 0;
   void (*func) (OrcExecutor *);
 
@@ -9683,7 +9683,7 @@ cogorc_convert_Y42B_YUY2 (guint8 * ORC_RESTRICT d1, int d1_stride,
     const guint8 * ORC_RESTRICT s3, int s3_stride, int n, int m)
 {
   OrcExecutor _ex, *ex = &_ex;
-  static int p_inited = 0;
+  static volatile int p_inited = 0;
   static OrcProgram *p = 0;
   void (*func) (OrcExecutor *);
 
@@ -9857,7 +9857,7 @@ cogorc_convert_Y42B_UYVY (guint8 * ORC_RESTRICT d1, int d1_stride,
     const guint8 * ORC_RESTRICT s3, int s3_stride, int n, int m)
 {
   OrcExecutor _ex, *ex = &_ex;
-  static int p_inited = 0;
+  static volatile int p_inited = 0;
   static OrcProgram *p = 0;
   void (*func) (OrcExecutor *);
 
@@ -10083,7 +10083,7 @@ cogorc_convert_Y42B_AYUV (guint8 * ORC_RESTRICT d1, int d1_stride,
     const guint8 * ORC_RESTRICT s3, int s3_stride, int n, int m)
 {
   OrcExecutor _ex, *ex = &_ex;
-  static int p_inited = 0;
+  static volatile int p_inited = 0;
   static OrcProgram *p = 0;
   void (*func) (OrcExecutor *);
 
@@ -10307,7 +10307,7 @@ cogorc_convert_Y444_YUY2 (guint8 * ORC_RESTRICT d1, int d1_stride,
     const guint8 * ORC_RESTRICT s3, int s3_stride, int n, int m)
 {
   OrcExecutor _ex, *ex = &_ex;
-  static int p_inited = 0;
+  static volatile int p_inited = 0;
   static OrcProgram *p = 0;
   void (*func) (OrcExecutor *);
 
@@ -10530,7 +10530,7 @@ cogorc_convert_Y444_UYVY (guint8 * ORC_RESTRICT d1, int d1_stride,
     const guint8 * ORC_RESTRICT s3, int s3_stride, int n, int m)
 {
   OrcExecutor _ex, *ex = &_ex;
-  static int p_inited = 0;
+  static volatile int p_inited = 0;
   static OrcProgram *p = 0;
   void (*func) (OrcExecutor *);
 
@@ -10721,7 +10721,7 @@ cogorc_convert_Y444_AYUV (guint8 * ORC_RESTRICT d1, int d1_stride,
     const guint8 * ORC_RESTRICT s3, int s3_stride, int n, int m)
 {
   OrcExecutor _ex, *ex = &_ex;
-  static int p_inited = 0;
+  static volatile int p_inited = 0;
   static OrcProgram *p = 0;
   void (*func) (OrcExecutor *);
 
@@ -11167,7 +11167,7 @@ cogorc_convert_AYUV_ARGB (guint8 * ORC_RESTRICT d1, int d1_stride,
     const guint8 * ORC_RESTRICT s1, int s1_stride, int n, int m)
 {
   OrcExecutor _ex, *ex = &_ex;
-  static int p_inited = 0;
+  static volatile int p_inited = 0;
   static OrcProgram *p = 0;
   void (*func) (OrcExecutor *);
 
@@ -11689,7 +11689,7 @@ cogorc_convert_AYUV_BGRA (guint8 * ORC_RESTRICT d1, int d1_stride,
     const guint8 * ORC_RESTRICT s1, int s1_stride, int n, int m)
 {
   OrcExecutor _ex, *ex = &_ex;
-  static int p_inited = 0;
+  static volatile int p_inited = 0;
   static OrcProgram *p = 0;
   void (*func) (OrcExecutor *);
 
@@ -12211,7 +12211,7 @@ cogorc_convert_AYUV_ABGR (guint8 * ORC_RESTRICT d1, int d1_stride,
     const guint8 * ORC_RESTRICT s1, int s1_stride, int n, int m)
 {
   OrcExecutor _ex, *ex = &_ex;
-  static int p_inited = 0;
+  static volatile int p_inited = 0;
   static OrcProgram *p = 0;
   void (*func) (OrcExecutor *);
 
@@ -12733,7 +12733,7 @@ cogorc_convert_AYUV_RGBA (guint8 * ORC_RESTRICT d1, int d1_stride,
     const guint8 * ORC_RESTRICT s1, int s1_stride, int n, int m)
 {
   OrcExecutor _ex, *ex = &_ex;
-  static int p_inited = 0;
+  static volatile int p_inited = 0;
   static OrcProgram *p = 0;
   void (*func) (OrcExecutor *);
 
@@ -13242,7 +13242,7 @@ cogorc_convert_I420_BGRA (guint8 * ORC_RESTRICT d1,
     const guint8 * ORC_RESTRICT s3, int n)
 {
   OrcExecutor _ex, *ex = &_ex;
-  static int p_inited = 0;
+  static volatile int p_inited = 0;
   static OrcProgram *p = 0;
   void (*func) (OrcExecutor *);
 
@@ -13793,7 +13793,7 @@ cogorc_convert_I420_BGRA_avg (guint8 * ORC_RESTRICT d1,
     const guint8 * ORC_RESTRICT s5, int n)
 {
   OrcExecutor _ex, *ex = &_ex;
-  static int p_inited = 0;
+  static volatile int p_inited = 0;
   static OrcProgram *p = 0;
   void (*func) (OrcExecutor *);
 
@@ -14059,7 +14059,7 @@ cogorc_getline_I420 (guint8 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1,
     const guint8 * ORC_RESTRICT s2, const guint8 * ORC_RESTRICT s3, int n)
 {
   OrcExecutor _ex, *ex = &_ex;
-  static int p_inited = 0;
+  static volatile int p_inited = 0;
   static OrcProgram *p = 0;
   void (*func) (OrcExecutor *);
 
@@ -14278,7 +14278,7 @@ cogorc_getline_YUV9 (guint8 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1,
     const guint8 * ORC_RESTRICT s2, const guint8 * ORC_RESTRICT s3, int n)
 {
   OrcExecutor _ex, *ex = &_ex;
-  static int p_inited = 0;
+  static volatile int p_inited = 0;
   static OrcProgram *p = 0;
   void (*func) (OrcExecutor *);
 
@@ -14494,7 +14494,7 @@ cogorc_getline_YUY2 (guint8 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1,
     int n)
 {
   OrcExecutor _ex, *ex = &_ex;
-  static int p_inited = 0;
+  static volatile int p_inited = 0;
   static OrcProgram *p = 0;
   void (*func) (OrcExecutor *);
 
@@ -14701,7 +14701,7 @@ cogorc_getline_UYVY (guint8 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1,
     int n)
 {
   OrcExecutor _ex, *ex = &_ex;
-  static int p_inited = 0;
+  static volatile int p_inited = 0;
   static OrcProgram *p = 0;
   void (*func) (OrcExecutor *);
 
@@ -14914,7 +14914,7 @@ cogorc_getline_YVYU (guint8 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1,
     int n)
 {
   OrcExecutor _ex, *ex = &_ex;
-  static int p_inited = 0;
+  static volatile int p_inited = 0;
   static OrcProgram *p = 0;
   void (*func) (OrcExecutor *);
 
@@ -15129,7 +15129,7 @@ cogorc_getline_Y42B (guint8 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1,
     const guint8 * ORC_RESTRICT s2, const guint8 * ORC_RESTRICT s3, int n)
 {
   OrcExecutor _ex, *ex = &_ex;
-  static int p_inited = 0;
+  static volatile int p_inited = 0;
   static OrcProgram *p = 0;
   void (*func) (OrcExecutor *);
 
@@ -15304,7 +15304,7 @@ cogorc_getline_Y444 (guint8 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1,
     const guint8 * ORC_RESTRICT s2, const guint8 * ORC_RESTRICT s3, int n)
 {
   OrcExecutor _ex, *ex = &_ex;
-  static int p_inited = 0;
+  static volatile int p_inited = 0;
   static OrcProgram *p = 0;
   void (*func) (OrcExecutor *);
 
@@ -15445,7 +15445,7 @@ cogorc_getline_Y800 (guint8 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1,
     int n)
 {
   OrcExecutor _ex, *ex = &_ex;
-  static int p_inited = 0;
+  static volatile int p_inited = 0;
   static OrcProgram *p = 0;
   void (*func) (OrcExecutor *);
 
@@ -15586,7 +15586,7 @@ cogorc_getline_Y16 (guint8 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1,
     int n)
 {
   OrcExecutor _ex, *ex = &_ex;
-  static int p_inited = 0;
+  static volatile int p_inited = 0;
   static OrcProgram *p = 0;
   void (*func) (OrcExecutor *);
 
@@ -15686,7 +15686,7 @@ cogorc_getline_BGRA (guint8 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1,
     int n)
 {
   OrcExecutor _ex, *ex = &_ex;
-  static int p_inited = 0;
+  static volatile int p_inited = 0;
   static OrcProgram *p = 0;
   void (*func) (OrcExecutor *);
 
@@ -15874,7 +15874,7 @@ cogorc_getline_ABGR (guint8 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1,
     int n)
 {
   OrcExecutor _ex, *ex = &_ex;
-  static int p_inited = 0;
+  static volatile int p_inited = 0;
   static OrcProgram *p = 0;
   void (*func) (OrcExecutor *);
 
@@ -16080,7 +16080,7 @@ cogorc_getline_RGBA (guint8 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1,
     int n)
 {
   OrcExecutor _ex, *ex = &_ex;
-  static int p_inited = 0;
+  static volatile int p_inited = 0;
   static OrcProgram *p = 0;
   void (*func) (OrcExecutor *);
 
@@ -16280,7 +16280,7 @@ cogorc_getline_NV12 (guint8 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1,
     const guint8 * ORC_RESTRICT s2, int n)
 {
   OrcExecutor _ex, *ex = &_ex;
-  static int p_inited = 0;
+  static volatile int p_inited = 0;
   static OrcProgram *p = 0;
   void (*func) (OrcExecutor *);
 
@@ -16471,7 +16471,7 @@ cogorc_getline_NV21 (guint8 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1,
     const guint8 * ORC_RESTRICT s2, int n)
 {
   OrcExecutor _ex, *ex = &_ex;
-  static int p_inited = 0;
+  static volatile int p_inited = 0;
   static OrcProgram *p = 0;
   void (*func) (OrcExecutor *);
 
@@ -16649,7 +16649,7 @@ cogorc_getline_A420 (guint8 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1,
     const guint8 * ORC_RESTRICT s4, int n)
 {
   OrcExecutor _ex, *ex = &_ex;
-  static int p_inited = 0;
+  static volatile int p_inited = 0;
   static OrcProgram *p = 0;
   void (*func) (OrcExecutor *);
 
@@ -16901,7 +16901,7 @@ cogorc_putline_I420 (guint8 * ORC_RESTRICT d1, guint8 * ORC_RESTRICT d2,
     guint8 * ORC_RESTRICT d3, const guint8 * ORC_RESTRICT s1, int n)
 {
   OrcExecutor _ex, *ex = &_ex;
-  static int p_inited = 0;
+  static volatile int p_inited = 0;
   static OrcProgram *p = 0;
   void (*func) (OrcExecutor *);
 
@@ -17117,7 +17117,7 @@ cogorc_putline_YUY2 (guint8 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1,
     int n)
 {
   OrcExecutor _ex, *ex = &_ex;
-  static int p_inited = 0;
+  static volatile int p_inited = 0;
   static OrcProgram *p = 0;
   void (*func) (OrcExecutor *);
 
@@ -17330,7 +17330,7 @@ cogorc_putline_YVYU (guint8 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1,
     int n)
 {
   OrcExecutor _ex, *ex = &_ex;
-  static int p_inited = 0;
+  static volatile int p_inited = 0;
   static OrcProgram *p = 0;
   void (*func) (OrcExecutor *);
 
@@ -17539,7 +17539,7 @@ cogorc_putline_UYVY (guint8 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1,
     int n)
 {
   OrcExecutor _ex, *ex = &_ex;
-  static int p_inited = 0;
+  static volatile int p_inited = 0;
   static OrcProgram *p = 0;
   void (*func) (OrcExecutor *);
 
@@ -17752,7 +17752,7 @@ cogorc_putline_Y42B (guint8 * ORC_RESTRICT d1, guint8 * ORC_RESTRICT d2,
     guint8 * ORC_RESTRICT d3, const guint8 * ORC_RESTRICT s1, int n)
 {
   OrcExecutor _ex, *ex = &_ex;
-  static int p_inited = 0;
+  static volatile int p_inited = 0;
   static OrcProgram *p = 0;
   void (*func) (OrcExecutor *);
 
@@ -17920,7 +17920,7 @@ cogorc_putline_Y444 (guint8 * ORC_RESTRICT d1, guint8 * ORC_RESTRICT d2,
     guint8 * ORC_RESTRICT d3, const guint8 * ORC_RESTRICT s1, int n)
 {
   OrcExecutor _ex, *ex = &_ex;
-  static int p_inited = 0;
+  static volatile int p_inited = 0;
   static OrcProgram *p = 0;
   void (*func) (OrcExecutor *);
 
@@ -18044,7 +18044,7 @@ cogorc_putline_Y800 (guint8 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1,
     int n)
 {
   OrcExecutor _ex, *ex = &_ex;
-  static int p_inited = 0;
+  static volatile int p_inited = 0;
   static OrcProgram *p = 0;
   void (*func) (OrcExecutor *);
 
@@ -18173,7 +18173,7 @@ cogorc_putline_Y16 (guint8 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1,
     int n)
 {
   OrcExecutor _ex, *ex = &_ex;
-  static int p_inited = 0;
+  static volatile int p_inited = 0;
   static OrcProgram *p = 0;
   void (*func) (OrcExecutor *);
 
@@ -18274,7 +18274,7 @@ cogorc_putline_BGRA (guint8 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1,
     int n)
 {
   OrcExecutor _ex, *ex = &_ex;
-  static int p_inited = 0;
+  static volatile int p_inited = 0;
   static OrcProgram *p = 0;
   void (*func) (OrcExecutor *);
 
@@ -18462,7 +18462,7 @@ cogorc_putline_ABGR (guint8 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1,
     int n)
 {
   OrcExecutor _ex, *ex = &_ex;
-  static int p_inited = 0;
+  static volatile int p_inited = 0;
   static OrcProgram *p = 0;
   void (*func) (OrcExecutor *);
 
@@ -18668,7 +18668,7 @@ cogorc_putline_RGBA (guint8 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1,
     int n)
 {
   OrcExecutor _ex, *ex = &_ex;
-  static int p_inited = 0;
+  static volatile int p_inited = 0;
   static OrcProgram *p = 0;
   void (*func) (OrcExecutor *);
 
@@ -18860,7 +18860,7 @@ cogorc_putline_NV12 (guint8 * ORC_RESTRICT d1, guint8 * ORC_RESTRICT d2,
     const guint8 * ORC_RESTRICT s1, int n)
 {
   OrcExecutor _ex, *ex = &_ex;
-  static int p_inited = 0;
+  static volatile int p_inited = 0;
   static OrcProgram *p = 0;
   void (*func) (OrcExecutor *);
 
@@ -19052,7 +19052,7 @@ cogorc_putline_NV21 (guint8 * ORC_RESTRICT d1, guint8 * ORC_RESTRICT d2,
     const guint8 * ORC_RESTRICT s1, int n)
 {
   OrcExecutor _ex, *ex = &_ex;
-  static int p_inited = 0;
+  static volatile int p_inited = 0;
   static OrcProgram *p = 0;
   void (*func) (OrcExecutor *);
 
@@ -19335,7 +19335,7 @@ cogorc_putline_A420 (guint8 * ORC_RESTRICT d1, guint8 * ORC_RESTRICT d2,
     const guint8 * ORC_RESTRICT s1, int n)
 {
   OrcExecutor _ex, *ex = &_ex;
-  static int p_inited = 0;
+  static volatile int p_inited = 0;
   static OrcProgram *p = 0;
   void (*func) (OrcExecutor *);
 
