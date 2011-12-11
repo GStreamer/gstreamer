@@ -1,75 +1,77 @@
 # Serbian translation of gst-plugins
 # Copyright (C) 2004 Free Software Foundation, Inc.
+# This file is distributed under the same license as the gst-plugins-bad package.
 # Danilo Segan <dsegan@gmx.net>, 2004.
-#
+# Мирослав Николић <miroslavnikolic@rocketmail.com>, 2011.
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins 0.7.6\n"
+"Project-Id-Version: gst-plugins-bad-0.10.21.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2010-10-19 23:33+0100\n"
-"PO-Revision-Date: 2004-03-13 00:18+0100\n"
-"Last-Translator: Danilo Segan <dsegan@gmx.net>\n"
+"POT-Creation-Date: 2011-12-11 00:54+0000\n"
+"PO-Revision-Date: 2011-12-04 09:59+0200\n"
+"Last-Translator: Мирослав Николић <miroslavnikolic@rocketmail.com>\n"
 "Language-Team: Serbian <gnu@prevod.org>\n"
 "Language: sr\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Plural-Forms: nplurals=3;    plural=n%10==1 && n%100!=11 ? 0 :  (n%10>=2 && n"
+"Plural-Forms: nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && n"
 "%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2);\n"
+"X-Generator: Virtaal 0.7.0\n"
+"X-Project-Style: gnome\n"
 
-#, fuzzy
 msgid "Could not read title information for DVD."
-msgstr "Не могу да пишем у датотеку „%s“."
+msgstr "Не могу да прочитам информације о наслову ДВД-а."
 
-#, fuzzy, c-format
+#, c-format
 msgid "Failed to open DVD device '%s'."
-msgstr "Не могу да затворим управљачки уређај „%s“."
+msgstr "Нисам успео да отворим ДВД уређај „%s“."
 
 msgid "Failed to set PGC based seeking."
-msgstr ""
+msgstr "Нисам успео да подесим позиционирање засновано на ланцу програма."
 
 msgid ""
 "Could not read DVD. This may be because the DVD is encrypted and a DVD "
 "decryption library is not installed."
 msgstr ""
+"Не могу да читам ДВД. Можда зато што је ДВД шифрован а библиотека за "
+"дешифровање ДВД-а није инсталирана."
 
-#, fuzzy
 msgid "Could not read DVD."
-msgstr "Не могу да пишем у датотеку „%s“."
+msgstr "Не могу да читам ДВД."
 
-#, fuzzy
 msgid "No file name specified for writing."
-msgstr "Име датотеке није задато."
+msgstr "Није наведен назив датотеке за упис."
 
 #, c-format
 msgid "Could not open file \"%s\" for writing."
-msgstr "Не могу да отворим датотеку „%s“ ради уписа."
+msgstr "Не могу да отворим датотеку „%s“ за упис."
 
 msgid "Internal data stream error."
-msgstr ""
+msgstr "Унутрашња грешка тока података."
 
 #, c-format
 msgid "Could not write to file \"%s\"."
 msgstr "Не могу да пишем у датотеку „%s“."
 
 msgid "Internal data flow error."
-msgstr ""
+msgstr "Унутрашња грешка протока података."
 
 #, c-format
 msgid "Device \"%s\" does not exist."
-msgstr "Не постоји уређај „%s“."
+msgstr "Уређај „%s“ не постоји."
 
-#, fuzzy, c-format
+#, c-format
 msgid "Could not open frontend device \"%s\"."
-msgstr "Не могу да затворим управљачки уређај „%s“."
+msgstr "Не могу да отворим управљачки уређај „%s“."
 
-#, fuzzy, c-format
+#, c-format
 msgid "Could not get settings from frontend device \"%s\"."
-msgstr "Не могу да примим довољно бафера са уређаја „%s“."
+msgstr "Не могу да добавим подешавања са управљачког уређаја „%s“."
 
 #, c-format
 msgid "Could not open file \"%s\" for reading."
-msgstr "Не могу да отворим датотеку „%s“ ради читања."
+msgstr "Не могу да отворим датотеку „%s“ за читање."
 
 #~ msgid "Could not open device \"%s\" for reading and writing."
 #~ msgstr "Не могу да отворим уређај „%s“ ради читања и уписа."
@@ -82,6 +84,9 @@ msgstr "Не могу да отворим датотеку „%s“ ради ч�
 
 #~ msgid "Could not get buffers from device \"%s\"."
 #~ msgstr "Не могу да примим бафере са уређаја „%s“."
+
+#~ msgid "Could not open audio device \"%s\" for writing."
+#~ msgstr "Не могу да отворим звучни уређај „%s“ ради уписа."
 
 #~ msgid "Could not open control device \"%s\" for writing."
 #~ msgstr "Не могу да отворим управљачки уређај „%s“ ради уписа."
@@ -119,8 +124,29 @@ msgstr "Не могу да отворим датотеку „%s“ ради ч�
 #~ msgid "Could not open device \"%s\" for reading."
 #~ msgstr "Не могу да отворим уређај „%s“ ради читања."
 
+#~ msgid "Volume"
+#~ msgstr "Јачина звука"
+
+#~ msgid "Bass"
+#~ msgstr "Бас"
+
+#~ msgid "Treble"
+#~ msgstr "Шум"
+
 #~ msgid "Synth"
 #~ msgstr "Синт."
+
+#~ msgid "PCM"
+#~ msgstr "ПЦМ"
+
+#~ msgid "Speaker"
+#~ msgstr "Звучник"
+
+#~ msgid "Line-in"
+#~ msgstr "Ул.лин."
+
+#~ msgid "Microphone"
+#~ msgstr "Микрофон"
 
 #~ msgid "CD"
 #~ msgstr "ЦД"
@@ -131,8 +157,14 @@ msgstr "Не могу да отворим датотеку „%s“ ради ч�
 #~ msgid "PCM-2"
 #~ msgstr "ПЦМ-2"
 
+#~ msgid "Record"
+#~ msgstr "Снимање"
+
 #~ msgid "In-gain"
 #~ msgstr "Ул. пој."
+
+#~ msgid "Out-gain"
+#~ msgstr "Из. пој."
 
 #~ msgid "Line-1"
 #~ msgstr "Лин. 1"
@@ -142,6 +174,9 @@ msgstr "Не могу да отворим датотеку „%s“ ради ч�
 
 #~ msgid "Line-3"
 #~ msgstr "Лин. 3"
+
+#~ msgid "Digital-1"
+#~ msgstr "Диг. 1"
 
 #~ msgid "Digital-2"
 #~ msgstr "Диг. 2"
@@ -155,8 +190,18 @@ msgstr "Не могу да отворим датотеку „%s“ ради ч�
 #~ msgid "Phone-out"
 #~ msgstr "Тел. из."
 
+#~ msgid "Video"
+#~ msgstr "Видео"
+
 #~ msgid "Radio"
 #~ msgstr "Радио"
+
+#~ msgid "Monitor"
+#~ msgstr "Праћење"
+
+#, fuzzy
+#~ msgid "PC Speaker"
+#~ msgstr "Звучник"
 
 #~ msgid "Could not open CD device for reading."
 #~ msgstr "Не могу да отворим ЦД уређај ради читања."
