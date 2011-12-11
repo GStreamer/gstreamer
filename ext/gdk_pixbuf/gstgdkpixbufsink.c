@@ -271,7 +271,7 @@ gst_gdk_pixbuf_sink_set_caps (GstBaseSink * basesink, GstCaps * caps)
 
   GST_INFO_OBJECT (sink, "format             : %d", fmt);
   GST_INFO_OBJECT (sink, "width x height     : %d x %d", w, h);
-  GST_INFO_OBJECT (sink, "pixel-aspect-ratio : %d/%d", par_d, par_n);
+  GST_INFO_OBJECT (sink, "pixel-aspect-ratio : %d/%d", par_n, par_d);
 
   return TRUE;
 }
@@ -344,7 +344,7 @@ gst_gdk_pixbuf_sink_handle_buffer (GstBaseSink * basesink, GstBuffer * buf,
      * The structure will take its own ref to the pixbuf. */
     s = gst_structure_new (msg_name,
         "pixbuf", GDK_TYPE_PIXBUF, pixbuf,
-        "pixel-aspect-ratio", GST_TYPE_FRACTION, sink->par_d, sink->par_n,
+        "pixel-aspect-ratio", GST_TYPE_FRACTION, sink->par_n, sink->par_d,
         NULL);
 
     msg = gst_message_new_element (GST_OBJECT_CAST (sink), s);
