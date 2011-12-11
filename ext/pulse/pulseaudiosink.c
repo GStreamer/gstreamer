@@ -140,8 +140,7 @@ gst_pulse_audio_sink_base_init (gpointer klass)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
 
-  gst_element_class_add_static_pad_template (element_class,
-      &sink_template);
+  gst_element_class_add_static_pad_template (element_class, &sink_template);
 
   gst_element_class_set_details_simple (element_class,
       "Bin wrapping pulsesink", "Sink/Audio/Bin",
@@ -356,6 +355,7 @@ static void
 gst_pulse_audio_sink_init (GstPulseAudioSink * pbin,
     GstPulseAudioSinkClass * klass)
 {
+  GstPadTemplate *template;
   GstPad *pad = NULL;
   GParamSpec **specs;
   GString *prop;
@@ -375,8 +375,9 @@ gst_pulse_audio_sink_init (GstPulseAudioSink * pbin,
   }
 
   pad = gst_element_get_static_pad (GST_ELEMENT (pbin->psink), "sink");
-  pbin->sinkpad = gst_ghost_pad_new_from_template ("sink", pad,
-      gst_static_pad_template_get (&sink_template));
+  template = gst_static_pad_template_get (&sink_template);
+  pbin->sinkpad = gst_ghost_pad_new_from_template ("sink", pad, template);
+  gst_object_unref (template);
 
   pbin->sinkpad_old_eventfunc = GST_PAD_EVENTFUNC (pbin->sinkpad);
   gst_pad_set_event_function (pbin->sinkpad,
