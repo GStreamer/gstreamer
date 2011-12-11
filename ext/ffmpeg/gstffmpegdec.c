@@ -152,6 +152,9 @@ struct _GstFFMpegDec
 
   /* reverse playback queue */
   GList *queued;
+
+  /* prevent reopening the decoder on GST_EVENT_CAPS when caps are same as last time. */
+  GstCaps *last_caps;
 };
 
 typedef struct _GstFFMpegDecClass GstFFMpegDecClass;
@@ -602,6 +605,8 @@ gst_ffmpegdec_close (GstFFMpegDec * ffmpegdec)
     return;
 
   GST_LOG_OBJECT (ffmpegdec, "closing ffmpeg codec");
+
+  gst_caps_replace (&ffmpegdec->last_caps, NULL);
 
   if (ffmpegdec->context->priv_data)
     gst_ffmpeg_avcodec_close (ffmpegdec->context);
@@ -1934,7 +1939,7 @@ gst_ffmpegdec_video_frame (GstFFMpegDec * ffmpegdec,
       GstStructure *s = gst_caps_get_structure (GST_BUFFER_CAPS (buffer), 0);
       gboolean interlaced;
       gboolean found = gst_structure_get_boolean (s, "interlaced", &interlaced);
-      if (!found || (! !interlaced != ! !ffmpegdec->format.video.interlaced)) {
+      if (!found || (!!interlaced != !!ffmpegdec->format.video.interlaced)) {
         GST_DEBUG_OBJECT (ffmpegdec,
             "Buffer interlacing does not match pad, updating");
         buffer = gst_buffer_make_metadata_writable (buffer);
@@ -2570,7 +2575,15 @@ gst_ffmpegdec_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
 
       gst_event_parse_caps (event, &caps);
 
-      ret = gst_ffmpegdec_setcaps (ffmpegdec, caps);
+      if (!ffmpegdec->last_caps
+          || !gst_caps_is_equal (ffmpegdec->last_caps, caps)) {
+        ret = gst_ffmpegdec_setcaps (ffmpegdec, caps);
+        if (ret) {
+          gst_caps_replace (&ffmpegdec->last_caps, caps);
+        }
+      } else {
+        ret = TRUE;
+      }
 
       gst_event_unref (event);
       goto done;
