@@ -23,6 +23,8 @@
 # include "config.h"
 #endif
 
+#include <stdlib.h>
+
 #include <glib.h>
 #include <glib/gprintf.h>
 #include <libsoup/soup-address.h>
@@ -454,7 +456,7 @@ souphttpsrc_suite (void)
 
   suite_add_tcase (s, tc_chain);
   run_server (&http_port, &https_port);
-  g_atexit (stop_server);
+  atexit (stop_server);
   tcase_add_test (tc_chain, test_first_buffer_has_offset);
   tcase_add_test (tc_chain, test_redirect_yes);
   tcase_add_test (tc_chain, test_redirect_no);
