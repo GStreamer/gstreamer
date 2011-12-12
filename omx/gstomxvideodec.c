@@ -1108,14 +1108,6 @@ gst_omx_video_dec_set_format (GstBaseVideoDecoder * decoder,
   if (needs_disable && is_format_change) {
     gst_omx_video_dec_drain (self);
 
-    /* FIXME: Workaround for 
-     * https://bugzilla.gnome.org/show_bug.cgi?id=654529
-     */
-    g_list_foreach (GST_BASE_VIDEO_CODEC (self)->frames,
-        (GFunc) gst_base_video_codec_free_frame, NULL);
-    g_list_free (GST_BASE_VIDEO_CODEC (self)->frames);
-    GST_BASE_VIDEO_CODEC (self)->frames = NULL;
-
     if (klass->hacks & GST_OMX_HACK_NO_COMPONENT_RECONFIGURE) {
       GST_BASE_VIDEO_CODEC_STREAM_UNLOCK (self);
       gst_omx_video_dec_stop (GST_BASE_VIDEO_DECODER (self));
@@ -1218,16 +1210,6 @@ gst_omx_video_dec_reset (GstBaseVideoDecoder * decoder)
   GST_DEBUG_OBJECT (self, "Resetting decoder");
 
   gst_omx_video_dec_drain (self);
-
-  /* FIXME: Workaround for 
-   * https://bugzilla.gnome.org/show_bug.cgi?id=654529
-   *
-   * This is always called with GST_BASE_VIDEO_CODEC_STREAM_LOCK
-   */
-  g_list_foreach (GST_BASE_VIDEO_CODEC (self)->frames,
-      (GFunc) gst_base_video_codec_free_frame, NULL);
-  g_list_free (GST_BASE_VIDEO_CODEC (self)->frames);
-  GST_BASE_VIDEO_CODEC (self)->frames = NULL;
 
   gst_omx_port_set_flushing (self->in_port, TRUE);
   gst_omx_port_set_flushing (self->out_port, TRUE);
