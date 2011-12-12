@@ -70,7 +70,11 @@ struct _GstAlpha
   /* <private> */
 
   /* caps */
+#if !GLIB_CHECK_VERSION (2, 31, 0)
   GStaticMutex lock;
+#else
+  GMutex lock;
+#endif
 
   GstVideoFormat in_format, out_format;
   gint width, height;
