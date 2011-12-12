@@ -153,11 +153,16 @@ static GstStaticPadTemplate kate_sink_factory =
 #if G_BYTE_ORDER == G_LITTLE_ENDIAN
 #define TIGER_VIDEO_CAPS \
     GST_VIDEO_CAPS_xRGB ";" GST_VIDEO_CAPS_BGRx ";" \
-    GST_VIDEO_CAPS_YUV ("{AYUV, I420, YV12, UYVY, NV12, NV21}")
+    GST_VIDEO_CAPS_YUV ("{I420, YV12, AYUV, YUY2, UYVY, v308, v210," \
+        " v216, Y41B, Y42B, Y444, Y800, Y16, NV12, NV21, UYVP, A420," \
+        " YUV9, IYU1}")
+
 #else
 #define TIGER_VIDEO_CAPS \
     GST_VIDEO_CAPS_BGRx ";" GST_VIDEO_CAPS_xRGB ";" \
-    GST_VIDEO_CAPS_YUV ("{AYUV, I420, YV12, UYVY, NV12, NV21}")
+    GST_VIDEO_CAPS_YUV ("{I420, YV12, AYUV, YUY2, UYVY, v308, v210," \
+        " v216, Y41B, Y42B, Y444, Y800, Y16, NV12, NV21, UYVP, A420," \
+        " YUV9, IYU1}")
 #endif
 
 static GstStaticPadTemplate video_sink_factory =
