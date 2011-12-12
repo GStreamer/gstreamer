@@ -87,6 +87,19 @@ static gboolean gst_wavparse_sink_event (GstPad * pad, GstEvent * event);
 static void gst_wavparse_loop (GstPad * pad);
 static gboolean gst_wavparse_srcpad_event (GstPad * pad, GstEvent * event);
 
+static void gst_wavparse_set_property (GObject * object, guint prop_id,
+    const GValue * value, GParamSpec * pspec);
+static void gst_wavparse_get_property (GObject * object, guint prop_id,
+    GValue * value, GParamSpec * pspec);
+
+#define DEFAULT_IGNORE_LENGTH FALSE
+
+enum
+{
+  PROP_0,
+  PROP_IGNORE_LENGTH,
+};
+
 static GstStaticPadTemplate sink_template_factory =
 GST_STATIC_PAD_TEMPLATE ("wavparse_sink",
     GST_PAD_SINK,
@@ -133,6 +146,27 @@ gst_wavparse_class_init (GstWavParseClass * klass)
   parent_class = g_type_class_peek_parent (klass);
 
   object_class->dispose = gst_wavparse_dispose;
+
+  object_class->set_property = gst_wavparse_set_property;
+  object_class->get_property = gst_wavparse_get_property;
+
+  /**
+   * GstWavParse:ignore-length
+   * 
+   * This selects whether the length found in a data chunk
+   * should be ignored. This may be useful for streamed audio
+   * where the length is unknown until the end of streaming,
+   * and various software/hardware just puts some random value
+   * in there and hopes it doesn't break too much.
+   *
+   * Since: 0.10.36
+   */
+  g_object_class_install_property (object_class, PROP_IGNORE_LENGTH,
+      g_param_spec_boolean ("ignore-length",
+          "Ignore length",
+          "Ignore length from the Wave header",
+          DEFAULT_IGNORE_LENGTH, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)
+      );
 
   gstelement_class->change_state = gst_wavparse_change_state;
   gstelement_class->send_event = gst_wavparse_send_event;
@@ -1348,6 +1382,10 @@ gst_wavparse_stream_headers (GstWavParse * wav)
     switch (tag) {
       case GST_RIFF_TAG_data:{
         GST_DEBUG_OBJECT (wav, "Got 'data' TAG, size : %d", size);
+        if (wav->ignore_length) {
+          GST_DEBUG_OBJECT (wav, "Ignoring length");
+          size = 0;
+        }
         if (wav->streaming) {
           gst_adapter_flush (wav->adapter, 8);
           gotdata = TRUE;
@@ -1566,11 +1604,13 @@ gst_wavparse_stream_headers (GstWavParse * wav)
 
   if (gst_wavparse_calculate_duration (wav)) {
     gst_segment_init (&wav->segment, GST_FORMAT_TIME);
-    gst_segment_set_duration (&wav->segment, GST_FORMAT_TIME, wav->duration);
+    if (!wav->ignore_length)
+      gst_segment_set_duration (&wav->segment, GST_FORMAT_TIME, wav->duration);
   } else {
     /* no bitrate, let downstream peer do the math, we'll feed it bytes. */
     gst_segment_init (&wav->segment, GST_FORMAT_BYTES);
-    gst_segment_set_duration (&wav->segment, GST_FORMAT_BYTES, wav->datasize);
+    if (!wav->ignore_length)
+      gst_segment_set_duration (&wav->segment, GST_FORMAT_BYTES, wav->datasize);
   }
 
   /* now we have all the info to perform a pending seek if any, if no
@@ -2489,6 +2529,11 @@ gst_wavparse_pad_query (GstPad * pad, GstQuery * query)
       gint64 duration = 0;
       GstFormat format;
 
+      if (wav->ignore_length) {
+        res = FALSE;
+        break;
+      }
+
       gst_query_parse_duration (query, &format, NULL);
 
       switch (format) {
@@ -2655,6 +2700,43 @@ gst_wavparse_change_state (GstElement * element, GstStateChange transition)
       break;
   }
   return ret;
+}
+
+static void
+gst_wavparse_set_property (GObject * object, guint prop_id,
+    const GValue * value, GParamSpec * pspec)
+{
+  GstWavParse *self;
+
+  g_return_if_fail (GST_IS_WAVPARSE (object));
+  self = GST_WAVPARSE (object);
+
+  switch (prop_id) {
+    case PROP_IGNORE_LENGTH:
+      self->ignore_length = g_value_get_boolean (value);
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (self, prop_id, pspec);
+  }
+
+}
+
+static void
+gst_wavparse_get_property (GObject * object, guint prop_id,
+    GValue * value, GParamSpec * pspec)
+{
+  GstWavParse *self;
+
+  g_return_if_fail (GST_IS_WAVPARSE (object));
+  self = GST_WAVPARSE (object);
+
+  switch (prop_id) {
+    case PROP_IGNORE_LENGTH:
+      g_value_set_boolean (value, self->ignore_length);
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (self, prop_id, pspec);
+  }
 }
 
 static gboolean
