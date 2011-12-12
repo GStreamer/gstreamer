@@ -3485,8 +3485,8 @@ gst_matroska_demux_parse_blockgroup_or_simpleblock (GstMatroskaDemux * demux,
 
         GST_OBJECT_LOCK (demux);
         if (demux->common.segment.duration == -1 ||
-            demux->common.segment.duration <
-            lace_time - demux->stream_start_time) {
+            demux->stream_start_time + demux->common.segment.duration <
+            last_stop_end) {
           gst_segment_set_duration (&demux->common.segment, GST_FORMAT_TIME,
               last_stop_end - demux->stream_start_time);
           GST_OBJECT_UNLOCK (demux);
