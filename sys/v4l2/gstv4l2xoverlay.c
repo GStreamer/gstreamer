@@ -40,6 +40,7 @@
 #include "v4l2_calls.h"
 
 #include "gst/gst-i18n-plugin.h"
+#include <gst/glib-compat-private.h>
 
 struct _GstV4l2Xv
 {

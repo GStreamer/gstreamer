@@ -31,6 +31,8 @@
 #include "gstiirequalizer3bands.h"
 #include "gstiirequalizer10bands.h"
 
+#include "gst/glib-compat-private.h"
+
 GST_DEBUG_CATEGORY (equalizer_debug);
 #define GST_CAT_DEFAULT equalizer_debug
 

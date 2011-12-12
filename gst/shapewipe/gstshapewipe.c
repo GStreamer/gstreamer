@@ -46,6 +46,7 @@
 
 #include <gst/gst.h>
 #include <gst/controller/gstcontroller.h>
+#include <gst/glib-compat-private.h>
 
 #include "gstshapewipe.h"
 

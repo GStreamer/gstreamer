@@ -23,6 +23,8 @@
 #include <gst/rtp/gstrtcpbuffer.h>
 #include <gst/netbuffer/gstnetbuffer.h>
 
+#include <gst/glib-compat-private.h>
+
 #include "gstrtpbin-marshal.h"
 #include "rtpsession.h"
 

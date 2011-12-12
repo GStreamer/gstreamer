@@ -49,6 +49,8 @@
 #include <gst/gst.h>
 #include <gst/gst-i18n-plugin.h>
 
+#include "gst/glib-compat-private.h"
+
 GST_DEBUG_CATEGORY_STATIC (gst_debug_ximage_src);
 #define GST_CAT_DEFAULT gst_debug_ximage_src
 

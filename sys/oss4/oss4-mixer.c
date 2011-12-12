@@ -54,6 +54,7 @@
 
 #include <gst/interfaces/mixer.h>
 #include <gst/gst-i18n-plugin.h>
+#include "gst/glib-compat-private.h"
 
 #include <glib/gprintf.h>
 

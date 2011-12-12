@@ -114,6 +114,8 @@
 
 #include <gst/rtp/gstrtpbuffer.h>
 
+#include <gst/glib-compat-private.h>
+
 #include "gstrtpbin-marshal.h"
 #include "gstrtpsession.h"
 #include "rtpsession.h"
