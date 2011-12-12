@@ -836,26 +836,42 @@ gst_vaapi_surface_update_composition(
     for (n = 0; n < nb_rectangles; ++n) {
         GstBuffer *buf;
         GstVideoOverlayRectangle *rect;
-        guint stride;
+        guint width, height, stride;
+        GstVaapiImageFormat format;
         GstVaapiImage *subtitle_image;
         GstVaapiRectangle sub_rect;
         GstVaapiSubpicture *subpicture;
+        GstVaapiImageRaw raw_image;
 
         rect = gst_video_overlay_composition_get_rectangle (composition, n);
-        buf = gst_video_overlay_rectangle_get_pixels_argb (rect,
-                &stride, GST_VIDEO_OVERLAY_FORMAT_FLAG_NONE);
+        buf = gst_video_overlay_rectangle_get_pixels_unscaled_argb (rect,
+                &width, &height, &stride, GST_VIDEO_OVERLAY_FORMAT_FLAG_NONE);
+
+        /* XXX: use gst_vaapi_image_format_from_video() */
+#if G_BYTE_ORDER == G_LITTLE_ENDIAN
+        format = GST_VAAPI_IMAGE_BGRA;
+#else
+        format = GST_VAAPI_IMAGE_ARGB;
+#endif
+        subtitle_image = gst_vaapi_image_new (display, format, width, height);
+        if (!subtitle_image)
+          return FALSE;
+
+        raw_image.format     = format;
+        raw_image.width      = width;
+        raw_image.height     = height;
+        raw_image.num_planes = 1;
+        raw_image.pixels[0]  = GST_BUFFER_DATA(buf);
+        raw_image.stride[0]  = stride;
+        if (!gst_vaapi_image_update_from_raw (subtitle_image, &raw_image, NULL)) {
+          GST_WARNING ("could not update VA image with subtitle data");
+          g_object_unref (subtitle_image);
+          return FALSE;
+        }
 
         gst_video_overlay_rectangle_get_render_rectangle (rect,
                 (gint *)&sub_rect.x, (gint *)&sub_rect.y,
                 &sub_rect.width, &sub_rect.height);
-        subtitle_image = gst_vaapi_image_new (display,
-                GST_VAAPI_IMAGE_RGBA, sub_rect.width, sub_rect.height);
-
-        if (!gst_vaapi_image_update_from_buffer (subtitle_image, buf, &sub_rect)) {
-            GST_WARNING ("could not update VA image with subtitle data");
-            g_object_unref (subtitle_image);
-            return FALSE;
-        }
 
         subpicture = gst_vaapi_subpicture_new (subtitle_image);
         g_object_unref (subtitle_image);
