@@ -853,6 +853,7 @@ gst_vaapi_surface_update_composition(
 
         if (!gst_vaapi_image_update_from_buffer (subtitle_image, buf, &sub_rect)) {
             GST_WARNING ("could not update VA image with subtitle data");
+            g_object_unref (subtitle_image);
             return FALSE;
         }
 
