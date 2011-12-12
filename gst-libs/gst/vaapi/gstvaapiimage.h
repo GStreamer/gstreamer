@@ -80,6 +80,7 @@ G_BEGIN_DECLS
 typedef struct _GstVaapiImage                   GstVaapiImage;
 typedef struct _GstVaapiImagePrivate            GstVaapiImagePrivate;
 typedef struct _GstVaapiImageClass              GstVaapiImageClass;
+typedef struct _GstVaapiImageRaw                GstVaapiImageRaw;
 
 /**
  * GstVaapiImage:
@@ -101,6 +102,21 @@ struct _GstVaapiImage {
 struct _GstVaapiImageClass {
     /*< private >*/
     GstVaapiObjectClass parent_class;
+};
+
+/**
+ * GstVaapiImageRaw:
+ *
+ * A raw image wrapper. The caller is responsible for initializing all
+ * the fields with sensible values.
+ */
+struct _GstVaapiImageRaw {
+    GstVaapiImageFormat format;
+    guint               width;
+    guint               height;
+    guint               num_planes;
+    guchar             *pixels[3];
+    guint               stride[3];
 };
 
 GType
@@ -160,7 +176,11 @@ guint
 gst_vaapi_image_get_data_size(GstVaapiImage *image);
 
 gboolean
-gst_vaapi_image_update_from_buffer(GstVaapiImage *image, GstBuffer *buffer);
+gst_vaapi_image_update_from_buffer(
+    GstVaapiImage     *image,
+    GstBuffer         *buffer,
+    GstVaapiRectangle *rect
+);
 
 G_END_DECLS
 

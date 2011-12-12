@@ -425,7 +425,7 @@ gst_vaapiconvert_transform(
     if (!image)
         return GST_FLOW_UNEXPECTED;
 
-    gst_vaapi_image_update_from_buffer(image, inbuf);
+    gst_vaapi_image_update_from_buffer(image, inbuf, NULL);
     success = gst_vaapi_surface_put_image(surface, image);
     gst_vaapi_video_pool_put_object(convert->images, image);
     if (!success)

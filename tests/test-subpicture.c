@@ -194,7 +194,7 @@ main(int argc, char *argv[])
     subtitle_image = gst_vaapi_image_new (display,
       GST_VAAPI_IMAGE_RGBA, subinfo.width, subinfo.height);
 
-    if (!gst_vaapi_image_update_from_buffer (subtitle_image, buffer))
+    if (!gst_vaapi_image_update_from_buffer (subtitle_image, buffer, NULL))
         g_error ("could not update VA image with subtitle data");
 
     subpicture = gst_vaapi_subpicture_new (subtitle_image);
