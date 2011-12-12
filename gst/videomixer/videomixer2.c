@@ -93,6 +93,8 @@
 
 #include <gst/controller/gstcontroller.h>
 
+#include "gst/glib-compat-private.h"
+
 #ifdef DISABLE_ORC
 #define orc_memset memset
 #else

@@ -78,6 +78,8 @@
 
 #include "audiocheblimit.h"
 
+#include "gst/glib-compat-private.h"
+
 #define GST_CAT_DEFAULT gst_audio_cheb_limit_debug
 GST_DEBUG_CATEGORY_STATIC (GST_CAT_DEFAULT);
 

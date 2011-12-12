@@ -89,6 +89,8 @@
 #include "videomixer.h"
 #include "videomixer2.h"
 
+#include "gst/glib-compat-private.h"
+
 #ifdef DISABLE_ORC
 #define orc_memset memset
 #else

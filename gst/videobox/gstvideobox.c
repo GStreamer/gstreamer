@@ -66,6 +66,8 @@
 
 #include <gst/controller/gstcontroller.h>
 
+#include "gst/glib-compat-private.h"
+
 GST_DEBUG_CATEGORY_STATIC (videobox_debug);
 #define GST_CAT_DEFAULT videobox_debug
 

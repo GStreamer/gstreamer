@@ -42,6 +42,8 @@
 #include <gst/base/gstbasesink.h>
 #include "gstsouphttpclientsink.h"
 
+#include <gst/glib-compat-private.h>
+
 GST_DEBUG_CATEGORY_STATIC (souphttpclientsink_dbg);
 #define GST_CAT_DEFAULT souphttpclientsink_dbg
 

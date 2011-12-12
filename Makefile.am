@@ -38,6 +38,7 @@ DISTCLEANFILES = _stdint.h
 noinst_HEADERS = \
 	gst-libs/gst/gettext.h \
 	gst-libs/gst/gst-i18n-plugin.h
+	gst-libs/gst/glib-compat-private.h
 
 ACLOCAL_AMFLAGS = -I m4 -I common/m4
 

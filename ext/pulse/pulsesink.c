@@ -58,6 +58,8 @@
 
 #include <gst/pbutils/pbutils.h>        /* only used for GST_PLUGINS_BASE_VERSION_* */
 
+#include <gst/glib-compat-private.h>
+
 #include "pulsesink.h"
 #include "pulseutil.h"
 

@@ -53,6 +53,7 @@
 
 #include <gst/pbutils/pbutils.h>
 #include <gst/gst-i18n-plugin.h>
+#include <gst/glib-compat-private.h>
 
 #include <gst/audio/gstaudioiec61937.h>
 #include "pulsesink.h"
