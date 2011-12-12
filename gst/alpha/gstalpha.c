@@ -161,6 +161,8 @@ static GstStaticCaps gst_alpha_alpha_caps =
     ";" GST_VIDEO_CAPS_ARGB ";" GST_VIDEO_CAPS_BGRA ";" GST_VIDEO_CAPS_ABGR ";"
     GST_VIDEO_CAPS_RGBA);
 
+/* FIXME: why do we need our own lock for this? */
+#if !GLIB_CHECK_VERSION (2, 31, 0)
 #define GST_ALPHA_LOCK(alpha) G_STMT_START { \
   GST_LOG_OBJECT (alpha, "Locking alpha from thread %p", g_thread_self ()); \
   g_static_mutex_lock (&alpha->lock); \
@@ -171,6 +173,18 @@ static GstStaticCaps gst_alpha_alpha_caps =
   GST_LOG_OBJECT (alpha, "Unlocking alpha from thread %p", g_thread_self ()); \
   g_static_mutex_unlock (&alpha->lock); \
 } G_STMT_END
+#else
+#define GST_ALPHA_LOCK(alpha) G_STMT_START { \
+  GST_LOG_OBJECT (alpha, "Locking alpha from thread %p", g_thread_self ()); \
+  g_mutex_lock (&alpha->lock); \
+  GST_LOG_OBJECT (alpha, "Locked alpha from thread %p", g_thread_self ()); \
+} G_STMT_END
+
+#define GST_ALPHA_UNLOCK(alpha) G_STMT_START { \
+  GST_LOG_OBJECT (alpha, "Unlocking alpha from thread %p", g_thread_self ()); \
+  g_mutex_unlock (&alpha->lock); \
+} G_STMT_END
+#endif
 
 static gboolean gst_alpha_start (GstBaseTransform * trans);
 static gboolean gst_alpha_get_unit_size (GstBaseTransform * btrans,
@@ -312,7 +326,11 @@ gst_alpha_init (GstAlpha * alpha, GstAlphaClass * klass)
   alpha->black_sensitivity = DEFAULT_BLACK_SENSITIVITY;
   alpha->white_sensitivity = DEFAULT_WHITE_SENSITIVITY;
 
+#if !GLIB_CHECK_VERSION (2, 31, 0)
   g_static_mutex_init (&alpha->lock);
+#else
+  g_mutex_init (&alpha->lock);
+#endif
 }
 
 static void
@@ -320,7 +338,11 @@ gst_alpha_finalize (GObject * object)
 {
   GstAlpha *alpha = GST_ALPHA (object);
 
+#if !GLIB_CHECK_VERSION (2, 31, 0)
   g_static_mutex_free (&alpha->lock);
+#else
+  g_mutex_clear (&alpha->lock);
+#endif
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
