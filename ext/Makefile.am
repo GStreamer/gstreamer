@@ -349,9 +349,9 @@ SWFDEC_DIR=
 endif
 
 if USE_TELETEXTDEC
-TELETEXT_DIR=teletextdec
+TELETEXTDEC_DIR=teletextdec
 else
-TELETEXT_DIR=
+TELETEXTDEC_DIR=
 endif
 
 if USE_VP8
