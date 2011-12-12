@@ -3273,8 +3273,9 @@ gst_qt_mux_sink_event (GstPad * pad, GstEvent * event)
       GST_OBJECT_LOCK (qtmux);
       mode = gst_tag_setter_get_tag_merge_mode (setter);
 
-      GST_DEBUG_OBJECT (qtmux, "received tag event");
       gst_event_parse_tag (event, &list);
+      GST_DEBUG_OBJECT (qtmux, "received tag event on pad %s:%s : %"
+          GST_PTR_FORMAT, GST_DEBUG_PAD_NAME (pad), list);
 
       gst_tag_setter_merge_tags (setter, list, mode);
       GST_OBJECT_UNLOCK (qtmux);
