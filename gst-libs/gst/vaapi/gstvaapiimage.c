@@ -1175,3 +1175,40 @@ gst_vaapi_image_update_from_buffer(
 
     return success;
 }
+
+/**
+ * gst_vaapi_image_update_from_raw:
+ * @image: a #GstVaapiImage
+ * @src_image: a #GstVaapiImageRaw
+ * @buffer: a #GstBuffer
+ * @rect: a #GstVaapiRectangle expressing a region, or %NULL for the
+ *   whole image
+ *
+ * Transfers pixels data contained in the #GstVaapiImageRaw into the
+ * @image. Both image structures shall have the same format.
+ *
+ * Return value: %TRUE on success
+ */
+gboolean
+gst_vaapi_image_update_from_raw(
+    GstVaapiImage     *image,
+    GstVaapiImageRaw  *src_image,
+    GstVaapiRectangle *rect
+)
+{
+    GstVaapiImageRaw dst_image;
+    gboolean success;
+
+    g_return_val_if_fail(GST_VAAPI_IS_IMAGE(image), FALSE);
+    g_return_val_if_fail(image->priv->is_constructed, FALSE);
+
+    if (!_gst_vaapi_image_map(image, &dst_image))
+        return FALSE;
+
+    success = copy_image(&dst_image, src_image, rect);
+
+    if (!_gst_vaapi_image_unmap(image))
+        return FALSE;
+
+    return success;
+}
