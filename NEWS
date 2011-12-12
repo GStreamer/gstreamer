@@ -1,6 +1,11 @@
-gst-vaapi NEWS -- summary of changes.  2011-12-09
+gst-vaapi NEWS -- summary of changes.  2011-12-DD
 Copyright (C) 2010-2011 Splitted-Desktop Systems
 Copyright (C) 2011 Intel Corporation
+
+Version 0.3.1 - DD.Dec.2011
+* Fix check for supported VA images
+* Add support for new subtitle/overlay infrastructure (Thibault Saunier)
+* Add missing video context queries in vaapisink/vaapiconvert (Nicolas Dufresne)
 
 Version 0.3.0 - 09.Dec.2011
 * Group all plugins into the same bundle
