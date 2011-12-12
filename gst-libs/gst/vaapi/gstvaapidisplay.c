@@ -893,7 +893,14 @@ gst_vaapi_display_has_image_format(
     g_return_val_if_fail(GST_VAAPI_IS_DISPLAY(display), FALSE);
     g_return_val_if_fail(format, FALSE);
 
-    return find_format(display->priv->image_formats, format);
+    if (find_format(display->priv->image_formats, format))
+        return TRUE;
+
+    /* XXX: try subpicture formats since some drivers could report a
+     * set of VA image formats that is not a superset of the set of VA
+     * subpicture formats
+     */
+    return find_format(display->priv->subpicture_formats, format);
 }
 
 /**
