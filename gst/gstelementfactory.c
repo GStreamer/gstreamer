@@ -334,7 +334,7 @@ detailserror:
  * It will be given the name supplied, since all elements require a name as
  * their first argument.
  *
- * Returns: (transfer full): new #GstElement or NULL if the element couldn't
+ * Returns: (transfer floating): new #GstElement or NULL if the element couldn't
  *     be created
  */
 GstElement *
@@ -421,7 +421,7 @@ no_element:
  * consisting of the element factory name and a number.
  * If name is given, it will be given the name supplied.
  *
- * Returns: (transfer full): new #GstElement or NULL if unable to create element
+ * Returns: (transfer floating): new #GstElement or NULL if unable to create element
  */
 GstElement *
 gst_element_factory_make (const gchar * factoryname, const gchar * name)
