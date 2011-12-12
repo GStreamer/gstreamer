@@ -23,7 +23,10 @@
 
 #include <gst/gst.h>
 #include <gst/tag/tag.h>
+#include <gst/audio/gstaudiodecoder.h>
+
 #include <mad.h>
+#include <id3tag.h>
 
 G_BEGIN_DECLS
 
@@ -44,70 +47,34 @@ typedef struct _GstMadClass GstMadClass;
 
 struct _GstMad
 {
-  GstElement element;
-
-  /* pads */
-  GstPad *sinkpad, *srcpad;
+  GstAudioDecoder element;
 
   /* state */
   struct mad_stream stream;
   struct mad_frame frame;
   struct mad_synth synth;
-  guchar *tempbuffer;           /* temporary buffer to serve to mad */
-  glong tempsize;               /* running count of temp buffer size */
-  GstClockTime last_ts;
-  guint64 base_byte_offset;
-  guint64 bytes_consumed;       /* since the base_byte_offset */
-  guint64 total_samples;        /* the number of samples since the sync point */
-
-  gboolean in_error;            /* set when mad's in an error state */
-  gboolean restart;
-  gboolean discont;
-  guint64 segment_start;
-  GstSegment segment;
-  gboolean need_newsegment;
 
   /* info */
   struct mad_header header;
-  gboolean new_header;
-  guint framecount;
-  gint vbr_average;             /* average bitrate */
-  guint64 vbr_rate;             /* average * framecount */
-
-  gboolean half;
-  gboolean ignore_crc;
-
-  GstTagList *tags;
 
   /* negotiated format */
   gint rate, pending_rate;
   gint channels, pending_channels;
   gint times_pending;
-
   gboolean caps_set;            /* used to keep track of whether to change/update caps */
-  GstIndex *index;
-  gint index_id;
 
-  gboolean check_for_xing;
-  gboolean xing_found;
-
-  gboolean framed;              /* whether there is a demuxer in front of us */
-
-  GList *pending_events;
-
-  /* reverse playback */
-  GList *decode;
-  GList *gather;
-  GList *queued;
-  gboolean process;
+  /* properties */
+  gboolean half;
+  gboolean ignore_crc;
 };
 
 struct _GstMadClass
 {
-  GstElementClass parent_class;
+  GstAudioDecoderClass parent_class;
 };
 
 GType                   gst_mad_get_type (void);
+gboolean                gst_mad_register (GstPlugin * plugin);
 
 G_END_DECLS
 
