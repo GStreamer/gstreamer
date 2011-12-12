@@ -542,8 +542,13 @@ gst_oss4_mixer_start_watch_task (GstOss4Mixer * mixer)
   mixer->watch_cond = g_cond_new ();
   mixer->watch_shutdown = FALSE;
 
+#if !GLIB_CHECK_VERSION (2, 31, 0)
   mixer->watch_thread = g_thread_create (gst_oss4_mixer_watch_thread,
       gst_object_ref (mixer), TRUE, &err);
+#else
+  mixer->watch_thread = g_thread_try_new ("oss4-mixer-thread",
+      gst_oss4_mixer_watch_thread, gst_object_ref (mixer), &err);
+#endif
 
   if (mixer->watch_thread == NULL) {
     GST_ERROR_OBJECT (mixer, "Could not create watch thread: %s", err->message);
