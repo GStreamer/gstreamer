@@ -542,25 +542,6 @@ gst_vaapiconvert_ensure_surface_pool(GstVaapiConvert *convert, GstCaps *caps)
     return TRUE;
 }
 
-static GstVaapiImageFormat
-gst_video_format_to_vaapi_image_format(GstVideoFormat vformat)
-{
-    GstVaapiImageFormat vaformat;
-
-    switch (vformat) {
-    case GST_VIDEO_FORMAT_NV12: vaformat = GST_VAAPI_IMAGE_NV12; break;
-    case GST_VIDEO_FORMAT_YV12: vaformat = GST_VAAPI_IMAGE_YV12; break;
-    case GST_VIDEO_FORMAT_I420: vaformat = GST_VAAPI_IMAGE_I420; break;
-    case GST_VIDEO_FORMAT_AYUV: vaformat = GST_VAAPI_IMAGE_AYUV; break;
-    case GST_VIDEO_FORMAT_ARGB: vaformat = GST_VAAPI_IMAGE_ARGB; break;
-    case GST_VIDEO_FORMAT_RGBA: vaformat = GST_VAAPI_IMAGE_RGBA; break;
-    case GST_VIDEO_FORMAT_ABGR: vaformat = GST_VAAPI_IMAGE_ABGR; break;
-    case GST_VIDEO_FORMAT_BGRA: vaformat = GST_VAAPI_IMAGE_BGRA; break;
-    default:                    vaformat = (GstVaapiImageFormat)0; break;
-    }
-    return vaformat;
-}
-
 static void
 gst_vaapiconvert_ensure_direct_rendering_caps(
     GstVaapiConvert *convert,
@@ -592,7 +573,7 @@ gst_vaapiconvert_ensure_direct_rendering_caps(
         return;
     if (!gst_video_format_is_yuv(vformat))
         return;
-    vaformat = gst_video_format_to_vaapi_image_format(vformat);
+    vaformat = gst_vaapi_image_format_from_video(vformat);
     if (!vaformat)
         return;
 

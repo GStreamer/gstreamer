@@ -143,6 +143,7 @@ libgstvaapi_@GST_MAJORMINOR@_la_CFLAGS =	\
 	-I$(top_srcdir)/gst-libs		\
 	$(GST_BASE_CFLAGS)			\
 	$(GST_BASEVIDEO_CFLAGS)			\
+	$(GST_VIDEO_CFLAGS)			\
 	$(GST_CFLAGS)				\
 	$(LIBAVCODEC_CFLAGS)			\
 	$(LIBVA_CFLAGS)				\

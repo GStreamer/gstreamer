@@ -23,6 +23,7 @@
 #define GST_VAAPI_IMAGE_FORMAT_H
 
 #include <gst/gstvalue.h>
+#include <gst/video/video.h>
 
 G_BEGIN_DECLS
 
@@ -74,6 +75,9 @@ gst_vaapi_image_format_from_caps(GstCaps *caps);
 
 GstVaapiImageFormat
 gst_vaapi_image_format_from_fourcc(guint32 fourcc);
+
+GstVaapiImageFormat
+gst_vaapi_image_format_from_video(GstVideoFormat format);
 
 const VAImageFormat *
 gst_vaapi_image_format_get_va_format(GstVaapiImageFormat format);

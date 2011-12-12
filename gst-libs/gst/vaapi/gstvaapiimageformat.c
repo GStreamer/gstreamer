@@ -234,6 +234,35 @@ gst_vaapi_image_format_from_fourcc(guint32 fourcc)
 }
 
 /**
+ * gst_vaapi_image_format_from_video:
+ * @format: a #GstVideoFormat
+ *
+ * Converts a #GstVideoFormat into the corresponding
+ * #GstVaapiImageFormat.  If the image format cannot be represented by
+ * #GstVaapiImageFormat, then zero is returned.
+ *
+ * Return value: the #GstVaapiImageFormat describing the video format
+ */
+GstVaapiImageFormat
+gst_vaapi_image_format_from_video(GstVideoFormat format)
+{
+    GstVaapiImageFormat va_format;
+
+    switch (format) {
+    case GST_VIDEO_FORMAT_NV12: va_format = GST_VAAPI_IMAGE_NV12;   break;
+    case GST_VIDEO_FORMAT_YV12: va_format = GST_VAAPI_IMAGE_YV12;   break;
+    case GST_VIDEO_FORMAT_I420: va_format = GST_VAAPI_IMAGE_I420;   break;
+    case GST_VIDEO_FORMAT_AYUV: va_format = GST_VAAPI_IMAGE_AYUV;   break;
+    case GST_VIDEO_FORMAT_ARGB: va_format = GST_VAAPI_IMAGE_ARGB;   break;
+    case GST_VIDEO_FORMAT_RGBA: va_format = GST_VAAPI_IMAGE_RGBA;   break;
+    case GST_VIDEO_FORMAT_ABGR: va_format = GST_VAAPI_IMAGE_ABGR;   break;
+    case GST_VIDEO_FORMAT_BGRA: va_format = GST_VAAPI_IMAGE_BGRA;   break;
+    default:                    va_format = (GstVaapiImageFormat)0; break;
+    }
+    return va_format;
+}
+
+/**
  * gst_vaapi_image_format_get_va_format:
  * @format: a #GstVaapiImageFormat
  *
