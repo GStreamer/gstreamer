@@ -256,7 +256,7 @@ gst_vaapi_subpicture_get_image(GstVaapiSubpicture *subpicture)
  * @image: a #GstVaapiImage
  *
  * Binds a new #GstVaapiImage to the @subpicture. The reference to the
- * previous image is released a new one acquired on @image.
+ * previous image is released and a new one is acquired on @image.
  */
 void
 gst_vaapi_subpicture_set_image(
