@@ -491,7 +491,13 @@ main (int argc, char *argv[])
   gst_element_set_state (GST_ELEMENT (pipeline), GST_STATE_PLAYING);
   loop = g_main_loop_new (NULL, FALSE);
 
-  if (!(input_thread = g_thread_create (read_user, source, TRUE, NULL))) {
+#if !GLIB_CHECK_VERSION (2, 31, 0)
+  input_thread = g_thread_create (read_user, source, TRUE, NULL);
+#else
+  input_thread = g_thread_try_new ("v4l2src-test", read_user, source, NULL);
+#endif
+
+  if (input_thread == NULL) {
     fprintf (stderr, "error: g_thread_create return NULL");
     return -1;
   }
