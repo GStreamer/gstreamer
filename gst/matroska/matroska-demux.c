@@ -1373,10 +1373,12 @@ gst_matroska_demux_query (GstMatroskaDemux * demux, GstPad * pad,
         GST_OBJECT_LOCK (demux);
         if (context)
           gst_query_set_position (query, GST_FORMAT_TIME,
-              context->pos - demux->stream_start_time);
+              MAX (context->pos, demux->stream_start_time) -
+              demux->stream_start_time);
         else
           gst_query_set_position (query, GST_FORMAT_TIME,
-              demux->common.segment.last_stop - demux->stream_start_time);
+              MAX (demux->common.segment.last_stop, demux->stream_start_time) -
+              demux->stream_start_time);
         GST_OBJECT_UNLOCK (demux);
       } else if (format == GST_FORMAT_DEFAULT && context
           && context->default_duration) {
@@ -1745,8 +1747,11 @@ gst_matroska_demux_search_pos (GstMatroskaDemux * demux, GstClockTime time)
   otime = demux->common.segment.last_stop;
   GST_OBJECT_UNLOCK (demux);
 
+  /* sanitize */
+  time = MAX (time, demux->stream_start_time);
+
   /* avoid division by zero in first estimation below */
-  if (otime == 0)
+  if (otime <= demux->stream_start_time)
     otime = time;
 
 retry:
@@ -2015,9 +2020,9 @@ next:
   if (keyunit) {
     GST_DEBUG_OBJECT (demux, "seek to key unit, adjusting segment start to %"
         GST_TIME_FORMAT, GST_TIME_ARGS (entry->time));
-    seeksegment.start = entry->time;
-    seeksegment.last_stop = entry->time;
-    seeksegment.time = entry->time - demux->stream_start_time;
+    seeksegment.start = MAX (entry->time, demux->stream_start_time);
+    seeksegment.last_stop = seeksegment.start;
+    seeksegment.time = seeksegment.start - demux->stream_start_time;
   }
 
 exit:
@@ -3287,6 +3292,8 @@ gst_matroska_demux_parse_blockgroup_or_simpleblock (GstMatroskaDemux * demux,
 
     /* need to refresh segment info ASAP */
     if (GST_CLOCK_TIME_IS_VALID (lace_time) && demux->need_newsegment) {
+      guint64 clace_time;
+
       GST_DEBUG_OBJECT (demux,
           "generating segment starting at %" GST_TIME_FORMAT,
           GST_TIME_ARGS (lace_time));
@@ -3296,9 +3303,10 @@ gst_matroska_demux_parse_blockgroup_or_simpleblock (GstMatroskaDemux * demux,
             "Setting stream start time to %" GST_TIME_FORMAT,
             GST_TIME_ARGS (lace_time));
       }
+      clace_time = MAX (lace_time, demux->stream_start_time);
       gst_segment_set_newsegment (&demux->common.segment, FALSE,
-          demux->common.segment.rate, GST_FORMAT_TIME, lace_time,
-          GST_CLOCK_TIME_NONE, lace_time - demux->stream_start_time);
+          demux->common.segment.rate, GST_FORMAT_TIME, clace_time,
+          GST_CLOCK_TIME_NONE, clace_time - demux->stream_start_time);
       /* now convey our segment notion downstream */
       gst_matroska_demux_send_event (demux, gst_event_new_new_segment (FALSE,
               demux->common.segment.rate, demux->common.segment.format,
