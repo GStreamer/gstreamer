@@ -45,9 +45,21 @@ static void gst_base_video_codec_finalize (GObject * object);
 static GstStateChangeReturn gst_base_video_codec_change_state (GstElement *
     element, GstStateChange transition);
 
-G_DEFINE_BOXED_TYPE (GstVideoState, gst_video_frame,
-    (GBoxedCopyFunc) gst_video_frame_ref,
-    (GBoxedFreeFunc) gst_video_frame_unref);
+GType
+gst_video_frame_get_type (void)
+{
+  static volatile gsize type = 0;
+
+  if (g_once_init_enter (&type)) {
+    GType _type;
+
+    _type = g_boxed_type_register_static ("GstVideoFrame",
+        (GBoxedCopyFunc) gst_video_frame_ref,
+        (GBoxedFreeFunc) gst_video_frame_unref);
+    g_once_init_leave (&type, _type);
+  }
+  return (GType) type;
+}
 
 GST_BOILERPLATE (GstBaseVideoCodec, gst_base_video_codec, GstElement,
     GST_TYPE_ELEMENT);
