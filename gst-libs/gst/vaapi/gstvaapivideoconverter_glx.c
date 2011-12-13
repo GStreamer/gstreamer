@@ -56,7 +56,6 @@ static void
 gst_vaapi_video_converter_glx_class_init(GstVaapiVideoConverterGLXClass *klass)
 {
     GObjectClass *object_class = G_OBJECT_CLASS (klass);
-    GParamSpec *pspec;
 
     g_type_class_add_private (klass, sizeof (GstVaapiVideoConverterGLXPrivate));
     object_class->dispose = gst_vaapi_video_converter_glx_dispose;

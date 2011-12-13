@@ -517,7 +517,6 @@ gst_vaapidecode_class_init(GstVaapiDecodeClass *klass)
 static gboolean
 gst_vaapidecode_ensure_allowed_caps(GstVaapiDecode *decode)
 {
-    GstVaapiDisplay *display;
     GstCaps *decode_caps;
     guint i, n_decode_caps;
 

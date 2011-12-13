@@ -404,8 +404,6 @@ gst_vaapisink_ensure_window_xid(GstVaapiSink *sink, guintptr window_id)
 static gboolean
 gst_vaapisink_start(GstBaseSink *base_sink)
 {
-    GstVaapiSink * const sink = GST_VAAPISINK(base_sink);
-
     return TRUE;
 }
 

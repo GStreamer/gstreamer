@@ -79,12 +79,11 @@ x11_create_window(Display *dpy, guint w, guint h, Visual *vis, Colormap cmap)
     XSetWindowAttributes xswa;
     unsigned long xswa_mask;
     XWindowAttributes wattr;
-    unsigned long black_pixel, white_pixel;
+    unsigned long black_pixel;
 
     screen      = DefaultScreen(dpy);
     rootwin     = RootWindow(dpy, screen);
     black_pixel = BlackPixel(dpy, screen);
-    white_pixel = WhitePixel(dpy, screen);
 
     if (!vis)
         vis = DefaultVisual(dpy, screen);
