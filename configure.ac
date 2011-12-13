@@ -194,6 +194,25 @@ PKG_CHECK_MODULES([GST_VIDEO],
 AC_SUBST(GST_VIDEO_CFLAGS)
 AC_SUBST(GST_VIDEO_LIBS)
 
+AC_CACHE_CHECK([for GstVideoOverlayComposition],
+    ac_cv_have_gst_video_overlay_composition, [
+    saved_CFLAGS="$CFLAGS"
+    CFLAGS="$CFLAGS $GST_CFLAGS"
+    saved_LIBS="$LIBS"
+    LIBS="$LIBS $GST_LIBS"
+    AC_TRY_COMPILE(
+        [#include <gst/video/video-overlay-composition.h>],
+        [GstVideoOverlayComposition *c = gst_video_overlay_composition_new(0);],
+        [ac_cv_have_gst_video_overlay_composition="yes"],
+        [ac_cv_have_gst_video_overlay_composition="no"]
+    )
+    CFLAGS="$saved_CFLAGS"
+    LIBS="$saved_LIBS"
+])
+if test "$ac_cv_have_gst_video_overlay_composition" != "yes"; then
+    AC_MSG_ERROR([GstVideoOverlayComposition is not available])
+fi
+
 dnl Check for GStreamer basevideo
 PKG_CHECK_MODULES([GST_BASEVIDEO],
     [gstreamer-basevideo-$GST_MAJORMINOR >= $GST_PLUGINS_BAD_VERSION_REQUIRED]
