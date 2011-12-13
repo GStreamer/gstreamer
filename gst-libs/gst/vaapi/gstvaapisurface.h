@@ -230,7 +230,7 @@ gst_vaapi_surface_query_status(
 );
 
 gboolean
-gst_vaapi_surface_update_composition(
+gst_vaapi_surface_set_subpictures_from_composition(
     GstVaapiSurface *surface,
     GstVideoOverlayComposition *composition
 );

@@ -681,7 +681,7 @@ gst_vaapisink_show_frame(GstBaseSink *base_sink, GstBuffer *buffer)
 
     flags = GST_VAAPI_PICTURE_STRUCTURE_FRAME;
 
-    if (!gst_vaapi_surface_update_composition(surface, composition))
+    if (!gst_vaapi_surface_set_subpictures_from_composition(surface, composition))
         GST_WARNING("could not update subtitles");
 
 #if USE_VAAPISINK_GLX

@@ -136,7 +136,7 @@ gst_vaapi_video_converter_glx_upload (GstSurfaceConverter *converter,
                                                         GL_BGRA);
   }
 
-  if (!gst_vaapi_surface_update_composition (surface, composition))
+  if (!gst_vaapi_surface_set_subpictures_from_composition (surface, composition))
         GST_WARNING ("could not update subtitles");
 
   return gst_vaapi_texture_put_surface (priv->texture, surface,
