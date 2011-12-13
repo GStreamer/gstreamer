@@ -4432,13 +4432,17 @@ pause:
       /* Close the segment, i.e. update segment stop with the duration
        * if no stop was set */
       if (GST_CLOCK_TIME_IS_VALID (demux->last_stop_end) &&
-          !GST_CLOCK_TIME_IS_VALID (demux->common.segment.stop)) {
+          !GST_CLOCK_TIME_IS_VALID (demux->common.segment.stop) &&
+          GST_CLOCK_TIME_IS_VALID (demux->common.segment.start) &&
+          demux->last_stop_end > demux->common.segment.start) {
+        /* arrange to accumulate duration downstream, but avoid sending
+         * newsegment with decreasing start (w.r.t. sync newsegment events) */
         GstEvent *event =
             gst_event_new_new_segment_full (TRUE, demux->common.segment.rate,
             demux->common.segment.applied_rate, demux->common.segment.format,
-            demux->common.segment.start,
-            MAX (demux->last_stop_end, demux->common.segment.start),
-            demux->common.segment.time);
+            demux->last_stop_end, demux->last_stop_end,
+            demux->common.segment.time + (demux->last_stop_end -
+                demux->common.segment.start));
         gst_matroska_demux_send_event (demux, event);
       }
 
