@@ -1302,7 +1302,7 @@ gst_wavparse_stream_headers (GstWavParse * wav)
         break;
       }
       case GST_RIFF_WAVE_FORMAT_PCM:
-        if (wav->blockalign > wav->channels * (guint) ceil (wav->depth / 8.0))
+        if (wav->blockalign > wav->channels * ((wav->depth + 7) / 8))
           goto invalid_blockalign;
         /* fall through */
       default:
@@ -1686,7 +1686,7 @@ invalid_blockalign:
   {
     GST_ELEMENT_ERROR (wav, STREAM, FAILED, (NULL),
         ("Stream claims blockalign = %u, which is more than %u - invalid data",
-            wav->blockalign, wav->channels * (guint) ceil (wav->depth / 8.0)));
+            wav->blockalign, wav->channels * ((wav->depth + 7) / 8)));
     goto fail;
   }
 invalid_bps:
