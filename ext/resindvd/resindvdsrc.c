@@ -1036,6 +1036,7 @@ rsn_dvdsrc_step (resinDvdSrc * src, gboolean have_dvd_lock)
       break;
     case DVDNAV_CELL_CHANGE:{
       dvdnav_cell_change_event_t *event = (dvdnav_cell_change_event_t *) data;
+      GstMessage *message;
 
       src->pgc_duration = MPEGTIME_TO_GSTTIME (event->pgc_length);
       /* event->cell_start has the wrong time - it doesn't handle
@@ -1048,6 +1049,10 @@ rsn_dvdsrc_step (resinDvdSrc * src, gboolean have_dvd_lock)
           "CELL change dur now %" GST_TIME_FORMAT " position now %"
           GST_TIME_FORMAT, GST_TIME_ARGS (src->pgc_duration),
           GST_TIME_ARGS (src->cur_position));
+
+      message = gst_message_new_duration (GST_OBJECT (src), GST_FORMAT_TIME,
+          src->pgc_duration);
+      gst_element_post_message (GST_ELEMENT (src), message);
 
       rsn_dvdsrc_prepare_streamsinfo_event (src);
       src->need_tag_update = TRUE;
@@ -2485,6 +2490,9 @@ rsn_dvdsrc_src_query (GstBaseSrc * basesrc, GstQuery * query)
       if (format == GST_FORMAT_TIME) {
         if (src->pgc_duration != GST_CLOCK_TIME_NONE) {
           val = src->pgc_duration;
+
+          GST_DEBUG_OBJECT (src, "duration : %" GST_TIME_FORMAT,
+              GST_TIME_ARGS (val));
           gst_query_set_duration (query, format, val);
           res = TRUE;
         }
