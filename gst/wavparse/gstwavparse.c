@@ -599,7 +599,7 @@ gst_wavparse_fmt (GstWavParse * wav)
   gst_element_add_pad (GST_ELEMENT_CAST (wav), wav->srcpad);
   gst_element_no_more_pads (GST_ELEMENT_CAST (wav));
 
-  GST_DEBUG ("frequency %d, channels %d", wav->rate, wav->channels);
+  GST_DEBUG ("frequency %u, channels %u", wav->rate, wav->channels);
 
   return TRUE;
 
@@ -640,8 +640,8 @@ gst_wavparse_other (GstWavParse * wav)
     GST_WARNING_OBJECT (wav, "could not peek head");
     return FALSE;
   }
-  GST_DEBUG_OBJECT (wav, "got tag (%08x) %4.4s, length %d", tag,
-      (gchar *) & tag, length);
+  GST_DEBUG_OBJECT (wav, "got tag (%08x) %4.4s, length %u", tag,
+      (const gchar *) &tag, length);
 
   switch (tag) {
     case GST_RIFF_TAG_LIST:
@@ -1094,7 +1094,7 @@ gst_wavparse_peek_chunk_info (GstWavParse * wav, guint32 * tag, guint32 * size)
   *tag = GST_READ_UINT32_LE (data);
   *size = GST_READ_UINT32_LE (data + 4);
 
-  GST_DEBUG ("Next chunk size is %d bytes, type %" GST_FOURCC_FORMAT, *size,
+  GST_DEBUG ("Next chunk size is %u bytes, type %" GST_FOURCC_FORMAT, *size,
       GST_FOURCC_ARGS (*tag));
 
   return TRUE;
@@ -1124,7 +1124,7 @@ gst_wavparse_peek_chunk (GstWavParse * wav, guint32 * tag, guint32 * size)
    * so we throw poor man's exception, which can be caught if caller really
    * wants to handle 0 size chunk */
   if (!(*size) || (*size) >= (1 << 30)) {
-    GST_INFO ("Invalid/unexpected chunk size %d for tag %" GST_FOURCC_FORMAT,
+    GST_INFO ("Invalid/unexpected chunk size %u for tag %" GST_FOURCC_FORMAT,
         *size, GST_FOURCC_ARGS (*tag));
     /* chain should give up */
     wav->abort_buffering = TRUE;
@@ -1297,7 +1297,7 @@ gst_wavparse_stream_headers (GstWavParse * wav)
       {
         /* Note: workaround for mp2/mp3 embedded in wav, that relies on the
          * bitrate inside the mpeg stream */
-        GST_INFO ("resetting bps from %d to 0 for mp2/3", wav->av_bps);
+        GST_INFO ("resetting bps from %u to 0 for mp2/3", wav->av_bps);
         wav->bps = 0;
         break;
       }
@@ -1381,7 +1381,7 @@ gst_wavparse_stream_headers (GstWavParse * wav)
      */
     switch (tag) {
       case GST_RIFF_TAG_data:{
-        GST_DEBUG_OBJECT (wav, "Got 'data' TAG, size : %d", size);
+        GST_DEBUG_OBJECT (wav, "Got 'data' TAG, size : %u", size);
         if (wav->ignore_length) {
           GST_DEBUG_OBJECT (wav, "Ignoring length");
           size = 0;
@@ -1410,7 +1410,7 @@ gst_wavparse_stream_headers (GstWavParse * wav)
           /* We will continue parsing tags 'till end */
           wav->offset += size;
         }
-        GST_DEBUG_OBJECT (wav, "datasize = %d", size);
+        GST_DEBUG_OBJECT (wav, "datasize = %u", size);
         break;
       }
       case GST_RIFF_TAG_fact:{
@@ -1424,7 +1424,7 @@ gst_wavparse_stream_headers (GstWavParse * wav)
               /* need more data */
               goto exit;
             }
-            GST_DEBUG_OBJECT (wav, "need %d, available %d; ignoring chunk",
+            GST_DEBUG_OBJECT (wav, "need %u, available %u; ignoring chunk",
                 data_size, size);
             break;
           }
@@ -1469,7 +1469,7 @@ gst_wavparse_stream_headers (GstWavParse * wav)
             /* need more data */
             goto exit;
           }
-          GST_DEBUG_OBJECT (wav, "need %d, available %d; ignoring chunk",
+          GST_DEBUG_OBJECT (wav, "need %u, available %u; ignoring chunk",
               data_size, size);
           break;
         }
@@ -1597,7 +1597,7 @@ gst_wavparse_stream_headers (GstWavParse * wav)
     wav->bps =
         (guint32) gst_util_uint64_scale ((guint64) wav->rate, wav->datasize,
         (guint64) wav->fact);
-    GST_INFO_OBJECT (wav, "calculated bps : %d, enabling VBR", wav->bps);
+    GST_INFO_OBJECT (wav, "calculated bps : %u, enabling VBR", wav->bps);
 #endif
     wav->vbr = TRUE;
   }
@@ -1637,7 +1637,7 @@ gst_wavparse_stream_headers (GstWavParse * wav)
   if (wav->blockalign > 0)
     wav->max_buf_size -= (wav->max_buf_size % wav->blockalign);
 
-  GST_DEBUG_OBJECT (wav, "max buffer size %d", wav->max_buf_size);
+  GST_DEBUG_OBJECT (wav, "max buffer size %u", wav->max_buf_size);
 
   return GST_FLOW_OK;
 
@@ -1705,7 +1705,7 @@ no_bytes_per_sample:
 unknown_format:
   {
     GST_ELEMENT_ERROR (wav, STREAM, TYPE_NOT_FOUND, (NULL),
-        ("No caps found for format 0x%x, %d channels, %d Hz",
+        ("No caps found for format 0x%x, %u channels, %u Hz",
             wav->format, wav->channels, wav->rate));
     goto fail;
   }
@@ -1908,13 +1908,13 @@ iterate_adapter:
     if (G_UNLIKELY (extra)) {
       extra = wav->bytes_per_sample - extra;
       if (extra <= avail) {
-        GST_DEBUG_OBJECT (wav, "flushing %d bytes to sample boundary", extra);
+        GST_DEBUG_OBJECT (wav, "flushing %u bytes to sample boundary", extra);
         gst_adapter_flush (wav->adapter, extra);
         wav->offset += extra;
         wav->dataleft -= extra;
         goto iterate_adapter;
       } else {
-        GST_DEBUG_OBJECT (wav, "flushing %d bytes", avail);
+        GST_DEBUG_OBJECT (wav, "flushing %u bytes", avail);
         gst_adapter_clear (wav->adapter);
         wav->offset += avail;
         wav->dataleft -= avail;
@@ -1923,7 +1923,7 @@ iterate_adapter:
     }
 
     if (avail < desired) {
-      GST_LOG_OBJECT (wav, "Got only %d bytes of data from the sinkpad", avail);
+      GST_LOG_OBJECT (wav, "Got only %u bytes of data from the sinkpad", avail);
       return GST_FLOW_OK;
     }
 
