@@ -75,6 +75,7 @@ libgstvaapi_source_priv_h =			\
 	gstvaapidecoder_priv.h			\
 	gstvaapidisplay_priv.h			\
 	gstvaapiobject_priv.h			\
+	gstvaapisurface_priv.h			\
 	gstvaapiutils.h				\
 	gstvaapivideobuffer_priv.h		\
 	$(libgst_vaapi_ffmpeg_source_priv_h)	\

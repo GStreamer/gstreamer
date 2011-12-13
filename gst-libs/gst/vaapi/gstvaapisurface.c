@@ -28,6 +28,8 @@
 #include "gstvaapicompat.h"
 #include "gstvaapiutils.h"
 #include "gstvaapisurface.h"
+#include "gstvaapisurface_priv.h"
+#include "gstvaapicontext.h"
 #include "gstvaapiimage.h"
 #include "gstvaapi_priv.h"
 
@@ -46,6 +48,7 @@ struct _GstVaapiSurfacePrivate {
     guint               height;
     GstVaapiChromaType  chroma_type;
     GPtrArray          *subpictures;
+    GstVaapiContext    *parent_context;
 };
 
 enum {
@@ -53,7 +56,8 @@ enum {
 
     PROP_WIDTH,
     PROP_HEIGHT,
-    PROP_CHROMA_TYPE
+    PROP_CHROMA_TYPE,
+    PROP_PARENT_CONTEXT
 };
 
 static gboolean
@@ -100,6 +104,7 @@ gst_vaapi_surface_destroy(GstVaapiSurface *surface)
     GST_DEBUG("surface %" GST_VAAPI_ID_FORMAT, GST_VAAPI_ID_ARGS(surface_id));
 
     gst_vaapi_surface_destroy_subpictures(surface);
+    gst_vaapi_surface_set_parent_context(surface, NULL);
   
     if (surface_id != VA_INVALID_SURFACE) {
         GST_VAAPI_DISPLAY_LOCK(display);
@@ -185,6 +190,9 @@ gst_vaapi_surface_set_property(
     case PROP_CHROMA_TYPE:
         priv->chroma_type = g_value_get_uint(value);
         break;
+    case PROP_PARENT_CONTEXT:
+        gst_vaapi_surface_set_parent_context(surface, g_value_get_object(value));
+        break;
     default:
         G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, pspec);
         break;
@@ -210,6 +218,9 @@ gst_vaapi_surface_get_property(
         break;
     case PROP_CHROMA_TYPE:
         g_value_set_uint(value, gst_vaapi_surface_get_chroma_type(surface));
+        break;
+    case PROP_PARENT_CONTEXT:
+        g_value_set_object(value, gst_vaapi_surface_get_parent_context(surface));
         break;
     default:
         G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, pspec);
@@ -268,6 +279,15 @@ gst_vaapi_surface_class_init(GstVaapiSurfaceClass *klass)
                            "The chroma type of the surface",
                            0, G_MAXUINT32, 0,
                            G_PARAM_READWRITE|G_PARAM_CONSTRUCT_ONLY));
+
+    g_object_class_install_property
+        (object_class,
+         PROP_PARENT_CONTEXT,
+         g_param_spec_object("parent-context",
+                             "Parent Context",
+                             "The parent context, if any",
+                             GST_VAAPI_TYPE_CONTEXT,
+                             G_PARAM_READWRITE|G_PARAM_CONSTRUCT_ONLY));
 }
 
 static void
@@ -275,11 +295,12 @@ gst_vaapi_surface_init(GstVaapiSurface *surface)
 {
     GstVaapiSurfacePrivate *priv = GST_VAAPI_SURFACE_GET_PRIVATE(surface);
 
-    surface->priv       = priv;
-    priv->width         = 0;
-    priv->height        = 0;
-    priv->chroma_type   = 0;
-    priv->subpictures   = NULL;
+    surface->priv        = priv;
+    priv->width          = 0;
+    priv->height         = 0;
+    priv->chroma_type    = 0;
+    priv->subpictures    = NULL;
+    priv->parent_context = NULL;
 }
 
 /**
@@ -399,6 +420,54 @@ gst_vaapi_surface_get_size(
 
     if (pheight)
         *pheight = gst_vaapi_surface_get_height(surface);
+}
+
+/**
+ * gst_vaapi_surface_set_parent_context:
+ * @surface: a #GstVaapiSurface
+ * @context: a #GstVaapiContext
+ *
+ * Sets new parent context, or clears any parent context if @context
+ * is %NULL. This function owns an extra reference to the context,
+ * which will be released when the surface is destroyed.
+ */
+void
+gst_vaapi_surface_set_parent_context(
+    GstVaapiSurface *surface,
+    GstVaapiContext *context
+)
+{
+    GstVaapiSurfacePrivate *priv;
+
+    g_return_if_fail(GST_VAAPI_IS_SURFACE(surface));
+
+    priv = surface->priv;
+
+    if (priv->parent_context) {
+        g_object_unref(priv->parent_context);
+        priv->parent_context = NULL;
+    }
+
+    if (context)
+        priv->parent_context = g_object_ref(context);
+}
+
+/**
+ * gst_vaapi_surface_get_parent_context:
+ * @surface: a #GstVaapiSurface
+ *
+ * Retrieves the parent #GstVaapiContext, or %NULL if there is
+ * none. The surface shall still own a reference to the context.
+ * i.e. the caller shall not unreference the returned context object.
+ *
+ * Return value: the parent context, if any.
+ */
+GstVaapiContext *
+gst_vaapi_surface_get_parent_context(GstVaapiSurface *surface)
+{
+    g_return_val_if_fail(GST_VAAPI_IS_SURFACE(surface), NULL);
+
+    return surface->priv->parent_context;
 }
 
 /**

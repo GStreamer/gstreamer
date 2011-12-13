@@ -28,6 +28,8 @@
 #include <assert.h>
 #include "gstvaapicompat.h"
 #include "gstvaapicontext.h"
+#include "gstvaapisurface.h"
+#include "gstvaapisurface_priv.h"
 #include "gstvaapisurfacepool.h"
 #include "gstvaapiutils.h"
 #include "gstvaapi_priv.h"
@@ -66,7 +68,10 @@ enum {
 static void
 unref_surface_cb(gpointer data, gpointer user_data)
 {
-    g_object_unref(GST_VAAPI_SURFACE(data));
+    GstVaapiSurface * const surface = GST_VAAPI_SURFACE(data);
+
+    gst_vaapi_surface_set_parent_context(surface, NULL);
+    g_object_unref(surface);
 }
 
 static void
@@ -178,6 +183,7 @@ gst_vaapi_context_create_surfaces(GstVaapiContext *context)
         g_ptr_array_add(priv->surfaces, surface);
         if (!gst_vaapi_video_pool_add_object(priv->surfaces_pool, surface))
             return FALSE;
+        gst_vaapi_surface_set_parent_context(surface, context);
     }
     return TRUE;
 }
