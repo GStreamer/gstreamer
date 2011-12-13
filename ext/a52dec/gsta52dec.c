@@ -224,6 +224,7 @@ gst_a52dec_init (GstA52Dec * a52dec, GstA52DecClass * g_class)
   gst_element_add_pad (GST_ELEMENT (a52dec), a52dec->sinkpad);
 
   a52dec->srcpad = gst_pad_new_from_static_template (&src_factory, "src");
+  gst_pad_use_fixed_caps (a52dec->srcpad);
   gst_element_add_pad (GST_ELEMENT (a52dec), a52dec->srcpad);
 
   a52dec->request_channels = A52_CHANNEL;
