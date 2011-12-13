@@ -982,6 +982,21 @@ gst_matroska_read_common_parse_index_cuetrack (GstMatroskaReadCommon * common,
 
   DEBUG_ELEMENT_STOP (common, ebml, "CueTrackPositions", ret);
 
+  /* (e.g.) lavf typically creates entries without a block number,
+   * which is bogus and leads to contradictory information */
+  if (common->index->len) {
+    GstMatroskaIndex *last_idx;
+
+    last_idx = &g_array_index (common->index, GstMatroskaIndex,
+        common->index->len - 1);
+    if (last_idx->block == idx.block && last_idx->pos == idx.pos &&
+        last_idx->track == idx.track && idx.time > last_idx->time) {
+      GST_DEBUG_OBJECT (common, "Cue entry refers to same location, "
+          "but has different time than previous entry; discarding");
+      idx.track = 0;
+    }
+  }
+
   if ((ret == GST_FLOW_OK || ret == GST_FLOW_UNEXPECTED)
       && idx.pos != (guint64) - 1 && idx.track > 0) {
     g_array_append_val (common->index, idx);
