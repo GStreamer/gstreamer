@@ -681,18 +681,25 @@ out:
 }
 
 /* Must be called with subtitleoverlay lock! */
-static void
-gst_subtitle_overlay_set_fps (GstSubtitleOverlay * self)
+static gboolean
+_has_property_with_type (GObject * object, const gchar * property, GType type)
 {
   GObjectClass *gobject_class;
   GParamSpec *pspec;
 
+  gobject_class = G_OBJECT_GET_CLASS (object);
+  pspec = g_object_class_find_property (gobject_class, property);
+  return (pspec && pspec->value_type == type);
+}
+
+static void
+gst_subtitle_overlay_set_fps (GstSubtitleOverlay * self)
+{
   if (!self->parser || self->fps_d == 0)
     return;
 
-  gobject_class = G_OBJECT_GET_CLASS (self->parser);
-  pspec = g_object_class_find_property (gobject_class, "video-fps");
-  if (!pspec || pspec->value_type != GST_TYPE_FRACTION)
+  if (!_has_property_with_type (G_OBJECT (self->parser), "video-fps",
+          GST_TYPE_FRACTION))
     return;
 
   GST_DEBUG_OBJECT (self, "Updating video-fps property in parser");
@@ -709,41 +716,16 @@ _get_silent_property (GstElement * element, gboolean * invert)
   } properties[] = { {
   "silent", FALSE}, {
   "enable", TRUE}};
-  GObjectClass *gobject_class;
-  GParamSpec *pspec;
   guint i;
 
-  gobject_class = G_OBJECT_GET_CLASS (element);
-
   for (i = 0; i < G_N_ELEMENTS (properties); i++) {
-    pspec = g_object_class_find_property (gobject_class, properties[i].name);
-    if (pspec && pspec->value_type == G_TYPE_BOOLEAN) {
+    if (_has_property_with_type (G_OBJECT (element), properties[i].name,
+            G_TYPE_BOOLEAN)) {
       *invert = properties[i].invert;
       return properties[i].name;
     }
   }
   return NULL;
-}
-
-static gboolean
-_has_subtitle_encoding_property (GstElement * element)
-{
-  GParamSpec *pspec;
-
-  pspec =
-      g_object_class_find_property (G_OBJECT_GET_CLASS (element),
-      "subtitle-encoding");
-  return (pspec && pspec->value_type == G_TYPE_STRING);
-}
-
-static gboolean
-_has_font_desc_property (GstElement * element)
-{
-  GParamSpec *pspec;
-
-  pspec =
-      g_object_class_find_property (G_OBJECT_GET_CLASS (element), "font-desc");
-  return (pspec && pspec->value_type == G_TYPE_STRING);
 }
 
 static gboolean
@@ -780,7 +762,8 @@ _setup_parser (GstSubtitleOverlay * self)
     gst_object_unref (video_peer);
   }
 
-  if (_has_subtitle_encoding_property (self->parser))
+  if (_has_property_with_type (G_OBJECT (self->parser), "subtitle-encoding",
+          G_TYPE_STRING))
     g_object_set (self->parser, "subtitle-encoding", self->encoding, NULL);
 
   /* Try to set video fps on the parser */
@@ -808,9 +791,11 @@ _setup_renderer (GstSubtitleOverlay * self, GstElement * renderer)
   } else {
     self->silent_property =
         _get_silent_property (renderer, &self->silent_property_invert);
-    if (_has_subtitle_encoding_property (renderer))
+    if (_has_property_with_type (G_OBJECT (renderer), "subtitle-encoding",
+            G_TYPE_STRING))
       g_object_set (renderer, "subtitle-encoding", self->encoding, NULL);
-    if (_has_font_desc_property (renderer))
+    if (_has_property_with_type (G_OBJECT (renderer), "font-desc",
+            G_TYPE_STRING))
       g_object_set (renderer, "font-desc", self->font_desc, NULL);
   }
 
@@ -1572,9 +1557,13 @@ gst_subtitle_overlay_set_property (GObject * object, guint prop_id,
       GST_SUBTITLE_OVERLAY_LOCK (self);
       g_free (self->font_desc);
       self->font_desc = g_value_dup_string (value);
-      if (self->overlay)
+      if (self->overlay
+          && _has_property_with_type (G_OBJECT (self->overlay), "font-desc",
+              G_TYPE_STRING))
         g_object_set (self->overlay, "font-desc", self->font_desc, NULL);
-      else if (self->renderer && _has_font_desc_property (self->renderer))
+      else if (self->renderer
+          && _has_property_with_type (G_OBJECT (self->renderer), "font-desc",
+              G_TYPE_STRING))
         g_object_set (self->renderer, "font-desc", self->font_desc, NULL);
       GST_SUBTITLE_OVERLAY_UNLOCK (self);
       break;
@@ -1582,10 +1571,14 @@ gst_subtitle_overlay_set_property (GObject * object, guint prop_id,
       GST_SUBTITLE_OVERLAY_LOCK (self);
       g_free (self->encoding);
       self->encoding = g_value_dup_string (value);
-      if (self->renderer && _has_subtitle_encoding_property (self->renderer))
+      if (self->renderer
+          && _has_property_with_type (G_OBJECT (self->renderer),
+              "subtitle-encoding", G_TYPE_STRING))
         g_object_set (self->renderer, "subtitle-encoding", self->encoding,
             NULL);
-      if (self->parser && _has_subtitle_encoding_property (self->parser))
+      if (self->parser
+          && _has_property_with_type (G_OBJECT (self->parser),
+              "subtitle-encoding", G_TYPE_STRING))
         g_object_set (self->parser, "subtitle-encoding", self->encoding, NULL);
       GST_SUBTITLE_OVERLAY_UNLOCK (self);
       break;
