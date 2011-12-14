@@ -4,6 +4,7 @@ Copyright (C) 2011 Intel Corporation
 
 Version 0.3.1 - DD.Dec.2011
 * Fix check for supported VA images
+* Add support for partial VA image updates
 * Add support for new subtitle/overlay infrastructure (Thibault Saunier)
 * Add missing video context queries in vaapisink/vaapiconvert (Nicolas Dufresne)
 
