@@ -219,6 +219,68 @@ gst_vaapi_subpicture_new(GstVaapiImage *image)
 }
 
 /**
+ * gst_vaapi_subpicture_new_from_overlay_rectangle:
+ * @display: a #GstVaapiDisplay
+ * @rect: a #GstVideoOverlayRectangle
+ *
+ * Helper function that creates a new #GstVaapiSubpicture from a
+ * #GstVideoOverlayRectangle. A new #GstVaapiImage is also created
+ * along the way and attached to the resulting subpicture. The
+ * subpicture holds a unique reference to the underlying image.
+ *
+ * Return value: the newly allocated #GstVaapiSubpicture object
+ */
+GstVaapiSubpicture *
+gst_vaapi_subpicture_new_from_overlay_rectangle(
+    GstVaapiDisplay          *display,
+    GstVideoOverlayRectangle *rect
+)
+{
+    GstVaapiSubpicture *subpicture;
+    GstVaapiImageFormat format;
+    GstVaapiImage *image;
+    GstVaapiImageRaw raw_image;
+    GstBuffer *buffer;
+    guint width, height, stride;
+
+    g_return_val_if_fail(GST_IS_VIDEO_OVERLAY_RECTANGLE(rect), NULL);
+
+    buffer = gst_video_overlay_rectangle_get_pixels_unscaled_argb(
+        rect,
+        &width, &height, &stride,
+        GST_VIDEO_OVERLAY_FORMAT_FLAG_NONE
+    );
+    if (!buffer)
+        return NULL;
+
+    /* XXX: use gst_vaapi_image_format_from_video() */
+#if G_BYTE_ORDER == G_LITTLE_ENDIAN
+    format = GST_VAAPI_IMAGE_BGRA;
+#else
+    format = GST_VAAPI_IMAGE_ARGB;
+#endif
+    image = gst_vaapi_image_new(display, format, width, height);
+    if (!image)
+        return NULL;
+
+    raw_image.format     = format;
+    raw_image.width      = width;
+    raw_image.height     = height;
+    raw_image.num_planes = 1;
+    raw_image.pixels[0]  = GST_BUFFER_DATA(buffer);
+    raw_image.stride[0]  = stride;
+    if (!gst_vaapi_image_update_from_raw(image, &raw_image, NULL)) {
+        GST_WARNING("could not update VA image with subtitle data");
+        g_object_unref(image);
+        return NULL;
+    }
+
+    subpicture = gst_vaapi_subpicture_new(image);
+    g_object_unref(image);
+    return subpicture;
+}
+
+/**
  * gst_vaapi_subpicture_get_id:
  * @subpicture: a #GstVaapiSubpicture
  *

@@ -25,6 +25,7 @@
 #include <gst/vaapi/gstvaapiobject.h>
 #include <gst/vaapi/gstvaapidisplay.h>
 #include <gst/vaapi/gstvaapiimage.h>
+#include <gst/video/video-overlay-composition.h>
 
 G_BEGIN_DECLS
 
@@ -83,6 +84,12 @@ gst_vaapi_subpicture_get_type(void);
 
 GstVaapiSubpicture *
 gst_vaapi_subpicture_new(GstVaapiImage *image);
+
+GstVaapiSubpicture *
+gst_vaapi_subpicture_new_from_overlay_rectangle(
+    GstVaapiDisplay          *display,
+    GstVideoOverlayRectangle *rect
+);
 
 GstVaapiID
 gst_vaapi_subpicture_get_id(GstVaapiSubpicture *subpicture);
