@@ -904,6 +904,7 @@ gst_omx_video_enc_loop (GstOMXVideoEnc * self)
 
   } else {
     g_assert ((klass->hacks & GST_OMX_HACK_NO_EMPTY_EOS_BUFFER));
+    GST_BASE_VIDEO_CODEC_STREAM_LOCK (self);
     flow_ret = GST_FLOW_UNEXPECTED;
   }
 
