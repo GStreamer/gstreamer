@@ -235,8 +235,9 @@ gst_vaapi_surface_query_status(
 
 gboolean
 gst_vaapi_surface_set_subpictures_from_composition(
-    GstVaapiSurface *surface,
-    GstVideoOverlayComposition *composition
+    GstVaapiSurface            *surface,
+    GstVideoOverlayComposition *composition,
+    gboolean                    propagate_context
 );
 
 G_END_DECLS

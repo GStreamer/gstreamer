@@ -875,6 +875,8 @@ gst_vaapi_surface_query_status(
  * gst_vaapi_surface_set_subpictures_from_composition:
  * @surface: a #GstVaapiSurface
  * @compostion: a #GstVideoOverlayCompositon
+ * @propagate_context: a flag specifying whether to apply composition
+ *     to the parent context, if any
  *
  * Helper to update the subpictures from #GstVideoOverlayCompositon. Sending
  * a NULL composition will clear all the current subpictures. Note that this
@@ -884,14 +886,21 @@ gst_vaapi_surface_query_status(
  */
 gboolean
 gst_vaapi_surface_set_subpictures_from_composition(
-    GstVaapiSurface *surface,
-    GstVideoOverlayComposition *composition
+    GstVaapiSurface            *surface,
+    GstVideoOverlayComposition *composition,
+    gboolean                    propagate_context
 )
 {
     GstVaapiDisplay *display;
     guint n, nb_rectangles;
 
     g_return_val_if_fail(GST_VAAPI_IS_SURFACE(surface), FALSE);
+
+    if (propagate_context) {
+        GstVaapiContext * const context = surface->priv->parent_context;
+        if (context)
+            return gst_vaapi_context_apply_composition(context, composition);
+    }
 
     display = GST_VAAPI_OBJECT_DISPLAY(surface);
     if (!display)
