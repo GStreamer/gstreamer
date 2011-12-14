@@ -108,6 +108,9 @@ struct _GstVideoOverlayRectangle
   /* The format of the data in pixels */
   GstVideoFormat format;
 
+  /* The flags associated to this rectangle */
+  GstVideoOverlayFormatFlags flags;
+
   /* Refcounted blob of memory, no caps or timestamps */
   GstBuffer *pixels;
 
@@ -501,7 +504,7 @@ gst_video_overlay_composition_blend (GstVideoOverlayComposition * comp,
   }
 
   video_blend_format_info_init (&video_info, GST_BUFFER_DATA (video_buf),
-      h, w, fmt);
+      h, w, fmt, FALSE);
 
   num = comp->num_rectangles;
   GST_LOG ("Blending composition %p with %u rectangles onto video buffer %p "
@@ -518,7 +521,8 @@ gst_video_overlay_composition_blend (GstVideoOverlayComposition * comp,
 
     video_blend_format_info_init (&rectangle_info,
         GST_BUFFER_DATA (rect->pixels), rect->height, rect->width,
-        rect->format);
+        rect->format,
+        !!(rect->flags & GST_VIDEO_OVERLAY_FORMAT_FLAG_PREMULTIPLIED_ALPHA));
 
     needs_scaling = gst_video_overlay_rectangle_needs_scaling (rect);
     if (needs_scaling) {
@@ -706,6 +710,22 @@ gst_video_overlay_rectangle_instance_init (GstMiniObject * mini_obj)
 #endif
 }
 
+static inline gboolean
+gst_video_overlay_rectangle_check_flags (GstVideoOverlayFormatFlags flags)
+{
+  /* Check flags only contains flags we know about */
+  return (flags & ~(GST_VIDEO_OVERLAY_FORMAT_FLAG_PREMULTIPLIED_ALPHA)) == 0;
+}
+
+static gboolean
+gst_video_overlay_rectangle_is_same_alpha_type (GstVideoOverlayFormatFlags
+    flags1, GstVideoOverlayFormatFlags flags2)
+{
+  return ((flags1 ^ flags2) & GST_VIDEO_OVERLAY_FORMAT_FLAG_PREMULTIPLIED_ALPHA)
+      == 0;
+}
+
+
 /**
  * gst_video_overlay_rectangle_new_argb:
  * @pixels: (transfer none): a #GstBuffer pointing to the pixel memory
@@ -718,7 +738,7 @@ gst_video_overlay_rectangle_instance_init (GstMiniObject * mini_obj)
  *     overlay rectangle should be rendered to
  * @render_width: the render width of this rectangle on the video
  * @render_height: the render height of this rectangle on the video
- * @flags: flags (currently unused)
+ * @flags: flags
  *
  * Creates a new video overlay rectangle with ARGB pixel data. The layout
  * of the components in memory is B-G-R-A on little-endian platforms
@@ -726,9 +746,9 @@ gst_video_overlay_rectangle_instance_init (GstMiniObject * mini_obj)
  * platforms (corresponding to #GST_VIDEO_FORMAT_ARGB). In other words,
  * pixels are treated as 32-bit words and the lowest 8 bits then contain
  * the blue component value and the highest 8 bits contain the alpha
- * component value. The RGB values are non-premultiplied. This is the
- * format that is used by most hardware, and also many rendering libraries
- * such as Cairo, for example.
+ * component value. Unless specified in the flags, the RGB values are
+ * non-premultiplied. This is the format that is used by most hardware,
+ * and also many rendering libraries such as Cairo, for example.
  *
  * Returns: (transfer full): a new #GstVideoOverlayRectangle. Unref with
  *     gst_video_overlay_rectangle_unref() when no longer needed.
@@ -748,7 +768,7 @@ gst_video_overlay_rectangle_new_argb (GstBuffer * pixels,
   g_return_val_if_fail (stride >= (4 * width), NULL);
   g_return_val_if_fail (height > 0 && width > 0, NULL);
   g_return_val_if_fail (render_height > 0 && render_width > 0, NULL);
-  g_return_val_if_fail (flags == 0, NULL);
+  g_return_val_if_fail (gst_video_overlay_rectangle_check_flags (flags), NULL);
 
   rect = (GstVideoOverlayRectangle *)
       gst_mini_object_new (GST_TYPE_VIDEO_OVERLAY_RECTANGLE);
@@ -758,6 +778,7 @@ gst_video_overlay_rectangle_new_argb (GstBuffer * pixels,
 #else
   rect->format = GST_VIDEO_FORMAT_ARGB;
 #endif
+
   rect->pixels = gst_buffer_ref (pixels);
 
   rect->width = width;
@@ -769,11 +790,13 @@ gst_video_overlay_rectangle_new_argb (GstBuffer * pixels,
   rect->render_width = render_width;
   rect->render_height = render_height;
 
+  rect->flags = flags;
+
   rect->seq_num = gst_video_overlay_get_seqnum ();
 
   GST_LOG ("new rectangle %p: %ux%u => %ux%u @ %u,%u, seq_num %u, format %u, "
-      "pixels %p", rect, width, height, render_width, render_height, render_x,
-      render_y, rect->seq_num, rect->format, pixels);
+      "flags %x, pixels %p", rect, width, height, render_width, render_height,
+      render_x, render_y, rect->seq_num, rect->format, rect->flags, pixels);
 
   return rect;
 }
@@ -846,37 +869,61 @@ gst_video_overlay_rectangle_set_render_rectangle (GstVideoOverlayRectangle *
   rectangle->render_height = render_height;
 }
 
-/**
- * gst_video_overlay_rectangle_get_pixels_argb:
- * @rectangle: a #GstVideoOverlayRectangle
- * @stride: (out) (allow-none): address of guint variable where to store the
- *    row stride of the ARGB pixel data in the buffer
- * @flags: flags (unused)
- *
- * Returns: (transfer none): a #GstBuffer holding the ARGB pixel data with
- *    row stride @stride and width and height of the render dimensions as per
- *    gst_video_overlay_rectangle_get_render_rectangle(). This function does
- *    not return a reference, the caller should obtain a reference of her own
- *    with gst_buffer_ref() if needed.
- *
- * Since: 0.10.36
- */
-GstBuffer *
-gst_video_overlay_rectangle_get_pixels_argb (GstVideoOverlayRectangle *
-    rectangle, guint * stride, GstVideoOverlayFormatFlags flags)
+static void
+gst_video_overlay_rectangle_premultiply (GstBlendVideoFormatInfo * info)
+{
+  int i, j;
+  for (j = 0; j < info->height; ++j) {
+    guint8 *line = info->pixels + info->stride[0] * j;
+    for (i = 0; i < info->width; ++i) {
+      int a = line[0];
+      line[1] = line[1] * a / 255;
+      line[2] = line[2] * a / 255;
+      line[3] = line[3] * a / 255;
+      line += 4;
+    }
+  }
+}
+
+static void
+gst_video_overlay_rectangle_unpremultiply (GstBlendVideoFormatInfo * info)
+{
+  int i, j;
+  for (j = 0; j < info->height; ++j) {
+    guint8 *line = info->pixels + info->stride[0] * j;
+    for (i = 0; i < info->width; ++i) {
+      int a = line[0];
+      if (a) {
+        line[1] = MIN ((line[1] * 255 + a / 2) / a, 255);
+        line[2] = MIN ((line[2] * 255 + a / 2) / a, 255);
+        line[3] = MIN ((line[3] * 255 + a / 2) / a, 255);
+      }
+      line += 4;
+    }
+  }
+}
+
+static GstBuffer *
+gst_video_overlay_rectangle_get_pixels_argb_internal (GstVideoOverlayRectangle *
+    rectangle, guint * stride, GstVideoOverlayFormatFlags flags,
+    gboolean unscaled)
 {
   GstVideoOverlayRectangle *scaled_rect = NULL;
   GstBlendVideoFormatInfo info;
   GstBuffer *buf;
   GList *l;
+  guint wanted_width = unscaled ? rectangle->width : rectangle->render_width;
+  guint wanted_height = unscaled ? rectangle->height : rectangle->render_height;
 
   g_return_val_if_fail (GST_IS_VIDEO_OVERLAY_RECTANGLE (rectangle), NULL);
-  g_return_val_if_fail (flags == 0, NULL);
   g_return_val_if_fail (stride != NULL, NULL);
+  g_return_val_if_fail (gst_video_overlay_rectangle_check_flags (flags), NULL);
 
   /* This assumes we don't need to adjust the format */
-  if (rectangle->render_width == rectangle->width &&
-      rectangle->render_height == rectangle->height) {
+  if (wanted_width == rectangle->width &&
+      wanted_height == rectangle->height &&
+      gst_video_overlay_rectangle_is_same_alpha_type (rectangle->flags,
+          flags)) {
     *stride = rectangle->stride;
     return rectangle->pixels;
   }
@@ -886,8 +933,10 @@ gst_video_overlay_rectangle_get_pixels_argb (GstVideoOverlayRectangle *
   for (l = rectangle->scaled_rectangles; l != NULL; l = l->next) {
     GstVideoOverlayRectangle *r = l->data;
 
-    if (r->width == rectangle->render_width &&
-        r->height == rectangle->render_height) {
+    if (r->width == wanted_width &&
+        r->height == wanted_height &&
+        gst_video_overlay_rectangle_is_same_alpha_type (rectangle->flags,
+            flags)) {
       /* we'll keep these rectangles around until finalize, so it's ok not
        * to take our own ref here */
       scaled_rect = r;
@@ -901,10 +950,20 @@ gst_video_overlay_rectangle_get_pixels_argb (GstVideoOverlayRectangle *
 
   /* not cached yet, do the scaling and put the result into our cache */
   video_blend_format_info_init (&info, GST_BUFFER_DATA (rectangle->pixels),
-      rectangle->height, rectangle->width, rectangle->format);
+      rectangle->height, rectangle->width, rectangle->format,
+      !!(rectangle->flags & GST_VIDEO_OVERLAY_FORMAT_FLAG_PREMULTIPLIED_ALPHA));
 
-  video_blend_scale_linear_RGBA (&info, rectangle->render_height,
-      rectangle->render_width);
+  if (wanted_width != rectangle->width || wanted_height != rectangle->height) {
+    video_blend_scale_linear_RGBA (&info, wanted_height, wanted_width);
+  }
+
+  if (!gst_video_overlay_rectangle_is_same_alpha_type (rectangle->flags, flags)) {
+    if (rectangle->flags & GST_VIDEO_OVERLAY_FORMAT_FLAG_PREMULTIPLIED_ALPHA) {
+      gst_video_overlay_rectangle_unpremultiply (&info);
+    } else {
+      gst_video_overlay_rectangle_premultiply (&info);
+    }
+  }
 
   buf = gst_buffer_new ();
   GST_BUFFER_DATA (buf) = info.pixels;
@@ -912,8 +971,8 @@ gst_video_overlay_rectangle_get_pixels_argb (GstVideoOverlayRectangle *
   GST_BUFFER_SIZE (buf) = info.size;
 
   scaled_rect = gst_video_overlay_rectangle_new_argb (buf,
-      rectangle->render_width, rectangle->render_height, info.stride[0],
-      0, 0, rectangle->render_width, rectangle->render_height, 0);
+      wanted_width, wanted_height, info.stride[0],
+      0, 0, wanted_width, wanted_height, rectangle->flags);
 
   gst_buffer_unref (buf);
 
@@ -929,6 +988,29 @@ done:
 }
 
 /**
+ * gst_video_overlay_rectangle_get_pixels_argb:
+ * @rectangle: a #GstVideoOverlayRectangle
+ * @stride: (out) (allow-none): address of guint variable where to store the
+ *    row stride of the ARGB pixel data in the buffer
+ * @flags: flags
+ *
+ * Returns: (transfer none): a #GstBuffer holding the ARGB pixel data with
+ *    row stride @stride and width and height of the render dimensions as per
+ *    gst_video_overlay_rectangle_get_render_rectangle(). This function does
+ *    not return a reference, the caller should obtain a reference of her own
+ *    with gst_buffer_ref() if needed.
+ *
+ * Since: 0.10.36
+ */
+GstBuffer *
+gst_video_overlay_rectangle_get_pixels_argb (GstVideoOverlayRectangle *
+    rectangle, guint * stride, GstVideoOverlayFormatFlags flags)
+{
+  return gst_video_overlay_rectangle_get_pixels_argb_internal (rectangle,
+      stride, flags, FALSE);
+}
+
+/**
  * gst_video_overlay_rectangle_get_pixels_unscaled_argb:
  * @rectangle: a #GstVideoOverlayRectangle
  * @width: (out): address where to store the width of the unscaled
@@ -937,7 +1019,7 @@ done:
  *    rectangle in pixels
  * @stride: (out): address of guint variable where to store the row
  *    stride of the ARGB pixel data in the buffer
- * @flags: flags for future use (unused)
+ * @flags: flags
  *
  * Retrieves the pixel data as it is. This is useful if the caller can
  * do the scaling itself when handling the overlaying. The rectangle will
@@ -959,13 +1041,34 @@ gst_video_overlay_rectangle_get_pixels_unscaled_argb (GstVideoOverlayRectangle *
   g_return_val_if_fail (width != NULL, NULL);
   g_return_val_if_fail (height != NULL, NULL);
   g_return_val_if_fail (stride != NULL, NULL);
-  g_return_val_if_fail (flags == 0, NULL);
 
   *width = rectangle->width;
   *height = rectangle->height;
-  *stride = rectangle->stride;
+  return gst_video_overlay_rectangle_get_pixels_argb_internal (rectangle,
+      stride, flags, TRUE);
+}
 
-  return rectangle->pixels;
+/**
+ * gst_video_overlay_rectangle_get_flags:
+ * @rectangle: a #GstVideoOverlayRectangle
+ *
+ * Retrieves the flags associated with a #GstVideoOverlayRectangle.
+ * This is useful if the caller can handle both premultiplied alpha and
+ * non premultiplied alpha, for example. By knowing whether the rectangle
+ * uses premultiplied or not, it can request the pixel data in the format
+ * it is stored in, to avoid unnecessary conversion.
+ *
+ * Returns: the #GstVideoOverlayFormatFlags associated with the rectangle.
+ *
+ * Since: 0.10.37
+ */
+GstVideoOverlayFormatFlags
+gst_video_overlay_rectangle_get_flags (GstVideoOverlayRectangle * rectangle)
+{
+  g_return_val_if_fail (GST_IS_VIDEO_OVERLAY_RECTANGLE (rectangle),
+      GST_VIDEO_OVERLAY_FORMAT_FLAG_NONE);
+
+  return rectangle->flags;
 }
 
 /**
@@ -992,7 +1095,7 @@ gst_video_overlay_rectangle_copy (GstVideoOverlayRectangle * rectangle)
   copy = gst_video_overlay_rectangle_new_argb (rectangle->pixels,
       rectangle->width, rectangle->height, rectangle->stride,
       rectangle->x, rectangle->y,
-      rectangle->render_width, rectangle->render_height, 0);
+      rectangle->render_width, rectangle->render_height, rectangle->flags);
 
   return copy;
 }

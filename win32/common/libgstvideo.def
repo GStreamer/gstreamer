@@ -52,6 +52,7 @@ EXPORTS
 	gst_video_overlay_rectangle_get_type
 	gst_video_overlay_rectangle_new_argb
 	gst_video_overlay_rectangle_set_render_rectangle
+	gst_video_overlay_rectangle_get_flags
 	gst_video_parse_caps_chroma_site
 	gst_video_parse_caps_color_matrix
 	gst_video_parse_caps_framerate
