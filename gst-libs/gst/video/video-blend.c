@@ -1193,9 +1193,9 @@ matrix_yuv_to_rgb (guint8 * tmpline, guint width)
     g = (298 * y - 55 * u - 136 * v + 19681) >> 8;
     b = (298 * y + 541 * u - 73988) >> 8;
 
-    tmpline[i * 4 + ARGB_R] = CLAMP (r, 0, 255);
-    tmpline[i * 4 + ARGB_G] = CLAMP (g, 0, 255);
-    tmpline[i * 4 + ARGB_B] = CLAMP (b, 0, 255);
+    tmpline[i * 4 + 1] = CLAMP (r, 0, 255);
+    tmpline[i * 4 + 2] = CLAMP (g, 0, 255);
+    tmpline[i * 4 + 3] = CLAMP (b, 0, 255);
   }
 }
 
