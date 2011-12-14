@@ -718,7 +718,7 @@ common_creation (GType objtype, GstCaps * format, const gchar * preset,
  * @description: (allow-none): The description of the container profile,
  *     can be %NULL
  * @format: The format to use for this profile
- * @preset: The preset to use for this profile
+ * @preset: (allow-none): The preset to use for this profile
  *
  * Creates a new #GstEncodingContainerProfile.
  *
@@ -740,8 +740,8 @@ gst_encoding_container_profile_new (const gchar * name,
 /**
  * gst_encoding_video_profile_new:
  * @format: the #GstCaps
- * @preset: the preset(s) to use on the encoder, can be #NULL
- * @restriction: the #GstCaps used to restrict the input to the encoder, can be
+ * @preset: (allow-none): the preset(s) to use on the encoder, can be #NULL
+ * @restriction: (allow-none) the #GstCaps used to restrict the input to the encoder, can be
  * NULL. See gst_encoding_profile_get_restriction() for more details.
  * @presence: the number of time this stream must be used. 0 means any number of
  *  times (including never)
@@ -773,8 +773,8 @@ gst_encoding_video_profile_new (GstCaps * format, const gchar * preset,
 /**
  * gst_encoding_audio_profile_new:
  * @format: the #GstCaps
- * @preset: the preset(s) to use on the encoder, can be #NULL
- * @restriction: the #GstCaps used to restrict the input to the encoder, can be
+ * @preset: (allow-none): the preset(s) to use on the encoder, can be #NULL
+ * @restriction: (allow-none): the #GstCaps used to restrict the input to the encoder, can be
  * NULL. See gst_encoding_profile_get_restriction() for more details.
  * @presence: the number of time this stream must be used. 0 means any number of
  *  times (including never)
