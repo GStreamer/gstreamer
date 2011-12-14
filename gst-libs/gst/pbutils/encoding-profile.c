@@ -328,8 +328,8 @@ gst_encoding_profile_set_name (GstEncodingProfile * profile, const gchar * name)
  * @profile: a #GstEncodingProfile
  * @description: the description to set on the profile
  *
- * Set @description as the given description for the @profile. A copy of @description will be made
- * internally.
+ * Set @description as the given description for the @profile. A copy of
+ * @description will be made internally.
  *
  * Since: 0.10.32
  */
@@ -714,8 +714,9 @@ common_creation (GType objtype, GstCaps * format, const gchar * preset,
 
 /**
  * gst_encoding_container_profile_new:
- * @name: The name of the container profile, can be %NULL
- * @description: The description of the container profile, can be %NULL
+ * @name: (allow-none): The name of the container profile, can be %NULL
+ * @description: (allow-none): The description of the container profile,
+ *     can be %NULL
  * @format: The format to use for this profile
  * @preset: The preset to use for this profile
  *
