@@ -492,10 +492,14 @@ gst_dtsdec_handle_frame (GstAudioDecoder * bdec, GstBuffer * buffer)
   guint8 *data;
   gint size, chans;
   gint length = 0, flags, sample_rate, bit_rate, frame_length;
-  GstFlowReturn result = GST_FLOW_UNEXPECTED;
+  GstFlowReturn result = GST_FLOW_OK;
   GstBuffer *outbuf;
 
   dts = GST_DTSDEC (bdec);
+
+  /* no fancy draining */
+  if (G_UNLIKELY (!buffer))
+    return GST_FLOW_OK;
 
   /* parsed stuff already, so this should work out fine */
   data = GST_BUFFER_DATA (buffer);
@@ -597,7 +601,8 @@ gst_dtsdec_handle_frame (GstAudioDecoder * bdec, GstBuffer * buffer)
 
   /* negotiate if required */
   if (need_renegotiation) {
-    GST_DEBUG ("dtsdec: sample_rate:%d stream_chans:0x%x using_chans:0x%x",
+    GST_DEBUG_OBJECT (dts,
+        "dtsdec: sample_rate:%d stream_chans:0x%x using_chans:0x%x",
         dts->sample_rate, dts->stream_channels, dts->using_channels);
     if (!gst_dtsdec_renegotiate (dts))
       goto failed_negotiation;
