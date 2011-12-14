@@ -776,7 +776,7 @@ gst_kate_tiger_set_composition (GstKateTiger * tiger)
     rectangle = gst_video_overlay_rectangle_new_argb (tiger->render_buffer,
         tiger->video_width, tiger->video_height, 4 * tiger->video_width,
         0, 0, tiger->video_width, tiger->video_height,
-        GST_VIDEO_OVERLAY_FORMAT_FLAG_NONE);
+        GST_VIDEO_OVERLAY_FORMAT_FLAG_PREMULTIPLIED_ALPHA);
 
     if (tiger->composition)
       gst_video_overlay_composition_unref (tiger->composition);
@@ -786,23 +786,6 @@ gst_kate_tiger_set_composition (GstKateTiger * tiger)
   } else if (tiger->composition) {
     gst_video_overlay_composition_unref (tiger->composition);
     tiger->composition = NULL;
-  }
-}
-
-static inline void
-gst_kate_tiger_unpremultiply (GstKateTiger * tiger)
-{
-  guint i, j;
-  guint8 *pimage, *text_image = GST_BUFFER_DATA (tiger->render_buffer);
-
-  for (i = 0; i < tiger->video_height; i++) {
-    pimage = text_image + 4 * (i * tiger->video_width);
-    for (j = 0; j < tiger->video_width; j++) {
-      TIGER_UNPREMULTIPLY (pimage[TIGER_ARGB_A], pimage[TIGER_ARGB_R],
-          pimage[TIGER_ARGB_G], pimage[TIGER_ARGB_B]);
-
-      pimage += 4;
-    }
   }
 }
 
@@ -895,9 +878,6 @@ gst_kate_tiger_video_chain (GstPad * pad, GstBuffer * buf)
   }
 
   if (gst_video_format_is_yuv (tiger->video_format)) {
-    /* As the GstVideoOverlayComposition supports only unpremultiply ARGB,
-     * we need to unpermultiply it */
-    gst_kate_tiger_unpremultiply (tiger);
     gst_kate_tiger_set_composition (tiger);
     if (tiger->composition)
       gst_video_overlay_composition_blend (tiger->composition, buf);
