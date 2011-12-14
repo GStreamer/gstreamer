@@ -22,7 +22,7 @@
 #define __GST_FLV_MUX_H__
 
 #include <gst/gst.h>
-#include <gst/base/gstcollectpads.h>
+#include <gst/base/gstcollectpads2.h>
 
 G_BEGIN_DECLS
 
@@ -39,7 +39,7 @@ G_BEGIN_DECLS
 
 typedef struct
 {
-  GstCollectData collect;
+  GstCollectData2 collect;
 
   gboolean video;
 
@@ -65,7 +65,7 @@ typedef struct _GstFlvMux {
   GstElement     element;
 
   GstPad         *srcpad;
-  GstCollectPads *collect;
+  GstCollectPads2 *collect;
 
   /* <private> */
   GstPadEventFunction collect_event;

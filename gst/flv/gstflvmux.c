@@ -99,7 +99,7 @@ GST_BOILERPLATE_FULL (GstFlvMux, gst_flv_mux, GstElement, GST_TYPE_ELEMENT,
 
 static void gst_flv_mux_finalize (GObject * object);
 static GstFlowReturn
-gst_flv_mux_collected (GstCollectPads * pads, gpointer user_data);
+gst_flv_mux_collected (GstCollectPads2 * pads, gpointer user_data);
 
 static gboolean gst_flv_mux_handle_src_event (GstPad * pad, GstEvent * event);
 static GstPad *gst_flv_mux_request_new_pad (GstElement * element,
@@ -197,9 +197,9 @@ gst_flv_mux_init (GstFlvMux * mux, GstFlvMuxClass * g_class)
 
   mux->new_tags = FALSE;
 
-  mux->collect = gst_collect_pads_new ();
-  gst_collect_pads_set_function (mux->collect,
-      (GstCollectPadsFunction) GST_DEBUG_FUNCPTR (gst_flv_mux_collected), mux);
+  mux->collect = gst_collect_pads2_new ();
+  gst_collect_pads2_set_function (mux->collect,
+      (GstCollectPads2Function) GST_DEBUG_FUNCPTR (gst_flv_mux_collected), mux);
 
   gst_flv_mux_reset (GST_ELEMENT (mux));
 }
@@ -280,7 +280,7 @@ gst_flv_mux_handle_sink_event (GstPad * pad, GstEvent * event)
       break;
   }
 
-  /* now GstCollectPads can take care of the rest, e.g. EOS */
+  /* now GstCollectPads2 can take care of the rest, e.g. EOS */
   if (ret)
     ret = mux->collect_event (pad, event);
   gst_object_unref (mux);
@@ -536,14 +536,14 @@ gst_flv_mux_request_new_pad (GstElement * element,
 
   pad = gst_pad_new_from_template (templ, name);
   cpad = (GstFlvPad *)
-      gst_collect_pads_add_pad (mux->collect, pad, sizeof (GstFlvPad));
+      gst_collect_pads2_add_pad (mux->collect, pad, sizeof (GstFlvPad));
 
   cpad->audio_codec_data = NULL;
   cpad->video_codec_data = NULL;
   gst_flv_mux_reset_pad (mux, cpad, video);
 
   /* FIXME: hacked way to override/extend the event function of
-   * GstCollectPads; because it sets its own event function giving the
+   * GstCollectPads2; because it sets its own event function giving the
    * element no access to events.
    */
   mux->collect_event = (GstPadEventFunction) GST_PAD_EVENTFUNC (pad);
@@ -564,7 +564,7 @@ gst_flv_mux_release_pad (GstElement * element, GstPad * pad)
   GstFlvPad *cpad = (GstFlvPad *) gst_pad_get_element_private (pad);
 
   gst_flv_mux_reset_pad (mux, cpad, cpad->video);
-  gst_collect_pads_remove_pad (mux->collect, pad);
+  gst_collect_pads2_remove_pad (mux->collect, pad);
   gst_element_remove_pad (element, pad);
 }
 
@@ -756,7 +756,7 @@ gst_flv_mux_create_metadata (GstFlvMux * mux)
     guint64 dur;
 
     for (l = mux->collect->data; l; l = l->next) {
-      GstCollectData *cdata = l->data;
+      GstCollectData2 *cdata = l->data;
 
       fmt = GST_FORMAT_TIME;
 
@@ -1201,7 +1201,7 @@ gst_flv_mux_write_buffer (GstFlvMux * mux, GstFlvPad * cpad)
 {
   GstBuffer *tag;
   GstBuffer *buffer =
-      gst_collect_pads_pop (mux->collect, (GstCollectData *) cpad);
+      gst_collect_pads2_pop (mux->collect, (GstCollectData2 *) cpad);
   GstFlowReturn ret;
 
   /* arrange downstream running time */
@@ -1390,7 +1390,7 @@ gst_flv_mux_rewrite_header (GstFlvMux * mux)
 }
 
 static GstFlowReturn
-gst_flv_mux_collected (GstCollectPads * pads, gpointer user_data)
+gst_flv_mux_collected (GstCollectPads2 * pads, gpointer user_data)
 {
   GstFlvMux *mux = GST_FLV_MUX (user_data);
   GstFlvPad *best;
@@ -1428,7 +1428,7 @@ gst_flv_mux_collected (GstCollectPads * pads, gpointer user_data)
   best_time = GST_CLOCK_TIME_NONE;
   for (sl = mux->collect->data; sl; sl = sl->next) {
     GstFlvPad *cpad = sl->data;
-    GstBuffer *buffer = gst_collect_pads_peek (pads, (GstCollectData *) cpad);
+    GstBuffer *buffer = gst_collect_pads2_peek (pads, (GstCollectData2 *) cpad);
     GstClockTime time;
 
     if (!buffer)
@@ -1453,7 +1453,7 @@ gst_flv_mux_collected (GstCollectPads * pads, gpointer user_data)
     if (G_UNLIKELY (!GST_CLOCK_TIME_IS_VALID (time))) {
       GST_DEBUG_OBJECT (mux, "clipping buffer on pad %s outside segment",
           GST_PAD_NAME (cpad->collect.pad));
-      buffer = gst_collect_pads_pop (pads, (GstCollectData *) cpad);
+      buffer = gst_collect_pads2_pop (pads, (GstCollectData2 *) cpad);
       gst_buffer_unref (buffer);
       return GST_FLOW_OK;
     }
@@ -1533,12 +1533,12 @@ gst_flv_mux_change_state (GstElement * element, GstStateChange transition)
     case GST_STATE_CHANGE_NULL_TO_READY:
       break;
     case GST_STATE_CHANGE_READY_TO_PAUSED:
-      gst_collect_pads_start (mux->collect);
+      gst_collect_pads2_start (mux->collect);
       break;
     case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
       break;
     case GST_STATE_CHANGE_PAUSED_TO_READY:
-      gst_collect_pads_stop (mux->collect);
+      gst_collect_pads2_stop (mux->collect);
       break;
     default:
       break;
