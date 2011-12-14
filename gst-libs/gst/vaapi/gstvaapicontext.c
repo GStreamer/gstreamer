@@ -31,6 +31,8 @@
 #include "gstvaapisurface.h"
 #include "gstvaapisurface_priv.h"
 #include "gstvaapisurfacepool.h"
+#include "gstvaapiimage.h"
+#include "gstvaapisubpicture.h"
 #include "gstvaapiutils.h"
 #include "gstvaapi_priv.h"
 
@@ -44,11 +46,20 @@ G_DEFINE_TYPE(GstVaapiContext, gst_vaapi_context, GST_VAAPI_TYPE_OBJECT);
                                  GST_VAAPI_TYPE_CONTEXT,	\
                                  GstVaapiContextPrivate))
 
+typedef struct _GstVaapiOverlayRectangle GstVaapiOverlayRectangle;
+struct _GstVaapiOverlayRectangle {
+    GstVaapiContext    *context;
+    GstVaapiSubpicture *subpicture;
+    GstVaapiRectangle   rect;
+    guint               seq_num;
+};
+
 /* XXX: optimize for the effective number of reference frames */
 struct _GstVaapiContextPrivate {
     VAConfigID          config_id;
     GPtrArray          *surfaces;
     GstVaapiVideoPool  *surfaces_pool;
+    GPtrArray          *overlay;
     GstVaapiProfile     profile;
     GstVaapiEntrypoint  entrypoint;
     guint               width;
@@ -65,6 +76,65 @@ enum {
     PROP_HEIGHT
 };
 
+static GstVaapiOverlayRectangle *
+overlay_rectangle_new(GstVaapiContext *context)
+{
+    GstVaapiOverlayRectangle *overlay;
+
+    overlay = g_slice_new0(GstVaapiOverlayRectangle);
+    if (!overlay)
+        return NULL;
+
+    overlay->context = context;
+    return overlay;
+}
+
+static void
+overlay_rectangle_destroy(GstVaapiOverlayRectangle *overlay)
+{
+    GstVaapiContextPrivate *priv;
+    guint i;
+
+    if (!overlay)
+        return;
+    priv = overlay->context->priv;
+
+    if (overlay->subpicture) {
+        if (priv->surfaces) {
+            GstVaapiSubpicture * const subpicture = overlay->subpicture;
+            for (i = 0; i < priv->surfaces->len; i++) {
+                GstVaapiSurface * const surface =
+                    g_ptr_array_index(priv->surfaces, i);
+                gst_vaapi_surface_deassociate_subpicture(surface, subpicture);
+            }
+        }
+        g_object_unref(overlay->subpicture);
+        overlay->subpicture = NULL;
+    }
+    g_slice_free(GstVaapiOverlayRectangle, overlay);
+}
+
+static void
+destroy_overlay_cb(gpointer data, gpointer user_data)
+{
+    GstVaapiOverlayRectangle * const overlay = data;
+
+    overlay_rectangle_destroy(overlay);
+}
+
+static void
+gst_vaapi_context_destroy_overlay(GstVaapiContext *context)
+{
+    GstVaapiContextPrivate * const priv = context->priv;
+
+    if (!priv->overlay)
+        return;
+
+    g_ptr_array_foreach(priv->overlay, destroy_overlay_cb, priv);
+    g_ptr_array_free(priv->overlay, TRUE);
+    priv->overlay = NULL;
+}
+
 static void
 unref_surface_cb(gpointer data, gpointer user_data)
 {
@@ -78,6 +148,8 @@ static void
 gst_vaapi_context_destroy_surfaces(GstVaapiContext *context)
 {
     GstVaapiContextPrivate * const priv = context->priv;
+
+    gst_vaapi_context_destroy_overlay(context);
 
     if (priv->surfaces) {
         g_ptr_array_foreach(priv->surfaces, unref_surface_cb, NULL);
@@ -130,6 +202,19 @@ gst_vaapi_context_destroy(GstVaapiContext *context)
 }
 
 static gboolean
+gst_vaapi_context_create_overlay(GstVaapiContext *context)
+{
+    GstVaapiContextPrivate * const priv = context->priv;
+
+    if (!priv->overlay) {
+        priv->overlay = g_ptr_array_new();
+        if (!priv->overlay)
+            return FALSE;
+    }
+    return TRUE;
+}
+
+static gboolean
 gst_vaapi_context_create_surfaces(GstVaapiContext *context)
 {
     GstVaapiContextPrivate * const priv = context->priv;
@@ -139,6 +224,9 @@ gst_vaapi_context_create_surfaces(GstVaapiContext *context)
 
     /* Number of scratch surfaces beyond those used as reference */
     const guint SCRATCH_SURFACES_COUNT = 4;
+
+    if (!gst_vaapi_context_create_overlay(context))
+        return FALSE;
 
     if (!priv->surfaces) {
         priv->surfaces = g_ptr_array_new();
@@ -405,6 +493,7 @@ gst_vaapi_context_init(GstVaapiContext *context)
     priv->config_id     = VA_INVALID_ID;
     priv->surfaces      = NULL;
     priv->surfaces_pool = NULL;
+    priv->overlay       = NULL;
     priv->profile       = 0;
     priv->entrypoint    = 0;
     priv->width         = 0;
@@ -683,4 +772,121 @@ gst_vaapi_context_find_surface_by_id(GstVaapiContext *context, GstVaapiID id)
             return surface;
     }
     return NULL;
+}
+
+/* Check if composition changed */
+static gboolean
+gst_vaapi_context_composition_changed(
+    GstVaapiContext            *context,
+    GstVideoOverlayComposition *composition
+)
+{
+    GstVaapiContextPrivate * const priv = context->priv;
+    GstVaapiOverlayRectangle *overlay;
+    GstVideoOverlayRectangle *rect;
+    guint i, n_rectangles;
+
+    if (!priv->overlay || !composition)
+        return TRUE;
+
+    n_rectangles = gst_video_overlay_composition_n_rectangles(composition);
+    if (priv->overlay->len != n_rectangles)
+        return TRUE;
+
+    for (i = 0; i < n_rectangles; i++) {
+        rect = gst_video_overlay_composition_get_rectangle(composition, i);
+        g_return_val_if_fail(rect, TRUE);
+        overlay = g_ptr_array_index(priv->overlay, i);
+        g_return_val_if_fail(overlay, TRUE);
+        if (overlay->seq_num != gst_video_overlay_rectangle_get_seqnum(rect))
+            return TRUE;
+    }
+    return FALSE;
+}
+
+/**
+ * gst_vaapi_context_apply_composition:
+ * @context: a #GstVaapiContext
+ * @composition: a #GstVideoOverlayComposition
+ *
+ * Applies video composition planes to all surfaces bound to @context.
+ * This helper function resets any additional subpictures the user may
+ * have associated himself. A %NULL @composition will also clear all
+ * the existing subpictures.
+ *
+ * Return value: %TRUE if all composition planes could be applied,
+ *   %FALSE otherwise
+ */
+gboolean
+gst_vaapi_context_apply_composition(
+    GstVaapiContext            *context,
+    GstVideoOverlayComposition *composition
+)
+{
+    GstVaapiContextPrivate *priv;
+    GstVideoOverlayRectangle *rect;
+    GstVaapiOverlayRectangle *overlay = NULL;
+    GstVaapiDisplay *display;
+    guint i, j, n_rectangles;
+
+    g_return_val_if_fail(GST_VAAPI_IS_CONTEXT(context), FALSE);
+
+    priv = context->priv;
+    if (!priv->surfaces)
+        return FALSE;
+
+    display = GST_VAAPI_OBJECT_DISPLAY(context);
+    if (!display)
+        return FALSE;
+
+    if (!gst_vaapi_context_composition_changed(context, composition))
+        return TRUE;
+    gst_vaapi_context_destroy_overlay(context);
+
+    if (!composition)
+        return TRUE;
+    if (!gst_vaapi_context_create_overlay(context))
+        return FALSE;
+
+    n_rectangles = gst_video_overlay_composition_n_rectangles(composition);
+    for (i = 0; i < n_rectangles; i++) {
+        rect = gst_video_overlay_composition_get_rectangle(composition, i);
+
+        overlay = overlay_rectangle_new(context);
+        if (!overlay) {
+            GST_WARNING("could not create VA overlay rectangle");
+            return FALSE;
+        }
+        overlay->seq_num = gst_video_overlay_rectangle_get_seqnum(rect);
+
+        overlay->subpicture = gst_vaapi_subpicture_new_from_overlay_rectangle(
+            display,
+            rect
+        );
+        if (!overlay->subpicture) {
+            overlay_rectangle_destroy(overlay);
+            return FALSE;
+        }
+
+        gst_video_overlay_rectangle_get_render_rectangle(
+            rect,
+            (gint *)&overlay->rect.x,
+            (gint *)&overlay->rect.y,
+            &overlay->rect.width,
+            &overlay->rect.height
+        );
+
+        for (j = 0; j < priv->surfaces->len; j++) {
+            GstVaapiSurface * const surface =
+                g_ptr_array_index(priv->surfaces, j);
+            if (!gst_vaapi_surface_associate_subpicture(surface,
+                         overlay->subpicture, NULL, &overlay->rect)) {
+                GST_WARNING("could not render overlay rectangle %p", rect);
+                overlay_rectangle_destroy(overlay);
+                return FALSE;
+            }
+        }
+        g_ptr_array_add(priv->overlay, overlay);
+    }
+    return TRUE;
 }
