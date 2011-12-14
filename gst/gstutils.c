@@ -3015,7 +3015,7 @@ gst_pad_peer_query_convert (GstPad * pad, GstFormat src_format, gint64 src_val,
 /**
  * gst_pad_query_caps:
  * @pad: a  #GstPad to get the capabilities of.
- * @filter: suggested #GstCaps.
+ * @filter: (allow-none): suggested #GstCaps, or NULL
  *
  * Gets the capabilities this pad can produce or consume.
  * Note that this method doesn't necessarily return the caps set by
@@ -3064,7 +3064,7 @@ gst_pad_query_caps (GstPad * pad, GstCaps * filter)
 /**
  * gst_pad_peer_query_caps:
  * @pad: a  #GstPad to get the capabilities of.
- * @filter: a #GstCaps filter.
+ * @filter: (allow-none): a #GstCaps filter, or NULL.
  *
  * Gets the capabilities of the peer connected to this pad. Similar to
  * gst_pad_query_caps().
