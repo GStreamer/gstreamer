@@ -648,12 +648,16 @@ gst_vaapi_surface_associate_subpicture(
     g_return_val_if_fail(GST_VAAPI_IS_SURFACE(surface), FALSE);
     g_return_val_if_fail(GST_VAAPI_IS_SUBPICTURE(subpicture), FALSE);
 
-    if (!gst_vaapi_surface_deassociate_subpicture(surface, subpicture))
-        return FALSE;
-
     if (!surface->priv->subpictures) {
         surface->priv->subpictures = g_ptr_array_new();
         if (!surface->priv->subpictures)
+            return FALSE;
+    }
+
+    if (g_ptr_array_remove_fast(surface->priv->subpictures, subpicture)) {
+        success = _gst_vaapi_surface_deassociate_subpicture(surface, subpicture);
+        g_object_unref(subpicture);
+        if (!success)
             return FALSE;
     }
 
