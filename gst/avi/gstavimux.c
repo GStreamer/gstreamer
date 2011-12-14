@@ -195,7 +195,7 @@ static void gst_avi_mux_class_init (GstAviMuxClass * klass);
 static void gst_avi_mux_init (GstAviMux * avimux);
 static void gst_avi_mux_pad_reset (GstAviPad * avipad, gboolean free);
 
-static GstFlowReturn gst_avi_mux_collect_pads (GstCollectPads * pads,
+static GstFlowReturn gst_avi_mux_collect_pads (GstCollectPads2 * pads,
     GstAviMux * avimux);
 static gboolean gst_avi_mux_handle_event (GstPad * pad, GstEvent * event);
 static GstPad *gst_avi_mux_request_new_pad (GstElement * element,
@@ -418,9 +418,9 @@ gst_avi_mux_init (GstAviMux * avimux)
   /* property */
   avimux->enable_large_avi = DEFAULT_BIGFILE;
 
-  avimux->collect = gst_collect_pads_new ();
-  gst_collect_pads_set_function (avimux->collect,
-      (GstCollectPadsFunction) (GST_DEBUG_FUNCPTR (gst_avi_mux_collect_pads)),
+  avimux->collect = gst_collect_pads2_new ();
+  gst_collect_pads2_set_function (avimux->collect,
+      (GstCollectPads2Function) (GST_DEBUG_FUNCPTR (gst_avi_mux_collect_pads)),
       avimux);
 
   /* set to clean state */
@@ -1024,11 +1024,11 @@ gst_avi_mux_request_new_pad (GstElement * element,
 
   g_free (name);
 
-  avipad->collect = gst_collect_pads_add_pad (avimux->collect,
+  avipad->collect = gst_collect_pads2_add_pad (avimux->collect,
       newpad, sizeof (GstAviCollectData));
   ((GstAviCollectData *) (avipad->collect))->avipad = avipad;
   /* FIXME: hacked way to override/extend the event function of
-   * GstCollectPads; because it sets its own event function giving the
+   * GstCollectPads2; because it sets its own event function giving the
    * element no access to events */
   avimux->collect_event = (GstPadEventFunction) GST_PAD_EVENTFUNC (newpad);
   gst_pad_set_event_function (newpad,
@@ -1085,7 +1085,7 @@ gst_avi_mux_release_pad (GstElement * element, GstPad * pad)
        * as it also represent number of streams present */
       avipad->collect = NULL;
       GST_DEBUG_OBJECT (avimux, "removed pad '%s'", GST_PAD_NAME (pad));
-      gst_collect_pads_remove_pad (avimux->collect, pad);
+      gst_collect_pads2_remove_pad (avimux->collect, pad);
       gst_element_remove_pad (element, pad);
       /* if not started yet, we can remove any sign this pad ever existed */
       /* in this case _start will take care of the real pad count */
@@ -1882,7 +1882,7 @@ gst_avi_mux_handle_event (GstPad * pad, GstEvent * event)
       break;
   }
 
-  /* now GstCollectPads can take care of the rest, e.g. EOS */
+  /* now GstCollectPads2 can take care of the rest, e.g. EOS */
   ret = avimux->collect_event (pad, event);
 
   gst_object_unref (avimux);
@@ -1911,7 +1911,7 @@ gst_avi_mux_do_buffer (GstAviMux * avimux, GstAviPad * avipad)
   gulong total_size, pad_bytes = 0;
   guint flags;
 
-  data = gst_collect_pads_pop (avimux->collect, avipad->collect);
+  data = gst_collect_pads2_pop (avimux->collect, avipad->collect);
   /* arrange downstream running time */
   data = gst_buffer_make_metadata_writable (data);
   GST_BUFFER_TIMESTAMP (data) =
@@ -2037,7 +2037,7 @@ gst_avi_mux_do_one_buffer (GstAviMux * avimux)
     if (!avipad->hdr.fcc_handler)
       goto not_negotiated;
 
-    buffer = gst_collect_pads_peek (avimux->collect, avipad->collect);
+    buffer = gst_collect_pads2_peek (avimux->collect, avipad->collect);
     if (!buffer)
       continue;
     time = GST_BUFFER_TIMESTAMP (buffer);
@@ -2050,7 +2050,7 @@ gst_avi_mux_do_one_buffer (GstAviMux * avimux)
       if (G_UNLIKELY (!GST_CLOCK_TIME_IS_VALID (time))) {
         GST_DEBUG_OBJECT (avimux, "clipping buffer on pad %s outside segment",
             GST_PAD_NAME (avipad->collect->pad));
-        buffer = gst_collect_pads_pop (avimux->collect, avipad->collect);
+        buffer = gst_collect_pads2_pop (avimux->collect, avipad->collect);
         gst_buffer_unref (buffer);
         return GST_FLOW_OK;
       }
@@ -2089,7 +2089,7 @@ not_negotiated:
 }
 
 static GstFlowReturn
-gst_avi_mux_collect_pads (GstCollectPads * pads, GstAviMux * avimux)
+gst_avi_mux_collect_pads (GstCollectPads2 * pads, GstAviMux * avimux)
 {
   GstFlowReturn res;
 
@@ -2148,12 +2148,12 @@ gst_avi_mux_change_state (GstElement * element, GstStateChange transition)
 
   switch (transition) {
     case GST_STATE_CHANGE_READY_TO_PAUSED:
-      gst_collect_pads_start (avimux->collect);
+      gst_collect_pads2_start (avimux->collect);
       break;
     case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
       break;
     case GST_STATE_CHANGE_PAUSED_TO_READY:
-      gst_collect_pads_stop (avimux->collect);
+      gst_collect_pads2_stop (avimux->collect);
       break;
     default:
       break;
