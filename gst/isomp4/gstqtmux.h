@@ -44,7 +44,7 @@
 #define __GST_QT_MUX_H__
 
 #include <gst/gst.h>
-#include <gst/base/gstcollectpads.h>
+#include <gst/base/gstcollectpads2.h>
 
 #include "fourcc.h"
 #include "atoms.h"
@@ -82,7 +82,7 @@ typedef GstBuffer * (*GstQTPadPrepareBufferFunc) (GstQTPad * pad,
 
 struct _GstQTPad
 {
-  GstCollectData collect;       /* we extend the CollectData */
+  GstCollectData2 collect;       /* we extend the CollectData2 */
 
   /* fourcc id of stream */
   guint32 fourcc;
@@ -144,7 +144,7 @@ struct _GstQTMux
   GstElement element;
 
   GstPad *srcpad;
-  GstCollectPads *collect;
+  GstCollectPads2 *collect;
   GSList *sinkpads;
 
   /* state */
