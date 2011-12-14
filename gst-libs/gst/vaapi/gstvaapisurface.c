@@ -755,7 +755,7 @@ gst_vaapi_surface_deassociate_subpicture(
 
     /* First, check subpicture was really associated with this surface */
     if (!g_ptr_array_remove_fast(surface->priv->subpictures, subpicture)) {
-        GST_DEBUG("subpicture %" GST_VAAPI_ID_FORMAT "was not bound to "
+        GST_DEBUG("subpicture %" GST_VAAPI_ID_FORMAT " was not bound to "
                   "surface %" GST_VAAPI_ID_FORMAT,
                   GST_VAAPI_ID_ARGS(GST_VAAPI_OBJECT_ID(subpicture)),
                   GST_VAAPI_ID_ARGS(GST_VAAPI_OBJECT_ID(surface)));
