@@ -223,7 +223,7 @@ static void gst_matroska_mux_finalize (GObject * object);
 
 /* Pads collected callback */
 static GstFlowReturn
-gst_matroska_mux_collected (GstCollectPads * pads, gpointer user_data);
+gst_matroska_mux_collected (GstCollectPads2 * pads, gpointer user_data);
 
 /* pad functions */
 static gboolean gst_matroska_mux_handle_src_event (GstPad * pad,
@@ -450,9 +450,9 @@ gst_matroska_mux_init (GstMatroskaMux * mux, GstMatroskaMuxClass * g_class)
   gst_pad_set_event_function (mux->srcpad, gst_matroska_mux_handle_src_event);
   gst_element_add_pad (GST_ELEMENT (mux), mux->srcpad);
 
-  mux->collect = gst_collect_pads_new ();
-  gst_collect_pads_set_function (mux->collect,
-      (GstCollectPadsFunction) GST_DEBUG_FUNCPTR (gst_matroska_mux_collected),
+  mux->collect = gst_collect_pads2_new ();
+  gst_collect_pads2_set_function (mux->collect,
+      (GstCollectPads2Function) GST_DEBUG_FUNCPTR (gst_matroska_mux_collected),
       mux);
 
   mux->ebml_write = gst_ebml_write_new (mux->srcpad);
@@ -781,7 +781,7 @@ gst_matroska_mux_handle_sink_event (GstPad * pad, GstEvent * event)
       break;
   }
 
-  /* now GstCollectPads can take care of the rest, e.g. EOS */
+  /* now GstCollectPads2 can take care of the rest, e.g. EOS */
   if (event)
     ret = mux->collect_event (pad, event);
 
@@ -2008,17 +2008,17 @@ gst_matroska_mux_request_new_pad (GstElement * element,
 
   gst_matroskamux_pad_init (newpad);
   collect_pad = (GstMatroskaPad *)
-      gst_collect_pads_add_pad_full (mux->collect, GST_PAD (newpad),
+      gst_collect_pads2_add_pad_full (mux->collect, GST_PAD (newpad),
       sizeof (GstMatroskamuxPad),
-      (GstCollectDataDestroyNotify) gst_matroska_pad_free);
+      (GstCollectData2DestroyNotify) gst_matroska_pad_free, TRUE);
 
   collect_pad->track = context;
   gst_matroska_pad_reset (collect_pad, FALSE);
 
   /* FIXME: hacked way to override/extend the event function of
-   * GstCollectPads; because it sets its own event function giving the
+   * GstCollectPads2; because it sets its own event function giving the
    * element no access to events.
-   * TODO GstCollectPads should really give its 'users' a clean chance to
+   * TODO GstCollectPads2 should really give its 'users' a clean chance to
    * properly handle events that are not meant for collectpads itself.
    * Perhaps a callback or so, though rejected (?) in #340060.
    * This would allow (clean) transcoding of info from demuxer/streams
@@ -2063,7 +2063,7 @@ gst_matroska_mux_release_pad (GstElement * element, GstPad * pad)
   mux = GST_MATROSKA_MUX (GST_PAD_PARENT (pad));
 
   for (walk = mux->collect->data; walk; walk = g_slist_next (walk)) {
-    GstCollectData *cdata = (GstCollectData *) walk->data;
+    GstCollectData2 *cdata = (GstCollectData2 *) walk->data;
     GstMatroskaPad *collect_pad = (GstMatroskaPad *) cdata;
 
     if (cdata->pad == pad) {
@@ -2084,7 +2084,7 @@ gst_matroska_mux_release_pad (GstElement * element, GstPad * pad)
     }
   }
 
-  gst_collect_pads_remove_pad (mux->collect, pad);
+  gst_collect_pads2_remove_pad (mux->collect, pad);
   if (gst_element_remove_pad (element, pad))
     mux->num_streams--;
 }
@@ -2564,7 +2564,7 @@ gst_matroska_mux_finish (GstMatroskaMux * mux)
 /**
  * gst_matroska_mux_best_pad:
  * @mux: #GstMatroskaMux
- * @popped: True if at least one buffer was popped from #GstCollectPads
+ * @popped: True if at least one buffer was popped from #GstCollectPads2
  *
  * Find a pad with the oldest data
  * (data from this pad should be written first).
@@ -2585,8 +2585,8 @@ gst_matroska_mux_best_pad (GstMatroskaMux * mux, gboolean * popped)
     collect_pad = (GstMatroskaPad *) collected->data;
     /* fetch a new buffer if needed */
     if (collect_pad->buffer == NULL) {
-      collect_pad->buffer = gst_collect_pads_pop (mux->collect,
-          (GstCollectData *) collect_pad);
+      collect_pad->buffer = gst_collect_pads2_pop (mux->collect,
+          (GstCollectData2 *) collect_pad);
 
       if (collect_pad->buffer != NULL) {
         GstClockTime time;
@@ -2975,7 +2975,7 @@ gst_matroska_mux_write_data (GstMatroskaMux * mux, GstMatroskaPad * collect_pad)
 
 /**
  * gst_matroska_mux_collected:
- * @pads: #GstCollectPads
+ * @pads: #GstCollectPads2
  * @uuser_data: #GstMatroskaMux
  *
  * Collectpads callback.
@@ -2983,7 +2983,7 @@ gst_matroska_mux_write_data (GstMatroskaMux * mux, GstMatroskaPad * collect_pad)
  * Returns: #GstFlowReturn
  */
 static GstFlowReturn
-gst_matroska_mux_collected (GstCollectPads * pads, gpointer user_data)
+gst_matroska_mux_collected (GstCollectPads2 * pads, gpointer user_data)
 {
   GstMatroskaMux *mux = GST_MATROSKA_MUX (user_data);
   GstEbmlWrite *ebml = mux->ebml_write;
@@ -3077,12 +3077,12 @@ gst_matroska_mux_change_state (GstElement * element, GstStateChange transition)
     case GST_STATE_CHANGE_NULL_TO_READY:
       break;
     case GST_STATE_CHANGE_READY_TO_PAUSED:
-      gst_collect_pads_start (mux->collect);
+      gst_collect_pads2_start (mux->collect);
       break;
     case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
       break;
     case GST_STATE_CHANGE_PAUSED_TO_READY:
-      gst_collect_pads_stop (mux->collect);
+      gst_collect_pads2_stop (mux->collect);
       break;
     default:
       break;

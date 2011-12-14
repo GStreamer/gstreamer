@@ -24,7 +24,7 @@
 #define __GST_MATROSKA_MUX_H__
 
 #include <gst/gst.h>
-#include <gst/base/gstcollectpads.h>
+#include <gst/base/gstcollectpads2.h>
 
 #include "ebml-write.h"
 #include "matroska-ids.h"
@@ -56,7 +56,7 @@ typedef struct _GstMatroskaMetaSeekIndex {
 /* all information needed for one matroska stream */
 typedef struct
 {
-  GstCollectData collect;       /* we extend the CollectData */
+  GstCollectData2 collect;       /* we extend the CollectData */
   GstMatroskaTrackContext *track;
 
   GstBuffer *buffer;            /* the queued buffer for this pad */
@@ -76,7 +76,7 @@ typedef struct _GstMatroskaMux {
 
   /* pads */
   GstPad        *srcpad;
-  GstCollectPads *collect;
+  GstCollectPads2 *collect;
   GstPadEventFunction collect_event;
   GstEbmlWrite *ebml_write;
 
