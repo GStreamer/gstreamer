@@ -241,7 +241,6 @@ GST_START_TEST (test_force_key_unit_event_upstream)
   gint count = 0;
   TestData test_data = { 0, };
   ThreadData *thread_data_1, *thread_data_2, *thread_data_3, *thread_data_4;
-  gint32 seqnum;
 
   mpegtsmux = gst_check_setup_element ("mpegtsmux");
   gst_element_set_state (mpegtsmux, GST_STATE_PLAYING);
@@ -257,7 +256,6 @@ GST_START_TEST (test_force_key_unit_event_upstream)
   timestamp = stream_time = running_time = 2 * GST_SECOND;
   event =
       gst_video_event_new_upstream_force_key_unit (running_time, TRUE, count);
-  seqnum = gst_event_get_seqnum (event);
   fail_unless (gst_pad_push_event (sink, event));
 
   fail_unless (test_data.sink_event == NULL);
