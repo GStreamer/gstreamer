@@ -656,8 +656,15 @@ write_error:
     return GST_FLOW_ERROR;
   }
 stdio_write_error:
-  GST_ELEMENT_ERROR (multifilesink, RESOURCE, WRITE,
-      ("Error while writing to file."), (NULL));
+  switch (errno) {
+    case ENOSPC:
+      GST_ELEMENT_ERROR (multifilesink, RESOURCE, NO_SPACE_LEFT,
+          ("Error while writing to file."), ("%s", g_strerror (errno)));
+      break;
+    default:
+      GST_ELEMENT_ERROR (multifilesink, RESOURCE, WRITE,
+          ("Error while writing to file."), ("%s", g_strerror (errno)));
+  }
   return GST_FLOW_ERROR;
 }
 
