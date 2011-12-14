@@ -136,9 +136,10 @@ static void gst_adder_release_pad (GstElement * element, GstPad * pad);
 static GstStateChangeReturn gst_adder_change_state (GstElement * element,
     GstStateChange transition);
 
-static GstBuffer *gst_adder_do_clip (GstCollectPads * pads,
-    GstCollectData * data, GstBuffer * buffer, gpointer user_data);
-static GstFlowReturn gst_adder_collected (GstCollectPads * pads,
+static GstFlowReturn gst_adder_do_clip (GstCollectPads2 * pads,
+    GstCollectData2 * data, GstBuffer * buffer, GstBuffer ** out,
+    gpointer user_data);
+static GstFlowReturn gst_adder_collected (GstCollectPads2 * pads,
     gpointer user_data);
 
 /* non-clipping versions (for float) */
@@ -660,7 +661,7 @@ gst_adder_src_event (GstPad * pad, GstEvent * event)
       /* check if we are flushing */
       if (flush) {
         /* make sure we accept nothing anymore and return WRONG_STATE */
-        gst_collect_pads_set_flushing (adder->collect, TRUE);
+        gst_collect_pads2_set_flushing (adder->collect, TRUE);
 
         /* flushing seek, start flush downstream, the flush will be done
          * when all pads received a FLUSH_STOP. */
@@ -691,7 +692,7 @@ gst_adder_src_event (GstPad * pad, GstEvent * event)
       if (flush) {
         /* Yes, we need to call _set_flushing again *WHEN* the streaming threads
          * have stopped so that the cookie gets properly updated. */
-        gst_collect_pads_set_flushing (adder->collect, TRUE);
+        gst_collect_pads2_set_flushing (adder->collect, TRUE);
       }
       GST_OBJECT_UNLOCK (adder->collect);
       GST_DEBUG_OBJECT (adder, "forwarding seek event: %" GST_PTR_FORMAT,
@@ -749,7 +750,7 @@ gst_adder_sink_event (GstPad * pad, GstEvent * event)
     case GST_EVENT_FLUSH_STOP:
       /* we received a flush-stop. The collect_event function will push the
        * event past our element. We simply forward all flush-stop events, even
-       * when no flush-stop was pending, this is required because collectpads
+       * when no flush-stop was pending, this is required because collectpads2
        * does not provide an API to handle-but-not-forward the flush-stop.
        * We unset the pending flush-stop flag so that we don't send anymore
        * flush-stop from the collect function later.
@@ -783,7 +784,7 @@ gst_adder_sink_event (GstPad * pad, GstEvent * event)
       break;
   }
 
-  /* now GstCollectPads can take care of the rest, e.g. EOS */
+  /* now GstCollectPads2 can take care of the rest, e.g. EOS */
   ret = adder->collect_event (pad, event);
 
 beach:
@@ -860,10 +861,10 @@ gst_adder_init (GstAdder * adder, GstAdderClass * klass)
   adder->filter_caps = NULL;
 
   /* keep track of the sinkpads requested */
-  adder->collect = gst_collect_pads_new ();
-  gst_collect_pads_set_function (adder->collect,
+  adder->collect = gst_collect_pads2_new ();
+  gst_collect_pads2_set_function (adder->collect,
       GST_DEBUG_FUNCPTR (gst_adder_collected), adder);
-  gst_collect_pads_set_clip_function (adder->collect,
+  gst_collect_pads2_set_clip_function (adder->collect,
       GST_DEBUG_FUNCPTR (gst_adder_do_clip), adder);
 }
 
@@ -968,10 +969,10 @@ gst_adder_request_new_pad (GstElement * element, GstPadTemplate * templ,
   gst_pad_set_getcaps_function (newpad,
       GST_DEBUG_FUNCPTR (gst_adder_sink_getcaps));
   gst_pad_set_setcaps_function (newpad, GST_DEBUG_FUNCPTR (gst_adder_setcaps));
-  gst_collect_pads_add_pad (adder->collect, newpad, sizeof (GstCollectData));
+  gst_collect_pads2_add_pad (adder->collect, newpad, sizeof (GstCollectData2));
 
   /* FIXME: hacked way to override/extend the event function of
-   * GstCollectPads; because it sets its own event function giving the
+   * GstCollectPads2; because it sets its own event function giving the
    * element no access to events */
   adder->collect_event = (GstPadEventFunction) GST_PAD_EVENTFUNC (newpad);
   gst_pad_set_event_function (newpad, GST_DEBUG_FUNCPTR (gst_adder_sink_event));
@@ -991,7 +992,7 @@ not_sink:
 could_not_add:
   {
     GST_DEBUG_OBJECT (adder, "could not add pad");
-    gst_collect_pads_remove_pad (adder->collect, newpad);
+    gst_collect_pads2_remove_pad (adder->collect, newpad);
     gst_object_unref (newpad);
     return NULL;
   }
@@ -1006,13 +1007,13 @@ gst_adder_release_pad (GstElement * element, GstPad * pad)
 
   GST_DEBUG_OBJECT (adder, "release pad %s:%s", GST_DEBUG_PAD_NAME (pad));
 
-  gst_collect_pads_remove_pad (adder->collect, pad);
+  gst_collect_pads2_remove_pad (adder->collect, pad);
   gst_element_remove_pad (element, pad);
 }
 
-static GstBuffer *
-gst_adder_do_clip (GstCollectPads * pads, GstCollectData * data,
-    GstBuffer * buffer, gpointer user_data)
+static GstFlowReturn
+gst_adder_do_clip (GstCollectPads2 * pads, GstCollectData2 * data,
+    GstBuffer * buffer, GstBuffer ** out, gpointer user_data)
 {
   GstAdder *adder = GST_ADDER (user_data);
 
@@ -1025,11 +1026,12 @@ gst_adder_do_clip (GstCollectPads * pads, GstCollectData * data,
         adder->bps);
   }
 
-  return buffer;
+  *out = buffer;
+  return GST_FLOW_OK;
 }
 
 static GstFlowReturn
-gst_adder_collected (GstCollectPads * pads, gpointer user_data)
+gst_adder_collected (GstCollectPads2 * pads, gpointer user_data)
 {
   /*
    * combine streams by adding data values
@@ -1070,7 +1072,7 @@ gst_adder_collected (GstCollectPads * pads, gpointer user_data)
 
   /* get available bytes for reading, this can be 0 which could mean empty
    * buffers or EOS, which we will catch when we loop over the pads. */
-  outsize = gst_collect_pads_available (pads);
+  outsize = gst_collect_pads2_available (pads);
   /* can only happen when no pads to collect or all EOS */
   if (outsize == 0)
     goto eos;
@@ -1080,18 +1082,18 @@ gst_adder_collected (GstCollectPads * pads, gpointer user_data)
       outsize, adder->bps);
 
   for (collected = pads->data; collected; collected = next) {
-    GstCollectData *collect_data;
+    GstCollectData2 *collect_data;
     GstBuffer *inbuf;
     gboolean is_gap;
 
     /* take next to see if this is the last collectdata */
     next = g_slist_next (collected);
 
-    collect_data = (GstCollectData *) collected->data;
+    collect_data = (GstCollectData2 *) collected->data;
 
     /* get a buffer of size bytes, if we get a buffer, it is at least outsize
      * bytes big. */
-    inbuf = gst_collect_pads_take_buffer (pads, collect_data, outsize);
+    inbuf = gst_collect_pads2_take_buffer (pads, collect_data, outsize);
     /* NULL means EOS or an empty buffer so we still need to flush in
      * case of an empty buffer. */
     if (inbuf == NULL) {
@@ -1287,14 +1289,14 @@ gst_adder_change_state (GstElement * element, GstStateChange transition)
       adder->segment_end = GST_CLOCK_TIME_NONE;
       adder->segment_rate = 1.0;
       gst_segment_init (&adder->segment, GST_FORMAT_UNDEFINED);
-      gst_collect_pads_start (adder->collect);
+      gst_collect_pads2_start (adder->collect);
       break;
     case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
       break;
     case GST_STATE_CHANGE_PAUSED_TO_READY:
-      /* need to unblock the collectpads before calling the
+      /* need to unblock the collectpads2 before calling the
        * parent change_state so that streaming can finish */
-      gst_collect_pads_stop (adder->collect);
+      gst_collect_pads2_stop (adder->collect);
       break;
     default:
       break;
