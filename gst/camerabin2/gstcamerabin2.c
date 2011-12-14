@@ -1089,6 +1089,8 @@ gst_camera_bin_handle_message (GstBin * bin, GstMessage * message)
         }
         dec_counter = TRUE;
       }
+      g_error_free (err);
+      g_free (debug);
     }
       break;
     case GST_MESSAGE_EOS:{
