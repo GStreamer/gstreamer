@@ -224,7 +224,8 @@ static GstPad *gst_qt_mux_request_new_pad (GstElement * element,
 static void gst_qt_mux_release_pad (GstElement * element, GstPad * pad);
 
 /* event */
-static gboolean gst_qt_mux_sink_event (GstPad * pad, GstEvent * event);
+static gboolean gst_qt_mux_sink_event (GstCollectPads2 * pads,
+    GstCollectData2 * data, GstEvent * event, gpointer user_data);
 
 static GstFlowReturn gst_qt_mux_collected (GstCollectPads2 * pads,
     gpointer user_data);
@@ -485,6 +486,9 @@ gst_qt_mux_init (GstQTMux * qtmux, GstQTMuxClass * qtmux_klass)
   qtmux->collect = gst_collect_pads2_new ();
   gst_collect_pads2_set_function (qtmux->collect,
       (GstCollectPads2Function) GST_DEBUG_FUNCPTR (gst_qt_mux_collected),
+      qtmux);
+  gst_collect_pads2_set_event_function (qtmux->collect,
+      (GstCollectPads2EventFunction) GST_DEBUG_FUNCPTR (gst_qt_mux_sink_event),
       qtmux);
 
   /* properties set to default upon construction */
@@ -3258,13 +3262,14 @@ refuse_renegotiation:
 }
 
 static gboolean
-gst_qt_mux_sink_event (GstPad * pad, GstEvent * event)
+gst_qt_mux_sink_event (GstCollectPads2 * pads, GstCollectData2 * data,
+    GstEvent * event, gpointer user_data)
 {
-  gboolean ret;
   GstQTMux *qtmux;
   guint32 avg_bitrate = 0, max_bitrate = 0;
+  GstPad *pad = data->pad;
 
-  qtmux = GST_QT_MUX_CAST (gst_pad_get_parent (pad));
+  qtmux = GST_QT_MUX_CAST (user_data);
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_TAG:{
       GstTagList *list;
@@ -3298,10 +3303,8 @@ gst_qt_mux_sink_event (GstPad * pad, GstEvent * event)
       break;
   }
 
-  ret = qtmux->collect_event (pad, event);
-  gst_object_unref (qtmux);
-
-  return ret;
+  /* now GstCollectPads2 can take care of the rest, e.g. EOS */
+  return FALSE;
 }
 
 static void
@@ -3374,14 +3377,6 @@ gst_qt_mux_request_new_pad (GstElement * element,
   else
     gst_pad_set_setcaps_function (newpad,
         GST_DEBUG_FUNCPTR (gst_qt_mux_video_sink_set_caps));
-
-  /* FIXME: hacked way to override/extend the event function of
-   * GstCollectPads2; because it sets its own event function giving the
-   * element no access to events.
-   */
-  qtmux->collect_event = (GstPadEventFunction) GST_PAD_EVENTFUNC (newpad);
-  gst_pad_set_event_function (newpad,
-      GST_DEBUG_FUNCPTR (gst_qt_mux_sink_event));
 
   gst_pad_set_active (newpad, TRUE);
   gst_element_add_pad (element, newpad);
