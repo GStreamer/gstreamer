@@ -100,6 +100,9 @@ GST_BOILERPLATE_FULL (GstFlvMux, gst_flv_mux, GstElement, GST_TYPE_ELEMENT,
 static void gst_flv_mux_finalize (GObject * object);
 static GstFlowReturn
 gst_flv_mux_collected (GstCollectPads2 * pads, gpointer user_data);
+static gboolean
+gst_flv_mux_handle_sink_event (GstCollectPads2 * pads, GstCollectData2 * data,
+    GstEvent * event, gpointer user_data);
 
 static gboolean gst_flv_mux_handle_src_event (GstPad * pad, GstEvent * event);
 static GstPad *gst_flv_mux_request_new_pad (GstElement * element,
@@ -200,6 +203,9 @@ gst_flv_mux_init (GstFlvMux * mux, GstFlvMuxClass * g_class)
   mux->collect = gst_collect_pads2_new ();
   gst_collect_pads2_set_function (mux->collect,
       (GstCollectPads2Function) GST_DEBUG_FUNCPTR (gst_flv_mux_collected), mux);
+  gst_collect_pads2_set_event_function (mux->collect,
+      (GstCollectPads2EventFunction)
+      GST_DEBUG_FUNCPTR (gst_flv_mux_handle_sink_event), mux);
 
   gst_flv_mux_reset (GST_ELEMENT (mux));
 }
@@ -260,10 +266,10 @@ gst_flv_mux_handle_src_event (GstPad * pad, GstEvent * event)
 }
 
 static gboolean
-gst_flv_mux_handle_sink_event (GstPad * pad, GstEvent * event)
+gst_flv_mux_handle_sink_event (GstCollectPads2 * pads, GstCollectData2 * data,
+    GstEvent * event, gpointer user_data)
 {
-  GstFlvMux *mux = GST_FLV_MUX (gst_pad_get_parent (pad));
-  gboolean ret = TRUE;
+  GstFlvMux *mux = GST_FLV_MUX (user_data);
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_TAG:{
@@ -281,11 +287,7 @@ gst_flv_mux_handle_sink_event (GstPad * pad, GstEvent * event)
   }
 
   /* now GstCollectPads2 can take care of the rest, e.g. EOS */
-  if (ret)
-    ret = mux->collect_event (pad, event);
-  gst_object_unref (mux);
-
-  return ret;
+  return FALSE;
 }
 
 static gboolean
@@ -541,14 +543,6 @@ gst_flv_mux_request_new_pad (GstElement * element,
   cpad->audio_codec_data = NULL;
   cpad->video_codec_data = NULL;
   gst_flv_mux_reset_pad (mux, cpad, video);
-
-  /* FIXME: hacked way to override/extend the event function of
-   * GstCollectPads2; because it sets its own event function giving the
-   * element no access to events.
-   */
-  mux->collect_event = (GstPadEventFunction) GST_PAD_EVENTFUNC (pad);
-  gst_pad_set_event_function (pad,
-      GST_DEBUG_FUNCPTR (gst_flv_mux_handle_sink_event));
 
   gst_pad_set_setcaps_function (pad, setcapsfunc);
   gst_pad_set_active (pad, TRUE);

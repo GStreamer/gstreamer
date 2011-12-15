@@ -68,8 +68,6 @@ typedef struct _GstFlvMux {
   GstCollectPads2 *collect;
 
   /* <private> */
-  GstPadEventFunction collect_event;
-
   GstFlvMuxState state;
   gboolean have_audio;
   gboolean have_video;
