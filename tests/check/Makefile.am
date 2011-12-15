@@ -165,7 +165,6 @@ VALGRIND_TESTS_DISABLE = \
 noinst_PROGRAMS = \
         elements/camerabin2 \
 	pipelines/colorspace \
-        $(check_jifmux) \
 	$(check_neon)
 
 check_PROGRAMS = \
@@ -188,6 +187,7 @@ check_PROGRAMS = \
 	elements/camerabin \
 	elements/dataurisrc \
 	elements/legacyresample \
+        $(check_jifmux) \
 	elements/jpegparse \
 	$(check_logoinsert) \
 	elements/h263parse \
