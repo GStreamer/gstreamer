@@ -27,7 +27,7 @@
  * <refsect2>
  * <title>Color space conversion</title>
  * <para>
- * When needed, the color space conversion is made in a fragment shader using 
+ * When needed, the color space conversion is made in a fragment shader using
  * one frame buffer object instance.
  * </para>
  * </refsect2>
@@ -48,14 +48,14 @@
  * |[
  * gst-launch -v gltestsrc ! gldownload ! xvimagesink
  * ]| A pipeline to test hardware colorspace conversion.
- * Your driver must support GLSL (OpenGL Shading Language needs OpenGL >= 2.1). 
+ * Your driver must support GLSL (OpenGL Shading Language needs OpenGL >= 2.1).
  * Texture RGB32 is converted to one of the 4 following format YUY2, UYVY, I420, YV12 and AYUV,
  * through some fragment shaders and using one framebuffer (FBO extension OpenGL >= 1.4).
  * MESA >= 7.1 supports GLSL but it's made in software.
  * |[
  * gst-launch -v videotestsrc ! glupload ! gldownload ! "video/x-raw-yuv, format=(fourcc)YUY2" ! glimagesink
  * ]| A pipeline to test hardware colorspace conversion
- * FBO and GLSL are required. 
+ * FBO and GLSL are required.
  * </refsect2>
  */
 
@@ -235,6 +235,8 @@ gst_gl_download_src_query (GstPad * pad, GstQuery * query)
       res = gst_pad_query_default (pad, query);
       break;
   }
+
+  gst_object_unref (download);
 
   return res;
 }

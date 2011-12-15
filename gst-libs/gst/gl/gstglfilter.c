@@ -202,6 +202,8 @@ gst_gl_filter_src_query (GstPad * pad, GstQuery * query)
       break;
   }
 
+  gst_object_unref (parent);
+
   return res;
 }
 
