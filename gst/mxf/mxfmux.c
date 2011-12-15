@@ -65,7 +65,7 @@ static void gst_mxf_mux_set_property (GObject * object,
 static void gst_mxf_mux_get_property (GObject * object,
     guint prop_id, GValue * value, GParamSpec * pspec);
 
-static GstFlowReturn gst_mxf_mux_collected (GstCollectPads * pads,
+static GstFlowReturn gst_mxf_mux_collected (GstCollectPads2 * pads,
     gpointer user_data);
 
 static gboolean gst_mxf_mux_handle_src_event (GstPad * pad, GstEvent * event);
@@ -145,9 +145,9 @@ gst_mxf_mux_init (GstMXFMux * mux, GstMXFMuxClass * g_class)
   gst_caps_unref (caps);
   gst_element_add_pad (GST_ELEMENT (mux), mux->srcpad);
 
-  mux->collect = gst_collect_pads_new ();
-  gst_collect_pads_set_function (mux->collect,
-      (GstCollectPadsFunction) GST_DEBUG_FUNCPTR (gst_mxf_mux_collected), mux);
+  mux->collect = gst_collect_pads2_new ();
+  gst_collect_pads2_set_function (mux->collect,
+      (GstCollectPads2Function) GST_DEBUG_FUNCPTR (gst_mxf_mux_collected), mux);
 
   gst_mxf_mux_reset (mux);
 }
@@ -208,7 +208,7 @@ gst_mxf_mux_reset (GstMXFMux * mux)
     g_object_unref (cpad->adapter);
     g_free (cpad->mapping_data);
 
-    gst_collect_pads_remove_pad (mux->collect, cpad->collect.pad);
+    gst_collect_pads2_remove_pad (mux->collect, cpad->collect.pad);
   }
 
   mux->state = GST_MXF_MUX_STATE_HEADER;
@@ -267,7 +267,7 @@ gst_mxf_mux_handle_sink_event (GstPad * pad, GstEvent * event)
       break;
   }
 
-  /* now GstCollectPads can take care of the rest, e.g. EOS */
+  /* now GstCollectPads2 can take care of the rest, e.g. EOS */
   if (ret)
     ret = mux->collect_event (pad, event);
   gst_object_unref (mux);
@@ -337,13 +337,13 @@ gst_mxf_mux_setcaps (GstPad * pad, GstCaps * caps)
       for (i = 0; i < mux->preface->content_storage->n_packages; i++) {
         MXFMetadataSourcePackage *package;
 
-        if (!MXF_IS_METADATA_SOURCE_PACKAGE (mux->preface->content_storage->
-                packages[i]))
+        if (!MXF_IS_METADATA_SOURCE_PACKAGE (mux->preface->
+                content_storage->packages[i]))
           continue;
 
         package =
-            MXF_METADATA_SOURCE_PACKAGE (mux->preface->content_storage->
-            packages[i]);
+            MXF_METADATA_SOURCE_PACKAGE (mux->preface->
+            content_storage->packages[i]);
 
         if (!package->descriptor)
           continue;
@@ -419,13 +419,13 @@ gst_mxf_mux_request_new_pad (GstElement * element,
   pad = gst_pad_new_from_template (templ, name);
   g_free (name);
   cpad = (GstMXFMuxPad *)
-      gst_collect_pads_add_pad (mux->collect, pad, sizeof (GstMXFMuxPad));
+      gst_collect_pads2_add_pad (mux->collect, pad, sizeof (GstMXFMuxPad));
   cpad->last_timestamp = 0;
   cpad->adapter = gst_adapter_new ();
   cpad->writer = writer;
 
   /* FIXME: hacked way to override/extend the event function of
-   * GstCollectPads; because it sets its own event function giving the
+   * GstCollectPads2; because it sets its own event function giving the
    * element no access to events.
    */
   mux->collect_event = (GstPadEventFunction) GST_PAD_EVENTFUNC (pad);
@@ -449,7 +449,7 @@ gst_mxf_mux_release_pad (GstElement * element, GstPad * pad)
      g_object_unref (cpad->adapter);
      g_free (cpad->mapping_data);
 
-     gst_collect_pads_remove_pad (mux->collect, pad);
+     gst_collect_pads2_remove_pad (mux->collect, pad);
      gst_element_remove_pad (element, pad); */
 }
 
@@ -705,8 +705,8 @@ gst_mxf_mux_create_metadata (GstMXFMux * mux)
           if (p->parent.n_tracks == 1) {
             p->descriptor = (MXFMetadataGenericDescriptor *) cpad->descriptor;
           } else {
-            MXF_METADATA_MULTIPLE_DESCRIPTOR (p->descriptor)->
-                sub_descriptors[n] =
+            MXF_METADATA_MULTIPLE_DESCRIPTOR (p->
+                descriptor)->sub_descriptors[n] =
                 (MXFMetadataGenericDescriptor *) cpad->descriptor;
           }
 
@@ -928,8 +928,8 @@ gst_mxf_mux_create_metadata (GstMXFMux * mux)
         g_new0 (MXFMetadataEssenceContainerData *, 1);
     cstorage->essence_container_data[0] = (MXFMetadataEssenceContainerData *)
         gst_mini_object_new (MXF_TYPE_METADATA_ESSENCE_CONTAINER_DATA);
-    mxf_uuid_init (&MXF_METADATA_BASE (cstorage->essence_container_data[0])->
-        instance_uid, mux->metadata);
+    mxf_uuid_init (&MXF_METADATA_BASE (cstorage->
+            essence_container_data[0])->instance_uid, mux->metadata);
     g_hash_table_insert (mux->metadata,
         &MXF_METADATA_BASE (cstorage->essence_container_data[0])->instance_uid,
         cstorage->essence_container_data[0]);
@@ -1098,9 +1098,8 @@ gst_mxf_mux_handle_buffer (GstMXFMux * mux, GstMXFMuxPad * cpad)
   GstBuffer *packet;
   GstFlowReturn ret = GST_FLOW_OK;
   guint8 slen, ber[9];
-  gboolean flush =
-      (cpad->collect.abidata.ABI.eos && !cpad->have_complete_edit_unit
-      && cpad->collect.buffer == NULL);
+  gboolean flush = ((cpad->collect.state & GST_COLLECT_PADS2_STATE_EOS)
+      && !cpad->have_complete_edit_unit && cpad->collect.buffer == NULL);
 
   if (cpad->have_complete_edit_unit) {
     GST_DEBUG_OBJECT (cpad->collect.pad,
@@ -1108,7 +1107,7 @@ gst_mxf_mux_handle_buffer (GstMXFMux * mux, GstMXFMuxPad * cpad)
         cpad->source_track->parent.track_id, cpad->pos);
     buf = NULL;
   } else if (!flush) {
-    buf = gst_collect_pads_pop (mux->collect, &cpad->collect);
+    buf = gst_collect_pads2_pop (mux->collect, &cpad->collect);
   }
 
   if (buf) {
@@ -1246,22 +1245,23 @@ gst_mxf_mux_handle_eos (GstMXFMux * mux)
 
     /* Update durations */
     cpad->source_track->parent.sequence->duration = cpad->pos;
-    MXF_METADATA_SOURCE_CLIP (cpad->source_track->parent.sequence->
-        structural_components[0])->parent.duration = cpad->pos;
+    MXF_METADATA_SOURCE_CLIP (cpad->source_track->parent.
+        sequence->structural_components[0])->parent.duration = cpad->pos;
     for (i = 0; i < mux->preface->content_storage->packages[0]->n_tracks; i++) {
       MXFMetadataTimelineTrack *track;
 
-      if (!MXF_IS_METADATA_TIMELINE_TRACK (mux->preface->content_storage->
-              packages[0]->tracks[i])
-          || !MXF_IS_METADATA_SOURCE_CLIP (mux->preface->content_storage->
-              packages[0]->tracks[i]->sequence->structural_components[0]))
+      if (!MXF_IS_METADATA_TIMELINE_TRACK (mux->preface->
+              content_storage->packages[0]->tracks[i])
+          || !MXF_IS_METADATA_SOURCE_CLIP (mux->preface->
+              content_storage->packages[0]->tracks[i]->sequence->
+              structural_components[0]))
         continue;
 
       track =
-          MXF_METADATA_TIMELINE_TRACK (mux->preface->content_storage->
-          packages[0]->tracks[i]);
-      if (MXF_METADATA_SOURCE_CLIP (track->parent.sequence->
-              structural_components[0])->source_track_id ==
+          MXF_METADATA_TIMELINE_TRACK (mux->preface->
+          content_storage->packages[0]->tracks[i]);
+      if (MXF_METADATA_SOURCE_CLIP (track->parent.
+              sequence->structural_components[0])->source_track_id ==
           cpad->source_track->parent.track_id) {
         track->parent.sequence->structural_components[0]->duration = cpad->pos;
         track->parent.sequence->duration = cpad->pos;
@@ -1272,8 +1272,8 @@ gst_mxf_mux_handle_eos (GstMXFMux * mux)
   /* Update timecode track duration */
   {
     MXFMetadataTimelineTrack *track =
-        MXF_METADATA_TIMELINE_TRACK (mux->preface->content_storage->
-        packages[0]->tracks[0]);
+        MXF_METADATA_TIMELINE_TRACK (mux->preface->
+        content_storage->packages[0]->tracks[0]);
     MXFMetadataSequence *sequence = track->parent.sequence;
     MXFMetadataTimecodeComponent *component =
         MXF_METADATA_TIMECODE_COMPONENT (sequence->structural_components[0]);
@@ -1368,7 +1368,7 @@ _sort_mux_pads (gconstpointer a, gconstpointer b)
 }
 
 static GstFlowReturn
-gst_mxf_mux_collected (GstCollectPads * pads, gpointer user_data)
+gst_mxf_mux_collected (GstCollectPads2 * pads, gpointer user_data)
 {
   GstMXFMux *mux = GST_MXF_MUX (user_data);
   GstMXFMuxPad *best = NULL;
@@ -1423,14 +1423,17 @@ gst_mxf_mux_collected (GstCollectPads * pads, gpointer user_data)
 
   do {
     for (sl = mux->collect->data; sl; sl = sl->next) {
+      gboolean pad_eos;
       GstMXFMuxPad *cpad = sl->data;
       GstClockTime next_gc_timestamp =
           gst_util_uint64_scale ((mux->last_gc_position + 1) * GST_SECOND,
           mux->min_edit_rate.d, mux->min_edit_rate.n);
 
-      eos &= cpad->collect.abidata.ABI.eos;
+      pad_eos = cpad->collect.state & GST_COLLECT_PADS2_STATE_EOS;
+      if (!pad_eos)
+        eos = FALSE;
 
-      if ((!cpad->collect.abidata.ABI.eos || cpad->have_complete_edit_unit ||
+      if ((!pad_eos || cpad->have_complete_edit_unit ||
               gst_adapter_available (cpad->adapter) > 0 || cpad->collect.buffer)
           && cpad->last_timestamp < next_gc_timestamp) {
         best = cpad;
@@ -1478,12 +1481,12 @@ gst_mxf_mux_change_state (GstElement * element, GstStateChange transition)
     case GST_STATE_CHANGE_NULL_TO_READY:
       break;
     case GST_STATE_CHANGE_READY_TO_PAUSED:
-      gst_collect_pads_start (mux->collect);
+      gst_collect_pads2_start (mux->collect);
       break;
     case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
       break;
     case GST_STATE_CHANGE_PAUSED_TO_READY:
-      gst_collect_pads_stop (mux->collect);
+      gst_collect_pads2_stop (mux->collect);
       break;
     default:
       break;
