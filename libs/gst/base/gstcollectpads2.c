@@ -1527,6 +1527,7 @@ gst_collect_pads2_default_collected (GstCollectPads2 * pads, gpointer user_data)
      * so give another thread a chance to deliver a possibly
      * older buffer; don't charge on yet with the current oldest */
     ret = GST_FLOW_OK;
+    goto done;
   }
 
   best = pads->earliest_data;
