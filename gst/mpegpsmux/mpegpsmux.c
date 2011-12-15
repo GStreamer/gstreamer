@@ -96,7 +96,7 @@ static gboolean new_packet_cb (guint8 * data, guint len, void *user_data);
 static void release_buffer_cb (guint8 * data, void *user_data);
 
 static gboolean mpegpsdemux_prepare_srcpad (MpegPsMux * mux);
-static GstFlowReturn mpegpsmux_collected (GstCollectPads * pads,
+static GstFlowReturn mpegpsmux_collected (GstCollectPads2 * pads,
     MpegPsMux * mux);
 static GstPad *mpegpsmux_request_new_pad (GstElement * element,
     GstPadTemplate * templ, const gchar * name);
@@ -151,9 +151,9 @@ mpegpsmux_init (MpegPsMux * mux, MpegPsMuxClass * g_class)
   gst_pad_use_fixed_caps (mux->srcpad);
   gst_element_add_pad (GST_ELEMENT (mux), mux->srcpad);
 
-  mux->collect = gst_collect_pads_new ();
-  gst_collect_pads_set_function (mux->collect,
-      (GstCollectPadsFunction) GST_DEBUG_FUNCPTR (mpegpsmux_collected), mux);
+  mux->collect = gst_collect_pads2_new ();
+  gst_collect_pads2_set_function (mux->collect,
+      (GstCollectPads2Function) GST_DEBUG_FUNCPTR (mpegpsmux_collected), mux);
 
   mux->psmux = psmux_new ();
   psmux_set_write_func (mux->psmux, new_packet_cb, mux);
@@ -369,7 +369,7 @@ mpegpsmux_create_streams (MpegPsMux * mux)
 
   /* Create the streams */
   while (walk) {
-    GstCollectData *c_data = (GstCollectData *) walk->data;
+    GstCollectData2 *c_data = (GstCollectData2 *) walk->data;
     MpegPsPadData *ps_data = (MpegPsPadData *) walk->data;
 
     walk = g_slist_next (walk);
@@ -394,11 +394,11 @@ mpegpsmux_choose_best_stream (MpegPsMux * mux)
   /* Choose from which stream to mux with */
 
   MpegPsPadData *best = NULL;
-  GstCollectData *c_best = NULL;
+  GstCollectData2 *c_best = NULL;
   GSList *walk;
 
   for (walk = mux->collect->data; walk != NULL; walk = g_slist_next (walk)) {
-    GstCollectData *c_data = (GstCollectData *) walk->data;
+    GstCollectData2 *c_data = (GstCollectData2 *) walk->data;
     MpegPsPadData *ps_data = (MpegPsPadData *) walk->data;
 
     if (ps_data->eos == FALSE) {
@@ -406,7 +406,7 @@ mpegpsmux_choose_best_stream (MpegPsMux * mux)
         GstBuffer *buf;
 
         ps_data->queued_buf = buf =
-            gst_collect_pads_peek (mux->collect, c_data);
+            gst_collect_pads2_peek (mux->collect, c_data);
 
         if (buf != NULL) {
           if (ps_data->prepare_func) {
@@ -467,7 +467,7 @@ mpegpsmux_choose_best_stream (MpegPsMux * mux)
     }
   }
   if (c_best) {
-    gst_buffer_unref (gst_collect_pads_pop (mux->collect, c_best));
+    gst_buffer_unref (gst_collect_pads2_pop (mux->collect, c_best));
   }
 
   return best;
@@ -488,7 +488,7 @@ mpegpsmux_push_gop_list (MpegPsMux * mux)
 }
 
 static GstFlowReturn
-mpegpsmux_collected (GstCollectPads * pads, MpegPsMux * mux)
+mpegpsmux_collected (GstCollectPads2 * pads, MpegPsMux * mux)
 {
   /* main muxing function */
 
@@ -595,7 +595,7 @@ mpegpsmux_request_new_pad (GstElement * element,
 
   pad = gst_pad_new_from_template (templ, name);
 
-  pad_data = (MpegPsPadData *) gst_collect_pads_add_pad (mux->collect, pad,
+  pad_data = (MpegPsPadData *) gst_collect_pads2_add_pad (mux->collect, pad,
       sizeof (MpegPsPadData));
   if (pad_data == NULL)
     goto pad_failure;
@@ -612,7 +612,7 @@ mpegpsmux_request_new_pad (GstElement * element,
 could_not_add:
   GST_ELEMENT_ERROR (element, STREAM, FAILED,
       ("Internal data stream error."), ("Could not add pad to element"));
-  gst_collect_pads_remove_pad (mux->collect, pad);
+  gst_collect_pads2_remove_pad (mux->collect, pad);
   gst_object_unref (pad);
   return NULL;
 pad_failure:
@@ -647,7 +647,7 @@ mpegpsmux_release_pad (GstElement * element, GstPad * pad)
     mux->video_stream_id = 0;
   GST_OBJECT_UNLOCK (pad);
 
-  gst_collect_pads_remove_pad (mux->collect, pad);
+  gst_collect_pads2_remove_pad (mux->collect, pad);
 }
 
 static void
@@ -761,12 +761,12 @@ mpegpsmux_change_state (GstElement * element, GstStateChange transition)
     case GST_STATE_CHANGE_NULL_TO_READY:
       break;
     case GST_STATE_CHANGE_READY_TO_PAUSED:
-      gst_collect_pads_start (mux->collect);
+      gst_collect_pads2_start (mux->collect);
       break;
     case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
       break;
     case GST_STATE_CHANGE_PAUSED_TO_READY:
-      gst_collect_pads_stop (mux->collect);
+      gst_collect_pads2_stop (mux->collect);
       break;
     case GST_STATE_CHANGE_READY_TO_NULL:
       break;
