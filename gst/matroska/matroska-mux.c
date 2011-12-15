@@ -575,12 +575,6 @@ gst_matroska_pad_reset (GstMatroskaPad * collect_pad, gboolean full)
     collect_pad->track = NULL;
   }
 
-  /* free cached buffer */
-  if (collect_pad->buffer != NULL) {
-    gst_buffer_unref (collect_pad->buffer);
-    collect_pad->buffer = NULL;
-  }
-
   if (!full && type != 0) {
     GstMatroskaTrackContext *context;
 
@@ -608,7 +602,6 @@ gst_matroska_pad_reset (GstMatroskaPad * collect_pad, gboolean full)
     /* TODO: check default values for the context */
     context->flags = GST_MATROSKA_TRACK_ENABLED | GST_MATROSKA_TRACK_DEFAULT;
     collect_pad->track = context;
-    collect_pad->buffer = NULL;
     collect_pad->duration = 0;
     collect_pad->start_ts = GST_CLOCK_TIME_NONE;
     collect_pad->end_ts = GST_CLOCK_TIME_NONE;
@@ -2689,10 +2682,11 @@ gst_matroska_mux_stop_streamheader (GstMatroskaMux * mux)
  * Returns: Result of the gst_pad_push issued to write the data.
  */
 static GstFlowReturn
-gst_matroska_mux_write_data (GstMatroskaMux * mux, GstMatroskaPad * collect_pad)
+gst_matroska_mux_write_data (GstMatroskaMux * mux, GstMatroskaPad * collect_pad,
+    GstBuffer * buf)
 {
   GstEbmlWrite *ebml = mux->ebml_write;
-  GstBuffer *buf, *hdr;
+  GstBuffer *hdr;
   guint64 blockgroup;
   gboolean write_duration;
   gint16 relative_timestamp;
@@ -2702,8 +2696,6 @@ gst_matroska_mux_write_data (GstMatroskaMux * mux, GstMatroskaPad * collect_pad)
   GstMatroskamuxPad *pad;
 
   /* write data */
-  buf = collect_pad->buffer;
-  collect_pad->buffer = NULL;
   pad = GST_MATROSKAMUX_PAD_CAST (collect_pad->collect.pad);
 
   /* vorbis/theora headers are retrieved from caps and put in CodecPrivate */
@@ -2908,7 +2900,6 @@ gst_matroska_mux_handle_buffer (GstCollectPads2 * pads, GstCollectData2 * data,
   GstMatroskaMux *mux = GST_MATROSKA_MUX (user_data);
   GstEbmlWrite *ebml = mux->ebml_write;
   GstMatroskaPad *best;
-  gboolean popped;
   GstFlowReturn ret = GST_FLOW_OK;
 
   GST_DEBUG_OBJECT (mux, "Collected pads");
@@ -2927,54 +2918,53 @@ gst_matroska_mux_handle_buffer (GstCollectPads2 * pads, GstCollectData2 * data,
     mux->state = GST_MATROSKA_MUX_STATE_DATA;
   }
 
-  do {
-    /* provided with stream to write from */
-    best = (GstMatroskaPad *) data;
+  /* provided with stream to write from */
+  best = (GstMatroskaPad *) data;
 
-    /* if there is no best pad, we have reached EOS */
-    if (best == NULL) {
-      GST_DEBUG_OBJECT (mux, "No best pad finishing...");
-      if (!mux->streamable) {
-        gst_matroska_mux_finish (mux);
-      } else {
-        GST_DEBUG_OBJECT (mux, "... but streamable, nothing to finish");
-      }
-      gst_pad_push_event (mux->srcpad, gst_event_new_eos ());
-      ret = GST_FLOW_UNEXPECTED;
-      break;
+  /* if there is no best pad, we have reached EOS */
+  if (best == NULL) {
+    GST_DEBUG_OBJECT (mux, "No best pad finishing...");
+    if (!mux->streamable) {
+      gst_matroska_mux_finish (mux);
+    } else {
+      GST_DEBUG_OBJECT (mux, "... but streamable, nothing to finish");
     }
+    gst_pad_push_event (mux->srcpad, gst_event_new_eos ());
+    ret = GST_FLOW_UNEXPECTED;
+    goto exit;
+  }
 
-    best->buffer = buf;
-    popped = TRUE;
+  /* if we have a best stream, should also have a buffer */
+  g_assert (buf);
 
-    GST_DEBUG_OBJECT (best->collect.pad, "best pad - buffer ts %"
-        GST_TIME_FORMAT " dur %" GST_TIME_FORMAT,
-        GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (best->buffer)),
-        GST_TIME_ARGS (GST_BUFFER_DURATION (best->buffer)));
+  GST_DEBUG_OBJECT (best->collect.pad, "best pad - buffer ts %"
+      GST_TIME_FORMAT " dur %" GST_TIME_FORMAT,
+      GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buf)),
+      GST_TIME_ARGS (GST_BUFFER_DURATION (buf)));
 
-    /* make note of first and last encountered timestamps, so we can calculate
-     * the actual duration later when we send an updated header on eos */
-    if (GST_BUFFER_TIMESTAMP_IS_VALID (best->buffer)) {
-      GstClockTime start_ts = GST_BUFFER_TIMESTAMP (best->buffer);
-      GstClockTime end_ts = start_ts;
+  /* make note of first and last encountered timestamps, so we can calculate
+   * the actual duration later when we send an updated header on eos */
+  if (GST_BUFFER_TIMESTAMP_IS_VALID (buf)) {
+    GstClockTime start_ts = GST_BUFFER_TIMESTAMP (buf);
+    GstClockTime end_ts = start_ts;
 
-      if (GST_BUFFER_DURATION_IS_VALID (best->buffer))
-        end_ts += GST_BUFFER_DURATION (best->buffer);
-      else if (best->track->default_duration)
-        end_ts += best->track->default_duration;
+    if (GST_BUFFER_DURATION_IS_VALID (buf))
+      end_ts += GST_BUFFER_DURATION (buf);
+    else if (best->track->default_duration)
+      end_ts += best->track->default_duration;
 
-      if (!GST_CLOCK_TIME_IS_VALID (best->end_ts) || end_ts > best->end_ts)
-        best->end_ts = end_ts;
+    if (!GST_CLOCK_TIME_IS_VALID (best->end_ts) || end_ts > best->end_ts)
+      best->end_ts = end_ts;
 
-      if (G_UNLIKELY (best->start_ts == GST_CLOCK_TIME_NONE ||
-              start_ts < best->start_ts))
-        best->start_ts = start_ts;
-    }
+    if (G_UNLIKELY (best->start_ts == GST_CLOCK_TIME_NONE ||
+            start_ts < best->start_ts))
+      best->start_ts = start_ts;
+  }
 
-    /* write one buffer */
-    ret = gst_matroska_mux_write_data (mux, best);
-  } while (ret == GST_FLOW_OK && !popped);
+  /* write one buffer */
+  ret = gst_matroska_mux_write_data (mux, best, buf);
 
+exit:
   return ret;
 }
 

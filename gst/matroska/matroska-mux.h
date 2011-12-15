@@ -59,8 +59,6 @@ typedef struct
   GstCollectData2 collect;       /* we extend the CollectData */
   GstMatroskaTrackContext *track;
 
-  GstBuffer *buffer;            /* the queued buffer for this pad */
-
   guint64 duration;
   GstClockTime start_ts;
   GstClockTime end_ts;    /* last timestamp + (if available) duration */
