@@ -222,8 +222,8 @@ GST_BOILERPLATE_FULL (GstMatroskaMux, gst_matroska_mux, GstElement,
 static void gst_matroska_mux_finalize (GObject * object);
 
 /* Pads collected callback */
-static GstFlowReturn
-gst_matroska_mux_collected (GstCollectPads2 * pads, gpointer user_data);
+static GstFlowReturn gst_matroska_mux_handle_buffer (GstCollectPads2 * pads,
+    GstCollectData2 * data, GstBuffer * buf, gpointer user_data);
 static gboolean gst_matroska_mux_handle_sink_event (GstCollectPads2 * pads,
     GstCollectData2 * data, GstEvent * event, gpointer user_data);
 
@@ -453,12 +453,12 @@ gst_matroska_mux_init (GstMatroskaMux * mux, GstMatroskaMuxClass * g_class)
   gst_element_add_pad (GST_ELEMENT (mux), mux->srcpad);
 
   mux->collect = gst_collect_pads2_new ();
-  gst_collect_pads2_set_function (mux->collect,
-      (GstCollectPads2Function) GST_DEBUG_FUNCPTR (gst_matroska_mux_collected),
-      mux);
+  gst_collect_pads2_set_clip_function (mux->collect,
+      GST_DEBUG_FUNCPTR (gst_collect_pads2_clip_running_time), mux);
+  gst_collect_pads2_set_buffer_function (mux->collect,
+      GST_DEBUG_FUNCPTR (gst_matroska_mux_handle_buffer), mux);
   gst_collect_pads2_set_event_function (mux->collect,
-      (GstCollectPads2EventFunction) GST_DEBUG_FUNCPTR
-      (gst_matroska_mux_handle_sink_event), mux);
+      GST_DEBUG_FUNCPTR (gst_matroska_mux_handle_sink_event), mux);
 
   mux->ebml_write = gst_ebml_write_new (mux->srcpad);
   mux->doctype = GST_MATROSKA_DOCTYPE_MATROSKA;
@@ -2551,77 +2551,6 @@ gst_matroska_mux_finish (GstMatroskaMux * mux)
   gst_ebml_write_master_finish (ebml, mux->segment_pos);
 }
 
-
-/**
- * gst_matroska_mux_best_pad:
- * @mux: #GstMatroskaMux
- * @popped: True if at least one buffer was popped from #GstCollectPads2
- *
- * Find a pad with the oldest data
- * (data from this pad should be written first).
- *
- * Returns: Selected pad.
- */
-static GstMatroskaPad *
-gst_matroska_mux_best_pad (GstMatroskaMux * mux, gboolean * popped)
-{
-  GSList *collected;
-  GstMatroskaPad *best = NULL;
-
-  *popped = FALSE;
-  for (collected = mux->collect->data; collected;
-      collected = g_slist_next (collected)) {
-    GstMatroskaPad *collect_pad;
-
-    collect_pad = (GstMatroskaPad *) collected->data;
-    /* fetch a new buffer if needed */
-    if (collect_pad->buffer == NULL) {
-      collect_pad->buffer = gst_collect_pads2_pop (mux->collect,
-          (GstCollectData2 *) collect_pad);
-
-      if (collect_pad->buffer != NULL) {
-        GstClockTime time;
-
-        *popped = TRUE;
-        /* convert to running time */
-        time = GST_BUFFER_TIMESTAMP (collect_pad->buffer);
-        /* invalid should pass */
-        if (G_LIKELY (GST_CLOCK_TIME_IS_VALID (time))) {
-          time = gst_segment_to_running_time (&collect_pad->collect.segment,
-              GST_FORMAT_TIME, time);
-          if (G_UNLIKELY (!GST_CLOCK_TIME_IS_VALID (time))) {
-            GST_DEBUG_OBJECT (mux, "clipping buffer on pad %s outside segment",
-                GST_PAD_NAME (collect_pad->collect.pad));
-            gst_buffer_unref (collect_pad->buffer);
-            collect_pad->buffer = NULL;
-            return NULL;
-          } else {
-            GST_LOG_OBJECT (mux, "buffer ts %" GST_TIME_FORMAT " -> %"
-                GST_TIME_FORMAT " running time",
-                GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (collect_pad->buffer)),
-                GST_TIME_ARGS (time));
-            collect_pad->buffer =
-                gst_buffer_make_metadata_writable (collect_pad->buffer);
-            GST_BUFFER_TIMESTAMP (collect_pad->buffer) = time;
-          }
-        }
-      }
-    }
-
-    /* if we have a buffer check if it is better then the current best one */
-    if (collect_pad->buffer != NULL) {
-      if (best == NULL || !GST_BUFFER_TIMESTAMP_IS_VALID (collect_pad->buffer)
-          || (GST_BUFFER_TIMESTAMP_IS_VALID (best->buffer)
-              && GST_BUFFER_TIMESTAMP (collect_pad->buffer) <
-              GST_BUFFER_TIMESTAMP (best->buffer))) {
-        best = collect_pad;
-      }
-    }
-  }
-
-  return best;
-}
-
 /**
  * gst_matroska_mux_buffer_header:
  * @track: Track context.
@@ -2963,9 +2892,8 @@ gst_matroska_mux_write_data (GstMatroskaMux * mux, GstMatroskaPad * collect_pad)
   }
 }
 
-
 /**
- * gst_matroska_mux_collected:
+ * gst_matroska_mux_handle_buffer:
  * @pads: #GstCollectPads2
  * @uuser_data: #GstMatroskaMux
  *
@@ -2974,7 +2902,8 @@ gst_matroska_mux_write_data (GstMatroskaMux * mux, GstMatroskaPad * collect_pad)
  * Returns: #GstFlowReturn
  */
 static GstFlowReturn
-gst_matroska_mux_collected (GstCollectPads2 * pads, gpointer user_data)
+gst_matroska_mux_handle_buffer (GstCollectPads2 * pads, GstCollectData2 * data,
+    GstBuffer * buf, gpointer user_data)
 {
   GstMatroskaMux *mux = GST_MATROSKA_MUX (user_data);
   GstEbmlWrite *ebml = mux->ebml_write;
@@ -2999,14 +2928,11 @@ gst_matroska_mux_collected (GstCollectPads2 * pads, gpointer user_data)
   }
 
   do {
-    /* which stream to write from? */
-    best = gst_matroska_mux_best_pad (mux, &popped);
+    /* provided with stream to write from */
+    best = (GstMatroskaPad *) data;
 
     /* if there is no best pad, we have reached EOS */
     if (best == NULL) {
-      /* buffer popped, but none returned means it was clipped */
-      if (popped)
-        break;
       GST_DEBUG_OBJECT (mux, "No best pad finishing...");
       if (!mux->streamable) {
         gst_matroska_mux_finish (mux);
@@ -3017,6 +2943,10 @@ gst_matroska_mux_collected (GstCollectPads2 * pads, gpointer user_data)
       ret = GST_FLOW_UNEXPECTED;
       break;
     }
+
+    best->buffer = buf;
+    popped = TRUE;
+
     GST_DEBUG_OBJECT (best->collect.pad, "best pad - buffer ts %"
         GST_TIME_FORMAT " dur %" GST_TIME_FORMAT,
         GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (best->buffer)),
