@@ -403,8 +403,10 @@ gst_kate_tiger_dispose (GObject * object)
     tiger->default_font_desc = NULL;
   }
 
-  gst_buffer_unref (tiger->render_buffer);
-  tiger->render_buffer = NULL;
+  if (tiger->render_buffer) {
+    gst_buffer_unref (tiger->render_buffer);
+    tiger->render_buffer = NULL;
+  }
 
   g_cond_free (tiger->cond);
   tiger->cond = NULL;
