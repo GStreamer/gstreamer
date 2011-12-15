@@ -51,8 +51,6 @@ GST_DEBUG_CATEGORY_EXTERN (GST_CAT_DEFAULT);
 G_DEFINE_TYPE (GstInterpolationControlSource, gst_interpolation_control_source,
     GST_TYPE_CONTROL_SOURCE);
 
-static GObjectClass *parent_class = NULL;
-
 /*
  * gst_control_point_free:
  * @prop: the object to free
@@ -672,13 +670,14 @@ gst_interpolation_control_source_finalize (GObject * obj)
   gst_interpolation_control_source_reset (self);
   g_mutex_unlock (self->lock);
   g_mutex_free (self->lock);
-  G_OBJECT_CLASS (parent_class)->finalize (obj);
+  G_OBJECT_CLASS (gst_interpolation_control_source_parent_class)->finalize
+      (obj);
 }
 
 static void
 gst_interpolation_control_source_dispose (GObject * obj)
 {
-  G_OBJECT_CLASS (parent_class)->dispose (obj);
+  G_OBJECT_CLASS (gst_interpolation_control_source_parent_class)->dispose (obj);
 }
 
 static void
@@ -688,7 +687,6 @@ gst_interpolation_control_source_class_init (GstInterpolationControlSourceClass
   GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
   GstControlSourceClass *csource_class = GST_CONTROL_SOURCE_CLASS (klass);
 
-  parent_class = g_type_class_peek_parent (klass);
   g_type_class_add_private (klass,
       sizeof (GstInterpolationControlSourcePrivate));
 
