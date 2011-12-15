@@ -77,7 +77,6 @@ typedef struct _GstMatroskaMux {
   /* pads */
   GstPad        *srcpad;
   GstCollectPads2 *collect;
-  GstPadEventFunction collect_event;
   GstEbmlWrite *ebml_write;
 
   guint          num_streams,

@@ -224,6 +224,8 @@ static void gst_matroska_mux_finalize (GObject * object);
 /* Pads collected callback */
 static GstFlowReturn
 gst_matroska_mux_collected (GstCollectPads2 * pads, gpointer user_data);
+static gboolean gst_matroska_mux_handle_sink_event (GstCollectPads2 * pads,
+    GstCollectData2 * data, GstEvent * event, gpointer user_data);
 
 /* pad functions */
 static gboolean gst_matroska_mux_handle_src_event (GstPad * pad,
@@ -454,6 +456,9 @@ gst_matroska_mux_init (GstMatroskaMux * mux, GstMatroskaMuxClass * g_class)
   gst_collect_pads2_set_function (mux->collect,
       (GstCollectPads2Function) GST_DEBUG_FUNCPTR (gst_matroska_mux_collected),
       mux);
+  gst_collect_pads2_set_event_function (mux->collect,
+      (GstCollectPads2EventFunction) GST_DEBUG_FUNCPTR
+      (gst_matroska_mux_handle_sink_event), mux);
 
   mux->ebml_write = gst_ebml_write_new (mux->srcpad);
   mux->doctype = GST_MATROSKA_DOCTYPE_MATROSKA;
@@ -709,15 +714,18 @@ gst_matroska_mux_handle_src_event (GstPad * pad, GstEvent * event)
  * Returns: #TRUE on success.
  */
 static gboolean
-gst_matroska_mux_handle_sink_event (GstPad * pad, GstEvent * event)
+gst_matroska_mux_handle_sink_event (GstCollectPads2 * pads,
+    GstCollectData2 * data, GstEvent * event, gpointer user_data)
 {
   GstMatroskaTrackContext *context;
   GstMatroskaPad *collect_pad;
   GstMatroskaMux *mux;
+  GstPad *pad;
   GstTagList *list;
-  gboolean ret = TRUE;
 
-  mux = GST_MATROSKA_MUX (gst_pad_get_parent (pad));
+  mux = GST_MATROSKA_MUX (user_data);
+  collect_pad = (GstMatroskaPad *) data;
+  pad = data->pad;
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_TAG:{
@@ -726,8 +734,6 @@ gst_matroska_mux_handle_sink_event (GstPad * pad, GstEvent * event)
       GST_DEBUG_OBJECT (mux, "received tag event");
       gst_event_parse_tag (event, &list);
 
-      collect_pad = (GstMatroskaPad *) gst_pad_get_element_private (pad);
-      g_assert (collect_pad);
       context = collect_pad->track;
       g_assert (context);
 
@@ -760,7 +766,6 @@ gst_matroska_mux_handle_sink_event (GstPad * pad, GstEvent * event)
       gst_event_parse_new_segment (event, NULL, NULL, &format, NULL, NULL,
           NULL);
       if (format != GST_FORMAT_TIME) {
-        ret = FALSE;
         gst_event_unref (event);
         event = NULL;
       }
@@ -783,11 +788,9 @@ gst_matroska_mux_handle_sink_event (GstPad * pad, GstEvent * event)
 
   /* now GstCollectPads2 can take care of the rest, e.g. EOS */
   if (event)
-    ret = mux->collect_event (pad, event);
-
-  gst_object_unref (mux);
-
-  return ret;
+    return FALSE;
+  else
+    return TRUE;
 }
 
 
@@ -2014,18 +2017,6 @@ gst_matroska_mux_request_new_pad (GstElement * element,
 
   collect_pad->track = context;
   gst_matroska_pad_reset (collect_pad, FALSE);
-
-  /* FIXME: hacked way to override/extend the event function of
-   * GstCollectPads2; because it sets its own event function giving the
-   * element no access to events.
-   * TODO GstCollectPads2 should really give its 'users' a clean chance to
-   * properly handle events that are not meant for collectpads itself.
-   * Perhaps a callback or so, though rejected (?) in #340060.
-   * This would allow (clean) transcoding of info from demuxer/streams
-   * to another muxer */
-  mux->collect_event = (GstPadEventFunction) GST_PAD_EVENTFUNC (newpad);
-  gst_pad_set_event_function (GST_PAD (newpad),
-      GST_DEBUG_FUNCPTR (gst_matroska_mux_handle_sink_event));
 
   gst_pad_set_setcaps_function (GST_PAD (newpad), setcapsfunc);
   gst_pad_set_active (GST_PAD (newpad), TRUE);
