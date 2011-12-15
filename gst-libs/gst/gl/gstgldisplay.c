@@ -3311,6 +3311,12 @@ gst_gl_display_thread_do_download_draw_rgb (GstGLDisplay * display)
     default:
       g_assert_not_reached ();
   }
+
+#ifndef OPENGL_ES2
+  glDisable (GL_TEXTURE_RECTANGLE_ARB);
+#else
+  glReadBuffer (GL_NONE);
+#endif
 }
 
 
