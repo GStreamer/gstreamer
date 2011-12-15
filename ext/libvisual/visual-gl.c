@@ -764,6 +764,16 @@ render_frame (gint width, gint height, guint texture, GstVisualGL * visual)
 
   actor_negotiate (visual->display, visual);
 
+  if (visual->is_enabled_gl_depth_test) {
+    glEnable (GL_DEPTH_TEST);
+    glDepthFunc (visual->gl_depth_func);
+  }
+
+  if (visual->is_enabled_gl_blend) {
+    glEnable (GL_BLEND);
+    glBlendFunc (visual->gl_blend_src_alpha, GL_ZERO);
+  }
+
   glMatrixMode (GL_MODELVIEW);
   glScaled (1.0, -1.0, 1.0);
 
@@ -776,6 +786,9 @@ render_frame (gint width, gint height, guint texture, GstVisualGL * visual)
   glPopMatrix ();
 
   glPopAttrib ();
+
+  glDisable (GL_DEPTH_TEST);
+  glDisable (GL_BLEND);
 
   GST_DEBUG_OBJECT (visual, "rendered one frame");
 }
