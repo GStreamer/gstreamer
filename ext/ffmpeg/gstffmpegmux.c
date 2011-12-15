@@ -29,7 +29,7 @@
 #endif
 
 #include <gst/gst.h>
-#include <gst/base/gstcollectpads.h>
+#include <gst/base/gstcollectpads2.h>
 
 #include "gstffmpeg.h"
 #include "gstffmpegcodecmap.h"
@@ -40,7 +40,7 @@ typedef struct _GstFFMpegMuxPad GstFFMpegMuxPad;
 
 struct _GstFFMpegMuxPad
 {
-  GstCollectData collect;       /* we extend the CollectData */
+  GstCollectData2 collect;      /* we extend the CollectData2 */
 
   gint padnum;
 };
@@ -49,7 +49,7 @@ struct _GstFFMpegMux
 {
   GstElement element;
 
-  GstCollectPads *collect;
+  GstCollectPads2 *collect;
   /* We need to keep track of our pads, so we do so here. */
   GstPad *srcpad;
 
@@ -114,7 +114,7 @@ static void gst_ffmpegmux_finalize (GObject * object);
 static gboolean gst_ffmpegmux_setcaps (GstPad * pad, GstCaps * caps);
 static GstPad *gst_ffmpegmux_request_new_pad (GstElement * element,
     GstPadTemplate * templ, const gchar * name);
-static GstFlowReturn gst_ffmpegmux_collected (GstCollectPads * pads,
+static GstFlowReturn gst_ffmpegmux_collected (GstCollectPads2 * pads,
     gpointer user_data);
 
 static gboolean gst_ffmpegmux_sink_event (GstPad * pad, GstEvent * event);
@@ -332,9 +332,9 @@ gst_ffmpegmux_init (GstFFMpegMux * ffmpegmux, GstFFMpegMuxClass * g_class)
   gst_pad_set_caps (ffmpegmux->srcpad, gst_pad_template_get_caps (templ));
   gst_element_add_pad (GST_ELEMENT (ffmpegmux), ffmpegmux->srcpad);
 
-  ffmpegmux->collect = gst_collect_pads_new ();
-  gst_collect_pads_set_function (ffmpegmux->collect,
-      (GstCollectPadsFunction) gst_ffmpegmux_collected, ffmpegmux);
+  ffmpegmux->collect = gst_collect_pads2_new ();
+  gst_collect_pads2_set_function (ffmpegmux->collect,
+      (GstCollectPads2Function) gst_ffmpegmux_collected, ffmpegmux);
 
   ffmpegmux->context = g_new0 (AVFormatContext, 1);
   ffmpegmux->context->oformat = oclass->in_plugin;
@@ -440,7 +440,7 @@ gst_ffmpegmux_request_new_pad (GstElement * element,
   /* create pad */
   pad = gst_pad_new_from_template (templ, padname);
   collect_pad = (GstFFMpegMuxPad *)
-      gst_collect_pads_add_pad (ffmpegmux->collect, pad,
+      gst_collect_pads2_add_pad (ffmpegmux->collect, pad,
       sizeof (GstFFMpegMuxPad));
   collect_pad->padnum = ffmpegmux->context->nb_streams;
 
@@ -540,7 +540,7 @@ gst_ffmpegmux_sink_event (GstPad * pad, GstEvent * event)
 }
 
 static GstFlowReturn
-gst_ffmpegmux_collected (GstCollectPads * pads, gpointer user_data)
+gst_ffmpegmux_collected (GstCollectPads2 * pads, gpointer user_data)
 {
   GstFFMpegMux *ffmpegmux = (GstFFMpegMux *) user_data;
   GSList *collected;
@@ -589,8 +589,8 @@ gst_ffmpegmux_collected (GstCollectPads * pads, gpointer user_data)
 
             /* FIXME : This doesn't work for RAW AUDIO...
              * in fact I'm wondering if it even works for any kind of audio... */
-            buffer = gst_collect_pads_peek (ffmpegmux->collect,
-                (GstCollectData *) collect_pad);
+            buffer = gst_collect_pads2_peek (ffmpegmux->collect,
+                (GstCollectData2 *) collect_pad);
             if (buffer) {
               st->codec->frame_size =
                   st->codec->sample_rate *
@@ -683,8 +683,8 @@ gst_ffmpegmux_collected (GstCollectPads * pads, gpointer user_data)
   for (collected = ffmpegmux->collect->data; collected;
       collected = g_slist_next (collected)) {
     GstFFMpegMuxPad *collect_pad = (GstFFMpegMuxPad *) collected->data;
-    GstBuffer *buffer = gst_collect_pads_peek (ffmpegmux->collect,
-        (GstCollectData *) collect_pad);
+    GstBuffer *buffer = gst_collect_pads2_peek (ffmpegmux->collect,
+        (GstCollectData2 *) collect_pad);
 
     /* if there's no buffer, just continue */
     if (buffer == NULL) {
@@ -720,8 +720,8 @@ gst_ffmpegmux_collected (GstCollectPads * pads, gpointer user_data)
     gboolean need_free = FALSE;
 
     /* push out current buffer */
-    buf = gst_collect_pads_pop (ffmpegmux->collect,
-        (GstCollectData *) best_pad);
+    buf = gst_collect_pads2_pop (ffmpegmux->collect,
+        (GstCollectData2 *) best_pad);
 
     ffmpegmux->context->streams[best_pad->padnum]->codec->frame_number++;
 
@@ -792,12 +792,12 @@ gst_ffmpegmux_change_state (GstElement * element, GstStateChange transition)
     case GST_STATE_CHANGE_NULL_TO_READY:
       break;
     case GST_STATE_CHANGE_READY_TO_PAUSED:
-      gst_collect_pads_start (ffmpegmux->collect);
+      gst_collect_pads2_start (ffmpegmux->collect);
       break;
     case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
       break;
     case GST_STATE_CHANGE_PAUSED_TO_READY:
-      gst_collect_pads_stop (ffmpegmux->collect);
+      gst_collect_pads2_stop (ffmpegmux->collect);
       break;
     default:
       break;
