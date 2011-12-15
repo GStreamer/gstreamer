@@ -295,12 +295,10 @@ gst_opus_parse_parse_frame (GstBaseParse * base, GstBaseParseFrame * frame)
       GST_DEBUG_OBJECT (parse, "Found ID header, keeping");
       return GST_BASE_PARSE_FLOW_DROPPED;
     } else if (is_commentheader) {
-      gst_buffer_unmap (frame->buffer, data, size);
       gst_buffer_replace (&parse->comment_header, frame->buffer);
       GST_DEBUG_OBJECT (parse, "Found comment header, keeping");
       return GST_BASE_PARSE_FLOW_DROPPED;
     }
-    gst_buffer_unmap (frame->buffer, data, size);
 
     g_slist_foreach (parse->headers, (GFunc) gst_buffer_unref, NULL);
     parse->headers = NULL;

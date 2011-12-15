@@ -188,9 +188,11 @@ gst_opus_enc_class_init (GstOpusEncClass * klass)
 {
   GObjectClass *gobject_class;
   GstAudioEncoderClass *base_class;
+  GstElementClass *gstelement_class;
 
   gobject_class = (GObjectClass *) klass;
   base_class = (GstAudioEncoderClass *) klass;
+  gstelement_class = (GstElementClass *) klass;
 
   gobject_class->set_property = gst_opus_enc_set_property;
   gobject_class->get_property = gst_opus_enc_get_property;
