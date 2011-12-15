@@ -779,16 +779,12 @@ write_exif_undefined_tag (GstExifWriter * writer, guint16 tag,
 static void
 write_exif_ascii_tag (GstExifWriter * writer, guint16 tag, const gchar * str)
 {
-  gint size;
   guint32 offset = 0;
   gchar *ascii_str;
   gsize ascii_size;
   GError *error = NULL;
 
-  size = strlen (str) + 1;
-
-  ascii_str =
-      g_convert (str, size, "latin1", "utf8", NULL, &ascii_size, &error);
+  ascii_str = g_convert (str, -1, "latin1", "utf8", NULL, &ascii_size, &error);
 
   if (error) {
     GST_WARNING ("Failed to convert exif tag to ascii: 0x%x - %s. Error: %s",
