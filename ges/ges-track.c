@@ -75,6 +75,9 @@ static void
 sort_track_objects_cb (GESTrackObject * child,
     GParamSpec * arg G_GNUC_UNUSED, GESTrack * track);
 
+static void timeline_duration_cb (GESTimeline * timeline,
+    GParamSpec * arg G_GNUC_UNUSED, GESTrack * track);
+
 static void
 ges_track_get_property (GObject * object, guint property_id,
     GValue * value, GParamSpec * pspec)
@@ -149,8 +152,7 @@ ges_track_constructed (GObject * object)
   GESTrackPrivate *priv = self->priv;
 
   if ((priv->background = gst_element_factory_make ("gnlsource", "background"))) {
-    g_object_set (G_OBJECT (self->priv->background), "expandable", TRUE,
-        "priority", G_MAXINT, NULL);
+    g_object_set (priv->background, "priority", G_MAXUINT, NULL);
 
     switch (self->type) {
       case GES_TRACK_TYPE_VIDEO:
@@ -366,6 +368,14 @@ void
 ges_track_set_timeline (GESTrack * track, GESTimeline * timeline)
 {
   GST_DEBUG ("track:%p, timeline:%p", track, timeline);
+
+  if (track->priv->timeline)
+    g_signal_handlers_disconnect_by_func (track,
+        timeline_duration_cb, track->priv->timeline);
+
+  if (timeline)
+    g_signal_connect (G_OBJECT (timeline), "notify::duration",
+        G_CALLBACK (timeline_duration_cb), track);
 
   track->priv->timeline = timeline;
 }
@@ -625,6 +635,20 @@ sort_track_objects_cb (GESTrackObject * child,
   track->priv->trackobjects =
       g_list_sort (track->priv->trackobjects,
       (GCompareFunc) objects_start_compare);
+}
+
+static void
+timeline_duration_cb (GESTimeline * timeline,
+    GParamSpec * arg G_GNUC_UNUSED, GESTrack * track)
+{
+  guint64 duration;
+
+  g_object_get (timeline, "duration", &duration, NULL);
+  g_object_set (GES_TRACK (track)->priv->background, "duration", duration,
+      NULL);
+
+  GST_DEBUG_OBJECT (track, "Updating background duration to %" GST_TIME_FORMAT,
+      GST_TIME_ARGS (duration));
 }
 
 /**
