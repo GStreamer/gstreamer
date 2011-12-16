@@ -196,6 +196,14 @@ G_BEGIN_DECLS
 #define GST_VALUE_HOLDS_DATE_TIME(x)    (G_VALUE_HOLDS((x), gst_date_time_get_type ()))
 
 /**
+ * GST_VALUE_HOLDS_BITMASK:
+ * @x: the #GValue to check
+ *
+ * Checks if the given #GValue contains a #GST_TYPE_BITMASK value.
+ */
+#define GST_VALUE_HOLDS_BITMASK(x)      (G_VALUE_HOLDS((x), gst_bitmask_get_type ()))
+
+/**
  * GST_TYPE_INT_RANGE:
  *
  * a #GValue type that represents an integer range
@@ -291,6 +299,16 @@ G_BEGIN_DECLS
  */
 
 #define GST_TYPE_DATE_TIME               gst_date_time_get_type ()
+
+/**
+ * GST_TYPE_BITMASK:
+ *
+ * a #GValue type that represents a 64-bit bitmask.
+ *
+ * Returns: the #GType of GstBitmask (which is not explicitly typed)
+ */
+
+#define GST_TYPE_BITMASK                 gst_bitmask_get_type ()
 
 /**
  * GST_VALUE_LESS_THAN:
@@ -436,6 +454,7 @@ GType gst_fraction_range_get_type (void);
 GType gst_fraction_get_type (void);
 GType gst_value_list_get_type (void);
 GType gst_value_array_get_type (void);
+GType gst_bitmask_get_type (void);
 
 GType gst_date_get_type (void);
 GType gst_date_time_get_type (void);
@@ -533,6 +552,12 @@ const GValue    *gst_value_get_fraction_range_max (const GValue *value);
 const GDate *   gst_value_get_date              (const GValue   *value);
 void            gst_value_set_date              (GValue         *value,
                                                  const GDate    *date);
+
+
+/* bitmask */
+guint64         gst_value_get_bitmask           (const GValue   *value);
+void            gst_value_set_bitmask           (GValue         *value,
+                                                 guint64         bitmask);
 
 /* compare */
 gint            gst_value_compare               (const GValue   *value1,

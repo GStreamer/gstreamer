@@ -3831,9 +3831,11 @@ gst_value_register_subtract_func (GType minuend_type, GType subtrahend_type,
 {
   GstValueSubtractInfo info;
 
-  /* one type must be unfixed, other subtractions can be done as comparisons */
-  g_return_if_fail (!gst_type_is_fixed (minuend_type)
-      || !gst_type_is_fixed (subtrahend_type));
+  /* one type must be unfixed, other subtractions can be done as comparisons,
+   * special case: bitmasks */
+  if (minuend_type != GST_TYPE_BITMASK)
+    g_return_if_fail (!gst_type_is_fixed (minuend_type)
+        || !gst_type_is_fixed (subtrahend_type));
 
   info.minuend = minuend_type;
   info.subtrahend = subtrahend_type;
@@ -4647,6 +4649,207 @@ gst_value_transform_string_date (const GValue * src_value, GValue * dest_value)
   gst_value_deserialize_date (dest_value, src_value->data[0].v_pointer);
 }
 
+
+/************
+ * bitmask *
+ ************/
+
+/* helper functions */
+static void
+gst_value_init_bitmask (GValue * value)
+{
+  value->data[0].v_uint64 = 0;
+}
+
+static void
+gst_value_copy_bitmask (const GValue * src_value, GValue * dest_value)
+{
+  dest_value->data[0].v_uint64 = src_value->data[0].v_uint64;
+}
+
+static gchar *
+gst_value_collect_bitmask (GValue * value, guint n_collect_values,
+    GTypeCValue * collect_values, guint collect_flags)
+{
+  if (n_collect_values != 1)
+    return g_strdup_printf ("not enough value locations for `%s' passed",
+        G_VALUE_TYPE_NAME (value));
+
+  gst_value_set_bitmask (value, (guint64) collect_values[0].v_int64);
+
+  return NULL;
+}
+
+static gchar *
+gst_value_lcopy_bitmask (const GValue * value, guint n_collect_values,
+    GTypeCValue * collect_values, guint collect_flags)
+{
+  guint64 *bitmask = collect_values[0].v_pointer;
+
+  if (!bitmask)
+    return g_strdup_printf ("value for `%s' passed as NULL",
+        G_VALUE_TYPE_NAME (value));
+
+  *bitmask = value->data[0].v_uint64;
+
+  return NULL;
+}
+
+/**
+ * gst_value_set_bitmask:
+ * @value: a GValue initialized to #GST_TYPE_FRACTION
+ * @bitmask: the bitmask
+ *
+ * Sets @value to the bitmask specified by @bitmask.
+ */
+void
+gst_value_set_bitmask (GValue * value, guint64 bitmask)
+{
+  g_return_if_fail (GST_VALUE_HOLDS_BITMASK (value));
+
+  value->data[0].v_uint64 = bitmask;
+}
+
+/**
+ * gst_value_get_bitmask:
+ * @value: a GValue initialized to #GST_TYPE_FRACTION
+ *
+ * Gets the bitmask specified by @value.
+ *
+ * Returns: the bitmask.
+ */
+guint64
+gst_value_get_bitmask (const GValue * value)
+{
+  g_return_val_if_fail (GST_VALUE_HOLDS_BITMASK (value), 0);
+
+  return value->data[0].v_uint64;
+}
+
+static gchar *
+gst_value_serialize_bitmask (const GValue * value)
+{
+  guint64 bitmask = value->data[0].v_uint64;
+
+  return g_strdup_printf ("0x%016" G_GINT64_MODIFIER "x", bitmask);
+}
+
+static gboolean
+gst_value_deserialize_bitmask (GValue * dest, const gchar * s)
+{
+  gchar *endptr = NULL;
+  guint64 val;
+
+  if (G_UNLIKELY (s == NULL))
+    return FALSE;
+
+  if (G_UNLIKELY (dest == NULL || !GST_VALUE_HOLDS_BITMASK (dest)))
+    return FALSE;
+
+  val = g_ascii_strtoull (s, &endptr, 16);
+  if (val == G_MAXUINT64 && (errno == ERANGE || errno == EINVAL))
+    return FALSE;
+  if (val == 0 && endptr == s)
+    return FALSE;
+
+  gst_value_set_bitmask (dest, val);
+
+  return TRUE;
+}
+
+static void
+gst_value_transform_bitmask_string (const GValue * src_value,
+    GValue * dest_value)
+{
+  dest_value->data[0].v_pointer = gst_value_serialize_bitmask (src_value);
+}
+
+static void
+gst_value_transform_string_bitmask (const GValue * src_value,
+    GValue * dest_value)
+{
+  if (!gst_value_deserialize_bitmask (dest_value, src_value->data[0].v_pointer))
+    gst_value_set_bitmask (dest_value, 0);
+}
+
+static void
+gst_value_transform_uint64_bitmask (const GValue * src_value,
+    GValue * dest_value)
+{
+  dest_value->data[0].v_uint64 = src_value->data[0].v_uint64;
+}
+
+static void
+gst_value_transform_bitmask_uint64 (const GValue * src_value,
+    GValue * dest_value)
+{
+  dest_value->data[0].v_uint64 = src_value->data[0].v_uint64;
+}
+
+static gboolean
+gst_value_intersect_bitmask_bitmask (GValue * dest, const GValue * src1,
+    const GValue * src2)
+{
+  guint64 s1, s2;
+
+  s1 = gst_value_get_bitmask (src1);
+  s2 = gst_value_get_bitmask (src2);
+
+  g_value_init (dest, GST_TYPE_BITMASK);
+  gst_value_set_bitmask (dest, s1 & s2);
+
+  return TRUE;
+}
+
+static gboolean
+gst_value_union_bitmask_bitmask (GValue * dest, const GValue * src1,
+    const GValue * src2)
+{
+  guint64 s1, s2;
+
+  s1 = gst_value_get_bitmask (src1);
+  s2 = gst_value_get_bitmask (src2);
+
+  g_value_init (dest, GST_TYPE_BITMASK);
+  gst_value_set_bitmask (dest, s1 | s2);
+
+  return TRUE;
+}
+
+static gboolean
+gst_value_subtract_bitmask_bitmask (GValue * dest,
+    const GValue * minuend, const GValue * subtrahend)
+{
+  guint64 m, s, r;
+
+  g_return_val_if_fail (dest != NULL, FALSE);
+  g_return_val_if_fail (GST_VALUE_HOLDS_BITMASK (minuend), FALSE);
+  g_return_val_if_fail (GST_VALUE_HOLDS_BITMASK (subtrahend), FALSE);
+
+  m = minuend->data[0].v_uint64;
+  s = subtrahend->data[0].v_uint64;
+  r = m & (~s);
+
+  g_value_init (dest, GST_TYPE_BITMASK);
+  gst_value_set_bitmask (dest, r);
+
+  return (r != 0);
+}
+
+static gint
+gst_value_compare_bitmask (const GValue * value1, const GValue * value2)
+{
+  guint64 v1, v2;
+
+  v1 = value1->data[0].v_uint64;
+  v2 = value2->data[0].v_uint64;
+
+  if (v1 == v2)
+    return GST_VALUE_EQUAL;
+
+  return GST_VALUE_UNORDERED;
+}
+
 static void
 gst_value_transform_object_string (const GValue * src_value,
     GValue * dest_value)
@@ -4824,6 +5027,19 @@ gst_date_time_get_type (void)
   return gst_date_time_type;
 }
 
+static const GTypeValueTable _gst_bitmask_value_table = {
+  gst_value_init_bitmask,
+  NULL,
+  gst_value_copy_bitmask,
+  NULL,
+  (char *) "q",
+  gst_value_collect_bitmask,
+  (char *) "p",
+  gst_value_lcopy_bitmask
+};
+
+FUNC_VALUE_GET_TYPE (bitmask, "GstBitmask");
+
 
 void
 _priv_gst_value_initialize (void)
@@ -4988,6 +5204,18 @@ _priv_gst_value_initialize (void)
     gst_value_register (&gst_value);
   }
 
+  {
+    static GstValueTable gst_value = {
+      0,
+      gst_value_compare_bitmask,
+      gst_value_serialize_bitmask,
+      gst_value_deserialize_bitmask,
+    };
+
+    gst_value.type = gst_bitmask_get_type ();
+    gst_value_register (&gst_value);
+  }
+
   REGISTER_SERIALIZATION (G_TYPE_DOUBLE, double);
   REGISTER_SERIALIZATION (G_TYPE_FLOAT, float);
 
@@ -5038,6 +5266,14 @@ _priv_gst_value_initialize (void)
       gst_value_transform_string_date);
   g_value_register_transform_func (GST_TYPE_OBJECT, G_TYPE_STRING,
       gst_value_transform_object_string);
+  g_value_register_transform_func (GST_TYPE_BITMASK, G_TYPE_UINT64,
+      gst_value_transform_bitmask_uint64);
+  g_value_register_transform_func (GST_TYPE_BITMASK, G_TYPE_STRING,
+      gst_value_transform_bitmask_string);
+  g_value_register_transform_func (G_TYPE_UINT64, GST_TYPE_BITMASK,
+      gst_value_transform_uint64_bitmask);
+  g_value_register_transform_func (G_TYPE_STRING, GST_TYPE_BITMASK,
+      gst_value_transform_string_bitmask);
 
   gst_value_register_intersect_func (G_TYPE_INT, GST_TYPE_INT_RANGE,
       gst_value_intersect_int_int_range);
@@ -5058,6 +5294,8 @@ _priv_gst_value_initialize (void)
   gst_value_register_intersect_func (GST_TYPE_FRACTION_RANGE,
       GST_TYPE_FRACTION_RANGE,
       gst_value_intersect_fraction_range_fraction_range);
+  gst_value_register_intersect_func (GST_TYPE_BITMASK,
+      GST_TYPE_BITMASK, gst_value_intersect_bitmask_bitmask);
 
   gst_value_register_subtract_func (G_TYPE_INT, GST_TYPE_INT_RANGE,
       gst_value_subtract_int_int_range);
@@ -5077,7 +5315,6 @@ _priv_gst_value_initialize (void)
       gst_value_subtract_double_range_double);
   gst_value_register_subtract_func (GST_TYPE_DOUBLE_RANGE,
       GST_TYPE_DOUBLE_RANGE, gst_value_subtract_double_range_double_range);
-
   gst_value_register_subtract_func (GST_TYPE_FRACTION, GST_TYPE_FRACTION_RANGE,
       gst_value_subtract_fraction_fraction_range);
   gst_value_register_subtract_func (GST_TYPE_FRACTION_RANGE, GST_TYPE_FRACTION,
@@ -5085,6 +5322,8 @@ _priv_gst_value_initialize (void)
   gst_value_register_subtract_func (GST_TYPE_FRACTION_RANGE,
       GST_TYPE_FRACTION_RANGE,
       gst_value_subtract_fraction_range_fraction_range);
+  gst_value_register_subtract_func (GST_TYPE_BITMASK,
+      GST_TYPE_BITMASK, gst_value_subtract_bitmask_bitmask);
 
   /* see bug #317246, #64994, #65041 */
   {
@@ -5097,6 +5336,8 @@ _priv_gst_value_initialize (void)
       gst_value_union_int_int_range);
   gst_value_register_union_func (GST_TYPE_INT_RANGE, GST_TYPE_INT_RANGE,
       gst_value_union_int_range_int_range);
+  gst_value_register_union_func (GST_TYPE_BITMASK,
+      GST_TYPE_BITMASK, gst_value_union_bitmask_bitmask);
 
 #if 0
   /* Implement these if needed */
