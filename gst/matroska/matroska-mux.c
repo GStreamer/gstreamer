@@ -2,6 +2,7 @@
  * (c) 2003 Ronald Bultje <rbultje@ronald.bitfreak.net>
  * (c) 2005 Michal Benes <michal.benes@xeris.cz>
  * (c) 2008 Sebastian Dröge <sebastian.droege@collabora.co.uk>
+ * (c) 2011 Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>
  *
  * matroska-mux.c: matroska file/stream muxer
  *
@@ -205,10 +206,14 @@ static GstStaticPadTemplate audiosink_templ =
     );
 
 static GstStaticPadTemplate subtitlesink_templ =
-GST_STATIC_PAD_TEMPLATE ("subtitle_%d",
+    GST_STATIC_PAD_TEMPLATE ("subtitle_%d",
     GST_PAD_SINK,
     GST_PAD_REQUEST,
-    GST_STATIC_CAPS ("subtitle/x-kate"));
+    GST_STATIC_CAPS ("subtitle/x-kate; "
+        "text/plain; application/x-ssa; application/x-ass; "
+        "application/x-usf; video/x-dvd-subpicture; "
+        "application/x-subtitle-unknown")
+    );
 
 static GArray *used_uids;
 G_LOCK_DEFINE_STATIC (used_uids);
@@ -697,6 +702,44 @@ gst_matroska_mux_handle_src_event (GstPad * pad, GstEvent * event)
   return gst_pad_event_default (pad, event);
 }
 
+static void
+gst_matroska_mux_build_vobsub_private (GstMatroskaTrackContext * context,
+    const guint * clut)
+{
+  gchar *clutv[17];
+  gchar *sclut;
+  gint i;
+  guint32 col;
+  gdouble y, u, v;
+  guint8 r, g, b;
+
+  /* produce comma-separated list in hex format */
+  for (i = 0; i < 16; ++i) {
+    col = clut[i];
+    /* replicate vobsub's slightly off RGB conversion calculation */
+    y = (((col >> 16) & 0xff) - 16) * 255 / 219;
+    u = ((col >> 8) & 0xff) - 128;
+    v = (col & 0xff) - 128;
+    r = CLAMP (1.0 * y + 1.4022 * u, 0, 255);
+    g = CLAMP (1.0 * y - 0.3456 * u - 0.7145 * v, 0, 255);
+    b = CLAMP (1.0 * y + 1.7710 * v, 0, 255);
+    clutv[i] = g_strdup_printf ("%02x%02x%02x", r, g, b);
+  }
+  clutv[i] = NULL;
+  sclut = g_strjoinv (",", clutv);
+
+  /* build codec private; only palette for now */
+  g_free (context->codec_priv);
+  context->codec_priv = (guint8 *) g_strdup_printf ("palette: %s", sclut);
+  /* include terminating 0 */
+  context->codec_priv_size = strlen ((gchar *) context->codec_priv) + 1;
+  g_free (sclut);
+  for (i = 0; i < 16; ++i) {
+    g_free (clutv[i]);
+  }
+}
+
+
 /**
  * gst_matroska_mux_handle_sink_event:
  * @pad: Pad which received the event.
@@ -719,6 +762,8 @@ gst_matroska_mux_handle_sink_event (GstCollectPads2 * pads,
   mux = GST_MATROSKA_MUX (user_data);
   collect_pad = (GstMatroskaPad *) data;
   pad = data->pad;
+  context = collect_pad->track;
+  g_assert (context);
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_TAG:{
@@ -726,9 +771,6 @@ gst_matroska_mux_handle_sink_event (GstCollectPads2 * pads,
 
       GST_DEBUG_OBJECT (mux, "received tag event");
       gst_event_parse_tag (event, &list);
-
-      context = collect_pad->track;
-      g_assert (context);
 
       /* Matroska wants ISO 639-2B code, taglist most likely contains 639-1 */
       if (gst_tag_list_get_string (list, GST_TAG_LANGUAGE_CODE, &lang)) {
@@ -772,6 +814,31 @@ gst_matroska_mux_handle_sink_event (GstCollectPads2 * pads,
         gst_event_replace (&mux->force_key_unit_event, NULL);
         mux->force_key_unit_event = event;
         event = NULL;
+      } else if (gst_structure_has_name (structure, "application/x-gst-dvd") &&
+          !strcmp ("dvd-spu-clut-change",
+              gst_structure_get_string (structure, "event"))) {
+        gchar name[16];
+        gint i, value;
+        guint clut[16];
+
+        GST_DEBUG_OBJECT (pad, "New DVD colour table received");
+        if (context->type != GST_MATROSKA_TRACK_TYPE_SUBTITLE) {
+          GST_DEBUG_OBJECT (pad, "... discarding");
+          break;
+        }
+        /* first transform event data into table form */
+        for (i = 0; i < 16; i++) {
+          g_snprintf (name, sizeof (name), "clut%02d", i);
+          if (!gst_structure_get_int (structure, name, &value)) {
+            GST_ERROR_OBJECT (mux, "dvd-spu-clut-change event did not "
+                "contain %s field", name);
+            break;
+          }
+          clut[i] = value;
+        }
+
+        /* transform into private data for stream; text form */
+        gst_matroska_mux_build_vobsub_private (context, clut);
       }
       break;
     }
@@ -1854,6 +1921,10 @@ refuse_caps:
   }
 }
 
+/* we probably don't have the data at start,
+ * so have to reserve (a maximum) space to write this at the end.
+ * bit spacy, but some formats can hold quite some */
+#define SUBTITLE_MAX_CODEC_PRIVATE   2048       /* must be > 128 */
 
 /**
  * gst_matroska_mux_subtitle_pad_setcaps:
@@ -1867,11 +1938,6 @@ refuse_caps:
 static gboolean
 gst_matroska_mux_subtitle_pad_setcaps (GstPad * pad, GstCaps * caps)
 {
-  /* FIXME:
-   * Consider this as boilerplate code for now. There is
-   * no single subtitle creation element in GStreamer,
-   * neither do I know how subtitling works at all. */
-
   /* There is now (at least) one such alement (kateenc), and I'm going
      to handle it here and claim it works when it can be piped back
      through GStreamer and VLC */
@@ -1882,6 +1948,10 @@ gst_matroska_mux_subtitle_pad_setcaps (GstPad * pad, GstCaps * caps)
   GstMatroskaPad *collect_pad;
   const gchar *mimetype;
   GstStructure *structure;
+  const GValue *value = NULL;
+  const GstBuffer *buf = NULL;
+  gchar *id = NULL;
+  gboolean ret = TRUE;
 
   mux = GST_MATROSKA_MUX (GST_PAD_PARENT (pad));
 
@@ -1896,12 +1966,13 @@ gst_matroska_mux_subtitle_pad_setcaps (GstPad * pad, GstCaps * caps)
   structure = gst_caps_get_structure (caps, 0);
   mimetype = gst_structure_get_name (structure);
 
+  /* keep track of default set in request_pad */
+  id = context->codec_id;
+
   /* general setup */
   scontext->check_utf8 = 1;
   scontext->invalid_utf8 = 0;
   context->default_duration = 0;
-
-  /* TODO: - other format than Kate */
 
   if (!strcmp (mimetype, "subtitle/x-kate")) {
     const GValue *streamheader;
@@ -1918,12 +1989,59 @@ gst_matroska_mux_subtitle_pad_setcaps (GstPad * pad, GstCaps * caps)
     if (!kate_streamheader_to_codecdata (streamheader, context)) {
       GST_ELEMENT_ERROR (mux, STREAM, MUX, (NULL),
           ("kate stream headers missing or malformed"));
-      return FALSE;
+      ret = FALSE;
+      goto exit;
     }
-    return TRUE;
+  } else if (!strcmp (mimetype, "text/plain")) {
+    context->codec_id = g_strdup (GST_MATROSKA_CODEC_ID_SUBTITLE_UTF8);
+  } else if (!strcmp (mimetype, "application/x-ssa")) {
+    context->codec_id = g_strdup (GST_MATROSKA_CODEC_ID_SUBTITLE_SSA);
+  } else if (!strcmp (mimetype, "application/x-ass")) {
+    context->codec_id = g_strdup (GST_MATROSKA_CODEC_ID_SUBTITLE_ASS);
+  } else if (!strcmp (mimetype, "application/x-usf")) {
+    context->codec_id = g_strdup (GST_MATROSKA_CODEC_ID_SUBTITLE_USF);
+  } else if (!strcmp (mimetype, "video/x-dvd-subpicture")) {
+    context->codec_id = g_strdup (GST_MATROSKA_CODEC_ID_SUBTITLE_VOBSUB);
+  } else {
+    id = NULL;
+    ret = FALSE;
+    goto exit;
   }
 
-  return FALSE;
+  /* maybe some private data, e.g. vobsub */
+  value = gst_structure_get_value (structure, "codec_data");
+  if (value)
+    buf = gst_value_get_buffer (value);
+  if (buf != NULL) {
+    guint8 *priv_data = NULL;
+    guint priv_data_size = 0;
+
+    priv_data_size = GST_BUFFER_SIZE (buf);
+    if (priv_data_size > SUBTITLE_MAX_CODEC_PRIVATE) {
+      GST_WARNING_OBJECT (mux, "pad %" GST_PTR_FORMAT " subtitle private data"
+          " exceeded maximum (%d); discarding", pad,
+          SUBTITLE_MAX_CODEC_PRIVATE);
+      return TRUE;
+    }
+
+    if (context->codec_priv != NULL)
+      g_free (context->codec_priv);
+
+    priv_data = g_malloc0 (priv_data_size);
+    memcpy (priv_data, GST_BUFFER_DATA (buf), priv_data_size);
+    context->codec_priv = priv_data;
+    context->codec_priv_size = priv_data_size;
+  }
+
+  GST_DEBUG_OBJECT (pad, "codec_id %s, codec data size %u",
+      GST_STR_NULL (context->codec_id), context->codec_priv_size);
+
+exit:
+  /* free default if modified */
+  if (id)
+    g_free (id);
+
+  return ret;
 }
 
 
@@ -1950,6 +2068,8 @@ gst_matroska_mux_request_new_pad (GstElement * element,
   GstPadSetCapsFunction setcapsfunc = NULL;
   GstMatroskaTrackContext *context = NULL;
   gint pad_id;
+  gboolean locked = TRUE;
+  gchar *id = NULL;
 
   if (templ == gst_element_class_get_pad_template (klass, "audio_%d")) {
     /* don't mix named and unnamed pads, if the pad already exists we fail when
@@ -1993,6 +2113,9 @@ gst_matroska_mux_request_new_pad (GstElement * element,
         g_new0 (GstMatroskaTrackSubtitleContext, 1);
     context->type = GST_MATROSKA_TRACK_TYPE_SUBTITLE;
     context->name = g_strdup ("Subtitle");
+    /* setcaps may only provide proper one a lot later */
+    id = g_strdup ("S_SUB_UNKNOWN");
+    locked = FALSE;
   } else {
     GST_WARNING_OBJECT (mux, "This is not our template!");
     return NULL;
@@ -2006,10 +2129,11 @@ gst_matroska_mux_request_new_pad (GstElement * element,
   collect_pad = (GstMatroskaPad *)
       gst_collect_pads2_add_pad_full (mux->collect, GST_PAD (newpad),
       sizeof (GstMatroskamuxPad),
-      (GstCollectData2DestroyNotify) gst_matroska_pad_free, TRUE);
+      (GstCollectData2DestroyNotify) gst_matroska_pad_free, locked);
 
   collect_pad->track = context;
   gst_matroska_pad_reset (collect_pad, FALSE);
+  collect_pad->track->codec_id = id;
 
   gst_pad_set_setcaps_function (GST_PAD (newpad), setcapsfunc);
   gst_pad_set_active (GST_PAD (newpad), TRUE);
@@ -2105,6 +2229,14 @@ gst_matroska_mux_track_header (GstMatroskaMux * mux,
         context->language);
   }
 
+  /* FIXME: until we have a nice way of getting the codecname
+   * out of the caps, I'm not going to enable this. Too much
+   * (useless, double, boring) work... */
+  /* TODO: Use value from tags if any */
+  /*gst_ebml_write_utf8 (ebml, GST_MATROSKA_ID_CODECNAME,
+     context->codec_name); */
+  gst_ebml_write_utf8 (ebml, GST_MATROSKA_ID_TRACKNAME, context->name);
+
   /* type-specific stuff */
   switch (context->type) {
     case GST_MATROSKA_TRACK_TYPE_VIDEO:{
@@ -2155,6 +2287,24 @@ gst_matroska_mux_track_header (GstMatroskaMux * mux,
       break;
     }
 
+      /* this is what we write for now and must be filled
+       * and remainder void'ed later on */
+#define SUBTITLE_DUMMY_SIZE   (1 + 1 + 14 + 1 + 2 + SUBTITLE_MAX_CODEC_PRIVATE)
+
+    case GST_MATROSKA_TRACK_TYPE_SUBTITLE:{
+      gpointer buf;
+
+      context->pos = ebml->pos;
+      /* CodecID is mandatory ... */
+      gst_ebml_write_ascii (ebml, GST_MATROSKA_ID_CODECID, "S_SUB_UNKNOWN");
+      /* reserve space */
+      buf = g_malloc0 (SUBTITLE_MAX_CODEC_PRIVATE);
+      gst_ebml_write_binary (ebml, GST_EBML_ID_VOID, buf,
+          SUBTITLE_MAX_CODEC_PRIVATE);
+      g_free (buf);
+      /* real data has to be written at finish */
+      return;
+    }
     default:
       /* doesn't need type-specific data */
       break;
@@ -2164,13 +2314,6 @@ gst_matroska_mux_track_header (GstMatroskaMux * mux,
   if (context->codec_priv)
     gst_ebml_write_binary (ebml, GST_MATROSKA_ID_CODECPRIVATE,
         context->codec_priv, context->codec_priv_size);
-  /* FIXME: until we have a nice way of getting the codecname
-   * out of the caps, I'm not going to enable this. Too much
-   * (useless, double, boring) work... */
-  /* TODO: Use value from tags if any */
-  /*gst_ebml_write_utf8 (ebml, GST_MATROSKA_ID_CODECNAME,
-     context->codec_name); */
-  gst_ebml_write_utf8 (ebml, GST_MATROSKA_ID_TRACKNAME, context->name);
 }
 
 
@@ -2490,16 +2633,23 @@ gst_matroska_mux_finish (GstMatroskaMux * mux)
     gst_ebml_write_seek (ebml, my_pos);
   }
 
-  /* update duration */
-  /* first get the overall duration */
-  /* a released track may have left a duration in here */
+  /* loop tracks:
+   * - first get the overall duration
+   *   (a released track may have left a duration in here)
+   * - write some track header data for subtitles
+   */
   duration = mux->duration;
+  pos = ebml->pos;
   for (collected = mux->collect->data; collected;
       collected = g_slist_next (collected)) {
     GstMatroskaPad *collect_pad;
     GstClockTime min_duration;  /* observed minimum duration */
+    GstMatroskaTrackContext *context;
+    gint voidleft = 0, fill = 0;
+    gpointer codec_id;
 
     collect_pad = (GstMatroskaPad *) collected->data;
+    context = collect_pad->track;
 
     GST_DEBUG_OBJECT (mux,
         "Pad %" GST_PTR_FORMAT " start ts %" GST_TIME_FORMAT
@@ -2521,7 +2671,41 @@ gst_matroska_mux_finish (GstMatroskaMux * mux)
     if (GST_CLOCK_TIME_IS_VALID (collect_pad->duration) &&
         duration < collect_pad->duration)
       duration = collect_pad->duration;
+
+    if (context->type != GST_MATROSKA_TRACK_TYPE_SUBTITLE || !context->pos)
+      continue;
+
+  again:
+    /* write subtitle type and possible private data */
+    gst_ebml_write_seek (ebml, context->pos);
+    /* complex way to write ascii to account for extra filling */
+    codec_id = g_malloc0 (strlen (context->codec_id) + 1 + fill);
+    strcpy (codec_id, context->codec_id);
+    gst_ebml_write_binary (ebml, GST_MATROSKA_ID_CODECID,
+        codec_id, strlen (context->codec_id) + 1 + fill);
+    g_free (codec_id);
+    if (context->codec_priv)
+      gst_ebml_write_binary (ebml, GST_MATROSKA_ID_CODECPRIVATE,
+          context->codec_priv, context->codec_priv_size);
+    voidleft = SUBTITLE_DUMMY_SIZE - (ebml->pos - context->pos);
+    /* void'ify; sigh, variable sized length field */
+    if (voidleft == 1) {
+      fill = 1;
+      goto again;
+    } else if (voidleft && voidleft <= 128)
+      gst_ebml_write_buffer_header (ebml, GST_EBML_ID_VOID, voidleft - 2);
+    else if (voidleft >= 130)
+      gst_ebml_write_buffer_header (ebml, GST_EBML_ID_VOID, voidleft - 3);
+    else if (voidleft == 129) {
+      gst_ebml_write_buffer_header (ebml, GST_EBML_ID_VOID, 64);
+      gst_ebml_write_buffer_header (ebml, GST_EBML_ID_VOID, 63);
+    }
   }
+
+  /* seek back (optional, but do anyway) */
+  gst_ebml_write_seek (ebml, pos);
+
+  /* update duration */
   if (duration != 0) {
     GST_DEBUG_OBJECT (mux, "final total duration: %" GST_TIME_FORMAT,
         GST_TIME_ARGS (duration));
