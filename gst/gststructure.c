@@ -1690,6 +1690,8 @@ gst_structure_get_abbrs (gint * n_abbrs)
       {"date", GST_TYPE_DATE}
       ,
       {"datetime", GST_TYPE_DATE_TIME}
+      ,
+      {"bitmask", GST_TYPE_BITMASK}
     };
     _num = G_N_ELEMENTS (dyn_abbrs);
     /* permanently allocate and copy the array now */
