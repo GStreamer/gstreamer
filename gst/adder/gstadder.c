@@ -660,12 +660,14 @@ gst_adder_src_event (GstPad * pad, GstEvent * event)
 
       /* check if we are flushing */
       if (flush) {
-        /* make sure we accept nothing anymore and return WRONG_STATE */
-        gst_collect_pads2_set_flushing (adder->collect, TRUE);
-
         /* flushing seek, start flush downstream, the flush will be done
-         * when all pads received a FLUSH_STOP. */
+         * when all pads received a FLUSH_STOP.
+         * Make sure we accept nothing anymore and return WRONG_STATE.
+         * We send a flush-start before, to ensure no streaming is done
+         * as we need to take the stream lock.
+         */
         gst_pad_push_event (adder->srcpad, gst_event_new_flush_start ());
+        gst_collect_pads2_set_flushing (adder->collect, TRUE);
 
         /* We can't send FLUSH_STOP here since upstream could start pushing data
          * after we unlock adder->collect.
