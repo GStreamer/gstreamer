@@ -79,28 +79,32 @@ struct _GESTrackClass {
   gpointer _ges_reserved[GES_PADDING];
 };
 
-GType ges_track_get_type (void);
+GType ges_track_get_type                  (void);
 
-GESTrack* ges_track_new (GESTrackType type, GstCaps * caps);
+GESTrack* ges_track_new                   (GESTrackType type, GstCaps * caps);
 
-void		ges_track_set_timeline (GESTrack * track,
-					GESTimeline *timeline);
-void		ges_track_set_caps     (GESTrack * track,
-					const GstCaps * caps);
-const GstCaps * ges_track_get_caps     (GESTrack *track);
+void    ges_track_set_timeline            (GESTrack * track,
+                                           GESTimeline *timeline);
+
+void    ges_track_set_caps                (GESTrack * track,
+                                           const GstCaps * caps);
+
+const GstCaps * ges_track_get_caps        (GESTrack *track);
+
 const GESTimeline *ges_track_get_timeline (GESTrack *track);
 
-gboolean ges_track_add_object    (GESTrack * track,
-				  GESTrackObject * object);
-gboolean ges_track_remove_object (GESTrack * track,
-				  GESTrackObject * object);
+gboolean ges_track_add_object             (GESTrack * track,
+                                           GESTrackObject * object);
 
-GESTrack *ges_track_video_raw_new (void);
-GESTrack *ges_track_audio_raw_new (void);
+gboolean ges_track_remove_object          (GESTrack * track,
+                                           GESTrackObject * object);
 
-gboolean ges_track_enable_update(GESTrack * track, gboolean enabled);
+GESTrack *ges_track_video_raw_new         (void);
+GESTrack *ges_track_audio_raw_new         (void);
 
-GList* ges_track_get_objects (GESTrack *track);
+gboolean ges_track_enable_update          (GESTrack * track, gboolean enabled);
+
+GList* ges_track_get_objects              (GESTrack *track);
 
 G_END_DECLS
 
