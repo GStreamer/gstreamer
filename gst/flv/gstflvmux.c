@@ -1260,12 +1260,6 @@ gst_flv_mux_determine_duration (GstFlvMux * mux)
     }
   }
 
-  if (duration == GST_CLOCK_TIME_NONE) {
-    GST_DEBUG_OBJECT (mux, "not able to determine duration "
-        "from pad timestamps, assuming 0");
-    return 0;
-  }
-
   return duration;
 }
 
@@ -1279,6 +1273,7 @@ gst_flv_mux_rewrite_header (GstFlvMux * mux)
   GList *l;
   guint32 index_len, allocate_size;
   guint32 i, index_skip;
+  GstClockTime dur;
 
   if (mux->streamable)
     return GST_FLOW_OK;
@@ -1291,9 +1286,12 @@ gst_flv_mux_rewrite_header (GstFlvMux * mux)
     return GST_FLOW_OK;
   }
 
-  /* if we were not able to determine the duration before, set it now */
-  if (mux->duration == GST_CLOCK_TIME_NONE)
-    mux->duration = gst_flv_mux_determine_duration (mux);
+  /* determine duration now based on our own timestamping,
+   * so that it is likely many times better and consistent
+   * than whatever obtained by some query */
+  dur = gst_flv_mux_determine_duration (mux);
+  if (dur != GST_CLOCK_TIME_NONE)
+    mux->duration = dur;
 
   /* rewrite the duration tag */
   d = gst_guint64_to_gdouble (mux->duration);
