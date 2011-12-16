@@ -141,6 +141,8 @@ static GstFlowReturn gst_adder_do_clip (GstCollectPads2 * pads,
     gpointer user_data);
 static GstFlowReturn gst_adder_collected (GstCollectPads2 * pads,
     gpointer user_data);
+static gboolean gst_adder_event (GstCollectPads2 * pads, GstCollectData2 * pad,
+    GstEvent * event, gpointer user_data);
 
 /* non-clipping versions (for float) */
 #define MAKE_FUNC_NC(name,type)                                 \
@@ -750,16 +752,14 @@ gst_adder_sink_event (GstPad * pad, GstEvent * event)
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_FLUSH_STOP:
-      /* we received a flush-stop. The collect_event function will push the
-       * event past our element. We simply forward all flush-stop events, even
-       * when no flush-stop was pending, this is required because collectpads2
-       * does not provide an API to handle-but-not-forward the flush-stop.
-       * We unset the pending flush-stop flag so that we don't send anymore
-       * flush-stop from the collect function later.
+      /* we received a flush-stop. The collect_event function will call the
+       * gst_adder_event function we have set on the GstCollectPads2, so we
+       * have control over whether the event is sent past our element.
+       * We will only forward it when flush_stop_pending is set, and we will
+       * unset it then.
        */
       GST_COLLECT_PADS2_STREAM_LOCK (adder->collect);
       g_atomic_int_set (&adder->new_segment_pending, TRUE);
-      g_atomic_int_set (&adder->flush_stop_pending, FALSE);
       /* Clear pending tags */
       if (adder->pending_events) {
         g_list_foreach (adder->pending_events, (GFunc) gst_event_unref, NULL);
@@ -868,6 +868,8 @@ gst_adder_init (GstAdder * adder, GstAdderClass * klass)
       GST_DEBUG_FUNCPTR (gst_adder_collected), adder);
   gst_collect_pads2_set_clip_function (adder->collect,
       GST_DEBUG_FUNCPTR (gst_adder_do_clip), adder);
+  gst_collect_pads2_set_event_function (adder->collect,
+      GST_DEBUG_FUNCPTR (gst_adder_event), adder);
 }
 
 static void
@@ -1267,6 +1269,24 @@ eos:
     GST_DEBUG_OBJECT (adder, "no data available, must be EOS");
     gst_pad_push_event (adder->srcpad, gst_event_new_eos ());
     return GST_FLOW_UNEXPECTED;
+  }
+}
+
+static gboolean
+gst_adder_event (GstCollectPads2 * pads, GstCollectData2 * pad,
+    GstEvent * event, gpointer user_data)
+{
+  GstAdder *adder = GST_ADDER (user_data);
+  if (GST_EVENT_TYPE (event) == GST_EVENT_FLUSH_STOP) {
+    if (g_atomic_int_compare_and_exchange (&adder->flush_stop_pending,
+            TRUE, FALSE)) {
+      return FALSE;
+    } else {
+      gst_event_unref (event);
+      return TRUE;
+    }
+  } else {
+    return FALSE;
   }
 }
 
