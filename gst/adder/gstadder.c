@@ -682,7 +682,7 @@ gst_adder_src_event (GstPad * pad, GstEvent * event)
       /* now wait for the collected to be finished and mark a new
        * segment. After we have the lock, no collect function is running and no
        * new collect function will be called for as long as we're flushing. */
-      GST_OBJECT_LOCK (adder->collect);
+      GST_COLLECT_PADS2_STREAM_LOCK (adder->collect);
       if (curtype == GST_SEEK_TYPE_SET)
         adder->segment_start = cur;
       else
@@ -696,7 +696,7 @@ gst_adder_src_event (GstPad * pad, GstEvent * event)
          * have stopped so that the cookie gets properly updated. */
         gst_collect_pads2_set_flushing (adder->collect, TRUE);
       }
-      GST_OBJECT_UNLOCK (adder->collect);
+      GST_COLLECT_PADS2_STREAM_UNLOCK (adder->collect);
       GST_DEBUG_OBJECT (adder, "forwarding seek event: %" GST_PTR_FORMAT,
           event);
 
@@ -757,7 +757,7 @@ gst_adder_sink_event (GstPad * pad, GstEvent * event)
        * We unset the pending flush-stop flag so that we don't send anymore
        * flush-stop from the collect function later.
        */
-      GST_OBJECT_LOCK (adder->collect);
+      GST_COLLECT_PADS2_STREAM_LOCK (adder->collect);
       g_atomic_int_set (&adder->new_segment_pending, TRUE);
       g_atomic_int_set (&adder->flush_stop_pending, FALSE);
       /* Clear pending tags */
@@ -766,13 +766,13 @@ gst_adder_sink_event (GstPad * pad, GstEvent * event)
         g_list_free (adder->pending_events);
         adder->pending_events = NULL;
       }
-      GST_OBJECT_UNLOCK (adder->collect);
+      GST_COLLECT_PADS2_STREAM_UNLOCK (adder->collect);
       break;
     case GST_EVENT_TAG:
-      GST_OBJECT_LOCK (adder->collect);
+      GST_COLLECT_PADS2_STREAM_LOCK (adder->collect);
       /* collect tags here so we can push them out when we collect data */
       adder->pending_events = g_list_append (adder->pending_events, event);
-      GST_OBJECT_UNLOCK (adder->collect);
+      GST_COLLECT_PADS2_STREAM_UNLOCK (adder->collect);
       goto beach;
     case GST_EVENT_NEWSEGMENT:
       if (g_atomic_int_compare_and_exchange (&adder->wait_for_new_segment,
