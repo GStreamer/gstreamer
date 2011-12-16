@@ -1,6 +1,6 @@
 # variables used for enum/marshal generation
 glib_enum_headers= 		\
-	multichannel.h		\
+	audio.h			\
 	gstaudioringbuffer.h
 
 glib_enum_define = GST_AUDIO
@@ -27,7 +27,6 @@ libgstaudio_@GST_MAJORMINOR@_la_SOURCES = \
 	mixeroptions.c \
 	mixertrack.c \
 	mixerutils.c \
-	multichannel.c \
 	gstaudiocdsrc.c \
 	gstaudiodecoder.c \
 	gstaudioencoder.c \
@@ -60,7 +59,6 @@ libgstaudio_@GST_MAJORMINOR@include_HEADERS = \
 	mixeroptions.h \
 	mixertrack.h \
 	mixerutils.h \
-	multichannel.h \
 	streamvolume.h \
 	gstaudioiec61937.h
 
