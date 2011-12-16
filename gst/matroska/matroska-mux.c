@@ -2383,7 +2383,7 @@ gst_matroska_mux_start (GstMatroskaMux * mux)
     if (tags != NULL && !gst_tag_list_is_empty (tags)) {
       guint64 master_tags, master_tag;
 
-      GST_DEBUG ("Writing tags");
+      GST_DEBUG_OBJECT (mux, "Writing tags");
 
       /* TODO: maybe limit via the TARGETS id by looking at the source pad */
       mux->tags_pos = ebml->pos;
@@ -2458,7 +2458,7 @@ gst_matroska_mux_start (GstMatroskaMux * mux)
       child = gst_ebml_write_master_start (ebml, GST_MATROSKA_ID_TRACKENTRY);
       gst_matroska_mux_track_header (mux, collect_pad->track);
       gst_ebml_write_master_finish (ebml, child);
-      /* some remaing pad/track setup */
+      /* some remaining pad/track setup */
       collect_pad->default_duration_scaled =
           gst_util_uint64_scale (collect_pad->track->default_duration,
           1, mux->time_scale);
@@ -2585,7 +2585,7 @@ gst_matroska_mux_finish (GstMatroskaMux * mux)
   if (tags != NULL && !gst_tag_list_is_empty (tags)) {
     guint64 master_tags, master_tag;
 
-    GST_DEBUG ("Writing tags");
+    GST_DEBUG_OBJECT (mux, "Writing tags");
 
     /* TODO: maybe limit via the TARGETS id by looking at the source pad */
     mux->tags_pos = ebml->pos;
