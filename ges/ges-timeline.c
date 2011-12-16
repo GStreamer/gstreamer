@@ -509,7 +509,12 @@ discoverer_discovered_cb (GstDiscoverer * discoverer,
   GESTimelinePrivate *priv = timeline->priv;
   const gchar *uri = gst_discoverer_info_get_uri (info);
 
-  GST_DEBUG ("Discovered uri %s", uri);
+
+  if (err) {
+    GST_WARNING ("Error while discovering %s: %s", uri, err->message);
+    return;
+  } else
+    GST_DEBUG ("Discovered uri %s", uri);
 
   GES_TIMELINE_PENDINGOBJS_LOCK (timeline);
 
@@ -1164,6 +1169,8 @@ ges_timeline_enable_update (GESTimeline * timeline, gboolean enabled)
 {
   GList *tmp, *tracks;
   gboolean res = TRUE;
+
+  GST_DEBUG_OBJECT (timeline, "%s updates", enabled ? "Enabling" : "Disabling");
 
   tracks = ges_timeline_get_tracks (timeline);
 

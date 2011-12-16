@@ -888,6 +888,10 @@ ges_track_object_get_element (GESTrackObject * object)
 void
 ges_track_object_set_locked (GESTrackObject * object, gboolean locked)
 {
+  g_return_if_fail (GES_IS_TRACK_OBJECT (object));
+
+  GST_DEBUG_OBJECT (object, "%s object", locked ? "Locking" : "Unlocking");
+
   object->priv->locked = locked;
 }
 
