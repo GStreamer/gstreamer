@@ -227,8 +227,8 @@ static void gst_qt_mux_release_pad (GstElement * element, GstPad * pad);
 static gboolean gst_qt_mux_sink_event (GstCollectPads2 * pads,
     GstCollectData2 * data, GstEvent * event, gpointer user_data);
 
-static GstFlowReturn gst_qt_mux_collected (GstCollectPads2 * pads,
-    gpointer user_data);
+static GstFlowReturn gst_qt_mux_handle_buffer (GstCollectPads2 * pads,
+    GstCollectData2 * cdata, GstBuffer * buf, gpointer user_data);
 static GstFlowReturn gst_qt_mux_add_buffer (GstQTMux * qtmux, GstQTPad * pad,
     GstBuffer * buf);
 
@@ -484,12 +484,12 @@ gst_qt_mux_init (GstQTMux * qtmux, GstQTMuxClass * qtmux_klass)
 
   qtmux->sinkpads = NULL;
   qtmux->collect = gst_collect_pads2_new ();
-  gst_collect_pads2_set_function (qtmux->collect,
-      (GstCollectPads2Function) GST_DEBUG_FUNCPTR (gst_qt_mux_collected),
-      qtmux);
+  gst_collect_pads2_set_buffer_function (qtmux->collect,
+      GST_DEBUG_FUNCPTR (gst_qt_mux_handle_buffer), qtmux);
   gst_collect_pads2_set_event_function (qtmux->collect,
-      (GstCollectPads2EventFunction) GST_DEBUG_FUNCPTR (gst_qt_mux_sink_event),
-      qtmux);
+      GST_DEBUG_FUNCPTR (gst_qt_mux_sink_event), qtmux);
+  gst_collect_pads2_set_clip_function (qtmux->collect,
+      GST_DEBUG_FUNCPTR (gst_collect_pads2_clip_running_time), qtmux);
 
   /* properties set to default upon construction */
 
@@ -2506,14 +2506,13 @@ not_negotiated:
 }
 
 static GstFlowReturn
-gst_qt_mux_collected (GstCollectPads2 * pads, gpointer user_data)
+gst_qt_mux_handle_buffer (GstCollectPads2 * pads, GstCollectData2 * cdata,
+    GstBuffer * buf, gpointer user_data)
 {
   GstFlowReturn ret = GST_FLOW_OK;
   GstQTMux *qtmux = GST_QT_MUX_CAST (user_data);
-  GSList *walk;
   GstQTPad *best_pad = NULL;
-  GstClockTime time, best_time = GST_CLOCK_TIME_NONE;
-  GstBuffer *buf;
+  GstClockTime best_time = GST_CLOCK_TIME_NONE;
 
   if (G_UNLIKELY (qtmux->state == GST_QT_MUX_STATE_STARTED)) {
     if ((ret = gst_qt_mux_start_file (qtmux)) != GST_FLOW_OK)
@@ -2525,52 +2524,14 @@ gst_qt_mux_collected (GstCollectPads2 * pads, gpointer user_data)
   if (G_UNLIKELY (qtmux->state == GST_QT_MUX_STATE_EOS))
     return GST_FLOW_UNEXPECTED;
 
-  /* select the best buffer */
-  walk = qtmux->collect->data;
-  while (walk) {
-    GstQTPad *pad;
-    GstCollectData2 *data;
+  best_pad = (GstQTPad *) cdata;
 
-    data = (GstCollectData2 *) walk->data;
-    pad = (GstQTPad *) data;
-
-    walk = g_slist_next (walk);
-
-    buf = gst_collect_pads2_peek (pads, data);
-    if (buf == NULL) {
-      GST_LOG_OBJECT (qtmux, "Pad %s has no buffers",
-          GST_PAD_NAME (pad->collect.pad));
-      continue;
-    }
-    time = GST_BUFFER_TIMESTAMP (buf);
-    gst_buffer_unref (buf);
-
-    /* invalid should pass */
-    if (G_LIKELY (GST_CLOCK_TIME_IS_VALID (time))) {
-      time =
-          gst_segment_to_running_time (&data->segment, GST_FORMAT_TIME, time);
-      if (G_UNLIKELY (!GST_CLOCK_TIME_IS_VALID (time))) {
-        GST_DEBUG_OBJECT (qtmux, "clipping buffer on pad %s outside segment",
-            GST_PAD_NAME (data->pad));
-        buf = gst_collect_pads2_pop (pads, data);
-        gst_buffer_unref (buf);
-        return GST_FLOW_OK;
-      }
-    }
-
-    if (best_pad == NULL || !GST_CLOCK_TIME_IS_VALID (time) ||
-        (GST_CLOCK_TIME_IS_VALID (best_time) && time < best_time)) {
-      best_pad = pad;
-      best_time = time;
-    }
-  }
-
+  /* clipping already converted to running time */
   if (best_pad != NULL) {
+    g_assert (buf);
+    best_time = GST_BUFFER_TIMESTAMP (buf);
     GST_LOG_OBJECT (qtmux, "selected pad %s with time %" GST_TIME_FORMAT,
         GST_PAD_NAME (best_pad->collect.pad), GST_TIME_ARGS (best_time));
-    buf = gst_collect_pads2_pop (pads, &best_pad->collect);
-    buf = gst_buffer_make_metadata_writable (buf);
-    GST_BUFFER_TIMESTAMP (buf) = best_time;
     ret = gst_qt_mux_add_buffer (qtmux, best_pad, buf);
   } else {
     ret = gst_qt_mux_stop_file (qtmux);
