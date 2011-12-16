@@ -43,6 +43,8 @@
 #include "ges-timeline-layer.h"
 #include "ges.h"
 
+static void track_duration_cb (GstElement * track,
+    GParamSpec * arg G_GNUC_UNUSED, GESTimeline * timeline);
 
 G_DEFINE_TYPE (GESTimeline, ges_timeline, GST_TYPE_BIN);
 
@@ -57,6 +59,9 @@ struct _GESTimelinePrivate
 {
   GList *layers;                /* A list of GESTimelineLayer sorted by priority */
   GList *tracks;                /* A list of private track data */
+
+  /* The duration of the timeline */
+  gint64 duration;
 
   /* discoverer used for virgin sources */
   GstDiscoverer *discoverer;
@@ -77,6 +82,15 @@ typedef struct
   GstPad *pad;                  /* Pad from the track */
   GstPad *ghostpad;
 } TrackPrivate;
+
+enum
+{
+  PROP_0,
+  PROP_DURATION,
+  PROP_LAST
+};
+
+static GParamSpec *properties[PROP_LAST];
 
 enum
 {
@@ -104,9 +118,14 @@ static void
 ges_timeline_get_property (GObject * object, guint property_id,
     GValue * value, GParamSpec * pspec)
 {
+  GESTimeline *timeline = GES_TIMELINE (object);
+
   switch (property_id) {
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
+    case PROP_DURATION:
+      g_value_set_uint64 (value, timeline->priv->duration);
+      break;
   }
 }
 
@@ -177,6 +196,20 @@ ges_timeline_class_init (GESTimelineClass * klass)
   object_class->finalize = ges_timeline_finalize;
 
   /**
+   * GESTimelineObject:duration
+   *
+   * Current duration (in nanoseconds) of the #GESTimeline
+   *
+   * Default value: 0
+   */
+  properties[PROP_DURATION] =
+      g_param_spec_uint64 ("duration", "Duration",
+      "The duration of the timeline", 0, G_MAXUINT64,
+      GST_CLOCK_TIME_NONE, G_PARAM_READABLE);
+  g_object_class_install_property (object_class, PROP_DURATION,
+      properties[PROP_DURATION]);
+
+  /**
    * GESTimeline::track-added
    * @timeline: the #GESTimeline
    * @track: the #GESTrack that was added to the timeline
@@ -235,6 +268,7 @@ ges_timeline_init (GESTimeline * self)
 
   self->priv->layers = NULL;
   self->priv->tracks = NULL;
+  self->priv->duration = 0;
 
   self->priv->pendingobjects_lock = g_mutex_new ();
   /* New discoverer with a 15s timeout */
@@ -963,6 +997,12 @@ ges_timeline_add_track (GESTimeline * timeline, GESTrack * track)
     g_list_free (objects);
   }
 
+  /* We connect to the duration change notify, so we can update
+   * our duration accordingly */
+  g_signal_connect (G_OBJECT (track), "notify::duration",
+      G_CALLBACK (track_duration_cb), timeline);
+  track_duration_cb (GST_ELEMENT (track), NULL, timeline);
+
   return TRUE;
 }
 
@@ -1015,6 +1055,8 @@ ges_timeline_remove_track (GESTimeline * timeline, GESTrack * track)
   /* Remove pad-added/-removed handlers */
   g_signal_handlers_disconnect_by_func (track, pad_added_cb, tr_priv);
   g_signal_handlers_disconnect_by_func (track, pad_removed_cb, tr_priv);
+  g_signal_handlers_disconnect_by_func (track, track_duration_cb,
+      tr_priv->track);
 
   /* Signal track removal to all layers/objects */
   g_signal_emit (timeline, ges_timeline_signals[TRACK_REMOVED], 0, track);
@@ -1134,4 +1176,33 @@ ges_timeline_enable_update (GESTimeline * timeline, gboolean enabled)
   g_list_free (tracks);
 
   return res;
+}
+
+static void
+track_duration_cb (GstElement * track,
+    GParamSpec * arg G_GNUC_UNUSED, GESTimeline * timeline)
+{
+  guint64 duration, max_duration = 0;
+  GList *tmp;
+
+  for (tmp = timeline->priv->tracks; tmp; tmp = g_list_next (tmp)) {
+    TrackPrivate *tr_priv = (TrackPrivate *) tmp->data;
+    g_object_get (tr_priv->track, "duration", &duration, NULL);
+    GST_DEBUG ("track duration : %" GST_TIME_FORMAT, GST_TIME_ARGS (duration));
+    max_duration = MAX (duration, max_duration);
+  }
+
+  if (timeline->priv->duration != max_duration) {
+    GST_DEBUG ("track duration : %" GST_TIME_FORMAT " current : %"
+        GST_TIME_FORMAT, GST_TIME_ARGS (max_duration),
+        GST_TIME_ARGS (timeline->priv->duration));
+
+    timeline->priv->duration = max_duration;
+
+#if GLIB_CHECK_VERSION(2,26,0)
+    g_object_notify_by_pspec (G_OBJECT (timeline), properties[PROP_DURATION]);
+#else
+    g_object_notify (G_OBJECT (timeline), "duration");
+#endif
+  }
 }
