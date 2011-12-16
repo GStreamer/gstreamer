@@ -124,7 +124,7 @@ void            _gst_trace_add_entry            (GstTrace *trace, guint32 seq,
 void            gst_trace_read_tsc              (gint64 *dst);
 
 
-extern GStaticMutex     _gst_trace_mutex;
+GST_EXPORT GStaticMutex     _gst_trace_mutex;
 
 gboolean                gst_alloc_trace_available       (void);
 const GList*            gst_alloc_trace_list            (void);
@@ -196,7 +196,7 @@ G_STMT_START {                                          \
 #endif
 
 
-extern gint _gst_trace_on;
+GST_EXPORT gint _gst_trace_on;
 /**
  * gst_trace_add_entry:
  * @trace: a #GstTrace

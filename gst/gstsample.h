@@ -30,7 +30,7 @@
 
 G_BEGIN_DECLS
 
-extern GType _gst_sample_type;
+GST_EXPORT GType _gst_sample_type;
 
 #define GST_TYPE_SAMPLE      (_gst_sample_type)
 #define GST_IS_SAMPLE(obj)   (GST_IS_MINI_OBJECT_TYPE(obj, GST_TYPE_SAMPLE))

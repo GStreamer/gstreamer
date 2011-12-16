@@ -485,7 +485,7 @@ G_STMT_START{                                 \
  */
 GST_EXPORT GstDebugCategory *	GST_CAT_DEFAULT;
 /* this symbol may not be used */
-extern gboolean			_gst_debug_enabled;
+GST_EXPORT gboolean			_gst_debug_enabled;
 
 /* since 0.10.7, the min debug level, used for quickly discarding debug
  * messages that fall under the threshold. */

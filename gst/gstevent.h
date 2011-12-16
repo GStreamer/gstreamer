@@ -174,7 +174,7 @@ typedef enum {
 
 G_BEGIN_DECLS
 
-extern GType _gst_event_type;
+GST_EXPORT GType _gst_event_type;
 
 #define GST_TYPE_EVENT                  (_gst_event_type)
 #define GST_IS_EVENT(obj)               (GST_IS_MINI_OBJECT_TYPE (obj, GST_TYPE_EVENT))

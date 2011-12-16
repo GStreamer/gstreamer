@@ -27,7 +27,7 @@
 
 G_BEGIN_DECLS
 
-extern GType _gst_buffer_list_type;
+GST_EXPORT GType _gst_buffer_list_type;
 
 #define GST_TYPE_BUFFER_LIST      (_gst_buffer_list_type)
 #define GST_IS_BUFFER_LIST(obj)   (GST_IS_MINI_OBJECT_TYPE(obj, GST_TYPE_BUFFER_LIST))

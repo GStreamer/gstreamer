@@ -36,7 +36,7 @@ typedef struct _GstMemory GstMemory;
 typedef struct _GstMemoryInfo GstMemoryInfo;
 typedef struct _GstAllocator GstAllocator;
 
-extern gsize gst_memory_alignment;
+GST_EXPORT gsize gst_memory_alignment;
 
 /**
  * GstMemoryFlags:

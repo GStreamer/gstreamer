@@ -28,7 +28,7 @@
 
 G_BEGIN_DECLS
 
-extern GType _gst_structure_type;
+GST_EXPORT GType _gst_structure_type;
 
 typedef struct _GstStructure GstStructure;
 

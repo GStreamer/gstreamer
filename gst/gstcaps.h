@@ -27,7 +27,7 @@
 
 G_BEGIN_DECLS
 
-extern GType _gst_caps_type;
+GST_EXPORT GType _gst_caps_type;
 
 #define GST_TYPE_CAPS             (_gst_caps_type)
 #define GST_IS_CAPS(obj)          (GST_IS_MINI_OBJECT_TYPE((obj), GST_TYPE_CAPS))
@@ -138,8 +138,8 @@ typedef enum {
 typedef struct _GstCaps GstCaps;
 typedef struct _GstStaticCaps GstStaticCaps;
 
-extern GstCaps * _gst_caps_any;
-extern GstCaps * _gst_caps_none;
+GST_EXPORT GstCaps * _gst_caps_any;
+GST_EXPORT GstCaps * _gst_caps_none;
 /**
  * GST_CAPS_FLAGS:
  * @caps: a #GstCaps.

@@ -30,7 +30,7 @@
 
 G_BEGIN_DECLS
 
-extern GType _gst_buffer_type;
+GST_EXPORT GType _gst_buffer_type;
 
 typedef struct _GstBuffer GstBuffer;
 typedef struct _GstBufferPool GstBufferPool;
