@@ -134,6 +134,8 @@ struct _GESTimelineObjectPrivate
 
   guint nb_effects;
 
+  GESTrackObject *initiated_move;
+
   /* The formats supported by this TimelineObject */
   GESTrackType supportedformats;
 };
@@ -743,9 +745,17 @@ ges_timeline_object_set_start_internal (GESTimelineObject * object,
     tr = (GESTrackObject *) tmp->data;
     map = find_object_mapping (object, tr);
 
-    if (ges_track_object_is_locked (tr)) {
+    if (ges_track_object_is_locked (tr) && tr != object->priv->initiated_move) {
+      gint64 new_start = start - map->start_offset;
+
       /* Move the child... */
-      ges_track_object_set_start (tr, start + map->start_offset);
+      if (new_start < 0) {
+        GST_ERROR ("Trying to set start to a negative value %" GST_TIME_FORMAT,
+            GST_TIME_ARGS (-(start + map->start_offset)));
+        continue;
+      }
+
+      ges_track_object_set_start (tr, new_start);
     } else {
       /* ... or update the offset */
       map->start_offset = start - tr->start;
@@ -1492,7 +1502,9 @@ track_object_start_changed_cb (GESTrackObject * child,
     map->start_offset = object->start - child->start;
   } else {
     /* Or update the parent start */
+    object->priv->initiated_move = child;
     ges_timeline_object_set_start (object, child->start + map->start_offset);
+    object->priv->initiated_move = NULL;
   }
 }
 
