@@ -473,6 +473,33 @@ GST_START_TEST (test_deserialize_flags)
 
 GST_END_TEST;
 
+GST_START_TEST (test_deserialize_bitmask)
+{
+  GValue value = { 0 };
+  const char *strings[] = {
+    "0xffffffffffffffff",
+    "0x1234567890ABCDEF",
+  };
+  guint64 results[] = {
+    0xffffffffffffffffULL,
+    0x1234567890ABCDEFULL,
+  };
+  int i;
+
+  g_value_init (&value, GST_TYPE_BITMASK);
+
+  for (i = 0; i < G_N_ELEMENTS (strings); ++i) {
+    fail_unless (gst_value_deserialize (&value, strings[i]),
+        "could not deserialize %s (%d)", strings[i], i);
+    fail_unless (gst_value_get_bitmask (&value) == results[i],
+        "resulting value is 0x%016" G_GINT64_MODIFIER "x, not 0x%016"
+        G_GINT64_MODIFIER "x, for string %s (%d)",
+        gst_value_get_bitmask (&value), results[i], strings[i], i);
+  }
+}
+
+GST_END_TEST;
+
 GST_START_TEST (test_string)
 {
   const gchar *try[] = {
@@ -737,6 +764,16 @@ GST_START_TEST (test_value_compare)
   g_value_unset (&value1);
   g_value_unset (&value2);
   g_value_unset (&tmp);
+
+  g_value_init (&value1, GST_TYPE_BITMASK);
+  gst_value_set_bitmask (&value1, 0x123);
+  g_value_init (&value2, GST_TYPE_BITMASK);
+  gst_value_set_bitmask (&value2, 0x321);
+  fail_unless (gst_value_compare (&value1, &value2) == GST_VALUE_UNORDERED);
+  fail_unless (gst_value_compare (&value2, &value1) == GST_VALUE_UNORDERED);
+  fail_unless (gst_value_compare (&value1, &value1) == GST_VALUE_EQUAL);
+  g_value_unset (&value1);
+  g_value_unset (&value2);
 }
 
 GST_END_TEST;
@@ -776,6 +813,16 @@ GST_START_TEST (test_value_intersect)
   g_value_unset (&src1);
   g_value_unset (&src2);
   g_value_unset (&dest);
+
+  g_value_init (&src1, GST_TYPE_BITMASK);
+  gst_value_set_bitmask (&src1, 0xf00f);
+  g_value_init (&src2, GST_TYPE_BITMASK);
+  gst_value_set_bitmask (&src2, 0xff00);
+  ret = gst_value_intersect (&dest, &src1, &src2);
+  fail_unless (ret == TRUE);
+  fail_unless_equals_uint64 (0xf000, gst_value_get_bitmask (&dest));
+  g_value_unset (&src1);
+  g_value_unset (&src2);
 }
 
 GST_END_TEST;
@@ -1875,6 +1922,26 @@ GST_START_TEST (test_value_subtract_fraction_list)
 
 GST_END_TEST;
 
+GST_START_TEST (test_value_subtract_bitmask)
+{
+  GValue result = { 0 };
+  GValue src1 = { 0 };
+  GValue src2 = { 0 };
+
+  /* Subtract 1/4 from 1/2 */
+  g_value_init (&src1, GST_TYPE_BITMASK);
+  g_value_init (&src2, GST_TYPE_BITMASK);
+  gst_value_set_bitmask (&src1, 0xffff);
+  gst_value_set_bitmask (&src2, 0xff00);
+  fail_unless (gst_value_subtract (&result, &src1, &src2) == TRUE);
+  fail_unless_equals_uint64 (0x00ff, gst_value_get_bitmask (&result));
+
+  g_value_unset (&src1);
+  g_value_unset (&src2);
+  g_value_unset (&result);
+}
+
+GST_END_TEST;
 
 GST_START_TEST (test_date)
 {
@@ -2518,6 +2585,7 @@ gst_value_suite (void)
   tcase_add_test (tc_chain, test_deserialize_guint64);
   tcase_add_test (tc_chain, test_deserialize_guchar);
   tcase_add_test (tc_chain, test_deserialize_gstfraction);
+  tcase_add_test (tc_chain, test_deserialize_bitmask);
   tcase_add_test (tc_chain, test_serialize_flags);
   tcase_add_test (tc_chain, test_deserialize_flags);
   tcase_add_test (tc_chain, test_serialize_deserialize_format_enum);
@@ -2531,6 +2599,7 @@ gst_value_suite (void)
   tcase_add_test (tc_chain, test_value_subtract_fraction);
   tcase_add_test (tc_chain, test_value_subtract_fraction_range);
   tcase_add_test (tc_chain, test_value_subtract_fraction_list);
+  tcase_add_test (tc_chain, test_value_subtract_bitmask);
   tcase_add_test (tc_chain, test_date);
   tcase_add_test (tc_chain, test_date_time);
   tcase_add_test (tc_chain, test_fraction_range);
