@@ -99,7 +99,8 @@ GST_BOILERPLATE_FULL (GstFlvMux, gst_flv_mux, GstElement, GST_TYPE_ELEMENT,
 
 static void gst_flv_mux_finalize (GObject * object);
 static GstFlowReturn
-gst_flv_mux_collected (GstCollectPads2 * pads, gpointer user_data);
+gst_flv_mux_handle_buffer (GstCollectPads2 * pads, GstCollectData2 * cdata,
+    GstBuffer * buf, gpointer user_data);
 static gboolean
 gst_flv_mux_handle_sink_event (GstCollectPads2 * pads, GstCollectData2 * data,
     GstEvent * event, gpointer user_data);
@@ -201,11 +202,12 @@ gst_flv_mux_init (GstFlvMux * mux, GstFlvMuxClass * g_class)
   mux->new_tags = FALSE;
 
   mux->collect = gst_collect_pads2_new ();
-  gst_collect_pads2_set_function (mux->collect,
-      (GstCollectPads2Function) GST_DEBUG_FUNCPTR (gst_flv_mux_collected), mux);
+  gst_collect_pads2_set_buffer_function (mux->collect,
+      GST_DEBUG_FUNCPTR (gst_flv_mux_handle_buffer), mux);
   gst_collect_pads2_set_event_function (mux->collect,
-      (GstCollectPads2EventFunction)
       GST_DEBUG_FUNCPTR (gst_flv_mux_handle_sink_event), mux);
+  gst_collect_pads2_set_clip_function (mux->collect,
+      GST_DEBUG_FUNCPTR (gst_collect_pads2_clip_running_time), mux);
 
   gst_flv_mux_reset (GST_ELEMENT (mux));
 }
@@ -1191,18 +1193,12 @@ gst_flv_mux_update_index (GstFlvMux * mux, GstBuffer * buffer, GstFlvPad * cpad)
 }
 
 static GstFlowReturn
-gst_flv_mux_write_buffer (GstFlvMux * mux, GstFlvPad * cpad)
+gst_flv_mux_write_buffer (GstFlvMux * mux, GstFlvPad * cpad, GstBuffer * buffer)
 {
   GstBuffer *tag;
-  GstBuffer *buffer =
-      gst_collect_pads2_pop (mux->collect, (GstCollectData2 *) cpad);
   GstFlowReturn ret;
 
-  /* arrange downstream running time */
-  buffer = gst_buffer_make_metadata_writable (buffer);
-  GST_BUFFER_TIMESTAMP (buffer) =
-      gst_segment_to_running_time (&cpad->collect.segment,
-      GST_FORMAT_TIME, GST_BUFFER_TIMESTAMP (buffer));
+  /* clipping function arranged for running_time */
 
   if (!mux->streamable)
     gst_flv_mux_update_index (mux, buffer, cpad);
@@ -1384,14 +1380,13 @@ gst_flv_mux_rewrite_header (GstFlvMux * mux)
 }
 
 static GstFlowReturn
-gst_flv_mux_collected (GstCollectPads2 * pads, gpointer user_data)
+gst_flv_mux_handle_buffer (GstCollectPads2 * pads, GstCollectData2 * cdata,
+    GstBuffer * buffer, gpointer user_data)
 {
   GstFlvMux *mux = GST_FLV_MUX (user_data);
   GstFlvPad *best;
   GstClockTime best_time;
   GstFlowReturn ret;
-  GSList *sl;
-  gboolean eos = TRUE;
 
   if (mux->state == GST_FLV_MUX_STATE_HEADER) {
     if (mux->collect->data == NULL) {
@@ -1417,46 +1412,12 @@ gst_flv_mux_collected (GstCollectPads2 * pads, gpointer user_data)
     mux->new_tags = FALSE;
   }
 
-
-  best = NULL;
-  best_time = GST_CLOCK_TIME_NONE;
-  for (sl = mux->collect->data; sl; sl = sl->next) {
-    GstFlvPad *cpad = sl->data;
-    GstBuffer *buffer = gst_collect_pads2_peek (pads, (GstCollectData2 *) cpad);
-    GstClockTime time;
-
-    if (!buffer)
-      continue;
-
-    eos = FALSE;
-
-    time = GST_BUFFER_TIMESTAMP (buffer);
-    gst_buffer_unref (buffer);
-
-    /* Use buffers without valid timestamp first */
-    if (!GST_CLOCK_TIME_IS_VALID (time)) {
-      GST_WARNING_OBJECT (pads, "Buffer without valid timestamp");
-
-      best_time = cpad->last_timestamp;
-      best = cpad;
-      break;
-    }
-
-    time = gst_segment_to_running_time (&cpad->collect.segment,
-        GST_FORMAT_TIME, time);
-    if (G_UNLIKELY (!GST_CLOCK_TIME_IS_VALID (time))) {
-      GST_DEBUG_OBJECT (mux, "clipping buffer on pad %s outside segment",
-          GST_PAD_NAME (cpad->collect.pad));
-      buffer = gst_collect_pads2_pop (pads, (GstCollectData2 *) cpad);
-      gst_buffer_unref (buffer);
-      return GST_FLOW_OK;
-    }
-
-    if (best == NULL || (GST_CLOCK_TIME_IS_VALID (best_time)
-            && time < best_time)) {
-      best = cpad;
-      best_time = time;
-    }
+  best = (GstFlvPad *) cdata;
+  if (best) {
+    g_assert (buffer);
+    best_time = GST_BUFFER_TIMESTAMP (buffer);
+  } else {
+    best_time = GST_CLOCK_TIME_NONE;
   }
 
   /* The FLV timestamp is an int32 field. For non-live streams error out if a
@@ -1465,17 +1426,17 @@ gst_flv_mux_collected (GstCollectPads2 * pads, gpointer user_data)
   if (!mux->streamable && GST_CLOCK_TIME_IS_VALID (best_time)
       && best_time / GST_MSECOND > G_MAXINT32) {
     GST_WARNING_OBJECT (mux, "Timestamp larger than FLV supports - EOS");
-    eos = TRUE;
+    gst_buffer_unref (buffer);
+    buffer = NULL;
+    best = NULL;
   }
 
-  if (!eos && best) {
-    return gst_flv_mux_write_buffer (mux, best);
-  } else if (eos) {
+  if (best) {
+    return gst_flv_mux_write_buffer (mux, best, buffer);
+  } else {
     gst_flv_mux_rewrite_header (mux);
     gst_pad_push_event (mux->srcpad, gst_event_new_eos ());
     return GST_FLOW_UNEXPECTED;
-  } else {
-    return GST_FLOW_OK;
   }
 }
 
