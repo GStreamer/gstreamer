@@ -547,10 +547,6 @@ ges_timeline_object_add_track_object (GESTimelineObject * object, GESTrackObject
     }
 
     priv->nb_effects++;
-
-    /* emit 'effect-added' */
-    g_signal_emit (object, ges_timeline_object_signals[EFFECT_ADDED], 0,
-        GES_TRACK_EFFECT (trobj));
   }
 
   object->priv->trackobjects =
@@ -591,7 +587,12 @@ ges_timeline_object_add_track_object (GESTimelineObject * object, GESTrackObject
   if (!GES_IS_TRACK_PARSE_LAUNCH_EFFECT (trobj)) {
     g_signal_emit (object, ges_timeline_object_signals[TRACK_OBJECT_ADDED], 0,
         GES_TRACK_OBJECT (trobj));
+  } else {
+    /* emit 'effect-added' */
+    g_signal_emit (object, ges_timeline_object_signals[EFFECT_ADDED], 0,
+        GES_TRACK_EFFECT (trobj));
   }
+
   return TRUE;
 }
 
@@ -1165,12 +1166,13 @@ ges_timeline_object_get_top_effects (GESTimelineObject * object)
 
   g_return_val_if_fail (GES_IS_TIMELINE_OBJECT (object), NULL);
 
+  GST_DEBUG_OBJECT (object, "Getting the %i top effects",
+      object->priv->nb_effects);
   ret = NULL;
 
   for (tmp = object->priv->trackobjects, i = 0; i < object->priv->nb_effects;
       tmp = tmp->next, i++) {
-    ret = g_list_append (ret, tmp->data);
-    g_object_ref (tmp->data);
+    ret = g_list_append (ret, g_object_ref (tmp->data));
   }
 
   return ret;
