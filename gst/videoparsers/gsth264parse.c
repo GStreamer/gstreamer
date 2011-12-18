@@ -1276,12 +1276,10 @@ check_pending_key_unit_event (GstEvent * pending_event, GstSegment * segment,
       running_time < pending_key_unit_ts)
     goto out;
 
-#if 0
   if (flags & GST_BUFFER_FLAG_DELTA_UNIT) {
     GST_DEBUG ("pending force key unit, waiting for keyframe");
     goto out;
   }
-#endif
 
   stream_time = gst_segment_to_stream_time (segment,
       GST_FORMAT_TIME, timestamp);
