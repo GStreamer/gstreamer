@@ -920,6 +920,7 @@ mpegtsmux_collected (GstCollectPads2 * pads, MpegTsMux * mux)
 
           program->last_pmt_ts = -1;
         }
+        tsmux_program_set_pcr_stream (prog, NULL);
       }
     }
 
