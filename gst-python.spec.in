@@ -37,6 +37,16 @@ BuildRequires:  gcc-c++
 This module contains a wrapper that allows GStreamer applications
 to be written in Python.
 
+%package devel
+Summary: 	Libraries/include files for Python bindings for GStreamer
+Group: 		Development/Libraries
+
+Requires: 	%{gstreamer}-python = @VERSION@
+
+%description devel
+This package contains the libraries and includes files necessary to develop
+python bindings for GStreamer-based C libraries.
+
 %prep
 %setup -q -n gst-python-%{version}
 
@@ -69,9 +79,16 @@ rm -rf $RPM_BUILD_ROOT
 %{_libdir}/python?.?/site-packages/gst-%{majorminor}/gst/tag.so
 %{_libdir}/python?.?/site-packages/gst-%{majorminor}/gst/video.so
 %{_libdir}/python?.?/site-packages/gstoption.so
-
-
 %{_datadir}/gst-python
+
+%files devel
+%defattr(-, root, root, -)
+%dir %{_includedir}/gstreamer-%{majorminor}
+%dir %{_includedir}/gstreamer-%{majorminor}/gst
+%{_includedir}/gstreamer-%{majorminor}/gst/pygst.h
+%{_includedir}/gstreamer-%{majorminor}/gst/pygstvalue.h
+%{_includedir}/gstreamer-%{majorminor}/gst/pygstminiobject.h
+%{_includedir}/gstreamer-%{majorminor}/gst/pygstexception.h
 %{_libdir}/pkgconfig/gst-python-%{majorminor}.pc
 
 %changelog
