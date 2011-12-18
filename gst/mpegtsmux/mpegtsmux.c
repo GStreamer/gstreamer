@@ -888,7 +888,7 @@ mpegtsmux_collected (GstCollectPads * pads, MpegTsMux * mux)
       return GST_FLOW_ERROR;
     }
 
-    if (mux->force_key_unit_event != NULL) {
+    if (mux->force_key_unit_event != NULL && best->stream->is_video_stream) {
       GstEvent *event;
 
       event = check_pending_key_unit_event (mux->force_key_unit_event,
