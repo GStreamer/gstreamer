@@ -63,6 +63,8 @@ struct _GstMpeg4VParse {
   /* properties */
   gboolean drop;
   guint interval;
+  GstClockTime pending_key_unit_ts;
+  GstEvent *force_key_unit_event;
 };
 
 struct _GstMpeg4VParseClass {

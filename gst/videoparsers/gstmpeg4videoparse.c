@@ -31,6 +31,7 @@
 #include <string.h>
 #include <gst/base/gstbytereader.h>
 #include <gst/pbutils/codec-utils.h>
+#include <gst/video/video.h>
 
 #include "gstmpeg4videoparse.h"
 
@@ -82,6 +83,9 @@ static void gst_mpeg4vparse_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
 static void gst_mpeg4vparse_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
+static gboolean gst_mpeg4vparse_event (GstBaseParse * parse, GstEvent * event);
+static gboolean gst_mpeg4vparse_src_event (GstBaseParse * parse,
+    GstEvent * event);
 
 static void
 gst_mpeg4vparse_base_init (gpointer klass)
@@ -171,6 +175,8 @@ gst_mpeg4vparse_class_init (GstMpeg4VParseClass * klass)
       GST_DEBUG_FUNCPTR (gst_mpeg4vparse_pre_push_frame);
   parse_class->set_sink_caps = GST_DEBUG_FUNCPTR (gst_mpeg4vparse_set_caps);
   parse_class->get_sink_caps = GST_DEBUG_FUNCPTR (gst_mpeg4vparse_get_caps);
+  parse_class->event = GST_DEBUG_FUNCPTR (gst_mpeg4vparse_event);
+  parse_class->src_event = GST_DEBUG_FUNCPTR (gst_mpeg4vparse_src_event);
 }
 
 static void
@@ -197,6 +203,8 @@ gst_mpeg4vparse_reset (GstMpeg4VParse * mp4vparse)
   mp4vparse->update_caps = TRUE;
   mp4vparse->profile = NULL;
   mp4vparse->level = NULL;
+  mp4vparse->pending_key_unit_ts = GST_CLOCK_TIME_NONE;
+  mp4vparse->force_key_unit_event = NULL;
 
   gst_buffer_replace (&mp4vparse->config, NULL);
   memset (&mp4vparse->vol, 0, sizeof (mp4vparse->vol));
@@ -554,14 +562,89 @@ gst_mpeg4vparse_parse_frame (GstBaseParse * parse, GstBaseParseFrame * frame)
     return GST_FLOW_OK;
 }
 
+static GstEvent *
+check_pending_key_unit_event (GstEvent * pending_event, GstSegment * segment,
+    GstClockTime timestamp, guint flags, GstClockTime pending_key_unit_ts)
+{
+  GstClockTime running_time, stream_time;
+  gboolean all_headers;
+  guint count;
+  GstEvent *event = NULL;
+
+  g_return_val_if_fail (segment != NULL, NULL);
+
+  if (pending_event == NULL)
+    goto out;
+
+  if (GST_CLOCK_TIME_IS_VALID (pending_key_unit_ts) &&
+      timestamp == GST_CLOCK_TIME_NONE)
+    goto out;
+
+  running_time = gst_segment_to_running_time (segment,
+      GST_FORMAT_TIME, timestamp);
+
+  GST_INFO ("now %" GST_TIME_FORMAT " wanted %" GST_TIME_FORMAT,
+      GST_TIME_ARGS (running_time), GST_TIME_ARGS (pending_key_unit_ts));
+  if (GST_CLOCK_TIME_IS_VALID (pending_key_unit_ts) &&
+      running_time < pending_key_unit_ts)
+    goto out;
+
+  if (flags & GST_BUFFER_FLAG_DELTA_UNIT) {
+    GST_DEBUG ("pending force key unit, waiting for keyframe");
+    goto out;
+  }
+
+  stream_time = gst_segment_to_stream_time (segment,
+      GST_FORMAT_TIME, timestamp);
+
+  gst_video_event_parse_upstream_force_key_unit (pending_event,
+      NULL, &all_headers, &count);
+
+  event =
+      gst_video_event_new_downstream_force_key_unit (timestamp, stream_time,
+      running_time, all_headers, count);
+  gst_event_set_seqnum (event, gst_event_get_seqnum (pending_event));
+
+out:
+  return event;
+}
+
+static void
+gst_mpeg4vparse_prepare_key_unit (GstMpeg4VParse * parse, GstEvent * event)
+{
+  GstClockTime running_time;
+  guint count;
+
+  parse->pending_key_unit_ts = GST_CLOCK_TIME_NONE;
+  gst_event_replace (&parse->force_key_unit_event, NULL);
+
+  gst_video_event_parse_downstream_force_key_unit (event,
+      NULL, NULL, &running_time, NULL, &count);
+
+  GST_INFO_OBJECT (parse, "pushing downstream force-key-unit event %d "
+      "%" GST_TIME_FORMAT " count %d", gst_event_get_seqnum (event),
+      GST_TIME_ARGS (running_time), count);
+  gst_pad_push_event (GST_BASE_PARSE_SRC_PAD (parse), event);
+}
+
+
 static GstFlowReturn
 gst_mpeg4vparse_pre_push_frame (GstBaseParse * parse, GstBaseParseFrame * frame)
 {
   GstMpeg4VParse *mp4vparse = GST_MPEG4VIDEO_PARSE (parse);
   GstBuffer *buffer = frame->buffer;
+  gboolean push_codec = FALSE;
+  GstEvent *event = NULL;
+
+  if ((event = check_pending_key_unit_event (mp4vparse->force_key_unit_event,
+              &parse->segment, GST_BUFFER_TIMESTAMP (buffer),
+              GST_BUFFER_FLAGS (buffer), mp4vparse->pending_key_unit_ts))) {
+    gst_mpeg4vparse_prepare_key_unit (mp4vparse, event);
+    push_codec = TRUE;
+  }
 
   /* periodic config sending */
-  if (mp4vparse->interval > 0) {
+  if (mp4vparse->interval > 0 || push_codec) {
     GstClockTime timestamp = GST_BUFFER_TIMESTAMP (buffer);
     guint64 diff;
 
@@ -583,9 +666,9 @@ gst_mpeg4vparse_pre_push_frame (GstBaseParse * parse, GstBaseParseFrame * frame)
       GST_LOG_OBJECT (mp4vparse,
           "interval since last config %" GST_TIME_FORMAT, GST_TIME_ARGS (diff));
 
-      if (GST_TIME_AS_SECONDS (diff) >= mp4vparse->interval) {
+      if (GST_TIME_AS_SECONDS (diff) >= mp4vparse->interval || push_codec) {
         /* we need to send config now first */
-        GST_LOG_OBJECT (parse, "inserting config in stream");
+        GST_INFO_OBJECT (parse, "inserting config in stream");
 
         /* avoid inserting duplicate config */
         if ((GST_BUFFER_SIZE (buffer) < GST_BUFFER_SIZE (mp4vparse->config)) ||
@@ -600,7 +683,7 @@ gst_mpeg4vparse_pre_push_frame (GstBaseParse * parse, GstBaseParseFrame * frame)
           gst_buffer_replace (&frame->buffer, superbuf);
           gst_buffer_unref (superbuf);
         } else {
-          GST_LOG_OBJECT (parse, "... but avoiding duplication");
+          GST_INFO_OBJECT (parse, "... but avoiding duplication");
         }
 
         if (G_UNLIKELY (timestamp != -1)) {
@@ -689,4 +772,85 @@ gst_mpeg4vparse_get_caps (GstBaseParse * parse)
   }
 
   return res;
+}
+
+static gboolean
+gst_mpeg4vparse_event (GstBaseParse * parse, GstEvent * event)
+{
+  gboolean handled = FALSE;
+  GstMpeg4VParse *mp4vparse = GST_MPEG4VIDEO_PARSE (parse);
+
+  switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_CUSTOM_DOWNSTREAM:
+    {
+      GstClockTime timestamp, stream_time, running_time;
+      gboolean all_headers;
+      guint count;
+
+      if (!gst_video_event_is_force_key_unit (event))
+        break;
+
+      gst_video_event_parse_downstream_force_key_unit (event,
+          &timestamp, &stream_time, &running_time, &all_headers, &count);
+
+      GST_INFO_OBJECT (mp4vparse, "received downstream force key unit event, "
+          "seqnum %d running_time %" GST_TIME_FORMAT " all_headers %d count %d",
+          gst_event_get_seqnum (event), GST_TIME_ARGS (running_time),
+          all_headers, count);
+      handled = TRUE;
+
+      if (mp4vparse->force_key_unit_event) {
+        GST_INFO_OBJECT (mp4vparse, "ignoring force key unit event "
+            "as one is already queued");
+        break;
+      }
+
+      mp4vparse->pending_key_unit_ts = running_time;
+      gst_event_replace (&mp4vparse->force_key_unit_event, event);
+      break;
+    }
+    default:
+      break;
+  }
+
+  return handled;
+}
+
+static gboolean
+gst_mpeg4vparse_src_event (GstBaseParse * parse, GstEvent * event)
+{
+  gboolean handled = FALSE;
+  GstMpeg4VParse *mp4vparse = GST_MPEG4VIDEO_PARSE (parse);
+
+  switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_CUSTOM_UPSTREAM:
+    {
+      GstClockTime running_time;
+      gboolean all_headers;
+      guint count;
+
+      if (!gst_video_event_is_force_key_unit (event))
+        break;
+
+      gst_video_event_parse_upstream_force_key_unit (event,
+          &running_time, &all_headers, &count);
+
+      GST_INFO_OBJECT (mp4vparse, "received upstream force-key-unit event, "
+          "seqnum %d running_time %" GST_TIME_FORMAT " all_headers %d count %d",
+          gst_event_get_seqnum (event), GST_TIME_ARGS (running_time),
+          all_headers, count);
+
+      if (!all_headers)
+        break;
+
+      mp4vparse->pending_key_unit_ts = running_time;
+      gst_event_replace (&mp4vparse->force_key_unit_event, event);
+      /* leave handled = FALSE so that the event gets propagated upstream */
+      break;
+    }
+    default:
+      break;
+  }
+
+  return handled;
 }
