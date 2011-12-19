@@ -212,15 +212,6 @@ gst_wavparse_init (GstWavParse * wavparse)
   gst_element_add_pad (GST_ELEMENT_CAST (wavparse), wavparse->srcpad);
 }
 
-static void
-gst_wavparse_destroy_sourcepad (GstWavParse * wavparse)
-{
-  if (wavparse->srcpad) {
-    gst_element_remove_pad (GST_ELEMENT_CAST (wavparse), wavparse->srcpad);
-    wavparse->srcpad = NULL;
-  }
-}
-
 /* Compute (value * nom) % denom, avoiding overflow.  This can be used
  * to perform ceiling or rounding division together with
  * gst_util_uint64_scale[_int]. */
@@ -854,10 +845,8 @@ gst_wavparse_perform_seek (GstWavParse * wav, GstEvent * event)
    * as it completes one iteration (and thus might block when the sink is
    * blocking in preroll). */
   if (flush) {
-    if (wav->srcpad) {
-      GST_DEBUG_OBJECT (wav, "sending flush start");
-      gst_pad_push_event (wav->srcpad, gst_event_new_flush_start ());
-    }
+    GST_DEBUG_OBJECT (wav, "sending flush start");
+    gst_pad_push_event (wav->srcpad, gst_event_new_flush_start ());
   } else {
     gst_pad_pause_task (wav->sinkpad);
   }
@@ -935,12 +924,10 @@ gst_wavparse_perform_seek (GstWavParse * wav, GstEvent * event)
       wav->end_offset, GST_TIME_ARGS (seeksegment.start), GST_TIME_ARGS (stop));
 
   /* prepare for streaming again */
-  if (wav->srcpad) {
-    if (flush) {
-      /* if we sent a FLUSH_START, we now send a FLUSH_STOP */
-      GST_DEBUG_OBJECT (wav, "sending flush stop");
-      gst_pad_push_event (wav->srcpad, gst_event_new_flush_stop (TRUE));
-    }
+  if (flush) {
+    /* if we sent a FLUSH_START, we now send a FLUSH_STOP */
+    GST_DEBUG_OBJECT (wav, "sending flush stop");
+    gst_pad_push_event (wav->srcpad, gst_event_new_flush_stop (TRUE));
   }
 
   /* now we did the seek and can activate the new segment values */
@@ -2064,8 +2051,7 @@ pause:
             gst_message_new_segment_done (GST_OBJECT_CAST (wav),
                 wav->segment.format, stop));
       } else {
-        if (wav->srcpad != NULL)
-          gst_pad_push_event (wav->srcpad, gst_event_new_eos ());
+        gst_pad_push_event (wav->srcpad, gst_event_new_eos ());
       }
     } else if (ret == GST_FLOW_NOT_LINKED || ret < GST_FLOW_UNEXPECTED) {
       /* for fatal errors we post an error message, post the error
@@ -2073,8 +2059,7 @@ pause:
       GST_ELEMENT_ERROR (wav, STREAM, FAILED,
           (_("Internal data flow error.")),
           ("streaming task paused, reason %s (%d)", reason, ret));
-      if (wav->srcpad != NULL)
-        gst_pad_push_event (wav->srcpad, gst_event_new_eos ());
+      gst_pad_push_event (wav->srcpad, gst_event_new_eos ());
     }
     return;
   }
@@ -2629,7 +2614,6 @@ gst_wavparse_change_state (GstElement * element, GstStateChange transition)
     case GST_STATE_CHANGE_PLAYING_TO_PAUSED:
       break;
     case GST_STATE_CHANGE_PAUSED_TO_READY:
-      gst_wavparse_destroy_sourcepad (wav);
       gst_wavparse_reset (wav);
       break;
     case GST_STATE_CHANGE_READY_TO_NULL:
