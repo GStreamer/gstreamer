@@ -1252,9 +1252,9 @@ gst_ffmpegdec_video_negotiate (GstFFMpegDec * ffmpegdec, gboolean force)
 
   /* set the interlaced flag */
   if (ffmpegdec->ctx_interlaced)
-    info.flags |= GST_VIDEO_FLAG_INTERLACED;
+    info.interlace_mode = GST_VIDEO_INTERLACE_MODE_MIXED;
   else
-    info.flags &= ~GST_VIDEO_FLAG_INTERLACED;
+    info.interlace_mode = GST_VIDEO_INTERLACE_MODE_PROGRESSIVE;
 
   /* try to find a good framerate */
   if (ffmpegdec->in_fps_d) {
