@@ -44,26 +44,26 @@ G_BEGIN_DECLS
 #define GST_INTERPOLATION_CONTROL_SOURCE_GET_CLASS(inst) \
   (G_TYPE_INSTANCE_GET_CLASS ((inst), GST_TYPE_INTERPOLATION_CONTROL_SOURCE, GstInterpolationControlSourceClass))
 
+#define GST_TYPE_INTERPOLATION_MODE (gst_interpolation_mode_get_type ())
+
 typedef struct _GstInterpolationControlSource GstInterpolationControlSource;
 typedef struct _GstInterpolationControlSourceClass GstInterpolationControlSourceClass;
 typedef struct _GstInterpolationControlSourcePrivate GstInterpolationControlSourcePrivate;
 
 /**
- * GstInterpolateMode:
- * @GST_INTERPOLATE_NONE: steps-like interpolation, default
- * @GST_INTERPOLATE_LINEAR: linear interpolation
- * @GST_INTERPOLATE_QUADRATIC: square interpolation (deprecated, maps to cubic)
- * @GST_INTERPOLATE_CUBIC: cubic interpolation
+ * GstInterpolationMode:
+ * @GST_INTERPOLATION_MODE_NONE: steps-like interpolation, default
+ * @GST_INTERPOLATION_MODE_LINEAR: linear interpolation
+ * @GST_INTERPOLATION_MODE_CUBIC: cubic interpolation
  *
  * The various interpolation modes available.
  */
 typedef enum
 {
-  GST_INTERPOLATE_NONE,
-  GST_INTERPOLATE_LINEAR,
-  GST_INTERPOLATE_QUADRATIC,
-  GST_INTERPOLATE_CUBIC
-} GstInterpolateMode;
+  GST_INTERPOLATION_MODE_NONE,
+  GST_INTERPOLATION_MODE_LINEAR,
+  GST_INTERPOLATION_MODE_CUBIC
+} GstInterpolationMode;
 
 /**
  * GstInterpolationControlSource:
@@ -86,14 +86,12 @@ struct _GstInterpolationControlSourceClass {
 };
 
 GType gst_interpolation_control_source_get_type (void);
+GType gst_interpolation_mode_get_type (void);
 
 /* Functions */
 
 GstInterpolationControlSource *
                 gst_interpolation_control_source_new            (void);
-gboolean        gst_interpolation_control_source_set_interpolation_mode
-                                                                (GstInterpolationControlSource *self,
-                                                                 GstInterpolateMode mode);
 
 G_END_DECLS
 

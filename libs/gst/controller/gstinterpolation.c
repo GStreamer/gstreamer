@@ -585,7 +585,6 @@ static GstInterpolateMethod interpolate_cubic = {
 GstInterpolateMethod *priv_gst_interpolation_methods[] = {
   &interpolate_none,
   &interpolate_linear,
-  &interpolate_cubic,
   &interpolate_cubic
 };
 

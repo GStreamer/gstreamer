@@ -114,8 +114,7 @@ main (gint argc, gchar * argv[])
   csource = gst_interpolation_control_source_new ();
   gst_object_set_control_source (GST_OBJECT (src), "freq",
       GST_CONTROL_SOURCE (csource));
-  gst_interpolation_control_source_set_interpolation_mode (csource,
-      GST_INTERPOLATE_LINEAR);
+  g_object_set (csource, "mode", GST_INTERPOLATION_MODE_LINEAR, NULL);
   g_value_init (&freq, G_TYPE_DOUBLE);
 
 

@@ -29,9 +29,8 @@
  * control points. It supports several interpolation modes and property types.
  *
  * To use #GstInterpolationControlSource get a new instance by calling
- * gst_interpolation_control_source_new(), bind it to a #GParamSpec, select a interpolation mode with
- * gst_interpolation_control_source_set_interpolation_mode() and set some control points by calling
- * gst_timed_value_control_source_set().
+ * gst_interpolation_control_source_new(), bind it to a #GParamSpec and set some
+ * control points by calling gst_timed_value_control_source_set().
  *
  * All functions are MT-safe.
  *
@@ -47,6 +46,31 @@
 #define GST_CAT_DEFAULT controller_debug
 GST_DEBUG_CATEGORY_STATIC (GST_CAT_DEFAULT);
 
+enum
+{
+  PROP_MODE = 1
+};
+
+GType
+gst_interpolation_mode_get_type (void)
+{
+  static gsize gtype = 0;
+  static const GEnumValue values[] = {
+    {GST_INTERPOLATION_MODE_NONE, "GST_INTERPOLATION_MODE_NONE", "none"},
+    {GST_INTERPOLATION_MODE_LINEAR, "GST_INTERPOLATION_MODE_LINEAR", "linear"},
+    {GST_INTERPOLATION_MODE_CUBIC, "GST_INTERPOLATION_MODE_CUBIC", "cubic"},
+    {0, NULL, NULL}
+  };
+
+  if (g_once_init_enter (&gtype)) {
+    GType tmp = g_enum_register_static ("GstLFOWaveform", values);
+    g_once_init_leave (&gtype, tmp);
+  }
+
+  return (GType) gtype;
+}
+
+
 #define _do_init \
   GST_DEBUG_CATEGORY_INIT (GST_CAT_DEFAULT, "interpolation control source", 0, \
     "timeline value interpolating control source")
@@ -57,7 +81,7 @@ G_DEFINE_TYPE_WITH_CODE (GstInterpolationControlSource,
 
 struct _GstInterpolationControlSourcePrivate
 {
-  GstInterpolateMode interpolation_mode;
+  GstInterpolationMode interpolation_mode;
 };
 
 /**
@@ -73,23 +97,9 @@ gst_interpolation_control_source_new (void)
   return g_object_newv (GST_TYPE_INTERPOLATION_CONTROL_SOURCE, 0, NULL);
 }
 
-/**
- * gst_interpolation_control_source_set_interpolation_mode:
- * @self: the #GstInterpolationControlSource object
- * @mode: interpolation mode
- *
- * Sets the given interpolation mode.
- *
- * <note><para>User interpolation is not yet available and quadratic interpolation
- * is deprecated and maps to cubic interpolation.</para></note>
- *
- * Returns: %TRUE if the interpolation mode could be set, %FALSE otherwise
- */
-/* *INDENT-OFF* */
-gboolean
-gst_interpolation_control_source_set_interpolation_mode (
-    GstInterpolationControlSource * self, GstInterpolateMode mode)
-/* *INDENT-ON* */
+static gboolean
+    gst_interpolation_control_source_set_interpolation_mode
+    (GstInterpolationControlSource * self, GstInterpolationMode mode)
 {
   gboolean ret = TRUE;
   GstControlSource *csource = GST_CONTROL_SOURCE (self);
@@ -98,11 +108,6 @@ gst_interpolation_control_source_set_interpolation_mode (
       || priv_gst_interpolation_methods[mode] == NULL) {
     GST_WARNING ("interpolation mode %d invalid or not implemented yet", mode);
     return FALSE;
-  }
-
-  if (mode == GST_INTERPOLATE_QUADRATIC) {
-    GST_WARNING ("Quadratic interpolation mode is deprecated, using cubic"
-        "interpolation mode");
   }
 
   GST_TIMED_VALUE_CONTROL_SOURCE_LOCK (self);
@@ -203,17 +208,61 @@ gst_interpolation_control_source_init (GstInterpolationControlSource * self)
   self->priv =
       G_TYPE_INSTANCE_GET_PRIVATE (self, GST_TYPE_INTERPOLATION_CONTROL_SOURCE,
       GstInterpolationControlSourcePrivate);
-  self->priv->interpolation_mode = GST_INTERPOLATE_NONE;
+  self->priv->interpolation_mode = GST_INTERPOLATION_MODE_NONE;
+}
+
+static void
+gst_interpolation_control_source_set_property (GObject * object, guint prop_id,
+    const GValue * value, GParamSpec * pspec)
+{
+  GstInterpolationControlSource *self =
+      GST_INTERPOLATION_CONTROL_SOURCE (object);
+
+  switch (prop_id) {
+    case PROP_MODE:
+      gst_interpolation_control_source_set_interpolation_mode (self,
+          (GstInterpolationMode) g_value_get_enum (value));
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
+  }
+}
+
+static void
+gst_interpolation_control_source_get_property (GObject * object, guint prop_id,
+    GValue * value, GParamSpec * pspec)
+{
+  GstInterpolationControlSource *self =
+      GST_INTERPOLATION_CONTROL_SOURCE (object);
+
+  switch (prop_id) {
+    case PROP_MODE:
+      g_value_set_enum (value, self->priv->interpolation_mode);
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
+  }
 }
 
 static void
 gst_interpolation_control_source_class_init (GstInterpolationControlSourceClass
     * klass)
 {
+  GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
   GstControlSourceClass *csource_class = GST_CONTROL_SOURCE_CLASS (klass);
 
   g_type_class_add_private (klass,
       sizeof (GstInterpolationControlSourcePrivate));
 
+  gobject_class->set_property = gst_interpolation_control_source_set_property;
+  gobject_class->get_property = gst_interpolation_control_source_get_property;
+
   csource_class->bind = gst_interpolation_control_source_bind;
+
+  g_object_class_install_property (gobject_class, PROP_MODE,
+      g_param_spec_enum ("mode", "Mode", "Interpolation mode",
+          GST_TYPE_INTERPOLATION_MODE, GST_INTERPOLATION_MODE_NONE,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 }

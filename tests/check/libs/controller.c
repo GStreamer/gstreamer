@@ -520,8 +520,7 @@ GST_START_TEST (controller_interpolate_none)
           GST_CONTROL_SOURCE (csource)));
 
   /* set interpolation mode */
-  fail_unless (gst_interpolation_control_source_set_interpolation_mode (csource,
-          GST_INTERPOLATE_NONE));
+  g_object_set (csource, "mode", GST_INTERPOLATION_MODE_NONE, NULL);
 
   fail_unless (gst_timed_value_control_source_get_count (
           (GstTimedValueControlSource *) csource) == 0);
@@ -574,8 +573,7 @@ GST_START_TEST (controller_interpolate_linear)
           GST_CONTROL_SOURCE (csource)));
 
   /* set interpolation mode */
-  fail_unless (gst_interpolation_control_source_set_interpolation_mode (csource,
-          GST_INTERPOLATE_LINEAR));
+  g_object_set (csource, "mode", GST_INTERPOLATION_MODE_LINEAR, NULL);
 
   /* set control values */
   g_value_init (&val_ulong, G_TYPE_ULONG);
@@ -621,8 +619,7 @@ GST_START_TEST (controller_interpolate_cubic)
           GST_CONTROL_SOURCE (csource)));
 
   /* set interpolation mode */
-  fail_unless (gst_interpolation_control_source_set_interpolation_mode (csource,
-          GST_INTERPOLATE_CUBIC));
+  g_object_set (csource, "mode", GST_INTERPOLATION_MODE_CUBIC, NULL);
 
   /* set control values */
   g_value_init (&val_double, G_TYPE_DOUBLE);
@@ -683,8 +680,7 @@ GST_START_TEST (controller_interpolate_cubic_too_few_cp)
           GST_CONTROL_SOURCE (csource)));
 
   /* set interpolation mode */
-  fail_unless (gst_interpolation_control_source_set_interpolation_mode (csource,
-          GST_INTERPOLATE_CUBIC));
+  g_object_set (csource, "mode", GST_INTERPOLATION_MODE_CUBIC, NULL);
 
   /* set 2 control values */
   g_value_init (&val_double, G_TYPE_DOUBLE);
@@ -714,33 +710,6 @@ GST_START_TEST (controller_interpolate_cubic_too_few_cp)
 
 GST_END_TEST;
 
-/* make sure we don't crash when someone sets an unsupported interpolation
- * mode */
-GST_START_TEST (controller_interpolate_unimplemented)
-{
-  GstInterpolationControlSource *csource;
-  GstElement *elem;
-
-  elem = gst_element_factory_make ("testmonosource", "test_source");
-
-  /* Get interpolation control source */
-  csource = gst_interpolation_control_source_new ();
-
-  fail_unless (csource != NULL);
-  fail_unless (gst_object_set_control_source (GST_OBJECT (elem), "ulong",
-          GST_CONTROL_SOURCE (csource)));
-
-  /* set completely bogus interpolation mode */
-  fail_if (gst_interpolation_control_source_set_interpolation_mode (csource,
-          (GstInterpolateMode) 93871));
-
-  g_object_unref (csource);
-
-  gst_object_unref (elem);
-}
-
-GST_END_TEST;
-
 /* test _unset() */
 GST_START_TEST (controller_interpolation_unset)
 {
@@ -759,8 +728,7 @@ GST_START_TEST (controller_interpolation_unset)
           GST_CONTROL_SOURCE (csource)));
 
   /* set interpolation mode */
-  fail_unless (gst_interpolation_control_source_set_interpolation_mode (csource,
-          GST_INTERPOLATE_NONE));
+  g_object_set (csource, "mode", GST_INTERPOLATION_MODE_NONE, NULL);
 
   /* set control values */
   g_value_init (&val_ulong, G_TYPE_ULONG);
@@ -831,8 +799,7 @@ GST_START_TEST (controller_interpolation_unset_all)
           GST_CONTROL_SOURCE (csource)));
 
   /* set interpolation mode */
-  fail_unless (gst_interpolation_control_source_set_interpolation_mode (csource,
-          GST_INTERPOLATE_NONE));
+  g_object_set (csource, "mode", GST_INTERPOLATION_MODE_NONE, NULL);
 
   /* set control values */
   g_value_init (&val_ulong, G_TYPE_ULONG);
@@ -885,8 +852,7 @@ GST_START_TEST (controller_interpolation_linear_value_array)
           GST_CONTROL_SOURCE (csource)));
 
   /* set interpolation mode */
-  fail_unless (gst_interpolation_control_source_set_interpolation_mode (csource,
-          GST_INTERPOLATE_LINEAR));
+  g_object_set (csource, "mode", GST_INTERPOLATION_MODE_LINEAR, NULL);
 
   /* set control values */
   g_value_init (&val_ulong, G_TYPE_ULONG);
@@ -934,8 +900,7 @@ GST_START_TEST (controller_interpolation_linear_invalid_values)
           GST_CONTROL_SOURCE (csource)));
 
   /* set interpolation mode */
-  fail_unless (gst_interpolation_control_source_set_interpolation_mode (csource,
-          GST_INTERPOLATE_LINEAR));
+  g_object_set (csource, "mode", GST_INTERPOLATION_MODE_LINEAR, NULL);
 
   /* set control values */
   g_value_init (&val_float, G_TYPE_FLOAT);
@@ -993,8 +958,7 @@ GST_START_TEST (controller_interpolation_linear_default_values)
           GST_CONTROL_SOURCE (csource)));
 
   /* set interpolation mode */
-  fail_unless (gst_interpolation_control_source_set_interpolation_mode (csource,
-          GST_INTERPOLATE_LINEAR));
+  g_object_set (csource, "mode", GST_INTERPOLATION_MODE_LINEAR, NULL);
 
   g_value_init (&val_ulong, G_TYPE_ULONG);
 
@@ -1084,10 +1048,8 @@ GST_START_TEST (controller_interpolate_linear_disabled)
           GST_CONTROL_SOURCE (csource2)));
 
   /* set interpolation mode */
-  fail_unless (gst_interpolation_control_source_set_interpolation_mode (csource,
-          GST_INTERPOLATE_LINEAR));
-  fail_unless (gst_interpolation_control_source_set_interpolation_mode
-      (csource2, GST_INTERPOLATE_LINEAR));
+  g_object_set (csource, "mode", GST_INTERPOLATION_MODE_LINEAR, NULL);
+  g_object_set (csource2, "mode", GST_INTERPOLATION_MODE_LINEAR, NULL);
 
   /* set control values */
   g_value_init (&val_ulong, G_TYPE_ULONG);
@@ -1223,8 +1185,7 @@ GST_START_TEST (controller_interpolation_set_from_list)
           GST_CONTROL_SOURCE (csource)));
 
   /* set interpolation mode */
-  fail_unless (gst_interpolation_control_source_set_interpolation_mode (csource,
-          GST_INTERPOLATE_LINEAR));
+  g_object_set (csource, "mode", GST_INTERPOLATION_MODE_LINEAR, NULL);
 
   /* set control value */
   tval = g_new0 (GstTimedValue, 1);
@@ -1272,8 +1233,7 @@ GST_START_TEST (controller_interpolate_linear_before_ts0)
           GST_CONTROL_SOURCE (csource)));
 
   /* set interpolation mode */
-  fail_unless (gst_interpolation_control_source_set_interpolation_mode (csource,
-          GST_INTERPOLATE_LINEAR));
+  g_object_set (csource, "mode", GST_INTERPOLATION_MODE_LINEAR, NULL);
 
   /* set control values */
   g_value_init (&val_ulong, G_TYPE_ULONG);
@@ -1325,8 +1285,7 @@ GST_START_TEST (controller_interpolation_cp_count)
           GST_CONTROL_SOURCE (csource)));
 
   /* set interpolation mode */
-  fail_unless (gst_interpolation_control_source_set_interpolation_mode (csource,
-          GST_INTERPOLATE_NONE));
+  g_object_set (csource, "mode", GST_INTERPOLATION_MODE_NONE, NULL);
 
   fail_unless (gst_timed_value_control_source_get_count (
           (GstTimedValueControlSource *) csource) == 0);
@@ -1907,7 +1866,6 @@ gst_controller_suite (void)
   tcase_add_test (tc, controller_interpolate_linear);
   tcase_add_test (tc, controller_interpolate_cubic);
   tcase_add_test (tc, controller_interpolate_cubic_too_few_cp);
-  tcase_add_test (tc, controller_interpolate_unimplemented);
   tcase_add_test (tc, controller_interpolation_unset);
   tcase_add_test (tc, controller_interpolation_unset_all);
   tcase_add_test (tc, controller_interpolation_linear_value_array);

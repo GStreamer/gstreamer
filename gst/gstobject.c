@@ -113,7 +113,7 @@
  *   <listitem><para>
  *     create a #GstControlSource.
  *     csource = gst_interpolation_control_source_new ();
- *     gst_interpolation_control_source_set_interpolation_mode(csource, mode);
+ *     g_object_set (csource, "mode", GST_INTERPOLATION_MODE_LINEAR, NULL);
  *   </para></listitem>
  *   <listitem><para>
  *     Attach the #GstControlSource on the controller to a property.

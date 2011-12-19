@@ -452,3 +452,8 @@ The 0.11 porting guide
     GstTimedValueControlSource baseclass and 2 sub classes: 
     GstInterpolationControlSource and GstTriggerControlSource. The API for setting
     and getting the timestamps is in GstTimedValueControlSource.
+    
+    gst_interpolation_control_source_set_interpolation_mode() has been removed.
+    Set the "mode" gobject property on the control-source instead. The possible
+    enum values have been renamed from GST_INTERPOLATE_XXX to
+    GST_INTERPOLATION_MODE_XXX.
