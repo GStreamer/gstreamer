@@ -304,14 +304,32 @@ typedef struct _GstVideoInfo GstVideoInfo;
 typedef struct _GstVideoFrame GstVideoFrame;
 
 /**
+ * GstVideoInterlaceMode:
+ * GST_VIDEO_INTERLACE_MODE_PROGRESSIVE: all frames are progressive
+ * GST_VIDEO_INTERLACE_MODE_INTERLEAVED: video is interlaced and all fields
+ *     are interlaced in one frame.
+ * @GST_VIDEO_INTERLACE_MODE_MIXED: video contains both interlaced and
+ *     progressive frames, the buffer flags describe the frame and fields.
+ * @GST_VIDEO_INTERLACE_MODE_FIELDS: video is interlaced and fields are stored
+ *     separately. Use the id property to get access to the required field.
+ *
+ * The possible values of the #GstVideoInterlaceMode describing the interlace
+ * mode of the stream.
+ */
+typedef enum {
+  GST_VIDEO_INTERLACE_MODE_PROGRESSIVE = 0,
+  GST_VIDEO_INTERLACE_MODE_INTERLEAVED,
+  GST_VIDEO_INTERLACE_MODE_MIXED,
+  GST_VIDEO_INTERLACE_MODE_FIELDS
+} GstVideoInterlaceMode;
+
+/**
  * GstVideoFlags:
  * @GST_VIDEO_FLAG_NONE: no flags
  * @GST_VIDEO_FLAG_INTERLACED: The video is interlaced
  * @GST_VIDEO_FLAG_TFF: The video has the top field first
  * @GST_VIDEO_FLAG_RFF: The video has the repeat flag
  * @GST_VIDEO_FLAG_ONEFIELD: one field
- * @GST_VIDEO_FLAG_TELECINE: telecine
- * @GST_VIDEO_FLAG_PROGRESSIVE: video is progressive
  * @GST_VIDEO_FLAG_VARIABLE_FPS: a variable fps is selected, fps_n and fps_d
  * denote the maximum fps of the video
  *
@@ -323,9 +341,7 @@ typedef enum {
   GST_VIDEO_FLAG_TFF          = (1 << 1),
   GST_VIDEO_FLAG_RFF          = (1 << 2),
   GST_VIDEO_FLAG_ONEFIELD     = (1 << 3),
-  GST_VIDEO_FLAG_TELECINE     = (1 << 4),
-  GST_VIDEO_FLAG_PROGRESSIVE  = (1 << 5),
-  GST_VIDEO_FLAG_VARIABLE_FPS = (1 << 6)
+  GST_VIDEO_FLAG_VARIABLE_FPS = (1 << 4)
 } GstVideoFlags;
 
 /**
@@ -479,6 +495,7 @@ gchar *      gst_video_colorimetry_to_string   (GstVideoColorimetry *cinfo);
 /**
  * GstVideoInfo:
  * @finfo: the format info of the video
+ * @interlace_mode: the interlace mode
  * @flags: additional video flags
  * @width: the width of the video
  * @height: the height of the video
@@ -503,6 +520,8 @@ gchar *      gst_video_colorimetry_to_string   (GstVideoColorimetry *cinfo);
  */
 struct _GstVideoInfo {
   const GstVideoFormatInfo *finfo;
+
+  GstVideoInterlaceMode     interlace_mode;
   GstVideoFlags             flags;
   gint                      width;
   gint                      height;
@@ -531,6 +550,7 @@ struct _GstVideoInfo {
 #define GST_VIDEO_INFO_IS_GRAY(i)        (GST_VIDEO_FORMAT_INFO_IS_GRAY((i)->finfo))
 #define GST_VIDEO_INFO_HAS_ALPHA(i)      (GST_VIDEO_FORMAT_INFO_HAS_ALPHA((i)->finfo))
 
+#define GST_VIDEO_INFO_INTERLACE_MODE(i) ((i)->interlace_mode)
 #define GST_VIDEO_INFO_FLAGS(i)          ((i)->flags)
 #define GST_VIDEO_INFO_WIDTH(i)          ((i)->width)
 #define GST_VIDEO_INFO_HEIGHT(i)         ((i)->height)
@@ -662,6 +682,7 @@ gboolean    gst_video_frame_copy          (GstVideoFrame *dest, const GstVideoFr
 
 /**
  * GstVideoBufferFlags:
+ * @GST_VIDEO_BUFFER_FLAG_INTERLACED:  Mark #GstBuffer as interlaced
  * @GST_VIDEO_BUFFER_FLAG_TFF:         If the #GstBuffer is interlaced, then the first field
  *                                     in the video frame is the top field.  If unset, the
  *                                     bottom field is first.
@@ -671,17 +692,14 @@ gboolean    gst_video_frame_copy          (GstVideoFrame *dest, const GstVideoFr
  * @GST_VIDEO_BUFFER_FLAG_ONEFIELD:    If the #GstBuffer is interlaced, then only the
  *                                     first field (as defined by the %GST_VIDEO_BUFFER_TFF
  *                                     flag setting) is to be displayed.
- * @GST_VIDEO_BUFFER_FLAG_PROGRESSIVE: If the #GstBuffer is telecined, then the
- *                                     buffer is progressive if the %GST_VIDEO_BUFFER_PROGRESSIVE
- *                                     flag is set, else it is telecine mixed.
  *
  * Additional video buffer flags.
  */
 typedef enum {
-  GST_VIDEO_BUFFER_FLAG_TFF         = (GST_BUFFER_FLAG_LAST << 0),
-  GST_VIDEO_BUFFER_FLAG_RFF         = (GST_BUFFER_FLAG_LAST << 1),
-  GST_VIDEO_BUFFER_FLAG_ONEFIELD    = (GST_BUFFER_FLAG_LAST << 2),
-  GST_VIDEO_BUFFER_FLAG_PROGRESSIVE = (GST_BUFFER_FLAG_LAST << 3),
+  GST_VIDEO_BUFFER_FLAG_INTERLACED  = (GST_BUFFER_FLAG_LAST << 0),
+  GST_VIDEO_BUFFER_FLAG_TFF         = (GST_BUFFER_FLAG_LAST << 1),
+  GST_VIDEO_BUFFER_FLAG_RFF         = (GST_BUFFER_FLAG_LAST << 2),
+  GST_VIDEO_BUFFER_FLAG_ONEFIELD    = (GST_BUFFER_FLAG_LAST << 3),
 
   GST_VIDEO_BUFFER_FLAG_LAST        = (GST_BUFFER_FLAG_LAST << 8)
 } GstVideoBufferFlags;

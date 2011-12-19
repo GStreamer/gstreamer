@@ -647,6 +647,33 @@ gst_video_info_set_format (GstVideoInfo * info, GstVideoFormat format,
   fill_planes (info);
 }
 
+static const gchar *interlace_mode[] = {
+  "progressive",
+  "interleaved",
+  "mixed",
+  "fields"
+};
+
+static const gchar *
+gst_interlace_mode_to_string (GstVideoInterlaceMode mode)
+{
+  if (mode < 0 || mode >= G_N_ELEMENTS (interlace_mode))
+    return NULL;
+
+  return interlace_mode[mode];
+}
+
+static GstVideoInterlaceMode
+gst_interlace_mode_from_string (const gchar * mode)
+{
+  gint i;
+  for (i = 0; i < G_N_ELEMENTS (interlace_mode); i++) {
+    if (g_str_equal (interlace_mode[i], mode))
+      return i;
+  }
+  return GST_VIDEO_INTERLACE_MODE_PROGRESSIVE;
+}
+
 typedef struct
 {
   const gchar *name;
@@ -797,7 +824,6 @@ gst_video_info_from_caps (GstVideoInfo * info, const GstCaps * caps)
   GstVideoFormat format;
   gint width, height, views;
   gint fps_n, fps_d;
-  gboolean interlaced;
   gint par_n, par_d;
 
   g_return_val_if_fail (info != NULL, FALSE);
@@ -840,12 +866,10 @@ gst_video_info_from_caps (GstVideoInfo * info, const GstCaps * caps)
     info->fps_d = 1;
   }
 
-  if (!gst_structure_get_boolean (structure, "interlaced", &interlaced))
-    interlaced = FALSE;
-  if (interlaced)
-    info->flags |= GST_VIDEO_FLAG_INTERLACED;
+  if ((s = gst_structure_get_string (structure, "interlace-mode")))
+    info->interlace_mode = gst_interlace_mode_from_string (s);
   else
-    info->flags &= ~GST_VIDEO_FLAG_INTERLACED;
+    info->interlace_mode = GST_VIDEO_INTERLACE_MODE_PROGRESSIVE;
 
   if (gst_structure_get_int (structure, "views", &views))
     info->views = views;
@@ -928,8 +952,8 @@ gst_video_info_to_caps (GstVideoInfo * info)
       "height", G_TYPE_INT, info->height,
       "pixel-aspect-ratio", GST_TYPE_FRACTION, info->par_n, info->par_d, NULL);
 
-  if (info->flags & GST_VIDEO_FLAG_INTERLACED)
-    gst_caps_set_simple (caps, "interlaced", G_TYPE_BOOLEAN, TRUE, NULL);
+  gst_caps_set_simple (caps, "interlace-mode", G_TYPE_STRING,
+      gst_interlace_mode_to_string (info->interlace_mode), NULL);
 
   if (info->chroma_site != GST_VIDEO_CHROMA_SITE_UNKNOWN)
     gst_caps_set_simple (caps, "chroma-site", G_TYPE_STRING,

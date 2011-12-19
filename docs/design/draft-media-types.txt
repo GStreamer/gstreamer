@@ -16,12 +16,43 @@ Media Types
     For variable framerates this would be the maximum framerate that
     is expected. This value is only valid when the framerate is 0/1
 
-  pixel-aspect-ratio, GST_TYPE_FRACTION, default 1/1
-    The pixel aspect ration of the video
-
   views, G_TYPE_INT, default 1
     The number of views for multiview video. Each buffer contains
-    multiple GstMetaVideo buffers that describe each view.
+    multiple GstMetaVideo buffers that describe each view. use the frame id to
+    get access to the different views.
+
+  interlace-mode, G_TYPE_STRING, default progressive
+    The interlace mode. The following values are possible:
+
+    "progressive"  : all frames are progressive
+    "interleaved"  : 2 fields are interleaved in one video frame. Extra buffer
+                     flags describe the field order.
+    "mixed"        : progressive and interleaved frames, extra buffer flags describe
+                     the frame and fields.
+    "fields"       : 2 fields are stored in one buffer, use the frame ID
+                     to get access to the required field. For multiview (the
+                     views property > 1) the second field of view N is at N * 2.
+                     Each view has only half the amount of lines as noted in the
+                     height property, pads specifying the "fields" property
+                     must be prepared for this.
+
+  chroma-site, G_TYPE_STRING, default UNKNOWN
+    The chroma siting of the video frames.
+
+    "jpeg" : GST_VIDEO_CHROMA_SITE_JPEG
+    "mpeg2": GST_VIDEO_CHROMA_SITE_MPEG2
+    "dv"   : GST_VIDEO_CHROMA_SITE_DV
+
+  colorimetry, G_TYPE_STRING, default UNKNOWN
+    The colorimetry of the video frames predefined colorimetry is given with
+    the following values:
+
+    "bt601"
+    "bt709"
+    "smpte240m"
+
+  pixel-aspect-ratio, GST_TYPE_FRACTION, default 1/1
+    The pixel aspect ration of the video
 
   format, G_TYPE_STRING, mandatory
     The format of the video
