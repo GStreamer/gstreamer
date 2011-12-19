@@ -1726,18 +1726,21 @@ GST_START_TEST (test_controller_usability)
   gst_interpolation_control_source_set_interpolation_mode (csource,
       GST_INTERPOLATE_CUBIC);
   gst_controller_set_control_source (c, "volume", GST_CONTROL_SOURCE (csource));
-  g_object_unref (csource);
 
   g_value_init (&value, G_TYPE_DOUBLE);
   g_value_set_double (&value, 0.0);
-  gst_interpolation_control_source_set (csource, 0 * GST_SECOND, &value);
+  gst_timed_value_control_source_set ((GstTimedValueControlSource *) csource,
+      0 * GST_SECOND, &value);
   g_value_set_double (&value, 1.0);
-  gst_interpolation_control_source_set (csource, 5 * GST_SECOND, &value);
+  gst_timed_value_control_source_set ((GstTimedValueControlSource *) csource,
+      5 * GST_SECOND, &value);
   g_value_set_double (&value, 0.0);
-  gst_interpolation_control_source_set (csource, 10 * GST_SECOND, &value);
+  gst_timed_value_control_source_set ((GstTimedValueControlSource *) csource,
+      10 * GST_SECOND, &value);
   g_value_unset (&value);
 
   g_object_unref (c);
+  g_object_unref (csource);
 
   cleanup_volume (volume);
 }
