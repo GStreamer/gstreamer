@@ -499,7 +499,9 @@ handle_sequence (GstMpeg2dec * mpeg2dec, const mpeg2_info_t * info)
   mpeg2dec->frame_period = sequence->frame_period * GST_USECOND / 27;
 
   if (!(sequence->flags & SEQ_FLAG_PROGRESSIVE_SEQUENCE))
-    vinfo.flags |= GST_VIDEO_FLAG_INTERLACED;
+    vinfo.interlace_mode = GST_VIDEO_INTERLACE_MODE_MIXED;
+  else
+    vinfo.interlace_mode = GST_VIDEO_INTERLACE_MODE_PROGRESSIVE;
 
   vinfo.chroma_site = GST_VIDEO_CHROMA_SITE_MPEG2;
   vinfo.colorimetry.range = GST_VIDEO_COLOR_RANGE_16_235;
@@ -892,6 +894,9 @@ handle_slice (GstMpeg2dec * mpeg2dec, const mpeg2_info_t * info)
         picture->nb_fields * mpeg2dec->frame_period / 2;
   }
   mpeg2dec->next_time += GST_BUFFER_DURATION (outbuf);
+
+  if (!(picture->flags & PIC_FLAG_PROGRESSIVE_FRAME))
+    GST_BUFFER_FLAG_SET (outbuf, GST_VIDEO_BUFFER_FLAG_INTERLACED);
 
   if (picture->flags & PIC_FLAG_TOP_FIELD_FIRST)
     GST_BUFFER_FLAG_SET (outbuf, GST_VIDEO_BUFFER_FLAG_TFF);
