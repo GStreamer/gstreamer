@@ -1484,7 +1484,7 @@ gst_v4l2_object_get_caps_info (GstV4l2Object * v4l2object, GstCaps * caps,
 #endif
 
     if (dimensions) {
-      gboolean interlaced;
+      const gchar *interlace_mode;
 
       if (!gst_structure_get_int (structure, "width", &info->width))
         goto no_width;
@@ -1492,11 +1492,12 @@ gst_v4l2_object_get_caps_info (GstV4l2Object * v4l2object, GstCaps * caps,
       if (!gst_structure_get_int (structure, "height", &info->height))
         goto no_height;
 
-      if (!gst_structure_get_boolean (structure, "interlaced", &interlaced))
-        interlaced = FALSE;
-      if (interlaced)
-        info->flags |= GST_VIDEO_FLAG_INTERLACED;
-
+      interlace_mode = gst_structure_get_string (structure, "interlace-mode");
+      if (g_str_equal (interlace_mode, "progressive")) {
+        info->interlace_mode = GST_VIDEO_INTERLACE_MODE_PROGRESSIVE;
+      } else {
+        info->interlace_mode = GST_VIDEO_INTERLACE_MODE_MIXED;
+      }
       if (!gst_structure_get_fraction (structure, "framerate", &info->fps_n,
               &info->fps_d))
         goto no_framerate;
@@ -1731,7 +1732,7 @@ return_data:
   s = gst_structure_copy (template);
   gst_structure_set (s, "width", G_TYPE_INT, (gint) width,
       "height", G_TYPE_INT, (gint) height,
-      "interlaced", G_TYPE_BOOLEAN, interlaced,
+      "interlace-mode", G_TYPE_STRING, (interlaced ? "mixed" : "progressive"),
       "pixel-aspect-ratio", GST_TYPE_FRACTION, 1, 1, NULL);
 
   if (G_IS_VALUE (&rates)) {
@@ -1992,9 +1993,10 @@ default_frame_sizes:
     else
       gst_structure_set (tmp, "height", GST_TYPE_INT_RANGE, min_h, max_h, NULL);
 
-    gst_structure_set (tmp, "interlaced", G_TYPE_BOOLEAN, interlaced, NULL);
-    gst_structure_set (tmp, "pixel-aspect-ratio",
-        GST_TYPE_FRACTION, 1, 1, NULL);
+    gst_structure_set (tmp, "interlace-mode", G_TYPE_STRING,
+        (interlaced ? "mixed" : "progressive"), NULL);
+    gst_structure_set (tmp, "pixel-aspect-ratio", GST_TYPE_FRACTION, 1, 1,
+        NULL);
 
     gst_caps_append_structure (ret, tmp);
 

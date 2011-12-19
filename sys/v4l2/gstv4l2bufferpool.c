@@ -590,10 +590,14 @@ gst_v4l2_buffer_pool_dqbuf (GstV4l2BufferPool * pool, GstBuffer ** buffer)
       pool->num_queued, outbuf);
 
   /* set top/bottom field first if v4l2_buffer has the information */
-  if (vbuffer.field == V4L2_FIELD_INTERLACED_TB)
+  if (vbuffer.field == V4L2_FIELD_INTERLACED_TB) {
     GST_BUFFER_FLAG_SET (outbuf, GST_VIDEO_BUFFER_FLAG_TFF);
-  if (vbuffer.field == V4L2_FIELD_INTERLACED_BT)
+    GST_BUFFER_FLAG_SET (outbuf, GST_VIDEO_BUFFER_FLAG_INTERLACED);
+  }
+  if (vbuffer.field == V4L2_FIELD_INTERLACED_BT) {
     GST_BUFFER_FLAG_UNSET (outbuf, GST_VIDEO_BUFFER_FLAG_TFF);
+    GST_BUFFER_FLAG_SET (outbuf, GST_VIDEO_BUFFER_FLAG_INTERLACED);
+  }
 
   /* this can change at every frame, esp. with jpeg */
   if (obj->type == V4L2_BUF_TYPE_VIDEO_CAPTURE)
