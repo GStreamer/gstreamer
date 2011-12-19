@@ -163,7 +163,6 @@ VALGRIND_TESTS_DISABLE = \
 # camerabin2: wrappercamerabinsrc:test_multiple_video_recordings:0: Unexpected critical/warning: gst_caps_get_structure: assertion `GST_IS_CAPS (caps)' failed
 # colorspace: bad memory accesses in orc code for odd width buffers - https://bugzilla.gnome.org/show_bug.cgi?id=663248
 noinst_PROGRAMS = \
-        elements/camerabin2 \
 	pipelines/colorspace \
 	$(check_neon)
 
@@ -185,6 +184,7 @@ check_PROGRAMS = \
 	elements/asfmux \
 	elements/baseaudiovisualizer \
 	elements/camerabin \
+        elements/camerabin2 \
 	elements/dataurisrc \
 	elements/legacyresample \
         $(check_jifmux) \
