@@ -2220,6 +2220,19 @@ gst_base_transform_sink_event (GstPad * pad, GstEvent * event)
     } else {
       delay = GST_EVENT_IS_SERIALIZED (event) && !caps_set
           && GST_EVENT_TYPE (event) != GST_EVENT_EOS;
+
+      /* do not stall sparse stream update newsegment events */
+      if (delay && (GST_EVENT_TYPE (event) == GST_EVENT_NEWSEGMENT)) {
+        gboolean update;
+
+        gst_event_parse_new_segment_full (event, &update, NULL, NULL, NULL,
+            NULL, NULL, NULL);
+        if (update) {
+          GST_DEBUG_OBJECT (trans, "update segment; triggering delayed events");
+          delay = FALSE;
+          caps_set = TRUE;
+        }
+      }
     }
 
     if (delay) {
