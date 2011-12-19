@@ -106,7 +106,7 @@ main (int argc, char *argv[])
   }
 
   /* create a new bin to hold the elements */
-  bin = gst_element_factory_make ("playbin2", "bin");
+  bin = gst_element_factory_make ("playbin", "bin");
   g_assert (bin);
   g_object_set (bin, "uri", argv[1], NULL);
 

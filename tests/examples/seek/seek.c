@@ -945,7 +945,7 @@ update_streams (GstPipeline * pipeline)
     /* remove previous info */
     clear_streams (GST_ELEMENT_CAST (pipeline));
 
-    /* here we get and update the different streams detected by playbin2 */
+    /* here we get and update the different streams detected by playbin */
     g_object_get (pipeline, "n-video", &n_video, NULL);
     g_object_get (pipeline, "n-audio", &n_audio, NULL);
     g_object_get (pipeline, "n-text", &n_text, NULL);
@@ -1106,7 +1106,7 @@ vis_combo_cb (GtkComboBox * combo, GstPipeline * pipeline)
     if (!element)
       return;
 
-    /* set vis plugin for playbin2 */
+    /* set vis plugin for playbin */
     g_object_set (pipeline, "vis-plugin", element, NULL);
   }
 }
@@ -1986,7 +1986,7 @@ main (int argc, char **argv)
       pipeline);
 
   if (pipeline_type == 0) {
-    /* the playbin2 panel controls for the video/audio/subtitle tracks */
+    /* the playbin panel controls for the video/audio/subtitle tracks */
     panel = gtk_hbox_new (FALSE, 0);
     video_combo = gtk_combo_box_text_new ();
     audio_combo = gtk_combo_box_text_new ();
@@ -2003,7 +2003,7 @@ main (int argc, char **argv)
         G_CALLBACK (audio_combo_cb), pipeline);
     g_signal_connect (G_OBJECT (text_combo), "changed",
         G_CALLBACK (text_combo_cb), pipeline);
-    /* playbin2 panel for flag checkboxes and volume/mute */
+    /* playbin panel for flag checkboxes and volume/mute */
     boxes = gtk_hbox_new (FALSE, 0);
     vis_checkbox = gtk_check_button_new_with_label ("Vis");
     video_checkbox = gtk_check_button_new_with_label ("Video");
@@ -2047,7 +2047,7 @@ main (int argc, char **argv)
         G_CALLBACK (buffer_toggle_cb), pipeline);
     g_signal_connect (G_OBJECT (volume_spinbutton), "value_changed",
         G_CALLBACK (volume_spinbutton_changed_cb), pipeline);
-    /* playbin2 panel for snapshot */
+    /* playbin panel for snapshot */
     boxes2 = gtk_hbox_new (FALSE, 0);
     shot_button = gtk_button_new_from_stock (GTK_STOCK_SAVE);
     gtk_widget_set_tooltip_text (shot_button,
@@ -2092,7 +2092,7 @@ main (int argc, char **argv)
   gtk_table_attach_defaults (GTK_TABLE (flagtable), rate_spinbutton, 4, 5, 1,
       2);
   if (panel && boxes && boxes2) {
-    expander = gtk_expander_new ("playbin2 options");
+    expander = gtk_expander_new ("playbin options");
     pb2vbox = gtk_vbox_new (FALSE, 0);
     gtk_box_pack_start (GTK_BOX (pb2vbox), panel, FALSE, FALSE, 2);
     gtk_box_pack_start (GTK_BOX (pb2vbox), boxes, FALSE, FALSE, 2);
