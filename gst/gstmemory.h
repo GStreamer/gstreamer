@@ -52,7 +52,7 @@ typedef enum {
   GST_MEMORY_FLAG_READONLY = (1 << 0),
   GST_MEMORY_FLAG_NO_SHARE = (1 << 1),
 
-  GST_MEMORY_FLAG_LAST = (1 << 24)
+  GST_MEMORY_FLAG_LAST     = (1 << 16)
 } GstMemoryFlags;
 
 /**
@@ -87,12 +87,15 @@ struct _GstMemory {
  * GstMapFlags:
  * @GST_MAP_READ: map for read access
  * @GST_MAP_WRITE: map for write access
+ * @GST_MAP_FLAG_LAST: first flag that can be used for custom purposes
  *
  * Flags used when mapping memory
  */
 typedef enum {
-  GST_MAP_READ =  (1 << 0),
-  GST_MAP_WRITE = (1 << 1),
+  GST_MAP_READ      = (1 << 0),
+  GST_MAP_WRITE     = (1 << 1),
+
+  GST_MAP_FLAG_LAST = (1 << 16)
 } GstMapFlags;
 
 /**
