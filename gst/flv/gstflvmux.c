@@ -648,7 +648,7 @@ gst_flv_mux_create_number_script_value (const gchar * name, gdouble value)
 }
 
 static GstBuffer *
-gst_flv_mux_create_metadata (GstFlvMux * mux)
+gst_flv_mux_create_metadata (GstFlvMux * mux, gboolean full)
 {
   const GstTagList *tags;
   GstBuffer *script_tag, *tmp;
@@ -691,6 +691,9 @@ gst_flv_mux_create_metadata (GstFlvMux * mux)
   GST_WRITE_UINT32_BE (data + 1, n_tags);
   script_tag = gst_buffer_join (script_tag, tmp);
 
+  if (!full)
+    goto tags;
+
   /* Some players expect the 'duration' to be always set. Fill it out later,
      after querying the pads or after getting EOS */
   if (!mux->streamable) {
@@ -711,6 +714,7 @@ gst_flv_mux_create_metadata (GstFlvMux * mux)
     GST_DEBUG_OBJECT (mux, "not preallocating index, streamable mode");
   }
 
+tags:
   for (i = 0; tags && i < n_tags; i++) {
     const gchar *tag_name =
         gst_structure_nth_field_name ((const GstStructure *) tags, i);
@@ -748,6 +752,9 @@ gst_flv_mux_create_metadata (GstFlvMux * mux)
       tags_written++;
     }
   }
+
+  if (!full)
+    goto end;
 
   if (mux->duration == GST_CLOCK_TIME_NONE) {
     GSList *l;
@@ -930,6 +937,13 @@ gst_flv_mux_create_metadata (GstFlvMux * mux)
     tags_written++;
   }
 
+end:
+
+  if (!tags_written) {
+    gst_buffer_unref (script_tag);
+    goto exit;
+  }
+
   tmp = gst_buffer_new_and_alloc (2 + 0 + 1);
   data = GST_BUFFER_DATA (tmp);
   data[0] = 0;                  /* 0 byte size */
@@ -950,6 +964,7 @@ gst_flv_mux_create_metadata (GstFlvMux * mux)
 
   GST_WRITE_UINT32_BE (data + 11 + 13 + 1, tags_written);
 
+exit:
   return script_tag;
 }
 
@@ -1093,7 +1108,7 @@ gst_flv_mux_write_header (GstFlvMux * mux)
   GstFlowReturn ret;
 
   header = gst_flv_mux_create_header (mux);
-  metadata = gst_flv_mux_create_metadata (mux);
+  metadata = gst_flv_mux_create_metadata (mux, TRUE);
   video_codec_data = NULL;
   audio_codec_data = NULL;
 
@@ -1418,8 +1433,9 @@ gst_flv_mux_collected (GstCollectPads * pads, gpointer user_data)
   }
 
   if (mux->new_tags) {
-    GstBuffer *buf = gst_flv_mux_create_metadata (mux);
-    gst_flv_mux_push (mux, buf);
+    GstBuffer *buf = gst_flv_mux_create_metadata (mux, FALSE);
+    if (buf)
+      gst_flv_mux_push (mux, buf);
     mux->new_tags = FALSE;
   }
 
