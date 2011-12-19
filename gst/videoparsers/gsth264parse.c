@@ -211,6 +211,8 @@ gst_h264_parse_reset (GstH264Parse * h264parse)
 
   h264parse->last_report = GST_CLOCK_TIME_NONE;
   h264parse->push_codec = FALSE;
+  h264parse->have_pps = FALSE;
+  h264parse->have_sps = FALSE;
 
   h264parse->pending_key_unit_ts = GST_CLOCK_TIME_NONE;
   h264parse->force_key_unit_event = NULL;
@@ -437,8 +439,15 @@ gst_h264_parse_process_nal (GstH264Parse * h264parse, GstH264NalUnit * nalu)
 
       GST_DEBUG_OBJECT (h264parse, "triggering src caps check");
       h264parse->update_caps = TRUE;
-      /* found in stream, no need to forcibly push at start */
-      h264parse->push_codec = FALSE;
+      h264parse->have_sps = TRUE;
+      if (h264parse->push_codec && h264parse->have_pps) {
+        /* SPS and PPS found in stream before the first pre_push_frame, no need
+         * to forcibly push at start */
+        GST_INFO_OBJECT (h264parse, "have SPS/PPS in stream");
+        h264parse->push_codec = FALSE;
+        h264parse->have_sps = FALSE;
+        h264parse->have_pps = FALSE;
+      }
 
       gst_h264_parser_store_nal (h264parse, sps.id, nal_type, nalu);
       break;
@@ -447,8 +456,15 @@ gst_h264_parse_process_nal (GstH264Parse * h264parse, GstH264NalUnit * nalu)
       /* parameters might have changed, force caps check */
       GST_DEBUG_OBJECT (h264parse, "triggering src caps check");
       h264parse->update_caps = TRUE;
-      /* found in stream, no need to forcibly push at start */
-      h264parse->push_codec = FALSE;
+      h264parse->have_pps = TRUE;
+      if (h264parse->push_codec && h264parse->have_sps) {
+        /* SPS and PPS found in stream before the first pre_push_frame, no need
+         * to forcibly push at start */
+        GST_INFO_OBJECT (h264parse, "have SPS/PPS in stream");
+        h264parse->push_codec = FALSE;
+        h264parse->have_sps = FALSE;
+        h264parse->have_pps = FALSE;
+      }
 
       gst_h264_parser_store_nal (h264parse, pps.id, nal_type, nalu);
       break;
@@ -1449,6 +1465,8 @@ gst_h264_parse_pre_push_frame (GstBaseParse * parse, GstBaseParseFrame * frame)
       }
       /* we pushed whatever we had */
       h264parse->push_codec = FALSE;
+      h264parse->have_sps = FALSE;
+      h264parse->have_pps = FALSE;
     }
   }
 
@@ -1583,6 +1601,8 @@ gst_h264_parse_set_caps (GstBaseParse * parse, GstCaps * caps)
     /* arrange to insert codec-data in-stream if needed.
      * src caps are only arranged for later on */
     h264parse->push_codec = TRUE;
+    h264parse->have_sps = FALSE;
+    h264parse->have_pps = FALSE;
     h264parse->split_packetized = TRUE;
     h264parse->packetized = TRUE;
   }
