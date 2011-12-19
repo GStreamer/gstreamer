@@ -615,8 +615,6 @@ gst_lfo_waveform_get_type (void)
 G_DEFINE_TYPE_WITH_CODE (GstLFOControlSource, gst_lfo_control_source,
     GST_TYPE_CONTROL_SOURCE, _do_init);
 
-static GObjectClass *parent_class = NULL;
-
 static void
 gst_lfo_control_source_reset (GstLFOControlSource * self)
 {
@@ -954,19 +952,9 @@ gst_lfo_control_source_finalize (GObject * obj)
   GstLFOControlSource *self = GST_LFO_CONTROL_SOURCE (obj);
 
   gst_lfo_control_source_reset (self);
+  g_mutex_free (self->lock);
 
-  if (self->lock) {
-    g_mutex_free (self->lock);
-    self->lock = NULL;
-  }
-
-  G_OBJECT_CLASS (parent_class)->finalize (obj);
-}
-
-static void
-gst_lfo_control_source_dispose (GObject * obj)
-{
-  G_OBJECT_CLASS (parent_class)->dispose (obj);
+  G_OBJECT_CLASS (gst_lfo_control_source_parent_class)->finalize (obj);
 }
 
 static void
@@ -1091,11 +1079,9 @@ gst_lfo_control_source_class_init (GstLFOControlSourceClass * klass)
   GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
   GstControlSourceClass *csource_class = GST_CONTROL_SOURCE_CLASS (klass);
 
-  parent_class = g_type_class_peek_parent (klass);
   g_type_class_add_private (klass, sizeof (GstLFOControlSourcePrivate));
 
   gobject_class->finalize = gst_lfo_control_source_finalize;
-  gobject_class->dispose = gst_lfo_control_source_dispose;
   gobject_class->set_property = gst_lfo_control_source_set_property;
   gobject_class->get_property = gst_lfo_control_source_get_property;
 
