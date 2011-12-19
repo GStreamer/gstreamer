@@ -646,11 +646,6 @@ gst_tag_demux_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
           return GST_FLOW_EOS;
       }
       if (outbuf) {
-        if (G_UNLIKELY (demux->priv->srcpad == NULL)) {
-          gst_buffer_unref (outbuf);
-          return GST_FLOW_ERROR;
-        }
-
         /* Might need a new segment before the buffer */
         if (demux->priv->need_newseg) {
           if (!gst_tag_demux_send_new_segment (demux)) {
@@ -688,6 +683,7 @@ gst_tag_demux_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_EOS:
+      /* FIXME, detect this differently */
       if (demux->priv->srcpad == NULL) {
         GST_WARNING_OBJECT (demux, "EOS before we found a type");
         GST_ELEMENT_ERROR (demux, STREAM, TYPE_NOT_FOUND, (NULL), (NULL));
