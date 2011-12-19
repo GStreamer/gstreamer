@@ -1128,7 +1128,7 @@ gst_mpegts_demux_add_all_streams (GstMpegTSDemux * demux, GstClockTime pts)
     }
     if (!gst_mpegts_demux_fill_stream (stream, stream->filter.id,
             stream->stream_type)) {
-      GST_ERROR ("Unknown type for PID 0x%04x", stream->PID);
+      GST_WARNING_OBJECT (demux, "Unknown type for PID 0x%04x", stream->PID);
       /* ignore */
       continue;
     }
