@@ -134,10 +134,8 @@ main (gint argc, gchar ** argv)
 
   /* Set interpolation mode */
 
-  gst_interpolation_control_source_set_interpolation_mode (csource1,
-      GST_INTERPOLATE_LINEAR);
-  gst_interpolation_control_source_set_interpolation_mode (csource2,
-      GST_INTERPOLATE_LINEAR);
+  g_object_set (csource1, "mode", GST_INTERPOLATION_MODE_LINEAR, NULL);
+  g_object_set (csource2, "mode", GST_INTERPOLATION_MODE_LINEAR, NULL);
 
   /* set control values */
   g_value_init (&vol, G_TYPE_DOUBLE);
