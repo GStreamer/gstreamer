@@ -89,7 +89,8 @@ main (int argc, char **argv)
     else
       g_value_set_float (&val, 1.5);
 
-    gst_interpolation_control_source_set (csource, i * GST_SECOND, &val);
+    gst_timed_value_control_source_set ((GstTimedValueControlSource *) csource,
+        i * GST_SECOND, &val);
   }
 
   g_value_unset (&val);
