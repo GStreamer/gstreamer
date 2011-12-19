@@ -253,8 +253,16 @@ gst_wrapper_camera_bin_src_vidsrc_probe (GstPad * pad, GstBuffer * buffer,
   if (self->video_rec_status == GST_VIDEO_RECORDING_STATUS_DONE) {
     /* NOP */
   } else if (self->video_rec_status == GST_VIDEO_RECORDING_STATUS_STARTING) {
+    GstClockTime ts;
+
     GST_DEBUG_OBJECT (self, "Starting video recording");
     self->video_rec_status = GST_VIDEO_RECORDING_STATUS_RUNNING;
+
+    ts = GST_BUFFER_TIMESTAMP (buffer);
+    if (!GST_CLOCK_TIME_IS_VALID (ts))
+      ts = 0;
+    gst_pad_push_event (self->vidsrc, gst_event_new_new_segment (FALSE, 1.0,
+            GST_FORMAT_TIME, ts, -1, 0));
 
     /* post preview */
     GST_DEBUG_OBJECT (self, "Posting preview for video");
