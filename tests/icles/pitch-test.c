@@ -74,8 +74,7 @@ main (int argc, char **argv)
   }
 
   csource = gst_interpolation_control_source_new ();
-  gst_interpolation_control_source_set_interpolation_mode (csource,
-      GST_INTERPOLATE_LINEAR);
+  g_object_set (csource, "mode", GST_INTERPOLATION_MODE_LINEAR, NULL);
 
   gst_controller_set_control_source (ctl, "pitch",
       GST_CONTROL_SOURCE (csource));
