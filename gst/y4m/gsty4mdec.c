@@ -382,10 +382,12 @@ gst_y4m_dec_parse_header (GstY4mDec * y4mdec, char *header)
     case 0:
     case '?':
     case 'p':
+      y4mdec->info.interlace_mode = GST_VIDEO_INTERLACE_MODE_PROGRESSIVE;
       y4mdec->info.flags &= ~GST_VIDEO_FLAG_INTERLACED;
       break;
     case 't':
     case 'b':
+      y4mdec->info.interlace_mode = GST_VIDEO_INTERLACE_MODE_INTERLEAVED;
       y4mdec->info.flags |= GST_VIDEO_FLAG_INTERLACED;
       if (interlaced_char == 't')
         y4mdec->info.flags |= GST_VIDEO_FLAG_TFF;
