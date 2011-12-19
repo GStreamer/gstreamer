@@ -26,7 +26,6 @@
 
 #include <math.h>
 #include <string.h>
-#include <gst/audio/multichannel.h>
 
 #include "gstchannelmix.h"
 
@@ -96,7 +95,7 @@ gst_channel_mix_fill_compatible (AudioConvertCtx * this)
     { {
     GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT,
             GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT}, {
-    GST_AUDIO_CHANNEL_POSITION_FRONT_MONO}},
+    GST_AUDIO_CHANNEL_POSITION_MONO}},
         /* front center: 2 <-> 1 */
     { {
     GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT_OF_CENTER,
@@ -191,7 +190,7 @@ gst_channel_mix_detect_pos (GstAudioInfo * info,
 
   for (n = 0; n < info->channels; n++) {
     switch (info->position[n]) {
-      case GST_AUDIO_CHANNEL_POSITION_FRONT_MONO:
+      case GST_AUDIO_CHANNEL_POSITION_MONO:
         f[1] = n;
         *has_f = TRUE;
         break;
@@ -235,7 +234,7 @@ gst_channel_mix_detect_pos (GstAudioInfo * info,
         s[2] = n;
         *has_s = TRUE;
         break;
-      case GST_AUDIO_CHANNEL_POSITION_LFE:
+      case GST_AUDIO_CHANNEL_POSITION_LFE1:
         *has_b = TRUE;
         b[1] = n;
         break;
@@ -552,7 +551,7 @@ gst_channel_mix_fill_special (AudioConvertCtx * this)
               in->position[1] == GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT) ||
           (in->position[0] == GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT &&
               in->position[1] == GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT)) &&
-      out->position[0] == GST_AUDIO_CHANNEL_POSITION_FRONT_MONO) {
+      out->position[0] == GST_AUDIO_CHANNEL_POSITION_MONO) {
     this->matrix[0][0] = 0.5;
     this->matrix[1][0] = 0.5;
     return TRUE;
@@ -561,7 +560,7 @@ gst_channel_mix_fill_special (AudioConvertCtx * this)
               out->position[1] == GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT) ||
           (out->position[0] == GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT &&
               out->position[1] == GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT)) &&
-      in->position[0] == GST_AUDIO_CHANNEL_POSITION_FRONT_MONO) {
+      in->position[0] == GST_AUDIO_CHANNEL_POSITION_MONO) {
     this->matrix[0][0] = 1.0;
     this->matrix[0][1] = 1.0;
     return TRUE;
@@ -584,8 +583,7 @@ gst_channel_mix_fill_matrix (AudioConvertCtx * this)
 
   gst_channel_mix_fill_identical (this);
 
-  if (!GST_AUDIO_INFO_HAS_DEFAULT_POSITIONS (&this->in) &&
-      !GST_AUDIO_INFO_IS_UNPOSITIONED (&this->in)) {
+  if (!GST_AUDIO_INFO_IS_UNPOSITIONED (&this->in)) {
     gst_channel_mix_fill_compatible (this);
     gst_channel_mix_fill_others (this);
     gst_channel_mix_fill_normalize (this);
@@ -650,17 +648,20 @@ gboolean
 gst_channel_mix_passthrough (AudioConvertCtx * this)
 {
   gint i;
+  guint64 in_mask, out_mask;
 
   /* only NxN matrices can be identities */
   if (this->in.channels != this->out.channels)
     return FALSE;
 
-  /* this assumes a normalized matrix */
-  for (i = 0; i < this->in.channels; i++)
-    if (this->matrix[i][i] != 1.)
-      return FALSE;
+  /* passthrough if both channel masks are the same */
+  in_mask = out_mask = 0;
+  for (i = 0; i < this->in.channels; i++) {
+    in_mask |= this->in.position[i];
+    out_mask |= this->out.position[i];
+  }
 
-  return TRUE;
+  return in_mask == out_mask;
 }
 
 /* IMPORTANT: out_data == in_data is possible, make sure to not overwrite data
