@@ -121,8 +121,8 @@
  *   </para></listitem>
  *   <listitem><para>
  *     Set the control values
- *     gst_interpolation_control_source_set (csource,0 * GST_SECOND, value1);
- *     gst_interpolation_control_source_set (csource,1 * GST_SECOND, value2);
+ *     gst_timed_value_control_source_set ((GstTimedValueControlSource *)csource,0 * GST_SECOND, value1);
+ *     gst_timed_value_control_source_set ((GstTimedValueControlSource *)csource,1 * GST_SECOND, value2);
  *   </para></listitem>
  *   <listitem><para>
  *     start your pipeline

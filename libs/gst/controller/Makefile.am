@@ -2,7 +2,9 @@ lib_LTLIBRARIES = libgstcontroller-@GST_MAJORMINOR@.la
 
 libgstcontroller_@GST_MAJORMINOR@_includedir = $(includedir)/gstreamer-@GST_MAJORMINOR@/gst/controller
 libgstcontroller_@GST_MAJORMINOR@_include_HEADERS = \
+	gsttimedvaluecontrolsource.h \
 	gstinterpolationcontrolsource.h \
+	gsttriggercontrolsource.h \
 	gstlfocontrolsource.h
 
 noinst_HEADERS = \
@@ -10,8 +12,10 @@ noinst_HEADERS = \
 	gstlfocontrolsourceprivate.h
 
 libgstcontroller_@GST_MAJORMINOR@_la_SOURCES = \
+	gsttimedvaluecontrolsource.c \
 	gstinterpolation.c \
 	gstinterpolationcontrolsource.c \
+	gsttriggercontrolsource.c \
 	gstlfocontrolsource.c
 
 libgstcontroller_@GST_MAJORMINOR@_la_CFLAGS = $(GST_OBJ_CFLAGS)

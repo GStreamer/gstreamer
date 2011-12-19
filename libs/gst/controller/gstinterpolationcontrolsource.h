@@ -27,7 +27,7 @@
 #include <glib-object.h>
 #include <gst/gst.h>
 
-#include <gst/gstcontrolsource.h>
+#include <gst/controller/gsttimedvaluecontrolsource.h>
 
 G_BEGIN_DECLS
 
@@ -51,23 +51,18 @@ typedef struct _GstInterpolationControlSourcePrivate GstInterpolationControlSour
 /**
  * GstInterpolateMode:
  * @GST_INTERPOLATE_NONE: steps-like interpolation, default
- * @GST_INTERPOLATE_TRIGGER: returns the default value of the property,
- * except for times with specific values
  * @GST_INTERPOLATE_LINEAR: linear interpolation
  * @GST_INTERPOLATE_QUADRATIC: square interpolation (deprecated, maps to cubic)
  * @GST_INTERPOLATE_CUBIC: cubic interpolation
- * @GST_INTERPOLATE_USER: user-provided interpolation (not yet available)
  *
  * The various interpolation modes available.
  */
 typedef enum
 {
   GST_INTERPOLATE_NONE,
-  GST_INTERPOLATE_TRIGGER,
   GST_INTERPOLATE_LINEAR,
   GST_INTERPOLATE_QUADRATIC,
-  GST_INTERPOLATE_CUBIC,
-  GST_INTERPOLATE_USER
+  GST_INTERPOLATE_CUBIC
 } GstInterpolateMode;
 
 /**
@@ -76,17 +71,15 @@ typedef enum
  * The instance structure of #GstControlSource.
  */
 struct _GstInterpolationControlSource {
-  GstControlSource parent;
+  GstTimedValueControlSource parent;
 
-  /* <private> */
-  GMutex *lock;
+  /*< private >*/
   GstInterpolationControlSourcePrivate *priv;
-
   gpointer _gst_reserved[GST_PADDING];
 };
 
 struct _GstInterpolationControlSourceClass {
-  GstControlSourceClass parent_class;
+  GstTimedValueControlSourceClass parent_class;
 
   /*< private >*/
   gpointer _gst_reserved[GST_PADDING];
@@ -101,16 +94,6 @@ GstInterpolationControlSource *
 gboolean        gst_interpolation_control_source_set_interpolation_mode
                                                                 (GstInterpolationControlSource *self,
                                                                  GstInterpolateMode mode);
-gboolean        gst_interpolation_control_source_set            (GstInterpolationControlSource * self,
-                                                                 GstClockTime timestamp,
-                                                                 const GValue * value);
-gboolean        gst_interpolation_control_source_set_from_list  (GstInterpolationControlSource * self,
-                                                                 const GSList * timedvalues);
-gboolean        gst_interpolation_control_source_unset          (GstInterpolationControlSource * self,
-                                                                 GstClockTime timestamp);
-void            gst_interpolation_control_source_unset_all      (GstInterpolationControlSource *self);
-GList *         gst_interpolation_control_source_get_all        (GstInterpolationControlSource * self);
-gint            gst_interpolation_control_source_get_count      (GstInterpolationControlSource * self);
 
 G_END_DECLS
 

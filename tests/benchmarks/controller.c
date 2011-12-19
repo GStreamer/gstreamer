@@ -126,7 +126,8 @@ main (gint argc, gchar * argv[])
 
   for (i = 0; i < NUM_CP; i++) {
     g_value_set_double (&freq, g_random_double_range (50.0, 3000.0));
-    gst_interpolation_control_source_set (csource, i * tick, &freq);
+    gst_timed_value_control_source_set ((GstTimedValueControlSource *) csource,
+        i * tick, &freq);
   }
 
   ct = gst_util_get_timestamp ();
@@ -143,7 +144,8 @@ main (gint argc, gchar * argv[])
   for (i = 0; i < 100; i++) {
     j = g_random_int_range (0, NUM_CP - 1);
     g_value_set_double (&freq, g_random_double_range (50.0, 3000.0));
-    gst_interpolation_control_source_set (csource, j * tick, &freq);
+    gst_timed_value_control_source_set ((GstTimedValueControlSource *) csource,
+        j * tick, &freq);
   }
 
   ct = gst_util_get_timestamp ();

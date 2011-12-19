@@ -80,21 +80,6 @@ typedef struct _GstControlPoint
 
 } GstControlPoint;
 
-struct _GstInterpolationControlSourcePrivate
-{
-  GType type;                   /* type of the handled property */
-  GType base;                   /* base-type of the handled property */
-
-  GValue default_value;         /* default value for the handled property */
-  GValue minimum_value;         /* min value for the handled property */
-  GValue maximum_value;         /* max value for the handled property */
-  GstInterpolateMode interpolation_mode;
-
-  GSequence *values;            /* List of GstControlPoint */
-  gint nvalues;                 /* Number of control points */
-  gboolean valid_cache;
-};
-
 extern GstInterpolateMethod *priv_gst_interpolation_methods[];
 extern guint priv_gst_num_interpolation_methods;
 

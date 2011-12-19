@@ -447,4 +447,8 @@ The 0.11 porting guide
     properties fetch the value array. Also GstValueArray is gone. The fields of
     GstValueArray are now passed directly to gst_object_get_value_array as
     arguments.
-
+    
+    GstInterpolationControlSource has been split. There is a new 
+    GstTimedValueControlSource baseclass and 2 sub classes: 
+    GstInterpolationControlSource and GstTriggerControlSource. The API for setting
+    and getting the timestamps is in GstTimedValueControlSource.
