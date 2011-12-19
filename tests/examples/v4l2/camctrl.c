@@ -107,7 +107,8 @@ set_program (GstObject * elem, GstStructure * prog)
       }
       gst_structure_get_int (s, name, &v);
       g_value_set_int (&val, v);
-      gst_interpolation_control_source_set (cs, ts, &val);
+      gst_timed_value_control_source_set ((GstTimedValueControlSource *) cs, ts,
+          &val);
       GST_DEBUG ("  %s = %d", name, v);
     }
     ts += dur;
