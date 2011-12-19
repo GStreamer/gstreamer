@@ -3,6 +3,7 @@
  * unit tests for audio support library
  *
  * Copyright (C) 2006 Tim-Philipp Müller <tim centricular net>
+ * Copyright (C) 2011 Sebastian Dröge <sebastian.droege@collabora.co.uk>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -27,102 +28,7 @@
 #include <gst/check/gstcheck.h>
 
 #include <gst/audio/audio.h>
-#include <gst/audio/multichannel.h>
 #include <string.h>
-
-static gboolean
-structure_contains_channel_positions (const GstStructure * s)
-{
-  return (gst_structure_get_value (s, "channel-positions") != NULL);
-}
-
-#if 0
-static gboolean
-fixed_caps_have_channel_positions (const GstCaps * caps)
-{
-  GstStructure *s;
-
-  fail_unless (caps != NULL);
-
-  s = gst_caps_get_structure (caps, 0);
-  fail_unless (s != NULL);
-
-  return structure_contains_channel_positions (s);
-}
-#endif
-
-GST_START_TEST (test_multichannel_checks)
-{
-  GstAudioChannelPosition pos_2_mixed[2] = {
-    GST_AUDIO_CHANNEL_POSITION_FRONT_MONO,
-    GST_AUDIO_CHANNEL_POSITION_NONE
-  };
-  GstAudioChannelPosition pos_2_none[2] = {
-    GST_AUDIO_CHANNEL_POSITION_NONE,
-    GST_AUDIO_CHANNEL_POSITION_NONE
-  };
-  GstAudioChannelPosition pos_2_flr[2] = {
-    GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT,
-    GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT
-  };
-  GstAudioChannelPosition pos_2_frr[2] = {
-    GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT,
-    GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT
-  };
-  GstStructure *s;
-
-  s = gst_structure_new ("audio/x-raw", "channels", G_TYPE_INT, 2, NULL);
-
-  /* check if the audio channel position checks work */
-  fail_if (gst_audio_check_channel_positions (pos_2_mixed, 2));
-  fail_unless (gst_audio_check_channel_positions (pos_2_none, 2));
-  fail_unless (gst_audio_check_channel_positions (pos_2_flr, 2));
-  fail_if (gst_audio_check_channel_positions (pos_2_frr, 2));
-
-  /* this should not work and issue a warning: FRONT_MONO + NONE */
-  _gst_check_expecting_log = TRUE;
-  gst_audio_set_channel_positions (s, pos_2_mixed);
-  _gst_check_expecting_log = FALSE;
-  fail_if (structure_contains_channel_positions (s));
-
-  /* this should work: NONE + NONE */
-  gst_audio_set_channel_positions (s, pos_2_none);
-  fail_unless (structure_contains_channel_positions (s));
-  gst_structure_remove_field (s, "channel-positions");
-
-  /* this should also work: FRONT_LEFT + FRONT_RIGHT */
-  gst_audio_set_channel_positions (s, pos_2_flr);
-  fail_unless (structure_contains_channel_positions (s));
-  gst_structure_remove_field (s, "channel-positions");
-
-  /* this should not work and issue a warning: FRONT_RIGHT twice */
-  _gst_check_expecting_log = TRUE;
-  gst_audio_set_channel_positions (s, pos_2_frr);
-  _gst_check_expecting_log = FALSE;
-
-/* FIXME: did I misunderstand _set_structure_channel_positions_list? */
-#if  0
-  /* this should not work and issue a warning: FRONT_RIGHT twice */
-  _gst_check_expecting_log = TRUE;
-  gst_audio_set_structure_channel_positions_list (s, pos_2_frr, 2);
-  _gst_check_expecting_log = FALSE;
-
-  /* this should not work and issue a warning: FRONT_MONO + NONE */
-  _gst_check_expecting_log = TRUE;
-  gst_audio_set_structure_channel_positions_list (s, pos_2_mixed, 2);
-  _gst_check_expecting_log = FALSE;
-
-  /* this should not work either (channel count mismatch) */
-  _gst_check_expecting_log = TRUE;
-  gst_audio_set_structure_channel_positions_list (s, pos_2_none, 44);
-  _gst_check_expecting_log = FALSE;
-  fail_if (structure_contains_channel_positions (s));
-#endif
-
-  gst_structure_free (s);
-}
-
-GST_END_TEST;
 
 GST_START_TEST (test_buffer_clipping_time)
 {
@@ -495,58 +401,180 @@ GST_START_TEST (test_buffer_clipping_samples)
 
 GST_END_TEST;
 
-static void
-init_value_to_channel_layout (GValue * val, GstAudioChannelPosition pos1,
-    GstAudioChannelPosition pos2)
+GST_START_TEST (test_multichannel_checks)
 {
-  GValue pos = { 0, };
+  GstAudioChannelPosition pos_2_mixed[2] = {
+    GST_AUDIO_CHANNEL_POSITION_MONO,
+    GST_AUDIO_CHANNEL_POSITION_NONE
+  };
+  GstAudioChannelPosition pos_2_none[2] = {
+    GST_AUDIO_CHANNEL_POSITION_NONE,
+    GST_AUDIO_CHANNEL_POSITION_NONE
+  };
+  GstAudioChannelPosition pos_2_flr[2] = {
+    GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT,
+    GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT
+  };
+  GstAudioChannelPosition pos_2_frl[2] = {
+    GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT,
+    GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT
+  };
+  GstAudioChannelPosition pos_2_frr[2] = {
+    GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT,
+    GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT
+  };
+  GstAudioChannelPosition pos_3_flrc[3] = {
+    GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT,
+    GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT,
+    GST_AUDIO_CHANNEL_POSITION_FRONT_CENTER
+  };
+  GstAudioChannelPosition pos_3_frcl[3] = {
+    GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT,
+    GST_AUDIO_CHANNEL_POSITION_FRONT_CENTER,
+    GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT
+  };
+  GstAudioInfo info, info2;
+  GstCaps *caps;
 
-  g_value_init (val, GST_TYPE_ARRAY);
-  g_value_init (&pos, GST_TYPE_AUDIO_CHANNEL_POSITION);
-  g_value_set_enum (&pos, pos1);
-  gst_value_array_append_value (val, &pos);
-  g_value_set_enum (&pos, pos2);
-  gst_value_array_append_value (val, &pos);
-  g_value_unset (&pos);
+  gst_audio_info_init (&info);
+  gst_audio_info_init (&info2);
+
+  gst_audio_info_set_format (&info, GST_AUDIO_FORMAT_F32, 48000, 2, NULL);
+  fail_unless (memcmp (&info.position, pos_2_flr, sizeof (pos_2_flr)) == 0);
+
+  gst_audio_info_set_format (&info, GST_AUDIO_FORMAT_F32, 48000, 2, pos_2_flr);
+  fail_unless (memcmp (&info.position, pos_2_flr, sizeof (pos_2_flr)) == 0);
+  caps = gst_audio_info_to_caps (&info);
+  fail_unless (gst_audio_info_from_caps (&info2, caps));
+  fail_unless (memcmp (&info, &info2, sizeof (info)) == 0);
+  gst_caps_unref (caps);
+
+  gst_audio_info_set_format (&info, GST_AUDIO_FORMAT_F32, 48000, 2, pos_2_none);
+  fail_unless (memcmp (&info.position, pos_2_none, sizeof (pos_2_none)) == 0);
+  caps = gst_audio_info_to_caps (&info);
+  fail_unless (gst_audio_info_from_caps (&info2, caps));
+  fail_unless (memcmp (&info, &info2, sizeof (info)) == 0);
+  gst_caps_unref (caps);
+
+  gst_audio_info_set_format (&info, GST_AUDIO_FORMAT_F32, 48000, 3, pos_3_flrc);
+  fail_unless (memcmp (&info.position, pos_3_flrc, sizeof (pos_3_flrc)) == 0);
+  caps = gst_audio_info_to_caps (&info);
+  fail_unless (gst_audio_info_from_caps (&info2, caps));
+  fail_unless (memcmp (&info, &info2, sizeof (info)) == 0);
+  gst_caps_unref (caps);
+
+  ASSERT_WARNING (gst_audio_info_set_format (&info, GST_AUDIO_FORMAT_F32, 48000,
+          2, pos_2_frl));
+  ASSERT_WARNING (gst_audio_info_set_format (&info, GST_AUDIO_FORMAT_F32, 48000,
+          2, pos_2_mixed));
+  ASSERT_WARNING (gst_audio_info_set_format (&info, GST_AUDIO_FORMAT_F32, 48000,
+          2, pos_2_frr));
+  ASSERT_WARNING (gst_audio_info_set_format (&info, GST_AUDIO_FORMAT_F32, 48000,
+          3, pos_3_frcl));
 }
 
-GST_START_TEST (test_channel_layout_value_intersect)
+GST_END_TEST;
+
+typedef struct
 {
-  GValue layout = { 0, };
-  GValue list = { 0, };
-  GValue res = { 0, };
+  gint channels;
+  GstAudioChannelPosition from[32], to[32];
+  gint32 in[32], out[32];
+  gboolean fail;
+} MultichannelReorderData;
 
-  g_value_init (&list, GST_TYPE_LIST);
-  init_value_to_channel_layout (&layout, GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT,
-      GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT);
-  gst_value_list_append_value (&list, &layout);
-  g_value_unset (&layout);
-  init_value_to_channel_layout (&layout, GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT,
-      GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT);
-  gst_value_list_append_value (&list, &layout);
-  g_value_unset (&layout);
+GST_START_TEST (test_multichannel_reorder)
+{
+  MultichannelReorderData tests[] = {
+    {1,
+          {GST_AUDIO_CHANNEL_POSITION_MONO},
+          {GST_AUDIO_CHANNEL_POSITION_MONO},
+          {0, 1, 2, 3},
+          {0, 1, 2, 3},
+        FALSE},
+    {1,
+          {GST_AUDIO_CHANNEL_POSITION_MONO},
+          {GST_AUDIO_CHANNEL_POSITION_FRONT_CENTER},
+          {0, 1, 2, 3},
+          {0, 1, 2, 3},
+        TRUE},
+    {2,
+          {GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT,
+              GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT},
+          {GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT,
+              GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT},
+          {0, 1, 2, 3},
+          {0, 1, 2, 3},
+        FALSE},
+    {2,
+          {GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT,
+              GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT},
+          {GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT,
+              GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT},
+          {0, 1, 2, 3},
+          {1, 0, 3, 2},
+        FALSE},
+    {4,
+          {GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT,
+                GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT,
+                GST_AUDIO_CHANNEL_POSITION_FRONT_CENTER,
+              GST_AUDIO_CHANNEL_POSITION_REAR_CENTER},
+          {GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT,
+                GST_AUDIO_CHANNEL_POSITION_FRONT_CENTER,
+                GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT,
+              GST_AUDIO_CHANNEL_POSITION_REAR_CENTER},
+          {0, 1, 2, 3},
+          {1, 2, 0, 3},
+        FALSE},
+    {4,
+          {GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT,
+                GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT,
+                GST_AUDIO_CHANNEL_POSITION_FRONT_CENTER,
+              GST_AUDIO_CHANNEL_POSITION_REAR_CENTER},
+          {GST_AUDIO_CHANNEL_POSITION_REAR_CENTER,
+                GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT,
+                GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT,
+              GST_AUDIO_CHANNEL_POSITION_FRONT_CENTER},
+          {0, 1, 2, 3},
+          {3, 0, 1, 2},
+        FALSE},
+    {4,
+          {GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT,
+                GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT,
+                GST_AUDIO_CHANNEL_POSITION_FRONT_CENTER,
+              GST_AUDIO_CHANNEL_POSITION_REAR_CENTER},
+          {GST_AUDIO_CHANNEL_POSITION_REAR_CENTER,
+                GST_AUDIO_CHANNEL_POSITION_FRONT_CENTER,
+                GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT,
+              GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT},
+          {0, 1, 2, 3},
+          {3, 2, 1, 0},
+        FALSE},
+  };
+  gint i;
+  GstBuffer *buf;
+  gint32 *data;
+  gsize size;
 
-  init_value_to_channel_layout (&layout, GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT,
-      GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT);
+  for (i = 0; i < G_N_ELEMENTS (tests); i++) {
+    buf =
+        gst_buffer_new_wrapped_full (tests[i].in, NULL, 0,
+        sizeof (tests[i].in));
 
-  /* we should get the second layout in the list, as it matches the input */
-  fail_unless (gst_value_intersect (&res, &layout, &list));
-  g_value_unset (&layout);
-  fail_unless (GST_VALUE_HOLDS_ARRAY (&res));
-  fail_unless_equals_int (gst_value_array_get_size (&res), 2);
-  fail_unless_equals_int (g_value_get_enum (gst_value_array_get_value (&res,
-              0)), GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT);
-  fail_unless_equals_int (g_value_get_enum (gst_value_array_get_value (&res,
-              1)), GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT);
-  g_value_unset (&res);
+    if (tests[i].fail) {
+      fail_if (gst_audio_buffer_reorder_channels (buf, GST_AUDIO_FORMAT_S32,
+              tests[i].channels, tests[i].from, tests[i].to));
+    } else {
+      fail_unless (gst_audio_buffer_reorder_channels (buf, GST_AUDIO_FORMAT_S32,
+              tests[i].channels, tests[i].from, tests[i].to));
 
-  /* this (with rear position) should not yield any results */
-  init_value_to_channel_layout (&layout, GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT,
-      GST_AUDIO_CHANNEL_POSITION_REAR_RIGHT);
-  fail_if (gst_value_intersect (&res, &layout, &list));
-  g_value_unset (&layout);
-
-  g_value_unset (&list);
+      data = gst_buffer_map (buf, &size, NULL, GST_MAP_READ);
+      fail_unless_equals_int (size, sizeof (tests[i].in));
+      fail_unless (memcmp (tests[i].out, data, size) == 0);
+      gst_buffer_unmap (buf, data, size);
+    }
+    gst_buffer_unref (buf);
+  }
 }
 
 GST_END_TEST;
@@ -573,10 +601,10 @@ audio_suite (void)
 
   suite_add_tcase (s, tc_chain);
   tcase_add_test (tc_chain, test_audio_info);
-  tcase_add_test (tc_chain, test_multichannel_checks);
   tcase_add_test (tc_chain, test_buffer_clipping_time);
   tcase_add_test (tc_chain, test_buffer_clipping_samples);
-  tcase_add_test (tc_chain, test_channel_layout_value_intersect);
+  tcase_add_test (tc_chain, test_multichannel_checks);
+  tcase_add_test (tc_chain, test_multichannel_reorder);
 
   return s;
 }
