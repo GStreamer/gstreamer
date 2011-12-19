@@ -1006,29 +1006,35 @@ gst_base_transform_find_transform (GstBaseTransform * trans, GstPad * pad,
 
       peercaps = gst_pad_query_caps (otherpeer, othercaps);
       GST_DEBUG_OBJECT (trans, "Resulted in %" GST_PTR_FORMAT, peercaps);
+      if (!gst_caps_is_empty (peercaps)) {
+        templ_caps = gst_pad_get_pad_template_caps (otherpad);
 
-      templ_caps = gst_pad_get_pad_template_caps (otherpad);
+        GST_DEBUG_OBJECT (trans,
+            "Intersecting with template caps %" GST_PTR_FORMAT, templ_caps);
 
-      GST_DEBUG_OBJECT (trans,
-          "Intersecting with template caps %" GST_PTR_FORMAT, templ_caps);
+        intersection =
+            gst_caps_intersect_full (peercaps, templ_caps,
+            GST_CAPS_INTERSECT_FIRST);
+        GST_DEBUG_OBJECT (trans, "Intersection: %" GST_PTR_FORMAT,
+            intersection);
+        gst_caps_unref (peercaps);
+        gst_caps_unref (templ_caps);
+        peercaps = intersection;
 
-      intersection =
-          gst_caps_intersect_full (peercaps, templ_caps,
-          GST_CAPS_INTERSECT_FIRST);
-      GST_DEBUG_OBJECT (trans, "Intersection: %" GST_PTR_FORMAT, intersection);
-      gst_caps_unref (peercaps);
-      gst_caps_unref (templ_caps);
-      peercaps = intersection;
+        GST_DEBUG_OBJECT (trans,
+            "Intersecting with transformed caps %" GST_PTR_FORMAT, othercaps);
+        intersection =
+            gst_caps_intersect_full (peercaps, othercaps,
+            GST_CAPS_INTERSECT_FIRST);
+        GST_DEBUG_OBJECT (trans, "Intersection: %" GST_PTR_FORMAT,
+            intersection);
+        gst_caps_unref (peercaps);
+        gst_caps_unref (othercaps);
+        othercaps = intersection;
+      } else {
+        othercaps = peercaps;
+      }
 
-      GST_DEBUG_OBJECT (trans,
-          "Intersecting with transformed caps %" GST_PTR_FORMAT, othercaps);
-      intersection =
-          gst_caps_intersect_full (peercaps, othercaps,
-          GST_CAPS_INTERSECT_FIRST);
-      GST_DEBUG_OBJECT (trans, "Intersection: %" GST_PTR_FORMAT, intersection);
-      gst_caps_unref (peercaps);
-      gst_caps_unref (othercaps);
-      othercaps = intersection;
       is_fixed = gst_caps_is_fixed (othercaps);
     } else {
       GST_DEBUG_OBJECT (trans, "no peer, doing passthrough");
