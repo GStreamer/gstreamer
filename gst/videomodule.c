@@ -40,7 +40,8 @@ GST_DEBUG_CATEGORY (pygst_debug);       /* for python code */
 DL_EXPORT (void)
 initvideo (void)
 {
-  PyObject *m, *d, *gst;
+  PyObject *gst G_GNUC_UNUSED;
+  PyObject *m, *d;
 
   init_pygobject ();
   gst = pygst_init ();
