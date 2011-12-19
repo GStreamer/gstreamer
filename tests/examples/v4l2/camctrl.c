@@ -100,8 +100,7 @@ set_program (GstObject * elem, GstStructure * prog)
       if (!cs) {
         cs = gst_interpolation_control_source_new ();
         gst_object_set_control_source (elem, name, GST_CONTROL_SOURCE (cs));
-        gst_interpolation_control_source_set_interpolation_mode (cs,
-            GST_INTERPOLATE_NONE);
+        g_object_set (cs, "mode", GST_INTERPOLATION_MODE_NONE, NULL);
         g_hash_table_insert (css, (gpointer) name, cs);
         g_object_unref (cs);
       }
