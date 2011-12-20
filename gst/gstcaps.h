@@ -83,16 +83,18 @@ typedef enum {
  * GST_CAPS_ANY:
  *
  * Means that the element/pad can output 'anything'. Useful for elements
- * that output unknown media, such as filesrc.
+ * that output unknown media, such as filesrc. This macro returns a singleton and
+ * should not be unreffed.
  */
-#define GST_CAPS_ANY              gst_caps_new_any()
+#define GST_CAPS_ANY              _gst_caps_any
 /**
  * GST_CAPS_NONE:
  *
  * The opposite of %GST_CAPS_ANY: it means that the pad/element outputs an
- * undefined media type that can not be detected.
+ * undefined media type that can not be detected. This macro returns a singleton
+ * and should not be unreffed.
  */
-#define GST_CAPS_NONE             gst_caps_new_empty()
+#define GST_CAPS_NONE             _gst_caps_empty
 
 /**
  * GST_STATIC_CAPS_ANY:
@@ -136,6 +138,8 @@ typedef enum {
 typedef struct _GstCaps GstCaps;
 typedef struct _GstStaticCaps GstStaticCaps;
 
+extern GstCaps * _gst_caps_any;
+extern GstCaps * _gst_caps_empty;
 /**
  * GST_CAPS_FLAGS:
  * @caps: a #GstCaps.
