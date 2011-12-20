@@ -1091,6 +1091,7 @@ gst_h264_parser_parse_pic_timing (GstH264NalParser * nalparser,
       guint8 num_clock_num_ts;
       guint i;
 
+      tim->pic_struct_present_flag = TRUE;
       READ_UINT8 (nr, tim->pic_struct, 4);
       CHECK_ALLOWED ((gint8) tim->pic_struct, 0, 8);
 
@@ -1906,6 +1907,9 @@ gst_h264_parser_parse_sei (GstH264NalParser * nalparser, GstH264NalUnit * nalu,
   GST_DEBUG ("parsing \"Sei message\"");
 
   nal_reader_init (&nr, nalu->data + nalu->offset + 1, nalu->size - 1);
+
+  /* init */
+  memset (sei, 0, sizeof (*sei));
 
   sei->payloadType = 0;
   do {
