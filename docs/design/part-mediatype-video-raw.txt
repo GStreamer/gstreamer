@@ -18,7 +18,7 @@ Media Types
 
   views, G_TYPE_INT, default 1
     The number of views for multiview video. Each buffer contains
-    multiple GstMetaVideo buffers that describe each view. use the frame id to
+    multiple GstVideoMeta buffers that describe each view. use the frame id to
     get access to the different views.
 
   interlace-mode, G_TYPE_STRING, default progressive
@@ -34,7 +34,8 @@ Media Types
                      views property > 1) the second field of view N is at N * 2.
                      Each view has only half the amount of lines as noted in the
                      height property, pads specifying the "fields" property
-                     must be prepared for this.
+                     must be prepared for this. This mode requires multiple
+                     GstVideoMeta metadata to describe the fields.
 
   chroma-site, G_TYPE_STRING, default UNKNOWN
     The chroma siting of the video frames.
