@@ -417,6 +417,7 @@ gst_audio_decoder_reset (GstAudioDecoder * dec, gboolean full)
 
     gst_audio_info_clear (&dec->priv->ctx.info);
     memset (&dec->priv->ctx, 0, sizeof (dec->priv->ctx));
+    dec->priv->ctx.max_errors = GST_AUDIO_DECODER_MAX_ERRORS;
 
     if (dec->priv->taglist) {
       gst_tag_list_free (dec->priv->taglist);
