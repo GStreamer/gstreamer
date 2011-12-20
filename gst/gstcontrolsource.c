@@ -51,7 +51,12 @@
 #define GST_CAT_DEFAULT control_source_debug
 GST_DEBUG_CATEGORY_STATIC (GST_CAT_DEFAULT);
 
-G_DEFINE_ABSTRACT_TYPE (GstControlSource, gst_control_source, G_TYPE_OBJECT);
+#define _do_init \
+  GST_DEBUG_CATEGORY_INIT (GST_CAT_DEFAULT, "gstcontrolsource", 0, \
+      "dynamic parameter control sources");
+
+G_DEFINE_ABSTRACT_TYPE_WITH_CODE (GstControlSource, gst_control_source,
+    G_TYPE_OBJECT, _do_init);
 
 static void
 gst_control_source_class_init (GstControlSourceClass * klass)
@@ -60,15 +65,11 @@ gst_control_source_class_init (GstControlSourceClass * klass)
 
   /* Has to be implemented by children */
   klass->bind = NULL;
-
-  GST_DEBUG_CATEGORY_INIT (GST_CAT_DEFAULT, "gstcontrolsource", 0,
-      "dynamic parameter control sources");
 }
 
 static void
 gst_control_source_init (GstControlSource * self)
 {
-  /* Set default handlers that print a warning */
   self->get_value = NULL;
   self->get_value_array = NULL;
   self->bound = FALSE;
@@ -150,8 +151,12 @@ gst_control_source_bind (GstControlSource * self, GParamSpec * pspec)
 
   ret = GST_CONTROL_SOURCE_GET_CLASS (self)->bind (self, pspec);
 
-  if (ret)
+  if (ret) {
+    GST_DEBUG ("bound control source for param %s", pspec->name);
     self->bound = TRUE;
+  } else {
+    GST_DEBUG ("failed to bind control source for param %s", pspec->name);
+  }
 
   return ret;
 }

@@ -378,10 +378,12 @@ GST_START_TEST (controller_param_twice)
       GST_CONTROL_SOURCE (cs));
   fail_unless (res, NULL);
 
-  /* setting it again should not work */
+  /* setting it again will just unset the old and set it again
+   * this might cause some trouble with binding the control source again
+   */
   res = gst_object_set_control_source (GST_OBJECT (elem), "ulong",
       GST_CONTROL_SOURCE (cs));
-  fail_unless (!res, NULL);
+  fail_unless (res, NULL);
 
   /* it should have been added at least once, let remove it */
   res = gst_object_set_control_source (GST_OBJECT (elem), "ulong", NULL);
@@ -1091,8 +1093,7 @@ GST_START_TEST (controller_interpolate_linear_disabled)
   /* now pull in values for some timestamps, prop double disabled */
   GST_TEST_MONO_SOURCE (elem)->val_ulong = 0;
   GST_TEST_MONO_SOURCE (elem)->val_double = 0.0;
-  gst_object_set_controlled_property_disabled (GST_OBJECT (elem), "double",
-      TRUE);
+  gst_object_set_control_binding_disabled (GST_OBJECT (elem), "double", TRUE);
   gst_object_sync_values (GST_OBJECT (elem), 0 * GST_SECOND);
   fail_unless_equals_int (GST_TEST_MONO_SOURCE (elem)->val_ulong, 0);
   fail_unless (GST_TEST_MONO_SOURCE (elem)->val_double == 0.0, NULL);
@@ -1106,8 +1107,7 @@ GST_START_TEST (controller_interpolate_linear_disabled)
   /* now pull in values for some timestamps, after enabling double again */
   GST_TEST_MONO_SOURCE (elem)->val_ulong = 0;
   GST_TEST_MONO_SOURCE (elem)->val_double = 0.0;
-  gst_object_set_controlled_property_disabled (GST_OBJECT (elem), "double",
-      FALSE);
+  gst_object_set_control_binding_disabled (GST_OBJECT (elem), "double", FALSE);
   gst_object_sync_values (GST_OBJECT (elem), 0 * GST_SECOND);
   fail_unless_equals_int (GST_TEST_MONO_SOURCE (elem)->val_ulong, 0);
   fail_unless (GST_TEST_MONO_SOURCE (elem)->val_double == 2.0, NULL);
@@ -1121,7 +1121,7 @@ GST_START_TEST (controller_interpolate_linear_disabled)
   /* now pull in values for some timestamps, after disabling all props */
   GST_TEST_MONO_SOURCE (elem)->val_ulong = 0;
   GST_TEST_MONO_SOURCE (elem)->val_double = 0.0;
-  gst_object_set_controlled_properties_disabled (GST_OBJECT (elem), TRUE);
+  gst_object_set_control_bindings_disabled (GST_OBJECT (elem), TRUE);
   gst_object_sync_values (GST_OBJECT (elem), 0 * GST_SECOND);
   fail_unless_equals_int (GST_TEST_MONO_SOURCE (elem)->val_ulong, 0);
   fail_unless (GST_TEST_MONO_SOURCE (elem)->val_double == 0.0, NULL);
@@ -1135,8 +1135,7 @@ GST_START_TEST (controller_interpolate_linear_disabled)
   /* now pull in values for some timestamps, enabling double again */
   GST_TEST_MONO_SOURCE (elem)->val_ulong = 0;
   GST_TEST_MONO_SOURCE (elem)->val_double = 0.0;
-  gst_object_set_controlled_property_disabled (GST_OBJECT (elem), "double",
-      FALSE);
+  gst_object_set_control_binding_disabled (GST_OBJECT (elem), "double", FALSE);
   gst_object_sync_values (GST_OBJECT (elem), 0 * GST_SECOND);
   fail_unless_equals_int (GST_TEST_MONO_SOURCE (elem)->val_ulong, 0);
   fail_unless (GST_TEST_MONO_SOURCE (elem)->val_double == 2.0, NULL);
@@ -1150,7 +1149,7 @@ GST_START_TEST (controller_interpolate_linear_disabled)
   /* now pull in values for some timestamps, enabling all */
   GST_TEST_MONO_SOURCE (elem)->val_ulong = 0;
   GST_TEST_MONO_SOURCE (elem)->val_double = 0.0;
-  gst_object_set_controlled_properties_disabled (GST_OBJECT (elem), FALSE);
+  gst_object_set_control_bindings_disabled (GST_OBJECT (elem), FALSE);
   gst_object_sync_values (GST_OBJECT (elem), 0 * GST_SECOND);
   fail_unless_equals_int (GST_TEST_MONO_SOURCE (elem)->val_ulong, 0);
   fail_unless (GST_TEST_MONO_SOURCE (elem)->val_double == 2.0, NULL);

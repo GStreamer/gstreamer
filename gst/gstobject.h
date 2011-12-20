@@ -171,7 +171,7 @@ struct _GstObject {
   guint32        flags;
 
   /*< private >*/
-  GList         *properties;  /* List of GstControlledProperty */
+  GList         *control_bindings;  /* List of GstControlBinding */
   guint64        control_rate;
   guint64        last_sync;
 
@@ -232,30 +232,35 @@ gchar *		gst_object_get_path_string	(GstObject *object);
 gboolean	gst_object_check_uniqueness	(GList *list, const gchar *name);
 
 /* controller functions */
+#include <gst/gstcontrolbinding.h>
 #include <gst/gstcontrolsource.h>
 
 GstClockTime    gst_object_suggest_next_sync    (GstObject * object);
 gboolean        gst_object_sync_values          (GstObject * object, GstClockTime timestamp);
 
-gboolean        gst_object_has_active_controlled_properties   (GstObject *object);
-void            gst_object_set_controlled_properties_disabled (GstObject *object, gboolean disabled);
-void            gst_object_set_controlled_property_disabled   (GstObject *object,
+gboolean        gst_object_has_active_control_bindings   (GstObject *object);
+void            gst_object_set_control_bindings_disabled (GstObject *object, gboolean disabled);
+void            gst_object_set_control_binding_disabled   (GstObject *object,
                                                                const gchar * property_name,
                                                                gboolean disabled);
+
+gboolean        gst_object_set_control_binding  (GstObject * object, GstControlBinding * binding);
+GstControlBinding *
+                gst_object_get_control_binding  (GstObject *object, const gchar * property_name);
 
 gboolean        gst_object_set_control_source   (GstObject *object, const gchar * property_name,
                                                  GstControlSource *csource);
 GstControlSource *
                 gst_object_get_control_source   (GstObject *object, const gchar * property_name);
 
-GValue *         gst_object_get_value           (GstObject * object, const gchar * property_name,
+GValue *        gst_object_get_value            (GstObject * object, const gchar * property_name,
                                                  GstClockTime timestamp);
-gboolean         gst_object_get_value_array     (GstObject * object, const gchar * property_name,
+gboolean        gst_object_get_value_array      (GstObject * object, const gchar * property_name,
                                                  GstClockTime timestamp, GstClockTime interval,
                                                  guint n_values, gpointer values);
 
-GstClockTime     gst_object_get_control_rate    (GstObject * object);
-void             gst_object_set_control_rate    (GstObject * object, GstClockTime control_rate);
+GstClockTime    gst_object_get_control_rate     (GstObject * object);
+void            gst_object_set_control_rate     (GstObject * object, GstClockTime control_rate);
 
 G_END_DECLS
 

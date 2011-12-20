@@ -56,6 +56,7 @@ libgstreamer_@GST_MAJORMINOR@_la_SOURCES = \
 	gstcaps.c		\
 	gstchildproxy.c		\
 	gstclock.c		\
+	gstcontrolbinding.c \
 	gstcontrolsource.c \
 	gstdatetime.c		\
 	gstdebugutils.c		\
@@ -150,6 +151,7 @@ gst_headers =			\
 	gstchildproxy.h		\
 	gstclock.h		\
 	gstcompat.h		\
+	gstcontrolbinding.h \
 	gstcontrolsource.h \
 	gstdatetime.h		\
 	gstdebugutils.h		\

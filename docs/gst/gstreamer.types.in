@@ -12,6 +12,7 @@ gst_bin_get_type
 gst_bus_get_type
 gst_child_proxy_get_type
 gst_clock_get_type
+gst_control_binding_get_type
 gst_control_source_get_type
 gst_element_factory_get_type
 gst_element_get_type

@@ -102,6 +102,10 @@ gst_timed_value_control_source_bind (GstControlSource * source,
   GstTimedValueControlSource *self = (GstTimedValueControlSource *) source;
   gboolean ret = TRUE;
 
+  if (self->type != G_TYPE_INVALID) {
+    gst_timed_value_control_source_reset (self);
+  }
+
   /* get the fundamental base type */
   self->type = base = type = G_PARAM_SPEC_VALUE_TYPE (pspec);
   while ((type = g_type_parent (type)))

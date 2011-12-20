@@ -558,6 +558,27 @@ GST_USING_PRINTF_EXTENSION
 
 
 <SECTION>
+<FILE>gstcontrolbinding</FILE>
+<TITLE>GstControlBinding</TITLE>
+GstControlBinding
+GstControlBindingClass
+gst_control_binding_new
+gst_control_binding_sync_values
+gst_control_binding_get_control_source
+gst_control_binding_set_disabled
+gst_control_binding_is_disabled
+<SUBSECTION Standard>
+GST_CONTROL_BINDING
+GST_IS_CONTROL_BINDING
+GST_CONTROL_BINDING_CLASS
+GST_IS_CONTROL_BINDING_CLASS
+GST_CONTROL_BINDING_GET_CLASS
+GST_TYPE_CONTROL_BINDING
+<SUBSECTION Private>
+gst_control_binding_get_type
+</SECTION>
+
+<SECTION>
 <FILE>gstcontrolsource</FILE>
 <TITLE>GstControlSource</TITLE>
 GstControlSource
@@ -566,7 +587,6 @@ GstControlSourceBind
 GstControlSourceGetValue
 GstControlSourceGetValueArray
 GstTimedValue
-GstValueArray
 gst_control_source_bind
 gst_control_source_get_value
 gst_control_source_get_value_array
@@ -1525,9 +1545,11 @@ gst_object_get_path_string
 
 gst_object_suggest_next_sync
 gst_object_sync_values
-gst_object_has_active_controlled_properties
-gst_object_set_controlled_properties_disabled
-gst_object_set_controlled_property_disabled
+gst_object_has_active_control_bindings
+gst_object_set_control_bindings_disabled
+gst_object_set_control_binding_disabled
+gst_object_set_control_binding
+gst_object_get_control_binding
 gst_object_get_control_source
 gst_object_set_control_source
 gst_object_get_value
