@@ -77,8 +77,7 @@ typedef enum {
    * are defined or all positions are undefined, but can't mix'n'match  */
   GST_AUDIO_CHANNEL_POSITION_NONE,
 
-  /*< private >*/
-  /* don't use - counter */
+  /* don't use - counter (private) */
   GST_AUDIO_CHANNEL_POSITION_NUM
 } GstAudioChannelPosition;
 
