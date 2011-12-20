@@ -642,6 +642,10 @@ alsasrc_parse_spec (GstAlsaSrc * alsa, GstAudioRingBufferSpec * spec)
   alsa->period_time = spec->latency_time;
   alsa->access = SND_PCM_ACCESS_RW_INTERLEAVED;
 
+  if (spec->type == GST_AUDIO_RING_BUFFER_FORMAT_TYPE_RAW && alsa->channels < 9)
+    gst_audio_ring_buffer_set_channel_positions (GST_AUDIO_BASE_SRC
+        (alsa)->ringbuffer, alsa_position[alsa->channels - 1]);
+
   return TRUE;
 
   /* ERRORS */

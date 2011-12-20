@@ -204,26 +204,23 @@ get_channel_free_structure (const GstStructure * in_structure)
   return s;
 }
 
+#define ONE_64 G_GUINT64_CONSTANT (1)
+#define CHANNEL_MASK_STEREO ((ONE_64<<GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT) | (ONE_64<<GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT))
+#define CHANNEL_MASK_2_1    (CHANNEL_MASK_STEREO | (ONE_64<<GST_AUDIO_CHANNEL_POSITION_LFE1))
+#define CHANNEL_MASK_4_0    (CHANNEL_MASK_STEREO | (ONE_64<<GST_AUDIO_CHANNEL_POSITION_REAR_LEFT) | (ONE_64<<GST_AUDIO_CHANNEL_POSITION_REAR_RIGHT))
+#define CHANNEL_MASK_5_1    (CHANNEL_MASK_4_0 | (ONE_64<<GST_AUDIO_CHANNEL_POSITION_FRONT_CENTER) | (ONE_64<<GST_AUDIO_CHANNEL_POSITION_LFE1))
+#define CHANNEL_MASK_7_1    (CHANNEL_MASK_5_1 | (ONE_64<<GST_AUDIO_CHANNEL_POSITION_SIDE_LEFT) | (ONE_64<<GST_AUDIO_CHANNEL_POSITION_SIDE_RIGHT))
+
 static void
 caps_add_channel_configuration (GstCaps * caps,
     const GstStructure * in_structure, gint min_chans, gint max_chans)
 {
-  GstAudioChannelPosition pos[8] = {
-    GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT,
-    GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT,
-    GST_AUDIO_CHANNEL_POSITION_REAR_LEFT,
-    GST_AUDIO_CHANNEL_POSITION_REAR_RIGHT,
-    GST_AUDIO_CHANNEL_POSITION_FRONT_CENTER,
-    GST_AUDIO_CHANNEL_POSITION_LFE,
-    GST_AUDIO_CHANNEL_POSITION_SIDE_LEFT,
-    GST_AUDIO_CHANNEL_POSITION_SIDE_RIGHT
-  };
   GstStructure *s = NULL;
   gint c;
 
-  if (min_chans == max_chans && max_chans <= 2) {
+  if (min_chans == max_chans && max_chans == 1) {
     s = get_channel_free_structure (in_structure);
-    gst_structure_set (s, "channels", G_TYPE_INT, max_chans, NULL);
+    gst_structure_set (s, "channels", G_TYPE_INT, 1, NULL);
     gst_caps_append_structure (caps, s);
     return;
   }
@@ -233,11 +230,16 @@ caps_add_channel_configuration (GstCaps * caps,
   /* mono and stereo don't need channel configurations */
   if (min_chans == 2) {
     s = get_channel_free_structure (in_structure);
-    gst_structure_set (s, "channels", G_TYPE_INT, 2, NULL);
+    gst_structure_set (s, "channels", G_TYPE_INT, 2, "channel-mask",
+        GST_TYPE_BITMASK, CHANNEL_MASK_STEREO, NULL);
     gst_caps_append_structure (caps, s);
   } else if (min_chans == 1 && max_chans >= 2) {
     s = get_channel_free_structure (in_structure);
-    gst_structure_set (s, "channels", GST_TYPE_INT_RANGE, 1, 2, NULL);
+    gst_structure_set (s, "channels", G_TYPE_INT, 2, "channel-mask",
+        GST_TYPE_BITMASK, CHANNEL_MASK_STEREO, NULL);
+    gst_caps_append_structure (caps, s);
+    s = get_channel_free_structure (in_structure);
+    gst_structure_set (s, "channels", G_TYPE_INT, 1, NULL);
     gst_caps_append_structure (caps, s);
   }
 
@@ -245,41 +247,44 @@ caps_add_channel_configuration (GstCaps * caps,
    * alsa might work around that/fix it somehow. Can we tell alsa
    * what our channel layout is like? */
   if (max_chans >= 3 && min_chans <= 3) {
-    GstAudioChannelPosition pos_21[3] = {
-      GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT,
-      GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT,
-      GST_AUDIO_CHANNEL_POSITION_LFE
-    };
-
     s = get_channel_free_structure (in_structure);
-    gst_structure_set (s, "channels", G_TYPE_INT, 3, NULL);
-    gst_audio_set_channel_positions (s, pos_21);
+    gst_structure_set (s, "channels", G_TYPE_INT, 3, "channel-mask",
+        GST_TYPE_BITMASK, CHANNEL_MASK_2_1, NULL);
     gst_caps_append_structure (caps, s);
   }
 
   /* everything else (4, 6, 8 channels) needs a channel layout */
   for (c = MAX (4, min_chans); c <= 8; c += 2) {
     if (max_chans >= c) {
+      guint64 channel_mask;
+
       s = get_channel_free_structure (in_structure);
-      gst_structure_set (s, "channels", G_TYPE_INT, c, NULL);
-      gst_audio_set_channel_positions (s, pos);
+      switch (c) {
+        case 4:
+          channel_mask = CHANNEL_MASK_4_0;
+          break;
+        case 6:
+          channel_mask = CHANNEL_MASK_5_1;
+          break;
+        case 8:
+          channel_mask = CHANNEL_MASK_7_1;
+          break;
+        default:
+          g_assert_not_reached ();
+          break;
+      }
+      gst_structure_set (s, "channels", G_TYPE_INT, c, "channel-mask",
+          GST_TYPE_BITMASK, channel_mask, NULL);
       gst_caps_append_structure (caps, s);
     }
   }
 
+  /* NONE layouts for everything else */
   for (c = MAX (9, min_chans); c <= max_chans; ++c) {
-    GstAudioChannelPosition *ch_layout;
-    guint i;
-
-    ch_layout = g_new (GstAudioChannelPosition, c);
-    for (i = 0; i < c; ++i) {
-      ch_layout[i] = GST_AUDIO_CHANNEL_POSITION_NONE;
-    }
     s = get_channel_free_structure (in_structure);
-    gst_structure_set (s, "channels", G_TYPE_INT, c, NULL);
-    gst_audio_set_channel_positions (s, ch_layout);
+    gst_structure_set (s, "channels", G_TYPE_INT, c, "channel-mask",
+        GST_TYPE_BITMASK, G_GUINT64_CONSTANT (0), NULL);
     gst_caps_append_structure (caps, s);
-    g_free (ch_layout);
   }
 }
 
@@ -599,3 +604,55 @@ gst_alsa_find_device_name (GstObject * obj, const gchar * device,
 
   return ret;
 }
+
+/* ALSA channel positions */
+const GstAudioChannelPosition alsa_position[][8] = {
+  {
+      GST_AUDIO_CHANNEL_POSITION_MONO},
+  {
+        GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT,
+      GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT},
+  {
+        GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT,
+        GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT,
+      GST_AUDIO_CHANNEL_POSITION_LFE1},
+  {
+        GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT,
+        GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT,
+        GST_AUDIO_CHANNEL_POSITION_REAR_LEFT,
+      GST_AUDIO_CHANNEL_POSITION_REAR_RIGHT},
+  {
+        GST_AUDIO_CHANNEL_POSITION_INVALID,
+        GST_AUDIO_CHANNEL_POSITION_INVALID,
+        GST_AUDIO_CHANNEL_POSITION_INVALID,
+        GST_AUDIO_CHANNEL_POSITION_INVALID,
+        GST_AUDIO_CHANNEL_POSITION_INVALID,
+        GST_AUDIO_CHANNEL_POSITION_INVALID,
+        GST_AUDIO_CHANNEL_POSITION_INVALID,
+      GST_AUDIO_CHANNEL_POSITION_INVALID},
+  {
+        GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT,
+        GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT,
+        GST_AUDIO_CHANNEL_POSITION_REAR_LEFT,
+        GST_AUDIO_CHANNEL_POSITION_REAR_RIGHT,
+        GST_AUDIO_CHANNEL_POSITION_FRONT_CENTER,
+      GST_AUDIO_CHANNEL_POSITION_LFE1},
+  {
+        GST_AUDIO_CHANNEL_POSITION_INVALID,
+        GST_AUDIO_CHANNEL_POSITION_INVALID,
+        GST_AUDIO_CHANNEL_POSITION_INVALID,
+        GST_AUDIO_CHANNEL_POSITION_INVALID,
+        GST_AUDIO_CHANNEL_POSITION_INVALID,
+        GST_AUDIO_CHANNEL_POSITION_INVALID,
+        GST_AUDIO_CHANNEL_POSITION_INVALID,
+      GST_AUDIO_CHANNEL_POSITION_INVALID},
+  {
+        GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT,
+        GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT,
+        GST_AUDIO_CHANNEL_POSITION_REAR_LEFT,
+        GST_AUDIO_CHANNEL_POSITION_REAR_RIGHT,
+        GST_AUDIO_CHANNEL_POSITION_FRONT_CENTER,
+        GST_AUDIO_CHANNEL_POSITION_LFE1,
+        GST_AUDIO_CHANNEL_POSITION_SIDE_LEFT,
+      GST_AUDIO_CHANNEL_POSITION_SIDE_RIGHT}
+};

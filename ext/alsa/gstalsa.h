@@ -31,6 +31,7 @@
 #include <alsa/control.h>
 #include <alsa/error.h>
 #include <gst/gst.h>
+#include <gst/audio/audio.h>
 
 #define GST_CHECK_ALSA_VERSION(major,minor,micro) \
     (SND_LIB_MAJOR > (major) || \
@@ -56,5 +57,9 @@ gchar *   gst_alsa_find_card_name   (GstObject        * obj,
                                      const gchar      * devcard,
                                      snd_pcm_stream_t   stream);
 
+void      gst_alsa_add_channel_reorder_map (GstObject * obj,
+                                            GstCaps   * caps);
+
+extern const GstAudioChannelPosition alsa_position[][8];
 
 #endif /* __GST_ALSA_H__ */
