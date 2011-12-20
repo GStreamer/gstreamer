@@ -123,6 +123,7 @@ struct _GstAudioRingBufferSpec
   GstAudioRingBufferFormatType  type;
   GstAudioInfo                  info;
 
+
   guint64  latency_time;        /* the required/actual latency time, this is the
 				 * actual the size of one segment and the
 				 * minimum possible latency we can achieve. */
@@ -188,6 +189,10 @@ struct _GstAudioRingBuffer {
   /*< private >*/
   GstAudioRingBufferCallback  callback;
   gpointer                    cb_data;
+
+  gboolean                    need_reorder;
+  /* gst[channel_reorder_map[i]] = device[i] */
+  gint                        channel_reorder_map[64];
 
   gboolean                    flushing;
   /* ATOMIC */
@@ -272,6 +277,9 @@ gboolean        gst_audio_ring_buffer_acquire         (GstAudioRingBuffer *buf, 
 gboolean        gst_audio_ring_buffer_release         (GstAudioRingBuffer *buf);
 
 gboolean        gst_audio_ring_buffer_is_acquired     (GstAudioRingBuffer *buf);
+
+/* set the device channel positions */
+void            gst_audio_ring_buffer_set_channel_positions (GstAudioRingBuffer *buf, const GstAudioChannelPosition *position);
 
 /* activating */
 gboolean        gst_audio_ring_buffer_activate        (GstAudioRingBuffer *buf, gboolean active);

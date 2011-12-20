@@ -539,10 +539,15 @@ gst_audio_ring_buffer_acquire (GstAudioRingBuffer * buf,
     goto was_acquired;
 
   buf->acquired = TRUE;
+  buf->need_reorder = FALSE;
 
   rclass = GST_AUDIO_RING_BUFFER_GET_CLASS (buf);
   if (G_LIKELY (rclass->acquire))
     res = rclass->acquire (buf, spec);
+
+  /* Only reorder for raw audio */
+  buf->need_reorder = (buf->need_reorder
+      && buf->spec.type == GST_AUDIO_RING_BUFFER_FORMAT_TYPE_RAW);
 
   if (G_UNLIKELY (!res))
     goto acquire_failed;
@@ -1276,13 +1281,34 @@ no_start:
   }
 }
 
-#define FWD_SAMPLES(s,se,d,de)		 	\
+
+
+#define REORDER_SAMPLE(d, s, l)                 \
+G_STMT_START {                                  \
+  gint i;                                       \
+  for (i = 0; i < channels; i++) {              \
+    memcpy (d + reorder_map[i] * bps, s + i * bps, bps); \
+  }                                             \
+} G_STMT_END
+
+#define REORDER_SAMPLES(d, s, len)              \
+G_STMT_START {                                  \
+  gint i, len_ = len / bpf;                     \
+  guint8 *d_ = d, *s_ = s;                      \
+  for (i = 0; i < len_; i++) {                  \
+    REORDER_SAMPLE(d_, s_, bpf);                \
+    d_ += bpf;                                  \
+    s_ += bpf;                                  \
+  }                                             \
+} G_STMT_END
+
+#define FWD_SAMPLES(s,se,d,de,F)         	\
 G_STMT_START {					\
   /* no rate conversion */			\
   guint towrite = MIN (se + bpf - s, de - d);	\
   /* simple copy */				\
   if (!skip)					\
-    memcpy (d, s, towrite);			\
+    F (d, s, towrite);			        \
   in_samples -= towrite / bpf;			\
   out_samples -= towrite / bpf;			\
   s += towrite;					\
@@ -1290,12 +1316,12 @@ G_STMT_START {					\
 } G_STMT_END
 
 /* in_samples >= out_samples, rate > 1.0 */
-#define FWD_UP_SAMPLES(s,se,d,de) 	 	\
+#define FWD_UP_SAMPLES(s,se,d,de,F) 	 	\
 G_STMT_START {					\
   guint8 *sb = s, *db = d;			\
   while (s <= se && d < de) {			\
     if (!skip)					\
-      memcpy (d, s, bpf);			\
+      F (d, s, bpf);	       	        	\
     s += bpf;					\
     *accum += outr;				\
     if ((*accum << 1) >= inr) {			\
@@ -1309,12 +1335,12 @@ G_STMT_START {					\
 } G_STMT_END
 
 /* out_samples > in_samples, for rates smaller than 1.0 */
-#define FWD_DOWN_SAMPLES(s,se,d,de) 	 	\
+#define FWD_DOWN_SAMPLES(s,se,d,de,F) 	 	\
 G_STMT_START {					\
   guint8 *sb = s, *db = d;			\
   while (s <= se && d < de) {			\
     if (!skip)					\
-      memcpy (d, s, bpf);			\
+      F (d, s, bpf);	              		\
     d += bpf;					\
     *accum += inr;				\
     if ((*accum << 1) >= outr) {		\
@@ -1327,12 +1353,12 @@ G_STMT_START {					\
   GST_DEBUG ("fwd_down end %d/%d",*accum,*toprocess);	\
 } G_STMT_END
 
-#define REV_UP_SAMPLES(s,se,d,de) 	 	\
+#define REV_UP_SAMPLES(s,se,d,de,F) 	 	\
 G_STMT_START {					\
   guint8 *sb = se, *db = d;			\
   while (s <= se && d < de) {			\
     if (!skip)					\
-      memcpy (d, se, bpf);			\
+      F (d, se, bpf);                  		\
     se -= bpf;					\
     *accum += outr;				\
     while (d < de && (*accum << 1) >= inr) {	\
@@ -1345,12 +1371,12 @@ G_STMT_START {					\
   GST_DEBUG ("rev_up end %d/%d",*accum,*toprocess);	\
 } G_STMT_END
 
-#define REV_DOWN_SAMPLES(s,se,d,de) 	 	\
+#define REV_DOWN_SAMPLES(s,se,d,de,F) 	 	\
 G_STMT_START {					\
   guint8 *sb = se, *db = d;			\
   while (s <= se && d < de) {			\
     if (!skip)					\
-      memcpy (d, se, bpf);			\
+      F (d, se, bpf);        			\
     d += bpf;					\
     *accum += inr;				\
     while (s <= se && (*accum << 1) >= outr) {	\
@@ -1368,20 +1394,25 @@ default_commit (GstAudioRingBuffer * buf, guint64 * sample,
     guint8 * data, gint in_samples, gint out_samples, gint * accum)
 {
   gint segdone;
-  gint segsize, segtotal, bpf, sps;
+  gint segsize, segtotal, channels, bps, bpf, sps;
   guint8 *dest, *data_end;
   gint writeseg, sampleoff;
   gint *toprocess;
   gint inr, outr;
   gboolean reverse;
+  gboolean need_reorder;
 
   g_return_val_if_fail (buf->memory != NULL, -1);
   g_return_val_if_fail (data != NULL, -1);
 
+  need_reorder = buf->need_reorder;
+
+  channels = buf->spec.info.channels;
   dest = buf->memory;
   segsize = buf->spec.segsize;
   segtotal = buf->spec.segtotal;
   bpf = buf->spec.info.bpf;
+  bps = bpf / channels;
   sps = buf->samples_per_seg;
 
   reverse = out_samples < 0;
@@ -1455,23 +1486,46 @@ default_commit (GstAudioRingBuffer * buf, guint64 * sample,
     GST_DEBUG_OBJECT (buf, "write @%p seg %d, sps %d, off %d, avail %d",
         dest + ws * segsize, ws, sps, sampleoff, avail);
 
-    if (G_LIKELY (inr == outr && !reverse)) {
-      /* no rate conversion, simply copy samples */
-      FWD_SAMPLES (data, data_end, d, d_end);
-    } else if (!reverse) {
-      if (inr >= outr)
-        /* forward speed up */
-        FWD_UP_SAMPLES (data, data_end, d, d_end);
-      else
-        /* forward slow down */
-        FWD_DOWN_SAMPLES (data, data_end, d, d_end);
+    if (need_reorder) {
+      gint *reorder_map = buf->channel_reorder_map;
+
+      if (G_LIKELY (inr == outr && !reverse)) {
+        /* no rate conversion, simply copy samples */
+        FWD_SAMPLES (data, data_end, d, d_end, REORDER_SAMPLES);
+      } else if (!reverse) {
+        if (inr >= outr)
+          /* forward speed up */
+          FWD_UP_SAMPLES (data, data_end, d, d_end, REORDER_SAMPLE);
+        else
+          /* forward slow down */
+          FWD_DOWN_SAMPLES (data, data_end, d, d_end, REORDER_SAMPLE);
+      } else {
+        if (inr >= outr)
+          /* reverse speed up */
+          REV_UP_SAMPLES (data, data_end, d, d_end, REORDER_SAMPLE);
+        else
+          /* reverse slow down */
+          REV_DOWN_SAMPLES (data, data_end, d, d_end, REORDER_SAMPLE);
+      }
     } else {
-      if (inr >= outr)
-        /* reverse speed up */
-        REV_UP_SAMPLES (data, data_end, d, d_end);
-      else
-        /* reverse slow down */
-        REV_DOWN_SAMPLES (data, data_end, d, d_end);
+      if (G_LIKELY (inr == outr && !reverse)) {
+        /* no rate conversion, simply copy samples */
+        FWD_SAMPLES (data, data_end, d, d_end, memcpy);
+      } else if (!reverse) {
+        if (inr >= outr)
+          /* forward speed up */
+          FWD_UP_SAMPLES (data, data_end, d, d_end, memcpy);
+        else
+          /* forward slow down */
+          FWD_DOWN_SAMPLES (data, data_end, d, d_end, memcpy);
+      } else {
+        if (inr >= outr)
+          /* reverse speed up */
+          REV_UP_SAMPLES (data, data_end, d, d_end, memcpy);
+        else
+          /* reverse slow down */
+          REV_DOWN_SAMPLES (data, data_end, d, d_end, memcpy);
+      }
     }
 
     /* for the next iteration we write to the next segment at the beginning. */
@@ -1572,18 +1626,22 @@ gst_audio_ring_buffer_read (GstAudioRingBuffer * buf, guint64 sample,
     guint8 * data, guint len)
 {
   gint segdone;
-  gint segsize, segtotal, bpf, sps;
+  gint segsize, segtotal, channels, bps, bpf, sps;
   guint8 *dest;
   guint to_read;
+  gboolean need_reorder;
 
   g_return_val_if_fail (GST_IS_AUDIO_RING_BUFFER (buf), -1);
   g_return_val_if_fail (buf->memory != NULL, -1);
   g_return_val_if_fail (data != NULL, -1);
 
+  need_reorder = buf->need_reorder;
   dest = buf->memory;
   segsize = buf->spec.segsize;
   segtotal = buf->spec.segtotal;
+  channels = buf->spec.info.channels;
   bpf = buf->spec.info.bpf;
+  bps = bpf / channels;
   sps = buf->samples_per_seg;
 
   to_read = len;
@@ -1639,8 +1697,22 @@ gst_audio_ring_buffer_read (GstAudioRingBuffer * buf, guint64 sample,
     GST_DEBUG_OBJECT (buf, "read @%p seg %d, off %d, sampleslen %d",
         dest + readseg * segsize, readseg, sampleoff, sampleslen);
 
-    memcpy (data, dest + (readseg * segsize) + (sampleoff * bpf),
-        (sampleslen * bpf));
+    if (need_reorder) {
+      guint8 *ptr = dest + (readseg * segsize) + (sampleoff * bpf);
+      gint i, j;
+      gint *reorder_map = buf->channel_reorder_map;
+
+      /* Reorder from device order to GStreamer order */
+      for (i = 0; i < sampleslen; i++) {
+        for (j = 0; j < channels; j++) {
+          memcpy (data + reorder_map[j] * bps, ptr + j * bps, bps);
+        }
+        ptr += bpf;
+      }
+    } else {
+      memcpy (data, dest + (readseg * segsize) + (sampleoff * bpf),
+          (sampleslen * bpf));
+    }
 
   next:
     to_read -= sampleslen;
@@ -1795,4 +1867,58 @@ gst_audio_ring_buffer_may_start (GstAudioRingBuffer * buf, gboolean allowed)
 
   GST_LOG_OBJECT (buf, "may start: %d", allowed);
   g_atomic_int_set (&buf->may_start, allowed);
+}
+
+/**
+ * gst_audio_ring_buffer_set_channel_positions:
+ * @buf: the #GstAudioRingBuffer
+ * @position: the device channel positions
+ *
+ * Tell the ringbuffer about the device's channel positions. This must
+ * be called in when the ringbuffer is acquired.
+ */
+void
+gst_audio_ring_buffer_set_channel_positions (GstAudioRingBuffer * buf,
+    const GstAudioChannelPosition * position)
+{
+  const GstAudioChannelPosition *to;
+  gint channels;
+  gint i, j;
+
+  g_return_if_fail (GST_IS_AUDIO_RING_BUFFER (buf));
+  g_return_if_fail (buf->acquired);
+
+  channels = buf->spec.info.channels;
+  to = buf->spec.info.position;
+
+  buf->need_reorder = FALSE;
+  if (memcmp (position, to, channels * sizeof (to[0])) == 0)
+    return;
+
+  /* Build reorder map and check compatibility */
+  for (i = 0; i < channels; i++) {
+    g_return_if_fail (position[i] == GST_AUDIO_CHANNEL_POSITION_NONE
+        || to[i] == GST_AUDIO_CHANNEL_POSITION_NONE);
+    g_return_if_fail (position[i] == GST_AUDIO_CHANNEL_POSITION_INVALID
+        || to[i] == GST_AUDIO_CHANNEL_POSITION_INVALID);
+    g_return_if_fail (position[i] == GST_AUDIO_CHANNEL_POSITION_MONO
+        || to[i] == GST_AUDIO_CHANNEL_POSITION_MONO);
+
+    for (j = 0; j < channels; j++) {
+      if (position[i] == to[j]) {
+        buf->channel_reorder_map[i] = j;
+        break;
+      }
+    }
+
+    /* Not all channels present in both */
+    g_return_if_fail (j == channels);
+  }
+
+  for (i = 0; i < channels; i++) {
+    if (buf->channel_reorder_map[i] != i) {
+      buf->need_reorder = TRUE;
+      break;
+    }
+  }
 }
