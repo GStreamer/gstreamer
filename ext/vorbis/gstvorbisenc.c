@@ -50,7 +50,6 @@
 
 #include <gst/gsttagsetter.h>
 #include <gst/tag/tag.h>
-#include <gst/audio/multichannel.h>
 #include <gst/audio/audio.h>
 #include "gstvorbisenc.h"
 
@@ -264,30 +263,19 @@ gst_vorbis_enc_generate_sink_caps (void)
           "rate", GST_TYPE_INT_RANGE, 1, 200000,
           "channels", G_TYPE_INT, 1, NULL));
 
-  gst_caps_append_structure (caps, gst_structure_new ("audio/x-raw",
-          "format", G_TYPE_STRING, GST_AUDIO_NE (F32),
-          "rate", GST_TYPE_INT_RANGE, 1, 200000,
-          "channels", G_TYPE_INT, 2, NULL));
-
-  for (i = 3; i <= 8; i++) {
-    GValue chanpos = { 0 };
-    GValue pos = { 0 };
+  for (i = 2; i <= 8; i++) {
     GstStructure *structure;
-
-    g_value_init (&chanpos, GST_TYPE_ARRAY);
-    g_value_init (&pos, GST_TYPE_AUDIO_CHANNEL_POSITION);
+    guint64 channel_mask = 0;
+    const GstAudioChannelPosition *pos = gst_vorbis_channel_positions[i - 1];
 
     for (c = 0; c < i; c++) {
-      g_value_set_enum (&pos, gst_vorbis_channel_positions[i - 1][c]);
-      gst_value_array_append_value (&chanpos, &pos);
+      channel_mask |= pos[i];
     }
-    g_value_unset (&pos);
 
     structure = gst_structure_new ("audio/x-raw",
         "format", G_TYPE_STRING, GST_AUDIO_NE (F32),
-        "rate", GST_TYPE_INT_RANGE, 1, 200000, "channels", G_TYPE_INT, i, NULL);
-    gst_structure_set_value (structure, "channel-positions", &chanpos);
-    g_value_unset (&chanpos);
+        "rate", GST_TYPE_INT_RANGE, 1, 200000, "channels", G_TYPE_INT, i,
+        "channel-mask", GST_TYPE_BITMASK, channel_mask, NULL);
 
     gst_caps_append_structure (caps, structure);
   }
@@ -295,7 +283,8 @@ gst_vorbis_enc_generate_sink_caps (void)
   gst_caps_append_structure (caps, gst_structure_new ("audio/x-raw",
           "format", G_TYPE_STRING, GST_AUDIO_NE (F32),
           "rate", GST_TYPE_INT_RANGE, 1, 200000,
-          "channels", GST_TYPE_INT_RANGE, 9, 255, NULL));
+          "channels", GST_TYPE_INT_RANGE, 9, 255,
+          "channel-mask", GST_TYPE_BITMASK, G_GUINT64_CONSTANT (0), NULL));
 
   return caps;
 }
@@ -765,9 +754,22 @@ gst_vorbis_enc_handle_frame (GstAudioEncoder * enc, GstBuffer * buffer)
   vorbis_buffer = vorbis_analysis_buffer (&vorbisenc->vd, size);
 
   /* deinterleave samples, write the buffer data */
-  for (i = 0; i < size; i++) {
-    for (j = 0; j < vorbisenc->channels; j++) {
-      vorbis_buffer[j][i] = *ptr++;
+  if (vorbisenc->channels < 2 || vorbisenc->channels > 8) {
+    for (i = 0; i < size; i++) {
+      for (j = 0; j < vorbisenc->channels; j++) {
+        vorbis_buffer[j][i] = *ptr++;
+      }
+    }
+  } else {
+    gint i, j;
+
+    /* Reorder */
+    for (i = 0; i < size; i++) {
+      for (j = 0; j < vorbisenc->channels; j++) {
+        vorbis_buffer[gst_vorbis_reorder_map[vorbisenc->channels - 1][j]][i] =
+            ptr[j];
+      }
+      ptr += vorbisenc->channels;
     }
   }
 

@@ -26,7 +26,7 @@
 /* http://www.xiph.org/vorbis/doc/Vorbis_I_spec.html#x1-800004.3.9 */
 const GstAudioChannelPosition gst_vorbis_channel_positions[][8] = {
   {                             /* Mono */
-      GST_AUDIO_CHANNEL_POSITION_FRONT_MONO},
+      GST_AUDIO_CHANNEL_POSITION_MONO},
   {                             /* Stereo */
         GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT,
       GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT},
@@ -53,7 +53,7 @@ const GstAudioChannelPosition gst_vorbis_channel_positions[][8] = {
         GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT,
         GST_AUDIO_CHANNEL_POSITION_REAR_LEFT,
         GST_AUDIO_CHANNEL_POSITION_REAR_RIGHT,
-        GST_AUDIO_CHANNEL_POSITION_LFE,
+        GST_AUDIO_CHANNEL_POSITION_LFE1,
       },
   {                             /* 6.1 Surround, in Vorbis spec since 2010-01-13 */
         GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT,
@@ -62,7 +62,7 @@ const GstAudioChannelPosition gst_vorbis_channel_positions[][8] = {
         GST_AUDIO_CHANNEL_POSITION_SIDE_LEFT,
         GST_AUDIO_CHANNEL_POSITION_SIDE_RIGHT,
         GST_AUDIO_CHANNEL_POSITION_REAR_CENTER,
-      GST_AUDIO_CHANNEL_POSITION_LFE},
+      GST_AUDIO_CHANNEL_POSITION_LFE1},
   {                             /* 7.1 Surround, in Vorbis spec since 2010-01-13 */
         GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT,
         GST_AUDIO_CHANNEL_POSITION_FRONT_CENTER,
@@ -71,5 +71,71 @@ const GstAudioChannelPosition gst_vorbis_channel_positions[][8] = {
         GST_AUDIO_CHANNEL_POSITION_SIDE_RIGHT,
         GST_AUDIO_CHANNEL_POSITION_REAR_LEFT,
         GST_AUDIO_CHANNEL_POSITION_REAR_RIGHT,
-      GST_AUDIO_CHANNEL_POSITION_LFE},
+      GST_AUDIO_CHANNEL_POSITION_LFE1},
 };
+
+const GstAudioChannelPosition gst_vorbis_default_channel_positions[][8] = {
+  {                             /* Mono */
+      GST_AUDIO_CHANNEL_POSITION_MONO},
+  {                             /* Stereo */
+        GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT,
+      GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT},
+  {                             /* Stereo + Centre */
+        GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT,
+        GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT,
+      GST_AUDIO_CHANNEL_POSITION_FRONT_CENTER},
+  {                             /* Quadraphonic */
+        GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT,
+        GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT,
+        GST_AUDIO_CHANNEL_POSITION_REAR_LEFT,
+        GST_AUDIO_CHANNEL_POSITION_REAR_RIGHT,
+      },
+  {                             /* Stereo + Centre + rear stereo */
+        GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT,
+        GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT,
+        GST_AUDIO_CHANNEL_POSITION_FRONT_CENTER,
+        GST_AUDIO_CHANNEL_POSITION_REAR_LEFT,
+        GST_AUDIO_CHANNEL_POSITION_REAR_RIGHT,
+      },
+  {                             /* Full 5.1 Surround */
+        GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT,
+        GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT,
+        GST_AUDIO_CHANNEL_POSITION_FRONT_CENTER,
+        GST_AUDIO_CHANNEL_POSITION_LFE1,
+        GST_AUDIO_CHANNEL_POSITION_REAR_LEFT,
+        GST_AUDIO_CHANNEL_POSITION_REAR_RIGHT,
+      },
+  {                             /* 6.1 Surround, in Vorbis spec since 2010-01-13 */
+        GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT,
+        GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT,
+        GST_AUDIO_CHANNEL_POSITION_FRONT_CENTER,
+        GST_AUDIO_CHANNEL_POSITION_LFE1,
+        GST_AUDIO_CHANNEL_POSITION_REAR_CENTER,
+        GST_AUDIO_CHANNEL_POSITION_SIDE_LEFT,
+        GST_AUDIO_CHANNEL_POSITION_SIDE_RIGHT,
+      },
+  {                             /* 7.1 Surround, in Vorbis spec since 2010-01-13 */
+        GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT,
+        GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT,
+        GST_AUDIO_CHANNEL_POSITION_FRONT_CENTER,
+        GST_AUDIO_CHANNEL_POSITION_LFE1,
+        GST_AUDIO_CHANNEL_POSITION_REAR_LEFT,
+        GST_AUDIO_CHANNEL_POSITION_REAR_RIGHT,
+        GST_AUDIO_CHANNEL_POSITION_SIDE_LEFT,
+        GST_AUDIO_CHANNEL_POSITION_SIDE_RIGHT,
+      },
+};
+
+#ifndef USE_TREMOLO
+/* gst[i] = vorbis[reorder_map[i]] */
+const gint gst_vorbis_reorder_map[][8] = {
+  {0},
+  {0, 1},
+  {0, 2, 1},
+  {0, 1, 2, 3},
+  {0, 2, 1, 3, 4},
+  {0, 2, 1, 4, 5, 3},
+  {0, 2, 1, 5, 6, 4, 3},
+  {0, 2, 1, 6, 7, 4, 5, 3}
+};
+#endif

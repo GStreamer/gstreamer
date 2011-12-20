@@ -28,6 +28,7 @@
 
 #include <string.h>
 #include "gstvorbisdeclib.h"
+#include "gstvorbiscommon.h"
 
 #ifndef TREMOR
 /* These samples can be outside of the float -1.0 -- 1.0 range, this
@@ -65,7 +66,8 @@ copy_samples (vorbis_sample_t * out, vorbis_sample_t ** in, guint samples,
   gint i;
 
   for (i = 0; i < channels; i++) {
-    memcpy (out, in[i], samples * sizeof (float));
+    memcpy (out, in[gst_vorbis_reorder_map[channels - 1][i]],
+        samples * sizeof (float));
     out += samples;
   }
 #else
@@ -73,7 +75,7 @@ copy_samples (vorbis_sample_t * out, vorbis_sample_t ** in, guint samples,
 
   for (j = 0; j < samples; j++) {
     for (i = 0; i < channels; i++) {
-      *out++ = in[i][j];
+      *out++ = in[gst_vorbis_reorder_map[channels - 1][i]][j];
     }
   }
 #endif
@@ -165,7 +167,7 @@ copy_samples_16 (vorbis_sample_t * _out, vorbis_sample_t ** _in, guint samples,
 
   for (j = 0; j < samples; j++) {
     for (i = 0; i < channels; i++) {
-      *out++ = CLIP_TO_15 (in[i][j] >> 9);
+      *out++ = CLIP_TO_15 (in[gst_vorbis_reorder_map[channels - 1][i]][j] >> 9);
     }
   }
 }

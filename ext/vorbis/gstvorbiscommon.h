@@ -21,8 +21,13 @@
 #define __GST_VORBIS_COMMON_H__
 
 #include <gst/gst.h>
-#include <gst/audio/multichannel.h>
+#include <gst/audio/audio.h>
 
 extern const GstAudioChannelPosition gst_vorbis_channel_positions[][8];
+extern const GstAudioChannelPosition gst_vorbis_default_channel_positions[][8];
+
+#ifndef USE_TREMOLO
+extern const gint gst_vorbis_reorder_map[][8];
+#endif
 
 #endif /* __GST_VORBIS_COMMON_H__ */

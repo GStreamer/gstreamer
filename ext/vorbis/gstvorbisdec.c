@@ -44,7 +44,6 @@
 #include <string.h>
 #include <gst/audio/audio.h>
 #include <gst/tag/tag.h>
-#include <gst/audio/multichannel.h>
 
 #include "gstvorbiscommon.h"
 
@@ -230,14 +229,9 @@ vorbis_handle_identification_packet (GstVorbisDec * vd)
   GstCaps *caps;
   GstAudioInfo info;
 
-  gst_audio_info_set_format (&info, GST_VORBIS_AUDIO_FORMAT, vd->vi.rate,
-      vd->vi.channels);
-
   switch (info.channels) {
     case 1:
     case 2:
-      /* nothing */
-      break;
     case 3:
     case 4:
     case 5:
@@ -246,20 +240,22 @@ vorbis_handle_identification_packet (GstVorbisDec * vd)
     case 8:
     {
       const GstAudioChannelPosition *pos;
-      gint i;
 
-      pos = gst_vorbis_channel_positions[info.channels - 1];
-      for (i = 0; i < info.channels; i++)
-        info.position[i] = pos[i];
+      pos = gst_vorbis_default_channel_positions[info.channels - 1];
+      gst_audio_info_set_format (&info, GST_VORBIS_AUDIO_FORMAT, vd->vi.rate,
+          vd->vi.channels, pos);
       break;
     }
     default:{
+      GstAudioChannelPosition position[64];
       gint i, max_pos = MAX (info.channels, 64);
 
       GST_ELEMENT_WARNING (vd, STREAM, DECODE,
           (NULL), ("Using NONE channel layout for more than 8 channels"));
       for (i = 0; i < max_pos; i++)
-        info.position[i] = GST_AUDIO_CHANNEL_POSITION_NONE;
+        position[i] = GST_AUDIO_CHANNEL_POSITION_NONE;
+      gst_audio_info_set_format (&info, GST_VORBIS_AUDIO_FORMAT, vd->vi.rate,
+          vd->vi.channels, position);
       break;
     }
   }
@@ -577,7 +573,12 @@ vorbis_handle_data_packet (GstVorbisDec * vd, ogg_packet * packet,
 #endif
     goto wrong_samples;
 
-#ifndef USE_TREMOLO
+#ifdef USE_TREMOLO
+  if (vd->info.channels < 9)
+    gst_audio_reorder_channels (data, size, GST_VORBIS_AUDIO_FORMAT,
+        vd->info.channels, gst_vorbis_channel_positions[vd->info.channels - 1],
+        gst_vorbis_default_channel_positions[vd->info.channels - 1]);
+#else
   /* copy samples in buffer */
   vd->copy_samples ((vorbis_sample_t *) data, pcm,
       sample_count, vd->info.channels);
