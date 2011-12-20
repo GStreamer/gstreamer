@@ -54,7 +54,7 @@ static void gst_audio_ring_buffer_finalize (GObject * object);
 static gboolean gst_audio_ring_buffer_pause_unlocked (GstAudioRingBuffer * buf);
 static void default_clear_all (GstAudioRingBuffer * buf);
 static guint default_commit (GstAudioRingBuffer * buf, guint64 * sample,
-    guchar * data, gint in_samples, gint out_samples, gint * accum);
+    guint8 * data, gint in_samples, gint out_samples, gint * accum);
 
 /* ringbuffer abstract base class */
 G_DEFINE_ABSTRACT_TYPE (GstAudioRingBuffer, gst_audio_ring_buffer,
@@ -1365,7 +1365,7 @@ G_STMT_START {					\
 
 static guint
 default_commit (GstAudioRingBuffer * buf, guint64 * sample,
-    guchar * data, gint in_samples, gint out_samples, gint * accum)
+    guint8 * data, gint in_samples, gint out_samples, gint * accum)
 {
   gint segdone;
   gint segsize, segtotal, bpf, sps;
@@ -1529,7 +1529,7 @@ not_started:
  */
 guint
 gst_audio_ring_buffer_commit (GstAudioRingBuffer * buf, guint64 * sample,
-    guchar * data, gint in_samples, gint out_samples, gint * accum)
+    guint8 * data, gint in_samples, gint out_samples, gint * accum)
 {
   GstAudioRingBufferClass *rclass;
   guint res = -1;
@@ -1569,7 +1569,7 @@ gst_audio_ring_buffer_commit (GstAudioRingBuffer * buf, guint64 * sample,
  */
 guint
 gst_audio_ring_buffer_read (GstAudioRingBuffer * buf, guint64 sample,
-    guchar * data, guint len)
+    guint8 * data, guint len)
 {
   gint segdone;
   gint segsize, segtotal, bpf, sps;

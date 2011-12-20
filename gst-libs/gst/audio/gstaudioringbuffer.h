@@ -255,7 +255,7 @@ struct _GstAudioRingBufferClass {
   gboolean     (*activate)     (GstAudioRingBuffer *buf, gboolean active);
 
   guint        (*commit)       (GstAudioRingBuffer * buf, guint64 *sample,
-                                guchar * data, gint in_samples,
+                                guint8 * data, gint in_samples,
                                 gint out_samples, gint * accum);
 
   void         (*clear_all)    (GstAudioRingBuffer * buf);
@@ -314,12 +314,12 @@ void            gst_audio_ring_buffer_clear_all       (GstAudioRingBuffer *buf);
 
 /* commit samples */
 guint           gst_audio_ring_buffer_commit          (GstAudioRingBuffer * buf, guint64 *sample,
-                                                       guchar * data, gint in_samples,
+                                                       guint8 * data, gint in_samples,
                                                        gint out_samples, gint * accum);
 
 /* read samples */
 guint           gst_audio_ring_buffer_read            (GstAudioRingBuffer *buf, guint64 sample,
-                                                       guchar *data, guint len);
+                                                       guint8 *data, guint len);
 
 /* mostly protected */
 /* not yet implemented
