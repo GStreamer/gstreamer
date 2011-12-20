@@ -22,7 +22,7 @@ Metadata
 --------
 
  "GstAudioDownmixMeta"
-   A matrix for downmixing multichannel audio to mono or stereo.
+   A matrix for downmixing multichannel audio to a lower numer of channels.
    
 
 Formats
