@@ -16,6 +16,13 @@ Media Types
   channel-positions, G_TYPE_VALUE_ARRAY
    An array with a channel position for each channel. The number of items in
    this array must be the same as the channels property.
+
+
+Metadata
+--------
+
+ "GstAudioDownmixMeta"
+   A matrix for downmixing multichannel audio to mono or stereo.
    
 
 Formats

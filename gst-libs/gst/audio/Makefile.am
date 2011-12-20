@@ -34,6 +34,7 @@ libgstaudio_@GST_MAJORMINOR@_la_SOURCES = \
 	gstaudiobasesink.c \
 	gstaudiobasesrc.c \
 	gstaudiofilter.c \
+	gstaudiometa.c \
 	gstaudiosink.c \
 	gstaudiosrc.c \
 	streamvolume.c \
@@ -52,6 +53,7 @@ libgstaudio_@GST_MAJORMINOR@include_HEADERS = \
 	gstaudioencoder.h \
 	gstaudiobasesink.h \
 	gstaudiobasesrc.h \
+	gstaudiometa.h \
 	gstaudiosink.h \
 	gstaudiosrc.h \
 	mixer.h \

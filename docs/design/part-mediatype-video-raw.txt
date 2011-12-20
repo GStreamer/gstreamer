@@ -59,6 +59,21 @@ Media Types
     The format of the video, see the Formats section for a list of valid format
     strings.
 
+Metadata
+--------
+
+ "GstVideoMeta"
+   contains the description of one video field or frame. It has
+   stride support and support for having multiple memory regions per frame.
+
+   Multiple GstVideoMeta can be added to a buffer and can be identified with a
+   unique id. This id can be used to select fields in interlaced formats or
+   views in multiview formats.
+
+ "GstVideoCropMeta"
+   Contains the cropping region of the video.
+
+
 Formats
 -------
 
