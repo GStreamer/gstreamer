@@ -53,14 +53,10 @@ GST_DEBUG_CATEGORY_STATIC (GST_CAT_DEFAULT);
 
 G_DEFINE_ABSTRACT_TYPE (GstControlSource, gst_control_source, G_TYPE_OBJECT);
 
-static GObjectClass *parent_class = NULL;
-
 static void
 gst_control_source_class_init (GstControlSourceClass * klass)
 {
   //GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
-
-  parent_class = g_type_class_peek_parent (klass);
 
   /* Has to be implemented by children */
   klass->bind = NULL;
