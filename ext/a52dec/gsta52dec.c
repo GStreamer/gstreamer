@@ -248,6 +248,13 @@ gst_a52dec_start (GstAudioDecoder * dec)
 
   klass = GST_A52DEC_CLASS (G_OBJECT_GET_CLASS (a52dec));
   a52dec->state = a52_init (klass->a52_cpuflags);
+
+  if (!a52dec->state) {
+    GST_ELEMENT_ERROR (GST_ELEMENT (a52dec), LIBRARY, INIT, (NULL),
+        ("failed to initialize a52 state"));
+    return FALSE;
+  }
+
   a52dec->samples = a52_samples (a52dec->state);
   a52dec->bit_rate = -1;
   a52dec->sample_rate = -1;
