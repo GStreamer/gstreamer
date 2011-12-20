@@ -1928,7 +1928,7 @@ gst_subtitle_overlay_subtitle_sink_getcaps (GstPad * pad, GstCaps * filter)
 
   g_mutex_lock (self->factories_lock);
   if (G_UNLIKELY (!gst_subtitle_overlay_update_factory_list (self)))
-    ret = GST_CAPS_NONE;
+    ret = gst_caps_new_empty ();
   else if (filter)
     ret =
         gst_caps_intersect_full (filter, self->factory_caps,
