@@ -127,6 +127,16 @@ G_STMT_START {                                                              \
       GST_FUNCTION, __LINE__);                                              \
 } G_STMT_END
 
+
+/**
+ * GST_AUDIO_DECODER_MAX_ERRORS:
+ *
+ * Default maximum number of errors tolerated before signaling error.
+ *
+ * Since: 0.10.36
+ */
+#define GST_AUDIO_DECODER_MAX_ERRORS     10
+
 /**
  * GstAudioDecoder:
  *
