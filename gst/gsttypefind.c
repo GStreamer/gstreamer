@@ -74,7 +74,7 @@ gst_type_find_get_type (void)
 gboolean
 gst_type_find_register (GstPlugin * plugin, const gchar * name, guint rank,
     GstTypeFindFunction func, gchar ** extensions,
-    const GstCaps * possible_caps, gpointer data, GDestroyNotify data_notify)
+    GstCaps * possible_caps, gpointer data, GDestroyNotify data_notify)
 {
   GstTypeFindFactory *factory;
 
@@ -93,7 +93,7 @@ gst_type_find_register (GstPlugin * plugin, const gchar * name, guint rank,
     g_strfreev (factory->extensions);
   factory->extensions = g_strdupv (extensions);
 
-  gst_caps_replace (&factory->caps, (GstCaps *) possible_caps);
+  gst_caps_replace (&factory->caps, possible_caps);
   factory->function = func;
   factory->user_data = data;
   factory->user_data_notify = data_notify;
