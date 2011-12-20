@@ -758,7 +758,7 @@ gst_audio_base_src_create (GstBaseSrc * bsrc, guint64 offset, guint length,
   GstFlowReturn ret;
   GstAudioBaseSrc *src = GST_AUDIO_BASE_SRC (bsrc);
   GstBuffer *buf;
-  guchar *data, *ptr;
+  guint8 *data, *ptr;
   guint samples, total_samples;
   guint64 sample;
   gint bpf, rate;
