@@ -33,6 +33,8 @@ EXPORTS
 	_gst_alloc_trace_register
 	_gst_buffer_list_type DATA
 	_gst_buffer_type DATA
+	_gst_caps_any DATA
+	_gst_caps_empty DATA
 	_gst_caps_type DATA
 	_gst_debug_bin_to_dot_file
 	_gst_debug_bin_to_dot_file_with_ts
