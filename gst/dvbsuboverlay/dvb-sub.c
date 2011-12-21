@@ -715,7 +715,7 @@ _dvb_sub_read_2bit_string (guint8 * destbuf, gint dbuf_len,
     GST_TRACE ("RUNLEN: setting %u pixels to color 0x%x in destination buffer, "
         "dbuf_len left is %d pixels", run_length, clut_index, dbuf_len);
 
-    if (!(non_mod == 1 && bits == 1))
+    if (!(non_mod == 1 && clut_index == 1))
       memset (destbuf, clut_index, run_length);
 
     destbuf += run_length;
@@ -813,7 +813,7 @@ _dvb_sub_read_4bit_string (guint8 * destbuf, gint dbuf_len,
     GST_TRACE ("RUNLEN: setting %u pixels to color 0x%x in destination buffer; "
         "dbuf_len left is %d pixels", run_length, clut_index, dbuf_len);
 
-    if (!(non_mod == 1 && bits == 1))
+    if (!(non_mod == 1 && clut_index == 1))
       memset (destbuf, clut_index, run_length);
 
     destbuf += run_length;
@@ -905,7 +905,7 @@ _dvb_sub_read_8bit_string (guint8 * destbuf, gint dbuf_len,
     GST_TRACE ("RUNLEN: setting %u pixels to color 0x%x in destination buffer; "
         "dbuf_len left is %d pixels", run_length, clut_index, dbuf_len);
 
-    if (!(non_mod == 1 && bits == 1))
+    if (!(non_mod == 1 && clut_index == 1))
       memset (destbuf, clut_index, run_length);
 
     destbuf += run_length;
