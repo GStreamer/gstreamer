@@ -543,6 +543,8 @@ xvimage_buffer_pool_set_config (GstBufferPool * pool, GstStructure * config)
 
     /* we need the video metadata too now */
     priv->add_metavideo = TRUE;
+  } else {
+    gst_video_alignment_reset (&priv->align);
   }
 
   /* add the padding */
