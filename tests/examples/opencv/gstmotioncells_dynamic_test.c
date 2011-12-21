@@ -26,7 +26,6 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <locale.h>
-#include <gst/interfaces/propertyprobe.h>
 #include "gstmotioncells_dynamic_test.h"
 #include "gst_element_print_properties.h"
 
