@@ -159,6 +159,52 @@ gst_video_convert_transform_caps (GstBaseTransform * btrans,
   return result;
 }
 
+/* Answer the allocation query downstream. This is only called for
+ * non-passthrough cases */
+static gboolean
+gst_video_convert_propose_allocation (GstBaseTransform * trans,
+    GstQuery * query)
+{
+  GstVideoConvert *space = GST_VIDEO_CONVERT_CAST (trans);
+  GstBufferPool *pool;
+  GstCaps *caps;
+  gboolean need_pool;
+  guint size;
+
+  gst_query_parse_allocation (query, &caps, &need_pool);
+
+  size = GST_VIDEO_INFO_SIZE (&space->from_info);
+
+  if (need_pool) {
+    GstStructure *structure;
+
+    pool = gst_video_buffer_pool_new ();
+
+    structure = gst_buffer_pool_get_config (pool);
+    gst_buffer_pool_config_set (structure, caps, size, 0, 0, 0, 15);
+    if (!gst_buffer_pool_set_config (pool, structure))
+      goto config_failed;
+  } else
+    pool = NULL;
+
+  gst_query_set_allocation_params (query, size, 0, 0, 0, 15, pool);
+  gst_object_unref (pool);
+
+  gst_query_add_allocation_meta (query, GST_VIDEO_META_API);
+
+  return TRUE;
+
+  /* ERRORS */
+config_failed:
+  {
+    GST_ERROR_OBJECT (space, "failed to set config.");
+    gst_object_unref (pool);
+    return FALSE;
+  }
+}
+
+/* configure the allocation query that was answered downstream, we can configure
+ * some properties on it. Only called in passthrough mode. */
 static gboolean
 gst_video_convert_decide_allocation (GstBaseTransform * trans, GstQuery * query)
 {
@@ -369,6 +415,8 @@ gst_video_convert_class_init (GstVideoConvertClass * klass)
       GST_DEBUG_FUNCPTR (gst_video_convert_set_caps);
   gstbasetransform_class->transform_size =
       GST_DEBUG_FUNCPTR (gst_video_convert_transform_size);
+  gstbasetransform_class->propose_allocation =
+      GST_DEBUG_FUNCPTR (gst_video_convert_propose_allocation);
   gstbasetransform_class->decide_allocation =
       GST_DEBUG_FUNCPTR (gst_video_convert_decide_allocation);
   gstbasetransform_class->transform =

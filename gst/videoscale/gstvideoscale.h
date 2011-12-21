@@ -41,6 +41,8 @@ GST_DEBUG_CATEGORY_EXTERN (video_scale_debug);
   (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_VIDEO_SCALE))
 #define GST_IS_VIDEO_SCALE_CLASS(klass) \
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_VIDEO_SCALE))
+#define GST_VIDEO_SCALE_CAST(obj)       ((GstVideoScale *)(obj))
+
 
 /**
  * GstVideoScaleMethod:

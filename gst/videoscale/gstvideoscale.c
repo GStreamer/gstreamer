@@ -190,6 +190,8 @@ static gboolean gst_video_scale_set_caps (GstBaseTransform * trans,
     GstCaps * in, GstCaps * out);
 static gboolean gst_video_scale_get_unit_size (GstBaseTransform * trans,
     GstCaps * caps, gsize * size);
+static gboolean gst_video_scale_propose_allocation (GstBaseTransform * trans,
+    GstQuery * query);
 static gboolean gst_video_scale_decide_allocation (GstBaseTransform * trans,
     GstQuery * query);
 static GstFlowReturn gst_video_scale_transform (GstBaseTransform * trans,
@@ -271,6 +273,8 @@ gst_video_scale_class_init (GstVideoScaleClass * klass)
   trans_class->set_caps = GST_DEBUG_FUNCPTR (gst_video_scale_set_caps);
   trans_class->get_unit_size =
       GST_DEBUG_FUNCPTR (gst_video_scale_get_unit_size);
+  trans_class->propose_allocation =
+      GST_DEBUG_FUNCPTR (gst_video_scale_propose_allocation);
   trans_class->decide_allocation =
       GST_DEBUG_FUNCPTR (gst_video_scale_decide_allocation);
   trans_class->transform = GST_DEBUG_FUNCPTR (gst_video_scale_transform);
@@ -446,7 +450,51 @@ gst_video_scale_transform_caps (GstBaseTransform * trans,
   return ret;
 }
 
+/* Answer the allocation query downstream. This is only called for
+ * non-passthrough cases */
+static gboolean
+gst_video_scale_propose_allocation (GstBaseTransform * trans, GstQuery * query)
+{
+  GstVideoScale *scale = GST_VIDEO_SCALE_CAST (trans);
+  GstBufferPool *pool;
+  GstCaps *caps;
+  gboolean need_pool;
+  guint size;
 
+  gst_query_parse_allocation (query, &caps, &need_pool);
+
+  size = GST_VIDEO_INFO_SIZE (&scale->from_info);
+
+  if (need_pool) {
+    GstStructure *structure;
+
+    pool = gst_video_buffer_pool_new ();
+
+    structure = gst_buffer_pool_get_config (pool);
+    gst_buffer_pool_config_set (structure, caps, size, 0, 0, 0, 15);
+    if (!gst_buffer_pool_set_config (pool, structure))
+      goto config_failed;
+  } else
+    pool = NULL;
+
+  gst_query_set_allocation_params (query, size, 0, 0, 0, 15, pool);
+  gst_object_unref (pool);
+
+  gst_query_add_allocation_meta (query, GST_VIDEO_META_API);
+
+  return TRUE;
+
+  /* ERRORS */
+config_failed:
+  {
+    GST_ERROR_OBJECT (scale, "failed to set config.");
+    gst_object_unref (pool);
+    return FALSE;
+  }
+}
+
+/* configure the allocation query that was answered downstream, we can configure
+ * some properties on it. Only called in passthrough mode. */
 static gboolean
 gst_video_scale_decide_allocation (GstBaseTransform * trans, GstQuery * query)
 {
@@ -570,6 +618,8 @@ gst_video_scale_fixate_caps (GstBaseTransform * base, GstPadDirection direction,
   0,};
 
   g_return_if_fail (gst_caps_is_fixed (caps));
+
+  gst_caps_truncate (othercaps);
 
   GST_DEBUG_OBJECT (base, "trying to fixate othercaps %" GST_PTR_FORMAT
       " based on caps %" GST_PTR_FORMAT, othercaps, caps);
