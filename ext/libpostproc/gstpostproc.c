@@ -78,9 +78,6 @@ struct _GstPostProc
   guint quality;
   gint width, height;
 
-  gint ystride, ustride, vstride;
-  gint ysize, usize, vsize;
-
   pp_mode *mode;
   pp_context *context;
 
@@ -196,10 +193,11 @@ static void gst_post_proc_base_init (GstPostProcClass * klass);
 static void gst_post_proc_init (GstPostProc * pproc);
 static void gst_post_proc_dispose (GObject * object);
 
-static gboolean gst_post_proc_setcaps (GstBaseTransform * btrans,
-    GstCaps * incaps, GstCaps * outcaps);
-static GstFlowReturn gst_post_proc_transform_ip (GstBaseTransform * btrans,
-    GstBuffer * in);
+static gboolean gst_post_proc_set_info (GstVideoFilter * vfilter,
+    GstCaps * incaps, GstVideoInfo * in_info, GstCaps * outcaps,
+    GstVideoInfo * out_info);
+static GstFlowReturn gst_post_proc_transform_frame_ip (GstVideoFilter * vfilter,
+    GstVideoFrame * frame);
 
 /* static GstStateChangeReturn gst_post_proc_change_state (GstElement * element, */
 /*     GstStateChange transition); */
@@ -310,14 +308,6 @@ change_context (GstPostProc * postproc, gint width, gint height)
     postproc->context = pp_get_context (width, height, PP_FORMAT_420 | ppflags);
     postproc->width = width;
     postproc->height = height;
-    postproc->ystride = ROUND_UP_4 (width);
-    postproc->ustride = ROUND_UP_8 (width) / 2;
-    postproc->vstride = ROUND_UP_8 (postproc->ystride) / 2;
-    postproc->ysize = postproc->ystride * ROUND_UP_2 (height);
-    postproc->usize = postproc->ustride * ROUND_UP_2 (height) / 2;
-    postproc->vsize = postproc->vstride * ROUND_UP_2 (height) / 2;
-    GST_DEBUG_OBJECT (postproc, "new strides are (YUV) : %d %d %d",
-        postproc->ystride, postproc->ustride, postproc->vstride);
   }
 }
 
@@ -393,9 +383,8 @@ static void
 gst_post_proc_class_init (GstPostProcClass * klass)
 {
   GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
-
 /*   GstElementClass *gstelement_class = GST_ELEMENT_CLASS (klass); */
-  GstBaseTransformClass *btrans_class = GST_BASE_TRANSFORM_CLASS (klass);
+  GstVideoFilterClass *vfilter_class = GST_VIDEO_FILTER_CLASS (klass);
   gint ppidx;
 
   parent_class = g_type_class_peek_parent (klass);
@@ -493,8 +482,10 @@ gst_post_proc_class_init (GstPostProcClass * klass)
   }
 
   gobject_class->dispose = GST_DEBUG_FUNCPTR (gst_post_proc_dispose);
-  btrans_class->set_caps = GST_DEBUG_FUNCPTR (gst_post_proc_setcaps);
-  btrans_class->transform_ip = GST_DEBUG_FUNCPTR (gst_post_proc_transform_ip);
+
+  vfilter_class->set_info = GST_DEBUG_FUNCPTR (gst_post_proc_set_info);
+  vfilter_class->transform_frame_ip =
+      GST_DEBUG_FUNCPTR (gst_post_proc_transform_frame_ip);
 }
 
 static void
@@ -519,12 +510,6 @@ gst_post_proc_init (GstPostProc * postproc)
   postproc->context = NULL;
   postproc->width = 0;
   postproc->height = 0;
-  postproc->ystride = 0;
-  postproc->ustride = 0;
-  postproc->vstride = 0;
-  postproc->ysize = 0;
-  postproc->usize = 0;
-  postproc->vsize = 0;
 }
 
 static void
@@ -546,55 +531,44 @@ gst_post_proc_dispose (GObject * object)
 }
 
 static gboolean
-gst_post_proc_setcaps (GstBaseTransform * btrans, GstCaps * incaps,
-    GstCaps * outcaps)
+gst_post_proc_set_info (GstVideoFilter * vfilter, GstCaps * incaps,
+    GstVideoInfo * in_info, GstCaps * outcaps, GstVideoInfo * out_info)
 {
-  GstPostProc *postproc = (GstPostProc *) (btrans);
-  GstStructure *structure;
-  gboolean ret = FALSE;
-  gint width, height;
+  GstPostProc *postproc = (GstPostProc *) (vfilter);
 
-  structure = gst_caps_get_structure (incaps, 0);
+  change_context (postproc, in_info->width, in_info->height);
 
-  if (gst_structure_get_int (structure, "width", &width) &&
-      gst_structure_get_int (structure, "height", &height)) {
-    change_context (postproc, width, height);
-    ret = TRUE;
-  }
-
-  return ret;
+  return TRUE;
 }
 
 static GstFlowReturn
-gst_post_proc_transform_ip (GstBaseTransform * btrans, GstBuffer * in)
+gst_post_proc_transform_frame_ip (GstVideoFilter * vfilter,
+    GstVideoFrame * frame)
 {
   GstPostProc *postproc;
   gint stride[3];
   guint8 *outplane[3];
   guint8 *inplane[3];
-  guint8 *data;
-  gsize size;
+  gint width, height;
 
   /* postprocess the buffer ! */
-  postproc = (GstPostProc *) btrans;
+  postproc = (GstPostProc *) vfilter;
 
-  data = gst_buffer_map (in, &size, NULL, GST_MAP_READWRITE);
+  stride[0] = GST_VIDEO_FRAME_COMP_STRIDE (frame, 0);
+  stride[1] = GST_VIDEO_FRAME_COMP_STRIDE (frame, 1);
+  stride[2] = GST_VIDEO_FRAME_COMP_STRIDE (frame, 2);
+  outplane[0] = inplane[0] = GST_VIDEO_FRAME_COMP_DATA (frame, 0);
+  outplane[1] = inplane[1] = GST_VIDEO_FRAME_COMP_DATA (frame, 1);
+  outplane[2] = inplane[2] = GST_VIDEO_FRAME_COMP_DATA (frame, 2);
 
-  stride[0] = postproc->ystride;
-  stride[1] = postproc->ustride;
-  stride[2] = postproc->vstride;
-  outplane[0] = inplane[0] = data;
-  outplane[1] = inplane[1] = outplane[0] + postproc->ysize;
-  outplane[2] = inplane[2] = outplane[1] + postproc->usize;
+  width = GST_VIDEO_FRAME_WIDTH (frame);
+  height = GST_VIDEO_FRAME_HEIGHT (frame);
 
   GST_DEBUG_OBJECT (postproc, "calling pp_postprocess, width:%d, height:%d",
-      postproc->width, postproc->height);
+      width, height);
 
   pp_postprocess ((const guint8 **) inplane, stride, outplane, stride,
-      postproc->width, postproc->height, (int8_t *) "", 0,
-      postproc->mode, postproc->context, 0);
-
-  gst_buffer_unmap (in, data, size);
+      width, height, (int8_t *) "", 0, postproc->mode, postproc->context, 0);
 
   return GST_FLOW_OK;
 }
