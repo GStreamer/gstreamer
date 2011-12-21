@@ -808,7 +808,7 @@ gst_jpeg_dec_getcaps (GstPad * pad)
     templ_caps = gst_pad_get_pad_template_caps (pad);
     caps = gst_caps_intersect_full (peer_caps, templ_caps,
         GST_CAPS_INTERSECT_FIRST);
-
+    gst_caps_unref (peer_caps);
     gst_object_unref (peer);
   } else {
     caps = gst_caps_copy (gst_pad_get_pad_template_caps (pad));
