@@ -22,6 +22,7 @@
 #define __GST_VIDEO_FILTER_H__
 
 #include <gst/base/gstbasetransform.h>
+#include <gst/video/video.h>
 
 G_BEGIN_DECLS
 
@@ -40,11 +41,14 @@ typedef struct _GstVideoFilterClass GstVideoFilterClass;
   (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_VIDEO_FILTER))
 #define GST_IS_VIDEO_FILTER_CLASS(klass) \
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_VIDEO_FILTER))
+#define GST_VIDEO_FILTER_CAST(obj)  ((GstVideoFilter *)(obj))
 
 struct _GstVideoFilter {
   GstBaseTransform element;
 
-  gboolean inited;
+  gboolean negotiated;
+  GstVideoInfo in_info;
+  GstVideoInfo out_info;
 };
 
 /**
@@ -55,6 +59,15 @@ struct _GstVideoFilter {
  */
 struct _GstVideoFilterClass {
   GstBaseTransformClass parent_class;
+
+  gboolean      (*set_info)           (GstVideoFilter *filter,
+                                       GstCaps *incaps, GstVideoInfo *in_info,
+                                       GstCaps *outcaps, GstVideoInfo *out_info);
+
+  /* transform */
+  GstFlowReturn (*transform_frame)    (GstVideoFilter *filter,
+                                       GstVideoFrame *inframe, GstVideoFrame *outframe);
+  GstFlowReturn (*transform_frame_ip) (GstVideoFilter *trans, GstVideoFrame *frame);
 };
 
 GType gst_video_filter_get_type (void);

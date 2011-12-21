@@ -47,10 +47,6 @@ typedef struct _GstVideoConvertClass GstVideoConvertClass;
 struct _GstVideoConvert {
   GstVideoFilter element;
 
-  GstVideoInfo from_info;
-  GstVideoInfo to_info;
-  gboolean negotiated;
-
   ColorSpaceColorSpec from_spec;
   ColorSpaceColorSpec to_spec;
 

@@ -80,10 +80,6 @@ struct _GstVideoScale {
   int submethod;
   double envelope;
 
-  /* negotiated stuff */
-  GstVideoInfo from_info;
-  GstVideoInfo to_info;
-
   gint borders_h;
   gint borders_w;
 

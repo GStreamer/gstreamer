@@ -40,37 +40,98 @@
 #include "gstvideofilter.h"
 
 #include <gst/video/video.h>
+#include <gst/video/gstvideometa.h>
+#include <gst/video/gstvideopool.h>
 
 GST_DEBUG_CATEGORY_STATIC (gst_video_filter_debug);
 #define GST_CAT_DEFAULT gst_video_filter_debug
 
-static void gst_video_filter_class_init (gpointer g_class, gpointer class_data);
-static void gst_video_filter_init (GTypeInstance * instance, gpointer g_class);
+#define gst_video_filter_parent_class parent_class
+G_DEFINE_ABSTRACT_TYPE (GstVideoFilter, gst_video_filter,
+    GST_TYPE_BASE_TRANSFORM);
 
-static GstBaseTransformClass *parent_class = NULL;
-
-GType
-gst_video_filter_get_type (void)
+/* Answer the allocation query downstream. This is only called for
+ * non-passthrough cases */
+static gboolean
+gst_video_filter_propose_allocation (GstBaseTransform * trans, GstQuery * query)
 {
-  static GType video_filter_type = 0;
+  GstVideoFilter *filter = GST_VIDEO_FILTER_CAST (trans);
+  GstBufferPool *pool;
+  GstCaps *caps;
+  gboolean need_pool;
+  guint size;
 
-  if (!video_filter_type) {
-    static const GTypeInfo video_filter_info = {
-      sizeof (GstVideoFilterClass),
-      NULL,
-      NULL,
-      gst_video_filter_class_init,
-      NULL,
-      NULL,
-      sizeof (GstVideoFilter),
-      0,
-      gst_video_filter_init,
-    };
+  gst_query_parse_allocation (query, &caps, &need_pool);
 
-    video_filter_type = g_type_register_static (GST_TYPE_BASE_TRANSFORM,
-        "GstVideoFilter", &video_filter_info, G_TYPE_FLAG_ABSTRACT);
+  size = GST_VIDEO_INFO_SIZE (&filter->in_info);
+
+  if (need_pool) {
+    GstStructure *structure;
+
+    pool = gst_video_buffer_pool_new ();
+
+    structure = gst_buffer_pool_get_config (pool);
+    gst_buffer_pool_config_set (structure, caps, size, 0, 0, 0, 15);
+    if (!gst_buffer_pool_set_config (pool, structure))
+      goto config_failed;
+  } else
+    pool = NULL;
+
+  gst_query_set_allocation_params (query, size, 0, 0, 0, 15, pool);
+  gst_object_unref (pool);
+
+  gst_query_add_allocation_meta (query, GST_VIDEO_META_API);
+
+  return TRUE;
+
+  /* ERRORS */
+config_failed:
+  {
+    GST_ERROR_OBJECT (filter, "failed to set config");
+    gst_object_unref (pool);
+    return FALSE;
   }
-  return video_filter_type;
+}
+
+/* configure the allocation query that was answered downstream, we can configure
+ * some properties on it. Only called in passthrough mode. */
+static gboolean
+gst_video_filter_decide_allocation (GstBaseTransform * trans, GstQuery * query)
+{
+  GstBufferPool *pool = NULL;
+  guint size, min, max, prefix, alignment;
+
+  gst_query_parse_allocation_params (query, &size, &min, &max, &prefix,
+      &alignment, &pool);
+
+  if (pool) {
+    GstStructure *config;
+
+    config = gst_buffer_pool_get_config (pool);
+    gst_buffer_pool_config_add_option (config,
+        GST_BUFFER_POOL_OPTION_VIDEO_META);
+    gst_buffer_pool_set_config (pool, config);
+  }
+  return TRUE;
+}
+
+
+/* our output size only depends on the caps, not on the input caps */
+static gboolean
+gst_video_filter_transform_size (GstBaseTransform * btrans,
+    GstPadDirection direction, GstCaps * caps, gsize size,
+    GstCaps * othercaps, gsize * othersize)
+{
+  gboolean ret = TRUE;
+  GstVideoInfo info;
+
+  g_assert (size);
+
+  ret = gst_video_info_from_caps (&info, othercaps);
+  if (ret)
+    *othersize = info.size;
+
+  return ret;
 }
 
 static gboolean
@@ -92,8 +153,134 @@ gst_video_filter_get_unit_size (GstBaseTransform * btrans, GstCaps * caps,
   return TRUE;
 }
 
+static gboolean
+gst_video_filter_set_caps (GstBaseTransform * trans, GstCaps * incaps,
+    GstCaps * outcaps)
+{
+  GstVideoFilter *filter = GST_VIDEO_FILTER_CAST (trans);
+  GstVideoFilterClass *fclass;
+  GstVideoInfo in_info, out_info;
+  gboolean res;
+
+  /* input caps */
+  if (!gst_video_info_from_caps (&in_info, incaps))
+    goto invalid_caps;
+
+  /* output caps */
+  if (!gst_video_info_from_caps (&out_info, outcaps))
+    goto invalid_caps;
+
+  fclass = GST_VIDEO_FILTER_GET_CLASS (filter);
+  if (fclass->set_info)
+    res = fclass->set_info (filter, incaps, &in_info, outcaps, &out_info);
+  else
+    res = TRUE;
+
+  if (res) {
+    filter->in_info = in_info;
+    filter->out_info = out_info;
+  }
+  filter->negotiated = res;
+
+  return res;
+
+  /* ERRORS */
+invalid_caps:
+  {
+    GST_ERROR_OBJECT (filter, "invalid caps");
+    filter->negotiated = FALSE;
+    return FALSE;
+  }
+}
+
+static GstFlowReturn
+gst_video_filter_transform (GstBaseTransform * trans, GstBuffer * inbuf,
+    GstBuffer * outbuf)
+{
+  GstFlowReturn res;
+  GstVideoFilter *filter = GST_VIDEO_FILTER_CAST (trans);
+  GstVideoFilterClass *fclass;
+
+  if (G_UNLIKELY (!filter->negotiated))
+    goto unknown_format;
+
+  fclass = GST_VIDEO_FILTER_GET_CLASS (filter);
+  if (fclass->transform_frame) {
+    GstVideoFrame in_frame, out_frame;
+
+    if (!gst_video_frame_map (&in_frame, &filter->in_info, inbuf, GST_MAP_READ))
+      goto invalid_buffer;
+
+    if (!gst_video_frame_map (&out_frame, &filter->out_info, outbuf,
+            GST_MAP_WRITE))
+      goto invalid_buffer;
+
+    res = fclass->transform_frame (filter, &in_frame, &out_frame);
+
+    gst_video_frame_unmap (&out_frame);
+    gst_video_frame_unmap (&in_frame);
+  } else
+    res = GST_FLOW_OK;
+
+  return res;
+
+  /* ERRORS */
+unknown_format:
+  {
+    GST_ELEMENT_ERROR (filter, CORE, NOT_IMPLEMENTED, (NULL),
+        ("unknown format"));
+    return GST_FLOW_NOT_NEGOTIATED;
+  }
+invalid_buffer:
+  {
+    GST_ELEMENT_WARNING (filter, CORE, NOT_IMPLEMENTED, (NULL),
+        ("invalid video buffer received"));
+    return GST_FLOW_OK;
+  }
+}
+
+static GstFlowReturn
+gst_video_filter_transform_ip (GstBaseTransform * trans, GstBuffer * buf)
+{
+  GstFlowReturn res;
+  GstVideoFilter *filter = GST_VIDEO_FILTER_CAST (trans);
+  GstVideoFilterClass *fclass;
+
+  if (G_UNLIKELY (!filter->negotiated))
+    goto unknown_format;
+
+  fclass = GST_VIDEO_FILTER_GET_CLASS (filter);
+  if (fclass->transform_frame_ip) {
+    GstVideoFrame frame;
+
+    if (!gst_video_frame_map (&frame, &filter->in_info, buf, GST_MAP_READWRITE))
+      goto invalid_buffer;
+
+    res = fclass->transform_frame_ip (filter, &frame);
+
+    gst_video_frame_unmap (&frame);
+  } else
+    res = GST_FLOW_OK;
+
+  return res;
+
+  /* ERRORS */
+unknown_format:
+  {
+    GST_ELEMENT_ERROR (filter, CORE, NOT_IMPLEMENTED, (NULL),
+        ("unknown format"));
+    return GST_FLOW_NOT_NEGOTIATED;
+  }
+invalid_buffer:
+  {
+    GST_ELEMENT_WARNING (filter, CORE, NOT_IMPLEMENTED, (NULL),
+        ("invalid video buffer received"));
+    return GST_FLOW_OK;
+  }
+}
+
 static void
-gst_video_filter_class_init (gpointer g_class, gpointer class_data)
+gst_video_filter_class_init (GstVideoFilterClass * g_class)
 {
   GstBaseTransformClass *trans_class;
   GstVideoFilterClass *klass;
@@ -101,23 +288,30 @@ gst_video_filter_class_init (gpointer g_class, gpointer class_data)
   klass = (GstVideoFilterClass *) g_class;
   trans_class = (GstBaseTransformClass *) klass;
 
+  trans_class->set_caps = GST_DEBUG_FUNCPTR (gst_video_filter_set_caps);
+  trans_class->propose_allocation =
+      GST_DEBUG_FUNCPTR (gst_video_filter_propose_allocation);
+  trans_class->decide_allocation =
+      GST_DEBUG_FUNCPTR (gst_video_filter_decide_allocation);
+  trans_class->transform_size =
+      GST_DEBUG_FUNCPTR (gst_video_filter_transform_size);
   trans_class->get_unit_size =
       GST_DEBUG_FUNCPTR (gst_video_filter_get_unit_size);
-
-  parent_class = g_type_class_peek_parent (klass);
+  trans_class->transform = GST_DEBUG_FUNCPTR (gst_video_filter_transform);
+  trans_class->transform_ip = GST_DEBUG_FUNCPTR (gst_video_filter_transform_ip);
 
   GST_DEBUG_CATEGORY_INIT (gst_video_filter_debug, "videofilter", 0,
       "videofilter");
 }
 
 static void
-gst_video_filter_init (GTypeInstance * instance, gpointer g_class)
+gst_video_filter_init (GstVideoFilter * instance)
 {
   GstVideoFilter *videofilter = GST_VIDEO_FILTER (instance);
 
   GST_DEBUG_OBJECT (videofilter, "gst_video_filter_init");
 
-  videofilter->inited = FALSE;
+  videofilter->negotiated = FALSE;
   /* enable QoS */
   gst_base_transform_set_qos_enabled (GST_BASE_TRANSFORM (videofilter), TRUE);
 }
