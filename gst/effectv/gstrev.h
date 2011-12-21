@@ -69,8 +69,6 @@ struct _GstRevTV
   GstVideoFilter videofilter;
 
   /* < private > */
-  GstVideoInfo info;
-
   gint vgrabtime;
   gint vgrab;
   gint linespace;

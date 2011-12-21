@@ -53,7 +53,6 @@ struct _GstEdgeTV
   GstVideoFilter videofilter;
 
   /* < private > */
-  GstVideoInfo info;
   gint map_width, map_height;
   guint32 *map;
   gint video_width_margin;

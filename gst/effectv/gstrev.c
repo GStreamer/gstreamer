@@ -97,43 +97,22 @@ GST_STATIC_PAD_TEMPLATE ("sink",
     GST_STATIC_CAPS (CAPS_STR)
     );
 
-static gboolean
-gst_revtv_set_caps (GstBaseTransform * btrans, GstCaps * incaps,
-    GstCaps * outcaps)
-{
-  GstRevTV *filter = GST_REVTV (btrans);
-  GstVideoInfo info;
-
-  if (!gst_video_info_from_caps (&info, incaps))
-    goto invalid_caps;
-
-  filter->info = info;
-
-  return TRUE;
-
-  /* ERRORS */
-invalid_caps:
-  {
-    GST_DEBUG_OBJECT (filter, "invalid caps received");
-    return FALSE;
-  }
-}
-
 static GstFlowReturn
-gst_revtv_transform (GstBaseTransform * trans, GstBuffer * in, GstBuffer * out)
+gst_revtv_transform_frame (GstVideoFilter * vfilter, GstVideoFrame * in_frame,
+    GstVideoFrame * out_frame)
 {
-  GstRevTV *filter = GST_REVTV (trans);
+  GstRevTV *filter = GST_REVTV (vfilter);
   guint32 *src, *dest;
   gint width, height, sstride, dstride;
   guint32 *nsrc;
   gint y, x, R, G, B, yval;
   gint linespace, vscale;
   GstClockTime timestamp, stream_time;
-  GstVideoFrame in_frame, out_frame;
 
-  timestamp = GST_BUFFER_TIMESTAMP (in);
+  timestamp = GST_BUFFER_TIMESTAMP (in_frame->buffer);
   stream_time =
-      gst_segment_to_stream_time (&trans->segment, GST_FORMAT_TIME, timestamp);
+      gst_segment_to_stream_time (&GST_BASE_TRANSFORM (vfilter)->segment,
+      GST_FORMAT_TIME, timestamp);
 
   GST_DEBUG_OBJECT (filter, "sync to %" GST_TIME_FORMAT,
       GST_TIME_ARGS (timestamp));
@@ -141,19 +120,13 @@ gst_revtv_transform (GstBaseTransform * trans, GstBuffer * in, GstBuffer * out)
   if (GST_CLOCK_TIME_IS_VALID (stream_time))
     gst_object_sync_values (GST_OBJECT (filter), stream_time);
 
-  if (!gst_video_frame_map (&in_frame, &filter->info, in, GST_MAP_READ))
-    goto invalid_in;
+  src = GST_VIDEO_FRAME_PLANE_DATA (in_frame, 0);
+  sstride = GST_VIDEO_FRAME_PLANE_STRIDE (in_frame, 0);
+  dest = GST_VIDEO_FRAME_PLANE_DATA (out_frame, 0);
+  dstride = GST_VIDEO_FRAME_PLANE_STRIDE (out_frame, 0);
 
-  if (!gst_video_frame_map (&out_frame, &filter->info, out, GST_MAP_WRITE))
-    goto invalid_out;
-
-  src = GST_VIDEO_FRAME_PLANE_DATA (&in_frame, 0);
-  sstride = GST_VIDEO_FRAME_PLANE_STRIDE (&in_frame, 0);
-  dest = GST_VIDEO_FRAME_PLANE_DATA (&out_frame, 0);
-  dstride = GST_VIDEO_FRAME_PLANE_STRIDE (&out_frame, 0);
-
-  width = GST_VIDEO_FRAME_WIDTH (&in_frame);
-  height = GST_VIDEO_FRAME_HEIGHT (&in_frame);
+  width = GST_VIDEO_FRAME_WIDTH (in_frame);
+  height = GST_VIDEO_FRAME_HEIGHT (in_frame);
 
   /* Clear everything to black */
   memset (dest, 0, dstride * height * sizeof (guint32));
@@ -181,23 +154,7 @@ gst_revtv_transform (GstBaseTransform * trans, GstBuffer * in, GstBuffer * out)
   }
   GST_OBJECT_UNLOCK (filter);
 
-  gst_video_frame_unmap (&in_frame);
-  gst_video_frame_unmap (&out_frame);
-
   return GST_FLOW_OK;
-
-  /* ERRORS */
-invalid_in:
-  {
-    GST_DEBUG_OBJECT (filter, "invalid input frame");
-    return GST_FLOW_ERROR;
-  }
-invalid_out:
-  {
-    GST_DEBUG_OBJECT (filter, "invalid output frame");
-    gst_video_frame_unmap (&in_frame);
-    return GST_FLOW_ERROR;
-  }
 }
 
 static void
@@ -251,7 +208,7 @@ gst_revtv_class_init (GstRevTVClass * klass)
 {
   GObjectClass *gobject_class = (GObjectClass *) klass;
   GstElementClass *gstelement_class = (GstElementClass *) klass;
-  GstBaseTransformClass *trans_class = (GstBaseTransformClass *) klass;
+  GstVideoFilterClass *vfilter_class = (GstVideoFilterClass *) klass;
 
   gobject_class->set_property = gst_revtv_set_property;
   gobject_class->get_property = gst_revtv_get_property;
@@ -278,8 +235,8 @@ gst_revtv_class_init (GstRevTVClass * klass)
   gst_element_class_add_pad_template (gstelement_class,
       gst_static_pad_template_get (&gst_revtv_src_template));
 
-  trans_class->set_caps = GST_DEBUG_FUNCPTR (gst_revtv_set_caps);
-  trans_class->transform = GST_DEBUG_FUNCPTR (gst_revtv_transform);
+  vfilter_class->transform_frame =
+      GST_DEBUG_FUNCPTR (gst_revtv_transform_frame);
 }
 
 static void

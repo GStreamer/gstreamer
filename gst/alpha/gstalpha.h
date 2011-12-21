@@ -71,7 +71,6 @@ struct _GstAlpha
   /* caps */
   GStaticMutex lock;
 
-  GstVideoInfo in_info, out_info;
   gboolean in_sdtv, out_sdtv;
 
   /* properties */

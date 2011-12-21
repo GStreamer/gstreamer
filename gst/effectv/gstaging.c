@@ -87,28 +87,6 @@ GST_STATIC_PAD_TEMPLATE ("sink",
 
 G_DEFINE_TYPE (GstAgingTV, gst_agingtv, GST_TYPE_VIDEO_FILTER);
 
-static gboolean
-gst_agingtv_set_caps (GstBaseTransform * btrans, GstCaps * incaps,
-    GstCaps * outcaps)
-{
-  GstAgingTV *filter = GST_AGINGTV (btrans);
-  GstVideoInfo info;
-
-  if (!gst_video_info_from_caps (&info, incaps))
-    goto invalid_caps;
-
-  filter->info = info;
-
-  return TRUE;
-
-  /* ERRORS */
-invalid_caps:
-  {
-    GST_ERROR_OBJECT (filter, "could not parse caps");
-    return GST_FLOW_ERROR;
-  }
-}
-
 static void
 coloraging (guint32 * src, guint32 * dest, gint video_area, gint * c)
 {
@@ -321,19 +299,19 @@ gst_agingtv_start (GstBaseTransform * trans)
 }
 
 static GstFlowReturn
-gst_agingtv_transform (GstBaseTransform * trans, GstBuffer * in,
-    GstBuffer * out)
+gst_agingtv_transform_frame (GstVideoFilter * filter, GstVideoFrame * in_frame,
+    GstVideoFrame * out_frame)
 {
-  GstAgingTV *agingtv = GST_AGINGTV (trans);
-  GstVideoFrame in_frame, out_frame;
+  GstAgingTV *agingtv = GST_AGINGTV (filter);
   gint area_scale;
   GstClockTime timestamp, stream_time;
   gint width, height, stride, video_size;
   guint32 *src, *dest;
 
-  timestamp = GST_BUFFER_TIMESTAMP (in);
+  timestamp = GST_BUFFER_TIMESTAMP (in_frame->buffer);
   stream_time =
-      gst_segment_to_stream_time (&trans->segment, GST_FORMAT_TIME, timestamp);
+      gst_segment_to_stream_time (&GST_BASE_TRANSFORM (filter)->segment,
+      GST_FORMAT_TIME, timestamp);
 
   GST_DEBUG_OBJECT (agingtv, "sync to %" GST_TIME_FORMAT,
       GST_TIME_ARGS (timestamp));
@@ -341,20 +319,13 @@ gst_agingtv_transform (GstBaseTransform * trans, GstBuffer * in,
   if (GST_CLOCK_TIME_IS_VALID (stream_time))
     gst_object_sync_values (GST_OBJECT (agingtv), stream_time);
 
-  if (!gst_video_frame_map (&in_frame, &agingtv->info, in, GST_MAP_READ))
-    goto invalid_in;
-
-  if (!gst_video_frame_map (&out_frame, &agingtv->info, out, GST_MAP_WRITE))
-    goto invalid_out;
-
-
-  width = GST_VIDEO_FRAME_WIDTH (&in_frame);
-  height = GST_VIDEO_FRAME_HEIGHT (&in_frame);
-  stride = GST_VIDEO_FRAME_PLANE_STRIDE (&in_frame, 0);
+  width = GST_VIDEO_FRAME_WIDTH (in_frame);
+  height = GST_VIDEO_FRAME_HEIGHT (in_frame);
+  stride = GST_VIDEO_FRAME_PLANE_STRIDE (in_frame, 0);
   video_size = stride * height;
 
-  src = GST_VIDEO_FRAME_PLANE_DATA (&in_frame, 0);
-  dest = GST_VIDEO_FRAME_PLANE_DATA (&out_frame, 0);
+  src = GST_VIDEO_FRAME_PLANE_DATA (in_frame, 0);
+  dest = GST_VIDEO_FRAME_PLANE_DATA (out_frame, 0);
 
   area_scale = width * height / 64 / 480;
   if (area_scale <= 0)
@@ -371,23 +342,7 @@ gst_agingtv_transform (GstBaseTransform * trans, GstBuffer * in,
   if (area_scale > 1 && agingtv->dusts)
     dusts (dest, width, height, &agingtv->dust_interval, area_scale);
 
-  gst_video_frame_unmap (&in_frame);
-  gst_video_frame_unmap (&out_frame);
-
   return GST_FLOW_OK;
-
-  /* ERRORS */
-invalid_in:
-  {
-    GST_DEBUG_OBJECT (agingtv, "invalid input frame");
-    return GST_FLOW_ERROR;
-  }
-invalid_out:
-  {
-    GST_DEBUG_OBJECT (agingtv, "invalid output frame");
-    gst_video_frame_unmap (&in_frame);
-    return GST_FLOW_ERROR;
-  }
 }
 
 static void
@@ -396,6 +351,7 @@ gst_agingtv_class_init (GstAgingTVClass * klass)
   GObjectClass *gobject_class = (GObjectClass *) klass;
   GstElementClass *gstelement_class = (GstElementClass *) klass;
   GstBaseTransformClass *trans_class = (GstBaseTransformClass *) klass;
+  GstVideoFilterClass *vfilter_class = (GstVideoFilterClass *) klass;
 
   gobject_class->set_property = gst_agingtv_set_property;
   gobject_class->get_property = gst_agingtv_get_property;
@@ -430,9 +386,10 @@ gst_agingtv_class_init (GstAgingTVClass * klass)
   gst_element_class_add_pad_template (gstelement_class,
       gst_static_pad_template_get (&gst_agingtv_src_template));
 
-  trans_class->set_caps = GST_DEBUG_FUNCPTR (gst_agingtv_set_caps);
-  trans_class->transform = GST_DEBUG_FUNCPTR (gst_agingtv_transform);
   trans_class->start = GST_DEBUG_FUNCPTR (gst_agingtv_start);
+
+  vfilter_class->transform_frame =
+      GST_DEBUG_FUNCPTR (gst_agingtv_transform_frame);
 }
 
 static void

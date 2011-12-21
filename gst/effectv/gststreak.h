@@ -55,8 +55,6 @@ struct _GstStreakTV
   GstVideoFilter element;
 
   /* < private > */
-  GstVideoInfo info;
-
   gboolean feedback;
 
   guint32 *planebuffer;

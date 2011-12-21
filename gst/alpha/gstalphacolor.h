@@ -42,10 +42,8 @@ struct _GstAlphaColor
   GstVideoFilter parent;
 
   /*< private >*/
-  /* caps */
-  GstVideoInfo in_info, out_info;
-
   void (*process) (GstVideoFrame * frame, const gint * matrix);
+
   const gint *matrix;
 };
 

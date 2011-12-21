@@ -54,10 +54,6 @@ struct _GstGamma
   GstVideoFilter videofilter;
 
   /* < private > */
-
-  /* format */
-  GstVideoInfo info;
-
   /* properties */
   gdouble gamma;
 

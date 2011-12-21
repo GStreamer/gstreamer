@@ -51,8 +51,6 @@ struct _GstShagadelicTV
   GstVideoFilter videofilter;
 
   /* < private > */
-  GstVideoInfo info;
-
   guint8 *ripple;
   guint8 *spiral;
   guint8 phase;

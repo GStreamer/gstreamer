@@ -53,8 +53,6 @@ struct _GstRippleTV
   GstVideoFilter element;
 
   /* < private > */
-  GstVideoInfo info;
-
   gint mode;
 
   gint16 *background;

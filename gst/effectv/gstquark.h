@@ -53,8 +53,6 @@ struct _GstQuarkTV
   GstVideoFilter element;
 
   /* < private > */
-  GstVideoInfo info;
-
   gint area;
   gint planes;
   gint current_plane;

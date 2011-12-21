@@ -94,10 +94,10 @@ static void gst_gamma_set_property (GObject * object, guint prop_id,
 static void gst_gamma_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 
-static gboolean gst_gamma_set_caps (GstBaseTransform * base, GstCaps * incaps,
-    GstCaps * outcaps);
-static GstFlowReturn gst_gamma_transform_ip (GstBaseTransform * transform,
-    GstBuffer * buf);
+static gboolean gst_gamma_set_info (GstVideoFilter * vfilter, GstCaps * incaps,
+    GstVideoInfo * in_info, GstCaps * outcaps, GstVideoInfo * out_info);
+static GstFlowReturn gst_gamma_transform_frame_ip (GstVideoFilter * vfilter,
+    GstVideoFrame * frame);
 static void gst_gamma_before_transform (GstBaseTransform * transform,
     GstBuffer * buf);
 
@@ -111,6 +111,7 @@ gst_gamma_class_init (GstGammaClass * g_class)
   GObjectClass *gobject_class = (GObjectClass *) g_class;
   GstElementClass *gstelement_class = (GstElementClass *) g_class;
   GstBaseTransformClass *trans_class = (GstBaseTransformClass *) g_class;
+  GstVideoFilterClass *vfilter_class = (GstVideoFilterClass *) g_class;
 
   GST_DEBUG_CATEGORY_INIT (gamma_debug, "gamma", 0, "gamma");
 
@@ -131,10 +132,12 @@ gst_gamma_class_init (GstGammaClass * g_class)
   gst_element_class_add_pad_template (gstelement_class,
       gst_static_pad_template_get (&gst_gamma_src_template));
 
-  trans_class->set_caps = GST_DEBUG_FUNCPTR (gst_gamma_set_caps);
-  trans_class->transform_ip = GST_DEBUG_FUNCPTR (gst_gamma_transform_ip);
   trans_class->before_transform =
       GST_DEBUG_FUNCPTR (gst_gamma_before_transform);
+
+  vfilter_class->set_info = GST_DEBUG_FUNCPTR (gst_gamma_set_info);
+  vfilter_class->transform_frame_ip =
+      GST_DEBUG_FUNCPTR (gst_gamma_transform_frame_ip);
 }
 
 static void
@@ -318,22 +321,16 @@ gst_gamma_packed_rgb_ip (GstGamma * gamma, GstVideoFrame * frame)
 }
 
 static gboolean
-gst_gamma_set_caps (GstBaseTransform * base, GstCaps * incaps,
-    GstCaps * outcaps)
+gst_gamma_set_info (GstVideoFilter * vfilter, GstCaps * incaps,
+    GstVideoInfo * in_info, GstCaps * outcaps, GstVideoInfo * out_info)
 {
-  GstGamma *gamma = GST_GAMMA (base);
-  GstVideoInfo info;
+  GstGamma *gamma = GST_GAMMA (vfilter);
 
   GST_DEBUG_OBJECT (gamma,
       "setting caps: in %" GST_PTR_FORMAT " out %" GST_PTR_FORMAT, incaps,
       outcaps);
 
-  if (!gst_video_info_from_caps (&info, incaps))
-    goto invalid_caps;
-
-  gamma->info = info;
-
-  switch (GST_VIDEO_INFO_FORMAT (&info)) {
+  switch (GST_VIDEO_INFO_FORMAT (in_info)) {
     case GST_VIDEO_FORMAT_I420:
     case GST_VIDEO_FORMAT_YV12:
     case GST_VIDEO_FORMAT_Y41B:
@@ -365,9 +362,9 @@ gst_gamma_set_caps (GstBaseTransform * base, GstCaps * incaps,
       goto invalid_caps;
       break;
   }
-
   return TRUE;
 
+  /* ERRORS */
 invalid_caps:
   {
     GST_ERROR_OBJECT (gamma, "Invalid caps: %" GST_PTR_FORMAT, incaps);
@@ -393,36 +390,24 @@ gst_gamma_before_transform (GstBaseTransform * base, GstBuffer * outbuf)
 }
 
 static GstFlowReturn
-gst_gamma_transform_ip (GstBaseTransform * base, GstBuffer * outbuf)
+gst_gamma_transform_frame_ip (GstVideoFilter * vfilter, GstVideoFrame * frame)
 {
-  GstGamma *gamma = GST_GAMMA (base);
-  GstVideoFrame frame;
+  GstGamma *gamma = GST_GAMMA (vfilter);
 
   if (!gamma->process)
     goto not_negotiated;
 
-  if (base->passthrough)
+  if (GST_BASE_TRANSFORM (vfilter)->passthrough)
     goto done;
 
-  if (!gst_video_frame_map (&frame, &gamma->info, outbuf, GST_MAP_READWRITE))
-    goto wrong_buffer;
-
   GST_OBJECT_LOCK (gamma);
-  gamma->process (gamma, &frame);
+  gamma->process (gamma, frame);
   GST_OBJECT_UNLOCK (gamma);
-
-  gst_video_frame_unmap (&frame);
 
 done:
   return GST_FLOW_OK;
 
   /* ERRORS */
-wrong_buffer:
-  {
-    GST_ELEMENT_ERROR (gamma, STREAM, FORMAT,
-        (NULL), ("Invalid buffer received"));
-    return GST_FLOW_ERROR;
-  }
 not_negotiated:
   {
     GST_ERROR_OBJECT (gamma, "Not negotiated yet");

@@ -354,21 +354,17 @@ gst_video_balance_packed_rgb (GstVideoBalance * videobalance,
 
 /* get notified of caps and plug in the correct process function */
 static gboolean
-gst_video_balance_set_caps (GstBaseTransform * base, GstCaps * incaps,
-    GstCaps * outcaps)
+gst_video_balance_set_info (GstVideoFilter * vfilter, GstCaps * incaps,
+    GstVideoInfo * in_info, GstCaps * outcaps, GstVideoInfo * out_info)
 {
-  GstVideoBalance *videobalance = GST_VIDEO_BALANCE (base);
-  GstVideoInfo info;
+  GstVideoBalance *videobalance = GST_VIDEO_BALANCE (vfilter);
 
   GST_DEBUG_OBJECT (videobalance,
       "in %" GST_PTR_FORMAT " out %" GST_PTR_FORMAT, incaps, outcaps);
 
   videobalance->process = NULL;
 
-  if (!gst_video_info_from_caps (&info, incaps))
-    goto invalid_caps;
-
-  switch (GST_VIDEO_INFO_FORMAT (&info)) {
+  switch (GST_VIDEO_INFO_FORMAT (in_info)) {
     case GST_VIDEO_FORMAT_I420:
     case GST_VIDEO_FORMAT_YV12:
     case GST_VIDEO_FORMAT_Y41B:
@@ -399,15 +395,9 @@ gst_video_balance_set_caps (GstBaseTransform * base, GstCaps * incaps,
       break;
   }
 
-  videobalance->info = info;
-
   return TRUE;
 
-invalid_caps:
-  {
-    GST_ERROR_OBJECT (videobalance, "Invalid caps: %" GST_PTR_FORMAT, incaps);
-    return FALSE;
-  }
+  /* ERRORS */
 unknown_format:
   {
     GST_ERROR_OBJECT (videobalance, "unknown format %" GST_PTR_FORMAT, incaps);
@@ -433,38 +423,26 @@ gst_video_balance_before_transform (GstBaseTransform * base, GstBuffer * buf)
 }
 
 static GstFlowReturn
-gst_video_balance_transform_ip (GstBaseTransform * base, GstBuffer * outbuf)
+gst_video_balance_transform_frame_ip (GstVideoFilter * vfilter,
+    GstVideoFrame * frame)
 {
-  GstVideoBalance *videobalance = GST_VIDEO_BALANCE (base);
-  GstVideoFrame frame;
+  GstVideoBalance *videobalance = GST_VIDEO_BALANCE (vfilter);
 
   if (!videobalance->process)
     goto not_negotiated;
 
   /* if no change is needed, we are done */
-  if (base->passthrough)
+  if (GST_BASE_TRANSFORM (vfilter)->passthrough)
     goto done;
 
-  if (!gst_video_frame_map (&frame, &videobalance->info, outbuf,
-          GST_MAP_READWRITE))
-    goto wrong_frame;
-
   GST_OBJECT_LOCK (videobalance);
-  videobalance->process (videobalance, &frame);
+  videobalance->process (videobalance, frame);
   GST_OBJECT_UNLOCK (videobalance);
-
-  gst_video_frame_unmap (&frame);
 
 done:
   return GST_FLOW_OK;
 
   /* ERRORS */
-wrong_frame:
-  {
-    GST_ELEMENT_ERROR (videobalance, STREAM, FORMAT,
-        (NULL), ("Invalid buffer received"));
-    return GST_FLOW_ERROR;
-  }
 not_negotiated:
   {
     GST_ERROR_OBJECT (videobalance, "Not negotiated yet");
@@ -501,6 +479,7 @@ gst_video_balance_class_init (GstVideoBalanceClass * klass)
   GObjectClass *gobject_class = (GObjectClass *) klass;
   GstElementClass *gstelement_class = (GstElementClass *) klass;
   GstBaseTransformClass *trans_class = (GstBaseTransformClass *) klass;
+  GstVideoFilterClass *vfilter_class = (GstVideoFilterClass *) klass;
 
   GST_DEBUG_CATEGORY_INIT (videobalance_debug, "videobalance", 0,
       "videobalance");
@@ -535,11 +514,12 @@ gst_video_balance_class_init (GstVideoBalanceClass * klass)
   gst_element_class_add_pad_template (gstelement_class,
       gst_static_pad_template_get (&gst_video_balance_src_template));
 
-  trans_class->set_caps = GST_DEBUG_FUNCPTR (gst_video_balance_set_caps);
-  trans_class->transform_ip =
-      GST_DEBUG_FUNCPTR (gst_video_balance_transform_ip);
   trans_class->before_transform =
       GST_DEBUG_FUNCPTR (gst_video_balance_before_transform);
+
+  vfilter_class->set_info = GST_DEBUG_FUNCPTR (gst_video_balance_set_info);
+  vfilter_class->transform_frame_ip =
+      GST_DEBUG_FUNCPTR (gst_video_balance_transform_frame_ip);
 }
 
 static void

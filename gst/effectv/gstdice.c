@@ -91,38 +91,25 @@ enum
 };
 
 static gboolean
-gst_dicetv_set_caps (GstBaseTransform * btrans, GstCaps * incaps,
-    GstCaps * outcaps)
+gst_dicetv_set_info (GstVideoFilter * vfilter, GstCaps * incaps,
+    GstVideoInfo * in_info, GstCaps * outcaps, GstVideoInfo * out_info)
 {
-  GstDiceTV *filter = GST_DICETV (btrans);
-  GstVideoInfo info;
-
-  if (!gst_video_info_from_caps (&info, incaps))
-    goto invalid_caps;
+  GstDiceTV *filter = GST_DICETV (vfilter);
 
   g_free (filter->dicemap);
   filter->dicemap =
-      (guint8 *) g_malloc (GST_VIDEO_INFO_WIDTH (&info) *
-      GST_VIDEO_INFO_WIDTH (&info));
+      (guint8 *) g_malloc (GST_VIDEO_INFO_WIDTH (in_info) *
+      GST_VIDEO_INFO_WIDTH (in_info));
   gst_dicetv_create_map (filter);
 
-  filter->info = info;
-
   return TRUE;
-
-  /* ERRORS */
-invalid_caps:
-  {
-    GST_DEBUG_OBJECT (filter, "invalid caps");
-    return FALSE;
-  }
 }
 
 static GstFlowReturn
-gst_dicetv_transform (GstBaseTransform * trans, GstBuffer * in, GstBuffer * out)
+gst_dicetv_transform_frame (GstVideoFilter * vfilter, GstVideoFrame * in_frame,
+    GstVideoFrame * out_frame)
 {
-  GstDiceTV *filter = GST_DICETV (trans);
-  GstVideoFrame in_frame, out_frame;
+  GstDiceTV *filter = GST_DICETV (vfilter);
   guint32 *src, *dest;
   gint i, map_x, map_y, map_i, base, dx, dy, di;
   gint video_stride, g_cube_bits, g_cube_size;
@@ -130,9 +117,10 @@ gst_dicetv_transform (GstBaseTransform * trans, GstBuffer * in, GstBuffer * out)
   GstClockTime timestamp, stream_time;
   const guint8 *dicemap;
 
-  timestamp = GST_BUFFER_TIMESTAMP (in);
+  timestamp = GST_BUFFER_TIMESTAMP (in_frame->buffer);
   stream_time =
-      gst_segment_to_stream_time (&trans->segment, GST_FORMAT_TIME, timestamp);
+      gst_segment_to_stream_time (&GST_BASE_TRANSFORM (vfilter)->segment,
+      GST_FORMAT_TIME, timestamp);
 
   GST_DEBUG_OBJECT (filter, "sync to %" GST_TIME_FORMAT,
       GST_TIME_ARGS (timestamp));
@@ -140,12 +128,9 @@ gst_dicetv_transform (GstBaseTransform * trans, GstBuffer * in, GstBuffer * out)
   if (GST_CLOCK_TIME_IS_VALID (stream_time))
     gst_object_sync_values (GST_OBJECT (filter), stream_time);
 
-  gst_video_frame_map (&in_frame, &filter->info, in, GST_MAP_READ);
-  gst_video_frame_map (&out_frame, &filter->info, out, GST_MAP_WRITE);
-
-  src = (guint32 *) GST_VIDEO_FRAME_PLANE_DATA (&in_frame, 0);
-  dest = (guint32 *) GST_VIDEO_FRAME_PLANE_DATA (&out_frame, 0);
-  video_stride = GST_VIDEO_FRAME_PLANE_STRIDE (&in_frame, 0);
+  src = (guint32 *) GST_VIDEO_FRAME_PLANE_DATA (in_frame, 0);
+  dest = (guint32 *) GST_VIDEO_FRAME_PLANE_DATA (out_frame, 0);
+  video_stride = GST_VIDEO_FRAME_PLANE_STRIDE (in_frame, 0);
 
   GST_OBJECT_LOCK (filter);
   g_cube_bits = filter->g_cube_bits;
@@ -211,9 +196,6 @@ gst_dicetv_transform (GstBaseTransform * trans, GstBuffer * in, GstBuffer * out)
   }
   GST_OBJECT_UNLOCK (filter);
 
-  gst_video_frame_unmap (&in_frame);
-  gst_video_frame_unmap (&out_frame);
-
   return GST_FLOW_OK;
 }
 
@@ -222,9 +204,10 @@ gst_dicetv_create_map (GstDiceTV * filter)
 {
   gint x, y, i;
   gint width, height;
+  GstVideoInfo *info = &GST_VIDEO_FILTER (filter)->in_info;
 
-  width = GST_VIDEO_INFO_WIDTH (&filter->info);
-  height = GST_VIDEO_INFO_HEIGHT (&filter->info);
+  width = GST_VIDEO_INFO_WIDTH (info);
+  height = GST_VIDEO_INFO_HEIGHT (info);
 
   if (width <= 0 || height <= 0)
     return;
@@ -295,7 +278,7 @@ gst_dicetv_class_init (GstDiceTVClass * klass)
 {
   GObjectClass *gobject_class = (GObjectClass *) klass;
   GstElementClass *gstelement_class = (GstElementClass *) klass;
-  GstBaseTransformClass *trans_class = (GstBaseTransformClass *) klass;
+  GstVideoFilterClass *vfilter_class = (GstVideoFilterClass *) klass;
 
   gobject_class->set_property = gst_dicetv_set_property;
   gobject_class->get_property = gst_dicetv_get_property;
@@ -316,8 +299,9 @@ gst_dicetv_class_init (GstDiceTVClass * klass)
   gst_element_class_add_pad_template (gstelement_class,
       gst_static_pad_template_get (&gst_dicetv_src_template));
 
-  trans_class->set_caps = GST_DEBUG_FUNCPTR (gst_dicetv_set_caps);
-  trans_class->transform = GST_DEBUG_FUNCPTR (gst_dicetv_transform);
+  vfilter_class->set_info = GST_DEBUG_FUNCPTR (gst_dicetv_set_info);
+  vfilter_class->transform_frame =
+      GST_DEBUG_FUNCPTR (gst_dicetv_transform_frame);
 }
 
 static void

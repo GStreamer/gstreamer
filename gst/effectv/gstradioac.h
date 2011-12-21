@@ -53,8 +53,6 @@ struct _GstRadioacTV
   GstVideoFilter element;
 
   /* < private > */
-  GstVideoInfo info;
-
   gint mode;
   gint color;
   guint interval;

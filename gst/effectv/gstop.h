@@ -53,8 +53,6 @@ struct _GstOpTV
   GstVideoFilter element;
 
   /* < private > */
-  GstVideoInfo info;
-
   gint mode;
   gint speed;
   guint threshold;

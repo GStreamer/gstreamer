@@ -50,8 +50,6 @@ struct _GstVertigoTV
   GstVideoFilter videofilter;
 
   /* < private > */
-  GstVideoInfo info;
-
   guint32 *buffer;
   guint32 *current_buffer, *alt_buffer;
   gint dx, dy;

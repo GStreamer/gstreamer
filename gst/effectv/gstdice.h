@@ -55,7 +55,6 @@ struct _GstDiceTV
   GstVideoFilter videofilter;
 
   /* < private > */
-  GstVideoInfo info;
   guint8 *dicemap;
 
   gint g_cube_bits;

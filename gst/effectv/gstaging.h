@@ -62,8 +62,6 @@ struct _GstAgingTV
   GstVideoFilter videofilter;
 
   /* < private > */
-  GstVideoInfo info;
-
   gboolean color_aging;
   gboolean pits;
   gboolean dusts;

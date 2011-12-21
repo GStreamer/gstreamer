@@ -156,16 +156,16 @@ GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE ("{ AYUV, ARGB, BGRA, ABGR, RGBA }"));
   g_static_mutex_unlock (&alpha->lock); \
 } G_STMT_END
 
-static gboolean gst_alpha_get_unit_size (GstBaseTransform * btrans,
-    GstCaps * caps, gsize * size);
 static GstCaps *gst_alpha_transform_caps (GstBaseTransform * btrans,
     GstPadDirection direction, GstCaps * caps, GstCaps * filter);
-static gboolean gst_alpha_set_caps (GstBaseTransform * btrans,
-    GstCaps * incaps, GstCaps * outcaps);
-static GstFlowReturn gst_alpha_transform (GstBaseTransform * btrans,
-    GstBuffer * in, GstBuffer * out);
 static void gst_alpha_before_transform (GstBaseTransform * btrans,
     GstBuffer * buf);
+
+static gboolean gst_alpha_set_info (GstVideoFilter * filter,
+    GstCaps * incaps, GstVideoInfo * in_info, GstCaps * outcaps,
+    GstVideoInfo * out_info);
+static GstFlowReturn gst_alpha_transform_frame (GstVideoFilter * filter,
+    GstVideoFrame * in_frame, GstVideoFrame * out_frame);
 
 static void gst_alpha_init_params (GstAlpha * alpha);
 static gboolean gst_alpha_set_process_function (GstAlpha * alpha);
@@ -204,6 +204,7 @@ gst_alpha_class_init (GstAlphaClass * klass)
   GObjectClass *gobject_class = (GObjectClass *) klass;
   GstElementClass *gstelement_class = (GstElementClass *) klass;
   GstBaseTransformClass *btrans_class = (GstBaseTransformClass *) klass;
+  GstVideoFilterClass *vfilter_class = (GstVideoFilterClass *) klass;
 
   GST_DEBUG_CATEGORY_INIT (gst_alpha_debug, "alpha", 0,
       "alpha - Element for adding alpha channel to streams");
@@ -269,12 +270,13 @@ gst_alpha_class_init (GstAlphaClass * klass)
   gst_element_class_add_pad_template (gstelement_class,
       gst_static_pad_template_get (&gst_alpha_src_template));
 
-  btrans_class->transform = GST_DEBUG_FUNCPTR (gst_alpha_transform);
   btrans_class->before_transform =
       GST_DEBUG_FUNCPTR (gst_alpha_before_transform);
-  btrans_class->get_unit_size = GST_DEBUG_FUNCPTR (gst_alpha_get_unit_size);
   btrans_class->transform_caps = GST_DEBUG_FUNCPTR (gst_alpha_transform_caps);
-  btrans_class->set_caps = GST_DEBUG_FUNCPTR (gst_alpha_set_caps);
+
+  vfilter_class->set_info = GST_DEBUG_FUNCPTR (gst_alpha_set_info);
+  vfilter_class->transform_frame =
+      GST_DEBUG_FUNCPTR (gst_alpha_transform_frame);
 }
 
 static void
@@ -434,25 +436,6 @@ gst_alpha_get_property (GObject * object, guint prop_id, GValue * value,
   }
 }
 
-static gboolean
-gst_alpha_get_unit_size (GstBaseTransform * btrans,
-    GstCaps * caps, gsize * size)
-{
-  GstVideoInfo info;
-
-  if (!gst_video_info_from_caps (&info, caps))
-    return FALSE;
-
-  *size = info.size;
-
-  GST_DEBUG_OBJECT (btrans,
-      "unit size = %" G_GSIZE_FORMAT " for format %s w %d height %d", *size,
-      GST_VIDEO_INFO_NAME (&info), GST_VIDEO_INFO_WIDTH (&info),
-      GST_VIDEO_INFO_HEIGHT (&info));
-
-  return TRUE;
-}
-
 static GstCaps *
 gst_alpha_transform_caps (GstBaseTransform * btrans,
     GstPadDirection direction, GstCaps * caps, GstCaps * filter)
@@ -518,34 +501,28 @@ gst_alpha_transform_caps (GstBaseTransform * btrans,
 }
 
 static gboolean
-gst_alpha_set_caps (GstBaseTransform * btrans,
-    GstCaps * incaps, GstCaps * outcaps)
+gst_alpha_set_info (GstVideoFilter * filter,
+    GstCaps * incaps, GstVideoInfo * in_info, GstCaps * outcaps,
+    GstVideoInfo * out_info)
 {
-  GstAlpha *alpha = GST_ALPHA (btrans);
-  GstVideoInfo in_info, out_info;
+  GstAlpha *alpha = GST_ALPHA (filter);
   gboolean passthrough;
-
-  if (!gst_video_info_from_caps (&in_info, incaps) ||
-      !gst_video_info_from_caps (&out_info, outcaps))
-    goto invalid_format;
 
   GST_ALPHA_LOCK (alpha);
 
-  alpha->in_sdtv = in_info.colorimetry.matrix = GST_VIDEO_COLOR_MATRIX_BT601;
-  alpha->out_sdtv = out_info.colorimetry.matrix = GST_VIDEO_COLOR_MATRIX_BT601;
+  alpha->in_sdtv = in_info->colorimetry.matrix = GST_VIDEO_COLOR_MATRIX_BT601;
+  alpha->out_sdtv = out_info->colorimetry.matrix = GST_VIDEO_COLOR_MATRIX_BT601;
 
   passthrough = alpha->prefer_passthrough &&
-      GST_VIDEO_INFO_FORMAT (&in_info) == GST_VIDEO_INFO_FORMAT (&out_info)
+      GST_VIDEO_INFO_FORMAT (in_info) == GST_VIDEO_INFO_FORMAT (out_info)
       && alpha->in_sdtv == alpha->out_sdtv && alpha->method == ALPHA_METHOD_SET
       && alpha->alpha == 1.0;
 
   GST_DEBUG_OBJECT (alpha,
       "Setting caps %" GST_PTR_FORMAT " -> %" GST_PTR_FORMAT
       " (passthrough: %d)", incaps, outcaps, passthrough);
-  gst_base_transform_set_passthrough (btrans, passthrough);
-
-  alpha->in_info = in_info;
-  alpha->out_info = out_info;
+  gst_base_transform_set_passthrough (GST_BASE_TRANSFORM_CAST (filter),
+      passthrough);
 
   if (!gst_alpha_set_process_function (alpha) && !passthrough)
     goto no_process;
@@ -557,13 +534,6 @@ gst_alpha_set_caps (GstBaseTransform * btrans,
   return TRUE;
 
   /* ERRORS */
-invalid_format:
-  {
-    GST_WARNING_OBJECT (alpha,
-        "Failed to parse caps %" GST_PTR_FORMAT " -> %" GST_PTR_FORMAT, incaps,
-        outcaps);
-    return FALSE;
-  }
 no_process:
   {
     GST_WARNING_OBJECT (alpha,
@@ -2325,8 +2295,8 @@ gst_alpha_init_params (GstAlpha * alpha)
   const GstVideoFormatInfo *in_info, *out_info;
   const gint *matrix;
 
-  in_info = alpha->in_info.finfo;
-  out_info = alpha->out_info.finfo;
+  in_info = GST_VIDEO_FILTER (alpha)->in_info.finfo;
+  out_info = GST_VIDEO_FILTER (alpha)->out_info.finfo;
 
   /* RGB->RGB: convert to SDTV YUV, chroma keying, convert back
    * YUV->RGB: chroma keying, convert to RGB
@@ -2390,13 +2360,18 @@ gst_alpha_init_params (GstAlpha * alpha)
 static gboolean
 gst_alpha_set_process_function (GstAlpha * alpha)
 {
+  GstVideoInfo *in_info, *out_info;
+
   alpha->process = NULL;
+
+  in_info = &GST_VIDEO_FILTER_CAST (alpha)->in_info;
+  out_info = &GST_VIDEO_FILTER_CAST (alpha)->out_info;
 
   switch (alpha->method) {
     case ALPHA_METHOD_SET:
-      switch (GST_VIDEO_INFO_FORMAT (&alpha->out_info)) {
+      switch (GST_VIDEO_INFO_FORMAT (out_info)) {
         case GST_VIDEO_FORMAT_AYUV:
-          switch (GST_VIDEO_INFO_FORMAT (&alpha->in_info)) {
+          switch (GST_VIDEO_INFO_FORMAT (in_info)) {
             case GST_VIDEO_FORMAT_AYUV:
               alpha->process = gst_alpha_set_ayuv_ayuv;
               break;
@@ -2434,7 +2409,7 @@ gst_alpha_set_process_function (GstAlpha * alpha)
         case GST_VIDEO_FORMAT_ABGR:
         case GST_VIDEO_FORMAT_RGBA:
         case GST_VIDEO_FORMAT_BGRA:
-          switch (GST_VIDEO_INFO_FORMAT (&alpha->in_info)) {
+          switch (GST_VIDEO_INFO_FORMAT (in_info)) {
             case GST_VIDEO_FORMAT_AYUV:
               alpha->process = gst_alpha_set_ayuv_argb;
               break;
@@ -2476,9 +2451,9 @@ gst_alpha_set_process_function (GstAlpha * alpha)
     case ALPHA_METHOD_GREEN:
     case ALPHA_METHOD_BLUE:
     case ALPHA_METHOD_CUSTOM:
-      switch (GST_VIDEO_INFO_FORMAT (&alpha->out_info)) {
+      switch (GST_VIDEO_INFO_FORMAT (out_info)) {
         case GST_VIDEO_FORMAT_AYUV:
-          switch (GST_VIDEO_INFO_FORMAT (&alpha->in_info)) {
+          switch (GST_VIDEO_INFO_FORMAT (in_info)) {
             case GST_VIDEO_FORMAT_AYUV:
               alpha->process = gst_alpha_chroma_key_ayuv_ayuv;
               break;
@@ -2516,7 +2491,7 @@ gst_alpha_set_process_function (GstAlpha * alpha)
         case GST_VIDEO_FORMAT_ABGR:
         case GST_VIDEO_FORMAT_RGBA:
         case GST_VIDEO_FORMAT_BGRA:
-          switch (GST_VIDEO_INFO_FORMAT (&alpha->in_info)) {
+          switch (GST_VIDEO_INFO_FORMAT (in_info)) {
             case GST_VIDEO_FORMAT_AYUV:
               alpha->process = gst_alpha_chroma_key_ayuv_argb;
               break;
@@ -2575,26 +2550,17 @@ gst_alpha_before_transform (GstBaseTransform * btrans, GstBuffer * buf)
 }
 
 static GstFlowReturn
-gst_alpha_transform (GstBaseTransform * btrans, GstBuffer * in, GstBuffer * out)
+gst_alpha_transform_frame (GstVideoFilter * filter, GstVideoFrame * in_frame,
+    GstVideoFrame * out_frame)
 {
-  GstAlpha *alpha = GST_ALPHA (btrans);
-  GstVideoFrame in_frame, out_frame;
+  GstAlpha *alpha = GST_ALPHA (filter);
 
   GST_ALPHA_LOCK (alpha);
 
   if (G_UNLIKELY (!alpha->process))
     goto not_negotiated;
 
-  if (!gst_video_frame_map (&in_frame, &alpha->in_info, in, GST_MAP_READ))
-    goto invalid_in;
-
-  if (!gst_video_frame_map (&out_frame, &alpha->out_info, out, GST_MAP_WRITE))
-    goto invalid_out;
-
-  alpha->process (&in_frame, &out_frame, alpha);
-
-  gst_video_frame_unmap (&out_frame);
-  gst_video_frame_unmap (&in_frame);
+  alpha->process (in_frame, out_frame, alpha);
 
   GST_ALPHA_UNLOCK (alpha);
 
@@ -2606,19 +2572,6 @@ not_negotiated:
     GST_ERROR_OBJECT (alpha, "Not negotiated yet");
     GST_ALPHA_UNLOCK (alpha);
     return GST_FLOW_NOT_NEGOTIATED;
-  }
-invalid_in:
-  {
-    GST_ERROR_OBJECT (alpha, "Invalid input frame");
-    GST_ALPHA_UNLOCK (alpha);
-    return GST_FLOW_OK;
-  }
-invalid_out:
-  {
-    GST_ERROR_OBJECT (alpha, "Invalid output frame");
-    gst_video_frame_unmap (&in_frame);
-    GST_ALPHA_UNLOCK (alpha);
-    return GST_FLOW_OK;
   }
 }
 

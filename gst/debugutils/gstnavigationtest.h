@@ -50,8 +50,6 @@ struct _GstNavigationtest
 {
   GstVideoFilter videofilter;
 
-  GstVideoInfo info;
-
   gdouble x, y;
   GSList *clicks;
 };

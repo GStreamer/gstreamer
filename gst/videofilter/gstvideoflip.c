@@ -180,24 +180,6 @@ gst_video_flip_transform_caps (GstBaseTransform * trans,
   return ret;
 }
 
-static gboolean
-gst_video_flip_get_unit_size (GstBaseTransform * btrans, GstCaps * caps,
-    gsize * size)
-{
-  GstVideoInfo info;
-
-  if (!gst_video_info_from_caps (&info, caps))
-    return FALSE;
-
-  *size = info.size;
-
-  GST_DEBUG_OBJECT (btrans,
-      "our frame size is %" G_GSIZE_FORMAT " bytes (%dx%d)", *size, info.width,
-      info.height);
-
-  return TRUE;
-}
-
 static void
 gst_video_flip_planar_yuv (GstVideoFlip * videoflip, GstVideoFrame * dest,
     const GstVideoFrame * src)
@@ -765,20 +747,15 @@ gst_video_flip_y422 (GstVideoFlip * videoflip, GstVideoFrame * dest,
 
 
 static gboolean
-gst_video_flip_set_caps (GstBaseTransform * btrans, GstCaps * incaps,
-    GstCaps * outcaps)
+gst_video_flip_set_info (GstVideoFilter * vfilter, GstCaps * incaps,
+    GstVideoInfo * in_info, GstCaps * outcaps, GstVideoInfo * out_info)
 {
-  GstVideoFlip *vf = GST_VIDEO_FLIP (btrans);
-  GstVideoInfo in_info, out_info;
+  GstVideoFlip *vf = GST_VIDEO_FLIP (vfilter);
   gboolean ret = FALSE;
 
   vf->process = NULL;
 
-  if (!gst_video_info_from_caps (&in_info, incaps)
-      || !gst_video_info_from_caps (&out_info, outcaps))
-    goto invalid_caps;
-
-  if (GST_VIDEO_INFO_FORMAT (&in_info) != GST_VIDEO_INFO_FORMAT (&out_info))
+  if (GST_VIDEO_INFO_FORMAT (in_info) != GST_VIDEO_INFO_FORMAT (out_info))
     goto invalid_caps;
 
   /* Check that they are correct */
@@ -787,11 +764,11 @@ gst_video_flip_set_caps (GstBaseTransform * btrans, GstCaps * incaps,
     case GST_VIDEO_FLIP_METHOD_90L:
     case GST_VIDEO_FLIP_METHOD_TRANS:
     case GST_VIDEO_FLIP_METHOD_OTHER:
-      if ((in_info.width != out_info.height) ||
-          (in_info.height != out_info.width)) {
+      if ((in_info->width != out_info->height) ||
+          (in_info->height != out_info->width)) {
         GST_ERROR_OBJECT (vf, "we are inverting width and height but caps "
-            "are not correct : %dx%d to %dx%d", in_info.width,
-            in_info.height, out_info.width, out_info.height);
+            "are not correct : %dx%d to %dx%d", in_info->width,
+            in_info->height, out_info->width, out_info->height);
         goto beach;
       }
       break;
@@ -801,11 +778,11 @@ gst_video_flip_set_caps (GstBaseTransform * btrans, GstCaps * incaps,
     case GST_VIDEO_FLIP_METHOD_180:
     case GST_VIDEO_FLIP_METHOD_HORIZ:
     case GST_VIDEO_FLIP_METHOD_VERT:
-      if ((in_info.width != out_info.width) ||
-          (in_info.height != out_info.height)) {
+      if ((in_info->width != out_info->width) ||
+          (in_info->height != out_info->height)) {
         GST_ERROR_OBJECT (vf, "we are keeping width and height but caps "
-            "are not correct : %dx%d to %dx%d", in_info.width,
-            in_info.height, out_info.width, out_info.height);
+            "are not correct : %dx%d to %dx%d", in_info->width,
+            in_info->height, out_info->width, out_info->height);
         goto beach;
       }
       break;
@@ -815,10 +792,8 @@ gst_video_flip_set_caps (GstBaseTransform * btrans, GstCaps * incaps,
   }
 
   ret = TRUE;
-  vf->in_info = in_info;
-  vf->out_info = out_info;
 
-  switch (GST_VIDEO_INFO_FORMAT (&in_info)) {
+  switch (GST_VIDEO_INFO_FORMAT (in_info)) {
     case GST_VIDEO_FORMAT_I420:
     case GST_VIDEO_FORMAT_YV12:
     case GST_VIDEO_FORMAT_Y444:
@@ -873,33 +848,20 @@ gst_video_flip_before_transform (GstBaseTransform * trans, GstBuffer * in)
 }
 
 static GstFlowReturn
-gst_video_flip_transform (GstBaseTransform * trans, GstBuffer * in,
-    GstBuffer * out)
+gst_video_flip_transform_frame (GstVideoFilter * vfilter,
+    GstVideoFrame * in_frame, GstVideoFrame * out_frame)
 {
-  GstVideoFlip *videoflip = GST_VIDEO_FLIP (trans);
-  GstVideoFrame dest;
-  GstVideoFrame src;
+  GstVideoFlip *videoflip = GST_VIDEO_FLIP (vfilter);
 
   if (G_UNLIKELY (videoflip->process == NULL))
     goto not_negotiated;
 
-  if (!gst_video_frame_map (&src, &videoflip->in_info, in, GST_MAP_READ))
-    goto invalid_in;
-
-  if (!gst_video_frame_map (&dest, &videoflip->out_info, out, GST_MAP_WRITE))
-    goto invalid_out;
-
-  GST_LOG_OBJECT (videoflip, "videoflip: flipping %dx%d to %dx%d (%s)",
-      videoflip->in_info.width, videoflip->in_info.height,
-      videoflip->out_info.width, videoflip->out_info.height,
+  GST_LOG_OBJECT (videoflip, "videoflip: flipping (%s)",
       video_flip_methods[videoflip->method].value_nick);
 
   GST_OBJECT_LOCK (videoflip);
-  videoflip->process (videoflip, &dest, &src);
+  videoflip->process (videoflip, out_frame, in_frame);
   GST_OBJECT_UNLOCK (videoflip);
-
-  gst_video_frame_unmap (&src);
-  gst_video_frame_unmap (&dest);
 
   return GST_FLOW_OK;
 
@@ -907,17 +869,6 @@ not_negotiated:
   {
     GST_ERROR_OBJECT (videoflip, "Not negotiated yet");
     return GST_FLOW_NOT_NEGOTIATED;
-  }
-invalid_in:
-  {
-    GST_ERROR_OBJECT (videoflip, "invalid input frame");
-    return GST_FLOW_OK;
-  }
-invalid_out:
-  {
-    GST_ERROR_OBJECT (videoflip, "invalid output frame");
-    gst_video_frame_unmap (&src);
-    return GST_FLOW_OK;
   }
 }
 
@@ -928,6 +879,7 @@ gst_video_flip_src_event (GstBaseTransform * trans, GstEvent * event)
   gdouble new_x, new_y, x, y;
   GstStructure *structure;
   gboolean ret;
+  GstVideoInfo *out_info = &GST_VIDEO_FILTER (trans)->out_info;
 
   GST_DEBUG_OBJECT (vf, "handling %s event", GST_EVENT_TYPE_NAME (event));
 
@@ -943,31 +895,31 @@ gst_video_flip_src_event (GstBaseTransform * trans, GstEvent * event)
         switch (vf->method) {
           case GST_VIDEO_FLIP_METHOD_90R:
             new_x = y;
-            new_y = vf->out_info.width - x;
+            new_y = out_info->width - x;
             break;
           case GST_VIDEO_FLIP_METHOD_90L:
-            new_x = vf->out_info.height - y;
+            new_x = out_info->height - y;
             new_y = x;
             break;
           case GST_VIDEO_FLIP_METHOD_OTHER:
-            new_x = vf->out_info.height - y;
-            new_y = vf->out_info.width - x;
+            new_x = out_info->height - y;
+            new_y = out_info->width - x;
             break;
           case GST_VIDEO_FLIP_METHOD_TRANS:
             new_x = y;
             new_y = x;
             break;
           case GST_VIDEO_FLIP_METHOD_180:
-            new_x = vf->out_info.width - x;
-            new_y = vf->out_info.height - y;
+            new_x = out_info->width - x;
+            new_y = out_info->height - y;
             break;
           case GST_VIDEO_FLIP_METHOD_HORIZ:
-            new_x = vf->out_info.width - x;
+            new_x = out_info->width - x;
             new_y = y;
             break;
           case GST_VIDEO_FLIP_METHOD_VERT:
             new_x = x;
-            new_y = vf->out_info.height - y;
+            new_y = out_info->height - y;
             break;
           default:
             new_x = x;
@@ -1047,6 +999,7 @@ gst_video_flip_class_init (GstVideoFlipClass * klass)
   GObjectClass *gobject_class = (GObjectClass *) klass;
   GstElementClass *gstelement_class = (GstElementClass *) klass;
   GstBaseTransformClass *trans_class = (GstBaseTransformClass *) klass;
+  GstVideoFilterClass *vfilter_class = (GstVideoFilterClass *) klass;
 
   GST_DEBUG_CATEGORY_INIT (video_flip_debug, "videoflip", 0, "videoflip");
 
@@ -1069,12 +1022,13 @@ gst_video_flip_class_init (GstVideoFlipClass * klass)
 
   trans_class->transform_caps =
       GST_DEBUG_FUNCPTR (gst_video_flip_transform_caps);
-  trans_class->set_caps = GST_DEBUG_FUNCPTR (gst_video_flip_set_caps);
-  trans_class->get_unit_size = GST_DEBUG_FUNCPTR (gst_video_flip_get_unit_size);
-  trans_class->transform = GST_DEBUG_FUNCPTR (gst_video_flip_transform);
   trans_class->before_transform =
       GST_DEBUG_FUNCPTR (gst_video_flip_before_transform);
   trans_class->src_event = GST_DEBUG_FUNCPTR (gst_video_flip_src_event);
+
+  vfilter_class->set_info = GST_DEBUG_FUNCPTR (gst_video_flip_set_info);
+  vfilter_class->transform_frame =
+      GST_DEBUG_FUNCPTR (gst_video_flip_transform_frame);
 }
 
 static void

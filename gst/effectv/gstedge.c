@@ -70,21 +70,15 @@ GST_STATIC_PAD_TEMPLATE ("sink",
     );
 
 static gboolean
-gst_edgetv_set_caps (GstBaseTransform * btrans, GstCaps * incaps,
-    GstCaps * outcaps)
+gst_edgetv_set_info (GstVideoFilter * filter, GstCaps * incaps,
+    GstVideoInfo * in_info, GstCaps * outcaps, GstVideoInfo * out_info)
 {
-  GstEdgeTV *edgetv = GST_EDGETV (btrans);
-  GstVideoInfo info;
+  GstEdgeTV *edgetv = GST_EDGETV (filter);
   guint map_size;
   gint width, height;
 
-  if (!gst_video_info_from_caps (&info, incaps))
-    goto invalid_caps;
-
-  edgetv->info = info;
-
-  width = GST_VIDEO_INFO_WIDTH (&info);
-  height = GST_VIDEO_INFO_HEIGHT (&info);
+  width = GST_VIDEO_INFO_WIDTH (in_info);
+  height = GST_VIDEO_INFO_HEIGHT (in_info);
 
   edgetv->map_width = width / 4;
   edgetv->map_height = height / 4;
@@ -96,19 +90,13 @@ gst_edgetv_set_caps (GstBaseTransform * btrans, GstCaps * incaps,
   edgetv->map = (guint32 *) g_malloc0 (map_size);
 
   return TRUE;
-
-  /* ERRORS */
-invalid_caps:
-  {
-    GST_DEBUG_OBJECT (btrans, "could not parse caps");
-    return FALSE;
-  }
 }
 
 static GstFlowReturn
-gst_edgetv_transform (GstBaseTransform * trans, GstBuffer * in, GstBuffer * out)
+gst_edgetv_transform_frame (GstVideoFilter * vfilter, GstVideoFrame * in_frame,
+    GstVideoFrame * out_frame)
 {
-  GstEdgeTV *filter = GST_EDGETV (trans);
+  GstEdgeTV *filter = GST_EDGETV (vfilter);
   gint x, y, r, g, b;
   guint32 *src, *dest;
   guint32 p, q;
@@ -117,20 +105,16 @@ gst_edgetv_transform (GstBaseTransform * trans, GstBuffer * in, GstBuffer * out)
   gint video_width_margin;
   guint32 *map;
   GstFlowReturn ret = GST_FLOW_OK;
-  GstVideoFrame in_frame, out_frame;
 
   map = filter->map;
   map_height = filter->map_height;
   map_width = filter->map_width;
   video_width_margin = filter->video_width_margin;
 
-  gst_video_frame_map (&in_frame, &filter->info, in, GST_MAP_READ);
-  gst_video_frame_map (&out_frame, &filter->info, out, GST_MAP_WRITE);
+  src = GST_VIDEO_FRAME_PLANE_DATA (in_frame, 0);
+  dest = GST_VIDEO_FRAME_PLANE_DATA (out_frame, 0);
 
-  src = GST_VIDEO_FRAME_PLANE_DATA (&in_frame, 0);
-  dest = GST_VIDEO_FRAME_PLANE_DATA (&out_frame, 0);
-
-  width = GST_VIDEO_FRAME_WIDTH (&in_frame);
+  width = GST_VIDEO_FRAME_WIDTH (in_frame);
 
   src += width * 4 + 4;
   dest += width * 4 + 4;
@@ -244,6 +228,7 @@ gst_edgetv_class_init (GstEdgeTVClass * klass)
   GObjectClass *gobject_class = (GObjectClass *) klass;
   GstElementClass *gstelement_class = (GstElementClass *) klass;
   GstBaseTransformClass *trans_class = (GstBaseTransformClass *) klass;
+  GstVideoFilterClass *vfilter_class = (GstVideoFilterClass *) klass;
 
   gobject_class->finalize = gst_edgetv_finalize;
 
@@ -256,9 +241,11 @@ gst_edgetv_class_init (GstEdgeTVClass * klass)
   gst_element_class_add_pad_template (gstelement_class,
       gst_static_pad_template_get (&gst_edgetv_src_template));
 
-  trans_class->set_caps = GST_DEBUG_FUNCPTR (gst_edgetv_set_caps);
-  trans_class->transform = GST_DEBUG_FUNCPTR (gst_edgetv_transform);
   trans_class->start = GST_DEBUG_FUNCPTR (gst_edgetv_start);
+
+  vfilter_class->set_info = GST_DEBUG_FUNCPTR (gst_edgetv_set_info);
+  vfilter_class->transform_frame =
+      GST_DEBUG_FUNCPTR (gst_edgetv_transform_frame);
 }
 
 static void

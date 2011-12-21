@@ -60,9 +60,6 @@ struct _GstVideoBalance {
   gdouble hue;
   gdouble saturation;
 
-  /* format */
-  GstVideoInfo info;
-
   /* tables */
   guint8 tabley[256];
   guint8 *tableu[256];

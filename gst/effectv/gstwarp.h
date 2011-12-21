@@ -50,8 +50,6 @@ struct _GstWarpTV
   GstVideoFilter videofilter;
 
   /* < private > */
-  GstVideoInfo info;
-
   gint32 *disttable;
   gint32 ctable[1024];
   gint tval;

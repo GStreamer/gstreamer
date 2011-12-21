@@ -82,33 +82,20 @@ GST_STATIC_PAD_TEMPLATE ("sink",
     );
 
 static gboolean
-gst_warptv_set_caps (GstBaseTransform * btrans, GstCaps * incaps,
-    GstCaps * outcaps)
+gst_warptv_set_info (GstVideoFilter * vfilter, GstCaps * incaps,
+    GstVideoInfo * in_info, GstCaps * outcaps, GstVideoInfo * out_info)
 {
-  GstWarpTV *filter = GST_WARPTV (btrans);
-  GstVideoInfo info;
+  GstWarpTV *filter = GST_WARPTV (vfilter);
   gint width, height;
 
-  if (!gst_video_info_from_caps (&info, incaps))
-    goto invalid_caps;
-
-  filter->info = info;
-
-  width = GST_VIDEO_INFO_WIDTH (&info);
-  height = GST_VIDEO_INFO_HEIGHT (&info);
+  width = GST_VIDEO_INFO_WIDTH (in_info);
+  height = GST_VIDEO_INFO_HEIGHT (in_info);
 
   g_free (filter->disttable);
   filter->disttable = g_malloc (width * height * sizeof (guint32));
   initDistTable (filter, width, height);
 
   return TRUE;
-
-  /* ERRORS */
-invalid_caps:
-  {
-    GST_DEBUG_OBJECT (filter, "invalid caps received");
-    return FALSE;
-  }
 }
 
 static gint32 sintable[1024 + 256];
@@ -152,9 +139,10 @@ initDistTable (GstWarpTV * filter, gint width, gint height)
 }
 
 static GstFlowReturn
-gst_warptv_transform (GstBaseTransform * trans, GstBuffer * in, GstBuffer * out)
+gst_warptv_transform_frame (GstVideoFilter * filter, GstVideoFrame * in_frame,
+    GstVideoFrame * out_frame)
 {
-  GstWarpTV *warptv = GST_WARPTV (trans);
+  GstWarpTV *warptv = GST_WARPTV (filter);
   gint width, height;
   gint xw, yw, cw;
   gint32 c, i, x, y, dx, dy, maxx, maxy;
@@ -162,19 +150,15 @@ gst_warptv_transform (GstBaseTransform * trans, GstBuffer * in, GstBuffer * out)
   gint32 *ctable;
   guint32 *src, *dest;
   gint sstride, dstride;
-  GstVideoFrame in_frame, out_frame;
 
-  gst_video_frame_map (&in_frame, &warptv->info, in, GST_MAP_READ);
-  gst_video_frame_map (&out_frame, &warptv->info, out, GST_MAP_WRITE);
+  src = GST_VIDEO_FRAME_PLANE_DATA (in_frame, 0);
+  dest = GST_VIDEO_FRAME_PLANE_DATA (out_frame, 0);
 
-  src = GST_VIDEO_FRAME_PLANE_DATA (&in_frame, 0);
-  dest = GST_VIDEO_FRAME_PLANE_DATA (&out_frame, 0);
+  sstride = GST_VIDEO_FRAME_PLANE_STRIDE (in_frame, 0) / 4;
+  dstride = GST_VIDEO_FRAME_PLANE_STRIDE (out_frame, 0) / 4;
 
-  sstride = GST_VIDEO_FRAME_PLANE_STRIDE (&in_frame, 0) / 4;
-  dstride = GST_VIDEO_FRAME_PLANE_STRIDE (&out_frame, 0) / 4;
-
-  width = GST_VIDEO_FRAME_WIDTH (&in_frame);
-  height = GST_VIDEO_FRAME_HEIGHT (&in_frame);
+  width = GST_VIDEO_FRAME_WIDTH (in_frame);
+  height = GST_VIDEO_FRAME_HEIGHT (in_frame);
 
   GST_OBJECT_LOCK (warptv);
   xw = (gint) (sin ((warptv->tval + 100) * M_PI / 128) * 30);
@@ -222,9 +206,6 @@ gst_warptv_transform (GstBaseTransform * trans, GstBuffer * in, GstBuffer * out)
   warptv->tval = (warptv->tval + 1) & 511;
   GST_OBJECT_UNLOCK (warptv);
 
-  gst_video_frame_unmap (&in_frame);
-  gst_video_frame_unmap (&out_frame);
-
   return GST_FLOW_OK;
 }
 
@@ -235,26 +216,6 @@ gst_warptv_start (GstBaseTransform * trans)
 
   warptv->tval = 0;
 
-  return TRUE;
-}
-
-static gboolean
-gst_wraptv_decide_allocation (GstBaseTransform * trans, GstQuery * query)
-{
-  GstBufferPool *pool = NULL;
-  guint size, min, max, prefix, alignment;
-
-  gst_query_parse_allocation_params (query, &size, &min, &max, &prefix,
-      &alignment, &pool);
-
-  if (pool) {
-    GstStructure *config;
-
-    config = gst_buffer_pool_get_config (pool);
-    gst_buffer_pool_config_add_option (config,
-        GST_BUFFER_POOL_OPTION_VIDEO_META);
-    gst_buffer_pool_set_config (pool, config);
-  }
   return TRUE;
 }
 
@@ -275,6 +236,7 @@ gst_warptv_class_init (GstWarpTVClass * klass)
   GObjectClass *gobject_class = (GObjectClass *) klass;
   GstElementClass *gstelement_class = (GstElementClass *) klass;
   GstBaseTransformClass *trans_class = (GstBaseTransformClass *) klass;
+  GstVideoFilterClass *vfilter_class = (GstVideoFilterClass *) klass;
 
   gobject_class->finalize = gst_warptv_finalize;
 
@@ -289,10 +251,10 @@ gst_warptv_class_init (GstWarpTVClass * klass)
       gst_static_pad_template_get (&gst_warptv_src_template));
 
   trans_class->start = GST_DEBUG_FUNCPTR (gst_warptv_start);
-  trans_class->set_caps = GST_DEBUG_FUNCPTR (gst_warptv_set_caps);
-  trans_class->decide_allocation =
-      GST_DEBUG_FUNCPTR (gst_wraptv_decide_allocation);
-  trans_class->transform = GST_DEBUG_FUNCPTR (gst_warptv_transform);
+
+  vfilter_class->set_info = GST_DEBUG_FUNCPTR (gst_warptv_set_info);
+  vfilter_class->transform_frame =
+      GST_DEBUG_FUNCPTR (gst_warptv_transform_frame);
 
   initSinTable ();
 }
