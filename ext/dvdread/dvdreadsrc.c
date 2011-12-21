@@ -1585,7 +1585,8 @@ gst_dvd_read_src_goto_sector (GstDvdReadSrc * src, int angle)
       gint first = src->cur_pgc->cell_playback[cur].first_sector;
       gint last = src->cur_pgc->cell_playback[cur].last_sector;
       GST_DEBUG_OBJECT (src, "Cell %d sector bounds: %d %d", cur, first, last);
-      if (seek_to >= first && seek_to <= last) {
+      /* seeking to 0 should end up at first chapter in any case */
+      if ((seek_to >= first && seek_to <= last) || (seek_to == 0 && i == 0)) {
         GST_DEBUG_OBJECT (src, "Seek target found in chapter %d", i);
         chapter = i;
         goto done;
