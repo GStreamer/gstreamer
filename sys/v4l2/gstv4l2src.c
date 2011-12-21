@@ -80,7 +80,6 @@ enum
   PROP_DECIMATE
 };
 
-GST_IMPLEMENT_V4L2_PROBE_METHODS (GstV4l2SrcClass, gst_v4l2src);
 GST_IMPLEMENT_V4L2_COLOR_BALANCE_METHODS (GstV4l2Src, gst_v4l2src);
 GST_IMPLEMENT_V4L2_TUNER_METHODS (GstV4l2Src, gst_v4l2src);
 #ifdef HAVE_XVIDEO
@@ -103,9 +102,7 @@ G_DEFINE_TYPE_WITH_CODE (GstV4l2Src, gst_v4l2src, GST_TYPE_PUSH_SRC,
     G_IMPLEMENT_INTERFACE (GST_TYPE_COLOR_BALANCE,
         gst_v4l2src_color_balance_interface_init);
     G_IMPLEMENT_INTERFACE (GST_TYPE_VIDEO_ORIENTATION,
-        gst_v4l2src_video_orientation_interface_init);
-    G_IMPLEMENT_INTERFACE (GST_TYPE_PROPERTY_PROBE,
-        gst_v4l2src_property_probe_interface_init));
+        gst_v4l2src_video_orientation_interface_init));
 
 static void gst_v4l2src_dispose (GObject * object);
 static void gst_v4l2src_finalize (GstV4l2Src * v4l2src);

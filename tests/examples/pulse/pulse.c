@@ -19,6 +19,7 @@
 
 #include <gst/gst.h>
 
+#if 0
 #include <gst/interfaces/propertyprobe.h>
 
 static void
@@ -57,14 +58,17 @@ test_element (const gchar * name)
   gst_element_set_state (element, GST_STATE_NULL);
   gst_object_unref (GST_OBJECT (element));
 }
+#endif
 
 int
 main (int argc, char *argv[])
 {
   gst_init (&argc, &argv);
 
+#if 0
   test_element ("pulsesink");
   test_element ("pulsesrc");
+#endif
 
   return 0;
 }

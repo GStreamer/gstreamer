@@ -51,7 +51,6 @@
 #include <gst/base/gstpushsrc.h>
 
 #include <gst/video/video.h>
-#include <gst/interfaces/propertyprobe.h>
 
 typedef struct _GstV4l2Object GstV4l2Object;
 typedef struct _GstV4l2ObjectClassHelper GstV4l2ObjectClassHelper;
@@ -201,6 +200,7 @@ gboolean  gst_v4l2_object_open               (GstV4l2Object *v4l2object);
 gboolean  gst_v4l2_object_close              (GstV4l2Object *v4l2object);
 
 /* probing */
+#if 0
 const GList* gst_v4l2_probe_get_properties  (GstPropertyProbe * probe);
 
 void         gst_v4l2_probe_probe_property  (GstPropertyProbe * probe, guint prop_id,
@@ -212,6 +212,7 @@ gboolean     gst_v4l2_probe_needs_probe     (GstPropertyProbe * probe, guint pro
 GValueArray* gst_v4l2_probe_get_values      (GstPropertyProbe * probe, guint prop_id,
                                              const GParamSpec * pspec,
                                              GList ** klass_devices);
+#endif
 
 GstCaps*      gst_v4l2_object_probe_caps_for_format (GstV4l2Object *v4l2object, guint32 pixelformat,
                                              const GstStructure * template);

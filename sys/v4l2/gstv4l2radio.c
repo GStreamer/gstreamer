@@ -251,7 +251,6 @@ gst_v4l2radio_set_unmute (GstV4l2Radio * radio)
   return gst_v4l2radio_set_mute_on (radio, FALSE);
 }
 
-GST_IMPLEMENT_V4L2_PROBE_METHODS (GstV4l2RadioClass, gst_v4l2radio);
 GST_IMPLEMENT_V4L2_TUNER_METHODS (GstV4l2Radio, gst_v4l2radio);
 
 static void gst_v4l2radio_uri_handler_init (gpointer g_iface,
@@ -268,9 +267,7 @@ G_DEFINE_TYPE_WITH_CODE (GstV4l2Radio, gst_v4l2radio, GST_TYPE_ELEMENT,
     G_IMPLEMENT_INTERFACE (GST_TYPE_URI_HANDLER,
         gst_v4l2radio_uri_handler_init);
     G_IMPLEMENT_INTERFACE (GST_TYPE_TUNER,
-        gst_v4l2radio_tuner_interface_reinit);
-    G_IMPLEMENT_INTERFACE (GST_TYPE_PROPERTY_PROBE,
-        gst_v4l2radio_property_probe_interface_init));
+        gst_v4l2radio_tuner_interface_reinit));
 
 static void gst_v4l2radio_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);

@@ -28,7 +28,6 @@
 
 G_BEGIN_DECLS
 
-#include <gst/interfaces/propertyprobe.h>
 #include <pulse/pulseaudio.h>
 #include <pulse/thread-mainloop.h>
 

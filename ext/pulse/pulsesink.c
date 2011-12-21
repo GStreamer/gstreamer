@@ -1691,13 +1691,9 @@ static GstStaticPadTemplate pad_template = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS (PULSE_SINK_TEMPLATE_CAPS));
 
-GST_IMPLEMENT_PULSEPROBE_METHODS (GstPulseSink, gst_pulsesink);
-
 #define gst_pulsesink_parent_class parent_class
 G_DEFINE_TYPE_WITH_CODE (GstPulseSink, gst_pulsesink, GST_TYPE_AUDIO_BASE_SINK,
     gst_pulsesink_init_contexts ();
-    G_IMPLEMENT_INTERFACE (GST_TYPE_PROPERTY_PROBE,
-        gst_pulsesink_property_probe_interface_init);
     G_IMPLEMENT_INTERFACE (GST_TYPE_STREAM_VOLUME, NULL)
     );
 

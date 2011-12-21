@@ -65,14 +65,12 @@ static GstStateChangeReturn gst_pulsemixer_change_state (GstElement * element,
     GstStateChange transition);
 
 GST_IMPLEMENT_PULSEMIXER_CTRL_METHODS (GstPulseMixer, gst_pulsemixer);
-GST_IMPLEMENT_PULSEPROBE_METHODS (GstPulseMixer, gst_pulsemixer);
 
 
 #define gst_pulsemixer_parent_class parent_class
 G_DEFINE_TYPE_WITH_CODE (GstPulseMixer, gst_pulsemixer, GST_TYPE_ELEMENT,
-    G_IMPLEMENT_INTERFACE (GST_TYPE_MIXER, gst_pulsemixer_mixer_interface_init);
-    G_IMPLEMENT_INTERFACE (GST_TYPE_PROPERTY_PROBE,
-        gst_pulsemixer_property_probe_interface_init));
+    G_IMPLEMENT_INTERFACE (GST_TYPE_MIXER,
+        gst_pulsemixer_mixer_interface_init));
 
 static void
 gst_pulsemixer_class_init (GstPulseMixerClass * g_class)

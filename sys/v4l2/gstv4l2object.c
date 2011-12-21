@@ -69,6 +69,7 @@ enum
   V4L2_STD_OBJECT_PROPS,
 };
 
+#if 0
 G_LOCK_DEFINE_STATIC (probe_lock);
 
 const GList *
@@ -290,6 +291,7 @@ gst_v4l2_probe_get_values (GstPropertyProbe * probe,
 
   return array;
 }
+#endif
 
 #define GST_TYPE_V4L2_DEVICE_FLAGS (gst_v4l2_device_get_type ())
 static GType

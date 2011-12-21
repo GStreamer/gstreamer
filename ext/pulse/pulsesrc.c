@@ -127,13 +127,10 @@ static GstStaticPadTemplate pad_template = GST_STATIC_PAD_TEMPLATE ("src",
 
 
 GST_IMPLEMENT_PULSEMIXER_CTRL_METHODS (GstPulseSrc, gst_pulsesrc);
-GST_IMPLEMENT_PULSEPROBE_METHODS (GstPulseSrc, gst_pulsesrc);
 
 #define gst_pulsesrc_parent_class parent_class
 G_DEFINE_TYPE_WITH_CODE (GstPulseSrc, gst_pulsesrc, GST_TYPE_AUDIO_SRC,
     G_IMPLEMENT_INTERFACE (GST_TYPE_MIXER, gst_pulsesrc_mixer_interface_init);
-    G_IMPLEMENT_INTERFACE (GST_TYPE_PROPERTY_PROBE,
-        gst_pulsesrc_property_probe_interface_init);
     G_IMPLEMENT_INTERFACE (GST_TYPE_STREAM_VOLUME, NULL));
 
 static void
