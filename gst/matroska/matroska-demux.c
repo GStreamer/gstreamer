@@ -1962,7 +1962,7 @@ gst_matroska_demux_handle_seek_event (GstMatroskaDemux * demux,
               seeksegment.last_stop, &demux->seek_index, &demux->seek_entry)) ==
       NULL) {
     /* pull mode without index can scan later on */
-    if (demux->common.index || demux->streaming) {
+    if (demux->streaming) {
       GST_DEBUG_OBJECT (demux, "No matching seek entry in index");
       GST_OBJECT_UNLOCK (demux);
       return FALSE;
@@ -1999,7 +1999,7 @@ next:
   GST_PAD_STREAM_LOCK (demux->common.sinkpad);
 
   /* pull mode without index can do some scanning */
-  if (!demux->streaming && !demux->common.index) {
+  if (!demux->streaming && !entry) {
     /* need to stop flushing upstream as we need it next */
     if (flush)
       gst_pad_push_event (demux->common.sinkpad, gst_event_new_flush_stop ());
