@@ -443,7 +443,6 @@ gst_aac_parse_read_loas_audio_specific_config (GstAacParse * aacparse,
     GstBitReader * br, gint * sample_rate, gint * channels, guint32 * bits)
 {
   guint8 audio_object_type, channel_configuration;
-  gboolean sbr = FALSE;
 
   if (!gst_aac_parse_get_audio_object_type (aacparse, br, &audio_object_type))
     return FALSE;
@@ -461,7 +460,6 @@ gst_aac_parse_read_loas_audio_specific_config (GstAacParse * aacparse,
   if (audio_object_type == 5) {
     GST_LOG_OBJECT (aacparse,
         "Audio object type 5, so rereading sampling rate...");
-    sbr = TRUE;
     if (!gst_aac_parse_get_audio_sample_rate (aacparse, br, sample_rate))
       return FALSE;
   }
