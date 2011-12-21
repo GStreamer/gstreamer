@@ -17,7 +17,29 @@
  * Boston, MA 02111-1307, USA.
  */
 
+#include "gst/video/gstvideometa.h"
 #include "gst/video/gstvideopool.h"
+
+/**
+ * gst_video_alignment_reset:
+ * @align: a #GstVideoAlignment
+ *
+ * Set @align to its default values with no padding and no alignment.
+ */
+void
+gst_video_alignment_reset (GstVideoAlignment * align)
+{
+  gint i;
+
+  g_return_if_fail (align != NULL);
+
+  align->padding_top = 0;
+  align->padding_bottom = 0;
+  align->padding_left = 0;
+  align->padding_right = 0;
+  for (i = 0; i < GST_VIDEO_MAX_PLANES; i++)
+    align->stride_align[i] = 0;
+}
 
 /**
  * gst_buffer_pool_config_set_video_alignment:
@@ -71,4 +93,239 @@ gst_buffer_pool_config_get_video_alignment (GstStructure * config,
       "stride-align1", G_TYPE_UINT, &align->stride_align[1],
       "stride-align2", G_TYPE_UINT, &align->stride_align[2],
       "stride-align3", G_TYPE_UINT, &align->stride_align[3], NULL);
+}
+
+static void
+gst_video_info_align (GstVideoInfo * info, GstVideoAlignment * align)
+{
+  const GstVideoFormatInfo *vinfo = info->finfo;
+  gint width, height;
+  gint padded_width, padded_height;
+  gint i;
+
+  width = GST_VIDEO_INFO_WIDTH (info);
+  height = GST_VIDEO_INFO_HEIGHT (info);
+
+  GST_LOG ("padding %u-%ux%u-%u", align->padding_top,
+      align->padding_left, align->padding_right, align->padding_bottom);
+
+  /* add the padding */
+  padded_width = width + align->padding_left + align->padding_right;
+  padded_height = height + align->padding_top + align->padding_bottom;
+
+  gst_video_info_set_format (info, GST_VIDEO_INFO_FORMAT (info),
+      padded_width, padded_height);
+
+  info->width = width;
+  info->height = height;
+
+  /* FIXME, not quite correct, NV12 would apply the vedge twice on the second
+   * plane */
+  for (i = 0; i < GST_VIDEO_INFO_N_COMPONENTS (info); i++) {
+    gint vedge, hedge, plane;
+
+    hedge = GST_VIDEO_FORMAT_INFO_SCALE_WIDTH (vinfo, i, align->padding_left);
+    vedge = GST_VIDEO_FORMAT_INFO_SCALE_HEIGHT (vinfo, i, align->padding_top);
+    plane = GST_VIDEO_FORMAT_INFO_PLANE (vinfo, i);
+
+    GST_DEBUG ("plane %d: hedge %d vedge %d align %d", plane, hedge, vedge,
+        align->stride_align[i]);
+
+    info->offset[plane] += (vedge * info->stride[plane]) + hedge;
+  }
+}
+
+/* bufferpool */
+struct _GstVideoBufferPoolPrivate
+{
+  GstCaps *caps;
+  GstVideoInfo info;
+  GstVideoAlignment video_align;
+  gboolean add_metavideo;
+  gboolean need_alignment;
+  guint prefix;
+  guint align;
+};
+
+static void gst_video_buffer_pool_finalize (GObject * object);
+
+#define GST_VIDEO_BUFFER_POOL_GET_PRIVATE(obj)  \
+   (G_TYPE_INSTANCE_GET_PRIVATE ((obj), GST_TYPE_VIDEO_BUFFER_POOL, GstVideoBufferPoolPrivate))
+
+#define gst_video_buffer_pool_parent_class parent_class
+G_DEFINE_TYPE (GstVideoBufferPool, gst_video_buffer_pool, GST_TYPE_BUFFER_POOL);
+
+static const gchar **
+video_buffer_pool_get_options (GstBufferPool * pool)
+{
+  static const gchar *options[] = { GST_BUFFER_POOL_OPTION_VIDEO_META,
+    GST_BUFFER_POOL_OPTION_VIDEO_ALIGNMENT, NULL
+  };
+  return options;
+}
+
+static gboolean
+video_buffer_pool_set_config (GstBufferPool * pool, GstStructure * config)
+{
+  GstVideoBufferPool *vpool = GST_VIDEO_BUFFER_POOL_CAST (pool);
+  GstVideoBufferPoolPrivate *priv = vpool->priv;
+  GstVideoInfo info;
+  const GstCaps *caps;
+  gint width, height;
+  guint prefix, align;
+
+  if (!gst_buffer_pool_config_get (config, &caps, NULL, NULL, NULL, &prefix,
+          &align))
+    goto wrong_config;
+
+  if (caps == NULL)
+    goto no_caps;
+
+  /* now parse the caps from the config */
+  if (!gst_video_info_from_caps (&info, caps))
+    goto wrong_caps;
+
+  width = info.width;
+  height = info.height;
+
+  GST_LOG_OBJECT (pool, "%dx%d, caps %" GST_PTR_FORMAT, width, height, caps);
+
+  if (priv->caps)
+    gst_caps_unref (priv->caps);
+  priv->caps = gst_caps_copy (caps);
+  priv->prefix = prefix;
+  priv->align = align;
+
+  /* enable metadata based on config of the pool */
+  priv->add_metavideo =
+      gst_buffer_pool_config_has_option (config,
+      GST_BUFFER_POOL_OPTION_VIDEO_META);
+
+  /* parse extra alignment info */
+  priv->need_alignment = gst_buffer_pool_config_has_option (config,
+      GST_BUFFER_POOL_OPTION_VIDEO_ALIGNMENT);
+
+  if (priv->need_alignment) {
+    /* get an apply the alignment to the info */
+    gst_buffer_pool_config_get_video_alignment (config, &priv->video_align);
+    gst_video_info_align (&info, &priv->video_align);
+
+    /* we need the video metadata too now */
+    priv->add_metavideo = TRUE;
+  }
+  priv->info = info;
+
+  return GST_BUFFER_POOL_CLASS (parent_class)->set_config (pool, config);
+
+  /* ERRORS */
+wrong_config:
+  {
+    GST_WARNING_OBJECT (pool, "invalid config");
+    return FALSE;
+  }
+no_caps:
+  {
+    GST_WARNING_OBJECT (pool, "no caps in config");
+    return FALSE;
+  }
+wrong_caps:
+  {
+    GST_WARNING_OBJECT (pool,
+        "failed getting geometry from caps %" GST_PTR_FORMAT, caps);
+    return FALSE;
+  }
+}
+
+static GstFlowReturn
+video_buffer_pool_alloc (GstBufferPool * pool, GstBuffer ** buffer,
+    GstBufferPoolParams * params)
+{
+  GstVideoBufferPool *vpool = GST_VIDEO_BUFFER_POOL_CAST (pool);
+  GstVideoBufferPoolPrivate *priv = vpool->priv;
+  GstVideoInfo *info;
+  GstMemory *mem;
+
+  info = &priv->info;
+
+  GST_DEBUG_OBJECT (pool, "alloc %u", info->size);
+
+  mem = gst_allocator_alloc (NULL, info->size + priv->prefix, priv->align);
+  if (mem == NULL)
+    goto no_memory;
+
+  *buffer = gst_buffer_new ();
+  gst_memory_resize (mem, priv->prefix, info->size);
+  gst_buffer_take_memory (*buffer, -1, mem);
+
+  if (priv->add_metavideo) {
+    GST_DEBUG_OBJECT (pool, "adding GstVideoMeta");
+
+    gst_buffer_add_video_meta_full (*buffer, 0, GST_VIDEO_INFO_FORMAT (info),
+        GST_VIDEO_INFO_WIDTH (info), GST_VIDEO_INFO_HEIGHT (info),
+        GST_VIDEO_INFO_N_PLANES (info), info->offset, info->stride);
+  }
+
+  return GST_FLOW_OK;
+
+  /* ERROR */
+no_memory:
+  {
+    GST_WARNING_OBJECT (pool, "can't create memory");
+    return GST_FLOW_ERROR;
+  }
+}
+
+/**
+ * gst_video_buffer_pool_new:
+ *
+ * Create a new bufferpool that can allocate video frames. This bufferpool
+ * supports all the video bufferpool options.
+ *
+ * Returns: a new #GstBufferPool to allocate video frames
+ */
+GstBufferPool *
+gst_video_buffer_pool_new ()
+{
+  GstVideoBufferPool *pool;
+
+  pool = g_object_new (GST_TYPE_VIDEO_BUFFER_POOL, NULL);
+
+  GST_LOG_OBJECT (pool, "new video buffer pool %p", pool);
+
+  return GST_BUFFER_POOL_CAST (pool);
+}
+
+static void
+gst_video_buffer_pool_class_init (GstVideoBufferPoolClass * klass)
+{
+  GObjectClass *gobject_class = (GObjectClass *) klass;
+  GstBufferPoolClass *gstbufferpool_class = (GstBufferPoolClass *) klass;
+
+  g_type_class_add_private (klass, sizeof (GstVideoBufferPoolPrivate));
+
+  gobject_class->finalize = gst_video_buffer_pool_finalize;
+
+  gstbufferpool_class->get_options = video_buffer_pool_get_options;
+  gstbufferpool_class->set_config = video_buffer_pool_set_config;
+  gstbufferpool_class->alloc_buffer = video_buffer_pool_alloc;
+}
+
+static void
+gst_video_buffer_pool_init (GstVideoBufferPool * pool)
+{
+  pool->priv = GST_VIDEO_BUFFER_POOL_GET_PRIVATE (pool);
+}
+
+static void
+gst_video_buffer_pool_finalize (GObject * object)
+{
+  GstVideoBufferPool *pool = GST_VIDEO_BUFFER_POOL_CAST (object);
+  GstVideoBufferPoolPrivate *priv = pool->priv;
+
+  GST_LOG_OBJECT (pool, "finalize video buffer pool %p", pool);
+
+  if (priv->caps)
+    gst_caps_unref (priv->caps);
+
+  G_OBJECT_CLASS (gst_video_buffer_pool_parent_class)->finalize (object);
 }

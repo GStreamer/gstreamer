@@ -35,7 +35,7 @@ G_BEGIN_DECLS
 #define GST_BUFFER_POOL_OPTION_VIDEO_META "GstBufferPoolOptionVideoMeta"
 
 /**
- * GST_BUFFER_POOL_OPTION_VIDEO_LAYOUT:
+ * GST_BUFFER_POOL_OPTION_VIDEO_ALIGNMENT:
  *
  * A bufferpool option to enable extra padding. When a bufferpool supports this
  * option, gst_buffer_pool_set_video_alignment() can be called.
@@ -65,8 +65,37 @@ struct _GstVideoAlignment
   guint stride_align[GST_VIDEO_MAX_PLANES];
 };
 
+void gst_video_alignment_reset (GstVideoAlignment *align);
+
+/* setting a bufferpool config */
 void             gst_buffer_pool_config_set_video_alignment  (GstStructure *config, GstVideoAlignment *align);
 gboolean         gst_buffer_pool_config_get_video_alignment  (GstStructure *config, GstVideoAlignment *align);
+
+/* video bufferpool */
+typedef struct _GstVideoBufferPool GstVideoBufferPool;
+typedef struct _GstVideoBufferPoolClass GstVideoBufferPoolClass;
+typedef struct _GstVideoBufferPoolPrivate GstVideoBufferPoolPrivate;
+
+#define GST_TYPE_VIDEO_BUFFER_POOL      (gst_video_buffer_pool_get_type())
+#define GST_IS_VIDEO_BUFFER_POOL(obj)   (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_VIDEO_BUFFER_POOL))
+#define GST_VIDEO_BUFFER_POOL(obj)      (G_TYPE_CHECK_INSTANCE_CAST ((obj), GST_TYPE_VIDEO_BUFFER_POOL, GstVideoBufferPool))
+#define GST_VIDEO_BUFFER_POOL_CAST(obj) ((GstVideoBufferPool*)(obj))
+
+struct _GstVideoBufferPool
+{
+  GstBufferPool bufferpool;
+
+  GstVideoBufferPoolPrivate *priv;
+};
+
+struct _GstVideoBufferPoolClass
+{
+  GstBufferPoolClass parent_class;
+};
+
+GType             gst_video_buffer_pool_get_type (void);
+
+GstBufferPool *   gst_video_buffer_pool_new      (void);
 
 
 G_END_DECLS
