@@ -712,9 +712,9 @@ gst_video_overlay_rectangle_instance_init (GstMiniObject * mini_obj)
  * @width: the width of the rectangle in @pixels
  * @height: the height of the rectangle in @pixels
  * @stride: the stride of the rectangle in @pixels in bytes (&gt;= 4*width)
- * @x: the X co-ordinate on the video where the top-left corner of this
+ * @render_x: the X co-ordinate on the video where the top-left corner of this
  *     overlay rectangle should be rendered to
- * @y: the Y co-ordinate on the video where the top-left corner of this
+ * @render_y: the Y co-ordinate on the video where the top-left corner of this
  *     overlay rectangle should be rendered to
  * @render_width: the render width of this rectangle on the video
  * @render_height: the render height of this rectangle on the video
@@ -933,7 +933,7 @@ done:
  * @rectangle: a #GstVideoOverlayRectangle
  * @width: (out): address where to store the width of the unscaled
  *    rectangle in pixels
- * @width: (out): address where to store the height of the unscaled
+ * @height: (out): address where to store the height of the unscaled
  *    rectangle in pixels
  * @stride: (out): address of guint variable where to store the row
  *    stride of the ARGB pixel data in the buffer

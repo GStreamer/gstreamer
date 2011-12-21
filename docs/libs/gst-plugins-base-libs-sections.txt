@@ -408,7 +408,6 @@ gst_audio_ring_buffer_delay
 gst_audio_ring_buffer_samples_done
 gst_audio_ring_buffer_set_sample
 gst_audio_ring_buffer_commit
-gst_audio_ring_buffer_commit_full
 gst_audio_ring_buffer_convert
 
 gst_audio_ring_buffer_prepare_read
@@ -746,30 +745,6 @@ gst_navigation_command_get_type
 </SECTION>
 
 <SECTION>
-<FILE>gstpropertyprobe</FILE>
-<INCLUDE>gst/interfaces/propertyprobe.h</INCLUDE>
-GstPropertyProbe
-GstPropertyProbeInterface
-
-gst_property_probe_get_properties
-gst_property_probe_get_property
-gst_property_probe_get_values
-gst_property_probe_get_values_name
-gst_property_probe_needs_probe
-gst_property_probe_needs_probe_name
-gst_property_probe_probe_and_get_values
-gst_property_probe_probe_and_get_values_name
-gst_property_probe_probe_property
-gst_property_probe_probe_property_name
-<SUBSECTION Standard>
-GST_TYPE_PROPERTY_PROBE
-GST_PROPERTY_PROBE
-GST_PROPERTY_PROBE_GET_INTEFACE
-GST_IS_PROPERTY_PROBE
-gst_property_probe_get_type
-</SECTION>
-
-<SECTION>
 <FILE>gststreamvolume</FILE>
 <INCLUDE>gst/audio/streamvolume.h</INCLUDE>
 GstStreamVolume
@@ -883,8 +858,8 @@ gst_video_orientation_get_type
 <SECTION>
 <FILE>gstvideooverlay</FILE>
 <INCLUDE>gst/video/videooverlay.h</INCLUDE>
-GstXOverlay
-GstXOverlayIface
+GstVideoOverlay
+GstVideoOverlayInterface
 gst_video_overlay_got_window_handle
 gst_video_overlay_set_window_handle
 gst_video_overlay_prepare_window_handle
@@ -1730,7 +1705,6 @@ GST_TAG_MUSICBRAINZ_ARTISTID
 GST_TAG_MUSICBRAINZ_ALBUMID
 GST_TAG_MUSICBRAINZ_ALBUMARTISTID
 GST_TAG_MUSICBRAINZ_TRMID
-GST_TAG_MUSICBRAINZ_SORTNAME
 GST_TAG_CDDA_CDDB_DISCID
 GST_TAG_CDDA_CDDB_DISCID_FULL
 GST_TAG_CDDA_MUSICBRAINZ_DISCID
@@ -1763,7 +1737,6 @@ GST_TAG_ID3V2_HEADER_SIZE
 gst_tag_register_musicbrainz_tags
 gst_tag_freeform_string_to_utf8
 gst_tag_parse_extended_comment
-gst_tag_image_data_to_image_buffer
 GstTagImageType
 <SUBSECTION Standard>
 GST_TYPE_TAG_IMAGE_TYPE

@@ -115,7 +115,6 @@
 
 /* Our interfaces */
 #include <gst/interfaces/navigation.h>
-#include <gst/interfaces/propertyprobe.h>
 #include <gst/video/videooverlay.h>
 #include <gst/video/colorbalance.h>
 /* Helper functions */
@@ -200,9 +199,6 @@ static void gst_xvimagesink_video_overlay_init (GstVideoOverlayInterface *
     iface);
 static void gst_xvimagesink_colorbalance_init (GstColorBalanceInterface *
     iface);
-static void
-gst_xvimagesink_property_probe_interface_init (GstPropertyProbeInterface *
-    iface);
 #define gst_xvimagesink_parent_class parent_class
 G_DEFINE_TYPE_WITH_CODE (GstXvImageSink, gst_xvimagesink, GST_TYPE_VIDEO_SINK,
     G_IMPLEMENT_INTERFACE (GST_TYPE_NAVIGATION,
@@ -210,9 +206,7 @@ G_DEFINE_TYPE_WITH_CODE (GstXvImageSink, gst_xvimagesink, GST_TYPE_VIDEO_SINK,
     G_IMPLEMENT_INTERFACE (GST_TYPE_VIDEO_OVERLAY,
         gst_xvimagesink_video_overlay_init);
     G_IMPLEMENT_INTERFACE (GST_TYPE_COLOR_BALANCE,
-        gst_xvimagesink_colorbalance_init);
-    G_IMPLEMENT_INTERFACE (GST_TYPE_PROPERTY_PROBE,
-        gst_xvimagesink_property_probe_interface_init));
+        gst_xvimagesink_colorbalance_init));
 
 
 /* ============================================================= */
@@ -2336,6 +2330,7 @@ gst_xvimagesink_colorbalance_init (GstColorBalanceInterface * iface)
   iface->get_value = gst_xvimagesink_colorbalance_get_value;
 }
 
+#if 0
 static const GList *
 gst_xvimagesink_probe_get_properties (GstPropertyProbe * probe)
 {
@@ -2494,6 +2489,7 @@ gst_xvimagesink_property_probe_interface_init (GstPropertyProbeInterface *
   iface->needs_probe = gst_xvimagesink_probe_needs_probe;
   iface->get_values = gst_xvimagesink_probe_get_values;
 }
+#endif
 
 /* =========================================== */
 /*                                             */

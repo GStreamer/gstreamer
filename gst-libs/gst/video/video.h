@@ -305,8 +305,8 @@ typedef struct _GstVideoFrame GstVideoFrame;
 
 /**
  * GstVideoInterlaceMode:
- * GST_VIDEO_INTERLACE_MODE_PROGRESSIVE: all frames are progressive
- * GST_VIDEO_INTERLACE_MODE_INTERLEAVED: video is interlaced and all fields
+ * @GST_VIDEO_INTERLACE_MODE_PROGRESSIVE: all frames are progressive
+ * @GST_VIDEO_INTERLACE_MODE_INTERLEAVED: video is interlaced and all fields
  *     are interlaced in one frame.
  * @GST_VIDEO_INTERLACE_MODE_MIXED: video contains both interlaced and
  *     progressive frames, the buffer flags describe the frame and fields.
@@ -725,15 +725,15 @@ gboolean       gst_video_event_parse_still_frame (GstEvent * event, gboolean * i
 /* video force key unit event creation and parsing */
 
 GstEvent * gst_video_event_new_downstream_force_key_unit (GstClockTime timestamp,
-                                                          GstClockTime streamtime,
-                                                          GstClockTime runningtime,
+                                                          GstClockTime stream_time,
+                                                          GstClockTime running_time,
                                                           gboolean all_headers,
                                                           guint count);
 
 gboolean gst_video_event_parse_downstream_force_key_unit (GstEvent * event,
                                                           GstClockTime * timestamp,
-                                                          GstClockTime * streamtime,
-                                                          GstClockTime * runningtime,
+                                                          GstClockTime * stream_time,
+                                                          GstClockTime * running_time,
                                                           gboolean * all_headers,
                                                           guint * count);
 

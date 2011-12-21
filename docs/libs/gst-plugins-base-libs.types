@@ -28,8 +28,6 @@ gst_mixer_options_get_type
 gst_mixer_track_get_type
 #include <gst/interfaces/navigation.h>
 gst_navigation_get_type
-#include <gst/interfaces/propertyprobe.h>
-gst_property_probe_get_type
 #include <gst/interfaces/tuner.h>
 gst_tuner_get_type
 gst_tuner_channel_get_type

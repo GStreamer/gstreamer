@@ -490,10 +490,12 @@ gst_encoding_video_profile_class_init (GObjectClass * klass)
  * gst_encoding_video_profile_get_pass:
  * @prof: a #GstEncodingVideoProfile
  *
- * Since: 0.10.32
+ * Get the pass number if this is part of a multi-pass profile.
  *
- * Returns: The pass number if this is part of a multi-pass profile. Starts at
- * 1 for multi-pass. 0 if this is not a multi-pass profile
+ * Returns: The pass number. Starts at 1 for multi-pass. 0 if this is
+ * not a multi-pass profile
+ *
+ * Since: 0.10.32
  */
 guint
 gst_encoding_video_profile_get_pass (GstEncodingVideoProfile * prof)

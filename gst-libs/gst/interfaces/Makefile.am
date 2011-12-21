@@ -4,7 +4,6 @@ libgstinterfacesincludedir = \
 
 headers_interfaces = 		\
 	navigation.h		\
-	propertyprobe.h		\
 	tuner.h			\
 	tunernorm.h		\
 	tunerchannel.h
@@ -31,7 +30,6 @@ nodist_libgstinterfacesinclude_HEADERS = \
 
 libgstinterfaces_@GST_MAJORMINOR@_la_SOURCES = \
 	navigation.c		\
-	propertyprobe.c		\
 	tuner.c			\
 	tunernorm.c		\
 	tunerchannel.c

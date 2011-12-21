@@ -37,8 +37,6 @@
 
 #include "mixerutils.h"
 
-#include <gst/interfaces/propertyprobe.h>
-
 #include <string.h>
 
 static void
@@ -117,6 +115,7 @@ gst_audio_mixer_filter_probe_feature (GstAudioMixerFilterFunc filter_func,
 
   GST_DEBUG ("created element %s (%p)", GST_ELEMENT_NAME (element), element);
 
+#if 0
   if (GST_IS_PROPERTY_PROBE (element)) {
     GstPropertyProbe *probe;
     const GParamSpec *devspec;
@@ -155,7 +154,9 @@ gst_audio_mixer_filter_probe_feature (GstAudioMixerFilterFunc filter_func,
         g_value_array_free (array);
       }
     }
-  } else {
+  } else
+#endif
+  {
     GST_DEBUG ("element does not support the property probe interface");
 
     if (gst_audio_mixer_filter_check_element (element)) {

@@ -32,7 +32,6 @@
 
 #include <gst/gst.h>
 #include <gst/video/videooverlay.h>
-#include <gst/interfaces/propertyprobe.h>
 
 static GtkWidget *video_window = NULL;
 static GstElement *sink = NULL;
@@ -169,8 +168,10 @@ main (int argc, char **argv)
   GstElement *pipeline, *src;
   GstBus *bus;
   GstStateChangeReturn sret;
+#if 0
   GstPropertyProbe *probe;
   GValueArray *arr;
+#endif
 
 #if !GLIB_CHECK_VERSION (2, 31, 0)
   if (!g_thread_supported ())
@@ -201,7 +202,7 @@ main (int argc, char **argv)
     gst_object_unref (pipeline);
     return -1;
   }
-
+#if 0
   probe = GST_PROPERTY_PROBE (sink);
   if (!probe) {
     g_printerr ("Can't probe sink\n");
@@ -220,6 +221,7 @@ main (int argc, char **argv)
   }
   if (arr)
     g_value_array_free (arr);
+#endif
 
   bus = gst_pipeline_get_bus (GST_PIPELINE (pipeline));
   gst_bus_add_signal_watch_full (bus, G_PRIORITY_HIGH);
