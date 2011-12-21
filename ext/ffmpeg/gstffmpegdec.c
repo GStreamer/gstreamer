@@ -1126,6 +1126,7 @@ gst_ffmpegdec_bufferpool (GstFFMpegDec * ffmpegdec, GstCaps * caps)
     GstVideoAlignment align;
     gint width, height;
     gint linesize_align[4];
+    gint i;
 
     width = ffmpegdec->ctx_width;
     height = ffmpegdec->ctx_height;
@@ -1140,12 +1141,16 @@ gst_ffmpegdec_bufferpool (GstFFMpegDec * ffmpegdec, GstCaps * caps)
     align.padding_left = edge;
     align.padding_right = width - ffmpegdec->ctx_width - edge;
     align.padding_bottom = height - ffmpegdec->ctx_height - edge;
+    for (i = 0; i < GST_VIDEO_MAX_PLANES; i++)
+      align.stride_align[i] =
+          (linesize_align[i] > 0 ? linesize_align[i] - 1 : 0);
 
     GST_DEBUG_OBJECT (ffmpegdec, "aligned dimension %dx%d -> %dx%d "
-        "padding t:%u l:%u r:%u b:%u",
+        "padding t:%u l:%u r:%u b:%u, stride_align %d:%d:%d:%d",
         ffmpegdec->ctx_width, ffmpegdec->ctx_height, width, height,
         align.padding_top, align.padding_left, align.padding_right,
-        align.padding_bottom);
+        align.padding_bottom, align.stride_align[0], align.stride_align[1],
+        align.stride_align[2], align.stride_align[3]);
 
     gst_buffer_pool_config_add_option (config,
         GST_BUFFER_POOL_OPTION_VIDEO_ALIGNMENT);
