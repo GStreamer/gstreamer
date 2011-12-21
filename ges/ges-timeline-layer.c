@@ -38,13 +38,12 @@
 
 static void
 track_object_removed_cb (GESTimelineObject * object,
-    GESTrackObject * track_object, GESTimelineLayer * layer);
+    GESTrackObject * track_object);
 static void track_object_added_cb (GESTimelineObject * object,
-    GESTrackObject * track_object, GESTimelineLayer * layer);
+    GESTrackObject * track_object);
 static void track_object_changed_cb (GESTrackObject * track_object,
-    GParamSpec * arg G_GNUC_UNUSED, GESTimelineLayer * layer);
-static void calculate_transitions (GESTrackObject * track_object,
-    GESTimelineLayer * layer);
+    GParamSpec * arg G_GNUC_UNUSED);
+static void calculate_transitions (GESTrackObject * track_object);
 static void calculate_next_transition (GESTrackObject * track_object,
     GESTimelineLayer * layer);
 
@@ -263,8 +262,7 @@ track_get_by_layer (GESTimelineLayer * layer, GESTrack * track)
     tl_obj = ges_track_object_get_timeline_object (tmp->data);
 
     if (ges_timeline_object_get_layer (tl_obj) == layer) {
-
-      /*  We still the reference from tck_objects_list */
+      /*  We steal the reference from tck_objects_list */
       return_list = g_list_append (return_list, tmp->data);
 
     } else
@@ -314,9 +312,9 @@ ges_timeline_layer_add_object (GESTimelineLayer * layer,
   if (layer->priv->auto_transition) {
     if (GES_IS_TIMELINE_SOURCE (object)) {
       g_signal_connect (G_OBJECT (object), "track-object-added",
-          G_CALLBACK (track_object_added_cb), layer);
+          G_CALLBACK (track_object_added_cb), NULL);
       g_signal_connect (G_OBJECT (object), "track-object-removed",
-          G_CALLBACK (track_object_removed_cb), layer);
+          G_CALLBACK (track_object_removed_cb), NULL);
     }
   }
 
@@ -350,8 +348,13 @@ ges_timeline_layer_add_object (GESTimelineLayer * layer,
 
 static void
 track_object_duration_cb (GESTrackObject * track_object,
-    GParamSpec * arg G_GNUC_UNUSED, GESTimelineLayer * layer)
+    GParamSpec * arg G_GNUC_UNUSED)
 {
+  GESTimelineLayer *layer;
+  GESTimelineObject *tlobj;
+
+  tlobj = ges_track_object_get_timeline_object (track_object);
+  layer = ges_timeline_object_get_layer (tlobj);
   if (G_LIKELY (GES_IS_TRACK_SOURCE (track_object)))
     GST_DEBUG ("Here we should recalculate");
   calculate_next_transition (track_object, layer);
@@ -359,29 +362,26 @@ track_object_duration_cb (GESTrackObject * track_object,
 
 static void
 track_object_added_cb (GESTimelineObject * object,
-    GESTrackObject * track_object, GESTimelineLayer * layer)
+    GESTrackObject * track_object)
 {
   if (GES_IS_TRACK_SOURCE (track_object)) {
     g_signal_connect (G_OBJECT (track_object), "notify::start",
-        G_CALLBACK (track_object_changed_cb), layer);
+        G_CALLBACK (track_object_changed_cb), NULL);
     g_signal_connect (G_OBJECT (track_object), "notify::duration",
-        G_CALLBACK (track_object_duration_cb), layer);
-    calculate_transitions (track_object, layer);
+        G_CALLBACK (track_object_duration_cb), NULL);
+    calculate_transitions (track_object);
   }
-
-  g_object_unref (layer);
   return;
 }
 
 static void
 track_object_removed_cb (GESTimelineObject * object,
-    GESTrackObject * track_object, GESTimelineLayer * layer)
+    GESTrackObject * track_object)
 {
-
   if (GES_IS_TRACK_SOURCE (track_object)) {
     g_signal_handlers_disconnect_by_func (track_object, track_object_changed_cb,
         object);
-    calculate_transitions (track_object, layer);
+    calculate_transitions (track_object);
   }
   return;
 }
@@ -397,10 +397,10 @@ timeline_object_height_changed_cb (GESTimelineObject * obj,
 
 static void
 track_object_changed_cb (GESTrackObject * track_object,
-    GParamSpec * arg G_GNUC_UNUSED, GESTimelineLayer * layer)
+    GParamSpec * arg G_GNUC_UNUSED)
 {
   if (G_LIKELY (GES_IS_TRACK_SOURCE (track_object)))
-    calculate_transitions (track_object, layer);
+    calculate_transitions (track_object);
 }
 
 static void
@@ -441,15 +441,18 @@ calculate_next_transition (GESTrackObject * track_object,
 }
 
 static void
-calculate_transitions (GESTrackObject * track_object, GESTimelineLayer * layer)
+calculate_transitions (GESTrackObject * track_object)
 {
   GList *tckobjs_in_layer, *compared;
   GESTrack *track = ges_track_object_get_track (track_object);
+  GESTimelineLayer *layer;
+  GESTimelineObject *tlobj;
 
+  tlobj = ges_track_object_get_timeline_object (track_object);
+  layer = ges_timeline_object_get_layer (tlobj);
   tckobjs_in_layer = track_get_by_layer (layer, track);
   if (!(compared = g_list_find (tckobjs_in_layer, track_object)))
     return;
-
   do {
     compared = compared->prev;
 
@@ -525,7 +528,7 @@ compare (GList * compared, GESTrackObject * track_object, gboolean ahead)
     }
 
     for (tmp = compared->next; tmp; tmp = tmp->next) {
-      /* If we have a transitionm we recaluculate its values */
+      /* If we have a transitionmnmnm we recaluculuculate its values */
       if (GES_IS_TRACK_TRANSITION (tmp->data)) {
         g_object_get (tmp->data, "start", &tr_start, "duration", &tr_duration,
             NULL);
