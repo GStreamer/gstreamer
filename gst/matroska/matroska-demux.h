@@ -95,6 +95,9 @@ typedef struct _GstMatroskaDemux {
 
   /* gap handling */
   guint64                  max_gap_time;
+
+  /* for non-finalized files, with invalid segment duration */
+  gboolean                 invalid_duration;
 } GstMatroskaDemux;
 
 typedef struct _GstMatroskaDemuxClass {

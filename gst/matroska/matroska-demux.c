@@ -480,6 +480,8 @@ gst_matroska_demux_reset (GstElement * element)
     gst_buffer_unref (demux->common.cached_buffer);
     demux->common.cached_buffer = NULL;
   }
+
+  demux->invalid_duration = FALSE;
 }
 
 static GstBuffer *
@@ -1928,6 +1930,16 @@ gst_matroska_demux_handle_seek_event (GstMatroskaDemux * demux,
    * segment when we close the current segment. */
   memcpy (&seeksegment, &demux->common.segment, sizeof (GstSegment));
 
+  /* pull mode without index means that the actual duration is not known,
+   * we might be playing a file that's still being recorded
+   * so, invalidate our current duration, which is only a moving target,
+   * and should not be used to clamp anything */
+  if (!demux->streaming && !demux->common.index &&
+      demux->invalid_duration) {
+    gst_segment_set_duration (&seeksegment, GST_FORMAT_TIME,
+        GST_CLOCK_TIME_NONE);
+  }
+
   if (event) {
     GST_DEBUG_OBJECT (demux, "configuring seek");
     gst_segment_set_seek (&seeksegment, rate, format, flags,
@@ -1941,6 +1953,11 @@ gst_matroska_demux_handle_seek_event (GstMatroskaDemux * demux,
       /* note that time should stay at indicated position */
     }
   }
+
+  /* restore segment duration (if any effect),
+   * would be determined again when parsing, but anyway ... */
+  gst_segment_set_duration (&seeksegment, GST_FORMAT_TIME,
+      demux->common.segment.duration);
 
   flush = ! !(flags & GST_SEEK_FLAG_FLUSH);
   keyunit = ! !(flags & GST_SEEK_FLAG_KEY_UNIT);
@@ -3501,6 +3518,7 @@ gst_matroska_demux_parse_blockgroup_or_simpleblock (GstMatroskaDemux * demux,
           gst_element_post_message (GST_ELEMENT_CAST (demux),
               gst_message_new_duration (GST_OBJECT_CAST (demux),
                   GST_FORMAT_TIME, GST_CLOCK_TIME_NONE));
+          demux->invalid_duration = TRUE;
         } else {
           GST_OBJECT_UNLOCK (demux);
         }
