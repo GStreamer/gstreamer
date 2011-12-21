@@ -94,7 +94,7 @@ typedef enum {
  * undefined media type that can not be detected. This macro returns a singleton
  * and should not be unreffed.
  */
-#define GST_CAPS_NONE             _gst_caps_empty
+#define GST_CAPS_NONE             _gst_caps_none
 
 /**
  * GST_STATIC_CAPS_ANY:
@@ -139,7 +139,7 @@ typedef struct _GstCaps GstCaps;
 typedef struct _GstStaticCaps GstStaticCaps;
 
 extern GstCaps * _gst_caps_any;
-extern GstCaps * _gst_caps_empty;
+extern GstCaps * _gst_caps_none;
 /**
  * GST_CAPS_FLAGS:
  * @caps: a #GstCaps.
