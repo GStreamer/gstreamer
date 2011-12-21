@@ -125,12 +125,11 @@ static void gst_zbar_set_property (GObject * object, guint prop_id,
 static void gst_zbar_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 
-static gboolean gst_zbar_set_caps (GstBaseTransform * base, GstCaps * incaps,
-    GstCaps * outcaps);
-static GstFlowReturn gst_zbar_transform_ip (GstBaseTransform * transform,
-    GstBuffer * buf);
 static gboolean gst_zbar_start (GstBaseTransform * base);
 static gboolean gst_zbar_stop (GstBaseTransform * base);
+
+static GstFlowReturn gst_zbar_transform_frame_ip (GstVideoFilter * vfilter,
+    GstVideoFrame * frame);
 
 #define gst_zbar_parent_class parent_class
 G_DEFINE_TYPE (GstZBar, gst_zbar, GST_TYPE_VIDEO_FILTER);
@@ -141,10 +140,12 @@ gst_zbar_class_init (GstZBarClass * g_class)
   GObjectClass *gobject_class;
   GstElementClass *gstelement_class;
   GstBaseTransformClass *trans_class;
+  GstVideoFilterClass *vfilter_class;
 
   gobject_class = G_OBJECT_CLASS (g_class);
   gstelement_class = GST_ELEMENT_CLASS (g_class);
   trans_class = GST_BASE_TRANSFORM_CLASS (g_class);
+  vfilter_class = GST_VIDEO_FILTER_CLASS (g_class);
 
   gobject_class->set_property = gst_zbar_set_property;
   gobject_class->get_property = gst_zbar_get_property;
@@ -172,10 +173,11 @@ gst_zbar_class_init (GstZBarClass * g_class)
   gst_element_class_add_pad_template (gstelement_class,
       gst_static_pad_template_get (&gst_zbar_src_template));
 
-  trans_class->set_caps = GST_DEBUG_FUNCPTR (gst_zbar_set_caps);
-  trans_class->transform_ip = GST_DEBUG_FUNCPTR (gst_zbar_transform_ip);
   trans_class->start = GST_DEBUG_FUNCPTR (gst_zbar_start);
   trans_class->stop = GST_DEBUG_FUNCPTR (gst_zbar_stop);
+
+  vfilter_class->transform_frame_ip =
+      GST_DEBUG_FUNCPTR (gst_zbar_transform_frame_ip);
 }
 
 static void
@@ -241,53 +243,26 @@ gst_zbar_get_property (GObject * object, guint prop_id, GValue * value,
   }
 }
 
-static gboolean
-gst_zbar_set_caps (GstBaseTransform * base, GstCaps * incaps, GstCaps * outcaps)
-{
-  GstZBar *zbar = GST_ZBAR (base);
-  GstVideoInfo info;
-
-  GST_DEBUG_OBJECT (zbar,
-      "set_caps: in %" GST_PTR_FORMAT " out %" GST_PTR_FORMAT, incaps, outcaps);
-
-  if (!gst_video_info_from_caps (&info, incaps))
-    goto invalid_caps;
-
-  zbar->info = info;
-
-  return TRUE;
-
-  /* ERRORS */
-invalid_caps:
-  {
-    GST_ERROR_OBJECT (zbar, "invalid caps received");
-    return FALSE;
-  }
-}
-
 static GstFlowReturn
-gst_zbar_transform_ip (GstBaseTransform * base, GstBuffer * outbuf)
+gst_zbar_transform_frame_ip (GstVideoFilter * vfilter, GstVideoFrame * frame)
 {
-  GstZBar *zbar = GST_ZBAR (base);
+  GstZBar *zbar = GST_ZBAR (vfilter);
   gpointer data;
   gint stride, height;
   zbar_image_t *image;
-  GstVideoFrame frame;
   const zbar_symbol_t *symbol;
   int n;
 
-  if (base->passthrough)
+  if (GST_BASE_TRANSFORM (vfilter)->passthrough)
     goto done;
-
-  gst_video_frame_map (&frame, &zbar->info, outbuf, GST_MAP_READ);
 
   image = zbar_image_create ();
 
   /* all formats we support start with an 8-bit Y plane. zbar doesn't need
    * to know about the chroma plane(s) */
-  data = GST_VIDEO_FRAME_COMP_DATA (&frame, 0);
-  stride = GST_VIDEO_FRAME_COMP_STRIDE (&frame, 0);
-  height = GST_VIDEO_FRAME_HEIGHT (&frame);
+  data = GST_VIDEO_FRAME_COMP_DATA (frame, 0);
+  stride = GST_VIDEO_FRAME_COMP_STRIDE (frame, 0);
+  height = GST_VIDEO_FRAME_HEIGHT (frame);
 
   zbar_image_set_format (image, GST_MAKE_FOURCC ('Y', '8', '0', '0'));
   zbar_image_set_size (image, stride, height);
@@ -317,7 +292,7 @@ gst_zbar_transform_ip (GstBaseTransform * base, GstBuffer * outbuf)
 
       /* post a message */
       s = gst_structure_new ("barcode",
-          "timestamp", G_TYPE_UINT64, GST_BUFFER_TIMESTAMP (outbuf),
+          "timestamp", G_TYPE_UINT64, GST_BUFFER_TIMESTAMP (frame->buffer),
           "type", G_TYPE_STRING, zbar_get_symbol_name (typ),
           "symbol", G_TYPE_STRING, data, "quality", G_TYPE_INT, quality, NULL);
       m = gst_message_new_element (GST_OBJECT (zbar), s);
@@ -327,22 +302,17 @@ gst_zbar_transform_ip (GstBaseTransform * base, GstBuffer * outbuf)
 
 out:
   /* clean up */
-  gst_video_frame_unmap (&frame);
   zbar_image_scanner_recycle_image (zbar->scanner, image);
   zbar_image_destroy (image);
 
 done:
   return GST_FLOW_OK;
-
-/* ERRORS */
 }
 
 static gboolean
 gst_zbar_start (GstBaseTransform * base)
 {
   GstZBar *zbar = GST_ZBAR (base);
-
-  gst_video_info_init (&zbar->info);
 
   /* start the cache if enabled (e.g. for filtering dupes) */
   zbar_image_scanner_enable_cache (zbar->scanner, zbar->cache);

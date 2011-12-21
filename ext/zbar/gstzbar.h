@@ -21,8 +21,8 @@
 #ifndef __GST_VIDEO_ZBAR_H__
 #define __GST_VIDEO_ZBAR_H__
 
-#include <gst/video/gstvideofilter.h>
 #include <gst/video/video.h>
+#include <gst/video/gstvideofilter.h>
 #include <zbar.h>
 
 G_BEGIN_DECLS
@@ -51,13 +51,10 @@ struct _GstZBar
   /*< private >*/
   GstVideoFilter videofilter;
 
-  /* format */
-  GstVideoInfo   info;
-
   /* properties */
   gboolean message;
   gboolean cache;
-  
+
   /* internals */
   zbar_image_scanner_t *scanner;
 };
