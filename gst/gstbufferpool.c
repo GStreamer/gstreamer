@@ -176,6 +176,14 @@ default_alloc_buffer (GstBufferPool * pool, GstBuffer ** buffer,
   return GST_FLOW_OK;
 }
 
+static gboolean
+mark_meta_pooled (GstBuffer * buffer, GstMeta ** meta, gpointer user_data)
+{
+  GST_META_FLAG_SET (*meta, GST_META_FLAG_POOLED);
+
+  return TRUE;
+}
+
 /* the default implementation for preallocating the buffers
  * in the pool */
 static gboolean
@@ -198,6 +206,7 @@ default_start (GstBufferPool * pool)
     if (pclass->alloc_buffer (pool, &buffer, NULL) != GST_FLOW_OK)
       goto alloc_failed;
 
+    gst_buffer_foreach_meta (buffer, mark_meta_pooled, pool);
     GST_LOG_OBJECT (pool, "prealloced buffer %d: %p", i, buffer);
     /* release to the queue, we call the vmethod directly, we don't need to do
      * the other refcount handling right now. */
@@ -802,6 +811,10 @@ default_acquire_buffer (GstBufferPool * pool, GstBuffer ** buffer,
       /* no max_buffers, we allocate some more */
       if (G_LIKELY (pclass->alloc_buffer)) {
         result = pclass->alloc_buffer (pool, buffer, params);
+        if (result == GST_FLOW_OK && *buffer)
+          gst_buffer_foreach_meta (*buffer, mark_meta_pooled, pool);
+        else
+          result = GST_FLOW_ERROR;
       } else
         result = GST_FLOW_NOT_SUPPORTED;
       GST_LOG_OBJECT (pool, "alloc buffer %p", *buffer);
@@ -919,6 +932,14 @@ default_release_buffer (GstBufferPool * pool, GstBuffer * buffer)
   gst_poll_write_control (pool->poll);
 }
 
+static gboolean
+remove_meta_unpooled (GstBuffer * buffer, GstMeta ** meta, gpointer user_data)
+{
+  if (!GST_META_FLAG_IS_SET (*meta, GST_META_FLAG_POOLED))
+    *meta = NULL;
+  return TRUE;
+}
+
 /**
  * gst_buffer_pool_release_buffer:
  * @pool: a #GstBufferPool
@@ -942,6 +963,9 @@ gst_buffer_pool_release_buffer (GstBufferPool * pool, GstBuffer * buffer)
    * pool member set to NULL and the pool refcount decreased */
   if (!G_ATOMIC_POINTER_COMPARE_AND_EXCHANGE (&buffer->pool, pool, NULL))
     return;
+
+  /* remove all metadata without the POOLED flag */
+  gst_buffer_foreach_meta (buffer, remove_meta_unpooled, pool);
 
   pclass = GST_BUFFER_POOL_GET_CLASS (pool);
 
