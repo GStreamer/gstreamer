@@ -101,6 +101,7 @@ EXPORTS
 	gst_buffer_extract
 	gst_buffer_fill
 	gst_buffer_flags_get_type
+	gst_buffer_foreach_meta
 	gst_buffer_get_meta
 	gst_buffer_get_sizes
 	gst_buffer_get_type
@@ -613,6 +614,7 @@ EXPORTS
 	gst_message_type_get_name
 	gst_message_type_get_type
 	gst_message_type_to_quark
+	gst_meta_flags_get_type
 	gst_meta_get_info
 	gst_meta_register
 	gst_mini_object_copy
