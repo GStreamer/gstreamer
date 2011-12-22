@@ -691,6 +691,13 @@ gst_faac_handle_frame (GstAudioEncoder * enc, GstBuffer * in_buf)
     ret = gst_audio_encoder_finish_frame (enc, out_buf, faac->samples);
   } else {
     gst_buffer_unref (out_buf);
+    /* re-create encoder after final flush */
+    if (!in_buf) {
+      GST_DEBUG_OBJECT (faac, "flushed; recreating encoder");
+      gst_faac_close_encoder (faac);
+      if (!gst_faac_open_encoder (faac))
+        ret = GST_FLOW_ERROR;
+    }
   }
 
   return ret;
