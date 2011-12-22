@@ -56,7 +56,7 @@ GType ges_pitivi_formatter_get_type (void);
 
 GESPitiviFormatter *ges_pitivi_formatter_new (void);
 
-gboolean ges_pitivi_formatter_set_sources (GESPitiviFormatter * formatter, GList * uris);
+gboolean ges_pitivi_formatter_set_sources (GESPitiviFormatter * formatter, GList * infos);
 
 GList * ges_pitivi_formatter_get_sources(GESPitiviFormatter * formatter);
 

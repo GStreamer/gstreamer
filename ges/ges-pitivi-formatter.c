@@ -488,21 +488,6 @@ save_pitivi_timeline_to_uri (GESFormatter * formatter,
   return TRUE;
 }
 
-GList *
-ges_pitivi_formatter_get_sources (GESPitiviFormatter * formatter)
-{
-  GList *sources = NULL;
-  GHashTableIter iter;
-  gpointer key, value;
-
-  g_hash_table_iter_init (&iter, formatter->priv->source_uris);
-  while (g_hash_table_iter_next (&iter, &key, &value)) {
-    sources = g_list_prepend (sources, g_strdup (value));
-  }
-
-  return sources;
-}
-
 /* Project loading functions */
 
 /* Return: a GHashTable containing:
@@ -1082,7 +1067,19 @@ pitivi_formatter_update_source_uri (GESFormatter * formatter,
   return ret;
 }
 
-/*  API  */
+/* API */
+
+/**
+ * ges_pitivi_formatter_set_sources:
+ * @formatter: The #GESPitiviFormatter to set sources on
+ * @infos: (transfer none): (element-type GstDiscovererInfo):
+ *        The #GstDiscovererInfo infos to add as sources.
+ *
+ * Add @infos as the formatter sources so we can save sources that are
+ * not in the timeline when saving.
+ *
+ * Returns: %TRUE if everything wen fine, %FALSE otherwise
+ */
 gboolean
 ges_pitivi_formatter_set_sources (GESPitiviFormatter * formatter, GList * infos)
 {
@@ -1104,4 +1101,26 @@ ges_pitivi_formatter_set_sources (GESPitiviFormatter * formatter, GList * infos)
   }
 
   return TRUE;
+}
+
+/**
+ * ges_pitivi_formatter_get_sources:
+ * @formatter: The #GESPitiviFormatter to get sources from
+ *
+ * Returns: (transfer full): (element-type utf8): %TRUE if everything went
+ * fine, %FALSE otherwise
+ */
+GList *
+ges_pitivi_formatter_get_sources (GESPitiviFormatter * formatter)
+{
+  GList *sources = NULL;
+  GHashTableIter iter;
+  gpointer key, value;
+
+  g_hash_table_iter_init (&iter, formatter->priv->source_uris);
+  while (g_hash_table_iter_next (&iter, &key, &value)) {
+    sources = g_list_prepend (sources, g_strdup (value));
+  }
+
+  return sources;
 }

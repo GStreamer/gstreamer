@@ -797,6 +797,24 @@ ges_keyfile_formatter_get_type
 </SECTION>
 
 <SECTION>
+<FILE>ges-pitivi-formatter</FILE>
+<TITLE>GESPitiviFormatter</TITLE>
+GESPitiviFormatter
+ges_pitivi_formatter_new
+ges_pitivi_formatter_set_sources
+ges_pitivi_formatter_get_sources
+<SUBSECTION Standard>
+GESPitiviFormatterClass
+GES_IS_PITIVI_FORMATTER
+GES_IS_PITIVI_FORMATTER_CLASS
+GES_PITIVI_FORMATTER
+GES_PITIVI_FORMATTER_CLASS
+GES_PITIVI_FORMATTER_GET_CLASS
+GES_TYPE_PITIVIFORMATTER
+ges_pitivi_formatter_get_type
+</SECTION>
+
+<SECTION>
 <FILE>ges-track-effect</FILE>
 <TITLE>GESTrackEffect</TITLE>
 GESTrackEffect
