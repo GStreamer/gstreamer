@@ -1,7 +1,8 @@
-noinst_PROGRAMS = audio-example
+noinst_PROGRAMS = audio-example control-sources
 
-audio_example_CFLAGS  = $(GST_OBJ_CFLAGS) -I$(top_builddir)/libs
-audio_example_LDADD = \
+AM_CFLAGS  = $(GST_OBJ_CFLAGS) -I$(top_builddir)/libs
+
+LDADD = \
 	$(top_builddir)/libs/gst/controller/libgstcontroller-@GST_MAJORMINOR@.la \
 	$(GST_OBJ_LIBS)
 

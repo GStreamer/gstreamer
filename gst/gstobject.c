@@ -1109,6 +1109,8 @@ gst_object_sync_values (GstObject * object, GstClockTime timestamp)
   g_return_val_if_fail (GST_CLOCK_TIME_IS_VALID (timestamp), FALSE);
 
   GST_LOG_OBJECT (object, "sync_values");
+  if (!object->control_bindings)
+    return TRUE;
 
   /* FIXME: this deadlocks */
   /* GST_OBJECT_LOCK (object); */
@@ -1353,7 +1355,7 @@ gst_object_get_control_source (GstObject * object, const gchar * property_name)
  * @property_name: the name of the property to get
  * @timestamp: the time the control-change should be read from
  *
- * Gets the value for the given controllered property at the requested time.
+ * Gets the value for the given controlled property at the requested time.
  *
  * Returns: the GValue of the property at the given time, or %NULL if the
  * property isn't controlled.
@@ -1371,14 +1373,7 @@ gst_object_get_value (GstObject * object, const gchar * property_name,
 
   GST_OBJECT_LOCK (object);
   if ((binding = gst_object_find_control_binding (object, property_name))) {
-    val = g_new0 (GValue, 1);
-    g_value_init (val, G_PARAM_SPEC_VALUE_TYPE (binding->pspec));
-
-    /* get current value via control source */
-    if (!gst_control_source_get_value (binding->csource, timestamp, val)) {
-      g_free (val);
-      val = NULL;
-    }
+    val = gst_control_binding_get_value (binding, timestamp);
   }
   GST_OBJECT_UNLOCK (object);
 
@@ -1406,7 +1401,7 @@ gst_object_get_value (GstObject * object, const gchar * property_name,
 gboolean
 gst_object_get_value_array (GstObject * object, const gchar * property_name,
     GstClockTime timestamp, GstClockTime interval, guint n_values,
-    gpointer values)
+    GValue * values)
 {
   gboolean res = FALSE;
   GstControlBinding *binding;
@@ -1419,8 +1414,9 @@ gst_object_get_value_array (GstObject * object, const gchar * property_name,
 
   GST_OBJECT_LOCK (object);
   if ((binding = gst_object_find_control_binding (object, property_name))) {
-    res = gst_control_source_get_value_array (binding->csource, timestamp,
-        interval, n_values, values);
+    /* FIXME: use binding: */
+    res = gst_control_binding_get_value_array (binding, timestamp, interval,
+        n_values, values);
   }
   GST_OBJECT_UNLOCK (object);
   return res;

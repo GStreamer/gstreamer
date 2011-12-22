@@ -61,10 +61,6 @@ G_DEFINE_ABSTRACT_TYPE_WITH_CODE (GstControlSource, gst_control_source,
 static void
 gst_control_source_class_init (GstControlSourceClass * klass)
 {
-  //GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
-
-  /* Has to be implemented by children */
-  klass->bind = NULL;
 }
 
 static void
@@ -72,7 +68,6 @@ gst_control_source_init (GstControlSource * self)
 {
   self->get_value = NULL;
   self->get_value_array = NULL;
-  self->bound = FALSE;
 }
 
 /**
@@ -87,7 +82,7 @@ gst_control_source_init (GstControlSource * self)
  */
 gboolean
 gst_control_source_get_value (GstControlSource * self, GstClockTime timestamp,
-    GValue * value)
+    gdouble * value)
 {
   g_return_val_if_fail (GST_IS_CONTROL_SOURCE (self), FALSE);
 
@@ -102,23 +97,19 @@ gst_control_source_get_value (GstControlSource * self, GstClockTime timestamp,
 /**
  * gst_control_source_get_value_array:
  * @self: the #GstControlSource object
- * @timestamp: the time that should be processed
+ * @timestamp: the first timestamp
+ * @interval: the time steps
+ * @n_values: the number of values to fetch
  * @value_array: array to put control-values in
  *
- * Gets an array of values for one element property.
- *
- * All fields of @value_array must be filled correctly. Especially the
- * @value_array->values array must be big enough to keep the requested amount
- * of values.
- *
- * The type of the values in the array is the same as the property's type.
+ * Gets an array of values for for this #GstControlSource.
  *
  * Returns: %TRUE if the given array could be filled, %FALSE otherwise
  */
 gboolean
 gst_control_source_get_value_array (GstControlSource * self,
     GstClockTime timestamp, GstClockTime interval, guint n_values,
-    gpointer values)
+    gdouble * values)
 {
   g_return_val_if_fail (GST_IS_CONTROL_SOURCE (self), FALSE);
 
@@ -128,35 +119,4 @@ gst_control_source_get_value_array (GstControlSource * self,
     GST_ERROR ("Not bound to a specific property yet!");
     return FALSE;
   }
-}
-
-/**
- * gst_control_source_bind:
- * @self: the #GstControlSource object
- * @pspec: #GParamSpec for the property for which this #GstControlSource should generate values.
- *
- * Binds a #GstControlSource to a specific property. This must be called only once for a
- * #GstControlSource.
- *
- * Returns: %TRUE if the #GstControlSource was bound correctly, %FALSE otherwise.
- */
-gboolean
-gst_control_source_bind (GstControlSource * self, GParamSpec * pspec)
-{
-  gboolean ret = FALSE;
-
-  g_return_val_if_fail (GST_IS_CONTROL_SOURCE (self), FALSE);
-  g_return_val_if_fail (GST_CONTROL_SOURCE_GET_CLASS (self)->bind, FALSE);
-  g_return_val_if_fail (!self->bound, FALSE);
-
-  ret = GST_CONTROL_SOURCE_GET_CLASS (self)->bind (self, pspec);
-
-  if (ret) {
-    GST_DEBUG ("bound control source for param %s", pspec->name);
-    self->bound = TRUE;
-  } else {
-    GST_DEBUG ("failed to bind control source for param %s", pspec->name);
-  }
-
-  return ret;
 }

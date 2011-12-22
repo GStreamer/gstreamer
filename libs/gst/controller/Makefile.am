@@ -7,13 +7,8 @@ libgstcontroller_@GST_MAJORMINOR@_include_HEADERS = \
 	gsttriggercontrolsource.h \
 	gstlfocontrolsource.h
 
-noinst_HEADERS = \
-	gstinterpolationcontrolsourceprivate.h \
-	gstlfocontrolsourceprivate.h
-
 libgstcontroller_@GST_MAJORMINOR@_la_SOURCES = \
 	gsttimedvaluecontrolsource.c \
-	gstinterpolation.c \
 	gstinterpolationcontrolsource.c \
 	gsttriggercontrolsource.c \
 	gstlfocontrolsource.c

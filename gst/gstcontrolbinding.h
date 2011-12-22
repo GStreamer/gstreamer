@@ -48,27 +48,43 @@ typedef struct _GstControlBinding GstControlBinding;
 typedef struct _GstControlBindingClass GstControlBindingClass;
 
 /**
+ * GstControlBindingConvert:
+ * @self: the #GstControlBinding instance
+ * @src_value: the value returned by the cotnrol source
+ * @dest_value: the target GValue
+ *
+ * Function to map a control-value to the target GValue.
+ */
+typedef void (* GstControlBindingConvert) (GstControlBinding *self, gdouble src_value, GValue *dest_value);
+
+/**
  * GstControlBinding:
+ * @name: name of the property of this binding
  *
  * The instance structure of #GstControlBinding.
  */
 struct _GstControlBinding {
   GObject parent;
-
+  
   /*< public >*/
-  GParamSpec *pspec;            /* GParamSpec for this property */
   const gchar *name;            /* name of the property */
-  GstControlSource *csource;    /* GstControlSource for this property */
-  gboolean disabled;
-  GValue cur_value, last_value;
 
   /*< private >*/
+  GParamSpec *pspec;            /* GParamSpec for this property */
+  GstControlSource *csource;    /* GstControlSource for this property */
+  gboolean disabled;
+  GValue cur_value;
+  gdouble last_value;
+
+  GstControlBindingConvert convert;
+
   gpointer _gst_reserved[GST_PADDING];
 };
 
 /**
  * GstControlBindingClass:
  * @parent_class: Parent class
+ * @convert: Class method to convert control-values
  *
  * The class structure of #GstControlBinding.
  */
@@ -90,6 +106,10 @@ GstControlBinding * gst_control_binding_new                (GstObject * object, 
 
 gboolean            gst_control_binding_sync_values        (GstControlBinding * self, GstObject *object, 
                                                             GstClockTime timestamp, GstClockTime last_sync);
+GValue *            gst_control_binding_get_value          (GstControlBinding *binding,
+                                                            GstClockTime timestamp);
+gboolean            gst_control_binding_get_value_array    (GstControlBinding *binding, GstClockTime timestamp,
+                                                            GstClockTime interval, guint n_values, GValue *values);
 GstControlSource *  gst_control_binding_get_control_source (GstControlBinding * self);
 void                gst_control_binding_set_disabled       (GstControlBinding * self, gboolean disabled);
 gboolean            gst_control_binding_is_disabled        (GstControlBinding * self);

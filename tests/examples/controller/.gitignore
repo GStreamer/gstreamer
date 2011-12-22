@@ -1,5 +1,6 @@
 audio-example
+control-sources
 *.bb
 *.bbg
 *.da
-audio_example-audio-example.gcno
+*.gcno

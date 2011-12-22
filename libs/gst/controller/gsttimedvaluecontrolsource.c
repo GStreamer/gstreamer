@@ -39,7 +39,6 @@
 #include <gst/gst.h>
 
 #include "gstinterpolationcontrolsource.h"
-#include "gstinterpolationcontrolsourceprivate.h"
 #include "gst/glib-compat-private.h"
 
 #define GST_CAT_DEFAULT controller_debug
@@ -64,7 +63,6 @@ gst_control_point_free (GstControlPoint * cp)
 {
   g_return_if_fail (cp);
 
-  g_value_unset (&cp->value);
   g_slice_free (GstControlPoint, cp);
 }
 
@@ -76,15 +74,6 @@ gst_timed_value_control_source_reset (GstTimedValueControlSource * self)
   csource->get_value = NULL;
   csource->get_value_array = NULL;
 
-  self->type = self->base = G_TYPE_INVALID;
-
-  if (G_IS_VALUE (&self->default_value))
-    g_value_unset (&self->default_value);
-  if (G_IS_VALUE (&self->minimum_value))
-    g_value_unset (&self->minimum_value);
-  if (G_IS_VALUE (&self->maximum_value))
-    g_value_unset (&self->maximum_value);
-
   if (self->values) {
     g_sequence_free (self->values);
     self->values = NULL;
@@ -92,154 +81,6 @@ gst_timed_value_control_source_reset (GstTimedValueControlSource * self)
 
   self->nvalues = 0;
   self->valid_cache = FALSE;
-}
-
-static gboolean
-gst_timed_value_control_source_bind (GstControlSource * source,
-    GParamSpec * pspec)
-{
-  GType type, base;
-  GstTimedValueControlSource *self = (GstTimedValueControlSource *) source;
-  gboolean ret = TRUE;
-
-  if (self->type != G_TYPE_INVALID) {
-    gst_timed_value_control_source_reset (self);
-  }
-
-  /* get the fundamental base type */
-  self->type = base = type = G_PARAM_SPEC_VALUE_TYPE (pspec);
-  while ((type = g_type_parent (type)))
-    base = type;
-
-  self->base = base;
-  /* restore type */
-  type = self->type;
-
-  switch (base) {
-    case G_TYPE_INT:{
-      GParamSpecInt *tpspec = G_PARAM_SPEC_INT (pspec);
-
-      g_value_init (&self->default_value, type);
-      g_value_set_int (&self->default_value, tpspec->default_value);
-      g_value_init (&self->minimum_value, type);
-      g_value_set_int (&self->minimum_value, tpspec->minimum);
-      g_value_init (&self->maximum_value, type);
-      g_value_set_int (&self->maximum_value, tpspec->maximum);
-      break;
-    }
-    case G_TYPE_UINT:{
-      GParamSpecUInt *tpspec = G_PARAM_SPEC_UINT (pspec);
-
-      g_value_init (&self->default_value, type);
-      g_value_set_uint (&self->default_value, tpspec->default_value);
-      g_value_init (&self->minimum_value, type);
-      g_value_set_uint (&self->minimum_value, tpspec->minimum);
-      g_value_init (&self->maximum_value, type);
-      g_value_set_uint (&self->maximum_value, tpspec->maximum);
-      break;
-    }
-    case G_TYPE_LONG:{
-      GParamSpecLong *tpspec = G_PARAM_SPEC_LONG (pspec);
-
-      g_value_init (&self->default_value, type);
-      g_value_set_long (&self->default_value, tpspec->default_value);
-      g_value_init (&self->minimum_value, type);
-      g_value_set_long (&self->minimum_value, tpspec->minimum);
-      g_value_init (&self->maximum_value, type);
-      g_value_set_long (&self->maximum_value, tpspec->maximum);
-      break;
-    }
-    case G_TYPE_ULONG:{
-      GParamSpecULong *tpspec = G_PARAM_SPEC_ULONG (pspec);
-
-      g_value_init (&self->default_value, type);
-      g_value_set_ulong (&self->default_value, tpspec->default_value);
-      g_value_init (&self->minimum_value, type);
-      g_value_set_ulong (&self->minimum_value, tpspec->minimum);
-      g_value_init (&self->maximum_value, type);
-      g_value_set_ulong (&self->maximum_value, tpspec->maximum);
-      break;
-    }
-    case G_TYPE_INT64:{
-      GParamSpecInt64 *tpspec = G_PARAM_SPEC_INT64 (pspec);
-
-      g_value_init (&self->default_value, type);
-      g_value_set_int64 (&self->default_value, tpspec->default_value);
-      g_value_init (&self->minimum_value, type);
-      g_value_set_int64 (&self->minimum_value, tpspec->minimum);
-      g_value_init (&self->maximum_value, type);
-      g_value_set_int64 (&self->maximum_value, tpspec->maximum);
-      break;
-    }
-    case G_TYPE_UINT64:{
-      GParamSpecUInt64 *tpspec = G_PARAM_SPEC_UINT64 (pspec);
-
-      g_value_init (&self->default_value, type);
-      g_value_set_uint64 (&self->default_value, tpspec->default_value);
-      g_value_init (&self->minimum_value, type);
-      g_value_set_uint64 (&self->minimum_value, tpspec->minimum);
-      g_value_init (&self->maximum_value, type);
-      g_value_set_uint64 (&self->maximum_value, tpspec->maximum);
-      break;
-    }
-    case G_TYPE_FLOAT:{
-      GParamSpecFloat *tpspec = G_PARAM_SPEC_FLOAT (pspec);
-
-      g_value_init (&self->default_value, type);
-      g_value_set_float (&self->default_value, tpspec->default_value);
-      g_value_init (&self->minimum_value, type);
-      g_value_set_float (&self->minimum_value, tpspec->minimum);
-      g_value_init (&self->maximum_value, type);
-      g_value_set_float (&self->maximum_value, tpspec->maximum);
-      break;
-    }
-    case G_TYPE_DOUBLE:{
-      GParamSpecDouble *tpspec = G_PARAM_SPEC_DOUBLE (pspec);
-
-      g_value_init (&self->default_value, type);
-      g_value_set_double (&self->default_value, tpspec->default_value);
-      g_value_init (&self->minimum_value, type);
-      g_value_set_double (&self->minimum_value, tpspec->minimum);
-      g_value_init (&self->maximum_value, type);
-      g_value_set_double (&self->maximum_value, tpspec->maximum);
-      break;
-    }
-    case G_TYPE_BOOLEAN:{
-      GParamSpecBoolean *tpspec = G_PARAM_SPEC_BOOLEAN (pspec);
-
-      g_value_init (&self->default_value, type);
-      g_value_set_boolean (&self->default_value, tpspec->default_value);
-      break;
-    }
-    case G_TYPE_ENUM:{
-      GParamSpecEnum *tpspec = G_PARAM_SPEC_ENUM (pspec);
-
-      g_value_init (&self->default_value, type);
-      g_value_set_enum (&self->default_value, tpspec->default_value);
-      break;
-    }
-    case G_TYPE_STRING:{
-      GParamSpecString *tpspec = G_PARAM_SPEC_STRING (pspec);
-
-      g_value_init (&self->default_value, type);
-      g_value_set_string (&self->default_value, tpspec->default_value);
-      break;
-    }
-    default:
-      GST_WARNING ("incomplete implementation for paramspec type '%s'",
-          G_PARAM_SPEC_TYPE_NAME (pspec));
-      ret = FALSE;
-      break;
-  }
-
-  if (ret) {
-    self->valid_cache = FALSE;
-    self->nvalues = 0;
-  } else {
-    gst_timed_value_control_source_reset (self);
-  }
-
-  return ret;
 }
 
 /*
@@ -278,22 +119,21 @@ gst_control_point_find (gconstpointer p1, gconstpointer p2)
 
 static GstControlPoint *
 _make_new_cp (GstTimedValueControlSource * self, GstClockTime timestamp,
-    const GValue * value)
+    const gdouble value)
 {
   GstControlPoint *cp;
 
   /* create a new GstControlPoint */
   cp = g_slice_new0 (GstControlPoint);
   cp->timestamp = timestamp;
-  g_value_init (&cp->value, self->type);
-  g_value_copy (value, &cp->value);
+  cp->value = value;
 
   return cp;
 }
 
 static void
 gst_timed_value_control_source_set_internal (GstTimedValueControlSource *
-    self, GstClockTime timestamp, const GValue * value)
+    self, GstClockTime timestamp, const gdouble value)
 {
   GSequenceIter *iter;
 
@@ -311,13 +151,13 @@ gst_timed_value_control_source_set_internal (GstTimedValueControlSource *
       /* If the timestamp is the same just update the control point value */
       if (cp->timestamp == timestamp) {
         /* update control point */
-        g_value_reset (&cp->value);
-        g_value_copy (value, &cp->value);
+        cp->value = value;
         goto done;
       }
     }
   } else {
     self->values = g_sequence_new ((GDestroyNotify) gst_control_point_free);
+    GST_INFO ("create new timed value sequence");
   }
 
   /* sort new cp into the prop->values list */
@@ -377,12 +217,10 @@ GSequenceIter *gst_timed_value_control_source_find_control_point_iter
  */
 gboolean
 gst_timed_value_control_source_set (GstTimedValueControlSource * self,
-    GstClockTime timestamp, const GValue * value)
+    GstClockTime timestamp, const gdouble value)
 {
   g_return_val_if_fail (GST_IS_TIMED_VALUE_CONTROL_SOURCE (self), FALSE);
   g_return_val_if_fail (GST_CLOCK_TIME_IS_VALID (timestamp), FALSE);
-  g_return_val_if_fail (G_IS_VALUE (value), FALSE);
-  g_return_val_if_fail (G_VALUE_TYPE (value) == self->type, FALSE);
 
   g_mutex_lock (self->lock);
   gst_timed_value_control_source_set_internal (self, timestamp, value);
@@ -416,15 +254,10 @@ gst_timed_value_control_source_set_from_list (GstTimedValueControlSource *
     if (!GST_CLOCK_TIME_IS_VALID (tv->timestamp)) {
       GST_WARNING ("GstTimedValued with invalid timestamp passed to %s",
           GST_FUNCTION);
-    } else if (!G_IS_VALUE (&tv->value)) {
-      GST_WARNING ("GstTimedValued with invalid value passed to %s",
-          GST_FUNCTION);
-    } else if (G_VALUE_TYPE (&tv->value) != self->type) {
-      GST_WARNING ("incompatible value type for property");
     } else {
       g_mutex_lock (self->lock);
       gst_timed_value_control_source_set_internal (self, tv->timestamp,
-          &tv->value);
+          tv->value);
       g_mutex_unlock (self->lock);
       res = TRUE;
     }
@@ -547,23 +380,6 @@ gst_timed_value_control_source_get_count (GstTimedValueControlSource * self)
 }
 
 /**
- * gst_timed_value_control_source_get_base_value_type:
- * @self: the #GstTimedValueControlSource
- *
- * Get the base #GType of the property value.
- *
- * Returns: the #GType, %G_TYPE_INVALID if not yet known.
- */
-GType
-gst_timed_value_control_source_get_base_value_type (GstTimedValueControlSource *
-    self)
-{
-  g_return_val_if_fail (GST_IS_TIMED_VALUE_CONTROL_SOURCE (self),
-      G_TYPE_INVALID);
-  return self->base;
-}
-
-/**
  * gst_timed_value_control_invalidate_cache:
  * @self: the #GstTimedValueControlSource
  *
@@ -600,8 +416,7 @@ gst_timed_value_control_source_class_init (GstTimedValueControlSourceClass
     * klass)
 {
   GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
-  GstControlSourceClass *csource_class = GST_CONTROL_SOURCE_CLASS (klass);
+  //GstControlSourceClass *csource_class = GST_CONTROL_SOURCE_CLASS (klass);
 
   gobject_class->finalize = gst_timed_value_control_source_finalize;
-  csource_class->bind = gst_timed_value_control_source_bind;
 }

@@ -36,9 +36,8 @@
 #include <gst/base/gsttypefindhelper.h>
 
 #include <gst/controller/gstinterpolationcontrolsource.h>
-#include <gst/controller/gstinterpolationcontrolsourceprivate.h>
 #include <gst/controller/gstlfocontrolsource.h>
-#include <gst/controller/gstlfocontrolsourceprivate.h>
+#include <gst/controller/gsttriggercontrolsource.h>
 
 #include <gst/dataprotocol/dataprotocol.h>
 

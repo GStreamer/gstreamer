@@ -115,7 +115,6 @@ main (gint argc, gchar * argv[])
   gst_object_set_control_source (GST_OBJECT (src), "freq",
       GST_CONTROL_SOURCE (csource));
   g_object_set (csource, "mode", GST_INTERPOLATION_MODE_LINEAR, NULL);
-  g_value_init (&freq, G_TYPE_DOUBLE);
 
 
   /* set control values, we set them in a linear order as we would when loading
@@ -124,9 +123,8 @@ main (gint argc, gchar * argv[])
   bt = gst_util_get_timestamp ();
 
   for (i = 0; i < NUM_CP; i++) {
-    g_value_set_double (&freq, g_random_double_range (50.0, 3000.0));
     gst_timed_value_control_source_set ((GstTimedValueControlSource *) csource,
-        i * tick, &freq);
+        i * tick, g_random_double_range (50.0, 3000.0));
   }
 
   ct = gst_util_get_timestamp ();
@@ -142,9 +140,8 @@ main (gint argc, gchar * argv[])
 
   for (i = 0; i < 100; i++) {
     j = g_random_int_range (0, NUM_CP - 1);
-    g_value_set_double (&freq, g_random_double_range (50.0, 3000.0));
     gst_timed_value_control_source_set ((GstTimedValueControlSource *) csource,
-        j * tick, &freq);
+        j * tick, g_random_double_range (50.0, 3000.0));
   }
 
   ct = gst_util_get_timestamp ();
@@ -159,7 +156,7 @@ main (gint argc, gchar * argv[])
 
     bt = gst_util_get_timestamp ();
     gst_control_source_get_value_array (GST_CONTROL_SOURCE (csource), 0,
-        sample_duration, BLOCK_SIZE * NUM_CP, (gpointer) values);
+        sample_duration, BLOCK_SIZE * NUM_CP, values);
     ct = gst_util_get_timestamp ();
     g_free (values);
     elapsed = GST_CLOCK_DIFF (bt, ct);

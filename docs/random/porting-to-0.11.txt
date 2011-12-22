@@ -426,16 +426,20 @@ The 0.11 porting guide
     gst_tag_list_new_full*() have been renamed to gst_tag_list_new*().
 
 * GstController:
-    has now been merged into GstObject. The control sources are in the 
-    controller library still.
+    has now been merged into GstObject. It does not exists as a individual
+    object anymore. In addition core contains a GstControlSource base class and
+    the GstControlBinding. The actual control sources are in the controller
+    library as before. The 2nd big change is that control sources generate
+    a sequence of gdouble values and those are mapped to the property type and
+    value range by GstControlBindings.
     
     For plugins the effect is that gst_controller_init() is gone and
     gst_object_sync_values() is taking a GstObject * instead of GObject *.
     
     For applications the effect is larger. The whole gst_controller_* API is
-    gone and now available in simplified form under gst_object_*. There is no
-    more GstController object. Attach a control source to a property to control
-    it and attach NULL to un-control it.
+    gone and now available in simplified form under gst_object_*. ControlSources
+    are now attached via GstControlBinding to properties. There are no GValue
+    arguments used anymore when programming control sources.
 
     gst_controller_new* -> gst_object_set_control_source
     gst_controller_add_properties -> gst_object_set_control_source

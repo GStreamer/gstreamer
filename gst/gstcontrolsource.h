@@ -59,7 +59,7 @@ typedef struct _GstValueArray GstValueArray;
 struct _GstTimedValue
 {
   GstClockTime timestamp;
-  GValue       value;
+  gdouble      value;
 };
 
 /**
@@ -74,7 +74,7 @@ struct _GstTimedValue
  *
  */
 typedef gboolean (* GstControlSourceGetValue) (GstControlSource *self, 
-    GstClockTime timestamp, GValue *value);
+    GstClockTime timestamp, gdouble *value);
 
 /**
  * GstControlSourceGetValueArray
@@ -90,18 +90,7 @@ typedef gboolean (* GstControlSourceGetValue) (GstControlSource *self,
  *
  */
 typedef gboolean (* GstControlSourceGetValueArray) (GstControlSource *self, 
-    GstClockTime timestamp, GstClockTime interval, guint n_values, gpointer values);
-
-/**
- * GstControlSourceBind
- * @self: the #GstControlSource instance
- * @pspec: #GParamSpec that should be bound to
- *
- * Function for binding a #GstControlSource to a #GParamSpec.
- *
- * Returns: %TRUE if the property could be bound to the #GstControlSource, %FALSE otherwise.
- */
-typedef gboolean (* GstControlSourceBind) (GstControlSource *self, GParamSpec *pspec);
+    GstClockTime timestamp, GstClockTime interval, guint n_values, gdouble *values);
 
 /**
  * GstControlSource:
@@ -118,7 +107,6 @@ struct _GstControlSource {
   GstControlSourceGetValueArray get_value_array;  /* Returns values for a property in a given timespan */
 
   /*< private >*/
-  gboolean bound;
   gpointer _gst_reserved[GST_PADDING];
 };
 
@@ -134,8 +122,6 @@ struct _GstControlSourceClass
 {
   GObjectClass parent_class;
 
-  GstControlSourceBind bind;  /* Binds the GstControlSource to a specific GParamSpec */
-
   /*< private >*/
   gpointer _gst_reserved[GST_PADDING];
 };
@@ -144,13 +130,10 @@ GType gst_control_source_get_type (void);
 
 /* Functions */
 gboolean       gst_control_source_get_value             (GstControlSource *self, GstClockTime timestamp,
-                                                         GValue *value);
+                                                         gdouble *value);
 gboolean       gst_control_source_get_value_array       (GstControlSource *self, GstClockTime timestamp,
                                                          GstClockTime interval, guint n_values,
-                                                         gpointer values);
-
-gboolean       gst_control_source_bind                  (GstControlSource *self, GParamSpec *pspec);
-
+                                                         gdouble *values);
 G_END_DECLS
 
 #endif /* __GST_CONTROL_SOURCE_H__ */

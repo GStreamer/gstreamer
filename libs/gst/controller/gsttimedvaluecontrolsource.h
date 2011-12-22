@@ -50,6 +50,32 @@ typedef struct _GstTimedValueControlSourceClass GstTimedValueControlSourceClass;
 typedef struct _GstTimedValueControlSourcePrivate GstTimedValueControlSourcePrivate;
 
 /**
+ * GstControlPoint:
+ *
+ * a internal structure for value+time and various temporary
+ * values used for interpolation. This "inherits" from
+ * GstTimedValue.
+ */
+typedef struct _GstControlPoint
+{
+  /* fields from GstTimedValue. DO NOT CHANGE! */
+  GstClockTime timestamp;       /* timestamp of the value change */
+  gdouble value;                /* the new value */
+
+  /* internal fields */
+
+  /* Caches for the interpolators */
+  // FIXME: we should not have this here already ...
+  union {
+    struct {
+      gdouble h;
+      gdouble z;
+    } cubic;
+  } cache;
+
+} GstControlPoint;
+
+/**
  * GstTimedValueControlSource:
  *
  * The instance structure of #GstControlSource.
@@ -59,13 +85,6 @@ struct _GstTimedValueControlSource {
 
   /*< protected >*/
   GMutex *lock;
-
-  GType type;                   /* type of the handled property */
-  GType base;                   /* base-type of the handled property */
-
-  GValue default_value;         /* default value for the handled property */
-  GValue minimum_value;         /* min value for the handled property */
-  GValue maximum_value;         /* max value for the handled property */
 
   GSequence *values;            /* List of GstControlPoint */
   gint nvalues;                 /* Number of control points */
@@ -97,7 +116,7 @@ GSequenceIter * gst_timed_value_control_source_find_control_point_iter (
 
 gboolean        gst_timed_value_control_source_set            (GstTimedValueControlSource * self,
                                                                GstClockTime timestamp,
-                                                               const GValue * value);
+                                                               const gdouble value);
 gboolean        gst_timed_value_control_source_set_from_list  (GstTimedValueControlSource * self,
                                                                const GSList * timedvalues);
 gboolean        gst_timed_value_control_source_unset          (GstTimedValueControlSource * self,
@@ -105,8 +124,6 @@ gboolean        gst_timed_value_control_source_unset          (GstTimedValueCont
 void            gst_timed_value_control_source_unset_all      (GstTimedValueControlSource *self);
 GList *         gst_timed_value_control_source_get_all        (GstTimedValueControlSource * self);
 gint            gst_timed_value_control_source_get_count      (GstTimedValueControlSource * self);
-GType           gst_timed_value_control_source_get_base_value_type (
-                                                               GstTimedValueControlSource * self);
 void            gst_timed_value_control_invalidate_cache      (GstTimedValueControlSource * self);
 
 G_END_DECLS
