@@ -490,12 +490,37 @@ GstBuffer*      gst_buffer_span                 (GstBuffer *buf1, gsize offset, 
 /* metadata */
 #include <gst/gstmeta.h>
 
+/**
+ * GstBufferMetaFunc:
+ * @buffer: a #GstBuffer
+ * @meta: a pointer to a #GstMeta
+ * @user_data: user data passed to gst_buffer_foreach_meta()
+ *
+ * A function that will be called from gst_buffer_foreach_meta(). The @meta
+ * field will point to a the reference of the meta.
+ *
+ * @buffer should not be modified from this callback.
+ *
+ * When this function returns %TRUE, the next meta will be
+ * returned. When %FALSE is returned, gst_buffer_foreach_meta() will return.
+ *
+ * When @meta is set to NULL, the item will be removed from the buffer.
+ *
+ * Returns: %FALSE when gst_buffer_foreach_meta() should stop
+ */
+typedef gboolean (*GstBufferForeachMetaFunc)    (GstBuffer *buffer, GstMeta **meta,
+                                                 gpointer user_data);
+
 GstMeta *       gst_buffer_get_meta             (GstBuffer *buffer, const GstMetaInfo *info);
 GstMeta *       gst_buffer_add_meta             (GstBuffer *buffer, const GstMetaInfo *info,
                                                  gpointer params);
 gboolean        gst_buffer_remove_meta          (GstBuffer *buffer, GstMeta *meta);
 
 GstMeta *       gst_buffer_iterate_meta         (GstBuffer *buffer, gpointer *state);
+
+void            gst_buffer_foreach_meta         (GstBuffer *buffer,
+                                                 GstBufferForeachMetaFunc func,
+                                                 gpointer user_data);
 
 /**
  * gst_value_set_buffer:

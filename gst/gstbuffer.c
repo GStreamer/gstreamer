@@ -1618,3 +1618,59 @@ gst_buffer_iterate_meta (GstBuffer * buffer, gpointer * state)
   else
     return NULL;
 }
+
+/**
+ * gst_buffer_foreach_meta:
+ * @buffer: a #GstBuffer
+ * @func: (scope call): a #GstBufferForeachMetaFunc to call
+ * @user_data: (closure): user data passed to @func
+ *
+ * Call @func with @user_data for each meta in @buffer.
+ *
+ * @func can modify the passed meta pointer or its contents. The return value
+ * of @func define if this function returns or if the remaining metadata items
+ * in the buffer should be skipped.
+ */
+void
+gst_buffer_foreach_meta (GstBuffer * buffer, GstBufferForeachMetaFunc func,
+    gpointer user_data)
+{
+  GstMetaItem *walk, *prev, *next;
+
+  g_return_if_fail (buffer != NULL);
+  g_return_if_fail (func != NULL);
+
+  /* find the metadata and delete */
+  prev = GST_BUFFER_META (buffer);
+  for (walk = prev; walk; walk = next) {
+    GstMeta *m, *new;
+    gboolean res;
+
+    m = new = &walk->meta;
+    next = walk->next;
+
+    res = func (buffer, &new, user_data);
+
+    if (new == NULL) {
+      const GstMetaInfo *info = m->info;
+
+      GST_CAT_DEBUG (GST_CAT_BUFFER, "remove metadata %p (%s)", m,
+          g_type_name (info->type));
+
+      /* remove from list */
+      if (GST_BUFFER_META (buffer) == walk)
+        GST_BUFFER_META (buffer) = next;
+      else
+        prev->next = next;
+
+      /* call free_func if any */
+      if (info->free_func)
+        info->free_func (m, buffer);
+
+      /* and free the slice */
+      g_slice_free1 (ITEM_SIZE (info), walk);
+    }
+    if (!res)
+      break;
+  }
+}
