@@ -132,80 +132,96 @@ struct _GESTrackObjectClass {
 
   /*< private >*/
   /* signals (currently unused) */
-  void	(*changed)	(GESTrackObject * object);
+  void  (*changed)  (GESTrackObject * object);
 
   /*< public >*/
   /* virtual methods for subclasses */
   GHashTable*  (*get_props_hastable)       (GESTrackObject * object);
   GParamSpec** (*list_children_properties) (GESTrackObject * object,
-					    guint *n_properties);
+              guint *n_properties);
   /*< private >*/
   /* Padding for API extension */
   gpointer _ges_reserved[GES_PADDING - 2];
 };
 
-GType ges_track_object_get_type (void);
+GType ges_track_object_get_type               (void);
 
-gboolean ges_track_object_set_track  (GESTrackObject * object,
-				      GESTrack * track);
-GESTrack* ges_track_object_get_track (GESTrackObject * object);
+gboolean ges_track_object_set_track           (GESTrackObject * object,
+              GESTrack * track);
+GESTrack* ges_track_object_get_track          (GESTrackObject * object);
 
-void ges_track_object_set_timeline_object (GESTrackObject * object,
-					   GESTimelineObject * tlobject);
+void ges_track_object_set_timeline_object     (GESTrackObject * object,
+                                               GESTimelineObject * tlobject);
 GESTimelineObject *
-ges_track_object_get_timeline_object      (GESTrackObject* object);
+ges_track_object_get_timeline_object          (GESTrackObject* object);
 
-GstElement * ges_track_object_get_gnlobject (GESTrackObject * object);
-GstElement * ges_track_object_get_element   (GESTrackObject * object);
+GstElement * ges_track_object_get_gnlobject   (GESTrackObject * object);
 
-void ges_track_object_set_locked      (GESTrackObject * object,
-				       gboolean locked);
-gboolean ges_track_object_is_locked   (GESTrackObject * object);
+GstElement * ges_track_object_get_element     (GESTrackObject * object);
 
-void ges_track_object_set_start       (GESTrackObject * object,
-				       guint64 start);
-void ges_track_object_set_inpoint     (GESTrackObject * object,
-				       guint64 inpoint);
-void ges_track_object_set_duration    (GESTrackObject * object,
-				       guint64 duration);
-void ges_track_object_set_priority    (GESTrackObject * object,
-				       guint32 priority);
-gboolean ges_track_object_set_active  (GESTrackObject * object,
-				       gboolean active);
+void ges_track_object_set_locked              (GESTrackObject * object,
+                                               gboolean locked);
 
-guint64 ges_track_object_get_start    (GESTrackObject * object);
-guint64 ges_track_object_get_inpoint  (GESTrackObject * object);
-guint64 ges_track_object_get_duration (GESTrackObject * object);
-guint32 ges_track_object_get_priority (GESTrackObject * object);
-gboolean ges_track_object_is_active   (GESTrackObject * object);
+gboolean ges_track_object_is_locked           (GESTrackObject * object);
+
+void ges_track_object_set_start               (GESTrackObject * object,
+                                               guint64 start);
+
+void ges_track_object_set_inpoint             (GESTrackObject * object,
+                                               guint64 inpoint);
+
+void ges_track_object_set_duration            (GESTrackObject * object,
+                                               guint64 duration);
+
+void ges_track_object_set_priority            (GESTrackObject * object,
+                                               guint32 priority);
+
+gboolean ges_track_object_set_active          (GESTrackObject * object,
+                                               gboolean active);
+
+guint64 ges_track_object_get_start            (GESTrackObject * object);
+guint64 ges_track_object_get_inpoint          (GESTrackObject * object);
+guint64 ges_track_object_get_duration         (GESTrackObject * object);
+guint32 ges_track_object_get_priority         (GESTrackObject * object);
+gboolean ges_track_object_is_active           (GESTrackObject * object);
 
 GParamSpec **
-ges_track_object_list_children_properties (GESTrackObject *object,
-					   guint *n_properties);
-gboolean ges_track_object_lookup_child    (GESTrackObject *object,
-					   const gchar *prop_name,
-					   GstElement **element,
-					   GParamSpec **pspec);
+ges_track_object_list_children_properties     (GESTrackObject *object,
+                                               guint *n_properties);
 
-void ges_track_object_get_child_property_by_pspec (GESTrackObject * object,
-						   GParamSpec * pspec,
-						   GValue * value);
-void ges_track_object_get_child_property_valist   (GESTrackObject * object,
-						   const gchar * first_property_name,
-						   va_list var_args);
-void ges_track_object_get_child_property          (GESTrackObject *object,
-						   const gchar * first_property_name,
-						   ...) G_GNUC_NULL_TERMINATED;
+gboolean ges_track_object_lookup_child        (GESTrackObject *object,
+                                               const gchar *prop_name,
+                                               GstElement **element,
+                                               GParamSpec **pspec);
 
-void ges_track_object_set_child_property_valist (GESTrackObject * object,
-						 const gchar * first_property_name,
-						 va_list var_args);
-void ges_track_object_set_child_property_by_pspec (GESTrackObject * object,
-						   GParamSpec * pspec,
-						   GValue * value);
-void ges_track_object_set_child_property (GESTrackObject * object,
-					  const gchar * first_property_name,
-					  ...) G_GNUC_NULL_TERMINATED;
+void
+ges_track_object_get_child_property_by_pspec (GESTrackObject * object,
+                                              GParamSpec * pspec,
+                                              GValue * value);
+
+void
+ges_track_object_get_child_property_valist   (GESTrackObject * object,
+                                              const gchar * first_property_name,
+                                              va_list var_args);
+
+void ges_track_object_get_child_property     (GESTrackObject *object,
+                                              const gchar * first_property_name,
+                                              ...) G_GNUC_NULL_TERMINATED;
+
+void
+ges_track_object_set_child_property_valist   (GESTrackObject * object,
+                                              const gchar * first_property_name,
+                                              va_list var_args);
+
+void
+ges_track_object_set_child_property_by_pspec (GESTrackObject * object,
+                                              GParamSpec * pspec,
+                                              GValue * value);
+
+void ges_track_object_set_child_property     (GESTrackObject * object,
+                                              const gchar * first_property_name,
+                                              ...) G_GNUC_NULL_TERMINATED;
+
 
 G_END_DECLS
 #endif /* _GES_TRACK_OBJECT */
