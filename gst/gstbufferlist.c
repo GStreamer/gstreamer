@@ -184,8 +184,8 @@ gst_buffer_list_length (GstBufferList * list)
  * Call @func with @data for each buffer in @list.
  *
  * @func can modify the passed buffer pointer or its contents. The return value
- * of @func define if this function returns or if the remaining buffers in a
- * group should be skipped.
+ * of @func define if this function returns or if the remaining buffers in
+ * the list should be skipped.
  *
  * Since: 0.10.24
  */
