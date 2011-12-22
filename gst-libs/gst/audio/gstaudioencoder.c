@@ -790,10 +790,13 @@ gst_audio_encoder_push_buffers (GstAudioEncoder * enc, gboolean force)
 static GstFlowReturn
 gst_audio_encoder_drain (GstAudioEncoder * enc)
 {
+  GST_DEBUG_OBJECT (enc, "draining");
   if (enc->priv->drained)
     return GST_FLOW_OK;
-  else
+  else {
+    GST_DEBUG_OBJECT (enc, "... really");
     return gst_audio_encoder_push_buffers (enc, TRUE);
+  }
 }
 
 static void
