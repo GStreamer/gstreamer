@@ -1908,6 +1908,7 @@ gst_gl_display_on_draw (GstGLDisplay * display)
     glEnable (GL_TEXTURE_RECTANGLE_ARB);
 
     glBegin (GL_QUADS);
+    /* gst images are top-down while opengl plane is bottom-up */
     glTexCoord2i (display->redisplay_texture_width, 0);
     glVertex2f (1.0f, 1.0f);
     glTexCoord2i (0, 0);
@@ -1917,6 +1918,15 @@ gst_gl_display_on_draw (GstGLDisplay * display)
     glTexCoord2i (display->redisplay_texture_width,
         display->redisplay_texture_height);
     glVertex2f (1.0f, -1.0f);
+    /*glTexCoord2i (display->redisplay_texture_width, 0);
+       glVertex2i (1, -1);
+       glTexCoord2i (0, 0);
+       glVertex2f (-1.0f, -1.0f);
+       glTexCoord2i (0, display->redisplay_texture_height);
+       glVertex2f (-1.0f, 1.0f);
+       glTexCoord2i (display->redisplay_texture_width,
+       display->redisplay_texture_height);
+       glVertex2f (1.0f, 1.0f); */
     glEnd ();
 
     glDisable (GL_TEXTURE_RECTANGLE_ARB);

@@ -704,11 +704,34 @@ actor_negotiate (GstGLDisplay * display, GstVisualGL * visual)
   err =
       visual_video_set_dimension (visual->video, visual->width, visual->height);
   if (err != VISUAL_OK)
-    g_warning ("failed to visual_video_set_depth\n");
+    g_warning ("failed to visual_video_set_dimension\n");
 
   err = visual_actor_video_negotiate (visual->actor, 0, FALSE, FALSE);
   if (err != VISUAL_OK)
-    g_warning ("failed to visual_video_set_depth\n");
+    g_warning ("failed to visual_actor_video_negotiate\n");
+}
+
+static void
+check_gl_matrix (void)
+{
+  GLdouble projection_matrix[16];
+  GLdouble modelview_matrix[16];
+  gint i = 0;
+  gint j = 0;
+
+  glGetDoublev (GL_PROJECTION_MATRIX, projection_matrix);
+  glGetDoublev (GL_MODELVIEW_MATRIX, modelview_matrix);
+
+  for (j = 0; j < 4; ++j) {
+    for (i = 0; i < 4; ++i) {
+      if (projection_matrix[i + 4 * j] != projection_matrix[i + 4 * j])
+        g_warning ("invalid projection matrix at coordiante %dx%d: %f\n", i, j,
+            projection_matrix[i + 4 * j]);
+      if (modelview_matrix[i + 4 * j] != modelview_matrix[i + 4 * j])
+        g_warning ("invalid modelview_matrix matrix at coordiante %dx%d: %f\n",
+            i, j, modelview_matrix[i + 4 * j]);
+    }
+  }
 }
 
 static void
@@ -718,6 +741,7 @@ render_frame (gint width, gint height, guint texture, GstVisualGL * visual)
   VisBuffer *lbuf, *rbuf;
   guint16 ldata[VISUAL_SAMPLES], rdata[VISUAL_SAMPLES];
   guint i;
+  //GLint current_fbo = 0;
 
   /* Read VISUAL_SAMPLES samples per channel */
   data =
@@ -762,6 +786,18 @@ render_frame (gint width, gint height, guint texture, GstVisualGL * visual)
   glPushMatrix ();
   glLoadMatrixd (visual->actor_modelview_matrix);
 
+  /* This line try to hacks compatiblity with libprojectM
+   * You have to do that before calling glDrawBuffer(GL_BACK)
+   * Actually, at this point the current fbo is attached.
+   * then the folowing line unbind it.
+   * TODO: We have to rebind it just before final drawing
+   * if we want to append other glfilters after it.
+   */
+  //glGetIntegerv(GL_FRAMEBUFFER_BINDING, &current_fbo);
+  if (g_ascii_strncasecmp (gst_element_get_name (GST_ELEMENT (visual)),
+          "visualglprojectm", 16) == 0)
+    glBindFramebufferEXT (GL_FRAMEBUFFER_EXT, 0);
+
   actor_negotiate (visual->display, visual);
 
   if (visual->is_enabled_gl_depth_test) {
@@ -777,7 +813,16 @@ render_frame (gint width, gint height, guint texture, GstVisualGL * visual)
   glMatrixMode (GL_MODELVIEW);
   glScaled (1.0, -1.0, 1.0);
 
+  /* TODO: It should be possible to split libvisual rendering:
+   * framebuffer pass1,2,3 ... and final rendering
+   * This way we could rebind our fbo just before the
+   * final libvisual rendering
+   */
+  //glBindFramebufferEXT (GL_FRAMEBUFFER_EXT, current_fbo);
+
   visual_actor_run (visual->actor, visual->audio);
+
+  check_gl_matrix ();
 
   glMatrixMode (GL_PROJECTION);
   glPopMatrix ();
@@ -789,6 +834,12 @@ render_frame (gint width, gint height, guint texture, GstVisualGL * visual)
 
   glDisable (GL_DEPTH_TEST);
   glDisable (GL_BLEND);
+
+  /*glDisable (GL_LIGHT0);
+     glDisable (GL_LIGHTING);
+     glDisable (GL_POLYGON_OFFSET_FILL);
+     glDisable (GL_COLOR_MATERIAL);
+     glDisable (GL_CULL_FACE); */
 
   GST_DEBUG_OBJECT (visual, "rendered one frame");
 }
@@ -959,8 +1010,8 @@ gst_visual_gl_change_state (GstElement * element, GstStateChange transition)
         gst_visual_gl_reset (visual);
 
         visual->actor =
-            visual_actor_new (GST_VISUAL_GL_GET_CLASS (visual)->plugin->
-            info->plugname);
+            visual_actor_new (GST_VISUAL_GL_GET_CLASS (visual)->plugin->info->
+            plugname);
         visual->video = visual_video_new ();
         visual->audio = visual_audio_new ();
 
