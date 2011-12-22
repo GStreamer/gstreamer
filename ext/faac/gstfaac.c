@@ -379,9 +379,8 @@ static gboolean
 gst_faac_set_format (GstAudioEncoder * enc, GstAudioInfo * info)
 {
   GstFaac *faac = GST_FAAC (enc);
-  faacEncHandle *handle;
   gint channels, samplerate, width;
-  gulong samples, bytes, fmt = 0, bps = 0;
+  gulong fmt = 0, bps = 0;
   gboolean result = FALSE;
 
   /* base class takes care */
@@ -408,41 +407,24 @@ gst_faac_set_format (GstAudioEncoder * enc, GstAudioInfo * info)
     bps = 4;
   }
 
-  /* clean up in case of re-configure */
-  gst_faac_close_encoder (faac);
-
-  if (!(handle = faacEncOpen (samplerate, channels, &samples, &bytes)))
-    goto setup_failed;
-
-  /* mind channel count */
-  samples /= channels;
-
   /* ok, record and set up */
   faac->format = fmt;
   faac->bps = bps;
-  faac->handle = handle;
-  faac->bytes = bytes;
-  faac->samples = samples;
   faac->channels = channels;
   faac->samplerate = samplerate;
 
   /* finish up */
   result = gst_faac_configure_source_pad (faac);
+  if (!result)
+    goto done;
 
   /* report needs to base class */
-  gst_audio_encoder_set_frame_samples_min (enc, samples);
-  gst_audio_encoder_set_frame_samples_max (enc, samples);
+  gst_audio_encoder_set_frame_samples_min (enc, faac->samples);
+  gst_audio_encoder_set_frame_samples_max (enc, faac->samples);
   gst_audio_encoder_set_frame_max (enc, 1);
 
 done:
   return result;
-
-  /* ERRORS */
-setup_failed:
-  {
-    GST_ELEMENT_ERROR (faac, LIBRARY, SETTINGS, (NULL), (NULL));
-    goto done;
-  }
 }
 
 /* check downstream caps to configure format */
@@ -504,15 +486,32 @@ gst_faac_negotiate (GstFaac * faac)
 }
 
 static gboolean
-gst_faac_configure_source_pad (GstFaac * faac)
+gst_faac_open_encoder (GstFaac * faac)
 {
-  GstCaps *srccaps;
-  gboolean ret = FALSE;
+  faacEncHandle *handle;
   faacEncConfiguration *conf;
   guint maxbitrate;
+  gulong samples, bytes;
 
-  /* negotiate stream format */
-  gst_faac_negotiate (faac);
+  g_return_val_if_fail (faac->samplerate != 0 && faac->channels != 0, FALSE);
+
+  /* clean up in case of re-configure */
+  gst_faac_close_encoder (faac);
+
+  if (!(handle = faacEncOpen (faac->samplerate, faac->channels,
+              &samples, &bytes)))
+    goto setup_failed;
+
+  /* mind channel count */
+  samples /= faac->channels;
+
+  /* record */
+  faac->handle = handle;
+  faac->samples = samples;
+  faac->bytes = bytes;
+
+  GST_DEBUG_OBJECT (faac, "faac needs samples %d, output size %d",
+      faac->samples, faac->bytes);
 
   /* we negotiated caps update current configuration */
   conf = faacEncGetCurrentConfiguration (faac->handle);
@@ -549,7 +548,7 @@ gst_faac_configure_source_pad (GstFaac * faac)
   conf->bandWidth = 0;
 
   if (!faacEncSetConfiguration (faac->handle, conf))
-    goto set_failed;
+    goto setup_failed;
 
   /* let's see what really happened,
    * note that this may not really match desired rate */
@@ -557,6 +556,28 @@ gst_faac_configure_source_pad (GstFaac * faac)
       (conf->bitRate + 500) / 1000 * faac->channels);
   GST_DEBUG_OBJECT (faac, "quantization quality: %ld", conf->quantqual);
   GST_DEBUG_OBJECT (faac, "bandwidth: %d Hz", conf->bandWidth);
+
+  return TRUE;
+
+  /* ERRORS */
+setup_failed:
+  {
+    GST_ELEMENT_ERROR (faac, LIBRARY, SETTINGS, (NULL), (NULL));
+    return FALSE;
+  }
+}
+
+static gboolean
+gst_faac_configure_source_pad (GstFaac * faac)
+{
+  GstCaps *srccaps;
+  gboolean ret;
+
+  /* negotiate stream format */
+  gst_faac_negotiate (faac);
+
+  if (!gst_faac_open_encoder (faac))
+    goto set_failed;
 
   /* now create a caps for it all */
   srccaps = gst_caps_new_simple ("audio/mpeg",
