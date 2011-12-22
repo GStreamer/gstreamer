@@ -82,6 +82,7 @@ static gboolean gst_mad_parse (GstAudioDecoder * dec, GstAdapter * adapter,
     gint * offset, gint * length);
 static GstFlowReturn gst_mad_handle_frame (GstAudioDecoder * dec,
     GstBuffer * buffer);
+static gboolean gst_mad_event (GstAudioDecoder * dec, GstEvent * event);
 static void gst_mad_flush (GstAudioDecoder * dec, gboolean hard);
 
 static void gst_mad_set_property (GObject * object, guint prop_id,
@@ -119,6 +120,7 @@ gst_mad_class_init (GstMadClass * klass)
   base_class->parse = GST_DEBUG_FUNCPTR (gst_mad_parse);
   base_class->handle_frame = GST_DEBUG_FUNCPTR (gst_mad_handle_frame);
   base_class->flush = GST_DEBUG_FUNCPTR (gst_mad_flush);
+  base_class->event = GST_DEBUG_FUNCPTR (gst_mad_event);
 
   gobject_class->set_property = gst_mad_set_property;
   gobject_class->get_property = gst_mad_get_property;
@@ -168,6 +170,7 @@ gst_mad_start (GstAudioDecoder * dec)
   mad_stream_options (&mad->stream, options);
   mad->header.mode = -1;
   mad->header.emphasis = -1;
+  mad->eos = FALSE;
 
   /* call upon legacy upstream byte support (e.g. seeking) */
   gst_audio_decoder_set_byte_time (dec, TRUE);
@@ -281,6 +284,20 @@ gst_mad_parse (GstAudioDecoder * dec, GstAdapter * adapter,
   const guint8 *data;
 
   mad = GST_MAD (dec);
+
+  if (mad->eos) {
+    /* This is one steaming hack right there.
+     * mad will not decode the last frame if it is not followed by
+     * a number of 0 bytes, due to some buffer overflow, which can
+     * not be fixed for reasons I did not inquire into, see
+     * http://www.mars.org/mailman/public/mad-dev/2001-May/000262.html
+     */
+    GstBuffer *guard = gst_buffer_new_and_alloc (MAD_BUFFER_GUARD);
+    memset (GST_BUFFER_DATA (guard), 0, GST_BUFFER_SIZE (guard));
+    GST_DEBUG_OBJECT (mad, "Discreetly stuffing %u zero bytes in the adapter",
+        GST_BUFFER_SIZE (guard));
+    gst_adapter_push (adapter, guard);
+  }
 
   /* we basically let mad library do parsing,
    * and translate that back to baseclass.
@@ -480,6 +497,21 @@ gst_mad_flush (GstAudioDecoder * dec, gboolean hard)
     mad_frame_mute (&mad->frame);
     mad_synth_mute (&mad->synth);
   }
+}
+
+static gboolean
+gst_mad_event (GstAudioDecoder * dec, GstEvent * event)
+{
+  GstMad *mad;
+
+  mad = GST_MAD (dec);
+  if (GST_EVENT_TYPE (event) == GST_EVENT_EOS) {
+    GST_DEBUG_OBJECT (mad, "We got EOS, will pad next time");
+    mad->eos = TRUE;
+  }
+
+  /* Let the base class do its usual thing */
+  return FALSE;
 }
 
 static void
