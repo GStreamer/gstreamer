@@ -31,6 +31,8 @@
 #  include <config.h>
 #endif
 
+#include <gst/interfaces/photography.h>
+
 #include "gstwrappercamerabinsrc.h"
 #include "camerabingeneral.h"
 
@@ -703,7 +705,9 @@ static gboolean
 start_image_capture (GstWrapperCameraBinSrc * self)
 {
   GstBaseCameraSrc *bcamsrc = GST_BASE_CAMERA_SRC (self);
-  GstPhotography *photography = gst_base_camera_src_get_photography (bcamsrc);
+  GstPhotography *photography =
+      (GstPhotography *) gst_bin_get_by_interface (GST_BIN_CAST (bcamsrc),
+      GST_TYPE_PHOTOGRAPHY);
   gboolean ret = FALSE;
   GstCaps *caps;
 
@@ -744,7 +748,9 @@ static gboolean
 gst_wrapper_camera_bin_src_set_mode (GstBaseCameraSrc * bcamsrc,
     GstCameraBinMode mode)
 {
-  GstPhotography *photography = gst_base_camera_src_get_photography (bcamsrc);
+  GstPhotography *photography =
+      (GstPhotography *) gst_bin_get_by_interface (GST_BIN_CAST (bcamsrc),
+      GST_TYPE_PHOTOGRAPHY);
   GstWrapperCameraBinSrc *self = GST_WRAPPER_CAMERA_BIN_SRC (bcamsrc);
 
   if (self->output_selector) {
