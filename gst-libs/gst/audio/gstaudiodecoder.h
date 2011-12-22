@@ -188,7 +188,7 @@ struct _GstAudioDecoder
  *                  most notably a call to gst_audio_decoder_finish_frame().
  * @flush:          Optional.
  *                  Instructs subclass to clear any codec caches and discard
- *                  any pending samples and not yet returned encoded data.
+ *                  any pending samples and not yet returned decoded data.
  *                  @hard indicates whether a FLUSH is being processed,
  *                  or otherwise a DISCONT (or conceptually similar).
  * @event:          Optional.
