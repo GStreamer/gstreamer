@@ -258,29 +258,3 @@ gst_camerabin_remove_elements_from_bin (GstBin * bin)
   }
   gst_iterator_free (iter);
 }
-
-/**
- * gst_camerabin_drop_eos_probe:
- * @pad: pad receiving the event
- * @event: received event
- * @u_data: not used
- *
- * Event probe that drop all eos events.
- *
- * Returns: FALSE to drop the event, TRUE otherwise
- */
-gboolean
-gst_camerabin_drop_eos_probe (GstPad * pad, GstEvent * event, gpointer u_data)
-{
-  gboolean ret = TRUE;
-
-  switch (GST_EVENT_TYPE (event)) {
-    case GST_EVENT_EOS:
-      GST_DEBUG ("dropping eos in %s:%s", GST_DEBUG_PAD_NAME (pad));
-      ret = FALSE;
-      break;
-    default:
-      break;
-  }
-  return ret;
-}

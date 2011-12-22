@@ -34,6 +34,4 @@ GstElement * gst_camerabin_setup_default_element (GstBin * bin, GstElement *user
 
 void gst_camerabin_remove_elements_from_bin (GstBin * bin);
 
-gboolean gst_camerabin_drop_eos_probe (GstPad * pad, GstEvent * event, gpointer u_data);
-
 #endif /* #ifndef __CAMERABIN_GENERAL_H_ */
