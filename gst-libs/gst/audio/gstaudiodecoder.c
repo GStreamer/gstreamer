@@ -2218,7 +2218,8 @@ gst_audio_decoder_get_delay (GstAudioDecoder * dec)
  * @num: max tolerated errors
  *
  * Sets numbers of tolerated decoder errors, where a tolerated one is then only
- * warned about, but more than tolerated will lead to fatal error.
+ * warned about, but more than tolerated will lead to fatal error.  Default
+ * is set to GST_AUDIO_DECODER_MAX_ERRORS.
  *
  * Since: 0.10.36
  */
