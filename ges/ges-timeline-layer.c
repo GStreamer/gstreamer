@@ -1,6 +1,7 @@
 /* GStreamer Editing Services
  * Copyright (C) 2009 Edward Hervey <edward.hervey@collabora.co.uk>
  *               2009 Nokia Corporation
+ *               2011 Mathieu Duponchelle <mathieu.duponchelle@epitech.eu>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -20,7 +21,7 @@
 
 /**
  * SECTION:ges-timeline-layer
- * @short_description: Non-overlaping sequence of #GESTimelineObject
+ * @short_description: Non-overlapping sequence of #GESTimelineObject
  *
  * Responsible for the ordering of the various contained TimelineObject(s). A
  * timeline layer has a "priority" property, which is used to manage the
@@ -170,7 +171,7 @@ ges_timeline_layer_class_init (GESTimelineLayerClass * klass)
   /**
    * GESTimelineLayer:auto_transitioning
    *
-   * Sets whether transitions are added automatically when timeline objects overlap
+   * Sets whether transitions are added automagically when timeline objects overlap.
    */
   g_object_class_install_property (object_class, PROP_AUTO_TRANSITION,
       g_param_spec_boolean ("auto-transition", "Auto-Transition",
@@ -315,6 +316,7 @@ ges_timeline_layer_add_object (GESTimelineLayer * layer,
       g_list_insert_sorted (layer->priv->objects_start, object,
       (GCompareFunc) objects_start_compare);
 
+  /* We have to wait for the track objects to be created to calculate transitions */
   if (layer->priv->auto_transition) {
     if (GES_IS_TIMELINE_SOURCE (object)) {
       g_signal_connect (G_OBJECT (object), "track-object-added",
@@ -445,7 +447,6 @@ track_object_removed_cb (GESTimelineObject * object,
   if (GES_IS_TRACK_SOURCE (track_object)) {
     g_signal_handlers_disconnect_by_func (track_object, track_object_changed_cb,
         object);
-    calculate_transitions (track_object);
   }
   return;
 }
