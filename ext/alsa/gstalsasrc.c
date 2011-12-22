@@ -132,7 +132,9 @@ gst_alsasrc_init_interfaces (GType type)
 
   g_type_add_interface_static (type, GST_TYPE_MIXER, &mixer_iface_info);
 
+#if 0
   gst_alsa_type_add_device_property_probe_interface (type);
+#endif
 }
 
 static void

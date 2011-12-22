@@ -128,7 +128,9 @@ gst_alsasink_finalise (GObject * object)
 static void
 gst_alsasink_init_interfaces (GType type)
 {
+#if 0
   gst_alsa_type_add_device_property_probe_interface (type);
+#endif
 }
 
 static void
