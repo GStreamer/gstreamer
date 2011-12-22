@@ -63,7 +63,7 @@ gst_interpolation_mode_get_type (void)
   };
 
   if (g_once_init_enter (&gtype)) {
-    GType tmp = g_enum_register_static ("GstLFOWaveform", values);
+    GType tmp = g_enum_register_static ("GstInterpolationMode", values);
     g_once_init_leave (&gtype, tmp);
   }
 
