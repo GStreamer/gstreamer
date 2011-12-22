@@ -454,9 +454,6 @@ gst_voaacenc_handle_frame (GstAudioEncoder * benc, GstBuffer * buf)
 
   g_return_val_if_fail (voaacenc->handle, GST_FLOW_NOT_NEGOTIATED);
 
-  if (voaacenc->rate == 0 || voaacenc->channels == 0)
-    goto not_negotiated;
-
   /* we don't deal with squeezing remnants, so simply discard those */
   if (G_UNLIKELY (buf == NULL)) {
     GST_DEBUG_OBJECT (benc, "no data");
@@ -508,13 +505,6 @@ exit:
   return ret;
 
   /* ERRORS */
-not_negotiated:
-  {
-    GST_ELEMENT_ERROR (voaacenc, STREAM, TYPE_NOT_FOUND,
-        (NULL), ("unknown type"));
-    ret = GST_FLOW_NOT_NEGOTIATED;
-    goto exit;
-  }
 encode_failed:
   {
     GST_ELEMENT_ERROR (voaacenc, STREAM, ENCODE, (NULL), ("encode failed"));
