@@ -280,11 +280,6 @@ gst_voamrwbenc_handle_frame (GstAudioEncoder * benc, GstBuffer * buffer)
 
   g_return_val_if_fail (amrwbenc->handle, GST_FLOW_NOT_NEGOTIATED);
 
-  if (amrwbenc->rate == 0 || amrwbenc->channels == 0) {
-    ret = GST_FLOW_NOT_NEGOTIATED;
-    goto done;
-  }
-
   /* we don't deal with squeezing remnants, so simply discard those */
   if (G_UNLIKELY (buffer == NULL)) {
     GST_DEBUG_OBJECT (amrwbenc, "no data");
