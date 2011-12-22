@@ -11,6 +11,7 @@
 
 void pyges_register_classes (PyObject * d);
 extern PyMethodDef pyges_functions[];
+void pyges_add_constants (PyObject * module, const gchar * strip_prefix);
 DL_EXPORT (void)
 initges (void);
 
@@ -29,6 +30,7 @@ initges (void)
 
   pygst_init ();
   pyges_register_classes (d);
+  pyges_add_constants (m, "GES_");
 
   /* add anything else to the module dictionary (such as constants) */
 
