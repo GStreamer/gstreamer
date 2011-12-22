@@ -975,13 +975,21 @@ GST_START_TEST (test_xmp_parsing)
 {
   GstTagList *list;
   GstBuffer *buf;
-  guint i, result_size;
+  guint i, j, result_size;
   gchar *text;
   const gchar *xmp_header =
       "<?xpacket begin=\"\xEF\xBB\xBF\" id=\"W5M0MpCehiHzreSzNTczkc9d\"?>"
       "<x:xmpmeta xmlns:x=\"adobe:ns:meta/\" x:xmptk=\"GStreamer\">"
       "<rdf:RDF xmlns:rdf=\"http://www.w3.org/1999/02/22-rdf-syntax-ns#\" xmlns:dc=\"http://purl.org/dc/elements/1.1/\">";
-  const gchar *xmp_footer = "</rdf:RDF>" "</x:xmpmeta>" "<?xpacket end=\"r\"?>";
+
+  /* We used to write an extra trailing \n after the footer, keep compatibility
+   * with our old generated media by checking that it still can be parsed */
+  const gchar *xmp_footers[] = {
+    "</rdf:RDF>" "</x:xmpmeta>" "<?xpacket end=\"r\"?>",
+    "</rdf:RDF>" "</x:xmpmeta>" "<?xpacket end=\"r\"?>\n",
+    NULL
+  };
+
   struct
   {
     const gchar *xmp_data;
@@ -1003,36 +1011,40 @@ GST_START_TEST (test_xmp_parsing)
   /* test data */
   buf = gst_buffer_new ();
 
+  j = 0;
   i = 0;
-  while (test_data[i].xmp_data) {
-    GST_DEBUG ("trying test-data %u", i);
+  while (xmp_footers[j]) {
+    while (test_data[i].xmp_data) {
+      GST_DEBUG ("trying test-data %u", i);
 
-    text = g_strconcat (xmp_header, test_data[i].xmp_data, xmp_footer, NULL);
-    GST_BUFFER_DATA (buf) = (guint8 *) text;
-    GST_BUFFER_SIZE (buf) = strlen (text) + 1;
+      text =
+          g_strconcat (xmp_header, test_data[i].xmp_data, xmp_footers[j], NULL);
+      GST_BUFFER_DATA (buf) = (guint8 *) text;
+      GST_BUFFER_SIZE (buf) = strlen (text) + 1;
 
+      list = gst_tag_list_from_xmp_buffer (buf);
+      if (test_data[i].result_size >= 0) {
+        fail_unless (list != NULL);
 
-    list = gst_tag_list_from_xmp_buffer (buf);
-    if (test_data[i].result_size >= 0) {
-      fail_unless (list != NULL);
+        result_size = gst_structure_n_fields ((GstStructure *) list);
+        fail_unless (result_size == test_data[i].result_size);
 
-      result_size = gst_structure_n_fields ((GstStructure *) list);
-      fail_unless (result_size == test_data[i].result_size);
-
-      /* check the taglist content */
-      switch (test_data[i].result_test) {
-        case 0:
-          ASSERT_TAG_LIST_HAS_STRING (list, "description", "test");
-          break;
-        default:
-          break;
+        /* check the taglist content */
+        switch (test_data[i].result_test) {
+          case 0:
+            ASSERT_TAG_LIST_HAS_STRING (list, "description", "test");
+            break;
+          default:
+            break;
+        }
       }
-    }
-    if (list)
-      gst_tag_list_free (list);
+      if (list)
+        gst_tag_list_free (list);
 
-    g_free (text);
-    i++;
+      g_free (text);
+      i++;
+    }
+    j++;
   }
 
   gst_buffer_unref (buf);
