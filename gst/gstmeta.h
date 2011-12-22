@@ -28,14 +28,68 @@ G_BEGIN_DECLS
 typedef struct _GstMeta GstMeta;
 typedef struct _GstMetaInfo GstMetaInfo;
 
+#define GST_META_CAST(meta)   ((GstMeta *)(meta))
+
+/**
+ * GstMetaFlags:
+ * @GST_META_FLAG_NONE: no flags
+ * @GST_META_FLAG_READONLY: metadata should not be modified
+ * @GST_META_FLAG_POOLED: metadata is managed by a bufferpool and should not
+ *    be removed
+ * @GST_META_FLAG_LAST: additional flags can be added starting from this flag.
+ *
+ * Extra metadata flags.
+ */
+typedef enum {
+  GST_META_FLAG_NONE        = 0,
+  GST_META_FLAG_READONLY    = (1 << 0),
+  GST_META_FLAG_POOLED      = (1 << 1),
+
+  GST_META_FLAG_LAST        = (1 << 16)
+} GstMetaFlags;
+
+/**
+ * GST_META_FLAGS:
+ * @meta: a #GstMeta.
+ *
+ * A flags word containing #GstMetaFlag flags set on @meta
+ */
+#define GST_META_FLAGS(meta)  (GST_META_CAST (meta)->flags)
+/**
+ * GST_META_FLAG_IS_SET:
+ * @meta: a #GstMeta.
+ * @flag: the #GstMetaFlag to check.
+ *
+ * Gives the status of a specific flag on a metadata.
+ */
+#define GST_META_FLAG_IS_SET(meta,flag)        !!(GST_META_FLAGS (meta) & (flag))
+/**
+ * GST_META_FLAG_SET:
+ * @meta: a #GstMeta.
+ * @flag: the #GstMetaFlag to set.
+ *
+ * Sets a metadata flag on a metadata.
+ */
+#define GST_META_FLAG_SET(meta,flag)           (GST_META_FLAGS (meta) |= (flag))
+/**
+ * GST_META_FLAG_UNSET:
+ * @meta: a #GstMeta.
+ * @flag: the #GstMetaFlag to clear.
+ *
+ * Clears a metadata flag.
+ */
+#define GST_META_FLAG_UNSET(meta,flag)         (GST_META_FLAGS (meta) &= ~(flag))
+
 /**
  * GstMeta:
+ * @flags: extra flags for the metadata
  * @info: pointer to the #GstMetaInfo
  *
  * Base structure for metadata. Custom metadata will put this structure
  * as the first member of their structure.
  */
 struct _GstMeta {
+  GstMetaFlags       flags;
   const GstMetaInfo *info;
 };
 
