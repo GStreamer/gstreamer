@@ -51,9 +51,9 @@ struct _GstFaac {
        bps;
 
   /* input frame size */
-  gulong samples;
+  gint samples;
   /* required output buffer size */
-  gulong bytes;
+  gint bytes;
 
   /* negotiated */
   gint mpegversion, outputformat;
