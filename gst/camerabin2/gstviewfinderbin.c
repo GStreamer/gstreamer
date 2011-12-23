@@ -61,8 +61,8 @@ static GstStaticPadTemplate sink_template = GST_STATIC_PAD_TEMPLATE ("sink",
     );
 
 /* class initialization */
-
-GST_BOILERPLATE (GstViewfinderBin, gst_viewfinder_bin, GstBin, GST_TYPE_BIN);
+#define gst_viewfinder_bin_parent_class parent_class
+G_DEFINE_TYPE (GstViewfinderBin, gst_viewfinder_bin, GST_TYPE_BIN);
 
 static void gst_viewfinder_bin_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * spec);
@@ -96,19 +96,6 @@ gst_viewfinder_bin_dispose (GObject * object)
 }
 
 static void
-gst_viewfinder_bin_base_init (gpointer g_class)
-{
-  GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
-
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&sink_template));
-
-  gst_element_class_set_details_simple (element_class, "Viewfinder Bin",
-      "Sink/Video", "Viewfinder Bin used in camerabin2",
-      "Thiago Santos <thiago.sousa.santos@collabora.co.uk>");
-}
-
-static void
 gst_viewfinder_bin_class_init (GstViewfinderBinClass * klass)
 {
   GObjectClass *gobject_klass;
@@ -134,11 +121,17 @@ gst_viewfinder_bin_class_init (GstViewfinderBinClass * klass)
           "If video converters should be disabled (must be set on NULL)",
           DEFAULT_DISABLE_CONVERTERS,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  gst_element_class_add_pad_template (element_class,
+      gst_static_pad_template_get (&sink_template));
+
+  gst_element_class_set_details_simple (element_class, "Viewfinder Bin",
+      "Sink/Video", "Viewfinder Bin used in camerabin2",
+      "Thiago Santos <thiago.sousa.santos@collabora.com>");
 }
 
 static void
-gst_viewfinder_bin_init (GstViewfinderBin * viewfinderbin,
-    GstViewfinderBinClass * viewfinderbin_class)
+gst_viewfinder_bin_init (GstViewfinderBin * viewfinderbin)
 {
   GstPadTemplate *templ = gst_static_pad_template_get (&sink_template);
   viewfinderbin->ghostpad = gst_ghost_pad_new_no_target_from_template ("sink",

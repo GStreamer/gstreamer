@@ -229,19 +229,19 @@ void
 gst_camerabin_remove_elements_from_bin (GstBin * bin)
 {
   GstIterator *iter = NULL;
-  gpointer data = NULL;
+  GValue value = { 0 };
   GstElement *elem = NULL;
   gboolean done = FALSE;
 
   iter = gst_bin_iterate_elements (bin);
   while (!done) {
-    switch (gst_iterator_next (iter, &data)) {
+    switch (gst_iterator_next (iter, &value)) {
       case GST_ITERATOR_OK:
-        elem = GST_ELEMENT (data);
+        elem = (GstElement *) g_value_get_object (&value);
         gst_bin_remove (bin, elem);
         gst_element_set_state (GST_ELEMENT (elem), GST_STATE_NULL);
         /* Iterator increased the element refcount, so unref */
-        gst_object_unref (elem);
+        g_value_unset (&value);
         break;
       case GST_ITERATOR_RESYNC:
         gst_iterator_resync (iter);

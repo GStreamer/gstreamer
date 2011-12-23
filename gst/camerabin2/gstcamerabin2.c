@@ -350,7 +350,7 @@ static GstEvent *
 gst_camera_bin_new_event_renegotiate (void)
 {
   return gst_event_new_custom (GST_EVENT_CUSTOM_BOTH,
-      gst_structure_new ("renegotiate", NULL));
+      gst_structure_new_empty ("renegotiate"));
 }
 
 static GstEvent *
@@ -754,7 +754,7 @@ gst_camera_bin_class_init (GstCameraBin2Class * klass)
           GST_TYPE_CAPS, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (object_class, PROP_VIDEO_ENCODING_PROFILE,
-      gst_param_spec_mini_object ("video-profile", "Video Profile",
+      g_param_spec_boxed ("video-profile", "Video Profile",
           "The GstEncodingProfile to use for video recording. Audio is enabled "
           "when this profile supports audio.", GST_TYPE_ENCODING_PROFILE,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
@@ -827,7 +827,7 @@ gst_camera_bin_class_init (GstCameraBin2Class * klass)
    *   getting the 2nd buffer.
    */
   g_object_class_install_property (object_class, PROP_IMAGE_ENCODING_PROFILE,
-      gst_param_spec_mini_object ("image-profile", "Image Profile",
+      g_param_spec_boxed ("image-profile", "Image Profile",
           "The GstEncodingProfile to use for image captures.",
           GST_TYPE_ENCODING_PROFILE,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
@@ -947,7 +947,7 @@ gst_video_capture_bin_post_video_done (GstCameraBin2 * camera)
   GstMessage *msg;
 
   msg = gst_message_new_element (GST_OBJECT_CAST (camera),
-      gst_structure_new ("video-done", NULL));
+      gst_structure_new_empty ("video-done"));
 
   if (!gst_element_post_message (GST_ELEMENT_CAST (camera), msg))
     GST_WARNING_OBJECT (camera, "Failed to post video-done message");
@@ -1187,17 +1187,19 @@ encodebin_element_added (GstElement * encodebin, GstElement * new_element,
   GstElementFactory *factory = gst_element_get_factory (new_element);
 
   if (factory != NULL) {
-    if (strcmp (GST_PLUGIN_FEATURE_NAME (factory), "audiorate") == 0 ||
-        strcmp (GST_PLUGIN_FEATURE_NAME (factory), "videorate") == 0) {
+    if (strcmp (GST_OBJECT_NAME (factory), "audiorate") == 0 ||
+        strcmp (GST_OBJECT_NAME (factory), "videorate") == 0) {
       g_object_set (new_element, "skip-to-first", TRUE, NULL);
     }
   }
 
-  if (gst_element_implements_interface (new_element, GST_TYPE_TAG_SETTER)) {
-    GstTagSetter *tagsetter = GST_TAG_SETTER (new_element);
+  /* TODO porting
+     if (gst_element_implements_interface (new_element, GST_TYPE_TAG_SETTER)) {
+     GstTagSetter *tagsetter = GST_TAG_SETTER (new_element);
 
-    gst_tag_setter_set_tag_merge_mode (tagsetter, GST_TAG_MERGE_REPLACE);
-  }
+     gst_tag_setter_set_tag_merge_mode (tagsetter, GST_TAG_MERGE_REPLACE);
+     }
+   */
 }
 
 #define VIDEO_PAD 1
@@ -1206,6 +1208,7 @@ static GstPad *
 encodebin_find_pad (GstCameraBin2 * camera, GstElement * encodebin,
     gint pad_type)
 {
+  GValue value = { 0 };
   GstPad *pad = NULL;
   GstIterator *iter;
   gboolean done;
@@ -1216,8 +1219,10 @@ encodebin_find_pad (GstCameraBin2 * camera, GstElement * encodebin,
   iter = gst_element_iterate_sink_pads (encodebin);
   done = FALSE;
   while (!done) {
-    switch (gst_iterator_next (iter, (gpointer *) & pad)) {
+    switch (gst_iterator_next (iter, &value)) {
       case GST_ITERATOR_OK:
+        pad = g_value_dup_object (&value);
+        g_value_unset (&value);
         if (pad_type == VIDEO_PAD) {
           if (strstr (GST_PAD_NAME (pad), "video") != NULL) {
             GST_DEBUG_OBJECT (camera, "Found video pad %s", GST_PAD_NAME (pad));
@@ -1338,11 +1343,11 @@ gst_camera_bin_src_notify_zoom_cb (GObject * self, GParamSpec * pspec,
   g_object_notify (G_OBJECT (camera), "zoom");
 }
 
-static gboolean
-gst_camera_bin_image_src_buffer_probe (GstPad * pad, GstBuffer * buf,
+static GstPadProbeReturn
+gst_camera_bin_image_src_buffer_probe (GstPad * pad, GstPadProbeInfo * info,
     gpointer data)
 {
-  gboolean ret = TRUE;
+  GstPadProbeReturn ret = GST_PAD_PROBE_OK;
   GstCameraBin2 *camerabin = data;
   GstEvent *evt;
   gchar *location = NULL;
@@ -1392,7 +1397,7 @@ gst_camera_bin_image_src_buffer_probe (GstPad * pad, GstBuffer * buf,
   } else {
     /* This means we don't have to encode the capture, it is used for
      * signaling the application just wants the preview */
-    ret = FALSE;
+    ret = GST_PAD_PROBE_DROP;
     GST_CAMERA_BIN2_PROCESSING_DEC (camerabin);
   }
 
@@ -1400,11 +1405,12 @@ gst_camera_bin_image_src_buffer_probe (GstPad * pad, GstBuffer * buf,
 }
 
 
-static gboolean
-gst_camera_bin_image_sink_event_probe (GstPad * pad, GstEvent * event,
+static GstPadProbeReturn
+gst_camera_bin_image_sink_event_probe (GstPad * pad, GstPadProbeInfo * info,
     gpointer data)
 {
   GstCameraBin2 *camerabin = data;
+  GstEvent *event = GST_EVENT (info->data);
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_CUSTOM_DOWNSTREAM:{
@@ -1430,20 +1436,21 @@ gst_camera_bin_image_sink_event_probe (GstPad * pad, GstEvent * event,
       break;
   }
 
-  return TRUE;
+  return GST_PAD_PROBE_OK;
 }
 
-static gboolean
-gst_camera_bin_audio_src_event_probe (GstPad * pad, GstEvent * event,
+static GstPadProbeReturn
+gst_camera_bin_audio_src_event_probe (GstPad * pad, GstPadProbeInfo * info,
     gpointer data)
 {
   GstCameraBin2 *camera = data;
-  gboolean ret = TRUE;
+  gboolean ret = GST_PAD_PROBE_OK;
+  GstEvent *event = GST_EVENT (info->data);
 
   if (GST_EVENT_TYPE (event) == GST_EVENT_EOS) {
     /* we only let an EOS pass when the user is stopping a capture */
     if (camera->audio_drop_eos) {
-      ret = FALSE;
+      ret = GST_PAD_PROBE_DROP;
     } else {
       camera->audio_drop_eos = TRUE;
     }
@@ -1510,12 +1517,12 @@ gst_camera_bin_create_elements (GstCameraBin2 * camera)
       GstEncodingContainerProfile *prof;
       GstCaps *caps;
 
-      caps = gst_caps_new_simple ("application/ogg", NULL);
+      caps = gst_caps_new_simple ("application/ogg", NULL, NULL);
       prof = gst_encoding_container_profile_new ("ogg", "theora+vorbis+ogg",
           caps, NULL);
       gst_caps_unref (caps);
 
-      caps = gst_caps_new_simple ("video/x-theora", NULL);
+      caps = gst_caps_new_simple ("video/x-theora", NULL, NULL);
       if (!gst_encoding_container_profile_add_profile (prof,
               (GstEncodingProfile *) gst_encoding_video_profile_new (caps,
                   NULL, NULL, 1))) {
@@ -1523,7 +1530,7 @@ gst_camera_bin_create_elements (GstCameraBin2 * camera)
       }
       gst_caps_unref (caps);
 
-      caps = gst_caps_new_simple ("audio/x-vorbis", NULL);
+      caps = gst_caps_new_simple ("audio/x-vorbis", NULL, NULL);
       if (!gst_encoding_container_profile_add_profile (prof,
               (GstEncodingProfile *) gst_encoding_audio_profile_new (caps,
                   NULL, NULL, 1))) {
@@ -1562,7 +1569,7 @@ gst_camera_bin_create_elements (GstCameraBin2 * camera)
       GstEncodingVideoProfile *vprof;
       GstCaps *caps;
 
-      caps = gst_caps_new_simple ("image/jpeg", NULL);
+      caps = gst_caps_new_simple ("image/jpeg", NULL, NULL);
       vprof = gst_encoding_video_profile_new (caps, NULL, NULL, 1);
       gst_encoding_video_profile_set_variableframerate (vprof, TRUE);
 
@@ -1609,8 +1616,9 @@ gst_camera_bin_create_elements (GstCameraBin2 * camera)
 
       srcpad = gst_element_get_static_pad (camera->image_encodebin, "src");
 
-      gst_pad_add_event_probe (srcpad,
-          (GCallback) gst_camera_bin_image_sink_event_probe, camera);
+      gst_pad_add_probe (srcpad, GST_PAD_PROBE_TYPE_EVENT_DOWNSTREAM,
+          gst_camera_bin_image_sink_event_probe, gst_object_ref (camera),
+          gst_object_unref);
 
       gst_object_unref (srcpad);
     }
@@ -1738,8 +1746,9 @@ gst_camera_bin_create_elements (GstCameraBin2 * camera)
       goto fail;
     }
 
-    gst_pad_add_buffer_probe (imgsrc,
-        (GCallback) gst_camera_bin_image_src_buffer_probe, camera);
+    gst_pad_add_probe (imgsrc, GST_PAD_PROBE_TYPE_BUFFER,
+        gst_camera_bin_image_src_buffer_probe, gst_object_ref (camera),
+        gst_object_unref);
     gst_object_unref (imgsrc);
   }
 
@@ -1801,8 +1810,9 @@ gst_camera_bin_create_elements (GstCameraBin2 * camera)
 
     /* drop EOS for audiosrc elements that push them on state_changes
      * (basesrc does this) */
-    gst_pad_add_event_probe (srcpad,
-        (GCallback) gst_camera_bin_audio_src_event_probe, camera);
+    gst_pad_add_probe (srcpad, GST_PAD_PROBE_TYPE_EVENT_DOWNSTREAM,
+        gst_camera_bin_audio_src_event_probe, gst_object_ref (camera),
+        gst_object_unref);
 
     gst_object_unref (srcpad);
   }
@@ -2133,8 +2143,7 @@ gst_camera_bin_set_property (GObject * object, guint prop_id,
     case PROP_VIDEO_ENCODING_PROFILE:
       if (camera->video_profile)
         gst_encoding_profile_unref (camera->video_profile);
-      camera->video_profile =
-          (GstEncodingProfile *) gst_value_dup_mini_object (value);
+      camera->video_profile = (GstEncodingProfile *) g_value_dup_boxed (value);
       camera->video_profile_switch = TRUE;
       break;
     case PROP_IMAGE_FILTER:
@@ -2190,8 +2199,7 @@ gst_camera_bin_set_property (GObject * object, guint prop_id,
     case PROP_IMAGE_ENCODING_PROFILE:
       if (camera->image_profile)
         gst_encoding_profile_unref (camera->image_profile);
-      camera->image_profile =
-          (GstEncodingProfile *) gst_value_dup_mini_object (value);
+      camera->image_profile = (GstEncodingProfile *) g_value_dup_boxed (value);
       camera->image_profile_switch = TRUE;
       break;
     case PROP_FLAGS:
@@ -2262,7 +2270,7 @@ gst_camera_bin_get_property (GObject * object, guint prop_id,
          * won't negotiate. Need to take care on the special case of the
          * pad being unlinked.
          */
-        caps = gst_pad_get_caps_reffed (pad);
+        caps = gst_pad_query_caps (pad, NULL);
         if (caps) {
           gst_value_set_caps (value, caps);
           gst_caps_unref (caps);
@@ -2328,8 +2336,7 @@ gst_camera_bin_get_property (GObject * object, guint prop_id,
       break;
     case PROP_VIDEO_ENCODING_PROFILE:
       if (camera->video_profile) {
-        gst_value_set_mini_object (value,
-            (GstMiniObject *) camera->video_profile);
+        g_value_set_boxed (value, camera->video_profile);
       }
       break;
     case PROP_VIDEO_FILTER:
@@ -2367,8 +2374,7 @@ gst_camera_bin_get_property (GObject * object, guint prop_id,
       break;
     case PROP_IMAGE_ENCODING_PROFILE:
       if (camera->image_profile) {
-        gst_value_set_mini_object (value,
-            (GstMiniObject *) camera->image_profile);
+        g_value_set_boxed (value, camera->image_profile);
       }
       break;
     case PROP_IDLE:

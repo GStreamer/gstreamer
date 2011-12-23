@@ -1,7 +1,7 @@
 /*
  * GStreamer
  * Copyright (C) 2010 Texas Instruments, Inc
- * Copyright (C) 2010 Thiago Santos <thiago.sousa.santos@collabora.co.uk>
+ * Copyright (C) 2011 Thiago Santos <thiago.sousa.santos@collabora.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -44,8 +44,9 @@ enum
 GST_DEBUG_CATEGORY (wrapper_camera_bin_src_debug);
 #define GST_CAT_DEFAULT wrapper_camera_bin_src_debug
 
-GST_BOILERPLATE (GstWrapperCameraBinSrc, gst_wrapper_camera_bin_src,
-    GstBaseCameraSrc, GST_TYPE_BASE_CAMERA_SRC);
+#define gst_wrapper_camera_bin_src_parent_class parent_class
+G_DEFINE_TYPE (GstWrapperCameraBinSrc, gst_wrapper_camera_bin_src,
+    GST_TYPE_BIN);
 
 static void set_capsfilter_caps (GstWrapperCameraBinSrc * self,
     GstCaps * new_caps);
@@ -165,13 +166,14 @@ gst_wrapper_camera_bin_reset_video_src_caps (GstWrapperCameraBinSrc * self,
       if (GST_IS_BIN (self->src_vid_src)) {
         GstIterator *it =
             gst_bin_iterate_elements (GST_BIN (self->src_vid_src));
-        gpointer item = NULL;
+        GValue item = { 0 };
         gboolean done = FALSE;
         while (!done) {
           switch (gst_iterator_next (it, &item)) {
             case GST_ITERATOR_OK:
-              gst_element_set_base_time (GST_ELEMENT (item), base_time);
-              gst_object_unref (item);
+              gst_element_set_base_time (GST_ELEMENT (g_value_get_object
+                      (&item)), base_time);
+              g_value_unset (&item);
               break;
             case GST_ITERATOR_RESYNC:
               gst_iterator_resync (it);
@@ -197,20 +199,21 @@ gst_wrapper_camera_bin_reset_video_src_caps (GstWrapperCameraBinSrc * self,
  *
  * Buffer probe called before sending each buffer to image queue.
  */
-static gboolean
-gst_wrapper_camera_bin_src_imgsrc_probe (GstPad * pad, GstBuffer * buffer,
+static GstPadProbeReturn
+gst_wrapper_camera_bin_src_imgsrc_probe (GstPad * pad, GstPadProbeInfo * info,
     gpointer data)
 {
   GstWrapperCameraBinSrc *self = GST_WRAPPER_CAMERA_BIN_SRC (data);
   GstBaseCameraSrc *camerasrc = GST_BASE_CAMERA_SRC (data);
-  gboolean ret = FALSE;
+  GstBuffer *buffer = GST_BUFFER (info->data);
+  GstPadProbeReturn ret = GST_PAD_PROBE_DROP;
 
   GST_LOG_OBJECT (self, "Image probe, mode %d, capture count %d",
       camerasrc->mode, self->image_capture_count);
 
   g_mutex_lock (camerasrc->capturing_mutex);
   if (self->image_capture_count > 0) {
-    ret = TRUE;
+    ret = GST_PAD_PROBE_OK;
     self->image_capture_count--;
 
     /* post preview */
@@ -232,13 +235,14 @@ gst_wrapper_camera_bin_src_imgsrc_probe (GstPad * pad, GstBuffer * buffer,
  *
  * Buffer probe called before sending each buffer to image queue.
  */
-static gboolean
-gst_wrapper_camera_bin_src_vidsrc_probe (GstPad * pad, GstBuffer * buffer,
+static GstPadProbeReturn
+gst_wrapper_camera_bin_src_vidsrc_probe (GstPad * pad, GstPadProbeInfo * info,
     gpointer data)
 {
   GstWrapperCameraBinSrc *self = GST_WRAPPER_CAMERA_BIN_SRC (data);
   GstBaseCameraSrc *camerasrc = GST_BASE_CAMERA_SRC_CAST (self);
-  gboolean ret = FALSE;
+  GstPadProbeReturn ret = GST_PAD_PROBE_DROP;
+  GstBuffer *buffer = GST_BUFFER (info->data);
 
   GST_LOG_OBJECT (self, "Video probe, mode %d, capture status %d",
       camerasrc->mode, self->video_rec_status);
@@ -260,7 +264,7 @@ gst_wrapper_camera_bin_src_vidsrc_probe (GstPad * pad, GstBuffer * buffer,
     GST_DEBUG_OBJECT (self, "Posting preview for video");
     gst_base_camera_src_post_preview (camerasrc, buffer);
 
-    ret = TRUE;
+    ret = GST_PAD_PROBE_OK;
   } else if (self->video_rec_status == GST_VIDEO_RECORDING_STATUS_FINISHING) {
     /* send eos */
     GST_DEBUG_OBJECT (self, "Finishing video recording, pushing eos");
@@ -268,14 +272,15 @@ gst_wrapper_camera_bin_src_vidsrc_probe (GstPad * pad, GstBuffer * buffer,
     self->video_rec_status = GST_VIDEO_RECORDING_STATUS_DONE;
     gst_base_camera_src_finish_capture (camerasrc);
   } else {
-    ret = TRUE;
+    ret = GST_PAD_PROBE_OK;
   }
   g_mutex_unlock (camerasrc->capturing_mutex);
   return ret;
 }
 
 static gboolean
-gst_wrapper_camera_bin_src_event (GstPad * pad, GstEvent * event)
+gst_wrapper_camera_bin_src_event (GstPad * pad, GstObject * parent,
+    GstEvent * event)
 {
   GstWrapperCameraBinSrc *src =
       GST_WRAPPER_CAMERA_BIN_SRC (GST_PAD_PARENT (pad));
@@ -292,25 +297,27 @@ gst_wrapper_camera_bin_src_event (GstPad * pad, GstEvent * event)
       src->video_renegotiate = TRUE;
     }
   }
-
-  return src->srcpad_event_func (pad, event);
+  //TODO porting
+  //return src->srcpad_event_func (pad, event);
+  return TRUE;
 }
 
-static gboolean
-gst_wrapper_camera_src_src_event_probe (GstPad * pad, GstEvent * evt,
+static GstPadProbeReturn
+gst_wrapper_camera_src_src_event_probe (GstPad * pad, GstPadProbeInfo * info,
     gpointer udata)
 {
-  gboolean ret = TRUE;
+  GstPadProbeReturn ret = GST_PAD_PROBE_OK;
   GstWrapperCameraBinSrc *self = udata;
+  GstEvent *evt = GST_EVENT (info->data);
 
   switch (GST_EVENT_TYPE (evt)) {
     case GST_EVENT_EOS:
       /* drop */
-      ret = FALSE;
+      ret = GST_PAD_PROBE_DROP;
       break;
-    case GST_EVENT_NEWSEGMENT:
+    case GST_EVENT_SEGMENT:
       if (self->drop_newseg) {
-        ret = FALSE;
+        ret = GST_PAD_PROBE_DROP;
         self->drop_newseg = FALSE;
       }
       break;
@@ -333,7 +340,7 @@ gst_wrapper_camera_bin_src_caps_cb (GObject * gobject, GParamSpec * pspec,
   /* get the new caps that were set on the capsfilter that configures the
    * source */
   src_caps_src_pad = gst_element_get_static_pad (self->src_filter, "src");
-  caps = gst_pad_get_caps_reffed (src_caps_src_pad);
+  caps = gst_pad_query_caps (src_caps_src_pad, NULL);
   gst_object_unref (src_caps_src_pad);
   GST_DEBUG_OBJECT (self, "src-filter caps changed to %s",
       gst_caps_to_string (caps));
@@ -429,8 +436,10 @@ gst_wrapper_camera_bin_src_construct_pipeline (GstBaseCameraSrc * bcamsrc)
       GstPad *pad;
       pad = gst_element_get_static_pad (self->src_vid_src, "src");
 
-      self->src_event_probe_id = gst_pad_add_event_probe (pad,
-          (GCallback) gst_wrapper_camera_src_src_event_probe, self);
+      self->src_event_probe_id =
+          gst_pad_add_probe (pad, GST_PAD_PROBE_TYPE_EVENT_DOWNSTREAM,
+          gst_wrapper_camera_src_src_event_probe, gst_object_ref (self),
+          gst_object_unref);
       gst_object_unref (pad);
     }
 
@@ -500,10 +509,12 @@ gst_wrapper_camera_bin_src_construct_pipeline (GstBaseCameraSrc * bcamsrc)
     g_assert (self->outsel_vidpad != NULL);
     g_assert (self->outsel_imgpad != NULL);
 
-    gst_pad_add_buffer_probe (self->outsel_imgpad,
-        G_CALLBACK (gst_wrapper_camera_bin_src_imgsrc_probe), self);
-    gst_pad_add_buffer_probe (self->outsel_vidpad,
-        G_CALLBACK (gst_wrapper_camera_bin_src_vidsrc_probe), self);
+    gst_pad_add_probe (self->outsel_imgpad, GST_PAD_PROBE_TYPE_BUFFER,
+        gst_wrapper_camera_bin_src_imgsrc_probe, gst_object_ref (self),
+        gst_object_unref);
+    gst_pad_add_probe (self->outsel_vidpad, GST_PAD_PROBE_TYPE_BUFFER,
+        gst_wrapper_camera_bin_src_vidsrc_probe, gst_object_ref (self),
+        gst_object_unref);
     gst_ghost_pad_set_target (GST_GHOST_PAD (self->imgsrc),
         self->outsel_imgpad);
     gst_ghost_pad_set_target (GST_GHOST_PAD (self->vidsrc),
@@ -1048,19 +1059,6 @@ end:
 }
 
 static void
-gst_wrapper_camera_bin_src_base_init (gpointer g_class)
-{
-  GstElementClass *gstelement_class = GST_ELEMENT_CLASS (g_class);
-
-  GST_DEBUG_CATEGORY_INIT (wrapper_camera_bin_src_debug, "wrappercamerabinsrc",
-      0, "V4l2 camera src");
-
-  gst_element_class_set_details_simple (gstelement_class,
-      "V4l2 camera src element for camerabin", "Source/Video",
-      "V4l2 camera src element for camerabin", "Rob Clark <rob@ti.com>");
-}
-
-static void
 gst_wrapper_camera_bin_src_class_init (GstWrapperCameraBinSrcClass * klass)
 {
   GObjectClass *gobject_class;
@@ -1097,11 +1095,18 @@ gst_wrapper_camera_bin_src_class_init (GstWrapperCameraBinSrcClass * klass)
       gst_wrapper_camera_bin_src_start_capture;
   gstbasecamerasrc_class->stop_capture =
       gst_wrapper_camera_bin_src_stop_capture;
+
+  GST_DEBUG_CATEGORY_INIT (wrapper_camera_bin_src_debug, "wrappercamerabinsrc",
+      0, "wrapper camera src");
+
+  gst_element_class_set_details_simple (gstelement_class,
+      "Wrapper camera src element for camerabin2", "Source/Video",
+      "Wrapper camera src element for camerabin2",
+      "Thiago Santos <thiago.sousa.santos@collabora.com>");
 }
 
 static void
-gst_wrapper_camera_bin_src_init (GstWrapperCameraBinSrc * self,
-    GstWrapperCameraBinSrcClass * klass)
+gst_wrapper_camera_bin_src_init (GstWrapperCameraBinSrc * self)
 {
   self->vfsrc =
       gst_ghost_pad_new_no_target (GST_BASE_CAMERA_SRC_VIEWFINDER_PAD_NAME,
