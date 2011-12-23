@@ -70,6 +70,8 @@ enum
   PROP_0,
   PROP_AUDIO_SINK,
   PROP_VIDEO_SINK,
+  PROP_TIMELINE,
+  PROP_MODE,
   PROP_LAST
 };
 
@@ -100,6 +102,12 @@ ges_timeline_pipeline_get_property (GObject * object, guint property_id,
       g_object_get_property (G_OBJECT (self->priv->playsink), "video-sink",
                              value);
       break;
+    case PROP_TIMELINE:
+      g_value_set_object (value, self->priv->timeline);
+      break;
+    case PROP_MODE:
+      g_value_set_flags (value, self->priv->mode);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
   }
@@ -119,6 +127,14 @@ ges_timeline_pipeline_set_property (GObject * object, guint property_id,
     case PROP_VIDEO_SINK:
       g_object_set_property (G_OBJECT (self->priv->playsink), "video-sink",
                              value);
+      break;
+    case PROP_TIMELINE:
+      ges_timeline_pipeline_add_timeline (GES_TIMELINE_PIPELINE (object),
+                                          g_value_get_object(value));
+      break;
+    case PROP_MODE:
+      ges_timeline_pipeline_set_mode (GES_TIMELINE_PIPELINE (object),
+                                      g_value_get_flags(value));
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
@@ -187,6 +203,32 @@ ges_timeline_pipeline_class_init (GESTimelinePipelineClass * klass)
       GST_TYPE_ELEMENT, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
   g_object_class_install_property (object_class, PROP_VIDEO_SINK,
       properties[PROP_VIDEO_SINK]);
+
+  /**
+   * GESTimelinePipeline:timeline
+   *
+   * Timeline to use in this pipeline. See also
+   * ges_timeline_pipeline_add_timeline() for more info.
+   */
+  properties[PROP_TIMELINE] = g_param_spec_object ("timeline", "Timeline",
+      "Timeline to use in this pipeline. See also "
+      "ges_timeline_pipeline_add_timeline() for more info.",
+      GES_TYPE_TIMELINE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
+  g_object_class_install_property (object_class, PROP_TIMELINE,
+      properties[PROP_TIMELINE]);
+
+  /**
+   * GESTimelinePipeline:mode
+   *
+   * Pipeline mode. See ges_timeline_pipeline_set_mode() for more
+   * info.
+   */
+  properties[PROP_MODE] = g_param_spec_flags ("mode", "Mode",
+      "Pipeline mode. See ges_timeline_pipeline_set_mode() for more info.",
+      GES_TYPE_PIPELINE_FLAGS, DEFAULT_TIMELINE_MODE,
+      G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
+  g_object_class_install_property (object_class, PROP_MODE,
+      properties[PROP_MODE]);
 
   element_class->change_state =
       GST_DEBUG_FUNCPTR (ges_timeline_pipeline_change_state);
