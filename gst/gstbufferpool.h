@@ -147,7 +147,8 @@ struct _GstBufferPool {
  *        buffers from the default memory allocator and with the configured
  *        size, prefix and alignment.
  * @reset_buffer: reset the buffer to its state when it was freshly allocated.
- *        The default implementation will clear the flags and timestamps.
+ *        The default implementation will clear the flags, timestamps and
+ *        will remove the metadata added after alloc_buffer.
  * @release_buffer: release a buffer back in the pool. The default
  *        implementation will put the buffer back in the queue and notify any
  *        blocking acquire_buffer calls.

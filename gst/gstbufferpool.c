@@ -861,6 +861,14 @@ dec_outstanding (GstBufferPool * pool)
   }
 }
 
+static gboolean
+remove_meta_unpooled (GstBuffer * buffer, GstMeta ** meta, gpointer user_data)
+{
+  if (!GST_META_FLAG_IS_SET (*meta, GST_META_FLAG_POOLED))
+    *meta = NULL;
+  return TRUE;
+}
+
 static void
 default_reset_buffer (GstBufferPool * pool, GstBuffer * buffer,
     GstBufferPoolParams * params)
@@ -872,6 +880,9 @@ default_reset_buffer (GstBufferPool * pool, GstBuffer * buffer,
   GST_BUFFER_DURATION (buffer) = GST_CLOCK_TIME_NONE;
   GST_BUFFER_OFFSET (buffer) = GST_BUFFER_OFFSET_NONE;
   GST_BUFFER_OFFSET_END (buffer) = GST_BUFFER_OFFSET_NONE;
+
+  /* remove all metadata without the POOLED flag */
+  gst_buffer_foreach_meta (buffer, remove_meta_unpooled, pool);
 }
 
 /**
@@ -932,14 +943,6 @@ default_release_buffer (GstBufferPool * pool, GstBuffer * buffer)
   gst_poll_write_control (pool->poll);
 }
 
-static gboolean
-remove_meta_unpooled (GstBuffer * buffer, GstMeta ** meta, gpointer user_data)
-{
-  if (!GST_META_FLAG_IS_SET (*meta, GST_META_FLAG_POOLED))
-    *meta = NULL;
-  return TRUE;
-}
-
 /**
  * gst_buffer_pool_release_buffer:
  * @pool: a #GstBufferPool
@@ -963,9 +966,6 @@ gst_buffer_pool_release_buffer (GstBufferPool * pool, GstBuffer * buffer)
    * pool member set to NULL and the pool refcount decreased */
   if (!G_ATOMIC_POINTER_COMPARE_AND_EXCHANGE (&buffer->pool, pool, NULL))
     return;
-
-  /* remove all metadata without the POOLED flag */
-  gst_buffer_foreach_meta (buffer, remove_meta_unpooled, pool);
 
   pclass = GST_BUFFER_POOL_GET_CLASS (pool);
 
