@@ -216,7 +216,7 @@ ges_timeline_layer_init (GESTimelineLayer * self)
   self->max_gnl_priority = LAYER_HEIGHT;
   self->priv->signal_table =
       g_hash_table_new_full (g_direct_hash, g_direct_equal, g_object_unref,
-      g_free);
+      NULL);
 }
 
 /**
@@ -434,7 +434,7 @@ track_object_added_cb (GESTimelineObject * object,
   if (!g_hash_table_lookup (signal_table, track)) {
     ptr = g_signal_connect (track, "track-object-removed",
         (GCallback) track_object_deleted_cb, NULL);
-    g_hash_table_insert (signal_table, track, &ptr);
+    g_hash_table_insert (signal_table, track, GINT_TO_POINTER (ptr));
   }
   return;
 }
@@ -749,6 +749,14 @@ look_for_transition (GESTrackObject * track_object, GESTimelineLayer * layer)
   g_list_free_full (track_objects, g_object_unref);
 }
 
+static gboolean
+disconnect_handlers (GESTrack * track, gpointer * ptr)
+{
+  g_signal_handler_disconnect (track, GPOINTER_TO_INT (ptr));
+
+  return TRUE;
+}
+
 /**
  * ges_timeline_layer_remove_object:
  * @layer: a #GESTimelineLayer
@@ -792,6 +800,9 @@ ges_timeline_layer_remove_object (GESTimelineLayer * layer,
 
     g_list_free_full (trackobjects, g_object_unref);
   }
+
+  g_hash_table_foreach_remove (layer->priv->signal_table,
+      (GHRFunc) disconnect_handlers, NULL);
 
   /* emit 'object-removed' */
   g_signal_emit (layer, ges_timeline_layer_signals[OBJECT_REMOVED], 0, object);
