@@ -816,7 +816,7 @@ theora_negotiate_pool (GstTheoraDec * dec, GstCaps * caps, GstVideoInfo * info)
   gst_buffer_pool_config_add_option (config, GST_BUFFER_POOL_OPTION_VIDEO_META);
 
   /* check if downstream supports cropping */
-  dec->use_cropping =
+  dec->has_cropping =
       gst_query_has_allocation_meta (query, GST_VIDEO_CROP_META_API);
 
   gst_buffer_pool_set_config (pool, config);
@@ -861,15 +861,15 @@ theora_handle_type_packet (GstTheoraDec * dec, ogg_packet * packet)
   }
   /* theora has:
    *
-   *  width/height : dimension of the encoded frame 
+   *  frame_width/frame_height : dimension of the encoded frame
    *  pic_width/pic_height : dimension of the visible part
    *  pic_x/pic_y : offset in encoded frame where visible part starts
    */
-  GST_DEBUG_OBJECT (dec, "dimension %dx%d, PAR %d/%d", dec->info.pic_width,
-      dec->info.pic_height, par_num, par_den);
-  GST_DEBUG_OBJECT (dec, "frame dimension %dx%d, offset %d:%d",
-      dec->info.pic_width, dec->info.pic_height,
-      dec->info.pic_x, dec->info.pic_y);
+  GST_DEBUG_OBJECT (dec, "frame dimension %dx%d, PAR %d/%d",
+      dec->info.frame_width, dec->info.frame_height, par_num, par_den);
+  GST_DEBUG_OBJECT (dec, "picture dimension %dx%d, offset %d:%d",
+      dec->info.pic_width, dec->info.pic_height, dec->info.pic_x,
+      dec->info.pic_y);
 
   switch (dec->info.pixel_fmt) {
     case TH_PF_444:
@@ -891,27 +891,17 @@ theora_handle_type_packet (GstTheoraDec * dec, ogg_packet * packet)
   if (dec->crop) {
     width = dec->info.pic_width;
     height = dec->info.pic_height;
-    dec->offset_x = dec->info.pic_x;
-    dec->offset_y = dec->info.pic_y;
-    /* Ensure correct offsets in chroma for formats that need it
-     * by rounding the offset. libtheora will add proper pixels,
-     * so no need to handle them ourselves. */
-    if (dec->offset_x & 1 && dec->info.pixel_fmt != TH_PF_444) {
-      dec->offset_x--;
-    }
-    if (dec->offset_y & 1 && dec->info.pixel_fmt == TH_PF_420) {
-      dec->offset_y--;
-    }
   } else {
     /* no cropping, use the encoded dimensions */
     width = dec->info.frame_width;
     height = dec->info.frame_height;
-    dec->offset_x = 0;
-    dec->offset_y = 0;
   }
-
-  GST_DEBUG_OBJECT (dec, "after fixup frame dimension %dx%d, offset %d:%d",
-      width, height, dec->offset_x, dec->offset_y);
+  if (dec->info.pic_width != dec->info.frame_width ||
+      dec->info.pic_height != dec->info.frame_height ||
+      dec->info.pic_x != 0 || dec->info.pic_y != 0)
+    dec->need_cropping = TRUE;
+  else
+    dec->need_cropping = FALSE;
 
   /* done */
   dec->decoder = th_decode_alloc (&dec->info, dec->setup);
@@ -1132,7 +1122,7 @@ theora_handle_image (GstTheoraDec * dec, th_ycbcr_buffer buf, GstBuffer ** out)
   if (!gst_video_frame_map (&frame, &dec->vinfo, *out, GST_MAP_WRITE))
     goto invalid_frame;
 
-  if (dec->crop && !dec->use_cropping) {
+  if (dec->crop && !dec->has_cropping) {
     /* we need to crop the hard way */
     offset_x = dec->info.pic_x;
     offset_y = dec->info.pic_y;
@@ -1152,7 +1142,7 @@ theora_handle_image (GstTheoraDec * dec, th_ycbcr_buffer buf, GstBuffer ** out)
     pic_width = dec->info.frame_width;
     pic_height = dec->info.frame_height;
 
-    if (dec->use_cropping) {
+    if (dec->has_cropping && dec->need_cropping) {
       crop = gst_buffer_add_video_crop_meta (*out);
       /* we can do things slightly more efficient when we know that
        * downstream understands clipping */
