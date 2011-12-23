@@ -559,6 +559,8 @@ ges_track_remove_object (GESTrack * track, GESTrackObject * object)
     }
   }
 
+  g_signal_handlers_disconnect_by_func (object, sort_track_objects_cb, NULL);
+
   ges_track_object_set_track (object, NULL);
 
   g_signal_emit (track, ges_track_signals[TRACK_OBJECT_REMOVED], 0,
