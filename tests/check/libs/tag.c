@@ -1392,6 +1392,7 @@ do_exif_tag_serialization_deserialization (GstTagList * taglist)
 
   /* LE */
   buf = gst_tag_list_to_exif_buffer (taglist, G_LITTLE_ENDIAN, 0);
+  GST_MEMDUMP ("Exif tag", GST_BUFFER_DATA (buf), GST_BUFFER_SIZE (buf));
   taglist2 = gst_tag_list_from_exif_buffer (buf, G_LITTLE_ENDIAN, 0);
   gst_buffer_unref (buf);
 
@@ -1400,6 +1401,7 @@ do_exif_tag_serialization_deserialization (GstTagList * taglist)
 
   /* BE */
   buf = gst_tag_list_to_exif_buffer (taglist, G_BIG_ENDIAN, 0);
+  GST_MEMDUMP ("Exif tag", GST_BUFFER_DATA (buf), GST_BUFFER_SIZE (buf));
   taglist2 = gst_tag_list_from_exif_buffer (buf, G_BIG_ENDIAN, 0);
   gst_buffer_unref (buf);
 
