@@ -72,7 +72,8 @@ The 0.11 porting guide
     push the tag event.
 
 * GstPad:
-    gst_pad_get_caps() does not return writable caps anymore and an explicit
+    gst_pad_get_caps() was replaced by gst_pad_query_caps(), it
+    does not return writable caps anymore and an explicit
     gst_caps_make_writable() needs to be performed. This was the functionality
     of gst_pad_get_caps_reffed(), which is removed now.
 
