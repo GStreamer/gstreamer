@@ -922,76 +922,21 @@ gst_audio_buffer_clip (GstBuffer * buffer, GstSegment * segment, gint rate,
   return ret;
 }
 
-gboolean
-gst_audio_buffer_reorder_channels (GstBuffer * buffer,
-    GstAudioFormat format, gint channels,
-    const GstAudioChannelPosition * from, const GstAudioChannelPosition * to)
-{
-  gsize size;
-  guint8 *data;
-  gboolean ret;
-
-  g_return_val_if_fail (GST_IS_BUFFER (buffer), FALSE);
-
-  data = gst_buffer_map (buffer, &size, NULL, GST_MAP_READ | GST_MAP_WRITE);
-
-  ret = gst_audio_reorder_channels (data, size, format, channels, from, to);
-
-  gst_buffer_unmap (buffer, data, size);
-
-  return ret;
-}
-
-gboolean
-gst_audio_check_valid_channel_positions (const GstAudioChannelPosition *
-    position, gint channels, gboolean force_order)
-{
-  return check_valid_channel_positions (position, channels, force_order, NULL);
-}
-
-gboolean
-gst_audio_get_channel_reorder_map (gint channels,
-    const GstAudioChannelPosition * from, const GstAudioChannelPosition * to,
-    gint * reorder_map)
-{
-  gint i, j;
-
-  g_return_val_if_fail (reorder_map != NULL, FALSE);
-  g_return_val_if_fail (channels > 0, FALSE);
-  g_return_val_if_fail (from != NULL, FALSE);
-  g_return_val_if_fail (to != NULL, FALSE);
-  g_return_val_if_fail (check_valid_channel_positions (from, channels, FALSE,
-          NULL), FALSE);
-  g_return_val_if_fail (check_valid_channel_positions (to, channels, FALSE,
-          NULL), FALSE);
-
-  /* Build reorder map and check compatibility */
-  for (i = 0; i < channels; i++) {
-    if (from[i] == GST_AUDIO_CHANNEL_POSITION_NONE
-        || to[i] == GST_AUDIO_CHANNEL_POSITION_NONE)
-      return FALSE;
-    if (from[i] == GST_AUDIO_CHANNEL_POSITION_INVALID
-        || to[i] == GST_AUDIO_CHANNEL_POSITION_INVALID)
-      return FALSE;
-    if (from[i] == GST_AUDIO_CHANNEL_POSITION_MONO
-        || to[i] == GST_AUDIO_CHANNEL_POSITION_MONO)
-      return FALSE;
-
-    for (j = 0; j < channels; j++) {
-      if (from[i] == to[j]) {
-        reorder_map[i] = j;
-        break;
-      }
-    }
-
-    /* Not all channels present in both */
-    if (j == channels)
-      return FALSE;
-  }
-
-  return TRUE;
-}
-
+/**
+ * gst_audio_reorder_channels:
+ * @data: The pointer to the memory.
+ * @size: The size of the memory.
+ * @format: The %GstAudioFormat of the buffer.
+ * @channels: The number of channels.
+ * @from: The channel positions in the buffer.
+ * @to: The channel positions to convert to.
+ *
+ * Reorders @data from the channel positions @from to the channel
+ * positions @to. @from and @to must contain the same number of
+ * positions and the same positions, only in a different order.
+ *
+ * Returns: %TRUE if the reordering was possible.
+ */
 gboolean
 gst_audio_reorder_channels (gpointer data, gsize size, GstAudioFormat format,
     gint channels, const GstAudioChannelPosition * from,
@@ -1037,6 +982,123 @@ gst_audio_reorder_channels (gpointer data, gsize size, GstAudioFormat format,
       memcpy (ptr + reorder_map[j] * bps, tmp + j * bps, bps);
 
     ptr += bpf;
+  }
+
+  return TRUE;
+}
+
+/**
+ * gst_audio_buffer_reorder_channels:
+ * @buffer: The buffer to reorder.
+ * @format: The %GstAudioFormat of the buffer.
+ * @channels: The number of channels.
+ * @from: The channel positions in the buffer.
+ * @to: The channel positions to convert to.
+ *
+ * Reorders @buffer from the channel positions @from to the channel
+ * positions @to. @from and @to must contain the same number of
+ * positions and the same positions, only in a different order.
+ * @buffer must be writable.
+ *
+ * Returns: %TRUE if the reordering was possible.
+ */
+gboolean
+gst_audio_buffer_reorder_channels (GstBuffer * buffer,
+    GstAudioFormat format, gint channels,
+    const GstAudioChannelPosition * from, const GstAudioChannelPosition * to)
+{
+  gsize size;
+  guint8 *data;
+  gboolean ret;
+
+  g_return_val_if_fail (GST_IS_BUFFER (buffer), FALSE);
+  g_return_val_if_fail (gst_buffer_is_writable (buffer), FALSE);
+
+  data = gst_buffer_map (buffer, &size, NULL, GST_MAP_READ | GST_MAP_WRITE);
+
+  ret = gst_audio_reorder_channels (data, size, format, channels, from, to);
+
+  gst_buffer_unmap (buffer, data, size);
+
+  return ret;
+}
+
+/**
+ * gst_audio_check_valid_channel_positions:
+ * @position: The %GstAudioChannelPositions to check.
+ * @channels: The number of channels.
+ * @force_order: Only consider the GStreamer channel order.
+ *
+ * Checks if @position contains valid channel positions for
+ * @channels channels. If @force_order is %TRUE it additionally
+ * checks if the channels are in the order required by GStreamer.
+ *
+ * Returns: %TRUE if the channel positions are valid.
+ */
+gboolean
+gst_audio_check_valid_channel_positions (const GstAudioChannelPosition *
+    position, gint channels, gboolean force_order)
+{
+  return check_valid_channel_positions (position, channels, force_order, NULL);
+}
+
+/**
+ * gst_audio_get_channel_reorder_map:
+ * @channels: The number of channels.
+ * @from: The channel positions to reorder from.
+ * @to: The channel positions to reorder to.
+ * @reorder_map: Pointer to the reorder map.
+ *
+ * Returns a reorder map for @from to @to that can be used in
+ * custom channel reordering code, e.g. to convert from or to the
+ * GStreamer channel order. @from and @to must contain the same
+ * number of positions and the same positions, only in a
+ * different order.
+ *
+ * The resulting @reorder_map can be used for reordering by assigning
+ * channel i of the input to channel reorder_map[i] of the output.
+ *
+ * Returns: %TRUE if the channel positions are valid and reordering
+ * is possible.
+ */
+gboolean
+gst_audio_get_channel_reorder_map (gint channels,
+    const GstAudioChannelPosition * from, const GstAudioChannelPosition * to,
+    gint * reorder_map)
+{
+  gint i, j;
+
+  g_return_val_if_fail (reorder_map != NULL, FALSE);
+  g_return_val_if_fail (channels > 0, FALSE);
+  g_return_val_if_fail (from != NULL, FALSE);
+  g_return_val_if_fail (to != NULL, FALSE);
+  g_return_val_if_fail (check_valid_channel_positions (from, channels, FALSE,
+          NULL), FALSE);
+  g_return_val_if_fail (check_valid_channel_positions (to, channels, FALSE,
+          NULL), FALSE);
+
+  /* Build reorder map and check compatibility */
+  for (i = 0; i < channels; i++) {
+    if (from[i] == GST_AUDIO_CHANNEL_POSITION_NONE
+        || to[i] == GST_AUDIO_CHANNEL_POSITION_NONE)
+      return FALSE;
+    if (from[i] == GST_AUDIO_CHANNEL_POSITION_INVALID
+        || to[i] == GST_AUDIO_CHANNEL_POSITION_INVALID)
+      return FALSE;
+    if (from[i] == GST_AUDIO_CHANNEL_POSITION_MONO
+        || to[i] == GST_AUDIO_CHANNEL_POSITION_MONO)
+      return FALSE;
+
+    for (j = 0; j < channels; j++) {
+      if (from[i] == to[j]) {
+        reorder_map[i] = j;
+        break;
+      }
+    }
+
+    /* Not all channels present in both */
+    if (j == channels)
+      return FALSE;
   }
 
   return TRUE;
