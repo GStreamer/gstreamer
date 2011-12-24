@@ -1883,7 +1883,7 @@ gst_audio_ring_buffer_set_channel_positions (GstAudioRingBuffer * buf,
 {
   const GstAudioChannelPosition *to;
   gint channels;
-  gint i, j;
+  gint i;
 
   g_return_if_fail (GST_IS_AUDIO_RING_BUFFER (buf));
   g_return_if_fail (buf->acquired);
@@ -1895,25 +1895,9 @@ gst_audio_ring_buffer_set_channel_positions (GstAudioRingBuffer * buf,
   if (memcmp (position, to, channels * sizeof (to[0])) == 0)
     return;
 
-  /* Build reorder map and check compatibility */
-  for (i = 0; i < channels; i++) {
-    g_return_if_fail (position[i] == GST_AUDIO_CHANNEL_POSITION_NONE
-        || to[i] == GST_AUDIO_CHANNEL_POSITION_NONE);
-    g_return_if_fail (position[i] == GST_AUDIO_CHANNEL_POSITION_INVALID
-        || to[i] == GST_AUDIO_CHANNEL_POSITION_INVALID);
-    g_return_if_fail (position[i] == GST_AUDIO_CHANNEL_POSITION_MONO
-        || to[i] == GST_AUDIO_CHANNEL_POSITION_MONO);
-
-    for (j = 0; j < channels; j++) {
-      if (position[i] == to[j]) {
-        buf->channel_reorder_map[i] = j;
-        break;
-      }
-    }
-
-    /* Not all channels present in both */
-    g_return_if_fail (j == channels);
-  }
+  if (!gst_audio_get_channel_reorder_map (channels, position, to,
+          buf->channel_reorder_map))
+    g_return_if_reached ();
 
   for (i = 0; i < channels; i++) {
     if (buf->channel_reorder_map[i] != i) {
