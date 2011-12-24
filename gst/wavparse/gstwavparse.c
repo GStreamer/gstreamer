@@ -281,37 +281,6 @@ gst_wavparse_create_sourcepad (GstWavParse * wavparse)
   GST_DEBUG_OBJECT (wavparse, "srcpad created");
 }
 
-/* Compute (value * nom) % denom, avoiding overflow.  This can be used
- * to perform ceiling or rounding division together with
- * gst_util_uint64_scale[_int]. */
-#define uint64_scale_modulo(val, nom, denom) \
-  ((val % denom) * (nom % denom) % denom)
-
-/* Like gst_util_uint64_scale, but performs ceiling division. */
-static guint64
-uint64_ceiling_scale_int (guint64 val, gint num, gint denom)
-{
-  guint64 result = gst_util_uint64_scale_int (val, num, denom);
-
-  if (uint64_scale_modulo (val, num, denom) == 0)
-    return result;
-  else
-    return result + 1;
-}
-
-/* Like gst_util_uint64_scale, but performs ceiling division. */
-static guint64
-uint64_ceiling_scale (guint64 val, guint64 num, guint64 denom)
-{
-  guint64 result = gst_util_uint64_scale (val, num, denom);
-
-  if (uint64_scale_modulo (val, num, denom) == 0)
-    return result;
-  else
-    return result + 1;
-}
-
-
 /* FIXME: why is that not in use? */
 #if 0
 static void
@@ -792,12 +761,12 @@ gst_wavparse_time_to_bytepos (GstWavParse * wav, gint64 ts, gint64 * bytepos)
   }
 
   if (wav->bps > 0) {
-    *bytepos = uint64_ceiling_scale (ts, (guint64) wav->bps, GST_SECOND);
+    *bytepos = gst_util_uint64_scale_ceil (ts, (guint64) wav->bps, GST_SECOND);
     return TRUE;
   } else if (wav->fact) {
     guint64 bps =
         gst_util_uint64_scale_int (wav->datasize, wav->rate, wav->fact);
-    *bytepos = uint64_ceiling_scale (ts, bps, GST_SECOND);
+    *bytepos = gst_util_uint64_scale_ceil (ts, bps, GST_SECOND);
     return TRUE;
   }
 
@@ -1159,12 +1128,14 @@ gst_wavparse_calculate_duration (GstWavParse * wav)
   if (wav->bps > 0) {
     GST_INFO_OBJECT (wav, "Got datasize %" G_GUINT64_FORMAT, wav->datasize);
     wav->duration =
-        uint64_ceiling_scale (wav->datasize, GST_SECOND, (guint64) wav->bps);
+        gst_util_uint64_scale_ceil (wav->datasize, GST_SECOND,
+        (guint64) wav->bps);
     GST_INFO_OBJECT (wav, "Got duration (bps) %" GST_TIME_FORMAT,
         GST_TIME_ARGS (wav->duration));
     return TRUE;
   } else if (wav->fact) {
-    wav->duration = uint64_ceiling_scale_int (GST_SECOND, wav->fact, wav->rate);
+    wav->duration =
+        gst_util_uint64_scale_int_ceil (GST_SECOND, wav->fact, wav->rate);
     GST_INFO_OBJECT (wav, "Got duration (fact) %" GST_TIME_FORMAT,
         GST_TIME_ARGS (wav->duration));
     return TRUE;
@@ -1976,9 +1947,10 @@ iterate_adapter:
 
   if (wav->bps > 0) {
     /* and timestamps if we have a bitrate, be careful for overflows */
-    timestamp = uint64_ceiling_scale (pos, GST_SECOND, (guint64) wav->bps);
+    timestamp =
+        gst_util_uint64_scale_ceil (pos, GST_SECOND, (guint64) wav->bps);
     next_timestamp =
-        uint64_ceiling_scale (nextpos, GST_SECOND, (guint64) wav->bps);
+        gst_util_uint64_scale_ceil (nextpos, GST_SECOND, (guint64) wav->bps);
     duration = next_timestamp - timestamp;
 
     /* update current running segment position */
@@ -1989,8 +1961,8 @@ iterate_adapter:
     guint64 bps =
         gst_util_uint64_scale_int (wav->datasize, wav->rate, wav->fact);
     /* and timestamps if we have a bitrate, be careful for overflows */
-    timestamp = uint64_ceiling_scale (pos, GST_SECOND, bps);
-    next_timestamp = uint64_ceiling_scale (nextpos, GST_SECOND, bps);
+    timestamp = gst_util_uint64_scale_ceil (pos, GST_SECOND, bps);
+    next_timestamp = gst_util_uint64_scale_ceil (nextpos, GST_SECOND, bps);
     duration = next_timestamp - timestamp;
   } else {
     /* no bitrate, all we know is that the first sample has timestamp 0, all
@@ -2277,10 +2249,12 @@ gst_wavparse_sink_event (GstPad * pad, GstEvent * event)
           if (bps) {
             if (start >= 0)
               start =
-                  uint64_ceiling_scale (start, GST_SECOND, (guint64) wav->bps);
+                  gst_util_uint64_scale_ceil (start, GST_SECOND,
+                  (guint64) wav->bps);
             if (stop >= 0)
               stop =
-                  uint64_ceiling_scale (stop, GST_SECOND, (guint64) wav->bps);
+                  gst_util_uint64_scale_ceil (stop, GST_SECOND,
+                  (guint64) wav->bps);
           }
         }
       } else {
@@ -2395,13 +2369,14 @@ gst_wavparse_pad_convert (GstPad * pad,
               "src=%" G_GINT64_FORMAT ", offset=%" G_GINT64_FORMAT, src_value,
               wavparse->offset);
           if (wavparse->bps > 0)
-            *dest_value = uint64_ceiling_scale (src_value, GST_SECOND,
+            *dest_value = gst_util_uint64_scale_ceil (src_value, GST_SECOND,
                 (guint64) wavparse->bps);
           else if (wavparse->fact) {
-            guint64 bps = uint64_ceiling_scale_int (wavparse->datasize,
+            guint64 bps = gst_util_uint64_scale_int_ceil (wavparse->datasize,
                 wavparse->rate, wavparse->fact);
 
-            *dest_value = uint64_ceiling_scale_int (src_value, GST_SECOND, bps);
+            *dest_value =
+                gst_util_uint64_scale_int_ceil (src_value, GST_SECOND, bps);
           } else {
             res = FALSE;
           }
