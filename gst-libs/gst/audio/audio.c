@@ -943,41 +943,27 @@ gst_audio_buffer_reorder_channels (GstBuffer * buffer,
 }
 
 gboolean
-gst_audio_reorder_channels (gpointer data, gsize size, GstAudioFormat format,
-    gint channels, const GstAudioChannelPosition * from,
-    const GstAudioChannelPosition * to)
+gst_audio_check_valid_channel_positions (const GstAudioChannelPosition *
+    position, gint channels, gboolean force_order)
 {
-  const GstAudioFormatInfo *info;
-  gint i, j, n;
-  gint reorder_map[64] = { 0, };
-  guint8 *ptr;
-  gint bpf, bps;
-  guint8 tmp[64 * 8];
+  return check_valid_channel_positions (position, channels, force_order, NULL);
+}
 
-  info = gst_audio_format_get_info (format);
+gboolean
+gst_audio_get_channel_reorder_map (gint channels,
+    const GstAudioChannelPosition * from, const GstAudioChannelPosition * to,
+    gint * reorder_map)
+{
+  gint i, j;
 
-  g_return_val_if_fail (data != NULL, FALSE);
-  g_return_val_if_fail (from != NULL, FALSE);
-  g_return_val_if_fail (info != NULL && info->width > 0, FALSE);
-  g_return_val_if_fail (info->width > 0, FALSE);
-  g_return_val_if_fail (info->width <= 8 * 64, FALSE);
-  g_return_val_if_fail (size % ((info->width * channels) / 8) != 0, FALSE);
+  g_return_val_if_fail (reorder_map != NULL, FALSE);
   g_return_val_if_fail (channels > 0, FALSE);
-  g_return_val_if_fail (channels <= 64, FALSE);
+  g_return_val_if_fail (from != NULL, FALSE);
   g_return_val_if_fail (to != NULL, FALSE);
   g_return_val_if_fail (check_valid_channel_positions (from, channels, FALSE,
           NULL), FALSE);
   g_return_val_if_fail (check_valid_channel_positions (to, channels, FALSE,
           NULL), FALSE);
-
-  if (size == 0)
-    return TRUE;
-
-  if (memcmp (from, to, channels * sizeof (from[0])) == 0)
-    return TRUE;
-
-  bps = info->width / 8;
-  bpf = bps * channels;
 
   /* Build reorder map and check compatibility */
   for (i = 0; i < channels; i++) {
@@ -1003,6 +989,44 @@ gst_audio_reorder_channels (gpointer data, gsize size, GstAudioFormat format,
       return FALSE;
   }
 
+  return TRUE;
+}
+
+gboolean
+gst_audio_reorder_channels (gpointer data, gsize size, GstAudioFormat format,
+    gint channels, const GstAudioChannelPosition * from,
+    const GstAudioChannelPosition * to)
+{
+  const GstAudioFormatInfo *info;
+  gint i, j, n;
+  gint reorder_map[64] = { 0, };
+  guint8 *ptr;
+  gint bpf, bps;
+  guint8 tmp[64 * 8];
+
+  info = gst_audio_format_get_info (format);
+
+  g_return_val_if_fail (data != NULL, FALSE);
+  g_return_val_if_fail (from != NULL, FALSE);
+  g_return_val_if_fail (to != NULL, FALSE);
+  g_return_val_if_fail (info != NULL && info->width > 0, FALSE);
+  g_return_val_if_fail (info->width > 0, FALSE);
+  g_return_val_if_fail (info->width <= 8 * 64, FALSE);
+  g_return_val_if_fail (size % ((info->width * channels) / 8) != 0, FALSE);
+  g_return_val_if_fail (channels > 0, FALSE);
+  g_return_val_if_fail (channels <= 64, FALSE);
+
+  if (size == 0)
+    return TRUE;
+
+  if (memcmp (from, to, channels * sizeof (from[0])) == 0)
+    return TRUE;
+
+  if (!gst_audio_get_channel_reorder_map (channels, from, to, reorder_map))
+    return FALSE;
+
+  bps = info->width / 8;
+  bpf = bps * channels;
   ptr = data;
 
   n = size / bpf;
