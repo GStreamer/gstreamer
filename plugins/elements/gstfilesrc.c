@@ -361,8 +361,12 @@ gst_file_src_fill (GstBaseSrc * basesrc, guint64 offset, guint length,
     }
 
     /* files should eos if they read 0 and more was requested */
-    if (G_UNLIKELY (ret == 0))
+    if (G_UNLIKELY (ret == 0)) {
+      /* .. but first we should return any remaining data */
+      if (bytes_read > 0)
+        break;
       goto eos;
+    }
 
     to_read -= ret;
     bytes_read += ret;
