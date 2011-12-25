@@ -136,13 +136,13 @@ gstaudioformat_to_pasampleformat (GstAudioFormat format,
 gboolean
 gst_pulse_fill_sample_spec (GstAudioRingBufferSpec * spec, pa_sample_spec * ss)
 {
-  if (spec->type == GST_BUFTYPE_RAW) {
+  if (spec->type == GST_AUDIO_RING_BUFFER_FORMAT_TYPE_RAW) {
     if (!gstaudioformat_to_pasampleformat (GST_AUDIO_INFO_FORMAT (&spec->info),
             &ss->format))
       return FALSE;
-  } else if (spec->type == GST_BUFTYPE_MU_LAW) {
+  } else if (spec->type == GST_AUDIO_RING_BUFFER_FORMAT_TYPE_MU_LAW) {
     ss->format = PA_SAMPLE_ULAW;
-  } else if (spec->type == GST_BUFTYPE_A_LAW) {
+  } else if (spec->type == GST_AUDIO_RING_BUFFER_FORMAT_TYPE_A_LAW) {
     ss->format = PA_SAMPLE_ALAW;
   } else
     return FALSE;
@@ -166,24 +166,25 @@ gst_pulse_fill_format_info (GstAudioRingBufferSpec * spec, pa_format_info ** f,
 
   format = pa_format_info_new ();
 
-  if (spec->type == GST_BUFTYPE_MU_LAW && GST_AUDIO_INFO_WIDTH (ainfo) == 8) {
+  if (spec->type == GST_AUDIO_RING_BUFFER_FORMAT_TYPE_MU_LAW
+      && GST_AUDIO_INFO_WIDTH (ainfo) == 8) {
     format->encoding = PA_ENCODING_PCM;
     sf = PA_SAMPLE_ULAW;
-  } else if (spec->type == GST_BUFTYPE_A_LAW
+  } else if (spec->type == GST_AUDIO_RING_BUFFER_FORMAT_TYPE_A_LAW
       && GST_AUDIO_INFO_WIDTH (ainfo) == 8) {
     format->encoding = PA_ENCODING_PCM;
     sf = PA_SAMPLE_ALAW;
-  } else if (spec->type == GST_BUFTYPE_RAW) {
+  } else if (spec->type == GST_AUDIO_RING_BUFFER_FORMAT_TYPE_RAW) {
     format->encoding = PA_ENCODING_PCM;
     if (!gstaudioformat_to_pasampleformat (GST_AUDIO_INFO_FORMAT (ainfo), &sf))
       goto fail;
-  } else if (spec->type == GST_BUFTYPE_AC3) {
+  } else if (spec->type == GST_AUDIO_RING_BUFFER_FORMAT_TYPE_AC3) {
     format->encoding = PA_ENCODING_AC3_IEC61937;
-  } else if (spec->type == GST_BUFTYPE_EAC3) {
+  } else if (spec->type == GST_AUDIO_RING_BUFFER_FORMAT_TYPE_EAC3) {
     format->encoding = PA_ENCODING_EAC3_IEC61937;
-  } else if (spec->type == GST_BUFTYPE_DTS) {
+  } else if (spec->type == GST_AUDIO_RING_BUFFER_FORMAT_TYPE_DTS) {
     format->encoding = PA_ENCODING_DTS_IEC61937;
-  } else if (spec->type == GST_BUFTYPE_MPEG) {
+  } else if (spec->type == GST_AUDIO_RING_BUFFER_FORMAT_TYPE_MPEG) {
     format->encoding = PA_ENCODING_MPEG_IEC61937;
   } else {
     goto fail;

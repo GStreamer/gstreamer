@@ -1713,10 +1713,10 @@ static GstBuffer *
 gst_pulsesink_payload (GstAudioBaseSink * sink, GstBuffer * buf)
 {
   switch (sink->ringbuffer->spec.type) {
-    case GST_BUFTYPE_AC3:
-    case GST_BUFTYPE_EAC3:
-    case GST_BUFTYPE_DTS:
-    case GST_BUFTYPE_MPEG:
+    case GST_AUDIO_RING_BUFFER_FORMAT_TYPE_AC3:
+    case GST_AUDIO_RING_BUFFER_FORMAT_TYPE_EAC3:
+    case GST_AUDIO_RING_BUFFER_FORMAT_TYPE_DTS:
+    case GST_AUDIO_RING_BUFFER_FORMAT_TYPE_MPEG:
     {
       /* FIXME: alloc memory from PA if possible */
       gint framesize = gst_audio_iec61937_frame_size (&sink->ringbuffer->spec);
