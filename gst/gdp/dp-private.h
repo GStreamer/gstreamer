@@ -29,6 +29,8 @@
 
 G_BEGIN_DECLS
 
+/* FIXME: please make the dataprotocol format typefindable in new versions */
+
 /* accessor defines */
 #define GST_DP_HEADER_MAJOR_VERSION(x)	((x)[0])
 #define GST_DP_HEADER_MINOR_VERSION(x)  ((x)[1])

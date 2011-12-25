@@ -38,7 +38,7 @@
 
 #include <string.h>
 
-#include <gst/dataprotocol/dataprotocol.h>
+#include "dataprotocol.h"
 
 #include "gstgdpdepay.h"
 

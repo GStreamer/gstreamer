@@ -22,7 +22,7 @@
 #include <unistd.h>
 
 #include <gst/check/gstcheck.h>
-#include <gst/dataprotocol/dataprotocol.h>
+#include "../../gst/gdp/dataprotocol.c"
 
 /* For ease of programming we use globals to keep refs for our floating
  * src and sink pads we create; otherwise we always have to do get_pad,
