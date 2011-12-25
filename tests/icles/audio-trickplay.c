@@ -53,7 +53,6 @@ main (gint argc, gchar ** argv)
   GstClock *clock;
   GstClockID clock_id;
   GstClockReturn wait_ret;
-  GValue vol = { 0, };
   GstEvent *pos_seek, *rate_seek1, *rate_seek2;
   GstQuery *pos;
   GstSeekFlags flags;
