@@ -800,7 +800,7 @@ gst_file_src_create_read (GstFileSrc * src, guint64 offset, guint length,
 {
   int ret;
   GstBuffer *buf;
-  guint64 woffset;
+  guint to_read, bytes_read;
 
   if (G_UNLIKELY (src->read_position != offset)) {
     off_t res;
@@ -822,12 +822,13 @@ gst_file_src_create_read (GstFileSrc * src, guint64 offset, guint length,
   GST_BUFFER_SIZE (buf) = 0;
   GST_BUFFER_OFFSET (buf) = offset;
   GST_BUFFER_OFFSET_END (buf) = offset;
-  woffset = 0;
-  while (length > 0) {
+  bytes_read = 0;
+  to_read = length;
+  while (to_read > 0) {
     GST_LOG_OBJECT (src, "Reading %d bytes at offset 0x%" G_GINT64_MODIFIER "x",
-        length, offset + woffset);
+        to_read, offset + bytes_read);
     errno = 0;
-    ret = read (src->fd, GST_BUFFER_DATA (buf) + woffset, length);
+    ret = read (src->fd, GST_BUFFER_DATA (buf) + bytes_read, to_read);
     if (G_UNLIKELY (ret < 0)) {
       if (errno == EAGAIN || errno == EINTR)
         continue;
@@ -838,13 +839,14 @@ gst_file_src_create_read (GstFileSrc * src, guint64 offset, guint length,
     if (G_UNLIKELY (ret == 0))
       goto eos;
 
-    length -= ret;
-    woffset += ret;
-    GST_BUFFER_SIZE (buf) += ret;
-    GST_BUFFER_OFFSET_END (buf) += ret;
+    to_read -= ret;
+    bytes_read += ret;
 
     src->read_position += ret;
   }
+
+  GST_BUFFER_SIZE (buf) = bytes_read;
+  GST_BUFFER_OFFSET_END (buf) = offset + bytes_read;
 
   *buffer = buf;
 
