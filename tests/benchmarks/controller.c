@@ -83,7 +83,6 @@ main (gint argc, gchar * argv[])
   GstElement *src, *sink;
   GstElement *bin;
   GstInterpolationControlSource *csource;
-  GValue freq = { 0, };
   GstClockTime bt, ct;
   GstClockTimeDiff elapsed;
   GstClockTime tick;
