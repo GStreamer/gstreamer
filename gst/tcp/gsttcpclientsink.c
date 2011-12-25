@@ -28,7 +28,7 @@
  * # server:
  * nc -l -p 3000
  * # client:
- * gst-launch fdsrc fd=1 ! tcpclientsink protocol=none port=3000
+ * gst-launch fdsrc fd=1 ! tcpclientsink port=3000
  * ]| everything you type in the client is shown on the server
  * </refsect2>
  */
@@ -37,7 +37,6 @@
 #include "config.h"
 #endif
 #include <gst/gst-i18n-plugin.h>
-#include <gst/dataprotocol/dataprotocol.h>
 #include "gsttcp.h"
 #include "gsttcpclientsink.h"
 #include <string.h>             /* memset */

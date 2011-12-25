@@ -26,7 +26,6 @@
 #include "gsttcp-enumtypes.h"
 #include <gst/gst.h>
 #undef GST_DISABLE_DEPRECATED
-#include <gst/dataprotocol/dataprotocol.h>
 
 #define TCP_HIGHEST_PORT        65535
 #define TCP_DEFAULT_HOST        "localhost"
@@ -41,9 +40,6 @@ gint gst_tcp_socket_write (int socket, const void *buf, size_t count);
 void gst_tcp_socket_close (GstPollFD *socket);
 
 GstFlowReturn gst_tcp_read_buffer (GstElement * this, int socket, GstPoll * fdset, GstBuffer **buf);
-
-GstFlowReturn gst_tcp_gdp_read_buffer (GstElement * this, int socket, GstPoll * fdset, GstBuffer **buf);
-GstFlowReturn gst_tcp_gdp_read_caps (GstElement * this, int socket, GstPoll * fdset, GstCaps **caps);
 
 G_END_DECLS
 

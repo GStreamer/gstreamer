@@ -1296,8 +1296,7 @@ is_sync_frame (GstMultiFdSink * sink, GstBuffer * buffer)
   return FALSE;
 }
 
-/* queue the given buffer for the given client, possibly adding the GDP
- * header if GDP is being used */
+/* queue the given buffer for the given client */
 static gboolean
 gst_multi_fd_sink_client_queue_buffer (GstMultiFdSink * sink,
     GstTCPClient * client, GstBuffer * buffer)
@@ -1878,12 +1877,9 @@ gst_multi_fd_sink_new_client (GstMultiFdSink * sink, GstTCPClient * client)
  * which indicates a read request from a client.
  *
  * For each client we maintain a queue of GstBuffers that contain the raw bytes
- * we need to send to the client. In the case of the GDP protocol, we create
- * buffers out of the header bytes so that we can focus only on sending
- * buffers.
+ * we need to send to the client.
  *
- * We first check to see if we need to send caps (in GDP) and streamheaders.
- * If so, we queue them.
+ * We first check to see if we need to send streamheaders. If so, we queue them.
  *
  * Then we run into the main loop that tries to send as many buffers as
  * possible. It will first exhaust the client->sending queue and if the queue

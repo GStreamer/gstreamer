@@ -23,8 +23,7 @@ LOCAL_SHARED_LIBRARIES := \
     libglib-2.0             \
     libgthread-2.0          \
     libgmodule-2.0          \
-    libgobject-2.0 			\
-	libgstdataprotocol-0.11
+    libgobject-2.0
 
 LOCAL_MODULE:= libgsttcp
 
