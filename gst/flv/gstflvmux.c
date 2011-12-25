@@ -567,6 +567,7 @@ gst_flv_mux_release_pad (GstElement * element, GstPad * pad)
 static GstFlowReturn
 gst_flv_mux_push (GstFlvMux * mux, GstBuffer * buffer)
 {
+  buffer = gst_buffer_make_metadata_writable (buffer);
   gst_buffer_set_caps (buffer, GST_PAD_CAPS (mux->srcpad));
   /* pushing the buffer that rewrites the header will make it no longer be the
    * total output size in bytes, but it doesn't matter at that point */
@@ -937,6 +938,7 @@ end:
 
   if (!tags_written) {
     gst_buffer_unref (script_tag);
+    script_tag = NULL;
     goto exit;
   }
 
