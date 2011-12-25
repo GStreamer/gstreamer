@@ -71,7 +71,7 @@
 #endif
 
 #include <gst/gst.h>
-#include <gst/dataprotocol/dataprotocol.h>
+#include "dataprotocol.h"
 #include <glib/gprintf.h>       /* g_sprintf */
 #include <string.h>             /* strlen */
 #include "dp-private.h"

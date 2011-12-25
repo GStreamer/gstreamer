@@ -21,7 +21,7 @@
 #  include <config.h>
 #endif
 
-#include <gst/dataprotocol/dataprotocol.h>
+#include "dataprotocol.h"
 
 #include "gstgdppay.h"
 #include "gstgdpdepay.h"

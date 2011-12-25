@@ -357,8 +357,8 @@ elements_audiorate_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(CFLAGS) $(AM_CFLAGS)
 elements_libvisual_LDADD =  $(LDADD)
 elements_libvisual_CFLAGS = $(CFLAGS) $(AM_CFLAGS)
 
-elements_gdpdepay_LDADD = $(GST_GDP_LIBS) $(LDADD)
-elements_gdppay_LDADD = $(GST_GDP_LIBS) $(LDADD)
+elements_gdpdepay_LDADD = $(LDADD)
+elements_gdppay_LDADD = $(LDADD)
 
 elements_playbin_LDADD = $(GST_BASE_LIBS) $(LDADD)
 elements_playbin_CFLAGS = $(GST_BASE_CFLAGS) $(AM_CFLAGS)
