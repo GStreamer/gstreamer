@@ -49,6 +49,7 @@ main (gint argc, gchar ** argv)
   GstElement *src, *mix = NULL, *sink;
   GstElement *bin;
   GstInterpolationControlSource *csource1, *csource2;
+  GstTimedValueControlSource *cs;
   GstClock *clock;
   GstClockID clock_id;
   GstClockReturn wait_ret;
@@ -138,25 +139,16 @@ main (gint argc, gchar ** argv)
   g_object_set (csource2, "mode", GST_INTERPOLATION_MODE_LINEAR, NULL);
 
   /* set control values */
-  g_value_init (&vol, G_TYPE_DOUBLE);
-  g_value_set_double (&vol, 0.0);
-  gst_timed_value_control_source_set ((GstTimedValueControlSource *) csource1,
-      0 * GST_SECOND, &vol);
-  g_value_set_double (&vol, 1.0);
-  gst_timed_value_control_source_set ((GstTimedValueControlSource *) csource1,
-      5 * GST_SECOND, &vol);
+  cs = (GstTimedValueControlSource *) csource1;
+  gst_timed_value_control_source_set (cs, 0 * GST_SECOND, 0.0);
+  gst_timed_value_control_source_set (cs, 5 * GST_SECOND, 1.0);
 
   g_object_unref (csource1);
 
-  g_value_set_double (&vol, 220.0);
-  gst_timed_value_control_source_set ((GstTimedValueControlSource *) csource2,
-      0 * GST_SECOND, &vol);
-  g_value_set_double (&vol, 3520.0);
-  gst_timed_value_control_source_set ((GstTimedValueControlSource *) csource2,
-      2 * GST_SECOND, &vol);
-  g_value_set_double (&vol, 440.0);
-  gst_timed_value_control_source_set ((GstTimedValueControlSource *) csource2,
-      6 * GST_SECOND, &vol);
+  cs = (GstTimedValueControlSource *) csource2;
+  gst_timed_value_control_source_set (cs, 0 * GST_SECOND, 20000.0 / 220.0);
+  gst_timed_value_control_source_set (cs, 2 * GST_SECOND, 20000.0 / 3520.0);
+  gst_timed_value_control_source_set (cs, 6 * GST_SECOND, 20000.0 / 440.0);
 
   g_object_unref (csource2);
 
