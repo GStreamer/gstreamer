@@ -73,16 +73,13 @@ set_program (GstObject * elem, GstStructure * prog)
   const GstStructure *s;
   GstInterpolationControlSource *cs;
   GstClockTime ts, dur;
-  GValue val = { 0, };
-  gint v;
+  gdouble v;
   const GValue *frame;
   GHashTable *css;
   gint i, j;
   const gchar *name;
 
   css = g_hash_table_new (g_str_hash, g_str_equal);
-
-  g_value_init (&val, G_TYPE_INT);
 
   ts = 0;
   dur = gst_util_uint64_scale_int (GST_SECOND, 1, 15);
@@ -104,16 +101,13 @@ set_program (GstObject * elem, GstStructure * prog)
         g_hash_table_insert (css, (gpointer) name, cs);
         g_object_unref (cs);
       }
-      gst_structure_get_int (s, name, &v);
-      g_value_set_int (&val, v);
+      gst_structure_get_double (s, name, &v);
       gst_timed_value_control_source_set ((GstTimedValueControlSource *) cs, ts,
-          &val);
-      GST_DEBUG ("  %s = %d", name, v);
+          v);
+      GST_DEBUG ("  %s = %lf", name, v);
     }
     ts += dur;
   }
-
-  g_value_unset (&val);
 
   g_hash_table_unref (css);
 }
@@ -171,17 +165,17 @@ main (gint argc, gchar ** argv)
   /* programm a pattern of events */
 #if 0
   prog = gst_structure_from_string ("program"
-      ", image00=(structure)\"image\\,contrast\\=0\\;\""
-      ", image01=(structure)\"image\\,contrast\\=79\\;\""
-      ", image02=(structure)\"image\\,contrast\\=255\\;\""
-      ", image03=(structure)\"image\\,contrast\\=15\\;\";", NULL);
+      ", image00=(structure)\"image\\,contrast\\=0.0\\;\""
+      ", image01=(structure)\"image\\,contrast\\=0.3\\;\""
+      ", image02=(structure)\"image\\,contrast\\=1.0\\;\""
+      ", image03=(structure)\"image\\,contrast\\=0.05\\;\";", NULL);
 #endif
 #if 1
   prog = gst_structure_from_string ("program"
-      ", image00=(structure)\"image\\,brightness\\=255\\,contrast\\=0\\;\""
-      ", image01=(structure)\"image\\,brightness\\=127\\,contrast\\=79\\;\""
-      ", image02=(structure)\"image\\,brightness\\=64\\,contrast\\=255\\;\""
-      ", image03=(structure)\"image\\,brightness\\=0\\,contrast\\=15\\;\";",
+      ", image00=(structure)\"image\\,brightness\\=1.0\\,contrast\\=0.0\\;\""
+      ", image01=(structure)\"image\\,brightness\\=0.5\\,contrast\\=0.3\\;\""
+      ", image02=(structure)\"image\\,brightness\\=0.25\\,contrast\\=1.0\\;\""
+      ", image03=(structure)\"image\\,brightness\\=0.0\\,contrast\\=0.05\\;\";",
       NULL);
 #endif
   set_program (GST_OBJECT (src), prog);
