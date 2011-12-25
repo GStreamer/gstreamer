@@ -437,7 +437,7 @@ gst_collect_pads2_clip_running_time (GstCollectPads2 * pads,
       GST_LOG_OBJECT (cdata->pad, "buffer ts %" GST_TIME_FORMAT " -> %"
           GST_TIME_FORMAT " running time",
           GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buf)), GST_TIME_ARGS (time));
-      *outbuf = gst_buffer_make_metadata_writable (buf);
+      *outbuf = gst_buffer_make_writable (buf);
       GST_BUFFER_TIMESTAMP (*outbuf) = time;
     }
   }
