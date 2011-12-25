@@ -329,6 +329,7 @@ gst_file_src_fill (GstBaseSrc * basesrc, guint64 offset, guint length,
     GstBuffer * buf)
 {
   GstFileSrc *src;
+  guint to_read, bytes_read;
   int ret;
   guint8 *data;
 
@@ -346,29 +347,33 @@ gst_file_src_fill (GstBaseSrc * basesrc, guint64 offset, guint length,
 
   data = gst_buffer_map (buf, NULL, NULL, GST_MAP_WRITE);
 
-  GST_LOG_OBJECT (src, "Reading %d bytes at offset 0x%" G_GINT64_MODIFIER "x",
-      length, offset);
+  bytes_read = 0;
+  to_read = length;
+  while (to_read > 0) {
+    GST_LOG_OBJECT (src, "Reading %d bytes at offset 0x%" G_GINT64_MODIFIER "x",
+        to_read, offset + bytes_read);
+    errno = 0;
+    ret = read (src->fd, data + bytes_read, to_read);
+    if (G_UNLIKELY (ret < 0)) {
+      if (errno == EAGAIN || errno == EINTR)
+        continue;
+      goto could_not_read;
+    }
 
-  ret = read (src->fd, data, length);
-  if (G_UNLIKELY (ret < 0))
-    goto could_not_read;
+    /* files should eos if they read 0 and more was requested */
+    if (G_UNLIKELY (ret == 0))
+      goto eos;
 
-  /* seekable regular files should have given us what we expected */
-  if (G_UNLIKELY ((guint) ret < length && src->seekable))
-    goto unexpected_eos;
+    to_read -= ret;
+    bytes_read += ret;
 
-  /* other files should eos if they read 0 and more was requested */
-  if (G_UNLIKELY (ret == 0))
-    goto eos;
+    src->read_position += ret;
+  }
 
-  length = ret;
-
-  gst_buffer_unmap (buf, data, length);
+  gst_buffer_unmap (buf, data, bytes_read);
 
   GST_BUFFER_OFFSET (buf) = offset;
-  GST_BUFFER_OFFSET_END (buf) = offset + length;
-
-  src->read_position += length;
+  GST_BUFFER_OFFSET_END (buf) = offset + bytes_read;
 
   return GST_FLOW_OK;
 
@@ -384,16 +389,9 @@ could_not_read:
     gst_buffer_unmap (buf, data, 0);
     return GST_FLOW_ERROR;
   }
-unexpected_eos:
-  {
-    GST_ELEMENT_ERROR (src, RESOURCE, READ, (NULL),
-        ("unexpected end of file."));
-    gst_buffer_unmap (buf, data, 0);
-    return GST_FLOW_ERROR;
-  }
 eos:
   {
-    GST_DEBUG ("non-regular file hits EOS");
+    GST_DEBUG ("EOS");
     gst_buffer_unmap (buf, data, 0);
     return GST_FLOW_EOS;
   }

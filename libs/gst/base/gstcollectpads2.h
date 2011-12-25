@@ -383,6 +383,11 @@ GstBuffer*      gst_collect_pads2_take_buffer   (GstCollectPads2 * pads, GstColl
 void            gst_collect_pads2_set_waiting   (GstCollectPads2 *pads, GstCollectData2 *data,
                                                  gboolean waiting);
 
+/* convenience helper */
+GstFlowReturn	gst_collect_pads2_clip_running_time (GstCollectPads2 * pads,
+						GstCollectData2 * cdata, GstBuffer * buf, GstBuffer ** outbuf,
+                                                gpointer user_data);
+
 
 G_END_DECLS
 

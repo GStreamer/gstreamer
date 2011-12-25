@@ -212,6 +212,7 @@ EXPORTS
 	gst_collect_pads2_add_pad
 	gst_collect_pads2_add_pad_full
 	gst_collect_pads2_available
+	gst_collect_pads2_clip_running_time
 	gst_collect_pads2_collect
 	gst_collect_pads2_collect_range
 	gst_collect_pads2_flush

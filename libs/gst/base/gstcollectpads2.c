@@ -403,6 +403,48 @@ gst_collect_pads2_set_event_function (GstCollectPads2 * pads,
   GST_OBJECT_UNLOCK (pads);
 }
 
+/**
+* gst_collect_pads2_clip_running:
+* @pads: the collectspads to use
+* @cdata: collect data of corrsponding pad
+* @buf: buffer being clipped
+* @outbuf: output buffer with running time, or NULL if clipped
+* @user_data: user data (unused)
+*
+* Convenience clipping function that converts incoming buffer's timestamp
+* to running time, or clips the buffer if outside configured segment.
+*
+* Since: 0.10.37
+*/
+GstFlowReturn
+gst_collect_pads2_clip_running_time (GstCollectPads2 * pads,
+    GstCollectData2 * cdata, GstBuffer * buf, GstBuffer ** outbuf,
+    gpointer user_data)
+{
+  GstClockTime time;
+
+  *outbuf = buf;
+  time = GST_BUFFER_TIMESTAMP (buf);
+
+  /* invalid left alone and passed */
+  if (G_LIKELY (GST_CLOCK_TIME_IS_VALID (time))) {
+    time = gst_segment_to_running_time (&cdata->segment, GST_FORMAT_TIME, time);
+    if (G_UNLIKELY (!GST_CLOCK_TIME_IS_VALID (time))) {
+      GST_DEBUG_OBJECT (cdata->pad, "clipping buffer on pad outside segment");
+      gst_buffer_unref (buf);
+      *outbuf = NULL;
+    } else {
+      GST_LOG_OBJECT (cdata->pad, "buffer ts %" GST_TIME_FORMAT " -> %"
+          GST_TIME_FORMAT " running time",
+          GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buf)), GST_TIME_ARGS (time));
+      *outbuf = gst_buffer_make_metadata_writable (buf);
+      GST_BUFFER_TIMESTAMP (*outbuf) = time;
+    }
+  }
+
+  return GST_FLOW_OK;
+}
+
  /**
  * gst_collect_pads2_set_clip_function:
  * @pads: the collectspads to use
@@ -1489,6 +1531,7 @@ gst_collect_pads2_default_collected (GstCollectPads2 * pads, gpointer user_data)
      * so give another thread a chance to deliver a possibly
      * older buffer; don't charge on yet with the current oldest */
     ret = GST_FLOW_OK;
+    goto done;
   }
 
   best = pads->earliest_data;

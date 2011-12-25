@@ -459,6 +459,10 @@ gst_base_parse_clear_queues (GstBaseParse * parse)
   g_list_free (parse->priv->detect_buffers);
   parse->priv->detect_buffers = NULL;
   parse->priv->detect_buffers_size = 0;
+
+  g_queue_foreach (&parse->priv->queued_frames,
+      (GFunc) gst_base_parse_frame_free, NULL);
+  g_queue_clear (&parse->priv->queued_frames);
 }
 
 static void
@@ -487,10 +491,6 @@ gst_base_parse_finalize (GObject * object)
       NULL);
   g_list_free (parse->priv->pending_events);
   parse->priv->pending_events = NULL;
-
-  g_queue_foreach (&parse->priv->queued_frames,
-      (GFunc) gst_base_parse_frame_free, NULL);
-  g_queue_clear (&parse->priv->queued_frames);
 
   if (parse->priv->index) {
     gst_object_unref (parse->priv->index);
