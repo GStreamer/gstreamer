@@ -54,7 +54,6 @@
 #include <gst/interfaces/interfaces-enumtypes.h>
 #include <gst/interfaces/interfaces-marshal.h>
 #include <gst/interfaces/navigation.h>
-#include <gst/interfaces/propertyprobe.h>
 #include <gst/interfaces/tunerchannel.h>
 #include <gst/interfaces/tuner.h>
 #include <gst/interfaces/tunernorm.h>

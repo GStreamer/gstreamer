@@ -41,7 +41,6 @@
 #include <gst/fft/gstfftf32.h>
 #include <gst/fft/gstfftf64.h>
 #include <gst/interfaces/navigation.h>
-#include <gst/interfaces/propertyprobe.h>
 #include <gst/interfaces/tuner.h>
 #include <gst/pbutils/pbutils.h>
 #include <gst/riff/riff-media.h>

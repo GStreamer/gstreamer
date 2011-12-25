@@ -43,7 +43,6 @@ GstCheckABIStruct list[] = {
   {"GstMixerTrack", sizeof (GstMixerTrack), 32},
   {"GstNavigationInterface", sizeof (GstNavigationInterface), 28},
   {"GstNetAddress", sizeof (GstNetAddress), 40},
-  {"GstPropertyProbeInterface", sizeof (GstPropertyProbeInterface), 44},
   {"gst_riff_acid", sizeof (gst_riff_acid), 24},
   {"gst_riff_dmlh", sizeof (gst_riff_dmlh), 4},
   {"gst_riff_index_entry", sizeof (gst_riff_index_entry), 16},
