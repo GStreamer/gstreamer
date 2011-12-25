@@ -1,0 +1,23 @@
+Controller
+----------
+
+The controller subsystem allows to automate element property changes. It works
+so that all parameter changes are time based and elements request property
+updates at processing time.
+
+Element view
+~~~~~~~~~~~~
+Elements don't need to do much. They need to:
+- mark object properties that can be changed while processing with
+  GST_PARAM_CONTROLLABLE
+- call gst_object_sync_values (self, timestamp) in the processing function
+  before accessing the parameters.
+
+Application view
+~~~~~~~~~~~~~~~~
+Application need to setup the property automation. For that they need to create
+a GstControlSource and attach it to a property using GstControlBinding. Various
+control-sources and control-bindings exists. All control sources produce control
+value sequences in the form of gdouble values. The control bindings map them to
+the value range and type of the bound property.
+
