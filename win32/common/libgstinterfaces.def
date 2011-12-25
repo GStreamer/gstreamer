@@ -30,17 +30,6 @@ EXPORTS
 	gst_navigation_send_event
 	gst_navigation_send_key_event
 	gst_navigation_send_mouse_event
-	gst_property_probe_get_properties
-	gst_property_probe_get_property
-	gst_property_probe_get_type
-	gst_property_probe_get_values
-	gst_property_probe_get_values_name
-	gst_property_probe_needs_probe
-	gst_property_probe_needs_probe_name
-	gst_property_probe_probe_and_get_values
-	gst_property_probe_probe_and_get_values_name
-	gst_property_probe_probe_property
-	gst_property_probe_probe_property_name
 	gst_tuner_channel_changed
 	gst_tuner_channel_flags_get_type
 	gst_tuner_channel_get_type

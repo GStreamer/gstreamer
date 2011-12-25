@@ -53,6 +53,7 @@ EXPORTS
 	gst_audio_decoder_set_plc_aware
 	gst_audio_decoder_set_tolerance
 	gst_audio_default_registry_mixer_filter
+	gst_audio_downmix_meta_get_info
 	gst_audio_encoder_finish_frame
 	gst_audio_encoder_get_audio_info
 	gst_audio_encoder_get_frame_max
@@ -106,12 +107,12 @@ EXPORTS
 	gst_audio_ring_buffer_clear_all
 	gst_audio_ring_buffer_close_device
 	gst_audio_ring_buffer_commit
-	gst_audio_ring_buffer_commit_full
 	gst_audio_ring_buffer_convert
 	gst_audio_ring_buffer_debug_spec_buff
 	gst_audio_ring_buffer_debug_spec_caps
 	gst_audio_ring_buffer_delay
 	gst_audio_ring_buffer_device_is_open
+	gst_audio_ring_buffer_format_type_get_type
 	gst_audio_ring_buffer_get_type
 	gst_audio_ring_buffer_is_acquired
 	gst_audio_ring_buffer_is_active
@@ -123,7 +124,6 @@ EXPORTS
 	gst_audio_ring_buffer_read
 	gst_audio_ring_buffer_release
 	gst_audio_ring_buffer_samples_done
-	gst_audio_ring_buffer_seg_state_get_type
 	gst_audio_ring_buffer_set_callback
 	gst_audio_ring_buffer_set_flushing
 	gst_audio_ring_buffer_set_sample
@@ -135,7 +135,6 @@ EXPORTS
 	gst_audio_set_structure_channel_positions_list
 	gst_audio_sink_get_type
 	gst_audio_src_get_type
-	gst_buffer_format_type_get_type
 	gst_mixer_get_mixer_flags
 	gst_mixer_get_mixer_type
 	gst_mixer_get_option

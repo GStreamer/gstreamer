@@ -5,9 +5,8 @@ EXPORTS
 	gst_app_sink_get_max_buffers
 	gst_app_sink_get_type
 	gst_app_sink_is_eos
-	gst_app_sink_pull_buffer
-	gst_app_sink_pull_buffer_list
 	gst_app_sink_pull_preroll
+	gst_app_sink_pull_sample
 	gst_app_sink_set_callbacks
 	gst_app_sink_set_caps
 	gst_app_sink_set_drop
