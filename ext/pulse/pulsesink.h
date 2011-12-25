@@ -121,23 +121,6 @@ GType gst_pulsesink_get_type (void);
   _PULSE_SINK_CAPS_COMMON \
   _PULSE_SINK_CAPS_1_0
 
-/* FIXME 0.11: pulseaudiosink helper bin must die */
-
-#define GST_TYPE_PULSE_AUDIO_SINK \
-  (gst_pulse_audio_sink_get_type())
-#define GST_PULSE_AUDIO_SINK(obj) \
-  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_PULSE_AUDIO_SINK,GstPulseAudioSink))
-#define GST_PULSE_AUDIO_SINK_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_PULSE_AUDIO_SINK,GstPulseAudioSinkClass))
-#define GST_IS_PULSE_AUDIO_SINK(obj) \
-  (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_PULSE_AUDIO_SINK))
-#define GST_IS_PULSE_AUDIO_SINK_CLASS(obj) \
-  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_PULSE_AUDIO_SINK))
-#define GST_PULSE_AUDIO_SINK_CAST(obj) \
-  ((GstPulseAudioSink *)(obj))
-
-GType gst_pulse_audio_sink_get_type (void);
-
 G_END_DECLS
 
 #endif /* __GST_PULSESINK_H__ */

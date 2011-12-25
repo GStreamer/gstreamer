@@ -7,7 +7,6 @@ libgstpulse_la_SOURCES = \
 	pulsemixertrack.c \
 	pulseprobe.c \
 	pulsesink.c \
-	pulseaudiosink.c \
 	pulsesrc.c \
 	pulseutil.c
 

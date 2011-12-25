@@ -426,6 +426,8 @@ gst_pulsering_context_subscribe_cb (pa_context * c,
 
       GST_INFO_OBJECT (psink, "emitting sink-changed");
 
+      /* FIXME: send reconfigure event instead and let decodebin/playbin
+       * handle that. Also take care of ac3 alignment. See "pulse-format-lost" */
       renego = gst_event_new_custom (GST_EVENT_CUSTOM_UPSTREAM,
           gst_structure_new_empty ("pulse-sink-changed"));
 
@@ -742,8 +744,21 @@ gst_pulsering_stream_event_cb (pa_stream * p, const char *name,
     g_free (psink->device);
     psink->device = g_strdup (pa_proplist_gets (pl, "device"));
 
+    /* FIXME: send reconfigure event instead and let decodebin/playbin
+     * handle that. Also take care of ac3 alignment */
     renego = gst_event_new_custom (GST_EVENT_CUSTOM_UPSTREAM,
         gst_structure_new_empty ("pulse-format-lost"));
+
+#if 0
+    if (g_str_equal (gst_structure_get_name (st), "audio/x-eac3")) {
+      GstStructure *event_st = gst_structure_new ("ac3parse-set-alignment",
+          "alignment", G_TYPE_STRING, pbin->dbin ? "frame" : "iec61937", NULL);
+
+      if (!gst_pad_push_event (pbin->sinkpad,
+              gst_event_new_custom (GST_EVENT_CUSTOM_UPSTREAM, event_st)))
+        GST_WARNING_OBJECT (pbin->sinkpad, "Could not update alignment");
+    }
+#endif
 
     if (!gst_pad_push_event (GST_BASE_SINK (psink)->sinkpad, renego)) {
       /* Nobody handled the format change - emit an error */
@@ -1938,8 +1953,6 @@ done:
   pa_threaded_mainloop_signal (mainloop, 0);
 }
 
-/* NOTE: If you're making changes here, see if pulseaudiosink acceptcaps also
- * needs to be changed accordingly. */
 static gboolean
 gst_pulsesink_query_acceptcaps (GstPulseSink * psink, GstCaps * caps)
 {

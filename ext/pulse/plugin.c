@@ -49,12 +49,6 @@ plugin_init (GstPlugin * plugin)
           GST_TYPE_PULSESRC))
     return FALSE;
 
-  /* FIXME 0.11: this helper bin sink should just go away, reconfiguration
-   * should be handled using reconfigure events */
-  if (!gst_element_register (plugin, "pulseaudiosink", GST_RANK_PRIMARY + 11,
-          GST_TYPE_PULSE_AUDIO_SINK))
-    return FALSE;
-
   if (!gst_element_register (plugin, "pulsemixer", GST_RANK_NONE,
           GST_TYPE_PULSEMIXER))
     return FALSE;
