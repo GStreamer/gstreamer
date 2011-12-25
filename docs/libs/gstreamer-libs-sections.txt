@@ -13,43 +13,6 @@
 # <SUBSECTION Private>
 # </SECTION>
 
-<SECTION>
-<FILE>gstdataprotocol</FILE>
-<INCLUDE>gst/dataprotocol/dataprotocol.h</INCLUDE>
-GstDPHeaderFlag
-GstDPPayloadType
-
-GST_DP_HEADER_LENGTH
-GstDPVersion
-GST_DP_VERSION_MAJOR
-GST_DP_VERSION_MINOR
-
-gst_dp_init
-
-GstDPHeaderFromBufferFunction
-GstDPPacketFromCapsFunction
-GstDPPacketFromEventFunction
-GstDPPacketizer
-gst_dp_packetizer_new
-gst_dp_packetizer_free
-
-gst_dp_crc
-
-gst_dp_header_payload_length
-gst_dp_header_payload_type
-
-gst_dp_buffer_from_header
-gst_dp_caps_from_packet
-gst_dp_event_from_packet
-
-gst_dp_validate_header
-gst_dp_validate_payload
-gst_dp_validate_packet
-<SUBSECTION Standard>
-GST_TYPE_DP_VERSION
-gst_dp_version_get_type
-</SECTION>
-
 # control source classes
 
 <SECTION>

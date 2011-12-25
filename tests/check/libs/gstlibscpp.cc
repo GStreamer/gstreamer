@@ -39,8 +39,6 @@
 #include <gst/controller/gstlfocontrolsource.h>
 #include <gst/controller/gsttriggercontrolsource.h>
 
-#include <gst/dataprotocol/dataprotocol.h>
-
 #include <gst/net/gstnetclientclock.h>
 #include <gst/net/gstnet.h>
 #include <gst/net/gstnettimepacket.h>

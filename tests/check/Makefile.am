@@ -127,7 +127,6 @@ check_PROGRAMS =				\
 	$(PARSE_CHECKS)				\
 	$(REGISTRY_CHECKS)			\
 	$(LIBSABI_CHECKS)		     	\
-	libs/gdp				\
 	libs/adapter				\
 	libs/bitreader				\
 	libs/bytereader				\
@@ -178,12 +177,6 @@ libs_gstlibscpp_SOURCES = libs/gstlibscpp.cc
 
 gst_gstutils_LDADD = $(LDADD) $(GSL_LIBS) $(GMP_LIBS)
 
-libs_gdp_SOURCES = \
-	libs/gdp.c
-libs_gdp_LDADD = \
-	$(top_builddir)/libs/gst/dataprotocol/libgstdataprotocol-@GST_MAJORMINOR@.la \
-	$(LDADD)
-
 elements_fdsrc_CFLAGS=$(GST_OBJ_CFLAGS) $(AM_CFLAGS) \
 	-DTESTFILE=\"$(top_srcdir)/configure.ac\"
 elements_filesrc_CFLAGS=$(GST_OBJ_CFLAGS) $(AM_CFLAGS) \
@@ -225,7 +218,6 @@ COVERAGE_DIRS = \
 	libs/gst/base \
 	libs/gst/controller \
 	libs/gst/check \
-	libs/gst/dataprotocol \
 	libs/gst/net \
 	plugins/elements
 COVERAGE_FILES = $(foreach dir,$(COVERAGE_DIRS),$(wildcard $(top_builddir)/$(dir)/*.gcov))

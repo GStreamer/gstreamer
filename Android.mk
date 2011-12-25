@@ -17,12 +17,10 @@ GST_BUILT_SOURCES := 		\
 	pkgconfig/gstreamer-0.10.pc       \
 	pkgconfig/gstreamer-base-0.10.pc      \
 	pkgconfig/gstreamer-controller-0.10.pc    \
-	pkgconfig/gstreamer-dataprotocol-0.10.pc    \
 	pkgconfig/gstreamer-net-0.10.pc	\
 	pkgconfig/gstreamer-0.10-uninstalled.pc       \
 	pkgconfig/gstreamer-base-0.10-uninstalled.pc      \
 	pkgconfig/gstreamer-controller-0.10-uninstalled.pc    \
-	pkgconfig/gstreamer-dataprotocol-0.10-uninstalled.pc    \
 	pkgconfig/gstreamer-net-0.10-uninstalled.pc	\
 	gst/Android.mk \
 	gst/parse/Android.mk \
@@ -30,7 +28,6 @@ GST_BUILT_SOURCES := 		\
 	libs/gst/Android.mk \
 	libs/gst/base/Android.mk \
 	libs/gst/controller/Android.mk \
-	libs/gst/dataprotocol/Android.mk \
 	libs/gst/net/Android.mk \
 	libs/gst/helpers/Android.mk \
 	plugins/Android.mk \

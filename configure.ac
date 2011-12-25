@@ -729,7 +729,6 @@ libs/gst/check/Makefile
 libs/gst/check/libcheck/Makefile
 libs/gst/check/libcheck/check.h
 libs/gst/controller/Makefile
-libs/gst/dataprotocol/Makefile
 libs/gst/helpers/Makefile
 libs/gst/net/Makefile
 plugins/Makefile
@@ -777,8 +776,6 @@ pkgconfig/gstreamer-check.pc
 pkgconfig/gstreamer-check-uninstalled.pc
 pkgconfig/gstreamer-controller.pc
 pkgconfig/gstreamer-controller-uninstalled.pc
-pkgconfig/gstreamer-dataprotocol.pc
-pkgconfig/gstreamer-dataprotocol-uninstalled.pc
 pkgconfig/gstreamer-net.pc
 pkgconfig/gstreamer-net-uninstalled.pc
 gst-element-check.m4

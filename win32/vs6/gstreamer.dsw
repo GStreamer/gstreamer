@@ -93,21 +93,6 @@ Package=<4>
 
 ###############################################################################
 
-Project: "libgstdataprotocol"=".\libgstdataprotocol.dsp" - Package Owner=<4>
-
-Package=<5>
-{{{
-}}}
-
-Package=<4>
-{{{
-    Begin Project Dependency
-    Project_Dep_Name libgstreamer
-    End Project Dependency
-}}}
-
-###############################################################################
-
 Project: "libgstnet"=".\libgstnet.dsp" - Package Owner=<4>
 
 Package=<5>

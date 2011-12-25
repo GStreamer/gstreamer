@@ -24,7 +24,7 @@ else
 SUBDIRS_HELPERS = helpers
 endif
 
-SUBDIRS_ALWAYS = base controller dataprotocol
+SUBDIRS_ALWAYS = base controller
 
 SUBDIRS = $(SUBDIRS_ALWAYS) $(SUBDIRS_CHECK) $(SUBDIRS_NET) $(SUBDIRS_HELPERS)
 DIST_SUBDIRS = $(SUBDIRS_ALWAYS) check net helpers

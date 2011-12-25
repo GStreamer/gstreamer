@@ -61,11 +61,6 @@
       <xi:include href="xml/gsttriggercontrolsource.xml" />
     </chapter>
 
-    <chapter id="gstreamer-dataprotocol">
-      <title>GStreamer Data Protocol</title>
-      <xi:include href="xml/gstdataprotocol.xml" />
-    </chapter>
-
     <chapter id="gstreamer-net">
       <title>GStreamer Network Classes</title>
       <para>

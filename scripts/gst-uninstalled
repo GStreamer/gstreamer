@@ -79,7 +79,7 @@ do
 done
 
 # GStreamer core libraries
-for path in base net check controller dataprotocol
+for path in base net check controller
 do
   LD_LIBRARY_PATH=$GST/gstreamer/libs/gst/$path/.libs:$LD_LIBRARY_PATH
   DYLD_LIBRARY_PATH=$GST/gstreamer/libs/gst/$path/.libs:$DYLD_LIBRARY_PATH
