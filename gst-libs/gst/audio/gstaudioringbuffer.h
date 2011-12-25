@@ -67,22 +67,6 @@ typedef enum {
 } GstAudioRingBufferState;
 
 /**
- * GstAudioRingBufferSegState:
- * @GST_SEGSTATE_INVALID: The content of the segment is invalid
- * @GST_SEGSTATE_EMPTY: The segment is empty
- * @GST_SEGSTATE_FILLED: The segment contains valid data
- * @GST_SEGSTATE_PARTIAL: The segment partially contains valid data
- *
- * The state of a segment in the ringbuffer.
- */
-typedef enum {
-  GST_SEGSTATE_INVALID,
-  GST_SEGSTATE_EMPTY,
-  GST_SEGSTATE_FILLED,
-  GST_SEGSTATE_PARTIAL
-} GstAudioRingBufferSegState;
-
-/**
  * GstBufferFormatType:
  * @GST_BUFTYPE_RAW: samples in linear or float
  * @GST_BUFTYPE_MU_LAW: samples in mulaw
@@ -193,7 +177,6 @@ struct _GstAudioRingBuffer {
   guint8                     *memory;
   gsize                       size;
   GstAudioRingBufferSpec      spec;
-  GstAudioRingBufferSegState *segstate;
   gint                        samples_per_seg;
   guint8                     *empty_seg;
 
