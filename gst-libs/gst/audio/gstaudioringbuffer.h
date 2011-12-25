@@ -67,37 +67,37 @@ typedef enum {
 } GstAudioRingBufferState;
 
 /**
- * GstBufferFormatType:
- * @GST_BUFTYPE_RAW: samples in linear or float
- * @GST_BUFTYPE_MU_LAW: samples in mulaw
- * @GST_BUFTYPE_A_LAW: samples in alaw
- * @GST_BUFTYPE_IMA_ADPCM: samples in ima adpcm
- * @GST_BUFTYPE_MPEG: samples in mpeg audio (but not AAC) format
- * @GST_BUFTYPE_GSM: samples in gsm format
- * @GST_BUFTYPE_IEC958: samples in IEC958 frames (e.g. AC3)
- * @GST_BUFTYPE_AC3: samples in AC3 format
- * @GST_BUFTYPE_EAC3: samples in EAC3 format
- * @GST_BUFTYPE_DTS: samples in DTS format
- * @GST_BUFTYPE_MPEG2_AAC: samples in MPEG-2 AAC format
- * @GST_BUFTYPE_MPEG4_AAC: samples in MPEG-4 AAC format
+ * GstAudioRingBufferFormatType:
+ * @GST_AUDIO_RING_BUFFER_FORMAT_TYPE_RAW: samples in linear or float
+ * @GST_AUDIO_RING_BUFFER_FORMAT_TYPE_MU_LAW: samples in mulaw
+ * @GST_AUDIO_RING_BUFFER_FORMAT_TYPE_A_LAW: samples in alaw
+ * @GST_AUDIO_RING_BUFFER_FORMAT_TYPE_IMA_ADPCM: samples in ima adpcm
+ * @GST_AUDIO_RING_BUFFER_FORMAT_TYPE_MPEG: samples in mpeg audio (but not AAC) format
+ * @GST_AUDIO_RING_BUFFER_FORMAT_TYPE_GSM: samples in gsm format
+ * @GST_AUDIO_RING_BUFFER_FORMAT_TYPE_IEC958: samples in IEC958 frames (e.g. AC3)
+ * @GST_AUDIO_RING_BUFFER_FORMAT_TYPE_AC3: samples in AC3 format
+ * @GST_AUDIO_RING_BUFFER_FORMAT_TYPE_EAC3: samples in EAC3 format
+ * @GST_AUDIO_RING_BUFFER_FORMAT_TYPE_DTS: samples in DTS format
+ * @GST_AUDIO_RING_BUFFER_FORMAT_TYPE_MPEG2_AAC: samples in MPEG-2 AAC format
+ * @GST_AUDIO_RING_BUFFER_FORMAT_TYPE_MPEG4_AAC: samples in MPEG-4 AAC format
  *
  * The format of the samples in the ringbuffer.
  */
 typedef enum
 {
-  GST_BUFTYPE_RAW,
-  GST_BUFTYPE_MU_LAW,
-  GST_BUFTYPE_A_LAW,
-  GST_BUFTYPE_IMA_ADPCM,
-  GST_BUFTYPE_MPEG,
-  GST_BUFTYPE_GSM,
-  GST_BUFTYPE_IEC958,
-  GST_BUFTYPE_AC3,
-  GST_BUFTYPE_EAC3,
-  GST_BUFTYPE_DTS,
-  GST_BUFTYPE_MPEG2_AAC,
-  GST_BUFTYPE_MPEG4_AAC,
-} GstBufferFormatType;
+  GST_AUDIO_RING_BUFFER_FORMAT_TYPE_RAW,
+  GST_AUDIO_RING_BUFFER_FORMAT_TYPE_MU_LAW,
+  GST_AUDIO_RING_BUFFER_FORMAT_TYPE_A_LAW,
+  GST_AUDIO_RING_BUFFER_FORMAT_TYPE_IMA_ADPCM,
+  GST_AUDIO_RING_BUFFER_FORMAT_TYPE_MPEG,
+  GST_AUDIO_RING_BUFFER_FORMAT_TYPE_GSM,
+  GST_AUDIO_RING_BUFFER_FORMAT_TYPE_IEC958,
+  GST_AUDIO_RING_BUFFER_FORMAT_TYPE_AC3,
+  GST_AUDIO_RING_BUFFER_FORMAT_TYPE_EAC3,
+  GST_AUDIO_RING_BUFFER_FORMAT_TYPE_DTS,
+  GST_AUDIO_RING_BUFFER_FORMAT_TYPE_MPEG2_AAC,
+  GST_AUDIO_RING_BUFFER_FORMAT_TYPE_MPEG4_AAC
+} GstAudioRingBufferFormatType;
 
 /**
  * GstAudioRingBufferSpec:
@@ -120,8 +120,8 @@ struct _GstAudioRingBufferSpec
   GstCaps  *caps;               /* the caps of the buffer */
 
   /* in/out */
-  GstBufferFormatType type;
-  GstAudioInfo        info;
+  GstAudioRingBufferFormatType  type;
+  GstAudioInfo                  info;
 
   guint64  latency_time;        /* the required/actual latency time, this is the
 				 * actual the size of one segment and the

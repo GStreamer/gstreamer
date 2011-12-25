@@ -209,14 +209,14 @@ gst_audio_ring_buffer_parse_caps (GstAudioRingBufferSpec * spec, GstCaps * caps)
     if (!gst_audio_info_from_caps (&info, caps))
       goto parse_error;
 
-    spec->type = GST_BUFTYPE_RAW;
+    spec->type = GST_AUDIO_RING_BUFFER_FORMAT_TYPE_RAW;
   } else if (g_str_equal (mimetype, "audio/x-alaw")) {
     /* extract the needed information from the cap */
     if (!(gst_structure_get_int (structure, "rate", &info.rate) &&
             gst_structure_get_int (structure, "channels", &info.channels)))
       goto parse_error;
 
-    spec->type = GST_BUFTYPE_A_LAW;
+    spec->type = GST_AUDIO_RING_BUFFER_FORMAT_TYPE_A_LAW;
     info.bpf = info.channels;
   } else if (g_str_equal (mimetype, "audio/x-mulaw")) {
     /* extract the needed information from the cap */
@@ -224,35 +224,35 @@ gst_audio_ring_buffer_parse_caps (GstAudioRingBufferSpec * spec, GstCaps * caps)
             gst_structure_get_int (structure, "channels", &info.channels)))
       goto parse_error;
 
-    spec->type = GST_BUFTYPE_MU_LAW;
+    spec->type = GST_AUDIO_RING_BUFFER_FORMAT_TYPE_MU_LAW;
     info.bpf = info.channels;
   } else if (g_str_equal (mimetype, "audio/x-iec958")) {
     /* extract the needed information from the cap */
     if (!(gst_structure_get_int (structure, "rate", &info.rate)))
       goto parse_error;
 
-    spec->type = GST_BUFTYPE_IEC958;
+    spec->type = GST_AUDIO_RING_BUFFER_FORMAT_TYPE_IEC958;
     info.bpf = 4;
   } else if (g_str_equal (mimetype, "audio/x-ac3")) {
     /* extract the needed information from the cap */
     if (!(gst_structure_get_int (structure, "rate", &info.rate)))
       goto parse_error;
 
-    spec->type = GST_BUFTYPE_AC3;
+    spec->type = GST_AUDIO_RING_BUFFER_FORMAT_TYPE_AC3;
     info.bpf = 4;
   } else if (g_str_equal (mimetype, "audio/x-eac3")) {
     /* extract the needed information from the cap */
     if (!(gst_structure_get_int (structure, "rate", &info.rate)))
       goto parse_error;
 
-    spec->type = GST_BUFTYPE_EAC3;
+    spec->type = GST_AUDIO_RING_BUFFER_FORMAT_TYPE_EAC3;
     info.bpf = 16;
   } else if (g_str_equal (mimetype, "audio/x-dts")) {
     /* extract the needed information from the cap */
     if (!(gst_structure_get_int (structure, "rate", &info.rate)))
       goto parse_error;
 
-    spec->type = GST_BUFTYPE_DTS;
+    spec->type = GST_AUDIO_RING_BUFFER_FORMAT_TYPE_DTS;
     info.bpf = 4;
   } else if (g_str_equal (mimetype, "audio/mpeg") &&
       gst_structure_get_int (structure, "mpegaudioversion", &i) &&
@@ -262,7 +262,7 @@ gst_audio_ring_buffer_parse_caps (GstAudioRingBufferSpec * spec, GstCaps * caps)
     if (!(gst_structure_get_int (structure, "rate", &info.rate)))
       goto parse_error;
 
-    spec->type = GST_BUFTYPE_MPEG;
+    spec->type = GST_AUDIO_RING_BUFFER_FORMAT_TYPE_MPEG;
     info.bpf = 4;
   } else {
     goto parse_error;
@@ -563,7 +563,7 @@ gst_audio_ring_buffer_acquire (GstAudioRingBuffer * buf,
   g_free (buf->empty_seg);
   buf->empty_seg = g_malloc (segsize);
 
-  if (buf->spec.type == GST_BUFTYPE_RAW) {
+  if (buf->spec.type == GST_AUDIO_RING_BUFFER_FORMAT_TYPE_RAW) {
     gst_audio_format_fill_silence (buf->spec.info.finfo, buf->empty_seg,
         segsize);
   } else {

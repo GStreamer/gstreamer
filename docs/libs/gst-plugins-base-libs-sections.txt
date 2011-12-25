@@ -384,7 +384,7 @@ GstAudioRingBufferSpec
 GstAudioRingBufferCallback
 GstAudioRingBufferSegState
 GstAudioRingBufferState
-GstBufferFormatType
+GstAudioRingBufferFormatType
 
 GST_AUDIO_RING_BUFFER_BROADCAST
 GST_AUDIO_RING_BUFFER_GET_COND

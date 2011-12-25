@@ -530,7 +530,7 @@ static gboolean
 alsasrc_parse_spec (GstAlsaSrc * alsa, GstAudioRingBufferSpec * spec)
 {
   switch (spec->type) {
-    case GST_BUFTYPE_RAW:
+    case GST_AUDIO_RING_BUFFER_FORMAT_TYPE_RAW:
       switch (GST_AUDIO_INFO_FORMAT (&spec->info)) {
         case GST_AUDIO_FORMAT_U8:
           alsa->format = SND_PCM_FORMAT_U8;
@@ -626,10 +626,10 @@ alsasrc_parse_spec (GstAlsaSrc * alsa, GstAudioRingBufferSpec * spec)
           goto error;
       }
       break;
-    case GST_BUFTYPE_A_LAW:
+    case GST_AUDIO_RING_BUFFER_FORMAT_TYPE_A_LAW:
       alsa->format = SND_PCM_FORMAT_A_LAW;
       break;
-    case GST_BUFTYPE_MU_LAW:
+    case GST_AUDIO_RING_BUFFER_FORMAT_TYPE_MU_LAW:
       alsa->format = SND_PCM_FORMAT_MU_LAW;
       break;
     default:

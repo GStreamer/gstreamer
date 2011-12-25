@@ -75,10 +75,10 @@ guint
 gst_audio_iec61937_frame_size (const GstAudioRingBufferSpec * spec)
 {
   switch (spec->type) {
-    case GST_BUFTYPE_AC3:
+    case GST_AUDIO_RING_BUFFER_FORMAT_TYPE_AC3:
       return IEC61937_PAYLOAD_SIZE_AC3;
 
-    case GST_BUFTYPE_EAC3:
+    case GST_AUDIO_RING_BUFFER_FORMAT_TYPE_EAC3:
       /* Check that the parser supports /some/ alignment. Need to be less
        * strict about this at checking time since the alignment is dynamically
        * set at the moment. */
@@ -87,7 +87,7 @@ gst_audio_iec61937_frame_size (const GstAudioRingBufferSpec * spec)
       else
         return 0;
 
-    case GST_BUFTYPE_DTS:
+    case GST_AUDIO_RING_BUFFER_FORMAT_TYPE_DTS:
     {
       gint dts_frame_size = caps_get_int_field (spec->caps, "frame-size");
       gint iec_frame_size = caps_get_int_field (spec->caps, "block-size") * 4;
@@ -99,7 +99,7 @@ gst_audio_iec61937_frame_size (const GstAudioRingBufferSpec * spec)
         return 0;
     }
 
-    case GST_BUFTYPE_MPEG:
+    case GST_AUDIO_RING_BUFFER_FORMAT_TYPE_MPEG:
     {
       int version, layer, channels, frames;
 
@@ -176,7 +176,7 @@ gst_audio_iec61937_payload (const guint8 * src, guint src_n, guint8 * dst,
   dst[three] = 0x1F;
 
   switch (spec->type) {
-    case GST_BUFTYPE_AC3:
+    case GST_AUDIO_RING_BUFFER_FORMAT_TYPE_AC3:
     {
       g_return_val_if_fail (src_n >= 6, FALSE);
 
@@ -196,7 +196,7 @@ gst_audio_iec61937_payload (const guint8 * src, guint src_n, guint8 * dst,
       break;
     }
 
-    case GST_BUFTYPE_EAC3:
+    case GST_AUDIO_RING_BUFFER_FORMAT_TYPE_EAC3:
     {
       if (g_str_equal (caps_get_string_field (spec->caps, "alignment"),
               "iec61937"))
@@ -218,7 +218,7 @@ gst_audio_iec61937_payload (const guint8 * src, guint src_n, guint8 * dst,
       break;
     }
 
-    case GST_BUFTYPE_DTS:
+    case GST_AUDIO_RING_BUFFER_FORMAT_TYPE_DTS:
     {
       int blocksize = caps_get_int_field (spec->caps, "block-size");
 
@@ -242,7 +242,7 @@ gst_audio_iec61937_payload (const guint8 * src, guint src_n, guint8 * dst,
       break;
     }
 
-    case GST_BUFTYPE_MPEG:
+    case GST_AUDIO_RING_BUFFER_FORMAT_TYPE_MPEG:
     {
       int version, layer;
 

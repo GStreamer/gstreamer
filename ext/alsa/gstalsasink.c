@@ -597,7 +597,7 @@ alsasink_parse_spec (GstAlsaSink * alsa, GstAudioRingBufferSpec * spec)
   alsa->iec958 = FALSE;
 
   switch (spec->type) {
-    case GST_BUFTYPE_RAW:
+    case GST_AUDIO_RING_BUFFER_FORMAT_TYPE_RAW:
       switch (GST_AUDIO_INFO_FORMAT (&spec->info)) {
         case GST_AUDIO_FORMAT_U8:
           alsa->format = SND_PCM_FORMAT_U8;
@@ -693,13 +693,13 @@ alsasink_parse_spec (GstAlsaSink * alsa, GstAudioRingBufferSpec * spec)
           goto error;
       }
       break;
-    case GST_BUFTYPE_A_LAW:
+    case GST_AUDIO_RING_BUFFER_FORMAT_TYPE_A_LAW:
       alsa->format = SND_PCM_FORMAT_A_LAW;
       break;
-    case GST_BUFTYPE_MU_LAW:
+    case GST_AUDIO_RING_BUFFER_FORMAT_TYPE_MU_LAW:
       alsa->format = SND_PCM_FORMAT_MU_LAW;
       break;
-    case GST_BUFTYPE_IEC958:
+    case GST_AUDIO_RING_BUFFER_FORMAT_TYPE_IEC958:
       alsa->format = SND_PCM_FORMAT_S16_BE;
       alsa->iec958 = TRUE;
       break;
@@ -764,7 +764,7 @@ gst_alsasink_prepare (GstAudioSink * asink, GstAudioRingBufferSpec * spec)
 
   alsa = GST_ALSA_SINK (asink);
 
-  if (spec->type == GST_BUFTYPE_IEC958) {
+  if (spec->type == GST_AUDIO_RING_BUFFER_FORMAT_TYPE_IEC958) {
     snd_pcm_close (alsa->handle);
     alsa->handle = gst_alsa_open_iec958_pcm (GST_OBJECT (alsa));
     if (G_UNLIKELY (!alsa->handle)) {
