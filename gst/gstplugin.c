@@ -123,15 +123,20 @@ static void
 gst_plugin_finalize (GObject * object)
 {
   GstPlugin *plugin = GST_PLUGIN_CAST (object);
-  GstRegistry *registry = gst_registry_get_default ();
-  GList *g;
 
   GST_DEBUG ("finalizing plugin %" GST_PTR_FORMAT, plugin);
+
+  /* FIXME: make registry add a weak ref instead */
+#if 0
+  GstRegistry *registry = gst_registry_get_default ();
+  GList *g;
   for (g = registry->plugins; g; g = g->next) {
     if (g->data == (gpointer) plugin) {
       g_warning ("removing plugin that is still in registry");
     }
   }
+#endif
+
   g_free (plugin->filename);
   g_free (plugin->basename);
 

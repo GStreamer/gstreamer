@@ -50,22 +50,8 @@ struct _GstRegistry {
   GstObject      object;
 
   /*< private >*/
-  GList *plugins;
-  GList *features;
-
-  GList *paths;
-
-  /* FIXME move these elsewhere */
-  int            cache_file;
-
-  /* hash to speedup _lookup_feature_locked() */
-  GHashTable *feature_hash;
-  /* hash to speedup _lookup */
-  GHashTable *basename_hash;
-
   GstRegistryPrivate *priv;
 
-  /*< private >*/
   gpointer _gst_reserved[GST_PADDING];
 };
 

@@ -126,7 +126,7 @@ gboolean  priv_gst_structure_append_to_gstring (const GstStructure * structure,
                                                 GString            * s);
 /* registry cache backends */
 gboolean		priv_gst_registry_binary_read_cache	(GstRegistry * registry, const char *location);
-gboolean		priv_gst_registry_binary_write_cache	(GstRegistry * registry, const char *location);
+gboolean		priv_gst_registry_binary_write_cache	(GstRegistry * registry, GList * plugins, const char *location);
 
 void      __gst_element_factory_add_static_pad_template (GstElementFactory    * elementfactory,
                                                          GstStaticPadTemplate * templ);
