@@ -362,8 +362,10 @@ gst_lamemp3enc_set_format (GstAudioEncoder * enc, GstAudioInfo * info)
       GST_SECOND, lame->samplerate);
   gst_audio_encoder_set_latency (enc, latency, latency);
 
-  if (tags)
+  if (tags) {
     gst_audio_encoder_merge_tags (enc, tags, GST_TAG_MERGE_REPLACE);
+    gst_tag_list_free (tags);
+  }
 
   return TRUE;
 
