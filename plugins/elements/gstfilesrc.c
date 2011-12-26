@@ -130,8 +130,7 @@ enum
 enum
 {
   PROP_0,
-  PROP_LOCATION,
-  PROP_FD
+  PROP_LOCATION
 };
 
 static void gst_file_src_finalize (GObject * object);
@@ -173,10 +172,6 @@ gst_file_src_class_init (GstFileSrcClass * klass)
   gobject_class->set_property = gst_file_src_set_property;
   gobject_class->get_property = gst_file_src_get_property;
 
-  g_object_class_install_property (gobject_class, PROP_FD,
-      g_param_spec_int ("fd", "File-descriptor",
-          "File-descriptor for the file being mmap()d", 0, G_MAXINT, 0,
-          G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_LOCATION,
       g_param_spec_string ("location", "File Location",
           "Location of the file to read", NULL,
@@ -304,9 +299,6 @@ gst_file_src_get_property (GObject * object, guint prop_id, GValue * value,
   switch (prop_id) {
     case PROP_LOCATION:
       g_value_set_string (value, src->filename);
-      break;
-    case PROP_FD:
-      g_value_set_int (value, src->fd);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
