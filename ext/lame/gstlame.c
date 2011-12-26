@@ -573,6 +573,7 @@ gst_lame_set_format (GstAudioEncoder * enc, GstAudioInfo * info)
         "output samplerate %d is different from incoming samplerate %d",
         out_samplerate, lame->samplerate);
   }
+  lame->out_samplerate = out_samplerate;
 
   version = lame_get_version (lame->lgf);
   if (version == 0)
@@ -663,6 +664,10 @@ gst_lame_start (GstAudioEncoder * enc)
 {
   GstLame *lame = GST_LAME (enc);
 
+  if (!lame->adapter)
+    lame->adapter = gst_adapter_new ();
+  gst_adapter_clear (lame->adapter);
+
   GST_DEBUG_OBJECT (lame, "start");
   return TRUE;
 }
@@ -673,6 +678,11 @@ gst_lame_stop (GstAudioEncoder * enc)
   GstLame *lame = GST_LAME (enc);
 
   GST_DEBUG_OBJECT (lame, "stop");
+
+  if (lame->adapter) {
+    g_object_unref (lame->adapter);
+    lame->adapter = NULL;
+  }
 
   gst_lame_release_memory (lame);
   return TRUE;
@@ -944,12 +954,209 @@ gst_lame_get_property (GObject * object, guint prop_id, GValue * value,
   }
 }
 
+/* **** credits go to mpegaudioparse **** */
+
+static const guint mp3types_bitrates[2][3][16] = {
+  {
+        {0, 32, 64, 96, 128, 160, 192, 224, 256, 288, 320, 352, 384, 416, 448,},
+        {0, 32, 48, 56, 64, 80, 96, 112, 128, 160, 192, 224, 256, 320, 384,},
+        {0, 32, 40, 48, 56, 64, 80, 96, 112, 128, 160, 192, 224, 256, 320,}
+      },
+  {
+        {0, 32, 48, 56, 64, 80, 96, 112, 128, 144, 160, 176, 192, 224, 256,},
+        {0, 8, 16, 24, 32, 40, 48, 56, 64, 80, 96, 112, 128, 144, 160,},
+        {0, 8, 16, 24, 32, 40, 48, 56, 64, 80, 96, 112, 128, 144, 160,}
+      },
+};
+
+static const guint mp3types_freqs[3][3] = { {44100, 48000, 32000},
+{22050, 24000, 16000},
+{11025, 12000, 8000}
+};
+
+static inline guint
+mp3_type_frame_length_from_header (GstLame * lame, guint32 header,
+    guint * put_version, guint * put_layer, guint * put_channels,
+    guint * put_bitrate, guint * put_samplerate, guint * put_mode,
+    guint * put_crc)
+{
+  guint length;
+  gulong mode, samplerate, bitrate, layer, channels, padding, crc;
+  gulong version;
+  gint lsf, mpg25;
+
+  if (header & (1 << 20)) {
+    lsf = (header & (1 << 19)) ? 0 : 1;
+    mpg25 = 0;
+  } else {
+    lsf = 1;
+    mpg25 = 1;
+  }
+
+  version = 1 + lsf + mpg25;
+
+  layer = 4 - ((header >> 17) & 0x3);
+
+  crc = (header >> 16) & 0x1;
+
+  bitrate = (header >> 12) & 0xF;
+  bitrate = mp3types_bitrates[lsf][layer - 1][bitrate] * 1000;
+  /* The caller has ensured we have a valid header, so bitrate can't be
+     zero here. */
+  g_assert (bitrate != 0);
+
+  samplerate = (header >> 10) & 0x3;
+  samplerate = mp3types_freqs[lsf + mpg25][samplerate];
+
+  padding = (header >> 9) & 0x1;
+
+  mode = (header >> 6) & 0x3;
+  channels = (mode == 3) ? 1 : 2;
+
+  switch (layer) {
+    case 1:
+      length = 4 * ((bitrate * 12) / samplerate + padding);
+      break;
+    case 2:
+      length = (bitrate * 144) / samplerate + padding;
+      break;
+    default:
+    case 3:
+      length = (bitrate * 144) / (samplerate << lsf) + padding;
+      break;
+  }
+
+  GST_DEBUG_OBJECT (lame, "Calculated mp3 frame length of %u bytes", length);
+  GST_DEBUG_OBJECT (lame, "samplerate = %lu, bitrate = %lu, version = %lu, "
+      "layer = %lu, channels = %lu", samplerate, bitrate, version,
+      layer, channels);
+
+  if (put_version)
+    *put_version = version;
+  if (put_layer)
+    *put_layer = layer;
+  if (put_channels)
+    *put_channels = channels;
+  if (put_bitrate)
+    *put_bitrate = bitrate;
+  if (put_samplerate)
+    *put_samplerate = samplerate;
+  if (put_mode)
+    *put_mode = mode;
+  if (put_crc)
+    *put_crc = crc;
+
+  return length;
+}
+
+static gboolean
+mp3_sync_check (GstLame * lame, unsigned long head)
+{
+  GST_DEBUG_OBJECT (lame, "checking mp3 header 0x%08lx", head);
+  /* if it's not a valid sync */
+  if ((head & 0xffe00000) != 0xffe00000) {
+    GST_WARNING_OBJECT (lame, "invalid sync");
+    return FALSE;
+  }
+  /* if it's an invalid MPEG version */
+  if (((head >> 19) & 3) == 0x1) {
+    GST_WARNING_OBJECT (lame, "invalid MPEG version: 0x%lx", (head >> 19) & 3);
+    return FALSE;
+  }
+  /* if it's an invalid layer */
+  if (!((head >> 17) & 3)) {
+    GST_WARNING_OBJECT (lame, "invalid layer: 0x%lx", (head >> 17) & 3);
+    return FALSE;
+  }
+  /* if it's an invalid bitrate */
+  if (((head >> 12) & 0xf) == 0x0) {
+    GST_WARNING_OBJECT (lame, "invalid bitrate: 0x%lx."
+        "Free format files are not supported yet", (head >> 12) & 0xf);
+    return FALSE;
+  }
+  if (((head >> 12) & 0xf) == 0xf) {
+    GST_WARNING_OBJECT (lame, "invalid bitrate: 0x%lx", (head >> 12) & 0xf);
+    return FALSE;
+  }
+  /* if it's an invalid samplerate */
+  if (((head >> 10) & 0x3) == 0x3) {
+    GST_WARNING_OBJECT (lame, "invalid samplerate: 0x%lx", (head >> 10) & 0x3);
+    return FALSE;
+  }
+
+  if ((head & 0x3) == 0x2) {
+    /* Ignore this as there are some files with emphasis 0x2 that can
+     * be played fine. See BGO #537235 */
+    GST_WARNING_OBJECT (lame, "invalid emphasis: 0x%lx", head & 0x3);
+  }
+
+  return TRUE;
+}
+
+/* **** end mpegaudioparse **** */
+
+static GstFlowReturn
+gst_lame_finish_frames (GstLame * lame)
+{
+  gint av;
+  guint header;
+  GstFlowReturn result = GST_FLOW_OK;
+
+  /* limited parsing, we don't expect to lose sync here */
+  while ((result == GST_FLOW_OK) &&
+      ((av = gst_adapter_available (lame->adapter)) > 4)) {
+    guint rate, version, layer, size;
+    GstBuffer *mp3_buf;
+    const guint8 *data;
+
+    data = gst_adapter_peek (lame->adapter, 4);
+    header = GST_READ_UINT32_BE (data);
+    if (!mp3_sync_check (lame, header))
+      goto invalid_header;
+
+    size = mp3_type_frame_length_from_header (lame, header, &version, &layer,
+        NULL, NULL, &rate, NULL, NULL);
+
+    if (G_UNLIKELY (layer != 3 || rate != lame->out_samplerate)) {
+      GST_DEBUG_OBJECT (lame,
+          "unexpected mp3 header with (rate, layer): (%u, %u)",
+          rate, version, layer);
+      goto invalid_header;
+    }
+
+    if (size > av) {
+      /* pretty likely to occur when lame is holding back on us */
+      GST_LOG_OBJECT (lame, "frame size %u (> %d)", size, av);
+      break;
+    }
+
+    /* should be ok now */
+    mp3_buf = gst_adapter_take_buffer (lame->adapter, size);
+    /* number of samples for MPEG-1, layer 3 */
+    result = gst_audio_encoder_finish_frame (GST_AUDIO_ENCODER (lame),
+        mp3_buf, version == 1 ? 1152 : 576);
+  }
+
+exit:
+  return result;
+
+  /* ERRORS */
+invalid_header:
+  {
+    GST_ELEMENT_ERROR (lame, STREAM, ENCODE,
+        ("invalid lame mp3 sync header %08X", header), (NULL));
+    result = GST_FLOW_ERROR;
+    goto exit;
+  }
+}
+
 static GstFlowReturn
 gst_lame_flush_full (GstLame * lame, gboolean push)
 {
   GstBuffer *buf;
   gint size;
   GstFlowReturn result = GST_FLOW_OK;
+  gint av;
 
   if (!lame->lgf)
     return GST_FLOW_OK;
@@ -957,15 +1164,31 @@ gst_lame_flush_full (GstLame * lame, gboolean push)
   buf = gst_buffer_new_and_alloc (7200);
   size = lame_encode_flush (lame->lgf, GST_BUFFER_DATA (buf), 7200);
 
-  if (size > 0 && push) {
+  if (size > 0) {
     GST_BUFFER_SIZE (buf) = size;
-    GST_DEBUG_OBJECT (lame, "pushing final packet of %u bytes", size);
-    result = gst_audio_encoder_finish_frame (GST_AUDIO_ENCODER (lame), buf, -1);
+    GST_DEBUG_OBJECT (lame, "collecting final %d bytes", size);
+    gst_adapter_push (lame->adapter, buf);
   } else {
     GST_DEBUG_OBJECT (lame, "no final packet (size=%d, push=%d)", size, push);
     gst_buffer_unref (buf);
     result = GST_FLOW_OK;
   }
+
+  if (push) {
+    result = gst_lame_finish_frames (lame);
+  } else {
+    /* never mind */
+    gst_adapter_clear (lame->adapter);
+  }
+
+  /* either way, we expect nothing left */
+  if ((av = gst_adapter_available (lame->adapter))) {
+    /* should this be more fatal ?? */
+    GST_WARNING_OBJECT (lame, "unparsed %d bytes left after flushing", av);
+    /* clean up anyway */
+    gst_adapter_clear (lame->adapter);
+  }
+
   return result;
 }
 
@@ -1023,7 +1246,10 @@ gst_lame_handle_frame (GstAudioEncoder * enc, GstBuffer * buf)
 
   if (G_LIKELY (mp3_size > 0)) {
     GST_BUFFER_SIZE (mp3_buf) = mp3_size;
-    result = gst_audio_encoder_finish_frame (enc, mp3_buf, -1);
+    /* unfortunately lame does not provide frame delineated output,
+     * so collect output and parse into frames ... */
+    gst_adapter_push (lame->adapter, mp3_buf);
+    result = gst_lame_finish_frames (lame);
   } else {
     if (mp3_size < 0) {
       /* eat error ? */

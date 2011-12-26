@@ -28,6 +28,7 @@ G_BEGIN_DECLS
 
 #include <lame/lame.h>
 #include <gst/audio/gstaudioencoder.h>
+#include <gst/base/gstadapter.h>
 
 #define GST_TYPE_LAME \
   (gst_lame_get_type())
@@ -54,6 +55,7 @@ struct _GstLame {
   /*< private >*/
 
   gint samplerate;
+  gint out_samplerate;
   gint num_channels;
   gboolean setup;
 
@@ -91,6 +93,8 @@ struct _GstLame {
   gint preset;
 
   lame_global_flags *lgf;
+
+  GstAdapter *adapter;
 };
 
 struct _GstLameClass {
