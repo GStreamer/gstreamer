@@ -444,6 +444,12 @@ int main ()
   AC_SUBST(HAVE_DIRECTSOUND)
 ])
 
+dnl *** Win32 WaveOut ***
+translit(dnm, m, l) AM_CONDITIONAL(USE_WAVEFORM, true)
+AG_GST_CHECK_FEATURE(WAVEFORM, [Win32 WaveForm], waveformsink, [
+  AC_CHECK_HEADER(mmsystem.h, HAVE_WAVEFORM="yes", HAVE_WAVEFORM="no", [#include <windows.h>])
+])
+
 dnl *** OSS audio *** (Linux, *BSD)
 translit(dnm, m, l) AM_CONDITIONAL(USE_OSS, true)
 AG_GST_CHECK_FEATURE(OSS, [OSS audio], ossaudio, [
@@ -1046,6 +1052,7 @@ AM_CONDITIONAL(USE_SOUP, false)
 AM_CONDITIONAL(USE_SPEEX, false)
 AM_CONDITIONAL(USE_SUNAUDIO, false)
 AM_CONDITIONAL(USE_TAGLIB, false)
+AM_CONDITIONAL(USE_WAVEFORM, false)
 AM_CONDITIONAL(USE_WAVPACK, false)
 AM_CONDITIONAL(USE_X, false)
 AM_CONDITIONAL(USE_XSHM, false)
