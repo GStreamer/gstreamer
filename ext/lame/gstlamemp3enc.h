@@ -25,6 +25,7 @@
 
 #include <gst/gst.h>
 #include <gst/audio/gstaudioencoder.h>
+#include <gst/base/gstadapter.h>
 
 G_BEGIN_DECLS
 
@@ -54,6 +55,7 @@ struct _GstLameMP3Enc {
 
   /*< private >*/
   gint samplerate;
+  gint out_samplerate;
   gint num_channels;
 
   /* properties */
@@ -65,6 +67,8 @@ struct _GstLameMP3Enc {
   gboolean mono;
 
   lame_global_flags *lgf;
+
+  GstAdapter *adapter;
 };
 
 struct _GstLameMP3EncClass {
