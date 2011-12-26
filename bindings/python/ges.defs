@@ -541,6 +541,16 @@
   (return-type "gboolean")
 )
 
+(define-function version
+  (c-name "ges_version")
+  (return-type "none")
+  (parameters
+    '("guint*" "major")
+    '("guint*" "minor")
+    '("guint*" "micro")
+    '("guint*" "nano")
+  )
+)
 
 
 ;; From ges-internal.h

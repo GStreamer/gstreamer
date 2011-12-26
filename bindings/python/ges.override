@@ -417,6 +417,25 @@ _wrap_ges_track_object_list_children_properties (PyGObject *self)
 }
 
 %%
+override ges_version noargs
+static PyObject *
+_wrap_ges_version (PyObject *self)
+{
+    guint	major, minor, micro, nano;
+    PyObject	*py_tuple;
+
+    ges_version (&major, &minor, &micro, &nano);
+    py_tuple = PyTuple_New(4);
+    PyTuple_SetItem(py_tuple, 0, PyInt_FromLong(major));
+    PyTuple_SetItem(py_tuple, 1, PyInt_FromLong(minor));
+    PyTuple_SetItem(py_tuple, 2, PyInt_FromLong(micro));
+    PyTuple_SetItem(py_tuple, 3, PyInt_FromLong(nano));
+
+    return py_tuple;
+}
+
+
+%%
 ignore-glob
 
   *_get_type

@@ -4,6 +4,7 @@
 <FILE>ges-common</FILE>
 <TITLE>Initialization</TITLE>
 ges_init
+ges_version
 <SUBSECTION Standard>
 GES_PADDING
 </SECTION>
