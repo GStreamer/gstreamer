@@ -45,6 +45,55 @@
 #include <gobject/gvaluecollector.h>
 #include "gstutils.h"
 
+/* GstValueUnionFunc:
+ * @dest: a #GValue for the result
+ * @value1: a #GValue operand
+ * @value2: a #GValue operand
+ *
+ * Used by gst_value_union() to perform unification for a specific #GValue
+ * type. Register a new implementation with gst_value_register_union_func().
+ *
+ * Returns: %TRUE if a union was successful
+ */
+typedef gboolean (*GstValueUnionFunc) (GValue * dest,
+    const GValue * value1, const GValue * value2);
+
+/* GstValueIntersectFunc:
+ * @dest: (out caller-allocates): a #GValue for the result
+ * @value1: a #GValue operand
+ * @value2: a #GValue operand
+ *
+ * Used by gst_value_intersect() to perform intersection for a specific #GValue
+ * type. If the intersection is non-empty, the result is
+ * placed in @dest and TRUE is returned.  If the intersection is
+ * empty, @dest is unmodified and FALSE is returned.
+ * Register a new implementation with gst_value_register_intersect_func().
+ *
+ * Returns: %TRUE if the values can intersect
+ */
+typedef gboolean (*GstValueIntersectFunc) (GValue * dest,
+    const GValue * value1, const GValue * value2);
+
+/* GstValueSubtractFunc:
+ * @dest: (out caller-allocates): a #GValue for the result
+ * @minuend: a #GValue operand
+ * @subtrahend: a #GValue operand
+ *
+ * Used by gst_value_subtract() to perform subtraction for a specific #GValue
+ * type. Register a new implementation with gst_value_register_subtract_func().
+ *
+ * Returns: %TRUE if the subtraction is not empty
+ */
+typedef gboolean (*GstValueSubtractFunc) (GValue * dest,
+    const GValue * minuend, const GValue * subtrahend);
+
+static void gst_value_register_union_func (GType type1,
+    GType type2, GstValueUnionFunc func);
+static void gst_value_register_intersect_func (GType type1,
+    GType type2, GstValueIntersectFunc func);
+static void gst_value_register_subtract_func (GType minuend_type,
+    GType subtrahend_type, GstValueSubtractFunc func);
+
 typedef struct _GstValueUnionInfo GstValueUnionInfo;
 struct _GstValueUnionInfo
 {
@@ -4119,8 +4168,7 @@ gst_value_union (GValue * dest, const GValue * value1, const GValue * value2)
   return TRUE;
 }
 
-/**
- * gst_value_register_union_func: (skip)
+/* gst_value_register_union_func: (skip)
  * @type1: a type to union
  * @type2: another type to union
  * @func: a function that implements creating a union between the two types
@@ -4132,7 +4180,7 @@ gst_value_union (GValue * dest, const GValue * value1, const GValue * value2)
  * started, as gst_value_register_union_func() is not thread-safe and cannot
  * be used at the same time as gst_value_union() or gst_value_can_union().
  */
-void
+static void
 gst_value_register_union_func (GType type1, GType type2, GstValueUnionFunc func)
 {
   GstValueUnionInfo union_info;
@@ -4253,8 +4301,7 @@ gst_value_intersect (GValue * dest, const GValue * value1,
 
 
 
-/**
- * gst_value_register_intersect_func: (skip)
+/* gst_value_register_intersect_func: (skip)
  * @type1: the first type to intersect
  * @type2: the second type to intersect
  * @func: the intersection function
@@ -4267,7 +4314,7 @@ gst_value_intersect (GValue * dest, const GValue * value1,
  * cannot be used at the same time as gst_value_intersect() or
  * gst_value_can_intersect().
  */
-void
+static void
 gst_value_register_intersect_func (GType type1, GType type2,
     GstValueIntersectFunc func)
 {
@@ -4387,8 +4434,7 @@ gst_value_can_subtract (const GValue * minuend, const GValue * subtrahend)
   return gst_value_can_compare (minuend, subtrahend);
 }
 
-/**
- * gst_value_register_subtract_func: (skip)
+/* gst_value_register_subtract_func: (skip)
  * @minuend_type: type of the minuend
  * @subtrahend_type: type of the subtrahend
  * @func: function to use
@@ -4400,7 +4446,7 @@ gst_value_can_subtract (const GValue * minuend, const GValue * subtrahend)
  * started, as gst_value_register_subtract_func() is not thread-safe and
  * cannot be used at the same time as gst_value_subtract().
  */
-void
+static void
 gst_value_register_subtract_func (GType minuend_type, GType subtrahend_type,
     GstValueSubtractFunc func)
 {

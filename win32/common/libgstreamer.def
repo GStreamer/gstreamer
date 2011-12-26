@@ -1195,9 +1195,6 @@ EXPORTS
 	gst_value_list_merge
 	gst_value_list_prepend_value
 	gst_value_register
-	gst_value_register_intersect_func
-	gst_value_register_subtract_func
-	gst_value_register_union_func
 	gst_value_serialize
 	gst_value_set_bitmask
 	gst_value_set_caps

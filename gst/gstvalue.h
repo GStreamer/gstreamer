@@ -361,54 +361,6 @@ typedef gchar *  (* GstValueSerializeFunc)   (const GValue *value1);
 typedef gboolean (* GstValueDeserializeFunc) (GValue       *dest,
                                               const gchar  *s);
 
-/**
- * GstValueUnionFunc:
- * @dest: a #GValue for the result
- * @value1: a #GValue operand
- * @value2: a #GValue operand
- *
- * Used by gst_value_union() to perform unification for a specific #GValue
- * type. Register a new implementation with gst_value_register_union_func().
- *
- * Returns: %TRUE if a union was successful
- */
-typedef gboolean (* GstValueUnionFunc)       (GValue       *dest,
-                                              const GValue *value1,
-                                              const GValue *value2);
-
-/**
- * GstValueIntersectFunc:
- * @dest: (out caller-allocates): a #GValue for the result
- * @value1: a #GValue operand
- * @value2: a #GValue operand
- *
- * Used by gst_value_intersect() to perform intersection for a specific #GValue
- * type. If the intersection is non-empty, the result is
- * placed in @dest and TRUE is returned.  If the intersection is
- * empty, @dest is unmodified and FALSE is returned.
- * Register a new implementation with gst_value_register_intersect_func().
- *
- * Returns: %TRUE if the values can intersect
- */
-typedef gboolean (* GstValueIntersectFunc)   (GValue       *dest,
-                                              const GValue *value1,
-                                              const GValue *value2);
-
-/**
- * GstValueSubtractFunc:
- * @dest: (out caller-allocates): a #GValue for the result
- * @minuend: a #GValue operand
- * @subtrahend: a #GValue operand
- *
- * Used by gst_value_subtract() to perform subtraction for a specific #GValue
- * type. Register a new implementation with gst_value_register_subtract_func().
- *
- * Returns: %TRUE if the subtraction is not empty
- */
-typedef gboolean (* GstValueSubtractFunc)    (GValue       *dest,
-                                              const GValue *minuend,
-                                              const GValue *subtrahend);
-
 typedef struct _GstValueTable GstValueTable;
 /**
  * GstValueTable:
@@ -558,9 +510,6 @@ gboolean        gst_value_union                 (GValue         *dest,
                                                  const GValue   *value2);
 gboolean        gst_value_can_union             (const GValue   *value1,
                                                  const GValue   *value2);
-void            gst_value_register_union_func   (GType          type1,
-                                                 GType          type2,
-                                                 GstValueUnionFunc func);
 
 /* intersection */
 gboolean        gst_value_intersect             (GValue         *dest,
@@ -568,9 +517,6 @@ gboolean        gst_value_intersect             (GValue         *dest,
                                                  const GValue   *value2);
 gboolean        gst_value_can_intersect         (const GValue   *value1,
                                                  const GValue   *value2);
-void            gst_value_register_intersect_func (GType        type1,
-                                                GType           type2,
-                                                GstValueIntersectFunc func);
 
 /* subtraction */
 gboolean        gst_value_subtract              (GValue         *dest,
@@ -578,9 +524,6 @@ gboolean        gst_value_subtract              (GValue         *dest,
                                                  const GValue   *subtrahend);
 gboolean        gst_value_can_subtract          (const GValue   *minuend,
                                                  const GValue   *subtrahend);
-void            gst_value_register_subtract_func (GType         minuend_type,
-                                                GType           subtrahend_type,
-                                                GstValueSubtractFunc func);
 
 /* fixation */
 gboolean        gst_value_is_fixed              (const GValue   *value);
