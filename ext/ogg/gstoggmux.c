@@ -467,7 +467,6 @@ gst_ogg_mux_request_new_pad (GstElement * element,
       ogg_mux->active_pads++;
 
       oggpad->map.serialno = serial;
-      ogg_stream_init (&oggpad->map.stream, oggpad->map.serialno);
       oggpad->packetno = 0;
       oggpad->pageno = 0;
       oggpad->eos = FALSE;
@@ -477,11 +476,17 @@ gst_ogg_mux_request_new_pad (GstElement * element,
       oggpad->first_delta = FALSE;
       oggpad->prev_delta = FALSE;
       oggpad->data_pushed = FALSE;
-      oggpad->pagebuffers = g_queue_new ();
       oggpad->map.headers = NULL;
       oggpad->map.queued = NULL;
       oggpad->next_granule = 0;
       oggpad->keyframe_granule = -1;
+
+      if (GST_STATE (ogg_mux) > GST_STATE_READY) {
+        /* This will be initialized in init_collectpads when going from ready
+         * paused state */
+        ogg_stream_init (&oggpad->map.stream, oggpad->map.serialno);
+        oggpad->pagebuffers = g_queue_new ();
+      }
 
       gst_segment_init (&oggpad->segment, GST_FORMAT_TIME);
 
