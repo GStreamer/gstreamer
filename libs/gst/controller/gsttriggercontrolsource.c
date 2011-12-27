@@ -79,9 +79,7 @@ _interpolate_trigger (GstTimedValueControlSource * self, GSequenceIter * iter,
   if (found) {
     return cp->value;
   }
-
-  g_warning ("FIXME: _interpolate_trigger return value");
-  return 0.0;                   /* FIXME */
+  return FP_NAN;
 }
 
 static gboolean
@@ -97,7 +95,8 @@ interpolate_trigger_get (GstTimedValueControlSource * self,
       gst_timed_value_control_source_find_control_point_iter (self, timestamp);
   if (iter) {
     *value = _interpolate_trigger (self, iter, timestamp);
-    ret = TRUE;
+    if (!isnan (*value))
+      ret = TRUE;
   }
   g_mutex_unlock (self->lock);
   return ret;
@@ -141,7 +140,8 @@ interpolate_trigger_get_value_array (GstTimedValueControlSource * self,
 
       if (iter1) {
         val = _interpolate_trigger (self, iter1, ts);
-        ret = TRUE;
+        if (!isnan (val))
+          ret = TRUE;
       } else {
         g_mutex_unlock (self->lock);
         return FALSE;
@@ -150,7 +150,8 @@ interpolate_trigger_get_value_array (GstTimedValueControlSource * self,
     } else if (triggered) {
       if (iter1) {
         val = _interpolate_trigger (self, iter1, ts);
-        ret = TRUE;
+        if (!isnan (val))
+          ret = TRUE;
       } else {
         g_mutex_unlock (self->lock);
         return FALSE;
