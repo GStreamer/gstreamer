@@ -248,7 +248,7 @@ video_buffer_pool_alloc (GstBufferPool * pool, GstBuffer ** buffer,
 
   info = &priv->info;
 
-  GST_DEBUG_OBJECT (pool, "alloc %u", info->size);
+  GST_DEBUG_OBJECT (pool, "alloc %" G_GSIZE_FORMAT, info->size);
 
   mem =
       gst_allocator_alloc (priv->allocator, info->size + priv->prefix,
