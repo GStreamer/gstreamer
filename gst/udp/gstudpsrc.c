@@ -491,7 +491,8 @@ retry:
   if (G_UNLIKELY (!readsize)) {
     /* try to read a packet (and it will be ignored),
      * in case a packet with no data arrived */
-    recvfrom (udpsrc->sock.fd, (char *)&slen, 0, 0, &sa.sa, &slen);
+    slen = sizeof (sa);
+    recvfrom (udpsrc->sock.fd, (char *) &slen, 0, 0, &sa.sa, &slen);
 
     /* clear any error, in case a poll error occurred */
     clear_error (udpsrc);
