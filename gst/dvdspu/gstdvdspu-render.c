@@ -85,10 +85,13 @@ gstspu_blend_comp_buffers (SpuState * state, guint8 * planes[3])
      * inverse alpha is (4 * 0xff) - in_A[x] */
     guint16 inv_A = (4 * 0xff) - in_A[x];
 
-    tmp = in_U[x] + inv_A * out_U[x];
-    out_U[x] = (guint8) (tmp / (4 * 0xff));
+    tmp = in_U[x] + inv_A * *out_U;
+    *out_U = (guint8) (tmp / (4 * 0xff));
 
-    tmp = in_V[x] + inv_A * out_V[x];
-    out_V[x] = (guint8) (tmp / (4 * 0xff));
+    tmp = in_V[x] + inv_A * *out_V;
+    *out_V = (guint8) (tmp / (4 * 0xff));
+
+    out_U += GST_VIDEO_INFO_COMP_PSTRIDE (&state->info, 1);
+    out_V += GST_VIDEO_INFO_COMP_PSTRIDE (&state->info, 2);
   }
 }

@@ -61,17 +61,15 @@ static GstStaticPadTemplate video_sink_factory =
 GST_STATIC_PAD_TEMPLATE ("video",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("video/x-raw, " "format = (string) { I420 }, "
+    GST_STATIC_CAPS ("video/x-raw, " "format = (string) { I420, NV12, YV12 }, "
         "width = (int) [ 16, 4096 ], " "height = (int) [ 16, 4096 ]")
-    /* FIXME: Can support YV12 one day too */
     );
 
 static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("video/x-raw, " "format = (string) { I420 }, "
+    GST_STATIC_CAPS ("video/x-raw, " "format = (string) { I420, NV12, YV12 }, "
         "width = (int) [ 16, 4096 ], " "height = (int) [ 16, 4096 ]")
-    /* FIXME: Can support YV12 one day too */
     );
 
 static GstStaticPadTemplate subpic_sink_factory =
