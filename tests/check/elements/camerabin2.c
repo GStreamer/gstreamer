@@ -347,6 +347,7 @@ extract_jpeg_tags (const gchar * filename, gint num)
   gst_object_unref (bus);
   g_source_remove (source);
   gst_object_unref (pipeline);
+  g_main_loop_unref (loop);
 }
 
 static void
@@ -563,6 +564,7 @@ check_file_validity (const gchar * filename, gint num, GstTagList * taglist,
   g_source_remove (source);
   gst_object_unref (bus);
   gst_object_unref (playbin);
+  g_main_loop_unref (loop);
 
   return TRUE;
 }
