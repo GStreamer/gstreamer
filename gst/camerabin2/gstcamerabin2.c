@@ -1964,6 +1964,9 @@ gst_camera_bin_send_event (GstElement * element, GstEvent * event)
   GstCameraBin2 *camera = GST_CAMERA_BIN2_CAST (element);
   gboolean res;
 
+  /* avoid losing our ref to send_event */
+  gst_event_ref (event);
+
   res = GST_ELEMENT_CLASS (parent_class)->send_event (element, event);
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_EOS:
@@ -1989,6 +1992,7 @@ gst_camera_bin_send_event (GstElement * element, GstEvent * event)
       break;
   }
 
+  gst_event_unref (event);
   return res;
 }
 
