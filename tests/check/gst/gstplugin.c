@@ -50,26 +50,35 @@ GST_END_TEST;
 
 GST_START_TEST (test_registry)
 {
-  GList *g;
+  GList *list, *g;
   GstRegistry *registry;
 
   registry = gst_registry_get_default ();
 
-  for (g = registry->plugins; g; g = g->next) {
+  list = gst_registry_get_plugin_list (registry);
+  for (g = list; g; g = g->next) {
     GstPlugin *plugin = GST_PLUGIN (g->data);
 
-    ASSERT_OBJECT_REFCOUNT (plugin, "plugin in registry", 1);
+    /* one for the registry, one for the list */
     GST_DEBUG ("refcount %d %s", GST_OBJECT_REFCOUNT_VALUE (plugin),
         plugin->desc.name);
+    ASSERT_OBJECT_REFCOUNT (plugin, "plugin in registry", 2);
+
+    gst_object_unref (plugin);
   }
-  for (g = registry->features; g; g = g->next) {
+  g_list_free (list);
+
+  list = gst_registry_feature_filter (registry, NULL, FALSE, NULL);
+  for (g = list; g; g = g->next) {
     GstPluginFeature *feature = GST_PLUGIN_FEATURE (g->data);
 
-    fail_if (GST_OBJECT_REFCOUNT_VALUE (feature) != 1,
-        "Feature in registry should have refcount of 1");
+    /* one for the registry, one for the list */
     GST_DEBUG ("refcount %d %s", GST_OBJECT_REFCOUNT_VALUE (feature),
         GST_OBJECT_NAME (feature));
+    ASSERT_OBJECT_REFCOUNT (feature, "feature in registry", 2);
+    gst_object_unref (feature);
   }
+  g_list_free (list);
 }
 
 GST_END_TEST;
