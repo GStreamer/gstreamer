@@ -53,6 +53,7 @@ souphttpsrc
 spectrum
 sunaudio
 udpsink
+udpsrc
 videocrop
 videofilter
 wavpackdec
