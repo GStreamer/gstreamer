@@ -1119,7 +1119,7 @@ gst_lame_finish_frames (GstLame * lame)
 
     if (G_UNLIKELY (layer != 3 || rate != lame->out_samplerate)) {
       GST_DEBUG_OBJECT (lame,
-          "unexpected mp3 header with (rate, layer): (%u, %u)",
+          "unexpected mp3 header with rate %u, version %u, layer %u",
           rate, version, layer);
       goto invalid_header;
     }
