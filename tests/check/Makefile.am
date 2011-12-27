@@ -147,6 +147,7 @@ check_PROGRAMS = \
 	elements/shapewipe \
 	elements/spectrum \
 	elements/udpsink \
+	elements/udpsrc \
 	elements/videocrop \
 	elements/videofilter \
 	elements/y4menc \
@@ -260,6 +261,9 @@ elements_sunaudio_CFLAGS = \
 elements_sunaudio_LDADD = \
 	$(GST_PLUGINS_BASE_LIBS) -lgstinterfaces-@GST_MAJORMINOR@ \
 	$(LDADD)
+
+elements_udpsrc_CFLAGS = $(AM_CFLAGS) $(GIO_CFLAGS)
+elements_udpsrc_LDADD = $(LDADD) $(GIO_LIBS)
 
 elements_videocrop_LDADD = $(GST_BASE_LIBS) $(LDADD)
 elements_videocrop_CFLAGS = $(GST_BASE_CFLAGS) $(CFLAGS) $(AM_CFLAGS)
