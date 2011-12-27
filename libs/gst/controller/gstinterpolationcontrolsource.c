@@ -49,7 +49,7 @@ GST_DEBUG_CATEGORY_STATIC (GST_CAT_DEFAULT);
 
 /*  steps-like (no-)interpolation, default */
 /*  just returns the value for the most recent key-frame */
-static inline const gdouble
+static inline gdouble
 _interpolate_none (GstTimedValueControlSource * self, GSequenceIter * iter)
 {
   GstControlPoint *cp = g_sequence_get (iter);
