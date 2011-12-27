@@ -49,10 +49,6 @@
 
 GST_DEBUG_CATEGORY_STATIC (waveformsink_debug);
 
-static void gst_waveform_sink_base_init (gpointer g_class);
-static void gst_waveform_sink_class_init (GstWaveFormSinkClass * klass);
-static void gst_waveform_sink_init (GstWaveFormSink * wfsink,
-    GstWaveFormSinkClass * g_class);
 static void gst_waveform_sink_finalise (GObject * object);
 static void gst_waveform_sink_set_property (GObject * object,
     guint prop_id, const GValue * value, GParamSpec * pspec);
@@ -154,7 +150,7 @@ static void
 gst_waveform_sink_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec)
 {
-  GstWaveFormSink *wfsink = GST_WAVEFORM_SINK (object);
+  /* GstWaveFormSink *wfsink = GST_WAVEFORM_SINK (object); */
 
   switch (prop_id) {
     default:
@@ -167,7 +163,7 @@ static void
 gst_waveform_sink_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec)
 {
-  GstWaveFormSink *wfsink = GST_WAVEFORM_SINK (object);
+  /* GstWaveFormSink *wfsink = GST_WAVEFORM_SINK (object); */
 
   switch (prop_id) {
     default:
@@ -348,7 +344,7 @@ gst_waveform_sink_getcaps (GstBaseSink * bsink)
 static gboolean
 gst_waveform_sink_open (GstAudioSink * asink)
 {
-  GstWaveFormSink *wfsink = GST_WAVEFORM_SINK (asink);
+  /* GstWaveFormSink *wfsink = GST_WAVEFORM_SINK (asink); */
 
   /* nothing to do here as the device needs to be opened with the format we will use */
 
@@ -448,7 +444,7 @@ gst_waveform_sink_unprepare (GstAudioSink * asink)
 static gboolean
 gst_waveform_sink_close (GstAudioSink * asink)
 {
-  GstWaveFormSink *wfsink = GST_WAVEFORM_SINK (asink);
+  /* GstWaveFormSink *wfsink = GST_WAVEFORM_SINK (asink); */
 
   return TRUE;
 }
