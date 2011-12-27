@@ -79,6 +79,9 @@ _interpolate_trigger (GstTimedValueControlSource * self, GSequenceIter * iter,
   if (found) {
     return cp->value;
   }
+
+  g_warning ("FIXME: _interpolate_trigger return value");
+  return 0.0;                   /* FIXME */
 }
 
 static gboolean
