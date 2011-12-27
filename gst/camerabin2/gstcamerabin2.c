@@ -1044,7 +1044,6 @@ gst_camera_bin_handle_message (GstBin * bin, GstMessage * message)
         }
         dec_counter = TRUE;
       } else if (gst_structure_has_name (structure, "preview-image")) {
-        GValue *value;
         gchar *location = NULL;
 
         g_mutex_lock (camerabin->preview_list_mutex);
@@ -1064,11 +1063,11 @@ gst_camera_bin_handle_message (GstBin * bin, GstMessage * message)
         g_mutex_unlock (camerabin->preview_list_mutex);
 
         if (location) {
-          value = g_new0 (GValue, 1);
-          g_value_init (value, G_TYPE_STRING);
-          g_value_take_string (value, location);
+          GValue value = { 0 };
+          g_value_init (&value, G_TYPE_STRING);
+          g_value_take_string (&value, location);
           gst_structure_take_value ((GstStructure *) structure, "location",
-              value);
+              &value);
         }
 
         GST_LOG_OBJECT (bin, "received preview-image message");
