@@ -1113,6 +1113,7 @@ gst_deinit (void)
   g_type_class_unref (g_type_class_peek (gst_iterator_result_get_type ()));
   g_type_class_unref (g_type_class_peek (gst_iterator_item_get_type ()));
   g_type_class_unref (g_type_class_peek (gst_message_type_get_type ()));
+  g_type_class_unref (g_type_class_peek (gst_meta_flags_get_type ()));
   g_type_class_unref (g_type_class_peek (gst_mini_object_flags_get_type ()));
   g_type_class_unref (g_type_class_peek (gst_pad_link_return_get_type ()));
   g_type_class_unref (g_type_class_peek (gst_pad_link_check_get_type ()));
