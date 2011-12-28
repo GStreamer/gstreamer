@@ -63,8 +63,7 @@ src_need_data_cb (GstElement * src, guint size, gpointer data)
 }
 
 static void
-decodebin_pad_added_cb (GstElement * decodebin, GstPad * pad,
-    gboolean last, gboolean * p_flag)
+decodebin_pad_added_cb (GstElement * decodebin, GstPad * pad, gboolean * p_flag)
 {
   /* we should not be reached */
   fail_unless (decodebin == NULL, "pad-added should not be emitted");
@@ -117,7 +116,7 @@ GST_END_TEST;
 
 static void
 pad_added_plug_fakesink_cb (GstElement * decodebin, GstPad * srcpad,
-    gboolean last, GstElement * pipeline)
+    GstElement * pipeline)
 {
   GstElement *sink;
   GstPad *sinkpad;
