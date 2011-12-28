@@ -612,6 +612,8 @@ wait_for_element_message (GstElement * camera, const gchar * name,
 
         if (gst_structure_has_name (st, name))
           break;
+        else
+          gst_message_unref (msg);
       } else {
         gst_message_unref (msg);
         msg = NULL;
