@@ -617,7 +617,8 @@ GST_START_TEST (test_parse_caps_rgb)
     caps = gst_caps_from_string (formats[i].tmpl_caps_string);
     gst_caps_set_simple (caps, "width", G_TYPE_INT, 2 * (i + 1), "height",
         G_TYPE_INT, i + 1, "framerate", GST_TYPE_FRACTION, 15, 1,
-        "pixel-aspect-ratio", GST_TYPE_FRACTION, 1, 1, NULL);
+        "pixel-aspect-ratio", GST_TYPE_FRACTION, 1, 1,
+        "interlace-mode", G_TYPE_STRING, "progressive", NULL);
     g_assert (gst_caps_is_fixed (caps));
 
     GST_DEBUG ("testing caps: %" GST_PTR_FORMAT, caps);
