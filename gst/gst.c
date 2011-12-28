@@ -770,6 +770,7 @@ init_post (GOptionContext * context, GOptionGroup * group, gpointer data,
   g_type_class_ref (gst_pad_probe_return_get_type ());
   g_type_class_ref (gst_segment_flags_get_type ());
   g_type_class_ref (gst_scheduling_flags_get_type ());
+  g_type_class_ref (gst_meta_flags_get_type ());
 
   g_type_class_ref (gst_control_binding_get_type ());
   g_type_class_ref (gst_control_source_get_type ());
