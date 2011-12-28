@@ -311,9 +311,11 @@ GST_START_TEST (test_sticky_caps_unlinked_incompatible)
    * Sink pad has foobar caps
    * We will push the pony express caps (which should fail)
    */
-  caps = gst_caps_from_string ("foo/bar, dummy=(int){1, 2}");
+  caps = gst_caps_new_any ();
   src_template = gst_pad_template_new ("src", GST_PAD_SRC,
-      GST_PAD_ALWAYS, gst_caps_new_any ());
+      GST_PAD_ALWAYS, caps);
+  gst_caps_unref (caps);
+  caps = gst_caps_from_string ("foo/bar, dummy=(int){1, 2}");
   sink_template = gst_pad_template_new ("sink", GST_PAD_SINK,
       GST_PAD_ALWAYS, caps);
   gst_caps_unref (caps);
@@ -332,6 +334,7 @@ GST_START_TEST (test_sticky_caps_unlinked_incompatible)
   ASSERT_CAPS_REFCOUNT (failcaps, "caps", 1);
 
   event = gst_event_new_caps (failcaps);
+  gst_caps_unref (failcaps);
   gst_pad_set_active (src, TRUE);
   /* The pad isn't linked yet, and anything matches the source pad template
    * (which is ANY) */
