@@ -159,8 +159,6 @@ VALGRIND_TESTS_DISABLE = \
 
 # these tests don't even pass
 # neon: too flaky (almost always fails 'the first time')
-# jifmux: elements/jifmux.c:728:F:general:test_jifmux_tags:0: Assertion 'entry->components == 2' failed
-# camerabin2: wrappercamerabinsrc:test_multiple_video_recordings:0: Unexpected critical/warning: gst_caps_get_structure: assertion `GST_IS_CAPS (caps)' failed
 # colorspace: bad memory accesses in orc code for odd width buffers - https://bugzilla.gnome.org/show_bug.cgi?id=663248
 noinst_PROGRAMS = \
 	pipelines/colorspace \
