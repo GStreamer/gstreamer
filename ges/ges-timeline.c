@@ -579,7 +579,10 @@ discoverer_discovered_cb (GstDiscoverer * discoverer,
       g_object_set (tfs, "is_image", (gboolean) TRUE, NULL);
     }
 
-    else {
+    /* Continue the processing on tfs */
+    add_object_to_tracks (timeline, GES_TIMELINE_OBJECT (tfs));
+
+    if (!is_image) {
       g_object_set (tfs, "max-duration",
           gst_discoverer_info_get_duration (info), NULL);
     }

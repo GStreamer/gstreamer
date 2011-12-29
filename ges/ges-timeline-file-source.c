@@ -233,12 +233,22 @@ ges_timeline_filesource_set_max_duration (GESTimelineFileSource * self,
     guint64 maxduration)
 {
   GESTimelineObject *object = GES_TIMELINE_OBJECT (self);
+  GList *tmp, *tckobjs;
 
   self->priv->maxduration = maxduration;
   if (object->duration == GST_CLOCK_TIME_NONE || object->duration == 0) {
     /* If we don't have a valid duration, use the max duration */
     g_object_set (self, "duration", self->priv->maxduration - object->inpoint,
         NULL);
+  }
+
+  tckobjs = ges_timeline_object_get_track_objects (GES_TIMELINE_OBJECT (self));
+  for (tmp = tckobjs; tmp; tmp = g_list_next (tmp)) {
+    g_object_set (tmp->data, "max-duration", maxduration, NULL);
+
+    /* We free the list in the same loop */
+    g_object_unref (tmp->data);
+    g_list_free_1 (tmp);
   }
 }
 
