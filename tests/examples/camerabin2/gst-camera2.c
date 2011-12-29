@@ -44,6 +44,7 @@
 
 static GstElement *camera;
 static GtkBuilder *builder;
+static GtkWidget *ui_main_window;
 
 typedef struct
 {
@@ -60,10 +61,10 @@ create_ogg_profile (void)
       gst_caps_new_simple ("application/ogg", NULL), NULL);
 
   gst_encoding_container_profile_add_profile (container, (GstEncodingProfile *)
-      gst_encoding_video_profile_new (gst_caps_new_simple ("video/theora",
+      gst_encoding_video_profile_new (gst_caps_new_simple ("video/x-theora",
               NULL), NULL, NULL, 1));
   gst_encoding_container_profile_add_profile (container, (GstEncodingProfile *)
-      gst_encoding_audio_profile_new (gst_caps_new_simple ("audio/vorbis",
+      gst_encoding_audio_profile_new (gst_caps_new_simple ("audio/x-vorbis",
               NULL), NULL, NULL, 1));
 
   return (GstEncodingProfile *) container;
@@ -81,7 +82,7 @@ create_webm_profile (void)
       gst_encoding_video_profile_new (gst_caps_new_simple ("video/x-vp8", NULL),
           NULL, NULL, 1));
   gst_encoding_container_profile_add_profile (container, (GstEncodingProfile *)
-      gst_encoding_audio_profile_new (gst_caps_new_simple ("audio/vorbis",
+      gst_encoding_audio_profile_new (gst_caps_new_simple ("audio/x-vorbis",
               NULL), NULL, NULL, 1));
 
   return (GstEncodingProfile *) container;
@@ -171,8 +172,21 @@ on_formatComboBox_changed (GtkWidget * widget, gpointer data)
   g_return_if_fail (profile != NULL);
   gst_element_set_state (camera, GST_STATE_NULL);
   g_object_set (camera, "video-profile", profile, NULL);
-  gst_element_set_state (camera, GST_STATE_PLAYING);
   gst_encoding_profile_unref (profile);
+
+  if (GST_STATE_CHANGE_FAILURE == gst_element_set_state (camera,
+          GST_STATE_PLAYING)) {
+    GtkWidget *dialog =
+        gtk_message_dialog_new (GTK_WINDOW (ui_main_window), GTK_DIALOG_MODAL,
+        GTK_MESSAGE_ERROR, GTK_BUTTONS_OK,
+        "Could not initialize camerabin2 with the "
+        "selected format. Your system might not have the required plugins installed.\n"
+        "Please select another format.");
+
+    gtk_dialog_run (GTK_DIALOG (dialog));
+
+    gtk_widget_destroy (dialog);
+  }
 }
 
 static GstBusSyncReply
@@ -265,7 +279,6 @@ int
 main (int argc, char *argv[])
 {
   int ret = 0;
-  GtkWidget *ui_main_window;
   GError *error = NULL;
   GstBus *bus;
 
