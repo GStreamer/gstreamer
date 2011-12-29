@@ -1161,8 +1161,9 @@ gst_value_free_fraction_range (GValue * value)
   GValue *vals = (GValue *) value->data[0].v_pointer;
 
   if (vals != NULL) {
-    g_value_unset (&vals[0]);
-    g_value_unset (&vals[1]);
+    /* we know the two values contain fractions without internal allocs */
+    /* g_value_unset (&vals[0]); */
+    /* g_value_unset (&vals[1]); */
     g_slice_free1 (2 * sizeof (GValue), vals);
     value->data[0].v_pointer = NULL;
   }
@@ -1311,8 +1312,9 @@ gst_value_set_fraction_range_full (GValue * value,
   gst_value_set_fraction (&end, numerator_end, denominator_end);
   gst_value_set_fraction_range (value, &start, &end);
 
-  g_value_unset (&start);
-  g_value_unset (&end);
+  /* we know the two values contain fractions without internal allocs */
+  /* g_value_unset (&start); */
+  /* g_value_unset (&end);   */
 }
 
 /**
