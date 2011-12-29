@@ -463,7 +463,7 @@
   (c-name "gst_encoding_container_profile_add_profile")
   (return-type "gboolean")
   (parameters
-    '("GstEncodingProfile*" "profile")
+    '("GstEncodingProfile*" "profile" (keep-refcount))
   )
 )
 
