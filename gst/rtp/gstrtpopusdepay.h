@@ -23,7 +23,7 @@
 #define __GST_RTP_OPUS_DEPAY_H__
 
 #include <gst/gst.h>
-#include <gst/rtp/gstbasertpdepayload.h>
+#include <gst/rtp/gstrtpbasedepayload.h>
 
 G_BEGIN_DECLS typedef struct _GstRTPOpusDepay GstRTPOpusDepay;
 typedef struct _GstRTPOpusDepayClass GstRTPOpusDepayClass;
@@ -42,13 +42,13 @@ typedef struct _GstRTPOpusDepayClass GstRTPOpusDepayClass;
 
 struct _GstRTPOpusDepay
 {
-  GstBaseRTPDepayload depayload;
+  GstRTPBaseDepayload depayload;
 
 };
 
 struct _GstRTPOpusDepayClass
 {
-  GstBaseRTPDepayloadClass parent_class;
+  GstRTPBaseDepayloadClass parent_class;
 };
 
 GType gst_rtp_opus_depay_get_type (void);

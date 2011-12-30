@@ -31,8 +31,6 @@
 GST_DEBUG_CATEGORY_STATIC (rtpopusdepay_debug);
 #define GST_CAT_DEFAULT (rtpopusdepay_debug)
 
-
-
 static GstStaticPadTemplate gst_rtp_opus_depay_sink_template =
 GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
@@ -51,18 +49,22 @@ GST_STATIC_PAD_TEMPLATE ("src",
     GST_STATIC_CAPS ("audio/x-opus")
     );
 
-static GstBuffer *gst_rtp_opus_depay_process (GstBaseRTPDepayload * depayload,
+static GstBuffer *gst_rtp_opus_depay_process (GstRTPBaseDepayload * depayload,
     GstBuffer * buf);
-static gboolean gst_rtp_opus_depay_setcaps (GstBaseRTPDepayload * depayload,
+static gboolean gst_rtp_opus_depay_setcaps (GstRTPBaseDepayload * depayload,
     GstCaps * caps);
 
-GST_BOILERPLATE (GstRTPOpusDepay, gst_rtp_opus_depay, GstBaseRTPDepayload,
-    GST_TYPE_BASE_RTP_DEPAYLOAD);
+G_DEFINE_TYPE (GstRTPOpusDepay, gst_rtp_opus_depay,
+    GST_TYPE_RTP_BASE_DEPAYLOAD);
 
 static void
-gst_rtp_opus_depay_base_init (gpointer klass)
+gst_rtp_opus_depay_class_init (GstRTPOpusDepayClass * klass)
 {
-  GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
+  GstRTPBaseDepayloadClass *gstbasertpdepayload_class;
+  GstElementClass *element_class;
+
+  element_class = GST_ELEMENT_CLASS (klass);
+  gstbasertpdepayload_class = (GstRTPBaseDepayloadClass *) klass;
 
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&gst_rtp_opus_depay_src_template));
@@ -72,14 +74,6 @@ gst_rtp_opus_depay_base_init (gpointer klass)
       "RTP Opus packet depayloader", "Codec/Depayloader/Network/RTP",
       "Extracts Opus audio from RTP packets",
       "Danilo Cesar Lemes de Paula <danilo.cesar@collabora.co.uk>");
-}
-
-static void
-gst_rtp_opus_depay_class_init (GstRTPOpusDepayClass * klass)
-{
-  GstBaseRTPDepayloadClass *gstbasertpdepayload_class;
-
-  gstbasertpdepayload_class = (GstBaseRTPDepayloadClass *) klass;
 
   gstbasertpdepayload_class->process = gst_rtp_opus_depay_process;
   gstbasertpdepayload_class->set_caps = gst_rtp_opus_depay_setcaps;
@@ -89,20 +83,19 @@ gst_rtp_opus_depay_class_init (GstRTPOpusDepayClass * klass)
 }
 
 static void
-gst_rtp_opus_depay_init (GstRTPOpusDepay * rtpopusdepay,
-    GstRTPOpusDepayClass * klass)
+gst_rtp_opus_depay_init (GstRTPOpusDepay * rtpopusdepay)
 {
 
 }
 
 static gboolean
-gst_rtp_opus_depay_setcaps (GstBaseRTPDepayload * depayload, GstCaps * caps)
+gst_rtp_opus_depay_setcaps (GstRTPBaseDepayload * depayload, GstCaps * caps)
 {
   GstCaps *srccaps;
   gboolean ret;
 
-  srccaps = gst_caps_new_simple ("audio/x-opus", NULL);
-  ret = gst_pad_set_caps (GST_BASE_RTP_DEPAYLOAD_SRCPAD (depayload), srccaps);
+  srccaps = gst_caps_new_empty_simple ("audio/x-opus");
+  ret = gst_pad_set_caps (GST_RTP_BASE_DEPAYLOAD_SRCPAD (depayload), srccaps);
 
   GST_DEBUG_OBJECT (depayload,
       "set caps on source: %" GST_PTR_FORMAT " (ret=%d)", srccaps, ret);
@@ -114,10 +107,14 @@ gst_rtp_opus_depay_setcaps (GstBaseRTPDepayload * depayload, GstCaps * caps)
 }
 
 static GstBuffer *
-gst_rtp_opus_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
+gst_rtp_opus_depay_process (GstRTPBaseDepayload * depayload, GstBuffer * buf)
 {
   GstBuffer *outbuf;
-  outbuf = gst_rtp_buffer_get_payload_buffer (buf);
+  GstRTPBuffer rtpbuf = { NULL, };
+
+  gst_rtp_buffer_map (buf, GST_MAP_READ, &rtpbuf);
+  outbuf = gst_rtp_buffer_get_payload_buffer (&rtpbuf);
+  gst_rtp_buffer_unmap (&rtpbuf);
 
   return outbuf;
 }

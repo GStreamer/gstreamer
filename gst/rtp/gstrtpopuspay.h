@@ -23,7 +23,7 @@
 #define __GST_RTP_OPUS_PAY_H__
 
 #include <gst/gst.h>
-#include <gst/rtp/gstbasertppayload.h>
+#include <gst/rtp/gstrtpbasepayload.h>
 
 G_BEGIN_DECLS
 
@@ -43,12 +43,12 @@ typedef struct _GstRtpOPUSPayClass GstRtpOPUSPayClass;
 
 struct _GstRtpOPUSPay
 {
-  GstBaseRTPPayload payload;
+  GstRTPBasePayload payload;
 };
 
 struct _GstRtpOPUSPayClass
 {
-  GstBaseRTPPayloadClass parent_class;
+  GstRTPBasePayloadClass parent_class;
 };
 
 GType gst_rtp_opus_pay_get_type (void);

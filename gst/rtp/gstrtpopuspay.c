@@ -51,18 +51,24 @@ GST_STATIC_PAD_TEMPLATE ("src",
         "encoding-name = (string) \"X-GST-OPUS-DRAFT-SPITTKA-00\"")
     );
 
-static gboolean gst_rtp_opus_pay_setcaps (GstBaseRTPPayload * payload,
+static gboolean gst_rtp_opus_pay_setcaps (GstRTPBasePayload * payload,
     GstCaps * caps);
-static GstFlowReturn gst_rtp_opus_pay_handle_buffer (GstBaseRTPPayload *
+static GstFlowReturn gst_rtp_opus_pay_handle_buffer (GstRTPBasePayload *
     payload, GstBuffer * buffer);
 
-GST_BOILERPLATE (GstRtpOPUSPay, gst_rtp_opus_pay, GstBaseRTPPayload,
-    GST_TYPE_BASE_RTP_PAYLOAD);
+G_DEFINE_TYPE (GstRtpOPUSPay, gst_rtp_opus_pay, GST_TYPE_RTP_BASE_PAYLOAD);
 
 static void
-gst_rtp_opus_pay_base_init (gpointer klass)
+gst_rtp_opus_pay_class_init (GstRtpOPUSPayClass * klass)
 {
-  GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
+  GstRTPBasePayloadClass *gstbasertppayload_class;
+  GstElementClass *element_class;
+
+  gstbasertppayload_class = (GstRTPBasePayloadClass *) klass;
+  element_class = GST_ELEMENT_CLASS (klass);
+
+  gstbasertppayload_class->set_caps = gst_rtp_opus_pay_setcaps;
+  gstbasertppayload_class->handle_buffer = gst_rtp_opus_pay_handle_buffer;
 
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&gst_rtp_opus_pay_src_template));
@@ -74,39 +80,28 @@ gst_rtp_opus_pay_base_init (gpointer klass)
       "Codec/Payloader/Network/RTP",
       "Puts Opus audio in RTP packets",
       "Danilo Cesar Lemes de Paula <danilo.cesar@collabora.co.uk>");
-}
-
-static void
-gst_rtp_opus_pay_class_init (GstRtpOPUSPayClass * klass)
-{
-  GstBaseRTPPayloadClass *gstbasertppayload_class;
-
-  gstbasertppayload_class = (GstBaseRTPPayloadClass *) klass;
-
-  gstbasertppayload_class->set_caps = gst_rtp_opus_pay_setcaps;
-  gstbasertppayload_class->handle_buffer = gst_rtp_opus_pay_handle_buffer;
 
   GST_DEBUG_CATEGORY_INIT (rtpopuspay_debug, "rtpopuspay", 0,
       "Opus RTP Payloader");
 }
 
 static void
-gst_rtp_opus_pay_init (GstRtpOPUSPay * rtpopuspay, GstRtpOPUSPayClass * klass)
+gst_rtp_opus_pay_init (GstRtpOPUSPay * rtpopuspay)
 {
 }
 
 static gboolean
-gst_rtp_opus_pay_setcaps (GstBaseRTPPayload * payload, GstCaps * caps)
+gst_rtp_opus_pay_setcaps (GstRTPBasePayload * payload, GstCaps * caps)
 {
   gboolean res;
   gchar *capsstr;
 
   capsstr = gst_caps_to_string (caps);
 
-  gst_basertppayload_set_options (payload, "audio", FALSE,
+  gst_rtp_base_payload_set_options (payload, "audio", FALSE,
       "X-GST-OPUS-DRAFT-SPITTKA-00", 48000);
   res =
-      gst_basertppayload_set_outcaps (payload, "caps", G_TYPE_STRING, capsstr,
+      gst_rtp_base_payload_set_outcaps (payload, "caps", G_TYPE_STRING, capsstr,
       NULL);
   g_free (capsstr);
 
@@ -114,27 +109,29 @@ gst_rtp_opus_pay_setcaps (GstBaseRTPPayload * payload, GstCaps * caps)
 }
 
 static GstFlowReturn
-gst_rtp_opus_pay_handle_buffer (GstBaseRTPPayload * basepayload,
+gst_rtp_opus_pay_handle_buffer (GstRTPBasePayload * basepayload,
     GstBuffer * buffer)
 {
+  GstRTPBuffer rtpbuf = { NULL, };
   GstBuffer *outbuf;
-  GstClockTime timestamp;
+  gsize size;
+  gpointer *data;
 
-  guint size;
-  guint8 *data;
-  guint8 *payload;
+  /* Copy data and timestamp to a new output buffer
+   * FIXME : Don't we have a convenience function for this ? */
+  data = gst_buffer_map (buffer, &size, NULL, GST_MAP_READ);
+  outbuf = gst_rtp_buffer_new_copy_data (data, size);
+  GST_BUFFER_TIMESTAMP (outbuf) = GST_BUFFER_TIMESTAMP (buffer);
 
-  size = GST_BUFFER_SIZE (buffer);
-  data = GST_BUFFER_DATA (buffer);
-  timestamp = GST_BUFFER_TIMESTAMP (buffer);
+  /* Unmap and free input buffer */
+  gst_buffer_unmap (buffer, data, size);
+  gst_buffer_unref (buffer);
 
-  outbuf = gst_rtp_buffer_new_allocate (size, 0, 0);
-  payload = gst_rtp_buffer_get_payload (outbuf);
+  /* Remove marker from RTP buffer */
+  gst_rtp_buffer_map (outbuf, GST_MAP_WRITE, &rtpbuf);
+  gst_rtp_buffer_set_marker (&rtpbuf, FALSE);
+  gst_rtp_buffer_unmap (&rtpbuf);
 
-  memcpy (payload, data, size);
-
-  gst_rtp_buffer_set_marker (outbuf, FALSE);
-  GST_BUFFER_TIMESTAMP (outbuf) = timestamp;
-
-  return gst_basertppayload_push (basepayload, outbuf);
+  /* Push out */
+  return gst_rtp_base_payload_push (basepayload, outbuf);
 }
