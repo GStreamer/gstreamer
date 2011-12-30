@@ -1679,7 +1679,7 @@ gst_camera_bin_create_elements (GstCameraBin2 * camera)
       NULL);
 
   if (camera->video_profile_switch) {
-    GST_DEBUG_OBJECT (camera, "Switching encodebin's profile");
+    GST_DEBUG_OBJECT (camera, "Switching video-encodebin's profile");
     g_object_set (camera->video_encodebin, "profile", camera->video_profile,
         NULL);
     if (GST_PAD_LINK_FAILED (gst_camera_bin_link_encodebin (camera,
@@ -1694,7 +1694,7 @@ gst_camera_bin_create_elements (GstCameraBin2 * camera)
   }
 
   if (camera->image_profile_switch) {
-    GST_DEBUG_OBJECT (camera, "Switching encodebin's profile");
+    GST_DEBUG_OBJECT (camera, "Switching image-encodebin's profile");
     g_object_set (camera->image_encodebin, "profile", camera->image_profile,
         NULL);
     if (GST_PAD_LINK_FAILED (gst_camera_bin_link_encodebin (camera,
