@@ -103,6 +103,9 @@ get_int_caps (guint channels, gint endianness, guint width,
   gchar *string;
   GstAudioFormat fmt;
 
+  GST_DEBUG ("channels:%d, endianness:%d, width:%d, depth:%d, signedness:%d",
+      channels, endianness, width, depth, signedness);
+
   fmt = gst_audio_format_build_integer (signedness, endianness, width, depth);
 
   string = g_strdup_printf ("audio/x-raw, "

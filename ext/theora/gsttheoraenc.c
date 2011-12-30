@@ -61,6 +61,7 @@
 #include <stdlib.h>             /* free */
 
 #include <gst/tag/tag.h>
+#include <gst/video/video.h>
 
 #define GST_CAT_DEFAULT theoraenc_debug
 GST_DEBUG_CATEGORY_STATIC (GST_CAT_DEFAULT);
@@ -129,6 +130,7 @@ _ilog (unsigned int v)
 #define THEORA_DEF_RATE_BUFFER          0
 #define THEORA_DEF_MULTIPASS_CACHE_FILE NULL
 #define THEORA_DEF_MULTIPASS_MODE       MULTIPASS_MODE_SINGLE_PASS
+#define THEORA_DEF_DUP_ON_GAP           FALSE
 enum
 {
   PROP_0,
@@ -151,7 +153,8 @@ enum
   PROP_CAP_UNDERFLOW,
   PROP_RATE_BUFFER,
   PROP_MULTIPASS_CACHE_FILE,
-  PROP_MULTIPASS_MODE
+  PROP_MULTIPASS_MODE,
+  PROP_DUP_ON_GAP
       /* FILL ME */
 };
 
@@ -269,6 +272,11 @@ static gboolean theora_enc_write_multipass_cache (GstTheoraEnc * enc,
     gboolean begin, gboolean eos);
 
 static char *theora_enc_get_supported_formats (void);
+
+static void theora_timefifo_free (GstTheoraEnc * enc);
+static GstFlowReturn
+theora_enc_encode_and_push (GstTheoraEnc * enc, ogg_packet op,
+    GstBuffer * buffer);
 
 static void
 gst_theora_enc_class_init (GstTheoraEncClass * klass)
@@ -394,6 +402,16 @@ gst_theora_enc_class_init (GstTheoraEncClass * klass)
           "Single pass or first/second pass", GST_TYPE_MULTIPASS_MODE,
           THEORA_DEF_MULTIPASS_MODE,
           (GParamFlags) G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+  g_object_class_install_property (gobject_class, PROP_DUP_ON_GAP,
+      g_param_spec_boolean ("dup-on-gap", "Create DUP frame on GAP flag",
+          "Allow codec to handle frames with GAP flag as duplicates "
+          "of previous frame. "
+          "This is good to work with variable frame rate stabilized "
+          "by videorate element. It will add variable latency with maximal "
+          "size of keyframe distance, this way it is a bad idea "
+          "to use with live streams.",
+          THEORA_DEF_DUP_ON_GAP,
+          (GParamFlags) G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   gst_element_class_add_pad_template (gstelement_class,
       gst_static_pad_template_get (&theora_enc_src_factory));
@@ -447,6 +465,7 @@ gst_theora_enc_init (GstTheoraEnc * enc)
   enc->cap_overflow = THEORA_DEF_CAP_OVERFLOW;
   enc->cap_underflow = THEORA_DEF_CAP_UNDERFLOW;
   enc->rate_buffer = THEORA_DEF_RATE_BUFFER;
+  enc->dup_on_gap = THEORA_DEF_DUP_ON_GAP;
 
   enc->multipass_mode = THEORA_DEF_MULTIPASS_MODE;
   enc->multipass_cache_file = THEORA_DEF_MULTIPASS_CACHE_FILE;
@@ -548,6 +567,8 @@ theora_enc_clear (GstTheoraEnc * enc)
   enc->bytes_out = 0;
   enc->granulepos_offset = 0;
   enc->timestamp_offset = 0;
+
+  theora_timefifo_free (enc);
 
   enc->next_ts = GST_CLOCK_TIME_NONE;
   enc->next_discont = FALSE;
@@ -924,6 +945,9 @@ theora_enc_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
     }
     case GST_EVENT_EOS:
       if (enc->initialised) {
+        /* clear all standing buffers */
+        if (enc->dup_on_gap)
+          theora_enc_encode_and_push (enc, op, NULL);
         /* push last packet with eos flag, should not be called */
         while (th_encode_packetout (enc->encoder, 1, &op)) {
           GstClockTime next_time =
@@ -945,6 +969,7 @@ theora_enc_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
     case GST_EVENT_FLUSH_STOP:
       gst_segment_init (&enc->segment, GST_FORMAT_UNDEFINED);
       res = gst_pad_push_event (enc->srcpad, event);
+      theora_timefifo_free (enc);
       break;
     case GST_EVENT_CUSTOM_DOWNSTREAM:
     {
@@ -1152,20 +1177,197 @@ theora_enc_write_multipass_cache (GstTheoraEnc * enc, gboolean begin,
   return TRUE;
 }
 
+/**
+ * g_slice_free can't be used with g_queue_foreach.
+ * so we create new function with predefined GstClockTime size.
+ */
+static void
+theora_free_gstclocktime (gpointer mem)
+{
+  g_slice_free (GstClockTime, mem);
+}
+
+static void
+theora_timefifo_in (GstTheoraEnc * enc, const GstClockTime * timestamp)
+{
+  GstClockTime *ptr;
+
+  if (!enc->t_queue)
+    enc->t_queue = g_queue_new ();
+
+  g_assert (enc->t_queue != NULL);
+
+  ptr = g_slice_new (GstClockTime);
+  *ptr = *timestamp;
+
+  g_queue_push_head (enc->t_queue, ptr);
+}
+
+static GstClockTime
+theora_timefifo_out (GstTheoraEnc * enc)
+{
+  GstClockTime ret, *ptr;
+
+  g_assert (enc->t_queue != NULL);
+
+  ptr = g_queue_pop_tail (enc->t_queue);
+  g_assert (ptr != NULL);
+
+  ret = *ptr;
+  theora_free_gstclocktime (ptr);
+
+  return ret;
+}
+
+/**
+ * theora_timefifo_truncate - truncate the timestamp queue.
+ * After frame encoding we should have only one buffer for next time.
+ * The count of timestamps should be the same. If it is less,
+ * some thing really bad has happened. If it is bigger, encoder
+ * decided to return less then we ordered.
+ * TODO: for now we will just drop this timestamps. The better solution
+ * probably will be to recovery frames by recovery timestamps with
+ * last buffer.
+ */
+static void
+theora_timefifo_truncate (GstTheoraEnc * enc)
+{
+  if (enc->dup_on_gap) {
+    guint length;
+    g_assert (enc->t_queue != NULL);
+    length = g_queue_get_length (enc->t_queue);
+
+    if (length > 1) {
+      /* it is also not good if we have more then 1. */
+      GST_DEBUG_OBJECT (enc, "Dropping %u time stamps", length - 1);
+      while (g_queue_get_length (enc->t_queue) > 1) {
+        theora_timefifo_out (enc);
+      }
+    }
+  }
+}
+
+static void
+theora_timefifo_free (GstTheoraEnc * enc)
+{
+  if (enc->t_queue) {
+    if (g_queue_get_length (enc->t_queue))
+      g_queue_foreach (enc->t_queue, (GFunc) theora_free_gstclocktime, NULL);
+    g_queue_free (enc->t_queue);
+    enc->t_queue = NULL;
+  }
+  /* prevbuf makes no sense without timestamps,
+   * so clear it too. */
+  if (enc->prevbuf) {
+    gst_buffer_unref (enc->prevbuf);
+    enc->prevbuf = NULL;
+  }
+
+}
+
+static void
+theora_update_prevbuf (GstTheoraEnc * enc, GstBuffer * buffer)
+{
+  if (enc->prevbuf) {
+    gst_buffer_unref (enc->prevbuf);
+    enc->prevbuf = NULL;
+  }
+  enc->prevbuf = gst_buffer_ref (buffer);
+}
+
+/**
+ * theora_enc_encode_and_push - encode buffer or queued previous buffer
+ * buffer - buffer to encode. If set to NULL it should encode only
+ *          queued buffers and produce dups if needed.
+ */
+
 static GstFlowReturn
 theora_enc_encode_and_push (GstTheoraEnc * enc, ogg_packet op,
-    GstClockTime timestamp, GstClockTime running_time,
-    GstClockTime duration, GstBuffer * buffer)
+    GstBuffer * buffer)
 {
   GstFlowReturn ret;
+  GstVideoFrame frame;
   th_ycbcr_buffer ycbcr;
   gint res;
-  GstVideoFrame frame;
 
-  gst_video_frame_map (&frame, &enc->vinfo, buffer, GST_MAP_READ);
-  theora_enc_init_buffer (ycbcr, &frame);
+  if (enc->dup_on_gap) {
+    guint t_queue_length;
 
-  if (theora_enc_is_discontinuous (enc, running_time, duration)) {
+    if (enc->t_queue)
+      t_queue_length = g_queue_get_length (enc->t_queue);
+    else
+      t_queue_length = 0;
+
+    if (buffer) {
+      GstClockTime timestamp = GST_BUFFER_TIMESTAMP (buffer);
+
+      /* videorate can easy create 200 dup frames in one shot.
+       * In this case th_encode_ctl will just return TH_EINVAL
+       * and we will generate only one frame as result.
+       * To make us more bullet proof, make sure we have no
+       * more dup frames than keyframe interval.
+       */
+      if (GST_BUFFER_FLAG_IS_SET (buffer, GST_BUFFER_FLAG_GAP) &&
+          enc->keyframe_force > t_queue_length) {
+        GST_DEBUG_OBJECT (enc, "Got GAP frame, queue as duplicate.");
+
+        theora_timefifo_in (enc, &timestamp);
+        gst_buffer_unref (buffer);
+        return GST_FLOW_OK;
+      } else {
+        theora_timefifo_in (enc, &timestamp);
+        /* We should have one frame delay to create correct frame order.
+         * First time we got buffer, prevbuf should be empty. Nothing else
+         * should be done here.
+         */
+        if (!enc->prevbuf) {
+          theora_update_prevbuf (enc, buffer);
+          gst_buffer_unref (buffer);
+          return GST_FLOW_OK;
+        } else {
+          theora_update_prevbuf (enc, buffer);
+          /* after theora_update_prevbuf t_queue_length was changed */
+          t_queue_length++;
+
+          if (t_queue_length > 2) {
+            /* now in t_queue_length should be two real buffers: current and
+             * previous. All others are timestamps of duplicate frames. */
+            t_queue_length -= 2;
+            res = th_encode_ctl (enc->encoder, TH_ENCCTL_SET_DUP_COUNT,
+                &t_queue_length, sizeof (t_queue_length));
+            if (res < 0)
+              GST_WARNING_OBJECT (enc, "Failed marking dups for last frame");
+          }
+        }
+      }
+    } else {
+      /* if there is no buffer, then probably we got EOS or discontinuous.
+       * We need to encode every thing what was left in the queue
+       */
+      GST_DEBUG_OBJECT (enc, "Encode collected buffers.");
+      if (t_queue_length > 1) {
+        t_queue_length--;
+        res = th_encode_ctl (enc->encoder, TH_ENCCTL_SET_DUP_COUNT,
+            &t_queue_length, sizeof (t_queue_length));
+        if (res < 0)
+          GST_WARNING_OBJECT (enc, "Failed marking dups for last frame.");
+      } else {
+        GST_DEBUG_OBJECT (enc, "Prevbuffer is empty. Nothing to encode.");
+        return GST_FLOW_OK;
+      }
+    }
+    gst_video_frame_map (&frame, &enc->vinfo, enc->prevbuf, GST_MAP_READ);
+    theora_enc_init_buffer (ycbcr, &frame);
+  } else {
+    gst_video_frame_map (&frame, &enc->vinfo, buffer, GST_MAP_READ);
+    theora_enc_init_buffer (ycbcr, &frame);
+  }
+
+  /* check for buffer, it can be optional */
+  if (enc->current_discont && buffer) {
+    GstClockTime timestamp = GST_BUFFER_TIMESTAMP (buffer);
+    GstClockTime running_time =
+        gst_segment_to_running_time (&enc->segment, GST_FORMAT_TIME, timestamp);
     theora_enc_reset (enc);
     enc->granulepos_offset =
         gst_util_uint64_scale (running_time, enc->vinfo.fps_n,
@@ -1197,22 +1399,34 @@ theora_enc_encode_and_push (GstTheoraEnc * enc, ogg_packet op,
 
   ret = GST_FLOW_OK;
   while (th_encode_packetout (enc->encoder, 0, &op)) {
-    GstClockTime next_time;
+    GstClockTime next_time, duration;
+    GstClockTime timestamp = 0;
+    GST_DEBUG_OBJECT (enc, "encoded. granule:%" G_GINT64_FORMAT ", packet:%p, "
+        "bytes:%ld", op.granulepos, op.packet, op.bytes);
 
     next_time = th_granule_time (enc->encoder, op.granulepos) * GST_SECOND;
+    duration = next_time - enc->next_ts;
 
-    ret =
-        theora_push_packet (enc, &op, timestamp, enc->next_ts,
-        next_time - enc->next_ts);
+    if (enc->dup_on_gap && !enc->current_discont)
+      timestamp = theora_timefifo_out (enc);
+    else
+      timestamp = GST_BUFFER_TIMESTAMP (buffer);
+
+    ret = theora_push_packet (enc, &op, timestamp, enc->next_ts, duration);
 
     enc->next_ts = next_time;
-    if (ret != GST_FLOW_OK)
+    if (ret != GST_FLOW_OK) {
+      theora_timefifo_truncate (enc);
       goto data_push;
+    }
   }
 
+  theora_timefifo_truncate (enc);
 done:
   gst_video_frame_unmap (&frame);
-  gst_buffer_unref (buffer);
+  if (buffer)
+    gst_buffer_unref (buffer);
+  enc->current_discont = FALSE;
 
   return ret;
 
@@ -1380,8 +1594,14 @@ theora_enc_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
     enc->next_ts = 0;
   }
 
-  ret = theora_enc_encode_and_push (enc, op, timestamp, running_time, duration,
-      buffer);
+  enc->current_discont = theora_enc_is_discontinuous (enc,
+      running_time, duration);
+
+  /* empty queue if discontinuous */
+  if (enc->current_discont && enc->dup_on_gap)
+    theora_enc_encode_and_push (enc, op, NULL);
+
+  ret = theora_enc_encode_and_push (enc, op, buffer);
 
   return ret;
 
@@ -1563,6 +1783,9 @@ theora_enc_set_property (GObject * object, guint prop_id,
     case PROP_MULTIPASS_MODE:
       enc->multipass_mode = g_value_get_enum (value);
       break;
+    case PROP_DUP_ON_GAP:
+      enc->dup_on_gap = g_value_get_boolean (value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -1639,6 +1862,9 @@ theora_enc_get_property (GObject * object, guint prop_id,
       break;
     case PROP_MULTIPASS_MODE:
       g_value_set_enum (value, enc->multipass_mode);
+      break;
+    case PROP_DUP_ON_GAP:
+      g_value_set_boolean (value, enc->dup_on_gap);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);

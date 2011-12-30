@@ -168,6 +168,8 @@ GST_START_TEST (test_reuse_without_decoders)
   /* there shouldn't be any errors */
   fail_if (gst_bus_poll (GST_ELEMENT_BUS (pipe), GST_MESSAGE_ERROR, 0) != NULL);
 
+  GST_DEBUG ("Resetting pipeline");
+
   /* reset */
   gst_element_set_state (pipe, GST_STATE_READY);
 

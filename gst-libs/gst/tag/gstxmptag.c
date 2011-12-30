@@ -1325,7 +1325,10 @@ gst_tag_list_from_xmp_buffer (GstBuffer * buffer)
   if (*xp1 != '>')
     goto missing_header;
 
-  max_ft_len = 1 + strlen ("<?xpacket end=\".\"?>");
+  /* Use 2 here to count for an extra trailing \n that was added
+   * in old versions, this makes it able to parse xmp packets with
+   * and without this trailing char */
+  max_ft_len = 2 + strlen ("<?xpacket end=\".\"?>");
   if (len < max_ft_len)
     goto missing_footer;
 

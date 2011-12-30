@@ -3442,7 +3442,8 @@ gst_decode_chain_get_topology (GstDecodeChain * chain)
   u = gst_structure_new_id_empty (topology_structure_name);
 
   /* Now at the last element */
-  if (chain->elements && (chain->endpad || chain->deadend)) {
+  if ((chain->elements || !chain->active_group) &&
+      (chain->endpad || chain->deadend)) {
     s = gst_structure_new_id_empty (topology_structure_name);
     gst_structure_id_set (u, topology_caps, GST_TYPE_CAPS, chain->endcaps,
         NULL);

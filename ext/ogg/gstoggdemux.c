@@ -310,6 +310,8 @@ gst_ogg_pad_src_query (GstPad * pad, GstObject * parent, GstQuery * query)
         if (ogg->pullmode) {
           seekable = TRUE;
           stop = ogg->total_time;
+        } else if (ogg->push_disable_seeking) {
+          seekable = FALSE;
         } else if (ogg->current_chain->streams->len) {
           gint i;
 
@@ -3238,6 +3240,10 @@ gst_ogg_demux_check_duration_push (GstOggDemux * ogg, GstSeekFlags flags,
         ogg->push_byte_length = length;
         GST_DEBUG_OBJECT (ogg,
             "File byte length %" G_GINT64_FORMAT, ogg->push_byte_length);
+      } else {
+        GST_DEBUG_OBJECT (ogg, "File byte length unknown, assuming live");
+        ogg->push_disable_seeking = TRUE;
+        return TRUE;
       }
       res = gst_pad_query_duration (peer, GST_FORMAT_TIME, &length);
       gst_object_unref (peer);
@@ -4545,8 +4551,22 @@ gst_ogg_demux_change_state (GstElement * element, GstStateChange transition)
       ogg->push_byte_length = -1;
       ogg->push_time_length = GST_CLOCK_TIME_NONE;
       ogg->push_time_offset = GST_CLOCK_TIME_NONE;
-      ogg->push_disable_seeking = FALSE;
       ogg->push_state = PUSH_PLAYING;
+
+      ogg->push_disable_seeking = FALSE;
+      if (!ogg->pullmode) {
+        GstPad *peer;
+        if ((peer = gst_pad_get_peer (ogg->sinkpad)) != NULL) {
+          gint64 length = -1;
+          if (!gst_pad_query_duration (peer, GST_FORMAT_BYTES, &length)
+              || length <= 0) {
+            GST_DEBUG_OBJECT (ogg,
+                "Unable to determine stream size, assuming live, seeking disabled");
+            ogg->push_disable_seeking = TRUE;
+          }
+        }
+      }
+
       GST_PUSH_UNLOCK (ogg);
       gst_segment_init (&ogg->segment, GST_FORMAT_TIME);
       break;

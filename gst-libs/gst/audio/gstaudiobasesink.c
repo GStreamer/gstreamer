@@ -1921,7 +1921,8 @@ out_of_segment:
 too_late:
   {
     GST_DEBUG_OBJECT (sink, "dropping late sample");
-    return GST_FLOW_OK;
+    ret = GST_FLOW_OK;
+    goto done;
   }
   /* ERRORS */
 payload_failed:

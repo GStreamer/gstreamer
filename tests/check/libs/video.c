@@ -413,15 +413,17 @@ GST_START_TEST (test_video_formats)
     fourcc = GST_MAKE_FOURCC (s[0], s[1], s[2], s[3]);
     fmt = gst_video_format_from_fourcc (fourcc);
 
-    if (fmt == GST_VIDEO_FORMAT_UNKNOWN)
+    if (fmt == GST_VIDEO_FORMAT_UNKNOWN) {
+      GST_DEBUG ("Unknown format %s, skipping tests", fourcc_list[i].fourcc);
       continue;
+    }
 
     vf_info = gst_video_format_get_info (fmt);
     fail_unless (vf_info != NULL);
 
     fail_unless_equals_int (GST_VIDEO_FORMAT_INFO_FORMAT (vf_info), fmt);
 
-    GST_INFO ("Fourcc %s, packed=%", fourcc_list[i].fourcc,
+    GST_INFO ("Fourcc %s, packed=%d", fourcc_list[i].fourcc,
         gst_video_format_is_packed (fmt));
 
     fail_unless (GST_VIDEO_FORMAT_INFO_IS_YUV (vf_info));
@@ -632,7 +634,9 @@ GST_START_TEST (test_parse_caps_rgb)
     /* make sure they're serialised back correctly */
     caps2 = gst_video_info_to_caps (&vinfo);
     fail_unless (caps != NULL);
-    fail_unless (gst_caps_is_equal (caps, caps2));
+    fail_unless (gst_caps_is_equal (caps, caps2),
+        "caps [%" GST_PTR_FORMAT "] not equal to caps2 [%" GST_PTR_FORMAT "]",
+        caps, caps2);
 
     gst_caps_unref (caps);
     gst_caps_unref (caps2);

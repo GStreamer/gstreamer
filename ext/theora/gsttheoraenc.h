@@ -122,6 +122,13 @@ struct _GstTheoraEnc
   gboolean cap_underflow;
   int rate_buffer;
 
+  /* variables for dup-on-gap */
+  gboolean dup_on_gap;
+  gboolean current_discont;
+  GstBuffer *prevbuf;
+  GQueue *t_queue;
+  /* end dup-on-gap */
+
   GstTheoraEncMultipassMode multipass_mode;
   GIOChannel *multipass_cache_fd;
   GstAdapter *multipass_cache_adapter;

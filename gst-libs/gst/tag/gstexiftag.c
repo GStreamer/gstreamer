@@ -612,7 +612,7 @@ gst_tag_list_has_ifd_tags (const GstTagList * taglist,
 static void
 gst_exif_writer_write_tag_header (GstExifWriter * writer,
     guint16 exif_tag, guint16 exif_type, guint32 count, guint32 offset,
-    gboolean is_data)
+    const guint32 * offset_data)
 {
   GST_DEBUG ("Writing tag entry: id %x, type %u, count %u, offset %u",
       exif_tag, exif_type, count, offset);
@@ -621,13 +621,17 @@ gst_exif_writer_write_tag_header (GstExifWriter * writer,
     gst_byte_writer_put_uint16_le (&writer->tagwriter, exif_tag);
     gst_byte_writer_put_uint16_le (&writer->tagwriter, exif_type);
     gst_byte_writer_put_uint32_le (&writer->tagwriter, count);
-    gst_byte_writer_put_uint32_le (&writer->tagwriter, offset);
+    if (offset_data != NULL) {
+      gst_byte_writer_put_data (&writer->tagwriter, (guint8 *) offset_data, 4);
+    } else {
+      gst_byte_writer_put_uint32_le (&writer->tagwriter, offset);
+    }
   } else if (writer->byte_order == G_BIG_ENDIAN) {
     gst_byte_writer_put_uint16_be (&writer->tagwriter, exif_tag);
     gst_byte_writer_put_uint16_be (&writer->tagwriter, exif_type);
     gst_byte_writer_put_uint32_be (&writer->tagwriter, count);
-    if (is_data) {
-      gst_byte_writer_put_uint32_le (&writer->tagwriter, offset);
+    if (offset_data != NULL) {
+      gst_byte_writer_put_data (&writer->tagwriter, (guint8 *) offset_data, 4);
     } else {
       gst_byte_writer_put_uint32_be (&writer->tagwriter, offset);
     }
@@ -671,7 +675,7 @@ gst_exif_writer_write_rational_tag (GstExifWriter * writer,
   guint32 offset = gst_byte_writer_get_size (&writer->datawriter);
 
   gst_exif_writer_write_tag_header (writer, tag, EXIF_TYPE_RATIONAL,
-      1, offset, FALSE);
+      1, offset, NULL);
 
   gst_exif_writer_write_rational_data (writer, frac_n, frac_d);
 }
@@ -683,7 +687,7 @@ gst_exif_writer_write_signed_rational_tag (GstExifWriter * writer,
   guint32 offset = gst_byte_writer_get_size (&writer->datawriter);
 
   gst_exif_writer_write_tag_header (writer, tag, EXIF_TYPE_SRATIONAL,
-      1, offset, FALSE);
+      1, offset, NULL);
 
   gst_exif_writer_write_signed_rational_data (writer, frac_n, frac_d);
 }
@@ -720,7 +724,7 @@ gst_exif_writer_write_byte_tag (GstExifWriter * writer, guint16 tag,
 
   GST_WRITE_UINT8 ((guint8 *) & offset, value);
   gst_exif_writer_write_tag_header (writer, tag, EXIF_TYPE_BYTE,
-      1, offset, TRUE);
+      1, offset, &offset);
 }
 
 static void
@@ -736,7 +740,7 @@ gst_exif_writer_write_short_tag (GstExifWriter * writer, guint16 tag,
   }
 
   gst_exif_writer_write_tag_header (writer, tag, EXIF_TYPE_SHORT,
-      1, offset, TRUE);
+      1, offset, &offset);
 }
 
 static void
@@ -751,7 +755,7 @@ gst_exif_writer_write_long_tag (GstExifWriter * writer, guint16 tag,
   }
 
   gst_exif_writer_write_tag_header (writer, tag, EXIF_TYPE_LONG,
-      1, offset, TRUE);
+      1, offset, &offset);
 }
 
 
@@ -766,29 +770,25 @@ write_exif_undefined_tag (GstExifWriter * writer, guint16 tag,
      * resulting tag headers offset and the base offset */
     offset = gst_byte_writer_get_size (&writer->datawriter);
     gst_exif_writer_write_tag_header (writer, tag, EXIF_TYPE_UNDEFINED,
-        size, offset, FALSE);
+        size, offset, NULL);
     gst_byte_writer_put_data (&writer->datawriter, data, size);
   } else {
     /* small enough to go in the offset */
     memcpy ((guint8 *) & offset, data, size);
     gst_exif_writer_write_tag_header (writer, tag, EXIF_TYPE_UNDEFINED,
-        size, offset, TRUE);
+        size, offset, &offset);
   }
 }
 
 static void
 write_exif_ascii_tag (GstExifWriter * writer, guint16 tag, const gchar * str)
 {
-  gint size;
   guint32 offset = 0;
   gchar *ascii_str;
   gsize ascii_size;
   GError *error = NULL;
 
-  size = strlen (str) + 1;
-
-  ascii_str =
-      g_convert (str, size, "latin1", "utf8", NULL, &ascii_size, &error);
+  ascii_str = g_convert (str, -1, "latin1", "utf8", NULL, &ascii_size, &error);
 
   if (error) {
     GST_WARNING ("Failed to convert exif tag to ascii: 0x%x - %s. Error: %s",
@@ -806,13 +806,13 @@ write_exif_ascii_tag (GstExifWriter * writer, guint16 tag, const gchar * str)
      * resulting tag headers offset and the base offset */
     offset = gst_byte_writer_get_size (&writer->datawriter);
     gst_exif_writer_write_tag_header (writer, tag, EXIF_TYPE_ASCII,
-        ascii_size, offset, FALSE);
+        ascii_size, offset, NULL);
     gst_byte_writer_put_string (&writer->datawriter, ascii_str);
   } else {
     /* small enough to go in the offset */
     memcpy ((guint8 *) & offset, ascii_str, ascii_size);
     gst_exif_writer_write_tag_header (writer, tag, EXIF_TYPE_ASCII,
-        ascii_size, offset, TRUE);
+        ascii_size, offset, &offset);
   }
 
   g_free (ascii_str);
@@ -1460,7 +1460,7 @@ parse_exif_rational_tag (GstExifReader * exif_reader,
 }
 
 static GstBuffer *
-write_exif_ifd (const GstTagList * taglist, gboolean byte_order,
+write_exif_ifd (const GstTagList * taglist, guint byte_order,
     guint32 base_offset, const GstExifTagMatch * tag_map)
 {
   GstExifWriter writer;
@@ -1520,7 +1520,7 @@ write_exif_ifd (const GstTagList * taglist, gboolean byte_order,
         GST_DEBUG ("Adding inner ifd: %x", tag_map[i].exif_tag);
         gst_exif_writer_write_tag_header (&writer, tag_map[i].exif_tag,
             EXIF_TYPE_LONG, 1,
-            gst_byte_writer_get_size (&writer.datawriter), FALSE);
+            gst_byte_writer_get_size (&writer.datawriter), NULL);
 
         data = gst_buffer_map (inner_ifd, &size, NULL, GST_MAP_READ);
         gst_byte_writer_put_data (&writer.datawriter, data, size);
@@ -1998,7 +1998,7 @@ serialize_geo_coordinate (GstExifWriter * writer, const GstTagList * taglist,
 
   offset = gst_byte_writer_get_size (&writer->datawriter);
   gst_exif_writer_write_tag_header (writer, exiftag->exif_tag,
-      EXIF_TYPE_RATIONAL, 3, offset, FALSE);
+      EXIF_TYPE_RATIONAL, 3, offset, NULL);
   gst_exif_writer_write_rational_data (writer, degrees, 1);
   gst_exif_writer_write_rational_data (writer, minutes, 1);
   gst_exif_writer_write_rational_data (writer, seconds, 1);

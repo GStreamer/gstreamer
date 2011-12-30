@@ -127,6 +127,16 @@ G_STMT_START {                                                              \
       GST_FUNCTION, __LINE__);                                              \
 } G_STMT_END
 
+
+/**
+ * GST_AUDIO_DECODER_MAX_ERRORS:
+ *
+ * Default maximum number of errors tolerated before signaling error.
+ *
+ * Since: 0.10.36
+ */
+#define GST_AUDIO_DECODER_MAX_ERRORS     10
+
 /**
  * GstAudioDecoder:
  *
@@ -179,7 +189,7 @@ struct _GstAudioDecoder
  *                  most notably a call to gst_audio_decoder_finish_frame().
  * @flush:          Optional.
  *                  Instructs subclass to clear any codec caches and discard
- *                  any pending samples and not yet returned encoded data.
+ *                  any pending samples and not yet returned decoded data.
  *                  @hard indicates whether a FLUSH is being processed,
  *                  or otherwise a DISCONT (or conceptually similar).
  * @event:          Optional.
