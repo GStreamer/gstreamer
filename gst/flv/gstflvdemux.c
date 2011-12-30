@@ -42,6 +42,13 @@
 #include <gst/pbutils/descriptions.h>
 #include <gst/pbutils/pbutils.h>
 
+/* FIXME: don't rely on own GstIndex */
+#include "gstindex.c"
+#include "gstmemindex.c"
+#define GST_ASSOCIATION_FLAG_NONE GST_INDEX_ASSOCIATION_FLAG_NONE
+#define GST_ASSOCIATION_FLAG_KEY_UNIT GST_INDEX_ASSOCIATION_FLAG_KEY_UNIT
+#define GST_ASSOCIATION_FLAG_DELTA_UNIT GST_INDEX_ASSOCIATION_FLAG_DELTA_UNIT
+
 static GstStaticPadTemplate flv_sink_template = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
@@ -3079,7 +3086,7 @@ gst_flv_demux_change_state (GstElement * element, GstStateChange transition)
       if (G_UNLIKELY (!demux->index)) {
         GST_DEBUG_OBJECT (demux, "no index provided creating our own");
 
-        demux->index = gst_index_factory_make ("memindex");
+        demux->index = g_object_new (gst_mem_index_get_type (), NULL);
 
         gst_index_get_writer_id (demux->index, GST_OBJECT (demux),
             &demux->index_id);
@@ -3106,6 +3113,7 @@ gst_flv_demux_change_state (GstElement * element, GstStateChange transition)
   return ret;
 }
 
+#if 0
 static void
 gst_flv_demux_set_index (GstElement * element, GstIndex * index)
 {
@@ -3142,6 +3150,7 @@ gst_flv_demux_get_index (GstElement * element)
 
   return result;
 }
+#endif
 
 static void
 gst_flv_demux_dispose (GObject * object)
@@ -3214,8 +3223,11 @@ gst_flv_demux_class_init (GstFlvDemuxClass * klass)
 
   gstelement_class->change_state =
       GST_DEBUG_FUNCPTR (gst_flv_demux_change_state);
+
+#if 0
   gstelement_class->set_index = GST_DEBUG_FUNCPTR (gst_flv_demux_set_index);
   gstelement_class->get_index = GST_DEBUG_FUNCPTR (gst_flv_demux_get_index);
+#endif
 
   gst_element_class_add_pad_template (gstelement_class,
       gst_static_pad_template_get (&flv_sink_template));

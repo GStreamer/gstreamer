@@ -22,6 +22,7 @@
 
 #include <gst/gst.h>
 #include <gst/base/gstadapter.h>
+#include "gstindex.h"
 
 G_BEGIN_DECLS
 #define GST_TYPE_FLV_DEMUX \
