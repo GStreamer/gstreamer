@@ -41,8 +41,7 @@
 
 #include "gsttriggercontrolsource.h"
 #include "gst/glib-compat-private.h"
-
-#include <math.h>
+#include "gst/math-compat.h"
 
 #define GST_CAT_DEFAULT controller_debug
 GST_DEBUG_CATEGORY_STATIC (GST_CAT_DEFAULT);
@@ -79,7 +78,7 @@ _interpolate_trigger (GstTimedValueControlSource * self, GSequenceIter * iter,
   if (found) {
     return cp->value;
   }
-  return FP_NAN;
+  return NAN;
 }
 
 static gboolean
@@ -117,7 +116,7 @@ interpolate_trigger_get_value_array (GstTimedValueControlSource * self,
 
   g_mutex_lock (self->lock);
   for (i = 0; i < n_values; i++) {
-    val = FP_NAN;
+    val = NAN;
     if (ts >= next_ts) {
       iter1 = gst_timed_value_control_source_find_control_point_iter (self, ts);
       if (!iter1) {

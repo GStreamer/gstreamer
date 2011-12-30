@@ -79,6 +79,24 @@ __gst_math_compat_rintf (float x)
 #define rintf(x) __gst_math_compat_rintf(x)
 #endif
 
+#if G_BYTE_ORDER == G_BIG_ENDIAN
+#define __gst_nan_bytes        { 0x7f, 0xc0, 0, 0 }
+#endif
+#if G_BYTE_ORDER == G_LITTLE_ENDIAN
+#define __gst_nan_bytes        { 0, 0, 0xc0, 0x7f }
+#endif
+
+static union {
+  unsigned char __c[4];
+  float __d;
+} __gst_nan_union __attribute_used__ = {
+  __gst_nan_bytes
+};
+
+#ifndef NAN
+#define NAN    (__gst_nan_union.__d)
+#endif
+
 G_END_DECLS
 
 #endif /* __GST_MATH_COMPAT_H__ */

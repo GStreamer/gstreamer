@@ -41,8 +41,7 @@
 
 #include "gstinterpolationcontrolsource.h"
 #include "gst/glib-compat-private.h"
-
-#include <math.h>
+#include "gst/math-compat.h"
 
 #define GST_CAT_DEFAULT controller_debug
 GST_DEBUG_CATEGORY_STATIC (GST_CAT_DEFAULT);
@@ -90,7 +89,7 @@ interpolate_none_get_value_array (GstTimedValueControlSource * self,
 
   g_mutex_lock (self->lock);
   for (i = 0; i < n_values; i++) {
-    val = FP_NAN;
+    val = NAN;
     if (ts >= next_ts) {
       iter1 = gst_timed_value_control_source_find_control_point_iter (self, ts);
       if (!iter1) {
@@ -189,7 +188,7 @@ interpolate_linear_get_value_array (GstTimedValueControlSource * self,
   g_mutex_lock (self->lock);
 
   for (i = 0; i < n_values; i++) {
-    val = FP_NAN;
+    val = NAN;
     if (ts >= next_ts) {
       cp1 = cp2 = NULL;
       iter1 = gst_timed_value_control_source_find_control_point_iter (self, ts);
@@ -403,7 +402,7 @@ interpolate_cubic_get_value_array (GstTimedValueControlSource * self,
   g_mutex_lock (self->lock);
 
   for (i = 0; i < n_values; i++) {
-    val = FP_NAN;
+    val = NAN;
     if (ts >= next_ts) {
       cp1 = cp2 = NULL;
       iter1 = gst_timed_value_control_source_find_control_point_iter (self, ts);
