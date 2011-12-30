@@ -1710,36 +1710,24 @@ GST_END_TEST;
 GST_START_TEST (test_controller_usability)
 {
   GstInterpolationControlSource *csource;
-  GstController *c;
+  GstTimedValueControlSource *cs;
   GstElement *volume;
   GValue value = { 0, };
 
-  /* note: the volume element should init the controller library for us */
   volume = setup_volume ();
-
-  c = gst_controller_new (G_OBJECT (volume), "volume", NULL);
-
-  fail_unless (GST_IS_CONTROLLER (c));
 
   /* this shouldn't crash, whether this mode is implemented or not */
   csource = gst_interpolation_control_source_new ();
   g_object_set (csource, "mode", GST_INTERPOLATION_MODE_CUBIC, NULL);
-  gst_controller_set_control_source (c, "volume", GST_CONTROL_SOURCE (csource));
+  gst_object_set_control_source (volume, "volume",
+      GST_CONTROL_SOURCE (csource));
 
-  g_value_init (&value, G_TYPE_DOUBLE);
-  g_value_set_double (&value, 0.0);
-  gst_timed_value_control_source_set ((GstTimedValueControlSource *) csource,
-      0 * GST_SECOND, &value);
-  g_value_set_double (&value, 1.0);
-  gst_timed_value_control_source_set ((GstTimedValueControlSource *) csource,
-      5 * GST_SECOND, &value);
-  g_value_set_double (&value, 0.0);
-  gst_timed_value_control_source_set ((GstTimedValueControlSource *) csource,
-      10 * GST_SECOND, &value);
-  g_value_unset (&value);
+  cs = (GstTimedValueControlSource *) csource;
+  gst_timed_value_control_source_set (cs, 0 * GST_SECOND, 0.0);
+  gst_timed_value_control_source_set (cs, 5 * GST_SECOND, 1.0);
+  gst_timed_value_control_source_set (cs, 10 * GST_SECOND, 0.0);
 
-  g_object_unref (c);
-  g_object_unref (csource);
+  gst_object_unref (csource);
 
   cleanup_volume (volume);
 }
@@ -1749,7 +1737,6 @@ GST_END_TEST;
 GST_START_TEST (test_controller_processing)
 {
   GstInterpolationControlSource *csource;
-  GstController *c;
   GstElement *volume;
   GstBuffer *inbuffer, *outbuffer;
   GstCaps *caps;
@@ -1759,14 +1746,10 @@ GST_START_TEST (test_controller_processing)
 
   volume = setup_volume ();
 
-  c = gst_controller_new (G_OBJECT (volume), "volume", NULL);
-
-  fail_unless (GST_IS_CONTROLLER (c));
-
   csource = gst_interpolation_control_source_new ();
   g_object_set (csource, "mode", GST_INTERPOLATION_MODE_CUBIC, NULL);
-  gst_controller_set_control_source (c, "volume", GST_CONTROL_SOURCE (csource));
-  g_object_unref (csource);
+  gst_object_set_control_source (volume, "volume",
+      GST_CONTROL_SOURCE (csource));
 
   fail_unless (gst_element_set_state (volume,
           GST_STATE_PLAYING) == GST_STATE_CHANGE_SUCCESS,
@@ -1792,8 +1775,7 @@ GST_START_TEST (test_controller_processing)
   fail_unless (memcmp (res, in, 4) == 0);
   gst_buffer_unmap (outbuffer, res, size);
 
-  g_object_unref (c);
-
+  gst_object_unref (csource);
   cleanup_volume (volume);
 }
 
