@@ -103,9 +103,6 @@ struct _GstMpeg2dec {
   guint64        offset;
   gboolean       need_sequence;
 
-  GstIndex      *index;
-  gint           index_id;
-
   gint           error_count;
   gboolean       can_allocate_aligned;
 

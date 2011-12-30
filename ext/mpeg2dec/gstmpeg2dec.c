@@ -81,9 +81,6 @@ GST_STATIC_PAD_TEMPLATE ("src",
 static void gst_mpeg2dec_finalize (GObject * object);
 static void gst_mpeg2dec_reset (GstMpeg2dec * mpeg2dec);
 
-static void gst_mpeg2dec_set_index (GstElement * element, GstIndex * index);
-static GstIndex *gst_mpeg2dec_get_index (GstElement * element);
-
 static gboolean gst_mpeg2dec_src_event (GstPad * pad, GstObject * parent,
     GstEvent * event);
 
@@ -150,8 +147,6 @@ gst_mpeg2dec_class_init (GstMpeg2decClass * klass)
       "Wim Taymans <wim.taymans@gmail.com>");
 
   gstelement_class->change_state = gst_mpeg2dec_change_state;
-  gstelement_class->set_index = gst_mpeg2dec_set_index;
-  gstelement_class->get_index = gst_mpeg2dec_get_index;
 
   GST_DEBUG_CATEGORY_INIT (mpeg2dec_debug, "mpeg2dec", 0,
       "MPEG2 decoder element");
@@ -192,8 +187,6 @@ gst_mpeg2dec_init (GstMpeg2dec * mpeg2dec)
   mpeg2dec->error_count = 0;
   mpeg2dec->can_allocate_aligned = TRUE;
 
-  GST_OBJECT_FLAG_SET (mpeg2dec, GST_ELEMENT_FLAG_INDEXABLE);
-
   /* initialize the mpeg2dec acceleration */
 }
 
@@ -201,12 +194,6 @@ static void
 gst_mpeg2dec_finalize (GObject * object)
 {
   GstMpeg2dec *mpeg2dec = GST_MPEG2DEC (object);
-
-  if (mpeg2dec->index) {
-    gst_object_unref (mpeg2dec->index);
-    mpeg2dec->index = NULL;
-    mpeg2dec->index_id = 0;
-  }
 
   if (mpeg2dec->decoder) {
     GST_DEBUG_OBJECT (mpeg2dec, "closing decoder");
@@ -223,12 +210,6 @@ gst_mpeg2dec_finalize (GObject * object)
 static void
 gst_mpeg2dec_reset (GstMpeg2dec * mpeg2dec)
 {
-  if (mpeg2dec->index) {
-    gst_object_unref (mpeg2dec->index);
-    mpeg2dec->index = NULL;
-    mpeg2dec->index_id = 0;
-  }
-
   /* reset the initial video state */
   gst_video_info_init (&mpeg2dec->vinfo);
   gst_segment_init (&mpeg2dec->segment, GST_FORMAT_UNDEFINED);
@@ -251,33 +232,6 @@ gst_mpeg2dec_qos_reset (GstMpeg2dec * mpeg2dec)
   mpeg2dec->dropped = 0;
   mpeg2dec->processed = 0;
   GST_OBJECT_UNLOCK (mpeg2dec);
-}
-
-static void
-gst_mpeg2dec_set_index (GstElement * element, GstIndex * index)
-{
-  GstMpeg2dec *mpeg2dec = GST_MPEG2DEC (element);
-
-  GST_OBJECT_LOCK (mpeg2dec);
-  if (mpeg2dec->index)
-    gst_object_unref (mpeg2dec->index);
-  mpeg2dec->index = NULL;
-  mpeg2dec->index_id = 0;
-  if (index) {
-    mpeg2dec->index = gst_object_ref (index);
-  }
-  GST_OBJECT_UNLOCK (mpeg2dec);
-  /* object lock might be taken again */
-  if (index)
-    gst_index_get_writer_id (index, GST_OBJECT (element), &mpeg2dec->index_id);
-}
-
-static GstIndex *
-gst_mpeg2dec_get_index (GstElement * element)
-{
-  GstMpeg2dec *mpeg2dec = GST_MPEG2DEC (element);
-
-  return (mpeg2dec->index) ? gst_object_ref (mpeg2dec->index) : NULL;
 }
 
 #if 0
@@ -922,14 +876,6 @@ handle_slice (GstMpeg2dec * mpeg2dec, const mpeg2_info_t * info)
       picture->nb_fields, GST_BUFFER_OFFSET (outbuf),
       GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (outbuf)));
 
-  if (mpeg2dec->index) {
-    gst_index_add_association (mpeg2dec->index, mpeg2dec->index_id,
-        (key_frame ? GST_ASSOCIATION_FLAG_KEY_UNIT :
-            GST_ASSOCIATION_FLAG_DELTA_UNIT),
-        GST_FORMAT_BYTES, GST_BUFFER_OFFSET (outbuf),
-        GST_FORMAT_TIME, GST_BUFFER_TIMESTAMP (outbuf), 0);
-  }
-
   if (picture->flags & PIC_FLAG_SKIP)
     goto skip;
 
@@ -1286,9 +1232,6 @@ gst_mpeg2dec_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
       break;
     }
     case GST_EVENT_EOS:
-      if (mpeg2dec->index && mpeg2dec->closed) {
-        gst_index_commit (mpeg2dec->index, mpeg2dec->index_id);
-      }
       ret = gst_pad_push_event (mpeg2dec->srcpad, event);
       break;
     default:
@@ -1563,73 +1506,6 @@ gst_mpeg2dec_get_event_masks (GstPad * pad)
 #endif
 
 static gboolean
-index_seek (GstPad * pad, GstEvent * event)
-{
-  GstIndexEntry *entry;
-  GstMpeg2dec *mpeg2dec;
-  gdouble rate;
-  GstFormat format;
-  GstSeekFlags flags;
-  GstSeekType cur_type, stop_type;
-  gint64 cur, stop;
-
-  mpeg2dec = GST_MPEG2DEC (GST_PAD_PARENT (pad));
-
-  gst_event_parse_seek (event, &rate, &format, &flags,
-      &cur_type, &cur, &stop_type, &stop);
-
-  entry = gst_index_get_assoc_entry (mpeg2dec->index, mpeg2dec->index_id,
-      GST_INDEX_LOOKUP_BEFORE, GST_ASSOCIATION_FLAG_KEY_UNIT, format, cur);
-
-  if ((entry) && gst_pad_is_linked (mpeg2dec->sinkpad)) {
-    const GstFormat *peer_formats, *try_formats;
-
-    /* since we know the exact byteoffset of the frame, make sure to seek on bytes first */
-    const GstFormat try_all_formats[] = {
-      GST_FORMAT_BYTES,
-      GST_FORMAT_TIME,
-      0
-    };
-
-    try_formats = try_all_formats;
-
-#if 0
-    peer_formats = gst_pad_get_formats (GST_PAD_PEER (mpeg2dec->sinkpad));
-#else
-    peer_formats = try_all_formats;     /* FIXE ME */
-#endif
-
-    while (gst_formats_contains (peer_formats, *try_formats)) {
-      gint64 value;
-
-      if (gst_index_entry_assoc_map (entry, *try_formats, &value)) {
-        GstEvent *seek_event;
-
-        GST_DEBUG_OBJECT (mpeg2dec, "index %s %" G_GINT64_FORMAT
-            " -> %s %" G_GINT64_FORMAT,
-            gst_format_get_details (format)->nick,
-            cur, gst_format_get_details (*try_formats)->nick, value);
-
-        /* lookup succeeded, create the seek */
-        seek_event =
-            gst_event_new_seek (rate, *try_formats, flags, cur_type, value,
-            stop_type, stop);
-        /* do the seek */
-        if (gst_pad_push_event (mpeg2dec->sinkpad, seek_event)) {
-          /* seek worked, we're done, loop will exit */
-#if 0
-          mpeg2dec->segment_start = GST_EVENT_SEEK_OFFSET (event);
-#endif
-          return TRUE;
-        }
-      }
-      try_formats++;
-    }
-  }
-  return FALSE;
-}
-
-static gboolean
 normal_seek (GstPad * pad, GstEvent * event)
 {
   gdouble rate;
@@ -1713,10 +1589,7 @@ gst_mpeg2dec_src_event (GstPad * pad, GstObject * parent, GstEvent * event)
     case GST_EVENT_SEEK:{
       gst_event_ref (event);
       if (!(res = gst_pad_push_event (mpeg2dec->sinkpad, event))) {
-        if (mpeg2dec->index)
-          res = index_seek (pad, event);
-        else
-          res = normal_seek (pad, event);
+        res = normal_seek (pad, event); /* FIXME: get rid of seeking code */
       }
       gst_event_unref (event);
       break;
