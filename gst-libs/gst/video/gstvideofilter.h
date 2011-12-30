@@ -54,6 +54,9 @@ struct _GstVideoFilter {
 /**
  * GstVideoFilterClass:
  * @parent_class: the parent class structure
+ * @set_info: function to be called with the negotiated caps and video infos
+ * @transform_frame: transform a video frame
+ * @transform_frame_ip: transform a video frame in place
  *
  * The video filter class structure.
  */

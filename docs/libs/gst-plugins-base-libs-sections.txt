@@ -382,7 +382,6 @@ GstAudioRingBuffer
 GstAudioRingBufferClass
 GstAudioRingBufferSpec
 GstAudioRingBufferCallback
-GstAudioRingBufferSegState
 GstAudioRingBufferState
 GstAudioRingBufferFormatType
 

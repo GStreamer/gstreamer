@@ -157,7 +157,6 @@ struct _GstAudioRingBufferSpec
  * @memory: data in the ringbuffer
  * @size: size of data in the ringbuffer
  * @spec: format and layout of the ringbuffer data
- * @segstate: status of each segment in the ringbuffer (unused)
  * @samples_per_seg: number of samples in one segment
  * @empty_seg: pointer to memory holding one segment of silence samples
  * @state: state of the buffer

@@ -499,7 +499,7 @@ gst_audio_decoder_finalize (GObject * object)
  * sanity checking of @caps and extracts output data format
  *
  * Returns: %TRUE on success.
- * */
+ **/
 gboolean
 gst_audio_decoder_set_outcaps (GstAudioDecoder * dec, GstCaps * caps)
 {

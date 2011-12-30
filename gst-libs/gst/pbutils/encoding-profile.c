@@ -454,7 +454,8 @@ gst_encoding_container_profile_class_init (GObjectClass * klass)
  * @profile: a #GstEncodingContainerProfile
  *
  * Returns: (element-type GstPbutils.EncodingProfile) (transfer none):
- * the list of contained #GstEncodingProfile. */
+ * the list of contained #GstEncodingProfile.
+ */
 const GList *
 gst_encoding_container_profile_get_profiles (GstEncodingContainerProfile *
     profile)
