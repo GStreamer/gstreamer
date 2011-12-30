@@ -27,6 +27,9 @@ SUPPRESSIONS = $(top_srcdir)/common/gst.supp
 
 clean-local: clean-local-check
 
+# These tests don't even build any longer:
+#   gst/gstindex.c
+
 if GST_DISABLE_PARSE
 PARSE_CHECKS = pipelines/parse-disabled
 else
@@ -67,7 +70,6 @@ REGISTRY_CHECKS =				\
 	gst/gstelementfactory			\
 	gst/gstevent				\
 	gst/gstghostpad				\
-	gst/gstindex				\
 	gst/gstplugin				\
 	gst/gstpreset				\
 	gst/gstquery				\
