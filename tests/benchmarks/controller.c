@@ -163,7 +163,7 @@ main (gint argc, gchar * argv[])
         GST_TIME_ARGS (elapsed));
   }
 
-  g_object_unref (csource);
+  gst_object_unref (csource);
 
   /* play, this test sequential reads */
   bt = gst_util_get_timestamp ();

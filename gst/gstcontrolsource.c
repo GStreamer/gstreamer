@@ -56,7 +56,7 @@ GST_DEBUG_CATEGORY_STATIC (GST_CAT_DEFAULT);
       "dynamic parameter control sources");
 
 G_DEFINE_ABSTRACT_TYPE_WITH_CODE (GstControlSource, gst_control_source,
-    G_TYPE_OBJECT, _do_init);
+    GST_TYPE_OBJECT, _do_init);
 
 static void
 gst_control_source_class_init (GstControlSourceClass * klass)

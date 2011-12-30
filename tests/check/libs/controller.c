@@ -243,7 +243,7 @@ GST_START_TEST (controller_controlsource_empty1)
   gst_object_sync_values (GST_OBJECT (elem), 0 * GST_SECOND);
 
   /* unref objects */
-  g_object_unref (csource);
+  gst_object_unref (csource);
   gst_object_unref (elem);
 }
 
@@ -275,7 +275,7 @@ GST_START_TEST (controller_controlsource_empty2)
   gst_object_sync_values (GST_OBJECT (elem), 0 * GST_SECOND);
 
   /* unref objects */
-  g_object_unref (csource);
+  gst_object_unref (csource);
   gst_object_unref (elem);
 }
 
@@ -314,7 +314,7 @@ GST_START_TEST (controller_interpolate_none)
   fail_unless (res, NULL);
   fail_unless (gst_timed_value_control_source_get_count (cs) == 2);
 
-  g_object_unref (csource);
+  gst_object_unref (csource);
 
   /* now pull in values for some timestamps */
   gst_object_sync_values (GST_OBJECT (elem), 0 * GST_SECOND);
@@ -356,7 +356,7 @@ GST_START_TEST (controller_interpolate_linear)
   res = gst_timed_value_control_source_set (cs, 2 * GST_SECOND, 1.0);
   fail_unless (res, NULL);
 
-  g_object_unref (csource);
+  gst_object_unref (csource);
 
   /* now pull in values for some timestamps */
   gst_object_sync_values (GST_OBJECT (elem), 0 * GST_SECOND);
@@ -402,7 +402,7 @@ GST_START_TEST (controller_interpolate_cubic)
   res = gst_timed_value_control_source_set (cs, 4 * GST_SECOND, 0.8);
   fail_unless (res, NULL);
 
-  g_object_unref (csource);
+  gst_object_unref (csource);
 
   /* now pull in values for some timestamps */
   gst_object_sync_values (GST_OBJECT (elem), 0 * GST_SECOND);
@@ -451,7 +451,7 @@ GST_START_TEST (controller_interpolate_cubic_too_few_cp)
   res = gst_timed_value_control_source_set (cs, 2 * GST_SECOND, 0.4);
   fail_unless (res, NULL);
 
-  g_object_unref (csource);
+  gst_object_unref (csource);
 
   /* now pull in values for some timestamps and verify that it used linear
    * interpolation as we don't gave enough control points
@@ -521,7 +521,7 @@ GST_START_TEST (controller_interpolation_unset)
   gst_timed_value_control_source_unset_all (cs);
   fail_if (gst_timed_value_control_source_unset (cs, 2 * GST_SECOND));
 
-  g_object_unref (csource);
+  gst_object_unref (csource);
 
   gst_object_unref (elem);
 }
@@ -565,7 +565,7 @@ GST_START_TEST (controller_interpolation_unset_all)
   gst_timed_value_control_source_unset_all (cs);
   GST_TEST_OBJ (elem)->val_int = 0;
 
-  g_object_unref (csource);
+  gst_object_unref (csource);
 
   /* verify value again */
   gst_object_sync_values (GST_OBJECT (elem), 1 * GST_SECOND);
@@ -627,7 +627,7 @@ GST_START_TEST (controller_interpolation_linear_value_array)
 
   g_free (g_values);
 
-  g_object_unref (csource);
+  gst_object_unref (csource);
 
   gst_object_unref (elem);
 }
@@ -661,7 +661,7 @@ GST_START_TEST (controller_interpolation_linear_invalid_values)
   res = gst_timed_value_control_source_set (cs, 4 * GST_SECOND, -2.0);
   fail_unless (res, NULL);
 
-  g_object_unref (csource);
+  gst_object_unref (csource);
 
   /* now pull in values for some timestamps and see if clipping works */
   /* 200.0 */
@@ -754,7 +754,7 @@ GST_START_TEST (controller_interpolation_linear_default_values)
   gst_object_sync_values (GST_OBJECT (elem), 2 * GST_SECOND);
   fail_unless_equals_int (GST_TEST_OBJ (elem)->val_int, 100);
 
-  g_object_unref (csource);
+  gst_object_unref (csource);
 
   gst_object_unref (elem);
 }
@@ -793,7 +793,7 @@ GST_START_TEST (controller_interpolate_linear_disabled)
   res = gst_timed_value_control_source_set (cs, 2 * GST_SECOND, 1.0);
   fail_unless (res, NULL);
 
-  g_object_unref (csource1);
+  gst_object_unref (csource1);
 
   /* set control values */
   cs = (GstTimedValueControlSource *) csource2;
@@ -802,7 +802,7 @@ GST_START_TEST (controller_interpolate_linear_disabled)
   res = gst_timed_value_control_source_set (cs, 2 * GST_SECOND, 0.4);
   fail_unless (res, NULL);
 
-  g_object_unref (csource2);
+  gst_object_unref (csource2);
 
   /* now pull in values for some timestamps */
   gst_object_sync_values (GST_OBJECT (elem), 0 * GST_SECOND);
@@ -926,7 +926,7 @@ GST_START_TEST (controller_interpolation_set_from_list)
   fail_unless (gst_timed_value_control_source_set_from_list (
           (GstTimedValueControlSource *) csource, list));
 
-  g_object_unref (csource);
+  gst_object_unref (csource);
 
   /* allocated GstTimedValue now belongs to the controller, but list not */
   g_free (tval);
@@ -964,7 +964,7 @@ GST_START_TEST (controller_interpolate_linear_before_ts0)
   res = gst_timed_value_control_source_set (cs, 4 * GST_SECOND, 0.0);
   fail_unless (res, NULL);
 
-  g_object_unref (csource);
+  gst_object_unref (csource);
 
   /* now pull in values for some timestamps after first control point */
   gst_object_sync_values (GST_OBJECT (elem), 2 * GST_SECOND);
@@ -1027,7 +1027,7 @@ GST_START_TEST (controller_interpolation_cp_count)
   fail_unless (res, NULL);
   fail_unless (gst_timed_value_control_source_get_count (cs) == 0);
 
-  g_object_unref (csource);
+  gst_object_unref (csource);
 
   gst_object_unref (elem);
 }
@@ -1054,7 +1054,7 @@ GST_START_TEST (controller_lfo_sine)
       "frequency", 1.0, "timeshift", (GstClockTime) 0,
       "amplitude", 0.5, "offset", 0.5, NULL);
 
-  g_object_unref (csource);
+  gst_object_unref (csource);
 
   /* now pull in values for some timestamps */
   gst_object_sync_values (GST_OBJECT (elem), 0 * GST_MSECOND);
@@ -1107,7 +1107,7 @@ GST_START_TEST (controller_lfo_sine_timeshift)
       "frequency", 1.0, "timeshift", 250 * GST_MSECOND,
       "amplitude", 0.5, "offset", 0.5, NULL);
 
-  g_object_unref (csource);
+  gst_object_unref (csource);
 
 /* now pull in values for some timestamps */
   gst_object_sync_values (GST_OBJECT (elem), 0 * GST_MSECOND);
@@ -1160,7 +1160,7 @@ GST_START_TEST (controller_lfo_square)
       "frequency", 1.0, "timeshift", (GstClockTime) 0,
       "amplitude", 0.5, "offset", 0.5, NULL);
 
-  g_object_unref (csource);
+  gst_object_unref (csource);
 
   /* now pull in values for some timestamps */
   gst_object_sync_values (GST_OBJECT (elem), 0 * GST_MSECOND);
@@ -1213,7 +1213,7 @@ GST_START_TEST (controller_lfo_saw)
       "frequency", 1.0, "timeshift", (GstClockTime) 0,
       "amplitude", 0.5, "offset", 0.5, NULL);
 
-  g_object_unref (csource);
+  gst_object_unref (csource);
 
   /* now pull in values for some timestamps */
   gst_object_sync_values (GST_OBJECT (elem), 0 * GST_MSECOND);
@@ -1266,7 +1266,7 @@ GST_START_TEST (controller_lfo_rsaw)
       "frequency", 1.0, "timeshift", (GstClockTime) 0,
       "amplitude", 0.5, "offset", 0.5, NULL);
 
-  g_object_unref (csource);
+  gst_object_unref (csource);
 
   /* now pull in values for some timestamps */
   gst_object_sync_values (GST_OBJECT (elem), 0 * GST_MSECOND);
@@ -1319,7 +1319,7 @@ GST_START_TEST (controller_lfo_triangle)
       "frequency", 1.0, "timeshift", (GstClockTime) 0,
       "amplitude", 0.5, "offset", 0.5, NULL);
 
-  g_object_unref (csource);
+  gst_object_unref (csource);
 
   /* now pull in values for some timestamps */
   gst_object_sync_values (GST_OBJECT (elem), 0 * GST_MSECOND);
@@ -1367,7 +1367,7 @@ GST_START_TEST (controller_lfo_none)
   fail_unless (gst_object_set_control_source (GST_OBJECT (elem), "int",
           GST_CONTROL_SOURCE (csource)));
 
-  g_object_unref (csource);
+  gst_object_unref (csource);
 
   /* now pull in values for some timestamps */
   gst_object_sync_values (GST_OBJECT (elem), 0 * GST_MSECOND);
@@ -1440,7 +1440,7 @@ GST_START_TEST (controller_trigger_exact)
   gst_object_sync_values (GST_OBJECT (elem), 2 * GST_SECOND);
   fail_unless_equals_int (GST_TEST_OBJ (elem)->val_int, 100);
 
-  g_object_unref (csource);
+  gst_object_unref (csource);
   gst_object_unref (elem);
 }
 
@@ -1489,7 +1489,7 @@ GST_START_TEST (controller_trigger_tolerance)
   gst_object_sync_values (GST_OBJECT (elem), 2 * GST_SECOND);
   fail_unless_equals_int (GST_TEST_OBJ (elem)->val_int, 100);
 
-  g_object_unref (csource);
+  gst_object_unref (csource);
   gst_object_unref (elem);
 }
 

@@ -218,6 +218,7 @@ test_interpolation (void)
 
   fclose (f);
 
+  gst_object_unref (ics);
   gst_object_unref (e);
 }
 
@@ -268,6 +269,7 @@ test_lfo (void)
 
   fclose (f);
 
+  gst_object_unref (lfocs);
   gst_object_unref (e);
 }
 

@@ -333,7 +333,7 @@ GST_START_TEST (controller_new_fail1)
       GST_CONTROL_SOURCE (cs));
   fail_unless (res == FALSE, NULL);
 
-  g_object_unref (cs);
+  gst_object_unref (cs);
   gst_object_unref (elem);
 }
 
@@ -354,7 +354,7 @@ GST_START_TEST (controller_new_fail2)
           "readonly", GST_CONTROL_SOURCE (cs)));
   fail_unless (res == FALSE, NULL);
 
-  g_object_unref (cs);
+  gst_object_unref (cs);
   gst_object_unref (elem);
 }
 
@@ -375,7 +375,7 @@ GST_START_TEST (controller_new_fail3)
           "static", GST_CONTROL_SOURCE (cs)));
   fail_unless (res == FALSE, NULL);
 
-  g_object_unref (cs);
+  gst_object_unref (cs);
   gst_object_unref (elem);
 }
 
@@ -397,7 +397,7 @@ GST_START_TEST (controller_new_fail4)
           GST_CONTROL_SOURCE (cs)));
   fail_unless (res == FALSE, NULL);
 
-  g_object_unref (cs);
+  gst_object_unref (cs);
   gst_object_unref (elem);
 }
 
@@ -419,7 +419,7 @@ GST_START_TEST (controller_new_okay1)
       GST_CONTROL_SOURCE (cs));
   fail_unless (res == TRUE, NULL);
 
-  g_object_unref (cs);
+  gst_object_unref (cs);
   gst_object_unref (elem);
 }
 
@@ -445,8 +445,8 @@ GST_START_TEST (controller_new_okay2)
       GST_CONTROL_SOURCE (cs2));
   fail_unless (res == TRUE, NULL);
 
-  g_object_unref (cs1);
-  g_object_unref (cs2);
+  gst_object_unref (cs1);
+  gst_object_unref (cs2);
   gst_object_unref (elem);
 }
 
@@ -482,7 +482,7 @@ GST_START_TEST (controller_param_twice)
   res = gst_object_set_control_source (GST_OBJECT (elem), "int", NULL);
   fail_unless (!res, NULL);
 
-  g_object_unref (cs);
+  gst_object_unref (cs);
   gst_object_unref (elem);
 }
 
@@ -526,8 +526,8 @@ GST_START_TEST (controller_controlsource_refcounts)
   fail_unless (test_csource != NULL, NULL);
   fail_unless (test_csource == csource);
   fail_unless_equals_int (G_OBJECT (csource)->ref_count, 3);
-  g_object_unref (test_csource);
-  g_object_unref (csource);
+  gst_object_unref (test_csource);
+  gst_object_unref (csource);
 
   gst_object_unref (elem);
 }
@@ -550,7 +550,7 @@ GST_START_TEST (controller_bind_twice)
   fail_unless (gst_object_set_control_source (GST_OBJECT (elem), "double",
           csource));
 
-  g_object_unref (csource);
+  gst_object_unref (csource);
 
   gst_object_unref (elem);
 }
@@ -575,7 +575,7 @@ GST_START_TEST (controller_sync1)
   fail_unless (gst_object_sync_values (GST_OBJECT (elem), 0LL));
   fail_unless_equals_int (GST_TEST_OBJ (elem)->val_int, 50);
 
-  g_object_unref (csource);
+  gst_object_unref (csource);
 
   gst_object_unref (elem);
 }
@@ -603,7 +603,7 @@ GST_START_TEST (controller_sync2)
   fail_unless_equals_int (GST_TEST_OBJ (elem)->val_int, 50);
   fail_unless_equals_float (GST_TEST_OBJ (elem)->val_double, 50.0);
 
-  g_object_unref (csource);
+  gst_object_unref (csource);
 
   gst_object_unref (elem);
 }

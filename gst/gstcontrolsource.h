@@ -100,7 +100,7 @@ typedef gboolean (* GstControlSourceGetValueArray) (GstControlSource *self,
  * The instance structure of #GstControlSource.
  */
 struct _GstControlSource {
-  GObject parent;
+  GstObject parent;
 
   /*< public >*/
   GstControlSourceGetValue get_value;             /* Returns the value for a property at a given timestamp */
@@ -120,7 +120,7 @@ struct _GstControlSource {
 
 struct _GstControlSourceClass
 {
-  GObjectClass parent_class;
+  GstObjectClass parent_class;
 
   /*< private >*/
   gpointer _gst_reserved[GST_PADDING];
