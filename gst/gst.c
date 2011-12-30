@@ -1149,6 +1149,9 @@ gst_deinit (void)
   g_type_class_unref (g_type_class_peek (gst_segment_flags_get_type ()));
   g_type_class_unref (g_type_class_peek (gst_scheduling_flags_get_type ()));
 
+  g_type_class_unref (g_type_class_peek (gst_control_binding_get_type ()));
+  g_type_class_unref (g_type_class_peek (gst_control_source_get_type ()));
+
   gst_deinitialized = TRUE;
   GST_INFO ("deinitialized GStreamer");
 }
