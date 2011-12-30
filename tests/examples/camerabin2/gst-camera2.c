@@ -31,6 +31,9 @@
 
 #include "gst-camera2.h"
 
+#include <string.h>
+
+#include <gst/pbutils/encoding-profile.h>
 #include <gst/gst.h>
 #include <gst/video/videooverlay.h>
 #include <gtk/gtk.h>
@@ -41,6 +44,78 @@
 
 static GstElement *camera;
 static GtkBuilder *builder;
+static GtkWidget *ui_main_window;
+
+typedef struct
+{
+  const gchar *name;
+  GstEncodingProfile *(*create_profile) ();
+} GstCameraVideoFormat;
+
+static GstEncodingProfile *
+create_ogg_profile (void)
+{
+  GstEncodingContainerProfile *container;
+
+  container = gst_encoding_container_profile_new ("ogg", NULL,
+      gst_caps_new_empty_simple ("application/ogg"), NULL);
+
+  gst_encoding_container_profile_add_profile (container, (GstEncodingProfile *)
+      gst_encoding_video_profile_new (gst_caps_new_empty_simple
+          ("video/x-theora"), NULL, NULL, 1));
+  gst_encoding_container_profile_add_profile (container, (GstEncodingProfile *)
+      gst_encoding_audio_profile_new (gst_caps_new_empty_simple
+          ("audio/x-vorbis"), NULL, NULL, 1));
+
+  return (GstEncodingProfile *) container;
+}
+
+static GstEncodingProfile *
+create_webm_profile (void)
+{
+  GstEncodingContainerProfile *container;
+
+  container = gst_encoding_container_profile_new ("webm", NULL,
+      gst_caps_new_empty_simple ("video/webm"), NULL);
+
+  gst_encoding_container_profile_add_profile (container, (GstEncodingProfile *)
+      gst_encoding_video_profile_new (gst_caps_new_empty_simple ("video/x-vp8"),
+          NULL, NULL, 1));
+  gst_encoding_container_profile_add_profile (container, (GstEncodingProfile *)
+      gst_encoding_audio_profile_new (gst_caps_new_empty_simple
+          ("audio/x-vorbis"), NULL, NULL, 1));
+
+  return (GstEncodingProfile *) container;
+}
+
+static GstEncodingProfile *
+create_mp4_profile (void)
+{
+  GstEncodingContainerProfile *container;
+
+  container = gst_encoding_container_profile_new ("mp4", NULL,
+      gst_caps_new_simple ("video/quicktime", "variant", G_TYPE_STRING, "iso",
+          NULL), NULL);
+
+  gst_encoding_container_profile_add_profile (container, (GstEncodingProfile *)
+      gst_encoding_video_profile_new (gst_caps_new_empty_simple
+          ("video/x-h264"), NULL, NULL, 1));
+  gst_encoding_container_profile_add_profile (container, (GstEncodingProfile *)
+      gst_encoding_audio_profile_new (gst_caps_new_simple ("audio/mpeg",
+              "version", G_TYPE_INT, 4, NULL), NULL, NULL, 1));
+
+  return (GstEncodingProfile *) container;
+}
+
+GstCameraVideoFormat formats[] = {
+  {"ogg (theora/vorbis)", create_ogg_profile}
+  ,
+  {"webm (vp8/vorbis)", create_webm_profile}
+  ,
+  {"mp4 (h264+aac)", create_mp4_profile}
+  ,
+  {NULL, NULL}
+};
 
 void
 on_mainWindow_delete_event (GtkWidget * widget, GdkEvent * event, gpointer data)
@@ -82,6 +157,36 @@ on_viewfinderArea_realize (GtkWidget * widget, gpointer data)
 #if GTK_CHECK_VERSION (2, 18, 0)
   gdk_window_ensure_native (gtk_widget_get_window (widget));
 #endif
+}
+
+void
+on_formatComboBox_changed (GtkWidget * widget, gpointer data)
+{
+  GstEncodingProfile *profile = NULL;
+  gint index = gtk_combo_box_get_active (GTK_COMBO_BOX (widget));
+
+  if (formats[index].create_profile) {
+    profile = formats[index].create_profile ();
+  }
+
+  g_return_if_fail (profile != NULL);
+  gst_element_set_state (camera, GST_STATE_NULL);
+  g_object_set (camera, "video-profile", profile, NULL);
+  gst_encoding_profile_unref (profile);
+
+  if (GST_STATE_CHANGE_FAILURE == gst_element_set_state (camera,
+          GST_STATE_PLAYING)) {
+    GtkWidget *dialog =
+        gtk_message_dialog_new (GTK_WINDOW (ui_main_window), GTK_DIALOG_MODAL,
+        GTK_MESSAGE_ERROR, GTK_BUTTONS_OK,
+        "Could not initialize camerabin2 with the "
+        "selected format. Your system might not have the required plugins installed.\n"
+        "Please select another format.");
+
+    gtk_dialog_run (GTK_DIALOG (dialog));
+
+    gtk_widget_destroy (dialog);
+  }
 }
 
 static GstBusSyncReply
@@ -152,11 +257,28 @@ bus_callback (GstBus * bus, GstMessage * message, gpointer data)
   return TRUE;
 }
 
+static void
+init_gtkwidgets_data (void)
+{
+  gint i;
+  GtkComboBoxText *combobox =
+      GTK_COMBO_BOX_TEXT (gtk_builder_get_object (builder, "formatComboBox"));
+
+  /* init formats combobox */
+  i = 0;
+  while (formats[i].name) {
+    gtk_combo_box_text_append_text (combobox, formats[i].name);
+    i++;
+  }
+
+  /* default to the first one -> ogg */
+  gtk_combo_box_set_active (GTK_COMBO_BOX (combobox), 0);
+}
+
 int
 main (int argc, char *argv[])
 {
   int ret = 0;
-  GtkWidget *ui_main_window;
   GError *error = NULL;
   GstBus *bus;
 
@@ -175,6 +297,8 @@ main (int argc, char *argv[])
   gst_bus_add_watch (bus, bus_callback, NULL);
   gst_bus_set_sync_handler (bus, bus_sync_callback, NULL);
   gst_object_unref (bus);
+
+  init_gtkwidgets_data ();
 
   ui_main_window = GTK_WIDGET (gtk_builder_get_object (builder, "mainWindow"));
   gtk_builder_connect_signals (builder, NULL);

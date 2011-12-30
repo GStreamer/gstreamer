@@ -152,6 +152,8 @@ gst_base_video_codec_reset (GstBaseVideoCodec * base_video_codec)
 
   gst_buffer_replace (&base_video_codec->state.codec_data, NULL);
   gst_caps_replace (&base_video_codec->state.caps, NULL);
+  memset (&base_video_codec->state, 0, sizeof (GstVideoState));
+  base_video_codec->state.format = GST_VIDEO_FORMAT_UNKNOWN;
   GST_BASE_VIDEO_CODEC_STREAM_UNLOCK (base_video_codec);
 }
 
