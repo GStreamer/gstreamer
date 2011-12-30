@@ -229,16 +229,8 @@ GST_END_TEST;
  * information about the source line where the failing object was created.
  */
 
-#define CMP_FAIL(obj, ...) \
-{\
-  gchar *file, *func;\
-  guint line;\
-  file = g_object_get_data (G_OBJECT(obj), "file");\
-  func = g_object_get_data (G_OBJECT(obj), "function");\
-  line = GPOINTER_TO_UINT(g_object_get_data (G_OBJECT(obj), "line"));\
-  gst_debug_log (GST_CAT_DEFAULT, GST_LEVEL_ERROR, file, func,\
-      line, G_OBJECT(obj), __VA_ARGS__);\
-}
+#define CMP_FAIL(a, ...)	\
+  fail_unless (FALSE, __VA_ARGS__);
 
 /* compare two GObjects for equality. pointer identity and GType short-circuit
  * the comparison. If a and b are not identical pointers and of the same
@@ -280,7 +272,8 @@ ges_objs_equal (GObject * a, GObject * b)
 
     /* ignore name and layer properties */
     if (!g_strcmp0 ("name", (*iter)->name) ||
-        !g_strcmp0 ("layer", (*iter)->name))
+        !g_strcmp0 ("layer", (*iter)->name) ||
+        !g_strcmp0 ("parent", (*iter)->name))
       continue;
 
     /* special case caps property */
@@ -311,13 +304,16 @@ ges_objs_equal (GObject * a, GObject * b)
     g_object_get_property (b, (*iter)->name, &bv);
 
     if (g_param_values_cmp (*iter, &av, &bv) != 0) {
-      const gchar *a_str, *b_str;
+      gchar *a_str, *b_str;
 
       a_str = gst_value_serialize (&av);
       b_str = gst_value_serialize (&bv);
 
       CMP_FAIL (b, "%s's %p and %p differ by property %s (%s != %s)",
           typename, a, b, (*iter)->name, a_str, b_str);
+
+      g_free (a_str);
+      g_free (b_str);
 
       goto fail;
     }
