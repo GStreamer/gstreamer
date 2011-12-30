@@ -180,9 +180,12 @@ typedef struct _GstAviDemux {
   GstTagList	*globaltags;
   gboolean	 got_tags;
 
+#if 0
   /* gst index support */
   GstIndex      *element_index;
   gint           index_id;
+#endif
+
   gboolean       seekable;
 
   guint64        first_movi_offset;

@@ -105,9 +105,10 @@ static gboolean gst_avi_demux_sink_activate_mode (GstPad * sinkpad,
     GstObject * parent, GstPadMode mode, gboolean active);
 static GstFlowReturn gst_avi_demux_chain (GstPad * pad, GstObject * parent,
     GstBuffer * buf);
-
+#if 0
 static void gst_avi_demux_set_index (GstElement * element, GstIndex * index);
 static GstIndex *gst_avi_demux_get_index (GstElement * element);
+#endif
 static GstStateChangeReturn gst_avi_demux_change_state (GstElement * element,
     GstStateChange transition);
 static void gst_avi_demux_calculate_durations_from_index (GstAviDemux * avi);
@@ -137,8 +138,10 @@ gst_avi_demux_class_init (GstAviDemuxClass * klass)
 
   gstelement_class->change_state =
       GST_DEBUG_FUNCPTR (gst_avi_demux_change_state);
+#if 0
   gstelement_class->set_index = GST_DEBUG_FUNCPTR (gst_avi_demux_set_index);
   gstelement_class->get_index = GST_DEBUG_FUNCPTR (gst_avi_demux_get_index);
+#endif
 
   audcaps = gst_riff_create_audio_template_caps ();
   gst_caps_append (audcaps, gst_caps_new_empty_simple ("audio/x-avi-unknown"));
@@ -252,9 +255,11 @@ gst_avi_demux_reset (GstAviDemux * avi)
   g_free (avi->avih);
   avi->avih = NULL;
 
+#if 0
   if (avi->element_index)
     gst_object_unref (avi->element_index);
   avi->element_index = NULL;
+#endif
 
   if (avi->seg_event) {
     gst_event_unref (avi->seg_event);
@@ -580,6 +585,7 @@ gst_avi_demux_get_event_mask (GstPad * pad)
 }
 #endif
 
+#if 0
 static guint64
 gst_avi_demux_seek_streams (GstAviDemux * avi, guint64 offset, gboolean before)
 {
@@ -625,6 +631,7 @@ gst_avi_demux_seek_streams (GstAviDemux * avi, guint64 offset, gboolean before)
 
   return min;
 }
+#endif
 
 static guint
 gst_avi_demux_index_entry_offset_search (GstAviIndexEntry * entry,
@@ -769,6 +776,7 @@ gst_avi_demux_handle_sink_event (GstPad * pad, GstObject * parent,
         /* get the ts corresponding to start offset bytes for the stream */
         gst_avi_demux_get_buffer_info (avi, stream, index,
             (GstClockTime *) & segment.time, NULL, NULL, NULL);
+#if 0
       } else if (avi->element_index) {
         GstIndexEntry *entry;
 
@@ -786,6 +794,7 @@ gst_avi_demux_handle_sink_event (GstPad * pad, GstObject * parent,
         gst_index_entry_assoc_map (entry, GST_FORMAT_TIME,
             (gint64 *) & segment.time);
         gst_index_entry_assoc_map (entry, GST_FORMAT_BYTES, &offset);
+#endif
       } else {
         GST_WARNING_OBJECT (avi, "no index data, forcing EOS");
         goto eos;
@@ -811,8 +820,10 @@ gst_avi_demux_handle_sink_event (GstPad * pad, GstObject * parent,
       /* adjust state for streaming thread accordingly */
       if (avi->have_index)
         gst_avi_demux_seek_streams_index (avi, offset, FALSE);
+#if 0
       else
         gst_avi_demux_seek_streams (avi, offset, FALSE);
+#endif
 
       /* set up streaming thread */
       g_assert (offset >= boffset);
@@ -1828,9 +1839,11 @@ gst_avi_demux_expose_streams (GstAviDemux * avi, gboolean force)
           GST_PAD_NAME (stream->pad));
       gst_element_add_pad ((GstElement *) avi, stream->pad);
 
+#if 0
       if (avi->element_index)
         gst_index_get_writer_id (avi->element_index,
             GST_OBJECT_CAST (stream->pad), &stream->index_id);
+#endif
 
       stream->exposed = TRUE;
       if (avi->main_stream == -1)
@@ -4447,6 +4460,7 @@ gst_avi_demux_invert (GstAviStream * stream, GstBuffer * buf)
   return buf;
 }
 
+#if 0
 static void
 gst_avi_demux_add_assoc (GstAviDemux * avi, GstAviStream * stream,
     GstClockTime timestamp, guint64 offset, gboolean keyframe)
@@ -4467,6 +4481,7 @@ gst_avi_demux_add_assoc (GstAviDemux * avi, GstAviStream * stream,
         NULL);
   }
 }
+#endif
 
 /*
  * Returns the aggregated GstFlowReturn.
@@ -4720,8 +4735,9 @@ gst_avi_demux_loop_data (GstAviDemux * avi)
       GST_BUFFER_FLAG_SET (buf, GST_BUFFER_FLAG_DISCONT);
       stream->discont = FALSE;
     }
-
+#if 0
     gst_avi_demux_add_assoc (avi, stream, timestamp, offset, keyframe);
+#endif
 
     /* update current position in the segment */
     avi->segment.position = timestamp;
@@ -4913,7 +4929,9 @@ gst_avi_demux_stream_data (GstAviDemux * avi)
       GstAviStream *stream;
       GstClockTime next_ts = 0;
       GstBuffer *buf = NULL;
+#if 0
       guint64 offset;
+#endif
       gboolean saw_desired_kf = stream_nr != avi->main_stream
           || avi->offset >= avi->seek_kf_offset;
 
@@ -4938,7 +4956,9 @@ gst_avi_demux_stream_data (GstAviDemux * avi)
         gst_adapter_flush (avi->adapter, 8 + GST_ROUND_UP_2 (size));
       }
 
+#if 0
       offset = avi->offset;
+#endif
       avi->offset += 8 + GST_ROUND_UP_2 (size);
 
       stream = &avi->stream[stream_nr];
@@ -4960,7 +4980,9 @@ gst_avi_demux_stream_data (GstAviDemux * avi)
         gst_pad_query_position (stream->pad, GST_FORMAT_TIME,
             (gint64 *) & next_ts);
 
+#if 0
         gst_avi_demux_add_assoc (avi, stream, next_ts, offset, FALSE);
+#endif
 
         /* increment our positions */
         stream->current_entry++;
@@ -5332,6 +5354,7 @@ gst_avi_demux_sink_activate_mode (GstPad * sinkpad, GstObject * parent,
   return res;
 }
 
+#if 0
 static void
 gst_avi_demux_set_index (GstElement * element, GstIndex * index)
 {
@@ -5367,6 +5390,7 @@ gst_avi_demux_get_index (GstElement * element)
 
   return result;
 }
+#endif
 
 static GstStateChangeReturn
 gst_avi_demux_change_state (GstElement * element, GstStateChange transition)
