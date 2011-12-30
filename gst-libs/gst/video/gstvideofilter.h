@@ -49,6 +49,9 @@ struct _GstVideoFilter {
   gboolean negotiated;
   GstVideoInfo in_info;
   GstVideoInfo out_info;
+
+  /*< private >*/
+  gpointer _gst_reserved[GST_PADDING];
 };
 
 /**
@@ -71,6 +74,9 @@ struct _GstVideoFilterClass {
   GstFlowReturn (*transform_frame)    (GstVideoFilter *filter,
                                        GstVideoFrame *inframe, GstVideoFrame *outframe);
   GstFlowReturn (*transform_frame_ip) (GstVideoFilter *trans, GstVideoFrame *frame);
+
+  /*< private >*/
+  gpointer _gst_reserved[GST_PADDING];
 };
 
 GType gst_video_filter_get_type (void);
