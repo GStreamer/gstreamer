@@ -106,6 +106,13 @@ void
 ges_timeline_pipeline_preview_set_video_sink (GESTimelinePipeline * self,
     GstElement * sink);
 
+GstElement *
+ges_timeline_pipeline_preview_get_audio_sink (GESTimelinePipeline * self);
+
+void
+ges_timeline_pipeline_preview_set_audio_sink (GESTimelinePipeline * self,
+    GstElement * sink);
+
 G_END_DECLS
 
 #endif /* _GES_TIMELINE_PIPELINE */

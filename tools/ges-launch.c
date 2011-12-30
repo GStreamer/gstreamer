@@ -129,44 +129,50 @@ make_encoding_profile (gchar * audio, gchar * video, gchar * video_restriction,
       NULL);
   gst_caps_unref (caps);
 
-  caps = gst_caps_from_string (audio);
-  stream = (GstEncodingProfile *)
-      gst_encoding_audio_profile_new (caps, audio_preset, NULL, 0);
-  gst_encoding_container_profile_add_profile (profile, stream);
-  gst_caps_unref (caps);
+  if (audio) {
+    caps = gst_caps_from_string (audio);
+    stream = (GstEncodingProfile *)
+        gst_encoding_audio_profile_new (caps, audio_preset, NULL, 0);
+    gst_encoding_container_profile_add_profile (profile, stream);
+    gst_caps_unref (caps);
+  }
 
-  caps = gst_caps_from_string (video);
-  stream = (GstEncodingProfile *)
-      gst_encoding_video_profile_new (caps, video_preset, NULL, 0);
-  if (video_restriction)
-    gst_encoding_profile_set_restriction (stream,
-        gst_caps_from_string (video_restriction));
-  gst_encoding_container_profile_add_profile (profile, stream);
-  gst_caps_unref (caps);
+  if (video) {
+    caps = gst_caps_from_string (video);
+    stream = (GstEncodingProfile *)
+        gst_encoding_video_profile_new (caps, video_preset, NULL, 0);
+    if (video_restriction)
+      gst_encoding_profile_set_restriction (stream,
+          gst_caps_from_string (video_restriction));
+    gst_encoding_container_profile_add_profile (profile, stream);
+    gst_caps_unref (caps);
+  }
 
   return (GstEncodingProfile *) profile;
 }
 
 static GESTimeline *
-create_timeline (int nbargs, gchar ** argv)
+create_timeline (int nbargs, gchar ** argv, gchar * audio, gchar * video)
 {
   GESTimelineLayer *layer;
-  GESTrack *tracka, *trackv;
+  GESTrack *tracka = NULL, *trackv = NULL;
   GESTimeline *timeline;
   guint i;
 
   timeline = ges_timeline_new ();
 
-  tracka = ges_track_audio_raw_new ();
-  trackv = ges_track_video_raw_new ();
+  if (audio)
+    tracka = ges_track_audio_raw_new ();
+  if (video)
+    trackv = ges_track_video_raw_new ();
 
   /* We are only going to be doing one layer of timeline objects */
   layer = (GESTimelineLayer *) ges_simple_timeline_layer_new ();
 
   /* Add the tracks and the layer to the timeline */
   if (!ges_timeline_add_layer (timeline, layer) ||
-      !ges_timeline_add_track (timeline, tracka) ||
-      !ges_timeline_add_track (timeline, trackv))
+      !(!audio || ges_timeline_add_track (timeline, tracka)) ||
+      !(!video || ges_timeline_add_track (timeline, trackv)))
     goto build_failure;
 
   /* Here we've finished initializing our timeline, we're 
@@ -264,7 +270,8 @@ build_failure:
 }
 
 static GESTimelinePipeline *
-create_pipeline (gchar * load_path, gchar * save_path, int argc, char **argv)
+create_pipeline (gchar * load_path, gchar * save_path, int argc, char **argv,
+    gchar * audio, gchar * video)
 {
   GESTimelinePipeline *pipeline = NULL;
   GESTimeline *timeline = NULL;
@@ -288,7 +295,7 @@ create_pipeline (gchar * load_path, gchar * save_path, int argc, char **argv)
     g_free (uri);
   } else
     /* Normal timeline creation */
-  if (!(timeline = create_timeline (argc, argv)))
+  if (!(timeline = create_timeline (argc, argv, audio, video)))
     goto failure;
 
   /* save project if path is given. we do this now in case GES crashes or
@@ -400,11 +407,13 @@ main (int argc, gchar ** argv)
   gchar *video_restriction = (gchar *) "ANY";
   gchar *audio_preset = NULL;
   gchar *video_preset = NULL;
+  gchar *exclude_args = NULL;
   static gboolean render = FALSE;
   static gboolean smartrender = FALSE;
   static gboolean list_transitions = FALSE;
   static gboolean list_patterns = FALSE;
   static gdouble thumbinterval = 0;
+  static gboolean verbose = FALSE;
   gchar *save_path = NULL;
   gchar *load_path = NULL;
   GOptionEntry options[] = {
@@ -438,6 +447,10 @@ main (int argc, gchar ** argv)
         "Save project to file before rendering", "<path>"},
     {"load", 'q', 0, G_OPTION_ARG_STRING, &load_path,
         "Load project from file before rendering", "<path>"},
+    {"verbose", 0, 0, G_OPTION_ARG_NONE, &verbose,
+        "Output status information and property notifications", NULL},
+    {"exclude", 'X', 0, G_OPTION_ARG_NONE, &exclude_args,
+        "Do not output status information of TYPE", "TYPE1,TYPE2,..."},
     {NULL}
   };
   GOptionContext *ctx;
@@ -497,8 +510,15 @@ main (int argc, gchar ** argv)
 
   g_option_context_free (ctx);
 
+  /* normalize */
+  if (strcmp (audio, "none") == 0)
+    audio = NULL;
+  if (strcmp (video, "none") == 0)
+    video = NULL;
+
   /* Create the pipeline */
-  pipeline = create_pipeline (load_path, save_path, argc - 1, argv + 1);
+  pipeline = create_pipeline (load_path, save_path, argc - 1, argv + 1,
+      audio, video);
   if (!pipeline)
     exit (1);
 
@@ -519,6 +539,13 @@ main (int argc, gchar ** argv)
     gst_encoding_profile_unref (prof);
   } else {
     ges_timeline_pipeline_set_mode (pipeline, TIMELINE_MODE_PREVIEW);
+  }
+
+  if (verbose) {
+    gchar **exclude_list =
+        exclude_args ? g_strsplit (exclude_args, ",", 0) : NULL;
+    g_signal_connect (pipeline, "deep-notify",
+        G_CALLBACK (gst_object_default_deep_notify), exclude_list);
   }
 
   /* Play the pipeline */
