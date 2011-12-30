@@ -1155,6 +1155,7 @@ gst_matroska_read_common_parse_index (GstMatroskaReadCommon * common,
     gint track_num;
     GstMatroskaTrackContext *ctx;
 
+#if 0
     if (common->element_index) {
       gint writer_id;
 
@@ -1182,6 +1183,7 @@ gst_matroska_read_common_parse_index (GstMatroskaReadCommon * common,
           GST_ASSOCIATION_FLAG_KEY_UNIT, GST_FORMAT_TIME, idx->time,
           GST_FORMAT_BYTES, idx->pos + common->ebml_segment_start, NULL);
     }
+#endif
 
     if (idx->track == 0)
       continue;

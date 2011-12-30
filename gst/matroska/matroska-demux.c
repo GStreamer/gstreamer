@@ -150,9 +150,11 @@ static GstFlowReturn gst_matroska_demux_chain (GstPad * pad,
 static GstStateChangeReturn
 gst_matroska_demux_change_state (GstElement * element,
     GstStateChange transition);
+#if 0
 static void
 gst_matroska_demux_set_index (GstElement * element, GstIndex * index);
 static GstIndex *gst_matroska_demux_get_index (GstElement * element);
+#endif
 
 /* caps functions */
 static GstCaps *gst_matroska_demux_video_caps (GstMatroskaTrackVideoContext
@@ -226,10 +228,12 @@ gst_matroska_demux_class_init (GstMatroskaDemuxClass * klass)
       GST_DEBUG_FUNCPTR (gst_matroska_demux_element_send_event);
   gstelement_class->query =
       GST_DEBUG_FUNCPTR (gst_matroska_demux_element_query);
+#if 0
   gstelement_class->set_index =
       GST_DEBUG_FUNCPTR (gst_matroska_demux_set_index);
   gstelement_class->get_index =
       GST_DEBUG_FUNCPTR (gst_matroska_demux_get_index);
+#endif
 
   gst_element_class_add_pad_template (gstelement_class,
       gst_static_pad_template_get (&video_src_templ));
@@ -456,12 +460,13 @@ gst_matroska_demux_reset (GstElement * element)
     gst_event_unref (demux->new_segment);
     demux->new_segment = NULL;
   }
-
+#if 0
   if (demux->common.element_index) {
     gst_object_unref (demux->common.element_index);
     demux->common.element_index = NULL;
   }
   demux->common.element_index_writer_id = -1;
+#endif
 
   if (demux->common.global_tags) {
     gst_tag_list_free (demux->common.global_tags);
@@ -3566,6 +3571,7 @@ gst_matroska_demux_parse_blockgroup_or_simpleblock (GstMatroskaDemux * demux,
           GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (sub)),
           GST_TIME_ARGS (GST_BUFFER_DURATION (sub)));
 
+#if 0
       if (demux->common.element_index) {
         if (stream->index_writer_id == -1)
           gst_index_get_writer_id (demux->common.element_index,
@@ -3581,6 +3587,7 @@ gst_matroska_demux_parse_blockgroup_or_simpleblock (GstMatroskaDemux * demux,
             GST_FORMAT_TIME, GST_BUFFER_TIMESTAMP (sub), GST_FORMAT_BYTES,
             cluster_offset, NULL);
       }
+#endif
 
       /* Postprocess the buffers depending on the codec used */
       if (stream->postprocess_frame) {
@@ -4207,6 +4214,7 @@ gst_matroska_demux_parse_id (GstMatroskaDemux * demux, guint32 id,
             goto parse_failed;
           GST_DEBUG_OBJECT (demux, "ClusterTimeCode: %" G_GUINT64_FORMAT, num);
           demux->cluster_time = num;
+#if 0
           if (demux->common.element_index) {
             if (demux->common.element_index_writer_id == -1)
               gst_index_get_writer_id (demux->common.element_index,
@@ -4221,6 +4229,7 @@ gst_matroska_demux_parse_id (GstMatroskaDemux * demux, guint32 id,
                 GST_FORMAT_TIME, demux->cluster_time,
                 GST_FORMAT_BYTES, demux->cluster_offset, NULL);
           }
+#endif
           break;
         }
         case GST_MATROSKA_ID_BLOCKGROUP:
@@ -5490,6 +5499,7 @@ gst_matroska_demux_subtitle_caps (GstMatroskaTrackSubtitleContext *
   return caps;
 }
 
+#if 0
 static void
 gst_matroska_demux_set_index (GstElement * element, GstIndex * index)
 {
@@ -5519,6 +5529,7 @@ gst_matroska_demux_get_index (GstElement * element)
 
   return result;
 }
+#endif
 
 static GstStateChangeReturn
 gst_matroska_demux_change_state (GstElement * element,

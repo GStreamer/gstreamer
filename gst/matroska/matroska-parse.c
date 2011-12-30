@@ -123,9 +123,11 @@ static GstFlowReturn gst_matroska_parse_chain (GstPad * pad,
 static GstStateChangeReturn
 gst_matroska_parse_change_state (GstElement * element,
     GstStateChange transition);
+#if 0
 static void
 gst_matroska_parse_set_index (GstElement * element, GstIndex * index);
 static GstIndex *gst_matroska_parse_get_index (GstElement * element);
+#endif
 
 /* stream methods */
 static void gst_matroska_parse_reset (GstElement * element);
@@ -174,10 +176,12 @@ gst_matroska_parse_class_init (GstMatroskaParseClass * klass)
   gstelement_class->query =
       GST_DEBUG_FUNCPTR (gst_matroska_parse_element_query);
 
+#if 0
   gstelement_class->set_index =
       GST_DEBUG_FUNCPTR (gst_matroska_parse_set_index);
   gstelement_class->get_index =
       GST_DEBUG_FUNCPTR (gst_matroska_parse_get_index);
+#endif
 
   gst_element_class_add_pad_template (gstelement_class,
       gst_static_pad_template_get (&src_templ));
@@ -355,12 +359,13 @@ gst_matroska_parse_reset (GstElement * element)
     gst_event_unref (parse->new_segment);
     parse->new_segment = NULL;
   }
-
+#if 0
   if (parse->common.element_index) {
     gst_object_unref (parse->common.element_index);
     parse->common.element_index = NULL;
   }
   parse->common.element_index_writer_id = -1;
+#endif
 
   if (parse->common.global_tags) {
     gst_tag_list_free (parse->common.global_tags);
@@ -2696,6 +2701,7 @@ gst_matroska_parse_parse_id (GstMatroskaParse * parse, guint32 id,
             goto parse_failed;
           GST_DEBUG_OBJECT (parse, "ClusterTimeCode: %" G_GUINT64_FORMAT, num);
           parse->cluster_time = num;
+#if 0
           if (parse->common.element_index) {
             if (parse->common.element_index_writer_id == -1)
               gst_index_get_writer_id (parse->common.element_index,
@@ -2710,6 +2716,7 @@ gst_matroska_parse_parse_id (GstMatroskaParse * parse, guint32 id,
                 GST_FORMAT_TIME, parse->cluster_time,
                 GST_FORMAT_BYTES, parse->cluster_offset, NULL);
           }
+#endif
           gst_matroska_parse_output (parse, ebml.buf, FALSE);
           break;
         }
@@ -3150,6 +3157,7 @@ gst_matroska_parse_handle_sink_event (GstPad * pad, GstObject * parent,
   return res;
 }
 
+#if 0
 static void
 gst_matroska_parse_set_index (GstElement * element, GstIndex * index)
 {
@@ -3179,6 +3187,7 @@ gst_matroska_parse_get_index (GstElement * element)
 
   return result;
 }
+#endif
 
 static GstStateChangeReturn
 gst_matroska_parse_change_state (GstElement * element,

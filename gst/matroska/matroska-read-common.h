@@ -43,8 +43,10 @@ typedef enum {
 } GstMatroskaReadState;
 
 typedef struct _GstMatroskaReadCommon {
+#if 0
   GstIndex                *element_index;
   gint                     element_index_writer_id;
+#endif
 
   /* pads */
   GstPad                  *sinkpad;
