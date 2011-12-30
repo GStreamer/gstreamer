@@ -2229,6 +2229,7 @@ gst_ts_demux_push_pending_data (GstTSDemux * demux, TSDemuxStream * stream)
   GList *tmp;
   MpegTSBaseStream *bs = (MpegTSBaseStream *) stream;
   GstBuffer *buf;
+  GstClockTime ts;
 
   GST_DEBUG_OBJECT (stream->pad,
       "stream:%p, pid:0x%04x stream_type:%d state:%d", stream, bs->pid,
@@ -2263,19 +2264,24 @@ gst_ts_demux_push_pending_data (GstTSDemux * demux, TSDemuxStream * stream)
   stream->currentlist = g_list_reverse (stream->currentlist);
   buf = (GstBuffer *) stream->currentlist->data;
 
+  ts = GST_BUFFER_TIMESTAMP (buf);
+
   GST_DEBUG_OBJECT (stream->pad,
-      "delta %" GST_TIME_FORMAT " stream->pts %" GST_TIME_FORMAT,
-      GST_TIME_ARGS (demux->pts_delta), GST_TIME_ARGS (stream->pts));
+      "ts %" GST_TIME_FORMAT " delta %" GST_TIME_FORMAT " stream->pts %"
+      GST_TIME_FORMAT, GST_TIME_ARGS (ts), GST_TIME_ARGS (demux->pts_delta),
+      GST_TIME_ARGS (stream->pts));
+
   if (GST_CLOCK_TIME_IS_VALID (demux->pts_delta)
       && GST_CLOCK_TIME_IS_VALID (stream->pts)
-      && !GST_CLOCK_TIME_IS_VALID (GST_BUFFER_TIMESTAMP (buf))) {
-    GST_BUFFER_TIMESTAMP (buf) = stream->pts - demux->pts_delta;
+      && !GST_CLOCK_TIME_IS_VALID (ts)) {
+    ts = stream->pts - demux->pts_delta;
   }
 
   for (tmp = stream->currentlist->next; tmp; tmp = tmp->next) {
     buf = gst_buffer_join (buf, (GstBuffer *) tmp->data);
   }
 
+  GST_BUFFER_TIMESTAMP (buf) = ts;
   GST_DEBUG_OBJECT (stream->pad,
       "Pushing buffer with timestamp: %" GST_TIME_FORMAT,
       GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buf)));
