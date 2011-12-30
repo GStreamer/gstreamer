@@ -35,6 +35,7 @@ G_BEGIN_DECLS
 typedef struct _GstAudioCdSrc GstAudioCdSrc;
 typedef struct _GstAudioCdSrcClass GstAudioCdSrcClass;
 typedef struct _GstAudioCdSrcTrack GstAudioCdSrcTrack;
+typedef struct _GstAudioCdSrcPrivate GstAudioCdSrcPrivate;
 
 /**
  * GstAudioCdSrcMode:
@@ -80,30 +81,7 @@ struct _GstAudioCdSrc {
   GstTagList           *tags;            /* tags that apply to all tracks   */
 
   /*< private >*/
-  GstAudioCdSrcMode    mode;
-
-  gchar                *device;
-
-  guint                 num_tracks;
-  guint                 num_all_tracks;
-  GstAudioCdSrcTrack  *tracks;
-
-  gint                  cur_track;       /* current track (starting from 0) */
-  gint                  prev_track;      /* current track last time         */
-  gint                  cur_sector;      /* current sector                  */
-  gint                  seek_sector;     /* -1 or sector to seek to         */
-
-  gint                  uri_track;
-  gchar                *uri;
-
-  guint32               discid;          /* cddb disc id (for unit test)    */
-  gchar                 mb_discid[32];   /* musicbrainz discid              */
-
-  GstIndex             *index;
-  gint                  index_id;
-
-  gint                  toc_offset;
-  gboolean              toc_bias;
+  GstAudioCdSrcPrivate *priv;
 
   /*< private >*/
   guint                 _gst_reserved1[GST_PADDING/2];

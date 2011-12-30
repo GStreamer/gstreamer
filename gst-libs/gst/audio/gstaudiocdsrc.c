@@ -116,6 +116,36 @@ enum
   ARG_TOC_BIAS
 };
 
+#define GstIndex gpointer
+
+struct _GstAudioCdSrcPrivate
+{
+  GstAudioCdSrcMode mode;
+
+  gchar *device;
+
+  guint num_tracks;
+  guint num_all_tracks;
+  GstAudioCdSrcTrack *tracks;
+
+  gint cur_track;               /* current track (starting from 0) */
+  gint prev_track;              /* current track last time         */
+  gint cur_sector;              /* current sector                  */
+  gint seek_sector;             /* -1 or sector to seek to         */
+
+  gint uri_track;
+  gchar *uri;
+
+  guint32 discid;               /* cddb disc id (for unit test)    */
+  gchar mb_discid[32];          /* musicbrainz discid              */
+
+  GstIndex *index;
+  gint index_id;
+
+  gint toc_offset;
+  gboolean toc_bias;
+};
+
 static void gst_audio_cd_src_uri_handler_init (gpointer g_iface,
     gpointer iface_data);
 static void gst_audio_cd_src_get_property (GObject * object, guint prop_id,
@@ -193,6 +223,8 @@ gst_audio_cd_src_class_init (GstAudioCdSrcClass * klass)
   GST_DEBUG_CATEGORY_INIT (gst_audio_cd_src_debug, "audiocdsrc", 0,
       "Audio CD source base class");
 
+  g_type_class_add_private (klass, sizeof (GstAudioCdSrcPrivate));
+
   /* our very own formats */
   track_format = gst_format_register ("track", "CD track");
   sector_format = gst_format_register ("sector", "CD sector");
@@ -258,15 +290,19 @@ gst_audio_cd_src_class_init (GstAudioCdSrcClass * klass)
 static void
 gst_audio_cd_src_init (GstAudioCdSrc * src)
 {
+  src->priv =
+      G_TYPE_INSTANCE_GET_PRIVATE (src, GST_TYPE_AUDIO_CD_SRC,
+      GstAudioCdSrcPrivate);
+
   /* we're not live and we operate in time */
   gst_base_src_set_format (GST_BASE_SRC (src), GST_FORMAT_TIME);
   gst_base_src_set_live (GST_BASE_SRC (src), FALSE);
 
   GST_OBJECT_FLAG_SET (src, GST_ELEMENT_FLAG_INDEXABLE);
 
-  src->device = NULL;
-  src->mode = GST_AUDIO_CD_SRC_MODE_NORMAL;
-  src->uri_track = -1;
+  src->priv->device = NULL;
+  src->priv->mode = GST_AUDIO_CD_SRC_MODE_NORMAL;
+  src->priv->uri_track = -1;
 }
 
 static void
@@ -274,11 +310,11 @@ gst_audio_cd_src_finalize (GObject * obj)
 {
   GstAudioCdSrc *cddasrc = GST_AUDIO_CD_SRC (obj);
 
-  g_free (cddasrc->uri);
-  g_free (cddasrc->device);
+  g_free (cddasrc->priv->uri);
+  g_free (cddasrc->priv->device);
 
-  if (cddasrc->index)
-    gst_object_unref (cddasrc->index);
+  if (cddasrc->priv->index)
+    gst_object_unref (cddasrc->priv->index);
 
   G_OBJECT_CLASS (parent_class)->finalize (obj);
 }
@@ -286,9 +322,9 @@ gst_audio_cd_src_finalize (GObject * obj)
 static void
 gst_audio_cd_src_set_device (GstAudioCdSrc * src, const gchar * device)
 {
-  if (src->device)
-    g_free (src->device);
-  src->device = NULL;
+  if (src->priv->device)
+    g_free (src->priv->device);
+  src->priv->device = NULL;
 
   if (!device)
     return;
@@ -305,11 +341,11 @@ gst_audio_cd_src_set_device (GstAudioCdSrc * src, const gchar * device)
   if (strncmp (device, "/dev/dsk", 8) == 0) {
     gchar *rdsk_value;
     rdsk_value = g_strdup_printf ("/dev/rdsk%s", device + 8);
-    src->device = g_strdup (rdsk_value);
+    src->priv->device = g_strdup (rdsk_value);
     g_free (rdsk_value);
   } else {
 #endif
-    src->device = g_strdup (device);
+    src->priv->device = g_strdup (device);
 #ifdef __sun
   }
 #endif
@@ -325,7 +361,7 @@ gst_audio_cd_src_set_property (GObject * object, guint prop_id,
 
   switch (prop_id) {
     case ARG_MODE:{
-      src->mode = g_value_get_enum (value);
+      src->priv->mode = g_value_get_enum (value);
       break;
     }
     case ARG_DEVICE:{
@@ -337,22 +373,22 @@ gst_audio_cd_src_set_property (GObject * object, guint prop_id,
     case ARG_TRACK:{
       guint track = g_value_get_uint (value);
 
-      if (src->num_tracks > 0 && track > src->num_tracks) {
+      if (src->priv->num_tracks > 0 && track > src->priv->num_tracks) {
         g_warning ("Invalid track %u", track);
-      } else if (track > 0 && src->tracks != NULL) {
-        src->cur_sector = src->tracks[track - 1].start;
-        src->uri_track = track;
+      } else if (track > 0 && src->priv->tracks != NULL) {
+        src->priv->cur_sector = src->priv->tracks[track - 1].start;
+        src->priv->uri_track = track;
       } else {
-        src->uri_track = track; /* seek will be done in start() */
+        src->priv->uri_track = track;   /* seek will be done in start() */
       }
       break;
     }
     case ARG_TOC_OFFSET:{
-      src->toc_offset = g_value_get_int (value);
+      src->priv->toc_offset = g_value_get_int (value);
       break;
     }
     case ARG_TOC_BIAS:{
-      src->toc_bias = g_value_get_boolean (value);
+      src->priv->toc_bias = g_value_get_boolean (value);
       break;
     }
     default:{
@@ -375,10 +411,10 @@ gst_audio_cd_src_get_property (GObject * object, guint prop_id,
 
   switch (prop_id) {
     case ARG_MODE:
-      g_value_set_enum (value, src->mode);
+      g_value_set_enum (value, src->priv->mode);
       break;
     case ARG_DEVICE:{
-      if (src->device == NULL && klass->get_default_device != NULL) {
+      if (src->priv->device == NULL && klass->get_default_device != NULL) {
         gchar *d = klass->get_default_device (src);
 
         if (d != NULL) {
@@ -387,25 +423,25 @@ gst_audio_cd_src_get_property (GObject * object, guint prop_id,
           break;
         }
       }
-      if (src->device == NULL)
+      if (src->priv->device == NULL)
         g_value_set_string (value, DEFAULT_DEVICE);
       else
-        g_value_set_string (value, src->device);
+        g_value_set_string (value, src->priv->device);
       break;
     }
     case ARG_TRACK:{
-      if (src->num_tracks <= 0 && src->uri_track > 0) {
-        g_value_set_uint (value, src->uri_track);
+      if (src->priv->num_tracks <= 0 && src->priv->uri_track > 0) {
+        g_value_set_uint (value, src->priv->uri_track);
       } else {
-        g_value_set_uint (value, src->cur_track + 1);
+        g_value_set_uint (value, src->priv->cur_track + 1);
       }
       break;
     }
     case ARG_TOC_OFFSET:
-      g_value_set_int (value, src->toc_offset);
+      g_value_set_int (value, src->priv->toc_offset);
       break;
     case ARG_TOC_BIAS:
-      g_value_set_boolean (value, src->toc_bias);
+      g_value_set_boolean (value, src->priv->toc_bias);
       break;
     default:{
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -421,8 +457,9 @@ gst_audio_cd_src_get_track_from_sector (GstAudioCdSrc * src, gint sector)
 {
   gint i;
 
-  for (i = 0; i < src->num_tracks; ++i) {
-    if (sector >= src->tracks[i].start && sector <= src->tracks[i].end)
+  for (i = 0; i < src->priv->num_tracks; ++i) {
+    if (sector >= src->priv->tracks[i].start
+        && sector <= src->priv->tracks[i].end)
       return i;
   }
   return -1;
@@ -449,12 +486,12 @@ gst_audio_cd_src_convert (GstAudioCdSrc * src, GstFormat src_format,
   if (src_format == track_format) {
     if (!started)
       goto not_started;
-    if (src_val < 0 || src_val >= src->num_tracks) {
+    if (src_val < 0 || src_val >= src->priv->num_tracks) {
       GST_DEBUG_OBJECT (src, "track number %d out of bounds", (gint) src_val);
       goto wrong_value;
     }
     src_format = GST_FORMAT_DEFAULT;
-    src_val = src->tracks[src_val].start * SAMPLES_PER_SECTOR;
+    src_val = src->priv->tracks[src_val].start * SAMPLES_PER_SECTOR;
   } else if (src_format == sector_format) {
     src_format = GST_FORMAT_DEFAULT;
     src_val = src_val * SAMPLES_PER_SECTOR;
@@ -590,23 +627,24 @@ gst_audio_cd_src_query (GstBaseSrc * basesrc, GstQuery * query)
       if (!started)
         return FALSE;
 
-      g_assert (src->tracks != NULL);
+      g_assert (src->priv->tracks != NULL);
 
       if (dest_format == track_format) {
-        GST_LOG_OBJECT (src, "duration: %d tracks", src->num_tracks);
-        gst_query_set_duration (query, track_format, src->num_tracks);
+        GST_LOG_OBJECT (src, "duration: %d tracks", src->priv->num_tracks);
+        gst_query_set_duration (query, track_format, src->priv->num_tracks);
         return TRUE;
       }
 
-      if (src->cur_track < 0 || src->cur_track >= src->num_tracks)
+      if (src->priv->cur_track < 0
+          || src->priv->cur_track >= src->priv->num_tracks)
         return FALSE;
 
-      if (src->mode == GST_AUDIO_CD_SRC_MODE_NORMAL) {
-        sectors = src->tracks[src->cur_track].end -
-            src->tracks[src->cur_track].start + 1;
+      if (src->priv->mode == GST_AUDIO_CD_SRC_MODE_NORMAL) {
+        sectors = src->priv->tracks[src->priv->cur_track].end -
+            src->priv->tracks[src->priv->cur_track].start + 1;
       } else {
-        sectors = src->tracks[src->num_tracks - 1].end -
-            src->tracks[0].start + 1;
+        sectors = src->priv->tracks[src->priv->num_tracks - 1].end -
+            src->priv->tracks[0].start + 1;
       }
 
       /* ... and convert into final format */
@@ -631,21 +669,24 @@ gst_audio_cd_src_query (GstBaseSrc * basesrc, GstQuery * query)
       if (!started)
         return FALSE;
 
-      g_assert (src->tracks != NULL);
+      g_assert (src->priv->tracks != NULL);
 
       if (dest_format == track_format) {
-        GST_LOG_OBJECT (src, "position: track %d", src->cur_track);
-        gst_query_set_position (query, track_format, src->cur_track);
+        GST_LOG_OBJECT (src, "position: track %d", src->priv->cur_track);
+        gst_query_set_position (query, track_format, src->priv->cur_track);
         return TRUE;
       }
 
-      if (src->cur_track < 0 || src->cur_track >= src->num_tracks)
+      if (src->priv->cur_track < 0
+          || src->priv->cur_track >= src->priv->num_tracks)
         return FALSE;
 
-      if (src->mode == GST_AUDIO_CD_SRC_MODE_NORMAL) {
-        pos_sector = src->cur_sector - src->tracks[src->cur_track].start;
+      if (src->priv->mode == GST_AUDIO_CD_SRC_MODE_NORMAL) {
+        pos_sector =
+            src->priv->cur_sector -
+            src->priv->tracks[src->priv->cur_track].start;
       } else {
-        pos_sector = src->cur_sector - src->tracks[0].start;
+        pos_sector = src->priv->cur_sector - src->priv->tracks[0].start;
       }
 
       if (!gst_audio_cd_src_convert (src, sector_format, pos_sector,
@@ -705,22 +746,23 @@ gst_audio_cd_src_do_seek (GstBaseSrc * basesrc, GstSegment * segment)
   }
 
   /* we should only really be called when open */
-  g_assert (src->cur_track >= 0 && src->cur_track < src->num_tracks);
+  g_assert (src->priv->cur_track >= 0
+      && src->priv->cur_track < src->priv->num_tracks);
 
-  switch (src->mode) {
+  switch (src->priv->mode) {
     case GST_AUDIO_CD_SRC_MODE_NORMAL:
-      seek_sector += src->tracks[src->cur_track].start;
+      seek_sector += src->priv->tracks[src->priv->cur_track].start;
       break;
     case GST_AUDIO_CD_SRC_MODE_CONTINUOUS:
-      seek_sector += src->tracks[0].start;
+      seek_sector += src->priv->tracks[0].start;
       break;
     default:
       g_return_val_if_reached (FALSE);
   }
 
-  src->cur_sector = (gint) seek_sector;
+  src->priv->cur_sector = (gint) seek_sector;
 
-  GST_DEBUG_OBJECT (src, "seek'd to sector %d", src->cur_sector);
+  GST_DEBUG_OBJECT (src, "seek'd to sector %d", src->priv->cur_sector);
 
   return TRUE;
 }
@@ -737,9 +779,9 @@ gst_audio_cd_src_handle_track_seek (GstAudioCdSrc * src, gdouble rate,
     gint64 start_time = -1;
     gint64 stop_time = -1;
 
-    if (src->mode != GST_AUDIO_CD_SRC_MODE_CONTINUOUS) {
+    if (src->priv->mode != GST_AUDIO_CD_SRC_MODE_CONTINUOUS) {
       GST_DEBUG_OBJECT (src, "segment seek in track format is only "
-          "supported in CONTINUOUS mode, not in mode %d", src->mode);
+          "supported in CONTINUOUS mode, not in mode %d", src->priv->mode);
       return FALSE;
     }
 
@@ -754,7 +796,8 @@ gst_audio_cd_src_handle_track_seek (GstAudioCdSrc * src, gdouble rate,
         break;
       case GST_SEEK_TYPE_END:
         if (!gst_audio_cd_src_convert (src, track_format,
-                src->num_tracks - start - 1, GST_FORMAT_TIME, &start_time)) {
+                src->priv->num_tracks - start - 1, GST_FORMAT_TIME,
+                &start_time)) {
           GST_DEBUG_OBJECT (src, "cannot convert track %d to time",
               (gint) start);
           return FALSE;
@@ -779,7 +822,8 @@ gst_audio_cd_src_handle_track_seek (GstAudioCdSrc * src, gdouble rate,
         break;
       case GST_SEEK_TYPE_END:
         if (!gst_audio_cd_src_convert (src, track_format,
-                src->num_tracks - stop - 1, GST_FORMAT_TIME, &stop_time)) {
+                src->priv->num_tracks - stop - 1, GST_FORMAT_TIME,
+                &stop_time)) {
           GST_DEBUG_OBJECT (src, "cannot convert track %d to time",
               (gint) stop);
           return FALSE;
@@ -816,20 +860,20 @@ gst_audio_cd_src_handle_track_seek (GstAudioCdSrc * src, gdouble rate,
     GST_WARNING_OBJECT (src, "ignoring stop seek type (expected NONE)");
   }
 
-  if (start < 0 || start >= src->num_tracks) {
+  if (start < 0 || start >= src->priv->num_tracks) {
     GST_DEBUG_OBJECT (src, "invalid track %" G_GINT64_FORMAT, start);
     return FALSE;
   }
 
   GST_DEBUG_OBJECT (src, "seeking to track %" G_GINT64_FORMAT, start + 1);
 
-  src->cur_sector = src->tracks[start].start;
-  GST_DEBUG_OBJECT (src, "starting at sector %d", src->cur_sector);
+  src->priv->cur_sector = src->priv->tracks[start].start;
+  GST_DEBUG_OBJECT (src, "starting at sector %d", src->priv->cur_sector);
 
-  if (src->cur_track != start) {
-    src->cur_track = (gint) start;
-    src->uri_track = -1;
-    src->prev_track = -1;
+  if (src->priv->cur_track != start) {
+    src->priv->cur_track = (gint) start;
+    src->priv->uri_track = -1;
+    src->priv->prev_track = -1;
 
     gst_audio_cd_src_update_duration (src);
   } else {
@@ -917,19 +961,19 @@ gst_audio_cd_src_uri_get_uri (GstURIHandler * handler)
 
   /* FIXME: can we get rid of all that here and just return a copy of the
    * existing URI perhaps? */
-  g_free (src->uri);
+  g_free (src->priv->uri);
 
   if (GST_OBJECT_FLAG_IS_SET (GST_BASE_SRC (src), GST_BASE_SRC_FLAG_STARTED)) {
-    src->uri =
-        g_strdup_printf ("cdda://%s#%d", src->device,
-        (src->uri_track > 0) ? src->uri_track : 1);
+    src->priv->uri =
+        g_strdup_printf ("cdda://%s#%d", src->priv->device,
+        (src->priv->uri_track > 0) ? src->priv->uri_track : 1);
   } else {
-    src->uri = g_strdup ("cdda://1");
+    src->priv->uri = g_strdup ("cdda://1");
   }
 
   GST_OBJECT_UNLOCK (src);
 
-  return g_strdup (src->uri);
+  return g_strdup (src->priv->uri);
 }
 
 /* Note: gst_element_make_from_uri() might call us with just 'cdda://' as
@@ -949,7 +993,7 @@ gst_audio_cd_src_uri_set_uri (GstURIHandler * handler, const gchar * uri,
 
   location = uri + 7;
   track_number = g_strrstr (location, "#");
-  src->uri_track = 0;
+  src->priv->uri_track = 0;
   /* FIXME 0.11: ignore URI fragments that look like device paths for
    * the benefit of rhythmbox and possibly other applications.
    */
@@ -961,28 +1005,30 @@ gst_audio_cd_src_uri_set_uri (GstURIHandler * handler, const gchar * uri,
     device = gst_uri_get_location (nuri);
     gst_audio_cd_src_set_device (src, device);
     g_free (device);
-    src->uri_track = strtol (track_number + 1, NULL, 10);
+    src->priv->uri_track = strtol (track_number + 1, NULL, 10);
     g_free (nuri);
   } else {
     if (*location == '\0')
-      src->uri_track = 1;
+      src->priv->uri_track = 1;
     else
-      src->uri_track = strtol (location, NULL, 10);
+      src->priv->uri_track = strtol (location, NULL, 10);
   }
 
-  if (src->uri_track < 1)
+  if (src->priv->uri_track < 1)
     goto failed;
 
-  if (src->num_tracks > 0
-      && src->tracks != NULL && src->uri_track > src->num_tracks)
+  if (src->priv->num_tracks > 0
+      && src->priv->tracks != NULL
+      && src->priv->uri_track > src->priv->num_tracks)
     goto failed;
 
-  if (src->uri_track > 0 && src->tracks != NULL) {
+  if (src->priv->uri_track > 0 && src->priv->tracks != NULL) {
     GST_OBJECT_UNLOCK (src);
 
     gst_pad_send_event (GST_BASE_SRC_PAD (src),
         gst_event_new_seek (1.0, track_format, GST_SEEK_FLAG_FLUSH,
-            GST_SEEK_TYPE_SET, src->uri_track - 1, GST_SEEK_TYPE_NONE, -1));
+            GST_SEEK_TYPE_SET, src->priv->uri_track - 1, GST_SEEK_TYPE_NONE,
+            -1));
   } else {
     /* seek will be done in start() */
     GST_OBJECT_UNLOCK (src);
@@ -1034,11 +1080,12 @@ gst_audio_cd_src_add_track (GstAudioCdSrc * src, GstAudioCdSrcTrack * track)
   g_return_val_if_fail (track->num > 0, FALSE);
 
   GST_DEBUG_OBJECT (src, "adding track %2u (%2u) [%6u-%6u] [%5s], tags: %"
-      GST_PTR_FORMAT, src->num_tracks + 1, track->num, track->start,
+      GST_PTR_FORMAT, src->priv->num_tracks + 1, track->num, track->start,
       track->end, (track->is_audio) ? "AUDIO" : "DATA ", track->tags);
 
-  if (src->num_tracks > 0) {
-    guint end_of_previous_track = src->tracks[src->num_tracks - 1].end;
+  if (src->priv->num_tracks > 0) {
+    guint end_of_previous_track =
+        src->priv->tracks[src->priv->num_tracks - 1].end;
 
     if (track->start <= end_of_previous_track) {
       GST_WARNING ("track %2u overlaps with previous tracks", track->num);
@@ -1048,9 +1095,10 @@ gst_audio_cd_src_add_track (GstAudioCdSrc * src, GstAudioCdSrcTrack * track)
 
   GST_OBJECT_LOCK (src);
 
-  ++src->num_tracks;
-  src->tracks = g_renew (GstAudioCdSrcTrack, src->tracks, src->num_tracks);
-  src->tracks[src->num_tracks - 1] = *track;
+  ++src->priv->num_tracks;
+  src->priv->tracks =
+      g_renew (GstAudioCdSrcTrack, src->priv->tracks, src->priv->num_tracks);
+  src->priv->tracks[src->priv->num_tracks - 1] = *track;
 
   GST_OBJECT_UNLOCK (src);
 
@@ -1107,16 +1155,19 @@ gst_audio_cd_src_calculate_musicbrainz_discid (GstAudioCdSrc * src)
 
   s = g_string_new (NULL);
 
-  leadout_sector = src->tracks[src->num_tracks - 1].end + 1 + CD_MSF_OFFSET;
+  leadout_sector =
+      src->priv->tracks[src->priv->num_tracks - 1].end + 1 + CD_MSF_OFFSET;
 
   /* generate SHA digest */
   sha = g_checksum_new (G_CHECKSUM_SHA1);
-  g_snprintf (tmp, sizeof (tmp), "%02X", src->tracks[0].num);
-  g_string_append_printf (s, "%02X", src->tracks[0].num);
+  g_snprintf (tmp, sizeof (tmp), "%02X", src->priv->tracks[0].num);
+  g_string_append_printf (s, "%02X", src->priv->tracks[0].num);
   g_checksum_update (sha, (guchar *) tmp, 2);
 
-  g_snprintf (tmp, sizeof (tmp), "%02X", src->tracks[src->num_tracks - 1].num);
-  g_string_append_printf (s, " %02X", src->tracks[src->num_tracks - 1].num);
+  g_snprintf (tmp, sizeof (tmp), "%02X",
+      src->priv->tracks[src->priv->num_tracks - 1].num);
+  g_string_append_printf (s, " %02X",
+      src->priv->tracks[src->priv->num_tracks - 1].num);
   g_checksum_update (sha, (guchar *) tmp, 2);
 
   g_snprintf (tmp, sizeof (tmp), "%08X", leadout_sector);
@@ -1124,8 +1175,8 @@ gst_audio_cd_src_calculate_musicbrainz_discid (GstAudioCdSrc * src)
   g_checksum_update (sha, (guchar *) tmp, 8);
 
   for (i = 0; i < 99; i++) {
-    if (i < src->num_tracks) {
-      guint frame_offset = src->tracks[i].start + CD_MSF_OFFSET;
+    if (i < src->priv->num_tracks) {
+      guint frame_offset = src->priv->tracks[i].start + CD_MSF_OFFSET;
 
       g_snprintf (tmp, sizeof (tmp), "%08X", frame_offset);
       g_string_append_printf (s, " %08X", frame_offset);
@@ -1142,15 +1193,15 @@ gst_audio_cd_src_calculate_musicbrainz_discid (GstAudioCdSrc * src)
   g_checksum_free (sha);
   i = strlen (ptr);
 
-  g_assert (i < sizeof (src->mb_discid) + 1);
-  memcpy (src->mb_discid, ptr, i);
-  src->mb_discid[i] = '\0';
+  g_assert (i < sizeof (src->priv->mb_discid) + 1);
+  memcpy (src->priv->mb_discid, ptr, i);
+  src->priv->mb_discid[i] = '\0';
   free (ptr);
 
   /* Replace '/', '+' and '=' by '_', '.' and '-' as specified on
    * http://musicbrainz.org/doc/DiscIDCalculation
    */
-  for (ptr = src->mb_discid; *ptr != '\0'; ptr++) {
+  for (ptr = src->priv->mb_discid; *ptr != '\0'; ptr++) {
     if (*ptr == '/')
       *ptr = '_';
     else if (*ptr == '+')
@@ -1159,11 +1210,11 @@ gst_audio_cd_src_calculate_musicbrainz_discid (GstAudioCdSrc * src)
       *ptr = '-';
   }
 
-  GST_DEBUG_OBJECT (src, "musicbrainz-discid      = %s", src->mb_discid);
+  GST_DEBUG_OBJECT (src, "musicbrainz-discid      = %s", src->priv->mb_discid);
   GST_DEBUG_OBJECT (src, "musicbrainz-discid-full = %s", s->str);
 
   gst_tag_list_add (src->tags, GST_TAG_MERGE_REPLACE,
-      GST_TAG_CDDA_MUSICBRAINZ_DISCID, src->mb_discid,
+      GST_TAG_CDDA_MUSICBRAINZ_DISCID, src->priv->mb_discid,
       GST_TAG_CDDA_MUSICBRAINZ_DISCID_FULL, s->str, NULL);
 
   g_string_free (s, TRUE);
@@ -1204,22 +1255,23 @@ gst_audio_cd_src_calculate_cddb_id (GstAudioCdSrc * src)
 
   /* FIXME: do we use offsets and duration of ALL tracks (data + audio)
    * for the CDDB ID calculation, or only audio tracks? */
-  for (i = 0; i < src->num_tracks; ++i) {
-    if (1) {                    /* src->tracks[i].is_audio) { */
+  for (i = 0; i < src->priv->num_tracks; ++i) {
+    if (1) {                    /* src->priv->tracks[i].is_audio) { */
       if (num_audio_tracks == 0) {
-        first_sector = src->tracks[i].start + CD_MSF_OFFSET;
+        first_sector = src->priv->tracks[i].start + CD_MSF_OFFSET;
       }
-      last_sector = src->tracks[i].end + CD_MSF_OFFSET + 1;
+      last_sector = src->priv->tracks[i].end + CD_MSF_OFFSET + 1;
       ++num_audio_tracks;
 
-      lba_to_msf (src->tracks[i].start + CD_MSF_OFFSET, NULL, NULL, NULL,
+      lba_to_msf (src->priv->tracks[i].start + CD_MSF_OFFSET, NULL, NULL, NULL,
           &secs);
 
-      len_secs = (src->tracks[i].end - src->tracks[i].start + 1) / 75;
+      len_secs =
+          (src->priv->tracks[i].end - src->priv->tracks[i].start + 1) / 75;
 
       GST_DEBUG_OBJECT (src, "track %02u: lsn %6u (%02u:%02u), "
           "length: %u seconds (%02u:%02u)",
-          num_audio_tracks, src->tracks[i].start + CD_MSF_OFFSET,
+          num_audio_tracks, src->priv->tracks[i].start + CD_MSF_OFFSET,
           secs / 60, secs % 60, len_secs, len_secs / 60, len_secs % 60);
 
       id += cddb_sum (secs);
@@ -1227,10 +1279,10 @@ gst_audio_cd_src_calculate_cddb_id (GstAudioCdSrc * src)
     }
   }
 
-  /* first_sector = src->tracks[0].start + CD_MSF_OFFSET; */
+  /* first_sector = src->priv->tracks[0].start + CD_MSF_OFFSET; */
   lba_to_msf (first_sector, NULL, NULL, NULL, &start_secs);
 
-  /* last_sector = src->tracks[src->num_tracks-1].end + CD_MSF_OFFSET; */
+  /* last_sector = src->priv->tracks[src->priv->num_tracks-1].end + CD_MSF_OFFSET; */
   lba_to_msf (last_sector, NULL, NULL, NULL, &end_secs);
 
   GST_DEBUG_OBJECT (src, "first_sector = %u = %u secs (%02u:%02u)",
@@ -1244,17 +1296,18 @@ gst_audio_cd_src_calculate_cddb_id (GstAudioCdSrc * src)
       "lengths = %u seconds (%02u:%02u)", t, t / 60, t % 60, total_secs,
       total_secs / 60, total_secs % 60);
 
-  src->discid = ((id % 0xff) << 24 | t << 8 | num_audio_tracks);
+  src->priv->discid = ((id % 0xff) << 24 | t << 8 | num_audio_tracks);
 
   s = g_string_new (NULL);
-  g_string_append_printf (s, "%08x", src->discid);
+  g_string_append_printf (s, "%08x", src->priv->discid);
 
   gst_tag_list_add (src->tags, GST_TAG_MERGE_REPLACE,
       GST_TAG_CDDA_CDDB_DISCID, s->str, NULL);
 
-  g_string_append_printf (s, " %u", src->num_tracks);
-  for (i = 0; i < src->num_tracks; ++i) {
-    g_string_append_printf (s, " %u", src->tracks[i].start + CD_MSF_OFFSET);
+  g_string_append_printf (s, " %u", src->priv->num_tracks);
+  for (i = 0; i < src->priv->num_tracks; ++i) {
+    g_string_append_printf (s, " %u",
+        src->priv->tracks[i].start + CD_MSF_OFFSET);
   }
   g_string_append_printf (s, " %u", t);
 
@@ -1272,21 +1325,22 @@ gst_audio_cd_src_add_tags (GstAudioCdSrc * src)
   gint i;
 
   /* fill in details for each track */
-  for (i = 0; i < src->num_tracks; ++i) {
+  for (i = 0; i < src->priv->num_tracks; ++i) {
     gint64 duration;
     guint num_sectors;
 
-    if (src->tracks[i].tags == NULL)
-      src->tracks[i].tags = gst_tag_list_new_empty ();
+    if (src->priv->tracks[i].tags == NULL)
+      src->priv->tracks[i].tags = gst_tag_list_new_empty ();
 
-    num_sectors = src->tracks[i].end - src->tracks[i].start + 1;
+    num_sectors = src->priv->tracks[i].end - src->priv->tracks[i].start + 1;
     gst_audio_cd_src_convert (src, sector_format, num_sectors,
         GST_FORMAT_TIME, &duration);
 
-    gst_tag_list_add (src->tracks[i].tags,
+    gst_tag_list_add (src->priv->tracks[i].tags,
         GST_TAG_MERGE_REPLACE,
         GST_TAG_TRACK_NUMBER, i + 1,
-        GST_TAG_TRACK_COUNT, src->num_tracks, GST_TAG_DURATION, duration, NULL);
+        GST_TAG_TRACK_COUNT, src->priv->num_tracks, GST_TAG_DURATION, duration,
+        NULL);
   }
 
   /* now fill in per-album tags and include each track's tags
@@ -1299,11 +1353,11 @@ gst_audio_cd_src_add_tags (GstAudioCdSrc * src)
    * the track number ?? *////////////////////////////////////////
 
   gst_tag_list_add (src->tags, GST_TAG_MERGE_REPLACE,
-      GST_TAG_TRACK_COUNT, src->num_tracks, NULL);
+      GST_TAG_TRACK_COUNT, src->priv->num_tracks, NULL);
 #if 0
-  for (i = 0; i < src->num_tracks; ++i) {
+  for (i = 0; i < src->priv->num_tracks; ++i) {
     gst_tag_list_add (src->tags, GST_TAG_MERGE_APPEND,
-        GST_TAG_CDDA_TRACK_TAGS, src->tracks[i].tags, NULL);
+        GST_TAG_CDDA_TRACK_TAGS, src->priv->tracks[i].tags, NULL);
   }
 #endif
 
@@ -1315,11 +1369,11 @@ gst_audio_cd_src_add_index_associations (GstAudioCdSrc * src)
 {
   gint i;
 
-  for (i = 0; i < src->num_tracks; i++) {
+  for (i = 0; i < src->priv->num_tracks; i++) {
     gint64 sector;
 
-    sector = src->tracks[i].start;
-    gst_index_add_association (src->index, src->index_id, GST_ASSOCIATION_FLAG_KEY_UNIT, track_format, i,       /* here we count from 0 */
+    sector = src->priv->tracks[i].start;
+    gst_index_add_association (src->priv->index, src->priv->index_id, GST_ASSOCIATION_FLAG_KEY_UNIT, track_format, i,   /* here we count from 0 */
         sector_format, sector,
         GST_FORMAT_TIME,
         (gint64) (((CD_FRAMESIZE_RAW >> 2) * sector * GST_SECOND) / 44100),
@@ -1335,22 +1389,22 @@ gst_audio_cd_src_set_index (GstElement * element, GstIndex * index)
   GstIndex *old;
 
   GST_OBJECT_LOCK (element);
-  old = src->index;
+  old = src->priv->index;
   if (old == index) {
     GST_OBJECT_UNLOCK (element);
     return;
   }
   if (index)
     gst_object_ref (index);
-  src->index = index;
+  src->priv->index = index;
   GST_OBJECT_UNLOCK (element);
   if (old)
     gst_object_unref (old);
 
   if (index) {
-    gst_index_get_writer_id (index, GST_OBJECT (src), &src->index_id);
-    gst_index_add_format (index, src->index_id, track_format);
-    gst_index_add_format (index, src->index_id, sector_format);
+    gst_index_get_writer_id (index, GST_OBJECT (src), &src->priv->index_id);
+    gst_index_add_format (index, src->priv->index_id, track_format);
+    gst_index_add_format (index, src->priv->index_id, sector_format);
   }
 }
 
@@ -1362,7 +1416,7 @@ gst_audio_cd_src_get_index (GstElement * element)
   GstIndex *index;
 
   GST_OBJECT_LOCK (element);
-  if ((index = src->index))
+  if ((index = src->priv->index))
     gst_object_ref (index);
   GST_OBJECT_UNLOCK (element);
 
@@ -1395,13 +1449,13 @@ gst_audio_cd_src_start (GstBaseSrc * basesrc)
   gboolean ret;
   gchar *device = NULL;
 
-  src->discid = 0;
-  src->mb_discid[0] = '\0';
+  src->priv->discid = 0;
+  src->priv->mb_discid[0] = '\0';
 
   g_assert (klass->open != NULL);
 
-  if (src->device != NULL) {
-    device = g_strdup (src->device);
+  if (src->priv->device != NULL) {
+    device = g_strdup (src->priv->device);
   } else if (klass->get_default_device != NULL) {
     device = klass->get_default_device (src);
   }
@@ -1420,7 +1474,7 @@ gst_audio_cd_src_start (GstBaseSrc * basesrc)
   if (!ret)
     goto open_failed;
 
-  if (src->num_tracks == 0 || src->tracks == NULL)
+  if (src->priv->num_tracks == 0 || src->priv->tracks == NULL)
     goto no_tracks;
 
   /* need to calculate disc IDs before we ditch the data tracks */
@@ -1429,45 +1483,46 @@ gst_audio_cd_src_start (GstBaseSrc * basesrc)
 
 #if 0
   /* adjust sector offsets if necessary */
-  if (src->toc_bias) {
-    src->toc_offset -= src->tracks[0].start;
+  if (src->priv->toc_bias) {
+    src->priv->toc_offset -= src->priv->tracks[0].start;
   }
-  for (i = 0; i < src->num_tracks; ++i) {
-    src->tracks[i].start += src->toc_offset;
-    src->tracks[i].end += src->toc_offset;
+  for (i = 0; i < src->priv->num_tracks; ++i) {
+    src->priv->tracks[i].start += src->priv->toc_offset;
+    src->priv->tracks[i].end += src->priv->toc_offset;
   }
 #endif
 
   /* now that we calculated the various disc IDs,
    * sort the data tracks to end and ignore them */
-  src->num_all_tracks = src->num_tracks;
+  src->priv->num_all_tracks = src->priv->num_tracks;
 
-  g_qsort_with_data (src->tracks, src->num_tracks,
+  g_qsort_with_data (src->priv->tracks, src->priv->num_tracks,
       sizeof (GstAudioCdSrcTrack), gst_audio_cd_src_track_sort_func, NULL);
 
-  while (src->num_tracks > 0 && !src->tracks[src->num_tracks - 1].is_audio)
-    --src->num_tracks;
+  while (src->priv->num_tracks > 0
+      && !src->priv->tracks[src->priv->num_tracks - 1].is_audio)
+    --src->priv->num_tracks;
 
-  if (src->num_tracks == 0)
+  if (src->priv->num_tracks == 0)
     goto no_tracks;
 
   gst_audio_cd_src_add_tags (src);
 
-  if (src->index && GST_INDEX_IS_WRITABLE (src->index))
+  if (src->priv->index && GST_INDEX_IS_WRITABLE (src->priv->index))
     gst_audio_cd_src_add_index_associations (src);
 
-  src->cur_track = 0;
-  src->prev_track = -1;
+  src->priv->cur_track = 0;
+  src->priv->prev_track = -1;
 
-  if (src->uri_track > 0 && src->uri_track <= src->num_tracks) {
-    GST_LOG_OBJECT (src, "seek to track %d", src->uri_track);
-    src->cur_track = src->uri_track - 1;
-    src->uri_track = -1;
-    src->mode = GST_AUDIO_CD_SRC_MODE_NORMAL;
+  if (src->priv->uri_track > 0 && src->priv->uri_track <= src->priv->num_tracks) {
+    GST_LOG_OBJECT (src, "seek to track %d", src->priv->uri_track);
+    src->priv->cur_track = src->priv->uri_track - 1;
+    src->priv->uri_track = -1;
+    src->priv->mode = GST_AUDIO_CD_SRC_MODE_NORMAL;
   }
 
-  src->cur_sector = src->tracks[src->cur_track].start;
-  GST_LOG_OBJECT (src, "starting at sector %d", src->cur_sector);
+  src->priv->cur_sector = src->priv->tracks[src->priv->cur_track].start;
+  GST_LOG_OBJECT (src, "starting at sector %d", src->priv->cur_sector);
 
   gst_audio_cd_src_update_duration (src);
 
@@ -1494,19 +1549,19 @@ no_tracks:
 static void
 gst_audio_cd_src_clear_tracks (GstAudioCdSrc * src)
 {
-  if (src->tracks != NULL) {
+  if (src->priv->tracks != NULL) {
     gint i;
 
-    for (i = 0; i < src->num_all_tracks; ++i) {
-      if (src->tracks[i].tags)
-        gst_tag_list_free (src->tracks[i].tags);
+    for (i = 0; i < src->priv->num_all_tracks; ++i) {
+      if (src->priv->tracks[i].tags)
+        gst_tag_list_free (src->priv->tracks[i].tags);
     }
 
-    g_free (src->tracks);
-    src->tracks = NULL;
+    g_free (src->priv->tracks);
+    src->priv->tracks = NULL;
   }
-  src->num_tracks = 0;
-  src->num_all_tracks = 0;
+  src->priv->num_tracks = 0;
+  src->priv->num_all_tracks = 0;
 }
 
 static gboolean
@@ -1526,8 +1581,8 @@ gst_audio_cd_src_stop (GstBaseSrc * basesrc)
     src->tags = NULL;
   }
 
-  src->prev_track = -1;
-  src->cur_track = -1;
+  src->priv->prev_track = -1;
+  src->priv->cur_track = -1;
 
   return TRUE;
 }
@@ -1547,47 +1602,51 @@ gst_audio_cd_src_create (GstPushSrc * pushsrc, GstBuffer ** buffer)
 
   g_assert (klass->read_sector != NULL);
 
-  switch (src->mode) {
+  switch (src->priv->mode) {
     case GST_AUDIO_CD_SRC_MODE_NORMAL:
-      eos = (src->cur_sector > src->tracks[src->cur_track].end);
+      eos =
+          (src->priv->cur_sector > src->priv->tracks[src->priv->cur_track].end);
       break;
     case GST_AUDIO_CD_SRC_MODE_CONTINUOUS:
-      eos = (src->cur_sector > src->tracks[src->num_tracks - 1].end);
-      src->cur_track = gst_audio_cd_src_get_track_from_sector (src,
-          src->cur_sector);
+      eos =
+          (src->priv->cur_sector >
+          src->priv->tracks[src->priv->num_tracks - 1].end);
+      src->priv->cur_track =
+          gst_audio_cd_src_get_track_from_sector (src, src->priv->cur_sector);
       break;
     default:
       g_return_val_if_reached (GST_FLOW_ERROR);
   }
 
   if (eos) {
-    src->prev_track = -1;
+    src->priv->prev_track = -1;
     GST_DEBUG_OBJECT (src, "EOS at sector %d, cur_track=%d, mode=%d",
-        src->cur_sector, src->cur_track, src->mode);
+        src->priv->cur_sector, src->priv->cur_track, src->priv->mode);
     /* base class will send EOS for us */
     return GST_FLOW_EOS;
   }
 
-  if (src->prev_track != src->cur_track) {
+  if (src->priv->prev_track != src->priv->cur_track) {
     GstTagList *tags;
 
-    tags = gst_tag_list_merge (src->tags, src->tracks[src->cur_track].tags,
-        GST_TAG_MERGE_REPLACE);
+    tags =
+        gst_tag_list_merge (src->tags,
+        src->priv->tracks[src->priv->cur_track].tags, GST_TAG_MERGE_REPLACE);
     GST_LOG_OBJECT (src, "announcing tags: %" GST_PTR_FORMAT, tags);
     gst_pad_push_event (GST_BASE_SRC_PAD (src), gst_event_new_tag (tags));
-    src->prev_track = src->cur_track;
+    src->priv->prev_track = src->priv->cur_track;
 
     gst_audio_cd_src_update_duration (src);
 
     g_object_notify (G_OBJECT (src), "track");
   }
 
-  GST_LOG_OBJECT (src, "asking for sector %u", src->cur_sector);
+  GST_LOG_OBJECT (src, "asking for sector %u", src->priv->cur_sector);
 
-  buf = klass->read_sector (src, src->cur_sector);
+  buf = klass->read_sector (src, src->priv->cur_sector);
 
   if (buf == NULL) {
-    GST_WARNING_OBJECT (src, "failed to read sector %u", src->cur_sector);
+    GST_WARNING_OBJECT (src, "failed to read sector %u", src->priv->cur_sector);
     return GST_FLOW_ERROR;
   }
 
@@ -1597,12 +1656,12 @@ gst_audio_cd_src_create (GstPushSrc * pushsrc, GstBuffer ** buffer)
 
     position = (GstClockTime) qry_position;
 
-    ++src->cur_sector;
+    ++src->priv->cur_sector;
     if (gst_pad_query_position (GST_BASE_SRC_PAD (src), GST_FORMAT_TIME,
             &next_ts)) {
       duration = (GstClockTime) (next_ts - qry_position);
     }
-    --src->cur_sector;
+    --src->priv->cur_sector;
   }
 
   /* fallback duration: 4 bytes per sample, 44100 samples per second */
@@ -1615,9 +1674,9 @@ gst_audio_cd_src_create (GstPushSrc * pushsrc, GstBuffer ** buffer)
   GST_BUFFER_DURATION (buf) = duration;
 
   GST_LOG_OBJECT (src, "pushing sector %d with timestamp %" GST_TIME_FORMAT,
-      src->cur_sector, GST_TIME_ARGS (position));
+      src->priv->cur_sector, GST_TIME_ARGS (position));
 
-  ++src->cur_sector;
+  ++src->priv->cur_sector;
 
   *buffer = buf;
 
