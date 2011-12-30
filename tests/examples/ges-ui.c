@@ -23,6 +23,7 @@
 #include <string.h>
 #include <gtk/gtk.h>
 #include <glib.h>
+#include <glib/gprintf.h>
 #include <ges/ges.h>
 #include <regex.h>
 

@@ -25,6 +25,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <glib.h>
+#include <glib/gprintf.h>
 #include <ges/ges.h>
 #include <gst/pbutils/encoding-profile.h>
 #include <regex.h>
