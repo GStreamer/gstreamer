@@ -116,8 +116,6 @@ enum
   ARG_TOC_BIAS
 };
 
-#define GstIndex gpointer
-
 struct _GstAudioCdSrcPrivate
 {
   GstAudioCdSrcMode mode;
@@ -139,8 +137,10 @@ struct _GstAudioCdSrcPrivate
   guint32 discid;               /* cddb disc id (for unit test)    */
   gchar mb_discid[32];          /* musicbrainz discid              */
 
+#if 0
   GstIndex *index;
   gint index_id;
+#endif
 
   gint toc_offset;
   gboolean toc_bias;
@@ -164,8 +164,10 @@ static GstFlowReturn gst_audio_cd_src_create (GstPushSrc * pushsrc,
     GstBuffer ** buf);
 static gboolean gst_audio_cd_src_is_seekable (GstBaseSrc * basesrc);
 static void gst_audio_cd_src_update_duration (GstAudioCdSrc * src);
+#if 0
 static void gst_audio_cd_src_set_index (GstElement * src, GstIndex * index);
 static GstIndex *gst_audio_cd_src_get_index (GstElement * src);
+#endif
 
 #define gst_audio_cd_src_parent_class parent_class
 G_DEFINE_TYPE_WITH_CODE (GstAudioCdSrc, gst_audio_cd_src, GST_TYPE_PUSH_SRC,
@@ -274,8 +276,10 @@ gst_audio_cd_src_class_init (GstAudioCdSrcClass * klass)
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&gst_audio_cd_src_src_template));
 
+#if 0
   element_class->set_index = GST_DEBUG_FUNCPTR (gst_audio_cd_src_set_index);
   element_class->get_index = GST_DEBUG_FUNCPTR (gst_audio_cd_src_get_index);
+#endif
 
   basesrc_class->start = GST_DEBUG_FUNCPTR (gst_audio_cd_src_start);
   basesrc_class->stop = GST_DEBUG_FUNCPTR (gst_audio_cd_src_stop);
@@ -313,8 +317,10 @@ gst_audio_cd_src_finalize (GObject * obj)
   g_free (cddasrc->priv->uri);
   g_free (cddasrc->priv->device);
 
+#if 0
   if (cddasrc->priv->index)
     gst_object_unref (cddasrc->priv->index);
+#endif
 
   G_OBJECT_CLASS (parent_class)->finalize (obj);
 }
@@ -1364,6 +1370,7 @@ gst_audio_cd_src_add_tags (GstAudioCdSrc * src)
   GST_DEBUG ("src->tags = %" GST_PTR_FORMAT, src->tags);
 }
 
+#if 0
 static void
 gst_audio_cd_src_add_index_associations (GstAudioCdSrc * src)
 {
@@ -1422,6 +1429,7 @@ gst_audio_cd_src_get_index (GstElement * element)
 
   return index;
 }
+#endif
 
 static gint
 gst_audio_cd_src_track_sort_func (gconstpointer a, gconstpointer b,
@@ -1508,8 +1516,10 @@ gst_audio_cd_src_start (GstBaseSrc * basesrc)
 
   gst_audio_cd_src_add_tags (src);
 
+#if 0
   if (src->priv->index && GST_INDEX_IS_WRITABLE (src->priv->index))
     gst_audio_cd_src_add_index_associations (src);
+#endif
 
   src->priv->cur_track = 0;
   src->priv->prev_track = -1;
