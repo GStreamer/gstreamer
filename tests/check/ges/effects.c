@@ -365,7 +365,7 @@ GST_START_TEST (test_track_effect_set_properties)
   fail_unless (color_aging == FALSE);
 
   pspecs = ges_track_object_list_children_properties (tck_effect, &n_props);
-  fail_unless (n_props == 6);
+  fail_unless (n_props == 7);
 
   spec = pspecs[0];
   i = 1;
