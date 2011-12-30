@@ -793,8 +793,8 @@ gst_index_add_entry (GstIndex * index, GstIndexEntry * entry)
  * Returns: a pointer to the newly added entry in the index.
  */
 GstIndexEntry *
-gst_index_add_associationv (GstIndex * index, gint id, GstAssocFlags flags,
-    gint n, const GstIndexAssociation * list)
+gst_index_add_associationv (GstIndex * index, gint id,
+    GstIndexAssociationFlags flags, gint n, const GstIndexAssociation * list)
 {
   GstIndexEntry *entry;
 
@@ -835,8 +835,8 @@ gst_index_add_associationv (GstIndex * index, gint id, GstAssocFlags flags,
  * Returns: a pointer to the newly added entry in the index.
  */
 GstIndexEntry *
-gst_index_add_association (GstIndex * index, gint id, GstAssocFlags flags,
-    GstFormat format, gint64 value, ...)
+gst_index_add_association (GstIndex * index, gint id,
+    GstIndexAssociationFlags flags, GstFormat format, gint64 value, ...)
 {
   va_list args;
   GstIndexEntry *entry;
@@ -934,7 +934,7 @@ gst_index_compare_func (gconstpointer a, gconstpointer b, gpointer user_data)
  */
 GstIndexEntry *
 gst_index_get_assoc_entry (GstIndex * index, gint id,
-    GstIndexLookupMethod method, GstAssocFlags flags,
+    GstIndexLookupMethod method, GstIndexAssociationFlags flags,
     GstFormat format, gint64 value)
 {
   g_return_val_if_fail (GST_IS_INDEX (index), NULL);
@@ -965,7 +965,7 @@ gst_index_get_assoc_entry (GstIndex * index, gint id,
  */
 GstIndexEntry *
 gst_index_get_assoc_entry_full (GstIndex * index, gint id,
-    GstIndexLookupMethod method, GstAssocFlags flags,
+    GstIndexLookupMethod method, GstIndexAssociationFlags flags,
     GstFormat format, gint64 value, GCompareDataFunc func, gpointer user_data)
 {
   GstIndexClass *iclass;

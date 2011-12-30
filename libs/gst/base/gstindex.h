@@ -137,24 +137,24 @@ struct _GstIndexAssociation {
 };
 
 /**
- * GstAssocFlags:
- * @GST_ASSOCIATION_FLAG_NONE: no extra flags
- * @GST_ASSOCIATION_FLAG_KEY_UNIT: the entry marks a key unit, a key unit is one
+ * GstIndexAssociationFlags:
+ * @GST_INDEX_ASSOCIATION_FLAG_NONE: no extra flags
+ * @GST_INDEX_ASSOCIATION_FLAG_KEY_UNIT: the entry marks a key unit, a key unit is one
  *  that marks a place where one can randomly seek to.
- * @GST_ASSOCIATION_FLAG_DELTA_UNIT: the entry marks a delta unit, a delta unit
+ * @GST_INDEX_ASSOCIATION_FLAG_DELTA_UNIT: the entry marks a delta unit, a delta unit
  *  is one that marks a place where one can relatively seek to.
- * @GST_ASSOCIATION_FLAG_LAST: extra user defined flags should start here.
+ * @GST_INDEX_ASSOCIATION_FLAG_LAST: extra user defined flags should start here.
  *
  * Flags for an association entry.
  */
 typedef enum {
-  GST_ASSOCIATION_FLAG_NONE       = 0,
-  GST_ASSOCIATION_FLAG_KEY_UNIT   = (1 << 0),
-  GST_ASSOCIATION_FLAG_DELTA_UNIT = (1 << 1),
+  GST_INDEX_ASSOCIATION_FLAG_NONE       = 0,
+  GST_INDEX_ASSOCIATION_FLAG_KEY_UNIT   = (1 << 0),
+  GST_INDEX_ASSOCIATION_FLAG_DELTA_UNIT = (1 << 1),
 
   /* new flags should start here */
-  GST_ASSOCIATION_FLAG_LAST     = (1 << 8)
-} GstAssocFlags;
+  GST_INDEX_ASSOCIATION_FLAG_LAST     = (1 << 8)
+} GstIndexAssociationFlags;
 
 /**
  * GST_INDEX_FORMAT_FORMAT:
@@ -205,7 +205,7 @@ struct _GstIndexEntry {
       gint               nassocs;
       GstIndexAssociation
                         *assocs;
-      GstAssocFlags      flags;
+      GstIndexAssociationFlags      flags;
     } assoc;
     struct {
       gchar             *key;
@@ -357,7 +357,7 @@ struct _GstIndexClass {
   void          (*add_entry)            (GstIndex *index, GstIndexEntry *entry);
 
   GstIndexEntry* (*get_assoc_entry)     (GstIndex *index, gint id,
-                                         GstIndexLookupMethod method, GstAssocFlags flags,
+                                         GstIndexLookupMethod method, GstIndexAssociationFlags flags,
                                          GstFormat format, gint64 value,
                                          GCompareDataFunc func,
                                          gpointer user_data);
@@ -406,10 +406,10 @@ GstIndexEntry*          gst_index_add_format            (GstIndex *index, gint i
 #endif
 
 static
-GstIndexEntry*          gst_index_add_associationv      (GstIndex * index, gint id, GstAssocFlags flags,
+GstIndexEntry*          gst_index_add_associationv      (GstIndex * index, gint id, GstIndexAssociationFlags flags,
                                                          gint n, const GstIndexAssociation * list);
 #if 0
-GstIndexEntry*          gst_index_add_association       (GstIndex *index, gint id, GstAssocFlags flags,
+GstIndexEntry*          gst_index_add_association       (GstIndex *index, gint id, GstIndexAssociationFlags flags,
                                                          GstFormat format, gint64 value, ...)
 GstIndexEntry*          gst_index_add_object            (GstIndex *index, gint id, gchar *key,
                                                          GType type, gpointer object);
@@ -421,11 +421,11 @@ GstIndexEntry*          gst_index_add_id                (GstIndex *index, gint i
 
 static
 GstIndexEntry*          gst_index_get_assoc_entry       (GstIndex *index, gint id,
-                                                         GstIndexLookupMethod method, GstAssocFlags flags,
+                                                         GstIndexLookupMethod method, GstIndexAssociationFlags flags,
                                                          GstFormat format, gint64 value);
 static
 GstIndexEntry*          gst_index_get_assoc_entry_full  (GstIndex *index, gint id,
-                                                         GstIndexLookupMethod method, GstAssocFlags flags,
+                                                         GstIndexLookupMethod method, GstIndexAssociationFlags flags,
                                                          GstFormat format, gint64 value,
                                                          GCompareDataFunc func,
                                                          gpointer user_data);

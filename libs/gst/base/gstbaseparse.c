@@ -1607,8 +1607,9 @@ gst_base_parse_add_index_entry (GstBaseParse * parse, guint64 offset,
   /* index might change on-the-fly, although that would be nutty app ... */
   GST_BASE_PARSE_INDEX_LOCK (parse);
   gst_index_add_associationv (parse->priv->index, parse->priv->index_id,
-      (key) ? GST_ASSOCIATION_FLAG_KEY_UNIT : GST_ASSOCIATION_FLAG_DELTA_UNIT,
-      2, (const GstIndexAssociation *) &associations);
+      (key) ? GST_INDEX_ASSOCIATION_FLAG_KEY_UNIT :
+      GST_INDEX_ASSOCIATION_FLAG_DELTA_UNIT, 2,
+      (const GstIndexAssociation *) &associations);
   GST_BASE_PARSE_INDEX_UNLOCK (parse);
 
   if (key) {
@@ -3729,7 +3730,7 @@ gst_base_parse_find_offset (GstBaseParse * parse, GstClockTime time,
     entry = gst_index_get_assoc_entry (parse->priv->index,
         parse->priv->index_id,
         before ? GST_INDEX_LOOKUP_BEFORE : GST_INDEX_LOOKUP_AFTER,
-        GST_ASSOCIATION_FLAG_KEY_UNIT, GST_FORMAT_TIME, time);
+        GST_INDEX_ASSOCIATION_FLAG_KEY_UNIT, GST_FORMAT_TIME, time);
   }
 
   if (entry) {
