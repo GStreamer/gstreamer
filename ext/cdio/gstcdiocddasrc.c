@@ -100,14 +100,13 @@ static void gst_cdio_cdda_src_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
 static void gst_cdio_cdda_src_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
-
-static gchar *gst_cdio_cdda_src_get_default_device (GstAudioCdSrc * src);
 static GstBuffer *gst_cdio_cdda_src_read_sector (GstAudioCdSrc * src,
     gint sector);
 static gboolean gst_cdio_cdda_src_open (GstAudioCdSrc * src,
     const gchar * device);
 static void gst_cdio_cdda_src_close (GstAudioCdSrc * src);
 
+#if 0
 static gchar *
 gst_cdio_cdda_src_get_default_device (GstAudioCdSrc * audiocdsrc)
 {
@@ -164,6 +163,7 @@ empty_devices:
     return NULL;
   }
 }
+#endif
 
 static GstBuffer *
 gst_cdio_cdda_src_read_sector (GstAudioCdSrc * audiocdsrc, gint sector)
@@ -321,8 +321,10 @@ gst_cdio_cdda_src_class_init (GstCdioCddaSrcClass * klass)
   audiocdsrc_class->open = gst_cdio_cdda_src_open;
   audiocdsrc_class->close = gst_cdio_cdda_src_close;
   audiocdsrc_class->read_sector = gst_cdio_cdda_src_read_sector;
+#if 0
   audiocdsrc_class->probe_devices = gst_cdio_cdda_src_probe_devices;
   audiocdsrc_class->get_default_device = gst_cdio_cdda_src_get_default_device;
+#endif
 
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_READ_SPEED,
       g_param_spec_int ("read-speed", "Read speed",
