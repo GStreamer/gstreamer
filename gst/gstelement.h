@@ -657,7 +657,7 @@ struct _GstElementClass
   gboolean              (*query)                (GstElement *element, GstQuery *query);
 
   /*< private >*/
-  gpointer _gst_reserved[GST_PADDING];
+  gpointer _gst_reserved[GST_PADDING_LARGE];
 };
 
 /* element class pad templates */
