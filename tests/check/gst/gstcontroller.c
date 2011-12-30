@@ -224,6 +224,8 @@ typedef struct _GstTestControlSourceClass GstTestControlSourceClass;
 struct _GstTestControlSource
 {
   GstControlSource parent;
+
+  gdouble value;
 };
 struct _GstTestControlSourceClass
 {
@@ -238,6 +240,39 @@ gst_test_control_source_new (void)
   return g_object_newv (GST_TYPE_TEST_CONTROL_SOURCE, 0, NULL);
 }
 
+static gboolean
+gst_test_control_source_get (GstTestControlSource * self,
+    GstClockTime timestamp, gdouble * value)
+{
+  *value = self->value;
+  return TRUE;
+}
+
+static gboolean
+gst_test_control_source_get_value_array (GstTestControlSource * self,
+    GstClockTime timestamp, GstClockTime interval, guint n_values,
+    gdouble * values)
+{
+  guint i;
+
+  for (i = 0; i < n_values; i++) {
+    *values = self->value;
+    values++;
+  }
+  return TRUE;
+}
+
+
+static void
+gst_test_control_source_init (GstTestControlSource * self)
+{
+  GstControlSource *cs = (GstControlSource *) self;
+
+  cs->get_value = (GstControlSourceGetValue) gst_test_control_source_get;
+  cs->get_value_array = (GstControlSourceGetValueArray)
+      gst_test_control_source_get_value_array;
+  self->value = 0.0;
+}
 
 static GType
 gst_test_control_source_get_type (void)
@@ -255,7 +290,7 @@ gst_test_control_source_get_type (void)
       NULL,                     // class_data
       (guint16) sizeof (GstTestControlSource),
       0,                        // n_preallocs
-      NULL,                     // instance_init
+      (GInstanceInitFunc) gst_test_control_source_init, // instance_init
       NULL                      // value_table
     };
     type =
@@ -503,7 +538,7 @@ GST_END_TEST;
 GST_START_TEST (controller_bind_twice)
 {
   GstElement *elem;
-  GstControlSource *csource, *test_csource;
+  GstControlSource *csource;
 
   elem = gst_element_factory_make ("testobj", NULL);
 
@@ -514,6 +549,59 @@ GST_START_TEST (controller_bind_twice)
           csource));
   fail_unless (gst_object_set_control_source (GST_OBJECT (elem), "double",
           csource));
+
+  g_object_unref (csource);
+
+  gst_object_unref (elem);
+}
+
+GST_END_TEST;
+
+/* tests synching a value */
+GST_START_TEST (controller_sync1)
+{
+  GstElement *elem;
+  GstTestControlSource *csource;
+
+  elem = gst_element_factory_make ("testobj", NULL);
+
+  csource = gst_test_control_source_new ();
+  fail_unless (csource != NULL, NULL);
+
+  fail_unless (gst_object_set_control_source (GST_OBJECT (elem), "int",
+          (GstControlSource *) csource));
+
+  csource->value = 0.5;
+  fail_unless (gst_object_sync_values (GST_OBJECT (elem), 0LL));
+  fail_unless_equals_int (GST_TEST_OBJ (elem)->val_int, 50);
+
+  g_object_unref (csource);
+
+  gst_object_unref (elem);
+}
+
+GST_END_TEST;
+
+/* tests synching a value */
+GST_START_TEST (controller_sync2)
+{
+  GstElement *elem;
+  GstTestControlSource *csource;
+
+  elem = gst_element_factory_make ("testobj", NULL);
+
+  csource = gst_test_control_source_new ();
+  fail_unless (csource != NULL, NULL);
+
+  fail_unless (gst_object_set_control_source (GST_OBJECT (elem), "int",
+          (GstControlSource *) csource));
+  fail_unless (gst_object_set_control_source (GST_OBJECT (elem), "double",
+          (GstControlSource *) csource));
+
+  csource->value = 0.5;
+  fail_unless (gst_object_sync_values (GST_OBJECT (elem), 0LL));
+  fail_unless_equals_int (GST_TEST_OBJ (elem)->val_int, 50);
+  fail_unless_equals_float (GST_TEST_OBJ (elem)->val_double, 50.0);
 
   g_object_unref (csource);
 
@@ -541,6 +629,8 @@ gst_controller_suite (void)
   tcase_add_test (tc, controller_any_gobject);
   tcase_add_test (tc, controller_controlsource_refcounts);
   tcase_add_test (tc, controller_bind_twice);
+  tcase_add_test (tc, controller_sync1);
+  tcase_add_test (tc, controller_sync2);
 
   return s;
 }
