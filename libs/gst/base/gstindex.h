@@ -368,7 +368,10 @@ struct _GstIndexClass {
   gpointer _gst_reserved[GST_PADDING];
 };
 
+static
 GType                   gst_index_get_type              (void);
+
+#if 0
 GstIndex*               gst_index_new                   (void);
 void                    gst_index_commit                (GstIndex *index, gint id);
 
@@ -380,32 +383,47 @@ void                    gst_index_set_certainty         (GstIndex *index,
                                                          GstIndexCertainty certainty);
 GstIndexCertainty       gst_index_get_certainty         (GstIndex *index);
 
+static
 void                    gst_index_set_filter            (GstIndex *index,
                                                          GstIndexFilter filter, gpointer user_data);
+static
 void                    gst_index_set_filter_full       (GstIndex *index,
                                                          GstIndexFilter filter, gpointer user_data,
                                                          GDestroyNotify user_data_destroy);
+
 void                    gst_index_set_resolver          (GstIndex *index,
                                                          GstIndexResolver resolver, gpointer user_data);
 void                    gst_index_set_resolver_full     (GstIndex *index, GstIndexResolver resolver,
                                                          gpointer user_data,
                                                          GDestroyNotify user_data_destroy);
+#endif
 
+static
 gboolean                gst_index_get_writer_id         (GstIndex *index, GstObject *writer, gint *id);
 
+#if 0
 GstIndexEntry*          gst_index_add_format            (GstIndex *index, gint id, GstFormat format);
+#endif
+
+static
 GstIndexEntry*          gst_index_add_associationv      (GstIndex * index, gint id, GstAssocFlags flags,
                                                          gint n, const GstIndexAssociation * list);
+#if 0
 GstIndexEntry*          gst_index_add_association       (GstIndex *index, gint id, GstAssocFlags flags,
-                                                         GstFormat format, gint64 value, ...);
+                                                         GstFormat format, gint64 value, ...)
 GstIndexEntry*          gst_index_add_object            (GstIndex *index, gint id, gchar *key,
                                                          GType type, gpointer object);
+#endif
+
+static
 GstIndexEntry*          gst_index_add_id                (GstIndex *index, gint id,
                                                          gchar *description);
 
+static
 GstIndexEntry*          gst_index_get_assoc_entry       (GstIndex *index, gint id,
                                                          GstIndexLookupMethod method, GstAssocFlags flags,
                                                          GstFormat format, gint64 value);
+static
 GstIndexEntry*          gst_index_get_assoc_entry_full  (GstIndex *index, gint id,
                                                          GstIndexLookupMethod method, GstAssocFlags flags,
                                                          GstFormat format, gint64 value,
@@ -413,9 +431,13 @@ GstIndexEntry*          gst_index_get_assoc_entry_full  (GstIndex *index, gint i
                                                          gpointer user_data);
 
 /* working with index entries */
+static
 GType gst_index_entry_get_type (void);
+static
 GstIndexEntry *         gst_index_entry_copy            (GstIndexEntry *entry);
+static
 void                    gst_index_entry_free            (GstIndexEntry *entry);
+static
 gboolean                gst_index_entry_assoc_map       (GstIndexEntry *entry,
                                                          GstFormat format, gint64 *value);
 

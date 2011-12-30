@@ -102,7 +102,7 @@ static GstIndexEntry *gst_mem_index_get_assoc_entry (GstIndex * index, gint id,
 
 #define CLASS(mem_index)  GST_MEM_INDEX_CLASS (G_OBJECT_GET_CLASS (mem_index))
 
-GType gst_mem_index_get_type (void);
+static GType gst_mem_index_get_type (void);
 
 G_DEFINE_TYPE (GstMemIndex, gst_mem_index, GST_TYPE_INDEX);
 

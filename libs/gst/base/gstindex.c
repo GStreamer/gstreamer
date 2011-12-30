@@ -297,6 +297,8 @@ gst_index_group_free (GstIndexGroup * group)
   g_slice_free (GstIndexGroup, group);
 }
 
+/* do not resurrect this, add a derived dummy index class instead */
+#if 0
 /**
  * gst_index_new:
  *
@@ -335,7 +337,6 @@ gst_index_commit (GstIndex * index, gint id)
   if (iclass->commit)
     iclass->commit (index, id);
 }
-
 
 /**
  * gst_index_get_group:
@@ -405,7 +406,9 @@ gst_index_set_group (GstIndex * index, gint groupnum)
   GST_DEBUG ("couldn't find index group %d", groupnum);
   return FALSE;
 }
+#endif
 
+#if 0
 /**
  * gst_index_set_certainty:
  * @index: the index to set the certainty on
@@ -432,7 +435,9 @@ gst_index_get_certainty (GstIndex * index)
 {
   return index->curgroup->certainty;
 }
+#endif
 
+#if 0
 /**
  * gst_index_set_filter:
  * @index: the index to register the filter on
@@ -517,6 +522,7 @@ gst_index_set_resolver_full (GstIndex * index, GstIndexResolver resolver,
   index->resolver_user_data_destroy = user_data_destroy;
   index->method = GST_INDEX_RESOLVER_CUSTOM;
 }
+#endif
 
 /**
  * gst_index_entry_copy:
@@ -568,6 +574,7 @@ gst_index_entry_free (GstIndexEntry * entry)
   g_slice_free (GstIndexEntry, entry);
 }
 
+#if 0
 /**
  * gst_index_add_format:
  * @index: the index to add the entry to
@@ -606,6 +613,7 @@ gst_index_add_format (GstIndex * index, gint id, GstFormat format)
 
   return entry;
 }
+#endif
 
 /**
  * gst_index_add_id:
@@ -810,6 +818,7 @@ gst_index_add_associationv (GstIndex * index, gint id, GstAssocFlags flags,
   return entry;
 }
 
+#if 0
 /**
  * gst_index_add_association:
  * @index: the index to add the entry to
@@ -897,6 +906,7 @@ gst_index_add_object (GstIndex * index, gint id, gchar * key,
 
   return NULL;
 }
+#endif
 
 static gint
 gst_index_compare_func (gconstpointer a, gconstpointer b, gpointer user_data)
