@@ -1209,6 +1209,10 @@ mpegts_base_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
       res = gst_mpegts_base_handle_eos (base);
       gst_event_unref (event);
       break;
+    case GST_EVENT_CAPS:
+      /* FIXME, do something */
+      gst_event_unref (event);
+      break;
     case GST_EVENT_FLUSH_START:
       mpegts_packetizer_flush (base->packetizer);
       mpegts_base_flush (base);
@@ -1224,6 +1228,8 @@ mpegts_base_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
       res = GST_MPEGTS_BASE_GET_CLASS (base)->push_event (base, event);
       gst_event_unref (event);
   }
+
+  GST_DEBUG ("Returning %d", res);
   return res;
 }
 
