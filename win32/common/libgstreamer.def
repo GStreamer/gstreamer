@@ -68,7 +68,6 @@ EXPORTS
 	gst_allocator_find
 	gst_allocator_register
 	gst_allocator_set_default
-	gst_assoc_flags_get_type
 	gst_atomic_queue_length
 	gst_atomic_queue_new
 	gst_atomic_queue_peek
@@ -357,7 +356,6 @@ EXPORTS
 	gst_element_get_compatible_pad
 	gst_element_get_compatible_pad_template
 	gst_element_get_factory
-	gst_element_get_index
 	gst_element_get_request_pad
 	gst_element_get_start_time
 	gst_element_get_state
@@ -393,7 +391,6 @@ EXPORTS
 	gst_element_set_base_time
 	gst_element_set_bus
 	gst_element_set_clock
-	gst_element_set_index
 	gst_element_set_locked_state
 	gst_element_set_start_time
 	gst_element_set_state
@@ -468,41 +465,6 @@ EXPORTS
 	gst_ghost_pad_new_no_target_from_template
 	gst_ghost_pad_set_target
 	gst_ghost_pad_unlink_default
-	gst_index_add_association
-	gst_index_add_associationv
-	gst_index_add_format
-	gst_index_add_id
-	gst_index_add_object
-	gst_index_certainty_get_type
-	gst_index_commit
-	gst_index_entry_assoc_map
-	gst_index_entry_copy
-	gst_index_entry_free
-	gst_index_entry_get_type
-	gst_index_entry_type_get_type
-	gst_index_factory_create
-	gst_index_factory_destroy
-	gst_index_factory_find
-	gst_index_factory_get_type
-	gst_index_factory_make
-	gst_index_factory_new
-	gst_index_flags_get_type
-	gst_index_get_assoc_entry
-	gst_index_get_assoc_entry_full
-	gst_index_get_certainty
-	gst_index_get_group
-	gst_index_get_type
-	gst_index_get_writer_id
-	gst_index_lookup_method_get_type
-	gst_index_new
-	gst_index_new_group
-	gst_index_resolver_method_get_type
-	gst_index_set_certainty
-	gst_index_set_filter
-	gst_index_set_filter_full
-	gst_index_set_group
-	gst_index_set_resolver
-	gst_index_set_resolver_full
 	gst_init
 	gst_init_check
 	gst_init_get_option_group
