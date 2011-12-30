@@ -410,7 +410,9 @@ static void
 gst_audio_cd_src_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec)
 {
+#if 0
   GstAudioCdSrcClass *klass = GST_AUDIO_CD_SRC_GET_CLASS (object);
+#endif
   GstAudioCdSrc *src = GST_AUDIO_CD_SRC (object);
 
   GST_OBJECT_LOCK (src);
@@ -420,6 +422,7 @@ gst_audio_cd_src_get_property (GObject * object, guint prop_id,
       g_value_set_enum (value, src->priv->mode);
       break;
     case ARG_DEVICE:{
+#if 0
       if (src->priv->device == NULL && klass->get_default_device != NULL) {
         gchar *d = klass->get_default_device (src);
 
@@ -429,6 +432,7 @@ gst_audio_cd_src_get_property (GObject * object, guint prop_id,
           break;
         }
       }
+#endif
       if (src->priv->device == NULL)
         g_value_set_string (value, DEFAULT_DEVICE);
       else
@@ -1464,9 +1468,12 @@ gst_audio_cd_src_start (GstBaseSrc * basesrc)
 
   if (src->priv->device != NULL) {
     device = g_strdup (src->priv->device);
-  } else if (klass->get_default_device != NULL) {
+  }
+#if 0
+  else if (klass->get_default_device != NULL) {
     device = klass->get_default_device (src);
   }
+#endif
 
   if (device == NULL)
     device = g_strdup (DEFAULT_DEVICE);

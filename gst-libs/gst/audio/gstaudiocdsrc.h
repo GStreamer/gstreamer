@@ -109,15 +109,17 @@ struct _GstAudioCdSrcClass {
   /* read one sector (LBA) */
   GstBuffer * (*read_sector)        (GstAudioCdSrc *src, gint sector);
 
+#if 0
   /* return default device or NULL (optional) */
   gchar *     (*get_default_device) (GstAudioCdSrc *src);
 
   /* return NULL-terminated string array of CD devices, or NULL (optional) */
   /* FIXME 0.11: reconsider for new probing/device discovery API, remove if in doubt */
   gchar **    (*probe_devices)      (GstAudioCdSrc *src);
+#endif
 
   /*< private >*/
-  gpointer       _gst_reserved[GST_PADDING];
+  gpointer       _gst_reserved[GST_PADDING_LARGE];
 };
 
 GType    gst_audio_cd_src_get_type (void);
