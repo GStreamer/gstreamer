@@ -396,8 +396,10 @@ static guint32
 gst_qtdemux_find_index_for_given_media_offset_linear (GstQTDemux * qtdemux,
     QtDemuxStream * str, gint64 media_offset);
 
+#if 0
 static void gst_qtdemux_set_index (GstElement * element, GstIndex * index);
 static GstIndex *gst_qtdemux_get_index (GstElement * element);
+#endif
 static GstStateChangeReturn gst_qtdemux_change_state (GstElement * element,
     GstStateChange transition);
 static gboolean qtdemux_sink_activate (GstPad * sinkpad, GstObject * parent);
@@ -445,8 +447,10 @@ gst_qtdemux_class_init (GstQTDemuxClass * klass)
   gobject_class->dispose = gst_qtdemux_dispose;
 
   gstelement_class->change_state = GST_DEBUG_FUNCPTR (gst_qtdemux_change_state);
+#if 0
   gstelement_class->set_index = GST_DEBUG_FUNCPTR (gst_qtdemux_set_index);
   gstelement_class->get_index = GST_DEBUG_FUNCPTR (gst_qtdemux_get_index);
+#endif
 
   gst_tag_register_musicbrainz_tags ();
 
@@ -1723,6 +1727,7 @@ drop:
   return res;
 }
 
+#if 0
 static void
 gst_qtdemux_set_index (GstElement * element, GstIndex * index)
 {
@@ -1759,6 +1764,7 @@ gst_qtdemux_get_index (GstElement * element)
 
   return result;
 }
+#endif
 
 static void
 gst_qtdemux_stbl_free (QtDemuxStream * stream)
@@ -1838,9 +1844,11 @@ gst_qtdemux_change_state (GstElement * element, GstStateChange transition)
       if (qtdemux->tag_list)
         gst_tag_list_free (qtdemux->tag_list);
       qtdemux->tag_list = NULL;
+#if 0
       if (qtdemux->element_index)
         gst_object_unref (qtdemux->element_index);
       qtdemux->element_index = NULL;
+#endif
       gst_adapter_clear (qtdemux->adapter);
       for (n = 0; n < qtdemux->n_streams; n++) {
         gst_qtdemux_stream_free (qtdemux, qtdemux->streams[n]);
@@ -3634,7 +3642,7 @@ gst_qtdemux_decorate_and_push_buffer (GstQTDemux * qtdemux,
   if (G_UNLIKELY (stream->padding)) {
     gst_buffer_resize (buf, stream->padding, -1);
   }
-
+#if 0
   if (G_UNLIKELY (qtdemux->element_index)) {
     GstClockTime stream_time;
 
@@ -3652,6 +3660,7 @@ gst_qtdemux_decorate_and_push_buffer (GstQTDemux * qtdemux,
           GST_FORMAT_BYTES, byte_position, NULL);
     }
   }
+#endif
 
   if (stream->need_clip)
     buf = gst_qtdemux_clip_buffer (qtdemux, stream, buf);
