@@ -41,7 +41,7 @@ static gboolean thumbnail_cb (gpointer pipeline);
 static gboolean
 thumbnail_cb (gpointer user)
 {
-  GstBuffer *b = NULL;
+  GstSample *b = NULL;
   GstCaps *caps;
   GESTimelinePipeline *p;
 
@@ -53,13 +53,13 @@ thumbnail_cb (gpointer user)
   /* check raw rgb use-case with scaling */
   b = ges_timeline_pipeline_get_thumbnail_rgb24 (p, 320, 240);
   g_assert (b);
-  gst_buffer_unref (b);
+  gst_sample_unref (b);
 
   /* check encoding use-case from caps */
   b = NULL;
-  b = ges_timeline_pipeline_get_thumbnail_buffer (p, caps);
+  b = ges_timeline_pipeline_get_thumbnail (p, caps);
   g_assert (b);
-  gst_buffer_unref (b);
+  gst_sample_unref (b);
 
   g_assert (ges_timeline_pipeline_save_thumbnail (p, -1, -1, (gchar *)
           "image/jpeg", (gchar *) TEST_PATH));
