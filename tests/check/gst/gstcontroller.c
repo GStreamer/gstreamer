@@ -499,6 +499,29 @@ GST_START_TEST (controller_controlsource_refcounts)
 
 GST_END_TEST;
 
+/* tests if we can bnd a control source twice */
+GST_START_TEST (controller_bind_twice)
+{
+  GstElement *elem;
+  GstControlSource *csource, *test_csource;
+
+  elem = gst_element_factory_make ("testobj", NULL);
+
+  csource = (GstControlSource *) gst_test_control_source_new ();
+  fail_unless (csource != NULL, NULL);
+
+  fail_unless (gst_object_set_control_source (GST_OBJECT (elem), "int",
+          csource));
+  fail_unless (gst_object_set_control_source (GST_OBJECT (elem), "double",
+          csource));
+
+  g_object_unref (csource);
+
+  gst_object_unref (elem);
+}
+
+GST_END_TEST;
+
 
 static Suite *
 gst_controller_suite (void)
@@ -517,6 +540,7 @@ gst_controller_suite (void)
   tcase_add_test (tc, controller_param_twice);
   tcase_add_test (tc, controller_any_gobject);
   tcase_add_test (tc, controller_controlsource_refcounts);
+  tcase_add_test (tc, controller_bind_twice);
 
   return s;
 }
