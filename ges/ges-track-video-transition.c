@@ -34,7 +34,6 @@ struct _GESTrackVideoTransitionPrivate
   GESVideoStandardTransitionType type;
 
   /* these enable video interpolation */
-  GstController *controller;
   GstInterpolationControlSource *control_source;
 
   /* so we can support changing between wipes */
@@ -106,7 +105,6 @@ ges_track_video_transition_init (GESTrackVideoTransition * self)
   self->priv = G_TYPE_INSTANCE_GET_PRIVATE (self,
       GES_TYPE_TRACK_VIDEO_TRANSITION, GESTrackVideoTransitionPrivate);
 
-  self->priv->controller = NULL;
   self->priv->control_source = NULL;
   self->priv->smpte = NULL;
   self->priv->mixer = NULL;
@@ -127,9 +125,7 @@ ges_track_video_transition_dispose (GObject * object)
   GST_LOG ("mixer: %p smpte: %p sinka: %p sinkb: %p",
       priv->mixer, priv->smpte, priv->sinka, priv->sinkb);
 
-  if (priv->controller) {
-    g_object_unref (priv->controller);
-    priv->controller = NULL;
+  if (priv->control_source) {
     if (priv->control_source)
       gst_object_unref (priv->control_source);
     priv->control_source = NULL;
@@ -185,7 +181,7 @@ on_caps_set (GstPad * srca_pad, GParamSpec * pspec, GstElement * capsfilt)
 {
   GstCaps *orig_caps;
 
-  orig_caps = gst_pad_get_caps (srca_pad, NULL);
+  orig_caps = gst_pad_query_caps (srca_pad, NULL);
 
   if (orig_caps) {
     gint width, height;
@@ -214,7 +210,6 @@ ges_track_video_transition_create_element (GESTrackObject * object)
   GstElement *mixer = NULL;
   GstPad *sinka_target, *sinkb_target, *src_target, *sinka, *sinkb, *src,
       *srca_pad;
-  GstController *controller;
   GstInterpolationControlSource *control_source;
   GESTrackVideoTransition *self;
   GESTrackVideoTransitionPrivate *priv;
@@ -239,6 +234,7 @@ ges_track_video_transition_create_element (GESTrackObject * object)
   mixer = gst_element_factory_make ("videomixer2", NULL);
   if (mixer == NULL)
     mixer = gst_element_factory_make ("videomixer", NULL);
+  g_assert (mixer);
   g_object_set (G_OBJECT (mixer), "background", 1, NULL);
   gst_bin_add (GST_BIN (topbin), mixer);
 
@@ -298,15 +294,11 @@ ges_track_video_transition_create_element (GESTrackObject * object)
 
   g_object_set (target, propname, (gfloat) 0.0, NULL);
 
-  controller = gst_object_control_properties (target, propname, NULL);
-
   control_source = gst_interpolation_control_source_new ();
-  gst_controller_set_control_source (controller,
-      propname, GST_CONTROL_SOURCE (control_source));
-  gst_interpolation_control_source_set_interpolation_mode (control_source,
-      GST_INTERPOLATE_LINEAR);
+  gst_object_set_control_source (GST_OBJECT (target), propname,
+      GST_CONTROL_SOURCE (control_source));
+  g_object_set (control_source, "mode", GST_INTERPOLATION_MODE_LINEAR, NULL);
 
-  priv->controller = controller;
   priv->control_source = control_source;
 
   return topbin;
@@ -354,29 +346,24 @@ static void
 ges_track_video_transition_duration_changed (GESTrackObject * object,
     guint64 duration)
 {
-  GValue start_value = { 0, };
-  GValue end_value = { 0, };
   GstElement *gnlobj = ges_track_object_get_gnlobject (object);
   GESTrackVideoTransition *self = GES_TRACK_VIDEO_TRANSITION (object);
   GESTrackVideoTransitionPrivate *priv = self->priv;
+  GstTimedValueControlSource *ts;
 
   GST_LOG ("updating controller");
 
   if (G_UNLIKELY (!gnlobj || !priv->control_source))
     return;
 
-  GST_INFO ("duration: %" G_GUINT64_FORMAT, duration);
-  g_value_init (&start_value, G_TYPE_DOUBLE);
-  g_value_init (&end_value, G_TYPE_DOUBLE);
-  g_value_set_double (&start_value, priv->start_value);
-  g_value_set_double (&end_value, priv->end_value);
+  ts = GST_TIMED_VALUE_CONTROL_SOURCE (priv->control_source);
 
+  GST_INFO ("duration: %" G_GUINT64_FORMAT, duration);
   GST_LOG ("setting values on controller");
 
-  gst_interpolation_control_source_unset_all (priv->control_source);
-  gst_interpolation_control_source_set (priv->control_source, 0, &start_value);
-  gst_interpolation_control_source_set (priv->control_source,
-      duration, &end_value);
+  gst_timed_value_control_source_unset_all (ts);
+  gst_timed_value_control_source_set (ts, 0, priv->start_value);
+  gst_timed_value_control_source_set (ts, duration, priv->end_value);
 
   GST_LOG ("done updating controller");
 }

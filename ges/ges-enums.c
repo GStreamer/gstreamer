@@ -51,13 +51,13 @@ register_ges_pipeline_flags (GType * id)
 {
   static const GFlagsValue values[] = {
     {C_ENUM (TIMELINE_MODE_PREVIEW_AUDIO), "TIMELINE_MODE_PREVIEW_AUDIO",
-          "audio_preview"},
+        "audio_preview"},
     {C_ENUM (TIMELINE_MODE_PREVIEW_VIDEO), "TIMELINE_MODE_PREVIEW_VIDEO",
-          "video_preview"},
+        "video_preview"},
     {C_ENUM (TIMELINE_MODE_PREVIEW), "TIMELINE_MODE_PREVIEW", "full_preview"},
     {C_ENUM (TIMELINE_MODE_RENDER), "TIMELINE_MODE_RENDER", "render"},
     {C_ENUM (TIMELINE_MODE_SMART_RENDER), "TIMELINE_MODE_SMART_RENDER",
-          "smart_render"},
+        "smart_render"},
     {0, NULL, NULL}
   };
 

@@ -19,7 +19,6 @@
  */
 
 #include <ges/ges.h>
-#include <gst/controller/gstcontroller.h>
 #include "ges-internal.h"
 
 #define GES_GNONLIN_VERSION_NEEDED_MAJOR 0
@@ -63,7 +62,6 @@ ges_init (void)
   /* initialize debugging category */
   GST_DEBUG_CATEGORY_INIT (_ges_debug, "ges", GST_DEBUG_FG_YELLOW,
       "GStreamer Editing Services");
-  gst_controller_init (NULL, NULL);
 
   /* register timeline object classes with the system */
 

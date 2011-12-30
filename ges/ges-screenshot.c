@@ -23,29 +23,12 @@
 #include "ges-screenshot.h"
 #include "ges-internal.h"
 
-GstBuffer *
+GstSample *
 ges_play_sink_convert_frame (GstElement * playsink, GstCaps * caps)
 {
-  GstBuffer *result;
+  GstSample *sample = NULL;
 
-  g_object_get (G_OBJECT (playsink), "frame", (GstMiniObject *) & result, NULL);
+  g_signal_emit_by_name (playsink, "convert-sample", caps, &sample);
 
-  GST_DEBUG ("got buffer %p from playsink", result);
-
-  if (result != NULL && caps != NULL) {
-    GstBuffer *temp;
-    GError *err = NULL;
-
-    /* FIXME : Need to get the input buffer caps */
-    temp = gst_video_convert_frame (result, NULL, caps, 25 * GST_SECOND, &err);
-    gst_buffer_unref (result);
-    if (temp == NULL && err) {
-      /* I'm really uncertain whether we should make playsink post an error
-       * on the bus or not. It's not like it's a critical issue regarding
-       * playsink behaviour. */
-      GST_ERROR ("Error converting frame: %s", err->message);
-    }
-    result = temp;
-  }
-  return result;
+  return sample;
 }

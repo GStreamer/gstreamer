@@ -226,7 +226,7 @@ ges_timeline_pipeline_update_caps (GESTimelinePipeline * self)
           if (track->type == GES_TRACK_TYPE_VIDEO)
             caps = gst_caps_from_string ("video/x-raw-yuv;video/x-raw-rgb");
           else if (track->type == GES_TRACK_TYPE_AUDIO)
-            gst_caps_from_string ("audio/x-raw-int;audio/x-raw-float");
+            caps = gst_caps_from_string ("audio/x-raw-int;audio/x-raw-float");
 
           if (caps) {
             ges_track_set_caps (track, caps);
@@ -265,8 +265,8 @@ ges_timeline_pipeline_change_state (GstElement * element,
         ret = GST_STATE_CHANGE_FAILURE;
         goto done;
       }
-      if (self->priv->
-          mode & (TIMELINE_MODE_RENDER | TIMELINE_MODE_SMART_RENDER))
+      if (self->
+          priv->mode & (TIMELINE_MODE_RENDER | TIMELINE_MODE_SMART_RENDER))
         GST_DEBUG ("rendering => Updating pipeline caps");
       if (!ges_timeline_pipeline_update_caps (self)) {
         GST_ERROR_OBJECT (element, "Error setting the caps for rendering");
@@ -334,7 +334,7 @@ get_compatible_unlinked_pad (GstElement * element, GstPad * pad)
     pads = gst_element_iterate_sink_pads (element);
   else
     pads = gst_element_iterate_src_pads (element);
-  srccaps = gst_pad_get_caps (pad, NULL);
+  srccaps = gst_pad_query_caps (pad, NULL);
 
   GST_DEBUG ("srccaps %" GST_PTR_FORMAT, srccaps);
 
@@ -345,7 +345,7 @@ get_compatible_unlinked_pad (GstElement * element, GstPad * pad)
         GstPad *testpad = g_value_get_object (&paditem);
 
         if (!gst_pad_is_linked (testpad)) {
-          GstCaps *sinkcaps = gst_pad_get_caps (testpad, NULL);
+          GstCaps *sinkcaps = gst_pad_query_caps (testpad, NULL);
 
           GST_DEBUG ("sinkccaps %" GST_PTR_FORMAT, sinkcaps);
 
@@ -389,7 +389,7 @@ pad_added_cb (GstElement * timeline, GstPad * pad, GESTimelinePipeline * self)
   GstCaps *caps;
   gboolean reconfigured = FALSE;
 
-  caps = gst_pad_get_caps (pad, NULL);
+  caps = gst_pad_query_caps (pad, NULL);
 
   GST_DEBUG_OBJECT (self, "new pad %s:%s , caps:%" GST_PTR_FORMAT,
       GST_DEBUG_PAD_NAME (pad), caps);
@@ -492,7 +492,7 @@ pad_added_cb (GstElement * timeline, GstPad * pad, GESTimelinePipeline * self)
       sinkpad = get_compatible_unlinked_pad (self->priv->encodebin, pad);
 
       if (sinkpad == NULL) {
-        GstCaps *caps = gst_pad_get_caps (pad, NULL);
+        GstCaps *caps = gst_pad_query_caps (pad, NULL);
 
         /* If no compatible static pad is available, request a pad */
         g_signal_emit_by_name (self->priv->encodebin, "request-pad", caps,
@@ -767,36 +767,33 @@ ges_timeline_pipeline_set_mode (GESTimelinePipeline * pipeline,
 }
 
 /**
- * ges_timeline_pipeline_get_thumbnail_buffer:
+ * ges_timeline_pipeline_get_thumbnail:
  * @self: a #GESTimelinePipeline in %GST_STATE_PLAYING or %GST_STATE_PAUSED
  * @caps: (transfer none): caps specifying current format. Use %GST_CAPS_ANY
  * for native size.
  *
- * Returns a #GstBuffer with the currently playing in the format specified by
- * caps. The caller should unref the #gst_buffer_unref when finished. If ANY
+ * Returns a #GstSample with the currently playing image in the format specified by
+ * caps. The caller should free the sample with #gst_sample_unref when finished. If ANY
  * caps are specified, the information will be returned in the whatever format
  * is currently used by the sink. This information can be retrieve from caps
  * associated with the buffer.
  *
- * Returns: (transfer full): a #GstBuffer or %NULL
+ * Returns: (transfer full): a #GstSample or %NULL
  */
 
-GstBuffer *
-ges_timeline_pipeline_get_thumbnail_buffer (GESTimelinePipeline * self,
-    GstCaps * caps)
+GstSample *
+ges_timeline_pipeline_get_thumbnail (GESTimelinePipeline * self, GstCaps * caps)
 {
   GstElement *sink;
-  GstBuffer *buf;
 
   sink = self->priv->playsink;
+
   if (!sink) {
     GST_WARNING ("thumbnailing can only be done if we have a playsink");
     return NULL;
   }
 
-  buf = ges_play_sink_convert_frame (sink, caps);
-
-  return buf;
+  return ges_play_sink_convert_frame (sink, caps);
 }
 
 /**
@@ -818,6 +815,7 @@ ges_timeline_pipeline_save_thumbnail (GESTimelinePipeline * self, int width, int
     height, const gchar * format, const gchar * location)
 {
   GstBuffer *b;
+  GstSample *sample;
   FILE *fp;
   GstCaps *caps;
   gboolean res = TRUE;
@@ -832,11 +830,12 @@ ges_timeline_pipeline_save_thumbnail (GESTimelinePipeline * self, int width, int
   if (height > 1)
     gst_caps_set_simple (caps, "height", G_TYPE_INT, height, NULL);
 
-  if (!(b = ges_timeline_pipeline_get_thumbnail_buffer (self, caps))) {
+  if (!(sample = ges_timeline_pipeline_get_thumbnail (self, caps))) {
     gst_caps_unref (caps);
     return res;
   }
 
+  b = gst_sample_get_buffer (sample);
   data = gst_buffer_map (b, &size, NULL, GST_MAP_READ);
 
   /* FIXME : Use standard glib methods */
@@ -849,6 +848,7 @@ ges_timeline_pipeline_save_thumbnail (GESTimelinePipeline * self, int width, int
   gst_caps_unref (caps);
   gst_buffer_unmap (b, data, size);
   gst_buffer_unref (b);
+  gst_sample_unref (sample);
 
   return res;
 }
@@ -859,23 +859,23 @@ ges_timeline_pipeline_save_thumbnail (GESTimelinePipeline * self, int width, int
  * @width: the requested width or -1 for native size
  * @height: the requested height or -1 for native size
  *
- * A convenience method for ges_timeline_pipeline_get_thumbnail_raw which
+ * A convenience method for @ges_timeline_pipeline_get_thumbnail which
  * returns a buffer in 24-bit RGB, optionally scaled to the specified width
  * and height. If -1 is specified for either dimension, it will be left at
  * native size. You can retreive this information from the caps associated
  * with the buffer.
  * 
- * The caller is responsible for unreffing the returned buffer with
- * #gst_buffer_unref.
+ * The caller is responsible for unreffing the returned sample with
+ * #gst_sample_unref.
  *
- * Returns: (transfer full): a #GstBuffer or %NULL
+ * Returns: (transfer full): a #GstSample or %NULL
  */
 
-GstBuffer *
+GstSample *
 ges_timeline_pipeline_get_thumbnail_rgb24 (GESTimelinePipeline * self,
     gint width, gint height)
 {
-  GstBuffer *ret;
+  GstSample *ret;
   GstCaps *caps;
 
   caps = gst_caps_from_string ("video/x-raw-rgb,bpp=(int)24," "depth=(int)24");
@@ -886,7 +886,7 @@ ges_timeline_pipeline_get_thumbnail_rgb24 (GESTimelinePipeline * self,
   if (height != -1)
     gst_caps_set_simple (caps, "height", G_TYPE_INT, (gint) height, NULL);
 
-  ret = ges_timeline_pipeline_get_thumbnail_buffer (self, caps);
+  ret = ges_timeline_pipeline_get_thumbnail (self, caps);
   gst_caps_unref (caps);
   return ret;
 }

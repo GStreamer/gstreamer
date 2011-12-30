@@ -23,7 +23,6 @@
 
 #include <glib-object.h>
 #include <gst/gst.h>
-#include <gst/controller/gstcontroller.h>
 #include <gst/controller/gstinterpolationcontrolsource.h>
 #include <ges/ges-types.h>
 #include <ges/ges-track-operation.h>
