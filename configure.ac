@@ -308,7 +308,7 @@ GST_PLUGINS_NONPORTED=" adpcmdec adpcmenc aiff asfmux \
  decklink fbdev linsys shm vcd \
  voaacenc apexsink bz2 cdaudio celt cog curl dc1394 dirac directfb dts resindvd \
  gsettings gsm jp2k ladspa modplug mpeg2enc mplex mimic \
- musepack musicbrainz nas neon ofa openal rsvg schro sdl smooth sndfile soundtouch spandsp timidity \
+ musepack musicbrainz nas neon ofa openal opencv rsvg schro sdl smooth sndfile soundtouch spandsp timidity \
  wildmidi xvid apple_media "
 AC_SUBST(GST_PLUGINS_NONPORTED)
 
@@ -354,7 +354,6 @@ AG_GST_CHECK_PLUGIN(mpegdemux)
 AG_GST_CHECK_PLUGIN(mpegtsdemux)
 AG_GST_CHECK_PLUGIN(mpegtsmux)
 AG_GST_CHECK_PLUGIN(mpegpsmux)
-AG_GST_CHECK_PLUGIN(mpeg4videoparse)
 AG_GST_CHECK_PLUGIN(mpegvideoparse)
 AG_GST_CHECK_PLUGIN(mve)
 AG_GST_CHECK_PLUGIN(mxf)
@@ -1382,7 +1381,7 @@ AG_GST_CHECK_FEATURE(OPENCV, [opencv plugins], opencv, [
   dnl a new version and the no-backward-compatibility define. (There doesn't
   dnl seem to be a switch to suppress the warnings the cvcompat.h header
   dnl causes.)
-  PKG_CHECK_MODULES(OPENCV, opencv >= 2.0.0 opencv <= 2.2.0 , [
+  PKG_CHECK_MODULES(OPENCV, opencv >= 2.0.0 opencv <= 2.3.1 , [
     AC_PROG_CXX
     AC_LANG_CPLUSPLUS
     OLD_CPPFLAGS=$CPPFLAGS
@@ -1612,6 +1611,9 @@ AG_GST_CHECK_FEATURE(XVID, [xvid plugins], xvid, [
               #if XVID_API_MAJOR(XVID_API) != 4
               #error "Incompatible XviD API version"
               #endif
+	      #if XVID_API_MAJOR(XVID_API) == 4 && XVID_API_MINOR(XVID_API) < 3
+              #error "Incompatible XviD API version"
+	      #endif
           ],[ AC_MSG_RESULT(yes)
             XVID_LIBS="-lxvidcore $LIBM"
             AC_SUBST(XVID_LIBS)
@@ -1965,7 +1967,6 @@ gst/mpegtsdemux/Makefile
 gst/mpegtsmux/Makefile
 gst/mpegtsmux/tsmux/Makefile
 gst/mpegpsmux/Makefile
-gst/mpeg4videoparse/Makefile
 gst/mpegvideoparse/Makefile
 gst/mve/Makefile
 gst/mxf/Makefile

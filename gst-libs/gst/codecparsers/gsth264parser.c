@@ -94,31 +94,31 @@ GST_DEBUG_CATEGORY (h264_parser_debug);
 #define GST_CAT_DEFAULT h264_parser_debug
 
 /**** Default scaling_lists according to Table 7-2 *****/
-const guint8 default_4x4_intra[16] = {
+static const guint8 default_4x4_intra[16] = {
   6, 13, 13, 20, 20, 20, 28, 28, 28, 28, 32, 32,
   32, 37, 37, 42
 };
 
-const guint8 default_4x4_inter[16] = {
+static const guint8 default_4x4_inter[16] = {
   10, 14, 14, 20, 20, 20, 24, 24, 24, 24, 27, 27,
   27, 30, 30, 34
 };
 
-const guint8 default_8x8_intra[64] = {
+static const guint8 default_8x8_intra[64] = {
   6, 10, 10, 13, 11, 13, 16, 16, 16, 16, 18, 18,
   18, 18, 18, 23, 23, 23, 23, 23, 23, 25, 25, 25, 25, 25, 25, 25, 27, 27, 27,
   27, 27, 27, 27, 27, 29, 29, 29, 29, 29, 29, 29, 31, 31, 31, 31, 31, 31, 33,
   33, 33, 33, 33, 36, 36, 36, 36, 38, 38, 38, 40, 40, 42
 };
 
-const guint8 default_8x8_inter[64] = {
+static const guint8 default_8x8_inter[64] = {
   9, 13, 13, 15, 13, 15, 17, 17, 17, 17, 19, 19,
   19, 19, 19, 21, 21, 21, 21, 21, 21, 22, 22, 22, 22, 22, 22, 22, 24, 24, 24,
   24, 24, 24, 24, 24, 25, 25, 25, 25, 25, 25, 25, 27, 27, 27, 27, 27, 27, 28,
   28, 28, 28, 28, 30, 30, 30, 30, 32, 32, 32, 33, 33, 35
 };
 
-const guint8 zigzag_8x8[64] = {
+static const guint8 zigzag_8x8[64] = {
   0, 1, 8, 16, 9, 2, 3, 10,
   17, 24, 32, 25, 18, 11, 4, 5,
   12, 19, 26, 33, 40, 48, 41, 34,
@@ -129,7 +129,7 @@ const guint8 zigzag_8x8[64] = {
   53, 60, 61, 54, 47, 55, 62, 63
 };
 
-const guint8 zigzag_4x4[16] = {
+static const guint8 zigzag_4x4[16] = {
   0, 1, 4, 8,
   5, 2, 3, 6,
   9, 12, 13, 10,
@@ -743,56 +743,57 @@ error:
 }
 
 static gboolean
-slice_parse_ref_pic_list_reordering (GstH264SliceHdr * slice, NalReader * nr)
+slice_parse_ref_pic_list_modification_1 (GstH264SliceHdr * slice,
+    NalReader * nr, guint list)
 {
-  GST_DEBUG ("parsing \"Reference picture list reordering\"");
+  GstH264RefPicListModification *entries;
+  guint8 *ref_pic_list_modification_flag;
+  guint32 modification_of_pic_nums_idc;
+  guint i = 0;
 
-  if (!GST_H264_IS_I_SLICE (slice) && !GST_H264_IS_SI_SLICE (slice)) {
-    guint8 ref_pic_list_reordering_flag_l0;
-    guint32 reordering_of_pic_nums_idc;
-
-    READ_UINT8 (nr, ref_pic_list_reordering_flag_l0, 1);
-    if (ref_pic_list_reordering_flag_l0)
-      do {
-        READ_UE (nr, reordering_of_pic_nums_idc);
-        if (reordering_of_pic_nums_idc == 0 || reordering_of_pic_nums_idc == 1) {
-          guint32 abs_diff_pic_num_minus1 G_GNUC_UNUSED;
-
-          READ_UE_ALLOWED (nr, abs_diff_pic_num_minus1, 0,
-              slice->max_pic_num - 1);
-        } else if (reordering_of_pic_nums_idc == 2) {
-          guint32 long_term_pic_num;
-
-          READ_UE (nr, long_term_pic_num);
-        }
-      } while (reordering_of_pic_nums_idc != 3);
+  if (list == 0) {
+    entries = slice->ref_pic_list_modification_l0;
+    ref_pic_list_modification_flag = &slice->ref_pic_list_modification_flag_l0;
+  } else {
+    entries = slice->ref_pic_list_modification_l1;
+    ref_pic_list_modification_flag = &slice->ref_pic_list_modification_flag_l1;
   }
 
-  if (GST_H264_IS_B_SLICE (slice)) {
-    guint8 ref_pic_list_reordering_flag_l1;
-    guint32 reordering_of_pic_nums_idc;
-
-    READ_UINT8 (nr, ref_pic_list_reordering_flag_l1, 1);
-    if (ref_pic_list_reordering_flag_l1)
-      do {
-        READ_UE (nr, reordering_of_pic_nums_idc);
-        if (reordering_of_pic_nums_idc == 0 || reordering_of_pic_nums_idc == 1) {
-          guint32 abs_diff_num_minus1;
-
-          READ_UE (nr, abs_diff_num_minus1);
-        } else if (reordering_of_pic_nums_idc == 2) {
-          guint32 long_term_pic_num;
-
-          READ_UE (nr, long_term_pic_num);
-        }
-      } while (reordering_of_pic_nums_idc != 3);
+  READ_UINT8 (nr, *ref_pic_list_modification_flag, 1);
+  if (*ref_pic_list_modification_flag) {
+    do {
+      READ_UE (nr, modification_of_pic_nums_idc);
+      if (modification_of_pic_nums_idc == 0 ||
+          modification_of_pic_nums_idc == 1) {
+        READ_UE_ALLOWED (nr, entries[i].value.abs_diff_pic_num_minus1, 0,
+            slice->max_pic_num - 1);
+      } else if (modification_of_pic_nums_idc == 2) {
+        READ_UE (nr, entries[i].value.long_term_pic_num);
+      }
+    } while (modification_of_pic_nums_idc != 3);
   }
 
   return TRUE;
 
 error:
-  GST_WARNING ("error parsing \"Reference picture list reordering\"");
+  GST_WARNING ("error parsing \"Reference picture list %u modification\"",
+      list);
   return FALSE;
+}
+
+static gboolean
+slice_parse_ref_pic_list_modification (GstH264SliceHdr * slice, NalReader * nr)
+{
+  if (!GST_H264_IS_I_SLICE (slice) && !GST_H264_IS_SI_SLICE (slice)) {
+    if (!slice_parse_ref_pic_list_modification_1 (slice, nr, 0))
+      return FALSE;
+  }
+
+  if (GST_H264_IS_B_SLICE (slice)) {
+    if (!slice_parse_ref_pic_list_modification_1 (slice, nr, 1))
+      return FALSE;
+  }
+  return TRUE;
 }
 
 static gboolean
@@ -1090,6 +1091,7 @@ gst_h264_parser_parse_pic_timing (GstH264NalParser * nalparser,
       guint8 num_clock_num_ts;
       guint i;
 
+      tim->pic_struct_present_flag = TRUE;
       READ_UINT8 (nr, tim->pic_struct, 4);
       CHECK_ALLOWED ((gint8) tim->pic_struct, 0, 8);
 
@@ -1149,22 +1151,28 @@ gst_h264_nal_parser_free (GstH264NalParser * nalparser)
 }
 
 /**
- * gst_h264_parser_identify_nalu:
+ * gst_h264_parser_identify_nalu_unchecked:
  * @nalparser: a #GstH264NalParser
  * @data: The data to parse
  * @offset: the offset from which to parse @data
  * @size: the size of @data
  * @nalu: The #GstH264NalUnit where to store parsed nal headers
  *
- * Parses @data and fills @nalu from the next nalu data from @data
+ * Parses @data and fills @nalu from the next nalu data from @data.
+ *
+ * This differs from @gst_h264_parser_identify_nalu in that it doesn't
+ * check whether the packet is complete or not.
+ *
+ * Note: Only use this function if you already know the provided @data
+ * is a complete NALU, else use @gst_h264_parser_identify_nalu.
  *
  * Returns: a #GstH264ParserResult
  */
 GstH264ParserResult
-gst_h264_parser_identify_nalu (GstH264NalParser * nalparser,
+gst_h264_parser_identify_nalu_unchecked (GstH264NalParser * nalparser,
     const guint8 * data, guint offset, gsize size, GstH264NalUnit * nalu)
 {
-  gint off1, off2;
+  gint off1;
 
   if (size < offset + 4) {
     GST_DEBUG ("Can't parse, buffer has too small size %" G_GSIZE_FORMAT
@@ -1187,12 +1195,14 @@ gst_h264_parser_identify_nalu (GstH264NalParser * nalparser,
 
   nalu->valid = TRUE;
   nalu->sc_offset = offset + off1;
+
   /* sc might have 2 or 3 0-bytes */
   if (nalu->sc_offset > 0 && data[nalu->sc_offset - 1] == 00)
     nalu->sc_offset--;
 
   nalu->offset = offset + off1 + 3;
   nalu->data = (guint8 *) data;
+
   set_nalu_datas (nalu);
 
   if (nalu->type == GST_H264_NAL_SEQ_END ||
@@ -1201,6 +1211,37 @@ gst_h264_parser_identify_nalu (GstH264NalParser * nalparser,
     nalu->size = 0;
     return GST_H264_PARSER_OK;
   }
+
+  nalu->size = size - nalu->offset;
+
+  return GST_H264_PARSER_OK;
+}
+
+/**
+ * gst_h264_parser_identify_nalu:
+ * @nalparser: a #GstH264NalParser
+ * @data: The data to parse
+ * @offset: the offset from which to parse @data
+ * @size: the size of @data
+ * @nalu: The #GstH264NalUnit where to store parsed nal headers
+ *
+ * Parses @data and fills @nalu from the next nalu data from @data
+ *
+ * Returns: a #GstH264ParserResult
+ */
+GstH264ParserResult
+gst_h264_parser_identify_nalu (GstH264NalParser * nalparser,
+    const guint8 * data, guint offset, gsize size, GstH264NalUnit * nalu)
+{
+  GstH264ParserResult res;
+  gint off2;
+
+  res =
+      gst_h264_parser_identify_nalu_unchecked (nalparser, data, offset, size,
+      nalu);
+
+  if (res != GST_H264_PARSER_OK || nalu->size == 0)
+    goto beach;
 
   off2 = scan_for_start_codes (data + nalu->offset, size - nalu->offset);
   if (off2 < 0) {
@@ -1217,8 +1258,11 @@ gst_h264_parser_identify_nalu (GstH264NalParser * nalparser,
     return GST_H264_PARSER_BROKEN_DATA;
 
   GST_DEBUG ("Complete nal found. Off: %d, Size: %d", nalu->offset, nalu->size);
-  return GST_H264_PARSER_OK;
+
+beach:
+  return res;
 }
+
 
 /**
  * gst_h264_parser_identify_nalu_avc:
@@ -1781,7 +1825,7 @@ gst_h264_parser_parse_slice_hdr (GstH264NalParser * nalparser,
     }
   }
 
-  if (!slice_parse_ref_pic_list_reordering (slice, &nr))
+  if (!slice_parse_ref_pic_list_modification (slice, &nr))
     goto error;
 
   if ((pps->weighted_pred_flag && (GST_H264_IS_P_SLICE (slice)
@@ -1863,6 +1907,9 @@ gst_h264_parser_parse_sei (GstH264NalParser * nalparser, GstH264NalUnit * nalu,
   GST_DEBUG ("parsing \"Sei message\"");
 
   nal_reader_init (&nr, nalu->data + nalu->offset + 1, nalu->size - 1);
+
+  /* init */
+  memset (sei, 0, sizeof (*sei));
 
   sei->payloadType = 0;
   do {

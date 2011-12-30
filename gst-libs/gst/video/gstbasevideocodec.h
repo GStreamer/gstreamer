@@ -138,6 +138,7 @@ struct _GstVideoFrameState
   GstClockTime deadline;
 
   gboolean force_keyframe;
+  gboolean force_keyframe_headers;
 
   /* Events that should be pushed downstream *before*
    * the next src_buffer */

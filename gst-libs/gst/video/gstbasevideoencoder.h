@@ -84,26 +84,22 @@ struct _GstBaseVideoEncoder
   guint64           presentation_frame_number;
   int               distance_from_sync;
 
-  gboolean          force_keyframe;
-
   /*< private >*/
   /* FIXME move to real private part ?
    * (and introduce a context ?) */
   gboolean          drained;
+  gboolean          at_eos;
 
   gint64            min_latency;
   gint64            max_latency;
 
-  GstEvent         *force_keyunit_event;
   GList            *current_frame_events;
 
-  union {
-    void *padding;
-    gboolean at_eos;
-  } a;
+  GstBuffer        *headers;
 
-  /* FIXME before moving to base */
-  void             *padding[GST_PADDING_LARGE-1];
+  GList            *force_key_unit; /* List of pending forced keyunits */
+
+  void             *padding[GST_PADDING_LARGE];
 };
 
 /**
@@ -178,7 +174,8 @@ void                   gst_base_video_encoder_set_latency (GstBaseVideoEncoder *
                                                            GstClockTime min_latency, GstClockTime max_latency);
 void                   gst_base_video_encoder_set_latency_fields (GstBaseVideoEncoder *base_video_encoder,
                                                                   int n_fields);
-
+void                   gst_base_video_encoder_set_headers (GstBaseVideoEncoder *base_video_encoder,
+                                                                  GstBuffer *headers);
 G_END_DECLS
 
 #endif

@@ -42,6 +42,12 @@ struct _GstSpaceScope
   /* < private > */
   GstSpaceScopeProcessFunc process;
   gint style;
+
+  /* filter specific data */
+  gdouble f1l_l, f1l_m, f1l_h;
+  gdouble f1r_l, f1r_m, f1r_h;
+  gdouble f2l_l, f2l_m, f2l_h;
+  gdouble f2r_l, f2r_m, f2r_h;
 };
 
 struct _GstSpaceScopeClass

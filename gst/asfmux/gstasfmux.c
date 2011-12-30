@@ -335,9 +335,9 @@ gst_asf_mux_init (GstAsfMux * asfmux)
   gst_pad_use_fixed_caps (asfmux->srcpad);
   gst_element_add_pad (GST_ELEMENT (asfmux), asfmux->srcpad);
 
-  asfmux->collect = gst_collect_pads_new ();
-  gst_collect_pads_set_function (asfmux->collect,
-      (GstCollectPadsFunction) GST_DEBUG_FUNCPTR (gst_asf_mux_collected),
+  asfmux->collect = gst_collect_pads2_new ();
+  gst_collect_pads2_set_function (asfmux->collect,
+      (GstCollectPads2Function) GST_DEBUG_FUNCPTR (gst_asf_mux_collected),
       asfmux);
 
   asfmux->payloads = NULL;
@@ -1851,7 +1851,7 @@ gst_asf_mux_process_buffer (GstAsfMux * asfmux, GstAsfPad * pad,
   AsfPayload *payload;
 
   payload = g_malloc0 (sizeof (AsfPayload));
-  payload->pad = (GstCollectData *) pad;
+  payload->pad = (GstCollectData2 *) pad;
   payload->data = buf;
 
   GST_LOG_OBJECT (asfmux,
@@ -1911,7 +1911,7 @@ gst_asf_mux_process_buffer (GstAsfMux * asfmux, GstAsfPad * pad,
 }
 
 static GstFlowReturn
-gst_asf_mux_collected (GstCollectPads * collect, gpointer data)
+gst_asf_mux_collected (GstCollectPads2 * collect, gpointer data)
 {
   GstAsfMux *asfmux = GST_ASF_MUX_CAST (data);
   GstFlowReturn ret = GST_FLOW_OK;
@@ -1937,15 +1937,15 @@ gst_asf_mux_collected (GstCollectPads * collect, gpointer data)
   walk = asfmux->collect->data;
   while (walk) {
     GstAsfPad *pad;
-    GstCollectData *data;
+    GstCollectData2 *data;
     GstClockTime time;
 
-    data = (GstCollectData *) walk->data;
+    data = (GstCollectData2 *) walk->data;
     pad = (GstAsfPad *) data;
 
     walk = g_slist_next (walk);
 
-    buf = gst_collect_pads_peek (collect, data);
+    buf = gst_collect_pads2_peek (collect, data);
     if (buf == NULL) {
       GST_LOG_OBJECT (asfmux, "Pad %s has no buffers",
           GST_PAD_NAME (pad->collect.pad));
@@ -1980,7 +1980,7 @@ gst_asf_mux_collected (GstCollectPads * collect, gpointer data)
     /* we have data */
     GST_LOG_OBJECT (asfmux, "selected pad %s with time %" GST_TIME_FORMAT,
         GST_PAD_NAME (best_pad->collect.pad), GST_TIME_ARGS (best_time));
-    buf = gst_collect_pads_pop (collect, &best_pad->collect);
+    buf = gst_collect_pads2_pop (collect, &best_pad->collect);
     ret = gst_asf_mux_process_buffer (asfmux, best_pad, buf);
   } else {
     /* no data, let's finish it up */
@@ -2251,16 +2251,16 @@ gst_asf_mux_request_new_pad (GstElement * element,
     return NULL;
   }
 
-  if (templ == gst_element_class_get_pad_template (klass, "audio_%u")) {
-    name = g_strdup_printf ("audio_%u", asfmux->stream_number + 1);
+  if (templ == gst_element_class_get_pad_template (klass, "audio_%d")) {
+    name = g_strdup_printf ("audio_%02d", asfmux->stream_number + 1);
     GST_DEBUG_OBJECT (asfmux, "Adding new pad %s", name);
     newpad = gst_pad_new_from_template (templ, name);
     g_free (name);
     is_audio = TRUE;
     gst_pad_set_setcaps_function (newpad,
         GST_DEBUG_FUNCPTR (gst_asf_mux_audio_set_caps));
-  } else if (templ == gst_element_class_get_pad_template (klass, "video_%u")) {
-    name = g_strdup_printf ("video_%u", asfmux->stream_number + 1);
+  } else if (templ == gst_element_class_get_pad_template (klass, "video_%d")) {
+    name = g_strdup_printf ("video_%02d", asfmux->stream_number + 1);
     GST_DEBUG_OBJECT (asfmux, "Adding new pad %s", name);
     newpad = gst_pad_new_from_template (templ, name);
     g_free (name);
@@ -2279,8 +2279,8 @@ gst_asf_mux_request_new_pad (GstElement * element,
     collect_size = sizeof (GstAsfVideoPad);
   }
   collect_pad = (GstAsfPad *)
-      gst_collect_pads_add_pad (asfmux->collect, newpad, collect_size,
-      (GstCollectDataDestroyNotify) (gst_asf_mux_pad_reset));
+      gst_collect_pads2_add_pad_full (asfmux->collect, newpad, collect_size,
+      (GstCollectData2DestroyNotify) (gst_asf_mux_pad_reset), TRUE);
 
   /* set up pad */
   collect_pad->is_audio = is_audio;
@@ -2294,7 +2294,7 @@ gst_asf_mux_request_new_pad (GstElement * element,
   collect_pad->stream_number = asfmux->stream_number;
 
   /* FIXME: hacked way to override/extend the event function of
-   * GstCollectPads; because it sets its own event function giving
+   * GstCollectPads2; because it sets its own event function giving
    * the element no access to events.
    */
   asfmux->collect_event = (GstPadEventFunction) GST_PAD_EVENTFUNC (newpad);
@@ -2391,12 +2391,12 @@ gst_asf_mux_change_state (GstElement * element, GstStateChange transition)
       asfmux->packet_size = asfmux->prop_packet_size;
       asfmux->preroll = asfmux->prop_preroll;
       asfmux->merge_stream_tags = asfmux->prop_merge_stream_tags;
-      gst_collect_pads_start (asfmux->collect);
+      gst_collect_pads2_start (asfmux->collect);
       break;
     case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
       break;
     case GST_STATE_CHANGE_PAUSED_TO_READY:
-      gst_collect_pads_stop (asfmux->collect);
+      gst_collect_pads2_stop (asfmux->collect);
       asfmux->state = GST_ASF_MUX_STATE_NONE;
       break;
     default:

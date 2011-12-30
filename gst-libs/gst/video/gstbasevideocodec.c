@@ -49,14 +49,14 @@ static GstElementClass *parent_class = NULL;
 
 G_DEFINE_BOXED_TYPE (GstVideoFrameState, gst_video_frame_state,
     (GBoxedCopyFunc) gst_video_frame_state_ref,
-    (GBoxedFreeFunc) gst_video_frame_state_unref)
+    (GBoxedFreeFunc) gst_video_frame_state_unref);
 
 /* NOTE (Edward): Do not use G_DEFINE_* because we need to have
  * a GClassInitFunc called with the target class (which the macros
- * don't handle). */
-     static void gst_base_video_codec_class_init (GstBaseVideoCodecClass *
-    klass);
-     static void gst_base_video_codec_init (GstBaseVideoCodec * dec,
+ * don't handle).
+ */
+static void gst_base_video_codec_class_init (GstBaseVideoCodecClass * klass);
+static void gst_base_video_codec_init (GstBaseVideoCodec * dec,
     GstBaseVideoCodecClass * klass);
 
 GType

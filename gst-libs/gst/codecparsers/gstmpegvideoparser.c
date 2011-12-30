@@ -40,6 +40,7 @@
 #endif
 
 #include "gstmpegvideoparser.h"
+#include "parserutils.h"
 
 #include <string.h>
 #include <gst/base/gstbitreader.h>
@@ -47,35 +48,8 @@
 
 #define MARKER_BIT 0x1
 
-#define GET_BITS(b, num, bits) G_STMT_START {        \
-  if (!gst_bit_reader_get_bits_uint32(b, bits, num)) \
-    goto failed;                                     \
-  GST_TRACE ("parsed %d bits: %d", num, *(bits));    \
-} G_STMT_END
-
-#define READ_UINT8(br, val, nbits) G_STMT_START {  \
-  if (!gst_bit_reader_get_bits_uint8 (br, &val, nbits)) { \
-    GST_WARNING ("failed to read uint8, nbits: %d", nbits); \
-    goto failed; \
-  } \
-} G_STMT_END
-
-#define READ_UINT16(br, val, nbits) G_STMT_START { \
-  if (!gst_bit_reader_get_bits_uint16 (br, &val, nbits)) { \
-    GST_WARNING ("failed to read uint16, nbits: %d", nbits); \
-    goto failed; \
-  } \
-} G_STMT_END
-
-#define READ_UINT32(br, val, nbits) G_STMT_START { \
-  if (!gst_bit_reader_get_bits_uint32 (br, &val, nbits)) { \
-    GST_WARNING ("failed to read uint32, nbits: %d", nbits); \
-    goto failed; \
-  } \
-} G_STMT_END
-
 /* default intra quant matrix, in zig-zag order */
-const guint8 default_intra_quantizer_matrix[64] = {
+static const guint8 default_intra_quantizer_matrix[64] = {
   8,
   16, 16,
   19, 16, 19,
@@ -93,7 +67,7 @@ const guint8 default_intra_quantizer_matrix[64] = {
   83
 };
 
-const guint8 mpeg_zigzag_8x8[64] = {
+static const guint8 mpeg_zigzag_8x8[64] = {
   0, 1, 8, 16, 9, 2, 3, 10,
   17, 24, 32, 25, 18, 11, 4, 5,
   12, 19, 26, 33, 40, 48, 41, 34,

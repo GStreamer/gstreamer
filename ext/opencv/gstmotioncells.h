@@ -107,7 +107,6 @@ struct _GstMotioncells
   gint width, height;
   //time stuff
   struct timeval tv;
-  GMutex *propset_mutex;
   double framerate;
 };
 

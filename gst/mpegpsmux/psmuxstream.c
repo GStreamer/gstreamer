@@ -513,7 +513,7 @@ psmux_stream_write_pes_header (PsMuxStream * stream, guint8 * data)
  */
 void
 psmux_stream_add_data (PsMuxStream * stream, guint8 * data, guint len,
-    void *user_data, gint64 pts, gint64 dts)
+    void *user_data, gint64 pts, gint64 dts, gboolean keyunit)
 {
   PsMuxStreamBuffer *packet;
 
@@ -524,6 +524,7 @@ psmux_stream_add_data (PsMuxStream * stream, guint8 * data, guint len,
   packet->size = len;
   packet->user_data = user_data;
 
+  packet->keyunit = keyunit;
   packet->pts = pts;
   packet->dts = dts;
 

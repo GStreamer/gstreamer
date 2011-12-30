@@ -46,7 +46,7 @@
 #define __MPEGPSMUX_H__
 
 #include <gst/gst.h>
-#include <gst/base/gstcollectpads.h>
+#include <gst/base/gstcollectpads2.h>
 #include <gst/base/gstadapter.h>
 
 G_BEGIN_DECLS
@@ -68,7 +68,9 @@ struct MpegPsMux {
 
   GstPad *srcpad;
 
-  GstCollectPads *collect; // pads collector
+  guint video_stream_id;   /* stream id of primary video stream */
+
+  GstCollectPads2 *collect; /* pads collector */
 
   PsMux *psmux;
 
@@ -76,6 +78,9 @@ struct MpegPsMux {
   GstFlowReturn last_flow_ret;
   
   GstClockTime last_ts;
+
+  GstBufferList *gop_list;
+  gboolean       aggregate_gops;
 };
 
 struct MpegPsMuxClass  {
@@ -83,7 +88,7 @@ struct MpegPsMuxClass  {
 };
 
 struct MpegPsPadData {
-  GstCollectData collect; /* Parent */
+  GstCollectData2 collect; /* Parent */
 
   guint8 stream_id;
   guint8 stream_id_ext; 

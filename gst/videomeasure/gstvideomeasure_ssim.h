@@ -21,7 +21,7 @@
 #define __GST_SSIM_H__
 
 #include <gst/gst.h>
-#include <gst/base/gstcollectpads.h>
+#include <gst/base/gstcollectpads2.h>
 #include <gst/video/video.h>
 
 G_BEGIN_DECLS
@@ -85,7 +85,7 @@ struct _GstSSim {
   
   gint            padcount;
 
-  GstCollectPads *collect;
+  GstCollectPads2 *collect;
   GstPad         *orig;
 
   gint            frame_rate;

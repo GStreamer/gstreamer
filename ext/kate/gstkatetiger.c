@@ -3,7 +3,6 @@
  * Copyright 2005 Thomas Vander Stichele <thomas@apestaart.org>
  * Copyright 2005 Ronald S. Bultje <rbultje@ronald.bitfreak.net>
  * Copyright 2008 Vincent Penquerc'h <ogg.k.ogg.k@googlemail.com>
- * Copyright (C) <2009> Young-Ho Cha <ganadist@gmail.com>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -126,39 +125,6 @@ enum
   ARG_SILENT
 };
 
-/* RGB -> YUV blitting routines taken from textoverlay,
-   original code from Young-Ho Cha <ganadist@gmail.com> */
-
-#define COMP_Y(ret, r, g, b) \
-{ \
-   ret = (int) (((19595 * r) >> 16) + ((38470 * g) >> 16) + ((7471 * b) >> 16)); \
-   ret = CLAMP (ret, 0, 255); \
-}
-
-#define COMP_U(ret, r, g, b) \
-{ \
-   ret = (int) (-((11059 * r) >> 16) - ((21709 * g) >> 16) + ((32768 * b) >> 16) + 128); \
-   ret = CLAMP (ret, 0, 255); \
-}
-
-#define COMP_V(ret, r, g, b) \
-{ \
-   ret = (int) (((32768 * r) >> 16) - ((27439 * g) >> 16) - ((5329 * b) >> 16) + 128); \
-   ret = CLAMP (ret, 0, 255); \
-}
-
-#define BLEND(ret, alpha, v0, v1) \
-{ \
-	ret = (v0 * alpha + v1 * (255 - alpha)) / 255; \
-}
-
-#define OVER(ret, alphaA, Ca, alphaB, Cb, alphaNew)	\
-{ \
-    gint _tmp; \
-    _tmp = (Ca * alphaA + Cb * alphaB * (255 - alphaA) / 255) / alphaNew; \
-    ret = CLAMP (_tmp, 0, 255); \
-}
-
 #if G_BYTE_ORDER == G_LITTLE_ENDIAN
 # define TIGER_ARGB_A 3
 # define TIGER_ARGB_R 2
@@ -187,11 +153,16 @@ static GstStaticPadTemplate kate_sink_factory =
 #if G_BYTE_ORDER == G_LITTLE_ENDIAN
 #define TIGER_VIDEO_CAPS \
     GST_VIDEO_CAPS_xRGB ";" GST_VIDEO_CAPS_BGRx ";" \
-    GST_VIDEO_CAPS_YUV ("{AYUV, I420, YV12, UYVY, NV12, NV21}")
+    GST_VIDEO_CAPS_YUV ("{I420, YV12, AYUV, YUY2, UYVY, v308, v210," \
+        " v216, Y41B, Y42B, Y444, Y800, Y16, NV12, NV21, UYVP, A420," \
+        " YUV9, IYU1}")
+
 #else
 #define TIGER_VIDEO_CAPS \
     GST_VIDEO_CAPS_BGRx ";" GST_VIDEO_CAPS_xRGB ";" \
-    GST_VIDEO_CAPS_YUV ("{AYUV, I420, YV12, UYVY, NV12, NV21}")
+    GST_VIDEO_CAPS_YUV ("{I420, YV12, AYUV, YUY2, UYVY, v308, v210," \
+        " v216, Y41B, Y42B, Y444, Y800, Y16, NV12, NV21, UYVP, A420," \
+        " YUV9, IYU1}")
 #endif
 
 static GstStaticPadTemplate video_sink_factory =
@@ -417,6 +388,8 @@ gst_kate_tiger_init (GstKateTiger * tiger, GstKateTigerClass * gclass)
   tiger->video_width = 0;
   tiger->video_height = 0;
 
+  tiger->composition = NULL;
+
   tiger->seen_header = FALSE;
 }
 
@@ -432,14 +405,21 @@ gst_kate_tiger_dispose (GObject * object)
     tiger->default_font_desc = NULL;
   }
 
-  g_free (tiger->render_buffer);
-  tiger->render_buffer = NULL;
+  if (tiger->render_buffer) {
+    gst_buffer_unref (tiger->render_buffer);
+    tiger->render_buffer = NULL;
+  }
 
   g_cond_free (tiger->cond);
   tiger->cond = NULL;
 
   g_mutex_free (tiger->mutex);
   tiger->mutex = NULL;
+
+  if (tiger->composition) {
+    gst_video_overlay_composition_unref (tiger->composition);
+    tiger->composition = NULL;
+  }
 
   GST_CALL_PARENT (G_OBJECT_CLASS, dispose, (object));
 }
@@ -789,401 +769,41 @@ gst_kate_tiger_get_time (GstKateTiger * tiger)
 }
 
 static inline void
-gst_kate_tiger_blit_1 (GstKateTiger * tiger, guchar * dest, gint xpos,
-    gint ypos, const guint8 * image, gint image_width, gint image_height,
-    guint dest_stride)
+gst_kate_tiger_set_composition (GstKateTiger * tiger)
 {
-  gint i, j = 0;
-  gint x, y;
-  guchar r, g, b, a;
-  const guint8 *pimage;
-  guchar *py;
-  gint width = image_width;
-  gint height = image_height;
+  GstVideoOverlayRectangle *rectangle;
 
-  if (xpos < 0) {
-    xpos = 0;
+  if (tiger->render_buffer) {
+    rectangle = gst_video_overlay_rectangle_new_argb (tiger->render_buffer,
+        tiger->video_width, tiger->video_height, 4 * tiger->video_width,
+        0, 0, tiger->video_width, tiger->video_height,
+        GST_VIDEO_OVERLAY_FORMAT_FLAG_NONE);
+
+    if (tiger->composition)
+      gst_video_overlay_composition_unref (tiger->composition);
+    tiger->composition = gst_video_overlay_composition_new (rectangle);
+    gst_video_overlay_rectangle_unref (rectangle);
+
+  } else if (tiger->composition) {
+    gst_video_overlay_composition_unref (tiger->composition);
+    tiger->composition = NULL;
   }
+}
 
-  if (xpos + width > tiger->video_width) {
-    width = tiger->video_width - xpos;
-  }
+static inline void
+gst_kate_tiger_unpremultiply (GstKateTiger * tiger)
+{
+  guint i, j;
+  guint8 *pimage, *text_image = GST_BUFFER_DATA (tiger->render_buffer);
 
-  if (ypos + height > tiger->video_height) {
-    height = tiger->video_height - ypos;
-  }
-
-  dest += (ypos / 1) * dest_stride;
-
-  for (i = 0; i < height; i++) {
-    pimage = image + 4 * (i * image_width);
-    py = dest + i * dest_stride + xpos;
-    for (j = 0; j < width; j++) {
-      b = pimage[TIGER_ARGB_B];
-      g = pimage[TIGER_ARGB_G];
-      r = pimage[TIGER_ARGB_R];
-      a = pimage[TIGER_ARGB_A];
-      TIGER_UNPREMULTIPLY (a, r, g, b);
+  for (i = 0; i < tiger->video_height; i++) {
+    pimage = text_image + 4 * (i * tiger->video_width);
+    for (j = 0; j < tiger->video_width; j++) {
+      TIGER_UNPREMULTIPLY (pimage[TIGER_ARGB_A], pimage[TIGER_ARGB_R],
+          pimage[TIGER_ARGB_G], pimage[TIGER_ARGB_B]);
 
       pimage += 4;
-      if (a == 0) {
-        py++;
-        continue;
-      }
-      COMP_Y (y, r, g, b);
-      x = *py;
-      BLEND (*py++, a, y, x);
     }
-  }
-}
-
-static inline void
-gst_kate_tiger_blit_sub2x2cbcr (GstKateTiger * tiger,
-    guchar * destcb, guchar * destcr, gint xpos, gint ypos,
-    const guint8 * image, gint image_width, gint image_height,
-    guint destcb_stride, guint destcr_stride, guint pix_stride)
-{
-  gint i, j;
-  gint x, cb, cr;
-  gushort r, g, b, a;
-  gushort r1, g1, b1, a1;
-  const guint8 *pimage1, *pimage2;
-  guchar *pcb, *pcr;
-  gint width = image_width - 2;
-  gint height = image_height - 2;
-
-  xpos *= pix_stride;
-
-  if (xpos < 0) {
-    xpos = 0;
-  }
-
-  if (xpos + width > tiger->video_width) {
-    width = tiger->video_width - xpos;
-  }
-
-  if (ypos + height > tiger->video_height) {
-    height = tiger->video_height - ypos;
-  }
-
-  destcb += (ypos / 2) * destcb_stride;
-  destcr += (ypos / 2) * destcr_stride;
-
-  for (i = 0; i < height; i += 2) {
-    pimage1 = image + 4 * (i * image_width);
-    pimage2 = pimage1 + 4 * image_width;
-    pcb = destcb + (i / 2) * destcb_stride + xpos / 2;
-    pcr = destcr + (i / 2) * destcr_stride + xpos / 2;
-    for (j = 0; j < width; j += 2) {
-      b = pimage1[TIGER_ARGB_B];
-      g = pimage1[TIGER_ARGB_G];
-      r = pimage1[TIGER_ARGB_R];
-      a = pimage1[TIGER_ARGB_A];
-      TIGER_UNPREMULTIPLY (a, r, g, b);
-      pimage1 += 4;
-
-      b1 = pimage1[TIGER_ARGB_B];
-      g1 = pimage1[TIGER_ARGB_G];
-      r1 = pimage1[TIGER_ARGB_R];
-      a1 = pimage1[TIGER_ARGB_A];
-      TIGER_UNPREMULTIPLY (a1, r1, g1, b1);
-      b += b1;
-      g += g1;
-      r += r1;
-      a += a1;
-      pimage1 += 4;
-
-      b1 = pimage2[TIGER_ARGB_B];
-      g1 = pimage2[TIGER_ARGB_G];
-      r1 = pimage2[TIGER_ARGB_R];
-      a1 = pimage2[TIGER_ARGB_A];
-      TIGER_UNPREMULTIPLY (a1, r1, g1, b1);
-      b += b1;
-      g += g1;
-      r += r1;
-      a += a1;
-      pimage2 += 4;
-
-      /* + 2 for rounding */
-      b1 = pimage2[TIGER_ARGB_B];
-      g1 = pimage2[TIGER_ARGB_G];
-      r1 = pimage2[TIGER_ARGB_R];
-      a1 = pimage2[TIGER_ARGB_A];
-      TIGER_UNPREMULTIPLY (a1, r1, g1, b1);
-      b += b1 + 2;
-      g += g1 + 2;
-      r += r1 + 2;
-      a += a1 + 2;
-      pimage2 += 4;
-
-      b /= 4;
-      g /= 4;
-      r /= 4;
-      a /= 4;
-
-      if (a == 0) {
-        pcb += pix_stride;
-        pcr += pix_stride;
-        continue;
-      }
-      COMP_U (cb, r, g, b);
-      COMP_V (cr, r, g, b);
-
-      x = *pcb;
-      BLEND (*pcb, a, cb, x);
-      x = *pcr;
-      BLEND (*pcr, a, cr, x);
-
-      pcb += pix_stride;
-      pcr += pix_stride;
-    }
-  }
-}
-
-/* FIXME:
- *  - use proper strides and offset for I420
- */
-
-static inline void
-gst_kate_tiger_blit_NV12_NV21 (GstKateTiger * tiger,
-    guint8 * yuv_pixels, gint xpos, gint ypos, const guint8 * image,
-    gint image_width, gint image_height)
-{
-  int y_stride, uv_stride;
-  int u_offset, v_offset;
-  int h, w;
-
-  /* because U/V is 2x2 subsampled, we need to round, either up or down,
-   * to a boundary of integer number of U/V pixels:
-   */
-  xpos = GST_ROUND_UP_2 (xpos);
-  ypos = GST_ROUND_UP_2 (ypos);
-
-  w = tiger->video_width;
-  h = tiger->video_height;
-
-  y_stride = gst_video_format_get_row_stride (tiger->video_format, 0, w);
-  uv_stride = gst_video_format_get_row_stride (tiger->video_format, 1, w);
-  u_offset =
-      gst_video_format_get_component_offset (tiger->video_format, 1, w, h);
-  v_offset =
-      gst_video_format_get_component_offset (tiger->video_format, 2, w, h);
-
-  gst_kate_tiger_blit_1 (tiger, yuv_pixels, xpos, ypos, image, image_width,
-      image_height, y_stride);
-  gst_kate_tiger_blit_sub2x2cbcr (tiger, yuv_pixels + u_offset,
-      yuv_pixels + v_offset, xpos, ypos, image, image_width, image_height,
-      uv_stride, uv_stride, 2);
-}
-
-static inline void
-gst_kate_tiger_blit_I420_YV12 (GstKateTiger * tiger,
-    guint8 * yuv_pixels, gint xpos, gint ypos, const guint8 * image,
-    gint image_width, gint image_height)
-{
-  int y_stride, u_stride, v_stride;
-  int u_offset, v_offset;
-  int h, w;
-
-  /* because U/V is 2x2 subsampled, we need to round, either up or down,
-   * to a boundary of integer number of U/V pixels:
-   */
-  xpos = GST_ROUND_UP_2 (xpos);
-  ypos = GST_ROUND_UP_2 (ypos);
-
-  w = tiger->video_width;
-  h = tiger->video_height;
-
-  y_stride = gst_video_format_get_row_stride (tiger->video_format, 0, w);
-  u_stride = gst_video_format_get_row_stride (tiger->video_format, 1, w);
-  v_stride = gst_video_format_get_row_stride (tiger->video_format, 2, w);
-  u_offset =
-      gst_video_format_get_component_offset (tiger->video_format, 1, w, h);
-  v_offset =
-      gst_video_format_get_component_offset (tiger->video_format, 2, w, h);
-
-  gst_kate_tiger_blit_1 (tiger, yuv_pixels, xpos, ypos, image, image_width,
-      image_height, y_stride);
-  gst_kate_tiger_blit_sub2x2cbcr (tiger, yuv_pixels + u_offset,
-      yuv_pixels + v_offset, xpos, ypos, image, image_width, image_height,
-      u_stride, v_stride, 1);
-}
-
-static inline void
-gst_kate_tiger_blit_UYVY (GstKateTiger * tiger,
-    guint8 * yuv_pixels, gint xpos, gint ypos, const guint8 * image,
-    gint image_width, gint image_height)
-{
-  int a0, r0, g0, b0;
-  int a1, r1, g1, b1;
-  int y0, y1, u, v;
-  int i, j;
-  int h, w;
-  const guint8 *pimage;
-  guchar *dest;
-
-  /* because U/V is 2x horizontally subsampled, we need to round to a
-   * boundary of integer number of U/V pixels in x dimension:
-   */
-  xpos = GST_ROUND_UP_2 (xpos);
-
-  w = image_width - 2;
-  h = image_height - 2;
-
-  if (xpos < 0) {
-    xpos = 0;
-  }
-
-  if (xpos + w > tiger->video_width) {
-    w = tiger->video_width - xpos;
-  }
-
-  if (ypos + h > tiger->video_height) {
-    h = tiger->video_height - ypos;
-  }
-
-  for (i = 0; i < h; i++) {
-    pimage = image + i * image_width * 4;
-    dest = yuv_pixels + (i + ypos) * tiger->video_width * 2 + xpos * 2;
-    for (j = 0; j < w; j += 2) {
-      b0 = pimage[TIGER_ARGB_B];
-      g0 = pimage[TIGER_ARGB_G];
-      r0 = pimage[TIGER_ARGB_R];
-      a0 = pimage[TIGER_ARGB_A];
-      TIGER_UNPREMULTIPLY (a0, r0, g0, b0);
-      pimage += 4;
-
-      b1 = pimage[TIGER_ARGB_B];
-      g1 = pimage[TIGER_ARGB_G];
-      r1 = pimage[TIGER_ARGB_R];
-      a1 = pimage[TIGER_ARGB_A];
-      TIGER_UNPREMULTIPLY (a1, r1, g1, b1);
-      pimage += 4;
-
-      a0 += a1 + 2;
-      a0 /= 2;
-      if (a0 == 0) {
-        dest += 4;
-        continue;
-      }
-
-      COMP_Y (y0, r0, g0, b0);
-      COMP_Y (y1, r1, g1, b1);
-
-      b0 += b1 + 2;
-      g0 += g1 + 2;
-      r0 += r1 + 2;
-
-      b0 /= 2;
-      g0 /= 2;
-      r0 /= 2;
-
-      COMP_U (u, r0, g0, b0);
-      COMP_V (v, r0, g0, b0);
-
-      BLEND (*dest, a0, u, *dest);
-      dest++;
-      BLEND (*dest, a0, y0, *dest);
-      dest++;
-      BLEND (*dest, a0, v, *dest);
-      dest++;
-      BLEND (*dest, a0, y1, *dest);
-      dest++;
-    }
-  }
-}
-
-static inline void
-gst_kate_tiger_blit_AYUV (GstKateTiger * tiger,
-    guint8 * rgb_pixels, gint xpos, gint ypos, const guint8 * image,
-    gint image_width, gint image_height)
-{
-  int a, r, g, b, a1;
-  int y, u, v;
-  int i, j;
-  int h, w;
-  const guint8 *pimage;
-  guchar *dest;
-
-  w = image_width;
-  h = image_height;
-
-  if (xpos < 0) {
-    xpos = 0;
-  }
-
-  if (xpos + w > tiger->video_width) {
-    w = tiger->video_width - xpos;
-  }
-
-  if (ypos + h > tiger->video_height) {
-    h = tiger->video_height - ypos;
-  }
-
-  for (i = 0; i < h; i++) {
-    pimage = image + i * image_width * 4;
-    dest = rgb_pixels + (i + ypos) * 4 * tiger->video_width + xpos * 4;
-    for (j = 0; j < w; j++) {
-      a = pimage[TIGER_ARGB_A];
-      b = pimage[TIGER_ARGB_B];
-      g = pimage[TIGER_ARGB_G];
-      r = pimage[TIGER_ARGB_R];
-
-      TIGER_UNPREMULTIPLY (a, r, g, b);
-
-      // convert background to yuv
-      COMP_Y (y, r, g, b);
-      COMP_U (u, r, g, b);
-      COMP_V (v, r, g, b);
-
-      // preform text "OVER" background alpha compositing
-      a1 = a + (dest[0] * (255 - a)) / 255 + 1; // add 1 to prevent divide by 0
-      OVER (dest[1], a, y, dest[0], dest[1], a1);
-      OVER (dest[2], a, u, dest[0], dest[2], a1);
-      OVER (dest[3], a, v, dest[0], dest[3], a1);
-      dest[0] = a1 - 1;         // remove the temporary 1 we added
-
-      pimage += 4;
-      dest += 4;
-    }
-  }
-}
-
-static void
-gst_kate_tiger_blend_yuv (GstKateTiger * tiger, GstBuffer * video_frame,
-    const guint8 * image, gint image_width, gint image_height)
-{
-  gint xpos = 0, ypos = 0;
-  gint width, height;
-
-  width = image_width;
-  height = image_height;
-
-  switch (tiger->video_format) {
-    case GST_VIDEO_FORMAT_I420:
-    case GST_VIDEO_FORMAT_YV12:
-      gst_kate_tiger_blit_I420_YV12 (tiger,
-          GST_BUFFER_DATA (video_frame), xpos, ypos, image, image_width,
-          image_height);
-      break;
-    case GST_VIDEO_FORMAT_NV12:
-    case GST_VIDEO_FORMAT_NV21:
-      gst_kate_tiger_blit_NV12_NV21 (tiger,
-          GST_BUFFER_DATA (video_frame), xpos, ypos, image, image_width,
-          image_height);
-      break;
-    case GST_VIDEO_FORMAT_UYVY:
-      gst_kate_tiger_blit_UYVY (tiger,
-          GST_BUFFER_DATA (video_frame), xpos, ypos, image, image_width,
-          image_height);
-      break;
-    case GST_VIDEO_FORMAT_AYUV:
-      gst_kate_tiger_blit_AYUV (tiger,
-          GST_BUFFER_DATA (video_frame), xpos, ypos, image, image_width,
-          image_height);
-      break;
-    default:
-      g_assert_not_reached ();
   }
 }
 
@@ -1249,14 +869,12 @@ gst_kate_tiger_video_chain (GstPad * pad, GstBuffer * buf)
 
   /* and setup that buffer before rendering */
   if (gst_video_format_is_yuv (tiger->video_format)) {
-    guint8 *tmp = g_realloc (tiger->render_buffer,
-        tiger->video_width * tiger->video_height * 4);
-    if (!tmp) {
-      GST_WARNING_OBJECT (tiger, "Failed to allocate render buffer");
-      goto pass;
+    if (!tiger->render_buffer) {
+      tiger->render_buffer =
+          gst_buffer_new_and_alloc (tiger->video_width * tiger->video_height *
+          4);
     }
-    tiger->render_buffer = tmp;
-    ptr = tiger->render_buffer;
+    ptr = GST_BUFFER_DATA (tiger->render_buffer);
     tiger_renderer_set_surface_clear_color (tiger->tr, 1, 0.0, 0.0, 0.0, 0.0);
   } else {
     ptr = GST_BUFFER_DATA (buf);
@@ -1278,8 +896,12 @@ gst_kate_tiger_video_chain (GstPad * pad, GstBuffer * buf)
   }
 
   if (gst_video_format_is_yuv (tiger->video_format)) {
-    gst_kate_tiger_blend_yuv (tiger, buf, tiger->render_buffer,
-        tiger->video_width, tiger->video_height);
+    /* As the GstVideoOverlayComposition supports only unpremultiply ARGB,
+     * we need to unpermultiply it */
+    gst_kate_tiger_unpremultiply (tiger);
+    gst_kate_tiger_set_composition (tiger);
+    if (tiger->composition)
+      gst_video_overlay_composition_blend (tiger->composition, buf);
   }
 
 pass:

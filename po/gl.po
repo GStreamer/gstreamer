@@ -2,20 +2,21 @@
 # Copyright (C) 2010 Fran Dieguez
 # This file is distributed under the same license as the gst-plugins-bad package.
 # Fran Diéguez <frandieguez@ubuntu.com>, 2010.
+# Fran Dieguez <frandieguez@ubuntu.com>, 2011.
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-bad 0.10.18.2\n"
+"Project-Id-Version: gst-plugins-bad 0.10.21.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2010-10-19 23:33+0100\n"
-"PO-Revision-Date: 2010-05-30 13:28+0200\n"
+"POT-Creation-Date: 2011-12-11 00:54+0000\n"
+"PO-Revision-Date: 2011-09-05 12:50+0200\n"
 "Last-Translator: Fran Dieguez <frandieguez@ubuntu.com>\n"
 "Language-Team: Galician <proxecto@trasno.net>\n"
 "Language: gl\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Plural-Forms: nplurals=2; plural=(n!=1);\\\n"
+"Plural-Forms: nplurals=2; plural=(n!=1);\n"
 "X-Poedit-Language: galego\n"
 
 msgid "Could not read title information for DVD."
@@ -32,10 +33,11 @@ msgid ""
 "Could not read DVD. This may be because the DVD is encrypted and a DVD "
 "decryption library is not installed."
 msgstr ""
+"Non foi posíbel ler o DVD. Isto pode ser cause de que o DVD estea cifrado e "
+"non teña instalada unha biblioteca de descifrado de DVD."
 
-#, fuzzy
 msgid "Could not read DVD."
-msgstr "Non foi posíbel ler a información do título do DVD"
+msgstr "Non foi posíbel ler o DVD."
 
 msgid "No file name specified for writing."
 msgstr "Non se especificou ningún nome de ficheiro para a súa escritura."

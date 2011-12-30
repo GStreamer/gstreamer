@@ -125,7 +125,8 @@ gst_camerabin_try_add_element (GstBin * bin, const gchar * srcpad,
         GST_DEBUG_PAD_NAME (bin_pad));
     bin_elem = gst_pad_get_parent_element (bin_pad);
     gst_object_unref (bin_pad);
-    if (!gst_element_link_pads (bin_elem, srcpad, new_elem, dstpad)) {
+    if (!gst_element_link_pads_full (bin_elem, srcpad, new_elem, dstpad,
+            GST_PAD_LINK_CHECK_CAPS)) {
       gst_object_ref (new_elem);
       gst_bin_remove (bin, new_elem);
       ret = FALSE;
@@ -256,30 +257,4 @@ gst_camerabin_remove_elements_from_bin (GstBin * bin)
     }
   }
   gst_iterator_free (iter);
-}
-
-/**
- * gst_camerabin_drop_eos_probe:
- * @pad: pad receiving the event
- * @event: received event
- * @u_data: not used
- *
- * Event probe that drop all eos events.
- *
- * Returns: FALSE to drop the event, TRUE otherwise
- */
-gboolean
-gst_camerabin_drop_eos_probe (GstPad * pad, GstEvent * event, gpointer u_data)
-{
-  gboolean ret = TRUE;
-
-  switch (GST_EVENT_TYPE (event)) {
-    case GST_EVENT_EOS:
-      GST_DEBUG ("dropping eos in %s:%s", GST_DEBUG_PAD_NAME (pad));
-      ret = FALSE;
-      break;
-    default:
-      break;
-  }
-  return ret;
 }

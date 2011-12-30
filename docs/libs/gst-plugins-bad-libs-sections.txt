@@ -118,6 +118,41 @@ gst_mpeg_video_parse_quant_matrix_extension
 </SECTION>
 
 <SECTION>
+<FILE>gstmpeg4parser</FILE>
+<TITLE>mpeg4parser</TITLE>
+<INCLUDE>gst/codecparsers/gstmpeg4parser.h</INCLUDE>
+GstMpeg4StartCode
+GstMpeg4VisualObjectType
+GstMpeg4AspectRatioInfo
+GstMpeg4ParseResult
+GstMpeg4VideoObjectCodingType
+GstMpeg4ChromaFormat
+GstMpeg4VideoObjectLayerShape
+GstMpeg4SpriteEnable
+GstMpeg4Profile
+GstMpeg4Level
+GstMpeg4VisualObjectSequence
+GstMpeg4VisualObject
+GstMpeg4VideoSignalType
+GstMpeg4VideoPlaneShortHdr
+GstMpeg4VideoObjectLayer
+GstMpeg4SpriteTrajectory
+GstMpeg4GroupOfVOP
+GstMpeg4VideoObjectPlane
+GstMpeg4Packet
+GstMpeg4VideoPacketHdr
+gst_mpeg4_parse
+gst_mpeg4_parse_video_object_plane
+gst_mpeg4_parse_group_of_vop
+gst_mpeg4_parse_video_object_layer
+gst_mpeg4_parse_visual_object
+gst_mpeg4_parse_visual_object_sequence
+gst_mpeg4_parse_video_packet_header
+<SUBSECTION Standard>
+<SUBSECTION Private>
+</SECTION>
+
+<SECTION>
 <FILE>gstphotography</FILE>
 GST_PHOTOGRAPHY_AUTOFOCUS_DONE
 GST_PHOTOGRAPHY_SHAKE_RISK

@@ -430,6 +430,7 @@ gst_camera_bin_start_capture (GstCameraBin2 * camerabin)
 
   g_signal_emit_by_name (camerabin->src, "start-capture", NULL);
   if (camerabin->mode == MODE_VIDEO) {
+    camerabin->audio_send_newseg = TRUE;
     if (camerabin->audio_src)
       gst_element_set_state (camerabin->audio_src, GST_STATE_PLAYING);
 
@@ -1043,7 +1044,6 @@ gst_camera_bin_handle_message (GstBin * bin, GstMessage * message)
         }
         dec_counter = TRUE;
       } else if (gst_structure_has_name (structure, "preview-image")) {
-        GValue *value;
         gchar *location = NULL;
 
         g_mutex_lock (camerabin->preview_list_mutex);
@@ -1063,11 +1063,11 @@ gst_camera_bin_handle_message (GstBin * bin, GstMessage * message)
         g_mutex_unlock (camerabin->preview_list_mutex);
 
         if (location) {
-          value = g_new0 (GValue, 1);
-          g_value_init (value, G_TYPE_STRING);
-          g_value_take_string (value, location);
+          GValue value = { 0 };
+          g_value_init (&value, G_TYPE_STRING);
+          g_value_take_string (&value, location);
           gst_structure_take_value ((GstStructure *) structure, "location",
-              value);
+              &value);
         }
 
         GST_LOG_OBJECT (bin, "received preview-image message");
@@ -1089,6 +1089,8 @@ gst_camera_bin_handle_message (GstBin * bin, GstMessage * message)
         }
         dec_counter = TRUE;
       }
+      g_error_free (err);
+      g_free (debug);
     }
       break;
     case GST_MESSAGE_EOS:{
@@ -1440,19 +1442,48 @@ gst_camera_bin_image_sink_event_probe (GstPad * pad, GstPadProbeInfo * info,
 }
 
 static GstPadProbeReturn
-gst_camera_bin_audio_src_event_probe (GstPad * pad, GstPadProbeInfo * info,
+gst_camera_bin_audio_src_data_probe (GstPad * pad, GstPadProbeInfo * info,
     gpointer data)
 {
   GstCameraBin2 *camera = data;
   gboolean ret = GST_PAD_PROBE_OK;
-  GstEvent *event = GST_EVENT (info->data);
 
-  if (GST_EVENT_TYPE (event) == GST_EVENT_EOS) {
-    /* we only let an EOS pass when the user is stopping a capture */
-    if (camera->audio_drop_eos) {
+  if (GST_IS_BUFFER (data)) {
+    if (G_UNLIKELY (camera->audio_send_newseg)) {
+      GstBuffer *buf = GST_BUFFER_CAST (data);
+      GstClockTime ts = GST_BUFFER_TIMESTAMP (buf);
+      GstPad *peer;
+      GstSegment segment;
+
+      if (!GST_CLOCK_TIME_IS_VALID (ts)) {
+        ts = 0;
+      }
+
+      peer = gst_pad_get_peer (pad);
+      g_return_val_if_fail (peer != NULL, TRUE);
+
+      gst_segment_init (&segment, GST_FORMAT_TIME);
+      segment.start = ts;
+      gst_pad_send_event (peer, gst_event_new_segment (&segment));
+
+      gst_object_unref (peer);
+
+      camera->audio_send_newseg = FALSE;
+    }
+  } else {
+    GstEvent *event = GST_EVENT_CAST (data);
+    if (GST_EVENT_TYPE (event) == GST_EVENT_EOS) {
+      /* we only let an EOS pass when the user is stopping a capture */
+      if (camera->audio_drop_eos) {
+        ret = GST_PAD_PROBE_DROP;
+      } else {
+        camera->audio_drop_eos = TRUE;
+        /* should already be false, but reinforce in case no buffers get
+         * pushed */
+        camera->audio_send_newseg = FALSE;
+      }
+    } else if (GST_EVENT_TYPE (event) == GST_EVENT_SEGMENT) {
       ret = GST_PAD_PROBE_DROP;
-    } else {
-      camera->audio_drop_eos = TRUE;
     }
   }
 
@@ -1517,12 +1548,12 @@ gst_camera_bin_create_elements (GstCameraBin2 * camera)
       GstEncodingContainerProfile *prof;
       GstCaps *caps;
 
-      caps = gst_caps_new_simple ("application/ogg", NULL, NULL);
+      caps = gst_caps_new_empty_simple ("application/ogg");
       prof = gst_encoding_container_profile_new ("ogg", "theora+vorbis+ogg",
           caps, NULL);
       gst_caps_unref (caps);
 
-      caps = gst_caps_new_simple ("video/x-theora", NULL, NULL);
+      caps = gst_caps_new_empty_simple ("video/x-theora");
       if (!gst_encoding_container_profile_add_profile (prof,
               (GstEncodingProfile *) gst_encoding_video_profile_new (caps,
                   NULL, NULL, 1))) {
@@ -1530,7 +1561,7 @@ gst_camera_bin_create_elements (GstCameraBin2 * camera)
       }
       gst_caps_unref (caps);
 
-      caps = gst_caps_new_simple ("audio/x-vorbis", NULL, NULL);
+      caps = gst_caps_new_empty_simple ("audio/x-vorbis");
       if (!gst_encoding_container_profile_add_profile (prof,
               (GstEncodingProfile *) gst_encoding_audio_profile_new (caps,
                   NULL, NULL, 1))) {
@@ -1569,7 +1600,7 @@ gst_camera_bin_create_elements (GstCameraBin2 * camera)
       GstEncodingVideoProfile *vprof;
       GstCaps *caps;
 
-      caps = gst_caps_new_simple ("image/jpeg", NULL, NULL);
+      caps = gst_caps_new_empty_simple ("image/jpeg");
       vprof = gst_encoding_video_profile_new (caps, NULL, NULL, 1);
       gst_encoding_video_profile_set_variableframerate (vprof, TRUE);
 
@@ -1803,15 +1834,17 @@ gst_camera_bin_create_elements (GstCameraBin2 * camera)
     gst_bin_add (GST_BIN_CAST (camera),
         gst_object_ref (camera->audio_capsfilter));
 
-    gst_element_link_many (camera->audio_src, camera->audio_volume,
-        camera->audio_capsfilter, NULL);
+    gst_element_link_pads_full (camera->audio_src, "src",
+        camera->audio_volume, "sink", GST_PAD_LINK_CHECK_CAPS);
+    gst_element_link_pads_full (camera->audio_volume, "src",
+        camera->audio_capsfilter, "sink", GST_PAD_LINK_CHECK_CAPS);
 
     srcpad = gst_element_get_static_pad (camera->audio_src, "src");
 
     /* drop EOS for audiosrc elements that push them on state_changes
      * (basesrc does this) */
-    gst_pad_add_probe (srcpad, GST_PAD_PROBE_TYPE_EVENT_DOWNSTREAM,
-        gst_camera_bin_audio_src_event_probe, gst_object_ref (camera),
+    gst_pad_add_probe (srcpad, GST_PAD_PROBE_TYPE_DATA_DOWNSTREAM,
+        gst_camera_bin_audio_src_data_probe, gst_object_ref (camera),
         gst_object_unref);
 
     gst_object_unref (srcpad);
@@ -1870,6 +1903,7 @@ gst_camera_bin_change_state (GstElement * element, GstStateChange trans)
     case GST_STATE_CHANGE_READY_TO_PAUSED:
       GST_CAMERA_BIN2_RESET_PROCESSING_COUNTER (camera);
       camera->audio_drop_eos = TRUE;
+      camera->audio_send_newseg = FALSE;
       break;
     case GST_STATE_CHANGE_PAUSED_TO_READY:
       if (GST_STATE (camera->videosink) >= GST_STATE_PAUSED)
@@ -1939,6 +1973,9 @@ gst_camera_bin_send_event (GstElement * element, GstEvent * event)
   GstCameraBin2 *camera = GST_CAMERA_BIN2_CAST (element);
   gboolean res;
 
+  /* avoid losing our ref to send_event */
+  gst_event_ref (event);
+
   res = GST_ELEMENT_CLASS (parent_class)->send_event (element, event);
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_EOS:
@@ -1964,6 +2001,7 @@ gst_camera_bin_send_event (GstElement * element, GstEvent * event)
       break;
   }
 
+  gst_event_unref (event);
   return res;
 }
 

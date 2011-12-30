@@ -896,6 +896,14 @@ mpegts_parse_is_psi (MpegTSParse * parse, MpegTSPacketizerPacket * packet)
       data = packet->data;
       pointer = *data++;
       data += pointer;
+      /* 'pointer' value may be invalid on malformed packet
+       * so we need to avoid out of range
+       */
+      if (!(data < packet->data_end)) {
+        GST_WARNING_OBJECT (parse,
+            "Wrong offset when retrieving table id: 0x%x", pointer);
+        return FALSE;
+      }
       table_id = *data;
       i = 0;
       while (si_tables[i] != TABLE_ID_UNSET) {

@@ -88,6 +88,8 @@
 #include <stdio.h>
 #include <string.h>
 
+#include <gst/video/video.h>
+
 #include "mpegtsmux.h"
 
 #include "mpegtsmux_h264.h"
@@ -143,7 +145,7 @@ static gboolean new_packet_cb (guint8 * data, guint len, void *user_data,
 static void release_buffer_cb (guint8 * data, void *user_data);
 
 static void mpegtsdemux_prepare_srcpad (MpegTsMux * mux);
-static GstFlowReturn mpegtsmux_collected (GstCollectPads * pads,
+static GstFlowReturn mpegtsmux_collected (GstCollectPads2 * pads,
     MpegTsMux * mux);
 static GstPad *mpegtsmux_request_new_pad (GstElement * element,
     GstPadTemplate * templ, const gchar * name);
@@ -151,6 +153,8 @@ static void mpegtsmux_release_pad (GstElement * element, GstPad * pad);
 static GstStateChangeReturn mpegtsmux_change_state (GstElement * element,
     GstStateChange transition);
 static void mpegtsdemux_set_header_on_caps (MpegTsMux * mux);
+static gboolean mpegtsmux_sink_event (GstPad * pad, GstEvent * event);
+static gboolean mpegtsmux_src_event (GstPad * pad, GstEvent * event);
 
 GST_BOILERPLATE (MpegTsMux, mpegtsmux, GstElement, GST_TYPE_ELEMENT);
 
@@ -215,11 +219,12 @@ mpegtsmux_init (MpegTsMux * mux, MpegTsMuxClass * g_class)
   mux->srcpad =
       gst_pad_new_from_static_template (&mpegtsmux_src_factory, "src");
   gst_pad_use_fixed_caps (mux->srcpad);
+  gst_pad_set_event_function (mux->srcpad, mpegtsmux_src_event);
   gst_element_add_pad (GST_ELEMENT (mux), mux->srcpad);
 
-  mux->collect = gst_collect_pads_new ();
-  gst_collect_pads_set_function (mux->collect,
-      (GstCollectPadsFunction) GST_DEBUG_FUNCPTR (mpegtsmux_collected), mux);
+  mux->collect = gst_collect_pads2_new ();
+  gst_collect_pads2_set_function (mux->collect,
+      (GstCollectPads2Function) GST_DEBUG_FUNCPTR (mpegtsmux_collected), mux);
 
   mux->tsmux = tsmux_new ();
   tsmux_set_write_func (mux->tsmux, new_packet_cb, mux);
@@ -238,6 +243,8 @@ mpegtsmux_init (MpegTsMux * mux, MpegTsMuxClass * g_class)
   mux->prog_map = NULL;
   mux->streamheader = NULL;
   mux->streamheader_sent = FALSE;
+  mux->force_key_unit_event = NULL;
+  mux->pending_key_unit_ts = GST_CLOCK_TIME_NONE;
 }
 
 static void
@@ -509,7 +516,7 @@ mpegtsmux_create_streams (MpegTsMux * mux)
 
   /* Create the streams */
   while (walk) {
-    GstCollectData *c_data = (GstCollectData *) walk->data;
+    GstCollectData2 *c_data = (GstCollectData2 *) walk->data;
     MpegTsPadData *ts_data = (MpegTsPadData *) walk->data;
     gchar *name = NULL;
 
@@ -569,11 +576,11 @@ static MpegTsPadData *
 mpegtsmux_choose_best_stream (MpegTsMux * mux)
 {
   MpegTsPadData *best = NULL;
-  GstCollectData *c_best = NULL;
+  GstCollectData2 *c_best = NULL;
   GSList *walk;
 
   for (walk = mux->collect->data; walk != NULL; walk = g_slist_next (walk)) {
-    GstCollectData *c_data = (GstCollectData *) walk->data;
+    GstCollectData2 *c_data = (GstCollectData2 *) walk->data;
     MpegTsPadData *ts_data = (MpegTsPadData *) walk->data;
 
     if (ts_data->eos == FALSE) {
@@ -581,7 +588,7 @@ mpegtsmux_choose_best_stream (MpegTsMux * mux)
         GstBuffer *buf;
 
         ts_data->queued_buf = buf =
-            gst_collect_pads_peek (mux->collect, c_data);
+            gst_collect_pads2_peek (mux->collect, c_data);
 
         if (buf != NULL) {
           if (ts_data->prepare_func) {
@@ -643,17 +650,212 @@ mpegtsmux_choose_best_stream (MpegTsMux * mux)
   }
   if (c_best) {
     GstBuffer *buffer;
-    if ((buffer = gst_collect_pads_pop (mux->collect, c_best)))
+    if ((buffer = gst_collect_pads2_pop (mux->collect, c_best)))
       gst_buffer_unref (buffer);
   }
 
   return best;
 }
 
-#define COLLECT_DATA_PAD(collect_data) (((GstCollectData *)(collect_data))->pad)
+#define COLLECT_DATA_PAD(collect_data) (((GstCollectData2 *)(collect_data))->pad)
+
+static MpegTsPadData *
+find_pad_data (MpegTsMux * mux, GstPad * pad)
+{
+  GSList *walk;
+  MpegTsPadData *ts_data = NULL;
+
+  GST_COLLECT_PADS2_STREAM_LOCK (mux->collect);
+  walk = mux->collect->pad_list;
+  while (walk) {
+    if (((GstCollectData2 *) walk->data)->pad == pad) {
+      ts_data = (MpegTsPadData *) walk->data;
+      break;
+    }
+
+    walk = g_slist_next (walk);
+  }
+  GST_COLLECT_PADS2_STREAM_UNLOCK (mux->collect);
+
+  return ts_data;
+}
+
+static gboolean
+mpegtsmux_sink_event (GstPad * pad, GstEvent * event)
+{
+  MpegTsMux *mux = GST_MPEG_TSMUX (gst_pad_get_parent (pad));
+  MpegTsPadData *ts_data;
+  gboolean res = TRUE;
+  gboolean forward = TRUE;
+
+  ts_data = find_pad_data (mux, pad);
+
+  switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_CUSTOM_DOWNSTREAM:
+    {
+      GstClockTime timestamp, stream_time, running_time;
+      gboolean all_headers;
+      guint count;
+
+      if (!gst_video_event_is_force_key_unit (event))
+        goto out;
+
+      forward = FALSE;
+
+      gst_video_event_parse_downstream_force_key_unit (event,
+          &timestamp, &stream_time, &running_time, &all_headers, &count);
+      GST_INFO_OBJECT (mux, "have downstream force-key-unit event on pad %s, "
+          "seqnum %d, running-time %" GST_TIME_FORMAT " count %d",
+          gst_pad_get_name (pad), gst_event_get_seqnum (event),
+          GST_TIME_ARGS (running_time), count);
+
+      if (mux->force_key_unit_event != NULL) {
+        GST_INFO_OBJECT (mux, "skipping downstream force key unit event "
+            "as an upstream force key unit is already queued");
+        goto out;
+      }
+
+      if (!all_headers)
+        goto out;
+
+      mux->pending_key_unit_ts = running_time;
+      gst_event_replace (&mux->force_key_unit_event, event);
+      break;
+    }
+    default:
+      break;
+  }
+
+out:
+  if (forward)
+    res = ts_data->eventfunc (pad, event);
+
+  gst_object_unref (mux);
+  return res;
+}
+
+static gboolean
+mpegtsmux_src_event (GstPad * pad, GstEvent * event)
+{
+  MpegTsMux *mux = GST_MPEG_TSMUX (gst_pad_get_parent (pad));
+  gboolean res = TRUE;
+
+  switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_CUSTOM_UPSTREAM:
+    {
+      GstIterator *iter;
+      GstIteratorResult iter_ret;
+      GstPad *sinkpad;
+      GstClockTime running_time;
+      gboolean all_headers, done;
+      guint count;
+
+      if (!gst_video_event_is_force_key_unit (event))
+        break;
+
+      gst_video_event_parse_upstream_force_key_unit (event,
+          &running_time, &all_headers, &count);
+
+      GST_INFO_OBJECT (mux, "received upstream force-key-unit event, "
+          "seqnum %d running_time %" GST_TIME_FORMAT " all_headers %d count %d",
+          gst_event_get_seqnum (event), GST_TIME_ARGS (running_time),
+          all_headers, count);
+
+      if (!all_headers)
+        break;
+
+      mux->pending_key_unit_ts = running_time;
+      gst_event_replace (&mux->force_key_unit_event, event);
+
+      iter = gst_element_iterate_sink_pads (GST_ELEMENT_CAST (mux));
+      done = FALSE;
+      while (!done) {
+        gboolean res = FALSE, tmp;
+        iter_ret = gst_iterator_next (iter, (gpointer *) & sinkpad);
+
+        switch (iter_ret) {
+          case GST_ITERATOR_DONE:
+            done = TRUE;
+            break;
+          case GST_ITERATOR_OK:
+            GST_INFO_OBJECT (mux, "forwarding to %s",
+                gst_pad_get_name (sinkpad));
+            tmp = gst_pad_push_event (sinkpad, gst_event_ref (event));
+            GST_INFO_OBJECT (mux, "result %d", tmp);
+            /* succeed if at least one pad succeeds */
+            res |= tmp;
+            gst_object_unref (sinkpad);
+            break;
+          case GST_ITERATOR_ERROR:
+            done = TRUE;
+            break;
+          case GST_ITERATOR_RESYNC:
+            break;
+        }
+      }
+
+      gst_event_unref (event);
+      break;
+    }
+    default:
+      res = gst_pad_event_default (pad, event);
+      break;
+  }
+
+  gst_object_unref (mux);
+  return res;
+}
+
+static GstEvent *
+check_pending_key_unit_event (GstEvent * pending_event, GstSegment * segment,
+    GstClockTime timestamp, guint flags, GstClockTime pending_key_unit_ts)
+{
+  GstClockTime running_time, stream_time;
+  gboolean all_headers;
+  guint count;
+  GstEvent *event = NULL;
+
+  g_return_val_if_fail (pending_event != NULL, NULL);
+  g_return_val_if_fail (segment != NULL, NULL);
+
+  if (pending_event == NULL)
+    goto out;
+
+  if (GST_CLOCK_TIME_IS_VALID (pending_key_unit_ts) &&
+      timestamp == GST_CLOCK_TIME_NONE)
+    goto out;
+
+  running_time = gst_segment_to_running_time (segment,
+      GST_FORMAT_TIME, timestamp);
+
+  GST_INFO ("now %" GST_TIME_FORMAT " wanted %" GST_TIME_FORMAT,
+      GST_TIME_ARGS (running_time), GST_TIME_ARGS (pending_key_unit_ts));
+  if (GST_CLOCK_TIME_IS_VALID (pending_key_unit_ts) &&
+      running_time < pending_key_unit_ts)
+    goto out;
+
+  if (flags & GST_BUFFER_FLAG_DELTA_UNIT) {
+    GST_INFO ("pending force key unit, waiting for keyframe");
+    goto out;
+  }
+
+  stream_time = gst_segment_to_stream_time (segment,
+      GST_FORMAT_TIME, timestamp);
+
+  gst_video_event_parse_upstream_force_key_unit (pending_event,
+      NULL, &all_headers, &count);
+
+  event =
+      gst_video_event_new_downstream_force_key_unit (timestamp, stream_time,
+      running_time, all_headers, count);
+  gst_event_set_seqnum (event, gst_event_get_seqnum (pending_event));
+
+out:
+  return event;
+}
 
 static GstFlowReturn
-mpegtsmux_collected (GstCollectPads * pads, MpegTsMux * mux)
+mpegtsmux_collected (GstCollectPads2 * pads, MpegTsMux * mux)
 {
   GstFlowReturn ret = GST_FLOW_OK;
   MpegTsPadData *best = NULL;
@@ -684,6 +886,42 @@ mpegtsmux_collected (GstCollectPads * pads, MpegTsMux * mux)
               " is not associated with any program", COLLECT_DATA_PAD (best)),
           (NULL));
       return GST_FLOW_ERROR;
+    }
+
+    if (mux->force_key_unit_event != NULL && best->stream->is_video_stream) {
+      GstEvent *event;
+
+      event = check_pending_key_unit_event (mux->force_key_unit_event,
+          &best->collect.segment, GST_BUFFER_TIMESTAMP (buf),
+          GST_BUFFER_FLAGS (buf), mux->pending_key_unit_ts);
+      if (event) {
+        GstClockTime running_time;
+        guint count;
+        GList *cur;
+
+        mux->pending_key_unit_ts = GST_CLOCK_TIME_NONE;
+        gst_event_replace (&mux->force_key_unit_event, NULL);
+
+        gst_video_event_parse_downstream_force_key_unit (event,
+            NULL, NULL, &running_time, NULL, &count);
+
+        GST_INFO_OBJECT (mux, "pushing downstream force-key-unit event %d "
+            "%" GST_TIME_FORMAT " count %d", gst_event_get_seqnum (event),
+            GST_TIME_ARGS (running_time), count);
+        gst_pad_push_event (mux->srcpad, event);
+
+        /* output PAT */
+        mux->tsmux->last_pat_ts = -1;
+
+        /* output PMT for each program */
+        for (cur = g_list_first (mux->tsmux->programs); cur != NULL;
+            cur = g_list_next (cur)) {
+          TsMuxProgram *program = (TsMuxProgram *) cur->data;
+
+          program->last_pmt_ts = -1;
+        }
+        tsmux_program_set_pcr_stream (prog, NULL);
+      }
     }
 
     if (G_UNLIKELY (prog->pcr_stream == NULL)) {
@@ -749,21 +987,24 @@ mpegtsmux_request_new_pad (GstElement * element,
   GstPad *pad = NULL;
   MpegTsPadData *pad_data = NULL;
 
-  if (name != NULL && sscanf (name, "sink_%u", &pid) == 1) {
+  if (name != NULL && sscanf (name, "sink_%d", &pid) == 1) {
     if (tsmux_find_stream (mux->tsmux, pid))
       goto stream_exists;
   } else {
     pid = tsmux_get_new_pid (mux->tsmux);
   }
 
-  pad_name = g_strdup_printf ("sink_%u", pid);
+  pad_name = g_strdup_printf ("sink_%d", pid);
   pad = gst_pad_new_from_template (templ, pad_name);
   g_free (pad_name);
 
-  pad_data = (MpegTsPadData *) gst_collect_pads_add_pad (mux->collect, pad,
-      sizeof (MpegTsPadData), NULL);
+  pad_data = (MpegTsPadData *) gst_collect_pads2_add_pad (mux->collect, pad,
+      sizeof (MpegTsPadData));
   if (pad_data == NULL)
     goto pad_failure;
+
+  pad_data->eventfunc = pad->eventfunc;
+  gst_pad_set_event_function (pad, mpegtsmux_sink_event);
 
   pad_data->pid = pid;
   pad_data->last_ts = GST_CLOCK_TIME_NONE;
@@ -786,7 +1027,7 @@ stream_exists:
 could_not_add:
   GST_ELEMENT_ERROR (element, STREAM, FAILED,
       ("Internal data stream error."), ("Could not add pad to element"));
-  gst_collect_pads_remove_pad (mux->collect, pad);
+  gst_collect_pads2_remove_pad (mux->collect, pad);
   gst_object_unref (pad);
   return NULL;
 pad_failure:
@@ -804,7 +1045,7 @@ mpegtsmux_release_pad (GstElement * element, GstPad * pad)
   GST_DEBUG_OBJECT (mux, "Pad %" GST_PTR_FORMAT " being released", pad);
 
   if (mux->collect) {
-    gst_collect_pads_remove_pad (mux->collect, pad);
+    gst_collect_pads2_remove_pad (mux->collect, pad);
   }
 
   /* chain up */
@@ -1065,12 +1306,12 @@ mpegtsmux_change_state (GstElement * element, GstStateChange transition)
     case GST_STATE_CHANGE_NULL_TO_READY:
       break;
     case GST_STATE_CHANGE_READY_TO_PAUSED:
-      gst_collect_pads_start (mux->collect);
+      gst_collect_pads2_start (mux->collect);
       break;
     case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
       break;
     case GST_STATE_CHANGE_PAUSED_TO_READY:
-      gst_collect_pads_stop (mux->collect);
+      gst_collect_pads2_stop (mux->collect);
       break;
     case GST_STATE_CHANGE_READY_TO_NULL:
       if (mux->adapter)

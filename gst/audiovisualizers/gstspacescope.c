@@ -72,6 +72,8 @@ enum
 {
   STYLE_DOTS = 0,
   STYLE_LINES,
+  STYLE_COLOR_DOTS,
+  STYLE_COLOR_LINES,
   NUM_STYLES
 };
 
@@ -85,6 +87,8 @@ gst_space_scope_style_get_type (void)
     static const GEnumValue values[] = {
       {STYLE_DOTS, "draw dots (default)", "dots"},
       {STYLE_LINES, "draw lines", "lines"},
+      {STYLE_COLOR_DOTS, "draw color dots", "color-dots"},
+      {STYLE_COLOR_LINES, "draw color lines", "color-lines"},
       {0, NULL, NULL}
     };
 
@@ -98,9 +102,13 @@ static void gst_space_scope_set_property (GObject * object, guint prop_id,
 static void gst_space_scope_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 
-static void render_dots (GstBaseAudioVisualizer * scope, guint32 * vdata,
+static void render_dots (GstBaseAudioVisualizer * base, guint32 * vdata,
     gint16 * adata, guint num_samples);
-static void render_lines (GstBaseAudioVisualizer * scope, guint32 * vdata,
+static void render_lines (GstBaseAudioVisualizer * base, guint32 * vdata,
+    gint16 * adata, guint num_samples);
+static void render_color_dots (GstBaseAudioVisualizer * base, guint32 * vdata,
+    gint16 * adata, guint num_samples);
+static void render_color_lines (GstBaseAudioVisualizer * base, guint32 * vdata,
     gint16 * adata, guint num_samples);
 
 static gboolean gst_space_scope_render (GstBaseAudioVisualizer * scope,
@@ -160,6 +168,12 @@ gst_space_scope_set_property (GObject * object, guint prop_id,
         case STYLE_LINES:
           scope->process = render_lines;
           break;
+        case STYLE_COLOR_DOTS:
+          scope->process = render_color_dots;
+          break;
+        case STYLE_COLOR_LINES:
+          scope->process = render_color_lines;
+          break;
       }
       break;
     default:
@@ -187,18 +201,19 @@ gst_space_scope_get_property (GObject * object, guint prop_id,
 #include "gstdrawhelpers.h"
 
 static void
-render_dots (GstBaseAudioVisualizer * scope, guint32 * vdata, gint16 * adata,
+render_dots (GstBaseAudioVisualizer * base, guint32 * vdata, gint16 * adata,
     guint num_samples)
 {
   guint i, s, x, y, ox, oy;
   gfloat dx, dy;
-  guint w = scope->width;
+  guint w = base->width;
+  guint h = base->height;
 
   /* draw dots 1st channel x, 2nd channel y */
-  dx = scope->width / 65536.0;
-  ox = scope->width / 2;
-  dy = scope->height / 65536.0;
-  oy = scope->height / 2;
+  dx = w / 65536.0;
+  ox = w / 2;
+  dy = h / 65536.0;
+  oy = h / 2;
   s = 0;
   for (i = 0; i < num_samples; i++) {
     x = (guint) (ox + (gfloat) adata[s++] * dx);
@@ -208,13 +223,13 @@ render_dots (GstBaseAudioVisualizer * scope, guint32 * vdata, gint16 * adata,
 }
 
 static void
-render_lines (GstBaseAudioVisualizer * scope, guint32 * vdata, gint16 * adata,
+render_lines (GstBaseAudioVisualizer * base, guint32 * vdata, gint16 * adata,
     guint num_samples)
 {
   guint i, s, x, y, ox, oy;
   gfloat dx, dy;
-  guint w = scope->width;
-  guint h = scope->height;
+  guint w = base->width;
+  guint h = base->height;
   gint x2, y2;
 
   /* draw lines 1st channel x, 2nd channel y */
@@ -232,6 +247,179 @@ render_lines (GstBaseAudioVisualizer * scope, guint32 * vdata, gint16 * adata,
     x2 = x;
     y2 = y;
   }
+}
+
+#define CUTOFF_1 0.15
+#define CUTOFF_2 0.45
+#define RESONANCE (1.0/0.5)
+
+#define filter(il, ir) G_STMT_START {                                          \
+  f1l_h = il - (f1l_m * RESONANCE) - f1l_l;                                    \
+  f1l_m += (f1l_h * CUTOFF_1);                                                 \
+  f1l_l += (f1l_m * CUTOFF_1);                                                 \
+                                                                               \
+  f2l_h = (f1l_m + f1l_h) - (f2l_m * RESONANCE) - f2l_l;                       \
+  f2l_m += (f2l_h * CUTOFF_2);                                                 \
+  f2l_l += (f2l_m * CUTOFF_2);                                                 \
+                                                                               \
+  f1r_h = ir - (f1r_m * RESONANCE) - f1r_l;                                    \
+  f1r_m += (f1r_h * CUTOFF_1);                                                 \
+  f1r_l += (f1r_m * CUTOFF_1);                                                 \
+                                                                               \
+  f2r_h = (f1r_m + f1r_h) - (f2r_m * RESONANCE) - f2r_l;                       \
+  f2r_m += (f2r_h * CUTOFF_2);                                                 \
+  f2r_l += (f2r_m * CUTOFF_2);                                                 \
+} G_STMT_END
+
+static void
+render_color_dots (GstBaseAudioVisualizer * base, guint32 * vdata,
+    gint16 * adata, guint num_samples)
+{
+  GstSpaceScope *scope = (GstSpaceScope *) base;
+  guint i, s;
+  gint x, y, ox, oy;
+  gfloat dx, dy;
+  gint w = base->width, w1 = w - 2;
+  gint h = base->height, h1 = h - 2;
+  gdouble il, ir;
+  gdouble f1l_l = scope->f1l_l, f1l_m = scope->f1l_m, f1l_h = scope->f1l_h;
+  gdouble f1r_l = scope->f1r_l, f1r_m = scope->f1r_m, f1r_h = scope->f1r_h;
+  gdouble f2l_l = scope->f2l_l, f2l_m = scope->f2l_m, f2l_h = scope->f2l_h;
+  gdouble f2r_l = scope->f2r_l, f2r_m = scope->f2r_m, f2r_h = scope->f2r_h;
+
+  /* draw dots 1st channel x, 2nd channel y */
+  ox = w / 2;
+  oy = h / 2;
+  dx = w / 65536.0;
+  dy = h / 65536.0;
+  s = 0;
+  for (i = 0; i < num_samples; i++) {
+    il = (gdouble) adata[s++];
+    ir = (gdouble) adata[s++];
+
+    filter (il, ir);
+
+    x = (gint) (ox + f1l_l * dx);
+    y = (gint) (oy + f1r_l * dy);
+    x = CLAMP (x, 0, w1);
+    y = CLAMP (y, 0, h1);
+    draw_dot_c (vdata, x, y, w, 0x00FF0000);
+
+    x = (gint) (ox + f2l_l * dx);
+    y = (gint) (oy + f2r_l * dy);
+    x = CLAMP (x, 0, w1);
+    y = CLAMP (y, 0, h1);
+    draw_dot_c (vdata, x, y, w, 0x0000FF00);
+
+    x = (gint) (ox + (f2l_m + f2l_h) * dx);
+    y = (gint) (oy + (f2r_m + f2r_h) * dy);
+    x = CLAMP (x, 0, w1);
+    y = CLAMP (y, 0, h1);
+    draw_dot_c (vdata, x, y, w, 0x000000FF);
+  }
+
+  scope->f1l_l = f1l_l;
+  scope->f1l_m = f1l_m;
+  scope->f1l_h = f1l_h;
+  scope->f1r_l = f1r_l;
+  scope->f1r_m = f1r_m;
+  scope->f1r_h = f1r_h;
+  scope->f2l_l = f2l_l;
+  scope->f2l_m = f2l_m;
+  scope->f2l_h = f2l_h;
+  scope->f2r_l = f2r_l;
+  scope->f2r_m = f2r_m;
+  scope->f2r_h = f2r_h;
+}
+
+static void
+render_color_lines (GstBaseAudioVisualizer * base, guint32 * vdata,
+    gint16 * adata, guint num_samples)
+{
+  GstSpaceScope *scope = (GstSpaceScope *) base;
+  guint i, s;
+  gint x, y, ox, oy;
+  gfloat dx, dy;
+  gint w = base->width, w1 = w - 2;
+  gint h = base->height, h1 = h - 2;
+  gdouble il, ir;
+  gdouble f1l_l = scope->f1l_l, f1l_m = scope->f1l_m, f1l_h = scope->f1l_h;
+  gdouble f1r_l = scope->f1r_l, f1r_m = scope->f1r_m, f1r_h = scope->f1r_h;
+  gdouble f2l_l = scope->f2l_l, f2l_m = scope->f2l_m, f2l_h = scope->f2l_h;
+  gdouble f2r_l = scope->f2r_l, f2r_m = scope->f2r_m, f2r_h = scope->f2r_h;
+  gint x2, y2, x3, y3, x4, y4;
+
+  /* draw lines 1st channel x, 2nd channel y */
+  ox = w / 2;
+  oy = h / 2;
+  dx = w / 65536.0;
+  dy = h / 65536.0;
+  s = 0;
+
+  /* do first pixels */
+  il = (gdouble) adata[s++];
+  ir = (gdouble) adata[s++];
+
+  filter (il, ir);
+
+  x = (gint) (ox + f1l_l * dx);
+  y = (gint) (oy + f1r_l * dy);
+  x2 = CLAMP (x, 0, w1);
+  y2 = CLAMP (y, 0, h1);
+
+  x = (gint) (ox + f2l_l * dx);
+  y = (gint) (oy + f2r_l * dy);
+  x3 = CLAMP (x, 0, w1);
+  y3 = CLAMP (y, 0, h1);
+
+  x = (gint) (ox + (f2l_m + f2l_h) * dx);
+  y = (gint) (oy + (f2r_m + f2r_h) * dy);
+  x4 = CLAMP (x, 0, w1);
+  y4 = CLAMP (y, 0, h1);
+
+  for (i = 1; i < num_samples; i++) {
+    il = (gdouble) adata[s++];
+    ir = (gdouble) adata[s++];
+
+    filter (il, ir);
+
+    x = (gint) (ox + f1l_l * dx);
+    y = (gint) (oy + f1r_l * dy);
+    x = CLAMP (x, 0, w1);
+    y = CLAMP (y, 0, h1);
+    draw_line_aa (vdata, x2, x, y2, y, w, 0x00FF0000);
+    x2 = x;
+    y2 = y;
+
+    x = (gint) (ox + f2l_l * dx);
+    y = (gint) (oy + f2r_l * dy);
+    x = CLAMP (x, 0, w1);
+    y = CLAMP (y, 0, h1);
+    draw_line_aa (vdata, x3, x, y3, y, w, 0x0000FF00);
+    x3 = x;
+    y3 = y;
+
+    x = (gint) (ox + (f2l_m + f2l_h) * dx);
+    y = (gint) (oy + (f2r_m + f2r_h) * dy);
+    x = CLAMP (x, 0, w1);
+    y = CLAMP (y, 0, h1);
+    draw_line_aa (vdata, x4, x, y4, y, w, 0x000000FF);
+    x4 = x;
+    y4 = y;
+  }
+
+  scope->f1l_l = f1l_l;
+  scope->f1l_m = f1l_m;
+  scope->f1l_h = f1l_h;
+  scope->f1r_l = f1r_l;
+  scope->f1r_m = f1r_m;
+  scope->f1r_h = f1r_h;
+  scope->f2l_l = f2l_l;
+  scope->f2l_m = f2l_m;
+  scope->f2l_h = f2l_h;
+  scope->f2r_l = f2r_l;
+  scope->f2r_m = f2r_m;
+  scope->f2r_h = f2r_h;
 }
 
 static gboolean

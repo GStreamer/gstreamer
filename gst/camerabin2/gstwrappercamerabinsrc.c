@@ -31,6 +31,8 @@
 #  include <config.h>
 #endif
 
+#include <gst/interfaces/photography.h>
+
 #include "gstwrappercamerabinsrc.h"
 #include "camerabingeneral.h"
 
@@ -257,8 +259,18 @@ gst_wrapper_camera_bin_src_vidsrc_probe (GstPad * pad, GstPadProbeInfo * info,
   if (self->video_rec_status == GST_VIDEO_RECORDING_STATUS_DONE) {
     /* NOP */
   } else if (self->video_rec_status == GST_VIDEO_RECORDING_STATUS_STARTING) {
+    GstClockTime ts;
+    GstSegment segment;
+
     GST_DEBUG_OBJECT (self, "Starting video recording");
     self->video_rec_status = GST_VIDEO_RECORDING_STATUS_RUNNING;
+
+    ts = GST_BUFFER_TIMESTAMP (buffer);
+    if (!GST_CLOCK_TIME_IS_VALID (ts))
+      ts = 0;
+    gst_segment_init (&segment, GST_FORMAT_TIME);
+    segment.start = ts;
+    gst_pad_push_event (self->vidsrc, gst_event_new_segment (&segment));
 
     /* post preview */
     GST_DEBUG_OBJECT (self, "Posting preview for video");
@@ -706,7 +718,9 @@ static gboolean
 start_image_capture (GstWrapperCameraBinSrc * self)
 {
   GstBaseCameraSrc *bcamsrc = GST_BASE_CAMERA_SRC (self);
-  GstPhotography *photography = gst_base_camera_src_get_photography (bcamsrc);
+  GstPhotography *photography =
+      (GstPhotography *) gst_bin_get_by_interface (GST_BIN_CAST (bcamsrc),
+      GST_TYPE_PHOTOGRAPHY);
   gboolean ret = FALSE;
   GstCaps *caps;
 
@@ -747,7 +761,9 @@ static gboolean
 gst_wrapper_camera_bin_src_set_mode (GstBaseCameraSrc * bcamsrc,
     GstCameraBinMode mode)
 {
-  GstPhotography *photography = gst_base_camera_src_get_photography (bcamsrc);
+  GstPhotography *photography =
+      (GstPhotography *) gst_bin_get_by_interface (GST_BIN_CAST (bcamsrc),
+      GST_TYPE_PHOTOGRAPHY);
   GstWrapperCameraBinSrc *self = GST_WRAPPER_CAMERA_BIN_SRC (bcamsrc);
 
   if (self->output_selector) {

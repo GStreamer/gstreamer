@@ -112,57 +112,6 @@ GST_STATIC_PAD_TEMPLATE (GST_BASE_CAMERA_SRC_VIDEO_PAD_NAME,
  */
 
 /**
- * gst_base_camera_src_get_photography:
- * @self: the camerasrc bin
- *
- * Get object implementing photography interface, if there is one.  Otherwise
- * returns NULL.
- */
-GstPhotography *
-gst_base_camera_src_get_photography (GstBaseCameraSrc * self)
-{
-  GstElement *elem;
-
-  if (GST_IS_PHOTOGRAPHY (self)) {
-    elem = GST_ELEMENT (self);
-  } else {
-    elem = gst_bin_get_by_interface (GST_BIN (self), GST_TYPE_PHOTOGRAPHY);
-  }
-
-  if (elem) {
-    return GST_PHOTOGRAPHY (elem);
-  }
-
-  return NULL;
-}
-
-
-/**
- * gst_base_camera_src_get_colorbalance:
- * @self: the camerasrc bin
- *
- * Get object implementing colorbalance interface, if there is one.  Otherwise
- * returns NULL.
- */
-GstColorBalance *
-gst_base_camera_src_get_color_balance (GstBaseCameraSrc * self)
-{
-  GstElement *elem;
-
-  if (GST_IS_COLOR_BALANCE (self)) {
-    elem = GST_ELEMENT (self);
-  } else {
-    elem = gst_bin_get_by_interface (GST_BIN (self), GST_TYPE_COLOR_BALANCE);
-  }
-
-  if (elem) {
-    return GST_COLOR_BALANCE (self);
-  }
-
-  return NULL;
-}
-
-/**
  * gst_base_camera_src_set_mode:
  * @self: the camerasrc bin
  * @mode: the mode

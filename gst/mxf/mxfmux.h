@@ -22,7 +22,7 @@
 
 #include <gst/gst.h>
 #include <gst/base/gstadapter.h>
-#include <gst/base/gstcollectpads.h>
+#include <gst/base/gstcollectpads2.h>
 
 #include "mxfessence.h"
 
@@ -41,7 +41,7 @@ G_BEGIN_DECLS
 
 typedef struct
 {
-  GstCollectData collect;
+  GstCollectData2 collect;
 
   guint64 pos;
   GstClockTime last_timestamp;
@@ -71,7 +71,7 @@ typedef struct _GstMXFMux {
   GstElement element;
 
   GstPad *srcpad;
-  GstCollectPads *collect;
+  GstCollectPads2 *collect;
 
   /* <private> */
   GstPadEventFunction collect_event;

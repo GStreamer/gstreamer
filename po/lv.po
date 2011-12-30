@@ -1,13 +1,14 @@
 # Latvian translation of gst-plugins-bad
 # This file is put in the public domain.
 # Arvis Lācis <arvis.lacis@inbox.lv>, 2009.
+# Rihards Priedītis <rprieditis@gmail.com>, 2011.
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-bad 0.10.13.2\n"
+"Project-Id-Version: gst-plugins-bad 0.10.21.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2010-10-19 23:33+0100\n"
-"PO-Revision-Date: 2009-08-12 20:33+0100\n"
+"POT-Creation-Date: 2011-12-11 00:54+0000\n"
+"PO-Revision-Date: 2011-09-02 12:04-0000\n"
 "Last-Translator: Rihards Priedītis <rprieditis@gmail.com>\n"
 "Language-Team: Latvian <translation-team-lv@lists.sourceforge.net>\n"
 "Language: lv\n"
@@ -33,10 +34,11 @@ msgid ""
 "Could not read DVD. This may be because the DVD is encrypted and a DVD "
 "decryption library is not installed."
 msgstr ""
+"Nevarēja nolasīt DVD. Iespējams, ka DVD ir šifrēts un DVD atšifrēšanas "
+"bibliotēka nav instalēta."
 
-#, fuzzy
 msgid "Could not read DVD."
-msgstr "Nevarēja nolasīt virsrakstu informāciju no DVD."
+msgstr "Nevar nolasīt  DVD."
 
 msgid "No file name specified for writing."
 msgstr "Ierakstīšanai nav norādīts neviens faila nosaukums."

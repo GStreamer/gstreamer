@@ -50,6 +50,7 @@
 #include <tiger/tiger.h>
 #include <gst/gst.h>
 #include <gst/video/video.h>
+#include <gst/video/video-overlay-composition.h>
 #include "gstkateutil.h"
 
 G_BEGIN_DECLS
@@ -95,7 +96,8 @@ struct _GstKateTiger
   gint video_width;
   gint video_height;
   gboolean swap_rgb;
-  guint8 *render_buffer;
+  GstBuffer *render_buffer;
+  GstVideoOverlayComposition *composition;
 
   GMutex *mutex;
   GCond *cond;

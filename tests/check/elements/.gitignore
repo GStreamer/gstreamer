@@ -25,11 +25,13 @@ logoinsert
 mpeg2enc
 mpegvideoparse
 mpeg4videoparse
+mpegtsmux
 mplex
 mxfdemux
 mxfmux
 neonhttpsrc
 ofa
+opus
 rganalysis
 rglimiter
 rgvolume
@@ -40,6 +42,7 @@ timidity
 y4menc
 videorecordingbin
 viewfinderbin
+voaacenc
 vp8dec
 vp8enc
 zbar

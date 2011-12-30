@@ -159,7 +159,9 @@ VALGRIND_TESTS_DISABLE = \
 
 # these tests don't even pass
 # neon: too flaky (almost always fails 'the first time')
+# colorspace: bad memory accesses in orc code for odd width buffers - https://bugzilla.gnome.org/show_bug.cgi?id=663248
 noinst_PROGRAMS = \
+	pipelines/colorspace \
 	$(check_neon)
 
 check_PROGRAMS = \
@@ -188,13 +190,13 @@ check_PROGRAMS = \
 	$(check_logoinsert) \
 	elements/h263parse \
 	elements/h264parse \
+	elements/mpegtsmux \
 	elements/mpegvideoparse \
 	elements/mpeg4videoparse \
 	elements/mxfdemux \
 	elements/mxfmux \
 	elements/id3mux \
 	pipelines/mxf \
-	pipelines/colorspace \
 	$(check_mimic) \
 	elements/rtpmux \
 	libs/mpegvideoparser \
@@ -314,6 +316,10 @@ elements_rtpmux_LDADD = $(GST_PLUGINS_BASE_LIBS) -lgstrtp-0.10 $(GST_BASE_LIBS) 
 
 elements_assrender_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(GST_BASE_CFLAGS) $(AM_CFLAGS)
 elements_assrender_LDADD = $(GST_PLUGINS_BASE_LIBS) -lgstvideo-0.10 -lgstapp-0.10 $(GST_BASE_LIBS) $(LDADD)
+
+elements_mpegtsmux_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(GST_BASE_CFLAGS) $(AM_CFLAGS)
+elements_mpegtsmux_LDADD = $(GST_PLUGINS_BASE_LIBS) -lgstvideo-0.10 $(GST_BASE_LIBS) $(LDADD)
+
 
 EXTRA_DIST = gst-plugins-bad.supp
 

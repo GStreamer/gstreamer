@@ -199,17 +199,16 @@ colorspace_compare (gint width, gint height, gboolean comp)
     for (j = 0; j < gst_caps_get_size (caps); j++) {
       GstCaps *in_caps, *out_caps;
       GstStructure *s;
-      guint32 fourcc;
+      const gchar *fourcc;
 
       in_caps = gst_caps_copy_nth (caps, i);
       out_caps = gst_caps_copy_nth (caps, j);
 
       /* FIXME remove if videotestsrc and video format handle these properly */
       s = gst_caps_get_structure (in_caps, 0);
-      if (gst_structure_get_fourcc (s, "format", &fourcc)) {
-        if (fourcc == GST_MAKE_FOURCC ('Y', 'U', 'V', '9') ||
-            fourcc == GST_MAKE_FOURCC ('Y', 'V', 'U', '9') ||
-            fourcc == GST_MAKE_FOURCC ('v', '2', '1', '6')) {
+      if ((fourcc = gst_structure_get_string (s, "format"))) {
+        if (!strcmp (fourcc, "YUV9") ||
+            !strcmp (fourcc, "YVU9") || !strcmp (fourcc, "v216")) {
           gst_caps_unref (in_caps);
           gst_caps_unref (out_caps);
           continue;

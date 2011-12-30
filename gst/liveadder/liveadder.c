@@ -1091,10 +1091,11 @@ gst_live_live_adder_chain (GstPad * pad, GstBuffer * buffer)
     if (skip) {
       GstClockTime subbuffer_duration = GST_BUFFER_DURATION (buffer) - skip;
       GstClockTime subbuffer_ts = GST_BUFFER_TIMESTAMP (buffer) + skip;
-
-      buffer = gst_buffer_create_sub (buffer,
+      GstBuffer *new_buffer = gst_buffer_create_sub (buffer,
           gst_live_adder_length_from_duration (adder, skip),
           gst_live_adder_length_from_duration (adder, subbuffer_duration));
+      gst_buffer_unref (buffer);
+      buffer = new_buffer;
       GST_BUFFER_TIMESTAMP (buffer) = subbuffer_ts;
       GST_BUFFER_DURATION (buffer) = subbuffer_duration;
     }

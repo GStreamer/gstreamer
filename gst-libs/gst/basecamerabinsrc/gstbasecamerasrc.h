@@ -1,6 +1,7 @@
 /*
  * GStreamer
  * Copyright (C) 2010 Texas Instruments, Inc
+ * Copyright (C) 2011 Thiago Santos <thiago.sousa.santos@collabora.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -29,8 +30,6 @@
 
 #include <gst/gst.h>
 #include <gst/gstbin.h>
-#include <gst/interfaces/photography.h>
-#include <gst/video/colorbalance.h>
 #include "gstcamerabin-enum.h"
 #include "gstcamerabinpreview.h"
 
@@ -130,9 +129,6 @@ struct _GstBaseCameraSrcClass
 #define MIN_ZOOM 1.0f
 #define MAX_ZOOM 10.0f
 #define ZOOM_1X MIN_ZOOM
-
-GstPhotography * gst_base_camera_src_get_photography (GstBaseCameraSrc *self);
-GstColorBalance * gst_base_camera_src_get_color_balance (GstBaseCameraSrc *self);
 
 gboolean gst_base_camera_src_set_mode (GstBaseCameraSrc *self, GstCameraBinMode mode);
 void gst_base_camera_src_setup_zoom (GstBaseCameraSrc * self);
