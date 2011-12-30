@@ -40,7 +40,10 @@ libgstbase_@GST_MAJORMINOR@include_HEADERS =	\
 noinst_HEADERS = \
 	gstbytereader-docs.h \
 	gstbytewriter-docs.h \
-	gstbitreader-docs.h
+	gstbitreader-docs.h \
+	gstindex.h
+
+EXTRA_DIST = gstindex.c gstmemindex.c
 
 CLEANFILES = *.gcno *.gcda *.gcov
 

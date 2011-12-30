@@ -60,8 +60,6 @@ typedef enum {
 #include <gst/gstelementfactory.h>
 #include <gst/gstplugin.h>
 #include <gst/gstpluginfeature.h>
-#include <gst/gstindex.h>
-#include <gst/gstindexfactory.h>
 #include <gst/gstiterator.h>
 #include <gst/gstmessage.h>
 #include <gst/gstquery.h>
@@ -653,10 +651,6 @@ struct _GstElementClass
   GstClock*             (*provide_clock)        (GstElement *element);
   gboolean              (*set_clock)            (GstElement *element, GstClock *clock);
 
-  /* index */
-  GstIndex*             (*get_index)            (GstElement *element);
-  void                  (*set_index)            (GstElement *element, GstIndex *index);
-
   /* query functions */
   gboolean              (*send_event)           (GstElement *element, GstEvent *event);
 
@@ -738,10 +732,6 @@ void                    gst_element_set_base_time       (GstElement *element, Gs
 GstClockTime            gst_element_get_base_time       (GstElement *element);
 void                    gst_element_set_start_time      (GstElement *element, GstClockTime time);
 GstClockTime            gst_element_get_start_time      (GstElement *element);
-
-/* indexes */
-void                    gst_element_set_index           (GstElement *element, GstIndex *index);
-GstIndex*               gst_element_get_index           (GstElement *element);
 
 /* bus */
 void                    gst_element_set_bus             (GstElement * element, GstBus * bus);

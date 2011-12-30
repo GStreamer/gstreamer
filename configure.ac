@@ -732,7 +732,6 @@ libs/gst/controller/Makefile
 libs/gst/helpers/Makefile
 libs/gst/net/Makefile
 plugins/Makefile
-plugins/indexers/Makefile
 plugins/elements/Makefile
 po/Makefile.in
 tests/Makefile

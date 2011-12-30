@@ -1013,6 +1013,7 @@ print_element_list (gboolean print_all)
           g_print ("%s:  %s: %s\n", plugin->desc.name,
               GST_OBJECT_NAME (factory),
               gst_element_factory_get_longname (factory));
+#if 0
       } else if (GST_IS_INDEX_FACTORY (feature)) {
         GstIndexFactory *factory;
 
@@ -1020,6 +1021,7 @@ print_element_list (gboolean print_all)
         if (!print_all)
           g_print ("%s:  %s: %s\n", plugin->desc.name,
               GST_OBJECT_NAME (factory), factory->longdesc);
+#endif
       } else if (GST_IS_TYPE_FIND_FACTORY (feature)) {
         GstTypeFindFactory *factory;
 
@@ -1206,12 +1208,14 @@ print_plugin_features (GstPlugin * plugin)
       n_print ("  %s: %s\n", GST_OBJECT_NAME (factory),
           gst_element_factory_get_longname (factory));
       num_elements++;
+#if 0
     } else if (GST_IS_INDEX_FACTORY (feature)) {
       GstIndexFactory *factory;
 
       factory = GST_INDEX_FACTORY (feature);
       n_print ("  %s: %s\n", GST_OBJECT_NAME (factory), factory->longdesc);
       num_indexes++;
+#endif
     } else if (GST_IS_TYPE_FIND_FACTORY (feature)) {
       GstTypeFindFactory *factory;
 
@@ -1262,12 +1266,14 @@ print_element_features (const gchar * element_name)
   GstPluginFeature *feature;
 
   /* FIXME implement other pretty print function for these */
+#if 0
   feature = gst_default_registry_find_feature (element_name,
       GST_TYPE_INDEX_FACTORY);
   if (feature) {
     n_print ("%s: an index\n", element_name);
     return 0;
   }
+#endif
   feature = gst_default_registry_find_feature (element_name,
       GST_TYPE_TYPE_FIND_FACTORY);
   if (feature) {

@@ -208,6 +208,11 @@
 
 #include "gstbaseparse.h"
 
+/* FIXME: get rid of old GstIndex code */
+#include "gstindex.h"
+#include "gstindex.c"
+#include "gstmemindex.c"
+
 #define GST_BASE_PARSE_FRAME_PRIVATE_FLAG_NOALLOC  (1 << 0)
 
 #define MIN_FRAMES_TO_POST_BITRATE 10
@@ -390,8 +395,10 @@ static GstStateChangeReturn gst_base_parse_change_state (GstElement * element,
     GstStateChange transition);
 static void gst_base_parse_reset (GstBaseParse * parse);
 
+#if 0
 static void gst_base_parse_set_index (GstElement * element, GstIndex * index);
 static GstIndex *gst_base_parse_get_index (GstElement * element);
+#endif
 
 static gboolean gst_base_parse_sink_activate (GstPad * sinkpad,
     GstObject * parent);
@@ -521,8 +528,11 @@ gst_base_parse_class_init (GstBaseParseClass * klass)
   gstelement_class = (GstElementClass *) klass;
   gstelement_class->change_state =
       GST_DEBUG_FUNCPTR (gst_base_parse_change_state);
+
+#if 0
   gstelement_class->set_index = GST_DEBUG_FUNCPTR (gst_base_parse_set_index);
   gstelement_class->get_index = GST_DEBUG_FUNCPTR (gst_base_parse_get_index);
+#endif
 
   /* Default handlers */
   klass->check_valid_frame = gst_base_parse_check_frame;
@@ -4025,6 +4035,7 @@ gst_base_parse_handle_tag (GstBaseParse * parse, GstEvent * event)
   }
 }
 
+#if 0
 static void
 gst_base_parse_set_index (GstElement * element, GstIndex * index)
 {
@@ -4057,6 +4068,7 @@ gst_base_parse_get_index (GstElement * element)
 
   return result;
 }
+#endif
 
 static GstStateChangeReturn
 gst_base_parse_change_state (GstElement * element, GstStateChange transition)
@@ -4081,7 +4093,7 @@ gst_base_parse_change_state (GstElement * element, GstStateChange transition)
       if (G_UNLIKELY (!parse->priv->index)) {
         GST_DEBUG_OBJECT (parse, "no index provided creating our own");
 
-        parse->priv->index = gst_index_factory_make ("memindex");
+        parse->priv->index = g_object_new (gst_mem_index_get_type (), NULL);
         gst_index_get_writer_id (parse->priv->index, GST_OBJECT (parse),
             &parse->priv->index_id);
         parse->priv->own_index = TRUE;

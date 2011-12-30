@@ -332,16 +332,6 @@ gst_registry_chunks_save_feature (GList ** list, GstPluginFeature * feature)
     } else {
       gst_registry_chunks_save_const_string (list, "");
     }
-  } else if (GST_IS_INDEX_FACTORY (feature)) {
-    GstIndexFactory *factory = GST_INDEX_FACTORY (feature);
-
-    pf = g_slice_new (GstRegistryChunkPluginFeature);
-    chk =
-        gst_registry_chunks_make_data (pf,
-        sizeof (GstRegistryChunkPluginFeature));
-
-    /* pack element factory strings */
-    gst_registry_chunks_save_const_string (list, factory->longdesc);
   } else {
     GST_WARNING ("unhandled feature type '%s'", type_name);
   }
@@ -660,17 +650,6 @@ gst_registry_chunks_load_feature (GstRegistry * registry, gchar ** in,
         factory->extensions[i - 1] = str;
       }
     }
-  } else if (GST_IS_INDEX_FACTORY (feature)) {
-    GstIndexFactory *factory = GST_INDEX_FACTORY (feature);
-
-    align (*in);
-    GST_DEBUG
-        ("Reading/casting for GstRegistryChunkPluginFeature at address %p",
-        *in);
-    unpack_element (*in, pf, GstRegistryChunkPluginFeature, end, fail);
-
-    /* unpack index factory strings */
-    unpack_string (*in, factory->longdesc, end, fail);
   } else {
     GST_WARNING ("unhandled factory type : %s", G_OBJECT_TYPE_NAME (feature));
     goto fail;

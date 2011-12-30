@@ -177,6 +177,7 @@ fault_setup (void)
 }
 #endif /* DISABLE_FAULT_HANDLER */
 
+#if 0
 typedef struct _GstIndexStats
 {
   gint id;
@@ -329,6 +330,7 @@ print_index_stats (GPtrArray * index_stats)
     }
   }
 }
+#endif
 
 /* Kids, use the functions from libgstpbutils in gst-plugins-base in your
  * own code (we can't do that here because it would introduce a circular
@@ -822,7 +824,9 @@ main (int argc, char *argv[])
   gboolean no_fault = FALSE;
   gboolean trace = FALSE;
   gboolean eos_on_shutdown = FALSE;
+#if 0
   gboolean check_index = FALSE;
+#endif
   gchar *savefile = NULL;
   gchar *exclude_args = NULL;
 #ifndef GST_DISABLE_OPTION_PARSING
@@ -843,16 +847,20 @@ main (int argc, char *argv[])
         N_("Print alloc trace (if enabled at compile time)"), NULL},
     {"eos-on-shutdown", 'e', 0, G_OPTION_ARG_NONE, &eos_on_shutdown,
         N_("Force EOS on sources before shutting the pipeline down"), NULL},
+#if 0
     {"index", 'i', 0, G_OPTION_ARG_NONE, &check_index,
         N_("Gather and print index statistics"), NULL},
+#endif
     GST_TOOLS_GOPTION_VERSION,
     {NULL}
   };
   GOptionContext *ctx;
   GError *err = NULL;
 #endif
+#if 0
   GstIndex *index;
   GPtrArray *index_stats = NULL;
+#endif
   gchar **argvn;
   GError *error = NULL;
   gint res = 0;
@@ -953,7 +961,7 @@ main (int argc, char *argv[])
       gst_bin_add (GST_BIN (real_pipeline), pipeline);
       pipeline = real_pipeline;
     }
-
+#if 0
     if (check_index) {
       /* gst_index_new() creates a null-index, it does not store anything, but
        * the entry-added signal works and this is what we use to build the
@@ -968,6 +976,7 @@ main (int argc, char *argv[])
         gst_element_set_index (pipeline, index);
       }
     }
+#endif
 
     bus = gst_element_get_bus (pipeline);
     gst_bus_set_sync_handler (bus, bus_sync_handler, (gpointer) pipeline);
@@ -1061,10 +1070,12 @@ main (int argc, char *argv[])
     gst_element_set_state (pipeline, GST_STATE_READY);
     gst_element_get_state (pipeline, &state, &pending, GST_CLOCK_TIME_NONE);
 
+#if 0
     if (check_index) {
       print_index_stats (index_stats);
       g_ptr_array_free (index_stats, TRUE);
     }
+#endif
 
   end:
     PRINT (_("Setting pipeline to NULL ...\n"));

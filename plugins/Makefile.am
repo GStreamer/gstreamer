@@ -1,6 +1,6 @@
-SUBDIRS = elements indexers
+SUBDIRS = elements
 
-DIST_SUBDIRS = elements indexers
+DIST_SUBDIRS = elements
 
 Android.mk: Makefile.am
 	androgenizer -:PROJECT gstreamer \

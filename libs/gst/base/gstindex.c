@@ -55,17 +55,11 @@
  *     sense to ask the app to provide a ptr and fill it.
  */
 
-#include "gst_private.h"
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
 
-#include "gstinfo.h"
-#include "gstindex.h"
-#include "gstindexfactory.h"
-#include "gstmarshal.h"
-#include "gstregistry.h"
-/* for constructing an entry name */
-#include "gstelement.h"
-#include "gstpad.h"
-#include "gstinfo.h"
+#include <gst/gst.h>
 
 /* Index signals and args */
 enum
@@ -81,8 +75,10 @@ enum
       /* FILL ME */
 };
 
+#if 0
 GST_DEBUG_CATEGORY_STATIC (index_debug);
 #define GST_CAT_DEFAULT index_debug
+#endif
 
 static void gst_index_finalize (GObject * object);
 
@@ -148,14 +144,15 @@ gst_index_entry_get_type (void)
   return index_entry_type;
 }
 
+#if 0
 #define _do_init \
 { \
   GST_DEBUG_CATEGORY_INIT (index_debug, "GST_INDEX", GST_DEBUG_BOLD, \
       "Generic indexing support"); \
 }
+#endif
 
-#define gst_index_parent_class parent_class
-G_DEFINE_TYPE_WITH_CODE (GstIndex, gst_index, GST_TYPE_OBJECT, _do_init);
+G_DEFINE_TYPE (GstIndex, gst_index, GST_TYPE_OBJECT);
 
 static void
 gst_index_class_init (GstIndexClass * klass)
@@ -238,7 +235,7 @@ gst_index_finalize (GObject * object)
   if (index->resolver_user_data && index->resolver_user_data_destroy)
     index->resolver_user_data_destroy (index->resolver_user_data);
 
-  G_OBJECT_CLASS (parent_class)->finalize (object);
+  G_OBJECT_CLASS (gst_index_parent_class)->finalize (object);
 }
 
 static void

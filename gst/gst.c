@@ -692,7 +692,6 @@ init_post (GOptionContext * context, GOptionGroup * group, gpointer data,
   g_type_class_ref (gst_task_get_type ());
   g_type_class_ref (gst_clock_get_type ());
 
-  g_type_class_ref (gst_index_factory_get_type ());
   gst_uri_handler_get_type ();
 
   g_type_class_ref (gst_object_flags_get_type ());
@@ -721,12 +720,6 @@ init_post (GOptionContext * context, GOptionGroup * group, gpointer data,
   g_type_class_ref (gst_seek_flags_get_type ());
   g_type_class_ref (gst_qos_type_get_type ());
   g_type_class_ref (gst_format_get_type ());
-  g_type_class_ref (gst_index_certainty_get_type ());
-  g_type_class_ref (gst_index_entry_type_get_type ());
-  g_type_class_ref (gst_index_lookup_method_get_type ());
-  g_type_class_ref (gst_assoc_flags_get_type ());
-  g_type_class_ref (gst_index_resolver_method_get_type ());
-  g_type_class_ref (gst_index_flags_get_type ());
   g_type_class_ref (gst_debug_level_get_type ());
   g_type_class_ref (gst_debug_color_flags_get_type ());
   g_type_class_ref (gst_iterator_result_get_type ());
@@ -1067,7 +1060,6 @@ gst_deinit (void)
   g_type_class_unref (g_type_class_peek (gst_bin_get_type ()));
   g_type_class_unref (g_type_class_peek (gst_bus_get_type ()));
   g_type_class_unref (g_type_class_peek (gst_task_get_type ()));
-  g_type_class_unref (g_type_class_peek (gst_index_factory_get_type ()));
   g_type_class_unref (g_type_class_peek (gst_object_flags_get_type ()));
   g_type_class_unref (g_type_class_peek (gst_bin_flags_get_type ()));
   g_type_class_unref (g_type_class_peek (gst_buffer_flags_get_type ()));
@@ -1101,13 +1093,6 @@ gst_deinit (void)
   g_type_class_unref (g_type_class_peek (gst_seek_flags_get_type ()));
   g_type_class_unref (g_type_class_peek (gst_qos_type_get_type ()));
   g_type_class_unref (g_type_class_peek (gst_format_get_type ()));
-  g_type_class_unref (g_type_class_peek (gst_index_certainty_get_type ()));
-  g_type_class_unref (g_type_class_peek (gst_index_entry_type_get_type ()));
-  g_type_class_unref (g_type_class_peek (gst_index_lookup_method_get_type ()));
-  g_type_class_unref (g_type_class_peek (gst_assoc_flags_get_type ()));
-  g_type_class_unref (g_type_class_peek (gst_index_resolver_method_get_type
-          ()));
-  g_type_class_unref (g_type_class_peek (gst_index_flags_get_type ()));
   g_type_class_unref (g_type_class_peek (gst_debug_level_get_type ()));
   g_type_class_unref (g_type_class_peek (gst_debug_color_flags_get_type ()));
   g_type_class_unref (g_type_class_peek (gst_iterator_result_get_type ()));

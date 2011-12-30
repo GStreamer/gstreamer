@@ -552,6 +552,7 @@ gst_element_get_start_time (GstElement * element)
   return result;
 }
 
+#if 0
 /**
  * gst_element_set_index:
  * @element: a #GstElement.
@@ -602,6 +603,7 @@ gst_element_get_index (GstElement * element)
 
   return result;
 }
+#endif
 
 /**
  * gst_element_add_pad:
