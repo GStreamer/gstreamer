@@ -51,23 +51,12 @@ struct _GstRegistry {
 
   /*< private >*/
   GstRegistryPrivate *priv;
-
-  gpointer _gst_reserved[GST_PADDING];
 };
 
 struct _GstRegistryClass {
   GstObjectClass        parent_class;
-
-  /* signals */
-  void                  (*plugin_added)         (GstRegistry *registry, GstPlugin *plugin);
-  void                  (*feature_added)        (GstRegistry *registry, GstPluginFeature *feature);
-
-  /*< private >*/
-  gpointer _gst_reserved[GST_PADDING];
 };
 
-
-/* normal GObject stuff */
 GType                   gst_registry_get_type           (void);
 
 GstRegistry *           gst_registry_get_default        (void);
