@@ -38,12 +38,11 @@
  */
 
 #ifdef HAVE_CONFIG_H
-#  include "config.h"
+#include "config.h"
 #endif
 
 #include <math.h>
 #include <string.h>
-#include <gst/tag/tag.h>
 #include "gstopusheader.h"
 #include "gstopuscommon.h"
 #include "gstopusdec.h"
@@ -57,7 +56,7 @@ GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("audio/x-raw, "
         "format = (string) { " GST_AUDIO_NE (S16) " }, "
-        "rate = (int) { 8000, 12000, 16000, 24000, 48000 }, "
+        "rate = (int) { 48000, 24000, 16000, 12000, 8000 }, "
         "channels = (int) [ 1, 8 ] ")
     );
 
@@ -207,12 +206,32 @@ gst_opus_dec_get_r128_volume (gint16 r128_gain)
   return DB_TO_LINEAR (gst_opus_dec_get_r128_gain (r128_gain));
 }
 
+static GstCaps *
+gst_opus_dec_negotiate (GstOpusDec * dec)
+{
+  GstCaps *caps = gst_pad_get_allowed_caps (GST_AUDIO_DECODER_SRC_PAD (dec));
+  GstStructure *s;
+
+  caps = gst_caps_make_writable (caps);
+  gst_caps_truncate (caps);
+
+  s = gst_caps_get_structure (caps, 0);
+  gst_structure_fixate_field_nearest_int (s, "rate", 48000);
+  gst_structure_get_int (s, "rate", &dec->sample_rate);
+  gst_structure_fixate_field_nearest_int (s, "channels", dec->n_channels);
+  gst_structure_get_int (s, "channels", &dec->n_channels);
+
+  GST_INFO_OBJECT (dec, "Negotiated %d channels, %d Hz", dec->n_channels,
+      dec->sample_rate);
+
+  return caps;
+}
+
 static GstFlowReturn
 gst_opus_dec_parse_header (GstOpusDec * dec, GstBuffer * buf)
 {
   const guint8 *data;
   GstCaps *caps;
-  GstStructure *s;
   const GstAudioChannelPosition *pos = NULL;
 
   g_return_val_if_fail (gst_opus_header_is_id_header (buf), GST_FLOW_ERROR);
@@ -277,16 +296,7 @@ gst_opus_dec_parse_header (GstOpusDec * dec, GstBuffer * buf)
     }
   }
 
-  /* negotiate width with downstream */
-  caps = gst_pad_get_allowed_caps (GST_AUDIO_DECODER_SRC_PAD (dec));
-  s = gst_caps_get_structure (caps, 0);
-  gst_structure_fixate_field_nearest_int (s, "rate", 48000);
-  gst_structure_get_int (s, "rate", &dec->sample_rate);
-  gst_structure_fixate_field_nearest_int (s, "channels", dec->n_channels);
-  gst_structure_get_int (s, "channels", &dec->n_channels);
-
-  GST_INFO_OBJECT (dec, "Negotiated %d channels, %d Hz", dec->n_channels,
-      dec->sample_rate);
+  caps = gst_opus_dec_negotiate (dec);
 
   if (pos) {
     GST_DEBUG_OBJECT (dec, "Setting channel positions on caps");
@@ -327,11 +337,36 @@ opus_dec_chain_parse_data (GstOpusDec * dec, GstBuffer * buffer)
   GstBuffer *buf;
 
   if (dec->state == NULL) {
+    /* If we did not get any headers, default to 2 channels */
+    if (dec->n_channels == 0) {
+      GstCaps *caps;
+      GST_INFO_OBJECT (dec, "No header, assuming single stream");
+      dec->n_channels = 2;
+      dec->sample_rate = 48000;
+      caps = gst_opus_dec_negotiate (dec);
+      GST_INFO_OBJECT (dec, "Setting src caps to %" GST_PTR_FORMAT, caps);
+      gst_pad_set_caps (GST_AUDIO_DECODER_SRC_PAD (dec), caps);
+      gst_caps_unref (caps);
+      /* default stereo mapping */
+      dec->channel_mapping_family = 0;
+      dec->channel_mapping[0] = 0;
+      dec->channel_mapping[1] = 1;
+      dec->n_streams = 1;
+      dec->n_stereo_streams = 1;
+    }
+
     GST_DEBUG_OBJECT (dec, "Creating decoder with %d channels, %d Hz",
         dec->n_channels, dec->sample_rate);
-    dec->state = opus_multistream_decoder_create (dec->sample_rate,
-        dec->n_channels, dec->n_streams, dec->n_stereo_streams,
-        dec->channel_mapping, &err);
+#ifndef GST_DISABLE_DEBUG
+    gst_opus_common_log_channel_mapping_table (GST_ELEMENT (dec), opusdec_debug,
+        "Mapping table", dec->n_channels, dec->channel_mapping);
+#endif
+
+    GST_DEBUG_OBJECT (dec, "%d streams, %d stereo", dec->n_streams,
+        dec->n_stereo_streams);
+    dec->state =
+        opus_multistream_decoder_create (dec->sample_rate, dec->n_channels,
+        dec->n_streams, dec->n_stereo_streams, dec->channel_mapping, &err);
     if (!dec->state || err != OPUS_OK)
       goto creation_failed;
   }
@@ -411,11 +446,11 @@ opus_dec_chain_parse_data (GstOpusDec * dec, GstBuffer * buffer)
     GST_INFO_OBJECT (dec,
         "Skipping %u samples (%u at 48000 Hz, %u left to skip)", skip,
         scaled_skip, dec->pre_skip);
+  }
 
-    if (gst_buffer_get_size (outbuf) == 0) {
-      gst_buffer_unref (outbuf);
-      outbuf = NULL;
-    }
+  if (gst_buffer_get_size (outbuf) == 0) {
+    gst_buffer_unref (outbuf);
+    outbuf = NULL;
   }
 
   /* Apply gain */

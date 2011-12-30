@@ -27,11 +27,16 @@
 #include "gstopusheader.h"
 
 static GstBuffer *
-gst_opus_enc_create_id_buffer (gint nchannels, gint sample_rate,
-    guint8 channel_mapping_family, const guint8 * channel_mapping)
+gst_opus_enc_create_id_buffer (gint nchannels, gint n_stereo_streams,
+    gint sample_rate, guint8 channel_mapping_family,
+    const guint8 * channel_mapping)
 {
   GstBuffer *buffer;
   GstByteWriter bw;
+
+  g_return_val_if_fail (nchannels > 0 && nchannels < 256, NULL);
+  g_return_val_if_fail (n_stereo_streams >= 0, NULL);
+  g_return_val_if_fail (n_stereo_streams <= nchannels - n_stereo_streams, NULL);
 
   gst_byte_writer_init (&bw);
 
@@ -44,8 +49,8 @@ gst_opus_enc_create_id_buffer (gint nchannels, gint sample_rate,
   gst_byte_writer_put_uint16_le (&bw, 0);       /* output gain */
   gst_byte_writer_put_uint8 (&bw, channel_mapping_family);
   if (channel_mapping_family > 0) {
-    gst_byte_writer_put_uint8 (&bw, nchannels);
-    gst_byte_writer_put_uint8 (&bw, 0);
+    gst_byte_writer_put_uint8 (&bw, nchannels - n_stereo_streams);
+    gst_byte_writer_put_uint8 (&bw, n_stereo_streams);
     gst_byte_writer_put_data (&bw, channel_mapping, nchannels);
   }
 
@@ -145,11 +150,38 @@ void
 gst_opus_header_create_caps_from_headers (GstCaps ** caps, GSList ** headers,
     GstBuffer * buf1, GstBuffer * buf2)
 {
+  int n_streams, family;
+  gboolean multistream;
+  guint8 *data;
+  gsize size;
+
   g_return_if_fail (caps);
   g_return_if_fail (headers && !*headers);
+  g_return_if_fail (gst_buffer_get_size (buf1) >= 19);
+
+  data = gst_buffer_map (buf1, &size, NULL, GST_MAP_READ);
+
+  /* work out the number of streams */
+  family = data[18];
+  if (family == 0) {
+    n_streams = 1;
+  } else {
+    /* only included in the header for family > 0 */
+    if (size >= 20)
+      n_streams = data[19];
+    else {
+      g_warning ("family > 0 but header buffer size < 20");
+      gst_buffer_unmap (buf1, data, size);
+      return;
+    }
+  }
+
+  gst_buffer_unmap (buf1, data, size);
 
   /* mark and put on caps */
-  *caps = gst_caps_from_string ("audio/x-opus");
+  multistream = n_streams > 1;
+  *caps = gst_caps_new_simple ("audio/x-opus",
+      "multistream", G_TYPE_BOOLEAN, multistream, NULL);
   *caps = _gst_caps_set_buffer_array (*caps, "streamheader", buf1, buf2, NULL);
 
   *headers = g_slist_prepend (*headers, buf2);
@@ -158,7 +190,7 @@ gst_opus_header_create_caps_from_headers (GstCaps ** caps, GSList ** headers,
 
 void
 gst_opus_header_create_caps (GstCaps ** caps, GSList ** headers, gint nchannels,
-    gint sample_rate, guint8 channel_mapping_family,
+    gint n_stereo_streams, gint sample_rate, guint8 channel_mapping_family,
     const guint8 * channel_mapping, const GstTagList * tags)
 {
   GstBuffer *buf1, *buf2;
@@ -175,7 +207,7 @@ gst_opus_header_create_caps (GstCaps ** caps, GSList ** headers, gint nchannels,
 
   /* create header buffers */
   buf1 =
-      gst_opus_enc_create_id_buffer (nchannels, sample_rate,
+      gst_opus_enc_create_id_buffer (nchannels, n_stereo_streams, sample_rate,
       channel_mapping_family, channel_mapping);
   buf2 = gst_opus_enc_create_metadata_buffer (tags);
 

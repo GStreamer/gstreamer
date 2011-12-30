@@ -161,6 +161,8 @@ static void gst_opus_enc_finalize (GObject * object);
 
 static gboolean gst_opus_enc_sink_event (GstAudioEncoder * benc,
     GstEvent * event);
+static GstCaps *gst_opus_enc_sink_getcaps (GstAudioEncoder * benc,
+    GstCaps * filter);
 static gboolean gst_opus_enc_setup (GstOpusEnc * enc);
 
 static void gst_opus_enc_get_property (GObject * object, guint prop_id,
@@ -211,6 +213,7 @@ gst_opus_enc_class_init (GstOpusEncClass * klass)
   base_class->set_format = GST_DEBUG_FUNCPTR (gst_opus_enc_set_format);
   base_class->handle_frame = GST_DEBUG_FUNCPTR (gst_opus_enc_handle_frame);
   base_class->event = GST_DEBUG_FUNCPTR (gst_opus_enc_sink_event);
+  base_class->getcaps = GST_DEBUG_FUNCPTR (gst_opus_enc_sink_getcaps);
 
   g_object_class_install_property (gobject_class, PROP_AUDIO,
       g_param_spec_boolean ("audio", "Audio or voice",
@@ -401,7 +404,50 @@ gst_opus_enc_get_frame_samples (GstOpusEnc * enc)
 }
 
 static void
-gst_opus_enc_setup_channel_mapping (GstOpusEnc * enc, const GstAudioInfo * info)
+gst_opus_enc_setup_trivial_mapping (GstOpusEnc * enc, guint8 mapping[256])
+{
+  int n;
+
+  for (n = 0; n < 255; ++n)
+    mapping[n] = n;
+}
+
+static int
+gst_opus_enc_find_channel_position (GstOpusEnc * enc, const GstAudioInfo * info,
+    GstAudioChannelPosition position)
+{
+  int n;
+  for (n = 0; n < enc->n_channels; ++n) {
+    if (GST_AUDIO_INFO_POSITION (info, n) == position) {
+      return n;
+    }
+  }
+  return -1;
+}
+
+static int
+gst_opus_enc_find_channel_position_in_vorbis_order (GstOpusEnc * enc,
+    GstAudioChannelPosition position)
+{
+  int c;
+
+  for (c = 0; c < enc->n_channels; ++c) {
+    if (gst_opus_channel_positions[enc->n_channels - 1][c] == position) {
+      GST_INFO_OBJECT (enc,
+          "Channel position %s maps to index %d in Vorbis order",
+          gst_opus_channel_names[position], c);
+      return c;
+    }
+  }
+  GST_WARNING_OBJECT (enc,
+      "Channel position %s is not representable in Vorbis order",
+      gst_opus_channel_names[position]);
+  return -1;
+}
+
+static void
+gst_opus_enc_setup_channel_mappings (GstOpusEnc * enc,
+    const GstAudioInfo * info)
 {
 #define MAPS(idx,pos) (GST_AUDIO_INFO_POSITION (info, (idx)) == GST_AUDIO_CHANNEL_POSITION_##pos)
 
@@ -411,14 +457,15 @@ gst_opus_enc_setup_channel_mapping (GstOpusEnc * enc, const GstAudioInfo * info)
       enc->n_channels);
 
   /* Start by setting up a default trivial mapping */
-  for (n = 0; n < 255; ++n)
-    enc->channel_mapping[n] = n;
+  enc->n_stereo_streams = 0;
+  gst_opus_enc_setup_trivial_mapping (enc, enc->encoding_channel_mapping);
+  gst_opus_enc_setup_trivial_mapping (enc, enc->decoding_channel_mapping);
 
   /* For one channel, use the basic RTP mapping */
   if (enc->n_channels == 1) {
     GST_INFO_OBJECT (enc, "Mono, trivial RTP mapping");
     enc->channel_mapping_family = 0;
-    enc->channel_mapping[0] = 0;
+    /* implicit mapping for family 0 */
     return;
   }
 
@@ -428,9 +475,11 @@ gst_opus_enc_setup_channel_mapping (GstOpusEnc * enc, const GstAudioInfo * info)
     if (MAPS (0, FRONT_LEFT) && MAPS (1, FRONT_RIGHT)) {
       GST_INFO_OBJECT (enc, "Stereo, canonical mapping");
       enc->channel_mapping_family = 0;
+      enc->n_stereo_streams = 1;
       /* The channel mapping is implicit for family 0, that's why we do not
          attempt to create one for right/left - this will be mapped to the
          Vorbis mapping below. */
+      return;
     } else {
       GST_DEBUG_OBJECT (enc, "Stereo, but not canonical mapping, continuing");
     }
@@ -438,42 +487,115 @@ gst_opus_enc_setup_channel_mapping (GstOpusEnc * enc, const GstAudioInfo * info)
 
   /* For channels between 1 and 8, we use the Vorbis mapping if we can
      find a permutation that matches it. Mono will have been taken care
-     of earlier, but this code also handles it. */
+     of earlier, but this code also handles it. Same for left/right stereo.
+     There are two mappings. One maps the input channels to an ordering
+     which has the natural pairs first so they can benefit from the Opus
+     stereo channel coupling, and the other maps this ordering to the
+     Vorbis ordering. */
   if (enc->n_channels >= 1 && enc->n_channels <= 8) {
-    GST_DEBUG_OBJECT (enc,
-        "In range for the Vorbis mapping, checking channel positions");
-    for (n = 0; n < enc->n_channels; ++n) {
-      GstAudioChannelPosition pos = GST_AUDIO_INFO_POSITION (info, n);
-      int c;
+    int c0, c1, c0v, c1v;
+    int mapped;
+    gboolean positions_done[256];
+    static const GstAudioChannelPosition pairs[][2] = {
+      {GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT,
+          GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT},
+      {GST_AUDIO_CHANNEL_POSITION_REAR_LEFT,
+          GST_AUDIO_CHANNEL_POSITION_REAR_RIGHT},
+      {GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT_OF_CENTER,
+          GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT_OF_CENTER},
+      {GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT_OF_CENTER,
+          GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT_OF_CENTER},
+      {GST_AUDIO_CHANNEL_POSITION_SIDE_LEFT,
+          GST_AUDIO_CHANNEL_POSITION_SIDE_RIGHT},
+    };
+    size_t pair;
 
-      GST_DEBUG_OBJECT (enc, "Channel %d has position %d (%s)", n, pos,
-          gst_opus_channel_names[pos]);
-      for (c = 0; c < enc->n_channels; ++c) {
-        if (gst_opus_channel_positions[enc->n_channels - 1][c] == pos) {
-          GST_DEBUG_OBJECT (enc, "Found in Vorbis mapping as channel %d", c);
-          break;
+    GST_DEBUG_OBJECT (enc,
+        "In range for the Vorbis mapping, building channel mapping tables");
+
+    enc->n_stereo_streams = 0;
+    mapped = 0;
+    for (n = 0; n < 256; ++n)
+      positions_done[n] = FALSE;
+
+    /* First, find any natural pairs, and move them to the front */
+    for (pair = 0; pair < G_N_ELEMENTS (pairs); ++pair) {
+      GstAudioChannelPosition p0 = pairs[pair][0];
+      GstAudioChannelPosition p1 = pairs[pair][1];
+      c0 = gst_opus_enc_find_channel_position (enc, info, p0);
+      c1 = gst_opus_enc_find_channel_position (enc, info, p1);
+      if (c0 >= 0 && c1 >= 0) {
+        /* We found a natural pair */
+        GST_DEBUG_OBJECT (enc, "Natural pair '%s/%s' found at %d %d",
+            gst_opus_channel_names[p0], gst_opus_channel_names[p1], c0, c1);
+        /* Find where they map in Vorbis order */
+        c0v = gst_opus_enc_find_channel_position_in_vorbis_order (enc, p0);
+        c1v = gst_opus_enc_find_channel_position_in_vorbis_order (enc, p1);
+        if (c0v < 0 || c1v < 0) {
+          GST_WARNING_OBJECT (enc,
+              "Cannot map channel positions to Vorbis order, using unknown mapping");
+          enc->channel_mapping_family = 255;
+          enc->n_stereo_streams = 0;
+          return;
         }
+
+        enc->encoding_channel_mapping[mapped] = c0;
+        enc->encoding_channel_mapping[mapped + 1] = c1;
+        enc->decoding_channel_mapping[c0v] = mapped;
+        enc->decoding_channel_mapping[c1v] = mapped + 1;
+        enc->n_stereo_streams++;
+        mapped += 2;
+        positions_done[p0] = positions_done[p1] = TRUE;
       }
-      if (c == enc->n_channels) {
-        /* We did not find that position, so use undefined */
-        GST_WARNING_OBJECT (enc,
-            "Position %d (%s) not found in Vorbis mapping, using unknown mapping",
-            pos, gst_opus_channel_positions[pos]);
-        enc->channel_mapping_family = 255;
-        return;
-      }
-      GST_DEBUG_OBJECT (enc, "Mapping output channel %d to %d (%s)", c, n,
-          gst_opus_channel_names[pos]);
-      enc->channel_mapping[c] = n;
     }
-    GST_INFO_OBJECT (enc, "Permutation found, using Vorbis mapping");
+
+    /* Now add all other input channels as mono streams */
+    for (n = 0; n < enc->n_channels; ++n) {
+      GstAudioChannelPosition position = GST_AUDIO_INFO_POSITION (info, n);
+
+      /* if we already mapped it while searching for pairs, nothing else
+         needs to be done */
+      if (!positions_done[position]) {
+        int cv;
+        GST_DEBUG_OBJECT (enc, "Channel position %s is not mapped yet, adding",
+            gst_opus_channel_names[position]);
+        cv = gst_opus_enc_find_channel_position_in_vorbis_order (enc, position);
+        if (cv < 0) {
+          GST_WARNING_OBJECT (enc,
+              "Cannot map channel positions to Vorbis order, using unknown mapping");
+          enc->channel_mapping_family = 255;
+          enc->n_stereo_streams = 0;
+          return;
+        }
+        enc->encoding_channel_mapping[mapped] = n;
+        enc->decoding_channel_mapping[cv] = mapped;
+        mapped++;
+      }
+    }
+
+#ifndef GST_DISABLE_DEBUG
+    GST_INFO_OBJECT (enc,
+        "Mapping tables built: %d channels, %d stereo streams", enc->n_channels,
+        enc->n_stereo_streams);
+    gst_opus_common_log_channel_mapping_table (GST_ELEMENT (enc), opusenc_debug,
+        "Encoding mapping table", enc->n_channels,
+        enc->encoding_channel_mapping);
+    gst_opus_common_log_channel_mapping_table (GST_ELEMENT (enc), opusenc_debug,
+        "Decoding mapping table", enc->n_channels,
+        enc->decoding_channel_mapping);
+#endif
+
     enc->channel_mapping_family = 1;
     return;
   }
 
-  /* For other cases, we use undefined, with the default trivial mapping */
+  /* More than 8 channels, if future mappings are added for those */
+
+  /* For other cases, we use undefined, with the default trivial mapping
+     and all mono streams */
   GST_WARNING_OBJECT (enc, "Unknown mapping");
   enc->channel_mapping_family = 255;
+  enc->n_stereo_streams = 0;
 
 #undef MAPS
 }
@@ -489,7 +611,7 @@ gst_opus_enc_set_format (GstAudioEncoder * benc, GstAudioInfo * info)
 
   enc->n_channels = GST_AUDIO_INFO_CHANNELS (info);
   enc->sample_rate = GST_AUDIO_INFO_RATE (info);
-  gst_opus_enc_setup_channel_mapping (enc, info);
+  gst_opus_enc_setup_channel_mappings (enc, info);
   GST_DEBUG_OBJECT (benc, "Setup with %d channels, %d Hz", enc->n_channels,
       enc->sample_rate);
 
@@ -514,17 +636,24 @@ gst_opus_enc_set_format (GstAudioEncoder * benc, GstAudioInfo * info)
 static gboolean
 gst_opus_enc_setup (GstOpusEnc * enc)
 {
-  int error = OPUS_OK, n;
-  guint8 trivial_mapping[256];
+  int error = OPUS_OK;
 
-  GST_DEBUG_OBJECT (enc, "setup");
+#ifndef GST_DISABLE_DEBUG
+  GST_DEBUG_OBJECT (enc,
+      "setup: %d Hz, %d channels, %d stereo streams, family %d",
+      enc->sample_rate, enc->n_channels, enc->n_stereo_streams,
+      enc->channel_mapping_family);
+  GST_INFO_OBJECT (enc, "Mapping tables built: %d channels, %d stereo streams",
+      enc->n_channels, enc->n_stereo_streams);
+  gst_opus_common_log_channel_mapping_table (GST_ELEMENT (enc), opusenc_debug,
+      "Encoding mapping table", enc->n_channels, enc->encoding_channel_mapping);
+  gst_opus_common_log_channel_mapping_table (GST_ELEMENT (enc), opusenc_debug,
+      "Decoding mapping table", enc->n_channels, enc->decoding_channel_mapping);
+#endif
 
-  for (n = 0; n < 256; ++n)
-    trivial_mapping[n] = n;
-
-  enc->state =
-      opus_multistream_encoder_create (enc->sample_rate, enc->n_channels,
-      enc->n_channels, 0, trivial_mapping,
+  enc->state = opus_multistream_encoder_create (enc->sample_rate,
+      enc->n_channels, enc->n_channels - enc->n_stereo_streams,
+      enc->n_stereo_streams, enc->encoding_channel_mapping,
       enc->audio_or_voip ? OPUS_APPLICATION_AUDIO : OPUS_APPLICATION_VOIP,
       &error);
   if (!enc->state || error != OPUS_OK)
@@ -578,6 +707,75 @@ gst_opus_enc_sink_event (GstAudioEncoder * benc, GstEvent * event)
   }
 
   return FALSE;
+}
+
+static GstCaps *
+gst_opus_enc_sink_getcaps (GstAudioEncoder * benc, GstCaps * filter)
+{
+  GstOpusEnc *enc;
+  GstCaps *caps;
+  GstCaps *peercaps = NULL;
+  GstCaps *intersect = NULL;
+  guint i;
+  gboolean allow_multistream;
+
+  enc = GST_OPUS_ENC (benc);
+
+  GST_DEBUG_OBJECT (enc, "sink getcaps");
+
+  peercaps = gst_pad_peer_query_caps (GST_AUDIO_ENCODER_SRC_PAD (benc), filter);
+  if (!peercaps) {
+    GST_DEBUG_OBJECT (benc, "No peercaps, returning template sink caps");
+    return
+        gst_caps_copy (gst_pad_get_pad_template_caps
+        (GST_AUDIO_ENCODER_SINK_PAD (benc)));
+  }
+
+  intersect = gst_caps_intersect (peercaps,
+      gst_pad_get_pad_template_caps (GST_AUDIO_ENCODER_SRC_PAD (benc)));
+  gst_caps_unref (peercaps);
+
+  if (gst_caps_is_empty (intersect))
+    return intersect;
+
+  allow_multistream = FALSE;
+  for (i = 0; i < gst_caps_get_size (intersect); i++) {
+    GstStructure *s = gst_caps_get_structure (intersect, i);
+    gboolean multistream;
+    if (gst_structure_get_boolean (s, "multistream", &multistream)) {
+      if (multistream) {
+        allow_multistream = TRUE;
+      }
+    } else {
+      allow_multistream = TRUE;
+    }
+  }
+
+  gst_caps_unref (intersect);
+
+  caps =
+      gst_caps_copy (gst_pad_get_pad_template_caps (GST_AUDIO_ENCODER_SINK_PAD
+          (benc)));
+  if (!allow_multistream) {
+    GValue range = { 0 };
+    g_value_init (&range, GST_TYPE_INT_RANGE);
+    gst_value_set_int_range (&range, 1, 2);
+    for (i = 0; i < gst_caps_get_size (caps); i++) {
+      GstStructure *s = gst_caps_get_structure (caps, i);
+      gst_structure_set_value (s, "channels", &range);
+    }
+    g_value_unset (&range);
+  }
+
+  if (filter) {
+    GstCaps *tmp = gst_caps_intersect_full (caps, filter,
+        GST_CAPS_INTERSECT_FIRST);
+    gst_caps_unref (caps);
+    caps = tmp;
+  }
+
+  GST_DEBUG_OBJECT (enc, "Returning caps: %" GST_PTR_FORMAT, caps);
+  return caps;
 }
 
 static GstFlowReturn
@@ -684,7 +882,8 @@ gst_opus_enc_handle_frame (GstAudioEncoder * benc, GstBuffer * buf)
     enc->headers = NULL;
 
     gst_opus_header_create_caps (&caps, &enc->headers, enc->n_channels,
-        enc->sample_rate, enc->channel_mapping_family, enc->channel_mapping,
+        enc->n_stereo_streams, enc->sample_rate, enc->channel_mapping_family,
+        enc->decoding_channel_mapping,
         gst_tag_setter_get_tag_list (GST_TAG_SETTER (enc)));
 
 
