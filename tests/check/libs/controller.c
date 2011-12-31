@@ -1431,11 +1431,15 @@ GST_START_TEST (controller_trigger_exact)
 
   /* now pull in values for some timestamps */
   fail_unless (gst_control_source_get_value (cs, 0 * GST_SECOND, &raw_val));
+
   gst_object_sync_values (GST_OBJECT (elem), 0 * GST_SECOND);
   fail_unless_equals_int (GST_TEST_OBJ (elem)->val_int, 50);
-  fail_unless (gst_control_source_get_value (cs, 1 * GST_SECOND, &raw_val));
+
+  GST_TEST_OBJ (elem)->val_int = 0;
+  fail_if (gst_control_source_get_value (cs, 1 * GST_SECOND, &raw_val));
   gst_object_sync_values (GST_OBJECT (elem), 1 * GST_SECOND);
   fail_unless_equals_int (GST_TEST_OBJ (elem)->val_int, 0);
+
   fail_unless (gst_control_source_get_value (cs, 2 * GST_SECOND, &raw_val));
   gst_object_sync_values (GST_OBJECT (elem), 2 * GST_SECOND);
   fail_unless_equals_int (GST_TEST_OBJ (elem)->val_int, 100);
@@ -1482,8 +1486,11 @@ GST_START_TEST (controller_trigger_tolerance)
   fail_unless_equals_int (GST_TEST_OBJ (elem)->val_int, 50);
   gst_object_sync_values (GST_OBJECT (elem), 0 * GST_SECOND + 5);
   fail_unless_equals_int (GST_TEST_OBJ (elem)->val_int, 50);
+
+  GST_TEST_OBJ (elem)->val_int = 0;
   gst_object_sync_values (GST_OBJECT (elem), 1 * GST_SECOND);
   fail_unless_equals_int (GST_TEST_OBJ (elem)->val_int, 0);
+
   gst_object_sync_values (GST_OBJECT (elem), 2 * GST_SECOND - 5);
   fail_unless_equals_int (GST_TEST_OBJ (elem)->val_int, 100);
   gst_object_sync_values (GST_OBJECT (elem), 2 * GST_SECOND);
