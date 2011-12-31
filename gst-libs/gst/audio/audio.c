@@ -470,6 +470,7 @@ gst_audio_info_set_format (GstAudioInfo * info, GstAudioFormat format,
   finfo = &formats[format];
 
   info->flags = 0;
+  info->layout = GST_AUDIO_LAYOUT_INTERLEAVED;
   info->finfo = finfo;
   info->rate = rate;
   info->channels = channels;
@@ -530,6 +531,15 @@ gst_audio_info_from_caps (GstAudioInfo * info, const GstCaps * caps)
   if (format == GST_AUDIO_FORMAT_UNKNOWN)
     goto unknown_format;
 
+  if (!(s = gst_structure_get_string (str, "layout")))
+    goto no_layout;
+  if (g_str_equal (s, "interleaved"))
+    info->layout = GST_AUDIO_LAYOUT_INTERLEAVED;
+  else if (g_str_equal (s, "non-interleaved"))
+    info->layout = GST_AUDIO_LAYOUT_NON_INTERLEAVED;
+  else
+    goto unknown_layout;
+
   if (!gst_structure_get_int (str, "rate", &rate))
     goto no_rate;
   if (!gst_structure_get_int (str, "channels", &channels))
@@ -585,6 +595,16 @@ unknown_format:
     GST_ERROR ("unknown format given");
     return FALSE;
   }
+no_layout:
+  {
+    GST_ERROR ("no layout given");
+    return FALSE;
+  }
+unknown_layout:
+  {
+    GST_ERROR ("unknown layout given");
+    return FALSE;
+  }
 no_rate:
   {
     GST_ERROR ("no rate property given");
@@ -622,6 +642,7 @@ gst_audio_info_to_caps (const GstAudioInfo * info)
 {
   GstCaps *caps;
   const gchar *format;
+  const gchar *layout;
 
   g_return_val_if_fail (info != NULL, NULL);
   g_return_val_if_fail (info->finfo != NULL, NULL);
@@ -630,8 +651,16 @@ gst_audio_info_to_caps (const GstAudioInfo * info)
   format = gst_audio_format_to_string (info->finfo->format);
   g_return_val_if_fail (format != NULL, NULL);
 
+  if (info->layout == GST_AUDIO_LAYOUT_INTERLEAVED)
+    layout = "interleaved";
+  else if (info->layout == GST_AUDIO_LAYOUT_NON_INTERLEAVED)
+    layout = "non-interleaved";
+  else
+    g_return_val_if_reached (NULL);
+
   caps = gst_caps_new_simple ("audio/x-raw",
       "format", G_TYPE_STRING, format,
+      "layout", G_TYPE_STRING, layout,
       "rate", G_TYPE_INT, info->rate,
       "channels", G_TYPE_INT, info->channels, NULL);
 

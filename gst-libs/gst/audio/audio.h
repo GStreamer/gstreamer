@@ -368,9 +368,22 @@ typedef enum {
 } GstAudioFlags;
 
 /**
+ * GstAudioLayout:
+ * @GST_AUDIO_LAYOUT_INTERLEAVED: interleaved audio
+ * @GST_AUDIO_LAYOUT_NON_INTERLEAVED: non-interleaved audio
+ *
+ * Layout of the audio samples for the different channels.
+ */
+typedef enum {
+  GST_AUDIO_LAYOUT_INTERLEAVED = 0,
+  GST_AUDIO_LAYOUT_NON_INTERLEAVED
+} GstAudioLayout;
+
+/**
  * GstAudioInfo:
  * @finfo: the format info of the audio
  * @flags: additional audio flags
+ * @layout: audio layout
  * @rate: the audio sample rate
  * @channels: the number of channels
  * @bpf: the number of bytes for one frame, this is the size of one
@@ -385,6 +398,7 @@ typedef enum {
 struct _GstAudioInfo {
   const GstAudioFormatInfo *finfo;
   GstAudioFlags             flags;
+  GstAudioLayout            layout;
   gint                      rate;
   gint                      channels;
   gint                      bpf;
@@ -414,6 +428,7 @@ GType gst_audio_info_get_type        (void);
 
 #define GST_AUDIO_INFO_FLAGS(info)           ((info)->flags)
 #define GST_AUDIO_INFO_IS_UNPOSITIONED(info) ((info)->flags & GST_AUDIO_FLAG_UNPOSITIONED)
+#define GST_AUDIO_INFO_LAYOUT(info)          ((info)->layout)
 
 #define GST_AUDIO_INFO_RATE(info)            ((info)->rate)
 #define GST_AUDIO_INFO_CHANNELS(info)        ((info)->channels)
