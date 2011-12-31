@@ -1651,6 +1651,7 @@ setup_pcm_mapper (GstOggStream * pad, ogg_packet * packet)
   }
 
   gst_caps_set_simple (caps,
+      "layout", G_TYPE_STRING, "interleaved",
       "rate", G_TYPE_INT, pad->granulerate_n,
       "channels", G_TYPE_INT, channels, NULL);
   pad->caps = caps;

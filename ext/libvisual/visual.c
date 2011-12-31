@@ -113,7 +113,7 @@ static GstStaticPadTemplate sink_template = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("audio/x-raw, "
         "format = (string) " GST_AUDIO_NE (S16) ", "
-        "channels = (int) { 1, 2 }, "
+        "layout = (string) interleaved, " "channels = (int) { 1, 2 }, "
 #if defined(VISUAL_API_VERSION) && VISUAL_API_VERSION >= 4000 && VISUAL_API_VERSION < 5000
         "rate = (int) { 8000, 11250, 22500, 32000, 44100, 48000, 96000 }"
 #else
