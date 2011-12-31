@@ -1151,6 +1151,7 @@ gst_riff_create_audio_caps (guint16 codec_id,
 
         caps = gst_caps_new_simple ("audio/x-raw",
             "format", G_TYPE_STRING, gst_audio_format_to_string (format),
+            "layout", G_TYPE_STRING, "interleaved",
             "channels", G_TYPE_INT, ch, NULL);
 
         /* Add default channel layout. In theory this should be done
@@ -1169,7 +1170,7 @@ gst_riff_create_audio_caps (guint16 codec_id,
         /* FIXME: this is pretty useless - we need fixed caps */
         caps = gst_caps_from_string ("audio/x-raw, "
             "format = (string) { S8, U8, S16LE, U16LE, S24LE, "
-            "U24LE, S32LE, U32LE }");
+            "U24LE, S32LE, U32LE }, " "layout = (string) interleaved");
       }
       if (codec_name && strf)
         *codec_name = g_strdup_printf ("Uncompressed %d-bit PCM audio",
@@ -1195,6 +1196,7 @@ gst_riff_create_audio_caps (guint16 codec_id,
 
         caps = gst_caps_new_simple ("audio/x-raw",
             "format", G_TYPE_STRING, wd == 64 ? "F64LE" : "F32LE",
+            "layout", G_TYPE_STRING, "interleaved",
             "channels", G_TYPE_INT, ch, NULL);
 
         /* Add default channel layout. In theory this should be done
@@ -1212,7 +1214,8 @@ gst_riff_create_audio_caps (guint16 codec_id,
       } else {
         /* FIXME: this is pretty useless - we need fixed caps */
         caps = gst_caps_from_string ("audio/x-raw, "
-            "format = (string) { F32LE, F64LE }");
+            "format = (string) { F32LE, F64LE }, "
+            "layout = (string) interleaved");
       }
       if (codec_name && strf)
         *codec_name = g_strdup_printf ("Uncompressed %d-bit IEEE float audio",
@@ -1515,6 +1518,7 @@ gst_riff_create_audio_caps (guint16 codec_id,
 
             caps = gst_caps_new_simple ("audio/x-raw",
                 "format", G_TYPE_STRING, gst_audio_format_to_string (format),
+                "layout", G_TYPE_STRING, "interleaved",
                 "channels", G_TYPE_INT, strf->channels,
                 "rate", G_TYPE_INT, strf->rate, NULL);
 
@@ -1547,6 +1551,7 @@ gst_riff_create_audio_caps (guint16 codec_id,
 
             caps = gst_caps_new_simple ("audio/x-raw",
                 "format", G_TYPE_STRING, wd == 32 ? "F32LE" : "F64LE",
+                "layout", G_TYPE_STRING, "interleaved",
                 "channels", G_TYPE_INT, strf->channels,
                 "rate", G_TYPE_INT, strf->rate, NULL);
 
