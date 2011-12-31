@@ -177,6 +177,7 @@ G_DEFINE_TYPE_WITH_CODE (GstAudioCdSrc, gst_audio_cd_src, GST_TYPE_PUSH_SRC,
 #define SRC_CAPS \
   "audio/x-raw, "               \
   "format = (string) " GST_AUDIO_NE(S16) ", " \
+  "layout = (string) interleaved, " \
   "rate = (int) 44100, "            \
   "channels = (int) 2"              \
 
