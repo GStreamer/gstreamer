@@ -116,7 +116,8 @@ G_DEFINE_TYPE_WITH_CODE (GstAudioConvert, gst_audio_convert,
 /*** GSTREAMER PROTOTYPES *****************************************************/
 
 #define STATIC_CAPS \
-GST_STATIC_CAPS (GST_AUDIO_CAPS_MAKE (GST_AUDIO_FORMATS_ALL))
+GST_STATIC_CAPS (GST_AUDIO_CAPS_MAKE (GST_AUDIO_FORMATS_ALL) \
+    ", layout = (string) interleaved")
 
 static GstStaticPadTemplate gst_audio_convert_src_template =
 GST_STATIC_PAD_TEMPLATE ("src",
