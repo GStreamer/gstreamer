@@ -964,17 +964,19 @@ static const struct
 #define MAX_CHANNEL_POSITIONS G_N_ELEMENTS (layout_mapping)
 
 static gboolean
-gst_riff_wavext_add_channel_mask (GstCaps * caps, guint32 layout)
+gst_riff_wavext_add_channel_mask (GstCaps * caps, guint32 layout,
+    gint channel_reorder_map[18])
 {
   GstStructure *s;
   gint num_channels, i, p;
   guint64 channel_mask = 0;
+  GstAudioChannelPosition from[18], to[18];
 
   s = gst_caps_get_structure (caps, 0);
   if (!gst_structure_get_int (s, "channels", &num_channels))
     g_return_val_if_reached (FALSE);
 
-  if (num_channels < 2 || num_channels > MAX_CHANNEL_POSITIONS) {
+  if (num_channels < 1 || num_channels > MAX_CHANNEL_POSITIONS) {
     GST_DEBUG ("invalid number of channels: %d", num_channels);
     return FALSE;
   }
@@ -994,6 +996,7 @@ gst_riff_wavext_add_channel_mask (GstCaps * caps, guint32 layout)
          * layout that has INVALID positions in it for now ... */
       }
       channel_mask |= G_GUINT64_CONSTANT (1) << layout_mapping[i].gst_pos;
+      from[p] = layout_mapping[i].gst_pos;
       ++p;
     }
   }
@@ -1004,6 +1007,15 @@ gst_riff_wavext_add_channel_mask (GstCaps * caps, guint32 layout)
     return FALSE;
   }
 
+  if (channel_reorder_map) {
+    memcpy (to, from, sizeof (from[0]) * num_channels);
+    if (!gst_audio_channel_positions_to_valid_order (to, num_channels))
+      return FALSE;
+    if (!gst_audio_get_channel_reorder_map (num_channels, from, to,
+            channel_reorder_map))
+      return FALSE;
+  }
+
   gst_caps_set_simple (caps, "channel-mask", GST_TYPE_BITMASK, channel_mask,
       NULL);
 
@@ -1011,11 +1023,22 @@ gst_riff_wavext_add_channel_mask (GstCaps * caps, guint32 layout)
 }
 
 static gboolean
-gst_riff_wave_add_default_channel_mask (GstCaps * caps)
+gst_riff_wave_add_default_channel_mask (GstCaps * caps,
+    gint channel_reorder_map[18])
 {
   GstStructure *s;
   gint nchannels;
   guint64 channel_mask = 0;
+  static const gint reorder_maps[8][11] = {
+    {0,},
+    {0, 1},
+    {-1, -1, -1},
+    {0, 1, 2, 3},
+    {0, 1, 3, 4, 2},
+    {0, 1, 4, 5, 2, 3},
+    {-1, -1, -1, -1, -1, -1, -1},
+    {0, 1, 4, 5, 2, 3, 6, 7}
+  };
 
   s = gst_caps_get_structure (caps, 0);
 
@@ -1037,6 +1060,8 @@ gst_riff_wave_add_default_channel_mask (GstCaps * caps)
   switch (nchannels) {
     case 1:
       /* Mono => nothing */
+      if (channel_reorder_map)
+        channel_reorder_map[0] = 0;
       return TRUE;
     case 8:
       channel_mask |=
@@ -1066,6 +1091,10 @@ gst_riff_wave_add_default_channel_mask (GstCaps * caps)
     default:
       return FALSE;
   }
+
+  if (channel_reorder_map)
+    memcpy (channel_reorder_map, reorder_maps[nchannels],
+        sizeof (gint) * nchannels);
 
   gst_caps_set_simple (caps, "channel-mask", GST_TYPE_BITMASK, channel_mask,
       NULL);
@@ -1109,12 +1138,17 @@ gst_riff_wavext_get_default_channel_mask (guint nchannels)
 GstCaps *
 gst_riff_create_audio_caps (guint16 codec_id,
     gst_riff_strh * strh, gst_riff_strf_auds * strf,
-    GstBuffer * strf_data, GstBuffer * strd_data, char **codec_name)
+    GstBuffer * strf_data, GstBuffer * strd_data, char **codec_name,
+    gint channel_reorder_map[18])
 {
   gboolean block_align = FALSE, rate_chan = TRUE;
   GstCaps *caps = NULL;
   gint rate_min = 1000, rate_max = 96000;
   gint channels_max = 2;
+  gint i;
+
+  for (i = 0; i < 18; i++)
+    channel_reorder_map[i] = -1;
 
   switch (codec_id) {
     case GST_RIFF_WAVE_FORMAT_PCM:     /* PCM */
@@ -1154,18 +1188,15 @@ gst_riff_create_audio_caps (guint16 codec_id,
             "layout", G_TYPE_STRING, "interleaved",
             "channels", G_TYPE_INT, ch, NULL);
 
-        /* Add default channel layout. In theory this should be done
-         * for 1 and 2 channels too but apparently breaks too many
-         * things currently. Also we know no default layout for more than
+        /* Add default channel layout. We know no default layout for more than
          * 8 channels. */
-        if (ch > 2) {
-          if (ch > 8)
-            GST_WARNING ("don't know default layout for %d channels", ch);
-          else if (gst_riff_wave_add_default_channel_mask (caps))
-            GST_DEBUG ("using default channel layout for %d channels", ch);
-          else
-            GST_WARNING ("failed to add channel layout");
-        }
+        if (ch > 8)
+          GST_WARNING ("don't know default layout for %d channels", ch);
+        else if (gst_riff_wave_add_default_channel_mask (caps,
+                channel_reorder_map))
+          GST_DEBUG ("using default channel layout for %d channels", ch);
+        else
+          GST_WARNING ("failed to add channel layout");
       } else {
         /* FIXME: this is pretty useless - we need fixed caps */
         caps = gst_caps_from_string ("audio/x-raw, "
@@ -1199,18 +1230,15 @@ gst_riff_create_audio_caps (guint16 codec_id,
             "layout", G_TYPE_STRING, "interleaved",
             "channels", G_TYPE_INT, ch, NULL);
 
-        /* Add default channel layout. In theory this should be done
-         * for 1 and 2 channels too but apparently breaks too many
-         * things currently. Also we know no default layout for more than
+        /* Add default channel layout. We know no default layout for more than
          * 8 channels. */
-        if (ch > 2) {
-          if (ch > 8)
-            GST_WARNING ("don't know default layout for %d channels", ch);
-          else if (gst_riff_wave_add_default_channel_mask (caps))
-            GST_DEBUG ("using default channel layout for %d channels", ch);
-          else
-            GST_WARNING ("failed to add channel layout");
-        }
+        if (ch > 8)
+          GST_WARNING ("don't know default layout for %d channels", ch);
+        else if (gst_riff_wave_add_default_channel_mask (caps,
+                channel_reorder_map))
+          GST_DEBUG ("using default channel layout for %d channels", ch);
+        else
+          GST_WARNING ("failed to add channel layout");
       } else {
         /* FIXME: this is pretty useless - we need fixed caps */
         caps = gst_caps_from_string ("audio/x-raw, "
@@ -1524,14 +1552,14 @@ gst_riff_create_audio_caps (guint16 codec_id,
 
             /* If channel_mask == 0 and channels > 2 let's
              * assume default layout as some wav files don't have the
-             * channel mask set. Don't set the layout for 1 or 2
-             * channels as it apparently breaks too many things currently. */
-            if (channel_mask == 0 && strf->channels > 2)
+             * channel mask set. Don't set the layout for 1 channel. */
+            if (channel_mask == 0 && strf->channels > 1)
               channel_mask =
                   gst_riff_wavext_get_default_channel_mask (strf->channels);
 
-            if ((channel_mask != 0 || strf->channels > 2) &&
-                !gst_riff_wavext_add_channel_mask (caps, channel_mask)) {
+            if ((channel_mask != 0 || strf->channels > 1) &&
+                !gst_riff_wavext_add_channel_mask (caps, channel_mask,
+                    channel_reorder_map)) {
               GST_WARNING ("failed to add channel layout");
               gst_caps_unref (caps);
               caps = NULL;
@@ -1555,16 +1583,16 @@ gst_riff_create_audio_caps (guint16 codec_id,
                 "channels", G_TYPE_INT, strf->channels,
                 "rate", G_TYPE_INT, strf->rate, NULL);
 
-            /* If channel_mask == 0 and channels > 2 let's
+            /* If channel_mask == 0 and channels > 1 let's
              * assume default layout as some wav files don't have the
-             * channel mask set. Don't set the layout for 1 or 2
-             * channels as it apparently breaks too many things currently. */
-            if (channel_mask == 0 && strf->channels > 2)
+             * channel mask set. Don't set the layout for 1 channel. */
+            if (channel_mask == 0 && strf->channels > 1)
               channel_mask =
                   gst_riff_wavext_get_default_channel_mask (strf->channels);
 
-            if ((channel_mask != 0 || strf->channels > 2) &&
-                !gst_riff_wavext_add_channel_mask (caps, channel_mask)) {
+            if ((channel_mask != 0 || strf->channels > 1) &&
+                !gst_riff_wavext_add_channel_mask (caps, channel_mask,
+                    channel_reorder_map)) {
               GST_WARNING ("failed to add channel layout");
               gst_caps_unref (caps);
               caps = NULL;
@@ -1885,7 +1913,9 @@ gst_riff_create_audio_template_caps (void)
 
   caps = gst_caps_new_empty ();
   for (i = 0; i < G_N_ELEMENTS (tags); i++) {
-    one = gst_riff_create_audio_caps (tags[i], NULL, NULL, NULL, NULL, NULL);
+    one =
+        gst_riff_create_audio_caps (tags[i], NULL, NULL, NULL, NULL, NULL,
+        NULL);
     if (one)
       gst_caps_append (caps, one);
   }
