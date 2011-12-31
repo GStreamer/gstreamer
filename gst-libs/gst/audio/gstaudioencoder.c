@@ -1205,8 +1205,8 @@ gst_audio_encoder_proxy_getcaps (GstAudioEncoder * enc, GstCaps * caps)
         gst_structure_set_value (s, "endianness", val);
       if ((val = gst_structure_get_value (allowed_s, "signed")))
         gst_structure_set_value (s, "signed", val);
-      if ((val = gst_structure_get_value (allowed_s, "channel-positions")))
-        gst_structure_set_value (s, "channel-positions", val);
+      if ((val = gst_structure_get_value (allowed_s, "channel-mask")))
+        gst_structure_set_value (s, "channel-mask", val);
 
       gst_caps_merge_structure (filter_caps, s);
     }
