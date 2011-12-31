@@ -1446,7 +1446,9 @@ setup_ogmaudio_mapper (GstOggStream * pad, ogg_packet * packet)
   fstr = g_strdup_printf ("%" GST_FOURCC_FORMAT, GST_FOURCC_ARGS (fourcc));
   GST_DEBUG ("fourcc: %s", fstr);
 
-  pad->caps = gst_riff_create_audio_caps (fourcc, NULL, NULL, NULL, NULL, NULL);
+  /* FIXME: Need to do something with the reorder map */
+  pad->caps =
+      gst_riff_create_audio_caps (fourcc, NULL, NULL, NULL, NULL, NULL, NULL);
 
   GST_LOG ("sample rate: %d", pad->granulerate_n);
   if (pad->granulerate_n == 0)

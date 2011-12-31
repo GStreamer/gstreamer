@@ -540,8 +540,10 @@ gst_ogm_parse_stream_header (GstOgmParse * ogm, const guint8 * data, guint size)
         GST_WARNING_OBJECT (ogm, "cannot parse subtype %s", ogm->hdr.subtype);
       }
 
+      /* FIXME: Need to do something with the reorder map */
       caps =
-          gst_riff_create_audio_caps (codec_id, NULL, NULL, NULL, NULL, NULL);
+          gst_riff_create_audio_caps (codec_id, NULL, NULL, NULL, NULL, NULL,
+          NULL);
 
       if (caps == NULL) {
         GST_WARNING_OBJECT (ogm, "no audio caps for codec %u found", codec_id);
