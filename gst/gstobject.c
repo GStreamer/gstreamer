@@ -1414,7 +1414,6 @@ gst_object_get_value_array (GstObject * object, const gchar * property_name,
 
   GST_OBJECT_LOCK (object);
   if ((binding = gst_object_find_control_binding (object, property_name))) {
-    /* FIXME: use binding: */
     res = gst_control_binding_get_value_array (binding, timestamp, interval,
         n_values, values);
   }
