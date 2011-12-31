@@ -99,7 +99,7 @@ set_program (GstObject * elem, GstStructure * prog)
         gst_object_set_control_source (elem, name, GST_CONTROL_SOURCE (cs));
         g_object_set (cs, "mode", GST_INTERPOLATION_MODE_NONE, NULL);
         g_hash_table_insert (css, (gpointer) name, cs);
-        g_object_unref (cs);
+        gst_object_unref (cs);
       }
       gst_structure_get_double (s, name, &v);
       gst_timed_value_control_source_set ((GstTimedValueControlSource *) cs, ts,
