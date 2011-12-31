@@ -1103,3 +1103,48 @@ gst_audio_get_channel_reorder_map (gint channels,
 
   return TRUE;
 }
+
+/**
+ * gst_audio_channel_positions_to_valid_order:
+ * @position: The channel positions to reorder to.
+ * @channels: The number of channels.
+ *
+ * Reorders the channel positions in @position from any order to
+ * the GStreamer channel order.
+ *
+ * Returns: %TRUE if the channel positions are valid and reordering
+ * was successful.
+ */
+gboolean
+gst_audio_channel_positions_to_valid_order (GstAudioChannelPosition * position,
+    gint channels)
+{
+  GstAudioChannelPosition tmp[64];
+  guint64 channel_mask = 0;
+  gint i, j;
+
+  g_return_val_if_fail (channels > 0, FALSE);
+  g_return_val_if_fail (position != NULL, FALSE);
+  g_return_val_if_fail (check_valid_channel_positions (position, channels,
+          FALSE, NULL), FALSE);
+
+  if (channels == 1 && position[0] == GST_AUDIO_CHANNEL_POSITION_MONO)
+    return TRUE;
+  if (position[0] == GST_AUDIO_CHANNEL_POSITION_NONE)
+    return TRUE;
+
+  check_valid_channel_positions (position, channels, FALSE, &channel_mask);
+
+  memset (tmp, 0xff, sizeof (tmp));
+  j = 0;
+  for (i = 0; i < 64; i++) {
+    if ((channel_mask & (G_GUINT64_CONSTANT (1) << i))) {
+      tmp[j] = i;
+      j++;
+    }
+  }
+
+  memcpy (position, tmp, sizeof (tmp[0]) * channels);
+
+  return TRUE;
+}

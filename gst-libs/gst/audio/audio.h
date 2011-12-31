@@ -532,6 +532,9 @@ gboolean       gst_audio_reorder_channels        (gpointer data, gsize size,
                                                   const GstAudioChannelPosition * from,
                                                   const GstAudioChannelPosition * to);
 
+gboolean       gst_audio_channel_positions_to_valid_order (GstAudioChannelPosition *position,
+                                                           gint channels);
+
 gboolean       gst_audio_check_valid_channel_positions (const GstAudioChannelPosition *position,
                                                         gint channels, gboolean force_order);
 
