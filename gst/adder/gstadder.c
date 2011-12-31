@@ -76,10 +76,12 @@ GST_DEBUG_CATEGORY_STATIC (GST_CAT_DEFAULT);
 
 #if G_BYTE_ORDER == G_LITTLE_ENDIAN
 #define CAPS \
-  GST_AUDIO_CAPS_MAKE ("{ S32LE, U32LE, S16LE, U16LE, S8, U8, F32LE, F64LE }")
+  GST_AUDIO_CAPS_MAKE ("{ S32LE, U32LE, S16LE, U16LE, S8, U8, F32LE, F64LE }") \
+  ", layout = (string) { interleaved, non-interleaved }"
 #else
 #define CAPS \
-  GST_AUDIO_CAPS_MAKE ("{ S32BE, U32BE, S16BE, U16BE, S8, U8, F32BE, F64BE }")
+  GST_AUDIO_CAPS_MAKE ("{ S32BE, U32BE, S16BE, U16BE, S8, U8, F32BE, F64BE }") \
+  ", layout = (string) { interleaved, non-interleaved }"
 #endif
 
 static GstStaticPadTemplate gst_adder_src_template =

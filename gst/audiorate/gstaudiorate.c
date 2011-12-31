@@ -96,14 +96,16 @@ static GstStaticPadTemplate gst_audio_rate_src_template =
 GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (GST_AUDIO_CAPS_MAKE (GST_AUDIO_FORMATS_ALL))
+    GST_STATIC_CAPS (GST_AUDIO_CAPS_MAKE (GST_AUDIO_FORMATS_ALL)
+        ", layout = (string) { interleaved, non-interleaved }")
     );
 
 static GstStaticPadTemplate gst_audio_rate_sink_template =
 GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (GST_AUDIO_CAPS_MAKE (GST_AUDIO_FORMATS_ALL))
+    GST_STATIC_CAPS (GST_AUDIO_CAPS_MAKE (GST_AUDIO_FORMATS_ALL)
+        ", layout = (string) { interleaved, non-interleaved }")
     );
 
 static gboolean gst_audio_rate_sink_event (GstPad * pad, GstObject * parent,

@@ -104,10 +104,12 @@ enum
 
 #if G_BYTE_ORDER == G_LITTLE_ENDIAN
 #define ALLOWED_CAPS \
-    GST_AUDIO_CAPS_MAKE ("{ F32LE, F64LE, S8, S16LE, S24LE, S32LE }")
+    GST_AUDIO_CAPS_MAKE ("{ F32LE, F64LE, S8, S16LE, S24LE, S32LE }") \
+    ", layout = (string) interleaved"
 #else
 #define ALLOWED_CAPS \
-    GST_AUDIO_CAPS_MAKE ("{ F32BE, F64BE, S8, S16BE, S24BE, S32BE }")
+    GST_AUDIO_CAPS_MAKE ("{ F32BE, F64BE, S8, S16BE, S24BE, S32BE }") \
+    ", layout = (string) { interleaved, non-interleaved }"
 #endif
 
 static void gst_volume_mixer_init (GstMixerInterface * iface);
