@@ -437,7 +437,7 @@ interpolate_cubic_get_value_array (GstTimedValueControlSource * self,
     }
     if (cp1) {
       val = _interpolate_cubic (self, cp1, cp1->value, cp2,
-          (cp2 ? cp2->value : 0.0), timestamp);
+          (cp2 ? cp2->value : 0.0), ts);
       ret = TRUE;
       GST_LOG ("values[%3d]=%lf", i, val);
     } else {
