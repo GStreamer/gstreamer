@@ -6,7 +6,7 @@ libgstavc_la_CPPFLAGS = \
 	$(GST_PLUGINS_BAD_CXXFLAGS) \
 	$(GST_PLUGINS_BASE_CXXFLAGS) \
 	$(GST_CXXFLAGS) \
-	-framework AVCVideoServices
+	-framework AVCVideoServices \
 	-Wno-deprecated-declarations
 libgstavc_la_LIBADD =  \
 	$(GST_PLUGINS_BASE_LIBS) -lgstvideo-$(GST_MAJORMINOR) \
