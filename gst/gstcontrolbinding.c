@@ -234,8 +234,8 @@ gst_control_binding_sync_values (GstControlBinding * self, GstObject * object,
   if (self->disabled)
     return TRUE;
 
-  GST_LOG_OBJECT (object, "property '%s' at ts=%" G_GUINT64_FORMAT,
-      self->name, timestamp);
+  GST_LOG_OBJECT (object, "property '%s' at ts=%" GST_TIME_FORMAT,
+      self->name, GST_TIME_ARGS (timestamp));
 
   dst_val = &self->cur_value;
   ret = gst_control_source_get_value (self->csource, timestamp, &src_val);
@@ -286,6 +286,9 @@ gst_control_binding_get_value (GstControlBinding * self, GstClockTime timestamp)
     dst_val = g_new0 (GValue, 1);
     g_value_init (dst_val, G_PARAM_SPEC_VALUE_TYPE (self->pspec));
     self->convert (self, src_val, dst_val);
+  } else {
+    GST_LOG ("no control value for property %s at ts %" GST_TIME_FORMAT,
+        self->name, GST_TIME_ARGS (timestamp));
   }
 
   return dst_val;
@@ -334,8 +337,13 @@ gst_control_binding_get_value_array (GstControlBinding * self,
       if (!isnan (src_val[i])) {
         g_value_init (&values[i], type);
         convert (self, src_val[i], &values[i]);
+      } else {
+        GST_LOG ("no control value for property %s at index %d", self->name, i);
       }
     }
+  } else {
+    GST_LOG ("failed to get control value for property %s at ts %"
+        GST_TIME_FORMAT, self->name, GST_TIME_ARGS (timestamp));
   }
   g_free (src_val);
   return res;
