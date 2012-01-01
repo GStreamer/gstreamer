@@ -229,7 +229,11 @@
 #endif
 #else /* not _MSC_VER */
 #define GST_PLUGIN_EXPORT
+#if (defined(__SUNPRO_C) && (__SUNPRO_C >= 0x590))
+#define GST_EXPORT extern __attribute__ ((visibility ("default")))
+#else
 #define GST_EXPORT extern
+#endif
 #endif
 
 #endif /* __GST_CONFIG_H__ */
