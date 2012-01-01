@@ -16,7 +16,7 @@ AC_SUBST(CHECK_MICRO_VERSION)
 AC_SUBST(CHECK_VERSION)
 
 dnl Checks for header files and declarations
-AC_CHECK_HEADERS([unistd.h sys/wait.h sys/time.h])
+AC_CHECK_HEADERS([unistd.h sys/wait.h sys/time.h], [], [], [AC_INCLUDES_DEFAULT])
 
 AC_CHECK_FUNCS([localtime_r])
 
