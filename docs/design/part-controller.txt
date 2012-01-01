@@ -12,12 +12,25 @@ Elements don't need to do much. They need to:
   GST_PARAM_CONTROLLABLE
 - call gst_object_sync_values (self, timestamp) in the processing function
   before accessing the parameters.
+  
+All ordered property types can be automated (int, double, boolean, enum). 
 
 Application view
 ~~~~~~~~~~~~~~~~
-Application need to setup the property automation. For that they need to create
+Applications need to setup the property automation. For that they need to create
 a GstControlSource and attach it to a property using GstControlBinding. Various
-control-sources and control-bindings exists. All control sources produce control
+control-sources and control-bindings exist. All control sources produce control
 value sequences in the form of gdouble values. The control bindings map them to
 the value range and type of the bound property.
+
+One control-source can be attached to one or more properties at the same time.
+If it is attached multiple times, then each control-binding will scale and
+convert the control values to the target property type and range.
+
+One can create complex control-curves by using a GstInterpolationControlSource.
+This allows the classic user editable control-curve (often seen in audio/video
+editors). Another way is to use computed control curves. GstLFOControlSource can
+generate various repetitive signals. Those can be made more complex by chaining
+the control sources. One can attach another control-source to e.g. modulate the
+frequency of the first GstLFOControlSource.
 
