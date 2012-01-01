@@ -333,7 +333,7 @@ gst_dca_parse_check_valid_frame (GstBaseParse * parse,
 
   if (G_LIKELY (parser_in_sync && dcaparse->last_sync != 0)) {
     off = gst_byte_reader_masked_scan_uint32 (&r, 0xffffffff,
-        dcaparse->last_sync, 0, size);
+        dcaparse->last_sync, 0, bufsize);
   }
 
   if (G_UNLIKELY (off < 0)) {
