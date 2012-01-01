@@ -69,9 +69,9 @@ main (gint argc, gchar ** argv)
   gst_object_unref (csource1);
 
   cs = (GstTimedValueControlSource *) csource2;
-  gst_timed_value_control_source_set (cs, 0 * GST_SECOND, 220.0);
-  gst_timed_value_control_source_set (cs, 3 * GST_SECOND, 3520.0);
-  gst_timed_value_control_source_set (cs, 6 * GST_SECOND, 440.0);
+  gst_timed_value_control_source_set (cs, 0 * GST_SECOND, 220.0 / 20000.0);
+  gst_timed_value_control_source_set (cs, 3 * GST_SECOND, 3520.0 / 20000.0);
+  gst_timed_value_control_source_set (cs, 6 * GST_SECOND, 440.0 / 20000.0);
 
   gst_object_unref (csource2);
 
