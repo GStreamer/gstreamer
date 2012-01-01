@@ -88,7 +88,10 @@ interpolate_none_get_value_array (GstTimedValueControlSource * self,
   GSequenceIter *iter1 = NULL, *iter2 = NULL;
 
   g_mutex_lock (self->lock);
+
   for (i = 0; i < n_values; i++) {
+    GST_LOG ("values[%3d] : ts=%" GST_TIME_FORMAT ", next_ts=%" GST_TIME_FORMAT,
+        i, GST_TIME_ARGS (ts), GST_TIME_ARGS (next_ts));
     val = NAN;
     if (ts >= next_ts) {
       iter1 = gst_timed_value_control_source_find_control_point_iter (self, ts);
@@ -109,11 +112,13 @@ interpolate_none_get_value_array (GstTimedValueControlSource * self,
       } else {
         next_ts = GST_CLOCK_TIME_NONE;
       }
-
-      if (iter1) {
-        val = _interpolate_none (self, iter1);
-        ret = TRUE;
-      }
+    }
+    if (iter1) {
+      val = _interpolate_none (self, iter1);
+      ret = TRUE;
+      GST_LOG ("values[%3d]=%lf", i, val);
+    } else {
+      GST_LOG ("values[%3d]=-", i);
     }
     *values = val;
     ts += interval;
@@ -188,6 +193,8 @@ interpolate_linear_get_value_array (GstTimedValueControlSource * self,
   g_mutex_lock (self->lock);
 
   for (i = 0; i < n_values; i++) {
+    GST_LOG ("values[%3d] : ts=%" GST_TIME_FORMAT ", next_ts=%" GST_TIME_FORMAT,
+        i, GST_TIME_ARGS (ts), GST_TIME_ARGS (next_ts));
     val = NAN;
     if (ts >= next_ts) {
       cp1 = cp2 = NULL;
@@ -214,6 +221,9 @@ interpolate_linear_get_value_array (GstTimedValueControlSource * self,
           (cp2 ? cp2->timestamp : GST_CLOCK_TIME_NONE),
           (cp2 ? cp2->value : 0.0), ts);
       ret = TRUE;
+      GST_LOG ("values[%3d]=%lf", i, val);
+    } else {
+      GST_LOG ("values[%3d]=-", i);
     }
     *values = val;
     ts += interval;
@@ -402,6 +412,8 @@ interpolate_cubic_get_value_array (GstTimedValueControlSource * self,
   g_mutex_lock (self->lock);
 
   for (i = 0; i < n_values; i++) {
+    GST_LOG ("values[%3d] : ts=%" GST_TIME_FORMAT ", next_ts=%" GST_TIME_FORMAT,
+        i, GST_TIME_ARGS (ts), GST_TIME_ARGS (next_ts));
     val = NAN;
     if (ts >= next_ts) {
       cp1 = cp2 = NULL;
@@ -422,11 +434,14 @@ interpolate_cubic_get_value_array (GstTimedValueControlSource * self,
       } else {
         next_ts = GST_CLOCK_TIME_NONE;
       }
-      if (cp1) {
-        val = _interpolate_cubic (self, cp1, cp1->value, cp2,
-            (cp2 ? cp2->value : 0.0), timestamp);
-        ret = TRUE;
-      }
+    }
+    if (cp1) {
+      val = _interpolate_cubic (self, cp1, cp1->value, cp2,
+          (cp2 ? cp2->value : 0.0), timestamp);
+      ret = TRUE;
+      GST_LOG ("values[%3d]=%lf", i, val);
+    } else {
+      GST_LOG ("values[%3d]=-", i);
     }
     *values = val;
     ts += interval;
