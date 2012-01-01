@@ -136,43 +136,42 @@ gst_test_obj_class_init (GstTestObjClass * klass)
   g_object_class_install_property (gobject_class, PROP_INT,
       g_param_spec_int ("int",
           "int prop",
-          "int number parameter for the test_mono_source",
+          "int number parameter",
           0, 100, 0, G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE));
 
   g_object_class_install_property (gobject_class, PROP_FLOAT,
       g_param_spec_float ("float",
           "float prop",
-          "float number parameter for the test_mono_source",
+          "float number parameter",
           0.0, 100.0, 0.0, G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE));
 
   g_object_class_install_property (gobject_class, PROP_DOUBLE,
       g_param_spec_double ("double",
           "double prop",
-          "double number parameter for the test_mono_source",
+          "double number parameter",
           0.0, 100.0, 0.0, G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE));
 
   g_object_class_install_property (gobject_class, PROP_BOOLEAN,
       g_param_spec_boolean ("boolean",
           "boolean prop",
-          "boolean parameter for the test_mono_source",
+          "boolean parameter",
           FALSE, G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE));
 
   g_object_class_install_property (gobject_class, PROP_READONLY,
       g_param_spec_int ("readonly",
           "readonly prop",
-          "readonly parameter for the test_mono_source",
+          "readonly parameter",
           0, G_MAXINT, 0, G_PARAM_READABLE | GST_PARAM_CONTROLLABLE));
 
   g_object_class_install_property (gobject_class, PROP_STATIC,
       g_param_spec_int ("static",
           "static prop",
-          "static parameter for the test_mono_source",
-          0, G_MAXINT, 0, G_PARAM_READWRITE));
+          "static parameter", 0, G_MAXINT, 0, G_PARAM_READWRITE));
 
   g_object_class_install_property (gobject_class, PROP_CONSTRUCTONLY,
       g_param_spec_int ("construct-only",
           "construct-only prop",
-          "construct-only parameter for the test_mono_source",
+          "construct-only parameter",
           0, G_MAXINT, 0, G_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY));
 }
 

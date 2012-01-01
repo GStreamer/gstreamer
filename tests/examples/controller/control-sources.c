@@ -117,25 +117,25 @@ gst_test_obj_class_init (GstTestObjClass * klass)
   g_object_class_install_property (gobject_class, PROP_INT,
       g_param_spec_int ("int",
           "int prop",
-          "int number parameter for the TEST_OBJ",
+          "int number parameter",
           0, 100, 0, G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE));
 
   g_object_class_install_property (gobject_class, PROP_FLOAT,
       g_param_spec_float ("float",
           "float prop",
-          "float number parameter for the TEST_OBJ",
+          "float number parameter",
           0.0, 100.0, 0.0, G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE));
 
   g_object_class_install_property (gobject_class, PROP_DOUBLE,
       g_param_spec_double ("double",
           "double prop",
-          "double number parameter for the TEST_OBJ",
+          "double number parameter",
           0.0, 100.0, 0.0, G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE));
 
   g_object_class_install_property (gobject_class, PROP_BOOLEAN,
       g_param_spec_boolean ("boolean",
           "boolean prop",
-          "boolean parameter for the TEST_OBJ",
+          "boolean parameter",
           FALSE, G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE));
 }
 
