@@ -56,7 +56,7 @@ autoheader_check || DIE=1
 die_check $DIE
 
 # if no arguments specified then this will be printed
-if test -z "$*"; then
+if test -z "$*" && test -z "$NOCONFIGURE"; then
   echo "+ checking for autogen.sh options"
   echo "  This autogen script will automatically run ./configure as:"
   echo "  ./configure $CONFIGURE_DEF_OPT"
