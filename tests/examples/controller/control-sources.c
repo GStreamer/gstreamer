@@ -5,7 +5,7 @@
  *
  * Needs gnuplot for plotting.
  * plot "ctrl_i1.dat" using 1:2 with points title 'none', "" using 1:3 with points title 'linear', "" using 1:4 with points title 'cubic', "ctrl_i2.dat" using 1:2 with lines title 'none', "" using 1:3 with lines title 'linear', "" using 1:4 with lines title 'cubic'
- * plot "ctrl_l1.dat" using 1:2 with points title 'sine', "" using 1:3 with points title 'saw', "" using 1:4 with points title 'square', "" using 1:5 with points title 'triangle', "ctrl_l2.dat" using 1:2 with lines title 'sine', "" using 1:3 with lines title 'saw', "" using 1:4 with lines title 'square', "" using 1:5 with lines title 'triangle'
+ * plot "ctrl_l1.dat" using 1:2 with points title 'sine', "" using 1:3 with points title 'square', "" using 1:4 with points title 'saw', "" using 1:5 with points title 'revsaw', "" using 1:6 with points title 'triangle', "ctrl_l2.dat" using 1:2 with lines title 'sine', "" using 1:3 with lines title 'square', "" using 1:4 with lines title 'saw', "" using 1:5 with lines title 'revsaw', "" using 1:6 with lines title 'triangle'
  * plot "ctrl_cl1.dat" using 1:2 with points title 'sine', "ctrl_cl2.dat" using 1:2 with lines title 'sine'
  */
 
@@ -265,8 +265,8 @@ test_lfo (void)
   GstObject *e;
   GstLFOControlSource *lfocs;
   GstControlSource *cs;
-  gint t, i1, i2, i3, i4;
-  GValue *v1, *v2, *v3, *v4;
+  gint t, i1, i2, i3, i4, i5;
+  GValue *v1, *v2, *v3, *v4, *v5;
   gint n_values;
   FILE *f;
 
@@ -285,26 +285,30 @@ test_lfo (void)
   /* test single values */
   if (!(f = fopen ("ctrl_l1.dat", "w")))
     exit (-1);
-  fprintf (f, "# Time Sine Saw Square Triangle\n");
+  fprintf (f, "# Time Sine Square Saw RevSaw Triangle\n");
 
   for (t = 0; t < 40; t++) {
     g_object_set (lfocs, "waveform", GST_LFO_WAVEFORM_SINE, NULL);
     gst_object_sync_values (e, t * GST_SECOND);
     i1 = GST_TEST_OBJ (e)->val_int;
 
-    g_object_set (lfocs, "waveform", GST_LFO_WAVEFORM_SAW, NULL);
+    g_object_set (lfocs, "waveform", GST_LFO_WAVEFORM_SQUARE, NULL);
     gst_object_sync_values (e, t * GST_SECOND);
     i2 = GST_TEST_OBJ (e)->val_int;
 
-    g_object_set (lfocs, "waveform", GST_LFO_WAVEFORM_SQUARE, NULL);
+    g_object_set (lfocs, "waveform", GST_LFO_WAVEFORM_SAW, NULL);
     gst_object_sync_values (e, t * GST_SECOND);
     i3 = GST_TEST_OBJ (e)->val_int;
 
-    g_object_set (lfocs, "waveform", GST_LFO_WAVEFORM_TRIANGLE, NULL);
+    g_object_set (lfocs, "waveform", GST_LFO_WAVEFORM_REVERSE_SAW, NULL);
     gst_object_sync_values (e, t * GST_SECOND);
     i4 = GST_TEST_OBJ (e)->val_int;
 
-    fprintf (f, "%4.1f %d %d %d %d\n", (gfloat) t, i1, i2, i3, i4);
+    g_object_set (lfocs, "waveform", GST_LFO_WAVEFORM_TRIANGLE, NULL);
+    gst_object_sync_values (e, t * GST_SECOND);
+    i5 = GST_TEST_OBJ (e)->val_int;
+
+    fprintf (f, "%4.1f %d %d %d %d %d\n", (gfloat) t, i1, i2, i3, i4, i5);
   }
 
   fclose (f);
@@ -312,40 +316,48 @@ test_lfo (void)
   /* test value arrays */
   if (!(f = fopen ("ctrl_l2.dat", "w")))
     exit (-1);
-  fprintf (f, "# Time Sine Saw Square Triangle\n");
+  fprintf (f, "# Time Sine Square Saw RevSaw Triangle\n");
   n_values = 40 * 10;
 
   g_object_set (lfocs, "waveform", GST_LFO_WAVEFORM_SINE, NULL);
   v1 = g_new0 (GValue, n_values);
   gst_object_get_value_array (e, "int", 0, GST_SECOND / 10, n_values, v1);
 
-  g_object_set (lfocs, "waveform", GST_LFO_WAVEFORM_SAW, NULL);
+  g_object_set (lfocs, "waveform", GST_LFO_WAVEFORM_SQUARE, NULL);
   v2 = g_new0 (GValue, n_values);
   gst_object_get_value_array (e, "int", 0, GST_SECOND / 10, n_values, v2);
 
-  g_object_set (lfocs, "waveform", GST_LFO_WAVEFORM_SQUARE, NULL);
+  g_object_set (lfocs, "waveform", GST_LFO_WAVEFORM_SAW, NULL);
   v3 = g_new0 (GValue, n_values);
   gst_object_get_value_array (e, "int", 0, GST_SECOND / 10, n_values, v3);
 
-  g_object_set (lfocs, "waveform", GST_LFO_WAVEFORM_TRIANGLE, NULL);
+  g_object_set (lfocs, "waveform", GST_LFO_WAVEFORM_REVERSE_SAW, NULL);
   v4 = g_new0 (GValue, n_values);
   gst_object_get_value_array (e, "int", 0, GST_SECOND / 10, n_values, v4);
+
+  g_object_set (lfocs, "waveform", GST_LFO_WAVEFORM_TRIANGLE, NULL);
+  v5 = g_new0 (GValue, n_values);
+  gst_object_get_value_array (e, "int", 0, GST_SECOND / 10, n_values, v5);
 
   for (t = 0; t < n_values; t++) {
     i1 = g_value_get_int (&v1[t]);
     i2 = g_value_get_int (&v2[t]);
     i3 = g_value_get_int (&v3[t]);
     i4 = g_value_get_int (&v4[t]);
-    fprintf (f, "%4.1f %d %d %d %d\n", (gfloat) t / 10.0, i1, i2, i3, i4);
+    i5 = g_value_get_int (&v5[t]);
+    fprintf (f, "%4.1f %d %d %d %d %d\n", (gfloat) t / 10.0, i1, i2, i3, i4,
+        i5);
     g_value_unset (&v1[t]);
     g_value_unset (&v2[t]);
     g_value_unset (&v3[t]);
     g_value_unset (&v4[t]);
+    g_value_unset (&v5[t]);
   }
   g_free (v1);
   g_free (v2);
   g_free (v3);
   g_free (v4);
+  g_free (v5);
 
   fclose (f);
 
