@@ -383,6 +383,30 @@ gstspu_vobsub_clear_comp_buffers (SpuState * state)
   state->vobsub.comp_last_x[1] = -1;
 }
 
+static void
+gstspu_vobsub_draw_highlight (SpuState * state,
+    GstVideoFrame * frame, SpuRect * rect)
+{
+  guint8 *cur;
+  gint16 pos;
+  gint ystride;
+
+  ystride = GST_VIDEO_FRAME_COMP_STRIDE (frame, 0);
+
+  cur = GST_VIDEO_FRAME_COMP_DATA (frame, 0) + ystride * rect->top;
+  for (pos = rect->left + 1; pos < rect->right; pos++)
+    cur[pos] = (cur[pos] / 2) + 0x8;
+  cur = GST_VIDEO_FRAME_COMP_DATA (frame, 0) + ystride * rect->bottom;
+  for (pos = rect->left + 1; pos < rect->right; pos++)
+    cur[pos] = (cur[pos] / 2) + 0x8;
+  cur = GST_VIDEO_FRAME_COMP_DATA (frame, 0) + ystride * rect->top;
+  for (pos = rect->top; pos <= rect->bottom; pos++) {
+    cur[rect->left] = (cur[rect->left] / 2) + 0x8;
+    cur[rect->right] = (cur[rect->right] / 2) + 0x8;
+    cur += ystride;
+  }
+}
+
 void
 gstspu_vobsub_render (GstDVDSpu * dvdspu, GstVideoFrame * frame)
 {
@@ -567,48 +591,11 @@ gstspu_vobsub_render (GstDVDSpu * dvdspu, GstVideoFrame * frame)
   }
 
   /* for debugging purposes, draw a faint rectangle at the edges of the disp_rect */
-#if 0
-  do {
-    guint8 *cur;
-    gint16 pos;
-
-    cur = GST_BUFFER_DATA (buf) + strides[0] * state->vobsub.disp_rect.top;
-    for (pos = state->vobsub.disp_rect.left + 1;
-        pos < state->vobsub.disp_rect.right; pos++)
-      cur[pos] = (cur[pos] / 2) + 0x8;
-    cur = GST_BUFFER_DATA (buf) + strides[0] * state->vobsub.disp_rect.bottom;
-    for (pos = state->vobsub.disp_rect.left + 1;
-        pos < state->vobsub.disp_rect.right; pos++)
-      cur[pos] = (cur[pos] / 2) + 0x8;
-    cur = GST_BUFFER_DATA (buf) + strides[0] * state->vobsub.disp_rect.top;
-    for (pos = state->vobsub.disp_rect.top;
-        pos <= state->vobsub.disp_rect.bottom; pos++) {
-      cur[state->vobsub.disp_rect.left] =
-          (cur[state->vobsub.disp_rect.left] / 2) + 0x8;
-      cur[state->vobsub.disp_rect.right] =
-          (cur[state->vobsub.disp_rect.right] / 2) + 0x8;
-      cur += strides[0];
-    }
-  } while (0);
-#endif
-  /* For debugging purposes, draw a faint rectangle around the highlight rect */
-#if 0
-  if (state->hl_rect.top != -1) {
-    guint8 *cur;
-    gint16 pos;
-
-    cur = GST_BUFFER_DATA (buf) + strides[0] * state->hl_rect.top;
-    for (pos = state->hl_rect.left + 1; pos < state->hl_rect.right; pos++)
-      cur[pos] = (cur[pos] / 2) + 0x8;
-    cur = GST_BUFFER_DATA (buf) + strides[0] * state->hl_rect.bottom;
-    for (pos = state->hl_rect.left + 1; pos < state->hl_rect.right; pos++)
-      cur[pos] = (cur[pos] / 2) + 0x8;
-    cur = GST_BUFFER_DATA (buf) + strides[0] * state->hl_rect.top;
-    for (pos = state->hl_rect.top; pos <= state->hl_rect.bottom; pos++) {
-      cur[state->hl_rect.left] = (cur[state->hl_rect.left] / 2) + 0x8;
-      cur[state->hl_rect.right] = (cur[state->hl_rect.right] / 2) + 0x8;
-      cur += strides[0];
-    }
+  if (FALSE) {
+    gstspu_vobsub_draw_highlight (state, frame, &state->vobsub.disp_rect);
   }
-#endif
+  /* For debugging purposes, draw a faint rectangle around the highlight rect */
+  if (FALSE && state->vobsub.hl_rect.top != -1) {
+    gstspu_vobsub_draw_highlight (state, frame, &state->vobsub.hl_rect);
+  }
 }
