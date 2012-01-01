@@ -95,17 +95,11 @@ waveform_sine_get (GstLFOControlSource * self, GstClockTime timestamp,
     gdouble * value)
 {
   GstLFOControlSourcePrivate *priv = self->priv;
-  gdouble amp, off, frequency;
-  GstClockTime timeshift, period;
 
+  gst_object_sync_values (GST_OBJECT (self), timestamp);
   g_mutex_lock (self->lock);
-  amp = priv->amplitude;
-  off = priv->offset;
-  timeshift = priv->timeshift;
-  period = priv->period;
-  frequency = priv->frequency;
-
-  *value = _sine_get (self, amp, off, timeshift, period, frequency, timestamp);
+  *value = _sine_get (self, priv->amplitude, priv->offset, priv->timeshift,
+      priv->period, priv->frequency, timestamp);
   g_mutex_unlock (self->lock);
   return TRUE;
 }
@@ -118,22 +112,16 @@ waveform_sine_get_value_array (GstLFOControlSource * self,
   GstLFOControlSourcePrivate *priv = self->priv;
   guint i;
   GstClockTime ts = timestamp;
-  gdouble amp, off, frequency;
-  GstClockTime timeshift, period;
-
-  g_mutex_lock (self->lock);
-  amp = priv->amplitude;
-  off = priv->offset;
-  timeshift = priv->timeshift;
-  period = priv->period;
-  frequency = priv->frequency;
 
   for (i = 0; i < n_values; i++) {
-    *values = _sine_get (self, amp, off, timeshift, period, frequency, ts);
+    gst_object_sync_values (GST_OBJECT (self), ts);
+    g_mutex_lock (self->lock);
+    *values = _sine_get (self, priv->amplitude, priv->offset, priv->timeshift,
+        priv->period, priv->frequency, ts);
+    g_mutex_unlock (self->lock);
     ts += interval;
     values++;
   }
-  g_mutex_unlock (self->lock);
   return TRUE;
 }
 
@@ -160,18 +148,11 @@ waveform_square_get (GstLFOControlSource * self, GstClockTime timestamp,
     gdouble * value)
 {
   GstLFOControlSourcePrivate *priv = self->priv;
-  gdouble amp, off, frequency;
-  GstClockTime timeshift, period;
 
+  gst_object_sync_values (GST_OBJECT (self), timestamp);
   g_mutex_lock (self->lock);
-  amp = priv->amplitude;
-  off = priv->offset;
-  timeshift = priv->timeshift;
-  period = priv->period;
-  frequency = priv->frequency;
-
-  *value =
-      _square_get (self, amp, off, timeshift, period, frequency, timestamp);
+  *value = _square_get (self, priv->amplitude, priv->offset, priv->timeshift,
+      priv->period, priv->frequency, timestamp);
   g_mutex_unlock (self->lock);
   return TRUE;
 }
@@ -184,22 +165,16 @@ waveform_square_get_value_array (GstLFOControlSource * self,
   GstLFOControlSourcePrivate *priv = self->priv;
   guint i;
   GstClockTime ts = timestamp;
-  gdouble amp, off, frequency;
-  GstClockTime timeshift, period;
-
-  g_mutex_lock (self->lock);
-  amp = priv->amplitude;
-  off = priv->offset;
-  timeshift = priv->timeshift;
-  period = priv->period;
-  frequency = priv->frequency;
 
   for (i = 0; i < n_values; i++) {
-    *values = _square_get (self, amp, off, timeshift, period, frequency, ts);
+    gst_object_sync_values (GST_OBJECT (self), ts);
+    g_mutex_lock (self->lock);
+    *values = _square_get (self, priv->amplitude, priv->offset, priv->timeshift,
+        priv->period, priv->frequency, ts);
+    g_mutex_unlock (self->lock);
     ts += interval;
     values++;
   }
-  g_mutex_unlock (self->lock);
   return TRUE;
 }
 
@@ -225,17 +200,11 @@ waveform_saw_get (GstLFOControlSource * self, GstClockTime timestamp,
     gdouble * value)
 {
   GstLFOControlSourcePrivate *priv = self->priv;
-  gdouble amp, off, frequency;
-  GstClockTime timeshift, period;
 
+  gst_object_sync_values (GST_OBJECT (self), timestamp);
   g_mutex_lock (self->lock);
-  amp = priv->amplitude;
-  off = priv->offset;
-  timeshift = priv->timeshift;
-  period = priv->period;
-  frequency = priv->frequency;
-
-  *value = _saw_get (self, amp, off, timeshift, period, frequency, timestamp);
+  *value = _saw_get (self, priv->amplitude, priv->offset, priv->timeshift,
+      priv->period, priv->frequency, timestamp);
   g_mutex_unlock (self->lock);
   return TRUE;
 }
@@ -248,22 +217,16 @@ waveform_saw_get_value_array (GstLFOControlSource * self,
   GstLFOControlSourcePrivate *priv = self->priv;
   guint i;
   GstClockTime ts = timestamp;
-  gdouble amp, off, frequency;
-  GstClockTime timeshift, period;
-
-  g_mutex_lock (self->lock);
-  amp = priv->amplitude;
-  off = priv->offset;
-  timeshift = priv->timeshift;
-  period = priv->period;
-  frequency = priv->frequency;
 
   for (i = 0; i < n_values; i++) {
-    *values = _saw_get (self, amp, off, timeshift, period, frequency, ts);
+    gst_object_sync_values (GST_OBJECT (self), ts);
+    g_mutex_lock (self->lock);
+    *values = _saw_get (self, priv->amplitude, priv->offset, priv->timeshift,
+        priv->period, priv->frequency, ts);
+    g_mutex_unlock (self->lock);
     ts += interval;
     values++;
   }
-  g_mutex_unlock (self->lock);
   return TRUE;
 }
 
@@ -289,17 +252,11 @@ waveform_rsaw_get (GstLFOControlSource * self, GstClockTime timestamp,
     gdouble * value)
 {
   GstLFOControlSourcePrivate *priv = self->priv;
-  gdouble amp, off, frequency;
-  GstClockTime timeshift, period;
 
+  gst_object_sync_values (GST_OBJECT (self), timestamp);
   g_mutex_lock (self->lock);
-  amp = priv->amplitude;
-  off = priv->offset;
-  timeshift = priv->timeshift;
-  period = priv->period;
-  frequency = priv->frequency;
-
-  *value = _rsaw_get (self, amp, off, timeshift, period, frequency, timestamp);
+  *value = _rsaw_get (self, priv->amplitude, priv->offset, priv->timeshift,
+      priv->period, priv->frequency, timestamp);
   g_mutex_unlock (self->lock);
   return TRUE;
 }
@@ -312,22 +269,16 @@ waveform_rsaw_get_value_array (GstLFOControlSource * self,
   GstLFOControlSourcePrivate *priv = self->priv;
   guint i;
   GstClockTime ts = timestamp;
-  gdouble amp, off, frequency;
-  GstClockTime timeshift, period;
-
-  g_mutex_lock (self->lock);
-  amp = priv->amplitude;
-  off = priv->offset;
-  timeshift = priv->timeshift;
-  period = priv->period;
-  frequency = priv->frequency;
 
   for (i = 0; i < n_values; i++) {
-    *values = _rsaw_get (self, amp, off, timeshift, period, frequency, ts);
+    gst_object_sync_values (GST_OBJECT (self), ts);
+    g_mutex_lock (self->lock);
+    *values = _rsaw_get (self, priv->amplitude, priv->offset, priv->timeshift,
+        priv->period, priv->frequency, ts);
+    g_mutex_unlock (self->lock);
     ts += interval;
     values++;
   }
-  g_mutex_unlock (self->lock);
   return TRUE;
 }
 
@@ -366,18 +317,11 @@ waveform_triangle_get (GstLFOControlSource * self, GstClockTime timestamp,
     gdouble * value)
 {
   GstLFOControlSourcePrivate *priv = self->priv;
-  gdouble amp, off, frequency;
-  GstClockTime timeshift, period;
 
+  gst_object_sync_values (GST_OBJECT (self), timestamp);
   g_mutex_lock (self->lock);
-  amp = priv->amplitude;
-  off = priv->offset;
-  timeshift = priv->timeshift;
-  period = priv->period;
-  frequency = priv->frequency;
-
-  *value =
-      _triangle_get (self, amp, off, timeshift, period, frequency, timestamp);
+  *value = _triangle_get (self, priv->amplitude, priv->offset, priv->timeshift,
+      priv->period, priv->frequency, timestamp);
   g_mutex_unlock (self->lock);
   return TRUE;
 }
@@ -390,22 +334,17 @@ waveform_triangle_get_value_array (GstLFOControlSource * self,
   GstLFOControlSourcePrivate *priv = self->priv;
   guint i;
   GstClockTime ts = timestamp;
-  gdouble amp, off, frequency;
-  GstClockTime timeshift, period;
-
-  g_mutex_lock (self->lock);
-  amp = priv->amplitude;
-  off = priv->offset;
-  timeshift = priv->timeshift;
-  period = priv->period;
-  frequency = priv->frequency;
 
   for (i = 0; i < n_values; i++) {
-    *values = _triangle_get (self, amp, off, timeshift, period, frequency, ts);
+    gst_object_sync_values (GST_OBJECT (self), ts);
+    g_mutex_lock (self->lock);
+    *values =
+        _triangle_get (self, priv->amplitude, priv->offset, priv->timeshift,
+        priv->period, priv->frequency, ts);
+    g_mutex_unlock (self->lock);
     ts += interval;
     values++;
   }
-  g_mutex_unlock (self->lock);
   return TRUE;
 }
 
@@ -642,7 +581,7 @@ gst_lfo_control_source_class_init (GstLFOControlSourceClass * klass)
   g_object_class_install_property (gobject_class, PROP_FREQUENCY,
       g_param_spec_double ("frequency", "Frequency",
           "Frequency of the waveform", 0.0, G_MAXDOUBLE, 1.0,
-          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+          G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE | G_PARAM_STATIC_STRINGS));
 
   /**
    * GstLFOControlSource:timeshift
@@ -657,7 +596,7 @@ gst_lfo_control_source_class_init (GstLFOControlSourceClass * klass)
   g_object_class_install_property (gobject_class, PROP_TIMESHIFT,
       g_param_spec_uint64 ("timeshift", "Timeshift",
           "Timeshift of the waveform to the right", 0, G_MAXUINT64, 0,
-          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+          G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE | G_PARAM_STATIC_STRINGS));
 
   /**
    * GstLFOControlSource:amplitude
@@ -666,8 +605,8 @@ gst_lfo_control_source_class_init (GstLFOControlSourceClass * klass)
    */
   g_object_class_install_property (gobject_class, PROP_AMPLITUDE,
       g_param_spec_double ("amplitude", "Amplitude",
-          "Amplitude of the waveform", 0.0, G_MAXDOUBLE, 1.0,
-          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+          "Amplitude of the waveform", 0.0, 1.0, 1.0,
+          G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE | G_PARAM_STATIC_STRINGS));
 
   /**
    * GstLFOControlSource:offset
@@ -676,5 +615,6 @@ gst_lfo_control_source_class_init (GstLFOControlSourceClass * klass)
    */
   g_object_class_install_property (gobject_class, PROP_OFFSET,
       g_param_spec_double ("offset", "Offset", "Offset of the waveform",
-          0.0, G_MAXDOUBLE, 1.0, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+          0.0, 1.0, 1.0,
+          G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE | G_PARAM_STATIC_STRINGS));
 }

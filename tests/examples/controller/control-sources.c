@@ -6,6 +6,7 @@
  * Needs gnuplot for plotting.
  * plot "ctrl_i1.dat" using 1:2 with points title 'none', "" using 1:3 with points title 'linear', "" using 1:4 with points title 'cubic', "ctrl_i2.dat" using 1:2 with lines title 'none', "" using 1:3 with lines title 'linear', "" using 1:4 with lines title 'cubic'
  * plot "ctrl_l1.dat" using 1:2 with points title 'sine', "" using 1:3 with points title 'saw', "" using 1:4 with points title 'square', "" using 1:5 with points title 'triangle', "ctrl_l2.dat" using 1:2 with lines title 'sine', "" using 1:3 with lines title 'saw', "" using 1:4 with lines title 'square', "" using 1:5 with lines title 'triangle'
+ * plot "ctrl_cl1.dat" using 1:2 with points title 'sine', "ctrl_cl2.dat" using 1:2 with lines title 'sine'
  */
 
 #include <stdio.h>
@@ -344,6 +345,7 @@ test_lfo (void)
   g_free (v1);
   g_free (v2);
   g_free (v3);
+  g_free (v4);
 
   fclose (f);
 
@@ -351,6 +353,76 @@ test_lfo (void)
   gst_object_unref (e);
 }
 
+static void
+test_chained_lfo (void)
+{
+  GstObject *e;
+  GstLFOControlSource *lfocs1, *lfocs2;
+  GstControlSource *cs1, *cs2;
+  gint t, i1;
+  GValue *v1;
+  gint n_values;
+  FILE *f;
+
+  e = (GstObject *) gst_element_factory_make ("testobj", NULL);
+
+  lfocs1 = gst_lfo_control_source_new ();
+  cs1 = (GstControlSource *) lfocs1;
+
+  gst_object_set_control_source (e, "int", cs1);
+
+  g_object_set (lfocs1,
+      "waveform", GST_LFO_WAVEFORM_SINE,
+      "frequency", (gdouble) 0.05,
+      "timeshift", (GstClockTime) 0, "offset", (gdouble) 0.5, NULL);
+
+  lfocs2 = gst_lfo_control_source_new ();
+  cs2 = (GstControlSource *) lfocs2;
+
+  gst_object_set_control_source ((GstObject *) lfocs1, "amplitude", cs2);
+
+  g_object_set (lfocs2,
+      "waveform", GST_LFO_WAVEFORM_SINE,
+      "frequency", (gdouble) 0.05,
+      "timeshift", (GstClockTime) 0,
+      "amplitude", (gdouble) 0.5, "offset", (gdouble) 0.5, NULL);
+
+  /* test single values */
+  if (!(f = fopen ("ctrl_cl1.dat", "w")))
+    exit (-1);
+  fprintf (f, "# Time Sine\n");
+
+  for (t = 0; t < 40; t++) {
+    gst_object_sync_values (e, t * GST_SECOND);
+    i1 = GST_TEST_OBJ (e)->val_int;
+
+    fprintf (f, "%4.1f %d\n", (gfloat) t, i1);
+  }
+
+  fclose (f);
+
+  /* test value arrays */
+  if (!(f = fopen ("ctrl_cl2.dat", "w")))
+    exit (-1);
+  fprintf (f, "# Time Sine\n");
+  n_values = 40 * 10;
+
+  v1 = g_new0 (GValue, n_values);
+  gst_object_get_value_array (e, "int", 0, GST_SECOND / 10, n_values, v1);
+
+  for (t = 0; t < n_values; t++) {
+    i1 = g_value_get_int (&v1[t]);
+    fprintf (f, "%4.1f %d\n", (gfloat) t / 10.0, i1);
+    g_value_unset (&v1[t]);
+  }
+  g_free (v1);
+
+  fclose (f);
+
+  gst_object_unref (lfocs1);
+  gst_object_unref (lfocs2);
+  gst_object_unref (e);
+}
 
 gint
 main (gint argc, gchar ** argv)
@@ -361,6 +433,8 @@ main (gint argc, gchar ** argv)
 
   test_interpolation ();
   test_lfo ();
+
+  test_chained_lfo ();
 
   return 0;
 }
