@@ -119,6 +119,7 @@ AG_GST_ARG_ENABLE_EXTERNAL
 AG_GST_ARG_ENABLE_EXPERIMENTAL
 
 dnl *** checks for platform ***
+AG_GST_PLATFORM
 
 dnl * hardware/architecture *
 
