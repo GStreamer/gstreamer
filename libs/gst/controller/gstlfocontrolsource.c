@@ -78,12 +78,11 @@ _sine_get (GstLFOControlSource * self, gdouble amp, gdouble off,
     GstClockTime timeshift, GstClockTime period, gdouble frequency,
     GstClockTime timestamp)
 {
-  GstClockTime pos = _calculate_pos (timestamp, timeshift, period);
+  gdouble pos =
+      gst_guint64_to_gdouble (_calculate_pos (timestamp, timeshift, period));
   gdouble ret;
 
-  ret =
-      sin (2.0 * M_PI * (frequency / GST_SECOND) *
-      gst_guint64_to_gdouble (pos));
+  ret = sin (2.0 * M_PI * (frequency / GST_SECOND) * pos);
   ret *= amp;
   ret += off;
 
@@ -183,13 +182,12 @@ _saw_get (GstLFOControlSource * self, gdouble amp, gdouble off,
     GstClockTime timeshift, GstClockTime period, gdouble frequency,
     GstClockTime timestamp)
 {
-  GstClockTime pos = _calculate_pos (timestamp, timeshift, period);
+  gdouble pos =
+      gst_guint64_to_gdouble (_calculate_pos (timestamp, timeshift, period));
+  gdouble per = gst_guint64_to_gdouble (period);
   gdouble ret;
 
-  ret =
-      -((gst_guint64_to_gdouble (pos) -
-          gst_guint64_to_gdouble (period) / 2.0) * ((2.0 * amp) /
-          gst_guint64_to_gdouble (period)));
+  ret = -((pos - per / 2.0) * ((2.0 * amp) / per));
   ret += off;
 
   return ret;
@@ -235,13 +233,12 @@ _rsaw_get (GstLFOControlSource * self, gdouble amp, gdouble off,
     GstClockTime timeshift, GstClockTime period, gdouble frequency,
     GstClockTime timestamp)
 {
-  GstClockTime pos = _calculate_pos (timestamp, timeshift, period);
+  gdouble pos =
+      gst_guint64_to_gdouble (_calculate_pos (timestamp, timeshift, period));
+  gdouble per = gst_guint64_to_gdouble (period);
   gdouble ret;
 
-  ret =
-      ((gst_guint64_to_gdouble (pos) -
-          gst_guint64_to_gdouble (period) / 2.0) * ((2.0 * amp) /
-          gst_guint64_to_gdouble (period)));
+  ret = (pos - per / 2.0) * ((2.0 * amp) / per);
   ret += off;
 
   return ret;
@@ -288,24 +285,20 @@ _triangle_get (GstLFOControlSource * self, gdouble amp, gdouble off,
     GstClockTime timeshift, GstClockTime period, gdouble frequency,
     GstClockTime timestamp)
 {
-  GstClockTime pos = _calculate_pos (timestamp, timeshift, period);
+  gdouble pos =
+      gst_guint64_to_gdouble (_calculate_pos (timestamp, timeshift, period));
+  gdouble per = gst_guint64_to_gdouble (period);
   gdouble ret;
 
-  if (gst_guint64_to_gdouble (pos) <= gst_guint64_to_gdouble (period) / 4.0)
-    ret =
-        gst_guint64_to_gdouble (pos) * ((4.0 * amp) /
-        gst_guint64_to_gdouble (period));
-  else if (gst_guint64_to_gdouble (pos) <=
-      (3.0 * gst_guint64_to_gdouble (period)) / 4.0)
-    ret =
-        -(gst_guint64_to_gdouble (pos) -
-        gst_guint64_to_gdouble (period) / 2.0) * ((4.0 * amp) /
-        gst_guint64_to_gdouble (period));
+  if (pos <= 0.25 * per)
+    /* 1st quarter */
+    ret = pos * ((4.0 * amp) / per);
+  else if (pos <= 0.75 * per)
+    /* 2nd & 3rd quarter */
+    ret = -(pos - per / 2.0) * ((4.0 * amp) / per);
   else
-    ret =
-        gst_guint64_to_gdouble (period) -
-        gst_guint64_to_gdouble (pos) * ((4.0 * amp) /
-        gst_guint64_to_gdouble (period));
+    /* 4th quarter */
+    ret = -(per - pos) * ((4.0 * amp) / per);
 
   ret += off;
 
