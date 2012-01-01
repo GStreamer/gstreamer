@@ -331,7 +331,7 @@ GST_START_TEST (controller_controlsource_empty2)
 GST_END_TEST;
 
 /* test timed value handling without interpolation */
-GST_START_TEST (controller_interpolate_none)
+GST_START_TEST (controller_interpolation_none)
 {
   GstInterpolationControlSource *csource;
   GstTimedValueControlSource *tvcs;
@@ -383,7 +383,7 @@ GST_START_TEST (controller_interpolate_none)
 GST_END_TEST;
 
 /* test timed value handling with linear interpolation */
-GST_START_TEST (controller_interpolate_linear)
+GST_START_TEST (controller_interpolation_linear)
 {
   GstInterpolationControlSource *csource;
   GstTimedValueControlSource *tvcs;
@@ -422,7 +422,7 @@ GST_START_TEST (controller_interpolate_linear)
 GST_END_TEST;
 
 /* test timed value handling with cubic interpolation */
-GST_START_TEST (controller_interpolate_cubic)
+GST_START_TEST (controller_interpolation_cubic)
 {
   GstInterpolationControlSource *csource;
   GstTimedValueControlSource *tvcs;
@@ -470,7 +470,7 @@ GST_START_TEST (controller_interpolate_cubic)
 GST_END_TEST;
 
 /* test timed value handling with cubic interpolation */
-GST_START_TEST (controller_interpolate_cubic_too_few_cp)
+GST_START_TEST (controller_interpolation_cubic_too_few_cp)
 {
   GstInterpolationControlSource *csource;
   GstTimedValueControlSource *tvcs;
@@ -783,7 +783,7 @@ GST_START_TEST (controller_interpolation_linear_default_values)
 GST_END_TEST;
 
 /* test gst_controller_set_disabled() with linear interpolation */
-GST_START_TEST (controller_interpolate_linear_disabled)
+GST_START_TEST (controller_interpolation_linear_disabled)
 {
   GstInterpolationControlSource *csource1, *csource2;
   GstTimedValueControlSource *tvcs1, *tvcs2;
@@ -955,7 +955,7 @@ GST_END_TEST;
 
 
 /* test linear interpolation for ts < first control point */
-GST_START_TEST (controller_interpolate_linear_before_ts0)
+GST_START_TEST (controller_interpolation_linear_before_ts0)
 {
   GstInterpolationControlSource *csource;
   GstTimedValueControlSource *tvcs;
@@ -1001,7 +1001,7 @@ GST_START_TEST (controller_interpolate_linear_before_ts0)
 GST_END_TEST;
 
 /* test linear interpolation of enums */
-GST_START_TEST (controller_interpolate_linear_enums)
+GST_START_TEST (controller_interpolation_linear_enums)
 {
   GstInterpolationControlSource *csource;
   GstTimedValueControlSource *tvcs;
@@ -1556,19 +1556,19 @@ gst_controller_suite (void)
   tcase_add_checked_fixture (tc, setup, teardown);
   tcase_add_test (tc, controller_controlsource_empty1);
   tcase_add_test (tc, controller_controlsource_empty2);
-  tcase_add_test (tc, controller_interpolate_none);
-  tcase_add_test (tc, controller_interpolate_linear);
-  tcase_add_test (tc, controller_interpolate_cubic);
-  tcase_add_test (tc, controller_interpolate_cubic_too_few_cp);
+  tcase_add_test (tc, controller_interpolation_none);
+  tcase_add_test (tc, controller_interpolation_linear);
+  tcase_add_test (tc, controller_interpolation_cubic);
+  tcase_add_test (tc, controller_interpolation_cubic_too_few_cp);
   tcase_add_test (tc, controller_interpolation_unset);
   tcase_add_test (tc, controller_interpolation_unset_all);
   tcase_add_test (tc, controller_interpolation_linear_value_array);
   tcase_add_test (tc, controller_interpolation_linear_invalid_values);
   tcase_add_test (tc, controller_interpolation_linear_default_values);
-  tcase_add_test (tc, controller_interpolate_linear_disabled);
+  tcase_add_test (tc, controller_interpolation_linear_disabled);
   tcase_add_test (tc, controller_interpolation_set_from_list);
-  tcase_add_test (tc, controller_interpolate_linear_before_ts0);
-  tcase_add_test (tc, controller_interpolate_linear_enums);
+  tcase_add_test (tc, controller_interpolation_linear_before_ts0);
+  tcase_add_test (tc, controller_interpolation_linear_enums);
   tcase_add_test (tc, controller_timed_value_count);
   tcase_add_test (tc, controller_lfo_sine);
   tcase_add_test (tc, controller_lfo_sine_timeshift);
