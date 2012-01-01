@@ -30,6 +30,40 @@
 #include <gst/controller/gstlfocontrolsource.h>
 #include <gst/controller/gsttriggercontrolsource.h>
 
+/* enum for text element */
+
+#define GST_TYPE_TEST_ENUM (gst_test_enum_get_type ())
+
+typedef enum
+{
+  ENUM_V0 = 0,
+  ENUM_V10 = 10,
+  ENUM_V11,
+  ENUM_V12,
+  ENUM_V255 = 255
+} GstTestEnum;
+
+static GType
+gst_test_enum_get_type (void)
+{
+  static gsize gtype = 0;
+  static const GEnumValue values[] = {
+    {ENUM_V0, "ENUM_V0", "0"},
+    {ENUM_V10, "ENUM_V10", "10"},
+    {ENUM_V11, "ENUM_V11", "11"},
+    {ENUM_V12, "ENUM_V12", "12"},
+    {ENUM_V255, "ENUM_V255", "255"},
+    {0, NULL, NULL}
+  };
+
+  if (g_once_init_enter (&gtype)) {
+    GType tmp = g_enum_register_static ("GstTestEnum", values);
+    g_once_init_leave (&gtype, tmp);
+  }
+
+  return (GType) gtype;
+}
+
 /* local test element */
 
 enum
@@ -38,6 +72,7 @@ enum
   PROP_FLOAT,
   PROP_DOUBLE,
   PROP_BOOLEAN,
+  PROP_ENUM,
   PROP_READONLY,
   PROP_STATIC,
   PROP_CONSTRUCTONLY,
@@ -61,6 +96,7 @@ struct _GstTestObj
   gfloat val_float;
   gdouble val_double;
   gboolean val_boolean;
+  GstTestEnum val_enum;
 };
 struct _GstTestObjClass
 {
@@ -87,6 +123,9 @@ gst_test_obj_get_property (GObject * object,
       break;
     case PROP_BOOLEAN:
       g_value_set_boolean (value, self->val_boolean);
+      break;
+    case PROP_ENUM:
+      g_value_set_enum (value, self->val_enum);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
@@ -116,6 +155,10 @@ gst_test_obj_set_property (GObject * object,
     case PROP_BOOLEAN:
       self->val_boolean = g_value_get_boolean (value);
       GST_DEBUG ("test value boolean=%d", self->val_boolean);
+      break;
+    case PROP_ENUM:
+      self->val_enum = g_value_get_enum (value);
+      GST_DEBUG ("test value enum=%d", self->val_enum);
       break;
     case PROP_CONSTRUCTONLY:
       break;
@@ -156,6 +199,13 @@ gst_test_obj_class_init (GstTestObjClass * klass)
           "boolean prop",
           "boolean parameter",
           FALSE, G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE));
+
+  g_object_class_install_property (gobject_class, PROP_ENUM,
+      g_param_spec_enum ("enum",
+          "enum prop",
+          "enum parameter",
+          GST_TYPE_TEST_ENUM, ENUM_V0,
+          G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE));
 
   g_object_class_install_property (gobject_class, PROP_READONLY,
       g_param_spec_int ("readonly",
@@ -950,6 +1000,49 @@ GST_START_TEST (controller_interpolate_linear_before_ts0)
 
 GST_END_TEST;
 
+/* test linear interpolation of enums */
+GST_START_TEST (controller_interpolate_linear_enums)
+{
+  GstInterpolationControlSource *csource;
+  GstTimedValueControlSource *tvcs;
+  GstControlSource *cs;
+  GstElement *elem;
+
+  elem = gst_element_factory_make ("testobj", NULL);
+
+  /* new interpolation control source */
+  csource = gst_interpolation_control_source_new ();
+  tvcs = (GstTimedValueControlSource *) csource;
+  cs = (GstControlSource *) csource;
+
+  fail_unless (csource != NULL);
+  fail_unless (gst_object_set_control_source (GST_OBJECT (elem), "enum", cs));
+
+  /* set interpolation mode */
+  g_object_set (csource, "mode", GST_INTERPOLATION_MODE_LINEAR, NULL);
+
+  /* set control values */
+  fail_unless (gst_timed_value_control_source_set (tvcs, 0 * GST_SECOND, 0.0));
+  fail_unless (gst_timed_value_control_source_set (tvcs, 4 * GST_SECOND, 1.0));
+
+  /* now pull in values going over the enum values */
+  gst_object_sync_values (GST_OBJECT (elem), 0 * GST_SECOND);
+  fail_unless_equals_int (GST_TEST_OBJ (elem)->val_enum, ENUM_V0);
+  gst_object_sync_values (GST_OBJECT (elem), 1 * GST_SECOND);
+  fail_unless_equals_int (GST_TEST_OBJ (elem)->val_enum, ENUM_V10);
+  gst_object_sync_values (GST_OBJECT (elem), 2 * GST_SECOND);
+  fail_unless_equals_int (GST_TEST_OBJ (elem)->val_enum, ENUM_V11);
+  gst_object_sync_values (GST_OBJECT (elem), 3 * GST_SECOND);
+  fail_unless_equals_int (GST_TEST_OBJ (elem)->val_enum, ENUM_V12);
+  gst_object_sync_values (GST_OBJECT (elem), 4 * GST_SECOND);
+  fail_unless_equals_int (GST_TEST_OBJ (elem)->val_enum, ENUM_V255);
+
+  gst_object_unref (csource);
+  gst_object_unref (elem);
+}
+
+GST_END_TEST;
+
 /* test timed value counts */
 GST_START_TEST (controller_timed_value_count)
 {
@@ -1475,6 +1568,7 @@ gst_controller_suite (void)
   tcase_add_test (tc, controller_interpolate_linear_disabled);
   tcase_add_test (tc, controller_interpolation_set_from_list);
   tcase_add_test (tc, controller_interpolate_linear_before_ts0);
+  tcase_add_test (tc, controller_interpolate_linear_enums);
   tcase_add_test (tc, controller_timed_value_count);
   tcase_add_test (tc, controller_lfo_sine);
   tcase_add_test (tc, controller_lfo_sine_timeshift);

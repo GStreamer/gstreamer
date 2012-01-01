@@ -110,6 +110,18 @@ convert_to_boolean (GstControlBinding * self, gdouble s, GValue * d)
   g_value_set_boolean (d, (gboolean) (s + 0.5));
 }
 
+static void
+convert_to_enum (GstControlBinding * self, gdouble s, GValue * d)
+{
+  GParamSpecEnum *pspec = G_PARAM_SPEC_ENUM (self->pspec);
+  GEnumClass *e = pspec->enum_class;
+  gint v;
+
+  s = CLAMP (s, 0.0, 1.0);
+  v = s * (e->n_values - 1);
+  g_value_set_enum (d, e->values[v].value);
+}
+
 /**
  * gst_control_binding_new:
  * @object: the object of the property
@@ -188,6 +200,9 @@ gst_control_binding_new (GstObject * object, const gchar * property_name,
           break;
         case G_TYPE_BOOLEAN:
           self->convert = convert_to_boolean;
+          break;
+        case G_TYPE_ENUM:
+          self->convert = convert_to_enum;
           break;
         default:
           // FIXME: return NULL?
