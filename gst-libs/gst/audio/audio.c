@@ -412,6 +412,11 @@ gst_audio_info_from_caps (GstAudioInfo * info, const GstCaps * caps)
     for (i = 0; i < max_pos; i++) {
       pos_val_entry = gst_value_array_get_value (pos_val_arr, i);
       info->position[i] = g_value_get_enum (pos_val_entry);
+
+      /* the unpositioned flag is set as soon as one of the channels has an
+       * explicit NONE positioning */
+      if (info->position[i] == GST_AUDIO_CHANNEL_POSITION_NONE)
+        info->flags |= GST_AUDIO_FLAG_UNPOSITIONED;
     }
   } else {
     info->flags |= GST_AUDIO_FLAG_DEFAULT_POSITIONS;
