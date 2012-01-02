@@ -166,19 +166,26 @@ gst_stream_combiner_src_query (GstPad * pad, GstObject * parent,
 {
   GstStreamCombiner *stream_combiner = (GstStreamCombiner *) parent;
   GstPad *sinkpad = NULL;
+  gboolean ret = FALSE;
 
-  STREAMS_LOCK (stream_combiner);
-  if (stream_combiner->current)
-    sinkpad = stream_combiner->current;
-  else if (stream_combiner->sinkpads)
-    sinkpad = (GstPad *) stream_combiner->sinkpads->data;
-  STREAMS_UNLOCK (stream_combiner);
+  switch (GST_QUERY_TYPE (query)) {
+    case GST_QUERY_CAPS:
+      ret = gst_pad_query_default (pad, parent, query);
+      break;
+    default:
+      STREAMS_LOCK (stream_combiner);
+      if (stream_combiner->current)
+        sinkpad = stream_combiner->current;
+      else if (stream_combiner->sinkpads)
+        sinkpad = (GstPad *) stream_combiner->sinkpads->data;
+      STREAMS_UNLOCK (stream_combiner);
 
-  if (sinkpad)
-    /* Forward upstream as is */
-    return gst_pad_peer_query (sinkpad, query);
-
-  return FALSE;
+      if (sinkpad)
+        /* Forward upstream as is */
+        ret = gst_pad_peer_query (sinkpad, query);
+      break;
+  }
+  return ret;
 }
 
 static void
