@@ -489,11 +489,13 @@ gst_audio_encoder_finish_frame (GstAudioEncoder * enc, GstBuffer * buf,
   priv = enc->priv;
   ctx = &enc->priv->ctx;
 
-  /* subclass should know what it is producing by now */
-  g_return_val_if_fail (gst_pad_has_current_caps (enc->srcpad), GST_FLOW_ERROR);
   /* subclass should not hand us no data */
   g_return_val_if_fail (buf == NULL || gst_buffer_get_size (buf) > 0,
       GST_FLOW_ERROR);
+
+  /* subclass should know what it is producing by now */
+  if (!gst_pad_has_current_caps (enc->srcpad))
+    goto no_caps;
 
   GST_AUDIO_ENCODER_STREAM_LOCK (enc);
 
@@ -693,6 +695,11 @@ exit:
   return ret;
 
   /* ERRORS */
+no_caps:
+  {
+    GST_ELEMENT_ERROR (enc, STREAM, ENCODE, ("no caps set"), (NULL));
+    return GST_FLOW_ERROR;
+  }
 overflow:
   {
     GST_ELEMENT_ERROR (enc, STREAM, ENCODE,
