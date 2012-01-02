@@ -606,12 +606,18 @@ audio_convert_prepare_context (AudioConvertCtx * ctx, GstAudioInfo * in,
 
   /* first clean the existing context */
   audio_convert_clean_context (ctx);
+  if ((GST_AUDIO_INFO_CHANNELS (in) != GST_AUDIO_INFO_CHANNELS (out)) &&
+      (GST_AUDIO_INFO_IS_UNPOSITIONED (in)
+          || GST_AUDIO_INFO_IS_UNPOSITIONED (out)))
+    goto unpositioned;
 
   ctx->in = *in;
   ctx->out = *out;
 
   in_depth = GST_AUDIO_FORMAT_INFO_DEPTH (in->finfo);
   out_depth = GST_AUDIO_FORMAT_INFO_DEPTH (out->finfo);
+
+  GST_INFO ("depth in %d, out %d", in_depth, out_depth);
 
   /* Don't dither or apply noise shaping if target depth is bigger than 20 bits
    * as DA converters only can do a SNR up to 20 bits in reality.
@@ -621,9 +627,11 @@ audio_convert_prepare_context (AudioConvertCtx * ctx, GstAudioInfo * in,
           || in_depth >= out_depth)) {
     ctx->dither = dither;
     ctx->ns = ns;
+    GST_INFO ("using dither %d and noise shaping %d", dither, ns);
   } else {
     ctx->dither = DITHER_NONE;
     ctx->ns = NOISE_SHAPING_NONE;
+    GST_INFO ("using no dither and noise shaping");
   }
 
   /* Use simple error feedback when output sample rate is smaller than
@@ -638,6 +646,8 @@ audio_convert_prepare_context (AudioConvertCtx * ctx, GstAudioInfo * in,
 
   idx_out = audio_convert_get_func_index (ctx, out->finfo);
   ctx->pack = pack_funcs[idx_out];
+
+  GST_INFO ("func index in %d, out %d", idx_in, idx_out);
 
   /* if both formats are float/double or we use noise shaping use double as
    * intermediate format and switch mixing */
@@ -665,9 +675,18 @@ audio_convert_prepare_context (AudioConvertCtx * ctx, GstAudioInfo * in,
   ctx->out_scale =
       GST_AUDIO_FORMAT_INFO_IS_INTEGER (out->finfo) ? (32 - out_depth) : 0;
 
+  GST_INFO ("scale in %d, out %d", ctx->in_scale, ctx->out_scale);
+
   gst_audio_quantize_setup (ctx);
 
   return TRUE;
+
+  /* ERRORS */
+unpositioned:
+  {
+    GST_WARNING ("unpositioned channels");
+    return FALSE;
+  }
 }
 
 gboolean

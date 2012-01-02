@@ -584,7 +584,8 @@ gst_channel_mix_fill_matrix (AudioConvertCtx * this)
 
   gst_channel_mix_fill_identical (this);
 
-  if (!GST_AUDIO_INFO_HAS_DEFAULT_POSITIONS (&this->in)) {
+  if (!GST_AUDIO_INFO_HAS_DEFAULT_POSITIONS (&this->in) &&
+      !GST_AUDIO_INFO_IS_UNPOSITIONED (&this->in)) {
     gst_channel_mix_fill_compatible (this);
     gst_channel_mix_fill_others (this);
     gst_channel_mix_fill_normalize (this);
