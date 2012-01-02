@@ -374,7 +374,8 @@ gst_output_selector_switch (GstOutputSelector * osel)
 
   /* Switch */
   GST_OBJECT_LOCK (GST_OBJECT (osel));
-  GST_INFO ("switching to pad %" GST_PTR_FORMAT, osel->pending_srcpad);
+  GST_INFO_OBJECT (osel, "switching to pad %" GST_PTR_FORMAT,
+      osel->pending_srcpad);
   if (gst_pad_is_linked (osel->pending_srcpad)) {
     osel->active_srcpad = osel->pending_srcpad;
     res = TRUE;
@@ -385,25 +386,27 @@ gst_output_selector_switch (GstOutputSelector * osel)
 
   /* Send SEGMENT event and latest buffer if switching succeeded
    * and we already have a valid segment configured */
-  if (res && osel->segment.format != GST_FORMAT_UNDEFINED) {
-    /* Send SEGMENT to the pad we are going to switch to */
-    seg = &osel->segment;
-    /* If resending then mark segment start and position accordingly */
-    if (osel->resend_latest && osel->latest_buffer &&
-        GST_BUFFER_TIMESTAMP_IS_VALID (osel->latest_buffer)) {
-      start = position = GST_BUFFER_TIMESTAMP (osel->latest_buffer);
-    } else {
-      start = position = seg->position;
-    }
+  if (res) {
+    if (osel->segment.format != GST_FORMAT_UNDEFINED) {
+      /* Send SEGMENT to the pad we are going to switch to */
+      seg = &osel->segment;
+      /* If resending then mark segment start and position accordingly */
+      if (osel->resend_latest && osel->latest_buffer &&
+          GST_BUFFER_TIMESTAMP_IS_VALID (osel->latest_buffer)) {
+        start = position = GST_BUFFER_TIMESTAMP (osel->latest_buffer);
+      } else {
+        start = position = seg->position;
+      }
 
-    seg->start = start;
-    seg->position = position;
-    ev = gst_event_new_segment (seg);
+      seg->start = start;
+      seg->position = position;
+      ev = gst_event_new_segment (seg);
 
-    if (!gst_pad_push_event (osel->active_srcpad, ev)) {
-      GST_WARNING_OBJECT (osel,
-          "newsegment handling failed in %" GST_PTR_FORMAT,
-          osel->active_srcpad);
+      if (!gst_pad_push_event (osel->active_srcpad, ev)) {
+        GST_WARNING_OBJECT (osel,
+            "newsegment handling failed in %" GST_PTR_FORMAT,
+            osel->active_srcpad);
+      }
     }
 
     /* Resend latest buffer to newly switched pad */
