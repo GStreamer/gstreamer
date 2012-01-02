@@ -1919,8 +1919,8 @@ gst_base_parse_push_frame (GstBaseParse * parse, GstBaseParseFrame * frame)
     last_stop = last_start + GST_BUFFER_DURATION (buffer);
 
   /* should have caps by now */
-  g_return_val_if_fail (gst_pad_has_current_caps (parse->srcpad),
-      GST_FLOW_ERROR);
+  if (!gst_pad_has_current_caps (parse->srcpad))
+    goto no_caps;
 
   /* segment adjustment magic; only if we are running the whole show */
   if (!parse->priv->passthrough && parse->segment.rate > 0.0 &&
@@ -2090,6 +2090,13 @@ gst_base_parse_push_frame (GstBaseParse * parse, GstBaseParseFrame * frame)
   gst_base_parse_frame_free (frame);
 
   return ret;
+
+  /* ERRORS */
+no_caps:
+  {
+    GST_ELEMENT_ERROR (parse, STREAM, DECODE, ("No caps set"), (NULL));
+    return GST_FLOW_ERROR;
+  }
 }
 
 
