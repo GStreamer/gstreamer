@@ -98,7 +98,7 @@ print_plugins (void)
 {
   GList *plugins, *l;
 
-  plugins = gst_default_registry_get_plugin_list ();
+  plugins = gst_registry_get_plugin_list (gst_registry_get ());
   plugins = g_list_sort (plugins, (GCompareFunc) sort_plugins);
   for (l = plugins; l != NULL; l = l->next) {
     GstPlugin *plugin = GST_PLUGIN (l->data);

@@ -134,7 +134,7 @@ gst_element_factory_find (const gchar * name)
 
   g_return_val_if_fail (name != NULL, NULL);
 
-  feature = gst_registry_find_feature (gst_registry_get_default (), name,
+  feature = gst_registry_find_feature (gst_registry_get (), name,
       GST_TYPE_ELEMENT_FACTORY);
   if (feature)
     return GST_ELEMENT_FACTORY (feature);
@@ -206,7 +206,7 @@ gst_element_register (GstPlugin * plugin, const gchar * name, guint rank,
   g_return_val_if_fail (name != NULL, FALSE);
   g_return_val_if_fail (g_type_is_a (type, GST_TYPE_ELEMENT), FALSE);
 
-  registry = gst_registry_get_default ();
+  registry = gst_registry_get ();
 
   /* check if feature already exists, if it exists there is no need to update it
    * when the registry is getting updated, outdated plugins and all their
@@ -739,8 +739,8 @@ gst_element_factory_list_get_elements (GstElementFactoryListType type,
   data.minrank = minrank;
 
   /* get the feature list using the filter */
-  result = gst_default_registry_feature_filter ((GstPluginFeatureFilter)
-      element_filter, FALSE, &data);
+  result = gst_registry_feature_filter (gst_registry_get (),
+      (GstPluginFeatureFilter) element_filter, FALSE, &data);
 
   /* sort on rank and name */
   result = g_list_sort (result, gst_plugin_feature_rank_compare_func);

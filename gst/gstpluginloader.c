@@ -701,7 +701,7 @@ do_plugin_load (GstPluginLoader * l, const gchar * filename, guint tag)
 
     /* Now serialise the plugin details and send */
     if (!_priv_gst_registry_chunks_save_plugin (&chunks,
-            gst_registry_get_default (), newplugin))
+            gst_registry_get (), newplugin))
       goto fail;
 
     /* Store where the header is, write an empty one, then write

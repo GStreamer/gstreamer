@@ -955,7 +955,7 @@ print_blacklist (void)
 
   g_print ("%s\n", _("Blacklisted files:"));
 
-  plugins = gst_default_registry_get_plugin_list ();
+  plugins = gst_registry_get_plugin_list (gst_registry_get ());
   for (cur = plugins; cur != NULL; cur = g_list_next (cur)) {
     GstPlugin *plugin = (GstPlugin *) (cur->data);
     if (plugin->flags & GST_PLUGIN_FLAG_BLACKLISTED) {
@@ -978,7 +978,7 @@ print_element_list (gboolean print_all)
   int plugincount = 0, featurecount = 0, blacklistcount = 0;
   GList *plugins, *orig_plugins;
 
-  orig_plugins = plugins = gst_default_registry_get_plugin_list ();
+  orig_plugins = plugins = gst_registry_get_plugin_list (gst_registry_get ());
   while (plugins) {
     GList *features, *orig_features;
     GstPlugin *plugin;
@@ -993,7 +993,7 @@ print_element_list (gboolean print_all)
     }
 
     orig_features = features =
-        gst_registry_get_feature_list_by_plugin (gst_registry_get_default (),
+        gst_registry_get_feature_list_by_plugin (gst_registry_get (),
         plugin->desc.name);
     while (features) {
       GstPluginFeature *feature;
@@ -1077,13 +1077,13 @@ print_all_uri_handlers (void)
 {
   GList *plugins, *p, *features, *f;
 
-  plugins = gst_default_registry_get_plugin_list ();
+  plugins = gst_registry_get_plugin_list (gst_registry_get ());
 
   for (p = plugins; p; p = p->next) {
     GstPlugin *plugin = (GstPlugin *) (p->data);
 
     features =
-        gst_registry_get_feature_list_by_plugin (gst_registry_get_default (),
+        gst_registry_get_feature_list_by_plugin (gst_registry_get (),
         plugin->desc.name);
 
     for (f = features; f; f = f->next) {
@@ -1193,7 +1193,7 @@ print_plugin_features (GstPlugin * plugin)
   gint num_other = 0;
 
   origlist = features =
-      gst_registry_get_feature_list_by_plugin (gst_registry_get_default (),
+      gst_registry_get_feature_list_by_plugin (gst_registry_get (),
       plugin->desc.name);
 
   while (features) {
@@ -1274,7 +1274,7 @@ print_element_features (const gchar * element_name)
     return 0;
   }
 #endif
-  feature = gst_default_registry_find_feature (element_name,
+  feature = gst_registry_find_feature (gst_registry_get (), element_name,
       GST_TYPE_TYPE_FIND_FACTORY);
   if (feature) {
     n_print ("%s: a typefind function\n", element_name);
@@ -1314,7 +1314,7 @@ print_element_info (GstElementFactory * factory, gboolean print_names)
   if (GST_PLUGIN_FEATURE (factory)->plugin_name) {
     GstPlugin *plugin;
 
-    plugin = gst_registry_find_plugin (gst_registry_get_default (),
+    plugin = gst_registry_find_plugin (gst_registry_get (),
         GST_PLUGIN_FEATURE (factory)->plugin_name);
     if (plugin) {
       print_plugin_info (plugin);
@@ -1447,7 +1447,7 @@ print_plugin_automatic_install_info (GstPlugin * plugin)
   plugin_name = gst_plugin_get_name (plugin);
 
   /* not interested in typefind factories, only element factories */
-  features = gst_registry_get_feature_list (gst_registry_get_default (),
+  features = gst_registry_get_feature_list (gst_registry_get (),
       GST_TYPE_ELEMENT_FACTORY);
 
   for (l = features; l != NULL; l = l->next) {
@@ -1476,7 +1476,7 @@ print_all_plugin_automatic_install_info (void)
 {
   GList *plugins, *orig_plugins;
 
-  orig_plugins = plugins = gst_default_registry_get_plugin_list ();
+  orig_plugins = plugins = gst_registry_get_plugin_list (gst_registry_get ());
   while (plugins) {
     GstPlugin *plugin;
 
@@ -1592,7 +1592,7 @@ main (int argc, char *argv[])
 
     /* otherwise check if it's a plugin */
     if (retval) {
-      plugin = gst_default_registry_find_plugin (arg);
+      plugin = gst_registry_find_plugin (gst_registry_get (), arg);
 
       /* if there is such a plugin, print out info */
       if (plugin) {

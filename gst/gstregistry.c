@@ -317,15 +317,16 @@ gst_registry_finalize (GObject * object)
 }
 
 /**
- * gst_registry_get_default:
+ * gst_registry_get:
  *
- * Retrieves the default registry. The caller does not own a reference on the
- * registry, as it is alive as long as GStreamer is initialized.
+ * Retrieves the singleton plugin registry. The caller does not own a
+ * reference on the registry, as it is alive as long as GStreamer is
+ * initialized.
  *
- * Returns: (transfer none): The default #GstRegistry.
+ * Returns: (transfer none): the #GstRegistry.
  */
 GstRegistry *
-gst_registry_get_default (void)
+gst_registry_get (void)
 {
   GstRegistry *registry;
 
@@ -1424,7 +1425,7 @@ gst_default_registry_check_feature_version (const gchar * feature_name,
 
   GST_DEBUG ("Looking up plugin feature '%s'", feature_name);
 
-  registry = gst_registry_get_default ();
+  registry = gst_registry_get ();
   feature = gst_registry_lookup_feature (registry, feature_name);
   if (feature) {
     ret = gst_plugin_feature_check_version (feature, min_major, min_minor,
@@ -1452,7 +1453,7 @@ load_plugin_func (gpointer data, gpointer user_data)
   if (plugin) {
     GST_INFO ("Loaded plugin: \"%s\"", filename);
 
-    gst_default_registry_add_plugin (plugin);
+    gst_registry_add_plugin (gst_registry_get (), plugin);
   } else {
     if (err) {
       /* Report error to user, and free error */
@@ -1655,7 +1656,7 @@ ensure_current_registry (GError ** error)
   gboolean do_update = TRUE;
   gboolean have_cache = TRUE;
 
-  default_registry = gst_registry_get_default ();
+  default_registry = gst_registry_get ();
   registry_file = g_strdup (g_getenv ("GST_REGISTRY"));
   if (registry_file == NULL) {
     registry_file = g_build_filename (g_get_user_cache_dir (),

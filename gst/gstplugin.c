@@ -128,7 +128,7 @@ gst_plugin_finalize (GObject * object)
 
   /* FIXME: make registry add a weak ref instead */
 #if 0
-  GstRegistry *registry = gst_registry_get_default ();
+  GstRegistry *registry = gst_registry_get ();
   GList *g;
   for (g = registry->plugins; g; g = g->next) {
     if (g->data == (gpointer) plugin) {
@@ -226,7 +226,7 @@ gst_plugin_register_static (gint major_version, gint minor_version,
   plugin = g_object_newv (GST_TYPE_PLUGIN, 0, NULL);
   if (gst_plugin_register_func (plugin, &desc, NULL) != NULL) {
     GST_INFO ("registered static plugin \"%s\"", name);
-    res = gst_default_registry_add_plugin (plugin);
+    res = gst_registry_add_plugin (gst_registry_get (), plugin);
     GST_INFO ("added static plugin \"%s\", result: %d", name, res);
   }
   return res;
@@ -296,7 +296,7 @@ gst_plugin_register_static_full (gint major_version, gint minor_version,
   plugin = g_object_newv (GST_TYPE_PLUGIN, 0, NULL);
   if (gst_plugin_register_func (plugin, &desc, user_data) != NULL) {
     GST_INFO ("registered static plugin \"%s\"", name);
-    res = gst_default_registry_add_plugin (plugin);
+    res = gst_registry_add_plugin (gst_registry_get (), plugin);
     GST_INFO ("added static plugin \"%s\", result: %d", name, res);
   }
   return res;
@@ -691,7 +691,7 @@ gst_plugin_load_file (const gchar * filename, GError ** error)
 
   g_return_val_if_fail (filename != NULL, NULL);
 
-  registry = gst_registry_get_default ();
+  registry = gst_registry_get ();
   g_static_mutex_lock (&gst_plugin_loading_mutex);
 
   plugin = gst_registry_lookup (registry, filename);
@@ -833,7 +833,7 @@ gst_plugin_load_file (const gchar * filename, GError ** error)
 
   if (new_plugin) {
     gst_object_ref (plugin);
-    gst_default_registry_add_plugin (plugin);
+    gst_registry_add_plugin (gst_registry_get (), plugin);
   }
 
   g_static_mutex_unlock (&gst_plugin_loading_mutex);
@@ -1264,7 +1264,7 @@ gst_plugin_load_by_name (const gchar * name)
   GError *error = NULL;
 
   GST_DEBUG ("looking up plugin %s in default registry", name);
-  plugin = gst_registry_find_plugin (gst_registry_get_default (), name);
+  plugin = gst_registry_find_plugin (gst_registry_get (), name);
   if (plugin) {
     GST_DEBUG ("loading plugin %s from file %s", name, plugin->filename);
     newplugin = gst_plugin_load_file (plugin->filename, &error);

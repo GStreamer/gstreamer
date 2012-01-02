@@ -842,7 +842,7 @@ gst_debug_help (void)
   if (!init_post (NULL, NULL, NULL, NULL))
     exit (1);
 
-  list2 = gst_registry_plugin_filter (gst_registry_get_default (),
+  list2 = gst_registry_plugin_filter (gst_registry_get (),
       select_all, FALSE, NULL);
 
   /* FIXME this is gross.  why don't debug have categories PluginFeatures? */

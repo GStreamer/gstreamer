@@ -523,7 +523,7 @@ get_element_factories_from_uri_protocol (const GstURIType type,
 
   entry.type = type;
   entry.protocol = protocol;
-  possibilities = gst_registry_feature_filter (gst_registry_get_default (),
+  possibilities = gst_registry_feature_filter (gst_registry_get (),
       search_by_entry, FALSE, &entry);
 
   return possibilities;

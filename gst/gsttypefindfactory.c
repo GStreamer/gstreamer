@@ -154,7 +154,7 @@ gst_type_find_factory_dispose (GObject * object)
 GList *
 gst_type_find_factory_get_list (void)
 {
-  return gst_registry_get_feature_list (gst_registry_get_default (),
+  return gst_registry_get_feature_list (gst_registry_get (),
       GST_TYPE_TYPE_FIND_FACTORY);
 }
 

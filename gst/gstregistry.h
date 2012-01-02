@@ -59,7 +59,7 @@ struct _GstRegistryClass {
 
 GType                   gst_registry_get_type           (void);
 
-GstRegistry *           gst_registry_get_default        (void);
+GstRegistry *           gst_registry_get                (void);
 
 gboolean                gst_registry_scan_path          (GstRegistry *registry, const gchar *path);
 void                    gst_registry_add_path           (GstRegistry * registry, const gchar * path);

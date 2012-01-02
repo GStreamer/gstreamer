@@ -71,12 +71,12 @@ GST_START_TEST (test_registry_update)
   GstRegistry *registry;
   GList *plugins_before, *plugins_after, *l;
 
-  registry = gst_registry_get_default ();
+  registry = gst_registry_get ();
   fail_unless (registry != NULL);
   ASSERT_OBJECT_REFCOUNT (registry, "default registry", 1);
 
   /* refcount should still be 1 the second time */
-  registry = gst_registry_get_default ();
+  registry = gst_registry_get ();
   fail_unless (registry != NULL);
   ASSERT_OBJECT_REFCOUNT (registry, "default registry", 1);
 

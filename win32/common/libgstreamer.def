@@ -904,7 +904,7 @@ EXPORTS
 	gst_registry_find_plugin
 	gst_registry_fork_is_enabled
 	gst_registry_fork_set_enabled
-	gst_registry_get_default
+	gst_registry_get
 	gst_registry_get_feature_list
 	gst_registry_get_feature_list_by_plugin
 	gst_registry_get_feature_list_cookie

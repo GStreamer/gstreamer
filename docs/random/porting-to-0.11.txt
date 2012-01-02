@@ -462,3 +462,8 @@ The 0.11 porting guide
     Set the "mode" gobject property on the control-source instead. The possible
     enum values have been renamed from GST_INTERPOLATE_XXX to
     GST_INTERPOLATION_MODE_XXX.
+
+* GstRegistry
+
+    gst_registry_get_default() -> gst_registry_get()
+    gst_default_registry_*(...) -> gst_registry_*(gst_registry_get(), ...)
