@@ -154,8 +154,7 @@ demo_player_build_pipeline (DemoPlayer * player)
   filter = priv->scaletempo;
 
   MAKE_ELEMENT (NULL, playbin, "playbin", "playbin");
-
-  gconf = gst_default_registry_find_plugin ("gconfelements");
+  gconf = gst_registry_find_plugin (gst_registry_get (), "gconfelements");
   has_gconf = (gconf != NULL);
   gst_object_unref (gconf);
 
