@@ -36,13 +36,12 @@ static gboolean
 ges_check_gnonlin_availability (void)
 {
   gboolean ret = TRUE;
-  if (!gst_default_registry_check_feature_version ("gnlcomposition",
-          GES_GNONLIN_VERSION_NEEDED_MAJOR, GES_GNONLIN_VERSION_NEEDED_MINOR,
-          GES_GNONLIN_VERSION_NEEDED_MICRO)) {
-    GST_ERROR
-        ("GNonLin plugins not found, or not at least version %u.%u.%u",
-        GES_GNONLIN_VERSION_NEEDED_MAJOR,
-        GES_GNONLIN_VERSION_NEEDED_MINOR, GES_GNONLIN_VERSION_NEEDED_MICRO);
+  if (!gst_registry_check_feature_version (gst_registry_get (),
+          "gnlcomposition", GES_GNONLIN_VERSION_NEEDED_MAJOR,
+          GES_GNONLIN_VERSION_NEEDED_MINOR, GES_GNONLIN_VERSION_NEEDED_MICRO)) {
+    GST_ERROR ("GNonLin plugins not found, or not at least version %u.%u.%u",
+        GES_GNONLIN_VERSION_NEEDED_MAJOR, GES_GNONLIN_VERSION_NEEDED_MINOR,
+        GES_GNONLIN_VERSION_NEEDED_MICRO);
     ret = FALSE;
   }
   return ret;
