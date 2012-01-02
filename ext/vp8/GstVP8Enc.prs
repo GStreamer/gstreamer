@@ -1,0 +1,7 @@
+[_presets_]
+version=0.10
+element-name=GstVP8Enc
+
+[Profile Realtime]
+max-latency=1
+speed=2
