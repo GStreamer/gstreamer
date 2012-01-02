@@ -1,4 +1,5 @@
 EXPORTS
+	gst_tag_check_language_code
 	gst_tag_demux_get_type
 	gst_tag_demux_result_get_type
 	gst_tag_freeform_string_to_utf8

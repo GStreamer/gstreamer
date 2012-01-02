@@ -1971,6 +1971,7 @@ gst_tag_get_language_code
 gst_tag_get_language_code_iso_639_1
 gst_tag_get_language_code_iso_639_2B
 gst_tag_get_language_code_iso_639_2T
+gst_tag_check_language_code
 </SECTION>
 
 <SECTION>
