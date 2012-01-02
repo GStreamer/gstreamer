@@ -241,7 +241,7 @@ gst_auto_video_src_find_best (GstAutoVideoSrc * src)
   GstCaps *el_caps = NULL;
   gboolean no_match = TRUE;
 
-  list = gst_registry_feature_filter (gst_registry_get_default (),
+  list = gst_registry_feature_filter (gst_registry_get (),
       (GstPluginFeatureFilter) gst_auto_video_src_factory_filter, FALSE, src);
   list = g_list_sort (list, (GCompareFunc) gst_auto_video_src_compare_ranks);
 

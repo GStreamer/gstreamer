@@ -238,7 +238,7 @@ gst_auto_video_sink_find_best (GstAutoVideoSink * sink)
   GstCaps *el_caps = NULL;
   gboolean no_match = TRUE;
 
-  list = gst_registry_feature_filter (gst_registry_get_default (),
+  list = gst_registry_feature_filter (gst_registry_get (),
       (GstPluginFeatureFilter) gst_auto_video_sink_factory_filter, FALSE, sink);
   list = g_list_sort (list, (GCompareFunc) gst_auto_video_sink_compare_ranks);
 
