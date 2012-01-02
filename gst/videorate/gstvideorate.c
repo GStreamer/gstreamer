@@ -365,80 +365,92 @@ gst_video_rate_transform_caps (GstBaseTransform * trans,
 {
   GstVideoRate *videorate = GST_VIDEO_RATE (trans);
   GstCaps *ret;
-  GstStructure *s, *s2;
-  GstStructure *s3 = NULL;
+  GstStructure *s, *s1, *s2, *s3 = NULL;
   int maxrate = g_atomic_int_get (&videorate->max_rate);
+  gint i;
 
-  /* Should always be called with simple caps */
-  g_return_val_if_fail (GST_CAPS_IS_SIMPLE (caps), NULL);
+  ret = gst_caps_new_empty ();
 
-  ret = gst_caps_copy (caps);
+  for (i = 0; i < gst_caps_get_size (caps); i++) {
+    s = gst_caps_get_structure (caps, i);
 
-  s = gst_caps_get_structure (ret, 0);
-  s2 = gst_structure_copy (s);
+    s1 = gst_structure_copy (s);
+    s2 = gst_structure_copy (s);
 
-  if (videorate->drop_only) {
-    gint min_num = 0, min_denom = 1;
-    gint max_num = G_MAXINT, max_denom = 1;
+    if (videorate->drop_only) {
+      gint min_num = 0, min_denom = 1;
+      gint max_num = G_MAXINT, max_denom = 1;
 
-    /* Clamp the caps to our maximum rate as the first caps if possible */
-    if (!gst_video_max_rate_clamp_structure (s, maxrate,
-            &min_num, &min_denom, &max_num, &max_denom)) {
-      min_num = 0;
-      min_denom = 1;
-      max_num = maxrate;
-      max_denom = 1;
+      /* Clamp the caps to our maximum rate as the first caps if possible */
+      if (!gst_video_max_rate_clamp_structure (s1, maxrate,
+              &min_num, &min_denom, &max_num, &max_denom)) {
+        min_num = 0;
+        min_denom = 1;
+        max_num = maxrate;
+        max_denom = 1;
 
-      /* clamp wouldn't be a real subset of 1..maxrate, in this case the sink
-       * caps should become [1..maxrate], [1..maxint] and the src caps just
-       * [1..maxrate].  In case there was a caps incompatibility things will
-       * explode later as appropriate :)
-       *
-       * In case [X..maxrate] == [X..maxint], skip as we'll set it later
-       */
-      if (direction == GST_PAD_SRC && maxrate != G_MAXINT)
-        gst_structure_set (s, "framerate", GST_TYPE_FRACTION_RANGE,
-            min_num, min_denom, maxrate, 1, NULL);
-      else
-        gst_caps_remove_structure (ret, 0);
-    }
-
-    if (direction == GST_PAD_SRC) {
-      /* We can accept anything as long as it's at least the minimal framerate
-       * the the sink needs */
-      gst_structure_set (s2, "framerate", GST_TYPE_FRACTION_RANGE,
-          min_num, min_denom, G_MAXINT, 1, NULL);
-
-      /* Also allow unknown framerate, if it isn't already */
-      if (min_num != 0 || min_denom != 1) {
-        s3 = gst_structure_copy (s);
-        gst_structure_set (s3, "framerate", GST_TYPE_FRACTION, 0, 1, NULL);
+        /* clamp wouldn't be a real subset of 1..maxrate, in this case the sink
+         * caps should become [1..maxrate], [1..maxint] and the src caps just
+         * [1..maxrate].  In case there was a caps incompatibility things will
+         * explode later as appropriate :)
+         *
+         * In case [X..maxrate] == [X..maxint], skip as we'll set it later
+         */
+        if (direction == GST_PAD_SRC && maxrate != G_MAXINT)
+          gst_structure_set (s1, "framerate", GST_TYPE_FRACTION_RANGE,
+              min_num, min_denom, maxrate, 1, NULL);
+        else {
+          gst_structure_free (s1);
+          s1 = NULL;
+        }
       }
-    } else if (max_num != 0 || max_denom != 1) {
-      /* We can provide everything upto the maximum framerate at the src */
-      gst_structure_set (s2, "framerate", GST_TYPE_FRACTION_RANGE,
-          0, 1, max_num, max_denom, NULL);
+
+      if (direction == GST_PAD_SRC) {
+        /* We can accept anything as long as it's at least the minimal framerate
+         * the the sink needs */
+        gst_structure_set (s2, "framerate", GST_TYPE_FRACTION_RANGE,
+            min_num, min_denom, G_MAXINT, 1, NULL);
+
+        /* Also allow unknown framerate, if it isn't already */
+        if (min_num != 0 || min_denom != 1) {
+          s3 = gst_structure_copy (s);
+          gst_structure_set (s3, "framerate", GST_TYPE_FRACTION, 0, 1, NULL);
+        }
+      } else if (max_num != 0 || max_denom != 1) {
+        /* We can provide everything upto the maximum framerate at the src */
+        gst_structure_set (s2, "framerate", GST_TYPE_FRACTION_RANGE,
+            0, 1, max_num, max_denom, NULL);
+      }
+    } else if (direction == GST_PAD_SINK) {
+      gint min_num = 0, min_denom = 1;
+      gint max_num = G_MAXINT, max_denom = 1;
+
+      if (!gst_video_max_rate_clamp_structure (s1, maxrate,
+              &min_num, &min_denom, &max_num, &max_denom)) {
+        gst_structure_free (s1);
+        s1 = NULL;
+      }
+      gst_structure_set (s2, "framerate", GST_TYPE_FRACTION_RANGE, 0, 1,
+          maxrate, 1, NULL);
+    } else {
+      /* set the framerate as a range */
+      gst_structure_set (s2, "framerate", GST_TYPE_FRACTION_RANGE, 0, 1,
+          G_MAXINT, 1, NULL);
     }
-  } else if (direction == GST_PAD_SINK) {
-    gint min_num = 0, min_denom = 1;
-    gint max_num = G_MAXINT, max_denom = 1;
-
-    if (!gst_video_max_rate_clamp_structure (s, maxrate,
-            &min_num, &min_denom, &max_num, &max_denom))
-      gst_caps_remove_structure (ret, 0);
-
-    gst_structure_set (s2, "framerate", GST_TYPE_FRACTION_RANGE, 0, 1,
-        maxrate, 1, NULL);
-  } else {
-    /* set the framerate as a range */
-    gst_structure_set (s2, "framerate", GST_TYPE_FRACTION_RANGE, 0, 1,
-        G_MAXINT, 1, NULL);
+    if (s1 != NULL)
+      gst_caps_merge_structure (ret, s1);
+    gst_caps_merge_structure (ret, s2);
+    if (s3 != NULL)
+      gst_caps_merge_structure (ret, s3);
   }
+  if (filter) {
+    GstCaps *intersection;
 
-  gst_caps_merge_structure (ret, s2);
-  if (s3 != NULL)
-    gst_caps_merge_structure (ret, s3);
-
+    intersection =
+        gst_caps_intersect_full (filter, ret, GST_CAPS_INTERSECT_FIRST);
+    gst_caps_unref (ret);
+    ret = intersection;
+  }
   return ret;
 }
 
@@ -453,6 +465,7 @@ gst_video_rate_fixate_caps (GstBaseTransform * trans,
   if (G_UNLIKELY (!gst_structure_get_fraction (s, "framerate", &num, &denom)))
     return;
 
+  gst_caps_truncate (othercaps);
   s = gst_caps_get_structure (othercaps, 0);
   gst_structure_fixate_field_nearest_fraction (s, "framerate", num, denom);
 }
