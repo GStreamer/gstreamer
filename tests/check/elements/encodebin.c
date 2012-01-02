@@ -486,7 +486,6 @@ GST_START_TEST (test_encodebin_render_audio_only_static)
   GstCaps *sinkcaps;
 
   /* Create an encodebin and render 5s of vorbis only */
-
   pipeline = gst_pipeline_new ("encodebin-pipeline");
   bus = gst_pipeline_get_bus ((GstPipeline *) pipeline);
   audiotestsrc = gst_element_factory_make ("audiotestsrc", NULL);
@@ -499,8 +498,9 @@ GST_START_TEST (test_encodebin_render_audio_only_static)
   g_object_set (ebin, "profile", prof, NULL);
   gst_encoding_profile_unref (prof);
 
-  gst_bin_add_many ((GstBin *) pipeline, audiotestsrc, ebin, fakesink, NULL);
+  gst_bin_add_many (GST_BIN (pipeline), audiotestsrc, ebin, fakesink, NULL);
 
+  GST_DEBUG ("linking encodebin");
   fail_unless (gst_element_link_many (audiotestsrc, ebin, fakesink, NULL));
 
   /* Requesting a new pad should fail */
