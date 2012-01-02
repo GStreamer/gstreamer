@@ -56,6 +56,7 @@ static gboolean
 gst_video_filter_propose_allocation (GstBaseTransform * trans, GstQuery * query)
 {
   GstVideoFilter *filter = GST_VIDEO_FILTER_CAST (trans);
+  GstVideoInfo info;
   GstBufferPool *pool;
   GstCaps *caps;
   gboolean need_pool;
@@ -63,7 +64,13 @@ gst_video_filter_propose_allocation (GstBaseTransform * trans, GstQuery * query)
 
   gst_query_parse_allocation (query, &caps, &need_pool);
 
-  size = GST_VIDEO_INFO_SIZE (&filter->in_info);
+  if (caps == NULL)
+    return FALSE;
+
+  if (!gst_video_info_from_caps (&info, caps))
+    return FALSE;
+
+  size = GST_VIDEO_INFO_SIZE (&info);
 
   if (need_pool) {
     GstStructure *structure;
