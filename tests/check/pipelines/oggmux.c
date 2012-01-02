@@ -316,7 +316,7 @@ test_pipeline (const char *pipeline)
 GST_START_TEST (test_vorbis)
 {
   test_pipeline
-      ("audiotestsrc num-buffers=5 ! audioconvert ! vorbisenc ! oggmux");
+      ("audiotestsrc num-buffers=5 ! audioconvert ! vorbisenc ! .audio_%u oggmux");
 }
 
 GST_END_TEST;
@@ -326,7 +326,7 @@ GST_START_TEST (test_vorbis_oggmux_unlinked)
   GstElement *pipe;
   GstMessage *msg;
 
-  pipe = gst_parse_launch ("audiotestsrc ! vorbisenc ! oggmux", NULL);
+  pipe = gst_parse_launch ("audiotestsrc ! vorbisenc ! .audio_%u oggmux", NULL);
   if (pipe == NULL) {
     g_printerr ("Skipping test 'test_vorbis_oggmux_unlinked'");
     return;
@@ -350,7 +350,7 @@ GST_END_TEST;
 GST_START_TEST (test_theora)
 {
   test_pipeline
-      ("videotestsrc num-buffers=5 ! videoconvert ! theoraenc ! oggmux");
+      ("videotestsrc num-buffers=5 ! videoconvert ! theoraenc ! .video_%u oggmux");
 }
 
 GST_END_TEST;
@@ -360,8 +360,8 @@ GST_END_TEST;
 GST_START_TEST (test_theora_vorbis)
 {
   test_pipeline
-      ("videotestsrc num-buffers=10 ! videoconvert ! theoraenc ! queue ! oggmux name=mux "
-      "audiotestsrc num-buffers=2 ! audioconvert ! vorbisenc ! queue ! mux.");
+      ("videotestsrc num-buffers=10 ! videoconvert ! theoraenc ! queue ! .video_%u oggmux name=mux "
+      "audiotestsrc num-buffers=2 ! audioconvert ! vorbisenc ! queue ! mux.audio_%u");
 }
 
 GST_END_TEST;
@@ -369,8 +369,8 @@ GST_END_TEST;
 GST_START_TEST (test_vorbis_theora)
 {
   test_pipeline
-      ("videotestsrc num-buffers=2 ! videoconvert ! theoraenc ! queue ! oggmux name=mux "
-      "audiotestsrc num-buffers=10 ! audioconvert ! vorbisenc ! queue ! mux.");
+      ("videotestsrc num-buffers=2 ! videoconvert ! theoraenc ! queue ! .video_%u oggmux name=mux "
+      "audiotestsrc num-buffers=10 ! audioconvert ! vorbisenc ! queue ! mux.audio_%u");
 }
 
 GST_END_TEST;
@@ -392,10 +392,10 @@ GST_START_TEST (test_request_pad_cleanup)
   GstPad *pad;
 
   oggmux = gst_element_factory_make ("oggmux", NULL);
-  pad = gst_element_get_request_pad (oggmux, "sink_%u");
+  pad = gst_element_get_request_pad (oggmux, "video_%u");
   fail_unless (pad != NULL);
   gst_object_unref (pad);
-  pad = gst_element_get_request_pad (oggmux, "sink_%u");
+  pad = gst_element_get_request_pad (oggmux, "audio_%u");
   fail_unless (pad != NULL);
   gst_object_unref (pad);
   gst_object_unref (oggmux);
