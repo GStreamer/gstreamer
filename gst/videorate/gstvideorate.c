@@ -787,7 +787,7 @@ gst_video_rate_sink_event (GstBaseTransform * trans, GstEvent * event)
       break;
   }
 
-  return TRUE;
+  return GST_BASE_TRANSFORM_CLASS (parent_class)->sink_event (trans, event);
 
   /* ERRORS */
 format_error:
