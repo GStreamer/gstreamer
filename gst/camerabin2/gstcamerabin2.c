@@ -755,7 +755,7 @@ gst_camera_bin_class_init (GstCameraBin2Class * klass)
           GST_TYPE_CAPS, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (object_class, PROP_VIDEO_ENCODING_PROFILE,
-      g_param_spec_boxed ("video-profile", "Video Profile",
+      g_param_spec_object ("video-profile", "Video Profile",
           "The GstEncodingProfile to use for video recording. Audio is enabled "
           "when this profile supports audio.", GST_TYPE_ENCODING_PROFILE,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
@@ -828,7 +828,7 @@ gst_camera_bin_class_init (GstCameraBin2Class * klass)
    *   getting the 2nd buffer.
    */
   g_object_class_install_property (object_class, PROP_IMAGE_ENCODING_PROFILE,
-      g_param_spec_boxed ("image-profile", "Image Profile",
+      g_param_spec_object ("image-profile", "Image Profile",
           "The GstEncodingProfile to use for image captures.",
           GST_TYPE_ENCODING_PROFILE,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
