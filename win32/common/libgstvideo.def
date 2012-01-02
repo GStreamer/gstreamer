@@ -15,8 +15,10 @@ EXPORTS
 	gst_is_video_overlay_prepare_window_handle_message
 	gst_video_alignment_reset
 	gst_video_buffer_flags_get_type
+	gst_video_buffer_pool_get_allocator
 	gst_video_buffer_pool_get_type
 	gst_video_buffer_pool_new
+	gst_video_buffer_pool_set_allocator
 	gst_video_calculate_display_ratio
 	gst_video_chroma_site_get_type
 	gst_video_color_matrix_get_type
