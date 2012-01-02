@@ -741,9 +741,24 @@ gboolean     gst_tag_list_get_buffer_index  (const GstTagList * list,
 /**
  * GST_TAG_LANGUAGE_CODE:
  *
- * Language code (ISO-639-1) (string) of the content
+ * ISO-639-2 or ISO-639-1 code for the language the content is in (string)
+ *
+ * There is utility API in libgsttag in gst-plugins-base to obtain a translated
+ * language name from the language code: gst_tag_get_language_name()
  */
 #define GST_TAG_LANGUAGE_CODE          "language-code"
+/**
+ * GST_TAG_LANGUAGE_NAME:
+ *
+ * Name of the language the content is in (string)
+ *
+ * Free-form name of the language the content is in, if a language code
+ * is not available. This tag should not be set in addition to a language
+ * code. It is undefined what language or locale the language name is in.
+ *
+ * Since: 0.10.37
+ */
+#define GST_TAG_LANGUAGE_NAME          "language-name"
 /**
  * GST_TAG_IMAGE:
  *

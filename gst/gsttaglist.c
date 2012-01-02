@@ -274,7 +274,11 @@ _gst_tag_initialize (void)
       _("reference level of track and album gain values"), NULL);
   gst_tag_register (GST_TAG_LANGUAGE_CODE, GST_TAG_FLAG_META, G_TYPE_STRING,
       _("language code"),
-      _("language code for this stream, conforming to ISO-639-1"), NULL);
+      _("language code for this stream, conforming to ISO-639-1 or ISO-639-2"),
+      NULL);
+  gst_tag_register (GST_TAG_LANGUAGE_NAME, GST_TAG_FLAG_META, G_TYPE_STRING,
+      _("language name"),
+      _("freeform name of the language this stream is in"), NULL);
   gst_tag_register (GST_TAG_IMAGE, GST_TAG_FLAG_META, GST_TYPE_BUFFER,
       _("image"), _("image related to this stream"), gst_tag_merge_use_first);
   gst_tag_register (GST_TAG_PREVIEW_IMAGE, GST_TAG_FLAG_META, GST_TYPE_BUFFER,
