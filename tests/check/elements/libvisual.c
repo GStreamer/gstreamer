@@ -82,7 +82,9 @@ GST_START_TEST (test_shutdown)
   if (factory_to_test == NULL) {
     GList *list, *l;
 
-    list = gst_default_registry_feature_filter (filter_func, FALSE, NULL);
+    list = gst_registry_feature_filter (gst_registry_get (), filter_func,
+        FALSE, NULL);
+
     if (list == NULL) {
       g_print ("No libvisual plugins installed.\n");
       return;

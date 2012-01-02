@@ -323,8 +323,8 @@ GST_START_TEST (test_mp3_parser_loop)
       "fakemp3parse", "fakemp3parse", plugin_init, VERSION, "LGPL",
       "gst-plugins-base", GST_PACKAGE_NAME, GST_PACKAGE_ORIGIN);
 
-  feature = gst_default_registry_find_feature ("testmpegaudioparse",
-      GST_TYPE_ELEMENT_FACTORY);
+  feature = gst_registry_find_feature (gst_registry_get (),
+      "testmpegaudioparse", GST_TYPE_ELEMENT_FACTORY);
 
   gst_plugin_feature_set_rank (feature, GST_RANK_PRIMARY + 100);
 

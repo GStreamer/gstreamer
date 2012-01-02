@@ -372,15 +372,18 @@ _factory_filter (GstPluginFeature * feature, GstCaps ** subcaps)
 static gboolean
 gst_subtitle_overlay_update_factory_list (GstSubtitleOverlay * self)
 {
-  if (!self->factories
-      || self->factories_cookie !=
-      gst_default_registry_get_feature_list_cookie ()) {
+  GstRegistry *registry;
+  guint cookie;
+
+  registry = gst_registry_get ();
+  cookie = gst_registry_get_feature_list_cookie (registry);
+  if (!self->factories || self->factories_cookie != cookie) {
     GstCaps *subcaps;
     GList *factories;
 
     subcaps = gst_caps_new_empty ();
 
-    factories = gst_default_registry_feature_filter (
+    factories = gst_registry_feature_filter (registry,
         (GstPluginFeatureFilter) _factory_filter, FALSE, &subcaps);
     GST_DEBUG_OBJECT (self, "Created factory caps: %" GST_PTR_FORMAT, subcaps);
     gst_caps_replace (&self->factory_caps, subcaps);
@@ -388,7 +391,7 @@ gst_subtitle_overlay_update_factory_list (GstSubtitleOverlay * self)
     if (self->factories)
       gst_plugin_feature_list_free (self->factories);
     self->factories = factories;
-    self->factories_cookie = gst_default_registry_get_feature_list_cookie ();
+    self->factories_cookie = cookie;
   }
 
   return (self->factories != NULL);
@@ -401,22 +404,24 @@ static guint32 _factory_caps_cookie = 0;
 GstCaps *
 gst_subtitle_overlay_create_factory_caps (void)
 {
+  GstRegistry *registry;
   GList *factories;
   GstCaps *subcaps = NULL;
+  guint cookie;
 
+  registry = gst_registry_get ();
+  cookie = gst_registry_get_feature_list_cookie (registry);
   G_LOCK (_factory_caps);
-  if (!_factory_caps
-      || _factory_caps_cookie !=
-      gst_default_registry_get_feature_list_cookie ()) {
+  if (!_factory_caps || _factory_caps_cookie != cookie) {
     if (_factory_caps)
       gst_caps_unref (_factory_caps);
     _factory_caps = gst_caps_new_empty ();
 
-    factories = gst_default_registry_feature_filter (
+    factories = gst_registry_feature_filter (registry,
         (GstPluginFeatureFilter) _factory_filter, FALSE, &_factory_caps);
     GST_DEBUG ("Created factory caps: %" GST_PTR_FORMAT, _factory_caps);
     gst_plugin_feature_list_free (factories);
-    _factory_caps_cookie = gst_default_registry_get_feature_list_cookie ();
+    _factory_caps_cookie = cookie;
   }
   subcaps = gst_caps_ref (_factory_caps);
   G_UNLOCK (_factory_caps);

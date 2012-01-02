@@ -1928,7 +1928,7 @@ init_visualization_features (void)
 
   vis_entries = g_array_new (FALSE, FALSE, sizeof (VisEntry));
 
-  list = gst_registry_feature_filter (gst_registry_get_default (),
+  list = gst_registry_feature_filter (gst_registry_get (),
       filter_features, FALSE, NULL);
 
   for (walk = list; walk; walk = g_list_next (walk)) {

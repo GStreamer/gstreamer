@@ -280,15 +280,16 @@ gst_uri_decode_bin_autoplug_continue (GstElement * element, GstPad * pad,
 static void
 gst_uri_decode_bin_update_factories_list (GstURIDecodeBin * dec)
 {
-  if (!dec->factories ||
-      dec->factories_cookie !=
-      gst_default_registry_get_feature_list_cookie ()) {
+  guint32 cookie;
+
+  cookie = gst_registry_get_feature_list_cookie (gst_registry_get ());
+  if (!dec->factories || dec->factories_cookie != cookie) {
     if (dec->factories)
       gst_plugin_feature_list_free (dec->factories);
     dec->factories =
         gst_element_factory_list_get_elements
         (GST_ELEMENT_FACTORY_TYPE_DECODABLE, GST_RANK_MARGINAL);
-    dec->factories_cookie = gst_default_registry_get_feature_list_cookie ();
+    dec->factories_cookie = cookie;
   }
 }
 

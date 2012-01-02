@@ -217,7 +217,7 @@ gst_audio_default_registry_mixer_filter (GstAudioMixerFilterFunc filter_func,
 
   /* go through all elements of a certain class and check whether
    * they implement a mixer. If so, add it to the list. */
-  feature_list = gst_registry_get_feature_list (gst_registry_get_default (),
+  feature_list = gst_registry_get_feature_list (gst_registry_get (),
       GST_TYPE_ELEMENT_FACTORY);
 
   feature_list = g_list_sort (feature_list, element_factory_rank_compare_func);

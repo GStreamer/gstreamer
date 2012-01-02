@@ -919,15 +919,16 @@ gst_decode_bin_class_init (GstDecodeBinClass * klass)
 static void
 gst_decode_bin_update_factories_list (GstDecodeBin * dbin)
 {
-  if (!dbin->factories
-      || dbin->factories_cookie !=
-      gst_default_registry_get_feature_list_cookie ()) {
+  guint cookie;
+
+  cookie = gst_registry_get_feature_list_cookie (gst_registry_get ());
+  if (!dbin->factories || dbin->factories_cookie != cookie) {
     if (dbin->factories)
       gst_plugin_feature_list_free (dbin->factories);
     dbin->factories =
         gst_element_factory_list_get_elements
         (GST_ELEMENT_FACTORY_TYPE_DECODABLE, GST_RANK_MARGINAL);
-    dbin->factories_cookie = gst_default_registry_get_feature_list_cookie ();
+    dbin->factories_cookie = cookie;
   }
 }
 

@@ -1220,10 +1220,10 @@ static void
 gst_play_bin_update_elements_list (GstPlayBin * playbin)
 {
   GList *res, *tmp;
+  guint cookie;
 
-  if (!playbin->elements ||
-      playbin->elements_cookie !=
-      gst_default_registry_get_feature_list_cookie ()) {
+  cookie = gst_registry_get_feature_list_cookie (gst_registry_get ());
+  if (!playbin->elements || playbin->elements_cookie != cookie) {
     if (playbin->elements)
       gst_plugin_feature_list_free (playbin->elements);
     res =
@@ -1235,7 +1235,7 @@ gst_play_bin_update_elements_list (GstPlayBin * playbin)
     playbin->elements = g_list_concat (res, tmp);
     playbin->elements =
         g_list_sort (playbin->elements, gst_plugin_feature_rank_compare_func);
-    playbin->elements_cookie = gst_default_registry_get_feature_list_cookie ();
+    playbin->elements_cookie = cookie;
   }
 }
 
