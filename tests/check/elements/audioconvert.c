@@ -651,36 +651,6 @@ GST_START_TEST (test_int_conversion)
         );
   }
 
-  /* 16 bit signed <-> 8 in 16 bit signed */
-  /* NOTE: if audioconvert was doing dithering we'd have a problem */
-  {
-    gint16 in[] = { 0, 64 << 8, -64 << 8 };
-    gint16 out[] = { 0, 64, -64 };
-    RUN_CONVERSION ("16 signed to 8 in 16 signed",
-        in, get_int_caps (1, G_BYTE_ORDER, 16, 16, TRUE),
-        out, get_int_caps (1, G_BYTE_ORDER, 16, 8, TRUE)
-        );
-    RUN_CONVERSION ("8 in 16 signed to 16 signed",
-        out, get_int_caps (1, G_BYTE_ORDER, 16, 8, TRUE),
-        in, get_int_caps (1, G_BYTE_ORDER, 16, 16, TRUE)
-        );
-  }
-
-  /* 16 bit unsigned <-> 8 in 16 bit unsigned */
-  /* NOTE: if audioconvert was doing dithering we'd have a problem */
-  {
-    guint16 in[] = { 1 << 15, (1 << 15) - (64 << 8), (1 << 15) + (64 << 8) };
-    guint16 out[] = { 1 << 7, (1 << 7) - 64, (1 << 7) + 64 };
-    RUN_CONVERSION ("16 unsigned to 8 in 16 unsigned",
-        in, get_int_caps (1, G_BYTE_ORDER, 16, 16, FALSE),
-        out, get_int_caps (1, G_BYTE_ORDER, 16, 8, FALSE)
-        );
-    RUN_CONVERSION ("8 in 16 unsigned to 16 unsigned",
-        out, get_int_caps (1, G_BYTE_ORDER, 16, 8, FALSE),
-        in, get_int_caps (1, G_BYTE_ORDER, 16, 16, FALSE)
-        );
-  }
-
   /* 32 bit signed -> 16 bit signed for rounding check */
   /* NOTE: if audioconvert was doing dithering we'd have a problem */
   {
