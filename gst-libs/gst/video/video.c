@@ -1259,6 +1259,7 @@ fill_planes (GstVideoInfo * info)
       info->size = info->stride[0] * height;
       break;
     case GST_VIDEO_FORMAT_I420:
+    case GST_VIDEO_FORMAT_YV12:        /* same as I420, but plane 1+2 swapped */
       info->stride[0] = GST_ROUND_UP_4 (width);
       info->stride[1] = GST_ROUND_UP_4 (GST_ROUND_UP_2 (width) / 2);
       info->stride[2] = info->stride[1];
@@ -1267,17 +1268,6 @@ fill_planes (GstVideoInfo * info)
       info->offset[2] = info->offset[1] +
           info->stride[1] * (GST_ROUND_UP_2 (height) / 2);
       info->size = info->offset[2] +
-          info->stride[2] * (GST_ROUND_UP_2 (height) / 2);
-      break;
-    case GST_VIDEO_FORMAT_YV12:        /* same as I420, but plane 1+2 swapped */
-      info->stride[0] = GST_ROUND_UP_4 (width);
-      info->stride[1] = GST_ROUND_UP_4 (GST_ROUND_UP_2 (width) / 2);
-      info->stride[2] = info->stride[1];
-      info->offset[0] = 0;
-      info->offset[2] = info->stride[0] * GST_ROUND_UP_2 (height);
-      info->offset[1] = info->offset[2] +
-          info->stride[1] * (GST_ROUND_UP_2 (height) / 2);
-      info->size = info->offset[1] +
           info->stride[2] * (GST_ROUND_UP_2 (height) / 2);
       break;
     case GST_VIDEO_FORMAT_Y41B:
@@ -1331,23 +1321,13 @@ fill_planes (GstVideoInfo * info)
       info->size = info->offset[3] + info->stride[0];
       break;
     case GST_VIDEO_FORMAT_YUV9:
+    case GST_VIDEO_FORMAT_YVU9:
       info->stride[0] = GST_ROUND_UP_4 (width);
       info->stride[1] = GST_ROUND_UP_4 (GST_ROUND_UP_4 (width) / 4);
       info->stride[2] = info->stride[1];
       info->offset[0] = 0;
       info->offset[1] = info->stride[0] * height;
       info->offset[2] = info->offset[1] +
-          info->stride[1] * (GST_ROUND_UP_4 (height) / 4);
-      info->size = info->offset[2] +
-          info->stride[2] * (GST_ROUND_UP_4 (height) / 4);
-      break;
-    case GST_VIDEO_FORMAT_YVU9:
-      info->stride[0] = GST_ROUND_UP_4 (width);
-      info->stride[1] = GST_ROUND_UP_4 (GST_ROUND_UP_4 (width) / 4);
-      info->stride[2] = info->stride[1];
-      info->offset[0] = 0;
-      info->offset[2] = info->stride[0] * height;
-      info->offset[1] = info->offset[2] +
           info->stride[1] * (GST_ROUND_UP_4 (height) / 4);
       info->size = info->offset[2] +
           info->stride[2] * (GST_ROUND_UP_4 (height) / 4);

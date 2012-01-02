@@ -222,7 +222,7 @@ typedef void (*GstVideoFormatPack)           (GstVideoFormatInfo *info, const gp
  *    less than the amount of components when multiple components are packed into
  *    one plane.
  * @plane: the plane number where a component can be found
- * @offset: the offset in the plane where the first pixel of the components
+ * @poffset: the offset in the plane where the first pixel of the components
  *    can be found. If bits < 8 the amount is specified in bits.
  * @w_sub: subsampling factor of the width for the component. Use
  *     GST_VIDEO_SUB_SCALE to scale a width.
@@ -246,7 +246,7 @@ struct _GstVideoFormatInfo {
   gint  pixel_stride[GST_VIDEO_MAX_COMPONENTS];
   guint n_planes;
   guint plane[GST_VIDEO_MAX_COMPONENTS];
-  guint offset[GST_VIDEO_MAX_COMPONENTS];
+  guint poffset[GST_VIDEO_MAX_COMPONENTS];
   guint w_sub[GST_VIDEO_MAX_COMPONENTS];
   guint h_sub[GST_VIDEO_MAX_COMPONENTS];
 
@@ -273,7 +273,7 @@ struct _GstVideoFormatInfo {
 #define GST_VIDEO_FORMAT_INFO_PSTRIDE(info,c)    ((info)->pixel_stride[c])
 #define GST_VIDEO_FORMAT_INFO_N_PLANES(info)     ((info)->n_planes)
 #define GST_VIDEO_FORMAT_INFO_PLANE(info,c)      ((info)->plane[c])
-#define GST_VIDEO_FORMAT_INFO_OFFSET(info,c)     ((info)->offset[c])
+#define GST_VIDEO_FORMAT_INFO_POFFSET(info,c)    ((info)->poffset[c])
 #define GST_VIDEO_FORMAT_INFO_W_SUB(info,c)      ((info)->w_sub[c])
 #define GST_VIDEO_FORMAT_INFO_H_SUB(info,c)      ((info)->h_sub[c])
 
@@ -283,8 +283,10 @@ struct _GstVideoFormatInfo {
 #define GST_VIDEO_FORMAT_INFO_SCALE_HEIGHT(info,c,h) GST_VIDEO_SUB_SCALE ((info)->h_sub[(c)],(h))
 
 #define GST_VIDEO_FORMAT_INFO_DATA(info,planes,comp) \
-  (((guint8*)(planes)[info->plane[comp]]) + info->offset[comp])
+  (((guint8*)(planes)[info->plane[comp]]) + info->poffset[comp])
 #define GST_VIDEO_FORMAT_INFO_STRIDE(info,strides,comp) ((strides)[info->plane[comp]])
+#define GST_VIDEO_FORMAT_INFO_OFFSET(info,offsets,comp) \
+  (((offsets)[info->plane[comp]]) + info->poffset[comp])
 
 /* format properties */
 GstVideoFormat gst_video_format_from_masks           (gint depth, gint bpp, gint endianness,
@@ -574,12 +576,13 @@ struct _GstVideoInfo {
 /* dealing with components */
 #define GST_VIDEO_INFO_N_COMPONENTS(i)   GST_VIDEO_FORMAT_INFO_N_COMPONENTS((i)->finfo)
 #define GST_VIDEO_INFO_COMP_DATA(i,d,c)  GST_VIDEO_FORMAT_INFO_DATA((i)->finfo,d,c)
+#define GST_VIDEO_INFO_COMP_OFFSET(i,c)  GST_VIDEO_FORMAT_INFO_OFFSET((i)->finfo,(i)->offset,c)
 #define GST_VIDEO_INFO_COMP_STRIDE(i,c)  GST_VIDEO_FORMAT_INFO_STRIDE((i)->finfo,(i)->stride,c)
 #define GST_VIDEO_INFO_COMP_WIDTH(i,c)   GST_VIDEO_FORMAT_INFO_SCALE_WIDTH((i)->finfo,c,(i)->width)
 #define GST_VIDEO_INFO_COMP_HEIGHT(i,c)  GST_VIDEO_FORMAT_INFO_SCALE_HEIGHT((i)->finfo,c,(i)->height)
 #define GST_VIDEO_INFO_COMP_PLANE(i,c)   GST_VIDEO_FORMAT_INFO_PLANE((i)->finfo,c)
-#define GST_VIDEO_INFO_COMP_OFFSET(i,c)  GST_VIDEO_FORMAT_INFO_OFFSET((i)->finfo,c)
 #define GST_VIDEO_INFO_COMP_PSTRIDE(i,c) GST_VIDEO_FORMAT_INFO_PSTRIDE((i)->finfo,c)
+#define GST_VIDEO_INFO_COMP_POFFSET(i,c) GST_VIDEO_FORMAT_INFO_POFFSET((i)->finfo,c)
 
 void         gst_video_info_init        (GstVideoInfo *info);
 
@@ -641,11 +644,12 @@ gboolean    gst_video_frame_copy          (GstVideoFrame *dest, const GstVideoFr
 #define GST_VIDEO_FRAME_N_COMPONENTS(f)   GST_VIDEO_INFO_N_COMPONENTS(&(f)->info)
 #define GST_VIDEO_FRAME_COMP_DATA(f,c)    GST_VIDEO_INFO_COMP_DATA(&(f)->info,(f)->data,c)
 #define GST_VIDEO_FRAME_COMP_STRIDE(f,c)  GST_VIDEO_INFO_COMP_STRIDE(&(f)->info,c)
+#define GST_VIDEO_FRAME_COMP_OFFSET(f,c)  GST_VIDEO_INFO_COMP_OFFSET(&(f)->info,c)
 #define GST_VIDEO_FRAME_COMP_WIDTH(f,c)   GST_VIDEO_INFO_COMP_WIDTH(&(f)->info,c)
 #define GST_VIDEO_FRAME_COMP_HEIGHT(f,c)  GST_VIDEO_INFO_COMP_HEIGHT(&(f)->info,c)
 #define GST_VIDEO_FRAME_COMP_PLANE(f,c)   GST_VIDEO_INFO_COMP_PLANE(&(f)->info,c)
-#define GST_VIDEO_FRAME_COMP_OFFSET(f,c)  GST_VIDEO_INFO_COMP_OFFSET(&(f)->info,c)
 #define GST_VIDEO_FRAME_COMP_PSTRIDE(f,c) GST_VIDEO_INFO_COMP_PSTRIDE(&(f)->info,c)
+#define GST_VIDEO_FRAME_COMP_POFFSET(f,c) GST_VIDEO_INFO_COMP_POFFSET(&(f)->info,c)
 
 #define GST_VIDEO_SIZE_RANGE "(int) [ 1, max ]"
 #define GST_VIDEO_FPS_RANGE "(fraction) [ 0, max ]"

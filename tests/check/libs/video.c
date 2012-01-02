@@ -69,7 +69,7 @@ static void paint_setup_YVYU (paintinfo * p, unsigned char *dest);
 static void paint_setup_IYU2 (paintinfo * p, unsigned char *dest);
 static void paint_setup_Y41B (paintinfo * p, unsigned char *dest);
 static void paint_setup_Y42B (paintinfo * p, unsigned char *dest);
-static void paint_setup_Y800 (paintinfo * p, unsigned char *dest);
+static void paint_setup_GRAY8 (paintinfo * p, unsigned char *dest);
 static void paint_setup_AYUV (paintinfo * p, unsigned char *dest);
 
 #if 0
@@ -138,8 +138,8 @@ struct fourcc_list_struct fourcc_list[] = {
   {"Y41B", "Y41B", 12, paint_setup_Y41B},
   /* Y42B */
   {"Y42B", "Y42B", 16, paint_setup_Y42B},
-  /* Y800 grayscale */
-  {"Y800", "Y800", 8, paint_setup_Y800}
+  /* GRAY8 grayscale */
+  {"GRAY8", "GRAY8", 8, paint_setup_GRAY8}
 };
 
 /* returns the size in bytes for one video frame of the given dimensions
@@ -259,7 +259,7 @@ paint_setup_Y42B (paintinfo * p, unsigned char *dest)
 }
 
 static void
-paint_setup_Y800 (paintinfo * p, unsigned char *dest)
+paint_setup_GRAY8 (paintinfo * p, unsigned char *dest)
 {
   /* untested */
   p->yp = dest;
@@ -334,7 +334,7 @@ video_format_is_packed (GstVideoFormat fmt)
     case GST_VIDEO_FORMAT_YV12:
     case GST_VIDEO_FORMAT_Y41B:
     case GST_VIDEO_FORMAT_Y42B:
-    case GST_VIDEO_FORMAT_Y800:
+    case GST_VIDEO_FORMAT_GRAY8:
     case GST_VIDEO_FORMAT_YUV9:
     case GST_VIDEO_FORMAT_YVU9:
       return FALSE;
@@ -444,6 +444,7 @@ GST_START_TEST (test_video_formats)
         GstVideoInfo vinfo;
         paintinfo paintinfo = { 0, };
         guint off0, off1, off2, off3;
+        guint cs0, cs1, cs2, cs3;
         guint size;
 
         GST_LOG ("%s, %dx%d", fourcc_list[i].fourcc, w, h);
@@ -457,7 +458,7 @@ GST_START_TEST (test_video_formats)
         fail_unless_equals_int (GST_VIDEO_INFO_COMP_STRIDE (&vinfo, 0),
             paintinfo.ystride);
         if (!gst_video_format_is_packed (fmt)
-            && !GST_VIDEO_FORMAT_INFO_IS_GRAY (vf_info)) {
+            && !GST_VIDEO_INFO_N_PLANES (&vinfo) > 2) {
           /* planar */
           fail_unless_equals_int (GST_VIDEO_INFO_COMP_STRIDE (&vinfo, 1),
               paintinfo.ustride);
@@ -471,6 +472,11 @@ GST_START_TEST (test_video_formats)
         off1 = GST_VIDEO_INFO_COMP_OFFSET (&vinfo, 1);
         off2 = GST_VIDEO_INFO_COMP_OFFSET (&vinfo, 2);
 
+        GST_INFO ("size %d <> %d", size, paintinfo.endptr);
+        GST_INFO ("off0 %d <> %d", off0, paintinfo.yp);
+        GST_INFO ("off1 %d <> %d", off1, paintinfo.up);
+        GST_INFO ("off2 %d <> %d", off2, paintinfo.vp);
+
         fail_unless_equals_int (size, (unsigned long) paintinfo.endptr);
         fail_unless_equals_int (off0, (unsigned long) paintinfo.yp);
         fail_unless_equals_int (off1, (unsigned long) paintinfo.up);
@@ -480,46 +486,39 @@ GST_START_TEST (test_video_formats)
         off3 = GST_VIDEO_INFO_COMP_OFFSET (&vinfo, 3);
         fail_unless_equals_int (off3, (unsigned long) paintinfo.ap);
 
-        /* some gstvideo checks ... (FIXME: fails for Y41B and Y42B; not sure
-         * if the check or the _get_component_size implementation is wrong) */
-        if (fmt != GST_VIDEO_FORMAT_Y41B && fmt != GST_VIDEO_FORMAT_Y42B
-            && fmt != GST_VIDEO_FORMAT_Y800) {
-          guint cs0, cs1, cs2, cs3;
+        cs0 = GST_VIDEO_INFO_COMP_WIDTH (&vinfo, 0) *
+            GST_VIDEO_INFO_COMP_HEIGHT (&vinfo, 0);
+        cs1 = GST_VIDEO_INFO_COMP_WIDTH (&vinfo, 1) *
+            GST_VIDEO_INFO_COMP_HEIGHT (&vinfo, 1);
+        cs2 = GST_VIDEO_INFO_COMP_WIDTH (&vinfo, 2) *
+            GST_VIDEO_INFO_COMP_HEIGHT (&vinfo, 2);
 
-          cs0 = GST_VIDEO_INFO_COMP_WIDTH (&vinfo, 0) *
-              GST_VIDEO_INFO_COMP_HEIGHT (&vinfo, 0);
-          cs1 = GST_VIDEO_INFO_COMP_WIDTH (&vinfo, 1) *
-              GST_VIDEO_INFO_COMP_HEIGHT (&vinfo, 1);
-          cs2 = GST_VIDEO_INFO_COMP_WIDTH (&vinfo, 2) *
+        /* GST_LOG ("cs0=%d,cs1=%d,cs2=%d,off0=%d,off1=%d,off2=%d,size=%d",
+           cs0, cs1, cs2, off0, off1, off2, size); */
+
+        if (!gst_video_format_is_packed (fmt))
+          fail_unless (cs0 <= off1);
+
+        if (GST_VIDEO_FORMAT_INFO_HAS_ALPHA (vinfo.finfo)) {
+          cs3 = GST_VIDEO_INFO_COMP_WIDTH (&vinfo, 3) *
               GST_VIDEO_INFO_COMP_HEIGHT (&vinfo, 2);
+          fail_unless (cs3 < size);
+          /* U/V/alpha shouldn't take up more space than the Y component */
+          fail_if (cs1 > cs0, "cs1 (%d) should be <= cs0 (%d)", cs1, cs0);
+          fail_if (cs2 > cs0, "cs2 (%d) should be <= cs0 (%d)", cs2, cs0);
+          fail_if (cs3 > cs0, "cs3 (%d) should be <= cs0 (%d)", cs3, cs0);
 
-          /* GST_LOG ("cs0=%d,cs1=%d,cs2=%d,off0=%d,off1=%d,off2=%d,size=%d",
-             cs0, cs1, cs2, off0, off1, off2, size); */
+          /* all components together shouldn't take up more space than size */
+          fail_unless (cs0 + cs1 + cs2 + cs3 <= size);
+        } else {
+          /* U/V shouldn't take up more space than the Y component */
+          fail_if (cs1 > cs0, "cs1 (%d) should be <= cs0 (%d)", cs1, cs0);
+          fail_if (cs2 > cs0, "cs2 (%d) should be <= cs0 (%d)", cs2, cs0);
 
-          if (!gst_video_format_is_packed (fmt))
-            fail_unless (cs0 <= off1);
-
-          if (GST_VIDEO_FORMAT_INFO_HAS_ALPHA (vinfo.finfo)) {
-            cs3 = GST_VIDEO_INFO_COMP_WIDTH (&vinfo, 3) *
-                GST_VIDEO_INFO_COMP_HEIGHT (&vinfo, 2);
-            fail_unless (cs3 < size);
-            /* U/V/alpha shouldn't take up more space than the Y component */
-            fail_if (cs1 > cs0, "cs1 (%d) should be <= cs0 (%d)", cs1, cs0);
-            fail_if (cs2 > cs0, "cs2 (%d) should be <= cs0 (%d)", cs2, cs0);
-            fail_if (cs3 > cs0, "cs3 (%d) should be <= cs0 (%d)", cs3, cs0);
-
-            /* all components together shouldn't take up more space than size */
-            fail_unless (cs0 + cs1 + cs2 + cs3 <= size);
-          } else {
-            /* U/V shouldn't take up more space than the Y component */
-            fail_if (cs1 > cs0, "cs1 (%d) should be <= cs0 (%d)", cs1, cs0);
-            fail_if (cs2 > cs0, "cs2 (%d) should be <= cs0 (%d)", cs2, cs0);
-
-            /* all components together shouldn't take up more space than size */
-            fail_unless (cs0 + cs1 + cs2 <= size,
-                "cs0 (%d) + cs1 (%d) + cs2 (%d) should be <= size (%d)",
-                cs0, cs1, cs2, size);
-          }
+          /* all components together shouldn't take up more space than size */
+          fail_unless (cs0 + cs1 + cs2 <= size,
+              "cs0 (%d) + cs1 (%d) + cs2 (%d) should be <= size (%d)",
+              cs0, cs1, cs2, size);
         }
       }
     }
