@@ -24,3 +24,8 @@ noinst_HEADERS = \
 	gstvp8dec.h \
 	gstvp8enc.h \
 	gstvp8utils.h
+
+presetdir = $(datadir)/gstreamer-$(GST_MAJORMINOR)/presets
+preset_DATA = GstVP8Enc.prs
+
+EXTRA_DIST = $(preset_DATA)
