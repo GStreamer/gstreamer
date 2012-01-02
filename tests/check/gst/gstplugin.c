@@ -245,6 +245,9 @@ GST_START_TEST (test_typefind)
 GST_END_TEST;
 #endif
 
+#define gst_default_registry_check_feature_version(name,a,b,c) \
+    gst_registry_check_feature_version(gst_registry_get(),(name),(a),(b),(c))
+
 GST_START_TEST (test_version_checks)
 {
   fail_if (gst_default_registry_check_feature_version ("identity",
