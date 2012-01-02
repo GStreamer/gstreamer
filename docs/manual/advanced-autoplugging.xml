@@ -314,7 +314,7 @@ init_factories (void)
 {
   /* first filter out the interesting element factories */
   factories = gst_registry_feature_filter (
-      gst_registry_get_default (),
+      gst_registry_get (),
       (GstPluginFeatureFilter) cb_feature_filter, FALSE, NULL);
 
   /* sort them according to their ranks */
