@@ -56,6 +56,6 @@ GType ges_pitivi_formatter_get_type (void);
 
 GESPitiviFormatter *ges_pitivi_formatter_new (void);
 
-
+GList * ges_pitivi_formatter_get_sources(GESPitiviFormatter * formatter, gchar * uri);
 
 #endif /* _GES_PITIVI_FORMATTER */

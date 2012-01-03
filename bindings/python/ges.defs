@@ -659,6 +659,15 @@
   (return-type "GESPitiviFormatter*")
 )
 
+(define-method get_sources
+  (of-object "GESPitiviFormatter")
+  (c-name "ges_pitivi_formatter_get_sources")
+  (return-type "GList*")
+  (parameters
+    '("const-gchar*" "uri")
+  )
+)
+
 ;; From ges-timeline-effect.h
 
 (define-function timeline_effect_get_type

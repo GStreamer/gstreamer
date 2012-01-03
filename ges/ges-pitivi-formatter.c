@@ -461,6 +461,69 @@ save_pitivi_timeline_to_uri (GESFormatter * pitivi_formatter,
   return TRUE;
 }
 
+GList *
+ges_pitivi_formatter_get_sources (GESPitiviFormatter * formatter, gchar * uri)
+{
+  GList *source_list = NULL;
+  xmlXPathContextPtr xpathCtx;
+  xmlDocPtr doc;
+  xmlXPathObjectPtr xpathObj;
+  int size, j;
+  xmlNodeSetPtr nodes;
+
+  if (!(doc = xmlParseFile (uri))) {
+    GST_ERROR ("The xptv file for uri %s was badly formed or did not exist",
+        uri);
+    return FALSE;
+  }
+
+  xpathCtx = xmlXPathNewContext (doc);
+
+  xpathObj = xmlXPathEvalExpression ((const xmlChar *)
+      "/pitivi/factories/sources/source", xpathCtx);
+
+  nodes = xpathObj->nodesetval;
+
+  size = (nodes) ? nodes->nodeNr : 0;
+  for (j = 0; j < size; ++j) {
+    xmlAttr *cur_attr;
+    gchar *name, *value;
+    xmlNodePtr node;
+
+    node = nodes->nodeTab[j];
+    for (cur_attr = node->properties; cur_attr; cur_attr = cur_attr->next) {
+      name = (gchar *) cur_attr->name;
+      value = (gchar *) xmlGetProp (node, cur_attr->name);
+      if (!g_strcmp0 (name, (gchar *) "filename"))
+        source_list = g_list_append (source_list, g_strdup (value));
+      xmlFree (value);
+    }
+  }
+
+  xmlXPathFreeObject (xpathObj);
+
+  xpathObj = xmlXPathEvalExpression ((const xmlChar *)
+      "/pitivi/factories/sources/unused_source", xpathCtx);
+
+  nodes = xpathObj->nodesetval;
+
+  size = (nodes) ? nodes->nodeNr : 0;
+  for (j = 0; j < size; ++j) {
+    xmlNodePtr node;
+
+    node = nodes->nodeTab[j];
+    source_list =
+        g_list_append (source_list,
+        g_strdup ((gchar *) xmlNodeGetContent (node)));
+  }
+
+  xmlXPathFreeObject (xpathObj);
+
+  xmlXPathFreeContext (xpathCtx);
+  xmlFreeDoc (doc);
+  return source_list;
+}
+
 /* Project loading functions */
 
 /* Return: a GHashTable containing:

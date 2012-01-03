@@ -160,6 +160,33 @@ _wrap_ges_timeline_parse_launch_effect_new(PyGObject *self, PyObject *args, PyOb
 /* I did not override ges_formatter_get_data and set_data for these functions are deprecated */
 
 %%
+override ges_pitivi_formatter_get_sources kwargs
+static PyObject *
+_wrap_ges_pitivi_formatter_get_sources(PyGObject *self, PyObject *args, PyObject *kwargs)
+{
+    const GList *l, *list;
+    PyObject *py_list;
+    gchar *uri;
+
+    g_return_val_if_fail (GES_IS_PITIVI_FORMATTER (self->obj),PyList_New(0));
+
+    if (!PyArg_ParseTuple(args, "s:GES.TrackObject.lookup_child", &uri))
+        return FALSE;
+    pyg_begin_allow_threads;
+    list = ges_pitivi_formatter_get_sources (GES_PITIVI_FORMATTER (self->obj), uri);
+    pyg_end_allow_threads;
+
+    py_list = PyList_New(0);
+    for (l = list; l; l = l->next) {
+	gchar * source = (gchar *)l->data;
+	PyList_Append(py_list, PyString_FromString(source));
+	Py_DECREF(source);
+    }
+
+    return py_list;
+}
+
+%%
 override ges_timeline_object_get_top_effects noargs
 static PyObject *
 _wrap_ges_timeline_object_get_top_effects(PyGObject *self)
