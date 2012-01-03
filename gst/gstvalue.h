@@ -162,6 +162,14 @@ G_BEGIN_DECLS
 #define GST_VALUE_HOLDS_BUFFER(x)       (G_VALUE_HOLDS((x), GST_TYPE_BUFFER))
 
 /**
+ * GST_VALUE_HOLDS_SAMPLE:
+ * @x: the #GValue to check
+ *
+ * Checks if the given #GValue contains a #GST_TYPE_SAMPLE value.
+ */
+#define GST_VALUE_HOLDS_SAMPLE(x)       (G_VALUE_HOLDS((x), GST_TYPE_SAMPLE))
+
+/**
  * GST_VALUE_HOLDS_FRACTION:
  * @x: the #GValue to check
  *
