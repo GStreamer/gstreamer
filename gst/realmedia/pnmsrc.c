@@ -188,7 +188,7 @@ gst_pnm_src_create (GstPushSrc * psrc, GstBuffer ** buf)
   gst_element_post_message (GST_ELEMENT_CAST (src), m);
 
 
-  return GST_FLOW_UNEXPECTED;
+  return GST_FLOW_EOS;
 }
 
 /*** GSTURIHANDLER INTERFACE *************************************************/

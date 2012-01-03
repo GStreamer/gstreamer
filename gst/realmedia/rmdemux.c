@@ -829,7 +829,7 @@ gst_rmdemux_loop (GstPad * pad)
       break;
     case RMDEMUX_STATE_EOS:
       GST_LOG_OBJECT (rmdemux, "At EOS, pausing task");
-      ret = GST_FLOW_UNEXPECTED;
+      ret = GST_FLOW_EOS;
       goto need_pause;
     default:
       GST_LOG_OBJECT (rmdemux, "Default: requires %d bytes (state is %d)",
@@ -904,7 +904,7 @@ need_pause:
     rmdemux->segment_running = FALSE;
     gst_pad_pause_task (rmdemux->sinkpad);
 
-    if (ret == GST_FLOW_UNEXPECTED) {
+    if (ret == GST_FLOW_EOS) {
       /* perform EOS logic */
       if (rmdemux->segment.flags & GST_SEEK_FLAG_SEGMENT) {
         gint64 stop;
@@ -923,7 +923,7 @@ need_pause:
         GST_LOG_OBJECT (rmdemux, "Sending EOS, at end of stream");
         gst_rmdemux_send_event (rmdemux, gst_event_new_eos ());
       }
-    } else if (ret == GST_FLOW_NOT_LINKED || ret < GST_FLOW_UNEXPECTED) {
+    } else if (ret == GST_FLOW_NOT_LINKED || ret < GST_FLOW_EOS) {
       GST_ELEMENT_ERROR (rmdemux, STREAM, FAILED,
           (NULL), ("stream stopped, reason %s", reason));
       gst_rmdemux_send_event (rmdemux, gst_event_new_eos ());

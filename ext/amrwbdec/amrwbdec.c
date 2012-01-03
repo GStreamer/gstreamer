@@ -192,7 +192,7 @@ gst_amrwbdec_parse (GstAudioDecoder * dec, GstAdapter * adapter,
     /* no frame yet, skip one byte */
     GST_LOG_OBJECT (amrwbdec, "skipping byte");
     *offset = 1;
-    return GST_FLOW_UNEXPECTED;
+    return GST_FLOW_EOS;
   }
 
   return GST_FLOW_OK;

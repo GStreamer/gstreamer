@@ -882,7 +882,7 @@ do_eos:
   {
     /* store result, we are flushing now */
     GST_DEBUG_OBJECT (rdtmanager, "We are EOS, pushing EOS downstream");
-    session->srcresult = GST_FLOW_UNEXPECTED;
+    session->srcresult = GST_FLOW_EOS;
     gst_pad_pause_task (session->recv_rtp_src);
     gst_pad_push_event (session->recv_rtp_src, gst_event_new_eos ());
     JBUF_UNLOCK (session);

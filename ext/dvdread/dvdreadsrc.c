@@ -962,7 +962,7 @@ gst_dvd_read_src_create (GstPushSrc * pushsrc, GstBuffer ** p_buf)
       return GST_FLOW_ERROR;
     }
     case GST_DVD_READ_EOS:{
-      return GST_FLOW_UNEXPECTED;
+      return GST_FLOW_EOS;
     }
     case GST_DVD_READ_OK:{
       src->change_cell = FALSE;
@@ -972,7 +972,7 @@ gst_dvd_read_src_create (GstPushSrc * pushsrc, GstBuffer ** p_buf)
       break;
   }
 
-  g_return_val_if_reached (GST_FLOW_UNEXPECTED);
+  g_return_val_if_reached (GST_FLOW_EOS);
 }
 
 static void

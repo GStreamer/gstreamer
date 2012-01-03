@@ -407,10 +407,10 @@ pause:
   {
     const gchar *reason = gst_flow_get_name (ret);
 
-    if (ret == GST_FLOW_UNEXPECTED) {
+    if (ret == GST_FLOW_EOS) {
       /* perform EOS logic, FIXME, segment seek? */
       gst_pad_push_event (pad, gst_event_new_eos ());
-    } else  if (ret < GST_FLOW_UNEXPECTED || ret == GST_FLOW_NOT_LINKED) {
+    } else  if (ret < GST_FLOW_EOS || ret == GST_FLOW_NOT_LINKED) {
       /* for fatal errors we post an error message */
       GST_ELEMENT_ERROR (siddec, STREAM, FAILED,
           (NULL), ("streaming task paused, reason %s", reason));

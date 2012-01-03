@@ -267,7 +267,7 @@ gst_mad_parse (GstAudioDecoder * dec, GstAdapter * adapter,
     gint * _offset, gint * len)
 {
   GstMad *mad;
-  GstFlowReturn ret = GST_FLOW_UNEXPECTED;
+  GstFlowReturn ret = GST_FLOW_EOS;
   gint av, size, offset, prev_offset, consumed = 0;
   const guint8 *data;
 
@@ -400,7 +400,7 @@ static GstFlowReturn
 gst_mad_handle_frame (GstAudioDecoder * dec, GstBuffer * buffer)
 {
   GstMad *mad;
-  GstFlowReturn ret = GST_FLOW_UNEXPECTED;
+  GstFlowReturn ret = GST_FLOW_EOS;
   GstBuffer *outbuffer;
   guint nsamples;
   gint32 *outdata;

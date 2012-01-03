@@ -405,7 +405,7 @@ gst_asf_demux_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
         break;
       }
       flow = gst_asf_demux_push_complete_payloads (demux, TRUE);
-      if (flow < GST_FLOW_UNEXPECTED || flow == GST_FLOW_NOT_LINKED) {
+      if (flow < GST_FLOW_EOS || flow == GST_FLOW_NOT_LINKED) {
         GST_ELEMENT_ERROR (demux, STREAM, FAILED,
             (_("Internal data stream error.")),
             ("streaming stopped, reason %s", gst_flow_get_name (flow)));
@@ -963,7 +963,7 @@ gst_asf_demux_pull_data (GstASFDemux * demux, guint64 offset, guint size,
         "+%u (got only %" G_GSIZE_FORMAT " bytes)", offset, size, buffer_size);
     gst_buffer_unref (*p_buf);
     if (G_LIKELY (p_flow))
-      *p_flow = GST_FLOW_UNEXPECTED;
+      *p_flow = GST_FLOW_EOS;
     *p_buf = NULL;
     return FALSE;
   }
@@ -1578,7 +1578,7 @@ gst_asf_demux_loop (GstASFDemux * demux)
   if (G_UNLIKELY (!gst_asf_demux_pull_data (demux, off,
               demux->packet_size * demux->speed_packets, &buf, &flow))) {
     GST_DEBUG_OBJECT (demux, "got flow %s", gst_flow_get_name (flow));
-    if (flow == GST_FLOW_UNEXPECTED)
+    if (flow == GST_FLOW_EOS)
       goto eos;
     else if (flow == GST_FLOW_WRONG_STATE) {
       GST_DEBUG_OBJECT (demux, "Not fatal");
@@ -1686,7 +1686,7 @@ eos:
       gst_element_post_message (GST_ELEMENT_CAST (demux),
           gst_message_new_segment_done (GST_OBJECT (demux), GST_FORMAT_TIME,
               stop));
-    } else if (flow != GST_FLOW_UNEXPECTED) {
+    } else if (flow != GST_FLOW_EOS) {
       /* check if we have a chained asf, in case, we don't eos yet */
       if (gst_asf_demux_check_chained_asf (demux)) {
         GST_INFO_OBJECT (demux, "Chained ASF starting");
@@ -1709,9 +1709,9 @@ pause:
 
     /* For the error cases (not EOS) */
     if (!sent_eos) {
-      if (flow == GST_FLOW_UNEXPECTED)
+      if (flow == GST_FLOW_EOS)
         gst_asf_demux_send_event_unlocked (demux, gst_event_new_eos ());
-      else if (flow < GST_FLOW_UNEXPECTED || flow == GST_FLOW_NOT_LINKED) {
+      else if (flow < GST_FLOW_EOS || flow == GST_FLOW_NOT_LINKED) {
         /* Post an error. Hopefully something else already has, but if not... */
         GST_ELEMENT_ERROR (demux, STREAM, FAILED,
             (_("Internal data stream error.")),
@@ -1726,7 +1726,7 @@ read_failed:
   {
     GST_DEBUG_OBJECT (demux, "Read failed, doh");
     gst_asf_demux_send_event_unlocked (demux, gst_event_new_eos ());
-    flow = GST_FLOW_UNEXPECTED;
+    flow = GST_FLOW_EOS;
     goto pause;
   }
 parse_error:
@@ -1874,7 +1874,7 @@ done:
 eos:
   {
     GST_DEBUG_OBJECT (demux, "Handled last packet, setting EOS");
-    ret = GST_FLOW_UNEXPECTED;
+    ret = GST_FLOW_EOS;
     goto done;
   }
 }
@@ -2349,7 +2349,7 @@ gst_asf_demux_parse_stream_object (GstASFDemux * demux, guint8 * data,
 
   flags = gst_asf_demux_get_uint16 (&data, &size);
   stream_id = flags & 0x7f;
-  is_encrypted = !!((flags & 0x8000) << 15);
+  is_encrypted = ! !((flags & 0x8000) << 15);
   unknown = gst_asf_demux_get_uint32 (&data, &size);
 
   GST_DEBUG_OBJECT (demux, "Found stream %u, time_offset=%" GST_TIME_FORMAT,
@@ -2957,8 +2957,8 @@ gst_asf_demux_process_file (GstASFDemux * demux, guint8 * data, guint64 size)
   max_pktsize = gst_asf_demux_get_uint32 (&data, &size);
   min_bitrate = gst_asf_demux_get_uint32 (&data, &size);
 
-  demux->broadcast = !!(flags & 0x01);
-  demux->seekable = !!(flags & 0x02);
+  demux->broadcast = ! !(flags & 0x01);
+  demux->seekable = ! !(flags & 0x02);
 
   GST_DEBUG_OBJECT (demux, "min_pktsize = %u", min_pktsize);
   GST_DEBUG_OBJECT (demux, "flags::broadcast = %d", demux->broadcast);
