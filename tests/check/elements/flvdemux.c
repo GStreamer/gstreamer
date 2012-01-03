@@ -55,8 +55,6 @@ handoff_cb (GstElement * element, GstBuffer * buf, GstPad * pad,
 {
   *p_counter += 1;
   GST_LOG ("counter = %d", *p_counter);
-
-  fail_unless (GST_BUFFER_CAPS (buf) != NULL);
 }
 
 static void

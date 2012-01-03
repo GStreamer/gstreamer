@@ -229,33 +229,17 @@ GST_START_TEST (test_parse_flac_detect_stream)
     fail_unless (G_VALUE_TYPE (bufval) == GST_TYPE_BUFFER);
     buf = g_value_peek_pointer (bufval);
     if (i == 0) {
-      fail_unless (GST_BUFFER_SIZE (buf) == sizeof (streaminfo_header));
-      fail_unless (memcmp (buf, streaminfo_header, sizeof (streaminfo_header)));
+      fail_unless (gst_buffer_get_size (buf) == sizeof (streaminfo_header));
+      fail_unless (gst_buffer_memcmp (buf, 0, streaminfo_header,
+              sizeof (streaminfo_header)));
     } else if (i == 1) {
-      fail_unless (GST_BUFFER_SIZE (buf) == sizeof (comment_header));
-      fail_unless (memcmp (buf, comment_header, sizeof (comment_header)));
+      fail_unless (gst_buffer_get_size (buf) == sizeof (comment_header));
+      fail_unless (gst_buffer_memcmp (buf, 0, comment_header,
+              sizeof (comment_header)));
     }
   }
 
   gst_caps_unref (caps);
-}
-
-GST_END_TEST;
-
-GST_START_TEST (test_parse_flac_set_index)
-{
-  GstElement *parse;
-  GstIndex *idx;
-
-  idx = gst_index_factory_make ("memindex");
-  if (idx == NULL)
-    return;
-  parse = gst_element_factory_make ("flacparse", NULL);
-  fail_unless (parse != NULL);
-  gst_object_ref_sink (idx);
-  gst_element_set_index (parse, GST_INDEX (idx));
-  gst_object_unref (idx);
-  gst_object_unref (parse);
 }
 
 GST_END_TEST;
@@ -275,7 +259,6 @@ flacparse_suite (void)
 
   /* Other tests */
   tcase_add_test (tc_chain, test_parse_flac_detect_stream);
-  tcase_add_test (tc_chain, test_parse_flac_set_index);
 
   return s;
 }

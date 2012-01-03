@@ -60,6 +60,7 @@
  */
 
 #include <gst/check/gstcheck.h>
+#include <gst/audio/audio.h>
 
 /* For ease of programming we use globals to keep refs for our floating src and
  * sink pads we create; otherwise we always have to do get_pad, get_peer, and
@@ -123,17 +124,13 @@ get_expected_gain (guint sample_rate)
   "rate = (int) { 8000, 11025, 12000, 16000, 22050, "   \
   "24000, 32000, 44100, 48000 }"
 
-#define RG_ANALYSIS_CAPS_TEMPLATE_STRING  \
-  "audio/x-raw-float, "                   \
-  "width = (int) 32, "                    \
-  "endianness = (int) BYTE_ORDER, "       \
-  REPLAY_GAIN_CAPS                        \
-  "; "                                    \
-  "audio/x-raw-int, "                     \
-  "width = (int) 16, "                    \
-  "depth = (int) [ 1, 16 ], "             \
-  "signed = (boolean) true, "             \
-  "endianness = (int) BYTE_ORDER, "       \
+#define RG_ANALYSIS_CAPS_TEMPLATE_STRING      \
+  "audio/x-raw, "                             \
+  "format = (string) "GST_AUDIO_NE (F32) ", " \
+  REPLAY_GAIN_CAPS                            \
+  "; "                                        \
+  "audio/x-raw, "                             \
+  "format = (string) "GST_AUDIO_NE (S16) ", " \
   REPLAY_GAIN_CAPS
 
 static GstStaticPadTemplate sinktemplate = GST_STATIC_PAD_TEMPLATE ("sink",
@@ -352,17 +349,19 @@ static GstBuffer *
 test_buffer_const_float_mono (gint sample_rate, gsize n_frames, gfloat value)
 {
   GstBuffer *buf = gst_buffer_new_and_alloc (n_frames * sizeof (gfloat));
-  gfloat *data = (gfloat *) GST_BUFFER_DATA (buf);
+  gfloat *data, *orig;
   GstCaps *caps;
   gint i;
 
+  data = orig = gst_buffer_map (buf, NULL, NULL, GST_MAP_WRITE);
   for (i = n_frames; i--;)
     *data++ = value;
+  gst_buffer_unmap (buf, orig, -1);
 
-  caps = gst_caps_new_simple ("audio/x-raw-float",
-      "rate", G_TYPE_INT, sample_rate, "channels", G_TYPE_INT, 1,
-      "endianness", G_TYPE_INT, G_BYTE_ORDER, "width", G_TYPE_INT, 32, NULL);
-  gst_buffer_set_caps (buf, caps);
+  caps = gst_caps_new_simple ("audio/x-raw",
+      "format", G_TYPE_STRING, GST_AUDIO_NE (F32),
+      "rate", G_TYPE_INT, sample_rate, "channels", G_TYPE_INT, 1, NULL);
+  gst_pad_set_caps (mysrcpad, caps);
   gst_caps_unref (caps);
 
   ASSERT_BUFFER_REFCOUNT (buf, "buf", 1);
@@ -375,19 +374,21 @@ test_buffer_const_float_stereo (gint sample_rate, gsize n_frames,
     gfloat value_l, gfloat value_r)
 {
   GstBuffer *buf = gst_buffer_new_and_alloc (n_frames * sizeof (gfloat) * 2);
-  gfloat *data = (gfloat *) GST_BUFFER_DATA (buf);
+  gfloat *data, *orig;
   GstCaps *caps;
   gint i;
 
+  data = orig = gst_buffer_map (buf, NULL, NULL, GST_MAP_WRITE);
   for (i = n_frames; i--;) {
     *data++ = value_l;
     *data++ = value_r;
   }
+  gst_buffer_unmap (buf, orig, -1);
 
-  caps = gst_caps_new_simple ("audio/x-raw-float",
-      "rate", G_TYPE_INT, sample_rate, "channels", G_TYPE_INT, 2,
-      "endianness", G_TYPE_INT, G_BYTE_ORDER, "width", G_TYPE_INT, 32, NULL);
-  gst_buffer_set_caps (buf, caps);
+  caps = gst_caps_new_simple ("audio/x-raw",
+      "format", G_TYPE_STRING, GST_AUDIO_NE (F32),
+      "rate", G_TYPE_INT, sample_rate, "channels", G_TYPE_INT, 2, NULL);
+  gst_pad_set_caps (mysrcpad, caps);
   gst_caps_unref (caps);
 
   ASSERT_BUFFER_REFCOUNT (buf, "buf", 1);
@@ -400,18 +401,19 @@ test_buffer_const_int16_mono (gint sample_rate, gint depth, gsize n_frames,
     gint16 value)
 {
   GstBuffer *buf = gst_buffer_new_and_alloc (n_frames * sizeof (gint16));
-  gint16 *data = (gint16 *) GST_BUFFER_DATA (buf);
+  gint16 *data, *orig;
   GstCaps *caps;
   gint i;
 
+  data = orig = gst_buffer_map (buf, NULL, NULL, GST_MAP_WRITE);
   for (i = n_frames; i--;)
     *data++ = value;
+  gst_buffer_unmap (buf, orig, -1);
 
-  caps = gst_caps_new_simple ("audio/x-raw-int",
-      "rate", G_TYPE_INT, sample_rate, "channels", G_TYPE_INT, 1,
-      "endianness", G_TYPE_INT, G_BYTE_ORDER, "signed", G_TYPE_BOOLEAN, TRUE,
-      "width", G_TYPE_INT, 16, "depth", G_TYPE_INT, depth, NULL);
-  gst_buffer_set_caps (buf, caps);
+  caps = gst_caps_new_simple ("audio/x-raw",
+      "format", G_TYPE_STRING, GST_AUDIO_NE (S16),
+      "rate", G_TYPE_INT, sample_rate, "channels", G_TYPE_INT, 1, NULL);
+  gst_pad_set_caps (mysrcpad, caps);
   gst_caps_unref (caps);
 
   ASSERT_BUFFER_REFCOUNT (buf, "buf", 1);
@@ -424,20 +426,21 @@ test_buffer_const_int16_stereo (gint sample_rate, gint depth, gsize n_frames,
     gint16 value_l, gint16 value_r)
 {
   GstBuffer *buf = gst_buffer_new_and_alloc (n_frames * sizeof (gint16) * 2);
-  gint16 *data = (gint16 *) GST_BUFFER_DATA (buf);
+  gint16 *data, *orig;
   GstCaps *caps;
   gint i;
 
+  data = orig = gst_buffer_map (buf, NULL, NULL, GST_MAP_WRITE);
   for (i = n_frames; i--;) {
     *data++ = value_l;
     *data++ = value_r;
   }
+  gst_buffer_unmap (buf, orig, -1);
 
-  caps = gst_caps_new_simple ("audio/x-raw-int",
-      "rate", G_TYPE_INT, sample_rate, "channels", G_TYPE_INT, 2,
-      "endianness", G_TYPE_INT, G_BYTE_ORDER, "signed", G_TYPE_BOOLEAN, TRUE,
-      "width", G_TYPE_INT, 16, "depth", G_TYPE_INT, depth, NULL);
-  gst_buffer_set_caps (buf, caps);
+  caps = gst_caps_new_simple ("audio/x-raw",
+      "format", G_TYPE_STRING, GST_AUDIO_NE (S16),
+      "rate", G_TYPE_INT, sample_rate, "channels", G_TYPE_INT, 2, NULL);
+  gst_pad_set_caps (mysrcpad, caps);
   gst_caps_unref (caps);
 
   ASSERT_BUFFER_REFCOUNT (buf, "buf", 1);
@@ -453,10 +456,11 @@ test_buffer_square_float_mono (gint * accumulator, gint sample_rate,
     gsize n_frames, gfloat value)
 {
   GstBuffer *buf = gst_buffer_new_and_alloc (n_frames * sizeof (gfloat));
-  gfloat *data = (gfloat *) GST_BUFFER_DATA (buf);
+  gfloat *data, *orig;
   GstCaps *caps;
   gint i;
 
+  data = orig = gst_buffer_map (buf, NULL, NULL, GST_MAP_WRITE);
   for (i = n_frames; i--;) {
     *accumulator += 1;
     *accumulator %= 96;
@@ -466,11 +470,12 @@ test_buffer_square_float_mono (gint * accumulator, gint sample_rate,
     else
       *data++ = -value;
   }
+  gst_buffer_unmap (buf, orig, -1);
 
-  caps = gst_caps_new_simple ("audio/x-raw-float",
-      "rate", G_TYPE_INT, sample_rate, "channels", G_TYPE_INT, 1,
-      "endianness", G_TYPE_INT, G_BYTE_ORDER, "width", G_TYPE_INT, 32, NULL);
-  gst_buffer_set_caps (buf, caps);
+  caps = gst_caps_new_simple ("audio/x-raw",
+      "format", G_TYPE_STRING, GST_AUDIO_NE (F32),
+      "rate", G_TYPE_INT, sample_rate, "channels", G_TYPE_INT, 1, NULL);
+  gst_pad_set_caps (mysrcpad, caps);
   gst_caps_unref (caps);
 
   ASSERT_BUFFER_REFCOUNT (buf, "buf", 1);
@@ -483,10 +488,11 @@ test_buffer_square_float_stereo (gint * accumulator, gint sample_rate,
     gsize n_frames, gfloat value_l, gfloat value_r)
 {
   GstBuffer *buf = gst_buffer_new_and_alloc (n_frames * sizeof (gfloat) * 2);
-  gfloat *data = (gfloat *) GST_BUFFER_DATA (buf);
+  gfloat *data, *orig;
   GstCaps *caps;
   gint i;
 
+  data = orig = gst_buffer_map (buf, NULL, NULL, GST_MAP_WRITE);
   for (i = n_frames; i--;) {
     *accumulator += 1;
     *accumulator %= 96;
@@ -499,11 +505,12 @@ test_buffer_square_float_stereo (gint * accumulator, gint sample_rate,
       *data++ = -value_r;
     }
   }
+  gst_buffer_unmap (buf, orig, -1);
 
-  caps = gst_caps_new_simple ("audio/x-raw-float",
-      "rate", G_TYPE_INT, sample_rate, "channels", G_TYPE_INT, 2,
-      "endianness", G_TYPE_INT, G_BYTE_ORDER, "width", G_TYPE_INT, 32, NULL);
-  gst_buffer_set_caps (buf, caps);
+  caps = gst_caps_new_simple ("audio/x-raw",
+      "format", G_TYPE_STRING, GST_AUDIO_NE (F32),
+      "rate", G_TYPE_INT, sample_rate, "channels", G_TYPE_INT, 2, NULL);
+  gst_pad_set_caps (mysrcpad, caps);
   gst_caps_unref (caps);
 
   ASSERT_BUFFER_REFCOUNT (buf, "buf", 1);
@@ -516,10 +523,11 @@ test_buffer_square_int16_mono (gint * accumulator, gint sample_rate,
     gint depth, gsize n_frames, gint16 value)
 {
   GstBuffer *buf = gst_buffer_new_and_alloc (n_frames * sizeof (gint16));
-  gint16 *data = (gint16 *) GST_BUFFER_DATA (buf);
+  gint16 *data, *orig;
   GstCaps *caps;
   gint i;
 
+  data = orig = gst_buffer_map (buf, NULL, NULL, GST_MAP_WRITE);
   for (i = n_frames; i--;) {
     *accumulator += 1;
     *accumulator %= 96;
@@ -529,12 +537,12 @@ test_buffer_square_int16_mono (gint * accumulator, gint sample_rate,
     else
       *data++ = -MAX (value, -32767);
   }
+  gst_buffer_unmap (buf, orig, -1);
 
-  caps = gst_caps_new_simple ("audio/x-raw-int",
-      "rate", G_TYPE_INT, sample_rate, "channels", G_TYPE_INT, 1,
-      "endianness", G_TYPE_INT, G_BYTE_ORDER, "signed", G_TYPE_BOOLEAN, TRUE,
-      "width", G_TYPE_INT, 16, "depth", G_TYPE_INT, depth, NULL);
-  gst_buffer_set_caps (buf, caps);
+  caps = gst_caps_new_simple ("audio/x-raw",
+      "format", G_TYPE_STRING, GST_AUDIO_NE (S16),
+      "rate", G_TYPE_INT, sample_rate, "channels", G_TYPE_INT, 1, NULL);
+  gst_pad_set_caps (mysrcpad, caps);
   gst_caps_unref (caps);
 
   ASSERT_BUFFER_REFCOUNT (buf, "buf", 1);
@@ -547,10 +555,11 @@ test_buffer_square_int16_stereo (gint * accumulator, gint sample_rate,
     gint depth, gsize n_frames, gint16 value_l, gint16 value_r)
 {
   GstBuffer *buf = gst_buffer_new_and_alloc (n_frames * sizeof (gint16) * 2);
-  gint16 *data = (gint16 *) GST_BUFFER_DATA (buf);
+  gint16 *data, *orig;
   GstCaps *caps;
   gint i;
 
+  data = orig = gst_buffer_map (buf, NULL, NULL, GST_MAP_WRITE);
   for (i = n_frames; i--;) {
     *accumulator += 1;
     *accumulator %= 96;
@@ -563,12 +572,12 @@ test_buffer_square_int16_stereo (gint * accumulator, gint sample_rate,
       *data++ = -MAX (value_r, -32767);
     }
   }
+  gst_buffer_unmap (buf, orig, -1);
 
-  caps = gst_caps_new_simple ("audio/x-raw-int",
-      "rate", G_TYPE_INT, sample_rate, "channels", G_TYPE_INT, 2,
-      "endianness", G_TYPE_INT, G_BYTE_ORDER, "signed", G_TYPE_BOOLEAN, TRUE,
-      "width", G_TYPE_INT, 16, "depth", G_TYPE_INT, depth, NULL);
-  gst_buffer_set_caps (buf, caps);
+  caps = gst_caps_new_simple ("audio/x-raw",
+      "format", G_TYPE_STRING, GST_AUDIO_NE (S16),
+      "rate", G_TYPE_INT, sample_rate, "channels", G_TYPE_INT, 2, NULL);
+  gst_pad_set_caps (mysrcpad, caps);
   gst_caps_unref (caps);
 
   ASSERT_BUFFER_REFCOUNT (buf, "buf", 1);
@@ -1179,7 +1188,7 @@ GST_START_TEST (test_forced)
   g_object_set (element, "forced", FALSE, NULL);
   set_playing_state (element);
 
-  tag_list = gst_tag_list_new ();
+  tag_list = gst_tag_list_new_empty ();
   /* Provided values are totally arbitrary. */
   gst_tag_list_add (tag_list, GST_TAG_MERGE_APPEND,
       GST_TAG_TRACK_PEAK, 1.0, GST_TAG_TRACK_GAIN, 2.21, NULL);
@@ -1219,12 +1228,12 @@ GST_START_TEST (test_forced_separate)
   g_object_set (element, "forced", FALSE, NULL);
   set_playing_state (element);
 
-  tag_list = gst_tag_list_new ();
+  tag_list = gst_tag_list_new_empty ();
   gst_tag_list_add (tag_list, GST_TAG_MERGE_APPEND, GST_TAG_TRACK_GAIN, 2.21,
       NULL);
   send_tag_event (element, tag_list);
 
-  tag_list = gst_tag_list_new ();
+  tag_list = gst_tag_list_new_empty ();
   gst_tag_list_add (tag_list, GST_TAG_MERGE_APPEND, GST_TAG_TRACK_PEAK, 1.0,
       NULL);
   send_tag_event (element, tag_list);
@@ -1273,7 +1282,7 @@ GST_START_TEST (test_forced_after_data)
   for (i = 20; i--;)
     push_buffer (test_buffer_const_float_stereo (8000, 512, 0.5, 0.5));
 
-  tag_list = gst_tag_list_new ();
+  tag_list = gst_tag_list_new_empty ();
   gst_tag_list_add (tag_list, GST_TAG_MERGE_APPEND,
       GST_TAG_TRACK_PEAK, 1.0, GST_TAG_TRACK_GAIN, 2.21, NULL);
   send_tag_event (element, tag_list);
@@ -1309,7 +1318,7 @@ GST_START_TEST (test_forced_album)
   g_object_set (element, "forced", FALSE, NULL);
   set_playing_state (element);
 
-  tag_list = gst_tag_list_new ();
+  tag_list = gst_tag_list_new_empty ();
   /* Provided values are totally arbitrary. */
   gst_tag_list_add (tag_list, GST_TAG_MERGE_APPEND,
       GST_TAG_TRACK_PEAK, 1.0, GST_TAG_TRACK_GAIN, 2.21, NULL);
@@ -1366,7 +1375,7 @@ GST_START_TEST (test_forced_album_skip)
   g_object_set (element, "forced", FALSE, "num-tracks", 2, NULL);
   set_playing_state (element);
 
-  tag_list = gst_tag_list_new ();
+  tag_list = gst_tag_list_new_empty ();
   /* Provided values are totally arbitrary. */
   gst_tag_list_add (tag_list, GST_TAG_MERGE_APPEND,
       GST_TAG_TRACK_PEAK, 0.75, GST_TAG_TRACK_GAIN, 2.21,
@@ -1428,7 +1437,7 @@ GST_START_TEST (test_forced_album_no_skip)
 
   /* The second track has indeed full tags, but although being not forced, this
    * one has to be processed because album processing is on. */
-  tag_list = gst_tag_list_new ();
+  tag_list = gst_tag_list_new_empty ();
   /* Provided values are totally arbitrary. */
   gst_tag_list_add (tag_list, GST_TAG_MERGE_APPEND,
       GST_TAG_TRACK_PEAK, 0.75, GST_TAG_TRACK_GAIN, 2.21,
@@ -1479,7 +1488,7 @@ GST_START_TEST (test_forced_abort_album_no_skip)
   g_object_set (element, "num-tracks", 0, NULL);
 
   /* Processing a track that has to be skipped. */
-  tag_list = gst_tag_list_new ();
+  tag_list = gst_tag_list_new_empty ();
   /* Provided values are totally arbitrary. */
   gst_tag_list_add (tag_list, GST_TAG_MERGE_APPEND,
       GST_TAG_TRACK_PEAK, 0.75, GST_TAG_TRACK_GAIN, 2.21,

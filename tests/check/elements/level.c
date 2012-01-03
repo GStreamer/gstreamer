@@ -23,6 +23,7 @@
 #include <unistd.h>
 #include <math.h>
 
+#include <gst/audio/audio.h>
 #include <gst/check/gstcheck.h>
 
 gboolean have_eos = FALSE;
@@ -107,13 +108,14 @@ GST_START_TEST (test_int16)
 
   /* create a fake 0.1 sec buffer with a half-amplitude block signal */
   inbuffer = gst_buffer_new_and_alloc (400);
-  data = (gint16 *) GST_BUFFER_DATA (inbuffer);
+  data = gst_buffer_map (inbuffer, NULL, NULL, GST_MAP_WRITE);
   for (j = 0; j < 200; ++j) {
     *data = 16536;
     ++data;
   }
+  gst_buffer_unmap (inbuffer, data, -1);
   caps = gst_caps_from_string (LEVEL_CAPS_STRING);
-  gst_buffer_set_caps (inbuffer, caps);
+  gst_pad_set_caps (mysrcpad, caps);
   gst_caps_unref (caps);
   ASSERT_BUFFER_REFCOUNT (inbuffer, "inbuffer", 1);
 
@@ -204,15 +206,16 @@ GST_START_TEST (test_int16_panned)
 
   /* create a fake 0.1 sec buffer with a half-amplitude block signal */
   inbuffer = gst_buffer_new_and_alloc (400);
-  data = (gint16 *) GST_BUFFER_DATA (inbuffer);
+  data = gst_buffer_map (inbuffer, NULL, NULL, GST_MAP_WRITE);
   for (j = 0; j < 100; ++j) {
     *data = 0;
     ++data;
     *data = 16536;
     ++data;
   }
+  gst_buffer_unmap (inbuffer, data, -1);
   caps = gst_caps_from_string (LEVEL_CAPS_STRING);
-  gst_buffer_set_caps (inbuffer, caps);
+  gst_pad_set_caps (mysrcpad, caps);
   gst_caps_unref (caps);
   ASSERT_BUFFER_REFCOUNT (inbuffer, "inbuffer", 1);
 

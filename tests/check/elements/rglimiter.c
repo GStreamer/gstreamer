@@ -21,6 +21,7 @@
  */
 
 #include <gst/check/gstcheck.h>
+#include <gst/audio/audio.h>
 
 #include <math.h>
 
@@ -29,11 +30,10 @@
  * get_peer, and then remove references in every test function */
 static GstPad *mysrcpad, *mysinkpad;
 
-#define RG_LIMITER_CAPS_TEMPLATE_STRING   \
-  "audio/x-raw-float, "                   \
-  "width = (int) 32, "                    \
-  "endianness = (int) BYTE_ORDER, "       \
-  "channels = (int) [ 1, MAX ], "         \
+#define RG_LIMITER_CAPS_TEMPLATE_STRING       \
+  "audio/x-raw, "                             \
+  "format = (string) "GST_AUDIO_NE (F32) ", " \
+  "channels = (int) [ 1, MAX ], "             \
   "rate = (int) [ 1, MAX ]"
 
 static GstStaticPadTemplate sinktemplate = GST_STATIC_PAD_TEMPLATE ("sink",
@@ -104,12 +104,12 @@ create_test_buffer (void)
   GstBuffer *buf = gst_buffer_new_and_alloc (sizeof (test_input));
   GstCaps *caps;
 
-  memcpy (GST_BUFFER_DATA (buf), test_input, sizeof (test_input));
+  gst_buffer_fill (buf, 0, test_input, sizeof (test_input));
 
-  caps = gst_caps_new_simple ("audio/x-raw-float",
+  caps = gst_caps_new_simple ("audio/x-raw",
       "rate", G_TYPE_INT, 44100, "channels", G_TYPE_INT, 1,
-      "endianness", G_TYPE_INT, G_BYTE_ORDER, "width", G_TYPE_INT, 32, NULL);
-  gst_buffer_set_caps (buf, caps);
+      "format", G_TYPE_STRING, GST_AUDIO_NE (F32), NULL);
+  gst_pad_set_caps (mysrcpad, caps);
   gst_caps_unref (caps);
 
   ASSERT_BUFFER_REFCOUNT (buf, "buf", 1);
@@ -120,14 +120,19 @@ create_test_buffer (void)
 static void
 verify_test_buffer (GstBuffer * buf)
 {
-  gfloat *output = (gfloat *) GST_BUFFER_DATA (buf);
+  gsize size;
+  gfloat *output;
   gint i;
 
-  fail_unless (GST_BUFFER_SIZE (buf) == sizeof (test_output));
+  output = gst_buffer_map (buf, &size, NULL, GST_MAP_READ);
+  fail_unless (size == sizeof (test_output));
+
   for (i = 0; i < G_N_ELEMENTS (test_input); i++)
     fail_unless (ABS (output[i] - test_output[i]) < 1.e-6,
         "Incorrect output value %.6f for input %.2f, expected %.6f",
         output[i], test_input[i], test_output[i]);
+
+  gst_buffer_unmap (buf, output, size);
 }
 
 /* Start of tests. */
@@ -209,6 +214,8 @@ GST_START_TEST (test_gap)
 {
   GstElement *element = setup_rglimiter ();
   GstBuffer *buf, *out_buf;
+  gpointer d1, d2;
+  gsize s1, s2;
 
   set_playing_state (element);
 
@@ -223,12 +230,17 @@ GST_START_TEST (test_gap)
   /* Verify that the baseclass does not lift the GAP flag: */
   fail_unless (GST_BUFFER_FLAG_IS_SET (out_buf, GST_BUFFER_FLAG_GAP));
 
-  g_assert (GST_BUFFER_SIZE (out_buf) == GST_BUFFER_SIZE (buf));
+  d1 = gst_buffer_map (out_buf, &s1, NULL, GST_MAP_READ);
+  d2 = gst_buffer_map (buf, &s2, NULL, GST_MAP_READ);
+
+  g_assert (s1 == s2);
   /* We cheated by passing an input buffer with non-silence that has the GAP
    * flag set.  The element cannot know that however and must have skipped
    * adjusting the buffer because of the flag, which we can easily verify: */
-  fail_if (memcmp (GST_BUFFER_DATA (out_buf),
-          GST_BUFFER_DATA (buf), GST_BUFFER_SIZE (out_buf)) != 0);
+  fail_if (memcmp (d1, d2, s1) != 0);
+
+  gst_buffer_unmap (out_buf, d1, s1);
+  gst_buffer_unmap (buf, d2, s2);
 
   cleanup_rglimiter (element);
 }

@@ -202,7 +202,7 @@ check_qtmux_pad (GstStaticPadTemplate * srctemplate, const gchar * sinkname,
 
   inbuffer = gst_buffer_new_and_alloc (1);
   caps = gst_caps_copy (gst_pad_get_pad_template_caps (mysrcpad));
-  gst_buffer_set_caps (inbuffer, caps);
+  gst_pad_set_caps (mysrcpad, caps);
   gst_caps_unref (caps);
   GST_BUFFER_TIMESTAMP (inbuffer) = 0;
   GST_BUFFER_DURATION (inbuffer) = 40 * GST_MSECOND;
@@ -225,24 +225,23 @@ check_qtmux_pad (GstStaticPadTemplate * srctemplate, const gchar * sinkname,
       case 0:
       {
         /* ftyp header */
-        guint8 *data = GST_BUFFER_DATA (outbuffer);
-
-        fail_unless (GST_BUFFER_SIZE (outbuffer) >= 20);
-        fail_unless (memcmp (data, data0, sizeof (data0)) == 0);
-        fail_unless (memcmp (data + 16, data0 + 8, 4) == 0);
+        fail_unless (gst_buffer_get_size (outbuffer) >= 20);
+        fail_unless (gst_buffer_memcmp (outbuffer, 0, data0,
+                sizeof (data0)) == 0);
+        fail_unless (gst_buffer_memcmp (outbuffer, 16, data0 + 8, 4) == 0);
         break;
       }
       case 1:                  /* mdat header */
-        fail_unless (GST_BUFFER_SIZE (outbuffer) == 16);
-        fail_unless (memcmp (GST_BUFFER_DATA (outbuffer), data1, sizeof (data1))
+        fail_unless (gst_buffer_get_size (outbuffer) == 16);
+        fail_unless (gst_buffer_memcmp (outbuffer, 0, data1, sizeof (data1))
             == 0);
         break;
       case 2:                  /* buffer we put in */
-        fail_unless (GST_BUFFER_SIZE (outbuffer) == 1);
+        fail_unless (gst_buffer_get_size (outbuffer) == 1);
         break;
       case 3:                  /* moov */
-        fail_unless (GST_BUFFER_SIZE (outbuffer) > 8);
-        fail_unless (memcmp (GST_BUFFER_DATA (outbuffer) + 4, data2,
+        fail_unless (gst_buffer_get_size (outbuffer) > 8);
+        fail_unless (gst_buffer_memcmp (outbuffer, 4, data2,
                 sizeof (data2)) == 0);
         break;
       default:
@@ -285,7 +284,7 @@ check_qtmux_pad_fragmented (GstStaticPadTemplate * srctemplate,
 
   inbuffer = gst_buffer_new_and_alloc (1);
   caps = gst_caps_copy (gst_pad_get_pad_template_caps (mysrcpad));
-  gst_buffer_set_caps (inbuffer, caps);
+  gst_pad_set_caps (mysrcpad, caps);
   gst_caps_unref (caps);
   GST_BUFFER_TIMESTAMP (inbuffer) = 0;
   GST_BUFFER_DURATION (inbuffer) = 40 * GST_MSECOND;
@@ -309,34 +308,33 @@ check_qtmux_pad_fragmented (GstStaticPadTemplate * srctemplate,
       case 0:
       {
         /* ftyp header */
-        guint8 *data = GST_BUFFER_DATA (outbuffer);
-
-        fail_unless (GST_BUFFER_SIZE (outbuffer) >= 20);
-        fail_unless (memcmp (data, data0, sizeof (data0)) == 0);
-        fail_unless (memcmp (data + 16, data0 + 8, 4) == 0);
+        fail_unless (gst_buffer_get_size (outbuffer) >= 20);
+        fail_unless (gst_buffer_memcmp (outbuffer, 0, data0,
+                sizeof (data0)) == 0);
+        fail_unless (gst_buffer_memcmp (outbuffer, 16, data0 + 8, 4) == 0);
         break;
       }
       case 1:                  /* moov */
-        fail_unless (GST_BUFFER_SIZE (outbuffer) > 8);
-        fail_unless (memcmp (GST_BUFFER_DATA (outbuffer) + 4, data2,
+        fail_unless (gst_buffer_get_size (outbuffer) > 8);
+        fail_unless (gst_buffer_memcmp (outbuffer, 4, data2,
                 sizeof (data2)) == 0);
         break;
       case 2:                  /* moof */
-        fail_unless (GST_BUFFER_SIZE (outbuffer) > 8);
-        fail_unless (memcmp (GST_BUFFER_DATA (outbuffer) + 4, data3,
+        fail_unless (gst_buffer_get_size (outbuffer) > 8);
+        fail_unless (gst_buffer_memcmp (outbuffer, 4, data3,
                 sizeof (data3)) == 0);
         break;
       case 3:                  /* mdat header */
-        fail_unless (GST_BUFFER_SIZE (outbuffer) == 8);
-        fail_unless (memcmp (GST_BUFFER_DATA (outbuffer) + 4, data1,
+        fail_unless (gst_buffer_get_size (outbuffer) == 8);
+        fail_unless (gst_buffer_memcmp (outbuffer, 4, data1,
                 sizeof (data1)) == 0);
         break;
       case 4:                  /* buffer we put in */
-        fail_unless (GST_BUFFER_SIZE (outbuffer) == 1);
+        fail_unless (gst_buffer_get_size (outbuffer) == 1);
         break;
       case 5:                  /* mfra */
-        fail_unless (GST_BUFFER_SIZE (outbuffer) > 8);
-        fail_unless (memcmp (GST_BUFFER_DATA (outbuffer) + 4, data4,
+        fail_unless (gst_buffer_get_size (outbuffer) > 8);
+        fail_unless (gst_buffer_memcmp (outbuffer, 4, data4,
                 sizeof (data4)) == 0);
         break;
       default:
@@ -510,7 +508,7 @@ GST_START_TEST (test_reuse)
   inbuffer = gst_buffer_new_and_alloc (1);
   fail_unless (inbuffer != NULL);
   caps = gst_caps_copy (gst_pad_get_pad_template_caps (mysrcpad));
-  gst_buffer_set_caps (inbuffer, caps);
+  gst_pad_set_caps (mysrcpad, caps);
   gst_caps_unref (caps);
   GST_BUFFER_TIMESTAMP (inbuffer) = 0;
   GST_BUFFER_DURATION (inbuffer) = 40 * GST_MSECOND;
@@ -532,7 +530,7 @@ create_qtmux_profile (const gchar * variant)
   GstCaps *caps;
 
   if (variant == NULL) {
-    caps = gst_caps_new_simple ("video/quicktime", NULL);
+    caps = gst_caps_new_empty_simple ("video/quicktime");
   } else {
     caps = gst_caps_new_simple ("video/quicktime",
         "variant", G_TYPE_STRING, variant, NULL);
@@ -607,10 +605,10 @@ static GstStaticPadTemplate sink_template = GST_STATIC_PAD_TEMPLATE ("sink",
 
 static GType test_mp3_enc_get_type (void);
 
-GST_BOILERPLATE (TestMp3Enc, test_mp3_enc, GstElement, GST_TYPE_ELEMENT);
+G_DEFINE_TYPE (TestMp3Enc, test_mp3_enc, GST_TYPE_ELEMENT);
 
 static void
-test_mp3_enc_base_init (gpointer klass)
+test_mp3_enc_class_init (TestMp3EncClass * klass)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
 
@@ -624,13 +622,7 @@ test_mp3_enc_base_init (gpointer klass)
 }
 
 static void
-test_mp3_enc_class_init (TestMp3EncClass * klass)
-{
-  /* doesn't actually need to do anything for this test */
-}
-
-static void
-test_mp3_enc_init (TestMp3Enc * mp3enc, TestMp3EncClass * klass)
+test_mp3_enc_init (TestMp3Enc * mp3enc)
 {
   GstPad *pad;
 
@@ -683,7 +675,7 @@ GST_START_TEST (test_encodebin_mp4mux)
       "fakemp3enc", "fakemp3enc", plugin_init, VERSION, "LGPL",
       "gst-plugins-good", GST_PACKAGE_NAME, GST_PACKAGE_ORIGIN);
 
-  feature = gst_default_registry_find_feature ("testmp3enc",
+  feature = gst_registry_find_feature (gst_registry_get (), "testmp3enc",
       GST_TYPE_ELEMENT_FACTORY);
   gst_plugin_feature_set_rank (feature, GST_RANK_PRIMARY + 100);
 
@@ -708,7 +700,7 @@ GST_START_TEST (test_encodebin_mp4mux)
 
     /* make sure we got mp4mux for variant=iso */
     GST_INFO ("muxer: %s", G_OBJECT_TYPE_NAME (mux));
-    fail_unless_equals_string (GST_PLUGIN_FEATURE_NAME (f), "mp4mux");
+    fail_unless_equals_string (GST_OBJECT_NAME (f), "mp4mux");
   }
   gst_object_unref (mux);
   gst_object_unref (enc);
@@ -736,7 +728,7 @@ extract_tags (const gchar * location, GstTagList ** taglist)
       != GST_STATE_CHANGE_FAILURE);
 
   if (*taglist == NULL) {
-    *taglist = gst_tag_list_new ();
+    *taglist = gst_tag_list_new_empty ();
   }
 
   while (1) {
@@ -803,13 +795,13 @@ test_average_bitrate_custom (const gchar * elementname,
   for (i = 0; i < 3; i++) {
     inbuffer = gst_buffer_new_and_alloc (bytes[i]);
     caps = gst_caps_copy (gst_pad_get_pad_template_caps (mysrcpad));
-    gst_buffer_set_caps (inbuffer, caps);
+    gst_pad_set_caps (mysrcpad, caps);
     gst_caps_unref (caps);
     GST_BUFFER_TIMESTAMP (inbuffer) = total_duration;
     GST_BUFFER_DURATION (inbuffer) = (GstClockTime) durations[i];
     ASSERT_BUFFER_REFCOUNT (inbuffer, "inbuffer", 1);
 
-    total_bytes += GST_BUFFER_SIZE (inbuffer);
+    total_bytes += gst_buffer_get_size (inbuffer);
     total_duration += GST_BUFFER_DURATION (inbuffer);
     fail_unless (gst_pad_push (mysrcpad, inbuffer) == GST_FLOW_OK);
   }

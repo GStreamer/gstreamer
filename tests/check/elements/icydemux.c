@@ -140,11 +140,11 @@ push_data (const guint8 * data, int len, GstCaps * caps, gint64 offset)
   GstFlowReturn res;
   GstBuffer *buffer = gst_buffer_new_and_alloc (len);
 
-  memcpy (GST_BUFFER_DATA (buffer), data, len);
-  gst_buffer_set_caps (buffer, caps);
+  gst_buffer_fill (buffer, 0, data, len);
 
   GST_BUFFER_OFFSET (buffer) = offset;
 
+  gst_pad_set_caps (srcpad, caps);
   res = gst_pad_push (srcpad, buffer);
 
   fail_unless (res == GST_FLOW_OK, "Failed pushing buffer: %d", res);
@@ -227,9 +227,6 @@ GST_START_TEST (test_first_buf_offset_when_merged_for_typefinding)
 
   /* first buffer should have offset 0 even after it was merged with 2nd buf */
   fail_unless (GST_BUFFER_OFFSET (GST_BUFFER_CAST (buffers->data)) == 0);
-
-  /* first buffer should have caps set */
-  fail_unless (GST_BUFFER_CAPS (GST_BUFFER_CAST (buffers->data)) != NULL);
 
   gst_caps_unref (icy_caps);
 

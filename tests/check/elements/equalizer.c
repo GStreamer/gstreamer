@@ -21,6 +21,7 @@
  */
 
 #include <gst/gst.h>
+#include <gst/audio/audio.h>
 #include <gst/base/gstbasetransform.h>
 #include <gst/check/gstcheck.h>
 
@@ -31,28 +32,25 @@
  * get_peer, and then remove references in every test function */
 GstPad *mysrcpad, *mysinkpad;
 
-#define EQUALIZER_CAPS_STRING             \
-    "audio/x-raw-float, "               \
-    "channels = (int) 1, "              \
-    "rate = (int) 48000, "              \
-    "endianness = (int) BYTE_ORDER, "   \
-    "width = (int) 64"                  \
+#define EQUALIZER_CAPS_STRING                     \
+    "audio/x-raw, "                               \
+    "format = (string) "GST_AUDIO_NE (F64) ", "   \
+    "channels = (int) 1, "                        \
+    "rate = (int) 48000"
 
 static GstStaticPadTemplate sinktemplate = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("audio/x-raw-float, "
-        "channels = (int) 1, "
-        "rate = (int) 48000, "
-        "endianness = (int) BYTE_ORDER, " "width = (int) 64 ")
+    GST_STATIC_CAPS ("audio/x-raw, "
+        "format = (string) " GST_AUDIO_NE (F64) ", "
+        "channels = (int) 1, " "rate = (int) 48000")
     );
 static GstStaticPadTemplate srctemplate = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("audio/x-raw-float, "
-        "channels = (int) 1, "
-        "rate = (int) 48000, "
-        "endianness = (int) BYTE_ORDER, " "width = (int) 64 ")
+    GST_STATIC_CAPS ("audio/x-raw, "
+        "format = (string) " GST_AUDIO_NE (F64) ", "
+        "channels = (int) 1, " "rate = (int) 48000")
     );
 
 static GstElement *
@@ -105,12 +103,13 @@ GST_START_TEST (test_equalizer_5bands_passthrough)
       "could not set to playing");
 
   inbuffer = gst_buffer_new_and_alloc (1024 * sizeof (gdouble));
-  in = (gdouble *) GST_BUFFER_DATA (inbuffer);
+  in = gst_buffer_map (inbuffer, NULL, NULL, GST_MAP_WRITE);
   for (i = 0; i < 1024; i++)
     in[i] = g_random_double_range (-1.0, 1.0);
+  gst_buffer_unmap (inbuffer, in, -1);
 
   caps = gst_caps_from_string (EQUALIZER_CAPS_STRING);
-  gst_buffer_set_caps (inbuffer, caps);
+  gst_pad_set_caps (mysrcpad, caps);
   gst_caps_unref (caps);
   ASSERT_BUFFER_REFCOUNT (inbuffer, "inbuffer", 1);
 
@@ -120,10 +119,11 @@ GST_START_TEST (test_equalizer_5bands_passthrough)
   /* ... and puts a new buffer on the global list */
   fail_unless (g_list_length (buffers) == 1);
 
-  res = (gdouble *) GST_BUFFER_DATA (GST_BUFFER (buffers->data));
+  res = gst_buffer_map (GST_BUFFER (buffers->data), NULL, NULL, GST_MAP_READ);
 
   for (i = 0; i < 1024; i++)
     fail_unless_equals_float (in[i], res[i]);
+  gst_buffer_unmap (GST_BUFFER (buffers->data), res, -1);
 
   /* cleanup */
   cleanup_equalizer (equalizer);
@@ -159,9 +159,10 @@ GST_START_TEST (test_equalizer_5bands_minus_24)
       "could not set to playing");
 
   inbuffer = gst_buffer_new_and_alloc (1024 * sizeof (gdouble));
-  in = (gdouble *) GST_BUFFER_DATA (inbuffer);
+  in = gst_buffer_map (inbuffer, NULL, NULL, GST_MAP_WRITE);
   for (i = 0; i < 1024; i++)
     in[i] = g_random_double_range (-1.0, 1.0);
+  gst_buffer_unmap (inbuffer, in, -1);
 
   rms_in = 0.0;
   for (i = 0; i < 1024; i++)
@@ -169,7 +170,7 @@ GST_START_TEST (test_equalizer_5bands_minus_24)
   rms_in = sqrt (rms_in / 1024);
 
   caps = gst_caps_from_string (EQUALIZER_CAPS_STRING);
-  gst_buffer_set_caps (inbuffer, caps);
+  gst_pad_set_caps (mysrcpad, caps);
   gst_caps_unref (caps);
   ASSERT_BUFFER_REFCOUNT (inbuffer, "inbuffer", 1);
 
@@ -179,12 +180,13 @@ GST_START_TEST (test_equalizer_5bands_minus_24)
   /* ... and puts a new buffer on the global list */
   fail_unless (g_list_length (buffers) == 1);
 
-  res = (gdouble *) GST_BUFFER_DATA (GST_BUFFER (buffers->data));
+  res = gst_buffer_map (GST_BUFFER (buffers->data), NULL, NULL, GST_MAP_READ);
 
   rms_out = 0.0;
   for (i = 0; i < 1024; i++)
     rms_out += res[i] * res[i];
   rms_out = sqrt (rms_out / 1024);
+  gst_buffer_unmap (GST_BUFFER (buffers->data), res, -1);
 
   fail_unless (rms_in > rms_out);
 
@@ -222,9 +224,10 @@ GST_START_TEST (test_equalizer_5bands_plus_12)
       "could not set to playing");
 
   inbuffer = gst_buffer_new_and_alloc (1024 * sizeof (gdouble));
-  in = (gdouble *) GST_BUFFER_DATA (inbuffer);
+  in = gst_buffer_map (inbuffer, NULL, NULL, GST_MAP_WRITE);
   for (i = 0; i < 1024; i++)
     in[i] = g_random_double_range (-1.0, 1.0);
+  gst_buffer_unmap (inbuffer, in, -1);
 
   rms_in = 0.0;
   for (i = 0; i < 1024; i++)
@@ -232,7 +235,7 @@ GST_START_TEST (test_equalizer_5bands_plus_12)
   rms_in = sqrt (rms_in / 1024);
 
   caps = gst_caps_from_string (EQUALIZER_CAPS_STRING);
-  gst_buffer_set_caps (inbuffer, caps);
+  gst_pad_set_caps (mysrcpad, caps);
   gst_caps_unref (caps);
   ASSERT_BUFFER_REFCOUNT (inbuffer, "inbuffer", 1);
 
@@ -242,12 +245,13 @@ GST_START_TEST (test_equalizer_5bands_plus_12)
   /* ... and puts a new buffer on the global list */
   fail_unless (g_list_length (buffers) == 1);
 
-  res = (gdouble *) GST_BUFFER_DATA (GST_BUFFER (buffers->data));
+  res = gst_buffer_map (GST_BUFFER (buffers->data), NULL, NULL, GST_MAP_READ);
 
   rms_out = 0.0;
   for (i = 0; i < 1024; i++)
     rms_out += res[i] * res[i];
   rms_out = sqrt (rms_out / 1024);
+  gst_buffer_unmap (GST_BUFFER (buffers->data), res, -1);
 
   fail_unless (rms_in < rms_out);
 
