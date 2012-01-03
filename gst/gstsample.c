@@ -81,6 +81,12 @@ _gst_sample_free (GstSample * sample)
 
 /**
  * gst_sample_new:
+ * @buffer: a #GstBuffer
+ * @caps: a #GstCaps
+ * @segment: a #GstSegment
+ * @info: a #GstStructure
+ *
+ * Create a new #GstSample with the provided details.
  *
  * Free-function: gst_sample_unref
  *

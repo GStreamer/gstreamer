@@ -597,8 +597,6 @@ struct _GstElement
  * @set_bus: set a #GstBus on the element
  * @provide_clock: gets the #GstClock provided by the element
  * @set_clock: set the #GstClock on the element
- * @get_index: set a #GstIndex on the element
- * @set_index: get the #GstIndex of an element
  * @send_event: send a #GstEvent to the element
  * @query: perform a #GstQuery on the element
  * @state_changed: called immediately after a new state was set.

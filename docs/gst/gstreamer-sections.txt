@@ -245,14 +245,24 @@ gst_buffer_copy_flags_get_type
 <FILE>gstmeta</FILE>
 <TITLE>GstMeta</TITLE>
 GstMeta
+GstMetaFlags
+GST_META_FLAGS
+GST_META_FLAG_IS_SET
+GST_META_FLAG_SET
+GST_META_FLAG_UNSET
 GstMetaInfo
-GST_META_TRACE_NAME
 GstMetaInitFunction
 GstMetaFreeFunction
 GstMetaCopyFunction
 GstMetaTransformFunction
 gst_meta_register
 gst_meta_get_info
+<SUBSECTION Standard>
+GST_META_CAST
+GST_META_TRACE_NAME
+<SUBSECTION Private>
+GST_TYPE_META_FLAGS
+gst_meta_flags_get_type
 </SECTION>
 
 
@@ -406,6 +416,29 @@ GST_CAPS_CAST
 gst_caps_flags_get_type
 gst_caps_get_type
 gst_caps_intersect_mode_get_type
+</SECTION>
+
+<SECTION>
+<FILE>gstsample</FILE>
+<TITLE>GstSample</TITLE>
+GstSample
+gst_sample_get_buffer
+gst_sample_get_caps
+gst_sample_get_info
+gst_sample_get_segment
+gst_sample_new
+gst_sample_ref
+gst_sample_unref
+gst_value_get_sample
+gst_value_set_sample
+gst_value_take_sample
+<SUBSECTION Standard>
+GST_SAMPLE_TRACE_NAME
+GST_IS_SAMPLE
+GST_SAMPLE
+GST_TYPE_SAMPLE
+gst_sample_get_type
+GST_SAMPLE_CAST
 </SECTION>
 
 <SECTION>
@@ -1242,11 +1275,13 @@ gst_allocator_find
 gst_allocator_register
 gst_allocator_set_default
 <SUBSECTION Standard>
+GST_TYPE_MEMORY
 GST_MEMORY_TRACE_NAME
 GST_TYPE_MAP_FLAGS
 GST_TYPE_MEMORY_FLAGS
 gst_map_flags_get_type
 gst_memory_flags_get_type
+gst_memory_get_type
 </SECTION>
 
 <SECTION>
@@ -2091,7 +2126,7 @@ gst_buffering_mode_get_type
 <FILE>gstregistry</FILE>
 <TITLE>GstRegistry</TITLE>
 GstRegistry
-gst_registry_get_default
+gst_registry_get
 gst_registry_get_feature_list
 gst_registry_get_feature_list_cookie
 gst_registry_get_feature_list_by_plugin
@@ -2109,16 +2144,7 @@ gst_registry_scan_path
 gst_registry_lookup
 gst_registry_remove_feature
 gst_registry_add_feature
-<SUBSECTION Default Registry>
-gst_default_registry_check_feature_version
-gst_default_registry_get_path_list
-gst_default_registry_add_plugin
-gst_default_registry_add_path
-gst_default_registry_find_plugin
-gst_default_registry_find_feature
-gst_default_registry_get_plugin_list
-gst_default_registry_get_feature_list_cookie
-gst_default_registry_feature_filter
+gst_registry_check_feature_version
 <SUBSECTION Standard>
 GstRegistryClass
 GST_REGISTRY
@@ -2372,6 +2398,8 @@ gst_tag_list_insert
 gst_tag_list_merge
 gst_tag_list_free
 gst_tag_list_get_tag_size
+gst_tag_list_n_tags
+gst_tag_list_nth_tag_name
 gst_tag_list_add
 gst_tag_list_add_value
 gst_tag_list_add_values
