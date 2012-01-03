@@ -565,7 +565,7 @@ gst_stream_synchronizer_sink_bufferalloc (GstPad * pad, guint64 offset,
     guint size, GstCaps * caps, GstBuffer ** buf)
 {
   GstPad *opad;
-  GstFlowReturn ret = GST_FLOW_ERROR;
+  GstFlowReturn ret = GST_FLOW_OK;
 
   GST_LOG_OBJECT (pad, "Allocating buffer: size=%u", size);
 
@@ -573,6 +573,10 @@ gst_stream_synchronizer_sink_bufferalloc (GstPad * pad, guint64 offset,
   if (opad) {
     ret = gst_pad_alloc_buffer (opad, offset, size, caps, buf);
     gst_object_unref (opad);
+  } else {
+    /* may have been released during shutdown;
+     * silently trigger fallback */
+    *buf = NULL;
   }
 
   GST_LOG_OBJECT (pad, "Allocation: %s", gst_flow_get_name (ret));
