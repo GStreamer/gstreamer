@@ -670,7 +670,9 @@ gst_h264_parse_check_valid_frame (GstBaseParse * parse,
         current_off = size - 3;
         goto parsing_error;
       case GST_H264_PARSER_NO_NAL:
-        current_off = size - 3;
+        /* don't expect to have found any NAL so far */
+        g_assert (h264parse->nalu.size == 0);
+        current_off = h264parse->nalu.sc_offset = size - 3;
         goto more;
       case GST_H264_PARSER_BROKEN_DATA:
         GST_WARNING_OBJECT (h264parse, "input stream is corrupt; "
