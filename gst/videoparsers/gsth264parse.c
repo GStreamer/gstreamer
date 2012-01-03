@@ -179,6 +179,7 @@ gst_h264_parse_reset_frame (GstH264Parse * h264parse)
   /* done parsing; reset state */
   h264parse->nalu.valid = FALSE;
   h264parse->nalu.offset = 0;
+  h264parse->nalu.sc_offset = 0;
   h264parse->nalu.size = 0;
   h264parse->current_off = 0;
 
@@ -601,7 +602,7 @@ gst_h264_parse_check_valid_frame (GstBaseParse * parse,
   guint size, current_off = 0;
   gboolean drain;
   GstH264NalParser *nalparser = h264parse->nalparser;
-  GstH264NalUnit nalu = h264parse->nalu;
+  GstH264NalUnit nalu;
 
   /* expect at least 3 bytes startcode == sc, and 2 bytes NALU payload */
   if (G_UNLIKELY (GST_BUFFER_SIZE (buffer) < 5))
@@ -624,6 +625,7 @@ gst_h264_parse_check_valid_frame (GstBaseParse * parse,
   size = GST_BUFFER_SIZE (buffer);
 
   drain = FALSE;
+  nalu = h264parse->nalu;
   current_off = h264parse->current_off;
 
   GST_DEBUG_OBJECT (h264parse, "last parse position %u", current_off);
