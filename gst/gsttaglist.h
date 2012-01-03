@@ -208,6 +208,8 @@ GstTagList * gst_tag_list_new_from_string   (const gchar      * str) G_GNUC_MALL
 
 gboolean     gst_is_tag_list                (gconstpointer p);
 GstTagList * gst_tag_list_copy              (const GstTagList * list) G_GNUC_MALLOC;
+gint         gst_tag_list_n_tags            (const GstTagList * list);
+const gchar* gst_tag_list_nth_tag_name      (const GstTagList * list, guint index);
 gboolean     gst_tag_list_is_empty          (const GstTagList * list);
 gboolean     gst_tag_list_is_equal          (const GstTagList * list1,
                                              const GstTagList * list2);
@@ -255,6 +257,10 @@ gboolean     gst_tag_list_copy_value        (GValue           * dest,
                                              const gchar      * tag);
 
 /* simplifications (FIXME: do we want them?) */
+const GValue *
+             gst_tag_list_get_value         (const GstTagList * list,
+                                             const gchar      * tag);
+
 gboolean     gst_tag_list_get_boolean       (const GstTagList * list,
                                              const gchar      * tag,
                                              gboolean         * value);

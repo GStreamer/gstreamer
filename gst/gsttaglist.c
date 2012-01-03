@@ -760,6 +760,41 @@ gst_tag_list_new_from_string (const gchar * str)
 }
 
 /**
+ * gst_tag_list_n_tags:
+ * @list: A #GstTagList.
+ *
+ * Get the number of tags in @list.
+ *
+ * Returns: The number of tags in @list.
+ */
+gint
+gst_tag_list_n_tags (const GstTagList * list)
+{
+  g_return_val_if_fail (list != NULL, 0);
+  g_return_val_if_fail (GST_IS_TAG_LIST (list), 0);
+
+  return gst_structure_n_fields ((GstStructure *) list);
+}
+
+/**
+ * gst_tag_list_nth_tag_name:
+ * @list: A #GstTagList.
+ * @index: the index
+ *
+ * Get the name of the tag in @list at @index.
+ *
+ * Returns: The name of the tag at @index.
+ */
+const gchar *
+gst_tag_list_nth_tag_name (const GstTagList * list, guint index)
+{
+  g_return_val_if_fail (list != NULL, 0);
+  g_return_val_if_fail (GST_IS_TAG_LIST (list), 0);
+
+  return gst_structure_nth_field_name ((GstStructure *) list, index);
+}
+
+/**
  * gst_tag_list_is_empty:
  * @list: A #GstTagList.
  *
@@ -1367,6 +1402,25 @@ gst_tag_list_copy_value (GValue * dest, const GstTagList * list,
   }
   return TRUE;
 }
+
+/**
+ * gst_tag_list_get_value:
+ * @list: list to get the tag from
+ * @tag: tag to read out
+ *
+ * Get the value for the given tag.
+ *
+ * Returns: The #GValue for @tag.
+ */
+const GValue *
+gst_tag_list_get_value (const GstTagList * list, const gchar * tag)
+{
+  g_return_val_if_fail (GST_IS_TAG_LIST (list), NULL);
+  g_return_val_if_fail (tag != NULL, NULL);
+
+  return gst_structure_get_value ((GstStructure *) list, tag);
+}
+
 
 /* FIXME 0.11: this whole merge function business is overdesigned, and the
  * _get_foo() API is misleading as well - how many application developers will
