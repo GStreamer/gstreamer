@@ -349,7 +349,7 @@ eos:
     GST_DEBUG_OBJECT (mmssrc, "EOS");
     g_free (data);
     *buf = NULL;
-    return GST_FLOW_UNEXPECTED;
+    return GST_FLOW_EOS;
   }
 }
 

@@ -1441,9 +1441,9 @@ error:
     const gchar *reason = gst_flow_get_name (ret);
 
     GST_DEBUG_OBJECT (base, "Pausing task, reason %s", reason);
-    if (ret == GST_FLOW_UNEXPECTED)
+    if (ret == GST_FLOW_EOS)
       GST_MPEGTS_BASE_GET_CLASS (base)->push_event (base, gst_event_new_eos ());
-    else if (ret == GST_FLOW_NOT_LINKED || ret < GST_FLOW_UNEXPECTED) {
+    else if (ret == GST_FLOW_NOT_LINKED || ret < GST_FLOW_EOS) {
       GST_ELEMENT_ERROR (base, STREAM, FAILED,
           (_("Internal data stream error.")),
           ("stream stopped, reason %s", reason));

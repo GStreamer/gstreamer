@@ -704,7 +704,7 @@ gst_ts_demux_perform_seek (MpegTSBase * base, GstSegment * segment, guint16 pid)
     res =
         find_pcr_packet (&demux->parent, seekpos, 4000 * MPEGTS_MAX_PACKETSIZE,
         &seekpcroffset);
-    if (G_UNLIKELY (res == GST_FLOW_UNEXPECTED)) {
+    if (G_UNLIKELY (res == GST_FLOW_EOS)) {
       seekpos =
           MAX ((gint64) pcr_start.offset,
           seekpos - 2000 * MPEGTS_MAX_PACKETSIZE) + 188;
@@ -1596,7 +1596,7 @@ find_timestamps (MpegTSBase * base, guint64 initoff, guint64 * offset)
   /* Search for the first PCRs */
   ret = process_pcr (base, base->first_pat_offset, &initial, 10, TRUE);
 
-  if (ret != GST_FLOW_OK && ret != GST_FLOW_UNEXPECTED) {
+  if (ret != GST_FLOW_OK && ret != GST_FLOW_EOS) {
     GST_WARNING ("Problem getting initial PCRs");
     goto beach;
   }

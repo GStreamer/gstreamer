@@ -777,7 +777,7 @@ gst_base_video_encoder_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
       GST_TIME_ARGS (GST_BUFFER_DURATION (buf)));
 
   if (base_video_encoder->at_eos) {
-    ret = GST_FLOW_UNEXPECTED;
+    ret = GST_FLOW_EOS;
     goto done;
   }
 

@@ -226,7 +226,7 @@ gst_data_uri_src_create (GstBaseSrc * basesrc, guint64 offset, guint size,
   /* This is only correct because GstBaseSrc already clips size for us to be no
    * larger than the max. available size if a segment at the end is requested */
   if (offset + size > gst_buffer_get_size (src->buffer)) {
-    ret = GST_FLOW_UNEXPECTED;
+    ret = GST_FLOW_EOS;
   } else {
     ret = GST_FLOW_OK;
     *buf =
