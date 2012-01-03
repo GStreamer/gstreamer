@@ -358,6 +358,7 @@ gst_vaapiupload_init(GstVaapiUpload *upload, GstVaapiUploadClass *klass)
     /* Override query on src pad */
     srcpad = gst_element_get_static_pad(GST_ELEMENT(upload), "src");
     gst_pad_set_query_function(srcpad, gst_vaapiupload_query);
+    g_object_unref(srcpad);
 }
 
 static gboolean
