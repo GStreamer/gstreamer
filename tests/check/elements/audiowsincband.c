@@ -21,6 +21,7 @@
  */
 
 #include <gst/gst.h>
+#include <gst/audio/audio.h>
 #include <gst/base/gstbasetransform.h>
 #include <gst/check/gstcheck.h>
 
@@ -32,34 +33,32 @@
 GstPad *mysrcpad, *mysinkpad;
 
 #define AUDIO_WSINC_BAND_CAPS_STRING_32          \
-    "audio/x-raw-float, "               \
-    "channels = (int) 1, "              \
-    "rate = (int) 44100, "              \
-    "endianness = (int) BYTE_ORDER, "   \
-    "width = (int) 32"                  \
+    "audio/x-raw, "                              \
+    "format = (string) " GST_AUDIO_NE (F32) ", " \
+    "channels = (int) 1, "                       \
+    "rate = (int) 44100"
 
 #define AUDIO_WSINC_BAND_CAPS_STRING_64          \
-    "audio/x-raw-float, "               \
-    "channels = (int) 1, "              \
-    "rate = (int) 44100, "              \
-    "endianness = (int) BYTE_ORDER, "   \
-    "width = (int) 64"                  \
+    "audio/x-raw, "                              \
+    "format = (string) " GST_AUDIO_NE (F64) ", " \
+    "channels = (int) 1, "                       \
+    "rate = (int) 44100"
+
+#define FORMATS "{ "GST_AUDIO_NE (F32)","GST_AUDIO_NE (F64)" }"
 
 static GstStaticPadTemplate sinktemplate = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("audio/x-raw-float, "
-        "channels = (int) 1, "
-        "rate = (int) 44100, "
-        "endianness = (int) BYTE_ORDER, " "width = (int) { 32, 64 } ")
+    GST_STATIC_CAPS ("audio/x-raw, "
+        "format = (string) " FORMATS ", "
+        "channels = (int) 1, " "rate = (int) 44100")
     );
 static GstStaticPadTemplate srctemplate = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("audio/x-raw-float, "
-        "channels = (int) 1, "
-        "rate = (int) 44100, "
-        "endianness = (int) BYTE_ORDER, " "width = (int) { 32, 64 } ")
+    GST_STATIC_CAPS ("audio/x-raw, "
+        "format = (string) " FORMATS ", "
+        "channels = (int) 1, " "rate = (int) 44100")
     );
 
 static GstElement *
@@ -120,12 +119,14 @@ GST_START_TEST (test_32_bp_0hz)
       44100 / 4.0 + 1000, NULL);
   inbuffer = gst_buffer_new_and_alloc (1024 * sizeof (gfloat));
   GST_BUFFER_TIMESTAMP (inbuffer) = 0;
-  in = (gfloat *) GST_BUFFER_DATA (inbuffer);
+
+  in = gst_buffer_map (inbuffer, NULL, NULL, GST_MAP_WRITE);
   for (i = 0; i < 1024; i++)
     in[i] = 1.0;
+  gst_buffer_unmap (inbuffer, in, -1);
 
   caps = gst_caps_from_string (AUDIO_WSINC_BAND_CAPS_STRING_32);
-  gst_buffer_set_caps (inbuffer, caps);
+  gst_pad_set_caps (mysrcpad, caps);
   gst_caps_unref (caps);
   ASSERT_BUFFER_REFCOUNT (inbuffer, "inbuffer", 1);
 
@@ -137,11 +138,13 @@ GST_START_TEST (test_32_bp_0hz)
 
   for (node = buffers; node; node = node->next) {
     gint buffer_length;
+    gsize size;
 
     fail_if ((outbuffer = (GstBuffer *) node->data) == NULL);
 
-    res = (gfloat *) GST_BUFFER_DATA (outbuffer);
-    buffer_length = GST_BUFFER_SIZE (outbuffer) / sizeof (gfloat);
+    res = gst_buffer_map (outbuffer, &size, NULL, GST_MAP_READ);
+    buffer_length = size / sizeof (gfloat);
+
     rms = 0.0;
     for (i = 0; i < buffer_length; i++)
       rms += res[i] * res[i];
@@ -182,16 +185,17 @@ GST_START_TEST (test_32_bp_11025hz)
       44100 / 4.0 + 1000, NULL);
   inbuffer = gst_buffer_new_and_alloc (1024 * sizeof (gfloat));
   GST_BUFFER_TIMESTAMP (inbuffer) = 0;
-  in = (gfloat *) GST_BUFFER_DATA (inbuffer);
+  in = gst_buffer_map (inbuffer, NULL, NULL, GST_MAP_WRITE);
   for (i = 0; i < 1024; i += 4) {
     in[i] = 0.0;
     in[i + 1] = 1.0;
     in[i + 2] = 0.0;
     in[i + 3] = -1.0;
   }
+  gst_buffer_unmap (inbuffer, in, -1);
 
   caps = gst_caps_from_string (AUDIO_WSINC_BAND_CAPS_STRING_32);
-  gst_buffer_set_caps (inbuffer, caps);
+  gst_pad_set_caps (mysrcpad, caps);
   gst_caps_unref (caps);
   ASSERT_BUFFER_REFCOUNT (inbuffer, "inbuffer", 1);
 
@@ -203,11 +207,12 @@ GST_START_TEST (test_32_bp_11025hz)
 
   for (node = buffers; node; node = node->next) {
     gint buffer_length;
+    gsize size;
 
     fail_if ((outbuffer = (GstBuffer *) node->data) == NULL);
 
-    res = (gfloat *) GST_BUFFER_DATA (outbuffer);
-    buffer_length = GST_BUFFER_SIZE (outbuffer) / sizeof (gfloat);
+    res = gst_buffer_map (outbuffer, &size, NULL, GST_MAP_READ);
+    buffer_length = size / sizeof (gfloat);
     rms = 0.0;
     for (i = 0; i < buffer_length; i++)
       rms += res[i] * res[i];
@@ -249,14 +254,15 @@ GST_START_TEST (test_32_bp_22050hz)
       44100 / 4.0 + 1000, NULL);
   inbuffer = gst_buffer_new_and_alloc (1024 * sizeof (gfloat));
   GST_BUFFER_TIMESTAMP (inbuffer) = 0;
-  in = (gfloat *) GST_BUFFER_DATA (inbuffer);
+  in = gst_buffer_map (inbuffer, NULL, NULL, GST_MAP_WRITE);
   for (i = 0; i < 1024; i += 2) {
     in[i] = 1.0;
     in[i + 1] = -1.0;
   }
+  gst_buffer_unmap (inbuffer, in, -1);
 
   caps = gst_caps_from_string (AUDIO_WSINC_BAND_CAPS_STRING_32);
-  gst_buffer_set_caps (inbuffer, caps);
+  gst_pad_set_caps (mysrcpad, caps);
   gst_caps_unref (caps);
   ASSERT_BUFFER_REFCOUNT (inbuffer, "inbuffer", 1);
 
@@ -268,11 +274,12 @@ GST_START_TEST (test_32_bp_22050hz)
 
   for (node = buffers; node; node = node->next) {
     gint buffer_length;
+    gsize size;
 
     fail_if ((outbuffer = (GstBuffer *) node->data) == NULL);
 
-    res = (gfloat *) GST_BUFFER_DATA (outbuffer);
-    buffer_length = GST_BUFFER_SIZE (outbuffer) / sizeof (gfloat);
+    res = gst_buffer_map (outbuffer, &size, NULL, GST_MAP_READ);
+    buffer_length = size / sizeof (gfloat);
     rms = 0.0;
     for (i = 0; i < buffer_length; i++)
       rms += res[i] * res[i];
@@ -313,12 +320,13 @@ GST_START_TEST (test_32_br_0hz)
       44100 / 4.0 + 1000, NULL);
   inbuffer = gst_buffer_new_and_alloc (1024 * sizeof (gfloat));
   GST_BUFFER_TIMESTAMP (inbuffer) = 0;
-  in = (gfloat *) GST_BUFFER_DATA (inbuffer);
+  in = gst_buffer_map (inbuffer, NULL, NULL, GST_MAP_WRITE);
   for (i = 0; i < 1024; i++)
     in[i] = 1.0;
+  gst_buffer_unmap (inbuffer, in, -1);
 
   caps = gst_caps_from_string (AUDIO_WSINC_BAND_CAPS_STRING_32);
-  gst_buffer_set_caps (inbuffer, caps);
+  gst_pad_set_caps (mysrcpad, caps);
   gst_caps_unref (caps);
   ASSERT_BUFFER_REFCOUNT (inbuffer, "inbuffer", 1);
 
@@ -330,11 +338,12 @@ GST_START_TEST (test_32_br_0hz)
 
   for (node = buffers; node; node = node->next) {
     gint buffer_length;
+    gsize size;
 
     fail_if ((outbuffer = (GstBuffer *) node->data) == NULL);
 
-    res = (gfloat *) GST_BUFFER_DATA (outbuffer);
-    buffer_length = GST_BUFFER_SIZE (outbuffer) / sizeof (gfloat);
+    res = gst_buffer_map (outbuffer, &size, NULL, GST_MAP_READ);
+    buffer_length = size / sizeof (gfloat);
     rms = 0.0;
     for (i = 0; i < buffer_length; i++)
       rms += res[i] * res[i];
@@ -375,7 +384,7 @@ GST_START_TEST (test_32_br_11025hz)
       44100 / 4.0 + 1000, NULL);
   inbuffer = gst_buffer_new_and_alloc (1024 * sizeof (gfloat));
   GST_BUFFER_TIMESTAMP (inbuffer) = 0;
-  in = (gfloat *) GST_BUFFER_DATA (inbuffer);
+  in = gst_buffer_map (inbuffer, NULL, NULL, GST_MAP_WRITE);
 
   for (i = 0; i < 1024; i += 4) {
     in[i] = 0.0;
@@ -383,9 +392,10 @@ GST_START_TEST (test_32_br_11025hz)
     in[i + 2] = 0.0;
     in[i + 3] = -1.0;
   }
+  gst_buffer_unmap (inbuffer, in, -1);
 
   caps = gst_caps_from_string (AUDIO_WSINC_BAND_CAPS_STRING_32);
-  gst_buffer_set_caps (inbuffer, caps);
+  gst_pad_set_caps (mysrcpad, caps);
   gst_caps_unref (caps);
   ASSERT_BUFFER_REFCOUNT (inbuffer, "inbuffer", 1);
 
@@ -397,11 +407,12 @@ GST_START_TEST (test_32_br_11025hz)
 
   for (node = buffers; node; node = node->next) {
     gint buffer_length;
+    gsize size;
 
     fail_if ((outbuffer = (GstBuffer *) node->data) == NULL);
 
-    res = (gfloat *) GST_BUFFER_DATA (outbuffer);
-    buffer_length = GST_BUFFER_SIZE (outbuffer) / sizeof (gfloat);
+    res = gst_buffer_map (outbuffer, &size, NULL, GST_MAP_READ);
+    buffer_length = size / sizeof (gfloat);
     rms = 0.0;
     for (i = 0; i < buffer_length; i++)
       rms += res[i] * res[i];
@@ -443,14 +454,15 @@ GST_START_TEST (test_32_br_22050hz)
       44100 / 4.0 + 1000, NULL);
   inbuffer = gst_buffer_new_and_alloc (1024 * sizeof (gfloat));
   GST_BUFFER_TIMESTAMP (inbuffer) = 0;
-  in = (gfloat *) GST_BUFFER_DATA (inbuffer);
+  in = gst_buffer_map (inbuffer, NULL, NULL, GST_MAP_WRITE);
   for (i = 0; i < 1024; i += 2) {
     in[i] = 1.0;
     in[i + 1] = -1.0;
   }
+  gst_buffer_unmap (inbuffer, in, -1);
 
   caps = gst_caps_from_string (AUDIO_WSINC_BAND_CAPS_STRING_32);
-  gst_buffer_set_caps (inbuffer, caps);
+  gst_pad_set_caps (mysrcpad, caps);
   gst_caps_unref (caps);
   ASSERT_BUFFER_REFCOUNT (inbuffer, "inbuffer", 1);
 
@@ -462,11 +474,12 @@ GST_START_TEST (test_32_br_22050hz)
 
   for (node = buffers; node; node = node->next) {
     gint buffer_length;
+    gsize size;
 
     fail_if ((outbuffer = (GstBuffer *) node->data) == NULL);
 
-    res = (gfloat *) GST_BUFFER_DATA (outbuffer);
-    buffer_length = GST_BUFFER_SIZE (outbuffer) / sizeof (gfloat);
+    res = gst_buffer_map (outbuffer, &size, NULL, GST_MAP_READ);
+    buffer_length = size / sizeof (gfloat);
     rms = 0.0;
     for (i = 0; i < buffer_length; i++)
       rms += res[i] * res[i];
@@ -505,12 +518,13 @@ GST_START_TEST (test_32_small_buffer)
       44100 / 4.0 + 44100 / 16.0, NULL);
   inbuffer = gst_buffer_new_and_alloc (20 * sizeof (gfloat));
   GST_BUFFER_TIMESTAMP (inbuffer) = 0;
-  in = (gfloat *) GST_BUFFER_DATA (inbuffer);
+  in = gst_buffer_map (inbuffer, NULL, NULL, GST_MAP_WRITE);
   for (i = 0; i < 20; i++)
     in[i] = 1.0;
+  gst_buffer_unmap (inbuffer, in, -1);
 
   caps = gst_caps_from_string (AUDIO_WSINC_BAND_CAPS_STRING_32);
-  gst_buffer_set_caps (inbuffer, caps);
+  gst_pad_set_caps (mysrcpad, caps);
   gst_caps_unref (caps);
   ASSERT_BUFFER_REFCOUNT (inbuffer, "inbuffer", 1);
 
@@ -561,12 +575,13 @@ GST_START_TEST (test_64_bp_0hz)
       44100 / 4.0 + 1000, NULL);
   inbuffer = gst_buffer_new_and_alloc (1024 * sizeof (gdouble));
   GST_BUFFER_TIMESTAMP (inbuffer) = 0;
-  in = (gdouble *) GST_BUFFER_DATA (inbuffer);
+  in = gst_buffer_map (inbuffer, NULL, NULL, GST_MAP_WRITE);
   for (i = 0; i < 1024; i++)
     in[i] = 1.0;
+  gst_buffer_unmap (inbuffer, in, -1);
 
   caps = gst_caps_from_string (AUDIO_WSINC_BAND_CAPS_STRING_64);
-  gst_buffer_set_caps (inbuffer, caps);
+  gst_pad_set_caps (mysrcpad, caps);
   gst_caps_unref (caps);
   ASSERT_BUFFER_REFCOUNT (inbuffer, "inbuffer", 1);
 
@@ -578,11 +593,12 @@ GST_START_TEST (test_64_bp_0hz)
 
   for (node = buffers; node; node = node->next) {
     gint buffer_length;
+    gsize size;
 
     fail_if ((outbuffer = (GstBuffer *) node->data) == NULL);
 
-    res = (gdouble *) GST_BUFFER_DATA (outbuffer);
-    buffer_length = GST_BUFFER_SIZE (outbuffer) / sizeof (gdouble);
+    res = gst_buffer_map (outbuffer, &size, NULL, GST_MAP_READ);
+    buffer_length = size / sizeof (gfloat);
     rms = 0.0;
     for (i = 0; i < buffer_length; i++)
       rms += res[i] * res[i];
@@ -623,16 +639,17 @@ GST_START_TEST (test_64_bp_11025hz)
       44100 / 4.0 + 1000, NULL);
   inbuffer = gst_buffer_new_and_alloc (1024 * sizeof (gdouble));
   GST_BUFFER_TIMESTAMP (inbuffer) = 0;
-  in = (gdouble *) GST_BUFFER_DATA (inbuffer);
+  in = gst_buffer_map (inbuffer, NULL, NULL, GST_MAP_WRITE);
   for (i = 0; i < 1024; i += 4) {
     in[i] = 0.0;
     in[i + 1] = 1.0;
     in[i + 2] = 0.0;
     in[i + 3] = -1.0;
   }
+  gst_buffer_unmap (inbuffer, in, -1);
 
   caps = gst_caps_from_string (AUDIO_WSINC_BAND_CAPS_STRING_64);
-  gst_buffer_set_caps (inbuffer, caps);
+  gst_pad_set_caps (mysrcpad, caps);
   gst_caps_unref (caps);
   ASSERT_BUFFER_REFCOUNT (inbuffer, "inbuffer", 1);
 
@@ -644,11 +661,12 @@ GST_START_TEST (test_64_bp_11025hz)
 
   for (node = buffers; node; node = node->next) {
     gint buffer_length;
+    gsize size;
 
     fail_if ((outbuffer = (GstBuffer *) node->data) == NULL);
 
-    res = (gdouble *) GST_BUFFER_DATA (outbuffer);
-    buffer_length = GST_BUFFER_SIZE (outbuffer) / sizeof (gdouble);
+    res = gst_buffer_map (outbuffer, &size, NULL, GST_MAP_READ);
+    buffer_length = size / sizeof (gfloat);
     rms = 0.0;
     for (i = 0; i < buffer_length; i++)
       rms += res[i] * res[i];
@@ -690,14 +708,15 @@ GST_START_TEST (test_64_bp_22050hz)
       44100 / 4.0 + 1000, NULL);
   inbuffer = gst_buffer_new_and_alloc (1024 * sizeof (gdouble));
   GST_BUFFER_TIMESTAMP (inbuffer) = 0;
-  in = (gdouble *) GST_BUFFER_DATA (inbuffer);
+  in = gst_buffer_map (inbuffer, NULL, NULL, GST_MAP_WRITE);
   for (i = 0; i < 1024; i += 2) {
     in[i] = 1.0;
     in[i + 1] = -1.0;
   }
+  gst_buffer_unmap (inbuffer, in, -1);
 
   caps = gst_caps_from_string (AUDIO_WSINC_BAND_CAPS_STRING_64);
-  gst_buffer_set_caps (inbuffer, caps);
+  gst_pad_set_caps (mysrcpad, caps);
   gst_caps_unref (caps);
   ASSERT_BUFFER_REFCOUNT (inbuffer, "inbuffer", 1);
 
@@ -709,11 +728,12 @@ GST_START_TEST (test_64_bp_22050hz)
 
   for (node = buffers; node; node = node->next) {
     gint buffer_length;
+    gsize size;
 
     fail_if ((outbuffer = (GstBuffer *) node->data) == NULL);
 
-    res = (gdouble *) GST_BUFFER_DATA (outbuffer);
-    buffer_length = GST_BUFFER_SIZE (outbuffer) / sizeof (gdouble);
+    res = gst_buffer_map (outbuffer, &size, NULL, GST_MAP_READ);
+    buffer_length = size / sizeof (gfloat);
     rms = 0.0;
     for (i = 0; i < buffer_length; i++)
       rms += res[i] * res[i];
@@ -754,12 +774,13 @@ GST_START_TEST (test_64_br_0hz)
       44100 / 4.0 + 1000, NULL);
   inbuffer = gst_buffer_new_and_alloc (1024 * sizeof (gdouble));
   GST_BUFFER_TIMESTAMP (inbuffer) = 0;
-  in = (gdouble *) GST_BUFFER_DATA (inbuffer);
+  in = gst_buffer_map (inbuffer, NULL, NULL, GST_MAP_WRITE);
   for (i = 0; i < 1024; i++)
     in[i] = 1.0;
+  gst_buffer_unmap (inbuffer, in, -1);
 
   caps = gst_caps_from_string (AUDIO_WSINC_BAND_CAPS_STRING_64);
-  gst_buffer_set_caps (inbuffer, caps);
+  gst_pad_set_caps (mysrcpad, caps);
   gst_caps_unref (caps);
   ASSERT_BUFFER_REFCOUNT (inbuffer, "inbuffer", 1);
 
@@ -771,11 +792,12 @@ GST_START_TEST (test_64_br_0hz)
 
   for (node = buffers; node; node = node->next) {
     gint buffer_length;
+    gsize size;
 
     fail_if ((outbuffer = (GstBuffer *) node->data) == NULL);
 
-    res = (gdouble *) GST_BUFFER_DATA (outbuffer);
-    buffer_length = GST_BUFFER_SIZE (outbuffer) / sizeof (gdouble);
+    res = gst_buffer_map (outbuffer, &size, NULL, GST_MAP_READ);
+    buffer_length = size / sizeof (gfloat);
     rms = 0.0;
     for (i = 0; i < buffer_length; i++)
       rms += res[i] * res[i];
@@ -816,7 +838,7 @@ GST_START_TEST (test_64_br_11025hz)
       44100 / 4.0 + 1000, NULL);
   inbuffer = gst_buffer_new_and_alloc (1024 * sizeof (gdouble));
   GST_BUFFER_TIMESTAMP (inbuffer) = 0;
-  in = (gdouble *) GST_BUFFER_DATA (inbuffer);
+  in = gst_buffer_map (inbuffer, NULL, NULL, GST_MAP_WRITE);
 
   for (i = 0; i < 1024; i += 4) {
     in[i] = 0.0;
@@ -824,9 +846,10 @@ GST_START_TEST (test_64_br_11025hz)
     in[i + 2] = 0.0;
     in[i + 3] = -1.0;
   }
+  gst_buffer_unmap (inbuffer, in, -1);
 
   caps = gst_caps_from_string (AUDIO_WSINC_BAND_CAPS_STRING_64);
-  gst_buffer_set_caps (inbuffer, caps);
+  gst_pad_set_caps (mysrcpad, caps);
   gst_caps_unref (caps);
   ASSERT_BUFFER_REFCOUNT (inbuffer, "inbuffer", 1);
 
@@ -838,11 +861,12 @@ GST_START_TEST (test_64_br_11025hz)
 
   for (node = buffers; node; node = node->next) {
     gint buffer_length;
+    gsize size;
 
     fail_if ((outbuffer = (GstBuffer *) node->data) == NULL);
 
-    res = (gdouble *) GST_BUFFER_DATA (outbuffer);
-    buffer_length = GST_BUFFER_SIZE (outbuffer) / sizeof (gdouble);
+    res = gst_buffer_map (outbuffer, &size, NULL, GST_MAP_READ);
+    buffer_length = size / sizeof (gfloat);
     rms = 0.0;
     for (i = 0; i < buffer_length; i++)
       rms += res[i] * res[i];
@@ -884,14 +908,15 @@ GST_START_TEST (test_64_br_22050hz)
       44100 / 4.0 + 1000, NULL);
   inbuffer = gst_buffer_new_and_alloc (1024 * sizeof (gdouble));
   GST_BUFFER_TIMESTAMP (inbuffer) = 0;
-  in = (gdouble *) GST_BUFFER_DATA (inbuffer);
+  in = gst_buffer_map (inbuffer, NULL, NULL, GST_MAP_WRITE);
   for (i = 0; i < 1024; i += 2) {
     in[i] = 1.0;
     in[i + 1] = -1.0;
   }
+  gst_buffer_unmap (inbuffer, in, -1);
 
   caps = gst_caps_from_string (AUDIO_WSINC_BAND_CAPS_STRING_64);
-  gst_buffer_set_caps (inbuffer, caps);
+  gst_pad_set_caps (mysrcpad, caps);
   gst_caps_unref (caps);
   ASSERT_BUFFER_REFCOUNT (inbuffer, "inbuffer", 1);
 
@@ -903,11 +928,12 @@ GST_START_TEST (test_64_br_22050hz)
 
   for (node = buffers; node; node = node->next) {
     gint buffer_length;
+    gsize size;
 
     fail_if ((outbuffer = (GstBuffer *) node->data) == NULL);
 
-    res = (gdouble *) GST_BUFFER_DATA (outbuffer);
-    buffer_length = GST_BUFFER_SIZE (outbuffer) / sizeof (gdouble);
+    res = gst_buffer_map (outbuffer, &size, NULL, GST_MAP_READ);
+    buffer_length = size / sizeof (gfloat);
     rms = 0.0;
     for (i = 0; i < buffer_length; i++)
       rms += res[i] * res[i];
@@ -946,12 +972,13 @@ GST_START_TEST (test_64_small_buffer)
       44100 / 4.0 + 44100 / 16.0, NULL);
   inbuffer = gst_buffer_new_and_alloc (20 * sizeof (gdouble));
   GST_BUFFER_TIMESTAMP (inbuffer) = 0;
-  in = (gdouble *) GST_BUFFER_DATA (inbuffer);
+  in = gst_buffer_map (inbuffer, NULL, NULL, GST_MAP_WRITE);
   for (i = 0; i < 20; i++)
     in[i] = 1.0;
+  gst_buffer_unmap (inbuffer, in, -1);
 
   caps = gst_caps_from_string (AUDIO_WSINC_BAND_CAPS_STRING_64);
-  gst_buffer_set_caps (inbuffer, caps);
+  gst_pad_set_caps (mysrcpad, caps);
   gst_caps_unref (caps);
   ASSERT_BUFFER_REFCOUNT (inbuffer, "inbuffer", 1);
 

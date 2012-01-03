@@ -37,6 +37,7 @@ setup (void)
   GList *plugins, *p;
   gchar **ignorelist = NULL;
   const gchar *STATE_IGNORE_ELEMENTS = NULL;
+  GstRegistry *def;
 
   GST_DEBUG ("getting elements for package %s", PACKAGE);
   STATE_IGNORE_ELEMENTS = g_getenv ("GST_STATE_IGNORE_ELEMENTS");
@@ -45,7 +46,9 @@ setup (void)
     ignorelist = g_strsplit (STATE_IGNORE_ELEMENTS, " ", 0);
   }
 
-  plugins = gst_registry_get_plugin_list (gst_registry_get_default ());
+  def = gst_registry_get ();
+
+  plugins = gst_registry_get_plugin_list (def);
 
   for (p = plugins; p; p = p->next) {
     GstPlugin *plugin = p->data;
@@ -54,7 +57,7 @@ setup (void)
       continue;
 
     features =
-        gst_registry_get_feature_list_by_plugin (gst_registry_get_default (),
+        gst_registry_get_feature_list_by_plugin (def,
         gst_plugin_get_name (plugin));
 
     for (f = features; f; f = f->next) {

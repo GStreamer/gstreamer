@@ -25,6 +25,7 @@
 
 #include <unistd.h>
 
+#include <gst/audio/audio.h>
 #include <gst/base/gstbasetransform.h>
 #include <gst/check/gstcheck.h>
 
@@ -102,10 +103,10 @@ GST_START_TEST (test_passthrough)
       "could not set to playing");
 
   inbuffer = gst_buffer_new_and_alloc (8);
-  memcpy (GST_BUFFER_DATA (inbuffer), in, 8);
-  fail_unless (memcmp (GST_BUFFER_DATA (inbuffer), in, 8) == 0);
+  gst_buffer_fill (inbuffer, 0, in, 8);
+  fail_unless (gst_buffer_memcmp (inbuffer, 0, in, 8) == 0);
   caps = gst_caps_from_string (INVERT_CAPS_STRING);
-  gst_buffer_set_caps (inbuffer, caps);
+  gst_pad_set_caps (mysrcpad, caps);
   gst_caps_unref (caps);
   ASSERT_BUFFER_REFCOUNT (inbuffer, "inbuffer", 1);
 
@@ -115,10 +116,12 @@ GST_START_TEST (test_passthrough)
   fail_unless_equals_int (g_list_length (buffers), 1);
   fail_if ((outbuffer = (GstBuffer *) buffers->data) == NULL);
 
-  res = (gint16 *) GST_BUFFER_DATA (outbuffer);
+  res = gst_buffer_map (outbuffer, NULL, NULL, GST_MAP_READ);
   GST_INFO ("expected %+5d %+5d %+5d %+5d real %+5d %+5d %+5d %+5d",
       in[0], in[1], in[2], in[3], res[0], res[1], res[2], res[3]);
-  fail_unless (memcmp (GST_BUFFER_DATA (outbuffer), in, 8) == 0);
+  gst_buffer_unmap (outbuffer, res, -1);
+
+  fail_unless (gst_buffer_memcmp (outbuffer, 0, in, 8) == 0);
 
   /* cleanup */
   cleanup_invert (invert);
@@ -142,10 +145,10 @@ GST_START_TEST (test_zero)
       "could not set to playing");
 
   inbuffer = gst_buffer_new_and_alloc (8);
-  memcpy (GST_BUFFER_DATA (inbuffer), in, 8);
-  fail_unless (memcmp (GST_BUFFER_DATA (inbuffer), in, 8) == 0);
+  gst_buffer_fill (inbuffer, 0, in, 8);
+  fail_unless (gst_buffer_memcmp (inbuffer, 0, in, 8) == 0);
   caps = gst_caps_from_string (INVERT_CAPS_STRING);
-  gst_buffer_set_caps (inbuffer, caps);
+  gst_pad_set_caps (mysrcpad, caps);
   gst_caps_unref (caps);
   ASSERT_BUFFER_REFCOUNT (inbuffer, "inbuffer", 1);
 
@@ -155,10 +158,12 @@ GST_START_TEST (test_zero)
   fail_unless_equals_int (g_list_length (buffers), 1);
   fail_if ((outbuffer = (GstBuffer *) buffers->data) == NULL);
 
-  res = (gint16 *) GST_BUFFER_DATA (outbuffer);
+  res = gst_buffer_map (outbuffer, NULL, NULL, GST_MAP_READ);
   GST_INFO ("expected %+5d %+5d %+5d %+5d real %+5d %+5d %+5d %+5d",
       out[0], out[1], out[2], out[3], res[0], res[1], res[2], res[3]);
-  fail_unless (memcmp (GST_BUFFER_DATA (outbuffer), out, 8) == 0);
+  gst_buffer_unmap (outbuffer, res, -1);
+
+  fail_unless (gst_buffer_memcmp (outbuffer, 0, out, 8) == 0);
 
   /* cleanup */
   cleanup_invert (invert);
@@ -182,10 +187,10 @@ GST_START_TEST (test_full_inverse)
       "could not set to playing");
 
   inbuffer = gst_buffer_new_and_alloc (8);
-  memcpy (GST_BUFFER_DATA (inbuffer), in, 8);
-  fail_unless (memcmp (GST_BUFFER_DATA (inbuffer), in, 8) == 0);
+  gst_buffer_fill (inbuffer, 0, in, 8);
+  fail_unless (gst_buffer_memcmp (inbuffer, 0, in, 8) == 0);
   caps = gst_caps_from_string (INVERT_CAPS_STRING);
-  gst_buffer_set_caps (inbuffer, caps);
+  gst_pad_set_caps (mysrcpad, caps);
   gst_caps_unref (caps);
   ASSERT_BUFFER_REFCOUNT (inbuffer, "inbuffer", 1);
 
@@ -195,10 +200,12 @@ GST_START_TEST (test_full_inverse)
   fail_unless_equals_int (g_list_length (buffers), 1);
   fail_if ((outbuffer = (GstBuffer *) buffers->data) == NULL);
 
-  res = (gint16 *) GST_BUFFER_DATA (outbuffer);
+  res = gst_buffer_map (outbuffer, NULL, NULL, GST_MAP_READ);
   GST_INFO ("expected %+5d %+5d %+5d %+5d real %+5d %+5d %+5d %+5d",
       out[0], out[1], out[2], out[3], res[0], res[1], res[2], res[3]);
-  fail_unless (memcmp (GST_BUFFER_DATA (outbuffer), out, 8) == 0);
+  gst_buffer_unmap (outbuffer, res, -1);
+
+  fail_unless (gst_buffer_memcmp (outbuffer, 0, out, 8) == 0);
 
   /* cleanup */
   cleanup_invert (invert);
@@ -222,10 +229,10 @@ GST_START_TEST (test_25_inverse)
       "could not set to playing");
 
   inbuffer = gst_buffer_new_and_alloc (8);
-  memcpy (GST_BUFFER_DATA (inbuffer), in, 8);
-  fail_unless (memcmp (GST_BUFFER_DATA (inbuffer), in, 8) == 0);
+  gst_buffer_fill (inbuffer, 0, in, 8);
+  fail_unless (gst_buffer_memcmp (inbuffer, 0, in, 8) == 0);
   caps = gst_caps_from_string (INVERT_CAPS_STRING);
-  gst_buffer_set_caps (inbuffer, caps);
+  gst_pad_set_caps (mysrcpad, caps);
   gst_caps_unref (caps);
   ASSERT_BUFFER_REFCOUNT (inbuffer, "inbuffer", 1);
 
@@ -235,10 +242,12 @@ GST_START_TEST (test_25_inverse)
   fail_unless_equals_int (g_list_length (buffers), 1);
   fail_if ((outbuffer = (GstBuffer *) buffers->data) == NULL);
 
-  res = (gint16 *) GST_BUFFER_DATA (outbuffer);
+  res = gst_buffer_map (outbuffer, NULL, NULL, GST_MAP_READ);
   GST_INFO ("expected %+5d %+5d %+5d %+5d real %+5d %+5d %+5d %+5d",
       out[0], out[1], out[2], out[3], res[0], res[1], res[2], res[3]);
-  fail_unless (memcmp (GST_BUFFER_DATA (outbuffer), out, 8) == 0);
+  gst_buffer_unmap (outbuffer, res, -1);
+
+  fail_unless (gst_buffer_memcmp (outbuffer, 0, out, 8) == 0);
 
   /* cleanup */
   cleanup_invert (invert);

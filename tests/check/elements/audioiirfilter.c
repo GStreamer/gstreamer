@@ -98,15 +98,20 @@ on_handoff (GstElement * object, GstBuffer * buffer, GstPad * pad,
     gpointer user_data)
 {
   if (!have_data) {
-    gdouble *data = (gdouble *) GST_BUFFER_DATA (buffer);
+    gsize size;
+    gdouble *data;
 
-    fail_unless (GST_BUFFER_SIZE (buffer) > 5 * sizeof (gdouble));
+    data = gst_buffer_map (buffer, &size, NULL, GST_MAP_READ);
+
+    fail_unless (size > 5 * sizeof (gdouble));
     fail_unless (data[0] == 0.0);
     fail_unless (data[1] == 0.0);
     fail_unless (data[2] == 0.0);
     fail_unless (data[3] == 0.0);
     fail_unless (data[4] == 0.0);
     fail_unless (data[5] != 0.0);
+
+    gst_buffer_unmap (buffer, data, size);
     have_data = TRUE;
   }
 }

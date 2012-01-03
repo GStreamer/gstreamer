@@ -169,7 +169,7 @@ check_avimux_pad (GstStaticPadTemplate * srctemplate,
 
   inbuffer = gst_buffer_new_and_alloc (1);
   caps = gst_caps_from_string (src_caps_string);
-  gst_buffer_set_caps (inbuffer, caps);
+  gst_pad_set_caps (mysrcpad, caps);
   gst_caps_unref (caps);
   GST_BUFFER_TIMESTAMP (inbuffer) = 0;
   ASSERT_BUFFER_REFCOUNT (inbuffer, "inbuffer", 1);
@@ -186,7 +186,10 @@ check_avimux_pad (GstStaticPadTemplate * srctemplate,
     switch (i) {
       case 0:{                 /* check riff header */
         /* avi header */
-        guint8 *data = GST_BUFFER_DATA (outbuffer);
+        gsize size;
+        guint8 *data, *orig;
+
+        data = orig = gst_buffer_map (outbuffer, &size, NULL, GST_MAP_READ);
 
         fail_unless (memcmp (data, data0, sizeof (data0)) == 0);
         fail_unless (memcmp (data + 8, data1, sizeof (data1)) == 0);
@@ -197,22 +200,23 @@ check_avimux_pad (GstStaticPadTemplate * srctemplate,
         fail_unless (memcmp (data + 8, data4, sizeof (data4)) == 0);
         fail_unless (memcmp (data + 76, data5, sizeof (data5)) == 0);
         /* avi data header */
-        data = GST_BUFFER_DATA (outbuffer);
-        data += GST_BUFFER_SIZE (outbuffer) - 12;
+        data = orig;
+        data += size - 12;
         fail_unless (memcmp (data, data6, sizeof (data6)) == 0);
         data += 8;
         fail_unless (memcmp (data, data7, sizeof (data7)) == 0);
+        gst_buffer_unmap (outbuffer, orig, size);
         break;
       }
       case 1:                  /* chunk header */
-        fail_unless (GST_BUFFER_SIZE (outbuffer) == 8);
-        fail_unless (memcmp (GST_BUFFER_DATA (outbuffer), chunk_id, 4) == 0);
+        fail_unless (gst_buffer_get_size (outbuffer) == 8);
+        fail_unless (gst_buffer_memcmp (outbuffer, 0, chunk_id, 4) == 0);
         break;
       case 2:
-        fail_unless (GST_BUFFER_SIZE (outbuffer) == 1);
+        fail_unless (gst_buffer_get_size (outbuffer) == 1);
         break;
       case 3:                  /* buffer we put in, must be padded to even size */
-        fail_unless (GST_BUFFER_SIZE (outbuffer) == 1);
+        fail_unless (gst_buffer_get_size (outbuffer) == 1);
         break;
       default:
         break;

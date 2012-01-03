@@ -28,13 +28,12 @@
 static gboolean
 gst_caps_is_interlaced (GstCaps * caps)
 {
-  GstStructure G_GNUC_UNUSED *structure;
-  gboolean interlaced = FALSE;
+  GstVideoInfo info;
 
   fail_unless (gst_caps_is_fixed (caps));
-  structure = gst_caps_get_structure (caps, 0);
-  fail_unless (gst_video_format_parse_caps_interlaced (caps, &interlaced));
-  return interlaced;
+  fail_unless (gst_video_info_from_caps (&info, caps));
+
+  return GST_VIDEO_INFO_IS_INTERLACED (&info);
 }
 
 GST_START_TEST (test_create_and_unref)
@@ -57,40 +56,40 @@ GST_END_TEST;
     "width=(int)3200, height=(int)3400, framerate=(fraction)0/1"
 
 #define CAPS_YUY2 \
-    "video/x-raw-yuv, " \
+    "video/x-raw, " \
     CAPS_VIDEO_COMMON ", " \
-    "format=(fourcc)YUY2"
+    "format=(string)YUY2"
 
 #define CAPS_YUY2_INTERLACED \
     CAPS_YUY2 ", " \
-    "interlaced=(boolean)true"
+    "interlace-mode=interleaved"
 
 #define CAPS_YVYU \
-    "video/x-raw-yuv, " \
+    "video/x-raw, " \
     CAPS_VIDEO_COMMON ", " \
-    "format=(fourcc)YVYU"
+    "format=(string)YVYU"
 
 #define CAPS_YVYU_INTERLACED \
     CAPS_YVYU ", " \
-    "interlaced=(boolean)true"
+    "interlace-mode=interleaved"
 
 #define CAPS_YUY2_IMAGE \
-    "video/x-raw-yuv, " \
+    "video/x-raw, " \
     CAPS_IMAGE_COMMON ", " \
-    "format=(fourcc)YUY2"
+    "format=(string)YUY2"
 
 #define CAPS_YUY2_INTERLACED_IMAGE \
     CAPS_YUY2_IMAGE ", " \
-    "interlaced=(boolean)true"
+    "interlace-mode=interleaved"
 
 #define CAPS_YVYU_IMAGE \
-    "video/x-raw-yuv, " \
+    "video/x-raw, " \
     CAPS_IMAGE_COMMON ", " \
-    "format=(fourcc)YVYU"
+    "format=(string)YVYU"
 
 #define CAPS_YVYU_INTERLACED_IMAGE \
     CAPS_YVYU_IMAGE ", " \
-    "interlaced=(boolean)true"
+    "interlace-mode=interleaved"
 
 static GstElement *deinterlace;
 static GstPad *srcpad;
@@ -168,49 +167,46 @@ setup_test_pipeline (gint mode, GstCaps * infiltercaps, GstCaps * outfiltercaps,
 /*
  * Checks if 2 buffers are equal
  *
- * Equals means same caps and same data
+ * Equals means same data
  */
 static gboolean
 test_buffer_equals (GstBuffer * buf_a, GstBuffer * buf_b)
 {
-  GstCaps *caps_a;
-  GstCaps *caps_b;
+  gsize s1, s2;
+  gpointer d1, d2;
+  gboolean res = FALSE;
 
-  if (GST_BUFFER_SIZE (buf_a) != GST_BUFFER_SIZE (buf_b))
-    return FALSE;
+  d1 = gst_buffer_map (buf_a, &s1, NULL, GST_MAP_READ);
+  d2 = gst_buffer_map (buf_b, &s2, NULL, GST_MAP_READ);
 
-  caps_a = gst_buffer_get_caps (buf_a);
-  caps_b = gst_buffer_get_caps (buf_b);
-
-  if (!gst_caps_is_equal (caps_a, caps_b))
-    return FALSE;
-
-  gst_caps_unref (caps_a);
-  gst_caps_unref (caps_b);
-
-  return memcmp (GST_BUFFER_DATA (buf_a), GST_BUFFER_DATA (buf_b),
-      GST_BUFFER_SIZE (buf_a)) == 0;
+  if (s1 == s2) {
+    res = memcmp (d1, d2, s1) == 0;
+  }
+  return res;
 }
 
-static gboolean
-sinkpad_enqueue_buffer (GstPad * pad, GstBuffer * buf, gpointer data)
+static GstPadProbeReturn
+sinkpad_enqueue_buffer (GstPad * pad, GstPadProbeInfo * info, gpointer data)
 {
   GQueue *queue = (GQueue *) data;
+  GstBuffer *buf = GST_PAD_PROBE_INFO_BUFFER (info);
 
   /* enqueue a copy for being compared later */
   g_queue_push_tail (queue, gst_buffer_copy (buf));
 
-  return TRUE;
+  return GST_PAD_PROBE_OK;
 }
 
 /*
  * pad buffer probe that compares the buffer with the top one
  * in the GQueue passed as the user data
  */
-static gboolean
-srcpad_dequeue_and_compare_buffer (GstPad * pad, GstBuffer * buf, gpointer data)
+static GstPadProbeReturn
+srcpad_dequeue_and_compare_buffer (GstPad * pad, GstPadProbeInfo * info,
+    gpointer data)
 {
   GQueue *queue = (GQueue *) data;
+  GstBuffer *buf = GST_PAD_PROBE_INFO_BUFFER (info);
   GstBuffer *queue_buf;
 
   queue_buf = (GstBuffer *) g_queue_pop_head (queue);
@@ -220,7 +216,7 @@ srcpad_dequeue_and_compare_buffer (GstPad * pad, GstBuffer * buf, gpointer data)
 
   gst_buffer_unref (queue_buf);
 
-  return TRUE;
+  return GST_PAD_PROBE_OK;
 }
 
 /*
@@ -243,9 +239,10 @@ deinterlace_check_passthrough (gint mode, const gchar * infiltercaps)
   queue = g_queue_new ();
 
   /* set up probes for testing */
-  gst_pad_add_buffer_probe (sinkpad, (GCallback) sinkpad_enqueue_buffer, queue);
-  gst_pad_add_buffer_probe (srcpad,
-      (GCallback) srcpad_dequeue_and_compare_buffer, queue);
+  gst_pad_add_probe (sinkpad, GST_PAD_PROBE_TYPE_BUFFER, sinkpad_enqueue_buffer,
+      queue, NULL);
+  gst_pad_add_probe (srcpad, GST_PAD_PROBE_TYPE_BUFFER,
+      srcpad_dequeue_and_compare_buffer, queue, NULL);
 
   fail_unless (gst_element_set_state (pipeline, GST_STATE_PLAYING) !=
       GST_STATE_CHANGE_FAILURE);

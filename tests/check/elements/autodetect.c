@@ -35,8 +35,8 @@ GST_START_TEST (test_autovideosink_ghostpad_error_case)
   filter = gst_element_factory_make ("capsfilter", NULL);
   sink = gst_element_factory_make ("autovideosink", NULL);
 
-  caps = gst_caps_new_simple ("video/x-raw-yuv", "format", GST_TYPE_FOURCC,
-      GST_MAKE_FOURCC ('A', 'C', 'D', 'C'), NULL);
+  caps = gst_caps_new_simple ("video/x-raw", "format", G_TYPE_STRING,
+      "ABCD", NULL);
 
   g_object_set (filter, "caps", caps, NULL);
   gst_caps_unref (caps);

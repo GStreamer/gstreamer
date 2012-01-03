@@ -74,23 +74,24 @@ push_and_test (GstCaps * prop_caps, gboolean join, gboolean replace,
 {
   GstElement *capssetter;
   GstBuffer *buffer;
+  GstCaps *current_out;
 
   capssetter = setup_capssetter ();
   fail_unless (gst_element_set_state (capssetter,
           GST_STATE_PLAYING) == GST_STATE_CHANGE_SUCCESS,
       "could not set to playing");
 
-  buffer = gst_buffer_new_and_alloc (4);
-  ASSERT_BUFFER_REFCOUNT (buffer, "buffer", 1);
-  memcpy (GST_BUFFER_DATA (buffer), "data", 4);
-
-  gst_buffer_set_caps (buffer, in_caps);
-  gst_caps_unref (in_caps);
-
   g_object_set (capssetter, "join", join, NULL);
   g_object_set (capssetter, "replace", replace, NULL);
   g_object_set (capssetter, "caps", prop_caps, NULL);
   gst_caps_unref (prop_caps);
+
+  buffer = gst_buffer_new_and_alloc (4);
+  ASSERT_BUFFER_REFCOUNT (buffer, "buffer", 1);
+  gst_buffer_fill (buffer, 0, "data", 4);
+
+  gst_pad_set_caps (mysrcpad, in_caps);
+  gst_caps_unref (in_caps);
 
   /* pushing gives away my reference ... */
   fail_unless (gst_pad_push (mysrcpad, buffer) == GST_FLOW_OK,
@@ -103,7 +104,9 @@ push_and_test (GstCaps * prop_caps, gboolean join, gboolean replace,
   buffer = g_list_first (buffers)->data;
   ASSERT_BUFFER_REFCOUNT (buffer, "buffer", 1);
 
-  fail_unless (gst_caps_is_equal (out_caps, GST_BUFFER_CAPS (buffer)));
+  current_out = gst_pad_get_current_caps (mysinkpad);
+  fail_unless (gst_caps_is_equal (out_caps, current_out));
+  gst_caps_unref (current_out);
   gst_caps_unref (out_caps);
 
   /* cleanup */
