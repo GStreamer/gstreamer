@@ -257,10 +257,6 @@ gboolean     gst_tag_list_copy_value        (GValue           * dest,
                                              const gchar      * tag);
 
 /* simplifications (FIXME: do we want them?) */
-const GValue *
-             gst_tag_list_get_value         (const GstTagList * list,
-                                             const gchar      * tag);
-
 gboolean     gst_tag_list_get_boolean       (const GstTagList * list,
                                              const gchar      * tag,
                                              gboolean         * value);
