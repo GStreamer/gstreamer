@@ -321,7 +321,7 @@ gst_h264_parse_format_from_caps (GstCaps * caps, guint * format, guint * align)
 
 /* check downstream caps to configure format and alignment */
 static void
-gst_h264_parse_negotiate (GstH264Parse * h264parse)
+gst_h264_parse_negotiate (GstH264Parse * h264parse, GstCaps * in_caps)
 {
   GstCaps *caps;
   guint format = GST_H264_PARSE_FORMAT_NONE;
@@ -330,10 +330,19 @@ gst_h264_parse_negotiate (GstH264Parse * h264parse)
   caps = gst_pad_get_allowed_caps (GST_BASE_PARSE_SRC_PAD (h264parse));
   GST_DEBUG_OBJECT (h264parse, "allowed caps: %" GST_PTR_FORMAT, caps);
 
-  gst_h264_parse_format_from_caps (caps, &format, &align);
+  if (in_caps && caps) {
+    if (gst_caps_can_intersect (in_caps, caps)) {
+      GST_DEBUG_OBJECT (h264parse, "downstream accepts upstream caps");
+      gst_h264_parse_format_from_caps (in_caps, &format, &align);
+      gst_caps_unref (caps);
+      caps = NULL;
+    }
+  }
 
-  if (caps)
+  if (caps) {
+    gst_h264_parse_format_from_caps (caps, &format, &align);
     gst_caps_unref (caps);
+  }
 
   /* default */
   if (!format)
@@ -626,7 +635,7 @@ gst_h264_parse_check_valid_frame (GstBaseParse * parse,
 
   /* need to configure aggregation */
   if (G_UNLIKELY (h264parse->format == GST_H264_PARSE_FORMAT_NONE))
-    gst_h264_parse_negotiate (h264parse);
+    gst_h264_parse_negotiate (h264parse, NULL);
 
   /* avoid stale cached parsing state */
   if (!(frame->flags & GST_BASE_PARSE_FRAME_FLAG_PARSING)) {
@@ -1595,8 +1604,20 @@ gst_h264_parse_set_caps (GstBaseParse * parse, GstCaps * caps)
     }
   }
 
-  /* negotiate with downstream, sets ->format and ->align */
-  gst_h264_parse_negotiate (h264parse);
+  {
+    GstCaps *in_caps;
+
+    /* prefer input type determined above */
+    in_caps = gst_caps_new_simple ("video/x-h264",
+        "parsed", G_TYPE_BOOLEAN, TRUE,
+        "stream-format", G_TYPE_STRING,
+        gst_h264_parse_get_string (h264parse, TRUE, format),
+        "alignment", G_TYPE_STRING,
+        gst_h264_parse_get_string (h264parse, FALSE, align), NULL);
+    /* negotiate with downstream, sets ->format and ->align */
+    gst_h264_parse_negotiate (h264parse, in_caps);
+    gst_caps_unref (in_caps);
+  }
 
   if (format == h264parse->format && align == h264parse->align) {
     gst_base_parse_set_passthrough (parse, TRUE);
