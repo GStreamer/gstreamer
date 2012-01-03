@@ -1069,10 +1069,12 @@ EXPORTS
 	gst_tag_list_is_empty
 	gst_tag_list_is_equal
 	gst_tag_list_merge
+	gst_tag_list_n_tags
 	gst_tag_list_new
 	gst_tag_list_new_empty
 	gst_tag_list_new_from_string
 	gst_tag_list_new_valist
+	gst_tag_list_nth_tag_name
 	gst_tag_list_peek_string_index
 	gst_tag_list_remove_tag
 	gst_tag_list_to_string
