@@ -1,5 +1,5 @@
 /*
- *  gstvaapiconvert.h - VA-API video converter
+ *  gstvaapiupload.h - VA-API video uploader
  *
  *  gstreamer-vaapi (C) 2010-2011 Splitted-Desktop Systems
  *
@@ -19,8 +19,8 @@
  *  Boston, MA 02110-1301 USA
 */
 
-#ifndef GST_VAAPICONVERT_H
-#define GST_VAAPICONVERT_H
+#ifndef GST_VAAPIUPLOAD_H
+#define GST_VAAPIUPLOAD_H
 
 #include <gst/base/gstbasetransform.h>
 #include <gst/vaapi/gstvaapidisplay.h>
@@ -31,37 +31,37 @@
 
 G_BEGIN_DECLS
 
-#define GST_TYPE_VAAPICONVERT \
-    (gst_vaapiconvert_get_type())
+#define GST_TYPE_VAAPIUPLOAD \
+    (gst_vaapiupload_get_type())
 
-#define GST_VAAPICONVERT(obj)                           \
+#define GST_VAAPIUPLOAD(obj)                            \
     (G_TYPE_CHECK_INSTANCE_CAST((obj),                  \
-                                GST_TYPE_VAAPICONVERT,  \
-                                GstVaapiConvert))
+                                GST_TYPE_VAAPIUPLOAD,   \
+                                GstVaapiUpload))
 
-#define GST_VAAPICONVERT_CLASS(klass)                   \
+#define GST_VAAPIUPLOAD_CLASS(klass)                    \
     (G_TYPE_CHECK_CLASS_CAST((klass),                   \
-                             GST_TYPE_VAAPICONVERT,     \
-                             GstVaapiConvertClass))
+                             GST_TYPE_VAAPIUPLOAD,      \
+                             GstVaapiUploadClass))
 
-#define GST_IS_VAAPICONVERT(obj) \
-    (G_TYPE_CHECK_INSTANCE_TYPE((obj), GST_TYPE_VAAPICONVERT))
+#define GST_IS_VAAPIUPLOAD(obj) \
+    (G_TYPE_CHECK_INSTANCE_TYPE((obj), GST_TYPE_VAAPIUPLOAD))
 
-#define GST_IS_VAAPICONVERT_CLASS(klass) \
-    (G_TYPE_CHECK_CLASS_TYPE((klass), GST_TYPE_VAAPICONVERT))
+#define GST_IS_VAAPIUPLOAD_CLASS(klass) \
+    (G_TYPE_CHECK_CLASS_TYPE((klass), GST_TYPE_VAAPIUPLOAD))
 
-#define GST_VAAPICONVERT_GET_CLASS(obj)                 \
+#define GST_VAAPIUPLOAD_GET_CLASS(obj)                  \
     (G_TYPE_INSTANCE_GET_CLASS((obj),                   \
-                               GST_TYPE_VAAPICONVERT,   \
-                               GstVaapiConvertClass))
+                               GST_TYPE_VAAPIUPLOAD,    \
+                               GstVaapiUploadClass))
 
-typedef struct _GstVaapiConvert                 GstVaapiConvert;
-typedef struct _GstVaapiConvertClass            GstVaapiConvertClass;
+typedef struct _GstVaapiUpload                  GstVaapiUpload;
+typedef struct _GstVaapiUploadClass             GstVaapiUploadClass;
 
 /* Max output surfaces */
-#define GST_VAAPICONVERT_MAX_SURFACES 2
+#define GST_VAAPIUPLOAD_MAX_SURFACES 2
 
-struct _GstVaapiConvert {
+struct _GstVaapiUpload {
     /*< private >*/
     GstBaseTransform    parent_instance;
 
@@ -78,14 +78,14 @@ struct _GstVaapiConvert {
     unsigned int        surfaces_reset  : 1;
 };
 
-struct _GstVaapiConvertClass {
+struct _GstVaapiUploadClass {
     /*< private >*/
     GstBaseTransformClass parent_class;
 };
 
 GType
-gst_vaapiconvert_get_type(void);
+gst_vaapiupload_get_type(void);
 
 G_END_DECLS
 
-#endif /* GST_VAAPICONVERT_H */
+#endif /* GST_VAAPIUPLOAD_H */

@@ -1,6 +1,9 @@
-gst-vaapi NEWS -- summary of changes.  2011-12-16
+gst-vaapi NEWS -- summary of changes.  2012-01-DD
 Copyright (C) 2010-2011 Splitted-Desktop Systems
 Copyright (C) 2011 Intel Corporation
+
+Version 0.3.2 - DD.Jan.2012
+* Rename vaapiconvert element to vaapiupload
 
 Version 0.3.1 - 16.Dec.2011
 * Fix check for supported VA images

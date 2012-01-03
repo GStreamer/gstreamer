@@ -18,7 +18,7 @@ Depends: ${shlibs:Depends}, ${misc:Depends}
 Suggests: gstreamer@GST_MAJORMINOR@-vaapi-doc
 Description: VA-API plugins for GStreamer
  This package contains GStreamer plugins for VA-API support:
- - `vaapiconvert': converts from YUV pixels to VA surfaces 
+ - `vaapiupload': converts from YUV pixels to VA surfaces 
  - `vaapisink': a VA-API based video sink
 
 Package: gstreamer@GST_MAJORMINOR@-vaapi-doc

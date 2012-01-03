@@ -27,16 +27,16 @@
 
 #include <gst/gst.h>
 
-#include "gstvaapiconvert.h"
+#include "gstvaapiupload.h"
 #include "gstvaapidecode.h"
 #include "gstvaapisink.h"
 
 static gboolean
 plugin_init (GstPlugin *plugin)
 {
-    gst_element_register(plugin, "vaapiconvert",
+    gst_element_register(plugin, "vaapiupload",
                          GST_RANK_PRIMARY,
-                         GST_TYPE_VAAPICONVERT);
+                         GST_TYPE_VAAPIUPLOAD);
     gst_element_register(plugin, "vaapidecode",
                          GST_RANK_PRIMARY,
                          GST_TYPE_VAAPIDECODE);

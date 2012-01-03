@@ -23,7 +23,7 @@ GStreamer and helper libraries.
     videos to video/x-vaapi-surfaces surfaces, depending on the
     underlying HW capabilities.
 
-  * `vaapiconvert' is used to convert from video/x-raw-yuv pixels to
+  * `vaapiupload' is used to convert from video/x-raw-yuv pixels to
     video/x-vaapi-surface surfaces.
 
   * `vaapisink' is used to display video/x-vaapi-surface surfaces to

@@ -17,17 +17,17 @@ endif
 
 libgstvaapi_la_SOURCES =	\
 	gstvaapi.c		\
-	gstvaapiconvert.c	\
 	gstvaapidecode.c	\
 	gstvaapipluginutil.c	\
 	gstvaapisink.c		\
+	gstvaapiupload.c	\
 	$(NULL)
 
 noinst_HEADERS =		\
-	gstvaapiconvert.h	\
 	gstvaapidecode.h	\
 	gstvaapipluginutil.h	\
 	gstvaapisink.h		\
+	gstvaapiupload.h	\
 	$(NULL)
 
 libgstvaapi_la_CFLAGS =	\
