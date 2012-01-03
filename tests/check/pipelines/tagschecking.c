@@ -143,7 +143,7 @@ test_demux_tags (const gchar * tag_str, const gchar * demuxer,
   GstBus *bus;
   GMainLoop *loop;
   GstTagList *sent_tags;
-  gint i, j, n_recv, n_sent;
+  gint i, j, k, n_recv, n_sent;
   const gchar *name_sent, *name_recv;
   const GValue *value_sent, *value_recv;
   gboolean found;
@@ -192,27 +192,41 @@ test_demux_tags (const gchar * tag_str, const gchar * demuxer,
   /* FIXME: compare taglits values */
   for (i = 0; i < n_sent; i++) {
     name_sent = gst_tag_list_nth_tag_name (sent_tags, i);
-    value_sent = gst_tag_list_get_value (sent_tags, name_sent);
+
     found = FALSE;
     for (j = 0; j < n_recv; j++) {
       name_recv = gst_tag_list_nth_tag_name (received_tags, j);
+
       if (!strcmp (name_sent, name_recv)) {
-        value_recv = gst_tag_list_get_value (received_tags, name_recv);
-        comparison = gst_value_compare (value_sent, value_recv);
-        if (comparison != GST_VALUE_EQUAL) {
-          gchar *vs = g_strdup_value_contents (value_sent);
-          gchar *vr = g_strdup_value_contents (value_recv);
-          GST_DEBUG ("sent = %s:'%s', recv = %s:'%s'",
-              G_VALUE_TYPE_NAME (value_sent), vs,
-              G_VALUE_TYPE_NAME (value_recv), vr);
-          g_free (vs);
-          g_free (vr);
+        guint sent_len, recv_len;
+
+        sent_len = gst_tag_list_get_tag_size (sent_tags, name_sent);
+        recv_len = gst_tag_list_get_tag_size (received_tags, name_recv);
+
+        fail_unless (sent_len == recv_len,
+            "tag item %s has been received with different size", name_sent);
+
+        for (k = 0; k < sent_len; k++) {
+          value_sent = gst_tag_list_get_value_index (sent_tags, name_sent, k);
+          value_recv =
+              gst_tag_list_get_value_index (received_tags, name_recv, k);
+
+          comparison = gst_value_compare (value_sent, value_recv);
+          if (comparison != GST_VALUE_EQUAL) {
+            gchar *vs = g_strdup_value_contents (value_sent);
+            gchar *vr = g_strdup_value_contents (value_recv);
+            GST_DEBUG ("sent = %s:'%s', recv = %s:'%s'",
+                G_VALUE_TYPE_NAME (value_sent), vs,
+                G_VALUE_TYPE_NAME (value_recv), vr);
+            g_free (vs);
+            g_free (vr);
+          }
+          fail_unless (comparison == GST_VALUE_EQUAL,
+              "tag item %s has been received with different type or value",
+              name_sent);
+          found = TRUE;
+          break;
         }
-        fail_unless (comparison == GST_VALUE_EQUAL,
-            "tag item %s has been received with different type or value",
-            name_sent);
-        found = TRUE;
-        break;
       }
     }
     fail_unless (found, "tag item %s is lost", name_sent);
