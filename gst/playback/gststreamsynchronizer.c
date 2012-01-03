@@ -94,11 +94,16 @@ gst_stream_get_other_pad (GstStream * stream, GstPad * pad)
 static GstPad *
 gst_stream_get_other_pad_from_pad (GstPad * pad)
 {
-  GstStreamSynchronizer *self =
-      GST_STREAM_SYNCHRONIZER (gst_pad_get_parent (pad));
+  GstObject *parent = gst_pad_get_parent (pad);
+  GstStreamSynchronizer *self;
   GstStream *stream;
   GstPad *opad = NULL;
 
+  /* released pad does not have parent anymore */
+  if (!G_LIKELY (parent))
+    goto exit;
+
+  self = GST_STREAM_SYNCHRONIZER (parent);
   GST_STREAM_SYNCHRONIZER_LOCK (self);
   stream = gst_pad_get_element_private (pad);
   if (!stream)
@@ -110,6 +115,7 @@ out:
   GST_STREAM_SYNCHRONIZER_UNLOCK (self);
   gst_object_unref (self);
 
+exit:
   if (!opad)
     GST_WARNING_OBJECT (pad, "Trying to get other pad after releasing");
 
