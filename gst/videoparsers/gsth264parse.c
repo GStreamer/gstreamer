@@ -1463,6 +1463,9 @@ gst_h264_parse_pre_push_frame (GstBaseParse * parse, GstBaseParseFrame * frame)
           /* collect result and push */
           new_buf = gst_byte_writer_reset_and_get_buffer (&bw);
           gst_buffer_copy_metadata (new_buf, buffer, GST_BUFFER_COPY_ALL);
+          /* should already be keyframe/IDR, but it may not have been,
+           * so mark it as such to avoid being discarded by picky decoder */
+          GST_BUFFER_FLAG_UNSET (new_buf, GST_BUFFER_FLAG_DELTA_UNIT);
           gst_buffer_replace (&frame->buffer, new_buf);
           gst_buffer_unref (new_buf);
         }
