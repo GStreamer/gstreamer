@@ -124,11 +124,12 @@ static guint8 rtp_packet[] = { 0x80, 0x60, 0x94, 0xbc, 0x8f, 0x37, 0x4e, 0xb8,
   0x2b, 0x82, 0x31, 0x3b, 0x36, 0xc1, 0x3c, 0x13
 };
 
-static GstBuffer *
-make_rtp_packet (CleanupData * data)
+static GstFlowReturn
+chain_rtp_packet (GstPad * pad, CleanupData * data)
 {
+  GstFlowReturn res;
   static GstCaps *caps = NULL;
-  GstBuffer *result;
+  GstBuffer *buffer;
   guint8 *datap;
 
   if (caps == NULL) {
@@ -136,24 +137,26 @@ make_rtp_packet (CleanupData * data)
         "media=(string)audio, clock-rate=(int)44100, "
         "encoding-name=(string)L16, encoding-params=(string)1, channels=(int)1");
     data->seqnum = 0;
+    gst_pad_set_caps (pad, caps);
   }
 
-  result = gst_buffer_new_and_alloc (sizeof (rtp_packet));
-  datap = GST_BUFFER_DATA (result);
+  buffer = gst_buffer_new_and_alloc (sizeof (rtp_packet));
+  datap = gst_buffer_map (buffer, NULL, NULL, GST_MAP_WRITE);
   memcpy (datap, rtp_packet, sizeof (rtp_packet));
 
   datap[2] = (data->seqnum >> 8) & 0xff;
   datap[3] = data->seqnum & 0xff;
 
   data->seqnum++;
+  gst_buffer_unmap (buffer, datap, -1);
 
-  gst_buffer_set_caps (result, caps);
+  res = gst_pad_chain (pad, buffer);
 
-  return result;
+  return res;
 }
 
 static GstFlowReturn
-dummy_chain (GstPad * pad, GstBuffer * buffer)
+dummy_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
 {
   gst_buffer_unref (buffer);
 
@@ -226,7 +229,6 @@ GST_START_TEST (test_cleanup_recv)
   CleanupData data;
   GstStateChangeReturn ret;
   GstFlowReturn res;
-  GstBuffer *buffer;
   gint count = 2;
 
   init_data (&data);
@@ -249,13 +251,11 @@ GST_START_TEST (test_cleanup_recv)
     fail_unless (rtpbin->numsinkpads == 1);
     fail_unless (rtpbin->numsrcpads == 0);
 
-    buffer = make_rtp_packet (&data);
-    res = gst_pad_chain (rtp_sink, buffer);
+    res = chain_rtp_packet (rtp_sink, &data);
     GST_DEBUG ("res %d, %s\n", res, gst_flow_get_name (res));
     fail_unless (res == GST_FLOW_OK);
 
-    buffer = make_rtp_packet (&data);
-    res = gst_pad_chain (rtp_sink, buffer);
+    res = chain_rtp_packet (rtp_sink, &data);
     GST_DEBUG ("res %d, %s\n", res, gst_flow_get_name (res));
     fail_unless (res == GST_FLOW_OK);
 
@@ -301,7 +301,6 @@ GST_START_TEST (test_cleanup_recv2)
   CleanupData data;
   GstStateChangeReturn ret;
   GstFlowReturn res;
-  GstBuffer *buffer;
   gint count = 2;
 
   init_data (&data);
@@ -324,13 +323,11 @@ GST_START_TEST (test_cleanup_recv2)
     fail_unless (rtpbin->numsinkpads == 1);
     fail_unless (rtpbin->numsrcpads == 0);
 
-    buffer = make_rtp_packet (&data);
-    res = gst_pad_chain (rtp_sink, buffer);
+    res = chain_rtp_packet (rtp_sink, &data);
     GST_DEBUG ("res %d, %s\n", res, gst_flow_get_name (res));
     fail_unless (res == GST_FLOW_OK);
 
-    buffer = make_rtp_packet (&data);
-    res = gst_pad_chain (rtp_sink, buffer);
+    res = chain_rtp_packet (rtp_sink, &data);
     GST_DEBUG ("res %d, %s\n", res, gst_flow_get_name (res));
     fail_unless (res == GST_FLOW_OK);
 

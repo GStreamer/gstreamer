@@ -343,15 +343,18 @@ got_buffer (GstElement * fakesink, GstBuffer * buf, GstPad * pad,
     gpointer user_data)
 {
   GstStructure *s;
+  GstCaps *caps;
 
   /* Caps can be anything if we don't except icy caps */
   if (!icy_caps)
     return;
 
   /* Otherwise they _must_ be "application/x-icy" */
-  fail_unless (GST_BUFFER_CAPS (buf) != NULL);
-  s = gst_caps_get_structure (GST_BUFFER_CAPS (buf), 0);
+  caps = gst_pad_get_current_caps (pad);
+  fail_unless (caps != NULL);
+  s = gst_caps_get_structure (caps, 0);
   fail_unless_equals_string (gst_structure_get_name (s), "application/x-icy");
+  gst_caps_unref (caps);
 }
 
 GST_START_TEST (test_icy_stream)

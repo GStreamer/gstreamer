@@ -539,10 +539,9 @@ create_qtmux_profile (const gchar * variant)
   cprof = gst_encoding_container_profile_new ("Name", "blah", caps, NULL);
   gst_caps_unref (caps);
 
-  caps = gst_caps_new_simple ("audio/x-raw-int", "width", G_TYPE_INT, 16,
-      "depth", G_TYPE_INT, 16, "endianness", G_TYPE_INT, 4321,
-      "channels", G_TYPE_INT, 2, "rate", G_TYPE_INT, 44100,
-      "signed", G_TYPE_BOOLEAN, TRUE, NULL);
+  caps = gst_caps_new_simple ("audio/x-raw",
+      "format", G_TYPE_STRING, "S16BE",
+      "channels", G_TYPE_INT, 2, "rate", G_TYPE_INT, 44100, NULL);
   gst_encoding_container_profile_add_profile (cprof,
       GST_ENCODING_PROFILE (gst_encoding_audio_profile_new (caps, NULL, NULL,
               1)));
@@ -600,7 +599,7 @@ static GstStaticPadTemplate src_template = GST_STATIC_PAD_TEMPLATE ("src",
 static GstStaticPadTemplate sink_template = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("audio/x-raw-int")
+    GST_STATIC_CAPS ("audio/x-raw")
     );
 
 static GType test_mp3_enc_get_type (void);

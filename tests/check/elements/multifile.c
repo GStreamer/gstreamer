@@ -72,7 +72,7 @@ GST_START_TEST (test_multifilesink_key_frame)
 
   pipeline =
       gst_parse_launch
-      ("videotestsrc num-buffers=10 ! video/x-raw-yuv,format=(fourcc)I420,width=320,height=240 ! multifilesink name=mfs",
+      ("videotestsrc num-buffers=10 ! video/x-raw,format=(string)I420,width=320,height=240 ! multifilesink name=mfs",
       NULL);
   fail_if (pipeline == NULL);
   mfs = gst_bin_get_by_name (GST_BIN (pipeline), "mfs");
@@ -115,7 +115,7 @@ GST_START_TEST (test_multifilesink_max_files)
 
   pipeline =
       gst_parse_launch
-      ("videotestsrc num-buffers=10 ! video/x-raw-yuv,format=(fourcc)I420,width=320,height=240 ! multifilesink name=mfs",
+      ("videotestsrc num-buffers=10 ! video/x-raw,format=(string)I420,width=320,height=240 ! multifilesink name=mfs",
       NULL);
   fail_if (pipeline == NULL);
   mfs = gst_bin_get_by_name (GST_BIN (pipeline), "mfs");
@@ -224,7 +224,7 @@ GST_START_TEST (test_multifilesrc)
 
   pipeline =
       gst_parse_launch
-      ("videotestsrc num-buffers=10 ! video/x-raw-yuv,format=(fourcc)I420,width=320,height=240 ! multifilesink name=mfs",
+      ("videotestsrc num-buffers=10 ! video/x-raw,format=(string)I420,width=320,height=240 ! multifilesink name=mfs",
       NULL);
   fail_if (pipeline == NULL);
   mfs = gst_bin_get_by_name (GST_BIN (pipeline), "mfs");
@@ -238,7 +238,7 @@ GST_START_TEST (test_multifilesrc)
 
   pipeline =
       gst_parse_launch
-      ("multifilesrc ! video/x-raw-yuv,format=(fourcc)I420,width=320,height=240,framerate=10/1 ! fakesink",
+      ("multifilesrc ! video/x-raw,format=(string)I420,width=320,height=240,framerate=10/1 ! fakesink",
       NULL);
   fail_if (pipeline == NULL);
   mfs = gst_bin_get_by_name (GST_BIN (pipeline), "multifilesrc0");

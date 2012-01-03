@@ -28,6 +28,7 @@
 #include <unistd.h>
 
 #include <gst/check/gstcheck.h>
+#include <gst/video/video.h>
 #include <gst/base/gstbasetransform.h>
 
 /* return a list of caps where we only need to set
@@ -110,8 +111,8 @@ GST_START_TEST (test_unit_sizes)
 
     for (i = 0; i < G_N_ELEMENTS (sizes_to_try); ++i) {
       gchar *caps_str;
-      guint csp_size = 0;
-      guint vc_size = 0;
+      gsize csp_size = 0;
+      gsize vc_size = 0;
 
       gst_structure_set (s, "width", G_TYPE_INT, sizes_to_try[i].width,
           "height", G_TYPE_INT, sizes_to_try[i].height, NULL);
@@ -157,13 +158,19 @@ typedef struct
   GstElement *crop;
   GstElement *sink;
   GstBuffer *last_buf;
+  GstCaps *last_caps;
 } GstVideoCropTestContext;
 
 static void
 handoff_cb (GstElement * sink, GstBuffer * buf, GstPad * pad,
-    GstBuffer ** p_buf)
+    GstVideoCropTestContext * ctx)
 {
-  gst_buffer_replace (p_buf, buf);
+  GstCaps *caps;
+
+  gst_buffer_replace (&ctx->last_buf, buf);
+  caps = gst_pad_get_current_caps (pad);
+  gst_caps_replace (&ctx->last_caps, caps);
+  gst_caps_unref (caps);
 }
 
 static void
@@ -190,10 +197,10 @@ videocrop_test_cropping_init_context (GstVideoCropTestContext * ctx)
   g_object_set (ctx->src, "pattern", 4, NULL);
 
   g_object_set (ctx->sink, "signal-handoffs", TRUE, NULL);
-  g_signal_connect (ctx->sink, "preroll-handoff", G_CALLBACK (handoff_cb),
-      &ctx->last_buf);
+  g_signal_connect (ctx->sink, "preroll-handoff", G_CALLBACK (handoff_cb), ctx);
 
   ctx->last_buf = NULL;
+  ctx->last_caps = NULL;
 
   GST_LOG ("context inited");
 }
@@ -209,7 +216,7 @@ videocrop_test_cropping_deinit_context (GstVideoCropTestContext * ctx)
   memset (ctx, 0x00, sizeof (GstVideoCropTestContext));
 }
 
-typedef void (*GstVideoCropTestBufferFunc) (GstBuffer * buffer);
+typedef void (*GstVideoCropTestBufferFunc) (GstBuffer * buffer, GstCaps * caps);
 
 static void
 videocrop_test_cropping (GstVideoCropTestContext * ctx, GstCaps * in_caps,
@@ -232,103 +239,45 @@ videocrop_test_cropping (GstVideoCropTestContext * ctx, GstCaps * in_caps,
           -1) == GST_STATE_CHANGE_SUCCESS);
 
   if (func != NULL) {
-    func (ctx->last_buf);
+    func (ctx->last_buf, ctx->last_caps);
   }
 
   gst_element_set_state (ctx->pipeline, GST_STATE_NULL);
 }
 
 static void
-check_1x1_buffer (GstBuffer * buf)
+check_1x1_buffer (GstBuffer * buf, GstCaps * caps)
 {
-  GstStructure *s;
+  GstVideoInfo info;
+  GstVideoFrame frame;
+  /* the exact values we check for come from videotestsrc */
+  static const guint yuv_values[] = { 81, 90, 240, 0 };
+  static const guint rgb_values[] = { 0xff, 0, 0, 0 };
+  const guint *values;
+  guint i;
 
   fail_unless (buf != NULL);
-  fail_unless (GST_BUFFER_CAPS (buf) != NULL);
+  fail_unless (caps != NULL);
 
-  s = gst_caps_get_structure (GST_BUFFER_CAPS (buf), 0);
-  if (gst_structure_has_name (s, "video/x-raw-yuv")) {
-    guint32 format = 0;
+  fail_unless (gst_video_info_from_caps (&info, caps));
+  fail_unless (gst_video_frame_map (&frame, &info, buf, GST_MAP_READ));
 
-    fail_unless (gst_structure_get_fourcc (s, "format", &format));
+  if (GST_VIDEO_INFO_IS_YUV (&info))
+    values = yuv_values;
+  else
+    values = rgb_values;
 
-    /* the exact values we check for come from videotestsrc */
-    switch (format) {
-      case GST_MAKE_FOURCC ('I', '4', '2', '0'):
-        fail_unless_equals_int (GST_BUFFER_DATA (buf)[0], 81);
-        fail_unless_equals_int (GST_BUFFER_DATA (buf)[8], 90);
-        fail_unless_equals_int (GST_BUFFER_DATA (buf)[12], 240);
-        break;
-      case GST_MAKE_FOURCC ('Y', 'V', '1', '2'):
-        fail_unless_equals_int (GST_BUFFER_DATA (buf)[0], 81);
-        fail_unless_equals_int (GST_BUFFER_DATA (buf)[8], 240);
-        fail_unless_equals_int (GST_BUFFER_DATA (buf)[12], 90);
-        break;
-      case GST_MAKE_FOURCC ('Y', '8', '0', '0'):
-        fail_unless_equals_int (GST_BUFFER_DATA (buf)[0], 81);
-        /* no chroma planes */
-        break;
-      case GST_MAKE_FOURCC ('A', 'Y', 'U', 'V'):
-        fail_unless_equals_int (GST_BUFFER_DATA (buf)[1], 81);
-        fail_unless_equals_int (GST_BUFFER_DATA (buf)[2], 90);
-        fail_unless_equals_int (GST_BUFFER_DATA (buf)[3], 240);
-        /* no chroma planes */
-        break;
-      default:
-        GST_LOG ("not checking %" GST_FOURCC_FORMAT, GST_FOURCC_ARGS (format));
-        break;
-    }
-  } else if (gst_structure_has_name (s, "video/x-raw-rgb")) {
-    guint32 pixel;
-    gint rmask = 0, bmask = 0, gmask = 0, endianness = 0, bpp = 0;
-    gint rshift, gshift, bshift;
+  for (i = 0; i < GST_VIDEO_FRAME_N_COMPONENTS (&frame); i++) {
+    guint8 *data = GST_VIDEO_FRAME_COMP_DATA (&frame, i);
 
-    fail_unless (gst_structure_get_int (s, "red_mask", &rmask));
-    fail_unless (gst_structure_get_int (s, "blue_mask", &bmask));
-    fail_unless (gst_structure_get_int (s, "green_mask", &gmask));
-    fail_unless (gst_structure_get_int (s, "bpp", &bpp));
-    fail_unless (gst_structure_get_int (s, "endianness", &endianness));
-
-    fail_unless (rmask != 0);
-    fail_unless (gmask != 0);
-    fail_unless (bmask != 0);
-    fail_unless (bpp != 0);
-    fail_unless (endianness != 0);
-
-    rshift = g_bit_nth_lsf (rmask, -1);
-    gshift = g_bit_nth_lsf (gmask, -1);
-    bshift = g_bit_nth_lsf (bmask, -1);
-
-    switch (bpp) {
-      case 32:{
-        if (endianness == G_LITTLE_ENDIAN)
-          pixel = GST_READ_UINT32_LE (GST_BUFFER_DATA (buf));
-        else
-          pixel = GST_READ_UINT32_BE (GST_BUFFER_DATA (buf));
-        break;
-      }
-      case 24:{
-        if (endianness == G_BIG_ENDIAN) {
-          pixel = (GST_READ_UINT8 (GST_BUFFER_DATA (buf)) << 16) |
-              (GST_READ_UINT8 (GST_BUFFER_DATA (buf) + 1) << 8) |
-              (GST_READ_UINT8 (GST_BUFFER_DATA (buf) + 2) << 0);
-        } else {
-          pixel = (GST_READ_UINT8 (GST_BUFFER_DATA (buf) + 2) << 16) |
-              (GST_READ_UINT8 (GST_BUFFER_DATA (buf) + 1) << 8) |
-              (GST_READ_UINT8 (GST_BUFFER_DATA (buf) + 0) << 0);
-        }
-        break;
-      }
-      default:{
-        GST_LOG ("not checking RGB-format buffer with %ubpp", bpp);
-        return;
-      }
-    }
-
-    fail_unless_equals_int ((pixel & rmask) >> rshift, 0xff);
-    fail_unless_equals_int ((pixel & gmask) >> gshift, 0x00);
-    fail_unless_equals_int ((pixel & bmask) >> bshift, 0x00);
+    fail_unless_equals_int (data[0], values[i]);
   }
+
+  /*
+     fail_unless_equals_int ((pixel & rmask) >> rshift, 0xff);
+     fail_unless_equals_int ((pixel & gmask) >> gshift, 0x00);
+     fail_unless_equals_int ((pixel & bmask) >> bshift, 0x00);
+   */
 }
 
 GST_START_TEST (test_crop_to_1x1)
@@ -459,11 +408,15 @@ GST_START_TEST (test_cropping)
 GST_END_TEST;
 
 
-static gboolean
-buffer_probe_cb (GstPad * pad, GstBuffer * buf, GstBuffer ** p_buf)
+static GstPadProbeReturn
+buffer_probe_cb (GstPad * pad, GstPadProbeInfo * info, gpointer data)
 {
+  GstBuffer **p_buf = data;
+  GstBuffer *buf = GST_PAD_PROBE_INFO_BUFFER (info);
+
   gst_buffer_replace (p_buf, buf);
-  return TRUE;                  /* keep data */
+
+  return GST_PAD_PROBE_OK;      /* keep data */
 }
 
 GST_START_TEST (test_passthrough)
@@ -479,7 +432,8 @@ GST_START_TEST (test_passthrough)
 
   srcpad = gst_element_get_static_pad (ctx.src, "src");
   fail_unless (srcpad != NULL);
-  gst_pad_add_buffer_probe (srcpad, G_CALLBACK (buffer_probe_cb), &gen_buf);
+  gst_pad_add_probe (srcpad, GST_PAD_PROBE_TYPE_BUFFER, buffer_probe_cb,
+      &gen_buf, NULL);
   gst_object_unref (srcpad);
 
   g_object_set (ctx.crop, "left", 0, "right", 0, "top", 0, "bottom", 0, NULL);
@@ -535,17 +489,17 @@ GST_START_TEST (test_caps_transform)
   fail_unless (klass != NULL);
 
   caps = gst_caps_new_simple ("video/x-raw-yuv",
-      "format", GST_TYPE_FOURCC, GST_MAKE_FOURCC ('I', '4', '2', '0'),
+      "format", G_TYPE_STRING, "I420",
       "framerate", GST_TYPE_FRACTION, 1, 1,
       "width", G_TYPE_INT, 200, "height", G_TYPE_INT, 100, NULL);
 
   /* by default, it should be no cropping and hence passthrough */
-  adj_caps = klass->transform_caps (crop, GST_PAD_SRC, caps);
+  adj_caps = klass->transform_caps (crop, GST_PAD_SRC, caps, NULL);
   fail_unless (adj_caps != NULL);
   fail_unless (gst_caps_is_equal (adj_caps, caps));
   gst_caps_unref (adj_caps);
 
-  adj_caps = klass->transform_caps (crop, GST_PAD_SINK, caps);
+  adj_caps = klass->transform_caps (crop, GST_PAD_SINK, caps, NULL);
   fail_unless (adj_caps != NULL);
   fail_unless (gst_caps_is_equal (adj_caps, caps));
   gst_caps_unref (adj_caps);
@@ -554,12 +508,12 @@ GST_START_TEST (test_caps_transform)
   g_object_set (ctx.crop, "left", 1, "right", 3, "top", 5, "bottom", 7, NULL);
   g_object_set (ctx.crop, "left", 0, "right", 0, "top", 0, "bottom", 0, NULL);
 
-  adj_caps = klass->transform_caps (crop, GST_PAD_SRC, caps);
+  adj_caps = klass->transform_caps (crop, GST_PAD_SRC, caps, NULL);
   fail_unless (adj_caps != NULL);
   fail_unless (gst_caps_is_equal (adj_caps, caps));
   gst_caps_unref (adj_caps);
 
-  adj_caps = klass->transform_caps (crop, GST_PAD_SINK, caps);
+  adj_caps = klass->transform_caps (crop, GST_PAD_SINK, caps, NULL);
   fail_unless (adj_caps != NULL);
   fail_unless (gst_caps_is_equal (adj_caps, caps));
   gst_caps_unref (adj_caps);
@@ -570,7 +524,7 @@ GST_START_TEST (test_caps_transform)
   /* ========= (1) fixed value ============================================= */
 
   /* sink => source, source must be bigger if we crop stuff off */
-  adj_caps = klass->transform_caps (crop, GST_PAD_SRC, caps);
+  adj_caps = klass->transform_caps (crop, GST_PAD_SRC, caps, NULL);
   fail_unless (adj_caps != NULL);
   fail_unless (gst_caps_get_size (adj_caps) == 1);
   w_val =
@@ -586,7 +540,7 @@ GST_START_TEST (test_caps_transform)
   gst_caps_unref (adj_caps);
 
   /* source => sink becomes smaller */
-  adj_caps = klass->transform_caps (crop, GST_PAD_SINK, caps);
+  adj_caps = klass->transform_caps (crop, GST_PAD_SINK, caps, NULL);
   fail_unless (adj_caps != NULL);
   fail_unless (gst_caps_get_size (adj_caps) == 1);
   w_val =
@@ -608,7 +562,7 @@ GST_START_TEST (test_caps_transform)
       "height", GST_TYPE_INT_RANGE, 3000, 4000, NULL);
 
   /* sink => source, source must be bigger if we crop stuff off */
-  adj_caps = klass->transform_caps (crop, GST_PAD_SRC, caps);
+  adj_caps = klass->transform_caps (crop, GST_PAD_SRC, caps, NULL);
   fail_unless (adj_caps != NULL);
   fail_unless (gst_caps_get_size (adj_caps) == 1);
   w_val =
@@ -626,7 +580,7 @@ GST_START_TEST (test_caps_transform)
   gst_caps_unref (adj_caps);
 
   /* source => sink becomes smaller */
-  adj_caps = klass->transform_caps (crop, GST_PAD_SINK, caps);
+  adj_caps = klass->transform_caps (crop, GST_PAD_SINK, caps, NULL);
   fail_unless (adj_caps != NULL);
   fail_unless (gst_caps_get_size (adj_caps) == 1);
   w_val =
@@ -650,7 +604,7 @@ GST_START_TEST (test_caps_transform)
       "height", GST_TYPE_INT_RANGE, 2, G_MAXINT, NULL);
 
   /* sink => source, source must be bigger if we crop stuff off */
-  adj_caps = klass->transform_caps (crop, GST_PAD_SRC, caps);
+  adj_caps = klass->transform_caps (crop, GST_PAD_SRC, caps, NULL);
   fail_unless (adj_caps != NULL);
   fail_unless (gst_caps_get_size (adj_caps) == 1);
   w_val =
@@ -668,7 +622,7 @@ GST_START_TEST (test_caps_transform)
   gst_caps_unref (adj_caps);
 
   /* source => sink becomes smaller */
-  adj_caps = klass->transform_caps (crop, GST_PAD_SINK, caps);
+  adj_caps = klass->transform_caps (crop, GST_PAD_SINK, caps, NULL);
   fail_unless (adj_caps != NULL);
   fail_unless (gst_caps_get_size (adj_caps) == 1);
   w_val =
@@ -715,7 +669,7 @@ GST_START_TEST (test_caps_transform)
   }
 
   /* sink => source, source must be bigger if we crop stuff off */
-  adj_caps = klass->transform_caps (crop, GST_PAD_SRC, caps);
+  adj_caps = klass->transform_caps (crop, GST_PAD_SRC, caps, NULL);
   fail_unless (adj_caps != NULL);
   fail_unless (gst_caps_get_size (adj_caps) == 1);
   w_val =
@@ -736,7 +690,7 @@ GST_START_TEST (test_caps_transform)
   gst_caps_unref (adj_caps);
 
   /* source => sink becomes smaller */
-  adj_caps = klass->transform_caps (crop, GST_PAD_SINK, caps);
+  adj_caps = klass->transform_caps (crop, GST_PAD_SINK, caps, NULL);
   fail_unless (adj_caps != NULL);
   fail_unless (gst_caps_get_size (adj_caps) == 1);
   w_val =

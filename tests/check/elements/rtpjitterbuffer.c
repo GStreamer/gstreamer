@@ -51,13 +51,10 @@ static GstStaticPadTemplate srctemplate = GST_STATIC_PAD_TEMPLATE ("src",
     );
 
 static void
-buffer_dropped (gpointer mem)
+buffer_dropped (gpointer data, GstMiniObject * obj)
 {
-  if (mem) {
-    GST_DEBUG ("dropping buffer: data=%p", mem);
-    g_free (mem);
-    num_dropped++;
-  }
+  GST_DEBUG ("dropping buffer %p", obj);
+  num_dropped++;
 }
 
 static GstElement *
@@ -103,12 +100,11 @@ setup_jitterbuffer (gint num_buffers)
   caps = gst_caps_from_string (RTP_CAPS_STRING);
   for (i = 0; i < num_buffers; i++) {
     buffer = gst_buffer_new_and_alloc (sizeof (in));
-    memcpy (GST_BUFFER_DATA (buffer), in, sizeof (in));
-    gst_buffer_set_caps (buffer, caps);
+    gst_buffer_fill (buffer, 0, in, sizeof (in));
     GST_BUFFER_TIMESTAMP (buffer) = ts;
     GST_BUFFER_DURATION (buffer) = tso;
-    GST_BUFFER_FREE_FUNC (buffer) = buffer_dropped;
-    GST_DEBUG ("created buffer: %p, data=%p", buffer, GST_BUFFER_DATA (buffer));
+    gst_mini_object_weak_ref (GST_MINI_OBJECT (buffer), buffer_dropped, NULL);
+    GST_DEBUG ("created buffer: %p", buffer);
 
     if (!i)
       GST_BUFFER_FLAG_SET (buffer, GST_BUFFER_FLAG_DISCONT);
@@ -187,10 +183,11 @@ check_jitterbuffer_results (GstElement * jitterbuffer, gint num_buffers)
   for (node = buffers; node; node = g_list_next (node)) {
     fail_if ((buffer = (GstBuffer *) node->data) == NULL);
     fail_if (GST_BUFFER_TIMESTAMP (buffer) != ts);
-    data = GST_BUFFER_DATA (buffer);
+    data = gst_buffer_map (buffer, NULL, NULL, GST_MAP_READ);
     cur_sn = ((guint16) data[2] << 8) | data[3];
     cur_ts = ((guint32) data[4] << 24) | ((guint32) data[5] << 16) |
         ((guint32) data[6] << 8) | data[7];
+    gst_buffer_unmap (buffer, data, -1);
 
     if (node != buffers) {
       fail_unless (cur_sn > prev_sn);

@@ -51,31 +51,25 @@ static guint chain_list_bytes_received;
  * Chain list function for testing buffer lists
  */
 static GstFlowReturn
-rtp_pipeline_chain_list (GstPad * pad, GstBufferList * list)
+rtp_pipeline_chain_list (GstPad * pad, GstObject * parent, GstBufferList * list)
 {
-  GstBufferListIterator *it;
+  guint i, len;
 
   fail_if (!list);
-  it = gst_buffer_list_iterate (list);
-
   /*
    * Count the size of the payload in the buffer list.
    */
+  len = gst_buffer_list_length (list);
 
   /* Loop through all groups */
-  while (gst_buffer_list_iterator_next_group (it)) {
+  for (i = 0; i < len; i++) {
     GstBuffer *paybuf;
 
-    /* Skip the first buffer in the group, its the RTP header */
-    fail_if (!gst_buffer_list_iterator_next (it));
-
+    /* FIXME need to discard RTP header */
+    paybuf = gst_buffer_list_get (list, i);
     /* Loop through all payload buffers in the current group */
-    while ((paybuf = gst_buffer_list_iterator_next (it))) {
-      chain_list_bytes_received += GST_BUFFER_SIZE (paybuf);
-    }
+    chain_list_bytes_received += gst_buffer_get_size (paybuf);
   }
-
-  gst_buffer_list_iterator_free (it);
   gst_buffer_list_unref (list);
 
   return GST_FLOW_OK;

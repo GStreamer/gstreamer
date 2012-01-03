@@ -112,7 +112,7 @@ test_mux_tags (const gchar * tag_str, const gchar * caps,
 
   setter = GST_TAG_SETTER (mux);
   fail_unless (setter != NULL);
-  sent_tags = gst_structure_from_string (tag_str, NULL);
+  sent_tags = gst_tag_list_new_from_string (tag_str);
   fail_unless (sent_tags != NULL);
   gst_tag_setter_merge_tags (setter, sent_tags, GST_TAG_MERGE_REPLACE);
   gst_tag_list_free (sent_tags);
@@ -176,7 +176,7 @@ test_demux_tags (const gchar * tag_str, const gchar * demuxer,
   bus_watch = gst_bus_add_watch (bus, bus_handler, loop);
   gst_object_unref (bus);
 
-  sent_tags = gst_structure_from_string (tag_str, NULL);
+  sent_tags = gst_tag_list_new_from_string (tag_str);
   fail_unless (sent_tags != NULL);
 
   gst_element_set_state (pipeline, GST_STATE_PLAYING);
@@ -186,18 +186,18 @@ test_demux_tags (const gchar * tag_str, const gchar * demuxer,
 
   /* verify tags */
   fail_unless (received_tags != NULL);
-  n_recv = gst_structure_n_fields (received_tags);
-  n_sent = gst_structure_n_fields (sent_tags);
+  n_recv = gst_tag_list_n_tags (received_tags);
+  n_sent = gst_tag_list_n_tags (sent_tags);
   fail_unless (n_recv >= n_sent);
   /* FIXME: compare taglits values */
   for (i = 0; i < n_sent; i++) {
-    name_sent = gst_structure_nth_field_name (sent_tags, i);
-    value_sent = gst_structure_get_value (sent_tags, name_sent);
+    name_sent = gst_tag_list_nth_tag_name (sent_tags, i);
+    value_sent = gst_tag_list_get_value (sent_tags, name_sent);
     found = FALSE;
     for (j = 0; j < n_recv; j++) {
-      name_recv = gst_structure_nth_field_name (received_tags, j);
+      name_recv = gst_tag_list_nth_tag_name (received_tags, j);
       if (!strcmp (name_sent, name_recv)) {
-        value_recv = gst_structure_get_value (received_tags, name_recv);
+        value_recv = gst_tag_list_get_value (received_tags, name_recv);
         comparison = gst_value_compare (value_sent, value_recv);
         if (comparison != GST_VALUE_EQUAL) {
           gchar *vs = g_strdup_value_contents (value_sent);
@@ -267,7 +267,8 @@ test_tags (const gchar * tag_str, const gchar * caps, const gchar * muxer,
 
 GST_START_TEST (test_common_tags)
 {
-  if (!gst_default_registry_check_feature_version ("qtdemux", 0, 10, 23)) {
+  if (!gst_registry_check_feature_version (gst_registry_get (), "qtdemux", 0,
+          10, 23)) {
     GST_INFO ("Skipping test, qtdemux either not available or too old");
     return;
   }
@@ -288,7 +289,8 @@ GST_END_TEST;
 
 GST_START_TEST (test_geo_location_tags)
 {
-  if (!gst_default_registry_check_feature_version ("qtdemux", 0, 10, 23)) {
+  if (!gst_registry_check_feature_version (gst_registry_get (), "qtdemux", 0,
+          10, 23)) {
     GST_INFO ("Skipping test, qtdemux either not available or too old");
     return;
   }
@@ -305,7 +307,8 @@ GST_END_TEST;
 
 GST_START_TEST (test_user_tags)
 {
-  if (!gst_default_registry_check_feature_version ("qtdemux", 0, 10, 23)) {
+  if (!gst_registry_check_feature_version (gst_registry_get (), "qtdemux", 0,
+          10, 23)) {
     GST_INFO ("Skipping test, qtdemux either not available or too old");
     return;
   }

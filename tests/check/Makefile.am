@@ -243,6 +243,9 @@ elements_rglimiter_LDADD = $(GST_PLUGINS_BASE_LIBS) -lgstaudio-$(GST_MAJORMINOR)
 elements_rgvolume_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(CFLAGS) $(AM_CFLAGS)
 elements_rgvolume_LDADD = $(GST_PLUGINS_BASE_LIBS) -lgstaudio-$(GST_MAJORMINOR) $(LDADD)
 
+elements_spectrum_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(CFLAGS) $(AM_CFLAGS)
+elements_spectrum_LDADD = $(GST_PLUGINS_BASE_LIBS) -lgstaudio-$(GST_MAJORMINOR) $(LDADD)
+
 elements_cmmldec_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(CFLAGS) $(AM_CFLAGS)
 elements_cmmlenc_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(CFLAGS) $(AM_CFLAGS)
 
@@ -263,7 +266,7 @@ elements_imagefreeze_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(GST_BASE_CFLAGS) $(AM
 elements_imagefreeze_LDADD = $(GST_PLUGINS_BASE_LIBS) -lgstvideo-$(GST_MAJORMINOR) $(GST_BASE_LIBS) $(LDADD)
 
 elements_jpegenc_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(GST_BASE_CFLAGS) $(AM_CFLAGS)
-elements_jpegenc_LDADD = $(GST_PLUGINS_BASE_LIBS) -lgstapp-0.10 $(GST_BASE_LIBS) $(LDADD)
+elements_jpegenc_LDADD = $(GST_PLUGINS_BASE_LIBS) -lgstapp-$(GST_MAJORMINOR) $(GST_BASE_LIBS) $(LDADD)
 
 elements_level_LDADD = $(LDADD) $(LIBM)
 
@@ -279,7 +282,7 @@ elements_qtmux_LDADD = $(GST_PLUGINS_BASE_LIBS) -lgstpbutils-@GST_MAJORMINOR@ \
 elements_rtpbin_buffer_list_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(GST_CFLAGS) \
 	$(WARNING_CFLAGS) $(ERROR_CFLAGS) $(GST_CHECK_CFLAGS) $(AM_CFLAGS)
 elements_rtpbin_buffer_list_LDADD = $(GST_PLUGINS_BASE_LIBS) \
-             -lgstnetbuffer-@GST_MAJORMINOR@ -lgstrtp-@GST_MAJORMINOR@ \
+             -lgstrtp-@GST_MAJORMINOR@ \
              $(GST_BASE_LIBS) $(GST_LIBS) $(GST_CHECK_LIBS)
 elements_rtpbin_buffer_list_SOURCES = elements/rtpbin_buffer_list.c
 
@@ -293,8 +296,8 @@ elements_sunaudio_LDADD = \
 	$(GST_PLUGINS_BASE_LIBS) -lgstinterfaces-@GST_MAJORMINOR@ \
 	$(LDADD)
 
-elements_videocrop_LDADD = $(GST_BASE_LIBS) $(LDADD)
-elements_videocrop_CFLAGS = $(GST_BASE_CFLAGS) $(CFLAGS) $(AM_CFLAGS)
+elements_videocrop_LDADD = $(GST_PLUGINS_BASE_LIBS) $(GST_BASE_LIBS) -lgstvideo-$(GST_MAJORMINOR) $(LDADD)
+elements_videocrop_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(GST_BASE_CFLAGS) $(CFLAGS) $(AM_CFLAGS)
 
 elements_videofilter_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(CFLAGS) $(AM_CFLAGS)
 elements_videofilter_LDADD = $(GST_PLUGINS_BASE_LIBS) -lgstvideo-$(GST_MAJORMINOR) $(LDADD)
@@ -306,6 +309,9 @@ elements_gdkpixbufsink_CFLAGS = \
 elements_gdkpixbufsink_LDADD = \
 	$(LDADD) $(GDK_PIXBUF_LIBS)
 
+
+pipelines_flacdec_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(CFLAGS) $(AM_CFLAGS)
+pipelines_flacdec_LDADD  = $(GST_PLUGINS_BASE_LIBS) -lgstaudio-$(GST_MAJORMINOR) $(LDADD)
 
 pipelines_wavenc_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(CFLAGS) $(AM_CFLAGS)
 pipelines_wavenc_LDADD  = $(GST_PLUGINS_BASE_LIBS) -lgstaudio-$(GST_MAJORMINOR) $(LDADD)
