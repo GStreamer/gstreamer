@@ -368,10 +368,10 @@ gst_multi_file_src_create (GstPushSrc * src, GstBuffer ** buffer)
           if (error != NULL)
             g_error_free (error);
 
-          return GST_FLOW_UNEXPECTED;
+          return GST_FLOW_EOS;
         }
       } else {
-        return GST_FLOW_UNEXPECTED;
+        return GST_FLOW_EOS;
       }
     } else {
       goto handle_error;

@@ -629,7 +629,7 @@ nodata:
   if (G_UNLIKELY (size == MULTIPART_DATA_ERROR))
     return GST_FLOW_ERROR;
   if (G_UNLIKELY (size == MULTIPART_DATA_EOS))
-    return GST_FLOW_UNEXPECTED;
+    return GST_FLOW_EOS;
 
   return res;
 }

@@ -2072,7 +2072,7 @@ gst_avi_mux_do_one_buffer (GstAviMux * avimux)
     /* simply finish off the file and send EOS */
     gst_avi_mux_stop_file (avimux);
     gst_pad_push_event (avimux->srcpad, gst_event_new_eos ());
-    return GST_FLOW_UNEXPECTED;
+    return GST_FLOW_EOS;
   }
 
   /* ERRORS */

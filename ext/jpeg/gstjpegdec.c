@@ -1656,7 +1656,7 @@ alloc_failed:
     GST_DEBUG_OBJECT (dec, "failed to alloc buffer, reason %s", reason);
     /* Reset for next time */
     jpeg_abort_decompress (&dec->cinfo);
-    if (ret != GST_FLOW_UNEXPECTED && ret != GST_FLOW_WRONG_STATE &&
+    if (ret != GST_FLOW_EOS && ret != GST_FLOW_WRONG_STATE &&
         ret != GST_FLOW_NOT_LINKED) {
       gst_jpeg_dec_set_error (dec, GST_FUNCTION, __LINE__,
           "Buffer allocation failed, reason: %s", reason);

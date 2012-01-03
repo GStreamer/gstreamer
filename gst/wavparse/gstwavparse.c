@@ -1953,12 +1953,12 @@ iterate_adapter:
 found_eos:
   {
     GST_DEBUG_OBJECT (wav, "found EOS");
-    return GST_FLOW_UNEXPECTED;
+    return GST_FLOW_EOS;
   }
 pull_error:
   {
     /* check if we got EOS */
-    if (res == GST_FLOW_UNEXPECTED)
+    if (res == GST_FLOW_EOS)
       goto found_eos;
 
     GST_WARNING_OBJECT (wav,
@@ -2019,7 +2019,7 @@ pause:
     GST_DEBUG_OBJECT (wav, "pausing task, reason %s", reason);
     gst_pad_pause_task (pad);
 
-    if (ret == GST_FLOW_UNEXPECTED) {
+    if (ret == GST_FLOW_EOS) {
       /* handle end-of-stream/segment */
       /* so align our position with the end of it, if there is one
        * this ensures a subsequent will arrive at correct base/acc time */
@@ -2053,7 +2053,7 @@ pause:
       } else {
         gst_pad_push_event (wav->srcpad, gst_event_new_eos ());
       }
-    } else if (ret == GST_FLOW_NOT_LINKED || ret < GST_FLOW_UNEXPECTED) {
+    } else if (ret == GST_FLOW_NOT_LINKED || ret < GST_FLOW_EOS) {
       /* for fatal errors we post an error message, post the error
        * first so the app knows about the error first. */
       GST_ELEMENT_ERROR (wav, STREAM, FAILED,

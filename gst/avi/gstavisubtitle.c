@@ -281,7 +281,7 @@ gst_avi_subtitle_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
 
   if (sub->subfile != NULL) {
     GST_WARNING_OBJECT (sub, "Got more buffers than expected, dropping");
-    ret = GST_FLOW_UNEXPECTED;
+    ret = GST_FLOW_EOS;
     goto done;
   }
 

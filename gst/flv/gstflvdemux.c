@@ -1073,9 +1073,9 @@ gst_flv_demux_parse_tag_audio (GstFlvDemux * demux, GstBuffer * buffer)
   /* Push downstream */
   ret = gst_pad_push (demux->audio_pad, outbuf);
   if (G_UNLIKELY (ret != GST_FLOW_OK)) {
-    if (demux->segment.rate < 0.0 && ret == GST_FLOW_UNEXPECTED &&
+    if (demux->segment.rate < 0.0 && ret == GST_FLOW_EOS &&
         demux->segment.position > demux->segment.stop) {
-      /* In reverse playback we can get a GST_FLOW_UNEXPECTED when
+      /* In reverse playback we can get a GST_FLOW_EOS when
        * we are at the end of the segment, so we just need to jump
        * back to the previous section. */
       GST_DEBUG_OBJECT (demux, "downstream has reached end of segment");
@@ -1453,9 +1453,9 @@ gst_flv_demux_parse_tag_video (GstFlvDemux * demux, GstBuffer * buffer)
   ret = gst_pad_push (demux->video_pad, outbuf);
 
   if (G_UNLIKELY (ret != GST_FLOW_OK)) {
-    if (demux->segment.rate < 0.0 && ret == GST_FLOW_UNEXPECTED &&
+    if (demux->segment.rate < 0.0 && ret == GST_FLOW_EOS &&
         demux->segment.position > demux->segment.stop) {
-      /* In reverse playback we can get a GST_FLOW_UNEXPECTED when
+      /* In reverse playback we can get a GST_FLOW_EOS when
        * we are at the end of the segment, so we just need to jump
        * back to the previous section. */
       GST_DEBUG_OBJECT (demux, "downstream has reached end of segment");
@@ -1613,7 +1613,7 @@ gst_flv_demux_parse_header (GstFlvDemux * demux, GstBuffer * buffer)
   } else {
     if (G_UNLIKELY (demux->strict)) {
       GST_WARNING_OBJECT (demux, "invalid header tag detected");
-      ret = GST_FLOW_UNEXPECTED;
+      ret = GST_FLOW_EOS;
       goto beach;
     }
   }
@@ -2037,7 +2037,7 @@ gst_flv_demux_pull_range (GstFlvDemux * demux, GstPad * pad, guint64 offset,
         "partial pull got %" G_GSIZE_FORMAT " when expecting %d from offset %"
         G_GUINT64_FORMAT, gst_buffer_get_size (*buffer), size, offset);
     gst_buffer_unref (*buffer);
-    ret = GST_FLOW_UNEXPECTED;
+    ret = GST_FLOW_EOS;
     *buffer = NULL;
     return ret;
   }
@@ -2168,7 +2168,7 @@ gst_flv_demux_move_to_offset (GstFlvDemux * demux, gint64 offset,
 static GstFlowReturn
 gst_flv_demux_seek_to_prev_keyframe (GstFlvDemux * demux)
 {
-  GstFlowReturn ret = GST_FLOW_UNEXPECTED;
+  GstFlowReturn ret = GST_FLOW_EOS;
   GstIndexEntry *entry = NULL;
 
   GST_DEBUG_OBJECT (demux,
@@ -2245,7 +2245,7 @@ gst_flv_demux_create_index (GstFlvDemux * demux, gint64 pos, GstClockTime ts)
     demux->offset += tag_size;
   }
 
-  if (ret == GST_FLOW_UNEXPECTED) {
+  if (ret == GST_FLOW_EOS) {
     /* file ran out, so mark we have complete index */
     demux->indexed = TRUE;
     ret = GST_FLOW_OK;
@@ -2347,7 +2347,7 @@ gst_flv_demux_loop (GstPad * pad)
         demux->file_size = gst_flv_demux_get_metadata (demux);
       break;
     case FLV_STATE_DONE:
-      ret = GST_FLOW_UNEXPECTED;
+      ret = GST_FLOW_EOS;
       break;
     case FLV_STATE_SEEK:
       /* seek issued with insufficient index;
@@ -2380,7 +2380,7 @@ gst_flv_demux_loop (GstPad * pad)
     /* check EOS condition */
     if ((demux->segment.stop != -1) &&
         (demux->segment.position >= demux->segment.stop)) {
-      ret = GST_FLOW_UNEXPECTED;
+      ret = GST_FLOW_EOS;
     }
   }
 
@@ -2399,7 +2399,7 @@ pause:
     GST_LOG_OBJECT (demux, "pausing task, reason %s", reason);
     gst_pad_pause_task (pad);
 
-    if (ret == GST_FLOW_UNEXPECTED) {
+    if (ret == GST_FLOW_EOS) {
       /* handle end-of-stream/segment */
       /* so align our position with the end of it, if there is one
        * this ensures a subsequent will arrive at correct base/acc time */
@@ -2446,7 +2446,7 @@ pause:
         if (!gst_flv_demux_push_src_event (demux, gst_event_new_eos ()))
           GST_WARNING_OBJECT (demux, "failed pushing EOS on streams");
       }
-    } else if (ret == GST_FLOW_NOT_LINKED || ret < GST_FLOW_UNEXPECTED) {
+    } else if (ret == GST_FLOW_NOT_LINKED || ret < GST_FLOW_EOS) {
       GST_ELEMENT_ERROR (demux, STREAM, FAILED,
           ("Internal data stream error."),
           ("stream stopped, reason %s", reason));

@@ -3928,7 +3928,7 @@ gst_avi_demux_move_stream (GstAviDemux * avi, GstAviStream * stream,
     guint next_key;
     /* Because we don't know the frame order we need to push from the prev keyframe
      * to the next keyframe. If there is a smart decoder downstream he will notice
-     * that there are too many encoded frames send and return UNEXPECTED when there
+     * that there are too many encoded frames send and return EOS when there
      * are enough decoded frames to fill the segment. */
     next_key = gst_avi_demux_index_next (avi, stream, index, TRUE);
 
@@ -4497,7 +4497,7 @@ gst_avi_demux_combine_flows (GstAviDemux * avi, GstAviStream * stream,
   stream->last_flow = ret;
 
   /* any other error that is not-linked or eos can be returned right away */
-  if (G_LIKELY (ret != GST_FLOW_UNEXPECTED && ret != GST_FLOW_NOT_LINKED))
+  if (G_LIKELY (ret != GST_FLOW_EOS && ret != GST_FLOW_NOT_LINKED))
     goto done;
 
   /* only return NOT_LINKED if all other pads returned NOT_LINKED */
@@ -4506,18 +4506,18 @@ gst_avi_demux_combine_flows (GstAviDemux * avi, GstAviStream * stream,
 
     ret = ostream->last_flow;
     /* no unexpected or unlinked, return */
-    if (G_LIKELY (ret != GST_FLOW_UNEXPECTED && ret != GST_FLOW_NOT_LINKED))
+    if (G_LIKELY (ret != GST_FLOW_EOS && ret != GST_FLOW_NOT_LINKED))
       goto done;
 
     /* we check to see if we have at least 1 unexpected or all unlinked */
-    unexpected |= (ret == GST_FLOW_UNEXPECTED);
+    unexpected |= (ret == GST_FLOW_EOS);
     not_linked &= (ret == GST_FLOW_NOT_LINKED);
   }
   /* when we get here, we all have unlinked or unexpected */
   if (not_linked)
     ret = GST_FLOW_NOT_LINKED;
   else if (unexpected)
-    ret = GST_FLOW_UNEXPECTED;
+    ret = GST_FLOW_EOS;
 done:
   GST_LOG_OBJECT (avi, "combined %s to return %s",
       gst_flow_get_name (stream->last_flow), gst_flow_get_name (ret));
@@ -4597,7 +4597,7 @@ eos:
     GST_DEBUG_OBJECT (avi, "we are EOS");
     /* setting current_timestamp to -1 marks EOS */
     stream->current_timestamp = -1;
-    return GST_FLOW_UNEXPECTED;
+    return GST_FLOW_EOS;
   }
 }
 
@@ -4621,7 +4621,7 @@ gst_avi_demux_find_next (GstAviDemux * avi, gfloat rate)
     stream = &avi->stream[i];
 
     /* ignore streams that finished */
-    if (stream->last_flow == GST_FLOW_UNEXPECTED)
+    if (stream->last_flow == GST_FLOW_EOS)
       continue;
 
     position = stream->current_timestamp;
@@ -4755,8 +4755,8 @@ gst_avi_demux_loop_data (GstAviDemux * avi)
     processed = TRUE;
 
     if (avi->segment.rate < 0) {
-      if (timestamp > avi->segment.stop && ret == GST_FLOW_UNEXPECTED) {
-        /* In reverse playback we can get a GST_FLOW_UNEXPECTED when
+      if (timestamp > avi->segment.stop && ret == GST_FLOW_EOS) {
+        /* In reverse playback we can get a GST_FLOW_EOS when
          * we are at the end of the segment, so we just need to jump
          * back to the previous section. */
         GST_DEBUG_OBJECT (avi, "downstream has reached end of segment");
@@ -4778,7 +4778,7 @@ beach:
 eos:
   {
     GST_DEBUG_OBJECT (avi, "No samples left for any streams - EOS");
-    ret = GST_FLOW_UNEXPECTED;
+    ret = GST_FLOW_EOS;
     goto beach;
   }
 eos_stop:
@@ -4786,7 +4786,7 @@ eos_stop:
     GST_LOG_OBJECT (avi, "Found keyframe after segment,"
         " setting EOS (%" GST_TIME_FORMAT " > %" GST_TIME_FORMAT ")",
         GST_TIME_ARGS (timestamp), GST_TIME_ARGS (avi->segment.stop));
-    ret = GST_FLOW_UNEXPECTED;
+    ret = GST_FLOW_EOS;
     /* move to next stream */
     goto next;
   }
@@ -4802,7 +4802,7 @@ short_buffer:
         ", only got %" G_GSIZE_FORMAT "/%" G_GUINT64_FORMAT
         " bytes (truncated file?)", offset, gst_buffer_get_size (buf), size);
     gst_buffer_unref (buf);
-    ret = GST_FLOW_UNEXPECTED;
+    ret = GST_FLOW_EOS;
     goto beach;
   }
 }
@@ -4822,7 +4822,7 @@ gst_avi_demux_stream_data (GstAviDemux * avi)
   if (G_UNLIKELY (avi->have_eos)) {
     /* Clean adapter, we're done */
     gst_adapter_clear (avi->adapter);
-    return GST_FLOW_UNEXPECTED;
+    return GST_FLOW_EOS;
   }
 
   if (G_UNLIKELY (avi->todrop)) {
@@ -4897,7 +4897,7 @@ gst_avi_demux_stream_data (GstAviDemux * avi)
     } else {
       GST_DEBUG ("No more stream chunks, send EOS");
       avi->have_eos = TRUE;
-      return GST_FLOW_UNEXPECTED;
+      return GST_FLOW_EOS;
     }
 
     if (G_UNLIKELY (!gst_avi_demux_peek_chunk (avi, &tag, &size))) {
@@ -5135,7 +5135,7 @@ pause:{
     GST_LOG_OBJECT (avi, "pausing task, reason %s", gst_flow_get_name (res));
     gst_pad_pause_task (avi->sinkpad);
 
-    if (res == GST_FLOW_UNEXPECTED) {
+    if (res == GST_FLOW_EOS) {
       /* handle end-of-stream/segment */
       /* so align our position with the end of it, if there is one
        * this ensures a subsequent will arrive at correct base/acc time */
@@ -5159,7 +5159,7 @@ pause:{
       } else {
         push_eos = TRUE;
       }
-    } else if (res == GST_FLOW_NOT_LINKED || res < GST_FLOW_UNEXPECTED) {
+    } else if (res == GST_FLOW_NOT_LINKED || res < GST_FLOW_EOS) {
       /* for fatal errors we post an error message, wrong-state is
        * not fatal because it happens due to flushes and only means
        * that we should stop now. */
@@ -5171,7 +5171,7 @@ pause:{
     if (push_eos) {
       GST_INFO_OBJECT (avi, "sending eos");
       if (!gst_avi_demux_push_event (avi, gst_event_new_eos ()) &&
-          (res == GST_FLOW_UNEXPECTED)) {
+          (res == GST_FLOW_EOS)) {
         GST_ELEMENT_ERROR (avi, STREAM, DEMUX,
             (NULL), ("got eos but no streams (yet)"));
       }

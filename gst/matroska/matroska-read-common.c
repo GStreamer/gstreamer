@@ -999,11 +999,11 @@ gst_matroska_read_common_parse_index_cuetrack (GstMatroskaReadCommon * common,
 
   DEBUG_ELEMENT_STOP (common, ebml, "CueTrackPositions", ret);
 
-  if ((ret == GST_FLOW_OK || ret == GST_FLOW_UNEXPECTED)
+  if ((ret == GST_FLOW_OK || ret == GST_FLOW_EOS)
       && idx.pos != (guint64) - 1 && idx.track > 0) {
     g_array_append_val (common->index, idx);
     (*nentries)++;
-  } else if (ret == GST_FLOW_OK || ret == GST_FLOW_UNEXPECTED) {
+  } else if (ret == GST_FLOW_OK || ret == GST_FLOW_EOS) {
     GST_DEBUG_OBJECT (common, "CueTrackPositions without valid content");
   }
 
@@ -1571,7 +1571,7 @@ gst_matroska_read_common_peek_adapter (GstMatroskaReadCommon * common, guint
   /* Caller needs to gst_adapter_unmap. */
   *data = gst_adapter_map (common->adapter, peek);
   if (*data == NULL)
-    return GST_FLOW_UNEXPECTED;
+    return GST_FLOW_EOS;
 
   return GST_FLOW_OK;
 }
@@ -1661,7 +1661,7 @@ gst_matroska_read_common_peek_bytes (GstMatroskaReadCommon * common, guint64
       *p_buf = NULL;
     if (bytes)
       *bytes = NULL;
-    return GST_FLOW_UNEXPECTED;
+    return GST_FLOW_EOS;
   }
 
   if (p_buf)
@@ -1861,7 +1861,7 @@ gst_matroska_read_common_read_track_encoding (GstMatroskaReadCommon * common,
   }
 
   DEBUG_ELEMENT_STOP (common, ebml, "ContentEncoding", ret);
-  if (ret != GST_FLOW_OK && ret != GST_FLOW_UNEXPECTED)
+  if (ret != GST_FLOW_OK && ret != GST_FLOW_EOS)
     return ret;
 
   /* TODO: Check if the combination of values is valid */
@@ -1906,7 +1906,7 @@ gst_matroska_read_common_read_track_encodings (GstMatroskaReadCommon * common,
   }
 
   DEBUG_ELEMENT_STOP (common, ebml, "ContentEncodings", ret);
-  if (ret != GST_FLOW_OK && ret != GST_FLOW_UNEXPECTED)
+  if (ret != GST_FLOW_OK && ret != GST_FLOW_EOS)
     return ret;
 
   /* Sort encodings according to their order */

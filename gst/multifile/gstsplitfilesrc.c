@@ -478,7 +478,7 @@ gst_split_file_src_create (GstBaseSrc * basesrc, guint64 offset, guint size,
   cur_part = src->parts[src->cur_part];
   if (offset < cur_part.start || offset > cur_part.stop) {
     if (!gst_split_file_src_find_part_for_offset (src, offset, &src->cur_part))
-      return GST_FLOW_UNEXPECTED;
+      return GST_FLOW_EOS;
     cur_part = src->parts[src->cur_part];
   }
 

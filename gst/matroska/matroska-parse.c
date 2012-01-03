@@ -1048,8 +1048,8 @@ gst_matroska_parse_add_stream (GstMatroskaParse * parse, GstEbmlRead * ebml)
   }
 
   if (context->type == 0 || context->codec_id == NULL || (ret != GST_FLOW_OK
-          && ret != GST_FLOW_UNEXPECTED)) {
-    if (ret == GST_FLOW_OK || ret == GST_FLOW_UNEXPECTED)
+          && ret != GST_FLOW_EOS)) {
+    if (ret == GST_FLOW_OK || ret == GST_FLOW_EOS)
       GST_WARNING_OBJECT (ebml, "Unknown stream/codec in track entry header");
 
     parse->common.num_streams--;
@@ -2101,8 +2101,8 @@ gst_matroska_parse_parse_blockgroup_or_simpleblock (GstMatroskaParse * parse,
 
       ret = gst_pad_push (stream->pad, sub);
       if (parse->segment.rate < 0) {
-        if (lace_time > parse->segment.stop && ret == GST_FLOW_UNEXPECTED) {
-          /* In reverse playback we can get a GST_FLOW_UNEXPECTED when
+        if (lace_time > parse->segment.stop && ret == GST_FLOW_EOS) {
+          /* In reverse playback we can get a GST_FLOW_EOS when
            * we are at the end of the segment, so we just need to jump
            * back to the previous section. */
           GST_DEBUG_OBJECT (parse, "downstream has reached end of segment");
@@ -2222,7 +2222,7 @@ gst_matroska_parse_parse_contents_seekentry (GstMatroskaParse * parse,
     }
   }
 
-  if (ret != GST_FLOW_OK && ret != GST_FLOW_UNEXPECTED)
+  if (ret != GST_FLOW_OK && ret != GST_FLOW_EOS)
     return ret;
 
   if (!seek_id || seek_pos == (guint64) - 1) {
@@ -2363,7 +2363,7 @@ gst_matroska_parse_check_parse_error (GstMatroskaParse * parse)
 }
 
 /* initializes @ebml with @bytes from input stream at current offset.
- * Returns UNEXPECTED if insufficient available,
+ * Returns EOS if insufficient available,
  * ERROR if too much was attempted to read. */
 static inline GstFlowReturn
 gst_matroska_parse_take (GstMatroskaParse * parse, guint64 bytes,
@@ -2383,7 +2383,7 @@ gst_matroska_parse_take (GstMatroskaParse * parse, guint64 bytes,
   if (gst_adapter_available (parse->common.adapter) >= bytes)
     buffer = gst_adapter_take_buffer (parse->common.adapter, bytes);
   else
-    ret = GST_FLOW_UNEXPECTED;
+    ret = GST_FLOW_EOS;
   if (G_LIKELY (buffer)) {
     gst_ebml_read_init (ebml, GST_ELEMENT_CAST (parse), buffer,
         parse->common.offset);
@@ -2584,7 +2584,7 @@ gst_matroska_parse_parse_id (GstMatroskaParse * parse, guint32 id,
     buffer = gst_adapter_take_buffer (parse->adapter, length + needed);
     gst_pad_push (parse->srcpad, buffer);
   } else {
-    ret = GST_FLOW_UNEXPECTED;
+    ret = GST_FLOW_EOS;
   }
   //GST_READ_CHECK (gst_matroska_parse_take (parse, read, &ebml));
 
@@ -2884,7 +2884,7 @@ gst_matroska_parse_loop (GstPad * pad)
 
   ret = gst_matroska_read_common_peek_id_length_pull (&parse->common,
       GST_ELEMENT_CAST (parse), &id, &length, &needed);
-  if (ret == GST_FLOW_UNEXPECTED)
+  if (ret == GST_FLOW_EOS)
     goto eos;
   if (ret != GST_FLOW_OK) {
     if (gst_matroska_parse_check_parse_error (parse))
@@ -2898,7 +2898,7 @@ gst_matroska_parse_loop (GstPad * pad)
       length, needed);
 
   ret = gst_matroska_parse_parse_id (parse, id, length, needed);
-  if (ret == GST_FLOW_UNEXPECTED)
+  if (ret == GST_FLOW_EOS)
     goto eos;
   if (ret != GST_FLOW_OK)
     goto pause;
@@ -2917,7 +2917,7 @@ gst_matroska_parse_loop (GstPad * pad)
     }
 
     GST_INFO_OBJECT (parse, "All streams are EOS");
-    ret = GST_FLOW_UNEXPECTED;
+    ret = GST_FLOW_EOS;
     goto eos;
   }
 
@@ -2925,7 +2925,7 @@ next:
   if (G_UNLIKELY (parse->offset ==
           gst_matroska_read_common_get_length (&parse->common))) {
     GST_LOG_OBJECT (parse, "Reached end of stream");
-    ret = GST_FLOW_UNEXPECTED;
+    ret = GST_FLOW_EOS;
     goto eos;
   }
 
@@ -2950,7 +2950,7 @@ pause:
     parse->segment_running = FALSE;
     gst_pad_pause_task (parse->common.sinkpad);
 
-    if (ret == GST_FLOW_UNEXPECTED) {
+    if (ret == GST_FLOW_EOS) {
       /* perform EOS logic */
 
       /* Close the segment, i.e. update segment stop with the duration
@@ -2981,7 +2981,7 @@ pause:
       } else {
         push_eos = TRUE;
       }
-    } else if (ret == GST_FLOW_NOT_LINKED || ret < GST_FLOW_UNEXPECTED) {
+    } else if (ret == GST_FLOW_NOT_LINKED || ret < GST_FLOW_EOS) {
       /* for fatal errors we post an error message */
       GST_ELEMENT_ERROR (parse, STREAM, FAILED, (NULL),
           ("stream stopped, reason %s", reason));
@@ -2991,7 +2991,7 @@ pause:
       /* send EOS, and prevent hanging if no streams yet */
       GST_LOG_OBJECT (parse, "Sending EOS, at end of stream");
       if (!gst_matroska_parse_send_event (parse, gst_event_new_eos ()) &&
-          (ret == GST_FLOW_UNEXPECTED)) {
+          (ret == GST_FLOW_EOS)) {
         GST_ELEMENT_ERROR (parse, STREAM, DEMUX,
             (NULL), ("got eos but no streams (yet)"));
       }
@@ -3050,7 +3050,7 @@ next:
 
   ret = gst_matroska_read_common_peek_id_length_push (&parse->common,
       GST_ELEMENT_CAST (parse), &id, &length, &needed);
-  if (G_UNLIKELY (ret != GST_FLOW_OK && ret != GST_FLOW_UNEXPECTED))
+  if (G_UNLIKELY (ret != GST_FLOW_OK && ret != GST_FLOW_EOS))
     return ret;
 
   GST_LOG_OBJECT (parse, "Offset %" G_GUINT64_FORMAT ", Element id 0x%x, "
@@ -3061,7 +3061,7 @@ next:
     return GST_FLOW_OK;
 
   ret = gst_matroska_parse_parse_id (parse, id, length, needed);
-  if (ret == GST_FLOW_UNEXPECTED) {
+  if (ret == GST_FLOW_EOS) {
     /* need more data */
     return GST_FLOW_OK;
   } else if (ret != GST_FLOW_OK) {

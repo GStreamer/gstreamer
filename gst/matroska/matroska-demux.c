@@ -1186,8 +1186,8 @@ gst_matroska_demux_add_stream (GstMatroskaDemux * demux, GstEbmlRead * ebml)
   }
 
   if (context->type == 0 || context->codec_id == NULL || (ret != GST_FLOW_OK
-          && ret != GST_FLOW_UNEXPECTED)) {
-    if (ret == GST_FLOW_OK || ret == GST_FLOW_UNEXPECTED)
+          && ret != GST_FLOW_EOS)) {
+    if (ret == GST_FLOW_OK || ret == GST_FLOW_EOS)
       GST_WARNING_OBJECT (ebml, "Unknown stream/codec in track entry header");
 
     demux->common.num_streams--;
@@ -1775,7 +1775,7 @@ retry:
   while (1) {
 
     ret = gst_matroska_demux_search_cluster (demux, &newpos);
-    if (ret == GST_FLOW_UNEXPECTED) {
+    if (ret == GST_FLOW_EOS) {
       /* heuristic HACK */
       newpos = startpos * 80 / 100;
       GST_DEBUG_OBJECT (demux, "EOS; "
@@ -1860,7 +1860,7 @@ retry:
     continue;
 
   error:
-    if (ret == GST_FLOW_UNEXPECTED) {
+    if (ret == GST_FLOW_EOS) {
       if (prev_cluster_time != GST_CLOCK_TIME_NONE)
         break;
     }
@@ -2224,13 +2224,13 @@ gst_matroska_demux_handle_src_event (GstPad * pad, GstObject * parent,
 static GstFlowReturn
 gst_matroska_demux_seek_to_previous_keyframe (GstMatroskaDemux * demux)
 {
-  GstFlowReturn ret = GST_FLOW_UNEXPECTED;
+  GstFlowReturn ret = GST_FLOW_EOS;
   gboolean done = TRUE;
   gint i;
 
-  g_return_val_if_fail (demux->seek_index, GST_FLOW_UNEXPECTED);
+  g_return_val_if_fail (demux->seek_index, GST_FLOW_EOS);
   g_return_val_if_fail (demux->seek_entry < demux->seek_index->len,
-      GST_FLOW_UNEXPECTED);
+      GST_FLOW_EOS);
 
   GST_DEBUG_OBJECT (demux, "locating previous keyframe");
 
@@ -3606,9 +3606,8 @@ gst_matroska_demux_parse_blockgroup_or_simpleblock (GstMatroskaDemux * demux,
 
       ret = gst_pad_push (stream->pad, sub);
       if (demux->common.segment.rate < 0) {
-        if (lace_time > demux->common.segment.stop
-            && ret == GST_FLOW_UNEXPECTED) {
-          /* In reverse playback we can get a GST_FLOW_UNEXPECTED when
+        if (lace_time > demux->common.segment.stop && ret == GST_FLOW_EOS) {
+          /* In reverse playback we can get a GST_FLOW_EOS when
            * we are at the end of the segment, so we just need to jump
            * back to the previous section. */
           GST_DEBUG_OBJECT (demux, "downstream has reached end of segment");
@@ -3735,7 +3734,7 @@ gst_matroska_demux_parse_contents_seekentry (GstMatroskaDemux * demux,
     }
   }
 
-  if (ret != GST_FLOW_OK && ret != GST_FLOW_UNEXPECTED)
+  if (ret != GST_FLOW_OK && ret != GST_FLOW_EOS)
     return ret;
 
   if (!seek_id || seek_pos == (guint64) - 1) {
@@ -3948,13 +3947,13 @@ gst_matroska_demux_flush (GstMatroskaDemux * demux, guint flush)
     if (flush <= gst_adapter_available (demux->common.adapter))
       gst_adapter_flush (demux->common.adapter, flush);
     else
-      return GST_FLOW_UNEXPECTED;
+      return GST_FLOW_EOS;
   }
   return GST_FLOW_OK;
 }
 
 /* initializes @ebml with @bytes from input stream at current offset.
- * Returns UNEXPECTED if insufficient available,
+ * Returns EOS if insufficient available,
  * ERROR if too much was attempted to read. */
 static inline GstFlowReturn
 gst_matroska_demux_take (GstMatroskaDemux * demux, guint64 bytes,
@@ -3981,7 +3980,7 @@ gst_matroska_demux_take (GstMatroskaDemux * demux, guint64 bytes,
     if (gst_adapter_available (demux->common.adapter) >= bytes)
       buffer = gst_adapter_take_buffer (demux->common.adapter, bytes);
     else
-      ret = GST_FLOW_UNEXPECTED;
+      ret = GST_FLOW_EOS;
   } else
     ret = gst_matroska_read_common_peek_bytes (&demux->common,
         demux->common.offset, bytes, &buffer, NULL);
@@ -4389,7 +4388,7 @@ gst_matroska_demux_loop (GstPad * pad)
 
   ret = gst_matroska_read_common_peek_id_length_pull (&demux->common,
       GST_ELEMENT_CAST (demux), &id, &length, &needed);
-  if (ret == GST_FLOW_UNEXPECTED)
+  if (ret == GST_FLOW_EOS)
     goto eos;
   if (ret != GST_FLOW_OK) {
     if (gst_matroska_demux_check_parse_error (demux))
@@ -4403,7 +4402,7 @@ gst_matroska_demux_loop (GstPad * pad)
       length, needed);
 
   ret = gst_matroska_demux_parse_id (demux, id, length, needed);
-  if (ret == GST_FLOW_UNEXPECTED)
+  if (ret == GST_FLOW_EOS)
     goto eos;
   if (ret != GST_FLOW_OK)
     goto pause;
@@ -4423,7 +4422,7 @@ gst_matroska_demux_loop (GstPad * pad)
     }
 
     GST_INFO_OBJECT (demux, "All streams are EOS");
-    ret = GST_FLOW_UNEXPECTED;
+    ret = GST_FLOW_EOS;
     goto eos;
   }
 
@@ -4431,7 +4430,7 @@ next:
   if (G_UNLIKELY (demux->common.offset ==
           gst_matroska_read_common_get_length (&demux->common))) {
     GST_LOG_OBJECT (demux, "Reached end of stream");
-    ret = GST_FLOW_UNEXPECTED;
+    ret = GST_FLOW_EOS;
     goto eos;
   }
 
@@ -4456,7 +4455,7 @@ pause:
     demux->segment_running = FALSE;
     gst_pad_pause_task (demux->common.sinkpad);
 
-    if (ret == GST_FLOW_UNEXPECTED) {
+    if (ret == GST_FLOW_EOS) {
       /* perform EOS logic */
 
       /* If we were in the headers, make sure we send no-more-pads.
@@ -4500,7 +4499,7 @@ pause:
       } else {
         push_eos = TRUE;
       }
-    } else if (ret == GST_FLOW_NOT_LINKED || ret < GST_FLOW_UNEXPECTED) {
+    } else if (ret == GST_FLOW_NOT_LINKED || ret < GST_FLOW_EOS) {
       /* for fatal errors we post an error message */
       GST_ELEMENT_ERROR (demux, STREAM, FAILED, (NULL),
           ("stream stopped, reason %s", reason));
@@ -4510,7 +4509,7 @@ pause:
       /* send EOS, and prevent hanging if no streams yet */
       GST_LOG_OBJECT (demux, "Sending EOS, at end of stream");
       if (!gst_matroska_demux_send_event (demux, gst_event_new_eos ()) &&
-          (ret == GST_FLOW_UNEXPECTED)) {
+          (ret == GST_FLOW_EOS)) {
         GST_ELEMENT_ERROR (demux, STREAM, DEMUX,
             (NULL), ("got eos but no streams (yet)"));
       }
@@ -4568,7 +4567,7 @@ next:
 
   ret = gst_matroska_read_common_peek_id_length_push (&demux->common,
       GST_ELEMENT_CAST (demux), &id, &length, &needed);
-  if (G_UNLIKELY (ret != GST_FLOW_OK && ret != GST_FLOW_UNEXPECTED))
+  if (G_UNLIKELY (ret != GST_FLOW_OK && ret != GST_FLOW_EOS))
     return ret;
 
   GST_LOG_OBJECT (demux, "Offset %" G_GUINT64_FORMAT ", Element id 0x%x, "
@@ -4579,7 +4578,7 @@ next:
     return GST_FLOW_OK;
 
   ret = gst_matroska_demux_parse_id (demux, id, length, needed);
-  if (ret == GST_FLOW_UNEXPECTED) {
+  if (ret == GST_FLOW_EOS) {
     /* need more data */
     return GST_FLOW_OK;
   } else if (ret != GST_FLOW_OK) {

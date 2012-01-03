@@ -813,7 +813,7 @@ gst_soup_http_src_got_body_cb (SoupMessage * msg, GstSoupHTTPSrc * src)
     return;
   }
   GST_DEBUG_OBJECT (src, "got body");
-  src->ret = GST_FLOW_UNEXPECTED;
+  src->ret = GST_FLOW_EOS;
   if (src->loop)
     g_main_loop_quit (src->loop);
   gst_soup_http_src_session_pause_message (src);
@@ -828,7 +828,7 @@ gst_soup_http_src_finished_cb (SoupMessage * msg, GstSoupHTTPSrc * src)
     return;
   }
   GST_DEBUG_OBJECT (src, "finished");
-  src->ret = GST_FLOW_UNEXPECTED;
+  src->ret = GST_FLOW_EOS;
   if (src->session_io_status == GST_SOUP_HTTP_SRC_SESSION_IO_STATUS_CANCELLED) {
     /* gst_soup_http_src_cancel_message() triggered this; probably a seek
      * that occurred in the QUEUEING state; i.e. before the connection setup
@@ -1110,7 +1110,7 @@ gst_soup_http_src_create (GstPushSrc * psrc, GstBuffer ** outbuf)
   if (src->msg && (src->request_position != src->read_position)) {
     if (src->content_size != 0 && src->request_position >= src->content_size) {
       GST_WARNING_OBJECT (src, "Seeking behind the end of file -- EOS");
-      return GST_FLOW_UNEXPECTED;
+      return GST_FLOW_EOS;
     } else if (src->session_io_status ==
         GST_SOUP_HTTP_SRC_SESSION_IO_STATUS_IDLE) {
       gst_soup_http_src_add_range_header (src, src->request_position);
@@ -1164,7 +1164,7 @@ gst_soup_http_src_create (GstPushSrc * psrc, GstBuffer ** outbuf)
   } while (src->ret == GST_FLOW_CUSTOM_ERROR);
 
   if (src->ret == GST_FLOW_CUSTOM_ERROR)
-    src->ret = GST_FLOW_UNEXPECTED;
+    src->ret = GST_FLOW_EOS;
   return src->ret;
 }
 

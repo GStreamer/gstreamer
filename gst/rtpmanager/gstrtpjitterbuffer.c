@@ -1434,7 +1434,7 @@ out_flushing:
   }
 have_eos:
   {
-    ret = GST_FLOW_UNEXPECTED;
+    ret = GST_FLOW_EOS;
     GST_WARNING_OBJECT (jitterbuffer, "we are EOS, refusing buffer");
     gst_buffer_unref (buffer);
     goto finished;
@@ -1905,7 +1905,7 @@ do_eos:
   {
     /* store result, we are flushing now */
     GST_DEBUG_OBJECT (jitterbuffer, "We are EOS, pushing EOS downstream");
-    priv->srcresult = GST_FLOW_UNEXPECTED;
+    priv->srcresult = GST_FLOW_EOS;
     gst_pad_pause_task (priv->srcpad);
     JBUF_UNLOCK (priv);
     gst_pad_push_event (priv->srcpad, gst_event_new_eos ());

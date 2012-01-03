@@ -3698,7 +3698,7 @@ server_eof:
         ("The server closed the connection."));
     src->conninfo.connected = FALSE;
     gst_rtsp_message_unset (&message);
-    return GST_FLOW_UNEXPECTED;
+    return GST_FLOW_EOS;
   }
 interrupt:
   {
@@ -3882,7 +3882,7 @@ server_eof:
         ("The server closed the connection."));
     src->conninfo.connected = FALSE;
     gst_rtsp_message_unset (&message);
-    return GST_FLOW_UNEXPECTED;
+    return GST_FLOW_EOS;
   }
 }
 
@@ -4113,7 +4113,7 @@ pause:
 
     GST_DEBUG_OBJECT (src, "pausing task, reason %s", reason);
     src->running = FALSE;
-    if (ret == GST_FLOW_UNEXPECTED) {
+    if (ret == GST_FLOW_EOS) {
       /* perform EOS logic */
       if (src->segment.flags & GST_SEEK_FLAG_SEGMENT) {
         gst_element_post_message (GST_ELEMENT_CAST (src),
@@ -4122,7 +4122,7 @@ pause:
       } else {
         gst_rtspsrc_push_event (src, gst_event_new_eos (), FALSE);
       }
-    } else if (ret == GST_FLOW_NOT_LINKED || ret < GST_FLOW_UNEXPECTED) {
+    } else if (ret == GST_FLOW_NOT_LINKED || ret < GST_FLOW_EOS) {
       /* for fatal errors we post an error message, post the error before the
        * EOS so the app knows about the error first. */
       GST_ELEMENT_ERROR (src, STREAM, FAILED,

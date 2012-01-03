@@ -45,7 +45,7 @@ GST_DEBUG_CATEGORY (ebmlread_debug);
 
 /* Peeks following element id and element length in datastream provided
  * by @peek with @ctx as user data.
- * Returns GST_FLOW_UNEXPECTED if not enough data to read id and length.
+ * Returns GST_FLOW_EOS if not enough data to read id and length.
  * Otherwise, @needed provides the prefix length (id + length), and
  * @length provides element length.
  *
@@ -199,7 +199,7 @@ gst_ebml_read_peek (GstByteReader * br, guint peek, const guint8 ** data)
   if (G_LIKELY (gst_byte_reader_peek_data (br, peek, data)))
     return GST_FLOW_OK;
   else
-    return GST_FLOW_UNEXPECTED;
+    return GST_FLOW_EOS;
 }
 
 static GstFlowReturn

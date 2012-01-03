@@ -535,7 +535,7 @@ eos:
   {
     GST_DEBUG_OBJECT (mux, "Pushing EOS");
     gst_pad_push_event (mux->srcpad, gst_event_new_eos ());
-    ret = GST_FLOW_UNEXPECTED;
+    ret = GST_FLOW_EOS;
     goto beach;
   }
 nego_error:

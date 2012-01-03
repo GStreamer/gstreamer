@@ -2536,7 +2536,7 @@ gst_qt_mux_collected (GstCollectPads * pads, gpointer user_data)
   }
 
   if (G_UNLIKELY (qtmux->state == GST_QT_MUX_STATE_EOS))
-    return GST_FLOW_UNEXPECTED;
+    return GST_FLOW_EOS;
 
   /* select the best buffer */
   walk = qtmux->collect->data;
@@ -2590,7 +2590,7 @@ gst_qt_mux_collected (GstCollectPads * pads, gpointer user_data)
     if (ret == GST_FLOW_OK) {
       GST_DEBUG_OBJECT (qtmux, "Pushing eos");
       gst_pad_push_event (qtmux->srcpad, gst_event_new_eos ());
-      ret = GST_FLOW_UNEXPECTED;
+      ret = GST_FLOW_EOS;
     } else {
       GST_WARNING_OBJECT (qtmux, "Failed to stop file: %s",
           gst_flow_get_name (ret));

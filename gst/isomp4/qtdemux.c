@@ -587,7 +587,7 @@ gst_qtdemux_pull_atom (GstQTDemux * qtdemux, guint64 offset, guint64 size,
        * so never mind the rest (e.g. tags) (that much) */
       GST_WARNING_OBJECT (qtdemux, "atom has bogus size %" G_GUINT64_FORMAT,
           size);
-      return GST_FLOW_UNEXPECTED;
+      return GST_FLOW_EOS;
     } else {
       GST_ELEMENT_ERROR (qtdemux, STREAM, DEMUX,
           (_("This file is invalid and cannot be played.")),
@@ -608,7 +608,7 @@ gst_qtdemux_pull_atom (GstQTDemux * qtdemux, guint64 offset, guint64 size,
         "short read: %" G_GSIZE_FORMAT " < %" G_GUINT64_FORMAT, bsize, size);
     gst_buffer_unref (*buf);
     *buf = NULL;
-    return GST_FLOW_UNEXPECTED;
+    return GST_FLOW_EOS;
   }
 
   return flow;
@@ -2664,7 +2664,7 @@ gst_qtdemux_loop_state_header (GstQTDemux * qtdemux)
         (_("Invalid atom size.")),
         ("Header atom '%" GST_FOURCC_FORMAT "' has empty length",
             GST_FOURCC_ARGS (fourcc)));
-    ret = GST_FLOW_UNEXPECTED;
+    ret = GST_FLOW_EOS;
     goto beach;
   }
 
@@ -2800,7 +2800,7 @@ gst_qtdemux_loop_state_header (GstQTDemux * qtdemux)
   }
 
 beach:
-  if (ret == GST_FLOW_UNEXPECTED && qtdemux->got_moov) {
+  if (ret == GST_FLOW_EOS && qtdemux->got_moov) {
     /* digested all data, show what we have */
     ret = qtdemux_expose_streams (qtdemux);
 
@@ -2980,7 +2980,7 @@ gst_qtdemux_seek_to_previous_keyframe (GstQTDemux * qtdemux)
   return GST_FLOW_OK;
 
 eos:
-  return GST_FLOW_UNEXPECTED;
+  return GST_FLOW_EOS;
 }
 
 /* activate the given segment number @seg_idx of @stream at time @offset.
@@ -3360,10 +3360,10 @@ gst_qtdemux_sync_streams (GstQTDemux * demux)
   }
 }
 
-/* UNEXPECTED and NOT_LINKED need to be combined. This means that we return:
+/* EOS and NOT_LINKED need to be combined. This means that we return:
  *
  *  GST_FLOW_NOT_LINKED: when all pads NOT_LINKED.
- *  GST_FLOW_UNEXPECTED: when all pads UNEXPECTED or NOT_LINKED.
+ *  GST_FLOW_EOS: when all pads EOS or NOT_LINKED.
  */
 static GstFlowReturn
 gst_qtdemux_combine_flows (GstQTDemux * demux, QtDemuxStream * stream,
@@ -3378,7 +3378,7 @@ gst_qtdemux_combine_flows (GstQTDemux * demux, QtDemuxStream * stream,
   stream->last_ret = ret;
 
   /* any other error that is not-linked or eos can be returned right away */
-  if (G_LIKELY (ret != GST_FLOW_UNEXPECTED && ret != GST_FLOW_NOT_LINKED))
+  if (G_LIKELY (ret != GST_FLOW_EOS && ret != GST_FLOW_NOT_LINKED))
     goto done;
 
   /* only return NOT_LINKED if all other pads returned NOT_LINKED */
@@ -3388,11 +3388,11 @@ gst_qtdemux_combine_flows (GstQTDemux * demux, QtDemuxStream * stream,
     ret = ostream->last_ret;
 
     /* no unexpected or unlinked, return */
-    if (G_LIKELY (ret != GST_FLOW_UNEXPECTED && ret != GST_FLOW_NOT_LINKED))
+    if (G_LIKELY (ret != GST_FLOW_EOS && ret != GST_FLOW_NOT_LINKED))
       goto done;
 
     /* we check to see if we have at least 1 unexpected or all unlinked */
-    unexpected |= (ret == GST_FLOW_UNEXPECTED);
+    unexpected |= (ret == GST_FLOW_EOS);
     not_linked &= (ret == GST_FLOW_NOT_LINKED);
   }
 
@@ -3400,7 +3400,7 @@ gst_qtdemux_combine_flows (GstQTDemux * demux, QtDemuxStream * stream,
   if (not_linked)
     ret = GST_FLOW_NOT_LINKED;
   else if (unexpected)
-    ret = GST_FLOW_UNEXPECTED;
+    ret = GST_FLOW_EOS;
 done:
   GST_LOG_OBJECT (demux, "combined flow return: %s", gst_flow_get_name (ret));
   return ret;
@@ -3751,7 +3751,7 @@ gst_qtdemux_loop_state_movie (GstQTDemux * qtdemux)
     goto next;
 
   /* last pushed sample was out of boundary, goto next sample */
-  if (G_UNLIKELY (stream->last_ret == GST_FLOW_UNEXPECTED))
+  if (G_UNLIKELY (stream->last_ret == GST_FLOW_EOS))
     goto next;
 
   GST_LOG_OBJECT (qtdemux, "reading %d bytes @ %" G_GUINT64_FORMAT, size,
@@ -3768,7 +3768,7 @@ gst_qtdemux_loop_state_movie (GstQTDemux * qtdemux)
   ret = gst_qtdemux_combine_flows (qtdemux, stream, ret);
   /* ignore unlinked, we will not push on the pad anymore and we will EOS when
    * we have no more data for the pad to push */
-  if (ret == GST_FLOW_UNEXPECTED)
+  if (ret == GST_FLOW_EOS)
     ret = GST_FLOW_OK;
 
 next:
@@ -3781,7 +3781,7 @@ beach:
 eos:
   {
     GST_DEBUG_OBJECT (qtdemux, "No samples left for any streams - EOS");
-    ret = GST_FLOW_UNEXPECTED;
+    ret = GST_FLOW_EOS;
     goto beach;
   }
 eos_stream:
@@ -3813,7 +3813,7 @@ gst_qtdemux_loop (GstPad * pad)
       break;
     case QTDEMUX_STATE_MOVIE:
       ret = gst_qtdemux_loop_state_movie (qtdemux);
-      if (qtdemux->segment.rate < 0 && ret == GST_FLOW_UNEXPECTED) {
+      if (qtdemux->segment.rate < 0 && ret == GST_FLOW_EOS) {
         ret = gst_qtdemux_seek_to_previous_keyframe (qtdemux);
       }
       break;
@@ -3849,7 +3849,7 @@ pause:
 
     /* fatal errors need special actions */
     /* check EOS */
-    if (ret == GST_FLOW_UNEXPECTED) {
+    if (ret == GST_FLOW_EOS) {
       if (qtdemux->n_streams == 0) {
         /* we have no streams, post an error */
         gst_qtdemux_post_no_playable_stream_error (qtdemux);
@@ -3876,7 +3876,7 @@ pause:
         GST_LOG_OBJECT (qtdemux, "Sending EOS at end of segment");
         gst_qtdemux_push_event (qtdemux, gst_event_new_eos ());
       }
-    } else if (ret == GST_FLOW_NOT_LINKED || ret < GST_FLOW_UNEXPECTED) {
+    } else if (ret == GST_FLOW_NOT_LINKED || ret < GST_FLOW_EOS) {
       GST_ELEMENT_ERROR (qtdemux, STREAM, FAILED,
           (NULL), ("streaming stopped, reason %s", reason));
       gst_qtdemux_push_event (qtdemux, gst_event_new_eos ());
@@ -4411,7 +4411,7 @@ unknown_stream:
 eos:
   {
     GST_DEBUG_OBJECT (demux, "no next entry, EOS");
-    ret = GST_FLOW_UNEXPECTED;
+    ret = GST_FLOW_EOS;
     goto done;
   }
 invalid_state:
@@ -5182,7 +5182,7 @@ qtdemux_find_atom (GstQTDemux * qtdemux, guint64 * offset,
       goto locate_failed;
     if (G_UNLIKELY (gst_buffer_get_size (buf) != 16)) {
       /* likely EOF */
-      ret = GST_FLOW_UNEXPECTED;
+      ret = GST_FLOW_EOS;
       gst_buffer_unref (buf);
       goto locate_failed;
     }
@@ -5236,7 +5236,7 @@ qtdemux_add_fragmented_samples (GstQTDemux * qtdemux)
 
   if (!offset) {
     GST_DEBUG_OBJECT (qtdemux, "no next moof");
-    return GST_FLOW_UNEXPECTED;
+    return GST_FLOW_EOS;
   }
 
   /* best not do pull etc with lock held */

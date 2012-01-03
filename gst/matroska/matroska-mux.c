@@ -3003,7 +3003,7 @@ gst_matroska_mux_collected (GstCollectPads * pads, gpointer user_data)
         GST_DEBUG_OBJECT (mux, "... but streamable, nothing to finish");
       }
       gst_pad_push_event (mux->srcpad, gst_event_new_eos ());
-      ret = GST_FLOW_UNEXPECTED;
+      ret = GST_FLOW_EOS;
       break;
     }
     GST_DEBUG_OBJECT (best->collect.pad, "best pad - buffer ts %"

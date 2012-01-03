@@ -1511,7 +1511,7 @@ gst_flv_mux_collected (GstCollectPads * pads, gpointer user_data)
   } else if (eos) {
     gst_flv_mux_rewrite_header (mux);
     gst_pad_push_event (mux->srcpad, gst_event_new_eos ());
-    return GST_FLOW_UNEXPECTED;
+    return GST_FLOW_EOS;
   } else {
     return GST_FLOW_OK;
   }
