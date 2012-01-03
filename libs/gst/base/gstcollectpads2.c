@@ -1540,7 +1540,7 @@ gst_collect_pads2_default_collected (GstCollectPads2 * pads, gpointer user_data)
   if (G_UNLIKELY (best == NULL)) {
     ret = func (pads, best, NULL, buffer_user_data);
     if (ret == GST_FLOW_OK)
-      ret = GST_FLOW_UNEXPECTED;
+      ret = GST_FLOW_EOS;
     goto done;
   }
 
@@ -1829,7 +1829,7 @@ gst_collect_pads2_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
   /* pad was EOS, we can refuse this data */
   if (G_UNLIKELY (GST_COLLECT_PADS2_STATE_IS_SET (data,
               GST_COLLECT_PADS2_STATE_EOS)))
-    goto unexpected;
+    goto eos;
 
   /* see if we need to clip */
   if (pads->clip_func) {
@@ -1840,8 +1840,8 @@ gst_collect_pads2_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
     if (G_UNLIKELY (outbuf == NULL))
       goto clipped;
 
-    if (G_UNLIKELY (ret == GST_FLOW_UNEXPECTED))
-      goto unexpected;
+    if (G_UNLIKELY (ret == GST_FLOW_EOS))
+      goto eos;
     else if (G_UNLIKELY (ret != GST_FLOW_OK))
       goto error;
   }
@@ -1953,12 +1953,12 @@ flushing:
     ret = GST_FLOW_WRONG_STATE;
     goto unlock_done;
   }
-unexpected:
+eos:
   {
     /* we should not post an error for this, just inform upstream that
      * we don't expect anything anymore */
     GST_DEBUG ("pad %s:%s is eos", GST_DEBUG_PAD_NAME (pad));
-    ret = GST_FLOW_UNEXPECTED;
+    ret = GST_FLOW_EOS;
     goto unlock_done;
   }
 clipped:
