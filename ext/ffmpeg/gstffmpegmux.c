@@ -786,7 +786,7 @@ gst_ffmpegmux_collected (GstCollectPads * pads, gpointer user_data)
     put_flush_packet (ffmpegmux->context->pb);
     url_fclose (ffmpegmux->context->pb);
     gst_pad_push_event (ffmpegmux->srcpad, gst_event_new_eos ());
-    return GST_FLOW_UNEXPECTED;
+    return GST_FLOW_EOS;
   }
 
   return GST_FLOW_OK;

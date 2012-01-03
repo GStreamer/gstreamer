@@ -1475,7 +1475,7 @@ pause:
       GST_FFMPEG_PIPE_MUTEX_UNLOCK (ffpipe);
     }
 
-    if (ret == GST_FLOW_UNEXPECTED) {
+    if (ret == GST_FLOW_EOS) {
       if (demux->segment.flags & GST_SEEK_FLAG_SEGMENT) {
         gint64 stop;
 
@@ -1490,7 +1490,7 @@ pause:
         GST_LOG_OBJECT (demux, "pushing eos");
         gst_ffmpegdemux_push_event (demux, gst_event_new_eos ());
       }
-    } else if (ret == GST_FLOW_NOT_LINKED || ret < GST_FLOW_UNEXPECTED) {
+    } else if (ret == GST_FLOW_NOT_LINKED || ret < GST_FLOW_EOS) {
       GST_ELEMENT_ERROR (demux, STREAM, FAILED,
           ("Internal data stream error."),
           ("streaming stopped, reason %s", gst_flow_get_name (ret)));
@@ -1515,7 +1515,7 @@ read_failed:
     else if (gst_ffmpegdemux_has_outputted (demux)
         || gst_ffmpegdemux_is_eos (demux)) {
       GST_DEBUG_OBJECT (demux, "We are EOS");
-      ret = GST_FLOW_UNEXPECTED;
+      ret = GST_FLOW_EOS;
     } else
       ret = GST_FLOW_ERROR;
     GST_OBJECT_UNLOCK (demux);
@@ -1529,7 +1529,7 @@ drop:
     if (gst_ffmpegdemux_is_eos (demux)) {
       av_free_packet (&pkt);
       GST_DEBUG_OBJECT (demux, "we are eos");
-      ret = GST_FLOW_UNEXPECTED;
+      ret = GST_FLOW_EOS;
       goto pause;
     } else {
       GST_DEBUG_OBJECT (demux, "some streams are not yet eos");
@@ -1672,7 +1672,7 @@ eos:
     GST_FFMPEG_PIPE_MUTEX_UNLOCK (ffpipe);
 
     gst_buffer_unref (buffer);
-    return GST_FLOW_UNEXPECTED;
+    return GST_FLOW_EOS;
   }
 ignore:
   {

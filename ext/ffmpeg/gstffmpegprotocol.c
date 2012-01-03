@@ -115,7 +115,7 @@ gst_ffmpegdata_peek (URLContext * h, unsigned char *buf, int size)
       gst_buffer_extract (inbuf, 0, buf, total);
       gst_buffer_unref (inbuf);
       break;
-    case GST_FLOW_UNEXPECTED:
+    case GST_FLOW_EOS:
       total = 0;
       break;
     case GST_FLOW_WRONG_STATE:
