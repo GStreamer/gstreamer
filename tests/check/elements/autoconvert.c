@@ -69,8 +69,8 @@ set_autoconvert_factories (GstElement * autoconvert)
 
   for (i = 0; i < G_N_ELEMENTS (desired_features); i++) {
     feature =
-        GST_ELEMENT_FACTORY_CAST (gst_default_registry_find_feature
-        (desired_features[i], GST_TYPE_ELEMENT_FACTORY));
+        GST_ELEMENT_FACTORY_CAST (gst_registry_find_feature
+        (gst_registry_get (), desired_features[i], GST_TYPE_ELEMENT_FACTORY));
     fail_if (feature == NULL, "Test element %s was not found in registry",
         desired_features[i]);
     factories = g_list_prepend (factories, feature);
@@ -100,7 +100,7 @@ generate_test_buffer (GstPad * src, TestContext * ctx)
   }
 
   buf = gst_buffer_new_and_alloc (4096);
-  gst_buffer_set_caps (buf, ctx->caps);
+  gst_pad_set_caps (src, ctx->caps);
 
   GST_LOG ("Pushing test buffer, caps %" GST_PTR_FORMAT, ctx->caps);
   fail_unless (gst_pad_push (src, buf) == GST_FLOW_OK);

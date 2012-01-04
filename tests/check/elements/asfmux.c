@@ -163,7 +163,7 @@ check_asfmux_pad (GstStaticPadTemplate * srctemplate,
 
   inbuffer = gst_buffer_new_and_alloc (1);
   caps = gst_caps_from_string (src_caps_string);
-  gst_buffer_set_caps (inbuffer, caps);
+  gst_pad_set_caps (mysrcpad, caps);
   gst_caps_unref (caps);
   GST_BUFFER_TIMESTAMP (inbuffer) = 0;
   ASSERT_BUFFER_REFCOUNT (inbuffer, "inbuffer", 1);

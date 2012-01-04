@@ -61,8 +61,8 @@ setup_faad (void)
 
   GST_DEBUG ("setup_faad");
   faad = gst_check_setup_element ("faad");
-  mysrcpad = gst_check_setup_src_pad (faad, &srctemplate, NULL);
-  mysinkpad = gst_check_setup_sink_pad (faad, &sinktemplate, NULL);
+  mysrcpad = gst_check_setup_src_pad (faad, &srctemplate);
+  mysinkpad = gst_check_setup_sink_pad (faad, &sinktemplate);
   gst_pad_set_active (mysrcpad, TRUE);
   gst_pad_set_active (mysinkpad, TRUE);
 
@@ -83,7 +83,7 @@ cleanup_faad (GstElement * faad)
 }
 
 static void
-do_test (GstBuffer * inbuffer)
+do_test (GstBuffer * inbuffer, GstCaps * caps)
 {
   GstElement *faad;
   GstBuffer *outbuffer;
@@ -97,6 +97,8 @@ do_test (GstBuffer * inbuffer)
 
   GST_BUFFER_TIMESTAMP (inbuffer) = 0;
   ASSERT_BUFFER_REFCOUNT (inbuffer, "inbuffer", 1);
+
+  gst_pad_set_caps (mysrcpad, caps);
   /* need to push twice to get faad output */
   gst_buffer_ref (inbuffer);
   fail_unless (gst_pad_push (mysrcpad, inbuffer) == GST_FLOW_OK);
@@ -115,7 +117,7 @@ do_test (GstBuffer * inbuffer)
     outbuffer = GST_BUFFER (buffers->data);
     fail_if (outbuffer == NULL);
 
-    size = GST_BUFFER_SIZE (outbuffer);
+    size = gst_buffer_get_size (outbuffer);
 
     /* 2 16-bit channels */
     fail_unless (size == 1024 * 2 * 2);
@@ -152,18 +154,16 @@ GST_START_TEST (test_adts)
 
   size = sizeof (adts_header);
   header_buf = gst_buffer_new_and_alloc (size);
-  memcpy (GST_BUFFER_DATA (header_buf), adts_header, size);
+  gst_buffer_fill (header_buf, 0, adts_header, size);
 
   size = sizeof (raw_data_block);
   buf = gst_buffer_new_and_alloc (size);
-  memcpy (GST_BUFFER_DATA (buf), raw_data_block, size);
+  gst_buffer_fill (buf, 0, raw_data_block, size);
 
   buf = gst_buffer_join (header_buf, buf);
   caps = gst_caps_from_string (AAC_CAPS_STRING);
-  gst_buffer_set_caps (buf, caps);
+  do_test (buf, caps);
   gst_caps_unref (caps);
-
-  do_test (buf);
 }
 
 GST_END_TEST;
@@ -176,18 +176,17 @@ GST_START_TEST (test_raw)
 
   size = sizeof (codec_data);
   codec_buf = gst_buffer_new_and_alloc (size);
-  memcpy (GST_BUFFER_DATA (codec_buf), codec_data, size);
+  gst_buffer_fill (codec_buf, 0, codec_data, size);
 
   size = sizeof (raw_data_block);
   buf = gst_buffer_new_and_alloc (size);
-  memcpy (GST_BUFFER_DATA (buf), raw_data_block, size);
+  gst_buffer_fill (buf, 0, raw_data_block, size);
   caps = gst_caps_from_string (AAC_CAPS_STRING);
   gst_caps_set_simple (caps, "codec_data", GST_TYPE_BUFFER, codec_buf, NULL);
   gst_buffer_unref (codec_buf);
-  gst_buffer_set_caps (buf, caps);
-  gst_caps_unref (caps);
 
-  do_test (buf);
+  do_test (buf, caps);
+  gst_caps_unref (caps);
 }
 
 GST_END_TEST;

@@ -74,12 +74,12 @@ setup_faac (gboolean adts)
 
   GST_DEBUG ("setup_faac");
   faac = gst_check_setup_element ("faac");
-  mysrcpad = gst_check_setup_src_pad (faac, &srctemplate, NULL);
+  mysrcpad = gst_check_setup_src_pad (faac, &srctemplate);
 
   if (adts)
-    mysinkpad = gst_check_setup_sink_pad (faac, &sinktemplate_adts, NULL);
+    mysinkpad = gst_check_setup_sink_pad (faac, &sinktemplate_adts);
   else
-    mysinkpad = gst_check_setup_sink_pad (faac, &sinktemplate_raw, NULL);
+    mysinkpad = gst_check_setup_sink_pad (faac, &sinktemplate_raw);
 
   gst_pad_set_active (mysrcpad, TRUE);
   gst_pad_set_active (mysinkpad, TRUE);
@@ -117,9 +117,9 @@ do_test (gboolean adts)
   /* corresponds to audio buffer mentioned in the caps */
   inbuffer = gst_buffer_new_and_alloc (1024 * nbuffers * 2 * 2);
   /* makes valgrind's memcheck happier */
-  memset (GST_BUFFER_DATA (inbuffer), 0, GST_BUFFER_SIZE (inbuffer));
+  gst_buffer_memset (inbuffer, 0, 0, 1024 * nbuffers * 2 * 2);
   caps = gst_caps_from_string (AUDIO_CAPS_STRING);
-  gst_buffer_set_caps (inbuffer, caps);
+  gst_pad_set_caps (mysrcpad, caps);
   gst_caps_unref (caps);
   GST_BUFFER_TIMESTAMP (inbuffer) = 0;
   ASSERT_BUFFER_REFCOUNT (inbuffer, "inbuffer", 1);
@@ -133,14 +133,14 @@ do_test (gboolean adts)
 
   /* clean up buffers */
   for (i = 0; i < num_buffers; ++i) {
-    gint size, header = 0, id;
+    gint header = 0, id;
+    gsize size;
     guint8 *data;
 
     outbuffer = GST_BUFFER (buffers->data);
     fail_if (outbuffer == NULL);
 
-    data = GST_BUFFER_DATA (outbuffer);
-    size = GST_BUFFER_SIZE (outbuffer);
+    data = gst_buffer_map (outbuffer, &size, NULL, GST_MAP_READ);
 
     if (adts) {
       gboolean protection;
@@ -175,8 +175,10 @@ do_test (gboolean adts)
       const GValue *value;
       GstBuffer *buf;
       gint k;
+      gsize csize;
+      guint8 *cdata;
 
-      caps = gst_buffer_get_caps (outbuffer);
+      caps = gst_pad_get_current_caps (mysinkpad);
       fail_if (caps == NULL);
       s = gst_caps_get_structure (caps, 0);
       fail_if (s == NULL);
@@ -184,10 +186,10 @@ do_test (gboolean adts)
       fail_if (value == NULL);
       buf = gst_value_get_buffer (value);
       fail_if (buf == NULL);
-      data = GST_BUFFER_DATA (buf);
-      size = GST_BUFFER_SIZE (buf);
-      fail_if (size < 2);
-      k = GST_READ_UINT16_BE (data);
+      cdata = gst_buffer_map (buf, &csize, NULL, GST_MAP_READ);
+      fail_if (csize < 2);
+      k = GST_READ_UINT16_BE (cdata);
+      gst_buffer_unmap (buf, cdata, csize);
       /* profile, rate, channels */
       fail_unless ((k & 0xFFF8) == ((0x02 << 11) | (0x3 << 7) | (0x02 << 3)));
       gst_caps_unref (caps);
@@ -197,6 +199,7 @@ do_test (gboolean adts)
     id = data[header] & (0x7 << 5);
     /* allow all but ID_END or ID_LFE */
     fail_if (id == 7 || id == 3);
+    gst_buffer_unmap (outbuffer, data, size);
 
     buffers = g_list_remove (buffers, outbuffer);
 
