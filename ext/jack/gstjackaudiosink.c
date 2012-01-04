@@ -637,6 +637,7 @@ GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("audio/x-raw, "
         "format = (string) " GST_JACK_FORMAT_STR ", "
+        "layout = (string) interleaved, "
         "rate = (int) [ 1, MAX ], " "channels = (int) [ 1, MAX ]")
     );
 
@@ -840,6 +841,7 @@ gst_jack_audio_sink_getcaps (GstBaseSink * bsink, GstCaps * filter)
   if (!sink->caps) {
     sink->caps = gst_caps_new_simple ("audio/x-raw",
         "format", G_TYPE_STRING, GST_JACK_FORMAT_STR,
+        "layout", G_TYPE_STRING, "interleaved",
         "rate", G_TYPE_INT, rate,
         "channels", GST_TYPE_INT_RANGE, min, max, NULL);
   }
