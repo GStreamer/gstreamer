@@ -1129,7 +1129,7 @@ gst_vaapi_image_update_from_buffer(
         src_image.stride[0]  = GST_ROUND_UP_4(width);
         size2               += height * src_image.stride[0];
         src_image.pixels[1]  = data + size2;
-        src_image.stride[1]  = src_image.stride[1];
+        src_image.stride[1]  = src_image.stride[0];
         size2               += height2 * src_image.stride[1];
         break;
     case GST_VAAPI_IMAGE_YV12:
