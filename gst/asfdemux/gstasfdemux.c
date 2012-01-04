@@ -2196,8 +2196,9 @@ gst_asf_demux_add_audio_stream (GstASFDemux * demux,
 
   /* asf_stream_audio is the same as gst_riff_strf_auds, but with an
    * additional two bytes indicating extradata. */
+  /* FIXME: Handle the channel reorder map here */
   caps = gst_riff_create_audio_caps (audio->codec_tag, NULL,
-      (gst_riff_strf_auds *) audio, extradata, NULL, &codec_name);
+      (gst_riff_strf_auds *) audio, extradata, NULL, &codec_name, NULL);
 
   if (caps == NULL) {
     caps = gst_caps_new_simple ("audio/x-asf-unknown", "codec_id",
