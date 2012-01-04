@@ -801,7 +801,7 @@ gst_wavpack_parse_pull_buffer (GstWavpackParse * wvparse, gint64 offset,
     if (offset + size > wvparse->upstream_length) {
       GST_DEBUG_OBJECT (wvparse, "EOS: %" G_GINT64_FORMAT " + %u > %"
           G_GINT64_FORMAT, offset, size, wvparse->upstream_length);
-      flow_ret = GST_FLOW_UNEXPECTED;
+      flow_ret = GST_FLOW_EOS;
       goto done;
     }
   }
@@ -820,7 +820,7 @@ gst_wavpack_parse_pull_buffer (GstWavpackParse * wvparse, gint64 offset,
         ", got only %u of %u bytes", offset, GST_BUFFER_SIZE (buf), size);
     gst_buffer_unref (buf);
     buf = NULL;
-    flow_ret = GST_FLOW_UNEXPECTED;
+    flow_ret = GST_FLOW_EOS;
   }
 
 done:
@@ -1037,7 +1037,7 @@ gst_wavpack_parse_find_marker (guint8 * buf, guint size)
 static GstFlowReturn
 gst_wavpack_parse_resync_loop (GstWavpackParse * parse, WavpackHeader * header)
 {
-  GstFlowReturn flow_ret = GST_FLOW_UNEXPECTED;
+  GstFlowReturn flow_ret = GST_FLOW_EOS;
 
   GstBuffer *buf = NULL;
 
@@ -1148,7 +1148,7 @@ pause:
     GST_LOG_OBJECT (parse, "pausing task, reason %s", reason);
     gst_pad_pause_task (parse->sinkpad);
 
-    if (flow_ret == GST_FLOW_UNEXPECTED && parse->srcpad) {
+    if (flow_ret == GST_FLOW_EOS && parse->srcpad) {
       if (parse->segment.flags & GST_SEEK_FLAG_SEGMENT) {
         GstClockTime stop;
 
@@ -1164,8 +1164,7 @@ pause:
         GST_LOG_OBJECT (parse, "Sending EOS, at end of stream");
         gst_pad_push_event (parse->srcpad, gst_event_new_eos ());
       }
-    } else if (flow_ret == GST_FLOW_NOT_LINKED
-        || flow_ret < GST_FLOW_UNEXPECTED) {
+    } else if (flow_ret == GST_FLOW_NOT_LINKED || flow_ret < GST_FLOW_EOS) {
       GST_ELEMENT_ERROR (parse, STREAM, FAILED,
           (_("Internal data stream error.")), ("stream stopped, reason %s",
               reason));

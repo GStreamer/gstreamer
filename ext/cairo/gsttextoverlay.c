@@ -853,7 +853,7 @@ gst_text_overlay_collected (GstCollectPads * pads, gpointer data)
           overlay->text_collect_data);
     }
     gst_pad_push_event (overlay->srcpad, gst_event_new_eos ());
-    ret = GST_FLOW_UNEXPECTED;
+    ret = GST_FLOW_EOS;
     goto done;
   }
 

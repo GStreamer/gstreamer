@@ -960,7 +960,7 @@ gst_videomixer2_collected (GstCollectPads2 * pads, GstVideoMixer2 * mix)
   if (output_start_time >= mix->segment.stop) {
     GST_DEBUG_OBJECT (mix, "Segment done");
     gst_pad_push_event (mix->srcpad, gst_event_new_eos ());
-    ret = GST_FLOW_UNEXPECTED;
+    ret = GST_FLOW_EOS;
     goto done;
   }
 
@@ -979,7 +979,7 @@ gst_videomixer2_collected (GstCollectPads2 * pads, GstVideoMixer2 * mix)
   } else if (res == -1) {
     GST_DEBUG_OBJECT (mix, "All sinkpads are EOS -- forwarding");
     gst_pad_push_event (mix->srcpad, gst_event_new_eos ());
-    ret = GST_FLOW_UNEXPECTED;
+    ret = GST_FLOW_EOS;
     goto done;
   } else if (res == -2) {
     GST_ERROR_OBJECT (mix, "Error collecting buffers");

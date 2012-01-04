@@ -1304,6 +1304,6 @@ eos:
     GST_DEBUG_OBJECT (self, "no data available, must be EOS");
     gst_buffer_unref (outbuf);
     gst_pad_push_event (self->src, gst_event_new_eos ());
-    return GST_FLOW_UNEXPECTED;
+    return GST_FLOW_EOS;
   }
 }

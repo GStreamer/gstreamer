@@ -1517,7 +1517,7 @@ gst_dvdemux_demux_frame (GstDVDemux * dvdemux, GstBuffer * buffer)
 
   /* check for the end of the segment */
   if (dvdemux->time_segment.stop != -1 && next_ts > dvdemux->time_segment.stop)
-    ret = GST_FLOW_UNEXPECTED;
+    ret = GST_FLOW_EOS;
   else
     ret = GST_FLOW_OK;
 
@@ -1785,7 +1785,7 @@ pause:
     GST_INFO_OBJECT (dvdemux, "pausing task, %s", gst_flow_get_name (ret));
     dvdemux->running = FALSE;
     gst_pad_pause_task (dvdemux->sinkpad);
-    if (ret == GST_FLOW_UNEXPECTED) {
+    if (ret == GST_FLOW_EOS) {
       GST_LOG_OBJECT (dvdemux, "got eos");
       /* perform EOS logic */
       if (dvdemux->time_segment.flags & GST_SEEK_FLAG_SEGMENT) {
@@ -1795,7 +1795,7 @@ pause:
       } else {
         gst_dvdemux_push_event (dvdemux, gst_event_new_eos ());
       }
-    } else if (ret == GST_FLOW_NOT_LINKED || ret < GST_FLOW_UNEXPECTED) {
+    } else if (ret == GST_FLOW_NOT_LINKED || ret < GST_FLOW_EOS) {
       /* for fatal errors or not-linked we post an error message */
       GST_ELEMENT_ERROR (dvdemux, STREAM, FAILED,
           (NULL), ("streaming stopped, reason %s", gst_flow_get_name (ret)));

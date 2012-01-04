@@ -351,7 +351,7 @@ gst_image_freeze_sink_bufferalloc (GstPad * pad, guint64 offset, guint size,
           gst_flow_get_name (ret));
   } else {
     /* Let upstream go EOS if we already have a buffer */
-    ret = GST_FLOW_UNEXPECTED;
+    ret = GST_FLOW_EOS;
   }
 
   gst_object_unref (self);
@@ -608,7 +608,7 @@ gst_image_freeze_src_event (GstPad * pad, GstEvent * event)
           &stop_type, &stop);
       gst_event_unref (event);
 
-      flush = !!(flags & GST_SEEK_FLAG_FLUSH);
+      flush = ! !(flags & GST_SEEK_FLAG_FLUSH);
 
       if (format != GST_FORMAT_TIME && format != GST_FORMAT_DEFAULT) {
         GST_ERROR_OBJECT (pad, "Seek in invalid format: %s",
@@ -727,7 +727,7 @@ gst_image_freeze_sink_chain (GstPad * pad, GstBuffer * buffer)
     GST_DEBUG_OBJECT (pad, "Already have a buffer, dropping");
     gst_buffer_unref (buffer);
     g_mutex_unlock (self->lock);
-    return GST_FLOW_UNEXPECTED;
+    return GST_FLOW_EOS;
   }
 
   self->buffer = buffer;

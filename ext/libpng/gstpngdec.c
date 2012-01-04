@@ -336,9 +336,9 @@ pause:
     GST_INFO_OBJECT (pngdec, "pausing task, reason %s",
         gst_flow_get_name (ret));
     gst_pad_pause_task (pngdec->sinkpad);
-    if (ret == GST_FLOW_UNEXPECTED) {
+    if (ret == GST_FLOW_EOS) {
       gst_pad_push_event (pngdec->srcpad, gst_event_new_eos ());
-    } else if (ret < GST_FLOW_UNEXPECTED || ret == GST_FLOW_NOT_LINKED) {
+    } else if (ret < GST_FLOW_EOS || ret == GST_FLOW_NOT_LINKED) {
       GST_ELEMENT_ERROR (pngdec, STREAM, FAILED,
           (_("Internal data stream error.")),
           ("stream stopped, reason %s", gst_flow_get_name (ret)));
@@ -546,9 +546,9 @@ pause:
     GST_INFO_OBJECT (pngdec, "pausing task, reason %s",
         gst_flow_get_name (ret));
     gst_pad_pause_task (pngdec->sinkpad);
-    if (ret == GST_FLOW_UNEXPECTED) {
+    if (ret == GST_FLOW_EOS) {
       gst_pad_push_event (pngdec->srcpad, gst_event_new_eos ());
-    } else if (ret == GST_FLOW_NOT_LINKED || ret < GST_FLOW_UNEXPECTED) {
+    } else if (ret == GST_FLOW_NOT_LINKED || ret < GST_FLOW_EOS) {
       GST_ELEMENT_ERROR (pngdec, STREAM, FAILED,
           (_("Internal data stream error.")),
           ("stream stopped, reason %s", gst_flow_get_name (ret)));
@@ -699,7 +699,7 @@ gst_pngdec_sink_event (GstPad * pad, GstEvent * event)
     {
       GST_LOG_OBJECT (pngdec, "EOS");
       gst_pngdec_libpng_clear (pngdec);
-      pngdec->ret = GST_FLOW_UNEXPECTED;
+      pngdec->ret = GST_FLOW_EOS;
       res = gst_pad_push_event (pngdec->srcpad, event);
       break;
     }

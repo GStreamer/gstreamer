@@ -720,7 +720,7 @@ gst_dv1394src_create (GstPushSrc * psrc, GstBuffer ** buf)
 error_while_polling:
   {
     GST_ELEMENT_ERROR (dv1394src, RESOURCE, READ, (NULL), GST_ERROR_SYSTEM);
-    return GST_FLOW_UNEXPECTED;
+    return GST_FLOW_EOS;
   }
 told_to_stop:
   {
