@@ -532,6 +532,15 @@
   (return-type "none")
 )
 
+(define-method update_source_uri
+  (of-object "GESFormatter")
+  (c-name "ges_formatter_update_source_uri")
+  (return-type "gboolean")
+  (parameters
+    '("GESTimelineFileSource*" "source")
+    '("gchar*" "new_uri")
+  )
+)
 
 
 ;; From ges.h
