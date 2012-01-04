@@ -913,6 +913,83 @@ gst_vaapi_image_get_data_size(GstVaapiImage *image)
     return image->priv->image.data_size;
 }
 
+static gboolean
+init_image_from_buffer(GstVaapiImageRaw *raw_image, GstBuffer *buffer)
+{
+    GstStructure *structure;
+    GstCaps *caps;
+    GstVaapiImageFormat format;
+    guint width2, height2, size2;
+    gint width, height;
+    guchar *data;
+    guint32 data_size;
+
+    data      = GST_BUFFER_DATA(buffer);
+    data_size = GST_BUFFER_SIZE(buffer);
+    caps      = GST_BUFFER_CAPS(buffer);
+
+    if (!caps)
+        return FALSE;
+
+    format = gst_vaapi_image_format_from_caps(caps);
+
+    structure = gst_caps_get_structure(caps, 0);
+    gst_structure_get_int(structure, "width",  &width);
+    gst_structure_get_int(structure, "height", &height);
+
+    /* XXX: copied from gst_video_format_get_row_stride() -- no NV12? */
+    raw_image->format = format;
+    raw_image->width  = width;
+    raw_image->height = height;
+    width2  = (width + 1) / 2;
+    height2 = (height + 1) / 2;
+    size2   = 0;
+    switch (format) {
+    case GST_VAAPI_IMAGE_NV12:
+        raw_image->num_planes = 2;
+        raw_image->pixels[0]  = data;
+        raw_image->stride[0]  = GST_ROUND_UP_4(width);
+        size2                += height * raw_image->stride[0];
+        raw_image->pixels[1]  = data + size2;
+        raw_image->stride[1]  = raw_image->stride[0];
+        size2                += height2 * raw_image->stride[1];
+        break;
+    case GST_VAAPI_IMAGE_YV12:
+    case GST_VAAPI_IMAGE_I420:
+        raw_image->num_planes = 3;
+        raw_image->pixels[0]  = data;
+        raw_image->stride[0]  = GST_ROUND_UP_4(width);
+        size2                += height * raw_image->stride[0];
+        raw_image->pixels[1]  = data + size2;
+        raw_image->stride[1]  = GST_ROUND_UP_4(width2);
+        size2                += height2 * raw_image->stride[1];
+        raw_image->pixels[2]  = data + size2;
+        raw_image->stride[2]  = raw_image->stride[1];
+        size2                += height2 * raw_image->stride[2];
+        break;
+    case GST_VAAPI_IMAGE_ARGB:
+    case GST_VAAPI_IMAGE_RGBA:
+    case GST_VAAPI_IMAGE_ABGR:
+    case GST_VAAPI_IMAGE_BGRA:
+        raw_image->num_planes = 1;
+        raw_image->pixels[0]  = data;
+        raw_image->stride[0]  = width * 4;
+        size2                += height * raw_image->stride[0];
+        break;
+    default:
+        g_error("could not compute row-stride for %" GST_FOURCC_FORMAT,
+                GST_FOURCC_ARGS(format));
+        return FALSE;
+    }
+
+    if (size2 != data_size) {
+        g_error("data_size mismatch %d / %u", size2, data_size);
+        if (size2 > data_size)
+            return FALSE;
+    }
+    return TRUE;
+}
+
 /* Copy N lines of an image */
 static inline void
 memcpy_pic(
@@ -1080,93 +1157,24 @@ gst_vaapi_image_update_from_buffer(
 )
 {
     GstVaapiImagePrivate *priv;
-    GstStructure *structure;
-    GstCaps *caps;
-    GstVaapiImageFormat format;
     GstVaapiImageRaw dst_image, src_image;
-    guint width2, height2, size2;
-    gint width, height;
-    guchar *data;
-    guint32 data_size;
     gboolean success;
 
     g_return_val_if_fail(GST_VAAPI_IS_IMAGE(image), FALSE);
     g_return_val_if_fail(image->priv->is_constructed, FALSE);
     g_return_val_if_fail(GST_IS_BUFFER(buffer), FALSE);
 
-    priv      = image->priv;
-    data      = GST_BUFFER_DATA(buffer);
-    data_size = GST_BUFFER_SIZE(buffer);
-    caps      = GST_BUFFER_CAPS(buffer);
+    priv = image->priv;
 
-    if (!caps)
+    if (!init_image_from_buffer(&src_image, buffer))
         return FALSE;
-
-    format = gst_vaapi_image_format_from_caps(caps);
-    if (format != priv->format)
+    if (src_image.format != priv->format)
         return FALSE;
-
-    structure = gst_caps_get_structure(caps, 0);
-    gst_structure_get_int(structure, "width",  &width);
-    gst_structure_get_int(structure, "height", &height);
-    if (width != priv->width || height != priv->height)
+    if (src_image.width != priv->width || src_image.height != priv->height)
         return FALSE;
 
     if (!_gst_vaapi_image_map(image, &dst_image))
         return FALSE;
-
-    /* XXX: copied from gst_video_format_get_row_stride() -- no NV12? */
-    src_image.format = priv->format;
-    src_image.width  = width;
-    src_image.height = height;
-    width2  = (width + 1) / 2;
-    height2 = (height + 1) / 2;
-    size2   = 0;
-    switch (format) {
-    case GST_VAAPI_IMAGE_NV12:
-        src_image.num_planes = 2;
-        src_image.pixels[0]  = data;
-        src_image.stride[0]  = GST_ROUND_UP_4(width);
-        size2               += height * src_image.stride[0];
-        src_image.pixels[1]  = data + size2;
-        src_image.stride[1]  = src_image.stride[0];
-        size2               += height2 * src_image.stride[1];
-        break;
-    case GST_VAAPI_IMAGE_YV12:
-    case GST_VAAPI_IMAGE_I420:
-        src_image.num_planes = 3;
-        src_image.pixels[0]  = data;
-        src_image.stride[0]  = GST_ROUND_UP_4(width);
-        size2               += height * src_image.stride[0];
-        src_image.pixels[1]  = data + size2;
-        src_image.stride[1]  = GST_ROUND_UP_4(width2);
-        size2               += height2 * src_image.stride[1];
-        src_image.pixels[2]  = data + size2;
-        src_image.stride[2]  = src_image.stride[1];
-        size2               += height2 * src_image.stride[2];
-        break;
-    case GST_VAAPI_IMAGE_ARGB:
-    case GST_VAAPI_IMAGE_RGBA:
-    case GST_VAAPI_IMAGE_ABGR:
-    case GST_VAAPI_IMAGE_BGRA:
-        src_image.num_planes = 1;
-        src_image.pixels[0]  = data;
-        src_image.stride[0]  = width * 4;
-        size2               += height * src_image.stride[0];
-        break;
-    default:
-        g_error("could not compute row-stride for %" GST_FOURCC_FORMAT,
-                GST_FOURCC_ARGS(format));
-        break;
-    }
-
-    if (size2 != data_size) {
-        g_error("data_size mismatch %d / %u", size2, data_size);
-        if (size2 > data_size) {
-            _gst_vaapi_image_unmap(image);
-            return FALSE;
-        }
-    }
 
     success = copy_image(&dst_image, &src_image, rect);
 
