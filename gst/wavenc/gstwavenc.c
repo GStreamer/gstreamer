@@ -75,8 +75,16 @@ struct wave_header
 #define SINK_CAPS \
     "audio/x-raw, "                      \
     "rate = (int) [ 1, MAX ], "          \
-    "channels = (int) [ 1, 2 ], "        \
+    "channels = (int) 1, "               \
     "format = (string) { S32LE, S24LE, S16LE, U8, F32LE, F64LE } " \
+    "layout = (string) interleaved"      \
+    "; "                                 \
+    "audio/x-raw, "                      \
+    "rate = (int) [ 1, MAX ], "          \
+    "channels = (int) 2, "               \
+    "channel-mask = (bitmask) 0x3, "     \
+    "format = (string) { S32LE, S24LE, S16LE, U8, F32LE, F64LE } " \
+    "layout = (string) interleaved"      \
     "; "                                 \
     "audio/x-alaw, "                     \
     "rate = (int) [ 8000, 192000 ], "    \
