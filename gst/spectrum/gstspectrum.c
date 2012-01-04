@@ -117,7 +117,8 @@ GST_DEBUG_CATEGORY_STATIC (gst_spectrum_debug);
 #endif
 
 #define ALLOWED_CAPS \
-  GST_AUDIO_CAPS_MAKE (FORMATS)
+  GST_AUDIO_CAPS_MAKE (FORMATS) ", " \
+  "layout = (string) interleaved"
 
 /* Spectrum properties */
 #define DEFAULT_POST_MESSAGES	        TRUE
