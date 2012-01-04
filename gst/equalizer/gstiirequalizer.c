@@ -53,7 +53,8 @@ static GstFlowReturn gst_iir_equalizer_transform_ip (GstBaseTransform * btrans,
     " format=(string) {"GST_AUDIO_NE(S16)","GST_AUDIO_NE(F32)","  \
                         GST_AUDIO_NE(F64)" }, "                   \
     " rate=(int)[1000,MAX],"                                      \
-    " channels=(int)[1,MAX]"
+    " channels=(int)[1,MAX],"                                     \
+    " layout=(string)interleaved"
 
 #define gst_iir_equalizer_parent_class parent_class
 G_DEFINE_TYPE_WITH_CODE (GstIirEqualizer, gst_iir_equalizer,
