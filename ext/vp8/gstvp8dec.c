@@ -493,6 +493,7 @@ gst_vp8_dec_handle_frame (GstBaseVideoDecoder * decoder,
     }
   } else {
     /* Invisible frame */
+    frame->decode_only = 1;
     gst_base_video_decoder_finish_frame (decoder, frame);
   }
 
