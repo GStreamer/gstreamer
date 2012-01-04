@@ -81,13 +81,19 @@ GST_DEBUG_CATEGORY_STATIC (debug);
 /* LAMEMP3ENC can do MPEG-1, MPEG-2, and MPEG-2.5, so it has 9 possible
  * sample rates it supports */
 static GstStaticPadTemplate gst_lamemp3enc_sink_template =
-GST_STATIC_PAD_TEMPLATE ("sink",
+    GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("audio/x-raw, "
         "format = (string) " GST_AUDIO_NE (S16) ", "
+        "layout = (string) interleaved, "
         "rate = (int) { 8000, 11025, 12000, 16000, 22050, 24000, 32000, 44100, 48000 }, "
-        "channels = (int) [ 1, 2 ]")
+        "channels = (int) 1; "
+        "audio/x-raw, "
+        "format = (string) " GST_AUDIO_NE (S16) ", "
+        "layout = (string) interleaved, "
+        "rate = (int) { 8000, 11025, 12000, 16000, 22050, 24000, 32000, 44100, 48000 }, "
+        "channels = (int) 2, " "channel-mask = (bitmask) 0x3")
     );
 
 static GstStaticPadTemplate gst_lamemp3enc_src_template =
