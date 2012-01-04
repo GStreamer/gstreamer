@@ -2192,11 +2192,12 @@ gst_avi_demux_parse_stream (GstAviDemux * avi, GstBuffer * buf)
       break;
     }
     case GST_RIFF_FCC_auds:{
+      /* FIXME: Do something with the channel reorder map */
       padname = g_strdup_printf ("audio_%u", avi->num_a_streams);
       templ = gst_element_class_get_pad_template (klass, "audio_%u");
       caps = gst_riff_create_audio_caps (stream->strf.auds->format,
           stream->strh, stream->strf.auds, stream->extradata,
-          stream->initdata, &codec_name);
+          stream->initdata, &codec_name, NULL);
       if (!caps) {
         caps = gst_caps_new_simple ("audio/x-avi-unknown", "codec_id",
             G_TYPE_INT, stream->strf.auds->format, NULL);
