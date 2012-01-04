@@ -67,6 +67,7 @@ GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("audio/x-raw, "
         "format = (string) " FORMAT_STR ", "
+        "layout = (string) interleaved, "
         "rate = (int) [ 6000, 48000 ], " "channels = (int) [ 1, 2 ]")
     );
 
@@ -231,8 +232,15 @@ gst_speex_dec_parse_header (GstSpeexDec * dec, GstBuffer * buf)
   /* set caps */
   caps = gst_caps_new_simple ("audio/x-raw",
       "format", G_TYPE_STRING, FORMAT_STR,
+      "layout", G_TYPE_STRING, "interleaved",
       "rate", G_TYPE_INT, dec->header->rate,
       "channels", G_TYPE_INT, dec->header->nb_channels, NULL);
+
+  if (dec->header->nb_channels == 2) {
+    gst_caps_set_simple (caps, "channel-mask", GST_TYPE_BITMASK,
+        GST_AUDIO_CHANNEL_POSITION_MASK (FRONT_LEFT) |
+        GST_AUDIO_CHANNEL_POSITION_MASK (FRONT_RIGHT), NULL);
+  }
 
   if (!gst_pad_set_caps (GST_AUDIO_DECODER_SRC_PAD (dec), caps))
     goto nego_failed;
