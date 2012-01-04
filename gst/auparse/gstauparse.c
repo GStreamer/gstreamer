@@ -49,7 +49,16 @@ static GstStaticPadTemplate sink_template = GST_STATIC_PAD_TEMPLATE ("sink",
                        "S32LE, S32BE, F32LE, F32BE, "        \
                        "F64LE, F64BE }, " \
     "rate = (int) [ 8000, 192000 ], "       \
-    "channels = (int) [ 1, 2 ]"
+    "channels = (int) 1, "                  \
+    "layout = (string) interleaved;"        \
+    "audio/x-raw, "                         \
+    "format= (string) { S8, S16LE, S16BE, S24LE, S24BE, "  \
+                       "S32LE, S32BE, F32LE, F32BE, "        \
+                       "F64LE, F64BE }, " \
+    "rate = (int) [ 8000, 192000 ], "       \
+    "channels = (int) 2, "                  \
+    "channel-mask = (bitmask) 0x3,"         \
+    "layout = (string) interleaved;"
 
 #define GST_AU_PARSE_ALAW_PAD_TEMPLATE_CAPS \
     "audio/x-alaw, "                        \
@@ -339,10 +348,17 @@ gst_au_parse_parse_header (GstAuParse * auparse)
         "channels", G_TYPE_INT, auparse->channels, NULL);
     auparse->sample_size = auparse->channels;
   } else if (format != GST_AUDIO_FORMAT_UNKNOWN) {
+    const GstCaps *templ_caps = gst_pad_get_pad_template_caps (auparse->srcpad);
+    GstCaps *intersection;
+
     tempcaps = gst_caps_new_simple ("audio/x-raw",
         "format", G_TYPE_STRING, gst_audio_format_to_string (format),
         "rate", G_TYPE_INT, auparse->samplerate,
         "channels", G_TYPE_INT, auparse->channels, NULL);
+
+    intersection = gst_caps_intersect (tempcaps, templ_caps);
+    gst_caps_unref (tempcaps);
+    tempcaps = intersection;
   } else if (layout[0]) {
     tempcaps = gst_caps_new_simple ("audio/x-adpcm",
         "layout", G_TYPE_STRING, layout, NULL);
