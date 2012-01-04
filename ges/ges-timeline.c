@@ -46,6 +46,13 @@
 
 G_DEFINE_TYPE (GESTimeline, ges_timeline, GST_TYPE_BIN);
 
+#define GES_TIMELINE_PENDINGOBJS_GET_LOCK(timeline) \
+  (GES_TIMELINE(timeline)->priv->pendingobjects_lock)
+#define GES_TIMELINE_PENDINGOBJS_LOCK(timeline) \
+  (g_mutex_lock(GES_TIMELINE_PENDINGOBJS_GET_LOCK (timeline)))
+#define GES_TIMELINE_PENDINGOBJS_UNLOCK(timeline) \
+  (g_mutex_unlock(GES_TIMELINE_PENDINGOBJS_GET_LOCK (timeline)))
+
 struct _GESTimelinePrivate
 {
   GList *layers;                /* A list of GESTimelineLayer sorted by priority */
@@ -53,8 +60,10 @@ struct _GESTimelinePrivate
 
   /* discoverer used for virgin sources */
   GstDiscoverer *discoverer;
-  /* Objects that are being discovered FIXME : LOCK ! */
   GList *pendingobjects;
+  /* lock to avoid discovery of objects that will be removed */
+  GMutex *pendingobjects_lock;
+
   /* Whether we are changing state asynchronously or not */
   gboolean async_pending;
 };
@@ -143,6 +152,10 @@ ges_timeline_dispose (GObject * object)
 static void
 ges_timeline_finalize (GObject * object)
 {
+  GESTimeline *timeline = GES_TIMELINE (object);
+
+  g_mutex_free (timeline->priv->pendingobjects_lock);
+
   G_OBJECT_CLASS (ges_timeline_parent_class)->finalize (object);
 }
 
@@ -223,6 +236,7 @@ ges_timeline_init (GESTimeline * self)
   self->priv->layers = NULL;
   self->priv->tracks = NULL;
 
+  self->priv->pendingobjects_lock = g_mutex_new ();
   /* New discoverer with a 15s timeout */
   self->priv->discoverer = gst_discoverer_new (15 * GST_SECOND, NULL);
   g_signal_connect (self->priv->discoverer, "finished",
@@ -443,6 +457,8 @@ discoverer_discovered_cb (GstDiscoverer * discoverer,
 
   GST_DEBUG ("Discovered uri %s", uri);
 
+  GES_TIMELINE_PENDINGOBJS_LOCK (timeline);
+
   /* Find corresponding TimelineFileSource in the sources */
   for (tmp = priv->pendingobjects; tmp; tmp = tmp->next) {
     tfs = (GESTimelineFileSource *) tmp->data;
@@ -457,8 +473,13 @@ discoverer_discovered_cb (GstDiscoverer * discoverer,
     GList *stream_list;
     GESTrackType tfs_supportedformats;
 
+    /* The timeline file source will be updated with discovered information
+     * so it needs to not be finalized during this process */
+    g_object_ref (tfs);
+
     /* Remove object from list */
     priv->pendingobjects = g_list_delete_link (priv->pendingobjects, tmp);
+    GES_TIMELINE_PENDINGOBJS_UNLOCK (timeline);
 
     /* FIXME : Handle errors in discovery */
     stream_list = gst_discoverer_info_get_stream_list (info);
@@ -503,6 +524,11 @@ discoverer_discovered_cb (GstDiscoverer * discoverer,
 
     /* Continue the processing on tfs */
     add_object_to_tracks (timeline, GES_TIMELINE_OBJECT (tfs));
+
+    /* Remove the ref as the timeline file source is no longer needed here */
+    g_object_unref (tfs);
+  } else {
+    GES_TIMELINE_PENDINGOBJS_UNLOCK (timeline);
   }
 }
 
@@ -514,9 +540,13 @@ ges_timeline_change_state (GstElement * element, GstStateChange transition)
 
   switch (transition) {
     case GST_STATE_CHANGE_READY_TO_PAUSED:
+      GES_TIMELINE_PENDINGOBJS_LOCK (timeline);
       if (timeline->priv->pendingobjects) {
+        GES_TIMELINE_PENDINGOBJS_UNLOCK (timeline);
         do_async_start (timeline);
         ret = GST_STATE_CHANGE_ASYNC;
+      } else {
+        GES_TIMELINE_PENDINGOBJS_UNLOCK (timeline);
       }
       break;
     default:
@@ -567,8 +597,12 @@ layer_object_added_cb (GESTimelineLayer * layer, GESTimelineObject * object,
         tfs_maxdur == GST_CLOCK_TIME_NONE || object->duration == 0) {
       GST_LOG ("Incomplete TimelineFileSource, discovering it");
       tfs_uri = ges_timeline_filesource_get_uri (tfs);
+
+      GES_TIMELINE_PENDINGOBJS_LOCK (timeline);
       timeline->priv->pendingobjects =
           g_list_append (timeline->priv->pendingobjects, object);
+      GES_TIMELINE_PENDINGOBJS_UNLOCK (timeline);
+
       gst_discoverer_discover_uri_async (timeline->priv->discoverer, tfs_uri);
     } else
       add_object_to_tracks (timeline, object);
@@ -609,6 +643,27 @@ layer_object_removed_cb (GESTimelineLayer * layer, GESTimelineObject * object,
     g_object_unref (trobj);
   }
   g_list_free (trackobjects);
+
+  /* if the object is a timeline file source that has not yet been discovered,
+   * it no longer needs to be discovered so remove it from the pendingobjects
+   * list if it belongs to this layer */
+  if (GES_IS_TIMELINE_FILE_SOURCE (object)) {
+    GList *pendingobjects;
+
+    GES_TIMELINE_PENDINGOBJS_LOCK (timeline);
+    pendingobjects = timeline->priv->pendingobjects;
+
+    tmp = pendingobjects;
+    while (tmp) {
+      GList *next = tmp->next;
+
+      if (layer == (GESTimelineLayer *) ((GESTimelineObject *) tmp->data)->priv)
+        pendingobjects = g_list_delete_link (pendingobjects, tmp);
+      tmp = next;
+    }
+    timeline->priv->pendingobjects = pendingobjects;
+    GES_TIMELINE_PENDINGOBJS_UNLOCK (timeline);
+  }
 
   GST_DEBUG ("Done");
 }
