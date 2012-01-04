@@ -122,20 +122,11 @@ gst_alpha_color_transform_caps (GstBaseTransform * btrans,
 
     /* Remove any specific parameter from the structure */
     gst_structure_remove_field (structure, "format");
-    gst_structure_remove_field (structure, "endianness");
-    gst_structure_remove_field (structure, "depth");
-    gst_structure_remove_field (structure, "bpp");
-    gst_structure_remove_field (structure, "red_mask");
-    gst_structure_remove_field (structure, "green_mask");
-    gst_structure_remove_field (structure, "blue_mask");
-    gst_structure_remove_field (structure, "alpha_mask");
     gst_structure_remove_field (structure, "color-matrix");
     gst_structure_remove_field (structure, "chroma-site");
 
-    gst_structure_set_name (structure, "video/x-raw-rgb");
+    gst_structure_set_name (structure, "video/x-raw");
     gst_caps_append_structure (local_caps, gst_structure_copy (structure));
-    gst_structure_set_name (structure, "video/x-raw-yuv");
-    gst_caps_append_structure (local_caps, structure);
   }
 
   /* Get the appropriate template */

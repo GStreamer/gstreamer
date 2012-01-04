@@ -72,16 +72,11 @@ create_caps_rgb24 (void)
 {
   GstCaps *caps;
 
-  caps = gst_caps_new_simple ("video/x-raw-rgb",
+  caps = gst_caps_new_simple ("video/x-raw",
       "width", G_TYPE_INT, 3,
       "height", G_TYPE_INT, 4,
-      "bpp", G_TYPE_INT, 24,
-      "depth", G_TYPE_INT, 24,
       "framerate", GST_TYPE_FRACTION, 0, 1,
-      "endianness", G_TYPE_INT, G_BIG_ENDIAN,
-      "red_mask", G_TYPE_INT, 0x00ff0000,
-      "green_mask", G_TYPE_INT, 0x0000ff00,
-      "blue_mask", G_TYPE_INT, 0x000000ff, NULL);
+      "format", G_TYPE_STRING, "RGB", NULL);
 
   return caps;
 }
@@ -91,17 +86,11 @@ create_caps_rgba32 (void)
 {
   GstCaps *caps;
 
-  caps = gst_caps_new_simple ("video/x-raw-rgb",
+  caps = gst_caps_new_simple ("video/x-raw",
       "width", G_TYPE_INT, 3,
       "height", G_TYPE_INT, 4,
-      "bpp", G_TYPE_INT, 32,
-      "depth", G_TYPE_INT, 32,
       "framerate", GST_TYPE_FRACTION, 0, 1,
-      "endianness", G_TYPE_INT, G_BIG_ENDIAN,
-      "red_mask", G_TYPE_INT, 0xff000000,
-      "green_mask", G_TYPE_INT, 0x00ff0000,
-      "blue_mask", G_TYPE_INT, 0x0000ff00,
-      "alpha_mask", G_TYPE_INT, 0x000000ff, NULL);
+      "format", G_TYPE_STRING, "RGBA", NULL);
 
   return caps;
 }
