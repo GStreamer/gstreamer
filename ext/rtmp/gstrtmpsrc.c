@@ -379,7 +379,7 @@ eos:
   {
     gst_buffer_unref (buf);
     GST_DEBUG_OBJECT (src, "Reading data gave EOS");
-    return GST_FLOW_UNEXPECTED;
+    return GST_FLOW_EOS;
   }
 }
 
