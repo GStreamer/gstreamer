@@ -404,9 +404,14 @@ check_valid_channel_positions (const GstAudioChannelPosition * position,
 {
   gint i, j;
   guint64 channel_mask = 0;
-  gboolean none_layout = FALSE;
 
   if (channels == 1 && position[0] == GST_AUDIO_CHANNEL_POSITION_MONO) {
+    if (channel_mask_out)
+      *channel_mask_out = 0;
+    return TRUE;
+  }
+
+  if (channels > 0 && position[0] == GST_AUDIO_CHANNEL_POSITION_NONE) {
     if (channel_mask_out)
       *channel_mask_out = 0;
     return TRUE;
@@ -422,11 +427,6 @@ check_valid_channel_positions (const GstAudioChannelPosition * position,
         position[i] == GST_AUDIO_CHANNEL_POSITION_MONO)
       return FALSE;
 
-    if (position[i] == GST_AUDIO_CHANNEL_POSITION_NONE) {
-      none_layout = TRUE;
-      continue;
-    }
-
     /* Is this in valid channel order? */
     if (enforce_order && j == G_N_ELEMENTS (default_channel_order))
       return FALSE;
@@ -437,9 +437,6 @@ check_valid_channel_positions (const GstAudioChannelPosition * position,
 
     channel_mask |= (G_GUINT64_CONSTANT (1) << position[i]);
   }
-
-  if (none_layout && channel_mask != 0)
-    return FALSE;
 
   if (channel_mask_out)
     *channel_mask_out = channel_mask;
