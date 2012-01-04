@@ -167,8 +167,12 @@ static gboolean gst_alpha_set_info (GstVideoFilter * filter,
 static GstFlowReturn gst_alpha_transform_frame (GstVideoFilter * filter,
     GstVideoFrame * in_frame, GstVideoFrame * out_frame);
 
+static void gst_alpha_init_params_full (GstAlpha * alpha,
+    const GstVideoFormatInfo * in_info, const GstVideoFormatInfo * out_info);
 static void gst_alpha_init_params (GstAlpha * alpha);
 static gboolean gst_alpha_set_process_function (GstAlpha * alpha);
+static gboolean gst_alpha_set_process_function_full (GstAlpha * alpha,
+    GstVideoInfo * in_info, GstVideoInfo * out_info);
 
 static void gst_alpha_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
@@ -524,10 +528,11 @@ gst_alpha_set_info (GstVideoFilter * filter,
   gst_base_transform_set_passthrough (GST_BASE_TRANSFORM_CAST (filter),
       passthrough);
 
-  if (!gst_alpha_set_process_function (alpha) && !passthrough)
+  if (!gst_alpha_set_process_function_full (alpha, in_info, out_info)
+      && !passthrough)
     goto no_process;
 
-  gst_alpha_init_params (alpha);
+  gst_alpha_init_params_full (alpha, in_info->finfo, out_info->finfo);
 
   GST_ALPHA_UNLOCK (alpha);
 
@@ -2286,17 +2291,14 @@ gst_alpha_chroma_key_packed_422_argb (const GstVideoFrame * in_frame,
 
 /* Protected with the alpha lock */
 static void
-gst_alpha_init_params (GstAlpha * alpha)
+gst_alpha_init_params_full (GstAlpha * alpha,
+    const GstVideoFormatInfo * in_info, const GstVideoFormatInfo * out_info)
 {
   gfloat kgl;
   gfloat tmp;
   gfloat tmp1, tmp2;
   gfloat y;
-  const GstVideoFormatInfo *in_info, *out_info;
   const gint *matrix;
-
-  in_info = GST_VIDEO_FILTER (alpha)->in_info.finfo;
-  out_info = GST_VIDEO_FILTER (alpha)->out_info.finfo;
 
   /* RGB->RGB: convert to SDTV YUV, chroma keying, convert back
    * YUV->RGB: chroma keying, convert to RGB
@@ -2356,16 +2358,19 @@ gst_alpha_init_params (GstAlpha * alpha)
   alpha->noise_level2 = alpha->noise_level * alpha->noise_level;
 }
 
+static void
+gst_alpha_init_params (GstAlpha * alpha)
+{
+  gst_alpha_init_params_full (alpha, GST_VIDEO_FILTER (alpha)->in_info.finfo,
+      GST_VIDEO_FILTER (alpha)->out_info.finfo);
+}
+
 /* Protected with the alpha lock */
 static gboolean
-gst_alpha_set_process_function (GstAlpha * alpha)
+gst_alpha_set_process_function_full (GstAlpha * alpha, GstVideoInfo * in_info,
+    GstVideoInfo * out_info)
 {
-  GstVideoInfo *in_info, *out_info;
-
   alpha->process = NULL;
-
-  in_info = &GST_VIDEO_FILTER_CAST (alpha)->in_info;
-  out_info = &GST_VIDEO_FILTER_CAST (alpha)->out_info;
 
   switch (alpha->method) {
     case ALPHA_METHOD_SET:
@@ -2534,6 +2539,14 @@ gst_alpha_set_process_function (GstAlpha * alpha)
       break;
   }
   return alpha->process != NULL;
+}
+
+static gboolean
+gst_alpha_set_process_function (GstAlpha * alpha)
+{
+  return gst_alpha_set_process_function_full (alpha,
+      &GST_VIDEO_FILTER_CAST (alpha)->in_info,
+      &GST_VIDEO_FILTER_CAST (alpha)->out_info);
 }
 
 static void
