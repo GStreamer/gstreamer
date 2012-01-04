@@ -139,8 +139,10 @@ run_check_for_file (const gchar * filename)
 GST_START_TEST (test_low_sample_rate_adpcm)
 {
 #define MIN_VERSION GST_VERSION_MAJOR, GST_VERSION_MINOR, 0
-  if (!gst_default_registry_check_feature_version ("wavparse", MIN_VERSION) ||
-      !gst_default_registry_check_feature_version ("decodebin", MIN_VERSION)) {
+  if (!gst_registry_check_feature_version (gst_registry_get (), "wavparse",
+          MIN_VERSION)
+      || !gst_registry_check_feature_version (gst_registry_get (), "decodebin",
+          MIN_VERSION)) {
     g_printerr ("skipping test_low_sample_rate_adpcm: required element "
         "wavparse or element decodebin not found\n");
     return;

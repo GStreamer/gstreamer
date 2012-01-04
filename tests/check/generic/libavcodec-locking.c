@@ -147,7 +147,7 @@ simple_launch_lines_suite (void)
 
 #ifndef GST_DISABLE_PARSE
   /* only run this if we haven't been configured with --disable-encoders */
-  if (gst_default_registry_check_feature_version ("ffenc_mpeg4",
+  if (gst_registry_check_feature_version (gst_registry_get (), "ffenc_mpeg4",
           GST_VERSION_MAJOR, GST_VERSION_MINOR, 0)) {
     tcase_add_test (tc_chain, test_libavcodec_locks);
   } else {

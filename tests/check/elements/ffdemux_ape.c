@@ -52,11 +52,10 @@ error_cb (GstBus * bus, GstMessage * msg, gpointer user_data)
 }
 
 static GstPadProbeReturn
-event_probe (GstPad * pad, GstPadProbeType type, gpointer type_data,
-    gpointer user_data)
+event_probe (GstPad * pad, GstPadProbeInfo * info, gpointer user_data)
 {
   GstTagList **p_tags = user_data;
-  GstEvent *event = type_data;
+  GstEvent *event = GST_PAD_PROBE_INFO_EVENT (info);
 
   if (GST_EVENT_TYPE (event) == GST_EVENT_TAG) {
     GST_INFO ("tag event: %" GST_PTR_FORMAT, event);
@@ -113,7 +112,8 @@ read_tags_from_file (const gchar * file, gboolean push_mode)
   /* we want to make sure there's a tag event coming out of ffdemux_ape
    * (ie. the one apedemux generated) */
   pad = gst_element_get_static_pad (sink, "sink");
-  gst_pad_add_probe (pad, GST_PAD_PROBE_TYPE_EVENT, event_probe, &tags, NULL);
+  gst_pad_add_probe (pad, GST_PAD_PROBE_TYPE_EVENT_DOWNSTREAM, event_probe,
+      &tags, NULL);
   gst_object_unref (pad);
 
   state_ret = gst_element_set_state (pipeline, GST_STATE_PAUSED);
@@ -177,8 +177,10 @@ GST_START_TEST (test_tag_caching)
 {
 #define MIN_VERSION GST_VERSION_MAJOR, GST_VERSION_MINOR, 0
 
-  if (!gst_default_registry_check_feature_version ("apedemux", MIN_VERSION) ||
-      !gst_default_registry_check_feature_version ("decodebin", MIN_VERSION)) {
+  if (!gst_registry_check_feature_version (gst_registry_get (), "apedemux",
+          MIN_VERSION)
+      || !gst_registry_check_feature_version (gst_registry_get (), "decodebin",
+          MIN_VERSION)) {
     g_printerr ("Skipping test_tag_caching: required element apedemux or "
         "decodebin element not found\n");
     return;
