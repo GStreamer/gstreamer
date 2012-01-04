@@ -516,7 +516,8 @@ gst_wavparse_fmt (GstWavParse * wav)
 
   /* Note: gst_riff_create_audio_caps might need to fix values in
    * the header header depending on the format, so call it first */
-  caps = gst_riff_create_audio_caps (header->format, NULL, header, NULL);
+  /* FIXME: Need to handle the channel reorder map */
+  caps = gst_riff_create_audio_caps (header->format, NULL, header, NULL, NULL);
   g_free (header);
 
   if (caps == NULL)
@@ -1179,8 +1180,9 @@ gst_wavparse_stream_headers (GstWavParse * wav)
 
     /* Note: gst_riff_create_audio_caps might need to fix values in
      * the header header depending on the format, so call it first */
+    /* FIXME: Need to handle the channel reorder map */
     caps = gst_riff_create_audio_caps (header->format, NULL, header, extra,
-        NULL, &codec_name);
+        NULL, &codec_name, NULL);
 
     if (extra)
       gst_buffer_unref (extra);
