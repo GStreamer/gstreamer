@@ -160,6 +160,34 @@ _wrap_ges_timeline_parse_launch_effect_new(PyGObject *self, PyObject *args, PyOb
 /* I did not override ges_formatter_get_data and set_data for these functions are deprecated */
 
 %%
+override ges_pitivi_formatter_set_sources kwargs
+static PyObject *
+_wrap_ges_pitivi_formatter_set_sources(PyGObject *self, PyObject *args, PyObject *kwargs)
+{
+  GList *sources = NULL;
+  guint i;
+
+  PyObject *pylist = NULL;
+  PyGObject *tmpobj = NULL;
+  Py_ssize_t list_size;
+
+  GESPitiviFormatter *formatter = GES_PITIVI_FORMATTER (self->obj);
+
+  if (!PyArg_ParseTuple(args, "O:GESPitiviFormatter.set_sources",
+        &pylist))
+    return PyBool_FromLong(FALSE);
+
+  list_size = PyList_GET_SIZE(pylist);
+
+  for (i = 0; i < list_size; i++) {
+    tmpobj = (PyGObject*)PyList_GetItem(pylist, i);
+    sources = g_list_prepend (sources, tmpobj->obj);
+  }
+
+  return PyBool_FromLong (ges_pitivi_formatter_set_sources (formatter, sources));
+}
+
+%%
 override ges_pitivi_formatter_get_sources kwargs
 static PyObject *
 _wrap_ges_pitivi_formatter_get_sources(PyGObject *self, PyObject *args, PyObject *kwargs)

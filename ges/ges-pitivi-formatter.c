@@ -11,7 +11,7 @@ GST_DEBUG_CATEGORY_STATIC (ges_pitivi_formatter_debug);
 /* The PiTiVi etree formatter is 0.1 we set GES one to 0.2 */
 #define VERSION "0.2"
 
-static gboolean save_pitivi_timeline_to_uri (GESFormatter * pitivi_formatter,
+static gboolean save_pitivi_timeline_to_uri (GESFormatter * formatter,
     GESTimeline * timeline, const gchar * uri);
 static gboolean load_pitivi_file_from_uri (GESFormatter * self,
     GESTimeline * timeline, const gchar * uri);
@@ -51,6 +51,11 @@ struct _GESPitiviFormatterPrivate
   GESTimeline *timeline;
 
   GESTrack *tracka, *trackv;
+
+  /* Saving context */
+  /* {factory_id: uri} */
+  GHashTable *saving_source_table;
+  guint nb_sources;
 };
 
 /* Memory freeing functions */
@@ -109,6 +114,11 @@ ges_pitivi_formatter_init (GESPitiviFormatter * self)
       g_hash_table_new_full (g_int_hash, g_str_equal, g_free, g_object_unref);
 
   priv->source_table = NULL;
+
+  /* Saving context */
+  priv->saving_source_table =
+      g_hash_table_new_full (g_str_hash, g_int_equal, g_free, g_free);
+  priv->nb_sources = 1;
 }
 
 static void
@@ -120,6 +130,8 @@ ges_pitivi_formatter_finalize (GObject * object)
   if (priv->source_table != NULL) {
     g_hash_table_destroy (priv->source_table);
   }
+
+  g_hash_table_destroy (priv->saving_source_table);
 
   if (priv->timeline_objects_table != NULL) {
     g_hash_table_foreach (priv->timeline_objects_table,
@@ -293,7 +305,6 @@ save_tracks (GESTimeline * timeline, xmlTextWriterPtr writer,
     GList * source_list)
 {
   GList *tracks, *tmp;
-
   gint id = 0;
 
   xmlTextWriterStartElement (writer, BAD_CAST "timeline");
@@ -339,20 +350,30 @@ save_tracks (GESTimeline * timeline, xmlTextWriterPtr writer,
   xmlTextWriterEndElement (writer);
 }
 
+static void
+write_source (gchar * uri, gchar * id, xmlTextWriterPtr writer)
+{
+  xmlTextWriterStartElement (writer, BAD_CAST "source");
+
+  xmlTextWriterWriteAttribute (writer, BAD_CAST "filename", BAD_CAST uri);
+  xmlTextWriterWriteAttribute (writer, BAD_CAST "id", BAD_CAST id);
+  xmlTextWriterEndElement (writer);
+}
+
 static GList *
-save_sources (GList * layers, xmlTextWriterPtr writer)
+save_sources (GESPitiviFormatter * formatter, GList * layers,
+    xmlTextWriterPtr writer)
 {
   GList *tlobjects, *tmp, *tmplayer;
   GESTimelineLayer *layer;
-  GHashTable *source_table;
+  GESPitiviFormatterPrivate *priv = formatter->priv;
 
   GList *source_list = NULL;
-  int id = 1;
 
   GST_DEBUG ("Saving sources");
 
-  source_table =
-      g_hash_table_new_full (g_str_hash, g_int_equal, g_free, g_free);
+  g_hash_table_foreach (priv->saving_source_table, (GHFunc) write_source,
+      writer);
 
   for (tmplayer = layers; tmplayer; tmplayer = tmplayer->next) {
     layer = GES_TIMELINE_LAYER (tmplayer->data);
@@ -369,19 +390,17 @@ save_sources (GList * layers, xmlTextWriterPtr writer)
         tfs_uri = (gchar *) ges_timeline_filesource_get_uri
             (GES_TIMELINE_FILE_SOURCE (tlobj));
 
-        if (!g_hash_table_lookup (source_table, tfs_uri)) {
-          gchar *strid = g_strdup_printf ("%i", id);
+        if (!g_hash_table_lookup (priv->saving_source_table, tfs_uri)) {
+          gchar *strid = g_strdup_printf ("%i", priv->nb_sources);
 
-          g_hash_table_insert (source_table, g_strdup (tfs_uri), strid);
-          xmlTextWriterStartElement (writer, BAD_CAST "source");
-          xmlTextWriterWriteAttribute (writer, BAD_CAST "filename",
-              BAD_CAST tfs_uri);
-          xmlTextWriterWriteAttribute (writer, BAD_CAST "id", BAD_CAST strid);
-          xmlTextWriterEndElement (writer);
-          id++;
+          g_hash_table_insert (priv->saving_source_table, g_strdup (tfs_uri),
+              strid);
+          write_source (tfs_uri, strid, writer);
+          priv->nb_sources++;
         }
 
-        srcmap->id = g_strdup (g_hash_table_lookup (source_table, tfs_uri));
+        srcmap->id =
+            g_strdup (g_hash_table_lookup (priv->saving_source_table, tfs_uri));
         srcmap->obj = g_object_ref (tlobj);
         srcmap->priority = ges_timeline_layer_get_priority (layer);
         /* We fill up the tck_obj_ids in save_track_objects */
@@ -391,7 +410,6 @@ save_sources (GList * layers, xmlTextWriterPtr writer)
     g_list_free_full (tlobjects, g_object_unref);
     g_object_unref (G_OBJECT (layer));
   }
-  g_hash_table_destroy (source_table);
 
   return source_list;
 }
@@ -429,7 +447,7 @@ save_timeline_objects (xmlTextWriterPtr writer, GList * list)
 }
 
 static gboolean
-save_pitivi_timeline_to_uri (GESFormatter * pitivi_formatter,
+save_pitivi_timeline_to_uri (GESFormatter * formatter,
     GESTimeline * timeline, const gchar * uri)
 {
   xmlTextWriterPtr writer;
@@ -446,7 +464,7 @@ save_pitivi_timeline_to_uri (GESFormatter * pitivi_formatter,
   xmlTextWriterStartElement (writer, BAD_CAST "sources");
 
   layers = ges_timeline_get_layers (timeline);
-  list = save_sources (layers, writer);
+  list = save_sources (GES_PITIVI_FORMATTER (formatter), layers, writer);
 
   xmlTextWriterEndElement (writer);
   xmlTextWriterEndElement (writer);
@@ -558,7 +576,7 @@ create_tracks (GESFormatter * self)
 
   tracks = ges_timeline_get_tracks (priv->timeline);
 
-  GST_DEBUG ("Creating tracks, current number of tracks",
+  GST_DEBUG ("Creating tracks, current number of tracks %d",
       g_list_length (tracks));
 
   if (tracks) {
@@ -1100,4 +1118,28 @@ pitivi_formatter_update_source_uri (GESFormatter * formatter,
   g_object_unref (tlobj);
 
   return ret;
+}
+
+/*  API  */
+gboolean
+ges_pitivi_formatter_set_sources (GESPitiviFormatter * formatter, GList * infos)
+{
+  GList *tmp;
+  gchar *strid;
+  GESPitiviFormatterPrivate *priv = formatter->priv;
+
+  g_hash_table_remove_all (priv->saving_source_table);
+  priv->nb_sources = 1;
+
+  for (tmp = infos; tmp; tmp = g_list_next (tmp)) {
+    GstDiscovererInfo *info = GST_DISCOVERER_INFO (tmp->data);
+    gchar *uri = g_strdup (gst_discoverer_info_get_uri (info));
+
+    strid = g_strdup_printf ("%i", priv->nb_sources);
+
+    g_hash_table_insert (priv->saving_source_table, uri, strid);
+    priv->nb_sources++;
+  }
+
+  return TRUE;
 }

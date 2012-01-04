@@ -668,6 +668,15 @@
   (return-type "GESPitiviFormatter*")
 )
 
+(define-method set_sources
+ (of-object "GESPitiviFormatter")
+ (c-name "ges_pitivi_formatter_set_sources")
+ (return-type "gboolean")
+ (parameters
+  '("GList*" "uris")
+ )
+)
+
 (define-method get_sources
   (of-object "GESPitiviFormatter")
   (c-name "ges_pitivi_formatter_get_sources")
