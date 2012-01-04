@@ -18,12 +18,12 @@
  */
 
 #include "gstjackutil.h"
-#include <gst/audio/multichannel.h>
+#include <gst/audio/audio.h>
 
 static const GstAudioChannelPosition default_positions[8][8] = {
   /* 1 channel */
   {
-        GST_AUDIO_CHANNEL_POSITION_FRONT_MONO,
+        GST_AUDIO_CHANNEL_POSITION_MONO,
       },
   /* 2 channels */
   {
@@ -34,7 +34,7 @@ static const GstAudioChannelPosition default_positions[8][8] = {
   {
         GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT,
         GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT,
-        GST_AUDIO_CHANNEL_POSITION_LFE, /* or FRONT_CENTER for 3.0? */
+        GST_AUDIO_CHANNEL_POSITION_LFE1,        /* or FRONT_CENTER for 3.0? */
       },
   /* 4 channels (4.0 or 3.1?) */
   {
@@ -58,7 +58,7 @@ static const GstAudioChannelPosition default_positions[8][8] = {
         GST_AUDIO_CHANNEL_POSITION_REAR_LEFT,
         GST_AUDIO_CHANNEL_POSITION_REAR_RIGHT,
         GST_AUDIO_CHANNEL_POSITION_FRONT_CENTER,
-        GST_AUDIO_CHANNEL_POSITION_LFE,
+        GST_AUDIO_CHANNEL_POSITION_LFE1,
       },
   /* 7 channels */
   {
@@ -67,7 +67,7 @@ static const GstAudioChannelPosition default_positions[8][8] = {
         GST_AUDIO_CHANNEL_POSITION_REAR_LEFT,
         GST_AUDIO_CHANNEL_POSITION_REAR_RIGHT,
         GST_AUDIO_CHANNEL_POSITION_FRONT_CENTER,
-        GST_AUDIO_CHANNEL_POSITION_LFE,
+        GST_AUDIO_CHANNEL_POSITION_LFE1,
         GST_AUDIO_CHANNEL_POSITION_REAR_CENTER,
       },
   /* 8 channels */
@@ -77,7 +77,7 @@ static const GstAudioChannelPosition default_positions[8][8] = {
         GST_AUDIO_CHANNEL_POSITION_REAR_LEFT,
         GST_AUDIO_CHANNEL_POSITION_REAR_RIGHT,
         GST_AUDIO_CHANNEL_POSITION_FRONT_CENTER,
-        GST_AUDIO_CHANNEL_POSITION_LFE,
+        GST_AUDIO_CHANNEL_POSITION_LFE1,
         GST_AUDIO_CHANNEL_POSITION_SIDE_LEFT,
         GST_AUDIO_CHANNEL_POSITION_SIDE_RIGHT,
       }
@@ -87,28 +87,24 @@ static const GstAudioChannelPosition default_positions[8][8] = {
 /* if channels are less than or equal to 8, we set a default layout,
  * otherwise set layout to an array of GST_AUDIO_CHANNEL_POSITION_NONE */
 void
-gst_jack_set_layout_on_caps (GstCaps ** caps, gint channels)
+gst_jack_set_layout (GstAudioRingBuffer * buffer, GstAudioRingBufferSpec * spec)
 {
-  int c;
-  GValue pos = { 0 };
-  GValue chanpos = { 0 };
-  gst_caps_unref (*caps);
+  gint i;
 
-  if (channels <= 8) {
-    g_assert (channels >= 1);
-    gst_audio_set_channel_positions (gst_caps_get_structure (*caps, 0),
-        default_positions[channels - 1]);
+  if (spec->info.channels <= 8) {
+    for (i = 0; i < spec->info.channels; i++)
+      spec->info.position[i] = default_positions[spec->info.channels - 1][i];
+    gst_audio_channel_positions_to_valid_order (spec->info.position,
+        spec->info.channels);
+    gst_audio_ring_buffer_set_channel_positions (buffer,
+        default_positions[spec->info.channels - 1]);
   } else {
-    g_value_init (&chanpos, GST_TYPE_ARRAY);
-    g_value_init (&pos, GST_TYPE_AUDIO_CHANNEL_POSITION);
-    for (c = 0; c < channels; c++) {
-      g_value_set_enum (&pos, GST_AUDIO_CHANNEL_POSITION_NONE);
-      gst_value_array_append_value (&chanpos, &pos);
-    }
-    g_value_unset (&pos);
-    gst_structure_set_value (gst_caps_get_structure (*caps, 0),
-        "channel-positions", &chanpos);
-    g_value_unset (&chanpos);
+    spec->info.flags |= GST_AUDIO_FLAG_UNPOSITIONED;
+    for (i = 0; i < G_N_ELEMENTS (spec->info.position); i++)
+      spec->info.position[i] = GST_AUDIO_CHANNEL_POSITION_NONE;
+    gst_audio_ring_buffer_set_channel_positions (buffer, spec->info.position);
   }
-  gst_caps_ref (*caps);
+
+  gst_caps_unref (spec->caps);
+  spec->caps = gst_audio_info_to_caps (&spec->info);
 }

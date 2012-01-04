@@ -428,7 +428,7 @@ gst_jack_ring_buffer_acquire (GstAudioRingBuffer * buf,
   if (!gst_jack_audio_src_allocate_channels (src, channels))
     goto out_of_ports;
 
-  gst_jack_set_layout_on_caps (&spec->caps, channels);
+  gst_jack_set_layout (buf, spec);
 
   buffer_size = jack_get_buffer_size (client);
 
