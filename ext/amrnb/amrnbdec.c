@@ -48,6 +48,7 @@ static GstStaticPadTemplate src_template = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("audio/x-raw, format = (string) " GST_AUDIO_NE (S16) ", "
+        "layout = (string) interleaved, "
         "rate = (int) 8000," "channels = (int) 1")
     );
 
@@ -222,8 +223,10 @@ gst_amrnbdec_set_format (GstAudioDecoder * dec, GstCaps * caps)
   /* create reverse caps */
   copy = gst_caps_new_simple ("audio/x-raw",
       "format", G_TYPE_STRING, GST_AUDIO_NE (S16),
+      "layout", G_TYPE_STRING, "interleaved",
       "channels", G_TYPE_INT, amrnbdec->channels,
       "rate", G_TYPE_INT, amrnbdec->rate, NULL);
+
   gst_audio_decoder_set_outcaps (dec, copy);
   gst_caps_unref (copy);
 
