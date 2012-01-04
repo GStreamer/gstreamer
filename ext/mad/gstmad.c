@@ -56,6 +56,7 @@ GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("audio/x-raw, "
         "format = (string) " GST_AUDIO_NE (S32) ", "
+        "layout = (string) interleaved, "
         "rate = (int) { 8000, 11025, 12000, 16000, 22050, 24000, 32000, 44100, 48000 }, "
         "channels = (int) [ 1, 2 ]")
     );
@@ -247,10 +248,16 @@ gst_mad_check_caps_reset (GstMad * mad)
      * can be gotten for streaminfo */
     caps = gst_caps_new_simple ("audio/x-raw",
         "format", G_TYPE_STRING, GST_AUDIO_NE (S32),
+        "layout", G_TYPE_STRING, "interleaved",
         "signed", G_TYPE_BOOLEAN, TRUE,
         "width", G_TYPE_INT, 32,
         "depth", G_TYPE_INT, 32,
         "rate", G_TYPE_INT, rate, "channels", G_TYPE_INT, nchannels, NULL);
+
+    if (nchannels > 1)
+      gst_caps_set_simple (caps, "channel-mask", GST_TYPE_BITMASK,
+          GST_AUDIO_CHANNEL_POSITION_MASK (FRONT_LEFT) |
+          GST_AUDIO_CHANNEL_POSITION_MASK (FRONT_RIGHT), NULL);
 
     gst_audio_decoder_set_outcaps (GST_AUDIO_DECODER (mad), caps);
     gst_caps_unref (caps);
