@@ -54,7 +54,9 @@ GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("audio/x-raw, "
         "format = (string) " GST_AUDIO_NE (S16) ", "
-        "rate = (int) [ 8000, 96000 ], " "channels = (int) 2")
+        "layout = (string) interleaved, "
+        "rate = (int) [ 8000, 96000 ], "
+        "channels = (int) 2, " "channel-mask = (bitmask) 0x3")
     );
 
 
