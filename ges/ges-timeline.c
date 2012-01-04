@@ -98,6 +98,7 @@ enum
   TRACK_REMOVED,
   LAYER_ADDED,
   LAYER_REMOVED,
+  DISCOVERY_ERROR,
   LAST_SIGNAL
 };
 
@@ -262,6 +263,18 @@ ges_timeline_class_init (GESTimelineClass * klass)
       G_SIGNAL_RUN_FIRST, G_STRUCT_OFFSET (GESTimelineClass, layer_removed),
       NULL, NULL, ges_marshal_VOID__OBJECT, G_TYPE_NONE, 1,
       GES_TYPE_TIMELINE_LAYER);
+
+  /**
+   * GESTimeline::discovery-error:
+   * @formatter: the #GESFormatter
+   * @source: The #GESTimelineFileSource that could not be discovered properly
+   * @error: (type GLib.Error): #GError, which will be non-NULL if an error
+   *                            occurred during discovery
+   */
+  ges_timeline_signals[DISCOVERY_ERROR] =
+      g_signal_new ("discovery-error", G_TYPE_FROM_CLASS (klass),
+      G_SIGNAL_RUN_FIRST, 0, NULL, NULL, gst_marshal_VOID__OBJECT_BOXED,
+      G_TYPE_NONE, 2, GES_TYPE_TIMELINE_FILE_SOURCE, GST_TYPE_G_ERROR);
 }
 
 static void
@@ -508,18 +521,14 @@ discoverer_discovered_cb (GstDiscoverer * discoverer,
     GstDiscovererInfo * info, GError * err, GESTimeline * timeline)
 {
   GList *tmp;
+  GList *stream_list;
+  GESTrackType tfs_supportedformats;
+
   gboolean found = FALSE;
   gboolean is_image = FALSE;
   GESTimelineFileSource *tfs = NULL;
   GESTimelinePrivate *priv = timeline->priv;
   const gchar *uri = gst_discoverer_info_get_uri (info);
-
-
-  if (err) {
-    GST_WARNING ("Error while discovering %s: %s", uri, err->message);
-    return;
-  } else
-    GST_DEBUG ("Discovered uri %s", uri);
 
   GES_TIMELINE_PENDINGOBJS_LOCK (timeline);
 
@@ -533,73 +542,85 @@ discoverer_discovered_cb (GstDiscoverer * discoverer,
     }
   }
 
-  if (found) {
-    GList *stream_list;
-    GESTrackType tfs_supportedformats;
+  if (!found) {
+    GST_WARNING ("Discovered %s, that seems not to be in the list of sources"
+        "to discover", uri);
+    GES_TIMELINE_PENDINGOBJS_UNLOCK (timeline);
+    return;
+  }
 
-    /* The timeline file source will be updated with discovered information
-     * so it needs to not be finalized during this process */
-    g_object_ref (tfs);
+  if (err) {
+    GError *propagate_error = NULL;
 
-    /* Remove object from list */
     priv->pendingobjects = g_list_delete_link (priv->pendingobjects, tmp);
     GES_TIMELINE_PENDINGOBJS_UNLOCK (timeline);
+    GST_WARNING ("Error while discovering %s: %s", uri, err->message);
 
-    /* FIXME : Handle errors in discovery */
-    stream_list = gst_discoverer_info_get_stream_list (info);
+    g_propagate_error (&propagate_error, err);
+    g_signal_emit (timeline, ges_timeline_signals[DISCOVERY_ERROR], 0, tfs,
+        propagate_error);
 
-    tfs_supportedformats = ges_timeline_filesource_get_supported_formats (tfs);
-    if (tfs_supportedformats != GES_TRACK_TYPE_UNKNOWN)
-      goto check_image;
+    return;
+  }
 
-    /* Update timelinefilesource properties based on info */
-    for (tmp = stream_list; tmp; tmp = tmp->next) {
-      GstDiscovererStreamInfo *sinf = (GstDiscovererStreamInfo *) tmp->data;
+  /* Everything went fine... let's do our job! */
+  GST_DEBUG ("Discovered uri %s", uri);
 
-      if (GST_IS_DISCOVERER_AUDIO_INFO (sinf)) {
+  /* The timeline file source will be updated with discovered information
+   * so it needs to not be finalized during this process */
+  g_object_ref (tfs);
+
+  /* Remove object from list */
+  priv->pendingobjects = g_list_delete_link (priv->pendingobjects, tmp);
+  GES_TIMELINE_PENDINGOBJS_UNLOCK (timeline);
+
+  /* FIXME : Handle errors in discovery */
+  stream_list = gst_discoverer_info_get_stream_list (info);
+
+  tfs_supportedformats = ges_timeline_filesource_get_supported_formats (tfs);
+  if (tfs_supportedformats != GES_TRACK_TYPE_UNKNOWN)
+    goto check_image;
+
+  /* Update timelinefilesource properties based on info */
+  for (tmp = stream_list; tmp; tmp = tmp->next) {
+    GstDiscovererStreamInfo *sinf = (GstDiscovererStreamInfo *) tmp->data;
+
+    if (GST_IS_DISCOVERER_AUDIO_INFO (sinf)) {
+      tfs_supportedformats |= GES_TRACK_TYPE_AUDIO;
+      ges_timeline_filesource_set_supported_formats (tfs, tfs_supportedformats);
+    } else if (GST_IS_DISCOVERER_VIDEO_INFO (sinf)) {
+      tfs_supportedformats |= GES_TRACK_TYPE_VIDEO;
+      ges_timeline_filesource_set_supported_formats (tfs, tfs_supportedformats);
+      if (gst_discoverer_video_info_is_image ((GstDiscovererVideoInfo *)
+              sinf)) {
         tfs_supportedformats |= GES_TRACK_TYPE_AUDIO;
         ges_timeline_filesource_set_supported_formats (tfs,
             tfs_supportedformats);
-      } else if (GST_IS_DISCOVERER_VIDEO_INFO (sinf)) {
-        tfs_supportedformats |= GES_TRACK_TYPE_VIDEO;
-        ges_timeline_filesource_set_supported_formats (tfs,
-            tfs_supportedformats);
-        if (gst_discoverer_video_info_is_image ((GstDiscovererVideoInfo *)
-                sinf)) {
-          tfs_supportedformats |= GES_TRACK_TYPE_AUDIO;
-          ges_timeline_filesource_set_supported_formats (tfs,
-              tfs_supportedformats);
-          is_image = TRUE;
-        }
+        is_image = TRUE;
       }
     }
-
-    if (stream_list)
-      gst_discoverer_stream_info_list_free (stream_list);
-
-  check_image:
-
-    if (is_image) {
-      /* don't set max-duration on still images */
-      g_object_set (tfs, "is_image", (gboolean) TRUE, NULL);
-    }
-
-    /* Continue the processing on tfs */
-    add_object_to_tracks (timeline, GES_TIMELINE_OBJECT (tfs));
-
-    if (!is_image) {
-      g_object_set (tfs, "max-duration",
-          gst_discoverer_info_get_duration (info), NULL);
-    }
-
-    /* Continue the processing on tfs */
-    add_object_to_tracks (timeline, GES_TIMELINE_OBJECT (tfs));
-
-    /* Remove the ref as the timeline file source is no longer needed here */
-    g_object_unref (tfs);
-  } else {
-    GES_TIMELINE_PENDINGOBJS_UNLOCK (timeline);
   }
+
+  if (stream_list)
+    gst_discoverer_stream_info_list_free (stream_list);
+
+check_image:
+
+  if (is_image) {
+    /* don't set max-duration on still images */
+    g_object_set (tfs, "is_image", (gboolean) TRUE, NULL);
+  }
+
+  /* Continue the processing on tfs */
+  add_object_to_tracks (timeline, GES_TIMELINE_OBJECT (tfs));
+
+  if (!is_image) {
+    g_object_set (tfs, "max-duration",
+        gst_discoverer_info_get_duration (info), NULL);
+  }
+
+  /* Remove the ref as the timeline file source is no longer needed here */
+  g_object_unref (tfs);
 }
 
 static GstStateChangeReturn
