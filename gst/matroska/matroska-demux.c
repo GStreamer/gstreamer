@@ -5191,8 +5191,10 @@ gst_matroska_demux_audio_caps (GstMatroskaTrackAudioContext *
     format = gst_audio_format_build_integer (sign, endianness,
         audiocontext->bitdepth, audiocontext->bitdepth);
 
+    /* FIXME: Channel mask and reordering */
     caps = gst_caps_new_simple ("audio/x-raw",
-        "format", G_TYPE_STRING, gst_audio_format_to_string (format), NULL);
+        "format", G_TYPE_STRING, gst_audio_format_to_string (format),
+        "layout", G_TYPE_STRING, "interleaved", NULL);
 
     *codec_name = g_strdup_printf ("Raw %d-bit PCM audio",
         audiocontext->bitdepth);
@@ -5203,8 +5205,10 @@ gst_matroska_demux_audio_caps (GstMatroskaTrackAudioContext *
       format = "F32LE";
     else
       format = "F64LE";
+    /* FIXME: Channel mask and reordering */
     caps = gst_caps_new_simple ("audio/x-raw",
-        "format", G_TYPE_STRING, format, NULL);
+        "format", G_TYPE_STRING, format,
+        "layout", G_TYPE_STRING, "interleaved", NULL);
     *codec_name = g_strdup_printf ("Raw %d-bit floating-point audio",
         audiocontext->bitdepth);
     context->alignment = audiocontext->bitdepth / 8;
@@ -5251,8 +5255,9 @@ gst_matroska_demux_audio_caps (GstMatroskaTrackAudioContext *
       if (riff_audio_fmt)
         *riff_audio_fmt = auds.format;
 
+      /* FIXME: Handle reorder map */
       caps = gst_riff_create_audio_caps (auds.format, NULL, &auds, NULL,
-          codec_data, codec_name);
+          codec_data, codec_name, NULL);
       gst_buffer_unref (codec_data);
 
       if (caps == NULL) {

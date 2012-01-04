@@ -166,6 +166,7 @@ static GstStaticPadTemplate audiosink_templ =
         COMMON_AUDIO_CAPS "; "
         "audio/x-raw, "
         "format = (string) { U8, S16BE, S16LE, S24BE, S24LE, S32BE, S32LE, F32LE, F64LE }, "
+        "layout = (string) interleaved, "
         COMMON_AUDIO_CAPS ";"
         "audio/x-tta, "
         "width = (int) { 8, 16, 24 }, "
