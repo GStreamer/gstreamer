@@ -59,6 +59,8 @@ enum
 static GESTrackObject
     * ges_timeline_filesource_create_track_object (GESTimelineObject * obj,
     GESTrack * track);
+void
+ges_timeline_filesource_set_uri (GESTimelineFileSource * self, gchar * uri);
 
 static void
 ges_timeline_filesource_get_property (GObject * object, guint property_id,
@@ -92,7 +94,7 @@ ges_timeline_filesource_set_property (GObject * object, guint property_id,
 
   switch (property_id) {
     case PROP_URI:
-      tfs->priv->uri = g_value_dup_string (value);
+      ges_timeline_filesource_set_uri (tfs, g_value_dup_string (value));
       break;
     case PROP_MUTE:
       ges_timeline_filesource_set_mute (tfs, g_value_get_boolean (value));
@@ -139,7 +141,7 @@ ges_timeline_filesource_class_init (GESTimelineFileSourceClass * klass)
    */
   g_object_class_install_property (object_class, PROP_URI,
       g_param_spec_string ("uri", "URI", "uri of the resource",
-          NULL, G_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY));
+          NULL, G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
 
   /**
    * GESTimelineFileSource:max-duration:
@@ -406,4 +408,21 @@ ges_timeline_filesource_new (gchar * uri)
     res = g_object_new (GES_TYPE_TIMELINE_FILE_SOURCE, "uri", uri, NULL);
 
   return res;
+}
+
+void
+ges_timeline_filesource_set_uri (GESTimelineFileSource * self, gchar * uri)
+{
+  GESTimelineObject *tlobj = GES_TIMELINE_OBJECT (self);
+  GList *tckobjs = ges_timeline_object_get_track_objects (tlobj);
+
+  if (tckobjs) {
+    /* FIXME handle this case properly */
+    GST_WARNING_OBJECT (tlobj, "Can not change uri when already"
+        "containing TrackObjects");
+
+    return;
+  }
+
+  self->priv->uri = uri;
 }
