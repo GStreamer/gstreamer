@@ -477,7 +477,8 @@ GST_START_TEST (test_source_setup)
   GstElement *playbin, *videosink;
   GstElement *src = NULL;
 
-  if (!gst_default_registry_check_feature_version ("redvideosrc", 0, 10, 0)) {
+  if (!gst_registry_check_feature_version (gst_registry_get (), "redvideosrc",
+          0, 10, 0)) {
     fail_unless (gst_element_register (NULL, "redvideosrc", GST_RANK_PRIMARY,
             gst_red_video_src_get_type ()));
   }
@@ -510,27 +511,28 @@ GST_END_TEST;
 /*** redvideo:// source ***/
 
 static GstURIType
-gst_red_video_src_uri_get_type (void)
+gst_red_video_src_uri_get_type (GType type)
 {
   return GST_URI_SRC;
 }
 
 static const gchar *const *
-gst_red_video_src_uri_get_protocols (void)
+gst_red_video_src_uri_get_protocols (GType type)
 {
   static const gchar *protocols[] = { "redvideo", NULL };
 
   return protocols;
 }
 
-static const gchar *
+static gchar *
 gst_red_video_src_uri_get_uri (GstURIHandler * handler)
 {
-  return "redvideo://";
+  return g_strdup ("redvideo://");
 }
 
 static gboolean
-gst_red_video_src_uri_set_uri (GstURIHandler * handler, const gchar * uri)
+gst_red_video_src_uri_set_uri (GstURIHandler * handler, const gchar * uri,
+    GError ** error)
 {
   return (uri != NULL && g_str_has_prefix (uri, "redvideo:"));
 }
@@ -586,8 +588,8 @@ static GstCaps *
 gst_red_video_src_get_caps (GstBaseSrc * src, GstCaps * filter)
 {
   guint w = 64, h = 64;
-  return gst_caps_new_simple ("video/x-raw", "format", GST_TYPE_FOURCC,
-      GST_MAKE_FOURCC ('I', '4', '2', '0'), "width", G_TYPE_INT, w, "height",
+  return gst_caps_new_simple ("video/x-raw", "format", G_TYPE_STRING,
+      "I420", "width", G_TYPE_INT, w, "height",
       G_TYPE_INT, h, "framerate", GST_TYPE_FRACTION, 1, 1, NULL);
 }
 
@@ -619,27 +621,28 @@ gst_red_video_src_init (GstRedVideoSrc * src)
 /*** codec:// source ***/
 
 static GstURIType
-gst_codec_src_uri_get_type (void)
+gst_codec_src_uri_get_type (GType type)
 {
   return GST_URI_SRC;
 }
 
-static gchar **
-gst_codec_src_uri_get_protocols (void)
+static const gchar *const *
+gst_codec_src_uri_get_protocols (GType type)
 {
-  static gchar *protocols[] = { (char *) "codec", NULL };
+  static const gchar *protocols[] = { (char *) "codec", NULL };
 
   return protocols;
 }
 
-static const gchar *
+static gchar *
 gst_codec_src_uri_get_uri (GstURIHandler * handler)
 {
-  return "codec://";
+  return g_strdup ("codec://");
 }
 
 static gboolean
-gst_codec_src_uri_set_uri (GstURIHandler * handler, const gchar * uri)
+gst_codec_src_uri_set_uri (GstURIHandler * handler, const gchar * uri,
+    GError ** error)
 {
   return (uri != NULL && g_str_has_prefix (uri, "codec:"));
 }
@@ -692,7 +695,7 @@ gst_codec_src_create (GstPushSrc * src, GstBuffer ** p_buf)
 static GstCaps *
 gst_codec_src_get_caps (GstBaseSrc * src, GstCaps * filter)
 {
-  return gst_caps_new_simple ("application/x-codec", NULL);
+  return gst_caps_new_empty_simple ("application/x-codec");
 }
 
 static void

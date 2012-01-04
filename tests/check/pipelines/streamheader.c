@@ -36,9 +36,12 @@
 
 static int n_tags = 0;
 
-static gboolean
-tag_event_probe_cb (GstPad * pad, GstEvent * event, GMainLoop * loop)
+static GstPadProbeReturn
+tag_event_probe_cb (GstPad * pad, GstPadProbeInfo * info, gpointer user_data)
 {
+  GMainLoop *loop = user_data;
+  GstEvent *event = GST_PAD_PROBE_INFO_EVENT (info);
+
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_TAG:
     {
@@ -55,7 +58,7 @@ tag_event_probe_cb (GstPad * pad, GstEvent * event, GMainLoop * loop)
       break;
   }
 
-  return TRUE;
+  return GST_PAD_PROBE_OK;
 }
 
 GST_START_TEST (test_multifdsink_gdp_tag)
@@ -95,7 +98,8 @@ GST_START_TEST (test_multifdsink_gdp_tag)
   fail_unless (pad != NULL, "Could not get pad out of depay");
   gst_object_unref (depay);
 
-  gst_pad_add_event_probe (pad, G_CALLBACK (tag_event_probe_cb), loop);
+  gst_pad_add_probe (pad, GST_PAD_PROBE_TYPE_EVENT_DOWNSTREAM,
+      tag_event_probe_cb, loop, NULL);
 
   gst_element_set_state (p1, GST_STATE_PLAYING);
   gst_element_set_state (p2, GST_STATE_PLAYING);
@@ -119,9 +123,10 @@ GST_END_TEST;
 
 static int n_in_caps = 0;
 
-static gboolean
-buffer_probe_cb (GstPad * pad, GstBuffer * buffer)
+static GstPadProbeReturn
+buffer_probe_cb (GstPad * pad, GstPadProbeInfo * info, gpointer user_data)
 {
+  GstBuffer *buffer = GST_PAD_PROBE_INFO_BUFFER (info);
   guint8 *data;
   gsize size;
 
@@ -138,13 +143,12 @@ buffer_probe_cb (GstPad * pad, GstBuffer * buffer)
 
     n_in_caps++;
 
-    caps = gst_buffer_get_caps (buffer);
+    caps = gst_pad_get_current_caps (pad);
     s = gst_caps_get_structure (caps, 0);
     fail_unless (gst_structure_has_field (s, "streamheader"));
     sh = gst_structure_get_value (s, "streamheader");
     buffers = g_value_peek_pointer (sh);
     assert_equals_int (buffers->len, 3);
-
 
     for (i = 0; i < 3; ++i) {
       GValue *val;
@@ -210,8 +214,10 @@ GST_START_TEST (test_multifdsink_gdp_vorbisenc)
   fail_unless (pad != NULL, "Could not get pad out of depay");
   gst_object_unref (depay);
 
-  gst_pad_add_event_probe (pad, G_CALLBACK (tag_event_probe_cb), loop);
-  gst_pad_add_buffer_probe (pad, G_CALLBACK (buffer_probe_cb), NULL);
+  gst_pad_add_probe (pad, GST_PAD_PROBE_TYPE_EVENT_DOWNSTREAM,
+      tag_event_probe_cb, loop, NULL);
+  gst_pad_add_probe (pad, GST_PAD_PROBE_TYPE_BUFFER, buffer_probe_cb, NULL,
+      NULL);
 
   gst_element_set_state (p1, GST_STATE_PLAYING);
   gst_element_set_state (p2, GST_STATE_PLAYING);

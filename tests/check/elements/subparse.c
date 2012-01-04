@@ -48,7 +48,7 @@ buffer_from_static_string (const gchar * s)
   len = strlen (s);
 
   buf = gst_buffer_new ();
-  gst_buffer_take_memory (buf,
+  gst_buffer_take_memory (buf, -1,
       gst_memory_new_wrapped (GST_MEMORY_FLAG_READONLY,
           (gpointer) s, NULL, len, 0, len));
 
@@ -159,8 +159,8 @@ setup_subparse (void)
 {
   subparse = gst_check_setup_element ("subparse");
 
-  mysrcpad = gst_check_setup_src_pad (subparse, &srctemplate, NULL);
-  mysinkpad = gst_check_setup_sink_pad (subparse, &sinktemplate, NULL);
+  mysrcpad = gst_check_setup_src_pad (subparse, &srctemplate);
+  mysinkpad = gst_check_setup_sink_pad (subparse, &sinktemplate);
 
   gst_pad_set_active (mysrcpad, TRUE);
   gst_pad_set_active (mysinkpad, TRUE);
@@ -192,6 +192,7 @@ static void
 test_srt_do_test (SubParseInputChunk * input, guint start_idx, guint num)
 {
   guint n;
+  GstCaps *outcaps;
 
   GST_LOG ("srt test: start_idx = %u, num = %u", start_idx, num);
 
@@ -207,6 +208,8 @@ test_srt_do_test (SubParseInputChunk * input, guint start_idx, guint num)
   gst_pad_push_event (mysrcpad, gst_event_new_eos ());
 
   fail_unless_equals_int (g_list_length (buffers), num);
+
+  outcaps = gst_pad_get_current_caps (mysinkpad);
 
   for (n = start_idx; n < start_idx + num; ++n) {
     const GstStructure *buffer_caps_struct;
@@ -236,11 +239,12 @@ test_srt_do_test (SubParseInputChunk * input, guint start_idx, guint num)
     }
     gst_buffer_unmap (buf, out, out_size);
     /* check caps */
-    fail_unless (GST_BUFFER_CAPS (buf) != NULL);
-    buffer_caps_struct = gst_caps_get_structure (GST_BUFFER_CAPS (buf), 0);
+    fail_unless (outcaps != NULL);
+    buffer_caps_struct = gst_caps_get_structure (outcaps, 0);
     fail_unless_equals_string (gst_structure_get_name (buffer_caps_struct),
         "text/x-pango-markup");
   }
+  gst_caps_unref (outcaps);
 
   teardown_subparse ();
 }
@@ -277,6 +281,7 @@ static void
 do_test (SubParseInputChunk * input, guint num, const gchar * media_type)
 {
   guint n;
+  GstCaps *outcaps;
 
   setup_subparse ();
 
@@ -290,6 +295,8 @@ do_test (SubParseInputChunk * input, guint num, const gchar * media_type)
   gst_pad_push_event (mysrcpad, gst_event_new_eos ());
 
   fail_unless_equals_int (g_list_length (buffers), num);
+
+  outcaps = gst_pad_get_current_caps (mysinkpad);
 
   for (n = 0; n < num; ++n) {
     const GstStructure *buffer_caps_struct;
@@ -326,11 +333,12 @@ do_test (SubParseInputChunk * input, guint num, const gchar * media_type)
     }
     gst_buffer_unmap (buf, out, out_size);
     /* check caps */
-    fail_unless (GST_BUFFER_CAPS (buf) != NULL);
-    buffer_caps_struct = gst_caps_get_structure (GST_BUFFER_CAPS (buf), 0);
+    fail_unless (outcaps != NULL);
+    buffer_caps_struct = gst_caps_get_structure (outcaps, 0);
     fail_unless_equals_string (gst_structure_get_name (buffer_caps_struct),
         media_type);
   }
+  gst_caps_unref (outcaps);
 
   teardown_subparse ();
 }

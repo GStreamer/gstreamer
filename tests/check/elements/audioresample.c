@@ -99,7 +99,7 @@ setup_audioresample (int channels, int inrate, int outrate, int width,
           GST_STATE_PAUSED) == GST_STATE_CHANGE_SUCCESS,
       "could not set to paused");
 
-  mysrcpad = gst_check_setup_src_pad (audioresample, &srctemplate, caps);
+  mysrcpad = gst_check_setup_src_pad (audioresample, &srctemplate);
   gst_pad_set_caps (mysrcpad, caps);
   gst_caps_unref (caps);
 
@@ -114,7 +114,7 @@ setup_audioresample (int channels, int inrate, int outrate, int width,
     gst_structure_set (structure, "depth", G_TYPE_INT, width, NULL);
   fail_unless (gst_caps_is_fixed (caps));
 
-  mysinkpad = gst_check_setup_sink_pad (audioresample, &sinktemplate, caps);
+  mysinkpad = gst_check_setup_sink_pad (audioresample, &sinktemplate);
   /* this installs a getcaps func that will always return the caps we set
    * later */
   gst_pad_set_caps (mysinkpad, caps);
@@ -189,7 +189,7 @@ test_perfect_stream_instance (int inrate, int outrate, int samples,
   gint16 *p, *data;
 
   audioresample = setup_audioresample (2, inrate, outrate, 16, FALSE);
-  caps = gst_pad_get_negotiated_caps (mysrcpad);
+  caps = gst_pad_get_current_caps (mysrcpad);
   fail_unless (gst_caps_is_fixed (caps));
 
   fail_unless (gst_element_set_state (audioresample,
@@ -204,8 +204,6 @@ test_perfect_stream_instance (int inrate, int outrate, int samples,
     GST_BUFFER_OFFSET (inbuffer) = offset;
     offset += samples;
     GST_BUFFER_OFFSET_END (inbuffer) = offset;
-
-    gst_buffer_set_caps (inbuffer, caps);
 
     p = data = gst_buffer_map (inbuffer, NULL, NULL, GST_MAP_WRITE);
 
@@ -277,7 +275,7 @@ test_discont_stream_instance (int inrate, int outrate, int samples,
       inrate, outrate, samples, numbuffers);
 
   audioresample = setup_audioresample (2, inrate, outrate, 16, FALSE);
-  caps = gst_pad_get_negotiated_caps (mysrcpad);
+  caps = gst_pad_get_current_caps (mysrcpad);
   fail_unless (gst_caps_is_fixed (caps));
 
   fail_unless (gst_element_set_state (audioresample,
@@ -293,8 +291,6 @@ test_discont_stream_instance (int inrate, int outrate, int samples,
     GST_BUFFER_TIMESTAMP (inbuffer) = ints;
     GST_BUFFER_OFFSET (inbuffer) = (j - 1) * 2 * samples;
     GST_BUFFER_OFFSET_END (inbuffer) = j * 2 * samples + samples;
-
-    gst_buffer_set_caps (inbuffer, caps);
 
     p = data = gst_buffer_map (inbuffer, NULL, NULL, GST_MAP_WRITE);
     /* create a 16 bit signed ramp */
@@ -362,16 +358,18 @@ GST_START_TEST (test_reuse)
   GstBuffer *inbuffer;
   GstCaps *caps;
   guint8 *data;
+  GstSegment segment;
 
   audioresample = setup_audioresample (1, 9343, 48000, 16, FALSE);
-  caps = gst_pad_get_negotiated_caps (mysrcpad);
+  caps = gst_pad_get_current_caps (mysrcpad);
   fail_unless (gst_caps_is_fixed (caps));
 
   fail_unless (gst_element_set_state (audioresample,
           GST_STATE_PLAYING) == GST_STATE_CHANGE_SUCCESS,
       "could not set to playing");
 
-  newseg = gst_event_new_new_segment (FALSE, 1.0, GST_FORMAT_TIME, 0, -1, 0);
+  gst_segment_init (&segment, GST_FORMAT_TIME);
+  newseg = gst_event_new_segment (&segment);
   fail_unless (gst_pad_push_event (mysrcpad, newseg) != FALSE);
 
   inbuffer = gst_buffer_new_and_alloc (9343 * 4);
@@ -381,7 +379,6 @@ GST_START_TEST (test_reuse)
   GST_BUFFER_DURATION (inbuffer) = GST_SECOND;
   GST_BUFFER_TIMESTAMP (inbuffer) = 0;
   GST_BUFFER_OFFSET (inbuffer) = 0;
-  gst_buffer_set_caps (inbuffer, caps);
 
   /* pushing gives away my reference ... */
   fail_unless (gst_pad_push (mysrcpad, inbuffer) == GST_FLOW_OK);
@@ -397,7 +394,7 @@ GST_START_TEST (test_reuse)
           GST_STATE_PLAYING) == GST_STATE_CHANGE_SUCCESS,
       "could not set to playing");
 
-  newseg = gst_event_new_new_segment (FALSE, 1.0, GST_FORMAT_TIME, 0, -1, 0);
+  newseg = gst_event_new_segment (&segment);
   fail_unless (gst_pad_push_event (mysrcpad, newseg) != FALSE);
 
   inbuffer = gst_buffer_new_and_alloc (9343 * 4);
@@ -407,7 +404,6 @@ GST_START_TEST (test_reuse)
   GST_BUFFER_DURATION (inbuffer) = GST_SECOND;
   GST_BUFFER_TIMESTAMP (inbuffer) = 0;
   GST_BUFFER_OFFSET (inbuffer) = 0;
-  gst_buffer_set_caps (inbuffer, caps);
 
   fail_unless (gst_pad_push (mysrcpad, inbuffer) == GST_FLOW_OK);
 
@@ -494,20 +490,20 @@ live_switch_alloc_only_48000 (GstPad * pad, guint64 offset,
 
   return GST_FLOW_OK;
 }
-#endif
 
 static GstCaps *
 live_switch_get_sink_caps (GstPad * pad)
 {
   GstCaps *result;
 
-  result = gst_caps_copy (GST_PAD_CAPS (pad));
+  result = gst_caps_make_writable (gst_pad_get_current_caps (pad));
 
   gst_caps_set_simple (result,
       "rate", GST_TYPE_INT_RANGE, 48000, G_MAXINT, NULL);
 
   return result;
 }
+#endif
 
 static void
 live_switch_push (int rate, GstCaps * caps)
@@ -515,7 +511,6 @@ live_switch_push (int rate, GstCaps * caps)
   GstBuffer *inbuffer;
   GstCaps *desired;
   GList *l;
-  guint8 *data;
 
   desired = gst_caps_copy (caps);
   gst_caps_set_simple (desired, "rate", G_TYPE_INT, rate, NULL);
@@ -526,19 +521,7 @@ live_switch_push (int rate, GstCaps * caps)
           GST_BUFFER_OFFSET_NONE, rate * 4, desired, &inbuffer) == GST_FLOW_OK);
 #endif
   inbuffer = gst_buffer_new_and_alloc (rate * 4);
-  gst_buffer_set_caps (inbuffer, desired);
-
-  /* When the basetransform hits the non-configured case it always
-   * returns a buffer with exactly the same caps as we requested so the actual
-   * renegotiation (if needed) will be done in the _chain*/
-  fail_unless (inbuffer != NULL);
-  GST_DEBUG ("desired: %" GST_PTR_FORMAT ".... got: %" GST_PTR_FORMAT,
-      desired, GST_BUFFER_CAPS (inbuffer));
-  fail_unless (gst_caps_is_equal (desired, GST_BUFFER_CAPS (inbuffer)));
-
-  data = gst_buffer_map (inbuffer, NULL, NULL, GST_MAP_WRITE);
-  memset (data, 0, rate * 4);
-  gst_buffer_unmap (inbuffer, data, rate * 4);
+  gst_buffer_memset (inbuffer, 0, 0, rate * 4);
 
   GST_BUFFER_DURATION (inbuffer) = GST_SECOND;
   GST_BUFFER_TIMESTAMP (inbuffer) = 0;
@@ -567,6 +550,7 @@ GST_START_TEST (test_live_switch)
   GstElement *audioresample;
   GstEvent *newseg;
   GstCaps *caps;
+  GstSegment segment;
 
   audioresample = setup_audioresample (4, 48000, 48000, 16, FALSE);
 
@@ -575,18 +559,19 @@ GST_START_TEST (test_live_switch)
    * tries to get a buffer with a rate higher then 48000 tries to renegotiate
    * */
   //gst_pad_set_bufferalloc_function (mysinkpad, live_switch_alloc_only_48000);
-  gst_pad_set_getcaps_function (mysinkpad, live_switch_get_sink_caps);
+  //gst_pad_set_getcaps_function (mysinkpad, live_switch_get_sink_caps);
 
   gst_pad_use_fixed_caps (mysrcpad);
 
-  caps = gst_pad_get_negotiated_caps (mysrcpad);
+  caps = gst_pad_get_current_caps (mysrcpad);
   fail_unless (gst_caps_is_fixed (caps));
 
   fail_unless (gst_element_set_state (audioresample,
           GST_STATE_PLAYING) == GST_STATE_CHANGE_SUCCESS,
       "could not set to playing");
 
-  newseg = gst_event_new_new_segment (FALSE, 1.0, GST_FORMAT_TIME, 0, -1, 0);
+  gst_segment_init (&segment, GST_FORMAT_TIME);
+  newseg = gst_event_new_segment (&segment);
   fail_unless (gst_pad_push_event (mysrcpad, newseg) != FALSE);
 
   /* downstream can provide the requested rate, a buffer alloc will be passed
@@ -678,23 +663,23 @@ GST_START_TEST (test_pipelines)
   for (quality = 0; quality < 11; quality += 5) {
     GST_DEBUG ("Checking with quality %d", quality);
 
-    test_pipeline (8, FALSE, 44100, 48000, quality);
-    test_pipeline (8, FALSE, 48000, 44100, quality);
+    test_pipeline ("S8", 44100, 48000, quality);
+    test_pipeline ("S8", 48000, 44100, quality);
 
-    test_pipeline (16, FALSE, 44100, 48000, quality);
-    test_pipeline (16, FALSE, 48000, 44100, quality);
+    test_pipeline ("S16", 44100, 48000, quality);
+    test_pipeline ("S16", 48000, 44100, quality);
 
-    test_pipeline (24, FALSE, 44100, 48000, quality);
-    test_pipeline (24, FALSE, 48000, 44100, quality);
+    test_pipeline ("S24", 44100, 48000, quality);
+    test_pipeline ("S24", 48000, 44100, quality);
 
-    test_pipeline (32, FALSE, 44100, 48000, quality);
-    test_pipeline (32, FALSE, 48000, 44100, quality);
+    test_pipeline ("S32", 44100, 48000, quality);
+    test_pipeline ("S32", 48000, 44100, quality);
 
-    test_pipeline (32, TRUE, 44100, 48000, quality);
-    test_pipeline (32, TRUE, 48000, 44100, quality);
+    test_pipeline ("F32", 44100, 48000, quality);
+    test_pipeline ("F32", 48000, 44100, quality);
 
-    test_pipeline (64, TRUE, 44100, 48000, quality);
-    test_pipeline (64, TRUE, 48000, 44100, quality);
+    test_pipeline ("F64", 44100, 48000, quality);
+    test_pipeline ("F64", 48000, 44100, quality);
   }
 }
 
@@ -732,8 +717,8 @@ GST_START_TEST (test_preference_passthrough)
   fail_unless (src != NULL);
   pad = gst_element_get_static_pad (src, "src");
   fail_unless (pad != NULL);
-  caps = gst_pad_get_negotiated_caps (pad);
-  GST_LOG ("negotiated audiotestsrc caps: %" GST_PTR_FORMAT, caps);
+  caps = gst_pad_get_current_caps (pad);
+  GST_LOG ("current audiotestsrc caps: %" GST_PTR_FORMAT, caps);
   fail_unless (caps != NULL);
   s = gst_caps_get_structure (caps, 0);
   fail_unless (gst_structure_get_int (s, "rate", &rate));
@@ -959,23 +944,31 @@ static gboolean is_zero_except_##ffttag (const GstFFT##ffttag##Complex *v, int e
   }                                                                                             \
   return TRUE;                                                                                  \
 }                                                                                               \
-static void compare_ffts_##ffttag (const GstBuffer *inbuffer, const GstBuffer *outbuffer)       \
+static void compare_ffts_##ffttag (GstBuffer *inbuffer, GstBuffer *outbuffer)                   \
 {                                                                                               \
-  int insamples = GST_BUFFER_SIZE (inbuffer) / sizeof(type) & ~1;                               \
-  int outsamples = GST_BUFFER_SIZE (outbuffer) / sizeof(type) & ~1;                             \
+  gsize insize, outsize;                                                                        \
+  gpointer indata, outdata;                                                                     \
+  int insamples, outsamples;                                                                    \
   gdouble inspot, outspot;                                                                      \
+  GstFFT##ffttag *inctx, *outctx;                                                               \
+  GstFFT##ffttag##Complex *in, *out;                                                            \
                                                                                                 \
-  GstFFT##ffttag *inctx = gst_fft_##ffttag2##_new (insamples, FALSE);                           \
-  GstFFT##ffttag##Complex *in = g_new (GstFFT##ffttag##Complex, insamples / 2 + 1);             \
-  GstFFT##ffttag *outctx = gst_fft_##ffttag2##_new (outsamples, FALSE);                         \
-  GstFFT##ffttag##Complex *out = g_new (GstFFT##ffttag##Complex, outsamples / 2 + 1);           \
+  indata = gst_buffer_map (inbuffer, &insize, NULL, GST_MAP_READ);                              \
+  outdata = gst_buffer_map (outbuffer, &outsize, NULL, GST_MAP_READWRITE);                      \
                                                                                                 \
-  gst_fft_##ffttag2##_window (inctx, (type*)GST_BUFFER_DATA (inbuffer),                         \
+  insamples = insize / sizeof(type) & ~1;                                                       \
+  outsamples = outsize / sizeof(type) & ~1;                                                     \
+  inctx = gst_fft_##ffttag2##_new (insamples, FALSE);                                           \
+  outctx = gst_fft_##ffttag2##_new (outsamples, FALSE);                                         \
+  in = g_new (GstFFT##ffttag##Complex, insamples / 2 + 1);                                      \
+  out = g_new (GstFFT##ffttag##Complex, outsamples / 2 + 1);                                    \
+                                                                                                \
+  gst_fft_##ffttag2##_window (inctx, (type*)indata,                                             \
       GST_FFT_WINDOW_HAMMING);                                                                  \
-  gst_fft_##ffttag2##_fft (inctx, (type*)GST_BUFFER_DATA (inbuffer), in);                       \
-  gst_fft_##ffttag2##_window (outctx, (type*)GST_BUFFER_DATA (outbuffer),                       \
+  gst_fft_##ffttag2##_fft (inctx, (type*)indata, in);                                           \
+  gst_fft_##ffttag2##_window (outctx, (type*)outdata,                                           \
       GST_FFT_WINDOW_HAMMING);                                                                  \
-  gst_fft_##ffttag2##_fft (outctx, (type*)GST_BUFFER_DATA (outbuffer), out);                    \
+  gst_fft_##ffttag2##_fft (outctx, (type*)outdata, out);                                        \
                                                                                                 \
   inspot = find_main_frequency_spot_##ffttag (in, insamples / 2 + 1);                           \
   outspot = find_main_frequency_spot_##ffttag (out, outsamples / 2 + 1);                        \
@@ -983,6 +976,9 @@ static void compare_ffts_##ffttag (const GstBuffer *inbuffer, const GstBuffer *o
   fail_unless (fabs (outspot - inspot) < 0.05);                                                 \
   fail_unless (is_zero_except_##ffttag (in, insamples / 2 + 1, inspot));                        \
   fail_unless (is_zero_except_##ffttag (out, outsamples / 2 + 1, outspot));                     \
+                                                                                                \
+  gst_buffer_unmap (inbuffer, indata, insize);                                                  \
+  gst_buffer_unmap (outbuffer, outdata, outsize);                                               \
                                                                                                 \
   gst_fft_##ffttag2##_free (inctx);                                                             \
   gst_fft_##ffttag2##_free (outctx);                                                            \
@@ -997,8 +993,9 @@ FFT_HELPERS (gint32, S32, s32, 2147483647.0);
 #define FILL_BUFFER(type, desc, value);                         \
   static void init_##type##_##desc (GstBuffer *buffer)          \
   {                                                             \
-    type *ptr = (type *) GST_BUFFER_DATA (buffer);              \
-    int i, nsamples = GST_BUFFER_SIZE (buffer) / sizeof (type); \
+    gsize size;                                                 \
+    type *ptr = gst_buffer_map (buffer, &size, NULL, GST_MAP_WRITE); \
+    int i, nsamples = size / sizeof (type);                     \
     for (i = 0; i < nsamples; ++i) {                            \
       *ptr++ = value;                                           \
     }                                                           \
@@ -1019,8 +1016,7 @@ FILL_BUFFER (gint32, sine2, (gint32) (2147483647 * sinf (i * 1.8f)));
 
 static void
 run_fft_pipeline (int inrate, int outrate, int quality, int width, gboolean fp,
-    void (*init) (GstBuffer *),
-    void (*compare_ffts) (const GstBuffer *, const GstBuffer *))
+    void (*init) (GstBuffer *), void (*compare_ffts) (GstBuffer *, GstBuffer *))
 {
   GstElement *audioresample;
   GstBuffer *inbuffer, *outbuffer;
@@ -1030,7 +1026,7 @@ run_fft_pipeline (int inrate, int outrate, int quality, int width, gboolean fp,
   audioresample = setup_audioresample (1, inrate, outrate, width, fp);
   fail_unless (audioresample != NULL);
   g_object_set (audioresample, "quality", quality, NULL);
-  caps = gst_pad_get_negotiated_caps (mysrcpad);
+  caps = gst_pad_get_current_caps (mysrcpad);
   fail_unless (gst_caps_is_fixed (caps));
 
   fail_unless (gst_element_set_state (audioresample,
@@ -1040,7 +1036,7 @@ run_fft_pipeline (int inrate, int outrate, int quality, int width, gboolean fp,
   inbuffer = gst_buffer_new_and_alloc (nsamples * width / 8);
   GST_BUFFER_DURATION (inbuffer) = GST_FRAMES_TO_CLOCK_TIME (nsamples, inrate);
   GST_BUFFER_TIMESTAMP (inbuffer) = 0;
-  gst_buffer_set_caps (inbuffer, caps);
+  gst_pad_set_caps (mysrcpad, caps);
   gst_buffer_ref (inbuffer);
 
   (*init) (inbuffer);

@@ -37,7 +37,7 @@ setup_appsrc (void)
 
   GST_DEBUG ("setup_appsrc");
   appsrc = gst_check_setup_element ("appsrc");
-  mysinkpad = gst_check_setup_sink_pad (appsrc, &sinktemplate, NULL);
+  mysinkpad = gst_check_setup_sink_pad (appsrc, &sinktemplate);
 
   gst_pad_set_active (mysinkpad, TRUE);
 
@@ -53,62 +53,6 @@ cleanup_appsrc (GstElement * appsrc)
   gst_check_teardown_element (appsrc);
 }
 
-
-/*
- * Pushes 4 buffers into appsrc and checks the caps on them on the output.
- *
- * Appsrc is configured with caps=null, so the buffers should have the
- * same caps that they were pushed with.
- *
- * The 4 buffers have NULL, SAMPLE_CAPS, NULL, SAMPLE_CAPS caps,
- * respectively.
- */
-GST_START_TEST (test_appsrc_null_caps)
-{
-  GstElement *src;
-  GstBuffer *buffer;
-  GList *iter;
-  GstCaps *caps;
-
-  src = setup_appsrc ();
-
-  g_object_set (src, "caps", NULL, NULL);
-  caps = gst_caps_from_string (SAMPLE_CAPS);
-
-  ASSERT_SET_STATE (src, GST_STATE_PLAYING, GST_STATE_CHANGE_SUCCESS);
-
-  buffer = gst_buffer_new_and_alloc (4);
-  fail_unless (gst_app_src_push_buffer (GST_APP_SRC (src),
-          buffer) == GST_FLOW_OK);
-
-  buffer = gst_buffer_new_and_alloc (4);
-  gst_buffer_set_caps (buffer, caps);
-  fail_unless (gst_app_src_push_buffer (GST_APP_SRC (src),
-          buffer) == GST_FLOW_OK);
-
-  fail_unless (gst_app_src_end_of_stream (GST_APP_SRC (src)) == GST_FLOW_OK);
-
-  /* Give some time to the appsrc loop to push the buffers */
-  g_usleep (G_USEC_PER_SEC * 3);
-
-  /* Check the output caps */
-  fail_unless (g_list_length (buffers) == 2);
-  iter = buffers;
-  buffer = (GstBuffer *) iter->data;
-  fail_unless (GST_BUFFER_CAPS (buffer) == NULL);
-
-  iter = g_list_next (iter);
-  buffer = (GstBuffer *) iter->data;
-  fail_unless (gst_caps_is_equal (GST_BUFFER_CAPS (buffer), caps));
-
-  ASSERT_SET_STATE (src, GST_STATE_NULL, GST_STATE_CHANGE_SUCCESS);
-  gst_caps_unref (caps);
-  cleanup_appsrc (src);
-}
-
-GST_END_TEST;
-
-
 /*
  * Pushes 4 buffers into appsrc and checks the caps on them on the output.
  *
@@ -122,7 +66,6 @@ GST_START_TEST (test_appsrc_non_null_caps)
 {
   GstElement *src;
   GstBuffer *buffer;
-  GList *iter;
   GstCaps *caps;
 
   src = setup_appsrc ();
@@ -137,7 +80,6 @@ GST_START_TEST (test_appsrc_non_null_caps)
           buffer) == GST_FLOW_OK);
 
   buffer = gst_buffer_new_and_alloc (4);
-  gst_buffer_set_caps (buffer, caps);
   fail_unless (gst_app_src_push_buffer (GST_APP_SRC (src),
           buffer) == GST_FLOW_OK);
 
@@ -146,7 +88,6 @@ GST_START_TEST (test_appsrc_non_null_caps)
           buffer) == GST_FLOW_OK);
 
   buffer = gst_buffer_new_and_alloc (4);
-  gst_buffer_set_caps (buffer, caps);
   fail_unless (gst_app_src_push_buffer (GST_APP_SRC (src),
           buffer) == GST_FLOW_OK);
 
@@ -157,11 +98,8 @@ GST_START_TEST (test_appsrc_non_null_caps)
 
   /* Check the output caps */
   fail_unless (g_list_length (buffers) == 4);
-  for (iter = buffers; iter; iter = g_list_next (iter)) {
-    GstBuffer *buf = (GstBuffer *) iter->data;
 
-    fail_unless (gst_caps_is_equal (GST_BUFFER_CAPS (buf), caps));
-  }
+  fail_unless (gst_caps_is_equal (gst_pad_get_current_caps (mysinkpad), caps));
 
   ASSERT_SET_STATE (src, GST_STATE_NULL, GST_STATE_CHANGE_SUCCESS);
   gst_caps_unref (caps);
@@ -177,7 +115,6 @@ appsrc_suite (void)
   Suite *s = suite_create ("appsrc");
   TCase *tc_chain = tcase_create ("general");
 
-  tcase_add_test (tc_chain, test_appsrc_null_caps);
   tcase_add_test (tc_chain, test_appsrc_non_null_caps);
 
   suite_add_tcase (s, tc_chain);

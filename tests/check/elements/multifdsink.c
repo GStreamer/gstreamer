@@ -41,7 +41,7 @@ setup_multifdsink (void)
 
   GST_DEBUG ("setup_multifdsink");
   multifdsink = gst_check_setup_element ("multifdsink");
-  mysrcpad = gst_check_setup_src_pad (multifdsink, &srctemplate, NULL);
+  mysrcpad = gst_check_setup_src_pad (multifdsink, &srctemplate);
 
   return multifdsink;
 }
@@ -88,7 +88,7 @@ GST_START_TEST (test_no_clients)
 
   caps = gst_caps_from_string ("application/x-gst-check");
   buffer = gst_buffer_new_and_alloc (4);
-  gst_buffer_set_caps (buffer, caps);
+  gst_pad_set_caps (mysrcpad, caps);
   gst_caps_unref (caps);
   fail_unless (gst_pad_push (mysrcpad, buffer) == GST_FLOW_OK);
 
@@ -119,7 +119,7 @@ GST_START_TEST (test_add_client)
   caps = gst_caps_from_string ("application/x-gst-check");
   GST_DEBUG ("Created test caps %p %" GST_PTR_FORMAT, caps, caps);
   buffer = gst_buffer_new_and_alloc (4);
-  gst_buffer_set_caps (buffer, caps);
+  gst_pad_set_caps (mysrcpad, caps);
   ASSERT_CAPS_REFCOUNT (caps, "caps", 2);
   gst_buffer_fill (buffer, 0, "dead", 4);
   fail_unless (gst_pad_push (mysrcpad, buffer) == GST_FLOW_OK);
@@ -206,11 +206,6 @@ gst_multifdsink_create_streamheader (const gchar * data1,
   gst_structure_set_value (structure, "streamheader", &array);
   g_value_unset (&array);
   ASSERT_CAPS_REFCOUNT (*caps, "streamheader caps", 1);
-
-  /* set our streamheadery caps on the buffers */
-  gst_buffer_set_caps (*hbuf1, *caps);
-  gst_buffer_set_caps (*hbuf2, *caps);
-  ASSERT_CAPS_REFCOUNT (*caps, "streamheader caps", 3);
 
   /* we want to keep them around for the tests */
   gst_buffer_ref (*hbuf1);
@@ -459,6 +454,7 @@ GST_START_TEST (test_burst_client_bytes)
   ASSERT_SET_STATE (sink, GST_STATE_PLAYING, GST_STATE_CHANGE_ASYNC);
 
   caps = gst_caps_from_string ("application/x-gst-check");
+  gst_pad_set_caps (mysrcpad, caps);
   GST_DEBUG ("Created test caps %p %" GST_PTR_FORMAT, caps, caps);
 
   /* push buffers in, 9 * 16 bytes = 144 bytes */
@@ -466,7 +462,6 @@ GST_START_TEST (test_burst_client_bytes)
     gchar *data;
 
     buffer = gst_buffer_new_and_alloc (16);
-    gst_buffer_set_caps (buffer, caps);
 
     /* copy some id */
     data = gst_buffer_map (buffer, NULL, NULL, GST_MAP_WRITE);
@@ -492,7 +487,6 @@ GST_START_TEST (test_burst_client_bytes)
     gchar *data;
 
     buffer = gst_buffer_new_and_alloc (16);
-    gst_buffer_set_caps (buffer, caps);
 
     /* copy some id */
     data = gst_buffer_map (buffer, NULL, NULL, GST_MAP_WRITE);
@@ -575,13 +569,13 @@ GST_START_TEST (test_burst_client_bytes_keyframe)
 
   caps = gst_caps_from_string ("application/x-gst-check");
   GST_DEBUG ("Created test caps %p %" GST_PTR_FORMAT, caps, caps);
+  gst_pad_set_caps (mysrcpad, caps);
 
   /* push buffers in, 9 * 16 bytes = 144 bytes */
   for (i = 0; i < 9; i++) {
     gchar *data;
 
     buffer = gst_buffer_new_and_alloc (16);
-    gst_buffer_set_caps (buffer, caps);
 
     /* mark most buffers as delta */
     if (i != 0 && i != 4 && i != 8)
@@ -611,7 +605,6 @@ GST_START_TEST (test_burst_client_bytes_keyframe)
     gchar *data;
 
     buffer = gst_buffer_new_and_alloc (16);
-    gst_buffer_set_caps (buffer, caps);
     GST_BUFFER_FLAG_SET (buffer, GST_BUFFER_FLAG_DELTA_UNIT);
 
     /* copy some id */
@@ -691,6 +684,7 @@ GST_START_TEST (test_burst_client_bytes_with_keyframe)
   ASSERT_SET_STATE (sink, GST_STATE_PLAYING, GST_STATE_CHANGE_ASYNC);
 
   caps = gst_caps_from_string ("application/x-gst-check");
+  gst_pad_set_caps (mysrcpad, caps);
   GST_DEBUG ("Created test caps %p %" GST_PTR_FORMAT, caps, caps);
 
   /* push buffers in, 9 * 16 bytes = 144 bytes */
@@ -698,7 +692,6 @@ GST_START_TEST (test_burst_client_bytes_with_keyframe)
     gchar *data;
 
     buffer = gst_buffer_new_and_alloc (16);
-    gst_buffer_set_caps (buffer, caps);
 
     /* mark most buffers as delta */
     if (i != 0 && i != 4 && i != 8)
@@ -728,7 +721,6 @@ GST_START_TEST (test_burst_client_bytes_with_keyframe)
     gchar *data;
 
     buffer = gst_buffer_new_and_alloc (16);
-    gst_buffer_set_caps (buffer, caps);
     GST_BUFFER_FLAG_SET (buffer, GST_BUFFER_FLAG_DELTA_UNIT);
 
     /* copy some id */
@@ -806,6 +798,7 @@ GST_START_TEST (test_client_next_keyframe)
   ASSERT_SET_STATE (sink, GST_STATE_PLAYING, GST_STATE_CHANGE_ASYNC);
 
   caps = gst_caps_from_string ("application/x-gst-check");
+  gst_pad_set_caps (mysrcpad, caps);
   GST_DEBUG ("Created test caps %p %" GST_PTR_FORMAT, caps, caps);
 
   /* now add our client */
@@ -816,7 +809,6 @@ GST_START_TEST (test_client_next_keyframe)
     gchar *data;
 
     buffer = gst_buffer_new_and_alloc (16);
-    gst_buffer_set_caps (buffer, caps);
 
     /* copy some id */
     data = gst_buffer_map (buffer, NULL, NULL, GST_MAP_WRITE);

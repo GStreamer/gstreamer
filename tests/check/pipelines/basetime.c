@@ -41,9 +41,10 @@ break_mainloop (gpointer data)
   return FALSE;
 }
 
-static gboolean
-buffer_probe_cb (GstPad * pad, GstBuffer * buffer)
+static GstPadProbeReturn
+buffer_probe_cb (GstPad * pad, GstPadProbeInfo * info, gpointer user_data)
 {
+  GstBuffer *buffer = GST_PAD_PROBE_INFO_BUFFER (info);
   GstClockTime new_ts = GST_BUFFER_TIMESTAMP (buffer);
 
   GST_LOG ("ts = %" GST_TIME_FORMAT, GST_TIME_ARGS (new_ts));
@@ -90,7 +91,8 @@ GST_START_TEST (test_basetime_calculation)
   pad = gst_element_get_static_pad (asink, "sink");
   fail_unless (pad != NULL, "Could not get pad out of sink");
 
-  gst_pad_add_buffer_probe (pad, G_CALLBACK (buffer_probe_cb), NULL);
+  gst_pad_add_probe (pad, GST_PAD_PROBE_TYPE_BUFFER, buffer_probe_cb, NULL,
+      NULL);
   gst_element_set_locked_state (bin, TRUE);
 
   /* Run main pipeline first */

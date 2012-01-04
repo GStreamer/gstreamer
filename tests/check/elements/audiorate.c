@@ -23,6 +23,7 @@
 #endif
 
 #include <gst/check/gstcheck.h>
+#include <gst/audio/audio.h>
 
 /* helper element to insert additional buffers overlapping with previous ones */
 static gdouble injector_inject_probability = 0.0;
@@ -64,7 +65,7 @@ test_injector_class_init (TestInjectorClass * klass)
 }
 
 static GstFlowReturn
-test_injector_chain (GstPad * pad, GstBuffer * buf)
+test_injector_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
 {
   GstFlowReturn ret;
   GstPad *srcpad;
@@ -141,29 +142,30 @@ test_injector_init (TestInjector * injector)
 
   pad = gst_pad_new_from_static_template (&sink_template, "sink");
   gst_pad_set_chain_function (pad, test_injector_chain);
-  gst_pad_set_getcaps_function (pad, gst_pad_proxy_getcaps);
-  gst_pad_set_setcaps_function (pad, gst_pad_proxy_setcaps);
+  GST_PAD_SET_PROXY_CAPS (pad);
   gst_element_add_pad (GST_ELEMENT (injector), pad);
 
   pad = gst_pad_new_from_static_template (&src_template, "src");
-  gst_pad_set_getcaps_function (pad, gst_pad_proxy_getcaps);
-  gst_pad_set_setcaps_function (pad, gst_pad_proxy_setcaps);
+  GST_PAD_SET_PROXY_CAPS (pad);
   gst_element_add_pad (GST_ELEMENT (injector), pad);
 }
 
-static gboolean
-probe_cb (GstPad * pad, GstBuffer * buf, gdouble * drop_probability)
+static GstPadProbeReturn
+probe_cb (GstPad * pad, GstPadProbeInfo * info, gpointer user_data)
 {
+  GstBuffer *buf = GST_PAD_PROBE_INFO_BUFFER (info);
+  gdouble *drop_probability = user_data;
+
   if (g_random_double () < *drop_probability) {
     GST_LOG ("dropping buffer [t=%" GST_TIME_FORMAT "-%" GST_TIME_FORMAT "], "
         "offset=%" G_GINT64_FORMAT ", offset_end=%" G_GINT64_FORMAT,
         GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buf)),
         GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buf) + GST_BUFFER_DURATION (buf)),
         GST_BUFFER_OFFSET (buf), GST_BUFFER_OFFSET_END (buf));
-    return FALSE;               /* drop buffer */
+    return GST_PAD_PROBE_DROP;  /* drop buffer */
   }
 
-  return TRUE;                  /* don't drop buffer */
+  return GST_PAD_PROBE_OK;      /* don't drop buffer */
 }
 
 static void
@@ -183,6 +185,15 @@ do_perfect_stream_test (guint rate, const gchar * format,
   GList *l, *bufs = NULL;
   GstClockTime next_time = GST_CLOCK_TIME_NONE;
   guint64 next_offset = GST_BUFFER_OFFSET_NONE;
+  GstAudioFormat fmt;
+  const GstAudioFormatInfo *finfo;
+  gint width;
+
+  fmt = gst_audio_format_from_string (format);
+  g_assert (format != GST_AUDIO_FORMAT_UNKNOWN);
+
+  finfo = gst_audio_format_get_info (fmt);
+  width = GST_AUDIO_FORMAT_INFO_WIDTH (finfo);
 
   caps = gst_caps_new_simple ("audio/x-raw", "rate", G_TYPE_INT,
       rate, "format", G_TYPE_STRING, format, NULL);
@@ -192,7 +203,6 @@ do_perfect_stream_test (guint rate, const gchar * format,
 
   g_assert (drop_probability >= 0.0 && drop_probability <= 1.0);
   g_assert (inject_probability >= 0.0 && inject_probability <= 1.0);
-  g_assert (width > 0 && (width % 8) == 0);
 
   pipe = gst_pipeline_new ("pipeline");
   fail_unless (pipe != NULL);
@@ -216,7 +226,8 @@ do_perfect_stream_test (guint rate, const gchar * format,
 
   srcpad = gst_element_get_static_pad (injector, "src");
   fail_unless (srcpad != NULL);
-  gst_pad_add_buffer_probe (srcpad, G_CALLBACK (probe_cb), &drop_probability);
+  gst_pad_add_probe (srcpad, GST_PAD_PROBE_TYPE_BUFFER, probe_cb,
+      &drop_probability, NULL);
   gst_object_unref (srcpad);
 
   audiorate = gst_element_factory_make ("audiorate", "audiorate");
@@ -401,8 +412,8 @@ GST_START_TEST (test_large_discont)
       "format", G_TYPE_STRING, GST_AUDIO_NE (F32),
       "channels", G_TYPE_INT, 1, "rate", G_TYPE_INT, 44100, NULL);
 
-  srcpad = gst_check_setup_src_pad (audiorate, &srctemplate, caps);
-  sinkpad = gst_check_setup_sink_pad (audiorate, &sinktemplate, caps);
+  srcpad = gst_check_setup_src_pad (audiorate, &srctemplate);
+  sinkpad = gst_check_setup_sink_pad (audiorate, &sinktemplate);
 
   gst_pad_set_active (srcpad, TRUE);
   gst_pad_set_active (sinkpad, TRUE);
@@ -412,14 +423,13 @@ GST_START_TEST (test_large_discont)
       "failed to set audiorate playing");
 
   buf = gst_buffer_new_and_alloc (4);
-  gst_buffer_set_caps (buf, caps);
+  gst_pad_set_caps (srcpad, caps);
   GST_BUFFER_TIMESTAMP (buf) = 0;
   gst_pad_push (srcpad, buf);
 
   fail_unless_equals_int (g_list_length (buffers), 1);
 
   buf = gst_buffer_new_and_alloc (4);
-  gst_buffer_set_caps (buf, caps);
   GST_BUFFER_TIMESTAMP (buf) = 2 * GST_SECOND;
   gst_pad_push (srcpad, buf);
   /* Now we should have 3 more buffers: the one we injected, plus _two_ filler

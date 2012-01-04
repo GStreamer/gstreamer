@@ -128,18 +128,7 @@ check_PROGRAMS = \
 	libs/xmpwriter \
 	$(cxx_checks) \
 	$(check_orc) \
-	pipelines/simple-launch-lines
-
-# TORTURE_TO_FIX = \
-#       elements/adder
-
-# videoconvert takes too long, so disabled for now
-VALGRIND_TO_FIX = \
-	elements/videoconvert \
-	libs/video
-
-# FIXME 0.11: these tests don't even build at the moment
-ZERO_11_TO_PORT = \
+	pipelines/simple-launch-lines \
 	pipelines/streamheader \
 	pipelines/basetime \
 	pipelines/capsfilter-renegotiation \
@@ -158,14 +147,19 @@ ZERO_11_TO_PORT = \
 	elements/videoscale         \
 	elements/videotestsrc       \
 	elements/volume
-
-# FIXME 0.11: these tests don't pass at the moment
-ZERO_11_TO_FIX = \
 	elements/adder	       \
 	$(check_theora)
 
+# TORTURE_TO_FIX = \
+#       elements/adder
+
+# videoconvert takes too long, so disabled for now
+VALGRIND_TO_FIX = \
+	elements/videoconvert \
+	libs/video
+
 # these tests don't even pass
-noinst_PROGRAMS = $(check_libvisual) $(ZERO_11_TO_FIX)
+noinst_PROGRAMS = $(check_libvisual)
 
 noinst_HEADERS = \
 	libs/struct_arm.h     \
@@ -351,7 +345,11 @@ elements_audioconvert_LDADD = \
 	$(GST_BASE_LIBS) \
 	$(LDADD)
 
-elements_audiorate_LDADD =  $(LDADD)
+elements_audiorate_LDADD = \
+	$(top_builddir)/gst-libs/gst/audio/libgstaudio-@GST_MAJORMINOR@.la \
+	$(top_builddir)/gst-libs/gst/interfaces/libgstinterfaces-@GST_MAJORMINOR@.la \
+	$(GST_BASE_LIBS) \
+	$(LDADD)
 elements_audiorate_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(CFLAGS) $(AM_CFLAGS)
 
 elements_libvisual_LDADD =  $(LDADD)
@@ -391,7 +389,7 @@ elements_textoverlay_LDADD = $(GST_BASE_LIBS) $(LDADD)
 elements_textoverlay_CFLAGS = $(GST_BASE_CFLAGS) $(AM_CFLAGS)
 
 elements_volume_LDADD = \
-	$(top_builddir)/gst-libs/gst/interfaces/libgstinterfaces-@GST_MAJORMINOR@.la \
+	$(top_builddir)/gst-libs/gst/audio/libgstaudio-@GST_MAJORMINOR@.la \
 	$(GST_CONTROLLER_LIBS) \
 	$(GST_BASE_LIBS) \
 	$(LDADD)

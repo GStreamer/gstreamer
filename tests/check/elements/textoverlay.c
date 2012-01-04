@@ -139,7 +139,7 @@ setup_textoverlay (gboolean video_only_no_text)
 
   GST_DEBUG ("setup_textoverlay");
   textoverlay = gst_check_setup_element ("textoverlay");
-  mysinkpad = gst_check_setup_sink_pad (textoverlay, &sinktemplate, NULL);
+  mysinkpad = gst_check_setup_sink_pad (textoverlay, &sinktemplate);
   myvideosrcpad =
       notgst_check_setup_src_pad2 (textoverlay, &video_srctemplate, NULL,
       "video_sink");
@@ -160,7 +160,7 @@ setup_textoverlay (gboolean video_only_no_text)
 }
 
 static gboolean
-buffer_is_all_black (GstBuffer * buf)
+buffer_is_all_black (GstBuffer * buf, GstCaps * caps)
 {
   GstStructure *s;
   gint x, y, w, h;
@@ -168,8 +168,8 @@ buffer_is_all_black (GstBuffer * buf)
   gsize size;
 
   fail_unless (buf != NULL);
-  fail_unless (GST_BUFFER_CAPS (buf) != NULL);
-  s = gst_caps_get_structure (GST_BUFFER_CAPS (buf), 0);
+  fail_unless (caps != NULL);
+  s = gst_caps_get_structure (caps, 0);
   fail_unless (s != NULL);
   fail_unless (gst_structure_get_int (s, "width", &w));
   fail_unless (gst_structure_get_int (s, "height", &h));
@@ -190,26 +190,34 @@ buffer_is_all_black (GstBuffer * buf)
   return TRUE;
 }
 
-static GstBuffer *
-create_black_buffer (const gchar * caps_string)
+static GstCaps *
+create_video_caps (const gchar * caps_string)
 {
-  GstStructure *s;
-  GstBuffer *buffer;
   GstCaps *caps;
-  gint w, h, size;
-  guint8 *data;
-
-  fail_unless (caps_string != NULL);
 
   caps = gst_caps_from_string (caps_string);
   fail_unless (caps != NULL);
   fail_unless (gst_caps_is_fixed (caps));
+
+  return caps;
+}
+
+static GstBuffer *
+create_black_buffer (GstCaps * caps)
+{
+  GstStructure *s;
+  GstBuffer *buffer;
+  gint w, h, size;
+  guint8 *data;
+
+  fail_unless (caps != NULL);
 
   s = gst_caps_get_structure (caps, 0);
   fail_unless (gst_structure_get_int (s, "width", &w));
   fail_unless (gst_structure_get_int (s, "height", &h));
 
   GST_LOG ("creating buffer (%dx%d)", w, h);
+
   size = I420_SIZE (w, h);
   buffer = gst_buffer_new_and_alloc (size);
 
@@ -219,11 +227,8 @@ create_black_buffer (const gchar * caps_string)
   memset (data, 0, size);
   gst_buffer_unmap (buffer, data, size);
 
-  gst_buffer_set_caps (buffer, caps);
-  gst_caps_unref (caps);
-
   /* double check to make sure it's been created right */
-  fail_unless (buffer_is_all_black (buffer));
+  fail_unless (buffer_is_all_black (buffer, caps));
 
   return buffer;
 }
@@ -232,7 +237,6 @@ static GstBuffer *
 create_text_buffer (const gchar * txt, GstClockTime ts, GstClockTime duration)
 {
   GstBuffer *buffer;
-  GstCaps *caps;
   guint txt_len;
 
   fail_unless (txt != NULL);
@@ -244,10 +248,6 @@ create_text_buffer (const gchar * txt, GstClockTime ts, GstClockTime duration)
 
   GST_BUFFER_TIMESTAMP (buffer) = ts;
   GST_BUFFER_DURATION (buffer) = duration;
-
-  caps = gst_caps_new_simple ("text/plain", NULL);
-  gst_buffer_set_caps (buffer, caps);
-  gst_caps_unref (caps);
 
   return buffer;
 }
@@ -276,14 +276,20 @@ cleanup_textoverlay (GstElement * textoverlay)
 GST_START_TEST (test_video_passthrough)
 {
   GstElement *textoverlay;
-  GstBuffer *inbuffer;
+  GstBuffer *inbuffer, *outbuffer;
+  GstCaps *incaps, *outcaps;
+  GstSegment segment;
 
   textoverlay = setup_textoverlay (TRUE);
   fail_unless (gst_element_set_state (textoverlay,
           GST_STATE_PLAYING) == GST_STATE_CHANGE_SUCCESS,
       "could not set to playing");
 
-  inbuffer = create_black_buffer (VIDEO_CAPS_STRING);
+  incaps = create_video_caps (VIDEO_CAPS_STRING);
+  gst_pad_set_caps (myvideosrcpad, incaps);
+  inbuffer = create_black_buffer (incaps);
+  gst_caps_unref (incaps);
+
   ASSERT_BUFFER_REFCOUNT (inbuffer, "inbuffer", 1);
 
   /* ========== (1) video buffer without timestamp => should be dropped ==== */
@@ -315,8 +321,11 @@ GST_START_TEST (test_video_passthrough)
   /* text pad is not linked, timestamp is in segment, no static text to
    * render, should have gone through right away without modification */
   fail_unless_equals_int (g_list_length (buffers), 1);
-  fail_unless (GST_BUFFER_CAST (buffers->data) == inbuffer);
-  fail_unless (buffer_is_all_black (inbuffer));
+  outbuffer = GST_BUFFER_CAST (buffers->data);
+  fail_unless (outbuffer == inbuffer);
+  outcaps = gst_pad_get_current_caps (mysinkpad);
+  fail_unless (buffer_is_all_black (outbuffer, outcaps));
+  gst_caps_unref (outcaps);
   ASSERT_BUFFER_REFCOUNT (inbuffer, "inbuffer", 2);
 
   /* and clean up */
@@ -328,9 +337,11 @@ GST_START_TEST (test_video_passthrough)
   /* ========== (3) buffer with 0 timestamp and no duration, with the
    *                segment starting from 1sec => should be discarded */
 
-  gst_pad_push_event (myvideosrcpad,
-      gst_event_new_new_segment (FALSE, 1.0, GST_FORMAT_TIME, 1 * GST_SECOND,
-          -1, 0));
+  gst_segment_init (&segment, GST_FORMAT_TIME);
+  segment.start = 1 * GST_SECOND;
+  segment.stop = -1;
+  segment.time = 0;
+  gst_pad_push_event (myvideosrcpad, gst_event_new_segment (&segment));
 
   GST_BUFFER_TIMESTAMP (inbuffer) = 0;
   GST_BUFFER_DURATION (inbuffer) = GST_CLOCK_TIME_NONE;
@@ -349,9 +360,7 @@ GST_START_TEST (test_video_passthrough)
   /* ========== (4) buffer with 0 timestamp and small defined duration, with
    *                segment starting from 1sec => should be discarded */
 
-  gst_pad_push_event (myvideosrcpad,
-      gst_event_new_new_segment (FALSE, 1.0, 1 * GST_FORMAT_TIME, GST_SECOND,
-          -1, 0));
+  gst_pad_push_event (myvideosrcpad, gst_event_new_segment (&segment));
 
   GST_BUFFER_DURATION (inbuffer) = GST_SECOND / 10;
 
@@ -369,9 +378,7 @@ GST_START_TEST (test_video_passthrough)
   /* ========== (5) buffer partially overlapping into the segment => should
    *                be pushed through, but with adjusted stamp values */
 
-  gst_pad_push_event (myvideosrcpad,
-      gst_event_new_new_segment (FALSE, 1.0, 1 * GST_FORMAT_TIME, GST_SECOND,
-          -1, 0));
+  gst_pad_push_event (myvideosrcpad, gst_event_new_segment (&segment));
 
   GST_BUFFER_TIMESTAMP (inbuffer) = GST_SECOND / 4;
   GST_BUFFER_DURATION (inbuffer) = GST_SECOND;
@@ -386,12 +393,13 @@ GST_START_TEST (test_video_passthrough)
   /* should be a new buffer for the stamp fix-up */
   ASSERT_BUFFER_REFCOUNT (inbuffer, "inbuffer", 1);
   fail_unless_equals_int (g_list_length (buffers), 1);
-  fail_unless (GST_BUFFER_CAST (buffers->data) != inbuffer);
-  fail_unless (GST_BUFFER_TIMESTAMP (GST_BUFFER_CAST (buffers->data)) ==
-      GST_SECOND);
-  fail_unless (GST_BUFFER_DURATION (GST_BUFFER_CAST (buffers->data)) ==
-      (GST_SECOND / 4));
-  fail_unless (buffer_is_all_black (GST_BUFFER_CAST (buffers->data)));
+  outbuffer = GST_BUFFER_CAST (buffers->data);
+  outcaps = gst_pad_get_current_caps (mysinkpad);
+  fail_unless (outbuffer != inbuffer);
+  fail_unless (GST_BUFFER_TIMESTAMP (outbuffer) == GST_SECOND);
+  fail_unless (GST_BUFFER_DURATION (outbuffer) == (GST_SECOND / 4));
+  fail_unless (buffer_is_all_black (outbuffer, outcaps));
+  gst_caps_unref (outcaps);
   /* and clean up */
   g_list_foreach (buffers, (GFunc) gst_mini_object_unref, NULL);
   g_list_free (buffers);
@@ -408,7 +416,8 @@ GST_END_TEST;
 GST_START_TEST (test_video_render_static_text)
 {
   GstElement *textoverlay;
-  GstBuffer *inbuffer;
+  GstBuffer *inbuffer, *outbuffer;
+  GstCaps *incaps, *outcaps;
 
   textoverlay = setup_textoverlay (TRUE);
 
@@ -419,7 +428,10 @@ GST_START_TEST (test_video_render_static_text)
           GST_STATE_PLAYING) == GST_STATE_CHANGE_SUCCESS,
       "could not set to playing");
 
-  inbuffer = create_black_buffer (VIDEO_CAPS_STRING);
+  incaps = create_video_caps (VIDEO_CAPS_STRING);
+  gst_pad_set_caps (myvideosrcpad, incaps);
+  inbuffer = create_black_buffer (incaps);
+  gst_caps_unref (incaps);
   ASSERT_BUFFER_REFCOUNT (inbuffer, "inbuffer", 1);
 
   GST_BUFFER_TIMESTAMP (inbuffer) = 0;
@@ -435,14 +447,16 @@ GST_START_TEST (test_video_render_static_text)
   /* should have been dropped in favour of a new writable buffer */
   ASSERT_BUFFER_REFCOUNT (inbuffer, "inbuffer", 1);
   fail_unless_equals_int (g_list_length (buffers), 1);
-  fail_unless (GST_BUFFER_CAST (buffers->data) != inbuffer);
+  outbuffer = GST_BUFFER_CAST (buffers->data);
+  outcaps = gst_pad_get_current_caps (mysinkpad);
+  fail_unless (outbuffer != inbuffer);
 
   /* there should be text rendered */
-  fail_unless (buffer_is_all_black (GST_BUFFER_CAST (buffers->data)) == FALSE);
+  fail_unless (buffer_is_all_black (outbuffer, outcaps) == FALSE);
+  gst_caps_unref (outcaps);
 
-  fail_unless (GST_BUFFER_TIMESTAMP (GST_BUFFER_CAST (buffers->data)) == 0);
-  fail_unless (GST_BUFFER_DURATION (GST_BUFFER_CAST (buffers->data)) ==
-      (GST_SECOND / 10));
+  fail_unless (GST_BUFFER_TIMESTAMP (outbuffer) == 0);
+  fail_unless (GST_BUFFER_DURATION (outbuffer) == (GST_SECOND / 10));
 
   /* and clean up */
   g_list_foreach (buffers, (GFunc) gst_mini_object_unref, NULL);
@@ -460,14 +474,18 @@ GST_END_TEST;
 static gpointer
 test_video_waits_for_text_send_text_newsegment_thread (gpointer data)
 {
+  GstSegment segment;
+
   g_usleep (1 * G_USEC_PER_SEC);
 
   /* send an update newsegment; the video buffer should now be pushed through 
    * even though there is no text buffer queued at the moment */
   GST_INFO ("Sending newsegment update on text pad");
-  gst_pad_push_event (mytextsrcpad,
-      gst_event_new_new_segment (TRUE, 1.0, GST_FORMAT_TIME,
-          35 * GST_SECOND, -1, 35 * GST_SECOND));
+  gst_segment_init (&segment, GST_FORMAT_TIME);
+  segment.base = 35 * GST_SECOND;
+  segment.start = 35 * GST_SECOND;
+  segment.time = 35 * GST_SECOND;
+  gst_pad_push_event (mytextsrcpad, gst_event_new_segment (&segment));
 
   return NULL;
 }
@@ -489,7 +507,8 @@ test_video_waits_for_text_shutdown_element (gpointer data)
 GST_START_TEST (test_video_waits_for_text)
 {
   GstElement *textoverlay;
-  GstBuffer *inbuffer, *tbuf;
+  GstBuffer *inbuffer, *outbuffer, *tbuf;
+  GstCaps *caps, *incaps, *outcaps;
   GThread *thread;
 
   textoverlay = setup_textoverlay (FALSE);
@@ -497,6 +516,10 @@ GST_START_TEST (test_video_waits_for_text)
   fail_unless (gst_element_set_state (textoverlay,
           GST_STATE_PLAYING) == GST_STATE_CHANGE_SUCCESS,
       "could not set to playing");
+
+  caps = gst_caps_new_empty_simple ("text/plain");
+  gst_pad_set_caps (mytextsrcpad, caps);
+  gst_caps_unref (caps);
 
   tbuf = create_text_buffer ("XLX", 1 * GST_SECOND, 5 * GST_SECOND);
   gst_buffer_ref (tbuf);
@@ -509,7 +532,10 @@ GST_START_TEST (test_video_waits_for_text)
    * newsegment event that indicates it's not needed any longer */
   fail_unless_equals_int (g_list_length (buffers), 0);
 
-  inbuffer = create_black_buffer (VIDEO_CAPS_STRING);
+  incaps = create_video_caps (VIDEO_CAPS_STRING);
+  gst_pad_set_caps (myvideosrcpad, incaps);
+  inbuffer = create_black_buffer (incaps);
+  gst_caps_unref (incaps);
   ASSERT_BUFFER_REFCOUNT (inbuffer, "inbuffer", 1);
 
   GST_BUFFER_TIMESTAMP (inbuffer) = 0;
@@ -530,7 +556,10 @@ GST_START_TEST (test_video_waits_for_text)
   ASSERT_BUFFER_REFCOUNT (tbuf, "tbuf", 2);
 
   /* there should be no text rendered */
-  fail_unless (buffer_is_all_black (GST_BUFFER_CAST (buffers->data)));
+  outbuffer = GST_BUFFER_CAST (buffers->data);
+  outcaps = gst_pad_get_current_caps (mysinkpad);
+  fail_unless (buffer_is_all_black (outbuffer, outcaps));
+  gst_caps_unref (outcaps);
 
   /* now, another video buffer */
   inbuffer = gst_buffer_make_writable (inbuffer);
@@ -549,8 +578,10 @@ GST_START_TEST (test_video_waits_for_text)
   ASSERT_BUFFER_REFCOUNT (tbuf, "tbuf", 2);
 
   /* there should be text rendered */
-  fail_unless (buffer_is_all_black (GST_BUFFER_CAST (buffers->next->data)) ==
-      FALSE);
+  outbuffer = GST_BUFFER_CAST (buffers->next->data);
+  outcaps = gst_pad_get_current_caps (mysinkpad);
+  fail_unless (buffer_is_all_black (outbuffer, outcaps) == FALSE);
+  gst_caps_unref (outcaps);
 
   /* a third video buffer */
   inbuffer = gst_buffer_make_writable (inbuffer);
@@ -577,8 +608,10 @@ GST_START_TEST (test_video_waits_for_text)
   fail_unless_equals_int (g_list_length (buffers), 3);
 
   /* ... and there should not be any text rendered on it */
-  fail_unless (buffer_is_all_black (GST_BUFFER_CAST (buffers->next->
-              next->data)));
+  outbuffer = GST_BUFFER_CAST (buffers->next->next->data);
+  outcaps = gst_pad_get_current_caps (mysinkpad);
+  fail_unless (buffer_is_all_black (outbuffer, outcaps));
+  gst_caps_unref (outcaps);
 
   /* a fourth video buffer */
   inbuffer = gst_buffer_make_writable (inbuffer);
@@ -619,11 +652,15 @@ test_render_continuity_push_video_buffers_thread (gpointer data)
 {
   /* push video buffers at 1fps */
   guint frame_count = 0;
+  GstCaps *vcaps;
+
+  vcaps = create_video_caps (VIDEO_CAPS_STRING);
+  gst_pad_set_caps (myvideosrcpad, vcaps);
 
   do {
     GstBuffer *vbuf;
 
-    vbuf = create_black_buffer (VIDEO_CAPS_STRING);
+    vbuf = create_black_buffer (vcaps);
     ASSERT_BUFFER_REFCOUNT (vbuf, "vbuf", 1);
 
     GST_BUFFER_TIMESTAMP (vbuf) = frame_count * GST_SECOND;
@@ -637,15 +674,17 @@ test_render_continuity_push_video_buffers_thread (gpointer data)
     ++frame_count;
   } while (frame_count < 15);
 
+  gst_caps_unref (vcaps);
+
   return NULL;
 }
-
 
 GST_START_TEST (test_render_continuity)
 {
   GThread *thread;
   GstElement *textoverlay;
   GstBuffer *tbuf;
+  GstCaps *caps, *outcaps;
 
   textoverlay = setup_textoverlay (FALSE);
 
@@ -656,6 +695,10 @@ GST_START_TEST (test_render_continuity)
   thread = g_thread_create (test_render_continuity_push_video_buffers_thread,
       NULL, FALSE, NULL);
   fail_unless (thread != NULL);
+
+  caps = gst_caps_new_empty_simple ("text/plain");
+  gst_pad_set_caps (mytextsrcpad, caps);
+  gst_caps_unref (caps);
 
   tbuf = create_text_buffer ("XLX", 2 * GST_SECOND, GST_SECOND);
   GST_LOG ("pushing text buffer @ %" GST_TIME_FORMAT,
@@ -695,39 +738,46 @@ GST_START_TEST (test_render_continuity)
   /* we should have 15 buffers each with one second length now */
   fail_unless_equals_int (g_list_length (buffers), 15);
 
+  outcaps = gst_pad_get_current_caps (mysinkpad);
+
   /* buffers 0 + 1 should be black */
-  fail_unless (buffer_is_all_black (GST_BUFFER (g_list_nth_data (buffers, 0))));
-  fail_unless (buffer_is_all_black (GST_BUFFER (g_list_nth_data (buffers, 1))));
+  fail_unless (buffer_is_all_black (GST_BUFFER (g_list_nth_data (buffers, 0)),
+          outcaps));
+  fail_unless (buffer_is_all_black (GST_BUFFER (g_list_nth_data (buffers, 1)),
+          outcaps));
 
   /* buffers 2 - 4 should have text */
   fail_unless (buffer_is_all_black (GST_BUFFER (g_list_nth_data (buffers,
-                  2))) == FALSE);
+                  2)), outcaps) == FALSE);
   fail_unless (buffer_is_all_black (GST_BUFFER (g_list_nth_data (buffers,
-                  3))) == FALSE);
+                  3)), outcaps) == FALSE);
   fail_unless (buffer_is_all_black (GST_BUFFER (g_list_nth_data (buffers,
-                  4))) == FALSE);
+                  4)), outcaps) == FALSE);
 
   /* buffers 5 + 6 should be black */
-  fail_unless (buffer_is_all_black (GST_BUFFER (g_list_nth_data (buffers, 5))));
-  fail_unless (buffer_is_all_black (GST_BUFFER (g_list_nth_data (buffers, 6))));
+  fail_unless (buffer_is_all_black (GST_BUFFER (g_list_nth_data (buffers, 5)),
+          outcaps));
+  fail_unless (buffer_is_all_black (GST_BUFFER (g_list_nth_data (buffers, 6)),
+          outcaps));
 
   /* buffers 7 - last should have text */
   fail_unless (buffer_is_all_black (GST_BUFFER (g_list_nth_data (buffers,
-                  7))) == FALSE);
+                  7)), outcaps) == FALSE);
   fail_unless (buffer_is_all_black (GST_BUFFER (g_list_nth_data (buffers,
-                  8))) == FALSE);
+                  8)), outcaps) == FALSE);
   fail_unless (buffer_is_all_black (GST_BUFFER (g_list_nth_data (buffers,
-                  9))) == FALSE);
+                  9)), outcaps) == FALSE);
   fail_unless (buffer_is_all_black (GST_BUFFER (g_list_nth_data (buffers,
-                  10))) == FALSE);
+                  10)), outcaps) == FALSE);
   fail_unless (buffer_is_all_black (GST_BUFFER (g_list_nth_data (buffers,
-                  11))) == FALSE);
+                  11)), outcaps) == FALSE);
   fail_unless (buffer_is_all_black (GST_BUFFER (g_list_nth_data (buffers,
-                  12))) == FALSE);
+                  12)), outcaps) == FALSE);
   fail_unless (buffer_is_all_black (GST_BUFFER (g_list_nth_data (buffers,
-                  13))) == FALSE);
+                  13)), outcaps) == FALSE);
   fail_unless (buffer_is_all_black (GST_BUFFER (g_list_nth_data (buffers,
-                  14))) == FALSE);
+                  14)), outcaps) == FALSE);
+  gst_caps_unref (outcaps);
 
   /* and clean up */
   g_list_foreach (buffers, (GFunc) gst_mini_object_unref, NULL);

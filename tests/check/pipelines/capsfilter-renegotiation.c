@@ -34,15 +34,12 @@ int buffer_count = 0;
 GstCaps *current_caps = NULL;
 int caps_change = 0;
 
-static gboolean
-buffer_probe (GstPad * pad, GstMiniObject * obj, gpointer data)
+static GstPadProbeReturn
+buffer_probe (GstPad * pad, GstPadProbeInfo * info, gpointer data)
 {
-  GstBuffer *buffer;
-  GstCaps *buffer_caps;
+  GstCaps *pad_caps;
   GstElement *capsfilter = GST_ELEMENT (data);
   GstCaps *caps = NULL;
-
-  buffer = GST_BUFFER (obj);
 
   /* increment the buffer count and check if it is time to change the caps */
   buffer_count++;
@@ -62,24 +59,23 @@ buffer_probe (GstPad * pad, GstMiniObject * obj, gpointer data)
     g_object_set (capsfilter, "caps", caps, NULL);
     gst_caps_unref (caps);
   }
-
-  /* now check if the buffer caps has changed since last check */
-  buffer_caps = GST_BUFFER_CAPS (buffer);
-  if (current_caps == NULL && buffer_caps != NULL) {
+  /* now check if the pad caps has changed since last check */
+  pad_caps = gst_pad_get_current_caps (pad);
+  if (current_caps == NULL && pad_caps != NULL) {
     /* probably the first caps, this is a change */
-    current_caps = gst_caps_copy (buffer_caps);
+    current_caps = gst_caps_copy (pad_caps);
     caps_change++;
   } else if (current_caps != NULL) {
-    if (buffer_caps == NULL) {
+    if (pad_caps == NULL) {
       /* caps was set to NULL, we consider this a change */
       gst_caps_unref (current_caps);
       current_caps = NULL;
       caps_change++;
     } else {
-      if (!gst_caps_is_equal (current_caps, buffer_caps)) {
+      if (!gst_caps_is_equal (current_caps, pad_caps)) {
         /* a caps change */
         gst_caps_unref (current_caps);
-        current_caps = gst_caps_copy (buffer_caps);
+        current_caps = gst_caps_copy (pad_caps);
         caps_change++;
       }
     }
@@ -116,7 +112,8 @@ run_capsfilter_renegotiation (const gchar * launch_line)
   g_assert (sink);
 
   pad = gst_element_get_static_pad (sink, "sink");
-  gst_pad_add_buffer_probe (pad, (GCallback) buffer_probe, capsfilter);
+  gst_pad_add_probe (pad, GST_PAD_PROBE_TYPE_BUFFER, buffer_probe, capsfilter,
+      NULL);
   gst_object_unref (pad);
 
   bus = gst_pipeline_get_bus (GST_PIPELINE (pipeline));

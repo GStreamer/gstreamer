@@ -73,17 +73,16 @@ static gboolean
 caps_are_64bpp (const GstCaps * caps)
 {
   GstVideoFormat fmt;
-  GstCaps *fmt_caps;
+  GstStructure *s;
+  const gchar *format;
 
-  /* need fixed caps for _parse_caps */
-  fmt_caps = gst_caps_copy (caps);
-  gst_structure_remove_field (gst_caps_get_structure (fmt_caps, 0), "width");
-  gst_structure_remove_field (gst_caps_get_structure (fmt_caps, 0), "height");
-  gst_structure_remove_field (gst_caps_get_structure (fmt_caps, 0),
-      "framerate");
+  s = gst_caps_get_structure (caps, 0);
+  format = gst_structure_get_string (s, "format");
+  fail_if (format == NULL);
 
-  fail_unless (gst_video_format_parse_caps (fmt_caps, &fmt, NULL, NULL));
-  gst_caps_unref (fmt_caps);
+  fmt = gst_video_format_from_string (format);
+  fail_if (fmt == GST_VIDEO_FORMAT_UNKNOWN);
+
   return (fmt == GST_VIDEO_FORMAT_ARGB64 || fmt == GST_VIDEO_FORMAT_AYUV64);
 }
 
@@ -573,7 +572,7 @@ G_DEFINE_TYPE (GstTestReverseNegotiationSink,
 static GstStaticPadTemplate sinktemplate = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (GST_VIDEO_CAPS_xRGB));
+    GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE ("xRGB")));
 
 #if 0
 static GstFlowReturn
@@ -617,12 +616,13 @@ gst_test_reverse_negotiation_sink_render (GstBaseSink * bsink,
 {
   GstTestReverseNegotiationSink *sink =
       GST_TEST_REVERSE_NEGOTIATION_SINK (bsink);
-  GstCaps *caps = gst_buffer_get_caps (buffer);
-  GstVideoFormat fmt;
-  gint width, height;
+  GstCaps *caps;
+  GstVideoInfo info;
+
+  caps = gst_pad_get_current_caps (GST_BASE_SINK_PAD (bsink));
 
   fail_unless (caps != NULL);
-  fail_unless (gst_video_format_parse_caps (caps, &fmt, &width, &height));
+  fail_unless (gst_video_info_from_caps (&info, caps));
 
   sink->nbuffers++;
 
@@ -631,8 +631,8 @@ gst_test_reverse_negotiation_sink_render (GstBaseSink * bsink,
    * the frame sizes
    */
   if (sink->nbuffers > 3) {
-    fail_unless_equals_int (width, 512);
-    fail_unless_equals_int (height, 128);
+    fail_unless_equals_int (GST_VIDEO_INFO_WIDTH (&info), 512);
+    fail_unless_equals_int (GST_VIDEO_INFO_HEIGHT (&info), 128);
   }
 
   gst_caps_unref (caps);
@@ -780,16 +780,16 @@ GST_START_TEST (test_basetransform_negotiation)
 
   g_object_set (src, "num-buffers", 3, NULL);
 
-  caps = gst_caps_new_simple ("video/x-raw", "format", GST_TYPE_FOURCC,
-      GST_MAKE_FOURCC ('U', 'Y', 'V', 'Y'), "width", G_TYPE_INT, 352,
+  caps = gst_caps_new_simple ("video/x-raw", "format", G_TYPE_STRING,
+      "UYVY", "width", G_TYPE_INT, 352,
       "height", G_TYPE_INT, 288, "framerate", GST_TYPE_FRACTION, 30, 1,
       "pixel-aspect-ratio", GST_TYPE_FRACTION, 1, 1, NULL);
   g_object_set (capsfilter1, "caps", caps, NULL);
   gst_caps_unref (caps);
 
   /* same caps, just different pixel-aspect-ratio */
-  caps = gst_caps_new_simple ("video/x-raw", "format", GST_TYPE_FOURCC,
-      GST_MAKE_FOURCC ('U', 'Y', 'V', 'Y'), "width", G_TYPE_INT, 352,
+  caps = gst_caps_new_simple ("video/x-raw", "format", G_TYPE_STRING,
+      "UYVY", "width", G_TYPE_INT, 352,
       "height", G_TYPE_INT, 288, "framerate", GST_TYPE_FRACTION, 30, 1,
       "pixel-aspect-ratio", GST_TYPE_FRACTION, 12, 11, NULL);
   g_object_set (capsfilter2, "caps", caps, NULL);
