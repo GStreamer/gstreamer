@@ -424,7 +424,8 @@ check_valid_channel_positions (const GstAudioChannelPosition * position,
       j++;
 
     if (position[i] == GST_AUDIO_CHANNEL_POSITION_INVALID ||
-        position[i] == GST_AUDIO_CHANNEL_POSITION_MONO)
+        position[i] == GST_AUDIO_CHANNEL_POSITION_MONO ||
+        position[i] == GST_AUDIO_CHANNEL_POSITION_NONE)
       return FALSE;
 
     /* Is this in valid channel order? */
@@ -459,10 +460,10 @@ gst_audio_info_set_format (GstAudioInfo * info, GstAudioFormat format,
     gint rate, gint channels, const GstAudioChannelPosition * position)
 {
   const GstAudioFormatInfo *finfo;
+  gint i;
 
   g_return_if_fail (info != NULL);
   g_return_if_fail (format != GST_AUDIO_FORMAT_UNKNOWN);
-  g_return_if_fail (channels <= 2 || position != NULL);
 
   finfo = &formats[format];
 
@@ -477,17 +478,27 @@ gst_audio_info_set_format (GstAudioInfo * info, GstAudioFormat format,
 
   if (!position && channels == 1) {
     info->position[0] = GST_AUDIO_CHANNEL_POSITION_MONO;
+    return;
   } else if (!position && channels == 2) {
     info->position[0] = GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT;
     info->position[1] = GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT;
+    return;
   } else {
     if (!check_valid_channel_positions (position, channels, TRUE, NULL)) {
       g_warning ("Invalid channel positions");
     } else {
       memcpy (&info->position, position,
           info->channels * sizeof (info->position[0]));
+      if (info->position[0] == GST_AUDIO_CHANNEL_POSITION_NONE)
+        info->flags |= GST_AUDIO_FLAG_UNPOSITIONED;
+      return;
     }
   }
+
+  /* Otherwise a NONE layout */
+  info->flags |= GST_AUDIO_FLAG_UNPOSITIONED;
+  for (i = 0; i < MIN (64, channels); i++)
+    info->position[i] = GST_AUDIO_CHANNEL_POSITION_NONE;
 }
 
 /**
@@ -553,7 +564,8 @@ gst_audio_info_from_caps (GstAudioInfo * info, const GstCaps * caps)
       goto no_channel_mask;
     }
   } else if (channel_mask == 0) {
-    for (i = 0; i < G_N_ELEMENTS (position); i++)
+    info->flags |= GST_AUDIO_FLAG_UNPOSITIONED;
+    for (i = 0; i < MIN (64, channels); i++)
       position[i] = GST_AUDIO_CHANNEL_POSITION_NONE;
   } else {
     gint j;
@@ -665,9 +677,13 @@ gst_audio_info_to_caps (const GstAudioInfo * info)
       || info->position[0] != GST_AUDIO_CHANNEL_POSITION_MONO) {
     guint64 channel_mask = 0;
 
-    if (!check_valid_channel_positions (info->position, info->channels,
-            TRUE, &channel_mask))
-      goto invalid_channel_positions;
+    if ((info->flags & GST_AUDIO_FLAG_UNPOSITIONED)) {
+      channel_mask = 0;
+    } else {
+      if (!check_valid_channel_positions (info->position, info->channels,
+              TRUE, &channel_mask))
+        goto invalid_channel_positions;
+    }
 
     if (info->channels == 1
         && info->position[0] == GST_AUDIO_CHANNEL_POSITION_MONO) {
