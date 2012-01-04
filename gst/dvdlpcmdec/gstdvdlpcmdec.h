@@ -48,6 +48,7 @@ struct _GstDvdLpcmDec {
   guint32 header;
 
   GstAudioInfo info;
+  const GstAudioChannelPosition *lpcm_layout;
   gint width;
   gint dynamic_range;
   gint emphasis;

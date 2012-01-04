@@ -26,7 +26,7 @@
 #include <string.h>
 
 #include "gstdvdlpcmdec.h"
-#include <gst/audio/multichannel.h>
+#include <gst/audio/audio.h>
 
 GST_DEBUG_CATEGORY_STATIC (dvdlpcm_debug);
 #define GST_CAT_DEFAULT dvdlpcm_debug
@@ -51,6 +51,7 @@ GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("audio/x-raw, "
         "format = (string) { S16BE, S24BE }, "
+        "layout = (string) interleaved, "
         "rate = (int) { 32000, 44100, 48000, 96000 }, "
         "channels = (int) [ 1, 8 ]")
     );
@@ -167,46 +168,31 @@ gst_dvdlpcmdec_init (GstDvdLpcmDec * dvdlpcmdec)
   gst_dvdlpcm_reset (dvdlpcmdec);
 }
 
-static GstAudioChannelPosition *
-get_audio_channel_positions (GstDvdLpcmDec * dvdlpcmdec)
-{
-  gint n_channels = GST_AUDIO_INFO_CHANNELS (&dvdlpcmdec->info);
-  GstAudioChannelPosition *ret = g_new (GstAudioChannelPosition, n_channels);
-
-  /* FIXME: The channel layouts for 5.1 and 7.1 are just guesses, I can't
-   * find any samples or confirmation */
-  switch (n_channels) {
-    case 8:
-      ret[7] = GST_AUDIO_CHANNEL_POSITION_SIDE_RIGHT;
-      ret[6] = GST_AUDIO_CHANNEL_POSITION_SIDE_LEFT;
-      /* Fall through */
-    case 6:
-      ret[5] = GST_AUDIO_CHANNEL_POSITION_REAR_RIGHT;
-      ret[4] = GST_AUDIO_CHANNEL_POSITION_REAR_LEFT;
-      ret[3] = GST_AUDIO_CHANNEL_POSITION_LFE;
-      ret[2] = GST_AUDIO_CHANNEL_POSITION_FRONT_CENTER;
-      /* Fall through */
-    case 2:
-      ret[1] = GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT;
-      ret[0] = GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT;
-      break;
-    case 4:
-      ret[3] = GST_AUDIO_CHANNEL_POSITION_REAR_RIGHT;
-      ret[2] = GST_AUDIO_CHANNEL_POSITION_REAR_LEFT;
-      ret[1] = GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT;
-      ret[0] = GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT;
-      break;
-    case 1:
-      ret[0] = GST_AUDIO_CHANNEL_POSITION_FRONT_MONO;
-      break;
-    default:
-      g_free (ret);
-      ret = NULL;
-      break;
-  }
-
-  return ret;
-}
+static const GstAudioChannelPosition channel_positions[][8] = {
+  {GST_AUDIO_CHANNEL_POSITION_MONO},
+  {GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT,
+      GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT},
+  {GST_AUDIO_CHANNEL_POSITION_INVALID},
+  {GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT,
+        GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT,
+        GST_AUDIO_CHANNEL_POSITION_REAR_LEFT,
+      GST_AUDIO_CHANNEL_POSITION_REAR_RIGHT},
+  {GST_AUDIO_CHANNEL_POSITION_INVALID},
+  {GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT,
+        GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT,
+        GST_AUDIO_CHANNEL_POSITION_FRONT_CENTER,
+        GST_AUDIO_CHANNEL_POSITION_LFE1, GST_AUDIO_CHANNEL_POSITION_REAR_LEFT,
+      GST_AUDIO_CHANNEL_POSITION_REAR_RIGHT},
+  {GST_AUDIO_CHANNEL_POSITION_INVALID},
+  {GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT,
+        GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT,
+        GST_AUDIO_CHANNEL_POSITION_FRONT_CENTER,
+        GST_AUDIO_CHANNEL_POSITION_LFE1, GST_AUDIO_CHANNEL_POSITION_REAR_LEFT,
+        GST_AUDIO_CHANNEL_POSITION_REAR_RIGHT,
+        GST_AUDIO_CHANNEL_POSITION_SIDE_LEFT,
+      GST_AUDIO_CHANNEL_POSITION_SIDE_RIGHT},
+  {GST_AUDIO_CHANNEL_POSITION_INVALID}
+};
 
 static void
 gst_dvdlpcmdec_send_tags (GstDvdLpcmDec * dvdlpcmdec)
@@ -231,16 +217,9 @@ gst_dvdlpcmdec_set_outcaps (GstDvdLpcmDec * dvdlpcmdec)
 {
   gboolean res = TRUE;
   GstCaps *src_caps;
-  GstAudioChannelPosition *pos;
 
   /* Build caps to set on the src pad, which we know from the incoming caps */
   src_caps = gst_audio_info_to_caps (&dvdlpcmdec->info);
-
-  pos = get_audio_channel_positions (dvdlpcmdec);
-  if (pos) {
-    gst_audio_set_channel_positions (gst_caps_get_structure (src_caps, 0), pos);
-    g_free (pos);
-  }
 
   res = gst_pad_set_caps (dvdlpcmdec->srcpad, src_caps);
   if (res) {
@@ -266,6 +245,7 @@ gst_dvdlpcmdec_setcaps (GstPad * pad, GstCaps * caps)
   GstDvdLpcmDec *dvdlpcmdec;
   GstAudioFormat format;
   gint rate, channels, width;
+  const GstAudioChannelPosition *position;
 
   g_return_val_if_fail (caps != NULL, FALSE);
   g_return_val_if_fail (pad != NULL, FALSE);
@@ -307,7 +287,20 @@ gst_dvdlpcmdec_setcaps (GstPad * pad, GstCaps * caps)
       format = GST_AUDIO_FORMAT_UNKNOWN;
       break;
   }
-  gst_audio_info_set_format (&dvdlpcmdec->info, format, rate, channels);
+
+  gst_audio_info_set_format (&dvdlpcmdec->info, format, rate, channels, NULL);
+  if (channels < 9
+      && channel_positions[channels - 1][0] !=
+      GST_AUDIO_CHANNEL_POSITION_INVALID) {
+    dvdlpcmdec->info.flags &= ~GST_AUDIO_FLAG_NONE_LAYOUT;
+    position = channel_positions[channels - 1];
+    dvdlpcmdec->lpcm_layout = position;
+    memcpy (dvdlpcmdec->info.position, position,
+        sizeof (GstAudioChannelPosition) * channels);
+    gst_audio_channel_positions_to_valid_order (dvdlpcmdec->info.position,
+        channels);
+  }
+
   dvdlpcmdec->width = width;
 
   res = gst_dvdlpcmdec_set_outcaps (dvdlpcmdec);
@@ -413,7 +406,19 @@ parse_header (GstDvdLpcmDec * dec, guint32 header)
   /* And, of course, the number of channels (up to 8) */
   channels = ((header >> 8) & 0x7) + 1;
 
-  gst_audio_info_set_format (&dec->info, format, rate, channels);
+  gst_audio_info_set_format (&dec->info, format, rate, channels, NULL);
+  if (channels < 9
+      && channel_positions[channels - 1][0] !=
+      GST_AUDIO_CHANNEL_POSITION_INVALID) {
+    const GstAudioChannelPosition *position;
+
+    dec->info.flags &= ~GST_AUDIO_FLAG_NONE_LAYOUT;
+    position = channel_positions[channels - 1];
+    dec->lpcm_layout = position;
+    memcpy (dec->info.position, position,
+        sizeof (GstAudioChannelPosition) * channels);
+    gst_audio_channel_positions_to_valid_order (dec->info.position, channels);
+  }
 }
 
 static GstFlowReturn
@@ -715,6 +720,11 @@ gst_dvdlpcmdec_chain_raw (GstPad * pad, GstObject * parent, GstBuffer * buf)
   }
 
   update_timestamps (dvdlpcmdec, buf, samples);
+
+  if (dvdlpcmdec->lpcm_layout)
+    gst_audio_buffer_reorder_channels (buf, dvdlpcmdec->info.finfo->format,
+        dvdlpcmdec->info.channels, dvdlpcmdec->lpcm_layout,
+        dvdlpcmdec->info.position);
 
   ret = gst_pad_push (dvdlpcmdec->srcpad, buf);
 
