@@ -32,7 +32,10 @@ struct _GESPitiviFormatterPrivate
   xmlXPathContextPtr xpathCtx;
 
   /* {"sourceId" : {"prop": "value"}} */
-  GHashTable *source_table;
+  GHashTable *sources_table;
+
+  /* Used as a set of the uris */
+  GHashTable *source_uris;
 
   /* {trackId: {"factory_ref": factoryId, ""}
    * if effect:
@@ -113,7 +116,12 @@ ges_pitivi_formatter_init (GESPitiviFormatter * self)
   priv->layers_table =
       g_hash_table_new_full (g_int_hash, g_str_equal, g_free, g_object_unref);
 
-  priv->source_table = NULL;
+  priv->sources_table =
+      g_hash_table_new_full (g_str_hash, g_str_equal, g_free,
+      (GDestroyNotify) g_hash_table_destroy);
+
+  priv->source_uris =
+      g_hash_table_new_full (g_str_hash, g_str_equal, g_free, g_free);
 
   /* Saving context */
   priv->saving_source_table =
@@ -127,9 +135,8 @@ ges_pitivi_formatter_finalize (GObject * object)
   GESPitiviFormatter *self = GES_PITIVI_FORMATTER (object);
   GESPitiviFormatterPrivate *priv = GES_PITIVI_FORMATTER (self)->priv;
 
-  if (priv->source_table != NULL) {
-    g_hash_table_destroy (priv->source_table);
-  }
+  g_hash_table_destroy (priv->sources_table);
+  g_hash_table_destroy (priv->source_uris);
 
   g_hash_table_destroy (priv->saving_source_table);
 
@@ -482,66 +489,18 @@ save_pitivi_timeline_to_uri (GESFormatter * formatter,
 }
 
 GList *
-ges_pitivi_formatter_get_sources (GESPitiviFormatter * formatter, gchar * uri)
+ges_pitivi_formatter_get_sources (GESPitiviFormatter * formatter)
 {
-  GList *source_list = NULL;
-  xmlXPathContextPtr xpathCtx;
-  xmlDocPtr doc;
-  xmlXPathObjectPtr xpathObj;
-  int size, j;
-  xmlNodeSetPtr nodes;
+  GList *sources = NULL;
+  GHashTableIter iter;
+  gpointer key, value;
 
-  if (!(doc = xmlParseFile (uri))) {
-    GST_ERROR ("The xptv file for uri %s was badly formed or did not exist",
-        uri);
-    return FALSE;
+  g_hash_table_iter_init (&iter, formatter->priv->source_uris);
+  while (g_hash_table_iter_next (&iter, &key, &value)) {
+    sources = g_list_prepend (sources, g_strdup (value));
   }
 
-  xpathCtx = xmlXPathNewContext (doc);
-
-  xpathObj = xmlXPathEvalExpression ((const xmlChar *)
-      "/pitivi/factories/sources/source", xpathCtx);
-
-  nodes = xpathObj->nodesetval;
-
-  size = (nodes) ? nodes->nodeNr : 0;
-  for (j = 0; j < size; ++j) {
-    xmlAttr *cur_attr;
-    gchar *name, *value;
-    xmlNodePtr node;
-
-    node = nodes->nodeTab[j];
-    for (cur_attr = node->properties; cur_attr; cur_attr = cur_attr->next) {
-      name = (gchar *) cur_attr->name;
-      value = (gchar *) xmlGetProp (node, cur_attr->name);
-      if (!g_strcmp0 (name, (gchar *) "filename"))
-        source_list = g_list_append (source_list, g_strdup (value));
-      xmlFree (value);
-    }
-  }
-
-  xmlXPathFreeObject (xpathObj);
-
-  xpathObj = xmlXPathEvalExpression ((const xmlChar *)
-      "/pitivi/factories/sources/unused_source", xpathCtx);
-
-  nodes = xpathObj->nodesetval;
-
-  size = (nodes) ? nodes->nodeNr : 0;
-  for (j = 0; j < size; ++j) {
-    xmlNodePtr node;
-
-    node = nodes->nodeTab[j];
-    source_list =
-        g_list_append (source_list,
-        g_strdup ((gchar *) xmlNodeGetContent (node)));
-  }
-
-  xmlXPathFreeObject (xpathObj);
-
-  xmlXPathFreeContext (xpathCtx);
-  xmlFreeDoc (doc);
-  return source_list;
+  return sources;
 }
 
 /* Project loading functions */
@@ -608,19 +567,15 @@ create_tracks (GESFormatter * self)
   return TRUE;
 }
 
-static GHashTable *
+static void
 list_sources (GESFormatter * self)
 {
   GESPitiviFormatterPrivate *priv = GES_PITIVI_FORMATTER (self)->priv;
   xmlXPathObjectPtr xpathObj;
-  GHashTable *table, *sources_table;
+  GHashTable *table;
   int size, j;
-  gchar *id;
+  gchar *id, *filename;
   xmlNodeSetPtr nodes;
-
-  sources_table =
-      g_hash_table_new_full (g_str_hash, g_str_equal, g_free,
-      (GDestroyNotify) g_hash_table_destroy);
 
   xpathObj = xmlXPathEvalExpression ((const xmlChar *)
       "/pitivi/factories/sources/source", priv->xpathCtx);
@@ -630,11 +585,13 @@ list_sources (GESFormatter * self)
   for (j = 0; j < size; ++j) {
     table = get_nodes_infos (nodes->nodeTab[j]);
     id = (gchar *) g_hash_table_lookup (table, (gchar *) "id");
-    g_hash_table_insert (sources_table, g_strdup (id), table);
+    filename = (gchar *) g_hash_table_lookup (table, (gchar *) "filename");
+    g_hash_table_insert (priv->sources_table, g_strdup (id), table);
+    g_hash_table_insert (priv->source_uris, g_strdup (filename),
+        g_strdup (filename));
   }
 
   xmlXPathFreeObject (xpathObj);
-  return sources_table;
 }
 
 static gboolean
@@ -1031,7 +988,7 @@ make_timeline_objects (GESFormatter * self)
     gchar *fac_id = (gchar *) tmp->data;
 
     reflist = g_hash_table_lookup (priv->timeline_objects_table, fac_id);
-    source_table = g_hash_table_lookup (priv->source_table, fac_id);
+    source_table = g_hash_table_lookup (priv->sources_table, fac_id);
     make_source (self, reflist, source_table);
   }
 
@@ -1076,7 +1033,7 @@ load_pitivi_file_from_uri (GESFormatter * self,
     return FALSE;
   }
 
-  priv->source_table = list_sources (self);
+  list_sources (self);
 
   if (!parse_timeline_objects (self)) {
     GST_ERROR ("Couldn't find timeline objects markup in the xptv file");
@@ -1104,6 +1061,8 @@ pitivi_formatter_update_source_uri (GESFormatter * formatter,
 {
   GESTimelineObject *tlobj = GES_TIMELINE_OBJECT (tfs);
   GESTimelineLayer *layer = ges_timeline_object_get_layer (tlobj);
+  const gchar *uri = ges_timeline_filesource_get_uri (tfs);
+  GESPitiviFormatterPrivate *priv = GES_PITIVI_FORMATTER (formatter)->priv;
   gboolean ret;
 
   /*Keep a ref to it as we don't want it to be destroyed! */
@@ -1113,6 +1072,9 @@ pitivi_formatter_update_source_uri (GESFormatter * formatter,
 
   g_object_set (tfs, "uri", new_uri, NULL);
   ret = ges_timeline_layer_add_object (layer, tlobj);
+
+  /* FIXME handle the case of source uri updated more than 1 time */
+  g_hash_table_insert (priv->source_uris, g_strdup (uri), g_strdup (new_uri));
 
   /* We do not need our reference anymore */
   g_object_unref (tlobj);

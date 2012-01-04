@@ -194,21 +194,19 @@ _wrap_ges_pitivi_formatter_get_sources(PyGObject *self, PyObject *args, PyObject
 {
     const GList *l, *list;
     PyObject *py_list;
-    gchar *uri;
 
     g_return_val_if_fail (GES_IS_PITIVI_FORMATTER (self->obj),PyList_New(0));
 
-    if (!PyArg_ParseTuple(args, "s:GES.TrackObject.lookup_child", &uri))
-        return FALSE;
     pyg_begin_allow_threads;
-    list = ges_pitivi_formatter_get_sources (GES_PITIVI_FORMATTER (self->obj), uri);
+    list = ges_pitivi_formatter_get_sources (GES_PITIVI_FORMATTER (self->obj));
     pyg_end_allow_threads;
 
     py_list = PyList_New(0);
     for (l = list; l; l = l->next) {
-	gchar * source = (gchar *)l->data;
-	PyList_Append(py_list, PyString_FromString(source));
-	Py_DECREF(source);
+        gchar * source = (gchar *)l->data;
+        GST_ERROR ("Adding %s", source);
+        PyList_Append(py_list, PyString_FromString(source));
+        Py_DECREF(source);
     }
 
     return py_list;
