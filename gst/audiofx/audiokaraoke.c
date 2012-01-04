@@ -74,7 +74,9 @@ enum
     "audio/x-raw,"                                                \
     " format=(string){"GST_AUDIO_NE(S16)","GST_AUDIO_NE(F32)"},"  \
     " rate=(int)[1,MAX],"                                         \
-    " channels=(int)[1,MAX]"
+    " channels=(int)2,"                                           \
+    " channel-mask=(bitmask)0x3,"                                 \
+    " layout=(string) interleaved"
 
 G_DEFINE_TYPE (GstAudioKaraoke, gst_audio_karaoke, GST_TYPE_AUDIO_FILTER);
 

@@ -40,7 +40,8 @@ GST_DEBUG_CATEGORY_STATIC (GST_CAT_DEFAULT);
     "audio/x-raw,"                                                \
     " format=(string){"GST_AUDIO_NE(F32)","GST_AUDIO_NE(F64)"},"  \
     " rate = (int) [ 1, MAX ],"                                   \
-    " channels = (int) [ 1, MAX ]"
+    " channels = (int) [ 1, MAX ],"                               \
+    " layout=(string) interleaved"
 
 #define gst_audio_fx_base_iir_filter_parent_class parent_class
 G_DEFINE_TYPE (GstAudioFXBaseIIRFilter,

@@ -72,7 +72,8 @@ enum
     "audio/x-raw,"                                                \
     " format=(string) {"GST_AUDIO_NE(S16)","GST_AUDIO_NE(F32)"}," \
     " rate=(int)[1,MAX],"                                         \
-    " channels=(int)[1,MAX]"
+    " channels=(int)[1,MAX],"                                     \
+    " layout=(string) {interleaved, non-interleaved}"
 
 G_DEFINE_TYPE (GstAudioDynamic, gst_audio_dynamic, GST_TYPE_AUDIO_FILTER);
 

@@ -95,7 +95,12 @@ static GstStaticPadTemplate sink_template = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("audio/x-raw, "
         "format = (string) { " GST_AUDIO_NE (S32) ", " GST_AUDIO_NE (S16) "}, "
-        "rate = (int) [ 1, MAX ], " "channels = (int) [ 1, 2 ]")
+        "rate = (int) [ 1, MAX ], " "channels = (int) 1, "
+        "layout = (string) interleaved;"
+        "audio/x-raw, "
+        "format = (string) { " GST_AUDIO_NE (S32) ", " GST_AUDIO_NE (S16) "}, "
+        "rate = (int) [ 1, MAX ], " "channels = (int) 2, "
+        "layout = (string) interleaved, " "channel-mask = (bitmask) 0x3")
     );
 
 static GstStaticPadTemplate src_template = GST_STATIC_PAD_TEMPLATE ("src",
@@ -103,7 +108,8 @@ static GstStaticPadTemplate src_template = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("audio/x-raw, "
         "format = (string) { " GST_AUDIO_NE (S32) ", " GST_AUDIO_NE (S16) "}, "
-        "rate = (int) [ 1, MAX ], " "channels = (int) 2")
+        "rate = (int) [ 1, MAX ], " "channels = (int) 2, "
+        "layout = (string) interleaved, " "channel-mask = (bitmask)0x3")
     );
 
 G_DEFINE_TYPE (GstAudioPanorama, gst_audio_panorama, GST_TYPE_BASE_TRANSFORM);

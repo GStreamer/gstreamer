@@ -99,7 +99,8 @@ gst_audio_amplify_clipping_method_get_type (void)
     " format=(string) {S8,"GST_AUDIO_NE(S16)","GST_AUDIO_NE(S32)","   \
                            GST_AUDIO_NE(F32)","GST_AUDIO_NE(F64)"},"  \
     " rate=(int)[1,MAX],"                                             \
-    " channels=(int)[1,MAX]"
+    " channels=(int)[1,MAX], "                                        \
+    " layout=(string) {interleaved, non-interleaved}"
 
 G_DEFINE_TYPE (GstAudioAmplify, gst_audio_amplify, GST_TYPE_AUDIO_FILTER);
 

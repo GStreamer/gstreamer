@@ -65,9 +65,10 @@ enum
 
 #define ALLOWED_CAPS \
     "audio/x-raw,"                                                     \
-    " format=(string) {"GST_AUDIO_NE(S16)","GST_AUDIO_NE(F32)"},"  \
+    " format=(string) {"GST_AUDIO_NE(S16)","GST_AUDIO_NE(F32)"},"      \
     " rate=(int)[1,MAX],"                                              \
-    " channels=(int)[1,MAX] "
+    " channels=(int)[1,MAX],"                                          \
+    " layout=(string) {interleaved, non-interleaved}"
 
 G_DEFINE_TYPE (GstAudioInvert, gst_audio_invert, GST_TYPE_AUDIO_FILTER);
 

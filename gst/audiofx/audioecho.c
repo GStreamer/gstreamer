@@ -69,7 +69,8 @@ enum
     "audio/x-raw,"                                                 \
     " format=(string) {"GST_AUDIO_NE(F32)","GST_AUDIO_NE(F64)"}, " \
     " rate=(int)[1,MAX],"                                          \
-    " channels=(int)[1,MAX]"
+    " channels=(int)[1,MAX],"                                      \
+    " layout=(string) interleaved"
 
 #define gst_audio_echo_parent_class parent_class
 G_DEFINE_TYPE (GstAudioEcho, gst_audio_echo, GST_TYPE_AUDIO_FILTER);

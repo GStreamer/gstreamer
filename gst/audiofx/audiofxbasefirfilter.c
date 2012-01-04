@@ -37,10 +37,11 @@
 GST_DEBUG_CATEGORY_STATIC (GST_CAT_DEFAULT);
 
 #define ALLOWED_CAPS \
-    "audio/x-raw, "                                              \
+    "audio/x-raw, "                                               \
     " format=(string){"GST_AUDIO_NE(F32)","GST_AUDIO_NE(F64)"}, " \
-    " rate = (int) [ 1, MAX ], "                                 \
-    " channels = (int) [ 1, MAX ]"
+    " rate = (int) [ 1, MAX ], "                                  \
+    " channels = (int) [ 1, MAX ], "                              \
+    " layout=(string) interleaved"
 
 /* Switch from time-domain to FFT convolution for kernels >= this */
 #define FFT_THRESHOLD 32
