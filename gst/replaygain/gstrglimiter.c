@@ -63,6 +63,7 @@ static GstStaticPadTemplate sink_factory = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("audio/x-raw, "
         "format = (string) " GST_AUDIO_NE (F32) ", "
+        "layout = (string) { interleaved, non-interleaved }, "
         "channels = (int) [1, MAX], " "rate = (int) [1, MAX]"));
 
 static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",
@@ -70,6 +71,7 @@ static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("audio/x-raw, "
         "format = (string) " GST_AUDIO_NE (F32) ", "
+        "layout = (string) { interleaved, non-interleaved}, "
         "channels = (int) [1, MAX], " "rate = (int) [1, MAX]"));
 
 #define gst_rg_limiter_parent_class parent_class

@@ -105,7 +105,15 @@ enum
  * "usual" sample rates in the 8000 to 48000 Hz range. */
 #define REPLAY_GAIN_CAPS "audio/x-raw," \
   "format = (string) { "GST_AUDIO_NE(F32)","GST_AUDIO_NE(S16)" }, "     \
-  "channels = (int) { 1, 2 }, "                                         \
+  "layout = (string) interleaved, "                                     \
+  "channels = (int) 1, "                                                \
+  "rate = (int) { 8000, 11025, 12000, 16000, 22050, 24000, 32000, "     \
+  "44100, 48000 }; "                                                    \
+  "audio/x-raw,"                                                        \
+  "format = (string) { "GST_AUDIO_NE(F32)","GST_AUDIO_NE(S16)" }, "     \
+  "layout = (string) interleaved, "                                     \
+  "channels = (int) 2, "                                                \
+  "channel-mask = (bitmask) 0x3, "                                      \
   "rate = (int) { 8000, 11025, 12000, 16000, 22050, 24000, 32000, "     \
   "44100, 48000 }"
 

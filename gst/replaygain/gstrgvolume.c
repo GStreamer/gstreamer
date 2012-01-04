@@ -104,6 +104,7 @@ static GstStaticPadTemplate sink_template = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("audio/x-raw, "
         "format = (string) " FORMAT ", "
+        "layout = (string) { interleaved, non-interleaved }, "
         "rate = (int) [ 1, MAX ], " "channels = (int) [ 1, MAX ]"));
 
 static GstStaticPadTemplate src_template = GST_STATIC_PAD_TEMPLATE ("src",
@@ -111,6 +112,7 @@ static GstStaticPadTemplate src_template = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("audio/x-raw, "
         "format = (string) " FORMAT ", "
+        "layout = (string) { interleaved, non-interleaved }, "
         "rate = (int) [ 1, MAX ], " "channels = (int) [ 1, MAX ]"));
 
 #define gst_rg_volume_parent_class parent_class
