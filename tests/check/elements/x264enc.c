@@ -58,8 +58,8 @@ setup_x264enc (void)
 
   GST_DEBUG ("setup_x264enc");
   x264enc = gst_check_setup_element ("x264enc");
-  mysrcpad = gst_check_setup_src_pad (x264enc, &srctemplate, NULL);
-  mysinkpad = gst_check_setup_sink_pad (x264enc, &sinktemplate, NULL);
+  mysrcpad = gst_check_setup_src_pad (x264enc, &srctemplate);
+  mysinkpad = gst_check_setup_sink_pad (x264enc, &sinktemplate);
   gst_pad_set_active (mysrcpad, TRUE);
   gst_pad_set_active (mysinkpad, TRUE);
 
@@ -231,6 +231,7 @@ GST_END_TEST;
 
 GstCaps *pad_caps;
 
+#if 0
 GstCaps *
 getcaps_test (GstPad * pad, GstCaps * filter)
 {
@@ -239,6 +240,7 @@ getcaps_test (GstPad * pad, GstCaps * filter)
   else
     return gst_caps_intersect (pad_caps, filter);
 }
+#endif
 
 GST_START_TEST (test_profile_in_caps)
 {
@@ -251,7 +253,9 @@ GST_START_TEST (test_profile_in_caps)
   pad_caps = gst_caps_from_string (MPEG_CAPS_STRING);
 
   x264enc = setup_x264enc ();
-  gst_pad_set_getcaps_function (mysinkpad, getcaps_test);
+  gst_pad_set_caps (mysinkpad, pad_caps);
+  gst_pad_use_fixed_caps (mysinkpad);
+
   srcpad = gst_element_get_static_pad (x264enc, "src");
   sinkpad = gst_element_get_static_pad (x264enc, "sink");
   fail_unless (gst_element_set_state (x264enc,

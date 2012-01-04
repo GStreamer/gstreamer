@@ -1345,8 +1345,8 @@ setup_mpeg2dec ()
 
   GST_DEBUG ("setup_mpeg2dec");
   mpeg2dec = gst_check_setup_element ("mpeg2dec");
-  mysrcpad = gst_check_setup_src_pad (mpeg2dec, &srctemplate, NULL);
-  mysinkpad = gst_check_setup_sink_pad (mpeg2dec, &sinktemplate, NULL);
+  mysrcpad = gst_check_setup_src_pad (mpeg2dec, &srctemplate);
+  mysinkpad = gst_check_setup_sink_pad (mpeg2dec, &sinktemplate);
   gst_pad_set_active (mysrcpad, TRUE);
   gst_pad_set_active (mysinkpad, TRUE);
 

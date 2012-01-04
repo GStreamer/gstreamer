@@ -62,8 +62,8 @@ setup_amrnbenc (void)
   GST_DEBUG ("setup_amrnbenc");
 
   amrnbenc = gst_check_setup_element ("amrnbenc");
-  srcpad = gst_check_setup_src_pad (amrnbenc, &srctemplate, NULL);
-  sinkpad = gst_check_setup_sink_pad (amrnbenc, &sinktemplate, NULL);
+  srcpad = gst_check_setup_src_pad (amrnbenc, &srctemplate);
+  sinkpad = gst_check_setup_sink_pad (amrnbenc, &sinktemplate);
   gst_pad_set_active (srcpad, TRUE);
   gst_pad_set_active (sinkpad, TRUE);
 

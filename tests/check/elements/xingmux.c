@@ -89,9 +89,8 @@ GST_START_TEST (test_xing_remux)
       "could not set to playing");
 
   inbuffer = gst_buffer_new_and_alloc (sizeof (test_xing));
-  memcpy (GST_BUFFER_DATA (inbuffer), test_xing, sizeof (test_xing));
+  gst_buffer_fill (inbuffer, 0, test_xing, sizeof (test_xing));
 
-  gst_buffer_set_caps (inbuffer, GST_PAD_CAPS (mysrcpad));
   ASSERT_BUFFER_REFCOUNT (inbuffer, "inbuffer", 1);
 
   /* pushing gives away my reference ... */
@@ -103,27 +102,30 @@ GST_START_TEST (test_xing_remux)
   verify_data = test_xing;
   for (it = buffers; it != NULL; it = it->next) {
     GstBuffer *outbuffer = (GstBuffer *) it->data;
+    gsize size;
+    guint8 *data;
+
+    data = gst_buffer_map (outbuffer, &size, NULL, GST_MAP_READ);
 
     if (it == buffers) {
       gint j;
 
       /* Empty Xing header, should be the same as input data until the "Xing" marker
        * and zeroes afterwards. */
-      fail_unless (memcmp (test_xing, GST_BUFFER_DATA (outbuffer), 25) == 0);
-      for (j = 26; j < GST_BUFFER_SIZE (outbuffer); j++)
-        fail_unless (GST_BUFFER_DATA (outbuffer)[j] == 0);
-      verify_data += GST_BUFFER_SIZE (outbuffer);
+      fail_unless (memcmp (data, test_xing, 25) == 0);
+      for (j = 26; j < size; j++)
+        fail_unless (data[j] == 0);
+      verify_data += size;
     } else if (it->next != NULL) {
       /* Should contain the raw MP3 data without changes */
-      fail_unless (memcmp (verify_data, GST_BUFFER_DATA (outbuffer),
-              GST_BUFFER_SIZE (outbuffer)) == 0);
-      verify_data += GST_BUFFER_SIZE (outbuffer);
+      fail_unless (memcmp (data, verify_data, size) == 0);
+      verify_data += size;
     } else {
       /* Last buffer is the rewrite of the first buffer and should be exactly the same
        * as the old Xing header we had */
-      fail_unless (memcmp (test_xing, GST_BUFFER_DATA (outbuffer),
-              GST_BUFFER_SIZE (outbuffer)) == 0);
+      fail_unless (memcmp (test_xing, data, size) == 0);
     }
+    gst_buffer_unmap (outbuffer, data, size);
   }
 
   /* cleanup */
