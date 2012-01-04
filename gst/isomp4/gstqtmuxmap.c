@@ -85,32 +85,25 @@
   "rate = (int) [ 1, " G_STRINGIFY (r) " ]"
 
 #define PCM_CAPS \
-  "audio/x-raw-int, " \
-  "width = (int) 8, " \
-  "depth = (int) 8, " \
-  COMMON_AUDIO_CAPS (2, MAX) ", " \
-  "signed = (boolean) { true, false }; " \
-  "audio/x-raw-int, " \
-  "width = (int) 16, " \
-  "depth = (int) 16, " \
-  "endianness = (int) { BIG_ENDIAN, LITTLE_ENDIAN }, " \
-  COMMON_AUDIO_CAPS (2, MAX) ", " \
-  "signed = (boolean) true " \
+  "audio/x-raw, " \
+  "format = (string) { S8, U8 }, " \
+  "layout = (string) interleaved, " \
+  COMMON_AUDIO_CAPS (2, MAX) "; " \
+  "audio/x-raw, " \
+  "format = (string) { S16LE, S16BE }, " \
+  "layout = (string) interleaved, " \
+  COMMON_AUDIO_CAPS (2, MAX)
 
 #define PCM_CAPS_FULL \
   PCM_CAPS "; " \
-  "audio/x-raw-int, " \
-  "width = (int) 24, " \
-  "depth = (int) 24, " \
-  "endianness = (int) { BIG_ENDIAN, LITTLE_ENDIAN }, " \
-  COMMON_AUDIO_CAPS (2, MAX) ", " \
-  "signed = (boolean) true; " \
-  "audio/x-raw-int, " \
-  "width = (int) 32, " \
-  "depth = (int) 32, " \
-  "endianness = (int) { BIG_ENDIAN, LITTLE_ENDIAN }, " \
-  COMMON_AUDIO_CAPS (2, MAX) ", " \
-  "signed = (boolean) true "
+  "audio/x-raw, " \
+  "format = (string) { S24LE, S24BE }, " \
+  "layout = (string) interleaved, " \
+  COMMON_AUDIO_CAPS (2, MAX) "; " \
+  "audio/x-raw, " \
+  "format = (string) { S32LE, S32BE }, " \
+  "layout = (string) interleaved, " \
+  COMMON_AUDIO_CAPS (2, MAX)
 
 #define MP3_CAPS \
   "audio/mpeg, " \

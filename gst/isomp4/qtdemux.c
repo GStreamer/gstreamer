@@ -5117,6 +5117,7 @@ gst_qtdemux_add_stream (GstQTDemux * qtdemux,
         gst_pad_new_from_static_template (&gst_qtdemux_audiosrc_template, name);
     g_free (name);
     if (stream->caps) {
+      /* FIXME: Need to set channel-mask here and maybe reorder */
       gst_caps_set_simple (stream->caps,
           "rate", G_TYPE_INT, (int) stream->rate,
           "channels", G_TYPE_INT, stream->n_channels, NULL);
@@ -7216,8 +7217,9 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
               if (gst_riff_parse_strf_auds (GST_ELEMENT_CAST (qtdemux),
                       headerbuf, &header, &extra)) {
                 gst_caps_unref (stream->caps);
+                /* FIXME: Need to do something with the channel reorder map */
                 stream->caps = gst_riff_create_audio_caps (header->format, NULL,
-                    header, extra, NULL, NULL);
+                    header, extra, NULL, NULL, NULL);
 
                 if (extra)
                   gst_buffer_unref (extra);
@@ -9659,6 +9661,15 @@ qtdemux_audio_caps (GstQTDemux * qtdemux, QtDemuxStream * stream,
       caps = gst_caps_new_empty_simple (s);
       break;
     }
+  }
+
+  if (caps) {
+    GstCaps *templ_caps =
+        gst_static_pad_template_get_caps (&gst_qtdemux_audiosrc_template);
+    GstCaps *intersection = gst_caps_intersect (caps, templ_caps);
+    gst_caps_unref (caps);
+    gst_caps_unref (templ_caps);
+    caps = intersection;
   }
 
   /* enable clipping for raw audio streams */

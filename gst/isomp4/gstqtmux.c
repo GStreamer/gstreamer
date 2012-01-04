@@ -117,6 +117,7 @@
 
 #include <gst/gst.h>
 #include <gst/base/gstcollectpads.h>
+#include <gst/audio/audio.h>
 #include <gst/video/video.h>
 #include <gst/tag/xmpwriter.h>
 
@@ -2777,51 +2778,38 @@ gst_qt_mux_audio_sink_set_caps (GstPad * pad, GstCaps * caps)
     entry.samples_per_packet = 320;
     entry.bytes_per_sample = 2;
     ext_atom = build_amr_extension ();
-  } else if (strcmp (mimetype, "audio/x-raw-int") == 0) {
-    gint width;
-    gint depth;
-    gint endianness;
-    gboolean sign;
+  } else if (strcmp (mimetype, "audio/x-raw") == 0) {
+    GstAudioInfo info;
 
-    if (!gst_structure_get_int (structure, "width", &width) ||
-        !gst_structure_get_int (structure, "depth", &depth) ||
-        !gst_structure_get_boolean (structure, "signed", &sign)) {
-      GST_DEBUG_OBJECT (qtmux, "broken caps, width/depth/signed field missing");
+    gst_audio_info_init (&info);
+    if (!gst_audio_info_from_caps (&info, caps))
       goto refuse_caps;
-    }
-
-    if (depth <= 8) {
-      endianness = G_BYTE_ORDER;
-    } else if (!gst_structure_get_int (structure, "endianness", &endianness)) {
-      GST_DEBUG_OBJECT (qtmux, "broken caps, endianness field missing");
-      goto refuse_caps;
-    }
 
     /* spec has no place for a distinction in these */
-    if (width != depth) {
+    if (info.finfo->width != info.finfo->depth) {
       GST_DEBUG_OBJECT (qtmux, "width must be same as depth!");
       goto refuse_caps;
     }
 
-    if (sign) {
-      if (endianness == G_LITTLE_ENDIAN)
+    if ((info.finfo->flags & GST_AUDIO_FORMAT_FLAG_SIGNED)) {
+      if (info.finfo->endianness == G_LITTLE_ENDIAN)
         entry.fourcc = FOURCC_sowt;
-      else if (endianness == G_BIG_ENDIAN)
+      else if (info.finfo->endianness == G_BIG_ENDIAN)
         entry.fourcc = FOURCC_twos;
       /* maximum backward compatibility; only new version for > 16 bit */
-      if (depth <= 16)
+      if (info.finfo->depth <= 16)
         entry.version = 0;
       /* not compressed in any case */
       entry.compression_id = 0;
       /* QT spec says: max at 16 bit even if sample size were actually larger,
        * however, most players (e.g. QuickTime!) seem to disagree, so ... */
-      entry.sample_size = depth;
-      entry.bytes_per_sample = depth / 8;
+      entry.sample_size = info.finfo->depth;
+      entry.bytes_per_sample = info.finfo->depth / 8;
       entry.samples_per_packet = 1;
-      entry.bytes_per_packet = depth / 8;
-      entry.bytes_per_frame = entry.bytes_per_packet * channels;
+      entry.bytes_per_packet = info.finfo->depth / 8;
+      entry.bytes_per_frame = entry.bytes_per_packet * info.channels;
     } else {
-      if (width == 8 && depth == 8) {
+      if (info.finfo->width == 8 && info.finfo->depth == 8) {
         /* fall back to old 8-bit version */
         entry.fourcc = FOURCC_raw_;
         entry.version = 0;
@@ -2832,7 +2820,7 @@ gst_qt_mux_audio_sink_set_caps (GstPad * pad, GstCaps * caps)
         goto refuse_caps;
       }
     }
-    constant_size = (depth / 8) * channels;
+    constant_size = (info.finfo->depth / 8) * info.channels;
   } else if (strcmp (mimetype, "audio/x-alaw") == 0) {
     entry.fourcc = FOURCC_alaw;
     entry.samples_per_packet = 1023;
