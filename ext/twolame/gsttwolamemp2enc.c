@@ -62,13 +62,19 @@ GST_DEBUG_CATEGORY_STATIC (debug);
 /* TwoLAME can do MPEG-1, MPEG-2 so it has 6 possible
  * sample rates it supports */
 static GstStaticPadTemplate gst_two_lame_sink_template =
-GST_STATIC_PAD_TEMPLATE ("sink",
+    GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("audio/x-raw, "
         "format = (string) { " GST_AUDIO_NE (F32) ", " GST_AUDIO_NE (S16) " }, "
+        "layout = (string) interleaved, "
         "rate = (int) { 16000, 22050, 24000, 32000, 44100, 48000 }, "
-        "channels = (int) [ 1, 2 ]")
+        "channels = (int) 1; "
+        "audio/x-raw, "
+        "format = (string) { " GST_AUDIO_NE (F32) ", " GST_AUDIO_NE (S16) " }, "
+        "layout = (string) interleaved, "
+        "rate = (int) { 16000, 22050, 24000, 32000, 44100, 48000 }, "
+        "channels = (int) 2," "channel-mask = (bitmask) 0x3")
     );
 
 static GstStaticPadTemplate gst_two_lame_src_template =
