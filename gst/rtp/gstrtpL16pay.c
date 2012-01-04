@@ -24,7 +24,6 @@
 #include <string.h>
 
 #include <gst/audio/audio.h>
-#include <gst/audio/multichannel.h>
 #include <gst/rtp/gstrtpbuffer.h>
 
 #include "gstrtpL16pay.h"
@@ -39,6 +38,7 @@ GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("audio/x-raw, "
         "format = (string) S16_BE, "
+        "layout = (string) interleaved, "
         "rate = (int) [ 1, MAX ], " "channels = (int) [ 1, MAX ]")
     );
 
@@ -68,6 +68,9 @@ static gboolean gst_rtp_L16_pay_setcaps (GstRTPBasePayload * basepayload,
     GstCaps * caps);
 static GstCaps *gst_rtp_L16_pay_getcaps (GstRTPBasePayload * rtppayload,
     GstPad * pad, GstCaps * filter);
+static GstFlowReturn
+gst_rtp_L16_pay_handle_buffer (GstRTPBasePayload * basepayload,
+    GstBuffer * buffer);
 
 #define gst_rtp_L16_pay_parent_class parent_class
 G_DEFINE_TYPE (GstRtpL16Pay, gst_rtp_L16_pay, GST_TYPE_RTP_BASE_AUDIO_PAYLOAD);
@@ -83,6 +86,7 @@ gst_rtp_L16_pay_class_init (GstRtpL16PayClass * klass)
 
   gstrtpbasepayload_class->set_caps = gst_rtp_L16_pay_setcaps;
   gstrtpbasepayload_class->get_caps = gst_rtp_L16_pay_getcaps;
+  gstrtpbasepayload_class->handle_buffer = gst_rtp_L16_pay_handle_buffer;
 
   gst_element_class_add_pad_template (gstelement_class,
       gst_static_pad_template_get (&gst_rtp_L16_pay_src_template));
@@ -113,72 +117,54 @@ static gboolean
 gst_rtp_L16_pay_setcaps (GstRTPBasePayload * basepayload, GstCaps * caps)
 {
   GstRtpL16Pay *rtpL16pay;
-  GstStructure *structure;
-  gint channels, rate;
   gboolean res;
   gchar *params;
-  GstAudioChannelPosition *pos;
+  GstAudioInfo *info;
   const GstRTPChannelOrder *order;
   GstRTPBaseAudioPayload *rtpbaseaudiopayload;
 
   rtpbaseaudiopayload = GST_RTP_BASE_AUDIO_PAYLOAD (basepayload);
   rtpL16pay = GST_RTP_L16_PAY (basepayload);
 
-  structure = gst_caps_get_structure (caps, 0);
+  info = &rtpL16pay->info;
+  gst_audio_info_init (info);
+  if (!gst_audio_info_from_caps (info, caps))
+    goto invalid_caps;
 
-  /* first parse input caps */
-  if (!gst_structure_get_int (structure, "rate", &rate))
-    goto no_rate;
+  order = gst_rtp_channels_get_by_pos (info->channels, info->position);
+  rtpL16pay->order = order;
 
-  if (!gst_structure_get_int (structure, "channels", &channels))
-    goto no_channels;
+  gst_rtp_base_payload_set_options (basepayload, "audio", TRUE, "L16",
+      info->rate);
+  params = g_strdup_printf ("%d", info->channels);
 
-  /* get the channel order */
-  pos = gst_audio_get_channel_positions (structure);
-  if (pos)
-    order = gst_rtp_channels_get_by_pos (channels, pos);
-  else
-    order = NULL;
-
-  gst_rtp_base_payload_set_options (basepayload, "audio", TRUE, "L16", rate);
-  params = g_strdup_printf ("%d", channels);
-
-  if (!order && channels > 2) {
+  if (!order && info->channels > 2) {
     GST_ELEMENT_WARNING (rtpL16pay, STREAM, DECODE,
-        (NULL), ("Unknown channel order for %d channels", channels));
+        (NULL), ("Unknown channel order for %d channels", info->channels));
   }
 
   if (order && order->name) {
     res = gst_rtp_base_payload_set_outcaps (basepayload,
         "encoding-params", G_TYPE_STRING, params, "channels", G_TYPE_INT,
-        channels, "channel-order", G_TYPE_STRING, order->name, NULL);
+        info->channels, "channel-order", G_TYPE_STRING, order->name, NULL);
   } else {
     res = gst_rtp_base_payload_set_outcaps (basepayload,
         "encoding-params", G_TYPE_STRING, params, "channels", G_TYPE_INT,
-        channels, NULL);
+        info->channels, NULL);
   }
 
   g_free (params);
-  g_free (pos);
-
-  rtpL16pay->rate = rate;
-  rtpL16pay->channels = channels;
 
   /* octet-per-sample is 2 * channels for L16 */
   gst_rtp_base_audio_payload_set_sample_options (rtpbaseaudiopayload,
-      2 * rtpL16pay->channels);
+      2 * info->channels);
 
   return res;
 
   /* ERRORS */
-no_rate:
+invalid_caps:
   {
-    GST_DEBUG_OBJECT (rtpL16pay, "no rate given");
-    return FALSE;
-  }
-no_channels:
-  {
-    GST_DEBUG_OBJECT (rtpL16pay, "no channels given");
+    GST_DEBUG_OBJECT (rtpL16pay, "invalid caps");
     return FALSE;
   }
 }
@@ -230,6 +216,26 @@ gst_rtp_L16_pay_getcaps (GstRTPBasePayload * rtppayload, GstPad * pad,
   }
 
   return caps;
+}
+
+static GstFlowReturn
+gst_rtp_L16_pay_handle_buffer (GstRTPBasePayload * basepayload,
+    GstBuffer * buffer)
+{
+  GstRtpL16Pay *rtpL16pay;
+
+  rtpL16pay = GST_RTP_L16_PAY (basepayload);
+  buffer = gst_buffer_make_writable (buffer);
+
+  if (rtpL16pay->order &&
+      !gst_audio_buffer_reorder_channels (buffer, rtpL16pay->info.finfo->format,
+          rtpL16pay->info.channels, rtpL16pay->info.position,
+          rtpL16pay->order->pos)) {
+    return GST_FLOW_ERROR;
+  }
+
+  return GST_RTP_BASE_PAYLOAD_CLASS (parent_class)->handle_buffer (basepayload,
+      buffer);
 }
 
 gboolean

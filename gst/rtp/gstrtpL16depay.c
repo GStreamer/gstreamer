@@ -25,7 +25,6 @@
 #include <stdlib.h>
 
 #include <gst/audio/audio.h>
-#include <gst/audio/multichannel.h>
 
 #include "gstrtpL16depay.h"
 #include "gstrtpchannels.h"
@@ -39,6 +38,7 @@ GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("audio/x-raw, "
         "format = (string) S16_BE, "
+        "layout = (string) interleaved, "
         "rate = (int) [ 1, MAX ], " "channels = (int) [ 1, MAX ]")
     );
 
@@ -131,6 +131,7 @@ gst_rtp_L16_depay_setcaps (GstRTPBaseDepayload * depayload, GstCaps * caps)
   gboolean res;
   const gchar *channel_order;
   const GstRTPChannelOrder *order;
+  GstAudioInfo *info;
 
   rtpL16depay = GST_RTP_L16_DEPAY (depayload);
 
@@ -171,32 +172,32 @@ gst_rtp_L16_depay_setcaps (GstRTPBaseDepayload * depayload, GstCaps * caps)
   }
 
   depayload->clock_rate = clock_rate;
-  rtpL16depay->rate = clock_rate;
-  rtpL16depay->channels = channels;
 
-  srccaps = gst_caps_new_simple ("audio/x-raw",
-      "format", G_TYPE_STRING, "S16_BE",
-      "rate", G_TYPE_INT, clock_rate, "channels", G_TYPE_INT, channels, NULL);
+  info = &rtpL16depay->info;
+  gst_audio_info_init (info);
+  info->finfo = gst_audio_format_get_info (GST_AUDIO_FORMAT_S16BE);
+  info->rate = clock_rate;
+  info->channels = channels;
+  info->bpf = (info->finfo->width / 8) * channels;
 
   /* add channel positions */
   channel_order = gst_structure_get_string (structure, "channel-order");
 
   order = gst_rtp_channels_get_by_order (channels, channel_order);
+  rtpL16depay->order = order;
   if (order) {
-    gst_audio_set_channel_positions (gst_caps_get_structure (srccaps, 0),
-        order->pos);
+    memcpy (info->position, order->pos,
+        sizeof (GstAudioChannelPosition) * channels);
+    gst_audio_channel_positions_to_valid_order (info->position, info->channels);
   } else {
-    GstAudioChannelPosition *pos;
-
     GST_ELEMENT_WARNING (rtpL16depay, STREAM, DECODE,
         (NULL), ("Unknown channel order '%s' for %d channels",
             GST_STR_NULL (channel_order), channels));
     /* create default NONE layout */
-    pos = gst_rtp_channels_create_default (channels);
-    gst_audio_set_channel_positions (gst_caps_get_structure (srccaps, 0), pos);
-    g_free (pos);
+    gst_rtp_channels_create_default (channels, info->position);
   }
 
+  srccaps = gst_audio_info_to_caps (info);
   res = gst_pad_set_caps (depayload->srcpad, srccaps);
   gst_caps_unref (srccaps);
 
@@ -237,6 +238,14 @@ gst_rtp_L16_depay_process (GstRTPBaseDepayload * depayload, GstBuffer * buf)
     GST_BUFFER_FLAG_SET (outbuf, GST_BUFFER_FLAG_DISCONT);
   }
 
+  outbuf = gst_buffer_make_writable (outbuf);
+  if (rtpL16depay->order &&
+      !gst_audio_buffer_reorder_channels (outbuf,
+          rtpL16depay->info.finfo->format, rtpL16depay->info.channels,
+          rtpL16depay->info.position, rtpL16depay->order->pos)) {
+    goto reorder_failed;
+  }
+
   gst_rtp_buffer_unmap (&rtp);
 
   return outbuf;
@@ -246,6 +255,13 @@ empty_packet:
   {
     GST_ELEMENT_WARNING (rtpL16depay, STREAM, DECODE,
         ("Empty Payload."), (NULL));
+    gst_rtp_buffer_unmap (&rtp);
+    return NULL;
+  }
+reorder_failed:
+  {
+    GST_ELEMENT_ERROR (rtpL16depay, STREAM, DECODE,
+        ("Channel reordering failed."), (NULL));
     gst_rtp_buffer_unmap (&rtp);
     return NULL;
   }

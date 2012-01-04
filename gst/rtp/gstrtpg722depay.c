@@ -25,7 +25,6 @@
 #include <stdlib.h>
 
 #include <gst/audio/audio.h>
-#include <gst/audio/multichannel.h>
 
 #include "gstrtpg722depay.h"
 #include "gstrtpchannels.h"
@@ -127,8 +126,10 @@ gst_rtp_g722_depay_setcaps (GstRTPBaseDepayload * depayload, GstCaps * caps)
   gint channels;
   GstCaps *srccaps;
   gboolean res;
+#if 0
   const gchar *channel_order;
   const GstRTPChannelOrder *order;
+#endif
 
   rtpg722depay = GST_RTP_G722_DEPAY (depayload);
 
@@ -179,6 +180,8 @@ gst_rtp_g722_depay_setcaps (GstRTPBaseDepayload * depayload, GstCaps * caps)
   srccaps = gst_caps_new_simple ("audio/G722",
       "rate", G_TYPE_INT, samplerate, "channels", G_TYPE_INT, channels, NULL);
 
+  /* FIXME: Do something with the channel order */
+#if 0
   /* add channel positions */
   channel_order = gst_structure_get_string (structure, "channel-order");
 
@@ -197,6 +200,7 @@ gst_rtp_g722_depay_setcaps (GstRTPBaseDepayload * depayload, GstCaps * caps)
     gst_audio_set_channel_positions (gst_caps_get_structure (srccaps, 0), pos);
     g_free (pos);
   }
+#endif
 
   res = gst_pad_set_caps (depayload->srcpad, srccaps);
   gst_caps_unref (srccaps);

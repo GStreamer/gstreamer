@@ -23,6 +23,8 @@
 #include <gst/gst.h>
 #include <gst/rtp/gstrtpbaseaudiopayload.h>
 
+#include "gstrtpchannels.h"
+
 G_BEGIN_DECLS
 
 #define GST_TYPE_RTP_L16_PAY \
@@ -43,8 +45,8 @@ struct _GstRtpL16Pay
 {
   GstRTPBaseAudioPayload payload;
 
-  gint rate;
-  gint channels;
+  GstAudioInfo info;
+  const GstRTPChannelOrder *order;
 };
 
 struct _GstRtpL16PayClass

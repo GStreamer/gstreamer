@@ -24,7 +24,6 @@
 #include <string.h>
 
 #include <gst/audio/audio.h>
-#include <gst/audio/multichannel.h>
 #include <gst/rtp/gstrtpbuffer.h>
 
 #include "gstrtpg722pay.h"
@@ -105,8 +104,10 @@ gst_rtp_g722_pay_setcaps (GstRTPBasePayload * basepayload, GstCaps * caps)
   gint rate, channels, clock_rate;
   gboolean res;
   gchar *params;
+#if 0
   GstAudioChannelPosition *pos;
   const GstRTPChannelOrder *order;
+#endif
   GstRTPBaseAudioPayload *rtpbaseaudiopayload;
 
   rtpbaseaudiopayload = GST_RTP_BASE_AUDIO_PAYLOAD (basepayload);
@@ -121,12 +122,15 @@ gst_rtp_g722_pay_setcaps (GstRTPBasePayload * basepayload, GstCaps * caps)
   if (!gst_structure_get_int (structure, "channels", &channels))
     goto no_channels;
 
+  /* FIXME: Do something with the channel positions */
+#if 0
   /* get the channel order */
   pos = gst_audio_get_channel_positions (structure);
   if (pos)
     order = gst_rtp_channels_get_by_pos (channels, pos);
   else
     order = NULL;
+#endif
 
   /* Clock rate is always 8000 Hz for G722 according to
    * RFC 3551 although the sampling rate is 16000 Hz */
@@ -136,6 +140,7 @@ gst_rtp_g722_pay_setcaps (GstRTPBasePayload * basepayload, GstCaps * caps)
       clock_rate);
   params = g_strdup_printf ("%d", channels);
 
+#if 0
   if (!order && channels > 2) {
     GST_ELEMENT_WARNING (rtpg722pay, STREAM, DECODE,
         (NULL), ("Unknown channel order for %d channels", channels));
@@ -146,13 +151,18 @@ gst_rtp_g722_pay_setcaps (GstRTPBasePayload * basepayload, GstCaps * caps)
         "encoding-params", G_TYPE_STRING, params, "channels", G_TYPE_INT,
         channels, "channel-order", G_TYPE_STRING, order->name, NULL);
   } else {
+#endif
     res = gst_rtp_base_payload_set_outcaps (basepayload,
         "encoding-params", G_TYPE_STRING, params, "channels", G_TYPE_INT,
         channels, NULL);
+#if 0
   }
+#endif
 
   g_free (params);
+#if 0
   g_free (pos);
+#endif
 
   rtpg722pay->rate = rate;
   rtpg722pay->channels = channels;

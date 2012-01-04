@@ -271,7 +271,7 @@ gst_rtp_vraw_pay_handle_buffer (GstRTPBasePayload * payload, GstBuffer * buffer)
   width = GST_VIDEO_INFO_WIDTH (&rtpvrawpay->vinfo);
   height = GST_VIDEO_INFO_HEIGHT (&rtpvrawpay->vinfo);
 
-  interlaced = !!(rtpvrawpay->vinfo.flags & GST_VIDEO_FLAG_INTERLACED);
+  interlaced = ! !(rtpvrawpay->vinfo.flags & GST_VIDEO_FLAG_INTERLACED);
 
   /* start with line 0, offset 0 */
   for (field = 0; field < 1 + interlaced; field++) {

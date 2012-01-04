@@ -22,6 +22,9 @@
 
 #include <gst/gst.h>
 #include <gst/rtp/gstrtpbasedepayload.h>
+#include <gst/audio/audio.h>
+
+#include "gstrtpchannels.h"
 
 G_BEGIN_DECLS
 
@@ -45,8 +48,8 @@ struct _GstRtpL16Depay
 {
   GstRTPBaseDepayload depayload;
 
-  guint rate;
-  guint channels;
+  GstAudioInfo info;
+  const GstRTPChannelOrder *order;
 };
 
 /* Standard definition defining a class for this element. */

@@ -21,7 +21,9 @@
 #include <stdlib.h>
 
 #include <gst/audio/audio.h>
-#include <gst/audio/multichannel.h>
+
+#ifndef __GST_RTP_CHANNELS_H__
+#define __GST_RTP_CHANNELS_H__
 
 typedef struct
 {
@@ -41,14 +43,14 @@ static const GstAudioChannelPosition pos_4_2[] = {
   GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT,
   GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT,
   GST_AUDIO_CHANNEL_POSITION_FRONT_CENTER,
-  GST_AUDIO_CHANNEL_POSITION_LFE
+  GST_AUDIO_CHANNEL_POSITION_LFE1
 };
 
 static const GstAudioChannelPosition pos_4_3[] = {
   GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT,
   GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT,
   GST_AUDIO_CHANNEL_POSITION_FRONT_CENTER,
-  GST_AUDIO_CHANNEL_POSITION_LFE
+  GST_AUDIO_CHANNEL_POSITION_LFE1
 };
 
 static const GstAudioChannelPosition pos_5_1[] = {
@@ -65,14 +67,14 @@ static const GstAudioChannelPosition pos_6_1[] = {
   GST_AUDIO_CHANNEL_POSITION_SIDE_LEFT,
   GST_AUDIO_CHANNEL_POSITION_SIDE_RIGHT,
   GST_AUDIO_CHANNEL_POSITION_FRONT_CENTER,
-  GST_AUDIO_CHANNEL_POSITION_LFE
+  GST_AUDIO_CHANNEL_POSITION_LFE1
 };
 
 static const GstAudioChannelPosition pos_6_2[] = {
   GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT,
   GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT,
   GST_AUDIO_CHANNEL_POSITION_FRONT_CENTER,
-  GST_AUDIO_CHANNEL_POSITION_LFE,
+  GST_AUDIO_CHANNEL_POSITION_LFE1,
   GST_AUDIO_CHANNEL_POSITION_SIDE_LEFT,
   GST_AUDIO_CHANNEL_POSITION_SIDE_RIGHT
 };
@@ -81,7 +83,7 @@ static const GstAudioChannelPosition pos_8_1[] = {
   GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT,
   GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT,
   GST_AUDIO_CHANNEL_POSITION_FRONT_CENTER,
-  GST_AUDIO_CHANNEL_POSITION_LFE,
+  GST_AUDIO_CHANNEL_POSITION_LFE1,
   GST_AUDIO_CHANNEL_POSITION_SIDE_LEFT,
   GST_AUDIO_CHANNEL_POSITION_SIDE_RIGHT,
   GST_AUDIO_CHANNEL_POSITION_REAR_LEFT,
@@ -92,7 +94,7 @@ static const GstAudioChannelPosition pos_8_2[] = {
   GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT,
   GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT,
   GST_AUDIO_CHANNEL_POSITION_FRONT_CENTER,
-  GST_AUDIO_CHANNEL_POSITION_LFE,
+  GST_AUDIO_CHANNEL_POSITION_LFE1,
   GST_AUDIO_CHANNEL_POSITION_SIDE_LEFT,
   GST_AUDIO_CHANNEL_POSITION_SIDE_RIGHT,
   GST_AUDIO_CHANNEL_POSITION_REAR_LEFT,
@@ -103,7 +105,7 @@ static const GstAudioChannelPosition pos_8_3[] = {
   GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT,
   GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT,
   GST_AUDIO_CHANNEL_POSITION_FRONT_CENTER,
-  GST_AUDIO_CHANNEL_POSITION_LFE,
+  GST_AUDIO_CHANNEL_POSITION_LFE1,
   GST_AUDIO_CHANNEL_POSITION_SIDE_LEFT,
   GST_AUDIO_CHANNEL_POSITION_SIDE_RIGHT,
   GST_AUDIO_CHANNEL_POSITION_REAR_LEFT,
@@ -111,7 +113,7 @@ static const GstAudioChannelPosition pos_8_3[] = {
 };
 
 static const GstAudioChannelPosition pos_def_1[] = {
-  GST_AUDIO_CHANNEL_POSITION_FRONT_MONO
+  GST_AUDIO_CHANNEL_POSITION_MONO
 };
 
 static const GstAudioChannelPosition pos_def_2[] = {
@@ -129,7 +131,7 @@ static const GstAudioChannelPosition pos_def_4[] = {
   GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT,
   GST_AUDIO_CHANNEL_POSITION_FRONT_CENTER,
   GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT,
-  GST_AUDIO_CHANNEL_POSITION_LFE
+  GST_AUDIO_CHANNEL_POSITION_LFE1
 };
 
 static const GstAudioChannelPosition pos_def_5[] = {
@@ -146,7 +148,7 @@ static const GstAudioChannelPosition pos_def_6[] = {
   GST_AUDIO_CHANNEL_POSITION_FRONT_CENTER,
   GST_AUDIO_CHANNEL_POSITION_SIDE_RIGHT,
   GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT,
-  GST_AUDIO_CHANNEL_POSITION_LFE
+  GST_AUDIO_CHANNEL_POSITION_LFE1
 };
 
 static const GstRTPChannelOrder channel_orders[] =
@@ -183,4 +185,6 @@ const GstRTPChannelOrder *   gst_rtp_channels_get_by_order   (gint channels,
                                                               const gchar *order);
 const GstRTPChannelOrder *   gst_rtp_channels_get_by_index   (gint channels, guint idx);
 
-GstAudioChannelPosition *    gst_rtp_channels_create_default (gint channels);
+void                         gst_rtp_channels_create_default (gint channels, GstAudioChannelPosition *pos);
+
+#endif /* __GST_RTP_CHANNELS_H__ */

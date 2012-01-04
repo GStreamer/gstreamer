@@ -33,14 +33,16 @@ static gboolean
 check_channels (const GstRTPChannelOrder * order,
     const GstAudioChannelPosition * pos)
 {
-  gint i;
+  gint i, j;
   gboolean res = TRUE;
 
   for (i = 0; i < order->channels; i++) {
-    if (order->pos[i] != pos[i]) {
-      res = FALSE;
-      break;
+    for (j = 0; j < order->channels; j++) {
+      if (order->pos[j] == pos[i])
+        break;
     }
+    if (j == order->channels)
+      return FALSE;
   }
   return res;
 }
@@ -150,18 +152,13 @@ gst_rtp_channels_get_by_index (gint channels, guint idx)
  * Returns: a #GstAudioChannelPosition with all the channel position info set to
  * #GST_AUDIO_CHANNEL_POSITION_NONE.
  */
-GstAudioChannelPosition *
-gst_rtp_channels_create_default (gint channels)
+void
+gst_rtp_channels_create_default (gint channels, GstAudioChannelPosition * posn)
 {
   gint i;
-  GstAudioChannelPosition *posn;
 
-  g_return_val_if_fail (channels > 0, NULL);
-
-  posn = g_new (GstAudioChannelPosition, channels);
+  g_return_if_fail (channels > 0);
 
   for (i = 0; i < channels; i++)
     posn[i] = GST_AUDIO_CHANNEL_POSITION_NONE;
-
-  return posn;
 }
