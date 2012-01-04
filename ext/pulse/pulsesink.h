@@ -101,13 +101,17 @@ GType gst_pulsesink_get_type (void);
 #define _PULSE_SINK_CAPS_COMMON \
     "audio/x-raw, " \
       "format = (string) " FORMATS ", " \
+      "layout = (string) interleaved, " \
       "rate = (int) [ 1, MAX ], " \
       "channels = (int) [ 1, 32 ];" \
     "audio/x-alaw, " \
+      "layout = (string) interleaved, " \
       "rate = (int) [ 1, MAX], " \
       "channels = (int) [ 1, 32 ];" \
     "audio/x-mulaw, " \
-      "rate = (int) [ 1, MAX], " "channels = (int) [ 1, 32 ];"
+      "layout = (string) interleaved, " \
+      "rate = (int) [ 1, MAX], " \
+      "channels = (int) [ 1, 32 ];"
 
 #define _PULSE_SINK_CAPS_1_0 \
     "audio/x-ac3, framed = (boolean) true;" \

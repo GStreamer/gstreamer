@@ -116,6 +116,7 @@ static GstStaticPadTemplate pad_template = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("audio/x-raw, "
         "format = (string) " FORMATS ", "
+        "layout = (string) interleaved, "
         "rate = (int) [ 1, MAX ], "
         "channels = (int) [ 1, 32 ];"
         "audio/x-alaw, "
@@ -1136,21 +1137,47 @@ server_dead:
 }
 
 static gboolean
-gst_pulsesrc_create_stream (GstPulseSrc * pulsesrc, GstCaps * caps)
+gst_pulsesrc_create_stream (GstPulseSrc * pulsesrc, GstCaps ** caps)
 {
   pa_channel_map channel_map;
+  const pa_channel_map *m;
   GstStructure *s;
   gboolean need_channel_layout = FALSE;
   GstAudioRingBufferSpec spec;
   const gchar *name;
 
+  s = gst_caps_get_structure (*caps, 0);
+  gst_structure_get_int (s, "channels", &spec.info.channels);
+  if (!gst_structure_has_field (s, "channel-mask")) {
+    if (spec.info.channels == 1) {
+      pa_channel_map_init_mono (&channel_map);
+    } else if (spec.info.channels == 2) {
+      gst_structure_set (s, "channel-mask", GST_TYPE_BITMASK,
+          GST_AUDIO_CHANNEL_POSITION_MASK (FRONT_LEFT) |
+          GST_AUDIO_CHANNEL_POSITION_MASK (FRONT_RIGHT), NULL);
+      pa_channel_map_init_stereo (&channel_map);
+    } else {
+      need_channel_layout = TRUE;
+      gst_structure_set (s, "channel-mask", GST_TYPE_BITMASK,
+          G_GUINT64_CONSTANT (0), NULL);
+    }
+  }
+
   memset (&spec, 0, sizeof (GstAudioRingBufferSpec));
   spec.latency_time = GST_SECOND;
-  if (!gst_audio_ring_buffer_parse_caps (&spec, caps))
+  if (!gst_audio_ring_buffer_parse_caps (&spec, *caps))
     goto invalid_caps;
 
   /* Keep the refcount of the caps at 1 to make them writable */
   gst_caps_unref (spec.caps);
+
+  if (!need_channel_layout
+      && !gst_pulse_gst_to_channel_map (&channel_map, &spec)) {
+    need_channel_layout = TRUE;
+    gst_structure_set (s, "channel-mask", GST_TYPE_BITMASK,
+        G_GUINT64_CONSTANT (0), NULL);
+    memset (spec.info.position, 0xff, sizeof (spec.info.position));
+  }
 
   if (!gst_pulse_fill_sample_spec (&spec, &pulsesrc->sample_spec))
     goto invalid_spec;
@@ -1159,17 +1186,6 @@ gst_pulsesrc_create_stream (GstPulseSrc * pulsesrc, GstCaps * caps)
 
   if (!pulsesrc->context)
     goto bad_context;
-
-  s = gst_caps_get_structure (caps, 0);
-  if (!gst_structure_has_field (s, "channel-layout") ||
-      !gst_pulse_gst_to_channel_map (&channel_map, &spec)) {
-    if (spec.info.channels == 1)
-      pa_channel_map_init_mono (&channel_map);
-    else if (spec.info.channels == 2)
-      pa_channel_map_init_stereo (&channel_map);
-    else
-      need_channel_layout = TRUE;
-  }
 
   name = "Record Stream";
   if (pulsesrc->proplist) {
@@ -1184,14 +1200,14 @@ gst_pulsesrc_create_stream (GstPulseSrc * pulsesrc, GstCaps * caps)
               (need_channel_layout) ? NULL : &channel_map)))
     goto create_failed;
 
-  if (need_channel_layout) {
-    const pa_channel_map *m = pa_stream_get_channel_map (pulsesrc->stream);
+  m = pa_stream_get_channel_map (pulsesrc->stream);
+  gst_pulse_channel_map_to_gst (m, &spec);
+  gst_audio_channel_positions_to_valid_order (spec.info.position,
+      spec.info.channels);
+  gst_caps_unref (*caps);
+  *caps = gst_audio_info_to_caps (&spec.info);
 
-    gst_pulse_channel_map_to_gst (m, &spec);
-    caps = spec.caps;
-  }
-
-  GST_DEBUG_OBJECT (pulsesrc, "Caps are %" GST_PTR_FORMAT, caps);
+  GST_DEBUG_OBJECT (pulsesrc, "Caps are %" GST_PTR_FORMAT, *caps);
 
   pa_stream_set_state_callback (pulsesrc->stream, gst_pulsesrc_stream_state_cb,
       pulsesrc);
@@ -1292,7 +1308,7 @@ gst_pulsesrc_negotiate (GstBaseSrc * basesrc)
         result = TRUE;
       } else if (gst_caps_is_fixed (caps)) {
         /* yay, fixed caps, use those then */
-        result = gst_pulsesrc_create_stream (pulsesrc, caps);
+        result = gst_pulsesrc_create_stream (pulsesrc, &caps);
         if (result)
           result = gst_base_src_set_caps (basesrc, caps);
       }
@@ -1320,6 +1336,16 @@ gst_pulsesrc_prepare (GstAudioSrc * asrc, GstAudioRingBufferSpec * spec)
   pa_operation *o;
 
   pa_threaded_mainloop_lock (pulsesrc->mainloop);
+
+  {
+    GstAudioRingBufferSpec s = *spec;
+    const pa_channel_map *m;
+
+    m = pa_stream_get_channel_map (pulsesrc->stream);
+    gst_pulse_channel_map_to_gst (m, &s);
+    gst_audio_ring_buffer_set_channel_positions (GST_AUDIO_BASE_SRC
+        (pulsesrc)->ringbuffer, s.info.position);
+  }
 
   /* enable event notifications */
   GST_LOG_OBJECT (pulsesrc, "subscribing to context events");

@@ -24,7 +24,6 @@
 #endif
 
 #include "pulseutil.h"
-#include <gst/audio/multichannel.h>
 
 #ifdef HAVE_UNISTD_H
 # include <unistd.h>            /* getpid on UNIX */
@@ -33,60 +32,39 @@
 # include <process.h>           /* getpid on win32 */
 #endif
 
-static const pa_channel_position_t gst_pos_to_pa[GST_AUDIO_CHANNEL_POSITION_NUM]
-    = {
-  [GST_AUDIO_CHANNEL_POSITION_FRONT_MONO] = PA_CHANNEL_POSITION_MONO,
-  [GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT] = PA_CHANNEL_POSITION_FRONT_LEFT,
-  [GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT] = PA_CHANNEL_POSITION_FRONT_RIGHT,
-  [GST_AUDIO_CHANNEL_POSITION_REAR_CENTER] = PA_CHANNEL_POSITION_REAR_CENTER,
-  [GST_AUDIO_CHANNEL_POSITION_REAR_LEFT] = PA_CHANNEL_POSITION_REAR_LEFT,
-  [GST_AUDIO_CHANNEL_POSITION_REAR_RIGHT] = PA_CHANNEL_POSITION_REAR_RIGHT,
-  [GST_AUDIO_CHANNEL_POSITION_LFE] = PA_CHANNEL_POSITION_LFE,
-  [GST_AUDIO_CHANNEL_POSITION_FRONT_CENTER] = PA_CHANNEL_POSITION_FRONT_CENTER,
-  [GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT_OF_CENTER] =
-      PA_CHANNEL_POSITION_FRONT_LEFT_OF_CENTER,
-  [GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT_OF_CENTER] =
-      PA_CHANNEL_POSITION_FRONT_RIGHT_OF_CENTER,
-  [GST_AUDIO_CHANNEL_POSITION_SIDE_LEFT] = PA_CHANNEL_POSITION_SIDE_LEFT,
-  [GST_AUDIO_CHANNEL_POSITION_SIDE_RIGHT] = PA_CHANNEL_POSITION_SIDE_RIGHT,
-  [GST_AUDIO_CHANNEL_POSITION_TOP_CENTER] = PA_CHANNEL_POSITION_TOP_CENTER,
-  [GST_AUDIO_CHANNEL_POSITION_TOP_FRONT_LEFT] =
-      PA_CHANNEL_POSITION_TOP_FRONT_LEFT,
-  [GST_AUDIO_CHANNEL_POSITION_TOP_FRONT_RIGHT] =
-      PA_CHANNEL_POSITION_TOP_FRONT_RIGHT,
-  [GST_AUDIO_CHANNEL_POSITION_TOP_FRONT_CENTER] =
-      PA_CHANNEL_POSITION_TOP_FRONT_CENTER,
-  [GST_AUDIO_CHANNEL_POSITION_TOP_REAR_LEFT] =
-      PA_CHANNEL_POSITION_TOP_REAR_LEFT,
-  [GST_AUDIO_CHANNEL_POSITION_TOP_REAR_RIGHT] =
-      PA_CHANNEL_POSITION_TOP_REAR_RIGHT,
-  [GST_AUDIO_CHANNEL_POSITION_TOP_REAR_CENTER] =
-      PA_CHANNEL_POSITION_TOP_REAR_CENTER,
-  [GST_AUDIO_CHANNEL_POSITION_NONE] = PA_CHANNEL_POSITION_INVALID
-};
-
-/* All index are increased by one because PA_CHANNEL_POSITION_INVALID == -1 */
-static const GstAudioChannelPosition
-    pa_to_gst_pos[GST_AUDIO_CHANNEL_POSITION_NUM]
-    = {
-  [PA_CHANNEL_POSITION_MONO + 1] = GST_AUDIO_CHANNEL_POSITION_FRONT_MONO,
-  [PA_CHANNEL_POSITION_FRONT_LEFT + 1] = GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT,
-  [PA_CHANNEL_POSITION_FRONT_RIGHT + 1] =
-      GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT,
-  [PA_CHANNEL_POSITION_REAR_CENTER + 1] =
-      GST_AUDIO_CHANNEL_POSITION_REAR_CENTER,
-  [PA_CHANNEL_POSITION_REAR_LEFT + 1] = GST_AUDIO_CHANNEL_POSITION_REAR_LEFT,
-  [PA_CHANNEL_POSITION_REAR_RIGHT + 1] = GST_AUDIO_CHANNEL_POSITION_REAR_RIGHT,
-  [PA_CHANNEL_POSITION_LFE + 1] = GST_AUDIO_CHANNEL_POSITION_LFE,
-  [PA_CHANNEL_POSITION_FRONT_CENTER + 1] =
-      GST_AUDIO_CHANNEL_POSITION_FRONT_CENTER,
-  [PA_CHANNEL_POSITION_FRONT_LEFT_OF_CENTER + 1] =
-      GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT_OF_CENTER,
-  [PA_CHANNEL_POSITION_FRONT_RIGHT_OF_CENTER + 1] =
-      GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT_OF_CENTER,
-  [PA_CHANNEL_POSITION_SIDE_LEFT + 1] = GST_AUDIO_CHANNEL_POSITION_SIDE_LEFT,
-  [PA_CHANNEL_POSITION_SIDE_RIGHT + 1] = GST_AUDIO_CHANNEL_POSITION_SIDE_RIGHT,
-  [PA_CHANNEL_POSITION_INVALID + 1] = GST_AUDIO_CHANNEL_POSITION_NONE,
+static const struct
+{
+  GstAudioChannelPosition gst_pos;
+  pa_channel_position_t pa_pos;
+} gst_pa_pos_table[] = {
+  {
+  GST_AUDIO_CHANNEL_POSITION_MONO, PA_CHANNEL_POSITION_MONO}, {
+  GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT, PA_CHANNEL_POSITION_FRONT_LEFT}, {
+  GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT, PA_CHANNEL_POSITION_FRONT_RIGHT}, {
+  GST_AUDIO_CHANNEL_POSITION_REAR_CENTER, PA_CHANNEL_POSITION_REAR_CENTER}, {
+  GST_AUDIO_CHANNEL_POSITION_REAR_LEFT, PA_CHANNEL_POSITION_REAR_LEFT}, {
+  GST_AUDIO_CHANNEL_POSITION_REAR_RIGHT, PA_CHANNEL_POSITION_REAR_RIGHT}, {
+  GST_AUDIO_CHANNEL_POSITION_LFE1, PA_CHANNEL_POSITION_LFE}, {
+  GST_AUDIO_CHANNEL_POSITION_FRONT_CENTER, PA_CHANNEL_POSITION_FRONT_CENTER}, {
+  GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT_OF_CENTER,
+        PA_CHANNEL_POSITION_FRONT_LEFT_OF_CENTER}, {
+  GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT_OF_CENTER,
+        PA_CHANNEL_POSITION_FRONT_RIGHT_OF_CENTER}, {
+  GST_AUDIO_CHANNEL_POSITION_SIDE_LEFT, PA_CHANNEL_POSITION_SIDE_LEFT}, {
+  GST_AUDIO_CHANNEL_POSITION_SIDE_RIGHT, PA_CHANNEL_POSITION_SIDE_RIGHT}, {
+  GST_AUDIO_CHANNEL_POSITION_TOP_CENTER, PA_CHANNEL_POSITION_TOP_CENTER}, {
+  GST_AUDIO_CHANNEL_POSITION_TOP_FRONT_LEFT,
+        PA_CHANNEL_POSITION_TOP_FRONT_LEFT}, {
+  GST_AUDIO_CHANNEL_POSITION_TOP_FRONT_RIGHT,
+        PA_CHANNEL_POSITION_TOP_FRONT_RIGHT}, {
+  GST_AUDIO_CHANNEL_POSITION_TOP_FRONT_CENTER,
+        PA_CHANNEL_POSITION_TOP_FRONT_CENTER}, {
+  GST_AUDIO_CHANNEL_POSITION_TOP_REAR_LEFT, PA_CHANNEL_POSITION_TOP_REAR_LEFT}, {
+  GST_AUDIO_CHANNEL_POSITION_TOP_REAR_RIGHT,
+        PA_CHANNEL_POSITION_TOP_REAR_RIGHT}, {
+  GST_AUDIO_CHANNEL_POSITION_TOP_REAR_CENTER,
+        PA_CHANNEL_POSITION_TOP_REAR_CENTER}, {
+  GST_AUDIO_CHANNEL_POSITION_NONE, PA_CHANNEL_POSITION_INVALID}
 };
 
 static gboolean
@@ -235,29 +213,30 @@ pa_channel_map *
 gst_pulse_gst_to_channel_map (pa_channel_map * map,
     const GstAudioRingBufferSpec * spec)
 {
-  int i;
-  GstAudioChannelPosition *pos;
+  gint i, j;
+  gint channels;
+  const GstAudioChannelPosition *pos;
 
   pa_channel_map_init (map);
 
-  if (!(pos =
-          gst_audio_get_channel_positions (gst_caps_get_structure (spec->caps,
-                  0)))) {
+  channels = GST_AUDIO_INFO_CHANNELS (&spec->info);
+  pos = spec->info.position;
+
+  for (j = 0; j < channels; j++) {
+    for (i = 0; i < G_N_ELEMENTS (gst_pa_pos_table); i++) {
+      if (pos[j] == gst_pa_pos_table[i].gst_pos) {
+        map->map[j] = gst_pa_pos_table[i].pa_pos;
+        break;
+      }
+    }
+    if (i == G_N_ELEMENTS (gst_pa_pos_table))
+      return NULL;
+  }
+
+  if (j != spec->info.channels) {
     return NULL;
   }
 
-  for (i = 0; i < spec->info.channels; i++) {
-    if (pos[i] == GST_AUDIO_CHANNEL_POSITION_NONE) {
-      /* no valid mappings for these channels */
-      g_free (pos);
-      return NULL;
-    } else if (pos[i] < GST_AUDIO_CHANNEL_POSITION_NUM)
-      map->map[i] = gst_pos_to_pa[pos[i]];
-    else
-      map->map[i] = PA_CHANNEL_POSITION_INVALID;
-  }
-
-  g_free (pos);
   map->channels = spec->info.channels;
 
   if (!pa_channel_map_valid (map)) {
@@ -271,40 +250,36 @@ GstAudioRingBufferSpec *
 gst_pulse_channel_map_to_gst (const pa_channel_map * map,
     GstAudioRingBufferSpec * spec)
 {
-  int i;
-  GstAudioChannelPosition *pos;
+  gint i, j;
   gboolean invalid = FALSE;
   gint channels;
+  GstAudioChannelPosition *pos;
 
   channels = GST_AUDIO_INFO_CHANNELS (&spec->info);
 
   g_return_val_if_fail (map->channels == channels, NULL);
 
-  pos = g_new0 (GstAudioChannelPosition, channels + 1);
+  pos = spec->info.position;
 
-  for (i = 0; i < channels; i++) {
-    if (map->map[i] == PA_CHANNEL_POSITION_INVALID) {
-      invalid = TRUE;
-      break;
-    } else if ((int) map->map[i] < (int) GST_AUDIO_CHANNEL_POSITION_NUM) {
-      pos[i] = pa_to_gst_pos[map->map[i] + 1];
-    } else {
-      invalid = TRUE;
-      break;
+  for (j = 0; j < channels; j++) {
+    for (i = 0; j < channels && i < G_N_ELEMENTS (gst_pa_pos_table); i++) {
+      if (map->map[j] == gst_pa_pos_table[i].pa_pos) {
+        pos[j] = gst_pa_pos_table[i].gst_pos;
+        break;
+      }
     }
+    if (i == G_N_ELEMENTS (gst_pa_pos_table))
+      return NULL;
   }
 
-  if (!invalid && !gst_audio_check_channel_positions (pos, channels))
+  if (!invalid
+      && !gst_audio_check_valid_channel_positions (pos, channels, FALSE))
     invalid = TRUE;
 
   if (invalid) {
     for (i = 0; i < channels; i++)
       pos[i] = GST_AUDIO_CHANNEL_POSITION_NONE;
   }
-
-  gst_audio_set_channel_positions (gst_caps_get_structure (spec->caps, 0), pos);
-
-  g_free (pos);
 
   return spec;
 }
