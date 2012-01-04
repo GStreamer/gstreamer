@@ -23,6 +23,8 @@
 #include <unistd.h>
 
 #include <gst/check/gstcheck.h>
+#include <gst/audio/audio.h>
+#undef GST_CAT_DEFAULT
 #include "../../gst/gdp/dataprotocol.c"
 
 /* For ease of programming we use globals to keep refs for our floating
@@ -63,8 +65,8 @@ setup_gdpdepay (void)
 
   GST_DEBUG ("setup_gdpdepay");
   gdpdepay = gst_check_setup_element ("gdpdepay");
-  mysrcpad = gst_check_setup_src_pad (gdpdepay, &srctemplate, NULL);
-  mysinkpad = gst_check_setup_sink_pad (gdpdepay, &sinktemplate, NULL);
+  mysrcpad = gst_check_setup_src_pad (gdpdepay, &srctemplate);
+  mysinkpad = gst_check_setup_sink_pad (gdpdepay, &sinktemplate);
   gst_pad_set_active (mysrcpad, TRUE);
   gst_pad_set_active (mysinkpad, TRUE);
 
@@ -122,10 +124,10 @@ GST_START_TEST (test_audio_per_byte)
           GST_STATE_PLAYING) == GST_STATE_CHANGE_SUCCESS,
       "could not set to playing");
 
-  caps = gst_pad_get_caps (srcpad);
+  caps = gst_pad_query_caps (srcpad, NULL);
   fail_unless (gst_caps_is_any (caps));
   gst_caps_unref (caps);
-  fail_if (gst_pad_get_negotiated_caps (srcpad));
+  fail_if (gst_pad_get_current_caps (srcpad));
 
   /* create caps and buffer packets and push them */
   caps = gst_caps_from_string (AUDIO_CAPS_STRING);
@@ -136,7 +138,7 @@ GST_START_TEST (test_audio_per_byte)
   gdpdepay_push_per_byte ("caps payload", payload,
       gst_dp_header_payload_length (header));
   fail_unless_equals_int (g_list_length (buffers), 0);
-  caps = gst_pad_get_caps (srcpad);
+  caps = gst_pad_query_caps (srcpad, NULL);
   fail_if (gst_caps_is_any (caps));
   gst_caps_unref (caps);
 
@@ -199,10 +201,10 @@ GST_START_TEST (test_audio_in_one_buffer)
       "could not set to playing");
 
   /* make sure no caps are set yet */
-  caps = gst_pad_get_caps (srcpad);
+  caps = gst_pad_query_caps (srcpad, NULL);
   fail_unless (gst_caps_is_any (caps));
   gst_caps_unref (caps);
-  fail_if (gst_pad_get_negotiated_caps (srcpad));
+  fail_if (gst_pad_get_current_caps (srcpad));
 
   /* create caps and buffer packets and push them as one buffer */
   caps = gst_caps_from_string (AUDIO_CAPS_STRING);
@@ -266,8 +268,8 @@ setup_gdpdepay_streamheader (void)
 
   GST_DEBUG ("setup_gdpdepay");
   gdpdepay = gst_check_setup_element ("gdpdepay");
-  mysrcpad = gst_check_setup_src_pad (gdpdepay, &srctemplate, NULL);
-  myshsinkpad = gst_check_setup_sink_pad (gdpdepay, &shsinktemplate, NULL);
+  mysrcpad = gst_check_setup_src_pad (gdpdepay, &srctemplate);
+  myshsinkpad = gst_check_setup_sink_pad (gdpdepay, &shsinktemplate);
   gst_pad_set_active (mysrcpad, TRUE);
   gst_pad_set_active (myshsinkpad, TRUE);
 
@@ -278,7 +280,7 @@ setup_gdpdepay_streamheader (void)
  * have a streamheader set */
 GST_START_TEST (test_streamheader)
 {
-  GstCaps *caps, *padcaps;
+  GstCaps *caps;
   GstPad *srcpad;
   GstElement *gdpdepay;
   GstBuffer *buffer, *inbuffer, *outbuffer, *shbuffer;
@@ -302,10 +304,10 @@ GST_START_TEST (test_streamheader)
       "could not set to playing");
 
   /* make sure no caps are set yet */
-  caps = gst_pad_get_caps (srcpad);
+  caps = gst_pad_query_caps (srcpad, NULL);
   fail_unless (gst_caps_is_any (caps));
   gst_caps_unref (caps);
-  fail_if (gst_pad_get_negotiated_caps (srcpad));
+  fail_if (gst_pad_get_current_caps (srcpad));
 
   /* create a streamheader buffer and the caps containing it */
   caps = gst_caps_from_string ("application/x-gst-test-streamheader");
@@ -322,8 +324,6 @@ GST_START_TEST (test_streamheader)
   g_value_unset (&value);
   gst_structure_set_value (structure, "streamheader", &array);
   g_value_unset (&array);
-
-  gst_buffer_set_caps (buffer, caps);
 
   /* create GDP packets for the caps and the buffer, and put them in one
    * GDP buffer */
@@ -364,17 +364,8 @@ GST_START_TEST (test_streamheader)
   ASSERT_BUFFER_REFCOUNT (outbuffer, "outbuffer", 1);
   fail_unless (GST_BUFFER_FLAG_IS_SET (outbuffer, GST_BUFFER_FLAG_IN_CAPS));
 
-  padcaps = gst_pad_get_negotiated_caps (myshsinkpad);
-  caps = gst_buffer_get_caps (outbuffer);
-  fail_if (caps == NULL);
-  fail_if (padcaps == NULL);
-  GST_DEBUG ("caps: %" GST_PTR_FORMAT ", padcaps: %" GST_PTR_FORMAT, caps,
-      padcaps);
-  fail_unless (gst_caps_is_equal (padcaps, caps));
-
   /* FIXME: get streamheader, compare data with buffer */
   gst_buffer_unref (outbuffer);
-  gst_caps_unref (padcaps);
   gst_caps_unref (caps);
 
   /* clean up */
