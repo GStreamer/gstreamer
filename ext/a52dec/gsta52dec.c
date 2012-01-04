@@ -43,7 +43,6 @@
 #include "_stdint.h"
 
 #include <gst/gst.h>
-#include <gst/audio/multichannel.h>
 
 #include <a52dec/a52.h>
 #include <a52dec/mm_accel.h>
@@ -84,6 +83,7 @@ static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("audio/x-raw, "
         "format = (string) " SAMPLE_FORMAT ", "
+        "layout = (string) interleaved, "
         "rate = (int) [ 4000, 96000 ], " "channels = (int) [ 1, 6 ]")
     );
 
@@ -231,21 +231,14 @@ gst_a52dec_init (GstA52Dec * a52dec)
 }
 
 static gint
-gst_a52dec_channels (int flags, GstAudioChannelPosition ** _pos)
+gst_a52dec_channels (int flags, GstAudioChannelPosition * pos)
 {
   gint chans = 0;
-  GstAudioChannelPosition *pos = NULL;
-
-  /* allocated just for safety. Number makes no sense */
-  if (_pos) {
-    pos = g_new (GstAudioChannelPosition, 6);
-    *_pos = pos;
-  }
 
   if (flags & A52_LFE) {
     chans += 1;
     if (pos) {
-      pos[0] = GST_AUDIO_CHANNEL_POSITION_LFE;
+      pos[0] = GST_AUDIO_CHANNEL_POSITION_LFE1;
     }
   }
   flags &= A52_CHANNEL_MASK;
@@ -305,13 +298,12 @@ gst_a52dec_channels (int flags, GstAudioChannelPosition ** _pos)
       break;
     case A52_MONO:
       if (pos) {
-        pos[0 + chans] = GST_AUDIO_CHANNEL_POSITION_FRONT_MONO;
+        pos[0 + chans] = GST_AUDIO_CHANNEL_POSITION_MONO;
       }
       chans += 1;
       break;
     default:
       /* error, caller should post error message */
-      g_free (pos);
       return 0;
   }
 
@@ -381,6 +373,9 @@ gst_a52dec_push (GstA52Dec * a52dec,
       data[n * chans + c] = samples[c * 256 + n];
     }
   }
+  gst_audio_reorder_channels (data, 256 * chans * (SAMPLE_WIDTH / 8),
+      (SAMPLE_WIDTH == 64) ? GST_AUDIO_FORMAT_F64 : GST_AUDIO_FORMAT_F32, chans,
+      a52dec->from, a52dec->to);
   gst_buffer_unmap (buf, data, -1);
 
   GST_BUFFER_TIMESTAMP (buf) = timestamp;
@@ -423,10 +418,11 @@ no_channels:
 static gboolean
 gst_a52dec_reneg (GstA52Dec * a52dec, GstPad * pad)
 {
-  GstAudioChannelPosition *pos;
-  gint channels = gst_a52dec_channels (a52dec->using_channels, &pos);
+  gint channels;
   GstCaps *caps = NULL;
   gboolean result = FALSE;
+
+  channels = gst_a52dec_channels (a52dec->using_channels, a52dec->from);
 
   if (!channels)
     goto done;
@@ -434,12 +430,24 @@ gst_a52dec_reneg (GstA52Dec * a52dec, GstPad * pad)
   GST_INFO_OBJECT (a52dec, "reneg channels:%d rate:%d",
       channels, a52dec->sample_rate);
 
+  memcpy (a52dec->to, a52dec->from, sizeof (a52dec->from));
+  gst_audio_channel_positions_to_valid_order (a52dec->to, channels);
+
   caps = gst_caps_new_simple ("audio/x-raw",
       "format", G_TYPE_STRING, SAMPLE_FORMAT,
+      "layout", G_TYPE_STRING, "interleaved",
       "channels", G_TYPE_INT, channels,
       "rate", G_TYPE_INT, a52dec->sample_rate, NULL);
-  gst_audio_set_channel_positions (gst_caps_get_structure (caps, 0), pos);
-  g_free (pos);
+
+  if (channels > 1) {
+    guint64 channel_mask = 0;
+    gint i;
+
+    for (i = 0; i < channels; i++)
+      channel_mask |= G_GUINT64_CONSTANT (1) << a52dec->to[i];
+    gst_caps_set_simple (caps, "channel-mask", GST_TYPE_BITMASK, channel_mask,
+        NULL);
+  }
 
   if (!gst_pad_set_caps (pad, caps))
     goto done;
@@ -976,10 +984,6 @@ plugin_init (GstPlugin * plugin)
 #if HAVE_ORC
   orc_init ();
 #endif
-
-  /* ensure GstAudioChannelPosition type is registered */
-  if (!gst_audio_channel_position_get_type ())
-    return FALSE;
 
   if (!gst_element_register (plugin, "a52dec", GST_RANK_SECONDARY,
           GST_TYPE_A52DEC))

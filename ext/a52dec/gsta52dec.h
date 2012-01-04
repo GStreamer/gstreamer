@@ -22,6 +22,7 @@
 #define __GST_A52DEC_H__
 
 #include <gst/gst.h>
+#include <gst/audio/audio.h>
 
 G_BEGIN_DECLS
 
@@ -59,6 +60,8 @@ struct _GstA52Dec {
   int            stream_channels;
   int            request_channels;
   int            using_channels;
+
+  GstAudioChannelPosition from[6], to[6];
 
   sample_t       level;
   sample_t       bias;
