@@ -90,6 +90,7 @@ struct _GstH264Parse
   GstClockTime dts;
   /* dts at start of last buffering period */
   GstClockTime ts_trn_nb;
+  gboolean do_ts;
 
   /* frame parsing */
   /*guint last_nal_pos;*/
