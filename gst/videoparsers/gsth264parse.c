@@ -215,6 +215,10 @@ gst_h264_parse_reset (GstH264Parse * h264parse)
   h264parse->have_pps = FALSE;
   h264parse->have_sps = FALSE;
 
+  h264parse->dts = GST_CLOCK_TIME_NONE;
+  h264parse->ts_trn_nb = GST_CLOCK_TIME_NONE;
+  h264parse->do_ts = TRUE;
+
   h264parse->pending_key_unit_ts = GST_CLOCK_TIME_NONE;
   h264parse->force_key_unit_event = NULL;
 
@@ -1238,9 +1242,12 @@ gst_h264_parse_parse_frame (GstBaseParse * parse, GstBaseParseFrame * frame)
 
   gst_h264_parse_update_src_caps (h264parse, NULL);
 
-  gst_h264_parse_get_timestamp (h264parse,
-      &GST_BUFFER_TIMESTAMP (buffer), &GST_BUFFER_DURATION (buffer),
-      h264parse->frame_start);
+  /* don't mess with timestamps if provided by upstream,
+   * particularly since our ts not that good they handle seeking etc */
+  if (h264parse->do_ts)
+    gst_h264_parse_get_timestamp (h264parse,
+        &GST_BUFFER_TIMESTAMP (buffer), &GST_BUFFER_DURATION (buffer),
+        h264parse->frame_start);
 
   if (h264parse->keyframe)
     GST_BUFFER_FLAG_UNSET (buffer, GST_BUFFER_FLAG_DELTA_UNIT);
@@ -1726,6 +1733,24 @@ gst_h264_parse_event (GstBaseParse * parse, GstEvent * event)
 
       h264parse->pending_key_unit_ts = running_time;
       gst_event_replace (&h264parse->force_key_unit_event, event);
+      break;
+    }
+    case GST_EVENT_FLUSH_STOP:
+      h264parse->dts = GST_CLOCK_TIME_NONE;
+      h264parse->ts_trn_nb = GST_CLOCK_TIME_NONE;
+      break;
+    case GST_EVENT_NEWSEGMENT:
+    {
+      gdouble rate, applied_rate;
+      GstFormat format;
+      gint64 start;
+
+      gst_event_parse_new_segment_full (event, NULL, &rate, &applied_rate,
+          &format, &start, NULL, NULL);
+      /* don't try to mess with more subtle cases (e.g. seek) */
+      if (format == GST_FORMAT_TIME &&
+          (start != 0 || rate != 1.0 || applied_rate != 1.0))
+        h264parse->do_ts = FALSE;
       break;
     }
     default:
