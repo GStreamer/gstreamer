@@ -469,9 +469,11 @@ gst_audio_convert_fixate_channels (GstBaseTransform * base, GstStructure * ins,
     /* channels == 1 => MONO */
     if (out_chans == 2) {
       out_mask =
-          GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT |
-          GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT;
+          GST_AUDIO_CHANNEL_POSITION_MASK (FRONT_LEFT) |
+          GST_AUDIO_CHANNEL_POSITION_MASK (FRONT_RIGHT);
       has_out_mask = TRUE;
+      gst_structure_set (outs, "channel-mask", GST_TYPE_BITMASK, out_mask,
+          NULL);
     }
   }
 
@@ -483,8 +485,8 @@ gst_audio_convert_fixate_channels (GstBaseTransform * base, GstStructure * ins,
     /* channels == 1 => MONO */
     if (in_chans == 2) {
       in_mask =
-          GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT |
-          GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT;
+          GST_AUDIO_CHANNEL_POSITION_MASK (FRONT_LEFT) |
+          GST_AUDIO_CHANNEL_POSITION_MASK (FRONT_RIGHT);
       has_in_mask = TRUE;
     } else if (in_chans > 2)
       g_warning ("%s: Upstream caps contain no channel mask",
@@ -571,7 +573,7 @@ gst_audio_convert_fixate_channels (GstBaseTransform * base, GstStructure * ins,
 
     out_mask = 0;
     for (i = 0; i < out_chans; i++)
-      out_mask |= default_positions[out_chans - 1][i];
+      out_mask |= G_GUINT64_CONSTANT (1) << default_positions[out_chans - 1][i];
 
     gst_structure_set (outs, "channel-mask", GST_TYPE_BITMASK, out_mask, NULL);
   } else {
