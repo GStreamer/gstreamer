@@ -27,6 +27,8 @@
 #include <stdio.h>
 #include <unistd.h>
 
+#include <glib/gstdio.h>
+
 #include <gst/check/gstcheck.h>
 #include <gst/tag/tag.h>
 
@@ -1200,6 +1202,7 @@ GST_START_TEST (test_jifmux_tags)
       tmpfile);
   libexif_check_tags (FILE_SOURCE_TAG ("transparent-scanner"), tmpfile);
 
+  g_unlink (tmpfile);
   g_free (tmpfile);
 }
 
