@@ -113,12 +113,19 @@ enum
 #define FORMATS "{" GST_AUDIO_NE(S16)","GST_AUDIO_NE(U16)", S8, U8 }"
 
 static GstStaticPadTemplate osssink_sink_factory =
-GST_STATIC_PAD_TEMPLATE ("sink",
+    GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("audio/x-raw, "
         "format = (string) " FORMATS ", "
-        "rate = (int) [ 1, MAX ], " "channels = (int) [ 1, 2 ]")
+        "layout = (string) interleaved, "
+        "rate = (int) [ 1, MAX ], "
+        "channels = (int) 1; "
+        "audio/x-raw, "
+        "format = (string) " FORMATS ", "
+        "layout = (string) interleaved, "
+        "rate = (int) [ 1, MAX ], "
+        "channels = (int) 2, " "channel-mask = (bitmask) 0x3")
     );
 
 static GstElementClass *parent_class = NULL;

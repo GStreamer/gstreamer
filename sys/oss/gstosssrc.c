@@ -108,7 +108,14 @@ static GstStaticPadTemplate osssrc_src_factory = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("audio/x-raw, "
         "format = (string) " FORMATS ", "
-        "rate = (int) [ 1, MAX ], " "channels = (int) [ 1, 2 ]")
+        "layout = (string) interleaved, "
+        "rate = (int) [ 1, MAX ], "
+        "channels = (int) 1; "
+        "audio/x-raw, "
+        "format = (string) " FORMATS ", "
+        "layout = (string) interleaved, "
+        "rate = (int) [ 1, MAX ], "
+        "channels = (int) 2, " "channel-mask = (bitmask) 0x3")
     );
 
 static void
