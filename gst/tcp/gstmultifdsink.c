@@ -1307,13 +1307,10 @@ gst_multi_fd_sink_client_queue_buffer (GstMultiFdSink * sink,
   gboolean send_streamheader = FALSE;
   GstStructure *s;
 
-#if 0
   /* before we queue the buffer, we check if we need to queue streamheader
    * buffers (because it's a new client, or because they changed) */
-  caps = gst_buffer_get_caps (buffer);  /* cleaned up after streamheader */
-#else
-  caps = NULL;
-#endif
+  caps = gst_pad_get_current_caps (GST_BASE_SINK_PAD (sink));
+
   if (!client->caps) {
     GST_DEBUG_OBJECT (sink,
         "[fd %5d] no previous caps for this client, send streamheader",
