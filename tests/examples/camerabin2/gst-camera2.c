@@ -257,9 +257,10 @@ bus_callback (GstBus * bus, GstMessage * message, gpointer data)
   return TRUE;
 }
 
-static void
+static gboolean
 init_gtkwidgets_data (void)
 {
+#if GTK_CHECK_VERSION(2,24,0)
   gint i;
   GtkComboBoxText *combobox =
       GTK_COMBO_BOX_TEXT (gtk_builder_get_object (builder, "formatComboBox"));
@@ -273,6 +274,11 @@ init_gtkwidgets_data (void)
 
   /* default to the first one -> ogg */
   gtk_combo_box_set_active (GTK_COMBO_BOX (combobox), 0);
+  return TRUE;
+#else
+  g_warning ("This needs a newer version of GTK (2.24 at least)");
+  return FALSE;
+#endif
 }
 
 int
@@ -298,7 +304,9 @@ main (int argc, char *argv[])
   gst_bus_set_sync_handler (bus, bus_sync_callback, NULL);
   gst_object_unref (bus);
 
-  init_gtkwidgets_data ();
+  if (!init_gtkwidgets_data ()) {
+    goto error;
+  }
 
   ui_main_window = GTK_WIDGET (gtk_builder_get_object (builder, "mainWindow"));
   gtk_builder_connect_signals (builder, NULL);
@@ -308,6 +316,7 @@ main (int argc, char *argv[])
 
   gtk_main ();
 
+error:
   gst_element_set_state (camera, GST_STATE_NULL);
   gst_object_unref (camera);
   return ret;
