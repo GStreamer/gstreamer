@@ -44,12 +44,8 @@ typedef struct _GstFaacClass GstFaacClass;
 struct _GstFaac {
   GstAudioEncoder element;
 
-  /* stream properties */
-  gint samplerate,
-       channels,
-       format,
-       bps;
-
+  /* input format */
+  gint format;
   /* input frame size */
   gint samples;
   /* required output buffer size */

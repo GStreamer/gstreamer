@@ -38,7 +38,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include <gst/audio/multichannel.h>
+#include <gst/audio/audio.h>
 #include <gst/pbutils/codec-utils.h>
 
 #include "gstfaac.h"
@@ -58,6 +58,7 @@
 #define SINK_CAPS \
     "audio/x-raw, "                \
     "format = (string) "GST_AUDIO_NE (S16) ", "  \
+    "layout = (string) interleaved, " \
     "rate = (int) {" SAMPLE_RATES "}, "   \
     "channels = (int) [ 1, 6 ] "
 
@@ -277,7 +278,7 @@ gst_faac_stop (GstAudioEncoder * enc)
 }
 
 static const GstAudioChannelPosition aac_channel_positions[][8] = {
-  {GST_AUDIO_CHANNEL_POSITION_FRONT_MONO},
+  {GST_AUDIO_CHANNEL_POSITION_MONO},
   {GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT,
       GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT},
   {
@@ -302,7 +303,7 @@ static const GstAudioChannelPosition aac_channel_positions[][8] = {
         GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT,
         GST_AUDIO_CHANNEL_POSITION_REAR_LEFT,
         GST_AUDIO_CHANNEL_POSITION_REAR_RIGHT,
-      GST_AUDIO_CHANNEL_POSITION_LFE}
+      GST_AUDIO_CHANNEL_POSITION_LFE1}
 };
 
 static GstCaps *
@@ -334,24 +335,19 @@ gst_faac_getcaps (GstAudioEncoder * enc, GstCaps * filter)
     gst_structure_set_value (s, "rate", &rates_arr);
 
     for (i = 1; i <= 6; i++) {
-      GValue chanpos = { 0 };
-      GValue pos = { 0 };
-
+      guint64 channel_mask = 0;
       t = gst_structure_copy (s);
 
       gst_structure_set (t, "channels", G_TYPE_INT, i, NULL);
+      if (i == 1)
+        continue;
 
-      g_value_init (&chanpos, GST_TYPE_ARRAY);
-      g_value_init (&pos, GST_TYPE_AUDIO_CHANNEL_POSITION);
+      for (c = 0; c < i; c++)
+        channel_mask |=
+            G_GUINT64_CONSTANT (1) << aac_channel_positions[i - 1][c];
 
-      for (c = 0; c < i; c++) {
-        g_value_set_enum (&pos, aac_channel_positions[i - 1][c]);
-        gst_value_array_append_value (&chanpos, &pos);
-      }
-      g_value_unset (&pos);
-
-      gst_structure_set_value (t, "channel-positions", &chanpos);
-      g_value_unset (&chanpos);
+      gst_structure_set (t, "channel-mask", GST_TYPE_BITMASK, channel_mask,
+          NULL);
       gst_caps_append_structure (tmp, t);
     }
     gst_structure_free (s);
@@ -369,39 +365,30 @@ static gboolean
 gst_faac_set_format (GstAudioEncoder * enc, GstAudioInfo * info)
 {
   GstFaac *faac = GST_FAAC (enc);
-  gint channels, samplerate, width;
-  gulong fmt = 0, bps = 0;
+  gint width;
+  gulong fmt = 0;
   gboolean result = FALSE;
 
   /* base class takes care */
-  channels = GST_AUDIO_INFO_CHANNELS (info);
-  samplerate = GST_AUDIO_INFO_RATE (info);
   width = GST_AUDIO_INFO_WIDTH (info);
 
   if (GST_AUDIO_INFO_IS_INTEGER (info)) {
     switch (width) {
       case 16:
         fmt = FAAC_INPUT_16BIT;
-        bps = 2;
         break;
       case 24:
       case 32:
         fmt = FAAC_INPUT_32BIT;
-        bps = 4;
         break;
       default:
         g_return_val_if_reached (FALSE);
     }
   } else {
     fmt = FAAC_INPUT_FLOAT;
-    bps = 4;
   }
 
-  /* ok, record and set up */
   faac->format = fmt;
-  faac->bps = bps;
-  faac->channels = channels;
-  faac->samplerate = samplerate;
 
   /* finish up */
   result = gst_faac_configure_source_pad (faac);
@@ -482,18 +469,19 @@ gst_faac_open_encoder (GstFaac * faac)
   faacEncConfiguration *conf;
   guint maxbitrate;
   gulong samples, bytes;
+  GstAudioInfo *info =
+      gst_audio_encoder_get_audio_info (GST_AUDIO_ENCODER (faac));
 
-  g_return_val_if_fail (faac->samplerate != 0 && faac->channels != 0, FALSE);
+  g_return_val_if_fail (info->rate != 0 && info->channels != 0, FALSE);
 
   /* clean up in case of re-configure */
   gst_faac_close_encoder (faac);
 
-  if (!(handle = faacEncOpen (faac->samplerate, faac->channels,
-              &samples, &bytes)))
+  if (!(handle = faacEncOpen (info->rate, info->channels, &samples, &bytes)))
     goto setup_failed;
 
   /* mind channel count */
-  samples /= faac->channels;
+  samples /= info->channels;
 
   /* record */
   faac->handle = handle;
@@ -514,7 +502,7 @@ gst_faac_open_encoder (GstFaac * faac)
   if (faac->brtype == VBR) {
     conf->quantqual = faac->quality;
   } else if (faac->brtype == ABR) {
-    conf->bitRate = faac->bitrate / faac->channels;
+    conf->bitRate = faac->bitrate / info->channels;
   }
 
   conf->inputFormat = faac->format;
@@ -524,13 +512,12 @@ gst_faac_open_encoder (GstFaac * faac)
   /* check, warn and correct if the max bitrate for the given samplerate is
    * exceeded. Maximum of 6144 bit for a channel */
   maxbitrate =
-      (unsigned int) (6144.0 * (double) faac->samplerate / (double) 1024.0 +
-      .5);
+      (unsigned int) (6144.0 * (double) info->rate / (double) 1024.0 + .5);
   if (conf->bitRate > maxbitrate) {
     GST_ELEMENT_WARNING (faac, RESOURCE, SETTINGS, (NULL),
         ("bitrate %lu exceeds maximum allowed bitrate of %u for samplerate %d. "
             "Setting bitrate to %u", conf->bitRate, maxbitrate,
-            faac->samplerate, maxbitrate));
+            info->rate, maxbitrate));
     conf->bitRate = maxbitrate;
   }
 
@@ -543,7 +530,7 @@ gst_faac_open_encoder (GstFaac * faac)
   /* let's see what really happened,
    * note that this may not really match desired rate */
   GST_DEBUG_OBJECT (faac, "average bitrate: %lu kbps",
-      (conf->bitRate + 500) / 1000 * faac->channels);
+      (conf->bitRate + 500) / 1000 * info->channels);
   GST_DEBUG_OBJECT (faac, "quantization quality: %ld", conf->quantqual);
   GST_DEBUG_OBJECT (faac, "bandwidth: %d Hz", conf->bandWidth);
 
@@ -562,6 +549,8 @@ gst_faac_configure_source_pad (GstFaac * faac)
 {
   GstCaps *srccaps;
   gboolean ret;
+  GstAudioInfo *info =
+      gst_audio_encoder_get_audio_info (GST_AUDIO_ENCODER (faac));
 
   /* negotiate stream format */
   gst_faac_negotiate (faac);
@@ -572,8 +561,8 @@ gst_faac_configure_source_pad (GstFaac * faac)
   /* now create a caps for it all */
   srccaps = gst_caps_new_simple ("audio/mpeg",
       "mpegversion", G_TYPE_INT, faac->mpegversion,
-      "channels", G_TYPE_INT, faac->channels,
-      "rate", G_TYPE_INT, faac->samplerate,
+      "channels", G_TYPE_INT, info->channels,
+      "rate", G_TYPE_INT, info->rate,
       "stream-format", G_TYPE_STRING, (faac->outputformat ? "adts" : "raw"),
       NULL);
 
@@ -661,11 +650,20 @@ gst_faac_handle_frame (GstAudioEncoder * enc, GstBuffer * in_buf)
   guint8 *data;
   guint8 *out_data;
   gsize out_size;
+  GstAudioInfo *info =
+      gst_audio_encoder_get_audio_info (GST_AUDIO_ENCODER (faac));
 
   out_buf = gst_buffer_new_and_alloc (faac->bytes);
   out_data = gst_buffer_map (out_buf, &out_size, NULL, GST_MAP_WRITE);
 
   if (G_LIKELY (in_buf)) {
+    if (memcmp (info->position, aac_channel_positions[info->channels - 1],
+            sizeof (GstAudioChannelPosition) * info->channels) != 0) {
+      in_buf = gst_buffer_make_writable (in_buf);
+      gst_audio_buffer_reorder_channels (in_buf, info->finfo->format,
+          info->channels, info->position,
+          aac_channel_positions[info->channels - 1]);
+    }
     data = gst_buffer_map (in_buf, &size, NULL, GST_MAP_READ);
   } else {
     data = NULL;
@@ -673,7 +671,7 @@ gst_faac_handle_frame (GstAudioEncoder * enc, GstBuffer * in_buf)
   }
 
   if (G_UNLIKELY ((ret_size = faacEncEncode (faac->handle, (gint32 *) data,
-                  size / faac->bps, out_data, out_size)) < 0))
+                  size / (info->finfo->width / 8), out_data, out_size)) < 0))
     goto encode_failed;
 
   gst_buffer_unmap (in_buf, data, size);
