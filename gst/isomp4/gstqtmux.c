@@ -1476,7 +1476,7 @@ gst_qt_mux_set_header_on_caps (GstQTMux * mux, GstBuffer * buf)
   GstStructure *structure;
   GValue array = { 0 };
   GValue value = { 0 };
-  GstCaps *caps = GST_PAD_CAPS (mux->srcpad);
+  GstCaps *caps;
 
   caps = gst_caps_copy (GST_PAD_CAPS (mux->srcpad));
   structure = gst_caps_get_structure (caps, 0);
