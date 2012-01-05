@@ -255,7 +255,7 @@ GST_START_TEST (test_try_new_and_alloc)
 #if 0
   /* Disabled this part of the test, because it happily succeeds on 64-bit
    * machines that have enough memory+swap, because the address space is large
-   * enough. There's not really any way to test the failure case except by 
+   * enough. There's not really any way to test the failure case except by
    * allocating chunks of memory until it fails, which would suck. */
 
   /* now this better fail (don't run in valgrind, it will abort
@@ -426,6 +426,46 @@ GST_START_TEST (test_map)
 
 GST_END_TEST;
 
+GST_START_TEST (test_map_nested)
+{
+  GstMemory *mem;
+  gsize size1, maxsize1, size2, maxsize2;
+  gpointer data1, data2;
+
+  mem = gst_allocator_alloc (NULL, 100, 0);
+
+  /* nested mapping */
+  data1 = gst_memory_map (mem, &size1, &maxsize1, GST_MAP_READ);
+  fail_unless (data1 != NULL);
+  fail_unless (size1 == 100);
+
+  data2 = gst_memory_map (mem, &size2, &maxsize2, GST_MAP_READ);
+  fail_unless (data2 == data1);
+  fail_unless (size2 == 100);
+
+  /* unmap in reverse order */
+  gst_memory_unmap (mem, data2, size2);
+  gst_memory_unmap (mem, data1, size1);
+
+  /* nested mapping */
+  data1 = gst_memory_map (mem, &size1, &maxsize1, GST_MAP_READ);
+  fail_unless (data1 != NULL);
+  fail_unless (size1 == 100);
+
+  data2 = gst_memory_map (mem, &size2, &maxsize2, GST_MAP_WRITE);
+  fail_unless (data2 == data1);
+  fail_unless (size2 == 100);
+
+  /* unmap in different order */
+  gst_memory_unmap (mem, data1, size1);
+  gst_memory_unmap (mem, data2, size2);
+
+  gst_memory_unref (mem);
+}
+
+GST_END_TEST;
+
+
 static Suite *
 gst_memory_suite (void)
 {
@@ -441,6 +481,7 @@ gst_memory_suite (void)
   tcase_add_test (tc_chain, test_try_new_and_alloc);
   tcase_add_test (tc_chain, test_resize);
   tcase_add_test (tc_chain, test_map);
+  tcase_add_test (tc_chain, test_map_nested);
 
   return s;
 }

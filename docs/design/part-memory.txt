@@ -114,6 +114,19 @@ Data Access
  After the data has been accessed in the object, the unmap call must be
  performed. The call will update the new memory size with the specified size.
 
+ It is allowed to map multiple times with different access modes. for each of
+ the map calls, an corresponding unmap call needs to be made.
+ 
+ The memory pointer returned from the map call is guaranteed to remain valid in
+ the requested mapping mode until the corresponding unmap call is performed on
+ the pointer.
+ 
+ When multiple map operations are nested and return the same pointer, the pointer
+ is valid until the last unmap call is done.
+
+ When the final reference on a memory object is dropped, all outstanding
+ mappings are automatically unmapped.
+
 
 Copy
 ~~~~
