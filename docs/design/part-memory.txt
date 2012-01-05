@@ -37,8 +37,8 @@ Allocators
 
  After an allocator is registerd, new GstMemory can be created with 
 
-   GstMemory * gst_memory_allocator_alloc (const GstMemoryAllocator * allocator,
-                                           gsize maxsize, gsize align);
+   GstMemory * gst_allocator_alloc (const GstAllocator * allocator,
+                                    gsize maxsize, gsize align);
 
  The GstMemory object is a refcounted object that must be freed with
  gst_memory_unref ().
@@ -87,13 +87,11 @@ Memory layout
 
  The current properties of the accessible memory can be retrieved with:
 
-   gsize       gst_memory_get_sizes  (GstMemory *mem, gsize *maxsize);
+   gsize       gst_memory_get_sizes  (GstMemory *mem, gsize *offset, gsize *maxsize);
 
  The offset and size can be changed with:
 
-   void        gst_memory_resize     (GstMemory *mem, gsize offset, gsize size);
-
- The visible memory region can currently only be made smaller.
+   void        gst_memory_resize     (GstMemory *mem, gssize offset, gsize size);
 
  The memory object is always readable. The memory block is writable when:
 
