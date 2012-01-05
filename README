@@ -26,6 +26,9 @@ GStreamer and helper libraries.
   * `vaapiupload' is used to convert from video/x-raw-yuv pixels to
     video/x-vaapi-surface surfaces.
 
+  * `vaapidownload' is used to convert from video-x-vaapi-surface
+    surfaces to video/x-raw-yuv pixels.
+
   * `vaapisink' is used to display video/x-vaapi-surface surfaces to
     screen.
 
