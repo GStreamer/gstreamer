@@ -37,8 +37,19 @@ typedef struct
   char **argv;
 } PrivStruct;
 
-#define my_g_string_append_printf(str, format, ...) \
-  g_string_append_printf (str, "%*s" format, 2*depth, " ", ##__VA_ARGS__)
+static void
+my_g_string_append_printf (GString * str, int depth, const gchar * format, ...)
+{
+  va_list args;
+
+  while (depth-- > 0) {
+    g_string_append (str, "  ");
+  }
+
+  va_start (args, format);
+  g_string_append_vprintf (str, format, args);
+  va_end (args);
+}
 
 static gchar *
 gst_stream_audio_information_to_string (GstDiscovererStreamInfo * info,
@@ -56,48 +67,49 @@ gst_stream_audio_information_to_string (GstDiscovererStreamInfo * info,
 
   s = g_string_sized_new (len);
 
-  my_g_string_append_printf (s, "Codec:\n");
+  my_g_string_append_printf (s, depth, "Codec:\n");
   caps = gst_discoverer_stream_info_get_caps (info);
   tmp = gst_caps_to_string (caps);
   gst_caps_unref (caps);
-  my_g_string_append_printf (s, "  %s\n", tmp);
+  my_g_string_append_printf (s, depth, "  %s\n", tmp);
   g_free (tmp);
 
-  my_g_string_append_printf (s, "Additional info:\n");
+  my_g_string_append_printf (s, depth, "Additional info:\n");
   if (gst_discoverer_stream_info_get_misc (info)) {
     tmp = gst_structure_to_string (gst_discoverer_stream_info_get_misc (info));
-    my_g_string_append_printf (s, "  %s\n", tmp);
+    my_g_string_append_printf (s, depth, "  %s\n", tmp);
     g_free (tmp);
   } else {
-    my_g_string_append_printf (s, "  None\n");
+    my_g_string_append_printf (s, depth, "  None\n");
   }
 
   audio_info = (GstDiscovererAudioInfo *) info;
   ctmp = gst_discoverer_audio_info_get_language (audio_info);
-  my_g_string_append_printf (s, "Language: %s\n", ctmp ? ctmp : "<unknown>");
-  my_g_string_append_printf (s, "Channels: %u\n",
+  my_g_string_append_printf (s, depth, "Language: %s\n",
+      ctmp ? ctmp : "<unknown>");
+  my_g_string_append_printf (s, depth, "Channels: %u\n",
       gst_discoverer_audio_info_get_channels (audio_info));
-  my_g_string_append_printf (s, "Sample rate: %u\n",
+  my_g_string_append_printf (s, depth, "Sample rate: %u\n",
       gst_discoverer_audio_info_get_sample_rate (audio_info));
-  my_g_string_append_printf (s, "Depth: %u\n",
+  my_g_string_append_printf (s, depth, "Depth: %u\n",
       gst_discoverer_audio_info_get_depth (audio_info));
 
-  my_g_string_append_printf (s, "Bitrate: %u\n",
+  my_g_string_append_printf (s, depth, "Bitrate: %u\n",
       gst_discoverer_audio_info_get_bitrate (audio_info));
-  my_g_string_append_printf (s, "Max bitrate: %u\n",
+  my_g_string_append_printf (s, depth, "Max bitrate: %u\n",
       gst_discoverer_audio_info_get_max_bitrate (audio_info));
 
-  my_g_string_append_printf (s, "Tags:\n");
+  my_g_string_append_printf (s, depth, "Tags:\n");
   tags = gst_discoverer_stream_info_get_tags (info);
   if (tags) {
     tmp = gst_structure_to_string ((GstStructure *) tags);
-    my_g_string_append_printf (s, "  %s\n", tmp);
+    my_g_string_append_printf (s, depth, "  %s\n", tmp);
     g_free (tmp);
   } else {
-    my_g_string_append_printf (s, "  None\n");
+    my_g_string_append_printf (s, depth, "  None\n");
   }
   if (verbose)
-    my_g_string_append_printf (s, "\n");
+    my_g_string_append_printf (s, depth, "\n");
 
   return g_string_free (s, FALSE);
 }
@@ -118,58 +130,58 @@ gst_stream_video_information_to_string (GstDiscovererStreamInfo * info,
 
   s = g_string_sized_new (len);
 
-  my_g_string_append_printf (s, "Codec:\n");
+  my_g_string_append_printf (s, depth, "Codec:\n");
   caps = gst_discoverer_stream_info_get_caps (info);
   tmp = gst_caps_to_string (caps);
   gst_caps_unref (caps);
-  my_g_string_append_printf (s, "  %s\n", tmp);
+  my_g_string_append_printf (s, depth, "  %s\n", tmp);
   g_free (tmp);
 
-  my_g_string_append_printf (s, "Additional info:\n");
+  my_g_string_append_printf (s, depth, "Additional info:\n");
   misc = gst_discoverer_stream_info_get_misc (info);
   if (misc) {
     tmp = gst_structure_to_string (misc);
-    my_g_string_append_printf (s, "  %s\n", tmp);
+    my_g_string_append_printf (s, depth, "  %s\n", tmp);
     g_free (tmp);
   } else {
-    my_g_string_append_printf (s, "  None\n");
+    my_g_string_append_printf (s, depth, "  None\n");
   }
 
   video_info = (GstDiscovererVideoInfo *) info;
-  my_g_string_append_printf (s, "Width: %u\n",
+  my_g_string_append_printf (s, depth, "Width: %u\n",
       gst_discoverer_video_info_get_width (video_info));
-  my_g_string_append_printf (s, "Height: %u\n",
+  my_g_string_append_printf (s, depth, "Height: %u\n",
       gst_discoverer_video_info_get_height (video_info));
-  my_g_string_append_printf (s, "Depth: %u\n",
+  my_g_string_append_printf (s, depth, "Depth: %u\n",
       gst_discoverer_video_info_get_depth (video_info));
 
-  my_g_string_append_printf (s, "Frame rate: %u/%u\n",
+  my_g_string_append_printf (s, depth, "Frame rate: %u/%u\n",
       gst_discoverer_video_info_get_framerate_num (video_info),
       gst_discoverer_video_info_get_framerate_denom (video_info));
 
-  my_g_string_append_printf (s, "Pixel aspect ratio: %u/%u\n",
+  my_g_string_append_printf (s, depth, "Pixel aspect ratio: %u/%u\n",
       gst_discoverer_video_info_get_par_num (video_info),
       gst_discoverer_video_info_get_par_denom (video_info));
 
-  my_g_string_append_printf (s, "Interlaced: %s\n",
+  my_g_string_append_printf (s, depth, "Interlaced: %s\n",
       gst_discoverer_video_info_is_interlaced (video_info) ? "true" : "false");
 
-  my_g_string_append_printf (s, "Bitrate: %u\n",
+  my_g_string_append_printf (s, depth, "Bitrate: %u\n",
       gst_discoverer_video_info_get_bitrate (video_info));
-  my_g_string_append_printf (s, "Max bitrate: %u\n",
+  my_g_string_append_printf (s, depth, "Max bitrate: %u\n",
       gst_discoverer_video_info_get_max_bitrate (video_info));
 
-  my_g_string_append_printf (s, "Tags:\n");
+  my_g_string_append_printf (s, depth, "Tags:\n");
   tags = gst_discoverer_stream_info_get_tags (info);
   if (tags) {
     tmp = gst_structure_to_string ((GstStructure *) tags);
-    my_g_string_append_printf (s, "  %s\n", tmp);
+    my_g_string_append_printf (s, depth, "  %s\n", tmp);
     g_free (tmp);
   } else {
-    my_g_string_append_printf (s, "  None\n");
+    my_g_string_append_printf (s, depth, "  None\n");
   }
   if (verbose)
-    my_g_string_append_printf (s, "\n");
+    my_g_string_append_printf (s, depth, "\n");
 
   return g_string_free (s, FALSE);
 }
@@ -190,37 +202,38 @@ gst_stream_subtitle_information_to_string (GstDiscovererStreamInfo * info,
 
   s = g_string_sized_new (len);
 
-  my_g_string_append_printf (s, "Codec:\n");
+  my_g_string_append_printf (s, depth, "Codec:\n");
   caps = gst_discoverer_stream_info_get_caps (info);
   tmp = gst_caps_to_string (caps);
   gst_caps_unref (caps);
-  my_g_string_append_printf (s, "  %s\n", tmp);
+  my_g_string_append_printf (s, depth, "  %s\n", tmp);
   g_free (tmp);
 
-  my_g_string_append_printf (s, "Additional info:\n");
+  my_g_string_append_printf (s, depth, "Additional info:\n");
   if (gst_discoverer_stream_info_get_misc (info)) {
     tmp = gst_structure_to_string (gst_discoverer_stream_info_get_misc (info));
-    my_g_string_append_printf (s, "  %s\n", tmp);
+    my_g_string_append_printf (s, depth, "  %s\n", tmp);
     g_free (tmp);
   } else {
-    my_g_string_append_printf (s, "  None\n");
+    my_g_string_append_printf (s, depth, "  None\n");
   }
 
   subtitle_info = (GstDiscovererSubtitleInfo *) info;
   ctmp = gst_discoverer_subtitle_info_get_language (subtitle_info);
-  my_g_string_append_printf (s, "Language: %s\n", ctmp ? ctmp : "<unknown>");
+  my_g_string_append_printf (s, depth, "Language: %s\n",
+      ctmp ? ctmp : "<unknown>");
 
-  my_g_string_append_printf (s, "Tags:\n");
+  my_g_string_append_printf (s, depth, "Tags:\n");
   tags = gst_discoverer_stream_info_get_tags (info);
   if (tags) {
     tmp = gst_structure_to_string ((GstStructure *) tags);
-    my_g_string_append_printf (s, "  %s\n", tmp);
+    my_g_string_append_printf (s, depth, "  %s\n", tmp);
     g_free (tmp);
   } else {
-    my_g_string_append_printf (s, "  None\n");
+    my_g_string_append_printf (s, depth, "  None\n");
   }
   if (verbose)
-    my_g_string_append_printf (s, "\n");
+    my_g_string_append_printf (s, depth, "\n");
 
   return g_string_free (s, FALSE);
 }
