@@ -127,6 +127,8 @@ Data Access
  When the final reference on a memory object is dropped, all outstanding
  mappings are automatically unmapped.
 
+ Resizing a GstMemory does not influence any current mappings.
+
 
 Copy
 ~~~~
