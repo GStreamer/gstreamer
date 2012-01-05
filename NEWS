@@ -4,6 +4,11 @@ Copyright (C) 2011 Intel Corporation
 
 Version 0.3.2 - DD.Jan.2012
 * Rename vaapiconvert element to vaapiupload
+* Fix vaapiupload from NV12 buffers
+* Fix possible leaks of VA surfaces in FFmpeg decoder
+* Fix memory leak in vaapiupload initialization function
+* Fix possible crash in vaapidecode deinitialization code
+* Add vaapidownload element to convert from VA surfaces to YUV pixels
 
 Version 0.3.1 - 16.Dec.2011
 * Fix check for supported VA images
