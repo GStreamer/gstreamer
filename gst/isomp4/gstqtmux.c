@@ -2585,7 +2585,6 @@ gst_qt_mux_audio_sink_set_caps (GstPad * pad, GstCaps * caps)
   AtomInfo *ext_atom = NULL;
   gint constant_size = 0;
   const gchar *stream_format;
-  GstCaps *current_caps = NULL;
 
   /* find stream data */
   qtpad = (GstQTPad *) gst_pad_get_element_private (pad);
@@ -2597,10 +2596,14 @@ gst_qt_mux_audio_sink_set_caps (GstPad * pad, GstCaps * caps)
    * the old caps are a subset of the new one (this means upstream
    * added more info to the caps, as both should be 'fixed' caps) */
   if (qtpad->fourcc) {
+    GstCaps *current_caps = NULL;
+    gboolean is_subset;
     g_object_get (pad, "caps", &current_caps, NULL);
     g_assert (caps != NULL);
 
-    if (!gst_qtmux_caps_is_subset_full (qtmux, current_caps, caps)) {
+    is_subset = gst_qtmux_caps_is_subset_full (qtmux, current_caps, caps);
+    gst_caps_unref (current_caps);
+    if (!is_subset) {
       goto refuse_renegotiation;
     }
     GST_DEBUG_OBJECT (qtmux,
@@ -2907,7 +2910,6 @@ gst_qt_mux_video_sink_set_caps (GstPad * pad, GstCaps * caps)
   GList *ext_atom_list = NULL;
   gboolean sync = FALSE;
   int par_num, par_den;
-  GstCaps *current_caps = NULL;
 
   /* find stream data */
   qtpad = (GstQTPad *) gst_pad_get_element_private (pad);
@@ -2919,10 +2921,14 @@ gst_qt_mux_video_sink_set_caps (GstPad * pad, GstCaps * caps)
    * the old caps are a subset of the new one (this means upstream
    * added more info to the caps, as both should be 'fixed' caps) */
   if (qtpad->fourcc) {
+    GstCaps *current_caps = NULL;
+    gboolean is_subset;
     g_object_get (pad, "caps", &current_caps, NULL);
     g_assert (caps != NULL);
 
-    if (!gst_qtmux_caps_is_subset_full (qtmux, current_caps, caps)) {
+    is_subset = gst_qtmux_caps_is_subset_full (qtmux, current_caps, caps);
+    gst_caps_unref (current_caps);
+    if (!is_subset) {
       goto refuse_renegotiation;
     }
     GST_DEBUG_OBJECT (qtmux,
