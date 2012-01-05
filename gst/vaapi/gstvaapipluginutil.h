@@ -28,3 +28,6 @@
 gboolean gst_vaapi_ensure_display (gpointer element, GstVaapiDisplay **display);
 void gst_vaapi_set_display (const gchar *type, const GValue *value, GstVaapiDisplay **display);
 gboolean gst_vaapi_reply_to_query (GstQuery *query, GstVaapiDisplay *display);
+
+gboolean
+gst_vaapi_append_surface_caps (GstCaps *out_caps, GstCaps *in_caps);

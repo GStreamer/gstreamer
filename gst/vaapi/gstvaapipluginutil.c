@@ -160,3 +160,31 @@ gst_vaapi_reply_to_query (GstQuery *query, GstVaapiDisplay *display)
 
   return res;
 }
+
+gboolean
+gst_vaapi_append_surface_caps (GstCaps *out_caps, GstCaps *in_caps)
+{
+  GstStructure *structure;
+  const GValue *v_width, *v_height, *v_framerate, *v_par;
+  guint i, n_structures;
+
+  structure   = gst_caps_get_structure (in_caps, 0);
+  v_width     = gst_structure_get_value (structure, "width");
+  v_height    = gst_structure_get_value (structure, "height");
+  v_framerate = gst_structure_get_value (structure, "framerate");
+  v_par       = gst_structure_get_value (structure, "pixel-aspect-ratio");
+  if (!v_width || !v_height)
+    return FALSE;
+
+  n_structures = gst_caps_get_size (out_caps);
+  for (i = 0; i < n_structures; i++) {
+    structure = gst_caps_get_structure (out_caps, i);
+    gst_structure_set_value (structure, "width", v_width);
+    gst_structure_set_value (structure, "height", v_height);
+    if (v_framerate)
+      gst_structure_set_value (structure, "framerate", v_framerate);
+    if (v_par)
+      gst_structure_set_value (structure, "pixel-aspect-ratio", v_par);
+  }
+  return TRUE;
+}
