@@ -470,6 +470,14 @@ gst_vaapiupload_transform_caps(
         if (!gst_structure_has_name(structure, "video/x-raw-yuv"))
             return NULL;
         out_caps = gst_caps_from_string(gst_vaapiupload_vaapi_caps_str);
+
+        structure = gst_caps_get_structure(out_caps, 0);
+        gst_structure_set(
+            structure,
+            "type", G_TYPE_STRING, "vaapi",
+            "opengl", G_TYPE_BOOLEAN, USE_VAAPI_GLX,
+            NULL
+        );
     }
     else {
         if (!gst_structure_has_name(structure, GST_VAAPI_SURFACE_CAPS_NAME))
@@ -490,8 +498,6 @@ gst_vaapiupload_transform_caps(
     structure = gst_caps_get_structure(out_caps, 0);
     gst_structure_set_value(structure, "width", v_width);
     gst_structure_set_value(structure, "height", v_height);
-    gst_structure_set(structure, "type", G_TYPE_STRING, "vaapi", NULL);
-    gst_structure_set(structure, "opengl", G_TYPE_BOOLEAN, USE_VAAPI_GLX, NULL);
     if (v_framerate)
         gst_structure_set_value(structure, "framerate", v_framerate);
     if (v_par)
