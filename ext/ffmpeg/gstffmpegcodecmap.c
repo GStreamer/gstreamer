@@ -83,7 +83,7 @@ static const struct
   CH_FRONT_LEFT, GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT}, {
   CH_FRONT_RIGHT, GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT}, {
   CH_FRONT_CENTER, GST_AUDIO_CHANNEL_POSITION_FRONT_CENTER}, {
-  CH_LOW_FREQUENCY, GST_AUDIO_CHANNEL_POSITION_LFE}, {
+  CH_LOW_FREQUENCY, GST_AUDIO_CHANNEL_POSITION_LFE1}, {
   CH_BACK_LEFT, GST_AUDIO_CHANNEL_POSITION_REAR_LEFT}, {
   CH_BACK_RIGHT, GST_AUDIO_CHANNEL_POSITION_REAR_RIGHT}, {
   CH_FRONT_LEFT_OF_CENTER, GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT_OF_CENTER}, {
@@ -142,7 +142,8 @@ gst_ff_channel_layout_to_gst (guint64 channel_layout, guint channels)
     none_layout = TRUE;
   }
 
-  if (!none_layout && !gst_audio_check_channel_positions (pos, nchannels)) {
+  if (!none_layout
+      && !gst_audio_check_valid_channel_positions (pos, nchannels, TRUE)) {
     GST_ERROR ("Invalid channel layout %" G_GUINT64_FORMAT
         " - assuming NONE layout", channel_layout);
     none_layout = TRUE;
@@ -150,7 +151,7 @@ gst_ff_channel_layout_to_gst (guint64 channel_layout, guint channels)
 
   if (none_layout) {
     if (nchannels == 1) {
-      pos[0] = GST_AUDIO_CHANNEL_POSITION_FRONT_MONO;
+      pos[0] = GST_AUDIO_CHANNEL_POSITION_MONO;
     } else if (nchannels == 2) {
       pos[0] = GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT;
       pos[1] = GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT;
@@ -338,8 +339,12 @@ gst_ff_aud_caps_new (AVCodecContext * context, enum CodecID codec_id,
 
   /* fixed, non-probing context */
   if (context != NULL && context->channels != -1) {
+    GstAudioInfo info;
     GstAudioChannelPosition *pos;
     guint64 channel_layout = context->channel_layout;
+
+    gst_audio_info_init (&info);
+
 
     if (channel_layout == 0) {
       const guint64 default_channel_set[] = {
@@ -366,7 +371,12 @@ gst_ff_aud_caps_new (AVCodecContext * context, enum CodecID codec_id,
 
     pos = gst_ff_channel_layout_to_gst (channel_layout, context->channels);
     if (pos != NULL) {
-      gst_audio_set_channel_positions (gst_caps_get_structure (caps, 0), pos);
+      guint64 mask;
+
+      if (gst_audio_channel_positions_to_mask (pos, context->channels, &mask)) {
+        gst_caps_set_simple (caps, "channel-mask", GST_TYPE_BITMASK, &mask,
+            NULL);
+      }
       g_free (pos);
     }
   } else {

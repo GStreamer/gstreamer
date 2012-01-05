@@ -28,7 +28,6 @@
 #include <gst/gst.h>
 
 #include <gst/video/video.h>
-#include <gst/audio/multichannel.h>
 
 /*
  * _codecid_to_caps () gets the GstCaps that belongs to
