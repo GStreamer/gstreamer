@@ -115,6 +115,9 @@ gst_vaapi_surface_proxy_set_context(
 GstVaapiSurface *
 gst_vaapi_surface_proxy_get_surface(GstVaapiSurfaceProxy *proxy);
 
+GstVaapiID
+gst_vaapi_surface_proxy_get_surface_id(GstVaapiSurfaceProxy *proxy);
+
 void
 gst_vaapi_surface_proxy_set_surface(
     GstVaapiSurfaceProxy *proxy,

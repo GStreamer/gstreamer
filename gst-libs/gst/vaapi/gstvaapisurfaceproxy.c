@@ -26,6 +26,7 @@
 
 #include "config.h"
 #include "gstvaapisurfaceproxy.h"
+#include "gstvaapiobject_priv.h"
 
 #define DEBUG 1
 #include "gstvaapidebug.h"
@@ -245,6 +246,23 @@ gst_vaapi_surface_proxy_get_surface(GstVaapiSurfaceProxy *proxy)
     g_return_val_if_fail(GST_VAAPI_IS_SURFACE_PROXY(proxy), NULL);
 
     return proxy->priv->surface;
+}
+
+/**
+ * gst_vaapi_surface_proxy_get_surface_id:
+ * @proxy: a #GstVaapiSurfaceProxy
+ *
+ * Returns the VA surface ID stored in the @proxy.
+ *
+ * Return value: the #GstVaapiID
+ */
+GstVaapiID
+gst_vaapi_surface_proxy_get_surface_id(GstVaapiSurfaceProxy *proxy)
+{
+    g_return_val_if_fail(GST_VAAPI_IS_SURFACE_PROXY(proxy), GST_VAAPI_ID_NONE);
+    g_return_val_if_fail(proxy->priv->surface != NULL, GST_VAAPI_ID_NONE);
+
+    return GST_VAAPI_OBJECT_ID(proxy->priv->surface);
 }
 
 /**
