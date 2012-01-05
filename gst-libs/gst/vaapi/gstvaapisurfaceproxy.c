@@ -55,19 +55,9 @@ static void
 gst_vaapi_surface_proxy_finalize(GObject *object)
 {
     GstVaapiSurfaceProxy * const proxy = GST_VAAPI_SURFACE_PROXY(object);
-    GstVaapiSurfaceProxyPrivate * const priv = proxy->priv;
 
-    if (priv->surface) {
-        if (priv->context)
-            gst_vaapi_context_put_surface(priv->context, priv->surface);
-        g_object_unref(priv->surface);
-        priv->surface = NULL;
-    }
-
-    if (priv->context) {
-        g_object_unref(priv->context);
-        priv->context = NULL;
-    }
+    gst_vaapi_surface_proxy_set_surface(proxy, NULL);
+    gst_vaapi_surface_proxy_set_context(proxy, NULL);
 
     G_OBJECT_CLASS(gst_vaapi_surface_proxy_parent_class)->finalize(object);
 }
@@ -226,16 +216,19 @@ gst_vaapi_surface_proxy_set_context(
     GstVaapiContext      *context
 )
 {
-    g_return_if_fail(GST_VAAPI_IS_SURFACE_PROXY(proxy));
-    g_return_if_fail(GST_VAAPI_IS_CONTEXT(context));
+    GstVaapiSurfaceProxyPrivate *priv;
 
-    if (proxy->priv->context) {
-        g_object_unref(proxy->priv->context);
-        proxy->priv->context = NULL;
+    g_return_if_fail(GST_VAAPI_IS_SURFACE_PROXY(proxy));
+
+    priv = proxy->priv;
+
+    if (priv->context) {
+        g_object_unref(priv->context);
+        priv->context = NULL;
     }
 
     if (context)
-        proxy->priv->context = g_object_ref(context);
+        priv->context = g_object_ref(context);
 }
 
 /**
@@ -269,16 +262,21 @@ gst_vaapi_surface_proxy_set_surface(
     GstVaapiSurface      *surface
 )
 {
-    g_return_if_fail(GST_VAAPI_IS_SURFACE_PROXY(proxy));
-    g_return_if_fail(GST_VAAPI_IS_SURFACE(surface));
+    GstVaapiSurfaceProxyPrivate *priv;
 
-    if (proxy->priv->surface) {
-        g_object_unref(proxy->priv->surface);
-        proxy->priv->surface = NULL;
+    g_return_if_fail(GST_VAAPI_IS_SURFACE_PROXY(proxy));
+
+    priv = proxy->priv;
+
+    if (priv->surface) {
+        if (priv->context)
+            gst_vaapi_context_put_surface(priv->context, priv->surface);
+        g_object_unref(priv->surface);
+        priv->surface = NULL;
     }
 
     if (surface)
-        proxy->priv->surface = g_object_ref(surface);
+        priv->surface = g_object_ref(surface);
 }
 
 /**
