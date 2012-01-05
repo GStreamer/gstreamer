@@ -453,18 +453,10 @@ gst_vaapiupload_transform_caps(
     GstVaapiUpload * const upload = GST_VAAPIUPLOAD(trans);
     GstCaps *out_caps = NULL;
     GstStructure *structure;
-    const GValue *v_width, *v_height, *v_framerate, *v_par;
 
     g_return_val_if_fail(GST_IS_CAPS(caps), NULL);
 
-    structure   = gst_caps_get_structure(caps, 0);
-    v_width     = gst_structure_get_value(structure, "width");
-    v_height    = gst_structure_get_value(structure, "height");
-    v_framerate = gst_structure_get_value(structure, "framerate");
-    v_par       = gst_structure_get_value(structure, "pixel-aspect-ratio");
-
-    if (!v_width || !v_height)
-        return NULL;
+    structure = gst_caps_get_structure(caps, 0);
 
     if (direction == GST_PAD_SINK) {
         if (!gst_structure_has_name(structure, "video/x-raw-yuv"))
@@ -495,13 +487,10 @@ gst_vaapiupload_transform_caps(
         }
     }
 
-    structure = gst_caps_get_structure(out_caps, 0);
-    gst_structure_set_value(structure, "width", v_width);
-    gst_structure_set_value(structure, "height", v_height);
-    if (v_framerate)
-        gst_structure_set_value(structure, "framerate", v_framerate);
-    if (v_par)
-        gst_structure_set_value(structure, "pixel-aspect-ratio", v_par);
+    if (!gst_vaapi_append_surface_caps(out_caps, caps)) {
+        gst_caps_unref(out_caps);
+        return NULL;
+    }
     return out_caps;
 }
 
