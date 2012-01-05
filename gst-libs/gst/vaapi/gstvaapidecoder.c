@@ -126,20 +126,15 @@ decode_step(GstVaapiDecoder *decoder)
 
 static gboolean
 push_surface(
-    GstVaapiDecoder *decoder,
-    GstVaapiSurface *surface,
-    GstClockTime     timestamp
+    GstVaapiDecoder      *decoder,
+    GstVaapiSurfaceProxy *proxy,
+    GstClockTime          timestamp
 )
 {
     GstVaapiDecoderPrivate * const priv = decoder->priv;
-    GstVaapiSurfaceProxy *proxy;
 
     GST_DEBUG("queue decoded surface %" GST_VAAPI_ID_FORMAT,
-              GST_VAAPI_ID_ARGS(GST_VAAPI_OBJECT_ID(surface)));
-
-    proxy = gst_vaapi_surface_proxy_new(priv->context, surface);
-    if (!proxy)
-        return FALSE;
+              GST_VAAPI_ID_ARGS(gst_vaapi_surface_proxy_get_surface_id(proxy)));
 
     gst_vaapi_surface_proxy_set_timestamp(proxy, timestamp);
     g_queue_push_tail(priv->surfaces, proxy);
@@ -560,5 +555,21 @@ gst_vaapi_decoder_push_surface(
     GstClockTime     timestamp
 )
 {
-    return push_surface(decoder, surface, timestamp);
+    GstVaapiDecoderPrivate * const priv = decoder->priv;
+    GstVaapiSurfaceProxy *proxy;
+
+    proxy = gst_vaapi_surface_proxy_new(priv->context, surface);
+    if (!proxy)
+        return FALSE;
+    return push_surface(decoder, proxy, timestamp);
+}
+
+gboolean
+gst_vaapi_decoder_push_surface_proxy(
+    GstVaapiDecoder      *decoder,
+    GstVaapiSurfaceProxy *proxy,
+    GstClockTime          timestamp
+)
+{
+    return push_surface(decoder, g_object_ref(proxy), timestamp);
 }

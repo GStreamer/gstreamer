@@ -169,6 +169,13 @@ gst_vaapi_decoder_push_surface(
     GstClockTime     timestamp
 ) attribute_hidden;
 
+gboolean
+gst_vaapi_decoder_push_surface_proxy(
+    GstVaapiDecoder      *decoder,
+    GstVaapiSurfaceProxy *proxy,
+    GstClockTime          timestamp
+) attribute_hidden;
+
 G_END_DECLS
 
 #endif /* GST_VAAPI_DECODER_PRIV_H */

@@ -260,6 +260,7 @@ gst_vaapi_decoder_ffmpeg_get_buffer(AVCodecContext *avctx, AVFrame *pic)
     GstVaapiContextFfmpeg * const vactx = avctx->hwaccel_context;
     GstVaapiContext *context;
     GstVaapiSurface *surface;
+    GstVaapiSurfaceProxy *proxy;
     GstVaapiID surface_id;
 
     context = get_context(avctx);
@@ -272,12 +273,19 @@ gst_vaapi_decoder_ffmpeg_get_buffer(AVCodecContext *avctx, AVFrame *pic)
         return -1;
     }
 
+    proxy = gst_vaapi_surface_proxy_new(context, surface);
+    if (!proxy) {
+        GST_DEBUG("failed to create proxy surface");
+        gst_vaapi_context_put_surface(context, surface);
+        return -1;
+    }
+
     surface_id = GST_VAAPI_OBJECT_ID(surface);
     GST_DEBUG("surface %" GST_VAAPI_ID_FORMAT, GST_VAAPI_ID_ARGS(surface_id));
 
     pic->type        = FF_BUFFER_TYPE_USER;
     pic->age         = 1;
-    pic->data[0]     = (uint8_t *)surface;
+    pic->data[0]     = (uint8_t *)proxy;
     pic->data[1]     = NULL;
     pic->data[2]     = NULL;
     pic->data[3]     = (uint8_t *)(uintptr_t)surface_id;
@@ -301,9 +309,12 @@ gst_vaapi_decoder_ffmpeg_reget_buffer(AVCodecContext *avctx, AVFrame *pic)
 static void
 gst_vaapi_decoder_ffmpeg_release_buffer(AVCodecContext *avctx, AVFrame *pic)
 {
+    GstVaapiSurfaceProxy * const proxy = GST_VAAPI_SURFACE_PROXY(pic->data[0]);
     GstVaapiID surface_id = GST_VAAPI_ID(GPOINTER_TO_UINT(pic->data[3]));
 
     GST_DEBUG("surface %" GST_VAAPI_ID_FORMAT, GST_VAAPI_ID_ARGS(surface_id));
+
+    g_object_unref(proxy);
 
     pic->data[0] = NULL;
     pic->data[1] = NULL;
@@ -477,7 +488,7 @@ decode_frame(GstVaapiDecoderFfmpeg *ffdecoder, guchar *buf, guint buf_size)
 {
     GstVaapiDecoderFfmpegPrivate * const priv = ffdecoder->priv;
     GstVaapiDisplay * const display = GST_VAAPI_DECODER_DISPLAY(ffdecoder);
-    GstVaapiSurface *surface;
+    GstVaapiSurfaceProxy *proxy;
     int bytes_read, got_picture = 0;
     AVPacket pkt;
 
@@ -498,15 +509,12 @@ decode_frame(GstVaapiDecoderFfmpeg *ffdecoder, guchar *buf, guint buf_size)
     if (bytes_read < 0)
         return GST_VAAPI_DECODER_STATUS_ERROR_UNKNOWN;
 
-    surface = gst_vaapi_context_find_surface_by_id(
-        GST_VAAPI_DECODER_CONTEXT(ffdecoder),
-        GPOINTER_TO_UINT(priv->frame->data[3])
-    );
-    if (!surface)
+    proxy = GST_VAAPI_SURFACE_PROXY(priv->frame->data[0]);
+    if (!proxy)
         return GST_VAAPI_DECODER_STATUS_ERROR_INVALID_SURFACE;
 
-    if (!gst_vaapi_decoder_push_surface(GST_VAAPI_DECODER_CAST(ffdecoder),
-                                        surface, priv->frame->pts))
+    if (!gst_vaapi_decoder_push_surface_proxy(GST_VAAPI_DECODER_CAST(ffdecoder),
+                                              proxy, priv->frame->pts))
         return GST_VAAPI_DECODER_STATUS_ERROR_ALLOCATION_FAILED;
     return GST_VAAPI_DECODER_STATUS_SUCCESS;
 }
