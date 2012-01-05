@@ -271,7 +271,6 @@ gst_vaapi_context_create_surfaces(GstVaapiContext *context)
         g_ptr_array_add(priv->surfaces, surface);
         if (!gst_vaapi_video_pool_add_object(priv->surfaces_pool, surface))
             return FALSE;
-        gst_vaapi_surface_set_parent_context(surface, context);
     }
     return TRUE;
 }
@@ -707,9 +706,16 @@ gst_vaapi_context_get_size(
 GstVaapiSurface *
 gst_vaapi_context_get_surface(GstVaapiContext *context)
 {
+    GstVaapiSurface *surface;
+
     g_return_val_if_fail(GST_VAAPI_IS_CONTEXT(context), NULL);
 
-    return gst_vaapi_video_pool_get_object(context->priv->surfaces_pool);
+    surface = gst_vaapi_video_pool_get_object(context->priv->surfaces_pool);
+    if (!surface)
+        return NULL;
+
+    gst_vaapi_surface_set_parent_context(surface, context);
+    return surface;
 }
 
 /**
@@ -741,6 +747,7 @@ gst_vaapi_context_put_surface(GstVaapiContext *context, GstVaapiSurface *surface
     g_return_if_fail(GST_VAAPI_IS_CONTEXT(context));
     g_return_if_fail(GST_VAAPI_IS_SURFACE(surface));
 
+    gst_vaapi_surface_set_parent_context(surface, NULL);
     gst_vaapi_video_pool_put_object(context->priv->surfaces_pool, surface);
 }
 
