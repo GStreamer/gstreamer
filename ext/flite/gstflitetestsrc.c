@@ -25,7 +25,7 @@
 #include <gst/gst.h>
 #include <gst/base/gstbasesrc.h>
 #include <gst/base/gstadapter.h>
-#include <gst/audio/multichannel.h>
+#include <gst/audio/audio.h>
 
 #include <flite/flite.h>
 
@@ -49,9 +49,7 @@ struct _GstFliteTestSrc
 
   GstAdapter *adapter;
 
-  int samplerate;
-  int n_channels;
-  GstAudioChannelPosition *layout;
+  GstAudioInfo info;
 
   int samples_per_buffer;
 
@@ -88,7 +86,8 @@ GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("audio/x-raw, "
         "format = (string) " GST_AUDIO_NE (s16) ", "
-        "rate = (int) 48000, " "channels = (int) [1,8]")
+        "layout = (string) interleaved, "
+        "rate = (int) 48000, " "channels = (int) [1, 8]")
     );
 
 #define gst_flite_test_src_parent_class parent_class
@@ -105,6 +104,7 @@ static GstFlowReturn gst_flite_test_src_create (GstBaseSrc * basesrc,
     guint64 offset, guint length, GstBuffer ** buffer);
 static gboolean
 gst_flite_test_src_set_caps (GstBaseSrc * basesrc, GstCaps * caps);
+static void gst_flite_test_src_fixate (GstBaseSrc * bsrc, GstCaps * caps);
 
 static void
 gst_flite_test_src_class_init (GstFliteTestSrcClass * klass)
@@ -138,6 +138,7 @@ gst_flite_test_src_class_init (GstFliteTestSrcClass * klass)
   gstbasesrc_class->stop = GST_DEBUG_FUNCPTR (gst_flite_test_src_stop);
   gstbasesrc_class->create = GST_DEBUG_FUNCPTR (gst_flite_test_src_create);
   gstbasesrc_class->set_caps = GST_DEBUG_FUNCPTR (gst_flite_test_src_set_caps);
+  gstbasesrc_class->fixate = GST_DEBUG_FUNCPTR (gst_flite_test_src_fixate);
 
   GST_DEBUG_CATEGORY_INIT (flite_test_src_debug, "flitetestsrc", 0,
       "Flite Audio Test Source");
@@ -146,7 +147,6 @@ gst_flite_test_src_class_init (GstFliteTestSrcClass * klass)
 static void
 gst_flite_test_src_init (GstFliteTestSrc * src)
 {
-  src->samplerate = 48000;
   src->samples_per_buffer = DEFAULT_SAMPLES_PER_BUFFER;
 
   /* we operate in time */
@@ -155,39 +155,126 @@ gst_flite_test_src_init (GstFliteTestSrc * src)
   gst_base_src_set_blocksize (GST_BASE_SRC (src), -1);
 }
 
+static gint
+n_bits_set (guint64 x)
+{
+  gint i;
+  gint c = 0;
+  guint64 y = 1;
+
+  for (i = 0; i < 64; i++) {
+    if (x & y)
+      c++;
+    y <<= 1;
+  }
+
+  return c;
+}
+
+static void
+gst_flite_test_src_fixate (GstBaseSrc * bsrc, GstCaps * caps)
+{
+  GstStructure *structure;
+  gint channels;
+
+  structure = gst_caps_get_structure (caps, 0);
+
+  gst_structure_fixate_field_nearest_int (structure, "channels", 2);
+  gst_structure_get_int (structure, "channels", &channels);
+
+  if (channels == 1) {
+    gst_structure_remove_field (structure, "channel-mask");
+  } else {
+    guint64 channel_mask = 0;
+    gint x = 64;
+
+    if (!gst_structure_get (structure, "channel-mask", GST_TYPE_BITMASK,
+            &channel_mask, NULL)) {
+      switch (channels) {
+        case 8:
+          channel_mask =
+              GST_AUDIO_CHANNEL_POSITION_MASK (FRONT_LEFT) |
+              GST_AUDIO_CHANNEL_POSITION_MASK (FRONT_RIGHT) |
+              GST_AUDIO_CHANNEL_POSITION_MASK (REAR_LEFT) |
+              GST_AUDIO_CHANNEL_POSITION_MASK (REAR_RIGHT) |
+              GST_AUDIO_CHANNEL_POSITION_MASK (FRONT_CENTER) |
+              GST_AUDIO_CHANNEL_POSITION_MASK (LFE1) |
+              GST_AUDIO_CHANNEL_POSITION_MASK (SIDE_LEFT) |
+              GST_AUDIO_CHANNEL_POSITION_MASK (SIDE_RIGHT);
+          break;
+        case 7:
+          channel_mask =
+              GST_AUDIO_CHANNEL_POSITION_MASK (FRONT_LEFT) |
+              GST_AUDIO_CHANNEL_POSITION_MASK (FRONT_RIGHT) |
+              GST_AUDIO_CHANNEL_POSITION_MASK (REAR_LEFT) |
+              GST_AUDIO_CHANNEL_POSITION_MASK (REAR_RIGHT) |
+              GST_AUDIO_CHANNEL_POSITION_MASK (FRONT_CENTER) |
+              GST_AUDIO_CHANNEL_POSITION_MASK (LFE1) |
+              GST_AUDIO_CHANNEL_POSITION_MASK (REAR_CENTER);
+          break;
+        case 6:
+          channel_mask =
+              GST_AUDIO_CHANNEL_POSITION_MASK (FRONT_LEFT) |
+              GST_AUDIO_CHANNEL_POSITION_MASK (FRONT_RIGHT) |
+              GST_AUDIO_CHANNEL_POSITION_MASK (REAR_LEFT) |
+              GST_AUDIO_CHANNEL_POSITION_MASK (REAR_RIGHT) |
+              GST_AUDIO_CHANNEL_POSITION_MASK (FRONT_CENTER) |
+              GST_AUDIO_CHANNEL_POSITION_MASK (LFE1);
+          break;
+        case 5:
+          channel_mask =
+              GST_AUDIO_CHANNEL_POSITION_MASK (FRONT_LEFT) |
+              GST_AUDIO_CHANNEL_POSITION_MASK (FRONT_RIGHT) |
+              GST_AUDIO_CHANNEL_POSITION_MASK (REAR_LEFT) |
+              GST_AUDIO_CHANNEL_POSITION_MASK (REAR_RIGHT) |
+              GST_AUDIO_CHANNEL_POSITION_MASK (FRONT_CENTER);
+          break;
+        case 4:
+          channel_mask =
+              GST_AUDIO_CHANNEL_POSITION_MASK (FRONT_LEFT) |
+              GST_AUDIO_CHANNEL_POSITION_MASK (FRONT_RIGHT) |
+              GST_AUDIO_CHANNEL_POSITION_MASK (REAR_LEFT) |
+              GST_AUDIO_CHANNEL_POSITION_MASK (REAR_RIGHT);
+          break;
+        case 3:
+          channel_mask =
+              GST_AUDIO_CHANNEL_POSITION_MASK (FRONT_LEFT) |
+              GST_AUDIO_CHANNEL_POSITION_MASK (FRONT_RIGHT) |
+              GST_AUDIO_CHANNEL_POSITION_MASK (LFE1);
+          break;
+        case 2:
+          channel_mask =
+              GST_AUDIO_CHANNEL_POSITION_MASK (FRONT_LEFT) |
+              GST_AUDIO_CHANNEL_POSITION_MASK (FRONT_RIGHT);
+          break;
+        default:
+          channel_mask = 0;
+          break;
+      }
+    }
+
+    while (n_bits_set (channel_mask) > channels) {
+      channel_mask &= ~(G_GUINT64_CONSTANT (1) << x);
+      x--;
+    }
+
+    gst_structure_set (structure, "channel-mask", GST_TYPE_BITMASK,
+        channel_mask, NULL);
+  }
+
+  GST_BASE_SRC_CLASS (parent_class)->fixate (bsrc, caps);
+}
+
 static gboolean
 gst_flite_test_src_set_caps (GstBaseSrc * basesrc, GstCaps * caps)
 {
   GstFliteTestSrc *src = GST_FLITE_TEST_SRC (basesrc);
-  GstStructure *structure;
   gboolean ret;
 
-  structure = gst_caps_get_structure (caps, 0);
-
-  ret = gst_structure_get_int (structure, "channels", &src->n_channels);
-
-  g_free (src->layout);
-
-  if (src->n_channels < 3) {
-    src->layout = g_malloc (sizeof (GstAudioChannelPosition) * 2);
-    if (src->n_channels == 1) {
-      src->layout[0] = GST_AUDIO_CHANNEL_POSITION_FRONT_MONO;
-    } else {
-      src->layout[0] = GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT;
-      src->layout[1] = GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT;
-    }
-  } else {
-    src->layout = gst_audio_get_channel_positions (structure);
-    if (src->layout == NULL) {
-      /* thanks, libgstaudio, for returning us NULL instead of
-       * doing this yourself. */
-      int i;
-      src->layout =
-          g_malloc (sizeof (GstAudioChannelPosition) * src->n_channels);
-      for (i = 0; i < src->n_channels; i++) {
-        src->layout[i] = GST_AUDIO_CHANNEL_POSITION_NONE;
-      }
-    }
+  gst_audio_info_init (&src->info);
+  if (!gst_audio_info_from_caps (&src->info, caps)) {
+    GST_ERROR_OBJECT (src, "Invalid caps");
+    return FALSE;
   }
 
   return ret;
@@ -298,7 +385,6 @@ gst_flite_test_src_start (GstBaseSrc * basesrc)
   src->adapter = gst_adapter_new ();
 
   src->voice = register_cmu_us_kal ();
-  src->n_channels = 2;
 
   return TRUE;
 }
@@ -320,19 +406,25 @@ get_channel_name (GstFliteTestSrc * src, int channel)
     "zero", "one", "two", "three", "four", "five", "six", "seven", "eight",
     "nine"
   };
-  const char *names[GST_AUDIO_CHANNEL_POSITION_NUM] = {
-    "mono", "front left", "front right", "rear center",
-    "rear left", "rear right", "low frequency effects",
-    "front center", "front left center", "front right center",
-    "side left", "side right",
-    "none"
+  const char *names[64] = {
+    "front left", "front right", "front center", "lfe 1", "rear left",
+    "rear right", "front left of center", "front right of center",
+    "rear center", "lfe 2", "side left", "side right", "top front left",
+    "top front right", "top front center", "top center", "top rear left",
+    "top rear right", "top side left", "top side right", "top rear center",
+    "bottom front center", "bottom front left", "bottom front right",
+    "wide left", "wide right", "surround left", "surround right"
   };
   const char *name;
 
-  if (src->layout[channel] == GST_AUDIO_CHANNEL_POSITION_INVALID) {
+  if (src->info.position[channel] == GST_AUDIO_CHANNEL_POSITION_INVALID) {
     name = "invalid";
+  } else if (src->info.position[channel] == GST_AUDIO_CHANNEL_POSITION_NONE) {
+    name = "none";
+  } else if (src->info.position[channel] == GST_AUDIO_CHANNEL_POSITION_MONO) {
+    name = "mono";
   } else {
-    name = names[src->layout[channel]];
+    name = names[src->info.position[channel]];
   }
 
   return g_strdup_printf ("%s, %s", numbers[channel], name);
@@ -347,7 +439,7 @@ gst_flite_test_src_create (GstBaseSrc * basesrc, guint64 offset,
 
   src = GST_FLITE_TEST_SRC (basesrc);
 
-  n_bytes = src->n_channels * sizeof (gint16) * src->samples_per_buffer;
+  n_bytes = src->info.channels * sizeof (gint16) * src->samples_per_buffer;
 
   while (gst_adapter_available (src->adapter) < n_bytes) {
     GstBuffer *buf;
@@ -361,23 +453,23 @@ gst_flite_test_src_create (GstBaseSrc * basesrc, guint64 offset,
 
     wave = flite_text_to_wave (text, src->voice);
     g_free (text);
-    cst_wave_resample (wave, 48000);
+    cst_wave_resample (wave, src->info.rate);
 
     GST_DEBUG ("type %s, sample_rate %d, num_samples %d, num_channels %d",
         wave->type, wave->sample_rate, wave->num_samples, wave->num_channels);
 
-    size = src->n_channels * sizeof (gint16) * wave->num_samples;
+    size = src->info.channels * sizeof (gint16) * wave->num_samples;
     buf = gst_buffer_new_and_alloc (size);
 
     data = gst_buffer_map (buf, NULL, NULL, GST_MAP_WRITE);
     memset (data, 0, size);
     for (i = 0; i < wave->num_samples; i++) {
-      data[i * src->n_channels + src->channel] = wave->samples[i];
+      data[i * src->info.channels + src->channel] = wave->samples[i];
     }
     gst_buffer_unmap (buf, data, size);
 
     src->channel++;
-    if (src->channel == src->n_channels) {
+    if (src->channel == src->info.channels) {
       src->channel = 0;
     }
 
