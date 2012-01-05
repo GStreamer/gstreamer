@@ -421,6 +421,16 @@ GST_START_TEST (test_map)
   ASSERT_CRITICAL (gst_memory_unmap (mem, data, maxsize + 1));
   gst_memory_unmap (mem, data, maxsize);
 
+  /* add offset, maxsize should be smaller now */
+  gst_memory_resize (mem, 1, 99);
+
+  data = gst_memory_map (mem, &size, &maxsize, GST_MAP_READ);
+  fail_unless (data != NULL);
+  fail_unless (size == 99);
+  fail_unless (maxsize == maxalloc - 1);
+  ASSERT_CRITICAL (gst_memory_unmap (mem, data, maxsize + 1));
+  gst_memory_unmap (mem, data, maxsize);
+
   gst_memory_unref (mem);
 }
 
