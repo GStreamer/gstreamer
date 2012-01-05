@@ -16,6 +16,7 @@ gst_camera2_LDADD   = \
         $(GST_PLUGINS_BASE_LIBS) \
         -lgstinterfaces-@GST_MAJORMINOR@ \
         -lgstpbutils-@GST_MAJORMINOR@ \
+	-lgstvideo-@GST_MAJORMINOR@ \
         $(GST_LIBS) \
 	$(GTK_LIBS) \
 	$(GMODULE_EXPORT_LIBS)
