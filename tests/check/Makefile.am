@@ -105,6 +105,7 @@ check_PROGRAMS =				\
 	gst/gstbuffer				\
 	gst/gstbufferlist			\
 	gst/gstmeta				\
+	gst/gstmemory				\
 	gst/gstbus				\
 	gst/gstcaps     			\
 	$(CXX_CHECKS)			     	\

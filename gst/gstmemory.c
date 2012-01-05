@@ -192,6 +192,7 @@ _default_mem_get_sizes (GstMemoryDefault * mem, gsize * offset, gsize * maxsize)
 static void
 _default_mem_resize (GstMemoryDefault * mem, gssize offset, gsize size)
 {
+  g_return_if_fail (offset >= 0 || mem->offset >= -offset);
   g_return_if_fail (size + mem->offset + offset <= mem->maxsize);
 
   mem->offset += offset;
@@ -213,8 +214,10 @@ _default_mem_map (GstMemoryDefault * mem, gsize * size, gsize * maxsize,
 static gboolean
 _default_mem_unmap (GstMemoryDefault * mem, gpointer data, gsize size)
 {
-  if (size != -1)
+  if (size != -1) {
+    g_return_val_if_fail (size <= mem->maxsize, FALSE);
     mem->size = size;
+  }
   return TRUE;
 }
 
