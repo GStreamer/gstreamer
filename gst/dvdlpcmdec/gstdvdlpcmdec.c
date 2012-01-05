@@ -292,7 +292,7 @@ gst_dvdlpcmdec_setcaps (GstPad * pad, GstCaps * caps)
   if (channels < 9
       && channel_positions[channels - 1][0] !=
       GST_AUDIO_CHANNEL_POSITION_INVALID) {
-    dvdlpcmdec->info.flags &= ~GST_AUDIO_FLAG_NONE_LAYOUT;
+    dvdlpcmdec->info.flags &= ~GST_AUDIO_FLAG_UNPOSITIONED;
     position = channel_positions[channels - 1];
     dvdlpcmdec->lpcm_layout = position;
     memcpy (dvdlpcmdec->info.position, position,
@@ -412,7 +412,7 @@ parse_header (GstDvdLpcmDec * dec, guint32 header)
       GST_AUDIO_CHANNEL_POSITION_INVALID) {
     const GstAudioChannelPosition *position;
 
-    dec->info.flags &= ~GST_AUDIO_FLAG_NONE_LAYOUT;
+    dec->info.flags &= ~GST_AUDIO_FLAG_UNPOSITIONED;
     position = channel_positions[channels - 1];
     dec->lpcm_layout = position;
     memcpy (dec->info.position, position,
