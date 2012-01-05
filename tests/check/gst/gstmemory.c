@@ -261,8 +261,8 @@ GST_START_TEST (test_try_new_and_alloc)
   /* now this better fail (don't run in valgrind, it will abort
    * or warn when passing silly arguments to malloc) */
   if (!RUNNING_ON_VALGRIND) {
-    buf = gst_allocator_alloc (NULL, (guint) - 1, 0);
-    fail_unless (buf == NULL);
+    mem = gst_allocator_alloc (NULL, (guint) - 1, 0);
+    fail_unless (mem == NULL);
   }
 #endif
 }
@@ -271,98 +271,157 @@ GST_END_TEST;
 
 GST_START_TEST (test_resize)
 {
-  GstMemory *buf;
+  GstMemory *mem;
   gsize maxalloc;
   gsize size, maxsize, offset;
 
   /* one memory block */
-  buf = gst_allocator_alloc (NULL, 100, 0);
+  mem = gst_allocator_alloc (NULL, 100, 0);
 
-  size = gst_memory_get_sizes (buf, &offset, &maxalloc);
+  size = gst_memory_get_sizes (mem, &offset, &maxalloc);
   fail_unless (size == 100);
   fail_unless (offset == 0);
   fail_unless (maxalloc >= 100);
 
-  ASSERT_CRITICAL (gst_memory_resize (buf, 200, 50));
-  ASSERT_CRITICAL (gst_memory_resize (buf, 0, 150));
-  ASSERT_CRITICAL (gst_memory_resize (buf, 1, maxalloc));
-  ASSERT_CRITICAL (gst_memory_resize (buf, maxalloc, 1));
+  ASSERT_CRITICAL (gst_memory_resize (mem, 200, 50));
+  ASSERT_CRITICAL (gst_memory_resize (mem, 0, 150));
+  ASSERT_CRITICAL (gst_memory_resize (mem, 1, maxalloc));
+  ASSERT_CRITICAL (gst_memory_resize (mem, maxalloc, 1));
 
   /* this does nothing */
-  gst_memory_resize (buf, 0, 100);
+  gst_memory_resize (mem, 0, 100);
 
   /* nothing should have changed */
-  size = gst_memory_get_sizes (buf, &offset, &maxsize);
+  size = gst_memory_get_sizes (mem, &offset, &maxsize);
   fail_unless (size == 100);
   fail_unless (offset == 0);
   fail_unless (maxsize == maxalloc);
 
-  gst_memory_resize (buf, 0, 50);
-  size = gst_memory_get_sizes (buf, &offset, &maxsize);
+  gst_memory_resize (mem, 0, 50);
+  size = gst_memory_get_sizes (mem, &offset, &maxsize);
   fail_unless (size == 50);
   fail_unless (offset == 0);
   fail_unless (maxsize == maxalloc);
 
-  gst_memory_resize (buf, 0, 100);
-  size = gst_memory_get_sizes (buf, &offset, &maxsize);
+  gst_memory_resize (mem, 0, 100);
+  size = gst_memory_get_sizes (mem, &offset, &maxsize);
   fail_unless (size == 100);
   fail_unless (offset == 0);
   fail_unless (maxsize == maxalloc);
 
-  gst_memory_resize (buf, 1, 99);
-  size = gst_memory_get_sizes (buf, &offset, &maxsize);
+  gst_memory_resize (mem, 1, 99);
+  size = gst_memory_get_sizes (mem, &offset, &maxsize);
   fail_unless (size == 99);
   fail_unless (offset == 1);
   fail_unless (maxsize == maxalloc);
 
-  ASSERT_CRITICAL (gst_memory_resize (buf, 1, maxalloc - 1));
+  ASSERT_CRITICAL (gst_memory_resize (mem, 1, maxalloc - 1));
 
-  gst_memory_resize (buf, 0, 99);
-  size = gst_memory_get_sizes (buf, &offset, &maxsize);
+  gst_memory_resize (mem, 0, 99);
+  size = gst_memory_get_sizes (mem, &offset, &maxsize);
   fail_unless (size == 99);
   fail_unless (offset == 1);
   fail_unless (maxsize == maxalloc);
 
-  gst_memory_resize (buf, -1, 100);
-  size = gst_memory_get_sizes (buf, &offset, &maxsize);
+  gst_memory_resize (mem, -1, 100);
+  size = gst_memory_get_sizes (mem, &offset, &maxsize);
   fail_unless (size == 100);
   fail_unless (offset == 0);
   fail_unless (maxsize == maxalloc);
 
   /* can't set offset below 0 */
-  ASSERT_CRITICAL (gst_memory_resize (buf, -1, 100));
+  ASSERT_CRITICAL (gst_memory_resize (mem, -1, 100));
 
-  gst_memory_resize (buf, 50, 40);
-  size = gst_memory_get_sizes (buf, &offset, &maxsize);
+  gst_memory_resize (mem, 50, 40);
+  size = gst_memory_get_sizes (mem, &offset, &maxsize);
   fail_unless (size == 40);
   fail_unless (offset == 50);
   fail_unless (maxsize == maxalloc);
 
-  gst_memory_resize (buf, -50, 100);
-  size = gst_memory_get_sizes (buf, &offset, &maxsize);
+  gst_memory_resize (mem, -50, 100);
+  size = gst_memory_get_sizes (mem, &offset, &maxsize);
   fail_unless (size == 100);
   fail_unless (offset == 0);
   fail_unless (maxsize == maxalloc);
 
-  gst_memory_resize (buf, 0, 0);
-  size = gst_memory_get_sizes (buf, &offset, &maxsize);
+  gst_memory_resize (mem, 0, 0);
+  size = gst_memory_get_sizes (mem, &offset, &maxsize);
   fail_unless (size == 0);
   fail_unless (offset == 0);
   fail_unless (maxsize == maxalloc);
 
-  gst_memory_resize (buf, 0, 100);
-  size = gst_memory_get_sizes (buf, &offset, &maxsize);
+  gst_memory_resize (mem, 0, 100);
+  size = gst_memory_get_sizes (mem, &offset, &maxsize);
   fail_unless (size == 100);
   fail_unless (offset == 0);
   fail_unless (maxsize == maxalloc);
 
-  gst_memory_resize (buf, 0, 100);
-  size = gst_memory_get_sizes (buf, &offset, &maxsize);
+  gst_memory_resize (mem, 0, 100);
+  size = gst_memory_get_sizes (mem, &offset, &maxsize);
   fail_unless (size == 100);
   fail_unless (offset == 0);
   fail_unless (maxsize == maxalloc);
 
-  gst_memory_unref (buf);
+  gst_memory_unref (mem);
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_map)
+{
+  GstMemory *mem;
+  gsize maxalloc;
+  gsize size, maxsize, offset;
+  gpointer data;
+
+  /* one memory block */
+  mem = gst_allocator_alloc (NULL, 100, 0);
+
+  size = gst_memory_get_sizes (mem, &offset, &maxalloc);
+  fail_unless (size == 100);
+  fail_unless (offset == 0);
+  fail_unless (maxalloc >= 100);
+
+  /* see if simply mapping works */
+  data = gst_memory_map (mem, &size, &maxsize, GST_MAP_READ);
+  fail_unless (data != NULL);
+  fail_unless (size == 100);
+  fail_unless (maxsize == maxalloc);
+  gst_memory_unmap (mem, data, size);
+
+  /* make smaller by unmapping less */
+  data = gst_memory_map (mem, &size, &maxsize, GST_MAP_READ);
+  fail_unless (data != NULL);
+  fail_unless (size == 100);
+  fail_unless (maxsize == maxalloc);
+  gst_memory_unmap (mem, data, size - 1);
+
+  size = gst_memory_get_sizes (mem, &offset, &maxalloc);
+  fail_unless (size == 99);
+  fail_unless (offset == 0);
+  fail_unless (maxalloc >= 100);
+
+  /* make bigger by unmapping more */
+  data = gst_memory_map (mem, &size, &maxsize, GST_MAP_READ);
+  fail_unless (data != NULL);
+  fail_unless (size == 99);
+  fail_unless (maxsize == maxalloc);
+  gst_memory_unmap (mem, data, size + 1);
+
+  size = gst_memory_get_sizes (mem, &offset, &maxalloc);
+  fail_unless (size == 100);
+  fail_unless (offset == 0);
+  fail_unless (maxalloc >= 100);
+
+  /* resize beyond the maxsize */
+  data = gst_memory_map (mem, &size, &maxsize, GST_MAP_READ);
+  fail_unless (data != NULL);
+  fail_unless (size == 100);
+  fail_unless (maxsize == maxalloc);
+  ASSERT_CRITICAL (gst_memory_unmap (mem, data, maxsize + 1));
+  gst_memory_unmap (mem, data, maxsize);
+
+  gst_memory_unref (mem);
 }
 
 GST_END_TEST;
@@ -381,6 +440,7 @@ gst_memory_suite (void)
   tcase_add_test (tc_chain, test_copy);
   tcase_add_test (tc_chain, test_try_new_and_alloc);
   tcase_add_test (tc_chain, test_resize);
+  tcase_add_test (tc_chain, test_map);
 
   return s;
 }
