@@ -49,6 +49,7 @@ typedef struct _GstFaad {
   guint      channels;   /* number of channels of the last frame  */
   guint      bps;        /* bytes per sample                      */
   guchar    *channel_positions;
+  GstAudioChannelPosition aac_positions[6], gst_positions[6];
 
   guint8     fake_codec_data[2];
   guint32    last_header;

@@ -41,7 +41,6 @@
 
 #include <string.h>
 #include <gst/audio/audio.h>
-#include <gst/audio/multichannel.h>
 
 /* These are the correct types for these functions, as defined in the source,
  * with types changed to match glib types, since those are defined for us.
@@ -98,6 +97,7 @@ static GstStaticPadTemplate sink_template = GST_STATIC_PAD_TEMPLATE ("sink",
 #define STATIC_RAW_CAPS(format) \
   "audio/x-raw, " \
     "format = (string) "GST_AUDIO_NE(format)", " \
+    "layout = (string) interleaved, " \
     "rate = (int) [ 8000, 96000 ], " \
     "channels = (int) [ 1, 8 ]"
 
@@ -375,27 +375,26 @@ init_failed:
   }
 }
 
-static GstAudioChannelPosition *
-gst_faad_chanpos_to_gst (GstFaad * faad, guchar * fpos, guint num,
-    gboolean * channel_map_failed)
+static gboolean
+gst_faad_chanpos_to_gst (GstFaad * faad, guchar * fpos,
+    GstAudioChannelPosition * pos, guint num)
 {
-  GstAudioChannelPosition *pos;
   guint n;
   gboolean unknown_channel = FALSE;
-
-  *channel_map_failed = FALSE;
 
   /* special handling for the common cases for mono and stereo */
   if (num == 1 && fpos[0] == FRONT_CHANNEL_CENTER) {
     GST_DEBUG_OBJECT (faad, "mono common case; won't set channel positions");
-    return NULL;
+    pos[0] = GST_AUDIO_CHANNEL_POSITION_MONO;
+    return TRUE;
   } else if (num == 2 && fpos[0] == FRONT_CHANNEL_LEFT
       && fpos[1] == FRONT_CHANNEL_RIGHT) {
     GST_DEBUG_OBJECT (faad, "stereo common case; won't set channel positions");
-    return NULL;
+    pos[0] = GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT;
+    pos[1] = GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT;
+    return TRUE;
   }
 
-  pos = g_new (GstAudioChannelPosition, num);
   for (n = 0; n < num; n++) {
     GST_DEBUG_OBJECT (faad, "faad channel %d as %d", n, fpos[n]);
     switch (fpos[n]) {
@@ -408,7 +407,7 @@ gst_faad_chanpos_to_gst (GstFaad * faad, guchar * fpos, guint num,
       case FRONT_CHANNEL_CENTER:
         /* argh, mono = center */
         if (num == 1)
-          pos[n] = GST_AUDIO_CHANNEL_POSITION_FRONT_MONO;
+          pos[n] = GST_AUDIO_CHANNEL_POSITION_MONO;
         else
           pos[n] = GST_AUDIO_CHANNEL_POSITION_FRONT_CENTER;
         break;
@@ -428,7 +427,7 @@ gst_faad_chanpos_to_gst (GstFaad * faad, guchar * fpos, guint num,
         pos[n] = GST_AUDIO_CHANNEL_POSITION_REAR_CENTER;
         break;
       case LFE_CHANNEL:
-        pos[n] = GST_AUDIO_CHANNEL_POSITION_LFE;
+        pos[n] = GST_AUDIO_CHANNEL_POSITION_LFE1;
         break;
       default:
         GST_DEBUG_OBJECT (faad, "unknown channel %d at %d", fpos[n], n);
@@ -437,39 +436,39 @@ gst_faad_chanpos_to_gst (GstFaad * faad, guchar * fpos, guint num,
     }
   }
   if (unknown_channel) {
-    g_free (pos);
-    pos = NULL;
     switch (num) {
       case 1:{
         GST_DEBUG_OBJECT (faad,
             "FAAD reports unknown 1 channel mapping. Forcing to mono");
+        pos[0] = GST_AUDIO_CHANNEL_POSITION_MONO;
         break;
       }
       case 2:{
         GST_DEBUG_OBJECT (faad,
             "FAAD reports unknown 2 channel mapping. Forcing to stereo");
+        pos[0] = GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT;
+        pos[1] = GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT;
         break;
       }
       default:{
         GST_WARNING_OBJECT (faad,
             "Unsupported FAAD channel position 0x%x encountered", fpos[n]);
-        *channel_map_failed = TRUE;
+        return FALSE;
         break;
       }
     }
   }
 
-  return pos;
+  return TRUE;
 }
 
 static gboolean
 gst_faad_update_caps (GstFaad * faad, faacDecFrameInfo * info)
 {
-  GstAudioChannelPosition *pos;
   gboolean ret;
-  gboolean channel_map_failed;
   GstCaps *caps;
   gboolean fmt_change = FALSE;
+  GstAudioInfo ainfo;
 
   /* see if we need to renegotiate */
   if (info->samplerate != faad->samplerate ||
@@ -479,13 +478,16 @@ gst_faad_update_caps (GstFaad * faad, faacDecFrameInfo * info)
     gint i;
 
     for (i = 0; i < info->channels; i++) {
-      if (info->channel_position[i] != faad->channel_positions[i])
+      if (info->channel_position[i] != faad->channel_positions[i]) {
         fmt_change = TRUE;
+        break;
+      }
     }
   }
 
   if (G_LIKELY (!fmt_change))
     return TRUE;
+
 
   /* store new negotiation information */
   faad->samplerate = info->samplerate;
@@ -493,26 +495,24 @@ gst_faad_update_caps (GstFaad * faad, faacDecFrameInfo * info)
   g_free (faad->channel_positions);
   faad->channel_positions = g_memdup (info->channel_position, faad->channels);
 
-  caps = gst_caps_new_simple ("audio/x-raw",
-      "format", G_TYPE_STRING, GST_AUDIO_NE (S16),
-      "rate", G_TYPE_INT, faad->samplerate,
-      "channels", G_TYPE_INT, faad->channels, NULL);
-
+  /* FIXME: Use the GstAudioInfo of GstAudioDecoder for all of this */
+  gst_audio_info_init (&ainfo);
+  gst_audio_info_set_format (&ainfo, GST_AUDIO_FORMAT_S16, faad->samplerate,
+      faad->channels, NULL);
   faad->bps = 16 / 8;
 
-  channel_map_failed = FALSE;
-  pos =
-      gst_faad_chanpos_to_gst (faad, faad->channel_positions, faad->channels,
-      &channel_map_failed);
-  if (channel_map_failed) {
+  if (!gst_faad_chanpos_to_gst (faad, faad->channel_positions,
+          faad->aac_positions, faad->channels)) {
     GST_DEBUG_OBJECT (faad, "Could not map channel positions");
-    gst_caps_unref (caps);
     return FALSE;
   }
-  if (pos) {
-    gst_audio_set_channel_positions (gst_caps_get_structure (caps, 0), pos);
-    g_free (pos);
-  }
+  memcpy (ainfo.position, faad->aac_positions,
+      faad->channels * sizeof (GstAudioChannelPosition));
+  gst_audio_channel_positions_to_valid_order (ainfo.position, faad->channels);
+  memcpy (faad->gst_positions, ainfo.position,
+      faad->channels * sizeof (GstAudioChannelPosition));
+
+  caps = gst_audio_info_to_caps (&ainfo);
 
   GST_DEBUG_OBJECT (faad, "New output caps: %" GST_PTR_FORMAT, caps);
 
@@ -751,6 +751,8 @@ init:
       /* FIXME, add bufferpool and allocator support to the base class */
       outbuf = gst_buffer_new_allocate (NULL, info.samples * faad->bps, 0);
       gst_buffer_fill (outbuf, 0, out, info.samples * faad->bps);
+      gst_audio_buffer_reorder_channels (outbuf, GST_AUDIO_FORMAT_S16,
+          faad->channels, faad->aac_positions, faad->gst_positions);
 
       ret = gst_audio_decoder_finish_frame (dec, outbuf, 1);
     }
