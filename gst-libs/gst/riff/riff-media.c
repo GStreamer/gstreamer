@@ -1147,8 +1147,9 @@ gst_riff_create_audio_caps (guint16 codec_id,
   gint channels_max = 2;
   gint i;
 
-  for (i = 0; i < 18; i++)
-    channel_reorder_map[i] = -1;
+  if (channel_reorder_map)
+    for (i = 0; i < 18; i++)
+      channel_reorder_map[i] = -1;
 
   switch (codec_id) {
     case GST_RIFF_WAVE_FORMAT_PCM:     /* PCM */
