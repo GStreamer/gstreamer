@@ -222,7 +222,7 @@ gboolean
 ges_formatter_can_save_uri (const gchar * uri)
 {
   if (!(gst_uri_is_valid (uri))) {
-    GST_ERROR ("Invalid uri!");
+    GST_ERROR ("%s invalid uri!", uri);
     return FALSE;
   }
 
