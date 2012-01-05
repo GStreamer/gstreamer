@@ -229,7 +229,7 @@ vorbis_handle_identification_packet (GstVorbisDec * vd)
   GstCaps *caps;
   GstAudioInfo info;
 
-  switch (info.channels) {
+  switch (vd->vi.channels) {
     case 1:
     case 2:
     case 3:
@@ -241,7 +241,7 @@ vorbis_handle_identification_packet (GstVorbisDec * vd)
     {
       const GstAudioChannelPosition *pos;
 
-      pos = gst_vorbis_default_channel_positions[info.channels - 1];
+      pos = gst_vorbis_default_channel_positions[vd->vi.channels - 1];
       gst_audio_info_set_format (&info, GST_VORBIS_AUDIO_FORMAT, vd->vi.rate,
           vd->vi.channels, pos);
       break;
