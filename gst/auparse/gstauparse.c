@@ -58,7 +58,7 @@ static GstStaticPadTemplate sink_template = GST_STATIC_PAD_TEMPLATE ("sink",
     "rate = (int) [ 8000, 192000 ], "       \
     "channels = (int) 2, "                  \
     "channel-mask = (bitmask) 0x3,"         \
-    "layout = (string) interleaved;"
+    "layout = (string) interleaved"
 
 #define GST_AU_PARSE_ALAW_PAD_TEMPLATE_CAPS \
     "audio/x-alaw, "                        \

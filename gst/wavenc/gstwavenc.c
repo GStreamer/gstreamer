@@ -76,14 +76,14 @@ struct wave_header
     "audio/x-raw, "                      \
     "rate = (int) [ 1, MAX ], "          \
     "channels = (int) 1, "               \
-    "format = (string) { S32LE, S24LE, S16LE, U8, F32LE, F64LE } " \
+    "format = (string) { S32LE, S24LE, S16LE, U8, F32LE, F64LE }, " \
     "layout = (string) interleaved"      \
     "; "                                 \
     "audio/x-raw, "                      \
     "rate = (int) [ 1, MAX ], "          \
     "channels = (int) 2, "               \
     "channel-mask = (bitmask) 0x3, "     \
-    "format = (string) { S32LE, S24LE, S16LE, U8, F32LE, F64LE } " \
+    "format = (string) { S32LE, S24LE, S16LE, U8, F32LE, F64LE }, " \
     "layout = (string) interleaved"      \
     "; "                                 \
     "audio/x-alaw, "                     \
