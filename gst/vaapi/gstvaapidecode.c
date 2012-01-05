@@ -301,17 +301,6 @@ gst_vaapidecode_create(GstVaapiDecode *decode, GstCaps *caps)
 static void
 gst_vaapidecode_destroy(GstVaapiDecode *decode)
 {
-    if (decode->decoder_ready) {
-        gst_vaapidecode_release(decode, NULL);
-        g_cond_free(decode->decoder_ready);
-        decode->decoder_ready = NULL;
-    }
-
-    if (decode->decoder_mutex) {
-        g_mutex_free(decode->decoder_mutex);
-        decode->decoder_mutex = NULL;
-    }
-
     if (decode->decoder) {
         gst_vaapi_decoder_put_buffer(decode->decoder, NULL);
         g_object_unref(decode->decoder);
@@ -321,6 +310,17 @@ gst_vaapidecode_destroy(GstVaapiDecode *decode)
     if (decode->decoder_caps) {
         gst_caps_unref(decode->decoder_caps);
         decode->decoder_caps = NULL;
+    }
+
+    if (decode->decoder_ready) {
+        gst_vaapidecode_release(decode, NULL);
+        g_cond_free(decode->decoder_ready);
+        decode->decoder_ready = NULL;
+    }
+
+    if (decode->decoder_mutex) {
+        g_mutex_free(decode->decoder_mutex);
+        decode->decoder_mutex = NULL;
     }
 }
 
