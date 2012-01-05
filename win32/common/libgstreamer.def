@@ -93,6 +93,7 @@ EXPORTS
 	gst_bin_recalculate_latency
 	gst_bin_remove
 	gst_bin_remove_many
+	gst_bitmask_get_type
 	gst_buffer_add_meta
 	gst_buffer_copy_flags_get_type
 	gst_buffer_copy_into
@@ -1183,6 +1184,7 @@ EXPORTS
 	gst_value_fixate
 	gst_value_fraction_multiply
 	gst_value_fraction_subtract
+	gst_value_get_bitmask
 	gst_value_get_caps
 	gst_value_get_date
 	gst_value_get_double_range_max
@@ -1211,6 +1213,7 @@ EXPORTS
 	gst_value_register_subtract_func
 	gst_value_register_union_func
 	gst_value_serialize
+	gst_value_set_bitmask
 	gst_value_set_caps
 	gst_value_set_date
 	gst_value_set_double_range
