@@ -25,7 +25,7 @@
 #define __GST_SIGNAL_PROCESSOR_H__
 
 #include <gst/gst.h>
-#include <gst/audio/multichannel.h>
+#include <gst/audio/audio.h>
 
 G_BEGIN_DECLS
 
