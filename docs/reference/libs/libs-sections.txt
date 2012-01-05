@@ -307,6 +307,8 @@ gst_vaapi_image_get_plane_count
 gst_vaapi_image_get_plane
 gst_vaapi_image_get_pitch
 gst_vaapi_image_get_data_size
+gst_vaapi_image_get_buffer
+gst_vaapi_image_get_raw
 gst_vaapi_image_update_from_buffer
 <SUBSECTION Standard>
 GST_VAAPI_IMAGE

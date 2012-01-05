@@ -1138,6 +1138,90 @@ copy_image(
 }
 
 /**
+ * gst_vaapi_image_get_buffer:
+ * @image: a #GstVaapiImage
+ * @buffer: a #GstBuffer
+ * @rect: a #GstVaapiRectangle expressing a region, or %NULL for the
+ *   whole image
+ *
+ * Transfers pixels data contained in the @image into the #GstBuffer.
+ * Both image structures shall have the same format.
+ *
+ * Return value: %TRUE on success
+ */
+gboolean
+gst_vaapi_image_get_buffer(
+    GstVaapiImage     *image,
+    GstBuffer         *buffer,
+    GstVaapiRectangle *rect
+)
+{
+    GstVaapiImagePrivate *priv;
+    GstVaapiImageRaw dst_image, src_image;
+    gboolean success;
+
+    g_return_val_if_fail(GST_VAAPI_IS_IMAGE(image), FALSE);
+    g_return_val_if_fail(image->priv->is_constructed, FALSE);
+    g_return_val_if_fail(GST_IS_BUFFER(buffer), FALSE);
+
+    priv = image->priv;
+
+    if (!init_image_from_buffer(&dst_image, buffer))
+        return FALSE;
+    if (dst_image.format != priv->format)
+        return FALSE;
+    if (dst_image.width != priv->width || dst_image.height != priv->height)
+        return FALSE;
+
+    if (!_gst_vaapi_image_map(image, &src_image))
+        return FALSE;
+
+    success = copy_image(&dst_image, &src_image, rect);
+
+    if (!_gst_vaapi_image_unmap(image))
+        return FALSE;
+
+    return success;
+}
+
+/**
+ * gst_vaapi_image_get_raw:
+ * @image: a #GstVaapiImage
+ * @dst_image: a #GstVaapiImageRaw
+ * @buffer: a #GstBuffer
+ * @rect: a #GstVaapiRectangle expressing a region, or %NULL for the
+ *   whole image
+ *
+ * Transfers pixels data contained in the @image into the #GstVaapiImageRaw.
+ * Both image structures shall have the same format.
+ *
+ * Return value: %TRUE on success
+ */
+gboolean
+gst_vaapi_image_get_raw(
+    GstVaapiImage     *image,
+    GstVaapiImageRaw  *dst_image,
+    GstVaapiRectangle *rect
+)
+{
+    GstVaapiImageRaw src_image;
+    gboolean success;
+
+    g_return_val_if_fail(GST_VAAPI_IS_IMAGE(image), FALSE);
+    g_return_val_if_fail(image->priv->is_constructed, FALSE);
+
+    if (!_gst_vaapi_image_map(image, &src_image))
+        return FALSE;
+
+    success = copy_image(dst_image, &src_image, rect);
+
+    if (!_gst_vaapi_image_unmap(image))
+        return FALSE;
+
+    return success;
+}
+
+/**
  * gst_vaapi_image_update_from_buffer:
  * @image: a #GstVaapiImage
  * @buffer: a #GstBuffer

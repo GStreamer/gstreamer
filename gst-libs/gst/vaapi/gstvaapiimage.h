@@ -176,6 +176,20 @@ guint
 gst_vaapi_image_get_data_size(GstVaapiImage *image);
 
 gboolean
+gst_vaapi_image_get_buffer(
+    GstVaapiImage     *image,
+    GstBuffer         *buffer,
+    GstVaapiRectangle *rect
+);
+
+gboolean
+gst_vaapi_image_get_raw(
+    GstVaapiImage     *image,
+    GstVaapiImageRaw  *dst_image,
+    GstVaapiRectangle *rect
+);
+
+gboolean
 gst_vaapi_image_update_from_buffer(
     GstVaapiImage     *image,
     GstBuffer         *buffer,
