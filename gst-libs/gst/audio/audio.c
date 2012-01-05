@@ -1085,6 +1085,23 @@ gst_audio_check_valid_channel_positions (const GstAudioChannelPosition *
 }
 
 /**
+ * gst_audio_channel_positions_to_mask:
+ * @position: The %GstAudioChannelPositions
+ * @channels: The number of channels.
+ * @channel_mask: the output channel mask
+ *
+ * Convert the @position array of @channels channels to a bitmask.
+ *
+ * Returns: %TRUE if the channel positions are valid and could be converted.
+ */
+gboolean
+gst_audio_channel_positions_to_mask (const GstAudioChannelPosition * position,
+    gint channels, guint64 * channel_mask)
+{
+  return check_valid_channel_positions (position, channels, TRUE, channel_mask);
+}
+
+/**
  * gst_audio_get_channel_reorder_map:
  * @channels: The number of channels.
  * @from: The channel positions to reorder from.
