@@ -214,10 +214,20 @@ _default_mem_map (GstMemoryDefault * mem, gsize * size, gsize * maxsize,
 static gboolean
 _default_mem_unmap (GstMemoryDefault * mem, gpointer data, gsize size)
 {
+  g_return_val_if_fail ((guint8 *) data >= mem->data
+      && (guint8 *) data < mem->data + mem->maxsize, FALSE);
+
   if (size != -1) {
+    /* check if resize happened or unmap was called with different data */
+    if (mem->data + mem->offset != data) {
+      /* adjust the size */
+      size = (guint8 *) data - mem->data + size - mem->offset;
+    }
+
     g_return_val_if_fail (mem->offset + size <= mem->maxsize, FALSE);
     mem->size = size;
   }
+
   return TRUE;
 }
 

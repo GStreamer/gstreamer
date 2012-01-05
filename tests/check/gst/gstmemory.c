@@ -387,6 +387,7 @@ GST_START_TEST (test_map)
   fail_unless (data != NULL);
   fail_unless (size == 100);
   fail_unless (maxsize == maxalloc);
+  ASSERT_CRITICAL (gst_memory_unmap (mem, (guint8 *) data - 1, maxsize + 1));
   gst_memory_unmap (mem, data, size);
 
   /* make smaller by unmapping less */
@@ -475,6 +476,30 @@ GST_START_TEST (test_map_nested)
 
 GST_END_TEST;
 
+GST_START_TEST (test_map_resize)
+{
+  GstMemory *mem;
+  gsize size, maxsize;
+  gpointer data;
+
+  mem = gst_allocator_alloc (NULL, 100, 0);
+
+  /* do mapping */
+  data = gst_memory_map (mem, &size, &maxsize, GST_MAP_READ);
+  fail_unless (data != NULL);
+  fail_unless (size == 100);
+
+  /* resize the buffer */
+  gst_memory_resize (mem, 1, maxsize - 1);
+
+  /* unmap the buffer with original pointer and size */
+  gst_memory_unmap (mem, data, maxsize);
+
+  gst_memory_unref (mem);
+}
+
+GST_END_TEST;
+
 
 static Suite *
 gst_memory_suite (void)
@@ -492,6 +517,7 @@ gst_memory_suite (void)
   tcase_add_test (tc_chain, test_resize);
   tcase_add_test (tc_chain, test_map);
   tcase_add_test (tc_chain, test_map_nested);
+  tcase_add_test (tc_chain, test_map_resize);
 
   return s;
 }
