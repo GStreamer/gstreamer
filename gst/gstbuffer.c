@@ -1198,7 +1198,7 @@ gst_buffer_memset (GstBuffer * buffer, gsize offset, guint8 val, gsize size)
     gsize ssize, toset;
     GstMemory *mem;
 
-    mem = GST_BUFFER_MEM_PTR (buffer, i);
+    mem = _get_memory (buffer, i, TRUE);
 
     data = gst_memory_map (mem, &ssize, NULL, GST_MAP_WRITE);
     if (ssize > offset) {
