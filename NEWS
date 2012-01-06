@@ -1,8 +1,8 @@
-gst-vaapi NEWS -- summary of changes.  2012-01-DD
+gst-vaapi NEWS -- summary of changes.  2012-01-06
 Copyright (C) 2010-2011 Splitted-Desktop Systems
 Copyright (C) 2011 Intel Corporation
 
-Version 0.3.2 - DD.Jan.2012
+Version 0.3.2 - 06.Jan.2012
 * Rename vaapiconvert element to vaapiupload
 * Fix vaapiupload from NV12 buffers
 * Fix possible leaks of VA surfaces in FFmpeg decoder
