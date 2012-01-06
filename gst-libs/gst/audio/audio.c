@@ -999,7 +999,7 @@ gst_audio_reorder_channels (gpointer data, gsize size, GstAudioFormat format,
   g_return_val_if_fail (info != NULL && info->width > 0, FALSE);
   g_return_val_if_fail (info->width > 0, FALSE);
   g_return_val_if_fail (info->width <= 8 * 64, FALSE);
-  g_return_val_if_fail (size % ((info->width * channels) / 8) != 0, FALSE);
+  g_return_val_if_fail (size % ((info->width * channels) / 8) == 0, FALSE);
   g_return_val_if_fail (channels > 0, FALSE);
   g_return_val_if_fail (channels <= 64, FALSE);
 
