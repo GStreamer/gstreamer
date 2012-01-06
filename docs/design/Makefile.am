@@ -8,4 +8,4 @@ EXTRA_DIST = \
 	design-orc-integration.txt \
 	draft-keyframe-force.txt   \
 	draft-va.txt               \
-	part-playbin2.txt
+	part-playbin.txt
