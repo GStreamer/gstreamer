@@ -242,43 +242,24 @@ ensure_quant_matrix(GstVaapiDecoderMpeg2 *decoder, GstVaapiPicture *picture)
     }
 
     iq_matrix->load_intra_quantiser_matrix = intra_quant_matrix != NULL;
-    if (intra_quant_matrix) {
-        iq_matrix->load_intra_quantiser_matrix = 1;
+    if (intra_quant_matrix)
         copy_quant_matrix(iq_matrix->intra_quantiser_matrix,
                           intra_quant_matrix);
-    }
 
-    iq_matrix->load_intra_quantiser_matrix = 1;
-    copy_quant_matrix(iq_matrix->intra_quantiser_matrix,
-                      priv->seq_hdr.intra_quantizer_matrix);
+    iq_matrix->load_non_intra_quantiser_matrix = non_intra_quant_matrix != NULL;
+    if (non_intra_quant_matrix)
+        copy_quant_matrix(iq_matrix->non_intra_quantiser_matrix,
+                          non_intra_quant_matrix);
 
-    iq_matrix->load_non_intra_quantiser_matrix = 1;
-    copy_quant_matrix(iq_matrix->non_intra_quantiser_matrix,
-                      priv->seq_hdr.non_intra_quantizer_matrix);
+    iq_matrix->load_chroma_intra_quantiser_matrix = chroma_intra_quant_matrix != NULL;
+    if (chroma_intra_quant_matrix)
+        copy_quant_matrix(iq_matrix->chroma_intra_quantiser_matrix,
+                          chroma_intra_quant_matrix);
 
-    iq_matrix->load_chroma_intra_quantiser_matrix     = 0;
-    iq_matrix->load_chroma_non_intra_quantiser_matrix = 0;
-    if (priv->has_quant_matrix_ext) {
-        if (priv->quant_matrix_ext.load_intra_quantiser_matrix)
-            copy_quant_matrix(iq_matrix->intra_quantiser_matrix,
-                              priv->quant_matrix_ext.intra_quantiser_matrix);
-
-        if (priv->quant_matrix_ext.load_non_intra_quantiser_matrix)
-            copy_quant_matrix(iq_matrix->non_intra_quantiser_matrix,
-                              priv->quant_matrix_ext.non_intra_quantiser_matrix);
-
-        if (priv->quant_matrix_ext.load_chroma_intra_quantiser_matrix) {
-            iq_matrix->load_chroma_intra_quantiser_matrix = 1;
-            copy_quant_matrix(iq_matrix->chroma_intra_quantiser_matrix,
-                              priv->quant_matrix_ext.chroma_intra_quantiser_matrix);
-        }
-
-        if (priv->quant_matrix_ext.load_chroma_non_intra_quantiser_matrix) {
-            iq_matrix->load_chroma_non_intra_quantiser_matrix = 1;
-            copy_quant_matrix(iq_matrix->chroma_non_intra_quantiser_matrix,
-                              priv->quant_matrix_ext.chroma_non_intra_quantiser_matrix);
-        }
-    }
+    iq_matrix->load_chroma_non_intra_quantiser_matrix = chroma_non_intra_quant_matrix != NULL;
+    if (chroma_non_intra_quant_matrix)
+        copy_quant_matrix(iq_matrix->chroma_non_intra_quantiser_matrix,
+                          chroma_non_intra_quant_matrix);
     return GST_VAAPI_DECODER_STATUS_SUCCESS;
 }
 
