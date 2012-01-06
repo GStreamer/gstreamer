@@ -64,6 +64,7 @@ pkgconfig/gstreamer-vaapi-glx-0.10.pc
 pkgconfig/gstreamer-vaapi-x11-0.10.pc
 tests/test-decode
 tests/test-display
+tests/test-subpicture
 tests/test-surfaces
 tests/test-textures
 tests/test-windows
