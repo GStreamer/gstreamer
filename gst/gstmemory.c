@@ -27,6 +27,11 @@
  * GstMemory is a lightweight refcounted object that wraps a region of memory.
  * They are typically used to manage the data of a #GstBuffer.
  *
+ * A GstMemory object has an allocated region of memory of maxsize. The maximum
+ * size does not change during the lifetime of the memory object. The memory
+ * also has an offset and size property that specifies the valid range of memory
+ * in the allocated region.
+ *
  * Memory is usually created by allocators with a gst_allocator_alloc()
  * method call. When NULL is used as the allocator, the default allocator will
  * be used.
@@ -45,6 +50,7 @@
  * gst_memory_get_sizes() and gst_memory_resize() respectively.
  *
  * Getting access to the data of the memory is performed with gst_memory_map().
+ * The call will return a pointer to offset bytes into the region of memory.
  * After the memory access is completed, gst_memory_unmap() should be called.
  *
  * Memory can be copied with gst_memory_copy(), which will returnn a writable
