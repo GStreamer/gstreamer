@@ -3512,14 +3512,6 @@ gst_decode_chain_get_topology (GstDecodeChain * chain)
 
   /* Caps that resulted in this chain */
   caps = gst_pad_get_current_caps (chain->pad);
-
-  if (!caps) {
-    /* Try querying the peer sink pad caps.
-     * This will most likely be the case with typefind:src
-     */
-    caps = gst_pad_peer_query_caps (chain->pad, NULL);
-  }
-
   if (!caps) {
     caps = get_pad_caps (chain->pad);
     if (G_UNLIKELY (!gst_caps_is_fixed (caps))) {
