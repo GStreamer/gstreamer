@@ -479,7 +479,7 @@ GST_END_TEST;
 GST_START_TEST (test_map_resize)
 {
   GstMemory *mem;
-  gsize size, maxsize;
+  gsize size, maxsize, maxalloc, offset;
   gpointer data;
 
   mem = gst_allocator_alloc (NULL, 100, 0);
@@ -490,10 +490,42 @@ GST_START_TEST (test_map_resize)
   fail_unless (size == 100);
 
   /* resize the buffer */
-  gst_memory_resize (mem, 1, maxsize - 1);
+  gst_memory_resize (mem, 1, size - 1);
+  size = gst_memory_get_sizes (mem, &offset, &maxalloc);
+  fail_unless (size == 99);
+  fail_unless (offset == 1);
+  fail_unless (maxalloc >= 100);
 
-  /* unmap the buffer with original pointer and size */
-  gst_memory_unmap (mem, data, maxsize);
+  /* unmap the buffer with original pointer and size, should restore the offset
+   * and size */
+  gst_memory_unmap (mem, data, 100);
+
+  size = gst_memory_get_sizes (mem, &offset, &maxalloc);
+  fail_unless (size == 100);
+  fail_unless (offset == 0);
+  fail_unless (maxalloc >= 100);
+
+  data = gst_memory_map (mem, &size, &maxsize, GST_MAP_READ);
+  fail_unless (data != NULL);
+  fail_unless (size == 100);
+  fail_unless (maxsize >= 100);
+
+  /* resize the buffer with unmap */
+  gst_memory_unmap (mem, (guint8 *) data + 1, 99);
+
+  size = gst_memory_get_sizes (mem, &offset, &maxalloc);
+  fail_unless (size == 99);
+  fail_unless (offset == 1);
+  fail_unless (maxalloc >= 100);
+
+  /* and larger */
+  data = gst_memory_map (mem, &size, &maxsize, GST_MAP_READ);
+  gst_memory_unmap (mem, (guint8 *) data - 1, 100);
+
+  size = gst_memory_get_sizes (mem, &offset, &maxalloc);
+  fail_unless (size == 100);
+  fail_unless (offset == 0);
+  fail_unless (maxalloc >= 100);
 
   gst_memory_unref (mem);
 }
