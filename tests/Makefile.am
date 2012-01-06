@@ -71,6 +71,7 @@ test_textures_LDADD	= $(TEST_LIBS) $(TEST_GLX_LIBS)
 EXTRA_DIST = \
 	image.h			\
 	test-decode.h 		\
+	test-subpicture-data.h	\
 	$(test_codecs_source_c)	\
 	$(test_codecs_source_h)	\
 	$(NULL)
