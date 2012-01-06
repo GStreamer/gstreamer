@@ -1124,8 +1124,8 @@ gst_audio_resample_transform (GstBaseTransform * base, GstBuffer * inbuf,
         gst_audio_resample_get_funcs (resample->width, resample->fp);
   }
 
-  GST_LOG_OBJECT (resample, "transforming buffer of %ld bytes, ts %"
-      GST_TIME_FORMAT ", duration %" GST_TIME_FORMAT ", offset %"
+  GST_LOG_OBJECT (resample, "transforming buffer of %" G_GSIZE_FORMAT " bytes,"
+      " ts %" GST_TIME_FORMAT ", duration %" GST_TIME_FORMAT ", offset %"
       G_GINT64_FORMAT ", offset_end %" G_GINT64_FORMAT,
       gst_buffer_get_size (inbuf), GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (inbuf)),
       GST_TIME_ARGS (GST_BUFFER_DURATION (inbuf)),
