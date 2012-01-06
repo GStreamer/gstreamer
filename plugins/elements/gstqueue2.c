@@ -1152,7 +1152,7 @@ gst_queue2_create_read (GstQueue2 * queue, guint64 offset, guint length,
     GstBuffer ** buffer)
 {
   GstBuffer *buf;
-  guint8 *data;
+  guint8 *data, *orig;
   guint64 file_offset;
   guint block_length, remaining, read_length;
   guint64 rb_size;
@@ -1161,7 +1161,7 @@ gst_queue2_create_read (GstQueue2 * queue, guint64 offset, guint length,
 
   /* allocate the output buffer of the requested size */
   buf = gst_buffer_new_allocate (NULL, length, 0);
-  data = gst_buffer_map (buf, NULL, NULL, GST_MAP_WRITE);
+  orig = data = gst_buffer_map (buf, NULL, NULL, GST_MAP_WRITE);
 
   GST_DEBUG_OBJECT (queue, "Reading %u bytes from %" G_GUINT64_FORMAT, length,
       offset);
@@ -1272,7 +1272,7 @@ gst_queue2_create_read (GstQueue2 * queue, guint64 offset, guint length,
     GST_DEBUG_OBJECT (queue, "%u bytes left to read", remaining);
   }
 
-  gst_buffer_unmap (buf, data, length);
+  gst_buffer_unmap (buf, orig, length);
 
   GST_BUFFER_OFFSET (buf) = offset;
   GST_BUFFER_OFFSET_END (buf) = offset + length;
