@@ -648,20 +648,9 @@ layer_object_removed_cb (GESTimelineLayer * layer, GESTimelineObject * object,
    * it no longer needs to be discovered so remove it from the pendingobjects
    * list if it belongs to this layer */
   if (GES_IS_TIMELINE_FILE_SOURCE (object)) {
-    GList *pendingobjects;
-
     GES_TIMELINE_PENDINGOBJS_LOCK (timeline);
-    pendingobjects = timeline->priv->pendingobjects;
-
-    tmp = pendingobjects;
-    while (tmp) {
-      GList *next = tmp->next;
-
-      if (layer == (GESTimelineLayer *) ((GESTimelineObject *) tmp->data)->priv)
-        pendingobjects = g_list_delete_link (pendingobjects, tmp);
-      tmp = next;
-    }
-    timeline->priv->pendingobjects = pendingobjects;
+    timeline->priv->pendingobjects =
+        g_list_remove_all (timeline->priv->pendingobjects, object);
     GES_TIMELINE_PENDINGOBJS_UNLOCK (timeline);
   }
 
