@@ -32,7 +32,6 @@
 #include <gst/audio/gstaudiosrc.h>
 #include <gst/audio/gstaudiosink.h>
 #include <gst/audio/gstaudioringbuffer.h>
-#include <gst/audio/multichannel.h>
 #include <gst/audio/mixer.h>
 #include <gst/audio/streamvolume.h>
 #include <gst/fft/gstfft.h>

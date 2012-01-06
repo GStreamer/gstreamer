@@ -39,7 +39,6 @@
 #include <gst/audio/gstaudiobasesrc.h>
 #include <gst/audio/gstaudioringbuffer.h>
 #include <gst/audio/mixerutils.h>
-#include <gst/audio/multichannel.h>
 #include <gst/audio/mixer.h>
 #include <gst/audio/mixeroptions.h>
 #include <gst/audio/mixertrack.h>
