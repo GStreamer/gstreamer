@@ -71,6 +71,7 @@ typedef enum {
  * @flags: memory flags
  * @refcount: refcount
  * @parent: parent memory block
+ * @state: private state
  *
  * Base structure for memory implementations. Custom memory will put this structure
  * as the first member of their structure.
@@ -81,6 +82,7 @@ struct _GstMemory {
   GstMemoryFlags  flags;
   gint            refcount;
   GstMemory      *parent;
+  volatile gint   state;
 };
 
 /**

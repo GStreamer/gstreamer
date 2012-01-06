@@ -123,6 +123,7 @@ _default_mem_init (GstMemoryDefault * mem, GstMemoryFlags flags,
   mem->mem.flags = flags;
   mem->mem.refcount = 1;
   mem->mem.parent = parent ? gst_memory_ref (parent) : NULL;
+  mem->mem.state = 0;
   mem->slice_size = slice_size;
   mem->data = data;
   mem->free_func = free_func;
@@ -220,6 +221,10 @@ _default_mem_map (GstMemoryDefault * mem, gsize * size, gsize * maxsize,
 static gboolean
 _default_mem_unmap (GstMemoryDefault * mem, gpointer data, gsize size)
 {
+  GST_DEBUG ("mem: %p, data %p, size %u", mem, data, size);
+  GST_DEBUG ("mem: %p, data %p,  offset %u, size %u, maxsize %u", mem,
+      mem->data, mem->offset, mem->size, mem->maxsize);
+
   g_return_val_if_fail ((guint8 *) data >= mem->data
       && (guint8 *) data < mem->data + mem->maxsize, FALSE);
 
@@ -477,11 +482,43 @@ gpointer
 gst_memory_map (GstMemory * mem, gsize * size, gsize * maxsize,
     GstMapFlags flags)
 {
-  g_return_val_if_fail (mem != NULL, NULL);
-  g_return_val_if_fail (!(flags & GST_MAP_WRITE) ||
-      GST_MEMORY_IS_WRITABLE (mem), NULL);
+  gpointer res;
+  gint access_mode, state, newstate;
 
-  return mem->allocator->info.map (mem, size, maxsize, flags);
+  g_return_val_if_fail (mem != NULL, NULL);
+  access_mode = flags & 3;
+  g_return_val_if_fail (!(access_mode & GST_MAP_WRITE)
+      || GST_MEMORY_IS_WRITABLE (mem), NULL);
+
+  do {
+    state = g_atomic_int_get (&mem->state);
+    if (state == 0) {
+      /* nothing mapped, set access_mode and refcount */
+      newstate = 4 | access_mode;
+    } else {
+      /* access_mode must match */
+      g_return_val_if_fail ((state & access_mode) == access_mode, NULL);
+      /* increase refcount */
+      newstate = state + 4;
+    }
+  } while (!g_atomic_int_compare_and_exchange (&mem->state, state, newstate));
+
+  res = mem->allocator->info.map (mem, size, maxsize, flags);
+
+  if (G_UNLIKELY (res == NULL)) {
+    /* something went wrong, restore the orginal state again */
+    do {
+      state = g_atomic_int_get (&mem->state);
+      /* there must be a ref */
+      g_return_val_if_fail (state >= 4, NULL);
+      /* decrease the refcount */
+      newstate = state - 4;
+      /* last refcount, unset access_mode */
+      if (newstate < 4)
+        newstate = 0;
+    } while (!g_atomic_int_compare_and_exchange (&mem->state, state, newstate));
+  }
+  return res;
 }
 
 /**
@@ -502,9 +539,31 @@ gst_memory_map (GstMemory * mem, gsize * size, gsize * maxsize,
 gboolean
 gst_memory_unmap (GstMemory * mem, gpointer data, gssize size)
 {
+  gboolean need_unmap = TRUE;
+  gint state, newstate;
+
   g_return_val_if_fail (mem != NULL, FALSE);
 
-  return mem->allocator->info.unmap (mem, data, size);
+  do {
+    state = g_atomic_int_get (&mem->state);
+
+    /* there must be a ref */
+    g_return_val_if_fail (state >= 4, FALSE);
+
+    if (need_unmap) {
+      /* try to unmap, only do this once */
+      if (!mem->allocator->info.unmap (mem, data, size))
+        return FALSE;
+      need_unmap = FALSE;
+    }
+    /* success, try to decrease the refcount */
+    newstate = state - 4;
+    /* last refcount, unset access_mode */
+    if (newstate < 4)
+      newstate = 0;
+  } while (!g_atomic_int_compare_and_exchange (&mem->state, state, newstate));
+
+  return TRUE;
 }
 
 /**

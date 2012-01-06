@@ -463,13 +463,43 @@ GST_START_TEST (test_map_nested)
   fail_unless (data1 != NULL);
   fail_unless (size1 == 100);
 
-  data2 = gst_memory_map (mem, &size2, &maxsize2, GST_MAP_WRITE);
+  data2 = gst_memory_map (mem, &size2, &maxsize2, GST_MAP_READ);
   fail_unless (data2 == data1);
   fail_unless (size2 == 100);
 
   /* unmap in different order */
   gst_memory_unmap (mem, data1, size1);
   gst_memory_unmap (mem, data2, size2);
+
+  data1 = gst_memory_map (mem, &size1, &maxsize1, GST_MAP_READ);
+  /* not allowed */
+  ASSERT_CRITICAL (gst_memory_map (mem, &size2, &maxsize2, GST_MAP_WRITE));
+  ASSERT_CRITICAL (gst_memory_map (mem, &size2, &maxsize2, GST_MAP_READWRITE));
+  data2 = gst_memory_map (mem, &size2, &maxsize2, GST_MAP_READ);
+  gst_memory_unmap (mem, data1, size1);
+  gst_memory_unmap (mem, data2, size2);
+  fail_unless (mem->state == 0);
+
+  data1 = gst_memory_map (mem, &size1, &maxsize1, GST_MAP_WRITE);
+  /* not allowed */
+  ASSERT_CRITICAL (gst_memory_map (mem, &size2, &maxsize2, GST_MAP_READ));
+  ASSERT_CRITICAL (gst_memory_map (mem, &size2, &maxsize2, GST_MAP_READWRITE));
+  data2 = gst_memory_map (mem, &size2, &maxsize2, GST_MAP_WRITE);
+  gst_memory_unmap (mem, data1, size1);
+  gst_memory_unmap (mem, data2, size2);
+  /* nothing was mapped */
+  ASSERT_CRITICAL (gst_memory_unmap (mem, data2, size2));
+
+  data1 = gst_memory_map (mem, &size1, &maxsize1, GST_MAP_READWRITE);
+  data2 = gst_memory_map (mem, &size2, &maxsize2, GST_MAP_READ);
+  gst_memory_unmap (mem, data2, size2);
+  data2 = gst_memory_map (mem, &size2, &maxsize2, GST_MAP_WRITE);
+  gst_memory_unmap (mem, data2, size2);
+  /* ut of range */
+  ASSERT_CRITICAL (gst_memory_unmap (mem, (guint8 *) data1 - 1, size1));
+  gst_memory_unmap (mem, data1, size1);
+  /* nothing was mapped */
+  ASSERT_CRITICAL (gst_memory_unmap (mem, data1, size1));
 
   gst_memory_unref (mem);
 }
