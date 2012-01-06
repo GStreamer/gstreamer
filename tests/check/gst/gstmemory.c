@@ -527,6 +527,22 @@ GST_START_TEST (test_map_resize)
   fail_unless (offset == 0);
   fail_unless (maxalloc >= 100);
 
+  data = gst_memory_map (mem, &size, &maxsize, GST_MAP_READ);
+  gst_memory_unmap (mem, (guint8 *) data + 1, -1);
+
+  size = gst_memory_get_sizes (mem, &offset, &maxalloc);
+  fail_unless (size == 99);
+  fail_unless (offset == 1);
+  fail_unless (maxalloc >= 100);
+
+  data = gst_memory_map (mem, &size, &maxsize, GST_MAP_READ);
+  gst_memory_unmap (mem, (guint8 *) data - 1, -1);
+
+  size = gst_memory_get_sizes (mem, &offset, &maxalloc);
+  fail_unless (size == 100);
+  fail_unless (offset == 0);
+  fail_unless (maxalloc >= 100);
+
   gst_memory_unref (mem);
 }
 

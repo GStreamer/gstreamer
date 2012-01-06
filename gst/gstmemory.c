@@ -217,8 +217,12 @@ _default_mem_unmap (GstMemoryDefault * mem, gpointer data, gsize size)
   g_return_val_if_fail ((guint8 *) data >= mem->data
       && (guint8 *) data < mem->data + mem->maxsize, FALSE);
 
-  if (mem->data + mem->offset != data)
-    mem->offset = (guint8 *) data - mem->data;
+  if (mem->data + mem->offset != data) {
+    gsize newoffset = (guint8 *) data - mem->data;
+    if (size == -1)
+      size = mem->offset + mem->size - newoffset;
+    mem->offset = newoffset;
+  }
 
   if (size != -1) {
     g_return_val_if_fail (mem->offset + size <= mem->maxsize, FALSE);
