@@ -45,12 +45,11 @@
 
 #include "gstflacdec.h"
 #include <gst/gst-i18n-plugin.h>
-#include <gst/audio/multichannel.h>
 #include <gst/tag/tag.h>
 
 /* Taken from http://flac.sourceforge.net/format.html#frame_header */
 static const GstAudioChannelPosition channel_positions[8][8] = {
-  {GST_AUDIO_CHANNEL_POSITION_FRONT_MONO},
+  {GST_AUDIO_CHANNEL_POSITION_MONO},
   {GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT,
       GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT}, {
         GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT,
@@ -68,7 +67,7 @@ static const GstAudioChannelPosition channel_positions[8][8] = {
         GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT,
         GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT,
         GST_AUDIO_CHANNEL_POSITION_FRONT_CENTER,
-        GST_AUDIO_CHANNEL_POSITION_LFE,
+        GST_AUDIO_CHANNEL_POSITION_LFE1,
         GST_AUDIO_CHANNEL_POSITION_REAR_LEFT,
       GST_AUDIO_CHANNEL_POSITION_REAR_RIGHT},
   /* FIXME: 7/8 channel layouts are not defined in the FLAC specs */
@@ -78,14 +77,14 @@ static const GstAudioChannelPosition channel_positions[8][8] = {
         GST_AUDIO_CHANNEL_POSITION_REAR_LEFT,
         GST_AUDIO_CHANNEL_POSITION_REAR_RIGHT,
         GST_AUDIO_CHANNEL_POSITION_FRONT_CENTER,
-        GST_AUDIO_CHANNEL_POSITION_LFE,
+        GST_AUDIO_CHANNEL_POSITION_LFE1,
       GST_AUDIO_CHANNEL_POSITION_REAR_CENTER}, {
         GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT,
         GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT,
         GST_AUDIO_CHANNEL_POSITION_REAR_LEFT,
         GST_AUDIO_CHANNEL_POSITION_REAR_RIGHT,
         GST_AUDIO_CHANNEL_POSITION_FRONT_CENTER,
-        GST_AUDIO_CHANNEL_POSITION_LFE,
+        GST_AUDIO_CHANNEL_POSITION_LFE1,
         GST_AUDIO_CHANNEL_POSITION_SIDE_LEFT,
       GST_AUDIO_CHANNEL_POSITION_SIDE_RIGHT}
 };
@@ -120,12 +119,10 @@ G_DEFINE_TYPE (GstFlacDec, gst_flac_dec, GST_TYPE_AUDIO_DECODER);
 #define FORMATS "{ S8BE, S16BE, S32BE } "
 #endif
 
-/* FIXME 0.11: Use width=32 for all depths and let audioconvert
- * handle the conversions instead of doing it ourself.
- */
 #define GST_FLAC_DEC_SRC_CAPS                             \
     "audio/x-raw, "                                       \
     "format = (string) " FORMATS ", "                     \
+    "layout = (string) interleaved, "                     \
     "rate = (int) [ 1, 655350 ], "                        \
     "channels = (int) [ 1, 8 ]"
 
@@ -192,6 +189,9 @@ gst_flac_dec_start (GstAudioDecoder * audio_dec)
   dec->adapter = gst_adapter_new ();
 
   dec->decoder = FLAC__stream_decoder_new ();
+
+  gst_audio_info_init (&dec->info);
+  dec->depth = 0;
 
   /* no point calculating MD5 since it's never checked here */
   FLAC__stream_decoder_set_md5_checking (dec->decoder, false);
@@ -405,10 +405,10 @@ gst_flac_dec_scan_got_frame (GstFlacDec * flacdec, guint8 * data, guint size,
   GST_DEBUG_OBJECT (flacdec, "frame number: %" G_GINT64_FORMAT,
       *last_sample_num);
 
-  if (flacdec->sample_rate > 0 && *last_sample_num != 0) {
+  if (flacdec->info.rate > 0 && *last_sample_num != 0) {
     GST_DEBUG_OBJECT (flacdec, "last sample %" G_GINT64_FORMAT " = %"
         GST_TIME_FORMAT, *last_sample_num,
-        GST_TIME_ARGS (*last_sample_num * GST_SECOND / flacdec->sample_rate));
+        GST_TIME_ARGS (*last_sample_num * GST_SECOND / flacdec->info.rate));
   }
 
   return TRUE;
@@ -425,29 +425,42 @@ gst_flac_dec_metadata_cb (const FLAC__StreamDecoder * decoder,
   switch (metadata->type) {
     case FLAC__METADATA_TYPE_STREAMINFO:{
       gint64 samples;
-      guint depth;
+      guint depth, width;
 
       samples = metadata->data.stream_info.total_samples;
 
       flacdec->min_blocksize = metadata->data.stream_info.min_blocksize;
       flacdec->max_blocksize = metadata->data.stream_info.max_blocksize;
-      flacdec->sample_rate = metadata->data.stream_info.sample_rate;
       flacdec->depth = depth = metadata->data.stream_info.bits_per_sample;
-      flacdec->channels = metadata->data.stream_info.channels;
 
       if (depth < 9)
-        flacdec->width = 8;
+        width = 8;
       else if (depth < 17)
-        flacdec->width = 16;
+        width = 16;
       else
-        flacdec->width = 32;
+        width = 32;
+
+      gst_audio_info_set_format (&flacdec->info,
+          gst_audio_format_build_integer (TRUE, G_BYTE_ORDER, width, width),
+          metadata->data.stream_info.sample_rate,
+          metadata->data.stream_info.channels, NULL);
+
+      memcpy (flacdec->info.position,
+          channel_positions[flacdec->info.channels - 1],
+          sizeof (GstAudioChannelPosition) * flacdec->info.channels);
+      gst_audio_channel_positions_to_valid_order (flacdec->info.position,
+          flacdec->info.channels);
+      /* Note: we create the inverse reordering map here */
+      gst_audio_get_channel_reorder_map (flacdec->info.channels,
+          flacdec->info.position, channel_positions[flacdec->info.channels - 1],
+          flacdec->channel_reorder_map);
 
       GST_DEBUG_OBJECT (flacdec, "blocksize: min=%u, max=%u",
           flacdec->min_blocksize, flacdec->max_blocksize);
       GST_DEBUG_OBJECT (flacdec, "sample rate: %u, channels: %u",
-          flacdec->sample_rate, flacdec->channels);
+          flacdec->info.rate, flacdec->info.channels);
       GST_DEBUG_OBJECT (flacdec, "depth: %u, width: %u", flacdec->depth,
-          flacdec->width);
+          flacdec->info.finfo->width);
 
       GST_DEBUG_OBJECT (flacdec, "total samples = %" G_GINT64_FORMAT, samples);
       break;
@@ -524,7 +537,7 @@ gst_flac_dec_write (GstFlacDec * flacdec, const FLAC__Frame * frame,
   guint j, i;
   gpointer data;
   gsize size;
-  const gchar *format;
+  gboolean caps_changed;
 
   GST_LOG_OBJECT (flacdec, "samples in frame header: %d", samples);
 
@@ -537,29 +550,20 @@ gst_flac_dec_write (GstFlacDec * flacdec, const FLAC__Frame * frame,
     }
 
     depth = flacdec->depth;
-    if (depth < 9)
-      depth = 8;
-    else if (depth < 17)
-      depth = 16;
-    else
-      depth = 32;
   }
 
   switch (depth) {
     case 8:
       width = 8;
-      format = GST_AUDIO_NE (S8);
       break;
     case 12:
     case 16:
       width = 16;
-      format = GST_AUDIO_NE (S16);
       break;
     case 20:
     case 24:
     case 32:
       width = 32;
-      format = GST_AUDIO_NE (S32);
       break;
     default:
       GST_ERROR_OBJECT (flacdec, "unsupported depth %d", depth);
@@ -568,8 +572,8 @@ gst_flac_dec_write (GstFlacDec * flacdec, const FLAC__Frame * frame,
   }
 
   if (sample_rate == 0) {
-    if (flacdec->sample_rate != 0) {
-      sample_rate = flacdec->sample_rate;
+    if (flacdec->info.rate != 0) {
+      sample_rate = flacdec->info.rate;
     } else {
       GST_ERROR_OBJECT (flacdec, "unknown sample rate");
       ret = GST_FLOW_ERROR;
@@ -577,27 +581,34 @@ gst_flac_dec_write (GstFlacDec * flacdec, const FLAC__Frame * frame,
     }
   }
 
-  if (!gst_pad_has_current_caps (GST_AUDIO_DECODER_SRC_PAD (flacdec))) {
+  caps_changed = (sample_rate != flacdec->info.rate)
+      || (width != flacdec->info.finfo->width)
+      || (channels != flacdec->info.channels);
+
+  if (caps_changed
+      || !gst_pad_has_current_caps (GST_AUDIO_DECODER_SRC_PAD (flacdec))) {
     GstCaps *caps;
 
-    GST_DEBUG_OBJECT (flacdec, "Negotiating %d Hz @ %d channels",
-        frame->header.sample_rate, channels);
+    GST_DEBUG_OBJECT (flacdec, "Negotiating %d Hz @ %d channels", sample_rate,
+        channels);
 
-    caps = gst_caps_new_simple ("audio/x-raw",
-        "format", G_TYPE_STRING, format,
-        "rate", G_TYPE_INT, frame->header.sample_rate,
-        "channels", G_TYPE_INT, channels, NULL);
+    gst_audio_info_set_format (&flacdec->info,
+        gst_audio_format_build_integer (TRUE, G_BYTE_ORDER, width, width),
+        sample_rate, channels, NULL);
 
-    if (channels > 2) {
-      GstStructure *s = gst_caps_get_structure (caps, 0);
+    memcpy (flacdec->info.position,
+        channel_positions[flacdec->info.channels - 1],
+        sizeof (GstAudioChannelPosition) * flacdec->info.channels);
+    gst_audio_channel_positions_to_valid_order (flacdec->info.position,
+        flacdec->info.channels);
+    /* Note: we create the inverse reordering map here */
+    gst_audio_get_channel_reorder_map (flacdec->info.channels,
+        flacdec->info.position, channel_positions[flacdec->info.channels - 1],
+        flacdec->channel_reorder_map);
 
-      gst_audio_set_channel_positions (s, channel_positions[channels - 1]);
-    }
+    caps = gst_audio_info_to_caps (&flacdec->info);
 
     flacdec->depth = depth;
-    flacdec->width = width;
-    flacdec->channels = channels;
-    flacdec->sample_rate = sample_rate;
 
     gst_audio_decoder_set_outcaps (GST_AUDIO_DECODER (flacdec), caps);
     gst_caps_unref (caps);
@@ -609,26 +620,55 @@ gst_flac_dec_write (GstFlacDec * flacdec, const FLAC__Frame * frame,
   data = gst_buffer_map (outbuf, &size, NULL, GST_MAP_WRITE);
   if (width == 8) {
     gint8 *outbuffer = (gint8 *) data;
+    gint *reorder_map = flacdec->channel_reorder_map;
 
-    for (i = 0; i < samples; i++) {
-      for (j = 0; j < channels; j++) {
-        *outbuffer++ = (gint8) buffer[j][i];
+    if (width != depth) {
+      for (i = 0; i < samples; i++) {
+        for (j = 0; j < channels; j++) {
+          *outbuffer++ = (gint8) (buffer[reorder_map[j]][i] >> (width - depth));
+        }
+      }
+    } else {
+      for (i = 0; i < samples; i++) {
+        for (j = 0; j < channels; j++) {
+          *outbuffer++ = (gint8) buffer[reorder_map[j]][i];
+        }
       }
     }
   } else if (width == 16) {
     gint16 *outbuffer = (gint16 *) data;
+    gint *reorder_map = flacdec->channel_reorder_map;
 
-    for (i = 0; i < samples; i++) {
-      for (j = 0; j < channels; j++) {
-        *outbuffer++ = (gint16) buffer[j][i];
+    if (width != depth) {
+      for (i = 0; i < samples; i++) {
+        for (j = 0; j < channels; j++) {
+          *outbuffer++ =
+              (gint16) (buffer[reorder_map[j]][i] >> (width - depth));
+        }
+      }
+    } else {
+      for (i = 0; i < samples; i++) {
+        for (j = 0; j < channels; j++) {
+          *outbuffer++ = (gint16) buffer[reorder_map[j]][i];
+        }
       }
     }
   } else if (width == 32) {
     gint32 *outbuffer = (gint32 *) data;
+    gint *reorder_map = flacdec->channel_reorder_map;
 
-    for (i = 0; i < samples; i++) {
-      for (j = 0; j < channels; j++) {
-        *outbuffer++ = (gint32) buffer[j][i];
+    if (width != depth) {
+      for (i = 0; i < samples; i++) {
+        for (j = 0; j < channels; j++) {
+          *outbuffer++ =
+              (gint32) (buffer[reorder_map[j]][i] >> (width - depth));
+        }
+      }
+    } else {
+      for (i = 0; i < samples; i++) {
+        for (j = 0; j < channels; j++) {
+          *outbuffer++ = (gint32) buffer[reorder_map[j]][i];
+        }
       }
     }
   } else {

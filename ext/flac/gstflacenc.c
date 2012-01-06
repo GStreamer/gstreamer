@@ -45,13 +45,12 @@
 
 #include <gstflacenc.h>
 #include <gst/audio/audio.h>
-#include <gst/audio/multichannel.h>
 #include <gst/tag/tag.h>
 #include <gst/gsttagsetter.h>
 
 /* Taken from http://flac.sourceforge.net/format.html#frame_header */
 static const GstAudioChannelPosition channel_positions[8][8] = {
-  {GST_AUDIO_CHANNEL_POSITION_FRONT_MONO},
+  {GST_AUDIO_CHANNEL_POSITION_MONO},
   {GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT,
       GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT}, {
         GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT,
@@ -69,7 +68,7 @@ static const GstAudioChannelPosition channel_positions[8][8] = {
         GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT,
         GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT,
         GST_AUDIO_CHANNEL_POSITION_FRONT_CENTER,
-        GST_AUDIO_CHANNEL_POSITION_LFE,
+        GST_AUDIO_CHANNEL_POSITION_LFE1,
         GST_AUDIO_CHANNEL_POSITION_REAR_LEFT,
       GST_AUDIO_CHANNEL_POSITION_REAR_RIGHT},
   /* FIXME: 7/8 channel layouts are not defined in the FLAC specs */
@@ -79,40 +78,30 @@ static const GstAudioChannelPosition channel_positions[8][8] = {
         GST_AUDIO_CHANNEL_POSITION_REAR_LEFT,
         GST_AUDIO_CHANNEL_POSITION_REAR_RIGHT,
         GST_AUDIO_CHANNEL_POSITION_FRONT_CENTER,
-        GST_AUDIO_CHANNEL_POSITION_LFE,
+        GST_AUDIO_CHANNEL_POSITION_LFE1,
       GST_AUDIO_CHANNEL_POSITION_REAR_CENTER}, {
         GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT,
         GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT,
         GST_AUDIO_CHANNEL_POSITION_REAR_LEFT,
         GST_AUDIO_CHANNEL_POSITION_REAR_RIGHT,
         GST_AUDIO_CHANNEL_POSITION_FRONT_CENTER,
-        GST_AUDIO_CHANNEL_POSITION_LFE,
+        GST_AUDIO_CHANNEL_POSITION_LFE1,
         GST_AUDIO_CHANNEL_POSITION_SIDE_LEFT,
       GST_AUDIO_CHANNEL_POSITION_SIDE_RIGHT}
 };
 
-#define FLAC_SINK_CAPS \
-  "audio/x-raw-int, "               \
-  "endianness = (int) BYTE_ORDER, " \
-  "signed = (boolean) TRUE, "       \
-  "width = (int) 8, "               \
-  "depth = (int) 8, "               \
-  "rate = (int) [ 1, 655350 ], "    \
-  "channels = (int) [ 1, 8 ]; "     \
-  "audio/x-raw-int, "               \
-  "endianness = (int) BYTE_ORDER, " \
-  "signed = (boolean) TRUE, "       \
-  "width = (int) 16, "              \
-  "depth = (int) { 12, 16 }, "      \
-  "rate = (int) [ 1, 655350 ], "    \
-  "channels = (int) [ 1, 8 ]; "     \
-  "audio/x-raw-int, "               \
-  "endianness = (int) BYTE_ORDER, " \
-  "signed = (boolean) TRUE, "       \
-  "width = (int) 32, "              \
-  "depth = (int) { 20, 24 }, "      \
-  "rate = (int) [ 1, 655350 ], "    \
-  "channels = (int) [ 1, 8 ]"
+#if G_BYTE_ORDER == G_LITTLE_ENDIAN
+#define FORMATS "{ S8LE, S16LE, S24LE, S32LE } "
+#else
+#define FORMATS "{ S8BE, S16BE, S24BE, S32BE } "
+#endif
+
+#define FLAC_SINK_CAPS                                    \
+    "audio/x-raw, "                                       \
+    "format = (string) " FORMATS ", "                     \
+    "layout = (string) interleaved, "                     \
+    "rate = (int) [ 1, 655350 ], "                        \
+    "channels = (int) [ 1, 8 ]"
 
 static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
@@ -424,9 +413,6 @@ gst_flac_enc_start (GstAudioEncoder * enc)
   flacenc->got_headers = FALSE;
   flacenc->last_flow = GST_FLOW_OK;
   flacenc->offset = 0;
-  flacenc->channels = 0;
-  flacenc->depth = 0;
-  flacenc->sample_rate = 0;
   flacenc->eos = FALSE;
   flacenc->tags = gst_tag_list_new_empty ();
 
@@ -502,6 +488,8 @@ gst_flac_enc_set_metadata (GstFlacEnc * flacenc, guint64 total_samples)
   GstTagList *copy;
   gint entries = 1;
   gint n_images, n_preview_images;
+  GstAudioInfo *info =
+      gst_audio_encoder_get_audio_info (GST_AUDIO_ENCODER (flacenc));
 
   g_return_if_fail (flacenc != NULL);
   user_tags = gst_tag_setter_get_tag_list (GST_TAG_SETTER (flacenc));
@@ -586,7 +574,7 @@ gst_flac_enc_set_metadata (GstFlacEnc * flacenc, guint64 total_samples)
           FLAC__metadata_object_seektable_template_append_spaced_points
           (flacenc->meta[entries], flacenc->seekpoints, total_samples);
     } else {
-      samples = -flacenc->seekpoints * flacenc->sample_rate;
+      samples = -flacenc->seekpoints * GST_AUDIO_INFO_RATE (info);
       res =
           FLAC__metadata_object_seektable_template_append_spaced_points_by_samples
           (flacenc->meta[entries], samples, total_samples);
@@ -617,49 +605,6 @@ gst_flac_enc_set_metadata (GstFlacEnc * flacenc, guint64 total_samples)
   gst_tag_list_free (copy);
 }
 
-static void
-gst_flac_enc_caps_append_structure_with_widths (GstCaps * caps,
-    GstStructure * s)
-{
-  GstStructure *tmp;
-  GValue list = { 0, };
-  GValue depth = { 0, };
-
-
-  tmp = gst_structure_copy (s);
-  gst_structure_set (tmp, "width", G_TYPE_INT, 8, "depth", G_TYPE_INT, 8, NULL);
-  gst_caps_append_structure (caps, tmp);
-
-  tmp = gst_structure_copy (s);
-
-  g_value_init (&depth, G_TYPE_INT);
-  g_value_init (&list, GST_TYPE_LIST);
-  g_value_set_int (&depth, 12);
-  gst_value_list_append_value (&list, &depth);
-  g_value_set_int (&depth, 16);
-  gst_value_list_append_value (&list, &depth);
-
-  gst_structure_set (tmp, "width", G_TYPE_INT, 16, NULL);
-  gst_structure_set_value (tmp, "depth", &list);
-  gst_caps_append_structure (caps, tmp);
-
-  g_value_reset (&list);
-
-  tmp = s;
-
-  g_value_set_int (&depth, 20);
-  gst_value_list_append_value (&list, &depth);
-  g_value_set_int (&depth, 24);
-  gst_value_list_append_value (&list, &depth);
-
-  gst_structure_set (tmp, "width", G_TYPE_INT, 32, NULL);
-  gst_structure_set_value (tmp, "depth", &list);
-  gst_caps_append_structure (caps, tmp);
-
-  g_value_unset (&list);
-  g_value_unset (&depth);
-}
-
 static GstCaps *
 gst_flac_enc_getcaps (GstAudioEncoder * enc, GstCaps * filter)
 {
@@ -673,41 +618,49 @@ gst_flac_enc_getcaps (GstAudioEncoder * enc, GstCaps * filter)
   if (gst_pad_has_current_caps (pad)) {
     ret = gst_pad_get_current_caps (pad);
   } else {
-    gint i, c;
+    gint i;
+    GValue v_arr = { 0, };
+    GValue v = { 0, };
+    GstStructure *s, *s2;
+
+    g_value_init (&v_arr, GST_TYPE_ARRAY);
+    g_value_init (&v, G_TYPE_STRING);
+
+    g_value_set_string (&v, GST_AUDIO_NE (S8));
+    gst_value_array_append_value (&v_arr, &v);
+    g_value_set_string (&v, GST_AUDIO_NE (S16));
+    gst_value_array_append_value (&v_arr, &v);
+    g_value_set_string (&v, GST_AUDIO_NE (S24));
+    gst_value_array_append_value (&v_arr, &v);
+    g_value_set_string (&v, GST_AUDIO_NE (S32));
+    gst_value_array_append_value (&v_arr, &v);
+    g_value_unset (&v);
+
+    s = gst_structure_new_empty ("audio/x-raw");
+    gst_structure_set_value (s, "format", &v_arr);
+    g_value_unset (&v_arr);
+
+    gst_structure_set (s, "layout", G_TYPE_STRING, "interleaved",
+        "rate", GST_TYPE_INT_RANGE, 1, 655350, NULL);
 
     ret = gst_caps_new_empty ();
+    for (i = 1; i <= 8; i++) {
+      s2 = gst_structure_copy (s);
 
-    gst_flac_enc_caps_append_structure_with_widths (ret,
-        gst_structure_new ("audio/x-raw-int",
-            "endianness", G_TYPE_INT, G_BYTE_ORDER,
-            "signed", G_TYPE_BOOLEAN, TRUE,
-            "rate", GST_TYPE_INT_RANGE, 1, 655350,
-            "channels", GST_TYPE_INT_RANGE, 1, 2, NULL));
+      if (i == 1) {
+        gst_structure_set (s, "channels", G_TYPE_INT, 1, NULL);
+      } else {
+        guint64 channel_mask;
 
-    for (i = 3; i <= 8; i++) {
-      GValue positions = { 0, };
-      GValue pos = { 0, };
-      GstStructure *s;
-
-      g_value_init (&positions, GST_TYPE_ARRAY);
-      g_value_init (&pos, GST_TYPE_AUDIO_CHANNEL_POSITION);
-
-      for (c = 0; c < i; c++) {
-        g_value_set_enum (&pos, channel_positions[i - 1][c]);
-        gst_value_array_append_value (&positions, &pos);
+        gst_audio_channel_positions_to_mask (channel_positions[i - 1], i,
+            &channel_mask);
+        gst_structure_set (s, "channels", G_TYPE_INT, 1, "channel-mask",
+            GST_TYPE_BITMASK, channel_mask, NULL);
       }
-      g_value_unset (&pos);
 
-      s = gst_structure_new ("audio/x-raw-int",
-          "endianness", G_TYPE_INT, G_BYTE_ORDER,
-          "signed", G_TYPE_BOOLEAN, TRUE,
-          "rate", GST_TYPE_INT_RANGE, 1, 655350,
-          "channels", G_TYPE_INT, i, NULL);
-      gst_structure_set_value (s, "channel-positions", &positions);
-      g_value_unset (&positions);
-
-      gst_flac_enc_caps_append_structure_with_widths (ret, s);
+      gst_caps_append_structure (ret, s2);
     }
+    gst_structure_free (s);
   }
 
   GST_OBJECT_UNLOCK (pad);
@@ -724,6 +677,8 @@ static guint64
 gst_flac_enc_peer_query_total_samples (GstFlacEnc * flacenc, GstPad * pad)
 {
   gint64 duration;
+  GstAudioInfo *info =
+      gst_audio_encoder_get_audio_info (GST_AUDIO_ENCODER (flacenc));
 
   GST_DEBUG_OBJECT (flacenc, "querying peer for DEFAULT format duration");
   if (gst_pad_peer_query_duration (pad, GST_FORMAT_DEFAULT, &duration)
@@ -736,7 +691,7 @@ gst_flac_enc_peer_query_total_samples (GstFlacEnc * flacenc, GstPad * pad)
       && duration != GST_CLOCK_TIME_NONE) {
     GST_DEBUG_OBJECT (flacenc, "peer reported duration %" GST_TIME_FORMAT,
         GST_TIME_ARGS (duration));
-    duration = GST_CLOCK_TIME_TO_FRAMES (duration, flacenc->sample_rate);
+    duration = GST_CLOCK_TIME_TO_FRAMES (duration, GST_AUDIO_INFO_RATE (info));
 
     goto done;
   }
@@ -766,26 +721,28 @@ gst_flac_enc_set_format (GstAudioEncoder * enc, GstAudioInfo * info)
       FLAC__STREAM_ENCODER_UNINITIALIZED)
     goto encoder_already_initialized;
 
-  flacenc->channels = GST_AUDIO_INFO_CHANNELS (info);
-  flacenc->width = GST_AUDIO_INFO_WIDTH (info);
-  flacenc->depth = GST_AUDIO_INFO_DEPTH (info);
-  flacenc->sample_rate = GST_AUDIO_INFO_RATE (info);
-
   caps = gst_caps_new_simple ("audio/x-flac",
-      "channels", G_TYPE_INT, flacenc->channels,
-      "rate", G_TYPE_INT, flacenc->sample_rate, NULL);
+      "channels", G_TYPE_INT, GST_AUDIO_INFO_CHANNELS (info),
+      "rate", G_TYPE_INT, GST_AUDIO_INFO_RATE (info), NULL);
 
   if (!gst_pad_set_caps (GST_AUDIO_ENCODER_SRC_PAD (enc), caps))
     goto setting_src_caps_failed;
 
   gst_caps_unref (caps);
 
+  gst_audio_get_channel_reorder_map (GST_AUDIO_INFO_CHANNELS (info),
+      channel_positions[GST_AUDIO_INFO_CHANNELS (info) - 1], info->position,
+      flacenc->channel_reorder_map);
+
   total_samples = gst_flac_enc_peer_query_total_samples (flacenc,
       GST_AUDIO_ENCODER_SINK_PAD (enc));
 
-  FLAC__stream_encoder_set_bits_per_sample (flacenc->encoder, flacenc->depth);
-  FLAC__stream_encoder_set_sample_rate (flacenc->encoder, flacenc->sample_rate);
-  FLAC__stream_encoder_set_channels (flacenc->encoder, flacenc->channels);
+  FLAC__stream_encoder_set_bits_per_sample (flacenc->encoder,
+      GST_AUDIO_INFO_WIDTH (info));
+  FLAC__stream_encoder_set_sample_rate (flacenc->encoder,
+      GST_AUDIO_INFO_RATE (info));
+  FLAC__stream_encoder_set_channels (flacenc->encoder,
+      GST_AUDIO_INFO_CHANNELS (info));
 
   if (total_samples != GST_CLOCK_TIME_NONE)
     FLAC__stream_encoder_set_total_samples_estimate (flacenc->encoder,
@@ -833,6 +790,9 @@ failed_to_initialize:
 static gboolean
 gst_flac_enc_update_quality (GstFlacEnc * flacenc, gint quality)
 {
+  GstAudioInfo *info =
+      gst_audio_encoder_get_audio_info (GST_AUDIO_ENCODER (flacenc));
+
   flacenc->quality = quality;
 
 #define DO_UPDATE(name, val, str)                                               \
@@ -847,7 +807,8 @@ gst_flac_enc_update_quality (GstFlacEnc * flacenc, gint quality)
 
   g_object_freeze_notify (G_OBJECT (flacenc));
 
-  if (flacenc->channels == 2 || flacenc->channels == 0) {
+  if (GST_AUDIO_INFO_CHANNELS (info) == 2
+      || GST_AUDIO_INFO_CHANNELS (info) == 0) {
     DO_UPDATE (do_mid_side_stereo, mid_side, "mid_side_stereo");
     DO_UPDATE (loose_mid_side_stereo, loose_mid_side, "loose_mid_side");
   }
@@ -945,10 +906,12 @@ gst_flac_enc_process_stream_headers (GstFlacEnc * enc)
   GstCaps *caps;
   GList *l;
   GstFlowReturn ret = GST_FLOW_OK;
+  GstAudioInfo *info =
+      gst_audio_encoder_get_audio_info (GST_AUDIO_ENCODER (enc));
 
   caps = gst_caps_new_simple ("audio/x-flac",
-      "channels", G_TYPE_INT, enc->channels,
-      "rate", G_TYPE_INT, enc->sample_rate, NULL);
+      "channels", G_TYPE_INT, GST_AUDIO_INFO_CHANNELS (info),
+      "rate", G_TYPE_INT, GST_AUDIO_INFO_RATE (info), NULL);
 
   for (l = enc->headers; l != NULL; l = l->next) {
     GstBuffer *buf;
@@ -1193,23 +1156,36 @@ gst_flac_enc_sink_event (GstAudioEncoder * enc, GstEvent * event)
   return ret;
 }
 
+#if G_BYTE_ORDER == G_LITTLE_ENDIAN
+#define READ_INT24 GST_READ_UINT24_LE
+#else
+#define READ_INT24 GST_READ_UINT24_BE
+#endif
+
 static GstFlowReturn
 gst_flac_enc_handle_frame (GstAudioEncoder * enc, GstBuffer * buffer)
 {
   GstFlacEnc *flacenc;
   FLAC__int32 *data;
   gsize bsize;
-  gint samples, width;
+  gint samples, width, channels;
   gulong i;
+  gint j;
   FLAC__bool res;
   gpointer bdata;
+  GstAudioInfo *info =
+      gst_audio_encoder_get_audio_info (GST_AUDIO_ENCODER (enc));
+  gint *reorder_map;
 
   flacenc = GST_FLAC_ENC (enc);
 
   /* base class ensures configuration */
-  g_return_val_if_fail (flacenc->depth != 0, GST_FLOW_NOT_NEGOTIATED);
+  g_return_val_if_fail (GST_AUDIO_INFO_WIDTH (info) != 0,
+      GST_FLOW_NOT_NEGOTIATED);
 
-  width = flacenc->width;
+  width = GST_AUDIO_INFO_WIDTH (info);
+  channels = GST_AUDIO_INFO_CHANNELS (info);
+  reorder_map = flacenc->channel_reorder_map;
 
   if (G_UNLIKELY (!buffer)) {
     if (flacenc->eos) {
@@ -1229,28 +1205,46 @@ gst_flac_enc_handle_frame (GstAudioEncoder * enc, GstBuffer * buffer)
 
   data = g_malloc (samples * sizeof (FLAC__int32));
 
+  samples /= channels;
   if (width == 8) {
     gint8 *indata = (gint8 *) bdata;
 
     for (i = 0; i < samples; i++)
-      data[i] = (FLAC__int32) indata[i];
+      for (j = 0; j < channels; j++)
+        data[i * channels + reorder_map[j]] =
+            (FLAC__int32) indata[i * channels + j];
   } else if (width == 16) {
     gint16 *indata = (gint16 *) bdata;
 
     for (i = 0; i < samples; i++)
-      data[i] = (FLAC__int32) indata[i];
+      for (j = 0; j < channels; j++)
+        data[i * channels + reorder_map[j]] =
+            (FLAC__int32) indata[i * channels + j];
+  } else if (width == 24) {
+    guint8 *indata = (guint8 *) bdata;
+    guint32 val;
+
+    for (i = 0; i < samples; i++)
+      for (j = 0; j < channels; j++) {
+        val = READ_INT24 (&indata[3 * (i * channels + j)]);
+        if (val & 0x00800000)
+          val |= 0xff000000;
+        data[i * channels + reorder_map[j]] = (FLAC__int32) val;
+      }
   } else if (width == 32) {
     gint32 *indata = (gint32 *) bdata;
 
     for (i = 0; i < samples; i++)
-      data[i] = (FLAC__int32) indata[i];
+      for (j = 0; j < channels; j++)
+        data[i * channels + reorder_map[j]] =
+            (FLAC__int32) indata[i * channels + j];
   } else {
     g_assert_not_reached ();
   }
   gst_buffer_unmap (buffer, bdata, bsize);
 
   res = FLAC__stream_encoder_process_interleaved (flacenc->encoder,
-      (const FLAC__int32 *) data, samples / flacenc->channels);
+      (const FLAC__int32 *) data, samples / channels);
 
   g_free (data);
 

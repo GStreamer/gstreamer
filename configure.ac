@@ -316,7 +316,7 @@ dnl Make sure you have a space before and after all plugins
 GST_PLUGINS_NONPORTED="deinterlace interleave flx goom2k1 \
  imagefreeze interleave monoscope smpte \
  videobox videomixer \
- cairo cairo_gobject dv1394 flac gdk_pixbuf libdv libpng \
+ cairo cairo_gobject dv1394 gdk_pixbuf libdv libpng \
  oss oss4 shout2 \
  taglib wavpack \
  osx_video osx_audio "

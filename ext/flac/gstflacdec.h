@@ -23,6 +23,7 @@
 #define __GST_FLAC_DEC_H__
 
 #include <gst/gst.h>
+#include <gst/audio/audio.h>
 #include <gst/audio/gstaudiodecoder.h>
 
 #include <FLAC/all.h>
@@ -50,10 +51,9 @@ struct _GstFlacDec {
   GstFlowReturn  last_flow;   /* to marshal flow return from finis_frame to
                                * handle_frame via flac callbacks */
 
-  gint           channels;
+  GstAudioInfo   info;
+  gint           channel_reorder_map[8];
   gint           depth;
-  gint           width;
-  gint           sample_rate;
 
   /* from the stream info, needed for scanning */
   guint16        min_blocksize;
