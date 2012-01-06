@@ -883,6 +883,14 @@ gst_type_find_element_activate_src_mode (GstPad * pad, GstObject * parent,
   switch (mode) {
     case GST_PAD_MODE_PULL:
       res = gst_pad_activate_mode (typefind->sink, mode, active);
+      if (typefind->caps) {
+        GstCaps *caps;
+        GST_OBJECT_LOCK (typefind);
+        caps = gst_caps_ref (typefind->caps);
+        GST_OBJECT_UNLOCK (typefind);
+        gst_pad_push_event (typefind->src, gst_event_new_caps (caps));
+        gst_caps_unref (caps);
+      }
       break;
     default:
       res = TRUE;
