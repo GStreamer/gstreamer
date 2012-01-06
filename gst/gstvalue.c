@@ -4822,7 +4822,6 @@ gst_value_subtract_bitmask_bitmask (GValue * dest,
 {
   guint64 m, s, r;
 
-  g_return_val_if_fail (dest != NULL, FALSE);
   g_return_val_if_fail (GST_VALUE_HOLDS_BITMASK (minuend), FALSE);
   g_return_val_if_fail (GST_VALUE_HOLDS_BITMASK (subtrahend), FALSE);
 
@@ -4830,9 +4829,10 @@ gst_value_subtract_bitmask_bitmask (GValue * dest,
   s = subtrahend->data[0].v_uint64;
   r = m & (~s);
 
-  g_value_init (dest, GST_TYPE_BITMASK);
-  gst_value_set_bitmask (dest, r);
-
+  if (dest) {
+    g_value_init (dest, GST_TYPE_BITMASK);
+    gst_value_set_bitmask (dest, r);
+  }
   return (r != 0);
 }
 
