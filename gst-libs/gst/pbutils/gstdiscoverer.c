@@ -438,19 +438,22 @@ _event_probe (GstPad * pad, GstEvent * event, PrivateStream * ps)
   return TRUE;
 }
 
+static GstStaticCaps subtitle_caps = GST_STATIC_CAPS ("text/plain; "
+    "text/x-pango-markup; subpicture/x-pgs; subpicture/x-dvb; "
+    "application/x-subtitle-unknown; application/x-ssa; application/x-ass; "
+    "subtitle/x-kate; application/x-kate; video/x-dvd-subpicture");
+
 static gboolean
 is_subtitle_caps (const GstCaps * caps)
 {
-  static GstCaps *subs_caps = NULL;
+  GstCaps *subs_caps;
+  gboolean ret;
 
-  if (!subs_caps) {
-    subs_caps = gst_caps_from_string ("text/plain; text/x-pango-markup; "
-        "subpicture/x-pgs; subpicture/x-dvb; application/x-subtitle-unknown; "
-        "application/x-ssa; application/x-ass; subtitle/x-kate; "
-        "application/x-kate; video/x-dvd-subpicture; ");
-  }
+  subs_caps = gst_static_caps_get (&subtitle_caps);
+  ret = gst_caps_can_intersect (caps, subs_caps);
+  gst_caps_unref (subs_caps);
 
-  return gst_caps_can_intersect (caps, subs_caps);
+  return ret;
 }
 
 static void
