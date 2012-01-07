@@ -55,6 +55,9 @@ struct _GESPitiviFormatterPrivate
 
   GESTrack *tracka, *trackv;
 
+  /* List the TimelineObject that haven't been loaded yet */
+  GList *sources_to_load;
+
   /* Saving context */
   /* {factory_id: uri} */
   GHashTable *saving_source_table;
@@ -123,6 +126,8 @@ ges_pitivi_formatter_init (GESPitiviFormatter * self)
   priv->source_uris =
       g_hash_table_new_full (g_str_hash, g_str_equal, g_free, g_free);
 
+  priv->sources_to_load = NULL;
+
   /* Saving context */
   priv->saving_source_table =
       g_hash_table_new_full (g_str_hash, g_int_equal, g_free, g_free);
@@ -139,6 +144,7 @@ ges_pitivi_formatter_finalize (GObject * object)
   g_hash_table_destroy (priv->source_uris);
 
   g_hash_table_destroy (priv->saving_source_table);
+  g_list_free (priv->sources_to_load);
 
   if (priv->timeline_objects_table != NULL) {
     g_hash_table_foreach (priv->timeline_objects_table,
@@ -747,10 +753,30 @@ track_object_added_cb (GESTimelineObject * object,
   gint64 start, duration;
   gboolean has_effect = FALSE, locked = TRUE;
   gint type = 0;
+  GESPitiviFormatter *formatter;
 
   tck_objs = ges_timeline_object_get_track_objects (object);
   media_type = (gchar *) g_hash_table_lookup (props_table, "media_type");
   lockedstr = (gchar *) g_hash_table_lookup (props_table, "locked");
+
+  formatter = GES_PITIVI_FORMATTER (g_hash_table_lookup (props_table,
+          "current-formatter"));
+
+  if (formatter) {
+    GESPitiviFormatterPrivate *priv = formatter->priv;
+
+    /* Make sure the hack to get a ref to the formatter
+     * doesn't break everything */
+    g_hash_table_steal (props_table, "current-formatter");
+
+    priv->sources_to_load = g_list_remove (priv->sources_to_load, object);
+    if (!priv->sources_to_load) {
+      GESFormatterClass *klass = GES_FORMATTER_GET_CLASS (formatter);
+
+      klass->project_loaded (GES_FORMATTER (formatter),
+          formatter->priv->timeline);
+    }
+  }
 
   if (lockedstr && !g_strcmp0 (lockedstr, "(bool)False"))
     locked = FALSE;
@@ -779,7 +805,7 @@ track_object_added_cb (GESTimelineObject * object,
         || (!g_strcmp0 (media_type, "pitivi.stream.AudioStream")
             && track->type == GES_TRACK_TYPE_AUDIO)) {
 
-      /* We lock the track objects so we do not move the whole TimelineObject */
+      /* We unlock the track objects so we do not move the whole TimelineObject */
       ges_track_object_set_locked (tmp->data, FALSE);
       set_properties (G_OBJECT (tmp->data), props_table);
 
@@ -794,7 +820,7 @@ track_object_added_cb (GESTimelineObject * object,
   if (has_effect) {
     tck_objs = ges_timeline_object_get_track_objects (object);
 
-    /* FIXME make sure this is te way we want to handle that
+    /* FIXME make sure this is the way we want to handle that
      * ie: set duration and start as the other trackobject
      * and no let full control to the user. */
 
@@ -813,6 +839,9 @@ track_object_added_cb (GESTimelineObject * object,
     }
   }
 
+  /* Disconnect the signal */
+  g_signal_handlers_disconnect_by_func (object, track_object_added_cb,
+      props_table);
 }
 
 static void
@@ -858,16 +887,15 @@ make_source (GESFormatter * self, GList * reflist, GHashTable * source_table)
 
     /* FIXME I am sure we could reimplement this whole part
      * in a simpler way */
+
     if (g_strcmp0 (fac_ref, (gchar *) "effect")) {
+      /* FIXME this is a hack to get a ref to the formatter when receiving
+       * track-object-added */
+      g_hash_table_insert (props_table, (gchar *) "current-formatter", self);
       if (a_avail && (!video)) {
         a_avail = FALSE;
-        g_signal_connect (src, "track-object-added",
-            G_CALLBACK (track_object_added_cb), props_table);
       } else if (v_avail && (video)) {
         v_avail = FALSE;
-        g_signal_connect (src, "track-object-added",
-            G_CALLBACK (track_object_added_cb), props_table);
-
       } else {
 
         /* If we only have audio or only video in the previous source,
@@ -891,8 +919,14 @@ make_source (GESFormatter * self, GList * reflist, GHashTable * source_table)
           a_avail = TRUE;
           v_avail = FALSE;
         }
+
         set_properties (G_OBJECT (src), props_table);
         ges_timeline_layer_add_object (layer, GES_TIMELINE_OBJECT (src));
+
+        g_signal_connect (src, "track-object-added",
+            G_CALLBACK (track_object_added_cb), props_table);
+
+        priv->sources_to_load = g_list_prepend (priv->sources_to_load, src);
       }
 
     } else {
