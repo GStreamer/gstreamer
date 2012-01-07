@@ -458,7 +458,7 @@ wrong_family:
 static gchar *
 do_resolve (const gchar * host)
 {
-  static gchar ip[INET6_ADDRSTRLEN];
+  gchar ip[INET6_ADDRSTRLEN];
   struct addrinfo *aires, hints;
   struct addrinfo *ai;
   gint aierr;
