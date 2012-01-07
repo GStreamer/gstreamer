@@ -26,7 +26,6 @@
 #include <gst/audio/gstaudiodecoder.h>
 
 #include <mad.h>
-#include <id3tag.h>
 
 G_BEGIN_DECLS
 
