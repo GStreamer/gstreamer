@@ -167,6 +167,7 @@ check_PROGRAMS = \
 # ffmpegcolorspace takes too long, so disabled for now
 VALGRIND_TO_FIX = \
 	elements/ffmpegcolorspace \
+	libs/discoverer \
 	libs/video
 
 # these tests don't even pass

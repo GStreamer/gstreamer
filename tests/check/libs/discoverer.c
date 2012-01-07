@@ -52,7 +52,8 @@ GST_START_TEST (test_disco_sync)
   GstDiscovererResult result;
   gchar *uri;
 
-  dc = gst_discoverer_new (GST_SECOND, &err);
+  /* high timeout, in case we're running under valgrind */
+  dc = gst_discoverer_new (5 * GST_SECOND, &err);
   fail_unless (dc != NULL);
   fail_unless (err == NULL);
 
@@ -78,6 +79,68 @@ GST_START_TEST (test_disco_sync)
 
 GST_END_TEST;
 
+static void
+test_disco_sync_reuse (const gchar * test_fn, guint num, GstClockTime timeout)
+{
+  GError *err = NULL;
+  GstDiscoverer *dc;
+  GstDiscovererInfo *info;
+  GstDiscovererResult result;
+  gchar *uri, *path;
+  int i;
+
+  dc = gst_discoverer_new (timeout, &err);
+  fail_unless (dc != NULL);
+  fail_unless (err == NULL);
+
+  /* GST_TEST_FILE comes from makefile CFLAGS */
+  path = g_build_filename (GST_TEST_FILES_PATH, test_fn, NULL);
+  uri = gst_filename_to_uri (path, &err);
+  g_free (path);
+  fail_unless (err == NULL);
+
+  for (i = 0; i < num; ++i) {
+    GST_INFO ("[%02d] discovering uri '%s'", i, uri);
+    info = gst_discoverer_discover_uri (dc, uri, &err);
+    if (info) {
+      result = gst_discoverer_info_get_result (info);
+      GST_INFO ("result: %d", result);
+      gst_discoverer_info_unref (info);
+    }
+    /* in case we don't have some of the elements needed */
+    if (err) {
+      g_error_free (err);
+      err = NULL;
+    }
+  }
+  g_free (uri);
+
+  g_object_unref (dc);
+}
+
+GST_START_TEST (test_disco_sync_reuse_ogg)
+{
+  test_disco_sync_reuse ("theora-vorbis.ogg", 2, 10 * GST_SECOND);
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_disco_sync_reuse_mp3)
+{
+  /* this will cause errors because -base doesn't do mp3 parsing or decoding */
+  test_disco_sync_reuse ("test.mp3", 3, 10 * GST_SECOND);
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_disco_sync_reuse_timeout)
+{
+  /* set minimum timeout to test that, esp. leakage under valgrind */
+  /* FIXME: should really be even shorter */
+  test_disco_sync_reuse ("theora-vorbis.ogg", 2, GST_SECOND);
+}
+
+GST_END_TEST;
 
 static Suite *
 discoverer_suite (void)
@@ -88,6 +151,9 @@ discoverer_suite (void)
   suite_add_tcase (s, tc_chain);
   tcase_add_test (tc_chain, test_disco_init);
   tcase_add_test (tc_chain, test_disco_sync);
+  tcase_add_test (tc_chain, test_disco_sync_reuse_ogg);
+  tcase_add_test (tc_chain, test_disco_sync_reuse_mp3);
+  tcase_add_test (tc_chain, test_disco_sync_reuse_timeout);
   return s;
 }
 
