@@ -753,6 +753,7 @@ GESFormatterClass
 GESFormatterLoadFromURIMethod
 GESFormatterSaveToURIMethod
 GESFormatterSourceMovedMethod
+GESFormatterLoadedMethod
 ges_default_formatter_new
 ges_formatter_load_from_uri
 ges_formatter_save_to_uri

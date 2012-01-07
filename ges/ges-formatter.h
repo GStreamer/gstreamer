@@ -118,6 +118,17 @@ typedef gboolean (*GESFormatterSourceMovedMethod)        (GESFormatter *formatte
 					   GESTimelineFileSource *tfs, gchar *new_uri);
 
 /**
+ * GESFormatterLoadedMethod
+ * @formatter: The #GESFormatter that is done loading
+ * @timeline: The #GESTimeline that has finnished to load
+ *
+ *  This method should be called by sublcasses when they are done
+ *  loading @timeline
+ */
+typedef gboolean (*GESFormatterLoadedMethod) (GESFormatter *formatter,
+    GESTimeline *timeline);
+
+/**
  * GESFormatterClass:
  * @parent_class: the parent class structure
  * @can_load_uri: Whether the URI can be loaded
@@ -126,6 +137,7 @@ typedef gboolean (*GESFormatterSourceMovedMethod)        (GESFormatter *formatte
  * @save_to_uri: class method to serialize data to a URI
  * @update_source_uri: virtual method to specify that a source has moved, and thus its URI
  * must be set to its new location (specified by the user)
+ * @project_loaded: Must be called by subclasses when done loading a project
  *
  * GES Formatter class. Override the vmethods to implement the formatter functionnality.
  */
@@ -138,6 +150,7 @@ struct _GESFormatterClass {
   GESFormatterLoadFromURIMethod load_from_uri;
   GESFormatterSaveToURIMethod save_to_uri;
   GESFormatterSourceMovedMethod update_source_uri;
+  GESFormatterLoadedMethod project_loaded;
 
   /*< private >*/
   /* FIXME : formatter name */

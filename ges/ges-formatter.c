@@ -38,6 +38,9 @@
  *
  * Support for saving or loading new formats can be added by creating a subclass of
  * #GESFormatter and implement the various vmethods of #GESFormatterClass.
+ *
+ * Note that subclasses should call project_loaded wen they are done loading
+ * a project.
  **/
 
 #include <gst/gst.h>
@@ -71,9 +74,13 @@ static gboolean default_can_save_uri (const gchar * uri);
 static void discovery_error_cb (GESTimeline * timeline,
     GESTimelineFileSource * tfs, GError * error, GESFormatter * formatter);
 
+static gboolean project_loaded (GESFormatter * formatter,
+    GESTimeline * timeline);
+
 enum
 {
   SOURCE_MOVED_SIGNAL,
+  LOADED_SIGNAL,
   LAST_SIGNAL
 };
 
@@ -98,6 +105,15 @@ ges_formatter_class_init (GESFormatterClass * klass)
       G_SIGNAL_RUN_LAST, 0, NULL, NULL, ges_marshal_VOID__OBJECT, G_TYPE_NONE,
       1, GES_TYPE_TIMELINE_FILE_SOURCE);
 
+  /**
+   * GESFormatter::loaded:
+   * @formatter: the #GESFormatter that is done loading a project.
+   */
+  ges_formatter_signals[LOADED_SIGNAL] =
+      g_signal_new ("loaded", G_TYPE_FROM_CLASS (klass),
+      G_SIGNAL_RUN_LAST, 0, NULL, NULL, ges_marshal_VOID__OBJECT, G_TYPE_NONE,
+      1, GES_TYPE_TIMELINE);
+
   object_class->dispose = ges_formatter_dispose;
 
   klass->can_load_uri = default_can_load_uri;
@@ -105,6 +121,7 @@ ges_formatter_class_init (GESFormatterClass * klass)
   klass->load_from_uri = load_from_uri;
   klass->save_to_uri = save_to_uri;
   klass->update_source_uri = NULL;
+  klass->project_loaded = project_loaded;
 }
 
 static void
@@ -534,4 +551,12 @@ discovery_error_cb (GESTimeline * timeline,
       g_signal_emit (formatter, ges_formatter_signals[SOURCE_MOVED_SIGNAL], 0,
           tfs);
   }
+}
+
+static gboolean
+project_loaded (GESFormatter * formatter, GESTimeline * timeline)
+{
+  g_signal_emit (formatter, ges_formatter_signals[LOADED_SIGNAL], 0, timeline);
+
+  return TRUE;
 }
