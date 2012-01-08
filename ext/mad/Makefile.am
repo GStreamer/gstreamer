@@ -6,8 +6,8 @@ libgstmad_la_CFLAGS = \
         $(GST_PLUGINS_BASE_CFLAGS) $(GST_BASE_CFLAGS) $(GST_CFLAGS) \
 	$(MAD_CFLAGS)
 libgstmad_la_LIBADD = \
-        $(GST_PLUGINS_BASE_LIBS) $(GST_BASE_LIBS) $(GST_LIBS) \
-	-lgstaudio-$(GST_MAJORMINOR) $(MAD_LIBS)
+        $(GST_PLUGINS_BASE_LIBS) -lgstaudio-$(GST_MAJORMINOR) \
+	$(GST_BASE_LIBS) $(GST_LIBS) $(MAD_LIBS)
 libgstmad_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 libgstmad_la_LIBTOOLFLAGS = --tag=disable-static
 
