@@ -56,7 +56,7 @@ struct _GstTriggerControlSourcePrivate
 /*  returns the default value of the property, except for times with specific values */
 /*  needed for one-shot events, such as notes and triggers */
 
-static inline const gdouble
+static inline gdouble
 _interpolate_trigger (GstTimedValueControlSource * self, GSequenceIter * iter,
     GstClockTime timestamp)
 {

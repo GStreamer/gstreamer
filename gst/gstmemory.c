@@ -221,9 +221,10 @@ _default_mem_map (GstMemoryDefault * mem, gsize * size, gsize * maxsize,
 static gboolean
 _default_mem_unmap (GstMemoryDefault * mem, gpointer data, gsize size)
 {
-  GST_DEBUG ("mem: %p, data %p, size %u", mem, data, size);
-  GST_DEBUG ("mem: %p, data %p,  offset %u, size %u, maxsize %u", mem,
-      mem->data, mem->offset, mem->size, mem->maxsize);
+  GST_DEBUG ("mem: %p, data %p, size %" G_GSIZE_FORMAT, mem, data, size);
+  GST_DEBUG ("mem: %p, data %p,  offset %" G_GSIZE_FORMAT ", size %"
+      G_GSIZE_FORMAT ", maxsize %" G_GSIZE_FORMAT, mem, mem->data, mem->offset,
+      mem->size, mem->maxsize);
 
   g_return_val_if_fail ((guint8 *) data >= mem->data
       && (guint8 *) data < mem->data + mem->maxsize, FALSE);
