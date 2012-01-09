@@ -1021,7 +1021,7 @@ gst_audio_base_sink_wait_eos (GstBaseSink * bsink, GstEvent * event)
   GstAudioBaseSink *sink = GST_AUDIO_BASE_SINK (bsink);
   GstFlowReturn ret;
 
-  ret = GST_BASE_SINK_CLASS (parent_class)->event (bsink, event);
+  ret = GST_BASE_SINK_CLASS (parent_class)->wait_eos (bsink, event);
   if (ret != GST_FLOW_OK)
     return ret;
 
