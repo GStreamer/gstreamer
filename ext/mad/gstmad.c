@@ -222,7 +222,8 @@ gst_mad_check_caps_reset (GstMad * mad)
    * so check this first before doing anything */
 
   /* only set caps if they weren't already set for this continuous stream */
-  if (mad->channels != nchannels || mad->rate != rate) {
+  if (!gst_pad_has_current_caps (GST_AUDIO_DECODER_SRC_PAD (mad))
+      || mad->channels != nchannels || mad->rate != rate) {
     GstCaps *caps;
 
     if (mad->caps_set) {
