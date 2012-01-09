@@ -853,6 +853,15 @@ gst_matroska_mux_handle_sink_event (GstCollectPads2 * pads,
     return TRUE;
 }
 
+static void
+gst_matroska_mux_set_codec_id (GstMatroskaTrackContext * context,
+    const char *id)
+{
+  g_assert (context && id);
+  if (context->codec_id)
+    g_free (context->codec_id);
+  context->codec_id = g_strdup (id);
+}
 
 /**
  * gst_matroska_mux_video_pad_setcaps:
@@ -961,7 +970,8 @@ skip_details:
 
   /* find type */
   if (!strcmp (mimetype, "video/x-raw-yuv")) {
-    context->codec_id = g_strdup (GST_MATROSKA_CODEC_ID_VIDEO_UNCOMPRESSED);
+    gst_matroska_mux_set_codec_id (context,
+        GST_MATROSKA_CODEC_ID_VIDEO_UNCOMPRESSED);
     gst_structure_get_fourcc (structure, "format", &videocontext->fourcc);
   } else if (!strcmp (mimetype, "video/x-xvid") /* MS/VfW compatibility cases */
       ||!strcmp (mimetype, "video/x-huffyuv")
@@ -1053,11 +1063,13 @@ skip_details:
           GST_BUFFER_DATA (codec_buf), GST_BUFFER_SIZE (codec_buf));
     }
 
-    context->codec_id = g_strdup (GST_MATROSKA_CODEC_ID_VIDEO_VFW_FOURCC);
+    gst_matroska_mux_set_codec_id (context,
+        GST_MATROSKA_CODEC_ID_VIDEO_VFW_FOURCC);
     context->codec_priv = (gpointer) bih;
     context->codec_priv_size = size;
   } else if (!strcmp (mimetype, "video/x-h264")) {
-    context->codec_id = g_strdup (GST_MATROSKA_CODEC_ID_VIDEO_MPEG4_AVC);
+    gst_matroska_mux_set_codec_id (context,
+        GST_MATROSKA_CODEC_ID_VIDEO_MPEG4_AVC);
 
     if (context->codec_priv != NULL) {
       g_free (context->codec_priv);
@@ -1075,7 +1087,7 @@ skip_details:
   } else if (!strcmp (mimetype, "video/x-theora")) {
     const GValue *streamheader;
 
-    context->codec_id = g_strdup (GST_MATROSKA_CODEC_ID_VIDEO_THEORA);
+    gst_matroska_mux_set_codec_id (context, GST_MATROSKA_CODEC_ID_VIDEO_THEORA);
 
     if (context->codec_priv != NULL) {
       g_free (context->codec_priv);
@@ -1090,22 +1102,25 @@ skip_details:
       goto refuse_caps;
     }
   } else if (!strcmp (mimetype, "video/x-dirac")) {
-    context->codec_id = g_strdup (GST_MATROSKA_CODEC_ID_VIDEO_DIRAC);
+    gst_matroska_mux_set_codec_id (context, GST_MATROSKA_CODEC_ID_VIDEO_DIRAC);
   } else if (!strcmp (mimetype, "video/x-vp8")) {
-    context->codec_id = g_strdup (GST_MATROSKA_CODEC_ID_VIDEO_VP8);
+    gst_matroska_mux_set_codec_id (context, GST_MATROSKA_CODEC_ID_VIDEO_VP8);
   } else if (!strcmp (mimetype, "video/mpeg")) {
     gint mpegversion;
 
     gst_structure_get_int (structure, "mpegversion", &mpegversion);
     switch (mpegversion) {
       case 1:
-        context->codec_id = g_strdup (GST_MATROSKA_CODEC_ID_VIDEO_MPEG1);
+        gst_matroska_mux_set_codec_id (context,
+            GST_MATROSKA_CODEC_ID_VIDEO_MPEG1);
         break;
       case 2:
-        context->codec_id = g_strdup (GST_MATROSKA_CODEC_ID_VIDEO_MPEG2);
+        gst_matroska_mux_set_codec_id (context,
+            GST_MATROSKA_CODEC_ID_VIDEO_MPEG2);
         break;
       case 4:
-        context->codec_id = g_strdup (GST_MATROSKA_CODEC_ID_VIDEO_MPEG4_ASP);
+        gst_matroska_mux_set_codec_id (context,
+            GST_MATROSKA_CODEC_ID_VIDEO_MPEG4_ASP);
         break;
       default:
         goto refuse_caps;
@@ -1129,16 +1144,20 @@ skip_details:
     gst_structure_get_int (structure, "rmversion", &rmversion);
     switch (rmversion) {
       case 1:
-        context->codec_id = g_strdup (GST_MATROSKA_CODEC_ID_VIDEO_REALVIDEO1);
+        gst_matroska_mux_set_codec_id (context,
+            GST_MATROSKA_CODEC_ID_VIDEO_REALVIDEO1);
         break;
       case 2:
-        context->codec_id = g_strdup (GST_MATROSKA_CODEC_ID_VIDEO_REALVIDEO2);
+        gst_matroska_mux_set_codec_id (context,
+            GST_MATROSKA_CODEC_ID_VIDEO_REALVIDEO2);
         break;
       case 3:
-        context->codec_id = g_strdup (GST_MATROSKA_CODEC_ID_VIDEO_REALVIDEO3);
+        gst_matroska_mux_set_codec_id (context,
+            GST_MATROSKA_CODEC_ID_VIDEO_REALVIDEO3);
         break;
       case 4:
-        context->codec_id = g_strdup (GST_MATROSKA_CODEC_ID_VIDEO_REALVIDEO4);
+        gst_matroska_mux_set_codec_id (context,
+            GST_MATROSKA_CODEC_ID_VIDEO_REALVIDEO4);
         break;
       default:
         goto refuse_caps;
@@ -1634,13 +1653,16 @@ gst_matroska_mux_audio_pad_setcaps (GstPad * pad, GstCaps * caps)
 
         switch (layer) {
           case 1:
-            context->codec_id = g_strdup (GST_MATROSKA_CODEC_ID_AUDIO_MPEG1_L1);
+            gst_matroska_mux_set_codec_id (context,
+                GST_MATROSKA_CODEC_ID_AUDIO_MPEG1_L1);
             break;
           case 2:
-            context->codec_id = g_strdup (GST_MATROSKA_CODEC_ID_AUDIO_MPEG1_L2);
+            gst_matroska_mux_set_codec_id (context,
+                GST_MATROSKA_CODEC_ID_AUDIO_MPEG1_L2);
             break;
           case 3:
-            context->codec_id = g_strdup (GST_MATROSKA_CODEC_ID_AUDIO_MPEG1_L3);
+            gst_matroska_mux_set_codec_id (context,
+                GST_MATROSKA_CODEC_ID_AUDIO_MPEG1_L3);
             break;
           default:
             goto refuse_caps;
@@ -1711,9 +1733,11 @@ gst_matroska_mux_audio_pad_setcaps (GstPad * pad, GstCaps * caps)
 
     audiocontext->bitdepth = depth;
     if (endianness == G_BIG_ENDIAN)
-      context->codec_id = g_strdup (GST_MATROSKA_CODEC_ID_AUDIO_PCM_INT_BE);
+      gst_matroska_mux_set_codec_id (context,
+          GST_MATROSKA_CODEC_ID_AUDIO_PCM_INT_BE);
     else
-      context->codec_id = g_strdup (GST_MATROSKA_CODEC_ID_AUDIO_PCM_INT_LE);
+      gst_matroska_mux_set_codec_id (context,
+          GST_MATROSKA_CODEC_ID_AUDIO_PCM_INT_LE);
 
   } else if (!strcmp (mimetype, "audio/x-raw-float")) {
     gint width;
@@ -1724,12 +1748,13 @@ gst_matroska_mux_audio_pad_setcaps (GstPad * pad, GstCaps * caps)
     }
 
     audiocontext->bitdepth = width;
-    context->codec_id = g_strdup (GST_MATROSKA_CODEC_ID_AUDIO_PCM_FLOAT);
+    gst_matroska_mux_set_codec_id (context,
+        GST_MATROSKA_CODEC_ID_AUDIO_PCM_FLOAT);
 
   } else if (!strcmp (mimetype, "audio/x-vorbis")) {
     const GValue *streamheader;
 
-    context->codec_id = g_strdup (GST_MATROSKA_CODEC_ID_AUDIO_VORBIS);
+    gst_matroska_mux_set_codec_id (context, GST_MATROSKA_CODEC_ID_AUDIO_VORBIS);
 
     if (context->codec_priv != NULL) {
       g_free (context->codec_priv);
@@ -1746,7 +1771,7 @@ gst_matroska_mux_audio_pad_setcaps (GstPad * pad, GstCaps * caps)
   } else if (!strcmp (mimetype, "audio/x-flac")) {
     const GValue *streamheader;
 
-    context->codec_id = g_strdup (GST_MATROSKA_CODEC_ID_AUDIO_FLAC);
+    gst_matroska_mux_set_codec_id (context, GST_MATROSKA_CODEC_ID_AUDIO_FLAC);
     if (context->codec_priv != NULL) {
       g_free (context->codec_priv);
       context->codec_priv = NULL;
@@ -1762,7 +1787,7 @@ gst_matroska_mux_audio_pad_setcaps (GstPad * pad, GstCaps * caps)
   } else if (!strcmp (mimetype, "audio/x-speex")) {
     const GValue *streamheader;
 
-    context->codec_id = g_strdup (GST_MATROSKA_CODEC_ID_AUDIO_SPEEX);
+    gst_matroska_mux_set_codec_id (context, GST_MATROSKA_CODEC_ID_AUDIO_SPEEX);
     if (context->codec_priv != NULL) {
       g_free (context->codec_priv);
       context->codec_priv = NULL;
@@ -1776,11 +1801,11 @@ gst_matroska_mux_audio_pad_setcaps (GstPad * pad, GstCaps * caps)
       goto refuse_caps;
     }
   } else if (!strcmp (mimetype, "audio/x-ac3")) {
-    context->codec_id = g_strdup (GST_MATROSKA_CODEC_ID_AUDIO_AC3);
+    gst_matroska_mux_set_codec_id (context, GST_MATROSKA_CODEC_ID_AUDIO_AC3);
   } else if (!strcmp (mimetype, "audio/x-eac3")) {
-    context->codec_id = g_strdup (GST_MATROSKA_CODEC_ID_AUDIO_EAC3);
+    gst_matroska_mux_set_codec_id (context, GST_MATROSKA_CODEC_ID_AUDIO_EAC3);
   } else if (!strcmp (mimetype, "audio/x-dts")) {
-    context->codec_id = g_strdup (GST_MATROSKA_CODEC_ID_AUDIO_DTS);
+    gst_matroska_mux_set_codec_id (context, GST_MATROSKA_CODEC_ID_AUDIO_DTS);
   } else if (!strcmp (mimetype, "audio/x-tta")) {
     gint width;
 
@@ -1789,7 +1814,7 @@ gst_matroska_mux_audio_pad_setcaps (GstPad * pad, GstCaps * caps)
 
     gst_structure_get_int (structure, "width", &width);
     audiocontext->bitdepth = width;
-    context->codec_id = g_strdup (GST_MATROSKA_CODEC_ID_AUDIO_TTA);
+    gst_matroska_mux_set_codec_id (context, GST_MATROSKA_CODEC_ID_AUDIO_TTA);
 
   } else if (!strcmp (mimetype, "audio/x-pn-realaudio")) {
     gint raversion;
@@ -1798,13 +1823,16 @@ gst_matroska_mux_audio_pad_setcaps (GstPad * pad, GstCaps * caps)
     gst_structure_get_int (structure, "raversion", &raversion);
     switch (raversion) {
       case 1:
-        context->codec_id = g_strdup (GST_MATROSKA_CODEC_ID_AUDIO_REAL_14_4);
+        gst_matroska_mux_set_codec_id (context,
+            GST_MATROSKA_CODEC_ID_AUDIO_REAL_14_4);
         break;
       case 2:
-        context->codec_id = g_strdup (GST_MATROSKA_CODEC_ID_AUDIO_REAL_28_8);
+        gst_matroska_mux_set_codec_id (context,
+            GST_MATROSKA_CODEC_ID_AUDIO_REAL_28_8);
         break;
       case 8:
-        context->codec_id = g_strdup (GST_MATROSKA_CODEC_ID_AUDIO_REAL_COOK);
+        gst_matroska_mux_set_codec_id (context,
+            GST_MATROSKA_CODEC_ID_AUDIO_REAL_COOK);
         break;
       default:
         goto refuse_caps;
@@ -1905,7 +1933,7 @@ gst_matroska_mux_audio_pad_setcaps (GstPad * pad, GstCaps * caps)
           GST_BUFFER_DATA (buf), GST_BUFFER_SIZE (buf));
     }
 
-    context->codec_id = g_strdup (GST_MATROSKA_CODEC_ID_AUDIO_ACM);
+    gst_matroska_mux_set_codec_id (context, GST_MATROSKA_CODEC_ID_AUDIO_ACM);
     context->codec_priv = (gpointer) codec_priv;
     context->codec_priv_size = codec_priv_size;
   }
@@ -1977,7 +2005,8 @@ gst_matroska_mux_subtitle_pad_setcaps (GstPad * pad, GstCaps * caps)
   if (!strcmp (mimetype, "subtitle/x-kate")) {
     const GValue *streamheader;
 
-    context->codec_id = g_strdup (GST_MATROSKA_CODEC_ID_SUBTITLE_KATE);
+    gst_matroska_mux_set_codec_id (context,
+        GST_MATROSKA_CODEC_ID_SUBTITLE_KATE);
 
     if (context->codec_priv != NULL) {
       g_free (context->codec_priv);
@@ -1993,15 +2022,17 @@ gst_matroska_mux_subtitle_pad_setcaps (GstPad * pad, GstCaps * caps)
       goto exit;
     }
   } else if (!strcmp (mimetype, "text/plain")) {
-    context->codec_id = g_strdup (GST_MATROSKA_CODEC_ID_SUBTITLE_UTF8);
+    gst_matroska_mux_set_codec_id (context,
+        GST_MATROSKA_CODEC_ID_SUBTITLE_UTF8);
   } else if (!strcmp (mimetype, "application/x-ssa")) {
-    context->codec_id = g_strdup (GST_MATROSKA_CODEC_ID_SUBTITLE_SSA);
+    gst_matroska_mux_set_codec_id (context, GST_MATROSKA_CODEC_ID_SUBTITLE_SSA);
   } else if (!strcmp (mimetype, "application/x-ass")) {
-    context->codec_id = g_strdup (GST_MATROSKA_CODEC_ID_SUBTITLE_ASS);
+    gst_matroska_mux_set_codec_id (context, GST_MATROSKA_CODEC_ID_SUBTITLE_ASS);
   } else if (!strcmp (mimetype, "application/x-usf")) {
-    context->codec_id = g_strdup (GST_MATROSKA_CODEC_ID_SUBTITLE_USF);
+    gst_matroska_mux_set_codec_id (context, GST_MATROSKA_CODEC_ID_SUBTITLE_USF);
   } else if (!strcmp (mimetype, "video/x-dvd-subpicture")) {
-    context->codec_id = g_strdup (GST_MATROSKA_CODEC_ID_SUBTITLE_VOBSUB);
+    gst_matroska_mux_set_codec_id (context,
+        GST_MATROSKA_CODEC_ID_SUBTITLE_VOBSUB);
   } else {
     id = NULL;
     ret = FALSE;
