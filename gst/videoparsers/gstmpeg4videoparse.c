@@ -239,7 +239,8 @@ gst_mpeg4vparse_process_config (GstMpeg4VParse * mp4vparse,
     const guint8 * data, guint offset, gsize size)
 {
   /* only do stuff if something new */
-  if (!gst_buffer_memcmp (mp4vparse->config, offset, data, size))
+  if (mp4vparse->config
+      && !gst_buffer_memcmp (mp4vparse->config, offset, data, size))
     return TRUE;
 
   if (mp4vparse->vol_offset < 0) {
