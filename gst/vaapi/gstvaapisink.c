@@ -52,6 +52,9 @@
 #define HAVE_GST_XOVERLAY_SET_WINDOW_HANDLE \
     GST_PLUGINS_BASE_CHECK_VERSION(0,10,31)
 
+#define HAVE_GST_XOVERLAY_SET_RENDER_RECTANGLE \
+    GST_PLUGINS_BASE_CHECK_VERSION(0,10,29)
+
 #define GST_PLUGIN_NAME "vaapisink"
 #define GST_PLUGIN_DESC "A VA-API based videosink"
 
@@ -161,6 +164,30 @@ gst_vaapisink_xoverlay_set_xid(GstXOverlay *overlay, XID xid)
 }
 #endif
 
+#if HAVE_GST_XOVERLAY_SET_RENDER_RECTANGLE
+static void
+gst_vaapisink_xoverlay_set_render_rectangle(
+    GstXOverlay *overlay,
+    gint         x,
+    gint         y,
+    gint         width,
+    gint         height
+)
+{
+    GstVaapiSink * const sink = GST_VAAPISINK(overlay);
+    GstVaapiRectangle * const display_rect = &sink->display_rect;
+
+    display_rect->x      = x;
+    display_rect->y      = y;
+    display_rect->width  = width;
+    display_rect->height = height;
+    
+    GST_DEBUG("render rect (%d,%d):%ux%u",
+              display_rect->x, display_rect->y,
+              display_rect->width, display_rect->height);
+}
+#endif
+
 static void
 gst_vaapisink_xoverlay_expose(GstXOverlay *overlay)
 {
@@ -178,11 +205,14 @@ static void
 gst_vaapisink_xoverlay_iface_init(GstXOverlayClass *iface)
 {
 #if HAVE_GST_XOVERLAY_SET_WINDOW_HANDLE
-    iface->set_window_handle = gst_vaapisink_xoverlay_set_window_handle;
+    iface->set_window_handle    = gst_vaapisink_xoverlay_set_window_handle;
 #else
-    iface->set_xwindow_id    = gst_vaapisink_xoverlay_set_xid;
+    iface->set_xwindow_id       = gst_vaapisink_xoverlay_set_xid;
 #endif
-    iface->expose            = gst_vaapisink_xoverlay_expose;
+#if HAVE_GST_XOVERLAY_SET_RENDER_RECTANGLE
+    iface->set_render_rectangle = gst_vaapisink_xoverlay_set_render_rectangle;
+#endif
+    iface->expose               = gst_vaapisink_xoverlay_expose;
 }
 
 static void
