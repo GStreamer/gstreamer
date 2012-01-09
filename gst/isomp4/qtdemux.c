@@ -6649,7 +6649,7 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
           /* see annex I of the jpeg2000 spec */
           GNode *jp2h, *ihdr, *colr, *mjp2, *field, *prefix, *cmap, *cdef;
           const guint8 *data;
-          const gchar *colorspace;
+          const gchar *colorspace = NULL;
           gint ncomp = 0;
           guint32 ncomp_map = 0;
           gint32 *comp_map = NULL;
