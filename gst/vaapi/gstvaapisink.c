@@ -293,7 +293,6 @@ gst_vaapisink_ensure_render_rect(GstVaapiSink *sink, guint width, guint height)
 {
     GstVaapiRectangle * const display_rect = &sink->display_rect;
     guint num, den, display_par_n, display_par_d;
-    double display_ratio;
     gboolean success;
 
     GST_DEBUG("ensure render rect within %ux%u bounds", width, height);
@@ -316,47 +315,24 @@ gst_vaapisink_ensure_render_rect(GstVaapiSink *sink, guint width, guint height)
     GST_DEBUG("video size %dx%d, calculated ratio %d/%d",
               sink->video_width, sink->video_height, num, den);
 
-    if ((sink->video_height % den) == 0) {
-        GST_DEBUG("keeping video height");
-        display_rect->width  =
-            gst_util_uint64_scale_int(sink->video_height, num, den);
-        display_rect->height = sink->video_height;
+    display_rect->width = gst_util_uint64_scale_int(height, num, den);
+    if (display_rect->width <= width) {
+        GST_DEBUG("keeping window height");
+        display_rect->height = height;
     }
-    else if ((sink->video_width % num) == 0) {
-        GST_DEBUG("keeping video width");
-        display_rect->width  = sink->video_width;
+    else {
+        GST_DEBUG("keeping window width");
+        display_rect->width  = width;
         display_rect->height =
-            gst_util_uint64_scale_int(sink->video_width, den, num);
+            gst_util_uint64_scale_int(width, den, num);
     }
-    else {
-        GST_DEBUG("approximating while keeping video height");
-        display_rect->width  =
-            gst_util_uint64_scale_int(sink->video_height, num, den);
-        display_rect->height = sink->video_height;
-    }
-    display_ratio = (gdouble)display_rect->width / display_rect->height;
-    GST_DEBUG("scaling to %ux%u", display_rect->width, display_rect->height);
+    GST_DEBUG("scaling video to %ux%u", display_rect->width, display_rect->height);
 
-    if (sink->fullscreen || sink->foreign_window ||
-        display_rect->width > width || display_rect->height > height) {
-        if (sink->video_width > sink->video_height) {
-            display_rect->width  = width;
-            display_rect->height = width / display_ratio;
-        }
-        else {
-            display_rect->width  = height * display_ratio;
-            display_rect->height = height;
-        }
-    }
+    g_assert(display_rect->width  <= width);
+    g_assert(display_rect->height <= height);
 
-    if (sink->fullscreen) {
-        display_rect->x  = (width  - display_rect->width)  / 2;
-        display_rect->y  = (height - display_rect->height) / 2;
-    }
-    else {
-        display_rect->x  = 0;
-        display_rect->y  = 0;
-    }
+    display_rect->x = (width  - display_rect->width)  / 2;
+    display_rect->y = (height - display_rect->height) / 2;
 
     GST_DEBUG("render rect (%d,%d):%ux%u",
               display_rect->x, display_rect->y,
