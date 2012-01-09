@@ -48,7 +48,7 @@ GST_DEBUG_CATEGORY (wrapper_camera_bin_src_debug);
 
 #define gst_wrapper_camera_bin_src_parent_class parent_class
 G_DEFINE_TYPE (GstWrapperCameraBinSrc, gst_wrapper_camera_bin_src,
-    GST_TYPE_BIN);
+    GST_TYPE_BASE_CAMERA_SRC);
 
 static void set_capsfilter_caps (GstWrapperCameraBinSrc * self,
     GstCaps * new_caps);
