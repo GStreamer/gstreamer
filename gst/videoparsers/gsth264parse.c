@@ -1044,9 +1044,9 @@ gst_h264_parse_update_src_caps (GstH264Parse * h264parse, GstCaps * caps)
       gst_caps_set_simple (caps, "width", G_TYPE_INT, sps->width,
           "height", G_TYPE_INT, sps->height, NULL);
       /* but not necessarily or reliably this */
-      if (sps->fps_num > 0 && sps->fps_den > 0)
+      if (h264parse->fps_num > 0 && h264parse->fps_den > 0)
         gst_caps_set_simple (caps, "framerate",
-            GST_TYPE_FRACTION, sps->fps_num, sps->fps_den, NULL);
+            GST_TYPE_FRACTION, h264parse->fps_num, h264parse->fps_den, NULL);
     }
   }
 
