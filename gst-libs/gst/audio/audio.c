@@ -1098,7 +1098,8 @@ gboolean
 gst_audio_channel_positions_to_mask (const GstAudioChannelPosition * position,
     gint channels, guint64 * channel_mask)
 {
-  return check_valid_channel_positions (position, channels, TRUE, channel_mask);
+  return check_valid_channel_positions (position, channels, FALSE,
+      channel_mask);
 }
 
 /**
