@@ -411,7 +411,7 @@ gst_mad_handle_frame (GstAudioDecoder * dec, GstBuffer * buffer)
   GstFlowReturn ret = GST_FLOW_EOS;
   GstBuffer *outbuffer;
   guint nsamples;
-  gint32 *outdata;
+  gint32 *data, *outdata;
   mad_fixed_t const *left_ch, *right_ch;
 
   mad = GST_MAD (dec);
@@ -435,7 +435,7 @@ gst_mad_handle_frame (GstAudioDecoder * dec, GstBuffer * buffer)
 
   outbuffer = gst_buffer_new_and_alloc (nsamples * mad->channels * 4);
 
-  outdata = gst_buffer_map (outbuffer, NULL, NULL, GST_MAP_WRITE);
+  data = outdata = gst_buffer_map (outbuffer, NULL, NULL, GST_MAP_WRITE);
 
   /* output sample(s) in 16-bit signed native-endian PCM */
   if (mad->channels == 1) {
@@ -453,7 +453,7 @@ gst_mad_handle_frame (GstAudioDecoder * dec, GstBuffer * buffer)
     }
   }
 
-  gst_buffer_unmap (outbuffer, outdata, -1);
+  gst_buffer_unmap (outbuffer, data, -1);
 
   ret = gst_audio_decoder_finish_frame (dec, outbuffer, 1);
 
