@@ -458,7 +458,7 @@ debug_dump_element_pads (GstIterator * pad_iter, GstPad * pad,
  * @out: file to write to
  * @indent: level of graph indentation
  *
- * Helper for _gst_debug_bin_to_dot_file() to recursively dump a pipeline.
+ * Helper for gst_debug_bin_to_dot_file() to recursively dump a pipeline.
  */
 static void
 debug_dump_element (GstBin * bin, GstDebugGraphDetails details, FILE * out,
@@ -590,7 +590,7 @@ debug_dump_element (GstBin * bin, GstDebugGraphDetails details, FILE * out,
 }
 
 /*
- * _gst_debug_bin_to_dot_file:
+ * gst_debug_bin_to_dot_file:
  * @bin: the top-level pipeline that should be analyzed
  * @file_name: output base filename (e.g. "myplayer")
  *
@@ -602,7 +602,7 @@ debug_dump_element (GstBin * bin, GstDebugGraphDetails details, FILE * out,
  * </programlisting></informalexample>
  */
 void
-_gst_debug_bin_to_dot_file (GstBin * bin, GstDebugGraphDetails details,
+gst_debug_bin_to_dot_file (GstBin * bin, GstDebugGraphDetails details,
     const gchar * file_name)
 {
   gchar *full_file_name = NULL;
@@ -667,15 +667,15 @@ _gst_debug_bin_to_dot_file (GstBin * bin, GstDebugGraphDetails details,
 }
 
 /*
- * _gst_debug_bin_to_dot_file_with_ts:
+ * gst_debug_bin_to_dot_file_with_ts:
  * @bin: the top-level pipeline that should be analyzed
  * @file_name: output base filename (e.g. "myplayer")
  *
- * This works like _gst_debug_bin_to_dot_file(), but adds the current timestamp
+ * This works like gst_debug_bin_to_dot_file(), but adds the current timestamp
  * to the filename, so that it can be used to take multiple snapshots.
  */
 void
-_gst_debug_bin_to_dot_file_with_ts (GstBin * bin,
+gst_debug_bin_to_dot_file_with_ts (GstBin * bin,
     GstDebugGraphDetails details, const gchar * file_name)
 {
   gchar *ts_file_name = NULL;
@@ -699,19 +699,19 @@ _gst_debug_bin_to_dot_file_with_ts (GstBin * bin,
       g_strdup_printf ("%u.%02u.%02u.%09u-%s", GST_TIME_ARGS (elapsed),
       file_name);
 
-  _gst_debug_bin_to_dot_file (bin, details, ts_file_name);
+  gst_debug_bin_to_dot_file (bin, details, ts_file_name);
   g_free (ts_file_name);
 }
 #else /* !GST_DISABLE_GST_DEBUG */
 #ifndef GST_REMOVE_DISABLED
 void
-_gst_debug_bin_to_dot_file (GstBin * bin, GstDebugGraphDetails details,
+gst_debug_bin_to_dot_file (GstBin * bin, GstDebugGraphDetails details,
     const gchar * file_name)
 {
 }
 
 void
-_gst_debug_bin_to_dot_file_with_ts (GstBin * bin, GstDebugGraphDetails details,
+gst_debug_bin_to_dot_file_with_ts (GstBin * bin, GstDebugGraphDetails details,
     const gchar * file_name)
 {
 }
