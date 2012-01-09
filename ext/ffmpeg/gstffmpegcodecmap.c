@@ -168,11 +168,6 @@ gst_ff_channel_layout_to_gst (guint64 channel_layout, guint channels)
     GST_DEBUG ("mono common case; won't set channel positions");
     g_free (pos);
     pos = NULL;
-  } else if (nchannels == 2 && pos[0] == GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT
-      && pos[1] == GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT) {
-    GST_DEBUG ("stereo common case; won't set channel positions");
-    g_free (pos);
-    pos = NULL;
   }
 
   return pos;
@@ -374,7 +369,7 @@ gst_ff_aud_caps_new (AVCodecContext * context, enum CodecID codec_id,
       guint64 mask;
 
       if (gst_audio_channel_positions_to_mask (pos, context->channels, &mask)) {
-        gst_caps_set_simple (caps, "channel-mask", GST_TYPE_BITMASK, &mask,
+        gst_caps_set_simple (caps, "channel-mask", GST_TYPE_BITMASK, mask,
             NULL);
       }
       g_free (pos);
