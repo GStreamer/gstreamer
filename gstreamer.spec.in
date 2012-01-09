@@ -118,7 +118,6 @@ rm -rf $RPM_BUILD_ROOT
 
 %dir %{_libdir}/gstreamer-%{majorminor}
 %{_libdir}/gstreamer-%{majorminor}/libgstcoreelements.so
-%{_libdir}/gstreamer-%{majorminor}/libgstcoreindexers.so
 
 %{_bindir}/gst-inspect-%{majorminor}
 %{_bindir}/gst-launch-%{majorminor}
