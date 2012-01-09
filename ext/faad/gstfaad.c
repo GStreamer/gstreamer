@@ -485,7 +485,8 @@ gst_faad_update_caps (GstFaad * faad, faacDecFrameInfo * info)
     }
   }
 
-  if (G_LIKELY (!fmt_change))
+  if (G_LIKELY (gst_pad_has_current_caps (GST_AUDIO_DECODER_SRC_PAD (faad))
+          && !fmt_change))
     return TRUE;
 
 
