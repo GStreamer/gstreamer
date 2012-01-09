@@ -1324,7 +1324,8 @@ gst_ffmpeg_codecid_to_caps (enum CodecID codec_id,
       }
 
       caps = gst_ff_aud_caps_new (context, codec_id, "audio/x-raw",
-          "format", G_TYPE_STRING, gst_audio_format_to_string (format), NULL);
+          "format", G_TYPE_STRING, gst_audio_format_to_string (format),
+          "layout", G_TYPE_STRING, "interleaved", NULL);
     }
       break;
 
@@ -1814,7 +1815,8 @@ gst_ffmpeg_smpfmt_to_caps (enum SampleFormat sample_fmt,
 
   if (format != GST_AUDIO_FORMAT_UNKNOWN) {
     caps = gst_ff_aud_caps_new (context, codec_id, "audio/x-raw",
-        "format", G_TYPE_STRING, gst_audio_format_to_string (format), NULL);
+        "format", G_TYPE_STRING, gst_audio_format_to_string (format),
+        "layout", G_TYPE_STRING, "interleaved", NULL);
     GST_LOG ("caps for sample_fmt=%d: %" GST_PTR_FORMAT, sample_fmt, caps);
   } else {
     GST_LOG ("No caps found for sample_fmt=%d", sample_fmt);
