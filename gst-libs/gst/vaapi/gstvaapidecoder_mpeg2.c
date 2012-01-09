@@ -440,6 +440,8 @@ decode_gop(GstVaapiDecoderMpeg2 *decoder, guchar *buf, guint buf_size)
     priv->gop_pts = pts;
     if (!priv->pts_diff)
         priv->pts_diff = priv->seq_pts - priv->gop_pts;
+
+    priv->is_first_field = TRUE;
     return GST_VAAPI_DECODER_STATUS_SUCCESS;
 }
 
@@ -500,10 +502,6 @@ decode_picture(GstVaapiDecoderMpeg2 *decoder, guchar *buf, guint buf_size)
     }
 
     priv->mb_y = 0;
-    if (pic_hdr->pic_type == GST_MPEG_VIDEO_PICTURE_TYPE_I)
-        priv->is_first_field = TRUE;
-    else
-        priv->is_first_field ^= 1;
 
     /* Update presentation time */
     pts = priv->gop_pts;
@@ -618,8 +616,13 @@ decode_slice(
 
     GST_DEBUG("slice %d @ %p, %u bytes)", slice_no, buf, buf_size);
 
-    if (picture->slices->len == 0 && !fill_picture(decoder, picture))
-        return GST_VAAPI_DECODER_STATUS_ERROR_UNKNOWN;
+    if (picture->slices->len == 0) {
+        if (!fill_picture(decoder, picture))
+            return GST_VAAPI_DECODER_STATUS_ERROR_UNKNOWN;
+
+        if (!priv->pic_ext.progressive_frame)
+            priv->is_first_field ^= 1;
+    }
 
     priv->mb_y = slice_no;
 
