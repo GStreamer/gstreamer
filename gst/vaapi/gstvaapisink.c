@@ -459,7 +459,7 @@ gst_vaapisink_set_caps(GstBaseSink *base_sink, GstCaps *caps)
 {
     GstVaapiSink * const sink = GST_VAAPISINK(base_sink);
     GstStructure * const structure = gst_caps_get_structure(caps, 0);
-    guint display_width, display_height, win_width, win_height;
+    guint win_width, win_height;
     gint video_width, video_height, video_par_n = 1, video_par_d = 1;
 
     if (!structure)
@@ -479,17 +479,11 @@ gst_vaapisink_set_caps(GstBaseSink *base_sink, GstCaps *caps)
     if (!gst_vaapi_ensure_display(sink, &sink->display))
         return FALSE;
 
-    gst_vaapi_display_get_size(sink->display, &display_width, &display_height);
-    if (!gst_vaapisink_ensure_render_rect(sink, display_width, display_height))
-        return FALSE;
-
-    if (sink->fullscreen) {
-        win_width  = display_width;
-        win_height = display_height;
-    }
+    if (sink->fullscreen)
+        gst_vaapi_display_get_size(sink->display, &win_width, &win_height);
     else {
-        win_width  = sink->display_rect.width;
-        win_height = sink->display_rect.height;
+        win_width  = video_width;
+        win_height = video_height;
     }
 
     if (sink->window)
@@ -504,10 +498,13 @@ gst_vaapisink_set_caps(GstBaseSink *base_sink, GstCaps *caps)
             return FALSE;
         gst_vaapi_window_set_fullscreen(sink->window, sink->fullscreen);
         gst_vaapi_window_show(sink->window);
+        gst_vaapi_window_get_size(sink->window, &win_width, &win_height);
     }
     sink->window_width  = win_width;
     sink->window_height = win_height;
-    return TRUE;
+    GST_DEBUG("window size %ux%u", win_width, win_height);
+
+    return gst_vaapisink_ensure_render_rect(sink, win_width, win_height);
 }
 
 #if USE_VAAPISINK_GLX
