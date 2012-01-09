@@ -856,6 +856,8 @@ gst_rmdemux_loop (GstPad * pad)
     }
   }
 
+  size = gst_buffer_get_size (buffer);
+
   /* Defer to the chain function */
   ret = gst_rmdemux_chain (pad, GST_OBJECT_CAST (rmdemux), buffer);
   if (ret != GST_FLOW_OK) {
@@ -864,7 +866,7 @@ gst_rmdemux_loop (GstPad * pad)
     goto need_pause;
   }
 
-  rmdemux->offset += gst_buffer_get_size (buffer);
+  rmdemux->offset += size;
 
   switch (rmdemux->loop_state) {
     case RMDEMUX_LOOP_STATE_HEADER:
