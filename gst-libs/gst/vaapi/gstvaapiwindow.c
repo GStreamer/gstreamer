@@ -41,9 +41,11 @@ G_DEFINE_TYPE(GstVaapiWindow, gst_vaapi_window, GST_VAAPI_TYPE_OBJECT);
 struct _GstVaapiWindowPrivate {
     guint               width;
     guint               height;
+    guint               display_width;
+    guint               display_height;
     gboolean            is_constructed          : 1;
     guint               is_fullscreen           : 1;
-    guint               is_fullscreen_changed   : 1;
+    guint               check_geometry          : 1;
 };
 
 enum {
@@ -59,22 +61,16 @@ gst_vaapi_window_ensure_size(GstVaapiWindow *window)
 {
     GstVaapiWindowPrivate * const priv = window->priv;
     GstVaapiWindowClass * const klass  = GST_VAAPI_WINDOW_GET_CLASS(window);
-    guint display_width, display_height;
 
-    if (!priv->is_fullscreen_changed)
+    if (!priv->check_geometry)
         return;
 
     if (klass->get_geometry)
         klass->get_geometry(window, NULL, NULL, &priv->width, &priv->height);
 
-    gst_vaapi_display_get_size(
-        GST_VAAPI_OBJECT_DISPLAY(window),
-        &display_width,
-        &display_height
-    );
-    priv->is_fullscreen_changed = FALSE;
-    priv->is_fullscreen         = (priv->width  == display_width &&
-                                   priv->height == display_height);
+    priv->check_geometry = FALSE;
+    priv->is_fullscreen  = (priv->width  == priv->display_width &&
+                            priv->height == priv->display_height);
 }
 
 static void
@@ -91,6 +87,12 @@ gst_vaapi_window_create(GstVaapiWindow *window)
 
     width  = priv->width;
     height = priv->height;
+
+    gst_vaapi_display_get_size(
+        GST_VAAPI_OBJECT_DISPLAY(window),
+        &priv->display_width,
+        &priv->display_height
+    );
 
     if (!GST_VAAPI_WINDOW_GET_CLASS(window)->create(window, &width, &height))
         return FALSE;
@@ -226,7 +228,7 @@ gst_vaapi_window_init(GstVaapiWindow *window)
     priv->height                = 1;
     priv->is_constructed        = FALSE;
     priv->is_fullscreen         = FALSE;
-    priv->is_fullscreen_changed = FALSE;
+    priv->check_geometry        = FALSE;
 }
 
 /**
@@ -259,6 +261,7 @@ gst_vaapi_window_show(GstVaapiWindow *window)
     g_return_if_fail(window->priv->is_constructed);
 
     GST_VAAPI_WINDOW_GET_CLASS(window)->show(window);
+    window->priv->check_geometry = TRUE;
 }
 
 /**
@@ -313,8 +316,8 @@ gst_vaapi_window_set_fullscreen(GstVaapiWindow *window, gboolean fullscreen)
 
     if (window->priv->is_fullscreen != fullscreen &&
         klass->set_fullscreen && klass->set_fullscreen(window, fullscreen)) {
-        window->priv->is_fullscreen         = fullscreen;
-        window->priv->is_fullscreen_changed = TRUE;
+        window->priv->is_fullscreen  = fullscreen;
+        window->priv->check_geometry = TRUE;
     }
 }
 
