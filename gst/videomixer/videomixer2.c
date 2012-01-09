@@ -2002,12 +2002,20 @@ gst_videomixer2_init (GstVideoMixer2 * mix, GstVideoMixer2Class * g_class)
 }
 
 /* Element registration */
-gboolean
-gst_videomixer2_register (GstPlugin * plugin)
+static gboolean
+plugin_init (GstPlugin * plugin)
 {
-  GST_DEBUG_CATEGORY_INIT (gst_videomixer2_debug, "videomixer2", 0,
-      "video mixer 2");
+  GST_DEBUG_CATEGORY_INIT (gst_videomixer_debug, "videomixer", 0,
+      "video mixer");
 
-  return gst_element_register (plugin, "videomixer2", GST_RANK_SECONDARY,
+  gst_video_mixer_init_blend ();
+
+  return gst_element_register (plugin, "videomixer", GST_RANK_PRIMARY,
       GST_TYPE_VIDEO_MIXER2);
 }
+
+GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
+    GST_VERSION_MINOR,
+    "videomixer",
+    "Video mixer", plugin_init, VERSION, GST_LICENSE, GST_PACKAGE_NAME,
+    GST_PACKAGE_ORIGIN)

@@ -4,7 +4,6 @@ ORC_SOURCE=blendorc
 include $(top_srcdir)/common/orc.mak
 
 libgstvideomixer_la_SOURCES = \
-	videomixer.c \
 	blend.c \
 	videomixer2.c
 
@@ -19,8 +18,6 @@ libgstvideomixer_la_LIBTOOLFLAGS = --tag=disable-static
 
 # headers we need but don't want installed
 noinst_HEADERS = \
-	videomixer.h \
-	videomixerpad.h \
 	blend.h \
 	videomixer2.h \
 	videomixer2pad.h

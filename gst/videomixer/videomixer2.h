@@ -119,7 +119,6 @@ struct _GstVideoMixer2Class
 };
 
 GType gst_videomixer2_get_type (void);
-gboolean gst_videomixer2_register (GstPlugin * plugin);
 
 G_END_DECLS
 #endif /* __GST_VIDEO_MIXER2_H__ */
