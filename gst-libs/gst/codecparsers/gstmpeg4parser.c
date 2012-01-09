@@ -473,8 +473,7 @@ gst_mpeg4_parse (GstMpeg4Packet * packet, gboolean skip_user_data,
   if (skip_user_data && data[off1 + 3] == GST_MPEG4_USER_DATA)
     /* If we are here, we know no resync code has been found the first time, so we
      * don't look for it this time */
-    return gst_mpeg4_parse (packet, skip_user_data, NULL, data, off1 + 3,
-        size - off1 - 3);
+    return gst_mpeg4_parse (packet, skip_user_data, NULL, data, off1 + 3, size);
 
   packet->offset = off1 + 3;
   packet->data = data;
