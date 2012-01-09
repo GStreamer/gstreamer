@@ -1449,6 +1449,7 @@ gst_asf_demux_push_complete_payloads (GstASFDemux * demux, gboolean force)
           stream->par_x, stream->par_y, payload->par_x, payload->par_y);
       stream->par_x = payload->par_x;
       stream->par_y = payload->par_y;
+      stream->caps = gst_caps_make_writable (stream->caps);
       gst_caps_set_simple (stream->caps, "pixel-aspect-ratio",
           GST_TYPE_FRACTION, stream->par_x, stream->par_y, NULL);
       gst_pad_set_caps (stream->pad, stream->caps);
@@ -1458,8 +1459,10 @@ gst_asf_demux_push_complete_payloads (GstASFDemux * demux, gboolean force)
       GST_DEBUG ("Updating interlaced status (%d => %d)", stream->interlaced,
           payload->interlaced);
       stream->interlaced = payload->interlaced;
+      stream->caps = gst_caps_make_writable (stream->caps);
       gst_caps_set_simple (stream->caps, "interlaced", G_TYPE_BOOLEAN,
           stream->interlaced, NULL);
+      gst_pad_set_caps (stream->pad, stream->caps);
     }
 
     /* (sort of) interpolate timestamps using upstream "frame of reference",
