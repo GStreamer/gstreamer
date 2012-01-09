@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.10.30.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2011-09-29 14:55+0200\n"
+"POT-Creation-Date: 2012-01-05 11:27+0000\n"
 "PO-Revision-Date: 2010-11-04 19:41+0100\n"
 "Last-Translator: Jordi Mallach <jordi@sindominio.net>\n"
 "Language-Team: Catalan <ca@dodds.net>\n"
@@ -556,8 +556,16 @@ msgstr "nivell de referència dels valors de guany de la pista i àlbum"
 msgid "language code"
 msgstr "codi de la llengua"
 
-msgid "language code for this stream, conforming to ISO-639-1"
+#, fuzzy
+msgid "language code for this stream, conforming to ISO-639-1 or ISO-639-2"
 msgstr "codi de la llengua per a aquest flux, conformant amb ISO-639-1"
+
+#, fuzzy
+msgid "language name"
+msgstr "codi de la llengua"
+
+msgid "freeform name of the language this stream is in"
+msgstr ""
 
 msgid "image"
 msgstr "imatge"

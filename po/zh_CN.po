@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.10.25.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2011-09-29 14:55+0200\n"
+"POT-Creation-Date: 2012-01-05 11:27+0000\n"
 "PO-Revision-Date: 2010-02-02 18:58+0800\n"
 "Last-Translator: Ji ZhengYu <zhengyuji@gmail.com>\n"
 "Language-Team: Chinese (simplified) <i18n-zh@googlegroups.com>\n"
@@ -535,8 +535,16 @@ msgstr "音轨和专辑增益的参考级别值"
 msgid "language code"
 msgstr "语言代码"
 
-msgid "language code for this stream, conforming to ISO-639-1"
+#, fuzzy
+msgid "language code for this stream, conforming to ISO-639-1 or ISO-639-2"
 msgstr "此流的语言代码，遵从为 ISO-639-1"
+
+#, fuzzy
+msgid "language name"
+msgstr "语言代码"
+
+msgid "freeform name of the language this stream is in"
+msgstr ""
 
 msgid "image"
 msgstr "图像"

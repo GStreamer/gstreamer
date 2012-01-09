@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.10.29.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2011-09-29 14:55+0200\n"
+"POT-Creation-Date: 2012-01-05 11:27+0000\n"
 "PO-Revision-Date: 2010-07-16 00:50+0300\n"
 "Last-Translator: Žygimantas Beručka <uid0@akl.lt>\n"
 "Language-Team: Lithuanian <komp_lt@konferencijos.lt>\n"
@@ -550,8 +550,16 @@ msgstr "takelio ir albumo stiprinimo reikšmių santykinis lygis"
 msgid "language code"
 msgstr "kalbos kodas"
 
-msgid "language code for this stream, conforming to ISO-639-1"
+#, fuzzy
+msgid "language code for this stream, conforming to ISO-639-1 or ISO-639-2"
 msgstr "šio srauto kalbos kodas, atitinkantis ISO-639-1"
+
+#, fuzzy
+msgid "language name"
+msgstr "kalbos kodas"
+
+msgid "freeform name of the language this stream is in"
+msgstr ""
 
 msgid "image"
 msgstr "paveikslėlis"

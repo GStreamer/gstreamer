@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.10.31.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2011-09-29 14:55+0200\n"
+"POT-Creation-Date: 2012-01-05 11:27+0000\n"
 "PO-Revision-Date: 2011-01-09 19:46+0100\n"
 "Last-Translator: Daniel Nylander <po@danielnylander.se>\n"
 "Language-Team: Swedish <tp-sv@listor.tp-sv.se>\n"
@@ -559,8 +559,16 @@ msgstr "referensnivå för förstärkningsvärden för spår och album"
 msgid "language code"
 msgstr "språkkod"
 
-msgid "language code for this stream, conforming to ISO-639-1"
+#, fuzzy
+msgid "language code for this stream, conforming to ISO-639-1 or ISO-639-2"
 msgstr "språkkod för detta ström, enligt ISO-639-1"
+
+#, fuzzy
+msgid "language name"
+msgstr "språkkod"
+
+msgid "freeform name of the language this stream is in"
+msgstr ""
 
 msgid "image"
 msgstr "bild"

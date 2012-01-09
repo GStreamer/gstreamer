@@ -15,7 +15,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.8.8\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2011-09-29 14:55+0200\n"
+"POT-Creation-Date: 2012-01-05 11:27+0000\n"
 "PO-Revision-Date: 2005-04-04 10:55-0700\n"
 "Last-Translator: Steven Michael Murphy <murf@e-tools.com>\n"
 "Language-Team: Kinyarwanda <translation-team-rw@lists.sourceforge.net>\n"
@@ -723,7 +723,13 @@ msgstr ""
 msgid "language code"
 msgstr ""
 
-msgid "language code for this stream, conforming to ISO-639-1"
+msgid "language code for this stream, conforming to ISO-639-1 or ISO-639-2"
+msgstr ""
+
+msgid "language name"
+msgstr ""
+
+msgid "freeform name of the language this stream is in"
 msgstr ""
 
 msgid "image"

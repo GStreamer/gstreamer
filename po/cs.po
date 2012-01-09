@@ -9,7 +9,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.10.32.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2011-12-12 12:07+0000\n"
+"POT-Creation-Date: 2012-01-05 11:27+0000\n"
 "PO-Revision-Date: 2011-12-01 08:17+0100\n"
 "Last-Translator: Marek Černocký <marek@manet.cz>\n"
 "Language-Team: Czech <translation-team-cs@lists.sourceforge.net>\n"
@@ -549,8 +549,16 @@ msgstr "Hodnota referenční úrovně zesílení stopy a alba"
 msgid "language code"
 msgstr "kód jazyka"
 
-msgid "language code for this stream, conforming to ISO-639-1"
+#, fuzzy
+msgid "language code for this stream, conforming to ISO-639-1 or ISO-639-2"
 msgstr "Kód jazyka pro tento proud, ve shodě s ISO-639-1"
+
+#, fuzzy
+msgid "language name"
+msgstr "kód jazyka"
+
+msgid "freeform name of the language this stream is in"
+msgstr ""
 
 msgid "image"
 msgstr "obrázek"

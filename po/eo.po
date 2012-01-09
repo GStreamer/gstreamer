@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.10.32.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2011-12-12 12:07+0000\n"
+"POT-Creation-Date: 2012-01-05 11:27+0000\n"
 "PO-Revision-Date: 2011-06-04 21:11+0100\n"
 "Last-Translator: Kristjan SCHMIDT <kristjan.schmidt@googlemail.com>\n"
 "Language-Team: Esperanto <translation-team-eo@lists.sourceforge.net>\n"
@@ -528,7 +528,14 @@ msgstr ""
 msgid "language code"
 msgstr "Lingvokodo"
 
-msgid "language code for this stream, conforming to ISO-639-1"
+msgid "language code for this stream, conforming to ISO-639-1 or ISO-639-2"
+msgstr ""
+
+#, fuzzy
+msgid "language name"
+msgstr "Lingvokodo"
+
+msgid "freeform name of the language this stream is in"
 msgstr ""
 
 msgid "image"
