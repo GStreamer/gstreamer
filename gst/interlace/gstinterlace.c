@@ -187,6 +187,7 @@ static gboolean gst_interlace_setcaps (GstPad * pad, GstCaps * caps);
 static GstCaps *gst_interlace_getcaps (GstPad * pad);
 static GstStateChangeReturn gst_interlace_change_state (GstElement * element,
     GstStateChange transition);
+static void gst_interlace_finalize (GObject * obj);
 
 static GstElementClass *parent_class = NULL;
 
@@ -242,6 +243,7 @@ gst_interlace_class_init (GstInterlaceClass * klass)
 
   object_class->set_property = gst_interlace_set_property;
   object_class->get_property = gst_interlace_get_property;
+  object_class->finalize = gst_interlace_finalize;
 
   element_class->change_state = gst_interlace_change_state;
 
@@ -266,6 +268,16 @@ gst_interlace_class_init (GstInterlaceClass * klass)
           "Allow generation of buffers with RFF flag set, i.e., duration of 3 fields",
           FALSE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
+}
+
+static void
+gst_interlace_finalize (GObject * obj)
+{
+  GstInterlace *interlace = GST_INTERLACE (obj);
+
+  gst_caps_replace (&interlace->srccaps, NULL);
+
+  G_OBJECT_CLASS (parent_class)->finalize (obj);
 }
 
 static void
@@ -478,7 +490,7 @@ gst_interlace_setcaps (GstPad * pad, GstCaps * caps)
   gboolean interlaced = TRUE;
   int fps_n, fps_d;
   GstPad *otherpad;
-  GstCaps *othercaps;
+  GstCaps *othercaps = NULL;
   const PulldownFormat *pdformat;
 
   interlace = GST_INTERLACE (gst_pad_get_parent (pad));
@@ -527,6 +539,8 @@ gst_interlace_setcaps (GstPad * pad, GstCaps * caps)
   }
 
 error:
+  if (othercaps)
+    gst_caps_unref (othercaps);
   g_object_unref (interlace);
 
   return ret;
