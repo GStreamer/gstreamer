@@ -607,6 +607,23 @@ collect_stream_information (GstDiscoverer * dc, PrivateStream * ps, guint idx)
   return st;
 }
 
+/* takes ownership of new_tags, may replace *taglist with a new one */
+static void
+gst_discoverer_merge_and_replace_tags (GstTagList ** taglist,
+    GstTagList * new_tags)
+{
+  if (new_tags == NULL)
+    return;
+
+  if (*taglist == NULL) {
+    *taglist = new_tags;
+    return;
+  }
+
+  gst_tag_list_insert (*taglist, new_tags, GST_TAG_MERGE_REPLACE);
+  gst_tag_list_free (new_tags);
+}
+
 /* Parses a set of caps and tags in st and populates a GstDiscovererStreamInfo
  * structure (parent, if !NULL, otherwise it allocates one)
  */
@@ -664,10 +681,8 @@ collect_information (GstDiscoverer * dc, const GstStructure * st,
         info->max_bitrate = utmp;
 
       /* FIXME: Is it worth it to remove the tags we've parsed? */
-      info->parent.tags = gst_tag_list_merge (info->parent.tags,
-          (GstTagList *) tags_st, GST_TAG_MERGE_REPLACE);
-
-      gst_structure_free (tags_st);
+      gst_discoverer_merge_and_replace_tags (&info->parent.tags,
+          (GstTagList *) tags_st);
     }
 
     if (!info->language && ((GstDiscovererStreamInfo *) info)->tags) {
@@ -728,9 +743,8 @@ collect_information (GstDiscoverer * dc, const GstStructure * st,
         info->max_bitrate = utmp;
 
       /* FIXME: Is it worth it to remove the tags we've parsed? */
-      info->parent.tags = gst_tag_list_merge (info->parent.tags,
-          (GstTagList *) tags_st, GST_TAG_MERGE_REPLACE);
-      gst_structure_free (tags_st);
+      gst_discoverer_merge_and_replace_tags (&info->parent.tags,
+          (GstTagList *) tags_st);
     }
 
     return (GstDiscovererStreamInfo *) info;
@@ -757,10 +771,8 @@ collect_information (GstDiscoverer * dc, const GstStructure * st,
         info->language = g_strdup (language);
 
       /* FIXME: Is it worth it to remove the tags we've parsed? */
-      info->parent.tags = gst_tag_list_merge (info->parent.tags,
-          (GstTagList *) tags_st, GST_TAG_MERGE_REPLACE);
-      gst_structure_free (tags_st);
-
+      gst_discoverer_merge_and_replace_tags (&info->parent.tags,
+          (GstTagList *) tags_st);
     }
 
     if (!info->language && ((GstDiscovererStreamInfo *) info)->tags) {
@@ -787,9 +799,8 @@ collect_information (GstDiscoverer * dc, const GstStructure * st,
 
     if (gst_structure_id_get (st, _TAGS_QUARK,
             GST_TYPE_STRUCTURE, &tags_st, NULL)) {
-      info->tags = gst_tag_list_merge (info->tags, (GstTagList *) tags_st,
-          GST_TAG_MERGE_REPLACE);
-      gst_structure_free (tags_st);
+      gst_discoverer_merge_and_replace_tags (&info->tags,
+          (GstTagList *) tags_st);
     }
 
     return info;
@@ -1197,7 +1208,6 @@ handle_current_sync (GstDiscoverer * dc)
       done = handle_message (dc, msg);
       gst_message_unref (msg);
     }
-
   } while (!done && (g_timer_elapsed (timer, NULL) < deadline));
 
   /* return result */
