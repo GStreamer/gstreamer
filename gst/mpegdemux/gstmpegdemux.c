@@ -2387,7 +2387,7 @@ gst_flups_demux_scan_forward_ts (GstFluPSDemux * demux, guint64 * pos,
   guint scan_sz = (mode == SCAN_SCR ? SCAN_SCR_SZ : SCAN_PTS_SZ);
   guint cursor, to_read = BLOCK_SZ;
   guint8 *data;
-  guint end_scan;
+  guint end_scan, data_size;
 
   do {
     if (offset + scan_sz > demux->sink_segment.stop)
@@ -2401,8 +2401,14 @@ gst_flups_demux_scan_forward_ts (GstFluPSDemux * demux, guint64 * pos,
     if (G_UNLIKELY (ret != GST_FLOW_OK))
       return FALSE;
 
+    /* may get a short buffer at the end of the file */
+    data_size = GST_BUFFER_SIZE (buffer);
+    if (G_UNLIKELY (data_size <= scan_sz))
+      return FALSE;
+
     data = GST_BUFFER_DATA (buffer);
-    end_scan = GST_BUFFER_SIZE (buffer) - scan_sz;
+    end_scan = data_size - scan_sz;
+
     /* scan the block */
     for (cursor = 0; !found && cursor <= end_scan; cursor++) {
       found = gst_flups_demux_scan_ts (demux, data++, mode, &ts);
@@ -2433,7 +2439,7 @@ gst_flups_demux_scan_backward_ts (GstFluPSDemux * demux, guint64 * pos,
   guint64 ts = 0;
   guint scan_sz = (mode == SCAN_SCR ? SCAN_SCR_SZ : SCAN_PTS_SZ);
   guint cursor, to_read = BLOCK_SZ;
-  guint start_scan;
+  guint start_scan, data_size;
   guint8 *data;
 
   do {
@@ -2451,8 +2457,14 @@ gst_flups_demux_scan_backward_ts (GstFluPSDemux * demux, guint64 * pos,
     if (G_UNLIKELY (ret != GST_FLOW_OK))
       return FALSE;
 
-    start_scan = GST_BUFFER_SIZE (buffer) - scan_sz;
+    /* may get a short buffer at the end of the file */
+    data_size = GST_BUFFER_SIZE (buffer);
+    if (G_UNLIKELY (data_size <= scan_sz))
+      return FALSE;
+
+    start_scan = data_size - scan_sz;
     data = GST_BUFFER_DATA (buffer) + start_scan;
+
     /* scan the block */
     for (cursor = (start_scan + 1); !found && cursor > 0; cursor--) {
       found = gst_flups_demux_scan_ts (demux, data--, mode, &ts);
