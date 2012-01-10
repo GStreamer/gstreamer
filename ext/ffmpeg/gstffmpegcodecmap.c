@@ -340,25 +340,6 @@ gst_ff_aud_caps_new (AVCodecContext * context, enum CodecID codec_id,
     GstAudioChannelPosition *pos;
     guint64 channel_layout = context->channel_layout;
 
-    if (channel_layout == 0) {
-      const guint64 default_channel_set[] = {
-        0, 0, CH_LAYOUT_SURROUND, CH_LAYOUT_QUAD, CH_LAYOUT_5POINT0,
-        CH_LAYOUT_5POINT1, 0, CH_LAYOUT_7POINT1
-      };
-
-      switch (codec_id) {
-        case CODEC_ID_EAC3:
-        case CODEC_ID_AC3:
-        case CODEC_ID_DTS:
-          if (context->channels > 0
-              && context->channels < G_N_ELEMENTS (default_channel_set))
-            channel_layout = default_channel_set[context->channels - 1];
-          break;
-        default:
-          break;
-      }
-    }
-
     caps = gst_caps_new_simple (mimetype,
         "rate", G_TYPE_INT, context->sample_rate,
         "channels", G_TYPE_INT, context->channels, NULL);
