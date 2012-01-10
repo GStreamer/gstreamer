@@ -702,6 +702,17 @@ gst_matroska_mux_handle_src_event (GstPad * pad, GstEvent * event)
   return gst_pad_event_default (pad, event);
 }
 
+
+static void
+gst_matroska_mux_free_codec_priv (GstMatroskaTrackContext * context)
+{
+  if (context->codec_priv != NULL) {
+    g_free (context->codec_priv);
+    context->codec_priv = NULL;
+    context->codec_priv_size = 0;
+  }
+}
+
 static void
 gst_matroska_mux_build_vobsub_private (GstMatroskaTrackContext * context,
     const guint * clut)
@@ -729,7 +740,7 @@ gst_matroska_mux_build_vobsub_private (GstMatroskaTrackContext * context,
   sclut = g_strjoinv (",", clutv);
 
   /* build codec private; only palette for now */
-  g_free (context->codec_priv);
+  gst_matroska_mux_free_codec_priv (context);
   context->codec_priv = (guint8 *) g_strdup_printf ("palette: %s", sclut);
   /* include terminating 0 */
   context->codec_priv_size = strlen ((gchar *) context->codec_priv) + 1;
@@ -1065,18 +1076,13 @@ skip_details:
 
     gst_matroska_mux_set_codec_id (context,
         GST_MATROSKA_CODEC_ID_VIDEO_VFW_FOURCC);
+    gst_matroska_mux_free_codec_priv (context);
     context->codec_priv = (gpointer) bih;
     context->codec_priv_size = size;
   } else if (!strcmp (mimetype, "video/x-h264")) {
     gst_matroska_mux_set_codec_id (context,
         GST_MATROSKA_CODEC_ID_VIDEO_MPEG4_AVC);
-
-    if (context->codec_priv != NULL) {
-      g_free (context->codec_priv);
-      context->codec_priv = NULL;
-      context->codec_priv_size = 0;
-    }
-
+    gst_matroska_mux_free_codec_priv (context);
     /* Create avcC header */
     if (codec_buf != NULL) {
       context->codec_priv_size = GST_BUFFER_SIZE (codec_buf);
@@ -1089,11 +1095,7 @@ skip_details:
 
     gst_matroska_mux_set_codec_id (context, GST_MATROSKA_CODEC_ID_VIDEO_THEORA);
 
-    if (context->codec_priv != NULL) {
-      g_free (context->codec_priv);
-      context->codec_priv = NULL;
-      context->codec_priv_size = 0;
-    }
+    gst_matroska_mux_free_codec_priv (context);
 
     streamheader = gst_structure_get_value (structure, "streamheader");
     if (!theora_streamheader_to_codecdata (streamheader, context)) {
@@ -1128,6 +1130,7 @@ skip_details:
 
     /* global headers may be in codec data */
     if (codec_buf != NULL) {
+      gst_matroska_mux_free_codec_priv (context);
       context->codec_priv_size = GST_BUFFER_SIZE (codec_buf);
       context->codec_priv = g_malloc0 (context->codec_priv_size);
       memcpy (context->codec_priv, GST_BUFFER_DATA (codec_buf),
@@ -1175,6 +1178,7 @@ skip_details:
 
       memcpy (priv_data, GST_BUFFER_DATA (codec_data_buf), priv_data_size);
 
+      gst_matroska_mux_free_codec_priv (context);
       context->codec_priv = priv_data;
       context->codec_priv_size = priv_data_size;
     }
@@ -1259,6 +1263,7 @@ xiphN_streamheader_to_codecdata (const GValue * streamheader,
     offset += GST_BUFFER_SIZE (buf[i]);
   }
 
+  gst_matroska_mux_free_codec_priv (context);
   context->codec_priv = priv_data;
   context->codec_priv_size = priv_data_size;
 
@@ -1438,6 +1443,7 @@ flac_streamheader_to_codecdata (const GValue * streamheader,
     return FALSE;
   }
 
+  gst_matroska_mux_free_codec_priv (context);
   context->codec_priv = g_malloc (GST_BUFFER_SIZE (buffer) - 9);
   context->codec_priv_size = GST_BUFFER_SIZE (buffer) - 9;
   memcpy (context->codec_priv, GST_BUFFER_DATA (buffer) + 9,
@@ -1447,9 +1453,7 @@ flac_streamheader_to_codecdata (const GValue * streamheader,
     bufval = &g_array_index (bufarr, GValue, i);
 
     if (G_VALUE_TYPE (bufval) != GST_TYPE_BUFFER) {
-      g_free (context->codec_priv);
-      context->codec_priv = NULL;
-      context->codec_priv_size = 0;
+      gst_matroska_mux_free_codec_priv (context);
       GST_WARNING ("streamheaders array does not contain GstBuffers");
       return FALSE;
     }
@@ -1503,6 +1507,7 @@ speex_streamheader_to_codecdata (const GValue * streamheader,
     return FALSE;
   }
 
+  gst_matroska_mux_free_codec_priv (context);
   context->codec_priv = g_malloc (GST_BUFFER_SIZE (buffer));
   context->codec_priv_size = GST_BUFFER_SIZE (buffer);
   memcpy (context->codec_priv, GST_BUFFER_DATA (buffer),
@@ -1511,9 +1516,7 @@ speex_streamheader_to_codecdata (const GValue * streamheader,
   bufval = &g_array_index (bufarr, GValue, 1);
 
   if (G_VALUE_TYPE (bufval) != GST_TYPE_BUFFER) {
-    g_free (context->codec_priv);
-    context->codec_priv = NULL;
-    context->codec_priv_size = 0;
+    gst_matroska_mux_free_codec_priv (context);
     GST_WARNING ("streamheaders array does not contain GstBuffers");
     return FALSE;
   }
@@ -1756,11 +1759,7 @@ gst_matroska_mux_audio_pad_setcaps (GstPad * pad, GstCaps * caps)
 
     gst_matroska_mux_set_codec_id (context, GST_MATROSKA_CODEC_ID_AUDIO_VORBIS);
 
-    if (context->codec_priv != NULL) {
-      g_free (context->codec_priv);
-      context->codec_priv = NULL;
-      context->codec_priv_size = 0;
-    }
+    gst_matroska_mux_free_codec_priv (context);
 
     streamheader = gst_structure_get_value (structure, "streamheader");
     if (!vorbis_streamheader_to_codecdata (streamheader, context)) {
@@ -1772,11 +1771,8 @@ gst_matroska_mux_audio_pad_setcaps (GstPad * pad, GstCaps * caps)
     const GValue *streamheader;
 
     gst_matroska_mux_set_codec_id (context, GST_MATROSKA_CODEC_ID_AUDIO_FLAC);
-    if (context->codec_priv != NULL) {
-      g_free (context->codec_priv);
-      context->codec_priv = NULL;
-      context->codec_priv_size = 0;
-    }
+
+    gst_matroska_mux_free_codec_priv (context);
 
     streamheader = gst_structure_get_value (structure, "streamheader");
     if (!flac_streamheader_to_codecdata (streamheader, context)) {
@@ -1788,11 +1784,7 @@ gst_matroska_mux_audio_pad_setcaps (GstPad * pad, GstCaps * caps)
     const GValue *streamheader;
 
     gst_matroska_mux_set_codec_id (context, GST_MATROSKA_CODEC_ID_AUDIO_SPEEX);
-    if (context->codec_priv != NULL) {
-      g_free (context->codec_priv);
-      context->codec_priv = NULL;
-      context->codec_priv_size = 0;
-    }
+    gst_matroska_mux_free_codec_priv (context);
 
     streamheader = gst_structure_get_value (structure, "streamheader");
     if (!speex_streamheader_to_codecdata (streamheader, context)) {
@@ -1849,6 +1841,8 @@ gst_matroska_mux_audio_pad_setcaps (GstPad * pad, GstCaps * caps)
       priv_data = g_malloc0 (priv_data_size);
 
       memcpy (priv_data, GST_BUFFER_DATA (codec_data_buf), priv_data_size);
+
+      gst_matroska_mux_free_codec_priv (context);
 
       context->codec_priv = priv_data;
       context->codec_priv_size = priv_data_size;
@@ -1934,6 +1928,7 @@ gst_matroska_mux_audio_pad_setcaps (GstPad * pad, GstCaps * caps)
     }
 
     gst_matroska_mux_set_codec_id (context, GST_MATROSKA_CODEC_ID_AUDIO_ACM);
+    gst_matroska_mux_free_codec_priv (context);
     context->codec_priv = (gpointer) codec_priv;
     context->codec_priv_size = codec_priv_size;
   }
@@ -2008,11 +2003,7 @@ gst_matroska_mux_subtitle_pad_setcaps (GstPad * pad, GstCaps * caps)
     gst_matroska_mux_set_codec_id (context,
         GST_MATROSKA_CODEC_ID_SUBTITLE_KATE);
 
-    if (context->codec_priv != NULL) {
-      g_free (context->codec_priv);
-      context->codec_priv = NULL;
-      context->codec_priv_size = 0;
-    }
+    gst_matroska_mux_free_codec_priv (context);
 
     streamheader = gst_structure_get_value (structure, "streamheader");
     if (!kate_streamheader_to_codecdata (streamheader, context)) {
@@ -2055,8 +2046,7 @@ gst_matroska_mux_subtitle_pad_setcaps (GstPad * pad, GstCaps * caps)
       return TRUE;
     }
 
-    if (context->codec_priv != NULL)
-      g_free (context->codec_priv);
+    gst_matroska_mux_free_codec_priv (context);
 
     priv_data = g_malloc0 (priv_data_size);
     memcpy (priv_data, GST_BUFFER_DATA (buf), priv_data_size);
