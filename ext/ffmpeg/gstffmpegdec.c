@@ -491,11 +491,11 @@ gst_ffmpegdec_src_query (GstPad * pad, GstObject * parent, GstQuery * query)
           GstClockTime min_lat, max_lat, our_lat;
 
           gst_query_parse_latency (query, &live, &min_lat, &max_lat);
-          if (ffmpegdec->format.video.fps_n > 0)
+          if (ffmpegdec->out_info.fps_n > 0)
             our_lat =
                 gst_util_uint64_scale_int (ffmpegdec->context->has_b_frames *
-                GST_SECOND, ffmpegdec->format.video.fps_d,
-                ffmpegdec->format.video.fps_n);
+                GST_SECOND, ffmpegdec->out_info.fps_d,
+                ffmpegdec->out_info.fps_n);
           else
             our_lat =
                 gst_util_uint64_scale_int (ffmpegdec->context->has_b_frames *
@@ -510,7 +510,7 @@ gst_ffmpegdec_src_query (GstPad * pad, GstObject * parent, GstQuery * query)
     }
       break;
     default:
-      res = gst_pad_query_default (pad, query);
+      res = gst_pad_query_default (pad, parent, query);
       break;
   }
 
