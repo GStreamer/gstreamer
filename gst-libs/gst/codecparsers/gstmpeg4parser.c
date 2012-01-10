@@ -273,7 +273,7 @@ find_psc (GstByteReader * br)
   /* Scan for the picture start code (22 bits - 0x0020) */
   while ((gst_byte_reader_get_remaining (br) >= 3)) {
     if (gst_byte_reader_peek_uint24_be (br, &psc) &&
-        ((psc & 0xffffc0) == 0x000080)) {
+        ((psc & 0xfffffc) == 0x000080)) {
       psc_pos = gst_byte_reader_get_pos (br);
       break;
     } else
@@ -473,8 +473,7 @@ gst_mpeg4_parse (GstMpeg4Packet * packet, gboolean skip_user_data,
   if (skip_user_data && data[off1 + 3] == GST_MPEG4_USER_DATA)
     /* If we are here, we know no resync code has been found the first time, so we
      * don't look for it this time */
-    return gst_mpeg4_parse (packet, skip_user_data, NULL, data, off1 + 3,
-        size - off1 - 3);
+    return gst_mpeg4_parse (packet, skip_user_data, NULL, data, off1 + 3, size);
 
   packet->offset = off1 + 3;
   packet->data = data;
@@ -524,7 +523,7 @@ gst_h263_parse (GstMpeg4Packet * packet,
   gint off1, off2;
   GstByteReader br;
 
-  gst_byte_reader_init (&br, data, size);
+  gst_byte_reader_init (&br, data + offset, size - offset);
 
   g_return_val_if_fail (packet != NULL, GST_MPEG4_PARSER_ERROR);
 
@@ -541,9 +540,10 @@ gst_h263_parse (GstMpeg4Packet * packet,
     return GST_MPEG4_PARSER_NO_PACKET;
   }
 
-  packet->offset = off1;
+  packet->offset = off1 + offset;
   packet->data = data;
 
+  gst_byte_reader_skip (&br, 3);
   off2 = find_psc (&br);
 
   if (off2 == -1) {
@@ -1490,18 +1490,24 @@ gst_mpeg4_parse_video_plane_short_header (GstMpeg4VideoPlaneShortHdr *
     shorthdr, const guint8 * data, gsize size)
 {
   guint8 zero_bits;
-  guint32 gob_resync;
 
   GstBitReader br = GST_BIT_READER_INIT (data, size);
 
   g_return_val_if_fail (shorthdr != NULL, GST_MPEG4_PARSER_ERROR);
 
-  if (gst_bit_reader_get_remaining (&br) < 26)
+  if (gst_bit_reader_get_remaining (&br) < 48)
+    goto failed;
+
+  if (gst_bit_reader_get_bits_uint32_unchecked (&br, 22) != 0x20)
     goto failed;
 
   shorthdr->temporal_reference =
       gst_bit_reader_get_bits_uint8_unchecked (&br, 8);
   CHECK_MARKER (&br);
+  zero_bits = gst_bit_reader_get_bits_uint8_unchecked (&br, 1);
+  if (zero_bits != 0x00)
+    goto failed;
+
   shorthdr->split_screen_indicator =
       gst_bit_reader_get_bits_uint8_unchecked (&br, 1);
   shorthdr->document_camera_indicator =
@@ -1517,26 +1523,31 @@ gst_mpeg4_parse_video_plane_short_header (GstMpeg4VideoPlaneShortHdr *
       shorthdr->vop_height = 96;
       shorthdr->num_macroblocks_in_gob = 8;
       shorthdr->num_gobs_in_vop = 6;
+      break;
     case 0x02:
       shorthdr->vop_width = 176;
       shorthdr->vop_height = 144;
       shorthdr->num_macroblocks_in_gob = 11;
       shorthdr->num_gobs_in_vop = 9;
+      break;
     case 0x03:
       shorthdr->vop_width = 352;
       shorthdr->vop_height = 288;
       shorthdr->num_macroblocks_in_gob = 22;
       shorthdr->num_gobs_in_vop = 18;
+      break;
     case 0x04:
       shorthdr->vop_width = 704;
       shorthdr->vop_height = 576;
       shorthdr->num_macroblocks_in_gob = 88;
       shorthdr->num_gobs_in_vop = 18;
+      break;
     case 0x05:
       shorthdr->vop_width = 1408;
       shorthdr->vop_height = 1152;
       shorthdr->num_macroblocks_in_gob = 352;
       shorthdr->num_gobs_in_vop = 18;
+      break;
     default:
       shorthdr->vop_width = 0;
       shorthdr->vop_height = 0;
@@ -1564,26 +1575,6 @@ gst_mpeg4_parse_video_plane_short_header (GstMpeg4VideoPlaneShortHdr *
       READ_UINT8 (&br, shorthdr->psupp, 8);
 
   } while (shorthdr->pei == 1);
-
-  if (!gst_bit_reader_peek_bits_uint32 (&br, &gob_resync, 17))
-    goto failed;
-
-  /* gob_layer() */
-
-  /* Setting default values */
-  shorthdr->gob_header_empty = 1;
-  shorthdr->gob_number = 0;
-  shorthdr->gob_frame_id = 0;
-  shorthdr->quant_scale = 0;
-
-  if (gob_resync == 0x01) {
-    shorthdr->gob_header_empty = 0;
-
-    gst_bit_reader_skip_unchecked (&br, 17);
-    READ_UINT8 (&br, shorthdr->gob_number, 5);
-    READ_UINT8 (&br, shorthdr->gob_frame_id, 2);
-    READ_UINT8 (&br, shorthdr->quant_scale, 5);
-  }
 
   shorthdr->size = gst_bit_reader_get_pos (&br);
 

@@ -1397,6 +1397,11 @@ gst_base_video_decoder_prepare_finish_frame (GstBaseVideoDecoder *
   }
   g_list_free (events);
 
+  /* Check if the data should not be displayed. For example altref/invisible
+   * frame in vp8. In this case we should not update the timestamps. */
+  if (frame->decode_only)
+    return;
+
   if (GST_CLOCK_TIME_IS_VALID (frame->presentation_timestamp)) {
     if (frame->presentation_timestamp != base_video_decoder->timestamp_offset) {
       GST_DEBUG_OBJECT (base_video_decoder,
@@ -1552,7 +1557,7 @@ gst_base_video_decoder_finish_frame (GstBaseVideoDecoder * base_video_decoder,
   base_video_decoder->processed++;
 
   /* no buffer data means this frame is skipped */
-  if (!frame->src_buffer) {
+  if (!frame->src_buffer || frame->decode_only) {
     GST_DEBUG_OBJECT (base_video_decoder, "skipping frame %" GST_TIME_FORMAT,
         GST_TIME_ARGS (frame->presentation_timestamp));
     goto done;

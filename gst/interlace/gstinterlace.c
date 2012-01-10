@@ -187,6 +187,7 @@ static gboolean gst_interlace_setcaps (GstPad * pad, GstCaps * caps);
 static GstCaps *gst_interlace_getcaps (GstPad * pad);
 static GstStateChangeReturn gst_interlace_change_state (GstElement * element,
     GstStateChange transition);
+static void gst_interlace_finalize (GObject * obj);
 
 static GstElementClass *parent_class = NULL;
 
@@ -242,6 +243,7 @@ gst_interlace_class_init (GstInterlaceClass * klass)
 
   object_class->set_property = gst_interlace_set_property;
   object_class->get_property = gst_interlace_get_property;
+  object_class->finalize = gst_interlace_finalize;
 
   element_class->change_state = gst_interlace_change_state;
 
@@ -266,6 +268,16 @@ gst_interlace_class_init (GstInterlaceClass * klass)
           "Allow generation of buffers with RFF flag set, i.e., duration of 3 fields",
           FALSE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
+}
+
+static void
+gst_interlace_finalize (GObject * obj)
+{
+  GstInterlace *interlace = GST_INTERLACE (obj);
+
+  gst_caps_replace (&interlace->srccaps, NULL);
+
+  G_OBJECT_CLASS (parent_class)->finalize (obj);
 }
 
 static void
@@ -328,13 +340,19 @@ gst_interlace_decorate_buffer (GstInterlace * interlace, GstBuffer * buf,
     int n_fields)
 {
   /* field duration = src_fps_d / (2 * src_fps_n) */
-  GST_BUFFER_TIMESTAMP (buf) = interlace->timebase +
-      gst_util_uint64_scale (GST_SECOND,
-      interlace->src_fps_d * interlace->fields_since_timebase,
-      interlace->src_fps_n * 2);
-  GST_BUFFER_DURATION (buf) =
-      gst_util_uint64_scale (GST_SECOND, interlace->src_fps_d * n_fields,
-      interlace->src_fps_n * 2);
+  if (interlace->src_fps_n == 0) {
+    /* If we don't know the fps, we can't generate timestamps/durations */
+    GST_BUFFER_TIMESTAMP (buf) = GST_CLOCK_TIME_NONE;
+    GST_BUFFER_DURATION (buf) = GST_CLOCK_TIME_NONE;
+  } else {
+    GST_BUFFER_TIMESTAMP (buf) = interlace->timebase +
+        gst_util_uint64_scale (GST_SECOND,
+        interlace->src_fps_d * interlace->fields_since_timebase,
+        interlace->src_fps_n * 2);
+    GST_BUFFER_DURATION (buf) =
+        gst_util_uint64_scale (GST_SECOND, interlace->src_fps_d * n_fields,
+        interlace->src_fps_n * 2);
+  }
   /* increment the buffer timestamp by duration for the next buffer */
   gst_buffer_set_caps (buf, interlace->srccaps);
 
@@ -457,6 +475,8 @@ gst_interlace_getcaps (GstPad * pad)
   gst_caps_set_simple (icaps, "interlaced", G_TYPE_BOOLEAN,
       pad == interlace->srcpad ? TRUE : FALSE, NULL);
 
+  gst_object_unref (interlace);
+
   return icaps;
 }
 
@@ -470,7 +490,7 @@ gst_interlace_setcaps (GstPad * pad, GstCaps * caps)
   gboolean interlaced = TRUE;
   int fps_n, fps_d;
   GstPad *otherpad;
-  GstCaps *othercaps;
+  GstCaps *othercaps = NULL;
   const PulldownFormat *pdformat;
 
   interlace = GST_INTERLACE (gst_pad_get_parent (pad));
@@ -519,6 +539,8 @@ gst_interlace_setcaps (GstPad * pad, GstCaps * caps)
   }
 
 error:
+  if (othercaps)
+    gst_caps_unref (othercaps);
   g_object_unref (interlace);
 
   return ret;

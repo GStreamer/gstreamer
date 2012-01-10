@@ -642,12 +642,13 @@ gst_mpegv_parse_update_src_caps (GstMpegvParse * mpvparse)
      *                      3 => SNR Scalable, 4 => Main, 5 => Simple
      * 4:2:2 and Multi-view have profile = 0, with the escape bit set to 1
      */
-    const gchar *profiles[] = { "high", "spatial", "snr", "main", "simple" };
+    const gchar *const profiles[] =
+        { "high", "spatial", "snr", "main", "simple" };
     /*
      * Level indication - 4 => High, 6 => High-1440, 8 => Main, 10 => Low,
      *                    except in the case of profile = 0
      */
-    const gchar *levels[] = { "high", "high-1440", "main", "low" };
+    const gchar *const levels[] = { "high", "high-1440", "main", "low" };
 
     if (profile_c > 0 && profile_c < 6)
       profile = profiles[profile_c - 1];

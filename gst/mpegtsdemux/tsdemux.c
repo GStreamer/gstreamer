@@ -63,6 +63,7 @@
 #define PCR_SMALL 17775000
 /* maximal PCR time */
 #define PCR_MAX_VALUE (((((guint64)1)<<33) * 300) + 298)
+#define PTS_DTS_MAX_VALUE (((guint64)1) << 33)
 
 /* seek to SEEK_TIMESTAMP_OFFSET before the desired offset and search then
  * either accurately or for the next timestamp
@@ -71,6 +72,8 @@
 
 GST_DEBUG_CATEGORY_STATIC (ts_demux_debug);
 #define GST_CAT_DEFAULT ts_demux_debug
+
+#define ABSDIFF(a,b) (((a) > (b)) ? ((a) - (b)) : ((b) - (a)))
 
 static GQuark QUARK_TSDEMUX;
 static GQuark QUARK_PID;
@@ -114,8 +117,15 @@ struct _TSDemuxStream
   /* Current data to be pushed out */
   GList *currentlist;
 
-  /* Current PTS for this stream */
+  /* Current PTS/DTS for this stream */
   GstClockTime pts;
+  GstClockTime dts;
+  /* Raw value of current PTS/DTS */
+  guint64 raw_pts;
+  guint64 raw_dts;
+  /* Number of rollover seen for PTS/DTS (default:0) */
+  guint nb_pts_rollover;
+  guint nb_dts_rollover;
 };
 
 #define VIDEO_CAPS \
@@ -1238,7 +1248,13 @@ gst_ts_demux_stream_added (MpegTSBase * base, MpegTSBaseStream * bstream,
     /* Create the pad */
     if (bstream->stream_type != 0xff)
       stream->pad = create_pad_for_stream (base, bstream, program);
+
     stream->pts = GST_CLOCK_TIME_NONE;
+    stream->dts = GST_CLOCK_TIME_NONE;
+    stream->raw_pts = 0;
+    stream->raw_dts = 0;
+    stream->nb_pts_rollover = 0;
+    stream->nb_dts_rollover = 0;
   }
   stream->flow_return = GST_FLOW_OK;
 }
@@ -1877,9 +1893,33 @@ gst_ts_demux_record_pts (GstTSDemux * demux, TSDemuxStream * stream,
 {
   MpegTSBaseStream *bs = (MpegTSBaseStream *) stream;
 
-  GST_LOG ("pid 0x%04x pts:%" GST_TIME_FORMAT " at offset %"
-      G_GUINT64_FORMAT, bs->pid,
-      GST_TIME_ARGS (MPEGTIME_TO_GSTTIME (pts)), offset);
+  GST_LOG ("pid 0x%04x pts:%" G_GUINT64_FORMAT " at offset %"
+      G_GUINT64_FORMAT, bs->pid, pts, offset);
+
+  if (G_UNLIKELY (GST_CLOCK_TIME_IS_VALID (stream->pts) &&
+          ABSDIFF (stream->raw_pts, pts) > 900000)) {
+    /* Detect rollover if diff > 10s */
+    GST_LOG ("Detected rollover (previous:%" G_GUINT64_FORMAT " new:%"
+        G_GUINT64_FORMAT ")", stream->raw_pts, pts);
+    if (pts < stream->raw_pts) {
+      /* Forward rollover */
+      GST_LOG ("Forward rollover, incrementing nb_pts_rollover");
+      stream->nb_pts_rollover++;
+    } else {
+      /* Reverse rollover */
+      GST_LOG ("Reverse rollover, decrementing nb_pts_rollover");
+      stream->nb_pts_rollover--;
+    }
+  }
+
+  /* Compute PTS in GstClockTime */
+  stream->raw_pts = pts;
+  stream->pts =
+      MPEGTIME_TO_GSTTIME (pts + stream->nb_pts_rollover * PTS_DTS_MAX_VALUE);
+
+  GST_LOG ("pid 0x%04x Stored PTS %" G_GUINT64_FORMAT " (%" GST_TIME_FORMAT ")",
+      bs->pid, stream->raw_pts, GST_TIME_ARGS (stream->pts));
+
 
   if (G_UNLIKELY (demux->emit_statistics)) {
     GstStructure *st;
@@ -1899,9 +1939,32 @@ gst_ts_demux_record_dts (GstTSDemux * demux, TSDemuxStream * stream,
 {
   MpegTSBaseStream *bs = (MpegTSBaseStream *) stream;
 
-  GST_LOG ("pid 0x%04x dts:%" GST_TIME_FORMAT " at offset %"
-      G_GUINT64_FORMAT, bs->pid,
-      GST_TIME_ARGS (MPEGTIME_TO_GSTTIME (dts)), offset);
+  GST_LOG ("pid 0x%04x dts:%" G_GUINT64_FORMAT " at offset %"
+      G_GUINT64_FORMAT, bs->pid, dts, offset);
+
+  if (G_UNLIKELY (GST_CLOCK_TIME_IS_VALID (stream->dts) &&
+          ABSDIFF (stream->raw_dts, dts) > 900000)) {
+    /* Detect rollover if diff > 10s */
+    GST_LOG ("Detected rollover (previous:%" G_GUINT64_FORMAT " new:%"
+        G_GUINT64_FORMAT ")", stream->raw_dts, dts);
+    if (dts < stream->raw_dts) {
+      /* Forward rollover */
+      GST_LOG ("Forward rollover, incrementing nb_dts_rollover");
+      stream->nb_dts_rollover++;
+    } else {
+      /* Reverse rollover */
+      GST_LOG ("Reverse rollover, decrementing nb_dts_rollover");
+      stream->nb_dts_rollover--;
+    }
+  }
+
+  /* Compute DTS in GstClockTime */
+  stream->raw_dts = dts;
+  stream->dts =
+      MPEGTIME_TO_GSTTIME (dts + stream->nb_dts_rollover * PTS_DTS_MAX_VALUE);
+
+  GST_LOG ("pid 0x%04x Stored DTS %" G_GUINT64_FORMAT " (%" GST_TIME_FORMAT ")",
+      bs->pid, stream->raw_dts, GST_TIME_ARGS (stream->dts));
 
   if (G_UNLIKELY (demux->emit_statistics)) {
     GstStructure *st;
@@ -1952,7 +2015,6 @@ gst_ts_demux_parse_pes_header (GstTSDemux * demux, TSDemuxStream * stream)
   guint8 *data;
   gsize length;
   guint64 bufferoffset;
-  GstClockTime time;
   PESParsingResult parseres;
   GstClockTime origts;
 
@@ -1971,6 +2033,9 @@ gst_ts_demux_parse_pes_header (GstTSDemux * demux, TSDemuxStream * stream)
         stream->stream.pid, stream->stream.stream_type);
     goto discont;
   }
+
+  if (header.DTS != -1)
+    gst_ts_demux_record_dts (demux, stream, header.DTS, bufferoffset);
 
   if (header.PTS != -1) {
     gst_ts_demux_record_pts (demux, stream, header.PTS, bufferoffset);
@@ -1995,7 +2060,6 @@ gst_ts_demux_parse_pes_header (GstTSDemux * demux, TSDemuxStream * stream)
     time = calc_gsttime_from_pts (&demux->index_pcr, pts);
 #endif
 
-    stream->pts = time = MPEGTIME_TO_GSTTIME (header.PTS);
     GST_DEBUG_OBJECT (base,
         "stream PTS %" GST_TIME_FORMAT " DTS %" GST_TIME_FORMAT,
         GST_TIME_ARGS (stream->pts),
@@ -2050,7 +2114,7 @@ gst_ts_demux_parse_pes_header (GstTSDemux * demux, TSDemuxStream * stream)
       else
         GST_BUFFER_TIMESTAMP (buf) = GST_CLOCK_TIME_NONE;
     } else
-      GST_BUFFER_TIMESTAMP (buf) = time + base->in_gap;
+      GST_BUFFER_TIMESTAMP (buf) = stream->pts + base->in_gap;
     GST_DEBUG ("buf %" GST_TIME_FORMAT,
         GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buf)));
   }
@@ -2144,7 +2208,7 @@ calculate_and_push_newsegment (GstTSDemux * demux, TSDemuxStream * stream)
 {
   MpegTSBase *base = (MpegTSBase *) demux;
   GstEvent *newsegmentevent;
-  gint64 start, stop, position;
+  gint64 start = 0, stop = GST_CLOCK_TIME_NONE, position = 0;
   GstClockTime firstpts = GST_CLOCK_TIME_NONE;
   GList *tmp;
 
@@ -2172,24 +2236,27 @@ calculate_and_push_newsegment (GstTSDemux * demux, TSDemuxStream * stream)
     /* FIXME : We should use base->segment.format and a upstream latency query
      * to decide if we need to use live values or not */
     GST_DEBUG ("push-based. base Segment start:%" GST_TIME_FORMAT " duration:%"
-        GST_TIME_FORMAT ", time:%" GST_TIME_FORMAT,
+        GST_TIME_FORMAT ", stop:%" GST_TIME_FORMAT ", time:%" GST_TIME_FORMAT,
         GST_TIME_ARGS (base->segment.start),
         GST_TIME_ARGS (base->segment.duration),
-        GST_TIME_ARGS (base->segment.time));
+        GST_TIME_ARGS (base->segment.stop), GST_TIME_ARGS (base->segment.time));
     GST_DEBUG ("push-based. demux Segment start:%" GST_TIME_FORMAT " duration:%"
-        GST_TIME_FORMAT ", time:%" GST_TIME_FORMAT,
+        GST_TIME_FORMAT ", stop:%" GST_TIME_FORMAT ", time:%" GST_TIME_FORMAT,
         GST_TIME_ARGS (demux->segment.start),
         GST_TIME_ARGS (demux->segment.duration),
+        GST_TIME_ARGS (demux->segment.stop),
         GST_TIME_ARGS (demux->segment.time));
 
     GST_DEBUG ("stream pts: %" GST_TIME_FORMAT " first pts: %" GST_TIME_FORMAT,
         GST_TIME_ARGS (stream->pts), GST_TIME_ARGS (firstpts));
 
-    start = base->segment.start;
-    stop = base->segment.stop;
-    if (!base->upstream_live) {
-      /* Shift the start depending on our position in the stream */
-      start += firstpts + base->in_gap - base->first_buf_ts;
+    if (base->segment.format == GST_FORMAT_TIME) {
+      start = base->segment.start;
+      stop = base->segment.stop;
+      if (!base->upstream_live) {
+        /* Shift the start depending on our position in the stream */
+        start += firstpts + base->in_gap - base->first_buf_ts;
+      }
     }
     position = start;
   } else {

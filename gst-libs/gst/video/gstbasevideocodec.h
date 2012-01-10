@@ -126,6 +126,10 @@ struct _GstVideoFrameState
   gboolean is_sync_point;
   gboolean is_eos;
 
+  /* Frames that should not be pushed downstream and are
+   * not meant for display */
+  gboolean decode_only;
+
   GstBuffer *sink_buffer;
   GstBuffer *src_buffer;
 

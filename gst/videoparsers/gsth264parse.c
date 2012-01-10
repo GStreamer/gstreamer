@@ -178,6 +178,7 @@ gst_h264_parse_reset_frame (GstH264Parse * h264parse)
   /* done parsing; reset state */
   h264parse->nalu.valid = FALSE;
   h264parse->nalu.offset = 0;
+  h264parse->nalu.sc_offset = 0;
   h264parse->nalu.size = 0;
   h264parse->current_off = 0;
 
@@ -212,6 +213,10 @@ gst_h264_parse_reset (GstH264Parse * h264parse)
   h264parse->push_codec = FALSE;
   h264parse->have_pps = FALSE;
   h264parse->have_sps = FALSE;
+
+  h264parse->dts = GST_CLOCK_TIME_NONE;
+  h264parse->ts_trn_nb = GST_CLOCK_TIME_NONE;
+  h264parse->do_ts = TRUE;
 
   h264parse->pending_key_unit_ts = GST_CLOCK_TIME_NONE;
   h264parse->force_key_unit_event = NULL;
@@ -319,7 +324,7 @@ gst_h264_parse_format_from_caps (GstCaps * caps, guint * format, guint * align)
 
 /* check downstream caps to configure format and alignment */
 static void
-gst_h264_parse_negotiate (GstH264Parse * h264parse)
+gst_h264_parse_negotiate (GstH264Parse * h264parse, GstCaps * in_caps)
 {
   GstCaps *caps;
   guint format = GST_H264_PARSE_FORMAT_NONE;
@@ -328,10 +333,19 @@ gst_h264_parse_negotiate (GstH264Parse * h264parse)
   caps = gst_pad_get_allowed_caps (GST_BASE_PARSE_SRC_PAD (h264parse));
   GST_DEBUG_OBJECT (h264parse, "allowed caps: %" GST_PTR_FORMAT, caps);
 
-  gst_h264_parse_format_from_caps (caps, &format, &align);
+  if (in_caps && caps) {
+    if (gst_caps_can_intersect (in_caps, caps)) {
+      GST_DEBUG_OBJECT (h264parse, "downstream accepts upstream caps");
+      gst_h264_parse_format_from_caps (in_caps, &format, &align);
+      gst_caps_unref (caps);
+      caps = NULL;
+    }
+  }
 
-  if (caps)
+  if (caps) {
+    gst_h264_parse_format_from_caps (caps, &format, &align);
     gst_caps_unref (caps);
+  }
 
   /* default */
   if (!format)
@@ -618,7 +632,7 @@ gst_h264_parse_check_valid_frame (GstBaseParse * parse,
   guint current_off = 0;
   gboolean drain;
   GstH264NalParser *nalparser = h264parse->nalparser;
-  GstH264NalUnit nalu = h264parse->nalu;
+  GstH264NalUnit nalu;
 
   data = gst_buffer_map (buffer, &size, NULL, GST_MAP_READ);
 
@@ -630,7 +644,7 @@ gst_h264_parse_check_valid_frame (GstBaseParse * parse,
 
   /* need to configure aggregation */
   if (G_UNLIKELY (h264parse->format == GST_H264_PARSE_FORMAT_NONE))
-    gst_h264_parse_negotiate (h264parse);
+    gst_h264_parse_negotiate (h264parse, NULL);
 
   /* avoid stale cached parsing state */
   if (!(frame->flags & GST_BASE_PARSE_FRAME_FLAG_PARSING)) {
@@ -642,6 +656,7 @@ gst_h264_parse_check_valid_frame (GstBaseParse * parse,
   }
 
   drain = FALSE;
+  nalu = h264parse->nalu;
   current_off = h264parse->current_off;
 
   GST_DEBUG_OBJECT (h264parse, "last parse position %u", current_off);
@@ -686,7 +701,9 @@ gst_h264_parse_check_valid_frame (GstBaseParse * parse,
         current_off = size - 3;
         goto parsing_error;
       case GST_H264_PARSER_NO_NAL:
-        current_off = size - 3;
+        /* don't expect to have found any NAL so far */
+        g_assert (h264parse->nalu.size == 0);
+        current_off = h264parse->nalu.sc_offset = size - 3;
         goto more;
       case GST_H264_PARSER_BROKEN_DATA:
         GST_WARNING_OBJECT (h264parse, "input stream is corrupt; "
@@ -1063,7 +1080,7 @@ gst_h264_parse_update_src_caps (GstH264Parse * h264parse, GstCaps * caps)
       /* but not necessarily or reliably this */
       if (h264parse->fps_num > 0 && h264parse->fps_den > 0)
         gst_caps_set_simple (caps, "framerate",
-            GST_TYPE_FRACTION, sps->fps_num, sps->fps_den, NULL);
+            GST_TYPE_FRACTION, h264parse->fps_num, h264parse->fps_den, NULL);
     }
   }
 
@@ -1243,9 +1260,12 @@ gst_h264_parse_parse_frame (GstBaseParse * parse, GstBaseParseFrame * frame)
 
   gst_h264_parse_update_src_caps (h264parse, NULL);
 
-  gst_h264_parse_get_timestamp (h264parse,
-      &GST_BUFFER_TIMESTAMP (buffer), &GST_BUFFER_DURATION (buffer),
-      h264parse->frame_start);
+  /* don't mess with timestamps if provided by upstream,
+   * particularly since our ts not that good they handle seeking etc */
+  if (h264parse->do_ts)
+    gst_h264_parse_get_timestamp (h264parse,
+        &GST_BUFFER_TIMESTAMP (buffer), &GST_BUFFER_DURATION (buffer),
+        h264parse->frame_start);
 
   if (h264parse->keyframe)
     GST_BUFFER_FLAG_UNSET (buffer, GST_BUFFER_FLAG_DELTA_UNIT);
@@ -1476,6 +1496,9 @@ gst_h264_parse_pre_push_frame (GstBaseParse * parse, GstBaseParseFrame * frame)
           new_buf = gst_byte_writer_reset_and_get_buffer (&bw);
           gst_buffer_copy_into (new_buf, buffer, GST_BUFFER_COPY_METADATA, 0,
               -1);
+          /* should already be keyframe/IDR, but it may not have been,
+           * so mark it as such to avoid being discarded by picky decoder */
+          GST_BUFFER_FLAG_UNSET (new_buf, GST_BUFFER_FLAG_DELTA_UNIT);
           gst_buffer_replace (&frame->buffer, new_buf);
           gst_buffer_unref (new_buf);
         }
@@ -1614,8 +1637,20 @@ gst_h264_parse_set_caps (GstBaseParse * parse, GstCaps * caps)
     }
   }
 
-  /* negotiate with downstream, sets ->format and ->align */
-  gst_h264_parse_negotiate (h264parse);
+  {
+    GstCaps *in_caps;
+
+    /* prefer input type determined above */
+    in_caps = gst_caps_new_simple ("video/x-h264",
+        "parsed", G_TYPE_BOOLEAN, TRUE,
+        "stream-format", G_TYPE_STRING,
+        gst_h264_parse_get_string (h264parse, TRUE, format),
+        "alignment", G_TYPE_STRING,
+        gst_h264_parse_get_string (h264parse, FALSE, align), NULL);
+    /* negotiate with downstream, sets ->format and ->align */
+    gst_h264_parse_negotiate (h264parse, in_caps);
+    gst_caps_unref (in_caps);
+  }
 
   if (format == h264parse->format && align == h264parse->align) {
     gst_base_parse_set_passthrough (parse, TRUE);
@@ -1730,6 +1765,22 @@ gst_h264_parse_event (GstBaseParse * parse, GstEvent * event)
 
       h264parse->pending_key_unit_ts = running_time;
       gst_event_replace (&h264parse->force_key_unit_event, event);
+      break;
+    }
+    case GST_EVENT_FLUSH_STOP:
+      h264parse->dts = GST_CLOCK_TIME_NONE;
+      h264parse->ts_trn_nb = GST_CLOCK_TIME_NONE;
+      break;
+    case GST_EVENT_SEGMENT:
+    {
+      const GstSegment *segment;
+
+      gst_event_parse_segment (event, &segment);
+      /* don't try to mess with more subtle cases (e.g. seek) */
+      if (segment->format == GST_FORMAT_TIME &&
+          (segment->start != 0 || segment->rate != 1.0
+              || segment->applied_rate != 1.0))
+        h264parse->do_ts = FALSE;
       break;
     }
     default:
