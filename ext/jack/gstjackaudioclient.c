@@ -66,7 +66,7 @@ struct _GstJackAudioClient
   gboolean active;
   gboolean deactivate;
 
-  void (*shutdown) (void *arg);
+  JackShutdownCallback shutdown;
   JackProcessCallback process;
   JackBufferSizeCallback buffer_size;
   JackSampleRateCallback sample_rate;
