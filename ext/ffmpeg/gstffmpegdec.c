@@ -3179,7 +3179,7 @@ gst_ffmpegdec_register (GstPlugin * plugin)
       case CODEC_ID_EAC3:
       case CODEC_ID_AC3:
       case CODEC_ID_DTS:
-        rank = GST_RANK_PRIMARY;
+        rank = GST_RANK_NONE;
         break;
       default:
         rank = GST_RANK_MARGINAL;
