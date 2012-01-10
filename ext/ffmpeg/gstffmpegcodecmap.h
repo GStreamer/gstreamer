@@ -26,7 +26,7 @@
 #include <libavcodec/avcodec.h>
 #endif
 #include <gst/gst.h>
-
+#include <gst/audio/audio.h>
 #include <gst/video/video.h>
 
 /*
@@ -127,5 +127,8 @@ gst_ffmpeg_formatid_get_codecids (const gchar *format_name,
 				  AVOutputFormat * plugin);
 
 
+gboolean
+gst_ffmpeg_channel_layout_to_gst (AVCodecContext * context,
+    GstAudioChannelPosition * pos);
 
 #endif /* __GST_FFMPEG_CODECMAP_H__ */

@@ -102,46 +102,52 @@ static const struct
   CH_STEREO_RIGHT, GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT}
 };
 
-static gboolean
-gst_ff_channel_layout_to_gst (guint64 channel_layout, guint channels,
+gboolean
+gst_ffmpeg_channel_layout_to_gst (AVCodecContext * context,
     GstAudioChannelPosition * pos)
 {
-  guint nchannels = 0, i, j;
+  guint nchannels = 0, channels = context->channels;
+  guint64 channel_layout = context->channel_layout;
   gboolean none_layout = FALSE;
-
-  for (i = 0; i < 64; i++) {
-    if ((channel_layout & (G_GUINT64_CONSTANT (1) << i)) != 0) {
-      nchannels++;
-    }
-  }
 
   if (channel_layout == 0) {
     nchannels = channels;
     none_layout = TRUE;
-  }
+  } else {
+    guint i, j;
 
-  if (nchannels != channels) {
-    GST_ERROR ("Number of channels is different (%u != %u)", channels,
-        nchannels);
-    return FALSE;
-  }
+    for (i = 0; i < 64; i++) {
+      if ((channel_layout & (G_GUINT64_CONSTANT (1) << i)) != 0) {
+        nchannels++;
+      }
+    }
 
-  for (i = 0, j = 0; i < G_N_ELEMENTS (_ff_to_gst_layout); i++) {
-    if ((channel_layout & _ff_to_gst_layout[i].ff) != 0) {
-      pos[j++] = _ff_to_gst_layout[i].gst;
+    if (nchannels != channels) {
+      GST_ERROR ("Number of channels is different (%u != %u)", channels,
+          nchannels);
+      nchannels = channels;
+      none_layout = TRUE;
+    } else {
 
-      if (_ff_to_gst_layout[i].gst == GST_AUDIO_CHANNEL_POSITION_NONE)
+      for (i = 0, j = 0; i < G_N_ELEMENTS (_ff_to_gst_layout); i++) {
+        if ((channel_layout & _ff_to_gst_layout[i].ff) != 0) {
+          pos[j++] = _ff_to_gst_layout[i].gst;
+
+          if (_ff_to_gst_layout[i].gst == GST_AUDIO_CHANNEL_POSITION_NONE)
+            none_layout = TRUE;
+        }
+      }
+
+      if (j != nchannels) {
+        GST_WARNING
+            ("Unknown channels in channel layout - assuming NONE layout");
         none_layout = TRUE;
+      }
     }
   }
 
-  if (j != nchannels) {
-    GST_WARNING ("Unknown channels in channel layout - assuming NONE layout");
-    none_layout = TRUE;
-  }
-
   if (!none_layout
-      && !gst_audio_check_valid_channel_positions (pos, nchannels, TRUE)) {
+      && !gst_audio_check_valid_channel_positions (pos, nchannels, FALSE)) {
     GST_ERROR ("Invalid channel layout %" G_GUINT64_FORMAT
         " - assuming NONE layout", channel_layout);
     none_layout = TRUE;
@@ -153,9 +159,9 @@ gst_ff_channel_layout_to_gst (guint64 channel_layout, guint channels,
     } else if (nchannels == 2) {
       pos[0] = GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT;
       pos[1] = GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT;
-    } else if (channel_layout == 0) {
-      return FALSE;
     } else {
+      guint i;
+
       for (i = 0; i < nchannels; i++)
         pos[i] = GST_AUDIO_CHANNEL_POSITION_NONE;
     }
@@ -322,17 +328,13 @@ gst_ff_aud_caps_new (AVCodecContext * context, enum CodecID codec_id,
 
   /* fixed, non-probing context */
   if (context != NULL && context->channels != -1) {
-    GstAudioInfo info;
     GstAudioChannelPosition pos[64];
-    guint64 channel_layout = context->channel_layout;
-
-    gst_audio_info_init (&info);
 
     caps = gst_caps_new_simple (mimetype,
         "rate", G_TYPE_INT, context->sample_rate,
         "channels", G_TYPE_INT, context->channels, NULL);
 
-    if (gst_ff_channel_layout_to_gst (channel_layout, context->channels, pos)) {
+    if (gst_ffmpeg_channel_layout_to_gst (context, pos)) {
       guint64 mask;
 
       if (gst_audio_channel_positions_to_mask (pos, context->channels, &mask)) {

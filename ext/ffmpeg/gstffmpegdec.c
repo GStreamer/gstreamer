@@ -97,6 +97,8 @@ struct _GstFFMpegDec
       gint channels;
       gint samplerate;
       gint depth;
+
+      GstAudioChannelPosition ffmpeg_layout[64], gst_layout[64];
     } audio;
   } format;
 
@@ -1350,13 +1352,18 @@ update_audio_context (GstFFMpegDec * ffmpegdec, gboolean force)
 {
   AVCodecContext *context = ffmpegdec->context;
   gint depth;
+  GstAudioChannelPosition pos[64] = { 0, };
 
   depth = av_smp_format_depth (context->sample_fmt);
+
+  gst_ffmpeg_channel_layout_to_gst (context, pos);
 
   if (!force && ffmpegdec->format.audio.samplerate ==
       context->sample_rate &&
       ffmpegdec->format.audio.channels == context->channels &&
-      ffmpegdec->format.audio.depth == depth)
+      ffmpegdec->format.audio.depth == depth &&
+      memcmp (ffmpegdec->format.audio.ffmpeg_layout, pos,
+          sizeof (GstAudioChannelPosition) * context->channels) == 0)
     return FALSE;
 
   GST_DEBUG_OBJECT (ffmpegdec,
@@ -1368,6 +1375,8 @@ update_audio_context (GstFFMpegDec * ffmpegdec, gboolean force)
   ffmpegdec->format.audio.samplerate = context->sample_rate;
   ffmpegdec->format.audio.channels = context->channels;
   ffmpegdec->format.audio.depth = depth;
+  memcpy (ffmpegdec->format.audio.ffmpeg_layout, pos,
+      sizeof (GstAudioChannelPosition) * context->channels);
 
   return TRUE;
 }
@@ -1388,6 +1397,13 @@ gst_ffmpegdec_audio_negotiate (GstFFMpegDec * ffmpegdec, gboolean force)
       ffmpegdec->context, oclass->in_plugin->id, FALSE);
   if (caps == NULL)
     goto no_caps;
+
+  /* Get GStreamer channel layout */
+  memcpy (ffmpegdec->format.audio.gst_layout,
+      ffmpegdec->format.audio.ffmpeg_layout,
+      sizeof (GstAudioChannelPosition) * ffmpegdec->format.audio.channels);
+  gst_audio_channel_positions_to_valid_order (ffmpegdec->format.
+      audio.gst_layout, ffmpegdec->format.audio.channels);
 
   GST_LOG_OBJECT (ffmpegdec, "output caps %" GST_PTR_FORMAT, caps);
 
@@ -2226,7 +2242,19 @@ gst_ffmpegdec_audio_frame (GstFFMpegDec * ffmpegdec,
       "Decode audio: len=%d, have_data=%d", len, have_data);
 
   if (len >= 0 && have_data > 0) {
-    /* FIXME: Reorder here */
+    GstAudioFormat fmt;
+
+    /* Reorder channels to the GStreamer channel order */
+    /* Only the width really matters here... and it's stored as depth */
+    fmt =
+        gst_audio_format_build_integer (TRUE, G_BYTE_ORDER,
+        ffmpegdec->format.audio.depth, ffmpegdec->format.audio.depth);
+
+    gst_audio_reorder_channels (odata, have_data, fmt,
+        ffmpegdec->format.audio.channels,
+        ffmpegdec->format.audio.ffmpeg_layout,
+        ffmpegdec->format.audio.gst_layout);
+
     /* Buffer size */
     gst_buffer_unmap (*outbuf, odata, have_data);
 
