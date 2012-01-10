@@ -4593,6 +4593,7 @@ gst_ogg_demux_change_state (GstElement * element, GstStateChange transition)
                 "Unable to determine stream size, assuming live, seeking disabled");
             ogg->push_disable_seeking = TRUE;
           }
+          gst_object_unref (peer);
         }
       }
 
