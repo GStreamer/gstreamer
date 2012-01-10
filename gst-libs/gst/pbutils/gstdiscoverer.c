@@ -602,7 +602,7 @@ collect_stream_information (GstDiscoverer * dc, PrivateStream * ps, guint idx)
     gst_caps_unref (caps);
   }
   if (ps->tags)
-    gst_structure_id_set (st, _TAGS_QUARK, GST_TYPE_STRUCTURE, ps->tags, NULL);
+    gst_structure_id_set (st, _TAGS_QUARK, GST_TYPE_TAG_LIST, ps->tags, NULL);
 
   return st;
 }
@@ -632,7 +632,8 @@ collect_information (GstDiscoverer * dc, const GstStructure * st,
     GstDiscovererStreamInfo * parent)
 {
   GstCaps *caps;
-  GstStructure *caps_st, *tags_st;
+  GstStructure *caps_st;
+  GstTagList *tags_st;
   const gchar *name;
   int tmp, tmp2;
   guint utmp;
@@ -671,8 +672,7 @@ collect_information (GstDiscoverer * dc, const GstStructure * st,
       info->depth = (guint) tmp;
 
     if (gst_structure_id_has_field (st, _TAGS_QUARK)) {
-      gst_structure_id_get (st, _TAGS_QUARK,
-          GST_TYPE_STRUCTURE, &tags_st, NULL);
+      gst_structure_id_get (st, _TAGS_QUARK, GST_TYPE_TAG_LIST, &tags_st, NULL);
       if (gst_structure_get_uint (tags_st, GST_TAG_BITRATE, &utmp) ||
           gst_structure_get_uint (tags_st, GST_TAG_NOMINAL_BITRATE, &utmp))
         info->bitrate = utmp;
@@ -681,8 +681,7 @@ collect_information (GstDiscoverer * dc, const GstStructure * st,
         info->max_bitrate = utmp;
 
       /* FIXME: Is it worth it to remove the tags we've parsed? */
-      gst_discoverer_merge_and_replace_tags (&info->parent.tags,
-          (GstTagList *) tags_st);
+      gst_discoverer_merge_and_replace_tags (&info->parent.tags, tags_st);
     }
 
     if (!info->language && ((GstDiscovererStreamInfo *) info)->tags) {
@@ -733,8 +732,7 @@ collect_information (GstDiscoverer * dc, const GstStructure * st,
       info->interlaced = FALSE;
 
     if (gst_structure_id_has_field (st, _TAGS_QUARK)) {
-      gst_structure_id_get (st, _TAGS_QUARK,
-          GST_TYPE_STRUCTURE, &tags_st, NULL);
+      gst_structure_id_get (st, _TAGS_QUARK, GST_TYPE_TAG_LIST, &tags_st, NULL);
       if (gst_structure_get_uint (tags_st, GST_TAG_BITRATE, &utmp) ||
           gst_structure_get_uint (tags_st, GST_TAG_NOMINAL_BITRATE, &utmp))
         info->bitrate = utmp;
@@ -763,16 +761,14 @@ collect_information (GstDiscoverer * dc, const GstStructure * st,
     if (gst_structure_id_has_field (st, _TAGS_QUARK)) {
       const gchar *language;
 
-      gst_structure_id_get (st, _TAGS_QUARK,
-          GST_TYPE_STRUCTURE, &tags_st, NULL);
+      gst_structure_id_get (st, _TAGS_QUARK, GST_TYPE_TAG_LIST, &tags_st, NULL);
 
       language = gst_structure_get_string (caps_st, GST_TAG_LANGUAGE_CODE);
       if (language)
         info->language = g_strdup (language);
 
       /* FIXME: Is it worth it to remove the tags we've parsed? */
-      gst_discoverer_merge_and_replace_tags (&info->parent.tags,
-          (GstTagList *) tags_st);
+      gst_discoverer_merge_and_replace_tags (&info->parent.tags, tags_st);
     }
 
     if (!info->language && ((GstDiscovererStreamInfo *) info)->tags) {
@@ -798,9 +794,8 @@ collect_information (GstDiscoverer * dc, const GstStructure * st,
     }
 
     if (gst_structure_id_get (st, _TAGS_QUARK,
-            GST_TYPE_STRUCTURE, &tags_st, NULL)) {
-      gst_discoverer_merge_and_replace_tags (&info->tags,
-          (GstTagList *) tags_st);
+            GST_TYPE_TAG_LIST, &tags_st, NULL)) {
+      gst_discoverer_merge_and_replace_tags (&info->tags, tags_st);
     }
 
     return info;
@@ -963,7 +958,7 @@ parse_stream_topology (GstDiscoverer * dc, const GstStructure * topology,
       GstTagList *tmp;
 
       gst_structure_id_get (topology, _TAGS_QUARK,
-          GST_TYPE_STRUCTURE, &tags, NULL);
+          GST_TYPE_TAG_LIST, &tags, NULL);
 
       GST_DEBUG ("Merge tags %" GST_PTR_FORMAT, tags);
 
@@ -1059,8 +1054,8 @@ discoverer_collect (GstDiscoverer * dc)
           gst_caps_get_structure (dc->priv->current_info->stream_info->caps, 0);
 
       if (g_str_has_prefix (gst_structure_get_name (st), "image/"))
-        ((GstDiscovererVideoInfo *) dc->priv->current_info->stream_info)->
-            is_image = TRUE;
+        ((GstDiscovererVideoInfo *) dc->priv->current_info->
+            stream_info)->is_image = TRUE;
     }
   }
 
