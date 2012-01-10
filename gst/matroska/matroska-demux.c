@@ -49,6 +49,10 @@
 #include "config.h"
 #endif
 
+/* FIXME 0.11: suppress warnings for deprecated API such as GStaticRecMutex
+ * with newer GLib versions (>= 2.31.0) */
+#define GLIB_DISABLE_DEPRECATION_WARNINGS
+
 #include <math.h>
 #include <string.h>
 #include <glib/gprintf.h>
@@ -482,6 +486,8 @@ gst_matroska_demux_reset (GstElement * element)
     gst_buffer_unref (demux->common.cached_buffer);
     demux->common.cached_buffer = NULL;
   }
+
+  demux->invalid_duration = FALSE;
 }
 
 static GstBuffer *
@@ -1356,10 +1362,12 @@ gst_matroska_demux_query (GstMatroskaDemux * demux, GstPad * pad,
         GST_OBJECT_LOCK (demux);
         if (context)
           gst_query_set_position (query, GST_FORMAT_TIME,
-              context->pos - demux->stream_start_time);
+              MAX (context->pos, demux->stream_start_time) -
+              demux->stream_start_time);
         else
           gst_query_set_position (query, GST_FORMAT_TIME,
-              demux->common.segment.position - demux->stream_start_time);
+              MAX (demux->common.segment.position, demux->stream_start_time) -
+              demux->stream_start_time);
         GST_OBJECT_UNLOCK (demux);
       } else if (format == GST_FORMAT_DEFAULT && context
           && context->default_duration) {
@@ -1740,8 +1748,11 @@ gst_matroska_demux_search_pos (GstMatroskaDemux * demux, GstClockTime time)
   otime = demux->common.segment.position;
   GST_OBJECT_UNLOCK (demux);
 
+  /* sanitize */
+  time = MAX (time, demux->stream_start_time);
+
   /* avoid division by zero in first estimation below */
-  if (otime == 0)
+  if (otime <= demux->stream_start_time)
     otime = time;
 
 retry:
@@ -1918,6 +1929,14 @@ gst_matroska_demux_handle_seek_event (GstMatroskaDemux * demux,
    * segment when we close the current segment. */
   memcpy (&seeksegment, &demux->common.segment, sizeof (GstSegment));
 
+  /* pull mode without index means that the actual duration is not known,
+   * we might be playing a file that's still being recorded
+   * so, invalidate our current duration, which is only a moving target,
+   * and should not be used to clamp anything */
+  if (!demux->streaming && !demux->common.index && demux->invalid_duration) {
+    seeksegment.duration = GST_CLOCK_TIME_NONE;
+  }
+
   if (event) {
     GST_DEBUG_OBJECT (demux, "configuring seek");
     gst_segment_do_seek (&seeksegment, rate, format, flags,
@@ -1931,6 +1950,10 @@ gst_matroska_demux_handle_seek_event (GstMatroskaDemux * demux,
       /* note that time should stay at indicated position */
     }
   }
+
+  /* restore segment duration (if any effect),
+   * would be determined again when parsing, but anyway ... */
+  seeksegment.duration = demux->common.segment.duration;
 
   flush = ! !(flags & GST_SEEK_FLAG_FLUSH);
   keyunit = ! !(flags & GST_SEEK_FLAG_KEY_UNIT);
@@ -1952,7 +1975,7 @@ gst_matroska_demux_handle_seek_event (GstMatroskaDemux * demux,
               seeksegment.position, &demux->seek_index, &demux->seek_entry)) ==
       NULL) {
     /* pull mode without index can scan later on */
-    if (demux->common.index || demux->streaming) {
+    if (demux->streaming) {
       GST_DEBUG_OBJECT (demux, "No matching seek entry in index");
       GST_OBJECT_UNLOCK (demux);
       return FALSE;
@@ -1989,7 +2012,7 @@ next:
   GST_PAD_STREAM_LOCK (demux->common.sinkpad);
 
   /* pull mode without index can do some scanning */
-  if (!demux->streaming && !demux->common.index) {
+  if (!demux->streaming && !entry) {
     /* need to stop flushing upstream as we need it next */
     if (flush)
       gst_pad_push_event (demux->common.sinkpad,
@@ -2011,9 +2034,9 @@ next:
   if (keyunit) {
     GST_DEBUG_OBJECT (demux, "seek to key unit, adjusting segment start to %"
         GST_TIME_FORMAT, GST_TIME_ARGS (entry->time));
-    seeksegment.start = entry->time;
-    seeksegment.position = entry->time;
-    seeksegment.time = entry->time - demux->stream_start_time;
+    seeksegment.start = MAX (entry->time, demux->stream_start_time);
+    seeksegment.position = seeksegment.start;
+    seeksegment.time = seeksegment.start - demux->stream_start_time;
   }
 
 exit:
@@ -3347,9 +3370,9 @@ gst_matroska_demux_parse_blockgroup_or_simpleblock (GstMatroskaDemux * demux,
       else if (GST_CLOCK_TIME_IS_VALID (segment->position))
         segment_duration = segment->position - segment->start;
       segment->base += segment_duration / fabs (segment->rate);
-      segment->start = lace_time;
+      segment->start = MAX (lace_time, demux->stream_start_time);
       segment->stop = GST_CLOCK_TIME_NONE;
-      segment->position = lace_time - demux->stream_start_time;
+      segment->position = segment->start - demux->stream_start_time;
       /* now convey our segment notion downstream */
       gst_matroska_demux_send_event (demux, gst_event_new_segment (segment));
       demux->need_segment = FALSE;
@@ -3535,14 +3558,15 @@ gst_matroska_demux_parse_blockgroup_or_simpleblock (GstMatroskaDemux * demux,
 
         GST_OBJECT_LOCK (demux);
         if (demux->common.segment.duration == -1 ||
-            demux->common.segment.duration <
-            lace_time - demux->stream_start_time) {
+            demux->stream_start_time + demux->common.segment.duration <
+            last_stop_end) {
           demux->common.segment.duration =
               last_stop_end - demux->stream_start_time;
           GST_OBJECT_UNLOCK (demux);
           gst_element_post_message (GST_ELEMENT_CAST (demux),
               gst_message_new_duration (GST_OBJECT_CAST (demux),
                   GST_FORMAT_TIME, GST_CLOCK_TIME_NONE));
+          demux->invalid_duration = TRUE;
         } else {
           GST_OBJECT_UNLOCK (demux);
         }
@@ -4475,11 +4499,13 @@ pause:
       /* Close the segment, i.e. update segment stop with the duration
        * if no stop was set */
       if (GST_CLOCK_TIME_IS_VALID (demux->last_stop_end) &&
-          !GST_CLOCK_TIME_IS_VALID (demux->common.segment.stop)) {
+          !GST_CLOCK_TIME_IS_VALID (demux->common.segment.stop) &&
+          GST_CLOCK_TIME_IS_VALID (demux->common.segment.start) &&
+          demux->last_stop_end > demux->common.segment.start) {
         GstSegment segment = demux->common.segment;
         GstEvent *event;
 
-        segment.stop = MAX (demux->last_stop_end, segment.start);
+        segment.stop = demux->last_stop_end;
         event = gst_event_new_segment (&segment);
         gst_matroska_demux_send_event (demux, event);
       }

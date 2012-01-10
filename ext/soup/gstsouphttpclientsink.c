@@ -42,6 +42,8 @@
 #include <gst/base/gstbasesink.h>
 #include "gstsouphttpclientsink.h"
 
+#include <gst/glib-compat-private.h>
+
 GST_DEBUG_CATEGORY_STATIC (souphttpclientsink_dbg);
 #define GST_CAT_DEFAULT souphttpclientsink_dbg
 
@@ -445,6 +447,20 @@ gst_soup_http_client_sink_get_times (GstBaseSink * sink, GstBuffer * buffer,
 
 }
 
+static gboolean
+thread_ready_idle_cb (gpointer data)
+{
+  GstSoupHttpClientSink *souphttpsink = GST_SOUP_HTTP_CLIENT_SINK (data);
+
+  GST_LOG_OBJECT (souphttpsink, "thread ready");
+
+  g_mutex_lock (souphttpsink->mutex);
+  g_cond_signal (souphttpsink->cond);
+  g_mutex_unlock (souphttpsink->mutex);
+
+  return FALSE;                 /* only run once */
+}
+
 static gpointer
 thread_func (gpointer ptr)
 {
@@ -452,7 +468,6 @@ thread_func (gpointer ptr)
 
   GST_DEBUG ("thread start");
 
-  souphttpsink->loop = g_main_loop_new (souphttpsink->context, TRUE);
   g_main_loop_run (souphttpsink->loop);
 
   GST_DEBUG ("thread quit");
@@ -468,12 +483,35 @@ gst_soup_http_client_sink_start (GstBaseSink * sink)
   if (souphttpsink->prop_session) {
     souphttpsink->session = souphttpsink->prop_session;
   } else {
+    GSource *source;
     GError *error = NULL;
 
     souphttpsink->context = g_main_context_new ();
 
+    /* set up idle source to signal when the main loop is running and
+     * it's safe for ::stop() to call g_main_loop_quit() */
+    source = g_idle_source_new ();
+    g_source_set_callback (source, thread_ready_idle_cb, sink, NULL);
+    g_source_attach (source, souphttpsink->context);
+    g_source_unref (source);
+
+    souphttpsink->loop = g_main_loop_new (souphttpsink->context, TRUE);
+
+    g_mutex_lock (souphttpsink->mutex);
+
+    /* FIXME: error handling */
+#if !GLIB_CHECK_VERSION (2, 31, 0)
     souphttpsink->thread = g_thread_create (thread_func, souphttpsink,
         TRUE, &error);
+#else
+    souphttpsink->thread = g_thread_try_new ("souphttpclientsink-thread",
+        thread_func, souphttpsink, &error);
+#endif
+
+    GST_LOG_OBJECT (souphttpsink, "waiting for main loop thread to start up");
+    g_cond_wait (souphttpsink->cond, souphttpsink->mutex);
+    g_mutex_unlock (souphttpsink->mutex);
+    GST_LOG_OBJECT (souphttpsink, "main loop thread running");
 
     souphttpsink->session =
         soup_session_async_new_with_options (SOUP_SESSION_ASYNC_CONTEXT,

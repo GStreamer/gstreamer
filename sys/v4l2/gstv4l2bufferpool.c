@@ -40,6 +40,7 @@
 #include "gstv4l2sink.h"
 #include "v4l2_calls.h"
 #include "gst/gst-i18n-plugin.h"
+#include <gst/glib-compat-private.h>
 
 /* videodev2.h is not versioned and we can't easily check for the presence
  * of enum values at compile time, but the V4L2_CAP_VIDEO_OUTPUT_OVERLAY define

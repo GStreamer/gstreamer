@@ -63,6 +63,8 @@
 
 #include "audiowsincband.h"
 
+#include "gst/glib-compat-private.h"
+
 #define GST_CAT_DEFAULT gst_gst_audio_wsincband_debug
 GST_DEBUG_CATEGORY_STATIC (GST_CAT_DEFAULT);
 

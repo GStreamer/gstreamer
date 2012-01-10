@@ -471,12 +471,21 @@ retry:
               IOCTL_SOCKET (udpsrc->sock.fd, FIONREAD, &readsize)) < 0))
     goto ioctl_failed;
 
-  /* if we get here and there is nothing to read from the socket, the select got
-   * woken up by activity on the socket but it was not a read. We know someone
-   * will also do something with the socket so that we don't go into an infinite
-   * loop in the select(). */
+  /* If we get here and the readsize is zero, then either select was woken up
+   * by activity that is not a read, or a poll error occurred, or a UDP packet
+   * was received that has no data. Since we cannot identify which case it is,
+   * we handle all of them. This could possibly lead to a UDP packet getting
+   * lost, but since UDP is not reliable, we can accept this. */
   if (G_UNLIKELY (!readsize)) {
+    /* try to read a packet (and it will be ignored),
+     * in case a packet with no data arrived */
+    slen = sizeof (sa);
+    recvfrom (udpsrc->sock.fd, (char *) &slen, 0, 0, &sa.sa, &slen);
+
+    /* clear any error, in case a poll error occurred */
     clear_error (udpsrc);
+
+    /* poll again */
     goto retry;
   }
 

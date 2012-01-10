@@ -41,6 +41,8 @@
 #include <errno.h>
 #include <string.h>
 
+#include "gst/glib-compat-private.h"
+
 GST_DEBUG_CATEGORY_STATIC (multiudpsink_debug);
 #define GST_CAT_DEFAULT (multiudpsink_debug)
 

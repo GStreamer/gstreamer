@@ -27,7 +27,7 @@
 #define __INTERLEAVE_H__
 
 #include <gst/gst.h>
-#include <gst/base/gstcollectpads.h>
+#include <gst/base/gstcollectpads2.h>
 
 G_BEGIN_DECLS
 
@@ -49,7 +49,7 @@ struct _GstInterleave
   GstElement element;
 
   /*< private >*/
-  GstCollectPads *collect;
+  GstCollectPads2 *collect;
 
   gint channels;
   gint padcounter;

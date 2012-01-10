@@ -23,7 +23,7 @@
 
 
 #include <gst/gst.h>
-#include <gst/base/gstcollectpads.h>
+#include <gst/base/gstcollectpads2.h>
 #include <gst/riff/riff-ids.h>
 #include "avi-ids.h"
 
@@ -74,7 +74,7 @@ typedef GstFlowReturn (*GstAviPadHook) (GstAviMux * avi, GstAviPad * avipad,
 struct _GstAviPad {
   /* do not extend, link to it */
   /* is NULL if original sink request pad has been removed */
-  GstCollectData *collect;
+  GstCollectData2 *collect;
 
   /* type */
   gboolean is_video;
@@ -129,7 +129,7 @@ typedef struct _GstAviAudioPad {
 
 typedef struct _GstAviCollectData {
   /* extend the CollectData */
-  GstCollectData collect;
+  GstCollectData2 collect;
 
   GstAviPad      *avipad;
 } GstAviCollectData;
@@ -143,8 +143,7 @@ struct _GstAviMux {
   GSList              *sinkpads;
   /* video restricted to 1 pad */
   guint               video_pads, audio_pads;
-  GstCollectPads      *collect;
-  GstPadEventFunction  collect_event;
+  GstCollectPads2     *collect;
 
   /* the AVI header */
   /* still some single stream video data in mux struct */

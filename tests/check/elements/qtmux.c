@@ -28,6 +28,8 @@
 #include <unistd.h>
 #endif
 
+#include <glib/gstdio.h>
+
 #include <gst/check/gstcheck.h>
 #include <gst/pbutils/encoding-profile.h>
 
@@ -830,7 +832,12 @@ test_average_bitrate_custom (const gchar * elementname,
         (guint) gst_util_uint64_scale_round ((guint64) total_bytes,
         (guint64) 8 * GST_SECOND, (guint64) total_duration);
     fail_unless (bitrate == expected);
+    gst_tag_list_free (taglist);
   }
+
+  /* delete file */
+  g_unlink (location);
+  g_free (location);
 }
 
 GST_START_TEST (test_average_bitrate)

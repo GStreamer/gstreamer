@@ -22,6 +22,8 @@
 #include <gst/rtp/gstrtpbuffer.h>
 #include <gst/rtp/gstrtcpbuffer.h>
 
+#include <gst/glib-compat-private.h>
+
 #include "gstrtpbin-marshal.h"
 #include "rtpsession.h"
 

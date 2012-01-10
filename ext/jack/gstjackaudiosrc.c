@@ -336,7 +336,11 @@ gst_jack_ring_buffer_open_device (GstAudioRingBuffer * buf)
 
   GST_DEBUG_OBJECT (src, "open");
 
-  name = g_get_application_name ();
+  if (src->client_name) {
+    name = src->client_name;
+  } else {
+    name = g_get_application_name ();
+  }
   if (!name)
     name = "GStreamer";
 
@@ -651,8 +655,9 @@ enum
   LAST_SIGNAL
 };
 
-#define DEFAULT_PROP_CONNECT 	GST_JACK_CONNECT_AUTO
-#define DEFAULT_PROP_SERVER 	NULL
+#define DEFAULT_PROP_CONNECT 		GST_JACK_CONNECT_AUTO
+#define DEFAULT_PROP_SERVER 		NULL
+#define DEFAULT_PROP_CLIENT_NAME	NULL
 
 enum
 {
@@ -660,6 +665,7 @@ enum
   PROP_CONNECT,
   PROP_SERVER,
   PROP_CLIENT,
+  PROP_CLIENT_NAME,
   PROP_LAST
 };
 
@@ -726,6 +732,19 @@ gst_jack_audio_src_class_init (GstJackAudioSrcClass * klass)
           "The Jack server to connect to (NULL = default)",
           DEFAULT_PROP_SERVER, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
+  /**
+   * GstJackAudioSrc:client-name
+   *
+   * The client name to use.
+   *
+   * Since: 0.10.31
+   */
+  g_object_class_install_property (gobject_class, PROP_CLIENT_NAME,
+      g_param_spec_string ("client-name", "Client name",
+          "The client name of the Jack instance (NULL = default)",
+          DEFAULT_PROP_CLIENT_NAME,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
   g_object_class_install_property (gobject_class, PROP_CLIENT,
       g_param_spec_boxed ("client", "JackClient", "Handle for jack client",
           GST_TYPE_JACK_CLIENT,
@@ -765,6 +784,7 @@ gst_jack_audio_src_init (GstJackAudioSrc * src)
   src->ports = NULL;
   src->port_count = 0;
   src->buffers = NULL;
+  src->client_name = g_strdup (DEFAULT_PROP_CLIENT_NAME);
 }
 
 static void
@@ -773,6 +793,12 @@ gst_jack_audio_src_dispose (GObject * object)
   GstJackAudioSrc *src = GST_JACK_AUDIO_SRC (object);
 
   gst_caps_replace (&src->caps, NULL);
+
+  if (src->client_name != NULL) {
+    g_free (src->client_name);
+    src->client_name = NULL;
+  }
+
   G_OBJECT_CLASS (parent_class)->dispose (object);
 }
 
@@ -783,6 +809,10 @@ gst_jack_audio_src_set_property (GObject * object, guint prop_id,
   GstJackAudioSrc *src = GST_JACK_AUDIO_SRC (object);
 
   switch (prop_id) {
+    case PROP_CLIENT_NAME:
+      g_free (src->client_name);
+      src->client_name = g_value_dup_string (value);
+      break;
     case PROP_CONNECT:
       src->connect = g_value_get_enum (value);
       break;
@@ -809,6 +839,9 @@ gst_jack_audio_src_get_property (GObject * object, guint prop_id,
   GstJackAudioSrc *src = GST_JACK_AUDIO_SRC (object);
 
   switch (prop_id) {
+    case PROP_CLIENT_NAME:
+      g_value_set_string (value, src->client_name);
+      break;
     case PROP_CONNECT:
       g_value_set_enum (value, src->connect);
       break;

@@ -43,6 +43,8 @@
 
 #include "gstaspectratiocrop.h"
 
+#include "gst/glib-compat-private.h"
+
 GST_DEBUG_CATEGORY_STATIC (aspect_ratio_crop_debug);
 #define GST_CAT_DEFAULT aspect_ratio_crop_debug
 

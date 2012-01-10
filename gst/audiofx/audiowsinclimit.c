@@ -63,6 +63,8 @@
 
 #include "audiowsinclimit.h"
 
+#include "gst/glib-compat-private.h"
+
 #define GST_CAT_DEFAULT gst_audio_wsinclimit_debug
 GST_DEBUG_CATEGORY_STATIC (GST_CAT_DEFAULT);
 

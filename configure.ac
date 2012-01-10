@@ -203,7 +203,7 @@ AC_CHECK_TYPE([struct ip_mreqn], [
 dnl *** checks for dependency libraries ***
 
 dnl GLib is required
-AG_GST_GLIB_CHECK([2.20])
+AG_GST_GLIB_CHECK([2.24])
 PKG_CHECK_MODULES(GIO, [ gio-2.0 >= 2.20 ], , AC_MSG_ERROR([gio is required]))
 
 dnl Orc
@@ -436,6 +436,12 @@ int main ()
     AC_SUBST(DIRECTSOUND_LIBS)
   fi
   AC_SUBST(HAVE_DIRECTSOUND)
+])
+
+dnl *** Win32 WaveOut ***
+translit(dnm, m, l) AM_CONDITIONAL(USE_WAVEFORM, true)
+AG_GST_CHECK_FEATURE(WAVEFORM, [Win32 WaveForm], waveformsink, [
+  AC_CHECK_HEADER(mmsystem.h, HAVE_WAVEFORM="yes", HAVE_WAVEFORM="no", [#include <windows.h>])
 ])
 
 dnl *** OSS audio *** (Linux, *BSD)
@@ -1005,6 +1011,7 @@ AM_CONDITIONAL(USE_SOUP, false)
 AM_CONDITIONAL(USE_SPEEX, false)
 AM_CONDITIONAL(USE_SUNAUDIO, false)
 AM_CONDITIONAL(USE_TAGLIB, false)
+AM_CONDITIONAL(USE_WAVEFORM, false)
 AM_CONDITIONAL(USE_WAVPACK, false)
 AM_CONDITIONAL(USE_X, false)
 AM_CONDITIONAL(USE_XSHM, false)

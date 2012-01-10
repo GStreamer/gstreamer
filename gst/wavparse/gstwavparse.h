@@ -116,6 +116,8 @@ struct _GstWavParse {
   gboolean first;
   /* discont after seek */
   gboolean discont;
+
+  gboolean ignore_length;
 };
 
 struct _GstWavParseClass {

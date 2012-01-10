@@ -23,6 +23,8 @@
 # include "config.h"
 #endif
 
+#include <stdlib.h>
+
 #include <glib.h>
 #include <glib/gprintf.h>
 #include <libsoup/soup-address.h>
@@ -444,8 +446,11 @@ souphttpsrc_suite (void)
   TCase *tc_chain, *tc_internet;
 
   g_type_init ();
+
+#if !GLIB_CHECK_VERSION (2, 31, 0)
   if (!g_thread_supported ())
     g_thread_init (NULL);
+#endif
 
   s = suite_create ("souphttpsrc");
   tc_chain = tcase_create ("general");
@@ -453,7 +458,7 @@ souphttpsrc_suite (void)
 
   suite_add_tcase (s, tc_chain);
   run_server (&http_port, &https_port);
-  g_atexit (stop_server);
+  atexit (stop_server);
   tcase_add_test (tc_chain, test_first_buffer_has_offset);
   tcase_add_test (tc_chain, test_redirect_yes);
   tcase_add_test (tc_chain, test_redirect_no);

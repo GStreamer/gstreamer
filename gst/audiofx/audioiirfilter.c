@@ -52,6 +52,8 @@
 
 #include "audioiirfilter.h"
 
+#include "gst/glib-compat-private.h"
+
 #define GST_CAT_DEFAULT gst_audio_iir_filter_debug
 GST_DEBUG_CATEGORY_STATIC (GST_CAT_DEFAULT);
 
