@@ -908,24 +908,21 @@ parse_stream_topology (GstDiscoverer * dc, const GstStructure * topology,
           /* We sometimes get an extra sub-stream from the parser. If this is
            * the case, we just replace the parent caps with this stream's caps
            * since they might contain more information */
-          gst_caps_unref (parent->caps);
-          parent->caps = caps;
+          gst_caps_replace (&parent->caps, caps);
 
           parse_stream_topology (dc, st, parent);
           add_to_list = FALSE;
-
         } else if (child_is_raw_stream (parent->caps, caps)) {
           /* This is the "raw" stream corresponding to the parent. This
            * contains more information than the parent, tags etc. */
           parse_stream_topology (dc, st, parent);
           add_to_list = FALSE;
-          gst_caps_unref (caps);
-
         } else {
           GstDiscovererStreamInfo *next = parse_stream_topology (dc, st, NULL);
           res->next = next;
           next->previous = res;
         }
+        gst_caps_unref (caps);
       }
     }
 
