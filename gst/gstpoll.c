@@ -75,7 +75,12 @@
 #define EINPROGRESS WSAEINPROGRESS
 #else
 #define _GNU_SOURCE 1
+#ifdef HAVE_SYS_POLL_H
 #include <sys/poll.h>
+#endif
+#ifdef HAVE_POLL_H
+#include <poll.h>
+#endif
 #include <sys/time.h>
 #include <sys/socket.h>
 #endif

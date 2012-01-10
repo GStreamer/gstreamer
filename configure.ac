@@ -380,6 +380,8 @@ AC_CHECK_FUNCS([poll])
 AC_CHECK_FUNCS([ppoll])
 AC_CHECK_FUNCS([pselect])
 
+AC_CHECK_HEADERS([sys/poll.h])
+
 dnl ****************************************
 dnl *** GLib POLL* compatibility defines ***
 dnl ****************************************

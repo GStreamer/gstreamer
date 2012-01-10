@@ -629,7 +629,7 @@ gst_fd_src_uri_set_uri (GstURIHandler * handler, const gchar * uri,
   gchar *protocol, *q;
   GstFdSrc *src = GST_FD_SRC (handler);
   gint fd;
-  guint64 size = -1;
+  guint64 size = (guint64) - 1;
 
   GST_INFO_OBJECT (src, "checking uri %s", uri);
 

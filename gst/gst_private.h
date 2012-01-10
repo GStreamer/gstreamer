@@ -144,7 +144,7 @@ gint priv_gst_date_time_compare (gconstpointer dt1, gconstpointer dt2);
 
 #ifndef GST_DISABLE_REGISTRY
 /* Secret variable to initialise gst without registry cache */
-extern gboolean _gst_disable_registry_cache;
+GST_EXPORT gboolean _gst_disable_registry_cache;
 #endif
 
 /* provide inline gst_g_value_get_foo_unchecked(), used in gststructure.c */

@@ -523,7 +523,7 @@ gst_input_selector_wait_running_time (GstInputSelector * sel,
   GstPad *active_sinkpad;
   GstSelectorPad *active_selpad;
   GstSegment *seg, *active_seg;
-  GstClockTime running_time, active_running_time = -1;
+  GstClockTime running_time, active_running_time = GST_CLOCK_TIME_NONE;
 
   seg = &pad->segment;
 
