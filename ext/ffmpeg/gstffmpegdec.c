@@ -1832,7 +1832,7 @@ gst_ffmpegdec_video_frame (GstFFMpegDec * ffmpegdec,
       GstStructure *s = gst_caps_get_structure (GST_BUFFER_CAPS (buffer), 0);
       gboolean interlaced;
       gboolean found = gst_structure_get_boolean (s, "interlaced", &interlaced);
-      if (!found || (!!interlaced != !!ffmpegdec->format.video.interlaced)) {
+      if (!found || (! !interlaced != ! !ffmpegdec->format.video.interlaced)) {
         GST_DEBUG_OBJECT (ffmpegdec,
             "Buffer interlacing does not match pad, updating");
         buffer = gst_buffer_make_metadata_writable (buffer);
@@ -3054,14 +3054,6 @@ gst_ffmpegdec_register (GstPlugin * plugin)
         rank = GST_RANK_SECONDARY;
         break;
       case CODEC_ID_MP3:
-        rank = GST_RANK_NONE;
-        break;
-        /* TEMPORARILY DISABLING AC3/EAC3/DTS for 0.10.12 release
-         * due to downmixing failure.
-         * See Bug #608892 for more details */
-      case CODEC_ID_EAC3:
-      case CODEC_ID_AC3:
-      case CODEC_ID_DTS:
         rank = GST_RANK_NONE;
         break;
       default:
