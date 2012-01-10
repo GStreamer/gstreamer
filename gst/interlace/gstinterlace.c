@@ -463,6 +463,8 @@ gst_interlace_getcaps (GstPad * pad)
   gst_caps_set_simple (icaps, "interlaced", G_TYPE_BOOLEAN,
       pad == interlace->srcpad ? TRUE : FALSE, NULL);
 
+  gst_object_unref (interlace);
+
   return icaps;
 }
 
