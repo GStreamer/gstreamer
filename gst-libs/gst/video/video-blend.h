@@ -53,6 +53,8 @@ struct _GstBlendVideoFormatInfo
     guint8        * pixels;
     gsize           size;
 
+    gboolean        premultiplied_alpha;
+
     /* YUV components: Y=0, U=1, V=2, A=3
      * RGB components: R=0, G=1, B=2, A=3 */
     gint            offset[MAX_VIDEO_PLANES];
@@ -61,7 +63,8 @@ struct _GstBlendVideoFormatInfo
 
 void       video_blend_format_info_init   (GstBlendVideoFormatInfo * info,
                                            guint8 *pixels, guint height,
-                                           guint width, GstVideoFormat fmt);
+                                           guint width, GstVideoFormat fmt,
+                                           gboolean premultiplied_alpha);
 
 void       video_blend_scale_linear_RGBA  (GstBlendVideoFormatInfo * src,
                                            gint dest_height, gint dest_width);

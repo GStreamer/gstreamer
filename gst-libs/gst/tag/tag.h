@@ -544,6 +544,8 @@ const gchar *  gst_tag_get_language_code_iso_639_2B (const gchar * lang_code);
 
 const gchar *  gst_tag_get_language_code_iso_639_2T (const gchar * lang_code);
 
+gboolean       gst_tag_check_language_code          (const gchar * lang_code);
+
 /**
  * gst_tag_get_language_code:
  * @lang_code: ISO-639 language code (e.g. "deu" or "ger" or "de")

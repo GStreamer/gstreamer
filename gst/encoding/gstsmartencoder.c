@@ -658,9 +658,10 @@ gst_smart_encoder_find_elements (GstSmartEncoder * smart_encoder)
 
   gst_caps_unref (tmpl);
 
-  if (gst_caps_is_empty (res))
+  if (gst_caps_is_empty (res)) {
+    gst_caps_unref (res);
     ret = GST_STATE_CHANGE_FAILURE;
-  else
+  } else
     smart_encoder->available_caps = res;
 
   GST_DEBUG_OBJECT (smart_encoder, "Done, available_caps:%" GST_PTR_FORMAT,

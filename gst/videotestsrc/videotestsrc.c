@@ -653,7 +653,7 @@ gst_video_test_src_smpte (GstVideoTestSrc * v, GstVideoFrame * frame)
   format->paint_setup (p, frame);
 
   y1 = 2 * h / 3;
-  y2 = h * 0.75;
+  y2 = 3 * h / 4;
 
   /* color bars */
   for (j = 0; j < y1; j++) {

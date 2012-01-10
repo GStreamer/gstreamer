@@ -30,8 +30,6 @@
  * </refsect2>
  */
 
-/* FIXME 0.11: maybe switch to ISO-639-2 everywhere incl. GST_TAG_LANGUAGE? */
-
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
@@ -311,8 +309,8 @@ gst_tag_get_language_codes (void)
  * gst_tag_get_language_name:
  * @language_code: two or three-letter ISO-639 language code
  *
- * Returns the name of the language given an ISO-639 language code, such
- * as often found in a GST_TAG_LANGUAGE tag. The name will be translated
+ * Returns the name of the language given an ISO-639 language code as
+ * found in a GST_TAG_LANGUAGE_CODE tag. The name will be translated
  * according to the current locale (if the library was built against the
  * iso-codes package, otherwise the English name will be returned).
  *
@@ -491,4 +489,26 @@ gst_tag_get_language_code_iso_639_2B (const gchar * lang_code)
   GST_LOG ("%s -> %s", lang_code, GST_STR_NULL (c));
 
   return c;
+}
+
+/**
+ * gst_tag_check_language_code:
+ * @lang_code: ISO-639 language code (e.g. "deu" or "ger" or "de")
+ *
+ * Check if a given string contains a known ISO 639 language code.
+ *
+ * This is useful in situations where it's not clear whether a given
+ * string is a language code (which should be put into a #GST_TAG_LANGUAGE_CODE
+ * tag) or a free-form language name descriptor (which should be put into a
+ * #GST_TAG_LANGUAGE_NAME tag instead).
+ *
+ * Returns: TRUE if the two- or three-letter language code in @lang_code
+ *     is a valid ISO-639 language code.
+ *
+ * Since: 0.10.37
+ */
+gboolean
+gst_tag_check_language_code (const gchar * lang_code)
+{
+  return (gst_tag_get_language_code_iso_639_1 (lang_code) != NULL);
 }

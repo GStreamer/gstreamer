@@ -48,7 +48,7 @@
 
 #include <gst/video/video.h>
 
-#include <gsttimeoverlay.h>
+#include "gsttimeoverlay.h"
 
 #define gst_time_overlay_parent_class parent_class
 G_DEFINE_TYPE (GstTimeOverlay, gst_time_overlay, GST_TYPE_BASE_TEXT_OVERLAY);

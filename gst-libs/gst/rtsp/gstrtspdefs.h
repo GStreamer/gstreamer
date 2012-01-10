@@ -228,10 +228,9 @@ typedef enum {
 /**
  * GstRTSPHeaderField:
  *
- * Enumeration of rtsp header fields.
+ * Enumeration of rtsp header fields
  */
 typedef enum {
-  /*< protected >*/
   GST_RTSP_HDR_INVALID,
 
   /*
@@ -342,10 +341,9 @@ typedef enum {
 /**
  * GstRTSPStatusCode:
  *
- * Enumeration of rtsp status codes.
+ * Enumeration of rtsp status codes
  */
 typedef enum {
-  /*< protected >*/
   GST_RTSP_STS_INVALID                              = 0,
   GST_RTSP_STS_CONTINUE                             = 100,
   GST_RTSP_STS_OK                                   = 200,

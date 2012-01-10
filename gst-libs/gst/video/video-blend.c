@@ -1156,6 +1156,34 @@ matrix_identity (guint8 * tmpline, guint width)
 }
 
 static void
+matrix_prea_rgb_to_yuv (guint8 * tmpline, guint width)
+{
+  int i;
+  int a, r, g, b;
+  int y, u, v;
+
+  for (i = 0; i < width; i++) {
+    a = tmpline[i * 4 + 0];
+    r = tmpline[i * 4 + 1];
+    g = tmpline[i * 4 + 2];
+    b = tmpline[i * 4 + 3];
+    if (a) {
+      r = (r * 255 + a / 2) / a;
+      g = (g * 255 + a / 2) / a;
+      b = (b * 255 + a / 2) / a;
+    }
+
+    y = (47 * r + 157 * g + 16 * b + 4096) >> 8;
+    u = (-26 * r - 87 * g + 112 * b + 32768) >> 8;
+    v = (112 * r - 102 * g - 10 * b + 32768) >> 8;
+
+    tmpline[i * 4 + 1] = CLAMP (y, 0, 255);
+    tmpline[i * 4 + 2] = CLAMP (u, 0, 255);
+    tmpline[i * 4 + 3] = CLAMP (v, 0, 255);
+  }
+}
+
+static void
 matrix_rgb_to_yuv (guint8 * tmpline, guint width)
 {
   int i;
@@ -1221,10 +1249,15 @@ lookup_getput (GetPutLine * getput, GstVideoFormat fmt)
   return FALSE;
 }
 
-#define BLEND(ret, alpha, v0, v1) \
-{ \
+#define BLEND00(ret, alpha, v0, v1) \
+G_STMT_START { \
   ret = (v0 * alpha + v1 * (255 - alpha)) / 255; \
-}
+} G_STMT_END
+
+#define BLEND10(ret, alpha, v0, v1) \
+G_STMT_START { \
+  ret = v0 + (v1 * (255 - alpha)) / 255; \
+} G_STMT_END
 
 void
 video_blend_scale_linear_RGBA (GstBlendVideoFormatInfo * src,
@@ -1289,7 +1322,7 @@ video_blend_scale_linear_RGBA (GstBlendVideoFormatInfo * src,
 
   /* Update src, our reference to the old src->pixels is lost */
   video_blend_format_info_init (src, dest_pixels, dest_height, dest_width,
-      src->fmt);
+      src->fmt, src->premultiplied_alpha);
 
   g_free (tmpbuf);
 }
@@ -1310,10 +1343,21 @@ video_blend (GstBlendVideoFormatInfo * dest,
   guint i, j;
   guint8 alpha;
   GetPutLine getputdest, getputsrc;
+  gint src_stride;
+  guint8 *tmpdestline = NULL, *tmpsrcline = NULL;
+  gboolean src_premultiplied_alpha;
 
-  gint src_stride = src->width * 4;
-  guint8 *tmpdestline = g_malloc (sizeof (guint8) * (dest->width + 8) * 4);
-  guint8 *tmpsrcline = g_malloc (sizeof (guint8) * (dest->width + 8) * 4);
+  g_return_val_if_fail (dest, FALSE);
+  g_return_val_if_fail (src, FALSE);
+
+  /* we do no support writing to premultiplied alpha, though that should
+     just be a matter of adding blenders below (BLEND01 and BLEND11) */
+  g_return_val_if_fail (!dest->premultiplied_alpha, FALSE);
+  src_premultiplied_alpha = src->premultiplied_alpha;
+
+  src_stride = src->width * 4;
+  tmpdestline = g_malloc (sizeof (guint8) * (dest->width + 8) * 4);
+  tmpsrcline = g_malloc (sizeof (guint8) * (dest->width + 8) * 4);
 
   ensure_debug_category ();
 
@@ -1324,9 +1368,18 @@ video_blend (GstBlendVideoFormatInfo * dest,
   if (!lookup_getput (&getputsrc, src->fmt))
     goto failed;
 
-  if (gst_video_format_is_rgb (src->fmt) != gst_video_format_is_rgb (dest->fmt))
-    getputsrc.matrix = gst_video_format_is_rgb (src->fmt) ?
-        matrix_rgb_to_yuv : matrix_yuv_to_rgb;
+  if (gst_video_format_is_rgb (src->fmt) != gst_video_format_is_rgb (dest->fmt)) {
+    if (gst_video_format_is_rgb (src->fmt)) {
+      if (src_premultiplied_alpha) {
+        getputsrc.matrix = matrix_prea_rgb_to_yuv;
+        src_premultiplied_alpha = FALSE;
+      } else {
+        getputsrc.matrix = matrix_rgb_to_yuv;
+      }
+    } else {
+      getputsrc.matrix = matrix_yuv_to_rgb;
+    }
+  }
 
   /* adjust src pointers for negative sizes */
   if (x < 0) {
@@ -1358,13 +1411,28 @@ video_blend (GstBlendVideoFormatInfo * dest,
 
     /* Here dest and src are both either in AYUV or ARGB
      * TODO: Make the orc version working properly*/
-    for (j = 0; j < src->width * 4; j += 4) {
-      alpha = tmpsrcline[j];
+#define BLENDLOOP(blender)                                                        \
+  do {                                                                            \
+    for (j = 0; j < src->width * 4; j += 4) {                                     \
+      alpha = tmpsrcline[j];                                                      \
+                                                                                  \
+      blender (tmpdestline[j + 1], alpha, tmpsrcline[j + 1], tmpdestline[j + 1]); \
+      blender (tmpdestline[j + 2], alpha, tmpsrcline[j + 2], tmpdestline[j + 2]); \
+      blender (tmpdestline[j + 3], alpha, tmpsrcline[j + 3], tmpdestline[j + 3]); \
+    }                                                                             \
+  } while(0)
 
-      BLEND (tmpdestline[j + 1], alpha, tmpsrcline[j + 1], tmpdestline[j + 1]);
-      BLEND (tmpdestline[j + 2], alpha, tmpsrcline[j + 2], tmpdestline[j + 2]);
-      BLEND (tmpdestline[j + 3], alpha, tmpsrcline[j + 3], tmpdestline[j + 3]);
+    if (src_premultiplied_alpha && dest->premultiplied_alpha) {
+      /* BLENDLOOP (BLEND11); */
+    } else if (!src_premultiplied_alpha && dest->premultiplied_alpha) {
+      /* BLENDLOOP (BLEND01); */
+    } else if (src_premultiplied_alpha && !dest->premultiplied_alpha) {
+      BLENDLOOP (BLEND10);
+    } else {
+      BLENDLOOP (BLEND00);
     }
+
+#undef BLENDLOOP
 
     /* FIXME
      * #if G_BYTE_ORDER == LITTLE_ENDIAN
@@ -1403,7 +1471,8 @@ failed:
  */
 void
 video_blend_format_info_init (GstBlendVideoFormatInfo * info,
-    guint8 * pixels, guint height, guint width, GstVideoFormat fmt)
+    guint8 * pixels, guint height, guint width, GstVideoFormat fmt,
+    gboolean premultiplied_alpha)
 {
   guint nb_component = gst_video_format_has_alpha (fmt) ? 4 : 3;
 
@@ -1417,6 +1486,7 @@ video_blend_format_info_init (GstBlendVideoFormatInfo * info,
   info->height = height;
   info->pixels = pixels;
   info->fmt = fmt;
+  info->premultiplied_alpha = premultiplied_alpha;
   info->size = gst_video_format_get_size (fmt, height, width);
 
   fill_planes (info);

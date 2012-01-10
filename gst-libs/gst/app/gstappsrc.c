@@ -220,8 +220,10 @@ static void gst_app_src_set_latencies (GstAppSrc * appsrc,
     gboolean do_min, guint64 min, gboolean do_max, guint64 max);
 
 static gboolean gst_app_src_negotiate (GstBaseSrc * basesrc);
-static GstFlowReturn gst_app_src_create (GstBaseSrc * bsrc,
-    guint64 offset, guint size, GstBuffer ** buf);
+static GstCaps *gst_app_src_internal_get_caps (GstBaseSrc * bsrc,
+    GstCaps * filter);
+static GstFlowReturn gst_app_src_create (GstBaseSrc * bsrc, guint64 offset,
+    guint size, GstBuffer ** buf);
 static gboolean gst_app_src_start (GstBaseSrc * bsrc);
 static gboolean gst_app_src_stop (GstBaseSrc * bsrc);
 static gboolean gst_app_src_unlock (GstBaseSrc * bsrc);
@@ -470,6 +472,7 @@ gst_app_src_class_init (GstAppSrcClass * klass)
       gst_static_pad_template_get (&gst_app_src_template));
 
   basesrc_class->negotiate = gst_app_src_negotiate;
+  basesrc_class->get_caps = gst_app_src_internal_get_caps;
   basesrc_class->create = gst_app_src_create;
   basesrc_class->start = gst_app_src_start;
   basesrc_class->stop = gst_app_src_stop;
@@ -551,6 +554,12 @@ gst_app_src_finalize (GObject * obj)
   G_OBJECT_CLASS (parent_class)->finalize (obj);
 }
 
+static GstCaps *
+gst_app_src_internal_get_caps (GstBaseSrc * bsrc, GstCaps * filter)
+{
+  return gst_app_src_get_caps (GST_APP_SRC_CAST (bsrc), filter);
+}
+
 static void
 gst_app_src_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec)
@@ -614,7 +623,7 @@ gst_app_src_get_property (GObject * object, guint prop_id, GValue * value,
       GstCaps *caps;
 
       /* we're missing a _take_caps() function to transfer ownership */
-      caps = gst_app_src_get_caps (appsrc);
+      caps = gst_app_src_get_caps (appsrc, NULL);
       gst_value_set_caps (value, caps);
       if (caps)
         gst_caps_unref (caps);
@@ -1097,7 +1106,7 @@ gst_app_src_set_caps (GstAppSrc * appsrc, const GstCaps * caps)
  * Since: 0.10.22
  */
 GstCaps *
-gst_app_src_get_caps (GstAppSrc * appsrc)
+gst_app_src_get_caps (GstAppSrc * appsrc, GstCaps * filter)
 {
   GstCaps *caps;
   GstAppSrcPrivate *priv;
@@ -1109,6 +1118,14 @@ gst_app_src_get_caps (GstAppSrc * appsrc)
   GST_OBJECT_LOCK (appsrc);
   if ((caps = priv->caps))
     gst_caps_ref (caps);
+
+  if (filter) {
+    GstCaps *intersection =
+        gst_caps_intersect_full (filter, caps, GST_CAPS_INTERSECT_FIRST);
+    gst_caps_unref (caps);
+    caps = intersection;
+  }
+
   GST_DEBUG_OBJECT (appsrc, "getting caps of %" GST_PTR_FORMAT, caps);
   GST_OBJECT_UNLOCK (appsrc);
 

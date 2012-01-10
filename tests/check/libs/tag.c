@@ -759,6 +759,16 @@ GST_START_TEST (test_language_utils)
   ASSERT_STRINGS_EQUAL (gst_tag_get_language_code_iso_639_2B ("de"), "ger");
   ASSERT_STRINGS_EQUAL (gst_tag_get_language_code_iso_639_2B ("deu"), "ger");
   ASSERT_STRINGS_EQUAL (gst_tag_get_language_code_iso_639_2B ("ger"), "ger");
+
+  fail_unless (gst_tag_check_language_code ("de"));
+  fail_unless (gst_tag_check_language_code ("deu"));
+  fail_unless (gst_tag_check_language_code ("ger"));
+  fail_if (gst_tag_check_language_code ("xxx"));
+  fail_if (gst_tag_check_language_code ("und"));
+  fail_if (gst_tag_check_language_code ("un"));
+  fail_if (gst_tag_check_language_code (""));
+  fail_if (gst_tag_check_language_code ("\377"));
+  fail_if (gst_tag_check_language_code ("deutsch"));
 }
 
 GST_END_TEST;

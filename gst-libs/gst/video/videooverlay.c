@@ -145,8 +145,11 @@
  * #ifdef GDK_WINDOWING_X11
  * #include &lt;gdk/gdkx.h&gt;  // for GDK_WINDOW_XID
  * #endif
+ * #ifdef GDK_WINDOWING_WIN32
+ * #include &lt;gdk/gdkwin32.h&gt;  // for GDK_WINDOW_HWND
+ * #endif
  * ...
- * static gulong video_window_xid = 0;
+ * static guintptr video_window_handle = 0;
  * ...
  * static GstBusSyncReply
  * bus_sync_handler (GstBus * bus, GstMessage * message, gpointer user_data)
@@ -155,14 +158,14 @@
  *  if (!gst_is_video_overlay_prepare_window_handle_message (message))
  *    return GST_BUS_PASS;
  *
- *  if (video_window_xid != 0) {
- *    GstVideoOverlay *xoverlay;
+ *  if (video_window_handle != 0) {
+ *    GstXOverlay *xoverlay;
  *
  *    // GST_MESSAGE_SRC (message) will be the video sink element
- *    xoverlay = GST_VIDEO_OVERLAY (GST_MESSAGE_SRC (message));
- *    gst_video_overlay_set_window_handle (xoverlay, video_window_xid);
+ *    xoverlay = GST_X_OVERLAY (GST_MESSAGE_SRC (message));
+ *    gst_x_overlay_set_window_handle (xoverlay, video_window_handle);
  *  } else {
- *    g_warning ("Should have obtained video_window_xid by now!");
+ *    g_warning ("Should have obtained video_window_handle by now!");
  *  }
  *
  *  gst_message_unref (message);
@@ -173,6 +176,8 @@
  * video_widget_realize_cb (GtkWidget * widget, gpointer data)
  * {
  * #if GTK_CHECK_VERSION(2,18,0)
+ *   // Tell Gtk+/Gdk to create a native window for this widget instead of
+ *   // drawing onto the parent widget.
  *   // This is here just for pedagogical purposes, GDK_WINDOW_XID will call
  *   // it as well in newer Gtk versions
  *   if (!gdk_window_ensure_native (widget->window))
@@ -180,7 +185,16 @@
  * #endif
  *
  * #ifdef GDK_WINDOWING_X11
- *   video_window_xid = GDK_WINDOW_XID (gtk_widget_get_window (video_window));
+ *   {
+ *     gulong xid = GDK_WINDOW_XID (gtk_widget_get_window (video_window));
+ *     video_window_handle = xid;
+ *   }
+ * #endif
+ * #ifdef GDK_WINDOWING_WIN32
+ *   {
+ *     HWND wnd = GDK_WINDOW_HWND (gtk_widget_get_window (video_window));
+ *     video_window_handle = (guintptr) wnd;
+ *   }
  * #endif
  * }
  * ...
@@ -206,12 +220,12 @@
  *   gtk_widget_show_all (app_window);
  *
  *   // realize window now so that the video window gets created and we can
- *   // obtain its XID before the pipeline is started up and the videosink
- *   // asks for the XID of the window to render onto
+ *   // obtain its XID/HWND before the pipeline is started up and the videosink
+ *   // asks for the XID/HWND of the window to render onto
  *   gtk_widget_realize (video_window);
  *
- *   // we should have the XID now
- *   g_assert (video_window_xid != 0);
+ *   // we should have the XID/HWND now
+ *   g_assert (video_window_handle != 0);
  *   ...
  *   // set up sync handler for setting the xid once the pipeline is started
  *   bus = gst_pipeline_get_bus (GST_PIPELINE (pipeline));

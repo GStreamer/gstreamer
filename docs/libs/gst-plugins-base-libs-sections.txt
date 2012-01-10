@@ -1836,6 +1836,7 @@ gst_tag_get_language_code
 gst_tag_get_language_code_iso_639_1
 gst_tag_get_language_code_iso_639_2B
 gst_tag_get_language_code_iso_639_2T
+gst_tag_check_language_code
 </SECTION>
 
 <SECTION>
@@ -2121,6 +2122,7 @@ gst_video_overlay_rectangle_get_render_rectangle
 gst_video_overlay_rectangle_get_seqnum
 gst_video_overlay_rectangle_set_render_rectangle
 gst_video_overlay_rectangle_copy
+gst_video_overlay_rectangle_get_flags
 <SUBSECTION Standard>
 GST_TYPE_VIDEO_OVERLAY_COMPOSITION
 GST_VIDEO_OVERLAY_COMPOSITION
