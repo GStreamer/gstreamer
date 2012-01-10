@@ -2244,17 +2244,6 @@ gst_ffmpegdec_audio_frame (GstFFMpegDec * ffmpegdec,
   if (len >= 0 && have_data > 0) {
     GstAudioFormat fmt;
 
-    /* Reorder channels to the GStreamer channel order */
-    /* Only the width really matters here... and it's stored as depth */
-    fmt =
-        gst_audio_format_build_integer (TRUE, G_BYTE_ORDER,
-        ffmpegdec->format.audio.depth, ffmpegdec->format.audio.depth);
-
-    gst_audio_reorder_channels (odata, have_data, fmt,
-        ffmpegdec->format.audio.channels,
-        ffmpegdec->format.audio.ffmpeg_layout,
-        ffmpegdec->format.audio.gst_layout);
-
     /* Buffer size */
     gst_buffer_unmap (*outbuf, odata, have_data);
 
@@ -2312,6 +2301,17 @@ gst_ffmpegdec_audio_frame (GstFFMpegDec * ffmpegdec,
                 out_duration)))
       goto clipped;
 
+
+    /* Reorder channels to the GStreamer channel order */
+    /* Only the width really matters here... and it's stored as depth */
+    fmt =
+        gst_audio_format_build_integer (TRUE, G_BYTE_ORDER,
+        ffmpegdec->format.audio.depth * 8, ffmpegdec->format.audio.depth * 8);
+
+    gst_audio_buffer_reorder_channels (*outbuf, fmt,
+        ffmpegdec->format.audio.channels,
+        ffmpegdec->format.audio.ffmpeg_layout,
+        ffmpegdec->format.audio.gst_layout);
   } else {
     gst_buffer_unmap (*outbuf, odata, 0);
     gst_buffer_unref (*outbuf);
@@ -3179,7 +3179,7 @@ gst_ffmpegdec_register (GstPlugin * plugin)
       case CODEC_ID_EAC3:
       case CODEC_ID_AC3:
       case CODEC_ID_DTS:
-        rank = GST_RANK_NONE;
+        rank = GST_RANK_PRIMARY;
         break;
       default:
         rank = GST_RANK_MARGINAL;
