@@ -673,7 +673,7 @@ gst_video_format_new_caps_raw (GstVideoFormat format)
 
     if (bpp != 8) {
       gst_caps_set_simple (caps,
-          "endianness", G_TYPE_INT, G_BIG_ENDIAN,
+          "endianness", G_TYPE_INT, bpp == 16 ? G_BYTE_ORDER : G_BIG_ENDIAN,
           "red_mask", G_TYPE_INT, red_mask,
           "green_mask", G_TYPE_INT, green_mask,
           "blue_mask", G_TYPE_INT, blue_mask, NULL);
