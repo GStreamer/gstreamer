@@ -287,8 +287,6 @@ gst_ogg_mux_finalize (GObject * object)
     ogg_mux->collect = NULL;
   }
 
-  gst_object_unref (ogg_mux->srcpad);
-
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
