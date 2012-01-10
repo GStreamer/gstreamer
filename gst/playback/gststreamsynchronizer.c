@@ -507,7 +507,6 @@ skip_adjustments:
   }
 
 done:
-  gst_object_unref (self);
 
   return ret;
 }
