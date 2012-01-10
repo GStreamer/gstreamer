@@ -21,16 +21,132 @@
 
 #include "gstaudiometa.h"
 
+static gboolean
+gst_audio_downmix_meta_init (GstMeta * meta, gpointer params,
+    GstBuffer * buffer)
+{
+  GstAudioDownmixMeta *dmeta = (GstAudioDownmixMeta *) meta;
+
+  dmeta->from_position = dmeta->to_position = NULL;
+  dmeta->from_channels = dmeta->to_channels = 0;
+  dmeta->matrix = NULL;
+
+  return TRUE;
+}
+
+static void
+gst_audio_downmix_meta_free (GstMeta * meta, GstBuffer * buffer)
+{
+  GstAudioDownmixMeta *dmeta = (GstAudioDownmixMeta *) meta;
+
+  g_free (dmeta->from_position);
+  if (dmeta->matrix) {
+    g_free (*dmeta->matrix);
+    g_free (dmeta->matrix);
+  }
+}
+
 static void
 gst_audio_downmix_meta_copy (GstBuffer * dest, GstMeta * meta,
     GstBuffer * buffer, gsize offset, gsize size)
 {
-  GstAudioDownmixMeta *dmeta, *smeta;
+  GstAudioDownmixMeta *smeta;
 
   smeta = (GstAudioDownmixMeta *) meta;
-  dmeta = gst_buffer_add_audio_downmix_meta (dest);
+  gst_buffer_add_audio_downmix_meta (dest, smeta->from_position,
+      smeta->from_channels, smeta->to_position, smeta->to_channels,
+      (const gfloat **) smeta->matrix);
+}
 
-  memcpy (dmeta, smeta, sizeof (GstAudioDownmixMeta));
+/**
+ * gst_buffer_get_audio_downmix_meta_for_channels:
+ * @buffer: a #GstBuffer
+ * @to_position: the channel positions of the destination
+ * @to_channels: The number of channels of the destination
+ * @matrix: The matrix coefficients.
+ *
+ * Find the #GstAudioDownmixMeta on @buffer for the given destination
+ * channel positions.
+ *
+ * Returns: the #GstAudioDownmixMeta on @buffer.
+ */
+GstAudioDownmixMeta *
+gst_buffer_get_audio_downmix_meta_for_channels (GstBuffer * buffer,
+    const GstAudioChannelPosition * to_position, gint to_channels)
+{
+  gpointer state = NULL;
+  GstMeta *meta;
+  const GstMetaInfo *info = GST_AUDIO_DOWNMIX_META_INFO;
+
+  while ((meta = gst_buffer_iterate_meta (buffer, &state))) {
+    if (meta->info->api == info->api) {
+      GstAudioDownmixMeta *ameta = (GstAudioDownmixMeta *) meta;
+      if (ameta->to_channels == to_channels &&
+          memcmp (ameta->to_position, to_position,
+              sizeof (GstAudioChannelPosition) * to_channels) == 0)
+        return ameta;
+    }
+  }
+  return NULL;
+}
+
+/**
+ * gst_buffer_add_audio_downmix_meta:
+ * @buffer: a #GstBuffer
+ * @from_position: the channel positions of the source
+ * @from_channels: The number of channels of the source
+ * @to_position: the channel positions of the destination
+ * @to_channels: The number of channels of the destination
+ * @matrix: The matrix coefficients.
+ *
+ * Attaches GstAudioDownmixMeta metadata to @buffer with the given parameters.
+ *
+ * @matrix is an two-dimensional array of @to_channels times @from_channels
+ * coefficients, i.e. the i-th output channels is constructed by multiplicating
+ * the input channels with the coefficients in @matrix[i] and taking the sum
+ * of the results.
+ *
+ * Returns: the #GstAudioDownmixMeta on @buffer.
+ */
+GstAudioDownmixMeta *
+gst_buffer_add_audio_downmix_meta (GstBuffer * buffer,
+    const GstAudioChannelPosition * from_position, gint from_channels,
+    const GstAudioChannelPosition * to_position, gint to_channels,
+    const gfloat ** matrix)
+{
+  GstAudioDownmixMeta *meta;
+  gint i;
+
+  g_return_val_if_fail (from_position != NULL, NULL);
+  g_return_val_if_fail (from_channels > 0, NULL);
+  g_return_val_if_fail (to_position != NULL, NULL);
+  g_return_val_if_fail (to_channels > 0, NULL);
+  g_return_val_if_fail (matrix != NULL, NULL);
+
+  meta =
+      (GstAudioDownmixMeta *) gst_buffer_add_meta (buffer,
+      GST_AUDIO_DOWNMIX_META_INFO, NULL);
+
+  meta->from_channels = from_channels;
+  meta->to_channels = to_channels;
+
+  meta->from_position =
+      g_new (GstAudioChannelPosition, meta->from_channels + meta->to_channels);
+  meta->to_position = meta->from_position + meta->from_channels;
+  memcpy (meta->from_position, from_position,
+      sizeof (GstAudioChannelPosition) * meta->from_channels);
+  memcpy (meta->to_position, to_position,
+      sizeof (GstAudioChannelPosition) * meta->to_channels);
+
+  meta->matrix = g_new (gfloat *, meta->to_channels);
+  meta->matrix[0] = g_new (gfloat, meta->from_channels * meta->to_channels);
+  memcpy (meta->matrix[0], matrix[0], sizeof (gfloat) * meta->from_channels);
+  for (i = 1; i < meta->to_channels; i++) {
+    meta->matrix[i] = meta->matrix[0] + i * meta->from_channels;
+    memcpy (meta->matrix[i], matrix[i], sizeof (gfloat) * meta->from_channels);
+  }
+
+  return meta;
 }
 
 const GstMetaInfo *
@@ -41,9 +157,10 @@ gst_audio_downmix_meta_get_info (void)
   if (audio_downmix_meta_info == NULL) {
     audio_downmix_meta_info =
         gst_meta_register (GST_AUDIO_DOWNMIX_META_API, "GstAudioDownmixMeta",
-        sizeof (GstAudioDownmixMeta), (GstMetaInitFunction) NULL,
-        (GstMetaFreeFunction) NULL, gst_audio_downmix_meta_copy,
-        (GstMetaTransformFunction) NULL);
+        sizeof (GstAudioDownmixMeta),
+        (GstMetaInitFunction) gst_audio_downmix_meta_init,
+        (GstMetaFreeFunction) gst_audio_downmix_meta_free,
+        gst_audio_downmix_meta_copy, (GstMetaTransformFunction) NULL);
   }
   return audio_downmix_meta_info;
 }

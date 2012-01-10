@@ -33,24 +33,43 @@ typedef struct _GstAudioDownmixMeta GstAudioDownmixMeta;
 /**
  * GstAudioDownmixMeta:
  * @meta: parent #GstMeta
- * @channels: the number of channels of the destination
+ * @from_position: the channel positions of the source
+ * @to_position: the channel positions of the destination
+ * @from_channels: the number of channels of the source
+ * @to_channels: the number of channels of the destination
  * @matrix: the matrix coefficients.
  *
  * Extra buffer metadata describing audio downmixing matrix. This metadata is
  * attached to audio buffers and contains a matrix to downmix the buffer number
  * of channels to @channels.
+ *
+ * @matrix is an two-dimensional array of @to_channels times @from_channels
+ * coefficients, i.e. the i-th output channels is constructed by multiplicating
+ * the input channels with the coefficients in @matrix[i] and taking the sum
+ * of the results.
  */
 struct _GstAudioDownmixMeta {
   GstMeta      meta;
 
-  guint        channels;
-  gfloat       matrix[64];
+  GstAudioChannelPosition *from_position;
+  GstAudioChannelPosition *to_position;
+  gint        from_channels, to_channels;
+  gfloat       **matrix;
 };
 
 const GstMetaInfo * gst_audio_downmix_meta_get_info (void);
 
 #define gst_buffer_get_audio_downmix_meta(b) ((GstAudioDownmixMeta*)gst_buffer_get_meta((b),GST_AUDIO_DOWNMIX_META_INFO))
-#define gst_buffer_add_audio_downmix_meta(b) ((GstAudioDownmixMeta*)gst_buffer_add_meta((b),GST_AUDIO_DOWNMIX_META_INFO, NULL))
+GstAudioDownmixMeta * gst_buffer_get_audio_downmix_meta_for_channels    (GstBuffer *buffer,
+                                                                         const GstAudioChannelPosition *to_position,
+                                                                         gint                           to_channels);
+
+GstAudioDownmixMeta * gst_buffer_add_audio_downmix_meta (GstBuffer    *buffer,
+                                                         const GstAudioChannelPosition *from_position,
+                                                         gint                           from_channels,
+                                                         const GstAudioChannelPosition *to_position,
+                                                         gint                           to_channels,
+                                                         const gfloat                 **matrix);
 
 G_END_DECLS
 
