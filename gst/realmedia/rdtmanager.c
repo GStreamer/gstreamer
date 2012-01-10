@@ -56,6 +56,8 @@
 #include "rdtmanager.h"
 #include "rdtjitterbuffer.h"
 
+#include <gst/glib-compat-private.h>
+
 #include <stdio.h>
 
 GST_DEBUG_CATEGORY_STATIC (rdtmanager_debug);

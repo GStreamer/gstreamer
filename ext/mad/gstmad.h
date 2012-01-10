@@ -46,7 +46,7 @@ typedef struct _GstMadClass GstMadClass;
 
 struct _GstMad
 {
-  GstAudioDecoder audiodecoder;
+  GstAudioDecoder element;
 
   /* state */
   struct mad_stream stream;
@@ -62,6 +62,8 @@ struct _GstMad
   gint times_pending;
   gboolean caps_set;            /* used to keep track of whether to change/update caps */
 
+  gboolean eos;
+
   /* properties */
   gboolean half;
   gboolean ignore_crc;
@@ -69,7 +71,7 @@ struct _GstMad
 
 struct _GstMadClass
 {
-  GstAudioDecoderClass audiodecoder_class;
+  GstAudioDecoderClass parent_class;
 };
 
 GType                   gst_mad_get_type (void);

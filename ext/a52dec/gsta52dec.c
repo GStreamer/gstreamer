@@ -21,7 +21,7 @@
  * SECTION:element-a52dec
  *
  * Dolby Digital (AC-3) audio decoder.
- * 
+ *
  * <refsect2>
  * <title>Example launch line</title>
  * |[
@@ -88,17 +88,20 @@ static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",
     );
 
 #define gst_a52dec_parent_class parent_class
-G_DEFINE_TYPE (GstA52Dec, gst_a52dec, GST_TYPE_ELEMENT);
+G_DEFINE_TYPE (GstA52Dec, gst_a52dec, GST_TYPE_AUDIO_DECODER);
+
+static gboolean gst_a52dec_start (GstAudioDecoder * dec);
+static gboolean gst_a52dec_stop (GstAudioDecoder * dec);
+static gboolean gst_a52dec_set_format (GstAudioDecoder * bdec, GstCaps * caps);
+static gboolean gst_a52dec_parse (GstAudioDecoder * dec, GstAdapter * adapter,
+    gint * offset, gint * length);
+static GstFlowReturn gst_a52dec_handle_frame (GstAudioDecoder * dec,
+    GstBuffer * buffer);
+static GstFlowReturn gst_a52dec_pre_push (GstAudioDecoder * bdec,
+    GstBuffer ** buffer);
 
 static GstFlowReturn gst_a52dec_chain (GstPad * pad, GstObject * parent,
     GstBuffer * buffer);
-static GstFlowReturn gst_a52dec_chain_raw (GstPad * pad, GstObject * parent,
-    GstBuffer * buf);
-static gboolean gst_a52dec_sink_event (GstPad * pad, GstObject * parent,
-    GstEvent * event);
-static GstStateChangeReturn gst_a52dec_change_state (GstElement * element,
-    GstStateChange transition);
-
 static void gst_a52dec_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
 static void gst_a52dec_get_property (GObject * object, guint prop_id,
@@ -132,15 +135,22 @@ gst_a52dec_class_init (GstA52DecClass * klass)
 {
   GObjectClass *gobject_class;
   GstElementClass *gstelement_class;
+  GstAudioDecoderClass *gstbase_class;
   guint cpuflags;
 
   gobject_class = (GObjectClass *) klass;
   gstelement_class = (GstElementClass *) klass;
+  gstbase_class = (GstAudioDecoderClass *) klass;
 
   gobject_class->set_property = gst_a52dec_set_property;
   gobject_class->get_property = gst_a52dec_get_property;
 
-  gstelement_class->change_state = GST_DEBUG_FUNCPTR (gst_a52dec_change_state);
+  gstbase_class->start = GST_DEBUG_FUNCPTR (gst_a52dec_start);
+  gstbase_class->stop = GST_DEBUG_FUNCPTR (gst_a52dec_stop);
+  gstbase_class->set_format = GST_DEBUG_FUNCPTR (gst_a52dec_set_format);
+  gstbase_class->parse = GST_DEBUG_FUNCPTR (gst_a52dec_parse);
+  gstbase_class->handle_frame = GST_DEBUG_FUNCPTR (gst_a52dec_handle_frame);
+  gstbase_class->pre_push = GST_DEBUG_FUNCPTR (gst_a52dec_pre_push);
 
   /**
    * GstA52Dec::drc
@@ -159,7 +169,7 @@ gst_a52dec_class_init (GstA52DecClass * klass)
    *
    * Force a particular output channel configuration from the decoder. By default,
    * the channel downmix (if any) is chosen automatically based on the downstream
-   * capabilities of the pipeline. 
+   * capabilities of the pipeline.
    */
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_MODE,
       g_param_spec_enum ("mode", "Decoder Mode", "Decoding Mode (default 3f2r)",
@@ -213,21 +223,114 @@ gst_a52dec_class_init (GstA52DecClass * klass)
 static void
 gst_a52dec_init (GstA52Dec * a52dec)
 {
-  /* create the sink and src pads */
-  a52dec->sinkpad = gst_pad_new_from_static_template (&sink_factory, "sink");
-  gst_pad_set_chain_function (a52dec->sinkpad,
-      GST_DEBUG_FUNCPTR (gst_a52dec_chain));
-  gst_pad_set_event_function (a52dec->sinkpad,
-      GST_DEBUG_FUNCPTR (gst_a52dec_sink_event));
-  gst_element_add_pad (GST_ELEMENT (a52dec), a52dec->sinkpad);
-
-  a52dec->srcpad = gst_pad_new_from_static_template (&src_factory, "src");
-  gst_element_add_pad (GST_ELEMENT (a52dec), a52dec->srcpad);
-
   a52dec->request_channels = A52_CHANNEL;
   a52dec->dynamic_range_compression = FALSE;
 
-  gst_segment_init (&a52dec->segment, GST_FORMAT_UNDEFINED);
+  a52dec->state = NULL;
+  a52dec->samples = NULL;
+
+  /* retrieve and intercept base class chain.
+   * Quite HACKish, but that's dvd specs/caps for you,
+   * since one buffer needs to be split into 2 frames */
+  a52dec->base_chain = GST_PAD_CHAINFUNC (GST_AUDIO_DECODER_SINK_PAD (a52dec));
+  gst_pad_set_chain_function (GST_AUDIO_DECODER_SINK_PAD (a52dec),
+      GST_DEBUG_FUNCPTR (gst_a52dec_chain));
+}
+
+static gboolean
+gst_a52dec_start (GstAudioDecoder * dec)
+{
+  GstA52Dec *a52dec = GST_A52DEC (dec);
+  GstA52DecClass *klass;
+
+  GST_DEBUG_OBJECT (dec, "start");
+
+  klass = GST_A52DEC_CLASS (G_OBJECT_GET_CLASS (a52dec));
+  a52dec->state = a52_init (klass->a52_cpuflags);
+
+  if (!a52dec->state) {
+    GST_ELEMENT_ERROR (GST_ELEMENT (a52dec), LIBRARY, INIT, (NULL),
+        ("failed to initialize a52 state"));
+    return FALSE;
+  }
+
+  a52dec->samples = a52_samples (a52dec->state);
+  a52dec->bit_rate = -1;
+  a52dec->sample_rate = -1;
+  a52dec->stream_channels = A52_CHANNEL;
+  a52dec->using_channels = A52_CHANNEL;
+  a52dec->level = 1;
+  a52dec->bias = 0;
+  a52dec->flag_update = TRUE;
+
+  /* call upon legacy upstream byte support (e.g. seeking) */
+  gst_audio_decoder_set_byte_time (dec, TRUE);
+
+  return TRUE;
+}
+
+static gboolean
+gst_a52dec_stop (GstAudioDecoder * dec)
+{
+  GstA52Dec *a52dec = GST_A52DEC (dec);
+
+  GST_DEBUG_OBJECT (dec, "stop");
+
+  a52dec->samples = NULL;
+  if (a52dec->state) {
+    a52_free (a52dec->state);
+    a52dec->state = NULL;
+  }
+  if (a52dec->pending_tags) {
+    gst_tag_list_free (a52dec->pending_tags);
+    a52dec->pending_tags = NULL;
+  }
+
+  return TRUE;
+}
+
+static GstFlowReturn
+gst_a52dec_parse (GstAudioDecoder * bdec, GstAdapter * adapter,
+    gint * _offset, gint * len)
+{
+  GstA52Dec *a52dec;
+  const guint8 *data;
+  gint av, size;
+  gint length = 0, flags, sample_rate, bit_rate;
+  GstFlowReturn result = GST_FLOW_EOS;
+
+  a52dec = GST_A52DEC (bdec);
+
+  size = av = gst_adapter_available (adapter);
+  data = (const guint8 *) gst_adapter_map (adapter, av);
+
+  /* find and read header */
+  bit_rate = a52dec->bit_rate;
+  sample_rate = a52dec->sample_rate;
+  flags = 0;
+  while (av >= 7) {
+    length = a52_syncinfo ((guint8 *) data, &flags, &sample_rate, &bit_rate);
+
+    if (length == 0) {
+      /* shift window to re-find sync */
+      data++;
+      size--;
+    } else if (length <= size) {
+      GST_LOG_OBJECT (a52dec, "Sync: frame size %d", length);
+      result = GST_FLOW_OK;
+      break;
+    } else {
+      GST_LOG_OBJECT (a52dec, "Not enough data available (needed %d had %d)",
+          length, size);
+      break;
+    }
+  }
+  gst_adapter_unmap (adapter);
+
+  *_offset = av - size;
+  *len = length;
+
+  return result;
 }
 
 static gint
@@ -310,119 +413,15 @@ gst_a52dec_channels (int flags, GstAudioChannelPosition * pos)
   return chans;
 }
 
-static void
-clear_queued (GstA52Dec * dec)
-{
-  g_list_foreach (dec->queued, (GFunc) gst_mini_object_unref, NULL);
-  g_list_free (dec->queued);
-  dec->queued = NULL;
-}
-
-static GstFlowReturn
-flush_queued (GstA52Dec * dec)
-{
-  GstFlowReturn ret = GST_FLOW_OK;
-
-  while (dec->queued) {
-    GstBuffer *buf = GST_BUFFER_CAST (dec->queued->data);
-
-    GST_LOG_OBJECT (dec, "pushing buffer %p, timestamp %"
-        GST_TIME_FORMAT ", duration %" GST_TIME_FORMAT, buf,
-        GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buf)),
-        GST_TIME_ARGS (GST_BUFFER_DURATION (buf)));
-
-    /* iterate ouput queue an push downstream */
-    ret = gst_pad_push (dec->srcpad, buf);
-
-    dec->queued = g_list_delete_link (dec->queued, dec->queued);
-  }
-  return ret;
-}
-
-static GstFlowReturn
-gst_a52dec_drain (GstA52Dec * dec)
-{
-  GstFlowReturn ret = GST_FLOW_OK;
-
-  if (dec->segment.rate < 0.0) {
-    /* if we have some queued frames for reverse playback, flush
-     * them now */
-    ret = flush_queued (dec);
-  }
-  return ret;
-}
-
-static GstFlowReturn
-gst_a52dec_push (GstA52Dec * a52dec,
-    GstPad * srcpad, int flags, sample_t * samples, GstClockTime timestamp)
-{
-  GstBuffer *buf;
-  int chans, n, c;
-  GstFlowReturn result;
-  sample_t *data;
-
-  flags &= (A52_CHANNEL_MASK | A52_LFE);
-  if (!(chans = gst_a52dec_channels (flags, NULL)))
-    goto no_channels;
-
-  buf = gst_buffer_new_allocate (NULL, 256 * chans * (SAMPLE_WIDTH / 8), 0);
-
-  data = gst_buffer_map (buf, NULL, NULL, GST_MAP_WRITE);
-  for (n = 0; n < 256; n++) {
-    for (c = 0; c < chans; c++) {
-      data[n * chans + c] = samples[c * 256 + n];
-    }
-  }
-  gst_audio_reorder_channels (data, 256 * chans * (SAMPLE_WIDTH / 8),
-      (SAMPLE_WIDTH == 64) ? GST_AUDIO_FORMAT_F64 : GST_AUDIO_FORMAT_F32, chans,
-      a52dec->from, a52dec->to);
-  gst_buffer_unmap (buf, data, -1);
-
-  GST_BUFFER_TIMESTAMP (buf) = timestamp;
-  GST_BUFFER_DURATION (buf) = 256 * GST_SECOND / a52dec->sample_rate;
-
-  result = GST_FLOW_OK;
-  if ((buf = gst_audio_buffer_clip (buf, &a52dec->segment,
-              a52dec->sample_rate, (SAMPLE_WIDTH / 8) * chans))) {
-    /* set discont when needed */
-    if (a52dec->discont) {
-      GST_LOG_OBJECT (a52dec, "marking DISCONT");
-      GST_BUFFER_FLAG_SET (buf, GST_BUFFER_FLAG_DISCONT);
-      a52dec->discont = FALSE;
-    }
-
-    if (a52dec->segment.rate > 0.0) {
-      GST_DEBUG_OBJECT (a52dec,
-          "Pushing buffer with ts %" GST_TIME_FORMAT " duration %"
-          GST_TIME_FORMAT, GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buf)),
-          GST_TIME_ARGS (GST_BUFFER_DURATION (buf)));
-
-      result = gst_pad_push (srcpad, buf);
-    } else {
-      /* reverse playback, queue frame till later when we get a discont. */
-      GST_DEBUG_OBJECT (a52dec, "queued frame");
-      a52dec->queued = g_list_prepend (a52dec->queued, buf);
-    }
-  }
-  return result;
-
-  /* ERRORS */
-no_channels:
-  {
-    GST_ELEMENT_ERROR (GST_ELEMENT (a52dec), STREAM, DECODE, (NULL),
-        ("invalid channel flags: %d", flags));
-    return GST_FLOW_ERROR;
-  }
-}
-
 static gboolean
-gst_a52dec_reneg (GstA52Dec * a52dec, GstPad * pad)
+gst_a52dec_reneg (GstA52Dec * a52dec)
 {
   gint channels;
   GstCaps *caps = NULL;
   gboolean result = FALSE;
+  GstAudioChannelPosition from[6], to[6];
 
-  channels = gst_a52dec_channels (a52dec->using_channels, a52dec->from);
+  channels = gst_a52dec_channels (a52dec->using_channels, from);
 
   if (!channels)
     goto done;
@@ -430,8 +429,10 @@ gst_a52dec_reneg (GstA52Dec * a52dec, GstPad * pad)
   GST_INFO_OBJECT (a52dec, "reneg channels:%d rate:%d",
       channels, a52dec->sample_rate);
 
-  memcpy (a52dec->to, a52dec->from, sizeof (a52dec->from));
-  gst_audio_channel_positions_to_valid_order (a52dec->to, channels);
+  memcpy (to, from, sizeof (GstAudioChannelPosition) * channels);
+  gst_audio_channel_positions_to_valid_order (to, channels);
+  gst_audio_get_channel_reorder_map (channels, from, to,
+      a52dec->channel_reorder_map);
 
   caps = gst_caps_new_simple ("audio/x-raw",
       "format", G_TYPE_STRING, SAMPLE_FORMAT,
@@ -441,15 +442,13 @@ gst_a52dec_reneg (GstA52Dec * a52dec, GstPad * pad)
 
   if (channels > 1) {
     guint64 channel_mask = 0;
-    gint i;
 
-    for (i = 0; i < channels; i++)
-      channel_mask |= G_GUINT64_CONSTANT (1) << a52dec->to[i];
+    gst_audio_channel_positions_to_mask (to, channels, &channel_mask);
     gst_caps_set_simple (caps, "channel-mask", GST_TYPE_BITMASK, channel_mask,
         NULL);
   }
 
-  if (!gst_pad_set_caps (pad, caps))
+  if (!gst_audio_decoder_set_outcaps (GST_AUDIO_DECODER (a52dec), caps))
     goto done;
 
   result = TRUE;
@@ -460,113 +459,69 @@ done:
   return result;
 }
 
-static gboolean
-gst_a52dec_sink_setcaps (GstA52Dec * a52dec, GstCaps * caps)
-{
-  GstStructure *structure;
-
-  structure = gst_caps_get_structure (caps, 0);
-
-  if (structure && gst_structure_has_name (structure, "audio/x-private1-ac3"))
-    a52dec->dvdmode = TRUE;
-  else
-    a52dec->dvdmode = FALSE;
-
-  return TRUE;
-}
-
-static gboolean
-gst_a52dec_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
-{
-  GstA52Dec *a52dec = GST_A52DEC (parent);
-  gboolean ret = FALSE;
-
-  GST_LOG ("Handling %s event", GST_EVENT_TYPE_NAME (event));
-
-  switch (GST_EVENT_TYPE (event)) {
-    case GST_EVENT_CAPS:
-    {
-      GstCaps *caps;
-
-      gst_event_parse_caps (event, &caps);
-
-      ret = gst_a52dec_sink_setcaps (a52dec, caps);
-      gst_event_unref (event);
-      break;
-    }
-    case GST_EVENT_SEGMENT:
-    {
-      GstSegment seg;
-
-      gst_event_copy_segment (event, &seg);
-
-      /* drain queued buffers before activating the segment so that we can clip
-       * against the old segment first */
-      gst_a52dec_drain (a52dec);
-
-      if (seg.format != GST_FORMAT_TIME || !GST_CLOCK_TIME_IS_VALID (seg.start)) {
-        GST_WARNING ("No time in newsegment event %p (format is %s)",
-            event, gst_format_get_name (seg.format));
-        gst_event_unref (event);
-        a52dec->sent_segment = FALSE;
-        /* set some dummy values, FIXME: do proper conversion */
-        a52dec->time = seg.start = seg.position = 0;
-        seg.format = GST_FORMAT_TIME;
-        seg.stop = -1;
-      } else {
-        a52dec->time = seg.start;
-        a52dec->sent_segment = TRUE;
-        GST_DEBUG_OBJECT (a52dec, "Pushing segment %" GST_SEGMENT_FORMAT, &seg);
-
-        ret = gst_pad_push_event (a52dec->srcpad, event);
-      }
-      a52dec->segment = seg;
-      break;
-    }
-    case GST_EVENT_TAG:
-      ret = gst_pad_push_event (a52dec->srcpad, event);
-      break;
-    case GST_EVENT_EOS:
-      gst_a52dec_drain (a52dec);
-      ret = gst_pad_push_event (a52dec->srcpad, event);
-      break;
-    case GST_EVENT_FLUSH_START:
-      ret = gst_pad_push_event (a52dec->srcpad, event);
-      break;
-    case GST_EVENT_FLUSH_STOP:
-      if (a52dec->cache) {
-        gst_buffer_unref (a52dec->cache);
-        a52dec->cache = NULL;
-      }
-      clear_queued (a52dec);
-      gst_segment_init (&a52dec->segment, GST_FORMAT_UNDEFINED);
-      ret = gst_pad_push_event (a52dec->srcpad, event);
-      break;
-    default:
-      ret = gst_pad_push_event (a52dec->srcpad, event);
-      break;
-  }
-
-  return ret;
-}
-
 static void
 gst_a52dec_update_streaminfo (GstA52Dec * a52dec)
 {
   GstTagList *taglist;
 
-  taglist = gst_tag_list_new (GST_TAG_AUDIO_CODEC, "Dolby Digital (AC-3)",
-      GST_TAG_BITRATE, (guint) a52dec->bit_rate, NULL);
+  taglist = gst_tag_list_new_empty ();
+  gst_tag_list_add (taglist, GST_TAG_MERGE_APPEND, GST_TAG_BITRATE,
+      (guint) a52dec->bit_rate, NULL);
 
-  gst_pad_push_event (GST_PAD (a52dec->srcpad), gst_event_new_tag (taglist));
+  if (a52dec->pending_tags) {
+    gst_tag_list_free (a52dec->pending_tags);
+    a52dec->pending_tags = NULL;
+  }
+
+  a52dec->pending_tags = taglist;
 }
 
 static GstFlowReturn
-gst_a52dec_handle_frame (GstA52Dec * a52dec, guint8 * data,
-    guint length, gint flags, gint sample_rate, gint bit_rate)
+gst_a52dec_pre_push (GstAudioDecoder * bdec, GstBuffer ** buffer)
 {
+  GstA52Dec *a52dec = GST_A52DEC (bdec);
+
+  if (G_UNLIKELY (a52dec->pending_tags)) {
+    gst_pad_push_event (GST_AUDIO_DECODER_SRC_PAD (a52dec),
+        gst_event_new_tag (a52dec->pending_tags));
+    a52dec->pending_tags = NULL;
+  }
+
+  return GST_FLOW_OK;
+}
+
+static GstFlowReturn
+gst_a52dec_handle_frame (GstAudioDecoder * bdec, GstBuffer * buffer)
+{
+  GstA52Dec *a52dec;
   gint channels, i;
   gboolean need_reneg = FALSE;
+  gint chans;
+  gint length = 0, flags, sample_rate, bit_rate;
+  guint8 *data;
+  gsize size;
+  GstFlowReturn result = GST_FLOW_OK;
+  GstBuffer *outbuf;
+  const gint num_blocks = 6;
+
+  a52dec = GST_A52DEC (bdec);
+
+  /* no fancy draining */
+  if (G_UNLIKELY (!buffer))
+    return GST_FLOW_OK;
+
+  /* parsed stuff already, so this should work out fine */
+  data = gst_buffer_map (buffer, &size, NULL, GST_MAP_READ);
+  g_assert (size >= 7);
+
+  /* re-obtain some sync header info,
+   * should be same as during _parse and could also be cached there,
+   * but anyway ... */
+  bit_rate = a52dec->bit_rate;
+  sample_rate = a52dec->sample_rate;
+  flags = 0;
+  length = a52_syncinfo (data, &flags, &sample_rate, &bit_rate);
+  g_assert (length == size);
 
   /* update stream information, renegotiate or re-streaminfo if needed */
   need_reneg = FALSE;
@@ -585,8 +540,8 @@ gst_a52dec_handle_frame (GstA52Dec * a52dec, guint8 * data,
   }
 
   /* If we haven't had an explicit number of channels chosen through properties
-   * at this point, choose what to downmix to now, based on what the peer will 
-   * accept - this allows a52dec to do downmixing in preference to a 
+   * at this point, choose what to downmix to now, based on what the peer will
+   * accept - this allows a52dec to do downmixing in preference to a
    * downstream element such as audioconvert.
    */
   if (a52dec->request_channels != A52_CHANNEL) {
@@ -596,7 +551,7 @@ gst_a52dec_handle_frame (GstA52Dec * a52dec, guint8 * data,
 
     a52dec->flag_update = FALSE;
 
-    caps = gst_pad_get_allowed_caps (a52dec->srcpad);
+    caps = gst_pad_get_allowed_caps (GST_AUDIO_DECODER_SRC_PAD (a52dec));
     if (caps && gst_caps_get_size (caps) > 0) {
       GstCaps *copy = gst_caps_copy_nth (caps, 0);
       GstStructure *structure = gst_caps_get_structure (copy, 0);
@@ -610,13 +565,13 @@ gst_a52dec_handle_frame (GstA52Dec * a52dec, guint8 * data,
         A52_3F2R | A52_LFE,
       };
 
-      /* Prefer the original number of channels, but fixate to something 
+      /* Prefer the original number of channels, but fixate to something
        * preferred (first in the caps) downstream if possible.
        */
       gst_structure_fixate_field_nearest_int (structure, "channels",
           flags ? gst_a52dec_channels (flags, NULL) : 6);
-      gst_structure_get_int (structure, "channels", &channels);
-      if (channels <= 6)
+      if (gst_structure_get_int (structure, "channels", &channels)
+          && channels <= 6)
         flags = a52_channels[channels - 1];
       else
         flags = a52_channels[5];
@@ -632,14 +587,18 @@ gst_a52dec_handle_frame (GstA52Dec * a52dec, guint8 * data,
   } else {
     flags = a52dec->using_channels;
   }
+
   /* process */
   flags |= A52_ADJUST_LEVEL;
   a52dec->level = 1;
   if (a52_frame (a52dec->state, data, &flags, &a52dec->level, a52dec->bias)) {
-    GST_WARNING ("a52_frame error");
-    a52dec->discont = TRUE;
-    return GST_FLOW_OK;
+    gst_buffer_unmap (buffer, data, size);
+    GST_AUDIO_DECODER_ERROR (a52dec, 1, STREAM, DECODE, (NULL),
+        ("a52_frame error"), result);
+    goto exit;
   }
+  gst_buffer_unmap (buffer, data, size);
+
   channels = flags & (A52_CHANNEL_MASK | A52_LFE);
   if (a52dec->using_channels != channels) {
     need_reneg = TRUE;
@@ -648,56 +607,96 @@ gst_a52dec_handle_frame (GstA52Dec * a52dec, guint8 * data,
 
   /* negotiate if required */
   if (need_reneg) {
-    GST_DEBUG ("a52dec reneg: sample_rate:%d stream_chans:%d using_chans:%d",
+    GST_DEBUG_OBJECT (a52dec,
+        "a52dec reneg: sample_rate:%d stream_chans:%d using_chans:%d",
         a52dec->sample_rate, a52dec->stream_channels, a52dec->using_channels);
-    if (!gst_a52dec_reneg (a52dec, a52dec->srcpad)) {
-      GST_ELEMENT_ERROR (a52dec, CORE, NEGOTIATION, (NULL), (NULL));
-      return GST_FLOW_ERROR;
-    }
+    if (!gst_a52dec_reneg (a52dec))
+      goto failed_negotiation;
   }
 
   if (a52dec->dynamic_range_compression == FALSE) {
     a52_dynrng (a52dec->state, NULL, NULL);
   }
 
-  /* each frame consists of 6 blocks */
-  for (i = 0; i < 6; i++) {
-    if (a52_block (a52dec->state)) {
-      /* ignore errors but mark a discont */
-      GST_WARNING ("a52_block error %d", i);
-      a52dec->discont = TRUE;
-    } else {
-      GstFlowReturn ret;
+  flags &= (A52_CHANNEL_MASK | A52_LFE);
+  chans = gst_a52dec_channels (flags, NULL);
+  if (!chans)
+    goto invalid_flags;
 
-      /* push on */
-      ret = gst_a52dec_push (a52dec, a52dec->srcpad, a52dec->using_channels,
-          a52dec->samples, a52dec->time);
-      if (ret != GST_FLOW_OK)
-        return ret;
+  /* handle decoded data;
+   * each frame has 6 blocks, one block is 256 samples, ea */
+  outbuf =
+      gst_buffer_new_and_alloc (256 * chans * (SAMPLE_WIDTH / 8) * num_blocks);
+
+  data = gst_buffer_map (buffer, &size, NULL, GST_MAP_WRITE);
+  {
+    guint8 *ptr = data;
+    for (i = 0; i < num_blocks; i++) {
+      if (a52_block (a52dec->state)) {
+        /* also marks discont */
+        GST_AUDIO_DECODER_ERROR (a52dec, 1, STREAM, DECODE, (NULL),
+            ("error decoding block %d", i), result);
+        if (result != GST_FLOW_OK) {
+          gst_buffer_unmap (outbuf, data, size);
+          goto exit;
+        }
+      } else {
+        gint n, c;
+        gint *reorder_map = a52dec->channel_reorder_map;
+
+        for (n = 0; n < 256; n++) {
+          for (c = 0; c < chans; c++) {
+            ((sample_t *) ptr)[reorder_map[n] * chans + c] =
+                a52dec->samples[c * 256 + n];
+          }
+        }
+      }
+      ptr += 256 * chans * (SAMPLE_WIDTH / 8);
     }
-    a52dec->time += 256 * GST_SECOND / a52dec->sample_rate;
   }
+  gst_buffer_unmap (outbuf, data, size);
 
-  return GST_FLOW_OK;
+  result = gst_audio_decoder_finish_frame (bdec, outbuf, 1);
+
+exit:
+  return result;
+
+  /* ERRORS */
+failed_negotiation:
+  {
+    GST_ELEMENT_ERROR (a52dec, CORE, NEGOTIATION, (NULL), (NULL));
+    return GST_FLOW_ERROR;
+  }
+invalid_flags:
+  {
+    GST_ELEMENT_ERROR (GST_ELEMENT (a52dec), STREAM, DECODE, (NULL),
+        ("Invalid channel flags: %d", flags));
+    return GST_FLOW_ERROR;
+  }
+}
+
+static gboolean
+gst_a52dec_set_format (GstAudioDecoder * bdec, GstCaps * caps)
+{
+  GstA52Dec *a52dec = GST_A52DEC (bdec);
+  GstStructure *structure;
+
+  structure = gst_caps_get_structure (caps, 0);
+
+  if (structure && gst_structure_has_name (structure, "audio/x-private1-ac3"))
+    a52dec->dvdmode = TRUE;
+  else
+    a52dec->dvdmode = FALSE;
+
+  return TRUE;
 }
 
 static GstFlowReturn
 gst_a52dec_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
 {
   GstA52Dec *a52dec = GST_A52DEC (parent);
-  GstFlowReturn ret;
+  GstFlowReturn ret = GST_FLOW_OK;
   gint first_access;
-
-  if (GST_BUFFER_IS_DISCONT (buf)) {
-    GST_LOG_OBJECT (a52dec, "received DISCONT");
-    gst_a52dec_drain (a52dec);
-    /* clear cache on discont and mark a discont in the element */
-    if (a52dec->cache) {
-      gst_buffer_unref (a52dec->cache);
-      a52dec->cache = NULL;
-    }
-    a52dec->discont = TRUE;
-  }
 
   if (a52dec->dvdmode) {
     gsize size;
@@ -724,9 +723,11 @@ gst_a52dec_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
 
       subbuf = gst_buffer_copy_region (buf, GST_BUFFER_COPY_ALL, offset, len);
       GST_BUFFER_TIMESTAMP (subbuf) = GST_CLOCK_TIME_NONE;
-      ret = gst_a52dec_chain_raw (pad, parent, subbuf);
-      if (ret != GST_FLOW_OK)
+      ret = a52dec->base_chain (pad, parent, subbuf);
+      if (ret != GST_FLOW_OK) {
+        gst_buffer_unref (buf);
         goto done;
+      }
 
       offset += len;
       len = size - offset;
@@ -735,23 +736,23 @@ gst_a52dec_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
         subbuf = gst_buffer_copy_region (buf, GST_BUFFER_COPY_ALL, offset, len);
         GST_BUFFER_TIMESTAMP (subbuf) = GST_BUFFER_TIMESTAMP (buf);
 
-        ret = gst_a52dec_chain_raw (pad, parent, subbuf);
+        ret = a52dec->base_chain (pad, parent, subbuf);
       }
+      gst_buffer_unref (buf);
     } else {
       /* first_access = 0 or 1, so if there's a timestamp it applies to the first byte */
       subbuf =
           gst_buffer_copy_region (buf, GST_BUFFER_COPY_ALL, offset,
           size - offset);
       GST_BUFFER_TIMESTAMP (subbuf) = GST_BUFFER_TIMESTAMP (buf);
-      ret = gst_a52dec_chain_raw (pad, parent, subbuf);
+      ret = a52dec->base_chain (pad, parent, subbuf);
     }
   } else {
     gst_buffer_ref (buf);
-    ret = gst_a52dec_chain_raw (pad, parent, buf);
+    ret = a52dec->base_chain (pad, parent, buf);
   }
 
 done:
-  gst_buffer_unref (buf);
   return ret;
 
 /* ERRORS */
@@ -769,155 +770,6 @@ bad_first_access_parameter:
     gst_buffer_unref (buf);
     return GST_FLOW_ERROR;
   }
-}
-
-static GstFlowReturn
-gst_a52dec_chain_raw (GstPad * pad, GstObject * parent, GstBuffer * buf)
-{
-  GstA52Dec *a52dec;
-  guint8 *bdata, *data;
-  gsize bsize, size;
-  gint length = 0, flags, sample_rate, bit_rate;
-  GstFlowReturn result = GST_FLOW_OK;
-
-  a52dec = GST_A52DEC (parent);
-
-  if (!a52dec->sent_segment) {
-    GstSegment segment;
-
-    /* Create a basic segment. Usually, we'll get a new-segment sent by 
-     * another element that will know more information (a demuxer). If we're
-     * just looking at a raw AC3 stream, we won't - so we need to send one
-     * here, but we don't know much info, so just send a minimal TIME 
-     * new-segment event
-     */
-    gst_segment_init (&segment, GST_FORMAT_TIME);
-    gst_pad_push_event (a52dec->srcpad, gst_event_new_segment (&segment));
-    a52dec->sent_segment = TRUE;
-  }
-
-  /* merge with cache, if any. Also make sure timestamps match */
-  if (GST_BUFFER_TIMESTAMP_IS_VALID (buf)) {
-    a52dec->time = GST_BUFFER_TIMESTAMP (buf);
-    GST_DEBUG_OBJECT (a52dec,
-        "Received buffer with ts %" GST_TIME_FORMAT " duration %"
-        GST_TIME_FORMAT, GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buf)),
-        GST_TIME_ARGS (GST_BUFFER_DURATION (buf)));
-  }
-
-  if (a52dec->cache) {
-    buf = gst_buffer_join (a52dec->cache, buf);
-    a52dec->cache = NULL;
-  }
-  bdata = gst_buffer_map (buf, &bsize, NULL, GST_MAP_READ);
-
-  data = bdata;
-  size = bsize;
-
-  /* find and read header */
-  bit_rate = a52dec->bit_rate;
-  sample_rate = a52dec->sample_rate;
-  flags = 0;
-  while (size >= 7) {
-    length = a52_syncinfo (data, &flags, &sample_rate, &bit_rate);
-
-    if (length == 0) {
-      /* no sync */
-      data++;
-      size--;
-    } else if (length <= size) {
-      GST_DEBUG ("Sync: %d", length);
-
-      if (flags != a52dec->prev_flags)
-        a52dec->flag_update = TRUE;
-      a52dec->prev_flags = flags;
-
-      result = gst_a52dec_handle_frame (a52dec, data,
-          length, flags, sample_rate, bit_rate);
-      if (result != GST_FLOW_OK) {
-        size = 0;
-        break;
-      }
-      size -= length;
-      data += length;
-    } else {
-      /* not enough data */
-      GST_LOG ("Not enough data available");
-      break;
-    }
-  }
-  gst_buffer_unmap (buf, bdata, bsize);
-
-  /* keep cache */
-  if (length == 0) {
-    GST_LOG ("No sync found");
-  }
-
-  if (size > 0) {
-    a52dec->cache =
-        gst_buffer_copy_region (buf, GST_BUFFER_COPY_ALL, bsize - size, size);
-  }
-
-  gst_buffer_unref (buf);
-
-  return result;
-}
-
-static GstStateChangeReturn
-gst_a52dec_change_state (GstElement * element, GstStateChange transition)
-{
-  GstStateChangeReturn ret = GST_STATE_CHANGE_SUCCESS;
-  GstA52Dec *a52dec = GST_A52DEC (element);
-
-  switch (transition) {
-    case GST_STATE_CHANGE_NULL_TO_READY:{
-      GstA52DecClass *klass;
-
-      klass = GST_A52DEC_CLASS (G_OBJECT_GET_CLASS (a52dec));
-      a52dec->state = a52_init (klass->a52_cpuflags);
-      break;
-    }
-    case GST_STATE_CHANGE_READY_TO_PAUSED:
-      a52dec->samples = a52_samples (a52dec->state);
-      a52dec->bit_rate = -1;
-      a52dec->sample_rate = -1;
-      a52dec->stream_channels = A52_CHANNEL;
-      a52dec->using_channels = A52_CHANNEL;
-      a52dec->level = 1;
-      a52dec->bias = 0;
-      a52dec->time = 0;
-      a52dec->sent_segment = FALSE;
-      a52dec->flag_update = TRUE;
-      gst_segment_init (&a52dec->segment, GST_FORMAT_UNDEFINED);
-      break;
-    case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
-      break;
-    default:
-      break;
-  }
-
-  ret = GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
-
-  switch (transition) {
-    case GST_STATE_CHANGE_PLAYING_TO_PAUSED:
-      break;
-    case GST_STATE_CHANGE_PAUSED_TO_READY:
-      a52dec->samples = NULL;
-      if (a52dec->cache) {
-        gst_buffer_unref (a52dec->cache);
-        a52dec->cache = NULL;
-      }
-      clear_queued (a52dec);
-      break;
-    case GST_STATE_CHANGE_READY_TO_NULL:
-      a52_free (a52dec->state);
-      a52dec->state = NULL;
-      break;
-    default:
-      break;
-  }
-
-  return ret;
 }
 
 static void

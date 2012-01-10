@@ -23,6 +23,7 @@
 
 #include <gst/gst.h>
 #include <gst/audio/audio.h>
+#include <gst/audio/gstaudiodecoder.h>
 
 G_BEGIN_DECLS
 
@@ -41,27 +42,22 @@ typedef struct _GstA52Dec GstA52Dec;
 typedef struct _GstA52DecClass GstA52DecClass;
 
 struct _GstA52Dec {
-  GstElement     element;
+  GstAudioDecoder element;
 
-  /* pads */
-  GstPad        *sinkpad,
-                *srcpad;
-  GstSegment     segment;
+  GstPadChainFunction base_chain;
 
   gboolean       dvdmode;
-  gboolean       sent_segment;
-  gboolean       discont;
-
   gboolean       flag_update;
   int            prev_flags;
 
+  /* stream properties */
   int            bit_rate;
   int            sample_rate;
   int            stream_channels;
   int            request_channels;
   int            using_channels;
 
-  GstAudioChannelPosition from[6], to[6];
+  gint           channel_reorder_map[6];
 
   sample_t       level;
   sample_t       bias;
@@ -69,15 +65,11 @@ struct _GstA52Dec {
   sample_t      *samples;
   a52_state_t   *state;
 
-  GstBuffer     *cache;
-  GstClockTime   time;
-
-  /* reverse */
-  GList         *queued;
+  GstTagList    *pending_tags;
 };
 
 struct _GstA52DecClass {
-  GstElementClass parent_class;
+  GstAudioDecoderClass parent_class;
 
   guint32 a52_cpuflags;
 };
