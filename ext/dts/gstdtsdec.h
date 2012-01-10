@@ -56,6 +56,8 @@ struct _GstDtsDec {
   gint 	         request_channels;
   gint 	         using_channels;
 
+  gint           channel_reorder_map[6];
+
   /* decoding properties */
   sample_t 	 level;
   sample_t 	 bias;
