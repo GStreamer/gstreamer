@@ -897,6 +897,7 @@ gst_opus_enc_handle_frame (GstAudioEncoder * benc, GstBuffer * buf)
     GST_DEBUG_OBJECT (enc, "here are the caps: %" GST_PTR_FORMAT, caps);
 
     gst_pad_set_caps (GST_AUDIO_ENCODER_SRC_PAD (enc), caps);
+    gst_caps_unref (caps);
 
     enc->header_sent = TRUE;
   }
