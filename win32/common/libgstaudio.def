@@ -21,11 +21,14 @@ EXPORTS
 	gst_audio_base_src_set_slave_method
 	gst_audio_base_src_slave_method_get_type
 	gst_audio_buffer_clip
+	gst_audio_buffer_reorder_channels
 	gst_audio_cd_src_add_track
 	gst_audio_cd_src_get_type
 	gst_audio_cd_src_mode_get_type
 	gst_audio_channel_position_get_type
-	gst_audio_check_channel_positions
+	gst_audio_channel_positions_to_mask
+	gst_audio_channel_positions_to_valid_order
+	gst_audio_check_valid_channel_positions
 	gst_audio_clock_adjust
 	gst_audio_clock_get_time
 	gst_audio_clock_get_type
@@ -79,14 +82,16 @@ EXPORTS
 	gst_audio_encoder_set_tolerance
 	gst_audio_filter_class_add_pad_templates
 	gst_audio_filter_get_type
-	gst_audio_fixate_channel_positions
+	gst_audio_flags_get_type
 	gst_audio_format_build_integer
 	gst_audio_format_fill_silence
+	gst_audio_format_flags_get_type
 	gst_audio_format_from_string
 	gst_audio_format_get_info
+	gst_audio_format_get_type
 	gst_audio_format_info_get_type
 	gst_audio_format_to_string
-	gst_audio_get_channel_positions
+	gst_audio_get_channel_reorder_map
 	gst_audio_iec61937_frame_size
 	gst_audio_iec61937_payload
 	gst_audio_info_convert
@@ -98,8 +103,10 @@ EXPORTS
 	gst_audio_info_new
 	gst_audio_info_set_format
 	gst_audio_info_to_caps
+	gst_audio_layout_get_type
 	gst_audio_marshal_VOID__OBJECT_INT
 	gst_audio_marshal_VOID__OBJECT_ULONG
+	gst_audio_reorder_channels
 	gst_audio_ring_buffer_acquire
 	gst_audio_ring_buffer_activate
 	gst_audio_ring_buffer_advance
@@ -125,16 +132,16 @@ EXPORTS
 	gst_audio_ring_buffer_release
 	gst_audio_ring_buffer_samples_done
 	gst_audio_ring_buffer_set_callback
+	gst_audio_ring_buffer_set_channel_positions
 	gst_audio_ring_buffer_set_flushing
 	gst_audio_ring_buffer_set_sample
 	gst_audio_ring_buffer_start
 	gst_audio_ring_buffer_state_get_type
 	gst_audio_ring_buffer_stop
-	gst_audio_set_caps_channel_positions_list
-	gst_audio_set_channel_positions
-	gst_audio_set_structure_channel_positions_list
 	gst_audio_sink_get_type
 	gst_audio_src_get_type
+	gst_buffer_add_audio_downmix_meta
+	gst_buffer_get_audio_downmix_meta_for_channels
 	gst_mixer_get_mixer_flags
 	gst_mixer_get_mixer_type
 	gst_mixer_get_option
