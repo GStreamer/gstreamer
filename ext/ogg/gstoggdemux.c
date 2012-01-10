@@ -2371,6 +2371,8 @@ gst_ogg_demux_get_prev_page (GstOggDemux * ogg, ogg_page * og, gint64 * offset)
       if (ret == GST_FLOW_UNEXPECTED) {
         new_offset = 0;
         GST_LOG_OBJECT (ogg, "got unexpected");
+        /* We hit EOS. */
+        goto beach;
       } else if (ret != GST_FLOW_OK) {
         GST_LOG_OBJECT (ogg, "got error %d", ret);
         return ret;
@@ -2398,6 +2400,7 @@ gst_ogg_demux_get_prev_page (GstOggDemux * ogg, ogg_page * og, gint64 * offset)
   if (offset)
     *offset = cur_offset;
 
+beach:
   return ret;
 }
 
@@ -4466,8 +4469,17 @@ pause:
      * e.g. because of a flushing seek.
      */
     if (event) {
-      gst_event_set_seqnum (event, ogg->seqnum);
-      gst_ogg_demux_send_event (ogg, event);
+      /* guard against corrupt/truncated files, where one can hit EOS
+         before prerolling is done and a chain created. If we have no
+         chain to send the event to, error out. */
+      if (ogg->current_chain || ogg->building_chain) {
+        gst_event_set_seqnum (event, ogg->seqnum);
+        gst_ogg_demux_send_event (ogg, event);
+      } else {
+        gst_event_unref (event);
+        GST_ELEMENT_ERROR (ogg, STREAM, DEMUX, (NULL),
+            ("EOS before finding a chain"));
+      }
     }
     return;
   }
