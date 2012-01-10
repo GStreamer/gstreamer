@@ -484,8 +484,10 @@ gst_audio_info_set_format (GstAudioInfo * info, GstAudioFormat format,
     info->position[1] = GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT;
     return;
   } else {
-    if (!check_valid_channel_positions (position, channels, TRUE, NULL)) {
-      g_warning ("Invalid channel positions");
+    if (!position
+        || !check_valid_channel_positions (position, channels, TRUE, NULL)) {
+      if (position)
+        g_warning ("Invalid channel positions");
     } else {
       memcpy (&info->position, position,
           info->channels * sizeof (info->position[0]));
