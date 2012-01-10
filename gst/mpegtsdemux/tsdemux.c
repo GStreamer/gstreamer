@@ -2168,7 +2168,7 @@ calculate_and_push_newsegment (GstTSDemux * demux, TSDemuxStream * stream)
 {
   MpegTSBase *base = (MpegTSBase *) demux;
   GstEvent *newsegmentevent;
-  gint64 start, stop, position;
+  gint64 start = 0, stop = GST_CLOCK_TIME_NONE, position = 0;
   GstClockTime firstpts = GST_CLOCK_TIME_NONE;
   GList *tmp;
 
@@ -2196,21 +2196,24 @@ calculate_and_push_newsegment (GstTSDemux * demux, TSDemuxStream * stream)
     /* FIXME : We should use base->segment.format and a upstream latency query
      * to decide if we need to use live values or not */
     GST_DEBUG ("push-based. base Segment start:%" GST_TIME_FORMAT " duration:%"
-        GST_TIME_FORMAT ", time:%" GST_TIME_FORMAT,
+        GST_TIME_FORMAT ", stop:%" GST_TIME_FORMAT ", time:%" GST_TIME_FORMAT,
         GST_TIME_ARGS (base->segment.start),
         GST_TIME_ARGS (base->segment.duration),
-        GST_TIME_ARGS (base->segment.time));
+        GST_TIME_ARGS (base->segment.stop), GST_TIME_ARGS (base->segment.time));
     GST_DEBUG ("push-based. demux Segment start:%" GST_TIME_FORMAT " duration:%"
-        GST_TIME_FORMAT ", time:%" GST_TIME_FORMAT,
+        GST_TIME_FORMAT ", stop:%" GST_TIME_FORMAT ", time:%" GST_TIME_FORMAT,
         GST_TIME_ARGS (demux->segment.start),
         GST_TIME_ARGS (demux->segment.duration),
+        GST_TIME_ARGS (demux->segment.stop),
         GST_TIME_ARGS (demux->segment.time));
 
     GST_DEBUG ("stream pts: %" GST_TIME_FORMAT " first pts: %" GST_TIME_FORMAT,
         GST_TIME_ARGS (stream->pts), GST_TIME_ARGS (firstpts));
 
-    start = base->segment.start;
-    stop = base->segment.stop;
+    if (base->segment.format == GST_FORMAT_TIME) {
+      start = base->segment.start;
+      stop = base->segment.stop;
+    }
     /* Shift the start depending on our position in the stream */
     start += firstpts + base->in_gap - base->first_buf_ts;
     position = start;
