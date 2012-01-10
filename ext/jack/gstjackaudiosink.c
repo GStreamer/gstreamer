@@ -191,9 +191,19 @@ jack_process_cb (jack_nframes_t nframes, void *arg)
   guint8 *readptr;
   gint i, j, flen, channels;
   sample_t *data;
+  GstState state;
 
   buf = GST_RING_BUFFER_CAST (arg);
   sink = GST_JACK_AUDIO_SINK (GST_OBJECT_PARENT (buf));
+
+  /* handle transport state requisitions */
+  state = gst_jack_audio_client_get_transport_state (sink->client);
+  if ((state != GST_STATE_VOID_PENDING) && (GST_STATE (sink) != state)) {
+    GST_DEBUG_OBJECT (sink, "requesting state change: %s",
+        gst_element_state_get_name (state));
+    gst_element_post_message (GST_ELEMENT (sink),
+        gst_message_new_request_state (GST_OBJECT (sink), state));
+  }
 
   channels = buf->spec.channels;
 
