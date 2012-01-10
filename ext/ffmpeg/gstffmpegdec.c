@@ -2226,6 +2226,7 @@ gst_ffmpegdec_audio_frame (GstFFMpegDec * ffmpegdec,
       "Decode audio: len=%d, have_data=%d", len, have_data);
 
   if (len >= 0 && have_data > 0) {
+    /* FIXME: Reorder here */
     /* Buffer size */
     gst_buffer_unmap (*outbuf, odata, have_data);
 

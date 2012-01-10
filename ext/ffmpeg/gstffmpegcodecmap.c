@@ -102,11 +102,11 @@ static const struct
   CH_STEREO_RIGHT, GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT}
 };
 
-static GstAudioChannelPosition *
-gst_ff_channel_layout_to_gst (guint64 channel_layout, guint channels)
+static gboolean
+gst_ff_channel_layout_to_gst (guint64 channel_layout, guint channels,
+    GstAudioChannelPosition * pos)
 {
   guint nchannels = 0, i, j;
-  GstAudioChannelPosition *pos = NULL;
   gboolean none_layout = FALSE;
 
   for (i = 0; i < 64; i++) {
@@ -123,10 +123,8 @@ gst_ff_channel_layout_to_gst (guint64 channel_layout, guint channels)
   if (nchannels != channels) {
     GST_ERROR ("Number of channels is different (%u != %u)", channels,
         nchannels);
-    return NULL;
+    return FALSE;
   }
-
-  pos = g_new (GstAudioChannelPosition, nchannels);
 
   for (i = 0, j = 0; i < G_N_ELEMENTS (_ff_to_gst_layout); i++) {
     if ((channel_layout & _ff_to_gst_layout[i].ff) != 0) {
@@ -156,21 +154,14 @@ gst_ff_channel_layout_to_gst (guint64 channel_layout, guint channels)
       pos[0] = GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT;
       pos[1] = GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT;
     } else if (channel_layout == 0) {
-      g_free (pos);
-      pos = NULL;
+      return FALSE;
     } else {
       for (i = 0; i < nchannels; i++)
         pos[i] = GST_AUDIO_CHANNEL_POSITION_NONE;
     }
   }
 
-  if (nchannels == 1 && pos[0] == GST_AUDIO_CHANNEL_POSITION_FRONT_CENTER) {
-    GST_DEBUG ("mono common case; won't set channel positions");
-    g_free (pos);
-    pos = NULL;
-  }
-
-  return pos;
+  return TRUE;
 }
 
 /* this macro makes a caps width fixed or unfixed width/height
@@ -305,10 +296,7 @@ gst_ff_vid_caps_new (AVCodecContext * context, enum CodecID codec_id,
    * default unfixed setting */
   if (!caps) {
     GST_DEBUG ("Creating default caps");
-    caps = gst_caps_new_simple (mimetype,
-        "width", GST_TYPE_INT_RANGE, 16, 4096,
-        "height", GST_TYPE_INT_RANGE, 16, 4096,
-        "framerate", GST_TYPE_FRACTION_RANGE, 0, 1, G_MAXINT, 1, NULL);
+    caps = gst_caps_new_simple (mimetype, NULL, NULL, NULL);
   }
 
   for (i = 0; i < gst_caps_get_size (caps); i++) {
@@ -335,7 +323,7 @@ gst_ff_aud_caps_new (AVCodecContext * context, enum CodecID codec_id,
   /* fixed, non-probing context */
   if (context != NULL && context->channels != -1) {
     GstAudioInfo info;
-    GstAudioChannelPosition *pos;
+    GstAudioChannelPosition pos[64];
     guint64 channel_layout = context->channel_layout;
 
     gst_audio_info_init (&info);
@@ -364,15 +352,13 @@ gst_ff_aud_caps_new (AVCodecContext * context, enum CodecID codec_id,
         "rate", G_TYPE_INT, context->sample_rate,
         "channels", G_TYPE_INT, context->channels, NULL);
 
-    pos = gst_ff_channel_layout_to_gst (channel_layout, context->channels);
-    if (pos != NULL) {
+    if (gst_ff_channel_layout_to_gst (channel_layout, context->channels, pos)) {
       guint64 mask;
 
       if (gst_audio_channel_positions_to_mask (pos, context->channels, &mask)) {
         gst_caps_set_simple (caps, "channel-mask", GST_TYPE_BITMASK, mask,
             NULL);
       }
-      g_free (pos);
     }
   } else {
     gint maxchannels = 2;
