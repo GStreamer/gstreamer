@@ -628,7 +628,7 @@ gst_a52dec_handle_frame (GstAudioDecoder * bdec, GstBuffer * buffer)
   outbuf =
       gst_buffer_new_and_alloc (256 * chans * (SAMPLE_WIDTH / 8) * num_blocks);
 
-  data = gst_buffer_map (buffer, &size, NULL, GST_MAP_WRITE);
+  data = gst_buffer_map (outbuf, &size, NULL, GST_MAP_WRITE);
   {
     guint8 *ptr = data;
     for (i = 0; i < num_blocks; i++) {
@@ -646,7 +646,7 @@ gst_a52dec_handle_frame (GstAudioDecoder * bdec, GstBuffer * buffer)
 
         for (n = 0; n < 256; n++) {
           for (c = 0; c < chans; c++) {
-            ((sample_t *) ptr)[reorder_map[n] * chans + c] =
+            ((sample_t *) ptr)[n * chans + reorder_map[c]] =
                 a52dec->samples[c * 256 + n];
           }
         }
