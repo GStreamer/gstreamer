@@ -422,6 +422,10 @@ gst_adapter_map (GstAdapter * adapter, gsize size)
   g_return_val_if_fail (GST_IS_ADAPTER (adapter), NULL);
   g_return_val_if_fail (size > 0, NULL);
 
+  if (adapter->priv->cdata) {
+    gst_adapter_unmap (adapter);
+  }
+
   /* we don't have enough data, return NULL. This is unlikely
    * as one usually does an _available() first instead of peeking a
    * random size. */
@@ -543,6 +547,10 @@ gst_adapter_flush_unchecked (GstAdapter * adapter, gsize flush)
   GSList *g;
 
   GST_LOG_OBJECT (adapter, "flushing %" G_GSIZE_FORMAT " bytes", flush);
+
+  if (adapter->priv->cdata) {
+    gst_adapter_unmap (adapter);
+  }
 
   priv = adapter->priv;
 
