@@ -210,6 +210,7 @@ static void
 gst_discoverer_audio_info_finalize (GstDiscovererAudioInfo * info)
 {
   g_free (info->language);
+  gst_discoverer_stream_info_finalize ((GstDiscovererStreamInfo *) info);
 }
 
 static void
@@ -263,6 +264,7 @@ static void
 gst_discoverer_subtitle_info_finalize (GstDiscovererSubtitleInfo * info)
 {
   g_free (info->language);
+  gst_discoverer_stream_info_finalize ((GstDiscovererStreamInfo *) info);
 }
 
 static void
