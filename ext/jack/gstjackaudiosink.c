@@ -191,25 +191,21 @@ jack_process_cb (jack_nframes_t nframes, void *arg)
   guint8 *readptr;
   gint i, j, flen, channels;
   sample_t *data;
-  /*GstState state;*/
 
   buf = GST_RING_BUFFER_CAST (arg);
   sink = GST_JACK_AUDIO_SINK (GST_OBJECT_PARENT (buf));
 
   /* handle transport state requisitions */
-  /*
-  FIXME: qjackctl's initial transport state is stopped
-  it can be started using jack_transport_start (jack_client_t *);
-  need to figure out what the policy here is
+  if (sink->transport == GST_JACK_TRANSPORT_SLAVE) {
+    GstState state = gst_jack_audio_client_get_transport_state (sink->client);
 
-  state = gst_jack_audio_client_get_transport_state (sink->client);
-  if ((state != GST_STATE_VOID_PENDING) && (GST_STATE (sink) != state)) {
-    GST_DEBUG_OBJECT (sink, "requesting state change: %s",
-        gst_element_state_get_name (state));
-    gst_element_post_message (GST_ELEMENT (sink),
-        gst_message_new_request_state (GST_OBJECT (sink), state));
+    if ((state != GST_STATE_VOID_PENDING) && (GST_STATE (sink) != state)) {
+      GST_DEBUG_OBJECT (sink, "requesting state change: %s",
+          gst_element_state_get_name (state));
+      gst_element_post_message (GST_ELEMENT (sink),
+          gst_message_new_request_state (GST_OBJECT (sink), state));
+    }
   }
-  */
 
   channels = buf->spec.channels;
 
@@ -576,6 +572,13 @@ gst_jack_ring_buffer_start (GstRingBuffer * buf)
 
   GST_DEBUG_OBJECT (sink, "start");
 
+  if (sink->transport == GST_JACK_TRANSPORT_MASTER) {
+    jack_client_t *client;
+
+    client = gst_jack_audio_client_get_client (sink->client);
+    jack_transport_start (client);
+  }
+
   return TRUE;
 }
 
@@ -588,6 +591,13 @@ gst_jack_ring_buffer_pause (GstRingBuffer * buf)
 
   GST_DEBUG_OBJECT (sink, "pause");
 
+  if (sink->transport == GST_JACK_TRANSPORT_MASTER) {
+    jack_client_t *client;
+
+    client = gst_jack_audio_client_get_client (sink->client);
+    jack_transport_stop (client);
+  }
+
   return TRUE;
 }
 
@@ -599,6 +609,13 @@ gst_jack_ring_buffer_stop (GstRingBuffer * buf)
   sink = GST_JACK_AUDIO_SINK (GST_OBJECT_PARENT (buf));
 
   GST_DEBUG_OBJECT (sink, "stop");
+
+  if (sink->transport == GST_JACK_TRANSPORT_MASTER) {
+    jack_client_t *client;
+
+    client = gst_jack_audio_client_get_client (sink->client);
+    jack_transport_stop (client);
+  }
 
   return TRUE;
 }
@@ -666,7 +683,8 @@ enum
 
 #define DEFAULT_PROP_CONNECT 		GST_JACK_CONNECT_AUTO
 #define DEFAULT_PROP_SERVER 		NULL
-#define DEFAULT_PROP_CLIENT_NAME 	NULL
+#define DEFAULT_PROP_CLIENT_NAME	NULL
+#define DEFAULT_PROP_TRANSPORT	GST_JACK_TRANSPORT_AUTONOMOUS
 
 enum
 {
@@ -675,6 +693,7 @@ enum
   PROP_SERVER,
   PROP_CLIENT,
   PROP_CLIENT_NAME,
+  PROP_TRANSPORT,
   PROP_LAST
 };
 
@@ -752,6 +771,19 @@ gst_jack_audio_sink_class_init (GstJackAudioSinkClass * klass)
           GST_PARAM_MUTABLE_READY | G_PARAM_READWRITE |
           G_PARAM_STATIC_STRINGS));
 
+  /**
+   * GstJackAudioSink:transport
+   *
+   * The jack transport behaviour for the client.
+   *
+   * Since: 0.10.31
+   */
+  g_object_class_install_property (gobject_class, PROP_TRANSPORT,
+      g_param_spec_enum ("transport", "Transport mode",
+          "Jack transport behaviour of the client",
+          GST_TYPE_JACK_TRANSPORT, DEFAULT_PROP_TRANSPORT,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
   gstbasesink_class->get_caps = GST_DEBUG_FUNCPTR (gst_jack_audio_sink_getcaps);
 
   gstbaseaudiosink_class->create_ringbuffer =
@@ -773,8 +805,9 @@ gst_jack_audio_sink_init (GstJackAudioSink * sink,
   sink->jclient = NULL;
   sink->ports = NULL;
   sink->port_count = 0;
-  sink->client_name = g_strdup (DEFAULT_PROP_CLIENT_NAME);
   sink->buffers = NULL;
+  sink->client_name = g_strdup (DEFAULT_PROP_CLIENT_NAME);
+  sink->transport = DEFAULT_PROP_TRANSPORT;
 }
 
 static void
@@ -818,6 +851,9 @@ gst_jack_audio_sink_set_property (GObject * object, guint prop_id,
         sink->jclient = g_value_get_boxed (value);
       }
       break;
+    case PROP_TRANSPORT:
+      sink->transport = g_value_get_enum (value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -844,6 +880,9 @@ gst_jack_audio_sink_get_property (GObject * object, guint prop_id,
       break;
     case PROP_CLIENT:
       g_value_set_boxed (value, sink->jclient);
+      break;
+    case PROP_TRANSPORT:
+      g_value_set_enum (value, sink->transport);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);

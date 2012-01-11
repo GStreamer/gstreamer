@@ -37,19 +37,35 @@
  *
  * Specify how the output ports will be connected.
  */
-
 typedef enum {
   GST_JACK_CONNECT_NONE,
   GST_JACK_CONNECT_AUTO,
   GST_JACK_CONNECT_AUTO_FORCED
 } GstJackConnect;
 
+/**
+ * GstJackTransport:
+ * @GST_JACK_TRANSPORT_AUTONOMOUS: no transport support
+ * @GST_JACK_TRANSPORT_MASTER: start and stop transport with state-changes
+ * @GST_JACK_TRANSPORT_SLAVE: follow transport state changes
+ *
+ * The jack transport state allow to sync multiple clients. This enum defines a
+ * client behaviour regarding to the transport mechanism.
+ */
+typedef enum {
+  GST_JACK_TRANSPORT_AUTONOMOUS,
+  GST_JACK_TRANSPORT_MASTER,
+  GST_JACK_TRANSPORT_SLAVE
+} GstJackTransport;
+
 typedef jack_default_audio_sample_t sample_t;
 
-#define GST_TYPE_JACK_CONNECT (gst_jack_connect_get_type())
-#define GST_TYPE_JACK_CLIENT  (gst_jack_client_get_type ())
+#define GST_TYPE_JACK_CONNECT   (gst_jack_connect_get_type ())
+#define GST_TYPE_JACK_TRANSPORT (gst_jack_transport_get_type ())
+#define GST_TYPE_JACK_CLIENT    (gst_jack_client_get_type ())
 
 GType gst_jack_client_get_type(void);
 GType gst_jack_connect_get_type(void);
+GType gst_jack_transport_get_type(void);
 
 #endif  // _GST_JACK_H_
