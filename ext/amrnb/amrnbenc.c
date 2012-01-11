@@ -258,7 +258,7 @@ gst_amrnbenc_handle_frame (GstAudioEncoder * enc, GstBuffer * buffer)
   in_data = gst_buffer_map (buffer, &in_size, NULL, GST_MAP_READ);
 
   if (G_UNLIKELY (in_size < 320)) {
-    gst_buffer_unmap (buffer, in_data, in_size);
+    gst_buffer_unmap (buffer, in_data, -1);
     GST_DEBUG_OBJECT (amrnbenc, "discarding trailing data of %" G_GSIZE_FORMAT
         " bytes", in_size);
     return gst_audio_encoder_finish_frame (enc, NULL, -1);
@@ -269,12 +269,13 @@ gst_amrnbenc_handle_frame (GstAudioEncoder * enc, GstBuffer * buffer)
   /* AMR encoder actually writes into the source data buffers it gets */
   /* should be able to handle that with what we are given */
 
-  out_data = gst_buffer_map (buffer, NULL, NULL, GST_MAP_WRITE);
+  out_data = gst_buffer_map (out, NULL, NULL, GST_MAP_WRITE);
   /* encode */
   out_size =
       Encoder_Interface_Encode (amrnbenc->handle, amrnbenc->bandmode,
       in_data, out_data, 0);
   gst_buffer_unmap (out, out_data, out_size);
+  gst_buffer_unmap (buffer, in_data, -1);
 
   GST_LOG_OBJECT (amrnbenc, "output data size %" G_GSIZE_FORMAT, out_size);
 
