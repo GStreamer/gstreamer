@@ -122,7 +122,8 @@ static void gst_faac_set_property (GObject * object,
 static void gst_faac_get_property (GObject * object,
     guint prop_id, GValue * value, GParamSpec * pspec);
 
-static gboolean gst_faac_configure_source_pad (GstFaac * faac);
+static gboolean gst_faac_configure_source_pad (GstFaac * faac,
+    GstAudioInfo * info);
 static GstCaps *gst_faac_getcaps (GstAudioEncoder * enc, GstCaps * filter);
 
 static gboolean gst_faac_start (GstAudioEncoder * enc);
@@ -392,7 +393,7 @@ gst_faac_set_format (GstAudioEncoder * enc, GstAudioInfo * info)
   faac->format = fmt;
 
   /* finish up */
-  result = gst_faac_configure_source_pad (faac);
+  result = gst_faac_configure_source_pad (faac, info);
   if (!result)
     goto done;
 
@@ -464,14 +465,12 @@ gst_faac_negotiate (GstFaac * faac)
 }
 
 static gboolean
-gst_faac_open_encoder (GstFaac * faac)
+gst_faac_open_encoder (GstFaac * faac, GstAudioInfo * info)
 {
   faacEncHandle *handle;
   faacEncConfiguration *conf;
   guint maxbitrate;
   gulong samples, bytes;
-  GstAudioInfo *info =
-      gst_audio_encoder_get_audio_info (GST_AUDIO_ENCODER (faac));
 
   g_return_val_if_fail (info->rate != 0 && info->channels != 0, FALSE);
 
@@ -546,17 +545,15 @@ setup_failed:
 }
 
 static gboolean
-gst_faac_configure_source_pad (GstFaac * faac)
+gst_faac_configure_source_pad (GstFaac * faac, GstAudioInfo * info)
 {
   GstCaps *srccaps;
   gboolean ret;
-  GstAudioInfo *info =
-      gst_audio_encoder_get_audio_info (GST_AUDIO_ENCODER (faac));
 
   /* negotiate stream format */
   gst_faac_negotiate (faac);
 
-  if (!gst_faac_open_encoder (faac))
+  if (!gst_faac_open_encoder (faac, info))
     goto set_failed;
 
   /* now create a caps for it all */
@@ -689,7 +686,7 @@ gst_faac_handle_frame (GstAudioEncoder * enc, GstBuffer * in_buf)
     if (!in_buf) {
       GST_DEBUG_OBJECT (faac, "flushed; recreating encoder");
       gst_faac_close_encoder (faac);
-      if (!gst_faac_open_encoder (faac))
+      if (!gst_faac_open_encoder (faac, gst_audio_encoder_get_audio_info (enc)))
         ret = GST_FLOW_ERROR;
     }
   }
