@@ -845,9 +845,9 @@ find_stream_for_node (GstDiscoverer * dc, const GstStructure * topology)
 }
 
 static gboolean
-child_is_raw_stream (GstCaps * parent, GstCaps * child)
+child_is_raw_stream (const GstCaps * parent, const GstCaps * child)
 {
-  GstStructure *st1, *st2;
+  const GstStructure *st1, *st2;
   const gchar *name1, *name2;
 
   st1 = gst_caps_get_structure (parent, 0);
