@@ -62,9 +62,9 @@ gst_vaapi_ensure_display (gpointer element, GstVaapiDisplay **display)
   /* If no neighboor, or application not interested, use system default */
   if (!*display)
 #if USE_VAAPI_GLX
-    *display = gst_vaapi_display_glx_new ("");
+    *display = gst_vaapi_display_glx_new (NULL);
 #else
-    *display = gst_vaapi_display_x11_new ("");
+    *display = gst_vaapi_display_x11_new (NULL);
 #endif
 
   /* FIXME allocator should return NULL in case of failure */
