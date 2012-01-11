@@ -37,7 +37,6 @@
 
 #include <string.h>
 
-#include <gst/audio/multichannel.h>
 #include <gst/pbutils/codec-utils.h>
 
 #include "gstvoaacenc.h"
@@ -70,11 +69,9 @@ enum
 static GstStaticPadTemplate sink_template = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("audio/x-raw-int, "
-        "width = (int) 16, "
-        "depth = (int) 16, "
-        "signed = (boolean) TRUE, "
-        "endianness = (int) BYTE_ORDER, "
+    GST_STATIC_CAPS ("audio/x-raw, "
+        "format = (string) " GST_AUDIO_NE (S16) ", "
+        "layout = (string) interleaved, "
         "rate = (int) { " SAMPLE_RATES " }, " "channels = (int) [1, 2]")
     );
 
@@ -101,10 +98,9 @@ static gboolean gst_voaacenc_set_format (GstAudioEncoder * enc,
     GstAudioInfo * info);
 static GstFlowReturn gst_voaacenc_handle_frame (GstAudioEncoder * enc,
     GstBuffer * in_buf);
-static GstCaps *gst_voaacenc_getcaps (GstAudioEncoder * enc);
+static GstCaps *gst_voaacenc_getcaps (GstAudioEncoder * enc, GstCaps * filter);
 
-GST_BOILERPLATE (GstVoAacEnc, gst_voaacenc, GstAudioEncoder,
-    GST_TYPE_AUDIO_ENCODER);
+G_DEFINE_TYPE (GstVoAacEnc, gst_voaacenc, GST_TYPE_AUDIO_ENCODER);
 
 static void
 gst_voaacenc_set_property (GObject * object, guint prop_id,
@@ -141,23 +137,10 @@ gst_voaacenc_get_property (GObject * object, guint prop_id,
 }
 
 static void
-gst_voaacenc_base_init (gpointer klass)
-{
-  GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
-
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&sink_template));
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&src_template));
-
-  gst_element_class_set_details_simple (element_class, "AAC audio encoder",
-      "Codec/Encoder/Audio", "AAC audio encoder", "Kan Hu <kan.hu@linaro.org>");
-}
-
-static void
 gst_voaacenc_class_init (GstVoAacEncClass * klass)
 {
   GObjectClass *object_class = G_OBJECT_CLASS (klass);
+  GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
   GstAudioEncoderClass *base_class = GST_AUDIO_ENCODER_CLASS (klass);
 
   object_class->set_property = GST_DEBUG_FUNCPTR (gst_voaacenc_set_property);
@@ -175,10 +158,18 @@ gst_voaacenc_class_init (GstVoAacEncClass * klass)
           "Target Audio Bitrate",
           0, G_MAXINT, VOAAC_ENC_DEFAULT_BITRATE,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  gst_element_class_add_pad_template (element_class,
+      gst_static_pad_template_get (&sink_template));
+  gst_element_class_add_pad_template (element_class,
+      gst_static_pad_template_get (&src_template));
+
+  gst_element_class_set_details_simple (element_class, "AAC audio encoder",
+      "Codec/Encoder/Audio", "AAC audio encoder", "Kan Hu <kan.hu@linaro.org>");
 }
 
 static void
-gst_voaacenc_init (GstVoAacEnc * voaacenc, GstVoAacEncClass * klass)
+gst_voaacenc_init (GstVoAacEnc * voaacenc)
 {
   voaacenc->bitrate = VOAAC_ENC_DEFAULT_BITRATE;
   voaacenc->output_format = VOAAC_ENC_DEFAULT_OUTPUTFORMAT;
@@ -214,41 +205,42 @@ gst_voaacenc_stop (GstAudioEncoder * enc)
   return TRUE;
 }
 
+#define VOAAC_ENC_MAX_CHANNELS 6
+/* describe the channels position */
+static const GstAudioChannelPosition
+    aac_channel_positions[][VOAAC_ENC_MAX_CHANNELS] = {
+  {                             /* 1 ch: Mono */
+      GST_AUDIO_CHANNEL_POSITION_MONO},
+  {                             /* 2 ch: front left + front right (front stereo) */
+        GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT,
+      GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT},
+  {                             /* 3 ch: front center + front stereo */
+        GST_AUDIO_CHANNEL_POSITION_FRONT_CENTER,
+        GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT,
+      GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT},
+  {                             /* 4 ch: front center + front stereo + back center */
+        GST_AUDIO_CHANNEL_POSITION_FRONT_CENTER,
+        GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT,
+        GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT,
+      GST_AUDIO_CHANNEL_POSITION_REAR_CENTER},
+  {                             /* 5 ch: front center + front stereo + back stereo */
+        GST_AUDIO_CHANNEL_POSITION_FRONT_CENTER,
+        GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT,
+        GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT,
+        GST_AUDIO_CHANNEL_POSITION_REAR_LEFT,
+      GST_AUDIO_CHANNEL_POSITION_REAR_RIGHT},
+  {                             /* 6ch: front center + front stereo + back stereo + LFE */
+        GST_AUDIO_CHANNEL_POSITION_FRONT_CENTER,
+        GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT,
+        GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT,
+        GST_AUDIO_CHANNEL_POSITION_REAR_LEFT,
+        GST_AUDIO_CHANNEL_POSITION_REAR_RIGHT,
+      GST_AUDIO_CHANNEL_POSITION_LFE1}
+};
+
 static gpointer
 gst_voaacenc_generate_sink_caps (gpointer data)
 {
-#define VOAAC_ENC_MAX_CHANNELS 6
-/* describe the channels position */
-  static const GstAudioChannelPosition
-      gst_voaacenc_channel_position[][VOAAC_ENC_MAX_CHANNELS] = {
-    {                           /* 1 ch: Mono */
-        GST_AUDIO_CHANNEL_POSITION_FRONT_MONO},
-    {                           /* 2 ch: front left + front right (front stereo) */
-          GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT,
-        GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT},
-    {                           /* 3 ch: front center + front stereo */
-          GST_AUDIO_CHANNEL_POSITION_FRONT_CENTER,
-          GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT,
-        GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT},
-    {                           /* 4 ch: front center + front stereo + back center */
-          GST_AUDIO_CHANNEL_POSITION_FRONT_CENTER,
-          GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT,
-          GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT,
-        GST_AUDIO_CHANNEL_POSITION_REAR_CENTER},
-    {                           /* 5 ch: front center + front stereo + back stereo */
-          GST_AUDIO_CHANNEL_POSITION_FRONT_CENTER,
-          GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT,
-          GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT,
-          GST_AUDIO_CHANNEL_POSITION_REAR_LEFT,
-        GST_AUDIO_CHANNEL_POSITION_REAR_RIGHT},
-    {                           /* 6ch: front center + front stereo + back stereo + LFE */
-          GST_AUDIO_CHANNEL_POSITION_FRONT_CENTER,
-          GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT,
-          GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT,
-          GST_AUDIO_CHANNEL_POSITION_REAR_LEFT,
-          GST_AUDIO_CHANNEL_POSITION_REAR_RIGHT,
-        GST_AUDIO_CHANNEL_POSITION_LFE}
-  };
   GstCaps *caps = gst_caps_new_empty ();
   gint i, c;
   static const int rates[] = {
@@ -257,6 +249,7 @@ gst_voaacenc_generate_sink_caps (gpointer data)
   };
   GValue rates_arr = { 0, };
   GValue tmp = { 0, };
+  GstStructure *s, *t;
 
   g_value_init (&rates_arr, GST_TYPE_LIST);
   g_value_init (&tmp, G_TYPE_INT);
@@ -266,35 +259,29 @@ gst_voaacenc_generate_sink_caps (gpointer data)
   }
   g_value_unset (&tmp);
 
-  for (i = 0; i < 2 /*VOAAC_ENC_MAX_CHANNELS */ ; i++) {
-    GValue chanpos = { 0 };
-    GValue pos = { 0 };
-    GstStructure *structure;
+  s = gst_structure_new ("audio/x-raw",
+      "format", G_TYPE_STRING, GST_AUDIO_NE (S16),
+      "layout", G_TYPE_STRING, "interleaved", NULL);
+  gst_structure_set_value (s, "rate", &rates_arr);
 
-    g_value_init (&chanpos, GST_TYPE_ARRAY);
-    g_value_init (&pos, GST_TYPE_AUDIO_CHANNEL_POSITION);
+  caps = gst_caps_new_empty ();
 
-    for (c = 0; c <= i; c++) {
-      g_value_set_enum (&pos, gst_voaacenc_channel_position[i][c]);
-      gst_value_array_append_value (&chanpos, &pos);
-    }
+  for (i = 1; i <= 2 /* VOAAC_ENC_MAX_CHANNELS */ ; i++) {
+    guint64 channel_mask = 0;
+    t = gst_structure_copy (s);
 
-    g_value_unset (&pos);
+    gst_structure_set (t, "channels", G_TYPE_INT, i, NULL);
+    if (i == 1)
+      continue;
 
-    structure = gst_structure_new ("audio/x-raw-int",
-        "width", G_TYPE_INT, 16,
-        "depth", G_TYPE_INT, 16,
-        "signed", G_TYPE_BOOLEAN, TRUE,
-        "endianness", G_TYPE_INT, G_BYTE_ORDER,
-        "channels", G_TYPE_INT, i + 1, NULL);
+    for (c = 0; c < i; c++)
+      channel_mask |= G_GUINT64_CONSTANT (1) << aac_channel_positions[i - 1][c];
 
-    gst_structure_set_value (structure, "rate", &rates_arr);
-    gst_structure_set_value (structure, "channel-positions", &chanpos);
-    g_value_unset (&chanpos);
-
-    gst_caps_append_structure (caps, structure);
+    gst_structure_set (t, "channel-mask", GST_TYPE_BITMASK, channel_mask, NULL);
+    gst_caps_append_structure (caps, t);
   }
 
+  gst_structure_free (s);
   g_value_unset (&rates_arr);
 
   GST_DEBUG ("generated sink caps: %" GST_PTR_FORMAT, caps);
@@ -314,7 +301,7 @@ gst_voaacenc_get_sink_caps (void)
 }
 
 static GstCaps *
-gst_voaacenc_getcaps (GstAudioEncoder * benc)
+gst_voaacenc_getcaps (GstAudioEncoder * benc, GstCaps * filter)
 {
   return gst_audio_encoder_proxy_getcaps (benc, gst_voaacenc_get_sink_caps ());
 }
@@ -371,11 +358,13 @@ static GstCaps *
 gst_voaacenc_create_source_pad_caps (GstVoAacEnc * voaacenc)
 {
   GstCaps *caps = NULL;
-  GstBuffer *codec_data;
   gint index;
-  guint8 data[VOAAC_ENC_CODECDATA_LEN];
+  GstBuffer *codec_data;
+  guint8 *data;
 
   if ((index = gst_voaacenc_get_rate_index (voaacenc->rate)) >= 0) {
+    codec_data = gst_buffer_new_and_alloc (VOAAC_ENC_CODECDATA_LEN);
+    data = gst_buffer_map (codec_data, NULL, NULL, GST_MAP_WRITE);
     /* LC profile only */
     data[0] = ((0x02 << 3) | (index >> 1));
     data[1] = ((index & 0x01) << 7) | (voaacenc->channels << 3);
@@ -388,18 +377,15 @@ gst_voaacenc_create_source_pad_caps (GstVoAacEnc * voaacenc)
         (voaacenc->output_format ? "adts" : "raw")
         , NULL);
 
-    gst_codec_utils_aac_caps_set_level_and_profile (caps, data, sizeof (data));
+    gst_codec_utils_aac_caps_set_level_and_profile (caps, data,
+        VOAAC_ENC_CODECDATA_LEN);
+    gst_buffer_unmap (codec_data, data, -1);
 
     if (!voaacenc->output_format) {
-      codec_data = gst_buffer_new_and_alloc (VOAAC_ENC_CODECDATA_LEN);
-
-      memcpy (GST_BUFFER_DATA (codec_data), data, sizeof (data));
-
       gst_caps_set_simple (caps, "codec_data", GST_TYPE_BUFFER, codec_data,
           NULL);
-
-      gst_buffer_unref (codec_data);
     }
+    gst_buffer_unref (codec_data);
   }
 
   return caps;
@@ -449,6 +435,9 @@ gst_voaacenc_handle_frame (GstAudioEncoder * benc, GstBuffer * buf)
   VO_AUDIO_OUTPUTINFO output_info = { {0} };
   VO_CODECBUFFER input = { 0 };
   VO_CODECBUFFER output = { 0 };
+  gsize size;
+  guint8 *data, *out_data;
+  GstAudioInfo *info = gst_audio_encoder_get_audio_info (benc);
 
   voaacenc = GST_VOAACENC (benc);
 
@@ -460,44 +449,47 @@ gst_voaacenc_handle_frame (GstAudioEncoder * benc, GstBuffer * buf)
     goto exit;
   }
 
-  if (G_UNLIKELY (GST_BUFFER_SIZE (buf) < voaacenc->inbuf_size)) {
-    GST_DEBUG_OBJECT (voaacenc, "discarding trailing data %d",
-        buf ? GST_BUFFER_SIZE (buf) : 0);
+  if (memcmp (info->position, aac_channel_positions[info->channels - 1],
+          sizeof (GstAudioChannelPosition) * info->channels) != 0) {
+    buf = gst_buffer_make_writable (buf);
+    gst_audio_buffer_reorder_channels (buf, info->finfo->format,
+        info->channels, info->position,
+        aac_channel_positions[info->channels - 1]);
+  }
+
+  data = gst_buffer_map (buf, &size, NULL, GST_MAP_READ);
+
+  if (G_UNLIKELY (size < voaacenc->inbuf_size)) {
+    gst_buffer_unmap (buf, data, -1);
+    GST_DEBUG_OBJECT (voaacenc, "discarding trailing data %d", (gint) size);
     ret = gst_audio_encoder_finish_frame (benc, NULL, -1);
     goto exit;
   }
 
   /* max size */
-  if ((ret =
-          gst_pad_alloc_buffer_and_set_caps (GST_AUDIO_ENCODER_SRC_PAD
-              (voaacenc), 0, voaacenc->inbuf_size,
-              GST_PAD_CAPS (GST_AUDIO_ENCODER_SRC_PAD (voaacenc)),
-              &out)) != GST_FLOW_OK) {
-    goto exit;
-  }
+  out = gst_buffer_new_and_alloc (voaacenc->inbuf_size);
+  out_data = gst_buffer_map (out, NULL, NULL, GST_MAP_WRITE);
 
-  output.Buffer = GST_BUFFER_DATA (out);
+  output.Buffer = out_data;
   output.Length = voaacenc->inbuf_size;
 
-  g_assert (GST_BUFFER_SIZE (buf) == voaacenc->inbuf_size);
-  input.Buffer = GST_BUFFER_DATA (buf);
+  g_assert (size == voaacenc->inbuf_size);
+  input.Buffer = data;
   input.Length = voaacenc->inbuf_size;
   voaacenc->codec_api.SetInputData (voaacenc->handle, &input);
 
   /* encode */
   if (voaacenc->codec_api.GetOutputData (voaacenc->handle, &output,
           &output_info) != VO_ERR_NONE) {
+    gst_buffer_unmap (buf, data, -1);
+    gst_buffer_unmap (out, out_data, -1);
     gst_buffer_unref (out);
     goto encode_failed;
   }
 
   GST_LOG_OBJECT (voaacenc, "encoded to %d bytes", output.Length);
-  GST_BUFFER_SIZE (out) = output.Length;
-
-  GST_LOG_OBJECT (voaacenc, "Pushing out buffer time: %" GST_TIME_FORMAT
-      " duration: %" GST_TIME_FORMAT,
-      GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (out)),
-      GST_TIME_ARGS (GST_BUFFER_DURATION (out)));
+  gst_buffer_unmap (out, out_data, output.Length);
+  gst_buffer_unmap (buf, data, -1);
 
   ret = gst_audio_encoder_finish_frame (benc, out, 1024);
 
