@@ -821,8 +821,10 @@ find_stream_for_node (GstDiscoverer * dc, const GstStructure * topology)
   gst_structure_id_get (topology, _TOPOLOGY_PAD_QUARK,
       GST_TYPE_PAD, &pad, NULL);
 
-  if (!dc->priv->streams)
+  if (!dc->priv->streams) {
+    gst_object_unref (pad);
     return NULL;
+  }
 
   for (i = 0, tmp = dc->priv->streams; tmp; tmp = tmp->next, i++) {
     ps = (PrivateStream *) tmp->data;
