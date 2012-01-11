@@ -529,6 +529,8 @@ gst_audio_info_from_caps (GstAudioInfo * info, const GstCaps * caps)
 
   GST_DEBUG ("parsing caps %" GST_PTR_FORMAT, caps);
 
+  info->flags = 0;
+
   str = gst_caps_get_structure (caps, 0);
 
   if (!gst_structure_has_name (str, "audio/x-raw"))
@@ -654,6 +656,7 @@ gst_audio_info_to_caps (const GstAudioInfo * info)
   GstCaps *caps;
   const gchar *format;
   const gchar *layout;
+  GstAudioFlags flags;
 
   g_return_val_if_fail (info != NULL, NULL);
   g_return_val_if_fail (info->finfo != NULL, NULL);
@@ -669,6 +672,13 @@ gst_audio_info_to_caps (const GstAudioInfo * info)
   else
     g_return_val_if_reached (NULL);
 
+  flags = info->flags;
+  if ((flags & GST_AUDIO_FLAG_UNPOSITIONED) && info->channels > 1
+      && info->position[0] != GST_AUDIO_CHANNEL_POSITION_NONE) {
+    flags &= ~GST_AUDIO_FLAG_UNPOSITIONED;
+    GST_WARNING ("Unpositioned flag set but channel positions present");
+  }
+
   caps = gst_caps_new_simple ("audio/x-raw",
       "format", G_TYPE_STRING, format,
       "layout", G_TYPE_STRING, layout,
@@ -679,7 +689,7 @@ gst_audio_info_to_caps (const GstAudioInfo * info)
       || info->position[0] != GST_AUDIO_CHANNEL_POSITION_MONO) {
     guint64 channel_mask = 0;
 
-    if ((info->flags & GST_AUDIO_FLAG_UNPOSITIONED)) {
+    if ((flags & GST_AUDIO_FLAG_UNPOSITIONED)) {
       channel_mask = 0;
     } else {
       if (!check_valid_channel_positions (info->position, info->channels,
