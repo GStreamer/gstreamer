@@ -121,6 +121,7 @@ gst_opus_parse_stop (GstBaseParse * base)
   GstOpusParse *parse = GST_OPUS_PARSE (base);
 
   g_slist_foreach (parse->headers, (GFunc) gst_buffer_unref, NULL);
+  g_slist_free (parse->headers);
   parse->headers = NULL;
 
   parse->header_sent = FALSE;
@@ -294,6 +295,7 @@ gst_opus_parse_parse_frame (GstBaseParse * base, GstBaseParseFrame * frame)
     }
 
     g_slist_foreach (parse->headers, (GFunc) gst_buffer_unref, NULL);
+    g_slist_free (parse->headers);
     parse->headers = NULL;
 
     if (parse->id_header && parse->comment_header) {
