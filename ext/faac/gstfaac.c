@@ -672,7 +672,8 @@ gst_faac_handle_frame (GstAudioEncoder * enc, GstBuffer * in_buf)
                   size / (info->finfo->width / 8), out_data, out_size)) < 0))
     goto encode_failed;
 
-  gst_buffer_unmap (in_buf, data, size);
+  if (in_buf)
+    gst_buffer_unmap (in_buf, data, -1);
 
   GST_LOG_OBJECT (faac, "encoder return: %" G_GSIZE_FORMAT, ret_size);
 
@@ -696,9 +697,9 @@ gst_faac_handle_frame (GstAudioEncoder * enc, GstBuffer * in_buf)
   /* ERRORS */
 encode_failed:
   {
-    gst_buffer_unref (out_buf);
     GST_ELEMENT_ERROR (faac, LIBRARY, ENCODE, (NULL), (NULL));
-    gst_buffer_unmap (in_buf, data, size);
+    if (in_buf)
+      gst_buffer_unmap (in_buf, data, -1);
     gst_buffer_unmap (out_buf, out_data, 0);
     gst_buffer_unref (out_buf);
     return GST_FLOW_ERROR;
