@@ -512,6 +512,9 @@ gst_faad_update_caps (GstFaad * faad, faacDecFrameInfo * info)
   gst_audio_channel_positions_to_valid_order (ainfo.position, faad->channels);
   memcpy (faad->gst_positions, ainfo.position,
       faad->channels * sizeof (GstAudioChannelPosition));
+  /* Unset UNPOSITIONED flag */
+  if (ainfo.position[0] != GST_AUDIO_CHANNEL_POSITION_NONE)
+    ainfo.flags &= ~GST_AUDIO_FLAG_UNPOSITIONED;
 
   caps = gst_audio_info_to_caps (&ainfo);
 
