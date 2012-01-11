@@ -331,7 +331,8 @@ gst_faac_getcaps (GstAudioEncoder * enc, GstCaps * filter)
     g_value_unset (&tmp_v);
 
     s = gst_structure_new ("audio/x-raw",
-        "format", G_TYPE_STRING, GST_AUDIO_NE (S16), NULL);
+        "format", G_TYPE_STRING, GST_AUDIO_NE (S16),
+        "layout", G_TYPE_STRING, "interleaved", NULL);
     gst_structure_set_value (s, "rate", &rates_arr);
 
     for (i = 1; i <= 6; i++) {
