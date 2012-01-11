@@ -676,7 +676,13 @@ gst_audio_info_to_caps (const GstAudioInfo * info)
   if ((flags & GST_AUDIO_FLAG_UNPOSITIONED) && info->channels > 1
       && info->position[0] != GST_AUDIO_CHANNEL_POSITION_NONE) {
     flags &= ~GST_AUDIO_FLAG_UNPOSITIONED;
-    GST_WARNING ("Unpositioned flag set but channel positions present");
+    g_warning ("Unpositioned audio channel position flag set but "
+        "channel positions present");
+  } else if (!(flags & GST_AUDIO_FLAG_UNPOSITIONED) && info->channels > 1
+      && info->position[0] == GST_AUDIO_CHANNEL_POSITION_NONE) {
+    flags |= GST_AUDIO_FLAG_UNPOSITIONED;
+    g_warning ("Unpositioned audio channel position flag not set "
+        "but no channel positions present");
   }
 
   caps = gst_caps_new_simple ("audio/x-raw",
