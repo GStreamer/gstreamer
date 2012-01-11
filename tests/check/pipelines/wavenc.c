@@ -54,7 +54,7 @@ bus_handler (GstBus * bus, GstMessage * message, gpointer data)
 
 /*
  * gst-launch \
- * audiotestsrc freq=440 num-buffers=100 ! interleave name=i ! wavenc ! filesink location=/tmp/mc.wav \
+ * audiotestsrc freq=440 num-buffers=100 ! interleave name=i ! audioconvert ! wavenc ! filesink location=/tmp/mc.wav \
  * audiotestsrc freq=880 num-buffers=100 ! i.
  * ...
  *
@@ -65,7 +65,7 @@ static void
 make_n_channel_wav (const gint channels, const GValueArray * arr)
 {
   GstElement *pipeline;
-  GstElement **audiotestsrc, *interleave, *wavenc, *fakesink;
+  GstElement **audiotestsrc, *interleave, *wavenc, *conv, *fakesink;
   GstBus *bus;
   GMainLoop *loop;
   guint i;
@@ -81,10 +81,21 @@ make_n_channel_wav (const gint channels, const GValueArray * arr)
   g_object_set (interleave, "channel-positions", arr, NULL);
   gst_bin_add (GST_BIN (pipeline), interleave);
 
+  if (G_BYTE_ORDER == G_BIG_ENDIAN) {
+    /* we're not here to test orc; audioconvert misbehaves on ppc32 */
+    g_setenv ("ORC_CODE", "backup", 1);
+    conv = gst_element_factory_make ("audioconvert", NULL);
+  } else {
+    conv = gst_element_factory_make ("identity", NULL);
+  }
+  fail_unless (conv != NULL);
+  gst_bin_add (GST_BIN (pipeline), conv);
+  fail_unless (gst_element_link (interleave, conv));
+
   wavenc = gst_element_factory_make ("wavenc", NULL);
   fail_unless (wavenc != NULL);
   gst_bin_add (GST_BIN (pipeline), wavenc);
-  fail_unless (gst_element_link (interleave, wavenc));
+  fail_unless (gst_element_link (conv, wavenc));
 
   fakesink = gst_element_factory_make ("fakesink", NULL);
   fail_unless (fakesink != NULL);
