@@ -92,7 +92,7 @@ CONFIGURE_TARGETS += gst-plugins-good-configure
 -include $(GST_PLUGINS_GOOD_TOP)/gst/law/Android.mk
 -include $(GST_PLUGINS_GOOD_TOP)/gst/level/Android.mk
 -include $(GST_PLUGINS_GOOD_TOP)/gst/matroska/Android.mk
--include $(GST_PLUGINS_GOOD_TOP)/gst/multifile/Android.mk
+#-include $(GST_PLUGINS_GOOD_TOP)/gst/multifile/Android.mk
 -include $(GST_PLUGINS_GOOD_TOP)/gst/multipart/Android.mk
 -include $(GST_PLUGINS_GOOD_TOP)/gst/isomp4/Android.mk
 -include $(GST_PLUGINS_GOOD_TOP)/gst/replaygain/Android.mk
