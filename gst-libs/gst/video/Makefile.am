@@ -107,7 +107,7 @@ Android.mk: Makefile.am $(BUILT_SOURCES)
          -:REL_TOP $(top_srcdir) -:ABS_TOP $(abs_top_srcdir) \
 	 -:SOURCES $(libgstvideo_@GST_MAJORMINOR@_la_SOURCES) \
 	           $(nodist_libgstvideo_@GST_MAJORMINOR@_la_SOURCES) \
-	 -:CFLAGS $(DEFS) $(libgstvideo_@GST_MAJORMINOR@_la_CFLAGS) \
+	 -:CFLAGS $(DEFS) $(DEFAULT_INCLUDES) $(libgstvideo_@GST_MAJORMINOR@_la_CFLAGS) \
 	 -:LDFLAGS $(libgstvideo_@GST_MAJORMINOR@_la_LDFLAGS) \
 	           $(libgstvideo_@GST_MAJORMINOR@_la_LIBADD) \
 	           -ldl \
