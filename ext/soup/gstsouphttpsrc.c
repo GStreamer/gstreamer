@@ -933,6 +933,7 @@ gst_soup_http_src_got_chunk_cb (SoupMessage * msg, SoupBuffer * chunk,
 {
   GstBaseSrc *basesrc;
   guint64 new_position;
+  SoupGstChunk *gchunk;
 
   if (G_UNLIKELY (msg != src->msg)) {
     GST_DEBUG_OBJECT (src, "got chunk, but not for current message");
@@ -948,7 +949,8 @@ gst_soup_http_src_got_chunk_cb (SoupMessage * msg, SoupBuffer * chunk,
       chunk->length);
 
   /* Extract the GstBuffer from the SoupBuffer and set its fields. */
-  *src->outbuf = GST_BUFFER_CAST (soup_buffer_get_owner (chunk));
+  gchunk = (SoupGstChunk *) soup_buffer_get_owner (chunk);
+  *src->outbuf = gchunk->buffer;
 
   gst_buffer_resize (*src->outbuf, 0, chunk->length);
   GST_BUFFER_OFFSET (*src->outbuf) = basesrc->segment.position;
