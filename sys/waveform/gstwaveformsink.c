@@ -80,8 +80,8 @@ GstCaps *gst_waveform_sink_create_caps (gint rate, gint channels,
     gint bits_per_sample);
 WAVEHDR *bufferpool_get_buffer (GstWaveFormSink * wfsink, gpointer data,
     guint length);
-void CALLBACK waveOutProc (HWAVEOUT hwo, UINT uMsg, unsigned long dwInstance,
-    DWORD dwParam1, DWORD dwParam2);
+void CALLBACK waveOutProc (HWAVEOUT hwo, UINT uMsg, DWORD_PTR dwInstance,
+    DWORD_PTR dwParam1, DWORD_PTR dwParam2);
 
 static GstStaticPadTemplate waveformsink_sink_factory =
     GST_STATIC_PAD_TEMPLATE ("sink",
@@ -378,7 +378,7 @@ gst_waveform_sink_prepare (GstAudioSink * asink, GstRingBufferSpec * spec)
 
   /* open the default audio device with the given caps */
   mmresult = waveOutOpen (&wfsink->hwaveout, WAVE_MAPPER,
-      &wfx, (DWORD) waveOutProc, (DWORD) wfsink, CALLBACK_FUNCTION);
+      &wfx, (DWORD_PTR) waveOutProc, (DWORD_PTR) wfsink, CALLBACK_FUNCTION);
   if (mmresult != MMSYSERR_NOERROR) {
     waveOutGetErrorText (mmresult, wfsink->error_string, ERROR_LENGTH - 1);
     GST_ELEMENT_ERROR (wfsink, RESOURCE, OPEN_WRITE,
@@ -573,7 +573,7 @@ gst_waveform_sink_create_caps (gint rate, gint channels, gint bits_per_sample)
 
 void CALLBACK
 waveOutProc (HWAVEOUT hwo,
-    UINT uMsg, unsigned long dwInstance, DWORD dwParam1, DWORD dwParam2)
+    UINT uMsg, DWORD_PTR dwInstance, DWORD_PTR dwParam1, DWORD_PTR dwParam2)
 {
   GstWaveFormSink *wfsink = (GstWaveFormSink *) dwInstance;
 
