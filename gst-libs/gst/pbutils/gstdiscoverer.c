@@ -641,7 +641,7 @@ collect_information (GstDiscoverer * dc, const GstStructure * st,
   if (!st || !gst_structure_id_has_field (st, _CAPS_QUARK)) {
     GST_WARNING ("Couldn't find caps !");
     if (parent)
-      return parent;
+      return gst_discoverer_stream_info_ref (parent);
     else
       return (GstDiscovererStreamInfo *)
           gst_mini_object_new (GST_TYPE_DISCOVERER_STREAM_INFO);
@@ -655,11 +655,11 @@ collect_information (GstDiscoverer * dc, const GstStructure * st,
     GstDiscovererAudioInfo *info;
 
     if (parent)
-      info = (GstDiscovererAudioInfo *) parent;
+      info = (GstDiscovererAudioInfo *) gst_discoverer_stream_info_ref (parent);
     else {
       info = (GstDiscovererAudioInfo *)
           gst_mini_object_new (GST_TYPE_DISCOVERER_AUDIO_INFO);
-      info->parent.caps = caps;
+      info->parent.caps = gst_caps_ref (caps);
     }
 
     if (gst_structure_get_int (caps_st, "rate", &tmp))
@@ -692,6 +692,7 @@ collect_information (GstDiscoverer * dc, const GstStructure * st,
       }
     }
 
+    gst_caps_unref (caps);
     return (GstDiscovererStreamInfo *) info;
 
   } else if (g_str_has_prefix (name, "video/") ||
@@ -699,11 +700,11 @@ collect_information (GstDiscoverer * dc, const GstStructure * st,
     GstDiscovererVideoInfo *info;
 
     if (parent)
-      info = (GstDiscovererVideoInfo *) parent;
+      info = (GstDiscovererVideoInfo *) gst_discoverer_stream_info_ref (parent);
     else {
       info = (GstDiscovererVideoInfo *)
           gst_mini_object_new (GST_TYPE_DISCOVERER_VIDEO_INFO);
-      info->parent.caps = caps;
+      info->parent.caps = gst_caps_ref (caps);
     }
 
     if (gst_structure_get_int (caps_st, "width", &tmp) &&
@@ -745,17 +746,19 @@ collect_information (GstDiscoverer * dc, const GstStructure * st,
           (GstTagList *) tags_st);
     }
 
+    gst_caps_unref (caps);
     return (GstDiscovererStreamInfo *) info;
 
   } else if (is_subtitle_caps (caps)) {
     GstDiscovererSubtitleInfo *info;
 
     if (parent)
-      info = (GstDiscovererSubtitleInfo *) parent;
+      info =
+          (GstDiscovererSubtitleInfo *) gst_discoverer_stream_info_ref (parent);
     else {
       info = (GstDiscovererSubtitleInfo *)
           gst_mini_object_new (GST_TYPE_DISCOVERER_SUBTITLE_INFO);
-      info->parent.caps = caps;
+      info->parent.caps = gst_caps_ref (caps);
     }
 
     if (gst_structure_id_has_field (st, _TAGS_QUARK)) {
@@ -779,6 +782,7 @@ collect_information (GstDiscoverer * dc, const GstStructure * st,
       }
     }
 
+    gst_caps_unref (caps);
     return (GstDiscovererStreamInfo *) info;
 
   } else {
@@ -786,11 +790,11 @@ collect_information (GstDiscoverer * dc, const GstStructure * st,
     GstDiscovererStreamInfo *info;
 
     if (parent)
-      info = parent;
+      info = gst_discoverer_stream_info_ref (parent);
     else {
       info = (GstDiscovererStreamInfo *)
           gst_mini_object_new (GST_TYPE_DISCOVERER_STREAM_INFO);
-      info->caps = caps;
+      info->caps = gst_caps_ref (caps);
     }
 
     if (gst_structure_id_get (st, _TAGS_QUARK,
@@ -798,6 +802,7 @@ collect_information (GstDiscoverer * dc, const GstStructure * st,
       gst_discoverer_merge_and_replace_tags (&info->tags, tags_st);
     }
 
+    gst_caps_unref (caps);
     return info;
   }
 
@@ -937,6 +942,8 @@ parse_stream_topology (GstDiscoverer * dc, const GstStructure * topology,
     if (add_to_list) {
       dc->priv->current_info->stream_list =
           g_list_append (dc->priv->current_info->stream_list, res);
+    } else {
+      gst_discoverer_stream_info_unref (res);
     }
 
   } else if (GST_VALUE_HOLDS_LIST (nval)) {
@@ -1056,8 +1063,8 @@ discoverer_collect (GstDiscoverer * dc)
           gst_caps_get_structure (dc->priv->current_info->stream_info->caps, 0);
 
       if (g_str_has_prefix (gst_structure_get_name (st), "image/"))
-        ((GstDiscovererVideoInfo *) dc->priv->current_info->
-            stream_info)->is_image = TRUE;
+        ((GstDiscovererVideoInfo *) dc->priv->current_info->stream_info)->
+            is_image = TRUE;
     }
   }
 
