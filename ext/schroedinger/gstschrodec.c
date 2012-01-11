@@ -571,6 +571,8 @@ gst_schro_dec_process (GstSchroDec * schro_dec, gboolean eos)
 
           schro_frame_unref (schro_frame);
         }
+        if (tag)
+          schro_tag_free (tag);
         if (!eos) {
           go = FALSE;
         }
