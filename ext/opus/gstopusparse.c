@@ -317,6 +317,7 @@ gst_opus_parse_parse_frame (GstBaseParse * base, GstBaseParseFrame * frame)
     gst_buffer_replace (&parse->comment_header, NULL);
 
     gst_pad_set_caps (GST_BASE_PARSE_SRC_PAD (parse), caps);
+    gst_caps_unref (caps);
     parse->header_sent = TRUE;
   }
 
