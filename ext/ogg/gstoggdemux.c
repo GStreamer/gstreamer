@@ -2436,10 +2436,12 @@ gst_ogg_demux_deactivate_current_chain (GstOggDemux * ogg)
 
     pad->added = FALSE;
   }
-  /* With push mode seeking implemented, we can now seek back to the chain,
-     so we do not destroy it */
-  GST_DEBUG_OBJECT (ogg, "Resetting current chain");
-  ogg->current_chain = NULL;
+
+  /* if we cannot seek back to the chain, we can destroy the chain 
+   * completely */
+  if (!ogg->pullmode) {
+    gst_ogg_chain_free (chain);
+  }
 
   return TRUE;
 }
