@@ -581,10 +581,6 @@ gst_structure_set_valist_internal (GstStructure * structure,
 
     type = va_arg (varargs, GType);
 
-    if (G_UNLIKELY (type == G_TYPE_DATE)) {
-      g_warning ("Don't use G_TYPE_DATE, use GST_TYPE_DATE instead\n");
-      type = GST_TYPE_DATE;
-    }
     G_VALUE_COLLECT_INIT (&field.value, type, varargs, 0, &err);
     if (G_UNLIKELY (err)) {
       g_critical ("%s", err);
@@ -651,10 +647,6 @@ gst_structure_id_set_valist_internal (GstStructure * structure,
 
     type = va_arg (varargs, GType);
 
-    if (G_UNLIKELY (type == G_TYPE_DATE)) {
-      g_warning ("Don't use G_TYPE_DATE, use GST_TYPE_DATE instead\n");
-      type = GST_TYPE_DATE;
-    }
 #ifndef G_VALUE_COLLECT_INIT
     g_value_init (&field.value, type);
     G_VALUE_COLLECT (&field.value, varargs, 0, &err);
@@ -797,10 +789,10 @@ gst_structure_set_field (GstStructure * structure, GstStructureField * field)
       g_value_unset (&field->value);
       return;
     }
-  } else if (G_UNLIKELY (GST_VALUE_HOLDS_DATE (&field->value))) {
+  } else if (G_UNLIKELY (G_VALUE_HOLDS (&field->value, G_TYPE_DATE))) {
     const GDate *d;
 
-    d = gst_value_get_date (&field->value);
+    d = g_value_get_boxed (&field->value);
     /* only check for NULL GDates in taglists, as they might make sense
      * in other, generic structs */
     if (G_UNLIKELY ((IS_TAGLIST (structure) && d == NULL))) {
@@ -1398,7 +1390,7 @@ gst_structure_get_date (const GstStructure * structure, const gchar * fieldname,
 
   if (field == NULL)
     return FALSE;
-  if (!GST_VALUE_HOLDS_DATE (&field->value))
+  if (!G_VALUE_HOLDS (&field->value, G_TYPE_DATE))
     return FALSE;
 
   /* FIXME: 0.11 g_value_dup_boxed() -> g_value_get_boxed() */
@@ -1687,7 +1679,7 @@ gst_structure_get_abbrs (gint * n_abbrs)
       ,
       {"structure", GST_TYPE_STRUCTURE}
       ,
-      {"date", GST_TYPE_DATE}
+      {"date", G_TYPE_DATE}
       ,
       {"datetime", GST_TYPE_DATE_TIME}
       ,

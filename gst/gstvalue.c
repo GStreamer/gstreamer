@@ -4447,52 +4447,6 @@ gst_value_compare_fraction (const GValue * value1, const GValue * value2)
  * GDate *
  *********/
 
-/**
- * gst_value_set_date:
- * @value: a GValue initialized to GST_TYPE_DATE
- * @date: the date to set the value to
- *
- * Sets the contents of @value to correspond to @date.  The actual
- * #GDate structure is copied before it is used.
- */
-void
-gst_value_set_date (GValue * value, const GDate * date)
-{
-  g_return_if_fail (G_VALUE_TYPE (value) == GST_TYPE_DATE);
-  g_return_if_fail (g_date_valid (date));
-
-  g_value_set_boxed (value, date);
-}
-
-/**
- * gst_value_get_date:
- * @value: a GValue initialized to GST_TYPE_DATE
- *
- * Gets the contents of @value.
- *
- * Returns: (transfer none): the contents of @value
- */
-const GDate *
-gst_value_get_date (const GValue * value)
-{
-  g_return_val_if_fail (G_VALUE_TYPE (value) == GST_TYPE_DATE, NULL);
-
-  return (const GDate *) g_value_get_boxed (value);
-}
-
-static gpointer
-gst_date_copy (gpointer boxed)
-{
-  const GDate *date = (const GDate *) boxed;
-
-  if (!g_date_valid (date)) {
-    GST_WARNING ("invalid GDate");
-    return NULL;
-  }
-
-  return g_date_new_julian (g_date_get_julian (date));
-}
-
 static gint
 gst_value_compare_date (const GValue * value1, const GValue * value2)
 {
@@ -4994,25 +4948,6 @@ static const GTypeValueTable _gst_fraction_value_table = {
 
 FUNC_VALUE_GET_TYPE (fraction, "GstFraction");
 
-
-GType
-gst_date_get_type (void)
-{
-  static GType gst_date_type = 0;
-
-  if (G_UNLIKELY (gst_date_type == 0)) {
-    /* FIXME 0.11: we require GLib 2.8 already
-     * Not using G_TYPE_DATE here on purpose, even if we could
-     * if GLIB_CHECK_VERSION(2,8,0) was true: we don't want the
-     * serialised strings to have different type strings depending
-     * on what version is used, so FIXME when we require GLib-2.8 */
-    gst_date_type = g_boxed_type_register_static ("GstDate",
-        (GBoxedCopyFunc) gst_date_copy, (GBoxedFreeFunc) g_date_free);
-  }
-
-  return gst_date_type;
-}
-
 GType
 gst_date_time_get_type (void)
 {
@@ -5189,7 +5124,7 @@ _priv_gst_value_initialize (void)
       gst_value_deserialize_date,
     };
 
-    gst_value.type = gst_date_get_type ();
+    gst_value.type = G_TYPE_DATE;
     gst_value_register (&gst_value);
   }
   {
@@ -5260,9 +5195,9 @@ _priv_gst_value_initialize (void)
       gst_value_transform_double_fraction);
   g_value_register_transform_func (G_TYPE_FLOAT, GST_TYPE_FRACTION,
       gst_value_transform_float_fraction);
-  g_value_register_transform_func (GST_TYPE_DATE, G_TYPE_STRING,
+  g_value_register_transform_func (G_TYPE_DATE, G_TYPE_STRING,
       gst_value_transform_date_string);
-  g_value_register_transform_func (G_TYPE_STRING, GST_TYPE_DATE,
+  g_value_register_transform_func (G_TYPE_STRING, G_TYPE_DATE,
       gst_value_transform_string_date);
   g_value_register_transform_func (GST_TYPE_OBJECT, G_TYPE_STRING,
       gst_value_transform_object_string);

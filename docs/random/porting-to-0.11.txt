@@ -467,3 +467,10 @@ The 0.11 porting guide
 
     gst_registry_get_default() -> gst_registry_get()
     gst_default_registry_*(...) -> gst_registry_*(gst_registry_get(), ...)
+
+* GstValue
+
+    GST_TYPE_DATE -> G_TYPE_DATE
+    GST_VALUE_HOLDS_DATE(value) -> G_VALUE_HOLDS(value,G_TYPE_DATE)
+    gst_value_set_date() -> g_value_set_boxed()
+    gst_value_get_date() -> g_value_get_boxed()

@@ -267,7 +267,6 @@ EXPORTS
 	gst_control_source_get_value_array
 	gst_core_error_get_type
 	gst_core_error_quark
-	gst_date_get_type
 	gst_date_time_get_day
 	gst_date_time_get_hour
 	gst_date_time_get_microsecond
@@ -1186,7 +1185,6 @@ EXPORTS
 	gst_value_fraction_subtract
 	gst_value_get_bitmask
 	gst_value_get_caps
-	gst_value_get_date
 	gst_value_get_double_range_max
 	gst_value_get_double_range_min
 	gst_value_get_fraction_denominator
@@ -1215,7 +1213,6 @@ EXPORTS
 	gst_value_serialize
 	gst_value_set_bitmask
 	gst_value_set_caps
-	gst_value_set_date
 	gst_value_set_double_range
 	gst_value_set_fraction
 	gst_value_set_fraction_range

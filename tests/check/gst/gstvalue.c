@@ -1951,11 +1951,10 @@ GST_START_TEST (test_date)
 
   date = g_date_new_dmy (22, 9, 2005);
 
-  s = gst_structure_new ("media/x-type", "SOME_DATE_TAG", GST_TYPE_DATE,
+  s = gst_structure_new ("media/x-type", "SOME_DATE_TAG", G_TYPE_DATE,
       date, NULL);
 
-  fail_unless (gst_structure_has_field_typed (s, "SOME_DATE_TAG",
-          GST_TYPE_DATE));
+  fail_unless (gst_structure_has_field_typed (s, "SOME_DATE_TAG", G_TYPE_DATE));
   fail_unless (gst_structure_get_date (s, "SOME_DATE_TAG", &date2));
   fail_unless (date2 != NULL);
   fail_unless (g_date_valid (date2));
@@ -1979,8 +1978,7 @@ GST_START_TEST (test_date)
 
   fail_unless (s != NULL);
   fail_unless (gst_structure_has_name (s, "media/x-type"));
-  fail_unless (gst_structure_has_field_typed (s, "SOME_DATE_TAG",
-          GST_TYPE_DATE));
+  fail_unless (gst_structure_has_field_typed (s, "SOME_DATE_TAG", G_TYPE_DATE));
   fail_unless (gst_structure_get_date (s, "SOME_DATE_TAG", &date));
   fail_unless (date != NULL);
   fail_unless (g_date_valid (date));

@@ -178,14 +178,6 @@ G_BEGIN_DECLS
 #define GST_VALUE_HOLDS_FRACTION(x)     (G_VALUE_HOLDS((x), gst_fraction_get_type ()))
 
 /**
- * GST_VALUE_HOLDS_DATE:
- * @x: the #GValue to check
- *
- * Checks if the given #GValue contains a #GST_TYPE_DATE value.
- */
-#define GST_VALUE_HOLDS_DATE(x)         (G_VALUE_HOLDS((x), gst_date_get_type ()))
-
-/**
  * GST_VALUE_HOLDS_DATE_TIME:
  * @x: the #GValue to check
  *
@@ -278,16 +270,6 @@ G_BEGIN_DECLS
  */
 
 #define GST_TYPE_FRACTION                gst_fraction_get_type ()
-
-/**
- * GST_TYPE_DATE:
- *
- * a boxed #GValue type for #GDate that represents a date.
- *
- * Returns: the #GType of GstDate
- */
-
-#define GST_TYPE_DATE                    gst_date_get_type ()
 
 /**
  * GST_TYPE_DATE_TIME:
@@ -456,7 +438,6 @@ GType gst_value_list_get_type (void);
 GType gst_value_array_get_type (void);
 GType gst_bitmask_get_type (void);
 
-GType gst_date_get_type (void);
 GType gst_date_time_get_type (void);
 
 void            gst_value_register              (const GstValueTable   *table);
@@ -547,12 +528,6 @@ void            gst_value_set_fraction_range_full (GValue       *value,
                                                  gint denominator_end);
 const GValue    *gst_value_get_fraction_range_min (const GValue *value);
 const GValue    *gst_value_get_fraction_range_max (const GValue *value);
-
-/* date */
-const GDate *   gst_value_get_date              (const GValue   *value);
-void            gst_value_set_date              (GValue         *value,
-                                                 const GDate    *date);
-
 
 /* bitmask */
 guint64         gst_value_get_bitmask           (const GValue   *value);

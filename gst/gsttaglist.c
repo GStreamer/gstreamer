@@ -149,9 +149,9 @@ _priv_gst_tag_initialize (void)
       G_TYPE_STRING,
       _("album artist sortname"),
       _("The artist of the entire album, as it should be sorted"), NULL);
-  gst_tag_register (GST_TAG_DATE, GST_TAG_FLAG_META, GST_TYPE_DATE,
+  gst_tag_register (GST_TAG_DATE, GST_TAG_FLAG_META, G_TYPE_DATE,
       _("date"), _("date the data was created (as a GDate structure)"), NULL);
-  gst_tag_register (GST_TAG_DATE_TIME, GST_TAG_FLAG_META, GST_TYPE_DATE_TIME,
+  gst_tag_register (GST_TAG_DATE_TIME, GST_TAG_FLAG_META, G_TYPE_DATE_TIME,
       _("datetime"),
       _("date and time the data was created (as a GstDateTime structure)"),
       NULL);
