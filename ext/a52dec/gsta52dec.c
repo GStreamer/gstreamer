@@ -745,10 +745,10 @@ gst_a52dec_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
           gst_buffer_copy_region (buf, GST_BUFFER_COPY_ALL, offset,
           size - offset);
       GST_BUFFER_TIMESTAMP (subbuf) = GST_BUFFER_TIMESTAMP (buf);
+      gst_buffer_unref (buf);
       ret = a52dec->base_chain (pad, parent, subbuf);
     }
   } else {
-    gst_buffer_ref (buf);
     ret = a52dec->base_chain (pad, parent, buf);
   }
 
