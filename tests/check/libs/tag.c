@@ -1233,9 +1233,9 @@ GST_START_TEST (test_xmp_tags_serialization_deserialization)
       (GST_TAG_CAPTURING_EXPOSURE_COMPENSATION, &value);
   g_value_unset (&value);
 
-  g_value_init (&value, GST_TYPE_DATE);
+  g_value_init (&value, G_TYPE_DATE);
   date = g_date_new_dmy (22, 3, 2010);
-  gst_value_set_date (&value, date);
+  g_value_set_boxed (&value, date);
   g_date_free (date);
   do_simple_xmp_tag_serialization_deserialization (GST_TAG_DATE, &value);
   g_value_unset (&value);

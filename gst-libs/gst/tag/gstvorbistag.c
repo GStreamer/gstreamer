@@ -272,7 +272,7 @@ gst_vorbis_tag_add (GstTagList * list, const gchar * tag, const gchar * value)
       break;
     }
     default:{
-      if (tag_type == GST_TYPE_DATE) {
+      if (tag_type == G_TYPE_DATE) {
         guint y, d = 1, m = 1;
         gchar *check = (gchar *) value;
 
@@ -728,7 +728,7 @@ gst_tag_to_vorbis_comments (const GstTagList * list, const gchar * tag)
         break;
       }
       default:{
-        if (tag_type == GST_TYPE_DATE) {
+        if (tag_type == G_TYPE_DATE) {
           GDate *date;
 
           if (!gst_tag_list_get_date_index (list, tag, i, &date))

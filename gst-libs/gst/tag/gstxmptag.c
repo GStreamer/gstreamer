@@ -1222,7 +1222,7 @@ read_one_tag (GstTagList * list, XmpTag * xmptag,
           gst_date_time_unref (datetime);
         }
 
-      } else if (tag_type == GST_TYPE_DATE) {
+      } else if (tag_type == G_TYPE_DATE) {
         GDate *date;
         gint d, m, y;
 
@@ -1628,8 +1628,8 @@ gst_value_serialize_xmp (const GValue * value)
       break;
   }
   /* put non-switchable types here */
-  if (G_VALUE_TYPE (value) == GST_TYPE_DATE) {
-    const GDate *date = gst_value_get_date (value);
+  if (G_VALUE_TYPE (value) == G_TYPE_DATE) {
+    const GDate *date = g_value_get_boxed (value);
 
     return g_strdup_printf ("%04d-%02d-%02d",
         (gint) g_date_get_year (date), (gint) g_date_get_month (date),
