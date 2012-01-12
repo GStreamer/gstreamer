@@ -1160,8 +1160,12 @@ handle_message (GstDiscoverer * dc, GstMessage * msg)
         GST_DEBUG_OBJECT (GST_MESSAGE_SRC (msg),
             "Setting result to MISSING_PLUGINS");
         dc->priv->current_info->result = GST_DISCOVERER_MISSING_PLUGINS;
+        if (dc->priv->current_info->misc)
+          gst_structure_free (dc->priv->current_info->misc);
         dc->priv->current_info->misc = gst_structure_copy (msg->structure);
       } else if (sttype == _STREAM_TOPOLOGY_QUARK) {
+        if (dc->priv->current_topology)
+          gst_structure_free (dc->priv->current_topology);
         dc->priv->current_topology = gst_structure_copy (msg->structure);
       }
     }
