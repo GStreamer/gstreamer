@@ -688,11 +688,14 @@ ges_track_get_timeline (GESTrack * track)
 /**
  * ges_track_enable_update:
  * @track: a #GESTrack
- * @enabled: %TRUE if the composition must be updated, FALSE otherwise.
+ * @enabled: Whether the track should update on every change or not.
  *
- * Sets the @track 's composition update property to @enabled .
+ * Control whether the track is updated for every change happening within.
  *
- * Returns: True if success, %FALSE otherwise.
+ * Users will want to use this method with %FALSE before doing lots of changes,
+ * and then call again with %TRUE for the changes to take effect in one go.
+ *
+ * Returns: %TRUE if the update status could be changed, else %FALSE.
  */
 gboolean
 ges_track_enable_update (GESTrack * track, gboolean enabled)

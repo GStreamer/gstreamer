@@ -1111,7 +1111,7 @@ pitivi_formatter_update_source_uri (GESFormatter * formatter,
 /**
  * ges_pitivi_formatter_set_sources:
  * @formatter: The #GESPitiviFormatter to set sources on
- * @infos: (transfer none): (element-type GstDiscovererInfo):
+ * @infos: (transfer none) (element-type GstDiscovererInfo):
  *        The #GstDiscovererInfo infos to add as sources.
  *
  * Add @infos as the formatter sources so we can save sources that are
@@ -1146,7 +1146,7 @@ ges_pitivi_formatter_set_sources (GESPitiviFormatter * formatter, GList * infos)
  * ges_pitivi_formatter_get_sources:
  * @formatter: The #GESPitiviFormatter to get sources from
  *
- * Returns: (transfer full): (element-type utf8): %TRUE if everything went
+ * Returns: (transfer full) (element-type utf8): %TRUE if everything went
  * fine, %FALSE otherwise
  */
 GList *

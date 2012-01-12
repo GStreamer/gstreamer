@@ -5,6 +5,10 @@
 <TITLE>Initialization</TITLE>
 ges_init
 ges_version
+GES_VERSION_MAJOR
+GES_VERSION_MICRO
+GES_VERSION_MINOR
+GES_VERSION_NANO
 <SUBSECTION Standard>
 GES_PADDING
 </SECTION>
@@ -352,10 +356,6 @@ ges_timeline_pipeline_preview_set_video_sink
 ges_timeline_pipeline_get_thumbnail_buffer
 ges_timeline_pipeline_get_thumbnail_rgb24
 ges_timeline_pipeline_save_thumbnail
-ges_timeline_pipeline_preview_get_audio_sink
-ges_timeline_pipeline_preview_get_video_sink
-ges_timeline_pipeline_preview_set_audio_sink
-ges_timeline_pipeline_preview_set_video_sink
 <SUBSECTION Standard>
 GESTimelinePipelineClass
 GESTimelinePipelinePrivate
@@ -760,6 +760,7 @@ ges_formatter_save_to_uri
 ges_formatter_new_for_uri
 ges_formatter_can_load_uri
 ges_formatter_can_save_uri
+ges_formatter_update_source_uri
 <SUBSECTION Standard>
 ges_formatter_get_type
 GES_FORMATTER
@@ -806,6 +807,8 @@ ges_pitivi_formatter_set_sources
 ges_pitivi_formatter_get_sources
 <SUBSECTION Standard>
 GESPitiviFormatterClass
+GESPitiviFormatterPrivate
+GES_TYPE_PITIVI_FORMATTER
 GES_IS_PITIVI_FORMATTER
 GES_IS_PITIVI_FORMATTER_CLASS
 GES_PITIVI_FORMATTER

@@ -169,7 +169,7 @@ ges_timeline_layer_class_init (GESTimelineLayerClass * klass)
           "The priority of the layer", 0, G_MAXUINT, 0, G_PARAM_READWRITE));
 
   /**
-   * GESTimelineLayer:auto_transitioning
+   * GESTimelineLayer:auto-transition
    *
    * Sets whether transitions are added automagically when timeline objects overlap.
    */
@@ -879,9 +879,10 @@ ges_timeline_layer_set_priority (GESTimelineLayer * layer, guint priority)
  * ges_timeline_layer_get_auto_transition:
  * @layer: a #GESTimelineLayer
  *
- * Get the priority of @layer within the timeline.
+ * Gets whether transitions are automatically added when objects
+ * overlap or not.
  *
- * Returns: The priority of the @layer within the timeline.
+ * Returns: %TRUE if transitions are automatically added, else %FALSE.
  */
 gboolean
 ges_timeline_layer_get_auto_transition (GESTimelineLayer * layer)

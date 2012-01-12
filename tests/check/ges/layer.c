@@ -326,7 +326,6 @@ GST_START_TEST (test_layer_automatic_transition)
   }
 
   fail_unless (res == TRUE);
-  printf ("zob\n");
 }
 
 GST_END_TEST;

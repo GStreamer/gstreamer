@@ -660,7 +660,7 @@ GST_START_TEST (test_pitivi_file_load)
   ges_formatter_load_from_uri (formatter, timeline, uri);
   g_timeout_add (1000, (GSourceFunc) g_main_loop_quit, mainloop);
   g_main_loop_run (mainloop);
-  printf ("saloperie\n");
+
   formatter = GES_FORMATTER (ges_pitivi_formatter_new ());
   ges_formatter_save_to_uri (formatter, timeline, save_uri);
   formatter = GES_FORMATTER (ges_pitivi_formatter_new ());

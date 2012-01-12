@@ -1187,11 +1187,14 @@ ges_timeline_get_layers (GESTimeline * timeline)
 /**
  * ges_timeline_enable_update:
  * @timeline: a #GESTimeline
- * @enabled: TRUE if the timeline must be updated, FALSE otherwise.
+ * @enabled: Whether the timeline should update on every change or not.
  *
- * Calls the enable_update function of the tracks contained by the timeline.
+ * Control whether the timeline is updated for every change happening within.
  *
- * Returns: True if success, FALSE otherwise.
+ * Users will want to use this method with %FALSE before doing lots of changes,
+ * and then call again with %TRUE for the changes to take effect in one go.
+ *
+ * Returns: %TRUE if the update status could be changed, else %FALSE.
  */
 gboolean
 ges_timeline_enable_update (GESTimeline * timeline, gboolean enabled)
