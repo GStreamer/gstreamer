@@ -150,11 +150,6 @@ static void
 gst_inter_video_sink_init (GstInterVideoSink * intervideosink,
     GstInterVideoSinkClass * intervideosink_class)
 {
-
-  intervideosink->sinkpad =
-      gst_pad_new_from_static_template (&gst_inter_video_sink_sink_template,
-      "sink");
-
   intervideosink->surface = gst_inter_surface_get ("default");
 }
 

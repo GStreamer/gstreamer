@@ -39,7 +39,6 @@ struct _GstInterVideoSrc
 {
   GstBaseSrc base_intervideosrc;
 
-  GstPad *srcpad;
   GstInterSurface *surface;
 
   GstVideoFormat format;
