@@ -288,15 +288,14 @@ ape_demux_parse_tags (const guint8 * data, gint size)
           break;
         }
         default:{
-          if (gst_tag_type == GST_TYPE_DATE) {
+          if (gst_tag_type == G_TYPE_DATE) {
             gint v_int;
 
             if (sscanf (val, "%d", &v_int) == 1) {
               GDate *date = g_date_new_dmy (1, 1, v_int);
 
-              g_value_init (&v, GST_TYPE_DATE);
-              gst_value_set_date (&v, date);
-              g_date_free (date);
+              g_value_init (&v, G_TYPE_DATE);
+              g_value_take_boxed (&v, date);
             }
           } else {
             GST_WARNING ("Unhandled tag type '%s' for tag '%s'",

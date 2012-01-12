@@ -618,7 +618,7 @@ gst_qt_mux_add_mp4_date (GstQTMux * qtmux, const GstTagList * list,
   GDateDay day;
   gchar *str;
 
-  g_return_if_fail (gst_tag_get_type (tag) == GST_TYPE_DATE);
+  g_return_if_fail (gst_tag_get_type (tag) == G_TYPE_DATE);
 
   if (!gst_tag_list_get_date (list, tag, &date) || !date)
     return;
@@ -731,7 +731,7 @@ gst_qt_mux_add_3gp_date (GstQTMux * qtmux, const GstTagList * list,
   GDate *date = NULL;
   GDateYear year;
 
-  g_return_if_fail (gst_tag_get_type (tag) == GST_TYPE_DATE);
+  g_return_if_fail (gst_tag_get_type (tag) == G_TYPE_DATE);
 
   if (!gst_tag_list_get_date (list, tag, &date) || !date)
     return;

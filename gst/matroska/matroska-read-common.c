@@ -652,7 +652,7 @@ gst_matroska_read_common_parse_attached_file (GstMatroskaReadCommon * common,
           tagsample, NULL);
 
     /* the list adds it own ref */
-    gst_buffer_unref (tagsample);
+    gst_sample_unref (tagsample);
   }
 
   g_free (filename);
@@ -1449,7 +1449,7 @@ gst_matroska_read_common_parse_metadata_id_simple_tag (GstMatroskaReadCommon *
         GType dest_type = gst_tag_get_type (tagname_gst);
 
         /* Ensure that any date string is complete */
-        if (dest_type == GST_TYPE_DATE) {
+        if (dest_type == G_TYPE_DATE) {
           guint year = 1901, month = 1, day = 1;
 
           /* Dates can be yyyy-MM-dd, yyyy-MM or yyyy, but we need
