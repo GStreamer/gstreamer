@@ -733,6 +733,7 @@ gst_a52dec_chain (GstPad * pad, GstBuffer * buf)
       /* first_access = 0 or 1, so if there's a timestamp it applies to the first byte */
       subbuf = gst_buffer_create_sub (buf, offset, size - offset);
       gst_buffer_copy_metadata (subbuf, buf, GST_BUFFER_COPY_ALL);
+      gst_buffer_unref (buf);
       ret = a52dec->base_chain (pad, subbuf);
     }
   } else {
