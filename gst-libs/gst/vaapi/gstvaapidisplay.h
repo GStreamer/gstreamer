@@ -95,7 +95,7 @@ struct _GstVaapiDisplay {
  * @unlock: (optional) virtual function to unlock a display
  * @sync: (optional) virtual function to sync a display
  * @flush: (optional) virtual function to flush pending requests of a display
- * @get_display: virtual function to retrieve the #VADisplay
+ * @get_display: virtual function to retrieve the #GstVaapiDisplayInfo
  * @get_size: virtual function to retrieve the display dimensions, in pixels
  * @get_size_mm: virtual function to retrieve the display dimensions, in millimeters
  *
@@ -112,7 +112,8 @@ struct _GstVaapiDisplayClass {
     void       (*unlock)        (GstVaapiDisplay *display);
     void       (*sync)          (GstVaapiDisplay *display);
     void       (*flush)         (GstVaapiDisplay *display);
-    VADisplay  (*get_display)   (GstVaapiDisplay *display);
+    gboolean   (*get_display)   (GstVaapiDisplay *display,
+                                 GstVaapiDisplayInfo *info);
     void       (*get_size)      (GstVaapiDisplay *display,
                                  guint *pwidth, guint *pheight);
     void       (*get_size_mm)   (GstVaapiDisplay *display,

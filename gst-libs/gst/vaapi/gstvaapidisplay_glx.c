@@ -46,10 +46,19 @@ gst_vaapi_display_glx_finalize(GObject *object)
     G_OBJECT_CLASS(gst_vaapi_display_glx_parent_class)->finalize(object);
 }
 
-static VADisplay
-gst_vaapi_display_glx_get_va_display(GstVaapiDisplay *display)
+static gboolean
+gst_vaapi_display_glx_get_display_info(
+    GstVaapiDisplay     *display,
+    GstVaapiDisplayInfo *info
+)
 {
-    return vaGetDisplayGLX(GST_VAAPI_DISPLAY_XDISPLAY(display));
+    GstVaapiDisplayClass * const dpy_class =
+        GST_VAAPI_DISPLAY_CLASS(gst_vaapi_display_glx_parent_class);
+
+    info->va_display = vaGetDisplayGLX(GST_VAAPI_DISPLAY_XDISPLAY(display));
+    if (!info->va_display)
+        return FALSE;
+    return dpy_class->get_display(display, info);
 }
 
 static void
@@ -59,7 +68,7 @@ gst_vaapi_display_glx_class_init(GstVaapiDisplayGLXClass *klass)
     GstVaapiDisplayClass * const dpy_class = GST_VAAPI_DISPLAY_CLASS(klass);
 
     object_class->finalize      = gst_vaapi_display_glx_finalize;
-    dpy_class->get_display      = gst_vaapi_display_glx_get_va_display;
+    dpy_class->get_display      = gst_vaapi_display_glx_get_display_info;
 }
 
 static void

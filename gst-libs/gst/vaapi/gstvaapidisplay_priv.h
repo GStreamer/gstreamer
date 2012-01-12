@@ -23,6 +23,7 @@
 #define GST_VAAPI_DISPLAY_PRIV_H
 
 #include <gst/vaapi/gstvaapidisplay.h>
+#include <gst/vaapi/gstvaapidisplaycache.h>
 
 G_BEGIN_DECLS
 
@@ -70,6 +71,7 @@ G_BEGIN_DECLS
  * Base class for VA displays.
  */
 struct _GstVaapiDisplayPrivate {
+    GstVaapiDisplay    *parent;
     GStaticRecMutex     mutex;
     VADisplay           display;
     guint               width;
@@ -84,6 +86,9 @@ struct _GstVaapiDisplayPrivate {
     GArray             *subpicture_formats;
     guint               create_display  : 1;
 };
+
+GstVaapiDisplayCache *
+gst_vaapi_display_get_cache(void);
 
 G_END_DECLS
 

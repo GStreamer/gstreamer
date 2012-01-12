@@ -25,6 +25,7 @@
  */
 
 #include "config.h"
+#include <string.h>
 #include "gstvaapiutils.h"
 #include "gstvaapidisplay.h"
 #include "gstvaapidisplay_priv.h"
@@ -49,6 +50,22 @@ enum {
     PROP_WIDTH,
     PROP_HEIGHT
 };
+
+static inline GstVaapiDisplayCache *
+get_display_cache(void)
+{
+    static GstVaapiDisplayCache *g_display_cache = NULL;
+
+    if (!g_display_cache)
+        g_display_cache = gst_vaapi_display_cache_new();
+    return g_display_cache;
+}
+
+GstVaapiDisplayCache *
+gst_vaapi_display_get_cache(void)
+{
+    return get_display_cache();
+}
 
 /* Append GstVaapiImageFormat to formats array */
 static inline void
@@ -281,7 +298,8 @@ gst_vaapi_display_destroy(GstVaapiDisplay *display)
     }
 
     if (priv->display) {
-        vaTerminate(priv->display);
+        if (!priv->parent)
+            vaTerminate(priv->display);
         priv->display = NULL;
     }
 
@@ -290,12 +308,20 @@ gst_vaapi_display_destroy(GstVaapiDisplay *display)
         if (klass->close_display)
             klass->close_display(display);
     }
+
+    if (priv->parent) {
+        g_object_unref(priv->parent);
+        priv->parent = NULL;
+    }
+
+    gst_vaapi_display_cache_remove(get_display_cache(), display);
 }
 
 static gboolean
 gst_vaapi_display_create(GstVaapiDisplay *display)
 {
     GstVaapiDisplayPrivate * const priv = display->priv;
+    GstVaapiDisplayCache *cache;
     gboolean            has_errors      = TRUE;
     VAProfile          *profiles        = NULL;
     VAEntrypoint       *entrypoints     = NULL;
@@ -303,16 +329,21 @@ gst_vaapi_display_create(GstVaapiDisplay *display)
     unsigned int       *flags           = NULL;
     gint                i, j, n, num_entrypoints, major_version, minor_version;
     VAStatus            status;
+    GstVaapiDisplayInfo info;
+    const GstVaapiDisplayInfo *cached_info = NULL;
 
-    if (!priv->display && priv->create_display) {
+    memset(&info, 0, sizeof(info));
+    info.display = display;
+
+    if (priv->display)
+        info.va_display = priv->display;
+    else if (priv->create_display) {
         GstVaapiDisplayClass *klass = GST_VAAPI_DISPLAY_GET_CLASS(display);
         if (klass->open_display && !klass->open_display(display))
             return FALSE;
-        if (klass->get_display) {
-            priv->display = klass->get_display(display);
-            if (!priv->display)
-                return FALSE;
-        }
+        if (!klass->get_display || !klass->get_display(display, &info))
+            return FALSE;
+        priv->display = info.va_display;
         if (klass->get_size)
             klass->get_size(display, &priv->width, &priv->height);
         if (klass->get_size_mm)
@@ -322,10 +353,25 @@ gst_vaapi_display_create(GstVaapiDisplay *display)
     if (!priv->display)
         return FALSE;
 
-    status = vaInitialize(priv->display, &major_version, &minor_version);
-    if (!vaapi_check_status(status, "vaInitialize()"))
-        goto end;
-    GST_DEBUG("VA-API version %d.%d", major_version, minor_version);
+    cache = get_display_cache();
+    if (!cache)
+        return FALSE;
+    cached_info = gst_vaapi_display_cache_lookup_by_va_display(
+        cache,
+        info.va_display
+    );
+    if (cached_info) {
+        if (priv->parent)
+            g_object_unref(priv->parent);
+        priv->parent = g_object_ref(cached_info->display);
+    }
+
+    if (!priv->parent) {
+        status = vaInitialize(priv->display, &major_version, &minor_version);
+        if (!vaapi_check_status(status, "vaInitialize()"))
+            goto end;
+        GST_DEBUG("VA-API version %d.%d", major_version, minor_version);
+    }
 
     /* VA profiles */
     profiles = g_new(VAProfile, vaMaxNumProfiles(priv->display));
@@ -419,6 +465,11 @@ gst_vaapi_display_create(GstVaapiDisplay *display)
     append_formats(priv->subpicture_formats, formats, n);
     g_array_sort(priv->subpicture_formats, compare_rgb_formats);
 
+    if (!cached_info) {
+        if (!gst_vaapi_display_cache_add(cache, &info))
+            goto end;
+    }
+
     has_errors = FALSE;
 end:
     g_free(profiles);
@@ -431,13 +482,21 @@ end:
 static void
 gst_vaapi_display_lock_default(GstVaapiDisplay *display)
 {
-    g_static_rec_mutex_lock(&display->priv->mutex);
+    GstVaapiDisplayPrivate *priv = display->priv;
+
+    if (priv->parent)
+        priv = priv->parent->priv;
+    g_static_rec_mutex_lock(&priv->mutex);
 }
 
 static void
 gst_vaapi_display_unlock_default(GstVaapiDisplay *display)
 {
-    g_static_rec_mutex_unlock(&display->priv->mutex);
+    GstVaapiDisplayPrivate *priv = display->priv;
+
+    if (priv->parent)
+        priv = priv->parent->priv;
+    g_static_rec_mutex_unlock(&priv->mutex);
 }
 
 static void
@@ -562,6 +621,7 @@ gst_vaapi_display_init(GstVaapiDisplay *display)
     GstVaapiDisplayPrivate *priv = GST_VAAPI_DISPLAY_GET_PRIVATE(display);
 
     display->priv               = priv;
+    priv->parent                = NULL;
     priv->display               = NULL;
     priv->width                 = 0;
     priv->height                = 0;
@@ -590,6 +650,16 @@ gst_vaapi_display_init(GstVaapiDisplay *display)
 GstVaapiDisplay *
 gst_vaapi_display_new_with_display(VADisplay va_display)
 {
+    GstVaapiDisplayCache * const cache = get_display_cache();
+    const GstVaapiDisplayInfo *info;
+
+    g_return_val_if_fail(va_display != NULL, NULL);
+    g_return_val_if_fail(cache != NULL, NULL);
+
+    info = gst_vaapi_display_cache_lookup_by_va_display(cache, va_display);
+    if (info)
+        return g_object_ref(info->display);
+
     return g_object_new(GST_VAAPI_TYPE_DISPLAY,
                         "display", va_display,
                         NULL);

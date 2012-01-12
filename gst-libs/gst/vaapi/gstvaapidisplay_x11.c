@@ -25,6 +25,7 @@
  */
 
 #include "config.h"
+#include <string.h>
 #include "gstvaapiutils.h"
 #include "gstvaapidisplay_priv.h"
 #include "gstvaapidisplay_x11.h"
@@ -45,6 +46,40 @@ enum {
     PROP_X11_DISPLAY,
     PROP_X11_SCREEN
 };
+
+static inline const gchar *
+get_default_display_name(void)
+{
+    static const gchar *g_display_name;
+
+    if (!g_display_name)
+        g_display_name = getenv("DISPLAY");
+    return g_display_name;
+}
+
+static gboolean
+compare_display_name(gconstpointer a, gconstpointer b, gpointer user_data)
+{
+    const gchar *display_name;
+
+    /* XXX: handle screen number? */
+    if (a && b)
+        return strcmp(a, b) == 0;
+
+    /* Match "" or default display name */
+    if (a)
+        display_name = a;
+    else if (b)
+        display_name = b;
+    else
+        return TRUE;
+
+    if (*display_name == '\0')
+        return TRUE;
+    if (strcmp(display_name, get_default_display_name()) == 0)
+        return TRUE;
+    return FALSE;
+}
 
 static void
 gst_vaapi_display_x11_finalize(GObject *object)
@@ -139,13 +174,29 @@ static void
 gst_vaapi_display_x11_constructed(GObject *object)
 {
     GstVaapiDisplayX11 * const display = GST_VAAPI_DISPLAY_X11(object);
+    GstVaapiDisplayX11Private * const priv = display->priv;
+    GstVaapiDisplayCache * const cache = gst_vaapi_display_get_cache();
+    const GstVaapiDisplayInfo *info;
     GObjectClass *parent_class;
 
-    display->priv->create_display = display->priv->x11_display == NULL;
+    priv->create_display = priv->x11_display == NULL;
+
+    /* Don't create X11 display if there is one in the cache already */
+    if (priv->create_display) {
+        info = gst_vaapi_display_cache_lookup_by_name(
+            cache,
+            priv->display_name,
+            compare_display_name, NULL
+        );
+        if (info) {
+            priv->x11_display    = info->native_display;
+            priv->create_display = FALSE;
+        }
+    }
 
     /* Reset display-name if the user provided his own X11 display */
-    if (!display->priv->create_display)
-        set_display_name(display, XDisplayString(display->priv->x11_display));
+    if (!priv->create_display)
+        set_display_name(display, XDisplayString(priv->x11_display));
 
     parent_class = G_OBJECT_CLASS(gst_vaapi_display_x11_parent_class);
     if (parent_class->constructed)
@@ -158,7 +209,6 @@ gst_vaapi_display_x11_open_display(GstVaapiDisplay *display)
     GstVaapiDisplayX11Private * const priv =
         GST_VAAPI_DISPLAY_X11(display)->priv;
 
-    /* XXX: maintain an X11 display cache */
     if (priv->create_display) {
         priv->x11_display = XOpenDisplay(priv->display_name);
         if (!priv->x11_display)
@@ -217,10 +267,36 @@ gst_vaapi_display_x11_flush(GstVaapiDisplay *display)
     }
 }
 
-static VADisplay
-gst_vaapi_display_x11_get_va_display(GstVaapiDisplay *display)
+static gboolean
+gst_vaapi_display_x11_get_display_info(
+    GstVaapiDisplay     *display,
+    GstVaapiDisplayInfo *info
+)
 {
-    return vaGetDisplay(GST_VAAPI_DISPLAY_XDISPLAY(display));
+    GstVaapiDisplayX11Private * const priv =
+        GST_VAAPI_DISPLAY_X11(display)->priv;
+    GstVaapiDisplayCache *cache;
+    const GstVaapiDisplayInfo *cached_info;
+
+    /* Return any cached info even if child has its own VA display */
+    cache = gst_vaapi_display_get_cache();
+    if (!cache)
+        return FALSE;
+    cached_info = gst_vaapi_display_cache_lookup_by_native_display(cache, priv->x11_display);
+    if (cached_info) {
+        *info = *cached_info;
+        return TRUE;
+    }
+
+    /* Otherwise, create VA display if there is none already */
+    info->native_display = priv->x11_display;
+    info->display_name   = priv->display_name;
+    if (!info->va_display) {
+        info->va_display = vaGetDisplay(priv->x11_display);
+        if (!info->va_display)
+            return FALSE;
+    }
+    return TRUE;
 }
 
 static void
@@ -280,7 +356,7 @@ gst_vaapi_display_x11_class_init(GstVaapiDisplayX11Class *klass)
     dpy_class->close_display    = gst_vaapi_display_x11_close_display;
     dpy_class->sync             = gst_vaapi_display_x11_sync;
     dpy_class->flush            = gst_vaapi_display_x11_flush;
-    dpy_class->get_display      = gst_vaapi_display_x11_get_va_display;
+    dpy_class->get_display      = gst_vaapi_display_x11_get_display_info;
     dpy_class->get_size         = gst_vaapi_display_x11_get_size;
     dpy_class->get_size_mm      = gst_vaapi_display_x11_get_size_mm;
 
