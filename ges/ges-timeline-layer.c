@@ -502,7 +502,8 @@ calculate_next_transition (GESTrackObject * track_object,
     calculate_next_transition_with_list (track_object, tckobjs_in_layer, layer);
   }
 
-  g_list_free_full (tckobjs_in_layer, g_object_unref);
+  g_list_foreach (tckobjs_in_layer, (GFunc) g_object_unref, NULL);
+  g_list_free (tckobjs_in_layer);
 }
 
 static void
@@ -535,7 +536,8 @@ calculate_transitions (GESTrackObject * track_object)
   calculate_next_transition_with_list (track_object, tckobjs_in_layer, layer);
 
 done:
-  g_list_free_full (tckobjs_in_layer, g_object_unref);
+  g_list_foreach (tckobjs_in_layer, (GFunc) g_object_unref, NULL);
+  g_list_free (tckobjs_in_layer);
 }
 
 
@@ -746,7 +748,8 @@ look_for_transition (GESTrackObject * track_object, GESTimelineLayer * layer)
           ges_track_object_get_timeline_object (tmp->data));
     }
   }
-  g_list_free_full (track_objects, g_object_unref);
+  g_list_foreach (track_objects, (GFunc) g_object_unref, NULL);
+  g_list_free (track_objects);
 }
 
 static gboolean
@@ -798,7 +801,8 @@ ges_timeline_layer_remove_object (GESTimelineLayer * layer,
       look_for_transition (tmp->data, layer);
     }
 
-    g_list_free_full (trackobjects, g_object_unref);
+    g_list_foreach (trackobjects, (GFunc) g_object_unref, NULL);
+    g_list_free (trackobjects);
   }
 
   g_hash_table_foreach_remove (layer->priv->signal_table,

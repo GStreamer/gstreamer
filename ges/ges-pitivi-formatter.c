@@ -70,14 +70,16 @@ free_src_map (SrcMapping * srcmap)
 {
   g_free (srcmap->id);
   g_object_unref (srcmap->obj);
-  g_list_free_full (srcmap->tck_obj_ids, (GDestroyNotify) g_free);
+  g_list_foreach (srcmap->tck_obj_ids, (GFunc) g_free, NULL);
+  g_list_free (srcmap->tck_obj_ids);
   g_slice_free (SrcMapping, srcmap);
 }
 
 static void
 list_table_destroyer (gpointer key, gpointer value, void *unused)
 {
-  g_list_free_full (value, g_free);
+  g_list_foreach (value, (GFunc) g_free, NULL);
+  g_list_free (value);
 }
 
 /* Object functions */
@@ -359,7 +361,8 @@ save_tracks (GESTimeline * timeline, xmlTextWriterPtr writer,
     xmlTextWriterEndElement (writer);
   }
 
-  g_list_free_full (tracks, g_object_unref);
+  g_list_foreach (tracks, (GFunc) g_object_unref, NULL);
+  g_list_free (tracks);
   xmlTextWriterEndElement (writer);
 }
 
@@ -420,7 +423,8 @@ save_sources (GESPitiviFormatter * formatter, GList * layers,
         source_list = g_list_append (source_list, srcmap);
       }
     }
-    g_list_free_full (tlobjects, g_object_unref);
+    g_list_foreach (tlobjects, (GFunc) g_object_unref, NULL);
+    g_list_free (tlobjects);
     g_object_unref (G_OBJECT (layer));
   }
 
@@ -540,7 +544,8 @@ create_tracks (GESFormatter * self)
         priv->trackv = track;
       }
     }
-    g_list_free_full (tracks, g_object_unref);
+    g_list_foreach (tracks, (GFunc) g_object_unref, NULL);
+    g_list_free (tracks);
     return TRUE;
   }
 
