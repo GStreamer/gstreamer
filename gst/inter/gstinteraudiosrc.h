@@ -38,7 +38,6 @@ struct _GstInterAudioSrc
 {
   GstBaseSrc base_interaudiosrc;
 
-  GstPad *srcpad;
   GstInterSurface *surface;
 
   guint64 n_samples;
