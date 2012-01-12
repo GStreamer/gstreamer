@@ -29,6 +29,9 @@
 #include "test-h264.h"
 #include "test-vc1.h"
 
+/* Set to 1 to check display cache works (shared VA display) */
+#define CHECK_DISPLAY_CACHE 1
+
 typedef void (*GetVideoInfoFunc)(VideoDecodeInfo *info);
 
 typedef struct _CodecDefs CodecDefs;
@@ -76,7 +79,7 @@ int
 main(int argc, char *argv[])
 {
     GOptionContext       *options;
-    GstVaapiDisplay      *display;
+    GstVaapiDisplay      *display, *display2;
     GstVaapiWindow       *window;
     GstVaapiDecoder      *decoder;
     GstCaps              *decoder_caps;
@@ -108,6 +111,13 @@ main(int argc, char *argv[])
     display = gst_vaapi_display_x11_new(NULL);
     if (!display)
         g_error("could not create VA display");
+
+    if (CHECK_DISPLAY_CACHE)
+        display2 = gst_vaapi_display_x11_new(NULL);
+    else
+        display2 = g_object_ref(display);
+    if (!display2)
+        g_error("could not create second VA display");
 
     window = gst_vaapi_window_x11_new(display, win_width, win_height);
     if (!window)
@@ -163,6 +173,7 @@ main(int argc, char *argv[])
     g_object_unref(decoder);
     g_object_unref(window);
     g_object_unref(display);
+    g_object_unref(display2);
     g_free(g_codec_str);
     gst_deinit();
     return 0;
