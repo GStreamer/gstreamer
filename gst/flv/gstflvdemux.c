@@ -902,6 +902,17 @@ gst_flv_demux_parse_tag_audio (GstFlvDemux * demux, GstBuffer * buffer)
       goto beach;
     }
 
+    /* Set functions on the pad */
+    gst_pad_set_query_function (demux->audio_pad,
+        GST_DEBUG_FUNCPTR (gst_flv_demux_query));
+    gst_pad_set_event_function (demux->audio_pad,
+        GST_DEBUG_FUNCPTR (gst_flv_demux_src_event));
+
+    gst_pad_use_fixed_caps (demux->audio_pad);
+
+    /* Make it active */
+    gst_pad_set_active (demux->audio_pad, TRUE);
+
     /* Negotiate caps */
     if (!gst_flv_demux_audio_negotiate (demux, codec_tag, rate, channels,
             width)) {
@@ -921,17 +932,6 @@ gst_flv_demux_parse_tag_audio (GstFlvDemux * demux, GstBuffer * buffer)
         gst_caps_unref (caps);
     }
 #endif
-
-    /* Set functions on the pad */
-    gst_pad_set_query_function (demux->audio_pad,
-        GST_DEBUG_FUNCPTR (gst_flv_demux_query));
-    gst_pad_set_event_function (demux->audio_pad,
-        GST_DEBUG_FUNCPTR (gst_flv_demux_src_event));
-
-    gst_pad_use_fixed_caps (demux->audio_pad);
-
-    /* Make it active */
-    gst_pad_set_active (demux->audio_pad, TRUE);
 
     /* We need to set caps before adding */
     gst_element_add_pad (GST_ELEMENT (demux),
@@ -1274,6 +1274,18 @@ gst_flv_demux_parse_tag_video (GstFlvDemux * demux, GstBuffer * buffer)
       goto beach;
     }
 
+    /* Set functions on the pad */
+    gst_pad_set_query_function (demux->video_pad,
+        GST_DEBUG_FUNCPTR (gst_flv_demux_query));
+    gst_pad_set_event_function (demux->video_pad,
+        GST_DEBUG_FUNCPTR (gst_flv_demux_src_event));
+
+    gst_pad_use_fixed_caps (demux->video_pad);
+
+    /* Make it active */
+    gst_pad_set_active (demux->video_pad, TRUE);
+
+    /* Needs to be active before setting caps */
     if (!gst_flv_demux_video_negotiate (demux, codec_tag)) {
       gst_object_unref (demux->video_pad);
       demux->video_pad = NULL;
@@ -1296,17 +1308,6 @@ gst_flv_demux_parse_tag_video (GstFlvDemux * demux, GstBuffer * buffer)
         gst_caps_unref (caps);
     }
 #endif
-
-    /* Set functions on the pad */
-    gst_pad_set_query_function (demux->video_pad,
-        GST_DEBUG_FUNCPTR (gst_flv_demux_query));
-    gst_pad_set_event_function (demux->video_pad,
-        GST_DEBUG_FUNCPTR (gst_flv_demux_src_event));
-
-    gst_pad_use_fixed_caps (demux->video_pad);
-
-    /* Make it active */
-    gst_pad_set_active (demux->video_pad, TRUE);
 
     /* We need to set caps before adding */
     gst_element_add_pad (GST_ELEMENT (demux),
