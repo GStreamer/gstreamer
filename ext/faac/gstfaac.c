@@ -341,15 +341,14 @@ gst_faac_getcaps (GstAudioEncoder * enc, GstCaps * filter)
       t = gst_structure_copy (s);
 
       gst_structure_set (t, "channels", G_TYPE_INT, i, NULL);
-      if (i == 1)
-        continue;
+      if (i > 1) {
+        for (c = 0; c < i; c++)
+          channel_mask |=
+              G_GUINT64_CONSTANT (1) << aac_channel_positions[i - 1][c];
 
-      for (c = 0; c < i; c++)
-        channel_mask |=
-            G_GUINT64_CONSTANT (1) << aac_channel_positions[i - 1][c];
-
-      gst_structure_set (t, "channel-mask", GST_TYPE_BITMASK, channel_mask,
-          NULL);
+        gst_structure_set (t, "channel-mask", GST_TYPE_BITMASK, channel_mask,
+            NULL);
+      }
       gst_caps_append_structure (tmp, t);
     }
     gst_structure_free (s);
