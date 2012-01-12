@@ -678,11 +678,11 @@ collect_information (GstDiscoverer * dc, const GstStructure * st,
 
     if (gst_structure_id_has_field (st, _TAGS_QUARK)) {
       gst_structure_id_get (st, _TAGS_QUARK, GST_TYPE_TAG_LIST, &tags_st, NULL);
-      if (gst_structure_get_uint (tags_st, GST_TAG_BITRATE, &utmp) ||
-          gst_structure_get_uint (tags_st, GST_TAG_NOMINAL_BITRATE, &utmp))
+      if (gst_tag_list_get_uint (tags_st, GST_TAG_BITRATE, &utmp) ||
+          gst_tag_list_get_uint (tags_st, GST_TAG_NOMINAL_BITRATE, &utmp))
         info->bitrate = utmp;
 
-      if (gst_structure_get_uint (tags_st, GST_TAG_MAXIMUM_BITRATE, &utmp))
+      if (gst_tag_list_get_uint (tags_st, GST_TAG_MAXIMUM_BITRATE, &utmp))
         info->max_bitrate = utmp;
 
       /* FIXME: Is it worth it to remove the tags we've parsed? */
@@ -734,11 +734,11 @@ collect_information (GstDiscoverer * dc, const GstStructure * st,
 
     if (gst_structure_id_has_field (st, _TAGS_QUARK)) {
       gst_structure_id_get (st, _TAGS_QUARK, GST_TYPE_TAG_LIST, &tags_st, NULL);
-      if (gst_structure_get_uint (tags_st, GST_TAG_BITRATE, &utmp) ||
-          gst_structure_get_uint (tags_st, GST_TAG_NOMINAL_BITRATE, &utmp))
+      if (gst_tag_list_get_uint (tags_st, GST_TAG_BITRATE, &utmp) ||
+          gst_tag_list_get_uint (tags_st, GST_TAG_NOMINAL_BITRATE, &utmp))
         info->bitrate = utmp;
 
-      if (gst_structure_get_uint (tags_st, GST_TAG_MAXIMUM_BITRATE, &utmp))
+      if (gst_tag_list_get_uint (tags_st, GST_TAG_MAXIMUM_BITRATE, &utmp))
         info->max_bitrate = utmp;
 
       /* FIXME: Is it worth it to remove the tags we've parsed? */
