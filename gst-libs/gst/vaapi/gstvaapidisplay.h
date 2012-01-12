@@ -58,9 +58,22 @@ G_BEGIN_DECLS
                                GST_VAAPI_TYPE_DISPLAY,  \
                                GstVaapiDisplayClass))
 
+typedef struct _GstVaapiDisplayInfo             GstVaapiDisplayInfo;
 typedef struct _GstVaapiDisplay                 GstVaapiDisplay;
 typedef struct _GstVaapiDisplayPrivate          GstVaapiDisplayPrivate;
 typedef struct _GstVaapiDisplayClass            GstVaapiDisplayClass;
+
+/**
+ * GstVaapiDisplayInfo:
+ *
+ * Generic class to retrieve VA display info
+ */
+struct _GstVaapiDisplayInfo {
+    GstVaapiDisplay    *display;
+    gchar              *display_name;
+    VADisplay           va_display;
+    gpointer            native_display;
+};
 
 /**
  * GstVaapiDisplay:

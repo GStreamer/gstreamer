@@ -25,6 +25,7 @@ libgstvaapi_source_c =				\
 	gstvaapicontext.c			\
 	gstvaapidecoder.c			\
 	gstvaapidisplay.c			\
+	gstvaapidisplaycache.c			\
 	gstvaapiimage.c				\
 	gstvaapiimageformat.c			\
 	gstvaapiimagepool.c			\
@@ -49,6 +50,7 @@ libgstvaapi_source_h =				\
 	gstvaapicontext.h			\
 	gstvaapidecoder.h			\
 	gstvaapidisplay.h			\
+	gstvaapidisplaycache.h			\
 	gstvaapiimage.h				\
 	gstvaapiimageformat.h			\
 	gstvaapiimagepool.h			\
