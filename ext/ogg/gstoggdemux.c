@@ -2349,6 +2349,8 @@ gst_ogg_demux_get_prev_page (GstOggDemux * ogg, ogg_page * og, gint64 * offset)
       if (ret == GST_FLOW_EOS) {
         new_offset = 0;
         GST_LOG_OBJECT (ogg, "got unexpected");
+        /* We hit EOS. */
+        goto beach;
       } else if (ret != GST_FLOW_OK) {
         GST_LOG_OBJECT (ogg, "got error %d", ret);
         return ret;
@@ -2376,6 +2378,7 @@ gst_ogg_demux_get_prev_page (GstOggDemux * ogg, ogg_page * og, gint64 * offset)
   if (offset)
     *offset = cur_offset;
 
+beach:
   return ret;
 }
 
@@ -2411,10 +2414,12 @@ gst_ogg_demux_deactivate_current_chain (GstOggDemux * ogg)
 
     pad->added = FALSE;
   }
-  /* With push mode seeking implemented, we can now seek back to the chain,
-     so we do not destroy it */
-  GST_DEBUG_OBJECT (ogg, "Resetting current chain");
-  ogg->current_chain = NULL;
+
+  /* if we cannot seek back to the chain, we can destroy the chain 
+   * completely */
+  if (!ogg->pullmode) {
+    gst_ogg_chain_free (chain);
+  }
 
   return TRUE;
 }
@@ -4436,8 +4441,17 @@ pause:
      * e.g. because of a flushing seek.
      */
     if (event) {
-      gst_event_set_seqnum (event, ogg->seqnum);
-      gst_ogg_demux_send_event (ogg, event);
+      /* guard against corrupt/truncated files, where one can hit EOS
+         before prerolling is done and a chain created. If we have no
+         chain to send the event to, error out. */
+      if (ogg->current_chain || ogg->building_chain) {
+        gst_event_set_seqnum (event, ogg->seqnum);
+        gst_ogg_demux_send_event (ogg, event);
+      } else {
+        gst_event_unref (event);
+        GST_ELEMENT_ERROR (ogg, STREAM, DEMUX, (NULL),
+            ("EOS before finding a chain"));
+      }
     }
     return;
   }
@@ -4564,6 +4578,7 @@ gst_ogg_demux_change_state (GstElement * element, GstStateChange transition)
                 "Unable to determine stream size, assuming live, seeking disabled");
             ogg->push_disable_seeking = TRUE;
           }
+          gst_object_unref (peer);
         }
       }
 

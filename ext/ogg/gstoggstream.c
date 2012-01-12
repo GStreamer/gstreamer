@@ -1822,6 +1822,7 @@ extract_tags_kate (GstOggStream * pad, ogg_packet * packet)
       /* ensure the comment packet cannot override the category/language
          from the identification header */
       gst_tag_list_insert (pad->taglist, list, GST_TAG_MERGE_KEEP_ALL);
+      gst_tag_list_free (list);
     } else
       pad->taglist = list;
   }
