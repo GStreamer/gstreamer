@@ -742,7 +742,10 @@ gst_rtp_ssrc_demux_iterate_internal_links_sink (GstPad * pad)
 
   it = gst_element_iterate_src_pads (GST_ELEMENT (demux));
 
-  return gst_iterator_filter (it, src_pad_compare_func, (gpointer) prefix);
+  it = gst_iterator_filter (it, src_pad_compare_func, (gpointer) prefix);
+
+  gst_object_unref (demux);
+  return it;
 }
 
 
