@@ -633,6 +633,9 @@ gst_matroska_read_common_parse_attached_file (GstMatroskaReadCommon * common,
     else
       gst_tag_list_add (taglist, GST_TAG_MERGE_APPEND, GST_TAG_ATTACHMENT,
           tagbuffer, NULL);
+
+    /* the tag list adds it own ref */
+    gst_buffer_unref (tagbuffer);
   }
 
   g_free (filename);
