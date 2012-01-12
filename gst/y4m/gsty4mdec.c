@@ -591,6 +591,9 @@ gst_y4m_dec_sink_event (GstPad * pad, GstEvent * event)
       }
 
       res = TRUE;
+      /* not sure why it's not forwarded, but let's unref it so it
+         doesn't leak, remove the unref if it gets forwarded again */
+      gst_event_unref (event);
       //res = gst_pad_push_event (y4mdec->srcpad, event);
     }
       break;
