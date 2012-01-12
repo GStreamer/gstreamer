@@ -1230,7 +1230,7 @@ print_plugin_info (GstPlugin * plugin)
 static void
 print_plugin_features (GstPlugin * plugin)
 {
-  GList *features;
+  GList *features, *features_to_free;
   gint num_features = 0;
   gint num_elements = 0;
   gint num_typefinders = 0;
@@ -1241,6 +1241,7 @@ print_plugin_features (GstPlugin * plugin)
       gst_registry_get_feature_list_by_plugin (gst_registry_get_default (),
       plugin->desc.name);
 
+  features_to_free = features;
   while (features) {
     GstPluginFeature *feature;
 
@@ -1284,6 +1285,7 @@ print_plugin_features (GstPlugin * plugin)
       num_other++;
     }
     num_features++;
+    gst_object_unref (feature);
     features = g_list_next (features);
   }
   n_print ("\n");
@@ -1298,6 +1300,9 @@ print_plugin_features (GstPlugin * plugin)
     n_print ("  +-- %d other objects\n", num_other);
 
   n_print ("\n");
+
+  if (features_to_free)
+    g_list_free (features_to_free);
 }
 
 static int
