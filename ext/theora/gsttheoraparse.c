@@ -241,7 +241,7 @@ theora_parse_get_property (GObject * object, guint prop_id,
         g_value_unset (&v);
       }
 
-      g_value_set_boxed (value, array);
+      g_value_take_boxed (value, array);
     }
       break;
     default:
