@@ -1330,6 +1330,7 @@ gst_ffmpegdemux_type_find (GstTypeFind * tf, gpointer priv)
           in_plugin->name, sinkcaps, res);
 
       gst_type_find_suggest (tf, res, sinkcaps);
+      gst_caps_unref (sinkcaps);
     }
   }
 }
