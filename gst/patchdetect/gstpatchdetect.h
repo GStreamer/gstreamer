@@ -37,9 +37,6 @@ struct _GstPatchdetect
 {
   GstBaseTransform base_patchdetect;
 
-  GstPad *sinkpad;
-  GstPad *srcpad;
-
   GstVideoFormat format;
   int width;
   int height;
