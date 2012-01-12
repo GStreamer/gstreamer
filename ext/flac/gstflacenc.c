@@ -1072,7 +1072,9 @@ gst_flac_enc_write_callback (const FLAC__StreamEncoder * encoder,
       ret = gst_flac_enc_process_stream_headers (flacenc);
       flacenc->got_headers = TRUE;
     }
-  } else if (flacenc->got_headers && samples == 0) {
+  }
+
+  if (flacenc->got_headers && samples == 0) {
     /* header fixup, push downstream directly */
     GST_DEBUG_OBJECT (flacenc, "Fixing up headers at pos=%" G_GUINT64_FORMAT
         ", size=%u", flacenc->offset, (guint) bytes);
