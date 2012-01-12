@@ -1959,7 +1959,7 @@ gst_ffmpegdemux_register (GstPlugin * plugin)
         )
       register_typefind_func = FALSE;
 
-    /* Set the rank of demuxers know to work to MARGINAL.
+    /* Set the rank of demuxers known to work to MARGINAL.
      * Set demuxers for which we already have another implementation to NONE
      * Set All others to NONE*/
     if (!strcmp (in_plugin->name, "wsvqa") ||
@@ -1967,7 +1967,6 @@ gst_ffmpegdemux_register (GstPlugin * plugin)
         !strcmp (in_plugin->name, "wc3movie") ||
         !strcmp (in_plugin->name, "voc") ||
         !strcmp (in_plugin->name, "tta") ||
-        !strcmp (in_plugin->name, "swf") ||
         !strcmp (in_plugin->name, "sol") ||
         !strcmp (in_plugin->name, "smk") ||
         !strcmp (in_plugin->name, "vmd") ||
