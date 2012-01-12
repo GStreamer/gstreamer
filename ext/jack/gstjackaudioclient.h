@@ -54,6 +54,8 @@ jack_client_t *       gst_jack_audio_client_get_client     (GstJackAudioClient *
 
 gboolean              gst_jack_audio_client_set_active     (GstJackAudioClient *client, gboolean active);
 
+GstState              gst_jack_audio_client_get_transport_state (GstJackAudioClient *client);
+
 G_END_DECLS
 
 #endif /* __GST_JACK_AUDIO_CLIENT_H__ */

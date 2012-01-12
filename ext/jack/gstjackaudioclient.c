@@ -55,6 +55,10 @@ typedef struct
   gint n_clients;
   GList *src_clients;
   GList *sink_clients;
+
+  /* transport state handling */
+  gint cur_ts;
+  GstState transport_state;
 } GstJackAudioConnection;
 
 /* an object sharing a jack_client_t connection. */
@@ -66,7 +70,7 @@ struct _GstJackAudioClient
   gboolean active;
   gboolean deactivate;
 
-  void (*shutdown) (void *arg);
+  JackShutdownCallback shutdown;
   JackProcessCallback process;
   JackBufferSizeCallback buffer_size;
   JackSampleRateCallback sample_rate;
@@ -87,6 +91,27 @@ jack_process_cb (jack_nframes_t nframes, void *arg)
   GstJackAudioConnection *conn = (GstJackAudioConnection *) arg;
   GList *walk;
   int res = 0;
+  jack_transport_state_t ts = jack_transport_query (conn->client, NULL);
+
+  if (ts != conn->cur_ts) {
+    conn->cur_ts = ts;
+    switch (ts) {
+      case JackTransportStopped:
+        GST_DEBUG ("transport state is 'stopped'");
+        conn->transport_state = GST_STATE_PAUSED;
+        break;
+      case JackTransportStarting:
+        GST_DEBUG ("transport state is 'starting'");
+        conn->transport_state = GST_STATE_READY;
+        break;
+      case JackTransportRolling:
+        GST_DEBUG ("transport state is 'rolling'");
+        conn->transport_state = GST_STATE_PLAYING;
+        break;
+      default:
+        break;
+    }
+  }
 
   g_mutex_lock (conn->lock);
   /* call sources first, then sinks. Sources will either push data into the
@@ -117,7 +142,6 @@ jack_process_cb (jack_nframes_t nframes, void *arg)
     }
   }
   g_mutex_unlock (conn->lock);
-
   return res;
 }
 
@@ -224,6 +248,8 @@ gst_jack_audio_make_connection (const gchar * id, const gchar * server,
   conn->n_clients = 0;
   conn->src_clients = NULL;
   conn->sink_clients = NULL;
+  conn->cur_ts = -1;
+  conn->transport_state = GST_STATE_VOID_PENDING;
 
   /* set our callbacks  */
   jack_set_process_callback (jclient, jack_process_cb, conn);
@@ -524,4 +550,23 @@ gst_jack_audio_client_set_active (GstJackAudioClient * client, gboolean active)
   g_mutex_unlock (client->conn->lock);
 
   return 0;
+}
+
+/**
+ * gst_jack_audio_client_get_transport_state:
+ * @client: a #GstJackAudioClient
+ *
+ * Check the current transport state. The client can use this to request a state
+ * change from the application.
+ *
+ * Returns: the state, %GST_STATE_VOID_PENDING for no change in the transport
+ * state
+ */
+GstState
+gst_jack_audio_client_get_transport_state (GstJackAudioClient * client)
+{
+  GstState state = client->conn->transport_state;
+
+  client->conn->transport_state = GST_STATE_VOID_PENDING;
+  return state;
 }
