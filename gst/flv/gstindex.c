@@ -126,7 +126,7 @@ gst_index_resolver_get_type (void)
 
   if (!index_resolver_type) {
     index_resolver_type =
-        g_enum_register_static ("GstIndexResolver", index_resolver);
+        g_enum_register_static ("GstFlvDemuxIndexResolver", index_resolver);
   }
   return index_resolver_type;
 }
@@ -137,7 +137,7 @@ gst_index_entry_get_type (void)
   static GType index_entry_type = 0;
 
   if (!index_entry_type) {
-    index_entry_type = g_boxed_type_register_static ("GstIndexEntry",
+    index_entry_type = g_boxed_type_register_static ("GstFlvDemuxIndexEntry",
         (GBoxedCopyFunc) gst_index_entry_copy,
         (GBoxedFreeFunc) gst_index_entry_free);
   }
@@ -152,7 +152,10 @@ gst_index_entry_get_type (void)
 }
 #endif
 
-G_DEFINE_TYPE (GstIndex, gst_index, GST_TYPE_OBJECT);
+typedef GstIndex GstFlvDemuxIndex;
+typedef GstIndexClass GstFlvDemuxIndexClass;
+//typedef GstIndexEntry GstFlvDemuxIndexEntry;
+G_DEFINE_TYPE (GstFlvDemuxIndex, gst_index, GST_TYPE_OBJECT);
 
 static void
 gst_index_class_init (GstIndexClass * klass)

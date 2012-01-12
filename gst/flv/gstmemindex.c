@@ -104,7 +104,9 @@ static GstIndexEntry *gst_mem_index_get_assoc_entry (GstIndex * index, gint id,
 
 static GType gst_mem_index_get_type (void);
 
-G_DEFINE_TYPE (GstMemIndex, gst_mem_index, GST_TYPE_INDEX);
+typedef GstMemIndex GstFlvDemuxMemIndex;
+typedef GstMemIndexClass GstFlvDemuxMemIndexClass;
+G_DEFINE_TYPE (GstFlvDemuxMemIndex, gst_mem_index, GST_TYPE_INDEX);
 
 static void
 gst_mem_index_class_init (GstMemIndexClass * klass)
