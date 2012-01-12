@@ -36,8 +36,6 @@ EXPORTS
 	_gst_caps_any DATA
 	_gst_caps_none DATA
 	_gst_caps_type DATA
-	_gst_debug_bin_to_dot_file
-	_gst_debug_bin_to_dot_file_with_ts
 	_gst_debug_category_new
 	_gst_debug_dump_mem
 	_gst_debug_enabled DATA
@@ -288,6 +286,8 @@ EXPORTS
 	gst_date_time_ref
 	gst_date_time_unref
 	gst_debug_add_log_function
+	gst_debug_bin_to_dot_file
+	gst_debug_bin_to_dot_file_with_ts
 	gst_debug_category_free
 	gst_debug_category_get_color
 	gst_debug_category_get_description
