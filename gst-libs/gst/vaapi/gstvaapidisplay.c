@@ -51,11 +51,11 @@ enum {
     PROP_HEIGHT
 };
 
+static GstVaapiDisplayCache *g_display_cache = NULL;
+
 static inline GstVaapiDisplayCache *
 get_display_cache(void)
 {
-    static GstVaapiDisplayCache *g_display_cache = NULL;
-
     if (!g_display_cache)
         g_display_cache = gst_vaapi_display_cache_new();
     return g_display_cache;
@@ -65,6 +65,17 @@ GstVaapiDisplayCache *
 gst_vaapi_display_get_cache(void)
 {
     return get_display_cache();
+}
+
+static void
+free_display_cache(void)
+{
+    if (!g_display_cache)
+        return;
+    if (gst_vaapi_display_cache_get_size(g_display_cache) > 0)
+        return;
+    gst_vaapi_display_cache_free(g_display_cache);
+    g_display_cache = NULL;
 }
 
 /* Append GstVaapiImageFormat to formats array */
@@ -314,7 +325,10 @@ gst_vaapi_display_destroy(GstVaapiDisplay *display)
         priv->parent = NULL;
     }
 
-    gst_vaapi_display_cache_remove(get_display_cache(), display);
+    if (g_display_cache) {
+        gst_vaapi_display_cache_remove(get_display_cache(), display);
+        free_display_cache();
+    }
 }
 
 static gboolean
