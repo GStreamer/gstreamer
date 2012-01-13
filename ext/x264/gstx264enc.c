@@ -962,7 +962,7 @@ gst_x264_enc_finalize (GObject * object)
 
 #define FREE_STRING(ptr) \
   if (ptr) \
-    ptr = (GString *)g_string_free (ptr, TRUE);
+    g_string_free (ptr, TRUE);
 
   FREE_STRING (encoder->tunings);
   FREE_STRING (encoder->option_string);
