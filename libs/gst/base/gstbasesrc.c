@@ -2857,6 +2857,8 @@ gst_base_src_default_negotiate (GstBaseSrc * basesrc)
     }
     gst_caps_unref (caps);
   } else {
+    if (caps)
+      gst_caps_unref (caps);
     GST_DEBUG_OBJECT (basesrc, "no common caps");
   }
   return result;
