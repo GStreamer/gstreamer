@@ -29,6 +29,13 @@
 #define DEBUG 1
 #include "gstvaapidebug.h"
 
+#define CONCAT(a, b)    CONCAT_(a, b)
+#define CONCAT_(a, b)   a##b
+#define STRINGIFY(x)    STRINGIFY_(x)
+#define STRINGIFY_(x)   #x
+#define STRCASEP(p, x)  STRCASE(CONCAT(p, x))
+#define STRCASE(x)      case x: return STRINGIFY(x)
+
 /* Check VA status for success or print out an error */
 gboolean
 vaapi_check_status(VAStatus status, const char *msg)
@@ -44,25 +51,25 @@ vaapi_check_status(VAStatus status, const char *msg)
 const char *string_of_VAProfile(VAProfile profile)
 {
     switch (profile) {
-#define PROFILE(profile) \
-        case VAProfile##profile: return "VAProfile" #profile
-        PROFILE(MPEG2Simple);
-        PROFILE(MPEG2Main);
-        PROFILE(MPEG4Simple);
-        PROFILE(MPEG4AdvancedSimple);
-        PROFILE(MPEG4Main);
+#define MAP(profile) \
+        STRCASEP(VAProfile, profile)
+        MAP(MPEG2Simple);
+        MAP(MPEG2Main);
+        MAP(MPEG4Simple);
+        MAP(MPEG4AdvancedSimple);
+        MAP(MPEG4Main);
 #if VA_CHECK_VERSION(0,32,0)
-        PROFILE(JPEGBaseline);
-        PROFILE(H263Baseline);
-        PROFILE(H264ConstrainedBaseline);
+        MAP(JPEGBaseline);
+        MAP(H263Baseline);
+        MAP(H264ConstrainedBaseline);
 #endif
-        PROFILE(H264Baseline);
-        PROFILE(H264Main);
-        PROFILE(H264High);
-        PROFILE(VC1Simple);
-        PROFILE(VC1Main);
-        PROFILE(VC1Advanced);
-#undef PROFILE
+        MAP(H264Baseline);
+        MAP(H264Main);
+        MAP(H264High);
+        MAP(VC1Simple);
+        MAP(VC1Main);
+        MAP(VC1Advanced);
+#undef MAP
     default: break;
     }
     return "<unknown>";
@@ -72,14 +79,14 @@ const char *string_of_VAProfile(VAProfile profile)
 const char *string_of_VAEntrypoint(VAEntrypoint entrypoint)
 {
     switch (entrypoint) {
-#define ENTRYPOINT(entrypoint) \
-        case VAEntrypoint##entrypoint: return "VAEntrypoint" #entrypoint
-        ENTRYPOINT(VLD);
-        ENTRYPOINT(IZZ);
-        ENTRYPOINT(IDCT);
-        ENTRYPOINT(MoComp);
-        ENTRYPOINT(Deblocking);
-#undef ENTRYPOINT
+#define MAP(entrypoint) \
+        STRCASEP(VAEntrypoint, entrypoint)
+        MAP(VLD);
+        MAP(IZZ);
+        MAP(IDCT);
+        MAP(MoComp);
+        MAP(Deblocking);
+#undef MAP
     default: break;
     }
     return "<unknown>";
