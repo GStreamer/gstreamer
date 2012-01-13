@@ -50,3 +50,11 @@ gst*orc.h
 /tests/examples/shapewipe/shapewipe-example
 /tests/examples/jack/jack_client
 /tests/examples/opencv/gstmotioncells_dynamic_test
+
+Build
+*.user
+*.suo
+*.ipch
+*.sdf
+*.opensdf
+*.DS_Store
