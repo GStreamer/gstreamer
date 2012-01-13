@@ -2679,11 +2679,9 @@ gst_asf_demux_process_ext_content_desc (GstASFDemux * demux, guint8 * data,
                 guint year = atoi (value_utf8);
 
                 if (year > 0) {
-                  GDate *date = g_date_new_dmy (1, 1, year);
-
-                  g_value_init (&tag_value, GST_TYPE_DATE);
-                  gst_value_set_date (&tag_value, date);
-                  g_date_free (date);
+                  /* FIXME: really want a GDateTime with just the year field */
+                  g_value_init (&tag_value, G_TYPE_DATE);
+                  g_value_take_boxed (&tag_value, g_date_new_dmy (1, 1, year));
                 }
               } else if (strcmp (gst_tag_name, GST_TAG_GENRE) == 0) {
                 guint id3v1_genre_id;
