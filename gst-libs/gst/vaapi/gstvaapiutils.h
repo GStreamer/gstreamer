@@ -36,10 +36,6 @@ gboolean
 vaapi_check_status(VAStatus status, const char *msg)
     attribute_hidden;
 
-/** Return a string representation of a FOURCC */
-const char *string_of_FOURCC(guint32 fourcc)
-    attribute_hidden;
-
 /** Return a string representation of a VAProfile */
 const char *string_of_VAProfile(VAProfile profile)
     attribute_hidden;

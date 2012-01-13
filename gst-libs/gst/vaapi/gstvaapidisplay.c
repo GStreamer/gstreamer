@@ -449,7 +449,7 @@ gst_vaapi_display_create(GstVaapiDisplay *display)
 
     GST_DEBUG("%d image formats", n);
     for (i = 0; i < n; i++)
-        GST_DEBUG("  %s", string_of_FOURCC(formats[i].fourcc));
+        GST_DEBUG("  %" GST_FOURCC_FORMAT, GST_FOURCC_ARGS(formats[i].fourcc));
 
     priv->image_formats =
         g_array_new(FALSE, FALSE, sizeof(GstVaapiImageFormat));
@@ -470,7 +470,7 @@ gst_vaapi_display_create(GstVaapiDisplay *display)
 
     GST_DEBUG("%d subpicture formats", n);
     for (i = 0; i < n; i++)
-        GST_DEBUG("  %s", string_of_FOURCC(formats[i].fourcc));
+        GST_DEBUG("  %" GST_FOURCC_FORMAT, GST_FOURCC_ARGS(formats[i].fourcc));
 
     priv->subpicture_formats =
         g_array_new(FALSE, FALSE, sizeof(GstVaapiImageFormat));

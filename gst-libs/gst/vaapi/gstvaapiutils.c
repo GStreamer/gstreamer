@@ -40,21 +40,6 @@ vaapi_check_status(VAStatus status, const char *msg)
     return TRUE;
 }
 
-/* Return a string representation of a FOURCC */
-const char *string_of_FOURCC(guint32 fourcc)
-{
-    static int buf;
-    static char str[2][5]; // XXX: 2 buffers should be enough for most purposes
-
-    buf ^= 1;
-    str[buf][0] = fourcc;
-    str[buf][1] = fourcc >> 8;
-    str[buf][2] = fourcc >> 16;
-    str[buf][3] = fourcc >> 24;
-    str[buf][4] = '\0';
-    return str[buf];
-}
-
 /* Return a string representation of a VAProfile */
 const char *string_of_VAProfile(VAProfile profile)
 {
