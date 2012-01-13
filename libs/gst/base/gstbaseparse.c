@@ -785,6 +785,9 @@ gst_base_parse_reset (GstBaseParse * parse)
   g_slist_free (parse->priv->pending_seeks);
   parse->priv->pending_seeks = NULL;
 
+  if (parse->priv->adapter)
+    gst_adapter_clear (parse->priv->adapter);
+
   /* we know it is not alloc'ed, but maybe other stuff to free, some day ... */
   parse->priv->frame._private_flags |=
       GST_BASE_PARSE_FRAME_PRIVATE_FLAG_NOALLOC;

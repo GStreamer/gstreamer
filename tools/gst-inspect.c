@@ -1241,6 +1241,7 @@ print_plugin_features (GstPlugin * plugin)
       num_other++;
     }
     num_features++;
+    gst_object_unref (feature);
     features = g_list_next (features);
   }
 

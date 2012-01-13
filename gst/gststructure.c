@@ -2851,9 +2851,9 @@ wrong_type:
  * (as a GType), pointer(s) to a variable(s) to hold the return value(s).
  * The last variable argument should be NULL.
  *
- * For refcounted (mini)objects you will acquire your own reference which
+ * For refcounted (mini)objects you will receive a new reference which
  * you must release with a suitable _unref() when no longer needed. For
- * strings and boxed types you will acquire a copy which you will need to
+ * strings and boxed types you will receive a copy which you will need to
  * release with either g_free() or the suitable function for the boxed type.
  *
  * Returns: FALSE if there was a problem reading any of the fields (e.g.
@@ -2896,9 +2896,9 @@ gst_structure_get (const GstStructure * structure, const char *first_fieldname,
  * more efficient since it saves the string-to-quark lookup in the global
  * quark hashtable.
  *
- * For refcounted (mini)objects you will acquire your own reference which
+ * For refcounted (mini)objects you will receive a new reference which
  * you must release with a suitable _unref() when no longer needed. For
- * strings and boxed types you will acquire a copy which you will need to
+ * strings and boxed types you will receive a copy which you will need to
  * release with either g_free() or the suitable function for the boxed type.
  *
  * Returns: FALSE if there was a problem reading any of the fields (e.g.
