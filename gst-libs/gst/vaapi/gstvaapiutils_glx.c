@@ -167,6 +167,39 @@ gl_get_texture_param(GLenum target, GLenum param, guint *pval)
 }
 
 /**
+ * gl_get_texture_binding:
+ * @target: a texture target
+ *
+ * Determines the texture binding type for the specified target.
+ *
+ * Return value: texture binding type for @target
+ */
+static GLenum
+gl_get_texture_binding(GLenum target)
+{
+    GLenum binding;
+
+    switch (target) {
+    case GL_TEXTURE_1D:
+        binding = GL_TEXTURE_BINDING_1D;
+        break;
+    case GL_TEXTURE_2D:
+        binding = GL_TEXTURE_BINDING_2D;
+        break;
+    case GL_TEXTURE_3D:
+        binding = GL_TEXTURE_BINDING_3D;
+        break;
+    case GL_TEXTURE_RECTANGLE_ARB:
+        binding = GL_TEXTURE_BINDING_RECTANGLE_ARB;
+        break;
+    default:
+        binding = 0;
+        break;
+    }
+    return binding;
+}
+
+/**
  * gl_set_bgcolor:
  * @color: the requested RGB color
  *
@@ -455,42 +488,32 @@ gl_swap_buffers(GLContextState *cs)
 gboolean
 gl_bind_texture(GLTextureState *ts, GLenum target, GLuint texture)
 {
-    ts->target      = target;
-    ts->old_texture = 0;
-    ts->was_bound   = 0;
-    ts->was_enabled = glIsEnabled(target);
-    if (!ts->was_enabled)
-        glEnable(target);
+    GLenum binding;
 
-    GLenum texture_binding;
-    switch (target) {
-    case GL_TEXTURE_1D:
-        texture_binding = GL_TEXTURE_BINDING_1D;
-        break;
-    case GL_TEXTURE_2D:
-        texture_binding = GL_TEXTURE_BINDING_2D;
-        break;
-    case GL_TEXTURE_3D:
-        texture_binding = GL_TEXTURE_BINDING_3D;
-        break;
-    case GL_TEXTURE_RECTANGLE_ARB:
-        texture_binding = GL_TEXTURE_BINDING_RECTANGLE_ARB;
-        break;
-    default:
-        g_assert(!texture);
-        return FALSE;
-    }
+    ts->target = target;
 
-    if (!gl_get_param(texture_binding, &ts->old_texture))
-        return FALSE;
-
-    ts->was_bound = texture == ts->old_texture;
-    if (!ts->was_bound) {
-        gl_purge_errors();
-        glBindTexture(target, texture);
-        if (gl_check_error())
+    if (glIsEnabled(target)) {
+        binding = gl_get_texture_binding(target);
+        if (!binding)
             return FALSE;
+        if (!gl_get_param(binding, &ts->old_texture))
+            return FALSE;
+        ts->was_enabled = TRUE;
+        ts->was_bound   = texture == ts->old_texture;
+        if (ts->was_bound)
+            return TRUE;
     }
+    else {
+        glEnable(target);
+        ts->old_texture = 0;
+        ts->was_enabled = FALSE;
+        ts->was_bound   = FALSE;
+    }
+
+    gl_purge_errors();
+    glBindTexture(target, texture);
+    if (gl_check_error())
+        return FALSE;
     return TRUE;
 }
 
