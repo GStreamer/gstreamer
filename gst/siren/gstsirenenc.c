@@ -156,7 +156,7 @@ gst_siren_enc_finalize (GObject * object)
   Siren7_CloseEncoder (enc->encoder);
   g_object_unref (enc->adapter);
 
-  G_OBJECT_CLASS (parent_class)->dispose (object);
+  G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
 static gboolean
