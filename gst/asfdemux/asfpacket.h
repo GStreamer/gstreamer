@@ -46,6 +46,7 @@ typedef struct {
 
 typedef struct {
   GstBuffer    *buf;
+  const guint8 *bdata;
   guint         length;            /* packet length (unused)               */
   guint         padding;           /* length of padding at end of packet   */
   guint         sequence;          /* sequence (unused)                    */

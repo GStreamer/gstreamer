@@ -77,7 +77,8 @@ asf_packet_create_payload_buffer (AsfPacket * packet, const guint8 ** p_data,
 
   g_assert (payload_len <= *p_size);
 
-  off = (guint) (gst_buffer_get_size (packet->buf) - *p_size);
+  off = (guint) (*p_data - packet->bdata);
+  g_assert (off < gst_buffer_get_size (packet->buf));
 
   *p_data += payload_len;
   *p_size -= payload_len;
@@ -484,6 +485,8 @@ gst_asf_demux_parse_packet (GstASFDemux * demux, GstBuffer * buf)
     goto short_packet;
 
   packet.buf = buf;
+  /* evidently transient */
+  packet.bdata = data;
 
   ec_flags = GST_READ_UINT8 (data);
 
