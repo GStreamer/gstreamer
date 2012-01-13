@@ -2007,6 +2007,9 @@ rtp_session_process_sdes (RTPSession * sess, GstRTCPPacket * packet,
     validated = !RTP_SOURCE_IS_ACTIVE (source);
     source->validated = TRUE;
 
+    if (created)
+      on_new_ssrc (sess, source);
+
     /* source became active */
     if (validated) {
       sess->stats.active_sources++;
@@ -2015,8 +2018,6 @@ rtp_session_process_sdes (RTPSession * sess, GstRTCPPacket * packet,
       on_ssrc_validated (sess, source);
     }
 
-    if (created)
-      on_new_ssrc (sess, source);
     if (changed)
       on_ssrc_sdes (sess, source);
 
