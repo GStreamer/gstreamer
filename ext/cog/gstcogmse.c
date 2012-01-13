@@ -209,6 +209,8 @@ gst_mse_finalize (GObject * object)
   g_mutex_free (fs->lock);
   g_cond_free (fs->cond);
   gst_buffer_replace (&fs->buffer_ref, NULL);
+
+  GST_CALL_PARENT (G_OBJECT_CLASS, finalize, (object));
 }
 
 static GstCaps *
