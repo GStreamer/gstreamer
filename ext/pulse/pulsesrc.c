@@ -1230,7 +1230,7 @@ gst_pulsesrc_delay (GstAudioSrc * asrc)
 
   pa_threaded_mainloop_unlock (pulsesrc->mainloop);
 
-  if (res > 0) {
+  if (res < 0) {
     GST_DEBUG_OBJECT (pulsesrc, "could not get latency");
     result = 0;
   } else {
