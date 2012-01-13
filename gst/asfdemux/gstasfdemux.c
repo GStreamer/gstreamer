@@ -2319,8 +2319,8 @@ gst_asf_demux_activate_stream (GstASFDemux * demux, AsfStream * stream)
     GST_INFO_OBJECT (demux, "Activating stream %2u, pad %s, caps %"
         GST_PTR_FORMAT, stream->id, GST_PAD_NAME (stream->pad), stream->caps);
     gst_pad_set_active (stream->pad, TRUE);
-    gst_element_add_pad (GST_ELEMENT_CAST (demux), stream->pad);
     gst_pad_set_caps (stream->pad, stream->caps);
+    gst_element_add_pad (GST_ELEMENT_CAST (demux), stream->pad);
     stream->active = TRUE;
   }
 }
