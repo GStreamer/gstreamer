@@ -1718,6 +1718,9 @@ again:
   if (G_UNLIKELY (gap != 0 && out_time != -1)) {
     GstClockReturn ret;
     GstClockTime duration = GST_CLOCK_TIME_NONE;
+    GstClockTimeDiff clock_jitter;
+    guint32 lost_packets = 1;
+    gboolean lost_packets_late = FALSE;
 
     if (gap > 0) {
       /* we have a gap */
@@ -1759,11 +1762,12 @@ again:
       goto push_buffer;
     }
 
-    GST_DEBUG_OBJECT (jitterbuffer, "sync to timestamp %" GST_TIME_FORMAT,
-        GST_TIME_ARGS (out_time));
-
     /* prepare for sync against clock */
     sync_time = get_sync_time (jitterbuffer, out_time);
+
+    GST_DEBUG_OBJECT (jitterbuffer, "sync to timestamp %" GST_TIME_FORMAT
+        " with sync time %" GST_TIME_FORMAT,
+        GST_TIME_ARGS (out_time), GST_TIME_ARGS (sync_time));
 
     /* create an entry for the clock */
     id = priv->clock_id = gst_clock_new_single_shot_id (clock, sync_time);
@@ -1773,7 +1777,31 @@ again:
     /* release the lock so that the other end can push stuff or unlock */
     JBUF_UNLOCK (priv);
 
-    ret = gst_clock_id_wait (id, NULL);
+    ret = gst_clock_id_wait (id, &clock_jitter);
+
+    if (ret == GST_CLOCK_EARLY && gap > 0
+        && clock_jitter > (priv->latency_ns + priv->peer_latency)) {
+      GstClockTimeDiff total_duration;
+      GstClockTime out_time_diff;
+
+      out_time_diff = apply_offset (jitterbuffer, timestamp) - out_time;
+      total_duration = MIN (out_time_diff, clock_jitter);
+
+      if (duration > 0)
+        lost_packets = total_duration / duration;
+      else
+        lost_packets = gap;
+      total_duration = lost_packets * duration;
+
+      GST_DEBUG_OBJECT (jitterbuffer,
+          "Current sync_time has expired a long time ago (+%" GST_TIME_FORMAT
+          ") Cover up %d lost packets with duration %" GST_TIME_FORMAT,
+          GST_TIME_ARGS (clock_jitter),
+          lost_packets, GST_TIME_ARGS (total_duration));
+
+      duration = total_duration;
+      lost_packets_late = TRUE;
+    }
 
     JBUF_LOCK (priv);
     /* and free the entry */
@@ -1802,15 +1830,20 @@ again:
     if (gap > 0) {
       GstEvent *event;
 
-      /* we had a gap and thus we lost a packet. Create an event for this.  */
-      GST_DEBUG_OBJECT (jitterbuffer, "Packet #%d lost", next_seqnum);
-      priv->num_late++;
+      /* we had a gap and thus we lost some packets. Create an event for this.  */
+      if (lost_packets > 1)
+        GST_DEBUG_OBJECT (jitterbuffer, "Packets #%d -> #%d lost", next_seqnum,
+            next_seqnum + lost_packets - 1);
+      else
+        GST_DEBUG_OBJECT (jitterbuffer, "Packet #%d lost", next_seqnum);
+
+      priv->num_late += lost_packets;
       discont = TRUE;
 
       /* update our expected next packet */
       priv->last_popped_seqnum = next_seqnum;
-      priv->last_out_time = out_time;
-      priv->next_seqnum = (next_seqnum + 1) & 0xffff;
+      priv->last_out_time += duration;
+      priv->next_seqnum = (next_seqnum + lost_packets) & 0xffff;
 
       if (priv->do_lost) {
         /* create paket lost event */
@@ -1818,8 +1851,8 @@ again:
             gst_structure_new ("GstRTPPacketLost",
                 "seqnum", G_TYPE_UINT, (guint) next_seqnum,
                 "timestamp", G_TYPE_UINT64, out_time,
-                "duration", G_TYPE_UINT64, duration, NULL));
-
+                "duration", G_TYPE_UINT64, duration,
+                "late", G_TYPE_BOOLEAN, lost_packets_late, NULL));
         JBUF_UNLOCK (priv);
         gst_pad_push_event (priv->srcpad, event);
         JBUF_LOCK_CHECK (priv, flushing);
