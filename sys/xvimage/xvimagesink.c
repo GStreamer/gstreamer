@@ -244,6 +244,8 @@ gst_xvimage_buffer_destroy (GstXvImageBuffer * xvimage)
       shmdt (xvimage->SHMInfo.shmaddr);
     }
 #endif
+    if (xvimage->xvimage)
+      XFree (xvimage->xvimage);
     goto beach;
   }
 
