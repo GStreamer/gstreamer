@@ -205,42 +205,17 @@ gl_set_bgcolor(guint32 color)
  * basically is the Mesa implementation of gluPerspective().
  */
 static void
-frustum(GLdouble left, GLdouble right,
-        GLdouble bottom, GLdouble top, 
-        GLdouble nearval, GLdouble farval)
+gl_perspective(GLdouble fovy, GLdouble aspect, GLdouble near_val, GLdouble far_val)
 {
-    GLdouble x, y, a, b, c, d;
-    GLdouble m[16];
+    GLdouble left, right, top, bottom;
 
-    x = (2.0 * nearval) / (right - left);
-    y = (2.0 * nearval) / (top - bottom);
-    a = (right + left) / (right - left);
-    b = (top + bottom) / (top - bottom);
-    c = -(farval + nearval) / ( farval - nearval);
-    d = -(2.0 * farval * nearval) / (farval - nearval);
-
-#define M(row,col)  m[col*4+row]
-    M(0,0) = x;     M(0,1) = 0.0F;  M(0,2) = a;      M(0,3) = 0.0F;
-    M(1,0) = 0.0F;  M(1,1) = y;     M(1,2) = b;      M(1,3) = 0.0F;
-    M(2,0) = 0.0F;  M(2,1) = 0.0F;  M(2,2) = c;      M(2,3) = d;
-    M(3,0) = 0.0F;  M(3,1) = 0.0F;  M(3,2) = -1.0F;  M(3,3) = 0.0F;
-#undef M
-
-    glMultMatrixd(m);
-}
-
-static void
-gl_perspective(GLdouble fovy, GLdouble aspect, GLdouble zNear, GLdouble zFar)
-{
-    GLdouble xmin, xmax, ymin, ymax;
-
-    ymax = zNear * tan(fovy * M_PI / 360.0);
-    ymin = -ymax;
-    xmin = ymin * aspect;
-    xmax = ymax * aspect;
-
-    /* Don't call glFrustum() because of error semantics (covglu) */
-    frustum(xmin, xmax, ymin, ymax, zNear, zFar);
+    /* Source (Q 9.085):
+       <http://www.opengl.org/resources/faq/technical/transformations.htm> */
+    top    = tan(fovy * M_PI / 360.0) * near_val;
+    bottom = -top;
+    left   = aspect * bottom;
+    right  = aspect * top;
+    glFrustum(left, right, bottom, top, near_val, far_val);
 }
 
 /**
