@@ -62,30 +62,24 @@ find_string(const char *name, const char *ext, const char *sep)
 const char *
 gl_get_error_string(GLenum error)
 {
-    static const struct {
-        GLenum val;
-        const char *str;
-    }
-    gl_errors[] = {
-        { GL_NO_ERROR,          "no error" },
-        { GL_INVALID_ENUM,      "invalid enumerant" },
-        { GL_INVALID_VALUE,     "invalid value" },
-        { GL_INVALID_OPERATION, "invalid operation" },
-        { GL_STACK_OVERFLOW,    "stack overflow" },
-        { GL_STACK_UNDERFLOW,   "stack underflow" },
-        { GL_OUT_OF_MEMORY,     "out of memory" },
+    switch (error) {
+#define MAP(id, str) \
+        case id: return str " (" #id ")"
+        MAP(GL_NO_ERROR,                "no error");
+        MAP(GL_INVALID_ENUM,            "invalid enumerant");
+        MAP(GL_INVALID_VALUE,           "invalid value");
+        MAP(GL_INVALID_OPERATION,       "invalid operation");
+        MAP(GL_STACK_OVERFLOW,          "stack overflow");
+        MAP(GL_STACK_UNDERFLOW,         "stack underflow");
+        MAP(GL_OUT_OF_MEMORY,           "out of memory");
 #ifdef GL_INVALID_FRAMEBUFFER_OPERATION_EXT
-        { GL_INVALID_FRAMEBUFFER_OPERATION_EXT, "invalid framebuffer operation" },
+        MAP(GL_INVALID_FRAMEBUFFER_OPERATION_EXT,
+            "invalid framebuffer operation");
 #endif
-        { ~0, NULL }
+#undef MAP
+    default: break;
     };
-
-    guint i;
-    for (i = 0; gl_errors[i].str; i++) {
-        if (gl_errors[i].val == error)
-            return gl_errors[i].str;
-    }
-    return "unknown";
+    return "<unknown>";
 }
 
 /**
