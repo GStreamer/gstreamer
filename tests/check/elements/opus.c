@@ -110,7 +110,7 @@ cleanup_opusenc (GstElement * opusenc)
 }
 
 static void
-check_buffers (guint expected, gboolean headers_in_caps)
+check_buffers (guint expected)
 {
   GstBuffer *outbuffer;
   guint i, num_buffers;
@@ -152,7 +152,7 @@ GST_START_TEST (test_opus_id_header)
   /* ... and nothing ends up on the global buffer list */
   ASSERT_BUFFER_REFCOUNT (inbuffer, "inbuffer", 1);
   gst_buffer_unref (inbuffer);
-  fail_unless (g_list_length (buffers) == 0);
+  check_buffers (0);
 
   /* cleanup */
   cleanup_opusdec (opusdec);
@@ -248,7 +248,7 @@ GST_START_TEST (test_opus_encode_samples)
       "could not set to ready");
 
   /* default frame size is 20 ms, at 48000 Hz that's 960 samples */
-  check_buffers ((nsamples + 959) / 960, FALSE);
+  check_buffers ((nsamples + 959) / 960);
 
   /* cleanup */
   cleanup_opusenc (opusenc);
@@ -331,6 +331,8 @@ GST_START_TEST (test_opus_encode_properties)
     /* change random parameters */
     g_object_set (opusenc, param_changes[step].param, param_changes[step].value,
         NULL);
+
+    check_buffers (1);
   }
 
   gst_caps_unref (caps);
