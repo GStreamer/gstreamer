@@ -326,6 +326,10 @@ gst_rtp_pt_demux_chain (GstPad * pad, GstBuffer * buf)
     GstPadTemplate *templ;
     gchar *padname;
 
+    caps = gst_rtp_pt_demux_get_caps (rtpdemux, pt);
+    if (!caps)
+      goto no_caps;
+
     klass = GST_ELEMENT_GET_CLASS (rtpdemux);
     templ = gst_element_class_get_pad_template (klass, "src_%d");
     padname = g_strdup_printf ("src_%d", pt);
@@ -333,10 +337,6 @@ gst_rtp_pt_demux_chain (GstPad * pad, GstBuffer * buf)
     gst_pad_use_fixed_caps (srcpad);
     g_free (padname);
     gst_pad_set_event_function (srcpad, gst_rtp_pt_demux_src_event);
-
-    caps = gst_rtp_pt_demux_get_caps (rtpdemux, pt);
-    if (!caps)
-      goto no_caps;
 
     caps = gst_caps_make_writable (caps);
     gst_caps_set_simple (caps, "payload", G_TYPE_INT, pt, NULL);
