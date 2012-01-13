@@ -44,3 +44,10 @@ gst-element-check.m4
 _stdint.h
 *.gir
 *.typelib
+Build
+*.user
+*.suo
+*.ipch
+*.sdf
+*.opensdf
+*.DS_Store
