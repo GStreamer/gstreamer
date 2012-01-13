@@ -45,3 +45,11 @@ tmp-orc.c
 *orc.h
 
 /tests/examples/jack/jack_client
+
+Build
+*.user
+*.suo
+*.ipch
+*.sdf
+*.opensdf
+*.DS_Store
