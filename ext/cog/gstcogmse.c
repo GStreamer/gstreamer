@@ -208,6 +208,7 @@ gst_mse_finalize (GObject * object)
   gst_object_unref (fs->sinkpad_test);
   g_mutex_free (fs->lock);
   g_cond_free (fs->cond);
+  gst_buffer_replace (&fs->buffer_ref, NULL);
 }
 
 static GstCaps *
