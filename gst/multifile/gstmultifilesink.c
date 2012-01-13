@@ -672,7 +672,7 @@ static gboolean
 buffer_list_calc_size (GstBuffer ** buf, guint idx, gpointer data)
 {
   guint *p_size = data;
-  guint buf_size;
+  gsize buf_size;
 
   buf_size = gst_buffer_get_size (*buf);
   GST_TRACE ("buffer %u has size %" G_GSIZE_FORMAT, idx, buf_size);

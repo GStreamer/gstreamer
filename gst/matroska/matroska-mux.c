@@ -2030,7 +2030,7 @@ gst_matroska_mux_subtitle_pad_setcaps (GstPad * pad, GstCaps * caps)
     gst_buffer_unmap (buf, priv_buffer_data, priv_data_size);
   }
 
-  GST_DEBUG_OBJECT (pad, "codec_id %s, codec data size %u",
+  GST_DEBUG_OBJECT (pad, "codec_id %s, codec data size %" G_GSIZE_FORMAT,
       GST_STR_NULL (context->codec_id), context->codec_priv_size);
 
 exit:

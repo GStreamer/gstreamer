@@ -178,7 +178,8 @@ gst_ebml_stop_streamheader (GstEbmlWrite * ebml)
 
   buffer = gst_byte_writer_free_and_get_buffer (ebml->streamheader);
   ebml->streamheader = NULL;
-  GST_DEBUG ("Streamheader was size %d", gst_buffer_get_size (buffer));
+  GST_DEBUG ("Streamheader was size %" G_GSIZE_FORMAT,
+      gst_buffer_get_size (buffer));
 
   ebml->writing_streamheader = FALSE;
   return buffer;
@@ -245,7 +246,8 @@ gst_ebml_write_flush_cache (GstEbmlWrite * ebml, gboolean is_keyframe,
 
   buffer = gst_byte_writer_free_and_get_buffer (ebml->cache);
   ebml->cache = NULL;
-  GST_DEBUG ("Flushing cache of size %d", gst_buffer_get_size (buffer));
+  GST_DEBUG ("Flushing cache of size %" G_GSIZE_FORMAT,
+      gst_buffer_get_size (buffer));
   GST_BUFFER_TIMESTAMP (buffer) = timestamp;
   GST_BUFFER_OFFSET (buffer) = ebml->pos - gst_buffer_get_size (buffer);
   GST_BUFFER_OFFSET_END (buffer) = ebml->pos;

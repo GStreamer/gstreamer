@@ -1246,7 +1246,8 @@ gst_matroska_parse_search_cluster (GstMatroskaParse * parse, gint64 * pos)
     ret = gst_pad_pull_range (parse->common.sinkpad, newpos, chunk, &buf);
     if (ret != GST_FLOW_OK)
       break;
-    GST_DEBUG_OBJECT (parse, "read buffer size %d at offset %" G_GINT64_FORMAT,
+    GST_DEBUG_OBJECT (parse,
+        "read buffer size %" G_GSIZE_FORMAT " at offset %" G_GINT64_FORMAT,
         gst_buffer_get_size (buf), newpos);
     data = gst_buffer_map (buf, &size, NULL, GST_MAP_READ);
     gst_byte_reader_init (&reader, data, size);
@@ -2509,7 +2510,7 @@ gst_matroska_parse_accumulate_streamheader (GstMatroskaParse * parse,
     parse->streamheader = gst_buffer_ref (buffer);
   }
 
-  GST_DEBUG ("%d", gst_buffer_get_size (parse->streamheader));
+  GST_DEBUG ("%" G_GSIZE_FORMAT, gst_buffer_get_size (parse->streamheader));
 }
 
 static GstFlowReturn

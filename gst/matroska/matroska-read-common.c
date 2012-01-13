@@ -1670,8 +1670,8 @@ gst_matroska_read_common_peek_bytes (GstMatroskaReadCommon * common, guint64
 
   if (gst_buffer_get_size (common->cached_buffer) < size) {
     GST_WARNING_OBJECT (common, "Dropping short buffer at offset %"
-        G_GUINT64_FORMAT ": wanted %u bytes, got %u bytes", common->offset,
-        size, gst_buffer_get_size (common->cached_buffer));
+        G_GUINT64_FORMAT ": wanted %u bytes, got %" G_GSIZE_FORMAT " bytes",
+        common->offset, size, gst_buffer_get_size (common->cached_buffer));
 
     gst_buffer_unref (common->cached_buffer);
     common->cached_buffer = NULL;

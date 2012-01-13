@@ -1636,7 +1636,8 @@ gst_matroska_demux_search_cluster (GstMatroskaDemux * demux, gint64 * pos)
     ret = gst_pad_pull_range (demux->common.sinkpad, newpos, chunk, &buf);
     if (ret != GST_FLOW_OK)
       break;
-    GST_DEBUG_OBJECT (demux, "read buffer size %d at offset %" G_GINT64_FORMAT,
+    GST_DEBUG_OBJECT (demux,
+        "read buffer size %" G_GSIZE_FORMAT " at offset %" G_GINT64_FORMAT,
         gst_buffer_get_size (buf), newpos);
     data = gst_buffer_map (buf, &size, NULL, GST_MAP_READ);
     gst_byte_reader_init (&reader, data, size);
@@ -2470,7 +2471,8 @@ gst_matroska_demux_push_flac_codec_priv_data (GstMatroskaDemux * demux,
   guint8 *pdata;
   guint off, len;
 
-  GST_LOG_OBJECT (demux, "priv data size = %u", stream->codec_priv_size);
+  GST_LOG_OBJECT (demux, "priv data size = %" G_GSIZE_FORMAT,
+      stream->codec_priv_size);
 
   pdata = (guint8 *) stream->codec_priv;
 
@@ -2514,7 +2516,8 @@ gst_matroska_demux_push_speex_codec_priv_data (GstMatroskaDemux * demux,
   GstFlowReturn ret;
   guint8 *pdata = stream->codec_priv;
 
-  GST_LOG_OBJECT (demux, "priv data size = %u", stream->codec_priv_size);
+  GST_LOG_OBJECT (demux, "priv data size = %" G_GSIZE_FORMAT,
+      stream->codec_priv_size);
 
   /* need at least 'fLaC' marker + STREAMINFO metadata block */
   if (stream->codec_priv_size < 80) {
@@ -2556,7 +2559,8 @@ gst_matroska_demux_push_xiph_codec_priv_data (GstMatroskaDemux * demux,
   /* start of the stream and vorbis audio or theora video, need to
    * send the codec_priv data as first three packets */
   num_packets = p[0] + 1;
-  GST_DEBUG_OBJECT (demux, "%u stream headers, total length=%u bytes",
+  GST_DEBUG_OBJECT (demux,
+      "%u stream headers, total length=%" G_GSIZE_FORMAT " bytes",
       (guint) num_packets, stream->codec_priv_size);
 
   length = g_alloca (num_packets * sizeof (guint));
@@ -3036,7 +3040,8 @@ gst_matroska_demux_align_buffer (GstMatroskaDemux * demux,
     memcpy (new_data, data, size);
     gst_buffer_unmap (new_buffer, new_data, -1);
     gst_buffer_copy_into (new_buffer, buffer, GST_BUFFER_COPY_METADATA, 0, -1);
-    GST_DEBUG_OBJECT (demux, "We want output aligned on %d, reallocated",
+    GST_DEBUG_OBJECT (demux,
+        "We want output aligned on %" G_GSIZE_FORMAT ", reallocated",
         alignment);
 
     gst_buffer_unmap (buffer, data, size);
@@ -3280,7 +3285,7 @@ gst_matroska_demux_parse_blockgroup_or_simpleblock (GstMatroskaDemux * demux,
           }
         }
 
-        GST_DEBUG_OBJECT (demux, "CodecState of %u bytes",
+        GST_DEBUG_OBJECT (demux, "CodecState of %" G_GSIZE_FORMAT " bytes",
             stream->codec_state_size);
         break;
       }
@@ -3571,9 +3576,9 @@ gst_matroska_demux_parse_blockgroup_or_simpleblock (GstMatroskaDemux * demux,
         stream->from_offset = offset;
 
       GST_DEBUG_OBJECT (demux,
-          "Pushing lace %d, data of size %d for stream %d, time=%"
-          GST_TIME_FORMAT " and duration=%" GST_TIME_FORMAT, n,
-          gst_buffer_get_size (sub), stream_num,
+          "Pushing lace %d, data of size %" G_GSIZE_FORMAT
+          " for stream %d, time=%" GST_TIME_FORMAT " and duration=%"
+          GST_TIME_FORMAT, n, gst_buffer_get_size (sub), stream_num,
           GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (sub)),
           GST_TIME_ARGS (GST_BUFFER_DURATION (sub)));
 
