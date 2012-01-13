@@ -311,6 +311,7 @@ gst_mse_reset (GstMSE * fs)
   fs->luma_mse_sum = 0;
   fs->chroma_mse_sum = 0;
   fs->n_frames = 0;
+  fs->cancel = FALSE;
 
   if (fs->buffer_ref) {
     gst_buffer_unref (fs->buffer_ref);
@@ -436,9 +437,11 @@ gst_mse_sink_event (GstPad * pad, GstEvent * event)
       break;
     case GST_EVENT_FLUSH_START:
       GST_DEBUG ("flush start");
+      fs->cancel = TRUE;
       break;
     case GST_EVENT_FLUSH_STOP:
       GST_DEBUG ("flush stop");
+      fs->cancel = FALSE;
       break;
     default:
       break;
