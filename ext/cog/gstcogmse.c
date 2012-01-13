@@ -244,7 +244,7 @@ gst_mse_getcaps (GstPad * pad)
   }
 
   if (pad != fs->sinkpad_test) {
-    peercaps = gst_pad_peer_get_caps (fs->sinkpad_ref);
+    peercaps = gst_pad_peer_get_caps (fs->sinkpad_test);
     if (peercaps) {
       icaps = gst_caps_intersect (caps, peercaps);
       gst_caps_unref (caps);
