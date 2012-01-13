@@ -203,6 +203,9 @@ gst_mse_finalize (GObject * object)
 {
   GstMSE *fs = GST_MSE (object);
 
+  gst_object_unref (fs->srcpad);
+  gst_object_unref (fs->sinkpad_ref);
+  gst_object_unref (fs->sinkpad_test);
   g_mutex_free (fs->lock);
   g_cond_free (fs->cond);
 }

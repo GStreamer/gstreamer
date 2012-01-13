@@ -101,6 +101,7 @@ static GstFlowReturn gst_schro_enc_handle_frame (GstBaseVideoEncoder *
     base_video_encoder, GstVideoFrame * frame);
 static GstFlowReturn gst_schro_enc_shape_output (GstBaseVideoEncoder *
     base_video_encoder, GstVideoFrame * frame);
+static void gst_schro_enc_finalize (GObject * object);
 
 static GstStaticPadTemplate gst_schro_enc_sink_template =
 GST_STATIC_PAD_TEMPLATE ("sink",
@@ -172,6 +173,7 @@ gst_schro_enc_class_init (GstSchroEncClass * klass)
 
   gobject_class->set_property = gst_schro_enc_set_property;
   gobject_class->get_property = gst_schro_enc_get_property;
+  gobject_class->finalize = gst_schro_enc_finalize;
 
   for (i = 0; i < schro_encoder_get_n_settings (); i++) {
     const SchroEncoderSetting *setting;
@@ -231,7 +233,22 @@ gst_schro_enc_init (GstSchroEnc * schro_enc, GstSchroEncClass * klass)
   schro_enc->video_format = schro_encoder_get_video_format (schro_enc->encoder);
 }
 
+static void
+gst_schro_enc_finalize (GObject * object)
+{
+  GstSchroEnc *schro_enc = GST_SCHRO_ENC (object);
 
+  if (schro_enc->encoder) {
+    schro_encoder_free (schro_enc->encoder);
+    schro_enc->encoder = NULL;
+  }
+  if (schro_enc->video_format) {
+    g_free (schro_enc->video_format);
+    schro_enc->video_format = NULL;
+  }
+
+  G_OBJECT_CLASS (parent_class)->finalize (object);
+}
 
 static gboolean
 gst_schro_enc_set_format (GstBaseVideoEncoder * base_video_encoder,
@@ -423,17 +440,6 @@ gst_schro_enc_start (GstBaseVideoEncoder * base_video_encoder)
 static gboolean
 gst_schro_enc_stop (GstBaseVideoEncoder * base_video_encoder)
 {
-  GstSchroEnc *schro_enc = GST_SCHRO_ENC (base_video_encoder);
-
-  if (schro_enc->encoder) {
-    schro_encoder_free (schro_enc->encoder);
-    schro_enc->encoder = NULL;
-  }
-  if (schro_enc->video_format) {
-    g_free (schro_enc->video_format);
-    schro_enc->video_format = NULL;
-  }
-
   return TRUE;
 }
 

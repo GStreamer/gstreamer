@@ -147,12 +147,6 @@ static void
 gst_patchdetect_init (GstPatchdetect * patchdetect,
     GstPatchdetectClass * patchdetect_class)
 {
-
-  patchdetect->sinkpad =
-      gst_pad_new_from_static_template (&gst_patchdetect_sink_template, "sink");
-
-  patchdetect->srcpad =
-      gst_pad_new_from_static_template (&gst_patchdetect_src_template, "src");
 }
 
 void

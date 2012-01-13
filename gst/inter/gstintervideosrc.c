@@ -163,11 +163,6 @@ static void
 gst_inter_video_src_init (GstInterVideoSrc * intervideosrc,
     GstInterVideoSrcClass * intervideosrc_class)
 {
-
-  intervideosrc->srcpad =
-      gst_pad_new_from_static_template (&gst_inter_video_src_src_template,
-      "src");
-
   gst_base_src_set_format (GST_BASE_SRC (intervideosrc), GST_FORMAT_TIME);
   gst_base_src_set_live (GST_BASE_SRC (intervideosrc), TRUE);
 

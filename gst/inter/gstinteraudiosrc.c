@@ -166,10 +166,6 @@ gst_inter_audio_src_init (GstInterAudioSrc * interaudiosrc,
     GstInterAudioSrcClass * interaudiosrc_class)
 {
 
-  interaudiosrc->srcpad =
-      gst_pad_new_from_static_template (&gst_inter_audio_src_src_template,
-      "src");
-
   gst_base_src_set_live (GST_BASE_SRC (interaudiosrc), TRUE);
   gst_base_src_set_blocksize (GST_BASE_SRC (interaudiosrc), -1);
 

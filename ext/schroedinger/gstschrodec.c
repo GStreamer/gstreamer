@@ -55,7 +55,7 @@ struct _GstSchroDec
 
   SchroDecoder *decoder;
 
-  GstBuffer *seq_header_buffer;
+  gboolean seq_header_buffer_seen;
 };
 
 struct _GstSchroDecClass
@@ -308,8 +308,7 @@ parse_sequence_header (GstSchroDec * schro_dec, guint8 * data, int size)
 
   state = gst_base_video_decoder_get_state (GST_BASE_VIDEO_DECODER (schro_dec));
 
-  schro_dec->seq_header_buffer = gst_buffer_new_and_alloc (size);
-  memcpy (GST_BUFFER_DATA (schro_dec->seq_header_buffer), data, size);
+  schro_dec->seq_header_buffer_seen = TRUE;
 
   ret = schro_parse_decode_sequence_header (data + 13, size - 13,
       &video_format);
@@ -462,7 +461,7 @@ gst_schro_dec_parse_data (GstBaseVideoDecoder * base_video_decoder,
     g_free (data);
   }
 
-  if (schro_decoder->seq_header_buffer == NULL) {
+  if (!schro_decoder->seq_header_buffer_seen) {
     gst_adapter_flush (base_video_decoder->input_adapter, next);
     return GST_FLOW_OK;
   }
@@ -572,6 +571,8 @@ gst_schro_dec_process (GstSchroDec * schro_dec, gboolean eos)
 
           schro_frame_unref (schro_frame);
         }
+        if (tag)
+          schro_tag_free (tag);
         if (!eos) {
           go = FALSE;
         }

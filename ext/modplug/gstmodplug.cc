@@ -491,13 +491,15 @@ gst_modplug_load_song (GstModPlug * modplug)
         gst_caps_copy_nth (gst_pad_get_pad_template_caps (modplug->srcpad), 0);
   }
   gst_pad_fixate_caps (modplug->srcpad, newcaps);
-  gst_pad_set_caps (modplug->srcpad, newcaps);
 
   /* set up modplug to output the negotiated format */
   structure = gst_caps_get_structure (newcaps, 0);
   gst_structure_get_int (structure, "depth", &modplug->bits);
   gst_structure_get_int (structure, "channels", &modplug->channel);
   gst_structure_get_int (structure, "rate", &modplug->frequency);
+
+  gst_pad_set_caps (modplug->srcpad, newcaps);
+  gst_caps_unref (newcaps);
 
   modplug->read_samples = 1152;
   modplug->read_bytes =

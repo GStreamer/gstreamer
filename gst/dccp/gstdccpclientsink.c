@@ -73,6 +73,7 @@ static gboolean gst_dccp_client_sink_stop (GstBaseSink * bsink);
 static gboolean gst_dccp_client_sink_start (GstBaseSink * bsink);
 static GstFlowReturn gst_dccp_client_sink_render (GstBaseSink * bsink,
     GstBuffer * buf);
+static void gst_dccp_client_sink_finalize (GObject * gobject);
 
 GST_DEBUG_CATEGORY_STATIC (dccpclientsink_debug);
 
@@ -165,6 +166,16 @@ gst_dccp_client_sink_get_property (GObject * object, guint prop_id,
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
   }
+}
+
+static void
+gst_dccp_client_sink_finalize (GObject * gobject)
+{
+  GstDCCPClientSink *this = GST_DCCP_CLIENT_SINK (gobject);
+
+  g_free (this->host);
+
+  G_OBJECT_CLASS (parent_class)->finalize (gobject);
 }
 
 /*
@@ -276,6 +287,7 @@ gst_dccp_client_sink_class_init (GstDCCPClientSinkClass * klass)
 
   gobject_class->set_property = gst_dccp_client_sink_set_property;
   gobject_class->get_property = gst_dccp_client_sink_get_property;
+  gobject_class->finalize = gst_dccp_client_sink_finalize;
 
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_PORT,
       g_param_spec_int ("port", "Port",

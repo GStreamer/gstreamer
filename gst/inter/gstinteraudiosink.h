@@ -40,8 +40,6 @@ struct _GstInterAudioSink
 
   GstInterSurface *surface;
 
-  GstPad *sinkpad;
-
   int fps_n;
   int fps_d;
 };

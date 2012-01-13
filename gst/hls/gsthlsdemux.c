@@ -166,6 +166,7 @@ gst_hls_demux_dispose (GObject * obj)
 
   gst_hls_demux_reset (demux, TRUE);
 
+  g_queue_free (demux->queue);
   gst_object_unref (demux->download);
 
   G_OBJECT_CLASS (parent_class)->dispose (obj);

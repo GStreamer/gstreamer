@@ -156,11 +156,6 @@ static void
 gst_inter_audio_sink_init (GstInterAudioSink * interaudiosink,
     GstInterAudioSinkClass * interaudiosink_class)
 {
-
-  interaudiosink->sinkpad =
-      gst_pad_new_from_static_template (&gst_inter_audio_sink_sink_template,
-      "sink");
-
   interaudiosink->surface = gst_inter_surface_get ("default");
 }
 

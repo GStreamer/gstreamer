@@ -40,8 +40,6 @@ struct _GstInterVideoSink
 
   GstInterSurface *surface;
 
-  GstPad *sinkpad;
-
   int fps_n;
   int fps_d;
 };
