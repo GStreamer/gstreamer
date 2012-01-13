@@ -3697,15 +3697,14 @@ gst_asf_demux_process_object (GstASFDemux * demux, guint8 ** p_data,
     case ASF_OBJ_EXTENDED_STREAM_PROPS:{
       GstBuffer *buf;
       gpointer data;
-      gsize size;
 
       /* process these later, we might not have parsed the corresponding
        * stream object yet */
       GST_LOG ("%s: queued for later parsing", demux->objpath);
       buf = gst_buffer_new_and_alloc (obj_data_size);
-      data = gst_buffer_map (buf, &size, NULL, GST_MAP_READ);
+      data = gst_buffer_map (buf, NULL, NULL, GST_MAP_WRITE);
       memcpy (data, *p_data, obj_data_size);
-      gst_buffer_unmap (buf, data, size);
+      gst_buffer_unmap (buf, data, -1);
       demux->ext_stream_props = g_slist_append (demux->ext_stream_props, buf);
       ret = GST_FLOW_OK;
       break;
