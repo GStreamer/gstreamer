@@ -1344,6 +1344,7 @@ print_element_info (GstElementFactory * factory, gboolean print_names)
 
   element = gst_element_factory_create (factory, NULL);
   if (!element) {
+    gst_object_unref (factory);
     g_print ("couldn't construct element for some reason\n");
     return -1;
   }
