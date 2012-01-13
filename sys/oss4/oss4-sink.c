@@ -392,7 +392,7 @@ gst_oss4_sink_getcaps (GstBaseSink * bsink)
   oss = GST_OSS4_SINK (bsink);
 
   if (oss->fd == -1) {
-    caps = gst_caps_copy (gst_oss4_audio_get_template_caps ());
+    caps = gst_oss4_audio_get_template_caps ();
   } else if (oss->probed_caps) {
     caps = gst_caps_copy (oss->probed_caps);
   } else {
