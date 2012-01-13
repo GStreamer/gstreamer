@@ -33,6 +33,7 @@ Android.mk: Makefile.am $(BUILT_SOURCES)
 	           $(libgstvideoparsersbad_la_LIBADD) \
 	           -ldl \
 	 -:LIBFILTER_STATIC gstbaseparse-@GST_MAJORMINOR@ \
+	                    gstcodecparsers-@GST_MAJORMINOR@ \
 	 -:PASSTHROUGH LOCAL_ARM_MODE:=arm \
 		       LOCAL_MODULE_PATH:='$$(TARGET_OUT)/lib/gstreamer-0.10' \
 	> $@
