@@ -455,11 +455,6 @@ gst_matroska_demux_reset (GstElement * element)
   demux->seek_index = NULL;
   demux->seek_entry = 0;
 
-  if (demux->close_segment) {
-    gst_event_unref (demux->close_segment);
-    demux->close_segment = NULL;
-  }
-
   if (demux->new_segment) {
     gst_event_unref (demux->new_segment);
     demux->new_segment = NULL;
@@ -2044,18 +2039,6 @@ exit:
     GST_DEBUG_OBJECT (demux, "Stopping flush");
     gst_pad_push_event (demux->common.sinkpad, gst_event_new_flush_stop (TRUE));
     gst_matroska_demux_send_event (demux, gst_event_new_flush_stop (TRUE));
-  } else if (demux->segment_running && update) {
-    GstSegment segment;
-    GST_DEBUG_OBJECT (demux, "Closing currently running segment");
-
-    GST_OBJECT_LOCK (demux);
-    if (demux->close_segment)
-      gst_event_unref (demux->close_segment);
-
-    segment = demux->common.segment;
-    segment.stop = segment.position;
-    demux->close_segment = gst_event_new_segment (&segment);
-    GST_OBJECT_UNLOCK (demux);
   }
 
   GST_OBJECT_LOCK (demux);
@@ -2086,7 +2069,6 @@ exit:
 
   /* restart our task since it might have been stopped when we did the
    * flush. */
-  demux->segment_running = TRUE;
   gst_pad_start_task (demux->common.sinkpad,
       (GstTaskFunction) gst_matroska_demux_loop, demux->common.sinkpad);
 
@@ -4400,10 +4382,6 @@ gst_matroska_demux_loop (GstPad * pad)
 
   /* If we have to close a segment, send a new segment to do this now */
   if (G_LIKELY (demux->common.state == GST_MATROSKA_READ_STATE_DATA)) {
-    if (G_UNLIKELY (demux->close_segment)) {
-      gst_matroska_demux_send_event (demux, demux->close_segment);
-      demux->close_segment = NULL;
-    }
     if (G_UNLIKELY (demux->new_segment)) {
       gst_matroska_demux_send_event (demux, demux->new_segment);
       demux->new_segment = NULL;
@@ -4476,7 +4454,6 @@ pause:
     gboolean push_eos = FALSE;
 
     GST_LOG_OBJECT (demux, "pausing task, reason %s", reason);
-    demux->segment_running = FALSE;
     gst_pad_pause_task (demux->common.sinkpad);
 
     if (ret == GST_FLOW_EOS) {
@@ -4732,17 +4709,13 @@ static gboolean
 gst_matroska_demux_sink_activate_mode (GstPad * sinkpad, GstObject * parent,
     GstPadMode mode, gboolean active)
 {
-  GstMatroskaDemux *demux = GST_MATROSKA_DEMUX (parent);
-
   switch (mode) {
     case GST_PAD_MODE_PULL:
       if (active) {
         /* if we have a scheduler we can start the task */
-        demux->segment_running = TRUE;
         gst_pad_start_task (sinkpad, (GstTaskFunction) gst_matroska_demux_loop,
             sinkpad);
       } else {
-        demux->segment_running = FALSE;
         gst_pad_stop_task (sinkpad);
       }
       return TRUE;
