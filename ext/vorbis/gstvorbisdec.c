@@ -557,7 +557,7 @@ vorbis_handle_data_packet (GstVorbisDec * vd, ogg_packet * packet,
    * before pushing data. */
 
 #ifdef USE_TREMOLO
-  if (G_UNLIKELY (vorbis_dsp_synthesis (&vd->vb, packet, 1)))
+  if (G_UNLIKELY (vorbis_dsp_synthesis (&vd->vd, packet, 1)))
     goto could_not_read;
 #else
   if (G_UNLIKELY (vorbis_synthesis (&vd->vb, packet)))
