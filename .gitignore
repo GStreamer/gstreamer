@@ -54,3 +54,11 @@ Makefile
 tmp-orc.c
 gst*orc.h
 tests/check/orc
+
+Build
+*.user
+*.suo
+*.ipch
+*.sdf
+*.opensdf
+*.DS_Store
