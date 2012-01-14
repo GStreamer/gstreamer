@@ -15,8 +15,8 @@ identify the following types:
    This is essential to be able to implement dynamic relinking of elements
    without breaking the dataflow.
 
- - be notified when data or events are pushed or sent on a pad. It should also
-   be possible to inspect and modify the data.
+ - be notified when data, events or queries are pushed or sent on a pad. It
+   should also be possible to inspect and modify the data.
  
  - be able to drop, pass and block on data based on the result of the callback.
 
@@ -52,14 +52,17 @@ Overview
       GST_PAD_PROBE_TYPE_BLOCK            = (1 << 1),
 
       /* flags to select datatypes */
-      GST_PAD_PROBE_TYPE_BUFFER           = (1 << 2),
-      GST_PAD_PROBE_TYPE_BUFFER_LIST      = (1 << 3),
-      GST_PAD_PROBE_TYPE_EVENT_DOWNSTREAM = (1 << 4),
-      GST_PAD_PROBE_TYPE_EVENT_UPSTREAM   = (1 << 5),
+      GST_PAD_PROBE_TYPE_BUFFER           = (1 << 4),
+      GST_PAD_PROBE_TYPE_BUFFER_LIST      = (1 << 5),
+      GST_PAD_PROBE_TYPE_EVENT_DOWNSTREAM = (1 << 6),
+      GST_PAD_PROBE_TYPE_EVENT_UPSTREAM   = (1 << 7),
+      GST_PAD_PROBE_TYPE_EVENT_FLUSH      = (1 << 8),
+      GST_PAD_PROBE_TYPE_QUERY_DOWNSTREAM = (1 << 9),
+      GST_PAD_PROBE_TYPE_QUERY_UPSTREAM   = (1 << 10),
 
       /* flags to select scheduling mode */
-      GST_PAD_PROBE_TYPE_PUSH             = (1 << 6),
-      GST_PAD_PROBE_TYPE_PULL             = (1 << 7),
+      GST_PAD_PROBE_TYPE_PUSH             = (1 << 12),
+      GST_PAD_PROBE_TYPE_PULL             = (1 << 13),
 
     } GstPadProbeType;
 
@@ -111,7 +114,7 @@ Blocking probes
   the callback will be called as soon as the pad becomes idle in the streaming
   thread.
 
-  The IDLE probe in useful to perform dynamic linking, it allows to wait for for
+  The IDLE probe is useful to perform dynamic linking, it allows to wait for for
   a safe moment when an unlink/link operation can be done. Since the probe is a
   blocking probe, it will also make sure that the pad stays idle until the probe
   is removed.
@@ -279,3 +282,6 @@ Query probes have the GST_PAD_PROBE_TYPE_QUERY_* flag set in the callbacks.
         < - - - - - - O                               | 
                       |                               | 
 
+For queries, the PUSH ProbeType is set when the query is traveling to the object
+that will answer the query and the PULL type is set when the query contains the
+answer.

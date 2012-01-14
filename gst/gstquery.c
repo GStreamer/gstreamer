@@ -566,8 +566,8 @@ gst_query_new_latency (void)
  * gst_query_set_latency:
  * @query: a #GstQuery
  * @live: if there is a live element upstream
- * @min_latency: the minimal latency of the live element
- * @max_latency: the maximal latency of the live element
+ * @min_latency: the minimal latency of the upstream elements
+ * @max_latency: the maximal latency of the upstream elements
  *
  * Answer a latency query by setting the requested values in the given format.
  *

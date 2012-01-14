@@ -51,7 +51,7 @@ API/ABI
     and another a push, the push might be busy while the block callback is done.
   * maybe this name is overloaded. We need to look at some more use cases before
     trying to fix this.
-  FIXED in 0.11 with BLOCKING probes. Not everything is implemented yet, though.
+  FIXED in 0.11 with BLOCKING probes.
 
 - rethink the way we do upstream renegotiation. Currently it's done with
   pad_alloc but this has many issues such as only being able to suggest 1 format
@@ -61,7 +61,7 @@ API/ABI
   This could, for example, easily be triggered with a RENEGOTIATE event.
   FIXED in 0.11 with RECONFIGURE events.
 
-- Remove the result format value in queries.
+- Remove the result format value in queries. FIXED in 0.11
 
 - Try to minimize the amount of acceptcaps calls when pushing buffers around.
   The element pushing the buffer usually negotiated already and decided on the

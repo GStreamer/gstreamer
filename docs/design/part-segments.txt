@@ -90,7 +90,7 @@ Use case: FLUSHING seek
     segment, the decoder knows it should not send the P frame.
 
     Avidemux stops sending data after pushing a frame with timestamp 5 and
-    returns GST_FLOW_UNEXPECTED from the chain function to make the upstream
+    returns GST_FLOW_EOS from the chain function to make the upstream
     elements perform the EOS logic.
 
 

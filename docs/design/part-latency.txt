@@ -220,6 +220,31 @@ separate async state change thread (like the one currently used for going from
 PAUSED->PLAYING in a non-live pipeline).
 
 
+Query
+~~~~~
+
+The pipeline latency is queried with the LATENCY query.
+
+ (out) "live", G_TYPE_BOOLEAN (default FALSE)
+        - if a live element is found upstream
+
+ (out) "min-latency", G_TYPE_UINT64 (default 0)
+        - the minimum latency in the pipeline
+
+ (out) "max-latency", G_TYPE_UINT64 (default 0)
+        - the maximum latency in the pipeline
+
+
+Event
+~~~~~
+
+The latency in the pipeline is configured with the LATENCY event, which contains
+the following fields:
+
+      "latency", G_TYPE_UINT64
+        - the configured latency in the pipeline
+
+
 Latency compensation
 ~~~~~~~~~~~~~~~~~~~~
 

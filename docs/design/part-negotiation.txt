@@ -8,9 +8,64 @@ pipeline that have information to those parts of the pipeline that are
 flexible, constrained by those parts of the pipeline that are not
 flexible.
 
+
+Basic rules
+~~~~~~~~~~~
+
+The simple rules must be followed:
+
+ 1) downstream suggests formats
+ 2) upstream decides on format
+
+There are 4 queries/events used in caps negotiation:
+
+ 1) GST_QUERY_CAPS        : get possible formats
+ 2) GST_QUERY_ACCEPT_CAPS : check if format is possible
+ 3) GST_EVENT_CAPS        : configure format (downstream)
+ 4) GST_EVENT_RECONFIGURE : inform upstream of possibly new caps
+
+
+Queries
+-------
+
+A pad can ask the peer pad for its supported GstCaps. It does this with
+the CAPS query. The list of supported caps can be used to choose an
+appropriate GstCaps for the data transfer.
+
+ (in) "filter", GST_TYPE_CAPS (default NULL)
+       - a GstCaps to filter the results against
+
+ (out) "caps", GST_TYPE_CAPS (default NULL)
+       - the result caps
+
+
+A pad can ask the peer pad if it supports a given caps. It does this with
+the ACCEPT_CAPS query.
+
+ (in) "caps", GST_TYPE_CAPS
+       - a GstCaps to check
+
+ (out) "result", G_TYPE_BOOLEAN (default FALSE)
+       - TRUE if the caps are accepted
+
+
+Events
+~~~~~~
+
+When a media format is negotiated, peer elements are notified of the GstCaps
+with the CAPS event. The caps must be fixed.
+
+    "caps", GST_TYPE_CAPS
+       - the negotiated GstCaps
+
+
+Operation
+~~~~~~~~~
+
 GStreamer's two scheduling modes, push mode and pull mode, lend
 themselves to different mechanisms to achieve this goal. As it is more
 common we describe push mode negotiation first.
+
 
 Push-mode negotiation
 ~~~~~~~~~~~~~~~~~~~~~
@@ -31,9 +86,9 @@ The basics of negotiation are as follows:
 
  - An element should reconfigure itself to the new format received as a CAPS
    event before processing the following buffers. If the data type in the
-   caps event is not acceptable, the element should refuse the buffer by 
-   returning an appropriate GST_FLOW_NOT_NEGOTIATED return value from the
-   chain function.
+   caps event is not acceptable, the element should refuse the event. The
+   element should also refuse the next buffers by returning an appropriate
+   GST_FLOW_NOT_NEGOTIATED return value from the chain function.
 
  - Downstream elements can request a format change of the stream by sending a
    RECONFIGURE event upstream. Upstream elements will renegotiate a new format
@@ -43,11 +98,18 @@ The general flow for a source pad starting the negotiation.
 
              src              sink
               |                 |
-              |  accepts?       |
-  type A      |---------------->|
-              |      yes        |
-              |< - - - - - - - -|
-              |                 |
+              |  querycaps?     |
+              |---------------->|
+              |     caps        |
+ select caps  |< - - - - - - - -|
+ from the     |                 |
+ candidates   |                 |
+              |                 |-.
+              |  accepts?       | |
+  type A      |---------------->| | optional
+              |      yes        | |
+              |< - - - - - - - -| |
+              |                 |-'
               |  send_event()   |
  send CAPS    |---------------->| Receive type A, reconfigure to
  event A      |                 | process type A.
@@ -61,9 +123,9 @@ The general flow for a source pad starting the negotiation.
  [element wants to create a buffer]
  if not format
    # see what we can do
-   ourcaps = gst_pad_get_caps (srcpad)
+   ourcaps = gst_pad_query_caps (srcpad)
    # see what the peer can do filtered against our caps
-   candidates = gst_pad_peer_get_caps (srcpad, ourcaps)
+   candidates = gst_pad_peer_query_caps (srcpad, ourcaps)
 
    foreach candidate in candidates
      # make sure the caps is fixed
@@ -100,7 +162,7 @@ The general flow for a sink pad starting a renegotiation.
   mark      .-|<----------------| send RECONFIGURE event
  renegotiate| |                 |
             '>|                 |
-              |   get_caps()    |
+              |  querycaps()    |
  renegotiate  |---------------->| 
               |  suggest B      |
               |< - - - - - - - -|
@@ -121,7 +183,7 @@ videotestsrc ! xvimagesink
 
   1) Who decides what format to use?
    - src pad always decides, by convention. sinkpad can suggest a format
-     by putting it high in the getcaps function GstCaps. 
+     by putting it high in the caps query result GstCaps. 
    - since the src decides, it can always choose something that it can do,
      so this step can only fail if the sinkpad stated it could accept
      something while later on it couldn't.
@@ -143,11 +205,11 @@ videotestsrc ! xvimagesink
    - src receives the RECONFIGURE event and marks renegotiation
    - On the next buffer push, the source renegotiates the caps and the
      bufferpool. The sink will put the new new prefered format high in the list
-     of caps it returns from its getcaps function.
+     of caps it returns from its caps query.
 
 videotestsrc ! queue ! xvimagesink
 
-  - queue proxies all accept and getcaps to the other peer pad.
+  - queue proxies all accept and caps queries to the other peer pad.
   - queue proxies the bufferpool
   - queue proxies the RECONFIGURE event
   - queue stores CAPS event in the queue. This means that the queue can contain
@@ -230,15 +292,15 @@ The sink determines that the upstream elements support pull based scheduling by
 doing a SCHEDULING query.
 
 The sink initiates the negotiation process by intersecting the results
-of gst_pad_get_caps() on its sink pad and its peer src pad. This is the
+of gst_pad_query_caps() on its sink pad and its peer src pad. This is the
 operation performed by gst_pad_get_allowed_caps(). In the simple
-passthrough case, the peer pad's getcaps() function should return the
+passthrough case, the peer pad's caps query should return the
 intersection of calling get_allowed_caps() on all of its sink pads. In
 this way the sink element knows the capabilities of the entire pipeline.
 
 The sink element then fixates the resulting caps, if necessary,
-resulting in the flow caps.  From now on, the getcaps function
-of the sinkpad will only return these fixed caps meaning that upstream elements
+resulting in the flow caps.  From now on, the caps query of the sinkpad
+will only return these fixed caps meaning that upstream elements
 will only be able to produce this format.
 
 If the sink element could not set caps on its sink pad, it should post
@@ -255,3 +317,25 @@ function. The state will commit to PAUSED when the first buffer is received in
 the sink. This is needed to provide a consistent API to the applications that
 expect ASYNC return values from sinks but it also allows us to perform the
 remainder of the negotiation outside of the context of the pulling thread.
+
+
+Patterns
+~~~~~~~~
+
+We can identify 3 patterns in negotiation:
+
+ 1) Fixed : Can't choose the output format
+      - Caps encoded in the stream
+      - A video/audio decoder
+      - usually uses gst_pad_use_fixed_caps()
+
+ 2) Passthrough
+      - Caps not modified
+      - can do caps transform based on element property
+      - videobox
+
+ 3) Dynamic : can choose output format 
+      - A converter element
+      - depends on downstream caps, needs to do a CAPS query to find
+        transform.
+      - usually prefers to use the identity transform

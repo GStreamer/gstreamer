@@ -147,7 +147,7 @@ Allocating from pool
  will block when all buffers are outstanding until a buffer is returned to the
  pool. This behaviour can be changed by specifying the
  GST_BUFFER_POOL_FLAG_DONTWAIT flag in the parameters. With this flag set,
- allocation will return GST_FLOW_UNEXPECTED when the pool is empty.
+ allocation will return GST_FLOW_EOS when the pool is empty.
 
 
 Renegotiation

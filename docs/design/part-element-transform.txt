@@ -273,7 +273,7 @@ Allocation
 ~~~~~~~~~~
 
 After the transform element is configured with caps, a bufferpool needs to be
-negotiated to perform the allocation of buffers. We habe 2 cases:
+negotiated to perform the allocation of buffers. We have 2 cases:
 
   - The element is operating in passthrough we don't need to allocate a buffer
     in the transform element.

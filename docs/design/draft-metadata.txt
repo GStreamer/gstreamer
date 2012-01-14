@@ -96,17 +96,16 @@ http://wiki.creativecommons.org/Tracker_CC_Indexing
 Current Metadata handling
 ~~~~~~~~~~~~~~~~~~~~~~~~~
 
-When reading files, demuxers or parsers extract the metadata. It will be sent as
-a GST_MESSAGE_TAG to the GstBus and GST_EVENT_TAG to downstream elements.
+When reading files, demuxers or parsers extract the metadata. It will be sent 
+a GST_EVENT_TAG to downstream elements. When a sink element receives a tag
+event, it will post a GST_MESSAGE_TAG message on the bus with the contents of
+the tag event.
 
 Elements receiving GST_EVENT_TAG events can mangle them, mux them into the 
 buffers they send or just pass them through. Usually is muxers that will format
 the tag data into the form required by the format they mux. Such elements would
 also implement the GstTagSetter interface to receive tags from the application.
 
-   GstMessage(tag) over GstBus to application
-       ^
-       |
   +----------+
   | demux    |
  sink       src --> GstEvent(tag) over GstPad to downstream element

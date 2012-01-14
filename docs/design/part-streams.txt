@@ -64,7 +64,7 @@ Typical stream
 
   3) EOS
      - marks the end of data, nothing is to be expected after EOS, elements
-       should refuse more data and return GST_FLOW_UNEXPECTED. A FLUSH_STOP
+       should refuse more data and return GST_FLOW_EOS. A FLUSH_STOP
        event clears the EOS state of an element.
 
 
