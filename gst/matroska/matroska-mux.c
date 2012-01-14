@@ -175,7 +175,11 @@ static GstStaticPadTemplate audiosink_templ =
         "audio/x-alaw, "
         "channels = (int) {1, 2}, " "rate = (int) [ 8000, 192000 ]; "
         "audio/x-mulaw, "
-        "channels = (int) {1, 2}, " "rate = (int) [ 8000, 192000 ]")
+        "channels = (int) {1, 2}, " "rate = (int) [ 8000, 192000 ]; "
+        "audio/x-adpcm, "
+        "layout = (string)dvi, "
+        "block_align = (int)[64, 8096], "
+        "channels = (int) { 1, 2 }, " "rate = (int) [ 8000, 96000 ]; ")
     );
 
 static GstStaticPadTemplate subtitlesink_templ =
@@ -1872,7 +1876,8 @@ gst_matroska_mux_audio_pad_setcaps (GstPad * pad, GstCaps * caps)
 
   } else if (!strcmp (mimetype, "audio/x-wma")
       || !strcmp (mimetype, "audio/x-alaw")
-      || !strcmp (mimetype, "audio/x-mulaw")) {
+      || !strcmp (mimetype, "audio/x-mulaw")
+      || !strcmp (mimetype, "audio/x-adpcm")) {
     guint8 *codec_priv;
     guint codec_priv_size;
     guint16 format = 0;
@@ -1923,6 +1928,14 @@ gst_matroska_mux_audio_pad_setcaps (GstPad * pad, GstCaps * caps)
 
       block_align = channels;
       bitrate = block_align * samplerate;
+    } else if (!strcmp (mimetype, "audio/x-adpcm")) {
+      if (!gst_structure_get_int (structure, "block_align", &block_align)) {
+        GST_WARNING_OBJECT (mux, "Missing block_align on adpcm caps");
+        goto refuse_caps;
+      }
+      /*support for IMA/WAV ADPCM */
+      format = GST_RIFF_WAVE_FORMAT_ADPCM_IMA_WAV;
+
     }
     g_assert (format != 0);
 
