@@ -1,0 +1,68 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 11.00
+# Visual Studio 2010
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "gstreamer", "gstreamer\gstreamer.vcxproj", "{62BA9F04-14B5-47D3-B467-AC12CE125DD3}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "generated", "generated\generated.vcxproj", "{F0025B10-A2E9-44EE-8668-4AE3AE1A2F9B}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "base", "base\base.vcxproj", "{A7371D9A-55A5-4C58-A400-C7C27EAD739A}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "controller", "controller\controller.vcxproj", "{8A0478DD-4E77-440D-B840-1AEB10C1831F}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "net", "net\net.vcxproj", "{7E02E21D-A170-466F-B383-2D58E70E4367}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "gst-inspect", "gst-inspect\gst-inspect.vcxproj", "{B30E6FEB-EFE3-4FF8-921B-A272B9B41CD9}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "gst-launch", "gst-launch\gst-launch.vcxproj", "{32C55424-4044-4D7B-A6A2-5D6DDA5491FB}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "gst-typefind", "gst-typefind\gst-typefind.vcxproj", "{454AAAC8-835A-4F24-9003-6BE9012F99A8}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "gstcoreelements", "gstcoreelements\gstcoreelements.vcxproj", "{95322960-1596-4999-979D-5EFED0B9AF59}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Win32 = Debug|Win32
+		Release|Win32 = Release|Win32
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{62BA9F04-14B5-47D3-B467-AC12CE125DD3}.Debug|Win32.ActiveCfg = Debug|Win32
+		{62BA9F04-14B5-47D3-B467-AC12CE125DD3}.Debug|Win32.Build.0 = Debug|Win32
+		{62BA9F04-14B5-47D3-B467-AC12CE125DD3}.Release|Win32.ActiveCfg = Release|Win32
+		{62BA9F04-14B5-47D3-B467-AC12CE125DD3}.Release|Win32.Build.0 = Release|Win32
+		{F0025B10-A2E9-44EE-8668-4AE3AE1A2F9B}.Debug|Win32.ActiveCfg = Debug|Win32
+		{F0025B10-A2E9-44EE-8668-4AE3AE1A2F9B}.Debug|Win32.Build.0 = Debug|Win32
+		{F0025B10-A2E9-44EE-8668-4AE3AE1A2F9B}.Release|Win32.ActiveCfg = Release|Win32
+		{F0025B10-A2E9-44EE-8668-4AE3AE1A2F9B}.Release|Win32.Build.0 = Release|Win32
+		{A7371D9A-55A5-4C58-A400-C7C27EAD739A}.Debug|Win32.ActiveCfg = Debug|Win32
+		{A7371D9A-55A5-4C58-A400-C7C27EAD739A}.Debug|Win32.Build.0 = Debug|Win32
+		{A7371D9A-55A5-4C58-A400-C7C27EAD739A}.Release|Win32.ActiveCfg = Release|Win32
+		{A7371D9A-55A5-4C58-A400-C7C27EAD739A}.Release|Win32.Build.0 = Release|Win32
+		{8A0478DD-4E77-440D-B840-1AEB10C1831F}.Debug|Win32.ActiveCfg = Debug|Win32
+		{8A0478DD-4E77-440D-B840-1AEB10C1831F}.Debug|Win32.Build.0 = Debug|Win32
+		{8A0478DD-4E77-440D-B840-1AEB10C1831F}.Release|Win32.ActiveCfg = Release|Win32
+		{8A0478DD-4E77-440D-B840-1AEB10C1831F}.Release|Win32.Build.0 = Release|Win32
+		{7E02E21D-A170-466F-B383-2D58E70E4367}.Debug|Win32.ActiveCfg = Debug|Win32
+		{7E02E21D-A170-466F-B383-2D58E70E4367}.Debug|Win32.Build.0 = Debug|Win32
+		{7E02E21D-A170-466F-B383-2D58E70E4367}.Release|Win32.ActiveCfg = Release|Win32
+		{7E02E21D-A170-466F-B383-2D58E70E4367}.Release|Win32.Build.0 = Release|Win32
+		{B30E6FEB-EFE3-4FF8-921B-A272B9B41CD9}.Debug|Win32.ActiveCfg = Debug|Win32
+		{B30E6FEB-EFE3-4FF8-921B-A272B9B41CD9}.Debug|Win32.Build.0 = Debug|Win32
+		{B30E6FEB-EFE3-4FF8-921B-A272B9B41CD9}.Release|Win32.ActiveCfg = Release|Win32
+		{B30E6FEB-EFE3-4FF8-921B-A272B9B41CD9}.Release|Win32.Build.0 = Release|Win32
+		{32C55424-4044-4D7B-A6A2-5D6DDA5491FB}.Debug|Win32.ActiveCfg = Debug|Win32
+		{32C55424-4044-4D7B-A6A2-5D6DDA5491FB}.Debug|Win32.Build.0 = Debug|Win32
+		{32C55424-4044-4D7B-A6A2-5D6DDA5491FB}.Release|Win32.ActiveCfg = Release|Win32
+		{32C55424-4044-4D7B-A6A2-5D6DDA5491FB}.Release|Win32.Build.0 = Release|Win32
+		{454AAAC8-835A-4F24-9003-6BE9012F99A8}.Debug|Win32.ActiveCfg = Debug|Win32
+		{454AAAC8-835A-4F24-9003-6BE9012F99A8}.Debug|Win32.Build.0 = Debug|Win32
+		{454AAAC8-835A-4F24-9003-6BE9012F99A8}.Release|Win32.ActiveCfg = Release|Win32
+		{454AAAC8-835A-4F24-9003-6BE9012F99A8}.Release|Win32.Build.0 = Release|Win32
+		{95322960-1596-4999-979D-5EFED0B9AF59}.Debug|Win32.ActiveCfg = Debug|Win32
+		{95322960-1596-4999-979D-5EFED0B9AF59}.Debug|Win32.Build.0 = Debug|Win32
+		{95322960-1596-4999-979D-5EFED0B9AF59}.Release|Win32.ActiveCfg = Release|Win32
+		{95322960-1596-4999-979D-5EFED0B9AF59}.Release|Win32.Build.0 = Release|Win32
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal

@@ -1,0 +1,118 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|Win32">
+      <Configuration>Debug</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|Win32">
+      <Configuration>Release</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{95322960-1596-4999-979D-5EFED0B9AF59}</ProjectGuid>
+    <RootNamespace>gstcoreelements</RootNamespace>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <CharacterSet>MultiByte</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>MultiByte</CharacterSet>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+    <Import Project="..\Common.props" />
+    <Import Project="..\Plugin.props" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+    <Import Project="..\Common.props" />
+    <Import Project="..\Plugin.props" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup />
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>Disabled</Optimization>
+    </ClCompile>
+    <Link>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>MaxSpeed</Optimization>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+    </ClCompile>
+    <Link>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <ClCompile Include="..\..\..\plugins\elements\gstcapsfilter.c" />
+    <ClCompile Include="..\..\..\plugins\elements\gstdataqueue.c" />
+    <ClCompile Include="..\..\..\plugins\elements\gstelements.c" />
+    <ClCompile Include="..\..\..\plugins\elements\gstfakesink.c" />
+    <ClCompile Include="..\..\..\plugins\elements\gstfakesrc.c" />
+    <ClCompile Include="..\..\..\plugins\elements\gstfdsink.c" />
+    <ClCompile Include="..\..\..\plugins\elements\gstfdsrc.c" />
+    <ClCompile Include="..\..\..\plugins\elements\gstfilesink.c" />
+    <ClCompile Include="..\..\..\plugins\elements\gstfilesrc.c" />
+    <ClCompile Include="..\..\..\plugins\elements\gstfunnel.c" />
+    <ClCompile Include="..\..\..\plugins\elements\gstidentity.c" />
+    <ClCompile Include="..\..\..\plugins\elements\gstinputselector.c" />
+    <ClCompile Include="..\..\..\plugins\elements\gstmultiqueue.c" />
+    <ClCompile Include="..\..\..\plugins\elements\gstoutputselector.c" />
+    <ClCompile Include="..\..\..\plugins\elements\gstqueue.c" />
+    <ClCompile Include="..\..\..\plugins\elements\gstqueue2.c" />
+    <ClCompile Include="..\..\..\plugins\elements\gsttee.c" />
+    <ClCompile Include="..\..\..\plugins\elements\gsttypefindelement.c" />
+    <ClCompile Include="..\..\..\plugins\elements\gstvalve.c" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\..\..\plugins\elements\gstcapsfilter.h" />
+    <ClInclude Include="..\..\..\plugins\elements\gstdataqueue.h" />
+    <ClInclude Include="..\..\..\plugins\elements\gstfakesink.h" />
+    <ClInclude Include="..\..\..\plugins\elements\gstfakesrc.h" />
+    <ClInclude Include="..\..\..\plugins\elements\gstfdsink.h" />
+    <ClInclude Include="..\..\..\plugins\elements\gstfdsrc.h" />
+    <ClInclude Include="..\..\..\plugins\elements\gstfilesink.h" />
+    <ClInclude Include="..\..\..\plugins\elements\gstfilesrc.h" />
+    <ClInclude Include="..\..\..\plugins\elements\gstfunnel.h" />
+    <ClInclude Include="..\..\..\plugins\elements\gstidentity.h" />
+    <ClInclude Include="..\..\..\plugins\elements\gstinputselector.h" />
+    <ClInclude Include="..\..\..\plugins\elements\gstmultiqueue.h" />
+    <ClInclude Include="..\..\..\plugins\elements\gstoutputselector.h" />
+    <ClInclude Include="..\..\..\plugins\elements\gstqueue.h" />
+    <ClInclude Include="..\..\..\plugins\elements\gstqueue2.h" />
+    <ClInclude Include="..\..\..\plugins\elements\gsttee.h" />
+    <ClInclude Include="..\..\..\plugins\elements\gsttypefindelement.h" />
+    <ClInclude Include="..\..\..\plugins\elements\gstvalve.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\base\base.vcxproj">
+      <Project>{a7371d9a-55a5-4c58-a400-c7c27ead739a}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\gstreamer\gstreamer.vcxproj">
+      <Project>{62ba9f04-14b5-47d3-b467-ac12ce125dd3}</Project>
+    </ProjectReference>
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+</Project>

@@ -1,0 +1,34 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ImportGroup Label="PropertySheets" />
+  <PropertyGroup Label="UserMacros">
+    <GstLibraryFolder>libs\</GstLibraryFolder>
+  </PropertyGroup>
+  <PropertyGroup>
+    <TargetName>gst$(ProjectName)-$(GstVersion)</TargetName>
+  </PropertyGroup>
+  <ItemDefinitionGroup>
+    <PostBuildEvent>
+      <Command>mkdir $(GstDestLib)
+copy /y $(OutDir)$(TargetName).lib $(GstDestLib)$(TargetName).lib
+
+mkdir $(GstDestBin)
+copy /y $(TargetPath) $(GstDestBin)$(TargetFileName)
+
+mkdir $(GstDestInclude)$(ProjectName)\
+copy /y $(GstProjectRoot)$(GstLibraryFolder)gst\$(ProjectName)\*.h $(GstDestInclude)$(ProjectName)\
+del  $(GstDestInclude)$(ProjectName)\*-docs.h
+del  $(GstDestInclude)$(ProjectName)\*-marshal.h
+del  $(GstDestInclude)$(ProjectName)\*private.h
+del  $(GstDestInclude)$(ProjectName)\*kiss_fft*.h</Command>
+    </PostBuildEvent>
+    <Link>
+      <ModuleDefinitionFile>$(GstProjectRoot)win32\common\libgst$(ProjectName).def</ModuleDefinitionFile>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <BuildMacro Include="GstLibraryFolder">
+      <Value>$(GstLibraryFolder)</Value>
+    </BuildMacro>
+  </ItemGroup>
+</Project>

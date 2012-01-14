@@ -1,0 +1,123 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|Win32">
+      <Configuration>Debug</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|Win32">
+      <Configuration>Release</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <ItemGroup>
+    <CustomBuild Include="..\..\..\gst\gstmarshal.list">
+      <FileType>Document</FileType>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">set prefix=gst_marshal
+set relativedir=%(RelativeDir)
+set filename=%(Filename)
+
+$(GstGenMarshal)</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(RelativeDir)%(Filename).c;%(RelativeDir)%(Filename).h</Outputs>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">set prefix=gst_marshal
+set relativedir=%(RelativeDir)
+set filename=%(Filename)
+
+$(GstGenMarshal)</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(RelativeDir)%(Filename).c;%(RelativeDir)%(Filename).h</Outputs>
+    </CustomBuild>
+    <CustomBuild Include="..\..\..\gst\parse\grammar.y">
+      <FileType>Document</FileType>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">bison -d -v -ppriv_gst_parse_yy $(GstProjectRoot)gst\parse\grammar.y -o $(GstProjectRoot)gst\parse\grammar.tab.c
+flex  -Ppriv_gst_parse_yy -o$(GstProjectRoot)gst\parse\lex.priv_gst_parse_yy.c $(GstProjectRoot)gst\parse\parse.l
+</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">bison -d -v -ppriv_gst_parse_yy $(GstProjectRoot)gst\parse\grammar.y -o $(GstProjectRoot)gst\parse\grammar.tab.c
+flex  -Ppriv_gst_parse_yy -o$(GstProjectRoot)gst\parse\lex.priv_gst_parse_yy.c $(GstProjectRoot)gst\parse\parse.l
+</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(GstProjectRoot)gst\parse\lex.priv_gst_parse_yy.c;$(GstProjectRoot)gst\parse\grammar.tab.c;$(GstProjectRoot)gst\parse\grammar.tab.h;%(Outputs)</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(GstProjectRoot)gst\parse\lex.priv_gst_parse_yy.c;$(GstProjectRoot)gst\parse\grammar.tab.c;$(GstProjectRoot)gst\parse\grammar.tab.h;%(Outputs)</Outputs>
+    </CustomBuild>
+  </ItemGroup>
+  <ItemGroup>
+    <CustomBuild Include="..\..\common\gstconfig.h">
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">copy /y %(Identity) $(GstProjectRoot)gst</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">copy /y %(Identity) $(GstProjectRoot)gst</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(GstProjectRoot)gst\%(Filename).%(Extension)</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(GstProjectRoot)gst\%(Filename).%(Extension)</Outputs>
+    </CustomBuild>
+    <CustomBuild Include="..\..\common\gstenumtypes.h">
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">copy /y %(Identity) $(GstProjectRoot)gst</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">copy /y %(Identity) $(GstProjectRoot)gst</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(GstProjectRoot)gst\%(Filename).%(Extension)</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(GstProjectRoot)gst\%(Filename).%(Extension)</Outputs>
+    </CustomBuild>
+    <CustomBuild Include="..\..\common\gstversion.h">
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">copy /y %(Identity) $(GstProjectRoot)gst</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">copy /y %(Identity) $(GstProjectRoot)gst</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(GstProjectRoot)gst\%(Filename).%(Extension)</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(GstProjectRoot)gst\%(Filename).%(Extension)</Outputs>
+    </CustomBuild>
+  </ItemGroup>
+  <ItemGroup>
+    <CustomBuild Include="..\..\common\gstenumtypes.c">
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">copy /y %(Identity) $(GstProjectRoot)gst</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">copy /y %(Identity) $(GstProjectRoot)gst</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(GstProjectRoot)gst\%(Filename).%(Extension)</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(GstProjectRoot)gst\%(Filename).%(Extension)</Outputs>
+    </CustomBuild>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{F0025B10-A2E9-44EE-8668-4AE3AE1A2F9B}</ProjectGuid>
+    <RootNamespace>generated</RootNamespace>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
+    <ConfigurationType>Utility</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <CharacterSet>MultiByte</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
+    <ConfigurationType>Utility</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>MultiByte</CharacterSet>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+    <Import Project="..\Common.props" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+    <Import Project="..\Common.props" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup />
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>Disabled</Optimization>
+    </ClCompile>
+    <Link>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>MaxSpeed</Optimization>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+    </ClCompile>
+    <Link>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+    </Link>
+  </ItemDefinitionGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+</Project>

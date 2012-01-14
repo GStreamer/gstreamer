@@ -1,0 +1,263 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|Win32">
+      <Configuration>Debug</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|Win32">
+      <Configuration>Release</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{62BA9F04-14B5-47D3-B467-AC12CE125DD3}</ProjectGuid>
+    <RootNamespace>gstreamer</RootNamespace>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <CharacterSet>MultiByte</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>MultiByte</CharacterSet>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+    <Import Project="..\Common.props" />
+    <Import Project="..\Library.props" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+    <Import Project="..\Common.props" />
+    <Import Project="..\Library.props" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <TargetName>$(ProjectName)-$(GstVersion)</TargetName>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <TargetName>$(ProjectName)-$(GstVersion)</TargetName>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>Disabled</Optimization>
+      <PreprocessorDefinitions>PREFIX="$(PREFIX)";GST_EXPORTS;YY_NO_UNISTD_H;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ClCompile>
+    <Link>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <ModuleDefinitionFile>$(GstProjectRoot)win32\common\lib$(ProjectName).def</ModuleDefinitionFile>
+    </Link>
+    <PostBuildEvent>
+      <Command>mkdir $(GstDestLib)
+copy /y $(OutDir)$(TargetName).lib $(GstDestLib)$(TargetName).lib
+
+mkdir $(GstDestBin)
+copy /y $(TargetPath) $(GstDestBin)$(TargetFileName)
+
+mkdir $(GstDestInclude)
+copy /y ..\..\..\gst\*.h $(GstDestInclude)
+del $(GstDestInclude)gstregistrychunks.h
+del $(GstDestInclude)gstregistrybinary.h
+del $(GstDestInclude)gstquark.h
+del $(GstDestInclude)gstpluginloader.h
+del $(GstDestInclude)gst-i18n-lib.h
+del $(GstDestInclude)gst-i18n-app.h
+del $(GstDestInclude)gst_private.h
+del $(GstDestInclude)glib-compat-private.h
+del $(GstDestInclude)gettext.h
+</Command>
+    </PostBuildEvent>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>MaxSpeed</Optimization>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <PreprocessorDefinitions>PREFIX="$(PREFIX)";GST_EXPORTS;YY_NO_UNISTD_H;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ClCompile>
+    <Link>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+      <ModuleDefinitionFile>$(GstProjectRoot)win32\common\lib$(ProjectName).def</ModuleDefinitionFile>
+    </Link>
+    <PostBuildEvent>
+      <Command>mkdir $(GstDestLib)
+copy /y $(OutDir)$(TargetName).lib $(GstDestLib)$(TargetName).lib
+
+mkdir $(GstDestBin)
+copy /y $(TargetPath) $(GstDestBin)$(TargetFileName)
+
+mkdir $(GstDestInclude)
+copy /y ..\..\..\gst\*.h $(GstDestInclude)
+del $(GstDestInclude)gstregistrychunks.h
+del $(GstDestInclude)gstregistrybinary.h
+del $(GstDestInclude)gstquark.h
+del $(GstDestInclude)gstpluginloader.h
+del $(GstDestInclude)gst-i18n-lib.h
+del $(GstDestInclude)gst-i18n-app.h
+del $(GstDestInclude)gst_private.h
+rem gst-plugins-base app lib needs gst-compat-private.h
+rem del $(GstDestInclude)glib-compat-private.h
+del $(GstDestInclude)gettext.h
+</Command>
+    </PostBuildEvent>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <ClInclude Include="..\..\..\gst\gettext.h" />
+    <ClInclude Include="..\..\..\gst\glib-compat-private.h" />
+    <ClInclude Include="..\..\..\gst\glib-compat.h" />
+    <ClInclude Include="..\..\..\gst\gst-i18n-app.h" />
+    <ClInclude Include="..\..\..\gst\gst-i18n-lib.h" />
+    <ClInclude Include="..\..\..\gst\gst.h" />
+    <ClInclude Include="..\..\..\gst\gstatomicqueue.h" />
+    <ClInclude Include="..\..\..\gst\gstbin.h" />
+    <ClInclude Include="..\..\..\gst\gstbuffer.h" />
+    <ClInclude Include="..\..\..\gst\gstbufferlist.h" />
+    <ClInclude Include="..\..\..\gst\gstbufferpool.h" />
+    <ClInclude Include="..\..\..\gst\gstbus.h" />
+    <ClInclude Include="..\..\..\gst\gstcaps.h" />
+    <ClInclude Include="..\..\..\gst\gstchildproxy.h" />
+    <ClInclude Include="..\..\..\gst\gstclock.h" />
+    <ClInclude Include="..\..\..\gst\gstcompat.h" />
+    <ClInclude Include="..\..\..\gst\gstconfig.h" />
+    <ClInclude Include="..\..\..\gst\gstcontrolbinding.h" />
+    <ClInclude Include="..\..\..\gst\gstcontrolsource.h" />
+    <ClInclude Include="..\..\..\gst\gstdatetime.h" />
+    <ClInclude Include="..\..\..\gst\gstdebugutils.h" />
+    <ClInclude Include="..\..\..\gst\gstelement.h" />
+    <ClInclude Include="..\..\..\gst\gstelementfactory.h" />
+    <ClInclude Include="..\..\..\gst\gstelementmetadata.h" />
+    <ClInclude Include="..\..\..\gst\gstenumtypes.h" />
+    <ClInclude Include="..\..\..\gst\gsterror.h" />
+    <ClInclude Include="..\..\..\gst\gstevent.h" />
+    <ClInclude Include="..\..\..\gst\gstformat.h" />
+    <ClInclude Include="..\..\..\gst\gstghostpad.h" />
+    <ClInclude Include="..\..\..\gst\gstindex.h" />
+    <ClInclude Include="..\..\..\gst\gstindexfactory.h" />
+    <ClInclude Include="..\..\..\gst\gstinfo.h" />
+    <ClInclude Include="..\..\..\gst\gstiterator.h" />
+    <ClInclude Include="..\..\..\gst\gstmacros.h" />
+    <ClInclude Include="..\..\..\gst\gstmarshal.h" />
+    <ClInclude Include="..\..\..\gst\gstmemory.h" />
+    <ClInclude Include="..\..\..\gst\gstmessage.h" />
+    <ClInclude Include="..\..\..\gst\gstmeta.h" />
+    <ClInclude Include="..\..\..\gst\gstminiobject.h" />
+    <ClInclude Include="..\..\..\gst\gstobject.h" />
+    <ClInclude Include="..\..\..\gst\gstpad.h" />
+    <ClInclude Include="..\..\..\gst\gstpadtemplate.h" />
+    <ClInclude Include="..\..\..\gst\gstparamspecs.h" />
+    <ClInclude Include="..\..\..\gst\gstparse.h" />
+    <ClInclude Include="..\..\..\gst\gstpipeline.h" />
+    <ClInclude Include="..\..\..\gst\gstplugin.h" />
+    <ClInclude Include="..\..\..\gst\gstpluginfeature.h" />
+    <ClInclude Include="..\..\..\gst\gstpluginloader.h" />
+    <ClInclude Include="..\..\..\gst\gstpoll.h" />
+    <ClInclude Include="..\..\..\gst\gstpreset.h" />
+    <ClInclude Include="..\..\..\gst\gstquark.h" />
+    <ClInclude Include="..\..\..\gst\gstquery.h" />
+    <ClInclude Include="..\..\..\gst\gstregistry.h" />
+    <ClInclude Include="..\..\..\gst\gstregistrybinary.h" />
+    <ClInclude Include="..\..\..\gst\gstregistrychunks.h" />
+    <ClInclude Include="..\..\..\gst\gstsample.h" />
+    <ClInclude Include="..\..\..\gst\gstsegment.h" />
+    <ClInclude Include="..\..\..\gst\gststructure.h" />
+    <ClInclude Include="..\..\..\gst\gstsystemclock.h" />
+    <ClInclude Include="..\..\..\gst\gsttaglist.h" />
+    <ClInclude Include="..\..\..\gst\gsttagsetter.h" />
+    <ClInclude Include="..\..\..\gst\gsttask.h" />
+    <ClInclude Include="..\..\..\gst\gsttaskpool.h" />
+    <ClInclude Include="..\..\..\gst\gsttrace.h" />
+    <ClInclude Include="..\..\..\gst\gsttypefind.h" />
+    <ClInclude Include="..\..\..\gst\gsttypefindfactory.h" />
+    <ClInclude Include="..\..\..\gst\gsturi.h" />
+    <ClInclude Include="..\..\..\gst\gstutils.h" />
+    <ClInclude Include="..\..\..\gst\gstvalue.h" />
+    <ClInclude Include="..\..\..\gst\gstversion.h" />
+    <ClInclude Include="..\..\..\gst\gst_private.h" />
+    <ClInclude Include="..\..\..\gst\math-compat.h" />
+    <ClInclude Include="..\..\..\gst\parse\grammar.tab.h" />
+    <ClInclude Include="..\..\..\gst\parse\types.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\..\..\gst\glib-compat.c" />
+    <ClCompile Include="..\..\..\gst\gst.c" />
+    <ClCompile Include="..\..\..\gst\gstatomicqueue.c" />
+    <ClCompile Include="..\..\..\gst\gstbin.c" />
+    <ClCompile Include="..\..\..\gst\gstbuffer.c" />
+    <ClCompile Include="..\..\..\gst\gstbufferlist.c" />
+    <ClCompile Include="..\..\..\gst\gstbufferpool.c" />
+    <ClCompile Include="..\..\..\gst\gstbus.c" />
+    <ClCompile Include="..\..\..\gst\gstcaps.c" />
+    <ClCompile Include="..\..\..\gst\gstchildproxy.c" />
+    <ClCompile Include="..\..\..\gst\gstclock.c" />
+    <ClCompile Include="..\..\..\gst\gstcontrolbinding.c" />
+    <ClCompile Include="..\..\..\gst\gstcontrolsource.c" />
+    <ClCompile Include="..\..\..\gst\gstdatetime.c" />
+    <ClCompile Include="..\..\..\gst\gstdebugutils.c" />
+    <ClCompile Include="..\..\..\gst\gstelement.c" />
+    <ClCompile Include="..\..\..\gst\gstelementfactory.c" />
+    <ClCompile Include="..\..\..\gst\gstenumtypes.c" />
+    <ClCompile Include="..\..\..\gst\gsterror.c" />
+    <ClCompile Include="..\..\..\gst\gstevent.c" />
+    <ClCompile Include="..\..\..\gst\gstformat.c" />
+    <ClCompile Include="..\..\..\gst\gstghostpad.c" />
+    <ClCompile Include="..\..\..\gst\gstinfo.c" />
+    <ClCompile Include="..\..\..\gst\gstiterator.c" />
+    <ClCompile Include="..\..\..\gst\gstmarshal.c" />
+    <ClCompile Include="..\..\..\gst\gstmemory.c" />
+    <ClCompile Include="..\..\..\gst\gstmessage.c" />
+    <ClCompile Include="..\..\..\gst\gstmeta.c" />
+    <ClCompile Include="..\..\..\gst\gstminiobject.c" />
+    <ClCompile Include="..\..\..\gst\gstobject.c" />
+    <ClCompile Include="..\..\..\gst\gstpad.c" />
+    <ClCompile Include="..\..\..\gst\gstpadtemplate.c" />
+    <ClCompile Include="..\..\..\gst\gstparamspecs.c" />
+    <ClCompile Include="..\..\..\gst\gstparse.c" />
+    <ClCompile Include="..\..\..\gst\gstpipeline.c" />
+    <ClCompile Include="..\..\..\gst\gstplugin.c" />
+    <ClCompile Include="..\..\..\gst\gstpluginfeature.c" />
+    <ClCompile Include="..\..\..\gst\gstpluginloader.c" />
+    <ClCompile Include="..\..\..\gst\gstpoll.c" />
+    <ClCompile Include="..\..\..\gst\gstpreset.c" />
+    <ClCompile Include="..\..\..\gst\gstquark.c" />
+    <ClCompile Include="..\..\..\gst\gstquery.c" />
+    <ClCompile Include="..\..\..\gst\gstregistry.c" />
+    <ClCompile Include="..\..\..\gst\gstregistrybinary.c" />
+    <ClCompile Include="..\..\..\gst\gstregistrychunks.c" />
+    <ClCompile Include="..\..\..\gst\gstsample.c" />
+    <ClCompile Include="..\..\..\gst\gstsegment.c" />
+    <ClCompile Include="..\..\..\gst\gststructure.c" />
+    <ClCompile Include="..\..\..\gst\gstsystemclock.c" />
+    <ClCompile Include="..\..\..\gst\gsttaglist.c" />
+    <ClCompile Include="..\..\..\gst\gsttagsetter.c" />
+    <ClCompile Include="..\..\..\gst\gsttask.c" />
+    <ClCompile Include="..\..\..\gst\gsttaskpool.c" />
+    <ClCompile Include="..\..\..\gst\gsttrace.c" />
+    <ClCompile Include="..\..\..\gst\gsttypefind.c" />
+    <ClCompile Include="..\..\..\gst\gsttypefindfactory.c" />
+    <ClCompile Include="..\..\..\gst\gsturi.c" />
+    <ClCompile Include="..\..\..\gst\gstutils.c" />
+    <ClCompile Include="..\..\..\gst\gstvalue.c" />
+    <ClCompile Include="..\..\..\gst\parse\grammar.tab.c" />
+    <ClCompile Include="..\..\..\gst\parse\lex.priv_gst_parse_yy.c" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\generated\generated.vcxproj">
+      <Project>{f0025b10-a2e9-44ee-8668-4ae3ae1a2f9b}</Project>
+    </ProjectReference>
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+</Project>
