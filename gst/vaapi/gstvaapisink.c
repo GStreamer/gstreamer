@@ -1,7 +1,7 @@
 /*
  *  gstvaapisink.c - VA-API video sink
  *
- *  gstreamer-vaapi (C) 2010-2011 Splitted-Desktop Systems
+ *  Copyright (C) 2010-2011 Splitted-Desktop Systems
  *  Copyright (C) 2011 Intel Corporation
  *
  *  This library is free software; you can redistribute it and/or
