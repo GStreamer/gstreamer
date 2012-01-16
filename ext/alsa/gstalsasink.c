@@ -508,7 +508,7 @@ no_rate:
 rate_match:
   {
     GST_ELEMENT_ERROR (alsa, RESOURCE, SETTINGS, (NULL),
-        ("Rate doesn't match (requested %iHz, get %iHz)", alsa->rate, err));
+        ("Rate doesn't match (requested %iHz, get %iHz)", alsa->rate, rrate));
     snd_pcm_hw_params_free (params);
     return -EINVAL;
   }
