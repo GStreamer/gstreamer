@@ -225,6 +225,8 @@ gst_debug_spy_transform_ip (GstBaseTransform * transform, GstBuffer * buf)
         "size", G_TYPE_UINT, GST_BUFFER_SIZE (buf),
         "caps", GST_TYPE_CAPS, GST_BUFFER_CAPS (buf), NULL);
 
+    g_free (checksum);
+
     message =
         gst_message_new_element (GST_OBJECT (transform), message_structure);
 
