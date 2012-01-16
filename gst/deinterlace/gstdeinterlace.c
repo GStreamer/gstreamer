@@ -1000,9 +1000,10 @@ gst_deinterlace_get_interlacing_method (const GstCaps * caps)
   GstDeinterlaceInterlacingMethod method = 0;
   gboolean interlaced;
 
-  /* check interlaced cap */
-  gst_structure_get_boolean (gst_caps_get_structure (caps, 0), "interlaced",
-      &interlaced);
+  /* check interlaced cap, defaulting to FALSE */
+  if (!gst_structure_get_boolean (gst_caps_get_structure (caps, 0),
+          "interlaced", &interlaced))
+    interlaced = FALSE;
 
   method =
       interlaced ? GST_DEINTERLACE_INTERLACED : GST_DEINTERLACE_PROGRESSIVE;
