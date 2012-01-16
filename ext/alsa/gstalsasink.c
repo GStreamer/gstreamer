@@ -290,9 +290,11 @@ gst_alsasink_init (GstAlsaSink * alsasink, GstAlsaSinkClass * g_class)
 }
 
 #define CHECK(call, error) \
-G_STMT_START {                  \
-if ((err = call) < 0)           \
-  goto error;                   \
+G_STMT_START {             \
+  if ((err = call) < 0) {  \
+    GST_WARNING_OBJECT (alsa, "Error %d (%s) calling " #call, err, snd_strerror (err)); \
+    goto error;            \
+  }                        \
 } G_STMT_END;
 
 static GstCaps *
