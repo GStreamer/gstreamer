@@ -15,7 +15,6 @@ BUILT_SOURCES = $(built_sources) $(built_headers)
 
 libgsttcp_la_SOURCES = \
 	gsttcpplugin.c \
-	gsttcp.c \
 	gsttcpclientsrc.c gsttcpclientsink.c \
 	gstmultisocketsink.c  \
 	gsttcpserversrc.c gsttcpserversink.c

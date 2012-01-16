@@ -30,16 +30,4 @@
 #define TCP_DEFAULT_HOST        "localhost"
 #define TCP_DEFAULT_PORT        4953
 
-G_BEGIN_DECLS
-
-gchar * gst_tcp_host_to_ip (GstElement *element, const gchar *host);
-
-gint gst_tcp_socket_write (int socket, const void *buf, size_t count);
-
-void gst_tcp_socket_close (GstPollFD *socket);
-
-GstFlowReturn gst_tcp_read_buffer (GstElement * this, int socket, GstPoll * fdset, GstBuffer **buf);
-
-G_END_DECLS
-
 #endif /* __GST_TCP_HELP_H__ */
