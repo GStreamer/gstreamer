@@ -992,6 +992,21 @@
   )
 )
 
+(define-method set_max_duration
+  (of-object "GESTimelineObject")
+  (c-name "ges_timeline_object_set_max_duration")
+  (return-type "none")
+  (parameters
+    '("guint64" "duration")
+  )
+)
+
+(define-method get_max_duration
+  (of-object "GESTimelineObject")
+  (c-name "ges_timeline_object_get_max_duration")
+  (return-type "guint64")
+)
+
 (define-method set_priority
   (of-object "GESTimelineObject")
   (c-name "ges_timeline_object_set_priority")
@@ -1885,6 +1900,21 @@
   (of-object "GESTrackObject")
   (c-name "ges_track_object_get_inpoint")
   (return-type "guint64")
+)
+
+(define-method get_max_duration
+  (of-object "GESTrackObject")
+  (c-name "ges_track_object_get_max_duration")
+  (return-type "guint64")
+)
+
+(define-method set_max_duration
+  (of-object "GESTrackObject")
+  (c-name "ges_track_object_set_max_duration")
+  (return-type "none")
+  (parameters
+    '("guint64" "duration")
+  )
 )
 
 (define-method get_duration

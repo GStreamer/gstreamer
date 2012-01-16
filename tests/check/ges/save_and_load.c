@@ -122,6 +122,7 @@ GST_START_TEST (test_keyfile_save)
   KEY ("Object0", "duration", "2000000000");
   KEY ("Object0", "priority", "2");
   KEY ("Object0", "supported-formats", "GES_TRACK_TYPE_UNKNOWN");
+  KEY ("Object0", "max-duration", "18446744073709551615");
   KEY ("Object0", "mute", "false");
   KEY ("Object0", "vpattern", "100% Black");
   KEY ("Object0", "freq", "440");
@@ -142,6 +143,7 @@ GST_START_TEST (test_keyfile_save)
   KEY ("Object1", "duration", "500000000");
   KEY ("Object1", "priority", "1");
   KEY ("Object1", "supported-formats", "GES_TRACK_TYPE_UNKNOWN");
+  KEY ("Object1", "max-duration", "18446744073709551615");
   KEY ("Object1", "vtype", "A bar moves from left to right");
   COMPARE;
 
@@ -157,6 +159,7 @@ GST_START_TEST (test_keyfile_save)
   KEY ("Object2", "duration", "2000000000");
   KEY ("Object2", "priority", "3");
   KEY ("Object2", "supported-formats", "GES_TRACK_TYPE_UNKNOWN");
+  KEY ("Object2", "max-duration", "18446744073709551615");
   KEY ("Object2", "mute", "false");
   KEY ("Object2", "vpattern", "100% Black");
   KEY ("Object2", "freq", "440");
@@ -188,6 +191,7 @@ GST_START_TEST (test_keyfile_save)
   KEY ("Object3", "duration", "1000000000");
   KEY ("Object3", "priority", "0");
   KEY ("Object3", "supported-formats", "GES_TRACK_TYPE_UNKNOWN");
+  KEY ("Object3", "max-duration", "18446744073709551615");
   KEY ("Object3", "mute", "false");
   KEY ("Object3", "text", "\"the\\\\ quick\\\\ brown\\\\ fox\"");
   KEY ("Object3", "font-desc", "\"Serif\\\\ 36\"");

@@ -184,8 +184,10 @@ struct _GESTimelineObject {
  * @need_fill_track: Set to TRUE if @fill_track_object needs to be called.
  * @track_object_added: Should be overridden by subclasses if they need to perform an
  * operation when a #GESTrackObject is added. Since: 0.10.2
- * @track_object_released: Should be overridden by subclassed if they need to perform
+ * @track_object_released: Should be overridden by subclasses if they need to perform
  * action when a #GESTrackObject is released. Since: 0.10.2
+ * @set_max_duration: Should be overridden by subclasses if they need to perform
+ * action when a changing the maximum duration. Since: 0.10.XX
  *
  * Subclasses can override the @create_track_object and @fill_track_object methods.
  */
@@ -205,10 +207,12 @@ struct _GESTimelineObjectClass {
                                 GESTrackObject *tck_object);
   void (*track_object_released) (GESTimelineObject *object,
                                 GESTrackObject *tck_object);
+  void (*set_max_duration )     (GESTimelineObject *object,
+                                 guint64 maxduration);
 
   /*< private >*/
   /* Padding for API extension */
-  gpointer _ges_reserved[GES_PADDING - 2];
+  gpointer _ges_reserved[GES_PADDING - 3];
 };
 
 GType ges_timeline_object_get_type          (void);
@@ -220,8 +224,12 @@ void ges_timeline_object_set_inpoint        (GESTimelineObject * object,
 				       guint64 inpoint);
 void ges_timeline_object_set_duration       (GESTimelineObject * object,
 				       guint64 duration);
+void ges_timeline_object_set_max_duration   (GESTimelineObject * object,
+				       guint64 maxduration);
 void ges_timeline_object_set_priority       (GESTimelineObject * object,
 				       guint priority);
+
+guint64 ges_timeline_object_get_max_duration (GESTimelineObject * object);
 
 void ges_timeline_object_set_layer          (GESTimelineObject * object,
 				       GESTimelineLayer * layer);
