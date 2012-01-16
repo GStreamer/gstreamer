@@ -374,8 +374,6 @@ retry:
   rrate = alsa->rate;
   CHECK (snd_pcm_hw_params_set_rate_near (alsa->handle, params, &rrate, NULL),
       no_rate);
-  if (rrate != alsa->rate)
-    goto rate_match;
 
 #ifndef GST_DISABLE_GST_DEBUG
   /* get and dump some limits */
@@ -504,13 +502,6 @@ no_rate:
         ("Rate %iHz not available for playback: %s",
             alsa->rate, snd_strerror (err)));
     return err;
-  }
-rate_match:
-  {
-    GST_ELEMENT_ERROR (alsa, RESOURCE, SETTINGS, (NULL),
-        ("Rate doesn't match (requested %iHz, get %iHz)", alsa->rate, rrate));
-    snd_pcm_hw_params_free (params);
-    return -EINVAL;
   }
 buffer_size:
   {
