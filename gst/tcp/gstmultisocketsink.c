@@ -113,6 +113,10 @@
 #include "gstmultisocketsink.h"
 #include "gsttcp-marshal.h"
 
+#ifndef G_OS_WIN32
+#include <netinet/in.h>
+#endif
+
 #define NOT_IMPLEMENTED 0
 
 static GstStaticPadTemplate sinktemplate = GST_STATIC_PAD_TEMPLATE ("sink",
@@ -160,6 +164,7 @@ enum
 #define DEFAULT_BURST_FORMAT            GST_FORMAT_UNDEFINED
 #define DEFAULT_BURST_VALUE             0
 
+#define DEFAULT_QOS_DSCP                -1
 #define DEFAULT_HANDLE_READ             TRUE
 
 #define DEFAULT_RESEND_STREAMHEADER      TRUE
@@ -191,6 +196,8 @@ enum
 
   PROP_BURST_FORMAT,
   PROP_BURST_VALUE,
+
+  PROP_QOS_DSCP,
 
   PROP_HANDLE_READ,
 
@@ -405,6 +412,12 @@ gst_multi_socket_sink_class_init (GstMultiSocketSinkClass * klass)
       g_param_spec_uint64 ("burst-value", "Burst value",
           "The amount of burst expressed in burst-unit", 0, G_MAXUINT64,
           DEFAULT_BURST_VALUE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  g_object_class_install_property (gobject_class, PROP_QOS_DSCP,
+      g_param_spec_int ("qos-dscp", "QoS diff srv code point",
+          "Quality of Service, differentiated services code point (-1 default)",
+          -1, 63, DEFAULT_QOS_DSCP,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   /**
    * GstMultiSocketSink::handle-read
@@ -634,6 +647,7 @@ gst_multi_socket_sink_init (GstMultiSocketSink * this)
   this->def_burst_format = DEFAULT_BURST_FORMAT;
   this->def_burst_value = DEFAULT_BURST_VALUE;
 
+  this->qos_dscp = DEFAULT_QOS_DSCP;
   this->handle_read = DEFAULT_HANDLE_READ;
 
   this->resend_streamheader = DEFAULT_RESEND_STREAMHEADER;
@@ -659,6 +673,87 @@ gst_multi_socket_sink_finalize (GObject * object)
   }
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
+}
+
+static gint
+setup_dscp_client (GstMultiSocketSink * sink, GstSocketClient * client)
+{
+#ifndef IP_TOS
+  return 0;
+#else
+  gint tos;
+  gint ret;
+  int fd;
+  union gst_sockaddr
+  {
+    struct sockaddr sa;
+    struct sockaddr_in6 sa_in6;
+    struct sockaddr_storage sa_stor;
+  } sa;
+  socklen_t slen = sizeof (sa);
+  gint af;
+
+  /* don't touch */
+  if (sink->qos_dscp < 0)
+    return 0;
+
+  fd = g_socket_get_fd (client->socket);
+
+  if ((ret = getsockname (fd, &sa.sa, &slen)) < 0) {
+    GST_DEBUG_OBJECT (sink, "could not get sockname: %s", g_strerror (errno));
+    return ret;
+  }
+
+  af = sa.sa.sa_family;
+
+  /* if this is an IPv4-mapped address then do IPv4 QoS */
+  if (af == AF_INET6) {
+
+    GST_DEBUG_OBJECT (sink, "check IP6 socket");
+    if (IN6_IS_ADDR_V4MAPPED (&(sa.sa_in6.sin6_addr))) {
+      GST_DEBUG_OBJECT (sink, "mapped to IPV4");
+      af = AF_INET;
+    }
+  }
+
+  /* extract and shift 6 bits of the DSCP */
+  tos = (sink->qos_dscp & 0x3f) << 2;
+
+  switch (af) {
+    case AF_INET:
+      ret = setsockopt (fd, IPPROTO_IP, IP_TOS, &tos, sizeof (tos));
+      break;
+    case AF_INET6:
+#ifdef IPV6_TCLASS
+      ret = setsockopt (fd, IPPROTO_IPV6, IPV6_TCLASS, &tos, sizeof (tos));
+      break;
+#endif
+    default:
+      ret = 0;
+      GST_ERROR_OBJECT (sink, "unsupported AF");
+      break;
+  }
+  if (ret)
+    GST_DEBUG_OBJECT (sink, "could not set DSCP: %s", g_strerror (errno));
+
+  return ret;
+#endif
+}
+
+static void
+setup_dscp (GstMultiSocketSink * sink)
+{
+  GList *clients;
+
+  CLIENTS_LOCK (sink);
+  for (clients = sink->clients; clients; clients = clients->next) {
+    GstSocketClient *client;
+
+    client = clients->data;
+
+    setup_dscp_client (sink, client);
+  }
+  CLIENTS_UNLOCK (sink);
 }
 
 /* "add-full" signal implementation */
@@ -735,6 +830,8 @@ gst_multi_socket_sink_add_full (GstMultiSocketSink * sink, GSocket * socket,
         gst_object_ref (sink), (GDestroyNotify) gst_object_unref);
     g_source_attach (client->source, sink->main_context);
   }
+
+  setup_dscp_client (sink, client);
 
   CLIENTS_UNLOCK (sink);
 
@@ -2383,6 +2480,10 @@ gst_multi_socket_sink_set_property (GObject * object, guint prop_id,
     case PROP_BURST_VALUE:
       multisocketsink->def_burst_value = g_value_get_uint64 (value);
       break;
+    case PROP_QOS_DSCP:
+      multisocketsink->qos_dscp = g_value_get_int (value);
+      setup_dscp (multisocketsink);
+      break;
     case PROP_HANDLE_READ:
       multisocketsink->handle_read = g_value_get_boolean (value);
       break;
@@ -2458,6 +2559,9 @@ gst_multi_socket_sink_get_property (GObject * object, guint prop_id,
       break;
     case PROP_BURST_VALUE:
       g_value_set_uint64 (value, multisocketsink->def_burst_value);
+      break;
+    case PROP_QOS_DSCP:
+      g_value_set_int (value, multisocketsink->qos_dscp);
       break;
     case PROP_HANDLE_READ:
       g_value_set_boolean (value, multisocketsink->handle_read);

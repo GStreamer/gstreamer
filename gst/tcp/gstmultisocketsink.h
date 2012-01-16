@@ -190,6 +190,7 @@ struct _GstMultiSocketSink {
   gboolean previous_buffer_in_caps;
 
   guint mtu;
+  gint qos_dscp;
   gboolean handle_read;
 
   GArray *bufqueue;     /* global queue of buffers */
