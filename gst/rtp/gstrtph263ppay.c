@@ -236,7 +236,7 @@ static GstCaps *
 gst_rtp_h263p_pay_sink_getcaps (GstBaseRTPPayload * payload, GstPad * pad)
 {
   GstRtpH263PPay *rtph263ppay;
-  GstCaps *caps = gst_caps_new_empty ();
+  GstCaps *caps = NULL;
   GstCaps *peercaps = NULL;
   GstCaps *intersect = NULL;
   guint i;
@@ -256,6 +256,7 @@ gst_rtp_h263p_pay_sink_getcaps (GstBaseRTPPayload * payload, GstPad * pad)
   if (gst_caps_is_empty (intersect))
     return intersect;
 
+  caps = gst_caps_new_empty ();
   for (i = 0; i < gst_caps_get_size (intersect); i++) {
     GstStructure *s = gst_caps_get_structure (intersect, i);
     const gchar *encoding_name = gst_structure_get_string (s, "encoding-name");
