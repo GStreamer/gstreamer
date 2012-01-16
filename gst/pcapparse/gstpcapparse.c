@@ -89,31 +89,19 @@ static void gst_pcap_parse_set_property (GObject * object, guint prop_id,
 
 static void gst_pcap_parse_reset (GstPcapParse * self);
 
-static GstFlowReturn gst_pcap_parse_chain (GstPad * pad, GstBuffer * buffer);
-static gboolean gst_pcap_sink_event (GstPad * pad, GstEvent * event);
+static GstFlowReturn gst_pcap_parse_chain (GstPad * pad,
+    GstObject * parent, GstBuffer * buffer);
+static gboolean gst_pcap_sink_event (GstPad * pad,
+    GstObject * parent, GstEvent * event);
 
-GST_BOILERPLATE (GstPcapParse, gst_pcap_parse, GstElement, GST_TYPE_ELEMENT);
-
-static void
-gst_pcap_parse_base_init (gpointer gclass)
-{
-  GstElementClass *element_class = GST_ELEMENT_CLASS (gclass);
-
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&sink_template));
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&src_template));
-
-  gst_element_class_set_details_simple (element_class, "PCapParse",
-      "Raw/Parser",
-      "Parses a raw pcap stream",
-      "Ole André Vadla Ravnås <ole.andre.ravnas@tandberg.com>");
-}
+#define parent_class gst_pcap_parse_parent_class
+G_DEFINE_TYPE (GstPcapParse, gst_pcap_parse, GST_TYPE_ELEMENT);
 
 static void
 gst_pcap_parse_class_init (GstPcapParseClass * klass)
 {
   GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
+  GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
 
   gobject_class->finalize = gst_pcap_parse_finalize;
   gobject_class->get_property = gst_pcap_parse_get_property;
@@ -149,11 +137,21 @@ gst_pcap_parse_class_init (GstPcapParseClass * klass)
           "Relative timestamp offset (ns) to apply (-1 = use absolute packet time)",
           -1, G_MAXINT64, -1, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
+  gst_element_class_add_pad_template (element_class,
+      gst_static_pad_template_get (&sink_template));
+  gst_element_class_add_pad_template (element_class,
+      gst_static_pad_template_get (&src_template));
+
+  gst_element_class_set_details_simple (element_class, "PCapParse",
+      "Raw/Parser",
+      "Parses a raw pcap stream",
+      "Ole André Vadla Ravnås <ole.andre.ravnas@tandberg.com>");
+
   GST_DEBUG_CATEGORY_INIT (gst_pcap_parse_debug, "pcapparse", 0, "pcap parser");
 }
 
 static void
-gst_pcap_parse_init (GstPcapParse * self, GstPcapParseClass * gclass)
+gst_pcap_parse_init (GstPcapParse * self)
 {
   self->sink_pad = gst_pad_new_from_static_template (&sink_template, "sink");
   gst_pad_set_chain_function (self->sink_pad,
@@ -443,9 +441,9 @@ gst_pcap_parse_scan_frame (GstPcapParse * self,
 }
 
 static GstFlowReturn
-gst_pcap_parse_chain (GstPad * pad, GstBuffer * buffer)
+gst_pcap_parse_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
 {
-  GstPcapParse *self = GST_PCAP_PARSE (GST_PAD_PARENT (pad));
+  GstPcapParse *self = GST_PCAP_PARSE (parent);
   GstFlowReturn ret = GST_FLOW_OK;
 
   gst_adapter_push (self->adapter, buffer);
@@ -465,7 +463,7 @@ gst_pcap_parse_chain (GstPad * pad, GstBuffer * buffer)
           const guint8 *payload_data;
           gint payload_size;
 
-          data = gst_adapter_peek (self->adapter, self->cur_packet_size);
+          data = gst_adapter_map (self->adapter, self->cur_packet_size);
 
           GST_LOG_OBJECT (self, "examining packet size %" G_GINT64_FORMAT,
               self->cur_packet_size);
@@ -473,11 +471,10 @@ gst_pcap_parse_chain (GstPad * pad, GstBuffer * buffer)
           if (gst_pcap_parse_scan_frame (self, data, self->cur_packet_size,
                   &payload_data, &payload_size)) {
             GstBuffer *out_buf;
+            guint8 *data;
 
-            ret = gst_pad_alloc_buffer_and_set_caps (self->src_pad,
-                self->buffer_offset, payload_size, self->caps, &out_buf);
-
-            if (ret == GST_FLOW_OK) {
+            out_buf = gst_buffer_new_and_alloc (payload_size);
+            if (out_buf) {
 
               if (GST_CLOCK_TIME_IS_VALID (self->cur_ts)) {
                 if (!GST_CLOCK_TIME_IS_VALID (self->base_ts))
@@ -488,15 +485,20 @@ gst_pcap_parse_chain (GstPad * pad, GstBuffer * buffer)
                 }
               }
 
-              memcpy (GST_BUFFER_DATA (out_buf), payload_data, payload_size);
+              data = gst_buffer_map (out_buf, NULL, NULL, GST_MAP_WRITE);
+              memcpy (data, payload_data, payload_size);
+              gst_buffer_unmap (out_buf, data, -1);
               GST_BUFFER_TIMESTAMP (out_buf) = self->cur_ts;
 
               if (!self->newsegment_sent &&
                   GST_CLOCK_TIME_IS_VALID (self->cur_ts)) {
-                GstEvent *newsegment =
-                    gst_event_new_new_segment (FALSE, 1, GST_FORMAT_TIME,
-                    self->cur_ts, -1, 0);
-                gst_pad_push_event (self->src_pad, newsegment);
+                GstSegment segment;
+
+                gst_pad_set_caps (self->src_pad, self->caps);
+                gst_segment_init (&segment, GST_FORMAT_TIME);
+                segment.start = self->cur_ts;
+                gst_pad_push_event (self->src_pad,
+                    gst_event_new_segment (&segment));
                 self->newsegment_sent = TRUE;
               }
 
@@ -506,6 +508,7 @@ gst_pcap_parse_chain (GstPad * pad, GstBuffer * buffer)
             }
           }
 
+          gst_adapter_unmap (self->adapter);
           gst_adapter_flush (self->adapter, self->cur_packet_size);
         }
 
@@ -518,13 +521,14 @@ gst_pcap_parse_chain (GstPad * pad, GstBuffer * buffer)
         if (avail < 16)
           break;
 
-        data = gst_adapter_peek (self->adapter, 16);
+        data = gst_adapter_map (self->adapter, 16);
 
         ts_sec = gst_pcap_parse_read_uint32 (self, data + 0);
         ts_usec = gst_pcap_parse_read_uint32 (self, data + 4);
         incl_len = gst_pcap_parse_read_uint32 (self, data + 8);
         /* orig_len = gst_pcap_parse_read_uint32 (self, data + 12); */
 
+        gst_adapter_unmap (self->adapter);
         gst_adapter_flush (self->adapter, 16);
 
         self->cur_ts = ts_sec * GST_SECOND + ts_usec * GST_USECOND;
@@ -538,10 +542,12 @@ gst_pcap_parse_chain (GstPad * pad, GstBuffer * buffer)
       if (avail < 24)
         break;
 
-      data = gst_adapter_peek (self->adapter, 24);
+      data = gst_adapter_map (self->adapter, 24);
 
       magic = *((guint32 *) data);
       major_version = *((guint16 *) (data + 4));
+      linktype = gst_pcap_parse_read_uint32 (self, data + 20);
+      gst_adapter_unmap (self->adapter);
 
       if (magic == 0xa1b2c3d4) {
         self->swap_endian = FALSE;
@@ -561,8 +567,6 @@ gst_pcap_parse_chain (GstPad * pad, GstBuffer * buffer)
         ret = GST_FLOW_ERROR;
         goto out;
       }
-
-      linktype = gst_pcap_parse_read_uint32 (self, data + 20);
 
       if (linktype != DLT_ETHER && linktype != DLT_SLL) {
         GST_ELEMENT_ERROR (self, STREAM, WRONG_TYPE, (NULL),
@@ -588,13 +592,13 @@ out:
 }
 
 static gboolean
-gst_pcap_sink_event (GstPad * pad, GstEvent * event)
+gst_pcap_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
 {
   gboolean ret = TRUE;
-  GstPcapParse *self = GST_PCAP_PARSE (gst_pad_get_parent (pad));
+  GstPcapParse *self = GST_PCAP_PARSE (parent);
 
   switch (GST_EVENT_TYPE (event)) {
-    case GST_EVENT_NEWSEGMENT:
+    case GST_EVENT_SEGMENT:
       /* Drop it, we'll replace it with our own */
       gst_event_unref (event);
       break;
