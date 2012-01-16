@@ -56,7 +56,7 @@ test_surfaces_SOURCES	= test-surfaces.c
 test_surfaces_CFLAGS	= $(TEST_CFLAGS) $(TEST_X11_CFLAGS)
 test_surfaces_LDADD	= $(TEST_LIBS) $(TEST_X11_LIBS)
 
-test_subpicture_SOURCES = test-subpicture.c test-h264.c test-subpicture-data.c
+test_subpicture_SOURCES = test-subpicture.c test-mpeg2.c test-subpicture-data.c
 test_subpicture_CFLAGS  = $(TEST_CFLAGS) $(TEST_X11_CFLAGS)
 test_subpicture_LDADD   = $(TEST_LIBS) $(TEST_X11_LIBS)
 

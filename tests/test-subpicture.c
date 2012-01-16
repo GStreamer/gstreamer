@@ -20,14 +20,21 @@
  *  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
  */
 
+#include "config.h"
 #include <string.h>
 #include <gst/vaapi/gstvaapidisplay_x11.h>
 #include <gst/vaapi/gstvaapiwindow_x11.h>
 #include <gst/vaapi/gstvaapidecoder.h>
-#include <gst/vaapi/gstvaapidecoder_ffmpeg.h>
 #include <gst/vaapi/gstvaapisurface.h>
-#include "test-h264.h"
+#include "test-mpeg2.h"
 #include "test-subpicture-data.h"
+
+#if USE_FFMPEG
+# include <gst/vaapi/gstvaapidecoder_ffmpeg.h>
+#endif
+#if USE_CODEC_PARSERS
+# include <gst/vaapi/gstvaapidecoder_mpeg2.h>
+#endif
 
 typedef void (*GetVideoInfoFunc)(VideoDecodeInfo *info);
 
@@ -39,7 +46,7 @@ struct _CodecDefs {
 
 static const CodecDefs g_codec_defs[] = {
 #define INIT_FUNCS(CODEC) { #CODEC, CODEC##_get_video_info }
-    INIT_FUNCS(h264),
+    INIT_FUNCS(mpeg2),
 #undef INIT_FUNCS
     { NULL, }
 };
@@ -89,7 +96,7 @@ main(int argc, char *argv[])
     GOptionContext       *options;
     GstVaapiDisplay      *display;
     GstVaapiWindow       *window;
-    GstVaapiDecoder      *decoder;
+    GstVaapiDecoder      *decoder = NULL;
     GstCaps              *decoder_caps;
     GstStructure         *structure;
     GstVaapiDecoderStatus status;
@@ -116,7 +123,7 @@ main(int argc, char *argv[])
     g_option_context_free(options);
 
     if (!g_codec_str)
-        g_codec_str = g_strdup("h264");
+        g_codec_str = g_strdup("mpeg2");
 
     g_print("Test %s decode\n", g_codec_str);
     codec = get_codec_defs(g_codec_str);
@@ -145,9 +152,15 @@ main(int argc, char *argv[])
             NULL
         );
 
-    decoder = gst_vaapi_decoder_ffmpeg_new(display, decoder_caps);
+#if USE_CODEC_PARSERS
+    decoder = gst_vaapi_decoder_mpeg2_new(display, decoder_caps);
+#endif
+#if USE_FFMPEG
     if (!decoder)
-        g_error("could not create FFmpeg decoder");
+        decoder = gst_vaapi_decoder_ffmpeg_new(display, decoder_caps);
+#endif
+    if (!decoder)
+        g_error("could not create video decoder");
     gst_caps_unref(decoder_caps);
 
     buffer = gst_buffer_new();
