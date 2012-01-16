@@ -158,6 +158,15 @@ GST_START_TEST (test_writable)
   data = gst_memory_map (mem2, &size, NULL, GST_MAP_WRITE);
   data[4] = 'a';
   gst_memory_unmap (mem2, data, size);
+
+  gst_memory_ref (mem2);
+  ASSERT_CRITICAL (gst_memory_map (mem, &size, NULL, GST_MAP_WRITE));
+  gst_memory_unref (mem2);
+
+  data = gst_memory_map (mem2, &size, NULL, GST_MAP_WRITE);
+  data[4] = 'a';
+  gst_memory_unmap (mem2, data, size);
+
   gst_memory_unref (mem2);
 
   gst_memory_unref (mem);
@@ -170,12 +179,13 @@ GST_START_TEST (test_submemory_writable)
   GstMemory *mem, *sub_mem;
   gsize size;
 
-  /* create sub-memory of read-only memory and make it writable */
+  /* create sub-memory of read-only memory and try to write */
   mem = create_read_only_memory ();
 
   sub_mem = gst_memory_share (mem, 0, 8);
   fail_if (GST_MEMORY_IS_WRITABLE (sub_mem));
 
+  ASSERT_CRITICAL (gst_memory_map (mem, &size, NULL, GST_MAP_WRITE));
   ASSERT_CRITICAL (gst_memory_map (sub_mem, &size, NULL, GST_MAP_WRITE));
 
   gst_memory_unref (sub_mem);
