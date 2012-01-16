@@ -62,6 +62,12 @@ GST_START_TEST (test_autovideosink_ghostpad_error_case)
 
   /* this should fail, there's no such format */
   state_ret = gst_element_set_state (pipeline, GST_STATE_PAUSED);
+  if (state_ret == GST_STATE_CHANGE_ASYNC) {
+    /* make sure we wait for the actual success/failure to happen */
+    GstState state;
+    state_ret =
+        gst_element_get_state (pipeline, &state, &state, GST_CLOCK_TIME_NONE);
+  }
   fail_unless (state_ret == GST_STATE_CHANGE_FAILURE,
       "pipeline _set_state() to PAUSED succeeded but should have failed");
 
