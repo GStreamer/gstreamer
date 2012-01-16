@@ -208,9 +208,9 @@ enum
   PROP_LAST
 };
 
-#define GST_TYPE_RECOVER_POLICY (gst_recover_policy_get_type())
+#define GST_TYPE_RECOVER_POLICY (gst_multi_socket_sink_recover_policy_get_type())
 static GType
-gst_recover_policy_get_type (void)
+gst_multi_socket_sink_recover_policy_get_type (void)
 {
   static GType recover_policy_type = 0;
   static const GEnumValue recover_policy[] = {
@@ -227,14 +227,15 @@ gst_recover_policy_get_type (void)
 
   if (!recover_policy_type) {
     recover_policy_type =
-        g_enum_register_static ("GstRecoverPolicy", recover_policy);
+        g_enum_register_static ("GstMultiSocketSinkRecoverPolicy",
+        recover_policy);
   }
   return recover_policy_type;
 }
 
-#define GST_TYPE_SYNC_METHOD (gst_sync_method_get_type())
+#define GST_TYPE_SYNC_METHOD (gst_multi_socket_sink_sync_method_get_type())
 static GType
-gst_sync_method_get_type (void)
+gst_multi_socket_sink_sync_method_get_type (void)
 {
   static GType sync_method_type = 0;
   static const GEnumValue sync_method[] = {
@@ -256,14 +257,15 @@ gst_sync_method_get_type (void)
   };
 
   if (!sync_method_type) {
-    sync_method_type = g_enum_register_static ("GstSyncMethod", sync_method);
+    sync_method_type =
+        g_enum_register_static ("GstMultiSocketSinkSyncMethod", sync_method);
   }
   return sync_method_type;
 }
 
-#define GST_TYPE_CLIENT_STATUS (gst_client_status_get_type())
+#define GST_TYPE_CLIENT_STATUS (gst_multi_socket_sink_client_status_get_type())
 static GType
-gst_client_status_get_type (void)
+gst_multi_socket_sink_client_status_get_type (void)
 {
   static GType client_status_type = 0;
   static const GEnumValue client_status[] = {
@@ -279,7 +281,8 @@ gst_client_status_get_type (void)
 
   if (!client_status_type) {
     client_status_type =
-        g_enum_register_static ("GstClientStatus", client_status);
+        g_enum_register_static ("GstMultiSocketSinkClientStatus",
+        client_status);
   }
   return client_status_type;
 }
