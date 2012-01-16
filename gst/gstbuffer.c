@@ -673,7 +673,9 @@ _get_memory (GstBuffer * buffer, guint idx, gboolean write)
  *
  * Get the memory block in @buffer at @idx for memory access in @flags.
  * This function does not return a refcount to the memory block. The memory
- * block stays valid for as long as the caller has a valid reference to @buffer.
+ * block stays valid for as long as the caller has a valid reference to @buffer
+ * and as long as no operations that modify the memory blocks are called, such
+ * as gst_buffer_remove_memory_range(), gst_buffer_take_memory() and gst_buffer_resize().
  *
  * @buffer should be writable when @flags contains #GST_MAP_WRITE. If the memory
  * at @idx is not writable, a new writable copy will be installed in @buffer and
