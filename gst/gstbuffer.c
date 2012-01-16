@@ -652,7 +652,7 @@ _get_memory (GstBuffer * buffer, guint idx, gboolean write)
 
   mem = GST_BUFFER_MEM_PTR (buffer, idx);
 
-  if (G_UNLIKELY (write && !GST_MEMORY_IS_WRITABLE (mem))) {
+  if (G_UNLIKELY (write && !gst_memory_is_writable (mem))) {
     GstMemory *copy;
     GST_CAT_LOG (GST_CAT_BUFFER,
         "making writable copy of memory %p in buffer %p", mem, buffer);
@@ -868,7 +868,7 @@ gst_buffer_resize (GstBuffer * buffer, gssize offset, gssize size)
 
     if (offset != 0 || left != bsize) {
       /* we need to clip something */
-      if (GST_MEMORY_IS_WRITABLE (mem)) {
+      if (gst_memory_is_writable (mem)) {
         gst_memory_resize (mem, offset, left);
       } else {
         GstMemory *tmp;
@@ -968,7 +968,7 @@ gst_buffer_map (GstBuffer * buffer, gsize * size, gsize * maxsize,
     }
   }
 
-  if (G_UNLIKELY (write && !GST_MEMORY_IS_WRITABLE (mem))) {
+  if (G_UNLIKELY (write && !gst_memory_is_writable (mem))) {
     GstMemory *copy;
     /* replace with a writable copy */
     copy = gst_memory_copy (mem, 0, -1);

@@ -56,16 +56,6 @@ typedef enum {
 } GstMemoryFlags;
 
 /**
- * GST_MEMORY_IS_WRITABLE:
- * @mem: a #GstMemory
- *
- * Check if @mem is writable.
- */
-#define GST_MEMORY_IS_WRITABLE(mem) (((mem)->refcount == 1) && \
-    (((mem)->parent == NULL) || ((mem)->parent->refcount == 1)) && \
-    (((mem)->flags & GST_MEMORY_FLAG_READONLY) == 0))
-
-/**
  * GstMemory:
  * @allocator: pointer to the #GstAllocator
  * @flags: memory flags
@@ -289,24 +279,26 @@ GstMemory * gst_memory_new_wrapped     (GstMemoryFlags flags, gpointer data, GFr
                                         gsize maxsize, gsize offset, gsize size);
 
 /* refcounting */
-GstMemory * gst_memory_ref        (GstMemory *mem);
-void        gst_memory_unref      (GstMemory *mem);
+GstMemory * gst_memory_ref         (GstMemory *mem);
+void        gst_memory_unref       (GstMemory *mem);
 
 /* getting/setting memory properties */
-gsize       gst_memory_get_sizes  (GstMemory *mem, gsize *offset, gsize *maxsize);
-void        gst_memory_resize     (GstMemory *mem, gssize offset, gsize size);
+gsize       gst_memory_get_sizes   (GstMemory *mem, gsize *offset, gsize *maxsize);
+void        gst_memory_resize      (GstMemory *mem, gssize offset, gsize size);
 
 /* retrieving data */
-gpointer    gst_memory_map        (GstMemory *mem, gsize *size, gsize *maxsize,
-                                   GstMapFlags flags);
-gboolean    gst_memory_unmap      (GstMemory *mem, gpointer data, gssize size);
+gboolean    gst_memory_is_writable (GstMemory *mem);
+
+gpointer    gst_memory_map         (GstMemory *mem, gsize *size, gsize *maxsize,
+                                    GstMapFlags flags);
+gboolean    gst_memory_unmap       (GstMemory *mem, gpointer data, gssize size);
 
 /* copy and subregions */
-GstMemory * gst_memory_copy       (GstMemory *mem, gssize offset, gssize size);
-GstMemory * gst_memory_share      (GstMemory *mem, gssize offset, gssize size);
+GstMemory * gst_memory_copy        (GstMemory *mem, gssize offset, gssize size);
+GstMemory * gst_memory_share       (GstMemory *mem, gssize offset, gssize size);
 
 /* span memory */
-gboolean    gst_memory_is_span    (GstMemory *mem1, GstMemory *mem2, gsize *offset);
+gboolean    gst_memory_is_span     (GstMemory *mem1, GstMemory *mem2, gsize *offset);
 
 G_END_DECLS
 

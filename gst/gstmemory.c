@@ -460,9 +460,27 @@ void
 gst_memory_resize (GstMemory * mem, gssize offset, gsize size)
 {
   g_return_if_fail (mem != NULL);
-  g_return_if_fail (GST_MEMORY_IS_WRITABLE (mem));
+  g_return_if_fail (gst_memory_is_writable (mem));
 
   mem->allocator->info.resize (mem, offset, size);
+}
+
+/**
+ * gst_memory_is_writable:
+ * @mem: a #GstMemory
+ *
+ * Check if @mem is writable.
+ *
+ * Returns: %TRUE is @mem is writable.
+ */
+gboolean
+gst_memory_is_writable (GstMemory * mem)
+{
+  g_return_val_if_fail (mem != NULL, FALSE);
+
+  return (mem->refcount == 1) &&
+      ((mem->parent == NULL) || (mem->parent->refcount == 1)) &&
+      ((mem->flags & GST_MEMORY_FLAG_READONLY) == 0);
 }
 
 /**
@@ -489,7 +507,7 @@ gst_memory_map (GstMemory * mem, gsize * size, gsize * maxsize,
   g_return_val_if_fail (mem != NULL, NULL);
   access_mode = flags & 3;
   g_return_val_if_fail (!(access_mode & GST_MAP_WRITE)
-      || GST_MEMORY_IS_WRITABLE (mem), NULL);
+      || gst_memory_is_writable (mem), NULL);
 
   do {
     state = g_atomic_int_get (&mem->state);
