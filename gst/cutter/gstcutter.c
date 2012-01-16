@@ -191,9 +191,6 @@ static GstMessage *
 gst_cutter_message_new (GstCutter * c, gboolean above, GstClockTime timestamp)
 {
   GstStructure *s;
-  GValue v = { 0, };
-
-  g_value_init (&v, GST_TYPE_LIST);
 
   s = gst_structure_new ("cutter",
       "above", G_TYPE_BOOLEAN, above,
