@@ -167,6 +167,8 @@ gst_spc_dec_dispose (GObject * object)
   }
 
   spc_tag_free (&spc->tag_info);
+
+  GST_CALL_PARENT (G_OBJECT_CLASS, dispose, (object));
 }
 
 static GstFlowReturn
