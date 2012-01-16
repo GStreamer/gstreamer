@@ -2,6 +2,7 @@
  *  gstvaapidownload.h - VA-API video downloader
  *
  *  Copyright (C) 2010-2011 Splitted-Desktop Systems
+ *  Copyright (C) 2011 Intel Corporation
  *
  *  This program is free software; you can redistribute it and/or
  *  modify it under the terms of the GNU Lesser General Public License
