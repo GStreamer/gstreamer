@@ -101,13 +101,15 @@ void
 GstMplexOutputStream::Write (guint8 * data, guint len)
 {
   GstBuffer *buf;
+  gpointer bdata;
 
   buf = gst_buffer_new_and_alloc (len);
-  memcpy (GST_BUFFER_DATA (buf), data, len);
+  bdata = gst_buffer_map (buf, NULL, NULL, GST_MAP_WRITE);
+  memcpy (bdata, data, len);
+  gst_buffer_unmap (buf, bdata, -1);
 
   size += len;
   GST_MPLEX_MUTEX_LOCK (mplex);
-  gst_buffer_set_caps (buf, GST_PAD_CAPS (pad));
   mplex->srcresult = gst_pad_push (pad, buf);
   GST_MPLEX_MUTEX_UNLOCK (mplex);
 }
