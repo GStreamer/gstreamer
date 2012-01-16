@@ -24,23 +24,11 @@
 
 
 #include <gst/gst.h>
+#include <gio/gio.h>
 
 G_BEGIN_DECLS
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <unistd.h>
-#include <errno.h>
-#include <string.h>
-#include <sys/time.h>
-#include <sys/types.h>
-#include <netinet/in.h>
-#include <netdb.h>
-#include <sys/socket.h>
-#include <sys/wait.h>
-#include <fcntl.h>
-#include <arpa/inet.h>
-#include "gstmultifdsink.h"
+#include "gstmultisocketsink.h"
 
 #define GST_TYPE_TCP_SERVER_SINK \
   (gst_tcp_server_sink_get_type())
@@ -68,19 +56,17 @@ typedef enum {
  * Opaque data structure.
  */
 struct _GstTCPServerSink {
-  GstMultiFdSink element;
+  GstMultiSocketSink element;
 
   /* server information */
-  int server_port;
+  gint server_port;
   gchar *host;
-  struct sockaddr_in server_sin;
-
-  /* socket */
-  GstPollFD server_sock;
+  GSocket *server_socket;
+  GSource *server_source;
 };
 
 struct _GstTCPServerSinkClass {
-  GstMultiFdSinkClass parent_class;
+  GstMultiSocketSinkClass parent_class;
 };
 
 GType gst_tcp_server_sink_get_type (void);

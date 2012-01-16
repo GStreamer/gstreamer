@@ -16,8 +16,8 @@ BUILT_SOURCES = $(built_sources) $(built_headers)
 libgsttcp_la_SOURCES = \
 	gsttcpplugin.c \
 	gsttcp.c \
-	gstmultifdsink.c  \
 	gsttcpclientsrc.c gsttcpclientsink.c \
+	gstmultisocketsink.c  \
 	gsttcpserversrc.c gsttcpserversink.c
 
 nodist_libgsttcp_la_SOURCES = \
@@ -29,10 +29,9 @@ libgsttcp_la_LIBADD = $(GST_BASE_LIBS) $(GST_LIBS) $(GIO_LIBS)
 libgsttcp_la_LIBTOOLFLAGS = --tag=disable-static
 
 noinst_HEADERS = \
-  gsttcpplugin.h \
   gsttcp.h \
-  gstmultifdsink.h  \
   gsttcpclientsrc.h gsttcpclientsink.h \
+  gstmultisocketsink.h  \
   gsttcpserversrc.h gsttcpserversink.h
 
 CLEANFILES = $(BUILT_SOURCES)

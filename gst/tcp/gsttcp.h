@@ -25,7 +25,6 @@
 
 #include "gsttcp-enumtypes.h"
 #include <gst/gst.h>
-#undef GST_DISABLE_DEPRECATED
 
 #define TCP_HIGHEST_PORT        65535
 #define TCP_DEFAULT_HOST        "localhost"

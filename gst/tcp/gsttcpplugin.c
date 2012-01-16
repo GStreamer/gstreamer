@@ -25,7 +25,7 @@
 #include "gsttcpclientsink.h"
 #include "gsttcpserversrc.h"
 #include "gsttcpserversink.h"
-#include "gstmultifdsink.h"
+#include "gstmultisocketsink.h"
 
 GST_DEBUG_CATEGORY (tcp_debug);
 
@@ -44,8 +44,8 @@ plugin_init (GstPlugin * plugin)
   if (!gst_element_register (plugin, "tcpserversrc", GST_RANK_NONE,
           GST_TYPE_TCP_SERVER_SRC))
     return FALSE;
-  if (!gst_element_register (plugin, "multifdsink", GST_RANK_NONE,
-          GST_TYPE_MULTI_FD_SINK))
+  if (!gst_element_register (plugin, "multisocketsink", GST_RANK_NONE,
+          GST_TYPE_MULTI_SOCKET_SINK))
     return FALSE;
 
   GST_DEBUG_CATEGORY_INIT (tcp_debug, "tcp", 0, "TCP calls");
