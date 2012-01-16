@@ -138,7 +138,6 @@ check_PROGRAMS = \
 	elements/audioresample      \
 	elements/gdpdepay           \
 	elements/gdppay             \
-	elements/multifdsink        \
 	elements/playbin            \
 	elements/playbin-compressed \
 	$(check_pango)              \

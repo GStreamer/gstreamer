@@ -185,11 +185,6 @@ AC_COMPILE_IFELSE(
 CPPFLAGS="$ac_cppflags_save"
 AM_CONDITIONAL(HAVE_LIBXML_HTML, test "x$HAVE_LIBXML_HTML" = "xyes")
 
-dnl used in gst/tcp
-AC_CHECK_HEADERS([sys/socket.h],
-  HAVE_SYS_SOCKET_H="yes", HAVE_SYS_SOCKET_H="no")
-AM_CONDITIONAL(HAVE_SYS_SOCKET_H, test "x$HAVE_SYS_SOCKET_H" = "xyes")
-
 dnl used in gst-libs/gst/rtsp
 AC_CHECK_HEADERS([winsock2.h], HAVE_WINSOCK2_H=yes)
 if test "x$HAVE_WINSOCK2_H" = "xyes"; then
@@ -223,10 +218,6 @@ AC_CHECK_FUNCS(log2)
 LIBS=$LIBS_SAVE
 
 dnl *** checks for types/defines ***
-
-dnl Check for FIONREAD ioctl declaration
-dnl used in gst/tcp
-GST_CHECK_FIONREAD
 
 dnl *** checks for structures ***
 
@@ -431,11 +422,6 @@ AC_DEFINE([GST_DISABLE_XML], [1], [set to disable libxml2-dependent code in subp
 dnl disable plug-ins that require libxml2's HTML support if it is not available
 if test "x$HAVE_LIBXML_HTML" != "xyes"; then
   AG_GST_DISABLE_PLUGIN(subparse)
-fi
-
-dnl disable plug-ins that require sys/socket.h if it is not available
-if test "x$HAVE_SYS_SOCKET_H" != "xyes"; then
-  AG_GST_DISABLE_PLUGIN(tcp)
 fi
 
 dnl iso-codes is optional, used by libgsttag
