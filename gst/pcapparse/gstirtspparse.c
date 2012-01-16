@@ -80,29 +80,14 @@ static void gst_irtsp_parse_set_property (GObject * object,
 static void gst_irtsp_parse_get_property (GObject * object,
     guint prop_id, GValue * value, GParamSpec * pspec);
 
-GST_BOILERPLATE (GstIRTSPParse, gst_irtsp_parse, GstBaseParse,
-    GST_TYPE_BASE_PARSE);
-
-static void
-gst_irtsp_parse_base_init (gpointer klass)
-{
-  GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
-
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&sink_template));
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&src_template));
-
-  gst_element_class_set_details_simple (element_class, "IRTSPParse",
-      "Raw/Parser",
-      "Parses a raw interleaved RTSP stream",
-      "Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>");
-}
+#define parent_class gst_irtsp_parse_parent_class
+G_DEFINE_TYPE (GstIRTSPParse, gst_irtsp_parse, GST_TYPE_BASE_PARSE);
 
 static void
 gst_irtsp_parse_class_init (GstIRTSPParseClass * klass)
 {
   GstBaseParseClass *parse_class = GST_BASE_PARSE_CLASS (klass);
+  GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
   GObjectClass *object_class = G_OBJECT_CLASS (klass);
 
   GST_DEBUG_CATEGORY_INIT (irtsp_parse_debug, "irtspparse", 0,
@@ -123,6 +108,16 @@ gst_irtsp_parse_class_init (GstIRTSPParseClass * klass)
   parse_class->check_valid_frame =
       GST_DEBUG_FUNCPTR (gst_irtsp_parse_check_valid_frame);
   parse_class->parse_frame = GST_DEBUG_FUNCPTR (gst_irtsp_parse_parse_frame);
+
+  gst_element_class_add_pad_template (element_class,
+      gst_static_pad_template_get (&sink_template));
+  gst_element_class_add_pad_template (element_class,
+      gst_static_pad_template_get (&src_template));
+
+  gst_element_class_set_details_simple (element_class, "IRTSPParse",
+      "Raw/Parser",
+      "Parses a raw interleaved RTSP stream",
+      "Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>");
 }
 
 static void
@@ -131,7 +126,7 @@ gst_irtsp_parse_reset (GstIRTSPParse * IRTSPParse)
 }
 
 static void
-gst_irtsp_parse_init (GstIRTSPParse * IRTSPParse, GstIRTSPParseClass * klass)
+gst_irtsp_parse_init (GstIRTSPParse * IRTSPParse)
 {
   gst_base_parse_set_min_frame_size (GST_BASE_PARSE (IRTSPParse), 4);
   gst_irtsp_parse_reset (IRTSPParse);
@@ -169,33 +164,43 @@ gst_irtsp_parse_check_valid_frame (GstBaseParse * parse,
 {
   GstIRTSPParse *IRTSPParse = GST_IRTSP_PARSE (parse);
   GstBuffer *buf = frame->buffer;
-  GstByteReader reader = GST_BYTE_READER_INIT_FROM_BUFFER (buf);
+  GstByteReader reader;
   gint off;
+  gsize size;
+  guint8 *data;
+  gboolean ret = FALSE;
 
-  if (G_UNLIKELY (GST_BUFFER_SIZE (buf) < 4))
-    return FALSE;
+  data = gst_buffer_map (buf, &size, NULL, GST_MAP_READ);
+  if (G_UNLIKELY (size < 4))
+    goto exit;
+
+  gst_byte_reader_init (&reader, data, size);
 
   off = gst_byte_reader_masked_scan_uint32 (&reader, 0xffff0000,
-      0x24000000 + (IRTSPParse->channel_id << 16), 0, GST_BUFFER_SIZE (buf));
+      0x24000000 + (IRTSPParse->channel_id << 16), 0, size);
 
   GST_LOG_OBJECT (parse, "possible sync at buffer offset %d", off);
 
   /* didn't find anything that looks like a sync word, skip */
   if (off < 0) {
-    *skipsize = GST_BUFFER_SIZE (buf) - 3;
-    return FALSE;
+    *skipsize = size - 3;
+    goto exit;
   }
 
   /* possible frame header, but not at offset 0? skip bytes before sync */
   if (off > 0) {
     *skipsize = off;
-    return FALSE;
+    goto exit;
   }
 
-  *framesize = GST_READ_UINT16_BE (GST_BUFFER_DATA (frame->buffer) + 2) + 4;
+  *framesize = GST_READ_UINT16_BE (data + 2) + 4;
   GST_LOG_OBJECT (parse, "got frame size %d", *framesize);
+  ret = TRUE;
 
-  return TRUE;
+exit:
+  gst_buffer_unmap (buf, data, -1);
+
+  return ret;
 }
 
 static GstFlowReturn
@@ -205,13 +210,13 @@ gst_irtsp_parse_parse_frame (GstBaseParse * parse, GstBaseParseFrame * frame)
    * could also ask baseparse to skip this,
    * but that would give us a discontinuity for free
    * which is a bit too much to have on all our packets */
-  GST_BUFFER_DATA (frame->buffer) += 4;
-  GST_BUFFER_SIZE (frame->buffer) -= 4;
+  frame->buffer = gst_buffer_make_writable (frame->buffer);
+  gst_buffer_resize (frame->buffer, 4, -1);
 
-  if (!GST_PAD_CAPS (GST_BASE_PARSE_SRC_PAD (parse))) {
+  if (!gst_pad_has_current_caps (GST_BASE_PARSE_SRC_PAD (parse))) {
     GstCaps *caps;
 
-    caps = gst_caps_new_simple ("application/x-rtp", NULL);
+    caps = gst_caps_new_empty_simple ("application/x-rtp");
     gst_pad_set_caps (GST_BASE_PARSE_SRC_PAD (parse), caps);
     gst_caps_unref (caps);
   }
