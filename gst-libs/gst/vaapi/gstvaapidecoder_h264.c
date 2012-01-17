@@ -285,6 +285,7 @@ struct _GstVaapiDecoderH264Private {
     gint32                      prev_frame_num;         // prevFrameNum
     guint                       is_constructed          : 1;
     guint                       is_opened               : 1;
+    guint                       is_avc                  : 1;
 };
 
 static gboolean
@@ -1769,11 +1770,20 @@ decode_buffer(GstVaapiDecoderH264 *decoder, GstBuffer *buffer)
     buf_size = GST_BUFFER_SIZE(buffer);
     ofs      = 0;
     do {
-        result = gst_h264_parser_identify_nalu(
-            priv->parser,
-            buf, ofs, buf_size,
-            &nalu
-        );
+        if (priv->is_avc) {
+            result = gst_h264_parser_identify_nalu_avc(
+                priv->parser,
+                buf, ofs, buf_size, priv->nal_length_size,
+                &nalu
+            );
+        }
+        else {
+            result = gst_h264_parser_identify_nalu(
+                priv->parser,
+                buf, ofs, buf_size,
+                &nalu
+            );
+        }
         status = get_status(result);
 
         if (status == GST_VAAPI_DECODER_STATUS_ERROR_NO_DATA) {
@@ -1807,7 +1817,7 @@ decode_buffer(GstVaapiDecoderH264 *decoder, GstBuffer *buffer)
             status = GST_VAAPI_DECODER_STATUS_ERROR_BITSTREAM_PARSER;
             break;
         }
-    } while (status == GST_VAAPI_DECODER_STATUS_SUCCESS);
+    } while (status == GST_VAAPI_DECODER_STATUS_SUCCESS && ofs < buf_size);
     return status;
 }
 
@@ -1872,6 +1882,8 @@ decode_codec_data(GstVaapiDecoderH264 *decoder, GstBuffer *buffer)
             return status;
         ofs = nalu.offset + nalu.size;
     }
+
+    priv->is_avc = TRUE;
     return status;
 }
 
@@ -1977,6 +1989,7 @@ gst_vaapi_decoder_h264_init(GstVaapiDecoderH264 *decoder)
     priv->prev_frame_num        = 0;
     priv->is_constructed        = FALSE;
     priv->is_opened             = FALSE;
+    priv->is_avc                = FALSE;
 
     memset(priv->dpb, 0, sizeof(priv->dpb));
     memset(priv->short_ref, 0, sizeof(priv->short_ref));
