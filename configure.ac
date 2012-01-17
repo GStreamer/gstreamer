@@ -104,8 +104,6 @@ else
   GST_REGISTRY_DOC_TYPES=
 fi
 AC_SUBST(GST_REGISTRY_DOC_TYPES)
-AG_GST_CHECK_SUBSYSTEM_DISABLE(NET,[network distribution])
-AM_CONDITIONAL(GST_DISABLE_NET, test "x$GST_DISABLE_NET" = "xyes")
 AG_GST_CHECK_SUBSYSTEM_DISABLE(PLUGIN,[plugin])
 AM_CONDITIONAL(GST_DISABLE_PLUGIN, test "x$GST_DISABLE_PLUGIN" = "xyes")
 
@@ -814,7 +812,6 @@ if test "x${GST_DISABLE_TRACE}" = "xno"; then enable_trace="yes"; fi
 if test "x${GST_DISABLE_ALLOC_TRACE}" = "xno"; then enable_alloc_trace="yes"; fi
 if test "x${GST_DISABLE_PLUGIN}" = "xno"; then enable_plugin="yes"; fi
 if test "x${GST_DISABLE_REGISTRY}" = "xno"; then enable_registry="yes"; fi
-if test "x${GST_DISABLE_NET}" = "xno"; then enable_net="yes"; fi
 
 echo "
 
@@ -836,7 +833,6 @@ Configuration
 	Allocation tracing         : ${enable_alloc_trace}
 	Plugin registry            : ${enable_registry}
 	Plugin support	           : ${enable_plugin}
-	Network support            : ${enable_net}
 	Unit testing support       : ${BUILD_CHECK}
 
 	Debug                      : ${USE_DEBUG}
