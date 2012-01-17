@@ -51,14 +51,12 @@ enum
 
 #define UDP_DEFAULT_SOCKET		NULL
 #define UDP_DEFAULT_CLOSE_SOCKET	TRUE
-#define UDP_DEFAULT_FAMILY              G_SOCKET_FAMILY_IPV4
 
 enum
 {
   PROP_0,
   PROP_SOCKET,
-  PROP_CLOSE_SOCKET,
-  PROP_FAMILY
+  PROP_CLOSE_SOCKET
 };
 
 static void gst_dynudpsink_finalize (GObject * object);
@@ -113,12 +111,6 @@ gst_dynudpsink_class_init (GstDynUDPSinkClass * klass)
           UDP_DEFAULT_CLOSE_SOCKET,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
-  g_object_class_install_property (gobject_class, PROP_FAMILY,
-      g_param_spec_enum ("family", "Socket family",
-          "Use IPv4 or IPv6",
-          G_TYPE_SOCKET_FAMILY, UDP_DEFAULT_FAMILY,
-          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
-
   gst_element_class_add_pad_template (gstelement_class,
       gst_static_pad_template_get (&sink_template));
 
@@ -142,10 +134,10 @@ gst_dynudpsink_init (GstDynUDPSink * sink)
   sink->socket = UDP_DEFAULT_SOCKET;
   sink->close_socket = UDP_DEFAULT_CLOSE_SOCKET;
   sink->external_socket = FALSE;
-  sink->family = G_SOCKET_FAMILY_IPV4;
 
   sink->used_socket = NULL;
   sink->cancellable = g_cancellable_new ();
+  sink->family = G_SOCKET_FAMILY_IPV6;
 }
 
 static void
@@ -180,6 +172,7 @@ gst_dynudpsink_render (GstBaseSink * bsink, GstBuffer * buffer)
   GstNetAddressMeta *meta;
   GSocketAddress *addr;
   GError *err = NULL;
+  GSocketFamily family;
 
   meta = gst_buffer_get_net_address_meta (buffer);
 
@@ -193,7 +186,8 @@ gst_dynudpsink_render (GstBaseSink * bsink, GstBuffer * buffer)
   /* let's get the address from the metadata */
   addr = meta->addr;
 
-  if (g_socket_address_get_family (addr) != sink->family)
+  family = g_socket_address_get_family (addr);
+  if (sink->family != family && family != G_SOCKET_FAMILY_IPV4)
     goto invalid_family;
 
   data = gst_buffer_map (buffer, &size, NULL, GST_MAP_READ);
@@ -267,9 +261,6 @@ gst_dynudpsink_set_property (GObject * object, guint prop_id,
     case PROP_CLOSE_SOCKET:
       udpsink->close_socket = g_value_get_boolean (value);
       break;
-    case PROP_FAMILY:
-      udpsink->family = g_value_get_enum (value);
-      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -291,9 +282,6 @@ gst_dynudpsink_get_property (GObject * object, guint prop_id, GValue * value,
     case PROP_CLOSE_SOCKET:
       g_value_set_boolean (value, udpsink->close_socket);
       break;
-    case PROP_FAMILY:
-      g_value_set_enum (value, udpsink->family);
-      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -310,18 +298,26 @@ gst_dynudpsink_start (GstBaseSink * bsink)
   udpsink = GST_DYNUDPSINK (bsink);
 
   if (udpsink->socket == NULL) {
-    /* create sender socket if none available */
+    /* create sender socket if none available, first try IPv6, then
+     * fall-back to IPv4 */
+    udpsink->family = G_SOCKET_FAMILY_IPV6;
     if ((udpsink->used_socket =
-            g_socket_new (udpsink->family,
-                G_SOCKET_TYPE_DATAGRAM, G_SOCKET_PROTOCOL_UDP, &err)) == NULL)
-      goto no_socket;
+            g_socket_new (G_SOCKET_FAMILY_IPV6,
+                G_SOCKET_TYPE_DATAGRAM, G_SOCKET_PROTOCOL_UDP, &err)) == NULL) {
+      udpsink->family = G_SOCKET_FAMILY_IPV4;
+      if ((udpsink->used_socket = g_socket_new (G_SOCKET_FAMILY_IPV4,
+                  G_SOCKET_TYPE_DATAGRAM, G_SOCKET_PROTOCOL_UDP, &err)) == NULL)
+        goto no_socket;
+    }
 
-    g_socket_set_broadcast (udpsink->used_socket, TRUE);
     udpsink->external_socket = FALSE;
   } else {
     udpsink->used_socket = G_SOCKET (g_object_ref (udpsink->socket));
     udpsink->external_socket = TRUE;
+    udpsink->family = g_socket_get_family (udpsink->used_socket);
   }
+
+  g_socket_set_broadcast (udpsink->used_socket, TRUE);
 
   return TRUE;
 

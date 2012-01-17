@@ -278,8 +278,6 @@ gst_udpsrc_class_init (GstUDPSrcClass * klass)
 static void
 gst_udpsrc_init (GstUDPSrc * udpsrc)
 {
-  WSA_STARTUP (udpsrc);
-
   udpsrc->uri =
       g_strdup_printf ("udp://%s:%u", UDP_DEFAULT_MULTICAST_GROUP,
       UDP_DEFAULT_PORT);

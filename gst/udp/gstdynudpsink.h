@@ -47,12 +47,12 @@ struct _GstDynUDPSink {
   /* properties */
   GSocket *socket;
   gboolean close_socket;
-  GSocketFamily family;
 
   /* the socket in use */
   GSocket *used_socket;
   gboolean external_socket;
   GCancellable *cancellable;
+  GSocketFamily family;
 };
 
 struct _GstDynUDPSinkClass {
