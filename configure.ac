@@ -204,7 +204,22 @@ dnl *** checks for dependency libraries ***
 
 dnl GLib is required
 AG_GST_GLIB_CHECK([2.24])
-PKG_CHECK_MODULES(GIO, [ gio-2.0 >= 2.20 ], , AC_MSG_ERROR([gio is required]))
+
+dnl Check for GIO
+translit(dnm, m, l) AM_CONDITIONAL(USE_GIO, true)
+AG_GST_CHECK_FEATURE(GIO, [GIO library], gio, [
+  PKG_CHECK_MODULES(GIO, gio-2.0 >= 2.31.10)
+  GIO_MODULE_DIR="`$PKG_CONFIG --variable=giomoduledir gio-2.0`"
+  AC_DEFINE_UNQUOTED(GIO_MODULE_DIR, "$GIO_MODULE_DIR",
+      [The GIO modules directory.])
+  GIO_LIBDIR="`$PKG_CONFIG --variable=libdir gio-2.0`"
+      AC_DEFINE_UNQUOTED(GIO_LIBDIR, "$GIO_LIBDIR",
+          [The GIO library directory.])
+
+  AC_SUBST(GIO_CFLAGS)
+  AC_SUBST(GIO_LIBS)
+  AC_SUBST(GIO_LDFLAGS)
+])
 
 dnl Orc
 ORC_CHECK([0.4.11])
