@@ -212,24 +212,32 @@ gst_tcp_server_src_create (GstPushSrc * psrc, GstBuffer ** outbuf)
       goto done;
     }
     avail = g_socket_get_available_bytes (src->client_socket);
-    if (avail <= 0)
+    if (avail < 0)
       goto get_available_error;
   }
 
-  read = MIN (avail, MAX_READ_SIZE);
-  *outbuf = gst_buffer_new_and_alloc (read);
-  data = gst_buffer_map (*outbuf, NULL, NULL, GST_MAP_READWRITE);
-  rret =
-      g_socket_receive (src->client_socket, (gchar *) data, read,
-      src->cancellable, &err);
+  if (avail > 0) {
+    read = MIN (avail, MAX_READ_SIZE);
+    *outbuf = gst_buffer_new_and_alloc (read);
+    data = gst_buffer_map (*outbuf, NULL, NULL, GST_MAP_READWRITE);
+    rret =
+        g_socket_receive (src->client_socket, (gchar *) data, read,
+        src->cancellable, &err);
+  } else {
+    /* Connection closed */
+    rret = 0;
+    *outbuf = NULL;
+  }
 
   if (rret == 0) {
     GST_DEBUG_OBJECT (src, "Connection closed");
     ret = GST_FLOW_EOS;
-    gst_buffer_unmap (*outbuf, data, MAX_READ_SIZE);
-    gst_buffer_unref (*outbuf);
+    if (*outbuf) {
+      gst_buffer_unmap (*outbuf, data, MAX_READ_SIZE);
+      gst_buffer_unref (*outbuf);
+    }
     *outbuf = NULL;
-  } else if (ret < 0) {
+  } else if (rret < 0) {
     if (g_error_matches (err, G_IO_ERROR, G_IO_ERROR_CANCELLED)) {
       ret = GST_FLOW_WRONG_STATE;
       GST_DEBUG_OBJECT (src, "Cancelled reading from socket");
@@ -285,7 +293,7 @@ select_error:
 get_available_error:
   {
     GST_ELEMENT_ERROR (src, RESOURCE, READ, (NULL),
-        ("Select to get available bytes from socket"));
+        ("Failed to get available bytes from socket"));
     return GST_FLOW_ERROR;
   }
 }
