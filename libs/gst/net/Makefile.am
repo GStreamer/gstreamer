@@ -15,7 +15,7 @@ libgstnet_@GST_MAJORMINOR@_la_SOURCES = \
     gstnettimeprovider.c
 
 libgstnet_@GST_MAJORMINOR@_la_CFLAGS = $(GST_OBJ_CFLAGS) $(GIO_CFLAGS)
-libgstnet_@GST_MAJORMINOR@_la_LIBADD = $(GST_OBJ_LIBS) $(GIO_LIBS) $(INET_ATON_LIBS) $(WIN32_LIBS)
+libgstnet_@GST_MAJORMINOR@_la_LIBADD = $(GST_OBJ_LIBS) $(GIO_LIBS)
 libgstnet_@GST_MAJORMINOR@_la_LDFLAGS = $(GST_LIB_LDFLAGS) $(GST_ALL_LDFLAGS) $(GST_LT_LDFLAGS)
 
 CLEANFILES = *.gcno *.gcda *.gcov

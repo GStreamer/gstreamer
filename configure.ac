@@ -510,30 +510,12 @@ AC_CHECK_LIB(dl, dladdr,
    LIBS="$LIBS -ldl")
 CFLAGS="$save_cflags"
 
-dnl *** checks for socket and nsl libraries ***
-AC_CHECK_FUNC(socket,,[AC_CHECK_LIB(socket,socket)])
-AC_CHECK_FUNC(gethostbyname,,[AC_CHECK_LIB(nsl,gethostbyname)])
-
-dnl check for inet_aton()
-save_libs="$LIBS"
-AC_CHECK_FUNC(inet_aton, ,
-   AC_CHECK_LIB(nsl, inet_aton, ,
-      AC_CHECK_LIB(socket, inet_aton, ,
-         AC_CHECK_LIB(resolv, inet_aton, ,[AC_DEFINE(NO_INET_ATON, 1, [Define if you have no native inet_aton() function.])]))))
-INET_ATON_LIBS=$LIBS
-AC_SUBST(INET_ATON_LIBS)
-LIBS="$save_libs"
-
 dnl *** checks for dependency libraries ***
 
 dnl GLib
 GLIB_REQ=2.26
 
 AG_GST_GLIB_CHECK([$GLIB_REQ])
-
-dnl Check for glib2 without extra fat, useful for the unversioned tool frontends
-PKG_CHECK_MODULES(GLIB_ONLY, glib-2.0 >= $GLIB_REQ)
-
 PKG_CHECK_MODULES(GIO, gio-2.0 >= $GLIB_REQ)
 
 dnl Check for documentation xrefs
