@@ -31,11 +31,6 @@
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
-#ifdef G_OS_WIN32
-  if (!gst_udp_net_utils_win32_wsa_startup (GST_OBJECT (plugin)))
-    return FALSE;
-#endif
-
   /* register info of the netaddress metadata so that we can use it from
    * multiple threads right away. Note that the plugin loading is always
    * serialized */
