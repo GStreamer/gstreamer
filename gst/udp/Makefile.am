@@ -15,10 +15,8 @@ BUILT_SOURCES = $(built_sources) $(built_headers)
 
 libgstudp_la_SOURCES = gstudp.c gstudpsrc.c gstudpsink.c gstmultiudpsink.c gstdynudpsink.c gstudpnetutils.c
 
-# adding -D_GNU_SOURCE to get non-POSIX extensions like EAI_ADDRFAMILY
-# with glibc >= 2.8 when including netdb.h (see glibc sources bug 6452)
-libgstudp_la_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(GST_BASE_CFLAGS) $(GST_NET_CFLAGS) $(GST_CFLAGS) -D_GNU_SOURCE
-libgstudp_la_LIBADD = $(GST_PLUGINS_BASE_LIBS) $(GST_BASE_LIBS) $(GST_NET_LIBS) $(WIN32_LIBS)
+libgstudp_la_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(GST_BASE_CFLAGS) $(GST_NET_CFLAGS) $(GST_CFLAGS) $(GIO_CFLAGS) -D_GNU_SOURCE
+libgstudp_la_LIBADD = $(GST_PLUGINS_BASE_LIBS) $(GST_BASE_LIBS) $(GST_NET_LIBS) $(GIO_LIBS)
 libgstudp_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 libgstudp_la_LIBTOOLFLAGS = --tag=disable-static
 

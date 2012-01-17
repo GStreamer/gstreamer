@@ -82,7 +82,7 @@ gboolean gst_udp_net_utils_win32_wsa_startup (GstObject * obj);
 
 typedef struct {
   gchar    *host;
-  gint      port;
+  guint16      port;
   gboolean  is_ipv6;
 } GstUDPUri;
 
@@ -102,9 +102,10 @@ int     gst_udp_leave_group          (int sockfd, struct sockaddr_storage *addr)
 /* uri handling */
 void    gst_udp_uri_init             (GstUDPUri *uri, const gchar *host, gint port);
 int     gst_udp_uri_update           (GstUDPUri *uri, const gchar *host, gint port);
-int     gst_udp_parse_uri            (const gchar *uristr, GstUDPUri *uri);
 gchar * gst_udp_uri_string           (GstUDPUri *uri);
 void    gst_udp_uri_free             (GstUDPUri *uri);
+
+gboolean     gst_udp_parse_uri            (const gchar *uristr, gchar **host, guint16 *port);
 
 #endif /* __GST_UDP_NET_UTILS_H__*/
 

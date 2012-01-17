@@ -182,6 +182,7 @@ gst_dynudpsink_render (GstBaseSink * bsink, GstBuffer * buffer)
   struct sockaddr_in theiraddr;
   guint16 destport;
   guint32 destaddr;
+  const guint8 *destaddr_bytes;
 
   memset (&theiraddr, 0, sizeof (theiraddr));
 
@@ -199,7 +200,12 @@ gst_dynudpsink_render (GstBaseSink * bsink, GstBuffer * buffer)
   GST_DEBUG ("about to send %" G_GSIZE_FORMAT " bytes", size);
 
   /* let's get the address from the metaata */
-  gst_net_address_get_ip4_address (&meta->naddr, &destaddr, &destport);
+  destaddr_bytes =
+      g_inet_address_to_bytes (g_inet_socket_address_get_address
+      (G_INET_SOCKET_ADDRESS (meta->addr)));
+  destaddr = GST_READ_UINT32_BE (destaddr_bytes);
+  destport =
+      g_inet_socket_address_get_port (G_INET_SOCKET_ADDRESS (meta->addr));
 
   GST_DEBUG ("sending %" G_GSIZE_FORMAT " bytes to client %d port %d", size,
       destaddr, destport);

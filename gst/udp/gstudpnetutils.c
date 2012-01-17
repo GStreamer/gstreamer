@@ -367,8 +367,8 @@ gst_udp_uri_update (GstUDPUri * uri, const gchar * host, gint port)
   return 0;
 }
 
-int
-gst_udp_parse_uri (const gchar * uristr, GstUDPUri * uri)
+gboolean
+gst_udp_parse_uri (const gchar * uristr, gchar ** host, guint16 * port)
 {
   gchar *protocol, *location_start;
   gchar *location, *location_end;
@@ -402,49 +402,45 @@ gst_udp_parse_uri (const gchar * uristr, GstUDPUri * uri)
     if (location_end == NULL)
       goto wrong_address;
 
-    uri->is_ipv6 = TRUE;
-    g_free (uri->host);
-    uri->host = g_strndup (location + 1, location_end - location - 1);
+    *host = g_strndup (location + 1, location_end - location - 1);
     colptr = strrchr (location_end, ':');
   } else {
     GST_DEBUG ("parse IPV4 address '%s'", location);
-    uri->is_ipv6 = FALSE;
     colptr = strrchr (location, ':');
 
-    g_free (uri->host);
     if (colptr != NULL) {
-      uri->host = g_strndup (location, colptr - location);
+      *host = g_strndup (location, colptr - location);
     } else {
-      uri->host = g_strdup (location);
+      *host = g_strdup (location);
     }
   }
-  GST_DEBUG ("host set to '%s'", uri->host);
+  GST_DEBUG ("host set to '%s'", *host);
 
   if (colptr != NULL) {
-    uri->port = atoi (colptr + 1);
+    *port = atoi (colptr + 1);
   }
   g_free (location_start);
 
-  return 0;
+  return TRUE;
 
   /* ERRORS */
 no_protocol:
   {
     GST_ERROR ("error parsing uri %s: no protocol", uristr);
-    return -1;
+    return FALSE;
   }
 wrong_protocol:
   {
     GST_ERROR ("error parsing uri %s: wrong protocol (%s != udp)", uristr,
         protocol);
     g_free (protocol);
-    return -1;
+    return FALSE;
   }
 wrong_address:
   {
     GST_ERROR ("error parsing uri %s", uristr);
     g_free (location);
-    return -1;
+    return FALSE;
   }
 }
 
