@@ -273,16 +273,6 @@ gst_tcp_server_sink_init_send (GstMultiSocketSink * parent)
   GSocketAddress *saddr;
   GResolver *resolver;
 
-  /* create the server listener socket */
-  this->server_socket =
-      g_socket_new (G_SOCKET_FAMILY_IPV4, G_SOCKET_TYPE_STREAM,
-      G_SOCKET_PROTOCOL_TCP, &err);
-  if (!this->server_socket)
-    goto no_socket;
-
-  GST_DEBUG_OBJECT (this, "opened sending server socket with socket %p",
-      this->server_socket);
-
   /* look up name if we need to */
   addr = g_inet_address_new_from_string (this->host);
   if (!addr) {
@@ -308,14 +298,27 @@ gst_tcp_server_sink_init_send (GstMultiSocketSink * parent)
     g_free (ip);
   }
 #endif
+  saddr = g_inet_socket_address_new (addr, this->server_port);
+  g_object_unref (addr);
+
+  /* create the server listener socket */
+  this->server_socket =
+      g_socket_new (g_socket_address_get_family (saddr), G_SOCKET_TYPE_STREAM,
+      G_SOCKET_PROTOCOL_TCP, &err);
+  if (!this->server_socket)
+    goto no_socket;
+
+  GST_DEBUG_OBJECT (this, "opened sending server socket with socket %p",
+      this->server_socket);
 
   g_socket_set_blocking (this->server_socket, FALSE);
 
   /* bind it */
-  saddr = g_inet_socket_address_new (addr, this->server_port);
   GST_DEBUG_OBJECT (this, "binding server socket to address");
   if (!g_socket_bind (this->server_socket, saddr, TRUE, &err))
     goto bind_failed;
+
+  g_object_unref (saddr);
 
   GST_DEBUG_OBJECT (this, "listening on server socket");
   g_socket_set_listen_backlog (this->server_socket, TCP_BACKLOG);
@@ -344,6 +347,7 @@ no_socket:
     GST_ELEMENT_ERROR (this, RESOURCE, OPEN_READ, (NULL),
         ("Failed to create socket: %s", err->message));
     g_clear_error (&err);
+    g_object_unref (saddr);
     return FALSE;
   }
 name_resolve:
@@ -356,7 +360,6 @@ name_resolve:
     }
     g_clear_error (&err);
     g_object_unref (resolver);
-    gst_tcp_server_sink_close (&this->element);
     return FALSE;
   }
 bind_failed:
@@ -370,7 +373,6 @@ bind_failed:
     }
     g_clear_error (&err);
     g_object_unref (saddr);
-    g_object_unref (addr);
     gst_tcp_server_sink_close (&this->element);
     return FALSE;
   }
@@ -384,8 +386,6 @@ listen_failed:
               this->server_port, err->message));
     }
     g_clear_error (&err);
-    g_object_unref (saddr);
-    g_object_unref (addr);
     gst_tcp_server_sink_close (&this->element);
     return FALSE;
   }

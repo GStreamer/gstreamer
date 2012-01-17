@@ -287,17 +287,6 @@ gst_tcp_client_sink_start (GstBaseSink * bsink)
   if (GST_OBJECT_FLAG_IS_SET (this, GST_TCP_CLIENT_SINK_OPEN))
     return TRUE;
 
-  /* create sending client socket */
-  GST_DEBUG_OBJECT (this, "opening sending client socket to %s:%d", this->host,
-      this->port);
-  this->socket =
-      g_socket_new (G_SOCKET_FAMILY_IPV4, G_SOCKET_TYPE_STREAM,
-      G_SOCKET_PROTOCOL_TCP, &err);
-  if (!this->socket)
-    goto no_socket;
-
-  GST_DEBUG_OBJECT (this, "opened sending client socket");
-
   /* look up name if we need to */
   addr = g_inet_address_new_from_string (this->host);
   if (!addr) {
@@ -323,14 +312,25 @@ gst_tcp_client_sink_start (GstBaseSink * bsink)
     g_free (ip);
   }
 #endif
+  saddr = g_inet_socket_address_new (addr, this->port);
+  g_object_unref (addr);
+
+  /* create sending client socket */
+  GST_DEBUG_OBJECT (this, "opening sending client socket to %s:%d", this->host,
+      this->port);
+  this->socket =
+      g_socket_new (g_socket_address_get_family (saddr), G_SOCKET_TYPE_STREAM,
+      G_SOCKET_PROTOCOL_TCP, &err);
+  if (!this->socket)
+    goto no_socket;
+
+  GST_DEBUG_OBJECT (this, "opened sending client socket");
 
   /* connect to server */
-  saddr = g_inet_socket_address_new (addr, this->port);
   if (!g_socket_connect (this->socket, saddr, this->cancellable, &err))
     goto connect_failed;
 
   g_object_unref (saddr);
-  g_object_unref (addr);
 
   GST_OBJECT_FLAG_SET (this, GST_TCP_CLIENT_SINK_OPEN);
 
@@ -342,6 +342,7 @@ no_socket:
     GST_ELEMENT_ERROR (this, RESOURCE, OPEN_READ, (NULL),
         ("Failed to create socket: %s", err->message));
     g_clear_error (&err);
+    g_object_unref (saddr);
     return FALSE;
   }
 name_resolve:
@@ -354,7 +355,6 @@ name_resolve:
     }
     g_clear_error (&err);
     g_object_unref (resolver);
-    gst_tcp_client_sink_stop (GST_BASE_SINK (this));
     return FALSE;
   }
 connect_failed:
@@ -368,7 +368,6 @@ connect_failed:
     }
     g_clear_error (&err);
     g_object_unref (saddr);
-    g_object_unref (addr);
     gst_tcp_client_sink_stop (GST_BASE_SINK (this));
     return FALSE;
   }

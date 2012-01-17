@@ -344,14 +344,6 @@ gst_tcp_server_src_start (GstBaseSrc * bsrc)
   GSocketAddress *saddr;
   GResolver *resolver;
 
-  /* create the server listener socket */
-  src->server_socket = g_socket_new (G_SOCKET_FAMILY_IPV4, G_SOCKET_TYPE_STREAM,
-      G_SOCKET_PROTOCOL_TCP, &err);
-  if (!src->server_socket)
-    goto no_socket;
-
-  GST_DEBUG_OBJECT (src, "opened receiving server socket");
-
   /* look up name if we need to */
   addr = g_inet_address_new_from_string (src->host);
   if (!addr) {
@@ -377,11 +369,24 @@ gst_tcp_server_src_start (GstBaseSrc * bsrc)
   }
 #endif
 
-  /* bind it */
   saddr = g_inet_socket_address_new (addr, src->server_port);
+  g_object_unref (addr);
+
+  /* create the server listener socket */
+  src->server_socket =
+      g_socket_new (g_socket_address_get_family (saddr), G_SOCKET_TYPE_STREAM,
+      G_SOCKET_PROTOCOL_TCP, &err);
+  if (!src->server_socket)
+    goto no_socket;
+
+  GST_DEBUG_OBJECT (src, "opened receiving server socket");
+
+  /* bind it */
   GST_DEBUG_OBJECT (src, "binding server socket to address");
   if (!g_socket_bind (src->server_socket, saddr, TRUE, &err))
     goto bind_failed;
+
+  g_object_unref (saddr);
 
   GST_DEBUG_OBJECT (src, "listening on server socket");
 
@@ -400,6 +405,7 @@ no_socket:
     GST_ELEMENT_ERROR (src, RESOURCE, OPEN_READ, (NULL),
         ("Failed to create socket: %s", err->message));
     g_clear_error (&err);
+    g_object_unref (saddr);
     return FALSE;
   }
 name_resolve:
@@ -412,7 +418,6 @@ name_resolve:
     }
     g_clear_error (&err);
     g_object_unref (resolver);
-    gst_tcp_server_src_stop (GST_BASE_SRC (src));
     return FALSE;
   }
 bind_failed:
@@ -426,7 +431,6 @@ bind_failed:
     }
     g_clear_error (&err);
     g_object_unref (saddr);
-    g_object_unref (addr);
     gst_tcp_server_src_stop (GST_BASE_SRC (src));
     return FALSE;
   }
@@ -440,8 +444,6 @@ listen_failed:
               err->message));
     }
     g_clear_error (&err);
-    g_object_unref (saddr);
-    g_object_unref (addr);
     gst_tcp_server_src_stop (GST_BASE_SRC (src));
     return FALSE;
   }

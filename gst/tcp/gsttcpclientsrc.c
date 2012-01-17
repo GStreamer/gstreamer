@@ -338,19 +338,6 @@ gst_tcp_client_src_start (GstBaseSrc * bsrc)
   GSocketAddress *saddr;
   GResolver *resolver;
 
-  /* create receiving client socket */
-  GST_DEBUG_OBJECT (src, "opening receiving client socket to %s:%d",
-      src->host, src->port);
-
-  src->socket =
-      g_socket_new (G_SOCKET_FAMILY_IPV4, G_SOCKET_TYPE_STREAM,
-      G_SOCKET_PROTOCOL_TCP, &err);
-  if (!src->socket)
-    goto no_socket;
-
-  GST_DEBUG_OBJECT (src, "opened receiving client socket");
-  GST_OBJECT_FLAG_SET (src, GST_TCP_CLIENT_SRC_OPEN);
-
   /* look up name if we need to */
   addr = g_inet_address_new_from_string (src->host);
   if (!addr) {
@@ -376,13 +363,27 @@ gst_tcp_client_src_start (GstBaseSrc * bsrc)
   }
 #endif
 
-  /* connect to server */
   saddr = g_inet_socket_address_new (addr, src->port);
+  g_object_unref (addr);
+
+  /* create receiving client socket */
+  GST_DEBUG_OBJECT (src, "opening receiving client socket to %s:%d",
+      src->host, src->port);
+
+  src->socket =
+      g_socket_new (g_socket_address_get_family (saddr), G_SOCKET_TYPE_STREAM,
+      G_SOCKET_PROTOCOL_TCP, &err);
+  if (!src->socket)
+    goto no_socket;
+
+  GST_DEBUG_OBJECT (src, "opened receiving client socket");
+  GST_OBJECT_FLAG_SET (src, GST_TCP_CLIENT_SRC_OPEN);
+
+  /* connect to server */
   if (!g_socket_connect (src->socket, saddr, src->cancellable, &err))
     goto connect_failed;
 
   g_object_unref (saddr);
-  g_object_unref (addr);
 
   return TRUE;
 
@@ -391,6 +392,7 @@ no_socket:
     GST_ELEMENT_ERROR (src, RESOURCE, OPEN_READ, (NULL),
         ("Failed to create socket: %s", err->message));
     g_clear_error (&err);
+    g_object_unref (saddr);
     return FALSE;
   }
 name_resolve:
@@ -403,7 +405,6 @@ name_resolve:
     }
     g_clear_error (&err);
     g_object_unref (resolver);
-    gst_tcp_client_src_stop (GST_BASE_SRC (src));
     return FALSE;
   }
 connect_failed:
@@ -417,7 +418,6 @@ connect_failed:
     }
     g_clear_error (&err);
     g_object_unref (saddr);
-    g_object_unref (addr);
     gst_tcp_client_src_stop (GST_BASE_SRC (src));
     return FALSE;
   }
