@@ -43,42 +43,15 @@ enum
   ARG_0
 };
 
-static void gst_gsmdec_base_init (gpointer g_class);
-static void gst_gsmdec_class_init (GstGSMDec * klass);
-static void gst_gsmdec_init (GstGSMDec * gsmdec);
-static void gst_gsmdec_finalize (GObject * object);
-
-static gboolean gst_gsmdec_sink_setcaps (GstPad * pad, GstCaps * caps);
-static gboolean gst_gsmdec_sink_event (GstPad * pad, GstEvent * event);
-static GstFlowReturn gst_gsmdec_chain (GstPad * pad, GstBuffer * buf);
-
-static GstElementClass *parent_class = NULL;
+static gboolean gst_gsmdec_start (GstAudioDecoder * dec);
+static gboolean gst_gsmdec_stop (GstAudioDecoder * dec);
+static gboolean gst_gsmdec_set_format (GstAudioDecoder * dec, GstCaps * caps);
+static GstFlowReturn gst_gsmdec_parse (GstAudioDecoder * dec,
+    GstAdapter * adapter, gint * offset, gint * length);
+static GstFlowReturn gst_gsmdec_handle_frame (GstAudioDecoder * dec,
+    GstBuffer * in_buf);
 
 /*static guint gst_gsmdec_signals[LAST_SIGNAL] = { 0 }; */
-
-GType
-gst_gsmdec_get_type (void)
-{
-  static GType gsmdec_type = 0;
-
-  if (!gsmdec_type) {
-    static const GTypeInfo gsmdec_info = {
-      sizeof (GstGSMDecClass),
-      gst_gsmdec_base_init,
-      NULL,
-      (GClassInitFunc) gst_gsmdec_class_init,
-      NULL,
-      NULL,
-      sizeof (GstGSMDec),
-      0,
-      (GInstanceInitFunc) gst_gsmdec_init,
-    };
-
-    gsmdec_type =
-        g_type_register_static (GST_TYPE_ELEMENT, "GstGSMDec", &gsmdec_info, 0);
-  }
-  return gsmdec_type;
-}
 
 #define ENCODED_SAMPLES	160
 
@@ -101,6 +74,9 @@ GST_STATIC_PAD_TEMPLATE ("src",
         "depth = (int) 16, " "rate = (int) [1, MAX], " "channels = (int) 1")
     );
 
+GST_BOILERPLATE (GstGSMDec, gst_gsmdec, GstAudioDecoder,
+    GST_TYPE_AUDIO_DECODER);
+
 static void
 gst_gsmdec_base_init (gpointer g_class)
 {
@@ -116,63 +92,60 @@ gst_gsmdec_base_init (gpointer g_class)
 }
 
 static void
-gst_gsmdec_class_init (GstGSMDec * klass)
+gst_gsmdec_class_init (GstGSMDecClass * klass)
 {
-  GObjectClass *gobject_class;
+  GstAudioDecoderClass *base_class;
 
-  gobject_class = (GObjectClass *) klass;
+  base_class = (GstAudioDecoderClass *) klass;
 
-  parent_class = g_type_class_peek_parent (klass);
-
-  gobject_class->finalize = gst_gsmdec_finalize;
+  base_class->start = GST_DEBUG_FUNCPTR (gst_gsmdec_start);
+  base_class->stop = GST_DEBUG_FUNCPTR (gst_gsmdec_stop);
+  base_class->set_format = GST_DEBUG_FUNCPTR (gst_gsmdec_set_format);
+  base_class->parse = GST_DEBUG_FUNCPTR (gst_gsmdec_parse);
+  base_class->handle_frame = GST_DEBUG_FUNCPTR (gst_gsmdec_handle_frame);
 
   GST_DEBUG_CATEGORY_INIT (gsmdec_debug, "gsmdec", 0, "GSM Decoder");
 }
 
 static void
-gst_gsmdec_init (GstGSMDec * gsmdec)
+gst_gsmdec_init (GstGSMDec * gsmdec, GstGSMDecClass * klass)
 {
-  /* create the sink and src pads */
-  gsmdec->sinkpad =
-      gst_pad_new_from_static_template (&gsmdec_sink_template, "sink");
-  gst_pad_set_setcaps_function (gsmdec->sinkpad, gst_gsmdec_sink_setcaps);
-  gst_pad_set_event_function (gsmdec->sinkpad, gst_gsmdec_sink_event);
-  gst_pad_set_chain_function (gsmdec->sinkpad, gst_gsmdec_chain);
-  gst_element_add_pad (GST_ELEMENT (gsmdec), gsmdec->sinkpad);
-
-  gsmdec->srcpad =
-      gst_pad_new_from_static_template (&gsmdec_src_template, "src");
-  gst_element_add_pad (GST_ELEMENT (gsmdec), gsmdec->srcpad);
-
-  gsmdec->state = gsm_create ();
-
-  gsmdec->adapter = gst_adapter_new ();
-  gsmdec->next_of = 0;
-  gsmdec->next_ts = 0;
-}
-
-static void
-gst_gsmdec_finalize (GObject * object)
-{
-  GstGSMDec *gsmdec;
-
-  gsmdec = GST_GSMDEC (object);
-
-  g_object_unref (gsmdec->adapter);
-  gsm_destroy (gsmdec->state);
-
-  G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
 static gboolean
-gst_gsmdec_sink_setcaps (GstPad * pad, GstCaps * caps)
+gst_gsmdec_start (GstAudioDecoder * dec)
+{
+  GstGSMDec *gsmdec = GST_GSMDEC (dec);
+
+  GST_DEBUG_OBJECT (dec, "start");
+
+  gsmdec->state = gsm_create ();
+
+  return TRUE;
+}
+
+static gboolean
+gst_gsmdec_stop (GstAudioDecoder * dec)
+{
+  GstGSMDec *gsmdec = GST_GSMDEC (dec);
+
+  GST_DEBUG_OBJECT (dec, "stop");
+
+  gsm_destroy (gsmdec->state);
+
+  return TRUE;
+}
+
+static gboolean
+gst_gsmdec_set_format (GstAudioDecoder * dec, GstCaps * caps)
 {
   GstGSMDec *gsmdec;
   GstCaps *srccaps;
   GstStructure *s;
   gboolean ret = FALSE;
+  gint rate;
 
-  gsmdec = GST_GSMDEC (gst_pad_get_parent (pad));
+  gsmdec = GST_GSMDEC (dec);
 
   s = gst_caps_get_structure (caps, 0);
   if (s == NULL)
@@ -186,7 +159,9 @@ gst_gsmdec_sink_setcaps (GstPad * pad, GstCaps * caps)
   else
     goto wrong_caps;
 
-  if (!gst_structure_get_int (s, "rate", &gsmdec->rate)) {
+  gsmdec->needed = 33;
+
+  if (!gst_structure_get_int (s, "rate", &rate)) {
     GST_WARNING_OBJECT (gsmdec, "missing sample rate parameter from sink caps");
     goto beach;
   }
@@ -194,21 +169,16 @@ gst_gsmdec_sink_setcaps (GstPad * pad, GstCaps * caps)
   /* MSGSM needs different framing */
   gsm_option (gsmdec->state, GSM_OPT_WAV49, &gsmdec->use_wav49);
 
-  gsmdec->duration = gst_util_uint64_scale (ENCODED_SAMPLES,
-      GST_SECOND, gsmdec->rate);
-
   /* Setting up src caps based on the input sample rate. */
   srccaps = gst_caps_new_simple ("audio/x-raw-int",
       "endianness", G_TYPE_INT, G_BYTE_ORDER,
       "signed", G_TYPE_BOOLEAN, TRUE,
       "width", G_TYPE_INT, 16,
       "depth", G_TYPE_INT, 16,
-      "rate", G_TYPE_INT, gsmdec->rate, "channels", G_TYPE_INT, 1, NULL);
+      "rate", G_TYPE_INT, rate, "channels", G_TYPE_INT, 1, NULL);
 
-  ret = gst_pad_set_caps (gsmdec->srcpad, srccaps);
-
+  ret = gst_pad_set_caps (GST_AUDIO_DECODER_SRC_PAD (dec), srccaps);
   gst_caps_unref (srccaps);
-  gst_object_unref (gsmdec);
 
   return ret;
 
@@ -218,127 +188,66 @@ wrong_caps:
   GST_ERROR_OBJECT (gsmdec, "invalid caps received");
 
 beach:
-  gst_object_unref (gsmdec);
 
   return ret;
 }
 
-static gboolean
-gst_gsmdec_sink_event (GstPad * pad, GstEvent * event)
+static GstFlowReturn
+gst_gsmdec_parse (GstAudioDecoder * dec, GstAdapter * adapter,
+    gint * offset, gint * length)
 {
-  gboolean res;
-  GstGSMDec *gsmdec;
+  GstGSMDec *gsmdec = GST_GSMDEC (dec);
+  guint size;
 
-  gsmdec = GST_GSMDEC (gst_pad_get_parent (pad));
+  size = gst_adapter_available (adapter);
+  g_return_val_if_fail (size > 0, GST_FLOW_ERROR);
 
-  switch (GST_EVENT_TYPE (event)) {
-    case GST_EVENT_FLUSH_START:
-      res = gst_pad_push_event (gsmdec->srcpad, event);
-      break;
-    case GST_EVENT_FLUSH_STOP:
-      gst_segment_init (&gsmdec->segment, GST_FORMAT_UNDEFINED);
-      res = gst_pad_push_event (gsmdec->srcpad, event);
-      break;
-    case GST_EVENT_NEWSEGMENT:
-    {
-      gboolean update;
-      GstFormat format;
-      gdouble rate, arate;
-      gint64 start, stop, time;
-
-      gst_event_parse_new_segment_full (event, &update, &rate, &arate, &format,
-          &start, &stop, &time);
-
-      /* now configure the values */
-      gst_segment_set_newsegment_full (&gsmdec->segment, update,
-          rate, arate, format, start, stop, time);
-
-      /* and forward */
-      res = gst_pad_push_event (gsmdec->srcpad, event);
-      break;
-    }
-    case GST_EVENT_EOS:
-    default:
-      res = gst_pad_push_event (gsmdec->srcpad, event);
-      break;
+  /* WAV49 requires alternating 33 and 32 bytes of input */
+  if (gsmdec->use_wav49) {
+    gsmdec->needed = (gsmdec->needed == 33 ? 32 : 33);
   }
 
-  gst_object_unref (gsmdec);
+  if (size < gsmdec->needed)
+    return GST_FLOW_UNEXPECTED;
 
-  return res;
+  *offset = 0;
+  *length = gsmdec->needed;
+
+  return GST_FLOW_OK;
 }
 
 static GstFlowReturn
-gst_gsmdec_chain (GstPad * pad, GstBuffer * buf)
+gst_gsmdec_handle_frame (GstAudioDecoder * dec, GstBuffer * buffer)
 {
   GstGSMDec *gsmdec;
   gsm_byte *data;
   GstFlowReturn ret = GST_FLOW_OK;
-  GstClockTime timestamp;
-  gint needed;
+  GstBuffer *outbuf;
 
-  gsmdec = GST_GSMDEC (gst_pad_get_parent (pad));
+  /* no fancy draining */
+  if (G_UNLIKELY (!buffer))
+    return GST_FLOW_OK;
 
-  timestamp = GST_BUFFER_TIMESTAMP (buf);
+  gsmdec = GST_GSMDEC (dec);
 
-  if (GST_BUFFER_FLAG_IS_SET (buf, GST_BUFFER_FLAG_DISCONT)) {
-    gst_adapter_clear (gsmdec->adapter);
-    gsmdec->next_ts = GST_CLOCK_TIME_NONE;
-    /* FIXME, do some good offset */
-    gsmdec->next_of = 0;
-  }
-  gst_adapter_push (gsmdec->adapter, buf);
+  /* always the same amount of output samples */
+  outbuf = gst_buffer_new_and_alloc (ENCODED_SAMPLES * sizeof (gsm_signal));
 
-  needed = 33;
-  /* do we have enough bytes to read a frame */
-  while (gst_adapter_available (gsmdec->adapter) >= needed) {
-    GstBuffer *outbuf;
-
-    /* always the same amount of output samples */
-    outbuf = gst_buffer_new_and_alloc (ENCODED_SAMPLES * sizeof (gsm_signal));
-
-    /* If we are not given any timestamp, interpolate from last seen
-     * timestamp (if any). */
-    if (timestamp == GST_CLOCK_TIME_NONE)
-      timestamp = gsmdec->next_ts;
-
-    GST_BUFFER_TIMESTAMP (outbuf) = timestamp;
-
-    /* interpolate in the next run */
-    if (timestamp != GST_CLOCK_TIME_NONE)
-      gsmdec->next_ts = timestamp + gsmdec->duration;
-    timestamp = GST_CLOCK_TIME_NONE;
-
-    GST_BUFFER_DURATION (outbuf) = gsmdec->duration;
-    GST_BUFFER_OFFSET (outbuf) = gsmdec->next_of;
-    if (gsmdec->next_of != -1)
-      gsmdec->next_of += ENCODED_SAMPLES;
-    GST_BUFFER_OFFSET_END (outbuf) = gsmdec->next_of;
-
-    gst_buffer_set_caps (outbuf, GST_PAD_CAPS (gsmdec->srcpad));
-
-    /* now encode frame into the output buffer */
-    data = (gsm_byte *) gst_adapter_peek (gsmdec->adapter, needed);
-    if (gsm_decode (gsmdec->state, data,
-            (gsm_signal *) GST_BUFFER_DATA (outbuf)) < 0) {
-      /* invalid frame */
-      GST_WARNING_OBJECT (gsmdec, "tried to decode an invalid frame, skipping");
-    }
-    gst_adapter_flush (gsmdec->adapter, needed);
-
-    /* WAV49 requires alternating 33 and 32 bytes of input */
-    if (gsmdec->use_wav49)
-      needed = (needed == 33 ? 32 : 33);
-
-    GST_DEBUG_OBJECT (gsmdec, "Pushing buffer of size %d ts %" GST_TIME_FORMAT,
-        GST_BUFFER_SIZE (outbuf),
-        GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (outbuf)));
-
-    /* push */
-    ret = gst_pad_push (gsmdec->srcpad, outbuf);
+  /* now encode frame into the output buffer */
+  data = (gsm_byte *) GST_BUFFER_DATA (buffer);
+  if (gsm_decode (gsmdec->state, data,
+          (gsm_signal *) GST_BUFFER_DATA (outbuf)) < 0) {
+    /* invalid frame */
+    GST_AUDIO_DECODER_ERROR (gsmdec, 1, STREAM, DECODE, (NULL),
+        ("tried to decode an invalid frame"), ret);
+    if (ret != GST_FLOW_OK)
+      goto exit;
+    gst_buffer_unref (outbuf);
+    outbuf = NULL;
   }
 
-  gst_object_unref (gsmdec);
+  gst_audio_decoder_finish_frame (dec, outbuf, 1);
 
+exit:
   return ret;
 }
