@@ -289,6 +289,7 @@ gst_tcp_client_src_start (GstBaseSrc * bsrc)
   GError *err = NULL;
   GInetAddress *addr;
   GSocketAddress *saddr;
+  GResolver *resolver;
 
   /* create receiving client socket */
   GST_DEBUG_OBJECT (src, "opening receiving client socket to %s:%d",
@@ -306,8 +307,9 @@ gst_tcp_client_src_start (GstBaseSrc * bsrc)
   /* look up name if we need to */
   addr = g_inet_address_new_from_string (src->host);
   if (!addr) {
-    GResolver *resolver = g_resolver_get_default ();
     GList *results;
+
+    resolver = g_resolver_get_default ();
 
     results =
         g_resolver_lookup_by_name (resolver, src->host, src->cancellable, &err);
@@ -353,6 +355,7 @@ name_resolve:
           ("Failed to resolve host '%s': %s", src->host, err->message));
     }
     g_clear_error (&err);
+    g_object_unref (resolver);
     gst_tcp_client_src_stop (GST_BASE_SRC (src));
     return FALSE;
   }

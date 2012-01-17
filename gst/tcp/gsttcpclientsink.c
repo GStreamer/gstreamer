@@ -282,6 +282,7 @@ gst_tcp_client_sink_start (GstBaseSink * bsink)
   GError *err = NULL;
   GInetAddress *addr;
   GSocketAddress *saddr;
+  GResolver *resolver;
 
   if (GST_OBJECT_FLAG_IS_SET (this, GST_TCP_CLIENT_SINK_OPEN))
     return TRUE;
@@ -300,8 +301,9 @@ gst_tcp_client_sink_start (GstBaseSink * bsink)
   /* look up name if we need to */
   addr = g_inet_address_new_from_string (this->host);
   if (!addr) {
-    GResolver *resolver = g_resolver_get_default ();
     GList *results;
+
+    resolver = g_resolver_get_default ();
 
     results =
         g_resolver_lookup_by_name (resolver, this->host, this->cancellable,
@@ -351,6 +353,7 @@ name_resolve:
           ("Failed to resolve host '%s': %s", this->host, err->message));
     }
     g_clear_error (&err);
+    g_object_unref (resolver);
     gst_tcp_client_sink_stop (GST_BASE_SINK (this));
     return FALSE;
   }

@@ -271,6 +271,7 @@ gst_tcp_server_sink_init_send (GstMultiSocketSink * parent)
   GError *err = NULL;
   GInetAddress *addr;
   GSocketAddress *saddr;
+  GResolver *resolver;
 
   /* create the server listener socket */
   this->server_socket =
@@ -285,8 +286,9 @@ gst_tcp_server_sink_init_send (GstMultiSocketSink * parent)
   /* look up name if we need to */
   addr = g_inet_address_new_from_string (this->host);
   if (!addr) {
-    GResolver *resolver = g_resolver_get_default ();
     GList *results;
+
+    resolver = g_resolver_get_default ();
 
     results =
         g_resolver_lookup_by_name (resolver, this->host,
@@ -353,6 +355,7 @@ name_resolve:
           ("Failed to resolve host '%s': %s", this->host, err->message));
     }
     g_clear_error (&err);
+    g_object_unref (resolver);
     gst_tcp_server_sink_close (&this->element);
     return FALSE;
   }
