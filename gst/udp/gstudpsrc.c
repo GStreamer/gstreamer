@@ -111,7 +111,6 @@
 #include "gstudpsrc.h"
 
 #include <gst/net/gstnetaddressmeta.h>
-#include <sys/socket.h>
 
 GST_DEBUG_CATEGORY_STATIC (udpsrc_debug);
 #define GST_CAT_DEFAULT (udpsrc_debug)
