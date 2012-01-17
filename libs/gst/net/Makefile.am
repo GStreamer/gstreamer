@@ -65,6 +65,7 @@ GstNet-@GST_MAJORMINOR@.gir: $(INTROSPECTION_SCANNER) libgstnet-@GST_MAJORMINOR@
 		--include=Gst-@GST_MAJORMINOR@ \
 		--libtool="$(top_builddir)/libtool" \
 		--pkg gstreamer-@GST_MAJORMINOR@ \
+		--pkg gio-2.0 \
 		--pkg-export="gstreamer-net-@GST_MAJORMINOR@" \
 		--add-init-section="gst_init(NULL,NULL);" \
 		--output $@ \
