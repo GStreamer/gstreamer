@@ -1,0 +1,427 @@
+Hardware Acceleration in GStreamer 1.0
+--------------------------------------
+
+Status : DRAFT
+
+
+Preamble:
+
+  This document serves to identify and define the various usages of
+  hardware-acceleration (hereafter hwaccel) in GStreamer 1.0, the
+  problems that arise and need to be solved, and a proposal API.
+
+
+Out of scope:
+
+  This document will initially limit itself to usage of hwaccel in the
+  field of video capture, processing and display due to their
+  complexity.
+  It is not excluded that some parts of the research could be
+  applicable to other fields (audio, text, generic media).
+
+  This document will not cover how encoded data is parsed and
+  fed/obtained to/from the various hardware subsystems.
+
+
+Overall Goal:
+
+  Make the most of the underlying hardware features while at the same
+  time not introduce any noticable overhead [0] and provide the
+  biggest flexibility of use-cases possible.
+
+
+Secondary Goals:
+
+  Avoid Providing a system that only allows (efficient) usage of one
+  use-case and/or through a specific combination or elements. This is
+  contrary to the principles of GStreamer.
+
+  Not introduce any unneeded memory copies.
+
+  Not introduce any extra latency.
+
+  Process data asynchronously wherever possible.
+
+
+Terminology:
+
+  Due to the limitations of the GStreamer 0.10 API, most of these
+  element, especially sink elements, were named "non-raw video
+  elements".
+  In the rest of this document, we will no longer refer to them as
+  non-raw since they _do_ handle raw video and in GStreamer 1.0 it no
+  longer matters where the raw video is located or accessed. We will
+  prefer the term "hardware-accelerated video element".
+
+
+Specificities:
+
+  Hardware-accelerated elements differ from non-hwaccel elements in a
+  few ways:
+
+  * They handle memory which ,in the vast majority of the cases, is
+    not accessible directly.
+  * The processing _can_ happen asynchronously
+  * They _might_ be part of a GPU sub-system and therefore tightly
+    coupled to the display system.
+
+
+Features handled:
+
+  HW-accelerated elements can handle a variety of individual logical
+  features. These should, in the spirit of GStreamer, be controlable
+  in an individual fashion.
+
+  * Video decoding and encoding
+  * Display
+  * Capture
+  * Scaling (Downscaling (preview), Upscaling (Super-resolution))
+  * Deinterlacing (including inverse-telecine)
+  * Post-processing (Noise reduction, ...)
+  * Colorspace conversion
+  * Overlaying and compositing
+
+
+Use-cases:
+----------
+
+UC1 : HW-accelerated video decoding to counterpart sink
+
+  Example : * VDPAU decoder to VDPAU sink
+            * libVA decoder to libVA sink
+
+  In these situations, the HW-accelerated decoder and sink can use the
+  same API to communicate with each other and share data.
+
+  There might be extra processing that can be applied before display
+  (deinterlacing, noise reduction, overlaying, ...) and that is
+  provided by the backing hardware. All these features should be
+  usable in a transparent fashion from GStreamer.
+
+  They might also need to communicate/share a common context.
+
+
+UC2 : HW-accelerated video decoding to different hwaccel sink
+
+  Example : * VDPAU/libVA decoder to OpenGL-based sink
+
+  The goal here is to end up with the decoded pictures as openGL
+  textures, which can then be used in an openGL scene (with all the
+  transformations one can do with those textures).
+
+  GStreamer is responsible for:
+  1) Filling the contents of those textures
+  2) Informing the application when to use which texture at which time
+    (i.e. synchronization).
+
+  How the textures are used is not the responsibility of GStreamer,
+  although a fallback could be possible (displaying the texture in a
+  specified X window for ex) if the application does not handle the
+  OpenGL scene.
+
+  Efficient usage is only possible if the HW-accelerated system
+  provides an API by which one can either:
+  * Be given openGL texture IDs for the decoder to decode into
+  * OR 'transform' hwaccel-backed buffers into texture IDs
+
+  Just as for UC1, some information will need to be exchanged between
+  the OpenGL-backed elements and the other HW-accelerated element.
+
+
+UC3 : HW-accelerated decoding to HW-accelerated encoding
+
+  This is needed in cases where we want to reencode a stream from one
+  format/profile to another format/profile, like for example for
+  UPNP/DLNA embedded devices.
+
+  If the encoder and decoder are using the same backing hardware, this
+  is similar to UC1.
+
+  If the encoder and decoder are backed by 1) different hardware but
+  there is an API allowing communication between the two, OR 2) the
+  same hardware but through different APIs this is similar to UC2.
+
+  If the hardware backing the encoder and decoder don't have direct
+  communication means, then best-effort must be ensured to only
+  introduce one copy. The recent ongoing improvements in the kernel
+  regarding DMA usage could help in that regards, allowing some
+  hardware to be aware of another hardware.
+
+
+UC4 : HW-accelerated decoding to software plugin
+
+  Examples : * Transcoding a stream using a software encoder
+             * Applying measurement/transformations
+             * Your crazy idea here
+             * ...
+
+  While the most common usage of HW-accelerated decoding is for
+  display, we do not want to limit users of the GStreamer framework to
+  only be able to use those plugins in some limited use-cases. Users
+  should be able to benefit from the acceleration in any use-cases.
+
+
+UC5 : Software element to HW-accelerated display
+
+  Examples : * Software decoder to VA/VDPAU/GL/.. sink
+             * Visualization to VA/VDPAU/GL/... sink
+             * anything in fact
+
+  We need to ensure in these cases that any GStreamer plugin can
+  output data to a HW-accelerated display.
+
+  This process must not introduce any unwanted synchronization issues,
+  meaning the transfer to the backing hardware needs to happen before
+  the synchronization time in the sinks.
+
+
+UC6 : HW-accelerated capture to HW-accelerated encoder
+
+  Examples : * Camerabin usage
+             * Streaming server
+             * Video-over-IP
+             * ...
+
+  In order to provide not only low-cpu usage (through HW-accelerated
+  encoding) but also low-latency, we need to be able to have capture
+  hardware provide the data to be encoded in such a way that the
+  encoder can read it without any copy.
+
+  Some capture APIs provide means by which the hardware can be
+  provided by a pool of buffers backed by some MMAP contiguous
+  memory.
+
+
+UC6.1 : UC6 + simultaneous preview
+
+  Examples : Camerabin usage (preview of video/photo while shooting)
+
+
+
+Problems:
+---------
+
+P1 : Ranking of decoders
+
+  How do we pick the best decoder available ? Do we just set the
+  ranking of hardware-accelerated plugins to higher ranks ?
+
+
+P2 : Capabilities of HW-accelerated decoders
+
+  Hardware decoders can have much tighter constraints as to what they
+  can handle (limitations in sizes, bitrate, profile, level,
+  ...).
+
+  These limitations might be known without probbing the hardware, but
+  in most cases they require querying it.
+  Getting as much information about the stream to decode is needed.
+  This can be obtained through parsers and only look for a decoder
+  once the parser has provided extensive caps.
+
+
+P3 : Finding and auto-plugging the best elements
+
+  Taking the case where several decoders are available and several
+  sink elements are available, how do we establish which is the best
+  combination ?
+
+  Assuming we take the highest-ranked (and compatible) decoder, how do
+  we figure out which sink element is compatible ?
+
+  Assuming the user/application selects a specific sink, how do we
+  figure out which is the best decoder to use ?
+
+  /!\ Caps are not longer sufficient to establish compatibility
+
+
+P4 : How to handle systems that require calls to happen in one thread
+
+  In OpenGL (for example) calls can only be done from one thread,
+  which might not be a GStreamer thread (the sink could be controlled
+  from an application thread).
+
+  How do we properly (and safely) handle buffers and contexts ? Do we
+  create an API that allows marshalling processing into the proper
+  thread (resulting in an asynchronous API from the GStreamer point of
+  view) ?
+
+
+
+Proposal Design:
+
+D1 : GstCaps
+
+  We use the "video/x-raw" GstCaps.
+
+  The format field and other required fields are filled in the same
+  way they would be for non-HW-accelerated streams.
+
+
+D2 : Buffers and memory access
+
+  The buffers used/provided/consumed by the various HW-accelerated
+  elements must be usable with non-HW-accelerated elements.
+
+  To that extent, the GstMemory backing the various buffers must be
+  accessible via the mapping methods and therefore have the proper
+  GstAllocator implementation if-so required.
+
+  In the un-likelihood that the hardware does not provide any means to
+  map the memory or that there are such limitation (such as on DRM
+  systems), there should still be an implementation of
+  GstMemoryMapFunction that returns NULL (and a size/maxsize of zero)
+  when called.
+
+
+D3 : GstVideoMeta
+
+  In the same way that a custom GstAllocator is required, it is
+  important that elements implement the proper GstVideoMeta API
+  wherever applicable.
+
+  The GstVideoMeta fields should correspond to the memory returned by
+  a call to gst_buffer_map() and/or gst_video_meta_map().
+
+  => gst_video_meta_{map|unmap}() needs to call the
+     GstVideoMeta->{map|unmap} implementations
+
+
+D4 : Custom GstMeta
+
+  In order to pass along API and/or hardware-specific information
+  regarding the various buffers, the elements will be able to create
+  custom GstMeta.
+
+  Ex (For VDPAU):
+
+  struct _GstVDPAUMeta {
+     GstMeta         meta;
+
+     VdpDevice       device;
+     VdpVideoSurface surface;
+     ...
+  };
+
+  If an element supports multiple APIs for accessing/using the data
+  (like for example VDPAU and GLX), it should all the applicable
+  GstMeta.
+
+
+D5 : Buffer pools
+
+  In order to:
+  * avoid expensive cycles of buffer destruction/creation,
+  * allow upstream elements to end up with the optimal buffers/memory
+    to which to upload,
+  elements should implement GstBufferPools whenever possible.
+
+  If the backing hardware has a system by which it differentiates used
+  buffers and available buffers, the bufferpool should have the proper
+  release_buffer() and acquire_buffer() implementations.
+
+
+D6 : Ahead-of-time/asynchronous uploading
+
+  In the case where the buffers to be displayed are not on the target
+  hardware, we need to ensure the buffers are uploaded before the
+  synchronization time. If data is uploaded at the render time we will
+  end up with an unknown render latency, resulting in bad A/V
+  synchronization.
+
+  In order for this to happen, the buffers provided by downstream
+  elements should have a GstAllocator implementation allowing
+  uploading memory on _map(GST_MAP_WRITE).
+
+  If this uploading happens asynchronously, the GstAllocator should
+  implement a system so that if an intermediary element wishes to map
+  the memory it can do so (either by providing a cached version of the
+  memory, or by using locks).
+
+
+D7 : Overlay and positioning support
+
+  FIXME : Move to a separate design doc
+
+  struct _GstVideoCompositingMeta {
+    GstMeta               meta;
+
+    /* zorder : Depth Position of the layer in the final scene
+     *        0 = background
+     *    2**32 = foreground
+     */
+    guint                 zorder;
+
+    /* x,y    : Spatial position of the layer in the final scene
+     */
+    guint                 x;
+    guint                 y;
+
+    /* width/height : Target width/height of the layer in the
+     *   final scene.
+     */
+
+    guint                 width;
+    guint                 height;
+    /* basewidth/baseheight : Reference scene width/height
+     *   If both values are zero, the x/y/width/height values above
+     *   are to be used as absolute coordinates, regardless of the
+     *   final scene's width and height.
+     *   If the values are non-zero, the x/y/width/height values
+     *   above should be scaled based on those values.
+     *     Ex : real x position = x / basewidth * scene_width
+     */
+    guint                 basewidth;
+    guint                 baseheight;
+
+    /* alpha : Global alpha multiplier
+     *   0.0 = completely transparent
+     *   1.0 = no modification of original transparency (or opacity)
+     */
+    gdouble               alpha;
+  }
+
+
+D8 : De-interlacing support
+
+  FIXME : Move to a separate design doc
+
+  For systems that can apply deinterlacing, the user needs to be in
+  control of whether it should be applied or not.
+
+  This should be done through the usage of the deinterlace element.
+
+  In order to benefit from the HW-acceleration, downstream/upstream
+  elements need a way by which they can indicate that the
+  deinterlacing process will be applied later.
+
+  To this extent, we introduce a new GstMeta : GstDeinterlaceMeta
+
+  typedef const gchar *GstDeinterlaceMethod;
+
+  struct _GstDeinterlaceMeta {
+    GstMeta              meta;
+
+    GstDeinterlaceMethod method;
+  }
+
+
+D9 : Context sharing
+
+  Re-use parts of -bad's videocontext ?
+
+
+D10 : Non-MT-safe APIs
+
+  If the wrapped API/system does not offer an API which is MT-safe
+  and/or usable from more than one thread (like OpenGL), we need:
+  * A system by which a global context can be provided to all elements
+    wanting to use that system,
+  * A system by which elements can serialize processing to a 3rd party
+    thread.
+
+
+[0]: Defining "noticeable overhead" is always tricky, but essentially
+means that the overhead introduced by GStreamer core and the element
+code should not exceed the overhead introduced for non-hw-accelerated
+elements.
