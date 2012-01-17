@@ -149,11 +149,6 @@ AC_HEADER_STDC
 dnl used by ext/wavpack
 AX_CREATE_STDINT_H
 
-dnl used in gst/rtp/gstasteriskh263.c
-AC_CHECK_HEADERS([netinet/in.h])
-AC_CHECK_HEADERS([winsock2.h], HAVE_WINSOCK2_H=yes)
-AM_CONDITIONAL(HAVE_WINSOCK2_H, test "x$HAVE_WINSOCK2_H" = "xyes")
-
 dnl used in gst/udp
 AC_CHECK_HEADERS([sys/time.h])
 
@@ -381,25 +376,6 @@ AG_GST_CHECK_PLUGIN(videomixer)
 AG_GST_CHECK_PLUGIN(wavenc)
 AG_GST_CHECK_PLUGIN(wavparse)
 AG_GST_CHECK_PLUGIN(y4m)
-
-dnl *** checks for socket and nsl libraries ***
-AC_CHECK_FUNC(socket,,[AC_CHECK_LIB(socket,socket)])
-
-dnl disable gst plugins we might not be able to build on this
-dnl platform: udp and rtsp (ugly but minimally invasive)
-dnl FIXME: maybe move to sys
-AC_CHECK_HEADERS([sys/socket.h], HAVE_SYS_SOCKET_H=yes)
-AC_CHECK_HEADERS([winsock2.h], HAVE_WINSOCK2_H=yes)
-
-if test "x$HAVE_SYS_SOCKET_H" != "xyes" -a "x$HAVE_WINSOCK2_H" != "xyes"; then
-  AG_GST_DISABLE_PLUGIN(udp)
-  AG_GST_DISABLE_PLUGIN(rtsp)
-fi
-
-if test "x$HAVE_WINSOCK2_H" = "xyes"; then
-  WIN32_LIBS="-lws2_32"
-  AC_SUBST(WIN32_LIBS)
-fi
 
 dnl disable experimental plug-ins
 if test "x$BUILD_EXPERIMENTAL" != "xyes"; then
@@ -1215,7 +1191,6 @@ sed \
     -e 's/.* HAVE_SYS_STAT_H$/#define HAVE_SYS_STAT_H 1/' \
     -e 's/.* HAVE_SYS_TYPES_H$/#define HAVE_SYS_TYPES_H 1/' \
     -e 's/.* HAVE_WIN32$/#define HAVE_WIN32 1/' \
-    -e 's/.* HAVE_WINSOCK2_H$/#define HAVE_WINSOCK2_H 1/' \
     -e 's/.* HOST_CPU$/#define HOST_CPU "i686"/' \
     -e 's/.* LIBDIR$/#ifdef _DEBUG\n#  define LIBDIR PREFIX "\\\\debug\\\\lib"\n#else\n#  define LIBDIR PREFIX "\\\\lib"\n#endif/' \
     -e 's/.* LOCALEDIR$/#define LOCALEDIR PREFIX "\\\\share\\\\locale"/' \

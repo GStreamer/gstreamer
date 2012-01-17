@@ -73,13 +73,6 @@ libgstrtp_la_SOURCES = \
 	gstrtpvrawdepay.c  \
 	gstrtpvrawpay.c 
 
-
-if HAVE_WINSOCK2_H
-WINSOCK2_LIBS = -lws2_32
-else
-WINSOCK2_LIBS =
-endif
-
 libgstrtp_la_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(GST_BASE_CFLAGS) $(GST_CFLAGS)
 libgstrtp_la_LIBADD = $(GST_PLUGINS_BASE_LIBS) \
 		-lgstaudio-@GST_MAJORMINOR@ \
@@ -88,7 +81,7 @@ libgstrtp_la_LIBADD = $(GST_PLUGINS_BASE_LIBS) \
                 -lgstrtp-@GST_MAJORMINOR@ \
                 -lgstpbutils-@GST_MAJORMINOR@ \
 		$(GST_BASE_LIBS) $(GST_LIBS) \
-		$(WINSOCK2_LIBS) $(LIBM)
+		$(LIBM)
 libgstrtp_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS) 
 libgstrtp_la_LIBTOOLFLAGS = --tag=disable-static
 
