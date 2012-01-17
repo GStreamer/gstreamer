@@ -49,6 +49,7 @@
 #include <gst/rtsp/gstrtspdefs.h>
 #include <gst/rtsp/gstrtspurl.h>
 #include <gst/rtsp/gstrtspmessage.h>
+#include <gio/gio.h>
 
 G_BEGIN_DECLS
 
@@ -61,12 +62,12 @@ typedef struct _GstRTSPConnection GstRTSPConnection;
 
 /* opening/closing a connection */
 GstRTSPResult      gst_rtsp_connection_create         (const GstRTSPUrl *url, GstRTSPConnection **conn);
-GstRTSPResult      gst_rtsp_connection_create_from_fd (gint fd,
+GstRTSPResult      gst_rtsp_connection_create_from_socket (GSocket * socket,
                                                        const gchar * ip,
                                                        guint16 port,
                                                        const gchar * initial_buffer,
                                                        GstRTSPConnection ** conn);
-GstRTSPResult      gst_rtsp_connection_accept         (gint sock, GstRTSPConnection **conn);
+GstRTSPResult      gst_rtsp_connection_accept         (GSocket *socket, GstRTSPConnection **conn, GCancellable *cancellable);
 GstRTSPResult      gst_rtsp_connection_connect        (GstRTSPConnection *conn, GTimeVal *timeout);
 GstRTSPResult      gst_rtsp_connection_close          (GstRTSPConnection *conn);
 GstRTSPResult      gst_rtsp_connection_free           (GstRTSPConnection *conn);
@@ -117,8 +118,8 @@ GstRTSPUrl *       gst_rtsp_connection_get_url        (const GstRTSPConnection *
 const gchar *      gst_rtsp_connection_get_ip         (const GstRTSPConnection *conn);
 void               gst_rtsp_connection_set_ip         (GstRTSPConnection *conn, const gchar *ip);
 
-gint               gst_rtsp_connection_get_readfd     (const GstRTSPConnection *conn);
-gint               gst_rtsp_connection_get_writefd    (const GstRTSPConnection *conn);
+GSocket *          gst_rtsp_connection_get_read_socket  (const GstRTSPConnection *conn);
+GSocket *          gst_rtsp_connection_get_write_socket (const GstRTSPConnection *conn);
 
 void               gst_rtsp_connection_set_http_mode  (GstRTSPConnection *conn,
                                                        gboolean enable);

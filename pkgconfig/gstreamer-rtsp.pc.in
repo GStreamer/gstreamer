@@ -9,7 +9,7 @@ typelibdir=${libdir}/girepository-1.0
 
 Name: GStreamer RTSP Library
 Description: RTSP base classes and helper functions
-Requires: gstreamer-@GST_MAJORMINOR@ gstreamer-sdp-@GST_MAJORMINOR@
+Requires: gstreamer-@GST_MAJORMINOR@ gstreamer-sdp-@GST_MAJORMINOR@ gio-2.0
 Version: @VERSION@
 Libs: -L${libdir} -lgstrtsp-@GST_MAJORMINOR@
 Cflags: -I${includedir}

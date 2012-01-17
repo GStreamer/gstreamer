@@ -54,12 +54,6 @@
 
 #include "gstrtspdefs.h"
 
-#ifdef G_OS_WIN32
-#include <winsock2.h>
-#else
-#include <netdb.h>
-#endif
-
 struct rtsp_header
 {
   const gchar *name;
@@ -261,25 +255,10 @@ gst_rtsp_strresult (GstRTSPResult result)
   switch (result) {
     case GST_RTSP_OK:
       return g_strdup ("OK");
-#ifdef G_OS_WIN32
     case GST_RTSP_ESYS:
+      return g_strdup ("System error");
     case GST_RTSP_ENET:
-    {
-      gchar *res, *msg;
-      msg = g_win32_error_message (WSAGetLastError ());
-      if (result == GST_RTSP_ESYS)
-        res = g_strdup_printf ("System error: %s", msg);
-      else
-        res = g_strdup_printf ("Network error: %s", msg);
-      g_free (msg);
-      return res;
-    }
-#else
-    case GST_RTSP_ESYS:
-      return g_strdup_printf ("System error: %s", g_strerror (errno));
-    case GST_RTSP_ENET:
-      return g_strdup_printf ("Network error: %s", hstrerror (h_errno));
-#endif
+      return g_strdup ("Network error");
     case GST_RTSP_ERROR:
       return g_strdup ("Generic error");
     case GST_RTSP_EINVAL:

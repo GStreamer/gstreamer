@@ -32,8 +32,8 @@ noinst_HEADERS = gstrtsp.h
 #gstrtspextwms.c  
 #rtspextreal.c    
 
-libgstrtsp_@GST_MAJORMINOR@_la_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(GST_BASE_CFLAGS) $(GST_CFLAGS)
-libgstrtsp_@GST_MAJORMINOR@_la_LIBADD = $(GST_LIBS) $(WIN32_LIBS) $(HSTRERROR_LIBS)
+libgstrtsp_@GST_MAJORMINOR@_la_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(GST_BASE_CFLAGS) $(GST_CFLAGS) $(GIO_CFLAGS)
+libgstrtsp_@GST_MAJORMINOR@_la_LIBADD = $(GST_LIBS) $(GIO_LIBS)
 libgstrtsp_@GST_MAJORMINOR@_la_LDFLAGS = $(GST_LIB_LDFLAGS) $(GST_ALL_LDFLAGS) $(GST_LT_LDFLAGS)
 
 BUILT_SOURCES = $(built_headers) $(built_sources)
@@ -76,6 +76,7 @@ GstRtsp-@GST_MAJORMINOR@.gir: $(INTROSPECTION_SCANNER) libgstrtsp-@GST_MAJORMINO
 		--libtool="$(top_builddir)/libtool" \
 		--pkg gstreamer-@GST_MAJORMINOR@ \
 		--pkg gstreamer-sdp-@GST_MAJORMINOR@ \
+		--pkg gio-2.0 \
 		--pkg-export gstreamer-rtsp-@GST_MAJORMINOR@ \
 		--add-init-section="gst_init(NULL,NULL);" \
 		--output $@ \
