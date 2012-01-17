@@ -183,7 +183,7 @@ gst_amrwbdec_parse (GstAudioDecoder * dec, GstAdapter * adapter,
   gst_audio_decoder_get_parse_state (dec, &sync, &eos);
 
   /* need to peek data to get the size */
-  if (gst_adapter_available (adapter) < 1)
+  if (size < 1)
     return GST_FLOW_ERROR;
 
   data = gst_adapter_peek (adapter, 1);
@@ -193,6 +193,8 @@ gst_amrwbdec_parse (GstAudioDecoder * dec, GstAdapter * adapter,
   GST_DEBUG_OBJECT (amrwbdec, "mode %d, block %d", mode, block);
 
   if (block) {
+    if (block > size)
+      return GST_FLOW_UNEXPECTED;
     *offset = 0;
     *length = block;
   } else {
