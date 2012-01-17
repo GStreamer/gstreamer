@@ -28,7 +28,7 @@
 #endif
 
 #include <gst/gst.h>
-#include <gst/base/gstadapter.h>
+#include <gst/audio/gstaudioencoder.h>
 
 #define GST_TYPE_ADPCM_ENC \
     (adpcmenc_get_type ())
@@ -113,17 +113,12 @@ adpcmenc_layout_get_type (void)
 
 typedef struct _ADPCMEncClass
 {
-  GstElementClass parent_class;
+  GstAudioEncoderClass parent_class;
 } ADPCMEncClass;
 
 typedef struct _ADPCMEnc
 {
-  GstElement parent;
-
-  GstPad *sinkpad;
-  GstPad *srcpad;
-
-  GstCaps *output_caps;
+  GstAudioEncoder parent;
 
   enum adpcm_layout layout;
   int rate;
@@ -133,19 +128,11 @@ typedef struct _ADPCMEnc
 
   guint8 step_index[2];
 
-  gboolean is_setup;
-
-  GstClockTime timestamp;
-  GstClockTime base_timestamp;
-
-  guint64 out_samples;
-
-  GstAdapter *adapter;
-
 } ADPCMEnc;
 
 GType adpcmenc_get_type (void);
-GST_BOILERPLATE (ADPCMEnc, adpcmenc, GstElement, GST_TYPE_ELEMENT);
+GST_BOILERPLATE (ADPCMEnc, adpcmenc, GstAudioEncoder, GST_TYPE_AUDIO_ENCODER);
+
 static gboolean
 adpcmenc_setup (ADPCMEnc * enc)
 {
@@ -153,6 +140,7 @@ adpcmenc_setup (ADPCMEnc * enc)
   const int ADPCM_SAMPLES_PER_BYTE = 2;
   guint64 sample_bytes;
   const char *layout;
+  GstCaps *caps;
 
   switch (enc->layout) {
     case LAYOUT_ADPCM_DVI:
@@ -168,21 +156,14 @@ adpcmenc_setup (ADPCMEnc * enc)
       return FALSE;
   }
 
-  enc->output_caps = gst_caps_new_simple ("audio/x-adpcm",
+  caps = gst_caps_new_simple ("audio/x-adpcm",
       "rate", G_TYPE_INT, enc->rate,
       "channels", G_TYPE_INT, enc->channels,
       "layout", G_TYPE_STRING, layout,
       "block_align", G_TYPE_INT, enc->blocksize, NULL);
 
-  if (enc->output_caps) {
-    gst_pad_set_caps (enc->srcpad, enc->output_caps);
-  }
-
-  enc->is_setup = TRUE;
-  enc->timestamp = GST_CLOCK_TIME_NONE;
-  enc->base_timestamp = GST_CLOCK_TIME_NONE;
-  enc->adapter = gst_adapter_new ();
-  enc->out_samples = 0;
+  gst_pad_set_caps (GST_AUDIO_ENCODER_SRC_PAD (enc), caps);
+  gst_caps_unref (caps);
 
   /* Step index state is carried between blocks. */
   enc->step_index[0] = 0;
@@ -191,37 +172,21 @@ adpcmenc_setup (ADPCMEnc * enc)
   return TRUE;
 }
 
-static void
-adpcmenc_teardown (ADPCMEnc * enc)
-{
-  if (enc->output_caps) {
-    gst_caps_unref (enc->output_caps);
-    enc->output_caps = NULL;
-  }
-  if (enc->adapter) {
-    g_object_unref (enc->adapter);
-    enc->adapter = NULL;
-  }
-  enc->is_setup = FALSE;
-}
-
 static gboolean
-adpcmenc_sink_setcaps (GstPad * pad, GstCaps * caps)
+adpcmenc_set_format (GstAudioEncoder * benc, GstAudioInfo * info)
 {
-  ADPCMEnc *enc = (ADPCMEnc *) gst_pad_get_parent (pad);
-  GstStructure *structure = gst_caps_get_structure (caps, 0);
+  ADPCMEnc *enc = (ADPCMEnc *) (benc);
 
-  if (!gst_structure_get_int (structure, "rate", &enc->rate))
+  enc->rate = GST_AUDIO_INFO_RATE (info);
+  enc->channels = GST_AUDIO_INFO_CHANNELS (info);
+
+  if (!adpcmenc_setup (enc))
     return FALSE;
-  if (!gst_structure_get_int (structure, "channels", &enc->channels))
-    return FALSE;
 
-  if (enc->is_setup) {
-    adpcmenc_teardown (enc);
-  }
-  adpcmenc_setup (enc);
-
-  gst_object_unref (enc);
+  /* report needs to base class */
+  gst_audio_encoder_set_frame_samples_min (benc, enc->samples_per_block);
+  gst_audio_encoder_set_frame_samples_max (benc, enc->samples_per_block);
+  gst_audio_encoder_set_frame_max (benc, 1);
 
   return TRUE;
 }
@@ -368,148 +333,86 @@ adpcmenc_encode_ima_block (ADPCMEnc * enc, const gint16 * samples,
   return TRUE;
 }
 
-static GstFlowReturn
+static GstBuffer *
 adpcmenc_encode_block (ADPCMEnc * enc, const gint16 * samples, int blocksize)
 {
-  gboolean res;
+  gboolean res = FALSE;
   GstBuffer *outbuf = NULL;
 
   if (enc->layout == LAYOUT_ADPCM_DVI) {
     outbuf = gst_buffer_new_and_alloc (enc->blocksize);
     res = adpcmenc_encode_ima_block (enc, samples, GST_BUFFER_DATA (outbuf));
   } else {
+    /* should not happen afaics */
+    g_assert_not_reached ();
     GST_WARNING_OBJECT (enc, "Unknown layout");
-    return GST_FLOW_ERROR;
+    res = FALSE;
   }
 
   if (!res) {
-    gst_buffer_unref (outbuf);
+    if (outbuf)
+      gst_buffer_unref (outbuf);
+    outbuf = NULL;
     GST_WARNING_OBJECT (enc, "Encode of block failed");
-    return GST_FLOW_ERROR;
   }
 
-  gst_buffer_set_caps (outbuf, enc->output_caps);
-  GST_BUFFER_TIMESTAMP (outbuf) = enc->timestamp;
-
-  enc->out_samples += enc->samples_per_block;
-  enc->timestamp = enc->base_timestamp +
-      gst_util_uint64_scale_int (enc->out_samples, GST_SECOND, enc->rate);
-  GST_BUFFER_DURATION (outbuf) = enc->timestamp - GST_BUFFER_TIMESTAMP (outbuf);
-
-  return gst_pad_push (enc->srcpad, outbuf);
+  return outbuf;
 }
 
 static GstFlowReturn
-adpcmenc_chain (GstPad * pad, GstBuffer * buf)
+adpcmenc_handle_frame (GstAudioEncoder * benc, GstBuffer * buffer)
 {
-  ADPCMEnc *enc = (ADPCMEnc *) gst_pad_get_parent (pad);
+  ADPCMEnc *enc = (ADPCMEnc *) (benc);
   GstFlowReturn ret = GST_FLOW_OK;
   gint16 *samples;
-  GstBuffer *databuf = NULL;
+  GstBuffer *outbuf;
   int input_bytes_per_block;
   const int BYTES_PER_SAMPLE = 2;
 
-  if (enc->base_timestamp == GST_CLOCK_TIME_NONE) {
-    enc->base_timestamp = GST_BUFFER_TIMESTAMP (buf);
-    if (enc->base_timestamp == GST_CLOCK_TIME_NONE)
-      enc->base_timestamp = 0;
-    enc->timestamp = enc->base_timestamp;
+  /* we don't deal with squeezing remnants, so simply discard those */
+  if (G_UNLIKELY (buffer == NULL)) {
+    GST_DEBUG_OBJECT (benc, "no data");
+    goto done;
   }
-
-  gst_adapter_push (enc->adapter, buf);
 
   input_bytes_per_block =
       enc->samples_per_block * BYTES_PER_SAMPLE * enc->channels;
 
-  while (gst_adapter_available (enc->adapter) >= input_bytes_per_block) {
-    databuf = gst_adapter_take_buffer (enc->adapter, input_bytes_per_block);
-    samples = (gint16 *) GST_BUFFER_DATA (databuf);
-    ret = adpcmenc_encode_block (enc, samples, enc->blocksize);
-    gst_buffer_unref (databuf);
-    if (ret != GST_FLOW_OK)
-      goto done;
+  if (G_UNLIKELY (GST_BUFFER_SIZE (buffer) < input_bytes_per_block)) {
+    GST_DEBUG_OBJECT (enc, "discarding trailing data %d",
+        GST_BUFFER_SIZE (buffer));
+    ret = gst_audio_encoder_finish_frame (benc, NULL, -1);
+    goto done;
   }
 
+  samples = (gint16 *) GST_BUFFER_DATA (buffer);
+  outbuf = adpcmenc_encode_block (enc, samples, enc->blocksize);
+
+  ret = gst_audio_encoder_finish_frame (benc, outbuf, enc->samples_per_block);
+
 done:
-  gst_object_unref (enc);
   return ret;
 }
 
 static gboolean
-adpcmenc_sink_event (GstPad * pad, GstEvent * event)
+adpcmenc_start (GstAudioEncoder * enc)
 {
-  ADPCMEnc *enc = (ADPCMEnc *) gst_pad_get_parent (pad);
-  gboolean res;
-  switch (GST_EVENT_TYPE (event)) {
-    case GST_EVENT_FLUSH_STOP:
-      enc->out_samples = 0;
-      enc->timestamp = GST_CLOCK_TIME_NONE;
-      enc->base_timestamp = GST_CLOCK_TIME_NONE;
-      gst_adapter_clear (enc->adapter);
-      /* Fall through */
-    default:
-      res = gst_pad_push_event (enc->srcpad, event);
-      break;
-  }
-  gst_object_unref (enc);
-  return res;
+  GST_DEBUG_OBJECT (enc, "start");
+
+  return TRUE;
 }
 
-static GstStateChangeReturn
-adpcmenc_change_state (GstElement * element, GstStateChange transition)
+static gboolean
+adpcmenc_stop (GstAudioEncoder * enc)
 {
-  GstStateChangeReturn ret;
-  ADPCMEnc *enc = (ADPCMEnc *) element;
+  GST_DEBUG_OBJECT (enc, "stop");
 
-  switch (transition) {
-    case GST_STATE_CHANGE_NULL_TO_READY:
-      break;
-    case GST_STATE_CHANGE_READY_TO_PAUSED:
-      break;
-    case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
-      break;
-    default:
-      break;
-  }
-
-  ret = GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
-
-  switch (transition) {
-    case GST_STATE_CHANGE_PLAYING_TO_PAUSED:
-      break;
-    case GST_STATE_CHANGE_PAUSED_TO_READY:
-      adpcmenc_teardown (enc);
-      break;
-    case GST_STATE_CHANGE_READY_TO_NULL:
-      break;
-    default:
-      break;
-  }
-  return ret;
-}
-
-static void
-adpcmenc_dispose (GObject * obj)
-{
-  G_OBJECT_CLASS (parent_class)->dispose (obj);
+  return TRUE;
 }
 
 static void
 adpcmenc_init (ADPCMEnc * enc, ADPCMEncClass * klass)
 {
-  enc->sinkpad =
-      gst_pad_new_from_static_template (&adpcmenc_sink_template, "sink");
-  gst_pad_set_setcaps_function (enc->sinkpad,
-      GST_DEBUG_FUNCPTR (adpcmenc_sink_setcaps));
-  gst_pad_set_chain_function (enc->sinkpad, GST_DEBUG_FUNCPTR (adpcmenc_chain));
-  gst_pad_set_event_function (enc->sinkpad,
-      GST_DEBUG_FUNCPTR (adpcmenc_sink_event));
-  gst_element_add_pad (GST_ELEMENT (enc), enc->sinkpad);
-
-  enc->srcpad =
-      gst_pad_new_from_static_template (&adpcmenc_src_template, "src");
-  gst_element_add_pad (GST_ELEMENT (enc), enc->srcpad);
-
   /* Set defaults. */
   enc->blocksize = DEFAULT_ADPCM_BLOCK_SIZE;
   enc->layout = DEFAULT_ADPCM_LAYOUT;
@@ -519,10 +422,15 @@ static void
 adpcmenc_class_init (ADPCMEncClass * klass)
 {
   GObjectClass *gobjectclass = (GObjectClass *) klass;
-  GstElementClass *gstelement_class = (GstElementClass *) klass;
+  GstAudioEncoderClass *base_class = (GstAudioEncoderClass *) klass;
 
   gobjectclass->set_property = adpcmenc_set_property;
   gobjectclass->get_property = adpcmenc_get_property;
+
+  base_class->start = GST_DEBUG_FUNCPTR (adpcmenc_start);
+  base_class->stop = GST_DEBUG_FUNCPTR (adpcmenc_stop);
+  base_class->set_format = GST_DEBUG_FUNCPTR (adpcmenc_set_format);
+  base_class->handle_frame = GST_DEBUG_FUNCPTR (adpcmenc_handle_frame);
 
   g_object_class_install_property (gobjectclass, ARG_LAYOUT,
       g_param_spec_enum ("layout", "Layout",
@@ -537,10 +445,9 @@ adpcmenc_class_init (ADPCMEncClass * klass)
           DEFAULT_ADPCM_BLOCK_SIZE,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
-  gobjectclass->dispose = adpcmenc_dispose;
-  gstelement_class->change_state = adpcmenc_change_state;
-} static void
+}
 
+static void
 adpcmenc_base_init (gpointer klass)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
