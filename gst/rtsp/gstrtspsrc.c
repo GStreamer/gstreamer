@@ -101,10 +101,6 @@
 
 #include "gstrtspsrc.h"
 
-#ifdef G_OS_WIN32
-#include <winsock2.h>
-#endif
-
 GST_DEBUG_CATEGORY_STATIC (rtspsrc_debug);
 #define GST_CAT_DEFAULT (rtspsrc_debug)
 
@@ -490,14 +486,6 @@ gst_rtspsrc_class_init (GstRTSPSrcClass * klass)
 static void
 gst_rtspsrc_init (GstRTSPSrc * src)
 {
-#ifdef G_OS_WIN32
-  WSADATA wsa_data;
-
-  if (WSAStartup (MAKEWORD (2, 2), &wsa_data) != 0) {
-    GST_ERROR_OBJECT (src, "WSAStartup failed: 0x%08x", WSAGetLastError ());
-  }
-#endif
-
   src->conninfo.location = g_strdup (DEFAULT_LOCATION);
   src->protocols = DEFAULT_PROTOCOLS;
   src->debug = DEFAULT_DEBUG;
@@ -563,10 +551,6 @@ gst_rtspsrc_finalize (GObject * object)
   g_free (rtspsrc->stream_rec_lock);
   g_static_rec_mutex_free (rtspsrc->state_rec_lock);
   g_free (rtspsrc->state_rec_lock);
-
-#ifdef G_OS_WIN32
-  WSACleanup ();
-#endif
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
@@ -2813,11 +2797,12 @@ gst_rtspsrc_stream_configure_udp_sinks (GstRTSPSrc * src,
     GstRTSPStream * stream, GstRTSPTransport * transport)
 {
   GstPad *pad;
-  gint rtp_port, rtcp_port, sockfd = -1;
+  gint rtp_port, rtcp_port;
   gboolean do_rtp, do_rtcp;
   const gchar *destination;
   gchar *uri, *name;
   guint ttl = 0;
+  GSocket *socket;
 
   /* get transport info */
   gst_rtspsrc_get_transport_info (src, stream, transport, &destination,
@@ -2855,12 +2840,13 @@ gst_rtspsrc_stream_configure_udp_sinks (GstRTSPSrc * src,
     if (stream->udpsrc[0]) {
       /* configure socket, we give it the same UDP socket as the udpsrc for RTP
        * so that NAT firewalls will open a hole for us */
-      g_object_get (G_OBJECT (stream->udpsrc[0]), "sock", &sockfd, NULL);
-      GST_DEBUG_OBJECT (src, "RTP UDP src has sock %d", sockfd);
+      g_object_get (G_OBJECT (stream->udpsrc[0]), "used-socket", &socket, NULL);
+      GST_DEBUG_OBJECT (src, "RTP UDP src has sock %p", socket);
       /* configure socket and make sure udpsink does not close it when shutting
        * down, it belongs to udpsrc after all. */
-      g_object_set (G_OBJECT (stream->udpsink[0]), "sockfd", sockfd,
-          "closefd", FALSE, NULL);
+      g_object_set (G_OBJECT (stream->udpsink[0]), "socket", socket,
+          "close-socket", FALSE, NULL);
+      g_object_unref (socket);
     }
 
     /* the source for the dummy packets to open up NAT */
@@ -2907,12 +2893,13 @@ gst_rtspsrc_stream_configure_udp_sinks (GstRTSPSrc * src,
       /* configure socket, we give it the same UDP socket as the udpsrc for RTCP
        * because some servers check the port number of where it sends RTCP to identify
        * the RTCP packets it receives */
-      g_object_get (G_OBJECT (stream->udpsrc[1]), "sock", &sockfd, NULL);
-      GST_DEBUG_OBJECT (src, "RTCP UDP src has sock %d", sockfd);
+      g_object_get (G_OBJECT (stream->udpsrc[1]), "used-socket", &socket, NULL);
+      GST_DEBUG_OBJECT (src, "RTCP UDP src has sock %p", socket);
       /* configure socket and make sure udpsink does not close it when shutting
        * down, it belongs to udpsrc after all. */
-      g_object_set (G_OBJECT (stream->udpsink[1]), "sockfd", sockfd,
-          "closefd", FALSE, NULL);
+      g_object_set (G_OBJECT (stream->udpsink[1]), "socket", socket,
+          "close-socket", FALSE, NULL);
+      g_object_unref (socket);
     }
 
     /* we don't want to consider this a sink */
