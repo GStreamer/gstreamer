@@ -292,3 +292,37 @@ rtp_stats_set_min_interval (RTPSessionStats * stats, gdouble min_interval)
 {
   stats->min_interval = min_interval;
 }
+
+gboolean
+__g_socket_address_equal (GSocketAddress * a, GSocketAddress * b)
+{
+  GInetSocketAddress *ia, *ib;
+  GInetAddress *iaa, *iab;
+
+  ia = G_INET_SOCKET_ADDRESS (a);
+  ib = G_INET_SOCKET_ADDRESS (b);
+
+  if (g_inet_socket_address_get_port (ia) !=
+      g_inet_socket_address_get_port (ib))
+    return FALSE;
+
+  iaa = g_inet_socket_address_get_address (ia);
+  iab = g_inet_socket_address_get_address (ib);
+
+  return g_inet_address_equal (iaa, iab);
+}
+
+gchar *
+__g_socket_address_to_string (GSocketAddress * addr)
+{
+  GInetSocketAddress *ia;
+  gchar *ret, *tmp;
+
+  ia = G_INET_SOCKET_ADDRESS (addr);
+
+  tmp = g_inet_address_to_string (g_inet_socket_address_get_address (ia));
+  ret = g_strdup_printf ("%s:%u", tmp, g_inet_socket_address_get_port (ia));
+  g_free (tmp);
+
+  return ret;
+}

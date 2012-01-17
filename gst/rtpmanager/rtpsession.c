@@ -1189,27 +1189,24 @@ check_collision (RTPSession * sess, RTPSource * source,
     RTPArrivalStats * arrival, gboolean rtp)
 {
   /* If we have no arrival address, we can't do collision checking */
-  if (!arrival->have_address)
+  if (!arrival->address)
     return FALSE;
 
   if (sess->source != source) {
-    GstNetAddress *from;
-    gboolean have_from;
+    GSocketAddress *from;
 
     /* This is not our local source, but lets check if two remote
      * source collide
      */
 
     if (rtp) {
-      from = &source->rtp_from;
-      have_from = source->have_rtp_from;
+      from = source->rtp_from;
     } else {
-      from = &source->rtcp_from;
-      have_from = source->have_rtcp_from;
+      from = source->rtcp_from;
     }
 
-    if (have_from) {
-      if (gst_net_address_equal (from, &arrival->address)) {
+    if (from) {
+      if (__g_socket_address_equal (from, arrival->address)) {
         /* Address is the same */
         return FALSE;
       } else {
@@ -1217,14 +1214,17 @@ check_collision (RTPSession * sess, RTPSource * source,
             rtp_source_get_ssrc (source));
         if (sess->favor_new) {
           if (rtp_source_find_conflicting_address (source,
-                  &arrival->address, arrival->current_time)) {
-            gchar buf1[40];
-            gst_net_address_to_string (&arrival->address, buf1, 40);
+                  arrival->address, arrival->current_time)) {
+            gchar *buf1;
+
+            buf1 = __g_socket_address_to_string (arrival->address);
             GST_LOG ("Known conflict on %x for %s, dropping packet",
                 rtp_source_get_ssrc (source), buf1);
+            g_free (buf1);
+
             return TRUE;
           } else {
-            gchar buf1[40], buf2[40];
+            gchar *buf1, *buf2;
 
             /* Current address is not a known conflict, lets assume this is
              * a new source. Save old address in possible conflict list
@@ -1232,16 +1232,21 @@ check_collision (RTPSession * sess, RTPSource * source,
             rtp_source_add_conflicting_address (source, from,
                 arrival->current_time);
 
-            gst_net_address_to_string (from, buf1, 40);
-            gst_net_address_to_string (&arrival->address, buf2, 40);
+            buf1 = __g_socket_address_to_string (from);
+            buf2 = __g_socket_address_to_string (arrival->address);
+
             GST_DEBUG ("New conflict for ssrc %x, replacing %s with %s,"
                 " saving old as known conflict",
                 rtp_source_get_ssrc (source), buf1, buf2);
 
             if (rtp)
-              rtp_source_set_rtp_from (source, &arrival->address);
+              rtp_source_set_rtp_from (source, arrival->address);
             else
-              rtp_source_set_rtcp_from (source, &arrival->address);
+              rtp_source_set_rtcp_from (source, arrival->address);
+
+            g_free (buf1);
+            g_free (buf2);
+
             return FALSE;
           }
         } else {
@@ -1252,9 +1257,9 @@ check_collision (RTPSession * sess, RTPSource * source,
     } else {
       /* We don't already have a from address for RTP, just set it */
       if (rtp)
-        rtp_source_set_rtp_from (source, &arrival->address);
+        rtp_source_set_rtp_from (source, arrival->address);
       else
-        rtp_source_set_rtcp_from (source, &arrival->address);
+        rtp_source_set_rtcp_from (source, arrival->address);
       return FALSE;
     }
 
@@ -1272,11 +1277,11 @@ check_collision (RTPSession * sess, RTPSource * source,
       if (inactivity_period > 1 * GST_SECOND) {
         /* Use new network address */
         if (rtp) {
-          g_assert (source->have_rtp_from);
-          rtp_source_set_rtp_from (source, &arrival->address);
+          g_assert (source->rtp_from);
+          rtp_source_set_rtp_from (source, arrival->address);
         } else {
-          g_assert (source->have_rtcp_from);
-          rtp_source_set_rtcp_from (source, &arrival->address);
+          g_assert (source->rtcp_from);
+          rtp_source_set_rtcp_from (source, arrival->address);
         }
         return FALSE;
       }
@@ -1284,7 +1289,7 @@ check_collision (RTPSession * sess, RTPSource * source,
   } else {
     /* This is sending with our ssrc, is it an address we already know */
 
-    if (rtp_source_find_conflicting_address (source, &arrival->address,
+    if (rtp_source_find_conflicting_address (source, arrival->address,
             arrival->current_time)) {
       /* Its a known conflict, its probably a loop, not a collision
        * lets just drop the incoming packet
@@ -1293,7 +1298,7 @@ check_collision (RTPSession * sess, RTPSource * source,
     } else {
       /* Its a new collision, lets change our SSRC */
 
-      rtp_source_add_conflicting_address (source, &arrival->address,
+      rtp_source_add_conflicting_address (source, arrival->address,
           arrival->current_time);
 
       GST_DEBUG ("Collision for SSRC %x", rtp_source_get_ssrc (source));
@@ -1333,11 +1338,11 @@ obtain_source (RTPSession * sess, guint32 ssrc, gboolean * created,
       source->probation = 0;
 
     /* store from address, if any */
-    if (arrival->have_address) {
+    if (arrival->address) {
       if (rtp)
-        rtp_source_set_rtp_from (source, &arrival->address);
+        rtp_source_set_rtp_from (source, arrival->address);
       else
-        rtp_source_set_rtcp_from (source, &arrival->address);
+        rtp_source_set_rtcp_from (source, arrival->address);
     }
 
     /* configure a callback on the source */
@@ -1649,11 +1654,12 @@ update_arrival_stats (RTPSession * sess, RTPArrivalStats * arrival,
 
   /* for netbuffer we can store the IP address to check for collisions */
   meta = gst_buffer_get_net_address_meta (buffer);
+  if (arrival->address)
+    g_object_unref (arrival->address);
   if (meta) {
-    arrival->have_address = TRUE;
-    memcpy (&arrival->address, &meta->naddr, sizeof (GstNetAddress));
+    arrival->address = G_SOCKET_ADDRESS (g_object_ref (meta->addr));
   } else {
-    arrival->have_address = FALSE;
+    arrival->address = NULL;
   }
 }
 
@@ -2372,6 +2378,9 @@ rtp_session_process_rtcp (RTPSession * sess, GstBuffer * buffer,
   GST_DEBUG ("%p, received RTCP packet, avg size %u, %u", &sess->stats,
       sess->stats.avg_rtcp_packet_size, arrival.bytes);
   RTP_SESSION_UNLOCK (sess);
+
+  if (arrival.address)
+    g_object_unref (arrival.address);
 
   /* notify caller of sr packets in the callback */
   if (do_sync && sess->callbacks.sync_rtcp) {

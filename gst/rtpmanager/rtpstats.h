@@ -22,6 +22,7 @@
 
 #include <gst/gst.h>
 #include <gst/net/gstnetaddressmeta.h>
+#include <gio/gio.h>
 
 /**
  * RTPSenderReport:
@@ -70,8 +71,7 @@ typedef struct {
   GstClockTime  current_time;
   GstClockTime  running_time;
   guint64       ntpnstime;
-  gboolean      have_address;
-  GstNetAddress address;
+  GSocketAddress *address;
   guint         bytes;
   guint         payload_len;
 } RTPArrivalStats;
@@ -200,4 +200,9 @@ gint64         rtp_stats_get_packets_lost           (const RTPSourceStats *stats
 
 void           rtp_stats_set_min_interval           (RTPSessionStats *stats,
                                                      gdouble min_interval);
+
+
+gboolean __g_socket_address_equal (GSocketAddress *a, GSocketAddress *b);
+gchar * __g_socket_address_to_string (GSocketAddress * addr);
+
 #endif /* __RTP_STATS_H__ */

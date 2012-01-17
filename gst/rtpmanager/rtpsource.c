@@ -244,6 +244,13 @@ rtp_source_init (RTPSource * src)
 }
 
 static void
+rtp_conflicting_address_free (RTPConflictingAddress * addr)
+{
+  g_object_unref (addr->address);
+  g_free (addr);
+}
+
+static void
 rtp_source_finalize (GObject * object)
 {
   RTPSource *src;
@@ -261,12 +268,18 @@ rtp_source_finalize (GObject * object)
 
   gst_caps_replace (&src->caps, NULL);
 
-  g_list_foreach (src->conflicting_addresses, (GFunc) g_free, NULL);
+  g_list_foreach (src->conflicting_addresses,
+      (GFunc) rtp_conflicting_address_free, NULL);
   g_list_free (src->conflicting_addresses);
 
   while ((buffer = g_queue_pop_head (src->retained_feedback)))
     gst_buffer_unref (buffer);
   g_queue_free (src->retained_feedback);
+
+  if (src->rtp_from)
+    g_object_unref (src->rtp_from);
+  if (src->rtcp_from)
+    g_object_unref (src->rtcp_from);
 
   G_OBJECT_CLASS (rtp_source_parent_class)->finalize (object);
 }
@@ -277,7 +290,7 @@ rtp_source_create_stats (RTPSource * src)
   GstStructure *s;
   gboolean is_sender = src->is_sender;
   gboolean internal = src->internal;
-  gchar address_str[GST_NETADDRESS_MAX_LEN];
+  gchar *address_str;
   gboolean have_rb;
   guint8 fractionlost = 0;
   gint32 packetslost = 0;
@@ -306,15 +319,15 @@ rtp_source_create_stats (RTPSource * src)
       "clock-rate", G_TYPE_INT, src->clock_rate, NULL);
 
   /* add address and port */
-  if (src->have_rtp_from) {
-    gst_net_address_to_string (&src->rtp_from, address_str,
-        sizeof (address_str));
+  if (src->rtp_from) {
+    address_str = __g_socket_address_to_string (src->rtp_from);
     gst_structure_set (s, "rtp-from", G_TYPE_STRING, address_str, NULL);
+    g_free (address_str);
   }
-  if (src->have_rtcp_from) {
-    gst_net_address_to_string (&src->rtcp_from, address_str,
-        sizeof (address_str));
+  if (src->rtcp_from) {
+    address_str = __g_socket_address_to_string (src->rtcp_from);
     gst_structure_set (s, "rtcp-from", G_TYPE_STRING, address_str, NULL);
+    g_free (address_str);
   }
 
   gst_structure_set (s,
@@ -805,12 +818,13 @@ rtp_source_get_sdes_string (RTPSource * src, GstRTCPSDESType type)
  * collistion checking.
  */
 void
-rtp_source_set_rtp_from (RTPSource * src, GstNetAddress * address)
+rtp_source_set_rtp_from (RTPSource * src, GSocketAddress * address)
 {
   g_return_if_fail (RTP_IS_SOURCE (src));
 
-  src->have_rtp_from = TRUE;
-  memcpy (&src->rtp_from, address, sizeof (GstNetAddress));
+  if (src->rtp_from)
+    g_object_unref (src->rtp_from);
+  src->rtp_from = G_SOCKET_ADDRESS (g_object_ref (address));
 }
 
 /**
@@ -822,12 +836,13 @@ rtp_source_set_rtp_from (RTPSource * src, GstNetAddress * address)
  * collistion checking.
  */
 void
-rtp_source_set_rtcp_from (RTPSource * src, GstNetAddress * address)
+rtp_source_set_rtcp_from (RTPSource * src, GSocketAddress * address)
 {
   g_return_if_fail (RTP_IS_SOURCE (src));
 
-  src->have_rtcp_from = TRUE;
-  memcpy (&src->rtcp_from, address, sizeof (GstNetAddress));
+  if (src->rtcp_from)
+    g_object_unref (src->rtcp_from);
+  src->rtcp_from = G_SOCKET_ADDRESS (g_object_ref (address));
 }
 
 static GstFlowReturn
@@ -1700,7 +1715,7 @@ rtp_source_get_last_rb (RTPSource * src, guint8 * fractionlost,
  * Returns: TRUE if it was a known conflict, FALSE otherwise
  */
 gboolean
-rtp_source_find_conflicting_address (RTPSource * src, GstNetAddress * address,
+rtp_source_find_conflicting_address (RTPSource * src, GSocketAddress * address,
     GstClockTime time)
 {
   GList *item;
@@ -1709,7 +1724,7 @@ rtp_source_find_conflicting_address (RTPSource * src, GstNetAddress * address,
       item; item = g_list_next (item)) {
     RTPConflictingAddress *known_conflict = item->data;
 
-    if (gst_net_address_equal (address, &known_conflict->address)) {
+    if (__g_socket_address_equal (address, known_conflict->address)) {
       known_conflict->time = time;
       return TRUE;
     }
@@ -1728,13 +1743,13 @@ rtp_source_find_conflicting_address (RTPSource * src, GstNetAddress * address,
  */
 void
 rtp_source_add_conflicting_address (RTPSource * src,
-    GstNetAddress * address, GstClockTime time)
+    GSocketAddress * address, GstClockTime time)
 {
   RTPConflictingAddress *new_conflict;
 
   new_conflict = g_new0 (RTPConflictingAddress, 1);
 
-  memcpy (&new_conflict->address, address, sizeof (GstNetAddress));
+  new_conflict->address = G_SOCKET_ADDRESS (g_object_ref (address));
   new_conflict->time = time;
 
   src->conflicting_addresses = g_list_prepend (src->conflicting_addresses,
@@ -1765,12 +1780,14 @@ rtp_source_timeout (RTPSource * src, GstClockTime current_time,
     GList *next_item = g_list_next (item);
 
     if (known_conflict->time < current_time - collision_timeout) {
-      gchar buf[40];
+      gchar *buf;
 
       src->conflicting_addresses =
           g_list_delete_link (src->conflicting_addresses, item);
-      gst_net_address_to_string (&known_conflict->address, buf, 40);
+      buf = __g_socket_address_to_string (known_conflict->address);
       GST_DEBUG ("collision %p timed out: %s", known_conflict, buf);
+      g_free (buf);
+      g_object_unref (known_conflict->address);
       g_free (known_conflict);
     }
     item = next_item;

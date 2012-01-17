@@ -23,6 +23,7 @@
 #include <gst/gst.h>
 #include <gst/rtp/gstrtcpbuffer.h>
 #include <gst/net/gstnetaddressmeta.h>
+#include <gio/gio.h>
 
 #include "rtpstats.h"
 
@@ -102,14 +103,14 @@ typedef struct {
 
 /**
  * RTPConflictingAddress:
- * @address: #GstNetAddress which conflicted
+ * @address: #GSocketAddress which conflicted
  * @last_conflict_time: time when the last conflict was seen
  *
  * This structure is used to account for addresses that have conflicted to find
  * loops.
  */
 typedef struct {
-  GstNetAddress address;
+  GSocketAddress *address;
   GstClockTime time;
 } RTPConflictingAddress;
 
@@ -138,10 +139,8 @@ struct _RTPSource {
   gboolean      received_bye;
   gchar        *bye_reason;
 
-  gboolean      have_rtp_from;
-  GstNetAddress rtp_from;
-  gboolean      have_rtcp_from;
-  GstNetAddress rtcp_from;
+  GSocketAddress *rtp_from;
+  GSocketAddress *rtcp_from;
 
   gint          payload;
   GstCaps      *caps;
@@ -213,8 +212,8 @@ const GstStructure *
 gboolean        rtp_source_set_sdes_struct     (RTPSource * src, GstStructure *sdes);
 
 /* handling network address */
-void            rtp_source_set_rtp_from        (RTPSource *src, GstNetAddress *address);
-void            rtp_source_set_rtcp_from       (RTPSource *src, GstNetAddress *address);
+void            rtp_source_set_rtp_from        (RTPSource *src, GSocketAddress *address);
+void            rtp_source_set_rtcp_from       (RTPSource *src, GSocketAddress *address);
 
 /* handling RTP */
 GstFlowReturn   rtp_source_process_rtp         (RTPSource *src, GstBuffer *buffer, RTPArrivalStats *arrival);
@@ -246,11 +245,11 @@ gboolean        rtp_source_get_last_rb         (RTPSource *src, guint8 *fraction
 void            rtp_source_reset               (RTPSource * src);
 
 gboolean        rtp_source_find_conflicting_address (RTPSource * src,
-                                                GstNetAddress *address,
+                                                GSocketAddress *address,
                                                 GstClockTime time);
 
 void            rtp_source_add_conflicting_address (RTPSource * src,
-                                                GstNetAddress *address,
+                                                GSocketAddress *address,
                                                 GstClockTime time);
 
 void            rtp_source_timeout             (RTPSource * src,
