@@ -185,23 +185,6 @@ AC_COMPILE_IFELSE(
 CPPFLAGS="$ac_cppflags_save"
 AM_CONDITIONAL(HAVE_LIBXML_HTML, test "x$HAVE_LIBXML_HTML" = "xyes")
 
-dnl used in gst-libs/gst/rtsp
-AC_CHECK_HEADERS([winsock2.h], HAVE_WINSOCK2_H=yes)
-if test "x$HAVE_WINSOCK2_H" = "xyes"; then
-  WIN32_LIBS="-lws2_32"
-  AC_SUBST(WIN32_LIBS)
-fi
-
-dnl check for hstrerror, for gst-libs/gst/rtsp
-save_libs="$LIBS"
-AC_CHECK_FUNC(hstrerror, ,
-    AC_CHECK_LIB(resolv, hstrerror, ,
-        [AC_DEFINE(NO_HSTRERROR, 1,
-             [Define if you have no native hstrerror() function.])]))
-HSTRERROR_LIBS=$LIBS
-AC_SUBST(HSTRERROR_LIBS)
-LIBS="$save_libs"
-
 dnl used in gst-libs/gst/pbutils and associated unit test
 AC_CHECK_HEADERS([process.h sys/types.h sys/wait.h sys/stat.h])
 
@@ -238,10 +221,6 @@ LIBS=$save_libs
 
 dnl Check for a way to display the function name in debug output
 AG_GST_CHECK_FUNCTION
-
-dnl *** checks for socket and nsl libraries ***
-AC_CHECK_FUNC(socket,,[AC_CHECK_LIB(socket,socket)])
-AC_CHECK_FUNC(gethostbyname,,[AC_CHECK_LIB(nsl,gethostbyname)])
 
 dnl *** checks for dependency libraries ***
 
@@ -961,7 +940,6 @@ sed \
     -e 's/.* HAVE_SYS_STAT_H$/#define HAVE_SYS_STAT_H 1/' \
     -e 's/.* HAVE_SYS_TYPES_H$/#define HAVE_SYS_TYPES_H 1/' \
     -e 's/.* HAVE_WIN32$/#define HAVE_WIN32 1/' \
-    -e 's/.* HAVE_WINSOCK2_H$/#define HAVE_WINSOCK2_H 1/' \
     -e 's/.* HOST_CPU$/#define HOST_CPU "i686"/' \
     -e 's/.* ISO_CODES_PREFIX$/#undef ISO_CODES_PREFIX/' \
     -e 's/.* ISO_CODES_VERSION$/#undef ISO_CODES_VERSION/' \
