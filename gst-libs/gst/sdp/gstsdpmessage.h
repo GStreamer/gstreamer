@@ -44,7 +44,7 @@
 #define __GST_SDP_MESSAGE_H__
 
 #include <glib.h>
-
+#include <gst/gst.h>
 #include <gst/sdp/gstsdp.h>
 
 G_BEGIN_DECLS

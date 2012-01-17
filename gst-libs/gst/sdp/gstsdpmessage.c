@@ -61,28 +61,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#ifdef HAVE_SYS_TYPES_H
-#include <sys/types.h>
-#endif
-
-#include <glib.h>               /* for G_OS_WIN32 */
-#include <gst/gstinfo.h>        /* For GST_STR_NULL */
-
-#ifdef G_OS_WIN32
-/* ws2_32.dll has getaddrinfo and freeaddrinfo on Windows XP and later.
- * minwg32 headers check WINVER before allowing the use of these */
-#ifndef WINVER
-#define WINVER 0x0501
-#endif
-#ifdef _MSC_VER
-#include <Winsock2.h>
-#endif
-#include <ws2tcpip.h>
-#else
-#include <sys/socket.h>
-#include <netdb.h>
-#include <netinet/in.h>
-#endif
+#include <gio/gio.h>
 
 #include "gstsdpmessage.h"
 
@@ -338,10 +317,8 @@ gboolean
 gst_sdp_address_is_multicast (const gchar * nettype, const gchar * addrtype,
     const gchar * addr)
 {
-  struct addrinfo hints;
-  struct addrinfo *ai;
-  struct addrinfo *res;
   gboolean ret = FALSE;
+  GInetAddress *iaddr;
 
   g_return_val_if_fail (addr, FALSE);
 
@@ -349,32 +326,9 @@ gst_sdp_address_is_multicast (const gchar * nettype, const gchar * addrtype,
   if (nettype && strcmp (nettype, "IN") != 0)
     return FALSE;
 
-  memset (&hints, 0, sizeof (hints));
-  hints.ai_socktype = SOCK_DGRAM;
-
-  /* set the address type as a hint */
-  if (addrtype) {
-    if (!strcmp (addrtype, "IP4"))
-      hints.ai_family = AF_INET;
-    else if (!strcmp (addrtype, "IP6"))
-      hints.ai_family = AF_INET6;
-  }
-
-  if (getaddrinfo (addr, NULL, &hints, &res) < 0)
-    return FALSE;
-
-  for (ai = res; !ret && ai; ai = ai->ai_next) {
-    if (ai->ai_family == AF_INET)
-      ret =
-          IN_MULTICAST (ntohl (((struct sockaddr_in *) ai->ai_addr)->
-              sin_addr.s_addr));
-    else
-      ret =
-          IN6_IS_ADDR_MULTICAST (&((struct sockaddr_in6 *) ai->
-              ai_addr)->sin6_addr);
-  }
-
-  freeaddrinfo (res);
+  iaddr = g_inet_address_new_from_string (addr);
+  ret = g_inet_address_get_is_multicast (iaddr);
+  g_object_unref (iaddr);
 
   return ret;
 }
