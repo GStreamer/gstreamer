@@ -248,6 +248,22 @@ dnl *** checks for dependency libraries ***
 dnl GLib is required
 AG_GST_GLIB_CHECK([2.26])
 
+dnl Check for GIO
+translit(dnm, m, l) AM_CONDITIONAL(USE_GIO, true)
+AG_GST_CHECK_FEATURE(GIO, [GIO library], gio, [
+  PKG_CHECK_MODULES(GIO, gio-2.0 >= 2.31.10)
+  GIO_MODULE_DIR="`$PKG_CONFIG --variable=giomoduledir gio-2.0`"
+  AC_DEFINE_UNQUOTED(GIO_MODULE_DIR, "$GIO_MODULE_DIR",
+      [The GIO modules directory.])
+  GIO_LIBDIR="`$PKG_CONFIG --variable=libdir gio-2.0`"
+      AC_DEFINE_UNQUOTED(GIO_LIBDIR, "$GIO_LIBDIR",
+          [The GIO library directory.])
+
+  AC_SUBST(GIO_CFLAGS)
+  AC_SUBST(GIO_LIBS)
+  AC_SUBST(GIO_LDFLAGS)
+])
+
 ORC_CHECK([0.4.11])
 
 dnl checks for gstreamer
@@ -644,25 +660,6 @@ AG_GST_CHECK_FEATURE(IVORBIS, [integer vorbis plug-in], ivorbisdec, [
       AC_DEFINE([USE_TREMOLO],1, "Define if building for android"),
       USE_TREMOLO=no)
   fi
-])
-
-dnl *** libgio ***
-translit(dnm, m, l) AM_CONDITIONAL(USE_GIO, true)
-AG_GST_CHECK_FEATURE(GIO, [GIO library], gio, [
-  PKG_CHECK_MODULES(GIO, gio-2.0 >= 2.16, [
-    HAVE_GIO="yes"
-    GIO_MODULE_DIR="`$PKG_CONFIG --variable=giomoduledir gio-2.0`"
-    AC_DEFINE_UNQUOTED(GIO_MODULE_DIR, "$GIO_MODULE_DIR",
-           [The GIO modules directory.])
-    GIO_LIBDIR="`$PKG_CONFIG --variable=libdir gio-2.0`"
-    AC_DEFINE_UNQUOTED(GIO_LIBDIR, "$GIO_LIBDIR",
-           [The GIO library directory.])
-  ], [
-    HAVE_GIO="no"
-  ])
-  AC_SUBST(GIO_CFLAGS)
-  AC_SUBST(GIO_LIBS)
-  AC_SUBST(GIO_LDFLAGS)
 ])
 
 dnl *** libvisual ***
