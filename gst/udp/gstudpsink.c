@@ -1,5 +1,7 @@
 /* GStreamer
  * Copyright (C) <2005> Wim Taymans <wim@fluendo.com>
+ * Copyright (C) <2012> Collabora Ltd.
+ *   Author: Sebastian Dröge <sebastian.droege@collabora.co.uk>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -34,14 +36,6 @@
 #include "config.h"
 #endif
 #include "gstudpsink.h"
-
-#include <stdio.h>
-#include <stdlib.h>
-#ifdef HAVE_UNISTD_H
-#include <unistd.h>
-#endif
-#include <errno.h>
-#include <string.h>
 
 #define UDP_DEFAULT_HOST        "localhost"
 #define UDP_DEFAULT_PORT        4951
@@ -108,17 +102,22 @@ gst_udpsink_class_init (GstUDPSinkClass * klass)
 static void
 gst_udpsink_init (GstUDPSink * udpsink)
 {
-  gst_udp_uri_init (&udpsink->uri, UDP_DEFAULT_HOST, UDP_DEFAULT_PORT);
+  udpsink->host = g_strdup (UDP_DEFAULT_HOST);
+  udpsink->port = UDP_DEFAULT_PORT;
+  udpsink->uri = g_strdup_printf ("udp://%s:%d", udpsink->host, udpsink->port);
 
-  gst_multiudpsink_add (GST_MULTIUDPSINK (udpsink), udpsink->uri.host,
-      udpsink->uri.port);
+  gst_multiudpsink_add (GST_MULTIUDPSINK (udpsink), udpsink->host,
+      udpsink->port);
 }
 
 static void
 gst_udpsink_finalize (GstUDPSink * udpsink)
 {
-  gst_udp_uri_free (&udpsink->uri);
-  g_free (udpsink->uristr);
+  g_free (udpsink->host);
+  udpsink->host = NULL;
+
+  g_free (udpsink->uri);
+  udpsink->uri = NULL;
 
   G_OBJECT_CLASS (parent_class)->finalize ((GObject *) udpsink);
 }
@@ -126,14 +125,15 @@ gst_udpsink_finalize (GstUDPSink * udpsink)
 static gboolean
 gst_udpsink_set_uri (GstUDPSink * sink, const gchar * uri, GError ** error)
 {
-  gst_multiudpsink_remove (GST_MULTIUDPSINK (sink), sink->uri.host,
-      sink->uri.port);
+  gst_multiudpsink_remove (GST_MULTIUDPSINK (sink), sink->host, sink->port);
 
-  if (gst_udp_parse_uri (uri, &sink->uri.host, &sink->uri.port) < 0)
+  if (!gst_udp_parse_uri (uri, &sink->host, &sink->port))
     goto wrong_uri;
 
-  gst_multiudpsink_add (GST_MULTIUDPSINK (sink), sink->uri.host,
-      sink->uri.port);
+  g_free (sink->uri);
+  sink->uri = g_strdup (uri);
+
+  gst_multiudpsink_add (GST_MULTIUDPSINK (sink), sink->host, sink->port);
 
   return TRUE;
 
@@ -158,7 +158,7 @@ gst_udpsink_set_property (GObject * object, guint prop_id, const GValue * value,
 
   /* remove old host */
   gst_multiudpsink_remove (GST_MULTIUDPSINK (udpsink),
-      udpsink->uri.host, udpsink->uri.port);
+      udpsink->host, udpsink->port);
 
   switch (prop_id) {
     case PROP_HOST:
@@ -166,15 +166,18 @@ gst_udpsink_set_property (GObject * object, guint prop_id, const GValue * value,
       const gchar *host;
 
       host = g_value_get_string (value);
-
-      if (host)
-        gst_udp_uri_update (&udpsink->uri, host, -1);
-      else
-        gst_udp_uri_update (&udpsink->uri, UDP_DEFAULT_HOST, -1);
+      g_free (udpsink->host);
+      udpsink->host = g_strdup (host);
+      g_free (udpsink->uri);
+      udpsink->uri =
+          g_strdup_printf ("udp://%s:%d", udpsink->host, udpsink->port);
       break;
     }
     case PROP_PORT:
-      gst_udp_uri_update (&udpsink->uri, NULL, g_value_get_int (value));
+      udpsink->port = g_value_get_int (value);
+      g_free (udpsink->uri);
+      udpsink->uri =
+          g_strdup_printf ("udp://%s:%d", udpsink->host, udpsink->port);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -182,7 +185,7 @@ gst_udpsink_set_property (GObject * object, guint prop_id, const GValue * value,
   }
   /* add new host */
   gst_multiudpsink_add (GST_MULTIUDPSINK (udpsink),
-      udpsink->uri.host, udpsink->uri.port);
+      udpsink->host, udpsink->port);
 }
 
 static void
@@ -195,10 +198,10 @@ gst_udpsink_get_property (GObject * object, guint prop_id, GValue * value,
 
   switch (prop_id) {
     case PROP_HOST:
-      g_value_set_string (value, udpsink->uri.host);
+      g_value_set_string (value, udpsink->host);
       break;
     case PROP_PORT:
-      g_value_set_int (value, udpsink->uri.port);
+      g_value_set_int (value, udpsink->port);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -227,10 +230,7 @@ gst_udpsink_uri_get_uri (GstURIHandler * handler)
 {
   GstUDPSink *sink = GST_UDPSINK (handler);
 
-  g_free (sink->uristr);
-  sink->uristr = gst_udp_uri_string (&sink->uri);
-
-  return g_strdup (sink->uristr);
+  return g_strdup (sink->uri);
 }
 
 static gboolean

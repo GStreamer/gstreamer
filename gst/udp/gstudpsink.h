@@ -41,8 +41,10 @@ typedef struct _GstUDPSinkClass GstUDPSinkClass;
 struct _GstUDPSink {
   GstMultiUDPSink parent;
 
-  GstUDPUri  uri;
-  gchar *uristr;
+  gchar *host;
+  guint16 port;
+
+  gchar *uri;
 };
 
 struct _GstUDPSinkClass {
