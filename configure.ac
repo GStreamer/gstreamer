@@ -74,6 +74,8 @@ AG_GST_GETTEXT([gstreamer-$GST_MAJORMINOR])
 
 dnl *** check for arguments to configure ***
 
+AG_GST_ARG_DISABLE_FATAL_WARNINGS
+
 dnl subsystems - can influence other decisions so needs to be high up
 dnl we need to AM_CONDITIONAL them here for automake 1.6.x compatibility
 AG_GST_CHECK_SUBSYSTEM_DISABLE(GST_DEBUG,[debugging subsystem])
@@ -646,7 +648,7 @@ if test "x${GST_DISABLE_GST_DEBUG}" = "xyes"; then
 fi
 
 dnl define an ERROR_CFLAGS Makefile variable
-AG_GST_SET_ERROR_CFLAGS($GST_GIT, [-Wmissing-declarations -Wmissing-prototypes -Wredundant-decls -Wundef -Wwrite-strings -Wformat-nonliteral -Wformat-security -Wold-style-definition -Winit-self -Wmissing-include-dirs -Waddress -Waggregate-return -Wno-multichar -Wnested-externs $NO_WARNINGS])
+AG_GST_SET_ERROR_CFLAGS($FATAL_WARNINGS, [-Wmissing-declarations -Wmissing-prototypes -Wredundant-decls -Wundef -Wwrite-strings -Wformat-nonliteral -Wformat-security -Wold-style-definition -Winit-self -Wmissing-include-dirs -Waddress -Waggregate-return -Wno-multichar -Wnested-externs $NO_WARNINGS])
 
 dnl define correct level for debugging messages
 AG_GST_SET_LEVEL_DEFAULT($GST_GIT)
