@@ -1160,11 +1160,17 @@ gst_multi_socket_sink_handle_client_read (GstMultiSocketSink * sink,
    * to write to us except for closing the socket, I guess it's because we
    * like to listen to our customers. */
   do {
+    gssize navail;
+
     GST_DEBUG_OBJECT (sink, "[socket %p] client wants us to read",
         client->socket);
 
+    navail = g_socket_get_available_bytes (client->socket);
+    if (navail < 0)
+      break;
+
     nread =
-        g_socket_receive (client->socket, dummy, sizeof (dummy),
+        g_socket_receive (client->socket, dummy, MIN (navail, sizeof (dummy)),
         sink->cancellable, &err);
     if (first && nread == 0) {
       /* client sent close, so remove it */

@@ -162,7 +162,8 @@ gst_tcp_server_src_create (GstPushSrc * psrc, GstBuffer ** outbuf)
 {
   GstTCPServerSrc *src;
   GstFlowReturn ret = GST_FLOW_OK;
-  gssize rret;
+  gssize rret, avail;
+  gsize read;
   GError *err = NULL;
   guint8 *data;
 
@@ -184,10 +185,42 @@ gst_tcp_server_src_create (GstPushSrc * psrc, GstBuffer ** outbuf)
   GST_LOG_OBJECT (src, "asked for a buffer");
 
   /* read the buffer header */
-  *outbuf = gst_buffer_new_and_alloc (MAX_READ_SIZE);
+  avail = g_socket_get_available_bytes (src->client_socket);
+  if (avail < 0) {
+    goto get_available_error;
+  } else if (avail == 0) {
+    GIOCondition condition;
+
+    if (!g_socket_condition_wait (src->client_socket,
+            G_IO_IN | G_IO_PRI | G_IO_ERR | G_IO_HUP, src->cancellable, &err))
+      goto select_error;
+
+    condition =
+        g_socket_condition_check (src->client_socket,
+        G_IO_IN | G_IO_PRI | G_IO_ERR | G_IO_HUP);
+
+    if ((condition & G_IO_ERR)) {
+      GST_ELEMENT_ERROR (src, RESOURCE, READ, (NULL),
+          ("Socket in error state"));
+      *outbuf = NULL;
+      ret = GST_FLOW_ERROR;
+      goto done;
+    } else if ((condition & G_IO_HUP)) {
+      GST_DEBUG_OBJECT (src, "Connection closed");
+      *outbuf = NULL;
+      ret = GST_FLOW_EOS;
+      goto done;
+    }
+    avail = g_socket_get_available_bytes (src->client_socket);
+    if (avail <= 0)
+      goto get_available_error;
+  }
+
+  read = MIN (avail, MAX_READ_SIZE);
+  *outbuf = gst_buffer_new_and_alloc (read);
   data = gst_buffer_map (*outbuf, NULL, NULL, GST_MAP_READWRITE);
   rret =
-      g_socket_receive (src->client_socket, (gchar *) data, MAX_READ_SIZE,
+      g_socket_receive (src->client_socket, (gchar *) data, read,
       src->cancellable, &err);
 
   if (rret == 0) {
@@ -223,6 +256,7 @@ gst_tcp_server_src_create (GstPushSrc * psrc, GstBuffer ** outbuf)
   }
   g_clear_error (&err);
 
+done:
   return ret;
 
 wrong_state:
@@ -239,6 +273,19 @@ accept_error:
           ("Failed to accept client: %s", err->message));
     }
     g_clear_error (&err);
+    return GST_FLOW_ERROR;
+  }
+select_error:
+  {
+    GST_ELEMENT_ERROR (src, RESOURCE, READ, (NULL),
+        ("Select failed: %s", err->message));
+    g_clear_error (&err);
+    return GST_FLOW_ERROR;
+  }
+get_available_error:
+  {
+    GST_ELEMENT_ERROR (src, RESOURCE, READ, (NULL),
+        ("Select to get available bytes from socket"));
     return GST_FLOW_ERROR;
   }
 }
