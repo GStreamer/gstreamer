@@ -573,8 +573,10 @@ struct _GstH264SliceHdr
   guint8 num_ref_idx_l1_active_minus1;
 
   guint8 ref_pic_list_modification_flag_l0;
+  guint8 n_ref_pic_list_modification_l0;
   GstH264RefPicListModification ref_pic_list_modification_l0[32];
   guint8 ref_pic_list_modification_flag_l1;
+  guint8 n_ref_pic_list_modification_l1;
   GstH264RefPicListModification ref_pic_list_modification_l1[32];
 
   GstH264PredWeightTable pred_weight_table;
