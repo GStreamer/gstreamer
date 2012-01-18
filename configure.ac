@@ -195,21 +195,7 @@ AC_CHECK_FUNC(gethostbyname,,[AC_CHECK_LIB(nsl,gethostbyname)])
 
 dnl GLib is required
 GLIB_REQ=2.31.10
-
 AG_GST_GLIB_CHECK([$GLIB_REQ])
-
-dnl Check for GIO
-PKG_CHECK_MODULES(GIO, gio-2.0 >= $GLIB_REQ)
-GIO_MODULE_DIR="`$PKG_CONFIG --variable=giomoduledir gio-2.0`"
-AC_DEFINE_UNQUOTED(GIO_MODULE_DIR, "$GIO_MODULE_DIR",
-    [The GIO modules directory.])
-GIO_LIBDIR="`$PKG_CONFIG --variable=libdir gio-2.0`"
-    AC_DEFINE_UNQUOTED(GIO_LIBDIR, "$GIO_LIBDIR",
-        [The GIO library directory.])
-
-AC_SUBST(GIO_CFLAGS)
-AC_SUBST(GIO_LIBS)
-AC_SUBST(GIO_LDFLAGS)
 
 dnl checks for gstreamer
 dnl uninstalled is selected preferentially -- see pkg-config(1)
