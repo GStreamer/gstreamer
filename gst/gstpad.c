@@ -2754,6 +2754,7 @@ gst_pad_query_default (GstPad * pad, GstObject * parent, GstQuery * query)
 
   switch (GST_QUERY_TYPE (query)) {
     case GST_QUERY_SCHEDULING:
+    case GST_QUERY_ALLOCATION:
       forward = FALSE;
       break;
     case GST_QUERY_ACCEPT_CAPS:
@@ -2771,7 +2772,6 @@ gst_pad_query_default (GstPad * pad, GstObject * parent, GstQuery * query)
     case GST_QUERY_JITTER:
     case GST_QUERY_RATE:
     case GST_QUERY_CONVERT:
-    case GST_QUERY_ALLOCATION:
     default:
       break;
   }
