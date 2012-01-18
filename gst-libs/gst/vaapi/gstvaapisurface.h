@@ -35,7 +35,6 @@ G_BEGIN_DECLS
 typedef enum _GstVaapiChromaType                GstVaapiChromaType;
 typedef enum _GstVaapiSurfaceStatus             GstVaapiSurfaceStatus;
 typedef enum _GstVaapiSurfaceRenderFlags        GstVaapiSurfaceRenderFlags;
-typedef struct _GstVaapiContext                 GstVaapiContext;
 
 /**
  * GST_VAAPI_SURFACE_CAPS_NAME:
@@ -197,9 +196,6 @@ gst_vaapi_surface_get_size(
     guint           *pwidth,
     guint           *pheight
 );
-
-GstVaapiContext *
-gst_vaapi_surface_get_parent_context(GstVaapiSurface *surface);
 
 GstVaapiImage *
 gst_vaapi_surface_derive_image(GstVaapiSurface *surface);

@@ -22,6 +22,7 @@
 #ifndef GST_VAAPI_SURFACE_PRIV_H
 #define GST_VAAPI_SURFACE_PRIV_H
 
+#include <gst/vaapi/gstvaapicontext.h>
 #include <gst/vaapi/gstvaapisurface.h>
 
 void
@@ -29,5 +30,9 @@ gst_vaapi_surface_set_parent_context(
     GstVaapiSurface *surface,
     GstVaapiContext *context
 ) attribute_hidden;
+
+GstVaapiContext *
+gst_vaapi_surface_get_parent_context(GstVaapiSurface *surface)
+    attribute_hidden;
 
 #endif /* GST_VAAPI_SURFACE_PRIV_H */
