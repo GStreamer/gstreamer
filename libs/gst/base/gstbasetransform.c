@@ -1317,19 +1317,18 @@ gst_base_transform_default_query (GstBaseTransform * trans,
         goto done;
 
       GST_BASE_TRANSFORM_LOCK (trans);
-      passthrough = trans->passthrough || trans->always_in_place;
+      passthrough = trans->passthrough;
       GST_BASE_TRANSFORM_UNLOCK (trans);
 
-      if (passthrough) {
+      GST_DEBUG_OBJECT (trans, "propose allocation values");
+      /* pass the query to the propose_allocation vmethod if any */
+      if (G_LIKELY (klass->propose_allocation)) {
+        ret = klass->propose_allocation (trans, query);
+      } else if (passthrough) {
         GST_DEBUG_OBJECT (trans, "doing passthrough query");
         ret = gst_pad_peer_query (otherpad, query);
       } else {
-        GST_DEBUG_OBJECT (trans, "propose allocation values");
-        /* pass the query to the propose_allocation vmethod if any */
-        if (G_LIKELY (klass->propose_allocation))
-          ret = klass->propose_allocation (trans, query);
-        else
-          ret = FALSE;
+        ret = FALSE;
       }
       GST_DEBUG_OBJECT (trans, "ALLOCATION ret %d, %" GST_PTR_FORMAT, ret,
           query);
