@@ -47,39 +47,14 @@
 #include "config.h"
 #endif
 
-#ifdef HAVE_UNISTD_H
-#include <unistd.h>
-#endif
-
-/* include GLIB for G_OS_WIN32 */
-#include <glib.h>
-
-#ifdef G_OS_WIN32
-#ifdef _MSC_VER
-#include <Winsock2.h>
-#endif
-/* ws2_32.dll has getaddrinfo and freeaddrinfo on Windows XP and later.
- *  * minwg32 headers check WINVER before allowing the use of these */
-#ifndef WINVER
-#define WINVER 0x0501
-#endif
-#include <ws2tcpip.h>
-#else
-#include <sys/socket.h>
-#include <netdb.h>
-#include <netinet/in.h>
-#endif
-
-#include <stdlib.h>
-#include <string.h>
-#include <locale.h>
-#include <stdio.h>
-#include <stdarg.h>
+#include "gstsdpdemux.h"
 
 #include <gst/rtp/gstrtppayloads.h>
 #include <gst/sdp/gstsdpmessage.h>
 
-#include "gstsdpdemux.h"
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 
 GST_DEBUG_CATEGORY_STATIC (sdpdemux_debug);
 #define GST_CAT_DEFAULT (sdpdemux_debug)
@@ -372,32 +347,31 @@ gst_sdp_demux_stream_free (GstSDPDemux * demux, GstSDPStream * stream)
 static gboolean
 is_multicast_address (const gchar * host_name)
 {
-  struct addrinfo hints;
-  struct addrinfo *ai;
-  struct addrinfo *res;
+  GInetAddress *addr;
+  GResolver *resolver = NULL;
   gboolean ret = FALSE;
 
-  memset (&hints, 0, sizeof (hints));
-  hints.ai_socktype = SOCK_DGRAM;
+  addr = g_inet_address_new_from_string (host_name);
+  if (!addr) {
+    GList *results;
 
-  g_return_val_if_fail (host_name, FALSE);
+    resolver = g_resolver_get_default ();
+    results = g_resolver_lookup_by_name (resolver, host_name, NULL, NULL);
+    if (!results)
+      goto out;
+    addr = G_INET_ADDRESS (g_object_ref (results->data));
 
-  if (getaddrinfo (host_name, NULL, &hints, &res) < 0)
-    return FALSE;
-
-  for (ai = res; !ret && ai; ai = ai->ai_next) {
-    if (ai->ai_family == AF_INET)
-      ret =
-          IN_MULTICAST (ntohl (((struct sockaddr_in *) ai->ai_addr)->sin_addr.
-              s_addr));
-    else
-      ret =
-          IN6_IS_ADDR_MULTICAST (&((struct sockaddr_in6 *) ai->ai_addr)->
-          sin6_addr);
+    g_resolver_free_addresses (results);
   }
+  g_assert (addr != NULL);
 
-  freeaddrinfo (res);
+  ret = g_inet_address_get_is_multicast (addr);
 
+out:
+  if (resolver)
+    g_object_unref (resolver);
+  if (addr)
+    g_object_unref (addr);
   return ret;
 }
 
@@ -1073,7 +1047,8 @@ gst_sdp_demux_stream_configure_udp_sink (GstSDPDemux * demux,
     GstSDPStream * stream)
 {
   GstPad *pad, *sinkpad;
-  gint port, sockfd = -1;
+  gint port;
+  GSocket *socket;
   gchar *destination, *uri, *name;
 
   /* get destination and port */
@@ -1106,12 +1081,13 @@ gst_sdp_demux_stream_configure_udp_sink (GstSDPDemux * demux,
     /* configure socket, we give it the same UDP socket as the udpsrc for RTCP
      * because some servers check the port number of where it sends RTCP to identify
      * the RTCP packets it receives */
-    g_object_get (G_OBJECT (stream->udpsrc[1]), "sock", &sockfd, NULL);
-    GST_DEBUG_OBJECT (demux, "UDP src has sock %d", sockfd);
+    g_object_get (G_OBJECT (stream->udpsrc[1]), "used_socket", &socket, NULL);
+    GST_DEBUG_OBJECT (demux, "UDP src has socket %p", socket);
     /* configure socket and make sure udpsink does not close it when shutting
      * down, it belongs to udpsrc after all. */
-    g_object_set (G_OBJECT (stream->udpsink), "sockfd", sockfd, NULL);
-    g_object_set (G_OBJECT (stream->udpsink), "closefd", FALSE, NULL);
+    g_object_set (G_OBJECT (stream->udpsink), "socket", socket, NULL);
+    g_object_set (G_OBJECT (stream->udpsink), "close-socket", FALSE, NULL);
+    g_object_unref (socket);
   }
 
   /* we keep this playing always */

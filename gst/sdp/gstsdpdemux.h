@@ -22,6 +22,7 @@
 
 #include <gst/gst.h>
 #include <gst/base/gstadapter.h>
+#include <gio/gio.h>
 
 G_BEGIN_DECLS
 

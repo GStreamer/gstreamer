@@ -2,8 +2,8 @@ plugin_LTLIBRARIES = libgstsdpelem.la
 
 libgstsdpelem_la_SOURCES = gstsdpelem.c gstsdpdemux.h gstsdpdemux.c
 
-libgstsdpelem_la_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(GST_CFLAGS)
-libgstsdpelem_la_LIBADD = $(GST_PLUGINS_BASE_LIBS) $(GST_BASE_LIBS) \
+libgstsdpelem_la_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(GST_CFLAGS) $(GIO_CFLAGS)
+libgstsdpelem_la_LIBADD = $(GST_PLUGINS_BASE_LIBS) $(GST_BASE_LIBS) $(GIO_LIBS) \
 		       -lgstinterfaces-@GST_MAJORMINOR@ \
 		       -lgstrtp-@GST_MAJORMINOR@ -lgstsdp-@GST_MAJORMINOR@ \
 		       $(GST_LIBS) $(WIN32_LIBS)
