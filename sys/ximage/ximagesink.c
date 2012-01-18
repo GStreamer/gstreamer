@@ -740,13 +740,8 @@ gst_ximagesink_manage_event_thread (GstXImageSink * ximagesink)
       GST_DEBUG_OBJECT (ximagesink, "run xevent thread, expose %d, events %d",
           ximagesink->handle_expose, ximagesink->handle_events);
       ximagesink->running = TRUE;
-#if !GLIB_CHECK_VERSION (2, 31, 0)
-      ximagesink->event_thread = g_thread_create (
-          (GThreadFunc) gst_ximagesink_event_thread, ximagesink, TRUE, NULL);
-#else
       ximagesink->event_thread = g_thread_try_new ("ximagesink-events",
           (GThreadFunc) gst_ximagesink_event_thread, ximagesink, NULL);
-#endif
     }
   } else {
     if (ximagesink->event_thread) {

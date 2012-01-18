@@ -136,11 +136,7 @@ struct _GstVideoOverlayRectangle
 
   /* FIXME: we may also need a (private) way to cache converted/scaled
    * pixel blobs */
-#if !GLIB_CHECK_VERSION (2, 31, 0)
-  GStaticMutex lock;
-#else
   GMutex lock;
-#endif
 
   GList *scaled_rectangles;
 };
@@ -150,13 +146,8 @@ struct _GstVideoOverlayRectangleClass
   GstMiniObjectClass parent_class;
 };
 
-#if !GLIB_CHECK_VERSION (2, 31, 0)
-#define GST_RECTANGLE_LOCK(rect)   g_static_mutex_lock(&rect->lock)
-#define GST_RECTANGLE_UNLOCK(rect) g_static_mutex_unlock(&rect->lock)
-#else
 #define GST_RECTANGLE_LOCK(rect)   g_mutex_lock(&rect->lock)
 #define GST_RECTANGLE_UNLOCK(rect) g_mutex_unlock(&rect->lock)
-#endif
 
 static void gst_video_overlay_composition_class_init (GstMiniObjectClass * k);
 static void gst_video_overlay_composition_finalize (GstMiniObject * comp);
@@ -197,11 +188,7 @@ gst_video_overlay_get_seqnum (void)
 {
   static gint seqnum;           /* 0 */
 
-#if GLIB_CHECK_VERSION(2,29,5)
   return (guint) g_atomic_int_add (&seqnum, 1);
-#else
-  return (guint) g_atomic_int_exchange_and_add (&seqnum, 1);
-#endif
 }
 
 #define GST_OVERLAY_COMPOSITION_QUARK gst_overlay_composition_quark_get()
@@ -683,11 +670,8 @@ gst_video_overlay_rectangle_finalize (GstMiniObject * mini_obj)
     rect->scaled_rectangles =
         g_list_delete_link (rect->scaled_rectangles, rect->scaled_rectangles);
   }
-#if !GLIB_CHECK_VERSION (2, 31, 0)
-  g_static_mutex_free (&rect->lock);
-#else
   g_mutex_clear (&rect->lock);
-#endif
+
   /* not chaining up to GstMiniObject's finalize for now, we know it's empty */
 }
 
@@ -703,11 +687,7 @@ gst_video_overlay_rectangle_instance_init (GstMiniObject * mini_obj)
 {
   GstVideoOverlayRectangle *rect = (GstVideoOverlayRectangle *) mini_obj;
 
-#if !GLIB_CHECK_VERSION (2, 31, 0)
-  g_static_mutex_init (&rect->lock);
-#else
   g_mutex_init (&rect->lock);
-#endif
 }
 
 static inline gboolean

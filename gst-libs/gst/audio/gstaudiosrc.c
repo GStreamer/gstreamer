@@ -398,14 +398,8 @@ gst_audio_src_ring_buffer_acquire (GstAudioRingBuffer * buf,
   abuf->running = TRUE;
 
   /* FIXME: handle thread creation failure */
-#if !GLIB_CHECK_VERSION (2, 31, 0)
-  src->thread =
-      g_thread_create ((GThreadFunc) audioringbuffer_thread_func, buf, TRUE,
-      NULL);
-#else
   src->thread = g_thread_try_new ("audiosrc-ringbuffer",
       (GThreadFunc) audioringbuffer_thread_func, buf, NULL);
-#endif
 
   GST_AUDIO_RING_BUFFER_WAIT (buf);
 

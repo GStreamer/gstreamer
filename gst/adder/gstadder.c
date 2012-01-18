@@ -40,6 +40,10 @@
  */
 /* Element-Checklist-Version: 5 */
 
+/* FIXME 0.11: suppress warnings for deprecated API such as GStaticRecMutex
+ * with newer GLib versions (>= 2.31.0) */
+#define GLIB_DISABLE_DEPRECATION_WARNINGS
+
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
@@ -981,11 +985,7 @@ gst_adder_request_new_pad (GstElement * element, GstPadTemplate * templ,
   adder = GST_ADDER (element);
 
   /* increment pad counter */
-#if GLIB_CHECK_VERSION(2,29,5)
   padcount = g_atomic_int_add (&adder->padcount, 1);
-#else
-  padcount = g_atomic_int_exchange_and_add (&adder->padcount, 1);
-#endif
 
   name = g_strdup_printf ("sink_%u", padcount);
   newpad = gst_pad_new_from_template (templ, name);

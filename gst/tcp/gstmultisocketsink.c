@@ -2635,13 +2635,8 @@ gst_multi_socket_sink_start (GstBaseSink * bsink)
 
   this->running = TRUE;
 
-#if !GLIB_CHECK_VERSION (2, 31, 0)
-  this->thread = g_thread_create ((GThreadFunc) gst_multi_socket_sink_thread,
-      this, TRUE, NULL);
-#else
   this->thread = g_thread_new ("multisocketsink",
       (GThreadFunc) gst_multi_socket_sink_thread, this);
-#endif
 
   GST_OBJECT_FLAG_SET (this, GST_MULTI_SOCKET_SINK_OPEN);
 

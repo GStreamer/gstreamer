@@ -27,43 +27,19 @@
 
 G_BEGIN_DECLS
 
-#if !GLIB_CHECK_VERSION(2,25,0)
-
-#if defined (_MSC_VER) && !defined(_WIN64)
-typedef struct _stat32 GStatBuf;
-#else
-typedef struct stat GStatBuf;
-#endif
-
-#endif
-
-#if GLIB_CHECK_VERSION(2,26,0)
+/* FIXME: can use unconditionally now */
 #define GLIB_HAS_GDATETIME
-#endif
 
-/* See bug #651514 */
-#if GLIB_CHECK_VERSION(2,29,5)
+/* FIXME: can use the new functions unconditionally now */
 #define G_ATOMIC_POINTER_COMPARE_AND_EXCHANGE(a,b,c) \
     g_atomic_pointer_compare_and_exchange ((a),(b),(c))
 #define G_ATOMIC_INT_COMPARE_AND_EXCHANGE(a,b,c) \
     g_atomic_int_compare_and_exchange ((a),(b),(c))
-#else
-#define G_ATOMIC_POINTER_COMPARE_AND_EXCHANGE(a,b,c) \
-    g_atomic_pointer_compare_and_exchange ((volatile gpointer *)(a),(b),(c))
-#define G_ATOMIC_INT_COMPARE_AND_EXCHANGE(a,b,c) \
-    g_atomic_int_compare_and_exchange ((volatile int *)(a),(b),(c))
-#endif
-
-/* See bug #651514 */
-#if GLIB_CHECK_VERSION(2,29,5)
 #define G_ATOMIC_INT_ADD(a,b) g_atomic_int_add ((a),(b))
-#else
-#define G_ATOMIC_INT_ADD(a,b) g_atomic_int_exchange_and_add ((a),(b))
-#endif
 
 /* copies */
 
-#if GLIB_CHECK_VERSION (2, 31, 0)
+/* FIXME: use new GLib API */
 #define g_mutex_new gst_g_mutex_new
 static inline GMutex *
 gst_g_mutex_new (void)
@@ -126,7 +102,6 @@ gst_g_cond_timed_wait (GCond *cond, GMutex *mutex, GTimeVal *abs_time)
   end_time += g_get_monotonic_time () - g_get_real_time ();
   return g_cond_wait_until (cond, mutex, end_time);
 }
-#endif /* GLIB_CHECK_VERSION (2, 31, 0) */
 
 /* adaptations */
 

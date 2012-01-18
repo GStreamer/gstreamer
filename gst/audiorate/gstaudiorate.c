@@ -402,21 +402,13 @@ gst_audio_rate_convert_segments (GstAudioRate * audiorate)
 static void
 gst_audio_rate_notify_drop (GstAudioRate * audiorate)
 {
-#if !GLIB_CHECK_VERSION(2,26,0)
-  g_object_notify ((GObject *) audiorate, "drop");
-#else
   g_object_notify_by_pspec ((GObject *) audiorate, pspec_drop);
-#endif
 }
 
 static void
 gst_audio_rate_notify_add (GstAudioRate * audiorate)
 {
-#if !GLIB_CHECK_VERSION(2,26,0)
-  g_object_notify ((GObject *) audiorate, "add");
-#else
   g_object_notify_by_pspec ((GObject *) audiorate, pspec_add);
-#endif
 }
 
 static GstFlowReturn

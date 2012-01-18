@@ -496,11 +496,7 @@ gst_alsa_mixer_new (const char *device, GstAlsaMixerDirection dir)
   if (pipe (ret->pfd) == -1)
     goto error;
 
-#if !GLIB_CHECK_VERSION (2, 31, 0)
-  g_static_rec_mutex_init (&ret->rec_mutex);
-#else
   g_rec_mutex_init (&ret->rec_mutex);
-#endif
   g_static_rec_mutex_init (&ret->task_mutex);
 
   ret->task = gst_task_new (task_monitor_alsa, ret);
@@ -583,11 +579,7 @@ gst_alsa_mixer_free (GstAlsaMixer * mixer)
     snd_mixer_close (mixer->handle);
     mixer->handle = NULL;
   }
-#if !GLIB_CHECK_VERSION (2, 31, 0)
-  g_static_rec_mutex_free (&mixer->rec_mutex);
-#else
   g_rec_mutex_clear (&mixer->rec_mutex);
-#endif
 
   g_free (mixer);
 }

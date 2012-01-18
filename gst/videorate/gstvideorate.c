@@ -652,21 +652,13 @@ gst_video_rate_swap_prev (GstVideoRate * videorate, GstBuffer * buffer,
 static void
 gst_video_rate_notify_drop (GstVideoRate * videorate)
 {
-#if !GLIB_CHECK_VERSION(2,26,0)
-  g_object_notify ((GObject *) videorate, "drop");
-#else
   g_object_notify_by_pspec ((GObject *) videorate, pspec_drop);
-#endif
 }
 
 static void
 gst_video_rate_notify_duplicate (GstVideoRate * videorate)
 {
-#if !GLIB_CHECK_VERSION(2,26,0)
-  g_object_notify ((GObject *) videorate, "duplicate");
-#else
   g_object_notify_by_pspec ((GObject *) videorate, pspec_duplicate);
-#endif
 }
 
 #define MAGIC_LIMIT  25

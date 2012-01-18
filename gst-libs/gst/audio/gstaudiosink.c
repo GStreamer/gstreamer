@@ -438,14 +438,8 @@ gst_audio_sink_ring_buffer_activate (GstAudioRingBuffer * buf, gboolean active)
 
     GST_DEBUG_OBJECT (sink, "starting thread");
 
-#if !GLIB_CHECK_VERSION (2, 31, 0)
-    sink->thread =
-        g_thread_create ((GThreadFunc) audioringbuffer_thread_func, buf, TRUE,
-        &error);
-#else
     sink->thread = g_thread_try_new ("audiosink-ringbuffer",
         (GThreadFunc) audioringbuffer_thread_func, buf, &error);
-#endif
 
     if (!sink->thread || error != NULL)
       goto thread_failed;

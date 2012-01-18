@@ -395,11 +395,6 @@ main (int argc, char **argv)
   GstEncodingProfile *prof;
   gchar *inputuri;
 
-#if !GLIB_CHECK_VERSION (2, 31, 0)
-  if (!g_thread_supported ())
-    g_thread_init (NULL);
-#endif
-
   ctx = g_option_context_new ("- encode URIs with GstProfile and encodebin");
   g_option_context_add_main_entries (ctx, options, NULL);
   g_option_context_add_group (ctx, gst_init_get_option_group ());
