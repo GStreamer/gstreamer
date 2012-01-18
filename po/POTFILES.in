@@ -7,7 +7,6 @@ gst/playback/gstdecodebin2.c
 gst/playback/gstplaysink.c
 gst/playback/gstsubtitleoverlay.c
 gst/playback/gsturidecodebin.c
-gst/tcp/gsttcp.c
 gst/tcp/gsttcpclientsink.c
 gst/tcp/gsttcpclientsrc.c
 gst-libs/gst/audio/gstaudiocdsrc.c
