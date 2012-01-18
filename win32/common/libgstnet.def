@@ -1,14 +1,6 @@
 EXPORTS
-	gst_net_address_equal
-	gst_net_address_get_address_bytes
-	gst_net_address_get_ip4_address
-	gst_net_address_get_ip6_address
-	gst_net_address_get_net_type
+	gst_buffer_add_net_address_meta
 	gst_net_address_meta_get_info
-	gst_net_address_set_address_bytes
-	gst_net_address_set_ip4_address
-	gst_net_address_set_ip6_address
-	gst_net_address_to_string
 	gst_net_client_clock_get_type
 	gst_net_client_clock_new
 	gst_net_time_packet_new
