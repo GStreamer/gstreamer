@@ -29,6 +29,7 @@
 #include <gst/gstbuffer.h>
 #include "gstvaapicompat.h"
 #include "gstvaapiprofile.h"
+#include "gstvaapiworkarounds.h"
 
 typedef struct _GstVaapiProfileMap              GstVaapiProfileMap;
 typedef struct _GstVaapiEntrypointMap           GstVaapiEntrypointMap;
@@ -245,11 +246,18 @@ gst_vaapi_profile_from_caps(GstCaps *caps)
                 strcmp(profile_str, m->profile_str) == 0)
                 profile = best_profile;
         }
-        if (!profile)
+        if (!profile) {
             profile = gst_vaapi_profile_from_codec_data(
                 gst_vaapi_profile_get_codec(m->profile),
                 codec_data
             );
+            if (!profile &&
+                WORKAROUND_QTDEMUX_NO_H263_PROFILES &&
+                strncmp(name, "video/x-h263", namelen) == 0) {
+                /* HACK: qtdemux does not report profiles for h263 */
+                profile = m->profile;
+            }
+        }
         gst_caps_unref(caps_test);
     }
     return profile ? profile : best_profile;

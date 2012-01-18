@@ -30,6 +30,12 @@ G_BEGIN_DECLS
  */
 #define WORKAROUND_H263_BASELINE_DECODE_PROFILE (1)
 
+/*
+ * Workaround for qtdemux that does not report profiles for
+ * video/x-h263. Assume H.263 Baseline profile in this case.
+ */
+#define WORKAROUND_QTDEMUX_NO_H263_PROFILES (1)
+
 G_END_DECLS
 
 #endif /* GST_VAAPI_WORKAROUNDS_H */
