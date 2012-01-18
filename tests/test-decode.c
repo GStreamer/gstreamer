@@ -158,6 +158,8 @@ main(int argc, char *argv[])
     if (g_use_ffmpeg) {
 #if USE_FFMPEG
         decoder = gst_vaapi_decoder_ffmpeg_new(display, decoder_caps);
+#else
+        g_error("FFmpeg-based decoders are not supported");
 #endif
     }
     else {
@@ -173,6 +175,8 @@ main(int argc, char *argv[])
             decoder = NULL;
             break;
         }
+#else
+        g_error("codecparsers-based decoders are not supported");
 #endif
     }
     if (!decoder)
