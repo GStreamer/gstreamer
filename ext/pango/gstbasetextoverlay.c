@@ -294,9 +294,9 @@ gst_base_text_overlay_line_align_get_type (void)
 }
 
 #define GST_BASE_TEXT_OVERLAY_GET_COND(ov) (((GstBaseTextOverlay *)ov)->cond)
-#define GST_BASE_TEXT_OVERLAY_WAIT(ov)     (g_cond_wait (GST_BASE_TEXT_OVERLAY_GET_COND (ov), GST_OBJECT_GET_LOCK (ov)))
-#define GST_BASE_TEXT_OVERLAY_SIGNAL(ov)   (g_cond_signal (GST_BASE_TEXT_OVERLAY_GET_COND (ov)))
-#define GST_BASE_TEXT_OVERLAY_BROADCAST(ov)(g_cond_broadcast (GST_BASE_TEXT_OVERLAY_GET_COND (ov)))
+#define GST_BASE_TEXT_OVERLAY_WAIT(ov)     (g_cond_wait (&GST_BASE_TEXT_OVERLAY_GET_COND (ov), GST_OBJECT_GET_LOCK (ov)))
+#define GST_BASE_TEXT_OVERLAY_SIGNAL(ov)   (g_cond_signal (&GST_BASE_TEXT_OVERLAY_GET_COND (ov)))
+#define GST_BASE_TEXT_OVERLAY_BROADCAST(ov)(g_cond_broadcast (&GST_BASE_TEXT_OVERLAY_GET_COND (ov)))
 
 static GstElementClass *parent_class = NULL;
 static void gst_base_text_overlay_base_init (gpointer g_class);
@@ -418,7 +418,8 @@ gst_base_text_overlay_class_init (GstBaseTextOverlayClass * klass)
   gstelement_class->change_state =
       GST_DEBUG_FUNCPTR (gst_base_text_overlay_change_state);
 
-  klass->pango_lock = g_mutex_new ();
+  klass->pango_lock = g_slice_new (GMutex);
+  g_mutex_init (klass->pango_lock);
 
   klass->get_text = gst_base_text_overlay_get_text;
 
@@ -597,10 +598,7 @@ gst_base_text_overlay_finalize (GObject * object)
     overlay->text_buffer = NULL;
   }
 
-  if (overlay->cond) {
-    g_cond_free (overlay->cond);
-    overlay->cond = NULL;
-  }
+  g_cond_clear (&overlay->cond);
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
@@ -690,7 +688,7 @@ gst_base_text_overlay_init (GstBaseTextOverlay * overlay,
 
   overlay->text_buffer = NULL;
   overlay->text_linked = FALSE;
-  overlay->cond = g_cond_new ();
+  g_cond_init (&overlay->cond);
   gst_segment_init (&overlay->segment, GST_FORMAT_TIME);
   g_mutex_unlock (GST_BASE_TEXT_OVERLAY_GET_CLASS (overlay)->pango_lock);
 }

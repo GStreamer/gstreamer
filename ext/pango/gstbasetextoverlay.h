@@ -109,7 +109,7 @@ struct _GstBaseTextOverlay {
     gboolean                text_flushing;
     gboolean                text_eos;
 
-    GCond                   *cond;  /* to signal removal of a queued text
+    GCond                    cond;  /* to signal removal of a queued text
                                      * buffer, arrival of a text buffer,
                                      * a text segment update, or a change
                                      * in status (e.g. shutdown, flushing) */
