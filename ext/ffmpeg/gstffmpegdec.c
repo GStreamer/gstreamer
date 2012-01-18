@@ -766,9 +766,11 @@ gst_ffmpegdec_setcaps (GstPad * pad, GstCaps * caps)
   }
 
   /* set buffer functions */
-  ffmpegdec->context->get_buffer = gst_ffmpegdec_get_buffer;
-  ffmpegdec->context->release_buffer = gst_ffmpegdec_release_buffer;
-  ffmpegdec->context->draw_horiz_band = NULL;
+  if (oclass->in_plugin->type == AVMEDIA_TYPE_VIDEO) {
+    ffmpegdec->context->get_buffer = gst_ffmpegdec_get_buffer;
+    ffmpegdec->context->release_buffer = gst_ffmpegdec_release_buffer;
+    ffmpegdec->context->draw_horiz_band = NULL;
+  }
 
   /* default is to let format decide if it needs a parser */
   ffmpegdec->turnoff_parser = FALSE;
