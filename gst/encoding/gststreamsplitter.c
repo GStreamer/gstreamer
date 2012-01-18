@@ -38,10 +38,11 @@ GST_DEBUG_CATEGORY_STATIC (gst_stream_splitter_debug);
 
 G_DEFINE_TYPE (GstStreamSplitter, gst_stream_splitter, GST_TYPE_ELEMENT);
 
-#define STREAMS_LOCK(obj) (g_mutex_lock(obj->lock))
-#define STREAMS_UNLOCK(obj) (g_mutex_unlock(obj->lock))
+#define STREAMS_LOCK(obj) (g_mutex_lock(&obj->lock))
+#define STREAMS_UNLOCK(obj) (g_mutex_unlock(&obj->lock))
 
 static void gst_stream_splitter_dispose (GObject * object);
+static void gst_stream_splitter_finalize (GObject * object);
 
 static gboolean gst_stream_splitter_sink_setcaps (GstPad * pad, GstCaps * caps);
 
@@ -60,6 +61,7 @@ gst_stream_splitter_class_init (GstStreamSplitterClass * klass)
   gstelement_klass = (GstElementClass *) klass;
 
   gobject_klass->dispose = gst_stream_splitter_dispose;
+  gobject_klass->finalize = gst_stream_splitter_finalize;
 
   GST_DEBUG_CATEGORY_INIT (gst_stream_splitter_debug, "streamsplitter", 0,
       "Stream Splitter");
@@ -85,17 +87,22 @@ gst_stream_splitter_dispose (GObject * object)
 {
   GstStreamSplitter *stream_splitter = (GstStreamSplitter *) object;
 
-  if (stream_splitter->lock) {
-    g_mutex_free (stream_splitter->lock);
-    stream_splitter->lock = NULL;
-  }
-
   g_list_foreach (stream_splitter->pending_events, (GFunc) gst_event_unref,
       NULL);
   g_list_free (stream_splitter->pending_events);
   stream_splitter->pending_events = NULL;
 
   G_OBJECT_CLASS (gst_stream_splitter_parent_class)->dispose (object);
+}
+
+static void
+gst_stream_splitter_finalize (GObject * object)
+{
+  GstStreamSplitter *stream_splitter = (GstStreamSplitter *) object;
+
+  g_mutex_clear (&stream_splitter->lock);
+
+  G_OBJECT_CLASS (gst_stream_splitter_parent_class)->finalize (object);
 }
 
 static GstFlowReturn
@@ -416,7 +423,7 @@ gst_stream_splitter_init (GstStreamSplitter * stream_splitter)
       gst_stream_splitter_sink_query);
   gst_element_add_pad (GST_ELEMENT (stream_splitter), stream_splitter->sinkpad);
 
-  stream_splitter->lock = g_mutex_new ();
+  g_mutex_init (&stream_splitter->lock);
 }
 
 static GstPad *

@@ -41,7 +41,7 @@ struct _GstStreamSplitter {
    * * the current pad
    * * the list of srcpads
    */
-  GMutex *lock;
+  GMutex lock;
   /* Currently activated srcpad */
   GstPad *current;
   GList *srcpads;

@@ -38,10 +38,10 @@ GST_DEBUG_CATEGORY_STATIC (gst_stream_combiner_debug);
 
 G_DEFINE_TYPE (GstStreamCombiner, gst_stream_combiner, GST_TYPE_ELEMENT);
 
-#define STREAMS_LOCK(obj) (g_mutex_lock(obj->lock))
-#define STREAMS_UNLOCK(obj) (g_mutex_unlock(obj->lock))
+#define STREAMS_LOCK(obj) (g_mutex_lock(&obj->lock))
+#define STREAMS_UNLOCK(obj) (g_mutex_unlock(&obj->lock))
 
-static void gst_stream_combiner_dispose (GObject * object);
+static void gst_stream_combiner_finalize (GObject * object);
 
 static GstPad *gst_stream_combiner_request_new_pad (GstElement * element,
     GstPadTemplate * templ, const gchar * name, const GstCaps * caps);
@@ -57,7 +57,7 @@ gst_stream_combiner_class_init (GstStreamCombinerClass * klass)
   gobject_klass = (GObjectClass *) klass;
   gstelement_klass = (GstElementClass *) klass;
 
-  gobject_klass->dispose = gst_stream_combiner_dispose;
+  gobject_klass->finalize = gst_stream_combiner_finalize;
 
   GST_DEBUG_CATEGORY_INIT (gst_stream_combiner_debug, "streamcombiner", 0,
       "Stream Combiner");
@@ -79,16 +79,13 @@ gst_stream_combiner_class_init (GstStreamCombinerClass * klass)
 }
 
 static void
-gst_stream_combiner_dispose (GObject * object)
+gst_stream_combiner_finalize (GObject * object)
 {
   GstStreamCombiner *stream_combiner = (GstStreamCombiner *) object;
 
-  if (stream_combiner->lock) {
-    g_mutex_free (stream_combiner->lock);
-    stream_combiner->lock = NULL;
-  }
+  g_mutex_clear (&stream_combiner->lock);
 
-  G_OBJECT_CLASS (gst_stream_combiner_parent_class)->dispose (object);
+  G_OBJECT_CLASS (gst_stream_combiner_parent_class)->finalize (object);
 }
 
 static GstFlowReturn
@@ -199,7 +196,7 @@ gst_stream_combiner_init (GstStreamCombiner * stream_combiner)
       gst_stream_combiner_src_query);
   gst_element_add_pad (GST_ELEMENT (stream_combiner), stream_combiner->srcpad);
 
-  stream_combiner->lock = g_mutex_new ();
+  g_mutex_init (&stream_combiner->lock);
 }
 
 static GstPad *
