@@ -399,6 +399,7 @@ AG_GST_CHECK_PLUGIN(audiotestsrc)
 AG_GST_CHECK_PLUGIN(encoding)
 AG_GST_CHECK_PLUGIN(videoconvert)
 AG_GST_CHECK_PLUGIN(gdp)
+AG_GST_CHECK_PLUGIN(gio)
 AG_GST_CHECK_PLUGIN(playback)
 AG_GST_CHECK_PLUGIN(audioresample)
 AG_GST_CHECK_PLUGIN(subparse)
@@ -721,7 +722,6 @@ dnl not building plugins with external dependencies,
 dnl but we still need to set the conditionals
 AM_CONDITIONAL(USE_ALSA, false)
 AM_CONDITIONAL(USE_CDPARANOIA, false)
-AM_CONDITIONAL(USE_GIO, false)
 AM_CONDITIONAL(USE_IVORBIS, false)
 AM_CONDITIONAL(USE_LIBVISUAL, false)
 AM_CONDITIONAL(USE_OGG, false)
@@ -827,6 +827,7 @@ gst/audiotestsrc/Makefile
 gst/encoding/Makefile
 gst/videoconvert/Makefile
 gst/gdp/Makefile
+gst/gio/Makefile
 gst/playback/Makefile
 gst/audioresample/Makefile
 gst/subparse/Makefile
@@ -842,7 +843,6 @@ sys/xvimage/Makefile
 ext/Makefile
 ext/alsa/Makefile
 ext/cdparanoia/Makefile
-ext/gio/Makefile
 ext/libvisual/Makefile
 ext/ogg/Makefile
 ext/pango/Makefile

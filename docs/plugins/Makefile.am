@@ -54,10 +54,6 @@ EXTRA_HFILES = \
 	$(top_srcdir)/ext/alsa/gstalsasink.h \
 	$(top_srcdir)/ext/alsa/gstalsasrc.h \
 	$(top_srcdir)/ext/cdparanoia/gstcdparanoiasrc.h \
-	$(top_srcdir)/ext/gio/gstgiosink.h \
-	$(top_srcdir)/ext/gio/gstgiosrc.h \
-	$(top_srcdir)/ext/gio/gstgiostreamsink.h \
-	$(top_srcdir)/ext/gio/gstgiostreamsrc.h \
 	$(top_srcdir)/ext/ogg/gstoggdemux.h \
 	$(top_srcdir)/ext/ogg/gstoggmux.h \
 	$(top_srcdir)/ext/pango/gstclockoverlay.h \
@@ -78,6 +74,10 @@ EXTRA_HFILES = \
 	$(top_srcdir)/gst/encoding/gstencodebin.h \
 	$(top_srcdir)/gst/gdp/gstgdpdepay.h \
 	$(top_srcdir)/gst/gdp/gstgdppay.h \
+	$(top_srcdir)/gst/gio/gstgiosink.h \
+	$(top_srcdir)/gst/gio/gstgiosrc.h \
+	$(top_srcdir)/gst/gio/gstgiostreamsink.h \
+	$(top_srcdir)/gst/gio/gstgiostreamsrc.h \
 	$(top_srcdir)/gst/playback/gstplay-enum.h \
 	$(top_srcdir)/gst/playback/gstsubtitleoverlay.h \
 	$(top_srcdir)/gst/audiorate/gstaudiorate.h \

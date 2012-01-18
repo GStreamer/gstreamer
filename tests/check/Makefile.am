@@ -35,12 +35,6 @@ else
 check_alsa =
 endif
 
-if USE_GIO
-check_gio = pipelines/gio
-else
-check_gio =
-endif
-
 if USE_LIBVISUAL
 check_libvisual = elements/libvisual
 else
@@ -102,7 +96,6 @@ endif
 
 check_PROGRAMS = \
 	$(check_alsa) \
-	$(check_gio) \
 	$(check_ogg) \
 	$(check_vorbis) \
 	elements/audioconvert \
@@ -132,6 +125,7 @@ check_PROGRAMS = \
 	pipelines/streamheader \
 	pipelines/basetime \
 	pipelines/capsfilter-renegotiation \
+	pipelines/gio \
 	elements/appsink            \
 	elements/appsrc             \
 	elements/audiorate          \

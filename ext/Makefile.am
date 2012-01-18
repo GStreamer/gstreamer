@@ -10,12 +10,6 @@ else
 CDPARANOIA_DIR=
 endif
 
-if USE_GIO
-GIO_DIR=gio
-else
-GIO_DIR=
-endif
-
 if USE_LIBVISUAL
 LIBVISUAL_DIR=libvisual
 else
@@ -57,7 +51,6 @@ endif
 SUBDIRS = \
   $(ALSA_DIR) \
   $(CDPARANOIA_DIR) \
-  $(GIO_DIR) \
   $(LIBVISUAL_DIR) \
   $(OGG_DIR) \
   $(PANGO_DIR) \
@@ -67,7 +60,6 @@ SUBDIRS = \
 DIST_SUBDIRS = \
   alsa \
   cdparanoia \
-  gio \
   libvisual \
   ogg \
   pango \
