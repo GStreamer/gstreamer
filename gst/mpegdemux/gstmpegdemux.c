@@ -2543,13 +2543,16 @@ gst_flups_sink_get_duration (GstFluPSDemux * demux)
       " in packet starting at %" G_GUINT64_FORMAT,
       demux->first_pts, GST_TIME_ARGS (MPEGTIME_TO_GSTTIME (demux->first_pts)),
       offset);
-  /* scan for last PTS in the stream */
-  offset = demux->sink_segment.stop;
-  gst_flups_demux_scan_backward_ts (demux, &offset, SCAN_PTS, &demux->last_pts);
-  GST_DEBUG_OBJECT (demux, "Last PTS: %" G_GINT64_FORMAT " %" GST_TIME_FORMAT
-      " in packet starting at %" G_GUINT64_FORMAT,
-      demux->last_pts, GST_TIME_ARGS (MPEGTIME_TO_GSTTIME (demux->last_pts)),
-      offset);
+  if (demux->first_pts != G_MAXUINT64) {
+    /* scan for last PTS in the stream */
+    offset = demux->sink_segment.stop;
+    gst_flups_demux_scan_backward_ts (demux, &offset, SCAN_PTS,
+        &demux->last_pts);
+    GST_DEBUG_OBJECT (demux,
+        "Last PTS: %" G_GINT64_FORMAT " %" GST_TIME_FORMAT
+        " in packet starting at %" G_GUINT64_FORMAT, demux->last_pts,
+        GST_TIME_ARGS (MPEGTIME_TO_GSTTIME (demux->last_pts)), offset);
+  }
   /* Detect wrong SCR values */
   if (demux->first_scr > demux->last_scr) {
     GST_DEBUG_OBJECT (demux, "Wrong SCR values detected, searching for "
