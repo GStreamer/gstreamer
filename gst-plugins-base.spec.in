@@ -56,7 +56,7 @@ export DOCS_ARE_INCOMPLETE_PLEASE_FIXME=0
 %configure \
   --enable-gtk-doc --enable-introspection=yes
 
-make %{?_smp_mflags}
+make %{?_smp_mflags} CFLAGS+="-Wno-error" CXXFLAGS+="-Wno-error"
                                                                                 
 %install
 rm -rf $RPM_BUILD_ROOT
@@ -145,7 +145,6 @@ GStreamer Plugins Base library development and header files.
 # plugin helper library headers
 %{_includedir}/gstreamer-%{majorminor}/gst/audio/audio.h
 %{_includedir}/gstreamer-%{majorminor}/gst/audio/gstaudiofilter.h
-%{_includedir}/gstreamer-%{majorminor}/gst/audio/multichannel.h
 %{_includedir}/gstreamer-%{majorminor}/gst/riff/riff-ids.h
 %{_includedir}/gstreamer-%{majorminor}/gst/riff/riff-media.h
 %{_includedir}/gstreamer-%{majorminor}/gst/riff/riff-read.h
@@ -154,7 +153,7 @@ GStreamer Plugins Base library development and header files.
 %{_includedir}/gstreamer-%{majorminor}/gst/video/gstvideometa.h
 %{_includedir}/gstreamer-%{majorminor}/gst/interfaces/interfaces-enumtypes.h
 %{_includedir}/gstreamer-%{majorminor}/gst/interfaces/navigation.h
-%{_includedir}/gstreamer-%{majorminor}/gst/interfaces/propertyprobe.h
+%{_includedir}/gstreamer-%{majorminor}//gst/audio/gstaudiometa.h
 %{_includedir}/gstreamer-%{majorminor}/gst/interfaces/tuner.h
 %{_includedir}/gstreamer-%{majorminor}/gst/interfaces/tunerchannel.h
 %{_includedir}/gstreamer-%{majorminor}/gst/interfaces/tunernorm.h
