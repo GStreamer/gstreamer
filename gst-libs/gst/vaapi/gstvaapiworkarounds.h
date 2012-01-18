@@ -24,6 +24,12 @@
 
 G_BEGIN_DECLS
 
+/*
+ * Workaround to expose H.263 Baseline decode profile for drivers that
+ * support MPEG-4:2 Simple profile decoding.
+ */
+#define WORKAROUND_H263_BASELINE_DECODE_PROFILE (1)
+
 G_END_DECLS
 
 #endif /* GST_VAAPI_WORKAROUNDS_H */

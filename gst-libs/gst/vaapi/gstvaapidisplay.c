@@ -30,6 +30,7 @@
 #include "gstvaapiutils.h"
 #include "gstvaapidisplay.h"
 #include "gstvaapidisplay_priv.h"
+#include "gstvaapiworkarounds.h"
 
 #define DEBUG 1
 #include "gstvaapidebug.h"
@@ -180,6 +181,36 @@ find_config(
             return TRUE;
     }
     return FALSE;
+}
+
+/* HACK: append H.263 Baseline profile if MPEG-4:2 Simple profile is supported */
+static void
+append_h263_config(GArray *configs)
+{
+    GstVaapiConfig *config, tmp_config;
+    GstVaapiConfig *mpeg4_simple_config = NULL;
+    GstVaapiConfig *h263_baseline_config = NULL;
+    guint i;
+
+    if (!WORKAROUND_H263_BASELINE_DECODE_PROFILE)
+        return;
+
+    if (!configs)
+        return;
+
+    for (i = 0; i < configs->len; i++) {
+        config = &g_array_index(configs, GstVaapiConfig, i);
+        if (config->profile == GST_VAAPI_PROFILE_MPEG4_SIMPLE)
+            mpeg4_simple_config = config;
+        else if (config->profile == GST_VAAPI_PROFILE_H263_BASELINE)
+            h263_baseline_config = config;
+    }
+
+    if (mpeg4_simple_config && !h263_baseline_config) {
+        tmp_config = *mpeg4_simple_config;
+        tmp_config.profile = GST_VAAPI_PROFILE_H263_BASELINE;
+        g_array_append_val(configs, tmp_config);
+    }
 }
 
 /* Convert configs array to profiles as GstCaps */
@@ -439,6 +470,7 @@ gst_vaapi_display_create(GstVaapiDisplay *display)
             }
         }
     }
+    append_h263_config(priv->decoders);
 
     /* VA image formats */
     formats = g_new(VAImageFormat, vaMaxNumImageFormats(priv->display));
