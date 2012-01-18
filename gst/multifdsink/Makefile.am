@@ -19,7 +19,7 @@ libgstmultifdsink_la_SOURCES = \
 nodist_libgstmultifdsink_la_SOURCES = \
 	$(built_sources)
 
-libgstmultifdsink_la_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(GST_BASE_CFLAGS) $(GST_CFLAGS)
+libgstmultifdsink_la_CFLAGS = $(GST_PLUGINS_BAD_CFLAGS) $(GST_PLUGINS_BASE_CFLAGS) $(GST_BASE_CFLAGS) $(GST_CFLAGS)
 libgstmultifdsink_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 libgstmultifdsink_la_LIBADD = $(GST_BASE_LIBS) $(GST_LIBS)
 libgstmultifdsink_la_LIBTOOLFLAGS = --tag=disable-static
