@@ -152,7 +152,9 @@ AG_GST_CHECK_FUNCTION
 dnl *** checks for dependency libraries ***
 
 dnl GLib is required
-AG_GST_GLIB_CHECK([2.20])
+GLIB_REQ=2.31.10
+AG_GST_GLIB_CHECK([$GLIB_REQ])
+
 ORC_CHECK([0.4.6])
 
 dnl checks for gstreamer
