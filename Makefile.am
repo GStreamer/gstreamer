@@ -82,6 +82,7 @@ CRUFT_FILES = \
 	$(top_builddir)/tools/gst-discoverer
 
 CRUFT_DIRS = \
+	$(top_srcdir)/ext/gio \
 	$(top_srcdir)/sys/v4l \
 	$(top_srcdir)/tests/examples/v4l
 
