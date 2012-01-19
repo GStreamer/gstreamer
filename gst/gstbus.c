@@ -549,7 +549,7 @@ beach:
  * Returns: (transfer full): the #GstMessage that is on the bus after the
  *     specified timeout or NULL if the bus is empty after the timeout expired.
  * The message is taken from the bus and needs to be unreffed with
- * gst_message_unre:f() after usage.
+ * gst_message_unref() after usage.
  *
  * MT safe.
  *
