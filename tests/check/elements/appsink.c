@@ -39,6 +39,7 @@ setup_appsink (void)
   GST_DEBUG ("setup_appsink");
   appsink = gst_check_setup_element ("appsink");
   mysrcpad = gst_check_setup_src_pad (appsink, &srctemplate);
+  gst_pad_set_active (mysrcpad, TRUE);
 
   return appsink;
 }

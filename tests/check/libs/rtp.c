@@ -40,7 +40,7 @@ GST_START_TEST (test_rtp_buffer)
   /* check GstRTPHeader structure alignment and packing */
   buf = gst_rtp_buffer_new_allocate (16, 4, 0);
   fail_unless (buf != NULL);
-  data = gst_buffer_map (buf, &size, NULL, GST_MAP_READ);
+  data = gst_buffer_map (buf, &size, NULL, GST_MAP_READWRITE);
   fail_unless_equals_int (size, RTP_HEADER_LEN + 16 + 4);
 
   gst_rtp_buffer_map (buf, GST_MAP_READWRITE, &rtp);
@@ -114,7 +114,7 @@ GST_START_TEST (test_rtp_buffer)
   /* and again, this time with CSRCs */
   buf = gst_rtp_buffer_new_allocate (16, 4, 3);
   fail_unless (buf != NULL);
-  data = gst_buffer_map (buf, &size, NULL, GST_MAP_READ);
+  data = gst_buffer_map (buf, &size, NULL, GST_MAP_READWRITE);
   fail_unless_equals_int (size, RTP_HEADER_LEN + 16 + 4 + 4 * 3);
 
   gst_rtp_buffer_map (buf, GST_MAP_READWRITE, &rtp);
@@ -229,7 +229,7 @@ GST_START_TEST (test_rtp_buffer_set_extension_data)
 
   /* check GstRTPHeader structure alignment and packing */
   buf = gst_rtp_buffer_new_allocate (4, 0, 0);
-  data = gst_buffer_map (buf, &bsize, NULL, GST_MAP_READ);
+  data = gst_buffer_map (buf, &bsize, NULL, GST_MAP_READWRITE);
 
   gst_rtp_buffer_map (buf, GST_MAP_READWRITE, &rtp);
 
@@ -253,7 +253,7 @@ GST_START_TEST (test_rtp_buffer_set_extension_data)
   gst_buffer_unref (buf);
 
   buf = gst_rtp_buffer_new_allocate (20, 0, 0);
-  data = gst_buffer_map (buf, &bsize, NULL, GST_MAP_READ);
+  data = gst_buffer_map (buf, &bsize, NULL, GST_MAP_READWRITE);
   gst_rtp_buffer_map (buf, GST_MAP_READWRITE, &rtp);
 
   fail_unless (gst_rtp_buffer_get_extension (&rtp) == FALSE);
@@ -272,7 +272,7 @@ GST_START_TEST (test_rtp_buffer_set_extension_data)
 
   /* Test header extensions with a one byte header */
   buf = gst_rtp_buffer_new_allocate (20, 0, 0);
-  data = gst_buffer_map (buf, &bsize, NULL, GST_MAP_READ);
+  data = gst_buffer_map (buf, &bsize, NULL, GST_MAP_READWRITE);
   gst_rtp_buffer_map (buf, GST_MAP_READWRITE, &rtp);
 
   fail_unless (gst_rtp_buffer_get_extension (&rtp) == FALSE);
@@ -336,7 +336,7 @@ GST_START_TEST (test_rtp_buffer_set_extension_data)
 
   /* Test header extensions with a two bytes header */
   buf = gst_rtp_buffer_new_allocate (20, 0, 0);
-  data = gst_buffer_map (buf, &bsize, NULL, GST_MAP_READ);
+  data = gst_buffer_map (buf, &bsize, NULL, GST_MAP_READWRITE);
   gst_rtp_buffer_map (buf, GST_MAP_READWRITE, &rtp);
 
   fail_unless (gst_rtp_buffer_get_extension (&rtp) == FALSE);

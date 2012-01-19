@@ -439,6 +439,9 @@ libs_video_LDADD = \
 pipelines_gio_CFLAGS = $(GIO_CFLAGS) $(AM_CFLAGS)
 pipelines_gio_LDADD = $(GIO_LIBS) $(LDADD)
 
+pipelines_streamheader_CFLAGS = $(GIO_CFLAGS) $(AM_CFLAGS)
+pipelines_streamheader_LDADD = $(GIO_LIBS) $(LDADD)
+
 pipelines_vorbisenc_CFLAGS = \
         $(GST_PLUGINS_BASE_CFLAGS) \
         $(AM_CFLAGS)
