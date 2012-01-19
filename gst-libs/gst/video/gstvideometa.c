@@ -235,19 +235,17 @@ gst_video_meta_map (GstVideoMeta * meta, guint plane, gint * stride,
  * gst_video_meta_unmap:
  * @meta: a #GstVideoMeta
  * @plane: a plane
- * @data: the data to unmap
  *
- * Unmap previously mapped data with gst_video_meta_map().
+ * Unmap a previously mapped plane with gst_video_meta_map().
  *
  * Returns: TRUE if the memory was successfully unmapped.
  */
 gboolean
-gst_video_meta_unmap (GstVideoMeta * meta, guint plane, gpointer data)
+gst_video_meta_unmap (GstVideoMeta * meta, guint plane)
 {
   guint offset;
   GstBuffer *buffer;
   GstMemory *mem;
-  guint8 *base;
 
   g_return_val_if_fail (meta != NULL, FALSE);
   g_return_val_if_fail (plane < meta->n_planes, FALSE);
@@ -257,9 +255,8 @@ gst_video_meta_unmap (GstVideoMeta * meta, guint plane, gpointer data)
 
   offset = meta->offset[plane];
   mem = find_mem_for_offset (buffer, &offset, GST_MAP_READ);
-  base = data;
 
-  gst_memory_unmap (mem, base - offset, -1);
+  gst_memory_unmap (mem);
 
   return TRUE;
 }

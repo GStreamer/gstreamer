@@ -124,7 +124,7 @@ gst_rtp_buffer_allocate_data (GstBuffer * buffer, guint payload_len,
   GST_RTP_HEADER_SEQ (data) = 0;
   GST_RTP_HEADER_TIMESTAMP (data) = 0;
   GST_RTP_HEADER_SSRC (data) = 0;
-  gst_memory_unmap (mem, data, len);
+  gst_memory_unmap (mem);
 
   gst_buffer_take_memory (buffer, -1, mem);
 }

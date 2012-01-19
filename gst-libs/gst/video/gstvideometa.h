@@ -68,7 +68,7 @@ struct _GstVideoMeta {
 
   gpointer (*map)    (GstVideoMeta *meta, guint plane, gint *stride,
                       GstMapFlags flags);
-  gboolean (*unmap)  (GstVideoMeta *meta, guint plane, gpointer data);
+  gboolean (*unmap)  (GstVideoMeta *meta, guint plane);
 };
 
 const GstMetaInfo * gst_video_meta_get_info (void);
@@ -85,7 +85,7 @@ GstVideoMeta * gst_buffer_add_video_meta_full  (GstBuffer *buffer, GstVideoFlags
 
 gpointer       gst_video_meta_map        (GstVideoMeta *meta, guint plane, gint *stride,
                                           GstMapFlags flags);
-gboolean       gst_video_meta_unmap      (GstVideoMeta *meta, guint plane, gpointer data);
+gboolean       gst_video_meta_unmap      (GstVideoMeta *meta, guint plane);
 
 /**
  * GstVideoCropMeta:

@@ -1107,7 +1107,7 @@ gst_video_frame_unmap (GstVideoFrame * frame)
 
   if (meta) {
     for (i = 0; i < frame->info.finfo->n_planes; i++) {
-      gst_video_meta_unmap (meta, i, frame->data[i]);
+      gst_video_meta_unmap (meta, i);
     }
   } else {
     guint8 *data;
