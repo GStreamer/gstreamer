@@ -394,8 +394,8 @@ vs_fill_borders_AYUV64 (const VSImage * dest, const uint8_t * val)
   uint8_t *data;
   uint64_t v;
 
-  v = (val[0] << 8) | (val[1] << 24) | (((guint64) val[2]) << 40) | (((guint64)
-          val[3]) << 56);
+  v = (((guint32) val[0]) << 8) | (((guint32) val[1]) << 24) |
+      (((guint64) val[2]) << 40) | (((guint64) val[3]) << 56);
 
   data = dest->real_pixels;
   for (i = 0; i < top; i++) {
