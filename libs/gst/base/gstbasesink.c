@@ -3323,7 +3323,7 @@ gst_base_sink_chain_list (GstPad * pad, GstObject * parent,
 
     result = GST_FLOW_OK;
     for (i = 0; i < len; i++) {
-      buffer = gst_buffer_list_get (list, 0);
+      buffer = gst_buffer_list_get (list, i);
       result = gst_base_sink_chain_main (basesink, pad,
           gst_buffer_ref (buffer));
       if (result != GST_FLOW_OK)
