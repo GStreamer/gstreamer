@@ -69,17 +69,9 @@ GST_DEBUG_CATEGORY_STATIC (input_selector_debug);
 #define NOTIFY_MUTEX_UNLOCK()
 #else
 static GStaticRecMutex notify_mutex = G_STATIC_REC_MUTEX_INIT;
-#define NOTIFY_MUTEX_LOCK() g_static_rec_mutex_lock (&notify_mutex)
-#define NOTIFY_MUTEX_UNLOCK() g_static_rec_mutex_unlock (&notify_mutex)
+#define NOTIFY_MUTEX_LOCK() g_rec_mutex_lock (&notify_mutex)
+#define NOTIFY_MUTEX_UNLOCK() g_rec_mutex_unlock (&notify_mutex)
 #endif
-
-#define GST_INPUT_SELECTOR_GET_LOCK(sel) (((GstInputSelector*)(sel))->lock)
-#define GST_INPUT_SELECTOR_GET_COND(sel) (((GstInputSelector*)(sel))->cond)
-#define GST_INPUT_SELECTOR_LOCK(sel) (g_mutex_lock (GST_INPUT_SELECTOR_GET_LOCK(sel)))
-#define GST_INPUT_SELECTOR_UNLOCK(sel) (g_mutex_unlock (GST_INPUT_SELECTOR_GET_LOCK(sel)))
-#define GST_INPUT_SELECTOR_WAIT(sel) (g_cond_wait (GST_INPUT_SELECTOR_GET_COND(sel), \
-			GST_INPUT_SELECTOR_GET_LOCK(sel)))
-#define GST_INPUT_SELECTOR_BROADCAST(sel) (g_cond_broadcast (GST_INPUT_SELECTOR_GET_COND(sel)))
 
 static GstStaticPadTemplate gst_input_selector_sink_factory =
 GST_STATIC_PAD_TEMPLATE ("sink_%u",
@@ -748,6 +740,7 @@ flushing:
 }
 
 static void gst_input_selector_dispose (GObject * object);
+static void gst_input_selector_finalize (GObject * object);
 
 static void gst_input_selector_set_property (GObject * object,
     guint prop_id, const GValue * value, GParamSpec * pspec);
@@ -813,6 +806,7 @@ gst_input_selector_class_init (GstInputSelectorClass * klass)
   GstElementClass *gstelement_class = GST_ELEMENT_CLASS (klass);
 
   gobject_class->dispose = gst_input_selector_dispose;
+  gobject_class->finalize = gst_input_selector_finalize;
 
   gobject_class->set_property = gst_input_selector_set_property;
   gobject_class->get_property = gst_input_selector_get_property;
@@ -890,8 +884,8 @@ gst_input_selector_init (GstInputSelector * sel)
   sel->padcount = 0;
   sel->sync_streams = DEFAULT_SYNC_STREAMS;
 
-  sel->lock = g_mutex_new ();
-  sel->cond = g_cond_new ();
+  g_mutex_init (&sel->lock);
+  g_cond_init (&sel->cond);
   sel->blocked = FALSE;
 }
 
@@ -904,16 +898,18 @@ gst_input_selector_dispose (GObject * object)
     gst_object_unref (sel->active_sinkpad);
     sel->active_sinkpad = NULL;
   }
-  if (sel->lock) {
-    g_mutex_free (sel->lock);
-    sel->lock = NULL;
-  }
-  if (sel->cond) {
-    g_cond_free (sel->cond);
-    sel->cond = NULL;
-  }
-
   G_OBJECT_CLASS (parent_class)->dispose (object);
+}
+
+static void
+gst_input_selector_finalize (GObject * object)
+{
+  GstInputSelector *sel = GST_INPUT_SELECTOR (object);
+
+  g_mutex_clear (&sel->lock);
+  g_cond_clear (&sel->cond);
+
+  G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
 /* this function must be called with the SELECTOR_LOCK. It returns TRUE when the

@@ -128,7 +128,7 @@ enum
 #define DEFAULT_MAX_SIZE_TIME     GST_SECOND    /* 1 second    */
 
 #define GST_QUEUE_MUTEX_LOCK(q) G_STMT_START {                          \
-  g_mutex_lock (q->qlock);                                              \
+  g_mutex_lock (&q->qlock);                                              \
 } G_STMT_END
 
 #define GST_QUEUE_MUTEX_LOCK_CHECK(q,label) G_STMT_START {              \
@@ -138,13 +138,13 @@ enum
 } G_STMT_END
 
 #define GST_QUEUE_MUTEX_UNLOCK(q) G_STMT_START {                        \
-  g_mutex_unlock (q->qlock);                                            \
+  g_mutex_unlock (&q->qlock);                                            \
 } G_STMT_END
 
 #define GST_QUEUE_WAIT_DEL_CHECK(q, label) G_STMT_START {               \
   STATUS (q, q->sinkpad, "wait for DEL");                               \
   q->waiting_del = TRUE;                                                \
-  g_cond_wait (q->item_del, q->qlock);                                  \
+  g_cond_wait (&q->item_del, &q->qlock);                                  \
   q->waiting_del = FALSE;                                               \
   if (q->srcresult != GST_FLOW_OK) {                                    \
     STATUS (q, q->srcpad, "received DEL wakeup");                       \
@@ -156,7 +156,7 @@ enum
 #define GST_QUEUE_WAIT_ADD_CHECK(q, label) G_STMT_START {               \
   STATUS (q, q->srcpad, "wait for ADD");                                \
   q->waiting_add = TRUE;                                                \
-  g_cond_wait (q->item_add, q->qlock);                                  \
+  g_cond_wait (&q->item_add, &q->qlock);                                  \
   q->waiting_add = FALSE;                                               \
   if (q->srcresult != GST_FLOW_OK) {                                    \
     STATUS (q, q->srcpad, "received ADD wakeup");                       \
@@ -168,14 +168,14 @@ enum
 #define GST_QUEUE_SIGNAL_DEL(q) G_STMT_START {                          \
   if (q->waiting_del) {                                                 \
     STATUS (q, q->srcpad, "signal DEL");                                \
-    g_cond_signal (q->item_del);                                        \
+    g_cond_signal (&q->item_del);                                        \
   }                                                                     \
 } G_STMT_END
 
 #define GST_QUEUE_SIGNAL_ADD(q) G_STMT_START {                          \
   if (q->waiting_add) {                                                 \
     STATUS (q, q->sinkpad, "signal ADD");                               \
-    g_cond_signal (q->item_add);                                        \
+    g_cond_signal (&q->item_add);                                        \
   }                                                                     \
 } G_STMT_END
 
@@ -421,9 +421,9 @@ gst_queue_init (GstQueue * queue)
   queue->leaky = GST_QUEUE_NO_LEAK;
   queue->srcresult = GST_FLOW_WRONG_STATE;
 
-  queue->qlock = g_mutex_new ();
-  queue->item_add = g_cond_new ();
-  queue->item_del = g_cond_new ();
+  g_mutex_init (&queue->qlock);
+  g_cond_init (&queue->item_add);
+  g_cond_init (&queue->item_del);
 
   g_queue_init (&queue->queue);
 
@@ -452,9 +452,9 @@ gst_queue_finalize (GObject * object)
     gst_mini_object_unref (data);
 
   g_queue_clear (&queue->queue);
-  g_mutex_free (queue->qlock);
-  g_cond_free (queue->item_add);
-  g_cond_free (queue->item_del);
+  g_mutex_clear (&queue->qlock);
+  g_cond_clear (&queue->item_add);
+  g_cond_clear (&queue->item_del);
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
@@ -1347,7 +1347,7 @@ gst_queue_src_activate_mode (GstPad * pad, GstObject * parent, GstPadMode mode,
         GST_QUEUE_MUTEX_LOCK (queue);
         queue->srcresult = GST_FLOW_WRONG_STATE;
         /* the item add signal will unblock */
-        g_cond_signal (queue->item_add);
+        g_cond_signal (&queue->item_add);
         GST_QUEUE_MUTEX_UNLOCK (queue);
 
         /* step 2, make sure streaming finishes */

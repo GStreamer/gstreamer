@@ -260,7 +260,7 @@ typedef GstFlowReturn (*GstCollectPads2ClipFunction) (GstCollectPads2 *pads, Gst
  *
  * Since: 0.10.36
  */
-#define GST_COLLECT_PADS2_STREAM_LOCK(pads)     (g_static_rec_mutex_lock(GST_COLLECT_PADS2_GET_STREAM_LOCK (pads)))
+#define GST_COLLECT_PADS2_STREAM_LOCK(pads)     (g_rec_mutex_lock(GST_COLLECT_PADS2_GET_STREAM_LOCK (pads)))
 /**
  * GST_COLLECT_PADS2_STREAM_UNLOCK:
  * @pads: a #GstCollectPads2
@@ -269,7 +269,7 @@ typedef GstFlowReturn (*GstCollectPads2ClipFunction) (GstCollectPads2 *pads, Gst
  *
  * Since: 0.10.36
  */
-#define GST_COLLECT_PADS2_STREAM_UNLOCK(pads)   (g_static_rec_mutex_unlock(GST_COLLECT_PADS2_GET_STREAM_LOCK (pads)))
+#define GST_COLLECT_PADS2_STREAM_UNLOCK(pads)   (g_rec_mutex_unlock(GST_COLLECT_PADS2_GET_STREAM_LOCK (pads)))
 
 /**
  * GstCollectPads2:
@@ -286,7 +286,7 @@ struct _GstCollectPads2 {
   GSList        *data;                  /* list of CollectData items */
 
   /*< private >*/
-  GStaticRecMutex stream_lock;          /* used to serialize collection among several streams */
+  GRecMutex      stream_lock;          /* used to serialize collection among several streams */
   /* with LOCK and/or STREAM_LOCK*/
   gboolean       started;
 
@@ -314,8 +314,8 @@ struct _GstCollectPads2 {
   gpointer       clip_user_data;
 
   /* no other lock needed */
-  GMutex        *evt_lock;              /* these make up sort of poor man's event signaling */
-  GCond         *evt_cond;
+  GMutex         evt_lock;              /* these make up sort of poor man's event signaling */
+  GCond          evt_cond;
   guint32        evt_cookie;
 
   gpointer _gst_reserved[GST_PADDING];

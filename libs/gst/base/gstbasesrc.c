@@ -159,9 +159,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-/* FIXME 0.11: suppress warnings for deprecated API such as GStaticRecMutex
- * with newer GLib versions (>= 2.31.0) */
-#define GLIB_DISABLE_DEPRECATION_WARNINGS
 #include <gst/gst_private.h>
 #include <gst/glib-compat-private.h>
 
@@ -173,14 +170,13 @@
 GST_DEBUG_CATEGORY_STATIC (gst_base_src_debug);
 #define GST_CAT_DEFAULT gst_base_src_debug
 
-#define GST_LIVE_GET_LOCK(elem)               (GST_BASE_SRC_CAST(elem)->live_lock)
+#define GST_LIVE_GET_LOCK(elem)               (&GST_BASE_SRC_CAST(elem)->live_lock)
 #define GST_LIVE_LOCK(elem)                   g_mutex_lock(GST_LIVE_GET_LOCK(elem))
 #define GST_LIVE_TRYLOCK(elem)                g_mutex_trylock(GST_LIVE_GET_LOCK(elem))
 #define GST_LIVE_UNLOCK(elem)                 g_mutex_unlock(GST_LIVE_GET_LOCK(elem))
-#define GST_LIVE_GET_COND(elem)               (GST_BASE_SRC_CAST(elem)->live_cond)
+#define GST_LIVE_GET_COND(elem)               (&GST_BASE_SRC_CAST(elem)->live_cond)
 #define GST_LIVE_WAIT(elem)                   g_cond_wait (GST_LIVE_GET_COND (elem), GST_LIVE_GET_LOCK (elem))
-#define GST_LIVE_TIMED_WAIT(elem, timeval)    g_cond_timed_wait (GST_LIVE_GET_COND (elem), GST_LIVE_GET_LOCK (elem),\
-                                                                                timeval)
+#define GST_LIVE_WAIT_UNTIL(elem, end_time)   g_cond_timed_wait (GST_LIVE_GET_COND (elem), GST_LIVE_GET_LOCK (elem), end_time)
 #define GST_LIVE_SIGNAL(elem)                 g_cond_signal (GST_LIVE_GET_COND (elem));
 #define GST_LIVE_BROADCAST(elem)              g_cond_broadcast (GST_LIVE_GET_COND (elem));
 
@@ -406,8 +402,8 @@ gst_base_src_init (GstBaseSrc * basesrc, gpointer g_class)
   basesrc->priv = GST_BASE_SRC_GET_PRIVATE (basesrc);
 
   basesrc->is_live = FALSE;
-  basesrc->live_lock = g_mutex_new ();
-  basesrc->live_cond = g_cond_new ();
+  g_mutex_init (&basesrc->live_lock);
+  g_cond_init (&basesrc->live_cond);
   basesrc->num_buffers = DEFAULT_NUM_BUFFERS;
   basesrc->num_buffers_left = -1;
 
@@ -455,8 +451,8 @@ gst_base_src_finalize (GObject * object)
 
   basesrc = GST_BASE_SRC (object);
 
-  g_mutex_free (basesrc->live_lock);
-  g_cond_free (basesrc->live_cond);
+  g_mutex_clear (&basesrc->live_lock);
+  g_cond_clear (&basesrc->live_cond);
 
   event_p = &basesrc->pending_seek;
   gst_event_replace (event_p, NULL);

@@ -211,7 +211,7 @@ static void
 gst_bus_init (GstBus * bus)
 {
   bus->queue = gst_atomic_queue_new (32);
-  bus->queue_lock = g_mutex_new ();
+  g_mutex_init (&bus->queue_lock);
 
   bus->priv = G_TYPE_INSTANCE_GET_PRIVATE (bus, GST_TYPE_BUS, GstBusPrivate);
   bus->priv->enable_async = DEFAULT_ENABLE_ASYNC;
@@ -227,7 +227,7 @@ gst_bus_dispose (GObject * object)
   if (bus->queue) {
     GstMessage *message;
 
-    g_mutex_lock (bus->queue_lock);
+    g_mutex_lock (&bus->queue_lock);
     do {
       message = gst_atomic_queue_pop (bus->queue);
       if (message)
@@ -235,9 +235,8 @@ gst_bus_dispose (GObject * object)
     } while (message != NULL);
     gst_atomic_queue_unref (bus->queue);
     bus->queue = NULL;
-    g_mutex_unlock (bus->queue_lock);
-    g_mutex_free (bus->queue_lock);
-    bus->queue_lock = NULL;
+    g_mutex_unlock (&bus->queue_lock);
+    g_mutex_clear (&bus->queue_lock);
 
     if (bus->priv->poll)
       gst_poll_free (bus->priv->poll);
@@ -334,11 +333,11 @@ gst_bus_post (GstBus * bus, GstMessage * message)
     {
       /* async delivery, we need a mutex and a cond to block
        * on */
-      GMutex *lock = g_mutex_new ();
-      GCond *cond = g_cond_new ();
+      GCond *cond = GST_MESSAGE_GET_COND (message);
+      GMutex *lock = GST_MESSAGE_GET_LOCK (message);
 
-      GST_MESSAGE_COND (message) = cond;
-      GST_MESSAGE_GET_LOCK (message) = lock;
+      g_cond_init (cond);
+      g_mutex_init (lock);
 
       GST_DEBUG_OBJECT (bus, "[msg %p] waiting for async delivery", message);
 
@@ -356,8 +355,8 @@ gst_bus_post (GstBus * bus, GstMessage * message)
 
       GST_DEBUG_OBJECT (bus, "[msg %p] delivered asynchronously", message);
 
-      g_mutex_free (lock);
-      g_cond_free (cond);
+      g_mutex_clear (lock);
+      g_cond_clear (cond);
       break;
     }
     default:
@@ -471,7 +470,7 @@ gst_bus_timed_pop_filtered (GstBus * bus, GstClockTime timeout,
   g_return_val_if_fail (types != 0, NULL);
   g_return_val_if_fail (timeout == 0 || bus->priv->poll != NULL, NULL);
 
-  g_mutex_lock (bus->queue_lock);
+  g_mutex_lock (&bus->queue_lock);
 
   while (TRUE) {
     gint ret;
@@ -516,9 +515,9 @@ gst_bus_timed_pop_filtered (GstBus * bus, GstClockTime timeout,
 
     /* only here in timeout case */
     g_assert (bus->priv->poll);
-    g_mutex_unlock (bus->queue_lock);
+    g_mutex_unlock (&bus->queue_lock);
     ret = gst_poll_wait (bus->priv->poll, timeout - elapsed);
-    g_mutex_lock (bus->queue_lock);
+    g_mutex_lock (&bus->queue_lock);
 
     if (ret == 0) {
       GST_INFO_OBJECT (bus, "timed out, breaking loop");
@@ -530,7 +529,7 @@ gst_bus_timed_pop_filtered (GstBus * bus, GstClockTime timeout,
 
 beach:
 
-  g_mutex_unlock (bus->queue_lock);
+  g_mutex_unlock (&bus->queue_lock);
 
   return message;
 }
@@ -550,7 +549,7 @@ beach:
  * Returns: (transfer full): the #GstMessage that is on the bus after the
  *     specified timeout or NULL if the bus is empty after the timeout expired.
  * The message is taken from the bus and needs to be unreffed with
- * gst_message_unref() after usage.
+ * gst_message_unre:f() after usage.
  *
  * MT safe.
  *
@@ -632,11 +631,11 @@ gst_bus_peek (GstBus * bus)
 
   g_return_val_if_fail (GST_IS_BUS (bus), NULL);
 
-  g_mutex_lock (bus->queue_lock);
+  g_mutex_lock (&bus->queue_lock);
   message = gst_atomic_queue_peek (bus->queue);
   if (message)
     gst_message_ref (message);
-  g_mutex_unlock (bus->queue_lock);
+  g_mutex_unlock (&bus->queue_lock);
 
   GST_DEBUG_OBJECT (bus, "peek on bus, got message %p", message);
 

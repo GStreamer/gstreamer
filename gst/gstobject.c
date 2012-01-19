@@ -252,7 +252,7 @@ gst_object_class_init (GstObjectClass * klass)
 static void
 gst_object_init (GstObject * object)
 {
-  object->lock = g_mutex_new ();
+  g_mutex_init (&object->lock);
   object->parent = NULL;
   object->name = NULL;
   GST_CAT_TRACE_OBJECT (GST_CAT_REFCOUNTING, object, "%p new", object);
@@ -450,7 +450,7 @@ gst_object_finalize (GObject * object)
   g_signal_handlers_destroy (object);
 
   g_free (gstobject->name);
-  g_mutex_free (gstobject->lock);
+  g_mutex_clear (&gstobject->lock);
 
 #ifndef GST_DISABLE_TRACE
   gst_alloc_trace_free (_gst_object_trace, object);

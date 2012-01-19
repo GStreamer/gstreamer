@@ -60,9 +60,6 @@
  * Last reviewed on 2006-07-06 (0.10.9)
  */
 
-/* FIXME 0.11: suppress warnings for deprecated API such as GStaticRecMutex
- * with newer GLib versions (>= 2.31.0) */
-#define GLIB_DISABLE_DEPRECATION_WARNINGS
 #include "gst_private.h"
 
 #include "gstpad.h"
@@ -325,9 +322,9 @@ gst_pad_init (GstPad * pad)
 
   GST_PAD_SET_FLUSHING (pad);
 
-  g_static_rec_mutex_init (&pad->stream_rec_lock);
+  g_rec_mutex_init (&pad->stream_rec_lock);
 
-  pad->block_cond = g_cond_new ();
+  g_cond_init (&pad->block_cond);
 
   g_hook_list_init (&pad->probes, sizeof (GstProbe));
 
@@ -614,8 +611,8 @@ gst_pad_finalize (GObject * object)
   if (pad->iterintlinknotify)
     pad->iterintlinknotify (pad);
 
-  g_static_rec_mutex_free (&pad->stream_rec_lock);
-  g_cond_free (pad->block_cond);
+  g_rec_mutex_clear (&pad->stream_rec_lock);
+  g_cond_clear (&pad->block_cond);
   g_array_free (pad->priv->events, TRUE);
 
   G_OBJECT_CLASS (parent_class)->finalize (object);

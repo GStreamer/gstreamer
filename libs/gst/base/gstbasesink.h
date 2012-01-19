@@ -44,16 +44,16 @@ G_BEGIN_DECLS
  */
 #define GST_BASE_SINK_PAD(obj)          (GST_BASE_SINK_CAST (obj)->sinkpad)
 
-#define GST_BASE_SINK_GET_PREROLL_LOCK(pad)   (GST_BASE_SINK_CAST(pad)->preroll_lock)
+#define GST_BASE_SINK_GET_PREROLL_LOCK(pad)   (&GST_BASE_SINK_CAST(pad)->preroll_lock)
 #define GST_BASE_SINK_PREROLL_LOCK(pad)       (g_mutex_lock(GST_BASE_SINK_GET_PREROLL_LOCK(pad)))
 #define GST_BASE_SINK_PREROLL_TRYLOCK(pad)    (g_mutex_trylock(GST_BASE_SINK_GET_PREROLL_LOCK(pad)))
 #define GST_BASE_SINK_PREROLL_UNLOCK(pad)     (g_mutex_unlock(GST_BASE_SINK_GET_PREROLL_LOCK(pad)))
 
-#define GST_BASE_SINK_GET_PREROLL_COND(pad)   (GST_BASE_SINK_CAST(pad)->preroll_cond)
+#define GST_BASE_SINK_GET_PREROLL_COND(pad)   (&GST_BASE_SINK_CAST(pad)->preroll_cond)
 #define GST_BASE_SINK_PREROLL_WAIT(pad)       \
       g_cond_wait (GST_BASE_SINK_GET_PREROLL_COND (pad), GST_BASE_SINK_GET_PREROLL_LOCK (pad))
-#define GST_BASE_SINK_PREROLL_TIMED_WAIT(pad, timeval) \
-      g_cond_timed_wait (GST_BASE_SINK_GET_PREROLL_COND (pad), GST_BASE_SINK_GET_PREROLL_LOCK (pad), timeval)
+#define GST_BASE_SINK_PREROLL_WAIT_UNTIL(pad, end_time) \
+      g_cond_wait_until (GST_BASE_SINK_GET_PREROLL_COND (pad), GST_BASE_SINK_GET_PREROLL_LOCK (pad), end_time)
 #define GST_BASE_SINK_PREROLL_SIGNAL(pad)     g_cond_signal (GST_BASE_SINK_GET_PREROLL_COND (pad));
 #define GST_BASE_SINK_PREROLL_BROADCAST(pad)  g_cond_broadcast (GST_BASE_SINK_GET_PREROLL_COND (pad));
 
@@ -79,8 +79,8 @@ struct _GstBaseSink {
   gboolean       can_activate_push;
 
   /*< protected >*/ /* with PREROLL_LOCK */
-  GMutex        *preroll_lock;
-  GCond         *preroll_cond;
+  GMutex         preroll_lock;
+  GCond          preroll_cond;
   gboolean       eos;
   gboolean       need_preroll;
   gboolean       have_preroll;

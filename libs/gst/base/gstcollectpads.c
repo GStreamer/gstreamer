@@ -119,7 +119,7 @@ gst_collect_pads_init (GstCollectPads * pads)
 {
   pads->priv = GST_COLLECT_PADS_GET_PRIVATE (pads);
 
-  pads->cond = g_cond_new ();
+  g_cond_init (&pads->cond);
   pads->data = NULL;
   pads->cookie = 0;
   pads->numpads = 0;
@@ -128,7 +128,7 @@ gst_collect_pads_init (GstCollectPads * pads)
   pads->started = FALSE;
 
   /* members to manage the pad list */
-  pads->pad_lock = g_mutex_new ();
+  g_mutex_init (&pads->pad_lock);
   pads->pad_cookie = 0;
   pads->pad_list = NULL;
 }
@@ -141,8 +141,8 @@ gst_collect_pads_finalize (GObject * object)
 
   GST_DEBUG ("finalize");
 
-  g_cond_free (pads->cond);
-  g_mutex_free (pads->pad_lock);
+  g_cond_clear (&pads->cond);
+  g_mutex_clear (&pads->pad_lock);
 
   /* Remove pads */
   collected = pads->pad_list;

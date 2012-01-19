@@ -149,12 +149,12 @@ typedef enum
 /* the lock is used to handle the synchronous handling of messages,
  * the emiting thread is block until the handling thread processed
  * the message using this mutex/cond pair */
-#define GST_MESSAGE_GET_LOCK(message)   (GST_MESSAGE_CAST(message)->lock)
+#define GST_MESSAGE_GET_LOCK(message)   (&GST_MESSAGE_CAST(message)->lock)
 #define GST_MESSAGE_LOCK(message)       g_mutex_lock(GST_MESSAGE_GET_LOCK(message))
 #define GST_MESSAGE_UNLOCK(message)     g_mutex_unlock(GST_MESSAGE_GET_LOCK(message))
-#define GST_MESSAGE_COND(message)       (GST_MESSAGE_CAST(message)->cond)
-#define GST_MESSAGE_WAIT(message)       g_cond_wait(GST_MESSAGE_COND(message),GST_MESSAGE_GET_LOCK(message))
-#define GST_MESSAGE_SIGNAL(message)     g_cond_signal(GST_MESSAGE_COND(message))
+#define GST_MESSAGE_GET_COND(message)   (&GST_MESSAGE_CAST(message)->cond)
+#define GST_MESSAGE_WAIT(message)       g_cond_wait(GST_MESSAGE_GET_COND(message),GST_MESSAGE_GET_LOCK(message))
+#define GST_MESSAGE_SIGNAL(message)     g_cond_signal(GST_MESSAGE_GET_COND(message))
 
 /**
  * GST_MESSAGE_TYPE:
@@ -282,17 +282,17 @@ typedef enum {
  */
 struct _GstMessage
 {
-  GstMiniObject mini_object;
+  GstMiniObject   mini_object;
 
   /*< public > *//* with COW */
-  GstMessageType type;
-  guint64 timestamp;
-  GstObject *src;
-  guint32 seqnum;
+  GstMessageType  type;
+  guint64         timestamp;
+  GstObject      *src;
+  guint32         seqnum;
 
   /*< private >*//* with MESSAGE_LOCK */
-  GMutex *lock;                 /* lock and cond for async delivery */
-  GCond *cond;
+  GMutex          lock;                 /* lock and cond for async delivery */
+  GCond           cond;
 };
 
 GType           gst_message_get_type            (void);

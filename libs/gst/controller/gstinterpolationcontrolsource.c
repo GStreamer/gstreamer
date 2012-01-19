@@ -63,7 +63,7 @@ interpolate_none_get (GstTimedValueControlSource * self, GstClockTime timestamp,
   gboolean ret = FALSE;
   GSequenceIter *iter;
 
-  g_mutex_lock (self->lock);
+  g_mutex_lock (&self->lock);
 
   iter =
       gst_timed_value_control_source_find_control_point_iter (self, timestamp);
@@ -71,7 +71,7 @@ interpolate_none_get (GstTimedValueControlSource * self, GstClockTime timestamp,
     *value = _interpolate_none (self, iter);
     ret = TRUE;
   }
-  g_mutex_unlock (self->lock);
+  g_mutex_unlock (&self->lock);
   return ret;
 }
 
@@ -87,7 +87,7 @@ interpolate_none_get_value_array (GstTimedValueControlSource * self,
   gdouble val;
   GSequenceIter *iter1 = NULL, *iter2 = NULL;
 
-  g_mutex_lock (self->lock);
+  g_mutex_lock (&self->lock);
 
   for (i = 0; i < n_values; i++) {
     GST_LOG ("values[%3d] : ts=%" GST_TIME_FORMAT ", next_ts=%" GST_TIME_FORMAT,
@@ -124,7 +124,7 @@ interpolate_none_get_value_array (GstTimedValueControlSource * self,
     ts += interval;
     values++;
   }
-  g_mutex_unlock (self->lock);
+  g_mutex_unlock (&self->lock);
   return ret;
 }
 
@@ -155,7 +155,7 @@ interpolate_linear_get (GstTimedValueControlSource * self,
   GSequenceIter *iter;
   GstControlPoint *cp1, *cp2;
 
-  g_mutex_lock (self->lock);
+  g_mutex_lock (&self->lock);
 
   iter =
       gst_timed_value_control_source_find_control_point_iter (self, timestamp);
@@ -173,7 +173,7 @@ interpolate_linear_get (GstTimedValueControlSource * self,
         (cp2 ? cp2->value : 0.0), timestamp);
     ret = TRUE;
   }
-  g_mutex_unlock (self->lock);
+  g_mutex_unlock (&self->lock);
   return ret;
 }
 
@@ -190,7 +190,7 @@ interpolate_linear_get_value_array (GstTimedValueControlSource * self,
   GSequenceIter *iter1, *iter2 = NULL;
   GstControlPoint *cp1 = NULL, *cp2 = NULL;
 
-  g_mutex_lock (self->lock);
+  g_mutex_lock (&self->lock);
 
   for (i = 0; i < n_values; i++) {
     GST_LOG ("values[%3d] : ts=%" GST_TIME_FORMAT ", next_ts=%" GST_TIME_FORMAT,
@@ -229,7 +229,7 @@ interpolate_linear_get_value_array (GstTimedValueControlSource * self,
     ts += interval;
     values++;
   }
-  g_mutex_unlock (self->lock);
+  g_mutex_unlock (&self->lock);
   return ret;
 }
 
@@ -372,7 +372,7 @@ interpolate_cubic_get (GstTimedValueControlSource * self,
   if (self->nvalues <= 2)
     return interpolate_linear_get (self, timestamp, value);
 
-  g_mutex_lock (self->lock);
+  g_mutex_lock (&self->lock);
 
   iter =
       gst_timed_value_control_source_find_control_point_iter (self, timestamp);
@@ -388,7 +388,7 @@ interpolate_cubic_get (GstTimedValueControlSource * self,
         (cp2 ? cp2->value : 0.0), timestamp);
     ret = TRUE;
   }
-  g_mutex_unlock (self->lock);
+  g_mutex_unlock (&self->lock);
   return ret;
 }
 
@@ -409,7 +409,7 @@ interpolate_cubic_get_value_array (GstTimedValueControlSource * self,
     return interpolate_linear_get_value_array (self, timestamp, interval,
         n_values, values);
 
-  g_mutex_lock (self->lock);
+  g_mutex_lock (&self->lock);
 
   for (i = 0; i < n_values; i++) {
     GST_LOG ("values[%3d] : ts=%" GST_TIME_FORMAT ", next_ts=%" GST_TIME_FORMAT,
@@ -447,7 +447,7 @@ interpolate_cubic_get_value_array (GstTimedValueControlSource * self,
     ts += interval;
     values++;
   }
-  g_mutex_unlock (self->lock);
+  g_mutex_unlock (&self->lock);
   return ret;
 }
 

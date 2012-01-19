@@ -80,8 +80,8 @@ struct _GstBaseSrc {
 
   /* available to subclass implementations */
   /* MT-protected (with LIVE_LOCK) */
-  GMutex        *live_lock;
-  GCond         *live_cond;
+  GMutex         live_lock;
+  GCond          live_cond;
   gboolean       is_live;
   gboolean       live_running;
 

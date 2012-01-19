@@ -185,7 +185,7 @@ _gst_message_free (GstMessage * message)
     GST_MESSAGE_SRC (message) = NULL;
   }
 
-  if (message->lock) {
+  if (message->lock.p) {
     GST_MESSAGE_LOCK (message);
     GST_MESSAGE_SIGNAL (message);
     GST_MESSAGE_UNLOCK (message);
@@ -226,9 +226,6 @@ _gst_message_copy (GstMessage * message)
   if (GST_MESSAGE_SRC (message)) {
     GST_MESSAGE_SRC (copy) = gst_object_ref (GST_MESSAGE_SRC (message));
   }
-
-  GST_MESSAGE_GET_LOCK (copy) = GST_MESSAGE_GET_LOCK (message);
-  GST_MESSAGE_COND (copy) = GST_MESSAGE_COND (message);
 
   structure = GST_MESSAGE_STRUCTURE (message);
   if (structure) {

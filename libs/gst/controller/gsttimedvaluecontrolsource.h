@@ -84,7 +84,7 @@ struct _GstTimedValueControlSource {
   GstControlSource parent;
 
   /*< protected >*/
-  GMutex *lock;
+  GMutex lock;
 
   GSequence *values;            /* List of GstControlPoint */
   gint nvalues;                 /* Number of control points */
@@ -102,9 +102,9 @@ struct _GstTimedValueControlSourceClass {
 };
 
 #define GST_TIMED_VALUE_CONTROL_SOURCE_LOCK(o) \
-  g_mutex_lock(((GstTimedValueControlSource *)o)->lock)
+  g_mutex_lock(&((GstTimedValueControlSource *)o)->lock)
 #define GST_TIMED_VALUE_CONTROL_SOURCE_UNLOCK(o) \
-  g_mutex_unlock(((GstTimedValueControlSource *)o)->lock)
+  g_mutex_unlock(&((GstTimedValueControlSource *)o)->lock)
 
 GType gst_timed_value_control_source_get_type (void);
 

@@ -79,8 +79,8 @@ gst_tee_pull_mode_get_type (void)
 }
 
 /* lock to protect request pads from being removed while downstream */
-#define GST_TEE_DYN_LOCK(tee) g_mutex_lock ((tee)->dyn_lock)
-#define GST_TEE_DYN_UNLOCK(tee) g_mutex_unlock ((tee)->dyn_lock)
+#define GST_TEE_DYN_LOCK(tee) g_mutex_lock (&(tee)->dyn_lock)
+#define GST_TEE_DYN_UNLOCK(tee) g_mutex_unlock (&(tee)->dyn_lock)
 
 #define DEFAULT_PROP_NUM_SRC_PADS	0
 #define DEFAULT_PROP_HAS_SINK_LOOP	FALSE
@@ -180,7 +180,7 @@ gst_tee_finalize (GObject * object)
 
   g_free (tee->last_message);
 
-  g_mutex_free (tee->dyn_lock);
+  g_mutex_clear (&tee->dyn_lock);
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
@@ -250,7 +250,7 @@ gst_tee_class_init (GstTeeClass * klass)
 static void
 gst_tee_init (GstTee * tee)
 {
-  tee->dyn_lock = g_mutex_new ();
+  g_mutex_init (&tee->dyn_lock);
 
   tee->sinkpad = gst_pad_new_from_static_template (&sinktemplate, "sink");
   tee->sink_mode = GST_PAD_MODE_NONE;

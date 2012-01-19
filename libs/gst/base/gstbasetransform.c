@@ -205,9 +205,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-/* FIXME 0.11: suppress warnings for deprecated API such as GStaticRecMutex
- * with newer GLib versions (>= 2.31.0) */
-#define GLIB_DISABLE_DEPRECATION_WARNINGS
 #include "../../../gst/gst_private.h"
 #include "../../../gst/gst-i18n-lib.h"
 #include "../../../gst/glib-compat-private.h"
@@ -356,7 +353,7 @@ gst_base_transform_finalize (GObject * object)
 
   trans = GST_BASE_TRANSFORM (object);
 
-  g_mutex_free (trans->transform_lock);
+  g_mutex_clear (&trans->transform_lock);
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
@@ -442,7 +439,7 @@ gst_base_transform_init (GstBaseTransform * trans,
       GST_DEBUG_FUNCPTR (gst_base_transform_query));
   gst_element_add_pad (GST_ELEMENT (trans), trans->srcpad);
 
-  trans->transform_lock = g_mutex_new ();
+  g_mutex_init (&trans->transform_lock);
   trans->priv->qos_enabled = DEFAULT_PROP_QOS;
   trans->cache_caps1 = NULL;
   trans->cache_caps2 = NULL;

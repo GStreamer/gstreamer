@@ -25,7 +25,7 @@
 
 static GstPoll *set;
 static GList *fds = NULL;
-static GMutex *fdlock;
+static GMutex fdlock;
 static GTimer *timer;
 
 #define MAX_THREADS  100
@@ -37,7 +37,7 @@ mess_some_more (void)
   gint random;
   gint removed = 0;
 
-  g_mutex_lock (fdlock);
+  g_mutex_lock (&fdlock);
 
   for (walk = fds; walk;) {
     GstPollFD *fd = (GstPollFD *) walk->data;
@@ -106,7 +106,7 @@ mess_some_more (void)
     }
   }
 
-  g_mutex_unlock (fdlock);
+  g_mutex_unlock (&fdlock);
 }
 
 static void *
@@ -124,10 +124,10 @@ run_test (void *threadid)
     } else {
       mess_some_more ();
       if (g_timer_elapsed (timer, NULL) > 0.5) {
-        g_mutex_lock (fdlock);
+        g_mutex_lock (&fdlock);
         g_print ("active fds :%d\n", g_list_length (fds));
         g_timer_start (timer);
-        g_mutex_unlock (fdlock);
+        g_mutex_unlock (&fdlock);
       }
       g_usleep (1);
     }
@@ -145,7 +145,7 @@ main (gint argc, gchar * argv[])
 
   gst_init (&argc, &argv);
 
-  fdlock = g_mutex_new ();
+  g_mutex_init (&fdlock);
   timer = g_timer_new ();
 
   if (argc != 2) {

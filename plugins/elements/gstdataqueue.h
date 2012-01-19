@@ -127,11 +127,11 @@ struct _GstDataQueue
   GstDataQueueCheckFullFunction checkfull;      /* Callback to check if the queue is full */
   gpointer *checkdata;
 
-  GMutex *qlock;                /* lock for queue (vs object lock) */
+  GMutex qlock;                /* lock for queue (vs object lock) */
   gboolean waiting_add;
-  GCond *item_add;              /* signals buffers now available for reading */
+  GCond item_add;              /* signals buffers now available for reading */
   gboolean waiting_del;
-  GCond *item_del;              /* signals space now available for writing */
+  GCond item_del;              /* signals space now available for writing */
   gboolean flushing;            /* indicates whether conditions where signalled because
                                  * of external flushing */
   GstDataQueueFullCallback fullcallback;

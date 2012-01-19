@@ -159,7 +159,7 @@ enum
                         queue->queue.length))
 
 #define GST_QUEUE2_MUTEX_LOCK(q) G_STMT_START {                          \
-  g_mutex_lock (q->qlock);                                              \
+  g_mutex_lock (&q->qlock);                                              \
 } G_STMT_END
 
 #define GST_QUEUE2_MUTEX_LOCK_CHECK(q,res,label) G_STMT_START {         \
@@ -169,13 +169,13 @@ enum
 } G_STMT_END
 
 #define GST_QUEUE2_MUTEX_UNLOCK(q) G_STMT_START {                        \
-  g_mutex_unlock (q->qlock);                                            \
+  g_mutex_unlock (&q->qlock);                                            \
 } G_STMT_END
 
 #define GST_QUEUE2_WAIT_DEL_CHECK(q, res, label) G_STMT_START {         \
   STATUS (queue, q->sinkpad, "wait for DEL");                           \
   q->waiting_del = TRUE;                                                \
-  g_cond_wait (q->item_del, queue->qlock);                              \
+  g_cond_wait (&q->item_del, &queue->qlock);                              \
   q->waiting_del = FALSE;                                               \
   if (res != GST_FLOW_OK) {                                             \
     STATUS (queue, q->srcpad, "received DEL wakeup");                   \
@@ -187,7 +187,7 @@ enum
 #define GST_QUEUE2_WAIT_ADD_CHECK(q, res, label) G_STMT_START {         \
   STATUS (queue, q->srcpad, "wait for ADD");                            \
   q->waiting_add = TRUE;                                                \
-  g_cond_wait (q->item_add, q->qlock);                                  \
+  g_cond_wait (&q->item_add, &q->qlock);                                  \
   q->waiting_add = FALSE;                                               \
   if (res != GST_FLOW_OK) {                                             \
     STATUS (queue, q->srcpad, "received ADD wakeup");                   \
@@ -199,14 +199,14 @@ enum
 #define GST_QUEUE2_SIGNAL_DEL(q) G_STMT_START {                          \
   if (q->waiting_del) {                                                 \
     STATUS (q, q->srcpad, "signal DEL");                                \
-    g_cond_signal (q->item_del);                                        \
+    g_cond_signal (&q->item_del);                                        \
   }                                                                     \
 } G_STMT_END
 
 #define GST_QUEUE2_SIGNAL_ADD(q) G_STMT_START {                          \
   if (q->waiting_add) {                                                 \
     STATUS (q, q->sinkpad, "signal ADD");                               \
-    g_cond_signal (q->item_add);                                        \
+    g_cond_signal (&q->item_add);                                        \
   }                                                                     \
 } G_STMT_END
 
@@ -439,11 +439,11 @@ gst_queue2_init (GstQueue2 * queue)
   queue->in_timer = g_timer_new ();
   queue->out_timer = g_timer_new ();
 
-  queue->qlock = g_mutex_new ();
+  g_mutex_init (&queue->qlock);
   queue->waiting_add = FALSE;
-  queue->item_add = g_cond_new ();
+  g_cond_init (&queue->item_add);
   queue->waiting_del = FALSE;
-  queue->item_del = g_cond_new ();
+  g_cond_init (&queue->item_del);
   g_queue_init (&queue->queue);
 
   queue->buffering_percent = 100;
@@ -476,9 +476,9 @@ gst_queue2_finalize (GObject * object)
   }
 
   g_queue_clear (&queue->queue);
-  g_mutex_free (queue->qlock);
-  g_cond_free (queue->item_add);
-  g_cond_free (queue->item_del);
+  g_mutex_clear (&queue->qlock);
+  g_cond_clear (&queue->item_add);
+  g_cond_clear (&queue->item_del);
   g_timer_destroy (queue->in_timer);
   g_timer_destroy (queue->out_timer);
 

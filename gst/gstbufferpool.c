@@ -26,9 +26,6 @@
  *
  */
 
-/* FIXME 0.11: suppress warnings for deprecated API such as GStaticRecMutex
- * with newer GLib versions (>= 2.31.0) */
-#define GLIB_DISABLE_DEPRECATION_WARNINGS
 #include "gst_private.h"
 #include "glib-compat-private.h"
 
@@ -49,12 +46,12 @@ GST_DEBUG_CATEGORY_STATIC (gst_buffer_pool_debug);
 #define GST_BUFFER_POOL_GET_PRIVATE(obj)  \
    (G_TYPE_INSTANCE_GET_PRIVATE ((obj), GST_TYPE_BUFFER_POOL, GstBufferPoolPrivate))
 
-#define GST_BUFFER_POOL_LOCK(pool)   (g_static_rec_mutex_lock(&pool->priv->rec_lock))
-#define GST_BUFFER_POOL_UNLOCK(pool) (g_static_rec_mutex_unlock(&pool->priv->rec_lock))
+#define GST_BUFFER_POOL_LOCK(pool)   (g_rec_mutex_lock(&pool->priv->rec_lock))
+#define GST_BUFFER_POOL_UNLOCK(pool) (g_rec_mutex_unlock(&pool->priv->rec_lock))
 
 struct _GstBufferPoolPrivate
 {
-  GStaticRecMutex rec_lock;
+  GRecMutex rec_lock;
   guint size;
   guint min_buffers;
   guint max_buffers;
@@ -112,7 +109,7 @@ gst_buffer_pool_init (GstBufferPool * pool)
 {
   pool->priv = GST_BUFFER_POOL_GET_PRIVATE (pool);
 
-  g_static_rec_mutex_init (&pool->priv->rec_lock);
+  g_rec_mutex_init (&pool->priv->rec_lock);
 
   pool->poll = gst_poll_new_timer ();
   pool->queue = gst_atomic_queue_new (10);
@@ -140,7 +137,7 @@ gst_buffer_pool_finalize (GObject * object)
   gst_atomic_queue_unref (pool->queue);
   gst_poll_free (pool->poll);
   gst_structure_free (pool->config);
-  g_static_rec_mutex_free (&pool->priv->rec_lock);
+  g_rec_mutex_clear (&pool->priv->rec_lock);
 
   G_OBJECT_CLASS (gst_buffer_pool_parent_class)->finalize (object);
 }

@@ -79,9 +79,6 @@
  * Last reviewed on 2009-05-29 (0.10.24)
  */
 
-/* FIXME 0.11: suppress warnings for deprecated API such as GStaticRecMutex
- * with newer GLib versions (>= 2.31.0) */
-#define GLIB_DISABLE_DEPRECATION_WARNINGS
 #include "gst_private.h"
 #include <glib.h>
 #include <stdarg.h>
@@ -294,8 +291,8 @@ gst_element_init (GstElement * element)
   GST_STATE_PENDING (element) = GST_STATE_VOID_PENDING;
   GST_STATE_RETURN (element) = GST_STATE_CHANGE_SUCCESS;
 
-  g_static_rec_mutex_init (&element->state_lock);
-  element->state_cond = g_cond_new ();
+  g_rec_mutex_init (&element->state_lock);
+  g_cond_init (&element->state_cond);
 }
 
 /**
@@ -1922,22 +1919,9 @@ gst_element_get_state_func (GstElement * element,
 
   old_pending = GST_STATE_PENDING (element);
   if (old_pending != GST_STATE_VOID_PENDING) {
-    GTimeVal *timeval, abstimeout;
+    gboolean signaled;
     guint32 cookie;
 
-    if (timeout != GST_CLOCK_TIME_NONE) {
-      glong add = timeout / 1000;
-
-      if (add == 0)
-        goto done;
-
-      /* make timeout absolute */
-      g_get_current_time (&abstimeout);
-      g_time_val_add (&abstimeout, add);
-      timeval = &abstimeout;
-    } else {
-      timeval = NULL;
-    }
     /* get cookie to detect state changes during waiting */
     cookie = element->state_cookie;
 
@@ -1945,7 +1929,17 @@ gst_element_get_state_func (GstElement * element,
         "waiting for element to commit state");
 
     /* we have a pending state change, wait for it to complete */
-    if (!GST_STATE_TIMED_WAIT (element, timeval)) {
+    if (timeout != GST_CLOCK_TIME_NONE) {
+      gint64 end_time;
+      /* make timeout absolute */
+      end_time = g_get_monotonic_time () + (timeout / 1000);
+      signaled = GST_STATE_WAIT_UNTIL (element, end_time);
+    } else {
+      GST_STATE_WAIT (element);
+      signaled = TRUE;
+    }
+
+    if (!signaled) {
       GST_CAT_INFO_OBJECT (GST_CAT_STATES, element, "timed out");
       /* timeout triggered */
       ret = GST_STATE_CHANGE_ASYNC;
@@ -2811,8 +2805,8 @@ gst_element_finalize (GObject * object)
 
   GST_CAT_INFO_OBJECT (GST_CAT_REFCOUNTING, element, "finalize");
 
-  g_cond_free (element->state_cond);
-  g_static_rec_mutex_free (&element->state_lock);
+  g_cond_clear (&element->state_cond);
+  g_rec_mutex_clear (&element->state_lock);
 
   GST_CAT_INFO_OBJECT (GST_CAT_REFCOUNTING, element, "finalize parent");
 

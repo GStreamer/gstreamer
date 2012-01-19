@@ -25,7 +25,7 @@
 #define MAX_THREADS  1000
 
 static guint64 nbbuffers;
-static GMutex *mutex;
+static GMutex mutex;
 
 
 static void *
@@ -36,8 +36,8 @@ run_test (void *user_data)
   GstBuffer *buf;
   GstClockTime start, end;
 
-  g_mutex_lock (mutex);
-  g_mutex_unlock (mutex);
+  g_mutex_lock (&mutex);
+  g_mutex_unlock (&mutex);
 
   start = gst_util_get_timestamp ();
 
@@ -68,7 +68,7 @@ main (gint argc, gchar * argv[])
   GstClockTime start, end;
 
   gst_init (&argc, &argv);
-  mutex = g_mutex_new ();
+  g_mutex_init (&mutex);
 
   if (argc != 3) {
     g_print ("usage: %s <num_threads> <nbbuffers>\n", argv[0]);
@@ -88,7 +88,7 @@ main (gint argc, gchar * argv[])
     exit (-3);
   }
 
-  g_mutex_lock (mutex);
+  g_mutex_lock (&mutex);
   /* Let's just make sure the GstBufferClass is loaded ... */
   tmp = gst_buffer_new ();
 
@@ -110,7 +110,7 @@ main (gint argc, gchar * argv[])
 
   /* Signal all threads to start */
   start = gst_util_get_timestamp ();
-  g_mutex_unlock (mutex);
+  g_mutex_unlock (&mutex);
 
   for (t = 0; t < num_threads; t++) {
     if (threads[t])

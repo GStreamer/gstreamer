@@ -109,10 +109,6 @@
 #  include "config.h"
 #endif
 
-/* FIXME 0.11: suppress warnings for deprecated API such as GStaticRecMutex
- * with newer GLib versions (>= 2.31.0) */
-#define GLIB_DISABLE_DEPRECATION_WARNINGS
-
 #include <gst/gst.h>
 #include <stdio.h>
 #include "gstmultiqueue.h"
@@ -163,7 +159,7 @@ struct _GstSingleQueue
   guint32 last_oldid;           /* Previously observed old_id, reset to MAXUINT32 on flush */
   GstClockTime next_time;       /* End running time of next buffer to be pushed */
   GstClockTime last_time;       /* Start running time of last pushed buffer */
-  GCond *turn;                  /* SingleQueue turn waiting conditional */
+  GCond turn;                   /* SingleQueue turn waiting conditional */
 };
 
 
@@ -251,11 +247,11 @@ enum
 };
 
 #define GST_MULTI_QUEUE_MUTEX_LOCK(q) G_STMT_START {                          \
-  g_mutex_lock (q->qlock);                                              \
+  g_mutex_lock (&q->qlock);                                              \
 } G_STMT_END
 
 #define GST_MULTI_QUEUE_MUTEX_UNLOCK(q) G_STMT_START {                        \
-  g_mutex_unlock (q->qlock);                                            \
+  g_mutex_unlock (&q->qlock);                                            \
 } G_STMT_END
 
 static void gst_multi_queue_finalize (GObject * object);
@@ -451,7 +447,7 @@ gst_multi_queue_init (GstMultiQueue * mqueue)
   mqueue->highid = -1;
   mqueue->high_time = GST_CLOCK_TIME_NONE;
 
-  mqueue->qlock = g_mutex_new ();
+  g_mutex_init (&mqueue->qlock);
 }
 
 static void
@@ -465,7 +461,7 @@ gst_multi_queue_finalize (GObject * object)
   mqueue->queues_cookie++;
 
   /* free/unref instance data */
-  g_mutex_free (mqueue->qlock);
+  g_mutex_clear (&mqueue->qlock);
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
@@ -713,7 +709,7 @@ gst_multi_queue_change_state (GstElement * element, GstStateChange transition)
       for (tmp = mqueue->queues; tmp; tmp = g_list_next (tmp)) {
         sq = (GstSingleQueue *) tmp->data;
         sq->flushing = TRUE;
-        g_cond_signal (sq->turn);
+        g_cond_signal (&sq->turn);
       }
       GST_MULTI_QUEUE_MUTEX_UNLOCK (mqueue);
       break;
@@ -753,7 +749,7 @@ gst_single_queue_flush (GstMultiQueue * mq, GstSingleQueue * sq, gboolean flush)
     GST_LOG_OBJECT (mq, "SingleQueue %d : waking up eventually waiting task",
         sq->id);
     GST_MULTI_QUEUE_MUTEX_LOCK (mq);
-    g_cond_signal (sq->turn);
+    g_cond_signal (&sq->turn);
     GST_MULTI_QUEUE_MUTEX_UNLOCK (mq);
 
     GST_LOG_OBJECT (mq, "SingleQueue %d : pausing task", sq->id);
@@ -1234,7 +1230,7 @@ gst_multi_queue_loop (GstPad * pad)
         wake_up_next_non_linked (mq);
 
         mq->numwaiting++;
-        g_cond_wait (sq->turn, mq->qlock);
+        g_cond_wait (&sq->turn, &mq->qlock);
         mq->numwaiting--;
 
         if (sq->flushing) {
@@ -1609,7 +1605,7 @@ wake_up_next_non_linked (GstMultiQueue * mq)
               && sq->next_time >= mq->high_time)
           || (sq->nextid != 0 && sq->nextid <= mq->highid)) {
         GST_LOG_OBJECT (mq, "Waking up singlequeue %d", sq->id);
-        g_cond_signal (sq->turn);
+        g_cond_signal (&sq->turn);
       }
     }
   }
@@ -1839,7 +1835,7 @@ gst_single_queue_free (GstSingleQueue * sq)
   /* DRAIN QUEUE */
   gst_data_queue_flush (sq->queue);
   g_object_unref (sq->queue);
-  g_cond_free (sq->turn);
+  g_cond_clear (&sq->turn);
   g_free (sq);
 }
 
@@ -1903,7 +1899,7 @@ gst_single_queue_new (GstMultiQueue * mqueue, guint id)
   sq->oldid = 0;
   sq->next_time = GST_CLOCK_TIME_NONE;
   sq->last_time = GST_CLOCK_TIME_NONE;
-  sq->turn = g_cond_new ();
+  g_cond_init (&sq->turn);
 
   sq->sinktime = GST_CLOCK_TIME_NONE;
   sq->srctime = GST_CLOCK_TIME_NONE;
@@ -1948,14 +1944,14 @@ gst_single_queue_new (GstMultiQueue * mqueue, guint id)
   /* only activate the pads when we are not in the NULL state
    * and add the pad under the state_lock to prevend state changes
    * between activating and adding */
-  g_static_rec_mutex_lock (GST_STATE_GET_LOCK (mqueue));
+  g_rec_mutex_lock (GST_STATE_GET_LOCK (mqueue));
   if (GST_STATE_TARGET (mqueue) != GST_STATE_NULL) {
     gst_pad_set_active (sq->srcpad, TRUE);
     gst_pad_set_active (sq->sinkpad, TRUE);
   }
   gst_element_add_pad (GST_ELEMENT (mqueue), sq->srcpad);
   gst_element_add_pad (GST_ELEMENT (mqueue), sq->sinkpad);
-  g_static_rec_mutex_unlock (GST_STATE_GET_LOCK (mqueue));
+  g_rec_mutex_unlock (GST_STATE_GET_LOCK (mqueue));
 
   GST_DEBUG_OBJECT (mqueue, "GstSingleQueue [%d] created and pads added",
       sq->id);

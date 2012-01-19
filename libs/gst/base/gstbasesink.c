@@ -142,9 +142,6 @@
 #  include "config.h"
 #endif
 
-/* FIXME 0.11: suppress warnings for deprecated API such as GStaticRecMutex
- * with newer GLib versions (>= 2.31.0) */
-#define GLIB_DISABLE_DEPRECATION_WARNINGS
 #include <gst/gst_private.h>
 
 #include "gstbasesink.h"
@@ -639,8 +636,8 @@ gst_base_sink_init (GstBaseSink * basesink, gpointer g_class)
   gst_element_add_pad (GST_ELEMENT_CAST (basesink), basesink->sinkpad);
 
   basesink->pad_mode = GST_PAD_MODE_NONE;
-  basesink->preroll_lock = g_mutex_new ();
-  basesink->preroll_cond = g_cond_new ();
+  g_mutex_init (&basesink->preroll_lock);
+  g_cond_init (&basesink->preroll_cond);
   priv->have_latency = FALSE;
 
   basesink->can_activate_push = DEFAULT_CAN_ACTIVATE_PUSH;
@@ -667,8 +664,8 @@ gst_base_sink_finalize (GObject * object)
 
   basesink = GST_BASE_SINK (object);
 
-  g_mutex_free (basesink->preroll_lock);
-  g_cond_free (basesink->preroll_cond);
+  g_mutex_clear (&basesink->preroll_lock);
+  g_cond_clear (&basesink->preroll_cond);
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }

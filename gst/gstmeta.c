@@ -25,9 +25,6 @@
  *
  * Last reviewed on December 17th, 2009 (0.10.26)
  */
-/* FIXME 0.11: suppress warnings for deprecated API such as GStaticRecMutex
- * with newer GLib versions (>= 2.31.0) */
-#define GLIB_DISABLE_DEPRECATION_WARNINGS
 #include "gst_private.h"
 
 #include "gstbuffer.h"
@@ -36,11 +33,12 @@
 #include "gstutils.h"
 
 static GHashTable *metainfo = NULL;
-static GStaticRWLock lock = G_STATIC_RW_LOCK_INIT;
+static GRWLock lock;
 
 void
 _priv_gst_meta_initialize (void)
 {
+  g_rw_lock_init (&lock);
   metainfo = g_hash_table_new (g_str_hash, g_str_equal);
 }
 
@@ -85,9 +83,9 @@ gst_meta_register (const gchar * api, const gchar * impl, gsize size,
   GST_DEBUG ("register \"%s\" implementing \"%s\" of size %" G_GSIZE_FORMAT,
       api, impl, size);
 
-  g_static_rw_lock_writer_lock (&lock);
+  g_rw_lock_writer_lock (&lock);
   g_hash_table_insert (metainfo, (gpointer) impl, (gpointer) info);
-  g_static_rw_lock_writer_unlock (&lock);
+  g_rw_lock_writer_unlock (&lock);
 
   return info;
 }
@@ -109,9 +107,9 @@ gst_meta_get_info (const gchar * impl)
 
   g_return_val_if_fail (impl != NULL, NULL);
 
-  g_static_rw_lock_reader_lock (&lock);
+  g_rw_lock_reader_lock (&lock);
   info = g_hash_table_lookup (metainfo, impl);
-  g_static_rw_lock_reader_unlock (&lock);
+  g_rw_lock_reader_unlock (&lock);
 
   return info;
 }

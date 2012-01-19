@@ -693,7 +693,7 @@ gst_clock_init (GstClock * clock)
 {
   clock->last_time = 0;
   clock->entries = NULL;
-  clock->entries_changed = g_cond_new ();
+  g_cond_init (&clock->entries_changed);
   clock->stats = FALSE;
 
   clock->priv =
@@ -704,7 +704,7 @@ gst_clock_init (GstClock * clock)
   clock->rate_numerator = 1;
   clock->rate_denominator = 1;
 
-  clock->slave_lock = g_mutex_new ();
+  g_mutex_init (&clock->slave_lock);
   clock->window_size = DEFAULT_WINDOW_SIZE;
   clock->window_threshold = DEFAULT_WINDOW_THRESHOLD;
   clock->filling = TRUE;
@@ -742,8 +742,8 @@ gst_clock_finalize (GObject * object)
   clock->times = NULL;
   GST_CLOCK_SLAVE_UNLOCK (clock);
 
-  g_cond_free (clock->entries_changed);
-  g_mutex_free (clock->slave_lock);
+  g_cond_clear (&clock->entries_changed);
+  g_mutex_clear (&clock->slave_lock);
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }

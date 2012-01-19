@@ -86,9 +86,6 @@
 #  include "config.h"
 #endif
 
-/* FIXME 0.11: suppress warnings for deprecated API such as GStaticRecMutex
- * with newer GLib versions (>= 2.31.0) */
-#define GLIB_DISABLE_DEPRECATION_WARNINGS
 #include <gst/gst_private.h>
 
 #include "gstcollectpads2.h"
@@ -123,8 +120,8 @@ static void unref_data (GstCollectData2 * data);
  * Alternative implementations are possible, e.g. some low-level re-implementing
  * of the 2 above locks to drop both of them atomically when going into _WAIT.
  */
-#define GST_COLLECT_PADS2_GET_EVT_COND(pads) (((GstCollectPads2 *)pads)->evt_cond)
-#define GST_COLLECT_PADS2_GET_EVT_LOCK(pads) (((GstCollectPads2 *)pads)->evt_lock)
+#define GST_COLLECT_PADS2_GET_EVT_COND(pads) (&((GstCollectPads2 *)pads)->evt_cond)
+#define GST_COLLECT_PADS2_GET_EVT_LOCK(pads) (&((GstCollectPads2 *)pads)->evt_lock)
 #define GST_COLLECT_PADS2_EVT_WAIT(pads, cookie) G_STMT_START {    \
   g_mutex_lock (GST_COLLECT_PADS2_GET_EVT_LOCK (pads));            \
   /* should work unless a lot of event'ing and thread starvation */\
@@ -182,7 +179,7 @@ gst_collect_pads2_init (GstCollectPads2 * pads)
   pads->eospads = 0;
   pads->started = FALSE;
 
-  g_static_rec_mutex_init (&pads->stream_lock);
+  g_rec_mutex_init (&pads->stream_lock);
 
   pads->func = gst_collect_pads2_default_collected;
   pads->user_data = NULL;
@@ -202,8 +199,8 @@ gst_collect_pads2_init (GstCollectPads2 * pads)
   pads->pad_list = NULL;
 
   /* members for event */
-  pads->evt_lock = g_mutex_new ();
-  pads->evt_cond = g_cond_new ();
+  g_mutex_init (&pads->evt_lock);
+  g_cond_init (&pads->evt_cond);
   pads->evt_cookie = 0;
 }
 
@@ -214,10 +211,10 @@ gst_collect_pads2_finalize (GObject * object)
 
   GST_DEBUG_OBJECT (object, "finalize");
 
-  g_static_rec_mutex_free (&pads->stream_lock);
+  g_rec_mutex_clear (&pads->stream_lock);
 
-  g_cond_free (pads->evt_cond);
-  g_mutex_free (pads->evt_lock);
+  g_cond_clear (&pads->evt_cond);
+  g_mutex_clear (&pads->evt_lock);
 
   /* Remove pads and free pads list */
   g_slist_foreach (pads->pad_list, (GFunc) unref_data, NULL);

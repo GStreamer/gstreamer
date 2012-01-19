@@ -67,9 +67,6 @@
 #include "config.h"
 #endif
 
-/* FIXME 0.11: suppress warnings for deprecated API such as GStaticRecMutex
- * with newer GLib versions (>= 2.31.0) */
-#define GLIB_DISABLE_DEPRECATION_WARNINGS
 #include "gst_private.h"
 #include "gstmemory.h"
 
@@ -339,7 +336,7 @@ _fallback_is_span (GstMemory * mem1, GstMemory * mem2, gsize * offset)
   return FALSE;
 }
 
-static GStaticRWLock lock = G_STATIC_RW_LOCK_INIT;
+static GRWLock lock;
 static GHashTable *allocators;
 
 void
@@ -358,6 +355,7 @@ _priv_gst_memory_initialize (void)
     NULL
   };
 
+  g_rw_lock_init (&lock);
   allocators = g_hash_table_new (g_str_hash, g_str_equal);
 
 #ifdef HAVE_GETPAGESIZE
@@ -711,9 +709,9 @@ gst_allocator_register (const gchar * name, const GstMemoryInfo * info)
 
   GST_DEBUG ("registering allocator \"%s\"", name);
 
-  g_static_rw_lock_writer_lock (&lock);
+  g_rw_lock_writer_lock (&lock);
   g_hash_table_insert (allocators, (gpointer) name, (gpointer) allocator);
-  g_static_rw_lock_writer_unlock (&lock);
+  g_rw_lock_writer_unlock (&lock);
 
   return allocator;
 }
@@ -733,13 +731,13 @@ gst_allocator_find (const gchar * name)
 {
   const GstAllocator *allocator;
 
-  g_static_rw_lock_reader_lock (&lock);
+  g_rw_lock_reader_lock (&lock);
   if (name) {
     allocator = g_hash_table_lookup (allocators, (gconstpointer) name);
   } else {
     allocator = _default_allocator;
   }
-  g_static_rw_lock_reader_unlock (&lock);
+  g_rw_lock_reader_unlock (&lock);
 
   return allocator;
 }
@@ -755,9 +753,9 @@ gst_allocator_set_default (const GstAllocator * allocator)
 {
   g_return_if_fail (allocator != NULL);
 
-  g_static_rw_lock_writer_lock (&lock);
+  g_rw_lock_writer_lock (&lock);
   _default_allocator = allocator;
-  g_static_rw_lock_writer_unlock (&lock);
+  g_rw_lock_writer_unlock (&lock);
 }
 
 /**

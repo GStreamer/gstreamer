@@ -75,7 +75,7 @@ typedef enum
  *
  * Acquire a reference to the mutex of this object.
  */
-#define GST_OBJECT_GET_LOCK(obj)               (GST_OBJECT_CAST(obj)->lock)
+#define GST_OBJECT_GET_LOCK(obj)               (&GST_OBJECT_CAST(obj)->lock)
 /**
  * GST_OBJECT_LOCK:
  * @obj: a #GstObject to lock
@@ -165,7 +165,7 @@ struct _GstObject {
   GInitiallyUnowned object;
 
   /*< public >*/ /* with LOCK */
-  GMutex        *lock;        /* object LOCK */
+  GMutex         lock;        /* object LOCK */
   gchar         *name;        /* object name */
   GstObject     *parent;      /* this object's parent, weak ref */
   guint32        flags;

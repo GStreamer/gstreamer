@@ -21,10 +21,10 @@
 
 #include <gst/check/gstcheck.h>
 
-static GMutex *task_lock;
-static GCond *task_cond;
+static GMutex task_lock;
+static GCond task_cond;
 
-static GStaticRecMutex task_mutex = G_STATIC_REC_MUTEX_INIT;
+static GRecMutex task_mutex;
 
 static void
 task_func2 (void *data)
@@ -32,10 +32,10 @@ task_func2 (void *data)
   gboolean ret;
   GstTask *t = *((GstTask **) data);
 
-  g_mutex_lock (task_lock);
+  g_mutex_lock (&task_lock);
   GST_DEBUG ("signal");
-  g_cond_signal (task_cond);
-  g_mutex_unlock (task_lock);
+  g_cond_signal (&task_cond);
+  g_mutex_unlock (&task_lock);
 
   ASSERT_WARNING (ret = gst_task_join (t));
   fail_unless (ret == FALSE);
@@ -49,20 +49,21 @@ GST_START_TEST (test_join)
   t = gst_task_new (task_func2, &t);
   fail_if (t == NULL);
 
+  g_rec_mutex_init (&task_mutex);
   gst_task_set_lock (t, &task_mutex);
 
-  task_cond = g_cond_new ();
-  task_lock = g_mutex_new ();
+  g_cond_init (&task_cond);
+  g_mutex_init (&task_lock);
 
-  g_mutex_lock (task_lock);
+  g_mutex_lock (&task_lock);
   GST_DEBUG ("starting");
   ret = gst_task_start (t);
   fail_unless (ret == TRUE);
   /* wait for it to spin up */
   GST_DEBUG ("waiting");
-  g_cond_wait (task_cond, task_lock);
+  g_cond_wait (&task_cond, &task_lock);
   GST_DEBUG ("done waiting");
-  g_mutex_unlock (task_lock);
+  g_mutex_unlock (&task_lock);
 
   GST_DEBUG ("joining");
   ret = gst_task_join (t);
@@ -78,10 +79,10 @@ GST_END_TEST;
 static void
 task_func (void *data)
 {
-  g_mutex_lock (task_lock);
+  g_mutex_lock (&task_lock);
   GST_DEBUG ("signal");
-  g_cond_signal (task_cond);
-  g_mutex_unlock (task_lock);
+  g_cond_signal (&task_cond);
+  g_mutex_unlock (&task_lock);
 }
 
 GST_START_TEST (test_lock_start)
@@ -92,20 +93,21 @@ GST_START_TEST (test_lock_start)
   t = gst_task_new (task_func, NULL);
   fail_if (t == NULL);
 
+  g_rec_mutex_init (&task_mutex);
   gst_task_set_lock (t, &task_mutex);
 
-  task_cond = g_cond_new ();
-  task_lock = g_mutex_new ();
+  g_cond_init (&task_cond);
+  g_mutex_init (&task_lock);
 
-  g_mutex_lock (task_lock);
+  g_mutex_lock (&task_lock);
   GST_DEBUG ("starting");
   ret = gst_task_start (t);
   fail_unless (ret == TRUE);
   /* wait for it to spin up */
   GST_DEBUG ("waiting");
-  g_cond_wait (task_cond, task_lock);
+  g_cond_wait (&task_cond, &task_lock);
   GST_DEBUG ("done waiting");
-  g_mutex_unlock (task_lock);
+  g_mutex_unlock (&task_lock);
 
   /* cannot set mutex now */
   ASSERT_WARNING (gst_task_set_lock (t, &task_mutex));
@@ -129,6 +131,7 @@ GST_START_TEST (test_lock)
   t = gst_task_new (task_func, NULL);
   fail_if (t == NULL);
 
+  g_rec_mutex_init (&task_mutex);
   gst_task_set_lock (t, &task_mutex);
 
   GST_DEBUG ("pause");

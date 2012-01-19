@@ -69,7 +69,7 @@ struct _GstMultiQueue {
   guint32  highid;	/* contains highest id of last outputted object */
   GstClockTime high_time; /* highest start running time */
 
-  GMutex * qlock;	/* Global queue lock (vs object lock or individual */
+  GMutex   qlock;	/* Global queue lock (vs object lock or individual */
 			/* queues lock). Protects nbqueues, queues, global */
 			/* GstMultiQueueSize, counter and highid */
 

@@ -88,7 +88,7 @@ interpolate_trigger_get (GstTimedValueControlSource * self,
   gboolean ret = FALSE;
   GSequenceIter *iter;
 
-  g_mutex_lock (self->lock);
+  g_mutex_lock (&self->lock);
 
   iter =
       gst_timed_value_control_source_find_control_point_iter (self, timestamp);
@@ -97,7 +97,7 @@ interpolate_trigger_get (GstTimedValueControlSource * self,
     if (!isnan (*value))
       ret = TRUE;
   }
-  g_mutex_unlock (self->lock);
+  g_mutex_unlock (&self->lock);
   return ret;
 }
 
@@ -114,7 +114,7 @@ interpolate_trigger_get_value_array (GstTimedValueControlSource * self,
   GSequenceIter *iter1 = NULL, *iter2 = NULL;
   gboolean triggered = FALSE;
 
-  g_mutex_lock (self->lock);
+  g_mutex_lock (&self->lock);
   for (i = 0; i < n_values; i++) {
     val = NAN;
     if (ts >= next_ts) {
@@ -142,7 +142,7 @@ interpolate_trigger_get_value_array (GstTimedValueControlSource * self,
         if (!isnan (val))
           ret = TRUE;
       } else {
-        g_mutex_unlock (self->lock);
+        g_mutex_unlock (&self->lock);
         return FALSE;
       }
       triggered = TRUE;
@@ -152,7 +152,7 @@ interpolate_trigger_get_value_array (GstTimedValueControlSource * self,
         if (!isnan (val))
           ret = TRUE;
       } else {
-        g_mutex_unlock (self->lock);
+        g_mutex_unlock (&self->lock);
         return FALSE;
       }
       triggered = FALSE;
@@ -161,7 +161,7 @@ interpolate_trigger_get_value_array (GstTimedValueControlSource * self,
     ts += interval;
     values++;
   }
-  g_mutex_unlock (self->lock);
+  g_mutex_unlock (&self->lock);
   return ret;
 }
 

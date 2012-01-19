@@ -124,11 +124,11 @@ struct _GstQueue2
   guint64 bytes_out;
   gdouble byte_out_rate;
 
-  GMutex *qlock;                /* lock for queue (vs object lock) */
+  GMutex qlock;                /* lock for queue (vs object lock) */
   gboolean waiting_add;
-  GCond *item_add;              /* signals buffers now available for reading */
+  GCond item_add;              /* signals buffers now available for reading */
   gboolean waiting_del;
-  GCond *item_del;              /* signals space now available for writing */
+  GCond item_del;              /* signals space now available for writing */
 
   /* temp location stuff */
   gchar *temp_template;

@@ -68,9 +68,6 @@
  * Last reviewed on 2010-03-15 (0.10.29)
  */
 
-/* FIXME 0.11: suppress warnings for deprecated API such as GStaticRecMutex
- * with newer GLib versions (>= 2.31.0) */
-#define GLIB_DISABLE_DEPRECATION_WARNINGS
 #include "gst_private.h"
 
 #include "gstinfo.h"
@@ -191,7 +188,7 @@ gst_task_init (GstTask * task)
   task->running = FALSE;
   task->thread = NULL;
   task->lock = NULL;
-  task->cond = g_cond_new ();
+  g_cond_init (&task->cond);
   SET_TASK_STATE (task, GST_TASK_STOPPED);
   task->priv->prio_set = FALSE;
 
@@ -219,8 +216,7 @@ gst_task_finalize (GObject * object)
 
   /* task thread cannot be running here since it holds a ref
    * to the task so that the finalize could not have happened */
-  g_cond_free (task->cond);
-  task->cond = NULL;
+  g_cond_clear (&task->cond);
 
   G_OBJECT_CLASS (gst_task_parent_class)->finalize (object);
 }
@@ -259,7 +255,7 @@ gst_task_configure_name (GstTask * task)
 static void
 gst_task_func (GstTask * task)
 {
-  GStaticRecMutex *lock;
+  GRecMutex *lock;
   GThread *tself;
   GstTaskPrivate *priv;
 
@@ -294,7 +290,7 @@ gst_task_func (GstTask * task)
     priv->thr_callbacks.enter_thread (task, tself, priv->thr_user_data);
 
   /* locking order is TASK_LOCK, LOCK */
-  g_static_rec_mutex_lock (lock);
+  g_rec_mutex_lock (lock);
   /* configure the thread name now */
   gst_task_configure_name (task);
 
@@ -302,13 +298,13 @@ gst_task_func (GstTask * task)
     if (G_UNLIKELY (GET_TASK_STATE (task) == GST_TASK_PAUSED)) {
       GST_OBJECT_LOCK (task);
       while (G_UNLIKELY (GST_TASK_STATE (task) == GST_TASK_PAUSED)) {
-        g_static_rec_mutex_unlock (lock);
+        g_rec_mutex_unlock (lock);
 
         GST_TASK_SIGNAL (task);
         GST_TASK_WAIT (task);
         GST_OBJECT_UNLOCK (task);
         /* locking order.. */
-        g_static_rec_mutex_lock (lock);
+        g_rec_mutex_lock (lock);
 
         GST_OBJECT_LOCK (task);
         if (G_UNLIKELY (GET_TASK_STATE (task) == GST_TASK_STOPPED)) {
@@ -322,7 +318,7 @@ gst_task_func (GstTask * task)
     task->func (task->data);
   }
 done:
-  g_static_rec_mutex_unlock (lock);
+  g_rec_mutex_unlock (lock);
 
   GST_OBJECT_LOCK (task);
   task->thread = NULL;
@@ -422,7 +418,7 @@ gst_task_new (GstTaskFunction func, gpointer data)
 /**
  * gst_task_set_lock:
  * @task: The #GstTask to use
- * @mutex: The #GMutex to use
+ * @mutex: The #GRecMutex to use
  *
  * Set the mutex used by the task. The mutex will be acquired before
  * calling the #GstTaskFunction.
@@ -433,7 +429,7 @@ gst_task_new (GstTaskFunction func, gpointer data)
  * MT safe.
  */
 void
-gst_task_set_lock (GstTask * task, GStaticRecMutex * mutex)
+gst_task_set_lock (GstTask * task, GRecMutex * mutex)
 {
   GST_OBJECT_LOCK (task);
   if (G_UNLIKELY (task->running))

@@ -119,11 +119,11 @@ struct _GstCollectData
  */
 typedef GstFlowReturn (*GstCollectPadsFunction) (GstCollectPads *pads, gpointer user_data);
 
-#define GST_COLLECT_PADS_GET_PAD_LOCK(pads) (((GstCollectPads *)pads)->pad_lock)
+#define GST_COLLECT_PADS_GET_PAD_LOCK(pads) (&((GstCollectPads *)pads)->pad_lock)
 #define GST_COLLECT_PADS_PAD_LOCK(pads)     (g_mutex_lock(GST_COLLECT_PADS_GET_PAD_LOCK (pads)))
 #define GST_COLLECT_PADS_PAD_UNLOCK(pads)   (g_mutex_unlock(GST_COLLECT_PADS_GET_PAD_LOCK (pads)))
 
-#define GST_COLLECT_PADS_GET_COND(pads) (((GstCollectPads *)pads)->cond)
+#define GST_COLLECT_PADS_GET_COND(pads) (&((GstCollectPads *)pads)->cond)
 #define GST_COLLECT_PADS_WAIT(pads)     (g_cond_wait (GST_COLLECT_PADS_GET_COND (pads), GST_OBJECT_GET_LOCK (pads)))
 #define GST_COLLECT_PADS_SIGNAL(pads)   (g_cond_signal (GST_COLLECT_PADS_GET_COND (pads)))
 #define GST_COLLECT_PADS_BROADCAST(pads)(g_cond_broadcast (GST_COLLECT_PADS_GET_COND (pads)))
@@ -146,7 +146,7 @@ struct _GstCollectPads {
   guint32        cookie;                /* @data list cookie */
 
   /* with LOCK */
-  GCond         *cond;                  /* to signal removal of data */
+  GCond          cond;                  /* to signal removal of data */
 
   GstCollectPadsFunction func;          /* function and user_data for callback */
   gpointer       user_data;
@@ -159,7 +159,7 @@ struct _GstCollectPads {
   gboolean       started;
 
   /* with PAD_LOCK */
-  GMutex        *pad_lock;              /* used to serialize add/remove */
+  GMutex         pad_lock;              /* used to serialize add/remove */
   GSList        *pad_list;              /* updated pad list */
   guint32        pad_cookie;            /* updated cookie */
   GstCollectPadsPrivate  *priv;

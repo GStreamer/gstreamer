@@ -77,7 +77,7 @@ struct _GstLFOControlSource {
 
   /* <private> */
   GstLFOControlSourcePrivate *priv;
-  GMutex *lock;
+  GMutex lock;
   gpointer _gst_reserved[GST_PADDING];
 };
 

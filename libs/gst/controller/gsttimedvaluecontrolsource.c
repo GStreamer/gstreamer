@@ -222,9 +222,9 @@ gst_timed_value_control_source_set (GstTimedValueControlSource * self,
   g_return_val_if_fail (GST_IS_TIMED_VALUE_CONTROL_SOURCE (self), FALSE);
   g_return_val_if_fail (GST_CLOCK_TIME_IS_VALID (timestamp), FALSE);
 
-  g_mutex_lock (self->lock);
+  g_mutex_lock (&self->lock);
   gst_timed_value_control_source_set_internal (self, timestamp, value);
-  g_mutex_unlock (self->lock);
+  g_mutex_unlock (&self->lock);
 
   return TRUE;
 }
@@ -255,10 +255,10 @@ gst_timed_value_control_source_set_from_list (GstTimedValueControlSource *
       GST_WARNING ("GstTimedValued with invalid timestamp passed to %s",
           GST_FUNCTION);
     } else {
-      g_mutex_lock (self->lock);
+      g_mutex_lock (&self->lock);
       gst_timed_value_control_source_set_internal (self, tv->timestamp,
           tv->value);
-      g_mutex_unlock (self->lock);
+      g_mutex_unlock (&self->lock);
       res = TRUE;
     }
   }
@@ -285,7 +285,7 @@ gst_timed_value_control_source_unset (GstTimedValueControlSource * self,
   g_return_val_if_fail (GST_IS_TIMED_VALUE_CONTROL_SOURCE (self), FALSE);
   g_return_val_if_fail (GST_CLOCK_TIME_IS_VALID (timestamp), FALSE);
 
-  g_mutex_lock (self->lock);
+  g_mutex_lock (&self->lock);
   /* check if a control point for the timestamp exists */
   if (G_LIKELY (self->values) && (iter =
           g_sequence_search (self->values, &timestamp,
@@ -304,7 +304,7 @@ gst_timed_value_control_source_unset (GstTimedValueControlSource * self,
       res = TRUE;
     }
   }
-  g_mutex_unlock (self->lock);
+  g_mutex_unlock (&self->lock);
 
   return res;
 }
@@ -321,7 +321,7 @@ gst_timed_value_control_source_unset_all (GstTimedValueControlSource * self)
 {
   g_return_if_fail (GST_IS_TIMED_VALUE_CONTROL_SOURCE (self));
 
-  g_mutex_lock (self->lock);
+  g_mutex_lock (&self->lock);
   /* free GstControlPoint structures */
   if (self->values) {
     g_sequence_free (self->values);
@@ -330,7 +330,7 @@ gst_timed_value_control_source_unset_all (GstTimedValueControlSource * self)
   self->nvalues = 0;
   self->valid_cache = FALSE;
 
-  g_mutex_unlock (self->lock);
+  g_mutex_unlock (&self->lock);
 }
 
 static void
@@ -356,10 +356,10 @@ gst_timed_value_control_source_get_all (GstTimedValueControlSource * self)
 
   g_return_val_if_fail (GST_IS_TIMED_VALUE_CONTROL_SOURCE (self), NULL);
 
-  g_mutex_lock (self->lock);
+  g_mutex_lock (&self->lock);
   if (G_LIKELY (self->values))
     g_sequence_foreach (self->values, (GFunc) _append_control_point, &res);
-  g_mutex_unlock (self->lock);
+  g_mutex_unlock (&self->lock);
 
   return res.head;
 }
@@ -395,7 +395,7 @@ gst_timed_value_control_invalidate_cache (GstTimedValueControlSource * self)
 static void
 gst_timed_value_control_source_init (GstTimedValueControlSource * self)
 {
-  self->lock = g_mutex_new ();
+  g_mutex_init (&self->lock);
 }
 
 static void
@@ -403,10 +403,10 @@ gst_timed_value_control_source_finalize (GObject * obj)
 {
   GstTimedValueControlSource *self = GST_TIMED_VALUE_CONTROL_SOURCE (obj);
 
-  g_mutex_lock (self->lock);
+  g_mutex_lock (&self->lock);
   gst_timed_value_control_source_reset (self);
-  g_mutex_unlock (self->lock);
-  g_mutex_free (self->lock);
+  g_mutex_unlock (&self->lock);
+  g_mutex_clear (&self->lock);
 
   G_OBJECT_CLASS (gst_timed_value_control_source_parent_class)->finalize (obj);
 }

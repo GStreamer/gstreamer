@@ -61,7 +61,7 @@ enum
     GST_CAT_LOG (data_queue_dataflow,                                   \
       "locking qlock from thread %p",                                   \
       g_thread_self ());                                                \
-  g_mutex_lock (q->qlock);                                              \
+  g_mutex_lock (&q->qlock);                                              \
   GST_CAT_LOG (data_queue_dataflow,                                     \
       "locked qlock from thread %p",                                    \
       g_thread_self ());                                                \
@@ -77,7 +77,7 @@ enum
     GST_CAT_LOG (data_queue_dataflow,                                   \
       "unlocking qlock from thread %p",                                 \
       g_thread_self ());                                                \
-  g_mutex_unlock (q->qlock);                                            \
+  g_mutex_unlock (&q->qlock);                                            \
 } G_STMT_END
 
 #define STATUS(q, msg)                                                  \
@@ -178,9 +178,9 @@ gst_data_queue_init (GstDataQueue * queue)
 
   queue->checkfull = NULL;
 
-  queue->qlock = g_mutex_new ();
-  queue->item_add = g_cond_new ();
-  queue->item_del = g_cond_new ();
+  g_mutex_init (&queue->qlock);
+  g_cond_init (&queue->item_add);
+  g_cond_init (&queue->item_del);
   queue->queue = g_queue_new ();
 
   GST_DEBUG ("initialized queue's not_empty & not_full conditions");
@@ -262,11 +262,11 @@ gst_data_queue_finalize (GObject * object)
   g_queue_free (queue->queue);
 
   GST_DEBUG ("free mutex");
-  g_mutex_free (queue->qlock);
+  g_mutex_clear (&queue->qlock);
   GST_DEBUG ("done free mutex");
 
-  g_cond_free (queue->item_add);
-  g_cond_free (queue->item_del);
+  g_cond_clear (&queue->item_add);
+  g_cond_clear (&queue->item_del);
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
@@ -279,7 +279,7 @@ gst_data_queue_locked_flush (GstDataQueue * queue)
   STATUS (queue, "after flushing");
   /* we deleted something... */
   if (queue->waiting_del)
-    g_cond_signal (queue->item_del);
+    g_cond_signal (&queue->item_del);
 }
 
 static inline gboolean
@@ -386,9 +386,9 @@ gst_data_queue_set_flushing (GstDataQueue * queue, gboolean flushing)
   if (flushing) {
     /* release push/pop functions */
     if (queue->waiting_add)
-      g_cond_signal (queue->item_add);
+      g_cond_signal (&queue->item_add);
     if (queue->waiting_del)
-      g_cond_signal (queue->item_del);
+      g_cond_signal (&queue->item_del);
   }
   GST_DATA_QUEUE_MUTEX_UNLOCK (queue);
 }
@@ -434,7 +434,7 @@ gst_data_queue_push (GstDataQueue * queue, GstDataQueueItem * item)
     /* signal might have removed some items */
     while (gst_data_queue_locked_is_full (queue)) {
       queue->waiting_del = TRUE;
-      g_cond_wait (queue->item_del, queue->qlock);
+      g_cond_wait (&queue->item_del, &queue->qlock);
       queue->waiting_del = FALSE;
       if (queue->flushing)
         goto flushing;
@@ -450,7 +450,7 @@ gst_data_queue_push (GstDataQueue * queue, GstDataQueueItem * item)
 
   STATUS (queue, "after pushing");
   if (queue->waiting_add)
-    g_cond_signal (queue->item_add);
+    g_cond_signal (&queue->item_add);
 
   GST_DATA_QUEUE_MUTEX_UNLOCK (queue);
 
@@ -499,7 +499,7 @@ gst_data_queue_pop (GstDataQueue * queue, GstDataQueueItem ** item)
 
     while (gst_data_queue_locked_is_empty (queue)) {
       queue->waiting_add = TRUE;
-      g_cond_wait (queue->item_add, queue->qlock);
+      g_cond_wait (&queue->item_add, &queue->qlock);
       queue->waiting_add = FALSE;
       if (queue->flushing)
         goto flushing;
@@ -517,7 +517,7 @@ gst_data_queue_pop (GstDataQueue * queue, GstDataQueueItem ** item)
 
   STATUS (queue, "after popping");
   if (queue->waiting_del)
-    g_cond_signal (queue->item_del);
+    g_cond_signal (&queue->item_del);
 
   GST_DATA_QUEUE_MUTEX_UNLOCK (queue);
 
@@ -603,7 +603,7 @@ gst_data_queue_limits_changed (GstDataQueue * queue)
   GST_DATA_QUEUE_MUTEX_LOCK (queue);
   if (queue->waiting_del) {
     GST_DEBUG ("signal del");
-    g_cond_signal (queue->item_del);
+    g_cond_signal (&queue->item_del);
   }
   GST_DATA_QUEUE_MUTEX_UNLOCK (queue);
 }
