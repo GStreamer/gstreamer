@@ -71,6 +71,8 @@ AG_GST_GETTEXT([gst-plugins-ugly-$GST_MAJORMINOR])
 
 dnl *** check for arguments to configure ***
 
+AG_GST_ARG_DISABLE_FATAL_WARNINGS
+
 AG_GST_ARG_DEBUG
 AG_GST_ARG_PROFILING
 AG_GST_ARG_VALGRIND
@@ -187,14 +189,14 @@ AG_GST_SET_PACKAGE_RELEASE_DATETIME_WITH_NANO([$PACKAGE_VERSION_NANO],
   [$PACKAGE_VERSION_MAJOR.$PACKAGE_VERSION_MINOR.$PACKAGE_VERSION_MICRO])
 
 dnl define an ERROR_CFLAGS Makefile variable
-AG_GST_SET_ERROR_CFLAGS($GST_GIT, [
+AG_GST_SET_ERROR_CFLAGS($FATAL_WARNINGS, [
     -Wmissing-declarations -Wmissing-prototypes -Wredundant-decls
     -Wwrite-strings -Wformat-nonliteral -Wformat-security -Wold-style-definition
     -Winit-self -Wmissing-include-dirs -Waddress
     -Waggregate-return -Wno-multichar -Wnested-externs ])
 
 dnl define an ERROR_CXXFLAGS Makefile variable
-AG_GST_SET_ERROR_CXXFLAGS($GST_GIT, [
+AG_GST_SET_ERROR_CXXFLAGS($FATAL_WARNINGS, [
     -Wmissing-declarations -Wredundant-decls
     -Wwrite-strings -Wformat-nonliteral -Wformat-security
     -Winit-self -Wmissing-include-dirs -Waddress -Waggregate-return
