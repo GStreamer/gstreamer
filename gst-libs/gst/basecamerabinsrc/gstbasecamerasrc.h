@@ -69,7 +69,7 @@ struct _GstBaseCameraSrc
   GstCameraBinMode mode;
 
   gboolean capturing;
-  GMutex *capturing_mutex;
+  GMutex capturing_mutex;
 
   /* Preview convert pipeline */
   GstCaps *preview_caps;

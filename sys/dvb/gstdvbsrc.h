@@ -41,7 +41,7 @@ G_BEGIN_DECLS
     GstPushSrc element;
     GstPad *srcpad;
 
-    GMutex *tune_mutex;
+    GMutex tune_mutex;
     gboolean need_tune;
 
     int adapter_type;

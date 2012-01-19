@@ -1141,7 +1141,7 @@ demo_gui_show_func (DemoGui * gui)
   status_bar_printf (GTK_STATUSBAR (status_bar), 5,
       "Welcome to the Scaletempo demo.");
 
-  if (!g_thread_create ((GThreadFunc) gtk_main, NULL, FALSE, &error)) {
+  if (!g_thread_try_new ("name", (GThreadFunc) gtk_main, NULL, &error)) {
     g_signal_emit (gui, demo_gui_signals[SIGNAL_ERROR], 0, error->message);
   }
 }

@@ -97,7 +97,7 @@ struct _GstCameraBin2
   /* Index of the auto incrementing file index for captures */
   gint capture_index;
 
-  GMutex *image_capture_mutex;
+  GMutex image_capture_mutex;
   /* stores list of image locations to be pushed to the image sink
    * as file location change notifications, they are pushed before
    * each buffer capture */
@@ -120,7 +120,7 @@ struct _GstCameraBin2
    * list and the message handling function looking at preview names)
    */
   GSList *preview_location_list;
-  GMutex *preview_list_mutex;
+  GMutex preview_list_mutex;
 
   gboolean video_profile_switch;
   gboolean image_profile_switch;
@@ -128,8 +128,8 @@ struct _GstCameraBin2
   gboolean audio_drop_eos;
   gboolean audio_send_newseg;
 
-  GMutex *video_capture_mutex;
-  GCond *video_state_cond;
+  GMutex video_capture_mutex;
+  GCond video_state_cond;
   GstCameraBinVideoState video_state;
 
   /* properties */

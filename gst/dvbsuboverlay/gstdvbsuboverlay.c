@@ -158,7 +158,7 @@ gst_dvbsub_overlay_flush_subtitles (GstDVBSubOverlay * render)
 {
   DVBSubtitles *subs;
 
-  g_mutex_lock (render->dvbsub_mutex);
+  g_mutex_lock (&render->dvbsub_mutex);
   while ((subs = g_queue_pop_head (render->pending_subtitles))) {
     dvb_subtitles_free (subs);
   }
@@ -177,7 +177,7 @@ gst_dvbsub_overlay_flush_subtitles (GstDVBSubOverlay * render)
     dvb_sub_set_callbacks (render->dvb_sub, &dvbsub_callbacks, render);
   }
 
-  g_mutex_unlock (render->dvbsub_mutex);
+  g_mutex_unlock (&render->dvbsub_mutex);
 }
 
 static void
@@ -220,7 +220,7 @@ gst_dvbsub_overlay_init (GstDVBSubOverlay * render)
   render->enable = DEFAULT_ENABLE;
   render->max_page_timeout = DEFAULT_MAX_PAGE_TIMEOUT;
 
-  render->dvbsub_mutex = g_mutex_new ();
+  g_mutex_init (&render->dvbsub_mutex);
   gst_dvbsub_overlay_flush_subtitles (render);
 
   gst_segment_init (&render->video_segment, GST_FORMAT_TIME);
@@ -247,8 +247,7 @@ gst_dvbsub_overlay_finalize (GObject * object)
   if (overlay->dvb_sub)
     dvb_sub_free (overlay->dvb_sub);
 
-  if (overlay->dvbsub_mutex)
-    g_mutex_free (overlay->dvbsub_mutex);
+  g_mutex_clear (&overlay->dvbsub_mutex);
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
@@ -715,9 +714,9 @@ gst_dvbsub_overlay_process_text (GstDVBSubOverlay * overlay, GstBuffer * buffer,
 
   data = gst_buffer_map (buffer, &size, NULL, GST_MAP_READ);
 
-  g_mutex_lock (overlay->dvbsub_mutex);
+  g_mutex_lock (&overlay->dvbsub_mutex);
   dvb_sub_feed_with_pts (overlay->dvb_sub, pts, data, size);
-  g_mutex_unlock (overlay->dvbsub_mutex);
+  g_mutex_unlock (&overlay->dvbsub_mutex);
 
   gst_buffer_unmap (buffer, data, size);
   gst_buffer_unref (buffer);
@@ -850,7 +849,7 @@ gst_dvbsub_overlay_chain_video (GstPad * pad, GstObject * parent,
 
   overlay->video_segment.position = GST_BUFFER_TIMESTAMP (buffer);
 
-  g_mutex_lock (overlay->dvbsub_mutex);
+  g_mutex_lock (&overlay->dvbsub_mutex);
   if (!g_queue_is_empty (overlay->pending_subtitles)) {
     DVBSubtitles *tmp, *candidate = NULL;
 
@@ -919,7 +918,7 @@ gst_dvbsub_overlay_chain_video (GstPad * pad, GstObject * parent,
     blit_i420 (overlay, overlay->current_subtitle, &frame);
     gst_video_frame_unmap (&frame);
   }
-  g_mutex_unlock (overlay->dvbsub_mutex);
+  g_mutex_unlock (&overlay->dvbsub_mutex);
 
   ret = gst_pad_push (overlay->srcpad, buffer);
 

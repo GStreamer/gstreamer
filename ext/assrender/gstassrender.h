@@ -60,13 +60,13 @@ struct _GstAssRender
   GstVideoInfo info;
   GstAssRenderBlitFunction blit;
 
-  GMutex *subtitle_mutex;
-  GCond *subtitle_cond;
+  GMutex subtitle_mutex;
+  GCond subtitle_cond;
   GstBuffer *subtitle_pending;
   gboolean subtitle_flushing;
   GstSegment subtitle_segment;
 
-  GMutex *ass_mutex;
+  GMutex ass_mutex;
   ASS_Library *ass_library;
   ASS_Renderer *ass_renderer;
   ASS_Track *ass_track;

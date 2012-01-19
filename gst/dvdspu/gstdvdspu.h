@@ -38,8 +38,8 @@ G_BEGIN_DECLS
 #define GST_IS_DVD_SPU_CLASS(klass) \
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_DVD_SPU))
 
-#define DVD_SPU_LOCK(s) g_mutex_lock ((s)->spu_lock);
-#define DVD_SPU_UNLOCK(s) g_mutex_unlock ((s)->spu_lock);
+#define DVD_SPU_LOCK(s) g_mutex_lock (&(s)->spu_lock);
+#define DVD_SPU_UNLOCK(s) g_mutex_unlock (&(s)->spu_lock);
 
 typedef struct _GstDVDSpuClass GstDVDSpuClass;
 
@@ -96,7 +96,7 @@ struct _GstDVDSpu {
   GstPad *srcpad;
 
   /* Mutex to protect state we access from different chain funcs */
-  GMutex *spu_lock;
+  GMutex spu_lock;
 
   GstSegment video_seg;
   GstSegment subp_seg;

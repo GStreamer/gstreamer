@@ -190,9 +190,6 @@ main (gint argc, gchar ** argv)
     return -1;
   }
 
-  if (!g_thread_supported ())
-    g_thread_init (NULL);
-
   gst_init (NULL, NULL);
   gtk_init (NULL, NULL);
 

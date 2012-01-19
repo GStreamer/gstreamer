@@ -179,7 +179,7 @@ gst_mplex_finalize (GObject * object)
   /* ... and of the rest */
   delete mplex->job;
 
-  g_mutex_free (mplex->tlock);
+  g_mutex_clear (&mplex->tlock);
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
@@ -200,7 +200,7 @@ gst_mplex_init (GstMplex * mplex)
   mplex->num_apads = 0;
   mplex->num_vpads = 0;
 
-  mplex->tlock = g_mutex_new ();
+  g_mutex_init (&mplex->tlock);
 
   gst_mplex_reset (mplex);
 }
@@ -231,7 +231,7 @@ gst_mplex_reset (GstMplex * mplex)
     }
 
     if (!mpad->pad) {
-      g_cond_free (mpad->cond);
+      g_cond_clear (&mpad->cond);
       g_object_unref (mpad->adapter);
       g_free (mpad);
     } else
@@ -630,7 +630,7 @@ gst_mplex_request_new_pad (GstElement * element,
 
   mpad = g_new0 (GstMplexPad, 1);
   mpad->adapter = gst_adapter_new ();
-  mpad->cond = g_cond_new ();
+  g_cond_init (&mpad->cond);
   gst_object_ref (newpad);
   mpad->pad = newpad;
 

@@ -101,7 +101,7 @@ struct _GstBaseAudioVisualizer
   gint rate;
   
   /* configuration mutex */
-  GMutex *config_lock;
+  GMutex config_lock;
   
   /* QoS stuff *//* with LOCK */
   gdouble proportion;

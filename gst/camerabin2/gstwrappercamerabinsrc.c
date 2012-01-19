@@ -213,7 +213,7 @@ gst_wrapper_camera_bin_src_imgsrc_probe (GstPad * pad, GstPadProbeInfo * info,
   GST_LOG_OBJECT (self, "Image probe, mode %d, capture count %d",
       camerasrc->mode, self->image_capture_count);
 
-  g_mutex_lock (camerasrc->capturing_mutex);
+  g_mutex_lock (&camerasrc->capturing_mutex);
   if (self->image_capture_count > 0) {
     ret = GST_PAD_PROBE_OK;
     self->image_capture_count--;
@@ -228,7 +228,7 @@ gst_wrapper_camera_bin_src_imgsrc_probe (GstPad * pad, GstPadProbeInfo * info,
       gst_base_camera_src_finish_capture (camerasrc);
     }
   }
-  g_mutex_unlock (camerasrc->capturing_mutex);
+  g_mutex_unlock (&camerasrc->capturing_mutex);
   return ret;
 }
 
@@ -255,7 +255,7 @@ gst_wrapper_camera_bin_src_vidsrc_probe (GstPad * pad, GstPadProbeInfo * info,
    * probe.
    */
   /* TODO shouldn't access this directly */
-  g_mutex_lock (camerasrc->capturing_mutex);
+  g_mutex_lock (&camerasrc->capturing_mutex);
   if (self->video_rec_status == GST_VIDEO_RECORDING_STATUS_DONE) {
     /* NOP */
   } else if (self->video_rec_status == GST_VIDEO_RECORDING_STATUS_STARTING) {
@@ -286,7 +286,7 @@ gst_wrapper_camera_bin_src_vidsrc_probe (GstPad * pad, GstPadProbeInfo * info,
   } else {
     ret = GST_PAD_PROBE_OK;
   }
-  g_mutex_unlock (camerasrc->capturing_mutex);
+  g_mutex_unlock (&camerasrc->capturing_mutex);
   return ret;
 }
 
@@ -747,10 +747,10 @@ start_image_capture (GstWrapperCameraBinSrc * self)
         (GstPhotoCapturePrepared) img_capture_prepared,
         self->image_capture_caps, self);
   } else {
-    g_mutex_unlock (bcamsrc->capturing_mutex);
+    g_mutex_unlock (&bcamsrc->capturing_mutex);
     gst_wrapper_camera_bin_reset_video_src_caps (self,
         self->image_capture_caps);
-    g_mutex_lock (bcamsrc->capturing_mutex);
+    g_mutex_lock (&bcamsrc->capturing_mutex);
     ret = TRUE;
   }
 
@@ -995,9 +995,9 @@ gst_wrapper_camera_bin_src_start_capture (GstBaseCameraSrc * camerasrc)
     GstCaps *caps = NULL;
 
     if (src->video_renegotiate) {
-      g_mutex_unlock (camerasrc->capturing_mutex);
+      g_mutex_unlock (&camerasrc->capturing_mutex);
       gst_wrapper_camera_bin_reset_video_src_caps (src, NULL);
-      g_mutex_lock (camerasrc->capturing_mutex);
+      g_mutex_lock (&camerasrc->capturing_mutex);
 
       /* clean capsfilter caps so they don't interfere here */
       g_object_set (src->src_filter, "caps", NULL, NULL);
@@ -1009,9 +1009,9 @@ gst_wrapper_camera_bin_src_start_capture (GstBaseCameraSrc * camerasrc)
       GST_DEBUG_OBJECT (src, "Video src caps %" GST_PTR_FORMAT, caps);
 
       src->video_renegotiate = FALSE;
-      g_mutex_unlock (camerasrc->capturing_mutex);
+      g_mutex_unlock (&camerasrc->capturing_mutex);
       gst_wrapper_camera_bin_reset_video_src_caps (src, caps);
-      g_mutex_lock (camerasrc->capturing_mutex);
+      g_mutex_lock (&camerasrc->capturing_mutex);
       gst_caps_unref (caps);
     }
     if (src->video_rec_status == GST_VIDEO_RECORDING_STATUS_DONE) {

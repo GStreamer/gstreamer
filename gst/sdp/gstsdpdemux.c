@@ -185,8 +185,7 @@ gst_sdp_demux_init (GstSDPDemux * demux)
 
   /* protects the streaming thread in interleaved mode or the polling
    * thread in UDP mode. */
-  demux->stream_rec_lock = g_new (GStaticRecMutex, 1);
-  g_static_rec_mutex_init (demux->stream_rec_lock);
+  g_rec_mutex_init (&demux->stream_rec_lock);
 
   demux->adapter = gst_adapter_new ();
 }
@@ -199,8 +198,7 @@ gst_sdp_demux_finalize (GObject * object)
   demux = GST_SDP_DEMUX (object);
 
   /* free locks */
-  g_static_rec_mutex_free (demux->stream_rec_lock);
-  g_free (demux->stream_rec_lock);
+  g_rec_mutex_clear (&demux->stream_rec_lock);
 
   g_object_unref (demux->adapter);
 

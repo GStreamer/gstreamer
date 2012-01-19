@@ -501,7 +501,7 @@ gst_base_audio_visualizer_init (GstBaseAudioVisualizer * scope,
   scope->rate = GST_AUDIO_DEF_RATE;
   scope->channels = 2;
 
-  scope->config_lock = g_mutex_new ();
+  g_mutex_init (&scope->config_lock);
 }
 
 static void
@@ -560,9 +560,9 @@ gst_base_audio_visualizer_dispose (GObject * object)
     g_free (scope->pixelbuf);
     scope->pixelbuf = NULL;
   }
-  if (scope->config_lock) {
-    g_mutex_free (scope->config_lock);
-    scope->config_lock = NULL;
+  if (scope->config_lock.p) {
+    g_mutex_clear (&scope->config_lock);
+    scope->config_lock.p = NULL;
   }
   G_OBJECT_CLASS (parent_class)->dispose (object);
 }
@@ -821,7 +821,7 @@ gst_base_audio_visualizer_chain (GstPad * pad, GstObject * parent,
 
   gst_adapter_push (scope->adapter, buffer);
 
-  g_mutex_lock (scope->config_lock);
+  g_mutex_lock (&scope->config_lock);
 
   /* this is what we want */
   sbpf = scope->req_spf * scope->channels * sizeof (gint16);
@@ -865,9 +865,9 @@ gst_base_audio_visualizer_chain (GstPad * pad, GstObject * parent,
       }
     }
 
-    g_mutex_unlock (scope->config_lock);
+    g_mutex_unlock (&scope->config_lock);
     ret = gst_buffer_pool_acquire_buffer (scope->pool, &outbuf, NULL);
-    g_mutex_lock (scope->config_lock);
+    g_mutex_lock (&scope->config_lock);
     /* recheck as the value could have changed */
     sbpf = scope->req_spf * scope->channels * sizeof (gint16);
 
@@ -910,10 +910,10 @@ gst_base_audio_visualizer_chain (GstPad * pad, GstObject * parent,
 
     gst_buffer_unmap (outbuf, vdata, scope->bpf);
 
-    g_mutex_unlock (scope->config_lock);
+    g_mutex_unlock (&scope->config_lock);
     ret = gst_pad_push (scope->srcpad, outbuf);
     outbuf = NULL;
-    g_mutex_lock (scope->config_lock);
+    g_mutex_lock (&scope->config_lock);
 
   skip:
     /* recheck as the value could have changed */
@@ -935,7 +935,7 @@ gst_base_audio_visualizer_chain (GstPad * pad, GstObject * parent,
       break;
   }
 
-  g_mutex_unlock (scope->config_lock);
+  g_mutex_unlock (&scope->config_lock);
 
 beach:
   return ret;

@@ -207,8 +207,8 @@ gst_ass_render_init (GstAssRender * render)
 
   gst_video_info_init (&render->info);
 
-  render->subtitle_mutex = g_mutex_new ();
-  render->subtitle_cond = g_cond_new ();
+  g_mutex_init (&render->subtitle_mutex);
+  g_cond_init (&render->subtitle_cond);
 
   render->renderer_init_ok = FALSE;
   render->track_init_ok = FALSE;
@@ -218,7 +218,7 @@ gst_ass_render_init (GstAssRender * render)
   gst_segment_init (&render->video_segment, GST_FORMAT_TIME);
   gst_segment_init (&render->subtitle_segment, GST_FORMAT_TIME);
 
-  render->ass_mutex = g_mutex_new ();
+  g_mutex_init (&render->ass_mutex);
   render->ass_library = ass_library_init ();
 #if defined(LIBASS_VERSION) && LIBASS_VERSION >= 0x00907000
   ass_set_message_cb (render->ass_library, _libass_message_cb, render);
@@ -241,11 +241,8 @@ gst_ass_render_finalize (GObject * object)
 {
   GstAssRender *render = GST_ASS_RENDER (object);
 
-  if (render->subtitle_mutex)
-    g_mutex_free (render->subtitle_mutex);
-
-  if (render->subtitle_cond)
-    g_cond_free (render->subtitle_cond);
+  g_mutex_clear (&render->subtitle_mutex);
+  g_cond_clear (&render->subtitle_cond);
 
   if (render->ass_track) {
     ass_free_track (render->ass_track);
@@ -259,8 +256,7 @@ gst_ass_render_finalize (GObject * object)
     ass_library_done (render->ass_library);
   }
 
-  if (render->ass_mutex)
-    g_mutex_free (render->ass_mutex);
+  g_mutex_clear (&render->ass_mutex);
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
@@ -277,9 +273,9 @@ gst_ass_render_set_property (GObject * object, guint prop_id,
       break;
     case PROP_EMBEDDEDFONTS:
       render->embeddedfonts = g_value_get_boolean (value);
-      g_mutex_lock (render->ass_mutex);
+      g_mutex_lock (&render->ass_mutex);
       ass_set_extract_fonts (render->ass_library, render->embeddedfonts);
-      g_mutex_unlock (render->ass_mutex);
+      g_mutex_unlock (&render->ass_mutex);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -324,13 +320,13 @@ gst_ass_render_change_state (GstElement * element, GstStateChange transition)
       break;
 
     case GST_STATE_CHANGE_PAUSED_TO_READY:
-      g_mutex_lock (render->subtitle_mutex);
+      g_mutex_lock (&render->subtitle_mutex);
       render->subtitle_flushing = TRUE;
       if (render->subtitle_pending)
         gst_buffer_unref (render->subtitle_pending);
       render->subtitle_pending = NULL;
-      g_cond_signal (render->subtitle_cond);
-      g_mutex_unlock (render->subtitle_mutex);
+      g_cond_signal (&render->subtitle_cond);
+      g_mutex_unlock (&render->subtitle_mutex);
       break;
   }
 
@@ -338,11 +334,11 @@ gst_ass_render_change_state (GstElement * element, GstStateChange transition)
 
   switch (transition) {
     case GST_STATE_CHANGE_PAUSED_TO_READY:
-      g_mutex_lock (render->ass_mutex);
+      g_mutex_lock (&render->ass_mutex);
       if (render->ass_track)
         ass_free_track (render->ass_track);
       render->ass_track = NULL;
-      g_mutex_unlock (render->ass_mutex);
+      g_mutex_unlock (&render->ass_mutex);
       render->track_init_ok = FALSE;
       render->renderer_init_ok = FALSE;
       break;
@@ -400,13 +396,13 @@ gst_ass_render_event_src (GstPad * pad, GstObject * parent, GstEvent * event)
         gst_pad_push_event (render->srcpad, gst_event_new_flush_start ());
 
       /* Mark subtitle as flushing, unblocks chains */
-      g_mutex_lock (render->subtitle_mutex);
+      g_mutex_lock (&render->subtitle_mutex);
       if (render->subtitle_pending)
         gst_buffer_unref (render->subtitle_pending);
       render->subtitle_pending = NULL;
       render->subtitle_flushing = TRUE;
-      g_cond_signal (render->subtitle_cond);
-      g_mutex_unlock (render->subtitle_mutex);
+      g_cond_signal (&render->subtitle_cond);
+      g_mutex_unlock (&render->subtitle_mutex);
 
       /* Seek on each sink pad */
       gst_event_ref (event);
@@ -780,7 +776,7 @@ gst_ass_render_setcaps_video (GstPad * pad, GstCaps * caps)
       goto out;
   }
 
-  g_mutex_lock (render->ass_mutex);
+  g_mutex_lock (&render->ass_mutex);
   ass_set_frame_size (render->ass_renderer, info.width, info.height);
 
   dar = (((gdouble) par_n) * ((gdouble) info.width))
@@ -803,7 +799,7 @@ gst_ass_render_setcaps_video (GstPad * pad, GstCaps * caps)
 #endif
   ass_set_margins (render->ass_renderer, 0, 0, 0, 0);
   ass_set_use_margins (render->ass_renderer, 0);
-  g_mutex_unlock (render->ass_mutex);
+  g_mutex_unlock (&render->ass_mutex);
 
   render->renderer_init_ok = TRUE;
 
@@ -841,7 +837,7 @@ gst_ass_render_setcaps_text (GstPad * pad, GstCaps * caps)
 
   value = gst_structure_get_value (structure, "codec_data");
 
-  g_mutex_lock (render->ass_mutex);
+  g_mutex_lock (&render->ass_mutex);
   if (value != NULL) {
     priv = gst_value_get_buffer (value);
     g_return_val_if_fail (priv != NULL, FALSE);
@@ -869,7 +865,7 @@ gst_ass_render_setcaps_text (GstPad * pad, GstCaps * caps)
 
     ret = TRUE;
   }
-  g_mutex_unlock (render->ass_mutex);
+  g_mutex_unlock (&render->ass_mutex);
 
   gst_object_unref (render);
 
@@ -897,9 +893,9 @@ gst_ass_render_process_text (GstAssRender * render, GstBuffer * buffer,
 
   data = gst_buffer_map (buffer, &size, NULL, GST_MAP_READ);
 
-  g_mutex_lock (render->ass_mutex);
+  g_mutex_lock (&render->ass_mutex);
   ass_process_chunk (render->ass_track, data, size, pts_start, pts_end);
-  g_mutex_unlock (render->ass_mutex);
+  g_mutex_unlock (&render->ass_mutex);
 
   gst_buffer_unmap (buffer, data, size);
   gst_buffer_unref (buffer);
@@ -953,7 +949,7 @@ gst_ass_render_chain_video (GstPad * pad, GstObject * parent,
 
   render->video_segment.position = clip_start;
 
-  g_mutex_lock (render->subtitle_mutex);
+  g_mutex_lock (&render->subtitle_mutex);
   if (render->subtitle_pending) {
     GstClockTime sub_running_time, vid_running_time;
     GstClockTime sub_running_time_end, vid_running_time_end;
@@ -979,15 +975,15 @@ gst_ass_render_chain_video (GstPad * pad, GstObject * parent,
           GST_TIME_FORMAT, GST_TIME_ARGS (sub_running_time_end),
           GST_TIME_ARGS (vid_running_time));
       render->subtitle_pending = NULL;
-      g_cond_signal (render->subtitle_cond);
+      g_cond_signal (&render->subtitle_cond);
     } else if (sub_running_time <= vid_running_time_end + GST_SECOND / 2) {
       gst_ass_render_process_text (render, render->subtitle_pending,
           sub_running_time, sub_running_time_end - sub_running_time);
       render->subtitle_pending = NULL;
-      g_cond_signal (render->subtitle_cond);
+      g_cond_signal (&render->subtitle_cond);
     }
   }
-  g_mutex_unlock (render->subtitle_mutex);
+  g_mutex_unlock (&render->subtitle_mutex);
 
   /* now start rendering subtitles, if all conditions are met */
   if (render->renderer_init_ok && render->track_init_ok && render->enable) {
@@ -1006,7 +1002,7 @@ gst_ass_render_chain_video (GstPad * pad, GstObject * parent,
     /* libass needs timestamps in ms */
     timestamp = running_time / GST_MSECOND;
 
-    g_mutex_lock (render->ass_mutex);
+    g_mutex_lock (&render->ass_mutex);
 #ifndef GST_DISABLE_GST_DEBUG
     /* only for testing right now. could possibly be used for optimizations? */
     step = ass_step_sub (render->ass_track, timestamp, 1);
@@ -1018,7 +1014,7 @@ gst_ass_render_chain_video (GstPad * pad, GstObject * parent,
     /* not sure what the last parameter to this call is for (detect_change) */
     ass_image = ass_render_frame (render->ass_renderer, render->ass_track,
         timestamp, NULL);
-    g_mutex_unlock (render->ass_mutex);
+    g_mutex_unlock (&render->ass_mutex);
 
     if (ass_image != NULL) {
       GstVideoFrame frame;
@@ -1108,11 +1104,11 @@ gst_ass_render_chain_text (GstPad * pad, GstObject * parent, GstBuffer * buffer)
 
   if (sub_running_time > vid_running_time + GST_SECOND / 2) {
     g_assert (render->subtitle_pending == NULL);
-    g_mutex_lock (render->subtitle_mutex);
+    g_mutex_lock (&render->subtitle_mutex);
     if (G_UNLIKELY (render->subtitle_flushing)) {
       GST_DEBUG_OBJECT (render, "Text pad flushing");
       gst_buffer_unref (buffer);
-      g_mutex_unlock (render->subtitle_mutex);
+      g_mutex_unlock (&render->subtitle_mutex);
       return GST_FLOW_WRONG_STATE;
     }
     GST_DEBUG_OBJECT (render,
@@ -1120,8 +1116,8 @@ gst_ass_render_chain_text (GstPad * pad, GstObject * parent, GstBuffer * buffer)
         GST_TIME_FORMAT, GST_TIME_ARGS (sub_running_time),
         GST_TIME_ARGS (vid_running_time));
     render->subtitle_pending = buffer;
-    g_cond_wait (render->subtitle_cond, render->subtitle_mutex);
-    g_mutex_unlock (render->subtitle_mutex);
+    g_cond_wait (&render->subtitle_cond, &render->subtitle_mutex);
+    g_mutex_unlock (&render->subtitle_mutex);
   } else if (sub_running_time_end < vid_running_time) {
     GST_DEBUG_OBJECT (render,
         "Too late text buffer, dropping (%" GST_TIME_FORMAT " < %"
@@ -1212,11 +1208,11 @@ gst_ass_render_handle_tags (GstAssRender * render, GstTagList * taglist)
       }
 
       if (valid_mimetype || valid_extension) {
-        g_mutex_lock (render->ass_mutex);
+        g_mutex_lock (&render->ass_mutex);
         ass_add_font (render->ass_library, (gchar *) filename,
             (gchar *) GST_BUFFER_DATA (buf), GST_BUFFER_SIZE (buf));
         GST_DEBUG_OBJECT (render, "registered new font %s", filename);
-        g_mutex_unlock (render->ass_mutex);
+        g_mutex_unlock (&render->ass_mutex);
       }
 #endif
     }
@@ -1368,7 +1364,7 @@ gst_ass_render_event_text (GstPad * pad, GstObject * parent, GstEvent * event)
       break;
     case GST_EVENT_FLUSH_START:
       GST_DEBUG_OBJECT (render, "begin flushing");
-      g_mutex_lock (render->ass_mutex);
+      g_mutex_lock (&render->ass_mutex);
       if (render->ass_track) {
         /* delete any events on the ass_track */
         for (i = 0; i < render->ass_track->n_events; i++) {
@@ -1378,14 +1374,14 @@ gst_ass_render_event_text (GstPad * pad, GstObject * parent, GstEvent * event)
         render->ass_track->n_events = 0;
         GST_DEBUG_OBJECT (render, "done flushing");
       }
-      g_mutex_unlock (render->ass_mutex);
-      g_mutex_lock (render->subtitle_mutex);
+      g_mutex_unlock (&render->ass_mutex);
+      g_mutex_lock (&render->subtitle_mutex);
       if (render->subtitle_pending)
         gst_buffer_unref (render->subtitle_pending);
       render->subtitle_pending = NULL;
       render->subtitle_flushing = TRUE;
-      g_cond_signal (render->subtitle_cond);
-      g_mutex_unlock (render->subtitle_mutex);
+      g_cond_signal (&render->subtitle_cond);
+      g_mutex_unlock (&render->subtitle_mutex);
       gst_event_unref (event);
       ret = TRUE;
       break;

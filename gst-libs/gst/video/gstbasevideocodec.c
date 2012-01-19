@@ -130,7 +130,7 @@ gst_base_video_codec_init (GstBaseVideoCodec * base_video_codec,
 
   gst_segment_init (&base_video_codec->segment, GST_FORMAT_TIME);
 
-  g_static_rec_mutex_init (&base_video_codec->stream_lock);
+  g_rec_mutex_init (&base_video_codec->stream_lock);
 }
 
 static void
@@ -162,7 +162,7 @@ gst_base_video_codec_finalize (GObject * object)
 {
   GstBaseVideoCodec *base_video_codec = GST_BASE_VIDEO_CODEC (object);
 
-  g_static_rec_mutex_free (&base_video_codec->stream_lock);
+  g_rec_mutex_clear (&base_video_codec->stream_lock);
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }

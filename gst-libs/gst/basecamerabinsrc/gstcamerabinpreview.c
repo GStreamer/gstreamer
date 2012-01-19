@@ -68,7 +68,7 @@ bus_callback (GstBus * bus, GstMessage * message, gpointer user_data)
         data->pipeline = NULL;
       }
 
-      g_cond_signal (data->processing_cond);
+      g_cond_signal (&data->processing_cond);
 
       break;
     }
@@ -101,13 +101,13 @@ gst_camerabin_preview_pipeline_new_sample (GstAppSink * appsink,
         "This element has no bus, therefore no message sent!");
   }
 
-  g_mutex_lock (data->processing_lock);
+  g_mutex_lock (&data->processing_lock);
 
   data->processing--;
   if (data->processing == 0)
-    g_cond_signal (data->processing_cond);
+    g_cond_signal (&data->processing_cond);
 
-  g_mutex_unlock (data->processing_lock);
+  g_mutex_unlock (&data->processing_lock);
 
   return GST_FLOW_OK;
 }
@@ -195,8 +195,8 @@ gst_camerabin_create_preview_pipeline (GstElement * element,
   data->filter = filter;
   data->vscale = vscale;
 
-  data->processing_lock = g_mutex_new ();
-  data->processing_cond = g_cond_new ();
+  g_mutex_init (&data->processing_lock);
+  g_cond_init (&data->processing_cond);
 
   data->pending_preview_caps = NULL;
   data->processing = 0;
@@ -230,13 +230,13 @@ gst_camerabin_destroy_preview_pipeline (GstCameraBinPreviewPipelineData *
 {
   g_return_if_fail (preview != NULL);
 
-  if (preview->processing_lock) {
-    g_mutex_free (preview->processing_lock);
-    preview->processing_lock = NULL;
+  if (preview->processing_lock.p) {
+    g_mutex_clear (&preview->processing_lock);
+    preview->processing_lock.p = NULL;
   }
-  if (preview->processing_cond) {
-    g_cond_free (preview->processing_cond);
-    preview->processing_cond = NULL;
+  if (preview->processing_cond.p) {
+    g_cond_clear (&preview->processing_cond);
+    preview->processing_cond.p = NULL;
   }
   if (preview->pipeline) {
     gst_element_set_state (preview->pipeline, GST_STATE_NULL);
@@ -263,12 +263,12 @@ gst_camerabin_preview_pipeline_post (GstCameraBinPreviewPipelineData * preview,
   g_return_val_if_fail (preview->pipeline != NULL, FALSE);
   g_return_val_if_fail (buffer, FALSE);
 
-  g_mutex_lock (preview->processing_lock);
+  g_mutex_lock (&preview->processing_lock);
   g_return_val_if_fail (preview->pipeline != NULL, FALSE);
 
   if (preview->pending_preview_caps) {
     if (preview->processing > 0) {
-      g_cond_wait (preview->processing_cond, preview->processing_lock);
+      g_cond_wait (&preview->processing_cond, &preview->processing_lock);
     }
     _gst_camerabin_preview_set_caps (preview, preview->pending_preview_caps);
     gst_caps_replace (&preview->pending_preview_caps, NULL);
@@ -279,7 +279,7 @@ gst_camerabin_preview_pipeline_post (GstCameraBinPreviewPipelineData * preview,
   gst_app_src_push_buffer ((GstAppSrc *) preview->appsrc,
       gst_buffer_ref (buffer));
 
-  g_mutex_unlock (preview->processing_lock);
+  g_mutex_unlock (&preview->processing_lock);
 
   return TRUE;
 }
@@ -321,7 +321,7 @@ gst_camerabin_preview_set_caps (GstCameraBinPreviewPipelineData * preview,
 {
   g_return_if_fail (preview != NULL);
 
-  g_mutex_lock (preview->processing_lock);
+  g_mutex_lock (&preview->processing_lock);
 
   if (preview->processing == 0) {
     _gst_camerabin_preview_set_caps (preview, caps);
@@ -329,7 +329,7 @@ gst_camerabin_preview_set_caps (GstCameraBinPreviewPipelineData * preview,
     GST_DEBUG ("Preview pipeline busy, storing new caps as pending");
     gst_caps_replace (&preview->pending_preview_caps, caps);
   }
-  g_mutex_unlock (preview->processing_lock);
+  g_mutex_unlock (&preview->processing_lock);
 }
 
 /**
@@ -352,7 +352,7 @@ gst_camerabin_preview_set_filter (GstCameraBinPreviewPipelineData * preview,
 
   GST_DEBUG ("Preview pipeline setting new filter %p", filter);
 
-  g_mutex_lock (preview->processing_lock);
+  g_mutex_lock (&preview->processing_lock);
 
   gst_element_get_state (preview->pipeline, &current, NULL, 0);
 
@@ -398,7 +398,7 @@ gst_camerabin_preview_set_filter (GstCameraBinPreviewPipelineData * preview,
     GST_WARNING ("Cannot change filter when pipeline is running");
     ret = FALSE;
   }
-  g_mutex_unlock (preview->processing_lock);
+  g_mutex_unlock (&preview->processing_lock);
 
   return ret;
 }

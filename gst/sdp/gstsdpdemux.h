@@ -42,9 +42,9 @@ G_BEGIN_DECLS
 typedef struct _GstSDPDemux GstSDPDemux;
 typedef struct _GstSDPDemuxClass GstSDPDemuxClass;
 
-#define GST_SDP_STREAM_GET_LOCK(sdp)   (GST_SDP_DEMUX_CAST(sdp)->stream_rec_lock)
-#define GST_SDP_STREAM_LOCK(sdp)       (g_static_rec_mutex_lock (GST_SDP_STREAM_GET_LOCK(sdp)))
-#define GST_SDP_STREAM_UNLOCK(sdp)     (g_static_rec_mutex_unlock (GST_SDP_STREAM_GET_LOCK(sdp)))
+#define GST_SDP_STREAM_GET_LOCK(sdp)   (&GST_SDP_DEMUX_CAST(sdp)->stream_rec_lock)
+#define GST_SDP_STREAM_LOCK(sdp)       (g_rec_mutex_lock (GST_SDP_STREAM_GET_LOCK(sdp)))
+#define GST_SDP_STREAM_UNLOCK(sdp)     (g_rec_mutex_unlock (GST_SDP_STREAM_GET_LOCK(sdp)))
 
 typedef struct _GstSDPStream GstSDPStream;
 
@@ -91,7 +91,7 @@ struct _GstSDPDemux {
   gboolean         ignore_timeout;
 
   gint             numstreams;
-  GStaticRecMutex *stream_rec_lock;
+  GRecMutex        stream_rec_lock;
   GList           *streams;
 
   /* properties */

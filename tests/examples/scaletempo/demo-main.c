@@ -60,9 +60,6 @@ main (int argc, char *argv[])
     {NULL,}
   };
 
-  if (!g_thread_supported ())
-    g_thread_init (NULL);
-
   ctx = g_option_context_new ("uri ...");
   g_option_context_add_group (ctx, gst_init_get_option_group ());
   g_option_context_add_group (ctx, gtk_get_option_group (FALSE));

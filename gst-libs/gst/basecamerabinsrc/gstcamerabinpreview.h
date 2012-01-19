@@ -42,8 +42,8 @@ typedef struct
 
   GstCaps *pending_preview_caps;
   guint processing;
-  GMutex *processing_lock;
-  GCond *processing_cond;
+  GMutex processing_lock;
+  GCond processing_cond;
 
 } GstCameraBinPreviewPipelineData;
 

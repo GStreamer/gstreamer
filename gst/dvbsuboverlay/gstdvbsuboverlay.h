@@ -56,7 +56,7 @@ struct _GstDVBSubOverlay
   GQueue *pending_subtitles; /* A queue of raw subtitle region sets with
 			      * metadata that are waiting their running time */
 
-  GMutex *dvbsub_mutex; /* protects the queue and the DvbSub instance */
+  GMutex dvbsub_mutex; /* protects the queue and the DvbSub instance */
   DvbSub *dvb_sub;
 };
 

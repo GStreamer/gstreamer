@@ -172,7 +172,7 @@ gst_dvd_spu_init (GstDVDSpu * dvdspu)
   gst_element_add_pad (GST_ELEMENT (dvdspu), dvdspu->subpic_sinkpad);
   gst_element_add_pad (GST_ELEMENT (dvdspu), dvdspu->srcpad);
 
-  dvdspu->spu_lock = g_mutex_new ();
+  g_mutex_init (&dvdspu->spu_lock);
   dvdspu->pending_spus = g_queue_new ();
 
   gst_dvd_spu_clear (dvdspu);
@@ -221,7 +221,7 @@ gst_dvd_spu_finalize (GObject * object)
     }
   }
   g_queue_free (dvdspu->pending_spus);
-  g_mutex_free (dvdspu->spu_lock);
+  g_mutex_clear (&dvdspu->spu_lock);
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }

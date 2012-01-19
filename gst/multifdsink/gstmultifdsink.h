@@ -176,10 +176,10 @@ typedef struct {
   guint64 last_buffer_ts;
 } GstTCPClient;
 
-#define CLIENTS_LOCK_INIT(fdsink)       (g_static_rec_mutex_init(&fdsink->clientslock))
-#define CLIENTS_LOCK_FREE(fdsink)       (g_static_rec_mutex_free(&fdsink->clientslock))
-#define CLIENTS_LOCK(fdsink)            (g_static_rec_mutex_lock(&fdsink->clientslock))
-#define CLIENTS_UNLOCK(fdsink)          (g_static_rec_mutex_unlock(&fdsink->clientslock))
+#define CLIENTS_LOCK_INIT(fdsink)       (g_rec_mutex_init(&fdsink->clientslock))
+#define CLIENTS_LOCK_CLEAR(fdsink)      (g_rec_mutex_clear(&fdsink->clientslock))
+#define CLIENTS_LOCK(fdsink)            (g_rec_mutex_lock(&fdsink->clientslock))
+#define CLIENTS_UNLOCK(fdsink)          (g_rec_mutex_unlock(&fdsink->clientslock))
 
 /**
  * GstMultiFdSink:
@@ -193,7 +193,7 @@ struct _GstMultiFdSink {
   guint64 bytes_to_serve; /* how much bytes we must serve */
   guint64 bytes_served; /* how much bytes have we served */
 
-  GStaticRecMutex clientslock;  /* lock to protect the clients list */
+  GRecMutex clientslock;  /* lock to protect the clients list */
   GList *clients;       /* list of clients we are serving */
   GHashTable *fd_hash;  /* index on fd to client */
   guint clients_cookie; /* Cookie to detect changes to the clients list */

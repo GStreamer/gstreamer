@@ -488,7 +488,7 @@ gst_dvbsrc_init (GstDvbSrc * object)
   object->inversion = DEFAULT_INVERSION;
   object->stats_interval = DEFAULT_STATS_REPORTING_INTERVAL;
 
-  object->tune_mutex = g_mutex_new ();
+  g_mutex_init (&object->tune_mutex);
   object->timeout = DEFAULT_TIMEOUT;
 }
 
@@ -617,9 +617,9 @@ gst_dvbsrc_set_property (GObject * _object, guint prop_id,
 
       /* if we are in paused/playing state tune now, otherwise in ready to paused state change */
       if (GST_STATE (object) > GST_STATE_READY) {
-        g_mutex_lock (object->tune_mutex);
+        g_mutex_lock (&object->tune_mutex);
         gst_dvbsrc_tune (object);
-        g_mutex_unlock (object->tune_mutex);
+        g_mutex_unlock (&object->tune_mutex);
       }
       break;
     }
@@ -856,7 +856,7 @@ gst_dvbsrc_finalize (GObject * _object)
   object = GST_DVBSRC (_object);
 
   /* freeing the mutex segfaults somehow */
-  g_mutex_free (object->tune_mutex);
+  g_mutex_clear (&object->tune_mutex);
 
   if (G_OBJECT_CLASS (parent_class)->finalize)
     G_OBJECT_CLASS (parent_class)->finalize (_object);
@@ -969,7 +969,7 @@ gst_dvbsrc_create (GstPushSrc * element, GstBuffer ** buf)
   buffer_size = DEFAULT_BUFFER_SIZE;
 
   /* device can not be tuned during read */
-  g_mutex_lock (object->tune_mutex);
+  g_mutex_lock (&object->tune_mutex);
 
 
   if (object->fd_dvr > -1) {
@@ -987,7 +987,7 @@ gst_dvbsrc_create (GstPushSrc * element, GstBuffer ** buf)
     }
   }
 
-  g_mutex_unlock (object->tune_mutex);
+  g_mutex_unlock (&object->tune_mutex);
   return retval;
 
 }
