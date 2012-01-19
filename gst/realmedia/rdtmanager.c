@@ -147,7 +147,7 @@ static void gst_rdt_manager_loop (GstPad * pad);
 
 static guint gst_rdt_manager_signals[LAST_SIGNAL] = { 0 };
 
-#define JBUF_LOCK(sess)   (g_mutex_lock ((sess)->jbuf_lock))
+#define JBUF_LOCK(sess)   (g_mutex_lock (&(sess)->jbuf_lock))
 
 #define JBUF_LOCK_CHECK(sess,label) G_STMT_START {    \
   JBUF_LOCK (sess);                                   \
@@ -155,8 +155,8 @@ static guint gst_rdt_manager_signals[LAST_SIGNAL] = { 0 };
     goto label;                                       \
 } G_STMT_END
 
-#define JBUF_UNLOCK(sess) (g_mutex_unlock ((sess)->jbuf_lock))
-#define JBUF_WAIT(sess)   (g_cond_wait ((sess)->jbuf_cond, (sess)->jbuf_lock))
+#define JBUF_UNLOCK(sess) (g_mutex_unlock (&(sess)->jbuf_lock))
+#define JBUF_WAIT(sess)   (g_cond_wait (&(sess)->jbuf_cond, &(sess)->jbuf_lock))
 
 #define JBUF_WAIT_CHECK(sess,label) G_STMT_START {    \
   JBUF_WAIT(sess);                                    \
@@ -164,7 +164,7 @@ static guint gst_rdt_manager_signals[LAST_SIGNAL] = { 0 };
     goto label;                                       \
 } G_STMT_END
 
-#define JBUF_SIGNAL(sess) (g_cond_signal ((sess)->jbuf_cond))
+#define JBUF_SIGNAL(sess) (g_cond_signal (&(sess)->jbuf_cond))
 
 /* Manages the receiving end of the packets.
  *
@@ -210,8 +210,8 @@ struct _GstRDTManagerSession
 
   /* jitterbuffer, lock and cond */
   RDTJitterBuffer *jbuf;
-  GMutex *jbuf_lock;
-  GCond *jbuf_cond;
+  GMutex jbuf_lock;
+  GCond jbuf_cond;
 
   /* some accounting */
   guint64 num_late;
@@ -243,8 +243,8 @@ create_session (GstRDTManager * rdtmanager, gint id)
   sess->id = id;
   sess->dec = rdtmanager;
   sess->jbuf = rdt_jitter_buffer_new ();
-  sess->jbuf_lock = g_mutex_new ();
-  sess->jbuf_cond = g_cond_new ();
+  g_mutex_init (&sess->jbuf_lock);
+  g_cond_init (&sess->jbuf_cond);
   rdtmanager->sessions = g_slist_prepend (rdtmanager->sessions, sess);
 
   return sess;
@@ -316,8 +316,8 @@ static void
 free_session (GstRDTManagerSession * session)
 {
   g_object_unref (session->jbuf);
-  g_cond_free (session->jbuf_cond);
-  g_mutex_free (session->jbuf_lock);
+  g_cond_clear (&session->jbuf_cond);
+  g_mutex_clear (&session->jbuf_lock);
   g_free (session);
 }
 
