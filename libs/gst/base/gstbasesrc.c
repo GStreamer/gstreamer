@@ -1178,10 +1178,13 @@ gst_base_src_default_query (GstBaseSrc * src, GstQuery * query)
       bclass = GST_BASE_SRC_GET_CLASS (src);
       if (bclass->get_caps) {
         gst_query_parse_caps (query, &filter);
-        caps = bclass->get_caps (src, filter);
-        gst_query_set_caps_result (query, caps);
-        gst_caps_unref (caps);
-        res = TRUE;
+        if ((caps = bclass->get_caps (src, filter))) {
+          gst_query_set_caps_result (query, caps);
+          gst_caps_unref (caps);
+          res = TRUE;
+        } else {
+          res = FALSE;
+        }
       } else
         res = FALSE;
       break;
