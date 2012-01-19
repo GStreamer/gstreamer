@@ -1120,12 +1120,15 @@ gst_app_src_get_caps (GstAppSrc * appsrc, GstCaps * filter)
     gst_caps_ref (caps);
 
   if (filter) {
-    GstCaps *intersection =
-        gst_caps_intersect_full (filter, caps, GST_CAPS_INTERSECT_FIRST);
-    gst_caps_unref (caps);
-    caps = intersection;
+    if (caps) {
+      GstCaps *intersection =
+          gst_caps_intersect_full (filter, caps, GST_CAPS_INTERSECT_FIRST);
+      gst_caps_unref (caps);
+      caps = intersection;
+    } else {
+      caps = gst_caps_ref (filter);
+    }
   }
-
   GST_DEBUG_OBJECT (appsrc, "getting caps of %" GST_PTR_FORMAT, caps);
   GST_OBJECT_UNLOCK (appsrc);
 
