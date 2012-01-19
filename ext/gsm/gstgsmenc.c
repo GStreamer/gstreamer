@@ -136,10 +136,7 @@ gst_gsmenc_stop (GstAudioEncoder * enc)
 static gboolean
 gst_gsmenc_set_format (GstAudioEncoder * benc, GstAudioInfo * info)
 {
-  GstGSMEnc *gsmenc;
   GstCaps *srccaps;
-
-  gsmenc = GST_GSMENC (benc);
 
   srccaps = gst_static_pad_template_get_caps (&gsmenc_src_template);
   gst_pad_set_caps (GST_AUDIO_ENCODER_SRC_PAD (benc), srccaps);
