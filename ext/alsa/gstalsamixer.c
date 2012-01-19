@@ -34,10 +34,6 @@
 #include "config.h"
 #endif
 
-/* FIXME 0.11: suppress warnings for deprecated API such as GStaticRecMutex
- * with newer GLib versions (>= 2.31.0) */
-#define GLIB_DISABLE_DEPRECATION_WARNINGS
-
 #include "gstalsamixer.h"
 #include "gst/glib-compat-private.h"
 #include <errno.h>
@@ -497,7 +493,7 @@ gst_alsa_mixer_new (const char *device, GstAlsaMixerDirection dir)
     goto error;
 
   g_rec_mutex_init (&ret->rec_mutex);
-  g_static_rec_mutex_init (&ret->task_mutex);
+  g_rec_mutex_init (&ret->task_mutex);
 
   ret->task = gst_task_new (task_monitor_alsa, ret);
   gst_task_set_lock (ret->task, &ret->task_mutex);
@@ -542,7 +538,7 @@ gst_alsa_mixer_free (GstAlsaMixer * mixer)
     mixer->task = NULL;
   }
 
-  g_static_rec_mutex_free (&mixer->task_mutex);
+  g_rec_mutex_clear (&mixer->task_mutex);
 
   if (mixer->pfd[0] > 0) {
     close (mixer->pfd[0]);

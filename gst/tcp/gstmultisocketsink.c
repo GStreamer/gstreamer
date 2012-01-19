@@ -104,10 +104,6 @@
 #include "config.h"
 #endif
 
-/* FIXME 0.11: suppress warnings for deprecated API such as GStaticRecMutex
- * with newer GLib versions (>= 2.31.0) */
-#define GLIB_DISABLE_DEPRECATION_WARNINGS
-
 #include <gst/gst-i18n-plugin.h>
 
 #include "gstmultisocketsink.h"
@@ -666,7 +662,7 @@ gst_multi_socket_sink_finalize (GObject * object)
 
   this = GST_MULTI_SOCKET_SINK (object);
 
-  CLIENTS_LOCK_FREE (this);
+  CLIENTS_LOCK_CLEAR (this);
   g_hash_table_destroy (this->socket_hash);
   g_array_free (this->bufqueue, TRUE);
 

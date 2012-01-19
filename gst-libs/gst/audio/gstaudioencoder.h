@@ -82,8 +82,8 @@ G_BEGIN_DECLS
  */
 #define GST_AUDIO_ENCODER_SEGMENT(obj)     (GST_AUDIO_ENCODER_CAST (obj)->segment)
 
-#define GST_AUDIO_ENCODER_STREAM_LOCK(enc) g_static_rec_mutex_lock (&GST_AUDIO_ENCODER (enc)->stream_lock)
-#define GST_AUDIO_ENCODER_STREAM_UNLOCK(enc) g_static_rec_mutex_unlock (&GST_AUDIO_ENCODER (enc)->stream_lock)
+#define GST_AUDIO_ENCODER_STREAM_LOCK(enc)   g_rec_mutex_lock (&GST_AUDIO_ENCODER (enc)->stream_lock)
+#define GST_AUDIO_ENCODER_STREAM_UNLOCK(enc) g_rec_mutex_unlock (&GST_AUDIO_ENCODER (enc)->stream_lock)
 
 typedef struct _GstAudioEncoder GstAudioEncoder;
 typedef struct _GstAudioEncoderClass GstAudioEncoderClass;
@@ -108,7 +108,7 @@ struct _GstAudioEncoder {
   /* protects all data processing, i.e. is locked
    * in the chain function, finish_frame and when
    * processing serialized events */
-  GStaticRecMutex stream_lock;
+  GRecMutex       stream_lock;
 
   /* MT-protected (with STREAM_LOCK) */
   GstSegment      segment;

@@ -22,10 +22,6 @@
 #include "config.h"
 #endif
 
-/* FIXME 0.11: suppress warnings for deprecated API such as GStaticRecMutex
- * with newer GLib versions (>= 2.31.0) */
-#define GLIB_DISABLE_DEPRECATION_WARNINGS
-
 #include <string.h>
 #include <gst/gst.h>
 
@@ -123,12 +119,12 @@ typedef struct
 #define GST_PLAY_SINK_GET_LOCK(playsink) (&((GstPlaySink *)playsink)->lock)
 #define GST_PLAY_SINK_LOCK(playsink)     G_STMT_START { \
   GST_LOG_OBJECT (playsink, "locking from thread %p", g_thread_self ()); \
-  g_static_rec_mutex_lock (GST_PLAY_SINK_GET_LOCK (playsink)); \
+  g_rec_mutex_lock (GST_PLAY_SINK_GET_LOCK (playsink)); \
   GST_LOG_OBJECT (playsink, "locked from thread %p", g_thread_self ()); \
 } G_STMT_END
 #define GST_PLAY_SINK_UNLOCK(playsink)   G_STMT_START { \
   GST_LOG_OBJECT (playsink, "unlocking from thread %p", g_thread_self ()); \
-  g_static_rec_mutex_unlock (GST_PLAY_SINK_GET_LOCK (playsink)); \
+  g_rec_mutex_unlock (GST_PLAY_SINK_GET_LOCK (playsink)); \
 } G_STMT_END
 
 #define PENDING_FLAG_SET(playsink, flagtype) \
@@ -148,7 +144,7 @@ struct _GstPlaySink
 {
   GstBin bin;
 
-  GStaticRecMutex lock;
+  GRecMutex lock;
 
   gboolean async_pending;
   gboolean need_async_start;
@@ -524,7 +520,7 @@ gst_play_sink_init (GstPlaySink * playsink)
   gst_bin_add (GST_BIN_CAST (playsink),
       GST_ELEMENT_CAST (playsink->stream_synchronizer));
 
-  g_static_rec_mutex_init (&playsink->lock);
+  g_rec_mutex_init (&playsink->lock);
   GST_OBJECT_FLAG_SET (playsink, GST_ELEMENT_FLAG_SINK);
 }
 
@@ -627,7 +623,7 @@ gst_play_sink_finalize (GObject * object)
 
   playsink = GST_PLAY_SINK (object);
 
-  g_static_rec_mutex_free (&playsink->lock);
+  g_rec_mutex_clear (&playsink->lock);
 
   G_OBJECT_CLASS (gst_play_sink_parent_class)->finalize (object);
 }

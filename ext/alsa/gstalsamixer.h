@@ -53,7 +53,7 @@ struct _GstAlsaMixer
   snd_mixer_t *         handle;
 
   GstTask *		task;
-  GStaticRecMutex	task_mutex;
+  GRecMutex	        task_mutex;
 
   GRecMutex		rec_mutex;
 

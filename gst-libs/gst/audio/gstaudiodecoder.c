@@ -149,10 +149,6 @@
 #include "config.h"
 #endif
 
-/* FIXME 0.11: suppress warnings for deprecated API such as GStaticRecMutex
- * with newer GLib versions (>= 2.31.0) */
-#define GLIB_DISABLE_DEPRECATION_WARNINGS
-
 #include "gstaudiodecoder.h"
 #include <gst/pbutils/descriptions.h>
 
@@ -411,7 +407,7 @@ gst_audio_decoder_init (GstAudioDecoder * dec, GstAudioDecoderClass * klass)
   dec->priv->adapter_out = gst_adapter_new ();
   g_queue_init (&dec->priv->frames);
 
-  g_static_rec_mutex_init (&dec->stream_lock);
+  g_rec_mutex_init (&dec->stream_lock);
 
   /* property default */
   dec->priv->latency = DEFAULT_LATENCY;
@@ -485,7 +481,7 @@ gst_audio_decoder_finalize (GObject * object)
     g_object_unref (dec->priv->adapter_out);
   }
 
-  g_static_rec_mutex_free (&dec->stream_lock);
+  g_rec_mutex_clear (&dec->stream_lock);
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }

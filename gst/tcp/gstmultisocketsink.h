@@ -161,10 +161,10 @@ typedef struct {
   guint64 last_buffer_ts;
 } GstSocketClient;
 
-#define CLIENTS_LOCK_INIT(socketsink)       (g_static_rec_mutex_init(&socketsink->clientslock))
-#define CLIENTS_LOCK_FREE(socketsink)       (g_static_rec_mutex_free(&socketsink->clientslock))
-#define CLIENTS_LOCK(socketsink)            (g_static_rec_mutex_lock(&socketsink->clientslock))
-#define CLIENTS_UNLOCK(socketsink)          (g_static_rec_mutex_unlock(&socketsink->clientslock))
+#define CLIENTS_LOCK_INIT(socketsink)       (g_rec_mutex_init(&socketsink->clientslock))
+#define CLIENTS_LOCK_CLEAR(socketsink)      (g_rec_mutex_clear(&socketsink->clientslock))
+#define CLIENTS_LOCK(socketsink)            (g_rec_mutex_lock(&socketsink->clientslock))
+#define CLIENTS_UNLOCK(socketsink)          (g_rec_mutex_unlock(&socketsink->clientslock))
 
 /**
  * GstMultiSocketSink:
@@ -178,7 +178,7 @@ struct _GstMultiSocketSink {
   guint64 bytes_to_serve; /* how much bytes we must serve */
   guint64 bytes_served; /* how much bytes have we served */
 
-  GStaticRecMutex clientslock;  /* lock to protect the clients list */
+  GRecMutex clientslock;  /* lock to protect the clients list */
   GList *clients;       /* list of clients we are serving */
   GHashTable *socket_hash;  /* index on socket to client */
   guint clients_cookie; /* Cookie to detect changes to the clients list */

@@ -21,10 +21,6 @@
 #include "config.h"
 #endif
 
-/* FIXME 0.11: suppress warnings for deprecated API such as GStaticRecMutex
- * with newer GLib versions (>= 2.31.0) */
-#define GLIB_DISABLE_DEPRECATION_WARNINGS
-
 #include "gststreamsynchronizer.h"
 #include "gst/glib-compat-private.h"
 
@@ -677,14 +673,14 @@ gst_stream_synchronizer_request_new_pad (GstElement * element,
   GST_STREAM_SYNCHRONIZER_UNLOCK (self);
 
   /* Add pads and activate unless we're going to NULL */
-  g_static_rec_mutex_lock (GST_STATE_GET_LOCK (self));
+  g_rec_mutex_lock (GST_STATE_GET_LOCK (self));
   if (GST_STATE_TARGET (self) != GST_STATE_NULL) {
     gst_pad_set_active (stream->srcpad, TRUE);
     gst_pad_set_active (stream->sinkpad, TRUE);
   }
   gst_element_add_pad (GST_ELEMENT_CAST (self), stream->srcpad);
   gst_element_add_pad (GST_ELEMENT_CAST (self), stream->sinkpad);
-  g_static_rec_mutex_unlock (GST_STATE_GET_LOCK (self));
+  g_rec_mutex_unlock (GST_STATE_GET_LOCK (self));
 
   return stream->sinkpad;
 }

@@ -217,10 +217,6 @@
 #include "config.h"
 #endif
 
-/* FIXME 0.11: suppress warnings for deprecated API such as GStaticRecMutex
- * with newer GLib versions (>= 2.31.0) */
-#define GLIB_DISABLE_DEPRECATION_WARNINGS
-
 #include <string.h>
 #include <gst/gst.h>
 
@@ -272,7 +268,7 @@ struct _GstSourceSelect
   gulong block_id;
 };
 
-#define GST_SOURCE_GROUP_GET_LOCK(group) (((GstSourceGroup*)(group))->lock)
+#define GST_SOURCE_GROUP_GET_LOCK(group) (&((GstSourceGroup*)(group))->lock)
 #define GST_SOURCE_GROUP_LOCK(group) (g_mutex_lock (GST_SOURCE_GROUP_GET_LOCK(group)))
 #define GST_SOURCE_GROUP_UNLOCK(group) (g_mutex_unlock (GST_SOURCE_GROUP_GET_LOCK(group)))
 
@@ -290,7 +286,7 @@ struct _GstSourceGroup
 {
   GstPlayBin *playbin;
 
-  GMutex *lock;
+  GMutex lock;
 
   gboolean valid;               /* the group has valid info to start playback */
   gboolean active;              /* the group is active */
@@ -330,7 +326,7 @@ struct _GstSourceGroup
 
   gulong block_id;
 
-  GMutex *stream_changed_pending_lock;
+  GMutex stream_changed_pending_lock;
   GList *stream_changed_pending;
 
   /* selectors for different streams */
@@ -338,12 +334,12 @@ struct _GstSourceGroup
 };
 
 #define GST_PLAY_BIN_GET_LOCK(bin) (&((GstPlayBin*)(bin))->lock)
-#define GST_PLAY_BIN_LOCK(bin) (g_static_rec_mutex_lock (GST_PLAY_BIN_GET_LOCK(bin)))
-#define GST_PLAY_BIN_UNLOCK(bin) (g_static_rec_mutex_unlock (GST_PLAY_BIN_GET_LOCK(bin)))
+#define GST_PLAY_BIN_LOCK(bin) (g_rec_mutex_lock (GST_PLAY_BIN_GET_LOCK(bin)))
+#define GST_PLAY_BIN_UNLOCK(bin) (g_rec_mutex_unlock (GST_PLAY_BIN_GET_LOCK(bin)))
 
 /* lock to protect dynamic callbacks, like no-more-pads */
-#define GST_PLAY_BIN_DYN_LOCK(bin)    g_mutex_lock ((bin)->dyn_lock)
-#define GST_PLAY_BIN_DYN_UNLOCK(bin)  g_mutex_unlock ((bin)->dyn_lock)
+#define GST_PLAY_BIN_DYN_LOCK(bin)    g_mutex_lock (&(bin)->dyn_lock)
+#define GST_PLAY_BIN_DYN_UNLOCK(bin)  g_mutex_unlock (&(bin)->dyn_lock)
 
 /* lock for shutdown */
 #define GST_PLAY_BIN_SHUTDOWN_LOCK(bin,label)           \
@@ -370,7 +366,7 @@ struct _GstPlayBin
 {
   GstPipeline parent;
 
-  GStaticRecMutex lock;         /* to protect group switching */
+  GRecMutex lock;               /* to protect group switching */
 
   /* the groups, we use a double buffer to switch between current and next */
   GstSourceGroup groups[2];     /* array with group info */
@@ -393,11 +389,11 @@ struct _GstPlayBin
   GstElement *source;
 
   /* lock protecting dynamic adding/removing */
-  GMutex *dyn_lock;
+  GMutex dyn_lock;
   /* if we are shutting down or not */
   gint shutdown;
 
-  GMutex *elements_lock;
+  GMutex elements_lock;
   guint32 elements_cookie;
   GList *elements;              /* factories we can use for selecting elements */
 
@@ -1130,7 +1126,7 @@ init_group (GstPlayBin * playbin, GstSourceGroup * group)
   group->video_channels = g_ptr_array_new ();
   group->audio_channels = g_ptr_array_new ();
   group->text_channels = g_ptr_array_new ();
-  group->lock = g_mutex_new ();
+  g_mutex_init (&group->lock);
   /* init selectors. The selector is found by finding the first prefix that
    * matches the media. */
   group->playbin = playbin;
@@ -1181,7 +1177,7 @@ free_group (GstPlayBin * playbin, GstSourceGroup * group)
   g_ptr_array_free (group->audio_channels, TRUE);
   g_ptr_array_free (group->text_channels, TRUE);
 
-  g_mutex_free (group->lock);
+  g_mutex_clear (&group->lock);
   if (group->audio_sink) {
     if (group->audio_sink != playbin->audio_sink)
       gst_element_set_state (group->audio_sink, GST_STATE_NULL);
@@ -1198,9 +1194,9 @@ free_group (GstPlayBin * playbin, GstSourceGroup * group)
   g_list_free (group->stream_changed_pending);
   group->stream_changed_pending = NULL;
 
-  if (group->stream_changed_pending_lock)
-    g_mutex_free (group->stream_changed_pending_lock);
-  group->stream_changed_pending_lock = NULL;
+  if (group->stream_changed_pending_lock.p)
+    g_mutex_clear (&group->stream_changed_pending_lock);
+  group->stream_changed_pending_lock.p = NULL;
 }
 
 static void
@@ -1242,8 +1238,8 @@ gst_play_bin_update_elements_list (GstPlayBin * playbin)
 static void
 gst_play_bin_init (GstPlayBin * playbin)
 {
-  g_static_rec_mutex_init (&playbin->lock);
-  playbin->dyn_lock = g_mutex_new ();
+  g_rec_mutex_init (&playbin->lock);
+  g_mutex_init (&playbin->dyn_lock);
 
   /* assume we can create a selector */
   playbin->have_selector = TRUE;
@@ -1255,7 +1251,7 @@ gst_play_bin_init (GstPlayBin * playbin)
   init_group (playbin, &playbin->groups[1]);
 
   /* first filter out the interesting element factories */
-  playbin->elements_lock = g_mutex_new ();
+  g_mutex_init (&playbin->elements_lock);
 
   /* add sink */
   playbin->playsink = g_object_new (GST_TYPE_PLAY_SINK, NULL);
@@ -1304,9 +1300,9 @@ gst_play_bin_finalize (GObject * object)
   if (playbin->elements)
     gst_plugin_feature_list_free (playbin->elements);
 
-  g_static_rec_mutex_free (&playbin->lock);
-  g_mutex_free (playbin->dyn_lock);
-  g_mutex_free (playbin->elements_lock);
+  g_rec_mutex_clear (&playbin->lock);
+  g_mutex_clear (&playbin->dyn_lock);
+  g_mutex_clear (&playbin->elements_lock);
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
@@ -2210,10 +2206,10 @@ gst_play_bin_query (GstElement * element, GstQuery * query)
     gboolean pending;
 
     GST_SOURCE_GROUP_LOCK (group);
-    if (group->stream_changed_pending_lock) {
-      g_mutex_lock (group->stream_changed_pending_lock);
+    if (group->stream_changed_pending_lock.p) {
+      g_mutex_lock (&group->stream_changed_pending_lock);
       pending = group->pending || group->stream_changed_pending;
-      g_mutex_unlock (group->stream_changed_pending_lock);
+      g_mutex_unlock (&group->stream_changed_pending_lock);
     } else {
       pending = group->pending;
     }
@@ -2288,7 +2284,7 @@ gst_play_bin_handle_message (GstBin * bin, GstMessage * msg)
       GList *l, *l_prev;
 
       group = playbin->curr_group;
-      g_mutex_lock (group->stream_changed_pending_lock);
+      g_mutex_lock (&group->stream_changed_pending_lock);
       for (l = group->stream_changed_pending; l;) {
         guint32 l_seqnum = GPOINTER_TO_UINT (l->data);
 
@@ -2306,7 +2302,7 @@ gst_play_bin_handle_message (GstBin * bin, GstMessage * msg)
           l = l->next;
         }
       }
-      g_mutex_unlock (group->stream_changed_pending_lock);
+      g_mutex_unlock (&group->stream_changed_pending_lock);
     }
   } else if (GST_MESSAGE_TYPE (msg) == GST_MESSAGE_ASYNC_START ||
       GST_MESSAGE_TYPE (msg) == GST_MESSAGE_ASYNC_DONE) {
@@ -2920,7 +2916,7 @@ no_more_pads_cb (GstElement * decodebin, GstSourceGroup * group)
         msg = gst_message_new_element (GST_OBJECT_CAST (playbin), s);
         seqnum = gst_message_get_seqnum (msg);
         event = gst_event_new_sink_message (msg);
-        g_mutex_lock (group->stream_changed_pending_lock);
+        g_mutex_lock (&group->stream_changed_pending_lock);
         group->stream_changed_pending =
             g_list_prepend (group->stream_changed_pending,
             GUINT_TO_POINTER (seqnum));
@@ -2942,7 +2938,7 @@ no_more_pads_cb (GstElement * decodebin, GstSourceGroup * group)
             GST_PAD_PROBE_TYPE_DATA_DOWNSTREAM,
             stream_changed_data_probe, (gpointer) select, NULL);
 
-        g_mutex_unlock (group->stream_changed_pending_lock);
+        g_mutex_unlock (&group->stream_changed_pending_lock);
         gst_message_unref (msg);
       }
 
@@ -3059,12 +3055,12 @@ autoplug_factories_cb (GstElement * decodebin, GstPad * pad,
       group, GST_DEBUG_PAD_NAME (pad), caps);
 
   /* filter out the elements based on the caps. */
-  g_mutex_lock (playbin->elements_lock);
+  g_mutex_lock (&playbin->elements_lock);
   gst_play_bin_update_elements_list (playbin);
   mylist =
       gst_element_factory_list_filter (playbin->elements, caps, GST_PAD_SINK,
       FALSE);
-  g_mutex_unlock (playbin->elements_lock);
+  g_mutex_unlock (&playbin->elements_lock);
 
   GST_DEBUG_OBJECT (playbin, "found factories %p", mylist);
   GST_PLUGIN_FEATURE_LIST_DEBUG (mylist);
@@ -3495,8 +3491,8 @@ activate_group (GstPlayBin * playbin, GstSourceGroup * group, GstState target)
 
   g_list_free (group->stream_changed_pending);
   group->stream_changed_pending = NULL;
-  if (!group->stream_changed_pending_lock)
-    group->stream_changed_pending_lock = g_mutex_new ();
+  if (!group->stream_changed_pending_lock.p)
+    g_mutex_init (&group->stream_changed_pending_lock);
 
   if (group->uridecodebin) {
     GST_DEBUG_OBJECT (playbin, "reusing existing uridecodebin");
