@@ -176,8 +176,7 @@ ensure_memory (GstJpegEnc * jpegenc)
   /* copy previous data if any */
   if (jpegenc->output_mem) {
     memcpy (new_data, jpegenc->output_data, old_size);
-    gst_memory_unmap (jpegenc->output_mem, jpegenc->output_data,
-        jpegenc->output_size);
+    gst_memory_unmap (jpegenc->output_mem);
     gst_memory_unref (jpegenc->output_mem);
   }
 
@@ -216,8 +215,9 @@ gst_jpegenc_term_destination (j_compress_ptr cinfo)
   GstJpegEnc *jpegenc = (GstJpegEnc *) (cinfo->client_data);
   GST_DEBUG_OBJECT (jpegenc, "gst_jpegenc_chain: term_source");
 
+  gst_memory_unmap (jpegenc->output_mem);
   /* Trim the buffer size. we will push it in the chain function */
-  gst_memory_unmap (jpegenc->output_mem, jpegenc->output_data,
+  gst_memory_resize (jpegenc->output_mem, 0,
       jpegenc->output_size - jpegenc->jdest.free_in_buffer);
   jpegenc->output_data = NULL;
   jpegenc->output_size = 0;

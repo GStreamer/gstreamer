@@ -511,11 +511,7 @@ gst_multiudpsink_render (GstBaseSink * bsink, GstBuffer * buffer)
   /* unmap all memory again */
   for (i = 0; i < n_mem; i++) {
     mem = gst_buffer_peek_memory (buffer, i, GST_MAP_READ);
-
-    bdata = (guint8 *) vec[i].buffer;
-    bsize = vec[i].size;
-
-    gst_memory_unmap (mem, bdata, bsize);
+    gst_memory_unmap (mem);
   }
   g_free (vec);
 
