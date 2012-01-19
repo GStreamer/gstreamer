@@ -262,9 +262,8 @@ gst_rtcp_buffer_map (GstBuffer * buffer, GstMapFlags flags,
 
   /* allow for expansion, e.g. adding packets, if needed */
   if ((flags & GST_MAP_WRITE) != 0) {
-    /* unmap and adjust to max available, and remap */
-    gst_buffer_unmap (buffer, rtcp->data, rtcp->maxsize);
-    rtcp->data = gst_buffer_map (buffer, &rtcp->size, &rtcp->maxsize, flags);
+    /* adjust to max available */
+    rtcp->size = rtcp->maxsize;
   }
 
   return TRUE;
@@ -294,6 +293,7 @@ gst_rtcp_buffer_unmap (GstRTCPBuffer * rtcp)
     while (gst_rtcp_packet_move_to_next (&packet));
 
   /* shrink size */
+  gst_buffer_resize (rtcp->buffer, 0, packet.offset);
   res = gst_buffer_unmap (rtcp->buffer, rtcp->data, packet.offset);
   rtcp->buffer = NULL;
 
