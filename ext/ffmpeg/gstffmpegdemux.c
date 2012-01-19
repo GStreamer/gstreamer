@@ -99,7 +99,7 @@ struct _GstFFMpegDemux
   /* push mode data */
   GstFFMpegPipe ffpipe;
   GstTask *task;
-  GStaticRecMutex *task_lock;
+  GRecMutex task_lock;
 };
 
 typedef struct _GstFFMpegDemuxClass GstFFMpegDemuxClass;
@@ -268,9 +268,8 @@ gst_ffmpegdemux_init (GstFFMpegDemux * demux)
       GST_DEBUG_FUNCPTR (gst_ffmpegdemux_chain));
   /* task for driving ffmpeg in loop function */
   demux->task = gst_task_new ((GstTaskFunction) gst_ffmpegdemux_loop, demux);
-  demux->task_lock = g_new (GStaticRecMutex, 1);
-  g_static_rec_mutex_init (demux->task_lock);
-  gst_task_set_lock (demux->task, demux->task_lock);
+  g_rec_mutex_init (&demux->task_lock);
+  gst_task_set_lock (demux->task, &demux->task_lock);
 
   demux->opened = FALSE;
   demux->context = NULL;
@@ -308,8 +307,7 @@ gst_ffmpegdemux_finalize (GObject * object)
   gst_object_unref (demux->ffpipe.adapter);
 
   gst_object_unref (demux->task);
-  g_static_rec_mutex_free (demux->task_lock);
-  g_free (demux->task_lock);
+  g_rec_mutex_clear (&demux->task_lock);
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
@@ -1470,8 +1468,8 @@ pause:
       GST_FFMPEG_PIPE_MUTEX_LOCK (ffpipe);
       /* pause task and make sure loop stops */
       gst_task_pause (demux->task);
-      g_static_rec_mutex_lock (demux->task_lock);
-      g_static_rec_mutex_unlock (demux->task_lock);
+      g_rec_mutex_lock (&demux->task_lock);
+      g_rec_mutex_unlock (&demux->task_lock);
       demux->ffpipe.srcresult = ret;
       GST_FFMPEG_PIPE_MUTEX_UNLOCK (ffpipe);
     }
@@ -1753,8 +1751,8 @@ gst_ffmpegdemux_sink_activate_push (GstPad * sinkpad, GstObject * parent,
 
     /* make sure streaming ends */
     gst_task_stop (demux->task);
-    g_static_rec_mutex_lock (demux->task_lock);
-    g_static_rec_mutex_unlock (demux->task_lock);
+    g_rec_mutex_lock (&demux->task_lock);
+    g_rec_mutex_unlock (&demux->task_lock);
     res = gst_task_join (demux->task);
     demux->seekable = FALSE;
   }
