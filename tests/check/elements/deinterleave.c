@@ -23,7 +23,6 @@
 
 #include <stdio.h>
 #include <gst/check/gstcheck.h>
-#include <gst/audio/multichannel.h>
 
 GST_START_TEST (test_create_and_unref)
 {

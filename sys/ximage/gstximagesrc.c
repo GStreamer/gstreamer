@@ -94,18 +94,18 @@ gst_ximage_src_return_buf (GstXImageSrc * ximagesrc, GstBuffer * ximage)
     GST_DEBUG_OBJECT (ximagesrc,
         "destroy image %p as its size changed %dx%d vs current %dx%d",
         ximage, meta->width, meta->height, ximagesrc->width, ximagesrc->height);
-    g_mutex_lock (ximagesrc->x_lock);
+    g_mutex_lock (&ximagesrc->x_lock);
     gst_ximageutil_ximage_destroy (ximagesrc->xcontext, ximage);
-    g_mutex_unlock (ximagesrc->x_lock);
+    g_mutex_unlock (&ximagesrc->x_lock);
   } else {
     /* In that case we can reuse the image and add it to our image pool. */
     GST_LOG_OBJECT (ximagesrc, "recycling image %p in pool", ximage);
     /* need to increment the refcount again to recycle */
     gst_buffer_ref (ximage);
-    g_mutex_lock (ximagesrc->pool_lock);
+    g_mutex_lock (&ximagesrc->pool_lock);
     GST_BUFFER_FLAGS (GST_BUFFER (ximage)) = 0; /* clear out any flags from the previous use */
     ximagesrc->buffer_pool = g_slist_prepend (ximagesrc->buffer_pool, ximage);
-    g_mutex_unlock (ximagesrc->pool_lock);
+    g_mutex_unlock (&ximagesrc->pool_lock);
   }
 }
 
@@ -146,10 +146,10 @@ gst_ximage_src_open_display (GstXImageSrc * s, const gchar * name)
   if (s->xcontext != NULL)
     return TRUE;
 
-  g_mutex_lock (s->x_lock);
+  g_mutex_lock (&s->x_lock);
   s->xcontext = ximageutil_xcontext_get (GST_ELEMENT (s), name);
   if (s->xcontext == NULL) {
-    g_mutex_unlock (s->x_lock);
+    g_mutex_unlock (&s->x_lock);
     GST_ELEMENT_ERROR (s, RESOURCE, OPEN_READ,
         ("Could not open X display for reading"),
         ("NULL returned from getting xcontext"));
@@ -259,7 +259,7 @@ use_root_window:
 #endif
 #endif
 
-  g_mutex_unlock (s->x_lock);
+  g_mutex_unlock (&s->x_lock);
 
   if (s->xcontext == NULL)
     return FALSE;
@@ -301,7 +301,7 @@ gst_ximage_src_stop (GstBaseSrc * basesrc)
 #endif
 
   if (src->xcontext) {
-    g_mutex_lock (src->x_lock);
+    g_mutex_lock (&src->x_lock);
 
 #ifdef HAVE_XDAMAGE
     if (src->damage_copy_gc != None) {
@@ -320,7 +320,7 @@ gst_ximage_src_stop (GstBaseSrc * basesrc)
 
     ximageutil_xcontext_clear (src->xcontext);
     src->xcontext = NULL;
-    g_mutex_unlock (src->x_lock);
+    g_mutex_unlock (&src->x_lock);
   }
 
   return TRUE;
@@ -454,7 +454,7 @@ gst_ximage_src_ximage_get (GstXImageSrc * ximagesrc)
   GstBuffer *ximage = NULL;
   GstMetaXImage *meta;
 
-  g_mutex_lock (ximagesrc->pool_lock);
+  g_mutex_lock (&ximagesrc->pool_lock);
   while (ximagesrc->buffer_pool != NULL) {
     ximage = ximagesrc->buffer_pool->data;
 
@@ -468,16 +468,13 @@ gst_ximage_src_ximage_get (GstXImageSrc * ximagesrc)
     ximagesrc->buffer_pool = g_slist_delete_link (ximagesrc->buffer_pool,
         ximagesrc->buffer_pool);
   }
-  g_mutex_unlock (ximagesrc->pool_lock);
+  g_mutex_unlock (&ximagesrc->pool_lock);
 
   if (ximage == NULL) {
-    GstXContext *xcontext;
-    GstCaps *caps = NULL;
-
     GST_DEBUG_OBJECT (ximagesrc, "creating image (%dx%d)",
         ximagesrc->width, ximagesrc->height);
 
-    g_mutex_lock (ximagesrc->x_lock);
+    g_mutex_lock (&ximagesrc->x_lock);
     ximage = gst_ximageutil_ximage_new (ximagesrc->xcontext,
         GST_ELEMENT (ximagesrc), ximagesrc->width, ximagesrc->height,
         (BufferReturnFunc) (gst_ximage_src_return_buf));
@@ -485,29 +482,11 @@ gst_ximage_src_ximage_get (GstXImageSrc * ximagesrc)
       GST_ELEMENT_ERROR (ximagesrc, RESOURCE, WRITE, (NULL),
           ("could not create a %dx%d ximage", ximagesrc->width,
               ximagesrc->height));
-      g_mutex_unlock (ximagesrc->x_lock);
+      g_mutex_unlock (&ximagesrc->x_lock);
       return NULL;
     }
 
-    xcontext = ximagesrc->xcontext;
-
-    caps = gst_caps_new_simple ("video/x-raw-rgb",
-        "bpp", G_TYPE_INT, xcontext->bpp,
-        "depth", G_TYPE_INT, xcontext->depth,
-        "endianness", G_TYPE_INT, xcontext->endianness,
-        "red_mask", G_TYPE_INT, xcontext->r_mask_output,
-        "green_mask", G_TYPE_INT, xcontext->g_mask_output,
-        "blue_mask", G_TYPE_INT, xcontext->b_mask_output,
-        "width", G_TYPE_INT, ximagesrc->width,
-        "height", G_TYPE_INT, ximagesrc->height,
-        "framerate", GST_TYPE_FRACTION, ximagesrc->fps_n, ximagesrc->fps_d,
-        "pixel-aspect-ratio", GST_TYPE_FRACTION,
-        gst_value_get_fraction_numerator (xcontext->par),
-        gst_value_get_fraction_denominator (xcontext->par), NULL);
-
-    g_mutex_unlock (ximagesrc->x_lock);
-
-    gst_caps_unref (caps);
+    g_mutex_unlock (&ximagesrc->x_lock);
   }
 
   g_return_val_if_fail (GST_IS_XIMAGE_SRC (ximagesrc), NULL);
@@ -998,7 +977,7 @@ gst_ximage_src_get_property (GObject * object, guint prop_id, GValue * value,
 static void
 gst_ximage_src_clear_bufpool (GstXImageSrc * ximagesrc)
 {
-  g_mutex_lock (ximagesrc->pool_lock);
+  g_mutex_lock (&ximagesrc->pool_lock);
   while (ximagesrc->buffer_pool != NULL) {
     GstBuffer *ximage = ximagesrc->buffer_pool->data;
 
@@ -1007,7 +986,7 @@ gst_ximage_src_clear_bufpool (GstXImageSrc * ximagesrc)
     ximagesrc->buffer_pool = g_slist_delete_link (ximagesrc->buffer_pool,
         ximagesrc->buffer_pool);
   }
-  g_mutex_unlock (ximagesrc->pool_lock);
+  g_mutex_unlock (&ximagesrc->pool_lock);
 }
 
 static void
@@ -1028,8 +1007,8 @@ gst_ximage_src_finalize (GObject * object)
     ximageutil_xcontext_clear (src->xcontext);
 
   g_free (src->xname);
-  g_mutex_free (src->pool_lock);
-  g_mutex_free (src->x_lock);
+  g_mutex_clear (&src->pool_lock);
+  g_mutex_clear (&src->x_lock);
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
@@ -1289,8 +1268,8 @@ gst_ximage_src_init (GstXImageSrc * ximagesrc)
   gst_base_src_set_format (GST_BASE_SRC (ximagesrc), GST_FORMAT_TIME);
   gst_base_src_set_live (GST_BASE_SRC (ximagesrc), TRUE);
 
-  ximagesrc->pool_lock = g_mutex_new ();
-  ximagesrc->x_lock = g_mutex_new ();
+  g_mutex_init (&ximagesrc->pool_lock);
+  g_mutex_init (&ximagesrc->x_lock);
   ximagesrc->show_pointer = TRUE;
   ximagesrc->use_damage = TRUE;
   ximagesrc->startx = 0;

@@ -38,8 +38,8 @@ struct _GstSoupHttpClientSink
 {
   GstBaseSink base_souphttpsink;
 
-  GMutex *mutex;
-  GCond *cond;
+  GMutex mutex;
+  GCond cond;
   GMainContext *context;
   GMainLoop *loop;
   GThread *thread;

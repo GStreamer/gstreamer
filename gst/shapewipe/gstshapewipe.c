@@ -194,8 +194,8 @@ gst_shape_wipe_init (GstShapeWipe * self)
       GST_DEBUG_FUNCPTR (gst_shape_wipe_src_query));
   gst_element_add_pad (GST_ELEMENT (self), self->srcpad);
 
-  self->mask_mutex = g_mutex_new ();
-  self->mask_cond = g_cond_new ();
+  g_mutex_init (&self->mask_mutex);
+  g_cond_init (&self->mask_cond);
 
   gst_shape_wipe_reset (self);
 }
@@ -253,13 +253,8 @@ gst_shape_wipe_finalize (GObject * object)
 
   gst_shape_wipe_reset (self);
 
-  if (self->mask_cond)
-    g_cond_free (self->mask_cond);
-  self->mask_cond = NULL;
-
-  if (self->mask_mutex)
-    g_mutex_free (self->mask_mutex);
-  self->mask_mutex = NULL;
+  g_cond_clear (&self->mask_cond);
+  g_mutex_clear (&self->mask_mutex);
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
@@ -273,9 +268,9 @@ gst_shape_wipe_reset (GstShapeWipe * self)
     gst_buffer_unref (self->mask);
   self->mask = NULL;
 
-  g_mutex_lock (self->mask_mutex);
-  g_cond_signal (self->mask_cond);
-  g_mutex_unlock (self->mask_mutex);
+  g_mutex_lock (&self->mask_mutex);
+  g_cond_signal (&self->mask_cond);
+  g_mutex_unlock (&self->mask_mutex);
 
   gst_video_info_init (&self->info);
   self->mask_bpp = 0;
@@ -298,12 +293,12 @@ gst_shape_wipe_video_sink_setcaps (GstShapeWipe * self, GstCaps * caps)
     goto invalid_caps;
 
   if (self->info.width != info.width || self->info.height != info.height) {
-    g_mutex_lock (self->mask_mutex);
+    g_mutex_lock (&self->mask_mutex);
     self->info = info;
     if (self->mask)
       gst_buffer_unref (self->mask);
     self->mask = NULL;
-    g_mutex_unlock (self->mask_mutex);
+    g_mutex_unlock (&self->mask_mutex);
   }
 
 
@@ -857,19 +852,19 @@ gst_shape_wipe_video_sink_chain (GstPad * pad, GstObject * parent,
       "Blending buffer with timestamp %" GST_TIME_FORMAT " at position %f",
       GST_TIME_ARGS (timestamp), self->mask_position);
 
-  g_mutex_lock (self->mask_mutex);
+  g_mutex_lock (&self->mask_mutex);
   if (self->shutdown)
     goto shutdown;
 
   if (!self->mask)
-    g_cond_wait (self->mask_cond, self->mask_mutex);
+    g_cond_wait (&self->mask_cond, &self->mask_mutex);
 
   if (self->mask == NULL || self->shutdown) {
     goto shutdown;
   } else {
     mask = gst_buffer_ref (self->mask);
   }
-  g_mutex_unlock (self->mask_mutex);
+  g_mutex_unlock (&self->mask_mutex);
 
   if (!gst_shape_wipe_do_qos (self, GST_BUFFER_TIMESTAMP (buffer)))
     goto qos;
@@ -958,12 +953,12 @@ gst_shape_wipe_mask_sink_chain (GstPad * pad, GstObject * parent,
   GstShapeWipe *self = GST_SHAPE_WIPE (parent);
   GstFlowReturn ret = GST_FLOW_OK;
 
-  g_mutex_lock (self->mask_mutex);
+  g_mutex_lock (&self->mask_mutex);
   GST_DEBUG_OBJECT (self, "Setting new mask buffer: %" GST_PTR_FORMAT, buffer);
 
   gst_buffer_replace (&self->mask, buffer);
-  g_cond_signal (self->mask_cond);
-  g_mutex_unlock (self->mask_mutex);
+  g_cond_signal (&self->mask_cond);
+  g_mutex_unlock (&self->mask_mutex);
 
   gst_buffer_unref (buffer);
 
@@ -982,10 +977,10 @@ gst_shape_wipe_change_state (GstElement * element, GstStateChange transition)
       break;
     case GST_STATE_CHANGE_PAUSED_TO_READY:
       /* Unblock video sink chain function */
-      g_mutex_lock (self->mask_mutex);
+      g_mutex_lock (&self->mask_mutex);
       self->shutdown = TRUE;
-      g_cond_signal (self->mask_cond);
-      g_mutex_unlock (self->mask_mutex);
+      g_cond_signal (&self->mask_cond);
+      g_mutex_unlock (&self->mask_mutex);
       break;
     default:
       break;
@@ -1067,9 +1062,9 @@ gst_shape_wipe_mask_sink_event (GstPad * pad, GstObject * parent,
       break;
     }
     case GST_EVENT_FLUSH_STOP:
-      g_mutex_lock (self->mask_mutex);
+      g_mutex_lock (&self->mask_mutex);
       gst_buffer_replace (&self->mask, NULL);
-      g_mutex_unlock (self->mask_mutex);
+      g_mutex_unlock (&self->mask_mutex);
       break;
     default:
       break;

@@ -37,8 +37,8 @@
 GST_DEBUG_CATEGORY (equalizer_debug);
 #define GST_CAT_DEFAULT equalizer_debug
 
-#define BANDS_LOCK(equ) g_mutex_lock(equ->bands_lock)
-#define BANDS_UNLOCK(equ) g_mutex_unlock(equ->bands_lock)
+#define BANDS_LOCK(equ) g_mutex_lock(&equ->bands_lock)
+#define BANDS_UNLOCK(equ) g_mutex_unlock(&equ->bands_lock)
 
 static void gst_iir_equalizer_child_proxy_interface_init (gpointer g_iface,
     gpointer iface_data);
@@ -371,7 +371,7 @@ gst_iir_equalizer_class_init (GstIirEqualizerClass * klass)
 static void
 gst_iir_equalizer_init (GstIirEqualizer * eq)
 {
-  eq->bands_lock = g_mutex_new ();
+  g_mutex_init (&eq->bands_lock);
   eq->need_new_coefficients = TRUE;
 }
 
@@ -391,7 +391,7 @@ gst_iir_equalizer_finalize (GObject * object)
   g_free (equ->bands);
   g_free (equ->history);
 
-  g_mutex_free (equ->bands_lock);
+  g_mutex_clear (&equ->bands_lock);
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }

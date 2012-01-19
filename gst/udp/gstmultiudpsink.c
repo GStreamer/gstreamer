@@ -326,7 +326,7 @@ gst_multiudpsink_class_init (GstMultiUDPSinkClass * klass)
 static void
 gst_multiudpsink_init (GstMultiUDPSink * sink)
 {
-  sink->client_lock = g_mutex_new ();
+  g_mutex_init (&sink->client_lock);
   sink->socket = DEFAULT_SOCKET;
   sink->used_socket = DEFAULT_USED_SOCKET;
   sink->close_socket = DEFAULT_CLOSE_SOCKET;
@@ -429,7 +429,7 @@ gst_multiudpsink_finalize (GObject * object)
     g_object_unref (sink->cancellable);
   sink->cancellable = NULL;
 
-  g_mutex_free (sink->client_lock);
+  g_mutex_clear (&sink->client_lock);
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
@@ -475,7 +475,7 @@ gst_multiudpsink_render (GstBaseSink * bsink, GstBuffer * buffer)
 
   /* grab lock while iterating and sending to clients, this should be
    * fast as UDP never blocks */
-  g_mutex_lock (sink->client_lock);
+  g_mutex_lock (&sink->client_lock);
   GST_LOG_OBJECT (bsink, "about to send %d bytes", size);
 
   no_clients = 0;
@@ -506,7 +506,7 @@ gst_multiudpsink_render (GstBaseSink * bsink, GstBuffer * buffer)
       sink->bytes_served += ret;
     }
   }
-  g_mutex_unlock (sink->client_lock);
+  g_mutex_unlock (&sink->client_lock);
 
   /* unmap all memory again */
   for (i = 0; i < n_mem; i++) {
@@ -545,7 +545,7 @@ gst_multiudpsink_set_clients_string (GstMultiUDPSink * sink,
 
   clients = g_strsplit (string, ",", 0);
 
-  g_mutex_lock (sink->client_lock);
+  g_mutex_lock (&sink->client_lock);
   /* clear all existing clients */
   gst_multiudpsink_clear_internal (sink, FALSE);
   for (i = 0; clients[i]; i++) {
@@ -561,7 +561,7 @@ gst_multiudpsink_set_clients_string (GstMultiUDPSink * sink,
     if (port != 0)
       gst_multiudpsink_add_internal (sink, host, port, FALSE);
   }
-  g_mutex_unlock (sink->client_lock);
+  g_mutex_unlock (&sink->client_lock);
 
   g_strfreev (clients);
 }
@@ -574,7 +574,7 @@ gst_multiudpsink_get_clients_string (GstMultiUDPSink * sink)
 
   str = g_string_new ("");
 
-  g_mutex_lock (sink->client_lock);
+  g_mutex_lock (&sink->client_lock);
   clients = sink->clients;
   while (clients) {
     GstUDPClient *client;
@@ -590,7 +590,7 @@ gst_multiudpsink_get_clients_string (GstMultiUDPSink * sink)
           (clients || count > 1 ? "," : ""));
     }
   }
-  g_mutex_unlock (sink->client_lock);
+  g_mutex_unlock (&sink->client_lock);
 
   return g_string_free (str, FALSE);
 }
@@ -919,7 +919,7 @@ gst_multiudpsink_add_internal (GstMultiUDPSink * sink, const gchar * host,
   GST_DEBUG_OBJECT (sink, "adding client on host %s, port %d", host, port);
 
   if (lock)
-    g_mutex_lock (sink->client_lock);
+    g_mutex_lock (&sink->client_lock);
 
   find = g_list_find_custom (sink->clients, &udpclient,
       (GCompareFunc) client_compare);
@@ -945,7 +945,7 @@ gst_multiudpsink_add_internal (GstMultiUDPSink * sink, const gchar * host,
   }
 
   if (lock)
-    g_mutex_unlock (sink->client_lock);
+    g_mutex_unlock (&sink->client_lock);
 
   g_signal_emit (G_OBJECT (sink),
       gst_multiudpsink_signals[SIGNAL_CLIENT_ADDED], 0, host, port);
@@ -959,7 +959,7 @@ error:
     GST_DEBUG_OBJECT (sink, "did not add client on host %s, port %d", host,
         port);
     if (lock)
-      g_mutex_unlock (sink->client_lock);
+      g_mutex_unlock (&sink->client_lock);
     return;
   }
 }
@@ -981,7 +981,7 @@ gst_multiudpsink_remove (GstMultiUDPSink * sink, const gchar * host, gint port)
   udpclient.host = (gchar *) host;
   udpclient.port = port;
 
-  g_mutex_lock (sink->client_lock);
+  g_mutex_lock (&sink->client_lock);
   find = g_list_find_custom (sink->clients, &udpclient,
       (GCompareFunc) client_compare);
   if (!find)
@@ -1015,23 +1015,23 @@ gst_multiudpsink_remove (GstMultiUDPSink * sink, const gchar * host, gint port)
     }
 
     /* Unlock to emit signal before we delete the actual client */
-    g_mutex_unlock (sink->client_lock);
+    g_mutex_unlock (&sink->client_lock);
     g_signal_emit (G_OBJECT (sink),
         gst_multiudpsink_signals[SIGNAL_CLIENT_REMOVED], 0, host, port);
-    g_mutex_lock (sink->client_lock);
+    g_mutex_lock (&sink->client_lock);
 
     sink->clients = g_list_delete_link (sink->clients, find);
 
     free_client (client);
   }
-  g_mutex_unlock (sink->client_lock);
+  g_mutex_unlock (&sink->client_lock);
 
   return;
 
   /* ERRORS */
 not_found:
   {
-    g_mutex_unlock (sink->client_lock);
+    g_mutex_unlock (&sink->client_lock);
     GST_WARNING_OBJECT (sink, "client at host %s, port %d not found",
         host, port);
     return;
@@ -1045,12 +1045,12 @@ gst_multiudpsink_clear_internal (GstMultiUDPSink * sink, gboolean lock)
   /* we only need to remove the client structure, there is no additional
    * socket or anything to free for UDP */
   if (lock)
-    g_mutex_lock (sink->client_lock);
+    g_mutex_lock (&sink->client_lock);
   g_list_foreach (sink->clients, (GFunc) free_client, sink);
   g_list_free (sink->clients);
   sink->clients = NULL;
   if (lock)
-    g_mutex_unlock (sink->client_lock);
+    g_mutex_unlock (&sink->client_lock);
 }
 
 void
@@ -1071,7 +1071,7 @@ gst_multiudpsink_get_stats (GstMultiUDPSink * sink, const gchar * host,
   udpclient.host = (gchar *) host;
   udpclient.port = port;
 
-  g_mutex_lock (sink->client_lock);
+  g_mutex_lock (&sink->client_lock);
 
   find = g_list_find_custom (sink->clients, &udpclient,
       (GCompareFunc) client_compare);
@@ -1090,14 +1090,14 @@ gst_multiudpsink_get_stats (GstMultiUDPSink * sink, const gchar * host,
       "connect-time", G_TYPE_UINT64, client->connect_time,
       "disconnect-time", G_TYPE_UINT64, client->disconnect_time, NULL);
 
-  g_mutex_unlock (sink->client_lock);
+  g_mutex_unlock (&sink->client_lock);
 
   return result;
 
   /* ERRORS */
 not_found:
   {
-    g_mutex_unlock (sink->client_lock);
+    g_mutex_unlock (&sink->client_lock);
     GST_WARNING_OBJECT (sink, "client with host %s, port %d not found",
         host, port);
     /* Apparently (see comment in gstmultifdsink.c) returning NULL from here may

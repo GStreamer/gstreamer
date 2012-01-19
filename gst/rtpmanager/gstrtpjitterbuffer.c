@@ -102,7 +102,7 @@ enum
   PROP_LAST
 };
 
-#define JBUF_LOCK(priv)   (g_mutex_lock ((priv)->jbuf_lock))
+#define JBUF_LOCK(priv)   (g_mutex_lock (&(priv)->jbuf_lock))
 
 #define JBUF_LOCK_CHECK(priv,label) G_STMT_START {    \
   JBUF_LOCK (priv);                                   \
@@ -110,8 +110,8 @@ enum
     goto label;                                       \
 } G_STMT_END
 
-#define JBUF_UNLOCK(priv) (g_mutex_unlock ((priv)->jbuf_lock))
-#define JBUF_WAIT(priv)   (g_cond_wait ((priv)->jbuf_cond, (priv)->jbuf_lock))
+#define JBUF_UNLOCK(priv) (g_mutex_unlock (&(priv)->jbuf_lock))
+#define JBUF_WAIT(priv)   (g_cond_wait (&(priv)->jbuf_cond, &(priv)->jbuf_lock))
 
 #define JBUF_WAIT_CHECK(priv,label) G_STMT_START {    \
   JBUF_WAIT(priv);                                    \
@@ -119,7 +119,7 @@ enum
     goto label;                                       \
 } G_STMT_END
 
-#define JBUF_SIGNAL(priv) (g_cond_signal ((priv)->jbuf_cond))
+#define JBUF_SIGNAL(priv) (g_cond_signal (&(priv)->jbuf_cond))
 
 struct _GstRtpJitterBufferPrivate
 {
@@ -127,8 +127,8 @@ struct _GstRtpJitterBufferPrivate
   GstPad *rtcpsinkpad;
 
   RTPJitterBuffer *jbuf;
-  GMutex *jbuf_lock;
-  GCond *jbuf_cond;
+  GMutex jbuf_lock;
+  GCond jbuf_cond;
   gboolean waiting;
   gboolean discont;
   gboolean active;
@@ -464,8 +464,8 @@ gst_rtp_jitter_buffer_init (GstRtpJitterBuffer * jitterbuffer)
   priv->do_lost = DEFAULT_DO_LOST;
 
   priv->jbuf = rtp_jitter_buffer_new ();
-  priv->jbuf_lock = g_mutex_new ();
-  priv->jbuf_cond = g_cond_new ();
+  g_mutex_init (&priv->jbuf_lock);
+  g_cond_init (&priv->jbuf_cond);
 
   /* reset skew detection initialy */
   rtp_jitter_buffer_reset_skew (priv->jbuf);
@@ -508,8 +508,8 @@ gst_rtp_jitter_buffer_finalize (GObject * object)
 
   jitterbuffer = GST_RTP_JITTER_BUFFER (object);
 
-  g_mutex_free (jitterbuffer->priv->jbuf_lock);
-  g_cond_free (jitterbuffer->priv->jbuf_cond);
+  g_mutex_clear (&jitterbuffer->priv->jbuf_lock);
+  g_cond_clear (&jitterbuffer->priv->jbuf_cond);
 
   g_object_unref (jitterbuffer->priv->jbuf);
 

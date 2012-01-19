@@ -449,7 +449,7 @@ rtp_session_init (RTPSession * sess)
   gint i;
   gchar *str;
 
-  sess->lock = g_mutex_new ();
+  g_mutex_init (&sess->lock);
   sess->key = g_random_int ();
   sess->mask_idx = 0;
   sess->mask = 0;
@@ -513,7 +513,7 @@ rtp_session_finalize (GObject * object)
 
   sess = RTP_SESSION_CAST (object);
 
-  g_mutex_free (sess->lock);
+  g_mutex_clear (&sess->lock);
   for (i = 0; i < 32; i++)
     g_hash_table_destroy (sess->ssrcs[i]);
 

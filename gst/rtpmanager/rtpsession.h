@@ -34,8 +34,8 @@ typedef struct _RTPSessionClass RTPSessionClass;
 #define RTP_IS_SESSION_CLASS(klass)  (G_TYPE_CHECK_CLASS_TYPE((klass),RTP_TYPE_SESSION))
 #define RTP_SESSION_CAST(sess)       ((RTPSession *)(sess))
 
-#define RTP_SESSION_LOCK(sess)     (g_mutex_lock ((sess)->lock))
-#define RTP_SESSION_UNLOCK(sess)   (g_mutex_unlock ((sess)->lock))
+#define RTP_SESSION_LOCK(sess)     (g_mutex_lock (&(sess)->lock))
+#define RTP_SESSION_UNLOCK(sess)   (g_mutex_unlock (&(sess)->lock))
 
 /**
  * RTPSessionProcessRTP:
@@ -184,7 +184,7 @@ typedef struct {
 struct _RTPSession {
   GObject       object;
 
-  GMutex       *lock;
+  GMutex        lock;
 
   guint         header_len;
   guint         mtu;

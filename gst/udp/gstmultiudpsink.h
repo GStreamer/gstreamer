@@ -60,7 +60,7 @@ struct _GstMultiUDPSink {
   GSocket       *used_socket;
   GCancellable  *cancellable;
 
-  GMutex        *client_lock;
+  GMutex         client_lock;
   GList         *clients;
 
   /* properties */

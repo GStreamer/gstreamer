@@ -44,10 +44,6 @@
 #include "config.h"
 #endif
 
-/* FIXME 0.11: suppress warnings for deprecated API such as GStaticRecMutex
- * with newer GLib versions (>= 2.31.0) */
-#define GLIB_DISABLE_DEPRECATION_WARNINGS
-
 #include <string.h>
 #include <gst/rtp/gstrtpbuffer.h>
 #include <gst/rtp/gstrtcpbuffer.h>
@@ -87,8 +83,8 @@ GST_STATIC_PAD_TEMPLATE ("rtcp_src_%u",
     GST_STATIC_CAPS ("application/x-rtcp")
     );
 
-#define GST_PAD_LOCK(obj)   (g_static_rec_mutex_lock (&(obj)->padlock))
-#define GST_PAD_UNLOCK(obj) (g_static_rec_mutex_unlock (&(obj)->padlock))
+#define GST_PAD_LOCK(obj)   (g_rec_mutex_lock (&(obj)->padlock))
+#define GST_PAD_UNLOCK(obj) (g_rec_mutex_unlock (&(obj)->padlock))
 
 /* signals */
 enum
@@ -338,7 +334,7 @@ gst_rtp_ssrc_demux_init (GstRtpSsrcDemux * demux)
       gst_rtp_ssrc_demux_iterate_internal_links_sink);
   gst_element_add_pad (GST_ELEMENT_CAST (demux), demux->rtcp_sink);
 
-  g_static_rec_mutex_init (&demux->padlock);
+  g_rec_mutex_init (&demux->padlock);
 
   gst_segment_init (&demux->segment, GST_FORMAT_UNDEFINED);
 }
@@ -380,7 +376,7 @@ gst_rtp_ssrc_demux_finalize (GObject * object)
   GstRtpSsrcDemux *demux;
 
   demux = GST_RTP_SSRC_DEMUX (object);
-  g_static_rec_mutex_free (&demux->padlock);
+  g_rec_mutex_clear (&demux->padlock);
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }

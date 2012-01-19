@@ -45,7 +45,7 @@ struct _GstV4l2Xv
 {
   Display *dpy;
   gint port, idle_id, event_id;
-  GMutex *mutex;                /* to serialize calls to X11 */
+  GMutex mutex;                 /* to serialize calls to X11 */
 };
 
 GST_DEBUG_CATEGORY_STATIC (v4l2xv_debug);
@@ -131,7 +131,7 @@ gst_v4l2_video_overlay_open (GstV4l2Object * v4l2object)
   v4l2xv = g_new0 (GstV4l2Xv, 1);
   v4l2xv->dpy = dpy;
   v4l2xv->port = id;
-  v4l2xv->mutex = g_mutex_new ();
+  g_mutex_init (&v4l2xv->mutex);
   v4l2xv->idle_id = 0;
   v4l2xv->event_id = 0;
   v4l2object->xv = v4l2xv;
@@ -155,7 +155,7 @@ gst_v4l2_video_overlay_close (GstV4l2Object * v4l2object)
   }
 
   XCloseDisplay (v4l2xv->dpy);
-  g_mutex_free (v4l2xv->mutex);
+  g_mutex_clear (&v4l2xv->mutex);
   if (v4l2xv->idle_id)
     g_source_remove (v4l2xv->idle_id);
   if (v4l2xv->event_id)
@@ -204,9 +204,9 @@ gst_v4l2_video_overlay_get_render_rect (GstV4l2Object * v4l2object,
   GstV4l2Xv *v4l2xv = v4l2object->xv;
   gboolean ret = FALSE;
   if (v4l2xv) {
-    g_mutex_lock (v4l2xv->mutex);
+    g_mutex_lock (&v4l2xv->mutex);
     ret = get_render_rect (v4l2object, rect);
-    g_mutex_unlock (v4l2xv->mutex);
+    g_mutex_unlock (&v4l2xv->mutex);
   }
   return ret;
 }
@@ -236,12 +236,12 @@ idle_refresh (gpointer data)
   GST_LOG_OBJECT (v4l2object->element, "idle refresh");
 
   if (v4l2xv) {
-    g_mutex_lock (v4l2xv->mutex);
+    g_mutex_lock (&v4l2xv->mutex);
 
     update_geometry (v4l2object);
 
     v4l2xv->idle_id = 0;
-    g_mutex_unlock (v4l2xv->mutex);
+    g_mutex_unlock (&v4l2xv->mutex);
   }
 
   /* once */
@@ -260,7 +260,7 @@ event_refresh (gpointer data)
   if (v4l2xv) {
     XEvent e;
 
-    g_mutex_lock (v4l2xv->mutex);
+    g_mutex_lock (&v4l2xv->mutex);
 
     /* If the element supports navigation, collect the relavent input
      * events and push them upstream as navigation events
@@ -287,10 +287,10 @@ event_refresh (gpointer data)
       if (pointer_moved) {
         GST_DEBUG_OBJECT (v4l2object->element,
             "pointer moved over window at %d,%d", pointer_x, pointer_y);
-        g_mutex_unlock (v4l2xv->mutex);
+        g_mutex_unlock (&v4l2xv->mutex);
         gst_navigation_send_mouse_event (GST_NAVIGATION (v4l2object->element),
             "mouse-move", 0, e.xbutton.x, e.xbutton.y);
-        g_mutex_lock (v4l2xv->mutex);
+        g_mutex_lock (&v4l2xv->mutex);
       }
 
       /* We get all events on our window to throw them upstream
@@ -301,7 +301,7 @@ event_refresh (gpointer data)
         KeySym keysym;
         const char *key_str = NULL;
 
-        g_mutex_unlock (v4l2xv->mutex);
+        g_mutex_unlock (&v4l2xv->mutex);
 
         switch (e.type) {
           case ButtonPress:
@@ -322,14 +322,14 @@ event_refresh (gpointer data)
             break;
           case KeyPress:
           case KeyRelease:
-            g_mutex_lock (v4l2xv->mutex);
+            g_mutex_lock (&v4l2xv->mutex);
             keysym = XKeycodeToKeysym (v4l2xv->dpy, e.xkey.keycode, 0);
             if (keysym != NoSymbol) {
               key_str = XKeysymToString (keysym);
             } else {
               key_str = "unknown";
             }
-            g_mutex_unlock (v4l2xv->mutex);
+            g_mutex_unlock (&v4l2xv->mutex);
             GST_DEBUG_OBJECT (v4l2object->element,
                 "key %d pressed over window at %d,%d (%s)",
                 e.xkey.keycode, e.xkey.x, e.xkey.y, key_str);
@@ -341,7 +341,7 @@ event_refresh (gpointer data)
                 "unhandled X event (%d)", e.type);
         }
 
-        g_mutex_lock (v4l2xv->mutex);
+        g_mutex_lock (&v4l2xv->mutex);
       }
     }
 
@@ -356,7 +356,7 @@ event_refresh (gpointer data)
           break;
       }
     }
-    g_mutex_unlock (v4l2xv->mutex);
+    g_mutex_unlock (&v4l2xv->mutex);
   }
 
   /* repeat */
@@ -380,7 +380,7 @@ gst_v4l2_video_overlay_set_window_handle (GstV4l2Object * v4l2object,
   v4l2xv = v4l2object->xv;
 
   if (v4l2xv)
-    g_mutex_lock (v4l2xv->mutex);
+    g_mutex_lock (&v4l2xv->mutex);
 
   if (change) {
     if (v4l2object->xwindow_id && v4l2xv) {
@@ -397,7 +397,7 @@ gst_v4l2_video_overlay_set_window_handle (GstV4l2Object * v4l2object,
 
   if (!v4l2xv || xwindow_id == 0) {
     if (v4l2xv)
-      g_mutex_unlock (v4l2xv->mutex);
+      g_mutex_unlock (&v4l2xv->mutex);
     return;
   }
 
@@ -415,7 +415,7 @@ gst_v4l2_video_overlay_set_window_handle (GstV4l2Object * v4l2object,
   if (v4l2xv->idle_id)
     g_source_remove (v4l2xv->idle_id);
   v4l2xv->idle_id = g_idle_add (idle_refresh, v4l2object);
-  g_mutex_unlock (v4l2xv->mutex);
+  g_mutex_unlock (&v4l2xv->mutex);
 }
 
 /**
@@ -456,7 +456,7 @@ gst_v4l2_video_overlay_prepare_window_handle (GstV4l2Object * v4l2object,
     /* video_overlay is supported, but we don't have a window.. so create one */
     GST_DEBUG_OBJECT (v4l2object->element, "creating window");
 
-    g_mutex_lock (v4l2xv->mutex);
+    g_mutex_lock (&v4l2xv->mutex);
 
     width = XDisplayWidth (v4l2xv->dpy, DefaultScreen (v4l2xv->dpy));
     height = XDisplayHeight (v4l2xv->dpy, DefaultScreen (v4l2xv->dpy));
@@ -481,7 +481,7 @@ gst_v4l2_video_overlay_prepare_window_handle (GstV4l2Object * v4l2object,
 
     XSync (v4l2xv->dpy, FALSE);
 
-    g_mutex_unlock (v4l2xv->mutex);
+    g_mutex_unlock (&v4l2xv->mutex);
 
     GST_DEBUG_OBJECT (v4l2object->element, "got window");
 

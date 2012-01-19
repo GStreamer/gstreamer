@@ -181,12 +181,12 @@ GST_STATIC_PAD_TEMPLATE ("send_rtp_src_%u",
 #define GST_RTP_BIN_GET_PRIVATE(obj)  \
    (G_TYPE_INSTANCE_GET_PRIVATE ((obj), GST_TYPE_RTP_BIN, GstRtpBinPrivate))
 
-#define GST_RTP_BIN_LOCK(bin)   g_mutex_lock ((bin)->priv->bin_lock)
-#define GST_RTP_BIN_UNLOCK(bin) g_mutex_unlock ((bin)->priv->bin_lock)
+#define GST_RTP_BIN_LOCK(bin)   g_mutex_lock (&(bin)->priv->bin_lock)
+#define GST_RTP_BIN_UNLOCK(bin) g_mutex_unlock (&(bin)->priv->bin_lock)
 
 /* lock to protect dynamic callbacks, like pad-added and new ssrc. */
-#define GST_RTP_BIN_DYN_LOCK(bin)    g_mutex_lock ((bin)->priv->dyn_lock)
-#define GST_RTP_BIN_DYN_UNLOCK(bin)  g_mutex_unlock ((bin)->priv->dyn_lock)
+#define GST_RTP_BIN_DYN_LOCK(bin)    g_mutex_lock (&(bin)->priv->dyn_lock)
+#define GST_RTP_BIN_DYN_UNLOCK(bin)  g_mutex_unlock (&(bin)->priv->dyn_lock)
 
 /* lock for shutdown */
 #define GST_RTP_BIN_SHUTDOWN_LOCK(bin,label)     \
@@ -206,10 +206,10 @@ G_STMT_START {                                   \
 
 struct _GstRtpBinPrivate
 {
-  GMutex *bin_lock;
+  GMutex bin_lock;
 
   /* lock protecting dynamic adding/removing */
-  GMutex *dyn_lock;
+  GMutex dyn_lock;
 
   /* if we are shutting down or not */
   gint shutdown;
@@ -349,8 +349,8 @@ struct _GstRtpBinStream
   gint64 clock_base;
 };
 
-#define GST_RTP_SESSION_LOCK(sess)   g_mutex_lock ((sess)->lock)
-#define GST_RTP_SESSION_UNLOCK(sess) g_mutex_unlock ((sess)->lock)
+#define GST_RTP_SESSION_LOCK(sess)   g_mutex_lock (&(sess)->lock)
+#define GST_RTP_SESSION_UNLOCK(sess) g_mutex_unlock (&(sess)->lock)
 
 /* Manages the receiving end of the packets.
  *
@@ -373,7 +373,7 @@ struct _GstRtpBinSession
   gulong demux_newpad_sig;
   gulong demux_padremoved_sig;
 
-  GMutex *lock;
+  GMutex lock;
 
   /* list of GstRtpBinStream */
   GSList *streams;
@@ -564,7 +564,7 @@ create_session (GstRtpBin * rtpbin, gint id)
     goto no_demux;
 
   sess = g_new0 (GstRtpBinSession, 1);
-  sess->lock = g_mutex_new ();
+  g_mutex_init (&sess->lock);
   sess->id = id;
   sess->bin = rtpbin;
   sess->session = session;
@@ -703,7 +703,7 @@ free_session (GstRtpBinSession * sess, GstRtpBin * bin)
   g_slist_foreach (sess->streams, (GFunc) free_stream, NULL);
   g_slist_free (sess->streams);
 
-  g_mutex_free (sess->lock);
+  g_mutex_clear (&sess->lock);
   g_hash_table_destroy (sess->ptmap);
 
   g_free (sess);
@@ -1883,8 +1883,8 @@ gst_rtp_bin_init (GstRtpBin * rtpbin)
   gchar *str;
 
   rtpbin->priv = GST_RTP_BIN_GET_PRIVATE (rtpbin);
-  rtpbin->priv->bin_lock = g_mutex_new ();
-  rtpbin->priv->dyn_lock = g_mutex_new ();
+  g_mutex_init (&rtpbin->priv->bin_lock);
+  g_mutex_init (&rtpbin->priv->dyn_lock);
 
   rtpbin->latency_ms = DEFAULT_LATENCY_MS;
   rtpbin->latency_ns = DEFAULT_LATENCY_MS * GST_MSECOND;
@@ -1935,8 +1935,8 @@ gst_rtp_bin_finalize (GObject * object)
   if (rtpbin->sdes)
     gst_structure_free (rtpbin->sdes);
 
-  g_mutex_free (rtpbin->priv->bin_lock);
-  g_mutex_free (rtpbin->priv->dyn_lock);
+  g_mutex_clear (&rtpbin->priv->bin_lock);
+  g_mutex_clear (&rtpbin->priv->dyn_lock);
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }

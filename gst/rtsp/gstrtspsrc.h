@@ -71,13 +71,13 @@ G_BEGIN_DECLS
 typedef struct _GstRTSPSrc GstRTSPSrc;
 typedef struct _GstRTSPSrcClass GstRTSPSrcClass;
 
-#define GST_RTSP_STATE_GET_LOCK(rtsp)    (GST_RTSPSRC_CAST(rtsp)->state_rec_lock)
-#define GST_RTSP_STATE_LOCK(rtsp)        (g_static_rec_mutex_lock (GST_RTSP_STATE_GET_LOCK(rtsp)))
-#define GST_RTSP_STATE_UNLOCK(rtsp)      (g_static_rec_mutex_unlock (GST_RTSP_STATE_GET_LOCK(rtsp)))
+#define GST_RTSP_STATE_GET_LOCK(rtsp)    (&GST_RTSPSRC_CAST(rtsp)->state_rec_lock)
+#define GST_RTSP_STATE_LOCK(rtsp)        (g_rec_mutex_lock (GST_RTSP_STATE_GET_LOCK(rtsp)))
+#define GST_RTSP_STATE_UNLOCK(rtsp)      (g_rec_mutex_unlock (GST_RTSP_STATE_GET_LOCK(rtsp)))
 
-#define GST_RTSP_STREAM_GET_LOCK(rtsp)   (GST_RTSPSRC_CAST(rtsp)->stream_rec_lock)
-#define GST_RTSP_STREAM_LOCK(rtsp)       (g_static_rec_mutex_lock (GST_RTSP_STREAM_GET_LOCK(rtsp)))
-#define GST_RTSP_STREAM_UNLOCK(rtsp)     (g_static_rec_mutex_unlock (GST_RTSP_STREAM_GET_LOCK(rtsp)))
+#define GST_RTSP_STREAM_GET_LOCK(rtsp)   (&GST_RTSPSRC_CAST(rtsp)->stream_rec_lock)
+#define GST_RTSP_STREAM_LOCK(rtsp)       (g_rec_mutex_lock (GST_RTSP_STREAM_GET_LOCK(rtsp)))
+#define GST_RTSP_STREAM_UNLOCK(rtsp)     (g_rec_mutex_unlock (GST_RTSP_STREAM_GET_LOCK(rtsp)))
 
 typedef struct _GstRTSPConnInfo GstRTSPConnInfo;
 
@@ -168,7 +168,7 @@ struct _GstRTSPSrc {
   /* task and mutex for interleaved mode */
   gboolean         interleaved;
   GstTask         *task;
-  GStaticRecMutex *stream_rec_lock;
+  GRecMutex        stream_rec_lock;
   GstSegment       segment;
   gboolean         running;
   gboolean         need_range;
@@ -184,7 +184,7 @@ struct _GstRTSPSrc {
   gboolean         open_error;
 
   /* mutex for protecting state changes */
-  GStaticRecMutex *state_rec_lock;
+  GRecMutex        state_rec_lock;
 
   GstSDPMessage   *sdp;
   gboolean         from_sdp;

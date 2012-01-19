@@ -81,10 +81,6 @@
 #include "config.h"
 #endif
 
-/* FIXME 0.11: suppress warnings for deprecated API such as GStaticRecMutex
- * with newer GLib versions (>= 2.31.0) */
-#define GLIB_DISABLE_DEPRECATION_WARNINGS
-
 #ifdef HAVE_UNISTD_H
 #include <unistd.h>
 #endif /* HAVE_UNISTD_H */
@@ -515,12 +511,10 @@ gst_rtspsrc_init (GstRTSPSrc * src)
 
   /* protects the streaming thread in interleaved mode or the polling
    * thread in UDP mode. */
-  src->stream_rec_lock = g_new (GStaticRecMutex, 1);
-  g_static_rec_mutex_init (src->stream_rec_lock);
+  g_rec_mutex_init (&src->stream_rec_lock);
 
   /* protects our state changes from multiple invocations */
-  src->state_rec_lock = g_new (GStaticRecMutex, 1);
-  g_static_rec_mutex_init (src->state_rec_lock);
+  g_rec_mutex_init (&src->state_rec_lock);
 
   src->state = GST_RTSP_STATE_INVALID;
 
@@ -547,10 +541,8 @@ gst_rtspsrc_finalize (GObject * object)
   }
 
   /* free locks */
-  g_static_rec_mutex_free (rtspsrc->stream_rec_lock);
-  g_free (rtspsrc->stream_rec_lock);
-  g_static_rec_mutex_free (rtspsrc->state_rec_lock);
-  g_free (rtspsrc->state_rec_lock);
+  g_rec_mutex_clear (&rtspsrc->stream_rec_lock);
+  g_rec_mutex_clear (&rtspsrc->state_rec_lock);
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }

@@ -223,12 +223,12 @@ enum
 #define GST_RTP_SESSION_GET_PRIVATE(obj)  \
 	   (G_TYPE_INSTANCE_GET_PRIVATE ((obj), GST_TYPE_RTP_SESSION, GstRtpSessionPrivate))
 
-#define GST_RTP_SESSION_LOCK(sess)   g_mutex_lock ((sess)->priv->lock)
-#define GST_RTP_SESSION_UNLOCK(sess) g_mutex_unlock ((sess)->priv->lock)
+#define GST_RTP_SESSION_LOCK(sess)   g_mutex_lock (&(sess)->priv->lock)
+#define GST_RTP_SESSION_UNLOCK(sess) g_mutex_unlock (&(sess)->priv->lock)
 
 struct _GstRtpSessionPrivate
 {
-  GMutex *lock;
+  GMutex lock;
   GstClock *sysclock;
 
   RTPSession *session;
@@ -621,7 +621,7 @@ static void
 gst_rtp_session_init (GstRtpSession * rtpsession)
 {
   rtpsession->priv = GST_RTP_SESSION_GET_PRIVATE (rtpsession);
-  rtpsession->priv->lock = g_mutex_new ();
+  g_mutex_init (&rtpsession->priv->lock);
   rtpsession->priv->sysclock = gst_system_clock_obtain ();
   rtpsession->priv->session = rtp_session_new ();
   rtpsession->priv->use_pipeline_clock = DEFAULT_USE_PIPELINE_CLOCK;
@@ -664,7 +664,7 @@ gst_rtp_session_finalize (GObject * object)
   rtpsession = GST_RTP_SESSION (object);
 
   g_hash_table_destroy (rtpsession->priv->ptmap);
-  g_mutex_free (rtpsession->priv->lock);
+  g_mutex_clear (&rtpsession->priv->lock);
   g_object_unref (rtpsession->priv->sysclock);
   g_object_unref (rtpsession->priv->session);
 

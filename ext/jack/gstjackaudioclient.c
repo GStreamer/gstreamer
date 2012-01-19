@@ -43,8 +43,8 @@ static GList *connections;
 typedef struct
 {
   gint refcount;
-  GMutex *lock;
-  GCond *flush_cond;
+  GMutex lock;
+  GCond flush_cond;
 
   /* id/server pair and the connection */
   gchar *id;
@@ -113,7 +113,7 @@ jack_process_cb (jack_nframes_t nframes, void *arg)
     }
   }
 
-  g_mutex_lock (conn->lock);
+  g_mutex_lock (&conn->lock);
   /* call sources first, then sinks. Sources will either push data into the
    * ringbuffer of the sinks, which will then pull the data out of it, or
    * sinks will pull the data from the sources. */
@@ -125,7 +125,7 @@ jack_process_cb (jack_nframes_t nframes, void *arg)
       res = client->process (nframes, client->user_data);
       if (client->deactivate) {
         client->deactivate = FALSE;
-        g_cond_signal (conn->flush_cond);
+        g_cond_signal (&conn->flush_cond);
       }
     }
   }
@@ -137,11 +137,11 @@ jack_process_cb (jack_nframes_t nframes, void *arg)
       res = client->process (nframes, client->user_data);
       if (client->deactivate) {
         client->deactivate = FALSE;
-        g_cond_signal (conn->flush_cond);
+        g_cond_signal (&conn->flush_cond);
       }
     }
   }
-  g_mutex_unlock (conn->lock);
+  g_mutex_unlock (&conn->lock);
   return res;
 }
 
@@ -168,7 +168,7 @@ jack_shutdown_cb (void *arg)
   GST_DEBUG ("disconnect client %s from server %s", conn->id,
       GST_STR_NULL (conn->server));
 
-  g_mutex_lock (conn->lock);
+  g_mutex_lock (&conn->lock);
   for (walk = conn->src_clients; walk; walk = g_list_next (walk)) {
     GstJackAudioClient *client = (GstJackAudioClient *) walk->data;
 
@@ -181,7 +181,7 @@ jack_shutdown_cb (void *arg)
     if (client->shutdown)
       client->shutdown (client->user_data);
   }
-  g_mutex_unlock (conn->lock);
+  g_mutex_unlock (&conn->lock);
 }
 
 typedef struct
@@ -240,8 +240,8 @@ gst_jack_audio_make_connection (const gchar * id, const gchar * server,
   /* now create object */
   conn = g_new (GstJackAudioConnection, 1);
   conn->refcount = 1;
-  conn->lock = g_mutex_new ();
-  conn->flush_cond = g_cond_new ();
+  g_mutex_init (&conn->lock);
+  g_cond_init (&conn->flush_cond);
   conn->id = g_strdup (id);
   conn->server = g_strdup (server);
   conn->client = jclient;
@@ -276,7 +276,7 @@ could_not_activate:
   {
     GST_ERROR ("Could not activate client (%d)", res);
     *status = JackFailure;
-    g_mutex_free (conn->lock);
+    g_mutex_clear (&conn->lock);
     g_free (conn->id);
     g_free (conn->server);
     g_free (conn);
@@ -365,8 +365,8 @@ gst_jack_audio_unref_connection (GstJackAudioConnection * conn)
     }
 
     /* free resources */
-    g_mutex_free (conn->lock);
-    g_cond_free (conn->flush_cond);
+    g_mutex_clear (&conn->lock);
+    g_cond_clear (&conn->flush_cond);
     g_free (conn->id);
     g_free (conn->server);
     g_free (conn);
@@ -377,7 +377,7 @@ static void
 gst_jack_audio_connection_add_client (GstJackAudioConnection * conn,
     GstJackAudioClient * client)
 {
-  g_mutex_lock (conn->lock);
+  g_mutex_lock (&conn->lock);
   switch (client->type) {
     case GST_JACK_CLIENT_SOURCE:
       conn->src_clients = g_list_append (conn->src_clients, client);
@@ -391,14 +391,14 @@ gst_jack_audio_connection_add_client (GstJackAudioConnection * conn,
       g_warning ("trying to add unknown client type");
       break;
   }
-  g_mutex_unlock (conn->lock);
+  g_mutex_unlock (&conn->lock);
 }
 
 static void
 gst_jack_audio_connection_remove_client (GstJackAudioConnection * conn,
     GstJackAudioClient * client)
 {
-  g_mutex_lock (conn->lock);
+  g_mutex_lock (&conn->lock);
   switch (client->type) {
     case GST_JACK_CLIENT_SOURCE:
       conn->src_clients = g_list_remove (conn->src_clients, client);
@@ -412,7 +412,7 @@ gst_jack_audio_connection_remove_client (GstJackAudioConnection * conn,
       g_warning ("trying to remove unknown client type");
       break;
   }
-  g_mutex_unlock (conn->lock);
+  g_mutex_unlock (&conn->lock);
 }
 
 /**
@@ -537,17 +537,17 @@ gst_jack_audio_client_set_active (GstJackAudioClient * client, gboolean active)
   g_return_val_if_fail (client != NULL, -1);
 
   /* make sure that we are not dispatching the client */
-  g_mutex_lock (client->conn->lock);
+  g_mutex_lock (&client->conn->lock);
   if (client->active && !active) {
     /* we need to process once more to flush the port */
     client->deactivate = TRUE;
 
     /* need to wait for process_cb run once more */
     while (client->deactivate)
-      g_cond_wait (client->conn->flush_cond, client->conn->lock);
+      g_cond_wait (&client->conn->flush_cond, &client->conn->lock);
   }
   client->active = active;
-  g_mutex_unlock (client->conn->lock);
+  g_mutex_unlock (&client->conn->lock);
 
   return 0;
 }
