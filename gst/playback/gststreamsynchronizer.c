@@ -620,7 +620,8 @@ gst_stream_synchronizer_sink_chain (GstPad * pad, GstBuffer * buffer)
   GST_STREAM_SYNCHRONIZER_LOCK (self);
   stream = gst_pad_get_element_private (pad);
 
-  stream->seen_data = TRUE;
+  if (stream)
+    stream->seen_data = TRUE;
   if (stream && stream->drop_discont) {
     buffer = gst_buffer_make_metadata_writable (buffer);
     GST_BUFFER_FLAG_UNSET (buffer, GST_BUFFER_FLAG_DISCONT);
