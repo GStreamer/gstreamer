@@ -538,7 +538,7 @@ gst_buffer_new_allocate (const GstAllocator * allocator, gsize size,
    * that a finalize won't free the buffer */
   data = gst_memory_map (mem, &asize, NULL, GST_MAP_WRITE);
   gst_buffer_init ((GstBufferImpl *) data, 0);
-  gst_memory_unmap (mem, data, asize);
+  gst_memory_unmap (mem);
 
   /* strip off the buffer */
   gst_memory_resize (mem, sizeof (GstBufferImpl), size);
@@ -1004,7 +1004,6 @@ not_writable:
 gboolean
 gst_buffer_unmap (GstBuffer * buffer, gpointer data, gssize size)
 {
-  gboolean result;
   guint len;
 
   g_return_val_if_fail (GST_IS_BUFFER (buffer), FALSE);
@@ -1015,15 +1014,14 @@ gst_buffer_unmap (GstBuffer * buffer, gpointer data, gssize size)
   if (G_LIKELY (len == 1)) {
     GstMemory *mem = GST_BUFFER_MEM_PTR (buffer, 0);
 
-    result = gst_memory_unmap (mem, data, size);
+    gst_memory_unmap (mem);
   } else {
     /* this must have been from read-only access. After _map, the buffer either
      * only contains 1 memory block or it allocated memory to join memory
      * blocks. It's not allowed to add buffers between _map and _unmap. */
     g_free (data);
-    result = TRUE;
   }
-  return result;
+  return TRUE;
 }
 
 /**
@@ -1071,7 +1069,7 @@ gst_buffer_fill (GstBuffer * buffer, gsize offset, gconstpointer src,
       /* offset past buffer, skip */
       offset -= ssize;
     }
-    gst_memory_unmap (mem, data, ssize);
+    gst_memory_unmap (mem);
   }
   return size - left;
 }
@@ -1119,7 +1117,7 @@ gst_buffer_extract (GstBuffer * buffer, gsize offset, gpointer dest, gsize size)
       /* offset past buffer, skip */
       offset -= ssize;
     }
-    gst_memory_unmap (mem, data, ssize);
+    gst_memory_unmap (mem);
   }
   return size - left;
 }
@@ -1167,7 +1165,7 @@ gst_buffer_memcmp (GstBuffer * buffer, gsize offset, gconstpointer mem,
       /* offset past buffer, skip */
       offset -= ssize;
     }
-    gst_memory_unmap (mem, data, ssize);
+    gst_memory_unmap (mem);
   }
   return res;
 }
@@ -1213,7 +1211,7 @@ gst_buffer_memset (GstBuffer * buffer, gsize offset, guint8 val, gsize size)
       /* offset past buffer, skip */
       offset -= ssize;
     }
-    gst_memory_unmap (mem, data, ssize);
+    gst_memory_unmap (mem);
   }
   return size - left;
 }
@@ -1341,10 +1339,10 @@ _gst_buffer_arr_span (GstMemory ** mem[], gsize len[], guint n, gsize offset,
         } else {
           offset -= tocopy;
         }
-        gst_memory_unmap (cmem[i], src, ssize);
+        gst_memory_unmap (cmem[i]);
       }
     }
-    gst_memory_unmap (span, dest, size);
+    gst_memory_unmap (span);
   }
   return span;
 }

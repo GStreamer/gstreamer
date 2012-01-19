@@ -62,6 +62,10 @@ typedef enum {
  * @refcount: refcount
  * @parent: parent memory block
  * @state: private state
+ * @maxsize: the maximum size allocated
+ * @align: the alignment of the memory
+ * @offset: the offset where valid data starts
+ * @size: the size of valid data
  *
  * Base structure for memory implementations. Custom memory will put this structure
  * as the first member of their structure.
@@ -73,6 +77,10 @@ struct _GstMemory {
   gint            refcount;
   GstMemory      *parent;
   volatile gint   state;
+  gsize           maxsize;
+  gsize           align;
+  gsize           offset;
+  gsize           size;
 };
 
 /**
@@ -123,62 +131,29 @@ typedef GstMemory *  (*GstMemoryAllocFunction)  (const GstAllocator *allocator,
                                                  gpointer user_data);
 
 /**
- * GstMemoryGetSizesFunction:
- * @mem: a #GstMemory
- * @offset: result pointer for offset
- * @maxsize: result pointer for maxsize
- *
- * Retrieve the size, offset and maxsize of @mem.
- *
- * Returns: the size of @mem, the offset and the maximum allocated size in @maxsize.
- */
-typedef gsize       (*GstMemoryGetSizesFunction)  (GstMemory *mem, gsize *offset, gsize *maxsize);
-
-/**
- * GstMemoryResizeFunction:
- * @mem: a #GstMemory
- * @offset: the offset adjustement
- * @size: the new size or -1 to just adjust the offset
- *
- * Adjust the size and offset of @mem. @offset bytes will be adjusted from the
- * current first byte in @mem as retrieved with gst_memory_map() and the new
- * size will be set to @size.
- *
- * @size can be set to -1, which will only adjust the offset.
- */
-typedef void        (*GstMemoryResizeFunction)    (GstMemory *mem, gssize offset, gssize size);
-
-/**
  * GstMemoryMapFunction:
  * @mem: a #GstMemory
- * @size: pointer for the size
- * @maxsize: pointer for the maxsize
+ * @maxsize: size to map
  * @flags: access mode for the memory
  *
  * Get the memory of @mem that can be accessed according to the mode specified
- * in @flags. @size and @maxsize will respectively contain the current amount of
- * valid bytes in the returned memory and the maximum allocated memory.
- * @size and @maxsize can optionally be set to NULL.
+ * in @flags. The function should return a pointer that contains at least
+ * @maxsize bytes.
  *
- * Returns: a pointer to memory. @size bytes are currently used from the
- * returned pointer and @maxsize bytes can potentially be used.
+ * Returns: a pointer to memory of which at least @maxsize bytes can be
+ * accessed according to the access pattern in @flags.
  */
-typedef gpointer    (*GstMemoryMapFunction)       (GstMemory *mem, gsize *size, gsize *maxsize,
-                                                   GstMapFlags flags);
+typedef gpointer    (*GstMemoryMapFunction)       (GstMemory *mem, gsize maxsize, GstMapFlags flags);
 
 /**
  * GstMemoryUnmapFunction:
  * @mem: a #GstMemory
- * @data: the data pointer
- * @size: the new size, or -1 to not modify the size
  *
- * Return the pointer previously retrieved with gst_memory_map() and adjust the
- * size of the memory with @size. @size can optionally be set to -1 to not
- * modify the size.
+ * Return the pointer previously retrieved with gst_memory_map().
  *
  * Returns: %TRUE on success.
  */
-typedef gboolean    (*GstMemoryUnmapFunction)     (GstMemory *mem, gpointer data, gssize size);
+typedef void        (*GstMemoryUnmapFunction)     (GstMemory *mem);
 
 /**
  * GstMemoryFreeFunction:
@@ -234,8 +209,6 @@ typedef gboolean    (*GstMemoryIsSpanFunction)    (GstMemory *mem1, GstMemory *m
 /**
  * GstMemoryInfo:
  * @alloc: the implementation of the GstMemoryAllocFunction
- * @get_sizes: the implementation of the GstMemoryGetSizesFunction
- * @resize: the implementation of the GstMemoryResizeFunction
  * @map: the implementation of the GstMemoryMapFunction
  * @unmap: the implementation of the GstMemoryUnmapFunction
  * @free: the implementation of the GstMemoryFreeFunction
@@ -249,8 +222,6 @@ typedef gboolean    (*GstMemoryIsSpanFunction)    (GstMemory *mem1, GstMemory *m
  */
 struct _GstMemoryInfo {
   GstMemoryAllocFunction    alloc;
-  GstMemoryGetSizesFunction get_sizes;
-  GstMemoryResizeFunction   resize;
   GstMemoryMapFunction      map;
   GstMemoryUnmapFunction    unmap;
   GstMemoryFreeFunction     free;
@@ -291,7 +262,7 @@ gboolean    gst_memory_is_writable (GstMemory *mem);
 
 gpointer    gst_memory_map         (GstMemory *mem, gsize *size, gsize *maxsize,
                                     GstMapFlags flags);
-gboolean    gst_memory_unmap       (GstMemory *mem, gpointer data, gssize size);
+void        gst_memory_unmap       (GstMemory *mem);
 
 /* copy and subregions */
 GstMemory * gst_memory_copy        (GstMemory *mem, gssize offset, gssize size);

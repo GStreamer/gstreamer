@@ -45,7 +45,7 @@ GST_START_TEST (test_submemory)
   fail_unless (size == 4, "memory has wrong size");
   fail_unless (maxsize >= 4, "memory has wrong size");
   memset (data, 0, 4);
-  gst_memory_unmap (memory, data, 4);
+  gst_memory_unmap (memory);
 
   data = gst_memory_map (memory, &size, NULL, GST_MAP_READ);
 
@@ -57,7 +57,7 @@ GST_START_TEST (test_submemory)
   fail_unless (memcmp (data + 1, sdata, 2) == 0,
       "submemory contains the wrong data");
   ASSERT_MEMORY_REFCOUNT (sub, "submemory", 1);
-  gst_memory_unmap (sub, sdata, ssize);
+  gst_memory_unmap (sub);
   gst_memory_unref (sub);
 
   /* create a submemory of size 0 */
@@ -68,7 +68,7 @@ GST_START_TEST (test_submemory)
   fail_unless (memcmp (data + 1, sdata, 0) == 0,
       "submemory contains the wrong data");
   ASSERT_MEMORY_REFCOUNT (sub, "submemory", 1);
-  gst_memory_unmap (sub, sdata, ssize);
+  gst_memory_unmap (sub);
   gst_memory_unref (sub);
 
   /* test if metadata is coppied, not a complete memory copy so only the
@@ -89,7 +89,7 @@ GST_START_TEST (test_submemory)
   /* clean up */
   gst_memory_unref (sub);
 
-  gst_memory_unmap (memory, data, size);
+  gst_memory_unmap (memory);
   gst_memory_unref (memory);
 }
 
@@ -157,7 +157,7 @@ GST_START_TEST (test_writable)
 
   data = gst_memory_map (mem2, &size, NULL, GST_MAP_WRITE);
   data[4] = 'a';
-  gst_memory_unmap (mem2, data, size);
+  gst_memory_unmap (mem2);
 
   gst_memory_ref (mem2);
   ASSERT_CRITICAL (gst_memory_map (mem, &size, NULL, GST_MAP_WRITE));
@@ -165,8 +165,7 @@ GST_START_TEST (test_writable)
 
   data = gst_memory_map (mem2, &size, NULL, GST_MAP_WRITE);
   data[4] = 'a';
-  gst_memory_unmap (mem2, data, size);
-
+  gst_memory_unmap (mem2);
   gst_memory_unref (mem2);
 
   gst_memory_unref (mem);
@@ -198,7 +197,6 @@ GST_START_TEST (test_copy)
 {
   GstMemory *memory, *copy;
   gsize size, ssize;
-  guint8 *data, *sdata;
 
   memory = gst_allocator_alloc (NULL, 4, 0);
   ASSERT_MEMORY_REFCOUNT (memory, "memory", 1);
@@ -209,28 +207,28 @@ GST_START_TEST (test_copy)
   /* memorys are copied and must point to different memory */
   fail_if (memory == copy);
 
-  data = gst_memory_map (memory, &size, NULL, GST_MAP_READ);
-  sdata = gst_memory_map (copy, &ssize, NULL, GST_MAP_READ);
+  gst_memory_map (memory, &size, NULL, GST_MAP_READ);
+  gst_memory_map (copy, &ssize, NULL, GST_MAP_READ);
 
   /* NOTE that data is refcounted */
   fail_unless (size == ssize);
 
-  gst_memory_unmap (copy, sdata, ssize);
-  gst_memory_unmap (memory, data, size);
+  gst_memory_unmap (copy);
+  gst_memory_unmap (memory);
 
   gst_memory_unref (copy);
   gst_memory_unref (memory);
 
   memory = gst_allocator_alloc (NULL, 0, 0);
-  data = gst_memory_map (memory, &size, NULL, GST_MAP_READ);
+  gst_memory_map (memory, &size, NULL, GST_MAP_READ);
   fail_unless (size == 0);
-  gst_memory_unmap (memory, data, size);
+  gst_memory_unmap (memory);
 
   /* copying a 0-sized memory should not crash */
   copy = gst_memory_copy (memory, 0, -1);
-  data = gst_memory_map (copy, &size, NULL, GST_MAP_READ);
+  gst_memory_map (copy, &size, NULL, GST_MAP_READ);
   fail_unless (size == 0);
-  gst_memory_unmap (copy, data, size);
+  gst_memory_unmap (copy);
 
   gst_memory_unref (copy);
   gst_memory_unref (memory);
@@ -248,7 +246,7 @@ GST_START_TEST (test_try_new_and_alloc)
   fail_unless (mem != NULL);
   data = gst_memory_map (mem, &size, NULL, GST_MAP_READ);
   fail_unless (size == 0);
-  gst_memory_unmap (mem, data, size);
+  gst_memory_unmap (mem);
   gst_memory_unref (mem);
 
   /* normal alloc should still work */
@@ -258,7 +256,7 @@ GST_START_TEST (test_try_new_and_alloc)
   fail_unless (data != NULL);
   fail_unless (size == (640 * 480 * 4));
   data[640 * 479 * 4 + 479] = 0xff;
-  gst_memory_unmap (mem, data, size);
+  gst_memory_unmap (mem);
 
   gst_memory_unref (mem);
 
@@ -397,51 +395,8 @@ GST_START_TEST (test_map)
   fail_unless (data != NULL);
   fail_unless (size == 100);
   fail_unless (maxsize == maxalloc);
-  ASSERT_CRITICAL (gst_memory_unmap (mem, (guint8 *) data - 1, maxsize + 1));
-  gst_memory_unmap (mem, data, size);
 
-  /* make smaller by unmapping less */
-  data = gst_memory_map (mem, &size, &maxsize, GST_MAP_READ);
-  fail_unless (data != NULL);
-  fail_unless (size == 100);
-  fail_unless (maxsize == maxalloc);
-  gst_memory_unmap (mem, data, size - 1);
-
-  size = gst_memory_get_sizes (mem, &offset, &maxalloc);
-  fail_unless (size == 99);
-  fail_unless (offset == 0);
-  fail_unless (maxalloc >= 100);
-
-  /* make bigger by unmapping more */
-  data = gst_memory_map (mem, &size, &maxsize, GST_MAP_READ);
-  fail_unless (data != NULL);
-  fail_unless (size == 99);
-  fail_unless (maxsize == maxalloc);
-  gst_memory_unmap (mem, data, size + 1);
-
-  size = gst_memory_get_sizes (mem, &offset, &maxalloc);
-  fail_unless (size == 100);
-  fail_unless (offset == 0);
-  fail_unless (maxalloc >= 100);
-
-  /* resize beyond the maxsize */
-  data = gst_memory_map (mem, &size, &maxsize, GST_MAP_READ);
-  fail_unless (data != NULL);
-  fail_unless (size == 100);
-  fail_unless (maxsize == maxalloc);
-  ASSERT_CRITICAL (gst_memory_unmap (mem, data, maxsize + 1));
-  gst_memory_unmap (mem, data, maxsize);
-
-  /* add offset, maxsize should be smaller now */
-  gst_memory_resize (mem, 1, 99);
-
-  data = gst_memory_map (mem, &size, &maxsize, GST_MAP_READ);
-  fail_unless (data != NULL);
-  fail_unless (size == 99);
-  fail_unless (maxsize == maxalloc - 1);
-  ASSERT_CRITICAL (gst_memory_unmap (mem, data, maxsize + 1));
-  gst_memory_unmap (mem, data, maxsize);
-
+  gst_memory_unmap (mem);
   gst_memory_unref (mem);
 }
 
@@ -464,30 +419,17 @@ GST_START_TEST (test_map_nested)
   fail_unless (data2 == data1);
   fail_unless (size2 == 100);
 
-  /* unmap in reverse order */
-  gst_memory_unmap (mem, data2, size2);
-  gst_memory_unmap (mem, data1, size1);
-
-  /* nested mapping */
-  data1 = gst_memory_map (mem, &size1, &maxsize1, GST_MAP_READ);
-  fail_unless (data1 != NULL);
-  fail_unless (size1 == 100);
-
-  data2 = gst_memory_map (mem, &size2, &maxsize2, GST_MAP_READ);
-  fail_unless (data2 == data1);
-  fail_unless (size2 == 100);
-
-  /* unmap in different order */
-  gst_memory_unmap (mem, data1, size1);
-  gst_memory_unmap (mem, data2, size2);
+  /* unmap */
+  gst_memory_unmap (mem);
+  gst_memory_unmap (mem);
 
   data1 = gst_memory_map (mem, &size1, &maxsize1, GST_MAP_READ);
   /* not allowed */
   ASSERT_CRITICAL (gst_memory_map (mem, &size2, &maxsize2, GST_MAP_WRITE));
   ASSERT_CRITICAL (gst_memory_map (mem, &size2, &maxsize2, GST_MAP_READWRITE));
   data2 = gst_memory_map (mem, &size2, &maxsize2, GST_MAP_READ);
-  gst_memory_unmap (mem, data1, size1);
-  gst_memory_unmap (mem, data2, size2);
+  gst_memory_unmap (mem);
+  gst_memory_unmap (mem);
   fail_unless (mem->state == 0);
 
   data1 = gst_memory_map (mem, &size1, &maxsize1, GST_MAP_WRITE);
@@ -495,21 +437,19 @@ GST_START_TEST (test_map_nested)
   ASSERT_CRITICAL (gst_memory_map (mem, &size2, &maxsize2, GST_MAP_READ));
   ASSERT_CRITICAL (gst_memory_map (mem, &size2, &maxsize2, GST_MAP_READWRITE));
   data2 = gst_memory_map (mem, &size2, &maxsize2, GST_MAP_WRITE);
-  gst_memory_unmap (mem, data1, size1);
-  gst_memory_unmap (mem, data2, size2);
+  gst_memory_unmap (mem);
+  gst_memory_unmap (mem);
   /* nothing was mapped */
-  ASSERT_CRITICAL (gst_memory_unmap (mem, data2, size2));
+  ASSERT_CRITICAL (gst_memory_unmap (mem));
 
   data1 = gst_memory_map (mem, &size1, &maxsize1, GST_MAP_READWRITE);
   data2 = gst_memory_map (mem, &size2, &maxsize2, GST_MAP_READ);
-  gst_memory_unmap (mem, data2, size2);
+  gst_memory_unmap (mem);
   data2 = gst_memory_map (mem, &size2, &maxsize2, GST_MAP_WRITE);
-  gst_memory_unmap (mem, data2, size2);
-  /* ut of range */
-  ASSERT_CRITICAL (gst_memory_unmap (mem, (guint8 *) data1 - 1, size1));
-  gst_memory_unmap (mem, data1, size1);
+  gst_memory_unmap (mem);
+  gst_memory_unmap (mem);
   /* nothing was mapped */
-  ASSERT_CRITICAL (gst_memory_unmap (mem, data1, size1));
+  ASSERT_CRITICAL (gst_memory_unmap (mem));
 
   gst_memory_unref (mem);
 }
@@ -535,32 +475,24 @@ GST_START_TEST (test_map_resize)
   fail_unless (size == 99);
   fail_unless (offset == 1);
   fail_unless (maxalloc >= 100);
-
-  /* unmap the buffer with original pointer and size, should restore the offset
-   * and size */
-  gst_memory_unmap (mem, data, 100);
+  gst_memory_unmap (mem);
 
   size = gst_memory_get_sizes (mem, &offset, &maxalloc);
-  fail_unless (size == 100);
-  fail_unless (offset == 0);
+  fail_unless (size == 99);
+  fail_unless (offset == 1);
   fail_unless (maxalloc >= 100);
 
   data = gst_memory_map (mem, &size, &maxsize, GST_MAP_READ);
   fail_unless (data != NULL);
-  fail_unless (size == 100);
-  fail_unless (maxsize >= 100);
-
-  /* resize the buffer with unmap */
-  gst_memory_unmap (mem, (guint8 *) data + 1, 99);
-
-  size = gst_memory_get_sizes (mem, &offset, &maxalloc);
   fail_unless (size == 99);
   fail_unless (offset == 1);
-  fail_unless (maxalloc >= 100);
+  fail_unless (maxsize >= 100);
+  gst_memory_unmap (mem);
 
   /* and larger */
   data = gst_memory_map (mem, &size, &maxsize, GST_MAP_READ);
-  gst_memory_unmap (mem, (guint8 *) data - 1, 100);
+  gst_memory_resize (mem, -1, 100);
+  gst_memory_unmap (mem);
 
   size = gst_memory_get_sizes (mem, &offset, &maxalloc);
   fail_unless (size == 100);
@@ -568,21 +500,7 @@ GST_START_TEST (test_map_resize)
   fail_unless (maxalloc >= 100);
 
   data = gst_memory_map (mem, &size, &maxsize, GST_MAP_READ);
-  gst_memory_unmap (mem, (guint8 *) data + 1, -1);
-
-  size = gst_memory_get_sizes (mem, &offset, &maxalloc);
-  fail_unless (size == 99);
-  fail_unless (offset == 1);
-  fail_unless (maxalloc >= 100);
-
-  data = gst_memory_map (mem, &size, &maxsize, GST_MAP_READ);
-  gst_memory_unmap (mem, (guint8 *) data - 1, -1);
-
-  size = gst_memory_get_sizes (mem, &offset, &maxalloc);
-  fail_unless (size == 100);
-  fail_unless (offset == 0);
-  fail_unless (maxalloc >= 100);
-
+  gst_memory_unmap (mem);
   gst_memory_unref (mem);
 }
 

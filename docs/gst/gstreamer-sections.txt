@@ -1237,13 +1237,10 @@ gst_iterator_result_get_type
 GstMemory
 GstMemoryInfo
 GstAllocator
-GST_MEMORY_IS_WRITABLE
 GstMemoryFlags
 GstMapFlags
 GST_MAP_READWRITE
 GstMemoryAllocFunction
-GstMemoryGetSizesFunction
-GstMemoryResizeFunction
 GstMemoryMapFunction
 GstMemoryUnmapFunction
 GstMemoryFreeFunction
@@ -1261,6 +1258,8 @@ gst_memory_unref
 
 gst_memory_get_sizes
 gst_memory_resize
+
+gst_memory_is_writable
 
 gst_memory_map
 gst_memory_unmap

@@ -105,9 +105,6 @@ typedef struct
   gsize slice_size;
   guint8 *data;
   GFreeFunc free_func;
-  gsize maxsize;
-  gsize offset;
-  gsize size;
 } GstMemoryDefault;
 
 /* the default allocator */
@@ -126,13 +123,13 @@ _default_mem_init (GstMemoryDefault * mem, GstMemoryFlags flags,
   mem->mem.flags = flags;
   mem->mem.refcount = 1;
   mem->mem.parent = parent ? gst_memory_ref (parent) : NULL;
-  mem->mem.state = 0;
+  mem->mem.state = (flags & GST_MEMORY_FLAG_READONLY ? 0x5 : 0);
+  mem->mem.maxsize = maxsize;
+  mem->mem.offset = offset;
+  mem->mem.size = size;
   mem->slice_size = slice_size;
   mem->data = data;
   mem->free_func = free_func;
-  mem->maxsize = maxsize;
-  mem->offset = offset;
-  mem->size = size;
 }
 
 /* create a new memory block that manages the given memory */
@@ -188,62 +185,15 @@ _default_mem_alloc (const GstAllocator * allocator, gsize maxsize, gsize align)
   return (GstMemory *) _default_mem_new_block (maxsize, align, 0, maxsize);
 }
 
-static gsize
-_default_mem_get_sizes (GstMemoryDefault * mem, gsize * offset, gsize * maxsize)
-{
-  if (offset)
-    *offset = mem->offset;
-  if (maxsize)
-    *maxsize = mem->maxsize;
-
-  return mem->size;
-}
-
-static void
-_default_mem_resize (GstMemoryDefault * mem, gssize offset, gsize size)
-{
-  g_return_if_fail (offset >= 0 || mem->offset >= -offset);
-  g_return_if_fail (size + mem->offset + offset <= mem->maxsize);
-
-  mem->offset += offset;
-  mem->size = size;
-}
-
 static gpointer
-_default_mem_map (GstMemoryDefault * mem, gsize * size, gsize * maxsize,
-    GstMapFlags flags)
+_default_mem_map (GstMemoryDefault * mem, GstMapFlags flags)
 {
-  if (size)
-    *size = mem->size;
-  if (maxsize)
-    *maxsize = mem->maxsize - mem->offset;
-
-  return mem->data + mem->offset;
+  return mem->data;
 }
 
 static gboolean
-_default_mem_unmap (GstMemoryDefault * mem, gpointer data, gsize size)
+_default_mem_unmap (GstMemoryDefault * mem)
 {
-  GST_DEBUG ("mem: %p, data %p, size %" G_GSIZE_FORMAT, mem, data, size);
-  GST_DEBUG ("mem: %p, data %p,  offset %" G_GSIZE_FORMAT ", size %"
-      G_GSIZE_FORMAT ", maxsize %" G_GSIZE_FORMAT, mem, mem->data, mem->offset,
-      mem->size, mem->maxsize);
-
-  g_return_val_if_fail ((guint8 *) data >= mem->data
-      && (guint8 *) data < mem->data + mem->maxsize, FALSE);
-
-  if (mem->data + mem->offset != data) {
-    gsize newoffset = (guint8 *) data - mem->data;
-    if (size == -1)
-      size = mem->offset + mem->size - newoffset;
-    mem->offset = newoffset;
-  }
-
-  if (size != -1) {
-    g_return_val_if_fail (mem->offset + size <= mem->maxsize, FALSE);
-    mem->size = size;
-  }
-
   return TRUE;
 }
 
@@ -265,10 +215,12 @@ _default_mem_copy (GstMemoryDefault * mem, gssize offset, gsize size)
   GstMemoryDefault *copy;
 
   if (size == -1)
-    size = mem->size > offset ? mem->size - offset : 0;
+    size = mem->mem.size > offset ? mem->mem.size - offset : 0;
 
-  copy = _default_mem_new_block (mem->maxsize, 0, mem->offset + offset, size);
-  memcpy (copy->data, mem->data, mem->maxsize);
+  copy =
+      _default_mem_new_block (mem->mem.maxsize, 0, mem->mem.offset + offset,
+      size);
+  memcpy (copy->data, mem->data, mem->mem.maxsize);
 
   return copy;
 }
@@ -284,10 +236,11 @@ _default_mem_share (GstMemoryDefault * mem, gssize offset, gsize size)
     parent = (GstMemory *) mem;
 
   if (size == -1)
-    size = mem->size - offset;
+    size = mem->mem.size - offset;
 
-  sub = _default_mem_new (parent->flags, parent, mem->data, NULL, mem->maxsize,
-      mem->offset + offset, size);
+  sub =
+      _default_mem_new (parent->flags, parent, mem->data, NULL,
+      mem->mem.maxsize, mem->mem.offset + offset, size);
 
   return sub;
 }
@@ -302,11 +255,12 @@ _default_mem_is_span (GstMemoryDefault * mem1, GstMemoryDefault * mem2,
 
     parent = (GstMemoryDefault *) mem1->mem.parent;
 
-    *offset = mem1->offset - parent->offset;
+    *offset = mem1->mem.offset - parent->mem.offset;
   }
 
   /* and memory is contiguous */
-  return mem1->data + mem1->offset + mem1->size == mem2->data + mem2->offset;
+  return mem1->data + mem1->mem.offset + mem1->mem.size ==
+      mem2->data + mem2->mem.offset;
 }
 
 static GstMemory *
@@ -317,15 +271,16 @@ _fallback_copy (GstMemory * mem, gssize offset, gssize size)
   gsize msize;
 
   data = gst_memory_map (mem, &msize, NULL, GST_MAP_READ);
+  if (data == NULL)
+    return NULL;
   if (size == -1)
     size = msize > offset ? msize - offset : 0;
-  /* use the same allocator as the memory we copy, FIXME, alignment?  */
-  copy = gst_allocator_alloc (mem->allocator, size, 0);
+  /* use the same allocator as the memory we copy  */
+  copy = gst_allocator_alloc (mem->allocator, size, mem->align);
   dest = gst_memory_map (copy, NULL, NULL, GST_MAP_WRITE);
   memcpy (dest, data + offset, size);
-  gst_memory_unmap (copy, dest, size);
-
-  gst_memory_unmap (mem, data, msize);
+  gst_memory_unmap (copy);
+  gst_memory_unmap (mem);
 
   return (GstMemory *) copy;
 }
@@ -344,8 +299,6 @@ _priv_gst_memory_initialize (void)
 {
   static const GstMemoryInfo _mem_info = {
     (GstMemoryAllocFunction) _default_mem_alloc,
-    (GstMemoryGetSizesFunction) _default_mem_get_sizes,
-    (GstMemoryResizeFunction) _default_mem_resize,
     (GstMemoryMapFunction) _default_mem_map,
     (GstMemoryUnmapFunction) _default_mem_unmap,
     (GstMemoryFreeFunction) _default_mem_free,
@@ -448,7 +401,12 @@ gst_memory_get_sizes (GstMemory * mem, gsize * offset, gsize * maxsize)
 {
   g_return_val_if_fail (mem != NULL, 0);
 
-  return mem->allocator->info.get_sizes (mem, offset, maxsize);
+  if (offset)
+    *offset = mem->offset;
+  if (maxsize)
+    *maxsize = mem->maxsize;
+
+  return mem->size;
 }
 
 /**
@@ -465,8 +423,11 @@ gst_memory_resize (GstMemory * mem, gssize offset, gsize size)
 {
   g_return_if_fail (mem != NULL);
   g_return_if_fail (gst_memory_is_writable (mem));
+  g_return_if_fail (offset >= 0 || mem->offset >= -offset);
+  g_return_if_fail (size + mem->offset + offset <= mem->maxsize);
 
-  mem->allocator->info.resize (mem, offset, size);
+  mem->offset += offset;
+  mem->size = size;
 }
 
 /**
@@ -487,6 +448,52 @@ gst_memory_is_writable (GstMemory * mem)
       ((mem->flags & GST_MEMORY_FLAG_READONLY) == 0);
 }
 
+static gboolean
+gst_memory_lock (GstMemory * mem, GstMapFlags flags)
+{
+  gint access_mode, state, newstate;
+
+  access_mode = flags & 3;
+
+  do {
+    state = g_atomic_int_get (&mem->state);
+    if (state == 0) {
+      /* nothing mapped, set access_mode and refcount */
+      newstate = 4 | access_mode;
+    } else {
+      /* access_mode must match */
+      if ((state & access_mode) != access_mode)
+        goto lock_failed;
+      /* increase refcount */
+      newstate = state + 4;
+    }
+  } while (!g_atomic_int_compare_and_exchange (&mem->state, state, newstate));
+
+  return TRUE;
+
+lock_failed:
+  {
+    GST_DEBUG ("lock failed %p: state %d, access_mode %d", mem, state,
+        access_mode);
+    return FALSE;
+  }
+}
+
+static void
+gst_memory_unlock (GstMemory * mem)
+{
+  gint state, newstate;
+
+  do {
+    state = g_atomic_int_get (&mem->state);
+    /* decrease the refcount */
+    newstate = state - 4;
+    /* last refcount, unset access_mode */
+    if (newstate < 4)
+      newstate = 0;
+  } while (!g_atomic_int_compare_and_exchange (&mem->state, state, newstate));
+}
+
 /**
  * gst_memory_map:
  * @mem: a #GstMemory
@@ -499,94 +506,71 @@ gst_memory_is_writable (GstMemory * mem)
  * @size and @maxsize will contain the size of the memory and the maximum
  * allocated memory of @mem respectively. They can be set to NULL.
  *
+ * This function can return NULL for various reasons:
+ * - the memory backed by @mem is not accessible with the given @flags.
+ * - the memory was already mapped with a different mapping.
+ *
+ * @pointer remains valid for as long as @mem is alive and until
+ * gst_memory_unmap() is called.
+ *
+ * For each gst_memory_map() call, a corresponding gst_memory_unmap() call
+ * should be done.
+ *
  * Returns: (transfer none): a pointer to the memory of @mem.
  */
 gpointer
 gst_memory_map (GstMemory * mem, gsize * size, gsize * maxsize,
     GstMapFlags flags)
 {
-  gpointer res;
-  gint access_mode, state, newstate;
+  guint8 *res;
 
   g_return_val_if_fail (mem != NULL, NULL);
-  access_mode = flags & 3;
-  g_return_val_if_fail (!(access_mode & GST_MAP_WRITE)
-      || gst_memory_is_writable (mem), NULL);
 
-  do {
-    state = g_atomic_int_get (&mem->state);
-    if (state == 0) {
-      /* nothing mapped, set access_mode and refcount */
-      newstate = 4 | access_mode;
-    } else {
-      /* access_mode must match */
-      g_return_val_if_fail ((state & access_mode) == access_mode, NULL);
-      /* increase refcount */
-      newstate = state + 4;
-    }
-  } while (!g_atomic_int_compare_and_exchange (&mem->state, state, newstate));
+  if (!gst_memory_lock (mem, flags))
+    goto lock_failed;
 
-  res = mem->allocator->info.map (mem, size, maxsize, flags);
+  res = mem->allocator->info.map (mem, mem->maxsize, flags);
 
-  if (G_UNLIKELY (res == NULL)) {
-    /* something went wrong, restore the orginal state again */
-    do {
-      state = g_atomic_int_get (&mem->state);
-      /* there must be a ref */
-      g_return_val_if_fail (state >= 4, NULL);
-      /* decrease the refcount */
-      newstate = state - 4;
-      /* last refcount, unset access_mode */
-      if (newstate < 4)
-        newstate = 0;
-    } while (!g_atomic_int_compare_and_exchange (&mem->state, state, newstate));
+  if (G_UNLIKELY (res == NULL))
+    goto error;
+
+  if (size)
+    *size = mem->size;
+  if (maxsize)
+    *maxsize = mem->maxsize - mem->offset;
+
+  return res + mem->offset;
+
+  /* ERRORS */
+lock_failed:
+  {
+    g_critical ("memory %p: failed to lock memory", mem);
+    return NULL;
   }
-  return res;
+error:
+  {
+    /* something went wrong, restore the orginal state again */
+    GST_ERROR ("mem %p: map failed", mem);
+    gst_memory_unlock (mem);
+    return NULL;
+  }
 }
 
 /**
  * gst_memory_unmap:
  * @mem: a #GstMemory
- * @data: data to unmap
- * @size: new size of @mem, or -1
  *
- * Release the memory pointer obtained with gst_memory_map() and set the size of
- * the memory to @size. @size can be set to -1 when the size should not be
- * updated.
- *
- * It is possible to pass a different @data than that obtained from
- * gst_memory_map() in which case the offset of @mem will be updated.
- *
- * Returns: TRUE when the memory was release successfully.
+ * Release the memory obtained with gst_memory_map()
  */
-gboolean
-gst_memory_unmap (GstMemory * mem, gpointer data, gssize size)
+void
+gst_memory_unmap (GstMemory * mem)
 {
-  gboolean need_unmap = TRUE;
-  gint state, newstate;
+  g_return_if_fail (mem != NULL);
+  /* there must be a ref */
+  g_return_if_fail (g_atomic_int_get (&mem->state) >= 4);
 
-  g_return_val_if_fail (mem != NULL, FALSE);
-
-  do {
-    state = g_atomic_int_get (&mem->state);
-
-    /* there must be a ref */
-    g_return_val_if_fail (state >= 4, FALSE);
-
-    if (need_unmap) {
-      /* try to unmap, only do this once */
-      if (!mem->allocator->info.unmap (mem, data, size))
-        return FALSE;
-      need_unmap = FALSE;
-    }
-    /* success, try to decrease the refcount */
-    newstate = state - 4;
-    /* last refcount, unset access_mode */
-    if (newstate < 4)
-      newstate = 0;
-  } while (!g_atomic_int_compare_and_exchange (&mem->state, state, newstate));
-
-  return TRUE;
+  mem->allocator->info.unmap (mem);
+  gst_memory_unlock (mem);
 }
 
 /**
@@ -604,9 +588,16 @@ gst_memory_unmap (GstMemory * mem, gpointer data, gssize size)
 GstMemory *
 gst_memory_copy (GstMemory * mem, gssize offset, gssize size)
 {
-  g_return_val_if_fail (mem != NULL, NULL);
+  GstMemory *copy;
 
-  return mem->allocator->info.copy (mem, offset, size);
+  g_return_val_if_fail (mem != NULL, NULL);
+  g_return_val_if_fail (gst_memory_lock (mem, GST_MAP_READ), NULL);
+
+  copy = mem->allocator->info.copy (mem, offset, size);
+
+  gst_memory_unlock (mem);
+
+  return copy;
 }
 
 /**
@@ -693,8 +684,6 @@ gst_allocator_register (const gchar * name, const GstMemoryInfo * info)
   g_return_val_if_fail (name != NULL, NULL);
   g_return_val_if_fail (info != NULL, NULL);
   g_return_val_if_fail (info->alloc != NULL, NULL);
-  g_return_val_if_fail (info->get_sizes != NULL, NULL);
-  g_return_val_if_fail (info->resize != NULL, NULL);
   g_return_val_if_fail (info->map != NULL, NULL);
   g_return_val_if_fail (info->unmap != NULL, NULL);
   g_return_val_if_fail (info->free != NULL, NULL);
