@@ -231,6 +231,8 @@ gst_tcp_client_src_create (GstPushSrc * psrc, GstBuffer ** outbuf)
   } else {
     /* Connection closed */
     *outbuf = NULL;
+    data = NULL;
+    read = 0;
     rret = 0;
   }
 

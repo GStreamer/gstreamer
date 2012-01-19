@@ -227,6 +227,8 @@ gst_tcp_server_src_create (GstPushSrc * psrc, GstBuffer ** outbuf)
     /* Connection closed */
     rret = 0;
     *outbuf = NULL;
+    data = NULL;
+    read = 0;
   }
 
   if (rret == 0) {
