@@ -71,7 +71,7 @@ main (int argc, char **argv)
   csource = gst_interpolation_control_source_new ();
   g_object_set (csource, "mode", GST_INTERPOLATION_MODE_LINEAR, NULL);
 
-  gst_object_set_control_binding (pitch,
+  gst_object_add_control_binding (pitch,
       gst_control_binding_new (pitch, "pitch", GST_CONTROL_SOURCE (csource)));
   cs = (GstTimedValueControlSource *) csource;
 
