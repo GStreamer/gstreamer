@@ -268,6 +268,7 @@ rsn_dvdsrc_finalize (GObject * object)
   g_mutex_free (src->dvd_lock);
   g_mutex_free (src->branch_lock);
   g_cond_free (src->still_cond);
+  g_free (src->device);
 
   gst_buffer_replace (&src->alloc_buf, NULL);
   gst_buffer_replace (&src->next_buf, NULL);
