@@ -96,7 +96,8 @@ set_program (GstObject * elem, GstStructure * prog)
       cs = g_hash_table_lookup (css, name);
       if (!cs) {
         cs = gst_interpolation_control_source_new ();
-        gst_object_set_control_source (elem, name, GST_CONTROL_SOURCE (cs));
+        gst_object_set_control_binding (elem,
+            gst_control_binding_new (elem, name, GST_CONTROL_SOURCE (cs)));
         g_object_set (cs, "mode", GST_INTERPOLATION_MODE_NONE, NULL);
         g_hash_table_insert (css, (gpointer) name, cs);
         gst_object_unref (cs);
