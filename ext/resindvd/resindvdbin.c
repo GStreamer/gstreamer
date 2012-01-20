@@ -720,7 +720,7 @@ demux_pad_added (GstElement * element, GstPad * pad, RsnDvdBin * dvdbin)
           ("No MPEG video decoder found"));
     } else {
       GST_ELEMENT_WARNING (dvdbin, STREAM, CODEC_NOT_FOUND, (NULL),
-          ("No MPEG video decoder found"));
+          ("No MPEG audio decoder found"));
     }
   }
 
