@@ -1677,10 +1677,13 @@ gst_pulsesrc_change_state (GstElement * element, GstStateChange transition)
 
   switch (transition) {
     case GST_STATE_CHANGE_NULL_TO_READY:
-      this->mainloop = pa_threaded_mainloop_new ();
-      g_assert (this->mainloop);
-
-      pa_threaded_mainloop_start (this->mainloop);
+      if (!(this->mainloop = pa_threaded_mainloop_new ()))
+        goto mainloop_failed;
+      if (pa_threaded_mainloop_start (this->mainloop) < 0) {
+        pa_threaded_mainloop_free (this->mainloop);
+        this->mainloop = NULL;
+        goto mainloop_start_failed;
+      }
 
       if (!this->mixer)
         this->mixer =
@@ -1730,4 +1733,18 @@ gst_pulsesrc_change_state (GstElement * element, GstStateChange transition)
   }
 
   return ret;
+
+  /* ERRORS */
+mainloop_failed:
+  {
+    GST_ELEMENT_ERROR (this, RESOURCE, FAILED,
+        ("pa_threaded_mainloop_new() failed"), (NULL));
+    return GST_STATE_CHANGE_FAILURE;
+  }
+mainloop_start_failed:
+  {
+    GST_ELEMENT_ERROR (this, RESOURCE, FAILED,
+        ("pa_threaded_mainloop_start() failed"), (NULL));
+    return GST_STATE_CHANGE_FAILURE;
+  }
 }
