@@ -284,8 +284,8 @@ GST_START_TEST (test_streamheader)
   GstPad *srcpad;
   GstElement *gdpdepay;
   GstBuffer *buffer, *inbuffer, *outbuffer, *shbuffer;
-  guint8 *caps_header, *caps_payload, *buf_header, *data;
-  gsize size;
+  guint8 *caps_header, *caps_payload, *buf_header;
+  GstMapInfo map;
   guint header_len, payload_len;
   guint i;
   GstStructure *structure;
@@ -334,17 +334,17 @@ GST_START_TEST (test_streamheader)
 
   payload_len = gst_dp_header_payload_length (caps_header);
 
-  data = gst_buffer_map (buffer, &size, NULL, GST_MAP_READ);
+  gst_buffer_map (buffer, &map, GST_MAP_READ);
   inbuffer = gst_buffer_new_and_alloc (2 * GST_DP_HEADER_LENGTH +
-      payload_len + size);
+      payload_len + map.size);
   gst_buffer_fill (inbuffer, 0, caps_header, GST_DP_HEADER_LENGTH);
   i = GST_DP_HEADER_LENGTH;
   gst_buffer_fill (inbuffer, i, caps_payload, payload_len);
   i += payload_len;
   gst_buffer_fill (inbuffer, i, buf_header, GST_DP_HEADER_LENGTH);
   i += GST_DP_HEADER_LENGTH;
-  gst_buffer_fill (inbuffer, i, data, size);
-  gst_buffer_unmap (buffer, data, size);
+  gst_buffer_fill (inbuffer, i, map.data, map.size);
+  gst_buffer_unmap (buffer, &map);
 
   gst_caps_unref (caps);
   gst_buffer_unref (buffer);

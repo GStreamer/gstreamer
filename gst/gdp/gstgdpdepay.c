@@ -308,11 +308,11 @@ gst_gdp_depay_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
 
         /* now take the payload if there is any */
         if (this->payload_length > 0) {
-          guint8 *payload;
+          GstMapInfo map;
 
-          payload = gst_buffer_map (buf, NULL, NULL, GST_MAP_WRITE);
-          gst_adapter_copy (this->adapter, payload, 0, this->payload_length);
-          gst_buffer_unmap (buf, payload, this->payload_length);
+          gst_buffer_map (buf, &map, GST_MAP_WRITE);
+          gst_adapter_copy (this->adapter, map.data, 0, this->payload_length);
+          gst_buffer_unmap (buf, &map);
 
           gst_adapter_flush (this->adapter, this->payload_length);
         }

@@ -466,8 +466,7 @@ GST_START_TEST (test_crc)
   GstEvent *event;
   gchar *caps_string;
   gint length;
-  guint8 *data;
-  gsize size;
+  GstMapInfo map;
   guint16 crc_calculated, crc_read;
 
   gdppay = setup_gdppay ();
@@ -508,18 +507,18 @@ GST_START_TEST (test_crc)
   /* verify the header checksum */
   /* CRC's start at 58 in the header */
   outbuffer = gst_buffer_make_writable (outbuffer);
-  data = gst_buffer_map (outbuffer, &size, NULL, GST_MAP_READWRITE);
-  crc_calculated = gst_dp_crc (data, 58);
-  crc_read = GST_READ_UINT16_BE (data + 58);
+  gst_buffer_map (outbuffer, &map, GST_MAP_READWRITE);
+  crc_calculated = gst_dp_crc (map.data, 58);
+  crc_read = GST_READ_UINT16_BE (map.data + 58);
   fail_unless_equals_int (crc_calculated, crc_read);
 
   /* change a byte in the header and verify that the checksum now fails */
-  data[0] = 0xff;
-  crc_calculated = gst_dp_crc (data, 58);
+  map.data[0] = 0xff;
+  crc_calculated = gst_dp_crc (map.data, 58);
   fail_if (crc_calculated == crc_read,
       "Introducing a byte error in the header should make the checksum fail");
 
-  gst_buffer_unmap (outbuffer, data, size);
+  gst_buffer_unmap (outbuffer, &map);
   gst_buffer_unref (outbuffer);
 
   /* second buffer is the serialized caps;
