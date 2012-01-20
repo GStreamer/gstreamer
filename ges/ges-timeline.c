@@ -1241,20 +1241,15 @@ ges_timeline_is_updating (GESTimeline * timeline)
 gboolean
 ges_timeline_enable_update (GESTimeline * timeline, gboolean enabled)
 {
-  GList *tmp, *tracks;
+  GList *tmp;
   gboolean res = TRUE;
 
   GST_DEBUG_OBJECT (timeline, "%s updates", enabled ? "Enabling" : "Disabling");
 
-  tracks = ges_timeline_get_tracks (timeline);
-
-  for (tmp = tracks; tmp; tmp = tmp->next) {
-    if (!ges_track_enable_update (tmp->data, enabled)) {
+  for (tmp = timeline->priv->tracks; tmp; tmp = tmp->next) {
+    if (!ges_track_enable_update (((TrackPrivate *) tmp->data)->track, enabled))
       res = FALSE;
-    }
   }
-
-  g_list_free (tracks);
 
   return res;
 }
