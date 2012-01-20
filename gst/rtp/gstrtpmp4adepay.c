@@ -130,7 +130,7 @@ gst_rtp_mp4a_depay_finalize (GObject * object)
 }
 
 static const guint aac_sample_rates[] = { 96000, 88200, 64000, 48000,
-  44100, 32000, 24000, 22050, 16000, 12000, 11025, 8000
+  44100, 32000, 24000, 22050, 16000, 12000, 11025, 8000, 7350
 };
 
 static gboolean
@@ -247,6 +247,8 @@ gst_rtp_mp4a_depay_setcaps (GstBaseRTPDepayload * depayload, GstCaps * caps)
         /* index of 15 means we get the rate in the next 24 bits */
         if (!gst_bit_reader_get_bits_uint32 (&br, &rate, 24))
           goto bad_config;
+      } else if (sr_idx >= G_N_ELEMENTS (aac_sample_rates)) {
+        goto bad_config;
       } else {
         /* else use the rate from the table */
         rate = aac_sample_rates[sr_idx];
