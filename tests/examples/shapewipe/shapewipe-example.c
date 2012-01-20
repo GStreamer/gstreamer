@@ -98,7 +98,7 @@ main (gint argc, gchar ** argv)
 
   csource = gst_lfo_control_source_new ();
 
-  gst_object_set_control_binding (GST_OBJECT_CAST (shapewipe),
+  gst_object_add_control_binding (GST_OBJECT_CAST (shapewipe),
       gst_control_binding_new (GST_OBJECT_CAST (shapewipe), "position",
           GST_CONTROL_SOURCE (csource)));
 
