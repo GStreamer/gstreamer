@@ -280,7 +280,6 @@ transform_ayuv_ayuv (guint8 * data, gint size, const gint * matrix)
     u = (data[1] * uc[0] + data[2] * uc[1] + data[3] * uc[2] + uc[3]) >> 8;
     v = (data[1] * vc[0] + data[2] * vc[1] + data[3] * vc[2] + vc[3]) >> 8;
 
-    data[0] = data[0];
     data[1] = y;
     data[2] = u;
     data[3] = v;
