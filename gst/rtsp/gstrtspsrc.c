@@ -4331,7 +4331,8 @@ gst_rtspsrc_parse_digest_challenge (GstRTSPConnection * conn,
     } else
       value = NULL;
 
-    if ((strcmp (item, "stale") == 0) && (strcmp (value, "TRUE") == 0))
+    if (item && (strcmp (item, "stale") == 0) &&
+        value && (strcmp (value, "TRUE") == 0))
       *stale = TRUE;
     gst_rtsp_connection_set_auth_param (conn, item, value);
     g_free (item);
