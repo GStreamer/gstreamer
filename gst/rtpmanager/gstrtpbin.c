@@ -1188,8 +1188,11 @@ gst_rtp_bin_associate (GstRtpBin * bin, GstRtpBinStream * stream, guint8 len,
        * now equating rtptime obtained from RTP-Info,
        * where the large time represent the otherwise irrelevant npt/ntp time */
       stream->rtp_delta = (GST_SECOND << 28) - rtp_clock_base;
+    } else {
+      clock_base = rtp_clock_base;
     }
 
+    all_sync = TRUE;
     for (walk = client->streams; walk; walk = g_slist_next (walk)) {
       GstRtpBinStream *ostream = (GstRtpBinStream *) walk->data;
 
@@ -1215,7 +1218,7 @@ gst_rtp_bin_associate (GstRtpBin * bin, GstRtpBinStream * stream, guint8 len,
 
     /* arrange to re-sync for each stream upon significant change,
      * e.g. post-seek */
-    all_sync = (stream->clock_base == clock_base);
+    all_sync = all_sync && (stream->clock_base == clock_base);
     stream->clock_base = clock_base;
 
     /* may need init performed above later on, but nothing more to do now */
