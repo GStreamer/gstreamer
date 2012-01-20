@@ -1,14 +1,9 @@
-/* vim:si:et:sw=2:sts=2:ts=8
- *
- * GStreamer
- *
- * gstchromaprint.c
- * 
+/* GStreamer chromaprint audio fingerprinting element
  * Copyright (C) 2006 M. Derezynski
  * Copyright (C) 2008 Eric Buehl
  * Copyright (C) 2008 Sebastian Dröge <slomo@circular-chaos.org>
  * Copyright (C) 2011 Lukáš Lalinský <lalinsky@gmail.com>
- * 
+ *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
  * License as published by the Free Software Foundation; either
@@ -28,23 +23,22 @@
 /**
  * SECTION:element-chromaprint
  *
- * FIXME:Describe chromaprint here.
+ * The chromaprint element calculates an acoustic fingerprint for an
+ * audio stream which can be used to identify a song and look up
+ * further metadata from the <ulink url="http://acoustid.org/">Acoustid</ulink>
+ * and Musicbrainz databases.
  *
  * <refsect2>
  * <title>Example launch line</title>
  * |[
- * gst-launch -v -m fakesrc ! chromaprint ! fakesink silent=TRUE
- * filesrc location=<file> ! decodebin ! audioconvert ! chromaprint ! fakesink sync=0 silent=TRUE
+ * gst-launch -m uridecodebin uri=file:///path/to/song.ogg ! audioconvert ! chromaprint ! fakesink
  * ]|
  * </refsect2>
  */
 
 #ifdef HAVE_CONFIG_H
-#  include <config.h>
+#include <config.h>
 #endif
-
-#include <gst/gst.h>
-#include <chromaprint.h>
 
 #include "gstchromaprint.h"
 
@@ -83,8 +77,6 @@ static GstFlowReturn gst_chromaprint_transform_ip (GstBaseTransform * trans,
 static gboolean gst_chromaprint_event (GstBaseTransform * trans,
     GstEvent * event);
 
-/* GObject vmethod implementations */
-
 static void
 gst_chromaprint_base_init (gpointer g_class)
 {
@@ -93,8 +85,8 @@ gst_chromaprint_base_init (gpointer g_class)
   GstCaps *caps;
 
   gst_element_class_set_details_simple (element_class,
-      "Chromaprint",
       "Chromaprint fingerprinting element",
+      "Filter/Analyzer/Audio",
       "Find an audio fingerprint using the Chromaprint library",
       "Lukáš Lalinský <lalinsky@gmail.com>");
 
@@ -112,18 +104,17 @@ gst_chromaprint_class_init (GstChromaprintClass * klass)
   gobject_class = G_OBJECT_CLASS (klass);
   gstbasetrans_class = GST_BASE_TRANSFORM_CLASS (klass);
 
-  gobject_class->set_property =
-      GST_DEBUG_FUNCPTR (gst_chromaprint_set_property);
-  gobject_class->get_property =
-      GST_DEBUG_FUNCPTR (gst_chromaprint_get_property);
+  gobject_class->set_property = gst_chromaprint_set_property;
+  gobject_class->get_property = gst_chromaprint_get_property;
 
+  /* FIXME: do we need this in addition to the tag message ? */
   g_object_class_install_property (gobject_class, PROP_FINGERPRINT,
       g_param_spec_string ("fingerprint", "Resulting fingerprint",
           "Resulting fingerprint", NULL, G_PARAM_READABLE));
 
   g_object_class_install_property (gobject_class, PROP_MAX_DURATION,
       g_param_spec_uint ("duration", "Duration limit",
-          "Number of seconds of audio to use for fingerpriting",
+          "Number of seconds of audio to use for fingerprinting",
           0, G_MAXUINT, DEFAULT_MAX_DURATION,
           G_PARAM_READABLE | G_PARAM_WRITABLE));
 
@@ -156,15 +147,17 @@ gst_chromaprint_create_fingerprint (GstChromaprint * chromaprint)
   if (chromaprint->duration <= 3)
     return;
 
-  GST_DEBUG ("Generating fingerprint based on %d seconds of audio",
+  GST_DEBUG_OBJECT (chromaprint,
+      "Generating fingerprint based on %d seconds of audio",
       chromaprint->duration);
+
   chromaprint_finish (chromaprint->context);
   chromaprint_get_fingerprint (chromaprint->context, &chromaprint->fingerprint);
   chromaprint->record = FALSE;
 
-  tags = gst_tag_list_new ();
-  gst_tag_list_add (tags, GST_TAG_MERGE_REPLACE,
-      GST_TAG_CHROMAPRINT_FINGERPRINT, chromaprint->fingerprint, NULL);
+  tags = gst_tag_list_new_full (GST_TAG_CHROMAPRINT_FINGERPRINT,
+      chromaprint->fingerprint, NULL);
+
   gst_element_found_tags (GST_ELEMENT (chromaprint), tags);
 }
 
@@ -204,20 +197,22 @@ static GstFlowReturn
 gst_chromaprint_transform_ip (GstBaseTransform * trans, GstBuffer * buf)
 {
   GstChromaprint *chromaprint = GST_CHROMAPRINT (trans);
-  guint nsamples;
   gint rate = GST_AUDIO_FILTER (chromaprint)->format.rate;
   gint channels = GST_AUDIO_FILTER (chromaprint)->format.channels;
+  guint nsamples;
 
-  g_return_val_if_fail (rate > 0 && channels > 0, GST_FLOW_NOT_NEGOTIATED);
+  if (G_UNLIKELY (rate <= 0 || channels <= 0))
+    return GST_FLOW_NOT_NEGOTIATED;
 
   if (!chromaprint->record)
     return GST_FLOW_OK;
 
   nsamples = GST_BUFFER_SIZE (buf) / (channels * 2);
-  if (!nsamples)
+
+  if (nsamples == 0)
     return GST_FLOW_OK;
 
-  if (!chromaprint->nsamples) {
+  if (chromaprint->nsamples == 0) {
     chromaprint_start (chromaprint->context, rate, channels);
   }
   chromaprint->nsamples += nsamples;
@@ -242,7 +237,8 @@ gst_chromaprint_event (GstBaseTransform * trans, GstEvent * event)
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_FLUSH_STOP:
     case GST_EVENT_NEWSEGMENT:
-      GST_DEBUG ("Got %s event, clearing buffer", GST_EVENT_TYPE_NAME (event));
+      GST_DEBUG_OBJECT (trans, "Got %s event, clearing buffer",
+          GST_EVENT_TYPE_NAME (event));
       gst_chromaprint_reset (chromaprint);
       break;
     case GST_EVENT_EOS:
@@ -292,7 +288,6 @@ gst_chromaprint_get_property (GObject * object, guint prop_id,
   }
 }
 
-
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
@@ -301,7 +296,7 @@ plugin_init (GstPlugin * plugin)
   GST_DEBUG_CATEGORY_INIT (gst_chromaprint_debug, "chromaprint",
       0, "chromaprint element");
 
-  GST_DEBUG ("libchromaprint %s", chromaprint_get_version ());
+  GST_INFO ("libchromaprint %s", chromaprint_get_version ());
 
   ret = gst_element_register (plugin, "chromaprint", GST_RANK_NONE,
       GST_TYPE_CHROMAPRINT);
@@ -319,4 +314,4 @@ GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
     GST_VERSION_MINOR,
     "chromaprint",
     "Calculate Chromaprint fingerprint from audio files",
-    plugin_init, VERSION, "LGPL", "GStreamer", "http://gstreamer.net/")
+    plugin_init, VERSION, "LGPL", GST_PACKAGE_NAME, GST_PACKAGE_ORIGIN)

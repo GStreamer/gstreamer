@@ -1,14 +1,9 @@
-/* vim:si:et:sw=2:sts=2:ts=8
- *
- * GStreamer
- *
- * gstchromaprint.h
- * 
+/* GStreamer chromaprint audio fingerprinting element
  * Copyright (C) 2006 M. Derezynski
  * Copyright (C) 2008 Eric Buehl
  * Copyright (C) 2008 Sebastian Dröge <slomo@circular-chaos.org>
  * Copyright (C) 2011 Lukáš Lalinský <<user@hostname.org>>
- * 
+ *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
  * License as published by the Free Software Foundation; either
@@ -55,24 +50,22 @@ typedef struct _GstChromaprintClass GstChromaprintClass;
 /**
  * GstChromaprint:
  *
- * Opaque #GstChromaprint data structure
+ * Opaque #GstChromaprint element structure
  */
-
 struct _GstChromaprint
 {
   GstAudioFilter element;
 
-  /*< private > */
-
-  ChromaprintContext *context; 
-  char *fingerprint;
-  gboolean record;
-  guint64 nsamples;
-  guint duration;
-  guint max_duration;
+  /*< private >*/
+  ChromaprintContext * context;
+  char               * fingerprint;
+  gboolean             record;
+  guint64              nsamples;
+  guint                duration;
+  guint                max_duration;
 };
 
-struct _GstChromaprintClass 
+struct _GstChromaprintClass
 {
   GstAudioFilterClass parent_class;
 };
