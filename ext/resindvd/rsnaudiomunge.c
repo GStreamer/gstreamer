@@ -154,9 +154,9 @@ rsn_audiomunge_set_caps (GstPad * pad, GstCaps * caps)
   g_return_val_if_fail (munge != NULL, FALSE);
 
   otherpad = (pad == munge->srcpad) ? munge->sinkpad : munge->srcpad;
-  gst_object_unref (munge);
 
   ret = gst_pad_set_caps (otherpad, caps);
+  gst_object_unref (munge);
   return ret;
 }
 
