@@ -681,6 +681,13 @@ moov_recov_file_create (FILE * file, GError ** err)
     goto fail;
   }
 
+  /* sanity check */
+  if (moovrf->num_traks > 1024) {
+    g_set_error (err, ATOMS_RECOV_QUARK, ATOMS_RECOV_ERR_PARSING,
+        "Unsupported number of traks");
+    goto fail;
+  }
+
   /* init the traks */
   moovrf->traks_rd = g_new0 (TrakRecovData, moovrf->num_traks);
   for (i = 0; i < moovrf->num_traks; i++) {
