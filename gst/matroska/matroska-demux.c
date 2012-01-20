@@ -1721,7 +1721,6 @@ gst_matroska_demux_search_pos (GstMatroskaDemux * demux, GstClockTime time)
   gint64 opos, newpos, startpos = 0, current_offset;
   gint64 prev_cluster_offset = -1, current_cluster_offset, cluster_offset;
   const guint chunk = 64 * 1024;
-  GstBuffer *buf = NULL;
   GstFlowReturn ret;
   guint64 length;
   guint32 id;
@@ -1886,8 +1885,6 @@ retry:
       ", pos %" G_GUINT64_FORMAT, GST_TIME_ARGS (entry->time), entry->pos);
 
 exit:
-  if (buf)
-    gst_buffer_unref (buf);
 
   /* restore some state */
   demux->cluster_offset = current_cluster_offset;
