@@ -45,8 +45,8 @@ static void gst_control_binding_finalize (GObject * object);
   GST_DEBUG_CATEGORY_INIT (GST_CAT_DEFAULT, "gstcontrolbinding", 0, \
       "dynamic parameter control source attachment");
 
-G_DEFINE_TYPE_WITH_CODE (GstControlBinding, gst_control_binding, G_TYPE_OBJECT,
-    _do_init);
+G_DEFINE_TYPE_WITH_CODE (GstControlBinding, gst_control_binding,
+    GST_TYPE_OBJECT, _do_init);
 
 static void
 gst_control_binding_class_init (GstControlBindingClass * klass)
@@ -363,8 +363,6 @@ gst_control_binding_get_value_array (GstControlBinding * self,
   g_free (src_val);
   return res;
 }
-
-
 
 /**
  * gst_control_binding_get_control_source:

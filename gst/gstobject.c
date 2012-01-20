@@ -117,7 +117,7 @@
  *   </para></listitem>
  *   <listitem><para>
  *     Attach the #GstControlSource on the controller to a property.
- *     gst_object_set_control_source (object, "prop1", csource);
+ *     gst_object_set_control_binding (object, gst_control_binding_new (objetct, "prop1", csource));
  *   </para></listitem>
  *   <listitem><para>
  *     Set the control values
@@ -1268,86 +1268,6 @@ gst_object_get_control_binding (GstObject * object, const gchar * property_name)
 
   return binding;
 }
-
-/**
- * gst_object_set_control_source:
- * @object: the controller object
- * @property_name: name of the property for which the #GstControlSource should be set
- * @csource: the #GstControlSource that should be used for the property
- *
- * Sets the #GstControlSource for @property_name. If there already was a #GstControlSource
- * for this property it will be unreferenced.
- *
- * This is a convenience function for gst_object_set_control_binding().
- *
- * Returns: %FALSE if the given property isn't handled by the controller or the new #GstControlSource
- * couldn't be bound to the property, %TRUE if everything worked as expected.
- */
-gboolean
-gst_object_set_control_source (GstObject * object, const gchar * property_name,
-    GstControlSource * csource)
-{
-  GstControlBinding *binding;
-  gboolean ret = FALSE;
-
-  g_return_val_if_fail (GST_IS_OBJECT (object), FALSE);
-  g_return_val_if_fail (property_name, FALSE);
-  g_return_val_if_fail ((!csource || GST_IS_CONTROL_SOURCE (csource)), FALSE);
-
-  GST_OBJECT_LOCK (object);
-  if ((binding = gst_object_find_control_binding (object, property_name))) {
-    object->control_bindings =
-        g_list_remove (object->control_bindings, binding);
-    g_object_unref (binding);
-    GST_DEBUG_OBJECT (object, "controlled property %s removed", property_name);
-    ret = TRUE;
-  }
-  if (csource) {
-    if ((binding = gst_control_binding_new (object, property_name, csource))) {
-      object->control_bindings =
-          g_list_prepend (object->control_bindings, binding);
-      GST_DEBUG_OBJECT (object, "controlled property %s added", property_name);
-      ret = TRUE;
-    } else {
-      ret = FALSE;
-    }
-  }
-  GST_OBJECT_UNLOCK (object);
-
-  return ret;
-}
-
-/**
- * gst_object_get_control_source:
- * @object: the object
- * @property_name: name of the property
- *
- * Gets the corresponding #GstControlSource for the property. This should be
- * unreferenced again after use.
- *
- * This is a convenience function for gst_object_get_control_binding().
- *
- * Returns: (transfer full): the #GstControlSource for @property_name or %NULL if
- * the property is not controlled.
- */
-GstControlSource *
-gst_object_get_control_source (GstObject * object, const gchar * property_name)
-{
-  GstControlBinding *binding;
-  GstControlSource *ret = NULL;
-
-  g_return_val_if_fail (GST_IS_OBJECT (object), NULL);
-  g_return_val_if_fail (property_name, NULL);
-
-  GST_OBJECT_LOCK (object);
-  if ((binding = gst_object_find_control_binding (object, property_name))) {
-    ret = gst_control_binding_get_control_source (binding);
-  }
-  GST_OBJECT_UNLOCK (object);
-
-  return ret;
-}
-
 
 /**
  * gst_object_get_value:

@@ -64,7 +64,7 @@ typedef void (* GstControlBindingConvert) (GstControlBinding *self, gdouble src_
  * The instance structure of #GstControlBinding.
  */
 struct _GstControlBinding {
-  GObject parent;
+  GstObject parent;
   
   /*< public >*/
   const gchar *name;            /* name of the property */
@@ -91,7 +91,13 @@ struct _GstControlBinding {
 
 struct _GstControlBindingClass
 {
-  GObjectClass parent_class;
+  GstObjectClass parent_class;
+  
+  /* need vfuncs for:
+  _sync_values
+  _get_value
+  _get_value_array
+  */
 
   /*< private >*/
   gpointer _gst_reserved[GST_PADDING];

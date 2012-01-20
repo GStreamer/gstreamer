@@ -1,10 +1,10 @@
 /*
  * audio-example.c
  *
- * Builds a pipeline with audiotestsource->alsasink and sweeps frequency and
- * volume.
+ * Builds a pipeline with [ audiotestsource ! autoaudiosink ] and sweeps
+ * frequency and volume.
  *
- * Needs gst-plugin-base installed.
+ * Needs gst-plugin-base + gst-plugins-good installed.
  */
 
 #include <gst/gst.h>
@@ -27,14 +27,14 @@ main (gint argc, gchar ** argv)
   /* build pipeline */
   bin = gst_pipeline_new ("pipeline");
   clock = gst_pipeline_get_clock (GST_PIPELINE (bin));
-  src = gst_element_factory_make ("audiotestsrc", "gen_audio");
+  src = gst_element_factory_make ("audiotestsrc", NULL);
   if (!src) {
     GST_WARNING ("need audiotestsrc from gst-plugins-base");
     goto Error;
   }
-  sink = gst_element_factory_make ("autoaudiosink", "play_audio");
+  sink = gst_element_factory_make ("autoaudiosink", NULL);
   if (!sink) {
-    GST_WARNING ("need autoaudiosink from gst-plugins-base");
+    GST_WARNING ("need autoaudiosink from gst-plugins-good");
     goto Error;
   }
 
@@ -44,19 +44,18 @@ main (gint argc, gchar ** argv)
     goto Error;
   }
 
-  /* square wave
-     g_object_set (G_OBJECT(src), "wave", 1, NULL);
-   */
-
+  /* setup control sources */
   csource1 = gst_interpolation_control_source_new ();
   csource2 = gst_interpolation_control_source_new ();
 
-  gst_object_set_control_source (GST_OBJECT (src), "volume",
-      GST_CONTROL_SOURCE (csource1));
-  gst_object_set_control_source (GST_OBJECT (src), "freq",
-      GST_CONTROL_SOURCE (csource2));
+  gst_object_set_control_binding (GST_OBJECT_CAST (src),
+      gst_control_binding_new (GST_OBJECT_CAST (src), "volume",
+          GST_CONTROL_SOURCE (csource1)));
+  gst_object_set_control_binding (GST_OBJECT_CAST (src),
+      gst_control_binding_new (GST_OBJECT_CAST (src), "freq",
+          GST_CONTROL_SOURCE (csource2)));
 
-  /* Set interpolation mode */
+  /* set interpolation mode */
 
   g_object_set (csource1, "mode", GST_INTERPOLATION_MODE_LINEAR, NULL);
   g_object_set (csource2, "mode", GST_INTERPOLATION_MODE_LINEAR, NULL);
@@ -75,11 +74,11 @@ main (gint argc, gchar ** argv)
 
   gst_object_unref (csource2);
 
+  /* run for 7 seconds */
   clock_id =
       gst_clock_new_single_shot_id (clock,
       gst_clock_get_time (clock) + (7 * GST_SECOND));
 
-  /* run for 7 seconds */
   if (gst_element_set_state (bin, GST_STATE_PLAYING)) {
     if ((wait_ret = gst_clock_id_wait (clock_id, NULL)) != GST_CLOCK_OK) {
       GST_WARNING ("clock_id_wait returned: %d", wait_ret);

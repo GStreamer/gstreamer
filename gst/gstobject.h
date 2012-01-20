@@ -248,11 +248,6 @@ gboolean        gst_object_set_control_binding  (GstObject * object, GstControlB
 GstControlBinding *
                 gst_object_get_control_binding  (GstObject *object, const gchar * property_name);
 
-gboolean        gst_object_set_control_source   (GstObject *object, const gchar * property_name,
-                                                 GstControlSource *csource);
-GstControlSource *
-                gst_object_get_control_source   (GstObject *object, const gchar * property_name);
-
 GValue *        gst_object_get_value            (GstObject * object, const gchar * property_name,
                                                  GstClockTime timestamp);
 gboolean        gst_object_get_value_array      (GstObject * object, const gchar * property_name,
