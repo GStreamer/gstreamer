@@ -80,6 +80,7 @@ helper_find_peek (gpointer data, gint64 offset, guint size)
   GSList *insert_pos = NULL;
   gsize buf_size;
   guint64 buf_offset;
+  GstMapInfo info;
 #if 0
   GstCaps *caps;
 #endif
@@ -113,12 +114,10 @@ helper_find_peek (gpointer data, gint64 offset, guint size)
        * we're after the searched end offset */
       if (buf_offset <= offset) {
         if ((offset + size) < (buf_offset + buf_size)) {
-          guint8 *data;
-
           /* FIXME, unmap after usage */
-          data = gst_buffer_map (buf, NULL, NULL, GST_MAP_READ);
+          g_assert (gst_buffer_map (buf, &info, GST_MAP_READ));
 
-          return data + (offset - buf_offset);
+          return (guint8 *) info.data + (offset - buf_offset);
         }
       } else if (offset + size >= buf_offset + buf_size) {
         insert_pos = walk;
@@ -181,7 +180,8 @@ helper_find_peek (gpointer data, gint64 offset, guint size)
   }
 
   /* FIXME, unmap */
-  return gst_buffer_map (buffer, NULL, NULL, GST_MAP_READ);
+  g_assert (gst_buffer_map (buffer, &info, GST_MAP_READ));
+  return info.data;
 
 error:
   {
@@ -563,17 +563,16 @@ gst_type_find_helper_for_buffer (GstObject * obj, GstBuffer * buf,
     GstTypeFindProbability * prob)
 {
   GstCaps *result;
-  guint8 *data;
-  gsize size;
+  GstMapInfo info;
 
   g_return_val_if_fail (buf != NULL, NULL);
   g_return_val_if_fail (GST_IS_BUFFER (buf), NULL);
   g_return_val_if_fail (GST_BUFFER_OFFSET (buf) == 0 ||
       GST_BUFFER_OFFSET (buf) == GST_BUFFER_OFFSET_NONE, NULL);
 
-  data = gst_buffer_map (buf, &size, NULL, GST_MAP_READ);
-  result = gst_type_find_helper_for_data (obj, data, size, prob);
-  gst_buffer_unmap (buf, data, size);
+  g_assert (gst_buffer_map (buf, &info, GST_MAP_READ));
+  result = gst_type_find_helper_for_data (obj, info.data, info.size, prob);
+  gst_buffer_unmap (buf, &info);
 
   return result;
 }

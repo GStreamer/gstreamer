@@ -359,20 +359,20 @@ gst_check_caps_equal (GstCaps * caps1, GstCaps * caps2)
 void
 gst_check_buffer_data (GstBuffer * buffer, gconstpointer data, gsize size)
 {
-  guint8 *bdata;
-  gsize bsize;
+  GstMapInfo info;
 
-  bdata = gst_buffer_map (buffer, &bsize, NULL, GST_MAP_READ);
-  GST_MEMDUMP ("Converted data", bdata, bsize);
+  gst_buffer_map (buffer, &info, GST_MAP_READ);
+  GST_MEMDUMP ("Converted data", info.data, info.size);
   GST_MEMDUMP ("Expected data", data, size);
-  if (memcmp (bdata, data, size) != 0) {
+  if (memcmp (info.data, data, size) != 0) {
     g_print ("\nConverted data:\n");
-    gst_util_dump_mem (bdata, bsize);
+    gst_util_dump_mem (info.data, info.size);
     g_print ("\nExpected data:\n");
     gst_util_dump_mem (data, size);
   }
-  fail_unless (memcmp (bdata, data, size) == 0, "buffer contents not equal");
-  gst_buffer_unmap (buffer, bdata, bsize);
+  fail_unless (memcmp (info.data, data, size) == 0,
+      "buffer contents not equal");
+  gst_buffer_unmap (buffer, &info);
 }
 
 /**
@@ -492,30 +492,30 @@ gst_check_element_push_buffer_list (const gchar * element_name,
   while (buffers != NULL) {
     GstBuffer *new = GST_BUFFER (buffers->data);
     GstBuffer *orig = GST_BUFFER (buffer_out->data);
-    gsize newsize, origsize;
-    guint8 *newdata, *origdata;
+    GstMapInfo newinfo, originfo;
 
-    newdata = gst_buffer_map (new, &newsize, NULL, GST_MAP_READ);
-    origdata = gst_buffer_map (orig, &origsize, NULL, GST_MAP_READ);
+    gst_buffer_map (new, &newinfo, GST_MAP_READ);
+    gst_buffer_map (orig, &originfo, GST_MAP_READ);
 
-    GST_LOG ("orig buffer: size %" G_GSIZE_FORMAT, origsize);
-    GST_LOG ("new  buffer: size %" G_GSIZE_FORMAT, newsize);
-    GST_MEMDUMP ("orig buffer", origdata, origsize);
-    GST_MEMDUMP ("new  buffer", newdata, newsize);
+    GST_LOG ("orig buffer: size %" G_GSIZE_FORMAT, originfo.size);
+    GST_LOG ("new  buffer: size %" G_GSIZE_FORMAT, newinfo.size);
+    GST_MEMDUMP ("orig buffer", originfo.data, originfo.size);
+    GST_MEMDUMP ("new  buffer", newinfo.data, newinfo.size);
 
     /* remove the buffers */
     buffers = g_list_remove (buffers, new);
     buffer_out = g_list_remove (buffer_out, orig);
 
-    fail_unless (origsize == newsize, "size of the buffers are not the same");
-    fail_unless (memcmp (origdata, newdata, newsize) == 0,
+    fail_unless (originfo.size == newinfo.size,
+        "size of the buffers are not the same");
+    fail_unless (memcmp (originfo.data, newinfo.data, newinfo.size) == 0,
         "data is not the same");
 #if 0
     gst_check_caps_equal (GST_BUFFER_CAPS (orig), GST_BUFFER_CAPS (new));
 #endif
 
-    gst_buffer_unmap (orig, origdata, origsize);
-    gst_buffer_unmap (new, newdata, newsize);
+    gst_buffer_unmap (orig, &originfo);
+    gst_buffer_unmap (new, &newinfo);
 
     gst_buffer_unref (new);
     gst_buffer_unref (orig);

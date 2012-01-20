@@ -719,7 +719,7 @@ gst_fake_src_create_buffer (GstFakeSrc * src, gsize * bufsize)
   GstBuffer *buf;
   gsize size = gst_fake_src_get_size (src);
   gboolean dump = src->dump;
-  guint8 *data;
+  GstMapInfo info;
 
   *bufsize = size;
 
@@ -746,9 +746,9 @@ gst_fake_src_create_buffer (GstFakeSrc * src, gsize * bufsize)
         /* try again (this will allocate a new parent) */
         return gst_fake_src_create_buffer (src, bufsize);
       }
-      data = gst_buffer_map (buf, &size, NULL, GST_MAP_WRITE);
-      gst_fake_src_prepare_buffer (src, data, size);
-      gst_buffer_unmap (buf, data, size);
+      gst_buffer_map (buf, &info, GST_MAP_WRITE);
+      gst_fake_src_prepare_buffer (src, info.data, info.size);
+      gst_buffer_unmap (buf, &info);
       break;
     default:
       g_warning ("fakesrc: dunno how to allocate buffers !");
@@ -756,9 +756,9 @@ gst_fake_src_create_buffer (GstFakeSrc * src, gsize * bufsize)
       break;
   }
   if (dump) {
-    data = gst_buffer_map (buf, &size, NULL, GST_MAP_READ);
-    gst_util_dump_mem (data, size);
-    gst_buffer_unmap (buf, data, size);
+    gst_buffer_map (buf, &info, GST_MAP_READ);
+    gst_util_dump_mem (info.data, info.size);
+    gst_buffer_unmap (buf, &info);
   }
 
   return buf;

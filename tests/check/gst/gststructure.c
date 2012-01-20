@@ -505,6 +505,7 @@ GST_START_TEST (test_vararg_getters)
   GstBuffer *buf, *buf2;
   gboolean ret;
   GstCaps *caps, *caps2;
+  GstMapInfo info;
   gdouble d;
   gint64 i64;
   gchar *c;
@@ -513,11 +514,12 @@ GST_START_TEST (test_vararg_getters)
 
   buf = gst_buffer_new_and_alloc (3);
 
-  data = gst_buffer_map (buf, NULL, NULL, GST_MAP_WRITE);
+  fail_unless (gst_buffer_map (buf, &info, GST_MAP_WRITE));
+  data = info.data;
   data[0] = 0xf0;
   data[1] = 0x66;
   data[2] = 0x0d;
-  gst_buffer_unmap (buf, data, 3);
+  gst_buffer_unmap (buf, &info);
 
   caps = gst_caps_new_empty_simple ("video/x-foo");
 

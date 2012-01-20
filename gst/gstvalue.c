@@ -1871,7 +1871,7 @@ gst_value_compare_buffer (const GValue * value1, const GValue * value2)
   GstBuffer *buf1 = gst_value_get_buffer (value1);
   GstBuffer *buf2 = gst_value_get_buffer (value2);
   gsize size1, size2;
-  gpointer data1, data2;
+  GstMapInfo info1, info2;
   gint result = GST_VALUE_UNORDERED;
 
   size1 = gst_buffer_get_size (buf1);
@@ -1883,16 +1883,14 @@ gst_value_compare_buffer (const GValue * value1, const GValue * value2)
   if (size1 == 0)
     return GST_VALUE_EQUAL;
 
-  data1 = gst_buffer_map (buf1, &size1, NULL, GST_MAP_READ);
-  data2 = gst_buffer_map (buf2, &size2, NULL, GST_MAP_READ);
-  g_assert (data1);
-  g_assert (data2);
+  g_assert (gst_buffer_map (buf1, &info1, GST_MAP_READ));
+  g_assert (gst_buffer_map (buf2, &info2, GST_MAP_READ));
 
-  if (memcmp (data1, data2, size1) == 0)
+  if (memcmp (info1.data, info2.data, info1.size) == 0)
     result = GST_VALUE_EQUAL;
 
-  gst_buffer_unmap (buf2, data2, size2);
-  gst_buffer_unmap (buf1, data1, size1);
+  gst_buffer_unmap (buf2, &info1);
+  gst_buffer_unmap (buf1, &info2);
 
   return result;
 }
@@ -1900,9 +1898,9 @@ gst_value_compare_buffer (const GValue * value1, const GValue * value2)
 static gchar *
 gst_value_serialize_buffer (const GValue * value)
 {
+  GstMapInfo info;
   guint8 *data;
   gint i;
-  gsize size;
   gchar *string;
   GstBuffer *buffer;
 
@@ -1910,15 +1908,16 @@ gst_value_serialize_buffer (const GValue * value)
   if (buffer == NULL)
     return NULL;
 
-  data = gst_buffer_map (buffer, &size, NULL, GST_MAP_READ);
+  g_assert (gst_buffer_map (buffer, &info, GST_MAP_READ));
+  data = info.data;
 
-  string = g_malloc (size * 2 + 1);
-  for (i = 0; i < size; i++) {
+  string = g_malloc (info.size * 2 + 1);
+  for (i = 0; i < info.size; i++) {
     sprintf (string + i * 2, "%02x", data[i]);
   }
-  string[size * 2] = 0;
+  string[info.size * 2] = 0;
 
-  gst_buffer_unmap (buffer, data, size);
+  gst_buffer_unmap (buffer, &info);
 
   return string;
 }
@@ -1929,16 +1928,17 @@ gst_value_deserialize_buffer (GValue * dest, const gchar * s)
   GstBuffer *buffer;
   gint len;
   gchar ts[3];
+  GstMapInfo info;
   guint8 *data;
   gint i;
-  gsize size;
 
   len = strlen (s);
   if (len & 1)
     goto wrong_length;
 
   buffer = gst_buffer_new_allocate (NULL, len / 2, 0);
-  data = gst_buffer_map (buffer, &size, NULL, GST_MAP_WRITE);
+  g_assert (gst_buffer_map (buffer, &info, GST_MAP_WRITE));
+  data = info.data;
 
   for (i = 0; i < len / 2; i++) {
     if (!isxdigit ((int) s[i * 2]) || !isxdigit ((int) s[i * 2 + 1]))
@@ -1950,7 +1950,7 @@ gst_value_deserialize_buffer (GValue * dest, const gchar * s)
 
     data[i] = (guint8) strtoul (ts, NULL, 16);
   }
-  gst_buffer_unmap (buffer, data, size);
+  gst_buffer_unmap (buffer, &info);
 
   gst_value_take_buffer (dest, buffer);
 
@@ -1964,7 +1964,7 @@ wrong_length:
 wrong_char:
   {
     gst_buffer_unref (buffer);
-    gst_buffer_unmap (buffer, data, size);
+    gst_buffer_unmap (buffer, &info);
     return FALSE;
   }
 }

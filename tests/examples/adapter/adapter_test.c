@@ -47,9 +47,7 @@ run_test_take (struct TestParams *params)
   for (i = 0; i < ntimes; i++) {
     buf = gst_buffer_new_and_alloc (params->write_size);
 
-    data = gst_buffer_map (buf, NULL, NULL, GST_MAP_WRITE);
-    memset (data, 0, params->write_size);
-    gst_buffer_unmap (buf, data, params->write_size);
+    gst_buffer_memset (buf, 0, 0, params->write_size);
 
     gst_adapter_push (adapter, buf);
   }
@@ -74,14 +72,11 @@ run_test_take_buffer (struct TestParams *params)
   GstBuffer *buf;
   int i;
   gint ntimes = params->tot_size / params->write_size;
-  guint8 *data;
 
   for (i = 0; i < ntimes; i++) {
     buf = gst_buffer_new_and_alloc (params->write_size);
 
-    data = gst_buffer_map (buf, NULL, NULL, GST_MAP_WRITE);
-    memset (data, 0, params->write_size);
-    gst_buffer_unmap (buf, data, params->write_size);
+    gst_buffer_memset (buf, 0, 0, params->write_size);
 
     gst_adapter_push (adapter, buf);
   }

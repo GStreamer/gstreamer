@@ -87,7 +87,6 @@ GST_START_TEST (test_one_buffer)
 {
   GstElement *identity;
   GstBuffer *buffer;
-  gpointer data;
 
   identity = setup_identity ();
   fail_unless (gst_element_set_state (identity,
@@ -97,9 +96,7 @@ GST_START_TEST (test_one_buffer)
   buffer = gst_buffer_new_and_alloc (4);
   ASSERT_BUFFER_REFCOUNT (buffer, "buffer", 1);
 
-  data = gst_buffer_map (buffer, NULL, NULL, GST_MAP_WRITE);
-  memcpy (data, "data", 4);
-  gst_buffer_unmap (buffer, data, 4);
+  gst_buffer_fill (buffer, 0, "data", 4);
 
   /* pushing gives away my reference ... */
   fail_unless (gst_pad_push (mysrcpad, buffer) == GST_FLOW_OK,

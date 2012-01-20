@@ -267,22 +267,27 @@ static GstMemory *
 _fallback_copy (GstMemory * mem, gssize offset, gssize size)
 {
   GstMemory *copy;
-  guint8 *data, *dest;
-  gsize msize;
+  GstMapInfo sinfo, dinfo;
 
-  data = gst_memory_map (mem, &msize, NULL, GST_MAP_READ);
-  if (data == NULL)
+  if (!gst_memory_map (mem, &sinfo, GST_MAP_READ))
     return NULL;
+
   if (size == -1)
-    size = msize > offset ? msize - offset : 0;
+    size = sinfo.size > offset ? sinfo.size - offset : 0;
+
   /* use the same allocator as the memory we copy  */
   copy = gst_allocator_alloc (mem->allocator, size, mem->align);
-  dest = gst_memory_map (copy, NULL, NULL, GST_MAP_WRITE);
-  memcpy (dest, data + offset, size);
-  gst_memory_unmap (copy);
-  gst_memory_unmap (mem);
+  if (!gst_memory_map (copy, &dinfo, GST_MAP_WRITE)) {
+    GST_WARNING ("could not write map memory %p", copy);
+    gst_memory_unmap (mem, &sinfo);
+    return NULL;
+  }
 
-  return (GstMemory *) copy;
+  memcpy (dinfo.data, (guint8 *) sinfo.data + offset, size);
+  gst_memory_unmap (copy, &dinfo);
+  gst_memory_unmap (mem, &sinfo);
+
+  return copy;
 }
 
 static gboolean
@@ -497,75 +502,73 @@ gst_memory_unlock (GstMemory * mem)
 /**
  * gst_memory_map:
  * @mem: a #GstMemory
- * @size: (out) (allow-none): pointer for size
- * @maxsize: (out) (allow-none): pointer for maxsize
+ * @info: (out): pointer for info
  * @flags: mapping flags
  *
- * Get a pointer to the memory of @mem that can be accessed according to @flags.
+ * Fill @info with the pointer and sizes of the memory in @mem that can be
+ * accessed according to @flags.
  *
- * @size and @maxsize will contain the size of the memory and the maximum
- * allocated memory of @mem respectively. They can be set to NULL.
- *
- * This function can return NULL for various reasons:
+ * This function can return %FALSE for various reasons:
  * - the memory backed by @mem is not accessible with the given @flags.
  * - the memory was already mapped with a different mapping.
  *
- * @pointer remains valid for as long as @mem is alive and until
+ * @info and its contents remains valid for as long as @mem is alive and until
  * gst_memory_unmap() is called.
  *
  * For each gst_memory_map() call, a corresponding gst_memory_unmap() call
  * should be done.
  *
- * Returns: (transfer none): a pointer to the memory of @mem.
+ * Returns: %TRUE if the map operation was successful.
  */
-gpointer
-gst_memory_map (GstMemory * mem, gsize * size, gsize * maxsize,
-    GstMapFlags flags)
+gboolean
+gst_memory_map (GstMemory * mem, GstMapInfo * info, GstMapFlags flags)
 {
-  guint8 *res;
-
-  g_return_val_if_fail (mem != NULL, NULL);
+  g_return_val_if_fail (mem != NULL, FALSE);
+  g_return_val_if_fail (info != NULL, FALSE);
 
   if (!gst_memory_lock (mem, flags))
     goto lock_failed;
 
-  res = mem->allocator->info.map (mem, mem->maxsize, flags);
+  info->data = mem->allocator->info.map (mem, mem->maxsize, flags);
 
-  if (G_UNLIKELY (res == NULL))
+  if (G_UNLIKELY (info->data == NULL))
     goto error;
 
-  if (size)
-    *size = mem->size;
-  if (maxsize)
-    *maxsize = mem->maxsize - mem->offset;
+  info->memory = mem;
+  info->size = mem->size;
+  info->maxsize = mem->maxsize - mem->offset;
+  info->data = (guint8 *) info->data + mem->offset;
 
-  return res + mem->offset;
+  return TRUE;
 
   /* ERRORS */
 lock_failed:
   {
-    g_critical ("memory %p: failed to lock memory", mem);
-    return NULL;
+    GST_DEBUG ("mem %p: lock %d failed", flags);
+    return FALSE;
   }
 error:
   {
     /* something went wrong, restore the orginal state again */
     GST_ERROR ("mem %p: map failed", mem);
     gst_memory_unlock (mem);
-    return NULL;
+    return FALSE;
   }
 }
 
 /**
  * gst_memory_unmap:
  * @mem: a #GstMemory
+ * @info: a #GstMapInfo
  *
  * Release the memory obtained with gst_memory_map()
  */
 void
-gst_memory_unmap (GstMemory * mem)
+gst_memory_unmap (GstMemory * mem, GstMapInfo * info)
 {
   g_return_if_fail (mem != NULL);
+  g_return_if_fail (info != NULL);
+  g_return_if_fail (info->memory == mem);
   /* there must be a ref */
   g_return_if_fail (g_atomic_int_get (&mem->state) >= 4);
 

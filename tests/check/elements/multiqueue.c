@@ -330,8 +330,7 @@ mq_dummypad_chain (GstPad * sinkpad, GstObject * parent, GstBuffer * buf)
 {
   guint32 cur_id;
   struct PadData *pad_data;
-  guint8 *data;
-  gsize size;
+  GstMapInfo info;
 
   pad_data = gst_pad_get_element_private (sinkpad);
 
@@ -339,11 +338,11 @@ mq_dummypad_chain (GstPad * sinkpad, GstObject * parent, GstBuffer * buf)
   fail_if (pad_data == NULL);
   /* Read an ID from the first 4 bytes of the buffer data and check it's
    * what we expect */
-  data = gst_buffer_map (buf, &size, NULL, GST_MAP_READ);
-  fail_unless (size >= 4);
+  fail_unless (gst_buffer_map (buf, &info, GST_MAP_READ));
+  fail_unless (info.size >= 4);
   g_mutex_unlock (&_check_lock);
-  cur_id = GST_READ_UINT32_BE (data);
-  gst_buffer_unmap (buf, data, size);
+  cur_id = GST_READ_UINT32_BE (info.data);
+  gst_buffer_unmap (buf, &info);
 
   g_mutex_lock (pad_data->mutex);
 
@@ -496,7 +495,7 @@ run_output_order_test (gint n_linked)
     guint8 cur_pad;
     GstBuffer *buf;
     GstFlowReturn ret;
-    gpointer data;
+    GstMapInfo info;
 
     cur_pad = pad_pattern[i % n];
 
@@ -505,9 +504,9 @@ run_output_order_test (gint n_linked)
     fail_if (buf == NULL);
     g_mutex_unlock (&_check_lock);
 
-    data = gst_buffer_map (buf, NULL, NULL, GST_MAP_WRITE);
-    GST_WRITE_UINT32_BE (data, i + 1);
-    gst_buffer_unmap (buf, data, 4);
+    fail_unless (gst_buffer_map (buf, &info, GST_MAP_WRITE));
+    GST_WRITE_UINT32_BE (info.data, i + 1);
+    gst_buffer_unmap (buf, &info);
     GST_BUFFER_TIMESTAMP (buf) = (i + 1) * GST_SECOND;
 
     ret = gst_pad_push (inputpads[cur_pad], buf);
@@ -655,7 +654,7 @@ GST_START_TEST (test_sparse_stream)
     GstBuffer *buf;
     GstFlowReturn ret;
     GstClockTime ts;
-    gpointer data;
+    GstMapInfo info;
 
     ts = gst_util_uint64_scale_int (GST_SECOND, i, 10);
 
@@ -664,9 +663,9 @@ GST_START_TEST (test_sparse_stream)
     fail_if (buf == NULL);
     g_mutex_unlock (&_check_lock);
 
-    data = gst_buffer_map (buf, NULL, NULL, GST_MAP_WRITE);
-    GST_WRITE_UINT32_BE (data, i + 1);
-    gst_buffer_unmap (buf, data, 4);
+    fail_unless (gst_buffer_map (buf, &info, GST_MAP_WRITE));
+    GST_WRITE_UINT32_BE (info.data, i + 1);
+    gst_buffer_unmap (buf, &info);
 
     GST_BUFFER_TIMESTAMP (buf) = gst_util_uint64_scale_int (GST_SECOND, i, 10);
 

@@ -56,12 +56,12 @@ cb_have_data (GstPad    *pad,
 	      gpointer   u_data)
 {
   gint x, y;
-  guint16 *data, *ptr, t;
-  gsize size;
+  GstMapInfo info;
+  guint16 *ptr, t;
   
-  data = gst_buffer_map (buffer, &amp;size, NULL, GST_MAP_WRITE);
+  gst_buffer_map (buffer, &amp;info, GST_MAP_WRITE);
 
-  ptr = data;
+  ptr = info.data;
   /* invert data */
   for (y = 0; y &lt; 288; y++) {
     for (x = 0; x &lt; 384 / 2; x++) {
@@ -71,8 +71,7 @@ cb_have_data (GstPad    *pad,
     }
     ptr += 384;
   }
-  gst_buffer_unmap (buffer, data, size);
-
+  gst_buffer_unmap (buffer, &amp;info);
 
   return TRUE;
 }
@@ -288,16 +287,15 @@ cb_handoff (GstElement *fakesrc,
 	    gpointer    user_data)
 {
   static gboolean white = FALSE;
-  gpointer data;
-  gsize size;
+  GstMapInfo info;
   
-  data = gst_buffer_map (buffer, &amp;size, NULL, GST_MAP_WRITE);
+  gst_buffer_map (buffer, &amp;info, GST_MAP_WRITE);
 
   /* this makes the image black/white */
-  memset (data, white ? 0xff : 0x0, size);
+  memset (info.data, white ? 0xff : 0x0, info.size);
   white = !white;
 
-  gst_buffer_unmap (buffer, data, size);
+  gst_buffer_unmap (buffer, &amp;info);
 }
 
 gint

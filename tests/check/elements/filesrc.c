@@ -171,8 +171,7 @@ GST_START_TEST (test_pull)
   GstPad *pad;
   GstFlowReturn ret;
   GstBuffer *buffer1, *buffer2;
-  guint8 *data1, *data2;
-  gsize size1, size2;
+  GstMapInfo info1, info2;
 
   src = setup_filesrc ();
 
@@ -218,10 +217,10 @@ GST_START_TEST (test_pull)
   fail_unless (gst_buffer_get_size (buffer2) == 50);
 
   /* this should be the same */
-  data1 = gst_buffer_map (buffer1, &size1, NULL, GST_MAP_READ);
-  data2 = gst_buffer_map (buffer2, &size2, NULL, GST_MAP_READ);
-  fail_unless (memcmp (data1, data2, 50) == 0);
-  gst_buffer_unmap (buffer2, data2, size2);
+  fail_unless (gst_buffer_map (buffer1, &info1, GST_MAP_READ));
+  fail_unless (gst_buffer_map (buffer2, &info2, GST_MAP_READ));
+  fail_unless (memcmp (info1.data, info2.data, 50) == 0);
+  gst_buffer_unmap (buffer2, &info2);
 
   gst_buffer_unref (buffer2);
 
@@ -232,11 +231,11 @@ GST_START_TEST (test_pull)
   fail_unless (gst_buffer_get_size (buffer2) == 50);
 
   /* compare with previously read data */
-  data2 = gst_buffer_map (buffer2, &size2, NULL, GST_MAP_READ);
-  fail_unless (memcmp (data1 + 50, data2, 50) == 0);
-  gst_buffer_unmap (buffer2, data2, size2);
+  fail_unless (gst_buffer_map (buffer2, &info2, GST_MAP_READ));
+  fail_unless (memcmp ((guint8 *) info1.data + 50, info2.data, 50) == 0);
+  gst_buffer_unmap (buffer2, &info2);
 
-  gst_buffer_unmap (buffer1, data1, size1);
+  gst_buffer_unmap (buffer1, &info1);
   gst_buffer_unref (buffer1);
   gst_buffer_unref (buffer2);
 

@@ -46,8 +46,7 @@ GST_START_TEST (test_initialization)
   GstByteReader reader = GST_BYTE_READER_INIT (data, 4);
   GstByteReader *reader2;
   guint8 x = 0;
-  guint8 *bdata;
-  gsize bsize;
+  GstMapInfo info;
 
   gst_buffer_take_memory (buffer, -1,
       gst_memory_new_wrapped (GST_MEMORY_FLAG_READONLY, data, NULL, 4, 0, 4));
@@ -65,13 +64,13 @@ GST_START_TEST (test_initialization)
   fail_unless (gst_byte_reader_get_uint8 (&reader, &x));
   fail_unless_equals_int (x, 0x02);
 
-  bdata = gst_buffer_map (buffer, &bsize, NULL, GST_MAP_READ);
-  gst_byte_reader_init (&reader, bdata, bsize);
+  fail_unless (gst_buffer_map (buffer, &info, GST_MAP_READ));
+  gst_byte_reader_init (&reader, info.data, info.size);
   fail_unless (gst_byte_reader_get_uint8 (&reader, &x));
   fail_unless_equals_int (x, 0x01);
   fail_unless (gst_byte_reader_get_uint8 (&reader, &x));
   fail_unless_equals_int (x, 0x02);
-  gst_buffer_unmap (buffer, bdata, bsize);
+  gst_buffer_unmap (buffer, &info);
 
   reader2 = gst_byte_reader_new (data, 4);
   fail_unless (gst_byte_reader_get_uint8 (reader2, &x));
@@ -80,14 +79,14 @@ GST_START_TEST (test_initialization)
   fail_unless_equals_int (x, 0x02);
   gst_byte_reader_free (reader2);
 
-  bdata = gst_buffer_map (buffer, &bsize, NULL, GST_MAP_READ);
-  reader2 = gst_byte_reader_new (bdata, bsize);
+  fail_unless (gst_buffer_map (buffer, &info, GST_MAP_READ));
+  reader2 = gst_byte_reader_new (info.data, info.size);
   fail_unless (gst_byte_reader_get_uint8 (reader2, &x));
   fail_unless_equals_int (x, 0x01);
   fail_unless (gst_byte_reader_get_uint8 (reader2, &x));
   fail_unless_equals_int (x, 0x02);
   gst_byte_reader_free (reader2);
-  gst_buffer_unmap (buffer, bdata, bsize);
+  gst_buffer_unmap (buffer, &info);
 
   gst_buffer_unref (buffer);
 }

@@ -1152,7 +1152,8 @@ gst_queue2_create_read (GstQueue2 * queue, guint64 offset, guint length,
     GstBuffer ** buffer)
 {
   GstBuffer *buf;
-  guint8 *data, *orig;
+  GstMapInfo info;
+  guint8 *data;
   guint64 file_offset;
   guint block_length, remaining, read_length;
   guint64 rb_size;
@@ -1161,7 +1162,8 @@ gst_queue2_create_read (GstQueue2 * queue, guint64 offset, guint length,
 
   /* allocate the output buffer of the requested size */
   buf = gst_buffer_new_allocate (NULL, length, 0);
-  orig = data = gst_buffer_map (buf, NULL, NULL, GST_MAP_WRITE);
+  gst_buffer_map (buf, &info, GST_MAP_WRITE);
+  data = info.data;
 
   GST_DEBUG_OBJECT (queue, "Reading %u bytes from %" G_GUINT64_FORMAT, length,
       offset);
@@ -1272,7 +1274,8 @@ gst_queue2_create_read (GstQueue2 * queue, guint64 offset, guint length,
     GST_DEBUG_OBJECT (queue, "%u bytes left to read", remaining);
   }
 
-  gst_buffer_unmap (buf, orig, length);
+  gst_buffer_unmap (buf, &info);
+  gst_buffer_resize (buf, 0, length);
 
   GST_BUFFER_OFFSET (buf) = offset;
   GST_BUFFER_OFFSET_END (buf) = offset + length;
@@ -1297,7 +1300,7 @@ out_flushing:
 read_error:
   {
     GST_DEBUG_OBJECT (queue, "we have a read error");
-    gst_buffer_unmap (buf, data, 0);
+    gst_buffer_unmap (buf, &info);
     gst_buffer_unref (buf);
     return ret;
   }
@@ -1523,9 +1526,9 @@ out_flushing:
 static gboolean
 gst_queue2_create_write (GstQueue2 * queue, GstBuffer * buffer)
 {
-  guint8 *odata, *data, *ring_buffer;
+  GstMapInfo info;
+  guint8 *data, *ring_buffer;
   guint size, rb_size;
-  gsize osize;
   guint64 writing_pos, new_writing_pos;
   GstQueue2Range *range, *prev, *next;
 
@@ -1536,10 +1539,10 @@ gst_queue2_create_write (GstQueue2 * queue, GstBuffer * buffer)
   ring_buffer = queue->ring_buffer;
   rb_size = queue->ring_buffer_max_size;
 
-  odata = gst_buffer_map (buffer, &osize, NULL, GST_MAP_READ);
+  gst_buffer_map (buffer, &info, GST_MAP_READ);
 
-  size = osize;
-  data = odata;
+  size = info.size;
+  data = info.data;
 
   GST_DEBUG_OBJECT (queue, "Writing %u bytes to %" G_GUINT64_FORMAT, size,
       GST_BUFFER_OFFSET (buffer));
@@ -1763,7 +1766,7 @@ gst_queue2_create_write (GstQueue2 * queue, GstBuffer * buffer)
     GST_QUEUE2_SIGNAL_ADD (queue);
   }
 
-  gst_buffer_unmap (buffer, odata, osize);
+  gst_buffer_unmap (buffer, &info);
 
   return TRUE;
 
@@ -1771,14 +1774,14 @@ gst_queue2_create_write (GstQueue2 * queue, GstBuffer * buffer)
 out_flushing:
   {
     GST_DEBUG_OBJECT (queue, "we are flushing");
-    gst_buffer_unmap (buffer, odata, osize);
+    gst_buffer_unmap (buffer, &info);
     /* FIXME - GST_FLOW_EOS ? */
     return FALSE;
   }
 seek_failed:
   {
     GST_ELEMENT_ERROR (queue, RESOURCE, SEEK, (NULL), GST_ERROR_SYSTEM);
-    gst_buffer_unmap (buffer, odata, osize);
+    gst_buffer_unmap (buffer, &info);
     return FALSE;
   }
 handle_error:
@@ -1794,7 +1797,7 @@ handle_error:
             ("%s", g_strerror (errno)));
       }
     }
-    gst_buffer_unmap (buffer, odata, osize);
+    gst_buffer_unmap (buffer, &info);
     return FALSE;
   }
 }

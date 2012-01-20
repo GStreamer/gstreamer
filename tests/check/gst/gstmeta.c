@@ -127,15 +127,15 @@ GST_START_TEST (test_meta_test)
 {
   GstBuffer *buffer, *copy, *subbuf;
   GstMetaTest *meta;
-  gpointer data;
+  GstMapInfo info;
 
   buffer = gst_buffer_new_and_alloc (4);
   fail_if (buffer == NULL);
 
-  data = gst_buffer_map (buffer, NULL, NULL, GST_MAP_WRITE);
-  fail_if (data == NULL);
-  memset (data, 0, 4);
-  gst_buffer_unmap (buffer, data, 4);
+  fail_unless (gst_buffer_map (buffer, &info, GST_MAP_WRITE));
+  fail_if (info.data == NULL);
+  memset (info.data, 0, 4);
+  gst_buffer_unmap (buffer, &info);
 
   /* add some metadata */
   meta = GST_META_TEST_ADD (buffer);

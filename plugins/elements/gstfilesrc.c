@@ -323,6 +323,7 @@ gst_file_src_fill (GstBaseSrc * basesrc, guint64 offset, guint length,
   GstFileSrc *src;
   guint to_read, bytes_read;
   int ret;
+  GstMapInfo info;
   guint8 *data;
 
   src = GST_FILE_SRC_CAST (basesrc);
@@ -337,7 +338,8 @@ gst_file_src_fill (GstBaseSrc * basesrc, guint64 offset, guint length,
     src->read_position = offset;
   }
 
-  data = gst_buffer_map (buf, NULL, NULL, GST_MAP_WRITE);
+  gst_buffer_map (buf, &info, GST_MAP_WRITE);
+  data = info.data;
 
   bytes_read = 0;
   to_read = length;
@@ -366,7 +368,8 @@ gst_file_src_fill (GstBaseSrc * basesrc, guint64 offset, guint length,
     src->read_position += ret;
   }
 
-  gst_buffer_unmap (buf, data, bytes_read);
+  gst_buffer_unmap (buf, &info);
+  gst_buffer_resize (buf, 0, bytes_read);
 
   GST_BUFFER_OFFSET (buf) = offset;
   GST_BUFFER_OFFSET_END (buf) = offset + bytes_read;
@@ -382,13 +385,15 @@ seek_failed:
 could_not_read:
   {
     GST_ELEMENT_ERROR (src, RESOURCE, READ, (NULL), GST_ERROR_SYSTEM);
-    gst_buffer_unmap (buf, data, 0);
+    gst_buffer_unmap (buf, &info);
+    gst_buffer_resize (buf, 0, 0);
     return GST_FLOW_ERROR;
   }
 eos:
   {
     GST_DEBUG ("EOS");
-    gst_buffer_unmap (buf, data, 0);
+    gst_buffer_unmap (buf, &info);
+    gst_buffer_resize (buf, 0, 0);
     return GST_FLOW_EOS;
   }
 }

@@ -721,14 +721,11 @@ buffer_from_string (const gchar * str)
 {
   guint size;
   GstBuffer *buf;
-  gpointer data;
 
   size = strlen (str);
   buf = gst_buffer_new_and_alloc (size);
 
-  data = gst_buffer_map (buf, NULL, NULL, GST_MAP_WRITE);
-  memcpy (data, str, size);
-  gst_buffer_unmap (buf, data, size);
+  gst_buffer_fill (buf, 0, str, size);
 
   return buf;
 }
@@ -737,12 +734,12 @@ static gboolean
 buffer_compare (GstBuffer * buf, const gchar * str, gsize size)
 {
   gboolean res;
-  gpointer data;
+  GstMapInfo info;
 
-  data = gst_buffer_map (buf, NULL, NULL, GST_MAP_READ);
-  res = memcmp (data, str, size) == 0;
-  GST_DEBUG ("%s <-> %s: %d", (gchar *) data, str, res);
-  gst_buffer_unmap (buf, data, size);
+  fail_unless (gst_buffer_map (buf, &info, GST_MAP_READ));
+  res = memcmp (info.data, str, size) == 0;
+  GST_DEBUG ("%s <-> %s: %d", (gchar *) info.data, str, res);
+  gst_buffer_unmap (buf, &info);
 
   return res;
 }

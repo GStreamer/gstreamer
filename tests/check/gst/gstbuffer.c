@@ -35,19 +35,18 @@
 GST_START_TEST (test_subbuffer)
 {
   GstBuffer *buffer, *sub;
-  gsize size, maxsize, ssize;
-  guint8 *data, *sdata;
+  GstMapInfo info, sinfo;
 
   buffer = gst_buffer_new_and_alloc (4);
 
   /* check sizes, buffer starts out empty */
-  data = gst_buffer_map (buffer, &size, &maxsize, GST_MAP_WRITE);
-  fail_unless (size == 4, "buffer has wrong size");
-  fail_unless (maxsize >= 4, "buffer has wrong size");
-  memset (data, 0, 4);
-  gst_buffer_unmap (buffer, data, 4);
+  fail_unless (gst_buffer_map (buffer, &info, GST_MAP_WRITE));
+  fail_unless (info.size == 4, "buffer has wrong size");
+  fail_unless (info.maxsize >= 4, "buffer has wrong size");
+  memset (info.data, 0, 4);
+  gst_buffer_unmap (buffer, &info);
 
-  data = gst_buffer_map (buffer, &size, NULL, GST_MAP_READ);
+  fail_unless (gst_buffer_map (buffer, &info, GST_MAP_READ));
   /* set some metadata */
   GST_BUFFER_TIMESTAMP (buffer) = 1;
   GST_BUFFER_DURATION (buffer) = 2;
@@ -57,9 +56,9 @@ GST_START_TEST (test_subbuffer)
   sub = gst_buffer_copy_region (buffer, GST_BUFFER_COPY_ALL, 1, 2);
   fail_if (sub == NULL, "copy region of buffer returned NULL");
 
-  sdata = gst_buffer_map (sub, &ssize, NULL, GST_MAP_READ);
-  fail_unless (ssize == 2, "subbuffer has wrong size");
-  fail_unless (memcmp (data + 1, sdata, 2) == 0,
+  fail_unless (gst_buffer_map (sub, &sinfo, GST_MAP_READ));
+  fail_unless (sinfo.size == 2, "subbuffer has wrong size");
+  fail_unless (memcmp ((guint8 *) info.data + 1, sinfo.data, 2) == 0,
       "subbuffer contains the wrong data");
   ASSERT_BUFFER_REFCOUNT (sub, "subbuffer", 1);
   fail_unless (GST_BUFFER_TIMESTAMP (sub) == -1,
@@ -68,18 +67,18 @@ GST_START_TEST (test_subbuffer)
   fail_unless (GST_BUFFER_OFFSET (sub) == -1, "subbuffer has wrong offset");
   fail_unless (GST_BUFFER_OFFSET_END (sub) == -1,
       "subbuffer has wrong offset end");
-  gst_buffer_unmap (sub, sdata, ssize);
+  gst_buffer_unmap (sub, &sinfo);
   gst_buffer_unref (sub);
 
   /* create a subbuffer of size 0 */
   sub = gst_buffer_copy_region (buffer, GST_BUFFER_COPY_ALL, 1, 0);
   fail_if (sub == NULL, "copy_region of buffer returned NULL");
-  sdata = gst_buffer_map (sub, &ssize, NULL, GST_MAP_READ);
-  fail_unless (ssize == 0, "subbuffer has wrong size");
-  fail_unless (memcmp (data + 1, sdata, 0) == 0,
+  fail_unless (gst_buffer_map (sub, &sinfo, GST_MAP_READ));
+  fail_unless (sinfo.size == 0, "subbuffer has wrong size");
+  fail_unless (memcmp ((guint8 *) info.data + 1, sinfo.data, 0) == 0,
       "subbuffer contains the wrong data");
   ASSERT_BUFFER_REFCOUNT (sub, "subbuffer", 1);
-  gst_buffer_unmap (sub, sdata, ssize);
+  gst_buffer_unmap (sub, &sinfo);
   gst_buffer_unref (sub);
 
   /* test if metadata is coppied, not a complete buffer copy so only the
@@ -110,7 +109,7 @@ GST_START_TEST (test_subbuffer)
   /* clean up */
   gst_buffer_unref (sub);
 
-  gst_buffer_unmap (buffer, data, size);
+  gst_buffer_unmap (buffer, &info);
   gst_buffer_unref (buffer);
 }
 
@@ -148,14 +147,13 @@ GST_END_TEST;
 GST_START_TEST (test_span)
 {
   GstBuffer *buffer, *sub1, *sub2, *span;
-  guint8 *data;
-  gsize size;
+  GstMapInfo info;
 
   buffer = gst_buffer_new_and_alloc (4);
 
-  data = gst_buffer_map (buffer, &size, NULL, GST_MAP_WRITE);
-  memcpy (data, "data", 4);
-  gst_buffer_unmap (buffer, data, 4);
+  fail_unless (gst_buffer_map (buffer, &info, GST_MAP_WRITE));
+  memcpy (info.data, "data", 4);
+  gst_buffer_unmap (buffer, &info);
 
   ASSERT_CRITICAL (gst_buffer_span (NULL, 1, NULL, 2));
   ASSERT_CRITICAL (gst_buffer_span (buffer, 1, NULL, 2));
@@ -174,56 +172,56 @@ GST_START_TEST (test_span)
 
   /* span will create a new subbuffer from the parent */
   span = gst_buffer_span (sub1, 0, sub2, 4);
-  data = gst_buffer_map (span, &size, NULL, GST_MAP_READ);
-  fail_unless (size == 4, "spanned buffer is wrong size");
+  fail_unless (gst_buffer_map (span, &info, GST_MAP_READ));
+  fail_unless (info.size == 4, "spanned buffer is wrong size");
   ASSERT_BUFFER_REFCOUNT (buffer, "parent", 1);
   ASSERT_BUFFER_REFCOUNT (sub1, "sub1", 1);
   ASSERT_BUFFER_REFCOUNT (sub2, "sub2", 1);
   ASSERT_BUFFER_REFCOUNT (span, "span", 1);
-  fail_unless (memcmp (data, "data", 4) == 0,
+  fail_unless (memcmp (info.data, "data", 4) == 0,
       "spanned buffer contains the wrong data");
-  gst_buffer_unmap (span, data, size);
+  gst_buffer_unmap (span, &info);
   gst_buffer_unref (span);
   ASSERT_BUFFER_REFCOUNT (buffer, "parent", 1);
 
   /* span from non-contiguous buffers will create new buffers */
   span = gst_buffer_span (sub2, 0, sub1, 4);
-  data = gst_buffer_map (span, &size, NULL, GST_MAP_READ);
-  fail_unless (size == 4, "spanned buffer is wrong size");
+  fail_unless (gst_buffer_map (span, &info, GST_MAP_READ));
+  fail_unless (info.size == 4, "spanned buffer is wrong size");
   ASSERT_BUFFER_REFCOUNT (buffer, "parent", 1);
   ASSERT_BUFFER_REFCOUNT (sub1, "sub1", 1);
   ASSERT_BUFFER_REFCOUNT (sub2, "sub2", 1);
   ASSERT_BUFFER_REFCOUNT (span, "span", 1);
-  fail_unless (memcmp (data, "tada", 4) == 0,
+  fail_unless (memcmp (info.data, "tada", 4) == 0,
       "spanned buffer contains the wrong data");
-  gst_buffer_unmap (span, data, size);
+  gst_buffer_unmap (span, &info);
   gst_buffer_unref (span);
   ASSERT_BUFFER_REFCOUNT (buffer, "parent", 1);
 
   /* span with different sizes */
   span = gst_buffer_span (sub1, 1, sub2, 3);
-  data = gst_buffer_map (span, &size, NULL, GST_MAP_READ);
-  fail_unless (size == 3, "spanned buffer is wrong size");
+  fail_unless (gst_buffer_map (span, &info, GST_MAP_READ));
+  fail_unless (info.size == 3, "spanned buffer is wrong size");
   ASSERT_BUFFER_REFCOUNT (buffer, "parent", 1);
   ASSERT_BUFFER_REFCOUNT (sub1, "sub1", 1);
   ASSERT_BUFFER_REFCOUNT (sub2, "sub2", 1);
   ASSERT_BUFFER_REFCOUNT (span, "span", 1);
-  fail_unless (memcmp (data, "ata", 3) == 0,
+  fail_unless (memcmp (info.data, "ata", 3) == 0,
       "spanned buffer contains the wrong data");
-  gst_buffer_unmap (span, data, size);
+  gst_buffer_unmap (span, &info);
   gst_buffer_unref (span);
   ASSERT_BUFFER_REFCOUNT (buffer, "parent", 1);
 
   span = gst_buffer_span (sub2, 0, sub1, 3);
-  data = gst_buffer_map (span, &size, NULL, GST_MAP_READ);
-  fail_unless (size == 3, "spanned buffer is wrong size");
+  fail_unless (gst_buffer_map (span, &info, GST_MAP_READ));
+  fail_unless (info.size == 3, "spanned buffer is wrong size");
   ASSERT_BUFFER_REFCOUNT (buffer, "parent", 1);
   ASSERT_BUFFER_REFCOUNT (sub1, "sub1", 1);
   ASSERT_BUFFER_REFCOUNT (sub2, "sub2", 1);
   ASSERT_BUFFER_REFCOUNT (span, "span", 1);
-  fail_unless (memcmp (data, "tad", 3) == 0,
+  fail_unless (memcmp (info.data, "tad", 3) == 0,
       "spanned buffer contains the wrong data");
-  gst_buffer_unmap (span, data, size);
+  gst_buffer_unmap (span, &info);
   gst_buffer_unref (span);
   ASSERT_BUFFER_REFCOUNT (buffer, "parent", 1);
 
@@ -257,15 +255,14 @@ create_read_only_buffer (void)
 GST_START_TEST (test_make_writable)
 {
   GstBuffer *buf, *buf2;
-  guint8 *data;
-  gsize size;
+  GstMapInfo info;
 
   /* create read-only buffer and make it writable */
   buf = create_read_only_buffer ();
 
-  data = gst_buffer_map (buf, &size, NULL, GST_MAP_WRITE);
-  data[4] = 'a';
-  gst_buffer_unmap (buf, data, size);
+  fail_unless (gst_buffer_map (buf, &info, GST_MAP_WRITE));
+  ((guint8 *) info.data)[4] = 'a';
+  gst_buffer_unmap (buf, &info);
   gst_buffer_unref (buf);
 
   /* alloc'ed buffer with refcount 1 should be writable */
@@ -289,18 +286,17 @@ GST_END_TEST;
 GST_START_TEST (test_subbuffer_make_writable)
 {
   GstBuffer *buf, *sub_buf;
-  guint8 *data;
-  gsize size;
+  GstMapInfo info;
 
   /* create sub-buffer of read-only buffer and make it writable */
   buf = create_read_only_buffer ();
 
   sub_buf = gst_buffer_copy_region (buf, GST_BUFFER_COPY_ALL, 0, 8);
 
-  data = gst_buffer_map (sub_buf, &size, NULL, GST_MAP_WRITE);
-  fail_if (data == NULL);
-  data[4] = 'a';
-  gst_buffer_unmap (sub_buf, data, size);
+  fail_unless (gst_buffer_map (sub_buf, &info, GST_MAP_WRITE));
+  fail_if (info.data == NULL);
+  ((guint8 *) info.data)[4] = 'a';
+  gst_buffer_unmap (sub_buf, &info);
   gst_buffer_unref (sub_buf);
   gst_buffer_unref (buf);
 }
@@ -354,8 +350,7 @@ GST_END_TEST;
 GST_START_TEST (test_copy)
 {
   GstBuffer *buffer, *copy;
-  gsize size, ssize;
-  guint8 *data, *sdata;
+  GstMapInfo info, sinfo;
 
   buffer = gst_buffer_new_and_alloc (4);
   ASSERT_BUFFER_REFCOUNT (buffer, "buffer", 1);
@@ -366,30 +361,30 @@ GST_START_TEST (test_copy)
   /* buffers are copied and must point to different memory */
   fail_if (buffer == copy);
 
-  data = gst_buffer_map (buffer, &size, NULL, GST_MAP_READ);
-  sdata = gst_buffer_map (copy, &ssize, NULL, GST_MAP_READ);
+  fail_unless (gst_buffer_map (buffer, &info, GST_MAP_READ));
+  fail_unless (gst_buffer_map (copy, &sinfo, GST_MAP_READ));
 
   /* NOTE that data is refcounted */
-  fail_unless (size == ssize);
+  fail_unless (info.size == sinfo.size);
 
-  gst_buffer_unmap (copy, sdata, ssize);
-  gst_buffer_unmap (buffer, data, size);
+  gst_buffer_unmap (copy, &sinfo);
+  gst_buffer_unmap (buffer, &info);
 
   gst_buffer_unref (copy);
   gst_buffer_unref (buffer);
 
   /* a 0-sized buffer has NULL data as per docs */
   buffer = gst_buffer_new_and_alloc (0);
-  data = gst_buffer_map (buffer, &size, NULL, GST_MAP_READ);
-  fail_unless (data == NULL);
-  gst_buffer_unmap (buffer, data, size);
+  fail_unless (gst_buffer_map (buffer, &info, GST_MAP_READ));
+  fail_unless (info.data == NULL);
+  gst_buffer_unmap (buffer, &info);
 
   /* copying a 0-sized buffer should not crash and also set
    * the data member NULL. */
   copy = gst_buffer_copy (buffer);
-  data = gst_buffer_map (copy, &size, NULL, GST_MAP_READ);
-  fail_unless (data == NULL);
-  gst_buffer_unmap (copy, data, size);
+  fail_unless (gst_buffer_map (copy, &info, GST_MAP_READ));
+  fail_unless (info.data == NULL);
+  gst_buffer_unmap (copy, &info);
 
   gst_buffer_unref (copy);
   gst_buffer_unref (buffer);
@@ -400,27 +395,26 @@ GST_END_TEST;
 GST_START_TEST (test_try_new_and_alloc)
 {
   GstBuffer *buf;
-  gsize size;
-  guint8 *data;
+  GstMapInfo info;
 
   /* special case: alloc of 0 bytes results in new buffer with NULL data */
   buf = gst_buffer_new_and_alloc (0);
   fail_unless (buf != NULL);
   fail_unless (GST_IS_BUFFER (buf));
-  data = gst_buffer_map (buf, &size, NULL, GST_MAP_READ);
-  fail_unless (data == NULL);
-  gst_buffer_unmap (buf, data, size);
+  fail_unless (gst_buffer_map (buf, &info, GST_MAP_READ));
+  fail_unless (info.data == NULL);
+  gst_buffer_unmap (buf, &info);
   gst_buffer_unref (buf);
 
   /* normal alloc should still work */
   buf = gst_buffer_new_and_alloc (640 * 480 * 4);
   fail_unless (buf != NULL);
   fail_unless (GST_IS_BUFFER (buf));
-  data = gst_buffer_map (buf, &size, NULL, GST_MAP_WRITE);
-  fail_unless (data != NULL);
-  fail_unless (size == (640 * 480 * 4));
-  data[640 * 479 * 4 + 479] = 0xff;
-  gst_buffer_unmap (buf, data, size);
+  fail_unless (gst_buffer_map (buf, &info, GST_MAP_WRITE));
+  fail_unless (info.data != NULL);
+  fail_unless (info.size == (640 * 480 * 4));
+  ((guint8 *) info.data)[640 * 479 * 4 + 479] = 0xff;
+  gst_buffer_unmap (buf, &info);
 
   gst_buffer_unref (buf);
 

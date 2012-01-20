@@ -99,6 +99,23 @@ typedef enum {
 } GstMapFlags;
 
 /**
+ * GstMapInfo:
+ * @memory: a pointer to the mapped memory
+ * @data: a pointer to the mapped data
+ * @size: the valid size in @data
+ * @maxsize: the maximum bytes in @data
+ *
+ * A structure containing the result of a map operation such as
+ * gst_memory_map(). It contains the data and size.
+ */
+typedef struct {
+  GstMemory *memory;
+  gpointer data;
+  gsize size;
+  gsize maxsize;
+} GstMapInfo;
+
+/**
  * GST_MAP_READWRITE:
  *
  * Map for readwrite access
@@ -260,9 +277,8 @@ void        gst_memory_resize      (GstMemory *mem, gssize offset, gsize size);
 /* retrieving data */
 gboolean    gst_memory_is_writable (GstMemory *mem);
 
-gpointer    gst_memory_map         (GstMemory *mem, gsize *size, gsize *maxsize,
-                                    GstMapFlags flags);
-void        gst_memory_unmap       (GstMemory *mem);
+gboolean    gst_memory_map         (GstMemory *mem, GstMapInfo *info, GstMapFlags flags);
+void        gst_memory_unmap       (GstMemory *mem, GstMapInfo *info);
 
 /* copy and subregions */
 GstMemory * gst_memory_copy        (GstMemory *mem, gssize offset, gssize size);

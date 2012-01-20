@@ -314,10 +314,8 @@ void        gst_buffer_resize              (GstBuffer *buffer, gssize offset, gs
  */
 #define     gst_buffer_set_size(b,s)       gst_buffer_resize ((b), 0, (s))
 
-/* getting memory */
-gpointer    gst_buffer_map                 (GstBuffer *buffer, gsize *size, gsize *maxsize,
-                                            GstMapFlags flags);
-gboolean    gst_buffer_unmap               (GstBuffer *buffer, gpointer data, gssize size);
+gboolean    gst_buffer_map                 (GstBuffer *buffer, GstMapInfo *info, GstMapFlags flags);
+void        gst_buffer_unmap               (GstBuffer *buffer, GstMapInfo *info);
 
 /* refcounting */
 /**

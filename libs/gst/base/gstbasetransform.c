@@ -1878,21 +1878,20 @@ no_qos:
       GST_DEBUG_OBJECT (trans, "doing inplace transform");
 
       if (inbuf != *outbuf) {
-        guint8 *indata, *outdata;
-        gsize insize, outsize;
+        GstMapInfo ininfo, outinfo;
 
         /* Different buffer. The data can still be the same when we are dealing
          * with subbuffers of the same buffer. Note that because of the FIXME in
          * prepare_output_buffer() we have decreased the refcounts of inbuf and
          * outbuf to keep them writable */
-        indata = gst_buffer_map (inbuf, &insize, NULL, GST_MAP_READ);
-        outdata = gst_buffer_map (*outbuf, &outsize, NULL, GST_MAP_WRITE);
+        g_assert (gst_buffer_map (inbuf, &ininfo, GST_MAP_READ));
+        g_assert (gst_buffer_map (*outbuf, &outinfo, GST_MAP_WRITE));
 
-        if (indata != outdata)
-          memcpy (outdata, indata, insize);
+        if (ininfo.data != outinfo.data)
+          memcpy (outinfo.data, ininfo.data, ininfo.size);
 
-        gst_buffer_unmap (inbuf, indata, insize);
-        gst_buffer_unmap (*outbuf, outdata, outsize);
+        gst_buffer_unmap (inbuf, &ininfo);
+        gst_buffer_unmap (*outbuf, &outinfo);
       }
       ret = bclass->transform_ip (trans, *outbuf);
     } else {

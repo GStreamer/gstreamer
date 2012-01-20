@@ -177,8 +177,8 @@ _replace_memory (GstBuffer * buffer, GstMemory * mem)
 {
   gsize len, i;
 
-  /* unref old buffers */
   len = GST_BUFFER_MEM_LEN (buffer);
+  /* unref old buffers */
   for (i = 0; i < len; i++)
     gst_memory_unref (GST_BUFFER_MEM_PTR (buffer, i));
 
@@ -746,6 +746,42 @@ gst_buffer_remove_memory_range (GstBuffer * buffer, guint idx, guint length)
 }
 
 /**
+ * gst_buffer_get_merged_memory:
+ * @buffer: a #GstBuffer.
+ *
+ * Return a #GstMemory object that contains all the memory in @buffer. If there
+ * was only one memory in @buffer, it will be returned directly, otherwise all
+ * memory objects will be merged into one object that will be returned.
+ *
+ * Returns: a #GstMemory with the merged memory in @buffer. This function can
+ * return %NULL if there is no memory in @buffer. Use gst_memory_unref() after
+ * usage.
+ */
+static GstMemory *
+gst_buffer_get_merged_memory (GstBuffer * buffer)
+{
+  guint len;
+  GstMemory *mem;
+
+  g_return_val_if_fail (GST_IS_BUFFER (buffer), NULL);
+
+  len = GST_BUFFER_MEM_LEN (buffer);
+
+  if (G_UNLIKELY (len == 0)) {
+    /* no memory */
+    mem = NULL;
+  } else if (G_LIKELY (len == 1)) {
+    /* we can take the first one */
+    mem = GST_BUFFER_MEM_PTR (buffer, 0);
+    gst_memory_ref (mem);
+  } else {
+    /* we need to span memory */
+    mem = _span_memory (buffer, 0, -1, FALSE);
+  }
+  return mem;
+}
+
+/**
  * gst_buffer_get_sizes:
  * @buffer: a #GstBuffer.
  * @offset: a pointer to the offset
@@ -892,17 +928,13 @@ gst_buffer_resize (GstBuffer * buffer, gssize offset, gssize size)
 /**
  * gst_buffer_map:
  * @buffer: a #GstBuffer.
- * @size: (out) (allow-none): a location for the size
- * @maxsize: (out) (allow-none): a location for the max size
+ * @info: (out): info about the mapping
  * @flags: flags for the mapping
  *
- * This function return a pointer to the memory in @buffer. @flags describe the
- * desired access of the memory. When @flags is #GST_MAP_WRITE, @buffer should
- * be writable (as returned from gst_buffer_is_writable()).
- *
- * @size and @maxsize will contain the current valid number of bytes in the
- * returned memory area and the total maximum mount of bytes available in the
- * returned memory area respectively. Both parameters can be %NULL.
+ * This function fills @info with a pointer to the merged memory in @buffer.
+ * @flags describe the desired access of the memory. When @flags is
+ * #GST_MAP_WRITE, @buffer should be writable (as returned from
+ * gst_buffer_is_writable()).
  *
  * When @buffer is writable but the memory isn't, a writable copy will
  * automatically be created and returned. The readonly copy of the buffer memory
@@ -911,18 +943,17 @@ gst_buffer_resize (GstBuffer * buffer, gssize offset, gssize size)
  * When the buffer contains multiple memory blocks, the returned pointer will be
  * a concatenation of the memory blocks.
  *
- * Returns: (transfer none): a pointer to the memory for the buffer.
+ * Returns: (transfer full): %TRUE if the map succeeded and @info contains valid
+ * data.
  */
-gpointer
-gst_buffer_map (GstBuffer * buffer, gsize * size, gsize * maxsize,
-    GstMapFlags flags)
+gboolean
+gst_buffer_map (GstBuffer * buffer, GstMapInfo * info, GstMapFlags flags)
 {
-  guint len;
-  gpointer data;
   GstMemory *mem;
   gboolean write, writable;
 
-  g_return_val_if_fail (GST_IS_BUFFER (buffer), NULL);
+  g_return_val_if_fail (GST_IS_BUFFER (buffer), FALSE);
+  g_return_val_if_fail (info != NULL, FALSE);
 
   write = (flags & GST_MAP_WRITE) != 0;
   writable = gst_buffer_is_writable (buffer);
@@ -931,97 +962,72 @@ gst_buffer_map (GstBuffer * buffer, gsize * size, gsize * maxsize,
   if (G_UNLIKELY (write && !writable))
     goto not_writable;
 
-  len = GST_BUFFER_MEM_LEN (buffer);
+  mem = gst_buffer_get_merged_memory (buffer);
+  if (mem == NULL)
+    goto no_memory;
 
-  if (G_UNLIKELY (len == 0)) {
-    /* no memory, return immediately */
-    if (size)
-      *size = 0;
-    if (maxsize)
-      *maxsize = 0;
-    return NULL;
-  }
-
-  if (G_LIKELY (len == 1)) {
-    /* we can take the first one */
-    mem = GST_BUFFER_MEM_PTR (buffer, 0);
-  } else {
-    /* we need to span memory */
-    if (writable) {
-      /* if we can write, we can change the memory with the spanned
-       * memory */
-      mem = _span_memory (buffer, 0, -1, write);
-      _replace_memory (buffer, mem);
-    } else {
-      gsize bsize;
-
-      /* extract all data in new memory, FIXME slow!! */
-      bsize = gst_buffer_get_size (buffer);
-
-      data = g_malloc (bsize);
-      gst_buffer_extract (buffer, 0, data, bsize);
-      if (size)
-        *size = bsize;
-      if (maxsize)
-        *maxsize = bsize;
-      return data;
-    }
-  }
-
-  if (G_UNLIKELY (write && !gst_memory_is_writable (mem))) {
+  /* now try to map */
+  if (!gst_memory_map (mem, info, flags) && write) {
     GstMemory *copy;
-    /* replace with a writable copy */
+    /* make a (writable) copy */
     copy = gst_memory_copy (mem, 0, -1);
-    GST_BUFFER_MEM_PTR (buffer, 0) = copy;
     gst_memory_unref (mem);
     mem = copy;
+    if (G_UNLIKELY (mem == NULL))
+      goto cannot_map;
+
+    /* try again */
+    if (!gst_memory_map (mem, info, flags))
+      goto cannot_map;
   }
 
-  data = gst_memory_map (mem, size, maxsize, flags);
+  /* if the buffer is writable, replace the memory */
+  if (writable)
+    _replace_memory (buffer, gst_memory_ref (mem));
 
-  return data;
+  return TRUE;
 
   /* ERROR */
 not_writable:
   {
-    g_return_val_if_fail (gst_buffer_is_writable (buffer), NULL);
-    return NULL;
+    g_critical ("write map requested on non-writable buffer");
+    return FALSE;
+  }
+no_memory:
+  {
+    /* empty buffer, we need to return NULL */
+    GST_DEBUG_OBJECT (buffer, "can't get buffer memory");
+    info->memory = NULL;
+    info->data = NULL;
+    info->size = 0;
+    info->maxsize = 0;
+    return TRUE;
+  }
+cannot_map:
+  {
+    GST_DEBUG_OBJECT (buffer, "cannot map memory");
+    gst_memory_unref (mem);
+    return FALSE;
   }
 }
 
 /**
  * gst_buffer_unmap:
  * @buffer: a #GstBuffer.
- * @data: the previously mapped data
- * @size: the size of @data, or -1
+ * @info: a #GstMapInfo
  *
- * Release the memory previously mapped with gst_buffer_map(). Pass -1 to size
- * if no update is needed.
- *
- * Returns: #TRUE on success. #FALSE can be returned when the new size is larger
- * than the maxsize of the memory.
+ * Release the memory previously mapped with gst_buffer_map().
  */
-gboolean
-gst_buffer_unmap (GstBuffer * buffer, gpointer data, gssize size)
+void
+gst_buffer_unmap (GstBuffer * buffer, GstMapInfo * info)
 {
-  guint len;
+  g_return_if_fail (GST_IS_BUFFER (buffer));
+  g_return_if_fail (info != NULL);
 
-  g_return_val_if_fail (GST_IS_BUFFER (buffer), FALSE);
-  g_return_val_if_fail (size >= -1, FALSE);
-
-  len = GST_BUFFER_MEM_LEN (buffer);
-
-  if (G_LIKELY (len == 1)) {
-    GstMemory *mem = GST_BUFFER_MEM_PTR (buffer, 0);
-
-    gst_memory_unmap (mem);
-  } else {
-    /* this must have been from read-only access. After _map, the buffer either
-     * only contains 1 memory block or it allocated memory to join memory
-     * blocks. It's not allowed to add buffers between _map and _unmap. */
-    g_free (data);
+  if (info->memory) {
+    gst_memory_unmap (info->memory, info);
+    gst_memory_unref (info->memory);
   }
-  return TRUE;
 }
 
 /**
@@ -1051,25 +1057,25 @@ gst_buffer_fill (GstBuffer * buffer, gsize offset, gconstpointer src,
   left = size;
 
   for (i = 0; i < len && left > 0; i++) {
-    guint8 *data;
-    gsize ssize, tocopy;
+    GstMapInfo info;
+    gsize tocopy;
     GstMemory *mem;
 
     mem = _get_memory (buffer, i, TRUE);
 
-    data = gst_memory_map (mem, &ssize, NULL, GST_MAP_WRITE);
-    if (ssize > offset) {
+    gst_memory_map (mem, &info, GST_MAP_WRITE);
+    if (info.size > offset) {
       /* we have enough */
-      tocopy = MIN (ssize - offset, left);
-      memcpy (data + offset, ptr, tocopy);
+      tocopy = MIN (info.size - offset, left);
+      memcpy ((guint8 *) info.data + offset, ptr, tocopy);
       left -= tocopy;
       ptr += tocopy;
       offset = 0;
     } else {
       /* offset past buffer, skip */
-      offset -= ssize;
+      offset -= info.size;
     }
-    gst_memory_unmap (mem);
+    gst_memory_unmap (mem, &info);
   }
   return size - left;
 }
@@ -1099,25 +1105,25 @@ gst_buffer_extract (GstBuffer * buffer, gsize offset, gpointer dest, gsize size)
   left = size;
 
   for (i = 0; i < len && left > 0; i++) {
-    guint8 *data;
-    gsize ssize, tocopy;
+    GstMapInfo info;
+    gsize tocopy;
     GstMemory *mem;
 
     mem = GST_BUFFER_MEM_PTR (buffer, i);
 
-    data = gst_memory_map (mem, &ssize, NULL, GST_MAP_READ);
-    if (ssize > offset) {
+    gst_memory_map (mem, &info, GST_MAP_READ);
+    if (info.size > offset) {
       /* we have enough */
-      tocopy = MIN (ssize - offset, left);
-      memcpy (ptr, data + offset, tocopy);
+      tocopy = MIN (info.size - offset, left);
+      memcpy (ptr, (guint8 *) info.data + offset, tocopy);
       left -= tocopy;
       ptr += tocopy;
       offset = 0;
     } else {
       /* offset past buffer, skip */
-      offset -= ssize;
+      offset -= info.size;
     }
-    gst_memory_unmap (mem);
+    gst_memory_unmap (mem, &info);
   }
   return size - left;
 }
@@ -1147,25 +1153,25 @@ gst_buffer_memcmp (GstBuffer * buffer, gsize offset, gconstpointer mem,
   len = GST_BUFFER_MEM_LEN (buffer);
 
   for (i = 0; i < len && size > 0 && res == 0; i++) {
-    guint8 *data;
-    gsize ssize, tocmp;
+    GstMapInfo info;
+    gsize tocmp;
     GstMemory *mem;
 
     mem = GST_BUFFER_MEM_PTR (buffer, i);
 
-    data = gst_memory_map (mem, &ssize, NULL, GST_MAP_READ);
-    if (ssize > offset) {
+    gst_memory_map (mem, &info, GST_MAP_READ);
+    if (info.size > offset) {
       /* we have enough */
-      tocmp = MIN (ssize - offset, size);
-      res = memcmp (ptr, data + offset, tocmp);
+      tocmp = MIN (info.size - offset, size);
+      res = memcmp (ptr, (guint8 *) info.data + offset, tocmp);
       size -= tocmp;
       ptr += tocmp;
       offset = 0;
     } else {
       /* offset past buffer, skip */
-      offset -= ssize;
+      offset -= info.size;
     }
-    gst_memory_unmap (mem);
+    gst_memory_unmap (mem, &info);
   }
   return res;
 }
@@ -1194,24 +1200,24 @@ gst_buffer_memset (GstBuffer * buffer, gsize offset, guint8 val, gsize size)
   left = size;
 
   for (i = 0; i < len && left > 0; i++) {
-    guint8 *data;
-    gsize ssize, toset;
+    GstMapInfo info;
+    gsize toset;
     GstMemory *mem;
 
     mem = _get_memory (buffer, i, TRUE);
 
-    data = gst_memory_map (mem, &ssize, NULL, GST_MAP_WRITE);
-    if (ssize > offset) {
+    gst_memory_map (mem, &info, GST_MAP_WRITE);
+    if (info.size > offset) {
       /* we have enough */
-      toset = MIN (ssize - offset, left);
-      memset (data + offset, val, toset);
+      toset = MIN (info.size - offset, left);
+      memset ((guint8 *) info.data + offset, val, toset);
       left -= toset;
       offset = 0;
     } else {
       /* offset past buffer, skip */
-      offset -= ssize;
+      offset -= info.size;
     }
-    gst_memory_unmap (mem);
+    gst_memory_unmap (mem, &info);
   }
   return size - left;
 }
@@ -1312,37 +1318,38 @@ _gst_buffer_arr_span (GstMemory ** mem[], gsize len[], guint n, gsize offset,
       span = gst_memory_share (parent, offset + poffset, size);
   } else {
     gsize count, left;
-    guint8 *dest, *ptr;
+    GstMapInfo dinfo;
+    guint8 *ptr;
 
     span = gst_allocator_alloc (NULL, size, 0);
-    dest = gst_memory_map (span, NULL, NULL, GST_MAP_WRITE);
+    gst_memory_map (span, &dinfo, GST_MAP_WRITE);
 
-    ptr = dest;
+    ptr = dinfo.data;
     left = size;
 
     for (count = 0; count < n; count++) {
-      gsize i, tocopy, clen, ssize;
-      guint8 *src;
+      GstMapInfo sinfo;
+      gsize i, tocopy, clen;
       GstMemory **cmem;
 
       cmem = mem[count];
       clen = len[count];
 
       for (i = 0; i < clen && left > 0; i++) {
-        src = gst_memory_map (cmem[i], &ssize, NULL, GST_MAP_READ);
-        tocopy = MIN (ssize, left);
+        gst_memory_map (cmem[i], &sinfo, GST_MAP_READ);
+        tocopy = MIN (sinfo.size, left);
         if (tocopy > offset) {
-          memcpy (ptr, src + offset, tocopy - offset);
+          memcpy (ptr, (guint8 *) sinfo.data + offset, tocopy - offset);
           left -= tocopy;
           ptr += tocopy;
           offset = 0;
         } else {
           offset -= tocopy;
         }
-        gst_memory_unmap (cmem[i]);
+        gst_memory_unmap (cmem[i], &sinfo);
       }
     }
-    gst_memory_unmap (span);
+    gst_memory_unmap (span, &dinfo);
   }
   return span;
 }
