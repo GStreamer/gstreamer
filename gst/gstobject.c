@@ -117,7 +117,7 @@
  *   </para></listitem>
  *   <listitem><para>
  *     Attach the #GstControlSource on the controller to a property.
- *     gst_object_set_control_binding (object, gst_control_binding_new (objetct, "prop1", csource));
+ *     gst_object_add_control_binding (object, gst_control_binding_new (objetct, "prop1", csource));
  *   </para></listitem>
  *   <listitem><para>
  *     Set the control values
@@ -1204,41 +1204,39 @@ gst_object_set_control_binding_disabled (GstObject * object,
 
 
 /**
- * gst_object_set_control_binding:
+ * gst_object_add_control_binding:
  * @object: the controller object
- * @binding: the #GstControlBinding that should be used for the property
+ * @binding: (transfer full): the #GstControlBinding that should be used
  *
  * Sets the #GstControlBinding. If there already was a #GstControlBinding
- * for this property it will be replaced. Use %NULL for @binding to unset it.
+ * for this property it will be replaced.
+ * The @object will take ownership of the @binding.
  *
- * Returns: %FALSE if the given property isn't handled by the controller or
- * %TRUE if everything worked as expected.
+ * Returns: %FALSE if the given @binding has not been setup for this object  or
+ * %TRUE otherwise.
  */
 gboolean
-gst_object_set_control_binding (GstObject * object, GstControlBinding * binding)
+gst_object_add_control_binding (GstObject * object, GstControlBinding * binding)
 {
   GstControlBinding *old;
-  gboolean ret = FALSE;
 
   g_return_val_if_fail (GST_IS_OBJECT (object), FALSE);
-  g_return_val_if_fail ((!binding || GST_IS_CONTROL_BINDING (binding)), FALSE);
+  g_return_val_if_fail (GST_IS_CONTROL_BINDING (binding), FALSE);
+  g_return_val_if_fail (g_type_is_a (binding->pspec->owner_type,
+          G_OBJECT_TYPE (object)), FALSE);
 
   GST_OBJECT_LOCK (object);
   if ((old = gst_object_find_control_binding (object, binding->name))) {
+    GST_DEBUG_OBJECT (object, "controlled property %s removed", old->name);
     object->control_bindings = g_list_remove (object->control_bindings, old);
-    g_object_unref (old);
-    GST_DEBUG_OBJECT (object, "controlled property %s removed", binding->name);
-    ret = TRUE;
+    gst_object_unparent (GST_OBJECT_CAST (old));
   }
-  if (binding) {
-    object->control_bindings =
-        g_list_prepend (object->control_bindings, g_object_ref (binding));
-    GST_DEBUG_OBJECT (object, "controlled property %s added", binding->name);
-    ret = TRUE;
-  }
+  object->control_bindings = g_list_prepend (object->control_bindings, binding);
+  gst_object_set_parent (GST_OBJECT_CAST (binding), object);
+  GST_DEBUG_OBJECT (object, "controlled property %s added", binding->name);
   GST_OBJECT_UNLOCK (object);
 
-  return ret;
+  return TRUE;
 }
 
 /**
@@ -1267,6 +1265,39 @@ gst_object_get_control_binding (GstObject * object, const gchar * property_name)
   GST_OBJECT_UNLOCK (object);
 
   return binding;
+}
+
+/**
+ * gst_object_remove_control_binding:
+ * @object: the object
+ * @binding: the binding
+ *
+ * Removes the corresponding #GstControlBinding. If it was the
+ * last ref of the binding, it will be disposed.  
+ *
+ * Returns: %TRUE if the binding could be removed.
+ */
+gboolean
+gst_object_remove_control_binding (GstObject * object,
+    GstControlBinding * binding)
+{
+  GList *node;
+  gboolean ret = FALSE;
+
+  g_return_val_if_fail (GST_IS_OBJECT (object), FALSE);
+  g_return_val_if_fail (GST_IS_CONTROL_BINDING (binding), FALSE);
+
+  GST_OBJECT_LOCK (object);
+  if ((node = g_list_find (object->control_bindings, binding))) {
+    GST_DEBUG_OBJECT (object, "controlled property %s removed", binding->name);
+    object->control_bindings =
+        g_list_delete_link (object->control_bindings, node);
+    gst_object_unparent (GST_OBJECT_CAST (binding));
+    ret = TRUE;
+  }
+  GST_OBJECT_UNLOCK (object);
+
+  return ret;
 }
 
 /**

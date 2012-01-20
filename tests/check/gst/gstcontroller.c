@@ -469,26 +469,26 @@ GST_START_TEST (controller_param_twice)
   cb = gst_control_binding_new (GST_OBJECT (elem), "int",
       GST_CONTROL_SOURCE (cs));
   fail_unless (cb != NULL, NULL);
+  cb = gst_object_ref (cb);
 
-  res = gst_object_set_control_binding (GST_OBJECT (elem), cb);
+  res = gst_object_add_control_binding (GST_OBJECT (elem), cb);
   fail_unless (res, NULL);
 
   /* setting it again will just unset the old and set it again
    * this might cause some trouble with binding the control source again
    */
-  res = gst_object_set_control_binding (GST_OBJECT (elem), cb);
+  res = gst_object_add_control_binding (GST_OBJECT (elem), cb);
   fail_unless (res, NULL);
 
-#if 0                           /* FIXME(ensonic): need new API */
-  /* it should have been added at least once, let remove it */
-  res = gst_object_remove_control_binding (GST_OBJECT (elem), "int");
+  /* it should have been added now, let remove it */
+  res = gst_object_remove_control_binding (GST_OBJECT (elem), cb);
   fail_unless (res, NULL);
 
   /* removing it again should not work */
-  res = gst_object_remove_control_binding (GST_OBJECT (elem), "int");
+  res = gst_object_remove_control_binding (GST_OBJECT (elem), cb);
   fail_unless (!res, NULL);
-#endif
 
+  gst_object_unref (cb);
   gst_object_unref (cs);
   gst_object_unref (elem);
 }
@@ -530,7 +530,7 @@ GST_START_TEST (controller_controlsource_refcounts)
   cb = gst_control_binding_new (GST_OBJECT (elem), "int", cs);
   fail_unless (cb != NULL, NULL);
   fail_unless_equals_int (G_OBJECT (cs)->ref_count, 2);
-  fail_unless (gst_object_set_control_binding (GST_OBJECT (elem), cb));
+  fail_unless (gst_object_add_control_binding (GST_OBJECT (elem), cb));
 
   test_cb = gst_object_get_control_binding (GST_OBJECT (elem), "int");
   fail_unless (test_cb != NULL, NULL);
@@ -542,7 +542,6 @@ GST_START_TEST (controller_controlsource_refcounts)
   gst_object_unref (test_cs);
   gst_object_unref (test_cb);
   gst_object_unref (cs);
-  gst_object_unref (cb);
 
   gst_object_unref (elem);
 }
@@ -585,7 +584,7 @@ GST_START_TEST (controller_sync1)
   csource = gst_test_control_source_new ();
   fail_unless (csource != NULL, NULL);
 
-  fail_unless (gst_object_set_control_binding (GST_OBJECT (elem),
+  fail_unless (gst_object_add_control_binding (GST_OBJECT (elem),
           gst_control_binding_new (GST_OBJECT (elem), "int",
               (GstControlSource *) csource)));
 
@@ -611,10 +610,10 @@ GST_START_TEST (controller_sync2)
   csource = gst_test_control_source_new ();
   fail_unless (csource != NULL, NULL);
 
-  fail_unless (gst_object_set_control_binding (GST_OBJECT (elem),
+  fail_unless (gst_object_add_control_binding (GST_OBJECT (elem),
           gst_control_binding_new (GST_OBJECT (elem), "int",
               (GstControlSource *) csource)));
-  fail_unless (gst_object_set_control_binding (GST_OBJECT (elem),
+  fail_unless (gst_object_add_control_binding (GST_OBJECT (elem),
           gst_control_binding_new (GST_OBJECT (elem), "double",
               (GstControlSource *) csource)));
 

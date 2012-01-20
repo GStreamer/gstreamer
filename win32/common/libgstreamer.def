@@ -598,6 +598,7 @@ EXPORTS
 	gst_mini_object_unref
 	gst_mini_object_weak_ref
 	gst_mini_object_weak_unref
+	gst_object_add_control_binding
 	gst_object_check_uniqueness
 	gst_object_default_deep_notify
 	gst_object_default_error
@@ -614,8 +615,8 @@ EXPORTS
 	gst_object_has_ancestor
 	gst_object_ref
 	gst_object_ref_sink
+	gst_object_remove_control_binding
 	gst_object_replace
-	gst_object_set_control_binding
 	gst_object_set_control_binding_disabled
 	gst_object_set_control_bindings_disabled
 	gst_object_set_control_rate

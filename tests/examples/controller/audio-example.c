@@ -48,10 +48,10 @@ main (gint argc, gchar ** argv)
   csource1 = gst_interpolation_control_source_new ();
   csource2 = gst_interpolation_control_source_new ();
 
-  gst_object_set_control_binding (GST_OBJECT_CAST (src),
+  gst_object_add_control_binding (GST_OBJECT_CAST (src),
       gst_control_binding_new (GST_OBJECT_CAST (src), "volume",
           GST_CONTROL_SOURCE (csource1)));
-  gst_object_set_control_binding (GST_OBJECT_CAST (src),
+  gst_object_add_control_binding (GST_OBJECT_CAST (src),
       gst_control_binding_new (GST_OBJECT_CAST (src), "freq",
           GST_CONTROL_SOURCE (csource2)));
 

@@ -285,7 +285,7 @@ GST_START_TEST (controller_controlsource_empty1)
   csource = (GstControlSource *) gst_interpolation_control_source_new ();
   fail_unless (csource != NULL, NULL);
 
-  fail_unless (gst_object_set_control_binding (GST_OBJECT (elem),
+  fail_unless (gst_object_add_control_binding (GST_OBJECT (elem),
           gst_control_binding_new (GST_OBJECT (elem), "int",
               (GstControlSource *) csource)));
 
@@ -311,7 +311,7 @@ GST_START_TEST (controller_controlsource_empty2)
   csource = gst_interpolation_control_source_new ();
   fail_unless (csource != NULL, NULL);
 
-  fail_unless (gst_object_set_control_binding (GST_OBJECT (elem),
+  fail_unless (gst_object_add_control_binding (GST_OBJECT (elem),
           gst_control_binding_new (GST_OBJECT (elem), "int",
               (GstControlSource *) csource)));
 
@@ -349,7 +349,7 @@ GST_START_TEST (controller_interpolation_none)
   cs = (GstControlSource *) csource;
 
   fail_unless (csource != NULL);
-  fail_unless (gst_object_set_control_binding (GST_OBJECT (elem),
+  fail_unless (gst_object_add_control_binding (GST_OBJECT (elem),
           gst_control_binding_new (GST_OBJECT (elem), "int", cs)));
 
   /* set interpolation mode */
@@ -401,7 +401,7 @@ GST_START_TEST (controller_interpolation_linear)
   cs = (GstControlSource *) csource;
 
   fail_unless (csource != NULL);
-  fail_unless (gst_object_set_control_binding (GST_OBJECT (elem),
+  fail_unless (gst_object_add_control_binding (GST_OBJECT (elem),
           gst_control_binding_new (GST_OBJECT (elem), "int", cs)));
 
   /* set interpolation mode */
@@ -441,7 +441,7 @@ GST_START_TEST (controller_interpolation_cubic)
   cs = (GstControlSource *) csource;
 
   fail_unless (csource != NULL);
-  fail_unless (gst_object_set_control_binding (GST_OBJECT (elem),
+  fail_unless (gst_object_add_control_binding (GST_OBJECT (elem),
           gst_control_binding_new (GST_OBJECT (elem), "double", cs)));
 
   /* set interpolation mode */
@@ -490,7 +490,7 @@ GST_START_TEST (controller_interpolation_cubic_too_few_cp)
   cs = (GstControlSource *) csource;
 
   fail_unless (csource != NULL);
-  fail_unless (gst_object_set_control_binding (GST_OBJECT (elem),
+  fail_unless (gst_object_add_control_binding (GST_OBJECT (elem),
           gst_control_binding_new (GST_OBJECT (elem), "double", cs)));
 
   /* set interpolation mode */
@@ -532,7 +532,7 @@ GST_START_TEST (controller_interpolation_unset)
   cs = (GstControlSource *) csource;
 
   fail_unless (csource != NULL);
-  fail_unless (gst_object_set_control_binding (GST_OBJECT (elem),
+  fail_unless (gst_object_add_control_binding (GST_OBJECT (elem),
           gst_control_binding_new (GST_OBJECT (elem), "int", cs)));
 
   /* set interpolation mode */
@@ -588,7 +588,7 @@ GST_START_TEST (controller_interpolation_unset_all)
   cs = (GstControlSource *) csource;
 
   fail_unless (csource != NULL);
-  fail_unless (gst_object_set_control_binding (GST_OBJECT (elem),
+  fail_unless (gst_object_add_control_binding (GST_OBJECT (elem),
           gst_control_binding_new (GST_OBJECT (elem), "int", cs)));
 
   /* set interpolation mode */
@@ -636,7 +636,7 @@ GST_START_TEST (controller_interpolation_linear_value_array)
   cs = (GstControlSource *) csource;
 
   fail_unless (csource != NULL);
-  fail_unless (gst_object_set_control_binding (GST_OBJECT (elem),
+  fail_unless (gst_object_add_control_binding (GST_OBJECT (elem),
           gst_control_binding_new (GST_OBJECT (elem), "int", cs)));
 
   /* set interpolation mode */
@@ -690,7 +690,7 @@ GST_START_TEST (controller_interpolation_linear_invalid_values)
   cs = (GstControlSource *) csource;
 
   fail_unless (csource != NULL);
-  fail_unless (gst_object_set_control_binding (GST_OBJECT (elem),
+  fail_unless (gst_object_add_control_binding (GST_OBJECT (elem),
           gst_control_binding_new (GST_OBJECT (elem), "float", cs)));
 
   /* set interpolation mode */
@@ -742,7 +742,7 @@ GST_START_TEST (controller_interpolation_linear_default_values)
   cs = (GstControlSource *) csource;
 
   fail_unless (csource != NULL);
-  fail_unless (gst_object_set_control_binding (GST_OBJECT (elem),
+  fail_unless (gst_object_add_control_binding (GST_OBJECT (elem),
           gst_control_binding_new (GST_OBJECT (elem), "int", cs)));
 
   /* set interpolation mode */
@@ -813,10 +813,10 @@ GST_START_TEST (controller_interpolation_linear_disabled)
   cs2 = (GstControlSource *) csource2;
 
   fail_unless (csource1 != NULL);
-  fail_unless (gst_object_set_control_binding (GST_OBJECT (elem),
+  fail_unless (gst_object_add_control_binding (GST_OBJECT (elem),
           gst_control_binding_new (GST_OBJECT (elem), "int", cs1)));
   fail_unless (csource2 != NULL);
-  fail_unless (gst_object_set_control_binding (GST_OBJECT (elem),
+  fail_unless (gst_object_add_control_binding (GST_OBJECT (elem),
           gst_control_binding_new (GST_OBJECT (elem), "double", cs2)));
 
   /* set interpolation mode */
@@ -938,7 +938,7 @@ GST_START_TEST (controller_interpolation_set_from_list)
   cs = (GstControlSource *) csource;
 
   fail_unless (csource != NULL);
-  fail_unless (gst_object_set_control_binding (GST_OBJECT (elem),
+  fail_unless (gst_object_add_control_binding (GST_OBJECT (elem),
           gst_control_binding_new (GST_OBJECT (elem), "int", cs)));
 
   /* set interpolation mode */
@@ -983,7 +983,7 @@ GST_START_TEST (controller_interpolation_linear_before_ts0)
   cs = (GstControlSource *) csource;
 
   fail_unless (csource != NULL);
-  fail_unless (gst_object_set_control_binding (GST_OBJECT (elem),
+  fail_unless (gst_object_add_control_binding (GST_OBJECT (elem),
           gst_control_binding_new (GST_OBJECT (elem), "int", cs)));
 
   /* set interpolation mode */
@@ -1030,7 +1030,7 @@ GST_START_TEST (controller_interpolation_linear_enums)
   cs = (GstControlSource *) csource;
 
   fail_unless (csource != NULL);
-  fail_unless (gst_object_set_control_binding (GST_OBJECT (elem),
+  fail_unless (gst_object_add_control_binding (GST_OBJECT (elem),
           gst_control_binding_new (GST_OBJECT (elem), "enum", cs)));
 
   /* set interpolation mode */
@@ -1074,7 +1074,7 @@ GST_START_TEST (controller_timed_value_count)
   cs = (GstControlSource *) csource;
 
   fail_unless (csource != NULL);
-  fail_unless (gst_object_set_control_binding (GST_OBJECT (elem),
+  fail_unless (gst_object_add_control_binding (GST_OBJECT (elem),
           gst_control_binding_new (GST_OBJECT (elem), "int", cs)));
 
   /* set interpolation mode */
@@ -1115,7 +1115,7 @@ GST_START_TEST (controller_lfo_sine)
   cs = (GstControlSource *) csource;
 
   fail_unless (csource != NULL);
-  fail_unless (gst_object_set_control_binding (GST_OBJECT (elem),
+  fail_unless (gst_object_add_control_binding (GST_OBJECT (elem),
           gst_control_binding_new (GST_OBJECT (elem), "int", cs)));
 
   /* configure lfo */
@@ -1169,7 +1169,7 @@ GST_START_TEST (controller_lfo_sine_timeshift)
   cs = (GstControlSource *) csource;
 
   fail_unless (csource != NULL);
-  fail_unless (gst_object_set_control_binding (GST_OBJECT (elem),
+  fail_unless (gst_object_add_control_binding (GST_OBJECT (elem),
           gst_control_binding_new (GST_OBJECT (elem), "int", cs)));
 
   /* configure lfo */
@@ -1223,7 +1223,7 @@ GST_START_TEST (controller_lfo_square)
   cs = (GstControlSource *) csource;
 
   fail_unless (csource != NULL);
-  fail_unless (gst_object_set_control_binding (GST_OBJECT (elem),
+  fail_unless (gst_object_add_control_binding (GST_OBJECT (elem),
           gst_control_binding_new (GST_OBJECT (elem), "int", cs)));
 
   /* configure lfo */
@@ -1277,7 +1277,7 @@ GST_START_TEST (controller_lfo_saw)
   cs = (GstControlSource *) csource;
 
   fail_unless (csource != NULL);
-  fail_unless (gst_object_set_control_binding (GST_OBJECT (elem),
+  fail_unless (gst_object_add_control_binding (GST_OBJECT (elem),
           gst_control_binding_new (GST_OBJECT (elem), "int", cs)));
 
   /* configure lfo */
@@ -1331,7 +1331,7 @@ GST_START_TEST (controller_lfo_rsaw)
   cs = (GstControlSource *) csource;
 
   fail_unless (csource != NULL);
-  fail_unless (gst_object_set_control_binding (GST_OBJECT (elem),
+  fail_unless (gst_object_add_control_binding (GST_OBJECT (elem),
           gst_control_binding_new (GST_OBJECT (elem), "int", cs)));
 
   /* configure lfo */
@@ -1385,7 +1385,7 @@ GST_START_TEST (controller_lfo_triangle)
   cs = (GstControlSource *) csource;
 
   fail_unless (csource != NULL);
-  fail_unless (gst_object_set_control_binding (GST_OBJECT (elem),
+  fail_unless (gst_object_add_control_binding (GST_OBJECT (elem),
           gst_control_binding_new (GST_OBJECT (elem), "int", cs)));
 
   /* configure lfo */
@@ -1439,7 +1439,7 @@ GST_START_TEST (controller_lfo_none)
   cs = (GstControlSource *) csource;
 
   fail_unless (csource != NULL);
-  fail_unless (gst_object_set_control_binding (GST_OBJECT (elem),
+  fail_unless (gst_object_add_control_binding (GST_OBJECT (elem),
           gst_control_binding_new (GST_OBJECT (elem), "int", cs)));
 
   /* now pull in values for some timestamps */
@@ -1491,7 +1491,7 @@ GST_START_TEST (controller_trigger_exact)
   cs = (GstControlSource *) csource;
 
   fail_unless (csource != NULL);
-  fail_unless (gst_object_set_control_binding (GST_OBJECT (elem),
+  fail_unless (gst_object_add_control_binding (GST_OBJECT (elem),
           gst_control_binding_new (GST_OBJECT (elem), "int", cs)));
 
   fail_if (gst_control_source_get_value (cs, 0 * GST_SECOND, &raw_val));
@@ -1537,7 +1537,7 @@ GST_START_TEST (controller_trigger_tolerance)
   cs = (GstControlSource *) csource;
 
   fail_unless (csource != NULL);
-  fail_unless (gst_object_set_control_binding (GST_OBJECT (elem),
+  fail_unless (gst_object_add_control_binding (GST_OBJECT (elem),
           gst_control_binding_new (GST_OBJECT (elem), "int", cs)));
 
   g_object_set (csource, "tolerance", G_GINT64_CONSTANT (10), NULL);
