@@ -499,6 +499,53 @@ gst_memory_unlock (GstMemory * mem)
   } while (!g_atomic_int_compare_and_exchange (&mem->state, state, newstate));
 }
 
+
+/**
+ * gst_memory_make_mapped:
+ * @mem: (transfer full): a #GstMemory
+ * @info: (out): pointer for info
+ * @flags: mapping flags
+ *
+ * Create a #GstMemory object that is mapped with @flags. If @mem is mappable
+ * with @flags, this function returns the mapped @mem directly. Otherwise a
+ * mapped copy of @mem is returned.
+ *
+ * This function takes ownership of old @mem and returns a reference to a new
+ * #GstMemory.
+ *
+ * Returns: (transfer full): a #GstMemory object mapped with @flags or NULL when
+ * a mapping is not possible.
+ */
+GstMemory *
+gst_memory_make_mapped (GstMemory * mem, GstMapInfo * info, GstMapFlags flags)
+{
+  GstMemory *result;
+
+  if (gst_memory_map (mem, info, flags)) {
+    result = mem;
+  } else {
+    result = gst_memory_copy (mem, 0, -1);
+    if (result == NULL)
+      goto cannot_copy;
+
+    if (!gst_memory_map (result, info, flags))
+      goto cannot_map;
+  }
+  return result;
+
+  /* ERRORS */
+cannot_copy:
+  {
+    GST_DEBUG ("cannot copy memory %p", mem);
+    return NULL;
+  }
+cannot_map:
+  {
+    GST_DEBUG ("cannot map memory %p with flags %d", mem, flags);
+    return NULL;
+  }
+}
+
 /**
  * gst_memory_map:
  * @mem: a #GstMemory

@@ -510,6 +510,7 @@ EXPORTS
 	gst_memory_get_type
 	gst_memory_is_span
 	gst_memory_is_writable
+	gst_memory_make_mapped
 	gst_memory_map
 	gst_memory_new_wrapped
 	gst_memory_ref

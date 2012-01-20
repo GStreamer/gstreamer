@@ -963,23 +963,13 @@ gst_buffer_map (GstBuffer * buffer, GstMapInfo * info, GstMapFlags flags)
     goto not_writable;
 
   mem = gst_buffer_get_merged_memory (buffer);
-  if (mem == NULL)
+  if (G_UNLIKELY (mem == NULL))
     goto no_memory;
 
   /* now try to map */
-  if (!gst_memory_map (mem, info, flags) && write) {
-    GstMemory *copy;
-    /* make a (writable) copy */
-    copy = gst_memory_copy (mem, 0, -1);
-    gst_memory_unref (mem);
-    mem = copy;
-    if (G_UNLIKELY (mem == NULL))
-      goto cannot_map;
-
-    /* try again */
-    if (!gst_memory_map (mem, info, flags))
-      goto cannot_map;
-  }
+  mem = gst_memory_make_mapped (mem, info, flags);
+  if (G_UNLIKELY (mem == NULL))
+    goto cannot_map;
 
   /* if the buffer is writable, replace the memory */
   if (writable)

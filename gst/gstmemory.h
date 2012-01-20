@@ -277,6 +277,7 @@ void        gst_memory_resize      (GstMemory *mem, gssize offset, gsize size);
 /* retrieving data */
 gboolean    gst_memory_is_writable (GstMemory *mem);
 
+GstMemory * gst_memory_make_mapped (GstMemory *mem, GstMapInfo *info, GstMapFlags flags);
 gboolean    gst_memory_map         (GstMemory *mem, GstMapInfo *info, GstMapFlags flags);
 void        gst_memory_unmap       (GstMemory *mem, GstMapInfo *info);
 
