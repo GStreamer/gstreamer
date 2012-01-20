@@ -2016,13 +2016,9 @@ gst_rtspsrc_handle_src_event (GstPad * pad, GstEvent * event)
 static gboolean
 gst_rtspsrc_handle_internal_src_event (GstPad * pad, GstEvent * event)
 {
-  GstRTSPSrc *src;
   gboolean res;
 
-  src = GST_RTSPSRC_CAST (gst_pad_get_element_private (pad));
-
-  GST_DEBUG_OBJECT (src, "pad %s:%s received event %s",
-      GST_DEBUG_PAD_NAME (pad), GST_EVENT_TYPE_NAME (event));
+  GST_DEBUG_OBJECT (pad, "received event %s", GST_EVENT_TYPE_NAME (event));
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_SEEK:
