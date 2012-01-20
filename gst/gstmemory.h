@@ -110,7 +110,7 @@ typedef enum {
  */
 typedef struct {
   GstMemory *memory;
-  gpointer data;
+  guint8 *data;
   gsize size;
   gsize maxsize;
 } GstMapInfo;

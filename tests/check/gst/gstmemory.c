@@ -53,7 +53,7 @@ GST_START_TEST (test_submemory)
 
   fail_unless (gst_memory_map (sub, &sinfo, GST_MAP_READ));
   fail_unless (sinfo.size == 2, "submemory has wrong size");
-  fail_unless (memcmp (((guint8 *) info.data) + 1, sinfo.data, 2) == 0,
+  fail_unless (memcmp (info.data + 1, sinfo.data, 2) == 0,
       "submemory contains the wrong data");
   ASSERT_MEMORY_REFCOUNT (sub, "submemory", 1);
   gst_memory_unmap (sub, &sinfo);
@@ -64,7 +64,7 @@ GST_START_TEST (test_submemory)
   fail_if (sub == NULL, "share memory returned NULL");
   fail_unless (gst_memory_map (sub, &sinfo, GST_MAP_READ));
   fail_unless (sinfo.size == 0, "submemory has wrong size");
-  fail_unless (memcmp (((guint8 *) info.data) + 1, sinfo.data, 0) == 0,
+  fail_unless (memcmp (info.data + 1, sinfo.data, 0) == 0,
       "submemory contains the wrong data");
   ASSERT_MEMORY_REFCOUNT (sub, "submemory", 1);
   gst_memory_unmap (sub, &sinfo);
@@ -154,7 +154,7 @@ GST_START_TEST (test_writable)
   fail_unless (gst_memory_is_writable (mem2));
 
   fail_unless (gst_memory_map (mem2, &info, GST_MAP_WRITE));
-  ((guint8 *) info.data)[4] = 'a';
+  info.data[4] = 'a';
   gst_memory_unmap (mem2, &info);
 
   gst_memory_ref (mem2);
@@ -162,7 +162,7 @@ GST_START_TEST (test_writable)
   gst_memory_unref (mem2);
 
   fail_unless (gst_memory_map (mem2, &info, GST_MAP_WRITE));
-  ((guint8 *) info.data)[4] = 'a';
+  info.data[4] = 'a';
   gst_memory_unmap (mem2, &info);
   gst_memory_unref (mem2);
 
@@ -252,7 +252,7 @@ GST_START_TEST (test_try_new_and_alloc)
   fail_unless (gst_memory_map (mem, &info, GST_MAP_WRITE));
   fail_unless (info.data != NULL);
   fail_unless (info.size == (640 * 480 * 4));
-  ((guint8 *) info.data)[640 * 479 * 4 + 479] = 0xff;
+  info.data[640 * 479 * 4 + 479] = 0xff;
   gst_memory_unmap (mem, &info);
 
   gst_memory_unref (mem);

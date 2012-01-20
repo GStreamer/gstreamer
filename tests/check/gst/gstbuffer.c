@@ -58,7 +58,7 @@ GST_START_TEST (test_subbuffer)
 
   fail_unless (gst_buffer_map (sub, &sinfo, GST_MAP_READ));
   fail_unless (sinfo.size == 2, "subbuffer has wrong size");
-  fail_unless (memcmp ((guint8 *) info.data + 1, sinfo.data, 2) == 0,
+  fail_unless (memcmp (info.data + 1, sinfo.data, 2) == 0,
       "subbuffer contains the wrong data");
   ASSERT_BUFFER_REFCOUNT (sub, "subbuffer", 1);
   fail_unless (GST_BUFFER_TIMESTAMP (sub) == -1,
@@ -75,7 +75,7 @@ GST_START_TEST (test_subbuffer)
   fail_if (sub == NULL, "copy_region of buffer returned NULL");
   fail_unless (gst_buffer_map (sub, &sinfo, GST_MAP_READ));
   fail_unless (sinfo.size == 0, "subbuffer has wrong size");
-  fail_unless (memcmp ((guint8 *) info.data + 1, sinfo.data, 0) == 0,
+  fail_unless (memcmp (info.data + 1, sinfo.data, 0) == 0,
       "subbuffer contains the wrong data");
   ASSERT_BUFFER_REFCOUNT (sub, "subbuffer", 1);
   gst_buffer_unmap (sub, &sinfo);
@@ -261,7 +261,7 @@ GST_START_TEST (test_make_writable)
   buf = create_read_only_buffer ();
 
   fail_unless (gst_buffer_map (buf, &info, GST_MAP_WRITE));
-  ((guint8 *) info.data)[4] = 'a';
+  info.data[4] = 'a';
   gst_buffer_unmap (buf, &info);
   gst_buffer_unref (buf);
 
@@ -295,7 +295,7 @@ GST_START_TEST (test_subbuffer_make_writable)
 
   fail_unless (gst_buffer_map (sub_buf, &info, GST_MAP_WRITE));
   fail_if (info.data == NULL);
-  ((guint8 *) info.data)[4] = 'a';
+  info.data[4] = 'a';
   gst_buffer_unmap (sub_buf, &info);
   gst_buffer_unref (sub_buf);
   gst_buffer_unref (buf);
@@ -413,7 +413,7 @@ GST_START_TEST (test_try_new_and_alloc)
   fail_unless (gst_buffer_map (buf, &info, GST_MAP_WRITE));
   fail_unless (info.data != NULL);
   fail_unless (info.size == (640 * 480 * 4));
-  ((guint8 *) info.data)[640 * 479 * 4 + 479] = 0xff;
+  info.data[640 * 479 * 4 + 479] = 0xff;
   gst_buffer_unmap (buf, &info);
 
   gst_buffer_unref (buf);

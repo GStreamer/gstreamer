@@ -283,7 +283,7 @@ _fallback_copy (GstMemory * mem, gssize offset, gssize size)
     return NULL;
   }
 
-  memcpy (dinfo.data, (guint8 *) sinfo.data + offset, size);
+  memcpy (dinfo.data, sinfo.data + offset, size);
   gst_memory_unmap (copy, &dinfo);
   gst_memory_unmap (mem, &sinfo);
 
@@ -584,7 +584,7 @@ gst_memory_map (GstMemory * mem, GstMapInfo * info, GstMapFlags flags)
   info->memory = mem;
   info->size = mem->size;
   info->maxsize = mem->maxsize - mem->offset;
-  info->data = (guint8 *) info->data + mem->offset;
+  info->data = info->data + mem->offset;
 
   return TRUE;
 
