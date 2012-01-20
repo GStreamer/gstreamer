@@ -399,6 +399,7 @@ gst_image_freeze_convert (GstImageFreeze * self,
         default:
           break;
       }
+      break;
     }
     case GST_FORMAT_TIME:{
       switch (*dest_format) {
@@ -413,7 +414,7 @@ gst_image_freeze_convert (GstImageFreeze * self,
         default:
           break;
       }
-
+      break;
     }
     default:
       break;
@@ -471,12 +472,14 @@ gst_image_freeze_src_query (GstPad * pad, GstQuery * query)
           position = self->offset;
           g_mutex_unlock (self->lock);
           ret = TRUE;
+          break;
         }
         case GST_FORMAT_TIME:{
           g_mutex_lock (self->lock);
           position = self->segment.last_stop;
           g_mutex_unlock (self->lock);
           ret = TRUE;
+          break;
         }
         default:
           break;
@@ -503,6 +506,7 @@ gst_image_freeze_src_query (GstPad * pad, GstQuery * query)
           duration = self->segment.stop;
           g_mutex_unlock (self->lock);
           ret = TRUE;
+          break;
         }
         case GST_FORMAT_DEFAULT:{
           g_mutex_lock (self->lock);
@@ -513,6 +517,7 @@ gst_image_freeze_src_query (GstPad * pad, GstQuery * query)
                 GST_SECOND * self->fps_d);
           g_mutex_unlock (self->lock);
           ret = TRUE;
+          break;
         }
         default:
           break;
