@@ -1730,7 +1730,7 @@ GST_START_TEST (test_controller_usability)
   /* this shouldn't crash, whether this mode is implemented or not */
   csource = gst_interpolation_control_source_new ();
   g_object_set (csource, "mode", GST_INTERPOLATION_MODE_CUBIC, NULL);
-  gst_object_set_control_binding (GST_OBJECT_CAST (volume),
+  gst_object_add_control_binding (GST_OBJECT_CAST (volume),
       gst_control_binding_new (GST_OBJECT_CAST (volume), "volume",
           GST_CONTROL_SOURCE (csource)));
 
@@ -1760,7 +1760,7 @@ GST_START_TEST (test_controller_processing)
 
   csource = gst_interpolation_control_source_new ();
   g_object_set (csource, "mode", GST_INTERPOLATION_MODE_CUBIC, NULL);
-  gst_object_set_control_binding (GST_OBJECT_CAST (volume),
+  gst_object_add_control_binding (GST_OBJECT_CAST (volume),
       gst_control_binding_new (GST_OBJECT_CAST (volume), "volume",
           GST_CONTROL_SOURCE (csource)));
 
