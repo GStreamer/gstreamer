@@ -1029,6 +1029,9 @@ ges_timeline_object_move_to_layer (GESTimelineObject * object, GESTimelineLayer
     return ges_timeline_layer_add_object (layer, object);
   }
 
+  GST_DEBUG_OBJECT (object, "moving to layer %p, priority: %d", layer,
+      ges_timeline_layer_get_priority (layer));
+
   object->priv->is_moving = TRUE;
   g_object_ref (object);
   ret = ges_timeline_layer_remove_object (current_layer, object);

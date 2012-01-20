@@ -381,8 +381,7 @@ track_object_duration_cb (GESTrackObject * track_object,
   tlobj = ges_track_object_get_timeline_object (track_object);
   layer = ges_timeline_object_get_layer (tlobj);
   if (G_LIKELY (GES_IS_TRACK_SOURCE (track_object)))
-    GST_DEBUG ("Here we should recalculate");
-  calculate_next_transition (track_object, layer);
+    calculate_next_transition (track_object, layer);
 }
 
 static void
