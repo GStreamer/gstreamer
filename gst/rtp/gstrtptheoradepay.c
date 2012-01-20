@@ -322,10 +322,6 @@ gst_rtp_theora_depay_setcaps (GstBaseRTPDepayload * depayload, GstCaps * caps)
     guint8 *data;
     gsize size;
 
-    /* configure string should be in the caps */
-    if (configuration == NULL)
-      goto no_configuration;
-
     /* deserialize base64 to buffer */
     data = g_base64_decode (configuration, &size);
 
@@ -349,11 +345,6 @@ gst_rtp_theora_depay_setcaps (GstBaseRTPDepayload * depayload, GstCaps * caps)
   return res;
 
   /* ERRORS */
-no_configuration:
-  {
-    GST_ERROR_OBJECT (rtptheoradepay, "no configuration specified");
-    return FALSE;
-  }
 invalid_configuration:
   {
     GST_ERROR_OBJECT (rtptheoradepay, "invalid configuration specified");
