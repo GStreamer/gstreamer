@@ -711,17 +711,12 @@ gst_flac_dec_length (const FLAC__StreamDecoder * decoder,
 {
   GstFlacDec *flacdec;
   GstFormat fmt = GST_FORMAT_BYTES;
-  gint64 len;
-  GstPad *peer;
+  gint64 len = -1;
 
   flacdec = GST_FLAC_DEC (client_data);
 
-  if (!(peer = gst_pad_get_peer (flacdec->sinkpad)))
-    return FLAC__STREAM_DECODER_LENGTH_STATUS_ERROR;
-
-  gst_pad_query_duration (peer, &fmt, &len);
-  gst_object_unref (peer);
-  if (fmt != GST_FORMAT_BYTES || len == -1)
+  if (!gst_pad_query_peer_duration (flacdec->sinkpad, &fmt, &len) ||
+      (fmt != GST_FORMAT_BYTES || len == -1))
     return FLAC__STREAM_DECODER_LENGTH_STATUS_ERROR;
 
   *length = len;
