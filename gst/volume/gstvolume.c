@@ -801,7 +801,7 @@ volume_transform_ip (GstBaseTransform * base, GstBuffer * outbuf)
   GstVolume *self = GST_VOLUME (base);
   guint8 *data;
   gsize size;
-  GstControlSource *mute_csource, *volume_csource;
+  GstControlBinding *mute_cb, *volume_cb;
 
   if (G_UNLIKELY (!self->negotiated))
     goto not_negotiated;
@@ -813,10 +813,10 @@ volume_transform_ip (GstBaseTransform * base, GstBuffer * outbuf)
 
   data = gst_buffer_map (outbuf, &size, NULL, GST_MAP_READWRITE);
 
-  mute_csource = gst_object_get_control_source (GST_OBJECT (self), "mute");
-  volume_csource = gst_object_get_control_source (GST_OBJECT (self), "volume");
+  mute_cb = gst_object_get_control_binding (GST_OBJECT (self), "mute");
+  volume_cb = gst_object_get_control_binding (GST_OBJECT (self), "volume");
 
-  if (mute_csource || (volume_csource && !self->current_mute)) {
+  if (mute_cb || (volume_cb && !self->current_mute)) {
     gint rate = GST_AUDIO_INFO_RATE (&filter->info);
     gint width = GST_AUDIO_FORMAT_INFO_WIDTH (filter->info.finfo) / 8;
     gint channels = GST_AUDIO_INFO_CHANNELS (&filter->info);
@@ -827,7 +827,7 @@ volume_transform_ip (GstBaseTransform * base, GstBuffer * outbuf)
 
     ts = gst_segment_to_stream_time (&base->segment, GST_FORMAT_TIME, ts);
 
-    if (self->mutes_count < nsamples && mute_csource) {
+    if (self->mutes_count < nsamples && mute_cb) {
       self->mutes = g_realloc (self->mutes, sizeof (gboolean) * nsamples);
       self->mutes_count = nsamples;
     }
@@ -837,13 +837,12 @@ volume_transform_ip (GstBaseTransform * base, GstBuffer * outbuf)
       self->volumes_count = nsamples;
     }
 
-    if (mute_csource) {
-      if (!gst_control_source_get_value_array (mute_csource, ts, interval,
+    if (mute_cb) {
+      if (!gst_control_binding_get_value_array (mute_cb, ts, interval,
               nsamples, (gpointer) self->mutes))
         goto controller_failure;
 
-      gst_object_unref (mute_csource);
-      mute_csource = NULL;
+      gst_object_replace ((GstObject **) & mute_cb, NULL);
       use_mutes = TRUE;
     } else {
       g_free (self->mutes);
@@ -851,13 +850,12 @@ volume_transform_ip (GstBaseTransform * base, GstBuffer * outbuf)
       self->mutes_count = 0;
     }
 
-    if (volume_csource) {
-      if (!gst_control_source_get_value_array (volume_csource, ts, interval,
+    if (volume_cb) {
+      if (!gst_control_binding_get_value_array (volume_cb, ts, interval,
               nsamples, (gpointer) self->volumes))
         goto controller_failure;
 
-      gst_object_unref (volume_csource);
-      volume_csource = NULL;
+      gst_object_replace ((GstObject **) & volume_cb, NULL);
     } else {
       orc_memset_f64 (self->volumes, self->current_volume, nsamples);
     }
@@ -869,8 +867,8 @@ volume_transform_ip (GstBaseTransform * base, GstBuffer * outbuf)
     self->process_controlled (self, data, self->volumes, channels, size);
 
     return GST_FLOW_OK;
-  } else if (volume_csource) {
-    gst_object_unref (volume_csource);
+  } else if (volume_cb) {
+    gst_object_unref (volume_cb);
   }
 
   if (self->current_volume == 0.0 || self->current_mute) {
@@ -892,10 +890,10 @@ not_negotiated:
   }
 controller_failure:
   {
-    if (mute_csource)
-      gst_object_unref (mute_csource);
-    if (volume_csource)
-      gst_object_unref (volume_csource);
+    if (mute_cb)
+      gst_object_unref (mute_cb);
+    if (volume_cb)
+      gst_object_unref (volume_cb);
 
     GST_ELEMENT_ERROR (self, CORE, FAILED,
         ("Failed to get values from controller"), (NULL));

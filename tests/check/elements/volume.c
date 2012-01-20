@@ -1730,8 +1730,9 @@ GST_START_TEST (test_controller_usability)
   /* this shouldn't crash, whether this mode is implemented or not */
   csource = gst_interpolation_control_source_new ();
   g_object_set (csource, "mode", GST_INTERPOLATION_MODE_CUBIC, NULL);
-  gst_object_set_control_source (GST_OBJECT_CAST (volume), "volume",
-      GST_CONTROL_SOURCE (csource));
+  gst_object_set_control_binding (GST_OBJECT_CAST (volume),
+      gst_control_binding_new (GST_OBJECT_CAST (volume), "volume",
+          GST_CONTROL_SOURCE (csource)));
 
   cs = (GstTimedValueControlSource *) csource;
   gst_timed_value_control_source_set (cs, 0 * GST_SECOND, 0.0);
@@ -1759,8 +1760,9 @@ GST_START_TEST (test_controller_processing)
 
   csource = gst_interpolation_control_source_new ();
   g_object_set (csource, "mode", GST_INTERPOLATION_MODE_CUBIC, NULL);
-  gst_object_set_control_source (GST_OBJECT_CAST (volume), "volume",
-      GST_CONTROL_SOURCE (csource));
+  gst_object_set_control_binding (GST_OBJECT_CAST (volume),
+      gst_control_binding_new (GST_OBJECT_CAST (volume), "volume",
+          GST_CONTROL_SOURCE (csource)));
 
   fail_unless (gst_element_set_state (volume,
           GST_STATE_PLAYING) == GST_STATE_CHANGE_SUCCESS,
