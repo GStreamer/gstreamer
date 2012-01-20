@@ -691,17 +691,18 @@ theora_dec_setcaps (GstTheoraDec * dec, GstCaps * caps)
   if ((codec_data = gst_structure_get_value (s, "codec_data"))) {
     if (G_VALUE_TYPE (codec_data) == GST_TYPE_BUFFER) {
       GstBuffer *buffer;
-      guint8 *data, *ptr;
-      gsize size, left;
+      GstMapInfo map;
+      guint8 *ptr;
+      gsize left;
       guint offset;
 
       buffer = gst_value_get_buffer (codec_data);
 
       offset = 0;
-      data = gst_buffer_map (buffer, &size, NULL, GST_MAP_READ);
+      gst_buffer_map (buffer, &map, GST_MAP_READ);
 
-      ptr = data;
-      left = size;
+      ptr = map.data;
+      left = map.size;
 
       while (left > 2) {
         guint psize;
@@ -731,7 +732,7 @@ theora_dec_setcaps (GstTheoraDec * dec, GstCaps * caps)
         ptr += psize;
         offset += psize;
       }
-      gst_buffer_unmap (buffer, data, size);
+      gst_buffer_unmap (buffer, &map);
     }
   }
 
@@ -1354,11 +1355,12 @@ theora_dec_decode_buffer (GstTheoraDec * dec, GstBuffer * buf)
   ogg_packet packet;
   GstFlowReturn result = GST_FLOW_OK;
   GstClockTime timestamp, duration;
-  gsize size;
+  GstMapInfo map;
 
   /* make ogg_packet out of the buffer */
-  packet.packet = gst_buffer_map (buf, &size, NULL, GST_MAP_READ);
-  packet.bytes = size;
+  gst_buffer_map (buf, &map, GST_MAP_READ);
+  packet.packet = map.data;
+  packet.bytes = map.size;
   packet.granulepos = -1;
   packet.packetno = 0;          /* we don't really care */
   packet.b_o_s = dec->have_header ? 0 : 1;
@@ -1387,7 +1389,7 @@ theora_dec_decode_buffer (GstTheoraDec * dec, GstBuffer * buf)
     result = theora_handle_data_packet (dec, &packet, timestamp, duration);
   }
 done:
-  gst_buffer_unmap (buf, packet.packet, size);
+  gst_buffer_unmap (buf, &map);
 
   return result;
 }

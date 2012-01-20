@@ -717,17 +717,18 @@ gst_ogm_parse_comment_packet (GstOgmParse * ogm, GstBuffer * buf)
 static void
 gst_ogm_text_parse_strip_trailing_zeroes (GstOgmParse * ogm, GstBuffer * buf)
 {
-  guint8 *data;
+  GstMapInfo map;
   gsize size;
 
   g_assert (gst_buffer_is_writable (buf));
 
   /* zeroes are not valid UTF-8 characters, so strip them from output */
-  data = gst_buffer_map (buf, &size, NULL, GST_MAP_WRITE);
-  while (size > 0 && data[size - 1] == '\0') {
+  gst_buffer_map (buf, &map, GST_MAP_WRITE);
+  size = map.size;
+  while (size > 0 && map.data[size - 1] == '\0') {
     --size;
   }
-  gst_buffer_unmap (buf, data, size);
+  gst_buffer_unmap (buf, &map);
 }
 
 static GstFlowReturn
@@ -845,18 +846,17 @@ gst_ogm_parse_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
 {
   GstFlowReturn ret = GST_FLOW_OK;
   GstOgmParse *ogm = GST_OGM_PARSE (parent);
-  guint8 *data;
-  gsize size;
+  GstMapInfo map;
 
-  data = gst_buffer_map (buf, &size, NULL, GST_MAP_READ);
-  if (size < 1)
+  gst_buffer_map (buf, &map, GST_MAP_READ);
+  if (map.size < 1)
     goto buffer_too_small;
 
-  GST_LOG_OBJECT (ogm, "Packet with start code 0x%02x", data[0]);
+  GST_LOG_OBJECT (ogm, "Packet with start code 0x%02x", map.data[0]);
 
-  switch (data[0]) {
+  switch (map.data[0]) {
     case 0x01:{
-      ret = gst_ogm_parse_stream_header (ogm, data + 1, size - 1);
+      ret = gst_ogm_parse_stream_header (ogm, map.data + 1, map.size - 1);
       break;
     }
     case 0x03:{
@@ -864,12 +864,12 @@ gst_ogm_parse_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
       break;
     }
     default:{
-      ret = gst_ogm_parse_data_packet (ogm, buf, data, size);
+      ret = gst_ogm_parse_data_packet (ogm, buf, map.data, map.size);
       break;
     }
   }
 
-  gst_buffer_unmap (buf, data, size);
+  gst_buffer_unmap (buf, &map);
   gst_buffer_unref (buf);
 
   if (ret != GST_FLOW_OK) {
@@ -882,7 +882,7 @@ gst_ogm_parse_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
 buffer_too_small:
   {
     GST_ELEMENT_ERROR (ogm, STREAM, DECODE, (NULL), ("buffer too small"));
-    gst_buffer_unmap (buf, data, size);
+    gst_buffer_unmap (buf, &map);
     gst_buffer_unref (buf);
     return GST_FLOW_ERROR;
   }

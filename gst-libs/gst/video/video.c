@@ -1001,8 +1001,6 @@ gst_video_frame_map_id (GstVideoFrame * frame, GstVideoInfo * info,
     GstBuffer * buffer, gint id, GstMapFlags flags)
 {
   GstVideoMeta *meta;
-  guint8 *data;
-  gsize size;
   gint i;
 
   g_return_val_if_fail (frame != NULL, FALSE);
@@ -1025,8 +1023,9 @@ gst_video_frame_map_id (GstVideoFrame * frame, GstVideoInfo * info,
     frame->id = meta->id;
 
     for (i = 0; i < info->finfo->n_planes; i++) {
-      frame->data[i] =
-          gst_video_meta_map (meta, i, &frame->info.stride[i], flags);
+      gst_video_meta_map (meta, i, &frame->map[i], &frame->info.stride[i],
+          flags);
+      frame->data[i] = frame->map[i].data;
     }
   } else {
     /* no metadata, we really need to have the metadata when the id is
@@ -1038,15 +1037,15 @@ gst_video_frame_map_id (GstVideoFrame * frame, GstVideoInfo * info,
     frame->info = *info;
     frame->id = id;
 
-    data = gst_buffer_map (buffer, &size, NULL, flags);
+    gst_buffer_map (buffer, &frame->map[0], flags);
 
     /* do some sanity checks */
-    if (size < info->size)
+    if (frame->map[0].size < info->size)
       goto invalid_size;
 
     /* set up pointers */
     for (i = 0; i < info->finfo->n_planes; i++) {
-      frame->data[i] = data + info->offset[i];
+      frame->data[i] = frame->map[0].data + info->offset[i];
     }
   }
   return TRUE;
@@ -1060,8 +1059,8 @@ no_metadata:
 invalid_size:
   {
     GST_ERROR ("invalid buffer size %" G_GSIZE_FORMAT " < %" G_GSIZE_FORMAT,
-        size, info->size);
-    gst_buffer_unmap (buffer, data, size);
+        frame->map[0].size, info->size);
+    gst_buffer_unmap (buffer, &frame->map[0]);
     return FALSE;
   }
 }
@@ -1107,14 +1106,10 @@ gst_video_frame_unmap (GstVideoFrame * frame)
 
   if (meta) {
     for (i = 0; i < frame->info.finfo->n_planes; i++) {
-      gst_video_meta_unmap (meta, i);
+      gst_video_meta_unmap (meta, i, &frame->map[i]);
     }
   } else {
-    guint8 *data;
-
-    data = frame->data[0];
-    data -= frame->info.offset[0];
-    gst_buffer_unmap (buffer, data, -1);
+    gst_buffer_unmap (buffer, &frame->map[0]);
   }
 }
 

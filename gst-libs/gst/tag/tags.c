@@ -570,8 +570,8 @@ gst_tag_image_data_to_image_sample (const guint8 * image_data,
   GstBuffer *image;
   GstSample *sample;
   GstCaps *caps;
-  guint8 *data;
-  GstStructure *info = NULL;
+  GstMapInfo info;
+  GstStructure *image_info = NULL;
 
   g_return_val_if_fail (image_data != NULL, NULL);
   g_return_val_if_fail (image_data_len > 0, NULL);
@@ -584,10 +584,10 @@ gst_tag_image_data_to_image_sample (const guint8 * image_data,
   if (image == NULL)
     goto alloc_failed;
 
-  data = gst_buffer_map (image, NULL, NULL, GST_MAP_WRITE);
-  memcpy (data, image_data, image_data_len);
-  data[image_data_len] = '\0';
-  gst_buffer_unmap (image, data, image_data_len + 1);
+  gst_buffer_map (image, &info, GST_MAP_WRITE);
+  memcpy (info.data, image_data, image_data_len);
+  info.data[image_data_len] = '\0';
+  gst_buffer_unmap (image, &info);
 
   /* Find GStreamer media type, can't trust declared type */
   caps = gst_type_find_helper_for_buffer (NULL, image, NULL);
@@ -615,10 +615,10 @@ gst_tag_image_data_to_image_sample (const guint8 * image_data,
 
   if (image_type != GST_TAG_IMAGE_TYPE_NONE) {
     GST_LOG ("Setting image type: %d", image_type);
-    info = gst_structure_new ("GstTagImageInfo",
+    image_info = gst_structure_new ("GstTagImageInfo",
         "image-type", GST_TYPE_TAG_IMAGE_TYPE, image_type, NULL);
   }
-  sample = gst_sample_new (image, caps, NULL, info);
+  sample = gst_sample_new (image, caps, NULL, image_info);
   gst_buffer_unref (image);
   gst_caps_unref (caps);
 

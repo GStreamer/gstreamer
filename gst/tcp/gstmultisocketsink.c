@@ -1895,21 +1895,20 @@ gst_multi_socket_sink_handle_client_write (GstMultiSocketSink * sink,
     if (client->sending) {
       gssize wrote;
       GstBuffer *head;
-      guint8 *data;
-      gsize size;
+      GstMapInfo map;
 
       /* pick first buffer from list */
       head = GST_BUFFER (client->sending->data);
 
-      data = gst_buffer_map (head, &size, NULL, GST_MAP_READ);
-      maxsize = size - client->bufoffset;
+      gst_buffer_map (head, &map, GST_MAP_READ);
+      maxsize = map.size - client->bufoffset;
 
       /* try to write the complete buffer */
 
       wrote =
-          g_socket_send (socket, (gchar *) data + client->bufoffset, maxsize,
-          sink->cancellable, &err);
-      gst_buffer_unmap (head, data, size);
+          g_socket_send (socket, (gchar *) map.data + client->bufoffset,
+          maxsize, sink->cancellable, &err);
+      gst_buffer_unmap (head, &map);
 
       if (wrote < 0) {
         /* hmm error.. */

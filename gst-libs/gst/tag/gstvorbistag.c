@@ -532,14 +532,13 @@ gst_tag_list_from_vorbiscomment_buffer (GstBuffer * buffer,
     const guint8 * id_data, const guint id_data_length, gchar ** vendor_string)
 {
   GstTagList *res;
-  guint8 *data;
-  gsize size;
+  GstMapInfo info;
 
-  data = gst_buffer_map (buffer, &size, NULL, GST_MAP_READ);
+  g_assert (gst_buffer_map (buffer, &info, GST_MAP_READ));
   res =
-      gst_tag_list_from_vorbiscomment (data, size, id_data, id_data_length,
-      vendor_string);
-  gst_buffer_unmap (buffer, data, size);
+      gst_tag_list_from_vorbiscomment (info.data, info.size, id_data,
+      id_data_length, vendor_string);
+  gst_buffer_unmap (buffer, &info);
 
   return res;
 }
@@ -791,7 +790,8 @@ gst_tag_list_to_vorbiscomment_buffer (const GstTagList * list,
     const gchar * vendor_string)
 {
   GstBuffer *buffer;
-  guint8 *data, *odata;
+  GstMapInfo info;
+  guint8 *data;
   guint i;
   GList *l;
   MyForEach my_data = { 0, 0, NULL };
@@ -809,7 +809,8 @@ gst_tag_list_to_vorbiscomment_buffer (const GstTagList * list,
   required_size += 4 * my_data.count + my_data.data_count;
 
   buffer = gst_buffer_new_and_alloc (required_size);
-  odata = data = gst_buffer_map (buffer, NULL, NULL, GST_MAP_WRITE);
+  gst_buffer_map (buffer, &info, GST_MAP_WRITE);
+  data = info.data;
   if (id_data_length > 0) {
     memcpy (data, id_data, id_data_length);
     data += id_data_length;
@@ -837,7 +838,7 @@ gst_tag_list_to_vorbiscomment_buffer (const GstTagList * list,
   g_list_foreach (my_data.entries, (GFunc) g_free, NULL);
   g_list_free (my_data.entries);
   *data = 1;
-  gst_buffer_unmap (buffer, odata, required_size);
+  gst_buffer_unmap (buffer, &info);
 
   return buffer;
 }

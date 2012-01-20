@@ -164,8 +164,7 @@ buffer_is_all_black (GstBuffer * buf, GstCaps * caps)
 {
   GstStructure *s;
   gint x, y, w, h;
-  guint8 *data;
-  gsize size;
+  GstMapInfo map;
 
   fail_unless (buf != NULL);
   fail_unless (caps != NULL);
@@ -174,9 +173,9 @@ buffer_is_all_black (GstBuffer * buf, GstCaps * caps)
   fail_unless (gst_structure_get_int (s, "width", &w));
   fail_unless (gst_structure_get_int (s, "height", &h));
 
-  data = gst_buffer_map (buf, &size, NULL, GST_MAP_READ);
+  gst_buffer_map (buf, &map, GST_MAP_READ);
   for (y = 0; y < h; ++y) {
-    guint8 *ptr = data + (y * GST_ROUND_UP_4 (w));
+    guint8 *ptr = map.data + (y * GST_ROUND_UP_4 (w));
 
     for (x = 0; x < w; ++x) {
       if (ptr[x] != 0x00) {
@@ -185,7 +184,7 @@ buffer_is_all_black (GstBuffer * buf, GstCaps * caps)
       }
     }
   }
-  gst_buffer_unmap (buf, data, size);
+  gst_buffer_unmap (buf, &map);
 
   return TRUE;
 }
@@ -208,7 +207,6 @@ create_black_buffer (GstCaps * caps)
   GstStructure *s;
   GstBuffer *buffer;
   gint w, h, size;
-  guint8 *data;
 
   fail_unless (caps != NULL);
 
@@ -220,12 +218,9 @@ create_black_buffer (GstCaps * caps)
 
   size = I420_SIZE (w, h);
   buffer = gst_buffer_new_and_alloc (size);
-
-  data = gst_buffer_map (buffer, NULL, NULL, GST_MAP_WRITE);
   /* we're only checking the Y plane later, so just zero it all out,
    * even if it's not the blackest black there is */
-  memset (data, 0, size);
-  gst_buffer_unmap (buffer, data, size);
+  gst_buffer_memset (buffer, 0, 0, size);
 
   /* double check to make sure it's been created right */
   fail_unless (buffer_is_all_black (buffer, caps));

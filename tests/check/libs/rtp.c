@@ -33,6 +33,7 @@
 GST_START_TEST (test_rtp_buffer)
 {
   GstBuffer *buf;
+  GstMapInfo map;
   guint8 *data;
   gsize size;
   GstRTPBuffer rtp = { NULL, };
@@ -40,7 +41,9 @@ GST_START_TEST (test_rtp_buffer)
   /* check GstRTPHeader structure alignment and packing */
   buf = gst_rtp_buffer_new_allocate (16, 4, 0);
   fail_unless (buf != NULL);
-  data = gst_buffer_map (buf, &size, NULL, GST_MAP_READWRITE);
+  gst_buffer_map (buf, &map, GST_MAP_READWRITE);
+  data = map.data;
+  size = map.size;
   fail_unless_equals_int (size, RTP_HEADER_LEN + 16 + 4);
 
   gst_rtp_buffer_map (buf, GST_MAP_READWRITE, &rtp);
@@ -108,13 +111,15 @@ GST_START_TEST (test_rtp_buffer)
   fail_unless_equals_int (data[0] & 0xf, 0);
 
   gst_rtp_buffer_unmap (&rtp);
-  gst_buffer_unmap (buf, data, size);
+  gst_buffer_unmap (buf, &map);
   gst_buffer_unref (buf);
 
   /* and again, this time with CSRCs */
   buf = gst_rtp_buffer_new_allocate (16, 4, 3);
   fail_unless (buf != NULL);
-  data = gst_buffer_map (buf, &size, NULL, GST_MAP_READWRITE);
+  gst_buffer_map (buf, &map, GST_MAP_READWRITE);
+  data = map.data;
+  size = map.size;
   fail_unless_equals_int (size, RTP_HEADER_LEN + 16 + 4 + 4 * 3);
 
   gst_rtp_buffer_map (buf, GST_MAP_READWRITE, &rtp);
@@ -136,7 +141,7 @@ GST_START_TEST (test_rtp_buffer)
   ASSERT_CRITICAL (gst_rtp_buffer_set_csrc (&rtp, 3, 0xf123));
 
   gst_rtp_buffer_unmap (&rtp);
-  gst_buffer_unmap (buf, data, size);
+  gst_buffer_unmap (buf, &map);
   gst_buffer_unref (buf);
 }
 
@@ -218,18 +223,19 @@ GST_END_TEST;
 GST_START_TEST (test_rtp_buffer_set_extension_data)
 {
   GstBuffer *buf;
+  GstMapInfo map;
   guint8 *data;
   guint16 bits;
   guint size;
   guint8 misc_data[4] = { 1, 2, 3, 4 };
   gpointer pointer;
   guint8 appbits;
-  gsize bsize;
   GstRTPBuffer rtp = { NULL, };
 
   /* check GstRTPHeader structure alignment and packing */
   buf = gst_rtp_buffer_new_allocate (4, 0, 0);
-  data = gst_buffer_map (buf, &bsize, NULL, GST_MAP_READWRITE);
+  gst_buffer_map (buf, &map, GST_MAP_READWRITE);
+  data = map.data;
 
   gst_rtp_buffer_map (buf, GST_MAP_READWRITE, &rtp);
 
@@ -248,12 +254,13 @@ GST_START_TEST (test_rtp_buffer_set_extension_data)
   pointer = gst_rtp_buffer_get_payload (&rtp);
   fail_unless (pointer == data + 16);
 
-  gst_buffer_unmap (buf, data, bsize);
+  gst_buffer_unmap (buf, &map);
   gst_rtp_buffer_unmap (&rtp);
   gst_buffer_unref (buf);
 
   buf = gst_rtp_buffer_new_allocate (20, 0, 0);
-  data = gst_buffer_map (buf, &bsize, NULL, GST_MAP_READWRITE);
+  gst_buffer_map (buf, &map, GST_MAP_READWRITE);
+  data = map.data;
   gst_rtp_buffer_map (buf, GST_MAP_READWRITE, &rtp);
 
   fail_unless (gst_rtp_buffer_get_extension (&rtp) == FALSE);
@@ -266,13 +273,14 @@ GST_START_TEST (test_rtp_buffer_set_extension_data)
   pointer = gst_rtp_buffer_get_payload (&rtp);
   fail_unless (pointer == data + 24);
 
-  gst_buffer_unmap (buf, data, bsize);
+  gst_buffer_unmap (buf, &map);
   gst_rtp_buffer_unmap (&rtp);
   gst_buffer_unref (buf);
 
   /* Test header extensions with a one byte header */
   buf = gst_rtp_buffer_new_allocate (20, 0, 0);
-  data = gst_buffer_map (buf, &bsize, NULL, GST_MAP_READWRITE);
+  gst_buffer_map (buf, &map, GST_MAP_READWRITE);
+  data = map.data;
   gst_rtp_buffer_map (buf, GST_MAP_READWRITE, &rtp);
 
   fail_unless (gst_rtp_buffer_get_extension (&rtp) == FALSE);
@@ -330,13 +338,14 @@ GST_START_TEST (test_rtp_buffer_set_extension_data)
   fail_unless (size == 2);
   fail_unless (memcmp (pointer, misc_data, 2) == 0);
 
-  gst_buffer_unmap (buf, data, bsize);
+  gst_buffer_unmap (buf, &map);
   gst_rtp_buffer_unmap (&rtp);
   gst_buffer_unref (buf);
 
   /* Test header extensions with a two bytes header */
   buf = gst_rtp_buffer_new_allocate (20, 0, 0);
-  data = gst_buffer_map (buf, &bsize, NULL, GST_MAP_READWRITE);
+  gst_buffer_map (buf, &map, GST_MAP_READWRITE);
+  data = map.data;
   gst_rtp_buffer_map (buf, GST_MAP_READWRITE, &rtp);
 
   fail_unless (gst_rtp_buffer_get_extension (&rtp) == FALSE);
@@ -395,7 +404,7 @@ GST_START_TEST (test_rtp_buffer_set_extension_data)
   fail_unless (size == 2);
   fail_unless (memcmp (pointer, misc_data, 2) == 0);
 
-  gst_buffer_unmap (buf, data, bsize);
+  gst_buffer_unmap (buf, &map);
   gst_rtp_buffer_unmap (&rtp);
   gst_buffer_unref (buf);
 }

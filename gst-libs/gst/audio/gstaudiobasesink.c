@@ -1563,7 +1563,7 @@ gst_audio_base_sink_render (GstBaseSink * bsink, GstBuffer * buf)
   gint64 diff, align;
   guint64 ctime, cstop;
   gsize offset;
-  guint8 *data;
+  GstMapInfo info;
   gsize size;
   guint samples, written;
   gint bpf, rate;
@@ -1850,11 +1850,11 @@ no_align:
   /* we need to accumulate over different runs for when we get interrupted */
   accum = 0;
   align_next = TRUE;
-  data = gst_buffer_map (buf, &size, NULL, GST_MAP_READ);
+  gst_buffer_map (buf, &info, GST_MAP_READ);
   do {
     written =
         gst_audio_ring_buffer_commit (ringbuf, &sample_offset,
-        data + offset, samples, out_samples, &accum);
+        info.data + offset, samples, out_samples, &accum);
 
     GST_DEBUG_OBJECT (sink, "wrote %u of %u", written, samples);
     /* if we wrote all, we're done */
@@ -1880,7 +1880,7 @@ no_align:
     samples -= written;
     offset += written * bpf;
   } while (TRUE);
-  gst_buffer_unmap (buf, data, size);
+  gst_buffer_unmap (buf, &info);
 
   if (align_next)
     sink->next_sample = sample_offset;
@@ -1946,7 +1946,7 @@ stopping:
   {
     GST_DEBUG_OBJECT (sink, "preroll got interrupted: %d (%s)", ret,
         gst_flow_get_name (ret));
-    gst_buffer_unmap (buf, data, size);
+    gst_buffer_unmap (buf, &info);
     goto done;
   }
 sync_latency_failed:

@@ -799,8 +799,7 @@ volume_transform_ip (GstBaseTransform * base, GstBuffer * outbuf)
 {
   GstAudioFilter *filter = GST_AUDIO_FILTER_CAST (base);
   GstVolume *self = GST_VOLUME (base);
-  guint8 *data;
-  gsize size;
+  GstMapInfo map;
   GstControlBinding *mute_cb, *volume_cb;
 
   if (G_UNLIKELY (!self->negotiated))
@@ -811,7 +810,7 @@ volume_transform_ip (GstBaseTransform * base, GstBuffer * outbuf)
       GST_BUFFER_FLAG_IS_SET (outbuf, GST_BUFFER_FLAG_GAP))
     return GST_FLOW_OK;
 
-  data = gst_buffer_map (outbuf, &size, NULL, GST_MAP_READWRITE);
+  gst_buffer_map (outbuf, &map, GST_MAP_READWRITE);
 
   mute_cb = gst_object_get_control_binding (GST_OBJECT (self), "mute");
   volume_cb = gst_object_get_control_binding (GST_OBJECT (self), "volume");
@@ -820,7 +819,7 @@ volume_transform_ip (GstBaseTransform * base, GstBuffer * outbuf)
     gint rate = GST_AUDIO_INFO_RATE (&filter->info);
     gint width = GST_AUDIO_FORMAT_INFO_WIDTH (filter->info.finfo) / 8;
     gint channels = GST_AUDIO_INFO_CHANNELS (&filter->info);
-    guint nsamples = size / (width * channels);
+    guint nsamples = map.size / (width * channels);
     GstClockTime interval = gst_util_uint64_scale_int (1, GST_SECOND, rate);
     GstClockTime ts = GST_BUFFER_TIMESTAMP (outbuf);
     gboolean use_mutes = FALSE;
@@ -864,20 +863,23 @@ volume_transform_ip (GstBaseTransform * base, GstBuffer * outbuf)
       orc_prepare_volumes (self->volumes, self->mutes, nsamples);
     }
 
-    self->process_controlled (self, data, self->volumes, channels, size);
+    self->process_controlled (self, map.data, self->volumes, channels,
+        map.size);
 
-    return GST_FLOW_OK;
+    goto done;
   } else if (volume_cb) {
     gst_object_unref (volume_cb);
   }
 
   if (self->current_volume == 0.0 || self->current_mute) {
-    orc_memset (data, 0, size);
+    orc_memset (map.data, 0, map.size);
     GST_BUFFER_FLAG_SET (outbuf, GST_BUFFER_FLAG_GAP);
   } else if (self->current_volume != 1.0) {
-    self->process (self, data, size);
+    self->process (self, map.data, map.size);
   }
-  gst_buffer_unmap (outbuf, data, size);
+
+done:
+  gst_buffer_unmap (outbuf, &map);
 
   return GST_FLOW_OK;
 
@@ -897,7 +899,7 @@ controller_failure:
 
     GST_ELEMENT_ERROR (self, CORE, FAILED,
         ("Failed to get values from controller"), (NULL));
-    gst_buffer_unmap (outbuf, data, size);
+    gst_buffer_unmap (outbuf, &map);
     return GST_FLOW_ERROR;
   }
 }

@@ -258,12 +258,9 @@ static GstBuffer *
 gst_cd_foo_src_read_sector (GstAudioCdSrc * audiocdsrc, gint sector)
 {
   GstBuffer *buf;
-  guint8 *data;
 
   buf = gst_buffer_new_and_alloc (CD_FRAMESIZE_RAW);
-  data = gst_buffer_map (buf, NULL, NULL, GST_MAP_WRITE);
-  memset (data, 0, CD_FRAMESIZE_RAW);
-  gst_buffer_unmap (buf, data, CD_FRAMESIZE_RAW);
+  gst_buffer_memset (buf, 0, 0, CD_FRAMESIZE_RAW);
 
   return buf;
 }

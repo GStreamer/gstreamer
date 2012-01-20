@@ -1435,13 +1435,14 @@ handle_buffer (GstSubParse * self, GstBuffer * buf)
 {
   GstFlowReturn ret = GST_FLOW_OK;
   GstCaps *caps = NULL;
-  gchar *line, *subtitle, *data;
-  gsize size;
+  gchar *line, *subtitle;
 
   if (self->first_buffer) {
-    data = gst_buffer_map (buf, &size, NULL, GST_MAP_READ);
-    self->detected_encoding = detect_encoding (data, size);
-    gst_buffer_unmap (buf, data, size);
+    GstMapInfo map;
+
+    gst_buffer_map (buf, &map, GST_MAP_READ);
+    self->detected_encoding = detect_encoding ((gchar *) map.data, map.size);
+    gst_buffer_unmap (buf, &map);
     self->first_buffer = FALSE;
     self->state.fps_n = self->fps_n;
     self->state.fps_d = self->fps_d;

@@ -80,19 +80,18 @@ static gboolean
 gst_buffer_equals (GstBuffer * buf_a, GstBuffer * buf_b)
 {
   gboolean res;
-  gpointer data1, data2;
-  gsize size1, size2;
+  GstMapInfo map1, map2;
 
-  data1 = gst_buffer_map (buf_a, &size1, NULL, GST_MAP_READ);
-  data2 = gst_buffer_map (buf_b, &size2, NULL, GST_MAP_READ);
+  gst_buffer_map (buf_a, &map1, GST_MAP_READ);
+  gst_buffer_map (buf_b, &map2, GST_MAP_READ);
 
-  if (size1 == size2) {
-    res = memcmp (data1, data2, size1) == 0;
+  if (map1.size == map2.size) {
+    res = memcmp (map1.data, map2.data, map1.size) == 0;
   } else {
     res = FALSE;
   }
-  gst_buffer_unmap (buf_a, data1, size1);
-  gst_buffer_unmap (buf_b, data2, size2);
+  gst_buffer_unmap (buf_a, &map1);
+  gst_buffer_unmap (buf_b, &map2);
 
   return res;
 }

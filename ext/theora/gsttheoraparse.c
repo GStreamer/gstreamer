@@ -300,20 +300,21 @@ theora_parse_set_streamheader (GstTheoraParse * parse)
     ogg_packet packet;
     GstBuffer *buf;
     int ret;
-    gsize size;
+    GstMapInfo map;
 
     buf = parse->streamheader[i];
     if (buf == NULL)
       continue;
 
-    packet.packet = gst_buffer_map (buf, &size, NULL, GST_MAP_READ);
-    packet.bytes = size;
+    gst_buffer_map (buf, &map, GST_MAP_READ);
+    packet.packet = map.data;
+    packet.bytes = map.size;
     packet.granulepos = GST_BUFFER_OFFSET_END (buf);
     packet.packetno = i + 1;
     packet.e_o_s = 0;
     packet.b_o_s = (i == 0);
     ret = th_decode_headerin (&parse->info, &parse->comment, &setup, &packet);
-    gst_buffer_unmap (buf, packet.packet, size);
+    gst_buffer_unmap (buf, &map);
     if (ret < 0) {
       GST_WARNING_OBJECT (parse, "Failed to decode Theora header %d: %d\n",
           i + 1, ret);
@@ -645,19 +646,19 @@ theora_parse_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
 {
   GstFlowReturn ret;
   GstTheoraParse *parse;
-  guint8 *data, header;
-  gsize size;
+  GstMapInfo map;
+  guint8 header;
   gboolean have_header;
 
   parse = GST_THEORA_PARSE (parent);
 
   have_header = FALSE;
 
-  data = gst_buffer_map (buffer, &size, NULL, GST_MAP_READ);
-  header = data[0];
-  gst_buffer_unmap (buffer, data, size);
+  gst_buffer_map (buffer, &map, GST_MAP_READ);
+  header = map.data[0];
+  gst_buffer_unmap (buffer, &map);
 
-  if (size >= 1) {
+  if (map.size >= 1) {
     if (header & 0x80)
       have_header = TRUE;
   }

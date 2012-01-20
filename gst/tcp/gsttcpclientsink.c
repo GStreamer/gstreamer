@@ -172,8 +172,8 @@ static GstFlowReturn
 gst_tcp_client_sink_render (GstBaseSink * bsink, GstBuffer * buf)
 {
   GstTCPClientSink *sink;
-  guint8 *data;
-  gsize size, written = 0;
+  GstMapInfo map;
+  gsize written = 0;
   gssize rret;
   GError *err = NULL;
 
@@ -182,20 +182,20 @@ gst_tcp_client_sink_render (GstBaseSink * bsink, GstBuffer * buf)
   g_return_val_if_fail (GST_OBJECT_FLAG_IS_SET (sink, GST_TCP_CLIENT_SINK_OPEN),
       GST_FLOW_WRONG_STATE);
 
-  data = gst_buffer_map (buf, &size, NULL, GST_MAP_READ);
+  gst_buffer_map (buf, &map, GST_MAP_READ);
   GST_LOG_OBJECT (sink, "writing %" G_GSIZE_FORMAT " bytes for buffer data",
-      size);
+      map.size);
 
   /* write buffer data */
-  while (written < size) {
+  while (written < map.size) {
     rret =
-        g_socket_send (sink->socket, (gchar *) data + written, size - written,
-        sink->cancellable, &err);
+        g_socket_send (sink->socket, (gchar *) map.data + written,
+        map.size - written, sink->cancellable, &err);
     if (rret < 0)
       goto write_error;
     written += rret;
   }
-  gst_buffer_unmap (buf, data, size);
+  gst_buffer_unmap (buf, &map);
 
   sink->data_written += written;
 
@@ -206,8 +206,6 @@ write_error:
   {
     GstFlowReturn ret;
 
-    gst_buffer_unmap (buf, data, size);
-
     if (g_error_matches (err, G_IO_ERROR, G_IO_ERROR_CANCELLED)) {
       ret = GST_FLOW_WRONG_STATE;
       GST_DEBUG_OBJECT (sink, "Cancelled reading from socket");
@@ -215,9 +213,10 @@ write_error:
       GST_ELEMENT_ERROR (sink, RESOURCE, WRITE,
           (_("Error while sending data to \"%s:%d\"."), sink->host, sink->port),
           ("Only %" G_GSIZE_FORMAT " of %" G_GSIZE_FORMAT " bytes written: %s",
-              written, size, err->message));
+              written, map.size, err->message));
       ret = GST_FLOW_ERROR;
     }
+    gst_buffer_unmap (buf, &map);
     g_clear_error (&err);
     return ret;
   }

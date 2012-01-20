@@ -36,8 +36,7 @@ main (int argc, char *argv[])
   gint64 duration, position;
   GstStateChangeReturn ret;
   gboolean res;
-  guint8 *data;
-  gsize size;
+  GstMapInfo map;
 
   gst_init (&argc, &argv);
 
@@ -137,14 +136,14 @@ main (int argc, char *argv[])
 
     /* create pixmap from buffer and save, gstreamer video buffers have a stride
      * that is rounded up to the nearest multiple of 4 */
-    data = gst_buffer_map (buffer, &size, NULL, GST_MAP_READ);
-    pixbuf = gdk_pixbuf_new_from_data (data,
+    gst_buffer_map (buffer, &map, GST_MAP_READ);
+    pixbuf = gdk_pixbuf_new_from_data (map.data,
         GDK_COLORSPACE_RGB, FALSE, 8, width, height,
         GST_ROUND_UP_4 (width * 3), NULL, NULL);
 
     /* save the pixbuf */
     gdk_pixbuf_save (pixbuf, "snapshot.png", "png", &error, NULL);
-    gst_buffer_unmap (buffer, data, size);
+    gst_buffer_unmap (buffer, &map);
 
     /* save the pixbuf */
     gdk_pixbuf_save (pixbuf, "snapshot.png", "png", &error, NULL);

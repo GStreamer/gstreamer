@@ -2188,8 +2188,7 @@ gst_ogg_stream_setup_map_from_caps_headers (GstOggStream * pad,
   const GValue *streamheader;
   const GValue *first_element;
   ogg_packet packet;
-  guint8 *data;
-  gsize size;
+  GstMapInfo map;
   gboolean ret;
 
   GST_INFO ("Checking streamheader on caps %" GST_PTR_FORMAT, caps);
@@ -2228,21 +2227,20 @@ gst_ogg_stream_setup_map_from_caps_headers (GstOggStream * pad,
     return FALSE;
   }
 
-  data = gst_buffer_map (buf, &size, 0, GST_MAP_READ);
-  if (data == NULL || size == 0) {
+  if (!gst_buffer_map (buf, &map, GST_MAP_READ) || map.size == 0) {
     GST_ERROR ("invalid first streamheader buffer");
     return FALSE;
   }
 
-  GST_MEMDUMP ("streamheader", data, size);
+  GST_MEMDUMP ("streamheader", map.data, map.size);
 
-  packet.packet = data;
-  packet.bytes = size;
+  packet.packet = map.data;
+  packet.bytes = map.size;
 
   GST_INFO ("Found headers on caps, using those to determine type");
   ret = gst_ogg_stream_setup_map (pad, &packet);
 
-  gst_buffer_unmap (buf, data, size);
+  gst_buffer_unmap (buf, &map);
 
   return ret;
 }

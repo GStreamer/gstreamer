@@ -197,8 +197,9 @@ gst_ogg_avi_parse_setcaps (GstPad * pad, GstCaps * caps)
   GstStructure *structure;
   const GValue *codec_data;
   GstBuffer *buffer;
-  guint8 *data, *ptr;
-  gsize size, left;
+  GstMapInfo map;
+  guint8 *ptr;
+  gsize left;
   guint32 sizes[3];
   GstCaps *outcaps;
   gint i, offs;
@@ -222,10 +223,10 @@ gst_ogg_avi_parse_setcaps (GstPad * pad, GstCaps * caps)
   /* first 22 bytes are bits_per_sample, channel_mask, GUID
    * Then we get 3 LE guint32 with the 3 header sizes
    * then we get the bytes of the 3 headers. */
-  data = gst_buffer_map (buffer, &size, NULL, GST_MAP_READ);
+  gst_buffer_map (buffer, &map, GST_MAP_READ);
 
-  ptr = data;
-  left = size;
+  ptr = map.data;
+  left = map.size;
 
   GST_LOG_OBJECT (ogg, "configuring codec_data of size %" G_GSIZE_FORMAT, left);
 
@@ -267,7 +268,7 @@ gst_ogg_avi_parse_setcaps (GstPad * pad, GstCaps * caps)
 
     offs += sizes[i];
   }
-  gst_buffer_unmap (buffer, data, size);
+  gst_buffer_unmap (buffer, &map);
 
   return TRUE;
 
@@ -285,7 +286,7 @@ wrong_format:
 buffer_too_small:
   {
     GST_DEBUG_OBJECT (ogg, "codec_data is too small");
-    gst_buffer_unmap (buffer, data, size);
+    gst_buffer_unmap (buffer, &map);
     return FALSE;
   }
 }

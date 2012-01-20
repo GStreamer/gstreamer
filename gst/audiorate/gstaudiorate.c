@@ -518,17 +518,14 @@ gst_audio_rate_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
 
     while (fillsamples > 0) {
       guint64 cursamples = MIN (fillsamples, rate);
-      guint8 *data;
 
       fillsamples -= cursamples;
       fillsize = cursamples * bpf;
 
       fill = gst_buffer_new_and_alloc (fillsize);
 
-      data = gst_buffer_map (fill, NULL, NULL, GST_MAP_WRITE);
       /* FIXME, 0 might not be the silence byte for the negotiated format. */
-      memset (data, 0, fillsize);
-      gst_buffer_unmap (fill, data, fillsize);
+      gst_buffer_memset (fill, 0, 0, fillsize);
 
       GST_DEBUG_OBJECT (audiorate, "inserting %" G_GUINT64_FORMAT " samples",
           cursamples);

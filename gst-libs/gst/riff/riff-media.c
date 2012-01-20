@@ -1493,7 +1493,7 @@ gst_riff_create_audio_caps (guint16 codec_id,
       guint16 valid_bits_per_sample;
       guint32 channel_mask;
       guint32 subformat_guid[4];
-      guint8 *data;
+      GstMapInfo info;
       gsize size;
 
       channels_max = 8;
@@ -1507,14 +1507,14 @@ gst_riff_create_audio_caps (guint16 codec_id,
         return NULL;
       }
 
-      data = gst_buffer_map (strf_data, &size, NULL, GST_MAP_READ);
-      valid_bits_per_sample = GST_READ_UINT16_LE (data);
-      channel_mask = GST_READ_UINT32_LE (data + 2);
-      subformat_guid[0] = GST_READ_UINT32_LE (data + 6);
-      subformat_guid[1] = GST_READ_UINT32_LE (data + 10);
-      subformat_guid[2] = GST_READ_UINT32_LE (data + 14);
-      subformat_guid[3] = GST_READ_UINT32_LE (data + 18);
-      gst_buffer_unmap (strf_data, data, size);
+      gst_buffer_map (strf_data, &info, GST_MAP_READ);
+      valid_bits_per_sample = GST_READ_UINT16_LE (info.data);
+      channel_mask = GST_READ_UINT32_LE (info.data + 2);
+      subformat_guid[0] = GST_READ_UINT32_LE (info.data + 6);
+      subformat_guid[1] = GST_READ_UINT32_LE (info.data + 10);
+      subformat_guid[2] = GST_READ_UINT32_LE (info.data + 14);
+      subformat_guid[3] = GST_READ_UINT32_LE (info.data + 18);
+      gst_buffer_unmap (strf_data, &info);
 
       GST_DEBUG ("valid bps    = %u", valid_bits_per_sample);
       GST_DEBUG ("channel mask = 0x%08x", channel_mask);

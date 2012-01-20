@@ -187,7 +187,7 @@ vorbis_parse_push_headers (GstVorbisParse * parse)
   GstCaps *caps;
   GstBuffer *outbuf, *outbuf1, *outbuf2, *outbuf3;
   ogg_packet packet;
-  gsize size;
+  GstMapInfo map;
 
   /* get the headers into the caps, passing them to vorbis as we go */
   caps = gst_caps_make_writable (gst_pad_query_caps (parse->srcpad, NULL));
@@ -197,37 +197,39 @@ vorbis_parse_push_headers (GstVorbisParse * parse)
   gst_caps_unref (caps);
 
   outbuf = GST_BUFFER_CAST (parse->streamheader->data);
-  packet.packet = gst_buffer_map (outbuf, &size, NULL, GST_MAP_READ);
-  packet.bytes = size;
+  gst_buffer_map (outbuf, &map, GST_MAP_READ);
+  packet.packet = map.data;
+  packet.bytes = map.size;
   packet.granulepos = GST_BUFFER_OFFSET_END (outbuf);
   packet.packetno = 1;
   packet.e_o_s = 0;
   packet.b_o_s = 1;
   vorbis_synthesis_headerin (&parse->vi, &parse->vc, &packet);
-  gst_buffer_unmap (outbuf, packet.packet, size);
+  gst_buffer_unmap (outbuf, &map);
   parse->sample_rate = parse->vi.rate;
   outbuf1 = outbuf;
 
   outbuf = GST_BUFFER_CAST (parse->streamheader->next->data);
-  packet.packet = gst_buffer_map (outbuf, &size, NULL, GST_MAP_READ);
-  packet.bytes = size;
+  gst_buffer_map (outbuf, &map, GST_MAP_READ);
+  packet.packet = map.data;
+  packet.bytes = map.size;
   packet.granulepos = GST_BUFFER_OFFSET_END (outbuf);
   packet.packetno = 2;
   packet.e_o_s = 0;
   packet.b_o_s = 0;
   vorbis_synthesis_headerin (&parse->vi, &parse->vc, &packet);
-  gst_buffer_unmap (outbuf, packet.packet, size);
+  gst_buffer_unmap (outbuf, &map);
   outbuf2 = outbuf;
 
   outbuf = GST_BUFFER_CAST (parse->streamheader->next->next->data);
-  packet.packet = gst_buffer_map (outbuf, &size, NULL, GST_MAP_READ);
-  packet.bytes = size;
+  gst_buffer_map (outbuf, &map, GST_MAP_READ);
+  packet.packet = map.data;
   packet.granulepos = GST_BUFFER_OFFSET_END (outbuf);
   packet.packetno = 3;
   packet.e_o_s = 0;
   packet.b_o_s = 0;
   vorbis_synthesis_headerin (&parse->vi, &parse->vc, &packet);
-  gst_buffer_unmap (outbuf, packet.packet, size);
+  gst_buffer_unmap (outbuf, &map);
   outbuf3 = outbuf;
 
   /* first process queued events */
@@ -350,18 +352,20 @@ vorbis_parse_queue_buffer (GstVorbisParse * parse, GstBuffer * buf)
   GstFlowReturn ret = GST_FLOW_OK;
   long blocksize;
   ogg_packet packet;
-  gsize size;
+  GstMapInfo map;
 
   buf = gst_buffer_make_writable (buf);
 
-  packet.packet = gst_buffer_map (buf, &size, NULL, GST_MAP_READ);
-  packet.bytes = size;
+  gst_buffer_map (buf, &map, GST_MAP_READ);
+  packet.packet = map.data;
+  packet.bytes = map.size;
+  GST_DEBUG ("%p, %d", map.data, map.size);
   packet.granulepos = GST_BUFFER_OFFSET_END (buf);
   packet.packetno = parse->packetno + parse->buffer_queue->length;
   packet.e_o_s = 0;
 
   blocksize = vorbis_packet_blocksize (&parse->vi, &packet);
-  gst_buffer_unmap (buf, packet.packet, size);
+  gst_buffer_unmap (buf, &map);
 
   /* temporarily store the sample count in OFFSET -- we overwrite this later */
 
@@ -384,19 +388,18 @@ static GstFlowReturn
 vorbis_parse_parse_packet (GstVorbisParse * parse, GstBuffer * buf)
 {
   GstFlowReturn ret;
-  guint8 *data;
-  gsize size;
+  GstMapInfo map;
   gboolean have_header;
 
   parse->packetno++;
 
   have_header = FALSE;
-  data = gst_buffer_map (buf, &size, NULL, GST_MAP_READ);
-  if (size >= 1) {
-    if (data[0] >= 0x01 && data[0] <= 0x05)
+  gst_buffer_map (buf, &map, GST_MAP_READ);
+  if (map.size >= 1) {
+    if (map.data[0] >= 0x01 && map.data[0] <= 0x05)
       have_header = TRUE;
   }
-  gst_buffer_unmap (buf, data, size);
+  gst_buffer_unmap (buf, &map);
 
   if (have_header) {
     if (!parse->streamheader_sent) {

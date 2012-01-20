@@ -1070,7 +1070,7 @@ gst_adder_collected (GstCollectPads2 * pads, gpointer user_data)
   GSList *collected, *next = NULL;
   GstFlowReturn ret;
   GstBuffer *outbuf = NULL, *gapbuf = NULL;
-  gpointer outdata = NULL;
+  GstMapInfo outmap = { NULL };
   guint outsize;
   gint64 next_offset;
   gint64 next_timestamp;
@@ -1148,25 +1148,25 @@ gst_adder_collected (GstCollectPads2 * pads, gpointer user_data)
        * are the only one referencing this buffer. If this is the last (and
        * only) GAP buffer, it will automatically copy the GAP flag. */
       outbuf = gst_buffer_make_writable (inbuf);
-      outdata = gst_buffer_map (outbuf, NULL, NULL, GST_MAP_WRITE);
+      gst_buffer_map (outbuf, &outmap, GST_MAP_WRITE);
     } else {
       if (!is_gap) {
         /* we had a previous output buffer, mix this non-GAP buffer */
-        guint8 *indata;
-        gsize insize;
+        GstMapInfo inmap;
 
-        indata = gst_buffer_map (inbuf, &insize, NULL, GST_MAP_READ);
+        gst_buffer_map (inbuf, &inmap, GST_MAP_READ);
 
         /* all buffers should have outsize, there are no short buffers because we
          * asked for the max size above */
-        g_assert (insize == outsize);
+        g_assert (inmap.size == outmap.size);
 
         GST_LOG_OBJECT (adder, "channel %p: mixing %" G_GSIZE_FORMAT " bytes"
-            " from data %p", collect_data, insize, indata);
+            " from data %p", collect_data, inmap.size, inmap.data);
 
         /* further buffers, need to add them */
-        adder->func ((gpointer) outdata, (gpointer) indata, insize / bps);
-        gst_buffer_unmap (inbuf, indata, insize);
+        adder->func ((gpointer) outmap.data, (gpointer) inmap.data,
+            inmap.size / bps);
+        gst_buffer_unmap (inbuf, &inmap);
       } else {
         /* skip gap buffer */
         GST_LOG_OBJECT (adder, "channel %p: skipping GAP buffer", collect_data);
@@ -1175,7 +1175,7 @@ gst_adder_collected (GstCollectPads2 * pads, gpointer user_data)
     }
   }
   if (outbuf)
-    gst_buffer_unmap (outbuf, outdata, outsize);
+    gst_buffer_unmap (outbuf, &outmap);
 
   if (outbuf == NULL) {
     /* no output buffer, reuse one of the GAP buffers then if we have one */

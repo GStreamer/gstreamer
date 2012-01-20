@@ -678,9 +678,9 @@ gst_vorbis_enc_handle_frame (GstAudioEncoder * enc, GstBuffer * buffer)
 {
   GstVorbisEnc *vorbisenc;
   GstFlowReturn ret = GST_FLOW_OK;
-  gfloat *data, *ptr;
+  GstMapInfo map;
+  gfloat *ptr;
   gulong size;
-  gsize bsize;
   gulong i, j;
   float **vorbis_buffer;
   GstBuffer *buf1, *buf2, *buf3;
@@ -747,12 +747,11 @@ gst_vorbis_enc_handle_frame (GstAudioEncoder * enc, GstBuffer * buffer)
   if (!buffer)
     return gst_vorbis_enc_clear (vorbisenc);
 
-  data = gst_buffer_map (buffer, &bsize, NULL, GST_MAP_WRITE);
+  gst_buffer_map (buffer, &map, GST_MAP_WRITE);
 
   /* data to encode */
-  size = bsize / (vorbisenc->channels * sizeof (float));
-
-  ptr = data;
+  size = map.size / (vorbisenc->channels * sizeof (float));
+  ptr = (gfloat *) map.data;
 
   /* expose the buffer to submit data */
   vorbis_buffer = vorbis_analysis_buffer (&vorbisenc->vd, size);
@@ -779,7 +778,7 @@ gst_vorbis_enc_handle_frame (GstAudioEncoder * enc, GstBuffer * buffer)
 
   /* tell the library how much we actually submitted */
   vorbis_analysis_wrote (&vorbisenc->vd, size);
-  gst_buffer_unmap (buffer, data, bsize);
+  gst_buffer_unmap (buffer, &map);
 
   GST_LOG_OBJECT (vorbisenc, "wrote %lu samples to vorbis", size);
 

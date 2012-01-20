@@ -95,26 +95,26 @@ id3v2_read_synch_uint (const guint8 * data, guint size)
 guint
 gst_tag_get_id3v2_tag_size (GstBuffer * buffer)
 {
-  guint8 *data, flags;
-  gsize size;
+  GstMapInfo info;
+  guint8 flags;
   guint result = 0;
 
   g_return_val_if_fail (buffer != NULL, 0);
 
-  data = gst_buffer_map (buffer, &size, NULL, GST_MAP_READ);
+  gst_buffer_map (buffer, &info, GST_MAP_READ);
 
-  if (size < ID3V2_HDR_SIZE)
+  if (info.size < ID3V2_HDR_SIZE)
     goto too_small;
 
   /* Check for 'ID3' string at start of buffer */
-  if (data[0] != 'I' || data[1] != 'D' || data[2] != '3')
+  if (info.data[0] != 'I' || info.data[1] != 'D' || info.data[2] != '3')
     goto no_tag;
 
   /* Read the flags */
-  flags = data[5];
+  flags = info.data[5];
 
   /* Read the size from the header */
-  result = id3v2_read_synch_uint (data + 6, 4);
+  result = id3v2_read_synch_uint (info.data + 6, 4);
   if (result == 0)
     goto empty;
 
@@ -127,7 +127,7 @@ gst_tag_get_id3v2_tag_size (GstBuffer * buffer)
   GST_DEBUG ("ID3v2 tag, size: %u bytes", result);
 
 done:
-  gst_buffer_unmap (buffer, data, size);
+  gst_buffer_unmap (buffer, &info);
 
   return result;
 
@@ -192,9 +192,9 @@ id3v2_ununsync_data (const guint8 * unsync_data, guint32 * size)
 GstTagList *
 gst_tag_list_from_id3v2_tag (GstBuffer * buffer)
 {
-  guint8 *data, *uu_data = NULL;
+  GstMapInfo info;
+  guint8 *uu_data = NULL;
   guint read_size;
-  gsize size;
   ID3TagsWorking work;
   guint8 flags;
   guint16 version;
@@ -205,13 +205,13 @@ gst_tag_list_from_id3v2_tag (GstBuffer * buffer)
   if (read_size < ID3V2_HDR_SIZE)
     return NULL;
 
-  data = gst_buffer_map (buffer, &size, NULL, GST_MAP_READ);
+  gst_buffer_map (buffer, &info, GST_MAP_READ);
 
   /* Read the version */
-  version = GST_READ_UINT16_BE (data + 3);
+  version = GST_READ_UINT16_BE (info.data + 3);
 
   /* Read the flags */
-  flags = data[5];
+  flags = info.data[5];
 
   /* Validate the version. At the moment, we only support up to 2.4.0 */
   if (ID3V2_VER_MAJOR (version) > 4 || ID3V2_VER_MINOR (version) > 0)
@@ -224,20 +224,20 @@ gst_tag_list_from_id3v2_tag (GstBuffer * buffer)
       (flags & ID3V2_HDR_FLAG_FOOTER) ? "FOOTER" : "");
 
   /* This shouldn't really happen! Caller should have checked first */
-  if (size < read_size)
+  if (info.size < read_size)
     goto not_enough_data;
 
   GST_DEBUG ("Reading ID3v2 tag with revision 2.%d.%d of size %u", version >> 8,
       version & 0xff, read_size);
 
-  GST_MEMDUMP ("ID3v2 tag", data, read_size);
+  GST_MEMDUMP ("ID3v2 tag", info.data, read_size);
 
   memset (&work, 0, sizeof (ID3TagsWorking));
   work.buffer = buffer;
   work.hdr.version = version;
   work.hdr.size = read_size;
   work.hdr.flags = flags;
-  work.hdr.frame_data = data + ID3V2_HDR_SIZE;
+  work.hdr.frame_data = info.data + ID3V2_HDR_SIZE;
   if (flags & ID3V2_HDR_FLAG_FOOTER)
     work.hdr.frame_data_size = read_size - ID3V2_HDR_SIZE - 10;
   else
@@ -258,7 +258,7 @@ gst_tag_list_from_id3v2_tag (GstBuffer * buffer)
 
   g_free (uu_data);
 
-  gst_buffer_unmap (buffer, data, size);
+  gst_buffer_unmap (buffer, &info);
 
   return work.tags;
 
@@ -268,15 +268,15 @@ wrong_version:
     GST_WARNING ("ID3v2 tag is from revision 2.%d.%d, "
         "but decoder only supports 2.%d.%d. Ignoring as per spec.",
         version >> 8, version & 0xff, ID3V2_VERSION >> 8, ID3V2_VERSION & 0xff);
-    gst_buffer_unmap (buffer, data, size);
+    gst_buffer_unmap (buffer, &info);
     return NULL;
   }
 not_enough_data:
   {
     GST_DEBUG
         ("Found ID3v2 tag with revision 2.%d.%d - need %u more bytes to read",
-        version >> 8, version & 0xff, (guint) (read_size - size));
-    gst_buffer_unmap (buffer, data, size);
+        version >> 8, version & 0xff, (guint) (read_size - info.size));
+    gst_buffer_unmap (buffer, &info);
     return NULL;
   }
 }

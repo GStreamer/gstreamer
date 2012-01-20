@@ -167,13 +167,12 @@ stop_pipeline (GstElement * element)
 static void
 compare_buffer (GstBuffer * buf, const guint8 * data, gsize size)
 {
-  guint8 *bdata;
-  gsize bsize;
+  GstMapInfo map;
 
-  bdata = gst_buffer_map (buf, &bsize, NULL, GST_MAP_READ);
-  fail_unless_equals_int (bsize, size);
-  fail_unless_equals_int (memcmp (bdata, data, size), 0);
-  gst_buffer_unmap (buf, bdata, bsize);
+  gst_buffer_map (buf, &map, GST_MAP_READ);
+  fail_unless_equals_int (map.size, size);
+  fail_unless_equals_int (memcmp (map.data, data, size), 0);
+  gst_buffer_unmap (buf, &map);
 }
 
 static vorbis_comment vc;
@@ -218,6 +217,7 @@ _create_audio_buffer (void)
   vorbis_bitrate_flushpacket (&vd, &packet);
   buffer = gst_buffer_new_and_alloc (packet.bytes);
   gst_buffer_fill (buffer, 0, packet.packet, packet.bytes);
+  GST_DEBUG ("%p %d", packet.packet, packet.bytes);
 
   vorbis_comment_clear (&vc);
   vorbis_block_clear (&vb);

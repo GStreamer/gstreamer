@@ -568,17 +568,17 @@ static GstFlowReturn
 gst_red_video_src_create (GstPushSrc * src, GstBuffer ** p_buf)
 {
   GstBuffer *buf;
-  guint8 *data;
+  GstMapInfo map;
   guint w = 64, h = 64;
   guint size;
 
   size = w * h * 3 / 2;
   buf = gst_buffer_new_and_alloc (size);
-  data = gst_buffer_map (buf, NULL, NULL, GST_MAP_WRITE);
-  memset (data, 76, w * h);
-  memset (data + (w * h), 85, (w * h) / 4);
-  memset (data + (w * h) + ((w * h) / 4), 255, (w * h) / 4);
-  gst_buffer_unmap (buf, data, size);
+  gst_buffer_map (buf, &map, GST_MAP_WRITE);
+  memset (map.data, 76, w * h);
+  memset (map.data + (w * h), 85, (w * h) / 4);
+  memset (map.data + (w * h) + ((w * h) / 4), 255, (w * h) / 4);
+  gst_buffer_unmap (buf, &map);
 
   *p_buf = buf;
   return GST_FLOW_OK;
@@ -681,12 +681,9 @@ static GstFlowReturn
 gst_codec_src_create (GstPushSrc * src, GstBuffer ** p_buf)
 {
   GstBuffer *buf;
-  guint8 *data;
 
   buf = gst_buffer_new_and_alloc (20);
-  data = gst_buffer_map (buf, NULL, NULL, GST_MAP_WRITE);
-  memset (data, 0, 20);
-  gst_buffer_unmap (buf, data, 20);
+  gst_buffer_memset (buf, 0, 0, 20);
 
   *p_buf = buf;
   return GST_FLOW_OK;

@@ -716,8 +716,7 @@ gst_visual_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
     gboolean need_skip;
     const guint16 *data;
     guint64 dist, timestamp;
-    guint8 *outdata;
-    gsize outsize;
+    GstMapInfo outmap;
 
     GST_DEBUG_OBJECT (visual, "processing buffer");
 
@@ -855,12 +854,12 @@ gst_visual_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
         goto beach;
       }
     }
-    outdata = gst_buffer_map (outbuf, &outsize, NULL, GST_MAP_WRITE);
-    visual_video_set_buffer (visual->video, outdata);
+    gst_buffer_map (outbuf, &outmap, GST_MAP_WRITE);
+    visual_video_set_buffer (visual->video, outmap.data);
     visual_audio_analyze (visual->audio);
     visual_actor_run (visual->actor, visual->audio);
     visual_video_set_buffer (visual->video, NULL);
-    gst_buffer_unmap (outbuf, outdata, outsize);
+    gst_buffer_unmap (outbuf, &outmap);
     GST_DEBUG_OBJECT (visual, "rendered one frame");
 
     gst_adapter_unmap (visual->adapter);

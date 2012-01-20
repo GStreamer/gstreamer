@@ -186,7 +186,8 @@ test_perfect_stream_instance (int inrate, int outrate, int samples,
   GstCaps *caps;
   guint64 offset = 0;
   int i, j;
-  gint16 *p, *data;
+  GstMapInfo map;
+  gint16 *p;
 
   audioresample = setup_audioresample (2, inrate, outrate, 16, FALSE);
   caps = gst_pad_get_current_caps (mysrcpad);
@@ -205,7 +206,8 @@ test_perfect_stream_instance (int inrate, int outrate, int samples,
     offset += samples;
     GST_BUFFER_OFFSET_END (inbuffer) = offset;
 
-    p = data = gst_buffer_map (inbuffer, NULL, NULL, GST_MAP_WRITE);
+    gst_buffer_map (inbuffer, &map, GST_MAP_WRITE);
+    p = (gint16 *) map.data;
 
     /* create a 16 bit signed ramp */
     for (i = 0; i < samples; ++i) {
@@ -214,7 +216,7 @@ test_perfect_stream_instance (int inrate, int outrate, int samples,
       *p = -32767 + i * (65535 / samples);
       ++p;
     }
-    gst_buffer_unmap (inbuffer, data, samples * 4);
+    gst_buffer_unmap (inbuffer, &map);
 
     /* pushing gives away my reference ... */
     fail_unless (gst_pad_push (mysrcpad, inbuffer) == GST_FLOW_OK);
@@ -269,7 +271,8 @@ test_discont_stream_instance (int inrate, int outrate, int samples,
   GstClockTime ints;
 
   int i, j;
-  gint16 *p, *data;
+  GstMapInfo map;
+  gint16 *p;
 
   GST_DEBUG ("inrate:%d outrate:%d samples:%d numbuffers:%d",
       inrate, outrate, samples, numbuffers);
@@ -292,7 +295,8 @@ test_discont_stream_instance (int inrate, int outrate, int samples,
     GST_BUFFER_OFFSET (inbuffer) = (j - 1) * 2 * samples;
     GST_BUFFER_OFFSET_END (inbuffer) = j * 2 * samples + samples;
 
-    p = data = gst_buffer_map (inbuffer, NULL, NULL, GST_MAP_WRITE);
+    gst_buffer_map (inbuffer, &map, GST_MAP_WRITE);
+    p = (gint16 *) map.data;
     /* create a 16 bit signed ramp */
     for (i = 0; i < samples; ++i) {
       *p = -32767 + i * (65535 / samples);
@@ -300,7 +304,7 @@ test_discont_stream_instance (int inrate, int outrate, int samples,
       *p = -32767 + i * (65535 / samples);
       ++p;
     }
-    gst_buffer_unmap (inbuffer, data, samples * 4);
+    gst_buffer_unmap (inbuffer, &map);
 
     GST_DEBUG ("Sending Buffer time:%" G_GUINT64_FORMAT " duration:%"
         G_GINT64_FORMAT " discont:%d offset:%" G_GUINT64_FORMAT " offset_end:%"
@@ -357,7 +361,6 @@ GST_START_TEST (test_reuse)
   GstEvent *newseg;
   GstBuffer *inbuffer;
   GstCaps *caps;
-  guint8 *data;
   GstSegment segment;
 
   audioresample = setup_audioresample (1, 9343, 48000, 16, FALSE);
@@ -373,9 +376,7 @@ GST_START_TEST (test_reuse)
   fail_unless (gst_pad_push_event (mysrcpad, newseg) != FALSE);
 
   inbuffer = gst_buffer_new_and_alloc (9343 * 4);
-  data = gst_buffer_map (inbuffer, NULL, NULL, GST_MAP_WRITE);
-  memset (data, 0, 9343 * 4);
-  gst_buffer_unmap (inbuffer, data, 9343 * 4);
+  gst_buffer_memset (inbuffer, 0, 0, 9343 * 4);
   GST_BUFFER_DURATION (inbuffer) = GST_SECOND;
   GST_BUFFER_TIMESTAMP (inbuffer) = 0;
   GST_BUFFER_OFFSET (inbuffer) = 0;
@@ -398,9 +399,7 @@ GST_START_TEST (test_reuse)
   fail_unless (gst_pad_push_event (mysrcpad, newseg) != FALSE);
 
   inbuffer = gst_buffer_new_and_alloc (9343 * 4);
-  data = gst_buffer_map (inbuffer, NULL, NULL, GST_MAP_WRITE);
-  memset (data, 0, 9343 * 4);
-  gst_buffer_unmap (inbuffer, data, 9343 * 4);
+  gst_buffer_memset (inbuffer, 0, 0, 9343 * 4);
   GST_BUFFER_DURATION (inbuffer) = GST_SECOND;
   GST_BUFFER_TIMESTAMP (inbuffer) = 0;
   GST_BUFFER_OFFSET (inbuffer) = 0;
@@ -946,29 +945,28 @@ static gboolean is_zero_except_##ffttag (const GstFFT##ffttag##Complex *v, int e
 }                                                                                               \
 static void compare_ffts_##ffttag (GstBuffer *inbuffer, GstBuffer *outbuffer)                   \
 {                                                                                               \
-  gsize insize, outsize;                                                                        \
-  gpointer indata, outdata;                                                                     \
+  GstMapInfo inmap, outmap;                                                                     \
   int insamples, outsamples;                                                                    \
   gdouble inspot, outspot;                                                                      \
   GstFFT##ffttag *inctx, *outctx;                                                               \
   GstFFT##ffttag##Complex *in, *out;                                                            \
                                                                                                 \
-  indata = gst_buffer_map (inbuffer, &insize, NULL, GST_MAP_READ);                              \
-  outdata = gst_buffer_map (outbuffer, &outsize, NULL, GST_MAP_READWRITE);                      \
+  gst_buffer_map (inbuffer, &inmap, GST_MAP_READ);                                              \
+  gst_buffer_map (outbuffer, &outmap, GST_MAP_READWRITE);                                       \
                                                                                                 \
-  insamples = insize / sizeof(type) & ~1;                                                       \
-  outsamples = outsize / sizeof(type) & ~1;                                                     \
+  insamples = inmap.size / sizeof(type) & ~1;                                                   \
+  outsamples = outmap.size / sizeof(type) & ~1;                                                 \
   inctx = gst_fft_##ffttag2##_new (insamples, FALSE);                                           \
   outctx = gst_fft_##ffttag2##_new (outsamples, FALSE);                                         \
   in = g_new (GstFFT##ffttag##Complex, insamples / 2 + 1);                                      \
   out = g_new (GstFFT##ffttag##Complex, outsamples / 2 + 1);                                    \
                                                                                                 \
-  gst_fft_##ffttag2##_window (inctx, (type*)indata,                                             \
+  gst_fft_##ffttag2##_window (inctx, (type*)inmap.data,                                         \
       GST_FFT_WINDOW_HAMMING);                                                                  \
-  gst_fft_##ffttag2##_fft (inctx, (type*)indata, in);                                           \
-  gst_fft_##ffttag2##_window (outctx, (type*)outdata,                                           \
+  gst_fft_##ffttag2##_fft (inctx, (type*)inmap.data, in);                                       \
+  gst_fft_##ffttag2##_window (outctx, (type*)outmap.data,                                       \
       GST_FFT_WINDOW_HAMMING);                                                                  \
-  gst_fft_##ffttag2##_fft (outctx, (type*)outdata, out);                                        \
+  gst_fft_##ffttag2##_fft (outctx, (type*)outmap.data, out);                                    \
                                                                                                 \
   inspot = find_main_frequency_spot_##ffttag (in, insamples / 2 + 1);                           \
   outspot = find_main_frequency_spot_##ffttag (out, outsamples / 2 + 1);                        \
@@ -977,8 +975,8 @@ static void compare_ffts_##ffttag (GstBuffer *inbuffer, GstBuffer *outbuffer)   
   fail_unless (is_zero_except_##ffttag (in, insamples / 2 + 1, inspot));                        \
   fail_unless (is_zero_except_##ffttag (out, outsamples / 2 + 1, outspot));                     \
                                                                                                 \
-  gst_buffer_unmap (inbuffer, indata, insize);                                                  \
-  gst_buffer_unmap (outbuffer, outdata, outsize);                                               \
+  gst_buffer_unmap (inbuffer, &inmap);                                                          \
+  gst_buffer_unmap (outbuffer, &outmap);                                                        \
                                                                                                 \
   gst_fft_##ffttag2##_free (inctx);                                                             \
   gst_fft_##ffttag2##_free (outctx);                                                            \
@@ -993,9 +991,12 @@ FFT_HELPERS (gint32, S32, s32, 2147483647.0);
 #define FILL_BUFFER(type, desc, value);                         \
   static void init_##type##_##desc (GstBuffer *buffer)          \
   {                                                             \
-    gsize size;                                                 \
-    type *ptr = gst_buffer_map (buffer, &size, NULL, GST_MAP_WRITE); \
-    int i, nsamples = size / sizeof (type);                     \
+    GstMapInfo map;                                             \
+    type *ptr;                                                  \
+    int i, nsamples;                                            \
+    gst_buffer_map (buffer, &map, GST_MAP_WRITE);               \
+    ptr = (type *)map.data;                                     \
+    nsamples = map.size / sizeof (type);                        \
     for (i = 0; i < nsamples; ++i) {                            \
       *ptr++ = value;                                           \
     }                                                           \

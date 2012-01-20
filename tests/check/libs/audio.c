@@ -35,8 +35,8 @@ GST_START_TEST (test_buffer_clipping_time)
   GstSegment s;
   GstBuffer *buf;
   GstBuffer *ret;
-  guint8 *data, *sdata;
-  gsize ssize;
+  GstMapInfo map;
+  guint8 *data;
 
   /* Clip start and end */
   buf = gst_buffer_new ();
@@ -61,10 +61,10 @@ GST_START_TEST (test_buffer_clipping_time)
   fail_unless (GST_BUFFER_DURATION (ret) == 4 * GST_SECOND);
   fail_unless (GST_BUFFER_OFFSET (ret) == 400);
   fail_unless (GST_BUFFER_OFFSET_END (ret) == 800);
-  sdata = gst_buffer_map (ret, &ssize, NULL, GST_MAP_READ);
-  fail_unless (sdata == data + 200);
-  fail_unless (ssize == 400);
-  gst_buffer_unmap (ret, sdata, ssize);
+  gst_buffer_map (ret, &map, GST_MAP_READ);
+  fail_unless (map.data == data + 200);
+  fail_unless (map.size == 400);
+  gst_buffer_unmap (ret, &map);
 
   gst_buffer_unref (ret);
 
@@ -91,10 +91,10 @@ GST_START_TEST (test_buffer_clipping_time)
   fail_unless (GST_BUFFER_DURATION (ret) == 8 * GST_SECOND);
   fail_unless (GST_BUFFER_OFFSET (ret) == 400);
   fail_unless (GST_BUFFER_OFFSET_END (ret) == 1200);
-  sdata = gst_buffer_map (ret, &ssize, NULL, GST_MAP_READ);
-  fail_unless (sdata == data + 200);
-  fail_unless (ssize == 800);
-  gst_buffer_unmap (ret, sdata, ssize);
+  gst_buffer_map (ret, &map, GST_MAP_READ);
+  fail_unless (map.data == data + 200);
+  fail_unless (map.size == 800);
+  gst_buffer_unmap (ret, &map);
 
   gst_buffer_unref (ret);
 
@@ -121,10 +121,10 @@ GST_START_TEST (test_buffer_clipping_time)
   fail_unless (GST_BUFFER_DURATION (ret) == 8 * GST_SECOND);
   fail_unless (GST_BUFFER_OFFSET (ret) == 200);
   fail_unless (GST_BUFFER_OFFSET_END (ret) == 1000);
-  sdata = gst_buffer_map (ret, &ssize, NULL, GST_MAP_READ);
-  fail_unless (sdata == data);
-  fail_unless (ssize == 800);
-  gst_buffer_unmap (ret, sdata, ssize);
+  gst_buffer_map (ret, &map, GST_MAP_READ);
+  fail_unless (map.data == data);
+  fail_unless (map.size == 800);
+  gst_buffer_unmap (ret, &map);
 
   gst_buffer_unref (ret);
 
@@ -170,10 +170,10 @@ GST_START_TEST (test_buffer_clipping_time)
   fail_unless (GST_BUFFER_DURATION (ret) == GST_CLOCK_TIME_NONE);
   fail_unless (GST_BUFFER_OFFSET (ret) == 400);
   fail_unless (GST_BUFFER_OFFSET_END (ret) == GST_BUFFER_OFFSET_NONE);
-  sdata = gst_buffer_map (ret, &ssize, NULL, GST_MAP_READ);
-  fail_unless (sdata == data + 200);
-  fail_unless (ssize == 400);
-  gst_buffer_unmap (ret, sdata, ssize);
+  gst_buffer_map (ret, &map, GST_MAP_READ);
+  fail_unless (map.data == data + 200);
+  fail_unless (map.size == 400);
+  gst_buffer_unmap (ret, &map);
 
   gst_buffer_unref (ret);
 
@@ -233,8 +233,8 @@ GST_START_TEST (test_buffer_clipping_samples)
   GstSegment s;
   GstBuffer *buf;
   GstBuffer *ret;
-  guint8 *data, *sdata;
-  gsize ssize;
+  GstMapInfo map;
+  guint8 *data;
 
   /* Clip start and end */
   buf = gst_buffer_new ();
@@ -259,10 +259,10 @@ GST_START_TEST (test_buffer_clipping_samples)
   fail_unless (GST_BUFFER_DURATION (ret) == 4 * GST_SECOND);
   fail_unless (GST_BUFFER_OFFSET (ret) == 400);
   fail_unless (GST_BUFFER_OFFSET_END (ret) == 800);
-  sdata = gst_buffer_map (ret, &ssize, NULL, GST_MAP_READ);
-  fail_unless (sdata == data + 200);
-  fail_unless (ssize == 400);
-  gst_buffer_unmap (ret, sdata, ssize);
+  gst_buffer_map (ret, &map, GST_MAP_READ);
+  fail_unless (map.data == data + 200);
+  fail_unless (map.size == 400);
+  gst_buffer_unmap (ret, &map);
 
   gst_buffer_unref (ret);
 
@@ -289,10 +289,10 @@ GST_START_TEST (test_buffer_clipping_samples)
   fail_unless (GST_BUFFER_DURATION (ret) == 8 * GST_SECOND);
   fail_unless (GST_BUFFER_OFFSET (ret) == 400);
   fail_unless (GST_BUFFER_OFFSET_END (ret) == 1200);
-  sdata = gst_buffer_map (ret, &ssize, NULL, GST_MAP_READ);
-  fail_unless (sdata == data + 200);
-  fail_unless (ssize == 800);
-  gst_buffer_unmap (ret, sdata, ssize);
+  gst_buffer_map (ret, &map, GST_MAP_READ);
+  fail_unless (map.data == data + 200);
+  fail_unless (map.size == 800);
+  gst_buffer_unmap (ret, &map);
 
   gst_buffer_unref (ret);
 
@@ -319,10 +319,10 @@ GST_START_TEST (test_buffer_clipping_samples)
   fail_unless (GST_BUFFER_DURATION (ret) == 8 * GST_SECOND);
   fail_unless (GST_BUFFER_OFFSET (ret) == 200);
   fail_unless (GST_BUFFER_OFFSET_END (ret) == 1000);
-  sdata = gst_buffer_map (ret, &ssize, NULL, GST_MAP_READ);
-  fail_unless (sdata == data);
-  fail_unless (ssize == 800);
-  gst_buffer_unmap (ret, sdata, ssize);
+  gst_buffer_map (ret, &map, GST_MAP_READ);
+  fail_unless (map.data == data);
+  fail_unless (map.size == 800);
+  gst_buffer_unmap (ret, &map);
 
   gst_buffer_unref (ret);
 
@@ -368,10 +368,10 @@ GST_START_TEST (test_buffer_clipping_samples)
   fail_unless (GST_BUFFER_DURATION (ret) == GST_CLOCK_TIME_NONE);
   fail_unless (GST_BUFFER_OFFSET (ret) == 400);
   fail_unless (GST_BUFFER_OFFSET_END (ret) == GST_BUFFER_OFFSET_NONE);
-  sdata = gst_buffer_map (ret, &ssize, NULL, GST_MAP_READ);
-  fail_unless (sdata == data + 200);
-  fail_unless (ssize == 400);
-  gst_buffer_unmap (ret, sdata, ssize);
+  gst_buffer_map (ret, &map, GST_MAP_READ);
+  fail_unless (map.data == data + 200);
+  fail_unless (map.size == 400);
+  gst_buffer_unmap (ret, &map);
 
   gst_buffer_unref (ret);
 
@@ -553,8 +553,7 @@ GST_START_TEST (test_multichannel_reorder)
   };
   gint i;
   GstBuffer *buf;
-  gint32 *data;
-  gsize size;
+  GstMapInfo map;
 
   for (i = 0; i < G_N_ELEMENTS (tests); i++) {
     buf =
@@ -568,10 +567,10 @@ GST_START_TEST (test_multichannel_reorder)
       fail_unless (gst_audio_buffer_reorder_channels (buf, GST_AUDIO_FORMAT_S32,
               tests[i].channels, tests[i].from, tests[i].to));
 
-      data = gst_buffer_map (buf, &size, NULL, GST_MAP_READ);
-      fail_unless_equals_int (size, sizeof (tests[i].in));
-      fail_unless (memcmp (tests[i].out, data, size) == 0);
-      gst_buffer_unmap (buf, data, size);
+      gst_buffer_map (buf, &map, GST_MAP_READ);
+      fail_unless_equals_int (map.size, sizeof (tests[i].in));
+      fail_unless (memcmp (tests[i].out, map.data, map.size) == 0);
+      gst_buffer_unmap (buf, &map);
     }
     gst_buffer_unref (buf);
   }

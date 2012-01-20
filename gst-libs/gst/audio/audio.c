@@ -1067,18 +1067,19 @@ gst_audio_buffer_reorder_channels (GstBuffer * buffer,
     GstAudioFormat format, gint channels,
     const GstAudioChannelPosition * from, const GstAudioChannelPosition * to)
 {
-  gsize size;
-  guint8 *data;
+  GstMapInfo info;
   gboolean ret;
 
   g_return_val_if_fail (GST_IS_BUFFER (buffer), FALSE);
   g_return_val_if_fail (gst_buffer_is_writable (buffer), FALSE);
 
-  data = gst_buffer_map (buffer, &size, NULL, GST_MAP_READ | GST_MAP_WRITE);
+  gst_buffer_map (buffer, &info, GST_MAP_READWRITE);
 
-  ret = gst_audio_reorder_channels (data, size, format, channels, from, to);
+  ret =
+      gst_audio_reorder_channels (info.data, info.size, format, channels, from,
+      to);
 
-  gst_buffer_unmap (buffer, data, size);
+  gst_buffer_unmap (buffer, &info);
 
   return ret;
 }

@@ -52,10 +52,9 @@ gst_riff_read_chunk (GstElement * element,
 {
   GstBuffer *buf;
   GstFlowReturn res;
-  guint8 *data;
+  GstMapInfo info;
   guint size;
   guint64 offset = *_offset;
-  gsize bsize;
 
   g_return_val_if_fail (element != NULL, GST_FLOW_ERROR);
   g_return_val_if_fail (pad != NULL, GST_FLOW_ERROR);
@@ -70,10 +69,10 @@ skip_junk:
   else if (gst_buffer_get_size (buf) < size)
     goto too_small;
 
-  data = gst_buffer_map (buf, &bsize, NULL, GST_MAP_READ);
-  *tag = GST_READ_UINT32_LE (data);
-  size = GST_READ_UINT32_LE (data + 4);
-  gst_buffer_unmap (buf, data, bsize);
+  gst_buffer_map (buf, &info, GST_MAP_READ);
+  *tag = GST_READ_UINT32_LE (info.data);
+  size = GST_READ_UINT32_LE (info.data + 4);
+  gst_buffer_unmap (buf, &info);
   gst_buffer_unref (buf);
 
   GST_DEBUG_OBJECT (element, "fourcc=%" GST_FOURCC_FORMAT ", size=%u",
@@ -129,8 +128,8 @@ gst_riff_parse_chunk (GstElement * element, GstBuffer * buf,
 {
   guint size, bufsize;
   guint32 fourcc;
-  guint8 *data, *ptr;
-  gsize bsize;
+  guint8 *ptr;
+  GstMapInfo info;
   guint offset = *_offset;
 
   g_return_val_if_fail (element != NULL, FALSE);
@@ -151,11 +150,11 @@ gst_riff_parse_chunk (GstElement * element, GstBuffer * buf,
     goto too_small;
 
   /* read header */
-  data = ptr = gst_buffer_map (buf, &bsize, NULL, GST_MAP_READ);
-  ptr += offset;
+  gst_buffer_map (buf, &info, GST_MAP_READ);
+  ptr = info.data + offset;
   fourcc = GST_READ_UINT32_LE (ptr);
   size = GST_READ_UINT32_LE (ptr + 4);
-  gst_buffer_unmap (buf, data, bsize);
+  gst_buffer_unmap (buf, &info);
 
   GST_DEBUG_OBJECT (element, "fourcc=%" GST_FOURCC_FORMAT ", size=%u",
       GST_FOURCC_ARGS (fourcc), size);
@@ -223,23 +222,22 @@ gboolean
 gst_riff_parse_file_header (GstElement * element,
     GstBuffer * buf, guint32 * doctype)
 {
-  guint8 *data;
+  GstMapInfo info;
   guint32 tag;
-  gsize size;
 
   g_return_val_if_fail (buf != NULL, FALSE);
   g_return_val_if_fail (doctype != NULL, FALSE);
 
-  data = gst_buffer_map (buf, &size, NULL, GST_MAP_READ);
-  if (size < 12)
+  gst_buffer_map (buf, &info, GST_MAP_READ);
+  if (info.size < 12)
     goto too_small;
 
-  tag = GST_READ_UINT32_LE (data);
+  tag = GST_READ_UINT32_LE (info.data);
   if (tag != GST_RIFF_TAG_RIFF && tag != GST_RIFF_TAG_AVF0)
     goto not_riff;
 
-  *doctype = GST_READ_UINT32_LE (data + 8);
-  gst_buffer_unmap (buf, data, size);
+  *doctype = GST_READ_UINT32_LE (info.data + 8);
+  gst_buffer_unmap (buf, &info);
 
   gst_buffer_unref (buf);
 
@@ -250,8 +248,8 @@ too_small:
   {
     GST_ELEMENT_ERROR (element, STREAM, WRONG_TYPE, (NULL),
         ("Not enough data to parse RIFF header (%" G_GSIZE_FORMAT " available,"
-            " %d needed)", size, 12));
-    gst_buffer_unmap (buf, data, size);
+            " %d needed)", info.size, 12));
+    gst_buffer_unmap (buf, &info);
     gst_buffer_unref (buf);
     return FALSE;
   }
@@ -260,7 +258,7 @@ not_riff:
     GST_ELEMENT_ERROR (element, STREAM, WRONG_TYPE, (NULL),
         ("Stream is no RIFF stream: %" GST_FOURCC_FORMAT,
             GST_FOURCC_ARGS (tag)));
-    gst_buffer_unmap (buf, data, size);
+    gst_buffer_unmap (buf, &info);
     gst_buffer_unref (buf);
     return FALSE;
   }
@@ -284,18 +282,17 @@ gst_riff_parse_strh (GstElement * element,
     GstBuffer * buf, gst_riff_strh ** _strh)
 {
   gst_riff_strh *strh;
-  guint8 *data;
-  gsize size;
+  GstMapInfo info;
 
   g_return_val_if_fail (buf != NULL, FALSE);
   g_return_val_if_fail (_strh != NULL, FALSE);
 
-  data = gst_buffer_map (buf, &size, NULL, GST_MAP_READ);
-  if (size < sizeof (gst_riff_strh))
+  gst_buffer_map (buf, &info, GST_MAP_READ);
+  if (info.size < sizeof (gst_riff_strh))
     goto too_small;
 
-  strh = g_memdup (data, size);
-  gst_buffer_unmap (buf, data, size);
+  strh = g_memdup (info.data, info.size);
+  gst_buffer_unmap (buf, &info);
 
   gst_buffer_unref (buf);
 
@@ -346,8 +343,8 @@ too_small:
   {
     GST_ERROR_OBJECT (element,
         "Too small strh (%" G_GSIZE_FORMAT " available, %d needed)",
-        size, (int) sizeof (gst_riff_strh));
-    gst_buffer_unmap (buf, data, size);
+        info.size, (int) sizeof (gst_riff_strh));
+    gst_buffer_unmap (buf, &info);
     gst_buffer_unref (buf);
     return FALSE;
   }
@@ -375,19 +372,18 @@ gst_riff_parse_strf_vids (GstElement * element,
     GstBuffer * buf, gst_riff_strf_vids ** _strf, GstBuffer ** data)
 {
   gst_riff_strf_vids *strf;
-  guint8 *bdata;
-  gsize size;
+  GstMapInfo info;
 
   g_return_val_if_fail (buf != NULL, FALSE);
   g_return_val_if_fail (_strf != NULL, FALSE);
   g_return_val_if_fail (data != NULL, FALSE);
 
-  bdata = gst_buffer_map (buf, &size, NULL, GST_MAP_READ);
-  if (size < sizeof (gst_riff_strf_vids))
+  gst_buffer_map (buf, &info, GST_MAP_READ);
+  if (info.size < sizeof (gst_riff_strf_vids))
     goto too_small;
 
-  strf = g_memdup (bdata, size);
-  gst_buffer_unmap (buf, bdata, size);
+  strf = g_memdup (info.data, info.size);
+  gst_buffer_unmap (buf, &info);
 
 #if (G_BYTE_ORDER == G_BIG_ENDIAN)
   strf->size = GUINT32_FROM_LE (strf->size);
@@ -405,16 +401,16 @@ gst_riff_parse_strf_vids (GstElement * element,
 
   /* size checking */
   *data = NULL;
-  if (strf->size > size) {
+  if (strf->size > info.size) {
     GST_WARNING_OBJECT (element,
         "strf_vids header gave %d bytes data, only %" G_GSIZE_FORMAT
-        " available", strf->size, size);
-    strf->size = size;
+        " available", strf->size, info.size);
+    strf->size = info.size;
   }
-  if (sizeof (gst_riff_strf_vids) < size) {
+  if (sizeof (gst_riff_strf_vids) < info.size) {
     *data =
         gst_buffer_copy_region (buf, GST_BUFFER_COPY_ALL,
-        sizeof (gst_riff_strf_vids), size - sizeof (gst_riff_strf_vids));
+        sizeof (gst_riff_strf_vids), info.size - sizeof (gst_riff_strf_vids));
   }
   gst_buffer_unref (buf);
 
@@ -445,8 +441,8 @@ too_small:
   {
     GST_ERROR_OBJECT (element,
         "Too small strf_vids (%" G_GSIZE_FORMAT " available, %d needed)",
-        size, (int) sizeof (gst_riff_strf_vids));
-    gst_buffer_unmap (buf, data, size);
+        info.size, (int) sizeof (gst_riff_strf_vids));
+    gst_buffer_unmap (buf, &info);
     gst_buffer_unref (buf);
     return FALSE;
   }
@@ -474,18 +470,17 @@ gst_riff_parse_strf_auds (GstElement * element,
     GstBuffer * buf, gst_riff_strf_auds ** _strf, GstBuffer ** data)
 {
   gst_riff_strf_auds *strf;
-  gsize bsize;
-  guint8 *bdata;
+  GstMapInfo info;
 
   g_return_val_if_fail (buf != NULL, FALSE);
   g_return_val_if_fail (_strf != NULL, FALSE);
   g_return_val_if_fail (data != NULL, FALSE);
 
-  bdata = gst_buffer_map (buf, &bsize, NULL, GST_MAP_READ);
-  if (bsize < sizeof (gst_riff_strf_auds))
+  gst_buffer_map (buf, &info, GST_MAP_READ);
+  if (info.size < sizeof (gst_riff_strf_auds))
     goto too_small;
 
-  strf = g_memdup (bdata, bsize);
+  strf = g_memdup (info.data, info.size);
 
 #if (G_BYTE_ORDER == G_BIG_ENDIAN)
   strf->format = GUINT16_FROM_LE (strf->format);
@@ -498,15 +493,15 @@ gst_riff_parse_strf_auds (GstElement * element,
 
   /* size checking */
   *data = NULL;
-  if (bsize > sizeof (gst_riff_strf_auds) + 2) {
+  if (info.size > sizeof (gst_riff_strf_auds) + 2) {
     gint len;
 
     len = GST_READ_UINT16_LE (&data[16]);
-    if (len + 2 + sizeof (gst_riff_strf_auds) > bsize) {
+    if (len + 2 + sizeof (gst_riff_strf_auds) > info.size) {
       GST_WARNING_OBJECT (element,
           "Extradata indicated %d bytes, but only %" G_GSSIZE_FORMAT
-          " available", len, bsize - 2 - sizeof (gst_riff_strf_auds));
-      len = bsize - 2 - sizeof (gst_riff_strf_auds);
+          " available", len, info.size - 2 - sizeof (gst_riff_strf_auds));
+      len = info.size - 2 - sizeof (gst_riff_strf_auds);
     }
     if (len)
       *data = gst_buffer_copy_region (buf, GST_BUFFER_COPY_ALL,
@@ -525,7 +520,7 @@ gst_riff_parse_strf_auds (GstElement * element,
     GST_INFO_OBJECT (element, " %" G_GSIZE_FORMAT " bytes extradata",
         gst_buffer_get_size (*data));
 
-  gst_buffer_unmap (buf, bdata, bsize);
+  gst_buffer_unmap (buf, &info);
   gst_buffer_unref (buf);
 
   *_strf = strf;
@@ -537,8 +532,9 @@ too_small:
   {
     GST_ERROR_OBJECT (element,
         "Too small strf_auds (%" G_GSIZE_FORMAT " available"
-        ", %" G_GSSIZE_FORMAT " needed)", bsize, sizeof (gst_riff_strf_auds));
-    gst_buffer_unmap (buf, bdata, bsize);
+        ", %" G_GSSIZE_FORMAT " needed)", info.size,
+        sizeof (gst_riff_strf_auds));
+    gst_buffer_unmap (buf, &info);
     gst_buffer_unref (buf);
     return FALSE;
   }
@@ -566,19 +562,18 @@ gst_riff_parse_strf_iavs (GstElement * element,
     GstBuffer * buf, gst_riff_strf_iavs ** _strf, GstBuffer ** data)
 {
   gst_riff_strf_iavs *strf;
-  gsize bsize;
-  guint8 *bdata;
+  GstMapInfo info;
 
   g_return_val_if_fail (buf != NULL, FALSE);
   g_return_val_if_fail (_strf != NULL, FALSE);
   g_return_val_if_fail (data != NULL, FALSE);
 
-  bdata = gst_buffer_map (buf, &bsize, NULL, GST_MAP_READ);
-  if (bsize < sizeof (gst_riff_strf_iavs))
+  gst_buffer_map (buf, &info, GST_MAP_READ);
+  if (info.size < sizeof (gst_riff_strf_iavs))
     goto too_small;
 
-  strf = g_memdup (bdata, bsize);
-  gst_buffer_unmap (buf, bdata, bsize);
+  strf = g_memdup (info.data, info.size);
+  gst_buffer_unmap (buf, &info);
 
   gst_buffer_unref (buf);
 
@@ -614,8 +609,9 @@ too_small:
   {
     GST_ERROR_OBJECT (element,
         "Too small strf_iavs (%" G_GSIZE_FORMAT "available"
-        ", %" G_GSSIZE_FORMAT " needed)", bsize, sizeof (gst_riff_strf_iavs));
-    gst_buffer_unmap (buf, bdata, bsize);
+        ", %" G_GSSIZE_FORMAT " needed)", info.size,
+        sizeof (gst_riff_strf_iavs));
+    gst_buffer_unmap (buf, &info);
     gst_buffer_unref (buf);
     return FALSE;
   }
@@ -635,8 +631,9 @@ void
 gst_riff_parse_info (GstElement * element,
     GstBuffer * buf, GstTagList ** _taglist)
 {
-  guint8 *data, *ptr;
-  gsize size, left;
+  GstMapInfo info;
+  guint8 *ptr;
+  gsize left;
   guint tsize;
   guint32 tag;
   const gchar *type;
@@ -648,12 +645,12 @@ gst_riff_parse_info (GstElement * element,
     *_taglist = NULL;
     return;
   }
-  data = gst_buffer_map (buf, &size, NULL, GST_MAP_READ);
+  gst_buffer_map (buf, &info, GST_MAP_READ);
 
   taglist = gst_tag_list_new_empty ();
 
-  ptr = data;
-  left = size;
+  ptr = info.data;
+  left = info.size;
 
   while (left > 8) {
     tag = GST_READ_UINT32_LE (ptr);
@@ -782,7 +779,7 @@ gst_riff_parse_info (GstElement * element,
     *_taglist = NULL;
     gst_tag_list_free (taglist);
   }
-  gst_buffer_unmap (buf, data, size);
+  gst_buffer_unmap (buf, &info);
 
   return;
 }

@@ -288,11 +288,10 @@ static GstFlowReturn
 gst_ogg_parse_submit_buffer (GstOggParse * ogg, GstBuffer * buffer)
 {
   gsize size;
-  guint8 *data;
   gchar *oggbuffer;
   GstFlowReturn ret = GST_FLOW_OK;
 
-  data = gst_buffer_map (buffer, &size, NULL, GST_MAP_READ);
+  size = gst_buffer_get_size (buffer);
 
   GST_DEBUG_OBJECT (ogg, "submitting %" G_GSIZE_FORMAT " bytes", size);
   if (G_UNLIKELY (size == 0))
@@ -306,7 +305,7 @@ gst_ogg_parse_submit_buffer (GstOggParse * ogg, GstBuffer * buffer)
     goto done;
   }
 
-  memcpy (oggbuffer, data, size);
+  size = gst_buffer_extract (buffer, 0, oggbuffer, size);
   if (G_UNLIKELY (ogg_sync_wrote (&ogg->sync, size) < 0)) {
     GST_ELEMENT_ERROR (ogg, STREAM, DECODE, (NULL),
         ("failed to write %" G_GSIZE_FORMAT " bytes to the sync buffer", size));
@@ -314,7 +313,6 @@ gst_ogg_parse_submit_buffer (GstOggParse * ogg, GstBuffer * buffer)
   }
 
 done:
-  gst_buffer_unmap (buffer, data, size);
   gst_buffer_unref (buffer);
 
   return ret;

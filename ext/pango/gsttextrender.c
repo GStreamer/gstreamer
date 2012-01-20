@@ -471,6 +471,7 @@ gst_text_render_chain (GstPad * pad, GstObject * parent, GstBuffer * inbuf)
   GstFlowReturn ret;
   GstBuffer *outbuf;
   GstCaps *caps = NULL, *padcaps;
+  GstMapInfo map;
   guint8 *data;
   gsize size;
   gint n;
@@ -478,7 +479,9 @@ gst_text_render_chain (GstPad * pad, GstObject * parent, GstBuffer * inbuf)
 
   render = GST_TEXT_RENDER (parent);
 
-  data = gst_buffer_map (inbuf, &size, NULL, GST_MAP_READ);
+  gst_buffer_map (inbuf, &map, GST_MAP_READ);
+  data = map.data;
+  size = map.size;
 
   /* somehow pango barfs over "\0" buffers... */
   while (size > 0 &&
@@ -491,7 +494,7 @@ gst_text_render_chain (GstPad * pad, GstObject * parent, GstBuffer * inbuf)
   GST_DEBUG ("rendering '%*s'", (gint) size, data);
   pango_layout_set_markup (render->layout, (gchar *) data, size);
   gst_text_render_render_pangocairo (render);
-  gst_buffer_unmap (inbuf, data, size);
+  gst_buffer_unmap (inbuf, &map);
 
   gst_text_render_check_argb (render);
 
@@ -517,7 +520,10 @@ gst_text_render_chain (GstPad * pad, GstObject * parent, GstBuffer * inbuf)
   outbuf = gst_buffer_new_and_alloc (render->width * render->height * 4);
 
   gst_buffer_copy_into (outbuf, inbuf, GST_BUFFER_COPY_TIMESTAMPS, 0, -1);
-  data = gst_buffer_map (outbuf, &size, NULL, GST_MAP_WRITE);
+
+  gst_buffer_map (outbuf, &map, GST_MAP_WRITE);
+  data = map.data;
+  size = map.size;
 
   if (render->use_ARGB) {
     memset (data, 0, render->width * render->height * 4);
@@ -566,7 +572,7 @@ gst_text_render_chain (GstPad * pad, GstObject * parent, GstBuffer * inbuf)
           render->width * 4);
     }
   }
-  gst_buffer_unmap (outbuf, data, size);
+  gst_buffer_unmap (outbuf, &map);
 
   ret = gst_pad_push (render->srcpad, outbuf);
 

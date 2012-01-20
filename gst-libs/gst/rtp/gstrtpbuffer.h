@@ -50,9 +50,7 @@ struct _GstRTPBuffer
 {
   GstBuffer   *buffer;
   GstMapFlags  flags;
-  guint8      *data;
-  gsize        size;
-  gsize        maxsize;
+  GstMapInfo   info;
 };
 
 #define GST_RTP_BUFFER_INIT {NULL,0,NULL,0,0}

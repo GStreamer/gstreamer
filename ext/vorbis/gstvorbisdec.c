@@ -442,13 +442,14 @@ vorbis_dec_handle_header_buffer (GstVorbisDec * vd, GstBuffer * buffer)
   ogg_packet *packet;
   ogg_packet_wrapper packet_wrapper;
   GstFlowReturn ret;
+  GstMapInfo map;
 
-  gst_ogg_packet_wrapper_map (&packet_wrapper, buffer);
+  gst_ogg_packet_wrapper_map (&packet_wrapper, buffer, &map);
   packet = gst_ogg_packet_from_wrapper (&packet_wrapper);
 
   ret = vorbis_handle_header_packet (vd, packet);
 
-  gst_ogg_packet_wrapper_unmap (&packet_wrapper, buffer);
+  gst_ogg_packet_wrapper_unmap (&packet_wrapper, buffer, &map);
 
   return ret;
 }
@@ -518,7 +519,7 @@ vorbis_handle_data_packet (GstVorbisDec * vd, ogg_packet * packet,
   guint sample_count;
   GstBuffer *out = NULL;
   GstFlowReturn result;
-  guint8 *data;
+  GstMapInfo map;
   gsize size;
 
   if (G_UNLIKELY (!vd->initialized)) {
@@ -563,10 +564,10 @@ vorbis_handle_data_packet (GstVorbisDec * vd, ogg_packet * packet,
   /* alloc buffer for it */
   out = gst_buffer_new_allocate (NULL, size, 0);
 
-  data = gst_buffer_map (out, NULL, NULL, GST_MAP_WRITE);
+  gst_buffer_map (out, &map, GST_MAP_WRITE);
   /* get samples ready for reading now, should be sample_count */
 #ifdef USE_TREMOLO
-  if (G_UNLIKELY (vorbis_dsp_pcmout (&vd->vd, data, sample_count) !=
+  if (G_UNLIKELY (vorbis_dsp_pcmout (&vd->vd, map.data, sample_count) !=
           sample_count))
 #else
   if (G_UNLIKELY (vorbis_synthesis_pcmout (&vd->vd, &pcm) != sample_count))
@@ -575,17 +576,17 @@ vorbis_handle_data_packet (GstVorbisDec * vd, ogg_packet * packet,
 
 #ifdef USE_TREMOLO
   if (vd->info.channels < 9)
-    gst_audio_reorder_channels (data, size, GST_VORBIS_AUDIO_FORMAT,
+    gst_audio_reorder_channels (map.data, map.size, GST_VORBIS_AUDIO_FORMAT,
         vd->info.channels, gst_vorbis_channel_positions[vd->info.channels - 1],
         gst_vorbis_default_channel_positions[vd->info.channels - 1]);
 #else
   /* copy samples in buffer */
-  vd->copy_samples ((vorbis_sample_t *) data, pcm,
+  vd->copy_samples ((vorbis_sample_t *) map.data, pcm,
       sample_count, vd->info.channels);
 #endif
 
-  GST_LOG_OBJECT (vd, "setting output size to %" G_GSIZE_FORMAT, size);
-  gst_buffer_unmap (out, data, size);
+  GST_LOG_OBJECT (vd, "have output size of %" G_GSIZE_FORMAT, size);
+  gst_buffer_unmap (out, &map);
 
 done:
   /* whether or not data produced, consume one frame and advance time */
@@ -633,6 +634,7 @@ vorbis_dec_handle_frame (GstAudioDecoder * dec, GstBuffer * buffer)
   ogg_packet *packet;
   ogg_packet_wrapper packet_wrapper;
   GstFlowReturn result = GST_FLOW_OK;
+  GstMapInfo map;
   GstVorbisDec *vd = GST_VORBIS_DEC (dec);
 
   /* no draining etc */
@@ -641,7 +643,7 @@ vorbis_dec_handle_frame (GstAudioDecoder * dec, GstBuffer * buffer)
 
   GST_LOG_OBJECT (vd, "got buffer %p", buffer);
   /* make ogg_packet out of the buffer */
-  gst_ogg_packet_wrapper_map (&packet_wrapper, buffer);
+  gst_ogg_packet_wrapper_map (&packet_wrapper, buffer, &map);
   packet = gst_ogg_packet_from_wrapper (&packet_wrapper);
   /* set some more stuff */
   packet->granulepos = -1;
@@ -680,7 +682,7 @@ vorbis_dec_handle_frame (GstAudioDecoder * dec, GstBuffer * buffer)
 
 done:
   GST_LOG_OBJECT (vd, "unmap buffer %p", buffer);
-  gst_ogg_packet_wrapper_unmap (&packet_wrapper, buffer);
+  gst_ogg_packet_wrapper_unmap (&packet_wrapper, buffer, &map);
 
   return result;
 

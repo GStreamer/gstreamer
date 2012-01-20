@@ -1275,6 +1275,7 @@ GstTagList *
 gst_tag_list_from_xmp_buffer (GstBuffer * buffer)
 {
   GstTagList *list = NULL;
+  GstMapInfo info;
   gchar *xps, *xp1, *xp2, *xpe, *ns, *ne;
   gsize len, max_ft_len;
   gboolean in_tag;
@@ -1310,7 +1311,9 @@ gst_tag_list_from_xmp_buffer (GstBuffer * buffer)
 
   GST_LOG ("Starting xmp parsing");
 
-  xps = gst_buffer_map (buffer, &len, NULL, GST_MAP_READ);
+  gst_buffer_map (buffer, &info, GST_MAP_READ);
+  xps = (gchar *) info.data;
+  len = info.size;
   g_return_val_if_fail (len > 0, NULL);
 
   xpe = &xps[len + 1];
@@ -1577,7 +1580,7 @@ gst_tag_list_from_xmp_buffer (GstBuffer * buffer)
   }
   g_free (part);
 
-  gst_buffer_unmap (buffer, xps, len);
+  gst_buffer_unmap (buffer, &info);
 
   return list;
 

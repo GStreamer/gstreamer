@@ -671,10 +671,10 @@ gst_audio_convert_transform (GstBaseTransform * base, GstBuffer * inbuf,
 {
   GstFlowReturn ret;
   GstAudioConvert *this = GST_AUDIO_CONVERT (base);
-  gsize srcsize, dstsize;
+  GstMapInfo srcmap, dstmap;
   gint insize, outsize;
+
   gint samples;
-  gpointer src, dst;
 
   /* get amount of samples to convert. */
   samples = gst_buffer_get_size (inbuf) / this->ctx.in.bpf;
@@ -688,29 +688,29 @@ gst_audio_convert_transform (GstBaseTransform * base, GstBuffer * inbuf,
     return GST_FLOW_OK;
 
   /* get src and dst data */
-  src = gst_buffer_map (inbuf, &srcsize, NULL, GST_MAP_READ);
-  dst = gst_buffer_map (outbuf, &dstsize, NULL, GST_MAP_WRITE);
+  gst_buffer_map (inbuf, &srcmap, GST_MAP_READ);
+  gst_buffer_map (outbuf, &dstmap, GST_MAP_WRITE);
 
   /* check in and outsize */
-  if (srcsize < insize)
+  if (srcmap.size < insize)
     goto wrong_size;
-  if (dstsize < outsize)
+  if (dstmap.size < outsize)
     goto wrong_size;
 
   /* and convert the samples */
   if (!GST_BUFFER_FLAG_IS_SET (inbuf, GST_BUFFER_FLAG_GAP)) {
-    if (!audio_convert_convert (&this->ctx, src, dst,
+    if (!audio_convert_convert (&this->ctx, srcmap.data, dstmap.data,
             samples, gst_buffer_is_writable (inbuf)))
       goto convert_error;
   } else {
     /* Create silence buffer */
-    gst_audio_format_fill_silence (this->ctx.out.finfo, dst, outsize);
+    gst_audio_format_fill_silence (this->ctx.out.finfo, dstmap.data, outsize);
   }
   ret = GST_FLOW_OK;
 
 done:
-  gst_buffer_unmap (outbuf, dst, outsize);
-  gst_buffer_unmap (inbuf, src, srcsize);
+  gst_buffer_unmap (outbuf, &dstmap);
+  gst_buffer_unmap (inbuf, &srcmap);
 
   return ret;
 
@@ -727,7 +727,7 @@ wrong_size:
         (NULL),
         ("input/output buffers are of wrong size in: %" G_GSIZE_FORMAT " < %d"
             " or out: %" G_GSIZE_FORMAT " < %d",
-            srcsize, insize, dstsize, outsize));
+            srcmap.size, insize, dstmap.size, outsize));
     ret = GST_FLOW_ERROR;
     goto done;
   }

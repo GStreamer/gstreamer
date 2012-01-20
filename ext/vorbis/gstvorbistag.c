@@ -95,15 +95,14 @@ gst_vorbis_tag_parse_packet (GstVorbisParse * parse, GstBuffer * buffer)
   GstVorbisTag *tagger;
   gchar *encoder = NULL;
   GstBuffer *new_buf;
-  guint8 *data;
-  gsize size;
+  GstMapInfo map;
   gboolean do_parse = FALSE;
 
-  data = gst_buffer_map (buffer, &size, NULL, GST_MAP_READ);
+  gst_buffer_map (buffer, &map, GST_MAP_READ);
   /* just pass everything except the comments packet */
-  if (size >= 1 && data[0] != 0x03)
+  if (map.size >= 1 && map.data[0] != 0x03)
     do_parse = TRUE;
-  gst_buffer_unmap (buffer, data, size);
+  gst_buffer_unmap (buffer, &map);
 
   if (do_parse) {
     return GST_VORBIS_PARSE_CLASS (parent_class)->parse_packet (parse, buffer);

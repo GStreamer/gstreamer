@@ -66,9 +66,9 @@ struct _GstVideoMeta {
   gsize              offset[GST_VIDEO_MAX_PLANES];
   gint               stride[GST_VIDEO_MAX_PLANES];
 
-  gpointer (*map)    (GstVideoMeta *meta, guint plane, gint *stride,
+  gboolean (*map)    (GstVideoMeta *meta, guint plane, GstMapInfo *info, gint *stride,
                       GstMapFlags flags);
-  gboolean (*unmap)  (GstVideoMeta *meta, guint plane);
+  gboolean (*unmap)  (GstVideoMeta *meta, guint plane, GstMapInfo *info);
 };
 
 const GstMetaInfo * gst_video_meta_get_info (void);
@@ -83,9 +83,9 @@ GstVideoMeta * gst_buffer_add_video_meta_full  (GstBuffer *buffer, GstVideoFlags
                                                 guint n_planes, gsize offset[GST_VIDEO_MAX_PLANES],
                                                 gint stride[GST_VIDEO_MAX_PLANES]);
 
-gpointer       gst_video_meta_map        (GstVideoMeta *meta, guint plane, gint *stride,
-                                          GstMapFlags flags);
-gboolean       gst_video_meta_unmap      (GstVideoMeta *meta, guint plane);
+gboolean       gst_video_meta_map        (GstVideoMeta *meta, guint plane, GstMapInfo *info,
+                                          gint *stride, GstMapFlags flags);
+gboolean       gst_video_meta_unmap      (GstVideoMeta *meta, guint plane, GstMapInfo *info);
 
 /**
  * GstVideoCropMeta:

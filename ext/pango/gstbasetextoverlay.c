@@ -2612,13 +2612,13 @@ wait_for_text_buf:
         /* Push the video frame */
         ret = gst_pad_push (overlay->srcpad, buffer);
       } else {
-        gchar *in_text, *otext;
-        gsize in_size, osize;
+        GstMapInfo map;
+        gchar *in_text;
+        gsize in_size;
 
-        otext =
-            gst_buffer_map (overlay->text_buffer, &osize, NULL, GST_MAP_READ);
-        in_text = otext;
-        in_size = osize;
+        gst_buffer_map (overlay->text_buffer, &map, GST_MAP_READ);
+        in_text = (gchar *) map.data;
+        in_size = map.size;
 
         /* g_markup_escape_text() absolutely requires valid UTF8 input, it
          * might crash otherwise. We don't fall back on GST_SUBTITLE_ENCODING
@@ -2652,10 +2652,10 @@ wait_for_text_buf:
           GST_DEBUG_OBJECT (overlay, "No text to render (empty buffer)");
           gst_base_text_overlay_render_text (overlay, " ", 1);
         }
-        gst_buffer_unmap (overlay->text_buffer, otext, osize);
-
-        if (in_text != otext)
+        if (in_text != (gchar *) map.data)
           g_free (in_text);
+
+        gst_buffer_unmap (overlay->text_buffer, &map);
 
         GST_OBJECT_UNLOCK (overlay);
         ret = gst_base_text_overlay_push_frame (overlay, buffer);

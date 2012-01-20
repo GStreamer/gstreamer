@@ -758,7 +758,8 @@ gst_audio_base_src_create (GstBaseSrc * bsrc, guint64 offset, guint length,
   GstFlowReturn ret;
   GstAudioBaseSrc *src = GST_AUDIO_BASE_SRC (bsrc);
   GstBuffer *buf;
-  guint8 *data, *ptr;
+  GstMapInfo info;
+  guint8 *ptr;
   guint samples, total_samples;
   guint64 sample;
   gint bpf, rate;
@@ -808,7 +809,8 @@ gst_audio_base_src_create (GstBaseSrc * bsrc, guint64 offset, guint length,
   if (G_UNLIKELY (ret != GST_FLOW_OK))
     goto alloc_failed;
 
-  data = ptr = gst_buffer_map (buf, NULL, NULL, GST_MAP_WRITE);
+  gst_buffer_map (buf, &info, GST_MAP_WRITE);
+  ptr = info.data;
   do {
     read = gst_audio_ring_buffer_read (ringbuffer, sample, ptr, samples);
     GST_DEBUG_OBJECT (src, "read %u of %u", read, samples);
@@ -828,7 +830,7 @@ gst_audio_base_src_create (GstBaseSrc * bsrc, guint64 offset, guint length,
     samples -= read;
     ptr += read * bpf;
   } while (TRUE);
-  gst_buffer_unmap (buf, data, length);
+  gst_buffer_unmap (buf, &info);
 
   /* mark discontinuity if needed */
   if (G_UNLIKELY (sample != src->next_sample) && src->next_sample != -1) {

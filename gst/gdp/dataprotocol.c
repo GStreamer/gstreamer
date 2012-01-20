@@ -131,8 +131,7 @@ gst_dp_header_from_buffer_any (const GstBuffer * buffer, GstDPHeaderFlag flags,
 {
   guint8 *h;
   guint16 flags_mask;
-  guint8 *data;
-  gsize size;
+  GstMapInfo map;
 
   g_return_val_if_fail (GST_IS_BUFFER (buffer), FALSE);
   g_return_val_if_fail (length, FALSE);
@@ -144,10 +143,10 @@ gst_dp_header_from_buffer_any (const GstBuffer * buffer, GstDPHeaderFlag flags,
   /* version, flags, type */
   GST_DP_INIT_HEADER (h, version, flags, GST_DP_PAYLOAD_BUFFER);
 
-  data = gst_buffer_map ((GstBuffer *) buffer, &size, NULL, GST_MAP_READ);
+  gst_buffer_map ((GstBuffer *) buffer, &map, GST_MAP_READ);
 
   /* buffer properties */
-  GST_WRITE_UINT32_BE (h + 6, size);
+  GST_WRITE_UINT32_BE (h + 6, map.size);
   GST_WRITE_UINT64_BE (h + 10, GST_BUFFER_TIMESTAMP (buffer));
   GST_WRITE_UINT64_BE (h + 18, GST_BUFFER_DURATION (buffer));
   GST_WRITE_UINT64_BE (h + 26, GST_BUFFER_OFFSET (buffer));
@@ -161,9 +160,9 @@ gst_dp_header_from_buffer_any (const GstBuffer * buffer, GstDPHeaderFlag flags,
 
   GST_WRITE_UINT16_BE (h + 42, GST_BUFFER_FLAGS (buffer) & flags_mask);
 
-  GST_DP_SET_CRC (h, flags, data, size);
+  GST_DP_SET_CRC (h, flags, map.data, map.size);
 
-  gst_buffer_unmap ((GstBuffer *) buffer, data, size);
+  gst_buffer_unmap ((GstBuffer *) buffer, &map);
 
   GST_LOG ("created header from buffer:");
   gst_dp_dump_byte_array (h, GST_DP_HEADER_LENGTH);

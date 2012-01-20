@@ -790,8 +790,8 @@ gst_ogg_mux_decorate_buffer (GstOggMux * ogg_mux, GstOggPadData * pad,
   gint64 duration, granule, limit;
   GstClockTime next_time;
   GstClockTimeDiff diff;
+  GstMapInfo map;
   ogg_packet packet;
-  gsize size;
 
   /* ensure messing with metadata is ok */
   buf = gst_buffer_make_writable (buf);
@@ -813,10 +813,11 @@ gst_ogg_mux_decorate_buffer (GstOggMux * ogg_mux, GstOggPadData * pad,
       pad->map.granulerate_n <= 0 || pad->map.granulerate_d <= 0)
     goto no_granule;
 
-  packet.packet = gst_buffer_map (buf, &size, NULL, GST_MAP_READ);
-  packet.bytes = size;
+  gst_buffer_map (buf, &map, GST_MAP_READ);
+  packet.packet = map.data;
+  packet.bytes = map.size;
   duration = gst_ogg_stream_get_packet_duration (&pad->map, &packet);
-  gst_buffer_unmap (buf, packet.packet, size);
+  gst_buffer_unmap (buf, &map);
 
   /* give up if no duration can be determined, relying on upstream */
   if (G_UNLIKELY (duration < 0)) {
@@ -946,10 +947,11 @@ gst_ogg_mux_queue_pads (GstOggMux * ogg_mux, gboolean * popped)
           /* and we have one */
           ogg_packet packet;
           gboolean is_header;
-          gsize size;
+          GstMapInfo map;
 
-          packet.packet = gst_buffer_map (buf, &size, NULL, GST_MAP_READ);
-          packet.bytes = size;
+          gst_buffer_map (buf, &map, GST_MAP_READ);
+          packet.packet = map.data;
+          packet.bytes = map.size;
 
           /* if we're not yet in data mode, ensure we're setup on the first packet */
           if (!pad->have_type) {
@@ -989,7 +991,7 @@ gst_ogg_mux_queue_pads (GstOggMux * ogg_mux, gboolean * popped)
           else                  /* fallback (FIXME 0.11: remove IN_CAPS hack) */
             is_header = GST_BUFFER_FLAG_IS_SET (buf, GST_BUFFER_FLAG_IN_CAPS);
 
-          gst_buffer_unmap (buf, packet.packet, size);
+          gst_buffer_unmap (buf, &map);
 
           if (is_header) {
             GST_DEBUG_OBJECT (ogg_mux,
@@ -1160,12 +1162,14 @@ gst_ogg_mux_submit_skeleton_header_packet (GstOggMux * mux,
     ogg_stream_state * os, GstBuffer * buf, gboolean bos, gboolean eos)
 {
   ogg_packet packet;
-  gsize size;
+  GstMapInfo map;
 
-  packet.packet = gst_buffer_map (buf, &size, NULL, GST_MAP_READ);
-  packet.bytes = size;
+  gst_buffer_map (buf, &map, GST_MAP_READ);
+  packet.packet = map.data;
+  packet.bytes = map.size;
   gst_ogg_mux_create_header_packet_with_flags (&packet, bos, eos);
   ogg_stream_packetin (os, &packet);
+  gst_buffer_unmap (buf, &map);
   gst_buffer_unref (buf);
 }
 
@@ -1354,7 +1358,7 @@ gst_ogg_mux_send_headers (GstOggMux * mux)
     GstCaps *caps;
     GstStructure *structure;
     GstBuffer *hbuf;
-    gsize size;
+    GstMapInfo map;
 
     pad = (GstOggPadData *) walk->data;
     thepad = pad->collect.pad;
@@ -1383,15 +1387,16 @@ gst_ogg_mux_send_headers (GstOggMux * mux)
     }
 
     /* create a packet from the buffer */
-    packet.packet = gst_buffer_map (buf, &size, NULL, GST_MAP_READ);
-    packet.bytes = size;
+    gst_buffer_map (buf, &map, GST_MAP_READ);
+    packet.packet = map.data;
+    packet.bytes = map.size;
 
     gst_ogg_mux_create_header_packet (&packet, pad);
 
     /* swap the packet in */
     ogg_stream_packetin (&pad->map.stream, &packet);
 
-    gst_buffer_unmap (buf, packet.packet, size);
+    gst_buffer_unmap (buf, &map);
     gst_buffer_unref (buf);
 
     GST_LOG_OBJECT (thepad, "flushing out BOS page");
@@ -1452,19 +1457,20 @@ gst_ogg_mux_send_headers (GstOggMux * mux)
       GstBuffer *buf = GST_BUFFER (hwalk->data);
       ogg_packet packet;
       ogg_page page;
-      gsize size;
+      GstMapInfo map;
 
       hwalk = hwalk->next;
 
       /* create a packet from the buffer */
-      packet.packet = gst_buffer_map (buf, &size, NULL, GST_MAP_READ);
-      packet.bytes = size;
+      gst_buffer_map (buf, &map, GST_MAP_READ);
+      packet.packet = map.data;
+      packet.bytes = map.size;
 
       gst_ogg_mux_create_header_packet (&packet, pad);
 
       /* swap the packet in */
       ogg_stream_packetin (&pad->map.stream, &packet);
-      gst_buffer_unmap (buf, packet.packet, size);
+      gst_buffer_unmap (buf, &map);
       gst_buffer_unref (buf);
 
       /* if last header, flush page */
@@ -1655,7 +1661,7 @@ gst_ogg_mux_process_best_pad (GstOggMux * ogg_mux, GstOggPadData * best)
     GstOggPadData *pad = ogg_mux->pulling;
     gint64 duration;
     gboolean force_flush;
-    gsize size;
+    GstMapInfo map;
 
     GST_LOG_OBJECT (ogg_mux->pulling->collect.pad, "pulling from pad");
 
@@ -1679,8 +1685,9 @@ gst_ogg_mux_process_best_pad (GstOggMux * ogg_mux, GstOggPadData * best)
           GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buf)));
     }
     /* create a packet from the buffer */
-    packet.packet = gst_buffer_map (buf, &size, NULL, GST_MAP_READ);
-    packet.bytes = size;
+    gst_buffer_map (buf, &map, GST_MAP_READ);
+    packet.packet = map.data;
+    packet.bytes = map.size;
     packet.granulepos = GST_BUFFER_OFFSET_END (buf);
     if (packet.granulepos == -1)
       packet.granulepos = 0;
@@ -1770,7 +1777,7 @@ gst_ogg_mux_process_best_pad (GstOggMux * ogg_mux, GstOggPadData * best)
       GST_DEBUG_OBJECT (pad->collect.pad, "swapping in BOS packet");
 
     ogg_stream_packetin (&pad->map.stream, &packet);
-    gst_buffer_unmap (buf, packet.packet, size);
+    gst_buffer_unmap (buf, &map);
     pad->data_pushed = TRUE;
 
     gp_time = GST_BUFFER_OFFSET (pad->buffer);

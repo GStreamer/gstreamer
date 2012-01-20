@@ -608,6 +608,7 @@ gboolean     gst_video_info_convert     (GstVideoInfo *info,
  * @id: id of the mapped frame. the id can for example be used to
  *   indentify the frame in case of multiview video.
  * @data: pointers to the plane data
+ * @map: mappings of the planes
  *
  * A video frame obtained from gst_video_frame_map()
  */
@@ -619,6 +620,7 @@ struct _GstVideoFrame {
   gint       id;
 
   gpointer   data[GST_VIDEO_MAX_PLANES];
+  GstMapInfo map[GST_VIDEO_MAX_PLANES];
 };
 
 gboolean    gst_video_frame_map           (GstVideoFrame *frame, GstVideoInfo *info,

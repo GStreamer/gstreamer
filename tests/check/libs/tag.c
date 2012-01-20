@@ -408,8 +408,7 @@ GST_START_TEST (test_vorbis_tags)
   /* now, while we still have a taglist, test _to_vorbiscomment_buffer() */
   {
     GstBuffer *buf1, *buf2;
-    guint8 *data1, *data2;
-    gsize size1, size2;
+    GstMapInfo map1, map2;
 
     ASSERT_CRITICAL (gst_tag_list_to_vorbiscomment_buffer (NULL,
             (const guint8 *) "x", 1, "x"));
@@ -421,13 +420,13 @@ GST_START_TEST (test_vorbis_tags)
         (const guint8 *) "foo", 3, NULL);
     fail_unless (buf2 != NULL);
 
-    data1 = gst_buffer_map (buf1, &size1, NULL, GST_MAP_READ);
-    data2 = gst_buffer_map (buf2, &size2, NULL, GST_MAP_READ);
+    gst_buffer_map (buf1, &map1, GST_MAP_READ);
+    gst_buffer_map (buf2, &map2, GST_MAP_READ);
 
-    fail_unless (memcmp (data1, data2 + 3, size1) == 0);
+    fail_unless (memcmp (map1.data, map2.data + 3, map1.size) == 0);
 
-    gst_buffer_unmap (buf2, data2, size2);
-    gst_buffer_unmap (buf1, data1, size1);
+    gst_buffer_unmap (buf2, &map2);
+    gst_buffer_unmap (buf1, &map1);
 
     gst_buffer_unref (buf1);
     gst_buffer_unref (buf2);
@@ -963,6 +962,7 @@ GST_START_TEST (test_xmp_formatting)
 {
   GstTagList *list;
   GstBuffer *buf;
+  GstMapInfo map;
   const gchar *text;
   gsize len;
 
@@ -974,7 +974,9 @@ GST_START_TEST (test_xmp_formatting)
   buf = gst_tag_list_to_xmp_buffer (list, FALSE);
   fail_unless (buf != NULL);
 
-  text = gst_buffer_map (buf, &len, NULL, GST_MAP_READ);
+  gst_buffer_map (buf, &map, GST_MAP_READ);
+  text = (gchar *) map.data;
+  len = map.size;
 
   /* check the content */
   fail_unless (g_strrstr_len (text, len, "<?xpacket begin") == text);
@@ -983,7 +985,7 @@ GST_START_TEST (test_xmp_formatting)
   fail_unless (g_strrstr_len (text, len, ">keyword1<") != NULL);
   fail_unless (g_strrstr_len (text, len, ">keyword2<") != NULL);
   fail_unless (g_strrstr_len (text, len, "<?xpacket end") != NULL);
-  gst_buffer_unmap (buf, (gpointer) text, len);
+  gst_buffer_unmap (buf, &map);
 
   gst_buffer_unref (buf);
   gst_tag_list_free (list);
@@ -1430,6 +1432,7 @@ GST_START_TEST (test_exif_tags_serialization_deserialization)
   GstBuffer *buf = NULL;
   gint i;
   GstTagList *taglist;
+  GstMapInfo map;
   guint8 *data;
 
   gst_tag_register_musicbrainz_tags ();
@@ -1741,10 +1744,11 @@ GST_START_TEST (test_exif_tags_serialization_deserialization)
 
   g_value_init (&value, GST_TYPE_BUFFER);
   buf = gst_buffer_new_and_alloc (1024);
-  data = gst_buffer_map (buf, NULL, NULL, GST_MAP_WRITE);
+  gst_buffer_map (buf, &map, GST_MAP_WRITE);
+  data = map.data;
   for (i = 0; i < 1024; i++)
     data[i] = i % 255;
-  gst_buffer_unmap (buf, data, 1024);
+  gst_buffer_unmap (buf, &map);
   gst_value_set_buffer (&value, buf);
   gst_buffer_unref (buf);
   do_simple_exif_tag_serialization_deserialization (GST_TAG_APPLICATION_DATA,

@@ -63,19 +63,18 @@ gst_ogg_packet_size (ogg_packet * p)
 }
 
 static inline void
-gst_ogg_packet_wrapper_map (ogg_packet * packet, GstBuffer * buffer)
+gst_ogg_packet_wrapper_map (ogg_packet * packet, GstBuffer * buffer, GstMapInfo *map)
 {
-  gsize size;
-
   gst_buffer_ref (buffer);
-  packet->packet = gst_buffer_map (buffer, &size, NULL, GST_MAP_READ);
-  packet->bytes = size;
+  gst_buffer_map (buffer, map, GST_MAP_READ);
+  packet->packet = map->data;
+  packet->bytes = map->size;
 }
 
 static inline void
-gst_ogg_packet_wrapper_unmap (ogg_packet * packet, GstBuffer * buffer)
+gst_ogg_packet_wrapper_unmap (ogg_packet * packet, GstBuffer * buffer, GstMapInfo *map)
 {
-  gst_buffer_unmap (buffer, packet->packet, packet->bytes);
+  gst_buffer_unmap (buffer, map);
   gst_buffer_unref (buffer);
 }
 

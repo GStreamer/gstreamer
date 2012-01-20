@@ -150,8 +150,9 @@ gst_ssa_parse_setcaps (GstPad * sinkpad, GstCaps * caps)
   GstStructure *s;
   const guchar bom_utf8[] = { 0xEF, 0xBB, 0xBF };
   GstBuffer *priv;
-  gchar *data, *ptr;
-  gsize size, left;
+  GstMapInfo map;
+  gchar *ptr;
+  gsize left;
 
   s = gst_caps_get_structure (caps, 0);
   val = gst_structure_get_value (s, "codec_data");
@@ -169,10 +170,10 @@ gst_ssa_parse_setcaps (GstPad * sinkpad, GstCaps * caps)
 
   gst_buffer_ref (priv);
 
-  data = gst_buffer_map (priv, &size, NULL, GST_MAP_READ);
+  gst_buffer_map (priv, &map, GST_MAP_READ);
 
-  ptr = data;
-  left = size;
+  ptr = (gchar *) map.data;
+  left = map.size;
 
   /* skip UTF-8 BOM */
   if (left >= 3 && memcmp (ptr, bom_utf8, 3) == 0) {
@@ -180,26 +181,36 @@ gst_ssa_parse_setcaps (GstPad * sinkpad, GstCaps * caps)
     left -= 3;
   }
 
-  if (!strstr (data, "[Script Info]")) {
-    GST_WARNING_OBJECT (parse, "Invalid Init section - no Script Info header");
-    gst_buffer_unref (priv);
-    return FALSE;
-  }
+  if (!strstr (ptr, "[Script Info]"))
+    goto invalid_init;
 
-  if (!g_utf8_validate (ptr, left, NULL)) {
-    GST_WARNING_OBJECT (parse, "Init section is not valid UTF-8");
-    gst_buffer_unref (priv);
-    return FALSE;
-  }
+  if (!g_utf8_validate (ptr, left, NULL))
+    goto invalid_utf8;
 
   /* FIXME: parse initial section */
   parse->ini = g_strndup (ptr, left);
   GST_LOG_OBJECT (parse, "Init section:\n%s", parse->ini);
 
-  gst_buffer_unmap (priv, data, size);
+  gst_buffer_unmap (priv, &map);
   gst_buffer_unref (priv);
 
   return TRUE;
+
+  /* ERRORS */
+invalid_init:
+  {
+    GST_WARNING_OBJECT (parse, "Invalid Init section - no Script Info header");
+    gst_buffer_unmap (priv, &map);
+    gst_buffer_unref (priv);
+    return FALSE;
+  }
+invalid_utf8:
+  {
+    GST_WARNING_OBJECT (parse, "Init section is not valid UTF-8");
+    gst_buffer_unmap (priv, &map);
+    gst_buffer_unref (priv);
+    return FALSE;
+  }
 }
 
 static gboolean
@@ -313,8 +324,7 @@ gst_ssa_parse_chain (GstPad * sinkpad, GstObject * parent, GstBuffer * buf)
   GstSsaParse *parse = GST_SSA_PARSE (parent);
   GstClockTime ts;
   gchar *txt;
-  gchar *data;
-  gsize size;
+  GstMapInfo map;
 
   if (G_UNLIKELY (!parse->framed))
     goto not_framed;
@@ -330,9 +340,9 @@ gst_ssa_parse_chain (GstPad * sinkpad, GstObject * parent, GstBuffer * buf)
   }
 
   /* make double-sure it's 0-terminated and all */
-  data = gst_buffer_map (buf, &size, NULL, GST_MAP_READ);
-  txt = g_strndup (data, size);
-  gst_buffer_unmap (buf, data, size);
+  gst_buffer_map (buf, &map, GST_MAP_READ);
+  txt = g_strndup ((gchar *) map.data, map.size);
+  gst_buffer_unmap (buf, &map);
 
   if (txt == NULL)
     goto empty_text;

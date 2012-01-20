@@ -678,20 +678,20 @@ GST_START_TEST (test_convert_frame)
   GstSample *from_sample, *to_sample;
   GError *error = NULL;
   gint i;
-  guint8 *data;
+  GstMapInfo map;
 
   gst_debug_set_threshold_for_name ("default", GST_LEVEL_NONE);
 
   from_buffer = gst_buffer_new_and_alloc (640 * 480 * 4);
 
-  data = gst_buffer_map (from_buffer, NULL, NULL, GST_MAP_WRITE);
+  gst_buffer_map (from_buffer, &map, GST_MAP_WRITE);
   for (i = 0; i < 640 * 480; i++) {
-    data[4 * i + 0] = 0;        /* x */
-    data[4 * i + 1] = 255;      /* R */
-    data[4 * i + 2] = 0;        /* G */
-    data[4 * i + 3] = 0;        /* B */
+    map.data[4 * i + 0] = 0;    /* x */
+    map.data[4 * i + 1] = 255;  /* R */
+    map.data[4 * i + 2] = 0;    /* G */
+    map.data[4 * i + 3] = 0;    /* B */
   }
-  gst_buffer_unmap (from_buffer, data, 640 * 480 * 4);
+  gst_buffer_unmap (from_buffer, &map);
 
   gst_video_info_init (&vinfo);
   gst_video_info_set_format (&vinfo, GST_VIDEO_FORMAT_xRGB, 640, 480);
@@ -762,7 +762,7 @@ GST_START_TEST (test_convert_frame_async)
   GstBuffer *from_buffer;
   GstSample *from_sample;
   gint i;
-  guint8 *data;
+  GstMapInfo map;
   GMainLoop *loop;
   ConvertFrameContext cf_data = { NULL, NULL, NULL };
 
@@ -770,14 +770,14 @@ GST_START_TEST (test_convert_frame_async)
 
   from_buffer = gst_buffer_new_and_alloc (640 * 480 * 4);
 
-  data = gst_buffer_map (from_buffer, NULL, NULL, GST_MAP_WRITE);
+  gst_buffer_map (from_buffer, &map, GST_MAP_WRITE);
   for (i = 0; i < 640 * 480; i++) {
-    data[4 * i + 0] = 0;        /* x */
-    data[4 * i + 1] = 255;      /* R */
-    data[4 * i + 2] = 0;        /* G */
-    data[4 * i + 3] = 0;        /* B */
+    map.data[4 * i + 0] = 0;    /* x */
+    map.data[4 * i + 1] = 255;  /* R */
+    map.data[4 * i + 2] = 0;    /* G */
+    map.data[4 * i + 3] = 0;    /* B */
   }
-  gst_buffer_unmap (from_buffer, data, 640 * 480 * 4);
+  gst_buffer_unmap (from_buffer, &map);
 
   gst_video_info_init (&vinfo);
   gst_video_info_set_format (&vinfo, GST_VIDEO_FORMAT_xRGB, 640, 470);

@@ -1167,8 +1167,7 @@ shot_cb (GtkButton * button, gpointer data)
     gint width, height;
     GdkPixbuf *pixbuf;
     GError *error = NULL;
-    guint8 *data;
-    gsize size;
+    GstMapInfo map;
 
     /* get the snapshot buffer format now. We set the caps on the appsink so
      * that it can only be an rgb buffer. The only thing we have not specified
@@ -1192,14 +1191,14 @@ shot_cb (GtkButton * button, gpointer data)
     /* create pixmap from buffer and save, gstreamer video buffers have a stride
      * that is rounded up to the nearest multiple of 4 */
     buffer = gst_sample_get_buffer (sample);
-    data = gst_buffer_map (buffer, &size, NULL, GST_MAP_READ);
-    pixbuf = gdk_pixbuf_new_from_data (data,
+    gst_buffer_map (buffer, &map, GST_MAP_READ);
+    pixbuf = gdk_pixbuf_new_from_data (map.data,
         GDK_COLORSPACE_RGB, FALSE, 8, width, height,
         GST_ROUND_UP_4 (width * 3), NULL, NULL);
 
     /* save the pixbuf */
     gdk_pixbuf_save (pixbuf, "snapshot.png", "png", &error, NULL);
-    gst_buffer_unmap (buffer, data, size);
+    gst_buffer_unmap (buffer, &map);
 
   done:
     gst_sample_unref (sample);

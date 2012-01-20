@@ -230,14 +230,15 @@ GST_START_TEST (test_ac3)
   GstBuffer *buf;
   GstCaps *caps = NULL;
   guint bsid;
-  guint8 *data;
 
   for (bsid = 0; bsid < 32; bsid++) {
+    GstMapInfo map;
+
     buf = gst_buffer_new_and_alloc ((256 + 640) * 2);
-    data = gst_buffer_map (buf, NULL, NULL, GST_MAP_WRITE);
-    make_ac3_packet (data, 256 * 2, bsid);
-    make_ac3_packet (data + 256 * 2, 640 * 2, bsid);
-    gst_buffer_unmap (buf, data, (256 + 640) * 2);
+    gst_buffer_map (buf, &map, GST_MAP_WRITE);
+    make_ac3_packet (map.data, 256 * 2, bsid);
+    make_ac3_packet (map.data + 256 * 2, 640 * 2, bsid);
+    gst_buffer_unmap (buf, &map);
 
     caps = gst_type_find_helper_for_buffer (NULL, buf, &prob);
     if (bsid <= 8) {
@@ -292,14 +293,15 @@ GST_START_TEST (test_eac3)
   GstBuffer *buf;
   GstCaps *caps = NULL;
   guint bsid;
-  guint8 *data;
 
   for (bsid = 0; bsid <= 32; bsid++) {
+    GstMapInfo map;
+
     buf = gst_buffer_new_and_alloc (558 + 384);
-    data = gst_buffer_map (buf, NULL, NULL, GST_MAP_WRITE);
-    make_eac3_packet (data, 558, bsid);
-    make_eac3_packet (data + 558, 384, bsid);
-    gst_buffer_unmap (buf, data, 558 + 384);
+    gst_buffer_map (buf, &map, GST_MAP_WRITE);
+    make_eac3_packet (map.data, 558, bsid);
+    make_eac3_packet (map.data + 558, 384, bsid);
+    gst_buffer_unmap (buf, &map);
 
     caps = gst_type_find_helper_for_buffer (NULL, buf, &prob);
     if (bsid > 10 && bsid <= 16) {

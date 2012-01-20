@@ -130,10 +130,9 @@ static GstPadProbeReturn
 buffer_probe_cb (GstPad * pad, GstPadProbeInfo * info, gpointer user_data)
 {
   GstBuffer *buffer = GST_PAD_PROBE_INFO_BUFFER (info);
-  guint8 *data;
-  gsize size;
+  GstMapInfo map;
 
-  data = gst_buffer_map (buffer, &size, NULL, GST_MAP_READ);
+  gst_buffer_map (buffer, &map, GST_MAP_READ);
 
   if (GST_BUFFER_FLAG_IS_SET (buffer, GST_BUFFER_FLAG_IN_CAPS)) {
     GstCaps *caps;
@@ -155,27 +154,26 @@ buffer_probe_cb (GstPad * pad, GstPadProbeInfo * info, gpointer user_data)
 
     for (i = 0; i < 3; ++i) {
       GValue *val;
-      guint8 *data2;
-      gsize size2;
+      GstMapInfo map2;
 
       val = &g_array_index (buffers, GValue, i);
       buf = g_value_peek_pointer (val);
       fail_unless (GST_IS_BUFFER (buf));
 
-      data2 = gst_buffer_map (buf, &size2, NULL, GST_MAP_READ);
-      if (size2 == size) {
-        if (memcmp (data2, data, size) == 0) {
+      gst_buffer_map (buf, &map2, GST_MAP_READ);
+      if (map2.size == map.size) {
+        if (memcmp (map2.data, map.data, map.size) == 0) {
           found = TRUE;
         }
       }
-      gst_buffer_unmap (buf, data2, size2);
+      gst_buffer_unmap (buf, &map2);
     }
     fail_unless (found, "Did not find incoming IN_CAPS buffer %p on caps",
         buffer);
 
     gst_caps_unref (caps);
   }
-  gst_buffer_unmap (buffer, data, size);
+  gst_buffer_unmap (buffer, &map);
 
   return TRUE;
 }

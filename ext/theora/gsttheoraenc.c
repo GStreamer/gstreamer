@@ -1086,21 +1086,21 @@ theora_enc_read_multipass_cache (GstTheoraEnc * enc)
 
   while (!done) {
     if (gst_adapter_available (enc->multipass_cache_adapter) == 0) {
-      guint8 *data;
-      gsize size;
+      GstMapInfo map;
 
       cache_buf = gst_buffer_new_and_alloc (512);
 
-      data = gst_buffer_map (cache_buf, &size, NULL, GST_MAP_READ);
+      gst_buffer_map (cache_buf, &map, GST_MAP_READ);
       stat = g_io_channel_read_chars (enc->multipass_cache_fd,
-          (gchar *) data, size, &bytes_read, NULL);
+          (gchar *) map.data, map.size, &bytes_read, NULL);
 
       if (bytes_read <= 0) {
-        gst_buffer_unmap (cache_buf, data, 0);
+        gst_buffer_unmap (cache_buf, &map);
         gst_buffer_unref (cache_buf);
         break;
       } else {
-        gst_buffer_unmap (cache_buf, data, bytes_read);
+        gst_buffer_unmap (cache_buf, &map);
+        gst_buffer_resize (cache_buf, 0, bytes_read);
         gst_adapter_push (enc->multipass_cache_adapter, cache_buf);
       }
     }

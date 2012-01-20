@@ -214,8 +214,7 @@ test_srt_do_test (SubParseInputChunk * input, guint start_idx, guint num)
   for (n = start_idx; n < start_idx + num; ++n) {
     const GstStructure *buffer_caps_struct;
     GstBuffer *buf;
-    gchar *out;
-    gsize out_size;
+    GstMapInfo map;
 
     buf = g_list_nth_data (buffers, n - start_idx);
     fail_unless (buf != NULL);
@@ -225,19 +224,19 @@ test_srt_do_test (SubParseInputChunk * input, guint start_idx, guint num)
     fail_unless_equals_uint64 (GST_BUFFER_DURATION (buf),
         input[n].to_ts - input[n].from_ts);
 
-    out = gst_buffer_map (buf, &out_size, NULL, GST_MAP_READ);
+    gst_buffer_map (buf, &map, GST_MAP_READ);
     /* can be NULL */
-    if (out != NULL) {
+    if (map.data != NULL) {
       /* shouldn't have trailing newline characters */
-      fail_if (out_size > 0 && out[out_size - 1] == '\n');
+      fail_if (map.size > 0 && map.data[map.size - 1] == '\n');
       /* shouldn't include NUL-terminator in data size */
-      fail_if (out_size > 0 && out[out_size - 1] == '\0');
+      fail_if (map.size > 0 && map.data[map.size - 1] == '\0');
       /* but should still have a  NUL-terminator behind the declared data */
-      fail_unless_equals_int (out[out_size], '\0');
+      fail_unless_equals_int (map.data[map.size], '\0');
       /* make sure out string matches expected string */
-      fail_unless_equals_string (out, input[n].out);
+      fail_unless_equals_string ((gchar *) map.data, input[n].out);
     }
-    gst_buffer_unmap (buf, out, out_size);
+    gst_buffer_unmap (buf, &map);
     /* check caps */
     fail_unless (outcaps != NULL);
     buffer_caps_struct = gst_caps_get_structure (outcaps, 0);
@@ -301,8 +300,7 @@ do_test (SubParseInputChunk * input, guint num, const gchar * media_type)
   for (n = 0; n < num; ++n) {
     const GstStructure *buffer_caps_struct;
     GstBuffer *buf;
-    gchar *out;
-    gsize out_size;
+    GstMapInfo map;
 
     buf = g_list_nth_data (buffers, n);
     fail_unless (buf != NULL);
@@ -319,19 +317,19 @@ do_test (SubParseInputChunk * input, guint num, const gchar * media_type)
           input[n].to_ts - input[n].from_ts);
     }
 
-    out = gst_buffer_map (buf, &out_size, NULL, GST_MAP_READ);
+    gst_buffer_map (buf, &map, GST_MAP_READ);
     /* can be NULL */
-    if (out != NULL) {
+    if (map.data != NULL) {
       /* shouldn't have trailing newline characters */
-      fail_if (out_size > 0 && out[out_size - 1] == '\n');
+      fail_if (map.size > 0 && map.data[map.size - 1] == '\n');
       /* shouldn't include NUL-terminator in data size */
-      fail_if (out_size > 0 && out[out_size - 1] == '\0');
+      fail_if (map.size > 0 && map.data[map.size - 1] == '\0');
       /* but should still have a  NUL-terminator behind the declared data */
-      fail_unless_equals_int (out[out_size], '\0');
+      fail_unless_equals_int (map.data[map.size], '\0');
       /* make sure out string matches expected string */
-      fail_unless_equals_string (out, input[n].out);
+      fail_unless_equals_string ((gchar *) map.data, input[n].out);
     }
-    gst_buffer_unmap (buf, out, out_size);
+    gst_buffer_unmap (buf, &map);
     /* check caps */
     fail_unless (outcaps != NULL);
     buffer_caps_struct = gst_caps_get_structure (outcaps, 0);

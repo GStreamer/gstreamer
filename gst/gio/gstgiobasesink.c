@@ -262,32 +262,32 @@ gst_gio_base_sink_render (GstBaseSink * base_sink, GstBuffer * buffer)
 {
   GstGioBaseSink *sink = GST_GIO_BASE_SINK (base_sink);
   gssize written;
-  guint8 *data;
-  gsize size;
+  GstMapInfo map;
   gboolean success;
   GError *err = NULL;
 
   g_return_val_if_fail (G_IS_OUTPUT_STREAM (sink->stream), GST_FLOW_ERROR);
 
-  data = gst_buffer_map (buffer, &size, NULL, GST_MAP_READ);
+  gst_buffer_map (buffer, &map, GST_MAP_READ);
 
   GST_LOG_OBJECT (sink,
-      "writing %" G_GSIZE_FORMAT " bytes to offset %" G_GUINT64_FORMAT, size,
-      sink->position);
+      "writing %" G_GSIZE_FORMAT " bytes to offset %" G_GUINT64_FORMAT,
+      map.size, sink->position);
 
   written =
-      g_output_stream_write (sink->stream, data, size, sink->cancel, &err);
-  gst_buffer_unmap (buffer, data, size);
+      g_output_stream_write (sink->stream, map.data, map.size, sink->cancel,
+      &err);
+  gst_buffer_unmap (buffer, &map);
 
   success = (written >= 0);
 
-  if (G_UNLIKELY (success && written < size)) {
+  if (G_UNLIKELY (success && written < map.size)) {
     /* FIXME: Can this happen?  Should we handle it gracefully?  gnomevfssink
      * doesn't... */
     GST_ELEMENT_ERROR (sink, RESOURCE, WRITE, (NULL),
         ("Could not write to stream: (short write, only %"
             G_GSSIZE_FORMAT " bytes of %" G_GSIZE_FORMAT " bytes written)",
-            written, size));
+            written, map.size));
     return GST_FLOW_ERROR;
   }
 

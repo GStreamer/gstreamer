@@ -232,7 +232,7 @@ gst_video_convert_set_info (GstVideoFilter * filter,
     goto format_mismatch;
   } else if (GST_VIDEO_INFO_FORMAT (in_info) == GST_VIDEO_FORMAT_RGB8_PALETTED) {
     GstBuffer *palette;
-    guint32 *data;
+    GstMapInfo map;
 
     palette = gst_video_parse_caps_palette (incaps);
 
@@ -242,9 +242,9 @@ gst_video_convert_set_info (GstVideoFilter * filter,
       goto invalid_palette;
     }
 
-    data = gst_buffer_map (palette, NULL, NULL, GST_MAP_READ);
-    videoconvert_convert_set_palette (space->convert, data);
-    gst_buffer_unmap (palette, data, -1);
+    gst_buffer_map (palette, &map, GST_MAP_READ);
+    videoconvert_convert_set_palette (space->convert, (guint32 *) map.data);
+    gst_buffer_unmap (palette, &map);
 
     gst_buffer_unref (palette);
   } else if (GST_VIDEO_INFO_FORMAT (out_info) == GST_VIDEO_FORMAT_RGB8_PALETTED) {
