@@ -573,7 +573,7 @@ gst_avi_demux_handle_src_query (GstPad * pad, GstQuery * query)
           GST_DEBUG_OBJECT (query, "total frames is %" G_GUINT32_FORMAT,
               stream->idx_n);
 
-          if (stream->idx_n >= 0)
+          if (stream->idx_n > 0)
             gst_query_set_duration (query, fmt, stream->idx_n);
           else if (gst_pad_query_convert (pad, GST_FORMAT_TIME,
                   duration, &fmt, &dur))
