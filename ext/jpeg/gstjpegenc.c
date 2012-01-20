@@ -210,15 +210,23 @@ gst_jpegenc_flush_destination (j_compress_ptr cinfo)
   GstBuffer *overflow_buffer;
   guint32 old_buffer_size;
   GstJpegEnc *jpegenc = (GstJpegEnc *) (cinfo->client_data);
+  GstFlowReturn ret;
+
   GST_DEBUG_OBJECT (jpegenc,
       "gst_jpegenc_chain: flush_destination: buffer too small");
 
   /* Our output buffer wasn't big enough.
    * Make a new buffer that's twice the size, */
   old_buffer_size = GST_BUFFER_SIZE (jpegenc->output_buffer);
-  gst_pad_alloc_buffer_and_set_caps (jpegenc->srcpad,
+  ret = gst_pad_alloc_buffer_and_set_caps (jpegenc->srcpad,
       GST_BUFFER_OFFSET_NONE, old_buffer_size * 2,
       GST_PAD_CAPS (jpegenc->srcpad), &overflow_buffer);
+  /* handle here if needed */
+  if (ret != GST_FLOW_OK) {
+    overflow_buffer = gst_buffer_new_and_alloc (old_buffer_size * 2);
+    gst_buffer_set_caps (overflow_buffer, GST_PAD_CAPS (jpegenc->srcpad));
+  }
+
   memcpy (GST_BUFFER_DATA (overflow_buffer),
       GST_BUFFER_DATA (jpegenc->output_buffer), old_buffer_size);
 
