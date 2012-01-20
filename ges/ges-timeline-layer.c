@@ -994,3 +994,21 @@ ges_timeline_layer_get_objects (GESTimelineLayer * layer)
   ret = g_list_reverse (ret);
   return ret;
 }
+
+/**
+ * ges_timeline_layer_is_empty:
+ * @layer: The #GESTimelineLayer to check
+ *
+ * Convenience method to check if @layer is empty (doesn't contain any object),
+ * or not.
+ *
+ * Returns: %TRUE if @layer is empty, %FALSE if it already contains at least
+ * one #GESTimelineObject
+ */
+gboolean
+ges_timeline_layer_is_empty (GESTimelineLayer * layer)
+{
+  g_return_val_if_fail (GES_IS_TIMELINE_LAYER (layer), FALSE);
+
+  return (layer->priv->objects_start == NULL);
+}

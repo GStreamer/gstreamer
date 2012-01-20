@@ -285,6 +285,7 @@ ges_timeline_layer_get_objects
 ges_timeline_layer_get_timeline
 ges_timeline_layer_get_auto_transition
 ges_timeline_layer_set_auto_transition
+ges_timeline_layer_is_empty
 <SUBSECTION Standard>
 GESTimelineLayerPrivate
 ges_timeline_layer_set_timeline

@@ -956,6 +956,12 @@
   (return-type "GList*")
 )
 
+(define-method is_empty
+  (of-object "GESTimelineLayer")
+  (c-name "ges_timeline_layer_is_empty")
+  (return-type "gboolean")
+)
+
 
 
 ;; From ges-timeline-object.h
