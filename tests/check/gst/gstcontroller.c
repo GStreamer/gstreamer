@@ -328,7 +328,7 @@ GST_START_TEST (controller_new_fail1)
   cs = gst_test_control_source_new ();
 
   /* that property should not exist */
-  cb = gst_control_binding_new (GST_OBJECT (elem), "_schrompf_",
+  cb = gst_control_binding_direct_new (GST_OBJECT (elem), "_schrompf_",
       GST_CONTROL_SOURCE (cs));
   fail_unless (cb == NULL, NULL);
 
@@ -349,7 +349,7 @@ GST_START_TEST (controller_new_fail2)
   cs = gst_test_control_source_new ();
 
   /* that property should exist and but is readonly */
-  ASSERT_CRITICAL (cb = gst_control_binding_new (GST_OBJECT (elem),
+  ASSERT_CRITICAL (cb = gst_control_binding_direct_new (GST_OBJECT (elem),
           "readonly", GST_CONTROL_SOURCE (cs)));
   fail_unless (cb == NULL, NULL);
 
@@ -370,7 +370,7 @@ GST_START_TEST (controller_new_fail3)
   cs = gst_test_control_source_new ();
 
   /* that property should exist and but is not controlable */
-  ASSERT_CRITICAL (cb = gst_control_binding_new (GST_OBJECT (elem),
+  ASSERT_CRITICAL (cb = gst_control_binding_direct_new (GST_OBJECT (elem),
           "static", GST_CONTROL_SOURCE (cs)));
   fail_unless (cb == NULL, NULL);
 
@@ -392,7 +392,7 @@ GST_START_TEST (controller_new_fail4)
 
   /* that property should exist and but is construct-only */
   ASSERT_CRITICAL (cb =
-      gst_control_binding_new (GST_OBJECT (elem), "construct-only",
+      gst_control_binding_direct_new (GST_OBJECT (elem), "construct-only",
           GST_CONTROL_SOURCE (cs)));
   fail_unless (cb == NULL, NULL);
 
@@ -414,7 +414,7 @@ GST_START_TEST (controller_new_okay1)
   cs = gst_test_control_source_new ();
 
   /* that property should exist and should be controllable */
-  cb = gst_control_binding_new (GST_OBJECT (elem), "int",
+  cb = gst_control_binding_direct_new (GST_OBJECT (elem), "int",
       GST_CONTROL_SOURCE (cs));
   fail_unless (cb != NULL, NULL);
 
@@ -437,11 +437,11 @@ GST_START_TEST (controller_new_okay2)
   cs2 = gst_test_control_source_new ();
 
   /* these properties should exist and should be controllable */
-  cb1 = gst_control_binding_new (GST_OBJECT (elem), "int",
+  cb1 = gst_control_binding_direct_new (GST_OBJECT (elem), "int",
       GST_CONTROL_SOURCE (cs1));
   fail_unless (cb1 != NULL, NULL);
 
-  cb2 = gst_control_binding_new (GST_OBJECT (elem), "boolean",
+  cb2 = gst_control_binding_direct_new (GST_OBJECT (elem), "boolean",
       GST_CONTROL_SOURCE (cs2));
   fail_unless (cb2 != NULL, NULL);
 
@@ -466,7 +466,7 @@ GST_START_TEST (controller_param_twice)
   cs = gst_test_control_source_new ();
 
   /* that property should exist and should be controllable */
-  cb = gst_control_binding_new (GST_OBJECT (elem), "int",
+  cb = gst_control_binding_direct_new (GST_OBJECT (elem), "int",
       GST_CONTROL_SOURCE (cs));
   fail_unless (cb != NULL, NULL);
   cb = gst_object_ref (cb);
@@ -527,7 +527,7 @@ GST_START_TEST (controller_controlsource_refcounts)
 
   fail_unless_equals_int (G_OBJECT (cs)->ref_count, 1);
 
-  cb = gst_control_binding_new (GST_OBJECT (elem), "int", cs);
+  cb = gst_control_binding_direct_new (GST_OBJECT (elem), "int", cs);
   fail_unless (cb != NULL, NULL);
   fail_unless_equals_int (G_OBJECT (cs)->ref_count, 2);
   fail_unless (gst_object_add_control_binding (GST_OBJECT (elem), cb));
@@ -560,9 +560,9 @@ GST_START_TEST (controller_bind_twice)
   cs = (GstControlSource *) gst_test_control_source_new ();
   fail_unless (cs != NULL, NULL);
 
-  cb1 = gst_control_binding_new (GST_OBJECT (elem), "int", cs);
+  cb1 = gst_control_binding_direct_new (GST_OBJECT (elem), "int", cs);
   fail_unless (cb1 != NULL, NULL);
-  cb2 = gst_control_binding_new (GST_OBJECT (elem), "double", cs);
+  cb2 = gst_control_binding_direct_new (GST_OBJECT (elem), "double", cs);
   fail_unless (cb2 != NULL, NULL);
 
   gst_object_unref (cb1);
@@ -585,7 +585,7 @@ GST_START_TEST (controller_sync1)
   fail_unless (csource != NULL, NULL);
 
   fail_unless (gst_object_add_control_binding (GST_OBJECT (elem),
-          gst_control_binding_new (GST_OBJECT (elem), "int",
+          gst_control_binding_direct_new (GST_OBJECT (elem), "int",
               (GstControlSource *) csource)));
 
   csource->value = 0.5;
@@ -611,10 +611,10 @@ GST_START_TEST (controller_sync2)
   fail_unless (csource != NULL, NULL);
 
   fail_unless (gst_object_add_control_binding (GST_OBJECT (elem),
-          gst_control_binding_new (GST_OBJECT (elem), "int",
+          gst_control_binding_direct_new (GST_OBJECT (elem), "int",
               (GstControlSource *) csource)));
   fail_unless (gst_object_add_control_binding (GST_OBJECT (elem),
-          gst_control_binding_new (GST_OBJECT (elem), "double",
+          gst_control_binding_direct_new (GST_OBJECT (elem), "double",
               (GstControlSource *) csource)));
 
   csource->value = 0.5;

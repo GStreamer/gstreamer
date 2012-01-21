@@ -68,15 +68,10 @@ struct _GstControlBinding {
   
   /*< public >*/
   const gchar *name;            /* name of the property */
+  GParamSpec *pspec;            /* GParamSpec for this property */
 
   /*< private >*/
-  GParamSpec *pspec;            /* GParamSpec for this property */
-  GstControlSource *csource;    /* GstControlSource for this property */
   gboolean disabled;
-  GValue cur_value;
-  gdouble last_value;
-
-  GstControlBindingConvert convert;
 
   gpointer _gst_reserved[GST_PADDING];
 };
@@ -92,12 +87,11 @@ struct _GstControlBinding {
 struct _GstControlBindingClass
 {
   GstObjectClass parent_class;
-  
-  /* need vfuncs for:
-  _sync_values
-  _get_value
-  _get_value_array
-  */
+
+  /* virtual methods */
+  gboolean (* sync_values) (GstControlBinding *self, GstObject *object, GstClockTime timestamp, GstClockTime last_sync);
+  GValue * (* get_value) (GstControlBinding *self, GstClockTime timestamp);
+  gboolean (* get_value_array) (GstControlBinding *self, GstClockTime timestamp,GstClockTime interval, guint n_values, GValue *values);
 
   /*< private >*/
   gpointer _gst_reserved[GST_PADDING];
@@ -107,16 +101,13 @@ GType gst_control_binding_get_type (void);
 
 /* Functions */
 
-GstControlBinding * gst_control_binding_new                (GstObject * object, const gchar * property_name,
-                                                            GstControlSource * csource);
-
 gboolean            gst_control_binding_sync_values        (GstControlBinding * self, GstObject *object, 
                                                             GstClockTime timestamp, GstClockTime last_sync);
 GValue *            gst_control_binding_get_value          (GstControlBinding *binding,
                                                             GstClockTime timestamp);
 gboolean            gst_control_binding_get_value_array    (GstControlBinding *binding, GstClockTime timestamp,
                                                             GstClockTime interval, guint n_values, GValue *values);
-GstControlSource *  gst_control_binding_get_control_source (GstControlBinding * self);
+
 void                gst_control_binding_set_disabled       (GstControlBinding * self, gboolean disabled);
 gboolean            gst_control_binding_is_disabled        (GstControlBinding * self);
 G_END_DECLS

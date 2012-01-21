@@ -15,6 +15,7 @@
 #include <gst/gst.h>
 #include <gst/controller/gstinterpolationcontrolsource.h>
 #include <gst/controller/gstlfocontrolsource.h>
+#include <gst/controller/gstcontrolbindingdirect.h>
 
 /* local test element */
 
@@ -192,7 +193,8 @@ test_interpolation (void)
   tvcs = (GstTimedValueControlSource *) ics;
   cs = (GstControlSource *) ics;
 
-  gst_object_add_control_binding (e, gst_control_binding_new (e, "int", cs));
+  gst_object_add_control_binding (e, gst_control_binding_direct_new (e, "int",
+          cs));
 
   gst_timed_value_control_source_set (tvcs, 0 * GST_SECOND, 0.0);
   gst_timed_value_control_source_set (tvcs, 10 * GST_SECOND, 1.0);
@@ -275,7 +277,8 @@ test_lfo (void)
   lfocs = gst_lfo_control_source_new ();
   cs = (GstControlSource *) lfocs;
 
-  gst_object_add_control_binding (e, gst_control_binding_new (e, "int", cs));
+  gst_object_add_control_binding (e, gst_control_binding_direct_new (e, "int",
+          cs));
 
   g_object_set (lfocs,
       "frequency", (gdouble) 0.05,
@@ -381,7 +384,8 @@ test_chained_lfo (void)
   lfocs1 = gst_lfo_control_source_new ();
   cs1 = (GstControlSource *) lfocs1;
 
-  gst_object_add_control_binding (e, gst_control_binding_new (e, "int", cs1));
+  gst_object_add_control_binding (e, gst_control_binding_direct_new (e, "int",
+          cs1));
 
   g_object_set (lfocs1,
       "waveform", GST_LFO_WAVEFORM_SINE,
@@ -392,7 +396,7 @@ test_chained_lfo (void)
   cs2 = (GstControlSource *) lfocs2;
 
   gst_object_add_control_binding ((GstObject *) lfocs1,
-      gst_control_binding_new ((GstObject *) lfocs1, "amplitude", cs2));
+      gst_control_binding_direct_new ((GstObject *) lfocs1, "amplitude", cs2));
 
   g_object_set (lfocs2,
       "waveform", GST_LFO_WAVEFORM_SINE,
