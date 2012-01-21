@@ -19,6 +19,7 @@
 
 #include <gst/gst.h>
 #include <gst/controller/gstlfocontrolsource.h>
+#include <gst/controller/gstcontrolbindingdirect.h>
 
 #include <stdlib.h>
 
@@ -99,7 +100,7 @@ main (gint argc, gchar ** argv)
   csource = gst_lfo_control_source_new ();
 
   gst_object_add_control_binding (GST_OBJECT_CAST (shapewipe),
-      gst_control_binding_new (GST_OBJECT_CAST (shapewipe), "position",
+      gst_control_binding_direct_new (GST_OBJECT_CAST (shapewipe), "position",
           GST_CONTROL_SOURCE (csource)));
 
   g_value_init (&val, G_TYPE_FLOAT);
