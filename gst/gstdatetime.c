@@ -257,11 +257,14 @@
 #define GST_DATE_TIME_USEC_PER_SECOND      (G_GINT64_CONSTANT (1000000))
 #define GST_DATE_TIME_USEC_PER_MILLISECOND (G_GINT64_CONSTANT (1000))
 
+/* FIXME: this bug was resolved NOTGNOME */
 /* Jan 5th 2011 (Edward) : GLib's GDateTime is broken in regards to gmt offset
  * on macosx. Re-enable it once the following bug is fixed:
  * https://bugzilla.gnome.org/show_bug.cgi?id=638666 */
 #ifdef HAVE_OSX
 #undef GLIB_HAS_GDATETIME
+#else
+#define GLIB_HAS_GDATETIME
 #endif
 
 

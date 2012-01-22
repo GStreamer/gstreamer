@@ -73,10 +73,6 @@ struct _GstIdentity {
   gchar 	*last_message;
   guint64        offset;
   gboolean       signal_handoffs;
-
-#if !GLIB_CHECK_VERSION(2,26,0)
-  GStaticRecMutex  notify_lock;
-#endif
 };
 
 struct _GstIdentityClass {

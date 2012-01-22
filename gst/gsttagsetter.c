@@ -83,20 +83,11 @@ typedef struct
 {
   GstTagMergeMode mode;
   GstTagList *list;
-#if !GLIB_CHECK_VERSION (2, 31, 0)
-  GStaticMutex lock;
-#else
   GMutex lock;
-#endif
 } GstTagData;
 
-#if !GLIB_CHECK_VERSION (2, 31, 0)
-#define GST_TAG_DATA_LOCK(data) g_static_mutex_lock(&data->lock)
-#define GST_TAG_DATA_UNLOCK(data) g_static_mutex_unlock(&data->lock)
-#else
 #define GST_TAG_DATA_LOCK(data) g_mutex_lock(&data->lock)
 #define GST_TAG_DATA_UNLOCK(data) g_mutex_unlock(&data->lock)
-#endif
 
 GType
 gst_tag_setter_get_type (void)
@@ -137,11 +128,7 @@ gst_tag_data_free (gpointer p)
   if (data->list)
     gst_tag_list_free (data->list);
 
-#if !GLIB_CHECK_VERSION (2, 31, 0)
-  g_static_mutex_free (&data->lock);
-#else
   g_mutex_clear (&data->lock);
-#endif
 
   g_slice_free (GstTagData, data);
 }
@@ -154,34 +141,21 @@ gst_tag_setter_get_data (GstTagSetter * setter)
   data = g_object_get_qdata (G_OBJECT (setter), gst_tag_key);
   if (!data) {
     /* make sure no other thread is creating a GstTagData at the same time */
-#if !GLIB_CHECK_VERSION (2, 31, 0)
-    static GStaticMutex create_mutex = G_STATIC_MUTEX_INIT;
-
-    g_static_mutex_lock (&create_mutex);
-#else
     static GMutex create_mutex; /* no initialisation required */
 
     g_mutex_lock (&create_mutex);
-#endif
 
     data = g_object_get_qdata (G_OBJECT (setter), gst_tag_key);
     if (!data) {
       data = g_slice_new (GstTagData);
-#if !GLIB_CHECK_VERSION (2, 31, 0)
-      g_static_mutex_init (&data->lock);
-#else
       g_mutex_init (&data->lock);
-#endif
       data->list = NULL;
       data->mode = GST_TAG_MERGE_KEEP;
       g_object_set_qdata_full (G_OBJECT (setter), gst_tag_key, data,
           gst_tag_data_free);
     }
-#if !GLIB_CHECK_VERSION (2, 31, 0)
-    g_static_mutex_unlock (&create_mutex);
-#else
+
     g_mutex_unlock (&create_mutex);
-#endif
   }
 
   return data;

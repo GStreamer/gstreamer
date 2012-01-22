@@ -271,9 +271,6 @@ gst_fake_sink_init (GstFakeSink * fakesink)
   fakesink->state_error = DEFAULT_STATE_ERROR;
   fakesink->signal_handoffs = DEFAULT_SIGNAL_HANDOFFS;
   fakesink->num_buffers = DEFAULT_NUM_BUFFERS;
-#if !GLIB_CHECK_VERSION(2,26,0)
-  g_static_rec_mutex_init (&fakesink->notify_lock);
-#endif
 
   gst_base_sink_set_sync (GST_BASE_SINK (fakesink), DEFAULT_SYNC);
 }
@@ -281,12 +278,6 @@ gst_fake_sink_init (GstFakeSink * fakesink)
 static void
 gst_fake_sink_finalize (GObject * obj)
 {
-#if !GLIB_CHECK_VERSION(2,26,0)
-  GstFakeSink *sink = GST_FAKE_SINK (obj);
-
-  g_static_rec_mutex_free (&sink->notify_lock);
-#endif
-
   G_OBJECT_CLASS (parent_class)->finalize (obj);
 }
 
@@ -370,19 +361,7 @@ gst_fake_sink_get_property (GObject * object, guint prop_id, GValue * value,
 static void
 gst_fake_sink_notify_last_message (GstFakeSink * sink)
 {
-  /* FIXME: this hacks around a bug in GLib/GObject: doing concurrent
-   * g_object_notify() on the same object might lead to crashes, see
-   * http://bugzilla.gnome.org/show_bug.cgi?id=166020#c60 and follow-ups.
-   * So we really don't want to do a g_object_notify() here for out-of-band
-   * events with the streaming thread possibly also doing a g_object_notify()
-   * for an in-band buffer or event. This is fixed in GLib >= 2.26 */
-#if !GLIB_CHECK_VERSION(2,26,0)
-  g_static_rec_mutex_lock (&sink->notify_lock);
-  g_object_notify ((GObject *) sink, "last-message");
-  g_static_rec_mutex_unlock (&sink->notify_lock);
-#else
   g_object_notify_by_pspec ((GObject *) sink, pspec_last_message);
-#endif
 }
 
 static gboolean

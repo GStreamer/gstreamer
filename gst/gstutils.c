@@ -704,7 +704,7 @@ guint32
 gst_util_seqnum_next (void)
 {
   static gint counter = 0;
-  return G_ATOMIC_INT_ADD (&counter, 1);
+  return g_atomic_int_add (&counter, 1);
 }
 
 /**

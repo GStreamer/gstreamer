@@ -446,11 +446,7 @@ gst_fake_src_event_handler (GstBaseSrc * basesrc, GstEvent * event)
     g_free (sstr);
     GST_OBJECT_UNLOCK (src);
 
-#if !GLIB_CHECK_VERSION(2,26,0)
-    g_object_notify ((GObject *) src, "last-message");
-#else
     g_object_notify_by_pspec ((GObject *) src, pspec_last_message);
-#endif
   }
 
   return GST_BASE_SRC_CLASS (parent_class)->event (basesrc, event);
@@ -881,11 +877,7 @@ gst_fake_src_create (GstBaseSrc * basesrc, guint64 offset, guint length,
         GST_MINI_OBJECT_CAST (buf)->flags, flag_str, buf);
     GST_OBJECT_UNLOCK (src);
 
-#if !GLIB_CHECK_VERSION(2,26,0)
-    g_object_notify ((GObject *) src, "last-message");
-#else
     g_object_notify_by_pspec ((GObject *) src, pspec_last_message);
-#endif
   }
 
   if (src->signal_handoffs) {

@@ -319,13 +319,8 @@ gst_net_time_provider_start (GstNetTimeProvider * self)
   self->priv->socket = socket;
   self->priv->cancel = g_cancellable_new ();
 
-#if !GLIB_CHECK_VERSION (2, 31, 0)
-  self->priv->thread =
-      g_thread_create (gst_net_time_provider_thread, self, TRUE, &err);
-#else
   self->priv->thread = g_thread_try_new ("GstNetTimeProvider",
       gst_net_time_provider_thread, self, &err);
-#endif
 
   if (err != NULL)
     goto no_thread;

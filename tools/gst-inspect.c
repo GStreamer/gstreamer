@@ -1527,10 +1527,6 @@ main (int argc, char *argv[])
   textdomain (GETTEXT_PACKAGE);
 #endif
 
-#if !GLIB_CHECK_VERSION (2, 31, 0)
-  g_thread_init (NULL);
-#endif
-
   gst_tools_set_prgname ("gst-inspect");
 
 #ifndef GST_DISABLE_OPTION_PARSING

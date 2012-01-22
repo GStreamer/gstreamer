@@ -273,11 +273,7 @@ gst_tee_init (GstTee * tee)
 static void
 gst_tee_notify_alloc_pad (GstTee * tee)
 {
-#if !GLIB_CHECK_VERSION(2,26,0)
-  g_object_notify ((GObject *) tee, "alloc-pad");
-#else
   g_object_notify_by_pspec ((GObject *) tee, pspec_alloc_pad);
-#endif
 }
 
 static gboolean
@@ -529,11 +525,7 @@ gst_tee_do_message (GstTee * tee, GstPad * pad, gpointer data, gboolean is_list)
   }
   GST_OBJECT_UNLOCK (tee);
 
-#if !GLIB_CHECK_VERSION(2,26,0)
-  g_object_notify ((GObject *) tee, "last-message");
-#else
   g_object_notify_by_pspec ((GObject *) tee, pspec_last_message);
-#endif
 }
 
 static GstFlowReturn

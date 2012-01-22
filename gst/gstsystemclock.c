@@ -57,7 +57,7 @@
 
 #define GET_ENTRY_STATUS(e)          ((GstClockReturn) g_atomic_int_get(&GST_CLOCK_ENTRY_STATUS(e)))
 #define SET_ENTRY_STATUS(e,val)      (g_atomic_int_set(&GST_CLOCK_ENTRY_STATUS(e),(val)))
-#define CAS_ENTRY_STATUS(e,old,val)  (G_ATOMIC_INT_COMPARE_AND_EXCHANGE(\
+#define CAS_ENTRY_STATUS(e,old,val)  (g_atomic_int_compare_and_exchange(\
                                        (&GST_CLOCK_ENTRY_STATUS(e)), (old), (val)))
 
 /* Define this to get some extra debug about jitter from each clock_wait */
@@ -732,13 +732,8 @@ gst_system_clock_start_async (GstSystemClock * clock)
   if (G_LIKELY (clock->thread != NULL))
     return TRUE;                /* Thread already running. Nothing to do */
 
-#if !GLIB_CHECK_VERSION (2, 31, 0)
-  clock->thread = g_thread_create ((GThreadFunc) gst_system_clock_async_thread,
-      clock, TRUE, &error);
-#else
   clock->thread = g_thread_try_new ("GstSystemClock",
       (GThreadFunc) gst_system_clock_async_thread, clock, &error);
-#endif
 
   if (G_UNLIKELY (error))
     goto no_thread;

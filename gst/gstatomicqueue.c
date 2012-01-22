@@ -113,7 +113,7 @@ add_to_free_list (GstAtomicQueue * queue, GstAQueueMem * mem)
 {
   do {
     mem->free = g_atomic_pointer_get (&queue->free_list);
-  } while (!G_ATOMIC_POINTER_COMPARE_AND_EXCHANGE (&queue->free_list,
+  } while (!g_atomic_pointer_compare_and_exchange (&queue->free_list,
           mem->free, mem));
 }
 
@@ -127,7 +127,7 @@ clear_free_list (GstAtomicQueue * queue)
     free_list = g_atomic_pointer_get (&queue->free_list);
     if (free_list == NULL)
       return;
-  } while (!G_ATOMIC_POINTER_COMPARE_AND_EXCHANGE (&queue->free_list, free_list,
+  } while (!g_atomic_pointer_compare_and_exchange (&queue->free_list, free_list,
           NULL));
 
   while (free_list) {
@@ -248,7 +248,7 @@ gst_atomic_queue_peek (GstAtomicQueue * queue)
 
     /* now we try to move the next array as the head memory. If we fail to do that,
      * some other reader managed to do it first and we retry */
-    if (!G_ATOMIC_POINTER_COMPARE_AND_EXCHANGE (&queue->head_mem, head_mem,
+    if (!g_atomic_pointer_compare_and_exchange (&queue->head_mem, head_mem,
             next))
       continue;
 
@@ -305,7 +305,7 @@ gst_atomic_queue_pop (GstAtomicQueue * queue)
 
       /* now we try to move the next array as the head memory. If we fail to do that,
        * some other reader managed to do it first and we retry */
-      if (!G_ATOMIC_POINTER_COMPARE_AND_EXCHANGE (&queue->head_mem, head_mem,
+      if (!g_atomic_pointer_compare_and_exchange (&queue->head_mem, head_mem,
               next))
         continue;
 
@@ -363,7 +363,7 @@ gst_atomic_queue_push (GstAtomicQueue * queue, gpointer data)
       mem = new_queue_mem ((size << 1) + 1, tail);
 
       /* try to make our new array visible to other writers */
-      if (!G_ATOMIC_POINTER_COMPARE_AND_EXCHANGE (&queue->tail_mem, tail_mem,
+      if (!g_atomic_pointer_compare_and_exchange (&queue->tail_mem, tail_mem,
               mem)) {
         /* we tried to swap the new writer array but something changed. This is
          * because some other writer beat us to it, we free our memory and try

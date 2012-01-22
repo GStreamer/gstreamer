@@ -128,10 +128,6 @@ gst_identity_finalize (GObject * object)
 
   g_free (identity->last_message);
 
-#if !GLIB_CHECK_VERSION(2,26,0)
-  g_static_rec_mutex_free (&identity->notify_lock);
-#endif
-
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
@@ -298,29 +294,13 @@ gst_identity_init (GstIdentity * identity)
   identity->last_message = NULL;
   identity->signal_handoffs = DEFAULT_SIGNAL_HANDOFFS;
 
-#if !GLIB_CHECK_VERSION(2,26,0)
-  g_static_rec_mutex_init (&identity->notify_lock);
-#endif
-
   gst_base_transform_set_gap_aware (GST_BASE_TRANSFORM_CAST (identity), TRUE);
 }
 
 static void
 gst_identity_notify_last_message (GstIdentity * identity)
 {
-  /* FIXME: this hacks around a bug in GLib/GObject: doing concurrent
-   * g_object_notify() on the same object might lead to crashes, see
-   * http://bugzilla.gnome.org/show_bug.cgi?id=166020#c60 and follow-ups.
-   * So we really don't want to do a g_object_notify() here for out-of-band
-   * events with the streaming thread possibly also doing a g_object_notify()
-   * for an in-band buffer or event. This is fixed in GLib >= 2.26 */
-#if !GLIB_CHECK_VERSION(2,26,0)
-  g_static_rec_mutex_lock (&identity->notify_lock);
-  g_object_notify ((GObject *) identity, "last-message");
-  g_static_rec_mutex_unlock (&identity->notify_lock);
-#else
   g_object_notify_by_pspec ((GObject *) identity, pspec_last_message);
-#endif
 }
 
 static gboolean

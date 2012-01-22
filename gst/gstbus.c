@@ -799,9 +799,7 @@ gst_bus_create_watch (GstBus * bus)
   source = (GstBusSource *) g_source_new (&gst_bus_source_funcs,
       sizeof (GstBusSource));
 
-#if GLIB_CHECK_VERSION(2,26,0)
   g_source_set_name ((GSource *) source, "GStreamer message bus watch");
-#endif
 
   source->bus = gst_object_ref (bus);
   g_source_add_poll ((GSource *) source, &bus->priv->pollfd);

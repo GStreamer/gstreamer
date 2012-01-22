@@ -82,9 +82,6 @@ struct _GstFakeSink {
   gchar			*last_message;
   gint                  num_buffers;
   gint                  num_buffers_left;
-#if !GLIB_CHECK_VERSION(2,26,0)
-  GStaticRecMutex       notify_lock;
-#endif
 };
 
 struct _GstFakeSinkClass {

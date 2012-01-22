@@ -96,12 +96,9 @@ main (gint argc, gchar * argv[])
   for (t = 0; t < num_threads; t++) {
     GError *error = NULL;
 
-#if !GLIB_CHECK_VERSION (2, 31, 0)
-    threads[t] = g_thread_create (run_test, GINT_TO_POINTER (t), TRUE, &error);
-#else
     threads[t] = g_thread_try_new ("bufferstresstest", run_test,
         GINT_TO_POINTER (t), &error);
-#endif
+
     if (error) {
       printf ("ERROR: g_thread_create() %s\n", error->message);
       exit (-1);

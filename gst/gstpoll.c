@@ -160,8 +160,8 @@ static gboolean gst_poll_add_fd_unlocked (GstPoll * set, GstPollFD * fd);
 #define IS_FLUSHING(s)      (g_atomic_int_get(&(s)->flushing))
 #define SET_FLUSHING(s,val) (g_atomic_int_set(&(s)->flushing, (val)))
 
-#define INC_WAITING(s)      (G_ATOMIC_INT_ADD(&(s)->waiting, 1))
-#define DEC_WAITING(s)      (G_ATOMIC_INT_ADD(&(s)->waiting, -1))
+#define INC_WAITING(s)      (g_atomic_int_add(&(s)->waiting, 1))
+#define DEC_WAITING(s)      (g_atomic_int_add(&(s)->waiting, -1))
 #define GET_WAITING(s)      (g_atomic_int_get(&(s)->waiting))
 
 #define TEST_REBUILD(s)     (g_atomic_int_compare_and_exchange(&(s)->rebuild, 1, 0))
@@ -182,7 +182,7 @@ raise_wakeup (GstPoll * set)
 {
   gboolean result = TRUE;
 
-  if (G_ATOMIC_INT_ADD (&set->control_pending, 1) == 0) {
+  if (g_atomic_int_add (&set->control_pending, 1) == 0) {
     /* raise when nothing pending */
     GST_LOG ("%p: raise", set);
     result = WAKE_EVENT (set);
@@ -222,7 +222,7 @@ release_all_wakeup (GstPoll * set)
         break;
       else
         /* retry again until we read it successfully */
-        G_ATOMIC_INT_ADD (&set->control_pending, 1);
+        g_atomic_int_add (&set->control_pending, 1);
     }
   }
   return old;

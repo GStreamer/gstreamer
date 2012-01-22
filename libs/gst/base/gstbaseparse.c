@@ -289,11 +289,7 @@ struct _GstBaseParsePrivate
   GstIndex *index;
   gint index_id;
   gboolean own_index;
-#if !GLIB_CHECK_VERSION (2, 31, 0)
-  GStaticMutex index_lock;
-#else
   GMutex index_lock;
-#endif
 
   /* seek table entries only maintained if upstream is BYTE seekable */
   gboolean upstream_seekable;
@@ -342,17 +338,10 @@ typedef struct _GstBaseParseSeek
   GstClockTime start_ts;
 } GstBaseParseSeek;
 
-#if !GLIB_CHECK_VERSION (2, 31, 0)
-#define GST_BASE_PARSE_INDEX_LOCK(parse) \
-  g_static_mutex_lock (&parse->priv->index_lock);
-#define GST_BASE_PARSE_INDEX_UNLOCK(parse) \
-  g_static_mutex_unlock (&parse->priv->index_lock);
-#else
 #define GST_BASE_PARSE_INDEX_LOCK(parse) \
   g_mutex_lock (&parse->priv->index_lock);
 #define GST_BASE_PARSE_INDEX_UNLOCK(parse) \
   g_mutex_unlock (&parse->priv->index_lock);
-#endif
 
 static GstElementClass *parent_class = NULL;
 
@@ -500,11 +489,7 @@ gst_base_parse_finalize (GObject * object)
     gst_object_unref (parse->priv->index);
     parse->priv->index = NULL;
   }
-#if !GLIB_CHECK_VERSION (2, 31, 0)
-  g_static_mutex_free (&parse->priv->index_lock);
-#else
   g_mutex_clear (&parse->priv->index_lock);
-#endif
 
   gst_base_parse_clear_queues (parse);
 
@@ -586,11 +571,7 @@ gst_base_parse_init (GstBaseParse * parse, GstBaseParseClass * bclass)
 
   parse->priv->pad_mode = GST_PAD_MODE_NONE;
 
-#if !GLIB_CHECK_VERSION (2, 31, 0)
-  g_static_mutex_init (&parse->priv->index_lock);
-#else
   g_mutex_init (&parse->priv->index_lock);
-#endif
 
   /* init state */
   gst_base_parse_reset (parse);

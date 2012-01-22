@@ -465,13 +465,8 @@ gst_net_client_clock_start (GstNetClientClock * self)
   self->priv->socket = socket;
   self->priv->servaddr = G_SOCKET_ADDRESS (servaddr);
 
-#if !GLIB_CHECK_VERSION (2, 31, 0)
-  self->priv->thread = g_thread_create (gst_net_client_clock_thread, self, TRUE,
-      &error);
-#else
   self->priv->thread = g_thread_try_new ("GstNetClientClock",
       gst_net_client_clock_thread, self, &error);
-#endif
 
   if (error != NULL)
     goto no_thread;
