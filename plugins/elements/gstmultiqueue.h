@@ -65,7 +65,7 @@ struct _GstMultiQueue {
   gboolean buffering;
   gint percent;
 
-  guint32  counter;	/* incoming object counter, use atomic accesses */
+  guint    counter;	/* incoming object counter, use atomic accesses */
   guint32  highid;	/* contains highest id of last outputted object */
   GstClockTime high_time; /* highest start running time */
 
