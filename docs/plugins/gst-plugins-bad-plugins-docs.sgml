@@ -184,7 +184,6 @@
     <xi:include href="xml/plugin-mpegdemux2.xml" />
     <xi:include href="xml/plugin-mpegpsmux.xml" />
     <xi:include href="xml/plugin-mpegtsmux.xml" />
-    <xi:include href="xml/plugin-mpegvideoparse.xml" />
     <xi:include href="xml/plugin-mplex.xml" />
     <xi:include href="xml/plugin-musepack.xml" />
     <xi:include href="xml/plugin-musicbrainz.xml" />

@@ -315,7 +315,7 @@ GST_PLUGINS_NONPORTED=" adpcmdec adpcmenc aiff asfmux \
  fieldanalysis freeverb freeze frei0r gaudieffects geometrictransform h264parse \
  hdvparse hls id3tag inter interlace ivfparse jpegformat jp2kdecimator \
  kate liveadder legacyresample librfb mpegdemux mpegtsmux \
- mpegpsmux mpegvideoparse mve mxf mythtv nsf nuvdemux \
+ mpegpsmux mve mxf mythtv nsf nuvdemux \
  patchdetect pnm rawparse real removesilence rtpmux rtpvp8 scaletempo \
  sdi segmentclip siren speed subenc stereo tta videofilters \
  videomaxrate videomeasure videosignal vmnc \
@@ -368,7 +368,6 @@ AG_GST_CHECK_PLUGIN(mpegdemux)
 AG_GST_CHECK_PLUGIN(mpegtsdemux)
 AG_GST_CHECK_PLUGIN(mpegtsmux)
 AG_GST_CHECK_PLUGIN(mpegpsmux)
-AG_GST_CHECK_PLUGIN(mpegvideoparse)
 AG_GST_CHECK_PLUGIN(multifdsink)
 AG_GST_CHECK_PLUGIN(mve)
 AG_GST_CHECK_PLUGIN(mxf)
@@ -1977,7 +1976,6 @@ gst/mpegtsdemux/Makefile
 gst/mpegtsmux/Makefile
 gst/mpegtsmux/tsmux/Makefile
 gst/mpegpsmux/Makefile
-gst/mpegvideoparse/Makefile
 gst/multifdsink/Makefile
 gst/mve/Makefile
 gst/mxf/Makefile
