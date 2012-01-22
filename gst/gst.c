@@ -682,6 +682,8 @@ init_post (GOptionContext * context, GOptionGroup * group, gpointer data,
   _priv_gst_caps_initialize ();
   _priv_gst_meta_initialize ();
 
+  g_mutex_init (&_gst_trace_mutex);
+
   g_type_class_ref (gst_object_get_type ());
   g_type_class_ref (gst_pad_get_type ());
   g_type_class_ref (gst_element_factory_get_type ());
@@ -1051,6 +1053,8 @@ gst_deinit (void)
   gst_object_unref (clock);
 
   _priv_gst_registry_cleanup ();
+
+  g_mutex_clear (&_gst_trace_mutex);
 
   g_type_class_unref (g_type_class_peek (gst_object_get_type ()));
   g_type_class_unref (g_type_class_peek (gst_pad_get_type ()));

@@ -124,7 +124,7 @@ void            _gst_trace_add_entry            (GstTrace *trace, guint32 seq,
 void            gst_trace_read_tsc              (gint64 *dst);
 
 
-GST_EXPORT GStaticMutex     _gst_trace_mutex;
+GST_EXPORT GMutex       _gst_trace_mutex;
 
 gboolean                gst_alloc_trace_available       (void);
 const GList*            gst_alloc_trace_list            (void);
@@ -159,13 +159,13 @@ void                    gst_alloc_trace_set_flags       (GstAllocTrace *trace, G
 #define gst_alloc_trace_new(trace, mem)                 \
 G_STMT_START {                                          \
   if (G_UNLIKELY ((trace)->flags)) {                    \
-    g_static_mutex_lock (&_gst_trace_mutex);            \
+    g_mutex_lock (&_gst_trace_mutex);            \
     if ((trace)->flags & GST_ALLOC_TRACE_LIVE)          \
       (trace)->live++;                                  \
     if ((trace)->flags & GST_ALLOC_TRACE_MEM_LIVE)      \
       (trace)->mem_live =                               \
         g_slist_prepend ((trace)->mem_live, mem);       \
-    g_static_mutex_unlock (&_gst_trace_mutex);          \
+    g_mutex_unlock (&_gst_trace_mutex);          \
   }                                                     \
 } G_STMT_END
 
@@ -179,13 +179,13 @@ G_STMT_START {                                          \
 #define gst_alloc_trace_free(trace, mem)                \
 G_STMT_START {                                          \
   if (G_UNLIKELY ((trace)->flags)) {                    \
-    g_static_mutex_lock (&_gst_trace_mutex);            \
+    g_mutex_lock (&_gst_trace_mutex);            \
     if ((trace)->flags & GST_ALLOC_TRACE_LIVE)          \
       (trace)->live--;                                  \
     if ((trace)->flags & GST_ALLOC_TRACE_MEM_LIVE)      \
       (trace)->mem_live =                               \
         g_slist_remove ((trace)->mem_live, mem);        \
-    g_static_mutex_unlock (&_gst_trace_mutex);          \
+    g_mutex_unlock (&_gst_trace_mutex);          \
   }                                                     \
 } G_STMT_END
 

@@ -66,13 +66,9 @@
 
 #include "gsttrace.h"
 
-GStaticMutex _gst_trace_mutex = G_STATIC_MUTEX_INIT;
+GMutex _gst_trace_mutex;
 
-static
-#ifdef __inline__
-  __inline__
-#endif
-    void
+static inline void
 read_tsc (gint64 * dst)
 {
 #if defined(HAVE_RDTSC) && defined(__GNUC__)
