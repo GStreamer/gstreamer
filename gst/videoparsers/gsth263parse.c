@@ -234,14 +234,23 @@ gst_h263_parse_set_src_caps (GstH263Parse * h263parse,
         NULL);
 
     h263parse->profile = gst_h263_parse_get_profile (params);
-    if (h263parse->profile != -1)
-      gst_caps_set_simple (caps, "profile", G_TYPE_UINT, h263parse->profile,
-          NULL);
+    if (h263parse->profile != -1) {
+      gchar *profile_str;
+
+      profile_str = g_strdup_printf ("%u", h263parse->profile);
+      gst_caps_set_simple (caps, "profile", G_TYPE_STRING, profile_str, NULL);
+      g_free (profile_str);
+    }
 
     h263parse->level = gst_h263_parse_get_level (params, h263parse->profile,
         h263parse->bitrate, fr_num, fr_denom);
-    if (h263parse->level != -1)
-      gst_caps_set_simple (caps, "level", G_TYPE_UINT, h263parse->level, NULL);
+    if (h263parse->level != -1) {
+      gchar *level_str;
+
+      level_str = g_strdup_printf ("%u", h263parse->level);
+      gst_caps_set_simple (caps, "level", G_TYPE_STRING, level_str, NULL);
+      g_free (level_str);
+    }
   }
 
   gst_pad_set_caps (GST_BASE_PARSE_SRC_PAD (GST_BASE_PARSE (h263parse)), caps);
