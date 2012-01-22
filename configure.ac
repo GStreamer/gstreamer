@@ -1702,7 +1702,7 @@ AG_GST_CHECK_FEATURE(VDPAU, [VDPAU], vdpau, [
 dnl *** schroedinger ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_SCHRO, true)
 AG_GST_CHECK_FEATURE(SCHRO, [Schroedinger video codec], schro, [
-  AG_GST_PKG_CHECK_MODULES(SCHRO, schroedinger-1.0 >= 1.0.7)
+  AG_GST_PKG_CHECK_MODULES(SCHRO, schroedinger-1.0 >= 1.0.10)
 ])
 
 dnl *** zbar ***

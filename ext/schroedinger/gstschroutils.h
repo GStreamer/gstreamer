@@ -24,6 +24,12 @@
 #include <gst/video/video.h>
 #include <schroedinger/schro.h>
 
+#ifdef SCHRO_FRAME_FORMAT_AY64
+#define GST_SCHRO_YUV_LIST "{ I420, YV12, YUY2, UYVY, AYUV, Y42B, Y444, v216, v210, AY64 }"
+#else
+#define GST_SCHRO_YUV_LIST "{ I420, YV12, YUY2, UYVY, AYUV, Y42B, Y444 }"
+#endif
+
 SchroFrame *
 gst_schro_buffer_wrap (GstBuffer *buf, GstVideoFormat format, int width,
     int height);
