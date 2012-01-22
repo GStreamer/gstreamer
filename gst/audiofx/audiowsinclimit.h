@@ -66,7 +66,7 @@ struct _GstAudioWSincLimit {
   gint kernel_length;
 
   /* < private > */
-  GMutex *lock;
+  GMutex lock;
 };
 
 struct _GstAudioWSincLimitClass {

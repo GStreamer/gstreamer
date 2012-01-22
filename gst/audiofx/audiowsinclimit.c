@@ -211,7 +211,7 @@ gst_audio_wsinclimit_init (GstAudioWSincLimit * self)
   self->kernel_length = 101;
   self->cutoff = 0.0;
 
-  self->lock = g_mutex_new ();
+  g_mutex_init (&self->lock);
 }
 
 static void
@@ -321,8 +321,7 @@ gst_audio_wsinclimit_finalize (GObject * object)
 {
   GstAudioWSincLimit *self = GST_AUDIO_WSINC_LIMIT (object);
 
-  g_mutex_free (self->lock);
-  self->lock = NULL;
+  g_mutex_clear (&self->lock);
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
@@ -339,7 +338,7 @@ gst_audio_wsinclimit_set_property (GObject * object, guint prop_id,
     case PROP_LENGTH:{
       gint val;
 
-      g_mutex_lock (self->lock);
+      g_mutex_lock (&self->lock);
       val = g_value_get_int (value);
       if (val % 2 == 0)
         val++;
@@ -350,26 +349,26 @@ gst_audio_wsinclimit_set_property (GObject * object, guint prop_id,
         self->kernel_length = val;
         gst_audio_wsinclimit_build_kernel (self);
       }
-      g_mutex_unlock (self->lock);
+      g_mutex_unlock (&self->lock);
       break;
     }
     case PROP_FREQUENCY:
-      g_mutex_lock (self->lock);
+      g_mutex_lock (&self->lock);
       self->cutoff = g_value_get_float (value);
       gst_audio_wsinclimit_build_kernel (self);
-      g_mutex_unlock (self->lock);
+      g_mutex_unlock (&self->lock);
       break;
     case PROP_MODE:
-      g_mutex_lock (self->lock);
+      g_mutex_lock (&self->lock);
       self->mode = g_value_get_enum (value);
       gst_audio_wsinclimit_build_kernel (self);
-      g_mutex_unlock (self->lock);
+      g_mutex_unlock (&self->lock);
       break;
     case PROP_WINDOW:
-      g_mutex_lock (self->lock);
+      g_mutex_lock (&self->lock);
       self->window = g_value_get_enum (value);
       gst_audio_wsinclimit_build_kernel (self);
-      g_mutex_unlock (self->lock);
+      g_mutex_unlock (&self->lock);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);

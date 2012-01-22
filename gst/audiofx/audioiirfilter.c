@@ -194,7 +194,7 @@ gst_audio_iir_filter_init (GstAudioIIRFilter * self)
   b = NULL;
   gst_audio_iir_filter_update_coefficients (self, a, b);
 
-  self->lock = g_mutex_new ();
+  g_mutex_init (&self->lock);
 }
 
 /* GstAudioFilter vmethod implementations */
@@ -219,8 +219,7 @@ gst_audio_iir_filter_finalize (GObject * object)
 {
   GstAudioIIRFilter *self = GST_AUDIO_IIR_FILTER (object);
 
-  g_mutex_free (self->lock);
-  self->lock = NULL;
+  g_mutex_clear (&self->lock);
 
   if (self->a)
     g_value_array_free (self->a);
@@ -242,16 +241,16 @@ gst_audio_iir_filter_set_property (GObject * object, guint prop_id,
 
   switch (prop_id) {
     case PROP_A:
-      g_mutex_lock (self->lock);
+      g_mutex_lock (&self->lock);
       gst_audio_iir_filter_update_coefficients (self, g_value_dup_boxed (value),
           NULL);
-      g_mutex_unlock (self->lock);
+      g_mutex_unlock (&self->lock);
       break;
     case PROP_B:
-      g_mutex_lock (self->lock);
+      g_mutex_lock (&self->lock);
       gst_audio_iir_filter_update_coefficients (self, NULL,
           g_value_dup_boxed (value));
-      g_mutex_unlock (self->lock);
+      g_mutex_unlock (&self->lock);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);

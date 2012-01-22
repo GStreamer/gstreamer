@@ -177,7 +177,7 @@ gst_audio_fir_filter_init (GstAudioFIRFilter * self)
   g_value_unset (&v);
   gst_audio_fir_filter_update_kernel (self, va);
 
-  self->lock = g_mutex_new ();
+  g_mutex_init (&self->lock);
 }
 
 /* GstAudioFilter vmethod implementations */
@@ -202,8 +202,7 @@ gst_audio_fir_filter_finalize (GObject * object)
 {
   GstAudioFIRFilter *self = GST_AUDIO_FIR_FILTER (object);
 
-  g_mutex_free (self->lock);
-  self->lock = NULL;
+  g_mutex_clear (&self->lock);
 
   if (self->kernel)
     g_value_array_free (self->kernel);
@@ -222,16 +221,16 @@ gst_audio_fir_filter_set_property (GObject * object, guint prop_id,
 
   switch (prop_id) {
     case PROP_KERNEL:
-      g_mutex_lock (self->lock);
+      g_mutex_lock (&self->lock);
       /* update kernel already pushes residues */
       gst_audio_fir_filter_update_kernel (self, g_value_dup_boxed (value));
-      g_mutex_unlock (self->lock);
+      g_mutex_unlock (&self->lock);
       break;
     case PROP_LATENCY:
-      g_mutex_lock (self->lock);
+      g_mutex_lock (&self->lock);
       self->latency = g_value_get_uint64 (value);
       gst_audio_fir_filter_update_kernel (self, NULL);
-      g_mutex_unlock (self->lock);
+      g_mutex_unlock (&self->lock);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);

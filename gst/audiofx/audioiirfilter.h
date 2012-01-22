@@ -54,7 +54,7 @@ struct _GstAudioIIRFilter {
   GValueArray *a, *b;
 
   /* < private > */
-  GMutex *lock;
+  GMutex lock;
 };
 
 struct _GstAudioIIRFilterClass {

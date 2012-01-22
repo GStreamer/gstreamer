@@ -216,7 +216,7 @@ gst_audio_wsincband_init (GstAudioWSincBand * self)
   self->mode = MODE_BAND_PASS;
   self->window = WINDOW_HAMMING;
 
-  self->lock = g_mutex_new ();
+  g_mutex_init (&self->lock);
 }
 
 static void
@@ -386,8 +386,7 @@ gst_audio_wsincband_finalize (GObject * object)
 {
   GstAudioWSincBand *self = GST_AUDIO_WSINC_BAND (object);
 
-  g_mutex_free (self->lock);
-  self->lock = NULL;
+  g_mutex_clear (&self->lock);
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
@@ -404,7 +403,7 @@ gst_audio_wsincband_set_property (GObject * object, guint prop_id,
     case PROP_LENGTH:{
       gint val;
 
-      g_mutex_lock (self->lock);
+      g_mutex_lock (&self->lock);
       val = g_value_get_int (value);
       if (val % 2 == 0)
         val++;
@@ -415,32 +414,32 @@ gst_audio_wsincband_set_property (GObject * object, guint prop_id,
         self->kernel_length = val;
         gst_audio_wsincband_build_kernel (self);
       }
-      g_mutex_unlock (self->lock);
+      g_mutex_unlock (&self->lock);
       break;
     }
     case PROP_LOWER_FREQUENCY:
-      g_mutex_lock (self->lock);
+      g_mutex_lock (&self->lock);
       self->lower_frequency = g_value_get_float (value);
       gst_audio_wsincband_build_kernel (self);
-      g_mutex_unlock (self->lock);
+      g_mutex_unlock (&self->lock);
       break;
     case PROP_UPPER_FREQUENCY:
-      g_mutex_lock (self->lock);
+      g_mutex_lock (&self->lock);
       self->upper_frequency = g_value_get_float (value);
       gst_audio_wsincband_build_kernel (self);
-      g_mutex_unlock (self->lock);
+      g_mutex_unlock (&self->lock);
       break;
     case PROP_MODE:
-      g_mutex_lock (self->lock);
+      g_mutex_lock (&self->lock);
       self->mode = g_value_get_enum (value);
       gst_audio_wsincband_build_kernel (self);
-      g_mutex_unlock (self->lock);
+      g_mutex_unlock (&self->lock);
       break;
     case PROP_WINDOW:
-      g_mutex_lock (self->lock);
+      g_mutex_lock (&self->lock);
       self->window = g_value_get_enum (value);
       gst_audio_wsincband_build_kernel (self);
-      g_mutex_unlock (self->lock);
+      g_mutex_unlock (&self->lock);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);

@@ -52,7 +52,7 @@ struct _GstAspectRatioCrop
   gint ar_num; /* if < 1 then don't change ar */
   gint ar_denom;
 
-  GMutex *crop_lock;
+  GMutex crop_lock;
 };
 
 struct _GstAspectRatioCropClass

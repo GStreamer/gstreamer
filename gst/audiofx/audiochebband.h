@@ -50,7 +50,7 @@ struct _GstAudioChebBand
   gfloat ripple;
 
   /* < private > */
-  GMutex *lock;
+  GMutex lock;
 };
 
 struct _GstAudioChebBandClass

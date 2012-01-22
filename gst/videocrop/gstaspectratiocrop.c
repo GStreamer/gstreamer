@@ -133,7 +133,7 @@ gst_aspect_ratio_crop_set_caps (GstAspectRatioCrop * aspect_ratio_crop,
   GstStructure *structure;
   gboolean ret;
 
-  g_mutex_lock (aspect_ratio_crop->crop_lock);
+  g_mutex_lock (&aspect_ratio_crop->crop_lock);
 
   structure = gst_caps_get_structure (caps, 0);
   gst_aspect_ratio_transform_structure (aspect_ratio_crop, structure, NULL,
@@ -143,7 +143,7 @@ gst_aspect_ratio_crop_set_caps (GstAspectRatioCrop * aspect_ratio_crop,
       "sink");
   ret = gst_pad_set_caps (peer_pad, caps);
   gst_object_unref (peer_pad);
-  g_mutex_unlock (aspect_ratio_crop->crop_lock);
+  g_mutex_unlock (&aspect_ratio_crop->crop_lock);
   return ret;
 }
 
@@ -212,8 +212,7 @@ gst_aspect_ratio_crop_finalize (GObject * object)
 
   aspect_ratio_crop = GST_ASPECT_RATIO_CROP (object);
 
-  if (aspect_ratio_crop->crop_lock)
-    g_mutex_free (aspect_ratio_crop->crop_lock);
+  g_mutex_clear (&aspect_ratio_crop->crop_lock);
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
@@ -230,7 +229,7 @@ gst_aspect_ratio_crop_init (GstAspectRatioCrop * aspect_ratio_crop)
   aspect_ratio_crop->ar_num = 0;
   aspect_ratio_crop->ar_denom = 1;
 
-  aspect_ratio_crop->crop_lock = g_mutex_new ();
+  g_mutex_init (&aspect_ratio_crop->crop_lock);
 
   /* add the transform element */
   aspect_ratio_crop->videocrop = gst_element_factory_make ("videocrop", NULL);
@@ -393,7 +392,7 @@ gst_aspect_ratio_crop_get_caps (GstPad * pad, GstCaps * filter)
 
   aspect_ratio_crop = GST_ASPECT_RATIO_CROP (gst_pad_get_parent (pad));
 
-  g_mutex_lock (aspect_ratio_crop->crop_lock);
+  g_mutex_lock (&aspect_ratio_crop->crop_lock);
 
   peer = gst_pad_get_peer (aspect_ratio_crop->sink);
   if (peer == NULL) {
@@ -409,7 +408,7 @@ gst_aspect_ratio_crop_get_caps (GstPad * pad, GstCaps * filter)
     gst_object_unref (peer);
   }
 
-  g_mutex_unlock (aspect_ratio_crop->crop_lock);
+  g_mutex_unlock (&aspect_ratio_crop->crop_lock);
   gst_object_unref (aspect_ratio_crop);
 
   if (return_caps && filter) {

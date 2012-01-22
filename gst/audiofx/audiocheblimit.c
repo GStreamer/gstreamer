@@ -196,7 +196,7 @@ gst_audio_cheb_limit_init (GstAudioChebLimit * filter)
   filter->poles = 4;
   filter->ripple = 0.25;
 
-  filter->lock = g_mutex_new ();
+  g_mutex_init (&filter->lock);
 }
 
 static void
@@ -477,8 +477,7 @@ gst_audio_cheb_limit_finalize (GObject * object)
 {
   GstAudioChebLimit *filter = GST_AUDIO_CHEB_LIMIT (object);
 
-  g_mutex_free (filter->lock);
-  filter->lock = NULL;
+  g_mutex_clear (&filter->lock);
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
@@ -491,34 +490,34 @@ gst_audio_cheb_limit_set_property (GObject * object, guint prop_id,
 
   switch (prop_id) {
     case PROP_MODE:
-      g_mutex_lock (filter->lock);
+      g_mutex_lock (&filter->lock);
       filter->mode = g_value_get_enum (value);
       generate_coefficients (filter);
-      g_mutex_unlock (filter->lock);
+      g_mutex_unlock (&filter->lock);
       break;
     case PROP_TYPE:
-      g_mutex_lock (filter->lock);
+      g_mutex_lock (&filter->lock);
       filter->type = g_value_get_int (value);
       generate_coefficients (filter);
-      g_mutex_unlock (filter->lock);
+      g_mutex_unlock (&filter->lock);
       break;
     case PROP_CUTOFF:
-      g_mutex_lock (filter->lock);
+      g_mutex_lock (&filter->lock);
       filter->cutoff = g_value_get_float (value);
       generate_coefficients (filter);
-      g_mutex_unlock (filter->lock);
+      g_mutex_unlock (&filter->lock);
       break;
     case PROP_RIPPLE:
-      g_mutex_lock (filter->lock);
+      g_mutex_lock (&filter->lock);
       filter->ripple = g_value_get_float (value);
       generate_coefficients (filter);
-      g_mutex_unlock (filter->lock);
+      g_mutex_unlock (&filter->lock);
       break;
     case PROP_POLES:
-      g_mutex_lock (filter->lock);
+      g_mutex_lock (&filter->lock);
       filter->poles = GST_ROUND_UP_2 (g_value_get_int (value));
       generate_coefficients (filter);
-      g_mutex_unlock (filter->lock);
+      g_mutex_unlock (&filter->lock);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);

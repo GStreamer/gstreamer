@@ -66,7 +66,7 @@ struct _GstAudioWSincBand {
   gint kernel_length;           /* length of the filter kernel */
 
   /* < private > */
-  GMutex *lock;
+  GMutex lock;
 };
 
 struct _GstAudioWSincBandClass {
