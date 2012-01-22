@@ -876,13 +876,11 @@ GST_STREAM_ERROR
 GST_ERROR_SYSTEM
 gst_error_get_message
 <SUBSECTION Standard>
-GST_TYPE_G_ERROR
 GST_TYPE_CORE_ERROR
 GST_TYPE_LIBRARY_ERROR
 GST_TYPE_RESOURCE_ERROR
 GST_TYPE_STREAM_ERROR
 <SUBSECTION Private>
-gst_g_error_get_type
 gst_core_error_get_type
 gst_library_error_get_type
 gst_resource_error_get_type

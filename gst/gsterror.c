@@ -122,14 +122,6 @@ GQuark gst_ ## string ## _error_quark (void) {                          \
     quark = g_quark_from_static_string ("gst-" # string "-error-quark"); \
   return quark; }
 
-/* FIXME: Deprecate when we depend on GLib 2.26 */
-/* FIXME 0.11: remove gst_g_error_get_type() */
-GType
-gst_g_error_get_type (void)
-{
-  return g_error_get_type ();
-}
-
 #define FILE_A_BUG "  Please file a bug at " PACKAGE_BUGREPORT "."
 
 static const gchar *

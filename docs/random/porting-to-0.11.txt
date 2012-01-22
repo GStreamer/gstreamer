@@ -474,3 +474,8 @@ The 0.11 porting guide
     GST_VALUE_HOLDS_DATE(value) -> G_VALUE_HOLDS(value,G_TYPE_DATE)
     gst_value_set_date() -> g_value_set_boxed()
     gst_value_get_date() -> g_value_get_boxed()
+
+* GError/GstGError
+
+    GstGError -> GError
+    GST_TYPE_G_ERROR / gst_g_error_get_type() -> G_TYPE_ERROR

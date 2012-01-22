@@ -386,7 +386,7 @@ gst_message_new_error (GstObject * src, GError * error, const gchar * debug)
   GstStructure *structure;
 
   structure = gst_structure_new_id (GST_QUARK (MESSAGE_ERROR),
-      GST_QUARK (GERROR), GST_TYPE_G_ERROR, error,
+      GST_QUARK (GERROR), G_TYPE_ERROR, error,
       GST_QUARK (DEBUG), G_TYPE_STRING, debug, NULL);
   message = gst_message_new_custom (GST_MESSAGE_ERROR, src, structure);
 
@@ -413,7 +413,7 @@ gst_message_new_warning (GstObject * src, GError * error, const gchar * debug)
   GstStructure *structure;
 
   structure = gst_structure_new_id (GST_QUARK (MESSAGE_WARNING),
-      GST_QUARK (GERROR), GST_TYPE_G_ERROR, error,
+      GST_QUARK (GERROR), G_TYPE_ERROR, error,
       GST_QUARK (DEBUG), G_TYPE_STRING, debug, NULL);
   message = gst_message_new_custom (GST_MESSAGE_WARNING, src, structure);
 
@@ -442,7 +442,7 @@ gst_message_new_info (GstObject * src, GError * error, const gchar * debug)
   GstStructure *structure;
 
   structure = gst_structure_new_id (GST_QUARK (MESSAGE_INFO),
-      GST_QUARK (GERROR), GST_TYPE_G_ERROR, error,
+      GST_QUARK (GERROR), G_TYPE_ERROR, error,
       GST_QUARK (DEBUG), G_TYPE_STRING, debug, NULL);
   message = gst_message_new_custom (GST_MESSAGE_INFO, src, structure);
 
@@ -1335,7 +1335,7 @@ gst_message_parse_error (GstMessage * message, GError ** gerror, gchar ** debug)
   structure = GST_MESSAGE_STRUCTURE (message);
   error_gvalue = gst_structure_id_get_value (structure, GST_QUARK (GERROR));
   g_return_if_fail (error_gvalue != NULL);
-  g_return_if_fail (G_VALUE_TYPE (error_gvalue) == GST_TYPE_G_ERROR);
+  g_return_if_fail (G_VALUE_TYPE (error_gvalue) == G_TYPE_ERROR);
 
   error_val = (GError *) g_value_get_boxed (error_gvalue);
   if (error_val)
@@ -1375,7 +1375,7 @@ gst_message_parse_warning (GstMessage * message, GError ** gerror,
   structure = GST_MESSAGE_STRUCTURE (message);
   error_gvalue = gst_structure_id_get_value (structure, GST_QUARK (GERROR));
   g_return_if_fail (error_gvalue != NULL);
-  g_return_if_fail (G_VALUE_TYPE (error_gvalue) == GST_TYPE_G_ERROR);
+  g_return_if_fail (G_VALUE_TYPE (error_gvalue) == G_TYPE_ERROR);
 
   error_val = (GError *) g_value_get_boxed (error_gvalue);
   if (error_val)
@@ -1416,7 +1416,7 @@ gst_message_parse_info (GstMessage * message, GError ** gerror, gchar ** debug)
   structure = GST_MESSAGE_STRUCTURE (message);
   error_gvalue = gst_structure_id_get_value (structure, GST_QUARK (GERROR));
   g_return_if_fail (error_gvalue != NULL);
-  g_return_if_fail (G_VALUE_TYPE (error_gvalue) == GST_TYPE_G_ERROR);
+  g_return_if_fail (G_VALUE_TYPE (error_gvalue) == G_TYPE_ERROR);
 
   error_val = (GError *) g_value_get_boxed (error_gvalue);
   if (error_val)

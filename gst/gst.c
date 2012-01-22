@@ -746,8 +746,6 @@ init_post (GOptionContext * context, GOptionGroup * group, gpointer data,
 
   _priv_gst_plugin_initialize ();
 
-  gst_g_error_get_type ();
-
   /* register core plugins */
   gst_plugin_register_static (GST_VERSION_MAJOR, GST_VERSION_MINOR,
       "staticelements", "core elements linked into the GStreamer library",

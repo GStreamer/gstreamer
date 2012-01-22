@@ -197,8 +197,6 @@ typedef enum
   GST_STREAM_ERROR_NUM_ERRORS
 } GstStreamError;
 
-#define GST_TYPE_G_ERROR    (gst_g_error_get_type ())
-
 /**
  * GST_LIBRARY_ERROR:
  *
@@ -239,11 +237,6 @@ typedef enum
  * call.  To be used as the debug argument in #GST_ELEMENT_ERROR.
  */
 #define GST_ERROR_SYSTEM    ("system error: %s", g_strerror (errno))
-
-/* Hide this compatibility type from introspection */
-#ifndef __GI_SCANNER__
-GType gst_g_error_get_type (void);
-#endif
 
 gchar *gst_error_get_message (GQuark domain, gint code);
 GQuark gst_stream_error_quark (void);
