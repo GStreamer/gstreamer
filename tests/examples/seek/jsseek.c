@@ -124,7 +124,7 @@ static GtkWidget *text_checkbox, *mute_checkbox, *volume_spinbutton;
 static GtkWidget *skip_checkbox, *video_window, *download_checkbox;
 static GtkWidget *buffer_checkbox, *rate_spinbutton;
 
-static GStaticMutex state_mutex = G_STATIC_MUTEX_INIT;
+static GMutex state_mutex;
 
 static GtkWidget *format_combo, *step_amount_spinbutton, *step_rate_spinbutton;
 static GtkWidget *shuttle_checkbox, *step_button;
@@ -1502,7 +1502,7 @@ failed:
 static void
 pause_cb (GtkButton * button, gpointer data)
 {
-  g_static_mutex_lock (&state_mutex);
+  g_mutex_lock (&state_mutex);
   if (state != GST_STATE_PAUSED) {
     GstStateChangeReturn ret;
 
@@ -1522,13 +1522,13 @@ pause_cb (GtkButton * button, gpointer data)
     state = GST_STATE_PAUSED;
     gtk_statusbar_push (GTK_STATUSBAR (statusbar), status_id, "Paused");
   }
-  g_static_mutex_unlock (&state_mutex);
+  g_mutex_unlock (&state_mutex);
 
   return;
 
 failed:
   {
-    g_static_mutex_unlock (&state_mutex);
+    g_mutex_unlock (&state_mutex);
     g_print ("PAUSE failed\n");
     gtk_statusbar_push (GTK_STATUSBAR (statusbar), status_id, "Pause failed");
   }
@@ -1543,7 +1543,7 @@ stop_cb (GtkButton * button, gpointer data)
     g_print ("READY pipeline\n");
     gtk_statusbar_pop (GTK_STATUSBAR (statusbar), status_id);
 
-    g_static_mutex_lock (&state_mutex);
+    g_mutex_lock (&state_mutex);
     ret = gst_element_set_state (pipeline, STOP_STATE);
     if (ret == GST_STATE_CHANGE_FAILURE)
       goto failed;
@@ -1560,7 +1560,7 @@ stop_cb (GtkButton * button, gpointer data)
 
     if (pipeline_type == 16)
       clear_streams (pipeline);
-    g_static_mutex_unlock (&state_mutex);
+    g_mutex_unlock (&state_mutex);
 
 #if 0
     /* if one uses parse_launch, play, stop and play again it fails as all the
@@ -1588,7 +1588,7 @@ stop_cb (GtkButton * button, gpointer data)
 
 failed:
   {
-    g_static_mutex_unlock (&state_mutex);
+    g_mutex_unlock (&state_mutex);
     g_print ("STOP failed\n");
     gtk_statusbar_push (GTK_STATUSBAR (statusbar), status_id, "Stop failed");
   }
@@ -2164,10 +2164,10 @@ msg_sync_step_done (GstBus * bus, GstMessage * message, GstElement * element)
     return;
   }
 
-  if (g_static_mutex_trylock (&state_mutex)) {
+  if (g_mutex_trylock (&state_mutex)) {
     if (shuttling)
       do_shuttle (element);
-    g_static_mutex_unlock (&state_mutex);
+    g_mutex_unlock (&state_mutex);
   } else {
     /* ignore step messages that come while we are doing a state change */
     g_print ("state change is busy\n");

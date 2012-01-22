@@ -94,7 +94,7 @@ static void gst_alsasink_reset (GstAudioSink * asink);
 
 static gint output_ref;         /* 0    */
 static snd_output_t *output;    /* NULL */
-static GStaticMutex output_mutex = G_STATIC_MUTEX_INIT;
+static GMutex output_mutex;
 
 static GstStaticPadTemplate alsasink_sink_factory =
     GST_STATIC_PAD_TEMPLATE ("sink",
@@ -115,13 +115,13 @@ gst_alsasink_finalise (GObject * object)
   g_free (sink->device);
   g_mutex_free (sink->alsa_lock);
 
-  g_static_mutex_lock (&output_mutex);
+  g_mutex_lock (&output_mutex);
   --output_ref;
   if (output_ref == 0) {
     snd_output_close (output);
     output = NULL;
   }
-  g_static_mutex_unlock (&output_mutex);
+  g_mutex_unlock (&output_mutex);
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
@@ -247,12 +247,12 @@ gst_alsasink_init (GstAlsaSink * alsasink)
   alsasink->cached_caps = NULL;
   alsasink->alsa_lock = g_mutex_new ();
 
-  g_static_mutex_lock (&output_mutex);
+  g_mutex_lock (&output_mutex);
   if (output_ref == 0) {
     snd_output_stdio_attach (&output, stdout, 0);
     ++output_ref;
   }
-  g_static_mutex_unlock (&output_mutex);
+  g_mutex_unlock (&output_mutex);
 }
 
 #define CHECK(call, error) \

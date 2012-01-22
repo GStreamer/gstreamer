@@ -75,7 +75,7 @@ static void gst_cd_paranoia_src_close (GstAudioCdSrc * src);
  * easy way to find out the calling object from within the paranoia
  * callback, and we need the object instance in there to emit our signals */
 static GstCdParanoiaSrc *cur_cb_source;
-static GStaticMutex cur_cb_mutex = G_STATIC_MUTEX_INIT;
+static GMutex cur_cb_mutex;
 
 static gint cdpsrc_signals[NUM_SIGNALS];        /* all 0 */
 
@@ -378,7 +378,7 @@ gst_cd_paranoia_src_read_sector (GstAudioCdSrc * audiocdsrc, gint sector)
 
   if (do_serialize) {
     GST_LOG_OBJECT (src, "Signal handlers connected, serialising access");
-    g_static_mutex_lock (&cur_cb_mutex);
+    g_mutex_lock (&cur_cb_mutex);
     GST_LOG_OBJECT (src, "Got lock");
     cur_cb_source = src;
 
@@ -386,7 +386,7 @@ gst_cd_paranoia_src_read_sector (GstAudioCdSrc * audiocdsrc, gint sector)
 
     cur_cb_source = NULL;
     GST_LOG_OBJECT (src, "Releasing lock");
-    g_static_mutex_unlock (&cur_cb_mutex);
+    g_mutex_unlock (&cur_cb_mutex);
   } else {
     cdda_buf = paranoia_read (src->p, gst_cd_paranoia_dummy_callback);
   }
