@@ -41,20 +41,6 @@ run_pipeline (GstElement * pipeline)
   gst_element_set_state (pipeline, GST_STATE_NULL);
 }
 
-#if !GLIB_CHECK_VERSION(2,30,0)
-static gchar *
-g_mkdtemp (gchar * template)
-{
-  gchar *tmpdir;
-
-  tmpdir = mkdtemp (template);
-  if (tmpdir == NULL) {
-    g_free (template);
-  }
-  return tmpdir;
-}
-#endif
-
 GST_START_TEST (test_multifilesink_key_frame)
 {
   GstElement *pipeline;

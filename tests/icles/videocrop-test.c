@@ -193,11 +193,6 @@ main (int argc, char **argv)
   GstCaps *filter_caps = NULL;
   GList *caps_list, *l;
 
-#if !GLIB_CHECK_VERSION (2, 31, 0)
-  if (!g_thread_supported ())
-    g_thread_init (NULL);
-#endif
-
   /* command line option parsing */
   ctx = g_option_context_new ("");
   g_option_context_add_group (ctx, gst_init_get_option_group ());

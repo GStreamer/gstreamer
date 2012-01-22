@@ -447,11 +447,6 @@ souphttpsrc_suite (void)
 
   g_type_init ();
 
-#if !GLIB_CHECK_VERSION (2, 31, 0)
-  if (!g_thread_supported ())
-    g_thread_init (NULL);
-#endif
-
   s = suite_create ("souphttpsrc");
   tc_chain = tcase_create ("general");
   tc_internet = tcase_create ("internet");
