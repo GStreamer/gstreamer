@@ -45,8 +45,6 @@ plugin_init (GstPlugin * plugin)
   gst_element_register (plugin, "intervideosink", GST_RANK_NONE,
       GST_TYPE_INTER_VIDEO_SINK);
 
-  gst_inter_surface_init ();
-
   return TRUE;
 }
 

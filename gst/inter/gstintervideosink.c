@@ -76,7 +76,8 @@ static gboolean gst_inter_video_sink_unlock_stop (GstBaseSink * sink);
 
 enum
 {
-  PROP_0
+  PROP_0,
+  PROP_CHANNEL
 };
 
 /* pad templates */
@@ -144,6 +145,10 @@ gst_inter_video_sink_class_init (GstInterVideoSinkClass * klass)
   base_sink_class->unlock_stop =
       GST_DEBUG_FUNCPTR (gst_inter_video_sink_unlock_stop);
 
+  g_object_class_install_property (gobject_class, PROP_CHANNEL,
+      g_param_spec_string ("channel", "Channel",
+          "Channel name to match inter src and sink elements",
+          "default", G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 }
 
 static void
@@ -151,15 +156,25 @@ gst_inter_video_sink_init (GstInterVideoSink * intervideosink,
     GstInterVideoSinkClass * intervideosink_class)
 {
   intervideosink->surface = gst_inter_surface_get ("default");
+
+  intervideosink->sinkpad =
+      gst_pad_new_from_static_template (&gst_inter_video_sink_sink_template,
+      "sink");
+
+  intervideosink->channel = g_strdup ("default");
 }
 
 void
 gst_inter_video_sink_set_property (GObject * object, guint property_id,
     const GValue * value, GParamSpec * pspec)
 {
-  /* GstInterVideoSink *intervideosink = GST_INTER_VIDEO_SINK (object); */
+  GstInterVideoSink *intervideosink = GST_INTER_VIDEO_SINK (object);
 
   switch (property_id) {
+    case PROP_CHANNEL:
+      g_free (intervideosink->channel);
+      intervideosink->channel = g_value_dup_string (value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
       break;
@@ -170,9 +185,12 @@ void
 gst_inter_video_sink_get_property (GObject * object, guint property_id,
     GValue * value, GParamSpec * pspec)
 {
-  /* GstInterVideoSink *intervideosink = GST_INTER_VIDEO_SINK (object); */
+  GstInterVideoSink *intervideosink = GST_INTER_VIDEO_SINK (object);
 
   switch (property_id) {
+    case PROP_CHANNEL:
+      g_value_set_string (value, intervideosink->channel);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
       break;
@@ -192,9 +210,10 @@ gst_inter_video_sink_dispose (GObject * object)
 void
 gst_inter_video_sink_finalize (GObject * object)
 {
-  /* GstInterVideoSink *intervideosink = GST_INTER_VIDEO_SINK (object); */
+  GstInterVideoSink *intervideosink = GST_INTER_VIDEO_SINK (object);
 
   /* clean up object here */
+  g_free (intervideosink->channel);
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
@@ -248,6 +267,9 @@ gst_inter_video_sink_get_times (GstBaseSink * sink, GstBuffer * buffer,
 static gboolean
 gst_inter_video_sink_start (GstBaseSink * sink)
 {
+  GstInterVideoSink *intervideosink = GST_INTER_VIDEO_SINK (sink);
+
+  intervideosink->surface = gst_inter_surface_get (intervideosink->channel);
 
   return TRUE;
 }
@@ -263,6 +285,9 @@ gst_inter_video_sink_stop (GstBaseSink * sink)
   }
   intervideosink->surface->video_buffer = NULL;
   g_mutex_unlock (intervideosink->surface->mutex);
+
+  gst_inter_surface_unref (intervideosink->surface);
+  intervideosink->surface = NULL;
 
   return TRUE;
 }

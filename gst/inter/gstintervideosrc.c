@@ -80,7 +80,8 @@ gst_inter_video_src_prepare_seek_segment (GstBaseSrc * src, GstEvent * seek,
 
 enum
 {
-  PROP_0
+  PROP_0,
+  PROP_CHANNEL
 };
 
 /* pad templates */
@@ -156,6 +157,10 @@ gst_inter_video_src_class_init (GstInterVideoSrcClass * klass)
     base_src_class->prepare_seek_segment =
         GST_DEBUG_FUNCPTR (gst_inter_video_src_prepare_seek_segment);
 
+  g_object_class_install_property (gobject_class, PROP_CHANNEL,
+      g_param_spec_string ("channel", "Channel",
+          "Channel name to match inter src and sink elements",
+          "default", G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
 }
 
@@ -166,16 +171,20 @@ gst_inter_video_src_init (GstInterVideoSrc * intervideosrc,
   gst_base_src_set_format (GST_BASE_SRC (intervideosrc), GST_FORMAT_TIME);
   gst_base_src_set_live (GST_BASE_SRC (intervideosrc), TRUE);
 
-  intervideosrc->surface = gst_inter_surface_get ("default");
+  intervideosrc->channel = g_strdup ("default");
 }
 
 void
 gst_inter_video_src_set_property (GObject * object, guint property_id,
     const GValue * value, GParamSpec * pspec)
 {
-  /* GstInterVideoSrc *intervideosrc = GST_INTER_VIDEO_SRC (object); */
+  GstInterVideoSrc *intervideosrc = GST_INTER_VIDEO_SRC (object);
 
   switch (property_id) {
+    case PROP_CHANNEL:
+      g_free (intervideosrc->channel);
+      intervideosrc->channel = g_value_dup_string (value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
       break;
@@ -186,9 +195,12 @@ void
 gst_inter_video_src_get_property (GObject * object, guint property_id,
     GValue * value, GParamSpec * pspec)
 {
-  /* GstInterVideoSrc *intervideosrc = GST_INTER_VIDEO_SRC (object); */
+  GstInterVideoSrc *intervideosrc = GST_INTER_VIDEO_SRC (object);
 
   switch (property_id) {
+    case PROP_CHANNEL:
+      g_value_set_string (value, intervideosrc->channel);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
       break;
@@ -208,9 +220,10 @@ gst_inter_video_src_dispose (GObject * object)
 void
 gst_inter_video_src_finalize (GObject * object)
 {
-  /* GstInterVideoSrc *intervideosrc = GST_INTER_VIDEO_SRC (object); */
+  GstInterVideoSrc *intervideosrc = GST_INTER_VIDEO_SRC (object);
 
   /* clean up object here */
+  g_free (intervideosrc->channel);
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
@@ -279,6 +292,8 @@ gst_inter_video_src_start (GstBaseSrc * src)
 
   GST_DEBUG_OBJECT (intervideosrc, "start");
 
+  intervideosrc->surface = gst_inter_surface_get (intervideosrc->channel);
+
   return TRUE;
 }
 
@@ -288,6 +303,9 @@ gst_inter_video_src_stop (GstBaseSrc * src)
   GstInterVideoSrc *intervideosrc = GST_INTER_VIDEO_SRC (src);
 
   GST_DEBUG_OBJECT (intervideosrc, "stop");
+
+  gst_inter_surface_unref (intervideosrc->surface);
+  intervideosrc->surface = NULL;
 
   return TRUE;
 }
@@ -391,15 +409,6 @@ gst_inter_video_src_create (GstBaseSrc * src, guint64 offset, guint size,
             intervideosrc->width) *
         gst_video_format_get_component_height (intervideosrc->format, 1,
             intervideosrc->height));
-
-#if 0
-    {
-      int i;
-      for (i = 0; i < 10000; i++) {
-        data[i] = g_random_int () & 0xff;
-      }
-    }
-#endif
   }
 
   buffer = gst_buffer_make_metadata_writable (buffer);

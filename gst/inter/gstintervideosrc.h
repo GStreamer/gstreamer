@@ -41,6 +41,8 @@ struct _GstInterVideoSrc
 
   GstInterSurface *surface;
 
+  char *channel;
+
   GstVideoFormat format;
   int fps_n;
   int fps_d;

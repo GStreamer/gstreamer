@@ -39,6 +39,7 @@ struct _GstInterVideoSink
   GstBaseSink base_intervideosink;
 
   GstInterSurface *surface;
+  char *channel;
 
   int fps_n;
   int fps_d;
