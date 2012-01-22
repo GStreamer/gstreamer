@@ -388,7 +388,7 @@ print_element_properties_info (GstElement * element)
         g_print ("Range: %lu - %lu Default: %lu ",
             pulong->minimum, pulong->maximum, g_value_get_ulong (&value));
 
-        GST_ERROR ("%s: property '%s' of type char: consider changing to "
+        GST_ERROR ("%s: property '%s' of type ulong: consider changing to "
             "uint/uint64", GST_OBJECT_NAME (element),
             g_param_spec_get_name (param));
         break;
