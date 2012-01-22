@@ -168,7 +168,7 @@ struct _GstRegistryPrivate
 
 /* the one instance of the default registry and the mutex protecting the
  * variable. */
-static GStaticMutex _gst_registry_mutex = G_STATIC_MUTEX_INIT;
+static GMutex _gst_registry_mutex;
 static GstRegistry *_gst_registry_default = NULL;
 
 /* defaults */
@@ -330,13 +330,13 @@ gst_registry_get (void)
 {
   GstRegistry *registry;
 
-  g_static_mutex_lock (&_gst_registry_mutex);
+  g_mutex_lock (&_gst_registry_mutex);
   if (G_UNLIKELY (!_gst_registry_default)) {
     _gst_registry_default = g_object_newv (GST_TYPE_REGISTRY, 0, NULL);
     gst_object_ref_sink (GST_OBJECT_CAST (_gst_registry_default));
   }
   registry = _gst_registry_default;
-  g_static_mutex_unlock (&_gst_registry_mutex);
+  g_mutex_unlock (&_gst_registry_mutex);
 
   return registry;
 }
@@ -1388,11 +1388,11 @@ _priv_gst_registry_cleanup (void)
 {
   GstRegistry *registry;
 
-  g_static_mutex_lock (&_gst_registry_mutex);
+  g_mutex_lock (&_gst_registry_mutex);
   if ((registry = _gst_registry_default) != NULL) {
     _gst_registry_default = NULL;
   }
-  g_static_mutex_unlock (&_gst_registry_mutex);
+  g_mutex_unlock (&_gst_registry_mutex);
 
   /* unref outside of the lock because we can. */
   if (registry)

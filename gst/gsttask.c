@@ -141,7 +141,7 @@ static void gst_task_finalize (GObject * object);
 
 static void gst_task_func (GstTask * task);
 
-static GStaticMutex pool_lock = G_STATIC_MUTEX_INIT;
+static GMutex pool_lock;
 
 #define _do_init \
 { \
@@ -153,14 +153,14 @@ G_DEFINE_TYPE_WITH_CODE (GstTask, gst_task, GST_TYPE_OBJECT, _do_init);
 static void
 init_klass_pool (GstTaskClass * klass)
 {
-  g_static_mutex_lock (&pool_lock);
+  g_mutex_lock (&pool_lock);
   if (klass->pool) {
     gst_task_pool_cleanup (klass->pool);
     gst_object_unref (klass->pool);
   }
   klass->pool = gst_task_pool_new ();
   gst_task_pool_prepare (klass->pool, NULL);
-  g_static_mutex_unlock (&pool_lock);
+  g_mutex_unlock (&pool_lock);
 }
 
 static void
@@ -194,9 +194,9 @@ gst_task_init (GstTask * task)
 
   /* use the default klass pool for this task, users can
    * override this later */
-  g_static_mutex_lock (&pool_lock);
+  g_mutex_lock (&pool_lock);
   task->priv->pool = gst_object_ref (klass->pool);
-  g_static_mutex_unlock (&pool_lock);
+  g_mutex_unlock (&pool_lock);
 }
 
 static void

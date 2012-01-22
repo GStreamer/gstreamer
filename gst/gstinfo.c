@@ -239,7 +239,7 @@ struct _GstDebugMessage
 };
 
 /* list of all name/level pairs from --gst-debug and GST_DEBUG */
-static GStaticMutex __level_name_mutex = G_STATIC_MUTEX_INIT;
+static GMutex __level_name_mutex;
 static GSList *__level_name = NULL;
 typedef struct
 {
@@ -249,7 +249,7 @@ typedef struct
 LevelNameEntry;
 
 /* list of all categories */
-static GStaticMutex __cat_mutex = G_STATIC_MUTEX_INIT;
+static GMutex __cat_mutex;
 static GSList *__categories = NULL;
 
 /* all registered debug handlers */
@@ -259,7 +259,7 @@ typedef struct
   gpointer user_data;
 }
 LogFuncEntry;
-static GStaticMutex __log_func_mutex = G_STATIC_MUTEX_INIT;
+static GMutex __log_func_mutex;
 static GSList *__log_functions = NULL;
 
 #define PRETTY_TAGS_DEFAULT  TRUE
@@ -977,13 +977,13 @@ gst_debug_log_default (GstDebugCategory * category, GstDebugLevel level,
     /* colors, windows. We take a lock to keep colors and content together.
      * Maybe there is a better way but for now this will do the right
      * thing. */
-    static GStaticMutex win_print_mutex = G_STATIC_MUTEX_INIT;
+    static GMutex win_print_mutex;
     const gint clear = FOREGROUND_RED | FOREGROUND_GREEN | FOREGROUND_BLUE;
 #define SET_COLOR(c) G_STMT_START { \
   if (log_file == stderr) \
     SetConsoleTextAttribute (GetStdHandle (STD_ERROR_HANDLE), (c)); \
   } G_STMT_END
-    g_static_mutex_lock (&win_print_mutex);
+    g_mutex_lock (&win_print_mutex);
     /* timestamp */
     fprintf (log_file, "%" GST_TIME_FORMAT " ", GST_TIME_ARGS (elapsed));
     fflush (log_file);
@@ -1009,7 +1009,7 @@ gst_debug_log_default (GstDebugCategory * category, GstDebugLevel level,
     SET_COLOR (clear);
     fprintf (log_file, " %s\n", gst_debug_message_get (message));
     fflush (log_file);
-    g_static_mutex_unlock (&win_print_mutex);
+    g_mutex_unlock (&win_print_mutex);
 #endif
   } else {
     /* no color, all platforms */
@@ -1087,10 +1087,10 @@ gst_debug_add_log_function (GstLogFunction func, gpointer data)
    * It'd probably be clever to use some kind of RCU here, but I don't know
    * anything about that.
    */
-  g_static_mutex_lock (&__log_func_mutex);
+  g_mutex_lock (&__log_func_mutex);
   list = g_slist_copy (__log_functions);
   __log_functions = g_slist_prepend (list, entry);
-  g_static_mutex_unlock (&__log_func_mutex);
+  g_mutex_unlock (&__log_func_mutex);
 
   GST_DEBUG ("prepended log function %p (user data %p) to log functions",
       func, data);
@@ -1119,7 +1119,7 @@ gst_debug_remove_with_compare_func (GCompareFunc func, gpointer data)
   GSList *new;
   guint removals = 0;
 
-  g_static_mutex_lock (&__log_func_mutex);
+  g_mutex_lock (&__log_func_mutex);
   new = __log_functions;
   while ((found = g_slist_find_custom (new, data, func))) {
     if (new == __log_functions) {
@@ -1134,7 +1134,7 @@ gst_debug_remove_with_compare_func (GCompareFunc func, gpointer data)
   }
   /* FIXME: We leak the old list here. See _add_log_function for why. */
   __log_functions = new;
-  g_static_mutex_unlock (&__log_func_mutex);
+  g_mutex_unlock (&__log_func_mutex);
 
   return removals;
 }
@@ -1282,7 +1282,7 @@ gst_debug_reset_threshold (gpointer category, gpointer unused)
   GstDebugCategory *cat = (GstDebugCategory *) category;
   GSList *walk;
 
-  g_static_mutex_lock (&__level_name_mutex);
+  g_mutex_lock (&__level_name_mutex);
   walk = __level_name;
   while (walk) {
     LevelNameEntry *entry = walk->data;
@@ -1298,15 +1298,15 @@ gst_debug_reset_threshold (gpointer category, gpointer unused)
   gst_debug_category_set_threshold (cat, gst_debug_get_default_threshold ());
 
 exit:
-  g_static_mutex_unlock (&__level_name_mutex);
+  g_mutex_unlock (&__level_name_mutex);
 }
 
 static void
 gst_debug_reset_all_thresholds (void)
 {
-  g_static_mutex_lock (&__cat_mutex);
+  g_mutex_lock (&__cat_mutex);
   g_slist_foreach (__categories, gst_debug_reset_threshold, NULL);
-  g_static_mutex_unlock (&__cat_mutex);
+  g_mutex_unlock (&__cat_mutex);
 }
 
 static void
@@ -1342,12 +1342,12 @@ gst_debug_set_threshold_for_name (const gchar * name, GstDebugLevel level)
   entry = g_slice_new (LevelNameEntry);
   entry->pat = pat;
   entry->level = level;
-  g_static_mutex_lock (&__level_name_mutex);
+  g_mutex_lock (&__level_name_mutex);
   __level_name = g_slist_prepend (__level_name, entry);
-  g_static_mutex_unlock (&__level_name_mutex);
-  g_static_mutex_lock (&__cat_mutex);
+  g_mutex_unlock (&__level_name_mutex);
+  g_mutex_lock (&__cat_mutex);
   g_slist_foreach (__categories, for_each_threshold_by_entry, entry);
-  g_static_mutex_unlock (&__cat_mutex);
+  g_mutex_unlock (&__cat_mutex);
 }
 
 /**
@@ -1365,7 +1365,7 @@ gst_debug_unset_threshold_for_name (const gchar * name)
   g_return_if_fail (name != NULL);
 
   pat = g_pattern_spec_new (name);
-  g_static_mutex_lock (&__level_name_mutex);
+  g_mutex_lock (&__level_name_mutex);
   walk = __level_name;
   /* improve this if you want, it's mighty slow */
   while (walk) {
@@ -1379,7 +1379,7 @@ gst_debug_unset_threshold_for_name (const gchar * name)
       walk = __level_name;
     }
   }
-  g_static_mutex_unlock (&__level_name_mutex);
+  g_mutex_unlock (&__level_name_mutex);
   g_pattern_spec_free (pat);
   gst_debug_reset_all_thresholds ();
 }
@@ -1404,9 +1404,9 @@ _gst_debug_category_new (const gchar * name, guint color,
   gst_debug_reset_threshold (cat, NULL);
 
   /* add to category list */
-  g_static_mutex_lock (&__cat_mutex);
+  g_mutex_lock (&__cat_mutex);
   __categories = g_slist_prepend (__categories, cat);
-  g_static_mutex_unlock (&__cat_mutex);
+  g_mutex_unlock (&__cat_mutex);
 
   return cat;
 }
@@ -1424,9 +1424,9 @@ gst_debug_category_free (GstDebugCategory * category)
     return;
 
   /* remove from category list */
-  g_static_mutex_lock (&__cat_mutex);
+  g_mutex_lock (&__cat_mutex);
   __categories = g_slist_remove (__categories, category);
-  g_static_mutex_unlock (&__cat_mutex);
+  g_mutex_unlock (&__cat_mutex);
 
   g_free ((gpointer) category->name);
   g_free ((gpointer) category->description);
@@ -1549,9 +1549,9 @@ gst_debug_get_all_categories (void)
 {
   GSList *ret;
 
-  g_static_mutex_lock (&__cat_mutex);
+  g_mutex_lock (&__cat_mutex);
   ret = g_slist_copy (__categories);
-  g_static_mutex_unlock (&__cat_mutex);
+  g_mutex_unlock (&__cat_mutex);
 
   return ret;
 }
@@ -1574,7 +1574,7 @@ _gst_debug_get_category (const gchar * name)
 /*** FUNCTION POINTERS ********************************************************/
 
 static GHashTable *__gst_function_pointers;     /* NULL */
-static GStaticMutex __dbg_functions_mutex = G_STATIC_MUTEX_INIT;
+static GMutex __dbg_functions_mutex;
 
 /* This function MUST NOT return NULL */
 const gchar *
@@ -1589,14 +1589,14 @@ _gst_debug_nameof_funcptr (GstDebugFuncPtr func)
   if (G_UNLIKELY (func == NULL))
     return "(NULL)";
 
-  g_static_mutex_lock (&__dbg_functions_mutex);
+  g_mutex_lock (&__dbg_functions_mutex);
   if (G_LIKELY (__gst_function_pointers)) {
     ptrname = g_hash_table_lookup (__gst_function_pointers, (gpointer) func);
-    g_static_mutex_unlock (&__dbg_functions_mutex);
+    g_mutex_unlock (&__dbg_functions_mutex);
     if (G_LIKELY (ptrname))
       return ptrname;
   } else {
-    g_static_mutex_unlock (&__dbg_functions_mutex);
+    g_mutex_unlock (&__dbg_functions_mutex);
   }
   /* we need to create an entry in the hash table for this one so we don't leak
    * the name */
@@ -1621,14 +1621,14 @@ _gst_debug_register_funcptr (GstDebugFuncPtr func, const gchar * ptrname)
 {
   gpointer ptr = (gpointer) func;
 
-  g_static_mutex_lock (&__dbg_functions_mutex);
+  g_mutex_lock (&__dbg_functions_mutex);
 
   if (!__gst_function_pointers)
     __gst_function_pointers = g_hash_table_new (g_direct_hash, g_direct_equal);
   if (!g_hash_table_lookup (__gst_function_pointers, ptr))
     g_hash_table_insert (__gst_function_pointers, ptr, (gpointer) ptrname);
 
-  g_static_mutex_unlock (&__dbg_functions_mutex);
+  g_mutex_unlock (&__dbg_functions_mutex);
 }
 
 /*** PRINTF EXTENSIONS ********************************************************/

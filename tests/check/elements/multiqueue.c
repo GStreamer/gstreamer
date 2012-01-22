@@ -22,7 +22,7 @@
 
 #include <gst/check/gstcheck.h>
 
-static GStaticMutex _check_lock = G_STATIC_MUTEX_INIT;
+static GMutex _check_lock;
 
 static GstElement *
 setup_multiqueue (GstElement * pipe, GstElement * inputs[],
@@ -335,13 +335,13 @@ mq_dummypad_chain (GstPad * sinkpad, GstObject * parent, GstBuffer * buf)
 
   pad_data = gst_pad_get_element_private (sinkpad);
 
-  g_static_mutex_lock (&_check_lock);
+  g_mutex_lock (&_check_lock);
   fail_if (pad_data == NULL);
   /* Read an ID from the first 4 bytes of the buffer data and check it's
    * what we expect */
   data = gst_buffer_map (buf, &size, NULL, GST_MAP_READ);
   fail_unless (size >= 4);
-  g_static_mutex_unlock (&_check_lock);
+  g_mutex_unlock (&_check_lock);
   cur_id = GST_READ_UINT32_BE (data);
   gst_buffer_unmap (buf, data, size);
 
@@ -353,12 +353,12 @@ mq_dummypad_chain (GstPad * sinkpad, GstObject * parent, GstBuffer * buf)
   if (!pad_data->is_linked) {
     /* If there are no linked pads, we can't track a max_id for them :) */
     if (pad_data->n_linked > 0 && !pad_data->first_buf) {
-      g_static_mutex_lock (&_check_lock);
+      g_mutex_lock (&_check_lock);
       fail_unless (cur_id <= *(pad_data->max_linked_id_ptr) + 1,
           "Got buffer %u on pad %u before buffer %u was seen on a "
           "linked pad (max: %u)", cur_id, pad_data->pad_num, cur_id - 1,
           *(pad_data->max_linked_id_ptr));
-      g_static_mutex_unlock (&_check_lock);
+      g_mutex_unlock (&_check_lock);
     }
   } else {
     /* Update the max_id value */
@@ -382,9 +382,9 @@ mq_dummypad_event (GstPad * sinkpad, GstObject * parent, GstEvent * event)
   struct PadData *pad_data;
 
   pad_data = gst_pad_get_element_private (sinkpad);
-  g_static_mutex_lock (&_check_lock);
+  g_mutex_lock (&_check_lock);
   fail_if (pad_data == NULL);
-  g_static_mutex_unlock (&_check_lock);
+  g_mutex_unlock (&_check_lock);
 
   if (GST_EVENT_TYPE (event) == GST_EVENT_EOS) {
     g_mutex_lock (pad_data->mutex);
@@ -501,9 +501,9 @@ run_output_order_test (gint n_linked)
     cur_pad = pad_pattern[i % n];
 
     buf = gst_buffer_new_and_alloc (4);
-    g_static_mutex_lock (&_check_lock);
+    g_mutex_lock (&_check_lock);
     fail_if (buf == NULL);
-    g_static_mutex_unlock (&_check_lock);
+    g_mutex_unlock (&_check_lock);
 
     data = gst_buffer_map (buf, NULL, NULL, GST_MAP_WRITE);
     GST_WRITE_UINT32_BE (data, i + 1);
@@ -511,7 +511,7 @@ run_output_order_test (gint n_linked)
     GST_BUFFER_TIMESTAMP (buf) = (i + 1) * GST_SECOND;
 
     ret = gst_pad_push (inputpads[cur_pad], buf);
-    g_static_mutex_lock (&_check_lock);
+    g_mutex_lock (&_check_lock);
     if (pad_data[cur_pad].is_linked) {
       fail_unless (ret == GST_FLOW_OK,
           "Push on pad %d returned %d when FLOW_OK was expected", cur_pad, ret);
@@ -521,7 +521,7 @@ run_output_order_test (gint n_linked)
           "Push on pad %d returned %d when FLOW_OK or NOT_LINKED  was expected",
           cur_pad, ret);
     }
-    g_static_mutex_unlock (&_check_lock);
+    g_mutex_unlock (&_check_lock);
   }
   for (i = 0; i < NPADS; i++) {
     gst_pad_push_event (inputpads[i], gst_event_new_eos ());
@@ -660,9 +660,9 @@ GST_START_TEST (test_sparse_stream)
     ts = gst_util_uint64_scale_int (GST_SECOND, i, 10);
 
     buf = gst_buffer_new_and_alloc (4);
-    g_static_mutex_lock (&_check_lock);
+    g_mutex_lock (&_check_lock);
     fail_if (buf == NULL);
-    g_static_mutex_unlock (&_check_lock);
+    g_mutex_unlock (&_check_lock);
 
     data = gst_buffer_map (buf, NULL, NULL, GST_MAP_WRITE);
     GST_WRITE_UINT32_BE (data, i + 1);
@@ -675,10 +675,10 @@ GST_START_TEST (test_sparse_stream)
       ret = gst_pad_push (inputpads[1], gst_buffer_ref (buf));
 
     ret = gst_pad_push (inputpads[0], buf);
-    g_static_mutex_lock (&_check_lock);
+    g_mutex_lock (&_check_lock);
     fail_unless (ret == GST_FLOW_OK,
         "Push on pad %d returned %d when FLOW_OK was expected", 0, ret);
-    g_static_mutex_unlock (&_check_lock);
+    g_mutex_unlock (&_check_lock);
 
     /* Push a new segment update on the 2nd pad */
     gst_segment_init (&segment, GST_FORMAT_TIME);

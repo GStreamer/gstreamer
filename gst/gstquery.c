@@ -84,7 +84,7 @@ typedef struct
 
 #define GST_QUERY_STRUCTURE(q)  (((GstQueryImpl *)(q))->structure)
 
-static GStaticMutex mutex = G_STATIC_MUTEX_INIT;
+static GMutex mutex;
 static GList *_gst_queries = NULL;
 static GHashTable *_nick_to_query = NULL;
 static GHashTable *_query_type_to_nick = NULL;
@@ -121,7 +121,7 @@ _priv_gst_query_initialize (void)
 
   GST_DEBUG_CATEGORY_INIT (gst_query_debug, "query", 0, "query system");
 
-  g_static_mutex_lock (&mutex);
+  g_mutex_lock (&mutex);
   if (_nick_to_query == NULL) {
     _nick_to_query = g_hash_table_new (g_str_hash, g_str_equal);
     _query_type_to_nick = g_hash_table_new (NULL, NULL);
@@ -137,7 +137,7 @@ _priv_gst_query_initialize (void)
     standards++;
     _n_values++;
   }
-  g_static_mutex_unlock (&mutex);
+  g_mutex_unlock (&mutex);
 
   _gst_query_type = gst_query_get_type ();
 }
@@ -210,13 +210,13 @@ gst_query_type_register (const gchar * nick, const gchar * description)
   query->description = g_strdup (description);
   query->quark = g_quark_from_static_string (query->nick);
 
-  g_static_mutex_lock (&mutex);
+  g_mutex_lock (&mutex);
   g_hash_table_insert (_nick_to_query, (gpointer) query->nick, query);
   g_hash_table_insert (_query_type_to_nick, GINT_TO_POINTER (query->value),
       query);
   _gst_queries = g_list_append (_gst_queries, query);
   _n_values++;
-  g_static_mutex_unlock (&mutex);
+  g_mutex_unlock (&mutex);
 
   return query->value;
 }
@@ -237,9 +237,9 @@ gst_query_type_get_by_nick (const gchar * nick)
 
   g_return_val_if_fail (nick != NULL, GST_QUERY_NONE);
 
-  g_static_mutex_lock (&mutex);
+  g_mutex_lock (&mutex);
   query = g_hash_table_lookup (_nick_to_query, nick);
-  g_static_mutex_unlock (&mutex);
+  g_mutex_unlock (&mutex);
 
   if (query != NULL)
     return query->value;
@@ -285,9 +285,9 @@ gst_query_type_get_details (GstQueryType type)
 {
   const GstQueryTypeDefinition *result;
 
-  g_static_mutex_lock (&mutex);
+  g_mutex_lock (&mutex);
   result = g_hash_table_lookup (_query_type_to_nick, GINT_TO_POINTER (type));
-  g_static_mutex_unlock (&mutex);
+  g_mutex_unlock (&mutex);
 
   return result;
 }
@@ -307,11 +307,11 @@ gst_query_type_iterate_definitions (void)
 {
   GstIterator *result;
 
-  g_static_mutex_lock (&mutex);
+  g_mutex_lock (&mutex);
   /* FIXME: register a boxed type for GstQueryTypeDefinition */
   result = gst_iterator_new_list (G_TYPE_POINTER,
-      g_static_mutex_get_mutex (&mutex), &_n_values, &_gst_queries, NULL, NULL);
-  g_static_mutex_unlock (&mutex);
+      &mutex, &_n_values, &_gst_queries, NULL, NULL);
+  g_mutex_unlock (&mutex);
 
   return result;
 }

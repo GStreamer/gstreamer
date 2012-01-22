@@ -121,7 +121,7 @@ static void gst_system_clock_async_thread (GstClock * clock);
 static gboolean gst_system_clock_start_async (GstSystemClock * clock);
 static void gst_system_clock_add_wakeup (GstSystemClock * sysclock);
 
-static GStaticMutex _gst_sysclock_mutex = G_STATIC_MUTEX_INIT;
+static GMutex _gst_sysclock_mutex;
 
 /* static guint gst_system_clock_signals[LAST_SIGNAL] = { 0 }; */
 
@@ -276,7 +276,7 @@ gst_system_clock_obtain (void)
 {
   GstClock *clock;
 
-  g_static_mutex_lock (&_gst_sysclock_mutex);
+  g_mutex_lock (&_gst_sysclock_mutex);
   clock = _the_system_clock;
 
   if (clock == NULL) {
@@ -289,9 +289,9 @@ gst_system_clock_obtain (void)
     gst_object_ref_sink (clock);
 
     _the_system_clock = clock;
-    g_static_mutex_unlock (&_gst_sysclock_mutex);
+    g_mutex_unlock (&_gst_sysclock_mutex);
   } else {
-    g_static_mutex_unlock (&_gst_sysclock_mutex);
+    g_mutex_unlock (&_gst_sysclock_mutex);
     GST_CAT_DEBUG (GST_CAT_CLOCK, "returning static system clock");
   }
 
