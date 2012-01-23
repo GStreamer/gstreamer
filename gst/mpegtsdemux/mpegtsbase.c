@@ -1088,6 +1088,8 @@ mpegts_base_get_tags_from_sdt (MpegTSBase * base, GstStructure * sdt_info)
      * which looks like service-%d */
     sid_str = gst_structure_get_name (service);
     tmp = g_strstr_len (sid_str, -1, "-");
+    if (!tmp)
+      continue;
     program_number = atoi (++tmp);
 
     program = mpegts_base_get_program (base, program_number);
