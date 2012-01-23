@@ -1056,6 +1056,8 @@ gst_h264_parse_clock_timestamp (GstH264ClockTimestamp * tim,
   if (time_offset_length > 0)
     READ_UINT32 (nr, tim->time_offset, time_offset_length);
 
+  return TRUE;
+
 error:
   GST_WARNING ("error parsing \"Clock timestamp\"");
   return FALSE;
