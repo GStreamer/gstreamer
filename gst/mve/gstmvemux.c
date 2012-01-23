@@ -337,7 +337,7 @@ static void
 gst_mve_mux_palette_analyze (GstMveMux * mvemux, const GstBuffer * pal,
     guint16 * first, guint16 * last)
 {
-  guint i;
+  gint i;
   guint32 *col1;
 
   col1 = (guint32 *) GST_BUFFER_DATA (pal);
