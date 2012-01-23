@@ -1883,7 +1883,7 @@ gst_rtp_bin_class_init (GstRtpBinClass * klass)
 static void
 gst_rtp_bin_init (GstRtpBin * rtpbin, GstRtpBinClass * klass)
 {
-  gchar *str;
+  gchar *cname;
 
   rtpbin->priv = GST_RTP_BIN_GET_PRIVATE (rtpbin);
   rtpbin->priv->bin_lock = g_mutex_new ();
@@ -1901,12 +1901,10 @@ gst_rtp_bin_init (GstRtpBin * rtpbin, GstRtpBinClass * klass)
   rtpbin->use_pipeline_clock = DEFAULT_USE_PIPELINE_CLOCK;
 
   /* some default SDES entries */
-  str = g_strdup_printf ("%s@%s", g_get_user_name (), g_get_host_name ());
+  cname = g_strdup_printf ("user%u@x-%u.net", g_random_int (), g_random_int ());
   rtpbin->sdes = gst_structure_new ("application/x-rtp-source-sdes",
-      "cname", G_TYPE_STRING, str,
-      "name", G_TYPE_STRING, g_get_real_name (),
-      "tool", G_TYPE_STRING, "GStreamer", NULL);
-  g_free (str);
+      "cname", G_TYPE_STRING, cname, "tool", G_TYPE_STRING, "GStreamer", NULL);
+  g_free (cname);
 }
 
 static void
