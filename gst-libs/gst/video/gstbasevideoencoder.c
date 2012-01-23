@@ -1147,7 +1147,7 @@ void
 gst_base_video_encoder_set_latency (GstBaseVideoEncoder * base_video_encoder,
     GstClockTime min_latency, GstClockTime max_latency)
 {
-  g_return_if_fail (min_latency >= 0);
+  g_return_if_fail (GST_CLOCK_TIME_IS_VALID (min_latency));
   g_return_if_fail (max_latency >= min_latency);
 
   GST_OBJECT_LOCK (base_video_encoder);
