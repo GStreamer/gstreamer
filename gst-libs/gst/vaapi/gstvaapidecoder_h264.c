@@ -1463,17 +1463,74 @@ exec_ref_pic_marking_sliding_window(GstVaapiDecoderH264 *decoder)
     return TRUE;
 }
 
-/* 8.2.5.4 - Adaptive memory control decoded reference picture marking process */
+/* 8.2.5.4. Adaptive memory control decoded reference picture marking process */
 static gboolean
 exec_ref_pic_marking_adaptive(
     GstVaapiDecoderH264     *decoder,
+    GstVaapiPictureH264     *picture,
     GstH264DecRefPicMarking *dec_ref_pic_marking
 )
 {
     GstVaapiDecoderH264Private * const priv = decoder->priv;
+    gint32 pic_num, ref_idx;
+    guint i;
 
     GST_DEBUG("reference picture marking process (adaptive memory control)");
 
+    for (i = 0; i < dec_ref_pic_marking->n_ref_pic_marking; i++) {
+        GstH264RefPicMarking * const ref_pic_marking =
+            &dec_ref_pic_marking->ref_pic_marking[i];
+
+        switch (ref_pic_marking->memory_management_control_operation) {
+        case 1:
+            // Mark short-term reference picture as "unused for reference"
+            if (!picture->field_pic_flag)
+                pic_num = picture->frame_num_wrap;
+            else
+                pic_num = 2 * picture->frame_num_wrap + 1;
+            pic_num -= ref_pic_marking->difference_of_pic_nums_minus1 + 1;
+            ref_idx = find_short_term_reference(decoder, pic_num);
+            if (ref_idx < 0)
+                break;
+            remove_reference_at(
+                decoder,
+                priv->short_ref, &priv->short_ref_count,
+                ref_idx
+            );
+            break;
+        case 2:
+            // Mark long-term reference picture as "unused for reference"
+            pic_num = picture->long_term_pic_num;
+            ref_idx = find_long_term_reference(decoder, pic_num);
+            if (ref_idx < 0)
+                break;
+            remove_reference_at(
+                decoder,
+                priv->long_ref, &priv->long_ref_count,
+                ref_idx
+            );
+            break;
+        case 3:
+            // Assign LongTermFrameIdx to a short-term reference picture
+            if (!picture->field_pic_flag)
+                pic_num = picture->frame_num_wrap;
+            else
+                pic_num = 2 * picture->frame_num_wrap + 1;
+            pic_num -= ref_pic_marking->difference_of_pic_nums_minus1 + 1;
+            ref_idx = find_short_term_reference(decoder, pic_num);
+            if (ref_idx < 0)
+                break;
+            break;
+        case 5:
+            // Mark all reference pictures as "unused for reference"
+            clear_references(decoder, priv->short_ref, &priv->short_ref_count);
+            clear_references(decoder, priv->long_ref,  &priv->long_ref_count );
+            break;
+        default:
+            g_assert(0 && "unhandled MMCO");
+            break;
+        }
+    }
     return TRUE;
 }
 
@@ -1491,7 +1548,7 @@ exec_ref_pic_marking(GstVaapiDecoderH264 *decoder, GstVaapiPictureH264 *picture)
         GstH264DecRefPicMarking * const dec_ref_pic_marking =
             get_dec_ref_pic_marking(picture);
         if (dec_ref_pic_marking->adaptive_ref_pic_marking_mode_flag) {
-            if (!exec_ref_pic_marking_adaptive(decoder, dec_ref_pic_marking))
+            if (!exec_ref_pic_marking_adaptive(decoder, picture, dec_ref_pic_marking))
                 return FALSE;
         }
         else {
