@@ -5,7 +5,7 @@
 %define gstpb_minver 0.10.30
 
 Summary: GStreamer streaming media framework "bad" plug-ins
-Name: gstreamer-plugins-bad
+Name: gstreamer-plugins-bad011
 Version: @VERSION@
 Release: @PACKAGE_VERSION_RELEASE@.gst
 # The freeze and nfs plugins are LGPLv2 (only)
