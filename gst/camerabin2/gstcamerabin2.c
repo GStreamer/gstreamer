@@ -816,15 +816,13 @@ gst_camera_bin_class_init (GstCameraBin2Class * klass)
 
   /* TODO
    * Review before stable
-   * - We use a profile for video recording properties and here we have
-   *   elements for image capture. This is slightly inconsistent.
    * - One problem with using encodebin for images here is how jifmux
    *   autoplugging works. We need to give it a higher rank and fix its
    *   caps (it has image/jpeg on sink and src pads). Preliminary tests
    *   show that jifmux is picked if image/jpeg is the caps of a container
    *   profile. So this could work.
    * - There seems to be a problem with encodebin for images currently as
-   *   it autoplugs a videorate that ony starts outputing buffers after
+   *   it autoplugs a videorate that only starts outputing buffers after
    *   getting the 2nd buffer.
    */
   g_object_class_install_property (object_class, PROP_IMAGE_ENCODING_PROFILE,
