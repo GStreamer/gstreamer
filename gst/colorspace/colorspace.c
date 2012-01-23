@@ -412,7 +412,7 @@ putline_v210 (ColorspaceConvert * convert, guint8 * dest, const guint8 * src,
   int i;
   guint8 *destline = FRAME_GET_LINE (dest, 0, j);
 
-  for (i = 0; i < convert->width; i += 6) {
+  for (i = 0; i < convert->width + 5; i += 6) {
     guint32 a0, a1, a2, a3;
     guint16 y0, y1, y2, y3, y4, y5;
     guint16 u0, u1, u2;
@@ -518,7 +518,7 @@ putline16_v210 (ColorspaceConvert * convert, guint8 * dest, const guint16 * src,
   int i;
   guint8 *destline = FRAME_GET_LINE (dest, 0, j);
 
-  for (i = 0; i < convert->width; i += 6) {
+  for (i = 0; i < convert->width + 5; i += 6) {
     guint32 a0, a1, a2, a3;
     guint16 y0, y1, y2, y3, y4, y5;
     guint16 u0, u1, u2;
