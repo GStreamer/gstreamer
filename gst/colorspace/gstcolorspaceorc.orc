@@ -616,7 +616,7 @@ avgub d, s1, s2
 
 .function cogorc_convert_YUY2_AYUV
 .flags 2d
-.dest 8 ayuv align 4 guint8
+.dest 8 ayuv guint8
 .source 4 yuy2 guint8
 .const 2 c255 0xff
 .temp 2 yy
@@ -632,7 +632,7 @@ x2 mergewl ayuv, ayay, uvuv
 
 .function cogorc_convert_UYVY_AYUV
 .flags 2d
-.dest 8 ayuv align 4 guint8
+.dest 8 ayuv guint8
 .source 4 uyvy guint8
 .const 2 c255 0xff
 .temp 2 yy
