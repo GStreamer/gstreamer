@@ -58,6 +58,7 @@ ges_track_set_caps
 ges_track_get_caps
 ges_track_enable_update
 ges_track_get_objects
+ges_track_is_updating
 <SUBSECTION Standard>
 GESTrackClass
 GESTrackPrivate
@@ -250,6 +251,7 @@ ges_timeline_remove_track
 ges_timeline_load_from_uri
 ges_timeline_save_to_uri
 ges_timeline_enable_update
+ges_timeline_is_updating
 <SUBSECTION usage>
 ges_timeline_get_tracks
 ges_timeline_get_layers

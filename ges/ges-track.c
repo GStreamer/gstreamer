@@ -48,6 +48,8 @@ struct _GESTrackPrivate
   GstElement *composition;      /* The composition associated with this track */
   GstElement *background;       /* The backgrond, handle the gaps in the track */
   GstPad *srcpad;               /* The source GhostPad */
+
+  gboolean updating;
 };
 
 enum
@@ -284,6 +286,7 @@ ges_track_init (GESTrack * self)
       GES_TYPE_TRACK, GESTrackPrivate);
 
   self->priv->composition = gst_element_factory_make ("gnlcomposition", NULL);
+  self->priv->updating = TRUE;
 
   g_signal_connect (G_OBJECT (self->priv->composition), "notify::duration",
       G_CALLBACK (composition_duration_cb), self);
@@ -711,13 +714,28 @@ ges_track_enable_update (GESTrack * track, gboolean enabled)
 {
   gboolean update;
 
-  g_object_set (track->priv->composition, "update", enabled, NULL);
+  g_return_val_if_fail (GES_IS_TRACK (track), FALSE);
 
+  g_object_set (track->priv->composition, "update", enabled, NULL);
   g_object_get (track->priv->composition, "update", &update, NULL);
 
-  if (update == enabled) {
-    return TRUE;
-  } else {
-    return FALSE;
-  }
+  track->priv->updating = update;
+
+  return update == enabled;
+}
+
+/**
+ * ges_track_is_updating:
+ * @track: a #GESTrack
+ *
+ * Get whether the track is updated for every change happening within or not.
+ *
+ * Returns: %TRUE if @track is updating on every changes, else %FALSE.
+ */
+gboolean
+ges_track_is_updating (GESTrack * track)
+{
+  g_return_val_if_fail (GES_IS_TRACK (track), FALSE);
+
+  return track->priv->updating;
 }

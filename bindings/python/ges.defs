@@ -881,6 +881,12 @@
   )
 )
 
+(define-method is_updating
+  (of-object "GESTimeline")
+  (c-name "ges_timeline_is_updating")
+  (return-type "gboolean")
+)
+
 
 
 ;; From ges-timeline-layer.h
@@ -1750,6 +1756,12 @@
   (parameters
     '("gchar*" "uri")
   )
+)
+
+(define-method is_updating
+  (of-object "GESTrack")
+  (c-name "ges_track_is_updating")
+  (return-type "gboolean")
 )
 
 
