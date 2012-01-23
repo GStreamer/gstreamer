@@ -293,16 +293,20 @@ mpegvideoparse_handle_sequence (MpegVideoParse * mpegvideoparse,
         switch (new_hdr.level) {
           case 2:
             level = levels[0];
+            break;
           case 5:
             level = levels[2];
             profile = "4:2:2";
             break;
           case 10:
             level = levels[0];
+            break;
           case 11:
             level = levels[1];
+            break;
           case 13:
             level = levels[2];
+            break;
           case 14:
             level = levels[3];
             profile = "multiview";
