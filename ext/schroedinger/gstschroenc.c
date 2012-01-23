@@ -103,11 +103,16 @@ static GstFlowReturn gst_schro_enc_shape_output (GstBaseVideoEncoder *
     base_video_encoder, GstVideoFrame * frame);
 static void gst_schro_enc_finalize (GObject * object);
 
+#if SCHRO_CHECK_VERSION(1,0,12)
+#define ARGB_CAPS ";" GST_VIDEO_CAPS_ARGB
+#else
+#define ARGB_CAPS
+#endif
 static GstStaticPadTemplate gst_schro_enc_sink_template =
 GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (GST_VIDEO_CAPS_YUV (GST_SCHRO_YUV_LIST))
+    GST_STATIC_CAPS (GST_VIDEO_CAPS_YUV (GST_SCHRO_YUV_LIST) ARGB_CAPS)
     );
 
 static GstStaticPadTemplate gst_schro_enc_src_template =
@@ -285,14 +290,14 @@ gst_schro_enc_set_format (GstBaseVideoEncoder * base_video_encoder,
       schro_enc->video_format->chroma_format = SCHRO_CHROMA_422;
       break;
     case GST_VIDEO_FORMAT_AYUV:
+#if SCHRO_CHECK_VERSION(1,0,12)
+    case GST_VIDEO_FORMAT_ARGB:
+#endif
 #if SCHRO_CHECK_VERSION(1,0,11)
     case GST_VIDEO_FORMAT_Y444:
     case GST_VIDEO_FORMAT_AYUV64:
 #endif
       schro_enc->video_format->chroma_format = SCHRO_CHROMA_444;
-      break;
-    case GST_VIDEO_FORMAT_ARGB:
-      schro_enc->video_format->chroma_format = SCHRO_CHROMA_420;
       break;
     default:
       g_assert_not_reached ();
@@ -311,14 +316,12 @@ gst_schro_enc_set_format (GstBaseVideoEncoder * base_video_encoder,
   schro_enc->video_format->aspect_ratio_numerator = state->par_n;
   schro_enc->video_format->aspect_ratio_denominator = state->par_d;
 
-#if SCHRO_CHECK_VERSION(1,0,11)
   switch (state->format) {
     default:
-#endif
       schro_video_format_set_std_signal_range (schro_enc->video_format,
           SCHRO_SIGNAL_RANGE_8BIT_VIDEO);
-#if SCHRO_CHECK_VERSION(1,0,11)
       break;
+#if SCHRO_CHECK_VERSION(1,0,11)
     case GST_VIDEO_FORMAT_v210:
       schro_video_format_set_std_signal_range (schro_enc->video_format,
           SCHRO_SIGNAL_RANGE_10BIT_VIDEO);
@@ -330,8 +333,16 @@ gst_schro_enc_set_format (GstBaseVideoEncoder * base_video_encoder,
       schro_enc->video_format->chroma_offset = 128 << 8;
       schro_enc->video_format->chroma_excursion = 224 << 8;
       break;
-  }
 #endif
+#if SCHRO_CHECK_VERSION(1,0,12)
+    case GST_VIDEO_FORMAT_ARGB:
+      schro_enc->video_format->luma_offset = 256;
+      schro_enc->video_format->luma_excursion = 511;
+      schro_enc->video_format->chroma_offset = 256;
+      schro_enc->video_format->chroma_excursion = 511;
+      break;
+#endif
+  }
 
   schro_video_format_set_std_colour_spec (schro_enc->video_format,
       SCHRO_COLOUR_SPEC_HDTV);
@@ -505,6 +516,7 @@ gst_schro_enc_handle_frame (GstBaseVideoEncoder * base_video_encoder,
     GST_DEBUG ("granule offset %" G_GINT64_FORMAT, schro_enc->granule_offset);
   }
 
+  GST_ERROR ("sink buffer %p", frame->sink_buffer);
   schro_frame = gst_schro_buffer_wrap (gst_buffer_ref (frame->sink_buffer),
       state->format, state->width, state->height);
 
