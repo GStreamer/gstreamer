@@ -23,6 +23,7 @@
 
 #include <gst/gst.h>
 #include <gst/controller/gstinterpolationcontrolsource.h>
+#include <gst/controller/gstcontrolbindingdirect.h>
 
 /* a song in buzztard can easily reach 30000 here */
 #define NUM_CP 15000
