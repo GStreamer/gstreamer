@@ -1110,6 +1110,10 @@ gst_mpegts_demux_add_all_streams (GstMpegTSDemux * demux, GstClockTime pts)
   GstPad *srcpad;
   gboolean all_added = TRUE;
 
+  GST_DEBUG_OBJECT (demux, "Adding streams early fixes a wedge in some low "
+      "bitrate streams, but causes deadlocks - disabled for now");
+  return FALSE;
+
   /* When adding a stream, require either a valid base PCR, or a valid PTS */
   if (!gst_mpegts_demux_setup_base_pts (demux, pts)) {
     GST_ERROR ("Can't set base pts");
