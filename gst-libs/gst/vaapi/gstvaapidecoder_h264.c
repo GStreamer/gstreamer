@@ -26,6 +26,7 @@
 
 #include "config.h"
 #include <string.h>
+#include <gst/base/gstadapter.h>
 #include <gst/codecparsers/gsth264parser.h>
 #include "gstvaapidecoder_h264.h"
 #include "gstvaapidecoder_objects.h"
@@ -248,6 +249,7 @@ G_DEFINE_TYPE(GstVaapiDecoderH264,
 #define BOTTOM_FIELD    1
 
 struct _GstVaapiDecoderH264Private {
+    GstAdapter                 *adapter;
     GstBuffer                  *sub_buffer;
     GstH264NalParser           *parser;
     GstH264SPS                 *sps;
@@ -355,6 +357,12 @@ gst_vaapi_decoder_h264_close(GstVaapiDecoderH264 *decoder)
             priv->dpb[i] = NULL;
         priv->dpb_count = 0;
     }
+
+    if (priv->adapter) {
+        gst_adapter_clear(priv->adapter);
+        g_object_unref(priv->adapter);
+        priv->adapter = NULL;
+    }
 }
 
 static gboolean
@@ -363,6 +371,10 @@ gst_vaapi_decoder_h264_open(GstVaapiDecoderH264 *decoder, GstBuffer *buffer)
     GstVaapiDecoderH264Private * const priv = decoder->priv;
 
     gst_vaapi_decoder_h264_close(decoder);
+
+    priv->adapter = gst_adapter_new();
+    if (!priv->adapter)
+        return FALSE;
 
     priv->parser = gst_h264_nal_parser_new();
     if (!priv->parser)
@@ -1335,6 +1347,7 @@ init_picture(
     picture->is_idr             = nalu->type == GST_H264_NAL_SLICE_IDR;
     picture->field_pic_flag     = slice_hdr->field_pic_flag;
     picture->bottom_field_flag  = slice_hdr->bottom_field_flag;
+    base_picture->pts           = gst_adapter_prev_timestamp(priv->adapter, NULL);
 
     /* Reset decoder state for IDR pictures */
     if (picture->is_idr) {
@@ -1858,6 +1871,9 @@ decode_buffer(GstVaapiDecoderH264 *decoder, GstBuffer *buffer)
     if (!buf && buf_size == 0)
         return decode_sequence_end(decoder);
 
+    gst_buffer_ref(buffer);
+    gst_adapter_push(priv->adapter, buffer);
+
     if (priv->sub_buffer) {
         buffer = gst_buffer_merge(priv->sub_buffer, buffer);
         if (!buffer)
@@ -1893,7 +1909,10 @@ decode_buffer(GstVaapiDecoderH264 *decoder, GstBuffer *buffer)
         if (status != GST_VAAPI_DECODER_STATUS_SUCCESS)
             break;
 
-        ofs = nalu.offset + nalu.size;
+        ofs = nalu.offset - ofs;
+        if (gst_adapter_available(priv->adapter) >= ofs)
+            gst_adapter_flush(priv->adapter, ofs);
+
         switch (nalu.type) {
         case GST_H264_NAL_SLICE_IDR:
             /* fall-through. IDR specifics are handled in init_picture() */
@@ -1917,6 +1936,10 @@ decode_buffer(GstVaapiDecoderH264 *decoder, GstBuffer *buffer)
             status = GST_VAAPI_DECODER_STATUS_ERROR_BITSTREAM_PARSER;
             break;
         }
+
+        if (gst_adapter_available(priv->adapter) >= nalu.size)
+            gst_adapter_flush(priv->adapter, nalu.size);
+        ofs = nalu.offset + nalu.size;
     } while (status == GST_VAAPI_DECODER_STATUS_SUCCESS && ofs < buf_size);
     return status;
 }
@@ -2076,6 +2099,7 @@ gst_vaapi_decoder_h264_init(GstVaapiDecoderH264 *decoder)
     priv->mb_y                  = 0;
     priv->mb_width              = 0;
     priv->mb_height             = 0;
+    priv->adapter               = NULL;
     priv->sub_buffer            = NULL;
     priv->field_poc[0]          = 0;
     priv->field_poc[1]          = 0;
