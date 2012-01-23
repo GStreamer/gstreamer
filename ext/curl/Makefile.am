@@ -4,7 +4,8 @@ libgstcurl_la_SOURCES = gstcurl.c \
 			gstcurlbasesink.c \
 			gstcurltlssink.c \
 			gstcurlhttpsink.c \
-			gstcurlfilesink.c
+			gstcurlfilesink.c \
+			gstcurlftpsink.c
 libgstcurl_la_CFLAGS = \
 	$(GST_PLUGINS_BAD_CFLAGS) \
 	$(GST_BASE_CFLAGS) \
@@ -21,4 +22,5 @@ libgstcurl_la_LIBTOOLFLAGS = --tag=disable-static
 noinst_HEADERS = gstcurlbasesink.h \
 		 gstcurltlssink.h \
 		 gstcurlhttpsink.h \
-		 gstcurlfilesink.h
+		 gstcurlfilesink.h \
+		 gstcurlftpsink.h
