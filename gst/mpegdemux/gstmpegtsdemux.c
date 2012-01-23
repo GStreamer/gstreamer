@@ -829,8 +829,13 @@ gst_mpegts_demux_fill_stream (GstMpegTSStream * stream, guint8 id,
     default:
       break;
   }
-  if (name == NULL || template == NULL || caps == NULL)
+  if (name == NULL || template == NULL || caps == NULL) {
+    if (name)
+      g_free (name);
+    if (caps)
+      gst_caps_unref (caps);
     return FALSE;
+  }
 
   stream->stream_type = stream_type;
   stream->id = id;

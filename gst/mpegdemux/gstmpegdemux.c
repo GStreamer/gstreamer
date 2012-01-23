@@ -399,8 +399,13 @@ gst_flups_demux_create_stream (GstFluPSDemux * demux, gint id, gint stream_type)
       break;
   }
 
-  if (name == NULL || template == NULL || caps == NULL)
-    return NULL;
+  if (name == NULL || template == NULL || caps == NULL) {
+    if (name)
+      g_free (name);
+    if (caps)
+      gst_caps_unref (caps);
+    return FALSE;
+  }
 
   stream = g_new0 (GstFluPSStream, 1);
   stream->id = id;
