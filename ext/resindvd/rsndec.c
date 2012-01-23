@@ -256,8 +256,9 @@ _get_decoder_factories (gpointer arg)
   raw_audio = gst_caps_can_intersect (raw, ctx.desired_caps);
   if (raw_audio) {
     GstCaps *sub = gst_caps_subtract (ctx.desired_caps, raw);
-    gst_caps_unref (ctx.desired_caps);
     ctx.desired_caps = sub;
+  } else {
+    gst_caps_ref (ctx.desired_caps);
   }
   gst_caps_unref (raw);
 
@@ -289,6 +290,7 @@ _get_decoder_factories (gpointer arg)
 
   GST_DEBUG ("Available decoder caps %" GST_PTR_FORMAT, ctx.decoder_caps);
   gst_caps_unref (ctx.decoder_caps);
+  gst_caps_unref (ctx.desired_caps);
 
   return factories;
 }
