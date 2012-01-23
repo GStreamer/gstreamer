@@ -1230,6 +1230,7 @@ gst_matroska_parse_search_cluster (GstMatroskaParse * parse, gint64 * pos)
   GstFlowReturn ret = GST_FLOW_OK;
   const guint chunk = 64 * 1024;
   GstBuffer *buf = NULL;
+  GstMapInfo map;
   gpointer data;
   gsize size;
   guint64 length;
@@ -1249,7 +1250,9 @@ gst_matroska_parse_search_cluster (GstMatroskaParse * parse, gint64 * pos)
     GST_DEBUG_OBJECT (parse,
         "read buffer size %" G_GSIZE_FORMAT " at offset %" G_GINT64_FORMAT,
         gst_buffer_get_size (buf), newpos);
-    data = gst_buffer_map (buf, &size, NULL, GST_MAP_READ);
+    gst_buffer_map (buf, &map, GST_MAP_READ);
+    data = map.data;
+    size = map.size;
     gst_byte_reader_init (&reader, data, size);
     cluster_pos = 0;
   resume:
@@ -1297,14 +1300,14 @@ gst_matroska_parse_search_cluster (GstMatroskaParse * parse, gint64 * pos)
     } else {
       /* partial cluster id may have been in tail of buffer */
       newpos += MAX (size, 4) - 3;
-      gst_buffer_unmap (buf, data, size);
+      gst_buffer_unmap (buf, &map);
       gst_buffer_unref (buf);
       buf = NULL;
     }
   }
 
   if (buf) {
-    gst_buffer_unmap (buf, data, size);
+    gst_buffer_unmap (buf, &map);
     gst_buffer_unref (buf);
     buf = NULL;
   }
@@ -1621,8 +1624,7 @@ gst_matroska_parse_parse_blockgroup_or_simpleblock (GstMatroskaParse * parse,
   guint32 id;
   guint64 block_duration = 0;
   GstBuffer *buf = NULL;
-  gpointer buf_data = NULL;
-  gsize buf_size = 0;
+  GstMapInfo map;
   gint stream_num = -1, n, laces = 0;
   guint size = 0;
   gint *lace_size = NULL;
@@ -1656,10 +1658,9 @@ gst_matroska_parse_parse_blockgroup_or_simpleblock (GstMatroskaParse * parse,
         if ((ret = gst_ebml_read_buffer (ebml, &id, &buf)) != GST_FLOW_OK)
           break;
 
-        buf_data = gst_buffer_map (buf, &buf_size, NULL, GST_MAP_READ);
-
-        data = buf_data;
-        size = buf_size;
+        gst_buffer_map (buf, &map, GST_MAP_READ);
+        data = map.data;
+        size = map.size;
 
         /* first byte(s): blocknum */
         if ((n = gst_matroska_ebmlnum_uint (data, size, &num)) < 0)
@@ -2125,7 +2126,7 @@ gst_matroska_parse_parse_blockgroup_or_simpleblock (GstMatroskaParse * parse,
 
 done:
   if (buf) {
-    gst_buffer_unmap (buf, buf_data, buf_size);
+    gst_buffer_unmap (buf, &map);
     gst_buffer_unref (buf);
   }
   g_free (lace_size);

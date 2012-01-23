@@ -267,16 +267,19 @@ gst_rtp_g726_pay_handle_buffer (GstRTPBasePayload * payload, GstBuffer * buffer)
   pay = GST_RTP_G726_PAY (payload);
 
   if (!pay->aal2) {
+    GstMapInfo map;
     guint8 *data, tmp;
-    gsize len;
+    gsize size;
 
     /* for non AAL2, we need to reshuffle the bytes, we can do this in-place
      * when the buffer is writable. */
     buffer = gst_buffer_make_writable (buffer);
 
-    data = gst_buffer_map (buffer, &len, NULL, GST_MAP_READWRITE);
+    gst_buffer_map (buffer, &map, GST_MAP_READWRITE);
+    data = map.data;
+    size = map.size;
 
-    GST_LOG_OBJECT (pay, "packing %" G_GSIZE_FORMAT " bytes of data", len);
+    GST_LOG_OBJECT (pay, "packing %" G_GSIZE_FORMAT " bytes of data", map.size);
 
     /* we need to reshuffle the bytes, output is of the form:
      * A B C D .. with the number of bits depending on the bitrate. */
@@ -290,11 +293,11 @@ gst_rtp_g726_pay_handle_buffer (GstRTPBasePayload * payload, GstBuffer * buffer)
          * |0 1|0 1|0 1|0 1|
          * +-+-+-+-+-+-+-+-+-
          */
-        while (len > 0) {
+        while (size > 0) {
           tmp = *data;
           *data++ = ((tmp & 0xc0) >> 6) |
               ((tmp & 0x30) >> 2) | ((tmp & 0x0c) << 2) | ((tmp & 0x03) << 6);
-          len--;
+          size--;
         }
         break;
       }
@@ -307,7 +310,7 @@ gst_rtp_g726_pay_handle_buffer (GstRTPBasePayload * payload, GstBuffer * buffer)
          * |1 2|0 1 2|0 1 2|2|0 1 2|0 1 2|0|0 1 2|0 1 2|0 1|
          * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-
          */
-        while (len > 2) {
+        while (size > 2) {
           tmp = *data;
           *data++ = ((tmp & 0xc0) >> 6) |
               ((tmp & 0x38) >> 1) | ((tmp & 0x07) << 5);
@@ -317,7 +320,7 @@ gst_rtp_g726_pay_handle_buffer (GstRTPBasePayload * payload, GstBuffer * buffer)
           tmp = *data;
           *data++ = ((tmp & 0xe0) >> 5) |
               ((tmp & 0x1c) >> 2) | ((tmp & 0x03) << 6);
-          len -= 3;
+          size -= 3;
         }
         break;
       }
@@ -330,10 +333,10 @@ gst_rtp_g726_pay_handle_buffer (GstRTPBasePayload * payload, GstBuffer * buffer)
          * |0 1 2 3|0 1 2 3|0 1 2 3|0 1 2 3|
          * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-
          */
-        while (len > 0) {
+        while (size > 0) {
           tmp = *data;
           *data++ = ((tmp & 0xf0) >> 4) | ((tmp & 0x0f) << 4);
-          len--;
+          size--;
         }
         break;
       }
@@ -346,7 +349,7 @@ gst_rtp_g726_pay_handle_buffer (GstRTPBasePayload * payload, GstBuffer * buffer)
          * |2 3 4|0 1 2 3 4|4|0 1 2 3 4|0 1|1 2 3 4|0 1 2 3|3 4|0 1 2 3 4|0|0 1 2 3 4|0 1 2|   
          * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-
          */
-        while (len > 4) {
+        while (size > 4) {
           tmp = *data;
           *data++ = ((tmp & 0xe0) >> 5) | ((tmp & 0x1f) << 3);
           tmp = *data;
@@ -359,12 +362,12 @@ gst_rtp_g726_pay_handle_buffer (GstRTPBasePayload * payload, GstBuffer * buffer)
               ((tmp & 0x3e) << 2) | ((tmp & 0x01) << 7);
           tmp = *data;
           *data++ = ((tmp & 0xf8) >> 3) | ((tmp & 0x07) << 5);
-          len -= 5;
+          size -= 5;
         }
         break;
       }
     }
-    gst_buffer_unmap (buffer, data, len);
+    gst_buffer_unmap (buffer, &map);
   }
 
   res =

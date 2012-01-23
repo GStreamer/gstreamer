@@ -387,14 +387,12 @@ gst_rtp_mp4v_pay_depay_data (GstRtpMP4VPay * enc, guint8 * data, guint size,
       }
       /* if config string changed or new profile, make new caps */
       if (!equal || newprofile) {
-        guint8 *bdata;
-
         if (enc->config)
           gst_buffer_unref (enc->config);
         enc->config = gst_buffer_new_and_alloc (i);
-        bdata = gst_buffer_map (enc->config, NULL, NULL, GST_MAP_WRITE);
-        memcpy (bdata, data, i);
-        gst_buffer_unmap (enc->config, bdata, -1);
+
+        gst_buffer_fill (enc->config, 0, data, i);
+
         gst_rtp_mp4v_pay_new_caps (enc);
       }
       *strip = i;
@@ -444,9 +442,9 @@ gst_rtp_mp4v_pay_handle_buffer (GstRTPBasePayload * basepayload,
   GstRtpMP4VPay *rtpmp4vpay;
   GstFlowReturn ret;
   guint avail;
-  gsize size;
   guint packet_len;
-  guint8 *data;
+  GstMapInfo map;
+  gsize size;
   gboolean flush;
   gint strip;
   GstClockTime timestamp, duration;
@@ -458,7 +456,8 @@ gst_rtp_mp4v_pay_handle_buffer (GstRTPBasePayload * basepayload,
 
   rtpmp4vpay = GST_RTP_MP4V_PAY (basepayload);
 
-  data = gst_buffer_map (buffer, &size, NULL, GST_MAP_READ);
+  gst_buffer_map (buffer, &map, GST_MAP_READ);
+  size = map.size;
   timestamp = GST_BUFFER_TIMESTAMP (buffer);
   duration = GST_BUFFER_DURATION (buffer);
   avail = gst_adapter_available (rtpmp4vpay->adapter);
@@ -474,9 +473,9 @@ gst_rtp_mp4v_pay_handle_buffer (GstRTPBasePayload * basepayload,
 
   /* depay incomming data and see if we need to start a new RTP
    * packet */
-  flush = gst_rtp_mp4v_pay_depay_data (rtpmp4vpay, data, size, &strip, &vopi);
-  gst_buffer_unmap (buffer, data, -1);
-  data = NULL;
+  flush =
+      gst_rtp_mp4v_pay_depay_data (rtpmp4vpay, map.data, size, &strip, &vopi);
+  gst_buffer_unmap (buffer, &map);
 
   if (strip) {
     /* strip off config if requested */

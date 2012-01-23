@@ -285,6 +285,7 @@ gst_ebml_write_element_new (GstEbmlWrite * ebml, guint8 ** data_out, guint size)
 {
   /* Create new buffer of size + ID + length */
   GstBuffer *buf;
+  GstMapInfo map;
 
   /* length, ID */
   size += 12;
@@ -292,7 +293,9 @@ gst_ebml_write_element_new (GstEbmlWrite * ebml, guint8 ** data_out, guint size)
   buf = gst_buffer_new_and_alloc (size);
   GST_BUFFER_TIMESTAMP (buf) = ebml->timestamp;
 
-  *data_out = gst_buffer_map (buf, NULL, NULL, GST_MAP_WRITE);
+  /* FIXME unmap not possible */
+  gst_buffer_map (buf, &map, GST_MAP_WRITE);
+  *data_out = map.data;
 
   return buf;
 }
@@ -408,6 +411,7 @@ static void
 gst_ebml_write_element_push (GstEbmlWrite * ebml, GstBuffer * buf,
     guint8 * buf_data, guint8 * buf_data_end)
 {
+  GstMapInfo map;
   guint data_size;
 
   if (buf_data_end)
@@ -419,21 +423,25 @@ gst_ebml_write_element_push (GstEbmlWrite * ebml, GstBuffer * buf,
 
   /* if there's no cache, then don't push it! */
   if (ebml->writing_streamheader) {
-    if (!buf_data)
-      buf_data = gst_buffer_map (buf, NULL, NULL, GST_MAP_WRITE);
+    if (!buf_data) {
+      gst_buffer_map (buf, &map, GST_MAP_WRITE);
+      buf_data = map.data;
+    }
     gst_byte_writer_put_data (ebml->streamheader, buf_data, data_size);
   }
   if (ebml->cache) {
-    if (!buf_data)
-      buf_data = gst_buffer_map (buf, NULL, NULL, GST_MAP_WRITE);
+    if (!buf_data) {
+      gst_buffer_map (buf, &map, GST_MAP_WRITE);
+      buf_data = map.data;
+    }
     gst_byte_writer_put_data (ebml->cache, buf_data, data_size);
-    gst_buffer_unmap (buf, buf_data, -1);
+    gst_buffer_unmap (buf, &map);
     gst_buffer_unref (buf);
     return;
   }
 
   if (buf_data)
-    gst_buffer_unmap (buf, buf_data, -1);
+    gst_buffer_unmap (buf, &map);
 
   if (ebml->last_write_result == GST_FLOW_OK) {
     buf = gst_buffer_make_writable (buf);

@@ -355,15 +355,11 @@ gst_qt_mux_map_format_to_header (GstQTMuxFormat format, GstBuffer ** _prefix,
     }
     case GST_QT_MUX_FORMAT_MJ2:
     {
-      guint8 *bdata;
-
       major = FOURCC_mjp2;
       comp = mjp2_brands;
       version = 0;
       prefix = gst_buffer_new_and_alloc (sizeof (mjp2_prefix));
-      bdata = gst_buffer_map (prefix, NULL, NULL, GST_MAP_WRITE);
-      memcpy (bdata, mjp2_prefix, sizeof (mjp2_prefix));
-      gst_buffer_unmap (prefix, bdata, -1);
+      gst_buffer_fill (prefix, 0, mjp2_prefix, sizeof (mjp2_prefix));
       break;
     }
     default:

@@ -97,11 +97,11 @@ gst_avi_subtitle_extract_file (GstAviSubtitle * sub, GstBuffer * buffer,
 {
   const gchar *input_enc = NULL;
   GstBuffer *ret = NULL;
-  gchar *data, *bdata;
-  gsize bsize;
+  gchar *data;
+  GstMapInfo map;
 
-  bdata = gst_buffer_map (buffer, &bsize, NULL, GST_MAP_READ);
-  data = bdata + offset;
+  gst_buffer_map (buffer, &map, GST_MAP_READ);
+  data = (gchar *) (map.data + offset);
 
   if (len >= (3 + 1) && IS_BOM_UTF8 (data) &&
       g_utf8_validate (data + 3, len - 3, NULL)) {
@@ -160,7 +160,7 @@ gst_avi_subtitle_extract_file (GstAviSubtitle * sub, GstBuffer * buffer,
   }
 
 done:
-  gst_buffer_unmap (buffer, bdata, bsize);
+  gst_buffer_unmap (buffer, &map);
 
   return ret;
 }
@@ -183,25 +183,25 @@ gst_avi_subtitle_title_tag (GstAviSubtitle * sub, gchar * title)
 static GstFlowReturn
 gst_avi_subtitle_parse_gab2_chunk (GstAviSubtitle * sub, GstBuffer * buf)
 {
-  guint8 *data;
   gchar *name_utf8;
   guint name_length;
   guint file_length;
-  gsize size;
+  GstMapInfo map;
 
-  data = gst_buffer_map (buf, &size, NULL, GST_MAP_READ);
+  gst_buffer_map (buf, &map, GST_MAP_READ);
 
   /* check the magic word "GAB2\0", and the next word must be 2 */
-  if (size < 12 || memcmp (data, "GAB2\0\2\0", 5 + 2) != 0)
+  if (map.size < 12 || memcmp (map.data, "GAB2\0\2\0", 5 + 2) != 0)
     goto wrong_magic_word;
 
   /* read 'name' of subtitle */
-  name_length = GST_READ_UINT32_LE (data + 5 + 2);
+  name_length = GST_READ_UINT32_LE (map.data + 5 + 2);
   GST_LOG_OBJECT (sub, "length of name: %u", name_length);
-  if (size <= 17 + name_length)
+  if (map.size <= 17 + name_length)
     goto wrong_name_length;
 
-  name_utf8 = g_convert ((gchar *) data + 11, name_length, "UTF-8", "UTF-16LE",
+  name_utf8 =
+      g_convert ((gchar *) map.data + 11, name_length, "UTF-8", "UTF-16LE",
       NULL, NULL, NULL);
 
   if (name_utf8) {
@@ -211,13 +211,13 @@ gst_avi_subtitle_parse_gab2_chunk (GstAviSubtitle * sub, GstBuffer * buf)
   }
 
   /* next word must be 4 */
-  if (GST_READ_UINT16_LE (data + 11 + name_length) != 0x4)
+  if (GST_READ_UINT16_LE (map.data + 11 + name_length) != 0x4)
     goto wrong_fixed_word_2;
 
-  file_length = GST_READ_UINT32_LE (data + 13 + name_length);
+  file_length = GST_READ_UINT32_LE (map.data + 13 + name_length);
   GST_LOG_OBJECT (sub, "length srt/ssa file: %u", file_length);
 
-  if (size < (17 + name_length + file_length))
+  if (map.size < (17 + name_length + file_length))
     goto wrong_total_length;
 
   /* store this, so we can send it again after a seek; note that we shouldn't
@@ -229,7 +229,7 @@ gst_avi_subtitle_parse_gab2_chunk (GstAviSubtitle * sub, GstBuffer * buf)
   if (sub->subfile == NULL)
     goto extract_failed;
 
-  gst_buffer_unmap (buf, data, size);
+  gst_buffer_unmap (buf, &map);
 
   return GST_FLOW_OK;
 
@@ -237,38 +237,38 @@ gst_avi_subtitle_parse_gab2_chunk (GstAviSubtitle * sub, GstBuffer * buf)
 wrong_magic_word:
   {
     GST_ELEMENT_ERROR (sub, STREAM, DECODE, (NULL), ("Wrong magic word"));
-    gst_buffer_unmap (buf, data, size);
+    gst_buffer_unmap (buf, &map);
     return GST_FLOW_ERROR;
   }
 wrong_name_length:
   {
     GST_ELEMENT_ERROR (sub, STREAM, DECODE, (NULL),
-        ("name doesn't fit in buffer (%" G_GSIZE_FORMAT " < %d)", size,
+        ("name doesn't fit in buffer (%" G_GSIZE_FORMAT " < %d)", map.size,
             17 + name_length));
-    gst_buffer_unmap (buf, data, size);
+    gst_buffer_unmap (buf, &map);
     return GST_FLOW_ERROR;
   }
 wrong_fixed_word_2:
   {
     GST_ELEMENT_ERROR (sub, STREAM, DECODE, (NULL),
         ("wrong fixed word: expected %u, got %u", 4,
-            GST_READ_UINT16_LE (data + 11 + name_length)));
-    gst_buffer_unmap (buf, data, size);
+            GST_READ_UINT16_LE (map.data + 11 + name_length)));
+    gst_buffer_unmap (buf, &map);
     return GST_FLOW_ERROR;
   }
 wrong_total_length:
   {
     GST_ELEMENT_ERROR (sub, STREAM, DECODE, (NULL),
         ("buffer size is wrong: need %d bytes, have %" G_GSIZE_FORMAT " bytes",
-            17 + name_length + file_length, size));
-    gst_buffer_unmap (buf, data, size);
+            17 + name_length + file_length, map.size));
+    gst_buffer_unmap (buf, &map);
     return GST_FLOW_ERROR;
   }
 extract_failed:
   {
     GST_ELEMENT_ERROR (sub, STREAM, DECODE, (NULL),
         ("could not extract subtitles"));
-    gst_buffer_unmap (buf, data, size);
+    gst_buffer_unmap (buf, &map);
     return GST_FLOW_ERROR;
   }
 }

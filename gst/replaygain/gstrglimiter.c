@@ -173,7 +173,7 @@ gst_rg_limiter_transform_ip (GstBaseTransform * base, GstBuffer * buf)
 {
   GstRgLimiter *filter = GST_RG_LIMITER (base);
   gfloat *input;
-  guint8 *data;
+  GstMapInfo map;
   guint count;
   guint i;
 
@@ -183,8 +183,8 @@ gst_rg_limiter_transform_ip (GstBaseTransform * base, GstBuffer * buf)
   if (GST_BUFFER_FLAG_IS_SET (buf, GST_BUFFER_FLAG_GAP))
     return GST_FLOW_OK;
 
-  data = gst_buffer_map (buf, NULL, NULL, GST_MAP_READ);
-  input = (gfloat *) data;
+  gst_buffer_map (buf, &map, GST_MAP_READ);
+  input = (gfloat *) map.data;
   count = gst_buffer_get_size (buf) / sizeof (gfloat);
 
   for (i = count; i--;) {
@@ -195,7 +195,7 @@ gst_rg_limiter_transform_ip (GstBaseTransform * base, GstBuffer * buf)
     input++;
   }
 
-  gst_buffer_unmap (buf, data, -1);
+  gst_buffer_unmap (buf, &map);
 
   return GST_FLOW_OK;
 }

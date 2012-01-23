@@ -470,8 +470,7 @@ gst_matroska_demux_reset (GstElement * element)
 
   if (demux->common.cached_buffer) {
     if (demux->common.cached_data) {
-      gst_buffer_unmap (demux->common.cached_buffer,
-          demux->common.cached_data, -1);
+      gst_buffer_unmap (demux->common.cached_buffer, &demux->common.cached_map);
       demux->common.cached_data = NULL;
     }
     gst_buffer_unref (demux->common.cached_buffer);
@@ -484,28 +483,28 @@ gst_matroska_demux_reset (GstElement * element)
 static GstBuffer *
 gst_matroska_decode_buffer (GstMatroskaTrackContext * context, GstBuffer * buf)
 {
-  gpointer data, buf_data;
-  gsize size, buf_size;
+  GstMapInfo map;
+  gpointer data;
+  gsize size;
 
   g_return_val_if_fail (GST_IS_BUFFER (buf), NULL);
 
   GST_DEBUG ("decoding buffer %p", buf);
 
-  buf_data = gst_buffer_map (buf, &buf_size, NULL, GST_MAP_READ);
+  gst_buffer_map (buf, &map, GST_MAP_READ);
+  data = map.data;
+  size = map.size;
 
-  g_return_val_if_fail (buf_size > 0, buf);
-
-  data = buf_data;
-  size = buf_size;
+  g_return_val_if_fail (size > 0, buf);
 
   if (gst_matroska_decode_data (context->encodings, &data, &size,
           GST_MATROSKA_TRACK_ENCODING_SCOPE_FRAME, FALSE)) {
-    gst_buffer_unmap (buf, buf_data, buf_size);
+    gst_buffer_unmap (buf, &map);
     gst_buffer_unref (buf);
     return gst_buffer_new_wrapped (data, size);
   } else {
     GST_DEBUG ("decode data failed");
-    gst_buffer_unmap (buf, buf_data, buf_size);
+    gst_buffer_unmap (buf, &map);
     gst_buffer_unref (buf);
     return NULL;
   }
@@ -1587,6 +1586,7 @@ gst_matroska_demux_search_cluster (GstMatroskaDemux * demux, gint64 * pos)
   GstFlowReturn ret = GST_FLOW_OK;
   const guint chunk = 64 * 1024;
   GstBuffer *buf = NULL;
+  GstMapInfo map;
   gpointer data = NULL;
   gsize size;
   guint64 length;
@@ -1625,7 +1625,7 @@ gst_matroska_demux_search_cluster (GstMatroskaDemux * demux, gint64 * pos)
     gint cluster_pos;
 
     if (buf != NULL) {
-      gst_buffer_unmap (buf, data, size);
+      gst_buffer_unmap (buf, &map);
       gst_buffer_unref (buf);
       buf = NULL;
     }
@@ -1635,7 +1635,9 @@ gst_matroska_demux_search_cluster (GstMatroskaDemux * demux, gint64 * pos)
     GST_DEBUG_OBJECT (demux,
         "read buffer size %" G_GSIZE_FORMAT " at offset %" G_GINT64_FORMAT,
         gst_buffer_get_size (buf), newpos);
-    data = gst_buffer_map (buf, &size, NULL, GST_MAP_READ);
+    gst_buffer_map (buf, &map, GST_MAP_READ);
+    data = map.data;
+    size = map.size;
     gst_byte_reader_init (&reader, data, size);
   resume:
     cluster_pos = gst_byte_reader_masked_scan_uint32 (&reader, 0xffffffff,
@@ -1690,7 +1692,7 @@ gst_matroska_demux_search_cluster (GstMatroskaDemux * demux, gint64 * pos)
   }
 
   if (buf) {
-    gst_buffer_unmap (buf, data, size);
+    gst_buffer_unmap (buf, &map);
     gst_buffer_unref (buf);
     buf = NULL;
   }
@@ -2717,6 +2719,7 @@ gst_matroska_demux_add_wvpk_header (GstElement * element,
   GstMatroskaTrackAudioContext *audiocontext =
       (GstMatroskaTrackAudioContext *) stream;
   GstBuffer *newbuf = NULL;
+  GstMapInfo map, outmap;
   guint8 *buf_data, *data;
   Wavpack4Header wvh;
 
@@ -2747,7 +2750,8 @@ gst_matroska_demux_add_wvpk_header (GstElement * element,
     /* block_samples, flags and crc are already in the buffer */
     newbuf = gst_buffer_new_allocate (NULL, sizeof (Wavpack4Header) - 12, 0);
 
-    data = gst_buffer_map (newbuf, NULL, NULL, GST_MAP_WRITE);
+    gst_buffer_map (newbuf, &outmap, GST_MAP_WRITE);
+    data = outmap.data;
     data[0] = 'w';
     data[1] = 'v';
     data[2] = 'p';
@@ -2772,11 +2776,13 @@ gst_matroska_demux_add_wvpk_header (GstElement * element,
     gsize buf_size, size, out_size = 0;
     guint32 block_samples, flags, crc, blocksize;
 
-    buf_data = gst_buffer_map (*buf, &buf_size, NULL, GST_MAP_READ);
+    gst_buffer_map (*buf, &map, GST_MAP_READ);
+    buf_data = map.data;
+    buf_size = map.size;
 
     if (buf_size < 4) {
       GST_ERROR_OBJECT (element, "Too small wavpack buffer");
-      gst_buffer_unmap (*buf, buf_data, buf_size);
+      gst_buffer_unmap (*buf, &map);
       return GST_FLOW_ERROR;
     }
 
@@ -2811,12 +2817,14 @@ gst_matroska_demux_add_wvpk_header (GstElement * element,
             GST_BUFFER_COPY_TIMESTAMPS | GST_BUFFER_COPY_FLAGS, 0, -1);
 
         outpos = 0;
-        outdata = gst_buffer_map (newbuf, NULL, NULL, GST_MAP_WRITE);
+        gst_buffer_map (newbuf, &outmap, GST_MAP_WRITE);
+        outdata = outmap.data;
       } else {
-        gst_buffer_unmap (newbuf, outdata, out_size);
+        gst_buffer_unmap (newbuf, &outmap);
         out_size += sizeof (Wavpack4Header) + blocksize;
         gst_buffer_set_size (newbuf, out_size);
-        outdata = gst_buffer_map (newbuf, NULL, NULL, GST_MAP_WRITE);
+        gst_buffer_map (newbuf, &outmap, GST_MAP_WRITE);
+        outdata = outmap.data;
       }
 
       outdata[outpos] = 'w';
@@ -2842,11 +2850,11 @@ gst_matroska_demux_add_wvpk_header (GstElement * element,
       data += blocksize;
       size -= blocksize;
     }
-    gst_buffer_unmap (*buf, buf_data, buf_size);
+    gst_buffer_unmap (*buf, &map);
     gst_buffer_unref (*buf);
 
     if (newbuf)
-      gst_buffer_unmap (newbuf, outdata, out_size);
+      gst_buffer_unmap (newbuf, &outmap);
 
     *buf = newbuf;
     audiocontext->wvpk_block_index += block_samples;
@@ -2896,12 +2904,11 @@ gst_matroska_demux_check_subtitle_buffer (GstElement * element,
   GError *err = NULL;
   GstBuffer *newbuf;
   gchar *utf8;
-  gpointer data;
-  gsize size;
+  GstMapInfo map;
 
   sub_stream = (GstMatroskaTrackSubtitleContext *) stream;
 
-  data = gst_buffer_map (*buf, &size, NULL, GST_MAP_READ);
+  gst_buffer_map (*buf, &map, GST_MAP_READ);
 
   if (!data) {
     gst_buffer_unmap (*buf, data, -1);
@@ -2909,7 +2916,7 @@ gst_matroska_demux_check_subtitle_buffer (GstElement * element,
   }
 
   if (!sub_stream->invalid_utf8) {
-    if (g_utf8_validate (data, size, NULL)) {
+    if (g_utf8_validate ((gchar *) map.data, map.size, NULL)) {
       goto next;
     }
     GST_WARNING_OBJECT (element, "subtitle stream %d is not valid UTF-8, this "
@@ -2927,8 +2934,9 @@ gst_matroska_demux_check_subtitle_buffer (GstElement * element,
     }
   }
 
-  utf8 = g_convert_with_fallback (data, size, "UTF-8", encoding, (char *) "*",
-      NULL, NULL, &err);
+  utf8 =
+      g_convert_with_fallback ((gchar *) map.data, map.size, "UTF-8", encoding,
+      (char *) "*", NULL, NULL, &err);
 
   if (err) {
     GST_LOG_OBJECT (element, "could not convert string from '%s' to UTF-8: %s",
@@ -2938,8 +2946,9 @@ gst_matroska_demux_check_subtitle_buffer (GstElement * element,
 
     /* invalid input encoding, fall back to ISO-8859-15 (always succeeds) */
     encoding = "ISO-8859-15";
-    utf8 = g_convert_with_fallback (data, size, "UTF-8", encoding, (char *) "*",
-        NULL, NULL, NULL);
+    utf8 =
+        g_convert_with_fallback ((gchar *) map.data, map.size, "UTF-8",
+        encoding, (char *) "*", NULL, NULL, NULL);
   }
 
   GST_LOG_OBJECT (element, "converted subtitle text from %s to UTF-8 %s",
@@ -2952,28 +2961,27 @@ gst_matroska_demux_check_subtitle_buffer (GstElement * element,
   gst_buffer_copy_into (newbuf, *buf,
       GST_BUFFER_COPY_TIMESTAMPS | GST_BUFFER_COPY_FLAGS | GST_BUFFER_COPY_META,
       0, -1);
-  gst_buffer_unmap (*buf, data, size);
-
+  gst_buffer_unmap (*buf, &map);
   gst_buffer_unref (*buf);
 
   *buf = newbuf;
-  data = gst_buffer_map (*buf, &size, NULL, GST_MAP_READ);
+  gst_buffer_map (*buf, &map, GST_MAP_READ);
 
 next:
   if (sub_stream->check_markup) {
     /* caps claim markup text, so we need to escape text,
      * except if text is already markup and then needs no further escaping */
     sub_stream->seen_markup_tag = sub_stream->seen_markup_tag ||
-        gst_matroska_demux_subtitle_chunk_has_tag (element, data);
+        gst_matroska_demux_subtitle_chunk_has_tag (element, (gchar *) map.data);
 
     if (!sub_stream->seen_markup_tag) {
-      utf8 = g_markup_escape_text (data, size);
+      utf8 = g_markup_escape_text ((gchar *) map.data, map.size);
 
       newbuf = gst_buffer_new_wrapped (utf8, strlen (utf8));
       gst_buffer_copy_into (newbuf, *buf,
           GST_BUFFER_COPY_TIMESTAMPS | GST_BUFFER_COPY_FLAGS |
           GST_BUFFER_COPY_META, 0, -1);
-      gst_buffer_unmap (*buf, data, size);
+      gst_buffer_unmap (*buf, &map);
       gst_buffer_unref (*buf);
 
       *buf = newbuf;
@@ -3020,38 +3028,36 @@ static GstBuffer *
 gst_matroska_demux_align_buffer (GstMatroskaDemux * demux,
     GstBuffer * buffer, gsize alignment)
 {
-  gpointer data;
-  gsize size;
+  GstMapInfo map;
 
-  data = gst_buffer_map (buffer, &size, NULL, GST_MAP_READ);
+  gst_buffer_map (buffer, &map, GST_MAP_READ);
 
-  if (size < sizeof (guintptr)) {
-    gst_buffer_unmap (buffer, data, size);
+  if (map.size < sizeof (guintptr)) {
+    gst_buffer_unmap (buffer, &map);
     return buffer;
   }
 
-  if (((guintptr) data) & (alignment - 1)) {
+  if (((guintptr) map.data) & (alignment - 1)) {
     GstBuffer *new_buffer;
-    gpointer new_data;
 
     new_buffer = gst_buffer_new_allocate (NULL,
         gst_buffer_get_size (buffer), alignment);
+
     /* Copy data "by hand", so ensure alignment is kept: */
-    new_data = gst_buffer_map (new_buffer, NULL, NULL, GST_MAP_WRITE);
-    memcpy (new_data, data, size);
-    gst_buffer_unmap (new_buffer, new_data, -1);
+    gst_buffer_fill (new_buffer, 0, map.data, map.size);
+
     gst_buffer_copy_into (new_buffer, buffer, GST_BUFFER_COPY_METADATA, 0, -1);
     GST_DEBUG_OBJECT (demux,
         "We want output aligned on %" G_GSIZE_FORMAT ", reallocated",
         alignment);
 
-    gst_buffer_unmap (buffer, data, size);
+    gst_buffer_unmap (buffer, &map);
     gst_buffer_unref (buffer);
 
     return new_buffer;
   }
 
-  gst_buffer_unmap (buffer, data, size);
+  gst_buffer_unmap (buffer, &map);
   return buffer;
 }
 
@@ -3066,8 +3072,7 @@ gst_matroska_demux_parse_blockgroup_or_simpleblock (GstMatroskaDemux * demux,
   guint32 id;
   guint64 block_duration = -1;
   GstBuffer *buf = NULL;
-  gpointer buf_data = NULL;
-  gsize buf_size;
+  GstMapInfo map;
   gint stream_num = -1, n, laces = 0;
   guint size = 0;
   gint *lace_size = NULL;
@@ -3098,16 +3103,16 @@ gst_matroska_demux_parse_blockgroup_or_simpleblock (GstMatroskaDemux * demux,
         guint8 *data;
 
         if (buf) {
-          gst_buffer_unmap (buf, buf_data, buf_size);
+          gst_buffer_unmap (buf, &map);
           gst_buffer_unref (buf);
           buf = NULL;
         }
         if ((ret = gst_ebml_read_buffer (ebml, &id, &buf)) != GST_FLOW_OK)
           break;
 
-        buf_data = gst_buffer_map (buf, &buf_size, NULL, GST_MAP_READ);
-        data = buf_data;
-        size = buf_size;
+        gst_buffer_map (buf, &map, GST_MAP_READ);
+        data = map.data;
+        size = map.size;
 
         /* first byte(s): blocknum */
         if ((n = gst_matroska_ebmlnum_uint (data, size, &num)) < 0)
@@ -3640,7 +3645,7 @@ gst_matroska_demux_parse_blockgroup_or_simpleblock (GstMatroskaDemux * demux,
 
 done:
   if (buf) {
-    gst_buffer_unmap (buf, buf_data, buf_size);
+    gst_buffer_unmap (buf, &map);
     gst_buffer_unref (buf);
   }
   g_free (lace_size);
@@ -5308,8 +5313,11 @@ gst_matroska_demux_audio_caps (GstMatroskaTrackAudioContext *
 
     /* make up decoder-specific data if it is not supplied */
     if (priv == NULL) {
+      GstMapInfo map;
+
       priv = gst_buffer_new_allocate (NULL, 5, 0);
-      data = gst_buffer_map (priv, NULL, NULL, GST_MAP_WRITE);
+      gst_buffer_map (priv, &map, GST_MAP_WRITE);
+      data = map.data;
       rate_idx = aac_rate_idx (audiocontext->samplerate);
       profile = aac_profile_idx (codec_id);
 
@@ -5319,7 +5327,7 @@ gst_matroska_demux_audio_caps (GstMatroskaTrackAudioContext *
       if (!strncmp (codec_id, GST_MATROSKA_CODEC_ID_AUDIO_AAC_MPEG2,
               strlen (GST_MATROSKA_CODEC_ID_AUDIO_AAC_MPEG2))) {
         mpegversion = 2;
-        gst_buffer_unmap (priv, data, 5);
+        gst_buffer_unmap (priv, &map);
         gst_buffer_set_size (priv, 2);
       } else if (!strncmp (codec_id, GST_MATROSKA_CODEC_ID_AUDIO_AAC_MPEG4,
               strlen (GST_MATROSKA_CODEC_ID_AUDIO_AAC_MPEG4))) {
@@ -5332,13 +5340,13 @@ gst_matroska_demux_audio_caps (GstMatroskaTrackAudioContext *
           data[2] = AAC_SYNC_EXTENSION_TYPE >> 3;
           data[3] = ((AAC_SYNC_EXTENSION_TYPE & 0x07) << 5) | 5;
           data[4] = (1 << 7) | (rate_idx << 3);
-          gst_buffer_unmap (priv, data, 5);
+          gst_buffer_unmap (priv, &map);
         } else {
-          gst_buffer_unmap (priv, data, 5);
+          gst_buffer_unmap (priv, &map);
           gst_buffer_set_size (priv, 2);
         }
       } else {
-        gst_buffer_unmap (priv, data, 5);
+        gst_buffer_unmap (priv, &map);
         gst_buffer_unref (priv);
         priv = NULL;
         GST_ERROR ("Unknown AAC profile and no codec private data");

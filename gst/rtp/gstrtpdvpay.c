@@ -282,8 +282,9 @@ gst_rtp_dv_pay_handle_buffer (GstRTPBasePayload * basepayload,
   GstBuffer *outbuf;
   GstFlowReturn ret = GST_FLOW_OK;
   gint hdrlen;
-  gsize size, osize;
-  guint8 *data, *odata;
+  gsize size;
+  GstMapInfo map;
+  guint8 *data;
   guint8 *dest;
   guint filled;
   GstRTPBuffer rtp = { NULL, };
@@ -299,10 +300,9 @@ gst_rtp_dv_pay_handle_buffer (GstRTPBasePayload * basepayload,
   max_payload_size = ((GST_RTP_BASE_PAYLOAD_MTU (rtpdvpay) - hdrlen) / 80) * 80;
 
   /* The length of the buffer to transmit. */
-  data = gst_buffer_map (buffer, &size, NULL, GST_MAP_READ);
-
-  odata = data;
-  osize = size;
+  gst_buffer_map (buffer, &map, GST_MAP_READ);
+  data = map.data;
+  size = map.size;
 
   GST_DEBUG_OBJECT (rtpdvpay,
       "DV RTP payloader got buffer of %" G_GSIZE_FORMAT
@@ -368,7 +368,7 @@ gst_rtp_dv_pay_handle_buffer (GstRTPBasePayload * basepayload,
       outbuf = NULL;
     }
   }
-  gst_buffer_unmap (buffer, odata, osize);
+  gst_buffer_unmap (buffer, &map);
   gst_buffer_unref (buffer);
 
   return ret;

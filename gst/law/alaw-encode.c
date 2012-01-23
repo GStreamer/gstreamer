@@ -492,6 +492,7 @@ static GstFlowReturn
 gst_alaw_enc_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
 {
   GstALawEnc *alawenc;
+  GstMapInfo inmap, outmap;
   gint16 *linear_data;
   gsize linear_size;
   guint8 *alaw_data;
@@ -506,7 +507,9 @@ gst_alaw_enc_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
   if (G_UNLIKELY (alawenc->rate == 0 || alawenc->channels == 0))
     goto not_negotiated;
 
-  linear_data = gst_buffer_map (buffer, &linear_size, NULL, GST_MAP_READ);
+  gst_buffer_map (buffer, &inmap, GST_MAP_READ);
+  linear_data = (gint16 *) inmap.data;
+  linear_size = inmap.size;
 
   alaw_size = linear_size / 2;
 
@@ -523,7 +526,9 @@ gst_alaw_enc_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
         GST_SECOND, alawenc->rate * alawenc->channels);
   }
 
-  alaw_data = gst_buffer_map (outbuf, NULL, NULL, GST_MAP_WRITE);
+  gst_buffer_map (outbuf, &outmap, GST_MAP_WRITE);
+  alaw_data = outmap.data;
+  alaw_size = outmap.size;
 
   /* copy discont flag */
   if (GST_BUFFER_FLAG_IS_SET (buffer, GST_BUFFER_FLAG_DISCONT))
@@ -536,8 +541,8 @@ gst_alaw_enc_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
     alaw_data[i] = s16_to_alaw (linear_data[i]);
   }
 
-  gst_buffer_unmap (outbuf, alaw_data, -1);
-  gst_buffer_unmap (buffer, linear_data, -1);
+  gst_buffer_unmap (outbuf, &outmap);
+  gst_buffer_unmap (buffer, &inmap);
   gst_buffer_unref (buffer);
 
   ret = gst_pad_push (alawenc->srcpad, outbuf);

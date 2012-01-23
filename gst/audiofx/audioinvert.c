@@ -228,8 +228,7 @@ gst_audio_invert_transform_ip (GstBaseTransform * base, GstBuffer * buf)
   GstAudioInvert *filter = GST_AUDIO_INVERT (base);
   guint num_samples;
   GstClockTime timestamp, stream_time;
-  guint8 *data;
-  gsize size;
+  GstMapInfo map;
 
   timestamp = GST_BUFFER_TIMESTAMP (buf);
   stream_time =
@@ -245,12 +244,12 @@ gst_audio_invert_transform_ip (GstBaseTransform * base, GstBuffer * buf)
       G_UNLIKELY (GST_BUFFER_FLAG_IS_SET (buf, GST_BUFFER_FLAG_GAP)))
     return GST_FLOW_OK;
 
-  data = gst_buffer_map (buf, &size, NULL, GST_MAP_READWRITE);
-  num_samples = size / GST_AUDIO_FILTER_BPS (filter);
+  gst_buffer_map (buf, &map, GST_MAP_READWRITE);
+  num_samples = map.size / GST_AUDIO_FILTER_BPS (filter);
 
-  filter->process (filter, data, num_samples);
+  filter->process (filter, map.data, num_samples);
 
-  gst_buffer_unmap (buf, data, size);
+  gst_buffer_unmap (buf, &map);
 
   return GST_FLOW_OK;
 }

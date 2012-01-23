@@ -602,8 +602,8 @@ gst_rtp_jpeg_depay_process (GstRTPBaseDepayload * depayload, GstBuffer * buf)
   }
 
   if (frag_offset == 0) {
+    GstMapInfo map;
     guint size;
-    guint8 *data;
 
     if (rtpjpegdepay->width != width || rtpjpegdepay->height != height) {
       GstCaps *outcaps;
@@ -645,9 +645,10 @@ gst_rtp_jpeg_depay_process (GstRTPBaseDepayload * depayload, GstBuffer * buf)
     }
     /* max header length, should be big enough */
     outbuf = gst_buffer_new_and_alloc (1000);
-    data = gst_buffer_map (outbuf, NULL, NULL, GST_MAP_WRITE);
-    size = MakeHeaders (data, type, width, height, qtable, precision, dri);
-    gst_buffer_unmap (outbuf, data, size);
+    gst_buffer_map (outbuf, &map, GST_MAP_WRITE);
+    size = MakeHeaders (map.data, type, width, height, qtable, precision, dri);
+    gst_buffer_unmap (outbuf, &map);
+    gst_buffer_resize (outbuf, 0, size);
 
     GST_DEBUG_OBJECT (rtpjpegdepay, "pushing %u bytes of header", size);
 
@@ -663,7 +664,7 @@ gst_rtp_jpeg_depay_process (GstRTPBaseDepayload * depayload, GstBuffer * buf)
   if (gst_rtp_buffer_get_marker (&rtp)) {
     guint avail;
     guint8 end[2];
-    guint8 *data;
+    GstMapInfo map;
 
     /* last buffer take all data out of the adapter */
     avail = gst_adapter_available (rtpjpegdepay->adapter);
@@ -678,10 +679,10 @@ gst_rtp_jpeg_depay_process (GstRTPBaseDepayload * depayload, GstBuffer * buf)
 
       /* no EOI marker, add one */
       outbuf = gst_buffer_new_and_alloc (2);
-      data = gst_buffer_map (outbuf, NULL, NULL, GST_MAP_WRITE);
-      data[0] = 0xff;
-      data[1] = 0xd9;
-      gst_buffer_unmap (outbuf, data, -1);
+      gst_buffer_map (outbuf, &map, GST_MAP_WRITE);
+      map.data[0] = 0xff;
+      map.data[1] = 0xd9;
+      gst_buffer_unmap (outbuf, &map);
 
       gst_adapter_push (rtpjpegdepay->adapter, outbuf);
       avail += 2;

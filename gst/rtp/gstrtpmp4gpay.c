@@ -181,16 +181,15 @@ static gboolean
 gst_rtp_mp4g_pay_parse_audio_config (GstRtpMP4GPay * rtpmp4gpay,
     GstBuffer * buffer)
 {
-  guint8 *data;
-  gsize size;
+  GstMapInfo map;
   guint8 objectType = 0;
   guint8 samplingIdx = 0;
   guint8 channelCfg = 0;
   GstBitReader br;
 
-  data = gst_buffer_map (buffer, &size, NULL, GST_MAP_READ);
+  gst_buffer_map (buffer, &map, GST_MAP_READ);
 
-  gst_bit_reader_init (&br, data, size);
+  gst_bit_reader_init (&br, map.data, map.size);
 
   /* any object type is fine, we need to copy it to the profile-level-id field. */
   if (!gst_bit_reader_get_bits_uint8 (&br, &objectType, 5))
@@ -261,7 +260,7 @@ gst_rtp_mp4g_pay_parse_audio_config (GstRtpMP4GPay * rtpmp4gpay,
       objectType, samplingIdx, rtpmp4gpay->rate, channelCfg,
       rtpmp4gpay->frame_len);
 
-  gst_buffer_unmap (buffer, data, -1);
+  gst_buffer_unmap (buffer, &map);
   return TRUE;
 
   /* ERROR */
@@ -269,28 +268,28 @@ too_short:
   {
     GST_ELEMENT_ERROR (rtpmp4gpay, STREAM, FORMAT,
         (NULL), ("config string too short"));
-    gst_buffer_unmap (buffer, data, -1);
+    gst_buffer_unmap (buffer, &map);
     return FALSE;
   }
 invalid_object:
   {
     GST_ELEMENT_ERROR (rtpmp4gpay, STREAM, FORMAT,
         (NULL), ("invalid object type"));
-    gst_buffer_unmap (buffer, data, -1);
+    gst_buffer_unmap (buffer, &map);
     return FALSE;
   }
 wrong_freq:
   {
     GST_ELEMENT_ERROR (rtpmp4gpay, STREAM, NOT_IMPLEMENTED,
         (NULL), ("unsupported frequency index %d", samplingIdx));
-    gst_buffer_unmap (buffer, data, -1);
+    gst_buffer_unmap (buffer, &map);
     return FALSE;
   }
 wrong_channels:
   {
     GST_ELEMENT_ERROR (rtpmp4gpay, STREAM, NOT_IMPLEMENTED,
         (NULL), ("unsupported number of channels %d, must < 8", channelCfg));
-    gst_buffer_unmap (buffer, data, -1);
+    gst_buffer_unmap (buffer, &map);
     return FALSE;
   }
 }
@@ -301,21 +300,20 @@ static gboolean
 gst_rtp_mp4g_pay_parse_video_config (GstRtpMP4GPay * rtpmp4gpay,
     GstBuffer * buffer)
 {
-  guint8 *data;
-  gsize size;
+  GstMapInfo map;
   guint32 code;
 
-  data = gst_buffer_map (buffer, &size, NULL, GST_MAP_READ);
+  gst_buffer_map (buffer, &map, GST_MAP_READ);
 
-  if (size < 5)
+  if (map.size < 5)
     goto too_short;
 
-  code = GST_READ_UINT32_BE (data);
+  code = GST_READ_UINT32_BE (map.data);
 
   g_free (rtpmp4gpay->profile);
   if (code == VOS_STARTCODE) {
     /* get profile */
-    rtpmp4gpay->profile = g_strdup_printf ("%d", (gint) data[4]);
+    rtpmp4gpay->profile = g_strdup_printf ("%d", (gint) map.data[4]);
   } else {
     GST_ELEMENT_WARNING (rtpmp4gpay, STREAM, FORMAT,
         (NULL), ("profile not found in config string, assuming \'1\'"));
@@ -333,7 +331,7 @@ gst_rtp_mp4g_pay_parse_video_config (GstRtpMP4GPay * rtpmp4gpay,
 
   GST_LOG_OBJECT (rtpmp4gpay, "profile %s", rtpmp4gpay->profile);
 
-  gst_buffer_unmap (buffer, data, -1);
+  gst_buffer_unmap (buffer, &map);
 
   return TRUE;
 
@@ -342,7 +340,7 @@ too_short:
   {
     GST_ELEMENT_ERROR (rtpmp4gpay, STREAM, FORMAT,
         (NULL), ("config string too short"));
-    gst_buffer_unmap (buffer, data, -1);
+    gst_buffer_unmap (buffer, &map);
     return FALSE;
   }
 }

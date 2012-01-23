@@ -321,14 +321,15 @@ gst_rtp_ac3_pay_handle_buffer (GstRTPBasePayload * basepayload,
 {
   GstRtpAC3Pay *rtpac3pay;
   GstFlowReturn ret;
-  gsize size, avail, left, NF;
-  guint8 *data, *p;
+  gsize avail, left, NF;
+  GstMapInfo map;
+  guint8 *p;
   guint packet_len;
   GstClockTime duration, timestamp;
 
   rtpac3pay = GST_RTP_AC3_PAY (basepayload);
 
-  data = gst_buffer_map (buffer, &size, NULL, GST_MAP_READ);
+  gst_buffer_map (buffer, &map, GST_MAP_READ);
   duration = GST_BUFFER_DURATION (buffer);
   timestamp = GST_BUFFER_TIMESTAMP (buffer);
 
@@ -339,8 +340,8 @@ gst_rtp_ac3_pay_handle_buffer (GstRTPBasePayload * basepayload,
 
   /* count the amount of incomming packets */
   NF = 0;
-  left = size;
-  p = data;
+  left = map.size;
+  p = map.data;
   while (TRUE) {
     guint bsid, fscod, frmsizecod, frame_size;
 
@@ -373,7 +374,7 @@ gst_rtp_ac3_pay_handle_buffer (GstRTPBasePayload * basepayload,
     p += frame_size;
     left -= frame_size;
   }
-  gst_buffer_unmap (buffer, data, size);
+  gst_buffer_unmap (buffer, &map);
   if (NF == 0)
     goto no_frames;
 
@@ -381,7 +382,7 @@ gst_rtp_ac3_pay_handle_buffer (GstRTPBasePayload * basepayload,
 
   /* get packet length of previous data and this new data,
    * payload length includes a 4 byte header */
-  packet_len = gst_rtp_buffer_calc_packet_len (2 + avail + size, 0, 0);
+  packet_len = gst_rtp_buffer_calc_packet_len (2 + avail + map.size, 0, 0);
 
   /* if this buffer is going to overflow the packet, flush what we
    * have. */

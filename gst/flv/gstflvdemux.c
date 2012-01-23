@@ -527,13 +527,12 @@ gst_flv_demux_parse_tag_script (GstFlvDemux * demux, GstBuffer * buffer)
   GstFlowReturn ret = GST_FLOW_OK;
   GstByteReader reader;
   guint8 type = 0;
-  guint8 *data;
-  gsize size;
+  GstMapInfo map;
 
   g_return_val_if_fail (gst_buffer_get_size (buffer) >= 7, GST_FLOW_ERROR);
 
-  data = gst_buffer_map (buffer, &size, NULL, GST_MAP_READ);
-  gst_byte_reader_init (&reader, data, size);
+  gst_buffer_map (buffer, &map, GST_MAP_READ);
+  gst_byte_reader_init (&reader, map.data, map.size);
 
   gst_byte_reader_skip (&reader, 7);
 
@@ -620,7 +619,7 @@ gst_flv_demux_parse_tag_script (GstFlvDemux * demux, GstBuffer * buffer)
   }
 
 cleanup:
-  gst_buffer_unmap (buffer, data, -1);
+  gst_buffer_unmap (buffer, &map);
 
   return ret;
 }
@@ -662,30 +661,30 @@ gst_flv_demux_audio_negotiate (GstFlvDemux * demux, guint32 codec_tag,
       break;
     case 10:
     {
-      guint8 *data = NULL;
-      gsize size;
+      if (demux->audio_codec_data) {
+        GstMapInfo map;
 
-      if (demux->audio_codec_data)
-        data = gst_buffer_map (demux->audio_codec_data, &size, NULL,
-            GST_MAP_READ);
-      /* use codec-data to extract and verify samplerate */
-      if (demux->audio_codec_data && size >= 2) {
-        gint freq_index;
+        gst_buffer_map (demux->audio_codec_data, &map, GST_MAP_READ);
 
-        freq_index = GST_READ_UINT16_BE (data);
-        freq_index = (freq_index & 0x0780) >> 7;
-        adjusted_rate =
-            gst_codec_utils_aac_get_sample_rate_from_index (freq_index);
+        /* use codec-data to extract and verify samplerate */
+        if (map.size >= 2) {
+          gint freq_index;
 
-        if (adjusted_rate && (rate != adjusted_rate)) {
-          GST_LOG_OBJECT (demux, "Ajusting AAC sample rate %d -> %d", rate,
-              adjusted_rate);
-        } else {
-          adjusted_rate = rate;
+          freq_index = GST_READ_UINT16_BE (map.data);
+          freq_index = (freq_index & 0x0780) >> 7;
+          adjusted_rate =
+              gst_codec_utils_aac_get_sample_rate_from_index (freq_index);
+
+          if (adjusted_rate && (rate != adjusted_rate)) {
+            GST_LOG_OBJECT (demux, "Ajusting AAC sample rate %d -> %d", rate,
+                adjusted_rate);
+          } else {
+            adjusted_rate = rate;
+          }
         }
+        gst_buffer_unmap (demux->audio_codec_data, &map);
       }
-      if (data)
-        gst_buffer_unmap (demux->audio_codec_data, data, -1);
+
       caps = gst_caps_new_simple ("audio/mpeg",
           "mpegversion", G_TYPE_INT, 4, "framed", G_TYPE_BOOLEAN, TRUE,
           "stream-format", G_TYPE_STRING, "raw", NULL);
@@ -811,9 +810,9 @@ gst_flv_demux_parse_tag_audio (GstFlvDemux * demux, GstBuffer * buffer)
   guint32 pts = 0, codec_tag = 0, rate = 5512, width = 8, channels = 1;
   guint32 codec_data = 0, pts_ext = 0;
   guint8 flags = 0;
-  guint8 *data;
+  GstMapInfo map;
   GstBuffer *outbuf;
-  gsize size;
+  guint8 *data;
 
   GST_LOG_OBJECT (demux, "parsing an audio tag");
 
@@ -833,7 +832,8 @@ gst_flv_demux_parse_tag_audio (GstFlvDemux * demux, GstBuffer * buffer)
     return GST_FLOW_ERROR;
   }
 
-  data = gst_buffer_map (buffer, &size, NULL, GST_MAP_READ);
+  gst_buffer_map (buffer, &map, GST_MAP_READ);
+  data = map.data;
 
   /* Grab information about audio tag */
   pts = GST_READ_UINT24_BE (data);
@@ -849,7 +849,7 @@ gst_flv_demux_parse_tag_audio (GstFlvDemux * demux, GstBuffer * buffer)
   flags = GST_READ_UINT8 (data + 7);
 
   /* Silently skip buffers with no data */
-  if (size == 11)
+  if (map.size == 11)
     goto beach;
 
   /* Channels */
@@ -1094,7 +1094,7 @@ gst_flv_demux_parse_tag_audio (GstFlvDemux * demux, GstBuffer * buffer)
   demux->audio_linked = TRUE;
 
 beach:
-  gst_buffer_unmap (buffer, data, -1);
+  gst_buffer_unmap (buffer, &map);
 
   return ret;
 }
@@ -1197,9 +1197,9 @@ gst_flv_demux_parse_tag_video (GstFlvDemux * demux, GstBuffer * buffer)
   guint32 pts = 0, codec_data = 1, pts_ext = 0;
   gboolean keyframe = FALSE;
   guint8 flags = 0, codec_tag = 0;
-  guint8 *data;
   GstBuffer *outbuf;
-  gsize size;
+  GstMapInfo map;
+  guint8 *data;
 
   g_return_val_if_fail (gst_buffer_get_size (buffer) == demux->tag_size,
       GST_FLOW_ERROR);
@@ -1217,7 +1217,8 @@ gst_flv_demux_parse_tag_video (GstFlvDemux * demux, GstBuffer * buffer)
     return GST_FLOW_ERROR;
   }
 
-  data = gst_buffer_map (buffer, &size, NULL, GST_MAP_READ);
+  gst_buffer_map (buffer, &map, GST_MAP_READ);
+  data = map.data;
 
   /* Grab information about video tag */
   pts = GST_READ_UINT24_BE (data);
@@ -1474,7 +1475,7 @@ gst_flv_demux_parse_tag_video (GstFlvDemux * demux, GstBuffer * buffer)
   demux->video_linked = TRUE;
 
 beach:
-  gst_buffer_unmap (buffer, data, -1);
+  gst_buffer_unmap (buffer, &map);
   return ret;
 }
 
@@ -1487,13 +1488,16 @@ gst_flv_demux_parse_tag_timestamp (GstFlvDemux * demux, gboolean index,
   guint8 type;
   gboolean keyframe = TRUE;
   GstClockTime ret = GST_CLOCK_TIME_NONE;
-  guint8 *data, *bdata;
+  GstMapInfo map;
+  guint8 *data;
   gsize size;
 
   g_return_val_if_fail (gst_buffer_get_size (buffer) >= 12,
       GST_CLOCK_TIME_NONE);
 
-  data = bdata = gst_buffer_map (buffer, &size, NULL, GST_MAP_READ);
+  gst_buffer_map (buffer, &map, GST_MAP_READ);
+  data = map.data;
+  size = map.size;
 
   type = data[0];
 
@@ -1550,7 +1554,7 @@ gst_flv_demux_parse_tag_timestamp (GstFlvDemux * demux, gboolean index,
     demux->duration = ret;
 
 exit:
-  gst_buffer_unmap (buffer, bdata, -1);
+  gst_buffer_unmap (buffer, &map);
   return ret;
 }
 
@@ -1559,13 +1563,13 @@ gst_flv_demux_parse_tag_type (GstFlvDemux * demux, GstBuffer * buffer)
 {
   GstFlowReturn ret = GST_FLOW_OK;
   guint8 tag_type = 0;
-  guint8 *data;
+  GstMapInfo map;
 
   g_return_val_if_fail (gst_buffer_get_size (buffer) >= 4, GST_FLOW_ERROR);
 
-  data = gst_buffer_map (buffer, NULL, NULL, GST_MAP_READ);
+  gst_buffer_map (buffer, &map, GST_MAP_READ);
 
-  tag_type = data[0];
+  tag_type = map.data[0];
 
   switch (tag_type) {
     case 9:
@@ -1585,13 +1589,13 @@ gst_flv_demux_parse_tag_type (GstFlvDemux * demux, GstBuffer * buffer)
 
   /* Tag size is 1 byte of type + 3 bytes of size + 7 bytes + tag data size +
    * 4 bytes of previous tag size */
-  demux->tag_data_size = GST_READ_UINT24_BE (data + 1);
+  demux->tag_data_size = GST_READ_UINT24_BE (map.data + 1);
   demux->tag_size = demux->tag_data_size + 11;
 
   GST_LOG_OBJECT (demux, "tag data size is %" G_GUINT64_FORMAT,
       demux->tag_data_size);
 
-  gst_buffer_unmap (buffer, data, -1);
+  gst_buffer_unmap (buffer, &map);
 
   return ret;
 }
@@ -1600,14 +1604,14 @@ static GstFlowReturn
 gst_flv_demux_parse_header (GstFlvDemux * demux, GstBuffer * buffer)
 {
   GstFlowReturn ret = GST_FLOW_OK;
-  guint8 *data;
+  GstMapInfo map;
 
   g_return_val_if_fail (gst_buffer_get_size (buffer) >= 9, GST_FLOW_ERROR);
 
-  data = gst_buffer_map (buffer, NULL, NULL, GST_MAP_READ);
+  gst_buffer_map (buffer, &map, GST_MAP_READ);
 
   /* Check for the FLV tag */
-  if (data[0] == 'F' && data[1] == 'L' && data[2] == 'V') {
+  if (map.data[0] == 'F' && map.data[1] == 'L' && map.data[2] == 'V') {
     GST_DEBUG_OBJECT (demux, "FLV header detected");
   } else {
     if (G_UNLIKELY (demux->strict)) {
@@ -1619,7 +1623,7 @@ gst_flv_demux_parse_header (GstFlvDemux * demux, GstBuffer * buffer)
 
   /* Now look at audio/video flags */
   {
-    guint8 flags = data[4];
+    guint8 flags = map.data[4];
 
     demux->has_video = demux->has_audio = FALSE;
 
@@ -1640,7 +1644,7 @@ gst_flv_demux_parse_header (GstFlvDemux * demux, GstBuffer * buffer)
   demux->need_header = FALSE;
 
 beach:
-  gst_buffer_unmap (buffer, data, -1);
+  gst_buffer_unmap (buffer, &map);
   return ret;
 }
 
@@ -2262,7 +2266,7 @@ gst_flv_demux_get_metadata (GstFlvDemux * demux)
   gint64 ret = 0, offset;
   size_t tag_size, size;
   GstBuffer *buffer = NULL;
-  guint8 *data;
+  GstMapInfo map;
 
   if (!gst_pad_peer_query_duration (demux->sinkpad, GST_FORMAT_BYTES, &offset))
     goto exit;
@@ -2277,9 +2281,9 @@ gst_flv_demux_get_metadata (GstFlvDemux * demux)
           4, &buffer))
     goto exit;
 
-  data = gst_buffer_map (buffer, NULL, NULL, GST_MAP_READ);
-  tag_size = GST_READ_UINT32_BE (data);
-  gst_buffer_unmap (buffer, data, -1);
+  gst_buffer_map (buffer, &map, GST_MAP_READ);
+  tag_size = GST_READ_UINT32_BE (map.data);
+  gst_buffer_unmap (buffer, &map);
   GST_DEBUG_OBJECT (demux, "last tag size: %" G_GSIZE_FORMAT, tag_size);
   gst_buffer_unref (buffer);
   buffer = NULL;
@@ -2290,10 +2294,10 @@ gst_flv_demux_get_metadata (GstFlvDemux * demux)
     goto exit;
 
   /* a consistency check */
-  data = gst_buffer_map (buffer, NULL, NULL, GST_MAP_READ);
-  size = GST_READ_UINT24_BE (data + 1);
+  gst_buffer_map (buffer, &map, GST_MAP_READ);
+  size = GST_READ_UINT24_BE (map.data + 1);
   if (size != tag_size - 11) {
-    gst_buffer_unmap (buffer, data, -1);
+    gst_buffer_unmap (buffer, &map);
     GST_DEBUG_OBJECT (demux,
         "tag size %" G_GSIZE_FORMAT ", expected %" G_GSIZE_FORMAT
         ", corrupt or truncated file", size, tag_size - 11);
@@ -2304,8 +2308,8 @@ gst_flv_demux_get_metadata (GstFlvDemux * demux)
   gst_flv_demux_parse_tag_timestamp (demux, FALSE, buffer, &size);
 
   /* maybe get some more metadata */
-  if (data[0] == 18) {
-    gst_buffer_unmap (buffer, data, -1);
+  if (map.data[0] == 18) {
+    gst_buffer_unmap (buffer, &map);
     gst_buffer_unref (buffer);
     buffer = NULL;
     GST_DEBUG_OBJECT (demux, "script tag, pulling it to parse");
@@ -2314,7 +2318,7 @@ gst_flv_demux_get_metadata (GstFlvDemux * demux)
             tag_size, &buffer))
       gst_flv_demux_parse_tag_script (demux, buffer);
   } else {
-    gst_buffer_unmap (buffer, data, -1);
+    gst_buffer_unmap (buffer, &map);
   }
 
 exit:

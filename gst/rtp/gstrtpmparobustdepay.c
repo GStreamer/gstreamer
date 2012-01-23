@@ -273,8 +273,7 @@ gst_rtp_mpa_robust_depay_generate_dummy_frame (GstRtpMPARobustDepay *
     rtpmpadepay, GstADUFrame * frame)
 {
   GstADUFrame *dummy;
-  guint8 *data;
-  gsize size;
+  GstMapInfo map;
 
   dummy = g_slice_dup (GstADUFrame, frame);
 
@@ -288,10 +287,10 @@ gst_rtp_mpa_robust_depay_generate_dummy_frame (GstRtpMPARobustDepay *
 
   dummy->buffer = gst_buffer_new_and_alloc (dummy->side_info + 4);
 
-  data = gst_buffer_map (dummy->buffer, &size, NULL, GST_MAP_WRITE);
-  memset (data, 0, size);
-  GST_WRITE_UINT32_BE (data, dummy->header);
-  gst_buffer_unmap (dummy->buffer, data, size);
+  gst_buffer_map (dummy->buffer, &map, GST_MAP_WRITE);
+  memset (map.data, 0, map.size);
+  GST_WRITE_UINT32_BE (map.data, dummy->header);
+  gst_buffer_unmap (dummy->buffer, &map);
 
   GST_BUFFER_TIMESTAMP (dummy->buffer) = GST_BUFFER_TIMESTAMP (frame->buffer);
 
@@ -308,18 +307,17 @@ gst_rtp_mpa_robust_depay_queue_frame (GstRtpMPARobustDepay * rtpmpadepay,
   GstADUFrame *frame = NULL;
   guint version, layer, channels, size;
   guint crc;
-  guint8 *bdata;
-  gsize bsize;
+  GstMapInfo map;
 
   g_return_val_if_fail (buf != NULL, FALSE);
 
-  bdata = gst_buffer_map (buf, &bsize, NULL, GST_MAP_READ);
+  gst_buffer_map (buf, &map, GST_MAP_READ);
 
-  if (bsize < 6)
+  if (map.size < 6)
     goto corrupt_frame;
 
   frame = g_slice_new0 (GstADUFrame);
-  frame->header = GST_READ_UINT32_BE (bdata);
+  frame->header = GST_READ_UINT32_BE (map.data);
 
   size = mp3_type_frame_length_from_header (GST_ELEMENT_CAST (rtpmpadepay),
       frame->header, &version, &layer, &channels, NULL, NULL, NULL, &crc);
@@ -341,7 +339,7 @@ gst_rtp_mpa_robust_depay_queue_frame (GstRtpMPARobustDepay * rtpmpadepay,
 
   /* backpointer */
   if (layer == 3) {
-    frame->backpointer = GST_READ_UINT16_BE (bdata + 4);
+    frame->backpointer = GST_READ_UINT16_BE (map.data + 4);
     frame->backpointer >>= 7;
     GST_LOG_OBJECT (rtpmpadepay, "backpointer: %d", frame->backpointer);
   }
@@ -353,15 +351,15 @@ gst_rtp_mpa_robust_depay_queue_frame (GstRtpMPARobustDepay * rtpmpadepay,
   frame->data_size = frame->size - 4 - frame->side_info;
 
   /* some size validation checks */
-  if (4 + frame->side_info > bsize)
+  if (4 + frame->side_info > map.size)
     goto corrupt_frame;
 
   /* ADU data would then extend past MP3 frame,
    * even using past byte reservoir */
-  if (-frame->backpointer + (gint) (bsize) > frame->size)
+  if (-frame->backpointer + (gint) (map.size) > frame->size)
     goto corrupt_frame;
 
-  gst_buffer_unmap (buf, bdata, bsize);
+  gst_buffer_unmap (buf, &map);
 
   /* ok, take buffer and queue */
   frame->buffer = buf;
@@ -373,7 +371,7 @@ gst_rtp_mpa_robust_depay_queue_frame (GstRtpMPARobustDepay * rtpmpadepay,
 corrupt_frame:
   {
     GST_DEBUG_OBJECT (rtpmpadepay, "frame is corrupt");
-    gst_buffer_unmap (buf, bdata, bsize);
+    gst_buffer_unmap (buf, &map);
     gst_buffer_unref (buf);
     if (frame)
       g_slice_free (GstADUFrame, frame);
@@ -413,13 +411,12 @@ gst_rtp_mpa_robust_depay_deinterleave (GstRtpMPARobustDepay * rtpmpadepay,
     GstBuffer * buf)
 {
   gboolean ret = FALSE;
-  guint8 *data;
-  gsize size;
+  GstMapInfo map;
   guint val, iindex, icc;
 
-  data = gst_buffer_map (buf, &size, NULL, GST_MAP_READ);
-  val = GST_READ_UINT16_BE (data) >> 5;
-  gst_buffer_unmap (buf, data, size);
+  gst_buffer_map (buf, &map, GST_MAP_READ);
+  val = GST_READ_UINT16_BE (map.data) >> 5;
+  gst_buffer_unmap (buf, &map);
 
   iindex = val >> 3;
   icc = val & 0x7;
@@ -476,8 +473,7 @@ gst_rtp_mpa_robust_depay_push_mp3_frames (GstRtpMPARobustDepay * rtpmpadepay)
   GstFlowReturn ret = GST_FLOW_OK;
 
   while (1) {
-    guint8 *data;
-    gsize size;
+    GstMapInfo map;
 
     if (G_UNLIKELY (!rtpmpadepay->cur_adu_frame)) {
       rtpmpadepay->cur_adu_frame = rtpmpadepay->adu_frames->head;
@@ -533,10 +529,10 @@ gst_rtp_mpa_robust_depay_push_mp3_frames (GstRtpMPARobustDepay * rtpmpadepay)
       gst_byte_writer_set_pos (rtpmpadepay->mp3_frame, 0);
       /* bytewriter corresponds to head frame,
        * i.e. the header and the side info must match */
-      data = gst_buffer_map (head->buffer, &size, NULL, GST_MAP_READ);
+      gst_buffer_map (head->buffer, &map, GST_MAP_READ);
       gst_byte_writer_put_data (rtpmpadepay->mp3_frame,
-          data, 4 + head->side_info);
-      gst_buffer_unmap (head->buffer, data, size);
+          map.data, 4 + head->side_info);
+      gst_buffer_unmap (head->buffer, &map);
     }
 
     buf = frame->buffer;
@@ -546,17 +542,17 @@ gst_rtp_mpa_robust_depay_push_mp3_frames (GstRtpMPARobustDepay * rtpmpadepay)
         rtpmpadepay->size);
 
     if (rtpmpadepay->offset) {
-      data = gst_buffer_map (buf, &size, NULL, GST_MAP_READ);
+      gst_buffer_map (buf, &map, GST_MAP_READ);
       /* no need to position, simply append */
-      g_assert (size > rtpmpadepay->offset);
-      av = MIN (av, size - rtpmpadepay->offset);
+      g_assert (map.size > rtpmpadepay->offset);
+      av = MIN (av, map.size - rtpmpadepay->offset);
       GST_LOG_OBJECT (rtpmpadepay,
           "appending %d bytes from ADU frame at offset %d", av,
           rtpmpadepay->offset);
       gst_byte_writer_put_data (rtpmpadepay->mp3_frame,
-          data + rtpmpadepay->offset, av);
+          map.data + rtpmpadepay->offset, av);
       rtpmpadepay->offset += av;
-      gst_buffer_unmap (buf, data, size);
+      gst_buffer_unmap (buf, &map);
     } else {
       gint pos, tpos;
 
@@ -594,14 +590,14 @@ gst_rtp_mpa_robust_depay_push_mp3_frames (GstRtpMPARobustDepay * rtpmpadepay)
         gst_byte_writer_set_pos (rtpmpadepay->mp3_frame, pos + av);
       } else {
         /* position and append */
-        data = gst_buffer_map (buf, &size, NULL, GST_MAP_READ);
+        gst_buffer_map (buf, &map, GST_MAP_READ);
         GST_LOG_OBJECT (rtpmpadepay, "adding to current MP3 frame");
         gst_byte_writer_set_pos (rtpmpadepay->mp3_frame, tpos);
-        av = MIN (av, size - 4 - frame->side_info);
+        av = MIN (av, map.size - 4 - frame->side_info);
         gst_byte_writer_put_data (rtpmpadepay->mp3_frame,
-            data + 4 + frame->side_info, av);
+            map.data + 4 + frame->side_info, av);
         rtpmpadepay->offset += av + 4 + frame->side_info;
-        gst_buffer_unmap (buf, data, size);
+        gst_buffer_unmap (buf, &map);
       }
     }
 

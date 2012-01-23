@@ -221,8 +221,8 @@ static GstFlowReturn
 gst_break_my_data_transform_ip (GstBaseTransform * trans, GstBuffer * buf)
 {
   GstBreakMyData *bmd = GST_BREAK_MY_DATA (trans);
-  guint8 *data;
-  gsize i, size;
+  GstMapInfo map;
+  gsize i;
 
   g_return_val_if_fail (gst_buffer_is_writable (buf), GST_FLOW_ERROR);
 
@@ -234,14 +234,14 @@ gst_break_my_data_transform_ip (GstBaseTransform * trans, GstBuffer * buf)
     i = 0;
   }
 
-  data = gst_buffer_map (buf, &size, NULL, GST_MAP_READWRITE);
+  gst_buffer_map (buf, &map, GST_MAP_READWRITE);
 
   GST_LOG_OBJECT (bmd,
       "got buffer %p (size %" G_GSIZE_FORMAT ", timestamp %" G_GUINT64_FORMAT
-      ", offset %" G_GUINT64_FORMAT "", buf, size, GST_BUFFER_TIMESTAMP (buf),
-      GST_BUFFER_OFFSET (buf));
+      ", offset %" G_GUINT64_FORMAT "", buf, map.size,
+      GST_BUFFER_TIMESTAMP (buf), GST_BUFFER_OFFSET (buf));
 
-  for (; i < size; i++) {
+  for (; i < map.size; i++) {
     if (g_rand_double_range (bmd->rand, 0, 1.0) <= bmd->probability) {
       guint8 new;
 
@@ -252,14 +252,14 @@ gst_break_my_data_transform_ip (GstBaseTransform * trans, GstBuffer * buf)
       }
       GST_INFO_OBJECT (bmd,
           "changing byte %" G_GSIZE_FORMAT " from 0x%02X to 0x%02X", i,
-          (guint) GST_READ_UINT8 (data + i), (guint) ((guint8) new));
-      data[i] = new;
+          (guint) GST_READ_UINT8 (map.data + i), (guint) ((guint8) new));
+      map.data[i] = new;
     }
   }
   /* don't overflow */
-  bmd->skipped += MIN (G_MAXUINT - bmd->skipped, size);
+  bmd->skipped += MIN (G_MAXUINT - bmd->skipped, map.size);
 
-  gst_buffer_unmap (buf, data, size);
+  gst_buffer_unmap (buf, &map);
 
   GST_OBJECT_UNLOCK (bmd);
 

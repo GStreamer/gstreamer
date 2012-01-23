@@ -328,24 +328,23 @@ static gboolean
 gst_ape_demux_identify_tag (GstTagDemux * demux, GstBuffer * buffer,
     gboolean start_tag, guint * tag_size)
 {
-  guint8 *data;
-  gsize size;
+  GstMapInfo map;
 
-  data = gst_buffer_map (buffer, &size, NULL, GST_MAP_READ);
+  gst_buffer_map (buffer, &map, GST_MAP_READ);
 
-  if (memcmp (data, "APETAGEX", 8) != 0) {
+  if (memcmp (map.data, "APETAGEX", 8) != 0) {
     GST_DEBUG_OBJECT (demux, "No APETAGEX marker at %s - not an APE file",
         (start_tag) ? "start" : "end");
-    gst_buffer_unmap (buffer, data, size);
+    gst_buffer_unmap (buffer, &map);
     return FALSE;
   }
 
-  *tag_size = GST_READ_UINT32_LE (data + 12);
+  *tag_size = GST_READ_UINT32_LE (map.data + 12);
 
   /* size is without header, so add 32 to account for that */
   *tag_size += 32;
 
-  gst_buffer_unmap (buffer, data, size);
+  gst_buffer_unmap (buffer, &map);
 
   return TRUE;
 }
@@ -354,15 +353,18 @@ static GstTagDemuxResult
 gst_ape_demux_parse_tag (GstTagDemux * demux, GstBuffer * buffer,
     gboolean start_tag, guint * tag_size, GstTagList ** tags)
 {
-  guint8 *data_start, *data;
+  guint8 *data;
   guint8 *footer;
   gboolean have_header;
   gboolean end_tag = !start_tag;
   GstCaps *sink_caps;
   guint version, footer_size;
+  GstMapInfo map;
   gsize size;
 
-  data_start = data = gst_buffer_map (buffer, &size, NULL, GST_MAP_READ);
+  gst_buffer_map (buffer, &map, GST_MAP_READ);
+  data = map.data;
+  size = map.size;
 
   GST_LOG_OBJECT (demux, "Parsing buffer of size %" G_GSIZE_FORMAT, size);
 
@@ -425,7 +427,7 @@ gst_ape_demux_parse_tag (GstTagDemux * demux, GstBuffer * buffer,
       GST_TAG_CONTAINER_FORMAT, sink_caps);
   gst_caps_unref (sink_caps);
 
-  gst_buffer_unmap (buffer, data_start, size);
+  gst_buffer_unmap (buffer, &map);
 
   return GST_TAG_DEMUX_RESULT_OK;
 }

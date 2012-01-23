@@ -1615,16 +1615,18 @@ gst_matroska_read_common_peek_bytes (GstMatroskaReadCommon * common, guint64
         *p_buf = gst_buffer_copy_region (common->cached_buffer,
             GST_BUFFER_COPY_ALL, common->offset - cache_offset, size);
       if (bytes) {
-        if (!common->cached_data)
-          common->cached_data = gst_buffer_map (common->cached_buffer,
-              NULL, NULL, GST_MAP_READ);
+        if (!common->cached_data) {
+          gst_buffer_map (common->cached_buffer, &common->cached_map,
+              GST_MAP_READ);
+          common->cached_data = common->cached_map.data;
+        }
         *bytes = common->cached_data + common->offset - cache_offset;
       }
       return GST_FLOW_OK;
     }
     /* not enough data in the cache, free cache and get a new one */
     if (common->cached_data) {
-      gst_buffer_unmap (common->cached_buffer, common->cached_data, -1);
+      gst_buffer_unmap (common->cached_buffer, &common->cached_map);
       common->cached_data = NULL;
     }
     gst_buffer_unref (common->cached_buffer);
@@ -1644,8 +1646,8 @@ gst_matroska_read_common_peek_bytes (GstMatroskaReadCommon * common, guint64
       *p_buf = gst_buffer_copy_region (common->cached_buffer,
           GST_BUFFER_COPY_ALL, 0, size);
     if (bytes) {
-      common->cached_data = gst_buffer_map (common->cached_buffer,
-          NULL, NULL, GST_MAP_READ);
+      gst_buffer_map (common->cached_buffer, &common->cached_map, GST_MAP_READ);
+      common->cached_data = common->cached_map.data;
       *bytes = common->cached_data;
     }
     return GST_FLOW_OK;
@@ -1686,8 +1688,8 @@ gst_matroska_read_common_peek_bytes (GstMatroskaReadCommon * common, guint64
     *p_buf = gst_buffer_copy_region (common->cached_buffer,
         GST_BUFFER_COPY_ALL, 0, size);
   if (bytes) {
-    common->cached_data = gst_buffer_map (common->cached_buffer,
-        NULL, NULL, GST_MAP_READ);
+    gst_buffer_map (common->cached_buffer, &common->cached_map, GST_MAP_READ);
+    common->cached_data = common->cached_map.data;
     *bytes = common->cached_data;
   }
 

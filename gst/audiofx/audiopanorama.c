@@ -626,8 +626,7 @@ gst_audio_panorama_transform (GstBaseTransform * base, GstBuffer * inbuf,
 {
   GstAudioPanorama *filter = GST_AUDIO_PANORAMA (base);
   GstClockTime timestamp, stream_time;
-  guint8 *indata, *outdata;
-  gsize insize, outsize;
+  GstMapInfo inmap, outmap;
 
   timestamp = GST_BUFFER_TIMESTAMP (inbuf);
   stream_time =
@@ -639,20 +638,20 @@ gst_audio_panorama_transform (GstBaseTransform * base, GstBuffer * inbuf,
   if (GST_CLOCK_TIME_IS_VALID (stream_time))
     gst_object_sync_values (GST_OBJECT (filter), stream_time);
 
-  indata = gst_buffer_map (inbuf, &insize, NULL, GST_MAP_READ);
-  outdata = gst_buffer_map (outbuf, &outsize, NULL, GST_MAP_WRITE);
+  gst_buffer_map (inbuf, &inmap, GST_MAP_READ);
+  gst_buffer_map (outbuf, &outmap, GST_MAP_WRITE);
 
   if (G_UNLIKELY (GST_BUFFER_FLAG_IS_SET (inbuf, GST_BUFFER_FLAG_GAP))) {
     GST_BUFFER_FLAG_SET (outbuf, GST_BUFFER_FLAG_GAP);
-    memset (outdata, 0, outsize);
+    memset (outmap.data, 0, outmap.size);
   } else {
-    guint num_samples = outsize / GST_AUDIO_INFO_BPF (&filter->info);
+    guint num_samples = outmap.size / GST_AUDIO_INFO_BPF (&filter->info);
 
-    filter->process (filter, indata, outdata, num_samples);
+    filter->process (filter, inmap.data, outmap.data, num_samples);
   }
 
-  gst_buffer_unmap (inbuf, indata, insize);
-  gst_buffer_unmap (outbuf, outdata, outsize);
+  gst_buffer_unmap (inbuf, &inmap);
+  gst_buffer_unmap (outbuf, &outmap);
 
   return GST_FLOW_OK;
 }

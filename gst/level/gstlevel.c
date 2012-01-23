@@ -534,7 +534,8 @@ static GstFlowReturn
 gst_level_transform_ip (GstBaseTransform * trans, GstBuffer * in)
 {
   GstLevel *filter;
-  guint8 *in_data, *data;
+  GstMapInfo map;
+  guint8 *in_data;
   gsize in_size;
   gdouble CS;
   guint i;
@@ -550,7 +551,10 @@ gst_level_transform_ip (GstBaseTransform * trans, GstBuffer * in)
   bps = GST_AUDIO_INFO_BPS (&filter->info);
   rate = GST_AUDIO_INFO_RATE (&filter->info);
 
-  in_data = data = gst_buffer_map (in, &in_size, NULL, GST_MAP_READ);
+  gst_buffer_map (in, &map, GST_MAP_READ);
+  in_data = map.data;
+  in_size = map.size;
+
   num_int_samples = in_size / bps;
 
   GST_LOG_OBJECT (filter, "analyzing %u sample frames at ts %" GST_TIME_FORMAT,
@@ -678,7 +682,7 @@ gst_level_transform_ip (GstBaseTransform * trans, GstBuffer * in)
     filter->num_frames = 0;
   }
 
-  gst_buffer_unmap (in, data, in_size);
+  gst_buffer_unmap (in, &map);
 
   return GST_FLOW_OK;
 }

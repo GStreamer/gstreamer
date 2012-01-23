@@ -164,7 +164,6 @@ gst_ebml_read_init (GstEbmlRead * ebml, GstElement * el, GstBuffer * buf,
     guint64 offset)
 {
   GstEbmlMaster m;
-  gsize buf_size;
 
   g_return_if_fail (el);
   g_return_if_fail (buf);
@@ -172,10 +171,10 @@ gst_ebml_read_init (GstEbmlRead * ebml, GstElement * el, GstBuffer * buf,
   ebml->el = el;
   ebml->offset = offset;
   ebml->buf = buf;
-  ebml->buf_data = gst_buffer_map (buf, &buf_size, NULL, GST_MAP_READ);
+  gst_buffer_map (buf, &ebml->map, GST_MAP_READ);
   ebml->readers = g_array_sized_new (FALSE, FALSE, sizeof (GstEbmlMaster), 10);
   m.offset = ebml->offset;
-  gst_byte_reader_init (&m.br, ebml->buf_data, buf_size);
+  gst_byte_reader_init (&m.br, ebml->map.data, ebml->map.size);
   g_array_append_val (ebml->readers, m);
 }
 
@@ -186,7 +185,7 @@ gst_ebml_read_clear (GstEbmlRead * ebml)
     g_array_free (ebml->readers, TRUE);
   ebml->readers = NULL;
   if (ebml->buf) {
-    gst_buffer_unmap (ebml->buf, ebml->buf_data, -1);
+    gst_buffer_unmap (ebml->buf, &ebml->map);
     gst_buffer_unref (ebml->buf);
   }
   ebml->buf = NULL;

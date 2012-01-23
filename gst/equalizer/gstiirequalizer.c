@@ -820,8 +820,7 @@ gst_iir_equalizer_transform_ip (GstBaseTransform * btrans, GstBuffer * buf)
   GstAudioFilter *filter = GST_AUDIO_FILTER (btrans);
   GstIirEqualizer *equ = GST_IIR_EQUALIZER (btrans);
   GstClockTime timestamp;
-  guint8 *data;
-  gsize size;
+  GstMapInfo map;
   gint channels = GST_AUDIO_FILTER_CHANNELS (filter);
 
   if (G_UNLIKELY (channels < 1 || equ->process == NULL))
@@ -852,9 +851,9 @@ gst_iir_equalizer_transform_ip (GstBaseTransform * btrans, GstBuffer * buf)
   }
   BANDS_UNLOCK (equ);
 
-  data = gst_buffer_map (buf, &size, NULL, GST_MAP_WRITE);
-  equ->process (equ, data, size, channels);
-  gst_buffer_unmap (buf, data, size);
+  gst_buffer_map (buf, &map, GST_MAP_WRITE);
+  equ->process (equ, map.data, map.size, channels);
+  gst_buffer_unmap (buf, &map);
 
   return GST_FLOW_OK;
 }

@@ -269,6 +269,7 @@ gst_cutter_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
 {
   GstFlowReturn ret = GST_FLOW_OK;
   GstCutter *filter;
+  GstMapInfo map;
   gint16 *in_data;
   gint bpf, rate;
   gsize in_size;
@@ -287,7 +288,9 @@ gst_cutter_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
   bpf = GST_AUDIO_INFO_BPF (&filter->info);
   rate = GST_AUDIO_INFO_RATE (&filter->info);
 
-  in_data = gst_buffer_map (buf, &in_size, NULL, GST_MAP_READ);
+  gst_buffer_map (buf, &map, GST_MAP_READ);
+  in_data = (gint16 *) map.data;
+  in_size = map.size;
 
   GST_LOG_OBJECT (filter, "length of prerec buffer: %" GST_TIME_FORMAT,
       GST_TIME_ARGS (filter->pre_run_length));
@@ -310,7 +313,7 @@ gst_cutter_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
       break;
   }
 
-  gst_buffer_unmap (buf, in_data, in_size);
+  gst_buffer_unmap (buf, &map);
 
   filter->silent_prev = filter->silent;
 

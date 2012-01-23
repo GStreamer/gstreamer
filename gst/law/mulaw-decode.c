@@ -240,6 +240,7 @@ static GstFlowReturn
 gst_mulawdec_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
 {
   GstMuLawDec *mulawdec;
+  GstMapInfo inmap, outmap;
   gint16 *linear_data;
   guint8 *mulaw_data;
   gsize mulaw_size, linear_size;
@@ -251,12 +252,15 @@ gst_mulawdec_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
   if (G_UNLIKELY (mulawdec->rate == 0))
     goto not_negotiated;
 
-  mulaw_data = gst_buffer_map (buffer, &mulaw_size, NULL, GST_MAP_READ);
+  gst_buffer_map (buffer, &inmap, GST_MAP_READ);
+  mulaw_data = inmap.data;
+  mulaw_size = inmap.size;
 
   linear_size = mulaw_size * 2;
 
   outbuf = gst_buffer_new_allocate (NULL, linear_size, 0);
-  linear_data = gst_buffer_map (outbuf, NULL, NULL, GST_MAP_WRITE);
+  gst_buffer_map (outbuf, &outmap, GST_MAP_WRITE);
+  linear_data = (gint16 *) outmap.data;
 
   /* copy discont flag */
   if (GST_BUFFER_FLAG_IS_SET (buffer, GST_BUFFER_FLAG_DISCONT))
@@ -271,8 +275,8 @@ gst_mulawdec_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
 
   mulaw_decode (mulaw_data, linear_data, mulaw_size);
 
-  gst_buffer_unmap (outbuf, linear_data, -1);
-  gst_buffer_unmap (buffer, mulaw_data, -1);
+  gst_buffer_unmap (outbuf, &outmap);
+  gst_buffer_unmap (buffer, &inmap);
   gst_buffer_unref (buffer);
 
   ret = gst_pad_push (mulawdec->srcpad, outbuf);

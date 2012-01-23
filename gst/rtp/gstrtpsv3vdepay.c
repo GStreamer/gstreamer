@@ -200,8 +200,8 @@ gst_rtp_sv3v_depay_process (GstRTPBaseDepayload * depayload, GstBuffer * buf)
   if (G_UNLIKELY (C)) {
     GstCaps *caps;
     GstBuffer *codec_data;
+    GstMapInfo cmap;
     guint8 res;
-    guint8 *cdata;
 
     GST_DEBUG ("Configuration packet");
 
@@ -229,14 +229,12 @@ gst_rtp_sv3v_depay_process (GstRTPBaseDepayload * depayload, GstBuffer * buf)
     /* CodecData needs to be 'SEQH' + len (32bit) + data according to
      * ffmpeg's libavcodec/svq3.c:svq3_decode_init */
     codec_data = gst_buffer_new_and_alloc (payload_len + 6);
-    cdata = gst_buffer_map (codec_data, NULL, NULL, GST_MAP_WRITE);
-    memcpy (cdata, "SEQH", 4);
-    GST_WRITE_UINT32_LE (cdata + 4, payload_len - 2);
-    memcpy (cdata + 8, payload + 2, payload_len - 2);
-
-    GST_MEMDUMP ("codec_data", cdata, gst_buffer_get_size (codec_data));
-
-    gst_buffer_unmap (codec_data, cdata, -1);
+    gst_buffer_map (codec_data, &cmap, GST_MAP_WRITE);
+    memcpy (cmap.data, "SEQH", 4);
+    GST_WRITE_UINT32_LE (cmap.data + 4, payload_len - 2);
+    memcpy (cmap.data + 8, payload + 2, payload_len - 2);
+    GST_MEMDUMP ("codec_data", cmap.data, gst_buffer_get_size (codec_data));
+    gst_buffer_unmap (codec_data, &cmap);
 
     caps = gst_caps_new_simple ("video/x-svq",
         "svqversion", G_TYPE_INT, 3,

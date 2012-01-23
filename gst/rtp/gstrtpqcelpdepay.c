@@ -241,12 +241,12 @@ static GstBuffer *
 create_erasure_buffer (GstRtpQCELPDepay * depay)
 {
   GstBuffer *outbuf;
-  guint8 *data;
+  GstMapInfo map;
 
   outbuf = gst_buffer_new_and_alloc (1);
-  data = gst_buffer_map (outbuf, NULL, NULL, GST_MAP_WRITE);
-  data[0] = 14;
-  gst_buffer_unmap (outbuf, data, -1);
+  gst_buffer_map (outbuf, &map, GST_MAP_WRITE);
+  map.data[0] = 14;
+  gst_buffer_unmap (outbuf, &map);
 
   return outbuf;
 }

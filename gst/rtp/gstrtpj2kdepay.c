@@ -267,8 +267,7 @@ gst_rtp_j2k_depay_flush_tile (GstRTPBaseDepayload * depayload)
   GList *packets, *walk;
   guint8 end[2];
   GstFlowReturn ret = GST_FLOW_OK;
-  guint8 *data;
-  gsize size;
+  GstMapInfo map;
   GstBuffer *buf;
 
   rtpj2kdepay = GST_RTP_J2K_DEPAY (depayload);
@@ -307,12 +306,12 @@ gst_rtp_j2k_depay_flush_tile (GstRTPBaseDepayload * depayload)
 
     if (walk == packets) {
       /* first buffer should contain the SOT */
-      data = gst_buffer_map (buf, &size, NULL, GST_MAP_READ);
+      gst_buffer_map (buf, &map, GST_MAP_READ);
 
-      if (size < 12)
+      if (map.size < 12)
         goto invalid_tile;
 
-      if (data[0] == 0xff && data[1] == J2K_MARKER_SOT) {
+      if (map.data[0] == 0xff && map.data[1] == J2K_MARKER_SOT) {
         guint Psot, nPsot;
 
         if (end[0] == 0xff && end[1] == J2K_MARKER_EOC)
@@ -320,19 +319,19 @@ gst_rtp_j2k_depay_flush_tile (GstRTPBaseDepayload * depayload)
         else
           nPsot = avail;
 
-        Psot = GST_READ_UINT32_BE (&data[6]);
+        Psot = GST_READ_UINT32_BE (&map.data[6]);
         if (Psot != nPsot && Psot != 0) {
           /* Psot must match the size of the tile */
           GST_DEBUG_OBJECT (rtpj2kdepay, "set Psot from %u to %u", Psot, nPsot);
-          gst_buffer_unmap (buf, data, size);
+          gst_buffer_unmap (buf, &map);
 
           buf = gst_buffer_make_writable (buf);
 
-          data = gst_buffer_map (buf, &size, NULL, GST_MAP_WRITE);
-          GST_WRITE_UINT32_BE (&data[6], nPsot);
+          gst_buffer_map (buf, &map, GST_MAP_WRITE);
+          GST_WRITE_UINT32_BE (&map.data[6], nPsot);
         }
       }
-      gst_buffer_unmap (buf, data, size);
+      gst_buffer_unmap (buf, &map);
     }
 
     GST_DEBUG_OBJECT (rtpj2kdepay, "append pu packet of size %" G_GSIZE_FORMAT,
@@ -357,7 +356,7 @@ waiting_header:
 invalid_tile:
   {
     GST_ELEMENT_WARNING (rtpj2kdepay, STREAM, DECODE, ("Invalid tile"), (NULL));
-    gst_buffer_unmap (buf, data, size);
+    gst_buffer_unmap (buf, &map);
     gst_adapter_clear (rtpj2kdepay->t_adapter);
     rtpj2kdepay->last_tile = -1;
     return ret;
