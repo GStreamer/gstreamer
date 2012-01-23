@@ -148,7 +148,8 @@ check_opus =
 endif
 
 if USE_CURL
-check_curl = elements/curlhttpsink
+check_curl = elements/curlhttpsink \
+	elements/curlfilesink
 else
 check_curl =
 endif
