@@ -1045,6 +1045,7 @@ create_pad_for_stream (MpegTSBase * base, MpegTSBaseStream * bstream,
         name = g_strdup_printf ("private_%04x", bstream->pid);
         caps = gst_caps_new_simple ("subpicture/x-dvb", NULL);
         g_free (desc);
+        break;
       }
       /* hack for itv hd (sid 10510, video pid 3401 */
       if (program->program_number == 10510 && bstream->pid == 3401) {
