@@ -18,6 +18,7 @@
 #include <string.h>
 #include <gst/gst.h>
 #include <gst/controller/gstinterpolationcontrolsource.h>
+#include <gst/controller/gstcontrolbindingdirect.h>
 
 static void
 check_position (GstElement * elem, GstQuery * pos, const gchar * info)
