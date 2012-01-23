@@ -518,6 +518,7 @@ gst_h264_parse_hrd_parameters (GstH264HRDParams * hrd, NalReader * nr)
   for (sched_sel_idx = 0; sched_sel_idx <= hrd->cpb_cnt_minus1; sched_sel_idx++) {
     READ_UE (nr, hrd->bit_rate_value_minus1[sched_sel_idx]);
     READ_UE (nr, hrd->cpb_size_value_minus1[sched_sel_idx]);
+    READ_UINT8 (nr, hrd->cbr_flag[sched_sel_idx], 1);
   }
 
   READ_UINT8 (nr, hrd->initial_cpb_removal_delay_length_minus1, 5);
