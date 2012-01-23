@@ -36,6 +36,7 @@
 
 #include <gst/gst.h>
 #include <gst/glib-compat-private.h>
+#include <gst/video/video.h>
 #include "gstdecklink.h"
 #include "gstdecklinksink.h"
 #include <string.h>
@@ -596,10 +597,23 @@ static gboolean
 gst_decklink_sink_videosink_setcaps (GstPad * pad, GstCaps * caps)
 {
   GstDecklinkSink *decklinksink;
+  gboolean ret;
+  GstVideoFormat format;
+  int width;
+  int height;
 
   decklinksink = GST_DECKLINK_SINK (gst_pad_get_parent (pad));
 
   GST_DEBUG_OBJECT (decklinksink, "setcaps");
+
+  ret = gst_video_format_parse_caps (caps, &format, &width, &height);
+  if (ret) {
+    if (format == GST_VIDEO_FORMAT_v210) {
+      decklinksink->pixel_format = bmdFormat10BitYUV;
+    } else {
+      decklinksink->pixel_format = bmdFormat8BitYUV;
+    }
+  }
 
 
   gst_object_unref (decklinksink);
@@ -713,7 +727,7 @@ gst_decklink_sink_videosink_chain (GstPad * pad, GstBuffer * buffer)
   mode = gst_decklink_get_mode (decklinksink->mode);
 
   decklinksink->output->CreateVideoFrame (mode->width,
-      mode->height, mode->width * 2, bmdFormat8BitYUV,
+      mode->height, mode->width * 2, decklinksink->pixel_format,
       bmdFrameFlagDefault, &frame);
 
   frame->GetBytes (&data);
@@ -863,7 +877,6 @@ gst_decklink_sink_audiosink_setcaps (GstPad * pad, GstCaps * caps)
   decklinksink = GST_DECKLINK_SINK (gst_pad_get_parent (pad));
 
   GST_DEBUG_OBJECT (decklinksink, "setcaps");
-
 
   gst_object_unref (decklinksink);
   return TRUE;

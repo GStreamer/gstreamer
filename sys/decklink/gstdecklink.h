@@ -108,7 +108,7 @@ GstCaps * gst_decklink_mode_get_caps (GstDecklinkModeEnum e);
 GstCaps * gst_decklink_mode_get_template_caps (void);
 
 #define GST_DECKLINK_MODE_CAPS(w,h,n,d,i) \
-  "video/x-raw-yuv,format=(fourcc)UYVY,width=" #w ",height=" #h \
+  "video/x-raw-yuv,format=(fourcc){ UYVY, v210 },width=" #w ",height=" #h \
   ",framerate=" #n "/" #d ",interlaced=" #i
 
 #define GST_DECKLINK_CAPS \
