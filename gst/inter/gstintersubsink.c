@@ -146,10 +146,6 @@ gst_inter_sub_sink_init (GstInterSubSink * intersubsink,
     GstInterSubSinkClass * intersubsink_class)
 {
 
-  intersubsink->sinkpad =
-      gst_pad_new_from_static_template (&gst_inter_sub_sink_sink_template,
-      "sink");
-
   intersubsink->surface = gst_inter_surface_get ("default");
 
   intersubsink->fps_n = 1;
