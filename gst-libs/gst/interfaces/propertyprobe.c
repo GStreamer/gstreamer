@@ -105,8 +105,8 @@ gst_property_probe_iface_init (GstPropertyProbeInterface * iface)
  *
  * Get a list of properties for which probing is supported.
  *
- * Returns: the list of properties for which probing is supported
- * by this element.
+ * Returns: the list of #GParamSpec * pointers representing 
+ * properties for which probing is supported by this element.
  */
 const GList *
 gst_property_probe_get_properties (GstPropertyProbe * probe)
