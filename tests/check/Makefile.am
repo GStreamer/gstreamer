@@ -147,6 +147,12 @@ else
 check_opus =
 endif
 
+if USE_CURL
+check_curl = elements/curlhttpsink
+else
+check_curl =
+endif
+
 VALGRIND_TO_FIX = \
 	elements/mpeg2enc \
 	elements/mplex    \
@@ -177,6 +183,7 @@ check_PROGRAMS = \
 	$(check_timidity)  \
 	$(check_kate)  \
 	$(check_opus)  \
+	$(check_curl) \
 	elements/autoconvert \
 	elements/autovideoconvert \
 	elements/asfmux \

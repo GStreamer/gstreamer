@@ -61,11 +61,17 @@ IGNORE_CFILES =
 EXAMPLE_CFILES = \
         $(top_srcdir)/ext/directfb/dfb-example.c
 
+#	$(top_srcdir)/ext/curl/gstcurlfilesink.h
+#	$(top_srcdir)/ext/curl/gstcurlftpsink.h
+#	$(top_srcdir)/ext/curl/gstcurlsmtpsink.h
+
 EXTRA_HFILES = \
 	$(top_srcdir)/ext/assrender/gstassrender.h \
 	$(top_srcdir)/ext/celt/gstceltdec.h \
 	$(top_srcdir)/ext/celt/gstceltenc.h \
-	$(top_srcdir)/ext/curl/gstcurlsink.h \
+	$(top_srcdir)/ext/curl/gstcurlbasesink.h \
+	$(top_srcdir)/ext/curl/gstcurlhttpsink.h \
+	$(top_srcdir)/ext/curl/gstcurltlssink.h \
 	$(top_srcdir)/ext/dc1394/gstdc1394.h \
 	$(top_srcdir)/ext/directfb/dfbvideosink.h \
 	$(top_srcdir)/ext/dts/gstdtsdec.h \
