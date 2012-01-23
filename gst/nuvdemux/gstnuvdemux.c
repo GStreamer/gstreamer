@@ -488,7 +488,7 @@ gst_nuv_demux_stream_data (GstNuvDemux * nuv)
   switch (h->i_type) {
     case 'V':
     {
-      if (h->i_length == 0)
+      if (!buf)
         break;
 
       GST_BUFFER_OFFSET (buf) = nuv->video_offset;
@@ -499,7 +499,7 @@ gst_nuv_demux_stream_data (GstNuvDemux * nuv)
     }
     case 'A':
     {
-      if (h->i_length == 0)
+      if (!buf)
         break;
 
       GST_BUFFER_OFFSET (buf) = nuv->audio_offset;
