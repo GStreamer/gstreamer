@@ -39,7 +39,7 @@ enum
   LAST_SIGNAL
 };
 
-#define DEFAULT_SNAPSHOT                TRUE
+#define DEFAULT_SNAPSHOT                FALSE
 /* #define DEFAULT_NEWMEDIA             FALSE */
 #define DEFAULT_COMPRESSION_LEVEL       6
 
