@@ -285,6 +285,10 @@ gst_vaapi_decoder_new_slice(
     guint            buf_size
 ) attribute_hidden;
 
+void
+gst_vaapi_decoder_free_slice(GstVaapiDecoder *decoder, GstVaapiSlice *slice)
+    attribute_hidden;
+
 gboolean
 gst_vaapi_decoder_decode_picture(
     GstVaapiDecoder *decoder,

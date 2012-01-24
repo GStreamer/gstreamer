@@ -878,8 +878,16 @@ gst_vaapi_decoder_new_slice(
     slice = create_slice(decoder, buf, buf_size);
     if (!slice)
         return NULL;
-    g_ptr_array_add(picture->slices, slice);
+
+    if (picture)
+        g_ptr_array_add(picture->slices, slice);
     return slice;
+}
+
+void
+gst_vaapi_decoder_free_slice(GstVaapiDecoder *decoder, GstVaapiSlice *slice)
+{
+    destroy_slice(decoder, slice);
 }
 
 gboolean
