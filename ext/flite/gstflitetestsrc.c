@@ -269,7 +269,6 @@ static gboolean
 gst_flite_test_src_set_caps (GstBaseSrc * basesrc, GstCaps * caps)
 {
   GstFliteTestSrc *src = GST_FLITE_TEST_SRC (basesrc);
-  gboolean ret;
 
   gst_audio_info_init (&src->info);
   if (!gst_audio_info_from_caps (&src->info, caps)) {
@@ -277,7 +276,7 @@ gst_flite_test_src_set_caps (GstBaseSrc * basesrc, GstCaps * caps)
     return FALSE;
   }
 
-  return ret;
+  return TRUE;
 }
 
 #if 0
