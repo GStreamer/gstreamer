@@ -86,6 +86,8 @@ struct _GstVaapiPictureH264 {
     guint                       field_pic_flag          : 1;
     guint                       bottom_field_flag       : 1;
     guint                       has_mmco_5              : 1;
+    guint                       output_flag             : 1;
+    guint                       output_needed           : 1;
 };
 
 struct _GstVaapiPictureH264Class {
@@ -125,6 +127,7 @@ gst_vaapi_picture_h264_init(GstVaapiPictureH264 *picture)
     picture->is_long_term       = FALSE;
     picture->is_idr             = FALSE;
     picture->has_mmco_5         = FALSE;
+    picture->output_needed      = FALSE;
 }
 
 static inline GstVaapiPictureH264 *
@@ -257,6 +260,7 @@ struct _GstVaapiDecoderH264Private {
     GstVaapiPictureH264        *current_picture;
     GstVaapiPictureH264        *dpb[16];
     guint                       dpb_count;
+    guint                       dpb_size;
     GstVaapiProfile             profile;
     GstVaapiPictureH264        *short_ref[32];
     guint                       short_ref_count;
@@ -300,6 +304,176 @@ clear_references(
     guint                *picture_count
 );
 
+static void
+dpb_remove_index(GstVaapiDecoderH264 *decoder, guint index)
+{
+    GstVaapiDecoderH264Private * const priv = decoder->priv;
+    guint num_pictures = --priv->dpb_count;
+
+    if (index != num_pictures)
+        gst_vaapi_picture_replace(&priv->dpb[index], priv->dpb[num_pictures]);
+    gst_vaapi_picture_replace(&priv->dpb[num_pictures], NULL);
+}
+
+static inline gboolean
+dpb_output(GstVaapiDecoderH264 *decoder, GstVaapiPictureH264 *picture)
+{
+    /* XXX: update cropping rectangle */
+    picture->output_needed = FALSE;
+    return gst_vaapi_picture_output(GST_VAAPI_PICTURE_CAST(picture));
+}
+
+static gboolean
+dpb_bump(GstVaapiDecoderH264 *decoder)
+{
+    GstVaapiDecoderH264Private * const priv = decoder->priv;
+    guint i, lowest_poc_index;
+    gboolean success;
+
+    for (i = 0; i < priv->dpb_count; i++) {
+        if (priv->dpb[i]->output_needed)
+            break;
+    }
+    if (i == priv->dpb_count)
+        return FALSE;
+
+    lowest_poc_index = i++;
+    for (; i < priv->dpb_count; i++) {
+        GstVaapiPictureH264 * const picture = priv->dpb[i];
+        if (picture->output_needed && picture->poc < priv->dpb[lowest_poc_index]->poc)
+            lowest_poc_index = i;
+    }
+
+    success = dpb_output(decoder, priv->dpb[lowest_poc_index]);
+    if (!GST_VAAPI_PICTURE_IS_REFERENCE(priv->dpb[lowest_poc_index]))
+        dpb_remove_index(decoder, lowest_poc_index);
+    return success;
+}
+
+static void
+dpb_flush(GstVaapiDecoderH264 *decoder)
+{
+    GstVaapiDecoderH264Private * const priv = decoder->priv;
+
+    while (dpb_bump(decoder))
+        ;
+    clear_references(decoder, priv->dpb, &priv->dpb_count);
+}
+
+static gboolean
+dpb_add(GstVaapiDecoderH264 *decoder, GstVaapiPictureH264 *picture)
+{
+    GstVaapiDecoderH264Private * const priv = decoder->priv;
+    guint i;
+
+    // Remove all unused pictures
+    if (picture->is_idr)
+        dpb_flush(decoder);
+    else {
+        i = 0;
+        while (i < priv->dpb_count) {
+            GstVaapiPictureH264 * const picture = priv->dpb[i];
+            if (!picture->output_needed &&
+                !GST_VAAPI_PICTURE_IS_REFERENCE(picture))
+                dpb_remove_index(decoder, i);
+            else
+                i++;
+        }
+    }
+
+    // C.4.5.1 - Storage and marking of a reference decoded picture into the DPB
+    if (GST_VAAPI_PICTURE_IS_REFERENCE(picture)) {
+        while (priv->dpb_count == priv->dpb_size) {
+            if (!dpb_bump(decoder))
+                return FALSE;
+        }
+        gst_vaapi_picture_replace(&priv->dpb[priv->dpb_count++], picture);
+        if (picture->output_flag)
+            picture->output_needed = TRUE;
+    }
+
+    // C.4.5.2 - Storage and marking of a non-reference decoded picture into the DPB
+    else {
+        if (!picture->output_flag)
+            return TRUE;
+        while (priv->dpb_count == priv->dpb_size) {
+            for (i = 0; i < priv->dpb_count; i++) {
+                if (priv->dpb[i]->output_needed &&
+                    priv->dpb[i]->poc < picture->poc)
+                    break;
+            }
+            if (i == priv->dpb_count)
+                return dpb_output(decoder, picture);
+            if (!dpb_bump(decoder))
+                return FALSE;
+        }
+        gst_vaapi_picture_replace(&priv->dpb[priv->dpb_count++], picture);
+        picture->output_needed = TRUE;
+    }
+    return TRUE;
+}
+
+static void
+dpb_reset(GstVaapiDecoderH264 *decoder, GstH264SPS *sps)
+{
+    GstVaapiDecoderH264Private * const priv = decoder->priv;
+    guint max_dec_frame_buffering, MaxDpbMbs, PicSizeMbs;
+
+    /* Table A-1 - Level limits */
+    switch (sps->level_idc) {
+    case 10: MaxDpbMbs = 396;    break;
+    case 11: MaxDpbMbs = 900;    break;
+    case 12: MaxDpbMbs = 2376;   break;
+    case 13: MaxDpbMbs = 2376;   break;
+    case 20: MaxDpbMbs = 2376;   break;
+    case 21: MaxDpbMbs = 4752;   break;
+    case 22: MaxDpbMbs = 8100;   break;
+    case 30: MaxDpbMbs = 8100;   break;
+    case 31: MaxDpbMbs = 18000;  break;
+    case 32: MaxDpbMbs = 20480;  break;
+    case 40: MaxDpbMbs = 32768;  break;
+    case 41: MaxDpbMbs = 32768;  break;
+    case 42: MaxDpbMbs = 34816;  break;
+    case 50: MaxDpbMbs = 110400; break;
+    case 51: MaxDpbMbs = 184320; break;
+    default:
+        g_assert(0 && "unhandled level");
+        break;
+    }
+
+    PicSizeMbs = ((sps->pic_width_in_mbs_minus1 + 1) *
+                  (sps->pic_height_in_map_units_minus1 + 1) *
+                  (sps->frame_mbs_only_flag ? 1 : 2));
+    max_dec_frame_buffering = MaxDpbMbs / PicSizeMbs;
+
+    /* VUI parameters */
+    if (sps->vui_parameters_present_flag) {
+        GstH264VUIParams * const vui_params = &sps->vui_parameters;
+        if (vui_params->bitstream_restriction_flag)
+            max_dec_frame_buffering = vui_params->max_dec_frame_buffering;
+        else {
+            switch (sps->profile_idc) {
+            case 44:  // CAVLC 4:4:4 Intra profile
+            case 86:  // Scalable High profile
+            case 100: // High profile
+            case 110: // High 10 profile
+            case 122: // High 4:2:2 profile
+            case 244: // High 4:4:4 Predictive profile
+                if (sps->constraint_set3_flag)
+                    max_dec_frame_buffering = 0;
+                break;
+            }
+        }
+    }
+
+    if (max_dec_frame_buffering > 16)
+        max_dec_frame_buffering = 16;
+    else if (max_dec_frame_buffering < sps->num_ref_frames)
+        max_dec_frame_buffering = sps->num_ref_frames;
+    priv->dpb_size = MAX(1, max_dec_frame_buffering);
+    GST_DEBUG("DPB size %u", priv->dpb_size);
+}
+
 static GstVaapiDecoderStatus
 get_status(GstH264ParserResult result)
 {
@@ -336,11 +510,11 @@ static void
 gst_vaapi_decoder_h264_close(GstVaapiDecoderH264 *decoder)
 {
     GstVaapiDecoderH264Private * const priv = decoder->priv;
-    guint i;
 
     gst_vaapi_picture_replace(&priv->current_picture, NULL);
     clear_references(decoder, priv->short_ref, &priv->short_ref_count);
     clear_references(decoder, priv->long_ref,  &priv->long_ref_count );
+    clear_references(decoder, priv->dpb,       &priv->dpb_count      );
 
     if (priv->sub_buffer) {
         gst_buffer_unref(priv->sub_buffer);
@@ -350,12 +524,6 @@ gst_vaapi_decoder_h264_close(GstVaapiDecoderH264 *decoder)
     if (priv->parser) {
         gst_h264_nal_parser_free(priv->parser);
         priv->parser = NULL;
-    }
-
-    if (priv->dpb_count > 0) {
-        for (i = 0; i < priv->dpb_count; i++)
-            priv->dpb[i] = NULL;
-        priv->dpb_count = 0;
     }
 
     if (priv->adapter) {
@@ -469,6 +637,9 @@ ensure_context(GstVaapiDecoderH264 *decoder, GstH264SPS *sps)
         );
         if (!success)
             return GST_VAAPI_DECODER_STATUS_ERROR_UNKNOWN;
+
+        /* Reset DPB */
+        dpb_reset(decoder, sps);
     }
     return GST_VAAPI_DECODER_STATUS_SUCCESS;
 }
@@ -500,8 +671,6 @@ decode_current_picture(GstVaapiDecoderH264 *decoder)
     if (!decode_picture_end(decoder, picture))
         goto end;
     if (!gst_vaapi_picture_decode(GST_VAAPI_PICTURE_CAST(picture)))
-        goto end;
-    if (!gst_vaapi_picture_output(GST_VAAPI_PICTURE_CAST(picture)))
         goto end;
     success = TRUE;
 end:
@@ -1100,6 +1269,7 @@ remove_reference_at(
 
     g_return_val_if_fail(index < num_pictures, FALSE);
 
+    GST_VAAPI_PICTURE_FLAG_UNSET(pictures[index], GST_VAAPI_PICTURE_FLAG_REFERENCE);
     if (index != --num_pictures)
         gst_vaapi_picture_replace(&pictures[index], pictures[num_pictures]);
     gst_vaapi_picture_replace(&pictures[num_pictures], NULL);
@@ -1347,6 +1517,7 @@ init_picture(
     picture->is_idr             = nalu->type == GST_H264_NAL_SLICE_IDR;
     picture->field_pic_flag     = slice_hdr->field_pic_flag;
     picture->bottom_field_flag  = slice_hdr->bottom_field_flag;
+    picture->output_flag        = TRUE; /* XXX: conformant to Annex A only */
     base_picture->pts           = gst_adapter_prev_timestamp(priv->adapter, NULL);
 
     /* Reset decoder state for IDR pictures */
@@ -1767,7 +1938,10 @@ decode_picture_end(GstVaapiDecoderH264 *decoder, GstVaapiPictureH264 *picture)
 {
     if (!fill_quant_matrix(decoder, picture))
         return FALSE;
-    exit_picture(decoder, picture);
+    if (!exit_picture(decoder, picture))
+        return FALSE;
+    if (!dpb_add(decoder, picture))
+        return FALSE;
     return TRUE;
 }
 
@@ -2171,6 +2345,7 @@ gst_vaapi_decoder_h264_init(GstVaapiDecoderH264 *decoder)
     priv->pps                   = NULL;
     priv->current_picture       = NULL;
     priv->dpb_count             = 0;
+    priv->dpb_size              = 0;
     priv->profile               = GST_VAAPI_PROFILE_H264_HIGH;
     priv->short_ref_count       = 0;
     priv->long_ref_count        = 0;
