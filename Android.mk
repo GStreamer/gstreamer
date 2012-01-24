@@ -29,7 +29,6 @@ GST_PLUGINS_BAD_BUILT_SOURCES := \
 	gst/siren/Android.mk \
 	gst/dataurisrc/Android.mk \
 	gst/rawparse/Android.mk \
-	gst/videomaxrate/Android.mk \
 	gst/tta/Android.mk \
 	gst/videosignal/Android.mk \
 	gst/coloreffects/Android.mk \
@@ -127,7 +126,6 @@ endif
 -include $(GST_PLUGINS_BAD_TOP)/gst/siren/Android.mk
 -include $(GST_PLUGINS_BAD_TOP)/gst/dataurisrc/Android.mk
 -include $(GST_PLUGINS_BAD_TOP)/gst/rawparse/Android.mk
--include $(GST_PLUGINS_BAD_TOP)/gst/videomaxrate/Android.mk
 -include $(GST_PLUGINS_BAD_TOP)/gst/tta/Android.mk
 -include $(GST_PLUGINS_BAD_TOP)/gst/videosignal/Android.mk
 -include $(GST_PLUGINS_BAD_TOP)/gst/coloreffects/Android.mk

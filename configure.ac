@@ -318,7 +318,7 @@ GST_PLUGINS_NONPORTED=" adpcmdec adpcmenc aiff asfmux \
  mpegpsmux mve mxf mythtv nsf nuvdemux \
  patchdetect pnm rawparse real removesilence rtpvp8 scaletempo \
  sdi segmentclip siren speed subenc stereo tta videofilters \
- videomaxrate videomeasure videosignal vmnc \
+ videomeasure videosignal vmnc \
  decklink fbdev linsys shm vcd \
  apexsink bz2 cdaudio celt cog curl dc1394 dirac directfb resindvd \
  gsettings gsm jp2k ladspa modplug mpeg2enc mimic \
@@ -392,7 +392,6 @@ AG_GST_CHECK_PLUGIN(subenc)
 AG_GST_CHECK_PLUGIN(stereo)
 AG_GST_CHECK_PLUGIN(tta)
 AG_GST_CHECK_PLUGIN(videofilters)
-AG_GST_CHECK_PLUGIN(videomaxrate)
 AG_GST_CHECK_PLUGIN(videomeasure)
 AG_GST_CHECK_PLUGIN(videoparsers)
 AG_GST_CHECK_PLUGIN(videosignal)
@@ -2000,7 +1999,6 @@ gst/subenc/Makefile
 gst/stereo/Makefile
 gst/tta/Makefile
 gst/videofilters/Makefile
-gst/videomaxrate/Makefile
 gst/videomeasure/Makefile
 gst/videoparsers/Makefile
 gst/videosignal/Makefile
