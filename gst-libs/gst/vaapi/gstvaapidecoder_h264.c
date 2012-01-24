@@ -1772,15 +1772,78 @@ decode_picture_end(GstVaapiDecoderH264 *decoder, GstVaapiPictureH264 *picture)
 }
 
 static gboolean
-fill_slice(GstVaapiDecoderH264 *decoder, GstVaapiSliceH264 *slice)
+fill_pred_weight_table(GstVaapiDecoderH264 *decoder, GstVaapiSliceH264 *slice)
 {
-    GstVaapiDecoderH264Private * const priv = decoder->priv;
     GstH264SliceHdr * const slice_hdr = &slice->slice_hdr;
     GstH264PPS * const pps = slice_hdr->pps;
     GstH264SPS * const sps = pps->sequence;
     GstH264PredWeightTable * const w = &slice_hdr->pred_weight_table;
     VASliceParameterBufferH264 * const slice_param = slice->base.param;
+    guint num_weight_tables = 0;
     gint i, j;
+
+    if (pps->weighted_pred_flag &&
+        (GST_H264_IS_P_SLICE(slice_hdr) || GST_H264_IS_SP_SLICE(slice_hdr)))
+        num_weight_tables = 1;
+    else if (pps->weighted_bipred_idc == 1 && GST_H264_IS_B_SLICE(slice_hdr))
+        num_weight_tables = 2;
+    else
+        num_weight_tables = 0;
+
+    slice_param->luma_log2_weight_denom   = w->luma_log2_weight_denom;
+    slice_param->chroma_log2_weight_denom = w->chroma_log2_weight_denom;
+    slice_param->luma_weight_l0_flag      = 0;
+    slice_param->chroma_weight_l0_flag    = 0;
+    slice_param->luma_weight_l1_flag      = 0;
+    slice_param->chroma_weight_l1_flag    = 0;
+
+    if (num_weight_tables < 1)
+        return TRUE;
+
+    slice_param->luma_weight_l0_flag = 1;
+    for (i = 0; i <= slice_param->num_ref_idx_l0_active_minus1; i++) {
+        slice_param->luma_weight_l0[i] = w->luma_weight_l0[i];
+        slice_param->luma_offset_l0[i] = w->luma_offset_l0[i];
+    }
+
+    slice_param->chroma_weight_l0_flag = sps->chroma_array_type != 0;
+    if (slice_param->chroma_weight_l0_flag) {
+        for (i = 0; i <= slice_param->num_ref_idx_l0_active_minus1; i++) {
+            for (j = 0; j < 2; j++) {
+                slice_param->chroma_weight_l0[i][j] = w->chroma_weight_l0[i][j];
+                slice_param->chroma_offset_l0[i][j] = w->chroma_offset_l0[i][j];
+            }
+        }
+    }
+
+    if (num_weight_tables < 2)
+        return TRUE;
+
+    slice_param->luma_weight_l1_flag = 1;
+    for (i = 0; i <= slice_param->num_ref_idx_l1_active_minus1; i++) {
+        slice_param->luma_weight_l1[i] = w->luma_weight_l1[i];
+        slice_param->luma_offset_l1[i] = w->luma_offset_l1[i];
+    }
+
+    slice_param->chroma_weight_l1_flag = sps->chroma_array_type != 0;
+    if (slice_param->chroma_weight_l1_flag) {
+        for (i = 0; i <= slice_param->num_ref_idx_l1_active_minus1; i++) {
+            for (j = 0; j < 2; j++) {
+                slice_param->chroma_weight_l1[i][j] = w->chroma_weight_l1[i][j];
+                slice_param->chroma_offset_l1[i][j] = w->chroma_offset_l1[i][j];
+            }
+        }
+    }
+    return TRUE;
+}
+
+static gboolean
+fill_slice(GstVaapiDecoderH264 *decoder, GstVaapiSliceH264 *slice)
+{
+    GstVaapiDecoderH264Private * const priv = decoder->priv;
+    GstH264SliceHdr * const slice_hdr = &slice->slice_hdr;
+    VASliceParameterBufferH264 * const slice_param = slice->base.param;
+    gint i;
 
     /* Fill in VASliceParameterBufferH264 */
     slice_param->slice_data_bit_offset          = 8 /* nal_unit_type */ + slice_hdr->header_size;
@@ -1794,8 +1857,6 @@ fill_slice(GstVaapiDecoderH264 *decoder, GstVaapiSliceH264 *slice)
     slice_param->disable_deblocking_filter_idc  = slice_hdr->disable_deblocking_filter_idc;
     slice_param->slice_alpha_c0_offset_div2     = slice_hdr->slice_alpha_c0_offset_div2;
     slice_param->slice_beta_offset_div2         = slice_hdr->slice_beta_offset_div2;
-    slice_param->luma_log2_weight_denom         = w->luma_log2_weight_denom;
-    slice_param->chroma_log2_weight_denom       = w->chroma_log2_weight_denom;
 
     for (i = 0; i < priv->RefPicList0_count && priv->RefPicList0[i]; i++)
         slice_param->RefPicList0[i] = priv->RefPicList0[i]->info;
@@ -1807,41 +1868,8 @@ fill_slice(GstVaapiDecoderH264 *decoder, GstVaapiSliceH264 *slice)
     for (; i <= slice_param->num_ref_idx_l1_active_minus1; i++)
         vaapi_init_picture(&slice_param->RefPicList1[i]);
 
-    slice_param->luma_weight_l0_flag = priv->list_count > 0;
-    if (slice_param->luma_weight_l0_flag) {
-        for (i = 0; i <= slice_param->num_ref_idx_l0_active_minus1; i++) {
-            slice_param->luma_weight_l0[i] = w->luma_weight_l0[i];
-            slice_param->luma_offset_l0[i] = w->luma_offset_l0[i];
-        }
-    }
-
-    slice_param->chroma_weight_l0_flag = priv->list_count > 0 && sps->chroma_array_type != 0;
-    if (slice_param->chroma_weight_l0_flag) {
-        for (i = 0; i <= slice_param->num_ref_idx_l0_active_minus1; i++) {
-            for (j = 0; j < 2; j++) {
-                slice_param->chroma_weight_l0[i][j] = w->chroma_weight_l0[i][j];
-                slice_param->chroma_offset_l0[i][j] = w->chroma_offset_l0[i][j];
-            }
-        }
-    }
-
-    slice_param->luma_weight_l1_flag = priv->list_count > 1;
-    if (slice_param->luma_weight_l1_flag) {
-        for (i = 0; i <= slice_param->num_ref_idx_l1_active_minus1; i++) {
-            slice_param->luma_weight_l1[i] = w->luma_weight_l1[i];
-            slice_param->luma_offset_l1[i] = w->luma_offset_l1[i];
-        }
-    }
-
-    slice_param->chroma_weight_l1_flag = priv->list_count > 1 && sps->chroma_array_type != 0;
-    if (slice_param->chroma_weight_l1_flag) {
-        for (i = 0; i <= slice_param->num_ref_idx_l1_active_minus1; i++) {
-            for (j = 0; j < 2; j++) {
-                slice_param->chroma_weight_l1[i][j] = w->chroma_weight_l1[i][j];
-                slice_param->chroma_offset_l1[i][j] = w->chroma_offset_l1[i][j];
-            }
-        }
-    }
+    if (!fill_pred_weight_table(decoder, slice))
+        return FALSE;
     return TRUE;
 }
 
