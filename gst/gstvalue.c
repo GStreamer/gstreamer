@@ -5307,8 +5307,10 @@ gst_value_intersect_bitmask_bitmask (GValue * dest, const GValue * src1,
   s1 = gst_value_get_bitmask (src1);
   s2 = gst_value_get_bitmask (src2);
 
-  g_value_init (dest, GST_TYPE_BITMASK);
-  gst_value_set_bitmask (dest, s1 & s2);
+  if (dest) {
+    g_value_init (dest, GST_TYPE_BITMASK);
+    gst_value_set_bitmask (dest, s1 & s2);
+  }
 
   return TRUE;
 }
