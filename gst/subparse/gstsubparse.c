@@ -1719,12 +1719,11 @@ gst_subparse_type_find (GstTypeFind * tf, gpointer private)
       GST_DEBUG ("Encoding '%s' detected but conversion failed: %s", encoding,
           err->message);
       g_error_free (err);
-      g_free (encoding);
     } else {
       g_free (str);
       str = converted_str;
-      g_free (encoding);
     }
+    g_free (encoding);
   }
 
   /* Check if at least the first 120 chars are valid UTF8,
