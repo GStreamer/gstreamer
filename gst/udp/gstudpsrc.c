@@ -322,6 +322,9 @@ gst_udpsrc_finalize (GObject * object)
   g_free (udpsrc->uri);
   udpsrc->uri = NULL;
 
+  g_free (udpsrc->host);
+  udpsrc->host = NULL;
+
   if (udpsrc->socket)
     g_object_unref (udpsrc->socket);
   udpsrc->socket = NULL;
