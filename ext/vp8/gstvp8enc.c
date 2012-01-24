@@ -1174,6 +1174,9 @@ gst_vp8_enc_shape_output (GstBaseVideoEncoder * base_video_encoder,
       gst_util_uint64_scale (frame->presentation_frame_number + 1,
       GST_SECOND * state->fps_d, state->fps_n);
 
+  GST_LOG_OBJECT (base_video_encoder, "src ts: %" GST_TIME_FORMAT,
+      GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buf)));
+
   ret = gst_pad_push (GST_BASE_VIDEO_CODEC_SRC_PAD (base_video_encoder), buf);
   if (ret != GST_FLOW_OK) {
     GST_WARNING_OBJECT (encoder, "flow error %d", ret);
