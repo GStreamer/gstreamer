@@ -37,6 +37,12 @@
 #define GST_CAT_DEFAULT control_binding_debug
 GST_DEBUG_CATEGORY_STATIC (GST_CAT_DEFAULT);
 
+static GObject *gst_control_binding_direct_constructor (GType type,
+    guint n_construct_params, GObjectConstructParam * construct_params);
+static void gst_control_binding_direct_set_property (GObject * object,
+    guint prop_id, const GValue * value, GParamSpec * pspec);
+static void gst_control_binding_direct_get_property (GObject * object,
+    guint prop_id, GValue * value, GParamSpec * pspec);
 static void gst_control_binding_direct_dispose (GObject * object);
 static void gst_control_binding_direct_finalize (GObject * object);
 
@@ -55,148 +61,17 @@ static gboolean gst_control_binding_direct_get_value_array (GstControlBinding *
 G_DEFINE_TYPE_WITH_CODE (GstControlBindingDirect, gst_control_binding_direct,
     GST_TYPE_CONTROL_BINDING, _do_init);
 
-static void
-gst_control_binding_direct_class_init (GstControlBindingDirectClass * klass)
+enum
 {
-  GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
-  GstControlBindingClass *control_binding_class =
-      GST_CONTROL_BINDING_CLASS (klass);
+  PROP_0,
+  PROP_CS,
+  PROP_LAST
+};
 
-  gobject_class->dispose = gst_control_binding_direct_dispose;
-  gobject_class->finalize = gst_control_binding_direct_finalize;
-
-  control_binding_class->sync_values = gst_control_binding_direct_sync_values;
-  control_binding_class->get_value = gst_control_binding_direct_get_value;
-  control_binding_class->get_value_array =
-      gst_control_binding_direct_get_value_array;
-}
-
-static void
-gst_control_binding_direct_init (GstControlBindingDirect * self)
-{
-}
-
-static void
-gst_control_binding_direct_dispose (GObject * object)
-{
-  GstControlBindingDirect *self = GST_CONTROL_BINDING_DIRECT (object);
-
-  if (self->csource)
-    gst_object_replace ((GstObject **) & self->csource, NULL);
-}
-
-static void
-gst_control_binding_direct_finalize (GObject * object)
-{
-  GstControlBindingDirect *self = GST_CONTROL_BINDING_DIRECT (object);
-
-  g_value_unset (&self->cur_value);
-}
-
-static gboolean
-gst_control_binding_direct_sync_values (GstControlBinding * _self,
-    GstObject * object, GstClockTime timestamp, GstClockTime last_sync)
-{
-  GstControlBindingDirect *self = GST_CONTROL_BINDING_DIRECT (_self);
-  gdouble src_val;
-  gboolean ret;
-
-  g_return_val_if_fail (GST_IS_CONTROL_BINDING_DIRECT (self), FALSE);
-
-  GST_LOG_OBJECT (object, "property '%s' at ts=%" GST_TIME_FORMAT,
-      _self->name, GST_TIME_ARGS (timestamp));
-
-  ret = gst_control_source_get_value (self->csource, timestamp, &src_val);
-  if (G_LIKELY (ret)) {
-    GST_LOG_OBJECT (object, "  new value %lf", src_val);
-    /* always set the value for first time, but then only if it changed
-     * this should limit g_object_notify invocations.
-     * FIXME: can we detect negative playback rates?
-     */
-    if ((timestamp < last_sync) || (src_val != self->last_value)) {
-      GValue *dst_val = &self->cur_value;
-
-      GST_LOG_OBJECT (object, "  mapping %s to value of type %s", _self->name,
-          G_VALUE_TYPE_NAME (dst_val));
-      /* run mapping function to convert gdouble to GValue */
-      self->convert (self, src_val, dst_val);
-      /* we can make this faster
-       * http://bugzilla.gnome.org/show_bug.cgi?id=536939
-       */
-      g_object_set_property ((GObject *) object, _self->name, dst_val);
-      self->last_value = src_val;
-    }
-  } else {
-    GST_DEBUG_OBJECT (object, "no control value for param %s", _self->name);
-  }
-  return (ret);
-}
-
-static GValue *
-gst_control_binding_direct_get_value (GstControlBinding * _self,
-    GstClockTime timestamp)
-{
-  GstControlBindingDirect *self = GST_CONTROL_BINDING_DIRECT (_self);
-  GValue *dst_val = NULL;
-  gdouble src_val;
-
-  g_return_val_if_fail (GST_IS_CONTROL_BINDING_DIRECT (self), NULL);
-  g_return_val_if_fail (GST_CLOCK_TIME_IS_VALID (timestamp), NULL);
-
-  /* get current value via control source */
-  if (gst_control_source_get_value (self->csource, timestamp, &src_val)) {
-    dst_val = g_new0 (GValue, 1);
-    g_value_init (dst_val, G_PARAM_SPEC_VALUE_TYPE (_self->pspec));
-    self->convert (self, src_val, dst_val);
-  } else {
-    GST_LOG ("no control value for property %s at ts %" GST_TIME_FORMAT,
-        _self->name, GST_TIME_ARGS (timestamp));
-  }
-
-  return dst_val;
-}
-
-static gboolean
-gst_control_binding_direct_get_value_array (GstControlBinding * _self,
-    GstClockTime timestamp, GstClockTime interval, guint n_values,
-    GValue * values)
-{
-  GstControlBindingDirect *self = GST_CONTROL_BINDING_DIRECT (_self);
-  gint i;
-  gdouble *src_val;
-  gboolean res = FALSE;
-  GType type;
-  GstControlBindingDirectConvert convert;
-
-  g_return_val_if_fail (GST_IS_CONTROL_BINDING_DIRECT (self), FALSE);
-  g_return_val_if_fail (GST_CLOCK_TIME_IS_VALID (timestamp), FALSE);
-  g_return_val_if_fail (GST_CLOCK_TIME_IS_VALID (interval), FALSE);
-  g_return_val_if_fail (values, FALSE);
-
-  convert = self->convert;
-  type = G_PARAM_SPEC_VALUE_TYPE (_self->pspec);
-
-  src_val = g_new0 (gdouble, n_values);
-  if ((res = gst_control_source_get_value_array (self->csource, timestamp,
-              interval, n_values, src_val))) {
-    for (i = 0; i < n_values; i++) {
-      if (!isnan (src_val[i])) {
-        g_value_init (&values[i], type);
-        convert (self, src_val[i], &values[i]);
-      } else {
-        GST_LOG ("no control value for property %s at index %d", _self->name,
-            i);
-      }
-    }
-  } else {
-    GST_LOG ("failed to get control value for property %s at ts %"
-        GST_TIME_FORMAT, _self->name, GST_TIME_ARGS (timestamp));
-  }
-  g_free (src_val);
-  return res;
-}
+static GParamSpec *properties[PROP_LAST];
 
 /* mapping functions */
+
 #define DEFINE_CONVERT(type,Type,TYPE) \
 static void \
 convert_to_##type (GstControlBindingDirect *self, gdouble s, GValue *d) \
@@ -238,6 +113,260 @@ convert_to_enum (GstControlBindingDirect * self, gdouble s, GValue * d)
   g_value_set_enum (d, e->values[v].value);
 }
 
+/* vmethods */
+
+static void
+gst_control_binding_direct_class_init (GstControlBindingDirectClass * klass)
+{
+  GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
+  GstControlBindingClass *control_binding_class =
+      GST_CONTROL_BINDING_CLASS (klass);
+
+  gobject_class->constructor = gst_control_binding_direct_constructor;
+  gobject_class->set_property = gst_control_binding_direct_set_property;
+  gobject_class->get_property = gst_control_binding_direct_get_property;
+  gobject_class->dispose = gst_control_binding_direct_dispose;
+  gobject_class->finalize = gst_control_binding_direct_finalize;
+
+  control_binding_class->sync_values = gst_control_binding_direct_sync_values;
+  control_binding_class->get_value = gst_control_binding_direct_get_value;
+  control_binding_class->get_value_array =
+      gst_control_binding_direct_get_value_array;
+
+  properties[PROP_CS] =
+      g_param_spec_object ("control-source", "ControlSource",
+      "The control source",
+      GST_TYPE_CONTROL_SOURCE,
+      G_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY | G_PARAM_STATIC_STRINGS);
+
+  g_object_class_install_properties (gobject_class, PROP_LAST, properties);
+}
+
+static void
+gst_control_binding_direct_init (GstControlBindingDirect * self)
+{
+}
+
+static GObject *
+gst_control_binding_direct_constructor (GType type, guint n_construct_params,
+    GObjectConstructParam * construct_params)
+{
+  GstControlBindingDirect *self;
+
+  self =
+      GST_CONTROL_BINDING_DIRECT (G_OBJECT_CLASS
+      (gst_control_binding_direct_parent_class)
+      ->constructor (type, n_construct_params, construct_params));
+
+  if (GST_CONTROL_BINDING_PSPEC (self)) {
+    GType type, base;
+
+    base = type = G_PARAM_SPEC_VALUE_TYPE (GST_CONTROL_BINDING_PSPEC (self));
+    g_value_init (&self->cur_value, type);
+    while ((type = g_type_parent (type)))
+      base = type;
+
+    GST_DEBUG ("  using type %s", g_type_name (base));
+
+    // select mapping function
+    switch (base) {
+      case G_TYPE_INT:
+        self->convert = convert_to_int;
+        break;
+      case G_TYPE_UINT:
+        self->convert = convert_to_uint;
+        break;
+      case G_TYPE_LONG:
+        self->convert = convert_to_long;
+        break;
+      case G_TYPE_ULONG:
+        self->convert = convert_to_ulong;
+        break;
+      case G_TYPE_INT64:
+        self->convert = convert_to_int64;
+        break;
+      case G_TYPE_UINT64:
+        self->convert = convert_to_uint64;
+        break;
+      case G_TYPE_FLOAT:
+        self->convert = convert_to_float;
+        break;
+      case G_TYPE_DOUBLE:
+        self->convert = convert_to_double;
+        break;
+      case G_TYPE_BOOLEAN:
+        self->convert = convert_to_boolean;
+        break;
+      case G_TYPE_ENUM:
+        self->convert = convert_to_enum;
+        break;
+      default:
+        GST_WARNING ("incomplete implementation for paramspec type '%s'",
+            G_PARAM_SPEC_TYPE_NAME (GST_CONTROL_BINDING_PSPEC (self)));
+        GST_CONTROL_BINDING_PSPEC (self) = NULL;
+        break;
+    }
+  }
+  return (GObject *) self;
+}
+
+static void
+gst_control_binding_direct_set_property (GObject * object, guint prop_id,
+    const GValue * value, GParamSpec * pspec)
+{
+  GstControlBindingDirect *self = GST_CONTROL_BINDING_DIRECT (object);
+
+  switch (prop_id) {
+    case PROP_CS:
+      self->cs = g_value_get_object (value);
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
+  }
+}
+
+static void
+gst_control_binding_direct_get_property (GObject * object, guint prop_id,
+    GValue * value, GParamSpec * pspec)
+{
+  GstControlBindingDirect *self = GST_CONTROL_BINDING_DIRECT (object);
+
+  switch (prop_id) {
+    case PROP_CS:
+      g_value_set_object (value, self->cs);
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
+  }
+}
+
+static void
+gst_control_binding_direct_dispose (GObject * object)
+{
+  GstControlBindingDirect *self = GST_CONTROL_BINDING_DIRECT (object);
+
+  if (self->cs)
+    gst_object_replace ((GstObject **) & self->cs, NULL);
+}
+
+static void
+gst_control_binding_direct_finalize (GObject * object)
+{
+  GstControlBindingDirect *self = GST_CONTROL_BINDING_DIRECT (object);
+
+  g_value_unset (&self->cur_value);
+}
+
+static gboolean
+gst_control_binding_direct_sync_values (GstControlBinding * _self,
+    GstObject * object, GstClockTime timestamp, GstClockTime last_sync)
+{
+  GstControlBindingDirect *self = GST_CONTROL_BINDING_DIRECT (_self);
+  gdouble src_val;
+  gboolean ret;
+
+  g_return_val_if_fail (GST_IS_CONTROL_BINDING_DIRECT (self), FALSE);
+  g_return_val_if_fail (GST_CONTROL_BINDING_PSPEC (self), FALSE);
+
+  GST_LOG_OBJECT (object, "property '%s' at ts=%" GST_TIME_FORMAT,
+      _self->name, GST_TIME_ARGS (timestamp));
+
+  ret = gst_control_source_get_value (self->cs, timestamp, &src_val);
+  if (G_LIKELY (ret)) {
+    GST_LOG_OBJECT (object, "  new value %lf", src_val);
+    /* always set the value for first time, but then only if it changed
+     * this should limit g_object_notify invocations.
+     * FIXME: can we detect negative playback rates?
+     */
+    if ((timestamp < last_sync) || (src_val != self->last_value)) {
+      GValue *dst_val = &self->cur_value;
+
+      GST_LOG_OBJECT (object, "  mapping %s to value of type %s", _self->name,
+          G_VALUE_TYPE_NAME (dst_val));
+      /* run mapping function to convert gdouble to GValue */
+      self->convert (self, src_val, dst_val);
+      /* we can make this faster
+       * http://bugzilla.gnome.org/show_bug.cgi?id=536939
+       */
+      g_object_set_property ((GObject *) object, _self->name, dst_val);
+      self->last_value = src_val;
+    }
+  } else {
+    GST_DEBUG_OBJECT (object, "no control value for param %s", _self->name);
+  }
+  return (ret);
+}
+
+static GValue *
+gst_control_binding_direct_get_value (GstControlBinding * _self,
+    GstClockTime timestamp)
+{
+  GstControlBindingDirect *self = GST_CONTROL_BINDING_DIRECT (_self);
+  GValue *dst_val = NULL;
+  gdouble src_val;
+
+  g_return_val_if_fail (GST_IS_CONTROL_BINDING_DIRECT (self), NULL);
+  g_return_val_if_fail (GST_CLOCK_TIME_IS_VALID (timestamp), NULL);
+  g_return_val_if_fail (GST_CONTROL_BINDING_PSPEC (self), FALSE);
+
+  /* get current value via control source */
+  if (gst_control_source_get_value (self->cs, timestamp, &src_val)) {
+    dst_val = g_new0 (GValue, 1);
+    g_value_init (dst_val, G_PARAM_SPEC_VALUE_TYPE (_self->pspec));
+    self->convert (self, src_val, dst_val);
+  } else {
+    GST_LOG ("no control value for property %s at ts %" GST_TIME_FORMAT,
+        _self->name, GST_TIME_ARGS (timestamp));
+  }
+
+  return dst_val;
+}
+
+static gboolean
+gst_control_binding_direct_get_value_array (GstControlBinding * _self,
+    GstClockTime timestamp, GstClockTime interval, guint n_values,
+    GValue * values)
+{
+  GstControlBindingDirect *self = GST_CONTROL_BINDING_DIRECT (_self);
+  gint i;
+  gdouble *src_val;
+  gboolean res = FALSE;
+  GType type;
+  GstControlBindingDirectConvert convert;
+
+  g_return_val_if_fail (GST_IS_CONTROL_BINDING_DIRECT (self), FALSE);
+  g_return_val_if_fail (GST_CLOCK_TIME_IS_VALID (timestamp), FALSE);
+  g_return_val_if_fail (GST_CLOCK_TIME_IS_VALID (interval), FALSE);
+  g_return_val_if_fail (values, FALSE);
+  g_return_val_if_fail (GST_CONTROL_BINDING_PSPEC (self), FALSE);
+
+  convert = self->convert;
+  type = G_PARAM_SPEC_VALUE_TYPE (_self->pspec);
+
+  src_val = g_new0 (gdouble, n_values);
+  if ((res = gst_control_source_get_value_array (self->cs, timestamp,
+              interval, n_values, src_val))) {
+    for (i = 0; i < n_values; i++) {
+      if (!isnan (src_val[i])) {
+        g_value_init (&values[i], type);
+        convert (self, src_val[i], &values[i]);
+      } else {
+        GST_LOG ("no control value for property %s at index %d", _self->name,
+            i);
+      }
+    }
+  } else {
+    GST_LOG ("failed to get control value for property %s at ts %"
+        GST_TIME_FORMAT, _self->name, GST_TIME_ARGS (timestamp));
+  }
+  g_free (src_val);
+  return res;
+}
+
+/* functions */
+
 /**
  * gst_control_binding_direct_new:
  * @object: the object of the property
@@ -251,101 +380,8 @@ convert_to_enum (GstControlBindingDirect * self, gdouble s, GValue * d)
  */
 GstControlBinding *
 gst_control_binding_direct_new (GstObject * object, const gchar * property_name,
-    GstControlSource * csource)
+    GstControlSource * cs)
 {
-  GstControlBindingDirect *self = NULL;
-  GParamSpec *pspec;
-
-  GST_INFO_OBJECT (object, "trying to put property '%s' under control",
-      property_name);
-
-  /* check if the object has a property of that name */
-  if ((pspec = g_object_class_find_property (G_OBJECT_GET_CLASS (object),
-              property_name))) {
-    GST_DEBUG_OBJECT (object, "  psec->flags : 0x%08x", pspec->flags);
-
-    /* check if this param is witable && controlable && !construct-only */
-    g_return_val_if_fail ((pspec->flags & (G_PARAM_WRITABLE |
-                GST_PARAM_CONTROLLABLE | G_PARAM_CONSTRUCT_ONLY)) ==
-        (G_PARAM_WRITABLE | GST_PARAM_CONTROLLABLE), NULL);
-
-    if ((self = (GstControlBindingDirect *)
-            g_object_newv (GST_TYPE_CONTROL_BINDING_DIRECT, 0, NULL))) {
-      GType type = G_PARAM_SPEC_VALUE_TYPE (pspec), base;
-
-      // add pspec as a construction parameter and move below to construct()
-      ((GstControlBinding *) self)->pspec = pspec;
-      ((GstControlBinding *) self)->name = pspec->name;
-      self->csource = gst_object_ref (csource);
-
-      g_value_init (&self->cur_value, type);
-
-      base = type = G_PARAM_SPEC_VALUE_TYPE (pspec);
-      while ((type = g_type_parent (type)))
-        base = type;
-
-      GST_DEBUG_OBJECT (object, "  using type %s", g_type_name (base));
-
-      // select mapping function
-      // FIXME: only select mapping if super class hasn't set any?
-      switch (base) {
-        case G_TYPE_INT:
-          self->convert = convert_to_int;
-          break;
-        case G_TYPE_UINT:
-          self->convert = convert_to_uint;
-          break;
-        case G_TYPE_LONG:
-          self->convert = convert_to_long;
-          break;
-        case G_TYPE_ULONG:
-          self->convert = convert_to_ulong;
-          break;
-        case G_TYPE_INT64:
-          self->convert = convert_to_int64;
-          break;
-        case G_TYPE_UINT64:
-          self->convert = convert_to_uint64;
-          break;
-        case G_TYPE_FLOAT:
-          self->convert = convert_to_float;
-          break;
-        case G_TYPE_DOUBLE:
-          self->convert = convert_to_double;
-          break;
-        case G_TYPE_BOOLEAN:
-          self->convert = convert_to_boolean;
-          break;
-        case G_TYPE_ENUM:
-          self->convert = convert_to_enum;
-          break;
-        default:
-          // FIXME: return NULL?
-          GST_WARNING ("incomplete implementation for paramspec type '%s'",
-              G_PARAM_SPEC_TYPE_NAME (pspec));
-          break;
-      }
-    }
-  } else {
-    GST_WARNING_OBJECT (object, "class '%s' has no property '%s'",
-        G_OBJECT_TYPE_NAME (object), property_name);
-  }
-  return (GstControlBinding *) self;
-}
-
-/* functions */
-
-/**
- * gst_control_binding_direct_get_control_source:
- * @self: the control binding
- *
- * Get the control source.
- *
- * Returns: the control source. Unref when done with it.
- */
-GstControlSource *
-gst_control_binding_direct_get_control_source (GstControlBindingDirect * self)
-{
-  g_return_val_if_fail (GST_IS_CONTROL_BINDING_DIRECT (self), NULL);
-  return g_object_ref (self->csource);
+  return (GstControlBinding *) g_object_new (GST_TYPE_CONTROL_BINDING_DIRECT,
+      "object", object, "name", property_name, "control-source", cs, NULL);
 }

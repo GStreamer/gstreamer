@@ -71,6 +71,8 @@ struct _GstControlBinding {
   GParamSpec *pspec;            /* GParamSpec for this property */
 
   /*< private >*/
+  GstObject *object;            /* GstObject owning the property
+                                 * (== parent when bound) */
   gboolean disabled;
 
   gpointer _gst_reserved[GST_PADDING];
@@ -96,6 +98,8 @@ struct _GstControlBindingClass
   /*< private >*/
   gpointer _gst_reserved[GST_PADDING];
 };
+
+#define GST_CONTROL_BINDING_PSPEC(cb) (((GstControlBinding *) cb)->pspec)
 
 GType gst_control_binding_get_type (void);
 

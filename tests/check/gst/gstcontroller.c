@@ -261,7 +261,6 @@ gst_test_control_source_get_value_array (GstTestControlSource * self,
   return TRUE;
 }
 
-
 static void
 gst_test_control_source_init (GstTestControlSource * self)
 {
@@ -300,7 +299,78 @@ gst_test_control_source_get_type (void)
   return test_countrol_source_type;
 }
 
+/* test control binding */
 
+#define GST_TYPE_TEST_CONTROL_BINDING            (gst_test_control_binding_get_type ())
+#define GST_TEST_CONTROL_BINDING(obj)            (G_TYPE_CHECK_INSTANCE_CAST ((obj), GST_TYPE_TEST_CONTROL_BINDING, GstTestControlBinding))
+#define GST_TEST_CONTROL_BINDING_CLASS(klass)    (G_TYPE_CHECK_CLASS_CAST ((klass), GST_TYPE_TEST_CONTROL_BINDING, GstTestControlBindingClass))
+#define GST_IS_TEST_CONTROL_BINDING(obj)         (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_TEST_CONTROL_BINDING))
+#define GST_IS_TEST_CONTROL_BINDING_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE ((klass), GST_TYPE_TEST_CONTROL_BINDING))
+#define GST_TEST_CONTROL_BINDING_GET_CLASS(obj)  (G_TYPE_INSTANCE_GET_CLASS ((obj), GST_TYPE_TEST_CONTROL_BINDING, GstTestControlBindingClass))
+
+typedef struct _GstTestControlBinding GstTestControlBinding;
+typedef struct _GstTestControlBindingClass GstTestControlBindingClass;
+
+struct _GstTestControlBinding
+{
+  GstControlBinding parent;
+
+  GstControlSource *cs;
+};
+struct _GstTestControlBindingClass
+{
+  GstControlBindingClass parent_class;
+};
+
+static GType gst_test_control_binding_get_type (void);
+
+static GstControlBinding *
+gst_test_control_binding_new (GstObject * object, const gchar * property_name,
+    GstControlSource * cs)
+{
+  GstTestControlBinding *self;
+  self = (GstTestControlBinding *) g_object_new (GST_TYPE_TEST_CONTROL_BINDING,
+      "object", object, "name", property_name, NULL);
+
+  self->cs = gst_object_ref (cs);
+
+  return (GstControlBinding *) self;
+}
+
+static GstControlSource *
+gst_test_control_binding_get_control_source (GstTestControlBinding * self)
+{
+  g_return_val_if_fail (GST_IS_TEST_CONTROL_BINDING (self), NULL);
+
+  return self->cs ? gst_object_ref (self->cs) : NULL;
+}
+
+static GType
+gst_test_control_binding_get_type (void)
+{
+  static volatile gsize test_countrol_source_type = 0;
+
+  if (g_once_init_enter (&test_countrol_source_type)) {
+    GType type;
+    static const GTypeInfo info = {
+      (guint16) sizeof (GstTestControlBindingClass),
+      NULL,                     // base_init
+      NULL,                     // base_finalize
+      NULL,                     // class_init
+      NULL,                     // class_finalize
+      NULL,                     // class_data
+      (guint16) sizeof (GstTestControlBinding),
+      0,                        // n_preallocs
+      NULL,                     // instance_init
+      NULL                      // value_table
+    };
+    type =
+        g_type_register_static (GST_TYPE_CONTROL_BINDING,
+        "GstTestControlBinding", &info, 0);
+    g_once_init_leave (&test_countrol_source_type, type);
+  }
+  return test_countrol_source_type;
+}
 
 
 static void
@@ -324,14 +394,15 @@ GST_START_TEST (controller_new_fail1)
   GstTestControlSource *cs;
   GstControlBinding *cb;
 
-  elem = gst_element_factory_make ("fakesrc", NULL);
+  elem = gst_element_factory_make ("testobj", NULL);
   cs = gst_test_control_source_new ();
 
   /* that property should not exist */
-  cb = gst_control_binding_direct_new (GST_OBJECT (elem), "_schrompf_",
+  cb = gst_test_control_binding_new (GST_OBJECT (elem), "_schrompf_",
       GST_CONTROL_SOURCE (cs));
-  fail_unless (cb == NULL, NULL);
+  fail_unless (GST_CONTROL_BINDING_PSPEC (cb) == NULL, NULL);
 
+  gst_object_unref (cb);
   gst_object_unref (cs);
   gst_object_unref (elem);
 }
@@ -349,10 +420,11 @@ GST_START_TEST (controller_new_fail2)
   cs = gst_test_control_source_new ();
 
   /* that property should exist and but is readonly */
-  ASSERT_CRITICAL (cb = gst_control_binding_direct_new (GST_OBJECT (elem),
-          "readonly", GST_CONTROL_SOURCE (cs)));
-  fail_unless (cb == NULL, NULL);
+  cb = gst_test_control_binding_new (GST_OBJECT (elem), "readonly",
+      GST_CONTROL_SOURCE (cs));
+  fail_unless (GST_CONTROL_BINDING_PSPEC (cb) == NULL, NULL);
 
+  gst_object_unref (cb);
   gst_object_unref (cs);
   gst_object_unref (elem);
 }
@@ -370,10 +442,11 @@ GST_START_TEST (controller_new_fail3)
   cs = gst_test_control_source_new ();
 
   /* that property should exist and but is not controlable */
-  ASSERT_CRITICAL (cb = gst_control_binding_direct_new (GST_OBJECT (elem),
-          "static", GST_CONTROL_SOURCE (cs)));
-  fail_unless (cb == NULL, NULL);
+  cb = gst_test_control_binding_new (GST_OBJECT (elem), "static",
+      GST_CONTROL_SOURCE (cs));
+  fail_unless (GST_CONTROL_BINDING_PSPEC (cb) == NULL, NULL);
 
+  gst_object_unref (cb);
   gst_object_unref (cs);
   gst_object_unref (elem);
 }
@@ -391,11 +464,11 @@ GST_START_TEST (controller_new_fail4)
   cs = gst_test_control_source_new ();
 
   /* that property should exist and but is construct-only */
-  ASSERT_CRITICAL (cb =
-      gst_control_binding_direct_new (GST_OBJECT (elem), "construct-only",
-          GST_CONTROL_SOURCE (cs)));
-  fail_unless (cb == NULL, NULL);
+  cb = gst_test_control_binding_new (GST_OBJECT (elem), "construct-only",
+      GST_CONTROL_SOURCE (cs));
+  fail_unless (GST_CONTROL_BINDING_PSPEC (cb) == NULL, NULL);
 
+  gst_object_unref (cb);
   gst_object_unref (cs);
   gst_object_unref (elem);
 }
@@ -414,9 +487,9 @@ GST_START_TEST (controller_new_okay1)
   cs = gst_test_control_source_new ();
 
   /* that property should exist and should be controllable */
-  cb = gst_control_binding_direct_new (GST_OBJECT (elem), "int",
+  cb = gst_test_control_binding_new (GST_OBJECT (elem), "int",
       GST_CONTROL_SOURCE (cs));
-  fail_unless (cb != NULL, NULL);
+  fail_unless (GST_CONTROL_BINDING_PSPEC (cb) != NULL, NULL);
 
   gst_object_unref (cb);
   gst_object_unref (cs);
@@ -437,13 +510,13 @@ GST_START_TEST (controller_new_okay2)
   cs2 = gst_test_control_source_new ();
 
   /* these properties should exist and should be controllable */
-  cb1 = gst_control_binding_direct_new (GST_OBJECT (elem), "int",
+  cb1 = gst_test_control_binding_new (GST_OBJECT (elem), "int",
       GST_CONTROL_SOURCE (cs1));
-  fail_unless (cb1 != NULL, NULL);
+  fail_unless (GST_CONTROL_BINDING_PSPEC (cb1) != NULL, NULL);
 
-  cb2 = gst_control_binding_direct_new (GST_OBJECT (elem), "boolean",
+  cb2 = gst_test_control_binding_new (GST_OBJECT (elem), "boolean",
       GST_CONTROL_SOURCE (cs2));
-  fail_unless (cb2 != NULL, NULL);
+  fail_unless (GST_CONTROL_BINDING_PSPEC (cb2) != NULL, NULL);
 
   gst_object_unref (cb1);
   gst_object_unref (cb2);
@@ -466,9 +539,9 @@ GST_START_TEST (controller_param_twice)
   cs = gst_test_control_source_new ();
 
   /* that property should exist and should be controllable */
-  cb = gst_control_binding_direct_new (GST_OBJECT (elem), "int",
+  cb = gst_test_control_binding_new (GST_OBJECT (elem), "int",
       GST_CONTROL_SOURCE (cs));
-  fail_unless (cb != NULL, NULL);
+  fail_unless (GST_CONTROL_BINDING_PSPEC (cb) != NULL, NULL);
   cb = gst_object_ref (cb);
 
   res = gst_object_add_control_binding (GST_OBJECT (elem), cb);
@@ -527,15 +600,17 @@ GST_START_TEST (controller_controlsource_refcounts)
 
   fail_unless_equals_int (G_OBJECT (cs)->ref_count, 1);
 
-  cb = gst_control_binding_direct_new (GST_OBJECT (elem), "int", cs);
-  fail_unless (cb != NULL, NULL);
+  cb = gst_test_control_binding_new (GST_OBJECT (elem), "int", cs);
+  fail_unless (GST_CONTROL_BINDING_PSPEC (cb) != NULL, NULL);
   fail_unless_equals_int (G_OBJECT (cs)->ref_count, 2);
   fail_unless (gst_object_add_control_binding (GST_OBJECT (elem), cb));
 
   test_cb = gst_object_get_control_binding (GST_OBJECT (elem), "int");
   fail_unless (test_cb != NULL, NULL);
 
-  test_cs = gst_control_binding_get_control_source (cb);
+  test_cs =
+      gst_test_control_binding_get_control_source (GST_TEST_CONTROL_BINDING
+      (test_cb));
   fail_unless (test_cs != NULL, NULL);
   fail_unless (test_cs == cs);
   fail_unless_equals_int (G_OBJECT (cs)->ref_count, 3);
@@ -548,7 +623,7 @@ GST_START_TEST (controller_controlsource_refcounts)
 
 GST_END_TEST;
 
-/* tests if we can bnd a control source twice */
+/* tests if we can bind a control source twice */
 GST_START_TEST (controller_bind_twice)
 {
   GstElement *elem;
@@ -560,70 +635,14 @@ GST_START_TEST (controller_bind_twice)
   cs = (GstControlSource *) gst_test_control_source_new ();
   fail_unless (cs != NULL, NULL);
 
-  cb1 = gst_control_binding_direct_new (GST_OBJECT (elem), "int", cs);
-  fail_unless (cb1 != NULL, NULL);
-  cb2 = gst_control_binding_direct_new (GST_OBJECT (elem), "double", cs);
-  fail_unless (cb2 != NULL, NULL);
+  cb1 = gst_test_control_binding_new (GST_OBJECT (elem), "int", cs);
+  fail_unless (GST_CONTROL_BINDING_PSPEC (cb1) != NULL, NULL);
+  cb2 = gst_test_control_binding_new (GST_OBJECT (elem), "double", cs);
+  fail_unless (GST_CONTROL_BINDING_PSPEC (cb2) != NULL, NULL);
 
   gst_object_unref (cb1);
   gst_object_unref (cb2);
   gst_object_unref (cs);
-  gst_object_unref (elem);
-}
-
-GST_END_TEST;
-
-/* tests synching a value */
-GST_START_TEST (controller_sync1)
-{
-  GstElement *elem;
-  GstTestControlSource *csource;
-
-  elem = gst_element_factory_make ("testobj", NULL);
-
-  csource = gst_test_control_source_new ();
-  fail_unless (csource != NULL, NULL);
-
-  fail_unless (gst_object_add_control_binding (GST_OBJECT (elem),
-          gst_control_binding_direct_new (GST_OBJECT (elem), "int",
-              (GstControlSource *) csource)));
-
-  csource->value = 0.5;
-  fail_unless (gst_object_sync_values (GST_OBJECT (elem), 0LL));
-  fail_unless_equals_int (GST_TEST_OBJ (elem)->val_int, 50);
-
-  gst_object_unref (csource);
-
-  gst_object_unref (elem);
-}
-
-GST_END_TEST;
-
-/* tests synching a value */
-GST_START_TEST (controller_sync2)
-{
-  GstElement *elem;
-  GstTestControlSource *csource;
-
-  elem = gst_element_factory_make ("testobj", NULL);
-
-  csource = gst_test_control_source_new ();
-  fail_unless (csource != NULL, NULL);
-
-  fail_unless (gst_object_add_control_binding (GST_OBJECT (elem),
-          gst_control_binding_direct_new (GST_OBJECT (elem), "int",
-              (GstControlSource *) csource)));
-  fail_unless (gst_object_add_control_binding (GST_OBJECT (elem),
-          gst_control_binding_direct_new (GST_OBJECT (elem), "double",
-              (GstControlSource *) csource)));
-
-  csource->value = 0.5;
-  fail_unless (gst_object_sync_values (GST_OBJECT (elem), 0LL));
-  fail_unless_equals_int (GST_TEST_OBJ (elem)->val_int, 50);
-  fail_unless_equals_float (GST_TEST_OBJ (elem)->val_double, 50.0);
-
-  gst_object_unref (csource);
-
   gst_object_unref (elem);
 }
 
@@ -648,8 +667,6 @@ gst_controller_suite (void)
   tcase_add_test (tc, controller_any_gobject);
   tcase_add_test (tc, controller_controlsource_refcounts);
   tcase_add_test (tc, controller_bind_twice);
-  tcase_add_test (tc, controller_sync1);
-  tcase_add_test (tc, controller_sync2);
 
   return s;
 }

@@ -67,7 +67,7 @@ struct _GstControlBindingDirect {
   GstControlBinding parent;
   
   /*< private >*/
-  GstControlSource *csource;    /* GstControlSource for this property */
+  GstControlSource *cs;    /* GstControlSource for this property */
   GValue cur_value;
   gdouble last_value;
 
@@ -97,10 +97,7 @@ GType gst_control_binding_direct_get_type (void);
 /* Functions */
 
 GstControlBinding * gst_control_binding_direct_new (GstObject * object, const gchar * property_name,
-                                                          GstControlSource * csource);
-
-GstControlSource *  gst_control_binding_direct_get_control_source (GstControlBindingDirect * self);
-
+                                                    GstControlSource * cs);
 G_END_DECLS
 
 #endif /* __GST_CONTROL_BINDING_DIRECT_H__ */

@@ -38,6 +38,12 @@
 #define GST_CAT_DEFAULT control_binding_debug
 GST_DEBUG_CATEGORY_STATIC (GST_CAT_DEFAULT);
 
+static GObject *gst_control_binding_argb_constructor (GType type,
+    guint n_construct_params, GObjectConstructParam * construct_params);
+static void gst_control_binding_argb_set_property (GObject * object,
+    guint prop_id, const GValue * value, GParamSpec * pspec);
+static void gst_control_binding_argb_get_property (GObject * object,
+    guint prop_id, GValue * value, GParamSpec * pspec);
 static void gst_control_binding_argb_dispose (GObject * object);
 static void gst_control_binding_argb_finalize (GObject * object);
 
@@ -56,6 +62,20 @@ static gboolean gst_control_binding_argb_get_value_array (GstControlBinding *
 G_DEFINE_TYPE_WITH_CODE (GstControlBindingARGB, gst_control_binding_argb,
     GST_TYPE_CONTROL_BINDING, _do_init);
 
+enum
+{
+  PROP_0,
+  PROP_CS_A,
+  PROP_CS_R,
+  PROP_CS_G,
+  PROP_CS_B,
+  PROP_LAST
+};
+
+static GParamSpec *properties[PROP_LAST];
+
+/* vmethods */
+
 static void
 gst_control_binding_argb_class_init (GstControlBindingARGBClass * klass)
 {
@@ -63,6 +83,9 @@ gst_control_binding_argb_class_init (GstControlBindingARGBClass * klass)
   GstControlBindingClass *control_binding_class =
       GST_CONTROL_BINDING_CLASS (klass);
 
+  gobject_class->constructor = gst_control_binding_argb_constructor;
+  gobject_class->set_property = gst_control_binding_argb_set_property;
+  gobject_class->get_property = gst_control_binding_argb_get_property;
   gobject_class->dispose = gst_control_binding_argb_dispose;
   gobject_class->finalize = gst_control_binding_argb_finalize;
 
@@ -70,11 +93,111 @@ gst_control_binding_argb_class_init (GstControlBindingARGBClass * klass)
   control_binding_class->get_value = gst_control_binding_argb_get_value;
   control_binding_class->get_value_array =
       gst_control_binding_argb_get_value_array;
+
+  properties[PROP_CS_A] =
+      g_param_spec_object ("control-source-a", "ControlSource A",
+      "The control source for the alpha color component",
+      GST_TYPE_CONTROL_SOURCE,
+      G_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY | G_PARAM_STATIC_STRINGS);
+
+  properties[PROP_CS_R] =
+      g_param_spec_object ("control-source-r", "ControlSource R",
+      "The control source for the red color component",
+      GST_TYPE_CONTROL_SOURCE,
+      G_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY | G_PARAM_STATIC_STRINGS);
+
+  properties[PROP_CS_G] =
+      g_param_spec_object ("control-source-g", "ControlSource G",
+      "The control source for the green color component",
+      GST_TYPE_CONTROL_SOURCE,
+      G_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY | G_PARAM_STATIC_STRINGS);
+
+  properties[PROP_CS_B] =
+      g_param_spec_object ("control-source-b", "ControlSource B",
+      "The control source for the blue color component",
+      GST_TYPE_CONTROL_SOURCE,
+      G_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY | G_PARAM_STATIC_STRINGS);
+
+  g_object_class_install_properties (gobject_class, PROP_LAST, properties);
 }
 
 static void
 gst_control_binding_argb_init (GstControlBindingARGB * self)
 {
+}
+
+static GObject *
+gst_control_binding_argb_constructor (GType type, guint n_construct_params,
+    GObjectConstructParam * construct_params)
+{
+  GstControlBindingARGB *self;
+
+  self =
+      GST_CONTROL_BINDING_ARGB (G_OBJECT_CLASS
+      (gst_control_binding_argb_parent_class)
+      ->constructor (type, n_construct_params, construct_params));
+
+  if (GST_CONTROL_BINDING_PSPEC (self)) {
+    if (!(G_PARAM_SPEC_VALUE_TYPE (GST_CONTROL_BINDING_PSPEC (self)) ==
+            G_TYPE_UINT)) {
+      GST_WARNING ("can't bind to paramspec type '%s'",
+          G_PARAM_SPEC_TYPE_NAME (GST_CONTROL_BINDING_PSPEC (self)));
+      GST_CONTROL_BINDING_PSPEC (self) = NULL;
+    } else {
+      g_value_init (&self->cur_value, G_TYPE_UINT);
+    }
+  }
+  return (GObject *) self;
+}
+
+static void
+gst_control_binding_argb_set_property (GObject * object, guint prop_id,
+    const GValue * value, GParamSpec * pspec)
+{
+  GstControlBindingARGB *self = GST_CONTROL_BINDING_ARGB (object);
+
+  switch (prop_id) {
+    case PROP_CS_A:
+      self->cs_a = g_value_get_object (value);
+      break;
+    case PROP_CS_R:
+      self->cs_r = g_value_get_object (value);
+      break;
+    case PROP_CS_G:
+      self->cs_r = g_value_get_object (value);
+      break;
+    case PROP_CS_B:
+      self->cs_g = g_value_get_object (value);
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
+  }
+}
+
+static void
+gst_control_binding_argb_get_property (GObject * object, guint prop_id,
+    GValue * value, GParamSpec * pspec)
+{
+  GstControlBindingARGB *self = GST_CONTROL_BINDING_ARGB (object);
+
+  switch (prop_id) {
+    case PROP_CS_A:
+      g_value_set_object (value, self->cs_a);
+      break;
+    case PROP_CS_R:
+      g_value_set_object (value, self->cs_r);
+      break;
+    case PROP_CS_G:
+      g_value_set_object (value, self->cs_g);
+      break;
+    case PROP_CS_B:
+      g_value_set_object (value, self->cs_b);
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
+  }
 }
 
 static void
@@ -109,6 +232,7 @@ gst_control_binding_argb_sync_values (GstControlBinding * _self,
   gboolean ret = TRUE;
 
   g_return_val_if_fail (GST_IS_CONTROL_BINDING_ARGB (self), FALSE);
+  g_return_val_if_fail (GST_CONTROL_BINDING_PSPEC (self), FALSE);
 
   GST_LOG_OBJECT (object, "property '%s' at ts=%" GST_TIME_FORMAT,
       _self->name, GST_TIME_ARGS (timestamp));
@@ -158,6 +282,7 @@ gst_control_binding_argb_get_value (GstControlBinding * _self,
 
   g_return_val_if_fail (GST_IS_CONTROL_BINDING_ARGB (self), NULL);
   g_return_val_if_fail (GST_CLOCK_TIME_IS_VALID (timestamp), NULL);
+  g_return_val_if_fail (GST_CONTROL_BINDING_PSPEC (self), FALSE);
 
   /* get current value via control source */
   if (self->cs_a)
@@ -200,6 +325,7 @@ gst_control_binding_argb_get_value_array (GstControlBinding * _self,
   g_return_val_if_fail (GST_CLOCK_TIME_IS_VALID (timestamp), FALSE);
   g_return_val_if_fail (GST_CLOCK_TIME_IS_VALID (interval), FALSE);
   g_return_val_if_fail (values, FALSE);
+  g_return_val_if_fail (GST_CONTROL_BINDING_PSPEC (self), FALSE);
 
   if (self->cs_a) {
     src_val_a = g_new0 (gdouble, n_values);
@@ -250,7 +376,7 @@ gst_control_binding_argb_get_value_array (GstControlBinding * _self,
   return ret;
 }
 
-/* mapping function */
+/* functions */
 
 /**
  * gst_control_binding_argb_new:
@@ -271,45 +397,11 @@ gst_control_binding_argb_new (GstObject * object, const gchar * property_name,
     GstControlSource * cs_a, GstControlSource * cs_r, GstControlSource * cs_g,
     GstControlSource * cs_b)
 {
-  GstControlBindingARGB *self = NULL;
-  GParamSpec *pspec;
-
-  GST_INFO_OBJECT (object, "trying to put property '%s' under control",
-      property_name);
-
-  /* check if the object has a property of that name */
-  if ((pspec = g_object_class_find_property (G_OBJECT_GET_CLASS (object),
-              property_name))) {
-    GST_DEBUG_OBJECT (object, "  psec->flags : 0x%08x", pspec->flags);
-
-    /* check if this param is witable && controlable && !construct-only */
-    g_return_val_if_fail ((pspec->flags & (G_PARAM_WRITABLE |
-                GST_PARAM_CONTROLLABLE | G_PARAM_CONSTRUCT_ONLY)) ==
-        (G_PARAM_WRITABLE | GST_PARAM_CONTROLLABLE), NULL);
-
-    g_return_val_if_fail (G_PARAM_SPEC_VALUE_TYPE (pspec) == G_TYPE_UINT, NULL);
-
-    if ((self = (GstControlBindingARGB *)
-            g_object_newv (GST_TYPE_CONTROL_BINDING_ARGB, 0, NULL))) {
-      // move below to construct()
-      ((GstControlBinding *) self)->pspec = pspec;
-      ((GstControlBinding *) self)->name = pspec->name;
-      if (cs_a)
-        self->cs_a = gst_object_ref (cs_a);
-      if (cs_r)
-        self->cs_r = gst_object_ref (cs_r);
-      if (cs_g)
-        self->cs_g = gst_object_ref (cs_g);
-      if (cs_b)
-        self->cs_b = gst_object_ref (cs_b);
-
-      g_value_init (&self->cur_value, G_TYPE_UINT);
-    }
-  } else {
-    GST_WARNING_OBJECT (object, "class '%s' has no property '%s'",
-        G_OBJECT_TYPE_NAME (object), property_name);
-  }
-  return (GstControlBinding *) self;
+  return (GstControlBinding *) g_object_new (GST_TYPE_CONTROL_BINDING_ARGB,
+      "object", object, "name", property_name,
+      "control-source-a", cs_a,
+      "control-source-r", cs_r,
+      "control-source-g", cs_g, "control-source-b", cs_b, NULL);
 }
 
 /* functions */

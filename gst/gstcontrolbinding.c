@@ -42,17 +42,142 @@ GST_DEBUG_CATEGORY_STATIC (GST_CAT_DEFAULT);
   GST_DEBUG_CATEGORY_INIT (GST_CAT_DEFAULT, "gstcontrolbinding", 0, \
       "dynamic parameter control source attachment");
 
+static GObject *gst_control_binding_constructor (GType type,
+    guint n_construct_params, GObjectConstructParam * construct_params);
+static void gst_control_binding_set_property (GObject * object, guint prop_id,
+    const GValue * value, GParamSpec * pspec);
+static void gst_control_binding_get_property (GObject * object, guint prop_id,
+    GValue * value, GParamSpec * pspec);
+static void gst_control_binding_dispose (GObject * object);
+static void gst_control_binding_finalize (GObject * object);
+
 G_DEFINE_ABSTRACT_TYPE_WITH_CODE (GstControlBinding, gst_control_binding,
     GST_TYPE_OBJECT, _do_init);
+
+enum
+{
+  PROP_0,
+  PROP_OBJECT,
+  PROP_NAME,
+  PROP_LAST
+};
+
+static GParamSpec *properties[PROP_LAST];
 
 static void
 gst_control_binding_class_init (GstControlBindingClass * klass)
 {
+  GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
+
+  gobject_class->constructor = gst_control_binding_constructor;
+  gobject_class->set_property = gst_control_binding_set_property;
+  gobject_class->get_property = gst_control_binding_get_property;
+  gobject_class->dispose = gst_control_binding_dispose;
+  gobject_class->finalize = gst_control_binding_finalize;
+
+  properties[PROP_OBJECT] =
+      g_param_spec_object ("object", "Object",
+      "The object of the property", GST_TYPE_OBJECT,
+      G_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY | G_PARAM_STATIC_STRINGS);
+
+  properties[PROP_NAME] =
+      g_param_spec_string ("name", "Name", "The name of the property", NULL,
+      G_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY | G_PARAM_STATIC_STRINGS);
+
+
+  g_object_class_install_properties (gobject_class, PROP_LAST, properties);
 }
 
 static void
 gst_control_binding_init (GstControlBinding * self)
 {
+}
+
+static GObject *
+gst_control_binding_constructor (GType type, guint n_construct_params,
+    GObjectConstructParam * construct_params)
+{
+  GstControlBinding *self;
+  GParamSpec *pspec;
+
+  self = GST_CONTROL_BINDING (G_OBJECT_CLASS (gst_control_binding_parent_class)
+      ->constructor (type, n_construct_params, construct_params));
+
+  GST_INFO_OBJECT (self->object, "trying to put property '%s' under control",
+      self->name);
+
+  /* check if the object has a property of that name */
+  if ((pspec =
+          g_object_class_find_property (G_OBJECT_GET_CLASS (self->object),
+              self->name))) {
+    GST_DEBUG_OBJECT (self->object, "  psec->flags : 0x%08x", pspec->flags);
+
+    /* check if this param is witable && controlable && !construct-only */
+    if ((pspec->flags & (G_PARAM_WRITABLE | GST_PARAM_CONTROLLABLE |
+                G_PARAM_CONSTRUCT_ONLY)) ==
+        (G_PARAM_WRITABLE | GST_PARAM_CONTROLLABLE)) {
+      self->pspec = pspec;
+    }
+  } else {
+    GST_WARNING_OBJECT (self->object, "class '%s' has no property '%s'",
+        G_OBJECT_TYPE_NAME (self->object), self->name);
+  }
+  return (GObject *) self;
+}
+
+static void
+gst_control_binding_dispose (GObject * object)
+{
+  GstControlBinding *self = GST_CONTROL_BINDING (object);
+
+  if (self->object)
+    gst_object_replace (&self->object, NULL);
+}
+
+static void
+gst_control_binding_finalize (GObject * object)
+{
+  GstControlBinding *self = GST_CONTROL_BINDING (object);
+
+  g_free (self->name);
+}
+
+static void
+gst_control_binding_set_property (GObject * object, guint prop_id,
+    const GValue * value, GParamSpec * pspec)
+{
+  GstControlBinding *self = GST_CONTROL_BINDING (object);
+
+  switch (prop_id) {
+    case PROP_OBJECT:
+      self->object = g_value_dup_object (value);
+      break;
+    case PROP_NAME:
+      self->name = g_value_dup_string (value);
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
+  }
+}
+
+static void
+gst_control_binding_get_property (GObject * object, guint prop_id,
+    GValue * value, GParamSpec * pspec)
+{
+  GstControlBinding *self = GST_CONTROL_BINDING (object);
+
+  switch (prop_id) {
+    case PROP_OBJECT:
+      g_value_set_object (value, self->object);
+      break;
+    case PROP_NAME:
+      g_value_set_string (value, self->name);
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
+  }
 }
 
 /* functions */
