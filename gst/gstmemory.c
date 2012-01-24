@@ -582,6 +582,7 @@ gst_memory_map (GstMemory * mem, GstMapInfo * info, GstMapFlags flags)
     goto error;
 
   info->memory = mem;
+  info->flags = flags;
   info->size = mem->size;
   info->maxsize = mem->maxsize - mem->offset;
   info->data = info->data + mem->offset;

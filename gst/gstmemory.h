@@ -101,6 +101,7 @@ typedef enum {
 /**
  * GstMapInfo:
  * @memory: a pointer to the mapped memory
+ * @flags: flags used when mapping the memory
  * @data: a pointer to the mapped data
  * @size: the valid size in @data
  * @maxsize: the maximum bytes in @data
@@ -110,10 +111,13 @@ typedef enum {
  */
 typedef struct {
   GstMemory *memory;
+  GstMapFlags flags;
   guint8 *data;
   gsize size;
   gsize maxsize;
 } GstMapInfo;
+
+#define GST_MAP_INFO_INIT { NULL, 0, NULL, 0, 0 }
 
 /**
  * GST_MAP_READWRITE:
