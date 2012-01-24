@@ -401,11 +401,11 @@ gst_flite_test_src_stop (GstBaseSrc * basesrc)
 static char *
 get_channel_name (GstFliteTestSrc * src, int channel)
 {
-  const char *numbers[10] = {
+  static const char *numbers[10] = {
     "zero", "one", "two", "three", "four", "five", "six", "seven", "eight",
     "nine"
   };
-  const char *names[64] = {
+  static const char *names[64] = {
     "front left", "front right", "front center", "lfe 1", "rear left",
     "rear right", "front left of center", "front right of center",
     "rear center", "lfe 2", "side left", "side right", "top front left",
