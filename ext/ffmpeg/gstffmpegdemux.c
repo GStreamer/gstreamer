@@ -1393,8 +1393,7 @@ gst_ffmpegdemux_loop (GstFFMpegDemux * demux)
     AVPicture src, dst;
     const gchar *plugin_name =
         ((GstFFMpegDemuxClass *) (G_OBJECT_GET_CLASS (demux)))->in_plugin->name;
-    guint8 *data;
-    gsize size;
+    GstMapInfo map;
 
     if (strcmp (plugin_name, "gif") == 0) {
       src.data[0] = pkt.data;
@@ -1408,14 +1407,14 @@ gst_ffmpegdemux_loop (GstFFMpegDemux * demux)
           avstream->codec->height);
     }
 
-    data = gst_buffer_map (outbuf, &size, NULL, GST_MAP_WRITE);
-    gst_ffmpeg_avpicture_fill (&dst, data,
+    gst_buffer_map (outbuf, &map, GST_MAP_WRITE);
+    gst_ffmpeg_avpicture_fill (&dst, map.data,
         avstream->codec->pix_fmt, avstream->codec->width,
         avstream->codec->height);
 
     av_picture_copy (&dst, &src, avstream->codec->pix_fmt,
         avstream->codec->width, avstream->codec->height);
-    gst_buffer_unmap (outbuf, data, size);
+    gst_buffer_unmap (outbuf, &map);
   } else {
     gst_buffer_fill (outbuf, 0, pkt.data, outsize);
   }

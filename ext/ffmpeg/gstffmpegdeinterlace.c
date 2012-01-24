@@ -284,8 +284,7 @@ gst_ffmpegdeinterlace_chain (GstPad * pad, GstObject * parent,
   GstFFMpegDeinterlace *deinterlace = GST_FFMPEGDEINTERLACE (parent);
   GstBuffer *outbuf = NULL;
   GstFlowReturn result;
-  guint8 *from_data, *to_data;
-  gsize from_size, to_size;
+  GstMapInfo from_map, to_map;
 
   GST_OBJECT_LOCK (deinterlace);
   if (deinterlace->reconfigure) {
@@ -311,18 +310,18 @@ gst_ffmpegdeinterlace_chain (GstPad * pad, GstObject * parent,
 
   outbuf = gst_buffer_new_and_alloc (deinterlace->to_size);
 
-  from_data = gst_buffer_map (inbuf, &from_size, NULL, GST_MAP_READ);
-  gst_ffmpeg_avpicture_fill (&deinterlace->from_frame, from_data,
+  gst_buffer_map (inbuf, &from_map, GST_MAP_READ);
+  gst_ffmpeg_avpicture_fill (&deinterlace->from_frame, from_map.data,
       deinterlace->pixfmt, deinterlace->width, deinterlace->height);
 
-  to_data = gst_buffer_map (outbuf, &to_size, NULL, GST_MAP_WRITE);
-  gst_ffmpeg_avpicture_fill (&deinterlace->to_frame, to_data,
+  gst_buffer_map (outbuf, &to_map, GST_MAP_WRITE);
+  gst_ffmpeg_avpicture_fill (&deinterlace->to_frame, to_map.data,
       deinterlace->pixfmt, deinterlace->width, deinterlace->height);
 
   avpicture_deinterlace (&deinterlace->to_frame, &deinterlace->from_frame,
       deinterlace->pixfmt, deinterlace->width, deinterlace->height);
-  gst_buffer_unmap (outbuf, to_data, to_size);
-  gst_buffer_unmap (inbuf, from_data, from_size);
+  gst_buffer_unmap (outbuf, &to_map);
+  gst_buffer_unmap (inbuf, &from_map);
 
   gst_buffer_copy_into (outbuf, inbuf, GST_BUFFER_COPY_TIMESTAMPS, 0, -1);
 

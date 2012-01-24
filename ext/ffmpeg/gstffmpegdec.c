@@ -2243,6 +2243,7 @@ gst_ffmpegdec_audio_frame (GstFFMpegDec * ffmpegdec,
   gint len = -1;
   gint have_data = AVCODEC_MAX_AUDIO_FRAME_SIZE;
   GstClockTime out_timestamp, out_duration;
+  GstMapInfo map;
   gint64 out_offset;
   int16_t *odata;
   AVPacket packet;
@@ -2255,7 +2256,8 @@ gst_ffmpegdec_audio_frame (GstFFMpegDec * ffmpegdec,
 
   *outbuf = new_aligned_buffer (AVCODEC_MAX_AUDIO_FRAME_SIZE);
 
-  odata = gst_buffer_map (*outbuf, NULL, NULL, GST_MAP_WRITE);
+  gst_buffer_map (*outbuf, &map, GST_MAP_WRITE);
+  odata = (int16_t *) map.data;
 
   gst_avpacket_init (&packet, data, size);
   len = avcodec_decode_audio3 (ffmpegdec->context, odata, &have_data, &packet);
@@ -2267,7 +2269,8 @@ gst_ffmpegdec_audio_frame (GstFFMpegDec * ffmpegdec,
     GstAudioFormat fmt;
 
     /* Buffer size */
-    gst_buffer_unmap (*outbuf, odata, have_data);
+    gst_buffer_unmap (*outbuf, &map);
+    gst_buffer_resize (*outbuf, 0, have_data);
 
     GST_DEBUG_OBJECT (ffmpegdec, "Creating output buffer");
     if (!gst_ffmpegdec_audio_negotiate (ffmpegdec, FALSE)) {
@@ -2335,7 +2338,7 @@ gst_ffmpegdec_audio_frame (GstFFMpegDec * ffmpegdec,
         ffmpegdec->format.audio.ffmpeg_layout,
         ffmpegdec->format.audio.gst_layout);
   } else {
-    gst_buffer_unmap (*outbuf, odata, 0);
+    gst_buffer_unmap (*outbuf, &map);
     gst_buffer_unref (*outbuf);
     *outbuf = NULL;
   }
@@ -2665,8 +2668,7 @@ gst_ffmpegdec_chain (GstPad * pad, GstObject * parent, GstBuffer * inbuf)
   GstFFMpegDec *ffmpegdec;
   GstFFMpegDecClass *oclass;
   guint8 *data, *bdata;
-  guint8 *odata;
-  gsize osize;
+  GstMapInfo map;
   gint size, bsize, len, have_data;
   GstFlowReturn ret = GST_FLOW_OK;
   GstClockTime in_timestamp;
@@ -2764,10 +2766,10 @@ gst_ffmpegdec_chain (GstPad * pad, GstObject * parent, GstBuffer * inbuf)
     inbuf = gst_buffer_make_writable (inbuf);
   }
 
-  odata = gst_buffer_map (inbuf, &osize, NULL, GST_MAP_READ);
+  gst_buffer_map (inbuf, &map, GST_MAP_READ);
 
-  bdata = odata;
-  bsize = osize;
+  bdata = map.data;
+  bsize = map.size;
 
   GST_LOG_OBJECT (ffmpegdec,
       "Received new data of size %u, offset:%" G_GUINT64_FORMAT ", ts:%"
@@ -2917,7 +2919,7 @@ gst_ffmpegdec_chain (GstPad * pad, GstObject * parent, GstBuffer * inbuf)
         bsize, bdata);
   } while (bsize > 0);
 
-  gst_buffer_unmap (inbuf, odata, osize);
+  gst_buffer_unmap (inbuf, &map);
 
   /* keep left-over */
   if (ffmpegdec->pctx && bsize > 0) {

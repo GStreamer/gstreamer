@@ -721,7 +721,7 @@ gst_ffmpegmux_collected (GstCollectPads2 * pads, gpointer user_data)
     GstBuffer *buf;
     AVPacket pkt;
     gboolean need_free = FALSE;
-    gsize size;
+    GstMapInfo map;
 
     /* push out current buffer */
     buf = gst_collect_pads2_pop (ffmpegmux->collect,
@@ -737,7 +737,6 @@ gst_ffmpegmux_collected (GstCollectPads2 * pads, gpointer user_data)
     if (strcmp (ffmpegmux->context->oformat->name, "gif") == 0) {
       AVStream *st = ffmpegmux->context->streams[best_pad->padnum];
       AVPicture src, dst;
-      guint8 *data;
 
       need_free = TRUE;
       pkt.size = st->codec->width * st->codec->height * 3;
@@ -748,16 +747,17 @@ gst_ffmpegmux_collected (GstCollectPads2 * pads, gpointer user_data)
       dst.data[2] = NULL;
       dst.linesize[0] = st->codec->width * 3;
 
-      data = gst_buffer_map (buf, &size, NULL, GST_MAP_READ);
-      gst_ffmpeg_avpicture_fill (&src, data,
+      gst_buffer_map (buf, &map, GST_MAP_READ);
+      gst_ffmpeg_avpicture_fill (&src, map.data,
           PIX_FMT_RGB24, st->codec->width, st->codec->height);
 
       av_picture_copy (&dst, &src, PIX_FMT_RGB24,
           st->codec->width, st->codec->height);
-      gst_buffer_unmap (buf, data, size);
+      gst_buffer_unmap (buf, &map);
     } else {
-      pkt.data = gst_buffer_map (buf, &size, NULL, GST_MAP_READ);
-      pkt.size = size;
+      gst_buffer_map (buf, &map, GST_MAP_READ);
+      pkt.data = map.data;
+      pkt.size = map.size;
     }
 
     pkt.stream_index = best_pad->padnum;
@@ -776,7 +776,7 @@ gst_ffmpegmux_collected (GstCollectPads2 * pads, gpointer user_data)
     if (need_free) {
       g_free (pkt.data);
     } else {
-      gst_buffer_unmap (buf, pkt.data, pkt.size);
+      gst_buffer_unmap (buf, &map);
     }
     gst_buffer_unref (buf);
   } else {

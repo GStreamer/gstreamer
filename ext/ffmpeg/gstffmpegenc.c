@@ -777,8 +777,7 @@ gst_ffmpegenc_chain_video (GstPad * pad, GstObject * parent, GstBuffer * inbuf)
 {
   GstFFMpegEnc *ffmpegenc = (GstFFMpegEnc *) parent;
   GstBuffer *outbuf;
-  guint8 *data;
-  gsize size;
+  GstMapInfo map;
   gint ret_size = 0, frame_size;
   gboolean force_keyframe;
 
@@ -797,13 +796,12 @@ gst_ffmpegenc_chain_video (GstPad * pad, GstObject * parent, GstBuffer * inbuf)
   if (force_keyframe)
     ffmpegenc->picture->pict_type = FF_I_TYPE;
 
-  data = gst_buffer_map (inbuf, &size, NULL, GST_MAP_READ);
+  gst_buffer_map (inbuf, &map, GST_MAP_READ);
   frame_size = gst_ffmpeg_avpicture_fill ((AVPicture *) ffmpegenc->picture,
-      data,
+      map.data,
       ffmpegenc->context->pix_fmt,
       ffmpegenc->context->width, ffmpegenc->context->height);
-  g_return_val_if_fail (frame_size == size, GST_FLOW_ERROR);
-
+  g_return_val_if_fail (frame_size == map.size, GST_FLOW_ERROR);
   ffmpegenc->picture->pts =
       gst_ffmpeg_time_gst_to_ff (GST_BUFFER_TIMESTAMP (inbuf) /
       ffmpegenc->context->ticks_per_frame, ffmpegenc->context->time_base);
@@ -813,7 +811,7 @@ gst_ffmpegenc_chain_video (GstPad * pad, GstObject * parent, GstBuffer * inbuf)
   ret_size = avcodec_encode_video (ffmpegenc->context,
       ffmpegenc->working_buf, ffmpegenc->working_buf_size, ffmpegenc->picture);
 
-  gst_buffer_unmap (inbuf, data, size);
+  gst_buffer_unmap (inbuf, &map);
 
   if (ret_size < 0) {
 #ifndef GST_DISABLE_GST_DEBUG
@@ -886,7 +884,7 @@ gst_ffmpegenc_encode_audio (GstFFMpegEnc * ffmpegenc, guint8 * audio_in,
 {
   GstBuffer *outbuf;
   AVCodecContext *ctx;
-  guint8 *audio_out;
+  GstMapInfo map;
   gint res;
   GstFlowReturn ret;
 
@@ -894,23 +892,24 @@ gst_ffmpegenc_encode_audio (GstFFMpegEnc * ffmpegenc, guint8 * audio_in,
 
   /* We need to provide at least ffmpegs minimal buffer size */
   outbuf = gst_buffer_new_and_alloc (max_size + FF_MIN_BUFFER_SIZE);
-  audio_out = gst_buffer_map (outbuf, NULL, NULL, GST_MAP_WRITE);
+  gst_buffer_map (outbuf, &map, GST_MAP_WRITE);
 
   GST_LOG_OBJECT (ffmpegenc, "encoding buffer of max size %d", max_size);
   if (ffmpegenc->buffer_size != max_size)
     ffmpegenc->buffer_size = max_size;
 
-  res = avcodec_encode_audio (ctx, audio_out, max_size, (short *) audio_in);
+  res = avcodec_encode_audio (ctx, map.data, max_size, (short *) audio_in);
 
   if (res < 0) {
-    gst_buffer_unmap (outbuf, audio_out, 0);
+    gst_buffer_unmap (outbuf, &map);
     GST_ERROR_OBJECT (ffmpegenc, "Failed to encode buffer: %d", res);
     gst_buffer_unref (outbuf);
     return GST_FLOW_OK;
   }
   GST_LOG_OBJECT (ffmpegenc, "got output size %d", res);
+  gst_buffer_unmap (outbuf, &map);
+  gst_buffer_resize (outbuf, 0, res);
 
-  gst_buffer_unmap (outbuf, audio_out, res);
   GST_BUFFER_TIMESTAMP (outbuf) = timestamp;
   GST_BUFFER_DURATION (outbuf) = duration;
   if (discont)
@@ -1066,6 +1065,7 @@ gst_ffmpegenc_chain_audio (GstPad * pad, GstObject * parent, GstBuffer * inbuf)
     }
     GST_LOG_OBJECT (ffmpegenc, "%u bytes left in the adapter", avail);
   } else {
+    GstMapInfo map;
     /* we have no frame_size, feed the encoder all the data and expect a fixed
      * output size */
     int coded_bps = av_get_bits_per_sample (oclass->in_plugin->id);
@@ -1076,10 +1076,12 @@ gst_ffmpegenc_chain_audio (GstPad * pad, GstObject * parent, GstBuffer * inbuf)
     if (coded_bps)
       out_size = (out_size * coded_bps) / 8;
 
-    in_data = (guint8 *) gst_buffer_map (inbuf, &size, NULL, GST_MAP_READ);
+    gst_buffer_map (inbuf, &map, GST_MAP_READ);
+    in_data = map.data;
+    size = map.size;
     ret = gst_ffmpegenc_encode_audio (ffmpegenc, in_data, size, out_size,
         timestamp, duration, discont);
-    gst_buffer_unmap (inbuf, in_data, size);
+    gst_buffer_unmap (inbuf, &map);
     gst_buffer_unref (inbuf);
 
     if (ret != GST_FLOW_OK)

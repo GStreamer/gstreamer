@@ -2203,11 +2203,10 @@ gst_ffmpeg_caps_with_codecid (enum CodecID codec_id,
 
   /* extradata parsing (esds [mpeg4], wma/wmv, msmpeg4v1/2/3, etc.) */
   if ((value = gst_structure_get_value (str, "codec_data"))) {
-    gsize size;
-    guint8 *data;
+    GstMapInfo map;
 
     buf = gst_value_get_buffer (value);
-    data = gst_buffer_map (buf, &size, NULL, GST_MAP_READ);
+    gst_buffer_map (buf, &map, GST_MAP_READ);
 
     /* free the old one if it is there */
     if (context->extradata)
@@ -2237,19 +2236,20 @@ gst_ffmpeg_caps_with_codecid (enum CodecID codec_id,
       /* allocate with enough padding */
       GST_DEBUG ("copy codec_data");
       context->extradata =
-          av_mallocz (GST_ROUND_UP_16 (size + FF_INPUT_BUFFER_PADDING_SIZE));
-      memcpy (context->extradata, data, size);
-      context->extradata_size = size;
+          av_mallocz (GST_ROUND_UP_16 (map.size +
+              FF_INPUT_BUFFER_PADDING_SIZE));
+      memcpy (context->extradata, map.data, map.size);
+      context->extradata_size = map.size;
     }
 
     /* Hack for VC1. Sometimes the first (length) byte is 0 for some files */
-    if (codec_id == CODEC_ID_VC1 && size > 0 && data[0] == 0) {
-      context->extradata[0] = (guint8) size;
+    if (codec_id == CODEC_ID_VC1 && map.size > 0 && map.data[0] == 0) {
+      context->extradata[0] = (guint8) map.size;
     }
 
-    GST_DEBUG ("have codec data of size %d", size);
+    GST_DEBUG ("have codec data of size %d", map.size);
 
-    gst_buffer_unmap (buf, data, size);
+    gst_buffer_unmap (buf, &map);
   } else if (context->extradata == NULL && codec_id != CODEC_ID_AAC_LATM &&
       codec_id != CODEC_ID_FLAC) {
     /* no extradata, alloc dummy with 0 sized, some codecs insist on reading
