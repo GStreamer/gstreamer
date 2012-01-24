@@ -22,6 +22,9 @@
 #define __GST_PNGDEC_H__
 
 #include <gst/gst.h>
+#include <gst/video/video.h>
+#include <gst/video/gstvideopool.h>
+
 #include <png.h>
 
 G_BEGIN_DECLS
@@ -46,7 +49,6 @@ struct _GstPngDec
   /* Progressive */
   GstBuffer *buffer_out;
   GstFlowReturn ret;
-  png_uint_32 rowbytes;
   
   /* Pull range */
   gint offset;
@@ -56,12 +58,14 @@ struct _GstPngDec
   png_infop endinfo;
   gboolean setup;
 
+  GstVideoInfo vinfo;
   gint width;
   gint height;
-  gint bpp;
   gint color_type;
   gint fps_n;
   gint fps_d;
+
+  GstBufferPool *pool;
 
   /* Chain */
   gboolean framed;

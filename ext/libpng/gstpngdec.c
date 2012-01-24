@@ -33,61 +33,33 @@
 GST_DEBUG_CATEGORY_STATIC (pngdec_debug);
 #define GST_CAT_DEFAULT pngdec_debug
 
-static void gst_pngdec_base_init (gpointer g_class);
-static void gst_pngdec_class_init (GstPngDecClass * klass);
-static void gst_pngdec_init (GstPngDec * pngdec);
-
 static gboolean gst_pngdec_libpng_init (GstPngDec * pngdec);
 static gboolean gst_pngdec_libpng_clear (GstPngDec * pngdec);
 
 static GstStateChangeReturn gst_pngdec_change_state (GstElement * element,
     GstStateChange transition);
 
-static gboolean gst_pngdec_sink_activate_push (GstPad * sinkpad,
-    gboolean active);
-static gboolean gst_pngdec_sink_activate_pull (GstPad * sinkpad,
-    gboolean active);
-static gboolean gst_pngdec_sink_activate (GstPad * sinkpad);
+static gboolean gst_pngdec_sink_activate_mode (GstPad * sinkpad,
+    GstObject * parent, GstPadMode mode, gboolean active);
+static gboolean gst_pngdec_sink_activate (GstPad * sinkpad, GstObject * parent);
 
 static GstFlowReturn gst_pngdec_caps_create_and_set (GstPngDec * pngdec);
 
 static void gst_pngdec_task (GstPad * pad);
-static GstFlowReturn gst_pngdec_chain (GstPad * pad, GstBuffer * buffer);
-static gboolean gst_pngdec_sink_event (GstPad * pad, GstEvent * event);
-static gboolean gst_pngdec_sink_setcaps (GstPad * pad, GstCaps * caps);
+static GstFlowReturn gst_pngdec_chain (GstPad * pad, GstObject * parent,
+    GstBuffer * buffer);
+static gboolean gst_pngdec_sink_event (GstPad * pad, GstObject * parent,
+    GstEvent * event);
+static gboolean gst_pngdec_sink_setcaps (GstPngDec * pngdec, GstCaps * caps);
 
-static GstElementClass *parent_class = NULL;
-
-GType
-gst_pngdec_get_type (void)
-{
-  static GType pngdec_type = 0;
-
-  if (!pngdec_type) {
-    static const GTypeInfo pngdec_info = {
-      sizeof (GstPngDecClass),
-      gst_pngdec_base_init,
-      NULL,
-      (GClassInitFunc) gst_pngdec_class_init,
-      NULL,
-      NULL,
-      sizeof (GstPngDec),
-      0,
-      (GInstanceInitFunc) gst_pngdec_init,
-    };
-
-    pngdec_type = g_type_register_static (GST_TYPE_ELEMENT, "GstPngDec",
-        &pngdec_info, 0);
-  }
-  return pngdec_type;
-}
+static GstFlowReturn gst_pngdec_negotiate_pool (GstPngDec * dec,
+    GstCaps * caps, GstVideoInfo * info);
 
 static GstStaticPadTemplate gst_pngdec_src_pad_template =
-    GST_STATIC_PAD_TEMPLATE ("src",
+GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (GST_VIDEO_CAPS_RGBA ";" GST_VIDEO_CAPS_RGB ";"
-        GST_VIDEO_CAPS_ARGB_64)
+    GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE ("{ RGBA, RGB }"))
     );
 
 static GstStaticPadTemplate gst_pngdec_sink_pad_template =
@@ -97,20 +69,8 @@ GST_STATIC_PAD_TEMPLATE ("sink",
     GST_STATIC_CAPS ("image/png")
     );
 
-static void
-gst_pngdec_base_init (gpointer g_class)
-{
-  GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
-
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&gst_pngdec_src_pad_template));
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&gst_pngdec_sink_pad_template));
-  gst_element_class_set_details_simple (element_class, "PNG image decoder",
-      "Codec/Decoder/Image",
-      "Decode a png video frame to a raw image",
-      "Wim Taymans <wim@fluendo.com>");
-}
+#define gst_pngdec_parent_class parent_class
+G_DEFINE_TYPE (GstPngDec, gst_pngdec, GST_TYPE_ELEMENT);
 
 static void
 gst_pngdec_class_init (GstPngDecClass * klass)
@@ -119,9 +79,16 @@ gst_pngdec_class_init (GstPngDecClass * klass)
 
   gstelement_class = (GstElementClass *) klass;
 
-  parent_class = g_type_class_peek_parent (klass);
+  gstelement_class->change_state = GST_DEBUG_FUNCPTR (gst_pngdec_change_state);
 
-  gstelement_class->change_state = gst_pngdec_change_state;
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&gst_pngdec_src_pad_template));
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&gst_pngdec_sink_pad_template));
+  gst_element_class_set_details_simple (gstelement_class, "PNG image decoder",
+      "Codec/Decoder/Image",
+      "Decode a png video frame to a raw image",
+      "Wim Taymans <wim@fluendo.com>");
 
   GST_DEBUG_CATEGORY_INIT (pngdec_debug, "pngdec", 0, "PNG image decoder");
 }
@@ -131,14 +98,14 @@ gst_pngdec_init (GstPngDec * pngdec)
 {
   pngdec->sinkpad =
       gst_pad_new_from_static_template (&gst_pngdec_sink_pad_template, "sink");
-  gst_pad_set_activate_function (pngdec->sinkpad, gst_pngdec_sink_activate);
-  gst_pad_set_activatepush_function (pngdec->sinkpad,
-      gst_pngdec_sink_activate_push);
-  gst_pad_set_activatepull_function (pngdec->sinkpad,
-      gst_pngdec_sink_activate_pull);
-  gst_pad_set_chain_function (pngdec->sinkpad, gst_pngdec_chain);
-  gst_pad_set_event_function (pngdec->sinkpad, gst_pngdec_sink_event);
-  gst_pad_set_setcaps_function (pngdec->sinkpad, gst_pngdec_sink_setcaps);
+  gst_pad_set_activate_function (pngdec->sinkpad,
+      GST_DEBUG_FUNCPTR (gst_pngdec_sink_activate));
+  gst_pad_set_activatemode_function (pngdec->sinkpad,
+      GST_DEBUG_FUNCPTR (gst_pngdec_sink_activate_mode));
+  gst_pad_set_chain_function (pngdec->sinkpad,
+      GST_DEBUG_FUNCPTR (gst_pngdec_chain));
+  gst_pad_set_event_function (pngdec->sinkpad,
+      GST_DEBUG_FUNCPTR (gst_pngdec_sink_event));
   gst_element_add_pad (GST_ELEMENT (pngdec), pngdec->sinkpad);
 
   pngdec->srcpad =
@@ -155,7 +122,6 @@ gst_pngdec_init (GstPngDec * pngdec)
   pngdec->color_type = -1;
   pngdec->width = -1;
   pngdec->height = -1;
-  pngdec->bpp = -1;
   pngdec->fps_n = 0;
   pngdec->fps_d = 1;
 
@@ -184,7 +150,6 @@ user_info_callback (png_structp png_ptr, png_infop info)
 {
   GstPngDec *pngdec = NULL;
   GstFlowReturn ret = GST_FLOW_OK;
-  size_t buffer_size;
   GstBuffer *buffer = NULL;
 
   pngdec = GST_PNGDEC (png_get_io_ptr (png_ptr));
@@ -197,20 +162,20 @@ user_info_callback (png_structp png_ptr, png_infop info)
     goto beach;
   }
 
-  /* Allocate output buffer */
-  pngdec->rowbytes = png_get_rowbytes (pngdec->png, pngdec->info);
-  if (pngdec->rowbytes > (G_MAXUINT32 - 3)
-      || pngdec->height > G_MAXUINT32 / pngdec->rowbytes) {
-    ret = GST_FLOW_ERROR;
-    goto beach;
-  }
-  pngdec->rowbytes = GST_ROUND_UP_4 (pngdec->rowbytes);
-  buffer_size = pngdec->height * pngdec->rowbytes;
+  if (gst_pad_check_reconfigure (pngdec->srcpad)) {
+    GstCaps *caps;
 
-  ret =
-      gst_pad_alloc_buffer_and_set_caps (pngdec->srcpad, GST_BUFFER_OFFSET_NONE,
-      buffer_size, GST_PAD_CAPS (pngdec->srcpad), &buffer);
+    caps = gst_pad_get_current_caps (pngdec->srcpad);
+    gst_pngdec_negotiate_pool (pngdec, caps, &pngdec->vinfo);
+    gst_caps_unref (caps);
+  }
+
+  /* Allocate output buffer */
+  g_assert (pngdec->pool);
+  ret = gst_buffer_pool_acquire_buffer (pngdec->pool, &buffer, NULL);
   if (ret != GST_FLOW_OK) {
+    GST_DEBUG_OBJECT (pngdec, "failed to acquire buffer");
+    ret = GST_FLOW_ERROR;
     goto beach;
   }
 
@@ -233,12 +198,24 @@ user_endrow_callback (png_structp png_ptr, png_bytep new_row,
   /* If buffer_out doesn't exist, it means buffer_alloc failed, which 
    * will already have set the return code */
   if (GST_IS_BUFFER (pngdec->buffer_out)) {
-    size_t offset = row_num * pngdec->rowbytes;
+    GstVideoFrame frame;
+    GstBuffer *buffer = pngdec->buffer_out;
+    size_t offset;
+    gint width;
+    guint8 *data;
 
+    if (!gst_video_frame_map (&frame, &pngdec->vinfo, buffer, GST_MAP_WRITE)) {
+      pngdec->ret = GST_FLOW_ERROR;
+      return;
+    }
+
+    data = GST_VIDEO_FRAME_COMP_DATA (&frame, 0);
+    offset = row_num * GST_VIDEO_FRAME_COMP_STRIDE (&frame, 0);
     GST_LOG ("got row %u, copying in buffer %p at offset %" G_GSIZE_FORMAT,
         (guint) row_num, pngdec->buffer_out, offset);
-    memcpy (GST_BUFFER_DATA (pngdec->buffer_out) + offset, new_row,
-        pngdec->rowbytes);
+    width = GST_ROUND_UP_4 (png_get_rowbytes (pngdec->png, pngdec->info));
+    memcpy (data + offset, new_row, width);
+    gst_video_frame_unmap (&frame);
     pngdec->ret = GST_FLOW_OK;
   }
 }
@@ -247,8 +224,7 @@ static gboolean
 buffer_clip (GstPngDec * dec, GstBuffer * buffer)
 {
   gboolean res = TRUE;
-  gint64 cstart, cstop;
-
+  guint64 cstart, cstop;
 
   if ((!GST_CLOCK_TIME_IS_VALID (GST_BUFFER_TIMESTAMP (buffer))) ||
       (!GST_CLOCK_TIME_IS_VALID (GST_BUFFER_DURATION (buffer))) ||
@@ -317,13 +293,12 @@ user_read_data (png_structp png_ptr, png_bytep data, png_size_t length)
   if (ret != GST_FLOW_OK)
     goto pause;
 
-  size = GST_BUFFER_SIZE (buffer);
+  size = gst_buffer_get_size (buffer);
 
   if (size != length)
     goto short_buffer;
 
-  memcpy (data, GST_BUFFER_DATA (buffer), size);
-
+  gst_buffer_extract (buffer, 0, data, size);
   gst_buffer_unref (buffer);
 
   pngdec->offset += length;
@@ -359,6 +334,56 @@ short_buffer:
 }
 
 static GstFlowReturn
+gst_pngdec_negotiate_pool (GstPngDec * dec, GstCaps * caps, GstVideoInfo * info)
+{
+  GstQuery *query;
+  GstBufferPool *pool = NULL;
+  guint size, min, max, prefix, alignment;
+  GstStructure *config;
+
+  /* find a pool for the negotiated caps now */
+  query = gst_query_new_allocation (caps, TRUE);
+
+  if (gst_pad_peer_query (dec->srcpad, query)) {
+    GST_DEBUG_OBJECT (dec, "got downstream ALLOCATION hints");
+    /* we got configuration from our peer, parse them */
+    gst_query_parse_allocation_params (query, &size, &min, &max, &prefix,
+        &alignment, &pool);
+    size = MAX (size, info->size);
+  } else {
+    GST_DEBUG_OBJECT (dec, "didn't get downstream ALLOCATION hints");
+    size = info->size;
+    min = max = 0;
+    prefix = 0;
+    alignment = 0;
+  }
+
+  if (pool == NULL) {
+    /* we did not get a pool, make one ourselves then */
+    pool = gst_buffer_pool_new ();
+  }
+
+  if (dec->pool)
+    gst_object_unref (dec->pool);
+  dec->pool = pool;
+
+  config = gst_buffer_pool_get_config (pool);
+  gst_buffer_pool_config_set (config, caps, size, min, max, prefix, alignment);
+  /* just set the option, if the pool can support it we will transparently use
+   * it through the video info API. We could also see if the pool support this
+   * option and only activate it then. */
+  gst_buffer_pool_config_add_option (config, GST_BUFFER_POOL_OPTION_VIDEO_META);
+
+  gst_buffer_pool_set_config (pool, config);
+  /* and activate */
+  gst_buffer_pool_set_active (pool, TRUE);
+
+  gst_query_unref (query);
+
+  return GST_FLOW_OK;
+}
+
+static GstFlowReturn
 gst_pngdec_caps_create_and_set (GstPngDec * pngdec)
 {
   GstFlowReturn ret = GST_FLOW_OK;
@@ -366,6 +391,8 @@ gst_pngdec_caps_create_and_set (GstPngDec * pngdec)
   GstPadTemplate *templ = NULL;
   gint bpc = 0, color_type;
   png_uint_32 width, height;
+  GstVideoFormat format;
+  GstVideoInfo vinfo = { 0, };
 
   g_return_val_if_fail (GST_IS_PNGDEC (pngdec), GST_FLOW_ERROR);
 
@@ -427,11 +454,11 @@ gst_pngdec_caps_create_and_set (GstPngDec * pngdec)
   switch (pngdec->color_type) {
     case PNG_COLOR_TYPE_RGB:
       GST_LOG_OBJECT (pngdec, "we have no alpha channel, depth is 24 bits");
-      pngdec->bpp = 3 * bpc;
+      format = GST_VIDEO_FORMAT_RGB;
       break;
     case PNG_COLOR_TYPE_RGB_ALPHA:
       GST_LOG_OBJECT (pngdec, "we have an alpha channel, depth is 32 bits");
-      pngdec->bpp = 4 * bpc;
+      format = GST_VIDEO_FORMAT_RGBA;
       break;
     default:
       GST_ELEMENT_ERROR (pngdec, STREAM, NOT_IMPLEMENTED, (NULL),
@@ -440,11 +467,21 @@ gst_pngdec_caps_create_and_set (GstPngDec * pngdec)
       goto beach;
   }
 
-  caps = gst_caps_new_simple ("video/x-raw-rgb",
-      "width", G_TYPE_INT, pngdec->width,
-      "height", G_TYPE_INT, pngdec->height,
-      "bpp", G_TYPE_INT, pngdec->bpp,
-      "framerate", GST_TYPE_FRACTION, pngdec->fps_n, pngdec->fps_d, NULL);
+  gst_video_info_set_format (&vinfo, format, pngdec->width, pngdec->height);
+  vinfo.fps_n = pngdec->fps_n;
+  vinfo.fps_d = pngdec->fps_d;
+  vinfo.par_n = 1;
+  vinfo.par_d = 1;
+
+  if (memcmp (&vinfo, &pngdec->vinfo, sizeof (vinfo)) == 0) {
+    GST_DEBUG_OBJECT (pngdec, "video info unchanged, skip negotiation");
+    ret = GST_FLOW_OK;
+    goto beach;
+  }
+
+  pngdec->vinfo = vinfo;
+
+  caps = gst_video_info_to_caps (&pngdec->vinfo);
 
   templ = gst_static_pad_template_get (&gst_pngdec_src_pad_template);
 
@@ -456,14 +493,19 @@ gst_pngdec_caps_create_and_set (GstPngDec * pngdec)
   if (!gst_pad_set_caps (pngdec->srcpad, res))
     ret = GST_FLOW_NOT_NEGOTIATED;
 
+  /* clear pending reconfigure */
+  gst_pad_check_reconfigure (pngdec->srcpad);
+
   GST_DEBUG_OBJECT (pngdec, "our caps %" GST_PTR_FORMAT, res);
+  gst_pngdec_negotiate_pool (pngdec, res, &pngdec->vinfo);
 
   gst_caps_unref (res);
 
   /* Push a newsegment event */
   if (pngdec->need_newsegment) {
+    gst_segment_init (&pngdec->segment, GST_FORMAT_TIME);
     gst_pad_push_event (pngdec->srcpad,
-        gst_event_new_new_segment (FALSE, 1.0, GST_FORMAT_TIME, 0, -1, 0));
+        gst_event_new_segment (&pngdec->segment));
     pngdec->need_newsegment = FALSE;
   }
 
@@ -476,11 +518,10 @@ gst_pngdec_task (GstPad * pad)
 {
   GstPngDec *pngdec;
   GstBuffer *buffer = NULL;
-  size_t buffer_size = 0;
   gint i = 0;
-  png_bytep *rows, inp;
-  png_uint_32 rowbytes;
+  png_bytep *rows, inp = NULL;
   GstFlowReturn ret = GST_FLOW_OK;
+  GstVideoFrame frame;
 
   pngdec = GST_PNGDEC (GST_OBJECT_PARENT (pad));
 
@@ -498,6 +539,9 @@ gst_pngdec_task (GstPad * pad)
   /* Read info */
   png_read_info (pngdec->png, pngdec->info);
 
+  pngdec->fps_n = 0;
+  pngdec->fps_d = 1;
+
   /* Generate the caps and configure */
   ret = gst_pngdec_caps_create_and_set (pngdec);
   if (ret != GST_FLOW_OK) {
@@ -505,34 +549,33 @@ gst_pngdec_task (GstPad * pad)
   }
 
   /* Allocate output buffer */
-  rowbytes = png_get_rowbytes (pngdec->png, pngdec->info);
-  if (rowbytes > (G_MAXUINT32 - 3) || pngdec->height > G_MAXUINT32 / rowbytes) {
-    ret = GST_FLOW_ERROR;
-    goto pause;
-  }
-  rowbytes = GST_ROUND_UP_4 (rowbytes);
-  buffer_size = pngdec->height * rowbytes;
-  ret =
-      gst_pad_alloc_buffer_and_set_caps (pngdec->srcpad, GST_BUFFER_OFFSET_NONE,
-      buffer_size, GST_PAD_CAPS (pngdec->srcpad), &buffer);
+  g_assert (pngdec->pool);
+  ret = gst_buffer_pool_acquire_buffer (pngdec->pool, &buffer, NULL);
   if (ret != GST_FLOW_OK)
     goto pause;
 
   rows = (png_bytep *) g_malloc (sizeof (png_bytep) * pngdec->height);
 
-  inp = GST_BUFFER_DATA (buffer);
+  if (!gst_video_frame_map (&frame, &pngdec->vinfo, buffer, GST_MAP_WRITE))
+    goto invalid_frame;
+
+  inp = GST_VIDEO_FRAME_COMP_DATA (&frame, 0);
 
   for (i = 0; i < pngdec->height; i++) {
     rows[i] = inp;
-    inp += rowbytes;
+    inp += GST_VIDEO_FRAME_COMP_STRIDE (&frame, 0);
   }
 
   /* Read the actual picture */
   png_read_image (pngdec->png, rows);
   g_free (rows);
 
+  gst_video_frame_unmap (&frame);
+  inp = NULL;
+
   /* Push the raw RGB frame */
   ret = gst_pad_push (pngdec->srcpad, buffer);
+  buffer = NULL;
   if (ret != GST_FLOW_OK)
     goto pause;
 
@@ -543,6 +586,10 @@ gst_pngdec_task (GstPad * pad)
 
 pause:
   {
+    if (inp)
+      gst_video_frame_unmap (&frame);
+    if (buffer)
+      gst_buffer_unref (buffer);
     GST_INFO_OBJECT (pngdec, "pausing task, reason %s",
         gst_flow_get_name (ret));
     gst_pad_pause_task (pngdec->sinkpad);
@@ -555,17 +602,23 @@ pause:
       gst_pad_push_event (pngdec->srcpad, gst_event_new_eos ());
     }
   }
+invalid_frame:
+  {
+    GST_DEBUG_OBJECT (pngdec, "could not map video frame");
+    ret = GST_FLOW_ERROR;
+    goto pause;
+  }
 }
 
 static GstFlowReturn
-gst_pngdec_chain (GstPad * pad, GstBuffer * buffer)
+gst_pngdec_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
 {
   GstPngDec *pngdec;
   GstFlowReturn ret = GST_FLOW_OK;
+  guint8 *bdata = NULL;
+  gsize size;
 
-  pngdec = GST_PNGDEC (gst_pad_get_parent (pad));
-
-  GST_LOG_OBJECT (pngdec, "Got buffer, size=%u", GST_BUFFER_SIZE (buffer));
+  pngdec = GST_PNGDEC (parent);
 
   if (G_UNLIKELY (!pngdec->setup))
     goto not_configured;
@@ -587,9 +640,12 @@ gst_pngdec_chain (GstPad * pad, GstBuffer * buffer)
   pngdec->in_timestamp = GST_BUFFER_TIMESTAMP (buffer);
   pngdec->in_duration = GST_BUFFER_DURATION (buffer);
 
+  bdata = gst_buffer_map (buffer, &size, NULL, GST_MAP_READ);
+
+  GST_LOG_OBJECT (pngdec, "Got buffer, size=%d", (gint) size);
+
   /* Progressive loading of the PNG image */
-  png_process_data (pngdec->png, pngdec->info, GST_BUFFER_DATA (buffer),
-      GST_BUFFER_SIZE (buffer));
+  png_process_data (pngdec->png, pngdec->info, bdata, size);
 
   if (pngdec->image_ready) {
     if (pngdec->framed) {
@@ -609,11 +665,12 @@ gst_pngdec_chain (GstPad * pad, GstBuffer * buffer)
   /* grab new return code */
   ret = pngdec->ret;
 
+beach:
+  if (G_LIKELY (bdata))
+    gst_buffer_unmap (buffer, bdata, -1);
+
   /* And release the buffer */
   gst_buffer_unref (buffer);
-
-beach:
-  gst_object_unref (pngdec);
 
   return ret;
 
@@ -627,13 +684,10 @@ not_configured:
 }
 
 static gboolean
-gst_pngdec_sink_setcaps (GstPad * pad, GstCaps * caps)
+gst_pngdec_sink_setcaps (GstPngDec * pngdec, GstCaps * caps)
 {
   GstStructure *s;
-  GstPngDec *pngdec;
   gint num, denom;
-
-  pngdec = GST_PNGDEC (gst_pad_get_parent (pad));
 
   s = gst_caps_get_structure (caps, 0);
   if (gst_structure_get_fraction (s, "framerate", &num, &denom)) {
@@ -648,34 +702,24 @@ gst_pngdec_sink_setcaps (GstPad * pad, GstCaps * caps)
     pngdec->fps_d = 1;
   }
 
-  gst_object_unref (pngdec);
   return TRUE;
 }
 
 static gboolean
-gst_pngdec_sink_event (GstPad * pad, GstEvent * event)
+gst_pngdec_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
 {
   GstPngDec *pngdec;
   gboolean res;
 
-  pngdec = GST_PNGDEC (gst_pad_get_parent (pad));
+  pngdec = GST_PNGDEC (parent);
 
   switch (GST_EVENT_TYPE (event)) {
-    case GST_EVENT_NEWSEGMENT:{
-      gdouble rate, arate;
-      gboolean update;
-      gint64 start, stop, position;
-      GstFormat fmt;
+    case GST_EVENT_SEGMENT:{
+      gst_event_copy_segment (event, &pngdec->segment);
 
-      gst_event_parse_new_segment_full (event, &update, &rate, &arate, &fmt,
-          &start, &stop, &position);
+      GST_LOG_OBJECT (pngdec, "SEGMENT %" GST_SEGMENT_FORMAT, &pngdec->segment);
 
-      gst_segment_set_newsegment_full (&pngdec->segment, update, rate, arate,
-          fmt, start, stop, position);
-
-      GST_LOG_OBJECT (pngdec, "NEWSEGMENT (%s)", gst_format_get_name (fmt));
-
-      if (fmt == GST_FORMAT_TIME) {
+      if (pngdec->segment.format == GST_FORMAT_TIME) {
         pngdec->need_newsegment = FALSE;
         res = gst_pad_push_event (pngdec->srcpad, event);
       } else {
@@ -703,12 +747,20 @@ gst_pngdec_sink_event (GstPad * pad, GstEvent * event)
       res = gst_pad_push_event (pngdec->srcpad, event);
       break;
     }
+    case GST_EVENT_CAPS:
+    {
+      GstCaps *caps;
+
+      gst_event_parse_caps (event, &caps);
+      res = gst_pngdec_sink_setcaps (pngdec, caps);
+      gst_event_unref (event);
+      break;
+    }
     default:
       res = gst_pad_push_event (pngdec->srcpad, event);
       break;
   }
 
-  gst_object_unref (pngdec);
   return res;
 }
 
@@ -738,9 +790,8 @@ gst_pngdec_libpng_clear (GstPngDec * pngdec)
     pngdec->endinfo = NULL;
   }
 
-  pngdec->bpp = pngdec->color_type = pngdec->height = pngdec->width = -1;
+  pngdec->color_type = pngdec->height = pngdec->width = -1;
   pngdec->offset = 0;
-  pngdec->rowbytes = 0;
   pngdec->buffer_out = NULL;
 
   pngdec->setup = FALSE;
@@ -823,13 +874,15 @@ gst_pngdec_change_state (GstElement * element, GstStateChange transition)
       break;
   }
 
-  ret = parent_class->change_state (element, transition);
+  ret = GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
   if (ret != GST_STATE_CHANGE_SUCCESS)
     return ret;
 
   switch (transition) {
     case GST_STATE_CHANGE_PAUSED_TO_READY:
       gst_pngdec_libpng_clear (pngdec);
+      if (pngdec->pool)
+        gst_object_unref (pngdec->pool);
       break;
     default:
       break;
@@ -838,46 +891,53 @@ gst_pngdec_change_state (GstElement * element, GstStateChange transition)
   return ret;
 }
 
-/* this function gets called when we activate ourselves in push mode. */
-static gboolean
-gst_pngdec_sink_activate_push (GstPad * sinkpad, gboolean active)
-{
-  GstPngDec *pngdec;
-
-  pngdec = GST_PNGDEC (GST_OBJECT_PARENT (sinkpad));
-
-  pngdec->ret = GST_FLOW_OK;
-
-  if (active) {
-    /* Let libpng come back here on error */
-    if (setjmp (png_jmpbuf (pngdec->png)))
-      goto setup_failed;
-
-    GST_LOG ("setting up progressive loading callbacks");
-    png_set_progressive_read_fn (pngdec->png, pngdec,
-        user_info_callback, user_endrow_callback, user_end_callback);
-  }
-  return TRUE;
-
-setup_failed:
-  {
-    GST_LOG ("failed setting up libpng jmpbuf");
-    gst_pngdec_libpng_clear (pngdec);
-    return FALSE;
-  }
-}
-
 /* this function gets called when we activate ourselves in pull mode.
  * We can perform  random access to the resource and we start a task
  * to start reading */
 static gboolean
-gst_pngdec_sink_activate_pull (GstPad * sinkpad, gboolean active)
+gst_pngdec_sink_activate_mode (GstPad * sinkpad, GstObject * parent,
+    GstPadMode mode, gboolean active)
 {
-  if (active) {
-    return gst_pad_start_task (sinkpad, (GstTaskFunction) gst_pngdec_task,
-        sinkpad);
-  } else {
-    return gst_pad_stop_task (sinkpad);
+  GstPngDec *pngdec = GST_PNGDEC (parent);
+  gboolean res;
+
+  switch (mode) {
+    case GST_PAD_MODE_PULL:
+      if (active) {
+        res = gst_pad_start_task (sinkpad, (GstTaskFunction) gst_pngdec_task,
+            sinkpad);
+      } else {
+        res = gst_pad_stop_task (sinkpad);
+      }
+      break;
+    case GST_PAD_MODE_PUSH:
+      GST_DEBUG_OBJECT (pngdec, "activating push/chain function");
+      if (active) {
+        pngdec->ret = GST_FLOW_OK;
+
+        /* Let libpng come back here on error */
+        if (setjmp (png_jmpbuf (pngdec->png)))
+          goto setup_failed;
+
+        GST_LOG_OBJECT (pngdec, "setting up progressive loading callbacks");
+        png_set_progressive_read_fn (pngdec->png, pngdec,
+            user_info_callback, user_endrow_callback, user_end_callback);
+      } else {
+        GST_DEBUG_OBJECT (pngdec, "deactivating push/chain function");
+      }
+      res = TRUE;
+      break;
+    default:
+      res = FALSE;
+      break;
+  }
+  return res;
+
+setup_failed:
+  {
+    GST_LOG_OBJECT (pngdec, "failed setting up libpng jmpbuf");
+    gst_pngdec_libpng_clear (pngdec);
+    return FALSE;
   }
 }
 
@@ -888,11 +948,30 @@ gst_pngdec_sink_activate_pull (GstPad * sinkpad, gboolean active)
  * pull based.
  */
 static gboolean
-gst_pngdec_sink_activate (GstPad * sinkpad)
+gst_pngdec_sink_activate (GstPad * sinkpad, GstObject * parent)
 {
-  if (gst_pad_check_pull_range (sinkpad)) {
-    return gst_pad_activate_pull (sinkpad, TRUE);
-  } else {
-    return gst_pad_activate_push (sinkpad, TRUE);
+  GstQuery *query;
+  gboolean pull_mode;
+
+  query = gst_query_new_scheduling ();
+
+  if (!gst_pad_peer_query (sinkpad, query)) {
+    gst_query_unref (query);
+    goto activate_push;
+  }
+
+  pull_mode = gst_query_has_scheduling_mode (query, GST_PAD_MODE_PULL);
+  gst_query_unref (query);
+
+  if (!pull_mode)
+    goto activate_push;
+
+  GST_DEBUG_OBJECT (sinkpad, "activating pull");
+  return gst_pad_activate_mode (sinkpad, GST_PAD_MODE_PULL, TRUE);
+
+activate_push:
+  {
+    GST_DEBUG_OBJECT (sinkpad, "activating push");
+    return gst_pad_activate_mode (sinkpad, GST_PAD_MODE_PUSH, TRUE);
   }
 }
