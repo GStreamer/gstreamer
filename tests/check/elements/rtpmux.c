@@ -38,32 +38,43 @@ static GstStaticPadTemplate srctemplate = GST_STATIC_PAD_TEMPLATE ("src",
 
 typedef void (*check_cb) (GstPad * pad, int i);
 
-static GstCaps *
-getcaps_func (GstPad * pad)
-{
-  GstCaps **caps = g_object_get_data (G_OBJECT (pad), "caps");
-
-  fail_unless (caps != NULL && *caps != NULL);
-
-  return gst_caps_ref (*caps);
-}
-
 static gboolean
-setcaps_func (GstPad * pad, GstCaps * caps)
+query_func (GstPad * pad, GstObject * noparent, GstQuery * query)
 {
-  GstCaps **caps2 = g_object_get_data (G_OBJECT (pad), "caps");
+  switch (GST_QUERY_TYPE (query)) {
+    case GST_QUERY_CAPS:
+    {
+      GstCaps **caps = g_object_get_data (G_OBJECT (pad), "caps");
 
-  fail_unless (caps2 != NULL && *caps2 != NULL);
-
-  fail_unless (gst_caps_is_equal (caps, *caps2));
+      fail_unless (caps != NULL && *caps != NULL);
+      gst_query_set_caps_result (query, *caps);
+      break;
+    }
+    default:
+      break;
+  }
 
   return TRUE;
 }
 
 static gboolean
-event_func (GstPad * pad, GstEvent * event)
+event_func (GstPad * pad, GstObject * noparent, GstEvent * event)
 {
-  gst_event_unref (event);
+  switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_CAPS:
+    {
+      GstCaps *caps;
+      GstCaps **caps2 = g_object_get_data (G_OBJECT (pad), "caps");
+
+      gst_event_parse_caps (event, &caps);
+      fail_unless (caps2 != NULL && *caps2 != NULL);
+      fail_unless (gst_caps_is_equal (caps, *caps2));
+      break;
+    }
+    default:
+      gst_event_unref (event);
+      break;
+  }
 
   return TRUE;
 }
@@ -83,7 +94,7 @@ test_basic (const gchar * elem_name, const gchar * sink2, int count,
   GstCaps *src2caps = NULL;
   GstCaps *sinkcaps = NULL;
   GstCaps *caps;
-  GstEvent *newsegment;
+  GstSegment segment;
   int i;
 
   rtpmux = gst_check_setup_element (elem_name);
@@ -98,10 +109,9 @@ test_basic (const gchar * elem_name, const gchar * sink2, int count,
   src2 = gst_pad_new_from_static_template (&srctemplate, "src");
   fail_unless (gst_pad_link (src1, reqpad1) == GST_PAD_LINK_OK);
   fail_unless (gst_pad_link (src2, reqpad2) == GST_PAD_LINK_OK);
-  gst_pad_set_getcaps_function (src1, getcaps_func);
-  gst_pad_set_getcaps_function (src2, getcaps_func);
-  gst_pad_set_getcaps_function (sink, getcaps_func);
-  gst_pad_set_setcaps_function (sink, setcaps_func);
+  gst_pad_set_query_function (src1, query_func);
+  gst_pad_set_query_function (src2, query_func);
+  gst_pad_set_query_function (sink, query_func);
   gst_pad_set_event_function (sink, event_func);
   g_object_set_data (G_OBJECT (src1), "caps", &src1caps);
   g_object_set_data (G_OBJECT (src2), "caps", &src2caps);
@@ -114,12 +124,12 @@ test_basic (const gchar * elem_name, const gchar * sink2, int count,
   sinkcaps = gst_caps_new_simple ("application/x-rtp",
       "clock-rate", G_TYPE_INT, 3, "ssrc", G_TYPE_UINT, 13, NULL);
 
-  caps = gst_pad_peer_get_caps (src1);
+  caps = gst_pad_peer_query_caps (src1, NULL);
   fail_unless (gst_caps_is_empty (caps));
   gst_caps_unref (caps);
 
   gst_caps_set_simple (src2caps, "clock-rate", G_TYPE_INT, 3, NULL);
-  caps = gst_pad_peer_get_caps (src1);
+  caps = gst_pad_peer_query_caps (src1, NULL);
   fail_unless (gst_caps_is_equal (caps, sinkcaps));
   gst_caps_unref (caps);
 
@@ -141,27 +151,33 @@ test_basic (const gchar * elem_name, const gchar * sink2, int count,
       "ssrc", G_TYPE_UINT, 66, NULL);
   fail_unless (gst_pad_set_caps (src1, caps));
 
-  newsegment = gst_event_new_new_segment (FALSE, 1, GST_FORMAT_TIME, 100000,
-      -1, 0);
-  fail_unless (gst_pad_push_event (src1, newsegment));
-  newsegment = gst_event_new_new_segment (FALSE, 1, GST_FORMAT_TIME, 0, -1, 0);
-  fail_unless (gst_pad_push_event (src2, newsegment));
+  gst_segment_init (&segment, GST_FORMAT_TIME);
+  segment.start = 100000;
+  fail_unless (gst_pad_push_event (src1, gst_event_new_segment (&segment)));
+  segment.start = 0;
+  fail_unless (gst_pad_push_event (src2, gst_event_new_segment (&segment)));
+
 
   for (i = 0; i < count; i++) {
+    GstRTPBuffer rtpbuffer = GST_RTP_BUFFER_INIT;
+
     inbuf = gst_rtp_buffer_new_allocate (10, 0, 0);
-    GST_BUFFER_TIMESTAMP (inbuf) = i * 1000 + 100000;
+    GST_BUFFER_PTS (inbuf) = i * 1000 + 100000;
     GST_BUFFER_DURATION (inbuf) = 1000;
-    gst_buffer_set_caps (inbuf, caps);
-    gst_rtp_buffer_set_version (inbuf, 2);
-    gst_rtp_buffer_set_payload_type (inbuf, 98);
-    gst_rtp_buffer_set_ssrc (inbuf, 44);
-    gst_rtp_buffer_set_timestamp (inbuf, 200 + i);
-    gst_rtp_buffer_set_seq (inbuf, 2000 + i);
+
+    gst_rtp_buffer_map (inbuf, GST_MAP_WRITE, &rtpbuffer);
+
+    gst_rtp_buffer_set_version (&rtpbuffer, 2);
+    gst_rtp_buffer_set_payload_type (&rtpbuffer, 98);
+    gst_rtp_buffer_set_ssrc (&rtpbuffer, 44);
+    gst_rtp_buffer_set_timestamp (&rtpbuffer, 200 + i);
+    gst_rtp_buffer_set_seq (&rtpbuffer, 2000 + i);
+    gst_rtp_buffer_unmap (&rtpbuffer);
     fail_unless (gst_pad_push (src1, inbuf) == GST_FLOW_OK);
 
     if (buffers)
-      fail_unless (GST_BUFFER_TIMESTAMP (buffers->data) == i * 1000, "%lld",
-          GST_BUFFER_TIMESTAMP (buffers->data));
+      fail_unless (GST_BUFFER_PTS (buffers->data) == i * 1000, "%lld",
+          GST_BUFFER_PTS (buffers->data));
 
     cb (src2, i);
 
@@ -195,11 +211,15 @@ test_basic (const gchar * elem_name, const gchar * sink2, int count,
 static void
 basic_check_cb (GstPad * pad, int i)
 {
+  GstRTPBuffer rtpbuffer = GST_RTP_BUFFER_INIT;
   fail_unless (buffers && g_list_length (buffers) == 1);
-  fail_unless (gst_rtp_buffer_get_ssrc (buffers->data) == 55);
-  fail_unless (gst_rtp_buffer_get_timestamp (buffers->data) ==
+
+  gst_rtp_buffer_map (buffers->data, GST_MAP_READ, &rtpbuffer);
+  fail_unless (gst_rtp_buffer_get_ssrc (&rtpbuffer) == 55);
+  fail_unless (gst_rtp_buffer_get_timestamp (&rtpbuffer) ==
       200 - 57 + 1000 + i);
-  fail_unless (gst_rtp_buffer_get_seq (buffers->data) == 100 + 1 + i);
+  fail_unless (gst_rtp_buffer_get_seq (&rtpbuffer) == 100 + 1 + i);
+  gst_rtp_buffer_unmap (&rtpbuffer);
 }
 
 
@@ -225,20 +245,26 @@ lock_check_cb (GstPad * pad, int i)
   if (i % 2) {
     fail_unless (buffers == NULL);
   } else {
+    GstRTPBuffer rtpbuffer = GST_RTP_BUFFER_INIT;
+
     fail_unless (buffers && g_list_length (buffers) == 1);
-    fail_unless (gst_rtp_buffer_get_ssrc (buffers->data) == 55);
-    fail_unless (gst_rtp_buffer_get_timestamp (buffers->data) ==
+    gst_rtp_buffer_map (buffers->data, GST_MAP_READ, &rtpbuffer);
+    fail_unless (gst_rtp_buffer_get_ssrc (&rtpbuffer) == 55);
+    fail_unless (gst_rtp_buffer_get_timestamp (&rtpbuffer) ==
         200 - 57 + 1000 + i);
-    fail_unless (gst_rtp_buffer_get_seq (buffers->data) == 100 + 1 + i);
+    fail_unless (gst_rtp_buffer_get_seq (&rtpbuffer) == 100 + 1 + i);
+    gst_rtp_buffer_unmap (&rtpbuffer);
 
     inbuf = gst_rtp_buffer_new_allocate (10, 0, 0);
-    GST_BUFFER_TIMESTAMP (inbuf) = i * 1000 + 500;
+    GST_BUFFER_PTS (inbuf) = i * 1000 + 500;
     GST_BUFFER_DURATION (inbuf) = 1000;
-    gst_rtp_buffer_set_version (inbuf, 2);
-    gst_rtp_buffer_set_payload_type (inbuf, 98);
-    gst_rtp_buffer_set_ssrc (inbuf, 44);
-    gst_rtp_buffer_set_timestamp (inbuf, 200 + i);
-    gst_rtp_buffer_set_seq (inbuf, 2000 + i);
+    gst_rtp_buffer_map (inbuf, GST_MAP_WRITE, &rtpbuffer);
+    gst_rtp_buffer_set_version (&rtpbuffer, 2);
+    gst_rtp_buffer_set_payload_type (&rtpbuffer, 98);
+    gst_rtp_buffer_set_ssrc (&rtpbuffer, 44);
+    gst_rtp_buffer_set_timestamp (&rtpbuffer, 200 + i);
+    gst_rtp_buffer_set_seq (&rtpbuffer, 2000 + i);
+    gst_rtp_buffer_unmap (&rtpbuffer);
     fail_unless (gst_pad_push (pad, inbuf) == GST_FLOW_OK);
 
 

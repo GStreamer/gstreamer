@@ -27,6 +27,7 @@
 #define __GST_RTP_MUX_H__
 
 #include <gst/gst.h>
+#include <gst/rtp/gstrtpbuffer.h>
 
 G_BEGIN_DECLS
 #define GST_TYPE_RTP_MUX (gst_rtp_mux_get_type())
@@ -83,7 +84,7 @@ struct _GstRTPMuxClass
   GstElementClass parent_class;
 
   gboolean (*accept_buffer_locked) (GstRTPMux *rtp_mux,
-      GstRTPMuxPadPrivate * padpriv, GstBuffer * buffer);
+      GstRTPMuxPadPrivate * padpriv, GstRTPBuffer * buffer);
 
   gboolean (*src_event) (GstRTPMux *rtp_mux, GstEvent *event);
 };
