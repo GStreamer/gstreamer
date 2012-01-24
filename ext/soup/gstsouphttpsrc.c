@@ -876,7 +876,7 @@ gst_soup_http_src_finished_cb (SoupMessage * msg, GstSoupHTTPSrc * src)
 typedef struct
 {
   GstBuffer *buffer;
-  gpointer data;
+  GstMapInfo map;
 } SoupGstChunk;
 
 static void
@@ -884,7 +884,7 @@ gst_soup_http_src_chunk_free (gpointer user_data)
 {
   SoupGstChunk *chunk = (SoupGstChunk *) user_data;
 
-  gst_buffer_unmap (chunk->buffer, chunk->data, -1);
+  gst_buffer_unmap (chunk->buffer, &chunk->map);
   gst_buffer_unref (chunk->buffer);
   g_slice_free (SoupGstChunk, chunk);
 }
@@ -919,9 +919,9 @@ gst_soup_http_src_chunk_allocator (SoupMessage * msg, gsize max_len,
 
   chunk = g_slice_new0 (SoupGstChunk);
   chunk->buffer = gstbuf;
-  chunk->data = gst_buffer_map (gstbuf, &length, NULL, GST_MAP_READWRITE);
+  gst_buffer_map (gstbuf, &chunk->map, GST_MAP_READWRITE);
 
-  soupbuf = soup_buffer_new_with_owner (chunk->data, length,
+  soupbuf = soup_buffer_new_with_owner (chunk->map.data, chunk->map.size,
       chunk, gst_soup_http_src_chunk_free);
 
   return soupbuf;

@@ -358,10 +358,13 @@ gst_cmml_dec_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
 {
   GstCmmlDec *dec = GST_CMML_DEC (parent);
   GstCmmlPacketType packet;
+  GstMapInfo map;
   guint8 *data;
   gsize size;
 
-  data = gst_buffer_map (buffer, &size, NULL, GST_MAP_READ);
+  gst_buffer_map (buffer, &map, GST_MAP_READ);
+  data = map.data;
+  size = map.size;
 
   if (size == 0) {
     /* the EOS page could be empty */
@@ -400,7 +403,7 @@ gst_cmml_dec_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
   }
 
 done:
-  gst_buffer_unmap (buffer, data, size);
+  gst_buffer_unmap (buffer, &map);
   gst_buffer_unref (buffer);
 
   return dec->flow_return;

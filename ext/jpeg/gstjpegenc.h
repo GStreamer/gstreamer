@@ -86,8 +86,7 @@ struct _GstJpegEnc
   GstFlowReturn last_ret;
 
   GstMemory *output_mem;
-  gpointer output_data;
-  gsize output_size;
+  GstMapInfo output_map;
 };
 
 struct _GstJpegEncClass

@@ -440,9 +440,9 @@ gst_multiudpsink_render (GstBaseSink * bsink, GstBuffer * buffer)
   GstMultiUDPSink *sink;
   GList *clients;
   GOutputVector *vec;
+  GstMapInfo *map;
   guint n_mem, i;
-  gpointer bdata;
-  gsize bsize, size;
+  gsize size;
   GstMemory *mem;
   gint num, no_clients;
   GError *err = NULL;
@@ -454,21 +454,22 @@ gst_multiudpsink_render (GstBaseSink * bsink, GstBuffer * buffer)
     goto no_data;
 
   vec = g_new (GOutputVector, n_mem);
+  map = g_new (GstMapInfo, n_mem);
 
   size = 0;
   for (i = 0; i < n_mem; i++) {
     mem = gst_buffer_peek_memory (buffer, i, GST_MAP_READ);
-    bdata = gst_memory_map (mem, &bsize, NULL, GST_MAP_READ);
+    gst_memory_map (mem, &map[i], GST_MAP_READ);
 
-    if (bsize > UDP_MAX_SIZE) {
+    if (map[i].size > UDP_MAX_SIZE) {
       GST_WARNING ("Attempting to send a UDP packet larger than maximum "
-          "size (%" G_GSIZE_FORMAT " > %d)", bsize, UDP_MAX_SIZE);
+          "size (%" G_GSIZE_FORMAT " > %d)", map[i].size, UDP_MAX_SIZE);
     }
 
-    vec[i].buffer = bdata;
-    vec[i].size = bsize;
+    vec[i].buffer = map[i].data;
+    vec[i].size = map[i].size;
 
-    size += bsize;
+    size += map[i].size;
   }
 
   sink->bytes_to_serve += size;
@@ -509,11 +510,11 @@ gst_multiudpsink_render (GstBaseSink * bsink, GstBuffer * buffer)
   g_mutex_unlock (&sink->client_lock);
 
   /* unmap all memory again */
-  for (i = 0; i < n_mem; i++) {
-    mem = gst_buffer_peek_memory (buffer, i, GST_MAP_READ);
-    gst_memory_unmap (mem);
-  }
+  for (i = 0; i < n_mem; i++)
+    gst_memory_unmap (map[i].memory, &map[i]);
+
   g_free (vec);
+  g_free (map);
 
   GST_LOG_OBJECT (sink, "sent %d bytes to %d (of %d) clients", size, num,
       no_clients);

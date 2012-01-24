@@ -516,8 +516,7 @@ gst_flac_enc_set_metadata (GstFlacEnc * flacenc, guint64 total_samples)
     GstTagImageType image_type = GST_TAG_IMAGE_TYPE_NONE;
 #endif
     gint i;
-    guint8 *data;
-    gsize size;
+    GstMapInfo map;
 
     for (i = 0; i < n_images + n_preview_images; i++) {
       if (i < n_images) {
@@ -545,10 +544,10 @@ gst_flac_enc_set_metadata (GstFlacEnc * flacenc, guint64 total_samples)
         image_type = image_type + 2;
 #endif
 
-      data = gst_buffer_map (buffer, &size, NULL, GST_MAP_READ);
+      gst_buffer_map (buffer, &map, GST_MAP_READ);
       FLAC__metadata_object_picture_set_data (flacenc->meta[entries],
-          data, size, TRUE);
-      gst_buffer_unmap (buffer, data, size);
+          map.data, map.size, TRUE);
+      gst_buffer_unmap (buffer, &map);
 
 #if 0
       /* FIXME: There's no way to set the picture type in libFLAC */
@@ -915,6 +914,7 @@ gst_flac_enc_process_stream_headers (GstFlacEnc * enc)
 
   for (l = enc->headers; l != NULL; l = l->next) {
     GstBuffer *buf;
+    GstMapInfo map;
     guint8 *data;
     gsize size;
 
@@ -925,7 +925,9 @@ gst_flac_enc_process_stream_headers (GstFlacEnc * enc)
     buf = GST_BUFFER_CAST (l->data);
     GST_BUFFER_FLAG_SET (buf, GST_BUFFER_FLAG_IN_CAPS);
 
-    data = gst_buffer_map (buf, &size, NULL, GST_MAP_READ);
+    gst_buffer_map (buf, &map, GST_MAP_READ);
+    data = map.data;
+    size = map.size;
 
     /* find initial 4-byte marker which we need to skip later on */
     if (size == 4 && memcmp (data, "fLaC", 4) == 0) {
@@ -936,7 +938,7 @@ gst_flac_enc_process_stream_headers (GstFlacEnc * enc)
       vorbiscomment = buf;
     }
 
-    gst_buffer_unmap (buf, data, size);
+    gst_buffer_unmap (buf, &map);
   }
 
   if (marker == NULL || streaminfo == NULL || vorbiscomment == NULL) {
@@ -951,8 +953,9 @@ gst_flac_enc_process_stream_headers (GstFlacEnc * enc)
   {
     GstBuffer *buf;
     guint16 num;
+    GstMapInfo map;
     guint8 *bdata;
-    gsize bsize, slen;
+    gsize slen;
 
     /* minus one for the marker that is merged with streaminfo here */
     num = g_list_length (enc->headers) - 1;
@@ -960,7 +963,8 @@ gst_flac_enc_process_stream_headers (GstFlacEnc * enc)
     slen = gst_buffer_get_size (streaminfo);
     buf = gst_buffer_new_and_alloc (13 + slen);
 
-    bdata = gst_buffer_map (buf, &bsize, NULL, GST_MAP_WRITE);
+    gst_buffer_map (buf, &map, GST_MAP_WRITE);
+    bdata = map.data;
     bdata[0] = 0x7f;
     memcpy (bdata + 1, "FLAC", 4);
     bdata[5] = 0x01;            /* mapping version major */
@@ -969,7 +973,7 @@ gst_flac_enc_process_stream_headers (GstFlacEnc * enc)
     bdata[8] = (num & 0x00FF) >> 0;
     memcpy (bdata + 9, "fLaC", 4);
     gst_buffer_extract (streaminfo, 0, bdata + 13, slen);
-    gst_buffer_unmap (buf, bdata, bsize);
+    gst_buffer_unmap (buf, &map);
 
     notgst_value_array_append_buffer (&array, buf);
     gst_buffer_unref (buf);
@@ -1169,12 +1173,11 @@ gst_flac_enc_handle_frame (GstAudioEncoder * enc, GstBuffer * buffer)
 {
   GstFlacEnc *flacenc;
   FLAC__int32 *data;
-  gsize bsize;
   gint samples, width, channels;
   gulong i;
   gint j;
   FLAC__bool res;
-  gpointer bdata;
+  GstMapInfo map;
   GstAudioInfo *info =
       gst_audio_encoder_get_audio_info (GST_AUDIO_ENCODER (enc));
   gint *reorder_map;
@@ -1202,28 +1205,28 @@ gst_flac_enc_handle_frame (GstAudioEncoder * enc, GstBuffer * buffer)
     return flacenc->last_flow;
   }
 
-  bdata = gst_buffer_map (buffer, &bsize, NULL, GST_MAP_READ);
-  samples = bsize / (width >> 3);
+  gst_buffer_map (buffer, &map, GST_MAP_READ);
+  samples = map.size / (width >> 3);
 
   data = g_malloc (samples * sizeof (FLAC__int32));
 
   samples /= channels;
   if (width == 8) {
-    gint8 *indata = (gint8 *) bdata;
+    gint8 *indata = (gint8 *) map.data;
 
     for (i = 0; i < samples; i++)
       for (j = 0; j < channels; j++)
         data[i * channels + reorder_map[j]] =
             (FLAC__int32) indata[i * channels + j];
   } else if (width == 16) {
-    gint16 *indata = (gint16 *) bdata;
+    gint16 *indata = (gint16 *) map.data;
 
     for (i = 0; i < samples; i++)
       for (j = 0; j < channels; j++)
         data[i * channels + reorder_map[j]] =
             (FLAC__int32) indata[i * channels + j];
   } else if (width == 24) {
-    guint8 *indata = (guint8 *) bdata;
+    guint8 *indata = (guint8 *) map.data;
     guint32 val;
 
     for (i = 0; i < samples; i++)
@@ -1234,7 +1237,7 @@ gst_flac_enc_handle_frame (GstAudioEncoder * enc, GstBuffer * buffer)
         data[i * channels + reorder_map[j]] = (FLAC__int32) val;
       }
   } else if (width == 32) {
-    gint32 *indata = (gint32 *) bdata;
+    gint32 *indata = (gint32 *) map.data;
 
     for (i = 0; i < samples; i++)
       for (j = 0; j < channels; j++)
@@ -1243,7 +1246,7 @@ gst_flac_enc_handle_frame (GstAudioEncoder * enc, GstBuffer * buffer)
   } else {
     g_assert_not_reached ();
   }
-  gst_buffer_unmap (buffer, bdata, bsize);
+  gst_buffer_unmap (buffer, &map);
 
   res = FLAC__stream_encoder_process_interleaved (flacenc->encoder,
       (const FLAC__int32 *) data, samples / channels);

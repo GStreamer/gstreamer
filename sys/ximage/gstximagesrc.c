@@ -437,12 +437,11 @@ composite_pixel (GstXContext * xcontext, guchar * dest, guchar * src)
 static void
 copy_buffer (GstBuffer * dest, GstBuffer * src)
 {
-  guint8 *data;
-  gsize size;
+  GstMapInfo map;
 
-  data = gst_buffer_map (src, &size, NULL, GST_MAP_READ);
-  gst_buffer_fill (dest, 0, data, size);
-  gst_buffer_unmap (src, data, size);
+  gst_buffer_map (src, &map, GST_MAP_READ);
+  gst_buffer_fill (dest, 0, map.data, map.size);
+  gst_buffer_unmap (src, &map);
 }
 #endif
 

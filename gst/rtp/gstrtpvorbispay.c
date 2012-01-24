@@ -291,10 +291,10 @@ gst_rtp_vorbis_pay_finish_headers (GstRTPBasePayload * basepayload)
   ident = fnv1_hash_32_new ();
   for (walk = rtpvorbispay->headers; walk; walk = g_list_next (walk)) {
     GstBuffer *buf = GST_BUFFER_CAST (walk->data);
-    guint bsize, osize;
-    guint8 *data;
+    GstMapInfo map;
+    guint bsize;
 
-    bsize = osize = gst_buffer_get_size (buf);
+    bsize = gst_buffer_get_size (buf);
     length += bsize;
     n_headers++;
 
@@ -307,9 +307,9 @@ gst_rtp_vorbis_pay_finish_headers (GstRTPBasePayload * basepayload)
       } while (bsize);
     }
     /* update hash */
-    data = gst_buffer_map (buf, NULL, NULL, GST_MAP_READ);
-    ident = fnv1_hash_32_update (ident, data, osize);
-    gst_buffer_unmap (buf, data, -1);
+    gst_buffer_map (buf, &map, GST_MAP_READ);
+    ident = fnv1_hash_32_update (ident, map.data, map.size);
+    gst_buffer_unmap (buf, &map);
   }
 
   /* packet length is header size + packet length */
@@ -475,6 +475,7 @@ gst_rtp_vorbis_pay_handle_buffer (GstRTPBasePayload * basepayload,
   GstRtpVorbisPay *rtpvorbispay;
   GstFlowReturn ret;
   guint newsize;
+  GstMapInfo map;
   gsize size;
   guint8 *data;
   guint packet_len;
@@ -488,7 +489,9 @@ gst_rtp_vorbis_pay_handle_buffer (GstRTPBasePayload * basepayload,
 
   rtpvorbispay = GST_RTP_VORBIS_PAY (basepayload);
 
-  data = gst_buffer_map (buffer, &size, NULL, GST_MAP_READ);
+  gst_buffer_map (buffer, &map, GST_MAP_READ);
+  data = map.data;
+  size = map.size;
   duration = GST_BUFFER_DURATION (buffer);
   timestamp = GST_BUFFER_TIMESTAMP (buffer);
 
@@ -523,7 +526,7 @@ gst_rtp_vorbis_pay_handle_buffer (GstRTPBasePayload * basepayload,
     if (VDT != 0) {
       GST_DEBUG_OBJECT (rtpvorbispay, "collecting header");
       /* append header to the list of headers */
-      gst_buffer_unmap (buffer, data, -1);
+      gst_buffer_unmap (buffer, &map);
       rtpvorbispay->headers = g_list_append (rtpvorbispay->headers, buffer);
       ret = GST_FLOW_OK;
       goto done;
@@ -623,7 +626,7 @@ gst_rtp_vorbis_pay_handle_buffer (GstRTPBasePayload * basepayload,
   if (rtp.buffer)
     gst_rtp_buffer_unmap (&rtp);
 
-  gst_buffer_unmap (buffer, data, -1);
+  gst_buffer_unmap (buffer, &map);
   gst_buffer_unref (buffer);
 
 done:
@@ -635,13 +638,13 @@ wrong_size:
     GST_ELEMENT_WARNING (rtpvorbispay, STREAM, DECODE,
         ("Invalid packet size (1 < %" G_GSIZE_FORMAT " <= 0xffff)", size),
         (NULL));
-    gst_buffer_unmap (buffer, data, -1);
+    gst_buffer_unmap (buffer, &map);
     gst_buffer_unref (buffer);
     return GST_FLOW_OK;
   }
 parse_id_failed:
   {
-    gst_buffer_unmap (buffer, data, -1);
+    gst_buffer_unmap (buffer, &map);
     gst_buffer_unref (buffer);
     return GST_FLOW_ERROR;
   }
@@ -649,7 +652,7 @@ unknown_header:
   {
     GST_ELEMENT_WARNING (rtpvorbispay, STREAM, DECODE,
         (NULL), ("Ignoring unknown header received"));
-    gst_buffer_unmap (buffer, data, -1);
+    gst_buffer_unmap (buffer, &map);
     gst_buffer_unref (buffer);
     return GST_FLOW_OK;
   }
@@ -657,7 +660,7 @@ header_error:
   {
     GST_ELEMENT_WARNING (rtpvorbispay, STREAM, DECODE,
         (NULL), ("Error initializing header config"));
-    gst_buffer_unmap (buffer, data, -1);
+    gst_buffer_unmap (buffer, &map);
     gst_buffer_unref (buffer);
     return GST_FLOW_OK;
   }

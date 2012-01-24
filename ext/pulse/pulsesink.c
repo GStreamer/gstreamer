@@ -1737,8 +1737,7 @@ gst_pulsesink_payload (GstAudioBaseSink * sink, GstBuffer * buf)
       /* FIXME: alloc memory from PA if possible */
       gint framesize = gst_audio_iec61937_frame_size (&sink->ringbuffer->spec);
       GstBuffer *out;
-      guint8 *indata, *outdata;
-      gsize insize, outsize;
+      GstMapInfo inmap, outmap;
       gboolean res;
 
       if (framesize <= 0)
@@ -1746,14 +1745,14 @@ gst_pulsesink_payload (GstAudioBaseSink * sink, GstBuffer * buf)
 
       out = gst_buffer_new_and_alloc (framesize);
 
-      indata = gst_buffer_map (buf, &insize, NULL, GST_MAP_READ);
-      outdata = gst_buffer_map (out, &outsize, NULL, GST_MAP_WRITE);
+      gst_buffer_map (buf, &inmap, GST_MAP_READ);
+      gst_buffer_map (out, &outmap, GST_MAP_WRITE);
 
-      res = gst_audio_iec61937_payload (indata, insize,
-          outdata, outsize, &sink->ringbuffer->spec);
+      res = gst_audio_iec61937_payload (inmap.data, inmap.size,
+          outmap.data, outmap.size, &sink->ringbuffer->spec);
 
-      gst_buffer_unmap (buf, indata, insize);
-      gst_buffer_unmap (out, outdata, outsize);
+      gst_buffer_unmap (buf, &inmap);
+      gst_buffer_unmap (out, &outmap);
 
       if (!res) {
         gst_buffer_unref (out);

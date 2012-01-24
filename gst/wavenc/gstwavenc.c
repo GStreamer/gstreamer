@@ -169,10 +169,12 @@ gst_wavenc_create_header_buf (GstWavEnc * wavenc, guint audio_data_size)
 {
   struct wave_header wave;
   GstBuffer *buf;
+  GstMapInfo map;
   guint8 *header;
 
   buf = gst_buffer_new_and_alloc (WAV_HEADER_LEN);
-  header = gst_buffer_map (buf, NULL, NULL, GST_MAP_WRITE);
+  gst_buffer_map (buf, &map, GST_MAP_WRITE);
+  header = map.data;
   memset (header, 0, WAV_HEADER_LEN);
 
   wave.common.wChannels = wavenc->channels;
@@ -209,7 +211,7 @@ gst_wavenc_create_header_buf (GstWavEnc * wavenc, guint audio_data_size)
   memcpy (header + 36, (char *) wave.data.id, 4);
   GST_WRITE_UINT32_LE (header + 40, wave.data.len);
 
-  gst_buffer_unmap (buf, header, -1);
+  gst_buffer_unmap (buf, &map);
 
   return buf;
 }

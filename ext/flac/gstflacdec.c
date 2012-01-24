@@ -536,8 +536,7 @@ gst_flac_dec_write (GstFlacDec * flacdec, const FLAC__Frame * frame,
   guint channels = frame->header.channels;
   guint samples = frame->header.blocksize;
   guint j, i;
-  gpointer data;
-  gsize size;
+  GstMapInfo map;
   gboolean caps_changed;
 
   GST_LOG_OBJECT (flacdec, "samples in frame header: %d", samples);
@@ -618,9 +617,9 @@ gst_flac_dec_write (GstFlacDec * flacdec, const FLAC__Frame * frame,
   GST_LOG_OBJECT (flacdec, "alloc_buffer_and_set_caps");
   outbuf = gst_buffer_new_allocate (NULL, samples * channels * (width / 8), 0);
 
-  data = gst_buffer_map (outbuf, &size, NULL, GST_MAP_WRITE);
+  gst_buffer_map (outbuf, &map, GST_MAP_WRITE);
   if (width == 8) {
-    gint8 *outbuffer = (gint8 *) data;
+    gint8 *outbuffer = (gint8 *) map.data;
     gint *reorder_map = flacdec->channel_reorder_map;
 
     if (width != depth) {
@@ -637,7 +636,7 @@ gst_flac_dec_write (GstFlacDec * flacdec, const FLAC__Frame * frame,
       }
     }
   } else if (width == 16) {
-    gint16 *outbuffer = (gint16 *) data;
+    gint16 *outbuffer = (gint16 *) map.data;
     gint *reorder_map = flacdec->channel_reorder_map;
 
     if (width != depth) {
@@ -655,7 +654,7 @@ gst_flac_dec_write (GstFlacDec * flacdec, const FLAC__Frame * frame,
       }
     }
   } else if (width == 32) {
-    gint32 *outbuffer = (gint32 *) data;
+    gint32 *outbuffer = (gint32 *) map.data;
     gint *reorder_map = flacdec->channel_reorder_map;
 
     if (width != depth) {
@@ -675,7 +674,7 @@ gst_flac_dec_write (GstFlacDec * flacdec, const FLAC__Frame * frame,
   } else {
     g_assert_not_reached ();
   }
-  gst_buffer_unmap (outbuf, data, size);
+  gst_buffer_unmap (outbuf, &map);
 
   GST_DEBUG_OBJECT (flacdec, "pushing %d samples", samples);
 
@@ -743,17 +742,17 @@ gst_flac_dec_handle_frame (GstAudioDecoder * audio_dec, GstBuffer * buf)
   if (G_UNLIKELY (!dec->got_headers)) {
     gboolean got_audio_frame;
     gint64 unused;
-    guint8 *data;
-    gsize size;
+    GstMapInfo map;
 
     /* check if this is a flac audio frame (rather than a header or junk) */
-    data = gst_buffer_map (buf, &size, NULL, GST_MAP_READ);
-    got_audio_frame = gst_flac_dec_scan_got_frame (dec, data, size, &unused);
-    gst_buffer_unmap (buf, data, size);
+    gst_buffer_map (buf, &map, GST_MAP_READ);
+    got_audio_frame =
+        gst_flac_dec_scan_got_frame (dec, map.data, map.size, &unused);
+    gst_buffer_unmap (buf, &map);
 
     if (!got_audio_frame) {
       GST_INFO_OBJECT (dec, "dropping in-stream header, %" G_GSIZE_FORMAT " "
-          "bytes", size);
+          "bytes", map.size);
       gst_audio_decoder_finish_frame (audio_dec, NULL, 1);
       return GST_FLOW_OK;
     }

@@ -2579,9 +2579,6 @@ gboolean
 gst_v4l2_object_copy (GstV4l2Object * v4l2object, GstBuffer * dest,
     GstBuffer * src)
 {
-  guint8 *data;
-  gsize size;
-
   if (v4l2object->info.finfo) {
     GstVideoFrame src_frame, dest_frame;
 
@@ -2602,10 +2599,12 @@ gst_v4l2_object_copy (GstV4l2Object * v4l2object, GstBuffer * dest,
     gst_video_frame_unmap (&src_frame);
     gst_video_frame_unmap (&dest_frame);
   } else {
+    GstMapInfo map;
+
     GST_DEBUG_OBJECT (v4l2object->element, "copy raw bytes");
-    data = gst_buffer_map (src, &size, NULL, GST_MAP_READ);
-    gst_buffer_fill (dest, 0, data, size);
-    gst_buffer_unmap (src, data, size);
+    gst_buffer_map (src, &map, GST_MAP_READ);
+    gst_buffer_fill (dest, 0, map.data, map.size);
+    gst_buffer_unmap (src, &map);
   }
   GST_CAT_LOG_OBJECT (GST_CAT_PERFORMANCE, v4l2object->element,
       "slow copy into buffer %p", dest);

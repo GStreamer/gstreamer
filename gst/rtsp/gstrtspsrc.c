@@ -2095,9 +2095,9 @@ gst_rtspsrc_sink_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
   GstRTSPSrc *src;
   GstRTSPStream *stream;
   GstFlowReturn res = GST_FLOW_OK;
+  GstMapInfo map;
   guint8 *data;
   guint size;
-  gsize bsize;
   GstRTSPResult ret;
   GstRTSPMessage message = { 0 };
   GstRTSPConnection *conn;
@@ -2105,8 +2105,9 @@ gst_rtspsrc_sink_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
   stream = (GstRTSPStream *) gst_pad_get_element_private (pad);
   src = stream->parent;
 
-  data = gst_buffer_map (buffer, &bsize, NULL, GST_MAP_READ);
-  size = bsize;
+  gst_buffer_map (buffer, &map, GST_MAP_READ);
+  size = map.size;
+  data = map.data;
 
   gst_rtsp_message_init_data (&message, stream->channel[1]);
 
@@ -2127,7 +2128,7 @@ gst_rtspsrc_sink_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
   gst_rtsp_message_steal_body (&message, &data, &size);
   gst_rtsp_message_unset (&message);
 
-  gst_buffer_unmap (buffer, data, size);
+  gst_buffer_unmap (buffer, &map);
   gst_buffer_unref (buffer);
 
   return res;

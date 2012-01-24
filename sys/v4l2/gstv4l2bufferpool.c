@@ -892,20 +892,20 @@ gst_v4l2_do_read (GstV4l2BufferPool * pool, GstBuffer * buf)
   GstFlowReturn res;
   GstV4l2Object *obj = pool->obj;
   gint amount;
-  gpointer data;
+  GstMapInfo map;
   gint toread;
 
   toread = obj->sizeimage;
 
   GST_LOG_OBJECT (pool, "reading %d bytes into buffer %p", toread, buf);
 
-  data = gst_buffer_map (buf, NULL, NULL, GST_MAP_WRITE);
+  gst_buffer_map (buf, &map, GST_MAP_WRITE);
 
   do {
     if ((res = gst_v4l2_object_poll (obj)) != GST_FLOW_OK)
       goto poll_error;
 
-    amount = v4l2_read (obj->video_fd, data, toread);
+    amount = v4l2_read (obj->video_fd, map.data, toread);
 
     if (amount == toread) {
       break;
@@ -921,7 +921,8 @@ gst_v4l2_do_read (GstV4l2BufferPool * pool, GstBuffer * buf)
   } while (TRUE);
 
   GST_LOG_OBJECT (pool, "read %d bytes", amount);
-  gst_buffer_unmap (buf, data, amount);
+  gst_buffer_unmap (buf, &map);
+  gst_buffer_resize (buf, 0, amount);
 
   return GST_FLOW_OK;
 
@@ -941,7 +942,8 @@ read_error:
   }
 cleanup:
   {
-    gst_buffer_unmap (buf, data, 0);
+    gst_buffer_unmap (buf, &map);
+    gst_buffer_resize (buf, 0, 0);
     return res;
   }
 }

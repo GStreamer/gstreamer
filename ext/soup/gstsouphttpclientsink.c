@@ -623,30 +623,28 @@ send_message_locked (GstSoupHttpClientSink * souphttpsink)
   if (souphttpsink->offset == 0) {
     for (g = souphttpsink->streamheader_buffers; g; g = g_list_next (g)) {
       GstBuffer *buffer = g->data;
-      gpointer data;
-      gsize size;
+      GstMapInfo map;
 
       /* FIXME, lifetime of the buffer? */
-      data = gst_buffer_map (buffer, &size, NULL, GST_MAP_READ);
+      gst_buffer_map (buffer, &map, GST_MAP_READ);
       soup_message_body_append (souphttpsink->message->request_body,
-          SOUP_MEMORY_STATIC, data, size);
-      n += size;
-      gst_buffer_unmap (buffer, data, size);
+          SOUP_MEMORY_STATIC, map.data, map.size);
+      n += map.size;
+      gst_buffer_unmap (buffer, &map);
     }
   }
 
   for (g = souphttpsink->queued_buffers; g; g = g_list_next (g)) {
     GstBuffer *buffer = g->data;
     if (!GST_BUFFER_FLAG_IS_SET (buffer, GST_BUFFER_FLAG_IN_CAPS)) {
-      gpointer data;
-      gsize size;
+      GstMapInfo map;
 
       /* FIXME, lifetime of the buffer? */
-      data = gst_buffer_map (buffer, &size, NULL, GST_MAP_READ);
+      gst_buffer_map (buffer, &map, GST_MAP_READ);
       soup_message_body_append (souphttpsink->message->request_body,
-          SOUP_MEMORY_STATIC, data, size);
-      n += size;
-      gst_buffer_unmap (buffer, data, size);
+          SOUP_MEMORY_STATIC, map.data, map.size);
+      n += map.size;
+      gst_buffer_unmap (buffer, &map);
     }
   }
 

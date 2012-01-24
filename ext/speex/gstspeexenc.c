@@ -539,13 +539,16 @@ gst_speex_enc_encode (GstSpeexEnc * enc, GstBuffer * buf)
   gint frame_size = enc->frame_size;
   gint bytes = frame_size * 2 * enc->channels, samples;
   gint outsize, written, dtx_ret = 0;
-  guint8 *data, *data0 = NULL, *bdata, *outdata;
+  GstMapInfo map;
+  guint8 *data, *data0 = NULL, *bdata;
   gsize bsize, size;
   GstBuffer *outbuf;
   GstFlowReturn ret = GST_FLOW_OK;
 
   if (G_LIKELY (buf)) {
-    bdata = gst_buffer_map (buf, &bsize, NULL, GST_MAP_READ);
+    gst_buffer_map (buf, &map, GST_MAP_READ);
+    bdata = map.data;
+    bsize = map.size;
 
     if (G_UNLIKELY (bsize % bytes)) {
       GST_DEBUG_OBJECT (enc, "draining; adding silence samples");
@@ -553,7 +556,7 @@ gst_speex_enc_encode (GstSpeexEnc * enc, GstBuffer * buf)
       size = ((bsize / bytes) + 1) * bytes;
       data0 = data = g_malloc0 (size);
       memcpy (data, bdata, bsize);
-      gst_buffer_unmap (buf, bdata, bsize);
+      gst_buffer_unmap (buf, &map);
       bdata = NULL;
     } else {
       data = bdata;
@@ -585,7 +588,7 @@ gst_speex_enc_encode (GstSpeexEnc * enc, GstBuffer * buf)
   outsize = speex_bits_nbytes (&enc->bits);
 
   if (bdata)
-    gst_buffer_unmap (buf, bdata, bsize);
+    gst_buffer_unmap (buf, &map);
 
 #if 0
   ret = gst_pad_alloc_buffer_and_set_caps (GST_AUDIO_ENCODER_SRC_PAD (enc),
@@ -596,9 +599,9 @@ gst_speex_enc_encode (GstSpeexEnc * enc, GstBuffer * buf)
     goto done;
 #endif
   outbuf = gst_buffer_new_allocate (NULL, outsize, 0);
-  outdata = gst_buffer_map (outbuf, NULL, NULL, GST_MAP_WRITE);
+  gst_buffer_map (outbuf, &map, GST_MAP_WRITE);
 
-  written = speex_bits_write (&enc->bits, (gchar *) outdata, outsize);
+  written = speex_bits_write (&enc->bits, (gchar *) map.data, outsize);
 
   if (G_UNLIKELY (written < outsize)) {
     GST_ERROR_OBJECT (enc, "short write: %d < %d bytes", written, outsize);
@@ -606,7 +609,8 @@ gst_speex_enc_encode (GstSpeexEnc * enc, GstBuffer * buf)
     GST_ERROR_OBJECT (enc, "overrun: %d > %d bytes", written, outsize);
     written = outsize;
   }
-  gst_buffer_unmap (outbuf, outdata, written);
+  gst_buffer_unmap (outbuf, &map);
+  gst_buffer_resize (outbuf, 0, written);
 
   if (!dtx_ret)
     GST_BUFFER_FLAG_SET (outbuf, GST_BUFFER_FLAG_GAP);
