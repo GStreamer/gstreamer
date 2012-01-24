@@ -22,6 +22,7 @@
 #define __GST_PNGENC_H__
 
 #include <gst/gst.h>
+#include <gst/video/video.h>
 #include <png.h>
 
 #ifdef __cplusplus
@@ -49,10 +50,10 @@ struct _GstPngEnc
   png_structp png_struct_ptr;
   png_infop png_info_ptr;
 
+  GstVideoInfo info;
   gint png_color_type;
   gint width;
   gint height;
-  gint stride;
   guint compression_level;
 
   gboolean snapshot;

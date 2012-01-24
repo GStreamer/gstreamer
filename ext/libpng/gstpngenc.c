@@ -27,7 +27,6 @@
 #include <string.h>
 #include <gst/gst.h>
 #include "gstpngenc.h"
-#include <gst/video/video.h>
 #include <zlib.h>
 
 GST_DEBUG_CATEGORY_STATIC (pngenc_debug);
@@ -62,23 +61,25 @@ GST_STATIC_PAD_TEMPLATE ("src",
     );
 
 static GstStaticPadTemplate pngenc_sink_template =
-    GST_STATIC_PAD_TEMPLATE ("sink",
+GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (GST_VIDEO_CAPS_RGBA ";" GST_VIDEO_CAPS_RGB ";"
-        GST_VIDEO_CAPS_GRAY8)
+    GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE ("{ RGBA, RGB, GRAY8 }"))
     );
 
 /* static GstElementClass *parent_class = NULL; */
 
-GST_BOILERPLATE (GstPngEnc, gst_pngenc, GstElement, GST_TYPE_ELEMENT);
+G_DEFINE_TYPE (GstPngEnc, gst_pngenc, GST_TYPE_ELEMENT);
 
 static void gst_pngenc_set_property (GObject * object,
     guint prop_id, const GValue * value, GParamSpec * pspec);
 static void gst_pngenc_get_property (GObject * object,
     guint prop_id, GValue * value, GParamSpec * pspec);
 
-static GstFlowReturn gst_pngenc_chain (GstPad * pad, GstBuffer * data);
+static GstFlowReturn gst_pngenc_chain (GstPad * pad, GstObject * parent,
+    GstBuffer * data);
+static gboolean gst_pngenc_sink_event (GstPad * pad, GstObject * parent,
+    GstEvent * event);
 
 static void
 user_error_fn (png_structp png_ptr, png_const_charp error_msg)
@@ -93,28 +94,13 @@ user_warning_fn (png_structp png_ptr, png_const_charp warning_msg)
 }
 
 static void
-gst_pngenc_base_init (gpointer g_class)
-{
-  GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
-
-  gst_element_class_add_pad_template
-      (element_class, gst_static_pad_template_get (&pngenc_sink_template));
-  gst_element_class_add_pad_template
-      (element_class, gst_static_pad_template_get (&pngenc_src_template));
-  gst_element_class_set_details_simple (element_class, "PNG image encoder",
-      "Codec/Encoder/Image",
-      "Encode a video frame to a .png image",
-      "Jeremy SIMON <jsimon13@yahoo.fr>");
-}
-
-static void
 gst_pngenc_class_init (GstPngEncClass * klass)
 {
   GObjectClass *gobject_class;
+  GstElementClass *element_class;
 
   gobject_class = (GObjectClass *) klass;
-
-  parent_class = g_type_class_peek_parent (klass);
+  element_class = (GstElementClass *) klass;
 
   gobject_class->get_property = gst_pngenc_get_property;
   gobject_class->set_property = gst_pngenc_set_property;
@@ -136,30 +122,35 @@ gst_pngenc_class_init (GstPngEncClass * klass)
           DEFAULT_COMPRESSION_LEVEL,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
+  gst_element_class_add_pad_template
+      (element_class, gst_static_pad_template_get (&pngenc_sink_template));
+  gst_element_class_add_pad_template
+      (element_class, gst_static_pad_template_get (&pngenc_src_template));
+  gst_element_class_set_details_simple (element_class, "PNG image encoder",
+      "Codec/Encoder/Image",
+      "Encode a video frame to a .png image",
+      "Jeremy SIMON <jsimon13@yahoo.fr>");
+
   GST_DEBUG_CATEGORY_INIT (pngenc_debug, "pngenc", 0, "PNG image encoder");
 }
 
 
 static gboolean
-gst_pngenc_setcaps (GstPad * pad, GstCaps * caps)
+gst_pngenc_setcaps (GstPngEnc * pngenc, GstCaps * caps)
 {
-  GstPngEnc *pngenc;
-  GstVideoFormat format;
   int fps_n, fps_d;
   GstCaps *pcaps;
   gboolean ret;
+  GstVideoInfo info;
 
-  pngenc = GST_PNGENC (gst_pad_get_parent (pad));
-
-  ret = gst_video_format_parse_caps (caps, &format,
-      &pngenc->width, &pngenc->height);
-  if (G_LIKELY (ret))
-    ret = gst_video_parse_caps_framerate (caps, &fps_n, &fps_d);
+  ret = gst_video_info_from_caps (&info, caps);
 
   if (G_UNLIKELY (!ret))
     goto done;
 
-  switch (format) {
+  pngenc->info = info;
+
+  switch (GST_VIDEO_INFO_FORMAT (&info)) {
     case GST_VIDEO_FORMAT_RGBA:
       pngenc->png_color_type = PNG_COLOR_TYPE_RGBA;
       break;
@@ -174,13 +165,16 @@ gst_pngenc_setcaps (GstPad * pad, GstCaps * caps)
       goto done;
   }
 
+  pngenc->width = GST_VIDEO_INFO_WIDTH (&info);
+  pngenc->height = GST_VIDEO_INFO_HEIGHT (&info);
+  fps_n = GST_VIDEO_INFO_FPS_N (&info);
+  fps_d = GST_VIDEO_INFO_FPS_D (&info);
+
   if (G_UNLIKELY (pngenc->width < 16 || pngenc->width > 1000000 ||
           pngenc->height < 16 || pngenc->height > 1000000)) {
     ret = FALSE;
     goto done;
   }
-
-  pngenc->stride = gst_video_format_get_row_stride (format, 0, pngenc->width);
 
   pcaps = gst_caps_new_simple ("image/png",
       "width", G_TYPE_INT, pngenc->width,
@@ -198,29 +192,25 @@ done:
     pngenc->height = 0;
   }
 
-  gst_object_unref (pngenc);
-
   return ret;
 }
 
 static void
-gst_pngenc_init (GstPngEnc * pngenc, GstPngEncClass * g_class)
+gst_pngenc_init (GstPngEnc * pngenc)
 {
   /* sinkpad */
   pngenc->sinkpad = gst_pad_new_from_static_template
       (&pngenc_sink_template, "sink");
-  gst_pad_set_chain_function (pngenc->sinkpad, gst_pngenc_chain);
-  /*   gst_pad_set_link_function (pngenc->sinkpad, gst_pngenc_sinklink); */
-  /*   gst_pad_set_getcaps_function (pngenc->sinkpad, gst_pngenc_sink_getcaps); */
-  gst_pad_set_setcaps_function (pngenc->sinkpad, gst_pngenc_setcaps);
+  gst_pad_set_chain_function (pngenc->sinkpad,
+      GST_DEBUG_FUNCPTR (gst_pngenc_chain));
+  gst_pad_set_event_function (pngenc->sinkpad,
+      GST_DEBUG_FUNCPTR (gst_pngenc_sink_event));
   gst_element_add_pad (GST_ELEMENT (pngenc), pngenc->sinkpad);
 
   /* srcpad */
   pngenc->srcpad = gst_pad_new_from_static_template
       (&pngenc_src_template, "src");
-  /*   pngenc->srcpad = gst_pad_new ("src", GST_PAD_SRC); */
-  /*   gst_pad_set_getcaps_function (pngenc->srcpad, gst_pngenc_src_getcaps); */
-  /*   gst_pad_set_setcaps_function (pngenc->srcpad, gst_pngenc_setcaps); */
+  gst_pad_use_fixed_caps (pngenc->srcpad);
   gst_element_add_pad (GST_ELEMENT (pngenc), pngenc->srcpad);
 
   /* init settings */
@@ -241,10 +231,14 @@ static void
 user_write_data (png_structp png_ptr, png_bytep data, png_uint_32 length)
 {
   GstPngEnc *pngenc;
+  gsize size;
+  guint8 *bdata;
 
   pngenc = (GstPngEnc *) png_get_io_ptr (png_ptr);
 
-  if (pngenc->written + length >= GST_BUFFER_SIZE (pngenc->buffer_out)) {
+  bdata = gst_buffer_map (pngenc->buffer_out, &size, NULL, GST_MAP_WRITE);
+  if (pngenc->written + length >= size) {
+    gst_buffer_unmap (pngenc->buffer_out, data, -1);
     GST_ERROR_OBJECT (pngenc, "output buffer bigger than the input buffer!?");
     png_error (png_ptr, "output buffer bigger than the input buffer!?");
 
@@ -252,41 +246,43 @@ user_write_data (png_structp png_ptr, png_bytep data, png_uint_32 length)
     return;
   }
 
-  memcpy (GST_BUFFER_DATA (pngenc->buffer_out) + pngenc->written, data, length);
+  GST_DEBUG_OBJECT (pngenc, "writing %u bytes", (guint) length);
+
+  memcpy (bdata + pngenc->written, data, length);
+  gst_buffer_unmap (pngenc->buffer_out, data, -1);
   pngenc->written += length;
 }
 
 static GstFlowReturn
-gst_pngenc_chain (GstPad * pad, GstBuffer * buf)
+gst_pngenc_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
 {
   GstPngEnc *pngenc;
   gint row_index;
   png_byte **row_pointers;
   GstFlowReturn ret = GST_FLOW_OK;
   GstBuffer *encoded_buf = NULL;
+  GstVideoFrame frame;
 
-  pngenc = GST_PNGENC (gst_pad_get_parent (pad));
+  pngenc = GST_PNGENC (parent);
 
   GST_DEBUG_OBJECT (pngenc, "BEGINNING");
 
   if (G_UNLIKELY (pngenc->width <= 0 || pngenc->height <= 0)) {
     ret = GST_FLOW_NOT_NEGOTIATED;
-    goto done;
+    goto exit;
   }
 
-  if (G_UNLIKELY (GST_BUFFER_SIZE (buf) < pngenc->height * pngenc->stride)) {
-    gst_buffer_unref (buf);
+  if (!gst_video_frame_map (&frame, &pngenc->info, buf, GST_MAP_READ)) {
     GST_ELEMENT_ERROR (pngenc, STREAM, FORMAT, (NULL),
-        ("Provided input buffer is too small, caps problem?"));
+        ("Failed to map video frame, caps problem?"));
     ret = GST_FLOW_ERROR;
-    goto done;
+    goto exit;
   }
 
   /* initialize png struct stuff */
   pngenc->png_struct_ptr = png_create_write_struct (PNG_LIBPNG_VER_STRING,
       (png_voidp) NULL, user_error_fn, user_warning_fn);
   if (pngenc->png_struct_ptr == NULL) {
-    gst_buffer_unref (buf);
     GST_ELEMENT_ERROR (pngenc, LIBRARY, INIT, (NULL),
         ("Failed to initialize png structure"));
     ret = GST_FLOW_ERROR;
@@ -295,7 +291,6 @@ gst_pngenc_chain (GstPad * pad, GstBuffer * buf)
 
   pngenc->png_info_ptr = png_create_info_struct (pngenc->png_struct_ptr);
   if (!pngenc->png_info_ptr) {
-    gst_buffer_unref (buf);
     png_destroy_write_struct (&(pngenc->png_struct_ptr), (png_infopp) NULL);
     GST_ELEMENT_ERROR (pngenc, LIBRARY, INIT, (NULL),
         ("Failed to initialize the png info structure"));
@@ -305,7 +300,6 @@ gst_pngenc_chain (GstPad * pad, GstBuffer * buf)
 
   /* non-0 return is from a longjmp inside of libpng */
   if (setjmp (png_jmpbuf (pngenc->png_struct_ptr)) != 0) {
-    gst_buffer_unref (buf);
     png_destroy_write_struct (&pngenc->png_struct_ptr, &pngenc->png_info_ptr);
     GST_ELEMENT_ERROR (pngenc, LIBRARY, FAILED, (NULL),
         ("returning from longjmp"));
@@ -332,13 +326,13 @@ gst_pngenc_chain (GstPad * pad, GstBuffer * buf)
   row_pointers = g_new (png_byte *, pngenc->height);
 
   for (row_index = 0; row_index < pngenc->height; row_index++) {
-    row_pointers[row_index] = GST_BUFFER_DATA (buf) +
-        (row_index * pngenc->stride);
+    row_pointers[row_index] = GST_VIDEO_FRAME_COMP_DATA (&frame, 0) +
+        (row_index * GST_VIDEO_FRAME_COMP_STRIDE (&frame, 0));
   }
 
   /* allocate the output buffer */
   pngenc->buffer_out =
-      gst_buffer_new_and_alloc (pngenc->height * pngenc->stride);
+      gst_buffer_new_and_alloc (pngenc->height * pngenc->width);
   pngenc->written = 0;
 
   png_write_info (pngenc->png_struct_ptr, pngenc->png_info_ptr);
@@ -347,13 +341,17 @@ gst_pngenc_chain (GstPad * pad, GstBuffer * buf)
 
   g_free (row_pointers);
 
-  encoded_buf = gst_buffer_create_sub (pngenc->buffer_out, 0, pngenc->written);
+  GST_DEBUG_OBJECT (pngenc, "written %d", pngenc->written);
+
+  encoded_buf =
+      gst_buffer_copy_region (pngenc->buffer_out, GST_BUFFER_COPY_MEMORY,
+      0, pngenc->written);
 
   png_destroy_info_struct (pngenc->png_struct_ptr, &pngenc->png_info_ptr);
   png_destroy_write_struct (&pngenc->png_struct_ptr, (png_infopp) NULL);
-  gst_buffer_copy_metadata (encoded_buf, buf, GST_BUFFER_COPY_TIMESTAMPS);
-  gst_buffer_unref (buf);
-  gst_buffer_set_caps (encoded_buf, GST_PAD_CAPS (pngenc->srcpad));
+
+  GST_BUFFER_TIMESTAMP (encoded_buf) = GST_BUFFER_TIMESTAMP (buf);
+  GST_BUFFER_DURATION (encoded_buf) = GST_BUFFER_DURATION (buf);
 
   if ((ret = gst_pad_push (pngenc->srcpad, encoded_buf)) != GST_FLOW_OK)
     goto done;
@@ -366,10 +364,13 @@ gst_pngenc_chain (GstPad * pad, GstBuffer * buf)
     event = gst_event_new_eos ();
 
     gst_pad_push_event (pngenc->srcpad, event);
-    ret = GST_FLOW_UNEXPECTED;
+    ret = GST_FLOW_EOS;
   }
 
 done:
+  gst_video_frame_unmap (&frame);
+exit:
+  gst_buffer_unref (buf);
   GST_DEBUG_OBJECT (pngenc, "END, ret:%d", ret);
 
   if (pngenc->buffer_out != NULL) {
@@ -377,10 +378,33 @@ done:
     pngenc->buffer_out = NULL;
   }
 
-  gst_object_unref (pngenc);
   return ret;
 }
 
+static gboolean
+gst_pngenc_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
+{
+  GstPngEnc *enc;
+  gboolean res;
+
+  enc = GST_PNGENC (parent);
+
+  switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_CAPS:
+    {
+      GstCaps *caps;
+
+      gst_event_parse_caps (event, &caps);
+      res = gst_pngenc_setcaps (enc, caps);
+      gst_event_unref (event);
+      break;
+    }
+    default:
+      res = gst_pad_push_event (enc->srcpad, event);
+      break;
+  }
+  return res;
+}
 
 static void
 gst_pngenc_get_property (GObject * object,
