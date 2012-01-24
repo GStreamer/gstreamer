@@ -89,14 +89,18 @@ static GstStaticPadTemplate sink_factory = GST_STATIC_PAD_TEMPLATE ("sink_%u",
     );
 
 static GstPad *gst_rtp_mux_request_new_pad (GstElement * element,
-    GstPadTemplate * templ, const gchar * name);
+    GstPadTemplate * templ, const gchar * name, const GstCaps * caps);
 static void gst_rtp_mux_release_pad (GstElement * element, GstPad * pad);
-static GstFlowReturn gst_rtp_mux_chain (GstPad * pad, GstBuffer * buffer);
-static GstFlowReturn gst_rtp_mux_chain_list (GstPad * pad,
+static GstFlowReturn gst_rtp_mux_chain (GstPad * pad, GstObject * parent,
+    GstBuffer * buffer);
+static GstFlowReturn gst_rtp_mux_chain_list (GstPad * pad, GstObject * parent,
     GstBufferList * bufferlist);
-static gboolean gst_rtp_mux_setcaps (GstPad * pad, GstCaps * caps);
-static GstCaps *gst_rtp_mux_getcaps (GstPad * pad);
-static gboolean gst_rtp_mux_sink_event (GstPad * pad, GstEvent * event);
+static gboolean gst_rtp_mux_setcaps (GstPad * pad, GstRTPMux * rtp_mux,
+    GstCaps * caps);
+static gboolean gst_rtp_mux_sink_event (GstPad * pad, GstObject * parent,
+    GstEvent * event);
+static gboolean gst_rtp_mux_sink_query (GstPad * pad, GstObject * parent,
+    GstQuery * query);
 
 static GstStateChangeReturn gst_rtp_mux_change_state (GstElement *
     element, GstStateChange transition);
@@ -110,22 +114,8 @@ static void gst_rtp_mux_dispose (GObject * object);
 static gboolean gst_rtp_mux_src_event_real (GstRTPMux * rtp_mux,
     GstEvent * event);
 
-GST_BOILERPLATE (GstRTPMux, gst_rtp_mux, GstElement, GST_TYPE_ELEMENT);
+G_DEFINE_TYPE (GstRTPMux, gst_rtp_mux, GST_TYPE_ELEMENT);
 
-static void
-gst_rtp_mux_base_init (gpointer g_class)
-{
-  GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
-
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&src_factory));
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&sink_factory));
-
-  gst_element_class_set_details_simple (element_class, "RTP muxer",
-      "Codec/Muxer",
-      "multiplex N rtp streams into one", "Zeeshan Ali <first.last@nokia.com>");
-}
 
 static void
 gst_rtp_mux_class_init (GstRTPMuxClass * klass)
@@ -135,6 +125,16 @@ gst_rtp_mux_class_init (GstRTPMuxClass * klass)
 
   gobject_class = (GObjectClass *) klass;
   gstelement_class = (GstElementClass *) klass;
+
+
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&src_factory));
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&sink_factory));
+
+  gst_element_class_set_metadata (gstelement_class, "RTP muxer",
+      "Codec/Muxer",
+      "multiplex N rtp streams into one", "Zeeshan Ali <first.last@nokia.com>");
 
   gobject_class->get_property = gst_rtp_mux_get_property;
   gobject_class->set_property = gst_rtp_mux_set_property;
@@ -182,23 +182,19 @@ restart:
     }
   }
 
-  G_OBJECT_CLASS (parent_class)->dispose (object);
+  G_OBJECT_CLASS (gst_rtp_mux_parent_class)->dispose (object);
 }
 
 static gboolean
-gst_rtp_mux_src_event (GstPad * pad, GstEvent * event)
+gst_rtp_mux_src_event (GstPad * pad, GstObject * parent, GstEvent * event)
 {
-  GstRTPMux *rtp_mux;
+  GstRTPMux *rtp_mux = GST_RTP_MUX (parent);
   GstRTPMuxClass *klass;
   gboolean ret = FALSE;
 
-  rtp_mux = (GstRTPMux *) gst_pad_get_parent_element (pad);
-  g_return_val_if_fail (rtp_mux != NULL, FALSE);
   klass = GST_RTP_MUX_GET_CLASS (rtp_mux);
 
   ret = klass->src_event (rtp_mux, event);
-
-  gst_object_unref (rtp_mux);
 
   return ret;
 }
@@ -207,18 +203,18 @@ static gboolean
 gst_rtp_mux_src_event_real (GstRTPMux * rtp_mux, GstEvent * event)
 {
   GstIterator *iter;
-  GstPad *sinkpad;
   gboolean result = FALSE;
   gboolean done = FALSE;
 
   iter = gst_element_iterate_sink_pads (GST_ELEMENT (rtp_mux));
 
   while (!done) {
-    switch (gst_iterator_next (iter, (gpointer) & sinkpad)) {
+    GValue item = { 0, };
+
+    switch (gst_iterator_next (iter, &item)) {
       case GST_ITERATOR_OK:
         gst_event_ref (event);
-        result |= gst_pad_push_event (sinkpad, event);
-        gst_object_unref (sinkpad);
+        result |= gst_pad_push_event (g_value_get_object (&item), event);
         break;
       case GST_ITERATOR_RESYNC:
         gst_iterator_resync (iter);
@@ -238,23 +234,26 @@ gst_rtp_mux_src_event_real (GstRTPMux * rtp_mux, GstEvent * event)
 }
 
 static void
-gst_rtp_mux_init (GstRTPMux * object, GstRTPMuxClass * g_class)
+gst_rtp_mux_init (GstRTPMux * rtp_mux)
 {
-  GstElementClass *klass = GST_ELEMENT_GET_CLASS (object);
+  GstElementClass *klass = GST_ELEMENT_GET_CLASS (rtp_mux);
+  GstSegment segment;
 
-  object->srcpad =
+  rtp_mux->srcpad =
       gst_pad_new_from_template (gst_element_class_get_pad_template (klass,
           "src"), "src");
-  gst_pad_set_event_function (object->srcpad,
+  gst_pad_set_event_function (rtp_mux->srcpad,
       GST_DEBUG_FUNCPTR (gst_rtp_mux_src_event));
-  gst_element_add_pad (GST_ELEMENT (object), object->srcpad);
+  gst_element_add_pad (GST_ELEMENT (rtp_mux), rtp_mux->srcpad);
 
-  object->ssrc = DEFAULT_SSRC;
-  object->ts_offset = DEFAULT_TIMESTAMP_OFFSET;
-  object->seqnum_offset = DEFAULT_SEQNUM_OFFSET;
+  gst_segment_init (&segment, GST_FORMAT_TIME);
+  gst_pad_push_event (rtp_mux->srcpad, gst_event_new_segment (&segment));
 
-  object->segment_pending = TRUE;
-  object->last_stop = GST_CLOCK_TIME_NONE;
+  rtp_mux->ssrc = DEFAULT_SSRC;
+  rtp_mux->ts_offset = DEFAULT_TIMESTAMP_OFFSET;
+  rtp_mux->seqnum_offset = DEFAULT_SEQNUM_OFFSET;
+
+  rtp_mux->last_stop = GST_CLOCK_TIME_NONE;
 }
 
 static void
@@ -263,16 +262,16 @@ gst_rtp_mux_setup_sinkpad (GstRTPMux * rtp_mux, GstPad * sinkpad)
   GstRTPMuxPadPrivate *padpriv = g_slice_new0 (GstRTPMuxPadPrivate);
 
   /* setup some pad functions */
-  gst_pad_set_setcaps_function (sinkpad, gst_rtp_mux_setcaps);
-  gst_pad_set_getcaps_function (sinkpad, gst_rtp_mux_getcaps);
   gst_pad_set_chain_function (sinkpad, GST_DEBUG_FUNCPTR (gst_rtp_mux_chain));
   gst_pad_set_chain_list_function (sinkpad,
       GST_DEBUG_FUNCPTR (gst_rtp_mux_chain_list));
   gst_pad_set_event_function (sinkpad,
       GST_DEBUG_FUNCPTR (gst_rtp_mux_sink_event));
+  gst_pad_set_query_function (sinkpad,
+      GST_DEBUG_FUNCPTR (gst_rtp_mux_sink_query));
 
 
-  gst_segment_init (&padpriv->segment, GST_FORMAT_UNDEFINED);
+  gst_segment_init (&padpriv->segment, GST_FORMAT_TIME);
 
   gst_pad_set_element_private (sinkpad, padpriv);
 
@@ -282,7 +281,7 @@ gst_rtp_mux_setup_sinkpad (GstRTPMux * rtp_mux, GstPad * sinkpad)
 
 static GstPad *
 gst_rtp_mux_request_new_pad (GstElement * element,
-    GstPadTemplate * templ, const gchar * req_name)
+    GstPadTemplate * templ, const gchar * req_name, const GstCaps * caps)
 {
   GstRTPMux *rtp_mux;
   GstPad *newpad;
@@ -327,7 +326,7 @@ gst_rtp_mux_release_pad (GstElement * element, GstPad * pad)
 /* Put our own clock-base on the buffer */
 static void
 gst_rtp_mux_readjust_rtp_timestamp_locked (GstRTPMux * rtp_mux,
-    GstRTPMuxPadPrivate * padpriv, GstBuffer * buffer)
+    GstRTPMuxPadPrivate * padpriv, GstRTPBuffer * rtpbuffer)
 {
   guint32 ts;
   guint32 sink_ts_base = 0;
@@ -335,59 +334,87 @@ gst_rtp_mux_readjust_rtp_timestamp_locked (GstRTPMux * rtp_mux,
   if (padpriv && padpriv->have_clock_base)
     sink_ts_base = padpriv->clock_base;
 
-  ts = gst_rtp_buffer_get_timestamp (buffer) - sink_ts_base + rtp_mux->ts_base;
+  ts = gst_rtp_buffer_get_timestamp (rtpbuffer) - sink_ts_base +
+      rtp_mux->ts_base;
   GST_LOG_OBJECT (rtp_mux, "Re-adjusting RTP ts %u to %u",
-      gst_rtp_buffer_get_timestamp (buffer), ts);
-  gst_rtp_buffer_set_timestamp (buffer, ts);
+      gst_rtp_buffer_get_timestamp (rtpbuffer), ts);
+  gst_rtp_buffer_set_timestamp (rtpbuffer, ts);
 }
 
 static gboolean
 process_buffer_locked (GstRTPMux * rtp_mux, GstRTPMuxPadPrivate * padpriv,
-    GstBuffer * buffer)
+    GstRTPBuffer * rtpbuffer)
 {
   GstRTPMuxClass *klass = GST_RTP_MUX_GET_CLASS (rtp_mux);
 
   if (klass->accept_buffer_locked)
-    if (!klass->accept_buffer_locked (rtp_mux, padpriv, buffer))
+    if (!klass->accept_buffer_locked (rtp_mux, padpriv, rtpbuffer))
       return FALSE;
 
   rtp_mux->seqnum++;
-  gst_rtp_buffer_set_seq (buffer, rtp_mux->seqnum);
+  gst_rtp_buffer_set_seq (rtpbuffer, rtp_mux->seqnum);
 
-  gst_rtp_buffer_set_ssrc (buffer, rtp_mux->current_ssrc);
-  gst_rtp_mux_readjust_rtp_timestamp_locked (rtp_mux, padpriv, buffer);
+  gst_rtp_buffer_set_ssrc (rtpbuffer, rtp_mux->current_ssrc);
+  gst_rtp_mux_readjust_rtp_timestamp_locked (rtp_mux, padpriv, rtpbuffer);
   GST_LOG_OBJECT (rtp_mux, "Pushing packet size %d, seq=%d, ts=%u",
-      GST_BUFFER_SIZE (buffer), rtp_mux->seqnum,
-      gst_rtp_buffer_get_timestamp (buffer));
+      rtpbuffer->size, rtp_mux->seqnum,
+      gst_rtp_buffer_get_timestamp (rtpbuffer));
 
   if (padpriv) {
-    gst_buffer_set_caps (buffer, padpriv->out_caps);
     if (padpriv->segment.format == GST_FORMAT_TIME)
-      GST_BUFFER_TIMESTAMP (buffer) =
+      GST_BUFFER_PTS (rtpbuffer->buffer) =
           gst_segment_to_running_time (&padpriv->segment, GST_FORMAT_TIME,
-          GST_BUFFER_TIMESTAMP (buffer));
+          GST_BUFFER_PTS (rtpbuffer->buffer));
   }
 
   return TRUE;
 }
 
+struct BufferListData
+{
+  GstRTPMux *rtp_mux;
+  GstRTPMuxPadPrivate *padpriv;
+  gboolean drop;
+};
+
+static gboolean
+process_list_item (GstBuffer ** buffer, guint idx, gpointer user_data)
+{
+  struct BufferListData *bd = user_data;
+  GstRTPBuffer rtpbuffer = GST_RTP_BUFFER_INIT;
+
+  *buffer = gst_buffer_make_writable (*buffer);
+
+  gst_rtp_buffer_map (*buffer, GST_MAP_READWRITE, &rtpbuffer);
+
+  bd->drop = !process_buffer_locked (bd->rtp_mux, bd->padpriv, &rtpbuffer);
+
+  gst_rtp_buffer_unmap (&rtpbuffer);
+
+  if (bd->drop)
+    return FALSE;
+
+  if (GST_BUFFER_DURATION_IS_VALID (*buffer) &&
+      GST_BUFFER_TIMESTAMP_IS_VALID (*buffer))
+    bd->rtp_mux->last_stop = GST_BUFFER_TIMESTAMP (*buffer) +
+        GST_BUFFER_DURATION (*buffer);
+  else
+    bd->rtp_mux->last_stop = GST_CLOCK_TIME_NONE;
+
+  return TRUE;
+}
+
 static GstFlowReturn
-gst_rtp_mux_chain_list (GstPad * pad, GstBufferList * bufferlist)
+gst_rtp_mux_chain_list (GstPad * pad, GstObject * parent,
+    GstBufferList * bufferlist)
 {
   GstRTPMux *rtp_mux;
   GstFlowReturn ret;
-  GstBufferListIterator *it;
   GstRTPMuxPadPrivate *padpriv;
-  GstEvent *newseg_event = NULL;
   gboolean drop = TRUE;
+  struct BufferListData bd;
 
-  rtp_mux = GST_RTP_MUX (gst_pad_get_parent (pad));
-
-  if (!gst_rtp_buffer_list_validate (bufferlist)) {
-    GST_ERROR_OBJECT (rtp_mux, "Invalid RTP buffer");
-    gst_object_unref (rtp_mux);
-    return GST_FLOW_ERROR;
-  }
+  rtp_mux = GST_RTP_MUX (parent);
 
   GST_OBJECT_LOCK (rtp_mux);
 
@@ -399,51 +426,14 @@ gst_rtp_mux_chain_list (GstPad * pad, GstBufferList * bufferlist)
     goto out;
   }
 
+  bd.rtp_mux = rtp_mux;
+  bd.padpriv = padpriv;
+  bd.drop = FALSE;
+
   bufferlist = gst_buffer_list_make_writable (bufferlist);
-  it = gst_buffer_list_iterate (bufferlist);
-  while (gst_buffer_list_iterator_next_group (it)) {
-    GstBuffer *rtpbuf;
-
-    rtpbuf = gst_buffer_list_iterator_next (it);
-    rtpbuf = gst_buffer_make_writable (rtpbuf);
-
-    drop = !process_buffer_locked (rtp_mux, padpriv, rtpbuf);
-
-    if (drop)
-      break;
-
-    gst_buffer_list_iterator_take (it, rtpbuf);
-
-    do {
-      if (GST_BUFFER_DURATION_IS_VALID (rtpbuf) &&
-          GST_BUFFER_TIMESTAMP_IS_VALID (rtpbuf))
-        rtp_mux->last_stop = GST_BUFFER_TIMESTAMP (rtpbuf) +
-            GST_BUFFER_DURATION (rtpbuf);
-      else
-        rtp_mux->last_stop = GST_CLOCK_TIME_NONE;
-
-      gst_buffer_list_iterator_take (it, rtpbuf);
-
-    } while ((rtpbuf = gst_buffer_list_iterator_next (it)) != NULL);
-
-
-  }
-  gst_buffer_list_iterator_free (it);
-
-  if (!drop && rtp_mux->segment_pending) {
-    /*
-     * We set the start at 0, because we re-timestamps to the running time
-     */
-    newseg_event = gst_event_new_new_segment_full (FALSE, 1.0, 1.0,
-        GST_FORMAT_TIME, 0, -1, 0);
-
-    rtp_mux->segment_pending = FALSE;
-  }
+  gst_buffer_list_foreach (bufferlist, process_list_item, &bd);
 
   GST_OBJECT_UNLOCK (rtp_mux);
-
-  if (newseg_event)
-    gst_pad_push_event (rtp_mux->srcpad, newseg_event);
 
   if (drop) {
     gst_buffer_list_unref (bufferlist);
@@ -454,19 +444,18 @@ gst_rtp_mux_chain_list (GstPad * pad, GstBufferList * bufferlist)
 
 out:
 
-  gst_object_unref (rtp_mux);
-
   return ret;
 }
 
 static GstFlowReturn
-gst_rtp_mux_chain (GstPad * pad, GstBuffer * buffer)
+gst_rtp_mux_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
 {
   GstRTPMux *rtp_mux;
   GstFlowReturn ret;
   GstRTPMuxPadPrivate *padpriv;
   GstEvent *newseg_event = NULL;
   gboolean drop;
+  GstRTPBuffer rtpbuffer = GST_RTP_BUFFER_INIT;
 
   rtp_mux = GST_RTP_MUX (GST_OBJECT_PARENT (pad));
 
@@ -487,19 +476,13 @@ gst_rtp_mux_chain (GstPad * pad, GstBuffer * buffer)
 
   buffer = gst_buffer_make_writable (buffer);
 
-  drop = !process_buffer_locked (rtp_mux, padpriv, buffer);
+  gst_rtp_buffer_map (buffer, GST_MAP_READWRITE, &rtpbuffer);
+
+  drop = !process_buffer_locked (rtp_mux, padpriv, &rtpbuffer);
+
+  gst_rtp_buffer_unmap (&rtpbuffer);
 
   if (!drop) {
-    if (rtp_mux->segment_pending) {
-      /*
-       * We set the start at 0, because we re-timestamps to the running time
-       */
-      newseg_event = gst_event_new_new_segment_full (FALSE, 1.0, 1.0,
-          GST_FORMAT_TIME, 0, -1, 0);
-
-      rtp_mux->segment_pending = FALSE;
-    }
-
     if (GST_BUFFER_DURATION_IS_VALID (buffer) &&
         GST_BUFFER_TIMESTAMP_IS_VALID (buffer))
       rtp_mux->last_stop = GST_BUFFER_TIMESTAMP (buffer) +
@@ -524,19 +507,16 @@ gst_rtp_mux_chain (GstPad * pad, GstBuffer * buffer)
 }
 
 static gboolean
-gst_rtp_mux_setcaps (GstPad * pad, GstCaps * caps)
+gst_rtp_mux_setcaps (GstPad * pad, GstRTPMux * rtp_mux, GstCaps * caps)
 {
-  GstRTPMux *rtp_mux;
   GstStructure *structure;
   gboolean ret = FALSE;
   GstRTPMuxPadPrivate *padpriv;
 
-  rtp_mux = GST_RTP_MUX (gst_pad_get_parent (pad));
-
   structure = gst_caps_get_structure (caps, 0);
 
   if (!structure)
-    goto out;
+    return FALSE;
 
   GST_OBJECT_LOCK (rtp_mux);
   padpriv = gst_pad_get_element_private (pad);
@@ -572,9 +552,6 @@ gst_rtp_mux_setcaps (GstPad * pad, GstCaps * caps)
   }
   gst_caps_unref (caps);
 
-out:
-  gst_object_unref (rtp_mux);
-
   return ret;
 }
 
@@ -600,54 +577,47 @@ clear_caps (GstCaps * caps, gboolean only_clock_rate)
 }
 
 static gboolean
-same_clock_rate_fold (gpointer item, GValue * ret, gpointer user_data)
+same_clock_rate_fold (const GValue * item, GValue * ret, gpointer user_data)
 {
   GstPad *mypad = user_data;
-  GstPad *pad = item;
+  GstPad *pad = g_value_get_object (item);
   GstCaps *peercaps;
-  GstCaps *othercaps;
   const GstCaps *accumcaps;
   GstCaps *intersect;
 
   if (pad == mypad) {
-    gst_object_unref (pad);
     return TRUE;
   }
-
-  peercaps = gst_pad_peer_get_caps (pad);
-  if (!peercaps) {
-    gst_object_unref (pad);
-    return TRUE;
-  }
-
-  othercaps = gst_caps_intersect (peercaps,
-      gst_pad_get_pad_template_caps (pad));
-  gst_caps_unref (peercaps);
 
   accumcaps = gst_value_get_caps (ret);
+  peercaps = gst_pad_peer_query_caps (pad, (GstCaps *) accumcaps);
+  if (!peercaps) {
+    g_warning ("no peercaps");
+    return TRUE;
+  }
+  peercaps = gst_caps_make_writable (peercaps);
+  clear_caps (peercaps, TRUE);
 
-  clear_caps (othercaps, TRUE);
-
-  intersect = gst_caps_intersect (accumcaps, othercaps);
+  intersect = gst_caps_intersect (accumcaps, peercaps);
 
   g_value_take_boxed (ret, intersect);
-
-  gst_caps_unref (othercaps);
-  gst_object_unref (pad);
+  gst_caps_unref (peercaps);
 
   return !gst_caps_is_empty (intersect);
 }
 
 static GstCaps *
-gst_rtp_mux_getcaps (GstPad * pad)
+gst_rtp_mux_getcaps (GstPad * pad, GstRTPMux * mux, GstCaps * filter)
 {
-  GstRTPMux *mux = GST_RTP_MUX (gst_pad_get_parent (pad));
   GstCaps *caps = NULL;
   GstIterator *iter = NULL;
   GValue v = { 0 };
   GstIteratorResult res;
-  GstCaps *peercaps = gst_pad_peer_get_caps (mux->srcpad);
+  GstCaps *peercaps;
   GstCaps *othercaps = NULL;
+  GstCaps *filtered_caps;
+
+  peercaps = gst_pad_peer_query_caps (mux->srcpad, filter);
 
   if (peercaps) {
     othercaps = gst_caps_intersect (peercaps,
@@ -657,13 +627,21 @@ gst_rtp_mux_getcaps (GstPad * pad)
     othercaps = gst_caps_copy (gst_pad_get_pad_template_caps (mux->srcpad));
   }
 
-  clear_caps (othercaps, FALSE);
+  if (filter) {
+    filtered_caps = gst_caps_intersect (othercaps, filter);
+    gst_caps_unref (othercaps);
+  } else {
+    filtered_caps = othercaps;
+  }
+
+  filtered_caps = gst_caps_make_writable (filtered_caps);
+  clear_caps (filtered_caps, FALSE);
 
   g_value_init (&v, GST_TYPE_CAPS);
 
   iter = gst_element_iterate_sink_pads (GST_ELEMENT (mux));
   do {
-    gst_value_set_caps (&v, othercaps);
+    gst_value_set_caps (&v, filtered_caps);
     res = gst_iterator_fold (iter, same_clock_rate_fold, &v, pad);
   } while (res == GST_ITERATOR_RESYNC);
   gst_iterator_free (iter);
@@ -675,11 +653,37 @@ gst_rtp_mux_getcaps (GstPad * pad)
     caps = gst_caps_new_empty ();
   }
 
-  if (othercaps)
-    gst_caps_unref (othercaps);
-  gst_object_unref (mux);
+  gst_caps_unref (filtered_caps);
 
   return caps;
+}
+
+static gboolean
+gst_rtp_mux_sink_query (GstPad * pad, GstObject * parent, GstQuery * query)
+{
+  GstRTPMux *mux = GST_RTP_MUX (parent);
+  gboolean res = FALSE;
+
+  switch (GST_QUERY_TYPE (query)) {
+    case GST_QUERY_CAPS:
+    {
+      GstCaps *filter, *caps;
+
+      gst_query_parse_caps (query, &filter);
+      caps = gst_rtp_mux_getcaps (pad, mux, filter);
+      gst_query_set_caps_result (query, caps);
+      gst_caps_unref (caps);
+      res = TRUE;
+      break;
+    }
+    default:
+      res = gst_pad_query_default (pad, parent, query);
+      break;
+  }
+
+  return res;
+
+
 }
 
 
@@ -737,49 +741,41 @@ gst_rtp_mux_set_property (GObject * object,
 }
 
 static gboolean
-gst_rtp_mux_sink_event (GstPad * pad, GstEvent * event)
+gst_rtp_mux_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
 {
 
   GstRTPMux *mux;
   gboolean ret = FALSE;
   gboolean forward = TRUE;
 
-  mux = GST_RTP_MUX (gst_pad_get_parent (pad));
+  mux = GST_RTP_MUX (parent);
 
   switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_CAPS:
+    {
+      GstCaps *caps;
+
+      gst_event_parse_caps (event, &caps);
+      ret = gst_rtp_mux_setcaps (pad, mux, caps);
+      forward = FALSE;
+      break;
+    }
     case GST_EVENT_FLUSH_STOP:
     {
-      GstRTPMuxPadPrivate *padpriv;
-
       GST_OBJECT_LOCK (mux);
       mux->last_stop = GST_CLOCK_TIME_NONE;
-      mux->segment_pending = TRUE;
-      padpriv = gst_pad_get_element_private (pad);
-      if (padpriv)
-        gst_segment_init (&padpriv->segment, GST_FORMAT_UNDEFINED);
       GST_OBJECT_UNLOCK (mux);
-    }
       break;
-    case GST_EVENT_NEWSEGMENT:
+    }
+    case GST_EVENT_SEGMENT:
     {
-      gboolean update;
-      gdouble rate, applied_rate;
-      GstFormat format;
-      gint64 start, stop, position;
       GstRTPMuxPadPrivate *padpriv;
-
-      gst_event_parse_new_segment_full (event, &update, &rate, &applied_rate,
-          &format, &start, &stop, &position);
 
       GST_OBJECT_LOCK (mux);
       padpriv = gst_pad_get_element_private (pad);
 
       if (padpriv) {
-        if (format == GST_FORMAT_TIME)
-          gst_segment_set_newsegment_full (&padpriv->segment, update,
-              rate, applied_rate, format, start, stop, position);
-        else
-          gst_segment_init (&padpriv->segment, GST_FORMAT_UNDEFINED);
+        gst_event_copy_segment (event, &padpriv->segment);
       }
       GST_OBJECT_UNLOCK (mux);
       gst_event_unref (event);
@@ -794,40 +790,14 @@ gst_rtp_mux_sink_event (GstPad * pad, GstEvent * event)
   if (forward)
     ret = gst_pad_push_event (mux->srcpad, event);
 
-  gst_object_unref (mux);
   return ret;
 }
-
-
-static void
-clear_segment (gpointer data, gpointer user_data)
-{
-  GstPad *pad = data;
-  GstRTPMux *mux = user_data;
-  GstRTPMuxPadPrivate *padpriv;
-
-  GST_OBJECT_LOCK (mux);
-  padpriv = gst_pad_get_element_private (pad);
-  if (padpriv)
-    gst_segment_init (&padpriv->segment, GST_FORMAT_UNDEFINED);
-  GST_OBJECT_UNLOCK (mux);
-
-  gst_object_unref (pad);
-}
-
 
 static void
 gst_rtp_mux_ready_to_paused (GstRTPMux * rtp_mux)
 {
-  GstIterator *iter;
-
-  iter = gst_element_iterate_sink_pads (GST_ELEMENT (rtp_mux));
-  while (gst_iterator_foreach (iter, clear_segment, rtp_mux) ==
-      GST_ITERATOR_RESYNC);
-  gst_iterator_free (iter);
 
   GST_OBJECT_LOCK (rtp_mux);
-  rtp_mux->segment_pending = TRUE;
 
   if (rtp_mux->ssrc == -1)
     rtp_mux->current_ssrc = g_random_int ();
@@ -871,7 +841,8 @@ gst_rtp_mux_change_state (GstElement * element, GstStateChange transition)
       break;
   }
 
-  return GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
+  return GST_ELEMENT_CLASS (gst_rtp_mux_parent_class)->change_state (element,
+      transition);
 }
 
 gboolean
