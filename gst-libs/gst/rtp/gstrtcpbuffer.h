@@ -177,12 +177,10 @@ typedef struct _GstRTCPPacket GstRTCPPacket;
 struct _GstRTCPBuffer
 {
   GstBuffer   *buffer;
-
-  GstMapFlags  flags;
-  GstMapInfo   info;
+  GstMapInfo   map;
 };
 
-#define GST_RTCP_BUFFER_INIT { NULL, 0, NULL, 0, 0 }
+#define GST_RTCP_BUFFER_INIT { NULL, GST_MAP_INFO_INIT }
 
 /**
  * GstRTCPPacket:
@@ -195,17 +193,17 @@ struct _GstRTCPBuffer
 struct _GstRTCPPacket
 {
   GstRTCPBuffer *rtcp;
-  guint         offset;
+  guint          offset;
 
   /*< private >*/
-  gboolean     padding;      /* padding field of current packet */
-  guint8       count;        /* count field of current packet */
-  GstRTCPType  type;         /* type of current packet */
-  guint16      length;       /* length of current packet in 32-bits words */
+  gboolean       padding;      /* padding field of current packet */
+  guint8         count;        /* count field of current packet */
+  GstRTCPType    type;         /* type of current packet */
+  guint16        length;       /* length of current packet in 32-bits words */
 
-  guint        item_offset;  /* current item offset for navigating SDES */
-  guint        item_count;   /* current item count */
-  guint        entry_offset; /* current entry offset for navigating SDES items */
+  guint          item_offset;  /* current item offset for navigating SDES */
+  guint          item_count;   /* current item count */
+  guint          entry_offset; /* current entry offset for navigating SDES items */
 };
 
 /* creating buffers */
