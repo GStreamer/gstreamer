@@ -662,7 +662,7 @@ gst_udpsrc_get_property (GObject * object, guint prop_id, GValue * value,
       g_value_set_string (value, udpsrc->multi_iface);
       break;
     case PROP_URI:
-      g_value_take_string (value, udpsrc->uri);
+      g_value_set_string (value, udpsrc->uri);
       break;
     case PROP_CAPS:
       gst_value_set_caps (value, udpsrc->caps);
