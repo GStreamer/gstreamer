@@ -304,7 +304,7 @@ reset_start_time (GstPipeline * pipeline)
  *
  * Create a new pipeline with the given name.
  *
- * Returns: (transfer full): newly created GstPipeline
+ * Returns: (transfer floating): newly created GstPipeline
  *
  * MT safe.
  */
