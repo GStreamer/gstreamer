@@ -31,13 +31,12 @@ g_value_to_string (const GValue * val)
 {
   if (G_VALUE_TYPE (val) == GST_TYPE_BUFFER) {
     GstBuffer *buf = gst_value_get_buffer (val);
-    gpointer data;
-    gsize size;
+    GstMapInfo map;
     gchar *ret;
 
-    data = gst_buffer_map (buf, &size, NULL, GST_MAP_READ);
-    ret = g_base64_encode (data, size);
-    gst_buffer_unmap (buf, data, size);
+    gst_buffer_map (buf, &map, GST_MAP_READ);
+    ret = g_base64_encode (map.data, map.size);
+    gst_buffer_unmap (buf, &map);
 
     return ret;
   } else {

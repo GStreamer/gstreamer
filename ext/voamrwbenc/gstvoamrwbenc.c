@@ -268,8 +268,7 @@ gst_voamrwbenc_handle_frame (GstAudioEncoder * benc, GstBuffer * buffer)
   const int buffer_size = sizeof (short) * L_FRAME16k;
   GstBuffer *out;
   gint outsize;
-  gsize size;
-  guint8 *data, *outdata;
+  GstMapInfo map, omap;
 
   amrwbenc = GST_VOAMRWBENC (benc);
 
@@ -281,24 +280,25 @@ gst_voamrwbenc_handle_frame (GstAudioEncoder * benc, GstBuffer * buffer)
     goto done;
   }
 
-  data = gst_buffer_map (buffer, &size, NULL, GST_MAP_READ);
+  gst_buffer_map (buffer, &map, GST_MAP_READ);
 
-  if (G_UNLIKELY (size < buffer_size)) {
-    GST_DEBUG_OBJECT (amrwbenc, "discarding trailing data %d", (gint) size);
-    gst_buffer_unmap (buffer, data, -1);
+  if (G_UNLIKELY (map.size < buffer_size)) {
+    GST_DEBUG_OBJECT (amrwbenc, "discarding trailing data %d", (gint) map.size);
+    gst_buffer_unmap (buffer, &map);
     ret = gst_audio_encoder_finish_frame (benc, NULL, -1);
     goto done;
   }
 
   out = gst_buffer_new_and_alloc (buffer_size);
-  outdata = gst_buffer_map (out, NULL, NULL, GST_MAP_WRITE);
+  gst_buffer_map (out, &omap, GST_MAP_WRITE);
   /* encode */
   outsize = E_IF_encode (amrwbenc->handle, amrwbenc->bandmode,
-      (const short *) data, (unsigned char *) outdata, 0);
+      (const short *) map.data, (unsigned char *) omap.data, 0);
 
   GST_LOG_OBJECT (amrwbenc, "encoded to %d bytes", outsize);
-  gst_buffer_unmap (out, outdata, outsize);
-  gst_buffer_unmap (buffer, data, -1);
+  gst_buffer_unmap (out, &omap);
+  gst_buffer_unmap (buffer, &map);
+  gst_buffer_resize (out, 0, outsize);
 
   ret = gst_audio_encoder_finish_frame (benc, out, L_FRAME16k);
 

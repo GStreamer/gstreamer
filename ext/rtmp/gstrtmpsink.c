@@ -205,8 +205,7 @@ gst_rtmp_sink_render (GstBaseSink * bsink, GstBuffer * buf)
 {
   GstRTMPSink *sink = GST_RTMP_SINK (bsink);
   GstBuffer *reffed_buf = NULL;
-  guint8 *data;
-  gsize size;
+  GstMapInfo map;
 
   if (sink->first) {
     /* open the connection */
@@ -244,12 +243,12 @@ gst_rtmp_sink_render (GstBaseSink * bsink, GstBuffer * buf)
   GST_LOG_OBJECT (sink, "Sending %" G_GSIZE_FORMAT " bytes to RTMP server",
       gst_buffer_get_size (buf));
 
-  data = gst_buffer_map (buf, &size, NULL, GST_MAP_READ);
+  gst_buffer_map (buf, &map, GST_MAP_READ);
 
-  if (!RTMP_Write (sink->rtmp, (char *) data, size))
+  if (!RTMP_Write (sink->rtmp, (char *) map.data, map.size))
     goto write_failed;
 
-  gst_buffer_unmap (buf, data, size);
+  gst_buffer_unmap (buf, &map);
   if (reffed_buf)
     gst_buffer_unref (reffed_buf);
 
@@ -259,7 +258,7 @@ gst_rtmp_sink_render (GstBaseSink * bsink, GstBuffer * buf)
 write_failed:
   {
     GST_ELEMENT_ERROR (sink, RESOURCE, WRITE, (NULL), ("Failed to write data"));
-    gst_buffer_unmap (buf, data, size);
+    gst_buffer_unmap (buf, &map);
     if (reffed_buf)
       gst_buffer_unref (reffed_buf);
     return GST_FLOW_ERROR;

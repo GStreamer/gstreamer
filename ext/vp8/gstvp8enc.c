@@ -854,7 +854,7 @@ gst_vp8_enc_set_format (GstBaseVideoEncoder * base_video_encoder,
     const GstTagList *iface_tags;
     GValue array = { 0, };
     GValue value = { 0, };
-    gsize size;
+    GstMapInfo map;
     s = gst_caps_get_structure (caps, 0);
 
     /* put buffers in a fixed list */
@@ -863,7 +863,8 @@ gst_vp8_enc_set_format (GstBaseVideoEncoder * base_video_encoder,
 
     /* Create Ogg stream-info */
     stream_hdr = gst_buffer_new_and_alloc (26);
-    data = gst_buffer_map (stream_hdr, &size, NULL, GST_MAP_WRITE);
+    gst_buffer_map (stream_hdr, &map, GST_MAP_WRITE);
+    data = map.data;
 
     GST_WRITE_UINT8 (data, 0x4F);
     GST_WRITE_UINT32_BE (data + 1, 0x56503830); /* "VP80" */
@@ -877,7 +878,7 @@ gst_vp8_enc_set_format (GstBaseVideoEncoder * base_video_encoder,
     GST_WRITE_UINT32_BE (data + 18, info->fps_n);
     GST_WRITE_UINT32_BE (data + 22, info->fps_d);
 
-    gst_buffer_unmap (stream_hdr, data, size);
+    gst_buffer_unmap (stream_hdr, &map);
 
     GST_BUFFER_FLAG_SET (stream_hdr, GST_BUFFER_FLAG_IN_CAPS);
     gst_value_set_buffer (&value, stream_hdr);

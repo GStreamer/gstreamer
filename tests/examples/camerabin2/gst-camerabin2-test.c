@@ -341,8 +341,6 @@ sync_bus_callback (GstBus * bus, GstMessage * message, gpointer data)
   const GstStructure *st;
   const GValue *image;
   GstBuffer *buf = NULL;
-  guint8 *data_buf = NULL;
-  gsize size = 0;
   gchar *preview_filename = NULL;
   FILE *f = NULL;
   size_t written;
@@ -385,9 +383,11 @@ sync_bus_callback (GstBus * bus, GstMessage * message, gpointer data)
             preview_filename = g_strdup_printf ("test_vga.rgb");
             f = g_fopen (preview_filename, "w");
             if (f) {
-              data_buf = gst_buffer_map (buf, &size, NULL, GST_MAP_READ);
-              written = fwrite (data_buf, size, 1, f);
-              gst_buffer_unmap (buf, data_buf, size);
+              GstMapInfo map;
+
+              gst_buffer_map (buf, &map, GST_MAP_READ);
+              written = fwrite (map.data, map.size, 1, f);
+              gst_buffer_unmap (buf, &map);
               if (!written) {
                 g_print ("error writing file\n");
               }

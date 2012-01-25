@@ -218,8 +218,6 @@ handle_element_message (GstMessage * msg)
   const GstStructure *st;
   const GValue *image;
   GstBuffer *buf = NULL;
-  guint8 *data = NULL;
-  gsize size = 0;
   gchar *filename = NULL;
   FILE *f = NULL;
   size_t written;
@@ -243,9 +241,11 @@ handle_element_message (GstMessage * msg)
       g_print ("writing buffer to %s\n", filename);
       f = g_fopen (filename, "w");
       if (f) {
-        data = gst_buffer_map (buf, &size, NULL, GST_MAP_READ);
-        written = fwrite (data, size, 1, f);
-        gst_buffer_unmap (buf, data, size);
+        GstMapInfo map;
+
+        gst_buffer_map (buf, &map, GST_MAP_READ);
+        written = fwrite (map.data, map.size, 1, f);
+        gst_buffer_unmap (buf, &map);
         if (!written) {
           g_print ("errro writing file\n");
         }

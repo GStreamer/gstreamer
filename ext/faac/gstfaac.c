@@ -644,14 +644,13 @@ gst_faac_handle_frame (GstAudioEncoder * enc, GstBuffer * in_buf)
   GstFlowReturn ret = GST_FLOW_OK;
   GstBuffer *out_buf;
   gsize size, ret_size;
+  GstMapInfo map, omap;
   guint8 *data;
-  guint8 *out_data;
-  gsize out_size;
   GstAudioInfo *info =
       gst_audio_encoder_get_audio_info (GST_AUDIO_ENCODER (faac));
 
   out_buf = gst_buffer_new_and_alloc (faac->bytes);
-  out_data = gst_buffer_map (out_buf, &out_size, NULL, GST_MAP_WRITE);
+  gst_buffer_map (out_buf, &omap, GST_MAP_WRITE);
 
   if (G_LIKELY (in_buf)) {
     if (memcmp (info->position, aac_channel_positions[info->channels - 1],
@@ -661,26 +660,29 @@ gst_faac_handle_frame (GstAudioEncoder * enc, GstBuffer * in_buf)
           info->channels, info->position,
           aac_channel_positions[info->channels - 1]);
     }
-    data = gst_buffer_map (in_buf, &size, NULL, GST_MAP_READ);
+    gst_buffer_map (in_buf, &map, GST_MAP_READ);
+    data = map.data;
+    size = map.size;
   } else {
     data = NULL;
     size = 0;
   }
 
   if (G_UNLIKELY ((ret_size = faacEncEncode (faac->handle, (gint32 *) data,
-                  size / (info->finfo->width / 8), out_data, out_size)) < 0))
+                  size / (info->finfo->width / 8), omap.data, omap.size)) < 0))
     goto encode_failed;
 
   if (in_buf)
-    gst_buffer_unmap (in_buf, data, -1);
+    gst_buffer_unmap (in_buf, &map);
 
   GST_LOG_OBJECT (faac, "encoder return: %" G_GSIZE_FORMAT, ret_size);
 
   if (ret_size > 0) {
-    gst_buffer_unmap (out_buf, out_data, ret_size);
+    gst_buffer_unmap (out_buf, &omap);
+    gst_buffer_resize (out_buf, 0, ret_size);
     ret = gst_audio_encoder_finish_frame (enc, out_buf, faac->samples);
   } else {
-    gst_buffer_unmap (out_buf, out_data, 0);
+    gst_buffer_unmap (out_buf, &omap);
     gst_buffer_unref (out_buf);
     /* re-create encoder after final flush */
     if (!in_buf) {
@@ -698,8 +700,8 @@ encode_failed:
   {
     GST_ELEMENT_ERROR (faac, LIBRARY, ENCODE, (NULL), (NULL));
     if (in_buf)
-      gst_buffer_unmap (in_buf, data, -1);
-    gst_buffer_unmap (out_buf, out_data, 0);
+      gst_buffer_unmap (in_buf, &map);
+    gst_buffer_unmap (out_buf, &omap);
     gst_buffer_unref (out_buf);
     return GST_FLOW_ERROR;
   }

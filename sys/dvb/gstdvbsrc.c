@@ -901,14 +901,14 @@ gst_dvbsrc_read_device (GstDvbSrc * object, int size)
   gint ret_val = 0;
   GstBuffer *buf = gst_buffer_new_and_alloc (size);
   GstClockTime timeout = object->timeout * GST_USECOND;
-  guint8 *data;
+  GstMapInfo map;
 
   g_return_val_if_fail (GST_IS_BUFFER (buf), NULL);
 
   if (object->fd_dvr < 0)
     return NULL;
 
-  data = gst_buffer_map (buf, NULL, NULL, GST_MAP_WRITE);
+  gst_buffer_map (buf, &map, GST_MAP_WRITE);
   while (count < size) {
     ret_val = gst_poll_wait (object->poll, timeout);
     GST_LOG_OBJECT (object, "select returned %d", ret_val);
@@ -923,7 +923,7 @@ gst_dvbsrc_read_device (GstDvbSrc * object, int size)
           gst_message_new_element (GST_OBJECT (object),
               gst_structure_new_empty ("dvb-read-failure")));
     } else {
-      int nread = read (object->fd_dvr, data + count, size - count);
+      int nread = read (object->fd_dvr, map.data + count, size - count);
 
       if (G_UNLIKELY (nread < 0)) {
         GST_WARNING_OBJECT
@@ -937,20 +937,21 @@ gst_dvbsrc_read_device (GstDvbSrc * object, int size)
         count = count + nread;
     }
   }
-  gst_buffer_unmap (buf, data, count);
+  gst_buffer_unmap (buf, &map);
+  gst_buffer_resize (buf, 0, count);
   GST_BUFFER_TIMESTAMP (buf) = GST_CLOCK_TIME_NONE;
   return buf;
 
 stopped:
   GST_DEBUG_OBJECT (object, "stop called");
-  gst_buffer_unmap (buf, data, 0);
+  gst_buffer_unmap (buf, &map);
   gst_buffer_unref (buf);
   return NULL;
 
 select_error:
   GST_ELEMENT_ERROR (object, RESOURCE, READ, (NULL),
       ("select error %d: %s (%d)", ret_val, g_strerror (errno), errno));
-  gst_buffer_unmap (buf, data, 0);
+  gst_buffer_unmap (buf, &map);
   gst_buffer_unref (buf);
   return NULL;
 }

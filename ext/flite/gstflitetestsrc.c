@@ -444,6 +444,7 @@ gst_flite_test_src_create (GstBaseSrc * basesrc, guint64 offset,
     GstBuffer *buf;
     char *text;
     int i;
+    GstMapInfo map;
     gint16 *data;
     cst_wave *wave;
     gsize size;
@@ -460,12 +461,13 @@ gst_flite_test_src_create (GstBaseSrc * basesrc, guint64 offset,
     size = src->info.channels * sizeof (gint16) * wave->num_samples;
     buf = gst_buffer_new_and_alloc (size);
 
-    data = gst_buffer_map (buf, NULL, NULL, GST_MAP_WRITE);
+    gst_buffer_map (buf, &map, GST_MAP_WRITE);
+    data = (gint16 *) map.data;
     memset (data, 0, size);
     for (i = 0; i < wave->num_samples; i++) {
       data[i * src->info.channels + src->channel] = wave->samples[i];
     }
-    gst_buffer_unmap (buf, data, size);
+    gst_buffer_unmap (buf, &map);
 
     src->channel++;
     if (src->channel == src->info.channels) {

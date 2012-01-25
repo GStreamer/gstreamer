@@ -353,14 +353,14 @@ gst_gme_play (GstPad * pad)
   const int NUM_SAMPLES = 1600; /* 4 bytes (stereo 16-bit) per sample */
 
   if (!seeking) {
-    short *data;
+    GstMapInfo map;
 
     out = gst_buffer_new_and_alloc (NUM_SAMPLES * 4);
     GST_BUFFER_TIMESTAMP (out) = gme_tell (gme->player) * GST_MSECOND;
 
-    data = gst_buffer_map (out, NULL, NULL, GST_MAP_WRITE);
-    gme_err = gme_play (gme->player, NUM_SAMPLES * 2, data);
-    gst_buffer_unmap (out, data, -1);
+    gst_buffer_map (out, &map, GST_MAP_WRITE);
+    gme_err = gme_play (gme->player, NUM_SAMPLES * 2, (short *) map.data);
+    gst_buffer_unmap (out, &map);
 
     if (gme_err) {
       GST_ELEMENT_ERROR (gme, STREAM, DEMUX, (NULL), (gme_err));
@@ -412,8 +412,7 @@ gme_setup (GstGmeDec * gme)
   guint64 fade_time;
   GstBuffer *buffer;
   GstSegment seg;
-  guint8 *data;
-  gsize size;
+  GstMapInfo map;
 
   if (!gst_adapter_available (gme->adapter) || !gme_negotiate (gme)) {
     return FALSE;
@@ -423,9 +422,9 @@ gme_setup (GstGmeDec * gme)
       gst_adapter_take_buffer (gme->adapter,
       gst_adapter_available (gme->adapter));
 
-  data = gst_buffer_map (buffer, &size, NULL, GST_MAP_READ);
-  gme_err = gme_open_data (data, size, &gme->player, 32000);
-  gst_buffer_unmap (buffer, data, size);
+  gst_buffer_map (buffer, &map, GST_MAP_READ);
+  gme_err = gme_open_data (map.data, map.size, &gme->player, 32000);
+  gst_buffer_unmap (buffer, &map);
   gst_buffer_unref (buffer);
 
   if (gme_err || !gme->player) {

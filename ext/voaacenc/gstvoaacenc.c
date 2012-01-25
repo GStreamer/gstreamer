@@ -361,14 +361,14 @@ gst_voaacenc_create_source_pad_caps (GstVoAacEnc * voaacenc)
   GstCaps *caps = NULL;
   gint index;
   GstBuffer *codec_data;
-  guint8 *data;
+  GstMapInfo map;
 
   if ((index = gst_voaacenc_get_rate_index (voaacenc->rate)) >= 0) {
     codec_data = gst_buffer_new_and_alloc (VOAAC_ENC_CODECDATA_LEN);
-    data = gst_buffer_map (codec_data, NULL, NULL, GST_MAP_WRITE);
+    gst_buffer_map (codec_data, &map, GST_MAP_WRITE);
     /* LC profile only */
-    data[0] = ((0x02 << 3) | (index >> 1));
-    data[1] = ((index & 0x01) << 7) | (voaacenc->channels << 3);
+    map.data[0] = ((0x02 << 3) | (index >> 1));
+    map.data[1] = ((index & 0x01) << 7) | (voaacenc->channels << 3);
 
     caps = gst_caps_new_simple ("audio/mpeg",
         "mpegversion", G_TYPE_INT, VOAAC_ENC_MPEGVERSION,
@@ -378,9 +378,9 @@ gst_voaacenc_create_source_pad_caps (GstVoAacEnc * voaacenc)
         (voaacenc->output_format ? "adts" : "raw")
         , NULL);
 
-    gst_codec_utils_aac_caps_set_level_and_profile (caps, data,
+    gst_codec_utils_aac_caps_set_level_and_profile (caps, map.data,
         VOAAC_ENC_CODECDATA_LEN);
-    gst_buffer_unmap (codec_data, data, -1);
+    gst_buffer_unmap (codec_data, &map);
 
     if (!voaacenc->output_format) {
       gst_caps_set_simple (caps, "codec_data", GST_TYPE_BUFFER, codec_data,
@@ -436,8 +436,7 @@ gst_voaacenc_handle_frame (GstAudioEncoder * benc, GstBuffer * buf)
   VO_AUDIO_OUTPUTINFO output_info = { {0} };
   VO_CODECBUFFER input = { 0 };
   VO_CODECBUFFER output = { 0 };
-  gsize size;
-  guint8 *data, *out_data;
+  GstMapInfo map, omap;
   GstAudioInfo *info = gst_audio_encoder_get_audio_info (benc);
 
   voaacenc = GST_VOAACENC (benc);
@@ -458,39 +457,40 @@ gst_voaacenc_handle_frame (GstAudioEncoder * benc, GstBuffer * buf)
         aac_channel_positions[info->channels - 1]);
   }
 
-  data = gst_buffer_map (buf, &size, NULL, GST_MAP_READ);
+  gst_buffer_map (buf, &map, GST_MAP_READ);
 
-  if (G_UNLIKELY (size < voaacenc->inbuf_size)) {
-    gst_buffer_unmap (buf, data, -1);
-    GST_DEBUG_OBJECT (voaacenc, "discarding trailing data %d", (gint) size);
+  if (G_UNLIKELY (map.size < voaacenc->inbuf_size)) {
+    gst_buffer_unmap (buf, &map);
+    GST_DEBUG_OBJECT (voaacenc, "discarding trailing data %d", (gint) map.size);
     ret = gst_audio_encoder_finish_frame (benc, NULL, -1);
     goto exit;
   }
 
   /* max size */
   out = gst_buffer_new_and_alloc (voaacenc->inbuf_size);
-  out_data = gst_buffer_map (out, NULL, NULL, GST_MAP_WRITE);
+  gst_buffer_map (out, &omap, GST_MAP_WRITE);
 
-  output.Buffer = out_data;
+  output.Buffer = omap.data;
   output.Length = voaacenc->inbuf_size;
 
-  g_assert (size == voaacenc->inbuf_size);
-  input.Buffer = data;
+  g_assert (map.size == voaacenc->inbuf_size);
+  input.Buffer = map.data;
   input.Length = voaacenc->inbuf_size;
   voaacenc->codec_api.SetInputData (voaacenc->handle, &input);
 
   /* encode */
   if (voaacenc->codec_api.GetOutputData (voaacenc->handle, &output,
           &output_info) != VO_ERR_NONE) {
-    gst_buffer_unmap (buf, data, -1);
-    gst_buffer_unmap (out, out_data, -1);
+    gst_buffer_unmap (buf, &map);
+    gst_buffer_unmap (out, &omap);
     gst_buffer_unref (out);
     goto encode_failed;
   }
 
   GST_LOG_OBJECT (voaacenc, "encoded to %d bytes", output.Length);
-  gst_buffer_unmap (out, out_data, output.Length);
-  gst_buffer_unmap (buf, data, -1);
+  gst_buffer_unmap (buf, &map);
+  gst_buffer_unmap (out, &omap);
+  gst_buffer_resize (out, 0, output.Length);
 
   ret = gst_audio_encoder_finish_frame (benc, out, 1024);
 

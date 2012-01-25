@@ -262,6 +262,7 @@ gst_faad_set_format (GstAudioDecoder * dec, GstCaps * caps)
   GstStructure *str = gst_caps_get_structure (caps, 0);
   GstBuffer *buf;
   const GValue *value;
+  GstMapInfo map;
   guint8 *cdata;
   gsize csize;
 
@@ -285,7 +286,9 @@ gst_faad_set_format (GstAudioDecoder * dec, GstCaps * caps)
     buf = gst_value_get_buffer (value);
     g_return_val_if_fail (buf != NULL, FALSE);
 
-    cdata = gst_buffer_map (buf, &csize, NULL, GST_MAP_READ);
+    gst_buffer_map (buf, &map, GST_MAP_READ);
+    cdata = map.data;
+    csize = map.size;
 
     if (csize < 2)
       goto wrong_length;
@@ -319,6 +322,7 @@ gst_faad_set_format (GstAudioDecoder * dec, GstCaps * caps)
     faad->channels = 0;
 
     faad->init = TRUE;
+    gst_buffer_unmap (buf, &map);
   } else if ((value = gst_structure_get_value (str, "framed")) &&
       g_value_get_boolean (value) == TRUE) {
     faad->packetised = TRUE;
@@ -356,21 +360,21 @@ wrong_length:
   {
     GST_DEBUG_OBJECT (faad, "codec_data less than 2 bytes long");
     gst_object_unref (faad);
-    gst_buffer_unmap (buf, cdata, csize);
+    gst_buffer_unmap (buf, &map);
     return FALSE;
   }
 open_failed:
   {
     GST_DEBUG_OBJECT (faad, "failed to create decoder");
     gst_object_unref (faad);
-    gst_buffer_unmap (buf, cdata, csize);
+    gst_buffer_unmap (buf, &map);
     return FALSE;
   }
 init_failed:
   {
     GST_DEBUG_OBJECT (faad, "faacDecInit2() failed");
     gst_object_unref (faad);
-    gst_buffer_unmap (buf, cdata, csize);
+    gst_buffer_unmap (buf, &map);
     return FALSE;
   }
 }
@@ -662,6 +666,7 @@ gst_faad_handle_frame (GstAudioDecoder * dec, GstBuffer * buffer)
 {
   GstFaad *faad;
   GstFlowReturn ret = GST_FLOW_OK;
+  GstMapInfo map;
   gsize input_size;
   guchar *input_data;
   GstBuffer *outbuf;
@@ -674,7 +679,9 @@ gst_faad_handle_frame (GstAudioDecoder * dec, GstBuffer * buffer)
   if (G_UNLIKELY (!buffer))
     return GST_FLOW_OK;
 
-  input_data = gst_buffer_map (buffer, &input_size, NULL, GST_MAP_READ);
+  gst_buffer_map (buffer, &map, GST_MAP_READ);
+  input_data = map.data;
+  input_size = map.size;
 
 init:
   /* init if not already done during capsnego */
@@ -763,7 +770,7 @@ init:
   } while (FALSE);
 
 out:
-  gst_buffer_unmap (buffer, input_data, input_size);
+  gst_buffer_unmap (buffer, &map);
 
   return ret;
 

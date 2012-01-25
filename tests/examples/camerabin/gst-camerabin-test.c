@@ -239,8 +239,6 @@ sync_bus_callback (GstBus * bus, GstMessage * message, gpointer data)
   const GstStructure *st;
   const GValue *image;
   GstBuffer *buf = NULL;
-  guint8 *data_buf = NULL;
-  gsize size = 0;
   gchar *preview_filename = NULL;
   FILE *f = NULL;
   size_t written;
@@ -264,14 +262,16 @@ sync_bus_callback (GstBus * bus, GstMessage * message, gpointer data)
           //extract preview-image from msg
           image = gst_structure_get_value (st, "buffer");
           if (image) {
+            GstMapInfo map;
+
             buf = gst_value_get_buffer (image);
-            data_buf = gst_buffer_map (buf, &size, NULL, GST_MAP_READ);
+            gst_buffer_map (buf, &map, GST_MAP_READ);
             preview_filename = g_strdup_printf ("test_vga.rgb");
             g_print ("writing buffer to %s, elapsed: %.2fs\n",
                 preview_filename, g_timer_elapsed (timer, NULL));
             f = g_fopen (preview_filename, "w");
             if (f) {
-              written = fwrite (data_buf, size, 1, f);
+              written = fwrite (map.data, map.size, 1, f);
               if (!written) {
                 g_print ("error writing file\n");
               }
@@ -280,7 +280,7 @@ sync_bus_callback (GstBus * bus, GstMessage * message, gpointer data)
               g_print ("error opening file for raw image writing\n");
             }
             g_free (preview_filename);
-            gst_buffer_unmap (buf, data_buf, size);
+            gst_buffer_unmap (buf, &map);
           }
         }
       }

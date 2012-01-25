@@ -826,8 +826,7 @@ gst_ass_render_setcaps_text (GstPad * pad, GstCaps * caps)
   GstStructure *structure;
   const GValue *value;
   GstBuffer *priv;
-  gchar *codec_private;
-  gsize codec_private_size;
+  GstMapInfo map;
   gboolean ret = FALSE;
 
   structure = gst_caps_get_structure (caps, 0);
@@ -842,16 +841,14 @@ gst_ass_render_setcaps_text (GstPad * pad, GstCaps * caps)
     priv = gst_value_get_buffer (value);
     g_return_val_if_fail (priv != NULL, FALSE);
 
-    codec_private =
-        gst_buffer_map (priv, &codec_private_size, NULL, GST_MAP_READ);
+    gst_buffer_map (priv, &map, GST_MAP_READ);
 
     if (!render->ass_track)
       render->ass_track = ass_new_track (render->ass_library);
 
-    ass_process_codec_private (render->ass_track,
-        codec_private, codec_private_size);
+    ass_process_codec_private (render->ass_track, (char *) map.data, map.size);
 
-    gst_buffer_unmap (priv, codec_private, codec_private_size);
+    gst_buffer_unmap (priv, &map);
 
     GST_DEBUG_OBJECT (render, "ass track created");
 
@@ -877,8 +874,7 @@ static void
 gst_ass_render_process_text (GstAssRender * render, GstBuffer * buffer,
     GstClockTime running_time, GstClockTime duration)
 {
-  gchar *data;
-  gsize size;
+  GstMapInfo map;
   gdouble pts_start, pts_end;
 
   pts_start = running_time;
@@ -891,13 +887,14 @@ gst_ass_render_process_text (GstAssRender * render, GstBuffer * buffer,
       " and duration %" GST_TIME_FORMAT, GST_TIME_ARGS (running_time),
       GST_TIME_ARGS (duration));
 
-  data = gst_buffer_map (buffer, &size, NULL, GST_MAP_READ);
+  gst_buffer_map (buffer, &map, GST_MAP_READ);
 
   g_mutex_lock (&render->ass_mutex);
-  ass_process_chunk (render->ass_track, data, size, pts_start, pts_end);
+  ass_process_chunk (render->ass_track, (gchar *) map.data, map.size,
+      pts_start, pts_end);
   g_mutex_unlock (&render->ass_mutex);
 
-  gst_buffer_unmap (buffer, data, size);
+  gst_buffer_unmap (buffer, &map);
   gst_buffer_unref (buffer);
 }
 

@@ -294,7 +294,8 @@ gst_rtmp_src_create (GstPushSrc * pushsrc, GstBuffer ** buffer)
 {
   GstRTMPSrc *src;
   GstBuffer *buf;
-  guint8 *data, *bdata;
+  GstMapInfo map;
+  guint8 *data;
   guint todo;
   gsize bsize;
   int read;
@@ -316,7 +317,8 @@ gst_rtmp_src_create (GstPushSrc * pushsrc, GstBuffer ** buffer)
   }
 
   bsize = todo = size;
-  bdata = data = gst_buffer_map (buf, NULL, NULL, GST_MAP_WRITE);
+  gst_buffer_map (buf, &map, GST_MAP_WRITE);
+  data = map.data;
   read = bsize = 0;
 
   while (todo > 0) {
@@ -342,7 +344,8 @@ gst_rtmp_src_create (GstPushSrc * pushsrc, GstBuffer ** buffer)
     }
     GST_LOG ("  got size %d", read);
   }
-  gst_buffer_unmap (buf, bdata, bsize);
+  gst_buffer_unmap (buf, &map);
+  gst_buffer_resize (buf, 0, bsize);
 
   if (src->discont) {
     GST_BUFFER_FLAG_SET (buf, GST_BUFFER_FLAG_DISCONT);

@@ -488,6 +488,7 @@ gst_dtsdec_handle_frame (GstAudioDecoder * bdec, GstBuffer * buffer)
   gboolean need_renegotiation = FALSE;
   guint8 *data;
   gsize size;
+  GstMapInfo map;
   gint chans;
   gint length = 0, flags, sample_rate, bit_rate, frame_length;
   GstFlowReturn result = GST_FLOW_OK;
@@ -500,7 +501,9 @@ gst_dtsdec_handle_frame (GstAudioDecoder * bdec, GstBuffer * buffer)
     return GST_FLOW_OK;
 
   /* parsed stuff already, so this should work out fine */
-  data = gst_buffer_map (buffer, &size, NULL, GST_MAP_READ);
+  gst_buffer_map (buffer, &map, GST_MAP_READ);
+  data = map.data;
+  size = map.size;
   g_assert (size >= 7);
 
   bit_rate = dts->bit_rate;
@@ -585,12 +588,12 @@ gst_dtsdec_handle_frame (GstAudioDecoder * bdec, GstBuffer * buffer)
   flags |= DCA_ADJUST_LEVEL;
   dts->level = 1;
   if (dca_frame (dts->state, data, &flags, &dts->level, dts->bias)) {
-    gst_buffer_unmap (buffer, data, size);
+    gst_buffer_unmap (buffer, &map);
     GST_AUDIO_DECODER_ERROR (dts, 1, STREAM, DECODE, (NULL),
         ("dts_frame error"), result);
     goto exit;
   }
-  gst_buffer_unmap (buffer, data, size);
+  gst_buffer_unmap (buffer, &map);
 
   channels = flags & (DCA_CHANNEL_MASK | DCA_LFE);
   if (dts->using_channels != channels) {
@@ -621,7 +624,9 @@ gst_dtsdec_handle_frame (GstAudioDecoder * bdec, GstBuffer * buffer)
   outbuf =
       gst_buffer_new_and_alloc (256 * chans * (SAMPLE_WIDTH / 8) * num_blocks);
 
-  data = gst_buffer_map (outbuf, &size, NULL, GST_MAP_WRITE);
+  gst_buffer_map (outbuf, &map, GST_MAP_WRITE);
+  data = map.data;
+  size = map.size;
   {
     guint8 *ptr = data;
     for (i = 0; i < num_blocks; i++) {
@@ -645,7 +650,7 @@ gst_dtsdec_handle_frame (GstAudioDecoder * bdec, GstBuffer * buffer)
       ptr += 256 * chans * (SAMPLE_WIDTH / 8);
     }
   }
-  gst_buffer_unmap (outbuf, data, size);
+  gst_buffer_unmap (outbuf, &map);
 
   result = gst_audio_decoder_finish_frame (bdec, outbuf, 1);
 

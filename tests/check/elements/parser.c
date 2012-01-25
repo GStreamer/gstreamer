@@ -58,14 +58,14 @@ buffer_new (const unsigned char *buffer_data, guint size)
     gst_buffer_fill (buffer, 0, buffer_data, size);
   } else {
     guint i;
-    guint8 *data;
+    GstMapInfo map;
 
     /* Create a recognizable pattern (loop 0x00 -> 0xff) in the data block */
-    data = gst_buffer_map (buffer, NULL, NULL, GST_MAP_WRITE);
+    gst_buffer_map (buffer, &map, GST_MAP_WRITE);
     for (i = 0; i < size; i++) {
-      data[i] = i % 0x100;
+      map.data[i] = i % 0x100;
     }
-    gst_buffer_unmap (buffer, data, size);
+    gst_buffer_unmap (buffer, &map);
   }
 
   GST_BUFFER_OFFSET (buffer) = dataoffset;
