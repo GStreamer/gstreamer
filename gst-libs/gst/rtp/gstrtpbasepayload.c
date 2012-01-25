@@ -730,8 +730,9 @@ typedef struct
 } HeaderData;
 
 static gboolean
-find_timestamp (GstBuffer ** buffer, guint idx, HeaderData * data)
+find_timestamp (GstBuffer ** buffer, guint idx, gpointer user_data)
 {
+  HeaderData *data = user_data;
   data->timestamp = GST_BUFFER_TIMESTAMP (*buffer);
   data->offset = GST_BUFFER_OFFSET (*buffer);
 
@@ -744,8 +745,9 @@ find_timestamp (GstBuffer ** buffer, guint idx, HeaderData * data)
 }
 
 static gboolean
-set_headers (GstBuffer ** buffer, guint group, guint idx, HeaderData * data)
+set_headers (GstBuffer ** buffer, guint idx, gpointer user_data)
 {
+  HeaderData *data = user_data;
   GstRTPBuffer rtp = { NULL, };
 
   gst_rtp_buffer_map (*buffer, GST_MAP_WRITE, &rtp);
@@ -789,8 +791,7 @@ gst_rtp_base_payload_prepare_push (GstRTPBasePayload * payload,
   if (is_list) {
     data.timestamp = -1;
     data.offset = GST_BUFFER_OFFSET_NONE;
-    gst_buffer_list_foreach (GST_BUFFER_LIST_CAST (obj),
-        (GstBufferListFunc) find_timestamp, &data);
+    gst_buffer_list_foreach (GST_BUFFER_LIST_CAST (obj), find_timestamp, &data);
   } else {
     data.timestamp = GST_BUFFER_TIMESTAMP (GST_BUFFER_CAST (obj));
     data.offset = GST_BUFFER_OFFSET (GST_BUFFER_CAST (obj));
@@ -834,11 +835,10 @@ gst_rtp_base_payload_prepare_push (GstRTPBasePayload * payload,
 
   /* set ssrc, payload type, seq number, caps and rtptime */
   if (is_list) {
-    gst_buffer_list_foreach (GST_BUFFER_LIST_CAST (obj),
-        (GstBufferListFunc) set_headers, &data);
+    gst_buffer_list_foreach (GST_BUFFER_LIST_CAST (obj), set_headers, &data);
   } else {
     GstBuffer *buf = GST_BUFFER_CAST (obj);
-    set_headers (&buf, 0, 0, &data);
+    set_headers (&buf, 0, &data);
   }
 
   priv->next_seqnum = data.seqnum;
