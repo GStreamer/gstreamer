@@ -273,7 +273,7 @@ gst_amrnbdec_parse (GstAudioDecoder * dec, GstAdapter * adapter,
   GST_DEBUG_OBJECT (amrnbdec, "mode %d, block %d", mode, block);
 
   if (block > size)
-    return GST_FLOW_UNEXPECTED;
+    return GST_FLOW_EOS;
 
   *offset = 0;
   *length = block;

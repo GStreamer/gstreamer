@@ -189,7 +189,7 @@ gst_amrwbdec_parse (GstAudioDecoder * dec, GstAdapter * adapter,
 
   if (block) {
     if (block > size)
-      return GST_FLOW_UNEXPECTED;
+      return GST_FLOW_EOS;
     *offset = 0;
     *length = block;
   } else {
