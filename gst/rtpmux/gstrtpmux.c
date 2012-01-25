@@ -215,6 +215,7 @@ gst_rtp_mux_src_event_real (GstRTPMux * rtp_mux, GstEvent * event)
       case GST_ITERATOR_OK:
         gst_event_ref (event);
         result |= gst_pad_push_event (g_value_get_object (&item), event);
+        g_value_reset (&item);
         break;
       case GST_ITERATOR_RESYNC:
         gst_iterator_resync (iter);
