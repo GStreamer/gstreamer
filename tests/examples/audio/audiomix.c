@@ -23,6 +23,9 @@
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
+/* FIXME 0.11: suppress warnings for deprecated API such as GStaticRecMutex
+ * with newer GTK versions (>= 3.3.0) */
+#define GDK_DISABLE_DEPRECATION_WARNINGS
 
 #include <string.h>
 #include <gst/gst.h>
