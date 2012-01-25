@@ -1,5 +1,5 @@
 /*
- * gst-rtp-vp8-pay.h - Header for GstRtpVP8Pay
+ * gstrtpvp8pay.h - Header for GstRtpVP8Pay
  * Copyright (C) 2011 Sjoerd Simons <sjoerd@luon.net>
  *
  * This library is free software; you can redistribute it and/or
@@ -22,7 +22,7 @@
 
 #include <glib-object.h>
 #include <gst/base/gstadapter.h>
-#include <gst/rtp/gstbasertppayload.h>
+#include <gst/rtp/gstrtpbasepayload.h>
 
 G_BEGIN_DECLS typedef struct _GstRtpVP8Pay GstRtpVP8Pay;
 typedef struct _GstRtpVP8PayClass GstRtpVP8PayClass;
@@ -36,12 +36,12 @@ enum _PictureIDMode {
 
 struct _GstRtpVP8PayClass
 {
-  GstBaseRTPPayloadClass parent_class;
+  GstRTPBasePayloadClass parent_class;
 };
 
 struct _GstRtpVP8Pay
 {
-  GstBaseRTPPayload parent;
+  GstRTPBasePayload parent;
   gboolean is_keyframe;
   gint n_partitions;
   /* Treat frame header & tag & partition size block as the first partition,

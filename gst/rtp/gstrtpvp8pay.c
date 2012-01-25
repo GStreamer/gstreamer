@@ -1,5 +1,5 @@
 /*
- * gst-rtp-vp8-pay.c - Source for GstRtpVP8Pay
+ * gstrtpvp8pay.c - Source for GstRtpVP8Pay
  * Copyright (C) 2011 Sjoerd Simons <sjoerd@luon.net>
  * Copyright (C) 2011 Collabora Ltd.
  *   Contact: Youness Alaoui <youness.alaoui@collabora.co.uk>
@@ -35,8 +35,7 @@ GST_DEBUG_CATEGORY_STATIC (gst_rtp_vp8_pay_debug);
 
 #define DEFAULT_PICTURE_ID_MODE VP8_PAY_PICTURE_ID_7BITS
 
-GST_BOILERPLATE (GstRtpVP8Pay, gst_rtp_vp8_pay, GstBaseRTPPayload,
-    GST_TYPE_BASE_RTP_PAYLOAD);
+G_DEFINE_TYPE (GstRtpVP8Pay, gst_rtp_vp8_pay, GST_TYPE_RTP_BASE_PAYLOAD);
 
 static GstStaticPadTemplate gst_rtp_vp8_pay_src_template =
 GST_STATIC_PAD_TEMPLATE ("src",
@@ -53,7 +52,7 @@ GST_STATIC_PAD_TEMPLATE ("sink",
     GST_STATIC_CAPS ("video/x-vp8"));
 
 static void
-gst_rtp_vp8_pay_init (GstRtpVP8Pay * obj, GstRtpVP8PayClass * klass)
+gst_rtp_vp8_pay_init (GstRtpVP8Pay * obj)
 {
   /* TODO: Make it configurable */
   obj->picture_id_mode = DEFAULT_PICTURE_ID_MODE;
@@ -63,16 +62,20 @@ gst_rtp_vp8_pay_init (GstRtpVP8Pay * obj, GstRtpVP8PayClass * klass)
     obj->picture_id = g_random_int_range (0, G_MAXUINT16) & 0x7FFF;
 }
 
-static GstFlowReturn gst_rtp_vp8_pay_handle_buffer (GstBaseRTPPayload * payload,
+static GstFlowReturn gst_rtp_vp8_pay_handle_buffer (GstRTPBasePayload * payload,
     GstBuffer * buffer);
-static gboolean gst_rtp_vp8_pay_handle_event (GstPad * pad, GstEvent * event);
-static gboolean gst_rtp_vp8_pay_set_caps (GstBaseRTPPayload * payload,
+static gboolean gst_rtp_vp8_pay_sink_event (GstRTPBasePayload * payload,
+    GstEvent * event);
+static gboolean gst_rtp_vp8_pay_set_caps (GstRTPBasePayload * payload,
     GstCaps * caps);
 
+
 static void
-gst_rtp_vp8_pay_base_init (gpointer klass)
+gst_rtp_vp8_pay_class_init (GstRtpVP8PayClass * gst_rtp_vp8_pay_class)
 {
-  GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
+  GstElementClass *element_class = GST_ELEMENT_CLASS (gst_rtp_vp8_pay_class);
+  GstRTPBasePayloadClass *pay_class =
+      GST_RTP_BASE_PAYLOAD_CLASS (gst_rtp_vp8_pay_class);
 
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&gst_rtp_vp8_pay_sink_template));
@@ -82,16 +85,9 @@ gst_rtp_vp8_pay_base_init (gpointer klass)
   gst_element_class_set_details_simple (element_class, "RTP VP8 payloader",
       "Codec/Payloader/Network/RTP",
       "Puts VP8 video in RTP packets)", "Sjoerd Simons <sjoerd@luon.net>");
-}
-
-static void
-gst_rtp_vp8_pay_class_init (GstRtpVP8PayClass * gst_rtp_vp8_pay_class)
-{
-  GstBaseRTPPayloadClass *pay_class =
-      GST_BASE_RTP_PAYLOAD_CLASS (gst_rtp_vp8_pay_class);
 
   pay_class->handle_buffer = gst_rtp_vp8_pay_handle_buffer;
-  pay_class->handle_event = gst_rtp_vp8_pay_handle_event;
+  pay_class->sink_event = gst_rtp_vp8_pay_sink_event;
   pay_class->set_caps = gst_rtp_vp8_pay_set_caps;
 
   GST_DEBUG_CATEGORY_INIT (gst_rtp_vp8_pay_debug, "rtpvp8pay", 0,
@@ -101,23 +97,27 @@ gst_rtp_vp8_pay_class_init (GstRtpVP8PayClass * gst_rtp_vp8_pay_class)
 static gboolean
 gst_rtp_vp8_pay_parse_frame (GstRtpVP8Pay * self, GstBuffer * buffer)
 {
-  GstBitReader *reader;
+  GstBitReader *reader = NULL;
+  guint8 *data;
+  gsize size;
   int i;
   gboolean keyframe;
   guint32 partition0_size;
   guint8 version;
   guint8 tmp8 = 0;
-  guint8 *data;
   guint8 partitions;
   guint offset;
   BOOL_DECODER bc;
+  guint8 *pdata;
 
-  reader = gst_bit_reader_new_from_buffer (buffer);
-
-  if (G_UNLIKELY (GST_BUFFER_SIZE (buffer) < 3))
+  if (G_UNLIKELY (gst_buffer_get_size (buffer) < 3))
     goto error;
 
-  data = GST_BUFFER_DATA (buffer);
+  data = gst_buffer_map (buffer, &size, NULL, GST_MAP_READ);
+  if (data == NULL)
+    goto error;
+
+  reader = gst_bit_reader_new (data, size);
 
   self->is_keyframe = keyframe = ((data[0] & 0x1) == 0);
   version = (data[0] >> 1) & 0x7;
@@ -154,8 +154,7 @@ gst_rtp_vp8_pay_parse_frame (GstRtpVP8Pay * self, GstBuffer * buffer)
   }
 
   offset = keyframe ? 10 : 3;
-  vp8dx_start_decode (&bc, GST_BUFFER_DATA (buffer) + offset,
-      GST_BUFFER_SIZE (buffer) - offset);
+  vp8dx_start_decode (&bc, data + offset, size - offset);
 
   if (keyframe) {
     /* color space (1 bit) and clamping type (1 bit) */
@@ -226,11 +225,11 @@ gst_rtp_vp8_pay_parse_frame (GstRtpVP8Pay * self, GstBuffer * buffer)
   partitions = 1 << tmp8;
 
   /* Check if things are still sensible */
-  if (partition0_size + (partitions - 1) * 3 >= GST_BUFFER_SIZE (buffer))
+  if (partition0_size + (partitions - 1) * 3 >= size)
     goto error;
 
   /* partition data is right after the mode partition */
-  data = GST_BUFFER_DATA (buffer) + partition0_size;
+  pdata = data + partition0_size;
 
   /* Set up mapping */
   self->n_partitions = partitions + 1;
@@ -239,29 +238,32 @@ gst_rtp_vp8_pay_parse_frame (GstRtpVP8Pay * self, GstBuffer * buffer)
 
   self->partition_offset[1] = self->partition_size[0];
   for (i = 1; i < partitions; i++) {
-    guint size = (data[2] << 16 | data[1] << 8 | data[0]);
+    guint psize = (pdata[2] << 16 | pdata[1] << 8 | pdata[0]);
 
-    data += 3;
-    self->partition_size[i] = size;
-    self->partition_offset[i + 1] = self->partition_offset[i] + size;
+    pdata += 3;
+    self->partition_size[i] = psize;
+    self->partition_offset[i + 1] = self->partition_offset[i] + psize;
   }
 
   /* Check that our partition offsets and sizes don't go outsize the buffer
    * size. */
-  if (self->partition_offset[i] >= GST_BUFFER_SIZE (buffer))
+  if (self->partition_offset[i] >= size)
     goto error;
 
-  self->partition_size[i] = GST_BUFFER_SIZE (buffer)
-      - self->partition_offset[i];
+  self->partition_size[i] = size - self->partition_offset[i];
 
-  self->partition_offset[i + 1] = GST_BUFFER_SIZE (buffer);
+  self->partition_offset[i + 1] = size;
 
   gst_bit_reader_free (reader);
+  gst_buffer_unmap (buffer, data, size);
   return TRUE;
 
 error:
   GST_DEBUG ("Failed to parse frame");
-  gst_bit_reader_free (reader);
+  if (reader) {
+    gst_bit_reader_free (reader);
+    gst_buffer_unmap (buffer, data, size);
+  }
   return FALSE;
 }
 
@@ -297,8 +299,8 @@ gst_rtp_vp8_calc_header_len (GstRtpVP8Pay * self)
 static gsize
 gst_rtp_vp8_calc_payload_len (GstRtpVP8Pay * self)
 {
-  GstBaseRTPPayload *payload = GST_BASE_RTP_PAYLOAD (self);
-  return gst_rtp_buffer_calc_payload_len (GST_BASE_RTP_PAYLOAD_MTU (payload) -
+  GstRTPBasePayload *payload = GST_RTP_BASE_PAYLOAD (self);
+  return gst_rtp_buffer_calc_payload_len (GST_RTP_BASE_PAYLOAD_MTU (payload) -
       gst_rtp_vp8_calc_header_len (self), 0, 0);
 }
 
@@ -309,9 +311,11 @@ gst_rtp_vp8_create_header_buffer (GstRtpVP8Pay * self, guint8 partid,
 {
   GstBuffer *out;
   guint8 *p;
+  GstRTPBuffer rtpbuffer = GST_RTP_BUFFER_INIT;
 
   out = gst_rtp_buffer_new_allocate (gst_rtp_vp8_calc_header_len (self), 0, 0);
-  p = gst_rtp_buffer_get_payload (out);
+  gst_rtp_buffer_map (out, GST_MAP_READWRITE, &rtpbuffer);
+  p = gst_rtp_buffer_get_payload (&rtpbuffer);
   /* X=0,R=0,N=0,S=start,PartID=partid */
   p[0] = (start << 4) | partid;
   if (self->picture_id_mode != VP8_PAY_NO_PICTURE_ID) {
@@ -329,10 +333,12 @@ gst_rtp_vp8_create_header_buffer (GstRtpVP8Pay * self, guint8 partid,
     }
   }
 
-  gst_rtp_buffer_set_marker (out, mark);
+  gst_rtp_buffer_set_marker (&rtpbuffer, mark);
+
+  gst_rtp_buffer_unmap (&rtpbuffer);
 
   GST_BUFFER_DURATION (out) = GST_BUFFER_DURATION (in);
-  GST_BUFFER_TIMESTAMP (out) = GST_BUFFER_TIMESTAMP (in);
+  GST_BUFFER_PTS (out) = GST_BUFFER_PTS (in);
 
   return out;
 }
@@ -340,16 +346,17 @@ gst_rtp_vp8_create_header_buffer (GstRtpVP8Pay * self, guint8 partid,
 
 static guint
 gst_rtp_vp8_payload_next (GstRtpVP8Pay * self,
-    GstBufferListIterator * it, guint offset, GstBuffer * buffer)
+    GstBufferList * list, guint offset, GstBuffer * buffer)
 {
   guint partition;
   GstBuffer *header;
   GstBuffer *sub;
+  GstBuffer *out;
   gboolean mark;
   gsize remaining;
   gsize available;
 
-  remaining = GST_BUFFER_SIZE (buffer) - offset;
+  remaining = gst_buffer_get_size (buffer) - offset;
   available = gst_rtp_vp8_calc_payload_len (self);
   if (available > remaining)
     available = remaining;
@@ -361,23 +368,22 @@ gst_rtp_vp8_payload_next (GstRtpVP8Pay * self,
   /* whole set of partitions, payload them and done */
   header = gst_rtp_vp8_create_header_buffer (self, partition,
       offset == self->partition_offset[partition], mark, buffer);
-  sub = gst_buffer_create_sub (buffer, offset, available);
+  sub = gst_buffer_copy_region (buffer, GST_BUFFER_COPY_ALL, offset, available);
 
-  gst_buffer_list_iterator_add_group (it);
-  gst_buffer_list_iterator_add (it, header);
-  gst_buffer_list_iterator_add (it, sub);
+  out = gst_buffer_join (header, sub);
 
-  return GST_BUFFER_SIZE (sub);
+  gst_buffer_list_insert (list, -1, out);
+
+  return available;
 }
 
 
 static GstFlowReturn
-gst_rtp_vp8_pay_handle_buffer (GstBaseRTPPayload * payload, GstBuffer * buffer)
+gst_rtp_vp8_pay_handle_buffer (GstRTPBasePayload * payload, GstBuffer * buffer)
 {
   GstRtpVP8Pay *self = GST_RTP_VP8_PAY (payload);
   GstFlowReturn ret;
   GstBufferList *list;
-  GstBufferListIterator *it;
   guint offset;
 
   if (G_UNLIKELY (!gst_rtp_vp8_pay_parse_frame (self, buffer))) {
@@ -386,13 +392,11 @@ gst_rtp_vp8_pay_handle_buffer (GstBaseRTPPayload * payload, GstBuffer * buffer)
   }
 
   list = gst_buffer_list_new ();
-  it = gst_buffer_list_iterate (list);
 
-  for (offset = 0; offset < GST_BUFFER_SIZE (buffer);)
-    offset += gst_rtp_vp8_payload_next (self, it, offset, buffer);
+  for (offset = 0; offset < gst_buffer_get_size (buffer);)
+    offset += gst_rtp_vp8_payload_next (self, list, offset, buffer);
 
-  ret = gst_basertppayload_push_list (payload, list);
-  gst_buffer_list_iterator_free (it);
+  ret = gst_rtp_base_payload_push_list (payload, list);
 
   /* Incremenent and wrap the picture id if it overflows */
   if ((self->picture_id_mode == VP8_PAY_PICTURE_ID_7BITS &&
@@ -405,9 +409,9 @@ gst_rtp_vp8_pay_handle_buffer (GstBaseRTPPayload * payload, GstBuffer * buffer)
 }
 
 static gboolean
-gst_rtp_vp8_pay_handle_event (GstPad * pad, GstEvent * event)
+gst_rtp_vp8_pay_sink_event (GstRTPBasePayload * payload, GstEvent * event)
 {
-  GstRtpVP8Pay *self = GST_RTP_VP8_PAY (gst_pad_get_parent (pad));
+  GstRtpVP8Pay *self = GST_RTP_VP8_PAY (payload);
 
   if (GST_EVENT_TYPE (event) == GST_EVENT_FLUSH_START) {
     if (self->picture_id_mode == VP8_PAY_PICTURE_ID_7BITS)
@@ -416,17 +420,16 @@ gst_rtp_vp8_pay_handle_event (GstPad * pad, GstEvent * event)
       self->picture_id = g_random_int_range (0, G_MAXUINT16) & 0x7FFF;
   }
 
-  gst_object_unref (self);
-
-  return FALSE;
+  return GST_RTP_BASE_PAYLOAD_CLASS (gst_rtp_vp8_pay_parent_class)->sink_event
+      (payload, event);
 }
 
 static gboolean
-gst_rtp_vp8_pay_set_caps (GstBaseRTPPayload * payload, GstCaps * caps)
+gst_rtp_vp8_pay_set_caps (GstRTPBasePayload * payload, GstCaps * caps)
 {
-  gst_basertppayload_set_options (payload, "video", TRUE,
+  gst_rtp_base_payload_set_options (payload, "video", TRUE,
       "VP8-DRAFT-IETF-01", 90000);
-  return gst_basertppayload_set_outcaps (payload, NULL);
+  return gst_rtp_base_payload_set_outcaps (payload, NULL);
 }
 
 gboolean

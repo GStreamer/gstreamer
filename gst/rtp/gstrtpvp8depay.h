@@ -1,5 +1,5 @@
 /*
- * gst-rtp-vp8-depay.h - Header for GstRtpVP8Depay
+ * gstrtpvp8depay.h - Header for GstRtpVP8Depay
  * Copyright (C) 2011 Sjoerd Simons <sjoerd@luon.net>
  *
  * This library is free software; you can redistribute it and/or
@@ -22,19 +22,19 @@
 
 #include <glib-object.h>
 #include <gst/base/gstadapter.h>
-#include <gst/rtp/gstbasertpdepayload.h>
+#include <gst/rtp/gstrtpbasedepayload.h>
 
 G_BEGIN_DECLS typedef struct _GstRtpVP8Depay GstRtpVP8Depay;
 typedef struct _GstRtpVP8DepayClass GstRtpVP8DepayClass;
 
 struct _GstRtpVP8DepayClass
 {
-  GstBaseRTPDepayloadClass parent_class;
+  GstRTPBaseDepayloadClass parent_class;
 };
 
 struct _GstRtpVP8Depay
 {
-  GstBaseRTPDepayload parent;
+  GstRTPBaseDepayload parent;
   GstAdapter *adapter;
   gboolean started;
 };
