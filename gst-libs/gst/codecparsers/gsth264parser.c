@@ -623,7 +623,6 @@ gst_h264_parse_vui_parameters (GstH264SPS * sps, NalReader * nr)
     READ_UE_ALLOWED (nr, vui->max_bits_per_mb_denom, 0, 16);
     READ_UE_ALLOWED (nr, vui->log2_max_mv_length_horizontal, 0, 16);
     READ_UE_ALLOWED (nr, vui->log2_max_mv_length_vertical, 0, 16);
-    READ_UE_ALLOWED (nr, vui->log2_max_mv_length_vertical, 0, 16);
     READ_UE (nr, vui->num_reorder_frames);
     READ_UE (nr, vui->max_dec_frame_buffering);
   }
