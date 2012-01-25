@@ -366,8 +366,7 @@ gst_vp8_dec_handle_frame (GstBaseVideoDecoder * decoder,
   vpx_image_t *img;
   long decoder_deadline = 0;
   GstClockTimeDiff deadline;
-  gsize size;
-  gpointer data;
+  GstMapInfo map;
 
   GST_DEBUG_OBJECT (decoder, "handle_frame");
 
@@ -383,13 +382,13 @@ gst_vp8_dec_handle_frame (GstBaseVideoDecoder * decoder,
     memset (&stream_info, 0, sizeof (stream_info));
     stream_info.sz = sizeof (stream_info);
 
-    data = gst_buffer_map (frame->sink_buffer, &size, NULL, GST_MAP_READ);
+    gst_buffer_map (frame->sink_buffer, &map, GST_MAP_READ);
 
     status =
-        vpx_codec_peek_stream_info (&vpx_codec_vp8_dx_algo, data, size,
+        vpx_codec_peek_stream_info (&vpx_codec_vp8_dx_algo, map.data, map.size,
         &stream_info);
 
-    gst_buffer_unmap (frame->sink_buffer, data, size);
+    gst_buffer_unmap (frame->sink_buffer, &map);
 
     if (status != VPX_CODEC_OK || !stream_info.is_kf) {
       GST_WARNING_OBJECT (decoder, "No keyframe, skipping");
@@ -456,11 +455,13 @@ gst_vp8_dec_handle_frame (GstBaseVideoDecoder * decoder,
     decoder_deadline = MAX (1, deadline / GST_MSECOND);
   }
 
-  data = gst_buffer_map (frame->sink_buffer, &size, NULL, GST_MAP_READ);
+  gst_buffer_map (frame->sink_buffer, &map, GST_MAP_READ);
 
-  status = vpx_codec_decode (&dec->decoder, data, size, NULL, decoder_deadline);
+  status =
+      vpx_codec_decode (&dec->decoder, map.data, map.size, NULL,
+      decoder_deadline);
 
-  gst_buffer_unmap (frame->sink_buffer, data, size);
+  gst_buffer_unmap (frame->sink_buffer, &map);
 
   if (status) {
     GST_ELEMENT_ERROR (decoder, LIBRARY, ENCODE,
