@@ -1625,7 +1625,7 @@ gst_collect_pads2_event (GstPad * pad, GstObject * parent, GstEvent * event)
       /* forward event to unblock check_collected */
       if (event_func)
         res = event_func (pads, data, event, event_user_data);
-      if (!res)
+      else
         res = gst_pad_event_default (pad, parent, event);
 
       /* now unblock the chain function.
@@ -1754,7 +1754,7 @@ forward_or_default:
   }
   if (event_func)
     res = event_func (pads, data, event, event_user_data);
-  if (!res)
+  else
     res = gst_pad_event_default (pad, parent, event);
   if (need_unlock)
     GST_COLLECT_PADS2_STREAM_UNLOCK (pads);
@@ -1765,9 +1765,9 @@ forward_or_eat:
     GST_COLLECT_PADS2_STREAM_LOCK (pads);
     need_unlock = TRUE;
   }
-  if (event_func)
+  if (event_func) {
     res = event_func (pads, data, event, event_user_data);
-  if (!res) {
+  } else {
     gst_event_unref (event);
     res = TRUE;
   }

@@ -206,7 +206,11 @@ typedef gint (*GstCollectPads2CompareFunction) (GstCollectPads2 *pads,
  * @event: the #GstEvent received
  * @user_data: user data passed to gst_collect_pads2_set_event_function()
  *
- * A function that will be called after collectpads has processed the event.
+ * A function that will be called while processing an event. It takes
+ * ownership of the event and is responsible for forwarding
+ * events downstream (with gst_pad_event_default()) or dropping events.
+ *
+ * The SEGMENT and EOS events should usually be dropped by this function.
  *
  * Returns: %TRUE if the pad could handle the event
  *
