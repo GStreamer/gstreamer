@@ -54,9 +54,7 @@ struct _GstVideoMixer2Pad
   /* < private > */
 
   /* caps */
-  gint width, height;
-  gint fps_n;
-  gint fps_d;
+  GstVideoInfo info;
 
   /* properties */
   gint xpos, ypos;

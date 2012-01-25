@@ -86,12 +86,7 @@ struct _GstVideoMixer2
   gint next_sinkpad;
 
   /* Output caps */
-  GstVideoFormat format;
-  gint width, height;
-  gint fps_n;
-  gint fps_d;
-  gint par_n;
-  gint par_d;
+  GstVideoInfo info;
 
   gboolean newseg_pending;
   gboolean flush_stop_pending;
