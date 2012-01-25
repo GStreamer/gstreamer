@@ -381,6 +381,19 @@ gst_type_find_handle_src_query (GstPad * pad, GstObject * parent,
   gboolean res = FALSE;
 
   typefind = GST_TYPE_FIND_ELEMENT (parent);
+  GST_DEBUG_OBJECT (typefind, "Handling src query %s",
+      GST_QUERY_TYPE_NAME (query));
+
+  /* We can hijack caps query if we typefind already */
+  if (GST_QUERY_TYPE (query) == GST_QUERY_CAPS) {
+    GST_DEBUG_OBJECT (typefind, "Got caps query, our caps are %" GST_PTR_FORMAT,
+        typefind->caps);
+    if (typefind->caps) {
+      gst_query_set_caps_result (query, typefind->caps);
+      res = TRUE;
+      goto out;
+    }
+  }
 
   res = gst_pad_peer_query (typefind->sink, query);
   if (!res)
