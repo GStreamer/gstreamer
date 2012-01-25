@@ -446,7 +446,6 @@ static gboolean gst_decode_chain_is_complete (GstDecodeChain * chain);
 static gboolean gst_decode_chain_expose (GstDecodeChain * chain,
     GList ** endpads, gboolean * missing_plugin);
 static gboolean gst_decode_chain_is_drained (GstDecodeChain * chain);
-static void gst_decode_chain_prune (GstDecodeChain * chain);
 static gboolean gst_decode_group_is_complete (GstDecodeGroup * group);
 static GstPad *gst_decode_group_control_demuxer_pad (GstDecodeGroup * group,
     GstPad * pad);
@@ -2321,16 +2320,6 @@ pad_event_cb (GstPad * pad, GstEvent * event, gpointer data)
 }
 
 static void
-demuxer_pad_blocked_cb (GstPad * pad, gboolean blocked, GstDecodeChain * chain)
-{
-  GstDecodeBin *dbin;
-
-  dbin = chain->dbin;
-  if (!blocked)
-    gst_decode_chain_prune (dbin->decode_chain);
-}
-
-static void
 pad_added_cb (GstElement * element, GstPad * pad, GstDecodeChain * chain)
 {
   GstCaps *caps;
@@ -2346,27 +2335,6 @@ pad_added_cb (GstElement * element, GstPad * pad, GstDecodeChain * chain)
     gst_caps_unref (caps);
 
   EXPOSE_LOCK (dbin);
-  CHAIN_MUTEX_LOCK (chain);
-  if (chain->demuxer &&
-      ((GstDecodeElement *) chain->elements->data)->element == element) {
-    GList *l;
-
-    for (l = chain->next_groups; l; l = l->next) {
-      GstDecodeGroup *group = l->data;
-      GList *l2;
-
-      for (l2 = group->children; l2; l2 = l2->next) {
-        GstDecodeChain *child_chain = l2->data;
-
-        if (!gst_pad_is_blocked (child_chain->pad)) {
-          GST_DEBUG_OBJECT (pad, "blocking next group's pad %p", pad);
-          gst_pad_set_blocked_async (child_chain->pad, TRUE,
-              (GstPadBlockCallback) demuxer_pad_blocked_cb, chain);
-        }
-      }
-    }
-  }
-  CHAIN_MUTEX_UNLOCK (chain);
   if (gst_decode_chain_is_complete (dbin->decode_chain)) {
     GST_LOG_OBJECT (dbin,
         "That was the last dynamic object, now attempting to expose the group");
@@ -2899,76 +2867,6 @@ gst_decode_group_hide (GstDecodeGroup * group)
   gst_decode_group_free_internal (group, TRUE);
 }
 
-static void
-gst_decode_group_prune (GstDecodeGroup * group)
-{
-  GList *l;
-
-  GST_DEBUG_OBJECT (group->dbin, "Pruning group %p", group);
-
-  for (l = group->children; l; l = l->next) {
-    GstDecodeChain *chain = (GstDecodeChain *) l->data;
-
-    gst_decode_chain_prune (chain);
-  }
-
-  GST_DEBUG_OBJECT (group->dbin, "Pruned group %p", group);
-}
-
-static void
-gst_decode_chain_prune (GstDecodeChain * chain)
-{
-  GList *l;
-
-  CHAIN_MUTEX_LOCK (chain);
-
-  GST_DEBUG_OBJECT (chain->dbin, "Pruning chain %p", chain);
-
-  if (chain->active_group)
-    gst_decode_group_prune (chain->active_group);
-
-  for (l = chain->next_groups; l; l = l->next) {
-    gst_decode_group_prune ((GstDecodeGroup *) l->data);
-  }
-
-  for (l = chain->old_groups; l; l = l->next) {
-    GstDecodeGroup *group = l->data;
-
-    /* This calls set_state(NULL) on the old elements and we're
-     * the streaming thread but this is one of the few cases
-     * when this is possible. It's guaranteed at this point
-     * that *this* streaming thread is not inside the elements
-     * currently, because it's *here* now or a different streaming
-     * thread is used for the elements.
-     */
-    gst_decode_group_free (group);
-  }
-  g_list_free (chain->old_groups);
-  chain->old_groups = NULL;
-
-  GST_DEBUG_OBJECT (chain->dbin, "Pruned chain %p", chain);
-  CHAIN_MUTEX_UNLOCK (chain);
-}
-
-static void
-unblock_demuxer_pads (GstDecodeChain * chain)
-{
-  GList *l;
-
-  GST_DEBUG_OBJECT (chain->dbin, "Unblocking demuxer pad for chain %p", chain);
-
-  if (gst_pad_is_blocked (chain->pad))
-    gst_pad_set_blocked_async (chain->pad, FALSE,
-        (GstPadBlockCallback) demuxer_pad_blocked_cb, chain);
-  if (chain->active_group) {
-    for (l = chain->active_group->children; l; l = l->next) {
-      GstDecodeChain *child_chain = l->data;
-
-      unblock_demuxer_pads (child_chain);
-    }
-  }
-}
-
 /* configure queue sizes, this depends on the buffering method and if we are
  * playing or prerolling. */
 static void
@@ -3343,7 +3241,6 @@ gst_decode_pad_handle_eos (GstDecodePad * pad)
     EXPOSE_LOCK (dbin);
     if (gst_decode_chain_is_complete (dbin->decode_chain))
       gst_decode_bin_expose (dbin);
-    unblock_demuxer_pads (dbin->decode_chain);
     EXPOSE_UNLOCK (dbin);
   }
 
