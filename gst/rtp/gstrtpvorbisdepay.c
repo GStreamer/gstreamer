@@ -152,12 +152,15 @@ gst_rtp_vorbis_depay_parse_configuration (GstRtpVorbisDepay * rtpvorbisdepay,
 {
   GstBuffer *buf;
   guint32 num_headers;
-  guint8 *data, *bdata;
+  GstMapInfo map;
+  guint8 *data;
   gsize size;
   guint offset;
   gint i, j;
 
-  bdata = data = gst_buffer_map (confbuf, &size, NULL, GST_MAP_READ);
+  gst_buffer_map (confbuf, &map, GST_MAP_READ);
+  data = map.data;
+  size = map.size;
 
   GST_DEBUG_OBJECT (rtpvorbisdepay, "config size %" G_GSIZE_FORMAT, size);
 
@@ -295,7 +298,7 @@ gst_rtp_vorbis_depay_parse_configuration (GstRtpVorbisDepay * rtpvorbisdepay,
     rtpvorbisdepay->configs = g_list_append (rtpvorbisdepay->configs, conf);
   }
 
-  gst_buffer_unmap (confbuf, bdata, -1);
+  gst_buffer_unmap (confbuf, &map);
   gst_buffer_unref (confbuf);
 
   return TRUE;
@@ -304,7 +307,7 @@ gst_rtp_vorbis_depay_parse_configuration (GstRtpVorbisDepay * rtpvorbisdepay,
 too_small:
   {
     GST_DEBUG_OBJECT (rtpvorbisdepay, "configuration too small");
-    gst_buffer_unmap (confbuf, bdata, -1);
+    gst_buffer_unmap (confbuf, &map);
     gst_buffer_unref (confbuf);
     return FALSE;
   }
@@ -316,23 +319,23 @@ gst_rtp_vorbis_depay_parse_inband_configuration (GstRtpVorbisDepay *
     guint length)
 {
   GstBuffer *confbuf;
-  guint8 *conf;
+  GstMapInfo map;
 
   if (G_UNLIKELY (size < 4))
     return FALSE;
 
   /* transform inline to out-of-band and parse that one */
   confbuf = gst_buffer_new_and_alloc (size + 9);
-  conf = gst_buffer_map (confbuf, NULL, NULL, -1);
+  gst_buffer_map (confbuf, &map, GST_MAP_WRITE);
   /* 1 header */
-  GST_WRITE_UINT32_BE (conf, 1);
+  GST_WRITE_UINT32_BE (map.data, 1);
   /* write Ident */
-  GST_WRITE_UINT24_BE (conf + 4, ident);
+  GST_WRITE_UINT24_BE (map.data + 4, ident);
   /* write sort-of-length */
-  GST_WRITE_UINT16_BE (conf + 7, length);
+  GST_WRITE_UINT16_BE (map.data + 7, length);
   /* copy remainder */
-  memcpy (conf + 9, configuration, size);
-  gst_buffer_unmap (confbuf, conf, -1);
+  memcpy (map.data + 9, configuration, size);
+  gst_buffer_unmap (confbuf, &map);
 
   return gst_rtp_vorbis_depay_parse_configuration (rtpvorbisdepay, confbuf);
 }
@@ -595,12 +598,8 @@ gst_rtp_vorbis_depay_process (GstRTPBaseDepayload * depayload, GstBuffer * buf)
               (payload - to_free) + length, payload - to_free, length));
       to_free = NULL;
     } else {
-      guint8 *data;
-
       outbuf = gst_buffer_new_and_alloc (length);
-      data = gst_buffer_map (outbuf, NULL, NULL, GST_MAP_WRITE);
-      memcpy (data, payload, length);
-      gst_buffer_unmap (outbuf, data, -1);
+      gst_buffer_fill (outbuf, 0, payload, length);
     }
 
     payload += length;

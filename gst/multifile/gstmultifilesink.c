@@ -487,19 +487,18 @@ gst_multi_file_sink_write_stream_headers (GstMultiFileSink * sink)
 
   for (i = 0; i < sink->n_streamheaders; i++) {
     GstBuffer *hdr;
-    guint8 *sdata;
-    gsize ssize;
+    GstMapInfo map;
     int ret;
 
     hdr = sink->streamheaders[i];
-    sdata = gst_buffer_map (hdr, &ssize, NULL, GST_MAP_READ);
-    ret = fwrite (sdata, ssize, 1, sink->file);
-    gst_buffer_unmap (hdr, sdata, ssize);
+    gst_buffer_map (hdr, &map, GST_MAP_READ);
+    ret = fwrite (map.data, map.size, 1, sink->file);
+    gst_buffer_unmap (hdr, &map);
 
     if (ret != 1)
       return FALSE;
 
-    sink->cur_file_size += ssize;
+    sink->cur_file_size += map.size;
   }
 
   return TRUE;
@@ -509,13 +508,12 @@ static GstFlowReturn
 gst_multi_file_sink_render (GstBaseSink * sink, GstBuffer * buffer)
 {
   GstMultiFileSink *multifilesink;
-  gsize size;
-  guint8 *data;
+  GstMapInfo map;
   gchar *filename;
   gboolean ret;
   GError *error = NULL;
 
-  data = gst_buffer_map (buffer, &size, NULL, GST_MAP_READ);
+  gst_buffer_map (buffer, &map, GST_MAP_READ);
 
   multifilesink = GST_MULTI_FILE_SINK (sink);
 
@@ -525,7 +523,7 @@ gst_multi_file_sink_render (GstBaseSink * sink, GstBuffer * buffer)
 
       filename = g_strdup_printf (multifilesink->filename,
           multifilesink->index);
-      ret = g_file_set_contents (filename, (char *) data, size, &error);
+      ret = g_file_set_contents (filename, (char *) map.data, map.size, &error);
       if (!ret)
         goto write_error;
 
@@ -547,7 +545,7 @@ gst_multi_file_sink_render (GstBaseSink * sink, GstBuffer * buffer)
           goto stdio_write_error;
       }
 
-      ret = fwrite (data, size, 1, multifilesink->file);
+      ret = fwrite (map.data, map.size, 1, multifilesink->file);
       if (ret != 1)
         goto stdio_write_error;
 
@@ -576,7 +574,7 @@ gst_multi_file_sink_render (GstBaseSink * sink, GstBuffer * buffer)
         gst_multi_file_sink_write_stream_headers (multifilesink);
       }
 
-      ret = fwrite (data, size, 1, multifilesink->file);
+      ret = fwrite (map.data, map.size, 1, multifilesink->file);
       if (ret != 1)
         goto stdio_write_error;
 
@@ -590,7 +588,7 @@ gst_multi_file_sink_render (GstBaseSink * sink, GstBuffer * buffer)
       if (!gst_multi_file_sink_write_stream_headers (multifilesink))
         goto stdio_write_error;
 
-      ret = fwrite (data, size, 1, multifilesink->file);
+      ret = fwrite (map.data, map.size, 1, multifilesink->file);
 
       if (ret != 1)
         goto stdio_write_error;
@@ -599,7 +597,7 @@ gst_multi_file_sink_render (GstBaseSink * sink, GstBuffer * buffer)
     case GST_MULTI_FILE_SINK_NEXT_MAX_SIZE:{
       guint64 new_size;
 
-      new_size = multifilesink->cur_file_size + size;
+      new_size = multifilesink->cur_file_size + map.size;
       if (new_size > multifilesink->max_file_size) {
 
         GST_INFO_OBJECT (multifilesink, "current size: %" G_GUINT64_FORMAT
@@ -618,19 +616,19 @@ gst_multi_file_sink_render (GstBaseSink * sink, GstBuffer * buffer)
         gst_multi_file_sink_write_stream_headers (multifilesink);
       }
 
-      ret = fwrite (data, size, 1, multifilesink->file);
+      ret = fwrite (map.data, map.size, 1, multifilesink->file);
 
       if (ret != 1)
         goto stdio_write_error;
 
-      multifilesink->cur_file_size += size;
+      multifilesink->cur_file_size += map.size;
       break;
     }
     default:
       g_assert_not_reached ();
   }
 
-  gst_buffer_unmap (buffer, data, size);
+  gst_buffer_unmap (buffer, &map);
   return GST_FLOW_OK;
 
   /* ERRORS */
@@ -651,7 +649,7 @@ write_error:
     g_error_free (error);
     g_free (filename);
 
-    gst_buffer_unmap (buffer, data, size);
+    gst_buffer_unmap (buffer, &map);
     return GST_FLOW_ERROR;
   }
 stdio_write_error:
@@ -664,7 +662,7 @@ stdio_write_error:
       GST_ELEMENT_ERROR (multifilesink, RESOURCE, WRITE,
           ("Error while writing to file."), ("%s", g_strerror (errno)));
   }
-  gst_buffer_unmap (buffer, data, size);
+  gst_buffer_unmap (buffer, &map);
   return GST_FLOW_ERROR;
 }
 

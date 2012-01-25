@@ -359,8 +359,7 @@ gst_audio_echo_transform_ip (GstBaseTransform * base, GstBuffer * buf)
   GstAudioEcho *self = GST_AUDIO_ECHO (base);
   guint num_samples;
   GstClockTime timestamp, stream_time;
-  guint8 *data;
-  gsize size;
+  GstMapInfo map;
 
   timestamp = GST_BUFFER_TIMESTAMP (buf);
   stream_time =
@@ -393,12 +392,12 @@ gst_audio_echo_transform_ip (GstBaseTransform * base, GstBuffer * buf)
     }
   }
 
-  data = gst_buffer_map (buf, &size, NULL, GST_MAP_READWRITE);
-  num_samples = size / GST_AUDIO_FILTER_BPS (self);
+  gst_buffer_map (buf, &map, GST_MAP_READWRITE);
+  num_samples = map.size / GST_AUDIO_FILTER_BPS (self);
 
-  self->process (self, data, num_samples);
+  self->process (self, map.data, num_samples);
 
-  gst_buffer_unmap (buf, data, size);
+  gst_buffer_unmap (buf, &map);
 
   return GST_FLOW_OK;
 }

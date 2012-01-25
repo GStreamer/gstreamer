@@ -290,7 +290,8 @@ gst_rtp_h264_depay_setcaps (GstRTPBaseDepayload * depayload, GstCaps * caps)
   GstRtpH264Depay *rtph264depay;
   const gchar *ps, *profile;
   GstBuffer *codec_data;
-  guint8 *ptr, *data;
+  GstMapInfo map;
+  guint8 *ptr;
   gboolean res;
 
   rtph264depay = GST_RTP_H264_DEPAY (depayload);
@@ -328,8 +329,8 @@ gst_rtp_h264_depay_setcaps (GstRTPBaseDepayload * depayload, GstCaps * caps)
     /* we seriously overshoot the length, but it's fine. */
     codec_data = gst_buffer_new_and_alloc (len);
 
-    data = gst_buffer_map (codec_data, NULL, NULL, GST_MAP_WRITE);
-    ptr = data;
+    gst_buffer_map (codec_data, &map, GST_MAP_WRITE);
+    ptr = map.data;
     total = 0;
     for (i = 0; params[i]; i++) {
       guint save = 0;
@@ -345,7 +346,8 @@ gst_rtp_h264_depay_setcaps (GstRTPBaseDepayload * depayload, GstCaps * caps)
       total += len + sizeof (sync_bytes);
       ptr += len;
     }
-    gst_buffer_unmap (codec_data, data, total);
+    gst_buffer_unmap (codec_data, &map);
+    gst_buffer_resize (codec_data, 0, total);
     g_strfreev (params);
 
     /* keep the codec_data, we need to send it as the first buffer. We cannot
@@ -408,7 +410,8 @@ gst_rtp_h264_depay_setcaps (GstRTPBaseDepayload * depayload, GstCaps * caps)
 
     codec_data = gst_buffer_new_and_alloc (len);
 
-    data = ptr = gst_buffer_map (codec_data, NULL, NULL, GST_MAP_WRITE);
+    gst_buffer_map (codec_data, &map, GST_MAP_WRITE);
+    ptr = map.data;
 
     /* 8 bits version == 1 */
     *ptr++ = 1;
@@ -451,7 +454,8 @@ gst_rtp_h264_depay_setcaps (GstRTPBaseDepayload * depayload, GstCaps * caps)
       ptr += len;
     }
     g_free (pps);
-    gst_buffer_unmap (codec_data, data, ptr - data);
+    gst_buffer_resize (codec_data, 0, ptr - map.data);
+    gst_buffer_unmap (codec_data, &map);
 
     gst_caps_set_simple (srccaps,
         "codec_data", GST_TYPE_BUFFER, codec_data, NULL);
@@ -507,17 +511,16 @@ gst_rtp_h264_depay_handle_nal (GstRtpH264Depay * rtph264depay, GstBuffer * nal,
 {
   GstRTPBaseDepayload *depayload = GST_RTP_BASE_DEPAYLOAD (rtph264depay);
   gint nal_type;
-  gsize size;
-  guint8 *data;
+  GstMapInfo map;
   GstBuffer *outbuf = NULL;
   GstClockTime out_timestamp;
   gboolean keyframe, out_keyframe;
 
-  data = gst_buffer_map (nal, &size, NULL, GST_MAP_READ);
-  if (G_UNLIKELY (size < 5))
+  gst_buffer_map (nal, &map, GST_MAP_READ);
+  if (G_UNLIKELY (map.size < 5))
     goto short_nal;
 
-  nal_type = data[4] & 0x1f;
+  nal_type = map.data[4] & 0x1f;
   GST_DEBUG_OBJECT (rtph264depay, "handle NAL type %d", nal_type);
 
   keyframe = NAL_TYPE_IS_KEY (nal_type);
@@ -537,7 +540,7 @@ gst_rtp_h264_depay_handle_nal (GstRtpH264Depay * rtph264depay, GstBuffer * nal,
     if (nal_type == 1 || nal_type == 2 || nal_type == 5) {
       /* we have a picture start */
       start = TRUE;
-      if (data[5] & 0x80) {
+      if (map.data[5] & 0x80) {
         /* first_mb_in_slice == 0 completes a picture */
         complete = TRUE;
       }
@@ -566,7 +569,7 @@ gst_rtp_h264_depay_handle_nal (GstRtpH264Depay * rtph264depay, GstBuffer * nal,
     GST_DEBUG_OBJECT (depayload, "using NAL as output");
     outbuf = nal;
   }
-  gst_buffer_unmap (nal, data, size);
+  gst_buffer_unmap (nal, &map);
 
   if (outbuf) {
     /* prepend codec_data */
@@ -592,7 +595,7 @@ gst_rtp_h264_depay_handle_nal (GstRtpH264Depay * rtph264depay, GstBuffer * nal,
 short_nal:
   {
     GST_WARNING_OBJECT (depayload, "dropping short NAL");
-    gst_buffer_unmap (nal, data, size);
+    gst_buffer_unmap (nal, &map);
     gst_buffer_unref (nal);
     return NULL;
   }
@@ -603,25 +606,25 @@ gst_rtp_h264_push_fragmentation_unit (GstRtpH264Depay * rtph264depay,
     gboolean send)
 {
   guint outsize;
-  guint8 *outdata;
+  GstMapInfo map;
   GstBuffer *outbuf;
 
   outsize = gst_adapter_available (rtph264depay->adapter);
   outbuf = gst_adapter_take_buffer (rtph264depay->adapter, outsize);
-  outdata = gst_buffer_map (outbuf, NULL, NULL, GST_MAP_WRITE);
 
+  gst_buffer_map (outbuf, &map, GST_MAP_WRITE);
   GST_DEBUG_OBJECT (rtph264depay, "output %d bytes", outsize);
 
   if (rtph264depay->byte_stream) {
-    memcpy (outdata, sync_bytes, sizeof (sync_bytes));
+    memcpy (map.data, sync_bytes, sizeof (sync_bytes));
   } else {
     outsize -= 4;
-    outdata[0] = (outsize >> 24);
-    outdata[1] = (outsize >> 16);
-    outdata[2] = (outsize >> 8);
-    outdata[3] = (outsize);
+    map.data[0] = (outsize >> 24);
+    map.data[1] = (outsize >> 16);
+    map.data[2] = (outsize >> 8);
+    map.data[3] = (outsize);
   }
-  gst_buffer_unmap (outbuf, outdata, -1);
+  gst_buffer_unmap (outbuf, &map);
 
   rtph264depay->current_fu_type = 0;
 
@@ -660,7 +663,7 @@ gst_rtp_h264_depay_process (GstRTPBaseDepayload * depayload, GstBuffer * buf)
     guint8 *payload;
     guint header_len;
     guint8 nal_ref_idc;
-    guint8 *outdata;
+    GstMapInfo map;
     guint outsize, nalu_size;
     GstClockTime timestamp;
     gboolean marker;
@@ -738,21 +741,21 @@ gst_rtp_h264_depay_process (GstRTPBaseDepayload * depayload, GstBuffer * buf)
           outsize = nalu_size + sizeof (sync_bytes);
           outbuf = gst_buffer_new_and_alloc (outsize);
 
-          outdata = gst_buffer_map (outbuf, NULL, NULL, GST_MAP_WRITE);
+          gst_buffer_map (outbuf, &map, GST_MAP_WRITE);
           if (rtph264depay->byte_stream) {
-            memcpy (outdata, sync_bytes, sizeof (sync_bytes));
+            memcpy (map.data, sync_bytes, sizeof (sync_bytes));
           } else {
-            outdata[0] = outdata[1] = 0;
-            outdata[2] = payload[0];
-            outdata[3] = payload[1];
+            map.data[0] = map.data[1] = 0;
+            map.data[2] = payload[0];
+            map.data[3] = payload[1];
           }
 
           /* strip NALU size */
           payload += 2;
           payload_len -= 2;
 
-          memcpy (outdata + sizeof (sync_bytes), payload, nalu_size);
-          gst_buffer_unmap (outbuf, outdata, outsize);
+          memcpy (map.data + sizeof (sync_bytes), payload, nalu_size);
+          gst_buffer_unmap (outbuf, &map);
 
           gst_adapter_push (rtph264depay->adapter, outbuf);
 
@@ -826,10 +829,10 @@ gst_rtp_h264_depay_process (GstRTPBaseDepayload * depayload, GstBuffer * buf)
           outsize = nalu_size + sizeof (sync_bytes);
           outbuf = gst_buffer_new_and_alloc (outsize);
 
-          outdata = gst_buffer_map (outbuf, NULL, NULL, GST_MAP_WRITE);
-          memcpy (outdata + sizeof (sync_bytes), payload, nalu_size);
-          outdata[sizeof (sync_bytes)] = nal_header;
-          gst_buffer_unmap (outbuf, outdata, outsize);
+          gst_buffer_map (outbuf, &map, GST_MAP_WRITE);
+          memcpy (map.data + sizeof (sync_bytes), payload, nalu_size);
+          map.data[sizeof (sync_bytes)] = nal_header;
+          gst_buffer_unmap (outbuf, &map);
 
           GST_DEBUG_OBJECT (rtph264depay, "queueing %d bytes", outsize);
 
@@ -842,10 +845,7 @@ gst_rtp_h264_depay_process (GstRTPBaseDepayload * depayload, GstBuffer * buf)
 
           outsize = payload_len;
           outbuf = gst_buffer_new_and_alloc (outsize);
-
-          outdata = gst_buffer_map (outbuf, NULL, NULL, GST_MAP_WRITE);
-          memcpy (outdata, payload, outsize);
-          gst_buffer_unmap (outbuf, outdata, outsize);
+          gst_buffer_fill (outbuf, 0, payload, outsize);
 
           GST_DEBUG_OBJECT (rtph264depay, "queueing %d bytes", outsize);
 
@@ -871,16 +871,16 @@ gst_rtp_h264_depay_process (GstRTPBaseDepayload * depayload, GstBuffer * buf)
         outsize = nalu_size + sizeof (sync_bytes);
         outbuf = gst_buffer_new_and_alloc (outsize);
 
-        outdata = gst_buffer_map (outbuf, NULL, NULL, GST_MAP_WRITE);
+        gst_buffer_map (outbuf, &map, GST_MAP_WRITE);
         if (rtph264depay->byte_stream) {
-          memcpy (outdata, sync_bytes, sizeof (sync_bytes));
+          memcpy (map.data, sync_bytes, sizeof (sync_bytes));
         } else {
-          outdata[0] = outdata[1] = 0;
-          outdata[2] = nalu_size >> 8;
-          outdata[3] = nalu_size & 0xff;
+          map.data[0] = map.data[1] = 0;
+          map.data[2] = nalu_size >> 8;
+          map.data[3] = nalu_size & 0xff;
         }
-        memcpy (outdata + sizeof (sync_bytes), payload, nalu_size);
-        gst_buffer_unmap (outbuf, outdata, outsize);
+        memcpy (map.data + sizeof (sync_bytes), payload, nalu_size);
+        gst_buffer_unmap (outbuf, &map);
 
         outbuf = gst_rtp_h264_depay_handle_nal (rtph264depay, outbuf, timestamp,
             marker);

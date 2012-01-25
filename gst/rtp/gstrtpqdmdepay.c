@@ -283,7 +283,7 @@ gst_rtp_qdm2_depay_process (GstRTPBaseDepayload * depayload, GstBuffer * buf)
           if (G_UNLIKELY (!rtpqdm2depay->configured)) {
             guint8 *ourdata;
             GstBuffer *codecdata;
-            guint8 *cdata;
+            GstMapInfo cmap;
             GstCaps *caps;
 
             /* First bytes are unknown */
@@ -306,10 +306,10 @@ gst_rtp_qdm2_depay_process (GstRTPBaseDepayload * depayload, GstBuffer * buf)
 
             /* Caps */
             codecdata = gst_buffer_new_and_alloc (48);
-            cdata = gst_buffer_map (codecdata, NULL, NULL, GST_MAP_WRITE);
-            memcpy (cdata, headheader, 20);
-            memcpy (cdata + 20, ourdata, 28);
-            gst_buffer_unmap (codecdata, cdata, -1);
+            gst_buffer_map (codecdata, &cmap, GST_MAP_WRITE);
+            memcpy (cmap.data, headheader, 20);
+            memcpy (cmap.data + 20, ourdata, 28);
+            gst_buffer_unmap (codecdata, &cmap);
 
             caps = gst_caps_new_simple ("audio/x-qdm2",
                 "samplesize", G_TYPE_INT, 16,

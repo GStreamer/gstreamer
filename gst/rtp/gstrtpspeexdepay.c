@@ -118,7 +118,8 @@ gst_rtp_speex_depay_setcaps (GstRTPBaseDepayload * depayload, GstCaps * caps)
   GstRtpSPEEXDepay *rtpspeexdepay;
   gint clock_rate, nb_channels;
   GstBuffer *buf;
-  guint8 *data, *bdata;
+  GstMapInfo map;
+  guint8 *data;
   const gchar *params;
   GstCaps *srccaps;
   gboolean res;
@@ -139,7 +140,8 @@ gst_rtp_speex_depay_setcaps (GstRTPBaseDepayload * depayload, GstCaps * caps)
 
   /* construct minimal header and comment packet for the decoder */
   buf = gst_buffer_new_and_alloc (80);
-  data = bdata = gst_buffer_map (buf, NULL, NULL, GST_MAP_WRITE);
+  gst_buffer_map (buf, &map, GST_MAP_WRITE);
+  data = map.data;
   memcpy (data, "Speex   ", 8);
   data += 8;
   memcpy (data, "1.1.12", 7);
@@ -169,7 +171,7 @@ gst_rtp_speex_depay_setcaps (GstRTPBaseDepayload * depayload, GstCaps * caps)
   GST_WRITE_UINT32_LE (data, 0);        /* reserved1 */
   data += 4;
   GST_WRITE_UINT32_LE (data, 0);        /* reserved2 */
-  gst_buffer_unmap (buf, bdata, -1);
+  gst_buffer_unmap (buf, &map);
 
   srccaps = gst_caps_new_empty_simple ("audio/x-speex");
   res = gst_pad_set_caps (depayload->srcpad, srccaps);
@@ -178,9 +180,8 @@ gst_rtp_speex_depay_setcaps (GstRTPBaseDepayload * depayload, GstCaps * caps)
   gst_rtp_base_depayload_push (GST_RTP_BASE_DEPAYLOAD (rtpspeexdepay), buf);
 
   buf = gst_buffer_new_and_alloc (sizeof (gst_rtp_speex_comment));
-  bdata = gst_buffer_map (buf, NULL, NULL, GST_MAP_WRITE);
-  memcpy (bdata, gst_rtp_speex_comment, sizeof (gst_rtp_speex_comment));
-  gst_buffer_unmap (buf, bdata, -1);
+  gst_buffer_fill (buf, 0, gst_rtp_speex_comment,
+      sizeof (gst_rtp_speex_comment));
 
   gst_rtp_base_depayload_push (GST_RTP_BASE_DEPAYLOAD (rtpspeexdepay), buf);
 

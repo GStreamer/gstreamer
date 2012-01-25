@@ -214,12 +214,11 @@ md5_new (const GstTestInfo * info)
 static void
 md5_add (gpointer checksum, GstBuffer * buffer)
 {
-  guint8 *data;
-  gsize size;
+  GstMapInfo map;
 
-  data = gst_buffer_map (buffer, &size, NULL, GST_MAP_READ);
-  g_checksum_update (checksum, data, size);
-  gst_buffer_unmap (buffer, data, size);
+  gst_buffer_map (buffer, &map, GST_MAP_READ);
+  g_checksum_update (checksum, map.data, map.size);
+  gst_buffer_unmap (buffer, &map);
 }
 
 static gboolean

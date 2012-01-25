@@ -298,15 +298,14 @@ gst_ac3_parse_frame_header_ac3 (GstAc3Parse * ac3parse, GstBuffer * buf,
     guint * sid)
 {
   GstBitReader bits;
-  gpointer data;
-  gsize size;
+  GstMapInfo map;
   guint8 fscod, frmsizcod, bsid, acmod, lfe_on, rate_scale;
   gboolean ret = FALSE;
 
   GST_LOG_OBJECT (ac3parse, "parsing ac3");
 
-  data = gst_buffer_map (buf, &size, NULL, GST_MAP_READ);
-  gst_bit_reader_init (&bits, data, size);
+  gst_buffer_map (buf, &map, GST_MAP_READ);
+  gst_bit_reader_init (&bits, map.data, map.size);
   gst_bit_reader_skip_unchecked (&bits, skip * 8);
 
   gst_bit_reader_skip_unchecked (&bits, 16 + 16);
@@ -360,7 +359,7 @@ gst_ac3_parse_frame_header_ac3 (GstAc3Parse * ac3parse, GstBuffer * buf,
   ret = TRUE;
 
 cleanup:
-  gst_buffer_unmap (buf, data, size);
+  gst_buffer_unmap (buf, &map);
 
   return ret;
 }
@@ -371,16 +370,15 @@ gst_ac3_parse_frame_header_eac3 (GstAc3Parse * ac3parse, GstBuffer * buf,
     guint * sid)
 {
   GstBitReader bits;
-  gpointer data;
-  gsize size;
+  GstMapInfo map;
   guint16 frmsiz, sample_rate, blocks;
   guint8 strmtyp, fscod, fscod2, acmod, lfe_on, strmid, numblkscod;
   gboolean ret = FALSE;
 
   GST_LOG_OBJECT (ac3parse, "parsing e-ac3");
 
-  data = gst_buffer_map (buf, &size, NULL, GST_MAP_READ);
-  gst_bit_reader_init (&bits, data, size);
+  gst_buffer_map (buf, &map, GST_MAP_READ);
+  gst_bit_reader_init (&bits, map.data, map.size);
   gst_bit_reader_skip_unchecked (&bits, skip * 8);
 
   gst_bit_reader_skip_unchecked (&bits, 16);
@@ -426,7 +424,7 @@ gst_ac3_parse_frame_header_eac3 (GstAc3Parse * ac3parse, GstBuffer * buf,
   ret = TRUE;
 
 cleanup:
-  gst_buffer_unmap (buf, data, size);
+  gst_buffer_unmap (buf, &map);
 
   return ret;
 }
@@ -439,14 +437,13 @@ gst_ac3_parse_frame_header (GstAc3Parse * parse, GstBuffer * buf, gint skip,
   GstBitReader bits;
   guint16 sync;
   guint8 bsid;
-  gpointer data;
-  gsize size;
+  GstMapInfo map;
   gboolean ret = FALSE;
 
-  data = gst_buffer_map (buf, &size, NULL, GST_MAP_READ);
-  gst_bit_reader_init (&bits, data, size);
+  gst_buffer_map (buf, &map, GST_MAP_READ);
+  gst_bit_reader_init (&bits, map.data, map.size);
 
-  GST_MEMDUMP_OBJECT (parse, "AC3 frame sync", data, MIN (size, 16));
+  GST_MEMDUMP_OBJECT (parse, "AC3 frame sync", map.data, MIN (map.size, 16));
 
   gst_bit_reader_skip_unchecked (&bits, skip * 8);
 
@@ -479,7 +476,7 @@ gst_ac3_parse_frame_header (GstAc3Parse * parse, GstBuffer * buf, gint skip,
   GST_DEBUG_OBJECT (parse, "unexpected bsid %d", bsid);
 
 cleanup:
-  gst_buffer_unmap (buf, data, size);
+  gst_buffer_unmap (buf, &map);
 
   return ret;
 }
@@ -495,24 +492,23 @@ gst_ac3_parse_check_valid_frame (GstBaseParse * parse,
   gboolean lost_sync, draining, eac, more = FALSE;
   guint frmsiz, blocks, sid;
   gint have_blocks = 0;
-  gpointer data;
-  gsize size;
+  GstMapInfo map;
   gboolean ret = FALSE;
 
-  data = gst_buffer_map (buf, &size, NULL, GST_MAP_READ);
+  gst_buffer_map (buf, &map, GST_MAP_READ);
 
-  if (G_UNLIKELY (size < 6))
+  if (G_UNLIKELY (map.size < 6))
     goto cleanup;
 
-  gst_byte_reader_init (&reader, data, size);
+  gst_byte_reader_init (&reader, map.data, map.size);
   off = gst_byte_reader_masked_scan_uint32 (&reader, 0xffff0000, 0x0b770000,
-      0, size);
+      0, map.size);
 
   GST_LOG_OBJECT (parse, "possible sync at buffer offset %d", off);
 
   /* didn't find anything that looks like a sync word, skip */
   if (off < 0) {
-    *skipsize = size - 3;
+    *skipsize = map.size - 3;
     goto cleanup;
   }
 
@@ -562,7 +558,8 @@ gst_ac3_parse_check_valid_frame (GstBaseParse * parse,
       do {
         *framesize += frmsiz;
 
-        if (!gst_byte_reader_skip (&reader, frmsiz) || size < (*framesize + 6)) {
+        if (!gst_byte_reader_skip (&reader, frmsiz)
+            || map.size < (*framesize + 6)) {
           more = TRUE;
           break;
         }
@@ -605,7 +602,7 @@ gst_ac3_parse_check_valid_frame (GstBaseParse * parse,
   ret = TRUE;
 
 cleanup:
-  gst_buffer_unmap (buf, data, size);
+  gst_buffer_unmap (buf, &map);
 
   return ret;
 }

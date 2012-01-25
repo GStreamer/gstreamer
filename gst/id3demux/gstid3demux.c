@@ -188,11 +188,11 @@ gst_id3demux_parse_tag (GstTagDemux * demux, GstBuffer * buffer,
       return GST_TAG_DEMUX_RESULT_BROKEN_TAG;
     }
   } else {
-    guint8 *data;
+    GstMapInfo map;
 
-    data = gst_buffer_map (buffer, NULL, NULL, GST_MAP_READ);
-    *tags = gst_tag_list_new_from_id3v1 (data);
-    gst_buffer_unmap (buffer, data, -1);
+    gst_buffer_map (buffer, &map, GST_MAP_READ);
+    *tags = gst_tag_list_new_from_id3v1 (map.data);
+    gst_buffer_unmap (buffer, &map);
 
     if (G_UNLIKELY (*tags == NULL))
       return GST_TAG_DEMUX_RESULT_BROKEN_TAG;

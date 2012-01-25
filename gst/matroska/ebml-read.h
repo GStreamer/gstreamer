@@ -54,8 +54,8 @@ typedef struct _GstEbmlRead {
   GstElement *el;
 
   GstBuffer *buf;
-  gpointer buf_data;
   guint64 offset;
+  GstMapInfo map;
 
   GArray *readers;
 } GstEbmlRead;

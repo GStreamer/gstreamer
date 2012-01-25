@@ -127,21 +127,21 @@ gst_rtp_gsm_pay_handle_buffer (GstRTPBasePayload * basepayload,
   GstRTPGSMPay *rtpgsmpay;
   guint payload_len;
   GstBuffer *outbuf;
-  guint8 *payload, *data;
+  GstMapInfo map;
+  guint8 *payload;
   GstClockTime timestamp, duration;
   GstFlowReturn ret;
-  gsize size;
   GstRTPBuffer rtp = { NULL };
 
   rtpgsmpay = GST_RTP_GSM_PAY (basepayload);
 
-  data = gst_buffer_map (buffer, &size, NULL, GST_MAP_READ);
+  gst_buffer_map (buffer, &map, GST_MAP_READ);
 
   timestamp = GST_BUFFER_TIMESTAMP (buffer);
   duration = GST_BUFFER_DURATION (buffer);
 
   /* FIXME, only one GSM frame per RTP packet for now */
-  payload_len = size;
+  payload_len = map.size;
 
   /* FIXME, just error out for now */
   if (payload_len > GST_RTP_BASE_PAYLOAD_MTU (rtpgsmpay))
@@ -158,11 +158,11 @@ gst_rtp_gsm_pay_handle_buffer (GstRTPBasePayload * basepayload,
 
   /* copy data in payload */
   payload = gst_rtp_buffer_get_payload (&rtp);
-  memcpy (payload, data, size);
+  memcpy (payload, map.data, map.size);
 
   gst_rtp_buffer_unmap (&rtp);
 
-  gst_buffer_unmap (buffer, data, size);
+  gst_buffer_unmap (buffer, &map);
   gst_buffer_unref (buffer);
 
   GST_DEBUG ("gst_rtp_gsm_pay_chain: pushing buffer of size %" G_GSIZE_FORMAT,
@@ -178,7 +178,7 @@ too_big:
     GST_ELEMENT_ERROR (rtpgsmpay, STREAM, ENCODE, (NULL),
         ("payload_len %u > mtu %u", payload_len,
             GST_RTP_BASE_PAYLOAD_MTU (rtpgsmpay)));
-    gst_buffer_unmap (buffer, data, size);
+    gst_buffer_unmap (buffer, &map);
     return GST_FLOW_ERROR;
   }
 }

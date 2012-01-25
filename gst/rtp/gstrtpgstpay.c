@@ -126,8 +126,9 @@ gst_rtp_gst_pay_handle_buffer (GstRTPBasePayload * basepayload,
     GstBuffer * buffer)
 {
   GstRtpGSTPay *rtpgstpay;
-  guint8 *data, *ptr;
-  gsize size, left;
+  GstMapInfo map;
+  guint8 *ptr;
+  gsize left;
   GstBuffer *outbuf;
   GstFlowReturn ret;
   GstClockTime timestamp;
@@ -136,7 +137,7 @@ gst_rtp_gst_pay_handle_buffer (GstRTPBasePayload * basepayload,
 
   rtpgstpay = GST_RTP_GST_PAY (basepayload);
 
-  data = gst_buffer_map (buffer, &size, NULL, GST_MAP_READ);
+  gst_buffer_map (buffer, &map, GST_MAP_READ);
   timestamp = GST_BUFFER_TIMESTAMP (buffer);
 
   ret = GST_FLOW_OK;
@@ -156,8 +157,8 @@ gst_rtp_gst_pay_handle_buffer (GstRTPBasePayload * basepayload,
    * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
    */
   frag_offset = 0;
-  ptr = data;
-  left = size;
+  ptr = map.data;
+  left = map.size;
 
   while (left > 0) {
     guint towrite;
@@ -206,7 +207,7 @@ gst_rtp_gst_pay_handle_buffer (GstRTPBasePayload * basepayload,
 
     ret = gst_rtp_base_payload_push (basepayload, outbuf);
   }
-  gst_buffer_unmap (buffer, data, size);
+  gst_buffer_unmap (buffer, &map);
   gst_buffer_unref (buffer);
 
   return ret;

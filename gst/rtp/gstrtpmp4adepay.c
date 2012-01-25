@@ -161,6 +161,7 @@ gst_rtp_mp4a_depay_setcaps (GstRTPBaseDepayload * depayload, GstCaps * caps)
     g_value_init (&v, GST_TYPE_BUFFER);
     if (gst_value_deserialize (&v, str)) {
       GstBuffer *buffer;
+      GstMapInfo map;
       guint8 *data;
       gsize size;
       gint i;
@@ -172,7 +173,9 @@ gst_rtp_mp4a_depay_setcaps (GstRTPBaseDepayload * depayload, GstCaps * caps)
       gst_buffer_ref (buffer);
       g_value_unset (&v);
 
-      data = gst_buffer_map (buffer, &size, NULL, GST_MAP_READ);
+      gst_buffer_map (buffer, &map, GST_MAP_READ);
+      data = map.data;
+      size = map.size;
 
       if (size < 2) {
         GST_WARNING_OBJECT (depayload, "config too short (%d < 2)",
@@ -268,7 +271,8 @@ gst_rtp_mp4a_depay_setcaps (GstRTPBaseDepayload * depayload, GstCaps * caps)
       }
 
       /* ignore remaining bit, we're only interested in full bytes */
-      gst_buffer_unmap (buffer, data, size);
+      gst_buffer_resize (buffer, 0, size);
+      gst_buffer_unmap (buffer, &map);
       data = NULL;
 
       gst_caps_set_simple (srccaps,
@@ -277,7 +281,7 @@ gst_rtp_mp4a_depay_setcaps (GstRTPBaseDepayload * depayload, GstCaps * caps)
           "codec_data", GST_TYPE_BUFFER, buffer, NULL);
     bad_config:
       if (data)
-        gst_buffer_unmap (buffer, data, -1);
+        gst_buffer_unmap (buffer, &map);
       gst_buffer_unref (buffer);
     } else {
       g_warning ("cannot convert config to buffer");
@@ -295,7 +299,7 @@ gst_rtp_mp4a_depay_process (GstRTPBaseDepayload * depayload, GstBuffer * buf)
   GstRtpMP4ADepay *rtpmp4adepay;
   GstBuffer *outbuf;
   GstRTPBuffer rtp = { NULL };
-  guint8 *bdata;
+  GstMapInfo map;
 
   rtpmp4adepay = GST_RTP_MP4A_DEPAY (depayload);
 
@@ -326,7 +330,8 @@ gst_rtp_mp4a_depay_process (GstRTPBaseDepayload * depayload, GstBuffer * buf)
     GST_LOG_OBJECT (rtpmp4adepay, "have marker and %u available", avail);
 
     outbuf = gst_adapter_take_buffer (rtpmp4adepay->adapter, avail);
-    data = bdata = gst_buffer_map (outbuf, NULL, NULL, GST_MAP_READ);
+    gst_buffer_map (outbuf, &map, GST_MAP_READ);
+    data = map.data;
     /* position in data we are at */
     pos = 0;
 
@@ -387,7 +392,7 @@ gst_rtp_mp4a_depay_process (GstRTPBaseDepayload * depayload, GstBuffer * buf)
               "possible wrongly encoded packet."));
     }
 
-    gst_buffer_unmap (outbuf, bdata, -1);
+    gst_buffer_unmap (outbuf, &map);
     gst_buffer_unref (outbuf);
   }
   gst_rtp_buffer_unmap (&rtp);
@@ -398,7 +403,7 @@ wrong_size:
   {
     GST_ELEMENT_WARNING (rtpmp4adepay, STREAM, DECODE,
         ("Packet did not validate"), ("wrong packet size"));
-    gst_buffer_unmap (outbuf, bdata, -1);
+    gst_buffer_unmap (outbuf, &map);
     gst_buffer_unref (outbuf);
     gst_rtp_buffer_unmap (&rtp);
     return NULL;

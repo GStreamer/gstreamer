@@ -191,7 +191,7 @@ gst_flac_tag_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
 {
   GstFlacTag *tag;
   GstFlowReturn ret;
-  guint8 *data;
+  GstMapInfo map;
   gsize size;
 
   ret = GST_FLOW_OK;
@@ -284,9 +284,9 @@ gst_flac_tag_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
     /* clear the is-last flag, as the last metadata block will
      * be the vorbis comment block which we will build ourselves.
      */
-    data = gst_buffer_map (metadata_buffer, &size, NULL, GST_MAP_READWRITE);
-    data[0] &= (~0x80);
-    gst_buffer_unmap (metadata_buffer, data, size);
+    gst_buffer_map (metadata_buffer, &map, GST_MAP_READWRITE);
+    map.data[0] &= (~0x80);
+    gst_buffer_unmap (metadata_buffer, &map);
 
     if (tag->state == GST_FLAC_TAG_STATE_WRITING_METADATA_BLOCK) {
       GST_DEBUG_OBJECT (tag, "pushing metadata block buffer");
@@ -362,11 +362,11 @@ gst_flac_tag_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
       if (buffer == NULL)
         goto no_buffer;
 
-      data = gst_buffer_map (buffer, &size, NULL, GST_MAP_WRITE);
-      memset (data, 0, size);
-      data[0] = 0x81;           /* 0x80 = Last metadata block, 
+      gst_buffer_map (buffer, &map, GST_MAP_WRITE);
+      memset (map.data, 0, map.size);
+      map.data[0] = 0x81;       /* 0x80 = Last metadata block, 
                                  * 0x01 = padding block */
-      gst_buffer_unmap (buffer, data, size);
+      gst_buffer_unmap (buffer, &map);
     } else {
       guchar header[4];
       guint8 fbit[1];
@@ -399,14 +399,14 @@ gst_flac_tag_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
     /* The 4 byte metadata block header isn't accounted for in the total
      * size of the metadata block
      */
-    data = gst_buffer_map (buffer, &size, NULL, GST_MAP_WRITE);
-    data[1] = (((size - 4) & 0xFF0000) >> 16);
-    data[2] = (((size - 4) & 0x00FF00) >> 8);
-    data[3] = ((size - 4) & 0x0000FF);
-    gst_buffer_unmap (buffer, data, size);
+    gst_buffer_map (buffer, &map, GST_MAP_WRITE);
+    map.data[1] = (((map.size - 4) & 0xFF0000) >> 16);
+    map.data[2] = (((map.size - 4) & 0x00FF00) >> 8);
+    map.data[3] = ((map.size - 4) & 0x0000FF);
+    gst_buffer_unmap (buffer, &map);
 
     GST_DEBUG_OBJECT (tag, "pushing %" G_GSIZE_FORMAT " byte vorbiscomment "
-        "buffer", size);
+        "buffer", map.size);
 
     ret = gst_pad_push (tag->srcpad, buffer);
     if (ret != GST_FLOW_OK) {

@@ -308,18 +308,17 @@ static void
 gst_video_crop_transform_packed_complex (GstVideoCrop * vcrop,
     GstBuffer * inbuf, GstBuffer * outbuf)
 {
+  GstMapInfo in_map, out_map;
   guint8 *in_data, *out_data;
-  gpointer in_bufdata, out_bufdata;
-  gsize insize, outsize;
   guint i, dx;
   gint in_stride;
   gint out_stride;
 
-  in_bufdata = gst_buffer_map (inbuf, &insize, NULL, GST_MAP_READ);
-  out_bufdata = gst_buffer_map (outbuf, &outsize, NULL, GST_MAP_WRITE);
+  gst_buffer_map (inbuf, &in_map, GST_MAP_READ);
+  gst_buffer_map (outbuf, &out_map, GST_MAP_WRITE);
 
-  in_data = in_bufdata;
-  out_data = out_bufdata;
+  in_data = in_map.data;
+  out_data = out_map.data;
 
   in_stride = GST_VIDEO_INFO_PLANE_STRIDE (&vcrop->in.info, 0);
   out_stride = GST_VIDEO_INFO_PLANE_STRIDE (&vcrop->out.info, 0);
@@ -358,25 +357,24 @@ gst_video_crop_transform_packed_complex (GstVideoCrop * vcrop,
       out_data += out_stride;
     }
   }
-  gst_buffer_unmap (inbuf, in_bufdata, insize);
-  gst_buffer_unmap (outbuf, out_bufdata, outsize);
+  gst_buffer_unmap (inbuf, &in_map);
+  gst_buffer_unmap (outbuf, &out_map);
 }
 
 static void
 gst_video_crop_transform_packed_simple (GstVideoCrop * vcrop,
     GstBuffer * inbuf, GstBuffer * outbuf)
 {
+  GstMapInfo in_map, out_map;
   guint8 *in_data, *out_data;
-  gpointer in_bufdata, out_bufdata;
-  gsize insize, outsize;
   guint i, dx;
   gint in_stride, out_stride;
 
-  in_bufdata = gst_buffer_map (inbuf, &insize, NULL, GST_MAP_READ);
-  out_bufdata = gst_buffer_map (outbuf, &outsize, NULL, GST_MAP_WRITE);
+  gst_buffer_map (inbuf, &in_map, GST_MAP_READ);
+  gst_buffer_map (outbuf, &out_map, GST_MAP_WRITE);
 
-  in_data = in_bufdata;
-  out_data = out_bufdata;
+  in_data = in_map.data;
+  out_data = out_map.data;
 
   in_stride = GST_VIDEO_INFO_PLANE_STRIDE (&vcrop->in.info, 0);
   out_stride = GST_VIDEO_INFO_PLANE_STRIDE (&vcrop->out.info, 0);
@@ -393,26 +391,25 @@ gst_video_crop_transform_packed_simple (GstVideoCrop * vcrop,
     in_data += in_stride;
     out_data += out_stride;
   }
-  gst_buffer_unmap (inbuf, in_bufdata, insize);
-  gst_buffer_unmap (outbuf, out_bufdata, outsize);
+  gst_buffer_unmap (inbuf, &in_map);
+  gst_buffer_unmap (outbuf, &out_map);
 }
 
 static void
 gst_video_crop_transform_planar (GstVideoCrop * vcrop, GstBuffer * inbuf,
     GstBuffer * outbuf)
 {
+  GstMapInfo in_map, out_map;
   guint8 *y_out, *u_out, *v_out;
   guint8 *y_in, *u_in, *v_in;
   guint i, dx;
-  gpointer in_bufdata, out_bufdata;
-  gsize insize, outsize;
 
-  in_bufdata = gst_buffer_map (inbuf, &insize, NULL, GST_MAP_READ);
-  out_bufdata = gst_buffer_map (outbuf, &outsize, NULL, GST_MAP_WRITE);
+  gst_buffer_map (inbuf, &in_map, GST_MAP_READ);
+  gst_buffer_map (outbuf, &out_map, GST_MAP_WRITE);
 
   /* Y plane */
-  y_in = in_bufdata;
-  y_out = out_bufdata;
+  y_in = in_map.data;
+  y_out = out_map.data;
 
   y_in +=
       (vcrop->crop_top * GST_VIDEO_INFO_PLANE_STRIDE (&vcrop->in.info,
@@ -427,9 +424,9 @@ gst_video_crop_transform_planar (GstVideoCrop * vcrop, GstBuffer * inbuf,
 
   /* U + V planes */
   u_in =
-      (guint8 *) in_bufdata + GST_VIDEO_INFO_PLANE_OFFSET (&vcrop->in.info, 1);
+      (guint8 *) in_map.data + GST_VIDEO_INFO_PLANE_OFFSET (&vcrop->in.info, 1);
   u_out =
-      (guint8 *) out_bufdata + GST_VIDEO_INFO_PLANE_OFFSET (&vcrop->out.info,
+      (guint8 *) out_map.data + GST_VIDEO_INFO_PLANE_OFFSET (&vcrop->out.info,
       1);
 
   u_in +=
@@ -437,9 +434,9 @@ gst_video_crop_transform_planar (GstVideoCrop * vcrop, GstBuffer * inbuf,
   u_in += vcrop->crop_left / 2;
 
   v_in =
-      (guint8 *) in_bufdata + GST_VIDEO_INFO_PLANE_OFFSET (&vcrop->in.info, 2);
+      (guint8 *) in_map.data + GST_VIDEO_INFO_PLANE_OFFSET (&vcrop->in.info, 2);
   v_out =
-      (guint8 *) out_bufdata + GST_VIDEO_INFO_PLANE_OFFSET (&vcrop->out.info,
+      (guint8 *) out_map.data + GST_VIDEO_INFO_PLANE_OFFSET (&vcrop->out.info,
       2);
 
   v_in +=
@@ -458,8 +455,8 @@ gst_video_crop_transform_planar (GstVideoCrop * vcrop, GstBuffer * inbuf,
     v_out += GST_VIDEO_INFO_PLANE_STRIDE (&vcrop->out.info, 2);
   }
 
-  gst_buffer_unmap (inbuf, in_bufdata, insize);
-  gst_buffer_unmap (outbuf, out_bufdata, outsize);
+  gst_buffer_unmap (inbuf, &in_map);
+  gst_buffer_unmap (outbuf, &out_map);
 }
 
 static GstFlowReturn

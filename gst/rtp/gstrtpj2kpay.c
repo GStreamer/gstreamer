@@ -335,8 +335,7 @@ gst_rtp_j2k_pay_handle_buffer (GstRTPBasePayload * basepayload,
 #if 0
   GstBufferList *list = NULL;
 #endif
-  guint8 *data;
-  gsize size;
+  GstMapInfo map;
   guint mtu, max_size;
   guint offset;
   guint end, pos;
@@ -344,13 +343,13 @@ gst_rtp_j2k_pay_handle_buffer (GstRTPBasePayload * basepayload,
   pay = GST_RTP_J2K_PAY (basepayload);
   mtu = GST_RTP_BASE_PAYLOAD_MTU (pay);
 
-  data = gst_buffer_map (buffer, &size, NULL, GST_MAP_READ);
+  gst_buffer_map (buffer, &map, GST_MAP_READ);
   timestamp = GST_BUFFER_TIMESTAMP (buffer);
   offset = pos = end = 0;
 
   GST_LOG_OBJECT (pay,
-      "got buffer size %" G_GSIZE_FORMAT ", timestamp %" GST_TIME_FORMAT, size,
-      GST_TIME_ARGS (timestamp));
+      "got buffer size %" G_GSIZE_FORMAT ", timestamp %" GST_TIME_FORMAT,
+      map.size, GST_TIME_ARGS (timestamp));
 
   /* do some header defaults first */
   state.header.tp = 0;          /* only progressive scan */
@@ -413,11 +412,11 @@ gst_rtp_j2k_pay_handle_buffer (GstRTPBasePayload * basepayload,
       pos = end;
 
       /* exit when finished */
-      if (pos == size)
+      if (pos == map.size)
         break;
 
       /* scan next packetization unit and fill in the header */
-      end = find_pu_end (pay, data, size, pos, &state);
+      end = find_pu_end (pay, map.data, map.size, pos, &state);
     } while (TRUE);
 
     while (pu_size > 0) {
@@ -468,7 +467,7 @@ gst_rtp_j2k_pay_handle_buffer (GstRTPBasePayload * basepayload,
           else
             state.header.MHF = 2;
         }
-        if (end >= size)
+        if (end >= map.size)
           gst_rtp_buffer_set_marker (&rtp, TRUE);
       }
 
@@ -518,7 +517,7 @@ gst_rtp_j2k_pay_handle_buffer (GstRTPBasePayload * basepayload,
 #endif
       {
         /* copy payload */
-        memcpy (header + HEADER_SIZE, &data[offset], data_size);
+        memcpy (header + HEADER_SIZE, &map.data[offset], data_size);
         gst_rtp_buffer_unmap (&rtp);
 
         ret = gst_rtp_base_payload_push (basepayload, outbuf);
@@ -534,7 +533,7 @@ gst_rtp_j2k_pay_handle_buffer (GstRTPBasePayload * basepayload,
       offset += data_size;
     }
     offset = pos;
-  } while (offset < size);
+  } while (offset < map.size);
 
 done:
   gst_buffer_unref (buffer);

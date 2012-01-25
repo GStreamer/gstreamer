@@ -354,8 +354,7 @@ gst_audio_fx_base_iir_filter_transform_ip (GstBaseTransform * base,
   GstAudioFXBaseIIRFilter *filter = GST_AUDIO_FX_BASE_IIR_FILTER (base);
   guint num_samples;
   GstClockTime timestamp, stream_time;
-  guint8 *data;
-  gsize size;
+  GstMapInfo map;
 
   timestamp = GST_BUFFER_TIMESTAMP (buf);
   stream_time =
@@ -372,12 +371,12 @@ gst_audio_fx_base_iir_filter_transform_ip (GstBaseTransform * base,
 
   g_return_val_if_fail (filter->a != NULL, GST_FLOW_ERROR);
 
-  data = gst_buffer_map (buf, &size, NULL, GST_MAP_READWRITE);
-  num_samples = size / GST_AUDIO_FILTER_BPS (filter);
+  gst_buffer_map (buf, &map, GST_MAP_READWRITE);
+  num_samples = map.size / GST_AUDIO_FILTER_BPS (filter);
 
-  filter->process (filter, data, num_samples);
+  filter->process (filter, map.data, num_samples);
 
-  gst_buffer_unmap (buf, data, size);
+  gst_buffer_unmap (buf, &map);
 
   return GST_FLOW_OK;
 }

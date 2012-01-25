@@ -231,14 +231,13 @@ static void
 user_write_data (png_structp png_ptr, png_bytep data, png_uint_32 length)
 {
   GstPngEnc *pngenc;
-  gsize size;
-  guint8 *bdata;
+  GstMapInfo map;
 
   pngenc = (GstPngEnc *) png_get_io_ptr (png_ptr);
 
-  bdata = gst_buffer_map (pngenc->buffer_out, &size, NULL, GST_MAP_WRITE);
-  if (pngenc->written + length >= size) {
-    gst_buffer_unmap (pngenc->buffer_out, data, -1);
+  gst_buffer_map (pngenc->buffer_out, &map, GST_MAP_WRITE);
+  if (pngenc->written + length >= map.size) {
+    gst_buffer_unmap (pngenc->buffer_out, &map);
     GST_ERROR_OBJECT (pngenc, "output buffer bigger than the input buffer!?");
     png_error (png_ptr, "output buffer bigger than the input buffer!?");
 
@@ -248,8 +247,8 @@ user_write_data (png_structp png_ptr, png_bytep data, png_uint_32 length)
 
   GST_DEBUG_OBJECT (pngenc, "writing %u bytes", (guint) length);
 
-  memcpy (bdata + pngenc->written, data, length);
-  gst_buffer_unmap (pngenc->buffer_out, data, -1);
+  memcpy (map.data + pngenc->written, data, length);
+  gst_buffer_unmap (pngenc->buffer_out, &map);
   pngenc->written += length;
 }
 

@@ -461,8 +461,7 @@ static GstFlowReturn
 gst_rg_analysis_transform_ip (GstBaseTransform * base, GstBuffer * buf)
 {
   GstRgAnalysis *filter = GST_RG_ANALYSIS (base);
-  guint8 *data;
-  gsize size;
+  GstMapInfo map;
 
   g_return_val_if_fail (filter->ctx != NULL, GST_FLOW_WRONG_STATE);
   g_return_val_if_fail (filter->analyze != NULL, GST_FLOW_NOT_NEGOTIATED);
@@ -470,13 +469,14 @@ gst_rg_analysis_transform_ip (GstBaseTransform * base, GstBuffer * buf)
   if (filter->skip)
     return GST_FLOW_OK;
 
-  data = gst_buffer_map (buf, &size, NULL, GST_MAP_READ);
-  GST_LOG_OBJECT (filter, "processing buffer of size %" G_GSIZE_FORMAT, size);
+  gst_buffer_map (buf, &map, GST_MAP_READ);
+  GST_LOG_OBJECT (filter, "processing buffer of size %" G_GSIZE_FORMAT,
+      map.size);
 
   rg_analysis_start_buffer (filter->ctx, GST_BUFFER_TIMESTAMP (buf));
-  filter->analyze (filter->ctx, data, size, filter->depth);
+  filter->analyze (filter->ctx, map.data, map.size, filter->depth);
 
-  gst_buffer_unmap (buf, data, size);
+  gst_buffer_unmap (buf, &map);
 
   return GST_FLOW_OK;
 }

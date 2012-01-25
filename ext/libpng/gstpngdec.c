@@ -615,8 +615,7 @@ gst_pngdec_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
 {
   GstPngDec *pngdec;
   GstFlowReturn ret = GST_FLOW_OK;
-  guint8 *bdata = NULL;
-  gsize size;
+  GstMapInfo map = GST_MAP_INFO_INIT;
 
   pngdec = GST_PNGDEC (parent);
 
@@ -640,12 +639,12 @@ gst_pngdec_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
   pngdec->in_timestamp = GST_BUFFER_TIMESTAMP (buffer);
   pngdec->in_duration = GST_BUFFER_DURATION (buffer);
 
-  bdata = gst_buffer_map (buffer, &size, NULL, GST_MAP_READ);
+  gst_buffer_map (buffer, &map, GST_MAP_READ);
 
-  GST_LOG_OBJECT (pngdec, "Got buffer, size=%d", (gint) size);
+  GST_LOG_OBJECT (pngdec, "Got buffer, size=%d", (gint) map.size);
 
   /* Progressive loading of the PNG image */
-  png_process_data (pngdec->png, pngdec->info, bdata, size);
+  png_process_data (pngdec->png, pngdec->info, map.data, map.size);
 
   if (pngdec->image_ready) {
     if (pngdec->framed) {
@@ -666,8 +665,8 @@ gst_pngdec_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
   ret = pngdec->ret;
 
 beach:
-  if (G_LIKELY (bdata))
-    gst_buffer_unmap (buffer, bdata, -1);
+  if (G_LIKELY (map.data))
+    gst_buffer_unmap (buffer, &map);
 
   /* And release the buffer */
   gst_buffer_unref (buffer);

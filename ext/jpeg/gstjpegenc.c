@@ -159,10 +159,11 @@ static void
 ensure_memory (GstJpegEnc * jpegenc)
 {
   GstMemory *new_memory;
+  GstMapInfo map;
   gsize old_size, desired_size, new_size;
   guint8 *new_data;
 
-  old_size = jpegenc->output_size;
+  old_size = jpegenc->output_map.size;
   if (old_size == 0)
     desired_size = jpegenc->bufsize;
   else
@@ -171,19 +172,20 @@ ensure_memory (GstJpegEnc * jpegenc)
   /* Our output memory wasn't big enough.
    * Make a new memory that's twice the size, */
   new_memory = gst_allocator_alloc (NULL, desired_size, 3);
-  new_data = gst_memory_map (new_memory, &new_size, NULL, GST_MAP_READWRITE);
+  gst_memory_map (new_memory, &map, GST_MAP_READWRITE);
+  new_data = map.data;
+  new_size = map.size;
 
   /* copy previous data if any */
   if (jpegenc->output_mem) {
-    memcpy (new_data, jpegenc->output_data, old_size);
-    gst_memory_unmap (jpegenc->output_mem);
+    memcpy (new_data, jpegenc->output_map.data, old_size);
+    gst_memory_unmap (jpegenc->output_mem, &jpegenc->output_map);
     gst_memory_unref (jpegenc->output_mem);
   }
 
   /* drop it into place, */
   jpegenc->output_mem = new_memory;
-  jpegenc->output_data = new_data;
-  jpegenc->output_size = new_size;
+  jpegenc->output_map = map;
 
   /* and last, update libjpeg on where to work. */
   jpegenc->jdest.next_output_byte = new_data + old_size;
@@ -215,12 +217,12 @@ gst_jpegenc_term_destination (j_compress_ptr cinfo)
   GstJpegEnc *jpegenc = (GstJpegEnc *) (cinfo->client_data);
   GST_DEBUG_OBJECT (jpegenc, "gst_jpegenc_chain: term_source");
 
-  gst_memory_unmap (jpegenc->output_mem);
+  gst_memory_unmap (jpegenc->output_mem, &jpegenc->output_map);
   /* Trim the buffer size. we will push it in the chain function */
   gst_memory_resize (jpegenc->output_mem, 0,
-      jpegenc->output_size - jpegenc->jdest.free_in_buffer);
-  jpegenc->output_data = NULL;
-  jpegenc->output_size = 0;
+      jpegenc->output_map.size - jpegenc->jdest.free_in_buffer);
+  jpegenc->output_map.data = NULL;
+  jpegenc->output_map.size = 0;
 }
 
 static void
@@ -566,12 +568,10 @@ gst_jpegenc_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
   }
 
   jpegenc->output_mem = gst_allocator_alloc (NULL, jpegenc->bufsize, 3);
-  jpegenc->output_data =
-      gst_memory_map (jpegenc->output_mem, &jpegenc->output_size, NULL,
-      GST_MAP_READWRITE);
+  gst_memory_map (jpegenc->output_mem, &jpegenc->output_map, GST_MAP_READWRITE);
 
-  jpegenc->jdest.next_output_byte = jpegenc->output_data;
-  jpegenc->jdest.free_in_buffer = jpegenc->output_size;
+  jpegenc->jdest.next_output_byte = jpegenc->output_map.data;
+  jpegenc->jdest.free_in_buffer = jpegenc->output_map.size;
 
   /* prepare for raw input */
 #if JPEG_LIB_VERSION >= 70

@@ -472,6 +472,7 @@ gst_split_file_src_create (GstBaseSrc * basesrc, guint64 offset, guint size,
   GstBuffer *buf;
   GError *err = NULL;
   guint64 read_offset;
+  GstMapInfo map;
   guint8 *data;
   guint to_read;
 
@@ -490,7 +491,8 @@ gst_split_file_src_create (GstBaseSrc * basesrc, guint64 offset, guint size,
 
   GST_BUFFER_OFFSET (buf) = offset;
 
-  data = gst_buffer_map (buf, NULL, NULL, GST_MAP_WRITE);
+  gst_buffer_map (buf, &map, GST_MAP_WRITE);
+  data = map.data;
 
   cancel = src->cancellable;
 
@@ -553,7 +555,7 @@ gst_split_file_src_create (GstBaseSrc * basesrc, guint64 offset, guint size,
 
   GST_BUFFER_OFFSET_END (buf) = offset;
 
-  gst_buffer_unmap (buf, data, size);
+  gst_buffer_unmap (buf, &map);
 
   *buffer = buf;
   GST_LOG_OBJECT (src, "read %" G_GSIZE_FORMAT " bytes into buf %p",

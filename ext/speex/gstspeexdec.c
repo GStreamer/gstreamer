@@ -190,13 +190,12 @@ static GstFlowReturn
 gst_speex_dec_parse_header (GstSpeexDec * dec, GstBuffer * buf)
 {
   GstCaps *caps;
-  char *data;
-  gsize size;
+  GstMapInfo map;
 
   /* get the header */
-  data = gst_buffer_map (buf, &size, NULL, GST_MAP_READ);
-  dec->header = speex_packet_to_header (data, size);
-  gst_buffer_unmap (buf, data, size);
+  gst_buffer_map (buf, &map, GST_MAP_READ);
+  dec->header = speex_packet_to_header ((gchar *) map.data, map.size);
+  gst_buffer_unmap (buf, &map);
 
   if (!dec->header)
     goto no_header;
@@ -368,23 +367,22 @@ gst_speex_dec_parse_data (GstSpeexDec * dec, GstBuffer * buf)
   GstFlowReturn res = GST_FLOW_OK;
   gint i, fpp;
   SpeexBits *bits;
-  gsize size;
-  char *data;
+  GstMapInfo map;
 
   if (!dec->frame_duration)
     goto not_negotiated;
 
   if (G_LIKELY (gst_buffer_get_size (buf))) {
     /* send data to the bitstream */
-    data = gst_buffer_map (buf, &size, NULL, GST_MAP_READ);
-    speex_bits_read_from (&dec->bits, data, size);
-    gst_buffer_unmap (buf, data, size);
+    gst_buffer_map (buf, &map, GST_MAP_READ);
+    speex_bits_read_from (&dec->bits, (gchar *) map.data, map.size);
+    gst_buffer_unmap (buf, &map);
 
     fpp = dec->header->frames_per_packet;
     bits = &dec->bits;
 
     GST_DEBUG_OBJECT (dec, "received buffer of size %" G_GSIZE_FORMAT
-        ", fpp %d, %d bits", size, fpp, speex_bits_remaining (bits));
+        ", fpp %d, %d bits", map.size, fpp, speex_bits_remaining (bits));
   } else {
     /* FIXME ? actually consider how much concealment is needed */
     /* concealment data, pass NULL as the bits parameters */
@@ -396,7 +394,6 @@ gst_speex_dec_parse_data (GstSpeexDec * dec, GstBuffer * buf)
   /* now decode each frame, catering for unknown number of them (e.g. rtp) */
   for (i = 0; i < fpp; i++) {
     GstBuffer *outbuf;
-    gint16 *out_data;
     gint ret;
 
     GST_LOG_OBJECT (dec, "decoding frame %d/%d, %d bits remaining", i, fpp,
@@ -418,9 +415,8 @@ gst_speex_dec_parse_data (GstSpeexDec * dec, GstBuffer * buf)
         gst_buffer_new_allocate (NULL,
         dec->frame_size * dec->header->nb_channels * 2, 0);
 
-    out_data = gst_buffer_map (outbuf, &size, NULL, GST_MAP_WRITE);
-    ret = speex_decode_int (dec->state, bits, out_data);
-    gst_buffer_unmap (outbuf, out_data, size);
+    gst_buffer_map (outbuf, &map, GST_MAP_WRITE);
+    ret = speex_decode_int (dec->state, bits, (spx_int16_t *) map.data);
 
     if (ret == -1) {
       /* uh? end of stream */
@@ -445,7 +441,10 @@ gst_speex_dec_parse_data (GstSpeexDec * dec, GstBuffer * buf)
       gst_buffer_unref (outbuf);
     }
     if (dec->header->nb_channels == 2)
-      speex_decode_stereo_int (out_data, dec->frame_size, dec->stereo);
+      speex_decode_stereo_int ((spx_int16_t *) map.data, dec->frame_size,
+          dec->stereo);
+
+    gst_buffer_unmap (outbuf, &map);
 
     res = gst_audio_decoder_finish_frame (GST_AUDIO_DECODER (dec), outbuf, 1);
 
@@ -469,8 +468,8 @@ not_negotiated:
 static gboolean
 memcmp_buffers (GstBuffer * buf1, GstBuffer * buf2)
 {
+  GstMapInfo map;
   gsize size1, size2;
-  gpointer data1;
   gboolean res;
 
   size1 = gst_buffer_get_size (buf1);
@@ -479,9 +478,9 @@ memcmp_buffers (GstBuffer * buf1, GstBuffer * buf2)
   if (size1 != size2)
     return FALSE;
 
-  data1 = gst_buffer_map (buf1, NULL, NULL, GST_MAP_READ);
-  res = gst_buffer_memcmp (buf2, 0, data1, size1) == 0;
-  gst_buffer_unmap (buf1, data1, size1);
+  gst_buffer_map (buf1, &map, GST_MAP_READ);
+  res = gst_buffer_memcmp (buf2, 0, map.data, map.size) == 0;
+  gst_buffer_unmap (buf1, &map);
 
   return res;
 }

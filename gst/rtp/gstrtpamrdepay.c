@@ -273,8 +273,7 @@ gst_rtp_amr_depay_process (GstRTPBaseDepayload * depayload, GstBuffer * buf)
   GstBuffer *outbuf = NULL;
   gint payload_len;
   GstRTPBuffer rtp = { NULL };
-  guint8 *odata;
-  gsize osize;
+  GstMapInfo map;
 
   rtpamrdepay = GST_RTP_AMR_DEPAY (depayload);
 
@@ -375,10 +374,10 @@ gst_rtp_amr_depay_process (GstRTPBaseDepayload * depayload, GstBuffer * buf)
     outbuf = gst_buffer_new_and_alloc (payload_len);
 
     /* point to destination */
-    odata = gst_buffer_map (outbuf, &osize, NULL, GST_MAP_WRITE);
+    gst_buffer_map (outbuf, &map, GST_MAP_WRITE);
 
     /* point to first data packet */
-    p = odata;
+    p = map.data;
     dp = payload + num_packets;
     if (rtpamrdepay->crc) {
       /* skip CRC if present */
@@ -400,7 +399,7 @@ gst_rtp_amr_depay_process (GstRTPBaseDepayload * depayload, GstBuffer * buf)
         dp += fr_size;
       }
     }
-    gst_buffer_unmap (outbuf, odata, osize);
+    gst_buffer_unmap (outbuf, &map);
 
     /* we can set the duration because each packet is 20 milliseconds */
     GST_BUFFER_DURATION (outbuf) = num_packets * 20 * GST_MSECOND;

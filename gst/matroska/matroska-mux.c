@@ -1290,14 +1290,15 @@ vorbis_streamheader_to_codecdata (const GValue * streamheader,
   } else {
     if (gst_buffer_memcmp (buf0, 1, "vorbis", 6) == 0) {
       GstMatroskaTrackAudioContext *audiocontext;
-      guint8 *data, *hdr;
+      GstMapInfo map;
+      guint8 *hdr;
 
-      data = gst_buffer_map (buf0, NULL, NULL, GST_MAP_READ);
-      hdr = data + 1 + 6 + 4;
+      gst_buffer_map (buf0, &map, GST_MAP_READ);
+      hdr = map.data + 1 + 6 + 4;
       audiocontext = (GstMatroskaTrackAudioContext *) context;
       audiocontext->channels = GST_READ_UINT8 (hdr);
       audiocontext->samplerate = GST_READ_UINT32_LE (hdr + 1);
-      gst_buffer_unmap (buf0, data, -1);
+      gst_buffer_unmap (buf0, &map);
     }
   }
 
@@ -1323,10 +1324,11 @@ theora_streamheader_to_codecdata (const GValue * streamheader,
   } else {
     GstMatroskaTrackVideoContext *videocontext;
     guint fps_num, fps_denom, par_num, par_denom;
-    guint8 *data, *hdr;
+    GstMapInfo map;
+    guint8 *hdr;
 
-    data = gst_buffer_map (buf0, NULL, NULL, GST_MAP_READ);
-    hdr = data + 1 + 6 + 3 + 2 + 2;
+    gst_buffer_map (buf0, &map, GST_MAP_READ);
+    hdr = map.data + 1 + 6 + 3 + 2 + 2;
 
     videocontext = (GstMatroskaTrackVideoContext *) context;
     videocontext->pixel_width = GST_READ_UINT32_BE (hdr) >> 8;
@@ -1358,7 +1360,7 @@ theora_streamheader_to_codecdata (const GValue * streamheader,
     }
     hdr += 3 + 3;
 
-    gst_buffer_unmap (buf0, data, -1);
+    gst_buffer_unmap (buf0, &map);
   }
 
   if (buf0)
@@ -2008,26 +2010,26 @@ gst_matroska_mux_subtitle_pad_setcaps (GstPad * pad, GstCaps * caps)
   if (value)
     buf = gst_value_get_buffer (value);
   if (buf != NULL) {
-    guint8 *priv_data = NULL, *priv_buffer_data;
-    gsize priv_data_size = 0;
+    GstMapInfo map;
+    guint8 *priv_data = NULL;
 
-    priv_buffer_data =
-        gst_buffer_map (buf, &priv_data_size, NULL, GST_MAP_READ);
-    if (priv_data_size > SUBTITLE_MAX_CODEC_PRIVATE) {
+    gst_buffer_map (buf, &map, GST_MAP_READ);
+
+    if (map.size > SUBTITLE_MAX_CODEC_PRIVATE) {
       GST_WARNING_OBJECT (mux, "pad %" GST_PTR_FORMAT " subtitle private data"
           " exceeded maximum (%d); discarding", pad,
           SUBTITLE_MAX_CODEC_PRIVATE);
-      gst_buffer_unmap (buf, priv_data, priv_data_size);
+      gst_buffer_unmap (buf, &map);
       return TRUE;
     }
 
     gst_matroska_mux_free_codec_priv (context);
 
-    priv_data = g_malloc0 (priv_data_size);
-    memcpy (priv_data, priv_buffer_data, priv_data_size);
+    priv_data = g_malloc0 (map.size);
+    memcpy (priv_data, map.data, map.size);
     context->codec_priv = priv_data;
-    context->codec_priv_size = priv_data_size;
-    gst_buffer_unmap (buf, priv_buffer_data, priv_data_size);
+    context->codec_priv_size = map.size;
+    gst_buffer_unmap (buf, &map);
   }
 
   GST_DEBUG_OBJECT (pad, "codec_id %s, codec data size %" G_GSIZE_FORMAT,
@@ -2763,18 +2765,20 @@ gst_matroska_mux_handle_dirac_packet (GstMatroskaMux * mux,
 {
   GstMatroskaTrackVideoContext *ctx =
       (GstMatroskaTrackVideoContext *) collect_pad->track;
-  guint8 *buf_data, *data;
+  GstMapInfo map;
+  guint8 *data;
   gsize size;
   guint8 parse_code;
   guint32 next_parse_offset;
   GstBuffer *ret = NULL;
   gboolean is_muxing_unit = FALSE;
 
-  buf_data = gst_buffer_map (buf, &size, NULL, GST_MAP_READ);
-  data = buf_data;
+  gst_buffer_map (buf, &map, GST_MAP_READ);
+  data = map.data;
+  size = map.size;
 
   if (size < 13) {
-    gst_buffer_unmap (buf, buf_data, -1);
+    gst_buffer_unmap (buf, &map);
     gst_buffer_unref (buf);
     return ret;
   }
@@ -2782,7 +2786,7 @@ gst_matroska_mux_handle_dirac_packet (GstMatroskaMux * mux,
   /* Check if this buffer contains a picture or end-of-sequence packet */
   while (size >= 13) {
     if (GST_READ_UINT32_BE (data) != 0x42424344 /* 'BBCD' */ ) {
-      gst_buffer_unmap (buf, buf_data, -1);
+      gst_buffer_unmap (buf, &map);
       gst_buffer_unref (buf);
       return ret;
     }
@@ -2813,7 +2817,7 @@ gst_matroska_mux_handle_dirac_packet (GstMatroskaMux * mux,
   else
     ctx->dirac_unit = gst_buffer_ref (buf);
 
-  gst_buffer_unmap (buf, buf_data, -1);
+  gst_buffer_unmap (buf, &map);
 
   if (is_muxing_unit) {
     ret = gst_buffer_make_writable (ctx->dirac_unit);

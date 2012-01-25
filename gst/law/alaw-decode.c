@@ -307,6 +307,7 @@ static GstFlowReturn
 gst_alaw_dec_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
 {
   GstALawDec *alawdec;
+  GstMapInfo inmap, outmap;
   gint16 *linear_data;
   guint8 *alaw_data;
   gsize alaw_size;
@@ -322,11 +323,14 @@ gst_alaw_dec_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
   GST_LOG_OBJECT (alawdec, "buffer with ts=%" GST_TIME_FORMAT,
       GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buffer)));
 
-  alaw_data = gst_buffer_map (buffer, &alaw_size, NULL, GST_MAP_READ);
+  gst_buffer_map (buffer, &inmap, GST_MAP_READ);
+  alaw_data = inmap.data;
+  alaw_size = inmap.size;
 
   outbuf = gst_buffer_new_allocate (NULL, alaw_size, 0);
 
-  linear_data = gst_buffer_map (outbuf, NULL, NULL, GST_MAP_WRITE);
+  gst_buffer_map (outbuf, &outmap, GST_MAP_WRITE);
+  linear_data = (gint16 *) outmap.data;
 
   /* copy discont flag */
   if (GST_BUFFER_FLAG_IS_SET (buffer, GST_BUFFER_FLAG_DISCONT))
@@ -339,8 +343,8 @@ gst_alaw_dec_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
     linear_data[i] = alaw_to_s16 (alaw_data[i]);
   }
 
-  gst_buffer_unmap (outbuf, linear_data, -1);
-  gst_buffer_unmap (buffer, alaw_data, -1);
+  gst_buffer_unmap (outbuf, &outmap);
+  gst_buffer_unmap (buffer, &inmap);
   gst_buffer_unref (buffer);
 
   ret = gst_pad_push (alawdec->srcpad, outbuf);

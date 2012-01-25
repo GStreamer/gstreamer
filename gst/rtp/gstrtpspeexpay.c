@@ -233,22 +233,22 @@ gst_rtp_speex_pay_handle_buffer (GstRTPBasePayload * basepayload,
 {
   GstRtpSPEEXPay *rtpspeexpay;
   guint payload_len;
-  gsize size;
+  GstMapInfo map;
   GstBuffer *outbuf;
-  guint8 *payload, *data;
+  guint8 *payload;
   GstClockTime timestamp, duration;
   GstFlowReturn ret;
   GstRTPBuffer rtp = { NULL };
 
   rtpspeexpay = GST_RTP_SPEEX_PAY (basepayload);
 
-  data = gst_buffer_map (buffer, &size, NULL, GST_MAP_READ);
+  gst_buffer_map (buffer, &map, GST_MAP_READ);
 
   switch (rtpspeexpay->packet) {
     case 0:
       /* ident packet. We need to parse the headers to construct the RTP
        * properties. */
-      if (!gst_rtp_speex_pay_parse_ident (rtpspeexpay, data, size))
+      if (!gst_rtp_speex_pay_parse_ident (rtpspeexpay, map.data, map.size))
         goto parse_error;
 
       ret = GST_FLOW_OK;
@@ -271,7 +271,7 @@ gst_rtp_speex_pay_handle_buffer (GstRTPBasePayload * basepayload,
   duration = GST_BUFFER_DURATION (buffer);
 
   /* FIXME, only one SPEEX frame per RTP packet for now */
-  payload_len = size;
+  payload_len = map.size;
 
   outbuf = gst_rtp_buffer_new_allocate (payload_len, 0, 0);
   /* FIXME, assert for now */
@@ -286,14 +286,14 @@ gst_rtp_speex_pay_handle_buffer (GstRTPBasePayload * basepayload,
   payload = gst_rtp_buffer_get_payload (&rtp);
 
   /* copy data in payload */
-  memcpy (&payload[0], data, size);
+  memcpy (&payload[0], map.data, map.size);
 
   gst_rtp_buffer_unmap (&rtp);
 
   ret = gst_rtp_base_payload_push (basepayload, outbuf);
 
 done:
-  gst_buffer_unmap (buffer, data, -1);
+  gst_buffer_unmap (buffer, &map);
   gst_buffer_unref (buffer);
 
   rtpspeexpay->packet++;
@@ -305,7 +305,7 @@ parse_error:
   {
     GST_ELEMENT_ERROR (rtpspeexpay, STREAM, DECODE, (NULL),
         ("Error parsing first identification packet."));
-    gst_buffer_unmap (buffer, data, -1);
+    gst_buffer_unmap (buffer, &map);
     gst_buffer_unref (buffer);
     return GST_FLOW_ERROR;
   }

@@ -225,9 +225,9 @@ gst_rtp_g726_depay_process (GstRTPBaseDepayload * depayload, GstBuffer * buf)
     if (!outbuf)
       goto bad_len;
   } else {
-    guint8 *in, *out, tmp, *odata;
+    guint8 *in, *out, tmp;
     guint len;
-    gsize osize;
+    GstMapInfo map;
 
     in = gst_rtp_buffer_get_payload (&rtp);
     len = gst_rtp_buffer_get_payload_len (&rtp);
@@ -237,8 +237,8 @@ gst_rtp_g726_depay_process (GstRTPBaseDepayload * depayload, GstBuffer * buf)
       goto bad_len;
     outbuf = gst_buffer_make_writable (outbuf);
 
-    odata = gst_buffer_map (outbuf, &osize, NULL, GST_MAP_WRITE);
-    out = odata;
+    gst_buffer_map (outbuf, &map, GST_MAP_WRITE);
+    out = map.data;
 
     /* we need to reshuffle the bytes, input is always of the form
      * A B C D ... with the number of bits depending on the bitrate. */
@@ -326,7 +326,7 @@ gst_rtp_g726_depay_process (GstRTPBaseDepayload * depayload, GstBuffer * buf)
         break;
       }
     }
-    gst_buffer_unmap (outbuf, odata, osize);
+    gst_buffer_unmap (outbuf, &map);
   }
 
   if (marker) {

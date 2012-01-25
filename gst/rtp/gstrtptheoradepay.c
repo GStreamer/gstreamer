@@ -126,11 +126,14 @@ gst_rtp_theora_depay_parse_configuration (GstRtpTheoraDepay * rtptheoradepay,
 {
   GstBuffer *buf;
   guint32 num_headers;
-  guint8 *data, *bdata;
+  GstMapInfo map;
+  guint8 *data;
   gsize size;
   gint i, j;
 
-  data = bdata = gst_buffer_map (confbuf, &size, NULL, GST_MAP_READ);
+  gst_buffer_map (confbuf, &map, GST_MAP_READ);
+  data = map.data;
+  size = map.size;
 
   GST_DEBUG_OBJECT (rtptheoradepay, "config size %" G_GSIZE_FORMAT, size);
 
@@ -236,7 +239,6 @@ gst_rtp_theora_depay_parse_configuration (GstRtpTheoraDepay * rtptheoradepay,
 
     for (j = 0; j <= n_headers; j++) {
       guint h_size;
-      guint8 *odata;
 
       h_size = h_sizes[j];
       if (size < h_size) {
@@ -253,9 +255,7 @@ gst_rtp_theora_depay_parse_configuration (GstRtpTheoraDepay * rtptheoradepay,
           h_size);
 
       buf = gst_buffer_new_and_alloc (h_size);
-      odata = gst_buffer_map (buf, NULL, NULL, GST_MAP_WRITE);
-      memcpy (odata, data, h_size);
-      gst_buffer_unmap (buf, odata, -1);
+      gst_buffer_fill (buf, 0, data, h_size);
       conf->headers = g_list_append (conf->headers, buf);
       data += h_size;
       size -= h_size;
@@ -263,14 +263,14 @@ gst_rtp_theora_depay_parse_configuration (GstRtpTheoraDepay * rtptheoradepay,
     rtptheoradepay->configs = g_list_append (rtptheoradepay->configs, conf);
   }
 
-  gst_buffer_unmap (confbuf, bdata, -1);
+  gst_buffer_unmap (confbuf, &map);
   return TRUE;
 
   /* ERRORS */
 too_small:
   {
     GST_DEBUG_OBJECT (rtptheoradepay, "configuration too small");
-    gst_buffer_unmap (confbuf, bdata, -1);
+    gst_buffer_unmap (confbuf, &map);
     return FALSE;
   }
 }
@@ -281,23 +281,23 @@ gst_rtp_theora_depay_parse_inband_configuration (GstRtpTheoraDepay *
     guint length)
 {
   GstBuffer *confbuf;
-  guint8 *conf;
+  GstMapInfo map;
 
   if (G_UNLIKELY (size < 4))
     return FALSE;
 
   /* transform inline to out-of-band and parse that one */
   confbuf = gst_buffer_new_and_alloc (size + 9);
-  conf = gst_buffer_map (confbuf, NULL, NULL, GST_MAP_WRITE);
+  gst_buffer_map (confbuf, &map, GST_MAP_WRITE);
   /* 1 header */
-  GST_WRITE_UINT32_BE (conf, 1);
+  GST_WRITE_UINT32_BE (map.data, 1);
   /* write Ident */
-  GST_WRITE_UINT24_BE (conf + 4, ident);
+  GST_WRITE_UINT24_BE (map.data + 4, ident);
   /* write sort-of-length */
-  GST_WRITE_UINT16_BE (conf + 7, length);
+  GST_WRITE_UINT16_BE (map.data + 7, length);
   /* copy remainder */
-  memcpy (conf + 9, configuration, size);
-  gst_buffer_unmap (confbuf, conf, -1);
+  memcpy (map.data + 9, configuration, size);
+  gst_buffer_unmap (confbuf, &map);
 
   return gst_rtp_theora_depay_parse_configuration (rtptheoradepay, confbuf);
 }
@@ -547,12 +547,8 @@ gst_rtp_theora_depay_process (GstRTPBaseDepayload * depayload, GstBuffer * buf)
               (payload - to_free) + length, payload - to_free, length));
       to_free = NULL;
     } else {
-      guint8 *odata;
-
       outbuf = gst_buffer_new_and_alloc (length);
-      odata = gst_buffer_map (outbuf, NULL, NULL, GST_MAP_WRITE);
-      memcpy (odata, payload, length);
-      gst_buffer_unmap (outbuf, odata, -1);
+      gst_buffer_fill (outbuf, 0, payload, length);
     }
 
     if (payload_len > 0 && (payload[0] & 0xC0) == 0x0)

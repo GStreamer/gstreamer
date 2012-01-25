@@ -167,8 +167,6 @@ gst_rtp_dv_depay_setcaps (GstRTPBaseDepayload * depayload, GstCaps * caps)
   gint clock_rate;
   gboolean systemstream, ret;
   const gchar *encode, *media;
-  guint8 *data;
-  gsize size;
 
   rtpdvdepay = GST_RTP_DV_DEPAY (depayload);
 
@@ -213,9 +211,7 @@ gst_rtp_dv_depay_setcaps (GstRTPBaseDepayload * depayload, GstCaps * caps)
   /* Initialize the new accumulator frame.
    * If the previous frame exists, copy that into the accumulator frame.
    * This way, missing packets in the stream won't show up badly. */
-  data = gst_buffer_map (rtpdvdepay->acc, &size, NULL, GST_MAP_WRITE);
-  memset (data, 0, rtpdvdepay->frame_size);
-  gst_buffer_unmap (rtpdvdepay->acc, data, size);
+  gst_buffer_memset (rtpdvdepay->acc, 0, 0, rtpdvdepay->frame_size);
 
   srccaps = gst_caps_new_simple ("video/x-dv",
       "systemstream", G_TYPE_BOOLEAN, systemstream,

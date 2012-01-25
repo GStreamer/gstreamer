@@ -119,8 +119,8 @@ gst_rtp_celt_depay_setcaps (GstRTPBaseDepayload * depayload, GstCaps * caps)
   GstRtpCELTDepay *rtpceltdepay;
   gint clock_rate, nb_channels = 0, frame_size = 0;
   GstBuffer *buf;
-  guint8 *data, *ptr;
-  gsize size;
+  GstMapInfo map;
+  guint8 *ptr;
   const gchar *params;
   GstCaps *srccaps;
   gboolean res;
@@ -149,7 +149,8 @@ gst_rtp_celt_depay_setcaps (GstRTPBaseDepayload * depayload, GstCaps * caps)
 
   /* construct minimal header and comment packet for the decoder */
   buf = gst_buffer_new_and_alloc (60);
-  ptr = data = gst_buffer_map (buf, &size, NULL, GST_MAP_WRITE);
+  gst_buffer_map (buf, &map, GST_MAP_WRITE);
+  ptr = map.data;
   memcpy (ptr, "CELT    ", 8);
   ptr += 8;
   memcpy (ptr, "1.1.12", 7);
@@ -169,7 +170,7 @@ gst_rtp_celt_depay_setcaps (GstRTPBaseDepayload * depayload, GstCaps * caps)
   GST_WRITE_UINT32_LE (ptr, -1);        /* bytes_per_packet */
   ptr += 4;
   GST_WRITE_UINT32_LE (ptr, 0); /* extra headers */
-  gst_buffer_unmap (buf, data, size);
+  gst_buffer_unmap (buf, &map);
 
   srccaps = gst_caps_new_empty_simple ("audio/x-celt");
   res = gst_pad_set_caps (depayload->srcpad, srccaps);

@@ -195,8 +195,7 @@ static GstFlowReturn
 gst_rtp_g723_pay_handle_buffer (GstRTPBasePayload * payload, GstBuffer * buf)
 {
   GstFlowReturn ret = GST_FLOW_OK;
-  guint8 *data;
-  gsize size;
+  GstMapInfo map;
   guint8 HDR;
   GstRTPG723Pay *pay;
   GstClockTime packet_dur, timestamp;
@@ -204,7 +203,7 @@ gst_rtp_g723_pay_handle_buffer (GstRTPBasePayload * payload, GstBuffer * buf)
 
   pay = GST_RTP_G723_PAY (payload);
 
-  data = gst_buffer_map (buf, &size, NULL, GST_MAP_READ);
+  gst_buffer_map (buf, &map, GST_MAP_READ);
   timestamp = GST_BUFFER_TIMESTAMP (buf);
 
   if (GST_BUFFER_IS_DISCONT (buf)) {
@@ -216,16 +215,16 @@ gst_rtp_g723_pay_handle_buffer (GstRTPBasePayload * payload, GstBuffer * buf)
   }
 
   /* should be one of these sizes */
-  if (size != 4 && size != 20 && size != 24)
+  if (map.size != 4 && map.size != 20 && map.size != 24)
     goto invalid_size;
 
   /* check size by looking at the header bits */
-  HDR = data[0] & 0x3;
-  if (size_tab[HDR] != size)
+  HDR = map.data[0] & 0x3;
+  if (size_tab[HDR] != map.size)
     goto wrong_size;
 
   /* calculate packet size and duration */
-  payload_len = gst_adapter_available (pay->adapter) + size;
+  payload_len = gst_adapter_available (pay->adapter) + map.size;
   packet_dur = pay->duration + G723_FRAME_DURATION;
   packet_len = gst_rtp_buffer_calc_packet_len (payload_len, 0, 0);
 
@@ -242,7 +241,7 @@ gst_rtp_g723_pay_handle_buffer (GstRTPBasePayload * payload, GstBuffer * buf)
     else
       pay->timestamp = 0;
   }
-  gst_buffer_unmap (buf, data, size);
+  gst_buffer_unmap (buf, &map);
 
   /* add packet to the queue */
   gst_adapter_push (pay->adapter, buf);
@@ -260,8 +259,8 @@ invalid_size:
   {
     GST_ELEMENT_WARNING (pay, STREAM, WRONG_TYPE,
         ("Invalid input buffer size"),
-        ("Input size should be 4, 20 or 24, got %" G_GSIZE_FORMAT, size));
-    gst_buffer_unmap (buf, data, size);
+        ("Input size should be 4, 20 or 24, got %" G_GSIZE_FORMAT, map.size));
+    gst_buffer_unmap (buf, &map);
     gst_buffer_unref (buf);
     return GST_FLOW_OK;
   }
@@ -270,8 +269,8 @@ wrong_size:
     GST_ELEMENT_WARNING (pay, STREAM, WRONG_TYPE,
         ("Wrong input buffer size"),
         ("Expected input buffer size %u but got %" G_GSIZE_FORMAT,
-            size_tab[HDR], size));
-    gst_buffer_unmap (buf, data, size);
+            size_tab[HDR], map.size));
+    gst_buffer_unmap (buf, &map);
     gst_buffer_unref (buf);
     return GST_FLOW_OK;
   }

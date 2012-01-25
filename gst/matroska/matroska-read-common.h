@@ -84,6 +84,7 @@ typedef struct _GstMatroskaReadCommon {
   /* pull mode caching */
   GstBuffer *cached_buffer;
   guint8 *cached_data;
+  GstMapInfo cached_map;
 
   /* push and pull mode */
   guint64                  offset;

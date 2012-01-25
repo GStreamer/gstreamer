@@ -857,14 +857,17 @@ gst_spectrum_transform_ip (GstBaseTransform * trans, GstBuffer * buffer)
   guint nfft = 2 * bands - 2;
   guint input_pos;
   gfloat *input;
-  const guint8 *data, *mdata;
+  GstMapInfo map;
+  const guint8 *data;
   gsize size;
   guint fft_todo, msg_todo, block_size;
   gboolean have_full_interval;
   GstSpectrumChannel *cd;
   GstSpectrumInputData input_data;
 
-  data = mdata = gst_buffer_map (buffer, &size, NULL, GST_MAP_READ);
+  gst_buffer_map (buffer, &map, GST_MAP_READ);
+  data = map.data;
+  size = map.size;
 
   GST_LOG_OBJECT (spectrum, "input size: %" G_GSIZE_FORMAT " bytes", size);
 
@@ -993,7 +996,7 @@ gst_spectrum_transform_ip (GstBaseTransform * trans, GstBuffer * buffer)
 
   spectrum->input_pos = input_pos;
 
-  gst_buffer_unmap (buffer, (guint8 *) mdata, -1);
+  gst_buffer_unmap (buffer, &map);
 
   g_assert (size == 0);
 

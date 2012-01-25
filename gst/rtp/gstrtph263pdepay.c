@@ -307,7 +307,7 @@ gst_rtp_h263p_depay_process (GstRTPBaseDepayload * depayload, GstBuffer * buf)
     /* frame is completed: append to previous, push it out */
     guint len, padlen;
     guint avail;
-    guint8 *data;
+    GstMapInfo map;
 
     GST_LOG_OBJECT (depayload, "Frame complete");
 
@@ -317,16 +317,16 @@ gst_rtp_h263p_depay_process (GstRTPBaseDepayload * depayload, GstBuffer * buf)
 
     outbuf = gst_buffer_new_and_alloc (len + padlen);
 
-    data = gst_buffer_map (outbuf, NULL, NULL, GST_MAP_WRITE);
-    memset (data + len, 0, padlen);
+    gst_buffer_map (outbuf, &map, GST_MAP_WRITE);
+    memset (map.data + len, 0, padlen);
 
     /* prepend previous data */
     if (avail > 0) {
-      gst_adapter_copy (rtph263pdepay->adapter, data, 0, avail);
+      gst_adapter_copy (rtph263pdepay->adapter, map.data, 0, avail);
       gst_adapter_flush (rtph263pdepay->adapter, avail);
     }
-    memcpy (data + avail, payload, payload_len);
-    gst_buffer_unmap (outbuf, data, len);
+    memcpy (map.data + avail, payload, payload_len);
+    gst_buffer_unmap (outbuf, &map);
     gst_rtp_buffer_unmap (&rtp);
 
     return outbuf;

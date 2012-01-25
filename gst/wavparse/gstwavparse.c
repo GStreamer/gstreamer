@@ -1283,16 +1283,16 @@ gst_wavparse_stream_headers (GstWavParse * wav)
       if (!gst_wavparse_peek_chunk_info (wav, &tag, &size))
         goto exit;
     } else {
-      guint8 *data;
+      GstMapInfo map;
 
       if ((res =
               gst_pad_pull_range (wav->sinkpad, wav->offset, 8,
                   &buf)) != GST_FLOW_OK)
         goto header_read_error;
-      data = gst_buffer_map (buf, NULL, NULL, -1);
-      tag = GST_READ_UINT32_LE (data);
-      size = GST_READ_UINT32_LE (data + 4);
-      gst_buffer_unmap (buf, data, -1);
+      gst_buffer_map (buf, &map, GST_MAP_READ);
+      tag = GST_READ_UINT32_LE (map.data);
+      size = GST_READ_UINT32_LE (map.data + 4);
+      gst_buffer_unmap (buf, &map);
     }
 
     GST_INFO_OBJECT (wav,
@@ -1409,15 +1409,16 @@ gst_wavparse_stream_headers (GstWavParse * wav)
           tempo = acid->tempo;
           gst_adapter_unmap (wav->adapter);
         } else {
+          GstMapInfo map;
           gst_buffer_unref (buf);
           if ((res =
                   gst_pad_pull_range (wav->sinkpad, wav->offset + 8,
                       size, &buf)) != GST_FLOW_OK)
             goto header_read_error;
-          acid = (const gst_riff_acid *) gst_buffer_map (buf, NULL, NULL,
-              GST_MAP_READ);
+          gst_buffer_map (buf, &map, GST_MAP_READ);
+          acid = (const gst_riff_acid *) map.data;
           tempo = acid->tempo;
-          gst_buffer_unmap (buf, (guint8 *) acid, -1);
+          gst_buffer_unmap (buf, &map);
         }
         /* send data as tags */
         if (!wav->tags)

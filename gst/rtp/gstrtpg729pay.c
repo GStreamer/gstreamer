@@ -330,11 +330,11 @@ gst_rtp_g729_pay_handle_buffer (GstRTPBasePayload * payload, GstBuffer * buf)
     rtpg729pay->next_ts = timestamp;
 
   if (available == 0 && size >= min_payload_len && size <= max_payload_len) {
-    guint8 *data;
+    GstMapInfo map;
 
-    data = gst_buffer_map (buf, &size, NULL, GST_MAP_READ);
-    ret = gst_rtp_g729_pay_push (rtpg729pay, data, size);
-    gst_buffer_unmap (buf, data, size);
+    gst_buffer_map (buf, &map, GST_MAP_READ);
+    ret = gst_rtp_g729_pay_push (rtpg729pay, map.data, map.size);
+    gst_buffer_unmap (buf, &map);
     gst_buffer_unref (buf);
     return ret;
   }

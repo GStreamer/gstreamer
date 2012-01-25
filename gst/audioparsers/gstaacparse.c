@@ -257,20 +257,19 @@ gst_aac_parse_sink_setcaps (GstBaseParse * parse, GstCaps * caps)
     GstBuffer *buf = gst_value_get_buffer (value);
 
     if (buf) {
-      guint8 *data;
-      gsize size;
+      GstMapInfo map;
       guint sr_idx;
 
-      data = gst_buffer_map (buf, &size, NULL, GST_MAP_READ);
+      gst_buffer_map (buf, &map, GST_MAP_READ);
 
-      sr_idx = ((data[0] & 0x07) << 1) | ((data[1] & 0x80) >> 7);
-      aacparse->object_type = (data[0] & 0xf8) >> 3;
+      sr_idx = ((map.data[0] & 0x07) << 1) | ((map.data[1] & 0x80) >> 7);
+      aacparse->object_type = (map.data[0] & 0xf8) >> 3;
       aacparse->sample_rate = gst_aac_parse_get_sample_rate_from_index (sr_idx);
-      aacparse->channels = (data[1] & 0x78) >> 3;
+      aacparse->channels = (map.data[1] & 0x78) >> 3;
       aacparse->header_type = DSPAAC_HEADER_NONE;
       aacparse->mpegversion = 4;
-      aacparse->frame_samples = (data[1] & 4) ? 960 : 1024;
-      gst_buffer_unmap (buf, data, size);
+      aacparse->frame_samples = (map.data[1] & 4) ? 960 : 1024;
+      gst_buffer_unmap (buf, &map);
 
       GST_DEBUG ("codec_data: object_type=%d, sample_rate=%d, channels=%d, "
           "samples=%d", aacparse->object_type, aacparse->sample_rate,
@@ -913,8 +912,7 @@ static gboolean
 gst_aac_parse_check_valid_frame (GstBaseParse * parse,
     GstBaseParseFrame * frame, guint * framesize, gint * skipsize)
 {
-  guint8 *data;
-  gsize size;
+  GstMapInfo map;
   GstAacParse *aacparse;
   gboolean ret = FALSE;
   gboolean lost_sync;
@@ -923,25 +921,25 @@ gst_aac_parse_check_valid_frame (GstBaseParse * parse,
   aacparse = GST_AAC_PARSE (parse);
   buffer = frame->buffer;
 
-  data = gst_buffer_map (buffer, &size, NULL, GST_MAP_READ);
+  gst_buffer_map (buffer, &map, GST_MAP_READ);
 
   lost_sync = GST_BASE_PARSE_LOST_SYNC (parse);
 
   if (aacparse->header_type == DSPAAC_HEADER_ADIF ||
       aacparse->header_type == DSPAAC_HEADER_NONE) {
     /* There is nothing to parse */
-    *framesize = size;
+    *framesize = map.size;
     ret = TRUE;
 
   } else if (aacparse->header_type == DSPAAC_HEADER_NOT_PARSED || lost_sync) {
 
-    ret = gst_aac_parse_detect_stream (aacparse, data, size,
+    ret = gst_aac_parse_detect_stream (aacparse, map.data, map.size,
         GST_BASE_PARSE_DRAINING (parse), framesize, skipsize);
 
   } else if (aacparse->header_type == DSPAAC_HEADER_ADTS) {
     guint needed_data = 1024;
 
-    ret = gst_aac_parse_check_adts_frame (aacparse, data, size,
+    ret = gst_aac_parse_check_adts_frame (aacparse, map.data, map.size,
         GST_BASE_PARSE_DRAINING (parse), framesize, &needed_data);
 
     if (!ret) {
@@ -953,8 +951,8 @@ gst_aac_parse_check_valid_frame (GstBaseParse * parse,
   } else if (aacparse->header_type == DSPAAC_HEADER_LOAS) {
     guint needed_data = 1024;
 
-    ret = gst_aac_parse_check_loas_frame (aacparse, data,
-        size, GST_BASE_PARSE_DRAINING (parse), framesize, &needed_data);
+    ret = gst_aac_parse_check_loas_frame (aacparse, map.data,
+        map.size, GST_BASE_PARSE_DRAINING (parse), framesize, &needed_data);
 
     if (!ret) {
       GST_DEBUG ("buffer didn't contain valid frame");
@@ -967,7 +965,7 @@ gst_aac_parse_check_valid_frame (GstBaseParse * parse,
     gst_base_parse_set_min_frame_size (GST_BASE_PARSE (aacparse),
         ADTS_MAX_SIZE);
   }
-  gst_buffer_unmap (buffer, data, size);
+  gst_buffer_unmap (buffer, &map);
 
   return ret;
 }
@@ -1003,8 +1001,7 @@ gst_aac_parse_parse_frame (GstBaseParse * parse, GstBaseParseFrame * frame)
   GstBuffer *buffer;
   GstFlowReturn ret = GST_FLOW_OK;
   gint rate, channels;
-  guint8 *data;
-  gsize size;
+  GstMapInfo map;
 
   aacparse = GST_AAC_PARSE (parse);
   buffer = frame->buffer;
@@ -1013,10 +1010,10 @@ gst_aac_parse_parse_frame (GstBaseParse * parse, GstBaseParseFrame * frame)
     /* see above */
     frame->overhead = 7;
 
-    data = gst_buffer_map (buffer, &size, NULL, GST_MAP_READ);
-    gst_aac_parse_parse_adts_header (aacparse, data,
+    gst_buffer_map (buffer, &map, GST_MAP_READ);
+    gst_aac_parse_parse_adts_header (aacparse, map.data,
         &rate, &channels, NULL, NULL);
-    gst_buffer_unmap (buffer, data, size);
+    gst_buffer_unmap (buffer, &map);
 
     GST_LOG_OBJECT (aacparse, "rate: %d, chans: %d", rate, channels);
 
@@ -1043,9 +1040,9 @@ gst_aac_parse_parse_frame (GstBaseParse * parse, GstBaseParseFrame * frame)
     /* see above */
     frame->overhead = 3;
 
-    data = gst_buffer_map (buffer, &size, NULL, GST_MAP_READ);
-    if (!gst_aac_parse_read_loas_config (aacparse, data, size, &rate, &channels,
-            NULL)) {
+    gst_buffer_map (buffer, &map, GST_MAP_READ);
+    if (!gst_aac_parse_read_loas_config (aacparse, map.data, map.size, &rate,
+            &channels, NULL)) {
       GST_WARNING_OBJECT (aacparse, "Error reading LOAS config");
     } else if (G_UNLIKELY (rate != aacparse->sample_rate
             || channels != aacparse->channels)) {
@@ -1055,7 +1052,7 @@ gst_aac_parse_parse_frame (GstBaseParse * parse, GstBaseParseFrame * frame)
       GST_INFO_OBJECT (aacparse, "New LOAS config: %d Hz, %d channels", rate,
           channels);
     }
-    gst_buffer_unmap (buffer, data, size);
+    gst_buffer_unmap (buffer, &map);
 
     /* We want to set caps both at start, and when rate/channels change.
        Since only some LOAS frames have that info, we may receive frames

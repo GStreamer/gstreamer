@@ -259,8 +259,7 @@ gst_amr_parse_check_valid_frame (GstBaseParse * parse,
     GstBaseParseFrame * frame, guint * framesize, gint * skipsize)
 {
   GstBuffer *buffer;
-  guint8 *data;
-  gsize size;
+  GstMapInfo map;
   gint fsize, mode, dsize;
   GstAmrParse *amrparse;
   gboolean ret = FALSE;
@@ -268,14 +267,14 @@ gst_amr_parse_check_valid_frame (GstBaseParse * parse,
   amrparse = GST_AMR_PARSE (parse);
   buffer = frame->buffer;
 
-  data = gst_buffer_map (buffer, &size, NULL, GST_MAP_READ);
-  dsize = size;
+  gst_buffer_map (buffer, &map, GST_MAP_READ);
+  dsize = map.size;
 
   GST_LOG ("buffer: %d bytes", dsize);
 
   if (amrparse->need_header) {
     if (dsize >= AMR_MIME_HEADER_SIZE &&
-        gst_amr_parse_parse_header (amrparse, data, skipsize)) {
+        gst_amr_parse_parse_header (amrparse, map.data, skipsize)) {
       amrparse->need_header = FALSE;
       gst_base_parse_set_frame_rate (GST_BASE_PARSE (amrparse), 50, 1, 2, 2);
     } else {
@@ -287,9 +286,9 @@ gst_amr_parse_check_valid_frame (GstBaseParse * parse,
   }
 
   /* Does this look like a possible frame header candidate? */
-  if ((data[0] & 0x83) == 0) {
+  if ((map.data[0] & 0x83) == 0) {
     /* Yep. Retrieve the frame size */
-    mode = (data[0] >> 3) & 0x0F;
+    mode = (map.data[0] >> 3) & 0x0F;
     fsize = amrparse->block_size[mode] + 1;     /* +1 for the header byte */
 
     /* We recognize this data as a valid frame when:
@@ -307,7 +306,7 @@ gst_amr_parse_check_valid_frame (GstBaseParse * parse,
         found = TRUE;
       } else if (dsize > fsize) {
         /* enough data, check for next sync */
-        if ((data[fsize] & 0x83) == 0)
+        if ((map.data[fsize] & 0x83) == 0)
           found = TRUE;
       } else if (GST_BASE_PARSE_DRAINING (parse)) {
         /* not enough, but draining, so ok */
@@ -326,7 +325,7 @@ gst_amr_parse_check_valid_frame (GstBaseParse * parse,
   GST_LOG ("sync lost");
 
 done:
-  gst_buffer_unmap (buffer, data, size);
+  gst_buffer_unmap (buffer, &map);
 
   return ret;
 }

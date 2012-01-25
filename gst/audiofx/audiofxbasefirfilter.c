@@ -626,8 +626,8 @@ gst_audio_fx_base_fir_filter_push_residue (GstAudioFXBaseFIRFilter * self)
   gint channels = GST_AUDIO_FILTER_CHANNELS (self);
   gint bps = GST_AUDIO_FILTER_BPS (self);
   gint outsize, outsamples;
-  guint8 *in, *out, *data;
-  gsize size;
+  GstMapInfo map;
+  guint8 *in, *out;
 
   if (channels == 0 || rate == 0 || self->nsamples_in == 0) {
     self->buffer_fill = 0;
@@ -668,16 +668,16 @@ gst_audio_fx_base_fir_filter_push_residue (GstAudioFXBaseFIRFilter * self)
 
     /* Convolve the residue with zeros to get the actual remaining data */
     in = g_new0 (guint8, outsize);
-    data = gst_buffer_map (outbuf, &size, NULL, GST_MAP_READWRITE);
-    self->nsamples_out += self->process (self, in, data, outsamples);
-    gst_buffer_unmap (outbuf, data, size);
+    gst_buffer_map (outbuf, &map, GST_MAP_READWRITE);
+    self->nsamples_out += self->process (self, in, map.data, outsamples);
+    gst_buffer_unmap (outbuf, &map);
 
     g_free (in);
   } else {
     guint gensamples = 0;
 
     outbuf = gst_buffer_new_and_alloc (outsize);
-    data = gst_buffer_map (outbuf, &size, NULL, GST_MAP_READWRITE);
+    gst_buffer_map (outbuf, &map, GST_MAP_READWRITE);
 
     while (gensamples < outsamples) {
       guint step_insamples = self->block_length - self->buffer_fill;
@@ -688,7 +688,7 @@ gst_audio_fx_base_fir_filter_push_residue (GstAudioFXBaseFIRFilter * self)
       step_gensamples = self->process (self, zeroes, out, step_insamples);
       g_free (zeroes);
 
-      memcpy (data + gensamples * bps, out, MIN (step_gensamples,
+      memcpy (map.data + gensamples * bps, out, MIN (step_gensamples,
               outsamples - gensamples) * bps);
       gensamples += MIN (step_gensamples, outsamples - gensamples);
 
@@ -696,7 +696,7 @@ gst_audio_fx_base_fir_filter_push_residue (GstAudioFXBaseFIRFilter * self)
     }
     self->nsamples_out += gensamples;
 
-    gst_buffer_unmap (outbuf, data, size);
+    gst_buffer_unmap (outbuf, &map);
   }
 
   /* Set timestamp, offset, etc from the values we
@@ -802,8 +802,7 @@ gst_audio_fx_base_fir_filter_transform (GstBaseTransform * base,
   gint channels = GST_AUDIO_FILTER_CHANNELS (self);
   gint rate = GST_AUDIO_FILTER_RATE (self);
   gint bps = GST_AUDIO_FILTER_BPS (self);
-  guint8 *indata, *outdata;
-  gsize insize, outsize;
+  GstMapInfo inmap, outmap;
   guint input_samples;
   guint output_samples;
   guint generated_samples;
@@ -858,18 +857,19 @@ gst_audio_fx_base_fir_filter_transform (GstBaseTransform * base,
     self->start_off = GST_BUFFER_OFFSET (inbuf);
   }
 
-  indata = gst_buffer_map (inbuf, &insize, NULL, GST_MAP_READ);
-  outdata = gst_buffer_map (outbuf, &outsize, NULL, GST_MAP_WRITE);
+  gst_buffer_map (inbuf, &inmap, GST_MAP_READ);
+  gst_buffer_map (outbuf, &outmap, GST_MAP_WRITE);
 
-  input_samples = (insize / bps) / channels;
-  output_samples = (outsize / bps) / channels;
+  input_samples = (inmap.size / bps) / channels;
+  output_samples = (outmap.size / bps) / channels;
 
   self->nsamples_in += input_samples;
 
-  generated_samples = self->process (self, indata, outdata, input_samples);
+  generated_samples =
+      self->process (self, inmap.data, outmap.data, input_samples);
 
-  gst_buffer_unmap (inbuf, indata, insize);
-  gst_buffer_unmap (outbuf, outdata, outsize);
+  gst_buffer_unmap (inbuf, &inmap);
+  gst_buffer_unmap (outbuf, &outmap);
 
   g_assert (generated_samples <= output_samples);
   self->nsamples_out += generated_samples;

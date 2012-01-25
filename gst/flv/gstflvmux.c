@@ -678,6 +678,7 @@ gst_flv_mux_create_metadata (GstFlvMux * mux, gboolean full)
 {
   const GstTagList *tags;
   GstBuffer *script_tag, *tmp;
+  GstMapInfo map;
   guint8 *data;
   gint i, n_tags, tags_written = 0;
 
@@ -800,13 +801,15 @@ tags:
 
   if (!mux->streamable && mux->duration != GST_CLOCK_TIME_NONE) {
     gdouble d;
+    GstMapInfo map;
+
     d = gst_guint64_to_gdouble (mux->duration);
     d /= (gdouble) GST_SECOND;
 
     GST_DEBUG_OBJECT (mux, "determined the duration to be %f", d);
-    data = gst_buffer_map (script_tag, NULL, NULL, GST_MAP_WRITE);
-    GST_WRITE_DOUBLE_BE (data + 29 + 2 + 8 + 1, d);
-    gst_buffer_unmap (script_tag, data, -1);
+    gst_buffer_map (script_tag, &map, GST_MAP_WRITE);
+    GST_WRITE_DOUBLE_BE (map.data + 29 + 2 + 8 + 1, d);
+    gst_buffer_unmap (script_tag, &map);
   }
 
   if (mux->have_video) {
@@ -981,13 +984,13 @@ end:
   GST_WRITE_UINT32_BE (data, gst_buffer_get_size (script_tag));
   script_tag = gst_buffer_join (script_tag, tmp);
 
-  data = gst_buffer_map (script_tag, NULL, NULL, GST_MAP_WRITE);
-  data[1] = ((gst_buffer_get_size (script_tag) - 11 - 4) >> 16) & 0xff;
-  data[2] = ((gst_buffer_get_size (script_tag) - 11 - 4) >> 8) & 0xff;
-  data[3] = ((gst_buffer_get_size (script_tag) - 11 - 4) >> 0) & 0xff;
+  gst_buffer_map (script_tag, &map, GST_MAP_WRITE);
+  map.data[1] = ((gst_buffer_get_size (script_tag) - 11 - 4) >> 16) & 0xff;
+  map.data[2] = ((gst_buffer_get_size (script_tag) - 11 - 4) >> 8) & 0xff;
+  map.data[3] = ((gst_buffer_get_size (script_tag) - 11 - 4) >> 0) & 0xff;
 
-  GST_WRITE_UINT32_BE (data + 11 + 13 + 1, tags_written);
-  gst_buffer_unmap (script_tag, data, -1);
+  GST_WRITE_UINT32_BE (map.data + 11 + 13 + 1, tags_written);
+  gst_buffer_unmap (script_tag, &map);
 
 exit:
   return script_tag;
@@ -998,15 +1001,17 @@ gst_flv_mux_buffer_to_tag_internal (GstFlvMux * mux, GstBuffer * buffer,
     GstFlvPad * cpad, gboolean is_codec_data)
 {
   GstBuffer *tag;
-  guint8 *data;
+  GstMapInfo map;
   guint size;
   guint32 timestamp =
       (GST_BUFFER_TIMESTAMP_IS_VALID (buffer)) ? GST_BUFFER_TIMESTAMP (buffer) /
       GST_MSECOND : cpad->last_timestamp / GST_MSECOND;
-  guint8 *bdata;
+  guint8 *data, *bdata;
   gsize bsize;
 
-  bdata = gst_buffer_map (buffer, &bsize, NULL, GST_MAP_READ);
+  gst_buffer_map (buffer, &map, GST_MAP_READ);
+  bdata = map.data;
+  bsize = map.size;
 
   size = 11;
   if (cpad->video) {
@@ -1076,7 +1081,7 @@ gst_flv_mux_buffer_to_tag_internal (GstFlvMux * mux, GstBuffer * buffer,
     }
   }
 
-  gst_buffer_unmap (buffer, bdata, -1);
+  gst_buffer_unmap (buffer, &map);
 
   GST_WRITE_UINT32_BE (data + size - 4, size - 4);
 

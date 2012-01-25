@@ -138,7 +138,7 @@ gst_asteriskh263_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
     guint32 samples;
     guint16 asterisk_len;
     GstRTPBuffer rtp = { NULL };
-    guint8 *data;
+    GstMapInfo map;
 
     gst_rtp_buffer_map (buf, GST_MAP_READ, &rtp);
 
@@ -162,14 +162,14 @@ gst_asteriskh263_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
     samples = timestamp - asteriskh263->lastts;
     asteriskh263->lastts = timestamp;
 
-    data = gst_buffer_map (outbuf, NULL, NULL, GST_MAP_WRITE);
-    GST_ASTERISKH263_HEADER_TIMESTAMP (data) = g_htonl (samples);
-    GST_ASTERISKH263_HEADER_LENGTH (data) = g_htons (asterisk_len);
+    gst_buffer_map (outbuf, &map, GST_MAP_WRITE);
+    GST_ASTERISKH263_HEADER_TIMESTAMP (map.data) = g_htonl (samples);
+    GST_ASTERISKH263_HEADER_LENGTH (map.data) = g_htons (asterisk_len);
 
     /* copy the data into place */
-    memcpy (data + GST_ASTERISKH263_HEADER_LEN, payload, payload_len);
+    memcpy (map.data + GST_ASTERISKH263_HEADER_LEN, payload, payload_len);
 
-    gst_buffer_unmap (outbuf, data, -1);
+    gst_buffer_unmap (outbuf, &map);
 
     GST_BUFFER_TIMESTAMP (outbuf) = timestamp;
     if (!gst_pad_has_current_caps (asteriskh263->srcpad)) {

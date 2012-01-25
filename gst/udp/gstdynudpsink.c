@@ -167,8 +167,7 @@ gst_dynudpsink_render (GstBaseSink * bsink, GstBuffer * buffer)
 {
   GstDynUDPSink *sink;
   gssize ret;
-  gsize size;
-  guint8 *data;
+  GstMapInfo map;
   GstNetAddressMeta *meta;
   GSocketAddress *addr;
   GError *err = NULL;
@@ -190,9 +189,9 @@ gst_dynudpsink_render (GstBaseSink * bsink, GstBuffer * buffer)
   if (sink->family != family && family != G_SOCKET_FAMILY_IPV4)
     goto invalid_family;
 
-  data = gst_buffer_map (buffer, &size, NULL, GST_MAP_READ);
+  gst_buffer_map (buffer, &map, GST_MAP_READ);
 
-  GST_DEBUG ("about to send %" G_GSIZE_FORMAT " bytes", size);
+  GST_DEBUG ("about to send %" G_GSIZE_FORMAT " bytes", map.size);
 
 #ifndef GST_DISABLE_GST_DEBUG
   {
@@ -201,16 +200,17 @@ gst_dynudpsink_render (GstBaseSink * bsink, GstBuffer * buffer)
     host =
         g_inet_address_to_string (g_inet_socket_address_get_address
         (G_INET_SOCKET_ADDRESS (addr)));
-    GST_DEBUG ("sending %" G_GSIZE_FORMAT " bytes to client %s port %d", size,
-        host, g_inet_socket_address_get_port (G_INET_SOCKET_ADDRESS (addr)));
+    GST_DEBUG ("sending %" G_GSIZE_FORMAT " bytes to client %s port %d",
+        map.size, host,
+        g_inet_socket_address_get_port (G_INET_SOCKET_ADDRESS (addr)));
     g_free (host);
   }
 #endif
 
   ret =
-      g_socket_send_to (sink->used_socket, addr, (gchar *) data, size,
+      g_socket_send_to (sink->used_socket, addr, (gchar *) map.data, map.size,
       sink->cancellable, &err);
-  gst_buffer_unmap (buffer, data, size);
+  gst_buffer_unmap (buffer, &map);
 
   if (ret < 0)
     goto send_error;

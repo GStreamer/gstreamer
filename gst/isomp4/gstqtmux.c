@@ -524,7 +524,7 @@ gst_qt_mux_prepare_jpc_buffer (GstQTPad * qtpad, GstBuffer * buf,
     GstQTMux * qtmux)
 {
   GstBuffer *newbuf;
-  guint8 *data;
+  GstMapInfo map;
   gsize size;
 
   GST_LOG_OBJECT (qtmux, "Preparing jpc buffer");
@@ -536,11 +536,11 @@ gst_qt_mux_prepare_jpc_buffer (GstQTPad * qtpad, GstBuffer * buf,
   newbuf = gst_buffer_new_and_alloc (size + 8);
   gst_buffer_copy_into (newbuf, buf, GST_BUFFER_COPY_ALL, 8, size);
 
-  data = gst_buffer_map (newbuf, &size, NULL, GST_MAP_WRITE);
-  GST_WRITE_UINT32_BE (data, size);
-  GST_WRITE_UINT32_LE (data + 4, FOURCC_jp2c);
+  gst_buffer_map (newbuf, &map, GST_MAP_WRITE);
+  GST_WRITE_UINT32_BE (map.data, map.size);
+  GST_WRITE_UINT32_LE (map.data + 4, FOURCC_jp2c);
 
-  gst_buffer_unmap (buf, data, size);
+  gst_buffer_unmap (buf, &map);
   gst_buffer_unref (buf);
 
   return newbuf;
@@ -651,8 +651,7 @@ gst_qt_mux_add_mp4_cover (GstQTMux * qtmux, const GstTagList * list,
   GstCaps *caps;
   GstStructure *structure;
   gint flags = 0;
-  guint8 *data;
-  gsize size;
+  GstMapInfo map;
 
   g_return_if_fail (gst_tag_get_type (tag) == GST_TYPE_BUFFER);
 
@@ -685,11 +684,11 @@ gst_qt_mux_add_mp4_cover (GstQTMux * qtmux, const GstTagList * list,
     goto done;
   }
 
-  data = gst_buffer_map (buf, &size, NULL, GST_MAP_READ);
+  gst_buffer_map (buf, &map, GST_MAP_READ);
   GST_DEBUG_OBJECT (qtmux, "Adding tag %" GST_FOURCC_FORMAT
-      " -> image size %" G_GSIZE_FORMAT "", GST_FOURCC_ARGS (fourcc), size);
-  atom_moov_add_tag (qtmux->moov, fourcc, flags, data, size);
-  gst_buffer_unmap (buf, data, size);
+      " -> image size %" G_GSIZE_FORMAT "", GST_FOURCC_ARGS (fourcc), map.size);
+  atom_moov_add_tag (qtmux->moov, fourcc, flags, map.data, map.size);
+  gst_buffer_unmap (buf, &map);
 done:
   g_value_unset (&value);
 }
@@ -1122,13 +1121,12 @@ gst_qt_mux_add_metadata_tags (GstQTMux * qtmux, const GstTagList * list)
       if (buf && (caps = NULL /*gst_buffer_get_caps (buf) */ )) {
         GstStructure *s;
         const gchar *style = NULL;
-        guint8 *data;
-        gsize size;
+        GstMapInfo map;
 
-        data = gst_buffer_map (buf, &size, NULL, GST_MAP_READ);
+        gst_buffer_map (buf, &map, GST_MAP_READ);
         GST_DEBUG_OBJECT (qtmux,
             "Found private tag %d/%d; size %" G_GSIZE_FORMAT ", caps %"
-            GST_PTR_FORMAT, i, num_tags, size, caps);
+            GST_PTR_FORMAT, i, num_tags, map.size, caps);
         s = gst_caps_get_structure (caps, 0);
         if (s && (style = gst_structure_get_string (s, "style"))) {
           /* try to prevent some style tag ending up into another variant
@@ -1138,10 +1136,10 @@ gst_qt_mux_add_metadata_tags (GstQTMux * qtmux, const GstTagList * list)
               (strcmp (style, "iso") == 0 &&
                   qtmux_klass->format == GST_QT_MUX_FORMAT_3GP)) {
             GST_DEBUG_OBJECT (qtmux, "Adding private tag");
-            atom_moov_add_blob_tag (qtmux->moov, data, size);
+            atom_moov_add_blob_tag (qtmux->moov, map.data, map.size);
           }
         }
-        gst_buffer_unmap (buf, data, size);
+        gst_buffer_unmap (buf, &map);
         gst_caps_unref (caps);
       }
     }
@@ -1207,13 +1205,13 @@ gst_qt_mux_send_buffer (GstQTMux * qtmux, GstBuffer * buf, guint64 * offset,
   GST_LOG_OBJECT (qtmux, "sending buffer size %" G_GSIZE_FORMAT, size);
 
   if (mind_fast && qtmux->fast_start_file) {
+    GstMapInfo map;
     gint ret;
-    guint8 *data;
 
     GST_LOG_OBJECT (qtmux, "to temporary file");
-    data = gst_buffer_map (buf, &size, NULL, GST_MAP_READ);
-    ret = fwrite (data, sizeof (guint8), size, qtmux->fast_start_file);
-    gst_buffer_unmap (buf, data, size);
+    gst_buffer_map (buf, &map, GST_MAP_READ);
+    ret = fwrite (map.data, sizeof (guint8), map.size, qtmux->fast_start_file);
+    gst_buffer_unmap (buf, &map);
     gst_buffer_unref (buf);
     if (ret != size)
       goto write_error;
@@ -1272,18 +1270,19 @@ gst_qt_mux_send_buffered_data (GstQTMux * qtmux, guint64 * offset)
   GST_DEBUG_OBJECT (qtmux, "Sending buffered data");
   while (ret == GST_FLOW_OK) {
     const int bufsize = 4096;
-    guint8 *data;
+    GstMapInfo map;
     gsize size;
 
     buf = gst_buffer_new_and_alloc (bufsize);
-    data = gst_buffer_map (buf, &size, NULL, GST_MAP_WRITE);
-    size = fread (data, sizeof (guint8), bufsize, qtmux->fast_start_file);
+    gst_buffer_map (buf, &map, GST_MAP_WRITE);
+    size = fread (map.data, sizeof (guint8), bufsize, qtmux->fast_start_file);
     if (size == 0) {
-      gst_buffer_unmap (buf, data, -1);
+      gst_buffer_unmap (buf, &map);
       break;
     }
-    gst_buffer_unmap (buf, data, size);
-    GST_LOG_OBJECT (qtmux, "Pushing buffered buffer of size %d", (gint) size);
+    GST_LOG_OBJECT (qtmux, "Pushing buffered buffer of size %d",
+        (gint) map.size);
+    gst_buffer_unmap (buf, &map);
     ret = gst_qt_mux_send_buffer (qtmux, buf, offset, FALSE);
     buf = NULL;
   }
@@ -1383,8 +1382,7 @@ gst_qt_mux_update_mdat_size (GstQTMux * qtmux, guint64 mdat_pos,
   GstBuffer *buf;
   gboolean large_file;
   GstSegment segment;
-  guint8 *data;
-  gsize size;
+  GstMapInfo map;
 
   large_file = (mdat_size > MDAT_LARGE_FILE_LIMIT);
 
@@ -1398,17 +1396,17 @@ gst_qt_mux_update_mdat_size (GstQTMux * qtmux, guint64 mdat_pos,
 
   if (large_file) {
     buf = gst_buffer_new_and_alloc (sizeof (guint64));
-    data = gst_buffer_map (buf, &size, NULL, GST_MAP_WRITE);
-    GST_WRITE_UINT64_BE (data, mdat_size + 16);
+    gst_buffer_map (buf, &map, GST_MAP_WRITE);
+    GST_WRITE_UINT64_BE (map.data, mdat_size + 16);
   } else {
     buf = gst_buffer_new_and_alloc (16);
-    data = gst_buffer_map (buf, &size, NULL, GST_MAP_WRITE);
-    GST_WRITE_UINT32_BE (data, 8);
-    GST_WRITE_UINT32_LE (data + 4, FOURCC_free);
-    GST_WRITE_UINT32_BE (data + 8, mdat_size + 8);
-    GST_WRITE_UINT32_LE (data + 12, FOURCC_mdat);
+    gst_buffer_map (buf, &map, GST_MAP_WRITE);
+    GST_WRITE_UINT32_BE (map.data, 8);
+    GST_WRITE_UINT32_LE (map.data + 4, FOURCC_free);
+    GST_WRITE_UINT32_BE (map.data + 8, mdat_size + 8);
+    GST_WRITE_UINT32_LE (map.data + 12, FOURCC_mdat);
   }
-  gst_buffer_unmap (buf, data, size);
+  gst_buffer_unmap (buf, &map);
 
   return gst_qt_mux_send_buffer (qtmux, buf, offset, FALSE);
 }
@@ -2822,25 +2820,24 @@ gst_qt_mux_audio_sink_set_caps (GstPad * pad, GstCaps * caps)
   } else if (strcmp (mimetype, "audio/x-alac") == 0) {
     GstBuffer *codec_config;
     gint len;
-    guint8 *data;
-    gsize size;
+    GstMapInfo map;
 
     entry.fourcc = FOURCC_alac;
-    data = gst_buffer_map ((GstBuffer *) codec_data, &size, NULL, GST_MAP_READ);
+    gst_buffer_map ((GstBuffer *) codec_data, &map, GST_MAP_READ);
     /* let's check if codec data already comes with 'alac' atom prefix */
-    if (!codec_data || (len = size) < 28) {
+    if (!codec_data || (len = map.size) < 28) {
       GST_DEBUG_OBJECT (qtmux, "broken caps, codec data missing");
-      gst_buffer_unmap ((GstBuffer *) codec_data, data, size);
+      gst_buffer_unmap ((GstBuffer *) codec_data, &map);
       goto refuse_caps;
     }
-    if (GST_READ_UINT32_LE (data + 4) == FOURCC_alac) {
+    if (GST_READ_UINT32_LE (map.data + 4) == FOURCC_alac) {
       len -= 8;
       codec_config =
           gst_buffer_copy_region ((GstBuffer *) codec_data, 0, 8, len);
     } else {
       codec_config = gst_buffer_ref ((GstBuffer *) codec_data);
     }
-    gst_buffer_unmap ((GstBuffer *) codec_data, data, size);
+    gst_buffer_unmap ((GstBuffer *) codec_data, &map);
     if (len != 28) {
       /* does not look good, but perhaps some trailing unneeded stuff */
       GST_WARNING_OBJECT (qtmux, "unexpected codec-data size, possibly broken");
@@ -2850,10 +2847,10 @@ gst_qt_mux_audio_sink_set_caps (GstPad * pad, GstCaps * caps)
     else
       ext_atom = build_codec_data_extension (FOURCC_alac, codec_config);
     /* set some more info */
-    data = gst_buffer_map (codec_config, &size, NULL, GST_MAP_READ);
+    gst_buffer_map (codec_config, &map, GST_MAP_READ);
     entry.bytes_per_sample = 2;
-    entry.samples_per_packet = GST_READ_UINT32_BE (data + 4);
-    gst_buffer_unmap (codec_config, data, size);
+    entry.samples_per_packet = GST_READ_UINT32_BE (map.data + 4);
+    gst_buffer_unmap (codec_config, &map);
     gst_buffer_unref (codec_config);
   }
 

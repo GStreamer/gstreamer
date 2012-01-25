@@ -195,7 +195,6 @@ gst_rtp_quicktime_parse_sd (GstRtpXQTDepay * rtpxqtdepay, guint8 * data,
           GstBuffer *buf;
           gint size;
           GstCaps *caps;
-          guint8 *bdata;
 
           GST_DEBUG_OBJECT (rtpxqtdepay, "found avcC codec_data in sd, %u",
               chlen);
@@ -207,9 +206,7 @@ gst_rtp_quicktime_parse_sd (GstRtpXQTDepay * rtpxqtdepay, guint8 * data,
             size = len - 8;
 
           buf = gst_buffer_new_and_alloc (size);
-          bdata = gst_buffer_map (buf, NULL, NULL, GST_MAP_WRITE);
-          memcpy (bdata, data + 8, size);
-          gst_buffer_unmap (buf, bdata, -1);
+          gst_buffer_fill (buf, 0, data + 8, size);
           caps = gst_caps_new_simple ("video/x-h264",
               "codec_data", GST_TYPE_BUFFER, buf, NULL);
           gst_buffer_unref (buf);
@@ -279,8 +276,6 @@ gst_rtp_xqt_depay_process (GstRTPBaseDepayload * depayload, GstBuffer * buf)
     guint8 *payload;
     guint8 ver, pck;
     gboolean s, q, l, d;
-    guint8 *bdata;
-    gsize bsize;
 
     payload_len = gst_rtp_buffer_get_payload_len (&rtp);
     payload = gst_rtp_buffer_get_payload (&rtp);
@@ -547,9 +542,7 @@ gst_rtp_xqt_depay_process (GstRTPBaseDepayload * depayload, GstBuffer * buf)
       {
         /* multiple samples per packet. */
         outbuf = gst_buffer_new_and_alloc (payload_len);
-        bdata = gst_buffer_map (outbuf, &bsize, NULL, GST_MAP_WRITE);
-        memcpy (bdata, payload, payload_len);
-        gst_buffer_unmap (outbuf, bdata, bsize);
+        gst_buffer_fill (outbuf, 0, payload, payload_len);
 
         goto done;
       }
@@ -591,9 +584,7 @@ gst_rtp_xqt_depay_process (GstRTPBaseDepayload * depayload, GstBuffer * buf)
             slen = payload_len;
 
           outbuf = gst_buffer_new_and_alloc (slen);
-          bdata = gst_buffer_map (outbuf, &bsize, NULL, GST_MAP_WRITE);
-          memcpy (bdata, payload, slen);
-          gst_buffer_unmap (outbuf, bdata, bsize);
+          gst_buffer_fill (outbuf, 0, payload, slen);
           if (!s)
             GST_BUFFER_FLAG_SET (outbuf, GST_BUFFER_FLAG_DELTA_UNIT);
 
@@ -611,9 +602,7 @@ gst_rtp_xqt_depay_process (GstRTPBaseDepayload * depayload, GstBuffer * buf)
       {
         /* one sample per packet, use adapter to combine based on marker bit. */
         outbuf = gst_buffer_new_and_alloc (payload_len);
-        bdata = gst_buffer_map (outbuf, &bsize, NULL, GST_MAP_WRITE);
-        memcpy (bdata, payload, payload_len);
-        gst_buffer_unmap (outbuf, bdata, bsize);
+        gst_buffer_fill (outbuf, 0, payload, payload_len);
 
         gst_adapter_push (rtpxqtdepay->adapter, outbuf);
 

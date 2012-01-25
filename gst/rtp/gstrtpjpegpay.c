@@ -607,7 +607,8 @@ gst_rtp_jpeg_pay_handle_buffer (GstRTPBasePayload * basepayload,
   RtpQuantTable tables[15] = { {0, NULL}, };
   CompInfo info[3] = { {0,}, };
   guint quant_data_size;
-  guint8 *data, *bdata;
+  GstMapInfo map;
+  guint8 *data;
   gsize size;
   guint mtu;
   guint bytes_left;
@@ -621,7 +622,9 @@ gst_rtp_jpeg_pay_handle_buffer (GstRTPBasePayload * basepayload,
   pay = GST_RTP_JPEG_PAY (basepayload);
   mtu = GST_RTP_BASE_PAYLOAD_MTU (pay);
 
-  data = bdata = gst_buffer_map (buffer, &size, NULL, GST_MAP_READ);
+  gst_buffer_map (buffer, &map, GST_MAP_READ);
+  data = map.data;
+  size = map.size;
   timestamp = GST_BUFFER_TIMESTAMP (buffer);
   offset = 0;
 
@@ -835,7 +838,7 @@ gst_rtp_jpeg_pay_handle_buffer (GstRTPBasePayload * basepayload,
     ret = gst_rtp_base_payload_push_list (basepayload, list);
   }
 
-  gst_buffer_unmap (buffer, bdata, -1);
+  gst_buffer_unmap (buffer, &map);
   gst_buffer_unref (buffer);
 
   return ret;
@@ -844,28 +847,28 @@ gst_rtp_jpeg_pay_handle_buffer (GstRTPBasePayload * basepayload,
 unsupported_jpeg:
   {
     GST_ELEMENT_ERROR (pay, STREAM, FORMAT, ("Unsupported JPEG"), (NULL));
-    gst_buffer_unmap (buffer, bdata, -1);
+    gst_buffer_unmap (buffer, &map);
     gst_buffer_unref (buffer);
     return GST_FLOW_NOT_SUPPORTED;
   }
 no_dimension:
   {
     GST_ELEMENT_ERROR (pay, STREAM, FORMAT, ("No size given"), (NULL));
-    gst_buffer_unmap (buffer, bdata, -1);
+    gst_buffer_unmap (buffer, &map);
     gst_buffer_unref (buffer);
     return GST_FLOW_NOT_NEGOTIATED;
   }
 invalid_format:
   {
     /* error was posted */
-    gst_buffer_unmap (buffer, bdata, -1);
+    gst_buffer_unmap (buffer, &map);
     gst_buffer_unref (buffer);
     return GST_FLOW_ERROR;
   }
 invalid_quant:
   {
     GST_ELEMENT_ERROR (pay, STREAM, FORMAT, ("Invalid quant tables"), (NULL));
-    gst_buffer_unmap (buffer, bdata, -1);
+    gst_buffer_unmap (buffer, &map);
     gst_buffer_unref (buffer);
     return GST_FLOW_ERROR;
   }
