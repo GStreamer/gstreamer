@@ -256,7 +256,7 @@ _is_video_pad (GstPad * pad, gboolean * hw_accelerated)
   }
 
   name = gst_structure_get_name (gst_caps_get_structure (caps, 0));
-  if (g_str_has_prefix (name, "video/x-raw-")) {
+  if (!strcmp (name, "video/x-raw")) {
     ret = TRUE;
     if (hw_accelerated)
       *hw_accelerated = FALSE;
