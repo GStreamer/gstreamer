@@ -960,16 +960,15 @@ mpegts_base_handle_psi (MpegTSBase * base, MpegTSPacketizerSection * section)
 
   /* table ids 0x70 - 0x73 do not have a crc */
   if (G_LIKELY (section->table_id < 0x70 || section->table_id > 0x73)) {
-    gpointer data;
-    gsize size;
+    GstMapInfo map;
 
-    data = gst_buffer_map (section->buffer, &size, 0, GST_MAP_READ);
-    if (G_UNLIKELY (mpegts_base_calc_crc32 (data, size) != 0)) {
-      gst_buffer_unmap (section->buffer, data, size);
+    gst_buffer_map (section->buffer, &map, GST_MAP_READ);
+    if (G_UNLIKELY (mpegts_base_calc_crc32 (map.data, map.size) != 0)) {
+      gst_buffer_unmap (section->buffer, &map);
       GST_WARNING_OBJECT (base, "bad crc in psi pid 0x%x", section->pid);
       return FALSE;
     }
-    gst_buffer_unmap (section->buffer, data, size);
+    gst_buffer_unmap (section->buffer, &map);
   }
 
   switch (section->table_id) {

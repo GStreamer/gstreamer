@@ -71,7 +71,7 @@ typedef struct _GstSignalProcessorClass GstSignalProcessorClass;
 struct _GstSignalProcessorGroup {
   guint channels; /**< Number of channels in buffers */
   guint nframes; /**< Number of frames currently allocated per channel */
-  gfloat *interleaved_buffer; /**< Interleaved buffer (c1c2c1c2...)*/
+  GstMapInfo interleaved_map; /**< Interleaved buffer (c1c2c1c2...)*/
   gfloat *buffer; /**< De-interleaved buffer (c1c1...c2c2...) */
 };
 
@@ -94,13 +94,9 @@ struct _GstSignalProcessor {
   GstSignalProcessorGroup *group_out;
 
   /* single channel signal pads */
-  gfloat **audio_in;
-  gfloat **audio_out;
+  GstMapInfo *audio_in;
+  GstMapInfo *audio_out;
 
-  /* controls */
-  gfloat *control_in;
-  gfloat *control_out;
-  
   /* sampling rate */
   gint sample_rate;
 
@@ -114,8 +110,6 @@ struct _GstSignalProcessorClass {
   guint num_group_out;
   guint num_audio_in;
   guint num_audio_out;
-  guint num_control_in;
-  guint num_control_out;
 
   guint flags;
 

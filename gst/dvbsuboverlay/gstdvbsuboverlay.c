@@ -702,23 +702,23 @@ static void
 gst_dvbsub_overlay_process_text (GstDVBSubOverlay * overlay, GstBuffer * buffer,
     guint64 pts)
 {
-  guint8 *data;
-  gsize size;
+  GstMapInfo map;
 
   GST_DEBUG_OBJECT (overlay,
       "Processing subtitles with fake PTS=%" G_GUINT64_FORMAT
       " which is a running time of %" GST_TIME_FORMAT,
       pts, GST_TIME_ARGS (pts));
-  GST_DEBUG_OBJECT (overlay, "Feeding %" G_GSIZE_FORMAT " bytes to libdvbsub",
-      size);
 
-  data = gst_buffer_map (buffer, &size, NULL, GST_MAP_READ);
+  gst_buffer_map (buffer, &map, GST_MAP_READ);
+
+  GST_DEBUG_OBJECT (overlay, "Feeding %" G_GSIZE_FORMAT " bytes to libdvbsub",
+      map.size);
 
   g_mutex_lock (&overlay->dvbsub_mutex);
-  dvb_sub_feed_with_pts (overlay->dvb_sub, pts, data, size);
+  dvb_sub_feed_with_pts (overlay->dvb_sub, pts, map.data, map.size);
   g_mutex_unlock (&overlay->dvbsub_mutex);
 
-  gst_buffer_unmap (buffer, data, size);
+  gst_buffer_unmap (buffer, &map);
   gst_buffer_unref (buffer);
 }
 

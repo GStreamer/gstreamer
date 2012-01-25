@@ -229,6 +229,7 @@ gst_rgb2bayer_transform (GstBaseTransform * trans, GstBuffer * inbuf,
     GstBuffer * outbuf)
 {
   GstRGB2Bayer *rgb2bayer = GST_RGB_2_BAYER (trans);
+  GstMapInfo map;
   guint8 *dest;
   guint8 *src;
   int i, j;
@@ -238,7 +239,8 @@ gst_rgb2bayer_transform (GstBaseTransform * trans, GstBuffer * inbuf,
 
   gst_video_frame_map (&frame, &rgb2bayer->info, inbuf, GST_MAP_READ);
 
-  dest = gst_buffer_map (outbuf, NULL, NULL, GST_MAP_READ);
+  gst_buffer_map (outbuf, &map, GST_MAP_READ);
+  dest = map.data;
   src = GST_VIDEO_FRAME_PLANE_DATA (&frame, 0);
 
   for (j = 0; j < height; j++) {
@@ -256,7 +258,7 @@ gst_rgb2bayer_transform (GstBaseTransform * trans, GstBuffer * inbuf,
       }
     }
   }
-  gst_buffer_unmap (outbuf, dest, -1);
+  gst_buffer_unmap (outbuf, &map);
   gst_video_frame_unmap (&frame);
 
   return GST_FLOW_OK;

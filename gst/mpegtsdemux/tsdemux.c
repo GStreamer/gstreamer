@@ -1726,8 +1726,8 @@ process_pcr (MpegTSBase * base, guint64 initoff, TSPcrOffset * pcroffset,
 
   for (i = 0; (i < 20) && (nbpcr < numpcr); i++) {
     guint offset;
-    gsize size, bufsize;
-    gpointer data;
+    GstMapInfo map;
+    gsize size;
 
     ret =
         gst_pad_pull_range (base->sinkpad,
@@ -1736,10 +1736,10 @@ process_pcr (MpegTSBase * base, guint64 initoff, TSPcrOffset * pcroffset,
     if (G_UNLIKELY (ret != GST_FLOW_OK))
       goto beach;
 
-    data = gst_buffer_map (buf, &bufsize, 0, GST_MAP_READ);
-    size = bufsize;
+    gst_buffer_map (buf, &map, GST_MAP_READ);
+    size = map.size;
 
-    gst_byte_reader_init (&br, data, size);
+    gst_byte_reader_init (&br, map.data, map.size);
 
     offset = 0;
 
@@ -1748,7 +1748,7 @@ process_pcr (MpegTSBase * base, guint64 initoff, TSPcrOffset * pcroffset,
         0, base->packetsize);
 
     if (offset == -1) {
-      gst_buffer_unmap (buf, data, bufsize);
+      gst_buffer_unmap (buf, &map);
       continue;
     }
 
@@ -1799,7 +1799,7 @@ process_pcr (MpegTSBase * base, guint64 initoff, TSPcrOffset * pcroffset,
       size -= base->packetsize;
       offset += base->packetsize;
     }
-    gst_buffer_unmap (buf, data, bufsize);
+    gst_buffer_unmap (buf, &map);
   }
 
 beach:
@@ -2013,19 +2013,18 @@ gst_ts_demux_parse_pes_header (GstTSDemux * demux, TSDemuxStream * stream)
   GstBuffer *buf = stream->pendingbuffers[0];
   GstFlowReturn res = GST_FLOW_OK;
   gint offset = 0;
-  guint8 *data;
-  gsize length;
+  GstMapInfo map;
   guint64 bufferoffset;
   PESParsingResult parseres;
   GstClockTime origts;
 
-  data = gst_buffer_map (buf, &length, 0, GST_MAP_READ);
+  gst_buffer_map (buf, &map, GST_MAP_READ);
   bufferoffset = GST_BUFFER_OFFSET (buf);
   origts = GST_BUFFER_TIMESTAMP (buf);
 
-  GST_MEMDUMP ("Header buffer", data, MIN (length, 32));
+  GST_MEMDUMP ("Header buffer", map.data, MIN (map.size, 32));
 
-  parseres = mpegts_parse_pes_header (data, length, &header, &offset);
+  parseres = mpegts_parse_pes_header (map.data, map.size, &header, &offset);
 
   if (G_UNLIKELY (parseres == PES_PARSING_NEED_MORE))
     goto discont;
@@ -2123,11 +2122,11 @@ gst_ts_demux_parse_pes_header (GstTSDemux * demux, TSDemuxStream * stream)
   if (header.DTS != -1)
     gst_ts_demux_record_dts (demux, stream, header.DTS, bufferoffset);
 
-  gst_buffer_unmap (buf, data, length);
+  gst_buffer_unmap (buf, &map);
 
   /* Remove PES headers */
   GST_DEBUG ("Moving data forward  by %d bytes", header.header_size);
-  gst_buffer_resize (buf, header.header_size, length - header.header_size);
+  gst_buffer_resize (buf, header.header_size, map.size - header.header_size);
 
   /* FIXME : responsible for switching to PENDING_PACKET_BUFFER and
    * creating the bufferlist */
@@ -2162,21 +2161,19 @@ gst_ts_demux_queue_data (GstTSDemux * demux, TSDemuxStream * stream,
     MpegTSPacketizerPacket * packet)
 {
   GstBuffer *buf;
-  guint8 *data;
-  gsize size;
+  GstMapInfo map;
 
   GST_DEBUG ("state:%d", stream->state);
 
   buf = packet->buffer;
-  data = gst_buffer_map (buf, &size, 0, GST_MAP_READ);
+  gst_buffer_map (buf, &map, GST_MAP_READ);
 
   GST_DEBUG ("Resizing buffer to %d (size:%d) (Was %" G_GSIZE_FORMAT
-      " bytes long)", (int) (packet->payload - data),
-      (int) (packet->data_end - packet->payload), size);
-  gst_buffer_unmap (buf, data, size);
-
-  gst_buffer_resize (buf, packet->payload - data,
+      " bytes long)", (int) (packet->payload - map.data),
+      (int) (packet->data_end - packet->payload), map.size);
+  gst_buffer_resize (buf, packet->payload - map.data,
       packet->data_end - packet->payload);
+  gst_buffer_unmap (buf, &map);
 
   if (stream->state == PENDING_PACKET_EMPTY) {
     if (G_UNLIKELY (!packet->payload_unit_start_indicator)) {

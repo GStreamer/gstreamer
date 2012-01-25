@@ -205,10 +205,9 @@ gst_synae_scope_render (GstBaseAudioVisualizer * bscope, GstBuffer * audio,
     GstBuffer * video)
 {
   GstSynaeScope *scope = GST_SYNAE_SCOPE (bscope);
-  gsize asize;
-  guint32 *vdata =
-      (guint32 *) gst_buffer_map (video, NULL, NULL, GST_MAP_WRITE);
-  gint16 *adata = (gint16 *) gst_buffer_map (audio, &asize, NULL, GST_MAP_READ);
+  GstMapInfo amap, vmap;
+  guint32 *vdata;
+  gint16 *adata;
   gint16 *adata_l = scope->adata_l;
   gint16 *adata_r = scope->adata_r;
   GstFFTS16Complex *fdata_l = scope->freq_data_l;
@@ -221,13 +220,21 @@ gst_synae_scope_render (GstBaseAudioVisualizer * bscope, GstBuffer * audio,
   guint *shade = scope->shade;
   //guint w2 = w /2;
   guint ch = bscope->channels;
-  guint num_samples = asize / (ch * sizeof (gint16));
+  guint num_samples;
   gint i, j, b;
   gint br, br1, br2;
   gint clarity;
   gdouble fc, r, l, rr, ll;
   gdouble frl, fil, frr, fir;
   const guint sl = 30;
+
+  gst_buffer_map (video, &vmap, GST_MAP_WRITE);
+  gst_buffer_map (audio, &amap, GST_MAP_READ);
+
+  vdata = (guint32 *) vmap.data;
+  adata = (gint16 *) amap.data;
+
+  num_samples = amap.size / (ch * sizeof (gint16));
 
   /* deinterleave */
   for (i = 0, j = 0; i < num_samples; i++) {
@@ -297,6 +304,8 @@ gst_synae_scope_render (GstBaseAudioVisualizer * bscope, GstBuffer * audio,
       }
     }
   }
+  gst_buffer_unmap (video, &vmap);
+  gst_buffer_unmap (audio, &amap);
 
   return TRUE;
 }

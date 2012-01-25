@@ -94,9 +94,8 @@ typedef struct
   guint8 continuity_counter;
   guint8 *payload;
 
-  /* temporary copies of gst_buffer_map */
-  guint8 *bufdata;
-  gsize  bufsize;
+  /* gst_buffer_map */
+  GstMapInfo bufmap;
 
   guint8 *data_start;		/* Location of 0x47 marker byte */
   guint8 *data_end;

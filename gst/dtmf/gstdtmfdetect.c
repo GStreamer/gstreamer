@@ -161,17 +161,16 @@ gst_dtmf_detect_transform_ip (GstBaseTransform * trans, GstBuffer * buf)
   gint dtmf_count;
   gchar dtmfbuf[MAX_DTMF_DIGITS] = "";
   gint i;
-  gpointer data;
-  gsize size;
+  GstMapInfo map;
 
   if (GST_BUFFER_IS_DISCONT (buf))
     zap_dtmf_detect_init (&self->dtmf_state);
   if (GST_BUFFER_FLAG_IS_SET (buf, GST_BUFFER_FLAG_GAP))
     return GST_FLOW_OK;
 
-  data = gst_buffer_map (buf, &size, NULL, GST_MAP_READ);
+  gst_buffer_map (buf, &map, GST_MAP_READ);
 
-  zap_dtmf_detect (&self->dtmf_state, (gint16 *) data, size / 2, FALSE);
+  zap_dtmf_detect (&self->dtmf_state, (gint16 *) map.data, map.size / 2, FALSE);
 
   dtmf_count = zap_dtmf_get (&self->dtmf_state, dtmfbuf, MAX_DTMF_DIGITS);
 
@@ -180,7 +179,7 @@ gst_dtmf_detect_transform_ip (GstBaseTransform * trans, GstBuffer * buf)
   else
     GST_LOG_OBJECT (self, "Got no DTMF events");
 
-  gst_buffer_unmap (buf, data, size);
+  gst_buffer_unmap (buf, &map);
 
   for (i = 0; i < dtmf_count; i++) {
     GstMessage *dtmf_message = NULL;

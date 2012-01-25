@@ -792,7 +792,7 @@ gst_base_audio_visualizer_chain (GstPad * pad, GstObject * parent,
   GstBuffer *inbuf;
   guint64 dist, ts;
   guint avail, sbpf;
-  gpointer adata, vdata;
+  gpointer adata;
   gboolean (*render) (GstBaseAudioVisualizer * scope, GstBuffer * audio,
       GstBuffer * video);
 
@@ -835,6 +835,7 @@ gst_base_audio_visualizer_chain (GstPad * pad, GstObject * parent,
   GST_LOG_OBJECT (scope, "avail: %u, bpf: %u", avail, sbpf);
   while (avail >= sbpf) {
     GstBuffer *outbuf;
+    GstMapInfo map;
 
     /* get timestamp of the current adapter content */
     ts = gst_adapter_prev_timestamp (scope->adapter, &dist);
@@ -881,11 +882,11 @@ gst_base_audio_visualizer_chain (GstPad * pad, GstObject * parent,
     GST_BUFFER_TIMESTAMP (outbuf) = ts;
     GST_BUFFER_DURATION (outbuf) = scope->frame_duration;
 
-    vdata = gst_buffer_map (outbuf, NULL, NULL, GST_MAP_WRITE);
+    gst_buffer_map (outbuf, &map, GST_MAP_WRITE);
     if (scope->shader) {
-      memcpy (vdata, scope->pixelbuf, scope->bpf);
+      memcpy (map.data, scope->pixelbuf, scope->bpf);
     } else {
-      memset (vdata, 0, scope->bpf);
+      memset (map.data, 0, scope->bpf);
     }
 
     /* this can fail as the data size we need could have changed */
@@ -903,12 +904,13 @@ gst_base_audio_visualizer_chain (GstPad * pad, GstObject * parent,
       } else {
         /* run various post processing (shading and geometri transformation */
         if (scope->shader) {
-          scope->shader (scope, vdata, scope->pixelbuf);
+          scope->shader (scope, map.data, scope->pixelbuf);
         }
       }
     }
 
-    gst_buffer_unmap (outbuf, vdata, scope->bpf);
+    gst_buffer_unmap (outbuf, &map);
+    gst_buffer_resize (outbuf, 0, scope->bpf);
 
     g_mutex_unlock (&scope->config_lock);
     ret = gst_pad_push (scope->srcpad, outbuf);

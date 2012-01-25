@@ -679,15 +679,15 @@ parse_pgs_packet (GstDVDSpu * dvdspu, guint8 type, guint8 * payload,
 gint
 gstspu_exec_pgs_buffer (GstDVDSpu * dvdspu, GstBuffer * buf)
 {
-  guint8 *data, *pos, *end;
-  gsize size;
+  GstMapInfo map;
+  guint8 *pos, *end;
   guint8 type;
   guint16 packet_len;
 
-  data = gst_buffer_map (buf, &size, NULL, GST_MAP_READ);
+  gst_buffer_map (buf, &map, GST_MAP_READ);
 
-  pos = data;
-  end = pos + size;
+  pos = map.data;
+  end = pos + map.size;
 
   /* Need at least 3 bytes */
   if (pos + 3 > end) {
@@ -703,7 +703,7 @@ gstspu_exec_pgs_buffer (GstDVDSpu * dvdspu, GstBuffer * buf)
     pos += 2;
 
     if (pos + packet_len > end) {
-      gst_buffer_unmap (buf, data, size);
+      gst_buffer_unmap (buf, &map);
       PGS_DUMP ("Invalid packet length %u (only have %u bytes)\n", packet_len,
           end - pos);
       goto error;
@@ -716,12 +716,12 @@ gstspu_exec_pgs_buffer (GstDVDSpu * dvdspu, GstBuffer * buf)
   } while (pos + 3 <= end);
 
   PGS_DUMP ("End dumping command buffer with %u bytes remaining\n", end - pos);
-  return (pos - data);
+  return (pos - map.data);
 
   /* ERRORS */
 error:
   {
-    gst_buffer_unmap (buf, data, size);
+    gst_buffer_unmap (buf, &map);
     return -1;
   }
 }

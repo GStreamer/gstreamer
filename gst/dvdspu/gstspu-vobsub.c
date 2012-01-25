@@ -322,8 +322,8 @@ void
 gstspu_vobsub_handle_new_buf (GstDVDSpu * dvdspu, GstClockTime event_ts,
     GstBuffer * buf)
 {
+  GstMapInfo map;
   guint8 *start, *end;
-  gsize size;
   SpuState *state = &dvdspu->spu_state;
 
 #if DUMP_DCSQ
@@ -340,8 +340,9 @@ gstspu_vobsub_handle_new_buf (GstDVDSpu * dvdspu, GstClockTime event_ts,
   state->vobsub.buf = buf;
   state->vobsub.base_ts = event_ts;
 
-  start = gst_buffer_map (state->vobsub.buf, &size, NULL, GST_MAP_READ);
-  end = start + size;
+  gst_buffer_map (state->vobsub.buf, &map, GST_MAP_READ);
+  start = map.data;
+  end = start + map.size;
 
   /* Configure the first command block in this buffer as our initial blk */
   state->vobsub.cur_cmd_blk = GST_READ_UINT16_BE (start + 2);
@@ -352,7 +353,7 @@ gstspu_vobsub_handle_new_buf (GstDVDSpu * dvdspu, GstClockTime event_ts,
     g_free (state->vobsub.line_ctrl_i);
     state->vobsub.line_ctrl_i = NULL;
   }
-  gst_buffer_unmap (state->vobsub.buf, start, size);
+  gst_buffer_unmap (state->vobsub.buf, &map);
   return;
 
 invalid:
@@ -363,9 +364,9 @@ invalid:
 gboolean
 gstspu_vobsub_execute_event (GstDVDSpu * dvdspu)
 {
+  GstMapInfo map;
   guint8 *start, *cmd_blk, *end;
   guint16 next_blk;
-  gsize size;
   SpuState *state = &dvdspu->spu_state;
 
   if (state->vobsub.buf == NULL)
@@ -375,13 +376,14 @@ gstspu_vobsub_execute_event (GstDVDSpu * dvdspu)
       " @ offset %u", GST_TIME_ARGS (state->next_ts),
       state->vobsub.cur_cmd_blk);
 
-  start = gst_buffer_map (state->vobsub.buf, &size, NULL, GST_MAP_READ);
-  end = start + size;
+  gst_buffer_map (state->vobsub.buf, &map, GST_MAP_READ);
+  start = map.data;
+  end = start + map.size;
 
   cmd_blk = start + state->vobsub.cur_cmd_blk;
 
   if (G_UNLIKELY (cmd_blk + 5 >= end)) {
-    gst_buffer_unmap (state->vobsub.buf, start, size);
+    gst_buffer_unmap (state->vobsub.buf, &map);
     /* Invalid. Finish the buffer and loop again */
     gst_dvd_spu_finish_spu_buf (dvdspu);
     return FALSE;
@@ -396,11 +398,11 @@ gstspu_vobsub_execute_event (GstDVDSpu * dvdspu)
   } else {
     /* Next Block points to the current block, so we're finished with this
      * SPU buffer */
-    gst_buffer_unmap (state->vobsub.buf, start, size);
+    gst_buffer_unmap (state->vobsub.buf, &map);
     gst_dvd_spu_finish_spu_buf (dvdspu);
     return FALSE;
   }
-  gst_buffer_unmap (state->vobsub.buf, start, size);
+  gst_buffer_unmap (state->vobsub.buf, &map);
 
   return TRUE;
 }

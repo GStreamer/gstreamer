@@ -167,20 +167,24 @@ gst_spectra_scope_render (GstBaseAudioVisualizer * bscope, GstBuffer * audio,
     GstBuffer * video)
 {
   GstSpectraScope *scope = GST_SPECTRA_SCOPE (bscope);
-  gsize asize;
-  guint32 *vdata =
-      (guint32 *) gst_buffer_map (video, NULL, NULL, GST_MAP_WRITE);
-  gint16 *adata = (gint16 *) gst_buffer_map (audio, &asize, NULL, GST_MAP_READ);
-  gint16 *mono_adata = (gint16 *) g_memdup (adata, asize);
+  gint16 *mono_adata;
   GstFFTS16Complex *fdata = scope->freq_data;
   guint x, y, off;
   guint l, h = bscope->height - 1;
   gfloat fr, fi;
   guint w = bscope->width;
+  GstMapInfo amap, vmap;
+  guint32 *vdata;
+
+  gst_buffer_map (audio, &amap, GST_MAP_READ);
+  gst_buffer_map (video, &vmap, GST_MAP_WRITE);
+  vdata = (guint32 *) vmap.data;
+
+  mono_adata = (gint16 *) g_memdup (amap.data, amap.size);
 
   if (bscope->channels > 1) {
     guint ch = bscope->channels;
-    guint num_samples = asize / (ch * sizeof (gint16));
+    guint num_samples = amap.size / (ch * sizeof (gint16));
     guint i, c, v, s = 0;
 
     /* deinterleave and mixdown adata */
@@ -196,7 +200,7 @@ gst_spectra_scope_render (GstBaseAudioVisualizer * bscope, GstBuffer * audio,
   /* run fft */
   gst_fft_s16_window (scope->fft_ctx, mono_adata, GST_FFT_WINDOW_HAMMING);
   gst_fft_s16_fft (scope->fft_ctx, mono_adata, fdata);
-  g_free (adata);
+  g_free (mono_adata);
 
   /* draw lines */
   for (x = 0; x < bscope->width; x++) {
@@ -215,8 +219,8 @@ gst_spectra_scope_render (GstBaseAudioVisualizer * bscope, GstBuffer * audio,
       add_pixel (&vdata[off], 0x007F7F7F);
     }
   }
-  gst_buffer_unmap (video, vdata, -1);
-  gst_buffer_unmap (audio, adata, -1);
+  gst_buffer_unmap (video, &vmap);
+  gst_buffer_unmap (audio, &amap);
   return TRUE;
 }
 

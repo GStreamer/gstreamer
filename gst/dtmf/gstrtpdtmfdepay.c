@@ -333,6 +333,7 @@ gst_dtmf_src_generate_tone (GstRtpDTMFDepay * rtpdtmfdepay,
     GstRTPDTMFPayload payload)
 {
   GstBuffer *buf;
+  GstMapInfo map;
   gint16 *p;
   gint tone_size;
   double i = 0;
@@ -351,7 +352,8 @@ gst_dtmf_src_generate_tone (GstRtpDTMFDepay * rtpdtmfdepay,
   GST_BUFFER_DURATION (buf) = payload.duration * GST_SECOND / clock_rate;
   volume = payload.volume;
 
-  p = (gint16 *) gst_buffer_map (buf, NULL, NULL, GST_MAP_WRITE);
+  gst_buffer_map (buf, &map, GST_MAP_WRITE);
+  p = (gint16 *) map.data;
 
   volume_factor = pow (10, (-volume) / 20);
 
@@ -382,7 +384,7 @@ gst_dtmf_src_generate_tone (GstRtpDTMFDepay * rtpdtmfdepay,
     (rtpdtmfdepay->sample)++;
   }
 
-  gst_buffer_unmap (buf, p, tone_size);
+  gst_buffer_unmap (buf, &map);
 
   return buf;
 }

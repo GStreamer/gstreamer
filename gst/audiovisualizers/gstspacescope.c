@@ -429,16 +429,17 @@ gst_space_scope_render (GstBaseAudioVisualizer * base, GstBuffer * audio,
     GstBuffer * video)
 {
   GstSpaceScope *scope = GST_SPACE_SCOPE (base);
-  gsize asize;
-  guint32 *vdata =
-      (guint32 *) gst_buffer_map (video, NULL, NULL, GST_MAP_WRITE);
-  gint16 *adata = (gint16 *) gst_buffer_map (audio, &asize, NULL, GST_MAP_READ);
+  GstMapInfo vmap, amap;
   guint num_samples;
 
-  num_samples = asize / (base->channels * sizeof (gint16));
-  scope->process (base, vdata, adata, num_samples);
-  gst_buffer_unmap (video, vdata, -1);
-  gst_buffer_unmap (audio, adata, -1);
+  gst_buffer_map (audio, &amap, GST_MAP_READ);
+  gst_buffer_map (video, &vmap, GST_MAP_WRITE);
+
+  num_samples = amap.size / (base->channels * sizeof (gint16));
+  scope->process (base, (guint32 *) vmap.data, (gint16 *) amap.data,
+      num_samples);
+  gst_buffer_unmap (video, &vmap);
+  gst_buffer_unmap (audio, &amap);
   return TRUE;
 }
 

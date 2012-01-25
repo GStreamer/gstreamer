@@ -951,14 +951,14 @@ gst_dvd_spu_subpic_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
        * we've collected */
       guint8 packet_type;
       guint16 packet_size;
-      guint8 *data, *ptr, *end;
-      gsize size;
+      GstMapInfo map;
+      guint8 *ptr, *end;
       gboolean invalid = FALSE;
 
-      data = gst_buffer_map (dvdspu->partial_spu, &size, NULL, GST_MAP_READ);
+      gst_buffer_map (dvdspu->partial_spu, &map, GST_MAP_READ);
 
-      ptr = data;
-      end = ptr + size;
+      ptr = map.data;
+      end = ptr + map.size;
 
       /* FIXME: There's no need to walk the command set each time. We can set a
        * marker and resume where we left off next time */
@@ -979,7 +979,7 @@ gst_dvd_spu_subpic_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
           break;
         }
       }
-      gst_buffer_unmap (dvdspu->partial_spu, data, size);
+      gst_buffer_unmap (dvdspu->partial_spu, &map);
 
       if (invalid) {
         gst_buffer_unref (dvdspu->partial_spu);
@@ -987,7 +987,7 @@ gst_dvd_spu_subpic_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
       } else if (ptr == end) {
         GST_DEBUG_OBJECT (dvdspu,
             "Have complete PGS packet of size %" G_GSIZE_FORMAT ". Enqueueing.",
-            size);
+            map.size);
         submit_new_spu_packet (dvdspu, dvdspu->partial_spu);
         dvdspu->partial_spu = NULL;
       }
