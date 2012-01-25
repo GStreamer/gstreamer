@@ -735,7 +735,6 @@ gst_matroska_mux_handle_sink_event (GstCollectPads2 * pads,
   GstMatroskaMux *mux;
   GstPad *pad;
   GstTagList *list;
-  gboolean ret = FALSE;
 
   mux = GST_MATROSKA_MUX (user_data);
   collect_pad = (GstMatroskaPad *) data;
@@ -750,7 +749,7 @@ gst_matroska_mux_handle_sink_event (GstCollectPads2 * pads,
       collect_pad = (GstMatroskaPad *) gst_pad_get_element_private (pad);
       gst_event_parse_caps (event, &caps);
 
-      ret = collect_pad->capsfunc (pad, caps);
+      collect_pad->capsfunc (pad, caps);
       gst_event_unref (event);
       event = NULL;
       break;
@@ -835,7 +834,7 @@ gst_matroska_mux_handle_sink_event (GstCollectPads2 * pads,
   }
 
   /* now GstCollectPads2 can take care of the rest, e.g. EOS */
-  return ret;
+  return (event == NULL);
 }
 
 static void
