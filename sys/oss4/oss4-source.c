@@ -273,7 +273,7 @@ gst_oss4_source_getcaps (GstBaseSrc * bsrc)
   oss = GST_OSS4_SOURCE (bsrc);
 
   if (oss->fd == -1) {
-    caps = gst_caps_copy (gst_oss4_audio_get_template_caps ());
+    caps = gst_oss4_audio_get_template_caps ();
   } else if (oss->probed_caps) {
     caps = gst_caps_copy (oss->probed_caps);
   } else {

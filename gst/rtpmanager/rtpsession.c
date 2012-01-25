@@ -486,12 +486,19 @@ rtp_session_init (RTPSession * sess)
   sess->mtu = DEFAULT_RTCP_MTU;
 
   /* some default SDES entries */
-  str = g_strdup_printf ("%s@%s", g_get_user_name (), g_get_host_name ());
+
+  /* we do not want to leak details like the username or hostname here */
+  str = g_strdup_printf ("user%u@x-%u.net", g_random_int (), g_random_int ());
   rtp_source_set_sdes_string (sess->source, GST_RTCP_SDES_CNAME, str);
   g_free (str);
 
-  rtp_source_set_sdes_string (sess->source, GST_RTCP_SDES_NAME,
-      g_get_real_name ());
+#if 0
+  /* we do not want to leak the user's real name here */
+  str = g_strdup_printf ("Anon%u", g_random_int ());
+  rtp_source_set_sdes_string (sess->source, GST_RTCP_SDES_NAME, str);
+  g_free (str);
+#endif
+
   rtp_source_set_sdes_string (sess->source, GST_RTCP_SDES_TOOL, "GStreamer");
 
   sess->first_rtcp = TRUE;

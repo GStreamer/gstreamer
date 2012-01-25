@@ -299,6 +299,7 @@ GST_START_TEST (test_crop_to_1x1)
 
     if (g_strcmp0 (gst_structure_get_name (s), "video/x-raw-gray") == 0) {
       /* videotestsrc does not support this format */
+      gst_caps_unref (caps);
       continue;
     }
 

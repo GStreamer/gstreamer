@@ -2863,8 +2863,11 @@ gst_pulsesink_change_state (GstElement * element, GstStateChange transition)
         GST_INFO_OBJECT (element, "new pa main loop thread");
         if (!(mainloop = pa_threaded_mainloop_new ()))
           goto mainloop_failed;
+        if (pa_threaded_mainloop_start (mainloop) < 0) {
+          pa_threaded_mainloop_free (mainloop);
+          goto mainloop_start_failed;
+        }
         mainloop_ref_ct = 1;
-        pa_threaded_mainloop_start (mainloop);
         g_mutex_unlock (&pa_shared_resource_mutex);
       } else {
         GST_INFO_OBJECT (element, "reusing pa main loop thread");
@@ -2908,6 +2911,13 @@ mainloop_failed:
     g_mutex_unlock (&pa_shared_resource_mutex);
     GST_ELEMENT_ERROR (pulsesink, RESOURCE, FAILED,
         ("pa_threaded_mainloop_new() failed"), (NULL));
+    return GST_STATE_CHANGE_FAILURE;
+  }
+mainloop_start_failed:
+  {
+    g_mutex_unlock (&pa_shared_resource_mutex);
+    GST_ELEMENT_ERROR (pulsesink, RESOURCE, FAILED,
+        ("pa_threaded_mainloop_start() failed"), (NULL));
     return GST_STATE_CHANGE_FAILURE;
   }
 state_failure:

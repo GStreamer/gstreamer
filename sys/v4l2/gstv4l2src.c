@@ -388,11 +388,12 @@ gst_v4l2src_negotiate (GstBaseSrc * basesrc)
       }
     }
     gst_caps_unref (thiscaps);
-    gst_caps_unref (peercaps);
   } else {
     /* no peer or peer have ANY caps, work with our own caps then */
     caps = thiscaps;
   }
+  if (peercaps)
+    gst_caps_unref (peercaps);
   if (caps) {
     caps = gst_caps_make_writable (caps);
     gst_caps_truncate (caps);

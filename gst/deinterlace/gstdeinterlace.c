@@ -1002,9 +1002,10 @@ gst_deinterlace_get_interlacing_method (const GstCaps * caps)
   GstDeinterlaceInterlacingMethod method = 0;
   gboolean interlaced;
 
-  /* check interlaced cap */
-  gst_structure_get_boolean (gst_caps_get_structure (caps, 0), "interlaced",
-      &interlaced);
+  /* check interlaced cap, defaulting to FALSE */
+  if (!gst_structure_get_boolean (gst_caps_get_structure (caps, 0),
+          "interlaced", &interlaced))
+    interlaced = FALSE;
 
   method =
       interlaced ? GST_DEINTERLACE_INTERLACED : GST_DEINTERLACE_PROGRESSIVE;
@@ -1707,8 +1708,8 @@ restart:
       gst_buffer_set_caps (outbuf, GST_PAD_CAPS (self->srcpad));
     }
 
-    g_return_val_if_fail (self->history_count - 1 -
-        gst_deinterlace_method_get_latency (self->method) >= 0, GST_FLOW_ERROR);
+    g_return_val_if_fail (self->history_count >=
+        1 + gst_deinterlace_method_get_latency (self->method), GST_FLOW_ERROR);
 
     buf =
         self->field_history[self->history_count - 1 -
