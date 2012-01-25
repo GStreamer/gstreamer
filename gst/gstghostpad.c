@@ -917,7 +917,7 @@ gst_ghost_pad_new_no_target (const gchar * name, GstPadDirection dir)
  *
  * Will ref the target.
  *
- * Returns: (transfer full): a new #GstPad, or NULL in case of an error.
+ * Returns: (transfer floating): a new #GstPad, or NULL in case of an error.
  */
 GstPad *
 gst_ghost_pad_new (const gchar * name, GstPad * target)

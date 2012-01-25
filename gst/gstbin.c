@@ -558,7 +558,7 @@ gst_bin_dispose (GObject * object)
  *
  * Creates a new bin with the given name.
  *
- * Returns: (transfer full): a new #GstBin
+ * Returns: (transfer floating): a new #GstBin
  */
 GstElement *
 gst_bin_new (const gchar * name)
