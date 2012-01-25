@@ -2908,12 +2908,8 @@ gst_matroska_demux_check_subtitle_buffer (GstElement * element,
 
   sub_stream = (GstMatroskaTrackSubtitleContext *) stream;
 
-  gst_buffer_map (*buf, &map, GST_MAP_READ);
-
-  if (!data) {
-    gst_buffer_unmap (*buf, data, -1);
+  if (!gst_buffer_map (*buf, &map, GST_MAP_READ))
     return GST_FLOW_OK;
-  }
 
   if (!sub_stream->invalid_utf8) {
     if (g_utf8_validate ((gchar *) map.data, map.size, NULL)) {
