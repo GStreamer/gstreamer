@@ -127,7 +127,7 @@ gst_flv_demux_parse_and_add_index_entry (GstFlvDemux * demux, GstClockTime ts,
 
   if (entry) {
 #ifndef GST_DISABLE_GST_DEBUG
-    gint64 time;
+    gint64 time = 0;
     gboolean key;
 
     gst_index_entry_assoc_map (entry, GST_FORMAT_TIME, &time);
@@ -2197,7 +2197,7 @@ gst_flv_demux_seek_to_prev_keyframe (GstFlvDemux * demux)
         GST_FORMAT_BYTES, demux->from_offset - 1);
 
   if (entry) {
-    gint64 bytes, time;
+    gint64 bytes = 0, time = 0;
 
     gst_index_entry_assoc_map (entry, GST_FORMAT_BYTES, &bytes);
     gst_index_entry_assoc_map (entry, GST_FORMAT_TIME, &time);
