@@ -67,7 +67,7 @@ struct _GstControlBinding {
   GstObject parent;
   
   /*< public >*/
-  const gchar *name;            /* name of the property */
+  gchar *name;                  /* name of the property */
   GParamSpec *pspec;            /* GParamSpec for this property */
 
   /*< private >*/
