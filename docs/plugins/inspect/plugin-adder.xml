@@ -3,7 +3,7 @@
   <description>Adds multiple streams</description>
   <filename>../../gst/adder/.libs/libgstadder.so</filename>
   <basename>libgstadder.so</basename>
-  <version>0.10.35.1</version>
+  <version>0.11.1.1</version>
   <license>LGPL</license>
   <source>gst-plugins-base</source>
   <package>GStreamer Base Plug-ins git</package>
@@ -17,16 +17,16 @@
       <author>Thomas Vander Stichele &lt;thomas at apestaart dot org&gt;</author>
       <pads>
         <caps>
-          <name>sink%d</name>
+          <name>sink_%u</name>
           <direction>sink</direction>
           <presence>request</presence>
-          <details>audio/x-raw-int, rate=(int)[ 1, 2147483647 ], channels=(int)[ 1, 2147483647 ], endianness=(int)1234, width=(int)32, depth=(int)32, signed=(boolean){ true, false }; audio/x-raw-int, rate=(int)[ 1, 2147483647 ], channels=(int)[ 1, 2147483647 ], endianness=(int)1234, width=(int)16, depth=(int)16, signed=(boolean){ true, false }; audio/x-raw-int, rate=(int)[ 1, 2147483647 ], channels=(int)[ 1, 2147483647 ], endianness=(int)1234, width=(int)8, depth=(int)8, signed=(boolean){ true, false }; audio/x-raw-float, rate=(int)[ 1, 2147483647 ], channels=(int)[ 1, 2147483647 ], endianness=(int)1234, width=(int){ 32, 64 }</details>
+          <details>audio/x-raw, format=(string){ S32LE, U32LE, S16LE, U16LE, S8, U8, F32LE, F64LE }, rate=(int)[ 1, 2147483647 ], channels=(int)[ 1, 2147483647 ], layout=(string){ interleaved, non-interleaved }</details>
         </caps>
         <caps>
           <name>src</name>
           <direction>source</direction>
           <presence>always</presence>
-          <details>audio/x-raw-int, rate=(int)[ 1, 2147483647 ], channels=(int)[ 1, 2147483647 ], endianness=(int)1234, width=(int)32, depth=(int)32, signed=(boolean){ true, false }; audio/x-raw-int, rate=(int)[ 1, 2147483647 ], channels=(int)[ 1, 2147483647 ], endianness=(int)1234, width=(int)16, depth=(int)16, signed=(boolean){ true, false }; audio/x-raw-int, rate=(int)[ 1, 2147483647 ], channels=(int)[ 1, 2147483647 ], endianness=(int)1234, width=(int)8, depth=(int)8, signed=(boolean){ true, false }; audio/x-raw-float, rate=(int)[ 1, 2147483647 ], channels=(int)[ 1, 2147483647 ], endianness=(int)1234, width=(int){ 32, 64 }</details>
+          <details>audio/x-raw, format=(string){ S32LE, U32LE, S16LE, U16LE, S8, U8, F32LE, F64LE }, rate=(int)[ 1, 2147483647 ], channels=(int)[ 1, 2147483647 ], layout=(string){ interleaved, non-interleaved }</details>
         </caps>
       </pads>
     </element>

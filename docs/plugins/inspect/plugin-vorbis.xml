@@ -3,7 +3,7 @@
   <description>Vorbis plugin library</description>
   <filename>../../ext/vorbis/.libs/libgstvorbis.so</filename>
   <basename>libgstvorbis.so</basename>
-  <version>0.10.35.1</version>
+  <version>0.11.1.1</version>
   <license>LGPL</license>
   <source>gst-plugins-base</source>
   <package>GStreamer Base Plug-ins git</package>
@@ -26,7 +26,7 @@
           <name>src</name>
           <direction>source</direction>
           <presence>always</presence>
-          <details>audio/x-raw-float, rate=(int)[ 1, 2147483647 ], channels=(int)[ 1, 256 ], endianness=(int)1234, width=(int)32</details>
+          <details>audio/x-raw, format=(string)F32LE, rate=(int)[ 1, 2147483647 ], channels=(int)[ 1, 256 ]</details>
         </caps>
       </pads>
     </element>
@@ -41,7 +41,7 @@
           <name>sink</name>
           <direction>sink</direction>
           <presence>always</presence>
-          <details>audio/x-raw-float, rate=(int)[ 1, 200000 ], channels=(int)[ 1, 256 ], endianness=(int)1234, width=(int)32</details>
+          <details>audio/x-raw, format=(string)F32LE, layout=(string)interleaved, rate=(int)[ 1, 200000 ], channels=(int)[ 1, 255 ]</details>
         </caps>
         <caps>
           <name>src</name>

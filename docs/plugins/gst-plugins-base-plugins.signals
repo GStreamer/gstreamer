@@ -102,6 +102,51 @@ GstCaps *arg2
 </SIGNAL>
 
 <SIGNAL>
+<NAME>GstDecodeBin::autoplug-continue</NAME>
+<RETURNS>gboolean</RETURNS>
+<FLAGS>l</FLAGS>
+GstDecodeBin *gstdecodebin
+GstPad *arg1
+GstCaps *arg2
+</SIGNAL>
+
+<SIGNAL>
+<NAME>GstDecodeBin::autoplug-factories</NAME>
+<RETURNS>GValueArray*</RETURNS>
+<FLAGS>l</FLAGS>
+GstDecodeBin *gstdecodebin
+GstPad *arg1
+GstCaps *arg2
+</SIGNAL>
+
+<SIGNAL>
+<NAME>GstDecodeBin::autoplug-select</NAME>
+<RETURNS>GstAutoplugSelectResult</RETURNS>
+<FLAGS>l</FLAGS>
+GstDecodeBin *gstdecodebin
+GstPad *arg1
+GstCaps *arg2
+GstElementFactory *arg3
+</SIGNAL>
+
+<SIGNAL>
+<NAME>GstDecodeBin::autoplug-sort</NAME>
+<RETURNS>GValueArray*</RETURNS>
+<FLAGS>l</FLAGS>
+GstDecodeBin *gstdecodebin
+GstPad *arg1
+GstCaps *arg2
+GValueArray *arg3
+</SIGNAL>
+
+<SIGNAL>
+<NAME>GstDecodeBin::drained</NAME>
+<RETURNS>void</RETURNS>
+<FLAGS>l</FLAGS>
+GstDecodeBin *gstdecodebin
+</SIGNAL>
+
+<SIGNAL>
 <NAME>CDParanoia::smilie-change</NAME>
 <RETURNS>void</RETURNS>
 CDParanoia *cdparanoia
@@ -425,7 +470,7 @@ GstAppSink *gstappsink
 
 <SIGNAL>
 <NAME>GstAppSink::pull-preroll</NAME>
-<RETURNS>GstBuffer*</RETURNS>
+<RETURNS>GstSample*</RETURNS>
 <FLAGS>la</FLAGS>
 GstAppSink *gstappsink
 </SIGNAL>
@@ -440,6 +485,20 @@ GstAppSink *gstappsink
 <SIGNAL>
 <NAME>GstAppSink::pull-buffer-list</NAME>
 <RETURNS>GstBufferList*</RETURNS>
+<FLAGS>la</FLAGS>
+GstAppSink *gstappsink
+</SIGNAL>
+
+<SIGNAL>
+<NAME>GstAppSink::new-sample</NAME>
+<RETURNS>void</RETURNS>
+<FLAGS>l</FLAGS>
+GstAppSink *gstappsink
+</SIGNAL>
+
+<SIGNAL>
+<NAME>GstAppSink::pull-sample</NAME>
+<RETURNS>GstSample*</RETURNS>
 <FLAGS>la</FLAGS>
 GstAppSink *gstappsink
 </SIGNAL>
@@ -498,10 +557,211 @@ GstCaps *arg1
 </SIGNAL>
 
 <SIGNAL>
+<NAME>GstPlaySink::convert-sample</NAME>
+<RETURNS>GstSample*</RETURNS>
+<FLAGS>la</FLAGS>
+GstPlaySink *gstplaysink
+GstCaps *arg1
+</SIGNAL>
+
+<SIGNAL>
 <NAME>GstEncodeBin::request-pad</NAME>
 <RETURNS>GstPad*</RETURNS>
 <FLAGS>la</FLAGS>
 GstEncodeBin *gstencodebin
 GstCaps *arg1
+</SIGNAL>
+
+<SIGNAL>
+<NAME>GstMultiSocketSink::add</NAME>
+<RETURNS>void</RETURNS>
+<FLAGS>la</FLAGS>
+GstMultiSocketSink *gstmultisocketsink
+GSocket *arg1
+</SIGNAL>
+
+<SIGNAL>
+<NAME>GstMultiSocketSink::add-full</NAME>
+<RETURNS>void</RETURNS>
+<FLAGS>la</FLAGS>
+GstMultiSocketSink *gstmultisocketsink
+GSocket *arg1
+GstMultiSocketSinkSyncMethod  arg2
+GstFormat  arg3
+guint64  arg4
+GstFormat  arg5
+guint64  arg6
+</SIGNAL>
+
+<SIGNAL>
+<NAME>GstMultiSocketSink::clear</NAME>
+<RETURNS>void</RETURNS>
+<FLAGS>la</FLAGS>
+GstMultiSocketSink *gstmultisocketsink
+</SIGNAL>
+
+<SIGNAL>
+<NAME>GstMultiSocketSink::client-added</NAME>
+<RETURNS>void</RETURNS>
+<FLAGS>l</FLAGS>
+GstMultiSocketSink *gstmultisocketsink
+GObject *arg1
+</SIGNAL>
+
+<SIGNAL>
+<NAME>GstMultiSocketSink::client-removed</NAME>
+<RETURNS>void</RETURNS>
+<FLAGS>l</FLAGS>
+GstMultiSocketSink *gstmultisocketsink
+gint  arg1
+GstMultiSocketSinkClientStatus  arg2
+</SIGNAL>
+
+<SIGNAL>
+<NAME>GstMultiSocketSink::client-socket-removed</NAME>
+<RETURNS>void</RETURNS>
+<FLAGS>l</FLAGS>
+GstMultiSocketSink *gstmultisocketsink
+GSocket *arg1
+</SIGNAL>
+
+<SIGNAL>
+<NAME>GstMultiSocketSink::get-stats</NAME>
+<RETURNS>GstStructure*</RETURNS>
+<FLAGS>la</FLAGS>
+GstMultiSocketSink *gstmultisocketsink
+GSocket *arg1
+</SIGNAL>
+
+<SIGNAL>
+<NAME>GstMultiSocketSink::remove</NAME>
+<RETURNS>void</RETURNS>
+<FLAGS>la</FLAGS>
+GstMultiSocketSink *gstmultisocketsink
+GSocket *arg1
+</SIGNAL>
+
+<SIGNAL>
+<NAME>GstMultiSocketSink::remove-flush</NAME>
+<RETURNS>void</RETURNS>
+<FLAGS>la</FLAGS>
+GstMultiSocketSink *gstmultisocketsink
+GSocket *arg1
+</SIGNAL>
+
+<SIGNAL>
+<NAME>GstPlayBin::about-to-finish</NAME>
+<RETURNS>void</RETURNS>
+<FLAGS>l</FLAGS>
+GstPlayBin *gstplaybin
+</SIGNAL>
+
+<SIGNAL>
+<NAME>GstPlayBin::audio-changed</NAME>
+<RETURNS>void</RETURNS>
+<FLAGS>l</FLAGS>
+GstPlayBin *gstplaybin
+</SIGNAL>
+
+<SIGNAL>
+<NAME>GstPlayBin::audio-tags-changed</NAME>
+<RETURNS>void</RETURNS>
+<FLAGS>l</FLAGS>
+GstPlayBin *gstplaybin
+gint  arg1
+</SIGNAL>
+
+<SIGNAL>
+<NAME>GstPlayBin::convert-sample</NAME>
+<RETURNS>GstSample*</RETURNS>
+<FLAGS>la</FLAGS>
+GstPlayBin *gstplaybin
+GstCaps *arg1
+</SIGNAL>
+
+<SIGNAL>
+<NAME>GstPlayBin::get-audio-pad</NAME>
+<RETURNS>GstPad*</RETURNS>
+<FLAGS>la</FLAGS>
+GstPlayBin *gstplaybin
+gint  arg1
+</SIGNAL>
+
+<SIGNAL>
+<NAME>GstPlayBin::get-audio-tags</NAME>
+<RETURNS>GstTagList*</RETURNS>
+<FLAGS>la</FLAGS>
+GstPlayBin *gstplaybin
+gint  arg1
+</SIGNAL>
+
+<SIGNAL>
+<NAME>GstPlayBin::get-text-pad</NAME>
+<RETURNS>GstPad*</RETURNS>
+<FLAGS>la</FLAGS>
+GstPlayBin *gstplaybin
+gint  arg1
+</SIGNAL>
+
+<SIGNAL>
+<NAME>GstPlayBin::get-text-tags</NAME>
+<RETURNS>GstTagList*</RETURNS>
+<FLAGS>la</FLAGS>
+GstPlayBin *gstplaybin
+gint  arg1
+</SIGNAL>
+
+<SIGNAL>
+<NAME>GstPlayBin::get-video-pad</NAME>
+<RETURNS>GstPad*</RETURNS>
+<FLAGS>la</FLAGS>
+GstPlayBin *gstplaybin
+gint  arg1
+</SIGNAL>
+
+<SIGNAL>
+<NAME>GstPlayBin::get-video-tags</NAME>
+<RETURNS>GstTagList*</RETURNS>
+<FLAGS>la</FLAGS>
+GstPlayBin *gstplaybin
+gint  arg1
+</SIGNAL>
+
+<SIGNAL>
+<NAME>GstPlayBin::source-setup</NAME>
+<RETURNS>void</RETURNS>
+<FLAGS>l</FLAGS>
+GstPlayBin *gstplaybin
+GstElement *arg1
+</SIGNAL>
+
+<SIGNAL>
+<NAME>GstPlayBin::text-changed</NAME>
+<RETURNS>void</RETURNS>
+<FLAGS>l</FLAGS>
+GstPlayBin *gstplaybin
+</SIGNAL>
+
+<SIGNAL>
+<NAME>GstPlayBin::text-tags-changed</NAME>
+<RETURNS>void</RETURNS>
+<FLAGS>l</FLAGS>
+GstPlayBin *gstplaybin
+gint  arg1
+</SIGNAL>
+
+<SIGNAL>
+<NAME>GstPlayBin::video-changed</NAME>
+<RETURNS>void</RETURNS>
+<FLAGS>l</FLAGS>
+GstPlayBin *gstplaybin
+</SIGNAL>
+
+<SIGNAL>
+<NAME>GstPlayBin::video-tags-changed</NAME>
+<RETURNS>void</RETURNS>
+<FLAGS>l</FLAGS>
+GstPlayBin *gstplaybin
+gint  arg1
 </SIGNAL>
 
