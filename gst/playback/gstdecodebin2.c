@@ -2316,12 +2316,13 @@ pad_event_cb (GstPad * pad, GstPadProbeInfo * info, gpointer data)
 }
 
 static void
-demuxer_pad_blocked_cb (GstPad * pad, gboolean blocked, GstDecodeChain * chain)
+demuxer_pad_blocked_cb (GstPad * pad, GstPadProbeInfo * info,
+    GstDecodeChain * chain)
 {
   GstDecodeBin *dbin;
 
   dbin = chain->dbin;
-  if (!blocked)
+  if (info->type == GST_PAD_PROBE_TYPE_IDLE)
     gst_decode_chain_prune (dbin->decode_chain);
 }
 
@@ -2355,8 +2356,9 @@ pad_added_cb (GstElement * element, GstPad * pad, GstDecodeChain * chain)
 
         if (!gst_pad_is_blocked (child_chain->pad)) {
           GST_DEBUG_OBJECT (pad, "blocking next group's pad %p", pad);
-          gst_pad_set_blocked_async (child_chain->pad, TRUE,
-              (GstPadBlockCallback) demuxer_pad_blocked_cb, chain);
+          gst_pad_add_probe (child_chain->pad,
+              GST_PAD_PROBE_TYPE_BLOCK_DOWNSTREAM,
+              (GstPadProbeCallback) demuxer_pad_blocked_cb, chain, NULL);
         }
       }
     }
@@ -2951,8 +2953,8 @@ unblock_demuxer_pads (GstDecodeChain * chain)
   GST_DEBUG_OBJECT (chain->dbin, "Unblocking demuxer pad for chain %p", chain);
 
   if (gst_pad_is_blocked (chain->pad))
-    gst_pad_set_blocked_async (chain->pad, FALSE,
-        (GstPadBlockCallback) demuxer_pad_blocked_cb, chain);
+    gst_pad_add_probe (chain->pad, GST_PAD_PROBE_TYPE_IDLE,
+        (GstPadProbeCallback) demuxer_pad_blocked_cb, chain, NULL);
   if (chain->active_group) {
     for (l = chain->active_group->children; l; l = l->next) {
       GstDecodeChain *child_chain = l->data;
