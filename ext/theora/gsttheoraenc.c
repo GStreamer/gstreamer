@@ -1057,6 +1057,7 @@ theora_enc_is_discontinuous (GstTheoraEnc * enc, GstClockTime timestamp,
 static void
 theora_enc_init_buffer (th_ycbcr_buffer buf, GstVideoFrame * frame)
 {
+  GstVideoInfo info;
   guint i;
 
   /* According to Theora developer Timothy Terriberry, the Theora 
@@ -1066,9 +1067,15 @@ theora_enc_init_buffer (th_ycbcr_buffer buf, GstVideoFrame * frame)
    * Due to this, setting the frame's width/height as the buffer width/height
    * is perfectly ok, even though it does not strictly look ok.
    */
+
+  gst_video_info_init (&info);
+  gst_video_info_set_format (&info, GST_VIDEO_FRAME_FORMAT (frame),
+      GST_ROUND_UP_16 (GST_VIDEO_FRAME_WIDTH (frame)),
+      GST_ROUND_UP_16 (GST_VIDEO_FRAME_HEIGHT (frame)));
+
   for (i = 0; i < 3; i++) {
-    buf[i].width = GST_VIDEO_FRAME_COMP_WIDTH (frame, i);
-    buf[i].height = GST_VIDEO_FRAME_COMP_HEIGHT (frame, i);
+    buf[i].width = GST_VIDEO_INFO_COMP_WIDTH (&info, i);
+    buf[i].height = GST_VIDEO_INFO_COMP_HEIGHT (&info, i);
     buf[i].data = GST_VIDEO_FRAME_COMP_DATA (frame, i);
     buf[i].stride = GST_VIDEO_FRAME_COMP_STRIDE (frame, i);
   }
