@@ -541,6 +541,7 @@ gst_dtmf_src_generate_tone (GstDTMFSrcEvent * event, DTMF_KEY key,
     float duration, gint sample_rate)
 {
   GstBuffer *buffer;
+  GstMapInfo map;
   gint16 *p;
   gint tone_size;
   double i = 0;
@@ -552,7 +553,8 @@ gst_dtmf_src_generate_tone (GstDTMFSrcEvent * event, DTMF_KEY key,
 
   buffer = gst_buffer_new_allocate (NULL, tone_size, 1);
 
-  p = (gint16 *) gst_buffer_map (buffer, NULL, NULL, GST_MAP_READWRITE);
+  gst_buffer_map (buffer, &map, GST_MAP_READWRITE);
+  p = (gint16 *) map.data;
 
   volume_factor = pow (10, (-event->volume) / 20);
 
@@ -581,7 +583,7 @@ gst_dtmf_src_generate_tone (GstDTMFSrcEvent * event, DTMF_KEY key,
     (event->sample)++;
   }
 
-  gst_buffer_unmap (buffer, p, tone_size);
+  gst_buffer_unmap (buffer, &map);
 
   return buffer;
 }
