@@ -325,7 +325,7 @@ gst_static_pad_template_get (GstStaticPadTemplate * pad_template)
  * Creates a new pad template with a name according to the given template
  * and with the given arguments.
  *
- * Returns: (transfer full): a new #GstPadTemplate.
+ * Returns: (transfer floating): a new #GstPadTemplate.
  */
 GstPadTemplate *
 gst_pad_template_new (const gchar * name_template,
