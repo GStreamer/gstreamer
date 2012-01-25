@@ -701,8 +701,8 @@ static GstFlowReturn
 gst_lamemp3enc_flush_full (GstLameMP3Enc * lame, gboolean push)
 {
   GstBuffer *buf;
+  GstMapInfo map;
   gint size;
-  guint8 *data;
   GstFlowReturn result = GST_FLOW_OK;
   gint av;
 
@@ -710,15 +710,16 @@ gst_lamemp3enc_flush_full (GstLameMP3Enc * lame, gboolean push)
     return GST_FLOW_OK;
 
   buf = gst_buffer_new_and_alloc (7200);
-  data = gst_buffer_map (buf, NULL, NULL, GST_MAP_WRITE);
-  size = lame_encode_flush (lame->lgf, data, 7200);
+  gst_buffer_map (buf, &map, GST_MAP_WRITE);
+  size = lame_encode_flush (lame->lgf, map.data, 7200);
 
   if (size > 0) {
-    gst_buffer_unmap (buf, data, size);
+    gst_buffer_unmap (buf, &map);
+    gst_buffer_resize (buf, 0, size);
     GST_DEBUG_OBJECT (lame, "collecting final %d bytes", size);
     gst_adapter_push (lame->adapter, buf);
   } else {
-    gst_buffer_unmap (buf, data, 0);
+    gst_buffer_unmap (buf, &map);
     GST_DEBUG_OBJECT (lame, "no final packet (size=%d, push=%d)", size, push);
     gst_buffer_unref (buf);
     result = GST_FLOW_OK;
@@ -752,13 +753,11 @@ static GstFlowReturn
 gst_lamemp3enc_handle_frame (GstAudioEncoder * enc, GstBuffer * in_buf)
 {
   GstLameMP3Enc *lame;
-  guchar *mp3_data;
   gint mp3_buffer_size, mp3_size;
   GstBuffer *mp3_buf;
   GstFlowReturn result;
   gint num_samples;
-  guint8 *data;
-  gsize size;
+  GstMapInfo in_map, mp3_map;
 
   lame = GST_LAMEMP3ENC (enc);
 
@@ -766,38 +765,39 @@ gst_lamemp3enc_handle_frame (GstAudioEncoder * enc, GstBuffer * in_buf)
   if (G_UNLIKELY (in_buf == NULL))
     return gst_lamemp3enc_flush_full (lame, TRUE);
 
-  data = gst_buffer_map (in_buf, &size, NULL, GST_MAP_READ);
+  gst_buffer_map (in_buf, &in_map, GST_MAP_READ);
 
-  num_samples = size / 2;
+  num_samples = in_map.size / 2;
 
   /* allocate space for output */
   mp3_buffer_size = 1.25 * num_samples + 7200;
   mp3_buf = gst_buffer_new_allocate (NULL, mp3_buffer_size, 0);
-  mp3_data = gst_buffer_map (mp3_buf, NULL, NULL, GST_MAP_WRITE);
+  gst_buffer_map (mp3_buf, &mp3_map, GST_MAP_WRITE);
 
   /* lame seems to be too stupid to get mono interleaved going */
   if (lame->num_channels == 1) {
     mp3_size = lame_encode_buffer (lame->lgf,
-        (short int *) data,
-        (short int *) data, num_samples, mp3_data, mp3_buffer_size);
+        (short int *) in_map.data,
+        (short int *) in_map.data, num_samples, mp3_map.data, mp3_buffer_size);
   } else {
     mp3_size = lame_encode_buffer_interleaved (lame->lgf,
-        (short int *) data,
-        num_samples / lame->num_channels, mp3_data, mp3_buffer_size);
+        (short int *) in_map.data,
+        num_samples / lame->num_channels, mp3_map.data, mp3_buffer_size);
   }
-  gst_buffer_unmap (in_buf, data, size);
+  gst_buffer_unmap (in_buf, &in_map);
 
   GST_LOG_OBJECT (lame, "encoded %" G_GSIZE_FORMAT " bytes of audio "
-      "to %d bytes of mp3", size, mp3_size);
+      "to %d bytes of mp3", in_map.size, mp3_size);
 
   if (G_LIKELY (mp3_size > 0)) {
     /* unfortunately lame does not provide frame delineated output,
      * so collect output and parse into frames ... */
-    gst_buffer_unmap (mp3_buf, mp3_data, mp3_size);
+    gst_buffer_unmap (mp3_buf, &mp3_map);
+    gst_buffer_resize (mp3_buf, 0, mp3_size);
     gst_adapter_push (lame->adapter, mp3_buf);
     result = gst_lamemp3enc_finish_frames (lame);
   } else {
-    gst_buffer_unmap (mp3_buf, mp3_data, 0);
+    gst_buffer_unmap (mp3_buf, &mp3_map);
     if (mp3_size < 0) {
       /* eat error ? */
       g_warning ("error %d", mp3_size);
