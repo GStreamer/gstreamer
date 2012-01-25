@@ -308,7 +308,7 @@ gst_a52dec_parse (GstAudioDecoder * bdec, GstAdapter * adapter,
   bit_rate = a52dec->bit_rate;
   sample_rate = a52dec->sample_rate;
   flags = 0;
-  while (av >= 7) {
+  while (size >= 7) {
     length = a52_syncinfo ((guint8 *) data, &flags, &sample_rate, &bit_rate);
 
     if (length == 0) {

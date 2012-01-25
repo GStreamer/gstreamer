@@ -327,11 +327,14 @@ cur_title_get_chapter_bounds (GstDvdReadSrc * src, gint chapter,
   *p_first_cell = pgc->program_map[pgn - 1] - 1;
 
   if (chapter == (src->num_chapters - 1)) {
-    *p_last_cell = pgc->nr_of_cells;
+    *p_last_cell = pgc->nr_of_cells - 1;
   } else {
     pgn_next_ch = src->vts_ptt_srpt->title[src->ttn - 1].ptt[chapter + 1].pgn;
     *p_last_cell = pgc->program_map[pgn_next_ch - 1] - 1;
   }
+
+  GST_DEBUG_OBJECT (src, "Chapter %d bounds: %d %d (within %d cells)",
+      chapter, *p_first_cell, *p_last_cell, pgc->nr_of_cells);
 }
 
 static gboolean

@@ -431,7 +431,7 @@ gst_x264_enc_build_tunings_string (GstX264Enc * x264enc)
 {
   int i = 1;
 
-  if (x264enc->tunings && x264enc->tunings->len)
+  if (x264enc->tunings)
     g_string_free (x264enc->tunings, TRUE);
 
   if (x264enc->psy_tune) {
@@ -948,7 +948,7 @@ gst_x264_enc_finalize (GObject * object)
 
 #define FREE_STRING(ptr) \
   if (ptr) \
-    ptr = (GString *)g_string_free (ptr, TRUE);
+    g_string_free (ptr, TRUE);
 
   FREE_STRING (encoder->tunings);
   FREE_STRING (encoder->option_string);
