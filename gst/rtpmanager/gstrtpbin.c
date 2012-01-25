@@ -1898,7 +1898,7 @@ gst_rtp_bin_init (GstRtpBin * rtpbin, GstRtpBinClass * klass)
   rtpbin->use_pipeline_clock = DEFAULT_USE_PIPELINE_CLOCK;
 
   /* some default SDES entries */
-  cname = g_strdup_printf ("user%u@x-%u.net", g_random_int (), g_random_int ());
+  cname = g_strdup_printf ("user%u@host-%x", g_random_int (), g_random_int ());
   rtpbin->sdes = gst_structure_new ("application/x-rtp-source-sdes",
       "cname", G_TYPE_STRING, cname, "tool", G_TYPE_STRING, "GStreamer", NULL);
   g_free (cname);
