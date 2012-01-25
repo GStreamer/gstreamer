@@ -248,8 +248,7 @@ static void
 gst_rtp_asf_depay_set_padding (GstRtpAsfDepay * depayload,
     GstBuffer * buf, guint32 padding)
 {
-  gpointer bufdata;
-  gsize bufsize;
+  GstMapInfo map;
   guint8 *data;
   gint offset = 0;
   guint8 aux;
@@ -257,8 +256,8 @@ gst_rtp_asf_depay_set_padding (GstRtpAsfDepay * depayload,
   guint8 pad_type;
   guint8 pkt_type;
 
-  bufdata = gst_buffer_map (buf, &bufsize, NULL, GST_MAP_READ);
-  data = bufdata;
+  gst_buffer_map (buf, &map, GST_MAP_READ);
+  data = map.data;
 
   aux = data[offset++];
   if (aux & 0x80) {
@@ -267,7 +266,7 @@ gst_rtp_asf_depay_set_padding (GstRtpAsfDepay * depayload,
       GST_WARNING_OBJECT (depayload, "Error correction length type should be "
           "set to 0");
       /* this packet doesn't follow the spec */
-      gst_buffer_unmap (buf, bufdata, bufsize);
+      gst_buffer_unmap (buf, &map);
       return;
     }
     err_len = aux & 0x0F;
@@ -305,7 +304,7 @@ gst_rtp_asf_depay_set_padding (GstRtpAsfDepay * depayload,
     default:
       break;
   }
-  gst_buffer_unmap (buf, bufdata, bufsize);
+  gst_buffer_unmap (buf, &map);
 }
 
 /* Docs: 'RTSP Protocol PDF' document from http://sdp.ppona.com/ (page 8) */

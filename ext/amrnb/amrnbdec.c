@@ -282,8 +282,7 @@ static GstFlowReturn
 gst_amrnbdec_handle_frame (GstAudioDecoder * dec, GstBuffer * buffer)
 {
   GstAmrnbDec *amrnbdec;
-  guint8 *data;
-  short *out_data;
+  GstMapInfo inmap, outmap;
   GstBuffer *out;
 
   amrnbdec = GST_AMRNBDEC (dec);
@@ -295,16 +294,17 @@ gst_amrnbdec_handle_frame (GstAudioDecoder * dec, GstBuffer * buffer)
   if (amrnbdec->rate == 0 || amrnbdec->channels == 0)
     goto not_negotiated;
 
-  data = gst_buffer_map (buffer, NULL, NULL, GST_MAP_READ);
+  gst_buffer_map (buffer, &inmap, GST_MAP_READ);
 
   /* get output */
   out = gst_buffer_new_and_alloc (160 * 2);
   /* decode */
-  out_data = gst_buffer_map (out, NULL, NULL, GST_MAP_WRITE);
-  Decoder_Interface_Decode (amrnbdec->handle, data, out_data, 0);
-  gst_buffer_unmap (out, out_data, 160 * 2);
+  gst_buffer_map (out, &outmap, GST_MAP_WRITE);
+  Decoder_Interface_Decode (amrnbdec->handle, inmap.data,
+      (gint16 *) outmap.data, 0);
+  gst_buffer_unmap (out, &outmap);
 
-  gst_buffer_unmap (buffer, data, -1);
+  gst_buffer_unmap (buffer, &inmap);
 
   return gst_audio_decoder_finish_frame (dec, out, 1);
 

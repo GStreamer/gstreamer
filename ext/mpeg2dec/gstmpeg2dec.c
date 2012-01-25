@@ -1004,8 +1004,7 @@ static GstFlowReturn
 gst_mpeg2dec_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
 {
   GstMpeg2dec *mpeg2dec;
-  gsize size;
-  guint8 *data, *end;
+  GstMapInfo map;
   GstClockTime pts;
   const mpeg2_info_t *info;
   mpeg2_state_t state;
@@ -1014,7 +1013,7 @@ gst_mpeg2dec_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
 
   mpeg2dec = GST_MPEG2DEC (parent);
 
-  data = gst_buffer_map (buf, &size, NULL, GST_MAP_READ);
+  gst_buffer_map (buf, &map, GST_MAP_READ);
   pts = GST_BUFFER_TIMESTAMP (buf);
 
   if (GST_BUFFER_IS_DISCONT (buf)) {
@@ -1032,7 +1031,6 @@ gst_mpeg2dec_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
       GST_TIME_ARGS (GST_BUFFER_DURATION (buf)));
 
   info = mpeg2dec->info;
-  end = data + size;
 
   mpeg2dec->offset = GST_BUFFER_OFFSET (buf);
 
@@ -1054,7 +1052,7 @@ gst_mpeg2dec_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
   }
 
   GST_LOG_OBJECT (mpeg2dec, "calling mpeg2_buffer");
-  mpeg2_buffer (mpeg2dec->decoder, data, end);
+  mpeg2_buffer (mpeg2dec->decoder, map.data, map.data + map.size);
   GST_LOG_OBJECT (mpeg2dec, "calling mpeg2_buffer done");
 
   while (!done) {
@@ -1159,7 +1157,7 @@ gst_mpeg2dec_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
     }
   }
 done:
-  gst_buffer_unmap (buf, data, size);
+  gst_buffer_unmap (buf, &map);
   gst_buffer_unref (buf);
   return ret;
 

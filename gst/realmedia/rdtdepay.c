@@ -303,6 +303,7 @@ gst_rdt_depay_handle_data (GstRDTDepay * rdtdepay, GstClockTime outtime,
 {
   GstFlowReturn ret;
   GstBuffer *outbuf;
+  GstMapInfo outmap;
   guint8 *data, *outdata;
   guint size;
   guint16 stream_id;
@@ -365,14 +366,16 @@ gst_rdt_depay_handle_data (GstRDTDepay * rdtdepay, GstClockTime outtime,
   else
     outflags = 0;
 
-  outdata = gst_buffer_map (outbuf, NULL, NULL, GST_MAP_WRITE);
+  gst_buffer_map (outbuf, &outmap, GST_MAP_WRITE);
+  outdata = outmap.data;
   GST_WRITE_UINT16_BE (outdata + 0, 0); /* version   */
   GST_WRITE_UINT16_BE (outdata + 2, size + 12); /* length    */
   GST_WRITE_UINT16_BE (outdata + 4, stream_id); /* stream    */
   GST_WRITE_UINT32_BE (outdata + 6, timestamp); /* timestamp */
   GST_WRITE_UINT16_BE (outdata + 10, outflags); /* flags     */
   memcpy (outdata + 12, data, size);
-  gst_buffer_unmap (outbuf, outdata, 12 + size);
+  gst_buffer_unmap (outbuf, &outmap);
+  gst_buffer_resize (outbuf, 0, 12 + size);
 
   gst_rdt_packet_data_unmap (packet);
 

@@ -205,8 +205,7 @@ gst_amrwbdec_handle_frame (GstAudioDecoder * dec, GstBuffer * buffer)
 {
   GstAmrwbDec *amrwbdec;
   GstBuffer *out;
-  guint8 *data;
-  Word16 *outdata;
+  GstMapInfo inmap, outmap;
 
   amrwbdec = GST_AMRWBDEC (dec);
 
@@ -219,17 +218,18 @@ gst_amrwbdec_handle_frame (GstAudioDecoder * dec, GstBuffer * buffer)
 
   /* the library seems to write into the source data, hence the copy. */
   /* should be no problem */
-  data = gst_buffer_map (buffer, NULL, NULL, GST_MAP_READ);
+  gst_buffer_map (buffer, &inmap, GST_MAP_READ);
 
   /* get output */
   out = gst_buffer_new_and_alloc (sizeof (gint16) * L_FRAME16k);
-  outdata = gst_buffer_map (out, NULL, NULL, GST_MAP_WRITE);
+  gst_buffer_map (out, &outmap, GST_MAP_WRITE);
 
   /* decode */
-  D_IF_decode (amrwbdec->handle, (unsigned char *) data, outdata, _good_frame);
+  D_IF_decode (amrwbdec->handle, (unsigned char *) inmap.data,
+      (short int *) outmap.data, _good_frame);
 
-  gst_buffer_unmap (out, outdata, sizeof (gint16) * L_FRAME16k);
-  gst_buffer_unmap (buffer, data, -1);
+  gst_buffer_unmap (out, &outmap);
+  gst_buffer_unmap (buffer, &inmap);
 
   /* send out */
   return gst_audio_decoder_finish_frame (dec, out, 1);

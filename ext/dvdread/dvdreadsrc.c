@@ -738,7 +738,7 @@ gst_dvd_read_src_read (GstDvdReadSrc * src, gint angle, gint new_seek,
   gint len;
   gint retries;
   gint64 next_time;
-  guint8 *data;
+  GstMapInfo map;
 
   seg = &(GST_BASE_SRC (src)->segment);
 
@@ -846,14 +846,16 @@ nav_retry:
   GST_LOG_OBJECT (src, "Going to read %u sectors @ pack %d", cur_output_size,
       src->cur_pack);
 
-  data = gst_buffer_map (buf, NULL, NULL, GST_MAP_WRITE);
+  gst_buffer_map (buf, &map, GST_MAP_WRITE);
   /* read in and output cursize packs */
-  len = DVDReadBlocks (src->dvd_title, src->cur_pack, cur_output_size, data);
+  len =
+      DVDReadBlocks (src->dvd_title, src->cur_pack, cur_output_size, map.data);
 
   if (len != cur_output_size)
     goto block_read_error;
 
-  gst_buffer_unmap (buf, data, cur_output_size * DVD_VIDEO_LB_LEN);
+  gst_buffer_unmap (buf, &map);
+  gst_buffer_resize (buf, 0, cur_output_size * DVD_VIDEO_LB_LEN);
   /* GST_BUFFER_OFFSET (buf) = priv->cur_pack * DVD_VIDEO_LB_LEN; */
   GST_BUFFER_TIMESTAMP (buf) =
       gst_dvd_read_src_get_time_for_sector (src, src->cur_pack);
@@ -889,7 +891,7 @@ block_read_error:
   {
     GST_ERROR_OBJECT (src, "Read failed for %d blocks at %d",
         cur_output_size, src->cur_pack);
-    gst_buffer_unmap (buf, data, 0);
+    gst_buffer_unmap (buf, &map);
     gst_buffer_unref (buf);
     return GST_DVD_READ_ERROR;
   }

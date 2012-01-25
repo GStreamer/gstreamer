@@ -467,17 +467,16 @@ gboolean
 gst_asf_demux_parse_packet (GstASFDemux * demux, GstBuffer * buf)
 {
   AsfPacket packet = { 0, };
-  gpointer bufdata;
+  GstMapInfo map;
   const guint8 *data;
   gboolean has_multiple_payloads;
   gboolean ret = TRUE;
   guint8 ec_flags, flags1;
-  gsize bufsize;
   guint size;
 
-  bufdata = gst_buffer_map (buf, &bufsize, NULL, GST_MAP_READ);
-  data = bufdata;
-  size = bufsize;
+  gst_buffer_map (buf, &map, GST_MAP_READ);
+  data = map.data;
+  size = map.size;
   GST_LOG_OBJECT (demux, "Buffer size: %u", size);
 
   /* need at least two payload flag bytes, send time, and duration */
@@ -596,13 +595,13 @@ gst_asf_demux_parse_packet (GstASFDemux * demux, GstBuffer * buf)
     ret = gst_asf_demux_parse_payload (demux, &packet, -1, &data, &size);
   }
 
-  gst_buffer_unmap (buf, bufdata, bufsize);
+  gst_buffer_unmap (buf, &map);
   return ret;
 
 /* ERRORS */
 short_packet:
   {
-    gst_buffer_unmap (buf, bufdata, bufsize);
+    gst_buffer_unmap (buf, &map);
     GST_WARNING_OBJECT (demux, "Short packet!");
     return FALSE;
   }

@@ -86,7 +86,7 @@ struct _GstRDTPacket
   /*< private >*/
   GstRDTType   type;         /* type of current packet */
   guint16      length;       /* length of current packet in bytes */
-  guint8      *data;         /* last mapped data */
+  GstMapInfo   map;          /* last mapped data */
 };
 
 /* validate buffers */

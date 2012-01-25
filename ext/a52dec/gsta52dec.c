@@ -498,8 +498,7 @@ gst_a52dec_handle_frame (GstAudioDecoder * bdec, GstBuffer * buffer)
   gboolean need_reneg = FALSE;
   gint chans;
   gint length = 0, flags, sample_rate, bit_rate;
-  guint8 *data;
-  gsize size;
+  GstMapInfo map;
   GstFlowReturn result = GST_FLOW_OK;
   GstBuffer *outbuf;
   const gint num_blocks = 6;
@@ -511,8 +510,8 @@ gst_a52dec_handle_frame (GstAudioDecoder * bdec, GstBuffer * buffer)
     return GST_FLOW_OK;
 
   /* parsed stuff already, so this should work out fine */
-  data = gst_buffer_map (buffer, &size, NULL, GST_MAP_READ);
-  g_assert (size >= 7);
+  gst_buffer_map (buffer, &map, GST_MAP_READ);
+  g_assert (map.size >= 7);
 
   /* re-obtain some sync header info,
    * should be same as during _parse and could also be cached there,
@@ -520,8 +519,8 @@ gst_a52dec_handle_frame (GstAudioDecoder * bdec, GstBuffer * buffer)
   bit_rate = a52dec->bit_rate;
   sample_rate = a52dec->sample_rate;
   flags = 0;
-  length = a52_syncinfo (data, &flags, &sample_rate, &bit_rate);
-  g_assert (length == size);
+  length = a52_syncinfo (map.data, &flags, &sample_rate, &bit_rate);
+  g_assert (length == map.size);
 
   /* update stream information, renegotiate or re-streaminfo if needed */
   need_reneg = FALSE;
@@ -591,13 +590,13 @@ gst_a52dec_handle_frame (GstAudioDecoder * bdec, GstBuffer * buffer)
   /* process */
   flags |= A52_ADJUST_LEVEL;
   a52dec->level = 1;
-  if (a52_frame (a52dec->state, data, &flags, &a52dec->level, a52dec->bias)) {
-    gst_buffer_unmap (buffer, data, size);
+  if (a52_frame (a52dec->state, map.data, &flags, &a52dec->level, a52dec->bias)) {
+    gst_buffer_unmap (buffer, &map);
     GST_AUDIO_DECODER_ERROR (a52dec, 1, STREAM, DECODE, (NULL),
         ("a52_frame error"), result);
     goto exit;
   }
-  gst_buffer_unmap (buffer, data, size);
+  gst_buffer_unmap (buffer, &map);
 
   channels = flags & (A52_CHANNEL_MASK | A52_LFE);
   if (a52dec->using_channels != channels) {
@@ -628,16 +627,16 @@ gst_a52dec_handle_frame (GstAudioDecoder * bdec, GstBuffer * buffer)
   outbuf =
       gst_buffer_new_and_alloc (256 * chans * (SAMPLE_WIDTH / 8) * num_blocks);
 
-  data = gst_buffer_map (outbuf, &size, NULL, GST_MAP_WRITE);
+  gst_buffer_map (outbuf, &map, GST_MAP_WRITE);
   {
-    guint8 *ptr = data;
+    guint8 *ptr = map.data;
     for (i = 0; i < num_blocks; i++) {
       if (a52_block (a52dec->state)) {
         /* also marks discont */
         GST_AUDIO_DECODER_ERROR (a52dec, 1, STREAM, DECODE, (NULL),
             ("error decoding block %d", i), result);
         if (result != GST_FLOW_OK) {
-          gst_buffer_unmap (outbuf, data, size);
+          gst_buffer_unmap (outbuf, &map);
           goto exit;
         }
       } else {
@@ -654,7 +653,7 @@ gst_a52dec_handle_frame (GstAudioDecoder * bdec, GstBuffer * buffer)
       ptr += 256 * chans * (SAMPLE_WIDTH / 8);
     }
   }
-  gst_buffer_unmap (outbuf, data, size);
+  gst_buffer_unmap (outbuf, &map);
 
   result = gst_audio_decoder_finish_frame (bdec, outbuf, 1);
 

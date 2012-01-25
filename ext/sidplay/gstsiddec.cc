@@ -355,7 +355,7 @@ play_loop (GstPad * pad)
   GstFlowReturn ret;
   GstSidDec *siddec;
   GstBuffer *out;
-  guint8 *data;
+  GstMapInfo outmap;
   gint64 value, offset, time;
   GstFormat format;
 
@@ -363,10 +363,10 @@ play_loop (GstPad * pad)
 
   out = gst_buffer_new_and_alloc (siddec->blocksize);
 
-  data = (guint8 *) gst_buffer_map (out, NULL, NULL, GST_MAP_WRITE);
+  gst_buffer_map (out, &outmap, GST_MAP_WRITE);
   sidEmuFillBuffer (*siddec->engine, *siddec->tune,
-      data, siddec->blocksize);
-  gst_buffer_unmap (out, data, siddec->blocksize);
+      outmap.data, siddec->blocksize);
+  gst_buffer_unmap (out, &outmap);
 
   /* get offset in samples */
   format = GST_FORMAT_DEFAULT;

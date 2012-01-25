@@ -343,7 +343,7 @@ gst_rmdemux_validate_offset (GstRMDemux * rmdemux)
   GstFlowReturn flowret;
   guint16 version, length;
   gboolean ret = TRUE;
-  guint8 *data;
+  GstMapInfo map;
 
   flowret = gst_pad_pull_range (rmdemux->sinkpad, rmdemux->offset, 4, &buffer);
 
@@ -361,21 +361,21 @@ gst_rmdemux_validate_offset (GstRMDemux * rmdemux)
    * 4 bytes, and we can check that it won't take us past our known total size
    */
 
-  data = gst_buffer_map (buffer, NULL, NULL, GST_MAP_READ);
-  version = RMDEMUX_GUINT16_GET (data);
+  gst_buffer_map (buffer, &map, GST_MAP_READ);
+  version = RMDEMUX_GUINT16_GET (map.data);
   if (version != 0 && version != 1) {
     GST_DEBUG_OBJECT (rmdemux, "Expected version 0 or 1, got %d",
         (int) version);
     ret = FALSE;
   }
 
-  length = RMDEMUX_GUINT16_GET (data + 2);
+  length = RMDEMUX_GUINT16_GET (map.data + 2);
   /* TODO: Also check against total stream length */
   if (length < 4) {
     GST_DEBUG_OBJECT (rmdemux, "Expected length >= 4, got %d", (int) length);
     ret = FALSE;
   }
-  gst_buffer_unmap (buffer, data, -1);
+  gst_buffer_unmap (buffer, &map);
 
   if (ret) {
     rmdemux->offset += 4;
@@ -1914,7 +1914,7 @@ gst_rmdemux_descramble_audio (GstRMDemux * rmdemux, GstRMDemuxStream * stream)
 {
   GstFlowReturn ret = GST_FLOW_ERROR;
   GstBuffer *outbuf;
-  guint8 *outdata;
+  GstMapInfo outmap;
   guint packet_size = stream->packet_size;
   guint height = stream->subpackets->len;
   guint leaf_size = stream->leaf_size;
@@ -1926,11 +1926,13 @@ gst_rmdemux_descramble_audio (GstRMDemux * rmdemux, GstRMDemuxStream * stream)
       leaf_size, height);
 
   outbuf = gst_buffer_new_and_alloc (height * packet_size);
-  outdata = gst_buffer_map (outbuf, NULL, NULL, GST_MAP_WRITE);
+  gst_buffer_map (outbuf, &outmap, GST_MAP_WRITE);
 
   for (p = 0; p < height; ++p) {
     GstBuffer *b = g_ptr_array_index (stream->subpackets, p);
-    guint8 *b_data = gst_buffer_map (b, NULL, NULL, GST_MAP_READ);
+    GstMapInfo map;
+
+    gst_buffer_map (b, &map, GST_MAP_READ);
 
     if (p == 0)
       GST_BUFFER_TIMESTAMP (outbuf) = GST_BUFFER_TIMESTAMP (b);
@@ -1941,11 +1943,12 @@ gst_rmdemux_descramble_audio (GstRMDemux * rmdemux, GstRMDemuxStream * stream)
       idx = height * x + ((height + 1) / 2) * (p % 2) + (p / 2);
 
       /* GST_LOG ("%3u => %3u", (height * p) + x, idx); */
-      memcpy (outdata + leaf_size * idx, b_data + leaf_size * x, leaf_size);
+      memcpy (outmap.data + leaf_size * idx, map.data + leaf_size * x,
+          leaf_size);
     }
-    gst_buffer_unmap (b, b_data, -1);
+    gst_buffer_unmap (b, &map);
   }
-  gst_buffer_unmap (outbuf, outdata, -1);
+  gst_buffer_unmap (outbuf, &outmap);
 
   /* some decoders, such as realaudiodec, need to be fed in packet units */
   for (p = 0; p < height; ++p) {
@@ -2001,7 +2004,7 @@ gst_rmdemux_descramble_mp4a_audio (GstRMDemux * rmdemux,
   GstFlowReturn res;
   GstBuffer *buf, *outbuf;
   guint frames, index, i;
-  guint8 *data;
+  GstMapInfo map;
   GstClockTime timestamp;
 
   res = GST_FLOW_OK;
@@ -2010,14 +2013,14 @@ gst_rmdemux_descramble_mp4a_audio (GstRMDemux * rmdemux,
   g_ptr_array_index (stream->subpackets, 0) = NULL;
   g_ptr_array_set_size (stream->subpackets, 0);
 
-  data = gst_buffer_map (buf, NULL, NULL, GST_MAP_READ);
+  gst_buffer_map (buf, &map, GST_MAP_READ);
   timestamp = GST_BUFFER_TIMESTAMP (buf);
 
-  frames = (data[1] & 0xf0) >> 4;
+  frames = (map.data[1] & 0xf0) >> 4;
   index = 2 * frames + 2;
 
   for (i = 0; i < frames; i++) {
-    guint len = (data[i * 2 + 2] << 8) | data[i * 2 + 3];
+    guint len = (map.data[i * 2 + 2] << 8) | map.data[i * 2 + 3];
 
     outbuf = gst_buffer_copy_region (buf, GST_BUFFER_COPY_ALL, index, len);
     if (i == 0)
@@ -2033,7 +2036,7 @@ gst_rmdemux_descramble_mp4a_audio (GstRMDemux * rmdemux,
     if (res != GST_FLOW_OK)
       break;
   }
-  gst_buffer_unmap (buf, data, -1);
+  gst_buffer_unmap (buf, &map);
   gst_buffer_unref (buf);
   return res;
 }
@@ -2044,7 +2047,7 @@ gst_rmdemux_descramble_sipr_audio (GstRMDemux * rmdemux,
 {
   GstFlowReturn ret;
   GstBuffer *outbuf;
-  guint8 *outdata;
+  GstMapInfo outmap;
   guint packet_size = stream->packet_size;
   guint height = stream->subpackets->len;
   guint p;
@@ -2055,7 +2058,7 @@ gst_rmdemux_descramble_sipr_audio (GstRMDemux * rmdemux,
       stream->leaf_size, height);
 
   outbuf = gst_buffer_new_and_alloc (height * packet_size);
-  outdata = gst_buffer_map (outbuf, NULL, NULL, GST_MAP_WRITE);
+  gst_buffer_map (outbuf, &outmap, GST_MAP_WRITE);
 
   for (p = 0; p < height; ++p) {
     GstBuffer *b = g_ptr_array_index (stream->subpackets, p);
@@ -2063,9 +2066,9 @@ gst_rmdemux_descramble_sipr_audio (GstRMDemux * rmdemux,
     if (p == 0)
       GST_BUFFER_TIMESTAMP (outbuf) = GST_BUFFER_TIMESTAMP (b);
 
-    gst_buffer_extract (b, 0, outdata + packet_size * p, packet_size);
+    gst_buffer_extract (b, 0, outmap.data + packet_size * p, packet_size);
   }
-  gst_buffer_unmap (outbuf, outdata, -1);
+  gst_buffer_unmap (outbuf, &outmap);
 
   GST_LOG_OBJECT (rmdemux, "pushing buffer timestamp %" GST_TIME_FORMAT,
       GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (outbuf)));
@@ -2284,14 +2287,14 @@ gst_rmdemux_parse_video_packet (GstRMDemux * rmdemux, GstRMDemuxStream * stream,
     GstClockTime timestamp, gboolean key)
 {
   GstFlowReturn ret;
+  GstMapInfo map;
   const guint8 *data;
-  guint8 *base;
   gsize size;
 
-  base = gst_buffer_map (in, &size, NULL, GST_MAP_READ);
+  gst_buffer_map (in, &map, GST_MAP_READ);
 
-  data = base + offset;
-  size -= offset;
+  data = map.data + offset;
+  size = map.size - offset;
 
   /* if size <= 2, we want this method to return the same GstFlowReturn as it
    * was previously for that given stream. */
@@ -2358,7 +2361,7 @@ gst_rmdemux_parse_video_packet (GstRMDemux * rmdemux, GstRMDemuxStream * stream,
 
     /* get the fragment */
     fragment =
-        gst_buffer_copy_region (in, GST_BUFFER_COPY_ALL, data - base,
+        gst_buffer_copy_region (in, GST_BUFFER_COPY_ALL, data - map.data,
         fragment_size);
 
     if (pkg_subseq == 1) {
@@ -2389,7 +2392,8 @@ gst_rmdemux_parse_video_packet (GstRMDemux * rmdemux, GstRMDemuxStream * stream,
     /* flush fragment when complete */
     if (stream->frag_current >= stream->frag_length) {
       GstBuffer *out;
-      guint8 *outdata, *outbase;
+      GstMapInfo outmap;
+      guint8 *outdata;
       guint header_size;
       gint i, avail;
 
@@ -2412,8 +2416,8 @@ gst_rmdemux_parse_video_packet (GstRMDemux * rmdemux, GstRMDemuxStream * stream,
       avail = gst_adapter_available (stream->adapter);
 
       out = gst_buffer_new_and_alloc (header_size + avail);
-      outbase = gst_buffer_map (out, NULL, NULL, GST_MAP_WRITE);
-      outdata = outbase;
+      gst_buffer_map (out, &outmap, GST_MAP_WRITE);
+      outdata = outmap.data;
 
       /* create header */
       *outdata++ = stream->frag_count - 1;
@@ -2444,7 +2448,7 @@ gst_rmdemux_parse_video_packet (GstRMDemux * rmdemux, GstRMDemuxStream * stream,
       timestamp =
           gst_rmdemux_fix_timestamp (rmdemux, stream, outdata, timestamp);
 
-      gst_buffer_unmap (out, outbase, -1);
+      gst_buffer_unmap (out, &outmap);
 
       GST_BUFFER_TIMESTAMP (out) = timestamp;
 
@@ -2473,7 +2477,7 @@ gst_rmdemux_parse_video_packet (GstRMDemux * rmdemux, GstRMDemuxStream * stream,
   GST_DEBUG_OBJECT (rmdemux, "%" G_GSIZE_FORMAT " bytes left", size);
 
 done:
-  gst_buffer_unmap (in, base, -1);
+  gst_buffer_unmap (in, &map);
   gst_buffer_unref (in);
 
   return ret;
@@ -2547,11 +2551,14 @@ gst_rmdemux_parse_packet (GstRMDemux * rmdemux, GstBuffer * in, guint16 version)
   GstFlowReturn cret, ret;
   GstClockTime timestamp;
   gboolean key;
-  guint8 *data, *base;
+  GstMapInfo map;
+  guint8 *data;
   guint8 flags;
   guint32 ts;
 
-  base = data = gst_buffer_map (in, &size, NULL, GST_MAP_READ);
+  gst_buffer_map (in, &map, GST_MAP_READ);
+  data = map.data;
+  size = map.size;
 
   /* stream number */
   id = RMDEMUX_GUINT16_GET (data);
@@ -2591,8 +2598,8 @@ gst_rmdemux_parse_packet (GstRMDemux * rmdemux, GstBuffer * in, guint16 version)
     data += 1;
     size -= 1;
   }
-  offset = data - base;
-  gst_buffer_unmap (in, base, -1);
+  offset = data - map.data;
+  gst_buffer_unmap (in, &map);
 
   key = (flags & 0x02) != 0;
   GST_DEBUG_OBJECT (rmdemux, "flags %d, Keyframe %d", flags, key);
@@ -2654,7 +2661,7 @@ unknown_stream:
   {
     GST_WARNING_OBJECT (rmdemux, "No stream for stream id %d in parsing "
         "data packet", id);
-    gst_buffer_unmap (in, base, -1);
+    gst_buffer_unmap (in, &map);
     gst_buffer_unref (in);
     return GST_FLOW_OK;
   }

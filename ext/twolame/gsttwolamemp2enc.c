@@ -613,7 +613,7 @@ static GstFlowReturn
 gst_two_lame_flush_full (GstTwoLame * lame, gboolean push)
 {
   GstBuffer *buf;
-  guint8 *data;
+  GstMapInfo map;
   gint size;
   GstFlowReturn result = GST_FLOW_OK;
 
@@ -621,9 +621,9 @@ gst_two_lame_flush_full (GstTwoLame * lame, gboolean push)
     return GST_FLOW_OK;
 
   buf = gst_buffer_new_and_alloc (16384);
-  data = gst_buffer_map (buf, NULL, NULL, GST_MAP_WRITE);
-  size = twolame_encode_flush (lame->glopts, data, 16384);
-  gst_buffer_unmap (buf, data, 16384);
+  gst_buffer_map (buf, &map, GST_MAP_WRITE);
+  size = twolame_encode_flush (lame->glopts, map.data, 16384);
+  gst_buffer_unmap (buf, &map);
 
   if (size > 0 && push) {
     gst_buffer_set_size (buf, size);
@@ -647,13 +647,11 @@ static GstFlowReturn
 gst_two_lame_handle_frame (GstAudioEncoder * enc, GstBuffer * buf)
 {
   GstTwoLame *twolame;
-  guchar *mp3_data;
   gint mp3_buffer_size, mp3_size;
   GstBuffer *mp3_buf;
   GstFlowReturn result;
   gint num_samples;
-  guint8 *data;
-  gsize size;
+  GstMapInfo map, mp3_map;
 
   twolame = GST_TWO_LAME (enc);
 
@@ -661,43 +659,43 @@ gst_two_lame_handle_frame (GstAudioEncoder * enc, GstBuffer * buf)
   if (G_UNLIKELY (buf == NULL))
     return gst_two_lame_flush_full (twolame, TRUE);
 
-  data = gst_buffer_map (buf, &size, NULL, GST_MAP_READ);
+  gst_buffer_map (buf, &map, GST_MAP_READ);
 
   if (twolame->float_input)
-    num_samples = size / 4;
+    num_samples = map.size / 4;
   else
-    num_samples = size / 2;
+    num_samples = map.size / 2;
 
   /* allocate space for output */
   mp3_buffer_size = 1.25 * num_samples + 16384;
   mp3_buf = gst_buffer_new_and_alloc (mp3_buffer_size);
-  mp3_data = gst_buffer_map (mp3_buf, NULL, NULL, GST_MAP_WRITE);
+  gst_buffer_map (mp3_buf, &mp3_map, GST_MAP_WRITE);
 
   if (twolame->num_channels == 1) {
     if (twolame->float_input)
       mp3_size = twolame_encode_buffer_float32 (twolame->glopts,
-          (float *) data,
-          (float *) data, num_samples, mp3_data, mp3_buffer_size);
+          (float *) map.data,
+          (float *) map.data, num_samples, mp3_map.data, mp3_buffer_size);
     else
       mp3_size = twolame_encode_buffer (twolame->glopts,
-          (short int *) data,
-          (short int *) data, num_samples, mp3_data, mp3_buffer_size);
+          (short int *) map.data,
+          (short int *) map.data, num_samples, mp3_map.data, mp3_buffer_size);
   } else {
     if (twolame->float_input)
       mp3_size = twolame_encode_buffer_float32_interleaved (twolame->glopts,
-          (float *) data,
-          num_samples / twolame->num_channels, mp3_data, mp3_buffer_size);
+          (float *) map.data,
+          num_samples / twolame->num_channels, mp3_map.data, mp3_buffer_size);
     else
       mp3_size = twolame_encode_buffer_interleaved (twolame->glopts,
-          (short int *) data,
-          num_samples / twolame->num_channels, mp3_data, mp3_buffer_size);
+          (short int *) map.data,
+          num_samples / twolame->num_channels, mp3_map.data, mp3_buffer_size);
   }
 
   GST_LOG_OBJECT (twolame, "encoded %" G_GSIZE_FORMAT " bytes of audio "
-      "to %d bytes of mp3", size, mp3_size);
+      "to %d bytes of mp3", map.size, mp3_size);
 
-  gst_buffer_unmap (buf, data, -1);
-  gst_buffer_unmap (mp3_buf, mp3_data, -1);
+  gst_buffer_unmap (buf, &map);
+  gst_buffer_unmap (mp3_buf, &mp3_map);
 
   if (mp3_size > 0) {
     gst_buffer_set_size (mp3_buf, mp3_size);

@@ -51,8 +51,7 @@ struct _GstDvdSubDec
 
   /* Collect together subtitle buffers until we have a full control sequence */
   GstBuffer *partialbuf;
-  guint8 *partialdata;
-  gsize partialsize;
+  GstMapInfo partialmap;
   gboolean have_title;
 
   guchar subtitle_index[4];

@@ -148,7 +148,6 @@ gst_dvd_sub_dec_init (GstDvdSubDec * dec)
   dec->in_height = 576;
 
   dec->partialbuf = NULL;
-  dec->partialdata = NULL;
   dec->have_title = FALSE;
   dec->parse_pos = NULL;
   dec->forced_display = FALSE;
@@ -171,7 +170,7 @@ gst_dvd_sub_dec_finalize (GObject * gobject)
   GstDvdSubDec *dec = GST_DVD_SUB_DEC (gobject);
 
   if (dec->partialbuf) {
-    gst_buffer_unmap (dec->partialbuf, dec->partialdata, dec->partialsize);
+    gst_buffer_unmap (dec->partialbuf, &dec->partialmap);
     gst_buffer_unref (dec->partialbuf);
     dec->partialbuf = NULL;
   }
@@ -201,7 +200,7 @@ gst_dvd_sub_dec_get_event_delay (GstDvdSubDec * dec)
   GstClockTime event_delay;
 
   /* If starting a new buffer, follow the first DCSQ ptr */
-  if (dec->parse_pos == dec->partialdata) {
+  if (dec->parse_pos == dec->partialmap.data) {
     buf = dec->parse_pos + dec->data_size;
   } else {
     buf = dec->parse_pos;
@@ -227,7 +226,7 @@ gst_dvd_sub_dec_parse_subpic (GstDvdSubDec * dec)
   { GST_WARNING("Subtitle stream broken parsing %c", *buf); \
     broken = TRUE; break; }
 
-  guchar *start = dec->partialdata;
+  guchar *start = dec->partialmap.data;
   guchar *buf;
   guchar *end;
   gboolean broken = FALSE;
@@ -567,7 +566,7 @@ gst_dvd_sub_dec_merge_title (GstDvdSubDec * dec, GstVideoFrame * frame)
 {
   gint y;
   gint Y_stride;
-  guchar *buffer = dec->partialdata;
+  guchar *buffer = dec->partialmap.data;
   gint hl_top, hl_bottom;
   gint last_y;
   RLE_state state;
@@ -821,7 +820,7 @@ gst_dvd_sub_dec_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
   }
 
   if (dec->have_title) {
-    gst_buffer_unmap (dec->partialbuf, dec->partialdata, dec->partialsize);
+    gst_buffer_unmap (dec->partialbuf, &dec->partialmap);
     gst_buffer_unref (dec->partialbuf);
     dec->partialbuf = NULL;
     dec->have_title = FALSE;
@@ -834,18 +833,17 @@ gst_dvd_sub_dec_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
   if (dec->partialbuf) {
     GstBuffer *merge;
 
-    gst_buffer_unmap (dec->partialbuf, dec->partialdata, dec->partialsize);
+    gst_buffer_unmap (dec->partialbuf, &dec->partialmap);
     merge = gst_buffer_join (dec->partialbuf, buf);
     dec->partialbuf = merge;
   } else {
     dec->partialbuf = buf;
   }
 
-  dec->partialdata =
-      gst_buffer_map (dec->partialbuf, &dec->partialsize, NULL, GST_MAP_READ);
+  gst_buffer_map (dec->partialbuf, &dec->partialmap, GST_MAP_READ);
 
-  data = dec->partialdata;
-  size = dec->partialsize;
+  data = dec->partialmap.data;
+  size = dec->partialmap.size;
 
   if (size > 4) {
     dec->packet_size = GST_READ_UINT16_BE (data);
@@ -1003,8 +1001,7 @@ gst_dvd_sub_dec_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
         // dec->forced_display = 0;
         // dec->current_button = 0;
         if (dec->partialbuf) {
-          gst_buffer_unmap (dec->partialbuf, dec->partialdata,
-              dec->partialsize);
+          gst_buffer_unmap (dec->partialbuf, &dec->partialmap);
           gst_buffer_unref (dec->partialbuf);
           dec->partialbuf = NULL;
           dec->have_title = FALSE;
@@ -1028,7 +1025,7 @@ gst_dvd_sub_dec_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
       dec->current_button = 0;
 
       if (dec->partialbuf) {
-        gst_buffer_unmap (dec->partialbuf, dec->partialdata, dec->partialsize);
+        gst_buffer_unmap (dec->partialbuf, &dec->partialmap);
         gst_buffer_unref (dec->partialbuf);
         dec->partialbuf = NULL;
         dec->have_title = FALSE;

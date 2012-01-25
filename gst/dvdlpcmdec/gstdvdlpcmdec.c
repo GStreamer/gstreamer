@@ -425,6 +425,7 @@ static GstFlowReturn
 gst_dvdlpcmdec_chain_dvd (GstPad * pad, GstObject * parent, GstBuffer * buf)
 {
   GstDvdLpcmDec *dvdlpcmdec;
+  GstMapInfo map;
   guint8 *data;
   gsize size;
   guint first_access;
@@ -436,7 +437,9 @@ gst_dvdlpcmdec_chain_dvd (GstPad * pad, GstObject * parent, GstBuffer * buf)
 
   dvdlpcmdec = GST_DVDLPCMDEC (parent);
 
-  data = gst_buffer_map (buf, &size, NULL, GST_MAP_READ);
+  gst_buffer_map (buf, &map, GST_MAP_READ);
+  data = map.data;
+  size = map.size;
 
   if (size < 5)
     goto too_small;
@@ -551,7 +554,7 @@ gst_dvdlpcmdec_chain_dvd (GstPad * pad, GstObject * parent, GstBuffer * buf)
   }
 
 done:
-  gst_buffer_unmap (buf, data, size);
+  gst_buffer_unmap (buf, &map);
   gst_buffer_unref (buf);
 
   return ret;
@@ -637,8 +640,9 @@ gst_dvdlpcmdec_chain_raw (GstPad * pad, GstObject * parent, GstBuffer * buf)
       gint64 samples = size * 8 / 20;
       gint64 count = size / 10;
       gint64 i;
-      guint8 *src, *osrc;
-      guint8 *dest, *odest;
+      GstMapInfo srcmap, destmap;
+      guint8 *src;
+      guint8 *dest;
       GstBuffer *outbuf;
 
       if (samples < 1)
@@ -650,8 +654,10 @@ gst_dvdlpcmdec_chain_raw (GstPad * pad, GstObject * parent, GstBuffer * buf)
       /* adjust samples so we can calc the new timestamp */
       samples = samples / channels;
 
-      src = osrc = gst_buffer_map (buf, NULL, NULL, GST_MAP_READ);
-      dest = odest = gst_buffer_map (outbuf, NULL, NULL, GST_MAP_WRITE);
+      gst_buffer_map (buf, &srcmap, GST_MAP_READ);
+      gst_buffer_map (outbuf, &destmap, GST_MAP_WRITE);
+      src = srcmap.data;
+      dest = destmap.data;
 
       /* Copy 20-bit LPCM format to 24-bit buffers, with 0x00 in the lowest
        * nibble. Note that the first 2 bytes are already correct */
@@ -672,8 +678,8 @@ gst_dvdlpcmdec_chain_raw (GstPad * pad, GstObject * parent, GstBuffer * buf)
         src += 10;
         dest += 12;
       }
-      gst_buffer_unmap (outbuf, odest, -1);
-      gst_buffer_unmap (buf, osrc, -1);
+      gst_buffer_unmap (outbuf, &destmap);
+      gst_buffer_unmap (buf, &srcmap);
       gst_buffer_unref (buf);
       buf = outbuf;
       break;
@@ -684,7 +690,8 @@ gst_dvdlpcmdec_chain_raw (GstPad * pad, GstObject * parent, GstBuffer * buf)
        * and last byte are already correct */
       guint count = size / 12;
       gint i;
-      guint8 *src, *osrc;
+      GstMapInfo map;
+      guint8 *ptr;
 
       samples = size / channels / 3;
 
@@ -694,25 +701,26 @@ gst_dvdlpcmdec_chain_raw (GstPad * pad, GstObject * parent, GstBuffer * buf)
       /* Ensure our output buffer is writable */
       buf = gst_buffer_make_writable (buf);
 
-      src = osrc = gst_buffer_map (buf, NULL, NULL, GST_MAP_READWRITE);
+      gst_buffer_map (buf, &map, GST_MAP_READWRITE);
+      ptr = map.data;
 
       for (i = 0; i < count; i++) {
         guint8 tmp;
 
-        tmp = src[10];
-        src[10] = src[7];
-        src[7] = src[5];
-        src[5] = src[9];
-        src[9] = src[6];
-        src[6] = src[4];
-        src[4] = src[3];
-        src[3] = src[2];
-        src[2] = src[8];
-        src[8] = tmp;
+        tmp = ptr[10];
+        ptr[10] = ptr[7];
+        ptr[7] = ptr[5];
+        ptr[5] = ptr[9];
+        ptr[9] = ptr[6];
+        ptr[6] = ptr[4];
+        ptr[4] = ptr[3];
+        ptr[3] = ptr[2];
+        ptr[2] = ptr[8];
+        ptr[8] = tmp;
 
-        src += 12;
+        ptr += 12;
       }
-      gst_buffer_unmap (buf, osrc, -1);
+      gst_buffer_unmap (buf, &map);
       break;
     }
     default:
