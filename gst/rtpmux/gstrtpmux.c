@@ -357,7 +357,7 @@ process_buffer_locked (GstRTPMux * rtp_mux, GstRTPMuxPadPrivate * padpriv,
   gst_rtp_buffer_set_ssrc (rtpbuffer, rtp_mux->current_ssrc);
   gst_rtp_mux_readjust_rtp_timestamp_locked (rtp_mux, padpriv, rtpbuffer);
   GST_LOG_OBJECT (rtp_mux, "Pushing packet size %d, seq=%d, ts=%u",
-      rtpbuffer->size, rtp_mux->seqnum,
+      rtpbuffer->map.size, rtp_mux->seqnum,
       gst_rtp_buffer_get_timestamp (rtpbuffer));
 
   if (padpriv) {
