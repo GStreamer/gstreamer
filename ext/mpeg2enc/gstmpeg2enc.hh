@@ -24,6 +24,8 @@
 #define __GST_MPEG2ENC_H__
 
 #include <gst/gst.h>
+#include <gst/video/video.h>
+
 #include "gstmpeg2encoptions.hh"
 #include "gstmpeg2encoder.hh"
 
@@ -45,23 +47,23 @@ GST_DEBUG_CATEGORY_EXTERN (mpeg2enc_debug);
 
 #define GST_MPEG2ENC_MUTEX_LOCK(m) G_STMT_START {                       \
   GST_LOG_OBJECT (m, "locking tlock from thread %p", g_thread_self ()); \
-  g_mutex_lock (m->tlock);                                              \
+  g_mutex_lock (&m->tlock);                                              \
   GST_LOG_OBJECT (m, "locked tlock from thread %p", g_thread_self ());  \
 } G_STMT_END
 
 #define GST_MPEG2ENC_MUTEX_UNLOCK(m) G_STMT_START {                       \
   GST_LOG_OBJECT (m, "unlocking tlock from thread %p", g_thread_self ()); \
-  g_mutex_unlock (m->tlock);                                              \
+  g_mutex_unlock (&m->tlock);                                              \
 } G_STMT_END
 
 #define GST_MPEG2ENC_WAIT(m) G_STMT_START {                             \
   GST_LOG_OBJECT (m, "thread %p waiting", g_thread_self ());            \
-  g_cond_wait (m->cond, m->tlock);                                      \
+  g_cond_wait (&m->cond, &m->tlock);                                      \
 } G_STMT_END
 
 #define GST_MPEG2ENC_SIGNAL(m) G_STMT_START {                           \
   GST_LOG_OBJECT (m, "signalling from thread %p", g_thread_self ());    \
-  g_cond_signal (m->cond);                                              \
+  g_cond_signal (&m->cond);                                              \
 } G_STMT_END
 
 typedef struct _GstMpeg2enc {
@@ -70,6 +72,9 @@ typedef struct _GstMpeg2enc {
   /* pads */
   GstPad *sinkpad, *srcpad;
 
+  /* video info for in caps */
+  GstVideoInfo vinfo;
+
   /* options wrapper */
   GstMpeg2EncOptions *options;
 
@@ -77,11 +82,11 @@ typedef struct _GstMpeg2enc {
   GstMpeg2Encoder *encoder;
 
   /* lock for syncing with encoding task */
-  GMutex *tlock;
+  GMutex tlock;
   /* with TLOCK */
   /* signals counterpart thread that something changed;
    * buffer ready for task or buffer has been processed */
-  GCond *cond;
+  GCond cond;
   /* seen eos */
   gboolean eos;
   /* flowreturn obtained by encoding task */

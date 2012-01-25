@@ -55,8 +55,7 @@ GstMpeg2EncStreamWriter::WriteOutBufferUpto (const guint8 * buffer,
   GstMpeg2enc *enc = GST_MPEG2ENC (GST_PAD_PARENT (pad));
 
   buf = gst_buffer_new_and_alloc (flush_upto);
-
-  memcpy (GST_BUFFER_DATA (buf), buffer, flush_upto);
+  gst_buffer_fill (buf, 0, buffer, flush_upto);
   flushed += flush_upto;
 
   /* this should not block anything else (e.g. chain), but if it does,
@@ -70,7 +69,6 @@ GstMpeg2EncStreamWriter::WriteOutBufferUpto (const guint8 * buffer,
     GST_BUFFER_DURATION (buf) = GST_BUFFER_DURATION (inbuf);
     gst_buffer_unref (inbuf);
   }
-  gst_buffer_set_caps (buf, GST_PAD_CAPS (pad));
   enc->srcresult = gst_pad_push (pad, buf);
   GST_MPEG2ENC_MUTEX_UNLOCK (enc);
 }
