@@ -89,8 +89,9 @@ gst_auto_video_convert_create_factory_list (GstAutoVideoConvert *
   GList *result = NULL;
 
   /* get the feature list using the filter */
-  result = gst_default_registry_feature_filter ((GstPluginFeatureFilter)
-      gst_auto_video_convert_element_filter, FALSE, autovideoconvert);
+  result = gst_registry_feature_filter (gst_registry_get (),
+      (GstPluginFeatureFilter) gst_auto_video_convert_element_filter,
+      FALSE, autovideoconvert);
 
   /* sort on rank and name */
   result = g_list_sort (result, gst_plugin_feature_rank_compare_func);
@@ -108,16 +109,19 @@ gst_auto_video_convert_update_factory_list (GstAutoVideoConvert *
   /* test if a factories list already exist or not */
   if (!factories) {
     /* no factories list create it */
-    factories_cookie = gst_default_registry_get_feature_list_cookie ();
+    factories_cookie =
+        gst_registry_get_feature_list_cookie (gst_registry_get ());
     factories = gst_auto_video_convert_create_factory_list (autovideoconvert);
   } else {
     /* a factories list exist but is it up to date? */
-    if (factories_cookie != gst_default_registry_get_feature_list_cookie ()) {
+    if (factories_cookie !=
+        gst_registry_get_feature_list_cookie (gst_registry_get ())) {
       /* we need to update the factories list */
       /* first free the old one */
       gst_plugin_feature_list_free (factories);
       /* then create an updated one */
-      factories_cookie = gst_default_registry_get_feature_list_cookie ();
+      factories_cookie =
+          gst_registry_get_feature_list_cookie (gst_registry_get ());
       factories = gst_auto_video_convert_create_factory_list (autovideoconvert);
     }
   }
@@ -125,41 +129,25 @@ gst_auto_video_convert_update_factory_list (GstAutoVideoConvert *
   g_static_mutex_unlock (&factories_mutex);
 }
 
-GST_BOILERPLATE (GstAutoVideoConvert, gst_auto_video_convert, GstBin,
-    GST_TYPE_BIN);
-
-static void
-gst_auto_video_convert_base_init (gpointer klass)
-{
-  GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
-
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&srctemplate));
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&sinktemplate));
-
-  gst_element_class_set_details_simple (element_class,
-      "Select color space convertor based on caps", "Generic/Bin",
-      "Selects the right color space convertor based on the caps",
-      "Benjamin Gaignard <benjamin.gaignard@stericsson.com>");
-}
-
-static void
-gst_auto_video_convert_dispose (GObject * object)
-{
-  G_OBJECT_CLASS (parent_class)->dispose (object);
-}
+G_DEFINE_TYPE (GstAutoVideoConvert, gst_auto_video_convert, GST_TYPE_BIN);
 
 static void
 gst_auto_video_convert_class_init (GstAutoVideoConvertClass * klass)
 {
-  GObjectClass *gobject_class = (GObjectClass *) klass;
   GstElementClass *gstelement_class = (GstElementClass *) klass;
-
-  gobject_class->dispose = GST_DEBUG_FUNCPTR (gst_auto_video_convert_dispose);
 
   GST_DEBUG_CATEGORY_INIT (autovideoconvert_debug, "autovideoconvert", 0,
       "Auto color space converter");
+
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&srctemplate));
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&sinktemplate));
+
+  gst_element_class_set_details_simple (gstelement_class,
+      "Select color space convertor based on caps", "Generic/Bin",
+      "Selects the right color space convertor based on the caps",
+      "Benjamin Gaignard <benjamin.gaignard@stericsson.com>");
 
   gstelement_class->change_state =
       GST_DEBUG_FUNCPTR (gst_auto_video_convert_change_state);
@@ -218,8 +206,7 @@ gst_auto_video_convert_remove_autoconvert (GstAutoVideoConvert *
 }
 
 static void
-gst_auto_video_convert_init (GstAutoVideoConvert * autovideoconvert,
-    GstAutoVideoConvertClass * klass)
+gst_auto_video_convert_init (GstAutoVideoConvert * autovideoconvert)
 {
   GstPadTemplate *pad_tmpl;
 
@@ -271,7 +258,8 @@ gst_auto_video_convert_change_state (GstElement * element,
       break;
   }
 
-  ret = GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
+  ret = GST_ELEMENT_CLASS (gst_auto_video_convert_parent_class)->change_state
+      (element, transition);
   if (ret == GST_STATE_CHANGE_FAILURE)
     return ret;
 
