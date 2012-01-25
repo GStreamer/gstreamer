@@ -311,7 +311,7 @@ dnl Non ported plugins (non-dependant, then dependant)
 dnl Make sure you have a space before and after all plugins
 GST_PLUGINS_NONPORTED=" adpcmdec adpcmenc aiff asfmux \
  autoconvert camerabin cdxaparse coloreffects \
- dccp debugutils dtmf faceoverlay festival \
+ dccp debugutils faceoverlay festival \
  fieldanalysis freeverb freeze frei0r gaudieffects geometrictransform h264parse \
  hdvparse hls id3tag inter interlace ivfparse jpegformat jp2kdecimator \
  kate liveadder legacyresample librfb mpegdemux mpegtsmux \

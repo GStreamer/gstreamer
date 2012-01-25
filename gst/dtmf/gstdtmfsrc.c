@@ -211,7 +211,7 @@ GST_STATIC_PAD_TEMPLATE ("src",
         "signed = (bool) true, rate = (int) [1, MAX], channels = (int) 1")
     );
 
-GST_BOILERPLATE (GstDTMFSrc, gst_dtmf_src, GstBaseSrc, GST_TYPE_BASE_SRC);
+G_DEFINE_TYPE (GstDTMFSrc, gst_dtmf_src, GST_TYPE_BASE_SRC);
 
 static void gst_dtmf_src_finalize (GObject * object);
 
@@ -234,21 +234,6 @@ static gboolean gst_dtmf_src_unlock (GstBaseSrc * src);
 static gboolean gst_dtmf_src_unlock_stop (GstBaseSrc * src);
 static gboolean gst_dtmf_src_negotiate (GstBaseSrc * basesrc);
 
-static void
-gst_dtmf_src_base_init (gpointer g_class)
-{
-  GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
-
-  GST_DEBUG_CATEGORY_INIT (gst_dtmf_src_debug, "dtmfsrc", 0, "dtmfsrc element");
-
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&gst_dtmf_src_template));
-
-  gst_element_class_set_details_simple (element_class, "DTMF tone generator",
-      "Source/Audio",
-      "Generates DTMF tones",
-      "Youness Alaoui <youness.alaoui@collabora.co.uk>");
-}
 
 static void
 gst_dtmf_src_class_init (GstDTMFSrcClass * klass)
@@ -260,6 +245,17 @@ gst_dtmf_src_class_init (GstDTMFSrcClass * klass)
   gobject_class = G_OBJECT_CLASS (klass);
   gstbasesrc_class = GST_BASE_SRC_CLASS (klass);
   gstelement_class = GST_ELEMENT_CLASS (klass);
+
+
+  GST_DEBUG_CATEGORY_INIT (gst_dtmf_src_debug, "dtmfsrc", 0, "dtmfsrc element");
+
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&gst_dtmf_src_template));
+
+  gst_element_class_set_details_simple (gstelement_class, "DTMF tone generator",
+      "Source/Audio",
+      "Generates DTMF tones",
+      "Youness Alaoui <youness.alaoui@collabora.co.uk>");
 
 
   gobject_class->finalize = gst_dtmf_src_finalize;
@@ -291,7 +287,7 @@ event_free (GstDTMFSrcEvent * event)
 }
 
 static void
-gst_dtmf_src_init (GstDTMFSrc * dtmfsrc, GstDTMFSrcClass * g_class)
+gst_dtmf_src_init (GstDTMFSrc * dtmfsrc)
 {
   /* we operate in time */
   gst_base_src_set_format (GST_BASE_SRC (dtmfsrc), GST_FORMAT_TIME);
@@ -319,7 +315,7 @@ gst_dtmf_src_finalize (GObject * object)
     dtmfsrc->event_queue = NULL;
   }
 
-  G_OBJECT_CLASS (parent_class)->finalize (object);
+  G_OBJECT_CLASS (gst_dtmf_src_parent_class)->finalize (object);
 }
 
 static gboolean
@@ -426,7 +422,8 @@ gst_dtmf_src_send_event (GstElement * element, GstEvent * event)
   if (gst_dtmf_src_handle_event (GST_BASE_SRC (element), event))
     return TRUE;
 
-  return GST_ELEMENT_CLASS (parent_class)->send_event (element, event);
+  return GST_ELEMENT_CLASS (gst_dtmf_src_parent_class)->send_event
+      (element, event);
 }
 
 static void
@@ -528,24 +525,22 @@ gst_dtmf_src_add_stop_event (GstDTMFSrc * dtmfsrc)
   g_async_queue_push (dtmfsrc->event_queue, event);
 }
 
-static void
-gst_dtmf_src_generate_silence (GstBuffer * buffer, float duration,
-    gint sample_rate)
+static GstBuffer *
+gst_dtmf_src_generate_silence (float duration, gint sample_rate)
 {
   gint buf_size;
 
   /* Create a buffer with data set to 0 */
   buf_size = ((duration / 1000) * sample_rate * SAMPLE_SIZE * CHANNELS) / 8;
-  GST_BUFFER_SIZE (buffer) = buf_size;
-  GST_BUFFER_MALLOCDATA (buffer) = g_malloc0 (buf_size);
-  GST_BUFFER_DATA (buffer) = GST_BUFFER_MALLOCDATA (buffer);
 
+  return gst_buffer_new_wrapped (g_malloc0 (buf_size), buf_size);
 }
 
-static void
+static GstBuffer *
 gst_dtmf_src_generate_tone (GstDTMFSrcEvent * event, DTMF_KEY key,
-    float duration, GstBuffer * buffer, gint sample_rate)
+    float duration, gint sample_rate)
 {
+  GstBuffer *buffer;
   gint16 *p;
   gint tone_size;
   double i = 0;
@@ -554,11 +549,10 @@ gst_dtmf_src_generate_tone (GstDTMFSrcEvent * event, DTMF_KEY key,
 
   /* Create a buffer for the tone */
   tone_size = ((duration / 1000) * sample_rate * SAMPLE_SIZE * CHANNELS) / 8;
-  GST_BUFFER_SIZE (buffer) = tone_size;
-  GST_BUFFER_MALLOCDATA (buffer) = g_malloc (tone_size);
-  GST_BUFFER_DATA (buffer) = GST_BUFFER_MALLOCDATA (buffer);
 
-  p = (gint16 *) GST_BUFFER_MALLOCDATA (buffer);
+  buffer = gst_buffer_new_allocate (NULL, tone_size, 1);
+
+  p = (gint16 *) gst_buffer_map (buffer, NULL, NULL, GST_MAP_READWRITE);
 
   volume_factor = pow (10, (-event->volume) / 20);
 
@@ -586,6 +580,10 @@ gst_dtmf_src_generate_tone (GstDTMFSrcEvent * event, DTMF_KEY key,
 
     (event->sample)++;
   }
+
+  gst_buffer_unmap (buffer, p, tone_size);
+
+  return buffer;
 }
 
 
@@ -596,13 +594,9 @@ gst_dtmf_src_create_next_tone_packet (GstDTMFSrc * dtmfsrc,
 {
   GstBuffer *buf = NULL;
   gboolean send_silence = FALSE;
-  GstPad *srcpad = GST_BASE_SRC_PAD (dtmfsrc);
 
   GST_LOG_OBJECT (dtmfsrc, "Creating buffer for tone %s",
       DTMF_KEYS[event->event_number].event_name);
-
-  /* create buffer to hold the tone */
-  buf = gst_buffer_new ();
 
   if (event->packet_count * dtmfsrc->interval < MIN_INTER_DIGIT_INTERVAL) {
     send_silence = TRUE;
@@ -610,12 +604,12 @@ gst_dtmf_src_create_next_tone_packet (GstDTMFSrc * dtmfsrc,
 
   if (send_silence) {
     GST_LOG_OBJECT (dtmfsrc, "Generating silence");
-    gst_dtmf_src_generate_silence (buf, dtmfsrc->interval,
+    buf = gst_dtmf_src_generate_silence (dtmfsrc->interval,
         dtmfsrc->sample_rate);
   } else {
     GST_LOG_OBJECT (dtmfsrc, "Generating tone");
-    gst_dtmf_src_generate_tone (event, DTMF_KEYS[event->event_number],
-        dtmfsrc->interval, buf, dtmfsrc->sample_rate);
+    buf = gst_dtmf_src_generate_tone (event, DTMF_KEYS[event->event_number],
+        dtmfsrc->interval, dtmfsrc->sample_rate);
   }
   event->packet_count++;
 
@@ -630,9 +624,6 @@ gst_dtmf_src_create_next_tone_packet (GstDTMFSrc * dtmfsrc,
       GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buf)));
 
   dtmfsrc->timestamp += GST_BUFFER_DURATION (buf);
-
-  /* Set caps on the buffer before pushing it */
-  gst_buffer_set_caps (buf, GST_PAD_CAPS (srcpad));
 
   return buf;
 }
@@ -787,7 +778,8 @@ gst_dtmf_src_create (GstBaseSrc * basesrc, guint64 offset,
 
   buf = gst_dtmf_src_create_next_tone_packet (dtmfsrc, dtmfsrc->last_event);
 
-  GST_LOG_OBJECT (dtmfsrc, "Created buffer of size %d", GST_BUFFER_SIZE (buf));
+  GST_LOG_OBJECT (dtmfsrc, "Created buffer of size %d",
+      gst_buffer_get_size (buf));
   *buffer = buf;
 
   return GST_FLOW_OK;
@@ -912,7 +904,7 @@ gst_dtmf_src_change_state (GstElement * element, GstStateChange transition)
   }
 
   if ((result =
-          GST_ELEMENT_CLASS (parent_class)->change_state (element,
+          GST_ELEMENT_CLASS (gst_dtmf_src_parent_class)->change_state (element,
               transition)) == GST_STATE_CHANGE_FAILURE)
     goto failure;
 

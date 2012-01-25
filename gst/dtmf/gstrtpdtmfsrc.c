@@ -176,8 +176,7 @@ GST_STATIC_PAD_TEMPLATE ("src",
     );
 
 
-GST_BOILERPLATE (GstRTPDTMFSrc, gst_rtp_dtmf_src, GstBaseSrc,
-    GST_TYPE_BASE_SRC);
+G_DEFINE_TYPE (GstRTPDTMFSrc, gst_rtp_dtmf_src, GST_TYPE_BASE_SRC);
 
 static void gst_rtp_dtmf_src_finalize (GObject * object);
 
@@ -201,22 +200,6 @@ static gboolean gst_rtp_dtmf_src_negotiate (GstBaseSrc * basesrc);
 
 
 static void
-gst_rtp_dtmf_src_base_init (gpointer g_class)
-{
-  GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
-
-  GST_DEBUG_CATEGORY_INIT (gst_rtp_dtmf_src_debug,
-      "rtpdtmfsrc", 0, "rtpdtmfsrc element");
-
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&gst_rtp_dtmf_src_template));
-
-  gst_element_class_set_details_simple (element_class,
-      "RTP DTMF packet generator", "Source/Network",
-      "Generates RTP DTMF packets", "Zeeshan Ali <zeeshan.ali@nokia.com>");
-}
-
-static void
 gst_rtp_dtmf_src_class_init (GstRTPDTMFSrcClass * klass)
 {
   GObjectClass *gobject_class;
@@ -227,7 +210,15 @@ gst_rtp_dtmf_src_class_init (GstRTPDTMFSrcClass * klass)
   gstbasesrc_class = GST_BASE_SRC_CLASS (klass);
   gstelement_class = GST_ELEMENT_CLASS (klass);
 
-  parent_class = g_type_class_peek_parent (klass);
+  GST_DEBUG_CATEGORY_INIT (gst_rtp_dtmf_src_debug,
+      "rtpdtmfsrc", 0, "rtpdtmfsrc element");
+
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&gst_rtp_dtmf_src_template));
+
+  gst_element_class_set_metadata (gstelement_class,
+      "RTP DTMF packet generator", "Source/Network",
+      "Generates RTP DTMF packets", "Zeeshan Ali <zeeshan.ali@nokia.com>");
 
   gobject_class->finalize = GST_DEBUG_FUNCPTR (gst_rtp_dtmf_src_finalize);
   gobject_class->set_property =
@@ -297,7 +288,7 @@ gst_rtp_dtmf_src_event_free (GstRTPDTMFSrcEvent * event)
 }
 
 static void
-gst_rtp_dtmf_src_init (GstRTPDTMFSrc * object, GstRTPDTMFSrcClass * g_class)
+gst_rtp_dtmf_src_init (GstRTPDTMFSrc * object)
 {
   gst_base_src_set_format (GST_BASE_SRC (object), GST_FORMAT_TIME);
   gst_base_src_set_live (GST_BASE_SRC (object), TRUE);
@@ -330,7 +321,7 @@ gst_rtp_dtmf_src_finalize (GObject * object)
   }
 
 
-  G_OBJECT_CLASS (parent_class)->finalize (object);
+  G_OBJECT_CLASS (gst_rtp_dtmf_src_parent_class)->finalize (object);
 }
 
 static gboolean
@@ -577,30 +568,37 @@ gst_rtp_dtmf_src_add_stop_event (GstRTPDTMFSrc * dtmfsrc)
 
 
 static void
-gst_rtp_dtmf_prepare_rtp_headers (GstRTPDTMFSrc * dtmfsrc, GstBuffer * buf)
+gst_rtp_dtmf_prepare_rtp_headers (GstRTPDTMFSrc * dtmfsrc,
+    GstRTPBuffer * rtpbuf)
 {
-  gst_rtp_buffer_set_ssrc (buf, dtmfsrc->current_ssrc);
-  gst_rtp_buffer_set_payload_type (buf, dtmfsrc->pt);
+  gst_rtp_buffer_set_ssrc (rtpbuf, dtmfsrc->current_ssrc);
+  gst_rtp_buffer_set_payload_type (rtpbuf, dtmfsrc->pt);
   /* Only the very first packet gets a marker */
   if (dtmfsrc->first_packet) {
-    gst_rtp_buffer_set_marker (buf, TRUE);
+    gst_rtp_buffer_set_marker (rtpbuf, TRUE);
   } else if (dtmfsrc->last_packet) {
     dtmfsrc->payload->e = 1;
   }
 
   dtmfsrc->seqnum++;
-  gst_rtp_buffer_set_seq (buf, dtmfsrc->seqnum);
+  gst_rtp_buffer_set_seq (rtpbuf, dtmfsrc->seqnum);
 
   /* timestamp of RTP header */
-  gst_rtp_buffer_set_timestamp (buf, dtmfsrc->rtp_timestamp);
+  gst_rtp_buffer_set_timestamp (rtpbuf, dtmfsrc->rtp_timestamp);
 }
 
-static void
-gst_rtp_dtmf_prepare_buffer_data (GstRTPDTMFSrc * dtmfsrc, GstBuffer * buf)
+static GstBuffer *
+gst_rtp_dtmf_src_create_next_rtp_packet (GstRTPDTMFSrc * dtmfsrc)
 {
+  GstBuffer *buf;
   GstRTPDTMFPayload *payload;
+  GstRTPBuffer rtpbuffer = GST_RTP_BUFFER_INIT;
 
-  gst_rtp_dtmf_prepare_rtp_headers (dtmfsrc, buf);
+  buf = gst_rtp_buffer_new_allocate (sizeof (GstRTPDTMFPayload), 0, 0);
+
+  gst_rtp_buffer_map (buf, GST_MAP_READWRITE, &rtpbuffer);
+
+  gst_rtp_dtmf_prepare_rtp_headers (dtmfsrc, &rtpbuffer);
 
   /* timestamp and duration of GstBuffer */
   /* Redundant buffer have no duration ... */
@@ -608,10 +606,9 @@ gst_rtp_dtmf_prepare_buffer_data (GstRTPDTMFSrc * dtmfsrc, GstBuffer * buf)
     GST_BUFFER_DURATION (buf) = 0;
   else
     GST_BUFFER_DURATION (buf) = dtmfsrc->ptime * GST_MSECOND;
-  GST_BUFFER_TIMESTAMP (buf) = dtmfsrc->timestamp;
+  GST_BUFFER_PTS (buf) = dtmfsrc->timestamp;
 
-
-  payload = (GstRTPDTMFPayload *) gst_rtp_buffer_get_payload (buf);
+  payload = (GstRTPDTMFPayload *) gst_rtp_buffer_get_payload (&rtpbuffer);
 
   /* copy payload and convert to network-byte order */
   g_memmove (payload, dtmfsrc->payload, sizeof (GstRTPDTMFPayload));
@@ -642,20 +639,7 @@ gst_rtp_dtmf_prepare_buffer_data (GstRTPDTMFSrc * dtmfsrc, GstBuffer * buf)
   if (GST_CLOCK_TIME_IS_VALID (dtmfsrc->timestamp))
     dtmfsrc->timestamp += GST_BUFFER_DURATION (buf);
 
-}
-
-static GstBuffer *
-gst_rtp_dtmf_src_create_next_rtp_packet (GstRTPDTMFSrc * dtmfsrc)
-{
-  GstBuffer *buf = NULL;
-
-  /* create buffer to hold the payload */
-  buf = gst_rtp_buffer_new_allocate (sizeof (GstRTPDTMFPayload), 0, 0);
-
-  gst_rtp_dtmf_prepare_buffer_data (dtmfsrc, buf);
-
-  /* Set caps on the buffer before pushing it */
-  gst_buffer_set_caps (buf, GST_PAD_CAPS (GST_BASE_SRC_PAD (dtmfsrc)));
+  gst_rtp_buffer_unmap (&rtpbuffer);
 
   return buf;
 }
@@ -884,7 +868,7 @@ gst_rtp_dtmf_src_negotiate (GstBaseSrc * basesrc)
       "encoding-name", G_TYPE_STRING, "TELEPHONE-EVENT", NULL);
 
   /* the peer caps can override some of the defaults */
-  peercaps = gst_pad_peer_get_caps (GST_BASE_SRC_PAD (basesrc));
+  peercaps = gst_pad_peer_query_caps (GST_BASE_SRC_PAD (basesrc), NULL);
   if (peercaps == NULL) {
     /* no peer caps, just add the other properties */
     gst_caps_set_simple (srccaps,
@@ -1068,8 +1052,8 @@ gst_rtp_dtmf_src_change_state (GstElement * element, GstStateChange transition)
   }
 
   if ((result =
-          GST_ELEMENT_CLASS (parent_class)->change_state (element,
-              transition)) == GST_STATE_CHANGE_FAILURE)
+          GST_ELEMENT_CLASS (gst_rtp_dtmf_src_parent_class)->change_state
+          (element, transition)) == GST_STATE_CHANGE_FAILURE)
     goto failure;
 
   switch (transition) {

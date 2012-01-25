@@ -101,50 +101,42 @@ static gboolean gst_dtmf_detect_set_caps (GstBaseTransform * trans,
     GstCaps * incaps, GstCaps * outcaps);
 static GstFlowReturn gst_dtmf_detect_transform_ip (GstBaseTransform * trans,
     GstBuffer * buf);
-static gboolean gst_dtmf_detect_event (GstBaseTransform * trans,
+static gboolean gst_dtmf_detect_sink_event (GstBaseTransform * trans,
     GstEvent * event);
 
-static void
-_do_init (GType type)
-{
-  GST_DEBUG_CATEGORY_INIT (dtmf_detect_debug, "dtmfdetect", 0, "dtmfdetect");
-}
-
-GST_BOILERPLATE_FULL (GstDtmfDetect, gst_dtmf_detect, GstBaseTransform,
-    GST_TYPE_BASE_TRANSFORM, _do_init);
-
-static void
-gst_dtmf_detect_base_init (gpointer klass)
-{
-  GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
-
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&srctemplate));
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&sinktemplate));
-
-  gst_element_class_set_details_simple (element_class, "DTMF detector element",
-      "Filter/Analyzer/Audio",
-      "This element detects DTMF tones",
-      "Olivier Crete <olivier.crete@collabora.co.uk>");
-}
+G_DEFINE_TYPE (GstDtmfDetect, gst_dtmf_detect, GST_TYPE_BASE_TRANSFORM);
 
 static void
 gst_dtmf_detect_class_init (GstDtmfDetectClass * klass)
 {
+  GstElementClass *gstelement_class;
   GstBaseTransformClass *gstbasetransform_class;
 
+  gstelement_class = GST_ELEMENT_CLASS (klass);
   gstbasetransform_class = (GstBaseTransformClass *) klass;
+
+  GST_DEBUG_CATEGORY_INIT (dtmf_detect_debug, "dtmfdetect", 0, "dtmfdetect");
+
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&srctemplate));
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&sinktemplate));
+
+  gst_element_class_set_metadata (gstelement_class, "DTMF detector element",
+      "Filter/Analyzer/Audio",
+      "This element detects DTMF tones",
+      "Olivier Crete <olivier.crete@collabora.com>");
 
   gstbasetransform_class->set_caps =
       GST_DEBUG_FUNCPTR (gst_dtmf_detect_set_caps);
   gstbasetransform_class->transform_ip =
       GST_DEBUG_FUNCPTR (gst_dtmf_detect_transform_ip);
-  gstbasetransform_class->event = GST_DEBUG_FUNCPTR (gst_dtmf_detect_event);
+  gstbasetransform_class->sink_event =
+      GST_DEBUG_FUNCPTR (gst_dtmf_detect_sink_event);
 }
 
 static void
-gst_dtmf_detect_init (GstDtmfDetect * dtmfdetect, GstDtmfDetectClass * klass)
+gst_dtmf_detect_init (GstDtmfDetect * dtmfdetect)
 {
   gst_base_transform_set_passthrough (GST_BASE_TRANSFORM (dtmfdetect), TRUE);
   gst_base_transform_set_gap_aware (GST_BASE_TRANSFORM (dtmfdetect), TRUE);
@@ -169,14 +161,17 @@ gst_dtmf_detect_transform_ip (GstBaseTransform * trans, GstBuffer * buf)
   gint dtmf_count;
   gchar dtmfbuf[MAX_DTMF_DIGITS] = "";
   gint i;
+  gpointer data;
+  gsize size;
 
   if (GST_BUFFER_IS_DISCONT (buf))
     zap_dtmf_detect_init (&self->dtmf_state);
   if (GST_BUFFER_FLAG_IS_SET (buf, GST_BUFFER_FLAG_GAP))
     return GST_FLOW_OK;
 
-  zap_dtmf_detect (&self->dtmf_state, (gint16 *) GST_BUFFER_DATA (buf),
-      GST_BUFFER_SIZE (buf) / 2, FALSE);
+  data = gst_buffer_map (buf, &size, NULL, GST_MAP_READ);
+
+  zap_dtmf_detect (&self->dtmf_state, (gint16 *) data, size / 2, FALSE);
 
   dtmf_count = zap_dtmf_get (&self->dtmf_state, dtmfbuf, MAX_DTMF_DIGITS);
 
@@ -184,6 +179,8 @@ gst_dtmf_detect_transform_ip (GstBaseTransform * trans, GstBuffer * buf)
     GST_DEBUG_OBJECT (self, "Got %d DTMF events: %s", dtmf_count, dtmfbuf);
   else
     GST_LOG_OBJECT (self, "Got no DTMF events");
+
+  gst_buffer_unmap (buf, data, size);
 
   for (i = 0; i < dtmf_count; i++) {
     GstMessage *dtmf_message = NULL;
@@ -258,7 +255,7 @@ gst_dtmf_detect_transform_ip (GstBaseTransform * trans, GstBuffer * buf)
 
 
 static gboolean
-gst_dtmf_detect_event (GstBaseTransform * trans, GstEvent * event)
+gst_dtmf_detect_sink_event (GstBaseTransform * trans, GstEvent * event)
 {
   GstDtmfDetect *self = GST_DTMF_DETECT (trans);
 
@@ -270,8 +267,7 @@ gst_dtmf_detect_event (GstBaseTransform * trans, GstEvent * event)
       break;
   }
 
-  return GST_CALL_PARENT_WITH_DEFAULT (GST_BASE_TRANSFORM_CLASS, event,
-      (trans, event), TRUE);
+  return GST_BASE_TRANSFORM_GET_CLASS (trans)->sink_event (trans, event);
 }
 
 
