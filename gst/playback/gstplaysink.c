@@ -1521,7 +1521,7 @@ gen_text_chain (GstPlaySink * playsink)
           chain->queue = NULL;
         }
         /* try to set sync to true but it's no biggie when we can't */
-        if ((elem =
+        if (chain->sink && (elem =
                 gst_play_sink_find_property_sinks (playsink, chain->sink,
                     "sync", G_TYPE_BOOLEAN)))
           g_object_set (elem, "sync", TRUE, NULL);
@@ -1594,10 +1594,18 @@ gen_text_chain (GstPlaySink * playsink)
               "max-size-bytes", 0, "max-size-time", (gint64) 0,
               "silent", TRUE, NULL);
           gst_bin_add (bin, element);
-          gst_element_link_pads_full (element, "src", chain->overlay,
-              "subtitle_sink", GST_PAD_LINK_CHECK_TEMPLATE_CAPS);
-          textsinkpad = gst_element_get_static_pad (element, "sink");
-          srcpad = gst_element_get_static_pad (chain->overlay, "src");
+          if (gst_element_link_pads_full (element, "src", chain->overlay,
+                  "subtitle_sink", GST_PAD_LINK_CHECK_TEMPLATE_CAPS)) {
+            textsinkpad = gst_element_get_static_pad (element, "sink");
+            srcpad = gst_element_get_static_pad (chain->overlay, "src");
+          } else {
+            gst_bin_remove (bin, chain->sink);
+            gst_bin_remove (bin, chain->overlay);
+            chain->sink = NULL;
+            chain->overlay = NULL;
+            gst_object_unref (videosinkpad);
+            videosinkpad = NULL;
+          }
         }
       }
     }

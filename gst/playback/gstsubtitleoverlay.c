@@ -1398,6 +1398,15 @@ gst_subtitle_overlay_change_state (GstElement * element,
       break;
     case GST_STATE_CHANGE_PAUSED_TO_READY:
       GST_DEBUG_OBJECT (self, "State change PAUSED->READY");
+
+      /* Set the pads back to blocking state */
+      GST_SUBTITLE_OVERLAY_LOCK (self);
+      gst_pad_set_blocked_async_full (self->video_block_pad, TRUE,
+          _pad_blocked_cb, self, NULL);
+      gst_pad_set_blocked_async_full (self->subtitle_block_pad, TRUE,
+          _pad_blocked_cb, self, NULL);
+      GST_SUBTITLE_OVERLAY_UNLOCK (self);
+
       do_async_done (self);
 
       break;

@@ -1642,7 +1642,7 @@ gst_audio_base_sink_render (GstBaseSink * bsink, GstBuffer * buf)
         " Using render_start=%" G_GUINT64_FORMAT, size, render_start);
     /* we don't have a start so we don't know stop either */
     stop = -1;
-    goto no_sync;
+    goto no_align;
   }
 
   /* let's calc stop based on the number of samples in the buffer instead
@@ -1717,7 +1717,7 @@ gst_audio_base_sink_render (GstBaseSink * bsink, GstBuffer * buf)
     render_stop = render_start + samples;
     GST_DEBUG_OBJECT (sink,
         "no sync needed. Using render_start=%" G_GUINT64_FORMAT, render_start);
-    goto no_sync;
+    goto no_align;
   }
 
   /* bring buffer start and stop times to running time */
@@ -1838,7 +1838,6 @@ no_align:
   /* number of target samples is difference between start and stop */
   out_samples = render_stop - render_start;
 
-no_sync:
   /* we render the first or last sample first, depending on the rate */
   if (bsink->segment.rate >= 0.0)
     sample_offset = render_start;

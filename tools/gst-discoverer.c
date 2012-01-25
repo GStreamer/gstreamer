@@ -413,7 +413,6 @@ process_file (GstDiscoverer * dc, const gchar * filename)
   GDir *dir;
   gchar *uri, *path;
   GstDiscovererInfo *info;
-  GstStructure *st = NULL;
 
   if (!gst_uri_is_valid (filename)) {
     /* Recurse into directories */
@@ -461,8 +460,6 @@ process_file (GstDiscoverer * dc, const gchar * filename)
     if (err)
       g_error_free (err);
     gst_discoverer_info_unref (info);
-    if (st)
-      gst_structure_free (st);
   } else {
     gst_discoverer_discover_uri_async (dc, uri);
   }

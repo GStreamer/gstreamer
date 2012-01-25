@@ -1874,7 +1874,7 @@ packet_duration_opus (GstOggStream * pad, ogg_packet * packet)
 
   gint64 duration;
   gint64 frame_duration;
-  gint nframes;
+  gint nframes = 0;
   guint8 toc;
 
   if (packet->bytes < 1)

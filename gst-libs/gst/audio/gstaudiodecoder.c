@@ -344,7 +344,8 @@ gst_audio_decoder_class_init (GstAudioDecoderClass * klass)
   gobject_class->get_property = gst_audio_decoder_get_property;
   gobject_class->finalize = gst_audio_decoder_finalize;
 
-  element_class->change_state = gst_audio_decoder_change_state;
+  element_class->change_state =
+      GST_DEBUG_FUNCPTR (gst_audio_decoder_change_state);
 
   /* Properties */
   g_object_class_install_property (gobject_class, PROP_LATENCY,

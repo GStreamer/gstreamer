@@ -401,7 +401,7 @@ vorbis_handle_header_packet (GstVorbisDec * vd, ogg_packet * packet)
   /* Packetno = 0 if the first byte is exactly 0x01 */
   packet->b_o_s = ((gst_ogg_packet_data (packet))[0] == 0x1) ? 1 : 0;
 
-#ifdef USE_TREMELO
+#ifdef USE_TREMOLO
   if ((ret = vorbis_dsp_headerin (&vd->vi, &vd->vc, packet)))
 #else
   if ((ret = vorbis_synthesis_headerin (&vd->vi, &vd->vc, packet)))
@@ -510,7 +510,7 @@ static GstFlowReturn
 vorbis_handle_data_packet (GstVorbisDec * vd, ogg_packet * packet,
     GstClockTime timestamp, GstClockTime duration)
 {
-#ifdef USE_TREMELO
+#ifdef USE_TREMOLO
   vorbis_sample_t *pcm;
 #else
   vorbis_sample_t **pcm;
@@ -534,8 +534,8 @@ vorbis_handle_data_packet (GstVorbisDec * vd, ogg_packet * packet,
    * throw away too much. For now we decode everything and clip right
    * before pushing data. */
 
-#ifdef USE_TREMELO
-  if (G_UNLIKELY (vorbis_dsp_synthesis (&vd->vb, packet, 1)))
+#ifdef USE_TREMOLO
+  if (G_UNLIKELY (vorbis_dsp_synthesis (&vd->vd, packet, 1)))
     goto could_not_read;
 #else
   if (G_UNLIKELY (vorbis_synthesis (&vd->vb, packet)))

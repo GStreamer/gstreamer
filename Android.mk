@@ -60,6 +60,7 @@ GST_PLUGINS_BASE_BUILT_SOURCES := 						\
 
 ifneq ($(NDK_BUILD), true)
 GST_PLUGINS_BASE_BUILT_SOURCES += ext/vorbis/Android.mk
+ZLIB_CFLAGS = -I $(abspath $(GST_PLUGINS_BASE_TOP)/../../zlib)
 endif
 
 GST_PLUGINS_BASE_BUILT_SOURCES := $(patsubst %, $(abspath $(GST_PLUGINS_BASE_TOP))/%, $(GST_PLUGINS_BASE_BUILT_SOURCES))
@@ -78,6 +79,7 @@ gst-plugins-base-configure:
 	PKG_CONFIG_TOP_BUILD_DIR=/ \
 	IVORBIS_CFLAGS="-I$(TOP)/external/tremolo -DTREMOR" \
 	IVORBIS_LIBS="-lvorbisidec" \
+	ZLIB_CFLAGS="$(ZLIB_CFLAGS)" \
 	$(abspath $(GST_PLUGINS_BASE_TOP))/$(CONFIGURE) --host=arm-linux-androideabi \
 	--prefix=/system --disable-orc --disable-gio --enable-ivorbis \
 	--disable-valgrind --disable-gtk-doc && \

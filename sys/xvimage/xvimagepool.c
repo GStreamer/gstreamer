@@ -333,6 +333,8 @@ gst_xvimage_meta_free (GstXvImageMeta * meta, GstBuffer * buffer)
       shmdt (meta->SHMInfo.shmaddr);
     }
 #endif
+    if (meta->xvimage)
+      XFree (meta->xvimage);
     goto beach;
   }
 

@@ -256,9 +256,11 @@ gst_alsasink_init (GstAlsaSink * alsasink)
 }
 
 #define CHECK(call, error) \
-G_STMT_START {                  \
-if ((err = call) < 0)           \
-  goto error;                   \
+G_STMT_START {             \
+  if ((err = call) < 0) {  \
+    GST_WARNING_OBJECT (alsa, "Error %d (%s) calling " #call, err, snd_strerror (err)); \
+    goto error;            \
+  }                        \
 } G_STMT_END;
 
 static GstCaps *
@@ -355,8 +357,6 @@ retry:
   rrate = alsa->rate;
   CHECK (snd_pcm_hw_params_set_rate_near (alsa->handle, params, &rrate, NULL),
       no_rate);
-  if (rrate != alsa->rate)
-    goto rate_match;
 
 #ifndef GST_DISABLE_GST_DEBUG
   /* get and dump some limits */
@@ -485,13 +485,6 @@ no_rate:
         ("Rate %iHz not available for playback: %s",
             alsa->rate, snd_strerror (err)));
     return err;
-  }
-rate_match:
-  {
-    GST_ELEMENT_ERROR (alsa, RESOURCE, SETTINGS, (NULL),
-        ("Rate doesn't match (requested %iHz, get %iHz)", alsa->rate, err));
-    snd_pcm_hw_params_free (params);
-    return -EINVAL;
   }
 buffer_size:
   {

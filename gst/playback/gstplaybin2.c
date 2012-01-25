@@ -3851,7 +3851,7 @@ save_current_group (GstPlayBin * playbin)
   /* see if there is a current group */
   GST_PLAY_BIN_LOCK (playbin);
   curr_group = playbin->curr_group;
-  if (curr_group && curr_group->valid) {
+  if (curr_group && curr_group->valid && curr_group->active) {
     /* unlink our pads with the sink */
     deactivate_group (playbin, curr_group);
   }

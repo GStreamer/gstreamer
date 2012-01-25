@@ -1681,6 +1681,7 @@ parse_exif_ifd (GstExifReader * exif_reader, gint buf_offset,
       case EXIF_TYPE_UNDEFINED:
         parse_exif_undefined_tag (exif_reader, &tag_map[map_index],
             tagdata.count, tagdata.offset, tagdata.offset_as_data);
+        break;
       case EXIF_TYPE_LONG:
         parse_exif_long_tag (exif_reader, &tag_map[map_index],
             tagdata.count, tagdata.offset, tagdata.offset_as_data);
