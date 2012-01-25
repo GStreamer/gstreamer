@@ -1199,6 +1199,11 @@ gst_video_scale_transform (GstBaseTransform * trans, GstBuffer * in,
         case GST_VIDEO_SCALE_4TAP:
           vs_image_scale_4tap_AYUV64 (&dest, &src, videoscale->tmp_buf);
           break;
+        case GST_VIDEO_SCALE_LANCZOS:
+          vs_image_scale_lanczos_AYUV64 (&dest, &src, videoscale->tmp_buf,
+              videoscale->sharpness, videoscale->dither, videoscale->submethod,
+              videoscale->envelope, videoscale->sharpen);
+          break;
         default:
           goto unknown_mode;
       }
