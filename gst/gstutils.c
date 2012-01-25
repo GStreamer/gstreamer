@@ -3290,7 +3290,7 @@ gst_bin_find_unlinked_pad (GstBin * bin, GstPadDirection direction)
  * and want them all ghosted, you will have to create the ghost pads
  * yourself).
  *
- * Returns: (transfer full): a newly-created bin, or NULL if an error occurred.
+ * Returns: (transfer floating): a newly-created bin, or NULL if an error occurred.
  *
  * Since: 0.10.3
  */
