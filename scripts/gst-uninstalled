@@ -59,10 +59,12 @@ $PATH"
 # /some/path: makes the dynamic linker look in . too, so avoid this
 LD_LIBRARY_PATH=$GST_PREFIX/lib${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}
 DYLD_LIBRARY_PATH=$GST_PREFIX/lib${DYLD_LIBRARY_PATH:+:$DYLD_LIBRARY_PATH}
+GI_TYPELIB_PATH=$GST_PREFIX/share/gir-1.0${GI_TYPELIB_PATH:+:$GI_TYPELIB_PATH}
 
 # GStreamer rtsp server library
 LD_LIBRARY_PATH=$GST/gst-rtsp-server/gst/rtsp-server/.libs:$LD_LIBRARY_PATH
 DYLD_LIBRARY_PATH=$GST/gst-rtsp-server/gst/rtsp-server/.libs:$DYLD_LIBRARY_PATH
+GI_TYPELIB_PATH=$GST/gst-rtsp-server/gst/rtsp-server:$GI_TYPELIB_PATH
 
 # GStreamer ffmpeg libraries
 for path in libavformat libavutil libavcodec libpostproc libavdevice
@@ -76,6 +78,7 @@ for path in app audio cdda fft interfaces pbutils netbuffer riff rtp rtsp sdp ta
 do
   LD_LIBRARY_PATH=$GST/gst-plugins-base/gst-libs/gst/$path/.libs:$LD_LIBRARY_PATH
   DYLD_LIBRARY_PATH=$GST/gst-plugins-base/gst-libs/gst/$path/.libs:$DYLD_LIBRARY_PATH
+  GI_TYPELIB_PATH=$GST/gst-plugins-base/gst-libs/gst/$path:$GI_TYPELIB_PATH
 done
 
 # GStreamer core libraries
@@ -83,11 +86,14 @@ for path in base net check controller
 do
   LD_LIBRARY_PATH=$GST/gstreamer/libs/gst/$path/.libs:$LD_LIBRARY_PATH
   DYLD_LIBRARY_PATH=$GST/gstreamer/libs/gst/$path/.libs:$DYLD_LIBRARY_PATH
+  GI_TYPELIB_PATH=$GST/gstreamer/libs/gst/$path:$GI_TYPELIB_PATH
 done
 LD_LIBRARY_PATH=$GST/gstreamer/gst/.libs:$LD_LIBRARY_PATH
 DYLD_LIBRARY_PATH=$GST/gstreamer/gst/.libs:$DYLD_LIBRARY_PATH
+GI_TYPELIB_PATH=$GST/gstreamer/gst:$GI_TYPELIB_PATH
 export LD_LIBRARY_PATH
 export DYLD_LIBRARY_PATH
+export GI_TYPELIB_PATH
   
 export PKG_CONFIG_PATH="\
 $GST_PREFIX/lib/pkgconfig\

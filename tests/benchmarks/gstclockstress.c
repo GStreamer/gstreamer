@@ -60,6 +60,11 @@ main (gint argc, gchar * argv[])
 
   num_threads = atoi (argv[1]);
 
+  if (num_threads <= 0 || num_threads > MAX_THREADS) {
+    g_print ("number of threads must be between 0 and %d\n", MAX_THREADS);
+    exit (-2);
+  }
+
   sysclock = gst_system_clock_obtain ();
 
   for (t = 0; t < num_threads; t++) {
