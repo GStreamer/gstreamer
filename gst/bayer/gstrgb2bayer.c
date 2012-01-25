@@ -154,6 +154,12 @@ gst_rgb2bayer_transform_caps (GstBaseTransform * trans,
   GST_DEBUG_OBJECT (trans, "transforming caps (into) %" GST_PTR_FORMAT,
       newcaps);
 
+  if (filter) {
+    GstCaps *tmpcaps = newcaps;
+    newcaps = gst_caps_intersect (newcaps, filter);
+    gst_caps_unref (tmpcaps);
+  }
+
   return newcaps;
 }
 
