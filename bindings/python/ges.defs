@@ -905,6 +905,12 @@
   )
 )
 
+(define-method get_timeline
+  (of-object "GESTimelineLayer")
+  (c-name "ges_timeline_layer_get_timeline")
+  (return-type "GESTimeline*")
+)
+
 (define-method add_object
   (of-object "GESTimelineLayer")
   (c-name "ges_timeline_layer_add_object")
