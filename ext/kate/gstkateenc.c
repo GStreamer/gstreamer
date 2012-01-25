@@ -924,33 +924,32 @@ gst_kate_enc_chain_text (GstKateEnc * ke, GstBuffer * buf,
         ("kate_encode_set_markup_type: %d", ret));
     rflow = GST_FLOW_ERROR;
   } else {
-    char *text;
-    gsize text_len;
+    const char *text;
+    size_t text_len;
+    gboolean need_unmap = TRUE;
+    kate_float t0 = start / (double) GST_SECOND;
+    kate_float t1 = stop / (double) GST_SECOND;
 
     text = gst_buffer_map (buf, &text_len, NULL, GST_MAP_READ);
-    if (text) {
-      kate_float t0 = start / (double) GST_SECOND;
-      kate_float t1 = stop / (double) GST_SECOND;
-      GST_LOG_OBJECT (ke, "Encoding text: %*.*s (%u bytes) from %f to %f",
-          (int) text_len, (int) text_len, text, text_len, t0, t1);
-
-      ret = kate_encode_text (&ke->k, t0, t1, text, text_len, &kp);
-
-      if (G_UNLIKELY (ret < 0)) {
-        GST_ELEMENT_ERROR (ke, STREAM, ENCODE, (NULL),
-            ("Failed to encode text: %d", ret));
-        rflow = GST_FLOW_ERROR;
-      } else {
-        rflow =
-            gst_kate_enc_chain_push_packet (ke, &kp, start, stop - start + 1);
-      }
-    } else {
-      /* FIXME: this should not be an error, we should ignore it and move on */
-      GST_ELEMENT_ERROR (ke, STREAM, ENCODE, (NULL),
-          ("no text in text packet"));
-      rflow = GST_FLOW_ERROR;
+    if (text == NULL) {
+      text = "";
+      text_len = 0;
+      need_unmap = FALSE;
     }
-    gst_buffer_unmap (buf, text, text_len);
+
+    GST_LOG_OBJECT (ke, "Encoding text: %*.*s (%u bytes) from %f to %f",
+        (int) text_len, (int) text_len, GST_BUFFER_DATA (buf),
+        GST_BUFFER_SIZE (buf), t0, t1);
+    ret = kate_encode_text (&ke->k, t0, t1, text, text_len, &kp);
+    if (G_UNLIKELY (ret < 0)) {
+      GST_ELEMENT_ERROR (ke, STREAM, ENCODE, (NULL),
+          ("Failed to encode text: %d", ret));
+      rflow = GST_FLOW_ERROR;
+    } else {
+      rflow = gst_kate_enc_chain_push_packet (ke, &kp, start, stop - start + 1);
+    }
+    if (need_unmap)
+      gst_buffer_unmap (buf, text, text_len);
   }
 
   return rflow;

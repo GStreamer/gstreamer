@@ -123,6 +123,8 @@ static GstStaticPadTemplate data_sink_template =
 GST_BOILERPLATE (GstRsvgOverlay, gst_rsvg_overlay, GstVideoFilter,
     GST_TYPE_VIDEO_FILTER);
 
+static void gst_rsvg_overlay_finalize (GObject * object);
+
 static void
 gst_rsvg_overlay_set_svg_data (GstRsvgOverlay * overlay, const gchar * data,
     gboolean consider_as_filename)
@@ -467,6 +469,7 @@ gst_rsvg_overlay_class_init (GstRsvgOverlayClass * klass)
 
   gobject_class->set_property = gst_rsvg_overlay_set_property;
   gobject_class->get_property = gst_rsvg_overlay_get_property;
+  gobject_class->finalize = gst_rsvg_overlay_finalize;
 
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_DATA,
       g_param_spec_string ("data", "data", "SVG data.", "",
@@ -541,4 +544,14 @@ gst_rsvg_overlay_init (GstRsvgOverlay * overlay, GstRsvgOverlayClass * klass)
   gst_pad_set_event_function (overlay->data_sinkpad,
       GST_DEBUG_FUNCPTR (gst_rsvg_overlay_data_sink_event));
   gst_element_add_pad (GST_ELEMENT (overlay), overlay->data_sinkpad);
+}
+
+static void
+gst_rsvg_overlay_finalize (GObject * object)
+{
+  GstRsvgOverlay *overlay = GST_RSVG_OVERLAY (object);
+
+  g_object_unref (overlay->adapter);
+
+  G_OBJECT_CLASS (parent_class)->finalize (object);
 }

@@ -30,6 +30,7 @@ typedef struct _GstInterSurface GstInterSurface;
 struct _GstInterSurface
 {
   GMutex *mutex;
+  char *name;
 
   /* video */
   GstVideoFormat format;
@@ -45,12 +46,13 @@ struct _GstInterSurface
   int n_channels;
 
   GstBuffer *video_buffer;
+  GstBuffer *sub_buffer;
   GstAdapter *audio_adapter;
 };
 
 
 GstInterSurface * gst_inter_surface_get (const char *name);
-void gst_inter_surface_init (void);
+void gst_inter_surface_unref (GstInterSurface *surface);
 
 
 G_END_DECLS

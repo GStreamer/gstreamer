@@ -296,6 +296,8 @@ gst_template_match_finalize (GObject * object)
   if (filter->cvTemplateImage) {
     cvReleaseImage (&filter->cvTemplateImage);
   }
+
+  GST_CALL_PARENT (G_OBJECT_CLASS, finalize, (object));
 }
 
 /* chain function

@@ -71,6 +71,8 @@ AG_GST_GETTEXT([gst-plugins-bad-$GST_MAJORMINOR])
 
 dnl *** check for arguments to configure ***
 
+AG_GST_ARG_DISABLE_FATAL_WARNINGS
+
 AG_GST_ARG_DEBUG
 AG_GST_ARG_PROFILING
 AG_GST_ARG_VALGRIND
@@ -208,9 +210,11 @@ AM_CONDITIONAL(HAVE_GST_CHECK, test "x$HAVE_GST_CHECK" = "xyes")
 AG_GST_CHECK_GST_PLUGINS_BASE($GST_MAJORMINOR, [$GSTPB_REQ], yes)
 
 dnl check for uninstalled plugin directories for unit tests
-AG_GST_CHECK_GST_PLUGINS_GOOD($GST_MAJORMINOR, [0.11.0])
-AG_GST_CHECK_GST_PLUGINS_UGLY($GST_MAJORMINOR, [0.11.0])
-AG_GST_CHECK_GST_PLUGINS_FFMPEG($GST_MAJORMINOR, [0.11.0])
+AG_GST_CHECK_UNINSTALLED_SETUP([
+  AG_GST_CHECK_GST_PLUGINS_GOOD($GST_MAJORMINOR, [0.11.0])
+  AG_GST_CHECK_GST_PLUGINS_UGLY($GST_MAJORMINOR, [0.11.0])
+  AG_GST_CHECK_GST_PLUGINS_FFMPEG($GST_MAJORMINOR, [0.11.0])
+])
 
 dnl Check for documentation xrefs
 GLIB_PREFIX="`$PKG_CONFIG --variable=prefix glib-2.0`"
@@ -288,14 +292,14 @@ AG_GST_SET_PACKAGE_RELEASE_DATETIME_WITH_NANO([$PACKAGE_VERSION_NANO],
 dnl define an ERROR_CFLAGS Makefile variable
 dnl -Waggregate-return - libexif returns aggregates
 dnl -Wundef - Windows headers check _MSC_VER unconditionally
-AG_GST_SET_ERROR_CFLAGS($GST_GIT, [
+AG_GST_SET_ERROR_CFLAGS($FATAL_WARNINGS, [
     -Wmissing-declarations -Wmissing-prototypes -Wredundant-decls
     -Wwrite-strings -Wformat-security -Wold-style-definition
     -Winit-self -Wmissing-include-dirs -Waddress -Wno-multichar
     -Wnested-externs])
 
 dnl define an ERROR_CXXFLAGS Makefile variable
-AG_GST_SET_ERROR_CXXFLAGS($GST_GIT, [
+AG_GST_SET_ERROR_CXXFLAGS($FATAL_WARNINGS, [
     -Wmissing-declarations -Wredundant-decls
     -Wwrite-strings -Wformat-nonliteral -Wformat-security
     -Winit-self -Wmissing-include-dirs -Waddress -Wno-multichar ])
@@ -753,6 +757,16 @@ AG_GST_CHECK_FEATURE(CELT, [celt], celt, [
   ])
   AC_SUBST(CELT_CFLAGS)
   AC_SUBST(CELT_LIBS)
+])
+
+dnl *** chromaprint ***
+translit(dnm, m, l) AM_CONDITIONAL(USE_CHROMAPRINT, true)
+AG_GST_CHECK_FEATURE(CHROMAPRINT, [chromaprint], chromaprint, [
+  PKG_CHECK_MODULES(CHROMAPRINT, libchromaprint, HAVE_CHROMAPRINT="yes", [
+    HAVE_CHROMAPRINT="no"
+  ])
+  AC_SUBST(CHROMAPRINT_CFLAGS)
+  AC_SUBST(CHROMAPRINT_LIBS)
 ])
 
 dnl *** Cog ***
@@ -1712,7 +1726,7 @@ AG_GST_CHECK_FEATURE(VDPAU, [VDPAU], vdpau, [
 dnl *** schroedinger ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_SCHRO, true)
 AG_GST_CHECK_FEATURE(SCHRO, [Schroedinger video codec], schro, [
-  AG_GST_PKG_CHECK_MODULES(SCHRO, schroedinger-1.0 >= 1.0.7)
+  AG_GST_PKG_CHECK_MODULES(SCHRO, schroedinger-1.0 >= 1.0.10)
 ])
 
 dnl *** zbar ***
@@ -1800,6 +1814,7 @@ AM_CONDITIONAL(USE_APEXSINK, false)
 AM_CONDITIONAL(USE_BZ2, false)
 AM_CONDITIONAL(USE_CDAUDIO, false)
 AM_CONDITIONAL(USE_CELT, false)
+AM_CONDITIONAL(USE_CHROMAPRINT, false)
 AM_CONDITIONAL(USE_COG, false)
 AM_CONDITIONAL(USE_CURL, false)
 AM_CONDITIONAL(USE_DC1394, false)
@@ -2056,6 +2071,7 @@ ext/apexsink/Makefile
 ext/bz2/Makefile
 ext/cdaudio/Makefile
 ext/celt/Makefile
+ext/chromaprint/Makefile
 ext/cog/Makefile
 ext/curl/Makefile
 ext/dc1394/Makefile

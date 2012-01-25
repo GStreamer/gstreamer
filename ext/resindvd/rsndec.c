@@ -247,18 +247,50 @@ _get_decoder_factories (gpointer arg)
   GstPadTemplate *templ = gst_element_class_get_pad_template (klass,
       "sink");
   RsnDecFactoryFilterCtx ctx = { NULL, };
+  GstCaps *raw;
+  gboolean raw_audio;
 
   ctx.desired_caps = gst_pad_template_get_caps (templ);
+
+  raw = gst_caps_from_string ("audio/x-raw-float");
+  raw_audio = gst_caps_can_intersect (raw, ctx.desired_caps);
+  if (raw_audio) {
+    GstCaps *sub = gst_caps_subtract (ctx.desired_caps, raw);
+    ctx.desired_caps = sub;
+  } else {
+    gst_caps_ref (ctx.desired_caps);
+  }
+  gst_caps_unref (raw);
+
   /* Set decoder caps to empty. Will be filled by the factory_filter */
   ctx.decoder_caps = gst_caps_new_empty ();
+  GST_DEBUG ("Finding factories for caps: %" GST_PTR_FORMAT, ctx.desired_caps);
 
   factories = gst_default_registry_feature_filter (
       (GstPluginFeatureFilter) rsndec_factory_filter, FALSE, &ctx);
+
+  /* If these are audio caps, we add audioconvert, which is not a decoder,
+     but allows raw audio to go through relatively unmolested - this will
+     come handy when we have to send placeholder silence to allow preroll
+     for those DVDs which have titles with no audio track. */
+  if (raw_audio) {
+    GstPluginFeature *feature;
+    GST_DEBUG ("These are audio caps, adding audioconvert");
+    feature =
+        gst_default_registry_find_feature ("audioconvert",
+        GST_TYPE_ELEMENT_FACTORY);
+    if (feature) {
+      factories = g_list_append (factories, feature);
+    } else {
+      GST_WARNING ("Could not find feature audioconvert");
+    }
+  }
 
   factories = g_list_sort (factories, (GCompareFunc) sort_by_ranks);
 
   GST_DEBUG ("Available decoder caps %" GST_PTR_FORMAT, ctx.decoder_caps);
   gst_caps_unref (ctx.decoder_caps);
+  gst_caps_unref (ctx.desired_caps);
 
   return factories;
 }
@@ -343,7 +375,7 @@ static GstStaticPadTemplate audio_sink_template =
     GST_STATIC_CAPS ("audio/mpeg,mpegversion=(int)1;"
         "audio/x-private1-lpcm;"
         "audio/x-private1-ac3;" "audio/ac3;" "audio/x-ac3;"
-        "audio/x-private1-dts;")
+        "audio/x-private1-dts; audio/x-raw-float")
     );
 
 static GstStaticPadTemplate audio_src_template = GST_STATIC_PAD_TEMPLATE ("src",

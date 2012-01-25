@@ -60,6 +60,8 @@
 #define SEGMENT_THRESHOLD (300*GST_MSECOND)
 #define VIDEO_SEGMENT_THRESHOLD (500*GST_MSECOND)
 
+#define DURATION_SCAN_LIMIT         4 * 1024 * 1024
+
 typedef enum
 {
   SCAN_SCR,
@@ -154,9 +156,9 @@ static GstStateChangeReturn gst_flups_demux_change_state (GstElement * element,
     GstStateChange transition);
 
 static inline gboolean gst_flups_demux_scan_forward_ts (GstFluPSDemux * demux,
-    guint64 * pos, SCAN_MODE mode, guint64 * rts);
+    guint64 * pos, SCAN_MODE mode, guint64 * rts, gint limit);
 static inline gboolean gst_flups_demux_scan_backward_ts (GstFluPSDemux * demux,
-    guint64 * pos, SCAN_MODE mode, guint64 * rts);
+    guint64 * pos, SCAN_MODE mode, guint64 * rts, gint limit);
 
 static inline void gst_flups_demux_send_segment_updates (GstFluPSDemux * demux,
     GstClockTime new_time);
@@ -399,8 +401,13 @@ gst_flups_demux_create_stream (GstFluPSDemux * demux, gint id, gint stream_type)
       break;
   }
 
-  if (name == NULL || template == NULL || caps == NULL)
-    return NULL;
+  if (name == NULL || template == NULL || caps == NULL) {
+    if (name)
+      g_free (name);
+    if (caps)
+      gst_caps_unref (caps);
+    return FALSE;
+  }
 
   stream = g_new0 (GstFluPSStream, 1);
   stream->id = id;
@@ -1046,19 +1053,22 @@ gst_flups_demux_do_seek (GstFluPSDemux * demux, GstSegment * seeksegment)
       MIN (gst_util_uint64_scale (scr - demux->first_scr, scr_rate_n,
           scr_rate_d), demux->sink_segment.stop);
 
-  found = gst_flups_demux_scan_forward_ts (demux, &offset, SCAN_SCR, &fscr);
+  found = gst_flups_demux_scan_forward_ts (demux, &offset, SCAN_SCR, &fscr, 0);
   if (!found) {
-    found = gst_flups_demux_scan_backward_ts (demux, &offset, SCAN_SCR, &fscr);
+    found =
+        gst_flups_demux_scan_backward_ts (demux, &offset, SCAN_SCR, &fscr, 0);
   }
 
   while (found && fscr < scr) {
     offset++;
-    found = gst_flups_demux_scan_forward_ts (demux, &offset, SCAN_SCR, &fscr);
+    found =
+        gst_flups_demux_scan_forward_ts (demux, &offset, SCAN_SCR, &fscr, 0);
   }
 
   while (found && fscr > scr && offset > 0) {
     offset--;
-    found = gst_flups_demux_scan_backward_ts (demux, &offset, SCAN_SCR, &fscr);
+    found =
+        gst_flups_demux_scan_backward_ts (demux, &offset, SCAN_SCR, &fscr, 0);
   }
 
   GST_INFO_OBJECT (demux, "doing seek at offset %" G_GUINT64_FORMAT
@@ -2377,7 +2387,7 @@ beach:
 
 static inline gboolean
 gst_flups_demux_scan_forward_ts (GstFluPSDemux * demux, guint64 * pos,
-    SCAN_MODE mode, guint64 * rts)
+    SCAN_MODE mode, guint64 * rts, gint limit)
 {
   GstFlowReturn ret = GST_FLOW_OK;
   GstBuffer *buffer = NULL;
@@ -2387,10 +2397,13 @@ gst_flups_demux_scan_forward_ts (GstFluPSDemux * demux, guint64 * pos,
   guint scan_sz = (mode == SCAN_SCR ? SCAN_SCR_SZ : SCAN_PTS_SZ);
   guint cursor, to_read = BLOCK_SZ;
   guint8 *data;
-  guint end_scan;
+  guint end_scan, data_size;
 
   do {
     if (offset + scan_sz > demux->sink_segment.stop)
+      return FALSE;
+
+    if (limit && offset > *pos + limit)
       return FALSE;
 
     if (offset + to_read > demux->sink_segment.stop)
@@ -2401,8 +2414,14 @@ gst_flups_demux_scan_forward_ts (GstFluPSDemux * demux, guint64 * pos,
     if (G_UNLIKELY (ret != GST_FLOW_OK))
       return FALSE;
 
+    /* may get a short buffer at the end of the file */
+    data_size = GST_BUFFER_SIZE (buffer);
+    if (G_UNLIKELY (data_size <= scan_sz))
+      return FALSE;
+
     data = GST_BUFFER_DATA (buffer);
-    end_scan = GST_BUFFER_SIZE (buffer) - scan_sz;
+    end_scan = data_size - scan_sz;
+
     /* scan the block */
     for (cursor = 0; !found && cursor <= end_scan; cursor++) {
       found = gst_flups_demux_scan_ts (demux, data++, mode, &ts);
@@ -2424,7 +2443,7 @@ gst_flups_demux_scan_forward_ts (GstFluPSDemux * demux, guint64 * pos,
 
 static inline gboolean
 gst_flups_demux_scan_backward_ts (GstFluPSDemux * demux, guint64 * pos,
-    SCAN_MODE mode, guint64 * rts)
+    SCAN_MODE mode, guint64 * rts, gint limit)
 {
   GstFlowReturn ret = GST_FLOW_OK;
   GstBuffer *buffer = NULL;
@@ -2433,11 +2452,14 @@ gst_flups_demux_scan_backward_ts (GstFluPSDemux * demux, guint64 * pos,
   guint64 ts = 0;
   guint scan_sz = (mode == SCAN_SCR ? SCAN_SCR_SZ : SCAN_PTS_SZ);
   guint cursor, to_read = BLOCK_SZ;
-  guint start_scan;
+  guint start_scan, data_size;
   guint8 *data;
 
   do {
     if (offset < scan_sz - 1)
+      return FALSE;
+
+    if (limit && offset < *pos - limit)
       return FALSE;
 
     if (offset > BLOCK_SZ)
@@ -2451,8 +2473,14 @@ gst_flups_demux_scan_backward_ts (GstFluPSDemux * demux, guint64 * pos,
     if (G_UNLIKELY (ret != GST_FLOW_OK))
       return FALSE;
 
-    start_scan = GST_BUFFER_SIZE (buffer) - scan_sz;
+    /* may get a short buffer at the end of the file */
+    data_size = GST_BUFFER_SIZE (buffer);
+    if (G_UNLIKELY (data_size <= scan_sz))
+      return FALSE;
+
+    start_scan = data_size - scan_sz;
     data = GST_BUFFER_DATA (buffer) + start_scan;
+
     /* scan the block */
     for (cursor = (start_scan + 1); !found && cursor > 0; cursor--) {
       found = gst_flups_demux_scan_ts (demux, data--, mode, &ts);
@@ -2505,7 +2533,8 @@ gst_flups_sink_get_duration (GstFluPSDemux * demux)
   /* Scan for notorious SCR and PTS to calculate the duration */
   /* scan for first SCR in the stream */
   offset = demux->sink_segment.start;
-  gst_flups_demux_scan_forward_ts (demux, &offset, SCAN_SCR, &demux->first_scr);
+  gst_flups_demux_scan_forward_ts (demux, &offset, SCAN_SCR, &demux->first_scr,
+      DURATION_SCAN_LIMIT);
   GST_DEBUG_OBJECT (demux, "First SCR: %" G_GINT64_FORMAT " %" GST_TIME_FORMAT
       " in packet starting at %" G_GUINT64_FORMAT,
       demux->first_scr, GST_TIME_ARGS (MPEGTIME_TO_GSTTIME (demux->first_scr)),
@@ -2513,7 +2542,8 @@ gst_flups_sink_get_duration (GstFluPSDemux * demux)
   demux->first_scr_offset = offset;
   /* scan for last SCR in the stream */
   offset = demux->sink_segment.stop;
-  gst_flups_demux_scan_backward_ts (demux, &offset, SCAN_SCR, &demux->last_scr);
+  gst_flups_demux_scan_backward_ts (demux, &offset, SCAN_SCR,
+      &demux->last_scr, 0);
   GST_DEBUG_OBJECT (demux, "Last SCR: %" G_GINT64_FORMAT " %" GST_TIME_FORMAT
       " in packet starting at %" G_GUINT64_FORMAT,
       demux->last_scr, GST_TIME_ARGS (MPEGTIME_TO_GSTTIME (demux->last_scr)),
@@ -2521,18 +2551,22 @@ gst_flups_sink_get_duration (GstFluPSDemux * demux)
   demux->last_scr_offset = offset;
   /* scan for first PTS in the stream */
   offset = demux->sink_segment.start;
-  gst_flups_demux_scan_forward_ts (demux, &offset, SCAN_PTS, &demux->first_pts);
+  gst_flups_demux_scan_forward_ts (demux, &offset, SCAN_PTS, &demux->first_pts,
+      DURATION_SCAN_LIMIT);
   GST_DEBUG_OBJECT (demux, "First PTS: %" G_GINT64_FORMAT " %" GST_TIME_FORMAT
       " in packet starting at %" G_GUINT64_FORMAT,
       demux->first_pts, GST_TIME_ARGS (MPEGTIME_TO_GSTTIME (demux->first_pts)),
       offset);
-  /* scan for last PTS in the stream */
-  offset = demux->sink_segment.stop;
-  gst_flups_demux_scan_backward_ts (demux, &offset, SCAN_PTS, &demux->last_pts);
-  GST_DEBUG_OBJECT (demux, "Last PTS: %" G_GINT64_FORMAT " %" GST_TIME_FORMAT
-      " in packet starting at %" G_GUINT64_FORMAT,
-      demux->last_pts, GST_TIME_ARGS (MPEGTIME_TO_GSTTIME (demux->last_pts)),
-      offset);
+  if (demux->first_pts != G_MAXUINT64) {
+    /* scan for last PTS in the stream */
+    offset = demux->sink_segment.stop;
+    gst_flups_demux_scan_backward_ts (demux, &offset, SCAN_PTS,
+        &demux->last_pts, DURATION_SCAN_LIMIT);
+    GST_DEBUG_OBJECT (demux,
+        "Last PTS: %" G_GINT64_FORMAT " %" GST_TIME_FORMAT
+        " in packet starting at %" G_GUINT64_FORMAT, demux->last_pts,
+        GST_TIME_ARGS (MPEGTIME_TO_GSTTIME (demux->last_pts)), offset);
+  }
   /* Detect wrong SCR values */
   if (demux->first_scr > demux->last_scr) {
     GST_DEBUG_OBJECT (demux, "Wrong SCR values detected, searching for "
@@ -2540,7 +2574,7 @@ gst_flups_sink_get_duration (GstFluPSDemux * demux)
     offset = demux->first_scr_offset;
     for (i = 0; i < 10; i++) {
       offset++;
-      gst_flups_demux_scan_forward_ts (demux, &offset, SCAN_SCR, &scr);
+      gst_flups_demux_scan_forward_ts (demux, &offset, SCAN_SCR, &scr, 0);
       if (scr < demux->last_scr) {
         demux->first_scr = scr;
         demux->first_scr_offset = offset;

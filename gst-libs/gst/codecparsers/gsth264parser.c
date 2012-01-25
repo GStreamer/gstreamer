@@ -518,6 +518,7 @@ gst_h264_parse_hrd_parameters (GstH264HRDParams * hrd, NalReader * nr)
   for (sched_sel_idx = 0; sched_sel_idx <= hrd->cpb_cnt_minus1; sched_sel_idx++) {
     READ_UE (nr, hrd->bit_rate_value_minus1[sched_sel_idx]);
     READ_UE (nr, hrd->cpb_size_value_minus1[sched_sel_idx]);
+    READ_UINT8 (nr, hrd->cbr_flag[sched_sel_idx], 1);
   }
 
   READ_UINT8 (nr, hrd->initial_cpb_removal_delay_length_minus1, 5);
@@ -747,22 +748,26 @@ slice_parse_ref_pic_list_modification_1 (GstH264SliceHdr * slice,
     NalReader * nr, guint list)
 {
   GstH264RefPicListModification *entries;
-  guint8 *ref_pic_list_modification_flag;
+  guint8 *ref_pic_list_modification_flag, *n_ref_pic_list_modification;
   guint32 modification_of_pic_nums_idc;
   guint i = 0;
 
   if (list == 0) {
     entries = slice->ref_pic_list_modification_l0;
     ref_pic_list_modification_flag = &slice->ref_pic_list_modification_flag_l0;
+    n_ref_pic_list_modification = &slice->n_ref_pic_list_modification_l0;
   } else {
     entries = slice->ref_pic_list_modification_l1;
     ref_pic_list_modification_flag = &slice->ref_pic_list_modification_flag_l1;
+    n_ref_pic_list_modification = &slice->n_ref_pic_list_modification_l1;
   }
 
   READ_UINT8 (nr, *ref_pic_list_modification_flag, 1);
   if (*ref_pic_list_modification_flag) {
-    do {
+    while (1) {
       READ_UE (nr, modification_of_pic_nums_idc);
+      if (modification_of_pic_nums_idc == 3)
+        break;
       if (modification_of_pic_nums_idc == 0 ||
           modification_of_pic_nums_idc == 1) {
         READ_UE_ALLOWED (nr, entries[i].value.abs_diff_pic_num_minus1, 0,
@@ -770,9 +775,10 @@ slice_parse_ref_pic_list_modification_1 (GstH264SliceHdr * slice,
       } else if (modification_of_pic_nums_idc == 2) {
         READ_UE (nr, entries[i].value.long_term_pic_num);
       }
-    } while (modification_of_pic_nums_idc != 3);
+      entries[i++].modification_of_pic_nums_idc = modification_of_pic_nums_idc;
+    }
   }
-
+  *n_ref_pic_list_modification = i;
   return TRUE;
 
 error:
@@ -1049,6 +1055,8 @@ gst_h264_parse_clock_timestamp (GstH264ClockTimestamp * tim,
 
   if (time_offset_length > 0)
     READ_UINT32 (nr, tim->time_offset, time_offset_length);
+
+  return TRUE;
 
 error:
   GST_WARNING ("error parsing \"Clock timestamp\"");

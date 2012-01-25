@@ -102,7 +102,7 @@ static GstStaticPadTemplate gst_schro_dec_src_template =
 GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (GST_VIDEO_CAPS_YUV ("{ I420, YUY2, AYUV }"))
+    GST_STATIC_CAPS (GST_VIDEO_CAPS_YUV (GST_SCHRO_YUV_LIST))
     );
 
 GST_BOILERPLATE (GstSchroDec, gst_schro_dec, GstBaseVideoDecoder,
@@ -313,12 +313,25 @@ parse_sequence_header (GstSchroDec * schro_dec, guint8 * data, int size)
   ret = schro_parse_decode_sequence_header (data + 13, size - 13,
       &video_format);
   if (ret) {
-    if (video_format.chroma_format == SCHRO_CHROMA_444) {
-      state->format = GST_VIDEO_FORMAT_AYUV;
-    } else if (video_format.chroma_format == SCHRO_CHROMA_422) {
-      state->format = GST_VIDEO_FORMAT_YUY2;
-    } else if (video_format.chroma_format == SCHRO_CHROMA_420) {
-      state->format = GST_VIDEO_FORMAT_I420;
+    int bit_depth;
+
+    bit_depth = schro_video_format_get_bit_depth (&video_format);
+
+    if (bit_depth == 8) {
+      if (video_format.chroma_format == SCHRO_CHROMA_444) {
+        state->format = GST_VIDEO_FORMAT_AYUV;
+      } else if (video_format.chroma_format == SCHRO_CHROMA_422) {
+        state->format = GST_VIDEO_FORMAT_UYVY;
+      } else if (video_format.chroma_format == SCHRO_CHROMA_420) {
+        state->format = GST_VIDEO_FORMAT_I420;
+      }
+    } else if (bit_depth <= 10) {
+      state->format = GST_VIDEO_FORMAT_v210;
+    } else if (bit_depth <= 16) {
+      state->format = GST_VIDEO_FORMAT_AYUV64;
+    } else {
+      GST_ERROR ("bit depth too large (%d > 16)", bit_depth);
+      state->format = GST_VIDEO_FORMAT_AYUV64;
     }
     state->fps_n = video_format.frame_rate_numerator;
     state->fps_d = video_format.frame_rate_denominator;

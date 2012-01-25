@@ -77,7 +77,8 @@ static gboolean gst_inter_audio_sink_unlock_stop (GstBaseSink * sink);
 
 enum
 {
-  PROP_0
+  PROP_0,
+  PROP_CHANNEL
 };
 
 /* pad templates */
@@ -150,6 +151,10 @@ gst_inter_audio_sink_class_init (GstInterAudioSinkClass * klass)
   base_sink_class->unlock_stop =
       GST_DEBUG_FUNCPTR (gst_inter_audio_sink_unlock_stop);
 
+  g_object_class_install_property (gobject_class, PROP_CHANNEL,
+      g_param_spec_string ("channel", "Channel",
+          "Channel name to match inter src and sink elements",
+          "default", G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 }
 
 static void

@@ -107,7 +107,7 @@ static GstStaticPadTemplate gst_schro_enc_sink_template =
 GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (GST_VIDEO_CAPS_YUV ("{ I420, YV12, YUY2, UYVY, AYUV }"))
+    GST_STATIC_CAPS (GST_VIDEO_CAPS_YUV (GST_SCHRO_YUV_LIST))
     );
 
 static GstStaticPadTemplate gst_schro_enc_src_template =
@@ -271,13 +271,18 @@ gst_schro_enc_set_format (GstBaseVideoEncoder * base_video_encoder,
   switch (state->format) {
     case GST_VIDEO_FORMAT_I420:
     case GST_VIDEO_FORMAT_YV12:
+    case GST_VIDEO_FORMAT_Y42B:
       schro_enc->video_format->chroma_format = SCHRO_CHROMA_420;
       break;
     case GST_VIDEO_FORMAT_YUY2:
     case GST_VIDEO_FORMAT_UYVY:
+    case GST_VIDEO_FORMAT_v216:
+    case GST_VIDEO_FORMAT_v210:
       schro_enc->video_format->chroma_format = SCHRO_CHROMA_422;
       break;
     case GST_VIDEO_FORMAT_AYUV:
+    case GST_VIDEO_FORMAT_Y444:
+    case GST_VIDEO_FORMAT_AYUV64:
       schro_enc->video_format->chroma_format = SCHRO_CHROMA_444;
       break;
     case GST_VIDEO_FORMAT_ARGB:
@@ -300,8 +305,24 @@ gst_schro_enc_set_format (GstBaseVideoEncoder * base_video_encoder,
   schro_enc->video_format->aspect_ratio_numerator = state->par_n;
   schro_enc->video_format->aspect_ratio_denominator = state->par_d;
 
-  schro_video_format_set_std_signal_range (schro_enc->video_format,
-      SCHRO_SIGNAL_RANGE_8BIT_VIDEO);
+  switch (state->format) {
+    default:
+      schro_video_format_set_std_signal_range (schro_enc->video_format,
+          SCHRO_SIGNAL_RANGE_8BIT_VIDEO);
+      break;
+    case GST_VIDEO_FORMAT_v210:
+      schro_video_format_set_std_signal_range (schro_enc->video_format,
+          SCHRO_SIGNAL_RANGE_10BIT_VIDEO);
+      break;
+    case GST_VIDEO_FORMAT_v216:
+    case GST_VIDEO_FORMAT_AYUV64:
+      schro_enc->video_format->luma_offset = 64 << 8;
+      schro_enc->video_format->luma_excursion = 219 << 8;
+      schro_enc->video_format->chroma_offset = 128 << 8;
+      schro_enc->video_format->chroma_excursion = 224 << 8;
+      break;
+  }
+
   schro_video_format_set_std_colour_spec (schro_enc->video_format,
       SCHRO_COLOUR_SPEC_HDTV);
 

@@ -21,22 +21,43 @@
 #include "config.h"
 #endif
 
+#include <string.h>
+
 #include "gstintersurface.h"
 
-static GstInterSurface *surface;
+static GList *list;
+static GStaticMutex mutex = G_STATIC_MUTEX_INIT;
 
 
 GstInterSurface *
 gst_inter_surface_get (const char *name)
 {
-  return surface;
+  GList *g;
+  GstInterSurface *surface;
 
+  g_static_mutex_lock (&mutex);
+
+  for (g = list; g; g = g_list_next (g)) {
+    surface = (GstInterSurface *) g->data;
+    if (strcmp (name, surface->name) == 0) {
+      g_static_mutex_unlock (&mutex);
+      return surface;
+    }
+  }
+
+  surface = g_malloc0 (sizeof (GstInterSurface));
+  surface->name = g_strdup (name);
+  surface->mutex = g_mutex_new ();
+  surface->audio_adapter = gst_adapter_new ();
+
+  list = g_list_append (list, surface);
+  g_static_mutex_unlock (&mutex);
+
+  return surface;
 }
 
 void
-gst_inter_surface_init (void)
+gst_inter_surface_unref (GstInterSurface * surface)
 {
-  surface = g_malloc0 (sizeof (GstInterSurface));
-  surface->mutex = g_mutex_new ();
-  surface->audio_adapter = gst_adapter_new ();
+
 }

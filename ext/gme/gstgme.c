@@ -161,6 +161,8 @@ gst_gme_dec_dispose (GObject * object)
     g_object_unref (gme->adapter);
     gme->adapter = NULL;
   }
+
+  GST_CALL_PARENT (G_OBJECT_CLASS, dispose, (object));
 }
 
 static GstFlowReturn

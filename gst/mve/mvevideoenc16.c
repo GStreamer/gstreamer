@@ -285,6 +285,9 @@ mve_quantize (const GstMveMux * mve, const guint16 * src,
           }
         }
 
+        if (G_UNLIKELY (!best))
+          continue;
+
         ++best->hits;
         best->r_total += r;
         best->g_total += g;

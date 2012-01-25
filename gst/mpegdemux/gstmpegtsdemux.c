@@ -829,8 +829,13 @@ gst_mpegts_demux_fill_stream (GstMpegTSStream * stream, guint8 id,
     default:
       break;
   }
-  if (name == NULL || template == NULL || caps == NULL)
+  if (name == NULL || template == NULL || caps == NULL) {
+    if (name)
+      g_free (name);
+    if (caps)
+      gst_caps_unref (caps);
     return FALSE;
+  }
 
   stream->stream_type = stream_type;
   stream->id = id;
@@ -1104,6 +1109,10 @@ gst_mpegts_demux_add_all_streams (GstMpegTSDemux * demux, GstClockTime pts)
   guint i;
   GstPad *srcpad;
   gboolean all_added = TRUE;
+
+  GST_DEBUG_OBJECT (demux, "Adding streams early fixes a wedge in some low "
+      "bitrate streams, but causes deadlocks - disabled for now");
+  return FALSE;
 
   /* When adding a stream, require either a valid base PCR, or a valid PTS */
   if (!gst_mpegts_demux_setup_base_pts (demux, pts)) {
