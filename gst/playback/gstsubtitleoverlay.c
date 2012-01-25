@@ -220,7 +220,7 @@ _is_parser (GstElementFactory * factory)
   return FALSE;
 }
 
-static const gchar *_sub_pad_names[] = { "subpicture", "subpicture_sink",
+static const gchar *const _sub_pad_names[] = { "subpicture", "subpicture_sink",
   "text", "text_sink",
   "subtitle_sink", "subtitle"
 };
@@ -510,7 +510,7 @@ _get_sub_pad (GstElement * element)
 static GstPad *
 _get_video_pad (GstElement * element)
 {
-  static const gchar *pad_names[] = { "video", "video_sink" };
+  static const gchar *const pad_names[] = { "video", "video_sink" };
   GstPad *pad;
   guint i;
 
