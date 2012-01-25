@@ -89,10 +89,13 @@ enum
 G_DEFINE_TYPE (GstTheoraParse, gst_theora_parse, GST_TYPE_ELEMENT);
 
 static void theora_parse_dispose (GObject * object);
+
+#if 0
 static void theora_parse_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 static void theora_parse_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
+#endif
 
 static GstFlowReturn theora_parse_chain (GstPad * pad, GstObject * parent,
     GstBuffer * buffer);
@@ -110,6 +113,8 @@ gst_theora_parse_class_init (GstTheoraParseClass * klass)
   GstElementClass *gstelement_class = GST_ELEMENT_CLASS (klass);
 
   gobject_class->dispose = theora_parse_dispose;
+
+#if 0
   gobject_class->get_property = theora_parse_get_property;
   gobject_class->set_property = theora_parse_set_property;
 
@@ -128,7 +133,7 @@ gst_theora_parse_class_init (GstTheoraParseClass * klass)
               "Time (either granuletime or buffertime)", 0, G_MAXUINT64, 0,
               G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS),
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
-
+#endif
 
   gst_element_class_add_pad_template (gstelement_class,
       gst_static_pad_template_get (&theora_parse_src_factory));
@@ -170,6 +175,7 @@ theora_parse_dispose (GObject * object)
   G_OBJECT_CLASS (parent_class)->dispose (object);
 }
 
+#if 0
 static void
 theora_parse_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec)
@@ -247,6 +253,7 @@ theora_parse_get_property (GObject * object, guint prop_id,
       break;
   }
 }
+#endif
 
 static void
 theora_parse_set_header_on_caps (GstTheoraParse * parse, GstCaps * caps)
