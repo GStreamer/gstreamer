@@ -1974,14 +1974,13 @@ gst_multi_fd_sink_handle_client_write (GstMultiFdSink * sink,
     if (client->sending) {
       ssize_t wrote;
       GstBuffer *head;
-      guint8 *data;
-      gsize size;
+      GstMapInfo map;
 
       /* pick first buffer from list */
       head = GST_BUFFER (client->sending->data);
 
-      data = gst_buffer_map (head, &size, NULL, GST_MAP_READ);
-      maxsize = size - client->bufoffset;
+      gst_buffer_map (head, &map, GST_MAP_READ);
+      maxsize = map.size - client->bufoffset;
 
       /* try to write the complete buffer */
 #ifdef MSG_NOSIGNAL
@@ -1990,11 +1989,11 @@ gst_multi_fd_sink_handle_client_write (GstMultiFdSink * sink,
 #define FLAGS 0
 #endif
       if (client->is_socket) {
-        wrote = send (fd, data + client->bufoffset, maxsize, FLAGS);
+        wrote = send (fd, map.data + client->bufoffset, maxsize, FLAGS);
       } else {
-        wrote = write (fd, data + client->bufoffset, maxsize);
+        wrote = write (fd, map.data + client->bufoffset, maxsize);
       }
-      gst_buffer_unmap (head, data, size);
+      gst_buffer_unmap (head, &map);
 
       if (wrote < 0) {
         /* hmm error.. */

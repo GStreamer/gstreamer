@@ -73,18 +73,17 @@ gst_h263_parse_get_params (H263Params * params, GstBuffer * buffer,
   };
 
   GstBitReader br;
-  guint8 *buf_data;
-  gsize buf_size;
+  GstMapInfo map;
   guint8 tr;
   guint32 psc = 0, temp32;
   guint8 temp8, pquant;
   gboolean hasplusptype;
 
-  buf_data = gst_buffer_map (buffer, &buf_size, NULL, GST_MAP_READ);
+  gst_buffer_map (buffer, &map, GST_MAP_READ);
 
   /* FIXME: we can optimise a little by checking the value of available
    * instead of calling using the bit reader's get_bits_* functions. */
-  gst_bit_reader_init (&br, buf_data, buf_size);
+  gst_bit_reader_init (&br, map.data, map.size);
 
   /* Default PCF is CIF PCF = 30000/1001 */
   params->pcfnum = 30000;
@@ -449,12 +448,12 @@ gst_h263_parse_get_params (H263Params * params, GstBuffer * buffer,
 done:
   *state = GOT_HEADER;
 more:
-  gst_buffer_unmap (buffer, buf_data, buf_size);
+  gst_buffer_unmap (buffer, &map);
   return GST_FLOW_OK;
 
 beach:
   *state = PASSTHROUGH;
-  gst_buffer_unmap (buffer, buf_data, buf_size);
+  gst_buffer_unmap (buffer, &map);
   return GST_FLOW_OK;
 }
 

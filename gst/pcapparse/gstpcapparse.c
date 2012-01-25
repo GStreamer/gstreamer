@@ -471,7 +471,7 @@ gst_pcap_parse_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
           if (gst_pcap_parse_scan_frame (self, data, self->cur_packet_size,
                   &payload_data, &payload_size)) {
             GstBuffer *out_buf;
-            guint8 *data;
+            GstMapInfo map;
 
             out_buf = gst_buffer_new_and_alloc (payload_size);
             if (out_buf) {
@@ -485,9 +485,9 @@ gst_pcap_parse_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
                 }
               }
 
-              data = gst_buffer_map (out_buf, NULL, NULL, GST_MAP_WRITE);
-              memcpy (data, payload_data, payload_size);
-              gst_buffer_unmap (out_buf, data, -1);
+              gst_buffer_map (out_buf, &map, GST_MAP_WRITE);
+              memcpy (map.data, payload_data, payload_size);
+              gst_buffer_unmap (out_buf, &map);
               GST_BUFFER_TIMESTAMP (out_buf) = self->cur_ts;
 
               if (!self->newsegment_sent &&

@@ -627,6 +627,7 @@ gst_h264_parse_check_valid_frame (GstBaseParse * parse,
 {
   GstH264Parse *h264parse = GST_H264_PARSE (parse);
   GstBuffer *buffer = frame->buffer;
+  GstMapInfo map;
   guint8 *data;
   gsize size;
   guint current_off = 0;
@@ -634,11 +635,13 @@ gst_h264_parse_check_valid_frame (GstBaseParse * parse,
   GstH264NalParser *nalparser = h264parse->nalparser;
   GstH264NalUnit nalu;
 
-  data = gst_buffer_map (buffer, &size, NULL, GST_MAP_READ);
+  gst_buffer_map (buffer, &map, GST_MAP_READ);
+  data = map.data;
+  size = map.size;
 
   /* expect at least 3 bytes startcode == sc, and 2 bytes NALU payload */
   if (G_UNLIKELY (size < 5)) {
-    gst_buffer_unmap (buffer, data, size);
+    gst_buffer_unmap (buffer, &map);
     return FALSE;
   }
 
@@ -770,7 +773,7 @@ end:
   *framesize = nalu.offset + nalu.size - h264parse->nalu.sc_offset;
   h264parse->current_off = current_off;
 
-  gst_buffer_unmap (buffer, data, size);
+  gst_buffer_unmap (buffer, &map);
   return TRUE;
 
 parsing_error:
@@ -795,7 +798,7 @@ more:
 
   /* Fall-through. */
 out:
-  gst_buffer_unmap (buffer, data, size);
+  gst_buffer_unmap (buffer, &map);
   return FALSE;
 
 invalid:
@@ -811,7 +814,8 @@ gst_h264_parse_make_codec_data (GstH264Parse * h264parse)
   gint i, sps_size = 0, pps_size = 0, num_sps = 0, num_pps = 0;
   guint8 profile_idc = 0, profile_comp = 0, level_idc = 0;
   gboolean found = FALSE;
-  guint8 *buf_data, *data;
+  GstMapInfo map;
+  guint8 *data;
 
   /* only nal payload in stored nals */
 
@@ -846,8 +850,8 @@ gst_h264_parse_make_codec_data (GstH264Parse * h264parse)
     return NULL;
 
   buf = gst_buffer_new_allocate (NULL, 5 + 1 + sps_size + 1 + pps_size, 0);
-  buf_data = gst_buffer_map (buf, NULL, NULL, GST_MAP_WRITE);
-  data = buf_data;
+  gst_buffer_map (buf, &map, GST_MAP_WRITE);
+  data = map.data;
 
   data[0] = 1;                  /* AVC Decoder Configuration Record ver. 1 */
   data[1] = profile_idc;        /* profile_idc                             */
@@ -877,7 +881,7 @@ gst_h264_parse_make_codec_data (GstH264Parse * h264parse)
     }
   }
 
-  gst_buffer_unmap (buf, buf_data, -1);
+  gst_buffer_unmap (buf, &map);
 
   return buf;
 }
@@ -1007,15 +1011,14 @@ gst_h264_parse_update_src_caps (GstH264Parse * h264parse, GstCaps * caps)
       h264parse->align == GST_H264_PARSE_ALIGN_AU) {
     buf = gst_h264_parse_make_codec_data (h264parse);
     if (buf && h264parse->codec_data) {
-      gsize size;
-      gpointer data;
+      GstMapInfo map;
 
-      data = gst_buffer_map (buf, &size, NULL, GST_MAP_READ);
-      if (size != gst_buffer_get_size (h264parse->codec_data) ||
-          gst_buffer_memcmp (h264parse->codec_data, 0, data, size))
+      gst_buffer_map (buf, &map, GST_MAP_READ);
+      if (map.size != gst_buffer_get_size (h264parse->codec_data) ||
+          gst_buffer_memcmp (h264parse->codec_data, 0, map.data, map.size))
         modified = TRUE;
 
-      gst_buffer_unmap (buf, data, size);
+      gst_buffer_unmap (buf, &map);
     } else {
       if (h264parse->codec_data)
         buf = gst_buffer_ref (h264parse->codec_data);
@@ -1292,12 +1295,12 @@ static GstFlowReturn
 gst_h264_parse_push_codec_buffer (GstH264Parse * h264parse, GstBuffer * nal,
     GstClockTime ts)
 {
-  gpointer data;
-  gsize size;
+  GstMapInfo map;
 
-  data = gst_buffer_map (nal, &size, NULL, GST_MAP_READ);
-  nal = gst_h264_parse_wrap_nal (h264parse, h264parse->format, data, size);
-  gst_buffer_unmap (nal, data, size);
+  gst_buffer_map (nal, &map, GST_MAP_READ);
+  nal = gst_h264_parse_wrap_nal (h264parse, h264parse->format,
+      map.data, map.size);
+  gst_buffer_unmap (nal, &map);
 
   GST_BUFFER_TIMESTAMP (nal) = ts;
   GST_BUFFER_DURATION (nal) = 0;
@@ -1548,6 +1551,7 @@ gst_h264_parse_set_caps (GstBaseParse * parse, GstCaps * caps)
   /* packetized video has a codec_data */
   if (format != GST_H264_PARSE_FORMAT_BYTE &&
       (value = gst_structure_get_value (str, "codec_data"))) {
+    GstMapInfo map;
     guint8 *data;
     guint num_sps, num_pps, profile;
     gint i;
@@ -1559,16 +1563,18 @@ gst_h264_parse_set_caps (GstBaseParse * parse, GstCaps * caps)
     codec_data = gst_value_get_buffer (value);
     if (!codec_data)
       goto wrong_type;
-    data = gst_buffer_map (codec_data, &size, NULL, GST_MAP_READ);
+    gst_buffer_map (codec_data, &map, GST_MAP_READ);
+    data = map.data;
+    size = map.size;
 
     /* parse the avcC data */
     if (size < 8) {
-      gst_buffer_unmap (codec_data, data, size);
+      gst_buffer_unmap (codec_data, &map);
       goto avcc_too_small;
     }
     /* parse the version, this must be 1 */
     if (data[0] != 1) {
-      gst_buffer_unmap (codec_data, data, size);
+      gst_buffer_unmap (codec_data, &map);
       goto wrong_version;
     }
 
@@ -1591,7 +1597,7 @@ gst_h264_parse_set_caps (GstBaseParse * parse, GstCaps * caps)
       parseres = gst_h264_parser_identify_nalu_avc (h264parse->nalparser,
           data, off, size, 2, &nalu);
       if (parseres != GST_H264_PARSER_OK) {
-        gst_buffer_unmap (codec_data, data, size);
+        gst_buffer_unmap (codec_data, &map);
         goto avcc_too_small;
       }
 
@@ -1606,7 +1612,7 @@ gst_h264_parse_set_caps (GstBaseParse * parse, GstCaps * caps)
       parseres = gst_h264_parser_identify_nalu_avc (h264parse->nalparser,
           data, off, size, 2, &nalu);
       if (parseres != GST_H264_PARSER_OK) {
-        gst_buffer_unmap (codec_data, data, size);
+        gst_buffer_unmap (codec_data, &map);
         goto avcc_too_small;
       }
 
@@ -1614,7 +1620,7 @@ gst_h264_parse_set_caps (GstBaseParse * parse, GstCaps * caps)
       off = nalu.offset + nalu.size;
     }
 
-    gst_buffer_unmap (codec_data, data, size);
+    gst_buffer_unmap (codec_data, &map);
 
     h264parse->codec_data = gst_buffer_ref (codec_data);
 
@@ -1840,8 +1846,7 @@ gst_h264_parse_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
     GstH264ParserResult parse_res;
     GstH264NalUnit nalu;
     const guint nl = h264parse->nal_length_size;
-    gpointer data;
-    gsize size;
+    GstMapInfo map;
 
     if (nl < 1 || nl > 4) {
       GST_DEBUG_OBJECT (h264parse, "insufficient data to split input");
@@ -1850,13 +1855,13 @@ gst_h264_parse_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
       return GST_FLOW_NOT_NEGOTIATED;
     }
 
-    data = gst_buffer_map (buffer, &size, NULL, GST_MAP_READ);
+    gst_buffer_map (buffer, &map, GST_MAP_READ);
 
     GST_LOG_OBJECT (h264parse,
-        "processing packet buffer of size %" G_GSIZE_FORMAT, size);
+        "processing packet buffer of size %" G_GSIZE_FORMAT, map.size);
 
     parse_res = gst_h264_parser_identify_nalu_avc (h264parse->nalparser,
-        data, 0, size, nl, &nalu);
+        map.data, 0, map.size, nl, &nalu);
 
     while (parse_res == GST_H264_PARSER_OK) {
       GST_DEBUG_OBJECT (h264parse, "AVC nal offset %d",
@@ -1881,10 +1886,10 @@ gst_h264_parse_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
       }
 
       parse_res = gst_h264_parser_identify_nalu_avc (h264parse->nalparser,
-          data, nalu.offset + nalu.size, size, nl, &nalu);
+          map.data, nalu.offset + nalu.size, map.size, nl, &nalu);
     }
 
-    gst_buffer_unmap (buffer, data, size);
+    gst_buffer_unmap (buffer, &map);
 
     if (h264parse->split_packetized) {
       gst_buffer_unref (buffer);

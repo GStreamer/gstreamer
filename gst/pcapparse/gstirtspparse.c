@@ -166,24 +166,23 @@ gst_irtsp_parse_check_valid_frame (GstBaseParse * parse,
   GstBuffer *buf = frame->buffer;
   GstByteReader reader;
   gint off;
-  gsize size;
-  guint8 *data;
+  GstMapInfo map;
   gboolean ret = FALSE;
 
-  data = gst_buffer_map (buf, &size, NULL, GST_MAP_READ);
-  if (G_UNLIKELY (size < 4))
+  gst_buffer_map (buf, &map, GST_MAP_READ);
+  if (G_UNLIKELY (map.size < 4))
     goto exit;
 
-  gst_byte_reader_init (&reader, data, size);
+  gst_byte_reader_init (&reader, map.data, map.size);
 
   off = gst_byte_reader_masked_scan_uint32 (&reader, 0xffff0000,
-      0x24000000 + (IRTSPParse->channel_id << 16), 0, size);
+      0x24000000 + (IRTSPParse->channel_id << 16), 0, map.size);
 
   GST_LOG_OBJECT (parse, "possible sync at buffer offset %d", off);
 
   /* didn't find anything that looks like a sync word, skip */
   if (off < 0) {
-    *skipsize = size - 3;
+    *skipsize = map.size - 3;
     goto exit;
   }
 
@@ -193,12 +192,12 @@ gst_irtsp_parse_check_valid_frame (GstBaseParse * parse,
     goto exit;
   }
 
-  *framesize = GST_READ_UINT16_BE (data + 2) + 4;
+  *framesize = GST_READ_UINT16_BE (map.data + 2) + 4;
   GST_LOG_OBJECT (parse, "got frame size %d", *framesize);
   ret = TRUE;
 
 exit:
-  gst_buffer_unmap (buf, data, -1);
+  gst_buffer_unmap (buf, &map);
 
   return ret;
 }

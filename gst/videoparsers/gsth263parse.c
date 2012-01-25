@@ -151,13 +151,12 @@ gst_h263_parse_sink_event (GstBaseParse * parse, GstEvent * event)
 static guint
 find_psc (GstBuffer * buffer, guint skip)
 {
-  guint8 *buf_data;
-  gsize buf_size;
+  GstMapInfo map;
   GstByteReader br;
   guint psc_pos = -1, psc;
 
-  buf_data = gst_buffer_map (buffer, &buf_size, NULL, GST_MAP_READ);
-  gst_byte_reader_init (&br, buf_data, buf_size);
+  gst_buffer_map (buffer, &map, GST_MAP_READ);
+  gst_byte_reader_init (&br, map.data, map.size);
 
   if (!gst_byte_reader_set_pos (&br, skip))
     goto out;
@@ -175,7 +174,7 @@ find_psc (GstBuffer * buffer, guint skip)
   }
 
 out:
-  gst_buffer_unmap (buffer, buf_data, buf_size);
+  gst_buffer_unmap (buffer, &map);
   return psc_pos;
 }
 

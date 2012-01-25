@@ -100,6 +100,7 @@ gst_rtp_vp8_pay_parse_frame (GstRtpVP8Pay * self, GstBuffer * buffer)
   GstBitReader *reader = NULL;
   guint8 *data;
   gsize size;
+  GstMapInfo map;
   int i;
   gboolean keyframe;
   guint32 partition0_size;
@@ -113,10 +114,11 @@ gst_rtp_vp8_pay_parse_frame (GstRtpVP8Pay * self, GstBuffer * buffer)
   if (G_UNLIKELY (gst_buffer_get_size (buffer) < 3))
     goto error;
 
-  data = gst_buffer_map (buffer, &size, NULL, GST_MAP_READ);
-  if (data == NULL)
+  if (!gst_buffer_map (buffer, &map, GST_MAP_READ) || !map.data)
     goto error;
 
+  data = map.data;
+  size = map.size;
   reader = gst_bit_reader_new (data, size);
 
   self->is_keyframe = keyframe = ((data[0] & 0x1) == 0);
@@ -255,14 +257,14 @@ gst_rtp_vp8_pay_parse_frame (GstRtpVP8Pay * self, GstBuffer * buffer)
   self->partition_offset[i + 1] = size;
 
   gst_bit_reader_free (reader);
-  gst_buffer_unmap (buffer, data, size);
+  gst_buffer_unmap (buffer, &map);
   return TRUE;
 
 error:
   GST_DEBUG ("Failed to parse frame");
   if (reader) {
     gst_bit_reader_free (reader);
-    gst_buffer_unmap (buffer, data, size);
+    gst_buffer_unmap (buffer, &map);
   }
   return FALSE;
 }

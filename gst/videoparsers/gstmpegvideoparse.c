@@ -229,21 +229,21 @@ gst_mpegv_parse_process_config (GstMpegvParse * mpvparse, GstBuffer * buf,
     guint size)
 {
   GList *tmp;
-  guint8 *buf_data, *data;
-  gsize buf_size;
+  GstMapInfo map;
+  guint8 *data;
 
-  buf_data = gst_buffer_map (buf, &buf_size, NULL, GST_MAP_READ);
-  data = buf_data + mpvparse->seq_offset;
+  gst_buffer_map (buf, &map, GST_MAP_READ);
+  data = map.data + mpvparse->seq_offset;
 
   /* only do stuff if something new */
   if (mpvparse->config && size == gst_buffer_get_size (mpvparse->config) &&
       gst_buffer_memcmp (mpvparse->config, 0, data, size) == 0) {
-    gst_buffer_unmap (buf, buf_data, buf_size);
+    gst_buffer_unmap (buf, &map);
     return TRUE;
   }
 
   if (gst_mpeg_video_parse_sequence_header (&mpvparse->sequencehdr, data,
-          buf_size - mpvparse->seq_offset, 0)) {
+          map.size - mpvparse->seq_offset, 0)) {
     if (mpvparse->fps_num == 0 || mpvparse->fps_den == 0) {
       mpvparse->fps_num = mpvparse->sequencehdr.fps_n;
       mpvparse->fps_den = mpvparse->sequencehdr.fps_d;
@@ -252,7 +252,7 @@ gst_mpegv_parse_process_config (GstMpegvParse * mpvparse, GstBuffer * buf,
     GST_DEBUG_OBJECT (mpvparse,
         "failed to parse config data (size %d) at offset %d",
         size, mpvparse->seq_offset);
-    gst_buffer_unmap (buf, buf_data, buf_size);
+    gst_buffer_unmap (buf, &map);
     return FALSE;
   }
 
@@ -270,7 +270,7 @@ gst_mpegv_parse_process_config (GstMpegvParse * mpvparse, GstBuffer * buf,
         mpvparse->mpeg_version = 2;
 
         if (gst_mpeg_video_parse_sequence_extension (&mpvparse->sequenceext,
-                buf_data, buf_size, tpoffsz->offset)) {
+                map.data, map.size, tpoffsz->offset)) {
           mpvparse->fps_num =
               mpvparse->sequencehdr.fps_n * (mpvparse->sequenceext.fps_n_ext +
               1) * 2;
@@ -292,7 +292,7 @@ gst_mpegv_parse_process_config (GstMpegvParse * mpvparse, GstBuffer * buf,
   /* trigger src caps update */
   mpvparse->update_caps = TRUE;
 
-  gst_buffer_unmap (buf, buf_data, buf_size);
+  gst_buffer_unmap (buf, &map);
 
   return TRUE;
 }
@@ -359,12 +359,11 @@ static void
 parse_picture_extension (GstMpegvParse * mpvparse, GstBuffer * buf, guint off)
 {
   GstMpegVideoPictureExt ext;
-  gpointer data;
-  gsize size;
+  GstMapInfo map;
 
-  data = gst_buffer_map (buf, &size, NULL, GST_MAP_READ);
+  gst_buffer_map (buf, &map, GST_MAP_READ);
 
-  if (gst_mpeg_video_parse_picture_extension (&ext, data, size, off)) {
+  if (gst_mpeg_video_parse_picture_extension (&ext, map.data, map.size, off)) {
     mpvparse->frame_repeat_count = 1;
 
     if (ext.repeat_first_field) {
@@ -379,7 +378,7 @@ parse_picture_extension (GstMpegvParse * mpvparse, GstBuffer * buf, guint off)
     }
   }
 
-  gst_buffer_unmap (buf, data, size);
+  gst_buffer_unmap (buf, &map);
 }
 
 /* caller guarantees at least start code in @buf at @off */
@@ -438,11 +437,11 @@ gst_mpegv_parse_process_sc (GstMpegvParse * mpvparse,
 
   /* extract some picture info if there is any in the frame being terminated */
   if (ret && mpvparse->pic_offset >= 0 && mpvparse->pic_offset < off) {
-    gsize size;
-    gpointer data = gst_buffer_map (buf, &size, NULL, GST_MAP_READ);
+    GstMapInfo map;
 
+    gst_buffer_map (buf, &map, GST_MAP_READ);
     if (gst_mpeg_video_parse_picture_header (&mpvparse->pichdr,
-            data, size, mpvparse->pic_offset))
+            map.data, map.size, mpvparse->pic_offset))
       GST_LOG_OBJECT (mpvparse, "picture_coding_type %d (%s), ending"
           "frame of size %d", mpvparse->pichdr.pic_type,
           picture_type_name (mpvparse->pichdr.pic_type), off - 4);
@@ -450,7 +449,7 @@ gst_mpegv_parse_process_sc (GstMpegvParse * mpvparse,
       GST_LOG_OBJECT (mpvparse, "Couldn't parse picture at offset %d",
           mpvparse->pic_offset);
 
-    gst_buffer_unmap (buf, data, size);
+    gst_buffer_unmap (buf, &map);
   }
 
   return ret;
@@ -503,7 +502,7 @@ gst_mpegv_parse_check_valid_frame (GstBaseParse * parse,
   gboolean ret = FALSE;
   GList *tmp;
   gint off = 0, fsize = -1;
-  gpointer buf_data;
+  GstMapInfo map;
   gsize buf_size;
 
   update_frame_parsing_status (mpvparse, frame);
@@ -511,9 +510,10 @@ gst_mpegv_parse_check_valid_frame (GstBaseParse * parse,
   if (mpvparse->last_sc >= 0)
     off = mpvparse->last_sc;
 
-  buf_data = gst_buffer_map (buf, &buf_size, NULL, GST_MAP_READ);
-  mpvparse->typeoffsize = gst_mpeg_video_parse (buf_data, buf_size, off);
-  gst_buffer_unmap (buf, buf_data, buf_size);
+  gst_buffer_map (buf, &map, GST_MAP_READ);
+  buf_size = map.size;
+  mpvparse->typeoffsize = gst_mpeg_video_parse (map.data, map.size, off);
+  gst_buffer_unmap (buf, &map);
 
   /* No sc found */
   if (mpvparse->typeoffsize == NULL)

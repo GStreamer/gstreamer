@@ -219,12 +219,15 @@ gst_dirac_parse_check_valid_frame (GstBaseParse * parse,
 {
   int off;
   guint32 next_header;
+  GstMapInfo map;
   guint8 *data;
   gsize size;
   gboolean have_picture = FALSE;
   int offset;
 
-  data = gst_buffer_map (frame->buffer, &size, NULL, GST_MAP_READ);
+  gst_buffer_map (frame->buffer, &map, GST_MAP_READ);
+  data = map.data;
+  size = map.size;
 
   if (G_UNLIKELY (size < 13))
     goto out;
@@ -286,7 +289,7 @@ gst_dirac_parse_check_valid_frame (GstBaseParse * parse,
     }
   }
 
-  gst_buffer_unmap (frame->buffer, data, size);
+  gst_buffer_unmap (frame->buffer, &map);
 
   *framesize = offset;
   GST_DEBUG ("framesize %d", *framesize);
@@ -294,7 +297,7 @@ gst_dirac_parse_check_valid_frame (GstBaseParse * parse,
   return TRUE;
 
 out:
-  gst_buffer_unmap (frame->buffer, data, size);
+  gst_buffer_unmap (frame->buffer, &map);
   return FALSE;
 }
 
@@ -302,6 +305,7 @@ static GstFlowReturn
 gst_dirac_parse_parse_frame (GstBaseParse * parse, GstBaseParseFrame * frame)
 {
   GstDiracParse *diracparse = GST_DIRAC_PARSE (parse);
+  GstMapInfo map;
   guint8 *data;
   gsize size;
 
@@ -309,7 +313,9 @@ gst_dirac_parse_parse_frame (GstBaseParse * parse, GstBaseParseFrame * frame)
      a checked frame. */
   /* MUST implement */
 
-  data = gst_buffer_map (frame->buffer, &size, NULL, GST_MAP_READ);
+  gst_buffer_map (frame->buffer, &map, GST_MAP_READ);
+  data = map.data;
+  size = map.size;
 
   //GST_ERROR("got here %d", size);
 
@@ -343,7 +349,7 @@ gst_dirac_parse_parse_frame (GstBaseParse * parse, GstBaseParseFrame * frame)
     }
   }
 
-  gst_buffer_unmap (frame->buffer, data, size);
+  gst_buffer_unmap (frame->buffer, &map);
 
   gst_base_parse_set_min_frame_size (parse, 13);
 

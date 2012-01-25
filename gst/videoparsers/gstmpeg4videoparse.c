@@ -369,12 +369,15 @@ gst_mpeg4vparse_check_valid_frame (GstBaseParse * parse,
 {
   GstMpeg4VParse *mp4vparse = GST_MPEG4VIDEO_PARSE (parse);
   GstMpeg4Packet packet;
+  GstMapInfo map;
   guint8 *data = NULL;
   gsize size;
   gint off = 0;
   gboolean ret = FALSE;
 
-  data = gst_buffer_map (frame->buffer, &size, NULL, GST_MAP_READ);
+  gst_buffer_map (frame->buffer, &map, GST_MAP_READ);
+  data = map.data;
+  size = map.size;
 
 retry:
   /* at least start code and subsequent byte */
@@ -475,7 +478,7 @@ next:
   }
 
 out:
-  gst_buffer_unmap (frame->buffer, data, size);
+  gst_buffer_unmap (frame->buffer, &map);
   return ret;
 }
 
@@ -671,16 +674,17 @@ gst_mpeg4vparse_pre_push_frame (GstBaseParse * parse, GstBaseParseFrame * frame)
           "interval since last config %" GST_TIME_FORMAT, GST_TIME_ARGS (diff));
 
       if (GST_TIME_AS_SECONDS (diff) >= mp4vparse->interval || push_codec) {
-        guint8 *cdata;
+        GstMapInfo cmap;
         gsize csize;
         gboolean diffconf;
 
         /* we need to send config now first */
         GST_INFO_OBJECT (parse, "inserting config in stream");
-        cdata = gst_buffer_map (mp4vparse->config, &csize, NULL, GST_MAP_READ);
-        diffconf = (gst_buffer_get_size (buffer) < csize)
-            || gst_buffer_memcmp (buffer, 0, cdata, csize);
-        gst_buffer_unmap (mp4vparse->config, cdata, csize);
+        gst_buffer_map (mp4vparse->config, &cmap, GST_MAP_READ);
+        diffconf = (gst_buffer_get_size (buffer) < cmap.size)
+            || gst_buffer_memcmp (buffer, 0, cmap.data, cmap.size);
+        csize = cmap.size;
+        gst_buffer_unmap (mp4vparse->config, &cmap);
 
         /* avoid inserting duplicate config */
         if (diffconf) {
@@ -713,6 +717,7 @@ gst_mpeg4vparse_set_caps (GstBaseParse * parse, GstCaps * caps)
   GstStructure *s;
   const GValue *value;
   GstBuffer *buf;
+  GstMapInfo map;
   guint8 *data;
   gsize size;
 
@@ -728,7 +733,9 @@ gst_mpeg4vparse_set_caps (GstBaseParse * parse, GstCaps * caps)
     /* best possible parse attempt,
      * src caps are based on sink caps so it will end up in there
      * whether sucessful or not */
-    data = gst_buffer_map (buf, &size, NULL, GST_MAP_READ);
+    gst_buffer_map (buf, &map, GST_MAP_READ);
+    data = map.data;
+    size = map.size;
     res = gst_mpeg4_parse (&packet, TRUE, NULL, data, 0, size);
 
     while (res == GST_MPEG4_PARSER_OK || res == GST_MPEG4_PARSER_NO_PACKET_END) {
@@ -742,7 +749,7 @@ gst_mpeg4vparse_set_caps (GstBaseParse * parse, GstCaps * caps)
 
     /* And take it as config */
     gst_mpeg4vparse_process_config (mp4vparse, data, 3, size);
-    gst_buffer_unmap (buf, data, size);
+    gst_buffer_unmap (buf, &map);
   }
 
   /* let's not interfere and accept regardless of config parsing success */
