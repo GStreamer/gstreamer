@@ -3253,10 +3253,8 @@ sink_accepts_caps (GstElement * sink, GstCaps * caps)
   return TRUE;
 }
 
-static GstStaticCaps raw_audio_caps = GST_STATIC_CAPS ("audio/x-raw-int; "
-    "audio/x-raw-float");
-static GstStaticCaps raw_video_caps = GST_STATIC_CAPS ("video/x-raw-rgb; "
-    "video/x-raw-yuv; " "video/x-raw-gray");
+static GstStaticCaps raw_audio_caps = GST_STATIC_CAPS ("audio/x-raw");
+static GstStaticCaps raw_video_caps = GST_STATIC_CAPS ("video/x-raw");
 
 /* We are asked to select an element. See if the next element to check
  * is a sink. If this is the case, we see if the sink works by setting it to
