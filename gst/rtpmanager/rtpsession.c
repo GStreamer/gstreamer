@@ -558,7 +558,7 @@ rtp_session_init (RTPSession * sess)
   /* some default SDES entries */
 
   /* we do not want to leak details like the username or hostname here */
-  str = g_strdup_printf ("user%u@x-%u.net", g_random_int (), g_random_int ());
+  str = g_strdup_printf ("user%u@host-%x", g_random_int (), g_random_int ());
   rtp_source_set_sdes_string (sess->source, GST_RTCP_SDES_CNAME, str);
   g_free (str);
 
