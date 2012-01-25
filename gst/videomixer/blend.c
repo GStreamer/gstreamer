@@ -43,15 +43,21 @@ GST_DEBUG_CATEGORY_STATIC (gst_videomixer_blend_debug);
 /* A32 is for AYUV, ARGB and BGRA */
 #define BLEND_A32(name, method, LOOP)		\
 static void \
-method##_ ##name (const guint8 * src, gint xpos, gint ypos, \
+method##_ ##name (GstVideoFrame * srcframe, gint xpos, gint ypos, \
     gint src_width, gint src_height, gdouble src_alpha, \
-    guint8 * dest, gint dest_width, gint dest_height) \
+    GstVideoFrame * destframe) \
 { \
   guint s_alpha; \
   gint src_stride, dest_stride; \
+  gint dest_width, dest_height; \
+  guint8 *src, *dest; \
   \
-  src_stride = src_width * 4; \
-  dest_stride = dest_width * 4; \
+  src = GST_VIDEO_FRAME_PLANE_DATA (srcframe, 0); \
+  src_stride = GST_VIDEO_FRAME_COMP_STRIDE (srcframe, 0); \
+  dest = GST_VIDEO_FRAME_PLANE_DATA (destframe, 0); \
+  dest_stride = GST_VIDEO_FRAME_COMP_STRIDE (destframe, 0); \
+  dest_width = GST_VIDEO_FRAME_COMP_WIDTH (destframe, 0); \
+  dest_height = GST_VIDEO_FRAME_COMP_HEIGHT (destframe, 0); \
   \
   s_alpha = CLAMP ((gint) (src_alpha * 256), 0, 256); \
   \
@@ -112,11 +118,17 @@ BLEND_A32 (bgra, overlay, _overlay_loop_argb);
 
 #define A32_CHECKER_C(name, RGB, A, C1, C2, C3) \
 static void \
-fill_checker_##name##_c (guint8 * dest, gint width, gint height) \
+fill_checker_##name##_c (GstVideoFrame * frame) \
 { \
   gint i, j; \
   gint val; \
   static const gint tab[] = { 80, 160, 80, 160 }; \
+  gint width, height; \
+  guint8 *dest; \
+  \
+  dest = GST_VIDEO_FRAME_PLANE_DATA (frame, 0); \
+  width = GST_VIDEO_FRAME_COMP_WIDTH (frame, 0); \
+  height = GST_VIDEO_FRAME_COMP_HEIGHT (frame, 0); \
   \
   if (!RGB) { \
     for (i = 0; i < height; i++) { \
@@ -152,10 +164,16 @@ A32_CHECKER_C (ayuv, FALSE, 0, 1, 2, 3);
 
 #define A32_COLOR(name, RGB, A, C1, C2, C3) \
 static void \
-fill_color_##name (guint8 * dest, gint width, gint height, gint Y, gint U, gint V) \
+fill_color_##name (GstVideoFrame * frame, gint Y, gint U, gint V) \
 { \
   gint c1, c2, c3; \
   guint32 val; \
+  gint width, height; \
+  guint8 *dest; \
+  \
+  dest = GST_VIDEO_FRAME_PLANE_DATA (frame, 0); \
+  width = GST_VIDEO_FRAME_COMP_WIDTH (frame, 0); \
+  height = GST_VIDEO_FRAME_COMP_HEIGHT (frame, 0); \
   \
   if (RGB) { \
     c1 = YUV_TO_R (Y, U, V); \
@@ -210,9 +228,9 @@ _blend_##format_name (const guint8 * src, guint8 * dest, \
 } \
 \
 static void \
-blend_##format_name (const guint8 * src, gint xpos, gint ypos, \
+blend_##format_name (GstVideoFrame * srcframe, gint xpos, gint ypos, \
     gint src_width, gint src_height, gdouble src_alpha, \
-    guint8 * dest, gint dest_width, gint dest_height) \
+    GstVideoFrame * destframe) \
 { \
   const guint8 *b_src; \
   guint8 *b_dest; \
@@ -225,6 +243,12 @@ blend_##format_name (const guint8 * src, gint xpos, gint ypos, \
   gint src_comp_width; \
   gint comp_ypos, comp_xpos; \
   gint comp_yoffset, comp_xoffset; \
+  gint dest_width, dest_height; \
+  const GstVideoFormatInfo *info; \
+  \
+  info = srcframe->info.finfo; \
+  dest_width = GST_VIDEO_FRAME_WIDTH (destframe); \
+  dest_height = GST_VIDEO_FRAME_WIDTH (destframe); \
   \
   xpos = x_round (xpos); \
   ypos = y_round (ypos); \
@@ -257,48 +281,48 @@ blend_##format_name (const guint8 * src, gint xpos, gint ypos, \
   } \
   \
   /* First mix Y, then U, then V */ \
-  b_src = src + gst_video_format_get_component_offset (format_enum, 0, src_width, src_height); \
-  b_dest = dest + gst_video_format_get_component_offset (format_enum, 0, dest_width, dest_height); \
-  src_comp_rowstride = gst_video_format_get_row_stride (format_enum, 0, src_width); \
-  dest_comp_rowstride = gst_video_format_get_row_stride (format_enum, 0, dest_width); \
-  src_comp_height = gst_video_format_get_component_height (format_enum, 0, b_src_height); \
-  src_comp_width = gst_video_format_get_component_width (format_enum, 0, b_src_width); \
-  comp_xpos = (xpos == 0) ? 0 : gst_video_format_get_component_width (format_enum, 0, xpos); \
-  comp_ypos = (ypos == 0) ? 0 : gst_video_format_get_component_height (format_enum, 0, ypos); \
-  comp_xoffset = (xoffset == 0) ? 0 : gst_video_format_get_component_width (format_enum, 0, xoffset); \
-  comp_yoffset = (yoffset == 0) ? 0 : gst_video_format_get_component_height (format_enum, 0, yoffset); \
+  b_src = GST_VIDEO_FRAME_COMP_DATA (srcframe, 0); \
+  b_dest = GST_VIDEO_FRAME_COMP_DATA (destframe, 0); \
+  src_comp_rowstride = GST_VIDEO_FRAME_COMP_STRIDE (srcframe, 0); \
+  dest_comp_rowstride = GST_VIDEO_FRAME_COMP_STRIDE (destframe, 0); \
+  src_comp_width = GST_VIDEO_FORMAT_INFO_SCALE_WIDTH(info, 0, b_src_width); \
+  src_comp_height = GST_VIDEO_FORMAT_INFO_SCALE_HEIGHT(info, 0, b_src_height); \
+  comp_xpos = (xpos == 0) ? 0 : GST_VIDEO_FORMAT_INFO_SCALE_WIDTH (info, 0, xpos); \
+  comp_ypos = (ypos == 0) ? 0 : GST_VIDEO_FORMAT_INFO_SCALE_HEIGHT (info, 0, ypos); \
+  comp_xoffset = (xoffset == 0) ? 0 : GST_VIDEO_FORMAT_INFO_SCALE_WIDTH (info, 0, xoffset); \
+  comp_yoffset = (yoffset == 0) ? 0 : GST_VIDEO_FORMAT_INFO_SCALE_HEIGHT (info, 0, yoffset); \
   _blend_##format_name (b_src + comp_xoffset + comp_yoffset * src_comp_rowstride, \
       b_dest + comp_xpos + comp_ypos * dest_comp_rowstride, \
       src_comp_rowstride, \
       dest_comp_rowstride, src_comp_width, src_comp_height, \
       src_alpha); \
   \
-  b_src = src + gst_video_format_get_component_offset (format_enum, 1, src_width, src_height); \
-  b_dest = dest + gst_video_format_get_component_offset (format_enum, 1, dest_width, dest_height); \
-  src_comp_rowstride = gst_video_format_get_row_stride (format_enum, 1, src_width); \
-  dest_comp_rowstride = gst_video_format_get_row_stride (format_enum, 1, dest_width); \
-  src_comp_height = gst_video_format_get_component_height (format_enum, 1, b_src_height); \
-  src_comp_width = gst_video_format_get_component_width (format_enum, 1, b_src_width); \
-  comp_xpos = (xpos == 0) ? 0 : gst_video_format_get_component_width (format_enum, 1, xpos); \
-  comp_ypos = (ypos == 0) ? 0 : gst_video_format_get_component_height (format_enum, 1, ypos); \
-  comp_xoffset = (xoffset == 0) ? 0 : gst_video_format_get_component_width (format_enum, 1, xoffset); \
-  comp_yoffset = (yoffset == 0) ? 0 : gst_video_format_get_component_height (format_enum, 1, yoffset); \
+  b_src = GST_VIDEO_FRAME_COMP_DATA (srcframe, 1); \
+  b_dest = GST_VIDEO_FRAME_COMP_DATA (destframe, 1); \
+  src_comp_rowstride = GST_VIDEO_FRAME_COMP_STRIDE (srcframe, 1); \
+  dest_comp_rowstride = GST_VIDEO_FRAME_COMP_STRIDE (destframe, 1); \
+  src_comp_width = GST_VIDEO_FORMAT_INFO_SCALE_WIDTH(info, 1, b_src_width); \
+  src_comp_height = GST_VIDEO_FORMAT_INFO_SCALE_HEIGHT(info, 1, b_src_height); \
+  comp_xpos = (xpos == 0) ? 0 : GST_VIDEO_FORMAT_INFO_SCALE_WIDTH (info, 1, xpos); \
+  comp_ypos = (ypos == 0) ? 0 : GST_VIDEO_FORMAT_INFO_SCALE_HEIGHT (info, 1, ypos); \
+  comp_xoffset = (xoffset == 0) ? 0 : GST_VIDEO_FORMAT_INFO_SCALE_WIDTH (info, 1, xoffset); \
+  comp_yoffset = (yoffset == 0) ? 0 : GST_VIDEO_FORMAT_INFO_SCALE_HEIGHT (info, 1, yoffset); \
   _blend_##format_name (b_src + comp_xoffset + comp_yoffset * src_comp_rowstride, \
       b_dest + comp_xpos + comp_ypos * dest_comp_rowstride, \
       src_comp_rowstride, \
       dest_comp_rowstride, src_comp_width, src_comp_height, \
       src_alpha); \
   \
-  b_src = src + gst_video_format_get_component_offset (format_enum, 2, src_width, src_height); \
-  b_dest = dest + gst_video_format_get_component_offset (format_enum, 2, dest_width, dest_height); \
-  src_comp_rowstride = gst_video_format_get_row_stride (format_enum, 2, src_width); \
-  dest_comp_rowstride = gst_video_format_get_row_stride (format_enum, 2, dest_width); \
-  src_comp_height = gst_video_format_get_component_height (format_enum, 2, b_src_height); \
-  src_comp_width = gst_video_format_get_component_width (format_enum, 2, b_src_width); \
-  comp_xpos = (xpos == 0) ? 0 : gst_video_format_get_component_width (format_enum, 2, xpos); \
-  comp_ypos = (ypos == 0) ? 0 : gst_video_format_get_component_height (format_enum, 2, ypos); \
-  comp_xoffset = (xoffset == 0) ? 0 : gst_video_format_get_component_width (format_enum, 2, xoffset); \
-  comp_yoffset = (yoffset == 0) ? 0 : gst_video_format_get_component_height (format_enum, 2, yoffset); \
+  b_src = GST_VIDEO_FRAME_COMP_DATA (srcframe, 2); \
+  b_dest = GST_VIDEO_FRAME_COMP_DATA (destframe, 2); \
+  src_comp_rowstride = GST_VIDEO_FRAME_COMP_STRIDE (srcframe, 2); \
+  dest_comp_rowstride = GST_VIDEO_FRAME_COMP_STRIDE (destframe, 2); \
+  src_comp_width = GST_VIDEO_FORMAT_INFO_SCALE_WIDTH(info, 2, b_src_width); \
+  src_comp_height = GST_VIDEO_FORMAT_INFO_SCALE_HEIGHT(info, 2, b_src_height); \
+  comp_xpos = (xpos == 0) ? 0 : GST_VIDEO_FORMAT_INFO_SCALE_WIDTH (info, 2, xpos); \
+  comp_ypos = (ypos == 0) ? 0 : GST_VIDEO_FORMAT_INFO_SCALE_HEIGHT (info, 2, ypos); \
+  comp_xoffset = (xoffset == 0) ? 0 : GST_VIDEO_FORMAT_INFO_SCALE_WIDTH (info, 2, xoffset); \
+  comp_yoffset = (yoffset == 0) ? 0 : GST_VIDEO_FORMAT_INFO_SCALE_HEIGHT (info, 2, yoffset); \
   _blend_##format_name (b_src + comp_xoffset + comp_yoffset * src_comp_rowstride, \
       b_dest + comp_xpos + comp_ypos * dest_comp_rowstride, \
       src_comp_rowstride, \
@@ -308,7 +332,7 @@ blend_##format_name (const guint8 * src, gint xpos, gint ypos, \
 
 #define PLANAR_YUV_FILL_CHECKER(format_name, format_enum, MEMSET) \
 static void \
-fill_checker_##format_name (guint8 * dest, gint width, gint height) \
+fill_checker_##format_name (GstVideoFrame * frame) \
 { \
   gint i, j; \
   static const int tab[] = { 80, 160, 80, 160 }; \
@@ -316,10 +340,10 @@ fill_checker_##format_name (guint8 * dest, gint width, gint height) \
   gint comp_width, comp_height; \
   gint rowstride; \
   \
-  p = dest + gst_video_format_get_component_offset (format_enum, 0, width, height); \
-  comp_width = gst_video_format_get_component_width (format_enum, 0, width); \
-  comp_height = gst_video_format_get_component_height (format_enum, 0, height); \
-  rowstride = gst_video_format_get_row_stride (format_enum, 0, width); \
+  p = GST_VIDEO_FRAME_COMP_DATA (frame, 0); \
+  comp_width = GST_VIDEO_FRAME_COMP_WIDTH (frame, 0); \
+  comp_height = GST_VIDEO_FRAME_COMP_HEIGHT (frame, 0); \
+  rowstride = GST_VIDEO_FRAME_COMP_STRIDE (frame, 0); \
   \
   for (i = 0; i < comp_height; i++) { \
     for (j = 0; j < comp_width; j++) { \
@@ -328,20 +352,20 @@ fill_checker_##format_name (guint8 * dest, gint width, gint height) \
     p += rowstride - comp_width; \
   } \
   \
-  p = dest + gst_video_format_get_component_offset (format_enum, 1, width, height); \
-  comp_width = gst_video_format_get_component_width (format_enum, 1, width); \
-  comp_height = gst_video_format_get_component_height (format_enum, 1, height); \
-  rowstride = gst_video_format_get_row_stride (format_enum, 1, width); \
+  p = GST_VIDEO_FRAME_COMP_DATA (frame, 1); \
+  comp_width = GST_VIDEO_FRAME_COMP_WIDTH (frame, 1); \
+  comp_height = GST_VIDEO_FRAME_COMP_HEIGHT (frame, 1); \
+  rowstride = GST_VIDEO_FRAME_COMP_STRIDE (frame, 1); \
   \
   for (i = 0; i < comp_height; i++) { \
     MEMSET (p, 0x80, comp_width); \
     p += rowstride; \
   } \
   \
-  p = dest + gst_video_format_get_component_offset (format_enum, 2, width, height); \
-  comp_width = gst_video_format_get_component_width (format_enum, 2, width); \
-  comp_height = gst_video_format_get_component_height (format_enum, 2, height); \
-  rowstride = gst_video_format_get_row_stride (format_enum, 2, width); \
+  p = GST_VIDEO_FRAME_COMP_DATA (frame, 2); \
+  comp_width = GST_VIDEO_FRAME_COMP_WIDTH (frame, 2); \
+  comp_height = GST_VIDEO_FRAME_COMP_HEIGHT (frame, 2); \
+  rowstride = GST_VIDEO_FRAME_COMP_STRIDE (frame, 2); \
   \
   for (i = 0; i < comp_height; i++) { \
     MEMSET (p, 0x80, comp_width); \
@@ -351,7 +375,7 @@ fill_checker_##format_name (guint8 * dest, gint width, gint height) \
 
 #define PLANAR_YUV_FILL_COLOR(format_name,format_enum,MEMSET) \
 static void \
-fill_color_##format_name (guint8 * dest, gint width, gint height, \
+fill_color_##format_name (GstVideoFrame * frame, \
     gint colY, gint colU, gint colV) \
 { \
   guint8 *p; \
@@ -359,30 +383,30 @@ fill_color_##format_name (guint8 * dest, gint width, gint height, \
   gint rowstride; \
   gint i; \
   \
-  p = dest + gst_video_format_get_component_offset (format_enum, 0, width, height); \
-  comp_width = gst_video_format_get_component_width (format_enum, 0, width); \
-  comp_height = gst_video_format_get_component_height (format_enum, 0, height); \
-  rowstride = gst_video_format_get_row_stride (format_enum, 0, width); \
+  p = GST_VIDEO_FRAME_COMP_DATA (frame, 0); \
+  comp_width = GST_VIDEO_FRAME_COMP_WIDTH (frame, 0); \
+  comp_height = GST_VIDEO_FRAME_COMP_HEIGHT (frame, 0); \
+  rowstride = GST_VIDEO_FRAME_COMP_STRIDE (frame, 0); \
   \
   for (i = 0; i < comp_height; i++) { \
     MEMSET (p, colY, comp_width); \
     p += rowstride; \
   } \
   \
-  p = dest + gst_video_format_get_component_offset (format_enum, 1, width, height); \
-  comp_width = gst_video_format_get_component_width (format_enum, 1, width); \
-  comp_height = gst_video_format_get_component_height (format_enum, 1, height); \
-  rowstride = gst_video_format_get_row_stride (format_enum, 1, width); \
+  p = GST_VIDEO_FRAME_COMP_DATA (frame, 1); \
+  comp_width = GST_VIDEO_FRAME_COMP_WIDTH (frame, 1); \
+  comp_height = GST_VIDEO_FRAME_COMP_HEIGHT (frame, 1); \
+  rowstride = GST_VIDEO_FRAME_COMP_STRIDE (frame, 1); \
   \
   for (i = 0; i < comp_height; i++) { \
     MEMSET (p, colU, comp_width); \
     p += rowstride; \
   } \
   \
-  p = dest + gst_video_format_get_component_offset (format_enum, 2, width, height); \
-  comp_width = gst_video_format_get_component_width (format_enum, 2, width); \
-  comp_height = gst_video_format_get_component_height (format_enum, 2, height); \
-  rowstride = gst_video_format_get_row_stride (format_enum, 2, width); \
+  p = GST_VIDEO_FRAME_COMP_DATA (frame, 2); \
+  comp_width = GST_VIDEO_FRAME_COMP_WIDTH (frame, 2); \
+  comp_height = GST_VIDEO_FRAME_COMP_HEIGHT (frame, 2); \
+  rowstride = GST_VIDEO_FRAME_COMP_STRIDE (frame, 2); \
   \
   for (i = 0; i < comp_height; i++) { \
     MEMSET (p, colV, comp_width); \
@@ -414,16 +438,24 @@ PLANAR_YUV_FILL_COLOR (y41b, GST_VIDEO_FORMAT_Y41B, memset);
 
 #define RGB_BLEND(name, bpp, MEMCPY, BLENDLOOP) \
 static void \
-blend_##name (const guint8 * src, gint xpos, gint ypos, \
+blend_##name (GstVideoFrame * srcframe, gint xpos, gint ypos, \
     gint src_width, gint src_height, gdouble src_alpha, \
-    guint8 * dest, gint dest_width, gint dest_height) \
+    GstVideoFrame * destframe) \
 { \
   gint b_alpha; \
   gint i; \
   gint src_stride, dest_stride; \
+  gint dest_width, dest_height; \
+  guint8 *dest, *src; \
   \
-  src_stride = GST_ROUND_UP_4 (src_width * bpp); \
-  dest_stride = GST_ROUND_UP_4 (dest_width * bpp); \
+  src = GST_VIDEO_FRAME_PLANE_DATA (srcframe, 0); \
+  dest = GST_VIDEO_FRAME_PLANE_DATA (destframe, 0); \
+  \
+  dest_width = GST_VIDEO_FRAME_WIDTH (destframe); \
+  dest_height = GST_VIDEO_FRAME_HEIGHT (destframe); \
+  \
+  src_stride = GST_VIDEO_FRAME_COMP_STRIDE (srcframe, 0); \
+  dest_stride = GST_VIDEO_FRAME_COMP_STRIDE (destframe, 0); \
   \
   b_alpha = CLAMP ((gint) (src_alpha * 256), 0, 256); \
   \
@@ -469,11 +501,18 @@ blend_##name (const guint8 * src, gint xpos, gint ypos, \
 
 #define RGB_FILL_CHECKER_C(name, bpp, r, g, b) \
 static void \
-fill_checker_##name##_c (guint8 * dest, gint width, gint height) \
+fill_checker_##name##_c (GstVideoFrame * frame) \
 { \
   gint i, j; \
   static const int tab[] = { 80, 160, 80, 160 }; \
-  gint dest_add = GST_ROUND_UP_4 (width * bpp) - width * bpp; \
+  gint stride, dest_add, width, height; \
+  guint8 *dest; \
+  \
+  width = GST_VIDEO_FRAME_WIDTH (frame); \
+  height = GST_VIDEO_FRAME_HEIGHT (frame); \
+  dest = GST_VIDEO_FRAME_PLANE_DATA (frame, 0); \
+  stride = GST_VIDEO_FRAME_COMP_STRIDE (frame, 0); \
+  dest_add = stride - width * bpp; \
   \
   for (i = 0; i < height; i++) { \
     for (j = 0; j < width; j++) { \
@@ -488,12 +527,19 @@ fill_checker_##name##_c (guint8 * dest, gint width, gint height) \
 
 #define RGB_FILL_COLOR(name, bpp, MEMSET_RGB) \
 static void \
-fill_color_##name (guint8 * dest, gint width, gint height, \
+fill_color_##name (GstVideoFrame * frame, \
     gint colY, gint colU, gint colV) \
 { \
   gint red, green, blue; \
   gint i; \
-  gint dest_stride = GST_ROUND_UP_4 (width * bpp); \
+  gint dest_stride; \
+  gint width, height; \
+  guint8 *dest; \
+  \
+  width = GST_VIDEO_FRAME_WIDTH (frame); \
+  height = GST_VIDEO_FRAME_HEIGHT (frame); \
+  dest = GST_VIDEO_FRAME_PLANE_DATA (frame, 0); \
+  dest_stride = GST_VIDEO_FRAME_COMP_STRIDE (frame, 0); \
   \
   red = YUV_TO_R (colY, colU, colV); \
   green = YUV_TO_G (colY, colU, colV); \
@@ -555,16 +601,24 @@ RGB_FILL_COLOR (bgrx, 4, _memset_bgrx);
 
 #define PACKED_422_BLEND(name, MEMCPY, BLENDLOOP) \
 static void \
-blend_##name (const guint8 * src, gint xpos, gint ypos, \
+blend_##name (GstVideoFrame * srcframe, gint xpos, gint ypos, \
     gint src_width, gint src_height, gdouble src_alpha, \
-    guint8 * dest, gint dest_width, gint dest_height) \
+    GstVideoFrame * destframe) \
 { \
   gint b_alpha; \
   gint i; \
   gint src_stride, dest_stride; \
+  gint dest_width, dest_height; \
+  guint8 *src, *dest; \
   \
-  src_stride = GST_ROUND_UP_4 (src_width * 2); \
-  dest_stride = GST_ROUND_UP_4 (dest_width * 2); \
+  dest_width = GST_VIDEO_FRAME_WIDTH (destframe); \
+  dest_height = GST_VIDEO_FRAME_HEIGHT (destframe); \
+  \
+  src = GST_VIDEO_FRAME_PLANE_DATA (srcframe, 0); \
+  dest = GST_VIDEO_FRAME_PLANE_DATA (destframe, 0); \
+  \
+  src_stride = GST_VIDEO_FRAME_COMP_STRIDE (srcframe, 0); \
+  dest_stride = GST_VIDEO_FRAME_COMP_STRIDE (destframe, 0); \
   \
   b_alpha = CLAMP ((gint) (src_alpha * 256), 0, 256); \
   \
@@ -613,14 +667,19 @@ blend_##name (const guint8 * src, gint xpos, gint ypos, \
 
 #define PACKED_422_FILL_CHECKER_C(name, Y1, U, Y2, V) \
 static void \
-fill_checker_##name##_c (guint8 * dest, gint width, gint height) \
+fill_checker_##name##_c (GstVideoFrame * frame) \
 { \
   gint i, j; \
   static const int tab[] = { 80, 160, 80, 160 }; \
   gint dest_add; \
+  gint width, height; \
+  guint8 *dest; \
   \
+  width = GST_VIDEO_FRAME_WIDTH (frame); \
   width = GST_ROUND_UP_2 (width); \
-  dest_add = GST_ROUND_UP_4 (width * 2) - width * 2; \
+  height = GST_VIDEO_FRAME_HEIGHT (frame); \
+  dest = GST_VIDEO_FRAME_COMP_DATA (frame, 0); \
+  dest_add = GST_VIDEO_FRAME_COMP_STRIDE (frame, 0) - width * 2; \
   width /= 2; \
   \
   for (i = 0; i < height; i++) { \
@@ -637,15 +696,20 @@ fill_checker_##name##_c (guint8 * dest, gint width, gint height) \
 
 #define PACKED_422_FILL_COLOR(name, Y1, U, Y2, V) \
 static void \
-fill_color_##name (guint8 * dest, gint width, gint height, \
+fill_color_##name (GstVideoFrame * frame, \
     gint colY, gint colU, gint colV) \
 { \
   gint i; \
   gint dest_stride; \
   guint32 val; \
+  gint width, height; \
+  guint8 *dest; \
   \
+  width = GST_VIDEO_FRAME_WIDTH (frame); \
   width = GST_ROUND_UP_2 (width); \
-  dest_stride = GST_ROUND_UP_4 (width * 2); \
+  height = GST_VIDEO_FRAME_HEIGHT (frame); \
+  dest = GST_VIDEO_FRAME_COMP_DATA (frame, 0); \
+  dest_stride = GST_VIDEO_FRAME_COMP_STRIDE (frame, 0); \
   width /= 2; \
   \
   val = GUINT32_FROM_BE ((colY << Y1) | (colY << Y2) | (colU << U) | (colV << V)); \

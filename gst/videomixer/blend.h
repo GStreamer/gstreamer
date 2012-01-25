@@ -21,10 +21,11 @@
 #define __BLEND_H__
 
 #include <gst/gst.h>
+#include <gst/video/video.h>
 
-typedef void (*BlendFunction) (const guint8 * src, gint xpos, gint ypos, gint src_width, gint src_height, gdouble src_alpha, guint8 * dest, gint dest_width, gint dest_height);
-typedef void (*FillCheckerFunction) (guint8 * dest, gint width, gint height);
-typedef void (*FillColorFunction) (guint8 * dest, gint width, gint height, gint c1, gint c2, gint c3);
+typedef void (*BlendFunction) (GstVideoFrame *srcframe, gint xpos, gint ypos, gint src_width, gint src_height, gdouble src_alpha, GstVideoFrame * destframe);
+typedef void (*FillCheckerFunction) (GstVideoFrame * frame);
+typedef void (*FillColorFunction) (GstVideoFrame * frame, gint c1, gint c2, gint c3);
 
 extern BlendFunction gst_video_mixer_blend_argb;
 extern BlendFunction gst_video_mixer_blend_bgra;
