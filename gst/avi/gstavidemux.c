@@ -3412,7 +3412,7 @@ gst_avi_demux_add_date_tag (GstAviDemux * avi, gint y, gint m, gint d,
     gint h, gint min, gint s)
 {
   GDate *date;
-  GstDateTime *dt;
+  GDateTime *dt;
 
   date = g_date_new_dmy (d, m, y);
   if (!g_date_valid (date)) {
@@ -3422,7 +3422,7 @@ gst_avi_demux_add_date_tag (GstAviDemux * avi, gint y, gint m, gint d,
     return;
   }
 
-  dt = gst_date_time_new_local_time (y, m, d, h, min, s);
+  dt = g_date_time_new_local (y, m, d, h, min, s);
 
   if (avi->globaltags == NULL)
     avi->globaltags = gst_tag_list_new_empty ();
@@ -3433,7 +3433,7 @@ gst_avi_demux_add_date_tag (GstAviDemux * avi, gint y, gint m, gint d,
   if (dt) {
     gst_tag_list_add (avi->globaltags, GST_TAG_MERGE_REPLACE, GST_TAG_DATE_TIME,
         dt, NULL);
-    gst_date_time_unref (dt);
+    g_date_time_unref (dt);
   }
 }
 
