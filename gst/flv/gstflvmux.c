@@ -305,7 +305,6 @@ gst_flv_mux_handle_sink_event (GstCollectPads2 * pads, GstCollectData2 * data,
         ret = gst_flv_mux_audio_pad_setcaps (data->pad, caps);
       }
       /* and eat */
-      ret = FALSE;
       gst_event_unref (event);
       break;
     }
@@ -317,13 +316,20 @@ gst_flv_mux_handle_sink_event (GstCollectPads2 * pads, GstCollectData2 * data,
       gst_event_parse_tag (event, &list);
       gst_tag_setter_merge_tags (setter, list, mode);
       mux->new_tags = TRUE;
+      ret = TRUE;
+      gst_event_unref (event);
       break;
     }
+    case GST_EVENT_EOS:
+    case GST_EVENT_SEGMENT:
+      gst_event_unref (event);
+      ret = TRUE;
+      break;
     default:
+      ret = gst_pad_event_default (data->pad, GST_OBJECT (mux), event);
       break;
   }
 
-  /* now GstCollectPads2 can take care of the rest, e.g. EOS */
   return ret;
 }
 
