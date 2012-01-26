@@ -328,8 +328,7 @@ gst_pad_init (GstPad * pad)
 
   g_hook_list_init (&pad->probes, sizeof (GstProbe));
 
-  pad->priv->events = g_array_sized_new (FALSE, TRUE,
-      sizeof (PadEvent), GST_EVENT_MAX_STICKY);
+  pad->priv->events = g_array_sized_new (FALSE, TRUE, sizeof (PadEvent), 16);
 }
 
 /* called when setting the pad inactive. It removes all sticky events from

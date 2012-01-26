@@ -199,7 +199,7 @@ gst_event_type_get_flags (GstEventType type)
 {
   GstEventTypeFlags ret;
 
-  ret = type & ((1 << GST_EVENT_STICKY_SHIFT) - 1);
+  ret = type & ((1 << GST_EVENT_NUM_SHIFT) - 1);
 
   return ret;
 }
