@@ -37,6 +37,7 @@
 
 #include "gstinfo.h"
 #include "gstquark.h"
+#include "gstvalue.h"
 
 #include "gstbufferpool.h"
 
@@ -634,34 +635,31 @@ gst_buffer_pool_config_set (GstStructure * config, const GstCaps * caps,
 void
 gst_buffer_pool_config_add_option (GstStructure * config, const gchar * option)
 {
-  GValueArray *array;
   const GValue *value;
-  GValue option_value = { 0 };
-  gint i;
+  GValue option_value = { 0, };
+  guint i, len;
 
   g_return_if_fail (config != NULL);
 
   value = gst_structure_id_get_value (config, GST_QUARK (OPTIONS));
   if (value) {
-    array = (GValueArray *) g_value_get_boxed (value);
+    len = gst_value_array_get_size (value);
+    for (i = 0; i < len; ++i) {
+      const GValue *nth_val = gst_value_array_get_value (value, i);
+
+      if (g_str_equal (option, g_value_get_string (nth_val)))
+        return;
+    }
   } else {
     GValue new_array_val = { 0, };
 
-    array = g_value_array_new (0);
-
-    g_value_init (&new_array_val, G_TYPE_VALUE_ARRAY);
-    g_value_take_boxed (&new_array_val, array);
-
+    g_value_init (&new_array_val, GST_TYPE_ARRAY);
     gst_structure_id_take_value (config, GST_QUARK (OPTIONS), &new_array_val);
-  }
-  for (i = 0; i < array->n_values; i++) {
-    value = g_value_array_get_nth (array, i);
-    if (g_str_equal (option, g_value_get_string (value)))
-      return;
+    value = gst_structure_id_get_value (config, GST_QUARK (OPTIONS));
   }
   g_value_init (&option_value, G_TYPE_STRING);
   g_value_set_string (&option_value, option);
-  g_value_array_append (array, &option_value);
+  gst_value_array_append_value ((GValue *) value, &option_value);
   g_value_unset (&option_value);
 }
 
@@ -677,7 +675,6 @@ gst_buffer_pool_config_add_option (GstStructure * config, const gchar * option)
 guint
 gst_buffer_pool_config_n_options (GstStructure * config)
 {
-  GValueArray *array;
   const GValue *value;
   guint size = 0;
 
@@ -685,8 +682,7 @@ gst_buffer_pool_config_n_options (GstStructure * config)
 
   value = gst_structure_id_get_value (config, GST_QUARK (OPTIONS));
   if (value) {
-    array = (GValueArray *) g_value_get_boxed (value);
-    size = array->n_values;
+    size = gst_value_array_get_size (value);
   }
   return size;
 }
@@ -711,12 +707,9 @@ gst_buffer_pool_config_get_option (GstStructure * config, guint index)
 
   value = gst_structure_id_get_value (config, GST_QUARK (OPTIONS));
   if (value) {
-    GValueArray *array;
-    GValue *option_value;
+    const GValue *option_value;
 
-    array = (GValueArray *) g_value_get_boxed (value);
-    option_value = g_value_array_get_nth (array, index);
-
+    option_value = gst_value_array_get_value (value, index);
     if (option_value)
       ret = g_value_get_string (option_value);
   }
@@ -736,19 +729,17 @@ gboolean
 gst_buffer_pool_config_has_option (GstStructure * config, const gchar * option)
 {
   const GValue *value;
+  guint i, len;
 
   g_return_val_if_fail (config != NULL, 0);
 
   value = gst_structure_id_get_value (config, GST_QUARK (OPTIONS));
   if (value) {
-    GValueArray *array;
-    GValue *option_value;
-    gint i;
+    len = gst_value_array_get_size (value);
+    for (i = 0; i < len; ++i) {
+      const GValue *nth_val = gst_value_array_get_value (value, i);
 
-    array = (GValueArray *) g_value_get_boxed (value);
-    for (i = 0; i < array->n_values; i++) {
-      option_value = g_value_array_get_nth (array, i);
-      if (g_str_equal (option, g_value_get_string (option_value)))
+      if (g_str_equal (option, g_value_get_string (nth_val)))
         return TRUE;
     }
   }
