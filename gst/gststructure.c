@@ -2232,7 +2232,7 @@ gst_structure_parse_value (gchar * str,
 /**
  * gst_structure_from_string:
  * @string: a string representation of a #GstStructure.
- * @end: (out) (allow-none): pointer to store the end of the string in.
+ * @end: (out) (allow-none) (transfer none): pointer to store the end of the string in.
  *
  * Creates a #GstStructure from a string representation.
  * If end is not NULL, a pointer to the place inside the given string
