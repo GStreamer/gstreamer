@@ -98,7 +98,8 @@ gst_dynudpsink_class_init (GstDynUDPSinkClass * klass)
   gobject_class->finalize = gst_dynudpsink_finalize;
 
   gst_dynudpsink_signals[SIGNAL_GET_STATS] =
-      g_signal_new ("get-stats", G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_LAST,
+      g_signal_new ("get-stats", G_TYPE_FROM_CLASS (klass),
+      G_SIGNAL_RUN_FIRST | G_SIGNAL_ACTION,
       G_STRUCT_OFFSET (GstDynUDPSinkClass, get_stats),
       NULL, NULL, gst_udp_marshal_BOXED__STRING_INT, GST_TYPE_STRUCTURE, 2,
       G_TYPE_STRING, G_TYPE_INT);
