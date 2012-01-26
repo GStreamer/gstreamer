@@ -782,7 +782,7 @@ done:
 void
 gst_multi_socket_sink_clear (GstMultiHandleSink * mhsink)
 {
-  GList *clients;
+  GList *clients, *next;
   guint32 cookie;
   GstMultiSocketSink *sink = GST_MULTI_SOCKET_SINK (mhsink);
 
@@ -791,7 +791,7 @@ gst_multi_socket_sink_clear (GstMultiHandleSink * mhsink)
   CLIENTS_LOCK (sink);
 restart:
   cookie = sink->clients_cookie;
-  for (clients = sink->clients; clients; clients = clients->next) {
+  for (clients = sink->clients; clients; clients = next) {
     GstMultiHandleClient *mhclient;
 
     if (cookie != sink->clients_cookie) {
@@ -800,7 +800,11 @@ restart:
     }
 
     mhclient = (GstMultiHandleClient *) clients->data;
+    next = g_list_next (clients);
+
     mhclient->status = GST_CLIENT_STATUS_REMOVED;
+    /* the next call changes the list, which is why we iterate
+     * with a temporary next pointer */
     gst_multi_socket_sink_remove_client_link (sink, clients);
   }
 

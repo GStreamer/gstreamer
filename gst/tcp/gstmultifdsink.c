@@ -855,6 +855,8 @@ restart:
     next = g_list_next (clients);
 
     mhclient->status = GST_CLIENT_STATUS_REMOVED;
+    /* the next call changes the list, which is why we iterate
+     * with a temporary next pointer */
     gst_multi_fd_sink_remove_client_link (sink, clients);
   }
   gst_poll_restart (sink->fdset);

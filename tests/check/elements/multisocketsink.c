@@ -587,9 +587,7 @@ GST_START_TEST (test_burst_client_bytes)
   ASSERT_SET_STATE (sink, GST_STATE_NULL, GST_STATE_CHANGE_SUCCESS);
   cleanup_multisocketsink (sink);
 
-  // FIXME for slomo: the refcount is now 3 instead of 1 ?
-  // ASSERT_CAPS_REFCOUNT (caps, "caps", 1);
-  ASSERT_CAPS_REFCOUNT (caps, "caps", 3);
+  ASSERT_CAPS_REFCOUNT (caps, "caps", 1);
   gst_caps_unref (caps);
 }
 
@@ -690,9 +688,7 @@ GST_START_TEST (test_burst_client_bytes_keyframe)
   ASSERT_SET_STATE (sink, GST_STATE_NULL, GST_STATE_CHANGE_SUCCESS);
   cleanup_multisocketsink (sink);
 
-  // FIXME for slomo: the refcount is now 3 instead of 1 ?
-  // ASSERT_CAPS_REFCOUNT (caps, "caps", 1);
-  ASSERT_CAPS_REFCOUNT (caps, "caps", 3);
+  ASSERT_CAPS_REFCOUNT (caps, "caps", 1);
   gst_caps_unref (caps);
 }
 
@@ -798,9 +794,7 @@ GST_START_TEST (test_burst_client_bytes_with_keyframe)
   ASSERT_SET_STATE (sink, GST_STATE_NULL, GST_STATE_CHANGE_SUCCESS);
   cleanup_multisocketsink (sink);
 
-  // FIXME for slomo: the refcount is now 3 instead of 1 ?
-  // ASSERT_CAPS_REFCOUNT (caps, "caps", 1);
-  ASSERT_CAPS_REFCOUNT (caps, "caps", 3);
+  ASSERT_CAPS_REFCOUNT (caps, "caps", 1);
   gst_caps_unref (caps);
 }
 
