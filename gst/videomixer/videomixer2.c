@@ -323,29 +323,6 @@ beach:
   return ret;
 }
 
-static gboolean
-gst_videomixer2_pad_sink_event (GstPad * pad, GstObject * parent,
-    GstEvent * event)
-{
-  gboolean ret = FALSE;
-
-  switch (GST_EVENT_TYPE (event)) {
-    case GST_EVENT_CAPS:
-    {
-      GstCaps *caps;
-
-      gst_event_parse_caps (event, &caps);
-      ret = gst_videomixer2_pad_sink_setcaps (pad, parent, caps);
-      gst_event_unref (event);
-      break;
-    }
-    default:
-      ret = gst_pad_event_default (pad, parent, event);
-      break;
-  }
-  return ret;
-}
-
 static GstCaps *
 gst_videomixer2_pad_sink_getcaps (GstPad * pad, GstObject * parent,
     GstCaps * filter)
@@ -549,8 +526,6 @@ static void
 gst_videomixer2_pad_init (GstVideoMixer2Pad * mixerpad)
 {
   /* setup some pad functions */
-  gst_pad_set_event_function (GST_PAD (mixerpad),
-      gst_videomixer2_pad_sink_event);
   gst_pad_set_query_function (GST_PAD (mixerpad),
       gst_videomixer2_pad_sink_query);
 
