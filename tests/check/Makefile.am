@@ -199,7 +199,6 @@ libs_gstnettimeprovider_LDADD = \
 # these just need valgrind fixing, period
 VALGRIND_TO_FIX = \
 	gst/gstinfo \
-	libs/collectpads2 \
 	pipelines/parse-launch
 
 VALGRIND_IGNORE = \
