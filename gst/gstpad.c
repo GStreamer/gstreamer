@@ -590,25 +590,25 @@ gst_pad_finalize (GObject * object)
   }
 
   if (pad->activatenotify)
-    pad->activatenotify (pad);
+    pad->activatenotify (pad->activatedata);
   if (pad->activatemodenotify)
-    pad->activatemodenotify (pad);
+    pad->activatemodenotify (pad->activatemodedata);
   if (pad->linknotify)
-    pad->linknotify (pad);
+    pad->linknotify (pad->linkdata);
   if (pad->unlinknotify)
-    pad->unlinknotify (pad);
+    pad->unlinknotify (pad->unlinkdata);
   if (pad->chainnotify)
-    pad->chainnotify (pad);
+    pad->chainnotify (pad->chaindata);
   if (pad->chainlistnotify)
-    pad->chainlistnotify (pad);
+    pad->chainlistnotify (pad->chainlistdata);
   if (pad->getrangenotify)
-    pad->getrangenotify (pad);
+    pad->getrangenotify (pad->getrangedata);
   if (pad->eventnotify)
-    pad->eventnotify (pad);
+    pad->eventnotify (pad->eventdata);
   if (pad->querynotify)
-    pad->querynotify (pad);
+    pad->querynotify (pad->querydata);
   if (pad->iterintlinknotify)
-    pad->iterintlinknotify (pad);
+    pad->iterintlinknotify (pad->iterintlinkdata);
 
   g_rec_mutex_clear (&pad->stream_rec_lock);
   g_cond_clear (&pad->block_cond);
@@ -1342,6 +1342,7 @@ gst_pad_mark_reconfigure (GstPad * pad)
  * gst_pad_set_activate_function_full:
  * @pad: a #GstPad.
  * @activate: the #GstPadActivateFunction to set.
+ * @user_data: user_data passed to @notify
  * @notify: notify called when @activate will not be used anymore.
  *
  * Sets the given activate function for @pad. The activate function will
@@ -1352,13 +1353,14 @@ gst_pad_mark_reconfigure (GstPad * pad)
  */
 void
 gst_pad_set_activate_function_full (GstPad * pad,
-    GstPadActivateFunction activate, GDestroyNotify notify)
+    GstPadActivateFunction activate, gpointer user_data, GDestroyNotify notify)
 {
   g_return_if_fail (GST_IS_PAD (pad));
 
   if (pad->activatenotify)
-    pad->activatenotify (pad);
+    pad->activatenotify (pad->activatedata);
   GST_PAD_ACTIVATEFUNC (pad) = activate;
+  pad->activatedata = user_data;
   pad->activatenotify = notify;
 
   GST_CAT_DEBUG_OBJECT (GST_CAT_PADS, pad, "activatefunc set to %s",
@@ -1369,6 +1371,7 @@ gst_pad_set_activate_function_full (GstPad * pad,
  * gst_pad_set_activatemode_function_full:
  * @pad: a #GstPad.
  * @activatemode: the #GstPadActivateModeFunction to set.
+ * @user_data: user_data passed to @notify
  * @notify: notify called when @activatemode will not be used anymore.
  *
  * Sets the given activate_mode function for the pad. An activate_mode function
@@ -1376,13 +1379,15 @@ gst_pad_set_activate_function_full (GstPad * pad,
  */
 void
 gst_pad_set_activatemode_function_full (GstPad * pad,
-    GstPadActivateModeFunction activatemode, GDestroyNotify notify)
+    GstPadActivateModeFunction activatemode, gpointer user_data,
+    GDestroyNotify notify)
 {
   g_return_if_fail (GST_IS_PAD (pad));
 
   if (pad->activatemodenotify)
-    pad->activatemodenotify (pad);
+    pad->activatemodenotify (pad->activatemodedata);
   GST_PAD_ACTIVATEMODEFUNC (pad) = activatemode;
+  pad->activatemodedata = user_data;
   pad->activatemodenotify = notify;
 
   GST_CAT_DEBUG_OBJECT (GST_CAT_PADS, pad, "activatemodefunc set to %s",
@@ -1393,6 +1398,7 @@ gst_pad_set_activatemode_function_full (GstPad * pad,
  * gst_pad_set_chain_function_full:
  * @pad: a sink #GstPad.
  * @chain: the #GstPadChainFunction to set.
+ * @user_data: user_data passed to @notify
  * @notify: notify called when @chain will not be used anymore.
  *
  * Sets the given chain function for the pad. The chain function is called to
@@ -1400,14 +1406,15 @@ gst_pad_set_activatemode_function_full (GstPad * pad,
  */
 void
 gst_pad_set_chain_function_full (GstPad * pad, GstPadChainFunction chain,
-    GDestroyNotify notify)
+    gpointer user_data, GDestroyNotify notify)
 {
   g_return_if_fail (GST_IS_PAD (pad));
   g_return_if_fail (GST_PAD_IS_SINK (pad));
 
   if (pad->chainnotify)
-    pad->chainnotify (pad);
+    pad->chainnotify (pad->chaindata);
   GST_PAD_CHAINFUNC (pad) = chain;
+  pad->chaindata = user_data;
   pad->chainnotify = notify;
 
   GST_CAT_DEBUG_OBJECT (GST_CAT_PADS, pad, "chainfunc set to %s",
@@ -1418,6 +1425,7 @@ gst_pad_set_chain_function_full (GstPad * pad, GstPadChainFunction chain,
  * gst_pad_set_chain_list_function_full:
  * @pad: a sink #GstPad.
  * @chainlist: the #GstPadChainListFunction to set.
+ * @user_data: user_data passed to @notify
  * @notify: notify called when @chainlist will not be used anymore.
  *
  * Sets the given chain list function for the pad. The chainlist function is
@@ -1428,14 +1436,16 @@ gst_pad_set_chain_function_full (GstPad * pad, GstPadChainFunction chain,
  */
 void
 gst_pad_set_chain_list_function_full (GstPad * pad,
-    GstPadChainListFunction chainlist, GDestroyNotify notify)
+    GstPadChainListFunction chainlist, gpointer user_data,
+    GDestroyNotify notify)
 {
   g_return_if_fail (GST_IS_PAD (pad));
   g_return_if_fail (GST_PAD_IS_SINK (pad));
 
   if (pad->chainlistnotify)
-    pad->chainlistnotify (pad);
+    pad->chainlistnotify (pad->chainlistdata);
   GST_PAD_CHAINLISTFUNC (pad) = chainlist;
+  pad->chainlistdata = user_data;
   pad->chainlistnotify = notify;
 
   GST_CAT_DEBUG_OBJECT (GST_CAT_PADS, pad, "chainlistfunc set to %s",
@@ -1446,6 +1456,7 @@ gst_pad_set_chain_list_function_full (GstPad * pad,
  * gst_pad_set_getrange_function_full:
  * @pad: a source #GstPad.
  * @get: the #GstPadGetRangeFunction to set.
+ * @user_data: user_data passed to @notify
  * @notify: notify called when @get will not be used anymore.
  *
  * Sets the given getrange function for the pad. The getrange function is
@@ -1454,14 +1465,15 @@ gst_pad_set_chain_list_function_full (GstPad * pad,
  */
 void
 gst_pad_set_getrange_function_full (GstPad * pad, GstPadGetRangeFunction get,
-    GDestroyNotify notify)
+    gpointer user_data, GDestroyNotify notify)
 {
   g_return_if_fail (GST_IS_PAD (pad));
   g_return_if_fail (GST_PAD_IS_SRC (pad));
 
   if (pad->getrangenotify)
-    pad->getrangenotify (pad);
+    pad->getrangenotify (pad->getrangedata);
   GST_PAD_GETRANGEFUNC (pad) = get;
+  pad->getrangedata = user_data;
   pad->getrangenotify = notify;
 
   GST_CAT_DEBUG_OBJECT (GST_CAT_PADS, pad, "getrangefunc set to %s",
@@ -1472,19 +1484,21 @@ gst_pad_set_getrange_function_full (GstPad * pad, GstPadGetRangeFunction get,
  * gst_pad_set_event_function_full:
  * @pad: a #GstPad of either direction.
  * @event: the #GstPadEventFunction to set.
+ * @user_data: user_data passed to @notify
  * @notify: notify called when @event will not be used anymore.
  *
  * Sets the given event handler for the pad.
  */
 void
 gst_pad_set_event_function_full (GstPad * pad, GstPadEventFunction event,
-    GDestroyNotify notify)
+    gpointer user_data, GDestroyNotify notify)
 {
   g_return_if_fail (GST_IS_PAD (pad));
 
   if (pad->eventnotify)
-    pad->eventnotify (pad);
+    pad->eventnotify (pad->eventdata);
   GST_PAD_EVENTFUNC (pad) = event;
+  pad->eventdata = user_data;
   pad->eventnotify = notify;
 
   GST_CAT_DEBUG_OBJECT (GST_CAT_PADS, pad, "eventfunc for set to %s",
@@ -1495,19 +1509,21 @@ gst_pad_set_event_function_full (GstPad * pad, GstPadEventFunction event,
  * gst_pad_set_query_function_full:
  * @pad: a #GstPad of either direction.
  * @query: the #GstPadQueryFunction to set.
+ * @user_data: user_data passed to @notify
  * @notify: notify called when @query will not be used anymore.
  *
  * Set the given query function for the pad.
  */
 void
 gst_pad_set_query_function_full (GstPad * pad, GstPadQueryFunction query,
-    GDestroyNotify notify)
+    gpointer user_data, GDestroyNotify notify)
 {
   g_return_if_fail (GST_IS_PAD (pad));
 
   if (pad->querynotify)
-    pad->querynotify (pad);
+    pad->querynotify (pad->querydata);
   GST_PAD_QUERYFUNC (pad) = query;
+  pad->querydata = user_data;
   pad->querynotify = notify;
 
   GST_CAT_DEBUG_OBJECT (GST_CAT_PADS, pad, "queryfunc set to %s",
@@ -1518,6 +1534,7 @@ gst_pad_set_query_function_full (GstPad * pad, GstPadQueryFunction query,
  * gst_pad_set_iterate_internal_links_function_full:
  * @pad: a #GstPad of either direction.
  * @iterintlink: the #GstPadIterIntLinkFunction to set.
+ * @user_data: user_data passed to @notify
  * @notify: notify called when @iterintlink will not be used anymore.
  *
  * Sets the given internal link iterator function for the pad.
@@ -1526,13 +1543,15 @@ gst_pad_set_query_function_full (GstPad * pad, GstPadQueryFunction query,
  */
 void
 gst_pad_set_iterate_internal_links_function_full (GstPad * pad,
-    GstPadIterIntLinkFunction iterintlink, GDestroyNotify notify)
+    GstPadIterIntLinkFunction iterintlink, gpointer user_data,
+    GDestroyNotify notify)
 {
   g_return_if_fail (GST_IS_PAD (pad));
 
   if (pad->iterintlinknotify)
-    pad->iterintlinknotify (pad);
+    pad->iterintlinknotify (pad->iterintlinkdata);
   GST_PAD_ITERINTLINKFUNC (pad) = iterintlink;
+  pad->iterintlinkdata = user_data;
   pad->iterintlinknotify = notify;
 
   GST_CAT_DEBUG_OBJECT (GST_CAT_PADS, pad, "internal link iterator set to %s",
@@ -1543,6 +1562,7 @@ gst_pad_set_iterate_internal_links_function_full (GstPad * pad,
  * gst_pad_set_link_function_full:
  * @pad: a #GstPad.
  * @link: the #GstPadLinkFunction to set.
+ * @user_data: user_data passed to @notify
  * @notify: notify called when @link will not be used anymore.
  *
  * Sets the given link function for the pad. It will be called when
@@ -1559,13 +1579,14 @@ gst_pad_set_iterate_internal_links_function_full (GstPad * pad,
  */
 void
 gst_pad_set_link_function_full (GstPad * pad, GstPadLinkFunction link,
-    GDestroyNotify notify)
+    gpointer user_data, GDestroyNotify notify)
 {
   g_return_if_fail (GST_IS_PAD (pad));
 
   if (pad->linknotify)
-    pad->linknotify (pad);
+    pad->linknotify (pad->linkdata);
   GST_PAD_LINKFUNC (pad) = link;
+  pad->linkdata = user_data;
   pad->linknotify = notify;
 
   GST_CAT_DEBUG_OBJECT (GST_CAT_PADS, pad, "linkfunc set to %s",
@@ -1576,6 +1597,7 @@ gst_pad_set_link_function_full (GstPad * pad, GstPadLinkFunction link,
  * gst_pad_set_unlink_function_full:
  * @pad: a #GstPad.
  * @unlink: the #GstPadUnlinkFunction to set.
+ * @user_data: user_data passed to @notify
  * @notify: notify called when @unlink will not be used anymore.
  *
  * Sets the given unlink function for the pad. It will be called
@@ -1583,13 +1605,14 @@ gst_pad_set_link_function_full (GstPad * pad, GstPadLinkFunction link,
  */
 void
 gst_pad_set_unlink_function_full (GstPad * pad, GstPadUnlinkFunction unlink,
-    GDestroyNotify notify)
+    gpointer user_data, GDestroyNotify notify)
 {
   g_return_if_fail (GST_IS_PAD (pad));
 
   if (pad->unlinknotify)
-    pad->unlinknotify (pad);
+    pad->unlinknotify (pad->unlinkdata);
   GST_PAD_UNLINKFUNC (pad) = unlink;
+  pad->unlinkdata = user_data;
   pad->unlinknotify = notify;
 
   GST_CAT_DEBUG_OBJECT (GST_CAT_PADS, pad, "unlinkfunc set to %s",

@@ -647,25 +647,33 @@ struct _GstPad {
 
   GstPadMode		         mode;
   GstPadActivateFunction	 activatefunc;
+  gpointer                       activatedata;
   GDestroyNotify                 activatenotify;
   GstPadActivateModeFunction	 activatemodefunc;
+  gpointer                       activatemodedata;
   GDestroyNotify                 activatemodenotify;
 
   /* pad link */
   GstPad			*peer;
   GstPadLinkFunction		 linkfunc;
+  gpointer                       linkdata;
   GDestroyNotify                 linknotify;
   GstPadUnlinkFunction		 unlinkfunc;
+  gpointer                       unlinkdata;
   GDestroyNotify                 unlinknotify;
 
   /* data transport functions */
   GstPadChainFunction		 chainfunc;
+  gpointer                       chaindata;
   GDestroyNotify                 chainnotify;
   GstPadChainListFunction        chainlistfunc;
+  gpointer                       chainlistdata;
   GDestroyNotify                 chainlistnotify;
   GstPadGetRangeFunction	 getrangefunc;
+  gpointer                       getrangedata;
   GDestroyNotify                 getrangenotify;
   GstPadEventFunction		 eventfunc;
+  gpointer                       eventdata;
   GDestroyNotify                 eventnotify;
 
   /* pad offset */
@@ -673,10 +681,12 @@ struct _GstPad {
 
   /* generic query method */
   GstPadQueryFunction		 queryfunc;
+  gpointer                       querydata;
   GDestroyNotify                 querynotify;
 
   /* internal links */
   GstPadIterIntLinkFunction      iterintlinkfunc;
+  gpointer                       iterintlinkdata;
   GDestroyNotify                 iterintlinknotify;
 
   /* counts number of probes attached. */
@@ -843,41 +853,49 @@ void                    gst_pad_sticky_events_foreach           (GstPad *pad, Gs
 /* data passing setup functions */
 void			gst_pad_set_activate_function_full	(GstPad *pad,
                                                                  GstPadActivateFunction activate,
+                                                                 gpointer user_data,
                                                                  GDestroyNotify notify);
 void			gst_pad_set_activatemode_function_full	(GstPad *pad,
                                                                  GstPadActivateModeFunction activatemode,
+                                                                 gpointer user_data,
                                                                  GDestroyNotify notify);
 /* data passing functions */
 void			gst_pad_set_chain_function_full		(GstPad *pad,
                                                                  GstPadChainFunction chain,
+                                                                 gpointer user_data,
                                                                  GDestroyNotify notify);
 void			gst_pad_set_chain_list_function_full	(GstPad *pad,
                                                                  GstPadChainListFunction chainlist,
+                                                                 gpointer user_data,
                                                                  GDestroyNotify notify);
 void			gst_pad_set_getrange_function_full	(GstPad *pad,
                                                                  GstPadGetRangeFunction get,
+                                                                 gpointer user_data,
                                                                  GDestroyNotify notify);
 void			gst_pad_set_event_function_full		(GstPad *pad,
                                                                  GstPadEventFunction event,
+                                                                 gpointer user_data,
                                                                  GDestroyNotify notify);
 
-#define gst_pad_set_activate_function(p,f)      gst_pad_set_activate_function_full((p),(f),NULL)
-#define gst_pad_set_activatemode_function(p,f)  gst_pad_set_activatemode_function_full((p),(f),NULL)
-#define gst_pad_set_chain_function(p,f)         gst_pad_set_chain_function_full((p),(f),NULL)
-#define gst_pad_set_chain_list_function(p,f)    gst_pad_set_chain_list_function_full((p),(f),NULL)
-#define gst_pad_set_getrange_function(p,f)      gst_pad_set_getrange_function_full((p),(f),NULL)
-#define gst_pad_set_event_function(p,f)         gst_pad_set_event_function_full((p),(f),NULL)
+#define gst_pad_set_activate_function(p,f)      gst_pad_set_activate_function_full((p),(f),NULL,NULL)
+#define gst_pad_set_activatemode_function(p,f)  gst_pad_set_activatemode_function_full((p),(f),NULL,NULL)
+#define gst_pad_set_chain_function(p,f)         gst_pad_set_chain_function_full((p),(f),NULL,NULL)
+#define gst_pad_set_chain_list_function(p,f)    gst_pad_set_chain_list_function_full((p),(f),NULL,NULL)
+#define gst_pad_set_getrange_function(p,f)      gst_pad_set_getrange_function_full((p),(f),NULL,NULL)
+#define gst_pad_set_event_function(p,f)         gst_pad_set_event_function_full((p),(f),NULL,NULL)
 
 /* pad links */
 void			gst_pad_set_link_function_full		(GstPad *pad,
                                                                  GstPadLinkFunction link,
+                                                                 gpointer user_data,
                                                                  GDestroyNotify notify);
 void			gst_pad_set_unlink_function_full        (GstPad *pad,
                                                                  GstPadUnlinkFunction unlink,
+                                                                 gpointer user_data,
                                                                  GDestroyNotify notify);
 
-#define gst_pad_set_link_function(p,f)          gst_pad_set_link_function_full((p),(f),NULL)
-#define gst_pad_set_unlink_function(p,f)        gst_pad_set_unlink_function_full((p),(f),NULL)
+#define gst_pad_set_link_function(p,f)          gst_pad_set_link_function_full((p),(f),NULL,NULL)
+#define gst_pad_set_unlink_function(p,f)        gst_pad_set_unlink_function_full((p),(f),NULL,NULL)
 
 gboolean                gst_pad_can_link                        (GstPad *srcpad, GstPad *sinkpad);
 GstPadLinkReturn        gst_pad_link				(GstPad *srcpad, GstPad *sinkpad);
@@ -926,21 +944,23 @@ gboolean		gst_pad_stop_task			(GstPad *pad);
 /* internal links */
 void                    gst_pad_set_iterate_internal_links_function_full (GstPad * pad,
                                                                  GstPadIterIntLinkFunction iterintlink,
+                                                                 gpointer user_data,
                                                                  GDestroyNotify notify);
 GstIterator *           gst_pad_iterate_internal_links          (GstPad * pad);
 GstIterator *           gst_pad_iterate_internal_links_default  (GstPad * pad, GstObject *parent);
 
-#define gst_pad_set_iterate_internal_links_function(p,f) gst_pad_set_iterate_internal_links_function_full((p),(f),NULL)
+#define gst_pad_set_iterate_internal_links_function(p,f) gst_pad_set_iterate_internal_links_function_full((p),(f),NULL,NULL)
 
 /* generic query function */
 gboolean		gst_pad_query				(GstPad *pad, GstQuery *query);
 gboolean		gst_pad_peer_query			(GstPad *pad, GstQuery *query);
 void			gst_pad_set_query_function_full		(GstPad *pad, GstPadQueryFunction query,
+                                                                 gpointer user_data,
                                                                  GDestroyNotify notify);
 gboolean		gst_pad_query_default			(GstPad *pad, GstObject *parent,
                                                                  GstQuery *query);
 
-#define gst_pad_set_query_function(p,f)   gst_pad_set_query_function_full((p),(f),NULL)
+#define gst_pad_set_query_function(p,f)   gst_pad_set_query_function_full((p),(f),NULL,NULL)
 
 /* misc helper functions */
 gboolean		gst_pad_forward                         (GstPad *pad, GstPadForwardFunction forward,
