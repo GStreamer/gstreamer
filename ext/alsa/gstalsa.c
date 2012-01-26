@@ -138,7 +138,7 @@ add_format (const gchar * str, GstStructure * s, snd_pcm_format_mask_t * mask,
     scopy = NULL;
   }
   if (scopy) {
-    gst_caps_append_structure (caps, scopy);
+    gst_caps_merge_structure (caps, scopy);
   }
 }
 
@@ -221,7 +221,7 @@ caps_add_channel_configuration (GstCaps * caps,
   if (min_chans == max_chans && max_chans == 1) {
     s = get_channel_free_structure (in_structure);
     gst_structure_set (s, "channels", G_TYPE_INT, 1, NULL);
-    gst_caps_append_structure (caps, s);
+    gst_caps_merge_structure (caps, s);
     return;
   }
 
@@ -232,15 +232,15 @@ caps_add_channel_configuration (GstCaps * caps,
     s = get_channel_free_structure (in_structure);
     gst_structure_set (s, "channels", G_TYPE_INT, 2, "channel-mask",
         GST_TYPE_BITMASK, CHANNEL_MASK_STEREO, NULL);
-    gst_caps_append_structure (caps, s);
+    gst_caps_merge_structure (caps, s);
   } else if (min_chans == 1 && max_chans >= 2) {
     s = get_channel_free_structure (in_structure);
     gst_structure_set (s, "channels", G_TYPE_INT, 2, "channel-mask",
         GST_TYPE_BITMASK, CHANNEL_MASK_STEREO, NULL);
-    gst_caps_append_structure (caps, s);
+    gst_caps_merge_structure (caps, s);
     s = get_channel_free_structure (in_structure);
     gst_structure_set (s, "channels", G_TYPE_INT, 1, NULL);
-    gst_caps_append_structure (caps, s);
+    gst_caps_merge_structure (caps, s);
   }
 
   /* don't know whether to use 2.1 or 3.0 here - but I suspect
@@ -250,7 +250,7 @@ caps_add_channel_configuration (GstCaps * caps,
     s = get_channel_free_structure (in_structure);
     gst_structure_set (s, "channels", G_TYPE_INT, 3, "channel-mask",
         GST_TYPE_BITMASK, CHANNEL_MASK_2_1, NULL);
-    gst_caps_append_structure (caps, s);
+    gst_caps_merge_structure (caps, s);
   }
 
   /* everything else (4, 6, 8 channels) needs a channel layout */
@@ -275,7 +275,7 @@ caps_add_channel_configuration (GstCaps * caps,
       }
       gst_structure_set (s, "channels", G_TYPE_INT, c, "channel-mask",
           GST_TYPE_BITMASK, channel_mask, NULL);
-      gst_caps_append_structure (caps, s);
+      gst_caps_merge_structure (caps, s);
     }
   }
 
@@ -284,7 +284,7 @@ caps_add_channel_configuration (GstCaps * caps,
     s = get_channel_free_structure (in_structure);
     gst_structure_set (s, "channels", G_TYPE_INT, c, "channel-mask",
         GST_TYPE_BITMASK, G_GUINT64_CONSTANT (0), NULL);
-    gst_caps_append_structure (caps, s);
+    gst_caps_merge_structure (caps, s);
   }
 }
 
