@@ -19,7 +19,7 @@
  */
 
 /**
- * SECTION:element-videomixer2
+ * SECTION:element-videomixer
  *
  * Videomixer2 can accept AYUV, ARGB and BGRA video streams. For each of the requested
  * sink pads it will compare the incoming geometry and framerate to define the
@@ -33,21 +33,17 @@
  * Individual parameters for each input stream can be configured on the
  * #GstVideoMixer2Pad.
  *
- * At this stage, videomixer2 is considered UNSTABLE. The API provided in the
- * properties may yet change in the near future. When videomixer2 is stable,
- * it will replace #videomixer
- *
  * <refsect2>
  * <title>Sample pipelines</title>
  * |[
- * gst-launch-0.10 \
+ * gst-launch-0.11 \
  *   videotestsrc pattern=1 ! \
- *   video/x-raw-yuv,format=\(fourcc\)AYUV,framerate=\(fraction\)10/1,width=100,height=100 ! \
+ *   video/x-raw,format=AYUV,framerate=\(fraction\)10/1,width=100,height=100 ! \
  *   videobox border-alpha=0 top=-70 bottom=-70 right=-220 ! \
- *   videomixer2 name=mix sink_0::alpha=0.7 sink_1::alpha=0.5 ! \
- *   ffmpegcolorspace ! xvimagesink \
+ *   videomixer name=mix sink_0::alpha=0.7 sink_1::alpha=0.5 ! \
+ *   videoconvert ! xvimagesink \
  *   videotestsrc ! \
- *   video/x-raw-yuv,format=\(fourcc\)AYUV,framerate=\(fraction\)5/1,width=320,height=240 ! mix.
+ *   video/x-raw,format=AYUV,framerate=\(fraction\)5/1,width=320,height=240 ! mix.
  * ]| A pipeline to demonstrate videomixer used together with videobox.
  * This should show a 320x240 pixels video test source with some transparency
  * showing the background checker pattern. Another video test source with just
@@ -56,27 +52,27 @@
  * video test source behind and the checker pattern under it. Note that the
  * framerate of the output video is 10 frames per second.
  * |[
- * gst-launch videotestsrc pattern=1 ! \
- *   video/x-raw-rgb, framerate=\(fraction\)10/1, width=100, height=100 ! \
- *   videomixer2 name=mix ! ffmpegcolorspace ! ximagesink \
+ * gst-launch-0.11 videotestsrc pattern=1 ! \
+ *   video/x-raw, framerate=\(fraction\)10/1, width=100, height=100 ! \
+ *   videomixer name=mix ! videoconvert ! ximagesink \
  *   videotestsrc !  \
- *   video/x-raw-rgb, framerate=\(fraction\)5/1, width=320, height=240 ! mix.
+ *   video/x-raw, framerate=\(fraction\)5/1, width=320, height=240 ! mix.
  * ]| A pipeline to demostrate bgra mixing. (This does not demonstrate alpha blending). 
  * |[
- * gst-launch videotestsrc pattern=1 ! \
- *   video/x-raw-yuv,format =\(fourcc\)I420, framerate=\(fraction\)10/1, width=100, height=100 ! \
- *   videomixer2 name=mix ! ffmpegcolorspace ! ximagesink \
+ * gst-launch-0.11 videotestsrc pattern=1 ! \
+ *   video/x-raw,format =I420, framerate=\(fraction\)10/1, width=100, height=100 ! \
+ *   videomixer name=mix ! videoconvert ! ximagesink \
  *   videotestsrc ! \
- *   video/x-raw-yuv,format=\(fourcc\)I420, framerate=\(fraction\)5/1, width=320, height=240 ! mix.
+ *   video/x-raw,format=I420, framerate=\(fraction\)5/1, width=320, height=240 ! mix.
  * ]| A pipeline to test I420
  * |[
- * gst-launch videomixer2 name=mixer sink_1::alpha=0.5 sink_1::xpos=50 sink_1::ypos=50 ! \
- *   ffmpegcolorspace ! ximagesink \
+ * gst-launch-0.11 videomixer name=mixer sink_1::alpha=0.5 sink_1::xpos=50 sink_1::ypos=50 ! \
+ *   videoconvert ! ximagesink \
  *   videotestsrc pattern=snow timestamp-offset=3000000000 ! \
- *   "video/x-raw-yuv,format=(fourcc)AYUV,width=640,height=480,framerate=(fraction)30/1" ! \
+ *   "video/x-raw,format=AYUV,width=640,height=480,framerate=(fraction)30/1" ! \
  *   timeoverlay ! queue2 ! mixer. \
  *   videotestsrc pattern=smpte ! \
- *   "video/x-raw-yuv,format=(fourcc)AYUV,width=800,height=600,framerate=(fraction)10/1" ! \
+ *   "video/x-raw,format=AYUV,width=800,height=600,framerate=(fraction)10/1" ! \
  *   timeoverlay ! queue2 ! mixer.
  * ]| A pipeline to demonstrate synchronized mixing (the second stream starts after 3 seconds)
  * </refsect2>
@@ -254,6 +250,7 @@ gst_videomixer2_update_src_caps (GstVideoMixer2 * mix)
       gst_caps_unref (peercaps);
       caps = tmp;
       if (gst_caps_is_empty (caps)) {
+        GST_DEBUG_OBJECT (mix, "empty caps");
         ret = FALSE;
         GST_VIDEO_MIXER2_UNLOCK (mix);
         goto done;
@@ -299,7 +296,7 @@ gst_videomixer2_pad_sink_setcaps (GstPad * pad, GstObject * parent,
   mix = GST_VIDEO_MIXER2 (parent);
   mixpad = GST_VIDEO_MIXER2_PAD (pad);
 
-  if (gst_video_info_from_caps (&info, caps)) {
+  if (!gst_video_info_from_caps (&info, caps)) {
     GST_ERROR_OBJECT (pad, "Failed to parse caps");
     goto beach;
   }
@@ -1660,6 +1657,17 @@ gst_videomixer2_sink_event (GstCollectPads2 * pads, GstCollectData2 * cdata,
 
   /* return FALSE => event will be forwarded */
   switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_CAPS:
+    {
+      GstCaps *caps;
+
+      gst_event_parse_caps (event, &caps);
+      ret =
+          gst_videomixer2_pad_sink_setcaps (GST_PAD (pad), GST_OBJECT (mix),
+          caps);
+      gst_event_unref (event);
+      break;
+    }
     case GST_EVENT_SEGMENT:{
       GstSegment seg;
       gst_event_copy_segment (event, &seg);
@@ -1685,12 +1693,12 @@ gst_videomixer2_sink_event (GstCollectPads2 * pads, GstCollectData2 * cdata,
 
       ret = gst_pad_event_default (cdata->pad, GST_OBJECT (mix), event);
       break;
-    default:
-      ret = gst_pad_event_default (cdata->pad, GST_OBJECT (mix), event);
-      break;
     case GST_EVENT_EOS:
       gst_event_unref (event);
       ret = TRUE;
+      break;
+    default:
+      ret = gst_pad_event_default (cdata->pad, GST_OBJECT (mix), event);
       break;
   }
 
@@ -1698,8 +1706,9 @@ gst_videomixer2_sink_event (GstCollectPads2 * pads, GstCollectData2 * cdata,
 }
 
 static gboolean
-forward_event_func (GstPad * pad, GValue * ret, GstEvent * event)
+forward_event_func (GValue * item, GValue * ret, GstEvent * event)
 {
+  GstPad *pad = g_value_get_object (item);
   gst_event_ref (event);
   GST_LOG_OBJECT (pad, "About to send event %s", GST_EVENT_TYPE_NAME (event));
   if (!gst_pad_push_event (pad, event)) {
@@ -1710,7 +1719,6 @@ forward_event_func (GstPad * pad, GValue * ret, GstEvent * event)
     GST_LOG_OBJECT (pad, "Sent event  %p (%s).",
         event, GST_EVENT_TYPE_NAME (event));
   }
-  gst_object_unref (pad);
   return TRUE;
 }
 
