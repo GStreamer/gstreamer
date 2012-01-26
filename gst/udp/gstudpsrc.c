@@ -767,7 +767,7 @@ gst_udpsrc_start (GstBaseSrc * bsrc)
 
     g_object_unref (bind_saddr);
   } else {
-    GST_DEBUG_OBJECT (src, "using provided socket %d", src->socket);
+    GST_DEBUG_OBJECT (src, "using provided socket %p", src->socket);
     /* we use the configured socket, try to get some info about it */
     src->used_socket = G_SOCKET (g_object_ref (src->socket));
     src->external_socket = TRUE;
