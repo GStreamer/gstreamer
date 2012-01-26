@@ -23,7 +23,7 @@
 #include <gst/gst.h>
 #include <gst/video/video.h>
 
-typedef void (*BlendFunction) (GstVideoFrame *srcframe, gint xpos, gint ypos, gint src_width, gint src_height, gdouble src_alpha, GstVideoFrame * destframe);
+typedef void (*BlendFunction) (GstVideoFrame *srcframe, gint xpos, gint ypos, gdouble src_alpha, GstVideoFrame * destframe);
 typedef void (*FillCheckerFunction) (GstVideoFrame * frame);
 typedef void (*FillColorFunction) (GstVideoFrame * frame, gint c1, gint c2, gint c3);
 

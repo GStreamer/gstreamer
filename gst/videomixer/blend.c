@@ -44,14 +44,16 @@ GST_DEBUG_CATEGORY_STATIC (gst_videomixer_blend_debug);
 #define BLEND_A32(name, method, LOOP)		\
 static void \
 method##_ ##name (GstVideoFrame * srcframe, gint xpos, gint ypos, \
-    gint src_width, gint src_height, gdouble src_alpha, \
-    GstVideoFrame * destframe) \
+    gdouble src_alpha, GstVideoFrame * destframe) \
 { \
   guint s_alpha; \
   gint src_stride, dest_stride; \
   gint dest_width, dest_height; \
   guint8 *src, *dest; \
+  gint src_width, src_height; \
   \
+  src_width = GST_VIDEO_FRAME_WIDTH (srcframe); \
+  src_height = GST_VIDEO_FRAME_HEIGHT (srcframe); \
   src = GST_VIDEO_FRAME_PLANE_DATA (srcframe, 0); \
   src_stride = GST_VIDEO_FRAME_COMP_STRIDE (srcframe, 0); \
   dest = GST_VIDEO_FRAME_PLANE_DATA (destframe, 0); \
@@ -229,13 +231,12 @@ _blend_##format_name (const guint8 * src, guint8 * dest, \
 \
 static void \
 blend_##format_name (GstVideoFrame * srcframe, gint xpos, gint ypos, \
-    gint src_width, gint src_height, gdouble src_alpha, \
-    GstVideoFrame * destframe) \
+    gdouble src_alpha, GstVideoFrame * destframe) \
 { \
   const guint8 *b_src; \
   guint8 *b_dest; \
-  gint b_src_width = src_width; \
-  gint b_src_height = src_height; \
+  gint b_src_width; \
+  gint b_src_height; \
   gint xoffset = 0; \
   gint yoffset = 0; \
   gint src_comp_rowstride, dest_comp_rowstride; \
@@ -245,6 +246,10 @@ blend_##format_name (GstVideoFrame * srcframe, gint xpos, gint ypos, \
   gint comp_yoffset, comp_xoffset; \
   gint dest_width, dest_height; \
   const GstVideoFormatInfo *info; \
+  gint src_width, src_height; \
+  \
+  src_width = GST_VIDEO_FRAME_WIDTH (srcframe); \
+  src_height = GST_VIDEO_FRAME_HEIGHT (srcframe); \
   \
   info = srcframe->info.finfo; \
   dest_width = GST_VIDEO_FRAME_WIDTH (destframe); \
@@ -252,6 +257,9 @@ blend_##format_name (GstVideoFrame * srcframe, gint xpos, gint ypos, \
   \
   xpos = x_round (xpos); \
   ypos = y_round (ypos); \
+  \
+  b_src_width = src_width; \
+  b_src_height = src_height; \
   \
   /* adjust src pointers for negative sizes */ \
   if (xpos < 0) { \
@@ -439,14 +447,17 @@ PLANAR_YUV_FILL_COLOR (y41b, GST_VIDEO_FORMAT_Y41B, memset);
 #define RGB_BLEND(name, bpp, MEMCPY, BLENDLOOP) \
 static void \
 blend_##name (GstVideoFrame * srcframe, gint xpos, gint ypos, \
-    gint src_width, gint src_height, gdouble src_alpha, \
-    GstVideoFrame * destframe) \
+    gdouble src_alpha, GstVideoFrame * destframe) \
 { \
   gint b_alpha; \
   gint i; \
   gint src_stride, dest_stride; \
   gint dest_width, dest_height; \
   guint8 *dest, *src; \
+  gint src_width, src_height; \
+  \
+  src_width = GST_VIDEO_FRAME_WIDTH (srcframe); \
+  src_height = GST_VIDEO_FRAME_HEIGHT (srcframe); \
   \
   src = GST_VIDEO_FRAME_PLANE_DATA (srcframe, 0); \
   dest = GST_VIDEO_FRAME_PLANE_DATA (destframe, 0); \
@@ -602,14 +613,17 @@ RGB_FILL_COLOR (bgrx, 4, _memset_bgrx);
 #define PACKED_422_BLEND(name, MEMCPY, BLENDLOOP) \
 static void \
 blend_##name (GstVideoFrame * srcframe, gint xpos, gint ypos, \
-    gint src_width, gint src_height, gdouble src_alpha, \
-    GstVideoFrame * destframe) \
+    gdouble src_alpha, GstVideoFrame * destframe) \
 { \
   gint b_alpha; \
   gint i; \
   gint src_stride, dest_stride; \
   gint dest_width, dest_height; \
   guint8 *src, *dest; \
+  gint src_width, src_height; \
+  \
+  src_width = GST_VIDEO_FRAME_WIDTH (srcframe); \
+  src_height = GST_VIDEO_FRAME_HEIGHT (srcframe); \
   \
   dest_width = GST_VIDEO_FRAME_WIDTH (destframe); \
   dest_height = GST_VIDEO_FRAME_HEIGHT (destframe); \

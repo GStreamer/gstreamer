@@ -101,7 +101,7 @@ GST_DEBUG_CATEGORY_STATIC (gst_videomixer2_debug);
 #define GST_CAT_DEFAULT gst_videomixer2_debug
 
 #define GST_VIDEO_MIXER2_GET_LOCK(mix) \
-  (GST_VIDEO_MIXER2(mix)->lock)
+  (&GST_VIDEO_MIXER2(mix)->lock)
 #define GST_VIDEO_MIXER2_LOCK(mix) \
   (g_mutex_lock(GST_VIDEO_MIXER2_GET_LOCK (mix)))
 #define GST_VIDEO_MIXER2_UNLOCK(mix) \
@@ -164,6 +164,9 @@ gst_videomixer2_collect_free (GstCollectData2 * data)
 
   gst_buffer_replace (&cdata->buffer, NULL);
 }
+
+static gboolean gst_videomixer2_src_setcaps (GstPad * pad, GstVideoMixer2 * mix,
+    GstCaps * caps);
 
 static gboolean
 gst_videomixer2_update_src_caps (GstVideoMixer2 * mix)
@@ -271,7 +274,7 @@ gst_videomixer2_update_src_caps (GstVideoMixer2 * mix)
     mix->info = info;
 
     GST_VIDEO_MIXER2_UNLOCK (mix);
-    ret = gst_pad_set_caps (mix->srcpad, caps);
+    ret = gst_videomixer2_src_setcaps (mix->srcpad, mix, caps);
     gst_caps_unref (caps);
   } else {
     GST_VIDEO_MIXER2_UNLOCK (mix);
@@ -283,7 +286,8 @@ done:
 
 
 static gboolean
-gst_videomixer2_pad_sink_setcaps (GstPad * pad, GstCaps * caps)
+gst_videomixer2_pad_sink_setcaps (GstPad * pad, GstObject * parent,
+    GstCaps * caps)
 {
   GstVideoMixer2 *mix;
   GstVideoMixer2Pad *mixpad;
@@ -292,7 +296,7 @@ gst_videomixer2_pad_sink_setcaps (GstPad * pad, GstCaps * caps)
 
   GST_INFO_OBJECT (pad, "Setting caps %" GST_PTR_FORMAT, caps);
 
-  mix = GST_VIDEO_MIXER2 (gst_pad_get_parent (pad));
+  mix = GST_VIDEO_MIXER2 (parent);
   mixpad = GST_VIDEO_MIXER2_PAD (pad);
 
   if (gst_video_info_from_caps (&info, caps)) {
@@ -319,22 +323,47 @@ gst_videomixer2_pad_sink_setcaps (GstPad * pad, GstCaps * caps)
   ret = gst_videomixer2_update_src_caps (mix);
 
 beach:
-  gst_object_unref (mix);
+  return ret;
+}
 
+static gboolean
+gst_videomixer2_pad_sink_event (GstPad * pad, GstObject * parent,
+    GstEvent * event)
+{
+  gboolean ret = FALSE;
+
+  switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_CAPS:
+    {
+      GstCaps *caps;
+
+      gst_event_parse_caps (event, &caps);
+      ret = gst_videomixer2_pad_sink_setcaps (pad, parent, caps);
+      gst_event_unref (event);
+      break;
+    }
+    default:
+      ret = gst_pad_event_default (pad, parent, event);
+      break;
+  }
   return ret;
 }
 
 static GstCaps *
-gst_videomixer2_pad_sink_getcaps (GstPad * pad)
+gst_videomixer2_pad_sink_getcaps (GstPad * pad, GstObject * parent,
+    GstCaps * filter)
 {
   GstVideoMixer2 *mix;
   GstCaps *srccaps;
   GstStructure *s;
   gint i, n;
 
-  mix = GST_VIDEO_MIXER2 (gst_pad_get_parent (pad));
+  mix = GST_VIDEO_MIXER2 (parent);
 
   srccaps = gst_pad_get_current_caps (GST_PAD (mix->srcpad));
+  if (srccaps == NULL)
+    srccaps = gst_pad_get_pad_template_caps (GST_PAD (mix->srcpad));
+
   srccaps = gst_caps_make_writable (srccaps);
 
   n = gst_caps_get_size (srccaps);
@@ -350,13 +379,12 @@ gst_videomixer2_pad_sink_getcaps (GstPad * pad)
 
   GST_DEBUG_OBJECT (pad, "Returning %" GST_PTR_FORMAT, srccaps);
 
-  gst_object_unref (mix);
-
   return srccaps;
 }
 
 static gboolean
-gst_videomixer2_pad_sink_acceptcaps (GstPad * pad, GstCaps * caps)
+gst_videomixer2_pad_sink_acceptcaps (GstPad * pad, GstObject * parent,
+    GstCaps * caps)
 {
   gboolean ret;
   GstVideoMixer2 *mix;
@@ -364,10 +392,13 @@ gst_videomixer2_pad_sink_acceptcaps (GstPad * pad, GstCaps * caps)
   gint i, n;
   GstStructure *s;
 
-  mix = GST_VIDEO_MIXER2 (gst_pad_get_parent (pad));
+  mix = GST_VIDEO_MIXER2 (parent);
   GST_DEBUG_OBJECT (pad, "%" GST_PTR_FORMAT, caps);
 
   accepted_caps = gst_pad_get_current_caps (GST_PAD (mix->srcpad));
+  if (accepted_caps == NULL)
+    accepted_caps = gst_pad_get_pad_template_caps (GST_PAD (mix->srcpad));
+
   accepted_caps = gst_caps_make_writable (accepted_caps);
   GST_LOG_OBJECT (pad, "src caps %" GST_PTR_FORMAT, accepted_caps);
 
@@ -386,10 +417,43 @@ gst_videomixer2_pad_sink_acceptcaps (GstPad * pad, GstCaps * caps)
   GST_INFO_OBJECT (pad, "%saccepted caps %" GST_PTR_FORMAT, (ret ? "" : "not "),
       caps);
   GST_INFO_OBJECT (pad, "acceptable caps are %" GST_PTR_FORMAT, accepted_caps);
-
   gst_caps_unref (accepted_caps);
 
-  gst_object_unref (mix);
+  return ret;
+}
+
+static gboolean
+gst_videomixer2_pad_sink_query (GstPad * pad, GstObject * parent,
+    GstQuery * query)
+{
+  gboolean ret = FALSE;
+
+  switch (GST_QUERY_TYPE (query)) {
+    case GST_QUERY_CAPS:
+    {
+      GstCaps *filter, *caps;
+
+      gst_query_parse_caps (query, &filter);
+      caps = gst_videomixer2_pad_sink_getcaps (pad, parent, filter);
+      gst_query_set_caps_result (query, caps);
+      gst_caps_unref (caps);
+      ret = TRUE;
+      break;
+    }
+    case GST_QUERY_ACCEPT_CAPS:
+    {
+      GstCaps *caps;
+
+      gst_query_parse_accept_caps (query, &caps);
+      ret = gst_videomixer2_pad_sink_acceptcaps (pad, parent, caps);
+      gst_query_set_accept_caps_result (query, ret);
+      ret = TRUE;
+      break;
+    }
+    default:
+      ret = gst_pad_query_default (pad, parent, query);
+      break;
+  }
   return ret;
 }
 
@@ -488,12 +552,10 @@ static void
 gst_videomixer2_pad_init (GstVideoMixer2Pad * mixerpad)
 {
   /* setup some pad functions */
-  gst_pad_set_setcaps_function (GST_PAD (mixerpad),
-      gst_videomixer2_pad_sink_setcaps);
-  gst_pad_set_acceptcaps_function (GST_PAD (mixerpad),
-      GST_DEBUG_FUNCPTR (gst_videomixer2_pad_sink_acceptcaps));
-  gst_pad_set_getcaps_function (GST_PAD (mixerpad),
-      gst_videomixer2_pad_sink_getcaps);
+  gst_pad_set_event_function (GST_PAD (mixerpad),
+      gst_videomixer2_pad_sink_event);
+  gst_pad_set_query_function (GST_PAD (mixerpad),
+      gst_videomixer2_pad_sink_query);
 
   mixerpad->zorder = DEFAULT_PAD_ZORDER;
   mixerpad->xpos = DEFAULT_PAD_XPOS;
@@ -583,10 +645,7 @@ gst_videomixer2_reset (GstVideoMixer2 * mix)
 {
   GSList *l;
 
-  mix->format = GST_VIDEO_FORMAT_UNKNOWN;
-  mix->width = mix->height = 0;
-  mix->fps_n = mix->fps_d = 0;
-  mix->par_n = mix->par_d = 0;
+  gst_video_info_init (&mix->info);
   mix->ts_offset = 0;
   mix->nframes = 0;
 
@@ -603,8 +662,7 @@ gst_videomixer2_reset (GstVideoMixer2 * mix)
     mixcol->start_time = -1;
     mixcol->end_time = -1;
 
-    p->fps_n = p->fps_d = 0;
-    p->width = p->height = 0;
+    gst_video_info_init (&p->info);
   }
 
   mix->newseg_pending = TRUE;
@@ -785,37 +843,32 @@ gst_videomixer2_blend_buffers (GstVideoMixer2 * mix,
     GstBuffer ** outbuf)
 {
   GSList *l;
-  GstFlowReturn ret;
   guint outsize;
   BlendFunction composite;
+  GstVideoFrame outframe;
 
-  outsize = gst_video_format_get_size (mix->format, mix->width, mix->height);
-  ret = gst_pad_alloc_buffer_and_set_caps (mix->srcpad, GST_BUFFER_OFFSET_NONE,
-      outsize, GST_PAD_CAPS (mix->srcpad), outbuf);
-  if (ret != GST_FLOW_OK)
-    return ret;
+  outsize = GST_VIDEO_INFO_SIZE (&mix->info);
 
+  *outbuf = gst_buffer_new_allocate (NULL, outsize, 15);
   GST_BUFFER_TIMESTAMP (*outbuf) = output_start_time;
   GST_BUFFER_DURATION (*outbuf) = output_end_time - output_start_time;
+
+  gst_video_frame_map (&outframe, &mix->info, *outbuf, GST_MAP_READWRITE);
 
   /* default to blending */
   composite = mix->blend;
   switch (mix->background) {
     case VIDEO_MIXER2_BACKGROUND_CHECKER:
-      mix->fill_checker (GST_BUFFER_DATA (*outbuf), mix->width, mix->height);
+      mix->fill_checker (&outframe);
       break;
     case VIDEO_MIXER2_BACKGROUND_BLACK:
-      mix->fill_color (GST_BUFFER_DATA (*outbuf), mix->width,
-          mix->height, 16, 128, 128);
+      mix->fill_color (&outframe, 16, 128, 128);
       break;
     case VIDEO_MIXER2_BACKGROUND_WHITE:
-      mix->fill_color (GST_BUFFER_DATA (*outbuf), mix->width,
-          mix->height, 240, 128, 128);
+      mix->fill_color (&outframe, 240, 128, 128);
       break;
     case VIDEO_MIXER2_BACKGROUND_TRANSPARENT:
-      orc_memset (GST_BUFFER_DATA (*outbuf), 0,
-          gst_video_format_get_row_stride (mix->format, 0,
-              mix->width) * mix->height);
+      gst_buffer_memset (*outbuf, 0, 0, outsize);
       /* use overlay to keep background transparent */
       composite = mix->overlay;
       break;
@@ -829,6 +882,7 @@ gst_videomixer2_blend_buffers (GstVideoMixer2 * mix,
       GstClockTime timestamp;
       gint64 stream_time;
       GstSegment *seg;
+      GstVideoFrame frame;
 
       seg = &mixcol->collect.segment;
 
@@ -841,11 +895,14 @@ gst_videomixer2_blend_buffers (GstVideoMixer2 * mix,
       if (GST_CLOCK_TIME_IS_VALID (stream_time))
         gst_object_sync_values (GST_OBJECT (pad), stream_time);
 
-      composite (GST_BUFFER_DATA (mixcol->buffer),
-          pad->xpos, pad->ypos, pad->width, pad->height, pad->alpha,
-          GST_BUFFER_DATA (*outbuf), mix->width, mix->height);
+      gst_video_frame_map (&frame, &pad->info, mixcol->buffer, GST_MAP_READ);
+
+      composite (&frame, pad->xpos, pad->ypos, pad->alpha, &outframe);
+
+      gst_video_frame_unmap (&frame);
     }
   }
+  gst_video_frame_unmap (&outframe);
 
   return GST_FLOW_OK;
 }
@@ -902,22 +959,20 @@ gst_videomixer2_collected (GstCollectPads2 * pads, GstVideoMixer2 * mix)
   gint64 jitter;
 
   /* If we're not negotiated yet... */
-  if (mix->format == GST_VIDEO_FORMAT_UNKNOWN)
+  if (GST_VIDEO_INFO_FORMAT (&mix->info) == GST_VIDEO_FORMAT_UNKNOWN)
     return GST_FLOW_NOT_NEGOTIATED;
 
   if (g_atomic_int_compare_and_exchange (&mix->flush_stop_pending, TRUE, FALSE)) {
     GST_DEBUG_OBJECT (mix, "pending flush stop");
-    gst_pad_push_event (mix->srcpad, gst_event_new_flush_stop ());
+    gst_pad_push_event (mix->srcpad, gst_event_new_flush_stop (TRUE));
   }
 
   GST_VIDEO_MIXER2_LOCK (mix);
 
   if (mix->newseg_pending) {
     GST_DEBUG_OBJECT (mix, "Sending NEWSEGMENT event");
-    if (!gst_pad_push_event (mix->srcpad, gst_event_new_new_segment_full (FALSE,
-                mix->segment.rate, mix->segment.applied_rate,
-                mix->segment.format, mix->segment.start, mix->segment.stop,
-                mix->segment.time))) {
+    if (!gst_pad_push_event (mix->srcpad,
+            gst_event_new_segment (&mix->segment))) {
       ret = GST_FLOW_ERROR;
       goto done;
     }
@@ -938,7 +993,8 @@ gst_videomixer2_collected (GstCollectPads2 * pads, GstVideoMixer2 * mix)
 
   output_end_time =
       mix->ts_offset + gst_util_uint64_scale (mix->nframes + 1,
-      GST_SECOND * mix->fps_d, mix->fps_n);
+      GST_SECOND * GST_VIDEO_INFO_FPS_D (&mix->info),
+      GST_VIDEO_INFO_FPS_N (&mix->info));
   if (mix->segment.stop != -1)
     output_end_time = MIN (output_end_time, mix->segment.stop);
 
@@ -1004,39 +1060,43 @@ done:
   return ret;
 }
 
-static GstCaps *
-gst_videomixer2_src_getcaps (GstPad * pad)
+static gboolean
+gst_videomixer2_query_caps (GstPad * pad, GstObject * parent, GstQuery * query)
 {
-  GstVideoMixer2 *mix = GST_VIDEO_MIXER2 (gst_pad_get_parent (pad));
-  GstCaps *caps;
+  GstCaps *filter, *caps;
+  GstVideoMixer2 *mix = GST_VIDEO_MIXER2 (parent);
   GstStructure *s;
   gint n;
 
-  if (mix->format != GST_VIDEO_FORMAT_UNKNOWN) {
-    caps = gst_caps_copy (GST_PAD_CAPS (mix->srcpad));
+  gst_query_parse_caps (query, &filter);
+
+  if (GST_VIDEO_INFO_FORMAT (&mix->info) != GST_VIDEO_FORMAT_UNKNOWN) {
+    caps = gst_pad_get_current_caps (mix->srcpad);
   } else {
-    caps = gst_caps_copy (gst_pad_get_pad_template_caps (mix->srcpad));
+    caps = gst_pad_get_pad_template_caps (mix->srcpad);
   }
+
+  caps = gst_caps_make_writable (caps);
 
   n = gst_caps_get_size (caps) - 1;
   for (; n >= 0; n--) {
     s = gst_caps_get_structure (caps, n);
     gst_structure_set (s, "width", GST_TYPE_INT_RANGE, 1, G_MAXINT,
         "height", GST_TYPE_INT_RANGE, 1, G_MAXINT, NULL);
-    if (mix->fps_d != 0) {
+    if (GST_VIDEO_INFO_FPS_D (&mix->info) != 0) {
       gst_structure_set (s,
           "framerate", GST_TYPE_FRACTION_RANGE, 0, 1, G_MAXINT, 1, NULL);
     }
   }
+  gst_query_set_caps_result (query, caps);
 
-  gst_object_unref (mix);
-
-  return caps;
+  return TRUE;
 }
 
 static gboolean
 gst_videomixer2_query_duration (GstVideoMixer2 * mix, GstQuery * query)
 {
+  GValue item = { 0 };
   gint64 max;
   gboolean res;
   GstFormat format;
@@ -1053,21 +1113,19 @@ gst_videomixer2_query_duration (GstVideoMixer2 * mix, GstQuery * query)
   /* Take maximum of all durations */
   it = gst_element_iterate_sink_pads (GST_ELEMENT_CAST (mix));
   while (!done) {
-    GstIteratorResult ires;
-    gpointer item;
-
-    ires = gst_iterator_next (it, &item);
-    switch (ires) {
+    switch (gst_iterator_next (it, &item)) {
       case GST_ITERATOR_DONE:
         done = TRUE;
         break;
       case GST_ITERATOR_OK:
       {
-        GstPad *pad = GST_PAD_CAST (item);
+        GstPad *pad;
         gint64 duration;
 
+        pad = g_value_get_object (&item);
+
         /* ask sink peer for duration */
-        res &= gst_pad_query_peer_duration (pad, &format, &duration);
+        res &= gst_pad_peer_query_duration (pad, format, &duration);
         /* take max from all valid return values */
         if (res) {
           /* valid unknown length, stop searching */
@@ -1079,7 +1137,7 @@ gst_videomixer2_query_duration (GstVideoMixer2 * mix, GstQuery * query)
           else if (duration > max)
             max = duration;
         }
-        gst_object_unref (pad);
+        g_value_reset (&item);
         break;
       }
       case GST_ITERATOR_RESYNC:
@@ -1093,6 +1151,7 @@ gst_videomixer2_query_duration (GstVideoMixer2 * mix, GstQuery * query)
         break;
     }
   }
+  g_value_unset (&item);
   gst_iterator_free (it);
 
   if (res) {
@@ -1113,6 +1172,7 @@ gst_videomixer2_query_latency (GstVideoMixer2 * mix, GstQuery * query)
   gboolean res;
   GstIterator *it;
   gboolean done;
+  GValue item = { 0 };
 
   res = TRUE;
   done = FALSE;
@@ -1123,17 +1183,13 @@ gst_videomixer2_query_latency (GstVideoMixer2 * mix, GstQuery * query)
   /* Take maximum of all latency values */
   it = gst_element_iterate_sink_pads (GST_ELEMENT_CAST (mix));
   while (!done) {
-    GstIteratorResult ires;
-    gpointer item;
-
-    ires = gst_iterator_next (it, &item);
-    switch (ires) {
+    switch (gst_iterator_next (it, &item)) {
       case GST_ITERATOR_DONE:
         done = TRUE;
         break;
       case GST_ITERATOR_OK:
       {
-        GstPad *pad = GST_PAD_CAST (item);
+        GstPad *pad = g_value_get_object (&item);
         GstQuery *peerquery;
         GstClockTime min_cur, max_cur;
         gboolean live_cur;
@@ -1159,7 +1215,7 @@ gst_videomixer2_query_latency (GstVideoMixer2 * mix, GstQuery * query)
         }
 
         gst_query_unref (peerquery);
-        gst_object_unref (pad);
+        g_value_reset (&item);
         break;
       }
       case GST_ITERATOR_RESYNC:
@@ -1175,6 +1231,7 @@ gst_videomixer2_query_latency (GstVideoMixer2 * mix, GstQuery * query)
         break;
     }
   }
+  g_value_unset (&item);
   gst_iterator_free (it);
 
   if (res) {
@@ -1189,9 +1246,9 @@ gst_videomixer2_query_latency (GstVideoMixer2 * mix, GstQuery * query)
 }
 
 static gboolean
-gst_videomixer2_src_query (GstPad * pad, GstQuery * query)
+gst_videomixer2_src_query (GstPad * pad, GstObject * parent, GstQuery * query)
 {
-  GstVideoMixer2 *mix = GST_VIDEO_MIXER2 (gst_pad_get_parent (pad));
+  GstVideoMixer2 *mix = GST_VIDEO_MIXER2 (parent);
   gboolean res = FALSE;
 
   switch (GST_QUERY_TYPE (query)) {
@@ -1219,6 +1276,9 @@ gst_videomixer2_src_query (GstPad * pad, GstQuery * query)
     case GST_QUERY_LATENCY:
       res = gst_videomixer2_query_latency (mix, query);
       break;
+    case GST_QUERY_CAPS:
+      res = gst_videomixer2_query_caps (pad, parent, query);
+      break;
     default:
       /* FIXME, needs a custom query handler because we have multiple
        * sinkpads */
@@ -1226,24 +1286,24 @@ gst_videomixer2_src_query (GstPad * pad, GstQuery * query)
       gst_query_unref (query);
       break;
   }
-
-  gst_object_unref (mix);
   return res;
 }
 
 static gboolean
-gst_videomixer2_src_event (GstPad * pad, GstEvent * event)
+gst_videomixer2_src_event (GstPad * pad, GstObject * parent, GstEvent * event)
 {
-  GstVideoMixer2 *mix = GST_VIDEO_MIXER2 (gst_pad_get_parent (pad));
+  GstVideoMixer2 *mix = GST_VIDEO_MIXER2 (parent);
   gboolean result;
 
   switch (GST_EVENT_TYPE (event)) {
-    case GST_EVENT_QOS:{
+    case GST_EVENT_QOS:
+    {
+      GstQOSType type;
       GstClockTimeDiff diff;
       GstClockTime timestamp;
       gdouble proportion;
 
-      gst_event_parse_qos (event, &proportion, &diff, &timestamp);
+      gst_event_parse_qos (event, &type, &proportion, &diff, &timestamp);
 
       gst_videomixer2_update_qos (mix, proportion, diff, timestamp);
 
@@ -1313,7 +1373,7 @@ gst_videomixer2_src_event (GstPad * pad, GstEvent * event)
       }
       GST_VIDEO_MIXER2_UNLOCK (mix);
 
-      gst_segment_set_seek (&mix->segment, rate, fmt, flags, start_type, start,
+      gst_segment_do_seek (&mix->segment, rate, fmt, flags, start_type, start,
           stop_type, stop, NULL);
       mix->segment.position = -1;
       mix->ts_offset = 0;
@@ -1341,7 +1401,7 @@ gst_videomixer2_src_event (GstPad * pad, GstEvent * event)
       if (g_atomic_int_compare_and_exchange (&mix->flush_stop_pending, TRUE,
               FALSE)) {
         GST_DEBUG_OBJECT (mix, "pending flush stop");
-        gst_pad_push_event (mix->srcpad, gst_event_new_flush_stop ());
+        gst_pad_push_event (mix->srcpad, gst_event_new_flush_stop (TRUE));
       }
 
       break;
@@ -1356,20 +1416,15 @@ gst_videomixer2_src_event (GstPad * pad, GstEvent * event)
       result = gst_videomixer2_push_sink_event (mix, event);
       break;
   }
-  gst_object_unref (mix);
 
   return result;
 }
 
 static gboolean
-gst_videomixer2_src_setcaps (GstPad * pad, GstCaps * caps)
+gst_videomixer2_src_setcaps (GstPad * pad, GstVideoMixer2 * mix, GstCaps * caps)
 {
-  GstVideoMixer2 *mix = GST_VIDEO_MIXER2 (gst_pad_get_parent_element (pad));
   gboolean ret = FALSE;
-  GstVideoFormat fmt;
-  gint width, height;
-  gint fps_n, fps_d;
-  gint par_n, par_d;
+  GstVideoInfo info;
 
   GST_INFO_OBJECT (pad, "set src caps: %" GST_PTR_FORMAT, caps);
 
@@ -1378,14 +1433,13 @@ gst_videomixer2_src_setcaps (GstPad * pad, GstCaps * caps)
   mix->fill_checker = NULL;
   mix->fill_color = NULL;
 
-  if (!gst_video_format_parse_caps (caps, &fmt, &width, &height) ||
-      !gst_video_parse_caps_framerate (caps, &fps_n, &fps_d) ||
-      !gst_video_parse_caps_pixel_aspect_ratio (caps, &par_n, &par_d))
+  if (!gst_video_info_from_caps (&info, caps))
     goto done;
 
   GST_VIDEO_MIXER2_LOCK (mix);
 
-  if (mix->fps_n != fps_n || mix->fps_d != fps_d) {
+  if (GST_VIDEO_INFO_FPS_N (&mix->info) != GST_VIDEO_INFO_FPS_N (&info) ||
+      GST_VIDEO_INFO_FPS_D (&mix->info) != GST_VIDEO_INFO_FPS_D (&info)) {
     if (mix->segment.position != -1) {
       mix->ts_offset = mix->segment.position - mix->segment.start;
       mix->nframes = 0;
@@ -1393,15 +1447,9 @@ gst_videomixer2_src_setcaps (GstPad * pad, GstCaps * caps)
     gst_videomixer2_reset_qos (mix);
   }
 
-  mix->format = fmt;
-  mix->width = width;
-  mix->height = height;
-  mix->fps_n = fps_n;
-  mix->fps_d = fps_d;
-  mix->par_n = par_n;
-  mix->par_d = par_d;
+  mix->info = info;
 
-  switch (mix->format) {
+  switch (GST_VIDEO_INFO_FORMAT (&mix->info)) {
     case GST_VIDEO_FORMAT_AYUV:
       mix->blend = gst_video_mixer_blend_ayuv;
       mix->overlay = gst_video_mixer_overlay_ayuv;
@@ -1540,8 +1588,8 @@ gst_videomixer2_src_setcaps (GstPad * pad, GstCaps * caps)
   }
   GST_VIDEO_MIXER2_UNLOCK (mix);
 
+  ret = gst_pad_set_caps (pad, caps);
 done:
-  gst_object_unref (mix);
 
   return ret;
 }
@@ -1564,7 +1612,9 @@ gst_videomixer2_sink_clip (GstCollectPads2 * pads,
 
   end_time = GST_BUFFER_DURATION (buf);
   if (end_time == -1)
-    end_time = gst_util_uint64_scale_int (GST_SECOND, pad->fps_d, pad->fps_n);
+    end_time =
+        gst_util_uint64_scale_int (GST_SECOND,
+        GST_VIDEO_INFO_FPS_D (&pad->info), GST_VIDEO_INFO_FPS_N (&pad->info));
   if (end_time == -1) {
     *outbuf = buf;
     return GST_FLOW_OK;
@@ -1610,12 +1660,12 @@ gst_videomixer2_sink_event (GstCollectPads2 * pads, GstCollectData2 * cdata,
 
   /* return FALSE => event will be forwarded */
   switch (GST_EVENT_TYPE (event)) {
-    case GST_EVENT_NEWSEGMENT:{
-      GstFormat fmt;
-      gst_event_parse_new_segment (event, NULL, NULL, &fmt, NULL, NULL, NULL);
+    case GST_EVENT_SEGMENT:{
+      GstSegment seg;
+      gst_event_copy_segment (event, &seg);
 
-      g_assert (fmt == GST_FORMAT_TIME);
-      /* eat NEWSEGMENT events */
+      g_assert (seg.format == GST_FORMAT_TIME);
+      /* eat SEGMENT events */
       ret = TRUE;
       gst_event_unref (event);
       break;
@@ -1639,7 +1689,6 @@ gst_videomixer2_sink_event (GstCollectPads2 * pads, GstCollectData2 * cdata,
       ret = gst_pad_event_default (cdata->pad, GST_OBJECT (mix), event);
       break;
     case GST_EVENT_EOS:
-    case GST_EVENT_SEGMENT:
       gst_event_unref (event);
       ret = TRUE;
       break;
@@ -1720,7 +1769,7 @@ gst_videomixer2_change_state (GstElement * element, GstStateChange transition)
 
 static GstPad *
 gst_videomixer2_request_new_pad (GstElement * element,
-    GstPadTemplate * templ, const gchar * req_name)
+    GstPadTemplate * templ, const gchar * req_name, const GstCaps * caps)
 {
   GstVideoMixer2 *mix;
   GstVideoMixer2Pad *mixpad;
@@ -1805,7 +1854,7 @@ gst_videomixer2_release_pad (GstElement * element, GstPad * pad)
   gst_child_proxy_child_removed (GST_OBJECT (mix), GST_OBJECT (mixpad));
   mix->numpads--;
 
-  update_caps = mix->format != GST_VIDEO_FORMAT_UNKNOWN;
+  update_caps = GST_VIDEO_INFO_FORMAT (&mix->info) != GST_VIDEO_FORMAT_UNKNOWN;
   GST_VIDEO_MIXER2_UNLOCK (mix);
 
   gst_collect_pads2_remove_pad (mix->collect, pad);
@@ -1826,7 +1875,7 @@ gst_videomixer2_finalize (GObject * o)
   GstVideoMixer2 *mix = GST_VIDEO_MIXER2 (o);
 
   gst_object_unref (mix->collect);
-  g_mutex_free (mix->lock);
+  g_mutex_clear (&mix->lock);
 
   G_OBJECT_CLASS (parent_class)->finalize (o);
 }
@@ -1947,10 +1996,6 @@ gst_videomixer2_init (GstVideoMixer2 * mix)
   mix->srcpad =
       gst_pad_new_from_template (gst_element_class_get_pad_template (klass,
           "src"), "src");
-  gst_pad_set_getcaps_function (GST_PAD (mix->srcpad),
-      GST_DEBUG_FUNCPTR (gst_videomixer2_src_getcaps));
-  gst_pad_set_setcaps_function (GST_PAD (mix->srcpad),
-      GST_DEBUG_FUNCPTR (gst_videomixer2_src_setcaps));
   gst_pad_set_query_function (GST_PAD (mix->srcpad),
       GST_DEBUG_FUNCPTR (gst_videomixer2_src_query));
   gst_pad_set_event_function (GST_PAD (mix->srcpad),
@@ -1968,7 +2013,7 @@ gst_videomixer2_init (GstVideoMixer2 * mix)
   gst_collect_pads2_set_clip_function (mix->collect,
       (GstCollectPads2ClipFunction) gst_videomixer2_sink_clip, mix);
 
-  mix->lock = g_mutex_new ();
+  g_mutex_init (&mix->lock);
   /* initialize variables */
   gst_videomixer2_reset (mix);
 }
@@ -1977,7 +2022,7 @@ gst_videomixer2_init (GstVideoMixer2 * mix)
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
-  GST_DEBUG_CATEGORY_INIT (gst_videomixer_debug, "videomixer", 0,
+  GST_DEBUG_CATEGORY_INIT (gst_videomixer2_debug, "videomixer", 0,
       "video mixer");
 
   gst_video_mixer_init_blend ();

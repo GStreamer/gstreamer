@@ -75,7 +75,7 @@ struct _GstVideoMixer2
   GstPad *srcpad;
 
   /* Lock to prevent the state to change while blending */
-  GMutex *lock;
+  GMutex lock;
   /* Sink pads using Collect Pads 2*/
   GstCollectPads2 *collect;
 
