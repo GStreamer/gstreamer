@@ -21,41 +21,108 @@
  */
 
 
-#ifndef __GST_MULTI_SOCKET_SINK_H__
-#define __GST_MULTI_SOCKET_SINK_H__
-
-#include <gio/gio.h>
+#ifndef __GST_MULTI_HANDLE_SINK_H__
+#define __GST_MULTI_HANDLE_SINK_H__
 
 #include <gst/gst.h>
 #include <gst/base/gstbasesink.h>
-
-#include "gstmultihandlesink.h"
+#include <gio/gio.h>
 
 G_BEGIN_DECLS
 
-#define GST_TYPE_MULTI_SOCKET_SINK \
-  (gst_multi_socket_sink_get_type())
-#define GST_MULTI_SOCKET_SINK(obj) \
-  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_MULTI_SOCKET_SINK,GstMultiSocketSink))
-#define GST_MULTI_SOCKET_SINK_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_MULTI_SOCKET_SINK,GstMultiSocketSinkClass))
-#define GST_IS_MULTI_SOCKET_SINK(obj) \
-  (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_MULTI_SOCKET_SINK))
-#define GST_IS_MULTI_SOCKET_SINK_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_MULTI_SOCKET_SINK))
-#define GST_MULTI_SOCKET_SINK_GET_CLASS(klass) \
-  (G_TYPE_INSTANCE_GET_CLASS ((klass), GST_TYPE_MULTI_SOCKET_SINK, GstMultiSocketSinkClass))
+#define GST_TYPE_MULTI_HANDLE_SINK \
+  (gst_multi_handle_sink_get_type())
+#define GST_MULTI_HANDLE_SINK(obj) \
+  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_MULTI_HANDLE_SINK,GstMultiHandleSink))
+#define GST_MULTI_HANDLE_SINK_CLASS(klass) \
+  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_MULTI_HANDLE_SINK,GstMultiHandleSinkClass))
+#define GST_IS_MULTI_HANDLE_SINK(obj) \
+  (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_MULTI_HANDLE_SINK))
+#define GST_IS_MULTI_HANDLE_SINK_CLASS(klass) \
+  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_MULTI_HANDLE_SINK))
+#define GST_MULTI_HANDLE_SINK_GET_CLASS(klass) \
+  (G_TYPE_INSTANCE_GET_CLASS ((klass), GST_TYPE_MULTI_HANDLE_SINK, GstMultiHandleSinkClass))
 
 
-typedef struct _GstMultiSocketSink GstMultiSocketSink;
-typedef struct _GstMultiSocketSinkClass GstMultiSocketSinkClass;
+typedef struct _GstMultiHandleSink GstMultiHandleSink;
+typedef struct _GstMultiHandleSinkClass GstMultiHandleSinkClass;
 
+#if 0
 typedef enum {
-  GST_MULTI_SOCKET_SINK_OPEN             = (GST_ELEMENT_FLAG_LAST << 0),
+  GST_MULTI_HANDLE_SINK_OPEN             = (GST_ELEMENT_FLAG_LAST << 0),
 
-  GST_MULTI_SOCKET_SINK_FLAG_LAST        = (GST_ELEMENT_FLAG_LAST << 2)
-} GstMultiSocketSinkFlags;
+  GST_MULTI_HANDLE_SINK_FLAG_LAST        = (GST_ELEMENT_FLAG_LAST << 2)
+} GstMultiHandleSinkFlags;
+#endif
 
+/**
+ * GstRecoverPolicy:
+ * @GST_RECOVER_POLICY_NONE             : no recovering is done
+ * @GST_RECOVER_POLICY_RESYNC_LATEST    : client is moved to last buffer
+ * @GST_RECOVER_POLICY_RESYNC_SOFT_LIMIT: client is moved to the soft limit
+ * @GST_RECOVER_POLICY_RESYNC_KEYFRAME  : client is moved to latest keyframe
+ *
+ * Possible values for the recovery procedure to use when a client consumes
+ * data too slow and has a backlag of more that soft-limit buffers.
+ */
+typedef enum
+{
+  GST_RECOVER_POLICY_NONE,
+  GST_RECOVER_POLICY_RESYNC_LATEST,
+  GST_RECOVER_POLICY_RESYNC_SOFT_LIMIT,
+  GST_RECOVER_POLICY_RESYNC_KEYFRAME
+} GstRecoverPolicy;
+
+/**
+ * GstSyncMethod:
+ * @GST_SYNC_METHOD_LATEST              : client receives most recent buffer
+ * @GST_SYNC_METHOD_NEXT_KEYFRAME       : client receives next keyframe
+ * @GST_SYNC_METHOD_LATEST_KEYFRAME     : client receives latest keyframe (burst)
+ * @GST_SYNC_METHOD_BURST               : client receives specific amount of data
+ * @GST_SYNC_METHOD_BURST_KEYFRAME      : client receives specific amount of data 
+ *                                        starting from latest keyframe
+ * @GST_SYNC_METHOD_BURST_WITH_KEYFRAME : client receives specific amount of data from
+ *                                        a keyframe, or if there is not enough data after
+ *                                        the keyframe, starting before the keyframe
+ *
+ * This enum defines the selection of the first buffer that is sent
+ * to a new client.
+ */
+typedef enum
+{
+  GST_SYNC_METHOD_LATEST,
+  GST_SYNC_METHOD_NEXT_KEYFRAME,
+  GST_SYNC_METHOD_LATEST_KEYFRAME,
+  GST_SYNC_METHOD_BURST,
+  GST_SYNC_METHOD_BURST_KEYFRAME,
+  GST_SYNC_METHOD_BURST_WITH_KEYFRAME
+} GstSyncMethod;
+
+/**
+ * GstClientStatus:
+ * @GST_CLIENT_STATUS_OK       : client is ok
+ * @GST_CLIENT_STATUS_CLOSED   : client closed the socket
+ * @GST_CLIENT_STATUS_REMOVED  : client is removed
+ * @GST_CLIENT_STATUS_SLOW     : client is too slow
+ * @GST_CLIENT_STATUS_ERROR    : client is in error
+ * @GST_CLIENT_STATUS_DUPLICATE: same client added twice
+ * @GST_CLIENT_STATUS_FLUSHING : client is flushing out the remaining buffers.
+ *
+ * This specifies the reason why a client was removed from
+ * multisocketsink and is received in the "client-removed" signal.
+ */
+typedef enum
+{
+  GST_CLIENT_STATUS_OK          = 0,
+  GST_CLIENT_STATUS_CLOSED      = 1,
+  GST_CLIENT_STATUS_REMOVED     = 2,
+  GST_CLIENT_STATUS_SLOW        = 3,
+  GST_CLIENT_STATUS_ERROR       = 4,
+  GST_CLIENT_STATUS_DUPLICATE   = 5,
+  GST_CLIENT_STATUS_FLUSHING    = 6
+} GstClientStatus;
+
+#if 0
 /* structure for a client
  */
 typedef struct {
@@ -96,6 +163,7 @@ typedef struct {
   guint64 first_buffer_ts;
   guint64 last_buffer_ts;
 } GstSocketClient;
+#endif
 
 #define CLIENTS_LOCK_INIT(socketsink)       (g_rec_mutex_init(&socketsink->clientslock))
 #define CLIENTS_LOCK_CLEAR(socketsink)      (g_rec_mutex_clear(&socketsink->clientslock))
@@ -103,11 +171,11 @@ typedef struct {
 #define CLIENTS_UNLOCK(socketsink)          (g_rec_mutex_unlock(&socketsink->clientslock))
 
 /**
- * GstMultiSocketSink:
+ * GstMultiHandleSink:
  *
  * The multisocketsink object structure.
  */
-struct _GstMultiSocketSink {
+struct _GstMultiHandleSink {
   GstBaseSink element;
 
   /*< private >*/
@@ -163,23 +231,23 @@ struct _GstMultiSocketSink {
   guint8 header_flags;
 };
 
-struct _GstMultiSocketSinkClass {
+struct _GstMultiHandleSinkClass {
   GstBaseSinkClass parent_class;
 
   /* element methods */
-  void          (*add)          (GstMultiSocketSink *sink, GSocket *socket);
-  void          (*add_full)     (GstMultiSocketSink *sink, GSocket *socket, GstSyncMethod sync,
+  void          (*add)          (GstMultiHandleSink *sink, GSocket *socket);
+  void          (*add_full)     (GstMultiHandleSink *sink, GSocket *socket, GstSyncMethod sync,
 		                 GstFormat format, guint64 value, 
 				 GstFormat max_format, guint64 max_value);
-  void          (*remove)       (GstMultiSocketSink *sink, GSocket *socket);
-  void          (*remove_flush) (GstMultiSocketSink *sink, GSocket *socket);
-  void          (*clear)        (GstMultiSocketSink *sink);
-  GstStructure* (*get_stats)    (GstMultiSocketSink *sink, GSocket *socket);
+  void          (*remove)       (GstMultiHandleSink *sink, GSocket *socket);
+  void          (*remove_flush) (GstMultiHandleSink *sink, GSocket *socket);
+  void          (*clear)        (GstMultiHandleSink *sink);
+  GstStructure* (*get_stats)    (GstMultiHandleSink *sink, GSocket *socket);
 
   /* vtable */
-  gboolean (*init)   (GstMultiSocketSink *sink);
-  gboolean (*close)  (GstMultiSocketSink *sink);
-  void (*removed) (GstMultiSocketSink *sink, GSocket *socket);
+  gboolean (*init)   (GstMultiHandleSink *sink);
+  gboolean (*close)  (GstMultiHandleSink *sink);
+  void (*removed) (GstMultiHandleSink *sink, GSocket *socket);
 
   /* signals */
   void (*client_added) (GstElement *element, GSocket *socket);
@@ -187,17 +255,19 @@ struct _GstMultiSocketSinkClass {
   void (*client_socket_removed) (GstElement *element, GSocket *socket);
 };
 
-GType gst_multi_socket_sink_get_type (void);
+GType gst_multi_handle_sink_get_type (void);
 
-void          gst_multi_socket_sink_add          (GstMultiSocketSink *sink, GSocket *socket);
-void          gst_multi_socket_sink_add_full     (GstMultiSocketSink *sink, GSocket *socket, GstSyncMethod sync, 
+#if 0
+void          gst_multi_handle_sink_add          (GstMultiHandleSink *sink, GSocket *socket);
+void          gst_multi_handle_sink_add_full     (GstMultiHandleSink *sink, GSocket *socket, GstSyncMethod sync, 
                                               GstFormat min_format, guint64 min_value,
                                               GstFormat max_format, guint64 max_value);
-void          gst_multi_socket_sink_remove       (GstMultiSocketSink *sink, GSocket *socket);
-void          gst_multi_socket_sink_remove_flush (GstMultiSocketSink *sink, GSocket *socket);
-void          gst_multi_socket_sink_clear        (GstMultiSocketSink *sink);
-GstStructure*  gst_multi_socket_sink_get_stats    (GstMultiSocketSink *sink, GSocket *socket);
+void          gst_multi_handle_sink_remove       (GstMultiHandleSink *sink, GSocket *socket);
+void          gst_multi_handle_sink_remove_flush (GstMultiHandleSink *sink, GSocket *socket);
+void          gst_multi_handle_sink_clear        (GstMultiHandleSink *sink);
+GstStructure*  gst_multi_handle_sink_get_stats    (GstMultiHandleSink *sink, GSocket *socket);
 
 G_END_DECLS
+#endif
 
-#endif /* __GST_MULTI_SOCKET_SINK_H__ */
+#endif /* __GST_MULTI_HANDLE_SINK_H__ */

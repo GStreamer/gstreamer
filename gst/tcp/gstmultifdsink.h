@@ -25,6 +25,8 @@
 #include <gst/gst.h>
 #include <gst/base/gstbasesink.h>
 
+#include "gstmultihandlesink.h"
+
 G_BEGIN_DECLS
 
 #define GST_TYPE_MULTI_FD_SINK \
@@ -50,48 +52,6 @@ typedef enum {
   GST_MULTI_FD_SINK_FLAG_LAST        = (GST_ELEMENT_FLAG_LAST << 2)
 } GstMultiFdSinkFlags;
 
-/**
- * GstRecoverPolicy:
- * @GST_RECOVER_POLICY_NONE             : no recovering is done
- * @GST_RECOVER_POLICY_RESYNC_LATEST    : client is moved to last buffer
- * @GST_RECOVER_POLICY_RESYNC_SOFT_LIMIT: client is moved to the soft limit
- * @GST_RECOVER_POLICY_RESYNC_KEYFRAME  : client is moved to latest keyframe
- *
- * Possible values for the recovery procedure to use when a client consumes
- * data too slow and has a backlag of more that soft-limit buffers.
- */
-typedef enum
-{
-  GST_RECOVER_POLICY_NONE,
-  GST_RECOVER_POLICY_RESYNC_LATEST,
-  GST_RECOVER_POLICY_RESYNC_SOFT_LIMIT,
-  GST_RECOVER_POLICY_RESYNC_KEYFRAME
-} GstRecoverPolicy;
-
-/**
- * GstSyncMethod:
- * @GST_SYNC_METHOD_LATEST              : client receives most recent buffer
- * @GST_SYNC_METHOD_NEXT_KEYFRAME       : client receives next keyframe
- * @GST_SYNC_METHOD_LATEST_KEYFRAME     : client receives latest keyframe (burst)
- * @GST_SYNC_METHOD_BURST               : client receives specific amount of data
- * @GST_SYNC_METHOD_BURST_KEYFRAME      : client receives specific amount of data 
- *                                        starting from latest keyframe
- * @GST_SYNC_METHOD_BURST_WITH_KEYFRAME : client receives specific amount of data from
- *                                        a keyframe, or if there is not enough data after
- *                                        the keyframe, starting before the keyframe
- *
- * This enum defines the selection of the first buffer that is sent
- * to a new client.
- */
-typedef enum
-{
-  GST_SYNC_METHOD_LATEST,
-  GST_SYNC_METHOD_NEXT_KEYFRAME,
-  GST_SYNC_METHOD_LATEST_KEYFRAME,
-  GST_SYNC_METHOD_BURST,
-  GST_SYNC_METHOD_BURST_KEYFRAME,
-  GST_SYNC_METHOD_BURST_WITH_KEYFRAME
-} GstSyncMethod;
 
 /**
  * GstTCPUnitType:
@@ -109,30 +69,6 @@ typedef enum
   GST_TCP_UNIT_TYPE_TIME,
   GST_TCP_UNIT_TYPE_BYTES
 } GstTCPUnitType;
-
-/**
- * GstClientStatus:
- * @GST_CLIENT_STATUS_OK       : client is ok
- * @GST_CLIENT_STATUS_CLOSED   : client closed the socket
- * @GST_CLIENT_STATUS_REMOVED  : client is removed
- * @GST_CLIENT_STATUS_SLOW     : client is too slow
- * @GST_CLIENT_STATUS_ERROR    : client is in error
- * @GST_CLIENT_STATUS_DUPLICATE: same client added twice
- * @GST_CLIENT_STATUS_FLUSHING : client is flushing out the remaining buffers.
- *
- * This specifies the reason why a client was removed from
- * multifdsink and is received in the "client-removed" signal.
- */
-typedef enum
-{
-  GST_CLIENT_STATUS_OK          = 0,
-  GST_CLIENT_STATUS_CLOSED      = 1,
-  GST_CLIENT_STATUS_REMOVED     = 2,
-  GST_CLIENT_STATUS_SLOW        = 3,
-  GST_CLIENT_STATUS_ERROR       = 4,
-  GST_CLIENT_STATUS_DUPLICATE   = 5,
-  GST_CLIENT_STATUS_FLUSHING    = 6
-} GstClientStatus;
 
 /* structure for a client
  */
@@ -175,11 +111,6 @@ typedef struct {
   guint64 first_buffer_ts;
   guint64 last_buffer_ts;
 } GstTCPClient;
-
-#define CLIENTS_LOCK_INIT(fdsink)       (g_rec_mutex_init(&fdsink->clientslock))
-#define CLIENTS_LOCK_CLEAR(fdsink)      (g_rec_mutex_clear(&fdsink->clientslock))
-#define CLIENTS_LOCK(fdsink)            (g_rec_mutex_lock(&fdsink->clientslock))
-#define CLIENTS_UNLOCK(fdsink)          (g_rec_mutex_unlock(&fdsink->clientslock))
 
 /**
  * GstMultiFdSink:
