@@ -129,8 +129,7 @@ typedef enum {
  */
 #define GST_STATIC_CAPS(string) \
 { \
-  /* miniobject */ { { 0, 0, 0, 0, NULL, NULL, NULL, 0, NULL }, \
-  /* caps */ NULL }, \
+  /* caps */ NULL, \
   /* string */ string, \
   GST_PADDING_INIT \
 }
@@ -361,7 +360,7 @@ struct _GstCaps {
  */
 struct _GstStaticCaps {
   /*< public >*/
-  GstCaps caps;
+  GstCaps *caps;
   const char *string;
 
   /*< private >*/

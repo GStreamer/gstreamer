@@ -356,7 +356,6 @@ gst_static_caps_get_type (void)
   return staticcaps_type;
 }
 
-
 /**
  * gst_static_caps_get:
  * @static_caps: the #GstStaticCaps to convert
@@ -370,20 +369,19 @@ gst_static_caps_get_type (void)
 GstCaps *
 gst_static_caps_get (GstStaticCaps * static_caps)
 {
-  GstCaps *caps;
+  GstCaps **caps;
 
   g_return_val_if_fail (static_caps != NULL, NULL);
 
-  caps = (GstCaps *) static_caps;
+  caps = &static_caps->caps;
 
   /* refcount is 0 when we need to convert */
-  if (G_UNLIKELY (GST_CAPS_REFCOUNT_VALUE (caps) == 0)) {
+  if (G_UNLIKELY (*caps == NULL)) {
     const char *string;
-    GstCaps temp;
 
     G_LOCK (static_caps_lock);
     /* check if other thread already updated */
-    if (G_UNLIKELY (GST_CAPS_REFCOUNT_VALUE (caps) > 0))
+    if (G_UNLIKELY (*caps != NULL))
       goto done;
 
     string = static_caps->string;
@@ -393,28 +391,21 @@ gst_static_caps_get (GstStaticCaps * static_caps)
 
     GST_CAT_TRACE (GST_CAT_CAPS, "creating %p", static_caps);
 
-    /* we construct the caps on the stack, then copy over the struct into our
-     * real caps, refcount last. We do this because we must leave the refcount
-     * of the result caps to 0 so that other threads don't run away with the
-     * caps while we are constructing it. */
-    gst_caps_init (&temp, sizeof (GstCaps));
+    *caps = gst_caps_from_string (string);
 
     /* convert to string */
-    if (G_UNLIKELY (!gst_caps_from_string_inplace (&temp, string)))
+    if (G_UNLIKELY (*caps == NULL))
       g_critical ("Could not convert static caps \"%s\"", string);
-
-    GST_MINI_OBJECT_REFCOUNT (&temp) = 0;
-    memcpy (caps, &temp, sizeof (GstCaps));
-    gst_caps_ref (caps);
 
     GST_CAT_TRACE (GST_CAT_CAPS, "created %p", static_caps);
   done:
     G_UNLOCK (static_caps_lock);
   }
   /* ref the caps, makes it not writable */
-  gst_caps_ref (caps);
+  if (G_LIKELY (*caps != NULL))
+    gst_caps_ref (*caps);
 
-  return caps;
+  return *caps;
 
   /* ERRORS */
 no_string:
@@ -427,30 +418,16 @@ no_string:
 
 /**
  * gst_static_caps_cleanup:
- * @static_caps: the #GstStaticCaps to convert
+ * @static_caps: the #GstStaticCaps to clean
  *
- * Clean up the caps contained in @static_caps when the refcount is 0.
+ * Clean up the cached caps contained in @static_caps.
  */
 void
 gst_static_caps_cleanup (GstStaticCaps * static_caps)
 {
-  GstCaps *caps = (GstCaps *) static_caps;
-
-  /* FIXME: this is not threadsafe */
-  if (GST_CAPS_REFCOUNT_VALUE (caps) == 1) {
-    GstStructure *structure;
-    guint i, clen;
-
-    clen = GST_CAPS_LEN (caps);
-
-    for (i = 0; i < clen; i++) {
-      structure = (GstStructure *) gst_caps_get_structure (caps, i);
-      gst_structure_set_parent_refcount (structure, NULL);
-      gst_structure_free (structure);
-    }
-    g_ptr_array_free (GST_CAPS_ARRAY (caps), TRUE);
-    GST_CAPS_REFCOUNT (caps) = 0;
-  }
+  G_LOCK (static_caps_lock);
+  gst_caps_replace (&static_caps->caps, NULL);
+  G_UNLOCK (static_caps_lock);
 }
 
 /* manipulation */
