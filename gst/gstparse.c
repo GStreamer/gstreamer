@@ -290,7 +290,7 @@ gst_parse_launchv_full (const gchar ** argv, GstParseContext * context,
  * the @error is set. In this case there was a recoverable parsing error and you
  * can try to play the pipeline.
  *
- * Returns: (transfer full): a new element on success, %NULL on failure. If
+ * Returns: (transfer floating): a new element on success, %NULL on failure. If
  *    more than one toplevel element is specified by the @pipeline_description,
  *   all elements are put into a #GstPipeline, which than is returned.
  */
