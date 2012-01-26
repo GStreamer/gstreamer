@@ -115,9 +115,9 @@ main (gint argc, gchar ** argv)
   uri = argv[1];
 
   /* build pipeline */
-  bin = gst_element_factory_make ("playbin2", NULL);
+  bin = gst_element_factory_make ("playbin", NULL);
   if (!bin) {
-    GST_WARNING ("need playbin2 from gst-plugins-base");
+    GST_WARNING ("need playbin from gst-plugins-base");
     goto Error;
   }
 

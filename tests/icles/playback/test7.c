@@ -139,7 +139,7 @@ main (gint argc, gchar * argv[])
     exit (-1);
   }
 
-  player = gst_element_factory_make ("playbin2", "player");
+  player = gst_element_factory_make ("playbin", "player");
   g_assert (player);
 
   bus = gst_pipeline_get_bus (GST_PIPELINE (player));
