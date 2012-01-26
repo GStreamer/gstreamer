@@ -53,12 +53,10 @@ static GstStaticPadTemplate adpcmdec_src_template =
 GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("audio/x-raw-int, "
-        "depth = (int)16, "
-        "width = (int)16, "
-        "endianness = (int)" G_STRINGIFY (G_BYTE_ORDER) ", "
-        "signed = (boolean)TRUE, "
-        "channels = (int) [1,2], " "rate = (int)[1, MAX]")
+    GST_STATIC_CAPS ("audio/x-raw, "
+        "format = (string) " GST_AUDIO_NE (S16) ", "
+        "layout = (string) interleaved, "
+        "rate = (int) [1, MAX], channels = (int) [1,2]")
     );
 
 enum adpcm_layout
@@ -83,7 +81,7 @@ typedef struct _ADPCMDec
 } ADPCMDec;
 
 GType adpcmdec_get_type (void);
-GST_BOILERPLATE (ADPCMDec, adpcmdec, GstAudioDecoder, GST_TYPE_AUDIO_DECODER);
+G_DEFINE_TYPE (ADPCMDec, adpcmdec, GST_TYPE_AUDIO_DECODER);
 
 static gboolean
 adpcmdec_set_format (GstAudioDecoder * bdec, GstCaps * in_caps)
@@ -112,15 +110,13 @@ adpcmdec_set_format (GstAudioDecoder * bdec, GstCaps * in_caps)
   if (!gst_structure_get_int (structure, "channels", &dec->channels))
     return FALSE;
 
-  caps = gst_caps_new_simple ("audio/x-raw-int",
+  caps = gst_caps_new_simple ("audio/x-raw",
+      "format", G_TYPE_STRING, GST_AUDIO_NE (S16),
+      "layout", G_TYPE_STRING, "interleaved",
       "rate", G_TYPE_INT, dec->rate,
-      "channels", G_TYPE_INT, dec->channels,
-      "width", G_TYPE_INT, 16,
-      "depth", G_TYPE_INT, 16,
-      "endianness", G_TYPE_INT, G_BYTE_ORDER,
-      "signed", G_TYPE_BOOLEAN, TRUE, NULL);
+      "channels", G_TYPE_INT, dec->channels, NULL);
 
-  gst_pad_set_caps (GST_AUDIO_DECODER_SRC_PAD (bdec), caps);
+  gst_audio_decoder_set_outcaps (bdec, caps);
   gst_caps_unref (caps);
 
   return TRUE;
@@ -457,26 +453,16 @@ adpcmdec_stop (GstAudioDecoder * dec)
 }
 
 static void
-adpcmdec_init (ADPCMDec * dec, ADPCMDecClass * klass)
+adpcmdec_init (ADPCMDec * dec)
 {
 }
 
 static void
 adpcmdec_class_init (ADPCMDecClass * klass)
 {
+  GstElementClass *element_class = (GstElementClass *) klass;
   GstAudioDecoderClass *base_class = (GstAudioDecoderClass *) klass;
 
-  base_class->start = GST_DEBUG_FUNCPTR (adpcmdec_start);
-  base_class->stop = GST_DEBUG_FUNCPTR (adpcmdec_stop);
-  base_class->set_format = GST_DEBUG_FUNCPTR (adpcmdec_set_format);
-  base_class->parse = GST_DEBUG_FUNCPTR (adpcmdec_parse);
-  base_class->handle_frame = GST_DEBUG_FUNCPTR (adpcmdec_handle_frame);
-}
-
-static void
-adpcmdec_base_init (gpointer klass)
-{
-  GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&adpcmdec_sink_template));
   gst_element_class_add_pad_template (element_class,
@@ -485,6 +471,12 @@ adpcmdec_base_init (gpointer klass)
       "Codec/Decoder/Audio",
       "Decode MS and IMA ADPCM audio",
       "Pioneers of the Inevitable <songbird@songbirdnest.com>");
+
+  base_class->start = GST_DEBUG_FUNCPTR (adpcmdec_start);
+  base_class->stop = GST_DEBUG_FUNCPTR (adpcmdec_stop);
+  base_class->set_format = GST_DEBUG_FUNCPTR (adpcmdec_set_format);
+  base_class->parse = GST_DEBUG_FUNCPTR (adpcmdec_parse);
+  base_class->handle_frame = GST_DEBUG_FUNCPTR (adpcmdec_handle_frame);
 }
 
 static gboolean

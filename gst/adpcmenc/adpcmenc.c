@@ -46,9 +46,10 @@ static GstStaticPadTemplate adpcmenc_sink_template =
 GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("audio/x-raw-int, "
-        "depth = (int)16, "
-        "width = (int)16, " "channels = (int) [1,2], " "rate = (int)[1, MAX]")
+    GST_STATIC_CAPS ("audio/x-raw, "
+        "format = (string) " GST_AUDIO_NE (S16) ", "
+        "layout = (string) interleaved, "
+        "rate = (int) [1, MAX], channels = (int) [1,2]")
     );
 
 static GstStaticPadTemplate adpcmenc_src_template =
@@ -131,7 +132,7 @@ typedef struct _ADPCMEnc
 } ADPCMEnc;
 
 GType adpcmenc_get_type (void);
-GST_BOILERPLATE (ADPCMEnc, adpcmenc, GstAudioEncoder, GST_TYPE_AUDIO_ENCODER);
+G_DEFINE_TYPE (ADPCMEnc, adpcmenc, GST_TYPE_AUDIO_ENCODER);
 
 static gboolean
 adpcmenc_setup (ADPCMEnc * enc)
@@ -338,10 +339,13 @@ adpcmenc_encode_block (ADPCMEnc * enc, const gint16 * samples, int blocksize)
 {
   gboolean res = FALSE;
   GstBuffer *outbuf = NULL;
+  GstMapInfo omap;
 
   if (enc->layout == LAYOUT_ADPCM_DVI) {
     outbuf = gst_buffer_new_and_alloc (enc->blocksize);
-    res = adpcmenc_encode_ima_block (enc, samples, GST_BUFFER_DATA (outbuf));
+    gst_buffer_map (outbuf, &omap, GST_MAP_WRITE);
+    res = adpcmenc_encode_ima_block (enc, samples, omap.data);
+    gst_buffer_unmap (outbuf, &omap);
   } else {
     /* should not happen afaics */
     g_assert_not_reached ();
@@ -368,6 +372,7 @@ adpcmenc_handle_frame (GstAudioEncoder * benc, GstBuffer * buffer)
   GstBuffer *outbuf;
   int input_bytes_per_block;
   const int BYTES_PER_SAMPLE = 2;
+  GstMapInfo map;
 
   /* we don't deal with squeezing remnants, so simply discard those */
   if (G_UNLIKELY (buffer == NULL)) {
@@ -378,15 +383,17 @@ adpcmenc_handle_frame (GstAudioEncoder * benc, GstBuffer * buffer)
   input_bytes_per_block =
       enc->samples_per_block * BYTES_PER_SAMPLE * enc->channels;
 
-  if (G_UNLIKELY (GST_BUFFER_SIZE (buffer) < input_bytes_per_block)) {
-    GST_DEBUG_OBJECT (enc, "discarding trailing data %d",
-        GST_BUFFER_SIZE (buffer));
+  gst_buffer_map (buffer, &map, GST_MAP_READ);
+  if (G_UNLIKELY (map.size < input_bytes_per_block)) {
+    GST_DEBUG_OBJECT (enc, "discarding trailing data %d", (gint) map.size);
+    gst_buffer_unmap (buffer, &map);
     ret = gst_audio_encoder_finish_frame (benc, NULL, -1);
     goto done;
   }
 
-  samples = (gint16 *) GST_BUFFER_DATA (buffer);
+  samples = (gint16 *) map.data;
   outbuf = adpcmenc_encode_block (enc, samples, enc->blocksize);
+  gst_buffer_unmap (buffer, &map);
 
   ret = gst_audio_encoder_finish_frame (benc, outbuf, enc->samples_per_block);
 
@@ -411,7 +418,7 @@ adpcmenc_stop (GstAudioEncoder * enc)
 }
 
 static void
-adpcmenc_init (ADPCMEnc * enc, ADPCMEncClass * klass)
+adpcmenc_init (ADPCMEnc * enc)
 {
   /* Set defaults. */
   enc->blocksize = DEFAULT_ADPCM_BLOCK_SIZE;
@@ -422,10 +429,20 @@ static void
 adpcmenc_class_init (ADPCMEncClass * klass)
 {
   GObjectClass *gobjectclass = (GObjectClass *) klass;
+  GstElementClass *element_class = (GstElementClass *) klass;
   GstAudioEncoderClass *base_class = (GstAudioEncoderClass *) klass;
 
   gobjectclass->set_property = adpcmenc_set_property;
   gobjectclass->get_property = adpcmenc_get_property;
+
+  gst_element_class_add_pad_template (element_class,
+      gst_static_pad_template_get (&adpcmenc_sink_template));
+  gst_element_class_add_pad_template (element_class,
+      gst_static_pad_template_get (&adpcmenc_src_template));
+  gst_element_class_set_details_simple (element_class, "ADPCM encoder",
+      "Codec/Encoder/Audio",
+      "Encode ADPCM audio",
+      "Pioneers of the Inevitable <songbird@songbirdnest.com>");
 
   base_class->start = GST_DEBUG_FUNCPTR (adpcmenc_start);
   base_class->stop = GST_DEBUG_FUNCPTR (adpcmenc_stop);
@@ -444,21 +461,6 @@ adpcmenc_class_init (ADPCMEncClass * klass)
           MIN_ADPCM_BLOCK_SIZE, MAX_ADPCM_BLOCK_SIZE,
           DEFAULT_ADPCM_BLOCK_SIZE,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
-
-}
-
-static void
-adpcmenc_base_init (gpointer klass)
-{
-  GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&adpcmenc_sink_template));
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&adpcmenc_src_template));
-  gst_element_class_set_details_simple (element_class, "ADPCM encoder",
-      "Codec/Encoder/Audio",
-      "Encode ADPCM audio",
-      "Pioneers of the Inevitable <songbird@songbirdnest.com>");
 }
 
 static gboolean
