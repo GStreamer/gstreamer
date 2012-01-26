@@ -336,6 +336,7 @@ adpcmdec_decode_block (ADPCMDec * dec, const guint8 * data, int blocksize)
   GstBuffer *outbuf = NULL;
   int outsize;
   int samples;
+  GstMapInfo omap;
 
   if (dec->layout == LAYOUT_ADPCM_MICROSOFT) {
     /* Each block has a 3 byte header per channel, plus 4 bytes per channel to
@@ -347,8 +348,9 @@ adpcmdec_decode_block (ADPCMDec * dec, const guint8 * data, int blocksize)
     outsize = 2 * samples;
     outbuf = gst_buffer_new_and_alloc (outsize);
 
-    res = adpcmdec_decode_ms_block (dec, samples, data,
-        (gint16 *) (GST_BUFFER_DATA (outbuf)));
+    gst_buffer_map (outbuf, &omap, GST_MAP_WRITE);
+    res = adpcmdec_decode_ms_block (dec, samples, data, (gint16 *) omap.data);
+    gst_buffer_unmap (outbuf, &omap);
   } else if (dec->layout == LAYOUT_ADPCM_DVI) {
     /* Each block has a 4 byte header per channel, include an initial sample.
        Then the remainder gives two samples per byte */
@@ -358,8 +360,9 @@ adpcmdec_decode_block (ADPCMDec * dec, const guint8 * data, int blocksize)
     outsize = 2 * samples;
     outbuf = gst_buffer_new_and_alloc (outsize);
 
-    res = adpcmdec_decode_ima_block (dec, samples, data,
-        (gint16 *) (GST_BUFFER_DATA (outbuf)));
+    gst_buffer_map (outbuf, &omap, GST_MAP_WRITE);
+    res = adpcmdec_decode_ima_block (dec, samples, data, (gint16 *) omap.data);
+    gst_buffer_unmap (outbuf, &omap);
   } else {
     GST_WARNING_OBJECT (dec, "Unknown layout");
   }
@@ -394,7 +397,7 @@ adpcmdec_parse (GstAudioDecoder * bdec, GstAdapter * adapter,
       *offset = 0;
       *length = dec->blocksize;
     } else {
-      return GST_FLOW_UNEXPECTED;
+      return GST_FLOW_EOS;
     }
   }
 
@@ -406,7 +409,7 @@ adpcmdec_handle_frame (GstAudioDecoder * bdec, GstBuffer * buffer)
 {
   ADPCMDec *dec = (ADPCMDec *) (bdec);
   GstFlowReturn ret = GST_FLOW_OK;
-  guint8 *data;
+  GstMapInfo map;
   GstBuffer *outbuf = NULL;
 
   /* no fancy draining */
@@ -416,8 +419,9 @@ adpcmdec_handle_frame (GstAudioDecoder * bdec, GstBuffer * buffer)
   if (!dec->blocksize)
     return GST_FLOW_NOT_NEGOTIATED;
 
-  data = GST_BUFFER_DATA (buffer);
-  outbuf = adpcmdec_decode_block (dec, data, dec->blocksize);
+  gst_buffer_map (buffer, &map, GST_MAP_READ);
+  outbuf = adpcmdec_decode_block (dec, map.data, dec->blocksize);
+  gst_buffer_unmap (buffer, &map);
 
   if (outbuf == NULL) {
     GST_AUDIO_DECODER_ERROR (bdec, 1, STREAM, DECODE, (NULL),
