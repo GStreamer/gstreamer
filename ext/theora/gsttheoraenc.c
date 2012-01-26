@@ -242,7 +242,9 @@ static GstStaticPadTemplate theora_enc_src_factory =
 GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("video/x-theora")
+    GST_STATIC_CAPS ("video/x-theora, "
+        "framerate = (fraction) [1/MAX, MAX], "
+        "width = (int) [ 1, MAX ], " "height = (int) [ 1, MAX ]")
     );
 
 #define gst_theora_enc_parent_class parent_class
