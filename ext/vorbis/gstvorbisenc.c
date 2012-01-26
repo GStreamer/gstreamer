@@ -72,7 +72,8 @@ static GstStaticPadTemplate vorbis_enc_src_factory =
 GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("audio/x-vorbis")
+    GST_STATIC_CAPS ("audio/x-vorbis, "
+        "rate = (int) [ 1, 200000 ], " "channels = (int) [ 1, 255 ]")
     );
 
 enum
@@ -724,7 +725,9 @@ gst_vorbis_enc_handle_frame (GstAudioEncoder * enc, GstBuffer * buffer)
     buf3 = gst_vorbis_enc_buffer_from_header_packet (vorbisenc, &header_code);
 
     /* mark and put on caps */
-    caps = gst_caps_new_empty_simple ("audio/x-vorbis");
+    caps = gst_caps_new_simple ("audio/x-vorbis",
+        "rate", G_TYPE_INT, vorbisenc->frequency,
+        "channels", G_TYPE_INT, vorbisenc->channels, NULL);
     caps = _gst_caps_set_buffer_array (caps, "streamheader",
         buf1, buf2, buf3, NULL);
 
