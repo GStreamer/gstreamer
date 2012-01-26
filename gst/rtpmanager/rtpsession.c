@@ -1691,7 +1691,7 @@ rtp_session_process_rtp (RTPSession * sess, GstBuffer * buffer,
   RTPSource *source;
   gboolean created;
   gboolean prevsender, prevactive;
-  RTPArrivalStats arrival;
+  RTPArrivalStats arrival = { NULL, };
   guint32 csrcs[16];
   guint8 i, count;
   guint64 oldrate;
@@ -2305,7 +2305,7 @@ rtp_session_process_rtcp (RTPSession * sess, GstBuffer * buffer,
 {
   GstRTCPPacket packet;
   gboolean more, is_bye = FALSE, do_sync = FALSE;
-  RTPArrivalStats arrival;
+  RTPArrivalStats arrival = { NULL, };
   GstFlowReturn result = GST_FLOW_OK;
   GstRTCPBuffer rtcp = { NULL, };
 
