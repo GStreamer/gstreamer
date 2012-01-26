@@ -61,20 +61,22 @@ static GstStaticPadTemplate gsmenc_sink_template =
 GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("audio/x-raw-int, "
-        "endianness = (int) BYTE_ORDER, "
-        "signed = (boolean) true, "
-        "width = (int) 16, "
-        "depth = (int) 16, " "rate = (int) 8000, " "channels = (int) 1")
+    GST_STATIC_CAPS ("audio/x-raw, "
+        "format = (string) " GST_AUDIO_NE (S16) ", "
+        "layout = (string) interleaved, "
+        "rate = (int) 8000, channels = (int) 1")
     );
 
-GST_BOILERPLATE (GstGSMEnc, gst_gsmenc, GstAudioEncoder,
-    GST_TYPE_AUDIO_ENCODER);
+G_DEFINE_TYPE (GstGSMEnc, gst_gsmenc, GST_TYPE_AUDIO_ENCODER);
 
 static void
-gst_gsmenc_base_init (gpointer g_class)
+gst_gsmenc_class_init (GstGSMEncClass * klass)
 {
-  GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
+  GstElementClass *element_class;
+  GstAudioEncoderClass *base_class;
+
+  element_class = (GstElementClass *) klass;
+  base_class = (GstAudioEncoderClass *) klass;
 
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&gsmenc_sink_template));
@@ -83,14 +85,6 @@ gst_gsmenc_base_init (gpointer g_class)
   gst_element_class_set_details_simple (element_class, "GSM audio encoder",
       "Codec/Encoder/Audio",
       "Encodes GSM audio", "Philippe Khalaf <burger@speedy.org>");
-}
-
-static void
-gst_gsmenc_class_init (GstGSMEncClass * klass)
-{
-  GstAudioEncoderClass *base_class;
-
-  base_class = (GstAudioEncoderClass *) klass;
 
   base_class->start = GST_DEBUG_FUNCPTR (gst_gsmenc_start);
   base_class->stop = GST_DEBUG_FUNCPTR (gst_gsmenc_stop);
@@ -101,7 +95,7 @@ gst_gsmenc_class_init (GstGSMEncClass * klass)
 }
 
 static void
-gst_gsmenc_init (GstGSMEnc * gsmenc, GstGSMEncClass * klass)
+gst_gsmenc_init (GstGSMEnc * gsmenc)
 {
 }
 
@@ -156,6 +150,7 @@ gst_gsmenc_handle_frame (GstAudioEncoder * benc, GstBuffer * buffer)
   gsm_signal *data;
   GstFlowReturn ret = GST_FLOW_OK;
   GstBuffer *outbuf;
+  GstMapInfo map, omap;
 
   gsmenc = GST_GSMENC (benc);
 
@@ -165,20 +160,24 @@ gst_gsmenc_handle_frame (GstAudioEncoder * benc, GstBuffer * buffer)
     goto done;
   }
 
-  if (G_UNLIKELY (GST_BUFFER_SIZE (buffer) < 320)) {
-    GST_DEBUG_OBJECT (gsmenc, "discarding trailing data %d",
-        GST_BUFFER_SIZE (buffer));
+  gst_buffer_map (buffer, &map, GST_MAP_READ);
+  if (G_UNLIKELY (map.size < 320)) {
+    GST_DEBUG_OBJECT (gsmenc, "discarding trailing data %d", (gint) map.size);
+    gst_buffer_unmap (buffer, &map);
     ret = gst_audio_encoder_finish_frame (benc, NULL, -1);
     goto done;
   }
 
   outbuf = gst_buffer_new_and_alloc (33 * sizeof (gsm_byte));
+  gst_buffer_map (outbuf, &omap, GST_MAP_WRITE);
 
   /* encode 160 16-bit samples into 33 bytes */
-  data = (gsm_signal *) GST_BUFFER_DATA (buffer);
-  gsm_encode (gsmenc->state, data, (gsm_byte *) GST_BUFFER_DATA (outbuf));
+  data = (gsm_signal *) map.data;
+  gsm_encode (gsmenc->state, data, (gsm_byte *) omap.data);
 
-  GST_LOG_OBJECT (gsmenc, "encoded to %d bytes", GST_BUFFER_SIZE (outbuf));
+  GST_LOG_OBJECT (gsmenc, "encoded to %d bytes", (gint) omap.size);
+  gst_buffer_unmap (buffer, &map);
+  gst_buffer_unmap (buffer, &omap);
 
   ret = gst_audio_encoder_finish_frame (benc, outbuf, 160);
 

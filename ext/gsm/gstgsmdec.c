@@ -67,20 +67,22 @@ static GstStaticPadTemplate gsmdec_src_template =
 GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("audio/x-raw-int, "
-        "endianness = (int) BYTE_ORDER, "
-        "signed = (boolean) true, "
-        "width = (int) 16, "
-        "depth = (int) 16, " "rate = (int) [1, MAX], " "channels = (int) 1")
+    GST_STATIC_CAPS ("audio/x-raw, "
+        "format = (string) " GST_AUDIO_NE (S16) ", "
+        "layout = (string) interleaved, "
+        "rate = (int) [1, MAX], channels = (int) 1")
     );
 
-GST_BOILERPLATE (GstGSMDec, gst_gsmdec, GstAudioDecoder,
-    GST_TYPE_AUDIO_DECODER);
+G_DEFINE_TYPE (GstGSMDec, gst_gsmdec, GST_TYPE_AUDIO_DECODER);
 
 static void
-gst_gsmdec_base_init (gpointer g_class)
+gst_gsmdec_class_init (GstGSMDecClass * klass)
 {
-  GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
+  GstElementClass *element_class;
+  GstAudioDecoderClass *base_class;
+
+  element_class = (GstElementClass *) klass;
+  base_class = (GstAudioDecoderClass *) klass;
 
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&gsmdec_sink_template));
@@ -89,14 +91,6 @@ gst_gsmdec_base_init (gpointer g_class)
   gst_element_class_set_details_simple (element_class, "GSM audio decoder",
       "Codec/Decoder/Audio",
       "Decodes GSM encoded audio", "Philippe Khalaf <burger@speedy.org>");
-}
-
-static void
-gst_gsmdec_class_init (GstGSMDecClass * klass)
-{
-  GstAudioDecoderClass *base_class;
-
-  base_class = (GstAudioDecoderClass *) klass;
 
   base_class->start = GST_DEBUG_FUNCPTR (gst_gsmdec_start);
   base_class->stop = GST_DEBUG_FUNCPTR (gst_gsmdec_stop);
@@ -108,7 +102,7 @@ gst_gsmdec_class_init (GstGSMDecClass * klass)
 }
 
 static void
-gst_gsmdec_init (GstGSMDec * gsmdec, GstGSMDecClass * klass)
+gst_gsmdec_init (GstGSMDec * gsmdec)
 {
 }
 
@@ -170,14 +164,12 @@ gst_gsmdec_set_format (GstAudioDecoder * dec, GstCaps * caps)
   gsm_option (gsmdec->state, GSM_OPT_WAV49, &gsmdec->use_wav49);
 
   /* Setting up src caps based on the input sample rate. */
-  srccaps = gst_caps_new_simple ("audio/x-raw-int",
-      "endianness", G_TYPE_INT, G_BYTE_ORDER,
-      "signed", G_TYPE_BOOLEAN, TRUE,
-      "width", G_TYPE_INT, 16,
-      "depth", G_TYPE_INT, 16,
+  srccaps = gst_caps_new_simple ("audio/x-raw",
+      "format", G_TYPE_STRING, GST_AUDIO_NE (S16),
+      "layout", G_TYPE_STRING, "interleaved",
       "rate", G_TYPE_INT, rate, "channels", G_TYPE_INT, 1, NULL);
 
-  ret = gst_pad_set_caps (GST_AUDIO_DECODER_SRC_PAD (dec), srccaps);
+  ret = gst_audio_decoder_set_outcaps (dec, srccaps);
   gst_caps_unref (srccaps);
 
   return ret;
@@ -208,7 +200,7 @@ gst_gsmdec_parse (GstAudioDecoder * dec, GstAdapter * adapter,
   }
 
   if (size < gsmdec->needed)
-    return GST_FLOW_UNEXPECTED;
+    return GST_FLOW_EOS;
 
   *offset = 0;
   *length = gsmdec->needed;
@@ -223,6 +215,7 @@ gst_gsmdec_handle_frame (GstAudioDecoder * dec, GstBuffer * buffer)
   gsm_byte *data;
   GstFlowReturn ret = GST_FLOW_OK;
   GstBuffer *outbuf;
+  GstMapInfo map, omap;
 
   /* no fancy draining */
   if (G_UNLIKELY (!buffer))
@@ -234,20 +227,23 @@ gst_gsmdec_handle_frame (GstAudioDecoder * dec, GstBuffer * buffer)
   outbuf = gst_buffer_new_and_alloc (ENCODED_SAMPLES * sizeof (gsm_signal));
 
   /* now encode frame into the output buffer */
-  data = (gsm_byte *) GST_BUFFER_DATA (buffer);
-  if (gsm_decode (gsmdec->state, data,
-          (gsm_signal *) GST_BUFFER_DATA (outbuf)) < 0) {
+  gst_buffer_map (buffer, &map, GST_MAP_READ);
+  gst_buffer_map (outbuf, &omap, GST_MAP_WRITE);
+  data = (gsm_byte *) map.data;
+  if (gsm_decode (gsmdec->state, data, (gsm_signal *) omap.data) < 0) {
     /* invalid frame */
     GST_AUDIO_DECODER_ERROR (gsmdec, 1, STREAM, DECODE, (NULL),
         ("tried to decode an invalid frame"), ret);
-    if (ret != GST_FLOW_OK)
-      goto exit;
+    gst_buffer_unmap (outbuf, &omap);
     gst_buffer_unref (outbuf);
     outbuf = NULL;
+  } else {
+    gst_buffer_unmap (outbuf, &omap);
   }
+
+  gst_buffer_unmap (buffer, &map);
 
   gst_audio_decoder_finish_frame (dec, outbuf, 1);
 
-exit:
   return ret;
 }
