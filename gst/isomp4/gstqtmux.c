@@ -3252,6 +3252,7 @@ gst_qt_mux_sink_event (GstCollectPads2 * pads, GstCollectData2 * data,
   GstQTMux *qtmux;
   guint32 avg_bitrate = 0, max_bitrate = 0;
   GstPad *pad = data->pad;
+  gboolean ret = FALSE;
 
   qtmux = GST_QT_MUX_CAST (user_data);
   switch (GST_EVENT_TYPE (event)) {
@@ -3267,7 +3268,8 @@ gst_qt_mux_sink_event (GstCollectPads2 * pads, GstCollectData2 * data,
       g_assert (collect_pad);
       g_assert (collect_pad->set_caps);
 
-      collect_pad->set_caps (pad, caps);
+      ret = collect_pad->set_caps (pad, caps);
+      gst_event_unref (event);
       break;
     }
     case GST_EVENT_TAG:{
@@ -3296,14 +3298,21 @@ gst_qt_mux_sink_event (GstCollectPads2 * pads, GstCollectData2 * data,
           qtpad->max_bitrate = max_bitrate;
       }
 
+      gst_event_unref (event);
+      ret = TRUE;
       break;
     }
     default:
+      ret = gst_pad_event_default (data->pad, GST_OBJECT (qtmux), event);
+      break;
+    case GST_EVENT_EOS:
+    case GST_EVENT_SEGMENT:
+      gst_event_unref (event);
+      ret = TRUE;
       break;
   }
 
-  /* now GstCollectPads2 can take care of the rest, e.g. EOS */
-  return FALSE;
+  return ret;
 }
 
 static void
