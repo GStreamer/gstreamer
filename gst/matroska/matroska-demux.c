@@ -3034,7 +3034,7 @@ gst_matroska_demux_align_buffer (GstMatroskaDemux * demux,
     GstBuffer *new_buffer;
 
     new_buffer = gst_buffer_new_allocate (NULL,
-        gst_buffer_get_size (buffer), alignment);
+        gst_buffer_get_size (buffer), alignment - 1);
 
     /* Copy data "by hand", so ensure alignment is kept: */
     gst_buffer_fill (new_buffer, 0, map.data, map.size);
