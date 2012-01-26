@@ -214,9 +214,9 @@ gst_caps_new_empty (void)
 {
   GstCaps *caps;
 
-  caps = g_slice_new (GstCaps);
+  caps = g_slice_new (GstCapsImpl);
 
-  gst_caps_init (caps, sizeof (GstCaps));
+  gst_caps_init (caps, sizeof (GstCapsImpl));
 
 #ifdef DEBUG_REFCOUNT
   GST_CAT_TRACE (GST_CAT_CAPS, "created caps %p", caps);
