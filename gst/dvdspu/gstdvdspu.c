@@ -392,7 +392,10 @@ gst_dvd_spu_video_event (GstPad * pad, GstObject * parent, GstEvent * event)
 
       gst_event_parse_caps (event, &caps);
       res = gst_dvd_spu_video_set_caps (pad, caps);
-      gst_event_unref (event);
+      if (res)
+        res = gst_pad_push_event (dvdspu->srcpad, event);
+      else
+        gst_event_unref (event);
       break;
     }
     case GST_EVENT_CUSTOM_DOWNSTREAM:
