@@ -110,6 +110,11 @@ setup (void)
   fail_unless (gst_pad_link (srcpad1, sinkpad1) == GST_PAD_LINK_OK);
   fail_unless (gst_pad_link (srcpad2, sinkpad2) == GST_PAD_LINK_OK);
 
+  gst_pad_set_active (sinkpad1, TRUE);
+  gst_pad_set_active (sinkpad2, TRUE);
+  gst_pad_set_active (srcpad1, TRUE);
+  gst_pad_set_active (srcpad2, TRUE);
+
   cond = g_cond_new ();
   lock = g_mutex_new ();
   data1 = NULL;
