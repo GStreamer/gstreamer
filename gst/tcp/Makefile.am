@@ -16,6 +16,7 @@ BUILT_SOURCES = $(built_sources) $(built_headers)
 libgsttcp_la_SOURCES = \
 	gsttcpplugin.c \
 	gsttcpclientsrc.c gsttcpclientsink.c \
+	gstmultifdsink.c  \
 	gstmultisocketsink.c  \
 	gsttcpserversrc.c gsttcpserversink.c
 
@@ -30,6 +31,7 @@ libgsttcp_la_LIBTOOLFLAGS = --tag=disable-static
 noinst_HEADERS = \
   gsttcp.h \
   gsttcpclientsrc.h gsttcpclientsink.h \
+  gstmultifdsink.h  \
   gstmultisocketsink.h  \
   gsttcpserversrc.h gsttcpserversink.h
 
