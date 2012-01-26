@@ -1384,7 +1384,8 @@ gst_tag_demux_send_pending_events (GstTagDemux * demux)
   while (events != NULL) {
     GST_DEBUG_OBJECT (demux->priv->srcpad, "sending cached %s event: %"
         GST_PTR_FORMAT, GST_EVENT_TYPE_NAME (events->data), events->data);
-    gst_pad_push_event (demux->priv->srcpad, GST_EVENT (events->data));
+    gst_pad_event_default (demux->priv->srcpad, GST_OBJECT (demux),
+        GST_EVENT (events->data));
     events = g_list_delete_link (events, events);
   }
 }
