@@ -2690,6 +2690,7 @@ early_exit:
 
 typedef struct
 {
+  GstRTCPBuffer rtcpbuf;
   RTPSession *sess;
   GstBuffer *rtcp;
   GstClockTime current_time;
@@ -2708,11 +2709,11 @@ session_start_rtcp (RTPSession * sess, ReportData * data)
 {
   GstRTCPPacket *packet = &data->packet;
   RTPSource *own = sess->source;
-  GstRTCPBuffer rtcp = { NULL, };
+  GstRTCPBuffer *rtcp = &data->rtcpbuf;
 
   data->rtcp = gst_rtcp_buffer_new (sess->mtu);
 
-  gst_rtcp_buffer_map (data->rtcp, GST_MAP_WRITE, &rtcp);
+  gst_rtcp_buffer_map (data->rtcp, GST_MAP_READWRITE, rtcp);
 
   if (RTP_SOURCE_IS_SENDER (own)) {
     guint64 ntptime;
@@ -2721,7 +2722,7 @@ session_start_rtcp (RTPSession * sess, ReportData * data)
 
     /* we are a sender, create SR */
     GST_DEBUG ("create SR for SSRC %08x", own->ssrc);
-    gst_rtcp_buffer_add_packet (&rtcp, GST_RTCP_TYPE_SR, packet);
+    gst_rtcp_buffer_add_packet (rtcp, GST_RTCP_TYPE_SR, packet);
 
     /* get latest stats */
     rtp_source_get_new_sr (own, data->ntpnstime, data->running_time,
@@ -2736,11 +2737,9 @@ session_start_rtcp (RTPSession * sess, ReportData * data)
   } else {
     /* we are only receiver, create RR */
     GST_DEBUG ("create RR for SSRC %08x", own->ssrc);
-    gst_rtcp_buffer_add_packet (&rtcp, GST_RTCP_TYPE_RR, packet);
+    gst_rtcp_buffer_add_packet (rtcp, GST_RTCP_TYPE_RR, packet);
     gst_rtcp_packet_rr_set_ssrc (packet, own->ssrc);
   }
-
-  gst_rtcp_buffer_unmap (&rtcp);
 }
 
 /* construct a Sender or Receiver Report */
@@ -2891,12 +2890,10 @@ session_sdes (RTPSession * sess, ReportData * data)
   GstRTCPPacket *packet = &data->packet;
   const GstStructure *sdes;
   gint i, n_fields;
-  GstRTCPBuffer rtcp = { NULL, };
-
-  gst_rtcp_buffer_map (data->rtcp, GST_MAP_WRITE, &rtcp);
+  GstRTCPBuffer *rtcp = &data->rtcpbuf;
 
   /* add SDES packet */
-  gst_rtcp_buffer_add_packet (&rtcp, GST_RTCP_TYPE_SDES, packet);
+  gst_rtcp_buffer_add_packet (rtcp, GST_RTCP_TYPE_SDES, packet);
 
   gst_rtcp_packet_sdes_add_item (packet, sess->source->ssrc);
 
@@ -2950,8 +2947,6 @@ session_sdes (RTPSession * sess, ReportData * data)
   }
 
   data->has_sdes = TRUE;
-
-  gst_rtcp_buffer_unmap (&rtcp);
 }
 
 /* schedule a BYE packet */
@@ -2959,7 +2954,7 @@ static void
 session_bye (RTPSession * sess, ReportData * data)
 {
   GstRTCPPacket *packet = &data->packet;
-  GstRTCPBuffer rtcp = { NULL, };
+  GstRTCPBuffer *rtcp = &data->rtcpbuf;
 
   /* open packet */
   session_start_rtcp (sess, data);
@@ -2967,18 +2962,14 @@ session_bye (RTPSession * sess, ReportData * data)
   /* add SDES */
   session_sdes (sess, data);
 
-  gst_rtcp_buffer_map (data->rtcp, GST_MAP_WRITE, &rtcp);
-
   /* add a BYE packet */
-  gst_rtcp_buffer_add_packet (&rtcp, GST_RTCP_TYPE_BYE, packet);
+  gst_rtcp_buffer_add_packet (rtcp, GST_RTCP_TYPE_BYE, packet);
   gst_rtcp_packet_bye_add_ssrc (packet, sess->source->ssrc);
   if (sess->bye_reason)
     gst_rtcp_packet_bye_set_reason (packet, sess->bye_reason);
 
   /* we have a BYE packet now */
   data->is_bye = TRUE;
-
-  gst_rtcp_buffer_unmap (&rtcp);
 }
 
 static gboolean
@@ -3083,7 +3074,7 @@ rtp_session_on_timeout (RTPSession * sess, GstClockTime current_time,
     guint64 ntpnstime, GstClockTime running_time)
 {
   GstFlowReturn result = GST_FLOW_OK;
-  ReportData data;
+  ReportData data = { GST_RTCP_BUFFER_INIT };
   RTPSource *own;
   GHashTable *table_copy;
   gboolean notify = FALSE;
@@ -3192,6 +3183,8 @@ rtp_session_on_timeout (RTPSession * sess, GstClockTime current_time,
   /* push out the RTCP packet */
   if (data.rtcp) {
     gboolean do_not_suppress;
+
+    gst_rtcp_buffer_unmap (&data.rtcpbuf);
 
     /* Give the user a change to add its own packet */
     g_signal_emit (sess, rtp_session_signals[SIGNAL_ON_SENDING_RTCP], 0,
@@ -3343,7 +3336,7 @@ rtp_session_on_sending_rtcp (RTPSession * sess, GstBuffer * buffer,
 
   RTP_SESSION_LOCK (sess);
 
-  gst_rtcp_buffer_map (buffer, GST_MAP_WRITE, &rtcp);
+  gst_rtcp_buffer_map (buffer, GST_MAP_READWRITE, &rtcp);
 
   g_hash_table_iter_init (&iter, sess->ssrcs[sess->mask_idx]);
   while (g_hash_table_iter_next (&iter, &key, &value)) {
