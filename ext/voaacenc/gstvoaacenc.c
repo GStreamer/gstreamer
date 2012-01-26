@@ -490,7 +490,8 @@ gst_voaacenc_handle_frame (GstAudioEncoder * benc, GstBuffer * buf)
     goto encode_failed;
   }
 
-  GST_LOG_OBJECT (voaacenc, "encoded to %d bytes", output.Length);
+  GST_LOG_OBJECT (voaacenc, "encoded to %" G_GSIZE_FORMAT " bytes",
+      output.Length);
   gst_buffer_unmap (buf, &map);
   gst_buffer_unmap (out, &omap);
   gst_buffer_resize (out, 0, output.Length);
