@@ -8825,7 +8825,7 @@ qtdemux_parse_tree (GstQTDemux * qtdemux)
   GNode *mvex;
   gint64 duration;
   guint64 creation_time;
-  GstDateTime *datetime = NULL;
+  GDateTime *datetime = NULL;
   gint version;
 
   mvhd = qtdemux_tree_get_child_by_type (qtdemux->moov_node, FOURCC_mvhd);
@@ -8859,7 +8859,7 @@ qtdemux_parse_tree (GstQTDemux * qtdemux)
       if (now.tv_sec + 24 * 3600 < creation_time) {
         GST_DEBUG_OBJECT (qtdemux, "discarding bogus future creation time");
       } else {
-        datetime = gst_date_time_new_from_unix_epoch_local_time (creation_time);
+        datetime = g_date_time_new_from_unix_local (creation_time);
       }
     } else {
       GST_WARNING_OBJECT (qtdemux, "Can't handle datetimes before 1970 yet, "
@@ -8873,7 +8873,7 @@ qtdemux_parse_tree (GstQTDemux * qtdemux)
     /* Use KEEP as explicit tags should have a higher priority than mvhd tag */
     gst_tag_list_add (qtdemux->tag_list, GST_TAG_MERGE_KEEP, GST_TAG_DATE_TIME,
         datetime, NULL);
-    gst_date_time_unref (datetime);
+    g_date_time_unref (datetime);
   }
 
   GST_INFO_OBJECT (qtdemux, "timescale: %u", qtdemux->timescale);
