@@ -1051,7 +1051,7 @@ gst_base_transform_find_transform (GstBaseTransform * trans, GstPad * pad,
   if (klass->fixate_caps) {
     othercaps = gst_caps_make_writable (othercaps);
 
-    GST_DEBUG_OBJECT (trans, "calling faxate_caps for %" GST_PTR_FORMAT
+    GST_DEBUG_OBJECT (trans, "calling fixate_caps for %" GST_PTR_FORMAT
         " using caps %" GST_PTR_FORMAT " on pad %s:%s", othercaps, caps,
         GST_DEBUG_PAD_NAME (otherpad));
     /* note that we pass the complete array of structures to the fixate
