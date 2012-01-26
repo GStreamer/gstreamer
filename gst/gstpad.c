@@ -1170,7 +1170,7 @@ gst_pad_add_probe (GstPad * pad, GstPadProbeType mask,
           "pad is in use, delay idle callback");
       GST_OBJECT_UNLOCK (pad);
     } else {
-      GstPadProbeInfo info = { GST_PAD_PROBE_TYPE_IDLE, };
+      GstPadProbeInfo info = { GST_PAD_PROBE_TYPE_IDLE, res, };
 
       /* the pad is idle now, we can signal the idle callback now */
       GST_CAT_LOG_OBJECT (GST_CAT_SCHEDULING, pad,
@@ -2827,6 +2827,8 @@ probe_hook_marshal (GHook * hook, ProbeMarshall * data)
   if (callback == NULL)
     return;
 
+  info->id = hook->hook_id;
+
   GST_OBJECT_UNLOCK (pad);
 
   ret = callback (pad, info, hook->data);
@@ -2871,7 +2873,7 @@ no_match:
   G_STMT_START {						\
     if (G_UNLIKELY (pad->num_probes)) {				\
       /* we start with passing NULL as the data item */         \
-      GstPadProbeInfo info = { mask, NULL, offs, size };        \
+      GstPadProbeInfo info = { mask, 0, NULL, offs, size };     \
       ret = do_probe_callbacks (pad, &info, defaultval);	\
       /* store the possibly updated data item */                \
       data = GST_PAD_PROBE_INFO_DATA (&info);                   \
@@ -2890,7 +2892,7 @@ no_match:
   G_STMT_START {						\
     if (G_UNLIKELY (pad->num_probes)) {				\
       /* pass NULL as the data item */                          \
-      GstPadProbeInfo info = { mask, NULL, 0, 0 };              \
+      GstPadProbeInfo info = { mask, 0, NULL, 0, 0 };           \
       ret = do_probe_callbacks (pad, &info, defaultval);	\
       if (G_UNLIKELY (ret != defaultval && ret != GST_FLOW_OK))	\
         goto label;						\
@@ -2900,7 +2902,7 @@ no_match:
 #define PROBE_FULL(pad,mask,data,offs,size,label,defaultval)    \
   G_STMT_START {						\
     if (G_UNLIKELY (pad->num_probes)) {				\
-      GstPadProbeInfo info = { mask, data, offs, size };        \
+      GstPadProbeInfo info = { mask, 0, data, offs, size };     \
       ret = do_probe_callbacks (pad, &info, defaultval);	\
       data = GST_PAD_PROBE_INFO_DATA (&info);                   \
       if (G_UNLIKELY (ret != defaultval && ret != GST_FLOW_OK))	\

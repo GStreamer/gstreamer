@@ -514,6 +514,7 @@ typedef enum
 /**
  * GstPadProbeInfo:
  * @type: the current probe type
+ * @id: the id of the probe
  * @data: type specific data, check the @type field to know the datatype.
  *    This field can be NULL.
  * @offset: offset of pull probe, this field is valid when @type contains
@@ -526,6 +527,7 @@ typedef enum
 typedef struct
 {
   GstPadProbeType type;
+  gulong id;
   gpointer data;
   guint64 offset;
   guint size;
@@ -534,6 +536,7 @@ typedef struct
 } GstPadProbeInfo;
 
 #define GST_PAD_PROBE_INFO_TYPE(d)         ((d)->type)
+#define GST_PAD_PROBE_INFO_ID(d)           ((d)->id)
 #define GST_PAD_PROBE_INFO_DATA(d)         ((d)->data)
 
 #define GST_PAD_PROBE_INFO_BUFFER(d)       GST_BUFFER_CAST(GST_PAD_PROBE_INFO_DATA(d))
