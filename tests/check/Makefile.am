@@ -132,6 +132,7 @@ check_PROGRAMS = \
 	elements/audioresample      \
 	elements/gdpdepay           \
 	elements/gdppay             \
+	elements/multisocketsink    \
 	elements/playbin            \
 	elements/playbin-compressed \
 	$(check_pango)              \
@@ -435,6 +436,9 @@ libs_video_LDADD = \
 	$(top_builddir)/gst-libs/gst/video/libgstvideo-@GST_MAJORMINOR@.la \
 	$(GST_BASE_LIBS) \
 	$(LDADD)
+
+elements_multisocketsink_CFLAGS = $(GIO_CFLAGS) $(AM_CFLAGS)
+elements_multisocketsink_LDADD = $(GIO_LIBS) $(LDADD)
 
 pipelines_gio_CFLAGS = $(GIO_CFLAGS) $(AM_CFLAGS)
 pipelines_gio_LDADD = $(GIO_LIBS) $(LDADD)
