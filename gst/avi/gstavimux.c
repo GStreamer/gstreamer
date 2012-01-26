@@ -1851,6 +1851,7 @@ gst_avi_mux_handle_event (GstCollectPads2 * pads, GstCollectData2 * data,
       } else {
         ret = gst_avi_mux_audsink_set_caps (GST_PAD (avipad), caps);
       }
+      gst_event_unref (event);
       break;
     }
     case GST_EVENT_TAG:{
@@ -1860,13 +1861,20 @@ gst_avi_mux_handle_event (GstCollectPads2 * pads, GstCollectData2 * data,
 
       gst_event_parse_tag (event, &list);
       gst_tag_setter_merge_tags (setter, list, mode);
+      gst_event_unref (event);
+      ret = TRUE;
       break;
     }
+    case GST_EVENT_EOS:
+    case GST_EVENT_SEGMENT:
+      gst_event_unref (event);
+      ret = TRUE;
+      break;
     default:
+      ret = gst_pad_event_default (data->pad, GST_OBJECT (avimux), event);
       break;
   }
 
-  /* now GstCollectPads2 can take care of the rest, e.g. EOS */
   return ret;
 }
 
