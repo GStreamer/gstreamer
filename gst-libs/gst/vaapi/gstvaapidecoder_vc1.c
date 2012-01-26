@@ -227,9 +227,8 @@ decode_current_picture(GstVaapiDecoderVC1 *decoder)
         if (!GST_VAAPI_PICTURE_IS_REFERENCE(picture)) {
             if (priv->prev_picture && priv->next_picture)
                 status = render_picture(decoder, picture);
-            gst_vaapi_picture_unref(picture);
         }
-        priv->current_picture = NULL;
+        gst_vaapi_picture_replace(&priv->current_picture, NULL);
     }
     return status;
 }
@@ -957,16 +956,10 @@ decode_frame(GstVaapiDecoderVC1 *decoder, GstVC1BDU *rbdu, GstVC1BDU *ebdu)
 
     /* Update reference pictures */
     if (GST_VAAPI_PICTURE_IS_REFERENCE(picture)) {
-        if (priv->prev_picture) {
-            gst_vaapi_picture_unref(priv->prev_picture);
-            priv->prev_picture = NULL;
-        }
-        if (priv->next_picture) {
-            priv->prev_picture = priv->next_picture;
-            priv->next_picture = NULL;
-            status = render_picture(decoder, priv->prev_picture);
-        }
-        priv->next_picture = picture;
+        if (priv->next_picture)
+            status = render_picture(decoder, priv->next_picture);
+        gst_vaapi_picture_replace(&priv->prev_picture, priv->next_picture);
+        gst_vaapi_picture_replace(&priv->next_picture, picture);
     }
 
     if (!fill_picture(decoder, picture))

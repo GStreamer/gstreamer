@@ -273,9 +273,8 @@ decode_current_picture(GstVaapiDecoderMpeg4 *decoder)
             if ((priv->prev_picture && priv->next_picture) ||
                 (priv->closed_gop && priv->next_picture))
                 status = render_picture(decoder, picture);
-            gst_vaapi_picture_unref(picture);
         }
-        priv->curr_picture = NULL;
+        gst_vaapi_picture_replace(&priv->curr_picture, NULL);
     }
     return status;
 }
@@ -569,16 +568,10 @@ decode_picture(GstVaapiDecoderMpeg4 *decoder, const guint8 *buf, guint buf_size)
     /* Update reference pictures */
     /* XXX: consider priv->vol_hdr.low_delay, consider packed video frames for DivX/XviD */
     if (GST_VAAPI_PICTURE_IS_REFERENCE(picture)) {
-        if (priv->prev_picture) {
-            gst_vaapi_picture_unref(priv->prev_picture);
-            priv->prev_picture = NULL;
-        }
-        if (priv->next_picture) {
-            priv->prev_picture = priv->next_picture;
-            priv->next_picture = NULL;
-            status = render_picture(decoder, priv->prev_picture);
-        }
-        priv->next_picture = picture;
+        if (priv->next_picture)
+            status = render_picture(decoder, priv->next_picture);
+        gst_vaapi_picture_replace(&priv->prev_picture, priv->next_picture);
+        gst_vaapi_picture_replace(&priv->next_picture, picture);
     }
     return status;
 }

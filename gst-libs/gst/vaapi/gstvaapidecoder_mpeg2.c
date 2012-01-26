@@ -274,9 +274,8 @@ decode_current_picture(GstVaapiDecoderMpeg2 *decoder)
             if ((priv->prev_picture && priv->next_picture) ||
                 (priv->closed_gop && priv->next_picture))
                 status = render_picture(decoder, picture);
-            gst_vaapi_picture_unref(picture);
         }
-        priv->current_picture = NULL;
+        gst_vaapi_picture_replace(&priv->current_picture, NULL);
     }
     return status;
 }
@@ -494,16 +493,10 @@ decode_picture(GstVaapiDecoderMpeg2 *decoder, guchar *buf, guint buf_size)
     /* Update reference pictures */
     if (pic_hdr->pic_type != GST_MPEG_VIDEO_PICTURE_TYPE_B) {
         GST_VAAPI_PICTURE_FLAG_SET(picture, GST_VAAPI_PICTURE_FLAG_REFERENCE);
-        if (priv->prev_picture) {
-            gst_vaapi_picture_unref(priv->prev_picture);
-            priv->prev_picture = NULL;
-        }
-        if (priv->next_picture) {
-            priv->prev_picture = priv->next_picture;
-            priv->next_picture = NULL;
-            status = render_picture(decoder, priv->prev_picture);
-        }
-        priv->next_picture = picture;
+        if (priv->next_picture)
+            status = render_picture(decoder, priv->next_picture);
+        gst_vaapi_picture_replace(&priv->prev_picture, priv->next_picture);
+        gst_vaapi_picture_replace(&priv->next_picture, picture);
     }
     return status;
 }
