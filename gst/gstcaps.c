@@ -214,7 +214,7 @@ gst_caps_new_empty (void)
 {
   GstCaps *caps;
 
-  caps = g_slice_new (GstCapsImpl);
+  caps = (GstCaps *) g_slice_new (GstCapsImpl);
 
   gst_caps_init (caps, sizeof (GstCapsImpl));
 
