@@ -47,13 +47,11 @@ G_BEGIN_DECLS
 typedef struct _GstMultiHandleSink GstMultiHandleSink;
 typedef struct _GstMultiHandleSinkClass GstMultiHandleSinkClass;
 
-#if 0
 typedef enum {
   GST_MULTI_HANDLE_SINK_OPEN             = (GST_ELEMENT_FLAG_LAST << 0),
 
   GST_MULTI_HANDLE_SINK_FLAG_LAST        = (GST_ELEMENT_FLAG_LAST << 2)
 } GstMultiHandleSinkFlags;
-#endif
 
 /**
  * GstRecoverPolicy:
@@ -122,13 +120,9 @@ typedef enum
   GST_CLIENT_STATUS_FLUSHING    = 6
 } GstClientStatus;
 
-#if 0
 /* structure for a client
  */
 typedef struct {
-  GSocket *socket;
-  GSource *source;
-
   gint bufpos;                  /* position of this client in the global queue */
   gint flushcount;              /* the remaining number of buffers to flush out or -1 if the 
                                    client is not flushing. */
@@ -141,15 +135,18 @@ typedef struct {
   gboolean discont;
 
   gboolean new_connection;
-
   gboolean currently_removing;
+
 
   /* method to sync client when connecting */
   GstSyncMethod sync_method;
+// FIXME: refactor format vs unit
+#if 0
   GstFormat     burst_min_format;
   guint64       burst_min_value;
   GstFormat     burst_max_format;
   guint64       burst_max_value;
+#endif
 
   GstCaps *caps;                /* caps of last queued buffer */
 
@@ -162,8 +159,7 @@ typedef struct {
   guint64 avg_queue_size;
   guint64 first_buffer_ts;
   guint64 last_buffer_ts;
-} GstSocketClient;
-#endif
+} GstMultiHandleClient;
 
 #define CLIENTS_LOCK_INIT(socketsink)       (g_rec_mutex_init(&socketsink->clientslock))
 #define CLIENTS_LOCK_CLEAR(socketsink)      (g_rec_mutex_clear(&socketsink->clientslock))
@@ -257,17 +253,28 @@ struct _GstMultiHandleSinkClass {
 
 GType gst_multi_handle_sink_get_type (void);
 
-#if 0
 void          gst_multi_handle_sink_add          (GstMultiHandleSink *sink, GSocket *socket);
 void          gst_multi_handle_sink_add_full     (GstMultiHandleSink *sink, GSocket *socket, GstSyncMethod sync, 
                                               GstFormat min_format, guint64 min_value,
                                               GstFormat max_format, guint64 max_value);
 void          gst_multi_handle_sink_remove       (GstMultiHandleSink *sink, GSocket *socket);
 void          gst_multi_handle_sink_remove_flush (GstMultiHandleSink *sink, GSocket *socket);
-void          gst_multi_handle_sink_clear        (GstMultiHandleSink *sink);
 GstStructure*  gst_multi_handle_sink_get_stats    (GstMultiHandleSink *sink, GSocket *socket);
 
+void gst_multi_handle_sink_client_init (GstMultiHandleClient * client, GstSyncMethod sync_method);
+
+// FIXME: make static again after refactoring
+#define GST_TYPE_RECOVER_POLICY (gst_multi_handle_sink_recover_policy_get_type())
+GType
+gst_multi_handle_sink_recover_policy_get_type (void);
+#define GST_TYPE_SYNC_METHOD (gst_multi_handle_sink_sync_method_get_type())
+GType
+gst_multi_handle_sink_sync_method_get_type (void);
+#define GST_TYPE_CLIENT_STATUS (gst_multi_handle_sink_client_status_get_type())
+GType
+gst_multi_handle_sink_client_status_get_type (void);
+
+
 G_END_DECLS
-#endif
 
 #endif /* __GST_MULTI_HANDLE_SINK_H__ */

@@ -46,12 +46,6 @@ G_BEGIN_DECLS
 typedef struct _GstMultiFdSink GstMultiFdSink;
 typedef struct _GstMultiFdSinkClass GstMultiFdSinkClass;
 
-typedef enum {
-  GST_MULTI_FD_SINK_OPEN             = (GST_ELEMENT_FLAG_LAST << 0),
-
-  GST_MULTI_FD_SINK_FLAG_LAST        = (GST_ELEMENT_FLAG_LAST << 2)
-} GstMultiFdSinkFlags;
-
 
 /**
  * GstTCPUnitType:
@@ -73,43 +67,20 @@ typedef enum
 /* structure for a client
  */
 typedef struct {
+  GstMultiHandleClient client;
+
   GstPollFD fd;
 
-  gint bufpos;                  /* position of this client in the global queue */
-  gint flushcount;              /* the remaining number of buffers to flush out or -1 if the 
-                                   client is not flushing. */
-
-  GstClientStatus status;
   gboolean is_socket;
 
-  GSList *sending;              /* the buffers we need to send */
-  gint bufoffset;               /* offset in the first buffer */
-
-  gboolean discont;
-
   gboolean caps_sent;
-  gboolean new_connection;
-
-  gboolean currently_removing;
 
   /* method to sync client when connecting */
   GstSyncMethod sync_method;
   GstTCPUnitType   burst_min_unit;
-  guint64       burst_min_value;
+  guint64          burst_min_value;
   GstTCPUnitType   burst_max_unit;
-  guint64       burst_max_value;
-
-  GstCaps *caps;                /* caps of last queued buffer */
-
-  /* stats */
-  guint64 bytes_sent;
-  guint64 connect_time;
-  guint64 disconnect_time;
-  guint64 last_activity_time;
-  guint64 dropped_buffers;
-  guint64 avg_queue_size;
-  guint64 first_buffer_ts;
-  guint64 last_buffer_ts;
+  guint64          burst_max_value;
 } GstTCPClient;
 
 /**
@@ -118,12 +89,9 @@ typedef struct {
  * The multifdsink object structure.
  */
 struct _GstMultiFdSink {
-  GstBaseSink element;
+  GstMultiHandleSink element;
 
   /*< private >*/
-  guint64 bytes_to_serve; /* how much bytes we must serve */
-  guint64 bytes_served; /* how much bytes have we served */
-
   GRecMutex clientslock;  /* lock to protect the clients list */
   GList *clients;       /* list of clients we are serving */
   GHashTable *fd_hash;  /* index on fd to client */
@@ -149,19 +117,9 @@ struct _GstMultiFdSink {
   GstTCPUnitType unit_type;/* the type of the units */
   gint64 units_max;       /* max units to queue for a client */
   gint64 units_soft_max;  /* max units a client can lag before recovery starts */
-  GstRecoverPolicy recover_policy;
-  GstClockTime timeout; /* max amount of nanoseconds to remain idle */
 
-  GstSyncMethod def_sync_method;    /* what method to use for connecting clients */
   GstTCPUnitType   def_burst_unit;
   guint64       def_burst_value;
-
-  /* these values are used to control the amount of data
-   * kept in the queues. It allows clients to perform a burst
-   * on connect. */
-  gint   bytes_min;	/* min number of bytes to queue */
-  gint64 time_min;	/* min time to queue */
-  gint   buffers_min;   /* min number of buffers to queue */
 
   gboolean resend_streamheader; /* resend streamheader if it changes */
 
@@ -174,7 +132,7 @@ struct _GstMultiFdSink {
 };
 
 struct _GstMultiFdSinkClass {
-  GstBaseSinkClass parent_class;
+  GstMultiHandleSinkClass parent_class;
 
   /* element methods */
   void          (*add)          (GstMultiFdSink *sink, int fd);
@@ -206,7 +164,7 @@ void          gst_multi_fd_sink_add_full     (GstMultiFdSink *sink, int fd, GstS
                                               GstTCPUnitType max_unit, guint64 max_value);
 void          gst_multi_fd_sink_remove       (GstMultiFdSink *sink, int fd);
 void          gst_multi_fd_sink_remove_flush (GstMultiFdSink *sink, int fd);
-void          gst_multi_fd_sink_clear        (GstMultiFdSink *sink);
+void          gst_multi_fd_sink_clear        (GstMultiHandleSink *sink);
 GValueArray*  gst_multi_fd_sink_get_stats    (GstMultiFdSink *sink, int fd);
 
 G_END_DECLS

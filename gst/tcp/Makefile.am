@@ -17,6 +17,7 @@ libgsttcp_la_SOURCES = \
 	gsttcpplugin.c \
 	gsttcpclientsrc.c gsttcpclientsink.c \
 	gstmultifdsink.c  \
+	gstmultihandlesink.c  \
 	gstmultisocketsink.c  \
 	gsttcpserversrc.c gsttcpserversink.c
 

@@ -131,7 +131,6 @@ enum
   SIGNAL_ADD_BURST,
   SIGNAL_REMOVE,
   SIGNAL_REMOVE_FLUSH,
-  SIGNAL_CLEAR,
   SIGNAL_GET_STATS,
 
   /* signals */
@@ -147,15 +146,9 @@ enum
 #define DEFAULT_MODE                    1
 #define DEFAULT_BUFFERS_MAX             -1
 #define DEFAULT_BUFFERS_SOFT_MAX        -1
-#define DEFAULT_TIME_MIN                -1
-#define DEFAULT_BYTES_MIN               -1
-#define DEFAULT_BUFFERS_MIN             -1
 #define DEFAULT_UNIT_TYPE               GST_FORMAT_BUFFERS
 #define DEFAULT_UNITS_MAX               -1
 #define DEFAULT_UNITS_SOFT_MAX          -1
-#define DEFAULT_RECOVER_POLICY          GST_RECOVER_POLICY_NONE
-#define DEFAULT_TIMEOUT                 0
-#define DEFAULT_SYNC_METHOD             GST_SYNC_METHOD_LATEST
 
 #define DEFAULT_BURST_FORMAT            GST_FORMAT_UNDEFINED
 #define DEFAULT_BURST_VALUE             0
@@ -180,16 +173,6 @@ enum
   PROP_BUFFERS_MAX,
   PROP_BUFFERS_SOFT_MAX,
 
-  PROP_TIME_MIN,
-  PROP_BYTES_MIN,
-  PROP_BUFFERS_MIN,
-
-  PROP_RECOVER_POLICY,
-  PROP_TIMEOUT,
-  PROP_SYNC_METHOD,
-  PROP_BYTES_TO_SERVE,
-  PROP_BYTES_SERVED,
-
   PROP_BURST_FORMAT,
   PROP_BURST_VALUE,
 
@@ -204,84 +187,6 @@ enum
   PROP_LAST
 };
 
-#define GST_TYPE_RECOVER_POLICY (gst_multi_socket_sink_recover_policy_get_type())
-static GType
-gst_multi_socket_sink_recover_policy_get_type (void)
-{
-  static GType recover_policy_type = 0;
-  static const GEnumValue recover_policy[] = {
-    {GST_RECOVER_POLICY_NONE,
-        "Do not try to recover", "none"},
-    {GST_RECOVER_POLICY_RESYNC_LATEST,
-        "Resync client to latest buffer", "latest"},
-    {GST_RECOVER_POLICY_RESYNC_SOFT_LIMIT,
-        "Resync client to soft limit", "soft-limit"},
-    {GST_RECOVER_POLICY_RESYNC_KEYFRAME,
-        "Resync client to most recent keyframe", "keyframe"},
-    {0, NULL, NULL},
-  };
-
-  if (!recover_policy_type) {
-    recover_policy_type =
-        g_enum_register_static ("GstMultiSocketSinkRecoverPolicy",
-        recover_policy);
-  }
-  return recover_policy_type;
-}
-
-#define GST_TYPE_SYNC_METHOD (gst_multi_socket_sink_sync_method_get_type())
-static GType
-gst_multi_socket_sink_sync_method_get_type (void)
-{
-  static GType sync_method_type = 0;
-  static const GEnumValue sync_method[] = {
-    {GST_SYNC_METHOD_LATEST,
-        "Serve starting from the latest buffer", "latest"},
-    {GST_SYNC_METHOD_NEXT_KEYFRAME,
-        "Serve starting from the next keyframe", "next-keyframe"},
-    {GST_SYNC_METHOD_LATEST_KEYFRAME,
-          "Serve everything since the latest keyframe (burst)",
-        "latest-keyframe"},
-    {GST_SYNC_METHOD_BURST, "Serve burst-value data to client", "burst"},
-    {GST_SYNC_METHOD_BURST_KEYFRAME,
-          "Serve burst-value data starting on a keyframe",
-        "burst-keyframe"},
-    {GST_SYNC_METHOD_BURST_WITH_KEYFRAME,
-          "Serve burst-value data preferably starting on a keyframe",
-        "burst-with-keyframe"},
-    {0, NULL, NULL},
-  };
-
-  if (!sync_method_type) {
-    sync_method_type =
-        g_enum_register_static ("GstMultiSocketSinkSyncMethod", sync_method);
-  }
-  return sync_method_type;
-}
-
-#define GST_TYPE_CLIENT_STATUS (gst_multi_socket_sink_client_status_get_type())
-static GType
-gst_multi_socket_sink_client_status_get_type (void)
-{
-  static GType client_status_type = 0;
-  static const GEnumValue client_status[] = {
-    {GST_CLIENT_STATUS_OK, "ok", "ok"},
-    {GST_CLIENT_STATUS_CLOSED, "Closed", "closed"},
-    {GST_CLIENT_STATUS_REMOVED, "Removed", "removed"},
-    {GST_CLIENT_STATUS_SLOW, "Too slow", "slow"},
-    {GST_CLIENT_STATUS_ERROR, "Error", "error"},
-    {GST_CLIENT_STATUS_DUPLICATE, "Duplicate", "duplicate"},
-    {GST_CLIENT_STATUS_FLUSHING, "Flushing", "flushing"},
-    {0, NULL, NULL},
-  };
-
-  if (!client_status_type) {
-    client_status_type =
-        g_enum_register_static ("GstMultiSocketSinkClientStatus",
-        client_status);
-  }
-  return client_status_type;
-}
 
 static void gst_multi_socket_sink_finalize (GObject * object);
 
@@ -303,7 +208,8 @@ static void gst_multi_socket_sink_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 
 #define gst_multi_socket_sink_parent_class parent_class
-G_DEFINE_TYPE (GstMultiSocketSink, gst_multi_socket_sink, GST_TYPE_BASE_SINK);
+G_DEFINE_TYPE (GstMultiSocketSink, gst_multi_socket_sink,
+    GST_TYPE_MULTI_HANDLE_SINK);
 
 static guint gst_multi_socket_sink_signals[LAST_SIGNAL] = { 0 };
 
@@ -313,10 +219,12 @@ gst_multi_socket_sink_class_init (GstMultiSocketSinkClass * klass)
   GObjectClass *gobject_class;
   GstElementClass *gstelement_class;
   GstBaseSinkClass *gstbasesink_class;
+  GstMultiHandleSinkClass *gstmultihandlesink_class;
 
   gobject_class = (GObjectClass *) klass;
   gstelement_class = (GstElementClass *) klass;
   gstbasesink_class = (GstBaseSinkClass *) klass;
+  gstmultihandlesink_class = (GstMultiHandleSinkClass *) klass;
 
   gobject_class->set_property = gst_multi_socket_sink_set_property;
   gobject_class->get_property = gst_multi_socket_sink_get_property;
@@ -331,22 +239,6 @@ gst_multi_socket_sink_class_init (GstMultiSocketSinkClass * klass)
       g_param_spec_int ("buffers-soft-max", "Buffers soft max",
           "Recover client when going over this limit (-1 = no limit)", -1,
           G_MAXINT, DEFAULT_BUFFERS_SOFT_MAX,
-          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
-
-  g_object_class_install_property (gobject_class, PROP_BYTES_MIN,
-      g_param_spec_int ("bytes-min", "Bytes min",
-          "min number of bytes to queue (-1 = as little as possible)", -1,
-          G_MAXINT, DEFAULT_BYTES_MIN,
-          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
-  g_object_class_install_property (gobject_class, PROP_TIME_MIN,
-      g_param_spec_int64 ("time-min", "Time min",
-          "min number of time to queue (-1 = as little as possible)", -1,
-          G_MAXINT64, DEFAULT_TIME_MIN,
-          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
-  g_object_class_install_property (gobject_class, PROP_BUFFERS_MIN,
-      g_param_spec_int ("buffers-min", "Buffers min",
-          "min number of buffers to queue (-1 = as few as possible)", -1,
-          G_MAXINT, DEFAULT_BUFFERS_MIN,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_class, PROP_UNIT_TYPE,
@@ -378,29 +270,6 @@ gst_multi_socket_sink_class_init (GstMultiSocketSinkClass * klass)
           "Number of time currently queued", 0, G_MAXUINT64, 0,
           G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
 #endif
-
-  g_object_class_install_property (gobject_class, PROP_RECOVER_POLICY,
-      g_param_spec_enum ("recover-policy", "Recover Policy",
-          "How to recover when client reaches the soft max",
-          GST_TYPE_RECOVER_POLICY, DEFAULT_RECOVER_POLICY,
-          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
-  g_object_class_install_property (gobject_class, PROP_TIMEOUT,
-      g_param_spec_uint64 ("timeout", "Timeout",
-          "Maximum inactivity timeout in nanoseconds for a client (0 = no limit)",
-          0, G_MAXUINT64, DEFAULT_TIMEOUT,
-          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
-  g_object_class_install_property (gobject_class, PROP_SYNC_METHOD,
-      g_param_spec_enum ("sync-method", "Sync Method",
-          "How to sync new clients to the stream", GST_TYPE_SYNC_METHOD,
-          DEFAULT_SYNC_METHOD, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
-  g_object_class_install_property (gobject_class, PROP_BYTES_TO_SERVE,
-      g_param_spec_uint64 ("bytes-to-serve", "Bytes to serve",
-          "Number of bytes received to serve to clients", 0, G_MAXUINT64, 0,
-          G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
-  g_object_class_install_property (gobject_class, PROP_BYTES_SERVED,
-      g_param_spec_uint64 ("bytes-served", "Bytes served",
-          "Total number of bytes send to all clients", 0, G_MAXUINT64, 0,
-          G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_class, PROP_BURST_FORMAT,
       g_param_spec_enum ("burst-format", "Burst format",
@@ -506,19 +375,6 @@ gst_multi_socket_sink_class_init (GstMultiSocketSinkClass * klass)
       G_SIGNAL_RUN_LAST | G_SIGNAL_ACTION,
       G_STRUCT_OFFSET (GstMultiSocketSinkClass, remove_flush), NULL, NULL,
       g_cclosure_marshal_VOID__OBJECT, G_TYPE_NONE, 1, G_TYPE_SOCKET);
-  /**
-   * GstMultiSocketSink::clear:
-   * @gstmultisocketsink: the multisocketsink element to emit this signal on
-   *
-   * Remove all sockets from multisocketsink.  Since multisocketsink did not
-   * open sockets itself, it does not explicitly close the sockets. The application
-   * should do so by connecting to the client-socket-removed callback.
-   */
-  gst_multi_socket_sink_signals[SIGNAL_CLEAR] =
-      g_signal_new ("clear", G_TYPE_FROM_CLASS (klass),
-      G_SIGNAL_RUN_LAST | G_SIGNAL_ACTION,
-      G_STRUCT_OFFSET (GstMultiSocketSinkClass, clear), NULL, NULL,
-      g_cclosure_marshal_VOID__VOID, G_TYPE_NONE, 0);
 
   /**
    * GstMultiSocketSink::get-stats:
@@ -612,11 +468,13 @@ gst_multi_socket_sink_class_init (GstMultiSocketSinkClass * klass)
   gstbasesink_class->unlock_stop =
       GST_DEBUG_FUNCPTR (gst_multi_socket_sink_unlock_stop);
 
+  gstmultihandlesink_class->clear =
+      GST_DEBUG_FUNCPTR (gst_multi_socket_sink_clear);
+
   klass->add = GST_DEBUG_FUNCPTR (gst_multi_socket_sink_add);
   klass->add_full = GST_DEBUG_FUNCPTR (gst_multi_socket_sink_add_full);
   klass->remove = GST_DEBUG_FUNCPTR (gst_multi_socket_sink_remove);
   klass->remove_flush = GST_DEBUG_FUNCPTR (gst_multi_socket_sink_remove_flush);
-  klass->clear = GST_DEBUG_FUNCPTR (gst_multi_socket_sink_clear);
   klass->get_stats = GST_DEBUG_FUNCPTR (gst_multi_socket_sink_get_stats);
 
   GST_DEBUG_CATEGORY_INIT (multisocketsink_debug, "multisocketsink", 0,
@@ -626,7 +484,7 @@ gst_multi_socket_sink_class_init (GstMultiSocketSinkClass * klass)
 static void
 gst_multi_socket_sink_init (GstMultiSocketSink * this)
 {
-  GST_OBJECT_FLAG_UNSET (this, GST_MULTI_SOCKET_SINK_OPEN);
+  GST_OBJECT_FLAG_UNSET (this, GST_MULTI_HANDLE_SINK_OPEN);
 
   CLIENTS_LOCK_INIT (this);
   this->clients = NULL;
@@ -636,13 +494,7 @@ gst_multi_socket_sink_init (GstMultiSocketSink * this)
   this->unit_type = DEFAULT_UNIT_TYPE;
   this->units_max = DEFAULT_UNITS_MAX;
   this->units_soft_max = DEFAULT_UNITS_SOFT_MAX;
-  this->time_min = DEFAULT_TIME_MIN;
-  this->bytes_min = DEFAULT_BYTES_MIN;
-  this->buffers_min = DEFAULT_BUFFERS_MIN;
-  this->recover_policy = DEFAULT_RECOVER_POLICY;
 
-  this->timeout = DEFAULT_TIMEOUT;
-  this->def_sync_method = DEFAULT_SYNC_METHOD;
   this->def_burst_format = DEFAULT_BURST_FORMAT;
   this->def_burst_value = DEFAULT_BURST_VALUE;
 
@@ -762,8 +614,8 @@ gst_multi_socket_sink_add_full (GstMultiSocketSink * sink, GSocket * socket,
     GstFormat max_format, guint64 max_value)
 {
   GstSocketClient *client;
+  GstMultiHandleClient *mhclient;
   GList *clink;
-  GTimeVal now;
 
   GST_DEBUG_OBJECT (sink, "[socket %p] adding client, sync_method %d, "
       "min_format %d, min_value %" G_GUINT64_FORMAT
@@ -778,31 +630,14 @@ gst_multi_socket_sink_add_full (GstMultiSocketSink * sink, GSocket * socket,
 
   /* create client datastructure */
   client = g_new0 (GstSocketClient, 1);
+  mhclient = (GstMultiHandleClient *) client;
+  gst_multi_handle_sink_client_init (mhclient, sync_method);
   client->socket = G_SOCKET (g_object_ref (socket));
-  client->status = GST_CLIENT_STATUS_OK;
-  client->bufpos = -1;
-  client->flushcount = -1;
-  client->bufoffset = 0;
-  client->sending = NULL;
-  client->bytes_sent = 0;
-  client->dropped_buffers = 0;
-  client->avg_queue_size = 0;
-  client->first_buffer_ts = GST_CLOCK_TIME_NONE;
-  client->last_buffer_ts = GST_CLOCK_TIME_NONE;
-  client->new_connection = TRUE;
+
   client->burst_min_format = min_format;
   client->burst_min_value = min_value;
   client->burst_max_format = max_format;
   client->burst_max_value = max_value;
-  client->sync_method = sync_method;
-  client->currently_removing = FALSE;
-
-  /* update start time */
-  g_get_current_time (&now);
-  client->connect_time = GST_TIMEVAL_TO_TIME (now);
-  client->disconnect_time = 0;
-  /* set last activity time to connect time */
-  client->last_activity_time = client->connect_time;
 
   CLIENTS_LOCK (sink);
 
@@ -850,13 +685,13 @@ wrong_limits:
   }
 duplicate:
   {
-    client->status = GST_CLIENT_STATUS_DUPLICATE;
+    mhclient->status = GST_CLIENT_STATUS_DUPLICATE;
     CLIENTS_UNLOCK (sink);
     GST_WARNING_OBJECT (sink, "[socket %p] duplicate client found, refusing",
         socket);
     g_signal_emit (G_OBJECT (sink),
         gst_multi_socket_sink_signals[SIGNAL_CLIENT_REMOVED], 0, socket,
-        client->status);
+        mhclient->status);
     g_free (client);
     return;
   }
@@ -866,7 +701,10 @@ duplicate:
 void
 gst_multi_socket_sink_add (GstMultiSocketSink * sink, GSocket * socket)
 {
-  gst_multi_socket_sink_add_full (sink, socket, sink->def_sync_method,
+  GstMultiHandleSink *mhsink;
+
+  mhsink = GST_MULTI_HANDLE_SINK (sink);
+  gst_multi_socket_sink_add_full (sink, socket, mhsink->def_sync_method,
       sink->def_burst_format, sink->def_burst_value, sink->def_burst_format,
       -1);
 }
@@ -883,15 +721,16 @@ gst_multi_socket_sink_remove (GstMultiSocketSink * sink, GSocket * socket)
   clink = g_hash_table_lookup (sink->socket_hash, socket);
   if (clink != NULL) {
     GstSocketClient *client = clink->data;
+    GstMultiHandleClient *mhclient = (GstMultiHandleClient *) client;
 
-    if (client->status != GST_CLIENT_STATUS_OK) {
+    if (mhclient->status != GST_CLIENT_STATUS_OK) {
       GST_INFO_OBJECT (sink,
           "[socket %p] Client already disconnecting with status %d",
-          socket, client->status);
+          socket, mhclient->status);
       goto done;
     }
 
-    client->status = GST_CLIENT_STATUS_REMOVED;
+    mhclient->status = GST_CLIENT_STATUS_REMOVED;
     gst_multi_socket_sink_remove_client_link (sink, clink);
   } else {
     GST_WARNING_OBJECT (sink, "[socket %p] no client with this socket found!",
@@ -914,21 +753,22 @@ gst_multi_socket_sink_remove_flush (GstMultiSocketSink * sink, GSocket * socket)
   clink = g_hash_table_lookup (sink->socket_hash, socket);
   if (clink != NULL) {
     GstSocketClient *client = clink->data;
+    GstMultiHandleClient *mhclient = (GstMultiHandleClient *) client;
 
-    if (client->status != GST_CLIENT_STATUS_OK) {
+    if (mhclient->status != GST_CLIENT_STATUS_OK) {
       GST_INFO_OBJECT (sink,
           "[socket %p] Client already disconnecting with status %d",
-          socket, client->status);
+          socket, mhclient->status);
       goto done;
     }
 
     /* take the position of the client as the number of buffers left to flush.
      * If the client was at position -1, we flush 0 buffers, 0 == flush 1
      * buffer, etc... */
-    client->flushcount = client->bufpos + 1;
+    mhclient->flushcount = mhclient->bufpos + 1;
     /* mark client as flushing. We can not remove the client right away because
      * it might have some buffers to flush in the ->sending queue. */
-    client->status = GST_CLIENT_STATUS_FLUSHING;
+    mhclient->status = GST_CLIENT_STATUS_FLUSHING;
   } else {
     GST_WARNING_OBJECT (sink, "[socket %p] no client with this fd found!",
         socket);
@@ -940,10 +780,11 @@ done:
 /* can be called both through the signal (i.e. from any thread) or when 
  * stopping, after the writing thread has shut down */
 void
-gst_multi_socket_sink_clear (GstMultiSocketSink * sink)
+gst_multi_socket_sink_clear (GstMultiHandleSink * mhsink)
 {
   GList *clients;
   guint32 cookie;
+  GstMultiSocketSink *sink = GST_MULTI_SOCKET_SINK (mhsink);
 
   GST_DEBUG_OBJECT (sink, "clearing all clients");
 
@@ -951,15 +792,15 @@ gst_multi_socket_sink_clear (GstMultiSocketSink * sink)
 restart:
   cookie = sink->clients_cookie;
   for (clients = sink->clients; clients; clients = clients->next) {
-    GstSocketClient *client;
+    GstMultiHandleClient *mhclient;
 
     if (cookie != sink->clients_cookie) {
       GST_DEBUG_OBJECT (sink, "cookie changed while removing all clients");
       goto restart;
     }
 
-    client = clients->data;
-    client->status = GST_CLIENT_STATUS_REMOVED;
+    mhclient = (GstMultiHandleClient *) clients->data;
+    mhclient->status = GST_CLIENT_STATUS_REMOVED;
     gst_multi_socket_sink_remove_client_link (sink, clients);
   }
 
@@ -982,29 +823,30 @@ gst_multi_socket_sink_get_stats (GstMultiSocketSink * sink, GSocket * socket)
 
   client = clink->data;
   if (client != NULL) {
+    GstMultiHandleClient *mhclient = (GstMultiHandleClient *) client;
     guint64 interval;
 
     result = gst_structure_new_empty ("multisocketsink-stats");
 
-    if (client->disconnect_time == 0) {
+    if (mhclient->disconnect_time == 0) {
       GTimeVal nowtv;
 
       g_get_current_time (&nowtv);
 
-      interval = GST_TIMEVAL_TO_TIME (nowtv) - client->connect_time;
+      interval = GST_TIMEVAL_TO_TIME (nowtv) - mhclient->connect_time;
     } else {
-      interval = client->disconnect_time - client->connect_time;
+      interval = mhclient->disconnect_time - mhclient->connect_time;
     }
 
     gst_structure_set (result,
-        "bytes-sent", G_TYPE_UINT64, client->bytes_sent,
-        "connect-time", G_TYPE_UINT64, client->connect_time,
-        "disconnect-time", G_TYPE_UINT64, client->disconnect_time,
+        "bytes-sent", G_TYPE_UINT64, mhclient->bytes_sent,
+        "connect-time", G_TYPE_UINT64, mhclient->connect_time,
+        "disconnect-time", G_TYPE_UINT64, mhclient->disconnect_time,
         "connected-duration", G_TYPE_UINT64, interval,
-        "last-activatity-time", G_TYPE_UINT64, client->last_activity_time,
-        "dropped-buffers", G_TYPE_UINT64, client->dropped_buffers,
-        "first-buffer-ts", G_TYPE_UINT64, client->first_buffer_ts,
-        "last-buffer-ts", G_TYPE_UINT64, client->last_buffer_ts, NULL);
+        "last-activatity-time", G_TYPE_UINT64, mhclient->last_activity_time,
+        "dropped-buffers", G_TYPE_UINT64, mhclient->dropped_buffers,
+        "first-buffer-ts", G_TYPE_UINT64, mhclient->first_buffer_ts,
+        "last-buffer-ts", G_TYPE_UINT64, mhclient->last_buffer_ts, NULL);
   }
 
 noclient:
@@ -1031,22 +873,23 @@ gst_multi_socket_sink_remove_client_link (GstMultiSocketSink * sink,
   GSocket *socket;
   GTimeVal now;
   GstSocketClient *client = link->data;
+  GstMultiHandleClient *mhclient = (GstMultiHandleClient *) client;
   GstMultiSocketSinkClass *fclass;
 
   fclass = GST_MULTI_SOCKET_SINK_GET_CLASS (sink);
 
   socket = client->socket;
 
-  if (client->currently_removing) {
+  if (mhclient->currently_removing) {
     GST_WARNING_OBJECT (sink, "[socket %p] client is already being removed",
         socket);
     return;
   } else {
-    client->currently_removing = TRUE;
+    mhclient->currently_removing = TRUE;
   }
 
   /* FIXME: if we keep track of ip we can log it here and signal */
-  switch (client->status) {
+  switch (mhclient->status) {
     case GST_CLIENT_STATUS_OK:
       GST_WARNING_OBJECT (sink, "[socket %p] removing client %p for no reason",
           socket, client);
@@ -1073,7 +916,7 @@ gst_multi_socket_sink_remove_client_link (GstMultiSocketSink * sink,
     default:
       GST_WARNING_OBJECT (sink,
           "[socket %p] removing client %p with invalid reason %d", socket,
-          client, client->status);
+          client, mhclient->status);
       break;
   }
 
@@ -1084,16 +927,16 @@ gst_multi_socket_sink_remove_client_link (GstMultiSocketSink * sink,
   }
 
   g_get_current_time (&now);
-  client->disconnect_time = GST_TIMEVAL_TO_TIME (now);
+  mhclient->disconnect_time = GST_TIMEVAL_TO_TIME (now);
 
   /* free client buffers */
-  g_slist_foreach (client->sending, (GFunc) gst_mini_object_unref, NULL);
-  g_slist_free (client->sending);
-  client->sending = NULL;
+  g_slist_foreach (mhclient->sending, (GFunc) gst_mini_object_unref, NULL);
+  g_slist_free (mhclient->sending);
+  mhclient->sending = NULL;
 
-  if (client->caps)
-    gst_caps_unref (client->caps);
-  client->caps = NULL;
+  if (mhclient->caps)
+    gst_caps_unref (mhclient->caps);
+  mhclient->caps = NULL;
 
   /* unlock the mutex before signaling because the signal handler
    * might query some properties */
@@ -1101,7 +944,7 @@ gst_multi_socket_sink_remove_client_link (GstMultiSocketSink * sink,
 
   g_signal_emit (G_OBJECT (sink),
       gst_multi_socket_sink_signals[SIGNAL_CLIENT_REMOVED], 0, socket,
-      client->status);
+      mhclient->status);
 
   /* lock again before we remove the client completely */
   CLIENTS_LOCK (sink);
@@ -1146,6 +989,7 @@ gst_multi_socket_sink_handle_client_read (GstMultiSocketSink * sink,
   gssize nread;
   GError *err = NULL;
   gboolean first = TRUE;
+  GstMultiHandleClient *mhclient = (GstMultiHandleClient *) client;
 
   GST_DEBUG_OBJECT (sink, "[socket %p] select reports client read",
       client->socket);
@@ -1172,12 +1016,12 @@ gst_multi_socket_sink_handle_client_read (GstMultiSocketSink * sink,
       /* client sent close, so remove it */
       GST_DEBUG_OBJECT (sink, "[socket %p] client asked for close, removing",
           client->socket);
-      client->status = GST_CLIENT_STATUS_CLOSED;
+      mhclient->status = GST_CLIENT_STATUS_CLOSED;
       ret = FALSE;
     } else if (nread < 0) {
       GST_WARNING_OBJECT (sink, "[socket %p] could not read: %s",
           client->socket, err->message);
-      client->status = GST_CLIENT_STATUS_ERROR;
+      mhclient->status = GST_CLIENT_STATUS_ERROR;
       ret = FALSE;
       break;
     }
@@ -1205,6 +1049,7 @@ static gboolean
 gst_multi_socket_sink_client_queue_buffer (GstMultiSocketSink * sink,
     GstSocketClient * client, GstBuffer * buffer)
 {
+  GstMultiHandleClient *mhclient = (GstMultiHandleClient *) client;
   GstCaps *caps;
 
   /* TRUE: send them if the new caps have them */
@@ -1215,15 +1060,15 @@ gst_multi_socket_sink_client_queue_buffer (GstMultiSocketSink * sink,
    * buffers (because it's a new client, or because they changed) */
   caps = gst_pad_get_current_caps (GST_BASE_SINK_PAD (sink));
 
-  if (!client->caps) {
+  if (!mhclient->caps) {
     GST_DEBUG_OBJECT (sink,
         "[socket %p] no previous caps for this client, send streamheader",
         client->socket);
     send_streamheader = TRUE;
-    client->caps = gst_caps_ref (caps);
+    mhclient->caps = gst_caps_ref (caps);
   } else {
     /* there were previous caps recorded, so compare */
-    if (!gst_caps_is_equal (caps, client->caps)) {
+    if (!gst_caps_is_equal (caps, mhclient->caps)) {
       const GValue *sh1, *sh2;
 
       /* caps are not equal, but could still have the same streamheader */
@@ -1235,7 +1080,7 @@ gst_multi_socket_sink_client_queue_buffer (GstMultiSocketSink * sink,
             client->socket);
       } else {
         /* there is a new streamheader */
-        s = gst_caps_get_structure (client->caps, 0);
+        s = gst_caps_get_structure (mhclient->caps, 0);
         if (!gst_structure_has_field (s, "streamheader")) {
           /* no previous streamheader, so send the new one */
           GST_DEBUG_OBJECT (sink,
@@ -1264,8 +1109,8 @@ gst_multi_socket_sink_client_queue_buffer (GstMultiSocketSink * sink,
       }
     }
     /* Replace the old caps */
-    gst_caps_unref (client->caps);
-    client->caps = gst_caps_ref (caps);
+    gst_caps_unref (mhclient->caps);
+    mhclient->caps = gst_caps_ref (caps);
   }
 
   if (G_UNLIKELY (send_streamheader)) {
@@ -1301,7 +1146,7 @@ gst_multi_socket_sink_client_queue_buffer (GstMultiSocketSink * sink,
             G_GSIZE_FORMAT, client->socket, gst_buffer_get_size (buffer));
         gst_buffer_ref (buffer);
 
-        client->sending = g_slist_append (client->sending, buffer);
+        mhclient->sending = g_slist_append (mhclient->sending, buffer);
       }
     }
   }
@@ -1314,7 +1159,7 @@ gst_multi_socket_sink_client_queue_buffer (GstMultiSocketSink * sink,
       gst_buffer_get_size (buffer));
 
   gst_buffer_ref (buffer);
-  client->sending = g_slist_append (client->sending, buffer);
+  mhclient->sending = g_slist_append (mhclient->sending, buffer);
 
   return TRUE;
 }
@@ -1591,29 +1436,30 @@ gst_multi_socket_sink_new_client (GstMultiSocketSink * sink,
     GstSocketClient * client)
 {
   gint result;
+  GstMultiHandleClient *mhclient = (GstMultiHandleClient *) client;
 
   GST_DEBUG_OBJECT (sink,
       "[socket %p] new client, deciding where to start in queue",
       client->socket);
   GST_DEBUG_OBJECT (sink, "queue is currently %d buffers long",
       sink->bufqueue->len);
-  switch (client->sync_method) {
+  switch (mhclient->sync_method) {
     case GST_SYNC_METHOD_LATEST:
       /* no syncing, we are happy with whatever the client is going to get */
-      result = client->bufpos;
+      result = mhclient->bufpos;
       GST_DEBUG_OBJECT (sink,
           "[socket %p] SYNC_METHOD_LATEST, position %d", client->socket,
           result);
       break;
     case GST_SYNC_METHOD_NEXT_KEYFRAME:
     {
-      /* if one of the new buffers (between client->bufpos and 0) in the queue
+      /* if one of the new buffers (between mhclient->bufpos and 0) in the queue
        * is a sync point, we can proceed, otherwise we need to keep waiting */
       GST_LOG_OBJECT (sink,
           "[socket %p] new client, bufpos %d, waiting for keyframe",
-          client->socket, client->bufpos);
+          client->socket, mhclient->bufpos);
 
-      result = find_prev_syncframe (sink, client->bufpos);
+      result = find_prev_syncframe (sink, mhclient->bufpos);
       if (result != -1) {
         GST_DEBUG_OBJECT (sink,
             "[socket %p] SYNC_METHOD_NEXT_KEYFRAME: result %d",
@@ -1626,7 +1472,7 @@ gst_multi_socket_sink_new_client (GstMultiSocketSink * sink,
       GST_LOG_OBJECT (sink,
           "[socket %p] new client, skipping buffer(s), no syncpoint found",
           client->socket);
-      client->bufpos = -1;
+      mhclient->bufpos = -1;
       break;
     }
     case GST_SYNC_METHOD_LATEST_KEYFRAME:
@@ -1651,9 +1497,9 @@ gst_multi_socket_sink_new_client (GstMultiSocketSink * sink,
           "[socket %p] SYNC_METHOD_LATEST_KEYFRAME: no keyframe found, "
           "switching to SYNC_METHOD_NEXT_KEYFRAME", client->socket);
       /* throw client to the waiting state */
-      client->bufpos = -1;
+      mhclient->bufpos = -1;
       /* and make client sync to next keyframe */
-      client->sync_method = GST_SYNC_METHOD_NEXT_KEYFRAME;
+      mhclient->sync_method = GST_SYNC_METHOD_NEXT_KEYFRAME;
       break;
     }
     case GST_SYNC_METHOD_BURST:
@@ -1726,9 +1572,9 @@ gst_multi_socket_sink_new_client (GstMultiSocketSink * sink,
           "no prev keyframe found in BURST_KEYFRAME sync mode, waiting for next");
 
       /* throw client to the waiting state */
-      client->bufpos = -1;
+      mhclient->bufpos = -1;
       /* and make client sync to next keyframe */
-      client->sync_method = GST_SYNC_METHOD_NEXT_KEYFRAME;
+      mhclient->sync_method = GST_SYNC_METHOD_NEXT_KEYFRAME;
       result = -1;
       break;
     }
@@ -1772,8 +1618,8 @@ gst_multi_socket_sink_new_client (GstMultiSocketSink * sink,
       break;
     }
     default:
-      g_warning ("unknown sync method %d", client->sync_method);
-      result = client->bufpos;
+      g_warning ("unknown sync method %d", mhclient->sync_method);
+      result = mhclient->bufpos;
       break;
   }
   return result;
@@ -1788,13 +1634,13 @@ gst_multi_socket_sink_new_client (GstMultiSocketSink * sink,
  * We first check to see if we need to send streamheaders. If so, we queue them.
  *
  * Then we run into the main loop that tries to send as many buffers as
- * possible. It will first exhaust the client->sending queue and if the queue
+ * possible. It will first exhaust the mhclient->sending queue and if the queue
  * is empty, it will pick a buffer from the global queue.
  *
- * Sending the buffers from the client->sending queue is basically writing
+ * Sending the buffers from the mhclient->sending queue is basically writing
  * the bytes to the socket and maintaining a count of the bytes that were
  * sent. When the buffer is completely sent, it is removed from the
- * client->sending queue and we try to pick a new buffer for sending.
+ * mhclient->sending queue and we try to pick a new buffer for sending.
  *
  * When the sending returns a partial buffer we stop sending more data as
  * the next send operation could block.
@@ -1811,19 +1657,23 @@ gst_multi_socket_sink_handle_client_write (GstMultiSocketSink * sink,
   GstClockTime now;
   GTimeVal nowtv;
   GError *err = NULL;
+  GstMultiHandleSink *mhsink;
+  GstMultiHandleClient *mhclient = (GstMultiHandleClient *) client;
+
+  mhsink = GST_MULTI_HANDLE_SINK (sink);
 
   g_get_current_time (&nowtv);
   now = GST_TIMEVAL_TO_TIME (nowtv);
 
-  flushing = client->status == GST_CLIENT_STATUS_FLUSHING;
+  flushing = mhclient->status == GST_CLIENT_STATUS_FLUSHING;
 
   more = TRUE;
   do {
     gint maxsize;
 
-    if (!client->sending) {
+    if (!mhclient->sending) {
       /* client is not working on a buffer */
-      if (client->bufpos == -1) {
+      if (mhclient->bufpos == -1) {
         /* client is too fast, remove from write queue until new buffer is
          * available */
         if (client->source) {
@@ -1832,7 +1682,7 @@ gst_multi_socket_sink_handle_client_write (GstMultiSocketSink * sink,
           client->source = NULL;
         }
         /* if we flushed out all of the client buffers, we can stop */
-        if (client->flushcount == 0)
+        if (mhclient->flushcount == 0)
           goto flushed;
 
         return TRUE;
@@ -1843,13 +1693,13 @@ gst_multi_socket_sink_handle_client_write (GstMultiSocketSink * sink,
 
         /* for new connections, we need to find a good spot in the
          * bufqueue to start streaming from */
-        if (client->new_connection && !flushing) {
+        if (mhclient->new_connection && !flushing) {
           gint position = gst_multi_socket_sink_new_client (sink, client);
 
           if (position >= 0) {
             /* we got a valid spot in the queue */
-            client->new_connection = FALSE;
-            client->bufpos = position;
+            mhclient->new_connection = FALSE;
+            mhclient->bufpos = position;
           } else {
             /* cannot send data to this client yet */
             if (client->source) {
@@ -1862,51 +1712,51 @@ gst_multi_socket_sink_handle_client_write (GstMultiSocketSink * sink,
         }
 
         /* we flushed all remaining buffers, no need to get a new one */
-        if (client->flushcount == 0)
+        if (mhclient->flushcount == 0)
           goto flushed;
 
         /* grab buffer */
-        buf = g_array_index (sink->bufqueue, GstBuffer *, client->bufpos);
-        client->bufpos--;
+        buf = g_array_index (sink->bufqueue, GstBuffer *, mhclient->bufpos);
+        mhclient->bufpos--;
 
         /* update stats */
         timestamp = GST_BUFFER_TIMESTAMP (buf);
-        if (client->first_buffer_ts == GST_CLOCK_TIME_NONE)
-          client->first_buffer_ts = timestamp;
+        if (mhclient->first_buffer_ts == GST_CLOCK_TIME_NONE)
+          mhclient->first_buffer_ts = timestamp;
         if (timestamp != -1)
-          client->last_buffer_ts = timestamp;
+          mhclient->last_buffer_ts = timestamp;
 
         /* decrease flushcount */
-        if (client->flushcount != -1)
-          client->flushcount--;
+        if (mhclient->flushcount != -1)
+          mhclient->flushcount--;
 
         GST_LOG_OBJECT (sink, "[socket %p] client %p at position %d",
-            socket, client, client->bufpos);
+            socket, client, mhclient->bufpos);
 
         /* queueing a buffer will ref it */
         gst_multi_socket_sink_client_queue_buffer (sink, client, buf);
 
         /* need to start from the first byte for this new buffer */
-        client->bufoffset = 0;
+        mhclient->bufoffset = 0;
       }
     }
 
     /* see if we need to send something */
-    if (client->sending) {
+    if (mhclient->sending) {
       gssize wrote;
       GstBuffer *head;
       GstMapInfo map;
 
       /* pick first buffer from list */
-      head = GST_BUFFER (client->sending->data);
+      head = GST_BUFFER (mhclient->sending->data);
 
       gst_buffer_map (head, &map, GST_MAP_READ);
-      maxsize = map.size - client->bufoffset;
+      maxsize = map.size - mhclient->bufoffset;
 
       /* try to write the complete buffer */
 
       wrote =
-          g_socket_send (socket, (gchar *) map.data + client->bufoffset,
+          g_socket_send (socket, (gchar *) map.data + mhclient->bufoffset,
           maxsize, sink->cancellable, &err);
       gst_buffer_unmap (head, &map);
 
@@ -1924,19 +1774,19 @@ gst_multi_socket_sink_handle_client_write (GstMultiSocketSink * sink,
           GST_LOG_OBJECT (sink,
               "partial write on %p of %" G_GSSIZE_FORMAT " bytes", socket,
               wrote);
-          client->bufoffset += wrote;
+          mhclient->bufoffset += wrote;
           more = FALSE;
         } else {
           /* complete buffer was written, we can proceed to the next one */
-          client->sending = g_slist_remove (client->sending, head);
+          mhclient->sending = g_slist_remove (mhclient->sending, head);
           gst_buffer_unref (head);
           /* make sure we start from byte 0 for the next buffer */
-          client->bufoffset = 0;
+          mhclient->bufoffset = 0;
         }
         /* update stats */
-        client->bytes_sent += wrote;
-        client->last_activity_time = now;
-        sink->bytes_served += wrote;
+        mhclient->bytes_sent += wrote;
+        mhclient->last_activity_time = now;
+        mhsink->bytes_served += wrote;
       }
     }
   } while (more);
@@ -1947,14 +1797,14 @@ gst_multi_socket_sink_handle_client_write (GstMultiSocketSink * sink,
 flushed:
   {
     GST_DEBUG_OBJECT (sink, "[socket %p] flushed, removing", socket);
-    client->status = GST_CLIENT_STATUS_REMOVED;
+    mhclient->status = GST_CLIENT_STATUS_REMOVED;
     return FALSE;
   }
 connection_reset:
   {
     GST_DEBUG_OBJECT (sink, "[socket %p] connection reset by peer, removing",
         socket);
-    client->status = GST_CLIENT_STATUS_CLOSED;
+    mhclient->status = GST_CLIENT_STATUS_CLOSED;
     g_clear_error (&err);
     return FALSE;
   }
@@ -1964,7 +1814,7 @@ write_error:
         "[socket %p] could not write, removing client: %s", socket,
         err->message);
     g_clear_error (&err);
-    client->status = GST_CLIENT_STATUS_ERROR;
+    mhclient->status = GST_CLIENT_STATUS_ERROR;
     return FALSE;
   }
 }
@@ -1978,16 +1828,18 @@ gst_multi_socket_sink_recover_client (GstMultiSocketSink * sink,
     GstSocketClient * client)
 {
   gint newbufpos;
+  GstMultiHandleSink *mhsink = GST_MULTI_HANDLE_SINK (sink);
+  GstMultiHandleClient *mhclient = (GstMultiHandleClient *) client;
 
   GST_WARNING_OBJECT (sink,
       "[socket %p] client %p is lagging at %d, recover using policy %d",
-      client->socket, client, client->bufpos, sink->recover_policy);
+      client->socket, client, mhclient->bufpos, mhsink->recover_policy);
 
-  switch (sink->recover_policy) {
+  switch (mhsink->recover_policy) {
     case GST_RECOVER_POLICY_NONE:
       /* do nothing, client will catch up or get kicked out when it reaches
        * the hard max */
-      newbufpos = client->bufpos;
+      newbufpos = mhclient->bufpos;
       break;
     case GST_RECOVER_POLICY_RESYNC_LATEST:
       /* move to beginning of queue */
@@ -2028,7 +1880,7 @@ gst_multi_socket_sink_recover_client (GstMultiSocketSink * sink,
  * tail buffer if the max queue size is exceeded, unreffing the queued buffer.
  * Note that unreffing the buffer is not a problem as clients who
  * started writing out this buffer will still have a reference to it in the
- * client->sending queue.
+ * mhclient->sending queue.
  *
  * After adding the buffer, we update all client positions in the queue. If
  * a client moves over the soft max, we start the recovery procedure for this
@@ -2051,6 +1903,9 @@ gst_multi_socket_sink_queue_buffer (GstMultiSocketSink * sink, GstBuffer * buf)
   GstClockTime now;
   gint max_buffers, soft_max_buffers;
   guint cookie;
+  GstMultiHandleSink *mhsink;
+
+  mhsink = GST_MULTI_HANDLE_SINK (sink);
 
   g_get_current_time (&nowtv);
   now = GST_TIMEVAL_TO_TIME (nowtv);
@@ -2080,6 +1935,7 @@ restart:
   cookie = sink->clients_cookie;
   for (clients = sink->clients; clients; clients = next) {
     GstSocketClient *client;
+    GstMultiHandleClient *mhclient;
 
     if (cookie != sink->clients_cookie) {
       GST_DEBUG_OBJECT (sink, "Clients cookie outdated, restarting");
@@ -2087,22 +1943,23 @@ restart:
     }
 
     client = clients->data;
+    mhclient = (GstMultiHandleClient *) client;
     next = g_list_next (clients);
 
-    client->bufpos++;
+    mhclient->bufpos++;
     GST_LOG_OBJECT (sink, "[socket %p] client %p at position %d",
-        client->socket, client, client->bufpos);
+        client->socket, client, mhclient->bufpos);
     /* check soft max if needed, recover client */
-    if (soft_max_buffers > 0 && client->bufpos >= soft_max_buffers) {
+    if (soft_max_buffers > 0 && mhclient->bufpos >= soft_max_buffers) {
       gint newpos;
 
       newpos = gst_multi_socket_sink_recover_client (sink, client);
-      if (newpos != client->bufpos) {
-        client->dropped_buffers += client->bufpos - newpos;
-        client->bufpos = newpos;
-        client->discont = TRUE;
+      if (newpos != mhclient->bufpos) {
+        mhclient->dropped_buffers += mhclient->bufpos - newpos;
+        mhclient->bufpos = newpos;
+        mhclient->discont = TRUE;
         GST_INFO_OBJECT (sink, "[socket %p] client %p position reset to %d",
-            client->socket, client, client->bufpos);
+            client->socket, client, mhclient->bufpos);
       } else {
         GST_INFO_OBJECT (sink,
             "[socket %p] client %p not recovering position",
@@ -2110,20 +1967,20 @@ restart:
       }
     }
     /* check hard max and timeout, remove client */
-    if ((max_buffers > 0 && client->bufpos >= max_buffers) ||
-        (sink->timeout > 0
-            && now - client->last_activity_time > sink->timeout)) {
+    if ((max_buffers > 0 && mhclient->bufpos >= max_buffers) ||
+        (mhsink->timeout > 0
+            && now - mhclient->last_activity_time > mhsink->timeout)) {
       /* remove client */
       GST_WARNING_OBJECT (sink, "[socket %p] client %p is too slow, removing",
           client->socket, client);
       /* remove the client, the fd set will be cleared and the select thread
        * will be signaled */
-      client->status = GST_CLIENT_STATUS_SLOW;
+      mhclient->status = GST_CLIENT_STATUS_SLOW;
       /* set client to invalid position while being removed */
-      client->bufpos = -1;
+      mhclient->bufpos = -1;
       gst_multi_socket_sink_remove_client_link (sink, clients);
       continue;
-    } else if (client->bufpos == 0 || client->new_connection) {
+    } else if (mhclient->bufpos == 0 || mhclient->new_connection) {
       /* can send data to this client now. need to signal the select thread that
        * the fd_set changed */
       if (!client->source) {
@@ -2138,8 +1995,8 @@ restart:
       }
     }
     /* keep track of maximum buffer usage */
-    if (client->bufpos > max_buffer_usage) {
-      max_buffer_usage = client->bufpos;
+    if (mhclient->bufpos > max_buffer_usage) {
+      max_buffer_usage = mhclient->bufpos;
     }
   }
 
@@ -2150,13 +2007,14 @@ restart:
     GST_LOG_OBJECT (sink,
         "extending queue %d to respect time_min %" GST_TIME_FORMAT
         ", bytes_min %d, buffers_min %d", max_buffer_usage,
-        GST_TIME_ARGS (sink->time_min), sink->bytes_min, sink->buffers_min);
+        GST_TIME_ARGS (mhsink->time_min), mhsink->bytes_min,
+        mhsink->buffers_min);
 
     /* get index where the limits are ok, we don't really care if all limits
      * are ok, we just queue as much as we need. We also don't compare against
      * the max limits. */
-    find_limits (sink, &usage, sink->bytes_min, sink->buffers_min,
-        sink->time_min, &max, -1, -1, -1);
+    find_limits (sink, &usage, mhsink->bytes_min, mhsink->buffers_min,
+        mhsink->time_min, &max, -1, -1, -1);
 
     max_buffer_usage = MAX (max_buffer_usage, usage + 1);
     GST_LOG_OBJECT (sink, "extended queue to %d", max_buffer_usage);
@@ -2165,8 +2023,8 @@ restart:
   /* now look for sync points and make sure there is at least one
    * sync point in the queue. We only do this if the LATEST_KEYFRAME or 
    * BURST_KEYFRAME mode is selected */
-  if (sink->def_sync_method == GST_SYNC_METHOD_LATEST_KEYFRAME ||
-      sink->def_sync_method == GST_SYNC_METHOD_BURST_KEYFRAME) {
+  if (mhsink->def_sync_method == GST_SYNC_METHOD_LATEST_KEYFRAME ||
+      mhsink->def_sync_method == GST_SYNC_METHOD_BURST_KEYFRAME) {
     /* no point in searching beyond the queue length */
     gint limit = queuelen;
     GstBuffer *buf;
@@ -2222,6 +2080,7 @@ gst_multi_socket_sink_socket_condition (GSocket * socket,
   GList *clink;
   GstSocketClient *client;
   gboolean ret = TRUE;
+  GstMultiHandleClient *mhclient;
 
   CLIENTS_LOCK (sink);
   clink = g_hash_table_lookup (sink->socket_hash, socket);
@@ -2231,9 +2090,10 @@ gst_multi_socket_sink_socket_condition (GSocket * socket,
   }
 
   client = clink->data;
+  mhclient = (GstMultiHandleClient *) client;
 
-  if (client->status != GST_CLIENT_STATUS_FLUSHING
-      && client->status != GST_CLIENT_STATUS_OK) {
+  if (mhclient->status != GST_CLIENT_STATUS_FLUSHING
+      && mhclient->status != GST_CLIENT_STATUS_OK) {
     gst_multi_socket_sink_remove_client_link (sink, clink);
     ret = FALSE;
     goto done;
@@ -2241,12 +2101,12 @@ gst_multi_socket_sink_socket_condition (GSocket * socket,
 
   if ((condition & G_IO_ERR)) {
     GST_WARNING_OBJECT (sink, "Socket %p has error", client->socket);
-    client->status = GST_CLIENT_STATUS_ERROR;
+    mhclient->status = GST_CLIENT_STATUS_ERROR;
     gst_multi_socket_sink_remove_client_link (sink, clink);
     ret = FALSE;
     goto done;
   } else if ((condition & G_IO_HUP)) {
-    client->status = GST_CLIENT_STATUS_CLOSED;
+    mhclient->status = GST_CLIENT_STATUS_CLOSED;
     gst_multi_socket_sink_remove_client_link (sink, clink);
     ret = FALSE;
     goto done;
@@ -2278,6 +2138,9 @@ gst_multi_socket_sink_timeout (GstMultiSocketSink * sink)
   GstClockTime now;
   GTimeVal nowtv;
   GList *clients;
+  GstMultiHandleSink *mhsink;
+
+  mhsink = GST_MULTI_HANDLE_SINK (sink);
 
   g_get_current_time (&nowtv);
   now = GST_TIMEVAL_TO_TIME (nowtv);
@@ -2285,10 +2148,13 @@ gst_multi_socket_sink_timeout (GstMultiSocketSink * sink)
   CLIENTS_LOCK (sink);
   for (clients = sink->clients; clients; clients = clients->next) {
     GstSocketClient *client;
+    GstMultiHandleClient *mhclient;
 
     client = clients->data;
-    if (sink->timeout > 0 && now - client->last_activity_time > sink->timeout) {
-      client->status = GST_CLIENT_STATUS_SLOW;
+    mhclient = (GstMultiHandleClient *) client;
+    if (mhsink->timeout > 0
+        && now - mhclient->last_activity_time > mhsink->timeout) {
+      mhclient->status = GST_CLIENT_STATUS_SLOW;
       gst_multi_socket_sink_remove_client_link (sink, clients);
     }
   }
@@ -2303,10 +2169,13 @@ static gpointer
 gst_multi_socket_sink_thread (GstMultiSocketSink * sink)
 {
   GSource *timeout = NULL;
+  GstMultiHandleSink *mhsink;
+
+  mhsink = GST_MULTI_HANDLE_SINK (sink);
 
   while (sink->running) {
-    if (sink->timeout > 0) {
-      timeout = g_timeout_source_new (sink->timeout / GST_MSECOND);
+    if (mhsink->timeout > 0) {
+      timeout = g_timeout_source_new (mhsink->timeout / GST_MSECOND);
 
       g_source_set_callback (timeout,
           (GSourceFunc) gst_multi_socket_sink_timeout, gst_object_ref (sink),
@@ -2337,8 +2206,10 @@ gst_multi_socket_sink_render (GstBaseSink * bsink, GstBuffer * buf)
 #if 0
   GstCaps *bufcaps, *padcaps;
 #endif
+  GstMultiHandleSink *mhsink;
 
   sink = GST_MULTI_SOCKET_SINK (bsink);
+  mhsink = GST_MULTI_HANDLE_SINK (sink);
 
   g_return_val_if_fail (GST_OBJECT_FLAG_IS_SET (sink,
           GST_MULTI_SOCKET_SINK_OPEN), GST_FLOW_FLUSHING);
@@ -2421,7 +2292,7 @@ gst_multi_socket_sink_render (GstBaseSink * bsink, GstBuffer * buf)
     /* queue the buffer, this is a regular data buffer. */
     gst_multi_socket_sink_queue_buffer (sink, buf);
 
-    sink->bytes_to_serve += gst_buffer_get_size (buf);
+    mhsink->bytes_to_serve += gst_buffer_get_size (buf);
   }
   return GST_FLOW_OK;
 
@@ -2451,15 +2322,6 @@ gst_multi_socket_sink_set_property (GObject * object, guint prop_id,
     case PROP_BUFFERS_SOFT_MAX:
       multisocketsink->units_soft_max = g_value_get_int (value);
       break;
-    case PROP_TIME_MIN:
-      multisocketsink->time_min = g_value_get_int64 (value);
-      break;
-    case PROP_BYTES_MIN:
-      multisocketsink->bytes_min = g_value_get_int (value);
-      break;
-    case PROP_BUFFERS_MIN:
-      multisocketsink->buffers_min = g_value_get_int (value);
-      break;
     case PROP_UNIT_TYPE:
       multisocketsink->unit_type = g_value_get_enum (value);
       break;
@@ -2468,15 +2330,6 @@ gst_multi_socket_sink_set_property (GObject * object, guint prop_id,
       break;
     case PROP_UNITS_SOFT_MAX:
       multisocketsink->units_soft_max = g_value_get_int64 (value);
-      break;
-    case PROP_RECOVER_POLICY:
-      multisocketsink->recover_policy = g_value_get_enum (value);
-      break;
-    case PROP_TIMEOUT:
-      multisocketsink->timeout = g_value_get_uint64 (value);
-      break;
-    case PROP_SYNC_METHOD:
-      multisocketsink->def_sync_method = g_value_get_enum (value);
       break;
     case PROP_BURST_FORMAT:
       multisocketsink->def_burst_format = g_value_get_enum (value);
@@ -2516,15 +2369,6 @@ gst_multi_socket_sink_get_property (GObject * object, guint prop_id,
     case PROP_BUFFERS_SOFT_MAX:
       g_value_set_int (value, multisocketsink->units_soft_max);
       break;
-    case PROP_TIME_MIN:
-      g_value_set_int64 (value, multisocketsink->time_min);
-      break;
-    case PROP_BYTES_MIN:
-      g_value_set_int (value, multisocketsink->bytes_min);
-      break;
-    case PROP_BUFFERS_MIN:
-      g_value_set_int (value, multisocketsink->buffers_min);
-      break;
     case PROP_BUFFERS_QUEUED:
       g_value_set_uint (value, multisocketsink->buffers_queued);
       break;
@@ -2542,21 +2386,6 @@ gst_multi_socket_sink_get_property (GObject * object, guint prop_id,
       break;
     case PROP_UNITS_SOFT_MAX:
       g_value_set_int64 (value, multisocketsink->units_soft_max);
-      break;
-    case PROP_RECOVER_POLICY:
-      g_value_set_enum (value, multisocketsink->recover_policy);
-      break;
-    case PROP_TIMEOUT:
-      g_value_set_uint64 (value, multisocketsink->timeout);
-      break;
-    case PROP_SYNC_METHOD:
-      g_value_set_enum (value, multisocketsink->def_sync_method);
-      break;
-    case PROP_BYTES_TO_SERVE:
-      g_value_set_uint64 (value, multisocketsink->bytes_to_serve);
-      break;
-    case PROP_BYTES_SERVED:
-      g_value_set_uint64 (value, multisocketsink->bytes_served);
       break;
     case PROP_BURST_FORMAT:
       g_value_set_enum (value, multisocketsink->def_burst_format);
@@ -2591,12 +2420,15 @@ gst_multi_socket_sink_start (GstBaseSink * bsink)
 {
   GstMultiSocketSinkClass *fclass;
   GstMultiSocketSink *this;
+  GstMultiHandleSink *mhsink;
+
   GList *clients;
 
-  if (GST_OBJECT_FLAG_IS_SET (bsink, GST_MULTI_SOCKET_SINK_OPEN))
+  if (GST_OBJECT_FLAG_IS_SET (bsink, GST_MULTI_HANDLE_SINK_OPEN))
     return TRUE;
 
   this = GST_MULTI_SOCKET_SINK (bsink);
+  mhsink = GST_MULTI_HANDLE_SINK (bsink);
   fclass = GST_MULTI_SOCKET_SINK_GET_CLASS (this);
 
   GST_INFO_OBJECT (this, "starting");
@@ -2621,8 +2453,8 @@ gst_multi_socket_sink_start (GstBaseSink * bsink)
   CLIENTS_UNLOCK (this);
 
   this->streamheader = NULL;
-  this->bytes_to_serve = 0;
-  this->bytes_served = 0;
+  mhsink->bytes_to_serve = 0;
+  mhsink->bytes_served = 0;
 
   if (fclass->init) {
     fclass->init (this);
@@ -2633,7 +2465,7 @@ gst_multi_socket_sink_start (GstBaseSink * bsink)
   this->thread = g_thread_new ("multisocketsink",
       (GThreadFunc) gst_multi_socket_sink_thread, this);
 
-  GST_OBJECT_FLAG_SET (this, GST_MULTI_SOCKET_SINK_OPEN);
+  GST_OBJECT_FLAG_SET (this, GST_MULTI_HANDLE_SINK_OPEN);
 
   return TRUE;
 }
@@ -2648,14 +2480,16 @@ static gboolean
 gst_multi_socket_sink_stop (GstBaseSink * bsink)
 {
   GstMultiSocketSinkClass *fclass;
+  GstMultiHandleSinkClass *mhclass;
   GstMultiSocketSink *this;
   GstBuffer *buf;
   gint i;
 
   this = GST_MULTI_SOCKET_SINK (bsink);
   fclass = GST_MULTI_SOCKET_SINK_GET_CLASS (this);
+  mhclass = GST_MULTI_HANDLE_SINK_GET_CLASS (this);
 
-  if (!GST_OBJECT_FLAG_IS_SET (bsink, GST_MULTI_SOCKET_SINK_OPEN))
+  if (!GST_OBJECT_FLAG_IS_SET (bsink, GST_MULTI_HANDLE_SINK_OPEN))
     return TRUE;
 
   this->running = FALSE;
@@ -2671,7 +2505,7 @@ gst_multi_socket_sink_stop (GstBaseSink * bsink)
   }
 
   /* free the clients */
-  gst_multi_socket_sink_clear (this);
+  mhclass->clear (GST_MULTI_HANDLE_SINK (this));
 
   if (this->streamheader) {
     g_slist_foreach (this->streamheader, (GFunc) gst_mini_object_unref, NULL);
@@ -2703,7 +2537,7 @@ gst_multi_socket_sink_stop (GstBaseSink * bsink)
     }
     /* freeing the array is done in _finalize */
   }
-  GST_OBJECT_FLAG_UNSET (this, GST_MULTI_SOCKET_SINK_OPEN);
+  GST_OBJECT_FLAG_UNSET (this, GST_MULTI_HANDLE_SINK_OPEN);
 
   return TRUE;
 }

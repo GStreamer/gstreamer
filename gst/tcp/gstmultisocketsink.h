@@ -50,32 +50,13 @@ G_BEGIN_DECLS
 typedef struct _GstMultiSocketSink GstMultiSocketSink;
 typedef struct _GstMultiSocketSinkClass GstMultiSocketSinkClass;
 
-typedef enum {
-  GST_MULTI_SOCKET_SINK_OPEN             = (GST_ELEMENT_FLAG_LAST << 0),
-
-  GST_MULTI_SOCKET_SINK_FLAG_LAST        = (GST_ELEMENT_FLAG_LAST << 2)
-} GstMultiSocketSinkFlags;
-
 /* structure for a client
  */
 typedef struct {
+  GstMultiHandleClient client;
+
   GSocket *socket;
   GSource *source;
-
-  gint bufpos;                  /* position of this client in the global queue */
-  gint flushcount;              /* the remaining number of buffers to flush out or -1 if the 
-                                   client is not flushing. */
-
-  GstClientStatus status;
-
-  GSList *sending;              /* the buffers we need to send */
-  gint bufoffset;               /* offset in the first buffer */
-
-  gboolean discont;
-
-  gboolean new_connection;
-
-  gboolean currently_removing;
 
   /* method to sync client when connecting */
   GstSyncMethod sync_method;
@@ -83,24 +64,7 @@ typedef struct {
   guint64       burst_min_value;
   GstFormat     burst_max_format;
   guint64       burst_max_value;
-
-  GstCaps *caps;                /* caps of last queued buffer */
-
-  /* stats */
-  guint64 bytes_sent;
-  guint64 connect_time;
-  guint64 disconnect_time;
-  guint64 last_activity_time;
-  guint64 dropped_buffers;
-  guint64 avg_queue_size;
-  guint64 first_buffer_ts;
-  guint64 last_buffer_ts;
 } GstSocketClient;
-
-#define CLIENTS_LOCK_INIT(socketsink)       (g_rec_mutex_init(&socketsink->clientslock))
-#define CLIENTS_LOCK_CLEAR(socketsink)      (g_rec_mutex_clear(&socketsink->clientslock))
-#define CLIENTS_LOCK(socketsink)            (g_rec_mutex_lock(&socketsink->clientslock))
-#define CLIENTS_UNLOCK(socketsink)          (g_rec_mutex_unlock(&socketsink->clientslock))
 
 /**
  * GstMultiSocketSink:
@@ -108,12 +72,9 @@ typedef struct {
  * The multisocketsink object structure.
  */
 struct _GstMultiSocketSink {
-  GstBaseSink element;
+  GstMultiHandleSink element;
 
   /*< private >*/
-  guint64 bytes_to_serve; /* how much bytes we must serve */
-  guint64 bytes_served; /* how much bytes have we served */
-
   GRecMutex clientslock;  /* lock to protect the clients list */
   GList *clients;       /* list of clients we are serving */
   GHashTable *socket_hash;  /* index on socket to client */
@@ -139,19 +100,9 @@ struct _GstMultiSocketSink {
   GstFormat unit_type;/* the format of the units */
   gint64 units_max;       /* max units to queue for a client */
   gint64 units_soft_max;  /* max units a client can lag before recovery starts */
-  GstRecoverPolicy recover_policy;
-  GstClockTime timeout; /* max amount of nanoseconds to remain idle */
 
-  GstSyncMethod def_sync_method;    /* what method to use for connecting clients */
   GstFormat     def_burst_format;
   guint64       def_burst_value;
-
-  /* these values are used to control the amount of data
-   * kept in the queues. It allows clients to perform a burst
-   * on connect. */
-  gint   bytes_min;	/* min number of bytes to queue */
-  gint64 time_min;	/* min time to queue */
-  gint   buffers_min;   /* min number of buffers to queue */
 
   gboolean resend_streamheader; /* resend streamheader if it changes */
 
@@ -164,7 +115,7 @@ struct _GstMultiSocketSink {
 };
 
 struct _GstMultiSocketSinkClass {
-  GstBaseSinkClass parent_class;
+  GstMultiHandleSinkClass parent_class;
 
   /* element methods */
   void          (*add)          (GstMultiSocketSink *sink, GSocket *socket);
@@ -195,7 +146,7 @@ void          gst_multi_socket_sink_add_full     (GstMultiSocketSink *sink, GSoc
                                               GstFormat max_format, guint64 max_value);
 void          gst_multi_socket_sink_remove       (GstMultiSocketSink *sink, GSocket *socket);
 void          gst_multi_socket_sink_remove_flush (GstMultiSocketSink *sink, GSocket *socket);
-void          gst_multi_socket_sink_clear        (GstMultiSocketSink *sink);
+void          gst_multi_socket_sink_clear        (GstMultiHandleSink *sink);
 GstStructure*  gst_multi_socket_sink_get_stats    (GstMultiSocketSink *sink, GSocket *socket);
 
 G_END_DECLS
