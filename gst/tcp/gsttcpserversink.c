@@ -39,8 +39,6 @@
 #include <gst/gst-i18n-plugin.h>
 #include <string.h>             /* memset */
 
-#include <sys/ioctl.h>
-
 #include "gsttcp.h"
 #include "gsttcpserversink.h"
 #include "gsttcp-marshal.h"
