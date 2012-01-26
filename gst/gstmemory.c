@@ -592,7 +592,7 @@ gst_memory_map (GstMemory * mem, GstMapInfo * info, GstMapFlags flags)
   /* ERRORS */
 lock_failed:
   {
-    GST_DEBUG ("mem %p: lock %d failed", flags);
+    GST_DEBUG ("mem %p: lock %d failed", mem, flags);
     return FALSE;
   }
 error:
