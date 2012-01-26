@@ -233,24 +233,6 @@ EXPORTS
 	gst_collect_pads2_start
 	gst_collect_pads2_stop
 	gst_collect_pads2_take_buffer
-	gst_collect_pads_add_pad
-	gst_collect_pads_available
-	gst_collect_pads_collect
-	gst_collect_pads_collect_range
-	gst_collect_pads_flush
-	gst_collect_pads_get_type
-	gst_collect_pads_is_active
-	gst_collect_pads_new
-	gst_collect_pads_peek
-	gst_collect_pads_pop
-	gst_collect_pads_read_buffer
-	gst_collect_pads_remove_pad
-	gst_collect_pads_set_clip_function
-	gst_collect_pads_set_flushing
-	gst_collect_pads_set_function
-	gst_collect_pads_start
-	gst_collect_pads_stop
-	gst_collect_pads_take_buffer
 	gst_push_src_get_type
 	gst_type_find_helper
 	gst_type_find_helper_for_buffer
