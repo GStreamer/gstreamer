@@ -224,19 +224,16 @@ gboolean
 gst_vaapi_picture_output(GstVaapiPicture *picture)
 {
     GstVaapiSurfaceProxy *proxy;
-    gboolean success;
 
     g_return_val_if_fail(GST_VAAPI_IS_PICTURE(picture), FALSE);
 
     proxy = gst_vaapi_surface_proxy_new(GET_CONTEXT(picture), picture->surface);
     if (!proxy)
         return FALSE;
-    success = gst_vaapi_decoder_push_surface_proxy(
-        GET_DECODER(picture),
-        proxy, picture->pts
-    );
-    g_object_unref(proxy); // ref'ed in gst_vaapi_decoder_push_surface_proxy()
-    return success;
+
+    gst_vaapi_surface_proxy_set_timestamp(proxy, picture->pts);
+    gst_vaapi_decoder_push_surface_proxy(GET_DECODER(picture), proxy);
+    return TRUE;
 }
 
 /* ------------------------------------------------------------------------- */

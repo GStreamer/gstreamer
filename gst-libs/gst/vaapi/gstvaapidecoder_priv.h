@@ -165,18 +165,10 @@ gst_vaapi_decoder_push_buffer_sub(
     guint            size
 ) attribute_hidden;
 
-gboolean
-gst_vaapi_decoder_push_surface(
-    GstVaapiDecoder *decoder,
-    GstVaapiSurface *surface,
-    GstClockTime     timestamp
-) attribute_hidden;
-
-gboolean
+void
 gst_vaapi_decoder_push_surface_proxy(
     GstVaapiDecoder      *decoder,
-    GstVaapiSurfaceProxy *proxy,
-    GstClockTime          timestamp
+    GstVaapiSurfaceProxy *proxy
 ) attribute_hidden;
 
 G_END_DECLS

@@ -484,11 +484,25 @@ gst_vaapi_decoder_ffmpeg_create(GstVaapiDecoderFfmpeg *ffdecoder)
 }
 
 static GstVaapiDecoderStatus
+render_frame(GstVaapiDecoderFfmpeg *decoder, AVFrame *frame)
+{
+    GstVaapiDecoder * const base_decoder = GST_VAAPI_DECODER(decoder);
+    GstVaapiSurfaceProxy *proxy;
+
+    proxy = GST_VAAPI_SURFACE_PROXY(frame->data[0]);
+    if (!proxy)
+        return GST_VAAPI_DECODER_STATUS_ERROR_INVALID_SURFACE;
+
+    gst_vaapi_surface_proxy_set_timestamp(proxy, frame->pts);
+    gst_vaapi_decoder_push_surface_proxy(base_decoder, g_object_ref(proxy));
+    return GST_VAAPI_DECODER_STATUS_SUCCESS;
+}
+
+static GstVaapiDecoderStatus
 decode_frame(GstVaapiDecoderFfmpeg *ffdecoder, guchar *buf, guint buf_size)
 {
     GstVaapiDecoderFfmpegPrivate * const priv = ffdecoder->priv;
     GstVaapiDisplay * const display = GST_VAAPI_DECODER_DISPLAY(ffdecoder);
-    GstVaapiSurfaceProxy *proxy;
     int bytes_read, got_picture = 0;
     AVPacket pkt;
 
@@ -509,14 +523,7 @@ decode_frame(GstVaapiDecoderFfmpeg *ffdecoder, guchar *buf, guint buf_size)
     if (bytes_read < 0)
         return GST_VAAPI_DECODER_STATUS_ERROR_UNKNOWN;
 
-    proxy = GST_VAAPI_SURFACE_PROXY(priv->frame->data[0]);
-    if (!proxy)
-        return GST_VAAPI_DECODER_STATUS_ERROR_INVALID_SURFACE;
-
-    if (!gst_vaapi_decoder_push_surface_proxy(GST_VAAPI_DECODER_CAST(ffdecoder),
-                                              proxy, priv->frame->pts))
-        return GST_VAAPI_DECODER_STATUS_ERROR_ALLOCATION_FAILED;
-    return GST_VAAPI_DECODER_STATUS_SUCCESS;
+    return render_frame(ffdecoder, priv->frame);
 }
 
 GstVaapiDecoderStatus
