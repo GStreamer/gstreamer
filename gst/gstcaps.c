@@ -75,8 +75,14 @@
 
 #define DEBUG_REFCOUNT
 
+typedef struct _GstCapsImpl
+{
+  GstCaps caps;
 
-#define GST_CAPS_ARRAY(c) ((GPtrArray *)((c)->priv))
+  GPtrArray *array;
+} GstCapsImpl;
+
+#define GST_CAPS_ARRAY(c) (((GstCapsImpl *)(c))->array)
 
 #define GST_CAPS_LEN(c)   (GST_CAPS_ARRAY(c)->len)
 
@@ -191,7 +197,7 @@ gst_caps_init (GstCaps * caps, gsize size)
    * in practise
    * GST_CAPS_ARRAY (caps) = g_ptr_array_sized_new (32);
    */
-  caps->priv = g_ptr_array_new ();
+  GST_CAPS_ARRAY (caps) = g_ptr_array_new ();
 }
 
 /**

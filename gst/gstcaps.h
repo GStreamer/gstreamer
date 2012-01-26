@@ -344,9 +344,6 @@ gst_caps_take (GstCaps **old_caps, GstCaps *new_caps)
  */
 struct _GstCaps {
   GstMiniObject mini_object;
-
-  /*< private >*/
-  gpointer     priv;
 };
 
 /**
