@@ -141,7 +141,7 @@ check_PROGRAMS =				\
 # failing tests
 noinst_PROGRAMS =				\
 	gst/gstpipeline				\
-	libs/collectpads
+	libs/collectpads2
 
 # elements to ignore for the state tests
 # STATE_IGNORE_ELEMENTS =
@@ -199,7 +199,7 @@ libs_gstnettimeprovider_LDADD = \
 # these just need valgrind fixing, period
 VALGRIND_TO_FIX = \
 	gst/gstinfo \
-	libs/collectpads \
+	libs/collectpads2 \
 	pipelines/parse-launch
 
 VALGRIND_IGNORE = \
