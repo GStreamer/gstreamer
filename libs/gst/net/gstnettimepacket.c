@@ -157,7 +157,7 @@ receive_error:
   }
 short_packet:
   {
-    GST_DEBUG ("someone sent us a short packet (%d < %d)",
+    GST_DEBUG ("someone sent us a short packet (%" G_GSSIZE_FORMAT " < %d)",
         ret, GST_NET_TIME_PACKET_SIZE);
     g_set_error (error, G_IO_ERROR, G_IO_ERROR_INVALID_DATA,
         "short time packet (%d < %d)", (int) ret, GST_NET_TIME_PACKET_SIZE);
