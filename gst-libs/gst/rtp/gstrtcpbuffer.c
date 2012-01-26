@@ -285,12 +285,15 @@ gst_rtcp_buffer_unmap (GstRTCPBuffer * rtcp)
   g_return_val_if_fail (rtcp != NULL, FALSE);
   g_return_val_if_fail (GST_IS_BUFFER (rtcp->buffer), FALSE);
 
-  /* move to the first free space */
-  if (gst_rtcp_buffer_get_first_packet (rtcp, &packet))
-    while (gst_rtcp_packet_move_to_next (&packet));
+  if (rtcp->map.flags & GST_MAP_WRITE) {
+    /* move to the first free space */
+    if (gst_rtcp_buffer_get_first_packet (rtcp, &packet))
+      while (gst_rtcp_packet_move_to_next (&packet));
 
-  /* shrink size */
-  gst_buffer_resize (rtcp->buffer, 0, packet.offset);
+    /* shrink size */
+    gst_buffer_resize (rtcp->buffer, 0, packet.offset);
+  }
+
   gst_buffer_unmap (rtcp->buffer, &rtcp->map);
   rtcp->buffer = NULL;
 
