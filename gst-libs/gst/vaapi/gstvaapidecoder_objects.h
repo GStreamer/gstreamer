@@ -105,6 +105,7 @@ struct _GstVaapiPicture {
     /*< private >*/
     GstVaapiCodecObject         parent_instance;
     GstVaapiSurface            *surface;
+    GstVaapiSurfaceProxy       *proxy;
     VABufferID                  param_id;
 
     /*< public >*/

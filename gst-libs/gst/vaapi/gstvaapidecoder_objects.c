@@ -71,6 +71,11 @@ gst_vaapi_picture_destroy(GstVaapiPicture *picture)
         picture->bitplane = NULL;
     }
 
+    if (picture->proxy) {
+        g_object_unref(picture->proxy);
+        picture->proxy = NULL;
+    }
+
     picture->surface_id = VA_INVALID_ID;
     picture->surface = NULL;
 
@@ -110,6 +115,7 @@ gst_vaapi_picture_init(GstVaapiPicture *picture)
 {
     picture->type       = GST_VAAPI_PICTURE_TYPE_NONE;
     picture->surface    = NULL;
+    picture->proxy      = NULL;
     picture->surface_id = VA_INVALID_ID;
     picture->param      = NULL;
     picture->param_id   = VA_INVALID_ID;
@@ -227,12 +233,19 @@ gst_vaapi_picture_output(GstVaapiPicture *picture)
 
     g_return_val_if_fail(GST_VAAPI_IS_PICTURE(picture), FALSE);
 
-    proxy = gst_vaapi_surface_proxy_new(GET_CONTEXT(picture), picture->surface);
-    if (!proxy)
-        return FALSE;
+    proxy = picture->proxy;
+    if (!proxy) {
+        proxy = gst_vaapi_surface_proxy_new(
+            GET_CONTEXT(picture),
+            picture->surface
+        );
+        if (!proxy)
+            return FALSE;
+        picture->proxy = proxy;
+    }
 
     gst_vaapi_surface_proxy_set_timestamp(proxy, picture->pts);
-    gst_vaapi_decoder_push_surface_proxy(GET_DECODER(picture), proxy);
+    gst_vaapi_decoder_push_surface_proxy(GET_DECODER(picture), g_object_ref(proxy));
     return TRUE;
 }
 
