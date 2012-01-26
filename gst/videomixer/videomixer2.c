@@ -263,12 +263,12 @@ gst_videomixer2_update_src_caps (GstVideoMixer2 * mix)
       gst_structure_fixate_field_nearest_fraction (s, "framerate", best_fps_n,
           best_fps_d);
 
-      gst_structure_get_int (s, "width", &best_width);
-      gst_structure_get_int (s, "height", &best_height);
-      gst_structure_get_fraction (s, "fraction", &best_fps_n, &best_fps_d);
+      gst_structure_get_int (s, "width", &info.width);
+      gst_structure_get_int (s, "height", &info.height);
+      gst_structure_get_fraction (s, "fraction", &info.fps_n, &info.fps_d);
     }
 
-    mix->info = info;
+    caps = gst_video_info_to_caps (&info);
 
     GST_VIDEO_MIXER2_UNLOCK (mix);
     ret = gst_videomixer2_src_setcaps (mix->srcpad, mix, caps);
