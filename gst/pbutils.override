@@ -433,7 +433,7 @@ _wrap_gst_encoding_list_all_targets(PyGstMiniObject * self, PyObject *args, PyOb
     const gchar *categoryname = NULL;
     PyObject *pyres;
 
-    if (!PyArg_ParseTupleAndKeywords(args, kwargs,"!s:GstDiscovererInfo.get_streams", kwlist, &categoryname))
+    if (!PyArg_ParseTupleAndKeywords(args, kwargs,"s:GstEncoding.list_all_targets", kwlist, &categoryname))
         return NULL;
     res = (GList*) gst_encoding_list_all_targets(categoryname);
 
