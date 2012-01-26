@@ -780,7 +780,7 @@ gst_dtmf_src_create (GstBaseSrc * basesrc, guint64 offset,
 
   buf = gst_dtmf_src_create_next_tone_packet (dtmfsrc, dtmfsrc->last_event);
 
-  GST_LOG_OBJECT (dtmfsrc, "Created buffer of size %d",
+  GST_LOG_OBJECT (dtmfsrc, "Created buffer of size %" G_GSIZE_FORMAT,
       gst_buffer_get_size (buf));
   *buffer = buf;
 
