@@ -116,7 +116,7 @@
 #include <glib/gstdio.h>
 
 #include <gst/gst.h>
-#include <gst/base/gstcollectpads.h>
+#include <gst/base/gstcollectpads2.h>
 #include <gst/audio/audio.h>
 #include <gst/video/video.h>
 #include <gst/tag/xmpwriter.h>
