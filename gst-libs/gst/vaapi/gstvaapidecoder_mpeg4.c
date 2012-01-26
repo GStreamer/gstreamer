@@ -29,6 +29,7 @@
 #include <gst/base/gstbitreader.h>
 #include <gst/codecparsers/gstmpeg4parser.h>
 #include "gstvaapidecoder_mpeg4.h"
+#include "gstvaapidecoder_objects.h"
 #include "gstvaapidecoder_priv.h"
 #include "gstvaapidisplay_priv.h"
 #include "gstvaapiobject_priv.h"
@@ -95,23 +96,11 @@ struct _GstVaapiDecoderMpeg4Private {
 static void
 gst_vaapi_decoder_mpeg4_close(GstVaapiDecoderMpeg4 *decoder)
 {
-    GstVaapiDecoder * const base_decoder = GST_VAAPI_DECODER(decoder);
     GstVaapiDecoderMpeg4Private * const priv = decoder->priv;
 
-    if (priv->curr_picture) {
-        gst_vaapi_decoder_free_picture(base_decoder, priv->curr_picture);
-        priv->curr_picture = NULL;
-    }
-
-    if (priv->next_picture) {
-        gst_vaapi_decoder_free_picture(base_decoder, priv->next_picture);
-        priv->next_picture = NULL;
-    }
-
-    if (priv->prev_picture) {
-        gst_vaapi_decoder_free_picture(base_decoder, priv->prev_picture);
-        priv->prev_picture = NULL;
-    }
+    gst_vaapi_picture_replace(&priv->curr_picture, NULL);
+    gst_vaapi_picture_replace(&priv->next_picture, NULL);
+    gst_vaapi_picture_replace(&priv->prev_picture, NULL);
 
     if (priv->sub_buffer) {
         gst_buffer_unref(priv->sub_buffer);
@@ -231,7 +220,7 @@ ensure_quant_matrix(GstVaapiDecoderMpeg4 *decoder, GstVaapiPicture *picture)
             return GST_VAAPI_DECODER_STATUS_SUCCESS;
     }
 
-    picture->iq_matrix = gst_vaapi_decoder_new_iq_matrix(GST_VAAPI_DECODER(decoder));
+    picture->iq_matrix = GST_VAAPI_IQ_MATRIX_NEW(MPEG4, decoder);
     if (!picture->iq_matrix) {
         GST_DEBUG("failed to allocate IQ matrix");
         return GST_VAAPI_DECODER_STATUS_ERROR_ALLOCATION_FAILED;
@@ -261,11 +250,7 @@ ensure_quant_matrix(GstVaapiDecoderMpeg4 *decoder, GstVaapiPicture *picture)
 static inline GstVaapiDecoderStatus
 render_picture(GstVaapiDecoderMpeg4 *decoder, GstVaapiPicture *picture)
 {
-    GstVaapiDecoder * const base_decoder = GST_VAAPI_DECODER(decoder);
-
-    if (!gst_vaapi_decoder_push_surface(base_decoder,
-                                        picture->surface,
-                                        picture->pts))
+    if (!gst_vaapi_picture_output(picture))
         return GST_VAAPI_DECODER_STATUS_ERROR_ALLOCATION_FAILED;
     return GST_VAAPI_DECODER_STATUS_SUCCESS;
 }
@@ -277,19 +262,18 @@ render_picture(GstVaapiDecoderMpeg4 *decoder, GstVaapiPicture *picture)
 static GstVaapiDecoderStatus
 decode_current_picture(GstVaapiDecoderMpeg4 *decoder)
 {
-    GstVaapiDecoder * const base_decoder = GST_VAAPI_DECODER(decoder);
     GstVaapiDecoderMpeg4Private * const priv = decoder->priv;
     GstVaapiPicture * const picture = priv->curr_picture;
     GstVaapiDecoderStatus status = GST_VAAPI_DECODER_STATUS_SUCCESS;
 
     if (picture) {
-        if (!gst_vaapi_decoder_decode_picture(base_decoder, picture))
+        if (!gst_vaapi_picture_decode(picture))
             status = GST_VAAPI_DECODER_STATUS_ERROR_UNKNOWN;
         if (!GST_VAAPI_PICTURE_IS_REFERENCE(picture)) {
             if ((priv->prev_picture && priv->next_picture) ||
                 (priv->closed_gop && priv->next_picture))
                 status = render_picture(decoder, picture);
-            gst_vaapi_decoder_free_picture(base_decoder, picture);
+            gst_vaapi_picture_unref(picture);
         }
         priv->curr_picture = NULL;
     }
@@ -448,7 +432,6 @@ static GstVaapiDecoderStatus
 decode_picture(GstVaapiDecoderMpeg4 *decoder, const guint8 *buf, guint buf_size)
 {
     GstMpeg4ParseResult parser_result = GST_MPEG4_PARSER_OK;
-    GstVaapiDecoder * const base_decoder = GST_VAAPI_DECODER(decoder);
     GstVaapiDecoderMpeg4Private * const priv = decoder->priv;
     GstMpeg4VideoObjectPlane * const vop_hdr = &priv->vop_hdr;
     GstMpeg4VideoObjectLayer * const vol_hdr = &priv->vol_hdr;
@@ -496,7 +479,7 @@ decode_picture(GstVaapiDecoderMpeg4 *decoder, const guint8 *buf, guint buf_size)
             return status;
     }
 
-    priv->curr_picture = gst_vaapi_decoder_new_picture(base_decoder);
+    priv->curr_picture = GST_VAAPI_PICTURE_NEW(MPEG4, decoder);
     if (!priv->curr_picture) {
         GST_DEBUG("failed to allocate picture");
         return GST_VAAPI_DECODER_STATUS_ERROR_ALLOCATION_FAILED;
@@ -527,12 +510,12 @@ decode_picture(GstVaapiDecoderMpeg4 *decoder, const guint8 *buf, guint buf_size)
     case GST_MPEG4_I_VOP:
         picture->type = GST_VAAPI_PICTURE_TYPE_I;
         if (priv->is_svh || vop_hdr->coded) 
-            picture->flags |= GST_VAAPI_PICTURE_REFERENCE;
+            GST_VAAPI_PICTURE_FLAG_SET(picture, GST_VAAPI_PICTURE_FLAG_REFERENCE);
         break;
     case GST_MPEG4_P_VOP:
         picture->type = GST_VAAPI_PICTURE_TYPE_P;
         if (priv->is_svh || vop_hdr->coded) 
-            picture->flags |= GST_VAAPI_PICTURE_REFERENCE;
+            GST_VAAPI_PICTURE_FLAG_SET(picture, GST_VAAPI_PICTURE_FLAG_REFERENCE);
         break;
     case GST_MPEG4_B_VOP:
         picture->type = GST_VAAPI_PICTURE_TYPE_B;
@@ -541,7 +524,7 @@ decode_picture(GstVaapiDecoderMpeg4 *decoder, const guint8 *buf, guint buf_size)
         picture->type = GST_VAAPI_PICTURE_TYPE_S;
         // see 3.175 reference VOP
         if (vop_hdr->coded) 
-            picture->flags |= GST_VAAPI_PICTURE_REFERENCE;
+            GST_VAAPI_PICTURE_FLAG_SET(picture, GST_VAAPI_PICTURE_FLAG_REFERENCE);
         break;
     default:
         GST_DEBUG("unsupported picture type %d", priv->coding_type);
@@ -586,9 +569,8 @@ decode_picture(GstVaapiDecoderMpeg4 *decoder, const guint8 *buf, guint buf_size)
     /* Update reference pictures */
     /* XXX: consider priv->vol_hdr.low_delay, consider packed video frames for DivX/XviD */
     if (GST_VAAPI_PICTURE_IS_REFERENCE(picture)) {
-        picture->flags |= GST_VAAPI_PICTURE_REFERENCE;
         if (priv->prev_picture) {
-            gst_vaapi_decoder_free_picture(base_decoder, priv->prev_picture);
+            gst_vaapi_picture_unref(priv->prev_picture);
             priv->prev_picture = NULL;
         }
         if (priv->next_picture) {
@@ -712,15 +694,12 @@ decode_slice(
     if (!has_packet_header && !fill_picture(decoder, picture))
         return GST_VAAPI_DECODER_STATUS_ERROR_UNKNOWN;
 
-    slice = gst_vaapi_decoder_new_slice(
-        GST_VAAPI_DECODER(decoder),
-        picture,
-        (guchar*)buf, buf_size
-    );
+    slice = GST_VAAPI_SLICE_NEW(MPEG4, decoder, buf, buf_size);
     if (!slice) {
         GST_DEBUG("failed to allocate slice");
         return GST_VAAPI_DECODER_STATUS_ERROR_ALLOCATION_FAILED;
     }
+    gst_vaapi_picture_add_slice(picture, slice);
 
     /* Fill in VASliceParameterBufferMPEG4 */
     slice_param = slice->param;
@@ -1085,14 +1064,6 @@ gst_vaapi_decoder_mpeg4_new(GstVaapiDisplay *display, GstCaps *caps)
 {
     GstVaapiDecoderMpeg4 *decoder;
 
-    static const GstVaapiCodecInfo codec_info = {
-        .pic_size               = sizeof(GstVaapiPicture),
-        .slice_size             = sizeof(GstVaapiSlice),
-        .pic_param_size         = sizeof(VAPictureParameterBufferMPEG4),
-        .slice_param_size       = sizeof(VASliceParameterBufferMPEG4),
-        .iq_matrix_size         = sizeof(VAIQMatrixBufferMPEG4),
-    };
-
     g_return_val_if_fail(GST_VAAPI_IS_DISPLAY(display), NULL);
     g_return_val_if_fail(GST_IS_CAPS(caps), NULL);
 
@@ -1100,7 +1071,6 @@ gst_vaapi_decoder_mpeg4_new(GstVaapiDisplay *display, GstCaps *caps)
         GST_VAAPI_TYPE_DECODER_MPEG4,
         "display",      display,
         "caps",         caps,
-        "codec-info",   &codec_info,
         NULL
     );
     if (!decoder->priv->is_constructed) {

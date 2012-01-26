@@ -29,6 +29,7 @@
 #include <gst/base/gstbitreader.h>
 #include <gst/codecparsers/gstmpegvideoparser.h>
 #include "gstvaapidecoder_mpeg2.h"
+#include "gstvaapidecoder_objects.h"
 #include "gstvaapidecoder_priv.h"
 #include "gstvaapidisplay_priv.h"
 #include "gstvaapiobject_priv.h"
@@ -91,23 +92,11 @@ struct _GstVaapiDecoderMpeg2Private {
 static void
 gst_vaapi_decoder_mpeg2_close(GstVaapiDecoderMpeg2 *decoder)
 {
-    GstVaapiDecoder * const base_decoder = GST_VAAPI_DECODER(decoder);
     GstVaapiDecoderMpeg2Private * const priv = decoder->priv;
 
-    if (priv->current_picture) {
-        gst_vaapi_decoder_free_picture(base_decoder, priv->current_picture);
-        priv->current_picture = NULL;
-    }
-
-    if (priv->next_picture) {
-        gst_vaapi_decoder_free_picture(base_decoder, priv->next_picture);
-        priv->next_picture = NULL;
-    }
-
-    if (priv->prev_picture) {
-        gst_vaapi_decoder_free_picture(base_decoder, priv->prev_picture);
-        priv->prev_picture = NULL;
-    }
+    gst_vaapi_picture_replace(&priv->current_picture, NULL);
+    gst_vaapi_picture_replace(&priv->next_picture,    NULL);
+    gst_vaapi_picture_replace(&priv->prev_picture,    NULL);
 
     if (priv->sub_buffer) {
         gst_buffer_unref(priv->sub_buffer);
@@ -221,7 +210,7 @@ ensure_quant_matrix(GstVaapiDecoderMpeg2 *decoder, GstVaapiPicture *picture)
 
     priv->quant_matrix_changed = FALSE;
 
-    picture->iq_matrix = gst_vaapi_decoder_new_iq_matrix(GST_VAAPI_DECODER(decoder));
+    picture->iq_matrix = GST_VAAPI_IQ_MATRIX_NEW(MPEG2, decoder);
     if (!picture->iq_matrix) {
         GST_DEBUG("failed to allocate IQ matrix");
         return GST_VAAPI_DECODER_STATUS_ERROR_ALLOCATION_FAILED;
@@ -266,11 +255,7 @@ ensure_quant_matrix(GstVaapiDecoderMpeg2 *decoder, GstVaapiPicture *picture)
 static inline GstVaapiDecoderStatus
 render_picture(GstVaapiDecoderMpeg2 *decoder, GstVaapiPicture *picture)
 {
-    GstVaapiDecoder * const base_decoder = GST_VAAPI_DECODER(decoder);
-
-    if (!gst_vaapi_decoder_push_surface(base_decoder,
-                                        picture->surface,
-                                        picture->pts))
+    if (!gst_vaapi_picture_output(picture))
         return GST_VAAPI_DECODER_STATUS_ERROR_ALLOCATION_FAILED;
     return GST_VAAPI_DECODER_STATUS_SUCCESS;
 }
@@ -278,19 +263,18 @@ render_picture(GstVaapiDecoderMpeg2 *decoder, GstVaapiPicture *picture)
 static GstVaapiDecoderStatus
 decode_current_picture(GstVaapiDecoderMpeg2 *decoder)
 {
-    GstVaapiDecoder * const base_decoder = GST_VAAPI_DECODER(decoder);
     GstVaapiDecoderMpeg2Private * const priv = decoder->priv;
     GstVaapiPicture * const picture = priv->current_picture;
     GstVaapiDecoderStatus status = GST_VAAPI_DECODER_STATUS_SUCCESS;
 
     if (picture) {
-        if (!gst_vaapi_decoder_decode_picture(base_decoder, picture))
+        if (!gst_vaapi_picture_decode(picture))
             status = GST_VAAPI_DECODER_STATUS_ERROR_UNKNOWN;
         if (!GST_VAAPI_PICTURE_IS_REFERENCE(picture)) {
             if ((priv->prev_picture && priv->next_picture) ||
                 (priv->closed_gop && priv->next_picture))
                 status = render_picture(decoder, picture);
-            gst_vaapi_decoder_free_picture(base_decoder, picture);
+            gst_vaapi_picture_unref(picture);
         }
         priv->current_picture = NULL;
     }
@@ -448,7 +432,6 @@ decode_gop(GstVaapiDecoderMpeg2 *decoder, guchar *buf, guint buf_size)
 static GstVaapiDecoderStatus
 decode_picture(GstVaapiDecoderMpeg2 *decoder, guchar *buf, guint buf_size)
 {
-    GstVaapiDecoder * const base_decoder = GST_VAAPI_DECODER(decoder);
     GstVaapiDecoderMpeg2Private * const priv = decoder->priv;
     GstMpegVideoPictureHdr * const pic_hdr = &priv->pic_hdr;
     GstVaapiPicture *picture;
@@ -467,7 +450,7 @@ decode_picture(GstVaapiDecoderMpeg2 *decoder, guchar *buf, guint buf_size)
             return status;
     }
 
-    priv->current_picture = gst_vaapi_decoder_new_picture(base_decoder);
+    priv->current_picture = GST_VAAPI_PICTURE_NEW(MPEG2, decoder);
     if (!priv->current_picture) {
         GST_DEBUG("failed to allocate picture");
         return GST_VAAPI_DECODER_STATUS_ERROR_ALLOCATION_FAILED;
@@ -510,9 +493,9 @@ decode_picture(GstVaapiDecoderMpeg2 *decoder, guchar *buf, guint buf_size)
 
     /* Update reference pictures */
     if (pic_hdr->pic_type != GST_MPEG_VIDEO_PICTURE_TYPE_B) {
-        picture->flags |= GST_VAAPI_PICTURE_REFERENCE;
+        GST_VAAPI_PICTURE_FLAG_SET(picture, GST_VAAPI_PICTURE_FLAG_REFERENCE);
         if (priv->prev_picture) {
-            gst_vaapi_decoder_free_picture(base_decoder, priv->prev_picture);
+            gst_vaapi_picture_unref(priv->prev_picture);
             priv->prev_picture = NULL;
         }
         if (priv->next_picture) {
@@ -626,15 +609,12 @@ decode_slice(
 
     priv->mb_y = slice_no;
 
-    slice = gst_vaapi_decoder_new_slice(
-        GST_VAAPI_DECODER(decoder),
-        picture,
-        buf, buf_size
-    );
+    slice = GST_VAAPI_SLICE_NEW(MPEG2, decoder, buf, buf_size);
     if (!slice) {
         GST_DEBUG("failed to allocate slice");
         return GST_VAAPI_DECODER_STATUS_ERROR_ALLOCATION_FAILED;
     }
+    gst_vaapi_picture_add_slice(picture, slice);
 
     /* Parse slice */
     gst_bit_reader_init(&br, buf, buf_size);
@@ -911,14 +891,6 @@ gst_vaapi_decoder_mpeg2_new(GstVaapiDisplay *display, GstCaps *caps)
 {
     GstVaapiDecoderMpeg2 *decoder;
 
-    static const GstVaapiCodecInfo codec_info = {
-        .pic_size               = sizeof(GstVaapiPicture),
-        .slice_size             = sizeof(GstVaapiSlice),
-        .pic_param_size         = sizeof(VAPictureParameterBufferMPEG2),
-        .slice_param_size       = sizeof(VASliceParameterBufferMPEG2),
-        .iq_matrix_size         = sizeof(VAIQMatrixBufferMPEG2),
-    };
-
     g_return_val_if_fail(GST_VAAPI_IS_DISPLAY(display), NULL);
     g_return_val_if_fail(GST_IS_CAPS(caps), NULL);
 
@@ -926,7 +898,6 @@ gst_vaapi_decoder_mpeg2_new(GstVaapiDisplay *display, GstCaps *caps)
         GST_VAAPI_TYPE_DECODER_MPEG2,
         "display",      display,
         "caps",         caps,
-        "codec-info",   &codec_info,
         NULL
     );
     if (!decoder->priv->is_constructed) {

@@ -28,6 +28,7 @@
 #include <string.h>
 #include <gst/codecparsers/gstvc1parser.h>
 #include "gstvaapidecoder_vc1.h"
+#include "gstvaapidecoder_objects.h"
 #include "gstvaapidecoder_priv.h"
 #include "gstvaapidisplay_priv.h"
 #include "gstvaapiobject_priv.h"
@@ -96,23 +97,11 @@ get_status(GstVC1ParserResult result)
 static void
 gst_vaapi_decoder_vc1_close(GstVaapiDecoderVC1 *decoder)
 {
-    GstVaapiDecoder * const base_decoder = GST_VAAPI_DECODER(decoder);
     GstVaapiDecoderVC1Private * const priv = decoder->priv;
 
-    if (priv->current_picture) {
-        gst_vaapi_decoder_free_picture(base_decoder, priv->current_picture);
-        priv->current_picture = NULL;
-    }
-
-    if (priv->next_picture) {
-        gst_vaapi_decoder_free_picture(base_decoder, priv->next_picture);
-        priv->next_picture = NULL;
-    }
-
-    if (priv->prev_picture) {
-        gst_vaapi_decoder_free_picture(base_decoder, priv->prev_picture);
-        priv->prev_picture = NULL;
-    }
+    gst_vaapi_picture_replace(&priv->current_picture, NULL);
+    gst_vaapi_picture_replace(&priv->next_picture,    NULL);
+    gst_vaapi_picture_replace(&priv->prev_picture,    NULL);
 
     if (priv->sub_buffer) {
         gst_buffer_unref(priv->sub_buffer);
@@ -220,11 +209,7 @@ ensure_context(GstVaapiDecoderVC1 *decoder)
 static inline GstVaapiDecoderStatus
 render_picture(GstVaapiDecoderVC1 *decoder, GstVaapiPicture *picture)
 {
-    GstVaapiDecoder * const base_decoder = GST_VAAPI_DECODER(decoder);
-
-    if (!gst_vaapi_decoder_push_surface(base_decoder,
-                                        picture->surface,
-                                        picture->pts))
+    if (!gst_vaapi_picture_output(picture))
         return GST_VAAPI_DECODER_STATUS_ERROR_ALLOCATION_FAILED;
     return GST_VAAPI_DECODER_STATUS_SUCCESS;
 }
@@ -232,18 +217,17 @@ render_picture(GstVaapiDecoderVC1 *decoder, GstVaapiPicture *picture)
 static GstVaapiDecoderStatus
 decode_current_picture(GstVaapiDecoderVC1 *decoder)
 {
-    GstVaapiDecoder * const base_decoder = GST_VAAPI_DECODER(decoder);
     GstVaapiDecoderVC1Private * const priv = decoder->priv;
     GstVaapiPicture * const picture = priv->current_picture;
     GstVaapiDecoderStatus status = GST_VAAPI_DECODER_STATUS_SUCCESS;
 
     if (picture) {
-        if (!gst_vaapi_decoder_decode_picture(base_decoder, picture))
+        if (!gst_vaapi_picture_decode(picture))
             status = GST_VAAPI_DECODER_STATUS_ERROR_UNKNOWN;
         if (!GST_VAAPI_PICTURE_IS_REFERENCE(picture)) {
             if (priv->prev_picture && priv->next_picture)
                 status = render_picture(decoder, picture);
-            gst_vaapi_decoder_free_picture(base_decoder, picture);
+            gst_vaapi_picture_unref(picture);
         }
         priv->current_picture = NULL;
     }
@@ -788,7 +772,6 @@ fill_picture_advanced(GstVaapiDecoderVC1 *decoder, GstVaapiPicture *picture)
 static gboolean
 fill_picture(GstVaapiDecoderVC1 *decoder, GstVaapiPicture *picture)
 {
-    GstVaapiDecoder * const base_decoder = GST_VAAPI_DECODER(decoder);
     GstVaapiDecoderVC1Private * const priv = decoder->priv;
     VAPictureParameterBufferVC1 * const pic_param = picture->param;
     GstVC1SeqHdr * const seq_hdr = &priv->seq_hdr;
@@ -878,8 +861,8 @@ fill_picture(GstVaapiDecoderVC1 *decoder, GstVaapiPicture *picture)
             break;
         }
 
-        picture->bitplane = gst_vaapi_decoder_new_bitplane(
-            base_decoder,
+        picture->bitplane = GST_VAAPI_BITPLANE_NEW(
+            decoder,
             (seq_hdr->mb_width * seq_hdr->mb_height + 1) / 2
         );
         if (!picture->bitplane)
@@ -898,7 +881,6 @@ fill_picture(GstVaapiDecoderVC1 *decoder, GstVaapiPicture *picture)
 static GstVaapiDecoderStatus
 decode_frame(GstVaapiDecoderVC1 *decoder, GstVC1BDU *rbdu, GstVC1BDU *ebdu)
 {
-    GstVaapiDecoder * const base_decoder = GST_VAAPI_DECODER(decoder);
     GstVaapiDecoderVC1Private * const priv = decoder->priv;
     GstVC1SeqHdr * const seq_hdr = &priv->seq_hdr;
     GstVC1FrameHdr * const frame_hdr = &priv->frame_hdr;
@@ -921,7 +903,7 @@ decode_frame(GstVaapiDecoderVC1 *decoder, GstVC1BDU *rbdu, GstVC1BDU *ebdu)
             return status;
     }
 
-    priv->current_picture = gst_vaapi_decoder_new_picture(base_decoder);
+    priv->current_picture = GST_VAAPI_PICTURE_NEW(VC1, decoder);
     if (!priv->current_picture) {
         GST_DEBUG("failed to allocate picture");
         return GST_VAAPI_DECODER_STATUS_ERROR_ALLOCATION_FAILED;
@@ -949,14 +931,14 @@ decode_frame(GstVaapiDecoderVC1 *decoder, GstVC1BDU *rbdu, GstVC1BDU *ebdu)
     switch (frame_hdr->ptype) {
     case GST_VC1_PICTURE_TYPE_I:
         picture->type   = GST_VAAPI_PICTURE_TYPE_I;
-        picture->flags |= GST_VAAPI_PICTURE_REFERENCE;
+        GST_VAAPI_PICTURE_FLAG_SET(picture, GST_VAAPI_PICTURE_FLAG_REFERENCE);
         break;
     case GST_VC1_PICTURE_TYPE_SKIPPED:
-        picture->flags |= GST_VAAPI_PICTURE_SKIPPED;
+        GST_VAAPI_PICTURE_FLAG_SET(picture, GST_VAAPI_PICTURE_FLAG_SKIPPED);
         // fall-through
     case GST_VC1_PICTURE_TYPE_P:
         picture->type   = GST_VAAPI_PICTURE_TYPE_P;
-        picture->flags |= GST_VAAPI_PICTURE_REFERENCE;
+        GST_VAAPI_PICTURE_FLAG_SET(picture, GST_VAAPI_PICTURE_FLAG_REFERENCE);
         break;
     case GST_VC1_PICTURE_TYPE_B:
         picture->type   = GST_VAAPI_PICTURE_TYPE_B;
@@ -976,7 +958,7 @@ decode_frame(GstVaapiDecoderVC1 *decoder, GstVC1BDU *rbdu, GstVC1BDU *ebdu)
     /* Update reference pictures */
     if (GST_VAAPI_PICTURE_IS_REFERENCE(picture)) {
         if (priv->prev_picture) {
-            gst_vaapi_decoder_free_picture(base_decoder, priv->prev_picture);
+            gst_vaapi_picture_unref(priv->prev_picture);
             priv->prev_picture = NULL;
         }
         if (priv->next_picture) {
@@ -990,9 +972,9 @@ decode_frame(GstVaapiDecoderVC1 *decoder, GstVC1BDU *rbdu, GstVC1BDU *ebdu)
     if (!fill_picture(decoder, picture))
         return GST_VAAPI_DECODER_STATUS_ERROR_UNKNOWN;
 
-    slice = gst_vaapi_decoder_new_slice(
-        base_decoder,
-        picture,
+    slice = GST_VAAPI_SLICE_NEW(
+        VC1,
+        decoder,
         ebdu->data + ebdu->sc_offset,
         ebdu->size + ebdu->offset - ebdu->sc_offset
     );
@@ -1000,6 +982,7 @@ decode_frame(GstVaapiDecoderVC1 *decoder, GstVC1BDU *rbdu, GstVC1BDU *ebdu)
         GST_DEBUG("failed to allocate slice");
         return GST_VAAPI_DECODER_STATUS_ERROR_ALLOCATION_FAILED;
     }
+    gst_vaapi_picture_add_slice(picture, slice);
 
     /* Fill in VASliceParameterBufferVC1 */
     slice_param                            = slice->param;
@@ -1351,14 +1334,6 @@ gst_vaapi_decoder_vc1_new(GstVaapiDisplay *display, GstCaps *caps)
 {
     GstVaapiDecoderVC1 *decoder;
 
-    static const GstVaapiCodecInfo codec_info = {
-        .pic_size               = sizeof(GstVaapiPicture),
-        .slice_size             = sizeof(GstVaapiSlice),
-        .pic_param_size         = sizeof(VAPictureParameterBufferVC1),
-        .slice_param_size       = sizeof(VASliceParameterBufferVC1),
-        .iq_matrix_size         = 0,
-    };
-
     g_return_val_if_fail(GST_VAAPI_IS_DISPLAY(display), NULL);
     g_return_val_if_fail(GST_IS_CAPS(caps), NULL);
 
@@ -1366,7 +1341,6 @@ gst_vaapi_decoder_vc1_new(GstVaapiDisplay *display, GstCaps *caps)
         GST_VAAPI_TYPE_DECODER_VC1,
         "display",      display,
         "caps",         caps,
-        "codec-info",   &codec_info,
         NULL
     );
     if (!decoder->priv->is_constructed) {
