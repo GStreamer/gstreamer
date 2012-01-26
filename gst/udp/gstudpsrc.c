@@ -503,7 +503,7 @@ receive_error:
       return GST_FLOW_FLUSHING;
     } else {
       GST_ELEMENT_ERROR (udpsrc, RESOURCE, READ, (NULL),
-          ("receive error %d: %s", ret, err->message));
+          ("receive error %" G_GSSIZE_FORMAT ": %s", ret, err->message));
       g_clear_error (&err);
       return GST_FLOW_ERROR;
     }
@@ -525,7 +525,7 @@ gst_udpsrc_set_uri (GstUDPSrc * src, const gchar * uri, GError ** error)
   if (!gst_udp_parse_uri (uri, &host, &port))
     goto wrong_uri;
 
-  if (port == -1)
+  if (port == (guint16) -1)
     port = UDP_DEFAULT_PORT;
 
   g_free (src->host);
