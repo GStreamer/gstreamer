@@ -1233,20 +1233,28 @@ _pad_blocked_cb (GstPad * pad, GstPadProbeInfo * info, gpointer user_data)
         _remove_element (self, &self->pre_colorspace);
 
         if (!_create_element (self, &self->overlay, NULL, overlay_factory,
-                "overlay", FALSE))
+                "overlay", FALSE)) {
+          GST_DEBUG_OBJECT (self, "Could not create element");
           continue;
+        }
 
-        if (!_setup_renderer (self, self->overlay))
+        if (!_setup_renderer (self, self->overlay)) {
+          GST_DEBUG_OBJECT (self, "Could not setup element");
           continue;
+        }
 
         src = gst_element_get_static_pad (self->parser, "src");
         if (!_link_renderer (self, self->overlay, src)) {
+          GST_DEBUG_OBJECT (self, "Could not link element");
           gst_object_unref (src);
           continue;
         }
         gst_object_unref (src);
 
         /* Everything done here, go out of loop */
+        GST_DEBUG_OBJECT (self, "%s is a suitable element",
+            GST_STR_NULL (gst_plugin_feature_get_name (GST_PLUGIN_FEATURE_CAST
+                    (overlay_factory))));
         break;
       }
 
