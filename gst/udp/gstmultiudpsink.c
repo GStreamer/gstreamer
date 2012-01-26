@@ -158,7 +158,7 @@ gst_multiudpsink_class_init (GstMultiUDPSinkClass * klass)
    */
   gst_multiudpsink_signals[SIGNAL_ADD] =
       g_signal_new ("add", G_TYPE_FROM_CLASS (klass),
-      G_SIGNAL_RUN_FIRST | G_SIGNAL_ACTION,
+      G_SIGNAL_RUN_LAST | G_SIGNAL_ACTION,
       G_STRUCT_OFFSET (GstMultiUDPSinkClass, add),
       NULL, NULL, gst_udp_marshal_VOID__STRING_INT, G_TYPE_NONE, 2,
       G_TYPE_STRING, G_TYPE_INT);
@@ -173,7 +173,7 @@ gst_multiudpsink_class_init (GstMultiUDPSinkClass * klass)
    */
   gst_multiudpsink_signals[SIGNAL_REMOVE] =
       g_signal_new ("remove", G_TYPE_FROM_CLASS (klass),
-      G_SIGNAL_RUN_FIRST | G_SIGNAL_ACTION,
+      G_SIGNAL_RUN_LAST | G_SIGNAL_ACTION,
       G_STRUCT_OFFSET (GstMultiUDPSinkClass, remove),
       NULL, NULL, gst_udp_marshal_VOID__STRING_INT, G_TYPE_NONE, 2,
       G_TYPE_STRING, G_TYPE_INT);
@@ -185,7 +185,7 @@ gst_multiudpsink_class_init (GstMultiUDPSinkClass * klass)
    */
   gst_multiudpsink_signals[SIGNAL_CLEAR] =
       g_signal_new ("clear", G_TYPE_FROM_CLASS (klass),
-      G_SIGNAL_RUN_FIRST | G_SIGNAL_ACTION,
+      G_SIGNAL_RUN_LAST | G_SIGNAL_ACTION,
       G_STRUCT_OFFSET (GstMultiUDPSinkClass, clear),
       NULL, NULL, g_cclosure_marshal_VOID__VOID, G_TYPE_NONE, 0);
   /**
@@ -201,7 +201,7 @@ gst_multiudpsink_class_init (GstMultiUDPSinkClass * klass)
    */
   gst_multiudpsink_signals[SIGNAL_GET_STATS] =
       g_signal_new ("get-stats", G_TYPE_FROM_CLASS (klass),
-      G_SIGNAL_RUN_FIRST | G_SIGNAL_ACTION,
+      G_SIGNAL_RUN_LAST | G_SIGNAL_ACTION,
       G_STRUCT_OFFSET (GstMultiUDPSinkClass, get_stats),
       NULL, NULL, gst_udp_marshal_BOXED__STRING_INT, GST_TYPE_STRUCTURE, 2,
       G_TYPE_STRING, G_TYPE_INT);
@@ -216,7 +216,7 @@ gst_multiudpsink_class_init (GstMultiUDPSinkClass * klass)
    */
   gst_multiudpsink_signals[SIGNAL_CLIENT_ADDED] =
       g_signal_new ("client-added", G_TYPE_FROM_CLASS (klass),
-      G_SIGNAL_RUN_FIRST, G_STRUCT_OFFSET (GstMultiUDPSinkClass, client_added),
+      G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstMultiUDPSinkClass, client_added),
       NULL, NULL, gst_udp_marshal_VOID__STRING_INT, G_TYPE_NONE, 2,
       G_TYPE_STRING, G_TYPE_INT);
   /**
@@ -230,7 +230,7 @@ gst_multiudpsink_class_init (GstMultiUDPSinkClass * klass)
    */
   gst_multiudpsink_signals[SIGNAL_CLIENT_REMOVED] =
       g_signal_new ("client-removed", G_TYPE_FROM_CLASS (klass),
-      G_SIGNAL_RUN_FIRST, G_STRUCT_OFFSET (GstMultiUDPSinkClass,
+      G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstMultiUDPSinkClass,
           client_removed), NULL, NULL, gst_udp_marshal_VOID__STRING_INT,
       G_TYPE_NONE, 2, G_TYPE_STRING, G_TYPE_INT);
 
