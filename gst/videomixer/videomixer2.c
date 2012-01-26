@@ -1615,8 +1615,9 @@ gst_videomixer2_sink_event (GstCollectPads2 * pads, GstCollectData2 * cdata,
       gst_event_parse_new_segment (event, NULL, NULL, &fmt, NULL, NULL, NULL);
 
       g_assert (fmt == GST_FORMAT_TIME);
-      /* eat NEWSEGMENT events, collectpads2 unrefs the event */
-      ret = FALSE;
+      /* eat NEWSEGMENT events */
+      ret = TRUE;
+      gst_event_unref (event);
       break;
     }
     case GST_EVENT_FLUSH_STOP:
@@ -1632,10 +1633,15 @@ gst_videomixer2_sink_event (GstCollectPads2 * pads, GstCollectData2 * cdata,
       mix->ts_offset = 0;
       mix->nframes = 0;
 
-      gst_pad_push_event (mix->srcpad, event);
+      ret = gst_pad_event_default (cdata->pad, GST_OBJECT (mix), event);
       break;
     default:
-      gst_pad_push_event (mix->srcpad, event);
+      ret = gst_pad_event_default (cdata->pad, GST_OBJECT (mix), event);
+      break;
+    case GST_EVENT_EOS:
+    case GST_EVENT_SEGMENT:
+      gst_event_unref (event);
+      ret = TRUE;
       break;
   }
 
