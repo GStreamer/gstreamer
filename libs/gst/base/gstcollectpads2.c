@@ -1742,6 +1742,8 @@ gst_collect_pads2_event (GstPad * pad, GstObject * parent, GstEvent * event)
        * accumulated and this is certainly not what we want. */
       goto forward_or_eat;
     }
+    case GST_EVENT_CAPS:
+      goto forward_or_eat;
     default:
       /* forward other events */
       goto forward_or_default;
