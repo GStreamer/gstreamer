@@ -1299,13 +1299,21 @@ gst_adder_event (GstCollectPads2 * pads, GstCollectData2 * pad,
   if (GST_EVENT_TYPE (event) == GST_EVENT_FLUSH_STOP) {
     if (g_atomic_int_compare_and_exchange (&adder->flush_stop_pending,
             TRUE, FALSE)) {
-      return FALSE;
+
+      return gst_pad_event_default (pad->pad, GST_OBJECT (user_data), event);
     } else {
       gst_event_unref (event);
       return TRUE;
     }
   } else {
-    return FALSE;
+    if (GST_EVENT_TYPE (event) == GST_EVENT_SEGMENT ||
+        GST_EVENT_TYPE (event) == GST_EVENT_CAPS ||
+        GST_EVENT_TYPE (event) == GST_EVENT_EOS) {
+      gst_event_unref (event);
+      return TRUE;
+    } else {
+      return gst_pad_event_default (pad->pad, GST_OBJECT (user_data), event);
+    }
   }
 }
 
