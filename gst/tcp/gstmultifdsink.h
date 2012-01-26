@@ -92,25 +92,16 @@ struct _GstMultiFdSink {
   GstMultiHandleSink element;
 
   /*< private >*/
-  GRecMutex clientslock;  /* lock to protect the clients list */
-  GList *clients;       /* list of clients we are serving */
   GHashTable *fd_hash;  /* index on fd to client */
-  guint clients_cookie; /* Cookie to detect changes to the clients list */
 
   gint mode;
   GstPoll *fdset;
 
-  GSList *streamheader; /* GSList of GstBuffers to use as streamheader */
   gboolean previous_buffer_in_caps;
 
   guint mtu;
   gint qos_dscp;
   gboolean handle_read;
-
-  GArray *bufqueue;     /* global queue of buffers */
-
-  gboolean running;     /* the thread state */
-  GThread *thread;      /* the sender thread */
 
   /* these values are used to check if a client is reading fast
    * enough and to control receovery */
@@ -120,13 +111,6 @@ struct _GstMultiFdSink {
 
   GstTCPUnitType   def_burst_unit;
   guint64       def_burst_value;
-
-  gboolean resend_streamheader; /* resend streamheader if it changes */
-
-  /* stats */
-  gint buffers_queued;  /* number of queued buffers */
-  gint bytes_queued;    /* number of queued bytes */
-  gint time_queued;     /* number of queued time */
 
   guint8 header_flags;
 };
@@ -145,9 +129,7 @@ struct _GstMultiFdSinkClass {
   GValueArray*  (*get_stats)    (GstMultiFdSink *sink, int fd);
 
   /* vtable */
-  gboolean (*init)   (GstMultiFdSink *sink);
   gboolean (*wait)   (GstMultiFdSink *sink, GstPoll *set);
-  gboolean (*close)  (GstMultiFdSink *sink);
   void (*removed) (GstMultiFdSink *sink, int fd);
 
   /* signals */

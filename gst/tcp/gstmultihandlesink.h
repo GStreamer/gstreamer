@@ -123,6 +123,8 @@ typedef enum
 /* structure for a client
  */
 typedef struct {
+  gchar debug[30];              /* a debug string used in debug calls to
+                                   identify the client */
   gint bufpos;                  /* position of this client in the global queue */
   gint flushcount;              /* the remaining number of buffers to flush out or -1 if the 
                                    client is not flushing. */
@@ -161,10 +163,20 @@ typedef struct {
   guint64 last_buffer_ts;
 } GstMultiHandleClient;
 
-#define CLIENTS_LOCK_INIT(socketsink)       (g_rec_mutex_init(&socketsink->clientslock))
-#define CLIENTS_LOCK_CLEAR(socketsink)      (g_rec_mutex_clear(&socketsink->clientslock))
-#define CLIENTS_LOCK(socketsink)            (g_rec_mutex_lock(&socketsink->clientslock))
-#define CLIENTS_UNLOCK(socketsink)          (g_rec_mutex_unlock(&socketsink->clientslock))
+// FIXME: remove cast ?
+#define CLIENTS_LOCK_INIT(mhsink)       (g_rec_mutex_init(&(GST_MULTI_HANDLE_SINK(mhsink))->clientslock))
+#define CLIENTS_LOCK_CLEAR(mhsink)      (g_rec_mutex_clear(&(GST_MULTI_HANDLE_SINK(mhsink))->clientslock))
+#define CLIENTS_LOCK(mhsink)            (g_rec_mutex_lock(&(GST_MULTI_HANDLE_SINK(mhsink))->clientslock))
+#define CLIENTS_UNLOCK(mhsink)          (g_rec_mutex_unlock(&(GST_MULTI_HANDLE_SINK(mhsink))->clientslock))
+
+// FIXME: internalize in .c file ?
+gint
+find_syncframe (GstMultiHandleSink * sink, gint idx, gint direction);
+#define find_next_syncframe(s,i) 	find_syncframe(s,i,1)
+#define find_prev_syncframe(s,i) 	find_syncframe(s,i,-1)
+gboolean is_sync_frame (GstMultiHandleSink * sink, GstBuffer * buffer);
+gboolean gst_multi_handle_sink_stop (GstBaseSink * bsink);
+gboolean gst_multi_handle_sink_start (GstBaseSink * bsink);
 
 /**
  * GstMultiHandleSink:
@@ -180,7 +192,6 @@ struct _GstMultiHandleSink {
 
   GRecMutex clientslock;  /* lock to protect the clients list */
   GList *clients;       /* list of clients we are serving */
-  GHashTable *socket_hash;  /* index on socket to client */
   guint clients_cookie; /* Cookie to detect changes to the clients list */
 
   GMainContext *main_context;
@@ -191,7 +202,6 @@ struct _GstMultiHandleSink {
 
   guint mtu;
   gint qos_dscp;
-  gboolean handle_read;
 
   GArray *bufqueue;     /* global queue of buffers */
 
@@ -238,7 +248,14 @@ struct _GstMultiHandleSinkClass {
   void          (*remove)       (GstMultiHandleSink *sink, GSocket *socket);
   void          (*remove_flush) (GstMultiHandleSink *sink, GSocket *socket);
   void          (*clear)        (GstMultiHandleSink *sink);
+  void          (*clear_post)   (GstMultiHandleSink *sink);
+  void          (*stop_pre)     (GstMultiHandleSink *sink);
+  void          (*stop_post)    (GstMultiHandleSink *sink);
+  gboolean      (*start_pre)    (GstMultiHandleSink *sink);
+  gpointer      (*thread)       (GstMultiHandleSink *sink);
+
   GstStructure* (*get_stats)    (GstMultiHandleSink *sink, GSocket *socket);
+  void          (*remove_client_link) (GstMultiHandleSink * sink, GList * link);
 
   /* vtable */
   gboolean (*init)   (GstMultiHandleSink *sink);

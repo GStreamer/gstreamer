@@ -57,8 +57,8 @@ enum
 
 static void gst_tcp_server_sink_finalize (GObject * gobject);
 
-static gboolean gst_tcp_server_sink_init_send (GstMultiSocketSink * this);
-static gboolean gst_tcp_server_sink_close (GstMultiSocketSink * this);
+static gboolean gst_tcp_server_sink_init_send (GstMultiHandleSink * this);
+static gboolean gst_tcp_server_sink_close (GstMultiHandleSink * this);
 static void gst_tcp_server_sink_removed (GstMultiSocketSink * sink,
     GSocket * socket);
 
@@ -76,10 +76,12 @@ gst_tcp_server_sink_class_init (GstTCPServerSinkClass * klass)
 {
   GObjectClass *gobject_class;
   GstElementClass *gstelement_class;
+  GstMultiHandleSinkClass *gstmultihandlesink_class;
   GstMultiSocketSinkClass *gstmultifdsink_class;
 
   gobject_class = (GObjectClass *) klass;
   gstelement_class = (GstElementClass *) klass;
+  gstmultihandlesink_class = (GstMultiHandleSinkClass *) klass;
   gstmultifdsink_class = (GstMultiSocketSinkClass *) klass;
 
   gobject_class->set_property = gst_tcp_server_sink_set_property;
@@ -99,8 +101,8 @@ gst_tcp_server_sink_class_init (GstTCPServerSinkClass * klass)
       "Send data as a server over the network via TCP",
       "Thomas Vander Stichele <thomas at apestaart dot org>");
 
-  gstmultifdsink_class->init = gst_tcp_server_sink_init_send;
-  gstmultifdsink_class->close = gst_tcp_server_sink_close;
+  gstmultihandlesink_class->init = gst_tcp_server_sink_init_send;
+  gstmultihandlesink_class->close = gst_tcp_server_sink_close;
   gstmultifdsink_class->removed = gst_tcp_server_sink_removed;
 
   GST_DEBUG_CATEGORY_INIT (tcpserversink_debug, "tcpserversink", 0, "TCP sink");
@@ -263,7 +265,7 @@ gst_tcp_server_sink_get_property (GObject * object, guint prop_id,
 
 /* create a socket for sending to remote machine */
 static gboolean
-gst_tcp_server_sink_init_send (GstMultiSocketSink * parent)
+gst_tcp_server_sink_init_send (GstMultiHandleSink * parent)
 {
   GstTCPServerSink *this = GST_TCP_SERVER_SINK (parent);
   GError *err = NULL;
@@ -371,7 +373,7 @@ bind_failed:
     }
     g_clear_error (&err);
     g_object_unref (saddr);
-    gst_tcp_server_sink_close (&this->element);
+    gst_tcp_server_sink_close (GST_MULTI_HANDLE_SINK (&this->element));
     return FALSE;
   }
 listen_failed:
@@ -384,13 +386,13 @@ listen_failed:
               this->server_port, err->message));
     }
     g_clear_error (&err);
-    gst_tcp_server_sink_close (&this->element);
+    gst_tcp_server_sink_close (GST_MULTI_HANDLE_SINK (&this->element));
     return FALSE;
   }
 }
 
 static gboolean
-gst_tcp_server_sink_close (GstMultiSocketSink * parent)
+gst_tcp_server_sink_close (GstMultiHandleSink * parent)
 {
   GstTCPServerSink *this = GST_TCP_SERVER_SINK (parent);
 

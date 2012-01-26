@@ -166,15 +166,10 @@ enum
 #define DEFAULT_QOS_DSCP                -1
 #define DEFAULT_HANDLE_READ             TRUE
 
-#define DEFAULT_RESEND_STREAMHEADER      TRUE
-
 enum
 {
   PROP_0,
   PROP_MODE,
-  PROP_BUFFERS_QUEUED,
-  PROP_BYTES_QUEUED,
-  PROP_TIME_QUEUED,
 
   PROP_UNIT_TYPE,
   PROP_UNITS_MAX,
@@ -189,8 +184,6 @@ enum
   PROP_QOS_DSCP,
 
   PROP_HANDLE_READ,
-
-  PROP_RESEND_STREAMHEADER,
 
   PROP_NUM_FDS,
 
@@ -238,13 +231,17 @@ gst_unit_type_get_type (void)
 
 static void gst_multi_fd_sink_finalize (GObject * object);
 
-static void gst_multi_fd_sink_remove_client_link (GstMultiFdSink * sink,
+static void gst_multi_fd_sink_clear_post (GstMultiHandleSink * mhsink);
+static void gst_multi_fd_sink_stop_pre (GstMultiHandleSink * mhsink);
+static void gst_multi_fd_sink_stop_post (GstMultiHandleSink * mhsink);
+static gboolean gst_multi_fd_sink_start_pre (GstMultiHandleSink * mhsink);
+static gpointer gst_multi_fd_sink_thread (GstMultiHandleSink * mhsink);
+
+static void gst_multi_fd_sink_remove_client_link (GstMultiHandleSink * sink,
     GList * link);
 
 static GstFlowReturn gst_multi_fd_sink_render (GstBaseSink * bsink,
     GstBuffer * buf);
-static GstStateChangeReturn gst_multi_fd_sink_change_state (GstElement *
-    element, GstStateChange transition);
 
 static void gst_multi_fd_sink_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
@@ -313,21 +310,6 @@ gst_multi_fd_sink_class_init (GstMultiFdSinkClass * klass)
           G_MAXINT64, DEFAULT_UNITS_SOFT_MAX,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
-  g_object_class_install_property (gobject_class, PROP_BUFFERS_QUEUED,
-      g_param_spec_uint ("buffers-queued", "Buffers queued",
-          "Number of buffers currently queued", 0, G_MAXUINT, 0,
-          G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
-#if NOT_IMPLEMENTED
-  g_object_class_install_property (gobject_class, PROP_BYTES_QUEUED,
-      g_param_spec_uint ("bytes-queued", "Bytes queued",
-          "Number of bytes currently queued", 0, G_MAXUINT, 0,
-          G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
-  g_object_class_install_property (gobject_class, PROP_TIME_QUEUED,
-      g_param_spec_uint64 ("time-queued", "Time queued",
-          "Number of time currently queued", 0, G_MAXUINT64, 0,
-          G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
-#endif
-
   g_object_class_install_property (gobject_class, PROP_BURST_UNIT,
       g_param_spec_enum ("burst-unit", "Burst unit",
           "The format of the burst units (when sync-method is burst[[-with]-keyframe])",
@@ -354,18 +336,6 @@ gst_multi_fd_sink_class_init (GstMultiFdSinkClass * klass)
       g_param_spec_boolean ("handle-read", "Handle Read",
           "Handle client reads and discard the data",
           DEFAULT_HANDLE_READ, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
-  /**
-   * GstMultiFdSink::resend-streamheader
-   *
-   * Resend the streamheaders to existing clients when they change.
-   *
-   * Since: 0.10.23
-   */
-  g_object_class_install_property (gobject_class, PROP_RESEND_STREAMHEADER,
-      g_param_spec_boolean ("resend-streamheader", "Resend streamheader",
-          "Resend the streamheader if it changes in the caps",
-          DEFAULT_RESEND_STREAMHEADER,
-          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_class, PROP_NUM_FDS,
       g_param_spec_uint ("num-fds", "Number of fds",
@@ -516,12 +486,23 @@ gst_multi_fd_sink_class_init (GstMultiFdSinkClass * klass)
       "Thomas Vander Stichele <thomas at apestaart dot org>, "
       "Wim Taymans <wim@fluendo.com>");
 
-  gstelement_class->change_state =
-      GST_DEBUG_FUNCPTR (gst_multi_fd_sink_change_state);
-
   gstbasesink_class->render = GST_DEBUG_FUNCPTR (gst_multi_fd_sink_render);
 
-  gstmultihandlesink_class->clear = GST_DEBUG_FUNCPTR (gst_multi_fd_sink_clear);
+  gstmultihandlesink_class->clear_post =
+      GST_DEBUG_FUNCPTR (gst_multi_fd_sink_clear_post);
+
+  gstmultihandlesink_class->stop_pre =
+      GST_DEBUG_FUNCPTR (gst_multi_fd_sink_stop_pre);
+  gstmultihandlesink_class->stop_post =
+      GST_DEBUG_FUNCPTR (gst_multi_fd_sink_stop_post);
+  gstmultihandlesink_class->start_pre =
+      GST_DEBUG_FUNCPTR (gst_multi_fd_sink_start_pre);
+  gstmultihandlesink_class->thread =
+      GST_DEBUG_FUNCPTR (gst_multi_fd_sink_thread);
+
+  gstmultihandlesink_class->remove_client_link =
+      GST_DEBUG_FUNCPTR (gst_multi_fd_sink_remove_client_link);
+
 
   klass->add = GST_DEBUG_FUNCPTR (gst_multi_fd_sink_add);
   klass->add_full = GST_DEBUG_FUNCPTR (gst_multi_fd_sink_add_full);
@@ -535,15 +516,10 @@ gst_multi_fd_sink_class_init (GstMultiFdSinkClass * klass)
 static void
 gst_multi_fd_sink_init (GstMultiFdSink * this)
 {
-  GST_OBJECT_FLAG_UNSET (this, GST_MULTI_HANDLE_SINK_OPEN);
-
   this->mode = DEFAULT_MODE;
 
-  CLIENTS_LOCK_INIT (this);
-  this->clients = NULL;
   this->fd_hash = g_hash_table_new (g_int_hash, g_int_equal);
 
-  this->bufqueue = g_array_new (FALSE, TRUE, sizeof (GstBuffer *));
   this->unit_type = DEFAULT_UNIT_TYPE;
   this->units_max = DEFAULT_UNITS_MAX;
   this->units_soft_max = DEFAULT_UNITS_SOFT_MAX;
@@ -554,21 +530,15 @@ gst_multi_fd_sink_init (GstMultiFdSink * this)
   this->qos_dscp = DEFAULT_QOS_DSCP;
   this->handle_read = DEFAULT_HANDLE_READ;
 
-  this->resend_streamheader = DEFAULT_RESEND_STREAMHEADER;
-
   this->header_flags = 0;
 }
 
 static void
 gst_multi_fd_sink_finalize (GObject * object)
 {
-  GstMultiFdSink *this;
+  GstMultiFdSink *this = GST_MULTI_FD_SINK (object);
 
-  this = GST_MULTI_FD_SINK (object);
-
-  CLIENTS_LOCK_CLEAR (this);
   g_hash_table_destroy (this->fd_hash);
-  g_array_free (this->bufqueue, TRUE);
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
@@ -638,9 +608,10 @@ static void
 setup_dscp (GstMultiFdSink * sink)
 {
   GList *clients, *next;
+  GstMultiHandleSink *mhsink = GST_MULTI_HANDLE_SINK (sink);
 
   CLIENTS_LOCK (sink);
-  for (clients = sink->clients; clients; clients = next) {
+  for (clients = mhsink->clients; clients; clients = next) {
     GstTCPClient *client;
 
     client = (GstTCPClient *) clients->data;
@@ -662,6 +633,7 @@ gst_multi_fd_sink_add_full (GstMultiFdSink * sink, int fd,
   GList *clink;
   gint flags;
   struct stat statbuf;
+  GstMultiHandleSink *mhsink = GST_MULTI_HANDLE_SINK (sink);
 
   GST_DEBUG_OBJECT (sink, "[fd %5d] adding client, sync_method %d, "
       "min_unit %d, min_value %" G_GUINT64_FORMAT
@@ -678,6 +650,7 @@ gst_multi_fd_sink_add_full (GstMultiFdSink * sink, int fd,
   client = g_new0 (GstTCPClient, 1);
   mhclient = (GstMultiHandleClient *) client;
   gst_multi_handle_sink_client_init (mhclient, sync_method);
+  g_snprintf (mhclient->debug, 30, "[fd %5d]", fd);
 
   client->fd.fd = fd;
   client->burst_min_unit = min_unit;
@@ -693,9 +666,9 @@ gst_multi_fd_sink_add_full (GstMultiFdSink * sink, int fd,
     goto duplicate;
 
   /* we can add the fd now */
-  clink = sink->clients = g_list_prepend (sink->clients, client);
+  clink = mhsink->clients = g_list_prepend (mhsink->clients, client);
   g_hash_table_insert (sink->fd_hash, &client->fd.fd, clink);
-  sink->clients_cookie++;
+  mhsink->clients_cookie++;
 
   /* set the socket to non blocking */
   if (fcntl (fd, F_SETFL, O_NONBLOCK) < 0) {
@@ -766,6 +739,9 @@ void
 gst_multi_fd_sink_remove (GstMultiFdSink * sink, int fd)
 {
   GList *clink;
+  GstMultiHandleSink *mhsink = GST_MULTI_HANDLE_SINK (sink);
+  GstMultiHandleSinkClass *mhsinkclass =
+      GST_MULTI_HANDLE_SINK_GET_CLASS (mhsink);
 
   GST_DEBUG_OBJECT (sink, "[fd %5d] removing client", fd);
 
@@ -783,7 +759,8 @@ gst_multi_fd_sink_remove (GstMultiFdSink * sink, int fd)
     }
 
     mhclient->status = GST_CLIENT_STATUS_REMOVED;
-    gst_multi_fd_sink_remove_client_link (sink, clink);
+    mhsinkclass->remove_client_link (GST_MULTI_HANDLE_SINK (sink), clink);
+    // FIXME: specific poll
     gst_poll_restart (sink->fdset);
   } else {
     GST_WARNING_OBJECT (sink, "[fd %5d] no client with this fd found!", fd);
@@ -828,39 +805,13 @@ done:
   CLIENTS_UNLOCK (sink);
 }
 
-/* can be called both through the signal (i.e. from any thread) or when 
- * stopping, after the writing thread has shut down */
-void
-gst_multi_fd_sink_clear (GstMultiHandleSink * mhsink)
+/* called with the CLIENTS_LOCK held */
+static void
+gst_multi_fd_sink_clear_post (GstMultiHandleSink * mhsink)
 {
-  GList *clients, *next;
-  guint32 cookie;
   GstMultiFdSink *sink = GST_MULTI_FD_SINK (mhsink);
 
-
-  GST_DEBUG_OBJECT (sink, "clearing all clients");
-
-  CLIENTS_LOCK (sink);
-restart:
-  cookie = sink->clients_cookie;
-  for (clients = sink->clients; clients; clients = next) {
-    GstMultiHandleClient *mhclient;
-
-    if (cookie != sink->clients_cookie) {
-      GST_DEBUG_OBJECT (sink, "cookie changed while removing all clients");
-      goto restart;
-    }
-
-    mhclient = (GstMultiHandleClient *) clients->data;
-    next = g_list_next (clients);
-
-    mhclient->status = GST_CLIENT_STATUS_REMOVED;
-    /* the next call changes the list, which is why we iterate
-     * with a temporary next pointer */
-    gst_multi_fd_sink_remove_client_link (sink, clients);
-  }
   gst_poll_restart (sink->fdset);
-  CLIENTS_UNLOCK (sink);
 }
 
 /* "get-stats" signal implementation
@@ -955,12 +906,13 @@ noclient:
  * close the fd itself.
  */
 static void
-gst_multi_fd_sink_remove_client_link (GstMultiFdSink * sink, GList * link)
+gst_multi_fd_sink_remove_client_link (GstMultiHandleSink * sink, GList * link)
 {
   int fd;
   GTimeVal now;
   GstTCPClient *client = (GstTCPClient *) link->data;
   GstMultiHandleClient *mhclient = (GstMultiHandleClient *) client;
+  GstMultiFdSink *mfsink = GST_MULTI_FD_SINK (sink);
   GstMultiFdSinkClass *fclass;
 
   fclass = GST_MULTI_FD_SINK_GET_CLASS (sink);
@@ -968,7 +920,8 @@ gst_multi_fd_sink_remove_client_link (GstMultiFdSink * sink, GList * link)
   fd = client->fd.fd;
 
   if (mhclient->currently_removing) {
-    GST_WARNING_OBJECT (sink, "[fd %5d] client is already being removed", fd);
+    GST_WARNING_OBJECT (sink, "%s client is already being removed",
+        mhclient->debug);
     return;
   } else {
     mhclient->currently_removing = TRUE;
@@ -977,34 +930,36 @@ gst_multi_fd_sink_remove_client_link (GstMultiFdSink * sink, GList * link)
   /* FIXME: if we keep track of ip we can log it here and signal */
   switch (mhclient->status) {
     case GST_CLIENT_STATUS_OK:
-      GST_WARNING_OBJECT (sink, "[fd %5d] removing client %p for no reason",
-          fd, client);
+      GST_WARNING_OBJECT (sink, "%s removing client %p for no reason",
+          mhclient->debug, client);
       break;
     case GST_CLIENT_STATUS_CLOSED:
-      GST_DEBUG_OBJECT (sink, "[fd %5d] removing client %p because of close",
-          fd, client);
+      GST_DEBUG_OBJECT (sink, "%s removing client %p because of close",
+          mhclient->debug, client);
       break;
     case GST_CLIENT_STATUS_REMOVED:
       GST_DEBUG_OBJECT (sink,
-          "[fd %5d] removing client %p because the app removed it", fd, client);
+          "%s removing client %p because the app removed it", mhclient->debug,
+          client);
       break;
     case GST_CLIENT_STATUS_SLOW:
       GST_INFO_OBJECT (sink,
-          "[fd %5d] removing client %p because it was too slow", fd, client);
+          "%s removing client %p because it was too slow", mhclient->debug,
+          client);
       break;
     case GST_CLIENT_STATUS_ERROR:
       GST_WARNING_OBJECT (sink,
-          "[fd %5d] removing client %p because of error", fd, client);
+          "%s removing client %p because of error", mhclient->debug, client);
       break;
     case GST_CLIENT_STATUS_FLUSHING:
     default:
       GST_WARNING_OBJECT (sink,
-          "[fd %5d] removing client %p with invalid reason %d", fd, client,
-          mhclient->status);
+          "%s removing client %p with invalid reason %d", mhclient->debug,
+          client, mhclient->status);
       break;
   }
 
-  gst_poll_remove_fd (sink->fdset, &client->fd);
+  gst_poll_remove_fd (mfsink->fdset, &client->fd);
 
   g_get_current_time (&now);
   mhclient->disconnect_time = GST_TIMEVAL_TO_TIME (now);
@@ -1031,7 +986,7 @@ gst_multi_fd_sink_remove_client_link (GstMultiFdSink * sink, GList * link)
 
   /* fd cannot be reused in the above signal callback so we can safely
    * remove it from the hashtable here */
-  if (!g_hash_table_remove (sink->fd_hash, &client->fd.fd)) {
+  if (!g_hash_table_remove (mfsink->fd_hash, &client->fd.fd)) {
     GST_WARNING_OBJECT (sink,
         "[fd %5d] error removing client %p from hash", client->fd.fd, client);
   }
@@ -1044,7 +999,7 @@ gst_multi_fd_sink_remove_client_link (GstMultiFdSink * sink, GList * link)
   sink->clients_cookie++;
 
   if (fclass->removed)
-    fclass->removed (sink, client->fd.fd);
+    fclass->removed (mfsink, client->fd.fd);
 
   g_free (client);
   CLIENTS_UNLOCK (sink);
@@ -1129,18 +1084,6 @@ ioctl_failed:
   }
 }
 
-static gboolean
-is_sync_frame (GstMultiFdSink * sink, GstBuffer * buffer)
-{
-  if (GST_BUFFER_FLAG_IS_SET (buffer, GST_BUFFER_FLAG_DELTA_UNIT)) {
-    return FALSE;
-  } else if (!GST_BUFFER_FLAG_IS_SET (buffer, GST_BUFFER_FLAG_IN_CAPS)) {
-    return TRUE;
-  }
-
-  return FALSE;
-}
-
 /* queue the given buffer for the given client */
 static gboolean
 gst_multi_fd_sink_client_queue_buffer (GstMultiFdSink * sink,
@@ -1152,6 +1095,7 @@ gst_multi_fd_sink_client_queue_buffer (GstMultiFdSink * sink,
   gboolean send_streamheader = FALSE;
   GstStructure *s;
   GstMultiHandleClient *mhclient = (GstMultiHandleClient *) client;
+  GstMultiHandleSink *mhsink = GST_MULTI_HANDLE_SINK (sink);
 
   /* before we queue the buffer, we check if we need to queue streamheader
    * buffers (because it's a new client, or because they changed) */
@@ -1186,7 +1130,7 @@ gst_multi_fd_sink_client_queue_buffer (GstMultiFdSink * sink,
           send_streamheader = TRUE;
         } else {
           /* both old and new caps have streamheader set */
-          if (!sink->resend_streamheader) {
+          if (!mhsink->resend_streamheader) {
             GST_DEBUG_OBJECT (sink,
                 "[fd %5d] asked to not resend the streamheader, not sending",
                 client->fd.fd);
@@ -1259,40 +1203,6 @@ gst_multi_fd_sink_client_queue_buffer (GstMultiFdSink * sink,
   return TRUE;
 }
 
-/* find the keyframe in the list of buffers starting the
- * search from @idx. @direction as -1 will search backwards, 
- * 1 will search forwards.
- * Returns: the index or -1 if there is no keyframe after idx.
- */
-static gint
-find_syncframe (GstMultiFdSink * sink, gint idx, gint direction)
-{
-  gint i, len, result;
-
-  /* take length of queued buffers */
-  len = sink->bufqueue->len;
-
-  /* assume we don't find a keyframe */
-  result = -1;
-
-  /* then loop over all buffers to find the first keyframe */
-  for (i = idx; i >= 0 && i < len; i += direction) {
-    GstBuffer *buf;
-
-    buf = g_array_index (sink->bufqueue, GstBuffer *, i);
-    if (is_sync_frame (sink, buf)) {
-      GST_LOG_OBJECT (sink, "found keyframe at %d from %d, direction %d",
-          i, idx, direction);
-      result = i;
-      break;
-    }
-  }
-  return result;
-}
-
-#define find_next_syncframe(s,i) 	find_syncframe(s,i,1)
-#define find_prev_syncframe(s,i) 	find_syncframe(s,i,-1)
-
 /* Get the number of buffers from the buffer queue needed to satisfy
  * the maximum max in the configured units.
  * If units are not BUFFERS, and there are insufficient buffers in the
@@ -1300,6 +1210,8 @@ find_syncframe (GstMultiFdSink * sink, gint idx, gint direction)
 static gint
 get_buffers_max (GstMultiFdSink * sink, gint64 max)
 {
+  GstMultiHandleSink *mhsink = GST_MULTI_HANDLE_SINK (sink);
+
   switch (sink->unit_type) {
     case GST_TCP_UNIT_TYPE_BUFFERS:
       return max;
@@ -1311,10 +1223,10 @@ get_buffers_max (GstMultiFdSink * sink, gint64 max)
       gint64 diff;
       GstClockTime first = GST_CLOCK_TIME_NONE;
 
-      len = sink->bufqueue->len;
+      len = mhsink->bufqueue->len;
 
       for (i = 0; i < len; i++) {
-        buf = g_array_index (sink->bufqueue, GstBuffer *, i);
+        buf = g_array_index (mhsink->bufqueue, GstBuffer *, i);
         if (GST_BUFFER_TIMESTAMP_IS_VALID (buf)) {
           if (first == -1)
             first = GST_BUFFER_TIMESTAMP (buf);
@@ -1334,10 +1246,10 @@ get_buffers_max (GstMultiFdSink * sink, gint64 max)
       int len;
       gint acc = 0;
 
-      len = sink->bufqueue->len;
+      len = mhsink->bufqueue->len;
 
       for (i = 0; i < len; i++) {
-        buf = g_array_index (sink->bufqueue, GstBuffer *, i);
+        buf = g_array_index (mhsink->bufqueue, GstBuffer *, i);
         acc += gst_buffer_get_size (buf);
 
         if (acc > max)
@@ -1370,9 +1282,10 @@ find_limits (GstMultiFdSink * sink,
   GstClockTime first, time;
   gint i, len, bytes;
   gboolean result, max_hit;
+  GstMultiHandleSink *mhsink = GST_MULTI_HANDLE_SINK (sink);
 
   /* take length of queue */
-  len = sink->bufqueue->len;
+  len = mhsink->bufqueue->len;
 
   /* this must hold */
   g_assert (len > 0);
@@ -1419,7 +1332,7 @@ find_limits (GstMultiFdSink * sink,
       result = *min_idx != -1;
       break;
     }
-    buf = g_array_index (sink->bufqueue, GstBuffer *, i);
+    buf = g_array_index (mhsink->bufqueue, GstBuffer *, i);
 
     bytes += gst_buffer_get_size (buf);
 
@@ -1531,11 +1444,12 @@ gst_multi_fd_sink_new_client (GstMultiFdSink * sink, GstTCPClient * client)
 {
   gint result;
   GstMultiHandleClient *mhclient = (GstMultiHandleClient *) client;
+  GstMultiHandleSink *mhsink = GST_MULTI_HANDLE_SINK (sink);
 
   GST_DEBUG_OBJECT (sink,
       "[fd %5d] new client, deciding where to start in queue", client->fd.fd);
   GST_DEBUG_OBJECT (sink, "queue is currently %d buffers long",
-      sink->bufqueue->len);
+      mhsink->bufqueue->len);
   switch (mhclient->sync_method) {
     case GST_SYNC_METHOD_LATEST:
       /* no syncing, we are happy with whatever the client is going to get */
@@ -1551,7 +1465,7 @@ gst_multi_fd_sink_new_client (GstMultiFdSink * sink, GstTCPClient * client)
           "[fd %5d] new client, bufpos %d, waiting for keyframe", client->fd.fd,
           mhclient->bufpos);
 
-      result = find_prev_syncframe (sink, mhclient->bufpos);
+      result = find_prev_syncframe (mhsink, mhclient->bufpos);
       if (result != -1) {
         GST_DEBUG_OBJECT (sink,
             "[fd %5d] SYNC_METHOD_NEXT_KEYFRAME: result %d",
@@ -1577,7 +1491,7 @@ gst_multi_fd_sink_new_client (GstMultiFdSink * sink, GstTCPClient * client)
        * we need to wait for the next keyframe and so we change the client's
        * sync method to GST_SYNC_METHOD_NEXT_KEYFRAME.
        */
-      result = find_next_syncframe (sink, 0);
+      result = find_next_syncframe (mhsink, 0);
       if (result != -1) {
         GST_DEBUG_OBJECT (sink,
             "[fd %5d] SYNC_METHOD_LATEST_KEYFRAME: result %d", client->fd.fd,
@@ -1642,7 +1556,7 @@ gst_multi_fd_sink_new_client (GstMultiFdSink * sink, GstTCPClient * client)
       GST_LOG_OBJECT (sink, "min %d, max %d", min_idx, max_idx);
 
       /* first find a keyframe after min_idx */
-      next_syncframe = find_next_syncframe (sink, min_idx);
+      next_syncframe = find_next_syncframe (mhsink, min_idx);
       if (next_syncframe != -1 && next_syncframe < max_idx) {
         /* we have a valid keyframe and it's below the max */
         GST_LOG_OBJECT (sink, "found keyframe in min/max limits");
@@ -1651,7 +1565,7 @@ gst_multi_fd_sink_new_client (GstMultiFdSink * sink, GstTCPClient * client)
       }
 
       /* no valid keyframe, try to find one below min */
-      prev_syncframe = find_prev_syncframe (sink, min_idx);
+      prev_syncframe = find_prev_syncframe (mhsink, min_idx);
       if (prev_syncframe != -1) {
         GST_WARNING_OBJECT (sink,
             "using keyframe below min in BURST_KEYFRAME sync mode");
@@ -1689,7 +1603,7 @@ gst_multi_fd_sink_new_client (GstMultiFdSink * sink, GstTCPClient * client)
       GST_LOG_OBJECT (sink, "min %d, max %d", min_idx, max_idx);
 
       /* first find a keyframe after min_idx */
-      next_syncframe = find_next_syncframe (sink, min_idx);
+      next_syncframe = find_next_syncframe (mhsink, min_idx);
       if (next_syncframe != -1 && next_syncframe < max_idx) {
         /* we have a valid keyframe and it's below the max */
         GST_LOG_OBJECT (sink, "found keyframe in min/max limits");
@@ -1799,7 +1713,7 @@ gst_multi_fd_sink_handle_client_write (GstMultiFdSink * sink,
           goto flushed;
 
         /* grab buffer */
-        buf = g_array_index (sink->bufqueue, GstBuffer *, mhclient->bufpos);
+        buf = g_array_index (mhsink->bufqueue, GstBuffer *, mhclient->bufpos);
         mhclient->bufpos--;
 
         /* update stats */
@@ -1941,14 +1855,14 @@ gst_multi_fd_sink_recover_client (GstMultiFdSink * sink, GstTCPClient * client)
     case GST_RECOVER_POLICY_RESYNC_KEYFRAME:
       /* find keyframe in buffers, we search backwards to find the
        * closest keyframe relative to what this client already received. */
-      newbufpos = MIN (sink->bufqueue->len - 1,
+      newbufpos = MIN (mhsink->bufqueue->len - 1,
           get_buffers_max (sink, sink->units_soft_max) - 1);
 
       while (newbufpos >= 0) {
         GstBuffer *buf;
 
-        buf = g_array_index (sink->bufqueue, GstBuffer *, newbufpos);
-        if (is_sync_frame (sink, buf)) {
+        buf = g_array_index (mhsink->bufqueue, GstBuffer *, newbufpos);
+        if (is_sync_frame (mhsink, buf)) {
           /* found a buffer that is not a delta unit */
           break;
         }
@@ -1993,17 +1907,17 @@ gst_multi_fd_sink_queue_buffer (GstMultiFdSink * sink, GstBuffer * buf)
   GstClockTime now;
   gint max_buffers, soft_max_buffers;
   guint cookie;
-  GstMultiHandleSink *mhsink;
-
-  mhsink = GST_MULTI_HANDLE_SINK (sink);
+  GstMultiHandleSink *mhsink = GST_MULTI_HANDLE_SINK (sink);
+  GstMultiHandleSinkClass *mhsinkclass =
+      GST_MULTI_HANDLE_SINK_GET_CLASS (mhsink);
 
   g_get_current_time (&nowtv);
   now = GST_TIMEVAL_TO_TIME (nowtv);
 
   CLIENTS_LOCK (sink);
   /* add buffer to queue */
-  g_array_prepend_val (sink->bufqueue, buf);
-  queuelen = sink->bufqueue->len;
+  g_array_prepend_val (mhsink->bufqueue, buf);
+  queuelen = mhsink->bufqueue->len;
 
   if (sink->units_max > 0)
     max_buffers = get_buffers_max (sink, sink->units_max);
@@ -2021,12 +1935,12 @@ gst_multi_fd_sink_queue_buffer (GstMultiFdSink * sink, GstBuffer * buf)
   max_buffer_usage = 0;
 
 restart:
-  cookie = sink->clients_cookie;
-  for (clients = sink->clients; clients; clients = next) {
+  cookie = mhsink->clients_cookie;
+  for (clients = mhsink->clients; clients; clients = next) {
     GstTCPClient *client;
     GstMultiHandleClient *mhclient;
 
-    if (cookie != sink->clients_cookie) {
+    if (cookie != mhsink->clients_cookie) {
       GST_DEBUG_OBJECT (sink, "Clients cookie outdated, restarting");
       goto restart;
     }
@@ -2067,7 +1981,7 @@ restart:
       mhclient->status = GST_CLIENT_STATUS_SLOW;
       /* set client to invalid position while being removed */
       mhclient->bufpos = -1;
-      gst_multi_fd_sink_remove_client_link (sink, clients);
+      mhsinkclass->remove_client_link (mhsink, clients);
       need_signal = TRUE;
       continue;
     } else if (mhclient->bufpos == 0 || mhclient->new_connection) {
@@ -2119,8 +2033,8 @@ restart:
         "extending queue to include sync point, now at %d, limit is %d",
         max_buffer_usage, limit);
     for (i = 0; i < limit; i++) {
-      buf = g_array_index (sink->bufqueue, GstBuffer *, i);
-      if (is_sync_frame (sink, buf)) {
+      buf = g_array_index (mhsink->bufqueue, GstBuffer *, i);
+      if (is_sync_frame (mhsink, buf)) {
         /* found a sync frame, now extend the buffer usage to
          * include at least this frame. */
         max_buffer_usage = MAX (max_buffer_usage, i);
@@ -2140,14 +2054,14 @@ restart:
 
     /* queue exceeded max size */
     queuelen--;
-    old = g_array_index (sink->bufqueue, GstBuffer *, i);
-    sink->bufqueue = g_array_remove_index (sink->bufqueue, i);
+    old = g_array_index (mhsink->bufqueue, GstBuffer *, i);
+    mhsink->bufqueue = g_array_remove_index (mhsink->bufqueue, i);
 
     /* unref tail buffer */
     gst_buffer_unref (old);
   }
   /* save for stats */
-  sink->buffers_queued = max_buffer_usage;
+  mhsink->buffers_queued = max_buffer_usage;
   CLIENTS_UNLOCK (sink);
 
   /* and send a signal to thread if fd_set changed */
@@ -2172,9 +2086,10 @@ gst_multi_fd_sink_handle_clients (GstMultiFdSink * sink)
   gboolean try_again;
   GstMultiFdSinkClass *fclass;
   guint cookie;
-  GstMultiHandleSink *mhsink;
+  GstMultiHandleSink *mhsink = GST_MULTI_HANDLE_SINK (sink);
+  GstMultiHandleSinkClass *mhsinkclass =
+      GST_MULTI_HANDLE_SINK_GET_CLASS (mhsink);
 
-  mhsink = GST_MULTI_HANDLE_SINK (sink);
 
   fclass = GST_MULTI_FD_SINK_GET_CLASS (sink);
 
@@ -2201,7 +2116,7 @@ gst_multi_fd_sink_handle_clients (GstMultiFdSink * sink)
       now = GST_TIMEVAL_TO_TIME (nowtv);
 
       CLIENTS_LOCK (sink);
-      for (clients = sink->clients; clients; clients = next) {
+      for (clients = mhsink->clients; clients; clients = next) {
         GstTCPClient *client;
         GstMultiHandleClient *mhclient;
 
@@ -2211,7 +2126,7 @@ gst_multi_fd_sink_handle_clients (GstMultiFdSink * sink)
         if (mhsink->timeout > 0
             && now - mhclient->last_activity_time > mhsink->timeout) {
           mhclient->status = GST_CLIENT_STATUS_SLOW;
-          gst_multi_fd_sink_remove_client_link (sink, clients);
+          mhsinkclass->remove_client_link (mhsink, clients);
         }
       }
       CLIENTS_UNLOCK (sink);
@@ -2224,15 +2139,15 @@ gst_multi_fd_sink_handle_clients (GstMultiFdSink * sink)
          * the ones that give an error to the F_GETFL fcntl. */
         CLIENTS_LOCK (sink);
       restart:
-        cookie = sink->clients_cookie;
-        for (clients = sink->clients; clients; clients = next) {
+        cookie = mhsink->clients_cookie;
+        for (clients = mhsink->clients; clients; clients = next) {
           GstTCPClient *client;
           GstMultiHandleClient *mhclient;
           int fd;
           long flags;
           int res;
 
-          if (cookie != sink->clients_cookie) {
+          if (cookie != mhsink->clients_cookie) {
             GST_DEBUG_OBJECT (sink, "Cookie changed finding bad fd");
             goto restart;
           }
@@ -2250,7 +2165,7 @@ gst_multi_fd_sink_handle_clients (GstMultiFdSink * sink)
             if (errno == EBADF) {
               mhclient->status = GST_CLIENT_STATUS_ERROR;
               /* releases the CLIENTS lock */
-              gst_multi_fd_sink_remove_client_link (sink, clients);
+              mhsinkclass->remove_client_link (mhsink, clients);
             }
           }
         }
@@ -2283,12 +2198,12 @@ gst_multi_fd_sink_handle_clients (GstMultiFdSink * sink)
   CLIENTS_LOCK (sink);
 
 restart2:
-  cookie = sink->clients_cookie;
-  for (clients = sink->clients; clients; clients = next) {
+  cookie = mhsink->clients_cookie;
+  for (clients = mhsink->clients; clients; clients = next) {
     GstTCPClient *client;
     GstMultiHandleClient *mhclient;
 
-    if (sink->clients_cookie != cookie) {
+    if (mhsink->clients_cookie != cookie) {
       GST_DEBUG_OBJECT (sink, "Restarting loop, cookie out of date");
       goto restart2;
     }
@@ -2299,32 +2214,32 @@ restart2:
 
     if (mhclient->status != GST_CLIENT_STATUS_FLUSHING
         && mhclient->status != GST_CLIENT_STATUS_OK) {
-      gst_multi_fd_sink_remove_client_link (sink, clients);
+      mhsinkclass->remove_client_link (mhsink, clients);
       continue;
     }
 
     if (gst_poll_fd_has_closed (sink->fdset, &client->fd)) {
       mhclient->status = GST_CLIENT_STATUS_CLOSED;
-      gst_multi_fd_sink_remove_client_link (sink, clients);
+      mhsinkclass->remove_client_link (mhsink, clients);
       continue;
     }
     if (gst_poll_fd_has_error (sink->fdset, &client->fd)) {
       GST_WARNING_OBJECT (sink, "gst_poll_fd_has_error for %d", client->fd.fd);
       mhclient->status = GST_CLIENT_STATUS_ERROR;
-      gst_multi_fd_sink_remove_client_link (sink, clients);
+      mhsinkclass->remove_client_link (mhsink, clients);
       continue;
     }
     if (gst_poll_fd_can_read (sink->fdset, &client->fd)) {
       /* handle client read */
       if (!gst_multi_fd_sink_handle_client_read (sink, client)) {
-        gst_multi_fd_sink_remove_client_link (sink, clients);
+        mhsinkclass->remove_client_link (mhsink, clients);
         continue;
       }
     }
     if (gst_poll_fd_can_write (sink->fdset, &client->fd)) {
       /* handle client write */
       if (!gst_multi_fd_sink_handle_client_write (sink, client)) {
-        gst_multi_fd_sink_remove_client_link (sink, clients);
+        mhsinkclass->remove_client_link (mhsink, clients);
         continue;
       }
     }
@@ -2335,9 +2250,11 @@ restart2:
 /* we handle the client communication in another thread so that we do not block
  * the gstreamer thread while we select() on the client fds */
 static gpointer
-gst_multi_fd_sink_thread (GstMultiFdSink * sink)
+gst_multi_fd_sink_thread (GstMultiHandleSink * mhsink)
 {
-  while (sink->running) {
+  GstMultiFdSink *sink = GST_MULTI_FD_SINK (mhsink);
+
+  while (mhsink->running) {
     gst_multi_fd_sink_handle_clients (sink);
   }
   return NULL;
@@ -2370,8 +2287,8 @@ gst_multi_fd_sink_render (GstBaseSink * bsink, GstBuffer * buf)
     goto no_caps;
 #endif
 
-  /* get IN_CAPS first, code below might mess with the flags */
-  in_caps = GST_BUFFER_FLAG_IS_SET (buf, GST_BUFFER_FLAG_IN_CAPS);
+  /* get HEADER first, code below might mess with the flags */
+  in_caps = GST_BUFFER_FLAG_IS_SET (buf, GST_BUFFER_FLAG_HEADER);
 
 #if 0
   /* stamp the buffer with previous caps if no caps set */
@@ -2408,15 +2325,15 @@ gst_multi_fd_sink_render (GstBaseSink * bsink, GstBuffer * buf)
       GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buf)),
       GST_TIME_ARGS (GST_BUFFER_DURATION (buf)));
 
-  /* if we get IN_CAPS buffers, but the previous buffer was not IN_CAPS,
+  /* if we get HEADER buffers, but the previous buffer was not HEADER,
    * it means we're getting new streamheader buffers, and we should clear
    * the old ones */
   if (in_caps && sink->previous_buffer_in_caps == FALSE) {
     GST_DEBUG_OBJECT (sink,
-        "receiving new IN_CAPS buffers, clearing old streamheader");
-    g_slist_foreach (sink->streamheader, (GFunc) gst_mini_object_unref, NULL);
-    g_slist_free (sink->streamheader);
-    sink->streamheader = NULL;
+        "receiving new HEADER buffers, clearing old streamheader");
+    g_slist_foreach (mhsink->streamheader, (GFunc) gst_mini_object_unref, NULL);
+    g_slist_free (mhsink->streamheader);
+    mhsink->streamheader = NULL;
   }
 
   /* save the current in_caps */
@@ -2431,9 +2348,9 @@ gst_multi_fd_sink_render (GstBaseSink * bsink, GstBuffer * buf)
    * We don't send the buffer to the client, since streamheaders are sent
    * separately when necessary. */
   if (in_caps) {
-    GST_DEBUG_OBJECT (sink, "appending IN_CAPS buffer with length %"
+    GST_DEBUG_OBJECT (sink, "appending HEADER buffer with length %"
         G_GSIZE_FORMAT " to streamheader", gst_buffer_get_size (buf));
-    sink->streamheader = g_slist_append (sink->streamheader, buf);
+    mhsink->streamheader = g_slist_append (mhsink->streamheader, buf);
   } else {
     /* queue the buffer, this is a regular data buffer. */
     gst_multi_fd_sink_queue_buffer (sink, buf);
@@ -2493,9 +2410,6 @@ gst_multi_fd_sink_set_property (GObject * object, guint prop_id,
     case PROP_HANDLE_READ:
       multifdsink->handle_read = g_value_get_boolean (value);
       break;
-    case PROP_RESEND_STREAMHEADER:
-      multifdsink->resend_streamheader = g_value_get_boolean (value);
-      break;
 
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -2521,15 +2435,6 @@ gst_multi_fd_sink_get_property (GObject * object, guint prop_id, GValue * value,
     case PROP_BUFFERS_SOFT_MAX:
       g_value_set_int (value, multifdsink->units_soft_max);
       break;
-    case PROP_BUFFERS_QUEUED:
-      g_value_set_uint (value, multifdsink->buffers_queued);
-      break;
-    case PROP_BYTES_QUEUED:
-      g_value_set_uint (value, multifdsink->bytes_queued);
-      break;
-    case PROP_TIME_QUEUED:
-      g_value_set_uint64 (value, multifdsink->time_queued);
-      break;
     case PROP_UNIT_TYPE:
       g_value_set_enum (value, multifdsink->unit_type);
       break;
@@ -2551,9 +2456,6 @@ gst_multi_fd_sink_get_property (GObject * object, guint prop_id, GValue * value,
     case PROP_HANDLE_READ:
       g_value_set_boolean (value, multifdsink->handle_read);
       break;
-    case PROP_RESEND_STREAMHEADER:
-      g_value_set_boolean (value, multifdsink->resend_streamheader);
-      break;
     case PROP_NUM_FDS:
       g_value_set_uint (value, g_hash_table_size (multifdsink->fd_hash));
       break;
@@ -2564,52 +2466,21 @@ gst_multi_fd_sink_get_property (GObject * object, guint prop_id, GValue * value,
   }
 }
 
-
-/* create a socket for sending to remote machine */
 static gboolean
-gst_multi_fd_sink_start (GstBaseSink * bsink)
+gst_multi_fd_sink_start_pre (GstMultiHandleSink * mhsink)
 {
-  GstMultiFdSinkClass *fclass;
-  GstMultiFdSink *this;
-  GstMultiHandleSink *mhsink;
+  GstMultiFdSink *mfsink = GST_MULTI_FD_SINK (mhsink);
 
-  if (GST_OBJECT_FLAG_IS_SET (bsink, GST_MULTI_HANDLE_SINK_OPEN))
-    return TRUE;
-
-  this = GST_MULTI_FD_SINK (bsink);
-  mhsink = GST_MULTI_HANDLE_SINK (bsink);
-  fclass = GST_MULTI_FD_SINK_GET_CLASS (this);
-
-  GST_INFO_OBJECT (this, "starting in mode %d", this->mode);
-  if ((this->fdset = gst_poll_new (TRUE)) == NULL)
+  GST_INFO_OBJECT (mfsink, "starting in mode %d", mfsink->mode);
+  if ((mfsink->fdset = gst_poll_new (TRUE)) == NULL)
     goto socket_pair;
-
-  this->streamheader = NULL;
-  mhsink->bytes_to_serve = 0;
-  mhsink->bytes_served = 0;
-
-  if (fclass->init) {
-    fclass->init (this);
-  }
-
-  this->running = TRUE;
-
-#if !GLIB_CHECK_VERSION (2, 31, 0)
-  this->thread = g_thread_create ((GThreadFunc) gst_multi_fd_sink_thread,
-      this, TRUE, NULL);
-#else
-  this->thread = g_thread_new ("multifdsink",
-      (GThreadFunc) gst_multi_fd_sink_thread, this);
-#endif
-
-  GST_OBJECT_FLAG_SET (this, GST_MULTI_HANDLE_SINK_OPEN);
 
   return TRUE;
 
   /* ERRORS */
 socket_pair:
   {
-    GST_ELEMENT_ERROR (this, RESOURCE, OPEN_READ_WRITE, (NULL),
+    GST_ELEMENT_ERROR (mfsink, RESOURCE, OPEN_READ_WRITE, (NULL),
         GST_ERROR_SYSTEM);
     return FALSE;
   }
@@ -2621,113 +2492,24 @@ multifdsink_hash_remove (gpointer key, gpointer value, gpointer data)
   return TRUE;
 }
 
-static gboolean
-gst_multi_fd_sink_stop (GstBaseSink * bsink)
+static void
+gst_multi_fd_sink_stop_pre (GstMultiHandleSink * mhsink)
 {
-  GstMultiFdSinkClass *fclass;
-  GstMultiHandleSinkClass *mhclass;
-  GstMultiFdSink *this;
-  GstBuffer *buf;
-  int i;
+  GstMultiFdSink *mfsink = GST_MULTI_FD_SINK (mhsink);
 
-  this = GST_MULTI_FD_SINK (bsink);
-  fclass = GST_MULTI_FD_SINK_GET_CLASS (this);
-  mhclass = GST_MULTI_HANDLE_SINK_GET_CLASS (this);
+  gst_poll_set_flushing (mfsink->fdset, TRUE);
 
-  if (!GST_OBJECT_FLAG_IS_SET (bsink, GST_MULTI_HANDLE_SINK_OPEN))
-    return TRUE;
-
-  this->running = FALSE;
-
-  gst_poll_set_flushing (this->fdset, TRUE);
-  if (this->thread) {
-    GST_DEBUG_OBJECT (this, "joining thread");
-    g_thread_join (this->thread);
-    GST_DEBUG_OBJECT (this, "joined thread");
-    this->thread = NULL;
-  }
-
-  /* free the clients */
-  mhclass->clear (GST_MULTI_HANDLE_SINK (this));
-
-  if (this->streamheader) {
-    g_slist_foreach (this->streamheader, (GFunc) gst_mini_object_unref, NULL);
-    g_slist_free (this->streamheader);
-    this->streamheader = NULL;
-  }
-
-  if (fclass->close)
-    fclass->close (this);
-
-  if (this->fdset) {
-    gst_poll_free (this->fdset);
-    this->fdset = NULL;
-  }
-  g_hash_table_foreach_remove (this->fd_hash, multifdsink_hash_remove, this);
-
-  /* remove all queued buffers */
-  if (this->bufqueue) {
-    GST_DEBUG_OBJECT (this, "Emptying bufqueue with %d buffers",
-        this->bufqueue->len);
-    for (i = this->bufqueue->len - 1; i >= 0; --i) {
-      buf = g_array_index (this->bufqueue, GstBuffer *, i);
-      GST_LOG_OBJECT (this, "Removing buffer %p (%d) with refcount %d", buf, i,
-          GST_MINI_OBJECT_REFCOUNT (buf));
-      gst_buffer_unref (buf);
-      this->bufqueue = g_array_remove_index (this->bufqueue, i);
-    }
-    /* freeing the array is done in _finalize */
-  }
-  GST_OBJECT_FLAG_UNSET (this, GST_MULTI_HANDLE_SINK_OPEN);
-
-  return TRUE;
 }
 
-static GstStateChangeReturn
-gst_multi_fd_sink_change_state (GstElement * element, GstStateChange transition)
+static void
+gst_multi_fd_sink_stop_post (GstMultiHandleSink * mhsink)
 {
-  GstMultiFdSink *sink;
-  GstStateChangeReturn ret;
+  GstMultiFdSink *mfsink = GST_MULTI_FD_SINK (mhsink);
 
-  sink = GST_MULTI_FD_SINK (element);
-
-  /* we disallow changing the state from the streaming thread */
-  if (g_thread_self () == sink->thread)
-    return GST_STATE_CHANGE_FAILURE;
-
-
-  switch (transition) {
-    case GST_STATE_CHANGE_NULL_TO_READY:
-      if (!gst_multi_fd_sink_start (GST_BASE_SINK (sink)))
-        goto start_failed;
-      break;
-    case GST_STATE_CHANGE_READY_TO_PAUSED:
-      break;
-    case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
-      break;
-    default:
-      break;
+  if (mfsink->fdset) {
+    gst_poll_free (mfsink->fdset);
+    mfsink->fdset = NULL;
   }
-
-  ret = GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
-
-  switch (transition) {
-    case GST_STATE_CHANGE_PLAYING_TO_PAUSED:
-      break;
-    case GST_STATE_CHANGE_PAUSED_TO_READY:
-      break;
-    case GST_STATE_CHANGE_READY_TO_NULL:
-      gst_multi_fd_sink_stop (GST_BASE_SINK (sink));
-      break;
-    default:
-      break;
-  }
-  return ret;
-
-  /* ERRORS */
-start_failed:
-  {
-    /* error message was posted */
-    return GST_STATE_CHANGE_FAILURE;
-  }
+  g_hash_table_foreach_remove (mfsink->fd_hash, multifdsink_hash_remove,
+      mfsink);
 }

@@ -75,25 +75,15 @@ struct _GstMultiSocketSink {
   GstMultiHandleSink element;
 
   /*< private >*/
-  GRecMutex clientslock;  /* lock to protect the clients list */
-  GList *clients;       /* list of clients we are serving */
   GHashTable *socket_hash;  /* index on socket to client */
-  guint clients_cookie; /* Cookie to detect changes to the clients list */
 
   GMainContext *main_context;
   GCancellable *cancellable;
 
-  GSList *streamheader; /* GSList of GstBuffers to use as streamheader */
   gboolean previous_buffer_in_caps;
 
   guint mtu;
   gint qos_dscp;
-  gboolean handle_read;
-
-  GArray *bufqueue;     /* global queue of buffers */
-
-  gboolean running;     /* the thread state */
-  GThread *thread;      /* the sender thread */
 
   /* these values are used to check if a client is reading fast
    * enough and to control receovery */
@@ -103,13 +93,6 @@ struct _GstMultiSocketSink {
 
   GstFormat     def_burst_format;
   guint64       def_burst_value;
-
-  gboolean resend_streamheader; /* resend streamheader if it changes */
-
-  /* stats */
-  gint buffers_queued;  /* number of queued buffers */
-  gint bytes_queued;    /* number of queued bytes */
-  gint time_queued;     /* number of queued time */
 
   guint8 header_flags;
 };
@@ -128,8 +111,6 @@ struct _GstMultiSocketSinkClass {
   GstStructure* (*get_stats)    (GstMultiSocketSink *sink, GSocket *socket);
 
   /* vtable */
-  gboolean (*init)   (GstMultiSocketSink *sink);
-  gboolean (*close)  (GstMultiSocketSink *sink);
   void (*removed) (GstMultiSocketSink *sink, GSocket *socket);
 
   /* signals */
@@ -141,7 +122,7 @@ struct _GstMultiSocketSinkClass {
 GType gst_multi_socket_sink_get_type (void);
 
 void          gst_multi_socket_sink_add          (GstMultiSocketSink *sink, GSocket *socket);
-void          gst_multi_socket_sink_add_full     (GstMultiSocketSink *sink, GSocket *socket, GstSyncMethod sync, 
+void          gst_multi_socket_sink_add_full     (GstMultiSocketSink *sink, GSocket *socket, GstSyncMethod sync,
                                               GstFormat min_format, guint64 min_value,
                                               GstFormat max_format, guint64 max_value);
 void          gst_multi_socket_sink_remove       (GstMultiSocketSink *sink, GSocket *socket);
