@@ -118,9 +118,14 @@ gst_pes_filter_parse (GstPESFilter * filter)
   gint avail, datalen;
   gboolean have_size = FALSE;
 
-  /* read start code and length */
-  if (!(data = gst_adapter_peek (filter->adapter, 6)))
+  avail = gst_adapter_available (filter->adapter);
+
+  if (avail < 6)
     goto need_more_data;
+
+  data = gst_adapter_map (filter->adapter, 6);
+
+  /* read start code and length */
 
   /* get start code */
   start_code = GST_READ_UINT32_BE (data);
@@ -135,9 +140,6 @@ gst_pes_filter_parse (GstPESFilter * filter)
 
   /* start parsing length */
   filter->length = GST_READ_UINT16_BE (data);
-
-  /* see how much is available */
-  avail = gst_adapter_available (filter->adapter);
 
   GST_DEBUG ("id 0x%02x length %d, avail %d start code 0x%02x", filter->id,
       filter->length, avail, filter->start_code);
@@ -171,10 +173,11 @@ gst_pes_filter_parse (GstPESFilter * filter)
   if (avail < 6)
     goto need_more_data;
 
+  gst_adapter_unmap (filter->adapter);
+
   /* read more data, either the whole packet if there is a length
    * or whatever we have available if this in an unbounded packet. */
-  if (!(data = gst_adapter_peek (filter->adapter, avail)))
-    goto need_more_data;
+  data = gst_adapter_map (filter->adapter, avail);
 
   /* This will make us flag LOST_SYNC if we run out of data from here onward */
   have_size = TRUE;
@@ -469,11 +472,8 @@ push_out:
     }
 
     if (datalen > 0) {
-      out = gst_buffer_new ();
-      GST_BUFFER_DATA (out) = g_memdup (data, datalen);
-      GST_BUFFER_SIZE (out) = datalen;
-      GST_BUFFER_MALLOCDATA (out) = GST_BUFFER_DATA (out);
-
+      out = gst_buffer_new_allocate (NULL, datalen, 0);
+      gst_buffer_fill (out, 0, data, datalen);
       ret = gst_pes_filter_data_push (filter, TRUE, out);
       filter->first = FALSE;
     } else {
@@ -486,6 +486,7 @@ push_out:
       filter->state = STATE_DATA_PUSH;
   }
 
+  gst_adapter_unmap (filter->adapter);
   gst_adapter_flush (filter->adapter, avail);
   ADAPTER_OFFSET_FLUSH (avail);
 
@@ -495,24 +496,26 @@ need_more_data:
   {
     if (filter->unbounded_packet == FALSE) {
       if (have_size == TRUE) {
-        GST_DEBUG ("bounded need more data %d, lost sync",
+        GST_DEBUG ("bounded need more data %" G_GSIZE_FORMAT " , lost sync",
             gst_adapter_available (filter->adapter));
         ret = GST_FLOW_LOST_SYNC;
       } else {
-        GST_DEBUG ("bounded need more data %d, breaking for more",
-            gst_adapter_available (filter->adapter));
+        GST_DEBUG ("bounded need more data %" G_GSIZE_FORMAT
+            ", breaking for more", gst_adapter_available (filter->adapter));
         ret = GST_FLOW_NEED_MORE_DATA;
       }
     } else {
-      GST_DEBUG ("unbounded need more data %d",
+      GST_DEBUG ("unbounded need more data %" G_GSIZE_FORMAT,
           gst_adapter_available (filter->adapter));
       ret = GST_FLOW_NEED_MORE_DATA;
     }
-
+    gst_adapter_unmap (filter->adapter);
     return ret;
   }
 skip:
   {
+    gst_adapter_unmap (filter->adapter);
+
     GST_DEBUG ("skipping 0x%02x", filter->id);
     gst_adapter_flush (filter->adapter, avail);
     ADAPTER_OFFSET_FLUSH (avail);
@@ -524,6 +527,7 @@ skip:
   }
 lost_sync:
   {
+    gst_adapter_unmap (filter->adapter);
     GST_DEBUG ("lost sync");
     gst_adapter_flush (filter->adapter, 4);
     ADAPTER_OFFSET_FLUSH (4);

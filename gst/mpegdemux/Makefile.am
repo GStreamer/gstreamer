@@ -2,16 +2,16 @@ plugin_LTLIBRARIES = libgstmpegdemux.la
 
 libgstmpegdemux_la_SOURCES = \
 	flumpegdemux.c \
-	flutspatinfo.c \
-	flutspmtinfo.c \
-	flutspmtstreaminfo.c \
 	gstmpegdemux.c \
-	gstmpegdesc.c \
-	gstmpegtsdemux.c \
-	gstpesfilter.c \
-	gstsectionfilter.c \
-	mpegtsparse.c \
-	mpegtspacketizer.c
+	gstpesfilter.c 
+#	flutspatinfo.c 
+#	flutspmtinfo.c 
+#	flutspmtstreaminfo.c
+#	gstmpegdesc.c \
+#	gstmpegtsdemux.c \
+#	gstsectionfilter.c \
+#	mpegtsparse.c \
+#	mpegtspacketizer.c
 
 libgstmpegdemux_la_CFLAGS = \
 	$(GST_PLUGINS_BASE_CFLAGS) \
