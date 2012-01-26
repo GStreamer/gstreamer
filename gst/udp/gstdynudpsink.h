@@ -66,8 +66,6 @@ struct _GstDynUDPSinkClass {
 
 GType gst_dynudpsink_get_type(void);
 
-GstStructure*    gst_dynudpsink_get_stats        (GstDynUDPSink *sink, const gchar *host, gint port);
-
 G_END_DECLS
 
 #endif /* __GST_DYNUDPSINK_H__ */

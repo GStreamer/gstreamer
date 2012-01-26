@@ -72,6 +72,8 @@ static void gst_dynudpsink_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
 static void gst_dynudpsink_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
+static GstStructure *gst_dynudpsink_get_stats (GstDynUDPSink * sink,
+    const gchar * host, gint port);
 
 static guint gst_dynudpsink_signals[LAST_SIGNAL] = { 0 };
 
@@ -98,7 +100,7 @@ gst_dynudpsink_class_init (GstDynUDPSinkClass * klass)
   gst_dynudpsink_signals[SIGNAL_GET_STATS] =
       g_signal_new ("get-stats", G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_LAST,
       G_STRUCT_OFFSET (GstDynUDPSinkClass, get_stats),
-      NULL, NULL, gst_udp_marshal_BOXED__STRING_INT, G_TYPE_VALUE_ARRAY, 2,
+      NULL, NULL, gst_udp_marshal_BOXED__STRING_INT, GST_TYPE_STRUCTURE, 2,
       G_TYPE_STRING, G_TYPE_INT);
 
   g_object_class_install_property (gobject_class, PROP_SOCKET,
@@ -124,6 +126,8 @@ gst_dynudpsink_class_init (GstDynUDPSinkClass * klass)
   gstbasesink_class->stop = gst_dynudpsink_stop;
   gstbasesink_class->unlock = gst_dynudpsink_unlock;
   gstbasesink_class->unlock_stop = gst_dynudpsink_unlock_stop;
+
+  klass->get_stats = gst_dynudpsink_get_stats;
 
   GST_DEBUG_CATEGORY_INIT (dynudpsink_debug, "dynudpsink", 0, "UDP sink");
 }
@@ -330,7 +334,7 @@ no_socket:
   }
 }
 
-GstStructure *
+static GstStructure *
 gst_dynudpsink_get_stats (GstDynUDPSink * sink, const gchar * host, gint port)
 {
   return NULL;
