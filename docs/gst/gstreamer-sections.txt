@@ -977,6 +977,17 @@ gst_event_new_reconfigure
 
 gst_event_new_caps
 gst_event_parse_caps
+
+GstStreamConfigFlags
+gst_event_new_stream_config
+gst_event_parse_stream_config
+
+gst_event_set_stream_config_codec_data
+gst_event_parse_stream_config_codec_data
+
+gst_event_add_stream_config_header
+gst_event_get_n_stream_config_headers
+gst_event_parse_nth_stream_config_header
 <SUBSECTION Standard>
 GstEventClass
 GST_EVENT
