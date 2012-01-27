@@ -2544,42 +2544,6 @@ gst_task_state_get_type
 
 
 <SECTION>
-<FILE>gsttrace</FILE>
-<TITLE>GstTrace</TITLE>
-GstTrace
-gst_trace_new
-gst_trace_destroy
-gst_trace_flush
-gst_trace_text_flush
-gst_trace_add_entry
-gst_trace_get_size
-gst_trace_get_offset
-gst_trace_get_remaining
-gst_trace_set_default
-gst_trace_read_tsc
-GstAllocTraceFlags
-GstAllocTrace
-gst_alloc_trace_available
-gst_alloc_trace_list
-gst_alloc_trace_live_all
-gst_alloc_trace_print_all
-gst_alloc_trace_set_flags_all
-gst_alloc_trace_get
-gst_alloc_trace_print
-gst_alloc_trace_print_live
-gst_alloc_trace_set_flags
-gst_alloc_trace_register
-gst_alloc_trace_new
-gst_alloc_trace_free
-<SUBSECTION Standard>
-GST_TYPE_ALLOC_TRACE_FLAGS
-gst_alloc_trace_flags_get_type
-<SUBSECTION Private>
-GstTraceEntry
-</SECTION>
-
-
-<SECTION>
 <FILE>gsttypefind</FILE>
 <TITLE>GstTypeFind</TITLE>
 GstTypeFind

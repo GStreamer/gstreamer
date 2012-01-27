@@ -118,7 +118,6 @@ Windows.  It is released under the GNU Library General Public License
     </para>
 
     <xi:include href="xml/gstinfo.xml" />
-    <xi:include href="xml/gsttrace.xml" />
 
   </chapter>
 

@@ -185,7 +185,6 @@ gst_headers =			\
 	gsttagsetter.h		\
 	gsttask.h		\
 	gsttaskpool.h		\
-	gsttrace.h		\
 	gsttypefind.h		\
 	gsttypefindfactory.h	\
 	gsturi.h		\
@@ -209,6 +208,7 @@ noinst_HEADERS = 		\
 	gstquark.h		\
 	gstregistrybinary.h     \
 	gstregistrychunks.h     \
+	gsttrace.h		\
 	gst_private.h
 
 gstmarshal.h: gstmarshal.list
