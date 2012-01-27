@@ -292,9 +292,9 @@ GST_START_TEST (test_streamheader)
 
   fail_unless (gst_pad_push (mysrcpad, hbuf1) == GST_FLOW_OK);
   fail_unless (gst_pad_push (mysrcpad, hbuf2) == GST_FLOW_OK);
-  ASSERT_BUFFER_REFCOUNT (hbuf1, "hbuf1", 1);
   // FIXME: we can't assert on the refcount because giving away the ref
   //        doesn't mean the refcount decreases
+  // ASSERT_BUFFER_REFCOUNT (hbuf1, "hbuf1", 1);
   // ASSERT_BUFFER_REFCOUNT (hbuf2, "hbuf2", 1);
 
   //FIXME:
@@ -338,13 +338,10 @@ GST_START_TEST (test_streamheader)
   ASSERT_SET_STATE (sink, GST_STATE_NULL, GST_STATE_CHANGE_SUCCESS);
   cleanup_multisocketsink (sink);
 
-  // FIXME for slomo: these refcounts end up as 0 instead of 1
-  //ASSERT_BUFFER_REFCOUNT (hbuf1, "hbuf1", 1);
-  ASSERT_BUFFER_REFCOUNT (hbuf1, "hbuf1", 0);
-  //ASSERT_BUFFER_REFCOUNT (hbuf2, "hbuf2", 1);
-  ASSERT_BUFFER_REFCOUNT (hbuf2, "hbuf2", 0);
-  //gst_buffer_unref (hbuf1);
-  //gst_buffer_unref (hbuf2);
+  ASSERT_BUFFER_REFCOUNT (hbuf1, "hbuf1", 1);
+  ASSERT_BUFFER_REFCOUNT (hbuf2, "hbuf2", 1);
+  gst_buffer_unref (hbuf1);
+  gst_buffer_unref (hbuf2);
 
   ASSERT_CAPS_REFCOUNT (caps, "caps", 1);
   gst_caps_unref (caps);
@@ -417,14 +414,10 @@ GST_START_TEST (test_change_streamheader)
   /* change the streamheader */
 
   /* before we change, multisocketsink still has a list of the old streamheaders */
-  // FIXME for slomo: it actually has refcount 1
-  // ASSERT_BUFFER_REFCOUNT (hbuf1, "hbuf1", 2);
-  ASSERT_BUFFER_REFCOUNT (hbuf1, "hbuf1", 1);
-  //ASSERT_BUFFER_REFCOUNT (hbuf2, "hbuf2", 2);
-  ASSERT_BUFFER_REFCOUNT (hbuf2, "hbuf2", 1);
-  // FIXME: which means we can't drop our refs
-  // gst_buffer_unref (hbuf1);
-  // gst_buffer_unref (hbuf2);
+  ASSERT_BUFFER_REFCOUNT (hbuf1, "hbuf1", 2);
+  ASSERT_BUFFER_REFCOUNT (hbuf2, "hbuf2", 2);
+  gst_buffer_unref (hbuf1);
+  gst_buffer_unref (hbuf2);
 
   /* drop our ref to the previous caps */
   gst_caps_unref (caps);
@@ -466,12 +459,10 @@ GST_START_TEST (test_change_streamheader)
   ASSERT_SET_STATE (sink, GST_STATE_NULL, GST_STATE_CHANGE_SUCCESS);
 
   /* setting to NULL should have cleared the streamheader */
-  /* FIXME for slomo: again, these buffers end up with rc 0
-     ASSERT_BUFFER_REFCOUNT (hbuf1, "hbuf1", 1);
-     ASSERT_BUFFER_REFCOUNT (hbuf2, "hbuf2", 1);
-     gst_buffer_unref (hbuf1);
-     gst_buffer_unref (hbuf2);
-   */
+  ASSERT_BUFFER_REFCOUNT (hbuf1, "hbuf1", 1);
+  ASSERT_BUFFER_REFCOUNT (hbuf2, "hbuf2", 1);
+  gst_buffer_unref (hbuf1);
+  gst_buffer_unref (hbuf2);
   cleanup_multisocketsink (sink);
 
   ASSERT_CAPS_REFCOUNT (caps, "caps", 1);

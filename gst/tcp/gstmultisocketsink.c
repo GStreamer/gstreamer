@@ -2137,6 +2137,7 @@ gst_multi_socket_sink_render (GstBaseSink * bsink, GstBuffer * buf)
     gst_buffer_ref (buf);
   }
 #endif
+  gst_buffer_ref (buf);
 
   GST_LOG_OBJECT (sink, "received buffer %p, in_caps: %s, offset %"
       G_GINT64_FORMAT ", offset_end %" G_GINT64_FORMAT
