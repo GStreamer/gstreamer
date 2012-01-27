@@ -596,7 +596,7 @@ GST_START_TEST (test_burst_client_bytes_keyframe)
   sink = setup_multisocketsink ();
   /* make sure we keep at least 100 bytes at all times */
   g_object_set (sink, "bytes-min", 100, NULL);
-  g_object_set (sink, "sync-method", 4, NULL);  /* 3 = burst_keyframe */
+  g_object_set (sink, "sync-method", 4, NULL);  /* 4 = burst_keyframe */
   g_object_set (sink, "burst-format", GST_FORMAT_BYTES, NULL);
   g_object_set (sink, "burst-value", (guint64) 80, NULL);
 
@@ -700,7 +700,7 @@ GST_START_TEST (test_burst_client_bytes_with_keyframe)
 
   /* make sure we keep at least 100 bytes at all times */
   g_object_set (sink, "bytes-min", 100, NULL);
-  g_object_set (sink, "sync-method", 5, NULL);  /* 3 = burst_with_keyframe */
+  g_object_set (sink, "sync-method", 5, NULL);  /* 5 = burst_with_keyframe */
   g_object_set (sink, "burst-format", GST_FORMAT_BYTES, NULL);
   g_object_set (sink, "burst-value", (guint64) 80, NULL);
 

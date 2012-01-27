@@ -115,11 +115,6 @@
 
 #define NOT_IMPLEMENTED 0
 
-static GstStaticPadTemplate sinktemplate = GST_STATIC_PAD_TEMPLATE ("sink",
-    GST_PAD_SINK,
-    GST_PAD_ALWAYS,
-    GST_STATIC_CAPS_ANY);
-
 GST_DEBUG_CATEGORY_STATIC (multisocketsink_debug);
 #define GST_CAT_DEFAULT (multisocketsink_debug)
 
@@ -143,34 +138,19 @@ enum
 
 
 /* this is really arbitrarily chosen */
-#define DEFAULT_MODE                    1
-#define DEFAULT_BUFFERS_MAX             -1
-#define DEFAULT_BUFFERS_SOFT_MAX        -1
-#define DEFAULT_UNIT_TYPE               GST_FORMAT_BUFFERS
-#define DEFAULT_UNITS_MAX               -1
-#define DEFAULT_UNITS_SOFT_MAX          -1
+#define DEFAULT_UNIT_FORMAT               GST_FORMAT_BUFFERS
 
 #define DEFAULT_BURST_FORMAT            GST_FORMAT_UNDEFINED
 #define DEFAULT_BURST_VALUE             0
 
-#define DEFAULT_QOS_DSCP                -1
-
 enum
 {
   PROP_0,
-  PROP_MODE,
 
-  PROP_UNIT_TYPE,
-  PROP_UNITS_MAX,
-  PROP_UNITS_SOFT_MAX,
-
-  PROP_BUFFERS_MAX,
-  PROP_BUFFERS_SOFT_MAX,
+  PROP_UNIT_FORMAT,
 
   PROP_BURST_FORMAT,
   PROP_BURST_VALUE,
-
-  PROP_QOS_DSCP,
 
   PROP_NUM_SOCKETS,
 
@@ -183,14 +163,18 @@ static void gst_multi_socket_sink_stop_pre (GstMultiHandleSink * mhsink);
 static void gst_multi_socket_sink_stop_post (GstMultiHandleSink * mhsink);
 static gboolean gst_multi_socket_sink_start_pre (GstMultiHandleSink * mhsink);
 static gpointer gst_multi_socket_sink_thread (GstMultiHandleSink * mhsink);
+static void gst_multi_socket_sink_queue_buffer (GstMultiHandleSink * mhsink,
+    GstBuffer * buffer);
+static gboolean gst_multi_socket_sink_client_queue_buffer (GstMultiHandleSink *
+    mhsink, GstMultiHandleClient * mhclient, GstBuffer * buffer);
+static int gst_multi_socket_sink_client_get_fd (GstMultiHandleClient * client);
+
 
 static void gst_multi_socket_sink_remove_client_link (GstMultiHandleSink * sink,
     GList * link);
 static gboolean gst_multi_socket_sink_socket_condition (GSocket * socket,
     GIOCondition condition, GstMultiSocketSink * sink);
 
-static GstFlowReturn gst_multi_socket_sink_render (GstBaseSink * bsink,
-    GstBuffer * buf);
 static gboolean gst_multi_socket_sink_unlock (GstBaseSink * bsink);
 static gboolean gst_multi_socket_sink_unlock_stop (GstBaseSink * bsink);
 
@@ -222,30 +206,10 @@ gst_multi_socket_sink_class_init (GstMultiSocketSinkClass * klass)
   gobject_class->get_property = gst_multi_socket_sink_get_property;
   gobject_class->finalize = gst_multi_socket_sink_finalize;
 
-  g_object_class_install_property (gobject_class, PROP_BUFFERS_MAX,
-      g_param_spec_int ("buffers-max", "Buffers max",
-          "max number of buffers to queue for a client (-1 = no limit)", -1,
-          G_MAXINT, DEFAULT_BUFFERS_MAX,
-          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
-  g_object_class_install_property (gobject_class, PROP_BUFFERS_SOFT_MAX,
-      g_param_spec_int ("buffers-soft-max", "Buffers soft max",
-          "Recover client when going over this limit (-1 = no limit)", -1,
-          G_MAXINT, DEFAULT_BUFFERS_SOFT_MAX,
-          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
-
-  g_object_class_install_property (gobject_class, PROP_UNIT_TYPE,
-      g_param_spec_enum ("unit-type", "Units type",
+  g_object_class_install_property (gobject_class, PROP_UNIT_FORMAT,
+      g_param_spec_enum ("unit-format", "Units format",
           "The unit to measure the max/soft-max/queued properties",
-          GST_TYPE_FORMAT, DEFAULT_UNIT_TYPE,
-          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
-  g_object_class_install_property (gobject_class, PROP_UNITS_MAX,
-      g_param_spec_int64 ("units-max", "Units max",
-          "max number of units to queue (-1 = no limit)", -1, G_MAXINT64,
-          DEFAULT_UNITS_MAX, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
-  g_object_class_install_property (gobject_class, PROP_UNITS_SOFT_MAX,
-      g_param_spec_int64 ("units-soft-max", "Units soft max",
-          "Recover client when going over this limit (-1 = no limit)", -1,
-          G_MAXINT64, DEFAULT_UNITS_SOFT_MAX,
+          GST_TYPE_FORMAT, DEFAULT_UNIT_FORMAT,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_class, PROP_BURST_FORMAT,
@@ -257,12 +221,6 @@ gst_multi_socket_sink_class_init (GstMultiSocketSinkClass * klass)
       g_param_spec_uint64 ("burst-value", "Burst value",
           "The amount of burst expressed in burst-unit", 0, G_MAXUINT64,
           DEFAULT_BURST_VALUE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
-
-  g_object_class_install_property (gobject_class, PROP_QOS_DSCP,
-      g_param_spec_int ("qos-dscp", "QoS diff srv code point",
-          "Quality of Service, differentiated services code point (-1 default)",
-          -1, 63, DEFAULT_QOS_DSCP,
-          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_class, PROP_NUM_SOCKETS,
       g_param_spec_uint ("num-sockets", "Number of sockets",
@@ -403,17 +361,12 @@ gst_multi_socket_sink_class_init (GstMultiSocketSinkClass * klass)
           client_socket_removed), NULL, NULL, g_cclosure_marshal_VOID__OBJECT,
       G_TYPE_NONE, 1, G_TYPE_SOCKET);
 
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&sinktemplate));
-
   gst_element_class_set_details_simple (gstelement_class,
       "Multi socket sink", "Sink/Network",
       "Send data to multiple sockets",
       "Thomas Vander Stichele <thomas at apestaart dot org>, "
       "Wim Taymans <wim@fluendo.com>, "
       "Sebastian Dröge <sebastian.droege@collabora.co.uk>");
-
-  gstbasesink_class->render = GST_DEBUG_FUNCPTR (gst_multi_socket_sink_render);
 
   gstbasesink_class->unlock = GST_DEBUG_FUNCPTR (gst_multi_socket_sink_unlock);
   gstbasesink_class->unlock_stop =
@@ -427,6 +380,12 @@ gst_multi_socket_sink_class_init (GstMultiSocketSinkClass * klass)
       GST_DEBUG_FUNCPTR (gst_multi_socket_sink_start_pre);
   gstmultihandlesink_class->thread =
       GST_DEBUG_FUNCPTR (gst_multi_socket_sink_thread);
+  gstmultihandlesink_class->queue_buffer =
+      GST_DEBUG_FUNCPTR (gst_multi_socket_sink_queue_buffer);
+  gstmultihandlesink_class->client_queue_buffer =
+      GST_DEBUG_FUNCPTR (gst_multi_socket_sink_client_queue_buffer);
+  gstmultihandlesink_class->client_get_fd =
+      GST_DEBUG_FUNCPTR (gst_multi_socket_sink_client_get_fd);
 
   gstmultihandlesink_class->remove_client_link =
       GST_DEBUG_FUNCPTR (gst_multi_socket_sink_remove_client_link);
@@ -446,16 +405,11 @@ gst_multi_socket_sink_init (GstMultiSocketSink * this)
 {
   this->socket_hash = g_hash_table_new (g_direct_hash, g_int_equal);
 
-  this->unit_type = DEFAULT_UNIT_TYPE;
-  this->units_max = DEFAULT_UNITS_MAX;
-  this->units_soft_max = DEFAULT_UNITS_SOFT_MAX;
+  this->unit_format = DEFAULT_UNIT_FORMAT;
 
   this->def_burst_format = DEFAULT_BURST_FORMAT;
   this->def_burst_value = DEFAULT_BURST_VALUE;
 
-  this->qos_dscp = DEFAULT_QOS_DSCP;
-
-  this->header_flags = 0;
   this->cancellable = g_cancellable_new ();
 }
 
@@ -473,86 +427,12 @@ gst_multi_socket_sink_finalize (GObject * object)
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
-static gint
-setup_dscp_client (GstMultiSocketSink * sink, GstSocketClient * client)
+static int
+gst_multi_socket_sink_client_get_fd (GstMultiHandleClient * client)
 {
-#ifndef IP_TOS
-  return 0;
-#else
-  gint tos;
-  gint ret;
-  int fd;
-  union gst_sockaddr
-  {
-    struct sockaddr sa;
-    struct sockaddr_in6 sa_in6;
-    struct sockaddr_storage sa_stor;
-  } sa;
-  socklen_t slen = sizeof (sa);
-  gint af;
+  GstSocketClient *msclient = (GstSocketClient *) client;
 
-  /* don't touch */
-  if (sink->qos_dscp < 0)
-    return 0;
-
-  fd = g_socket_get_fd (client->socket);
-
-  if ((ret = getsockname (fd, &sa.sa, &slen)) < 0) {
-    GST_DEBUG_OBJECT (sink, "could not get sockname: %s", g_strerror (errno));
-    return ret;
-  }
-
-  af = sa.sa.sa_family;
-
-  /* if this is an IPv4-mapped address then do IPv4 QoS */
-  if (af == AF_INET6) {
-
-    GST_DEBUG_OBJECT (sink, "check IP6 socket");
-    if (IN6_IS_ADDR_V4MAPPED (&(sa.sa_in6.sin6_addr))) {
-      GST_DEBUG_OBJECT (sink, "mapped to IPV4");
-      af = AF_INET;
-    }
-  }
-
-  /* extract and shift 6 bits of the DSCP */
-  tos = (sink->qos_dscp & 0x3f) << 2;
-
-  switch (af) {
-    case AF_INET:
-      ret = setsockopt (fd, IPPROTO_IP, IP_TOS, &tos, sizeof (tos));
-      break;
-    case AF_INET6:
-#ifdef IPV6_TCLASS
-      ret = setsockopt (fd, IPPROTO_IPV6, IPV6_TCLASS, &tos, sizeof (tos));
-      break;
-#endif
-    default:
-      ret = 0;
-      GST_ERROR_OBJECT (sink, "unsupported AF");
-      break;
-  }
-  if (ret)
-    GST_DEBUG_OBJECT (sink, "could not set DSCP: %s", g_strerror (errno));
-
-  return ret;
-#endif
-}
-
-static void
-setup_dscp (GstMultiSocketSink * sink)
-{
-  GList *clients;
-  GstMultiHandleSink *mhsink = GST_MULTI_HANDLE_SINK (sink);
-
-  CLIENTS_LOCK (sink);
-  for (clients = mhsink->clients; clients; clients = clients->next) {
-    GstSocketClient *client;
-
-    client = clients->data;
-
-    setup_dscp_client (sink, client);
-  }
-  CLIENTS_UNLOCK (sink);
+  return g_socket_get_fd (msclient->socket);
 }
 
 /* "add-full" signal implementation */
@@ -615,7 +495,7 @@ gst_multi_socket_sink_add_full (GstMultiSocketSink * sink, GSocket * socket,
     g_source_attach (client->source, sink->main_context);
   }
 
-  setup_dscp_client (sink, client);
+  gst_multi_handle_sink_setup_dscp_client (mhsink, mhclient);
 
   CLIENTS_UNLOCK (sink);
 
@@ -958,11 +838,11 @@ gst_multi_socket_sink_handle_client_read (GstMultiSocketSink * sink,
 
 /* queue the given buffer for the given client */
 static gboolean
-gst_multi_socket_sink_client_queue_buffer (GstMultiSocketSink * sink,
-    GstSocketClient * client, GstBuffer * buffer)
+gst_multi_socket_sink_client_queue_buffer (GstMultiHandleSink * mhsink,
+    GstMultiHandleClient * mhclient, GstBuffer * buffer)
 {
-  GstMultiHandleClient *mhclient = (GstMultiHandleClient *) client;
-  GstMultiHandleSink *mhsink = GST_MULTI_HANDLE_SINK (sink);
+  GstSocketClient *client = (GstSocketClient *) mhclient;
+  GstMultiSocketSink *sink = GST_MULTI_SOCKET_SINK (mhsink);
   GstCaps *caps;
 
   /* TRUE: send them if the new caps have them */
@@ -1086,7 +966,7 @@ get_buffers_max (GstMultiSocketSink * sink, gint64 max)
 {
   GstMultiHandleSink *mhsink = GST_MULTI_HANDLE_SINK (sink);
 
-  switch (sink->unit_type) {
+  switch (sink->unit_format) {
     case GST_FORMAT_BUFFERS:
       return max;
     case GST_FORMAT_TIME:
@@ -1540,10 +1420,11 @@ gst_multi_socket_sink_handle_client_write (GstMultiSocketSink * sink,
   GstClockTime now;
   GTimeVal nowtv;
   GError *err = NULL;
-  GstMultiHandleSink *mhsink;
+  GstMultiHandleSink *mhsink = GST_MULTI_HANDLE_SINK (sink);
   GstMultiHandleClient *mhclient = (GstMultiHandleClient *) client;
+  GstMultiHandleSinkClass *mhsinkclass =
+      GST_MULTI_HANDLE_SINK_GET_CLASS (mhsink);
 
-  mhsink = GST_MULTI_HANDLE_SINK (sink);
 
   g_get_current_time (&nowtv);
   now = GST_TIMEVAL_TO_TIME (nowtv);
@@ -1617,7 +1498,7 @@ gst_multi_socket_sink_handle_client_write (GstMultiSocketSink * sink,
             socket, client, mhclient->bufpos);
 
         /* queueing a buffer will ref it */
-        gst_multi_socket_sink_client_queue_buffer (sink, client, buf);
+        mhsinkclass->client_queue_buffer (mhsink, mhclient, buf);
 
         /* need to start from the first byte for this new buffer */
         mhclient->bufoffset = 0;
@@ -1730,13 +1611,13 @@ gst_multi_socket_sink_recover_client (GstMultiSocketSink * sink,
       break;
     case GST_RECOVER_POLICY_RESYNC_SOFT_LIMIT:
       /* move to beginning of soft max */
-      newbufpos = get_buffers_max (sink, sink->units_soft_max);
+      newbufpos = get_buffers_max (sink, mhsink->units_soft_max);
       break;
     case GST_RECOVER_POLICY_RESYNC_KEYFRAME:
       /* find keyframe in buffers, we search backwards to find the
        * closest keyframe relative to what this client already received. */
       newbufpos = MIN (mhsink->bufqueue->len - 1,
-          get_buffers_max (sink, sink->units_soft_max) - 1);
+          get_buffers_max (sink, mhsink->units_soft_max) - 1);
 
       while (newbufpos >= 0) {
         GstBuffer *buf;
@@ -1751,7 +1632,7 @@ gst_multi_socket_sink_recover_client (GstMultiSocketSink * sink,
       break;
     default:
       /* unknown recovery procedure */
-      newbufpos = get_buffers_max (sink, sink->units_soft_max);
+      newbufpos = get_buffers_max (sink, mhsink->units_soft_max);
       break;
   }
   return newbufpos;
@@ -1776,7 +1657,8 @@ gst_multi_socket_sink_recover_client (GstMultiSocketSink * sink,
  * the select thread that the fd_set changed.
  */
 static void
-gst_multi_socket_sink_queue_buffer (GstMultiSocketSink * sink, GstBuffer * buf)
+gst_multi_socket_sink_queue_buffer (GstMultiHandleSink * mhsink,
+    GstBuffer * buf)
 {
   GList *clients, *next;
   gint queuelen;
@@ -1786,7 +1668,7 @@ gst_multi_socket_sink_queue_buffer (GstMultiSocketSink * sink, GstBuffer * buf)
   GstClockTime now;
   gint max_buffers, soft_max_buffers;
   guint cookie;
-  GstMultiHandleSink *mhsink = GST_MULTI_HANDLE_SINK (sink);
+  GstMultiSocketSink *sink = GST_MULTI_SOCKET_SINK (mhsink);
   GstMultiHandleSinkClass *mhsinkclass =
       GST_MULTI_HANDLE_SINK_GET_CLASS (mhsink);
 
@@ -1799,13 +1681,13 @@ gst_multi_socket_sink_queue_buffer (GstMultiSocketSink * sink, GstBuffer * buf)
   g_array_prepend_val (mhsink->bufqueue, buf);
   queuelen = mhsink->bufqueue->len;
 
-  if (sink->units_max > 0)
-    max_buffers = get_buffers_max (sink, sink->units_max);
+  if (mhsink->units_max > 0)
+    max_buffers = get_buffers_max (sink, mhsink->units_max);
   else
     max_buffers = -1;
 
-  if (sink->units_soft_max > 0)
-    soft_max_buffers = get_buffers_max (sink, sink->units_soft_max);
+  if (mhsink->units_soft_max > 0)
+    soft_max_buffers = get_buffers_max (sink, mhsink->units_soft_max);
   else
     soft_max_buffers = -1;
   GST_LOG_OBJECT (sink, "Using max %d, softmax %d", max_buffers,
@@ -2082,116 +1964,6 @@ gst_multi_socket_sink_thread (GstMultiHandleSink * mhsink)
   return NULL;
 }
 
-static GstFlowReturn
-gst_multi_socket_sink_render (GstBaseSink * bsink, GstBuffer * buf)
-{
-  GstMultiSocketSink *sink;
-  gboolean in_caps;
-#if 0
-  GstCaps *bufcaps, *padcaps;
-#endif
-  GstMultiHandleSink *mhsink;
-
-  sink = GST_MULTI_SOCKET_SINK (bsink);
-  mhsink = GST_MULTI_HANDLE_SINK (sink);
-
-  g_return_val_if_fail (GST_OBJECT_FLAG_IS_SET (sink,
-          GST_MULTI_HANDLE_SINK_OPEN), GST_FLOW_FLUSHING);
-
-#if 0
-  /* since we check every buffer for streamheader caps, we need to make
-   * sure every buffer has caps set */
-  bufcaps = gst_buffer_get_caps (buf);
-  padcaps = GST_PAD_CAPS (GST_BASE_SINK_PAD (bsink));
-
-  /* make sure we have caps on the pad */
-  if (!padcaps && !bufcaps)
-    goto no_caps;
-#endif
-
-  /* get HEADER first, code below might mess with the flags */
-  in_caps = GST_BUFFER_FLAG_IS_SET (buf, GST_BUFFER_FLAG_HEADER);
-
-#if 0
-  /* stamp the buffer with previous caps if no caps set */
-  if (!bufcaps) {
-    if (!gst_buffer_is_writable (buf)) {
-      /* metadata is not writable, copy will be made and original buffer
-       * will be unreffed so we need to ref so that we don't lose the
-       * buffer in the render method. */
-      gst_buffer_ref (buf);
-      /* the new buffer is ours only, we keep it out of the scope of this
-       * function */
-      buf = gst_buffer_make_writable (buf);
-    } else {
-      /* else the metadata is writable, we ref because we keep the buffer
-       * out of the scope of this method */
-      gst_buffer_ref (buf);
-    }
-    /* buffer metadata is writable now, set the caps */
-    gst_buffer_set_caps (buf, padcaps);
-  } else {
-    gst_caps_unref (bufcaps);
-
-    /* since we keep this buffer out of the scope of this method */
-    gst_buffer_ref (buf);
-  }
-#endif
-  gst_buffer_ref (buf);
-
-  GST_LOG_OBJECT (sink, "received buffer %p, in_caps: %s, offset %"
-      G_GINT64_FORMAT ", offset_end %" G_GINT64_FORMAT
-      ", timestamp %" GST_TIME_FORMAT ", duration %" GST_TIME_FORMAT,
-      buf, in_caps ? "yes" : "no", GST_BUFFER_OFFSET (buf),
-      GST_BUFFER_OFFSET_END (buf),
-      GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buf)),
-      GST_TIME_ARGS (GST_BUFFER_DURATION (buf)));
-
-  /* if we get HEADER buffers, but the previous buffer was not HEADER,
-   * it means we're getting new streamheader buffers, and we should clear
-   * the old ones */
-  if (in_caps && sink->previous_buffer_in_caps == FALSE) {
-    GST_DEBUG_OBJECT (sink,
-        "receiving new HEADER buffers, clearing old streamheader");
-    g_slist_foreach (mhsink->streamheader, (GFunc) gst_mini_object_unref, NULL);
-    g_slist_free (mhsink->streamheader);
-    mhsink->streamheader = NULL;
-  }
-
-  /* save the current in_caps */
-  sink->previous_buffer_in_caps = in_caps;
-
-  /* if the incoming buffer is marked as IN CAPS, then we assume for now
-   * it's a streamheader that needs to be sent to each new client, so we
-   * put it on our internal list of streamheader buffers.
-   * FIXME: we could check if the buffer's contents are in fact part of the
-   * current streamheader.
-   *
-   * We don't send the buffer to the client, since streamheaders are sent
-   * separately when necessary. */
-  if (in_caps) {
-    GST_DEBUG_OBJECT (sink, "appending HEADER buffer with length %"
-        G_GSIZE_FORMAT " to streamheader", gst_buffer_get_size (buf));
-    mhsink->streamheader = g_slist_append (mhsink->streamheader, buf);
-  } else {
-    /* queue the buffer, this is a regular data buffer. */
-    gst_multi_socket_sink_queue_buffer (sink, buf);
-
-    mhsink->bytes_to_serve += gst_buffer_get_size (buf);
-  }
-  return GST_FLOW_OK;
-
-  /* ERRORS */
-#if 0
-no_caps:
-  {
-    GST_ELEMENT_ERROR (sink, CORE, NEGOTIATION, (NULL),
-        ("Received first buffer without caps set"));
-    return GST_FLOW_NOT_NEGOTIATED;
-  }
-#endif
-}
-
 static void
 gst_multi_socket_sink_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec)
@@ -2201,30 +1973,14 @@ gst_multi_socket_sink_set_property (GObject * object, guint prop_id,
   multisocketsink = GST_MULTI_SOCKET_SINK (object);
 
   switch (prop_id) {
-    case PROP_BUFFERS_MAX:
-      multisocketsink->units_max = g_value_get_int (value);
-      break;
-    case PROP_BUFFERS_SOFT_MAX:
-      multisocketsink->units_soft_max = g_value_get_int (value);
-      break;
-    case PROP_UNIT_TYPE:
-      multisocketsink->unit_type = g_value_get_enum (value);
-      break;
-    case PROP_UNITS_MAX:
-      multisocketsink->units_max = g_value_get_int64 (value);
-      break;
-    case PROP_UNITS_SOFT_MAX:
-      multisocketsink->units_soft_max = g_value_get_int64 (value);
+    case PROP_UNIT_FORMAT:
+      multisocketsink->unit_format = g_value_get_enum (value);
       break;
     case PROP_BURST_FORMAT:
       multisocketsink->def_burst_format = g_value_get_enum (value);
       break;
     case PROP_BURST_VALUE:
       multisocketsink->def_burst_value = g_value_get_uint64 (value);
-      break;
-    case PROP_QOS_DSCP:
-      multisocketsink->qos_dscp = g_value_get_int (value);
-      setup_dscp (multisocketsink);
       break;
 
     default:
@@ -2242,29 +1998,14 @@ gst_multi_socket_sink_get_property (GObject * object, guint prop_id,
   multisocketsink = GST_MULTI_SOCKET_SINK (object);
 
   switch (prop_id) {
-    case PROP_BUFFERS_MAX:
-      g_value_set_int (value, multisocketsink->units_max);
-      break;
-    case PROP_BUFFERS_SOFT_MAX:
-      g_value_set_int (value, multisocketsink->units_soft_max);
-      break;
-    case PROP_UNIT_TYPE:
-      g_value_set_enum (value, multisocketsink->unit_type);
-      break;
-    case PROP_UNITS_MAX:
-      g_value_set_int64 (value, multisocketsink->units_max);
-      break;
-    case PROP_UNITS_SOFT_MAX:
-      g_value_set_int64 (value, multisocketsink->units_soft_max);
+    case PROP_UNIT_FORMAT:
+      g_value_set_enum (value, multisocketsink->unit_format);
       break;
     case PROP_BURST_FORMAT:
       g_value_set_enum (value, multisocketsink->def_burst_format);
       break;
     case PROP_BURST_VALUE:
       g_value_set_uint64 (value, multisocketsink->def_burst_value);
-      break;
-    case PROP_QOS_DSCP:
-      g_value_set_int (value, multisocketsink->qos_dscp);
       break;
     case PROP_NUM_SOCKETS:
       g_value_set_uint (value,

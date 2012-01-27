@@ -177,6 +177,8 @@ find_syncframe (GstMultiHandleSink * sink, gint idx, gint direction);
 gboolean is_sync_frame (GstMultiHandleSink * sink, GstBuffer * buffer);
 gboolean gst_multi_handle_sink_stop (GstBaseSink * bsink);
 gboolean gst_multi_handle_sink_start (GstBaseSink * bsink);
+void gst_multi_handle_sink_setup_dscp (GstMultiHandleSink * mhsink);
+gint gst_multi_handle_sink_setup_dscp_client (GstMultiHandleSink * sink, GstMultiHandleClient * client);
 
 /**
  * GstMultiHandleSink:
@@ -200,7 +202,6 @@ struct _GstMultiHandleSink {
   GSList *streamheader; /* GSList of GstBuffers to use as streamheader */
   gboolean previous_buffer_in_caps;
 
-  guint mtu;
   gint qos_dscp;
 
   GArray *bufqueue;     /* global queue of buffers */
@@ -210,7 +211,7 @@ struct _GstMultiHandleSink {
 
   /* these values are used to check if a client is reading fast
    * enough and to control receovery */
-  GstFormat unit_type;/* the format of the units */
+  GstFormat unit_format;/* the format of the units */
   gint64 units_max;       /* max units to queue for a client */
   gint64 units_soft_max;  /* max units a client can lag before recovery starts */
   GstRecoverPolicy recover_policy;
@@ -253,6 +254,15 @@ struct _GstMultiHandleSinkClass {
   void          (*stop_post)    (GstMultiHandleSink *sink);
   gboolean      (*start_pre)    (GstMultiHandleSink *sink);
   gpointer      (*thread)       (GstMultiHandleSink *sink);
+  void          (*queue_buffer) (GstMultiHandleSink *sink,
+                                 GstBuffer *buffer);
+  gboolean      (*client_queue_buffer)
+                                (GstMultiHandleSink *sink,
+                                 GstMultiHandleClient *client,
+                                 GstBuffer *buffer);
+  int           (*client_get_fd)
+                                (GstMultiHandleClient *client);
+
 
   GstStructure* (*get_stats)    (GstMultiHandleSink *sink, GSocket *socket);
   void          (*remove_client_link) (GstMultiHandleSink * sink, GList * link);

@@ -83,13 +83,10 @@ struct _GstMultiSocketSink {
   gboolean previous_buffer_in_caps;
 
   guint mtu;
-  gint qos_dscp;
 
   /* these values are used to check if a client is reading fast
    * enough and to control receovery */
-  GstFormat unit_type;/* the format of the units */
-  gint64 units_max;       /* max units to queue for a client */
-  gint64 units_soft_max;  /* max units a client can lag before recovery starts */
+  GstFormat unit_format;/* the format of the units */
 
   GstFormat     def_burst_format;
   guint64       def_burst_value;
@@ -103,7 +100,7 @@ struct _GstMultiSocketSinkClass {
   /* element methods */
   void          (*add)          (GstMultiSocketSink *sink, GSocket *socket);
   void          (*add_full)     (GstMultiSocketSink *sink, GSocket *socket, GstSyncMethod sync,
-		                 GstFormat format, guint64 value, 
+		                 GstFormat format, guint64 value,
 				 GstFormat max_format, guint64 max_value);
   void          (*remove)       (GstMultiSocketSink *sink, GSocket *socket);
   void          (*remove_flush) (GstMultiSocketSink *sink, GSocket *socket);

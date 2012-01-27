@@ -144,13 +144,12 @@ enum
 
 
 /* this is really arbitrarily chosen */
-#define DEFAULT_MODE                    1
 #define DEFAULT_BUFFERS_MAX             -1
 #define DEFAULT_BUFFERS_SOFT_MAX        -1
 #define DEFAULT_TIME_MIN                -1
 #define DEFAULT_BYTES_MIN               -1
 #define DEFAULT_BUFFERS_MIN             -1
-#define DEFAULT_UNIT_TYPE               GST_FORMAT_BUFFERS
+#define DEFAULT_UNIT_FORMAT               GST_FORMAT_BUFFERS
 #define DEFAULT_UNITS_MAX               -1
 #define DEFAULT_UNITS_SOFT_MAX          -1
 #define DEFAULT_RECOVER_POLICY          GST_RECOVER_POLICY_NONE
@@ -167,21 +166,18 @@ enum
 enum
 {
   PROP_0,
-#if 0
-  PROP_MODE,
-#endif
   PROP_BUFFERS_QUEUED,
   PROP_BYTES_QUEUED,
   PROP_TIME_QUEUED,
 
 #if 0
-  PROP_UNIT_TYPE,
+  PROP_UNIT_FORMAT,
+#endif
   PROP_UNITS_MAX,
   PROP_UNITS_SOFT_MAX,
 
   PROP_BUFFERS_MAX,
   PROP_BUFFERS_SOFT_MAX,
-#endif
 
   PROP_TIME_MIN,
   PROP_BYTES_MIN,
@@ -196,9 +192,9 @@ enum
 #if 0
   PROP_BURST_FORMAT,
   PROP_BURST_VALUE,
+#endif
 
   PROP_QOS_DSCP,
-#endif
 
   PROP_RESEND_STREAMHEADER,
 
@@ -304,9 +300,9 @@ static gboolean gst_multi_handle_sink_socket_condition (GSocket * socket,
     GIOCondition condition, GstMultiHandleSink * sink);
 #endif
 
-#if 0
 static GstFlowReturn gst_multi_handle_sink_render (GstBaseSink * bsink,
     GstBuffer * buf);
+#if 0
 static gboolean gst_multi_handle_sink_unlock (GstBaseSink * bsink);
 static gboolean gst_multi_handle_sink_unlock_stop (GstBaseSink * bsink);
 #endif
@@ -328,15 +324,11 @@ gst_multi_handle_sink_class_init (GstMultiHandleSinkClass * klass)
 {
   GObjectClass *gobject_class;
   GstElementClass *gstelement_class;
-#if 0
   GstBaseSinkClass *gstbasesink_class;
-#endif
 
   gobject_class = (GObjectClass *) klass;
   gstelement_class = (GstElementClass *) klass;
-#if 0
   gstbasesink_class = (GstBaseSinkClass *) klass;
-#endif
 
   gobject_class->set_property = gst_multi_handle_sink_set_property;
   gobject_class->get_property = gst_multi_handle_sink_get_property;
@@ -374,10 +366,10 @@ gst_multi_handle_sink_class_init (GstMultiHandleSinkClass * klass)
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
 #if 0
-  g_object_class_install_property (gobject_class, PROP_UNIT_TYPE,
-      g_param_spec_enum ("unit-type", "Units type",
+  g_object_class_install_property (gobject_class, PROP_UNIT_FORMAT,
+      g_param_spec_enum ("unit-format", "Units format",
           "The unit to measure the max/soft-max/queued properties",
-          GST_TYPE_FORMAT, DEFAULT_UNIT_TYPE,
+          GST_TYPE_FORMAT, DEFAULT_UNIT_FORMAT,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_UNITS_MAX,
       g_param_spec_int64 ("units-max", "Units max",
@@ -438,6 +430,7 @@ gst_multi_handle_sink_class_init (GstMultiHandleSinkClass * klass)
       g_param_spec_uint64 ("burst-value", "Burst value",
           "The amount of burst expressed in burst-unit", 0, G_MAXUINT64,
           DEFAULT_BURST_VALUE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+#endif
 
   g_object_class_install_property (gobject_class, PROP_QOS_DSCP,
       g_param_spec_int ("qos-dscp", "QoS diff srv code point",
@@ -445,6 +438,7 @@ gst_multi_handle_sink_class_init (GstMultiHandleSinkClass * klass)
           -1, 63, DEFAULT_QOS_DSCP,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
+#if 0
   /**
    * GstMultiHandleSink::handle-read
    *
@@ -638,9 +632,9 @@ gst_multi_handle_sink_class_init (GstMultiHandleSinkClass * klass)
 
   gstelement_class->change_state =
       GST_DEBUG_FUNCPTR (gst_multi_handle_sink_change_state);
-#if 0
 
   gstbasesink_class->render = GST_DEBUG_FUNCPTR (gst_multi_handle_sink_render);
+#if 0
   gstbasesink_class->unlock = GST_DEBUG_FUNCPTR (gst_multi_handle_sink_unlock);
   gstbasesink_class->unlock_stop =
       GST_DEBUG_FUNCPTR (gst_multi_handle_sink_unlock_stop);
@@ -673,7 +667,7 @@ gst_multi_handle_sink_init (GstMultiHandleSink * this)
 #endif
 
   this->bufqueue = g_array_new (FALSE, TRUE, sizeof (GstBuffer *));
-  this->unit_type = DEFAULT_UNIT_TYPE;
+  this->unit_format = DEFAULT_UNIT_FORMAT;
   this->units_max = DEFAULT_UNITS_MAX;
   this->units_soft_max = DEFAULT_UNITS_SOFT_MAX;
   this->time_min = DEFAULT_TIME_MIN;
@@ -683,15 +677,15 @@ gst_multi_handle_sink_init (GstMultiHandleSink * this)
 
   this->timeout = DEFAULT_TIMEOUT;
   this->def_sync_method = DEFAULT_SYNC_METHOD;
+
+#if 0
   this->def_burst_format = DEFAULT_BURST_FORMAT;
   this->def_burst_value = DEFAULT_BURST_VALUE;
+#endif
 
   this->qos_dscp = DEFAULT_QOS_DSCP;
 
   this->resend_streamheader = DEFAULT_RESEND_STREAMHEADER;
-
-  this->header_flags = 0;
-  this->cancellable = g_cancellable_new ();
 }
 
 static void
@@ -707,9 +701,9 @@ gst_multi_handle_sink_finalize (GObject * object)
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
-#if 0
-static gint
-setup_dscp_client (GstMultiHandleSink * sink, GstSocketClient * client)
+gint
+gst_multi_handle_sink_setup_dscp_client (GstMultiHandleSink * sink,
+    GstMultiHandleClient * client)
 {
 #ifndef IP_TOS
   return 0;
@@ -725,12 +719,13 @@ setup_dscp_client (GstMultiHandleSink * sink, GstSocketClient * client)
   } sa;
   socklen_t slen = sizeof (sa);
   gint af;
+  GstMultiHandleSinkClass *mhsinkclass = GST_MULTI_HANDLE_SINK_GET_CLASS (sink);
 
   /* don't touch */
   if (sink->qos_dscp < 0)
     return 0;
 
-  fd = g_socket_get_fd (client->socket);
+  fd = mhsinkclass->client_get_fd (client);
 
   if ((ret = getsockname (fd, &sa.sa, &slen)) < 0) {
     GST_DEBUG_OBJECT (sink, "could not get sockname: %s", g_strerror (errno));
@@ -773,23 +768,6 @@ setup_dscp_client (GstMultiHandleSink * sink, GstSocketClient * client)
 #endif
 }
 
-static void
-setup_dscp (GstMultiHandleSink * sink)
-{
-  GList *clients;
-
-  CLIENTS_LOCK (sink);
-  for (clients = sink->clients; clients; clients = clients->next) {
-    GstSocketClient *client;
-
-    client = clients->data;
-
-    setup_dscp_client (sink, client);
-  }
-  CLIENTS_UNLOCK (sink);
-}
-#endif
-
 void
 gst_multi_handle_sink_client_init (GstMultiHandleClient * client,
     GstSyncMethod sync_method)
@@ -817,6 +795,23 @@ gst_multi_handle_sink_client_init (GstMultiHandleClient * client,
   /* set last activity time to connect time */
   client->last_activity_time = client->connect_time;
 }
+
+void
+gst_multi_handle_sink_setup_dscp (GstMultiHandleSink * mhsink)
+{
+  GList *clients;
+
+  CLIENTS_LOCK (mhsink);
+  for (clients = mhsink->clients; clients; clients = clients->next) {
+    GstMultiHandleClient *client;
+
+    client = clients->data;
+
+    gst_multi_handle_sink_setup_dscp_client (mhsink, client);
+  }
+  CLIENTS_UNLOCK (mhsink);
+}
+
 
 #if 0
 /* "add-full" signal implementation */
@@ -1421,7 +1416,7 @@ find_syncframe (GstMultiHandleSink * sink, gint idx, gint direction)
 static gint
 get_buffers_max (GstMultiHandleSink * sink, gint64 max)
 {
-  switch (sink->unit_type) {
+  switch (sink->unit_format) {
     case GST_FORMAT_BUFFERS:
       return max;
     case GST_FORMAT_TIME:
@@ -2409,20 +2404,19 @@ gst_multi_handle_sink_thread (GstMultiHandleSink * sink)
 }
 #endif
 
-#if 0
 static GstFlowReturn
 gst_multi_handle_sink_render (GstBaseSink * bsink, GstBuffer * buf)
 {
-  GstMultiHandleSink *sink;
   gboolean in_caps;
 #if 0
   GstCaps *bufcaps, *padcaps;
 #endif
 
-  sink = GST_MULTI_HANDLE_SINK (bsink);
+  GstMultiHandleSink *sink = GST_MULTI_HANDLE_SINK (bsink);
+  GstMultiHandleSinkClass *mhsinkclass = GST_MULTI_HANDLE_SINK_GET_CLASS (sink);
 
   g_return_val_if_fail (GST_OBJECT_FLAG_IS_SET (sink,
-          GST_MULTI_HANDLE_SINK_OPEN), GST_FLOW_WRONG_STATE);
+          GST_MULTI_HANDLE_SINK_OPEN), GST_FLOW_FLUSHING);
 
 #if 0
   /* since we check every buffer for streamheader caps, we need to make
@@ -2436,7 +2430,7 @@ gst_multi_handle_sink_render (GstBaseSink * bsink, GstBuffer * buf)
 #endif
 
   /* get IN_CAPS first, code below might mess with the flags */
-  in_caps = GST_BUFFER_FLAG_IS_SET (buf, GST_BUFFER_FLAG_IN_CAPS);
+  in_caps = GST_BUFFER_FLAG_IS_SET (buf, GST_BUFFER_FLAG_HEADER);
 
 #if 0
   /* stamp the buffer with previous caps if no caps set */
@@ -2463,6 +2457,7 @@ gst_multi_handle_sink_render (GstBaseSink * bsink, GstBuffer * buf)
     gst_buffer_ref (buf);
   }
 #endif
+  gst_buffer_ref (buf);
 
   GST_LOG_OBJECT (sink, "received buffer %p, in_caps: %s, offset %"
       G_GINT64_FORMAT ", offset_end %" G_GINT64_FORMAT
@@ -2477,7 +2472,7 @@ gst_multi_handle_sink_render (GstBaseSink * bsink, GstBuffer * buf)
    * the old ones */
   if (in_caps && sink->previous_buffer_in_caps == FALSE) {
     GST_DEBUG_OBJECT (sink,
-        "receiving new IN_CAPS buffers, clearing old streamheader");
+        "receiving new HEADER buffers, clearing old streamheader");
     g_slist_foreach (sink->streamheader, (GFunc) gst_mini_object_unref, NULL);
     g_slist_free (sink->streamheader);
     sink->streamheader = NULL;
@@ -2495,12 +2490,12 @@ gst_multi_handle_sink_render (GstBaseSink * bsink, GstBuffer * buf)
    * We don't send the buffer to the client, since streamheaders are sent
    * separately when necessary. */
   if (in_caps) {
-    GST_DEBUG_OBJECT (sink, "appending IN_CAPS buffer with length %"
+    GST_DEBUG_OBJECT (sink, "appending HEADER buffer with length %"
         G_GSIZE_FORMAT " to streamheader", gst_buffer_get_size (buf));
     sink->streamheader = g_slist_append (sink->streamheader, buf);
   } else {
     /* queue the buffer, this is a regular data buffer. */
-    gst_multi_handle_sink_queue_buffer (sink, buf);
+    mhsinkclass->queue_buffer (sink, buf);
 
     sink->bytes_to_serve += gst_buffer_get_size (buf);
   }
@@ -2516,7 +2511,6 @@ no_caps:
   }
 #endif
 }
-#endif
 
 static void
 gst_multi_handle_sink_set_property (GObject * object, guint prop_id,
@@ -2527,14 +2521,12 @@ gst_multi_handle_sink_set_property (GObject * object, guint prop_id,
   multihandlesink = GST_MULTI_HANDLE_SINK (object);
 
   switch (prop_id) {
-#if 0
     case PROP_BUFFERS_MAX:
       multihandlesink->units_max = g_value_get_int (value);
       break;
     case PROP_BUFFERS_SOFT_MAX:
       multihandlesink->units_soft_max = g_value_get_int (value);
       break;
-#endif
     case PROP_TIME_MIN:
       multihandlesink->time_min = g_value_get_int64 (value);
       break;
@@ -2545,8 +2537,8 @@ gst_multi_handle_sink_set_property (GObject * object, guint prop_id,
       multihandlesink->buffers_min = g_value_get_int (value);
       break;
 #if 0
-    case PROP_UNIT_TYPE:
-      multihandlesink->unit_type = g_value_get_enum (value);
+    case PROP_UNIT_FORMAT:
+      multihandlesink->unit_format = g_value_get_enum (value);
       break;
     case PROP_UNITS_MAX:
       multihandlesink->units_max = g_value_get_int64 (value);
@@ -2571,14 +2563,16 @@ gst_multi_handle_sink_set_property (GObject * object, guint prop_id,
     case PROP_BURST_VALUE:
       multihandlesink->def_burst_value = g_value_get_uint64 (value);
       break;
+#endif
     case PROP_QOS_DSCP:
       multihandlesink->qos_dscp = g_value_get_int (value);
-      setup_dscp (multihandlesink);
+      gst_multi_handle_sink_setup_dscp (multihandlesink);
       break;
+
     case PROP_RESEND_STREAMHEADER:
       multihandlesink->resend_streamheader = g_value_get_boolean (value);
       break;
-#endif
+
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -2594,14 +2588,12 @@ gst_multi_handle_sink_get_property (GObject * object, guint prop_id,
   multihandlesink = GST_MULTI_HANDLE_SINK (object);
 
   switch (prop_id) {
-#if 0
     case PROP_BUFFERS_MAX:
       g_value_set_int (value, multihandlesink->units_max);
       break;
     case PROP_BUFFERS_SOFT_MAX:
       g_value_set_int (value, multihandlesink->units_soft_max);
       break;
-#endif
     case PROP_TIME_MIN:
       g_value_set_int64 (value, multihandlesink->time_min);
       break;
@@ -2621,8 +2613,8 @@ gst_multi_handle_sink_get_property (GObject * object, guint prop_id,
       g_value_set_uint64 (value, multihandlesink->time_queued);
       break;
 #if 0
-    case PROP_UNIT_TYPE:
-      g_value_set_enum (value, multihandlesink->unit_type);
+    case PROP_UNIT_FORMAT:
+      g_value_set_enum (value, multihandlesink->unit_format);
       break;
     case PROP_UNITS_MAX:
       g_value_set_int64 (value, multihandlesink->units_max);
@@ -2653,12 +2645,14 @@ gst_multi_handle_sink_get_property (GObject * object, guint prop_id,
     case PROP_BURST_VALUE:
       g_value_set_uint64 (value, multihandlesink->def_burst_value);
       break;
+#endif
     case PROP_QOS_DSCP:
       g_value_set_int (value, multihandlesink->qos_dscp);
       break;
     case PROP_RESEND_STREAMHEADER:
       g_value_set_boolean (value, multihandlesink->resend_streamheader);
       break;
+#if 0
     case PROP_NUM_SOCKETS:
       g_value_set_uint (value,
           g_hash_table_size (multihandlesink->socket_hash));
