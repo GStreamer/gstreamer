@@ -401,7 +401,7 @@ gst_audio_src_ring_buffer_acquire (GstAudioRingBuffer * buf,
   src->thread = g_thread_try_new ("audiosrc-ringbuffer",
       (GThreadFunc) audioringbuffer_thread_func, buf, NULL);
 
-  GST_AUDIO_RING_BUFFER_WAIT (buf);
+  GST_AUDIO_SRC_RING_BUFFER_WAIT (buf);
 
   return result;
 
