@@ -187,6 +187,26 @@ add_ssrc_and_ref (GstEvent * event, guint32 ssrc)
   return event;
 }
 
+struct ForwardEventData
+{
+  GstPad *pad;
+  guint32 ssrc;
+};
+
+static gboolean
+forward_sticky_events (GstPad * pad, GstEvent ** event, gpointer user_data)
+{
+  struct ForwardEventData *data = user_data;
+  GstEvent *newevent;
+
+  newevent = add_ssrc_and_ref (*event, data->ssrc);
+
+  gst_pad_push_event (data->pad, newevent);
+
+  return TRUE;
+}
+
+
 /* with PAD_LOCK */
 static GstRtpSsrcDemuxPad *
 find_or_create_demux_pad_for_ssrc (GstRtpSsrcDemux * demux, guint32 ssrc)
@@ -197,6 +217,7 @@ find_or_create_demux_pad_for_ssrc (GstRtpSsrcDemux * demux, guint32 ssrc)
   gchar *padname;
   GstRtpSsrcDemuxPad *demuxpad;
   GstCaps *caps;
+  struct ForwardEventData fdata;
 
   GST_DEBUG_OBJECT (demux, "creating pad for SSRC %08x", ssrc);
 
@@ -222,6 +243,8 @@ find_or_create_demux_pad_for_ssrc (GstRtpSsrcDemux * demux, guint32 ssrc)
   demuxpad->rtp_pad = rtp_pad;
   demuxpad->rtcp_pad = rtcp_pad;
 
+  fdata.ssrc = ssrc;
+
   gst_pad_set_element_private (rtp_pad, demuxpad);
   gst_pad_set_element_private (rtcp_pad, demuxpad);
 
@@ -233,12 +256,18 @@ find_or_create_demux_pad_for_ssrc (GstRtpSsrcDemux * demux, guint32 ssrc)
   gst_pad_set_event_function (rtp_pad, gst_rtp_ssrc_demux_src_event);
   gst_pad_use_fixed_caps (rtp_pad);
   gst_pad_set_active (rtp_pad, TRUE);
+  fdata.pad = rtp_pad;
+  gst_pad_sticky_events_foreach (demux->rtp_sink, forward_sticky_events,
+      &fdata);
 
   gst_pad_set_event_function (rtcp_pad, gst_rtp_ssrc_demux_src_event);
   gst_pad_set_iterate_internal_links_function (rtcp_pad,
       gst_rtp_ssrc_demux_iterate_internal_links_src);
   gst_pad_use_fixed_caps (rtcp_pad);
   gst_pad_set_active (rtcp_pad, TRUE);
+  fdata.pad = rtcp_pad;
+  gst_pad_sticky_events_foreach (demux->rtcp_sink, forward_sticky_events,
+      &fdata);
 
   /* copy caps from input */
   if ((caps = gst_pad_get_current_caps (demux->rtp_sink))) {
