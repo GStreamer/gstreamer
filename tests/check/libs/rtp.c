@@ -684,10 +684,14 @@ GST_START_TEST (test_rtcp_buffer)
   GstBuffer *buf;
   GstRTCPPacket packet;
   GstRTCPBuffer rtcp = { NULL, };
+  gsize offset;
+  gsize maxsize;
 
   buf = gst_rtcp_buffer_new (1400);
   fail_unless (buf != NULL);
-  fail_unless_equals_int (gst_buffer_get_size (buf), 1400);
+  fail_unless_equals_int (gst_buffer_get_sizes (buf, &offset, &maxsize), 0);
+  fail_unless_equals_int (offset, 0);
+  fail_unless_equals_int (maxsize, 1400);
 
   gst_rtcp_buffer_map (buf, GST_MAP_READWRITE, &rtcp);
 
