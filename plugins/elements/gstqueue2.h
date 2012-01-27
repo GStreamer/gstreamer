@@ -144,6 +144,8 @@ struct _GstQueue2
   gboolean segment_event_received;
   GstEvent *starting_segment;
 
+  GstEvent *stream_start_event;
+
   guint64 ring_buffer_max_size;
   guint8 * ring_buffer;
 };

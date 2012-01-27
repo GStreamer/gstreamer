@@ -1312,7 +1312,10 @@ gst_queue2_read_item_from_file (GstQueue2 * queue)
 {
   GstMiniObject *item;
 
-  if (queue->starting_segment != NULL) {
+  if (queue->stream_start_event != NULL) {
+    item = GST_MINI_OBJECT_CAST (queue->stream_start_event);
+    queue->stream_start_event = NULL;
+  } else if (queue->starting_segment != NULL) {
     item = GST_MINI_OBJECT_CAST (queue->starting_segment);
     queue->starting_segment = NULL;
   } else {
@@ -1483,6 +1486,7 @@ gst_queue2_locked_flush (GstQueue2 * queue)
     gst_event_unref (queue->starting_segment);
   queue->starting_segment = NULL;
   queue->segment_event_received = FALSE;
+  gst_event_replace (&queue->stream_start_event, NULL);
 
   /* we deleted a lot of something */
   GST_QUEUE2_SIGNAL_DEL (queue);
@@ -1912,6 +1916,13 @@ gst_queue2_locked_enqueue (GstQueue2 * queue, gpointer item,
         /* a new segment allows us to accept more buffers if we got EOS
          * from downstream */
         queue->unexpected = FALSE;
+        break;
+      case GST_EVENT_STREAM_START:
+        if (!QUEUE_IS_USING_QUEUE (queue)) {
+          gst_event_replace (&queue->stream_start_event, event);
+          gst_event_unref (event);
+          item = NULL;
+        }
         break;
       default:
         if (!QUEUE_IS_USING_QUEUE (queue))
@@ -3051,6 +3062,7 @@ gst_queue2_change_state (GstElement * element, GstStateChange transition)
       }
       queue->segment_event_received = FALSE;
       queue->starting_segment = NULL;
+      gst_event_replace (&queue->stream_start_event, NULL);
       GST_QUEUE2_MUTEX_UNLOCK (queue);
       break;
     case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
@@ -3085,6 +3097,7 @@ gst_queue2_change_state (GstElement * element, GstStateChange transition)
         gst_event_unref (queue->starting_segment);
         queue->starting_segment = NULL;
       }
+      gst_event_replace (&queue->stream_start_event, NULL);
       GST_QUEUE2_MUTEX_UNLOCK (queue);
       break;
     case GST_STATE_CHANGE_READY_TO_NULL:
