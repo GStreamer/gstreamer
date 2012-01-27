@@ -84,8 +84,8 @@ typedef enum {
  *                 other serialized event and only sent at the start of a new stream,
  *                 not after flushing seeks.
  * @GST_EVENT_CAPS: #GstCaps event. Notify the pad of a new media type.
- * @GST_EVENT_STREAM_CONFIG: (unimplemented) contains configuration information
- *                 for the stream, for example stream-headers and codec-data.
+ * @GST_EVENT_STREAM_CONFIG: contains configuration information for the stream,
+ *                 for example stream-headers and codec-data.
  * @GST_EVENT_SEGMENT: A new media segment follows in the dataflow. The
  *                 segment events contains information for clipping buffers and
  *                 converting buffer timestamps to running-time and
