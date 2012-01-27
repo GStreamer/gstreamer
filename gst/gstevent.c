@@ -566,6 +566,63 @@ gst_event_new_eos (void)
 }
 
 /**
+ * gst_event_new_gap:
+ * @timestamp: the start time (pts) of a gap
+ * @duration: the duration of the gap, or %GST_CLOCK_TIME_NONE
+ *
+ * Create a new GAP event. A gap event can be thought of as conceptually
+ * equivalent to a buffer to signal that there is no data for a certain
+ * amount of time. This is useful to signal a gap to downstream elements
+ * which may wait for data, such as muxers or mixers or overlays, especially
+ * for sparse streams such as subtitle streams.
+ *
+ * Returns: (transfer full): the new GAP event.
+ */
+GstEvent *
+gst_event_new_gap (GstClockTime timestamp, GstClockTime duration)
+{
+  GstEvent *event;
+
+  g_return_val_if_fail (GST_CLOCK_TIME_IS_VALID (timestamp), NULL);
+
+  GST_CAT_TRACE (GST_CAT_EVENT, "creating gap %" GST_TIME_FORMAT " - "
+      "%" GST_TIME_FORMAT " (duration: %" GST_TIME_FORMAT ")",
+      GST_TIME_ARGS (timestamp),
+      GST_TIME_ARGS (GST_CLOCK_TIME_IS_VALID (duration) ? (timestamp +
+              duration) : GST_CLOCK_TIME_NONE), GST_TIME_ARGS (duration));
+
+  event = gst_event_new_custom (GST_EVENT_GAP,
+      gst_structure_new_id (GST_QUARK (EVENT_GAP),
+          GST_QUARK (TIMESTAMP), GST_TYPE_CLOCK_TIME, timestamp,
+          GST_QUARK (DURATION), GST_TYPE_CLOCK_TIME, duration, NULL));
+
+  return event;
+}
+
+/**
+ * gst_event_parse_gap:
+ * @timestamp: (out): location where to store the start time (pts) of the gap
+ * @duration: (out) (allow-none): location where to store the duration of
+ *     the gap, or %NULL
+ *
+ * Extract timestamp and duration from a new GAP event.
+ */
+void
+gst_event_parse_gap (GstEvent * event, GstClockTime * timestamp,
+    GstClockTime * duration)
+{
+  GstStructure *structure;
+
+  g_return_if_fail (GST_IS_EVENT (event));
+  g_return_if_fail (GST_EVENT_TYPE (event) == GST_EVENT_GAP);
+
+  structure = GST_EVENT_STRUCTURE (event);
+  gst_structure_id_get (structure,
+      GST_QUARK (TIMESTAMP), GST_TYPE_CLOCK_TIME, timestamp,
+      GST_QUARK (DURATION), GST_TYPE_CLOCK_TIME, duration, NULL);
+}
+
+/**
  * gst_event_new_caps:
  * @caps: (transfer none): a #GstCaps
  *

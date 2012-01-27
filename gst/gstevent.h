@@ -490,6 +490,14 @@ void            gst_event_parse_flush_stop      (GstEvent *event, gboolean *rese
 /* EOS event */
 GstEvent *      gst_event_new_eos               (void) G_GNUC_MALLOC;
 
+/* GAP event */
+GstEvent *      gst_event_new_gap               (GstClockTime   ts,
+                                                 GstClockTime   duration) G_GNUC_MALLOC;
+
+void            gst_event_parse_gap             (GstEvent     * event,
+                                                 GstClockTime * timestamp,
+                                                 GstClockTime * duration);
+
 /* Caps events */
 GstEvent *      gst_event_new_caps              (GstCaps *caps) G_GNUC_MALLOC;
 void            gst_event_parse_caps            (GstEvent *event, GstCaps **caps);

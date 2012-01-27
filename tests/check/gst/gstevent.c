@@ -62,6 +62,24 @@ GST_START_TEST (create_events)
     fail_unless (GST_EVENT_IS_SERIALIZED (event));
     gst_event_unref (event);
   }
+  /* GAP */
+  {
+    GstClockTime ts = 0, dur = 0;
+
+    ASSERT_CRITICAL (gst_event_new_gap (GST_CLOCK_TIME_NONE, GST_SECOND));
+
+    event = gst_event_new_gap (90 * GST_SECOND, GST_SECOND);
+    fail_if (event == NULL);
+    fail_unless (GST_EVENT_TYPE (event) == GST_EVENT_GAP);
+    fail_if (GST_EVENT_IS_UPSTREAM (event));
+    fail_unless (GST_EVENT_IS_DOWNSTREAM (event));
+    fail_unless (GST_EVENT_IS_SERIALIZED (event));
+    gst_event_parse_gap (event, &ts, NULL);
+    fail_unless_equals_int64 (ts, 90 * GST_SECOND);
+    gst_event_parse_gap (event, &ts, &dur);
+    fail_unless_equals_int64 (dur, GST_SECOND);
+    gst_event_unref (event);
+  }
   /* SEGMENT */
   {
     GstSegment segment, parsed;
