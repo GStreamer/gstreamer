@@ -494,9 +494,11 @@ GST_START_TEST (test_burst_client_bytes)
   /* now add the clients */
   g_signal_emit_by_name (sink, "add", pfd1[1]);
   g_signal_emit_by_name (sink, "add_full", pfd2[1], 3,
-      3, (guint64) 50, 3, (guint64) 200);
+      GST_TCP_UNIT_FORMAT_BYTES, (guint64) 50, GST_TCP_UNIT_FORMAT_BYTES,
+      (guint64) 200);
   g_signal_emit_by_name (sink, "add_full", pfd3[1], 3,
-      3, (guint64) 50, 3, (guint64) 50);
+      GST_TCP_UNIT_FORMAT_BYTES, (guint64) 50, GST_TCP_UNIT_FORMAT_BYTES,
+      (guint64) 50);
 
   /* push last buffer to make client fds ready for reading */
   for (i = 9; i < 10; i++) {
@@ -584,9 +586,11 @@ GST_START_TEST (test_burst_client_bytes_keyframe)
   /* now add the clients */
   g_signal_emit_by_name (sink, "add", pfd1[1]);
   g_signal_emit_by_name (sink, "add_full", pfd2[1], 4,
-      3, (guint64) 50, 3, (guint64) 90);
+      GST_TCP_UNIT_FORMAT_BYTES, (guint64) 50, GST_TCP_UNIT_FORMAT_BYTES,
+      (guint64) 90);
   g_signal_emit_by_name (sink, "add_full", pfd3[1], 4,
-      3, (guint64) 50, 3, (guint64) 50);
+      GST_TCP_UNIT_FORMAT_BYTES, (guint64) 50, GST_TCP_UNIT_FORMAT_BYTES,
+      (guint64) 50);
 
   /* push last buffer to make client fds ready for reading */
   for (i = 9; i < 10; i++) {
@@ -675,9 +679,11 @@ GST_START_TEST (test_burst_client_bytes_with_keyframe)
   /* now add the clients */
   g_signal_emit_by_name (sink, "add", pfd1[1]);
   g_signal_emit_by_name (sink, "add_full", pfd2[1], 5,
-      3, (guint64) 50, 3, (guint64) 90);
+      GST_TCP_UNIT_FORMAT_BYTES, (guint64) 50, GST_TCP_UNIT_FORMAT_BYTES,
+      (guint64) 90);
   g_signal_emit_by_name (sink, "add_full", pfd3[1], 5,
-      3, (guint64) 50, 3, (guint64) 50);
+      GST_TCP_UNIT_FORMAT_BYTES, (guint64) 50, GST_TCP_UNIT_FORMAT_BYTES,
+      (guint64) 50);
 
   /* push last buffer to make client fds ready for reading */
   for (i = 9; i < 10; i++) {

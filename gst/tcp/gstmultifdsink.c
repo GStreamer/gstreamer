@@ -146,7 +146,6 @@ enum
   LAST_SIGNAL
 };
 
-
 /* this is really arbitrarily chosen */
 #define DEFAULT_MODE                    1
 #define DEFAULT_UNIT_FORMAT               GST_FORMAT_BUFFERS
