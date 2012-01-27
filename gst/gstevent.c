@@ -84,6 +84,7 @@
 #include "gstenumtypes.h"
 #include "gstutils.h"
 #include "gstquark.h"
+#include "gstvalue.h"
 
 GType _gst_event_type = 0;
 
@@ -612,6 +613,213 @@ gst_event_parse_caps (GstEvent * event, GstCaps ** caps)
     *caps =
         g_value_get_boxed (gst_structure_id_get_value (structure,
             GST_QUARK (CAPS)));
+}
+
+/**
+ * gst_event_new_stream_config:
+ * @flags: the stream config flags
+ *
+ * Create a new STREAM CONFIG event. The stream config event travels
+ * downstream synchronized with the buffer flow and contains stream
+ * configuration information for the stream, such as stream-headers
+ * or codec-data. It is optional and should be sent after the CAPS
+ * event.
+ *
+ * Returns: (transfer full): the new STREAM CONFIG event.
+ */
+GstEvent *
+gst_event_new_stream_config (GstStreamConfigFlags flags)
+{
+  GstEvent *event;
+
+  GST_CAT_INFO (GST_CAT_EVENT, "creating stream info event, flags=0x%x", flags);
+
+  event = gst_event_new_custom (GST_EVENT_STREAM_CONFIG,
+      gst_structure_new_id (GST_QUARK (EVENT_STREAM_CONFIG),
+          GST_QUARK (FLAGS), GST_TYPE_STREAM_CONFIG_FLAGS, flags, NULL));
+
+  return event;
+}
+
+/**
+ * gst_event_parse_stream_config:
+ * @event: The event to parse
+ * @flags: (out): a pointer to a variable to store the stream config flags
+ *
+ * Get the stream config flags from @event.
+ */
+void
+gst_event_parse_stream_config (GstEvent * event, GstStreamConfigFlags * flags)
+{
+  GstStructure *structure;
+
+  g_return_if_fail (GST_IS_EVENT (event));
+  g_return_if_fail (GST_EVENT_TYPE (event) == GST_EVENT_STREAM_CONFIG);
+
+  structure = GST_EVENT_STRUCTURE (event);
+  if (G_LIKELY (flags != NULL)) {
+    *flags =
+        g_value_get_enum (gst_structure_id_get_value (structure,
+            GST_QUARK (FLAGS)));
+  }
+}
+
+/**
+ * gst_event_set_stream_config_codec_data:
+ * @event: a stream config event
+ * @buf: a #GstBuffer with codec data
+ *
+ * Set codec data on the stream info event to signal out of bound setup data
+ * to downstream elements. Unlike stream headers, codec data contains data
+ * that is required to interpret the data stream, but is not valid as-is
+ * inside the data stream and thus can't just be prepended to or inserted
+ * into the data stream.
+ */
+void
+gst_event_set_stream_config_codec_data (GstEvent * event, GstBuffer * buf)
+{
+  GstStructure *s;
+
+  g_return_if_fail (GST_IS_EVENT (event));
+  g_return_if_fail (GST_EVENT_TYPE (event) == GST_EVENT_STREAM_CONFIG);
+  g_return_if_fail (GST_IS_BUFFER (buf) && gst_buffer_get_size (buf) > 0);
+
+  s = GST_EVENT_STRUCTURE (event);
+  gst_structure_id_set (s, GST_QUARK (CODEC_DATA), GST_TYPE_BUFFER, buf, NULL);
+}
+
+/**
+ * gst_event_set_stream_config_codec_data:
+ * @event: a stream config event
+ * @buf: (transfer none): location where to store the #GstBuffer with codec data
+ *
+ * Extracts the codec data buffer from the stream info event. Will store
+ * %NULL in @buf if the event contains no codec data. The buffer returned
+ * will remain valid as long as @event remains valid. The caller should
+ * acquire a referenceto to @buf if needed.
+ */
+void
+gst_event_parse_stream_config_codec_data (GstEvent * event, GstBuffer ** buf)
+{
+  const GValue *val;
+  GstStructure *s;
+
+  g_return_if_fail (GST_IS_EVENT (event));
+  g_return_if_fail (GST_EVENT_TYPE (event) == GST_EVENT_STREAM_CONFIG);
+  g_return_if_fail (buf != NULL);
+
+  s = GST_EVENT_STRUCTURE (event);
+  val = gst_structure_id_get_value (s, GST_QUARK (CODEC_DATA));
+  if (val != NULL)
+    *buf = g_value_get_boxed (val);
+  else
+    *buf = NULL;
+}
+
+/**
+ * gst_event_add_stream_config_header:
+ * @event: a stream config event
+ * @buf: a #GstBuffer with stream header data
+ *
+ * Adds a stream header to the stream info event to signal stream headers to
+ * to downstream elements such as multifilesink, tcpserversink etc. Stream
+ * headers can be and should usually be prepended to the data stream at any
+ * point in the stream (which requires a streamable format), e.g. to a new
+ * client connecting, or when starting a new file segment. stream header
+ * buffers will all be used together in the order they were added to the
+ * stream config event. Stream headers are sent as buffers at the beginning
+ * of the data flow in addition to the stream config event. Elements that
+ * care about stream headers need to make sure that they don't insert or
+ * interpret these header buffers twice if they interpret them.
+ */
+void
+gst_event_add_stream_config_header (GstEvent * event, GstBuffer * buf)
+{
+  GstStructure *s;
+  GValue buf_val = { 0, };
+  GValue *val;
+
+  g_return_if_fail (GST_IS_EVENT (event));
+  g_return_if_fail (GST_EVENT_TYPE (event) == GST_EVENT_STREAM_CONFIG);
+  g_return_if_fail (GST_IS_BUFFER (buf) && gst_buffer_get_size (buf) > 0);
+
+  g_value_init (&buf_val, GST_TYPE_BUFFER);
+  g_value_set_boxed (&buf_val, buf);
+
+  s = GST_EVENT_STRUCTURE (event);
+  val = (GValue *) gst_structure_id_get_value (s, GST_QUARK (STREAM_HEADERS));
+  if (val == NULL) {
+    GValue new_array = { 0, };
+
+    g_value_init (&new_array, GST_TYPE_ARRAY);
+    gst_value_array_append_value (&new_array, &buf_val);
+    gst_structure_id_take_value (s, GST_QUARK (STREAM_HEADERS), &new_array);
+  } else {
+    gst_value_array_append_value (val, &buf_val);
+  }
+  g_value_unset (&buf_val);
+}
+
+/**
+ * gst_event_get_n_stream_config_headers:
+ * @event: a stream config event
+ *
+ * Extract the number of stream header buffers.
+ *
+ * Returns: the number of stream header buffers attached to the stream info
+ * @event.
+ */
+guint
+gst_event_get_n_stream_config_headers (GstEvent * event)
+{
+  const GValue *val;
+  GstStructure *s;
+  guint num = 0;
+
+  g_return_val_if_fail (GST_IS_EVENT (event), 0);
+  g_return_val_if_fail (GST_EVENT_TYPE (event) == GST_EVENT_STREAM_CONFIG, 0);
+
+  s = GST_EVENT_STRUCTURE (event);
+  val = gst_structure_id_get_value (s, GST_QUARK (STREAM_HEADERS));
+
+  if (val != NULL)
+    num = gst_value_array_get_size (val);
+
+  return num;
+}
+
+/**
+ * gst_event_parse_nth_stream_config_header:
+ * @event: a stream config event
+ * @index: number of the stream header to retrieve
+ * @buf: location where to store the n-th stream header #GstBuffer
+ *
+ * Retrieves the n-th stream header buffer attached to the stream config
+ * event and stores it in @buf. Will store %NULL in @buf if there is no such
+ * stream header.
+ */
+void
+gst_event_parse_nth_stream_config_header (GstEvent * event, guint index,
+    GstBuffer ** buf)
+{
+  const GValue *val, *buf_val;
+  GstStructure *s;
+  GstBuffer *ret = NULL;
+
+  g_return_if_fail (GST_IS_EVENT (event));
+  g_return_if_fail (GST_EVENT_TYPE (event) == GST_EVENT_STREAM_CONFIG);
+  g_return_if_fail (buf != NULL);
+
+  s = GST_EVENT_STRUCTURE (event);
+  val = gst_structure_id_get_value (s, GST_QUARK (STREAM_HEADERS));
+
+  if (val != NULL) {
+    buf_val = gst_value_array_get_value (val, index);
+    if (buf_val != NULL)
+      ret = g_value_get_boxed (buf_val);
+  }
+
+  *buf = ret;
 }
 
 /**

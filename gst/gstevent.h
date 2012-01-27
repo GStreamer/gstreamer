@@ -375,6 +375,17 @@ typedef enum {
 } GstQOSType;
 
 /**
+ * GstStreamConfigFlags:
+ * @GST_STREAM_CONFIG_FLAG_NONE: no flags set
+ *
+ * GstStreamConfigFlags are flags passed with the stream config event, see
+ * gst_event_new_stream_config().
+ */
+typedef enum {
+  GST_STREAM_CONFIG_FLAG_NONE = 0
+} GstStreamConfigFlags;
+
+/**
  * GstEvent:
  * @mini_object: the parent structure
  * @type: the #GstEventType of the event
@@ -482,6 +493,23 @@ GstEvent *      gst_event_new_eos               (void) G_GNUC_MALLOC;
 /* Caps events */
 GstEvent *      gst_event_new_caps              (GstCaps *caps) G_GNUC_MALLOC;
 void            gst_event_parse_caps            (GstEvent *event, GstCaps **caps);
+
+/* Stream config */
+GstEvent *      gst_event_new_stream_config                (GstStreamConfigFlags flags) G_GNUC_MALLOC;
+
+void            gst_event_parse_stream_config              (GstEvent * event, GstStreamConfigFlags * flags);
+
+
+void            gst_event_set_stream_config_codec_data     (GstEvent * event, GstBuffer  * buf);
+
+void            gst_event_parse_stream_config_codec_data   (GstEvent * event, GstBuffer ** buf);
+
+
+void            gst_event_add_stream_config_header         (GstEvent * event, GstBuffer  * buf);
+
+guint           gst_event_get_n_stream_config_headers      (GstEvent * event);
+
+void            gst_event_parse_nth_stream_config_header   (GstEvent * event, guint index, GstBuffer ** buf);
 
 /* segment event */
 GstEvent*       gst_event_new_segment           (const GstSegment *segment) G_GNUC_MALLOC;
