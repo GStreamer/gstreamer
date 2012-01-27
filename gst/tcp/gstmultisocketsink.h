@@ -57,13 +57,6 @@ typedef struct {
 
   GSocket *socket;
   GSource *source;
-
-  /* method to sync client when connecting */
-  GstSyncMethod sync_method;
-  GstFormat     burst_min_format;
-  guint64       burst_min_value;
-  GstFormat     burst_max_format;
-  guint64       burst_max_value;
 } GstSocketClient;
 
 /**
@@ -79,17 +72,6 @@ struct _GstMultiSocketSink {
 
   GMainContext *main_context;
   GCancellable *cancellable;
-
-  gboolean previous_buffer_in_caps;
-
-  guint mtu;
-
-  /* these values are used to check if a client is reading fast
-   * enough and to control receovery */
-  GstFormat unit_format;/* the format of the units */
-
-  GstFormat     def_burst_format;
-  guint64       def_burst_value;
 
   guint8 header_flags;
 };

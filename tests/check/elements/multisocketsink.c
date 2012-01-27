@@ -28,6 +28,8 @@
 #include <gio/gio.h>
 #include <gst/check/gstcheck.h>
 
+#include "gst/tcp/gstmultisocketsink.h"
+
 static GstPad *mysrcpad;
 
 static GstStaticPadTemplate srctemplate = GST_STATIC_PAD_TEMPLATE ("src",
@@ -528,9 +530,9 @@ GST_START_TEST (test_burst_client_bytes)
 
   /* now add the clients */
   g_signal_emit_by_name (sink, "add", socket[0]);
-  g_signal_emit_by_name (sink, "add_full", socket[2], 3,
+  g_signal_emit_by_name (sink, "add_full", socket[2], GST_SYNC_METHOD_BURST,
       GST_FORMAT_BYTES, (guint64) 50, GST_FORMAT_BYTES, (guint64) 200);
-  g_signal_emit_by_name (sink, "add_full", socket[4], 3,
+  g_signal_emit_by_name (sink, "add_full", socket[4], GST_SYNC_METHOD_BURST,
       GST_FORMAT_BYTES, (guint64) 50, GST_FORMAT_BYTES, (guint64) 50);
 
   /* push last buffer to make client fds ready for reading */
@@ -616,10 +618,12 @@ GST_START_TEST (test_burst_client_bytes_keyframe)
 
   /* now add the clients */
   g_signal_emit_by_name (sink, "add", socket[0]);
-  g_signal_emit_by_name (sink, "add_full", socket[2], 4,
-      GST_FORMAT_BYTES, (guint64) 50, GST_FORMAT_BYTES, (guint64) 90);
-  g_signal_emit_by_name (sink, "add_full", socket[4], 4,
-      GST_FORMAT_BYTES, (guint64) 50, GST_FORMAT_BYTES, (guint64) 50);
+  g_signal_emit_by_name (sink, "add_full", socket[2],
+      GST_SYNC_METHOD_BURST_KEYFRAME, GST_FORMAT_BYTES, (guint64) 50,
+      GST_FORMAT_BYTES, (guint64) 90);
+  g_signal_emit_by_name (sink, "add_full", socket[4],
+      GST_SYNC_METHOD_BURST_KEYFRAME, GST_FORMAT_BYTES, (guint64) 50,
+      GST_FORMAT_BYTES, (guint64) 50);
 
   /* push last buffer to make client fds ready for reading */
   for (i = 9; i < 10; i++) {
@@ -708,10 +712,12 @@ GST_START_TEST (test_burst_client_bytes_with_keyframe)
 
   /* now add the clients */
   g_signal_emit_by_name (sink, "add", socket[0]);
-  g_signal_emit_by_name (sink, "add_full", socket[2], 5,
-      GST_FORMAT_BYTES, (guint64) 50, GST_FORMAT_BYTES, (guint64) 90);
-  g_signal_emit_by_name (sink, "add_full", socket[4], 5,
-      GST_FORMAT_BYTES, (guint64) 50, GST_FORMAT_BYTES, (guint64) 50);
+  g_signal_emit_by_name (sink, "add_full", socket[2],
+      GST_SYNC_METHOD_BURST_WITH_KEYFRAME, GST_FORMAT_BYTES, (guint64) 50,
+      GST_FORMAT_BYTES, (guint64) 90);
+  g_signal_emit_by_name (sink, "add_full", socket[4],
+      GST_SYNC_METHOD_BURST_WITH_KEYFRAME, GST_FORMAT_BYTES, (guint64) 50,
+      GST_FORMAT_BYTES, (guint64) 50);
 
   /* push last buffer to make client fds ready for reading */
   for (i = 9; i < 10; i++) {

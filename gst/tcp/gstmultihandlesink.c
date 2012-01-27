@@ -170,9 +170,7 @@ enum
   PROP_BYTES_QUEUED,
   PROP_TIME_QUEUED,
 
-#if 0
   PROP_UNIT_FORMAT,
-#endif
   PROP_UNITS_MAX,
   PROP_UNITS_SOFT_MAX,
 
@@ -189,10 +187,8 @@ enum
   PROP_BYTES_TO_SERVE,
   PROP_BYTES_SERVED,
 
-#if 0
   PROP_BURST_FORMAT,
   PROP_BURST_VALUE,
-#endif
 
   PROP_QOS_DSCP,
 
@@ -420,7 +416,6 @@ gst_multi_handle_sink_class_init (GstMultiHandleSinkClass * klass)
           "Total number of bytes send to all clients", 0, G_MAXUINT64, 0,
           G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
 
-#if 0
   g_object_class_install_property (gobject_class, PROP_BURST_FORMAT,
       g_param_spec_enum ("burst-format", "Burst format",
           "The format of the burst units (when sync-method is burst[[-with]-keyframe])",
@@ -430,7 +425,6 @@ gst_multi_handle_sink_class_init (GstMultiHandleSinkClass * klass)
       g_param_spec_uint64 ("burst-value", "Burst value",
           "The amount of burst expressed in burst-unit", 0, G_MAXUINT64,
           DEFAULT_BURST_VALUE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
-#endif
 
   g_object_class_install_property (gobject_class, PROP_QOS_DSCP,
       g_param_spec_int ("qos-dscp", "QoS diff srv code point",
@@ -678,10 +672,8 @@ gst_multi_handle_sink_init (GstMultiHandleSink * this)
   this->timeout = DEFAULT_TIMEOUT;
   this->def_sync_method = DEFAULT_SYNC_METHOD;
 
-#if 0
   this->def_burst_format = DEFAULT_BURST_FORMAT;
   this->def_burst_value = DEFAULT_BURST_VALUE;
-#endif
 
   this->qos_dscp = DEFAULT_QOS_DSCP;
 
@@ -1407,13 +1399,11 @@ find_syncframe (GstMultiHandleSink * sink, gint idx, gint direction)
   return result;
 }
 
-
-#if 0
 /* Get the number of buffers from the buffer queue needed to satisfy
  * the maximum max in the configured units.
  * If units are not BUFFERS, and there are insufficient buffers in the
  * queue to satify the limit, return len(queue) + 1 */
-static gint
+gint
 get_buffers_max (GstMultiHandleSink * sink, gint64 max)
 {
   switch (sink->unit_format) {
@@ -1465,9 +1455,7 @@ get_buffers_max (GstMultiHandleSink * sink, gint64 max)
       return max;
   }
 }
-#endif
 
-#if 0
 /* find the positions in the buffer queue where *_min and *_max
  * is satisfied
  */
@@ -1480,7 +1468,7 @@ get_buffers_max (GstMultiHandleSink * sink, gint64 max)
  *
  * FIXME, this code might now work if any of the units is in buffers...
  */
-static gboolean
+gboolean
 find_limits (GstMultiHandleSink * sink,
     gint * min_idx, gint bytes_min, gint buffers_min, gint64 time_min,
     gint * max_idx, gint bytes_max, gint buffers_max, gint64 time_max)
@@ -1611,9 +1599,7 @@ assign_value (GstFormat format, guint64 value, gint * bytes, gint * buffers,
   }
   return res;
 }
-#endif
 
-#if 0
 /* count the index in the buffer queue to satisfy the given unit
  * and value pair starting from buffer at index 0.
  *
@@ -1637,9 +1623,7 @@ count_burst_unit (GstMultiHandleSink * sink, gint * min_idx,
   return find_limits (sink, min_idx, bytes_min, buffers_min, time_min,
       max_idx, bytes_max, buffers_max, time_max);
 }
-#endif
 
-#if 0
 /* decide where in the current buffer queue this new client should start
  * receiving buffers from.
  * This function is called whenever a client is connected and has not yet
@@ -1648,15 +1632,14 @@ count_burst_unit (GstMultiHandleSink * sink, gint * min_idx,
  * start streaming from yet, and this function should be called again later
  * when more buffers have arrived.
  */
-static gint
+gint
 gst_multi_handle_sink_new_client (GstMultiHandleSink * sink,
-    GstSocketClient * client)
+    GstMultiHandleClient * client)
 {
   gint result;
 
   GST_DEBUG_OBJECT (sink,
-      "[socket %p] new client, deciding where to start in queue",
-      client->socket);
+      "%s new client, deciding where to start in queue", client->debug);
   GST_DEBUG_OBJECT (sink, "queue is currently %d buffers long",
       sink->bufqueue->len);
   switch (client->sync_method) {
@@ -1664,37 +1647,34 @@ gst_multi_handle_sink_new_client (GstMultiHandleSink * sink,
       /* no syncing, we are happy with whatever the client is going to get */
       result = client->bufpos;
       GST_DEBUG_OBJECT (sink,
-          "[socket %p] SYNC_METHOD_LATEST, position %d", client->socket,
-          result);
+          "%s SYNC_METHOD_LATEST, position %d", client->debug, result);
       break;
     case GST_SYNC_METHOD_NEXT_KEYFRAME:
     {
       /* if one of the new buffers (between client->bufpos and 0) in the queue
        * is a sync point, we can proceed, otherwise we need to keep waiting */
       GST_LOG_OBJECT (sink,
-          "[socket %p] new client, bufpos %d, waiting for keyframe",
-          client->socket, client->bufpos);
+          "%s new client, bufpos %d, waiting for keyframe",
+          client->debug, client->bufpos);
 
       result = find_prev_syncframe (sink, client->bufpos);
       if (result != -1) {
         GST_DEBUG_OBJECT (sink,
-            "[socket %p] SYNC_METHOD_NEXT_KEYFRAME: result %d",
-            client->socket, result);
+            "%s SYNC_METHOD_NEXT_KEYFRAME: result %d", client->debug, result);
         break;
       }
 
       /* client is not on a syncbuffer, need to skip these buffers and
        * wait some more */
       GST_LOG_OBJECT (sink,
-          "[socket %p] new client, skipping buffer(s), no syncpoint found",
-          client->socket);
+          "%s new client, skipping buffer(s), no syncpoint found",
+          client->debug);
       client->bufpos = -1;
       break;
     }
     case GST_SYNC_METHOD_LATEST_KEYFRAME:
     {
-      GST_DEBUG_OBJECT (sink,
-          "[socket %p] SYNC_METHOD_LATEST_KEYFRAME", client->socket);
+      GST_DEBUG_OBJECT (sink, "%s SYNC_METHOD_LATEST_KEYFRAME", client->debug);
 
       /* for new clients we initially scan the complete buffer queue for
        * a sync point when a buffer is added. If we don't find a keyframe,
@@ -1704,14 +1684,13 @@ gst_multi_handle_sink_new_client (GstMultiHandleSink * sink,
       result = find_next_syncframe (sink, 0);
       if (result != -1) {
         GST_DEBUG_OBJECT (sink,
-            "[socket %p] SYNC_METHOD_LATEST_KEYFRAME: result %d",
-            client->socket, result);
+            "%s SYNC_METHOD_LATEST_KEYFRAME: result %d", client->debug, result);
         break;
       }
 
       GST_DEBUG_OBJECT (sink,
-          "[socket %p] SYNC_METHOD_LATEST_KEYFRAME: no keyframe found, "
-          "switching to SYNC_METHOD_NEXT_KEYFRAME", client->socket);
+          "%s SYNC_METHOD_LATEST_KEYFRAME: no keyframe found, "
+          "switching to SYNC_METHOD_NEXT_KEYFRAME", client->debug);
       /* throw client to the waiting state */
       client->bufpos = -1;
       /* and make client sync to next keyframe */
@@ -1732,8 +1711,8 @@ gst_multi_handle_sink_new_client (GstMultiHandleSink * sink,
           client->burst_min_value, &max, client->burst_max_format,
           client->burst_max_value);
       GST_DEBUG_OBJECT (sink,
-          "[socket %p] SYNC_METHOD_BURST: burst_unit returned %d, result %d",
-          client->socket, ok, result);
+          "%s SYNC_METHOD_BURST: burst_unit returned %d, result %d",
+          client->debug, ok, result);
 
       GST_LOG_OBJECT (sink, "min %d, max %d", result, max);
 
@@ -1741,8 +1720,8 @@ gst_multi_handle_sink_new_client (GstMultiHandleSink * sink,
       if (max != -1 && max <= result) {
         result = MAX (max - 1, 0);
         GST_DEBUG_OBJECT (sink,
-            "[socket %p] SYNC_METHOD_BURST: result above max, taken down to %d",
-            client->socket, result);
+            "%s SYNC_METHOD_BURST: result above max, taken down to %d",
+            client->debug, result);
       }
       break;
     }
@@ -1840,7 +1819,6 @@ gst_multi_handle_sink_new_client (GstMultiHandleSink * sink,
   }
   return result;
 }
-#endif
 
 #if 0
 /* Handle a write on a client,
@@ -2034,20 +2012,19 @@ write_error:
 }
 #endif
 
-#if 0
 /* calculate the new position for a client after recovery. This function
  * does not update the client position but merely returns the required
  * position.
  */
-static gint
+gint
 gst_multi_handle_sink_recover_client (GstMultiHandleSink * sink,
-    GstSocketClient * client)
+    GstMultiHandleClient * client)
 {
   gint newbufpos;
 
   GST_WARNING_OBJECT (sink,
-      "[socket %p] client %p is lagging at %d, recover using policy %d",
-      client->socket, client, client->bufpos, sink->recover_policy);
+      "%s client %p is lagging at %d, recover using policy %d",
+      client->debug, client, client->bufpos, sink->recover_policy);
 
   switch (sink->recover_policy) {
     case GST_RECOVER_POLICY_NONE:
@@ -2087,7 +2064,6 @@ gst_multi_handle_sink_recover_client (GstMultiHandleSink * sink,
   }
   return newbufpos;
 }
-#endif
 
 #if 0
 /* Queue a buffer on the global queue.
@@ -2536,7 +2512,6 @@ gst_multi_handle_sink_set_property (GObject * object, guint prop_id,
     case PROP_BUFFERS_MIN:
       multihandlesink->buffers_min = g_value_get_int (value);
       break;
-#if 0
     case PROP_UNIT_FORMAT:
       multihandlesink->unit_format = g_value_get_enum (value);
       break;
@@ -2546,7 +2521,6 @@ gst_multi_handle_sink_set_property (GObject * object, guint prop_id,
     case PROP_UNITS_SOFT_MAX:
       multihandlesink->units_soft_max = g_value_get_int64 (value);
       break;
-#endif
     case PROP_RECOVER_POLICY:
       multihandlesink->recover_policy = g_value_get_enum (value);
       break;
@@ -2556,14 +2530,12 @@ gst_multi_handle_sink_set_property (GObject * object, guint prop_id,
     case PROP_SYNC_METHOD:
       multihandlesink->def_sync_method = g_value_get_enum (value);
       break;
-#if 0
     case PROP_BURST_FORMAT:
       multihandlesink->def_burst_format = g_value_get_enum (value);
       break;
     case PROP_BURST_VALUE:
       multihandlesink->def_burst_value = g_value_get_uint64 (value);
       break;
-#endif
     case PROP_QOS_DSCP:
       multihandlesink->qos_dscp = g_value_get_int (value);
       gst_multi_handle_sink_setup_dscp (multihandlesink);
@@ -2612,7 +2584,6 @@ gst_multi_handle_sink_get_property (GObject * object, guint prop_id,
     case PROP_TIME_QUEUED:
       g_value_set_uint64 (value, multihandlesink->time_queued);
       break;
-#if 0
     case PROP_UNIT_FORMAT:
       g_value_set_enum (value, multihandlesink->unit_format);
       break;
@@ -2622,7 +2593,6 @@ gst_multi_handle_sink_get_property (GObject * object, guint prop_id,
     case PROP_UNITS_SOFT_MAX:
       g_value_set_int64 (value, multihandlesink->units_soft_max);
       break;
-#endif
     case PROP_RECOVER_POLICY:
       g_value_set_enum (value, multihandlesink->recover_policy);
       break;
@@ -2638,14 +2608,12 @@ gst_multi_handle_sink_get_property (GObject * object, guint prop_id,
     case PROP_BYTES_SERVED:
       g_value_set_uint64 (value, multihandlesink->bytes_served);
       break;
-#if 0
     case PROP_BURST_FORMAT:
       g_value_set_enum (value, multihandlesink->def_burst_format);
       break;
     case PROP_BURST_VALUE:
       g_value_set_uint64 (value, multihandlesink->def_burst_value);
       break;
-#endif
     case PROP_QOS_DSCP:
       g_value_set_int (value, multihandlesink->qos_dscp);
       break;

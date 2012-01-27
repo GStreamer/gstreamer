@@ -47,23 +47,6 @@ typedef struct _GstMultiFdSink GstMultiFdSink;
 typedef struct _GstMultiFdSinkClass GstMultiFdSinkClass;
 
 
-/**
- * GstTCPUnitType:
- * @GST_TCP_UNIT_FORMAT_UNDEFINED: undefined
- * @GST_TCP_UNIT_FORMAT_BUFFERS  : buffers
- * @GST_TCP_UNIT_FORMAT_TIME     : timeunits (in nanoseconds)
- * @GST_TCP_UNIT_FORMAT_BYTES    : bytes
- *
- * The units used to specify limits.
- */
-typedef enum
-{
-  GST_TCP_UNIT_FORMAT_UNDEFINED,
-  GST_TCP_UNIT_FORMAT_BUFFERS,
-  GST_TCP_UNIT_FORMAT_TIME,
-  GST_TCP_UNIT_FORMAT_BYTES,
-} GstTCPUnitType;
-
 /* structure for a client
  */
 typedef struct {
@@ -72,15 +55,6 @@ typedef struct {
   GstPollFD fd;
 
   gboolean is_socket;
-
-  gboolean caps_sent;
-
-  /* method to sync client when connecting */
-  GstSyncMethod sync_method;
-  GstFormat   burst_min_format;
-  guint64          burst_min_value;
-  GstFormat   burst_max_format;
-  guint64          burst_max_value;
 } GstTCPClient;
 
 /**
@@ -98,13 +72,6 @@ struct _GstMultiFdSink {
   GstPoll *fdset;
 
   gboolean handle_read;
-
-  /* these values are used to check if a client is reading fast
-   * enough and to control receovery */
-  GstFormat unit_format;/* the type of the units */
-
-  GstFormat   def_burst_format;
-  guint64       def_burst_value;
 
   guint8 header_flags;
 };

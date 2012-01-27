@@ -467,7 +467,7 @@ GST_START_TEST (test_burst_client_bytes)
   /* make sure we keep at least 100 bytes at all times */
   g_object_set (sink, "bytes-min", 100, NULL);
   g_object_set (sink, "sync-method", 3, NULL);  /* 3 = burst */
-  g_object_set (sink, "burst-format", GST_TCP_UNIT_FORMAT_BYTES, NULL);
+  g_object_set (sink, "burst-format", GST_FORMAT_BYTES, NULL);
   g_object_set (sink, "burst-value", (guint64) 80, NULL);
 
   fail_if (pipe (pfd1) == -1);
@@ -493,12 +493,10 @@ GST_START_TEST (test_burst_client_bytes)
 
   /* now add the clients */
   g_signal_emit_by_name (sink, "add", pfd1[1]);
-  g_signal_emit_by_name (sink, "add_full", pfd2[1], 3,
-      GST_TCP_UNIT_FORMAT_BYTES, (guint64) 50, GST_TCP_UNIT_FORMAT_BYTES,
-      (guint64) 200);
-  g_signal_emit_by_name (sink, "add_full", pfd3[1], 3,
-      GST_TCP_UNIT_FORMAT_BYTES, (guint64) 50, GST_TCP_UNIT_FORMAT_BYTES,
-      (guint64) 50);
+  g_signal_emit_by_name (sink, "add_full", pfd2[1], GST_SYNC_METHOD_BURST,
+      GST_FORMAT_BYTES, (guint64) 50, GST_FORMAT_BYTES, (guint64) 200);
+  g_signal_emit_by_name (sink, "add_full", pfd3[1], GST_SYNC_METHOD_BURST,
+      GST_FORMAT_BYTES, (guint64) 50, GST_FORMAT_BYTES, (guint64) 50);
 
   /* push last buffer to make client fds ready for reading */
   for (i = 9; i < 10; i++) {
@@ -555,7 +553,7 @@ GST_START_TEST (test_burst_client_bytes_keyframe)
   /* make sure we keep at least 100 bytes at all times */
   g_object_set (sink, "bytes-min", 100, NULL);
   g_object_set (sink, "sync-method", 4, NULL);  /* 4 = burst_keyframe */
-  g_object_set (sink, "burst-format", GST_TCP_UNIT_FORMAT_BYTES, NULL);
+  g_object_set (sink, "burst-format", GST_FORMAT_BYTES, NULL);
   g_object_set (sink, "burst-value", (guint64) 80, NULL);
 
   fail_if (pipe (pfd1) == -1);
@@ -585,12 +583,12 @@ GST_START_TEST (test_burst_client_bytes_keyframe)
 
   /* now add the clients */
   g_signal_emit_by_name (sink, "add", pfd1[1]);
-  g_signal_emit_by_name (sink, "add_full", pfd2[1], 4,
-      GST_TCP_UNIT_FORMAT_BYTES, (guint64) 50, GST_TCP_UNIT_FORMAT_BYTES,
-      (guint64) 90);
-  g_signal_emit_by_name (sink, "add_full", pfd3[1], 4,
-      GST_TCP_UNIT_FORMAT_BYTES, (guint64) 50, GST_TCP_UNIT_FORMAT_BYTES,
-      (guint64) 50);
+  g_signal_emit_by_name (sink, "add_full", pfd2[1],
+      GST_SYNC_METHOD_BURST_KEYFRAME, GST_FORMAT_BYTES, (guint64) 50,
+      GST_FORMAT_BYTES, (guint64) 90);
+  g_signal_emit_by_name (sink, "add_full", pfd3[1],
+      GST_SYNC_METHOD_BURST_KEYFRAME, GST_FORMAT_BYTES, (guint64) 50,
+      GST_FORMAT_BYTES, (guint64) 50);
 
   /* push last buffer to make client fds ready for reading */
   for (i = 9; i < 10; i++) {
@@ -648,7 +646,7 @@ GST_START_TEST (test_burst_client_bytes_with_keyframe)
   /* make sure we keep at least 100 bytes at all times */
   g_object_set (sink, "bytes-min", 100, NULL);
   g_object_set (sink, "sync-method", 5, NULL);  /* 5 = burst_with_keyframe */
-  g_object_set (sink, "burst-format", GST_TCP_UNIT_FORMAT_BYTES, NULL);
+  g_object_set (sink, "burst-format", GST_FORMAT_BYTES, NULL);
   g_object_set (sink, "burst-value", (guint64) 80, NULL);
 
   fail_if (pipe (pfd1) == -1);
@@ -678,12 +676,12 @@ GST_START_TEST (test_burst_client_bytes_with_keyframe)
 
   /* now add the clients */
   g_signal_emit_by_name (sink, "add", pfd1[1]);
-  g_signal_emit_by_name (sink, "add_full", pfd2[1], 5,
-      GST_TCP_UNIT_FORMAT_BYTES, (guint64) 50, GST_TCP_UNIT_FORMAT_BYTES,
-      (guint64) 90);
-  g_signal_emit_by_name (sink, "add_full", pfd3[1], 5,
-      GST_TCP_UNIT_FORMAT_BYTES, (guint64) 50, GST_TCP_UNIT_FORMAT_BYTES,
-      (guint64) 50);
+  g_signal_emit_by_name (sink, "add_full", pfd2[1],
+      GST_SYNC_METHOD_BURST_WITH_KEYFRAME, GST_FORMAT_BYTES,
+      (guint64) 50, GST_FORMAT_BYTES, (guint64) 90);
+  g_signal_emit_by_name (sink, "add_full", pfd3[1],
+      GST_SYNC_METHOD_BURST_WITH_KEYFRAME, GST_FORMAT_BYTES,
+      (guint64) 50, GST_FORMAT_BYTES, (guint64) 50);
 
   /* push last buffer to make client fds ready for reading */
   for (i = 9; i < 10; i++) {

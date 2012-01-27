@@ -142,13 +142,10 @@ typedef struct {
 
   /* method to sync client when connecting */
   GstSyncMethod sync_method;
-// FIXME: refactor format vs unit
-#if 0
   GstFormat     burst_min_format;
   guint64       burst_min_value;
   GstFormat     burst_max_format;
   guint64       burst_max_value;
-#endif
 
   GstCaps *caps;                /* caps of last queued buffer */
 
@@ -179,6 +176,18 @@ gboolean gst_multi_handle_sink_stop (GstBaseSink * bsink);
 gboolean gst_multi_handle_sink_start (GstBaseSink * bsink);
 void gst_multi_handle_sink_setup_dscp (GstMultiHandleSink * mhsink);
 gint gst_multi_handle_sink_setup_dscp_client (GstMultiHandleSink * sink, GstMultiHandleClient * client);
+gint get_buffers_max (GstMultiHandleSink * sink, gint64 max);
+gint
+gst_multi_handle_sink_recover_client (GstMultiHandleSink * sink,
+    GstMultiHandleClient * client);
+gint
+gst_multi_handle_sink_new_client (GstMultiHandleSink * sink,
+    GstMultiHandleClient * client);
+gboolean
+find_limits (GstMultiHandleSink * sink,
+    gint * min_idx, gint bytes_min, gint buffers_min, gint64 time_min,
+    gint * max_idx, gint bytes_max, gint buffers_max, gint64 time_max);
+
 
 /**
  * GstMultiHandleSink:
