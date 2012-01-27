@@ -1107,6 +1107,7 @@ print_all_uri_handlers (void)
         if (!element) {
           g_print ("couldn't construct element for %s for some reason\n",
               GST_OBJECT_NAME (factory));
+          gst_object_unref (factory);
           continue;
         }
 
@@ -1140,6 +1141,7 @@ print_all_uri_handlers (void)
         }
 
         gst_object_unref (element);
+        gst_object_unref (factory);
       }
     }
 
