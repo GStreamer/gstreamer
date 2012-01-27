@@ -318,7 +318,7 @@ GST_PLUGINS_NONPORTED=" aiff asfmux \
  dccp debugutils faceoverlay festival \
  fieldanalysis freeverb freeze frei0r gaudieffects geometrictransform h264parse \
  hdvparse hls id3tag inter interlace ivfparse jpegformat jp2kdecimator \
- kate liveadder legacyresample librfb mpegdemux mpegtsmux \
+ kate liveadder legacyresample librfb mpegtsmux \
  mpegpsmux mve mxf mythtv nsf nuvdemux \
  patchdetect pnm rawparse real removesilence scaletempo \
  sdi segmentclip siren speed subenc stereo tta videofilters \
