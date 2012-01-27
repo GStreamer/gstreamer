@@ -52,6 +52,8 @@
 #include "config.h"
 #endif
 
+#include <gst/base/gstbasesink.h>
+#include <gst/audio/streamvolume.h>
 #include "gstdirectsoundsink.h"
 
 #include <math.h>
@@ -63,229 +65,85 @@
 #endif
 #endif
 
+#define DEFAULT_MUTE FALSE
+
 GST_DEBUG_CATEGORY_STATIC (directsoundsink_debug);
 #define GST_CAT_DEFAULT directsoundsink_debug
 
-static void gst_directsound_sink_finalise (GObject * object);
+static void gst_directsound_sink_finalize (GObject * object);
 
 static void gst_directsound_sink_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
 static void gst_directsound_sink_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 
-static GstCaps *gst_directsound_sink_getcaps (GstBaseSink * bsink);
+static GstCaps *gst_directsound_sink_getcaps (GstBaseSink * bsink,
+    GstCaps * filter);
 static gboolean gst_directsound_sink_prepare (GstAudioSink * asink,
-    GstRingBufferSpec * spec);
+    GstAudioRingBufferSpec * spec);
 static gboolean gst_directsound_sink_unprepare (GstAudioSink * asink);
-
 static gboolean gst_directsound_sink_open (GstAudioSink * asink);
 static gboolean gst_directsound_sink_close (GstAudioSink * asink);
-static guint gst_directsound_sink_write (GstAudioSink * asink, gpointer data,
-    guint length);
+static gint gst_directsound_sink_write (GstAudioSink * asink,
+    gpointer data, guint length);
 static guint gst_directsound_sink_delay (GstAudioSink * asink);
 static void gst_directsound_sink_reset (GstAudioSink * asink);
 static GstCaps *gst_directsound_probe_supported_formats (GstDirectSoundSink *
     dsoundsink, const GstCaps * template_caps);
 
-/* interfaces */
-static void gst_directsound_sink_interfaces_init (GType type);
-static void
-gst_directsound_sink_implements_interface_init (GstImplementsInterfaceClass *
-    iface);
-static void gst_directsound_sink_mixer_interface_init (GstMixerInterface *
-    iface);
+static void gst_directsound_sink_set_volume (GstDirectSoundSink * sink,
+    gdouble volume, gboolean store);
+static gdouble gst_directsound_sink_get_volume (GstDirectSoundSink * sink);
+static void gst_directsound_sink_set_mute (GstDirectSoundSink * sink,
+    gboolean mute);
+static gboolean gst_directsound_sink_get_mute (GstDirectSoundSink * sink);
 
 static GstStaticPadTemplate directsoundsink_sink_factory =
     GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("audio/x-raw-int, "
-        "signed = (boolean) TRUE, "
-        "width = (int) 16, "
-        "depth = (int) 16, "
+    GST_STATIC_CAPS ("audio/x-raw, "
+        "format = (string) S16LE, "
+        "layout = (string) interleaved, "
         "rate = (int) [ 1, MAX ], " "channels = (int) [ 1, 2 ]; "
-        "audio/x-raw-int, "
-        "signed = (boolean) FALSE, "
-        "width = (int) 8, "
-        "depth = (int) 8, "
+        "audio/x-raw, "
+        "format = (string) S8, "
+        "layout = (string) interleaved, "
         "rate = (int) [ 1, MAX ], " "channels = (int) [ 1, 2 ];"
         "audio/x-iec958"));
 
 enum
 {
   PROP_0,
-  PROP_VOLUME
+  PROP_VOLUME,
+  PROP_MUTE
 };
 
-GST_BOILERPLATE_FULL (GstDirectSoundSink, gst_directsound_sink, GstAudioSink,
-    GST_TYPE_AUDIO_SINK, gst_directsound_sink_interfaces_init);
-
-/* interfaces stuff */
-static void
-gst_directsound_sink_interfaces_init (GType type)
-{
-  static const GInterfaceInfo implements_interface_info = {
-    (GInterfaceInitFunc) gst_directsound_sink_implements_interface_init,
-    NULL,
-    NULL,
-  };
-
-  static const GInterfaceInfo mixer_interface_info = {
-    (GInterfaceInitFunc) gst_directsound_sink_mixer_interface_init,
-    NULL,
-    NULL,
-  };
-
-  g_type_add_interface_static (type,
-      GST_TYPE_IMPLEMENTS_INTERFACE, &implements_interface_info);
-  g_type_add_interface_static (type, GST_TYPE_MIXER, &mixer_interface_info);
-}
-
-static gboolean
-gst_directsound_sink_interface_supported (GstImplementsInterface * iface,
-    GType iface_type)
-{
-  g_return_val_if_fail (iface_type == GST_TYPE_MIXER, FALSE);
-
-  /* for the sake of this example, we'll always support it. However, normally,
-   * you would check whether the device you've opened supports mixers. */
-  return TRUE;
-}
+#define gst_directsound_sink_parent_class parent_class
+G_DEFINE_TYPE_WITH_CODE (GstDirectSoundSink, gst_directsound_sink,
+    GST_TYPE_AUDIO_SINK, G_IMPLEMENT_INTERFACE (GST_TYPE_STREAM_VOLUME, NULL)
+    );
 
 static void
-gst_directsound_sink_implements_interface_init (GstImplementsInterfaceClass *
-    iface)
+gst_directsound_sink_finalize (GObject * object)
 {
-  iface->supported = gst_directsound_sink_interface_supported;
-}
-
-/*
- * This function returns the list of support tracks (inputs, outputs)
- * on this element instance. Elements usually build this list during
- * _init () or when going from NULL to READY.
- */
-
-static const GList *
-gst_directsound_sink_mixer_list_tracks (GstMixer * mixer)
-{
-  GstDirectSoundSink *dsoundsink = GST_DIRECTSOUND_SINK (mixer);
-
-  return dsoundsink->tracks;
-}
-
-static void
-gst_directsound_sink_set_volume (GstDirectSoundSink * dsoundsink)
-{
-  if (dsoundsink->pDSBSecondary) {
-    /* DirectSound controls volume using units of 100th of a decibel,
-     * ranging from -10000 to 0. We use a linear scale of 0 - 100
-     * here, so remap.
-     */
-    long dsVolume;
-    if (dsoundsink->volume == 0)
-      dsVolume = -10000;
-    else
-      dsVolume = 100 * (long) (20 * log10 ((double) dsoundsink->volume / 100.));
-    dsVolume = CLAMP (dsVolume, -10000, 0);
-
-    GST_DEBUG_OBJECT (dsoundsink,
-        "Setting volume on secondary buffer to %d from %d", (int) dsVolume,
-        (int) dsoundsink->volume);
-    IDirectSoundBuffer_SetVolume (dsoundsink->pDSBSecondary, dsVolume);
-  }
-}
-
-/*
- * Set volume. volumes is an array of size track->num_channels, and
- * each value in the array gives the wanted volume for one channel
- * on the track.
- */
-
-static void
-gst_directsound_sink_mixer_set_volume (GstMixer * mixer,
-    GstMixerTrack * track, gint * volumes)
-{
-  GstDirectSoundSink *dsoundsink = GST_DIRECTSOUND_SINK (mixer);
-
-  if (volumes[0] != dsoundsink->volume) {
-    dsoundsink->volume = volumes[0];
-
-    gst_directsound_sink_set_volume (dsoundsink);
-  }
-}
-
-static void
-gst_directsound_sink_mixer_get_volume (GstMixer * mixer,
-    GstMixerTrack * track, gint * volumes)
-{
-  GstDirectSoundSink *dsoundsink = GST_DIRECTSOUND_SINK (mixer);
-
-  volumes[0] = dsoundsink->volume;
-}
-
-static void
-gst_directsound_sink_mixer_interface_init (GstMixerInterface * iface)
-{
-  /* the mixer interface requires a definition of the mixer type:
-   * hardware or software? */
-  GST_MIXER_TYPE (iface) = GST_MIXER_SOFTWARE;
-
-  /* virtual function pointers */
-  iface->list_tracks = gst_directsound_sink_mixer_list_tracks;
-  iface->set_volume = gst_directsound_sink_mixer_set_volume;
-  iface->get_volume = gst_directsound_sink_mixer_get_volume;
-}
-
-static void
-gst_directsound_sink_finalise (GObject * object)
-{
-  GstDirectSoundSink *dsoundsink = GST_DIRECTSOUND_SINK (object);
-
-  g_mutex_free (dsoundsink->dsound_lock);
-
-  if (dsoundsink->tracks) {
-    g_list_foreach (dsoundsink->tracks, (GFunc) g_object_unref, NULL);
-    g_list_free (dsoundsink->tracks);
-    dsoundsink->tracks = NULL;
-  }
-
   G_OBJECT_CLASS (parent_class)->finalize (object);
-}
-
-static void
-gst_directsound_sink_base_init (gpointer g_class)
-{
-  GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
-
-  gst_element_class_set_details_simple (element_class,
-      "Direct Sound Audio Sink", "Sink/Audio",
-      "Output to a sound card via Direct Sound",
-      "Sebastien Moutte <sebastien@moutte.net>");
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&directsoundsink_sink_factory));
 }
 
 static void
 gst_directsound_sink_class_init (GstDirectSoundSinkClass * klass)
 {
-  GObjectClass *gobject_class;
-  GstElementClass *gstelement_class;
-  GstBaseSinkClass *gstbasesink_class;
-  GstBaseAudioSinkClass *gstbaseaudiosink_class;
-  GstAudioSinkClass *gstaudiosink_class;
-
-  gobject_class = (GObjectClass *) klass;
-  gstelement_class = (GstElementClass *) klass;
-  gstbasesink_class = (GstBaseSinkClass *) klass;
-  gstbaseaudiosink_class = (GstBaseAudioSinkClass *) klass;
-  gstaudiosink_class = (GstAudioSinkClass *) klass;
+  GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
+  GstBaseSinkClass *gstbasesink_class = GST_BASE_SINK_CLASS (klass);
+  GstAudioSinkClass *gstaudiosink_class = GST_AUDIO_SINK_CLASS (klass);
+  GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
 
   GST_DEBUG_CATEGORY_INIT (directsoundsink_debug, "directsoundsink", 0,
       "DirectSound sink");
 
   parent_class = g_type_class_peek_parent (klass);
 
-  gobject_class->finalize = gst_directsound_sink_finalise;
+  gobject_class->finalize = gst_directsound_sink_finalize;
   gobject_class->set_property = gst_directsound_sink_set_property;
   gobject_class->get_property = gst_directsound_sink_get_property;
 
@@ -307,23 +165,27 @@ gst_directsound_sink_class_init (GstDirectSoundSinkClass * klass)
       g_param_spec_double ("volume", "Volume",
           "Volume of this stream", 0.0, 1.0, 1.0,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  g_object_class_install_property (gobject_class,
+      PROP_MUTE,
+      g_param_spec_boolean ("mute", "Mute",
+          "Mute state of this stream", DEFAULT_MUTE,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  gst_element_class_set_details_simple (element_class,
+      "Direct Sound Audio Sink", "Sink/Audio",
+      "Output to a sound card via Direct Sound",
+      "Sebastien Moutte <sebastien@moutte.net>");
+
+  gst_element_class_add_pad_template (element_class,
+      gst_static_pad_template_get (&directsoundsink_sink_factory));
 }
 
 static void
-gst_directsound_sink_init (GstDirectSoundSink * dsoundsink,
-    GstDirectSoundSinkClass * g_class)
+gst_directsound_sink_init (GstDirectSoundSink * dsoundsink)
 {
-  GstMixerTrack *track = NULL;
-
-  dsoundsink->tracks = NULL;
-  track = g_object_new (GST_TYPE_MIXER_TRACK, NULL);
-  track->label = g_strdup ("DSoundTrack");
-  track->num_channels = 2;
-  track->min_volume = 0;
-  track->max_volume = 100;
-  track->flags = GST_MIXER_TRACK_OUTPUT;
-  dsoundsink->tracks = g_list_append (dsoundsink->tracks, track);
-
+  dsoundsink->volume = 100;
+  dsoundsink->mute = FALSE;
   dsoundsink->pDS = NULL;
   dsoundsink->cached_caps = NULL;
   dsoundsink->pDSBSecondary = NULL;
@@ -342,8 +204,10 @@ gst_directsound_sink_set_property (GObject * object,
 
   switch (prop_id) {
     case PROP_VOLUME:
-      sink->volume = (int) (g_value_get_double (value) * 100);
-      gst_directsound_sink_set_volume (sink);
+      gst_directsound_sink_set_volume (sink, g_value_get_double (value), TRUE);
+      break;
+    case PROP_MUTE:
+      gst_directsound_sink_set_mute (sink, g_value_get_boolean (value));
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -359,7 +223,10 @@ gst_directsound_sink_get_property (GObject * object,
 
   switch (prop_id) {
     case PROP_VOLUME:
-      g_value_set_double (value, (double) sink->volume / 100.);
+      g_value_set_double (value, gst_directsound_sink_get_volume (sink));
+      break;
+    case PROP_MUTE:
+      g_value_set_boolean (value, gst_directsound_sink_get_mute (sink));
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -368,7 +235,7 @@ gst_directsound_sink_get_property (GObject * object,
 }
 
 static GstCaps *
-gst_directsound_sink_getcaps (GstBaseSink * bsink)
+gst_directsound_sink_getcaps (GstBaseSink * bsink, GstCaps * filter)
 {
   GstElementClass *element_class;
   GstPadTemplate *pad_template;
@@ -410,8 +277,10 @@ gst_directsound_sink_getcaps (GstBaseSink * bsink)
 static gboolean
 gst_directsound_sink_open (GstAudioSink * asink)
 {
-  GstDirectSoundSink *dsoundsink = GST_DIRECTSOUND_SINK (asink);
+  GstDirectSoundSink *dsoundsink;
   HRESULT hRes;
+
+  dsoundsink = GST_DIRECTSOUND_SINK (asink);
 
   /* create and initialize a DirecSound object */
   if (FAILED (hRes = DirectSoundCreate (NULL, &dsoundsink->pDS, NULL))) {
@@ -433,47 +302,50 @@ gst_directsound_sink_open (GstAudioSink * asink)
 }
 
 static gboolean
-gst_directsound_sink_prepare (GstAudioSink * asink, GstRingBufferSpec * spec)
+gst_directsound_sink_prepare (GstAudioSink * asink,
+    GstAudioRingBufferSpec * spec)
 {
-  GstDirectSoundSink *dsoundsink = GST_DIRECTSOUND_SINK (asink);
+  GstDirectSoundSink *dsoundsink;
   HRESULT hRes;
   DSBUFFERDESC descSecondary;
   WAVEFORMATEX wfx;
 
+  dsoundsink = GST_DIRECTSOUND_SINK (asink);
+
   /*save number of bytes per sample and buffer format */
-  dsoundsink->bytes_per_sample = spec->bytes_per_sample;
-  dsoundsink->buffer_format = spec->format;
+  dsoundsink->bytes_per_sample = spec->info.bpf;
+  dsoundsink->type = spec->type;
 
   /* fill the WAVEFORMATEX structure with spec params */
   memset (&wfx, 0, sizeof (wfx));
-  if (spec->format != GST_IEC958) {
+  if (spec->type != GST_AUDIO_RING_BUFFER_FORMAT_TYPE_IEC958) {
     wfx.cbSize = sizeof (wfx);
     wfx.wFormatTag = WAVE_FORMAT_PCM;
-    wfx.nChannels = spec->channels;
-    wfx.nSamplesPerSec = spec->rate;
-    wfx.wBitsPerSample = (spec->bytes_per_sample * 8) / wfx.nChannels;
-    wfx.nBlockAlign = spec->bytes_per_sample;
+    wfx.nChannels = spec->info.channels;
+    wfx.nSamplesPerSec = spec->info.rate;
+    wfx.wBitsPerSample = (spec->info.bpf * 8) / wfx.nChannels;
+    wfx.nBlockAlign = spec->info.bpf;
     wfx.nAvgBytesPerSec = wfx.nSamplesPerSec * wfx.nBlockAlign;
 
-    /* Create directsound buffer with size based on our configured  
+    /* Create directsound buffer with size based on our configured
      * buffer_size (which is 200 ms by default) */
     dsoundsink->buffer_size =
         gst_util_uint64_scale_int (wfx.nAvgBytesPerSec, spec->buffer_time,
         GST_MSECOND);
     /* Make sure we make those numbers multiple of our sample size in bytes */
-    dsoundsink->buffer_size += dsoundsink->buffer_size % spec->bytes_per_sample;
+    dsoundsink->buffer_size += dsoundsink->buffer_size % spec->info.bpf;
 
     spec->segsize =
         gst_util_uint64_scale_int (wfx.nAvgBytesPerSec, spec->latency_time,
         GST_MSECOND);
-    spec->segsize += spec->segsize % spec->bytes_per_sample;
+    spec->segsize += spec->segsize % spec->info.bpf;
     spec->segtotal = dsoundsink->buffer_size / spec->segsize;
   } else {
 #ifdef WAVE_FORMAT_DOLBY_AC3_SPDIF
     wfx.cbSize = 0;
     wfx.wFormatTag = WAVE_FORMAT_DOLBY_AC3_SPDIF;
     wfx.nChannels = 2;
-    wfx.nSamplesPerSec = spec->rate;
+    wfx.nSamplesPerSec = spec->info.rate;
     wfx.wBitsPerSample = 16;
     wfx.nBlockAlign = wfx.wBitsPerSample / 8 * wfx.nChannels;
     wfx.nAvgBytesPerSec = wfx.nSamplesPerSec * wfx.nBlockAlign;
@@ -491,15 +363,15 @@ gst_directsound_sink_prepare (GstAudioSink * asink, GstRingBufferSpec * spec)
   GST_INFO_OBJECT (dsoundsink,
       "GstRingBufferSpec->channels: %d, GstRingBufferSpec->rate: %d, GstRingBufferSpec->bytes_per_sample: %d\n"
       "WAVEFORMATEX.nSamplesPerSec: %ld, WAVEFORMATEX.wBitsPerSample: %d, WAVEFORMATEX.nBlockAlign: %d, WAVEFORMATEX.nAvgBytesPerSec: %ld\n"
-      "Size of dsound circular buffer=>%d\n", spec->channels, spec->rate,
-      spec->bytes_per_sample, wfx.nSamplesPerSec, wfx.wBitsPerSample,
+      "Size of dsound circular buffer=>%d\n", spec->info.channels,
+      spec->info.rate, spec->info.bpf, wfx.nSamplesPerSec, wfx.wBitsPerSample,
       wfx.nBlockAlign, wfx.nAvgBytesPerSec, dsoundsink->buffer_size);
 
   /* create a secondary directsound buffer */
   memset (&descSecondary, 0, sizeof (DSBUFFERDESC));
   descSecondary.dwSize = sizeof (DSBUFFERDESC);
   descSecondary.dwFlags = DSBCAPS_GETCURRENTPOSITION2 | DSBCAPS_GLOBALFOCUS;
-  if (spec->format != GST_IEC958)
+  if (spec->type != GST_AUDIO_RING_BUFFER_FORMAT_TYPE_IEC958)
     descSecondary.dwFlags |= DSBCAPS_CTRLVOLUME;
 
   descSecondary.dwBufferBytes = dsoundsink->buffer_size;
@@ -514,7 +386,7 @@ gst_directsound_sink_prepare (GstAudioSink * asink, GstRingBufferSpec * spec)
     return FALSE;
   }
 
-  gst_directsound_sink_set_volume (dsoundsink);
+  gst_directsound_sink_set_volume (dsoundsink, dsoundsink->volume, FALSE);
 
   return TRUE;
 }
@@ -552,7 +424,7 @@ gst_directsound_sink_close (GstAudioSink * asink)
   return TRUE;
 }
 
-static guint
+static gint
 gst_directsound_sink_write (GstAudioSink * asink, gpointer data, guint length)
 {
   GstDirectSoundSink *dsoundsink;
@@ -565,7 +437,7 @@ gst_directsound_sink_write (GstAudioSink * asink, gpointer data, guint length)
   dsoundsink = GST_DIRECTSOUND_SINK (asink);
 
   /* Fix endianness */
-  if (dsoundsink->buffer_format == GST_IEC958)
+  if (dsoundsink->type == GST_AUDIO_RING_BUFFER_FORMAT_TYPE_IEC958)
     _swab (data, data, length);
 
   GST_DSOUND_LOCK (dsoundsink);
@@ -720,12 +592,12 @@ gst_directsound_sink_reset (GstAudioSink * asink)
   GST_DSOUND_UNLOCK (dsoundsink);
 }
 
-/* 
- * gst_directsound_probe_supported_formats: 
- * 
- * Takes the template caps and returns the subset which is actually 
- * supported by this device. 
- * 
+/*
+ * gst_directsound_probe_supported_formats:
+ *
+ * Takes the template caps and returns the subset which is actually
+ * supported by this device.
+ *
  */
 
 static GstCaps *
@@ -739,8 +611,8 @@ gst_directsound_probe_supported_formats (GstDirectSoundSink * dsoundsink,
 
   caps = gst_caps_copy (template_caps);
 
-  /* 
-   * Check availability of digital output by trying to create an SPDIF buffer 
+  /*
+   * Check availability of digital output by trying to create an SPDIF buffer
    */
 
 #ifdef WAVE_FORMAT_DOLBY_AC3_SPDIF
@@ -754,7 +626,7 @@ gst_directsound_probe_supported_formats (GstDirectSoundSink * dsoundsink,
   wfx.nBlockAlign = 4;
   wfx.nAvgBytesPerSec = wfx.nSamplesPerSec * wfx.nBlockAlign;
 
-  // create a secondary directsound buffer 
+  // create a secondary directsound buffer
   memset (&descSecondary, 0, sizeof (DSBUFFERDESC));
   descSecondary.dwSize = sizeof (DSBUFFERDESC);
   descSecondary.dwFlags = DSBCAPS_GETCURRENTPOSITION2 | DSBCAPS_GLOBALFOCUS;
@@ -768,7 +640,7 @@ gst_directsound_probe_supported_formats (GstDirectSoundSink * dsoundsink,
         "(IDirectSound_CreateSoundBuffer returned: %s)\n",
         DXGetErrorString9 (hRes));
     caps =
-        gst_caps_subtract (caps, gst_caps_new_simple ("audio/x-iec958", NULL));
+        gst_caps_subtract (caps, gst_caps_new_empty_simple ("audio/x-iec958"));
   } else {
     GST_INFO_OBJECT (dsoundsink, "AC3 passthrough supported");
     hRes = IDirectSoundBuffer_Release (dsoundsink->pDSBSecondary);
@@ -783,4 +655,54 @@ gst_directsound_probe_supported_formats (GstDirectSoundSink * dsoundsink,
 #endif
 
   return caps;
+}
+
+static void
+gst_directsound_sink_set_volume (GstDirectSoundSink * dsoundsink,
+    gdouble dvolume, gboolean store)
+{
+  glong volume;
+
+  volume = dvolume * 100;
+  if (store)
+    dsoundsink->volume = volume;
+
+  if (dsoundsink->pDSBSecondary) {
+    /* DirectSound controls volume using units of 100th of a decibel,
+     * ranging from -10000 to 0. We use a linear scale of 0 - 100
+     * here, so remap.
+     */
+    long dsVolume;
+    if (dsoundsink->volume == 0)
+      dsVolume = -10000;
+    else
+      dsVolume = 100 * (long) (20 * log10 ((double) dsoundsink->volume / 100.));
+    dsVolume = CLAMP (dsVolume, -10000, 0);
+
+    GST_DEBUG_OBJECT (dsoundsink,
+        "Setting volume on secondary buffer to %d from %d", (int) dsVolume,
+        (int) dsoundsink->volume);
+    IDirectSoundBuffer_SetVolume (dsoundsink->pDSBSecondary, dsVolume);
+  }
+}
+
+gdouble
+gst_directsound_sink_get_volume (GstDirectSoundSink * dsoundsink)
+{
+  return (gdouble) dsoundsink->volume / 100;
+}
+
+static void
+gst_directsound_sink_set_mute (GstDirectSoundSink * dsoundsink, gboolean mute)
+{
+  if (mute)
+    gst_directsound_sink_set_volume (dsoundsink, 0, FALSE);
+  else
+    gst_directsound_sink_set_volume (dsoundsink, dsoundsink->volume, FALSE);
+}
+
+static gboolean
+gst_directsound_sink_get_mute (GstDirectSoundSink * dsoundsink)
+{
+  return FALSE;
 }
