@@ -94,6 +94,7 @@ gboolean _priv_gst_in_valgrind (void);
 
 /* init functions called from gst_init(). */
 void  _priv_gst_quarks_initialize (void);
+void  _priv_gst_mini_object_initialize (void);
 void  _priv_gst_buffer_initialize (void);
 void  _priv_gst_buffer_list_initialize (void);
 void  _priv_gst_structure_initialize (void);

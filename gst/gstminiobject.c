@@ -38,8 +38,6 @@
 #include "gst/gstinfo.h"
 #include <gobject/gvaluecollector.h>
 
-#define GST_DISABLE_TRACE
-
 #ifndef GST_DISABLE_TRACE
 #include "gsttrace.h"
 static GstAllocTrace *_gst_mini_object_trace;
@@ -47,6 +45,14 @@ static GstAllocTrace *_gst_mini_object_trace;
 
 /* Mutex used for weak referencing */
 G_LOCK_DEFINE_STATIC (weak_refs_mutex);
+
+void
+_priv_gst_mini_object_initialize (void)
+{
+#ifndef GST_DISABLE_TRACE
+  _gst_mini_object_trace = gst_alloc_trace_register ("GstMiniObject");
+#endif
+}
 
 /**
  * gst_mini_object_init:
@@ -69,6 +75,10 @@ gst_mini_object_init (GstMiniObject * mini_object, GType type, gsize size)
   mini_object->size = size;
   mini_object->n_weak_refs = 0;
   mini_object->weak_refs = NULL;
+
+#ifndef GST_DISABLE_TRACE
+  gst_alloc_trace_new (_gst_mini_object_trace, mini_object);
+#endif
 }
 
 /**
