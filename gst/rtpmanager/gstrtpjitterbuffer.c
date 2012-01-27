@@ -1053,6 +1053,8 @@ gst_rtp_jitter_buffer_sink_event (GstPad * pad, GstObject * parent,
       /* set same caps on srcpad on success */
       if (ret)
         ret = gst_pad_push_event (priv->srcpad, event);
+      else
+        gst_event_unref (event);
       break;
     }
     case GST_EVENT_SEGMENT:
