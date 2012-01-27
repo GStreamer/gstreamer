@@ -45,8 +45,6 @@ typedef struct
   gboolean have_clock_base;
   guint clock_base;
 
-  GstCaps *out_caps;
-
   GstSegment segment;
 
   gboolean priority;
@@ -74,7 +72,7 @@ struct _GstRTPMux
   guint ssrc;
   guint current_ssrc;
 
-  gboolean segment_pending;
+  GstPad *last_pad; /* protected by object lock */
 
   GstClockTime last_stop;
 };

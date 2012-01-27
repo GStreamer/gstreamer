@@ -171,7 +171,10 @@ gst_rtp_mux_class_init (GstRTPMuxClass * klass)
 static void
 gst_rtp_mux_dispose (GObject * object)
 {
+  GstRTPMux *rtp_mux = GST_RTP_MUX (object);
   GList *item;
+
+  g_clear_object (&rtp_mux->last_pad);
 
 restart:
   for (item = GST_ELEMENT_PADS (object); item; item = g_list_next (item)) {
@@ -238,7 +241,6 @@ static void
 gst_rtp_mux_init (GstRTPMux * rtp_mux)
 {
   GstElementClass *klass = GST_ELEMENT_GET_CLASS (rtp_mux);
-  GstSegment segment;
 
   rtp_mux->srcpad =
       gst_pad_new_from_template (gst_element_class_get_pad_template (klass,
@@ -246,9 +248,6 @@ gst_rtp_mux_init (GstRTPMux * rtp_mux)
   gst_pad_set_event_function (rtp_mux->srcpad,
       GST_DEBUG_FUNCPTR (gst_rtp_mux_src_event));
   gst_element_add_pad (GST_ELEMENT (rtp_mux), rtp_mux->srcpad);
-
-  gst_segment_init (&segment, GST_FORMAT_TIME);
-  gst_pad_push_event (rtp_mux->srcpad, gst_event_new_segment (&segment));
 
   rtp_mux->ssrc = DEFAULT_SSRC;
   rtp_mux->ts_offset = DEFAULT_TIMESTAMP_OFFSET;
@@ -272,7 +271,7 @@ gst_rtp_mux_setup_sinkpad (GstRTPMux * rtp_mux, GstPad * sinkpad)
       GST_DEBUG_FUNCPTR (gst_rtp_mux_sink_query));
 
 
-  gst_segment_init (&padpriv->segment, GST_FORMAT_TIME);
+  gst_segment_init (&padpriv->segment, GST_FORMAT_UNDEFINED);
 
   gst_pad_set_element_private (sinkpad, padpriv);
 
@@ -319,7 +318,6 @@ gst_rtp_mux_release_pad (GstElement * element, GstPad * pad)
   gst_element_remove_pad (element, pad);
 
   if (padpriv) {
-    gst_caps_replace (&padpriv->out_caps, NULL);
     g_slice_free (GstRTPMuxPadPrivate, padpriv);
   }
 }
@@ -448,14 +446,24 @@ out:
   return ret;
 }
 
+static gboolean
+resend_events (GstPad * pad, GstEvent ** event, gpointer user_data)
+{
+  GstRTPMux *rtp_mux = user_data;
+
+  gst_pad_push_event (rtp_mux->srcpad, gst_event_ref (*event));
+
+  return TRUE;
+}
+
 static GstFlowReturn
 gst_rtp_mux_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
 {
   GstRTPMux *rtp_mux;
   GstFlowReturn ret;
   GstRTPMuxPadPrivate *padpriv;
-  GstEvent *newseg_event = NULL;
   gboolean drop;
+  gboolean changed = FALSE;
   GstRTPBuffer rtpbuffer = GST_RTP_BUFFER_INIT;
 
   rtp_mux = GST_RTP_MUX (GST_OBJECT_PARENT (pad));
@@ -484,6 +492,12 @@ gst_rtp_mux_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
   gst_rtp_buffer_unmap (&rtpbuffer);
 
   if (!drop) {
+    if (pad != rtp_mux->last_pad) {
+      changed = TRUE;
+      g_clear_object (&rtp_mux->last_pad);
+      rtp_mux->last_pad = g_object_ref (pad);
+    }
+
     if (GST_BUFFER_DURATION_IS_VALID (buffer) &&
         GST_BUFFER_TIMESTAMP_IS_VALID (buffer))
       rtp_mux->last_stop = GST_BUFFER_TIMESTAMP (buffer) +
@@ -494,8 +508,8 @@ gst_rtp_mux_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
 
   GST_OBJECT_UNLOCK (rtp_mux);
 
-  if (newseg_event)
-    gst_pad_push_event (rtp_mux->srcpad, newseg_event);
+  if (changed)
+    gst_pad_sticky_events_foreach (pad, resend_events, rtp_mux);
 
   if (drop) {
     gst_buffer_unref (buffer);
@@ -544,13 +558,6 @@ gst_rtp_mux_setcaps (GstPad * pad, GstRTPMux * rtp_mux, GstCaps * caps)
     }
   }
 
-  if (ret) {
-    GST_OBJECT_LOCK (rtp_mux);
-    padpriv = gst_pad_get_element_private (pad);
-    if (padpriv)
-      gst_caps_replace (&padpriv->out_caps, caps);
-    GST_OBJECT_UNLOCK (rtp_mux);
-  }
   gst_caps_unref (caps);
 
   return ret;
@@ -744,12 +751,8 @@ gst_rtp_mux_set_property (GObject * object,
 static gboolean
 gst_rtp_mux_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
 {
-
-  GstRTPMux *mux;
-  gboolean ret = FALSE;
-  gboolean forward = TRUE;
-
-  mux = GST_RTP_MUX (parent);
+  GstRTPMux *mux = GST_RTP_MUX (parent);
+  gboolean is_pad;
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_CAPS:
@@ -757,9 +760,7 @@ gst_rtp_mux_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
       GstCaps *caps;
 
       gst_event_parse_caps (event, &caps);
-      ret = gst_rtp_mux_setcaps (pad, mux, caps);
-      forward = FALSE;
-      break;
+      return gst_rtp_mux_setcaps (pad, mux, caps);
     }
     case GST_EVENT_FLUSH_STOP:
     {
@@ -780,18 +781,20 @@ gst_rtp_mux_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
       }
       GST_OBJECT_UNLOCK (mux);
       gst_event_unref (event);
-      forward = FALSE;
-      ret = TRUE;
       break;
     }
     default:
       break;
   }
 
-  if (forward)
-    ret = gst_pad_push_event (mux->srcpad, event);
+  GST_OBJECT_LOCK (mux);
+  is_pad = (pad == mux->last_pad);
+  GST_OBJECT_UNLOCK (mux);
 
-  return ret;
+  if (is_pad)
+    return gst_pad_push_event (mux->srcpad, event);
+  else
+    return TRUE;
 }
 
 static void
@@ -799,6 +802,8 @@ gst_rtp_mux_ready_to_paused (GstRTPMux * rtp_mux)
 {
 
   GST_OBJECT_LOCK (rtp_mux);
+
+  g_clear_object (&rtp_mux->last_pad);
 
   if (rtp_mux->ssrc == -1)
     rtp_mux->current_ssrc = g_random_int ();
