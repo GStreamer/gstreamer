@@ -529,9 +529,9 @@ GST_START_TEST (test_burst_client_bytes)
   /* now add the clients */
   g_signal_emit_by_name (sink, "add", socket[0]);
   g_signal_emit_by_name (sink, "add_full", socket[2], 3,
-      3, (guint64) 50, 3, (guint64) 200);
+      GST_FORMAT_BYTES, (guint64) 50, GST_FORMAT_BYTES, (guint64) 200);
   g_signal_emit_by_name (sink, "add_full", socket[4], 3,
-      3, (guint64) 50, 3, (guint64) 50);
+      GST_FORMAT_BYTES, (guint64) 50, GST_FORMAT_BYTES, (guint64) 50);
 
   /* push last buffer to make client fds ready for reading */
   for (i = 9; i < 10; i++) {
@@ -551,11 +551,6 @@ GST_START_TEST (test_burst_client_bytes)
   /* second client only bursts 50 bytes = 4 buffers (we get 4 buffers since
    * the max allows it) */
   GST_DEBUG ("Reading from client 2");
-  // FIXME for slomo: this client receives starting from 3 when it should
-  // start from 6!
-  fail_unless_read ("client 2", socket[3], 16, "deadbee00000003");
-  fail_unless_read ("client 2", socket[3], 16, "deadbee00000004");
-  fail_unless_read ("client 2", socket[3], 16, "deadbee00000005");
   fail_unless_read ("client 2", socket[3], 16, "deadbee00000006");
   fail_unless_read ("client 2", socket[3], 16, "deadbee00000007");
   fail_unless_read ("client 2", socket[3], 16, "deadbee00000008");
@@ -563,13 +558,7 @@ GST_START_TEST (test_burst_client_bytes)
 
   /* third client only bursts 50 bytes = 4 buffers, we can't send
    * more than 50 bytes so we only get 3 buffers (48 bytes). */
-  // FIXME for slomo: this client receives starting from 3 when it should
-  // start from 7!
   GST_DEBUG ("Reading from client 3");
-  fail_unless_read ("client 3", socket[5], 16, "deadbee00000003");
-  fail_unless_read ("client 3", socket[5], 16, "deadbee00000004");
-  fail_unless_read ("client 3", socket[5], 16, "deadbee00000005");
-  fail_unless_read ("client 3", socket[5], 16, "deadbee00000006");
   fail_unless_read ("client 3", socket[5], 16, "deadbee00000007");
   fail_unless_read ("client 3", socket[5], 16, "deadbee00000008");
   fail_unless_read ("client 3", socket[5], 16, "deadbee00000009");
@@ -628,9 +617,9 @@ GST_START_TEST (test_burst_client_bytes_keyframe)
   /* now add the clients */
   g_signal_emit_by_name (sink, "add", socket[0]);
   g_signal_emit_by_name (sink, "add_full", socket[2], 4,
-      3, (guint64) 50, 3, (guint64) 90);
+      GST_FORMAT_BYTES, (guint64) 50, GST_FORMAT_BYTES, (guint64) 90);
   g_signal_emit_by_name (sink, "add_full", socket[4], 4,
-      3, (guint64) 50, 3, (guint64) 50);
+      GST_FORMAT_BYTES, (guint64) 50, GST_FORMAT_BYTES, (guint64) 50);
 
   /* push last buffer to make client fds ready for reading */
   for (i = 9; i < 10; i++) {
@@ -654,24 +643,12 @@ GST_START_TEST (test_burst_client_bytes_keyframe)
   /* second client only bursts 50 bytes = 4 buffers, there is
    * no keyframe above min and below max, so get one below min */
   GST_DEBUG ("Reading from client 2");
-  // FIXME for slomo: should start from 8, not from 4
-  fail_unless_read ("client 2", socket[3], 16, "deadbee00000004");
-  fail_unless_read ("client 2", socket[3], 16, "deadbee00000005");
-  fail_unless_read ("client 2", socket[3], 16, "deadbee00000006");
-  fail_unless_read ("client 2", socket[3], 16, "deadbee00000007");
-
   fail_unless_read ("client 2", socket[3], 16, "deadbee00000008");
   fail_unless_read ("client 2", socket[3], 16, "deadbee00000009");
 
   /* third client only bursts 50 bytes = 4 buffers, we can't send
    * more than 50 bytes so we only get 2 buffers (32 bytes). */
   GST_DEBUG ("Reading from client 3");
-  // FIXME for slomo: should start from 8, not from 4
-  fail_unless_read ("client 3", socket[5], 16, "deadbee00000004");
-  fail_unless_read ("client 3", socket[5], 16, "deadbee00000005");
-  fail_unless_read ("client 3", socket[5], 16, "deadbee00000006");
-  fail_unless_read ("client 3", socket[5], 16, "deadbee00000007");
-
   fail_unless_read ("client 3", socket[5], 16, "deadbee00000008");
   fail_unless_read ("client 3", socket[5], 16, "deadbee00000009");
 
@@ -732,9 +709,9 @@ GST_START_TEST (test_burst_client_bytes_with_keyframe)
   /* now add the clients */
   g_signal_emit_by_name (sink, "add", socket[0]);
   g_signal_emit_by_name (sink, "add_full", socket[2], 5,
-      3, (guint64) 50, 3, (guint64) 90);
+      GST_FORMAT_BYTES, (guint64) 50, GST_FORMAT_BYTES, (guint64) 90);
   g_signal_emit_by_name (sink, "add_full", socket[4], 5,
-      3, (guint64) 50, 3, (guint64) 50);
+      GST_FORMAT_BYTES, (guint64) 50, GST_FORMAT_BYTES, (guint64) 50);
 
   /* push last buffer to make client fds ready for reading */
   for (i = 9; i < 10; i++) {
@@ -758,11 +735,6 @@ GST_START_TEST (test_burst_client_bytes_with_keyframe)
   /* second client only bursts 50 bytes = 4 buffers, there is
    * no keyframe above min and below max, so send min */
   GST_DEBUG ("Reading from client 2");
-  // FIXME for slomo: should start from 6, not from 3
-  fail_unless_read ("client 2", socket[3], 16, "deadbee00000003");
-  fail_unless_read ("client 2", socket[3], 16, "deadbee00000004");
-  fail_unless_read ("client 2", socket[3], 16, "deadbee00000005");
-
   fail_unless_read ("client 2", socket[3], 16, "deadbee00000006");
   fail_unless_read ("client 2", socket[3], 16, "deadbee00000007");
   fail_unless_read ("client 2", socket[3], 16, "deadbee00000008");
@@ -771,12 +743,6 @@ GST_START_TEST (test_burst_client_bytes_with_keyframe)
   /* third client only bursts 50 bytes = 4 buffers, we can't send
    * more than 50 bytes so we only get 3 buffers (48 bytes). */
   GST_DEBUG ("Reading from client 3");
-  // FIXME for slomo: should start from 7, not from 3
-  fail_unless_read ("client 3", socket[5], 16, "deadbee00000003");
-  fail_unless_read ("client 3", socket[5], 16, "deadbee00000004");
-  fail_unless_read ("client 3", socket[5], 16, "deadbee00000005");
-  fail_unless_read ("client 3", socket[5], 16, "deadbee00000006");
-
   fail_unless_read ("client 3", socket[5], 16, "deadbee00000007");
   fail_unless_read ("client 3", socket[5], 16, "deadbee00000008");
   fail_unless_read ("client 3", socket[5], 16, "deadbee00000009");
