@@ -2876,6 +2876,8 @@ gst_flups_demux_sink_activate (GstPad * sinkpad, GstObject * parent)
     }
   }
 
+  gst_query_unref (query);
+
   return res;
 }
 
