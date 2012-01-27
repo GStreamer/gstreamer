@@ -142,6 +142,9 @@ struct _GstSegment {
 
   guint64         position;
   guint64         duration;
+
+  /* < private > */
+  gpointer        _gst_reserved[GST_PADDING];
 };
 
 GType        gst_segment_get_type            (void);
