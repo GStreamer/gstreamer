@@ -50,7 +50,7 @@ void
 _priv_gst_mini_object_initialize (void)
 {
 #ifndef GST_DISABLE_TRACE
-  _gst_mini_object_trace = gst_alloc_trace_register ("GstMiniObject");
+  _gst_mini_object_trace = _gst_alloc_trace_register ("GstMiniObject", 0);
 #endif
 }
 
@@ -77,7 +77,7 @@ gst_mini_object_init (GstMiniObject * mini_object, GType type, gsize size)
   mini_object->weak_refs = NULL;
 
 #ifndef GST_DISABLE_TRACE
-  gst_alloc_trace_new (_gst_mini_object_trace, mini_object);
+  _gst_alloc_trace_new (_gst_mini_object_trace, mini_object);
 #endif
 }
 
@@ -237,7 +237,7 @@ gst_mini_object_unref (GstMiniObject * mini_object)
         weak_refs_notify (mini_object);
 
 #ifndef GST_DISABLE_TRACE
-      gst_alloc_trace_free (_gst_mini_object_trace, mini_object);
+      _gst_alloc_trace_free (_gst_mini_object_trace, mini_object);
 #endif
       if (mini_object->free)
         mini_object->free (mini_object);

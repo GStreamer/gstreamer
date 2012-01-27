@@ -626,10 +626,6 @@ init_post (GOptionContext * context, GOptionGroup * group, gpointer data,
 {
   GLogLevelFlags llf;
 
-#ifndef GST_DISABLE_TRACE
-  GstTrace *gst_trace;
-#endif /* GST_DISABLE_TRACE */
-
   if (gst_initialized) {
     GST_DEBUG ("already initialized");
     return TRUE;
@@ -637,6 +633,8 @@ init_post (GOptionContext * context, GOptionGroup * group, gpointer data,
 
   llf = G_LOG_LEVEL_CRITICAL | G_LOG_LEVEL_ERROR | G_LOG_FLAG_FATAL;
   g_log_set_handler (g_log_domain_gstreamer, llf, debug_log_handler, NULL);
+
+  _priv_gst_alloc_trace_initialize ();
 
   _priv_gst_mini_object_initialize ();
   _priv_gst_quarks_initialize ();
@@ -646,8 +644,6 @@ init_post (GOptionContext * context, GOptionGroup * group, gpointer data,
   _priv_gst_structure_initialize ();
   _priv_gst_caps_initialize ();
   _priv_gst_meta_initialize ();
-
-  g_mutex_init (&_gst_trace_mutex);
 
   g_type_class_ref (gst_object_get_type ());
   g_type_class_ref (gst_pad_get_type ());
@@ -766,14 +762,6 @@ init_post (GOptionContext * context, GOptionGroup * group, gpointer data,
 
   if (!gst_update_registry ())
     return FALSE;
-
-#ifndef GST_DISABLE_TRACE
-  _gst_trace_on = 0;
-  if (_gst_trace_on) {
-    gst_trace = gst_trace_new ("gst.trace", 1024);
-    gst_trace_set_default (gst_trace);
-  }
-#endif /* GST_DISABLE_TRACE */
 
   GST_INFO ("GLib runtime version: %d.%d.%d", glib_major_version,
       glib_minor_version, glib_micro_version);
@@ -1017,7 +1005,7 @@ gst_deinit (void)
 
   _priv_gst_registry_cleanup ();
 
-  g_mutex_clear (&_gst_trace_mutex);
+  _priv_gst_alloc_trace_deinit ();
 
   g_type_class_unref (g_type_class_peek (gst_object_get_type ()));
   g_type_class_unref (g_type_class_peek (gst_pad_get_type ()));

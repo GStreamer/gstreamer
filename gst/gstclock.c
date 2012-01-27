@@ -188,7 +188,7 @@ gst_clock_entry_new (GstClock * clock, GstClockTime time,
 
   entry = g_slice_new (GstClockEntry);
 #ifndef GST_DISABLE_TRACE
-  gst_alloc_trace_new (_gst_clock_entry_trace, entry);
+  _gst_alloc_trace_new (_gst_clock_entry_trace, entry);
 #endif
   GST_CAT_DEBUG_OBJECT (GST_CAT_CLOCK, clock,
       "created entry %p, time %" GST_TIME_FORMAT, entry, GST_TIME_ARGS (time));
@@ -305,7 +305,7 @@ _gst_clock_id_free (GstClockID id)
     entry->destroy_data (entry->user_data);
 
 #ifndef GST_DISABLE_TRACE
-  gst_alloc_trace_free (_gst_clock_entry_trace, id);
+  _gst_alloc_trace_free (_gst_clock_entry_trace, id);
 #endif
   g_slice_free (GstClockEntry, id);
 }
@@ -658,7 +658,7 @@ gst_clock_class_init (GstClockClass * klass)
 
 #ifndef GST_DISABLE_TRACE
   _gst_clock_entry_trace =
-      gst_alloc_trace_register (GST_CLOCK_ENTRY_TRACE_NAME);
+      _gst_alloc_trace_register (GST_CLOCK_ENTRY_TRACE_NAME, -1);
 #endif
 
   gobject_class->dispose = gst_clock_dispose;

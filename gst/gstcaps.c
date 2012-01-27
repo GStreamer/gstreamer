@@ -395,15 +395,14 @@ gst_static_caps_get (GstStaticCaps * static_caps)
     if (G_UNLIKELY (string == NULL))
       goto no_string;
 
-    GST_CAT_TRACE (GST_CAT_CAPS, "creating %p", static_caps);
-
     *caps = gst_caps_from_string (string);
 
     /* convert to string */
     if (G_UNLIKELY (*caps == NULL))
       g_critical ("Could not convert static caps \"%s\"", string);
 
-    GST_CAT_TRACE (GST_CAT_CAPS, "created %p", static_caps);
+    GST_CAT_TRACE (GST_CAT_CAPS, "created %p from string %s", static_caps,
+        string);
   done:
     G_UNLOCK (static_caps_lock);
   }

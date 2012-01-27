@@ -822,7 +822,6 @@ main (int argc, char *argv[])
   /* options */
   gboolean verbose = FALSE;
   gboolean no_fault = FALSE;
-  gboolean trace = FALSE;
   gboolean eos_on_shutdown = FALSE;
 #if 0
   gboolean check_index = FALSE;
@@ -843,8 +842,6 @@ main (int argc, char *argv[])
         N_("Do not output status information of TYPE"), N_("TYPE1,TYPE2,...")},
     {"no-fault", 'f', 0, G_OPTION_ARG_NONE, &no_fault,
         N_("Do not install a fault handler"), NULL},
-    {"trace", 'T', 0, G_OPTION_ARG_NONE, &trace,
-        N_("Print alloc trace (if enabled at compile time)"), NULL},
     {"eos-on-shutdown", 'e', 0, G_OPTION_ARG_NONE, &eos_on_shutdown,
         N_("Force EOS on sources before shutting the pipeline down"), NULL},
 #if 0
@@ -899,15 +896,6 @@ main (int argc, char *argv[])
 
   sigint_setup ();
 #endif
-
-  if (trace) {
-    if (!gst_alloc_trace_available ()) {
-      g_warning ("Trace not available (recompile with trace enabled).");
-    }
-    gst_alloc_trace_set_flags_all (GST_ALLOC_TRACE_LIVE |
-        GST_ALLOC_TRACE_MEM_LIVE);
-    gst_alloc_trace_print_live ();
-  }
 
   /* make a null-terminated version of argv */
   argvn = g_new0 (char *, argc);
@@ -1083,8 +1071,6 @@ main (int argc, char *argv[])
   gst_object_unref (pipeline);
 
   gst_deinit ();
-  if (trace)
-    gst_alloc_trace_print_live ();
 
   return res;
 }
