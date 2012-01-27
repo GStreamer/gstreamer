@@ -55,7 +55,7 @@ typedef struct _GstMultiSocketSinkClass GstMultiSocketSinkClass;
 typedef struct {
   GstMultiHandleClient client;
 
-  GSocket *socket;
+  GstMultiSinkHandle handle;
   GSource *source;
 } GstSocketClient;
 
@@ -80,34 +80,34 @@ struct _GstMultiSocketSinkClass {
   GstMultiHandleSinkClass parent_class;
 
   /* element methods */
-  void          (*add)          (GstMultiSocketSink *sink, GSocket *socket);
-  void          (*add_full)     (GstMultiSocketSink *sink, GSocket *socket, GstSyncMethod sync,
+  void          (*add)          (GstMultiSocketSink *sink, GstMultiSinkHandle handle);
+  void          (*add_full)     (GstMultiSocketSink *sink, GstMultiSinkHandle handle, GstSyncMethod sync,
 		                 GstFormat format, guint64 value,
 				 GstFormat max_format, guint64 max_value);
-  void          (*remove)       (GstMultiSocketSink *sink, GSocket *socket);
-  void          (*remove_flush) (GstMultiSocketSink *sink, GSocket *socket);
+  void          (*remove)       (GstMultiSocketSink *sink, GstMultiSinkHandle handle);
+  void          (*remove_flush) (GstMultiSocketSink *sink, GstMultiSinkHandle handle);
   void          (*clear)        (GstMultiSocketSink *sink);
-  GstStructure* (*get_stats)    (GstMultiSocketSink *sink, GSocket *socket);
+  GstStructure* (*get_stats)    (GstMultiSocketSink *sink, GstMultiSinkHandle handle);
 
   /* vtable */
-  void (*removed) (GstMultiSocketSink *sink, GSocket *socket);
+  void (*removed) (GstMultiHandleSink *sink, GstMultiSinkHandle handle);
 
   /* signals */
-  void (*client_added) (GstElement *element, GSocket *socket);
-  void (*client_removed) (GstElement *element, GSocket *socket, GstClientStatus status);
-  void (*client_socket_removed) (GstElement *element, GSocket *socket);
+  void (*client_added) (GstElement *element, GstMultiSinkHandle handle);
+  void (*client_removed) (GstElement *element, GstMultiSinkHandle handle, GstClientStatus status);
+  void (*client_socket_removed) (GstElement *element, GstMultiSinkHandle handle);
 };
 
 GType gst_multi_socket_sink_get_type (void);
 
-void          gst_multi_socket_sink_add          (GstMultiSocketSink *sink, GSocket *socket);
-void          gst_multi_socket_sink_add_full     (GstMultiSocketSink *sink, GSocket *socket, GstSyncMethod sync,
+void          gst_multi_socket_sink_add          (GstMultiSocketSink *sink, GstMultiSinkHandle handle);
+void          gst_multi_socket_sink_add_full     (GstMultiSocketSink *sink, GstMultiSinkHandle handle, GstSyncMethod sync,
                                               GstFormat min_format, guint64 min_value,
                                               GstFormat max_format, guint64 max_value);
-void          gst_multi_socket_sink_remove       (GstMultiSocketSink *sink, GSocket *socket);
-void          gst_multi_socket_sink_remove_flush (GstMultiSocketSink *sink, GSocket *socket);
+void          gst_multi_socket_sink_remove       (GstMultiSocketSink *sink, GstMultiSinkHandle handle);
+void          gst_multi_socket_sink_remove_flush (GstMultiSocketSink *sink, GstMultiSinkHandle handle);
 void          gst_multi_socket_sink_clear        (GstMultiHandleSink *sink);
-GstStructure*  gst_multi_socket_sink_get_stats    (GstMultiSocketSink *sink, GSocket *socket);
+GstStructure*  gst_multi_socket_sink_get_stats    (GstMultiSocketSink *sink, GstMultiSinkHandle handle);
 
 G_END_DECLS
 

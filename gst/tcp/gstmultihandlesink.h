@@ -120,6 +120,13 @@ typedef enum
   GST_CLIENT_STATUS_FLUSHING    = 6
 } GstClientStatus;
 
+// FIXME: is it better to use GSocket * or a gpointer here ?
+typedef union
+{
+  int fd;
+  GSocket *socket;
+} GstMultiSinkHandle;
+
 /* structure for a client
  */
 typedef struct {
@@ -251,12 +258,12 @@ struct _GstMultiHandleSinkClass {
   GstBaseSinkClass parent_class;
 
   /* element methods */
-  void          (*add)          (GstMultiHandleSink *sink, GSocket *socket);
-  void          (*add_full)     (GstMultiHandleSink *sink, GSocket *socket, GstSyncMethod sync,
+  void          (*add)          (GstMultiHandleSink *sink, GstMultiSinkHandle handle);
+  void          (*add_full)     (GstMultiHandleSink *sink, GstMultiSinkHandle handle, GstSyncMethod sync,
 		                 GstFormat format, guint64 value, 
 				 GstFormat max_format, guint64 max_value);
-  void          (*remove)       (GstMultiHandleSink *sink, GSocket *socket);
-  void          (*remove_flush) (GstMultiHandleSink *sink, GSocket *socket);
+  void          (*remove)       (GstMultiHandleSink *sink, GstMultiSinkHandle handle);
+  void          (*remove_flush) (GstMultiHandleSink *sink, GstMultiSinkHandle handle);
   void          (*clear)        (GstMultiHandleSink *sink);
   void          (*clear_post)   (GstMultiHandleSink *sink);
   void          (*stop_pre)     (GstMultiHandleSink *sink);
@@ -273,18 +280,18 @@ struct _GstMultiHandleSinkClass {
                                 (GstMultiHandleClient *client);
 
 
-  GstStructure* (*get_stats)    (GstMultiHandleSink *sink, GSocket *socket);
+  GstStructure* (*get_stats)    (GstMultiHandleSink *sink, GstMultiSinkHandle handle);
   void          (*remove_client_link) (GstMultiHandleSink * sink, GList * link);
 
   /* vtable */
   gboolean (*init)   (GstMultiHandleSink *sink);
   gboolean (*close)  (GstMultiHandleSink *sink);
-  void (*removed) (GstMultiHandleSink *sink, GSocket *socket);
+  void (*removed) (GstMultiHandleSink *sink, GstMultiSinkHandle handle);
 
   /* signals */
-  void (*client_added) (GstElement *element, GSocket *socket);
-  void (*client_removed) (GstElement *element, GSocket *socket, GstClientStatus status);
-  void (*client_socket_removed) (GstElement *element, GSocket *socket);
+  void (*client_added) (GstElement *element, GstMultiSinkHandle handle);
+  void (*client_removed) (GstElement *element, GstMultiSinkHandle handle, GstClientStatus status);
+  void (*client_socket_removed) (GstElement *element, GstMultiSinkHandle handle);
 };
 
 GType gst_multi_handle_sink_get_type (void);

@@ -80,35 +80,35 @@ struct _GstMultiFdSinkClass {
   GstMultiHandleSinkClass parent_class;
 
   /* element methods */
-  void          (*add)          (GstMultiFdSink *sink, int fd);
-  void          (*add_full)     (GstMultiFdSink *sink, int fd, GstSyncMethod sync,
+  void          (*add)          (GstMultiFdSink *sink, GstMultiSinkHandle handle);
+  void          (*add_full)     (GstMultiFdSink *sink, GstMultiSinkHandle handle, GstSyncMethod sync,
 		                 GstFormat format, guint64 value, 
 				 GstFormat max_format, guint64 max_value);
-  void          (*remove)       (GstMultiFdSink *sink, int fd);
-  void          (*remove_flush) (GstMultiFdSink *sink, int fd);
+  void          (*remove)       (GstMultiFdSink *sink, GstMultiSinkHandle handle);
+  void          (*remove_flush) (GstMultiFdSink *sink, GstMultiSinkHandle handle);
   void          (*clear)        (GstMultiFdSink *sink);
-  GValueArray*  (*get_stats)    (GstMultiFdSink *sink, int fd);
+  GValueArray*  (*get_stats)    (GstMultiFdSink *sink, GstMultiSinkHandle handle);
 
   /* vtable */
   gboolean (*wait)   (GstMultiFdSink *sink, GstPoll *set);
-  void (*removed) (GstMultiFdSink *sink, int fd);
+  void (*removed) (GstMultiFdSink *sink, GstMultiSinkHandle handle);
 
   /* signals */
-  void (*client_added) (GstElement *element, gint fd);
-  void (*client_removed) (GstElement *element, gint fd, GstClientStatus status);
-  void (*client_fd_removed) (GstElement *element, gint fd);
+  void (*client_added) (GstElement *element, GstMultiSinkHandle handle);
+  void (*client_removed) (GstElement *element, GstMultiSinkHandle handle, GstClientStatus status);
+  void (*client_fd_removed) (GstElement *element, GstMultiSinkHandle handle);
 };
 
 GType gst_multi_fd_sink_get_type (void);
 
-void          gst_multi_fd_sink_add          (GstMultiFdSink *sink, int fd);
-void          gst_multi_fd_sink_add_full     (GstMultiFdSink *sink, int fd, GstSyncMethod sync, 
+void          gst_multi_fd_sink_add          (GstMultiFdSink *sink, GstMultiSinkHandle handle);
+void          gst_multi_fd_sink_add_full     (GstMultiFdSink *sink, GstMultiSinkHandle handle, GstSyncMethod sync, 
                                               GstFormat min_format, guint64 min_value,
                                               GstFormat max_format, guint64 max_value);
-void          gst_multi_fd_sink_remove       (GstMultiFdSink *sink, int fd);
-void          gst_multi_fd_sink_remove_flush (GstMultiFdSink *sink, int fd);
+void          gst_multi_fd_sink_remove       (GstMultiFdSink *sink, GstMultiSinkHandle handle);
+void          gst_multi_fd_sink_remove_flush (GstMultiFdSink *sink, GstMultiSinkHandle handle);
 void          gst_multi_fd_sink_clear        (GstMultiHandleSink *sink);
-GValueArray*  gst_multi_fd_sink_get_stats    (GstMultiFdSink *sink, int fd);
+GValueArray*  gst_multi_fd_sink_get_stats    (GstMultiFdSink *sink, GstMultiSinkHandle handle);
 
 G_END_DECLS
 

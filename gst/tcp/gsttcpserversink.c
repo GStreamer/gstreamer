@@ -59,8 +59,8 @@ static void gst_tcp_server_sink_finalize (GObject * gobject);
 
 static gboolean gst_tcp_server_sink_init_send (GstMultiHandleSink * this);
 static gboolean gst_tcp_server_sink_close (GstMultiHandleSink * this);
-static void gst_tcp_server_sink_removed (GstMultiSocketSink * sink,
-    GSocket * socket);
+static void gst_tcp_server_sink_removed (GstMultiHandleSink * sink,
+    GstMultiSinkHandle handle);
 
 static void gst_tcp_server_sink_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
@@ -147,7 +147,8 @@ gst_tcp_server_sink_handle_server_read (GstTCPServerSink * sink)
   if (!client_socket)
     goto accept_failed;
 
-  gst_multi_socket_sink_add (GST_MULTI_SOCKET_SINK (sink), client_socket);
+  gst_multi_socket_sink_add (GST_MULTI_SOCKET_SINK (sink),
+      (GstMultiSinkHandle) client_socket);
 
 #ifndef GST_DISABLE_GST_DEBUG
   {
@@ -178,7 +179,8 @@ accept_failed:
 }
 
 static void
-gst_tcp_server_sink_removed (GstMultiSocketSink * sink, GSocket * socket)
+gst_tcp_server_sink_removed (GstMultiHandleSink * sink,
+    GstMultiSinkHandle handle)
 {
 #ifndef GST_DISABLE_GST_DEBUG
   GstTCPServerSink *this = GST_TCP_SERVER_SINK (sink);
@@ -187,7 +189,7 @@ gst_tcp_server_sink_removed (GstMultiSocketSink * sink, GSocket * socket)
 
   GST_DEBUG_OBJECT (this, "closing socket");
 
-  if (!g_socket_close (socket, &err)) {
+  if (!g_socket_close (handle.socket, &err)) {
     GST_ERROR_OBJECT (this, "Failed to close socket: %s", err->message);
     g_clear_error (&err);
   }
