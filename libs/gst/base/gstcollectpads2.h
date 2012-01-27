@@ -210,7 +210,8 @@ typedef gint (*GstCollectPads2CompareFunction) (GstCollectPads2 *pads,
  * ownership of the event and is responsible for forwarding
  * events downstream (with gst_pad_event_default()) or dropping events.
  *
- * The SEGMENT, CAPS and EOS events should usually be dropped by this function.
+ * The STREAM_START, CAPS, STREAM_CONFIG, SEGMENT and EOS events should
+ * usually be dropped by this function.
  *
  * Returns: %TRUE if the pad could handle the event
  *

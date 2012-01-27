@@ -1743,6 +1743,8 @@ gst_collect_pads2_event (GstPad * pad, GstObject * parent, GstEvent * event)
       goto forward_or_eat;
     }
     case GST_EVENT_CAPS:
+    case GST_EVENT_STREAM_START:
+    case GST_EVENT_STREAM_CONFIG:
       goto forward_or_eat;
     default:
       /* forward other events */
