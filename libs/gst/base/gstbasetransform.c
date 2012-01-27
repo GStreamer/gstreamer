@@ -692,7 +692,7 @@ gst_base_transform_query_caps (GstBaseTransform * trans, GstPad * pad,
     GST_DEBUG_OBJECT (pad, "intersected %" GST_PTR_FORMAT, temp);
     gst_caps_unref (templ);
   } else {
-    temp = gst_caps_copy (gst_pad_get_pad_template_caps (otherpad));
+    temp = gst_pad_get_pad_template_caps (otherpad);
   }
 
   /* then see what we can transform this to */
