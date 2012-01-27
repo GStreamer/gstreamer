@@ -479,3 +479,9 @@ The 0.11 porting guide
 
     GstGError -> GError
     GST_TYPE_G_ERROR / gst_g_error_get_type() -> G_TYPE_ERROR
+
+* "codec-data" and "streamheader" field in GstCaps
+
+    codec-data and stream headers are no longer in GstCaps, but sent as
+    part of a STREAM CONFIG event (which should be sent after the initial
+    CAPS event if needed).
