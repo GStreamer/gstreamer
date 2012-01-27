@@ -48,6 +48,7 @@
 
 #include <gst/gsttagsetter.h>
 #include <gst/audio/audio.h>
+#include <gst/glib-compat-private.h>
 #include "gstopusheader.h"
 #include "gstopuscommon.h"
 #include "gstopusenc.h"
