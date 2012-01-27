@@ -1328,7 +1328,9 @@ gst_event_parse_sink_message (GstEvent * event, GstMessage ** msg)
  * Source elements, demuxers and other elements that create new streams
  * are supposed to send this event as the first event of a new stream. It
  * should not be send after a flushing seek or in similar situations
- * and is used to mark the beginning of a new logical stream.
+ * and is used to mark the beginning of a new logical stream. Elements
+ * combining multiple streams must ensure that this event is only forwarded
+ * downstream once and not for every single input stream.
  *
  * Returns: (transfer full): the new STREAM_START event.
  */
