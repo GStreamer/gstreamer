@@ -30,7 +30,6 @@ EXPORTS
 	GST_CAT_SIGNAL DATA
 	GST_CAT_STATES DATA
 	GST_CAT_TYPES DATA
-	_gst_alloc_trace_register
 	_gst_buffer_list_type DATA
 	_gst_buffer_type DATA
 	_gst_caps_any DATA
@@ -49,19 +48,7 @@ EXPORTS
 	_gst_plugin_loader_client_run
 	_gst_sample_type DATA
 	_gst_structure_type DATA
-	_gst_trace_add_entry
 	_gst_trace_mutex DATA
-	_gst_trace_on DATA
-	gst_alloc_trace_available
-	gst_alloc_trace_flags_get_type
-	gst_alloc_trace_get
-	gst_alloc_trace_list
-	gst_alloc_trace_live_all
-	gst_alloc_trace_print
-	gst_alloc_trace_print_all
-	gst_alloc_trace_print_live
-	gst_alloc_trace_set_flags
-	gst_alloc_trace_set_flags_all
 	gst_allocator_alloc
 	gst_allocator_find
 	gst_allocator_register
@@ -398,7 +385,9 @@ EXPORTS
 	gst_element_unlink_many
 	gst_element_unlink_pads
 	gst_error_get_message
+	gst_event_add_stream_config_header
 	gst_event_copy_segment
+	gst_event_get_n_stream_config_headers
 	gst_event_get_seqnum
 	gst_event_get_structure
 	gst_event_get_type
@@ -417,19 +406,24 @@ EXPORTS
 	gst_event_new_segment
 	gst_event_new_sink_message
 	gst_event_new_step
+	gst_event_new_stream_config
 	gst_event_new_stream_start
 	gst_event_new_tag
 	gst_event_parse_buffer_size
 	gst_event_parse_caps
 	gst_event_parse_flush_stop
 	gst_event_parse_latency
+	gst_event_parse_nth_stream_config_header
 	gst_event_parse_qos
 	gst_event_parse_seek
 	gst_event_parse_segment
 	gst_event_parse_sink_message
 	gst_event_parse_step
+	gst_event_parse_stream_config
+	gst_event_parse_stream_config_codec_data
 	gst_event_parse_tag
 	gst_event_set_seqnum
+	gst_event_set_stream_config_codec_data
 	gst_event_type_flags_get_type
 	gst_event_type_get_flags
 	gst_event_type_get_name
@@ -952,6 +946,7 @@ EXPORTS
 	gst_static_pad_template_get
 	gst_static_pad_template_get_caps
 	gst_static_pad_template_get_type
+	gst_stream_config_flags_get_type
 	gst_stream_error_get_type
 	gst_stream_error_quark
 	gst_stream_status_type_get_type
@@ -1113,12 +1108,6 @@ EXPORTS
 	gst_task_start
 	gst_task_state_get_type
 	gst_task_stop
-	gst_trace_destroy
-	gst_trace_flush
-	gst_trace_new
-	gst_trace_read_tsc
-	gst_trace_set_default
-	gst_trace_text_flush
 	gst_type_find_factory_call_function
 	gst_type_find_factory_get_caps
 	gst_type_find_factory_get_extensions
