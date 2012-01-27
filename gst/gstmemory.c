@@ -130,6 +130,8 @@ _default_mem_init (GstMemoryDefault * mem, GstMemoryFlags flags,
   mem->slice_size = slice_size;
   mem->data = data;
   mem->free_func = free_func;
+
+  GST_DEBUG ("new memory %p", mem);
 }
 
 /* create a new memory block that manages the given memory */
@@ -200,6 +202,8 @@ _default_mem_unmap (GstMemoryDefault * mem)
 static void
 _default_mem_free (GstMemoryDefault * mem)
 {
+  GST_DEBUG ("free memory %p", mem);
+
   if (mem->mem.parent)
     gst_memory_unref (mem->mem.parent);
 
@@ -369,6 +373,8 @@ gst_memory_ref (GstMemory * mem)
 {
   g_return_val_if_fail (mem != NULL, NULL);
 
+  GST_DEBUG ("memory %p, %d->%d", mem, mem->refcount, mem->refcount + 1);
+
   g_atomic_int_inc (&mem->refcount);
 
   return mem;
@@ -386,6 +392,8 @@ gst_memory_unref (GstMemory * mem)
 {
   g_return_if_fail (mem != NULL);
   g_return_if_fail (mem->allocator != NULL);
+
+  GST_DEBUG ("memory %p, %d->%d", mem, mem->refcount, mem->refcount - 1);
 
   if (g_atomic_int_dec_and_test (&mem->refcount))
     mem->allocator->info.free (mem);
@@ -525,6 +533,8 @@ gst_memory_make_mapped (GstMemory * mem, GstMapInfo * info, GstMapFlags flags)
     result = mem;
   } else {
     result = gst_memory_copy (mem, 0, -1);
+    gst_memory_unref (mem);
+
     if (result == NULL)
       goto cannot_copy;
 
@@ -542,6 +552,7 @@ cannot_copy:
 cannot_map:
   {
     GST_DEBUG ("cannot map memory %p with flags %d", mem, flags);
+    gst_memory_unref (result);
     return NULL;
   }
 }
