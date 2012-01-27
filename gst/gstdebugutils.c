@@ -351,10 +351,10 @@ debug_dump_element_pad_link (GstPad * pad, GstElement * element,
         ) {
       caps = gst_pad_get_current_caps (pad);
       if (!caps)
-        caps = gst_caps_copy (gst_pad_get_pad_template_caps (pad));
+        caps = gst_pad_get_pad_template_caps (pad);
       peer_caps = gst_pad_get_current_caps (peer_pad);
       if (!peer_caps)
-        peer_caps = gst_caps_copy (gst_pad_get_pad_template_caps (peer_pad));
+        peer_caps = gst_pad_get_pad_template_caps (peer_pad);
 
       media = debug_dump_describe_caps (caps, details);
       /* check if peer caps are different */

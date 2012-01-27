@@ -1173,8 +1173,9 @@ gst_base_parse_sink_query (GstPad * pad, GstObject * parent, GstQuery * query)
           caps =
               gst_caps_intersect_full (filter, template_caps,
               GST_CAPS_INTERSECT_FIRST);
+          gst_caps_unref (template_caps);
         } else {
-          caps = gst_caps_copy (template_caps);
+          caps = template_caps;
         }
         gst_query_set_caps_result (query, caps);
         gst_caps_unref (caps);

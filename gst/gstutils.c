@@ -2795,7 +2795,7 @@ query_caps_func (GstPad * pad, QueryCapsData * data)
 gboolean
 gst_pad_proxy_query_caps (GstPad * pad, GstQuery * query)
 {
-  GstCaps *intersected;
+  GstCaps *templ, *intersected;
   QueryCapsData data;
 
   g_return_val_if_fail (GST_IS_PAD (pad), FALSE);
@@ -2811,14 +2811,15 @@ gst_pad_proxy_query_caps (GstPad * pad, GstQuery * query)
 
   gst_pad_forward (pad, (GstPadForwardFunction) query_caps_func, &data);
 
+  templ = gst_pad_get_pad_template_caps (pad);
   if (data.ret) {
-    intersected =
-        gst_caps_intersect (data.ret, gst_pad_get_pad_template_caps (pad));
+    intersected = gst_caps_intersect (data.ret, templ);
     gst_caps_unref (data.ret);
   } else {
-    intersected = gst_caps_copy (gst_pad_get_pad_template_caps (pad));
+    intersected = templ;
   }
   gst_query_set_caps_result (query, intersected);
+  gst_caps_unref (templ);
   gst_caps_unref (intersected);
 
   return TRUE;
