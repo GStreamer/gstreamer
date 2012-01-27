@@ -327,7 +327,7 @@ gst_alaw_dec_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
   alaw_data = inmap.data;
   alaw_size = inmap.size;
 
-  outbuf = gst_buffer_new_allocate (NULL, alaw_size, 0);
+  outbuf = gst_buffer_new_allocate (NULL, alaw_size * 2, 0);
 
   gst_buffer_map (outbuf, &outmap, GST_MAP_WRITE);
   linear_data = (gint16 *) outmap.data;
