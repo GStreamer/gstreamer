@@ -64,26 +64,27 @@
 
 #include <string.h>
 
+#include <gst/audio/audio.h>
+
 GST_DEBUG_CATEGORY (dtmf_detect_debug);
 #define GST_CAT_DEFAULT (dtmf_detect_debug)
 
 static GstStaticPadTemplate sinktemplate = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("audio/x-raw-int, "
-        "width = (int) 16, "
-        "depth = (int) 16, "
-        "endianness = (int) " G_STRINGIFY (G_BYTE_ORDER) ", "
-        "signed = (bool) true, rate = (int) 8000, channels = (int) 1"));
+    GST_STATIC_CAPS ("audio/x-raw, "
+        "format = (string) \"" GST_AUDIO_NE (S16) "\", "
+        "rate = (int) 8000, " "channels = (int) 1")
+    );
+
 
 static GstStaticPadTemplate srctemplate = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("audio/x-raw-int, "
-        "width = (int) 16, "
-        "depth = (int) 16, "
-        "endianness = (int) " G_STRINGIFY (G_BYTE_ORDER) ", "
-        "signed = (bool) true, rate = (int) 8000, channels = (int) 1"));
+    GST_STATIC_CAPS ("audio/x-raw, "
+        "format = (string) \"" GST_AUDIO_NE (S16) "\", "
+        "rate = (int) 8000, " "channels = (int) 1")
+    );
 
 /* signals and args */
 enum
@@ -266,7 +267,8 @@ gst_dtmf_detect_sink_event (GstBaseTransform * trans, GstEvent * event)
       break;
   }
 
-  return GST_BASE_TRANSFORM_GET_CLASS (trans)->sink_event (trans, event);
+  return GST_BASE_TRANSFORM_CLASS (gst_dtmf_detect_parent_class)->sink_event
+      (trans, event);
 }
 
 
