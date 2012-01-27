@@ -98,6 +98,47 @@ GST_DEBUG_CATEGORY_STATIC (collect_pads2_debug);
 #define parent_class gst_collect_pads2_parent_class
 G_DEFINE_TYPE (GstCollectPads2, gst_collect_pads2, GST_TYPE_OBJECT);
 
+struct _GstCollectData2Private
+{
+  /* refcounting for struct, and destroy callback */
+  GstCollectData2DestroyNotify destroy_notify;
+  gint refcount;
+};
+
+struct _GstCollectPads2Private
+{
+  /* with LOCK and/or STREAM_LOCK */
+  gboolean started;
+
+  /* with STREAM_LOCK */
+  guint32 cookie;               /* @data list cookie */
+  guint numpads;                /* number of pads in @data */
+  guint queuedpads;             /* number of pads with a buffer */
+  guint eospads;                /* number of pads that are EOS */
+  GstClockTime earliest_time;   /* Current earliest time */
+  GstCollectData2 *earliest_data;       /* Pad data for current earliest time */
+
+  /* with LOCK */
+  GSList *pad_list;             /* updated pad list */
+  guint32 pad_cookie;           /* updated cookie */
+
+  GstCollectPads2Function func; /* function and user_data for callback */
+  gpointer user_data;
+  GstCollectPads2BufferFunction buffer_func;    /* function and user_data for buffer callback */
+  gpointer buffer_user_data;
+  GstCollectPads2CompareFunction compare_func;
+  gpointer compare_user_data;
+  GstCollectPads2EventFunction event_func;      /* function and data for event callback */
+  gpointer event_user_data;
+  GstCollectPads2ClipFunction clip_func;
+  gpointer clip_user_data;
+
+  /* no other lock needed */
+  GMutex evt_lock;              /* these make up sort of poor man's event signaling */
+  GCond evt_cond;
+  guint32 evt_cookie;
+};
+
 static void gst_collect_pads2_clear (GstCollectPads2 * pads,
     GstCollectData2 * data);
 static GstFlowReturn gst_collect_pads2_chain (GstPad * pad, GstObject * parent,
@@ -120,15 +161,15 @@ static void unref_data (GstCollectData2 * data);
  * Alternative implementations are possible, e.g. some low-level re-implementing
  * of the 2 above locks to drop both of them atomically when going into _WAIT.
  */
-#define GST_COLLECT_PADS2_GET_EVT_COND(pads) (&((GstCollectPads2 *)pads)->evt_cond)
-#define GST_COLLECT_PADS2_GET_EVT_LOCK(pads) (&((GstCollectPads2 *)pads)->evt_lock)
+#define GST_COLLECT_PADS2_GET_EVT_COND(pads) (&((GstCollectPads2 *)pads)->priv->evt_cond)
+#define GST_COLLECT_PADS2_GET_EVT_LOCK(pads) (&((GstCollectPads2 *)pads)->priv->evt_lock)
 #define GST_COLLECT_PADS2_EVT_WAIT(pads, cookie) G_STMT_START {    \
   g_mutex_lock (GST_COLLECT_PADS2_GET_EVT_LOCK (pads));            \
   /* should work unless a lot of event'ing and thread starvation */\
-  while (cookie == ((GstCollectPads2 *) pads)->evt_cookie)         \
+  while (cookie == ((GstCollectPads2 *) pads)->priv->evt_cookie)         \
     g_cond_wait (GST_COLLECT_PADS2_GET_EVT_COND (pads),            \
         GST_COLLECT_PADS2_GET_EVT_LOCK (pads));                    \
-  cookie = ((GstCollectPads2 *) pads)->evt_cookie;                 \
+  cookie = ((GstCollectPads2 *) pads)->priv->evt_cookie;                 \
   g_mutex_unlock (GST_COLLECT_PADS2_GET_EVT_LOCK (pads));          \
 } G_STMT_END
 #define GST_COLLECT_PADS2_EVT_WAIT_TIMED(pads, cookie, timeout) G_STMT_START { \
@@ -139,22 +180,22 @@ static void unref_data (GstCollectData2 * data);
   \
   g_mutex_lock (GST_COLLECT_PADS2_GET_EVT_LOCK (pads));            \
   /* should work unless a lot of event'ing and thread starvation */\
-  while (cookie == ((GstCollectPads2 *) pads)->evt_cookie)         \
+  while (cookie == ((GstCollectPads2 *) pads)->priv->evt_cookie)         \
     g_cond_timed_wait (GST_COLLECT_PADS2_GET_EVT_COND (pads),            \
         GST_COLLECT_PADS2_GET_EVT_LOCK (pads), &tv);                    \
-  cookie = ((GstCollectPads2 *) pads)->evt_cookie;                 \
+  cookie = ((GstCollectPads2 *) pads)->priv->evt_cookie;                 \
   g_mutex_unlock (GST_COLLECT_PADS2_GET_EVT_LOCK (pads));          \
 } G_STMT_END
 #define GST_COLLECT_PADS2_EVT_BROADCAST(pads) G_STMT_START {       \
   g_mutex_lock (GST_COLLECT_PADS2_GET_EVT_LOCK (pads));            \
   /* never mind wrap-around */                                     \
-  ++(((GstCollectPads2 *) pads)->evt_cookie);                      \
+  ++(((GstCollectPads2 *) pads)->priv->evt_cookie);                      \
   g_cond_broadcast (GST_COLLECT_PADS2_GET_EVT_COND (pads));        \
   g_mutex_unlock (GST_COLLECT_PADS2_GET_EVT_LOCK (pads));          \
 } G_STMT_END
 #define GST_COLLECT_PADS2_EVT_INIT(cookie) G_STMT_START {          \
   g_mutex_lock (GST_COLLECT_PADS2_GET_EVT_LOCK (pads));            \
-  cookie = ((GstCollectPads2 *) pads)->evt_cookie;                 \
+  cookie = ((GstCollectPads2 *) pads)->priv->evt_cookie;                 \
   g_mutex_unlock (GST_COLLECT_PADS2_GET_EVT_LOCK (pads));          \
 } G_STMT_END
 
@@ -162,6 +203,8 @@ static void
 gst_collect_pads2_class_init (GstCollectPads2Class * klass)
 {
   GObjectClass *gobject_class = (GObjectClass *) klass;
+
+  g_type_class_add_private (klass, sizeof (GstCollectPads2Private));
 
   GST_DEBUG_CATEGORY_INIT (collect_pads2_debug, "collectpads2", 0,
       "GstCollectPads2");
@@ -172,36 +215,40 @@ gst_collect_pads2_class_init (GstCollectPads2Class * klass)
 static void
 gst_collect_pads2_init (GstCollectPads2 * pads)
 {
+  pads->priv =
+      G_TYPE_INSTANCE_GET_PRIVATE (pads, GST_TYPE_COLLECT_PADS2,
+      GstCollectPads2Private);
+
   pads->data = NULL;
-  pads->cookie = 0;
-  pads->numpads = 0;
-  pads->queuedpads = 0;
-  pads->eospads = 0;
-  pads->started = FALSE;
+  pads->priv->cookie = 0;
+  pads->priv->numpads = 0;
+  pads->priv->queuedpads = 0;
+  pads->priv->eospads = 0;
+  pads->priv->started = FALSE;
 
   g_rec_mutex_init (&pads->stream_lock);
 
-  pads->func = gst_collect_pads2_default_collected;
-  pads->user_data = NULL;
-  pads->event_func = NULL;
-  pads->event_user_data = NULL;
+  pads->priv->func = gst_collect_pads2_default_collected;
+  pads->priv->user_data = NULL;
+  pads->priv->event_func = NULL;
+  pads->priv->event_user_data = NULL;
 
   /* members for default muxing */
-  pads->buffer_func = NULL;
-  pads->buffer_user_data = NULL;
-  pads->compare_func = gst_collect_pads2_default_compare_func;
-  pads->compare_user_data = NULL;
-  pads->earliest_data = NULL;
-  pads->earliest_time = GST_CLOCK_TIME_NONE;
+  pads->priv->buffer_func = NULL;
+  pads->priv->buffer_user_data = NULL;
+  pads->priv->compare_func = gst_collect_pads2_default_compare_func;
+  pads->priv->compare_user_data = NULL;
+  pads->priv->earliest_data = NULL;
+  pads->priv->earliest_time = GST_CLOCK_TIME_NONE;
 
   /* members to manage the pad list */
-  pads->pad_cookie = 0;
-  pads->pad_list = NULL;
+  pads->priv->pad_cookie = 0;
+  pads->priv->pad_list = NULL;
 
   /* members for event */
-  g_mutex_init (&pads->evt_lock);
-  g_cond_init (&pads->evt_cond);
-  pads->evt_cookie = 0;
+  g_mutex_init (&pads->priv->evt_lock);
+  g_cond_init (&pads->priv->evt_cond);
+  pads->priv->evt_cookie = 0;
 }
 
 static void
@@ -213,14 +260,14 @@ gst_collect_pads2_finalize (GObject * object)
 
   g_rec_mutex_clear (&pads->stream_lock);
 
-  g_cond_clear (&pads->evt_cond);
-  g_mutex_clear (&pads->evt_lock);
+  g_cond_clear (&pads->priv->evt_cond);
+  g_mutex_clear (&pads->priv->evt_lock);
 
   /* Remove pads and free pads list */
-  g_slist_foreach (pads->pad_list, (GFunc) unref_data, NULL);
+  g_slist_foreach (pads->priv->pad_list, (GFunc) unref_data, NULL);
   g_slist_foreach (pads->data, (GFunc) unref_data, NULL);
   g_slist_free (pads->data);
-  g_slist_free (pads->pad_list);
+  g_slist_free (pads->priv->pad_list);
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
@@ -251,8 +298,8 @@ static void
 gst_collect_pads2_set_buffer_function_locked (GstCollectPads2 * pads,
     GstCollectPads2BufferFunction func, gpointer user_data)
 {
-  pads->buffer_func = func;
-  pads->buffer_user_data = user_data;
+  pads->priv->buffer_func = func;
+  pads->priv->buffer_user_data = user_data;
 }
 
 /**
@@ -304,8 +351,8 @@ gst_collect_pads2_set_compare_function (GstCollectPads2 * pads,
   g_return_if_fail (GST_IS_COLLECT_PADS2 (pads));
 
   GST_OBJECT_LOCK (pads);
-  pads->compare_func = func;
-  pads->compare_user_data = user_data;
+  pads->priv->compare_func = func;
+  pads->priv->compare_user_data = user_data;
   GST_OBJECT_UNLOCK (pads);
 }
 
@@ -337,8 +384,8 @@ gst_collect_pads2_set_function (GstCollectPads2 * pads,
   g_return_if_fail (GST_IS_COLLECT_PADS2 (pads));
 
   GST_OBJECT_LOCK (pads);
-  pads->func = func;
-  pads->user_data = user_data;
+  pads->priv->func = func;
+  pads->priv->user_data = user_data;
   gst_collect_pads2_set_buffer_function_locked (pads, NULL, NULL);
   GST_OBJECT_UNLOCK (pads);
 }
@@ -348,25 +395,26 @@ ref_data (GstCollectData2 * data)
 {
   g_assert (data != NULL);
 
-  g_atomic_int_inc (&(data->refcount));
+  g_atomic_int_inc (&(data->priv->refcount));
 }
 
 static void
 unref_data (GstCollectData2 * data)
 {
   g_assert (data != NULL);
-  g_assert (data->refcount > 0);
+  g_assert (data->priv->refcount > 0);
 
-  if (!g_atomic_int_dec_and_test (&(data->refcount)))
+  if (!g_atomic_int_dec_and_test (&(data->priv->refcount)))
     return;
 
-  if (data->destroy_notify)
-    data->destroy_notify (data);
+  if (data->priv->destroy_notify)
+    data->priv->destroy_notify (data);
 
   g_object_unref (data->pad);
   if (data->buffer) {
     gst_buffer_unref (data->buffer);
   }
+  g_free (data->priv);
   g_free (data);
 }
 
@@ -395,8 +443,8 @@ gst_collect_pads2_set_event_function (GstCollectPads2 * pads,
   g_return_if_fail (GST_IS_COLLECT_PADS2 (pads));
 
   GST_OBJECT_LOCK (pads);
-  pads->event_func = func;
-  pads->event_user_data = user_data;
+  pads->priv->event_func = func;
+  pads->priv->event_user_data = user_data;
   GST_OBJECT_UNLOCK (pads);
 }
 
@@ -460,8 +508,8 @@ gst_collect_pads2_set_clip_function (GstCollectPads2 * pads,
   g_return_if_fail (pads != NULL);
   g_return_if_fail (GST_IS_COLLECT_PADS2 (pads));
 
-  pads->clip_func = clipfunc;
-  pads->clip_user_data = user_data;
+  pads->priv->clip_func = clipfunc;
+  pads->priv->clip_user_data = user_data;
 }
 
 /**
@@ -552,6 +600,7 @@ gst_collect_pads2_add_pad_full (GstCollectPads2 * pads, GstPad * pad,
   GST_DEBUG_OBJECT (pads, "adding pad %s:%s", GST_DEBUG_PAD_NAME (pad));
 
   data = g_malloc0 (size);
+  data->priv = g_new0 (GstCollectData2Private, 1);
   data->collect = pads;
   data->pad = gst_object_ref (pad);
   data->buffer = NULL;
@@ -559,28 +608,28 @@ gst_collect_pads2_add_pad_full (GstCollectPads2 * pads, GstPad * pad,
   gst_segment_init (&data->segment, GST_FORMAT_UNDEFINED);
   data->state = GST_COLLECT_PADS2_STATE_WAITING;
   data->state |= lock ? GST_COLLECT_PADS2_STATE_LOCKED : 0;
-  data->refcount = 1;
-  data->destroy_notify = destroy_notify;
+  data->priv->refcount = 1;
+  data->priv->destroy_notify = destroy_notify;
 
   GST_OBJECT_LOCK (pads);
   GST_OBJECT_LOCK (pad);
   gst_pad_set_element_private (pad, data);
   GST_OBJECT_UNLOCK (pad);
-  pads->pad_list = g_slist_append (pads->pad_list, data);
+  pads->priv->pad_list = g_slist_append (pads->priv->pad_list, data);
   gst_pad_set_chain_function (pad, GST_DEBUG_FUNCPTR (gst_collect_pads2_chain));
   gst_pad_set_event_function (pad, GST_DEBUG_FUNCPTR (gst_collect_pads2_event));
   /* backward compat, also add to data if stopped, so that the element already
    * has this in the public data list before going PAUSED (typically)
    * this can only be done when we are stopped because we don't take the
    * STREAM_LOCK to protect the pads->data list. */
-  if (!pads->started) {
+  if (!pads->priv->started) {
     pads->data = g_slist_append (pads->data, data);
     ref_data (data);
   }
   /* activate the pad when needed */
-  if (pads->started)
+  if (pads->priv->started)
     gst_pad_set_active (pad, TRUE);
-  pads->pad_cookie++;
+  pads->priv->pad_cookie++;
   GST_OBJECT_UNLOCK (pads);
 
   return data;
@@ -625,7 +674,8 @@ gst_collect_pads2_remove_pad (GstCollectPads2 * pads, GstPad * pad)
   GST_DEBUG_OBJECT (pads, "removing pad %s:%s", GST_DEBUG_PAD_NAME (pad));
 
   GST_OBJECT_LOCK (pads);
-  list = g_slist_find_custom (pads->pad_list, pad, (GCompareFunc) find_pad);
+  list =
+      g_slist_find_custom (pads->priv->pad_list, pad, (GCompareFunc) find_pad);
   if (!list)
     goto unknown_pad;
 
@@ -644,7 +694,7 @@ gst_collect_pads2_remove_pad (GstCollectPads2 * pads, GstPad * pad)
   /* backward compat, also remove from data if stopped, note that this function
    * can only be called when we are stopped because we don't take the
    * STREAM_LOCK to protect the pads->data list. */
-  if (!pads->started) {
+  if (!pads->priv->started) {
     GSList *dlist;
 
     dlist = g_slist_find_custom (pads->data, pad, (GCompareFunc) find_pad);
@@ -656,14 +706,14 @@ gst_collect_pads2_remove_pad (GstCollectPads2 * pads, GstPad * pad)
     }
   }
   /* remove from the pad list */
-  pads->pad_list = g_slist_delete_link (pads->pad_list, list);
-  pads->pad_cookie++;
+  pads->priv->pad_list = g_slist_delete_link (pads->priv->pad_list, list);
+  pads->priv->pad_cookie++;
 
   /* signal waiters because something changed */
   GST_COLLECT_PADS2_EVT_BROADCAST (pads);
 
   /* deactivate the pad when needed */
-  if (!pads->started)
+  if (!pads->priv->started)
     gst_pad_set_active (pad, FALSE);
 
   /* clean and free the collect data */
@@ -852,7 +902,7 @@ gst_collect_pads2_start (GstCollectPads2 * pads)
   GST_OBJECT_LOCK (pads);
 
   /* loop over the master pad list and reset the segment */
-  collected = pads->pad_list;
+  collected = pads->priv->pad_list;
   for (; collected; collected = g_slist_next (collected)) {
     GstCollectData2 *data;
 
@@ -863,7 +913,7 @@ gst_collect_pads2_start (GstCollectPads2 * pads)
   gst_collect_pads2_set_flushing_unlocked (pads, FALSE);
 
   /* Start collect pads */
-  pads->started = TRUE;
+  pads->priv->started = TRUE;
   GST_OBJECT_UNLOCK (pads);
   GST_COLLECT_PADS2_STREAM_UNLOCK (pads);
 }
@@ -897,12 +947,12 @@ gst_collect_pads2_stop (GstCollectPads2 * pads)
   gst_collect_pads2_set_flushing_unlocked (pads, TRUE);
 
   /* Stop collect pads */
-  pads->started = FALSE;
-  pads->eospads = 0;
-  pads->queuedpads = 0;
+  pads->priv->started = FALSE;
+  pads->priv->eospads = 0;
+  pads->priv->queuedpads = 0;
 
   /* loop over the master pad list and flush buffers */
-  collected = pads->pad_list;
+  collected = pads->priv->pad_list;
   for (; collected; collected = g_slist_next (collected)) {
     GstCollectData2 *data;
     GstBuffer **buffer_p;
@@ -916,10 +966,10 @@ gst_collect_pads2_stop (GstCollectPads2 * pads)
     GST_COLLECT_PADS2_STATE_UNSET (data, GST_COLLECT_PADS2_STATE_EOS);
   }
 
-  if (pads->earliest_data)
-    unref_data (pads->earliest_data);
-  pads->earliest_data = NULL;
-  pads->earliest_time = GST_CLOCK_TIME_NONE;
+  if (pads->priv->earliest_data)
+    unref_data (pads->priv->earliest_data);
+  pads->priv->earliest_data = NULL;
+  pads->priv->earliest_time = GST_CLOCK_TIME_NONE;
 
   GST_OBJECT_UNLOCK (pads);
   /* Wake them up so they can end the chain functions. */
@@ -992,7 +1042,7 @@ gst_collect_pads2_pop (GstCollectPads2 * pads, GstCollectData2 * data)
     data->pos = 0;
     /* one less pad with queued data now */
     if (GST_COLLECT_PADS2_STATE_IS_SET (data, GST_COLLECT_PADS2_STATE_WAITING))
-      pads->queuedpads--;
+      pads->priv->queuedpads--;
   }
 
   GST_COLLECT_PADS2_EVT_BROADCAST (pads);
@@ -1248,9 +1298,9 @@ gst_collect_pads2_set_waiting (GstCollectPads2 * pads, GstCollectData2 * data,
     if (!data->buffer &&
         !GST_COLLECT_PADS2_STATE_IS_SET (data, GST_COLLECT_PADS2_STATE_EOS)) {
       if (waiting)
-        pads->queuedpads--;
+        pads->priv->queuedpads--;
       else
-        pads->queuedpads++;
+        pads->priv->queuedpads++;
     }
 
     /* signal waiters because something changed */
@@ -1272,34 +1322,34 @@ gst_collect_pads2_check_pads (GstCollectPads2 * pads)
 {
   /* the master list and cookie are protected with LOCK */
   GST_OBJECT_LOCK (pads);
-  if (G_UNLIKELY (pads->pad_cookie != pads->cookie)) {
+  if (G_UNLIKELY (pads->priv->pad_cookie != pads->priv->cookie)) {
     GSList *collected;
 
     /* clear list and stats */
     g_slist_foreach (pads->data, (GFunc) unref_data, NULL);
     g_slist_free (pads->data);
     pads->data = NULL;
-    pads->numpads = 0;
-    pads->queuedpads = 0;
-    pads->eospads = 0;
-    if (pads->earliest_data)
-      unref_data (pads->earliest_data);
-    pads->earliest_data = NULL;
-    pads->earliest_time = GST_CLOCK_TIME_NONE;
+    pads->priv->numpads = 0;
+    pads->priv->queuedpads = 0;
+    pads->priv->eospads = 0;
+    if (pads->priv->earliest_data)
+      unref_data (pads->priv->earliest_data);
+    pads->priv->earliest_data = NULL;
+    pads->priv->earliest_time = GST_CLOCK_TIME_NONE;
 
     /* loop over the master pad list */
-    collected = pads->pad_list;
+    collected = pads->priv->pad_list;
     for (; collected; collected = g_slist_next (collected)) {
       GstCollectData2 *data;
 
       /* update the stats */
-      pads->numpads++;
+      pads->priv->numpads++;
       data = collected->data;
       if (GST_COLLECT_PADS2_STATE_IS_SET (data, GST_COLLECT_PADS2_STATE_EOS))
-        pads->eospads++;
+        pads->priv->eospads++;
       else if (data->buffer || !GST_COLLECT_PADS2_STATE_IS_SET (data,
               GST_COLLECT_PADS2_STATE_WAITING))
-        pads->queuedpads++;
+        pads->priv->queuedpads++;
 
       /* add to the list of pads to collect */
       ref_data (data);
@@ -1307,7 +1357,7 @@ gst_collect_pads2_check_pads (GstCollectPads2 * pads)
       pads->data = g_slist_append (pads->data, data);
     }
     /* and update the cookie */
-    pads->cookie = pads->pad_cookie;
+    pads->priv->cookie = pads->priv->pad_cookie;
   }
   GST_OBJECT_UNLOCK (pads);
 }
@@ -1328,29 +1378,31 @@ gst_collect_pads2_check_collected (GstCollectPads2 * pads)
   g_return_val_if_fail (GST_IS_COLLECT_PADS2 (pads), GST_FLOW_ERROR);
 
   GST_OBJECT_LOCK (pads);
-  func = pads->func;
-  user_data = pads->user_data;
+  func = pads->priv->func;
+  user_data = pads->priv->user_data;
   GST_OBJECT_UNLOCK (pads);
 
-  g_return_val_if_fail (pads->func != NULL, GST_FLOW_NOT_SUPPORTED);
+  g_return_val_if_fail (pads->priv->func != NULL, GST_FLOW_NOT_SUPPORTED);
 
   /* check for new pads, update stats etc.. */
   gst_collect_pads2_check_pads (pads);
 
-  if (G_UNLIKELY (pads->eospads == pads->numpads)) {
+  if (G_UNLIKELY (pads->priv->eospads == pads->priv->numpads)) {
     /* If all our pads are EOS just collect once to let the element
      * do its final EOS handling. */
     GST_DEBUG_OBJECT (pads, "All active pads (%d) are EOS, calling %s",
-        pads->numpads, GST_DEBUG_FUNCPTR_NAME (func));
+        pads->priv->numpads, GST_DEBUG_FUNCPTR_NAME (func));
 
     flow_ret = func (pads, user_data);
   } else {
     gboolean collected = FALSE;
 
     /* We call the collected function as long as our condition matches. */
-    while (((pads->queuedpads + pads->eospads) >= pads->numpads)) {
-      GST_DEBUG_OBJECT (pads, "All active pads (%d + %d >= %d) have data, "
-          "calling %s", pads->queuedpads, pads->eospads, pads->numpads,
+    while (((pads->priv->queuedpads + pads->priv->eospads) >=
+            pads->priv->numpads)) {
+      GST_DEBUG_OBJECT (pads,
+          "All active pads (%d + %d >= %d) have data, " "calling %s",
+          pads->priv->queuedpads, pads->priv->eospads, pads->priv->numpads,
           GST_DEBUG_FUNCPTR_NAME (func));
 
       flow_ret = func (pads, user_data);
@@ -1360,12 +1412,12 @@ gst_collect_pads2_check_collected (GstCollectPads2 * pads)
       if (flow_ret != GST_FLOW_OK)
         break;
       /* Don't keep looping after telling the element EOS or flushing */
-      if (pads->queuedpads == 0)
+      if (pads->priv->queuedpads == 0)
         break;
     }
     if (!collected)
       GST_DEBUG_OBJECT (pads, "Not all active pads (%d) have data, continuing",
-          pads->numpads);
+          pads->priv->numpads);
   }
   return flow_ret;
 }
@@ -1393,7 +1445,7 @@ gst_collect_pads2_recalculate_waiting (GstCollectPads2 * pads)
   gboolean result = FALSE;
 
   /* If earliest time is not known, there is nothing to do. */
-  if (pads->earliest_data == NULL)
+  if (pads->priv->earliest_data == NULL)
     return FALSE;
 
   for (collected = pads->data; collected; collected = g_slist_next (collected)) {
@@ -1411,8 +1463,9 @@ gst_collect_pads2_recalculate_waiting (GstCollectPads2 * pads)
     }
 
     /* check if the waiting state should be changed */
-    cmp_res = pads->compare_func (pads, data, data->segment.start,
-        pads->earliest_data, pads->earliest_time, pads->compare_user_data);
+    cmp_res = pads->priv->compare_func (pads, data, data->segment.start,
+        pads->priv->earliest_data, pads->priv->earliest_time,
+        pads->priv->compare_user_data);
     if (cmp_res > 0)
       /* stop waiting */
       gst_collect_pads2_set_waiting (pads, data, FALSE);
@@ -1464,8 +1517,8 @@ gst_collect_pads2_find_best_pad (GstCollectPads2 * pads,
     if (buffer != NULL) {
       timestamp = GST_BUFFER_TIMESTAMP (buffer);
       gst_buffer_unref (buffer);
-      if (best == NULL || pads->compare_func (pads, data, timestamp,
-              best, best_time, pads->compare_user_data) < 0) {
+      if (best == NULL || pads->priv->compare_func (pads, data, timestamp,
+              best, best_time, pads->priv->compare_user_data) < 0) {
         best = data;
         best_time = timestamp;
       }
@@ -1490,12 +1543,12 @@ gst_collect_pads2_find_best_pad (GstCollectPads2 * pads,
 static gboolean
 gst_collect_pads2_recalculate_full (GstCollectPads2 * pads)
 {
-  if (pads->earliest_data)
-    unref_data (pads->earliest_data);
-  gst_collect_pads2_find_best_pad (pads, &pads->earliest_data,
-      &pads->earliest_time);
-  if (pads->earliest_data)
-    ref_data (pads->earliest_data);
+  if (pads->priv->earliest_data)
+    unref_data (pads->priv->earliest_data);
+  gst_collect_pads2_find_best_pad (pads, &pads->priv->earliest_data,
+      &pads->priv->earliest_time);
+  if (pads->priv->earliest_data)
+    ref_data (pads->priv->earliest_data);
   return gst_collect_pads2_recalculate_waiting (pads);
 }
 
@@ -1516,8 +1569,8 @@ gst_collect_pads2_default_collected (GstCollectPads2 * pads, gpointer user_data)
   g_return_val_if_fail (GST_IS_COLLECT_PADS2 (pads), GST_FLOW_ERROR);
 
   GST_OBJECT_LOCK (pads);
-  func = pads->buffer_func;
-  buffer_user_data = pads->buffer_user_data;
+  func = pads->priv->buffer_func;
+  buffer_user_data = pads->priv->buffer_user_data;
   GST_OBJECT_UNLOCK (pads);
 
   g_return_val_if_fail (func != NULL, GST_FLOW_NOT_SUPPORTED);
@@ -1531,7 +1584,7 @@ gst_collect_pads2_default_collected (GstCollectPads2 * pads, gpointer user_data)
     goto done;
   }
 
-  best = pads->earliest_data;
+  best = pads->priv->earliest_data;
 
   /* No data collected means EOS. */
   if (G_UNLIKELY (best == NULL)) {
@@ -1614,9 +1667,9 @@ gst_collect_pads2_event (GstPad * pad, GstObject * parent, GstEvent * event)
       GST_DEBUG_PAD_NAME (data->pad));
 
   GST_OBJECT_LOCK (pads);
-  event_func = pads->event_func;
-  event_user_data = pads->event_user_data;
-  buffer_func = pads->buffer_func;
+  event_func = pads->priv->event_func;
+  event_user_data = pads->priv->event_user_data;
+  buffer_func = pads->priv->buffer_func;
   GST_OBJECT_UNLOCK (pads);
 
   switch (GST_EVENT_TYPE (event)) {
@@ -1640,10 +1693,10 @@ gst_collect_pads2_event (GstPad * pad, GstObject * parent, GstEvent * event)
         /* restore to initial state */
         gst_collect_pads2_set_waiting (pads, data, TRUE);
         /* if the current pad is affected, reset state, recalculate later */
-        if (pads->earliest_data == data) {
+        if (pads->priv->earliest_data == data) {
           unref_data (data);
-          pads->earliest_data = NULL;
-          pads->earliest_time = GST_CLOCK_TIME_NONE;
+          pads->priv->earliest_data = NULL;
+          pads->priv->earliest_time = GST_CLOCK_TIME_NONE;
         }
       }
 
@@ -1668,8 +1721,8 @@ gst_collect_pads2_event (GstPad * pad, GstObject * parent, GstEvent * event)
                   GST_COLLECT_PADS2_STATE_EOS))) {
         if (!GST_COLLECT_PADS2_STATE_IS_SET (data,
                 GST_COLLECT_PADS2_STATE_WAITING))
-          pads->queuedpads++;
-        pads->eospads--;
+          pads->priv->queuedpads++;
+        pads->priv->eospads--;
         GST_COLLECT_PADS2_STATE_UNSET (data, GST_COLLECT_PADS2_STATE_EOS);
       }
       GST_COLLECT_PADS2_STREAM_UNLOCK (pads);
@@ -1687,8 +1740,8 @@ gst_collect_pads2_event (GstPad * pad, GstObject * parent, GstEvent * event)
         GST_COLLECT_PADS2_STATE_SET (data, GST_COLLECT_PADS2_STATE_EOS);
         if (!GST_COLLECT_PADS2_STATE_IS_SET (data,
                 GST_COLLECT_PADS2_STATE_WAITING))
-          pads->queuedpads--;
-        pads->eospads++;
+          pads->priv->queuedpads--;
+        pads->priv->eospads++;
       }
       /* check if we need collecting anything, we ignore the result. */
       gst_collect_pads2_check_collected (pads);
@@ -1723,14 +1776,16 @@ gst_collect_pads2_event (GstPad * pad, GstObject * parent, GstEvent * event)
 
       /* If oldest time is not known, or current pad got newsegment;
        * recalculate the state */
-      if (!pads->earliest_data || pads->earliest_data == data) {
+      if (!pads->priv->earliest_data || pads->priv->earliest_data == data) {
         gst_collect_pads2_recalculate_full (pads);
         goto newsegment_done;
       }
 
       /* Check if the waiting state of the pad should change. */
-      cmp_res = pads->compare_func (pads, data, seg.start, pads->earliest_data,
-          pads->earliest_time, pads->compare_user_data);
+      cmp_res =
+          pads->priv->compare_func (pads, data, seg.start,
+          pads->priv->earliest_data, pads->priv->earliest_time,
+          pads->priv->compare_user_data);
 
       if (cmp_res > 0)
         /* Stop waiting */
@@ -1821,7 +1876,7 @@ gst_collect_pads2_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
 
   GST_COLLECT_PADS2_STREAM_LOCK (pads);
   /* if not started, bail out */
-  if (G_UNLIKELY (!pads->started))
+  if (G_UNLIKELY (!pads->priv->started))
     goto not_started;
   /* check if this pad is flushing */
   if (G_UNLIKELY (GST_COLLECT_PADS2_STATE_IS_SET (data,
@@ -1833,9 +1888,11 @@ gst_collect_pads2_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
     goto eos;
 
   /* see if we need to clip */
-  if (pads->clip_func) {
+  if (pads->priv->clip_func) {
     GstBuffer *outbuf = NULL;
-    ret = pads->clip_func (pads, data, buffer, &outbuf, pads->clip_user_data);
+    ret =
+        pads->priv->clip_func (pads, data, buffer, &outbuf,
+        pads->priv->clip_user_data);
     buffer = outbuf;
 
     if (G_UNLIKELY (outbuf == NULL))
@@ -1852,7 +1909,7 @@ gst_collect_pads2_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
 
   /* One more pad has data queued */
   if (GST_COLLECT_PADS2_STATE_IS_SET (data, GST_COLLECT_PADS2_STATE_WAITING))
-    pads->queuedpads++;
+    pads->priv->queuedpads++;
   buffer_p = &data->buffer;
   gst_buffer_replace (buffer_p, buffer);
 
@@ -1909,7 +1966,7 @@ gst_collect_pads2_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
     GST_DEBUG_OBJECT (pads, "Pad %s:%s resuming", GST_DEBUG_PAD_NAME (pad));
 
     /* after a signal, we could be stopped */
-    if (G_UNLIKELY (!pads->started))
+    if (G_UNLIKELY (!pads->priv->started))
       goto not_started;
     /* check if this pad is flushing */
     if (G_UNLIKELY (GST_COLLECT_PADS2_STATE_IS_SET (data,

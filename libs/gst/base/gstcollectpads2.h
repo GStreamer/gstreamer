@@ -35,7 +35,9 @@ G_BEGIN_DECLS
 #define GST_IS_COLLECT_PADS2_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_COLLECT_PADS2))
 
 typedef struct _GstCollectData2 GstCollectData2;
+typedef struct _GstCollectData2Private GstCollectData2Private;
 typedef struct _GstCollectPads2 GstCollectPads2;
+typedef struct _GstCollectPads2Private GstCollectPads2Private;
 typedef struct _GstCollectPads2Class GstCollectPads2Class;
 
 /**
@@ -139,9 +141,7 @@ struct _GstCollectData2
    * eos, flushing, new_segment, waiting */
   GstCollectPads2StateFlags    state;
 
-  /* refcounting for struct, and destroy callback */
-  GstCollectData2DestroyNotify destroy_notify;
-  gint                   refcount;
+  GstCollectData2Private *priv;
 
   gpointer _gst_reserved[GST_PADDING];
 };
@@ -292,36 +292,8 @@ struct _GstCollectPads2 {
 
   /*< private >*/
   GRecMutex      stream_lock;          /* used to serialize collection among several streams */
-  /* with LOCK and/or STREAM_LOCK*/
-  gboolean       started;
 
-  /* with STREAM_LOCK */
-  guint32        cookie;                /* @data list cookie */
-  guint          numpads;               /* number of pads in @data */
-  guint          queuedpads;            /* number of pads with a buffer */
-  guint          eospads;               /* number of pads that are EOS */
-  GstClockTime   earliest_time;         /* Current earliest time */
-  GstCollectData2 *earliest_data;       /* Pad data for current earliest time */
-
-  /* with LOCK */
-  GSList        *pad_list;              /* updated pad list */
-  guint32        pad_cookie;            /* updated cookie */
-
-  GstCollectPads2Function func;         /* function and user_data for callback */
-  gpointer       user_data;
-  GstCollectPads2BufferFunction buffer_func;    /* function and user_data for buffer callback */
-  gpointer       buffer_user_data;
-  GstCollectPads2CompareFunction compare_func;
-  gpointer       compare_user_data;
-  GstCollectPads2EventFunction event_func; /* function and data for event callback */
-  gpointer       event_user_data;
-  GstCollectPads2ClipFunction clip_func;
-  gpointer       clip_user_data;
-
-  /* no other lock needed */
-  GMutex         evt_lock;              /* these make up sort of poor man's event signaling */
-  GCond          evt_cond;
-  guint32        evt_cookie;
+  GstCollectPads2Private *priv;
 
   gpointer _gst_reserved[GST_PADDING];
 };

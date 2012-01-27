@@ -90,7 +90,7 @@ static char *_gst_plugin_fault_handler_filename = NULL;
  * MIT/X11: http://www.opensource.org/licenses/mit-license.php
  * 3-clause BSD: http://www.opensource.org/licenses/bsd-license.php
  */
-static const gchar *valid_licenses[] = {
+static const gchar *const valid_licenses[] = {
   "LGPL",                       /* GNU Lesser General Public License */
   "GPL",                        /* GNU General Public License */
   "QPL",                        /* Trolltech Qt Public License */
@@ -460,7 +460,7 @@ priv_gst_plugin_loading_get_whitelist_hash (void)
 static gboolean
 gst_plugin_check_license (const gchar * license)
 {
-  const gchar **check_license = valid_licenses;
+  const gchar *const *check_license = valid_licenses;
 
   g_assert (check_license);
 
