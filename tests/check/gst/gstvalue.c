@@ -2462,6 +2462,7 @@ GST_START_TEST (test_serialize_int64_range)
       str = gst_value_serialize (&value);
       fail_unless (strcmp (str, int64_range_strings[idx]) == 0);
       g_free (int64_range_strings[idx]);
+      g_value_unset (&value);
 
       /* now deserialize again to an int64 range */
       s = gst_structure_new ("foo/bar", "range", GST_TYPE_INT64_RANGE,
@@ -2625,7 +2626,8 @@ GST_START_TEST (test_stepped_int_range_parsing)
   /* check we cannot parse bad ranges */
   for (n = 0; n < G_N_ELEMENTS (bad_ranges); ++n) {
     str = g_strdup_printf ("foo/bar, range=%s", bad_ranges[n]);
-    ASSERT_CRITICAL (gst_structure_from_string (str, &end));
+    ASSERT_CRITICAL (s = gst_structure_from_string (str, &end));
+    gst_structure_free (s);
     g_free (str);
   }
 }
@@ -2646,15 +2648,15 @@ GST_START_TEST (test_stepped_int_range_ops)
     const gchar *set2;
     const gchar *result;
   } ranges[] = {
-    {"[16, 4096, 16]", "inter", "[100, 200, 10]", "160"},
-    {"[16, 4096, 16]", "inter", "[100, 200, 100]", NULL},
-    {"[16, 4096, 16]", "inter", "[0, 512, 256]", "[256, 512, 256]"},
-    {"[16, 32, 16]", "union", "[32, 96, 16]", "[16, 96, 16]"},
-    {"[16, 32, 16]", "union", "[48, 96, 16]", "[16, 96, 16]"},
-    {"[112, 192, 16]", "union", "[48, 96, 16]", "[48, 192, 16]"},
-    {"[16, 32, 16]", "union", "[64, 96, 16]", NULL},
-    {"[112, 192, 16]", "union", "[48, 96, 8]", NULL},
-  };
+    {
+    "[16, 4096, 16]", "inter", "[100, 200, 10]", "160"}, {
+    "[16, 4096, 16]", "inter", "[100, 200, 100]", NULL}, {
+    "[16, 4096, 16]", "inter", "[0, 512, 256]", "[256, 512, 256]"}, {
+    "[16, 32, 16]", "union", "[32, 96, 16]", "[16, 96, 16]"}, {
+    "[16, 32, 16]", "union", "[48, 96, 16]", "[16, 96, 16]"}, {
+    "[112, 192, 16]", "union", "[48, 96, 16]", "[48, 192, 16]"}, {
+    "[16, 32, 16]", "union", "[64, 96, 16]", NULL}, {
+  "[112, 192, 16]", "union", "[48, 96, 8]", NULL},};
 
   for (n = 0; n < G_N_ELEMENTS (ranges); ++n) {
     gchar *end = NULL;
