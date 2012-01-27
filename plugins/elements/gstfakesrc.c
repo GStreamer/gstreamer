@@ -429,10 +429,13 @@ gst_fake_src_event_handler (GstBaseSrc * basesrc, GstEvent * event)
 
   if (!src->silent) {
     const GstStructure *s;
+    const gchar *tstr;
     gchar *sstr;
 
     GST_OBJECT_LOCK (src);
     g_free (src->last_message);
+
+    tstr = gst_event_type_get_name (GST_EVENT_TYPE (event));
 
     if ((s = gst_event_get_structure (event)))
       sstr = gst_structure_to_string (s);
@@ -440,9 +443,9 @@ gst_fake_src_event_handler (GstBaseSrc * basesrc, GstEvent * event)
       sstr = g_strdup ("");
 
     src->last_message =
-        g_strdup_printf ("event   ******* (%s:%s) E (type: %d, %s) %p",
+        g_strdup_printf ("event   ******* (%s:%s) E (type: %s (%d), %s) %p",
         GST_DEBUG_PAD_NAME (GST_BASE_SRC_CAST (src)->srcpad),
-        GST_EVENT_TYPE (event), sstr, event);
+        tstr, GST_EVENT_TYPE (event), sstr, event);
     g_free (sstr);
     GST_OBJECT_UNLOCK (src);
 

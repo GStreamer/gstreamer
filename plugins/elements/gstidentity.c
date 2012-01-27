@@ -313,20 +313,22 @@ gst_identity_sink_event (GstBaseTransform * trans, GstEvent * event)
 
   if (!identity->silent) {
     const GstStructure *s;
+    const gchar *tstr;
     gchar *sstr;
 
     GST_OBJECT_LOCK (identity);
     g_free (identity->last_message);
 
+    tstr = gst_event_type_get_name (GST_EVENT_TYPE (event));
     if ((s = gst_event_get_structure (event)))
       sstr = gst_structure_to_string (s);
     else
       sstr = g_strdup ("");
 
     identity->last_message =
-        g_strdup_printf ("event   ******* (%s:%s) E (type: %d, %s) %p",
-        GST_DEBUG_PAD_NAME (trans->sinkpad), GST_EVENT_TYPE (event), sstr,
-        event);
+        g_strdup_printf ("event   ******* (%s:%s) E (type: %s (%d), %s) %p",
+        GST_DEBUG_PAD_NAME (trans->sinkpad), tstr, GST_EVENT_TYPE (event),
+        sstr, event);
     g_free (sstr);
     GST_OBJECT_UNLOCK (identity);
 

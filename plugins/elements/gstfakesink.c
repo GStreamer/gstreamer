@@ -371,6 +371,7 @@ gst_fake_sink_event (GstBaseSink * bsink, GstEvent * event)
 
   if (!sink->silent) {
     const GstStructure *s;
+    const gchar *tstr;
     gchar *sstr;
 
     GST_OBJECT_LOCK (sink);
@@ -389,6 +390,8 @@ gst_fake_sink_event (GstBaseSink * bsink, GstEvent * event)
           GST_MESSAGE_TYPE (msg), sstr, msg);
       gst_message_unref (msg);
     } else {
+      tstr = gst_event_type_get_name (GST_EVENT_TYPE (event));
+
       if ((s = gst_event_get_structure (event))) {
         sstr = gst_structure_to_string (s);
       } else {
@@ -396,9 +399,9 @@ gst_fake_sink_event (GstBaseSink * bsink, GstEvent * event)
       }
 
       sink->last_message =
-          g_strdup_printf ("event   ******* (%s:%s) E (type: %d, %s) %p",
+          g_strdup_printf ("event   ******* (%s:%s) E (type: %s (%d), %s) %p",
           GST_DEBUG_PAD_NAME (GST_BASE_SINK_CAST (sink)->sinkpad),
-          GST_EVENT_TYPE (event), sstr, event);
+          tstr, GST_EVENT_TYPE (event), sstr, event);
     }
     g_free (sstr);
     GST_OBJECT_UNLOCK (sink);
