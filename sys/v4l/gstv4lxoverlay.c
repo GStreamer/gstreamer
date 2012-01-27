@@ -32,6 +32,7 @@
 #include <X11/extensions/Xv.h>
 #include <X11/extensions/Xvlib.h>
 
+#include <gst/glib-compat-private.h>
 #include "gstv4lxoverlay.h"
 #include "gstv4lelement.h"
 #include "v4l_calls.h"

@@ -34,6 +34,7 @@
 #include <errno.h>
 #include "v4lsrc_calls.h"
 #include <sys/time.h>
+#include <gst/glib-compat-private.h>
 
 /* number of buffers to be queued *at least* before syncing */
 #define MIN_BUFFERS_QUEUED 2

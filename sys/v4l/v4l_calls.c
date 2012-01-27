@@ -36,6 +36,7 @@
 #include <gst/gst.h>
 #include <gst/interfaces/tuner.h>
 #include <gst/interfaces/colorbalance.h>
+#include <gst/glib-compat-private.h>
 
 #include "v4l_calls.h"
 #include "gstv4ltuner.h"
