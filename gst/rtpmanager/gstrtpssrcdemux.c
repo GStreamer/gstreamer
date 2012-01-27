@@ -636,6 +636,22 @@ create_failed:
   }
 }
 
+static GstRtpSsrcDemuxPad *
+find_demux_pad_for_pad (GstRtpSsrcDemux * demux, GstPad * pad)
+{
+  GSList *walk;
+
+  for (walk = demux->srcpads; walk; walk = g_slist_next (walk)) {
+    GstRtpSsrcDemuxPad *dpad = (GstRtpSsrcDemuxPad *) walk->data;
+    if (dpad->rtp_pad == pad || dpad->rtcp_pad == pad) {
+      return dpad;
+    }
+  }
+
+  return NULL;
+}
+
+
 static gboolean
 gst_rtp_ssrc_demux_src_event (GstPad * pad, GstObject * parent,
     GstEvent * event)
@@ -651,21 +667,14 @@ gst_rtp_ssrc_demux_src_event (GstPad * pad, GstObject * parent,
     case GST_EVENT_CUSTOM_BOTH_OOB:
       s = gst_event_get_structure (event);
       if (s && !gst_structure_has_field (s, "ssrc")) {
-        GSList *walk;
+        GstRtpSsrcDemuxPad *dpad = find_demux_pad_for_pad (demux, pad);
 
-        for (walk = demux->srcpads; walk; walk = g_slist_next (walk)) {
-          GstRtpSsrcDemuxPad *dpad = (GstRtpSsrcDemuxPad *) walk->data;
+        if (dpad) {
+          GstStructure *ws;
 
-          if (dpad->rtp_pad == pad || dpad->rtcp_pad == pad) {
-            GstStructure *ws;
-
-            event =
-                GST_EVENT_CAST (gst_mini_object_make_writable
-                (GST_MINI_OBJECT_CAST (event)));
-            ws = gst_event_writable_structure (event);
-            gst_structure_set (ws, "ssrc", G_TYPE_UINT, dpad->ssrc, NULL);
-            break;
-          }
+          event = gst_event_make_writable (event);
+          ws = gst_event_writable_structure (event);
+          gst_structure_set (ws, "ssrc", G_TYPE_UINT, dpad->ssrc, NULL);
         }
       }
       break;
