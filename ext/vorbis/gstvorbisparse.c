@@ -189,13 +189,6 @@ vorbis_parse_push_headers (GstVorbisParse * parse)
   ogg_packet packet;
   GstMapInfo map;
 
-  /* get the headers into the caps, passing them to vorbis as we go */
-  caps = gst_caps_make_writable (gst_pad_query_caps (parse->srcpad, NULL));
-  vorbis_parse_set_header_on_caps (parse, caps);
-  GST_DEBUG_OBJECT (parse, "here are the caps: %" GST_PTR_FORMAT, caps);
-  gst_pad_set_caps (parse->srcpad, caps);
-  gst_caps_unref (caps);
-
   outbuf = GST_BUFFER_CAST (parse->streamheader->data);
   gst_buffer_map (outbuf, &map, GST_MAP_READ);
   packet.packet = map.data;
@@ -207,6 +200,7 @@ vorbis_parse_push_headers (GstVorbisParse * parse)
   vorbis_synthesis_headerin (&parse->vi, &parse->vc, &packet);
   gst_buffer_unmap (outbuf, &map);
   parse->sample_rate = parse->vi.rate;
+  parse->channels = parse->vi.channels;
   outbuf1 = outbuf;
 
   outbuf = GST_BUFFER_CAST (parse->streamheader->next->data);
@@ -224,6 +218,7 @@ vorbis_parse_push_headers (GstVorbisParse * parse)
   outbuf = GST_BUFFER_CAST (parse->streamheader->next->next->data);
   gst_buffer_map (outbuf, &map, GST_MAP_READ);
   packet.packet = map.data;
+  packet.bytes = map.size;
   packet.granulepos = GST_BUFFER_OFFSET_END (outbuf);
   packet.packetno = 3;
   packet.e_o_s = 0;
@@ -231,6 +226,15 @@ vorbis_parse_push_headers (GstVorbisParse * parse)
   vorbis_synthesis_headerin (&parse->vi, &parse->vc, &packet);
   gst_buffer_unmap (outbuf, &map);
   outbuf3 = outbuf;
+
+  /* get the headers into the caps, passing them to vorbis as we go */
+  caps = gst_caps_new_simple ("audio/x-vorbis",
+      "rate", G_TYPE_INT, parse->sample_rate,
+      "channels", G_TYPE_INT, parse->channels, NULL);;
+  vorbis_parse_set_header_on_caps (parse, caps);
+  GST_DEBUG_OBJECT (parse, "here are the caps: %" GST_PTR_FORMAT, caps);
+  gst_pad_set_caps (parse->srcpad, caps);
+  gst_caps_unref (caps);
 
   /* first process queued events */
   vorbis_parse_drain_event_queue (parse);
