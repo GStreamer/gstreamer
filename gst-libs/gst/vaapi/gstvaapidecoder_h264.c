@@ -738,6 +738,7 @@ decode_sequence_end(GstVaapiDecoderH264 *decoder)
 
     if (priv->current_picture && !decode_current_picture(decoder))
         return GST_VAAPI_DECODER_STATUS_ERROR_UNKNOWN;
+    dpb_flush(decoder);
     return GST_VAAPI_DECODER_STATUS_END_OF_STREAM;
 }
 
