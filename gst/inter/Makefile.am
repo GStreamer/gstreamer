@@ -24,6 +24,7 @@ noinst_HEADERS = \
 libgstinter_la_CFLAGS = \
 	$(GST_CFLAGS) \
 	$(GST_PLUGINS_BASE_CFLAGS) \
+	$(GST_PLUGINS_BAD_CFLAGS) \
 	$(GST_BASE_CFLAGS)
 
 libgstinter_la_LIBADD = \
@@ -40,7 +41,8 @@ gstintertest_SOURCES = \
 
 gstintertest_CFLAGS = \
 	$(GST_CFLAGS) \
-	$(GST_PLUGINS_BASE_CFLAGS)
+	$(GST_PLUGINS_BASE_CFLAGS) \
+	$(GST_PLUGINS_BAD_CFLAGS)
 
 gstintertest_LDADD = \
 	$(GST_LIBS) \

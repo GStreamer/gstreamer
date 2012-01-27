@@ -35,6 +35,7 @@
 
 #include <string.h>
 
+#include <gst/glib-compat-private.h>
 #include "gstinputselector.h"
 #include "gstcamerabin-marshal.h"
 

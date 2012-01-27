@@ -7,6 +7,7 @@ libgstcog_la_CFLAGS = \
 	-DCOG_ENABLE_UNSTABLE_API \
 	-I$(srcdir)/.. \
 	$(GST_PLUGINS_BASE_CFLAGS) \
+	$(GST_PLUGINS_BAD_CFLAGS) \
 	$(GST_CFLAGS) \
 	$(ORC_CFLAGS) \
 	$(COG_CFLAGS)

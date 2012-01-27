@@ -38,6 +38,7 @@
 #  include <config.h>
 #endif
 
+#include <gst/glib-compat-private.h>
 #include "gstdvbsuboverlay.h"
 
 #include <string.h>
@@ -123,8 +124,7 @@ gst_dvbsub_overlay_base_init (gpointer gclass)
   gst_element_class_add_static_pad_template (element_class, &src_factory);
   gst_element_class_add_static_pad_template (element_class,
       &video_sink_factory);
-  gst_element_class_add_static_pad_template (element_class,
-      &text_sink_factory);
+  gst_element_class_add_static_pad_template (element_class, &text_sink_factory);
 
   gst_element_class_set_details_simple (element_class,
       "DVB Subtitles Overlay",

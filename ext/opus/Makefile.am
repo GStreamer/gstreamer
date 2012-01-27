@@ -4,6 +4,7 @@ libgstopus_la_SOURCES = gstopus.c gstopusdec.c gstopusenc.c gstopusparse.c gstop
 libgstopus_la_CFLAGS = \
         -DGST_USE_UNSTABLE_API \
 	$(GST_PLUGINS_BASE_CFLAGS) \
+	$(GST_PLUGINS_BAD_CFLAGS) \
 	$(GST_CFLAGS) \
 	$(OPUS_CFLAGS)
 libgstopus_la_LIBADD = \

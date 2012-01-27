@@ -7,6 +7,7 @@
 #endif
 
 #include <gst/gst.h>
+#include <gst/glib-compat-private.h>
 #include <gst/video/video.h>
 #include <string.h>
 

@@ -23,6 +23,7 @@
 
 #include <string.h>
 
+#include <gst/glib-compat-private.h>
 #include "gstintersurface.h"
 
 static GList *list;

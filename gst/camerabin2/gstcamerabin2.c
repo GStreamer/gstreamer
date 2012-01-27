@@ -165,6 +165,7 @@
 #include "gstcamerabin2.h"
 #include <gst/gst-i18n-plugin.h>
 #include <gst/pbutils/pbutils.h>
+#include <gst/glib-compat-private.h>
 
 #if GLIB_CHECK_VERSION(2,29,6)
 #define gst_camerabin2_atomic_int_add g_atomic_int_add

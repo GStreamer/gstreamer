@@ -23,6 +23,8 @@
 
 #include <unistd.h>
 
+#include <gst/glib-compat-private.h>
+
 GST_DEBUG_CATEGORY_EXTERN (sdl_debug);
 #define GST_CAT_DEFAULT sdl_debug
 

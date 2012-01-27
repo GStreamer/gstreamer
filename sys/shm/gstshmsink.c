@@ -27,6 +27,7 @@
 #include "gstshmsink.h"
 
 #include <gst/gst.h>
+#include <gst/glib-compat-private.h>
 
 #include <string.h>
 

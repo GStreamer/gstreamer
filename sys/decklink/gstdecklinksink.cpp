@@ -35,7 +35,7 @@
 #endif
 
 #include <gst/gst.h>
-#include <gst/gst.h>
+#include <gst/glib-compat-private.h>
 #include "gstdecklink.h"
 #include "gstdecklinksink.h"
 #include <string.h>

@@ -30,6 +30,7 @@
 #endif
 #include <stdlib.h>
 
+#include <gst/glib-compat-private.h>
 #include <gst/interfaces/xoverlay.h>
 #include <gst/interfaces/navigation.h>
 

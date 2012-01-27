@@ -25,6 +25,7 @@
 #include <string.h>
 
 #include <gst/gst.h>
+#include <gst/glib-compat-private.h>
 #include <gst/gst-i18n-plugin.h>
 #include <gst/interfaces/navigation.h>
 #include <gst/video/video.h>

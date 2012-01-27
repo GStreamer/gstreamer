@@ -28,6 +28,7 @@
  */
 #include <gst/app/gstappsrc.h>
 #include <gst/app/gstappsink.h>
+#include <gst/glib-compat-private.h>
 #include "gstcamerabinpreview.h"
 #include "gstbasecamerasrc.h"
 

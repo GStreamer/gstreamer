@@ -53,6 +53,7 @@
 
 #include <string.h>
 
+#include <gst/glib-compat-private.h>
 #include "gstmplex.hh"
 #include "gstmplexoutputstream.hh"
 #include "gstmplexibitstream.hh"

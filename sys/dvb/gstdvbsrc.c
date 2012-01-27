@@ -42,6 +42,7 @@
 
 #include "gstdvbsrc.h"
 #include <gst/gst.h>
+#include <gst/glib-compat-private.h>
 #include <sys/ioctl.h>
 #include <sys/poll.h>
 #include <fcntl.h>

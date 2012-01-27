@@ -31,6 +31,8 @@
 #include <unistd.h>
 #include <fcntl.h>
 
+#include <gst/glib-compat-private.h>
+
 #include "gstdecklinksrc.h"
 
 #include "capture.h"

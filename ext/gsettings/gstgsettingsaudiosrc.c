@@ -35,6 +35,7 @@
 #endif
 
 #include <gst/gst.h>
+#include <gst/glib-compat-private.h>
 #include <string.h>
 
 #include "gstgsettingsaudiosrc.h"

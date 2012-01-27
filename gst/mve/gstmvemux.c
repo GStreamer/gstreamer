@@ -31,6 +31,7 @@ gst-launch-0.10 filesrc location=movie.mve ! mvedemux name=d !
 #include <string.h>
 
 #include <gst/gst.h>
+#include <gst/glib-compat-private.h>
 #include "gstmvemux.h"
 #include "mve.h"
 

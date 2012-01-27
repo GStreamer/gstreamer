@@ -184,8 +184,10 @@ main (gint argc, gchar ** argv)
     return -1;
   }
 
+#if !GLIB_CHECK_VERSION (2, 31, 0)
   if (!g_thread_supported ())
     g_thread_init (NULL);
+#endif
 
   gst_init (NULL, NULL);
   gtk_init (NULL, NULL);

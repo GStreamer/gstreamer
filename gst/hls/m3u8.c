@@ -23,6 +23,7 @@
 #include <errno.h>
 #include <glib.h>
 
+#include <gst/glib-compat-private.h>
 #include "gstfragmented.h"
 #include "m3u8.h"
 
