@@ -84,11 +84,13 @@
 #include "config.h"
 #endif
 
+#include "gstrtpdtmfdepay.h"
+
 #include <string.h>
 #include <math.h>
 
+#include <gst/audio/audio.h>
 #include <gst/rtp/gstrtpbuffer.h>
-#include "gstrtpdtmfdepay.h"
 
 #define DEFAULT_PACKET_INTERVAL  50     /* ms */
 #define MIN_PACKET_INTERVAL      10     /* ms */
@@ -180,12 +182,9 @@ static GstStaticPadTemplate gst_rtp_dtmf_depay_src_template =
 GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("audio/x-raw-int, "
-        "width = (int) 16, "
-        "depth = (int) 16, "
-        "endianness = (int) " G_STRINGIFY (G_BYTE_ORDER) ", "
-        "signed = (boolean) true, "
-        "rate = (int) [0, MAX], " "channels = (int) 1")
+    GST_STATIC_CAPS ("audio/x-raw, "
+        "format = (string) \"" GST_AUDIO_NE (S16) "\", "
+        "rate = " GST_AUDIO_RATE_RANGE ", " "channels = (int) 1")
     );
 
 static GstStaticPadTemplate gst_rtp_dtmf_depay_sink_template =
