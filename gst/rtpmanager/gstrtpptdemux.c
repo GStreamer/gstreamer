@@ -332,6 +332,16 @@ clear_newcaps_for_pt (GstRtpPtDemux * rtpdemux, guint8 pt)
   GST_OBJECT_UNLOCK (rtpdemux);
 }
 
+static gboolean
+forward_sticky_events (GstPad * pad, GstEvent ** event, gpointer user_data)
+{
+  GstPad *srcpad = GST_PAD_CAST (user_data);
+
+  gst_pad_push_event (srcpad, gst_event_ref (*event));
+
+  return TRUE;
+}
+
 static GstFlowReturn
 gst_rtp_pt_demux_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
 {
@@ -389,6 +399,8 @@ gst_rtp_pt_demux_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
     GST_OBJECT_UNLOCK (rtpdemux);
 
     gst_pad_set_active (srcpad, TRUE);
+    gst_pad_sticky_events_foreach (rtpdemux->sink, forward_sticky_events,
+        srcpad);
     gst_element_add_pad (GST_ELEMENT_CAST (rtpdemux), srcpad);
 
     GST_DEBUG ("emitting new-payload-type for pt %d", pt);
@@ -476,6 +488,13 @@ gst_rtp_pt_demux_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
   rtpdemux = GST_RTP_PT_DEMUX (parent);
 
   switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_CAPS:
+    {
+      gst_rtp_pt_demux_clear_pt_map (rtpdemux);
+      gst_event_unref (event);
+      res = TRUE;
+      break;
+    }
     case GST_EVENT_CUSTOM_DOWNSTREAM:
     {
       const GstStructure *s;
