@@ -182,7 +182,7 @@ G_DEFINE_TYPE_WITH_CODE (GstTriggerControlSource, gst_trigger_control_source,
  *
  * This returns a new, unbound #GstTriggerControlSource.
  *
- * Returns: a new, unbound #GstTriggerControlSource.
+ * Returns: (transfer·full): a new, unbound #GstTriggerControlSource.
  */
 GstTriggerControlSource *
 gst_trigger_control_source_new (void)

@@ -390,7 +390,7 @@ gst_control_binding_argb_get_value_array (GstControlBinding * _self,
  * Create a new control-binding that attaches the given #GstControlSource to the
  * #GObject property.
  *
- * Returns: the new #GstControlBindingARGB
+ * Returns: (transfer·floating): the new #GstControlBindingARGB
  */
 GstControlBinding *
 gst_control_binding_argb_new (GstObject * object, const gchar * property_name,

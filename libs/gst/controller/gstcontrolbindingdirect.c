@@ -376,7 +376,7 @@ gst_control_binding_direct_get_value_array (GstControlBinding * _self,
  * Create a new control-binding that attaches the #GstControlSource to the
  * #GObject property.
  *
- * Returns: the new #GstControlBindingDirect
+ * Returns: (transfer·floating): the new #GstControlBindingDirect
  */
 GstControlBinding *
 gst_control_binding_direct_new (GstObject * object, const gchar * property_name,
