@@ -266,7 +266,6 @@ struct _GstVaapiDecoderH264Private {
     guint                       short_ref_count;
     GstVaapiPictureH264        *long_ref[32];
     guint                       long_ref_count;
-    guint                       list_count;
     GstVaapiPictureH264        *RefPicList0[32];
     guint                       RefPicList0_count;
     GstVaapiPictureH264        *RefPicList1[32];
@@ -2013,36 +2012,66 @@ fill_pred_weight_table(GstVaapiDecoderH264 *decoder, GstVaapiSliceH264 *slice)
 }
 
 static gboolean
-fill_slice(GstVaapiDecoderH264 *decoder, GstVaapiSliceH264 *slice)
+fill_RefPicList(GstVaapiDecoderH264 *decoder, GstVaapiSliceH264 *slice)
 {
     GstVaapiDecoderH264Private * const priv = decoder->priv;
     GstH264SliceHdr * const slice_hdr = &slice->slice_hdr;
     VASliceParameterBufferH264 * const slice_param = slice->base.param;
-    gint i;
+    guint i, num_ref_lists = 0;
 
-    /* Fill in VASliceParameterBufferH264 */
-    slice_param->slice_data_bit_offset          = 8 /* nal_unit_type */ + slice_hdr->header_size;
-    slice_param->first_mb_in_slice              = slice_hdr->first_mb_in_slice;
-    slice_param->slice_type                     = slice_hdr->type % 5;
-    slice_param->direct_spatial_mv_pred_flag    = slice_hdr->direct_spatial_mv_pred_flag;
-    slice_param->num_ref_idx_l0_active_minus1   = priv->list_count > 0 ? slice_hdr->num_ref_idx_l0_active_minus1 : 0;
-    slice_param->num_ref_idx_l1_active_minus1   = priv->list_count > 1 ? slice_hdr->num_ref_idx_l1_active_minus1 : 0;
-    slice_param->cabac_init_idc                 = slice_hdr->cabac_init_idc;
-    slice_param->slice_qp_delta                 = slice_hdr->slice_qp_delta;
-    slice_param->disable_deblocking_filter_idc  = slice_hdr->disable_deblocking_filter_idc;
-    slice_param->slice_alpha_c0_offset_div2     = slice_hdr->slice_alpha_c0_offset_div2;
-    slice_param->slice_beta_offset_div2         = slice_hdr->slice_beta_offset_div2;
+    slice_param->num_ref_idx_l0_active_minus1 = 0;
+    slice_param->num_ref_idx_l1_active_minus1 = 0;
+
+    if (GST_H264_IS_B_SLICE(slice_hdr))
+        num_ref_lists = 2;
+    else if (GST_H264_IS_I_SLICE(slice_hdr))
+        num_ref_lists = 0;
+    else
+        num_ref_lists = 1;
+
+    if (num_ref_lists < 1)
+        return TRUE;
+
+    slice_param->num_ref_idx_l0_active_minus1 =
+        slice_hdr->num_ref_idx_l0_active_minus1;
 
     for (i = 0; i < priv->RefPicList0_count && priv->RefPicList0[i]; i++)
         slice_param->RefPicList0[i] = priv->RefPicList0[i]->info;
     for (; i <= slice_param->num_ref_idx_l0_active_minus1; i++)
         vaapi_init_picture(&slice_param->RefPicList0[i]);
 
+    if (num_ref_lists < 2)
+        return TRUE;
+
+    slice_param->num_ref_idx_l1_active_minus1 =
+        slice_hdr->num_ref_idx_l1_active_minus1;
+
     for (i = 0; i < priv->RefPicList1_count && priv->RefPicList1[i]; i++)
         slice_param->RefPicList1[i] = priv->RefPicList1[i]->info;
     for (; i <= slice_param->num_ref_idx_l1_active_minus1; i++)
         vaapi_init_picture(&slice_param->RefPicList1[i]);
+    return TRUE;
+}
 
+static gboolean
+fill_slice(GstVaapiDecoderH264 *decoder, GstVaapiSliceH264 *slice)
+{
+    GstH264SliceHdr * const slice_hdr = &slice->slice_hdr;
+    VASliceParameterBufferH264 * const slice_param = slice->base.param;
+
+    /* Fill in VASliceParameterBufferH264 */
+    slice_param->slice_data_bit_offset          = 8 /* nal_unit_type */ + slice_hdr->header_size;
+    slice_param->first_mb_in_slice              = slice_hdr->first_mb_in_slice;
+    slice_param->slice_type                     = slice_hdr->type % 5;
+    slice_param->direct_spatial_mv_pred_flag    = slice_hdr->direct_spatial_mv_pred_flag;
+    slice_param->cabac_init_idc                 = slice_hdr->cabac_init_idc;
+    slice_param->slice_qp_delta                 = slice_hdr->slice_qp_delta;
+    slice_param->disable_deblocking_filter_idc  = slice_hdr->disable_deblocking_filter_idc;
+    slice_param->slice_alpha_c0_offset_div2     = slice_hdr->slice_alpha_c0_offset_div2;
+    slice_param->slice_beta_offset_div2         = slice_hdr->slice_beta_offset_div2;
+
+    if (!fill_RefPicList(decoder, slice))
+        return FALSE;
     if (!fill_pred_weight_table(decoder, slice))
         return FALSE;
     return TRUE;
@@ -2084,9 +2113,6 @@ decode_slice(GstVaapiDecoderH264 *decoder, GstH264NalUnit *nalu)
             goto error;
     }
     picture = priv->current_picture;
-
-    priv->list_count = (GST_H264_IS_B_SLICE(slice_hdr) ? 2 :
-                        (GST_H264_IS_I_SLICE(slice_hdr) ? 0 : 1));
 
     priv->mb_x = slice_hdr->first_mb_in_slice % priv->mb_width;
     priv->mb_y = slice_hdr->first_mb_in_slice / priv->mb_width; // FIXME: MBAFF or field
@@ -2350,7 +2376,6 @@ gst_vaapi_decoder_h264_init(GstVaapiDecoderH264 *decoder)
     priv->profile               = GST_VAAPI_PROFILE_H264_HIGH;
     priv->short_ref_count       = 0;
     priv->long_ref_count        = 0;
-    priv->list_count            = 0;
     priv->RefPicList0_count     = 0;
     priv->RefPicList1_count     = 0;
     priv->nal_length_size       = 0;
