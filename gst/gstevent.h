@@ -80,8 +80,9 @@ typedef enum {
  *                 from the pipeline and unblock all streaming threads.
  * @GST_EVENT_FLUSH_STOP: Stop a flush operation. This event resets the
  *                 running-time of the pipeline.
- * @GST_EVENT_STREAM_START: (unimplemented) event to mark the start of a new
- *                          stream.
+ * @GST_EVENT_STREAM_START: Event to mark the start of a new stream. Sent before any
+ *                 other serialized event and only sent at the start of a new stream,
+ *                 not after flushing seeks.
  * @GST_EVENT_CAPS: #GstCaps event. Notify the pad of a new media type.
  * @GST_EVENT_STREAM_CONFIG: (unimplemented) contains configuration information
  *                 for the stream, for example stream-headers and codec-data.
@@ -465,6 +466,9 @@ gboolean        gst_event_has_name              (GstEvent *event, const gchar *n
 /* identifiers for events and messages */
 guint32         gst_event_get_seqnum            (GstEvent *event);
 void            gst_event_set_seqnum            (GstEvent *event, guint32 seqnum);
+
+/* Stream start event */
+GstEvent *      gst_event_new_stream_start      (void) G_GNUC_MALLOC;
 
 /* flush events */
 GstEvent *      gst_event_new_flush_start       (void) G_GNUC_MALLOC;

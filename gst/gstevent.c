@@ -1317,3 +1317,23 @@ gst_event_parse_sink_message (GstEvent * event, GstMessage ** msg)
         GST_MESSAGE (g_value_dup_boxed (gst_structure_id_get_value
             (structure, GST_QUARK (MESSAGE))));
 }
+
+/**
+ * gst_event_new_stream_start
+ *
+ * Create a new STREAM_START event. The stream start event can only
+ * travel downstream synchronized with the buffer flow. It is expected
+ * to be the first event that is sent for a new stream.
+ *
+ * Source elements, demuxers and other elements that create new streams
+ * are supposed to send this event as the first event of a new stream. It
+ * should not be send after a flushing seek or in similar situations
+ * and is used to mark the beginning of a new logical stream.
+ *
+ * Returns: (transfer full): the new STREAM_START event.
+ */
+GstEvent *
+gst_event_new_stream_start (void)
+{
+  return gst_event_new (GST_EVENT_STREAM_START);
+}

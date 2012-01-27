@@ -941,6 +941,8 @@ gst_event_parse_flush_stop
 
 gst_event_new_eos
 
+gst_event_new_stream_start
+
 gst_event_new_segment
 gst_event_parse_segment
 gst_event_copy_segment

@@ -417,6 +417,7 @@ EXPORTS
 	gst_event_new_segment
 	gst_event_new_sink_message
 	gst_event_new_step
+	gst_event_new_stream_start
 	gst_event_new_tag
 	gst_event_parse_buffer_size
 	gst_event_parse_caps
