@@ -748,7 +748,7 @@ gst_event_set_stream_config_codec_data (GstEvent * event, GstBuffer * buf)
 /**
  * gst_event_set_stream_config_codec_data:
  * @event: a stream config event
- * @buf: (transfer none): location where to store the #GstBuffer with codec data
+ * @buf: (out) (transfer none): location where to store the #GstBuffer with codec data
  *
  * Extracts the codec data buffer from the stream info event. Will store
  * %NULL in @buf if the event contains no codec data. The buffer returned
@@ -849,7 +849,8 @@ gst_event_get_n_stream_config_headers (GstEvent * event)
  * gst_event_parse_nth_stream_config_header:
  * @event: a stream config event
  * @index: number of the stream header to retrieve
- * @buf: location where to store the n-th stream header #GstBuffer
+ * @buf: (out) (transfer none): location where to store the n-th stream
+ *     header #GstBuffer
  *
  * Retrieves the n-th stream header buffer attached to the stream config
  * event and stores it in @buf. Will store %NULL in @buf if there is no such
