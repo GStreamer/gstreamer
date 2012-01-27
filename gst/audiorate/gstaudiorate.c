@@ -467,8 +467,6 @@ gst_audio_rate_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
     }
   }
 
-  audiorate->in++;
-
   in_time = GST_BUFFER_TIMESTAMP (buf);
   if (in_time == GST_CLOCK_TIME_NONE) {
     GST_DEBUG_OBJECT (audiorate, "no timestamp, using expected next time");
@@ -477,6 +475,7 @@ gst_audio_rate_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
 
   in_size = gst_buffer_get_size (buf);
   in_samples = in_size / bpf;
+  audiorate->in += in_samples;
 
   /* calculate the buffer offset */
   in_offset = gst_util_uint64_scale_int_round (in_time, rate, GST_SECOND);
@@ -502,6 +501,7 @@ gst_audio_rate_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
     /* The outgoing buffer's offset will be set to ->next_offset, we also
      * need to adjust the offset_end value accordingly */
     in_offset_end = audiorate->next_offset + in_samples;
+    audiorate->out += in_samples;
     goto send;
   }
 
@@ -555,7 +555,7 @@ gst_audio_rate_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
       ret = gst_pad_push (audiorate->srcpad, fill);
       if (ret != GST_FLOW_OK)
         goto beach;
-      audiorate->out++;
+      audiorate->out += cursamples;
       audiorate->add += cursamples;
 
       if (!audiorate->silent)
@@ -598,6 +598,7 @@ gst_audio_rate_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
       buf = trunc;
 
       audiorate->drop += truncsamples;
+      audiorate->out += (leftsize / bpf);
       GST_DEBUG_OBJECT (audiorate, "truncating %" G_GUINT64_FORMAT " samples",
           truncsamples);
 
@@ -640,7 +641,6 @@ send:
 
   ret = gst_pad_push (audiorate->srcpad, buf);
   buf = NULL;
-  audiorate->out++;
 
   audiorate->next_offset = in_offset_end;
 beach:
