@@ -254,6 +254,7 @@ gst_rtcp_buffer_map (GstBuffer * buffer, GstMapFlags flags,
   g_return_val_if_fail (rtcp != NULL, FALSE);
   g_return_val_if_fail (rtcp->buffer == NULL, FALSE);
   g_return_val_if_fail (GST_IS_BUFFER (buffer), FALSE);
+  g_return_val_if_fail (flags & GST_MAP_READ, FALSE);
 
   rtcp->buffer = buffer;
   gst_buffer_map (buffer, &rtcp->map, flags);
