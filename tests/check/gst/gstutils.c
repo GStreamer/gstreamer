@@ -119,16 +119,16 @@ GST_START_TEST (test_buffer_probe_n_times)
   gst_object_unref (bus);
 
   g_assert (n_buffer_probes == 10);     /* one for every buffer */
-  g_assert (n_event_probes == 3);       /* new segment, latency and eos */
-  g_assert (n_data_probes == 13);       /* duh */
+  g_assert (n_event_probes == 4);       /* start-start, new segment, latency and eos */
+  g_assert (n_data_probes == 14);       /* duh */
 
   gst_element_set_state (pipeline, GST_STATE_NULL);
   gst_object_unref (pipeline);
 
   /* make sure nothing was sent in addition to the above when shutting down */
   g_assert (n_buffer_probes == 10);     /* one for every buffer */
-  g_assert (n_event_probes == 3);       /* new segment, latency and eos */
-  g_assert (n_data_probes == 13);       /* duh */
+  g_assert (n_event_probes == 4);       /* stream-start, new segment, latency and eos */
+  g_assert (n_data_probes == 14);       /* duh */
 } GST_END_TEST;
 
 static int n_data_probes_once = 0;
