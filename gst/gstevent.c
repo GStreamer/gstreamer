@@ -116,6 +116,7 @@ static GstEventQuarks event_quarks[] = {
   {GST_EVENT_SINK_MESSAGE, "sink-message", 0},
   {GST_EVENT_EOS, "eos", 0},
   {GST_EVENT_SEGMENT_DONE, "segment-done", 0},
+  {GST_EVENT_GAP, "gap", 0},
   {GST_EVENT_QOS, "qos", 0},
   {GST_EVENT_SEEK, "seek", 0},
   {GST_EVENT_NAVIGATION, "navigation", 0},

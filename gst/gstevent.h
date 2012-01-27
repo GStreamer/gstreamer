@@ -93,7 +93,6 @@ typedef enum {
  * @GST_EVENT_TAG: A new set of metadata tags has been found in the stream.
  * @GST_EVENT_BUFFERSIZE: Notification of buffering requirements. Currently not
  *                 used yet.
- * @GST_EVENT_GAP: (unimplemented) Marks a gap in the datastream.
  * @GST_EVENT_SINK_MESSAGE: An event that sinks turn into a message. Used to
  *                          send messages that should be emitted in sync with
  *                          rendering.
@@ -101,6 +100,7 @@ typedef enum {
  * @GST_EVENT_EOS: End-Of-Stream. No more data is to be expected to follow
  *                 without a SEGMENT event.
  * @GST_EVENT_SEGMENT_DONE: (unimplemented) Marks the end of a segment playback.
+ * @GST_EVENT_GAP: (unimplemented) Marks a gap in the datastream.
  * @GST_EVENT_QOS: A quality message. Used to indicate to upstream elements
  *                 that the downstream elements should adjust their processing
  *                 rate.
@@ -147,28 +147,28 @@ typedef enum {
   GST_EVENT_SEGMENT               = GST_EVENT_MAKE_TYPE (70, FLAG(DOWNSTREAM) | FLAG(SERIALIZED) | FLAG(STICKY)),
   GST_EVENT_TAG                   = GST_EVENT_MAKE_TYPE (80, FLAG(DOWNSTREAM) | FLAG(SERIALIZED) | FLAG(STICKY) | FLAG(STICKY_MULTI)),
   GST_EVENT_BUFFERSIZE            = GST_EVENT_MAKE_TYPE (90, FLAG(DOWNSTREAM) | FLAG(SERIALIZED) | FLAG(STICKY)),
-  GST_EVENT_GAP                   = GST_EVENT_MAKE_TYPE (100, FLAG(DOWNSTREAM) | FLAG(SERIALIZED) | FLAG(STICKY)),
-  GST_EVENT_SINK_MESSAGE          = GST_EVENT_MAKE_TYPE (110, FLAG(DOWNSTREAM) | FLAG(SERIALIZED) | FLAG(STICKY) | FLAG(STICKY_MULTI)),
-  GST_EVENT_EOS                   = GST_EVENT_MAKE_TYPE (120, FLAG(DOWNSTREAM) | FLAG(SERIALIZED) | FLAG(STICKY)),
+  GST_EVENT_SINK_MESSAGE          = GST_EVENT_MAKE_TYPE (100, FLAG(DOWNSTREAM) | FLAG(SERIALIZED) | FLAG(STICKY) | FLAG(STICKY_MULTI)),
+  GST_EVENT_EOS                   = GST_EVENT_MAKE_TYPE (110, FLAG(DOWNSTREAM) | FLAG(SERIALIZED) | FLAG(STICKY)),
 
   /* non-sticky downstream serialized */
   GST_EVENT_SEGMENT_DONE          = GST_EVENT_MAKE_TYPE (150, FLAG(DOWNSTREAM) | FLAG(SERIALIZED)),
+  GST_EVENT_GAP                   = GST_EVENT_MAKE_TYPE (160, FLAG(DOWNSTREAM) | FLAG(SERIALIZED)),
 
   /* upstream events */
-  GST_EVENT_QOS                   = GST_EVENT_MAKE_TYPE (180, FLAG(UPSTREAM)),
-  GST_EVENT_SEEK                  = GST_EVENT_MAKE_TYPE (190, FLAG(UPSTREAM)),
-  GST_EVENT_NAVIGATION            = GST_EVENT_MAKE_TYPE (200, FLAG(UPSTREAM)),
-  GST_EVENT_LATENCY               = GST_EVENT_MAKE_TYPE (210, FLAG(UPSTREAM)),
-  GST_EVENT_STEP                  = GST_EVENT_MAKE_TYPE (220, FLAG(UPSTREAM)),
-  GST_EVENT_RECONFIGURE           = GST_EVENT_MAKE_TYPE (230, FLAG(UPSTREAM)),
+  GST_EVENT_QOS                   = GST_EVENT_MAKE_TYPE (190, FLAG(UPSTREAM)),
+  GST_EVENT_SEEK                  = GST_EVENT_MAKE_TYPE (200, FLAG(UPSTREAM)),
+  GST_EVENT_NAVIGATION            = GST_EVENT_MAKE_TYPE (210, FLAG(UPSTREAM)),
+  GST_EVENT_LATENCY               = GST_EVENT_MAKE_TYPE (220, FLAG(UPSTREAM)),
+  GST_EVENT_STEP                  = GST_EVENT_MAKE_TYPE (230, FLAG(UPSTREAM)),
+  GST_EVENT_RECONFIGURE           = GST_EVENT_MAKE_TYPE (240, FLAG(UPSTREAM)),
 
   /* custom events start here */
-  GST_EVENT_CUSTOM_UPSTREAM          = GST_EVENT_MAKE_TYPE (260, FLAG(UPSTREAM)),
-  GST_EVENT_CUSTOM_DOWNSTREAM        = GST_EVENT_MAKE_TYPE (270, FLAG(DOWNSTREAM) | FLAG(SERIALIZED)),
-  GST_EVENT_CUSTOM_DOWNSTREAM_OOB    = GST_EVENT_MAKE_TYPE (280, FLAG(DOWNSTREAM)),
-  GST_EVENT_CUSTOM_DOWNSTREAM_STICKY = GST_EVENT_MAKE_TYPE (290, FLAG(DOWNSTREAM) | FLAG(SERIALIZED) | FLAG(STICKY) | FLAG(STICKY_MULTI)),
-  GST_EVENT_CUSTOM_BOTH              = GST_EVENT_MAKE_TYPE (300, FLAG(BOTH) | FLAG(SERIALIZED)),
-  GST_EVENT_CUSTOM_BOTH_OOB          = GST_EVENT_MAKE_TYPE (310, FLAG(BOTH))
+  GST_EVENT_CUSTOM_UPSTREAM          = GST_EVENT_MAKE_TYPE (270, FLAG(UPSTREAM)),
+  GST_EVENT_CUSTOM_DOWNSTREAM        = GST_EVENT_MAKE_TYPE (280, FLAG(DOWNSTREAM) | FLAG(SERIALIZED)),
+  GST_EVENT_CUSTOM_DOWNSTREAM_OOB    = GST_EVENT_MAKE_TYPE (290, FLAG(DOWNSTREAM)),
+  GST_EVENT_CUSTOM_DOWNSTREAM_STICKY = GST_EVENT_MAKE_TYPE (300, FLAG(DOWNSTREAM) | FLAG(SERIALIZED) | FLAG(STICKY) | FLAG(STICKY_MULTI)),
+  GST_EVENT_CUSTOM_BOTH              = GST_EVENT_MAKE_TYPE (310, FLAG(BOTH) | FLAG(SERIALIZED)),
+  GST_EVENT_CUSTOM_BOTH_OOB          = GST_EVENT_MAKE_TYPE (320, FLAG(BOTH))
 } GstEventType;
 #undef FLAG
 
