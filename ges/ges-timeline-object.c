@@ -647,6 +647,7 @@ ges_timeline_object_release_track_object (GESTimelineObject * object,
 
   if (GES_IS_TRACK_EFFECT (trackobject)) {
     /* emit 'object-removed' */
+    object->priv->nb_effects--;
     g_signal_emit (object, ges_timeline_object_signals[EFFECT_REMOVED], 0,
         GES_TRACK_EFFECT (trackobject));
   } else
