@@ -212,6 +212,9 @@ struct _GstBaseSrcPrivate
   GstFlowReturn start_result;
   gboolean async;
 
+  /* if a stream-start event should be sent */
+  gboolean stream_start_pending;
+
   /* if segment should be sent */
   gboolean segment_pending;
 
@@ -830,6 +833,19 @@ gst_base_src_new_seamless_segment (GstBaseSrc * src, gint64 start, gint64 stop,
   return res;
 }
 
+static gboolean
+gst_base_src_send_stream_start (GstBaseSrc * src)
+{
+  gboolean ret = TRUE;
+
+  if (src->priv->stream_start_pending) {
+    ret = gst_pad_push_event (src->srcpad, gst_event_new_stream_start ());
+    src->priv->stream_start_pending = FALSE;
+  }
+
+  return ret;
+}
+
 /**
  * gst_base_src_set_caps:
  * @src: a #GstBaseSrc
@@ -847,6 +863,7 @@ gst_base_src_set_caps (GstBaseSrc * src, GstCaps * caps)
 
   bclass = GST_BASE_SRC_GET_CLASS (src);
 
+  gst_base_src_send_stream_start (src);
   gst_pad_push_event (src->srcpad, gst_event_new_caps (caps));
 
   if (bclass->set_caps)
@@ -2452,6 +2469,8 @@ gst_base_src_loop (GstPad * pad)
 
   src = GST_BASE_SRC (GST_OBJECT_PARENT (pad));
 
+  gst_base_src_send_stream_start (src);
+
   /* check if we need to renegotiate */
   if (gst_pad_check_reconfigure (pad)) {
     if (!gst_base_src_negotiate (src))
@@ -3398,6 +3417,7 @@ gst_base_src_change_state (GstElement * element, GstStateChange transition)
     case GST_STATE_CHANGE_NULL_TO_READY:
       break;
     case GST_STATE_CHANGE_READY_TO_PAUSED:
+      basesrc->priv->stream_start_pending = TRUE;
       no_preroll = gst_base_src_is_live (basesrc);
       break;
     case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
@@ -3431,6 +3451,7 @@ gst_base_src_change_state (GstElement * element, GstStateChange transition)
        * already did this */
       g_atomic_int_set (&basesrc->priv->pending_eos, FALSE);
       gst_event_replace (&basesrc->pending_seek, NULL);
+      basesrc->priv->stream_start_pending = FALSE;
       break;
     }
     case GST_STATE_CHANGE_READY_TO_NULL:
