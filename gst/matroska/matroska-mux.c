@@ -2058,9 +2058,6 @@ gst_matroska_mux_subtitle_pad_setcaps (GstPad * pad, GstCaps * caps)
       GST_STR_NULL (context->codec_id), context->codec_priv_size);
 
 exit:
-  /* free default if modified */
-  if (id)
-    g_free (id);
 
   return ret;
 }
