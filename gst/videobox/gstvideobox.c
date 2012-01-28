@@ -3274,8 +3274,8 @@ static void
 gst_video_box_process (GstVideoBox * video_box, const guint8 * src,
     guint8 * dest)
 {
-  guint b_alpha = CLAMP (video_box->border_alpha * 256, 0, 256);
-  guint i_alpha = CLAMP (video_box->alpha * 256, 0, 256);
+  guint b_alpha = CLAMP (video_box->border_alpha * 256, 0, 255);
+  guint i_alpha = CLAMP (video_box->alpha * 256, 0, 255);
   GstVideoBoxFill fill_type = video_box->fill_type;
   gint br, bl, bt, bb, crop_w, crop_h;
 
