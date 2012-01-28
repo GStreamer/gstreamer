@@ -175,6 +175,8 @@ gst_voaacenc_class_init (GstVoAacEncClass * klass)
           "Target Audio Bitrate",
           0, G_MAXINT, VOAAC_ENC_DEFAULT_BITRATE,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  GST_DEBUG_CATEGORY_INIT (gst_voaacenc_debug, "voaacenc", 0, "voaac encoder");
 }
 
 static void
