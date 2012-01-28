@@ -54,19 +54,8 @@
 
 #include "gstrtspurl.h"
 
-GType
-gst_rtsp_url_get_type (void)
-{
-  static volatile gsize url_type = 0;
-
-  if (g_once_init_enter (&url_type)) {
-    GType tmp = g_boxed_type_register_static ("GstRTSPUrl",
-        (GBoxedCopyFunc) gst_rtsp_url_copy, (GBoxedFreeFunc) gst_rtsp_url_free);
-    g_once_init_leave (&url_type, tmp);
-  }
-
-  return (GType) url_type;
-}
+G_DEFINE_BOXED_TYPE (GstRTSPUrl, gst_rtsp_url,
+    (GBoxedCopyFunc) gst_rtsp_url_copy, (GBoxedFreeFunc) gst_rtsp_url_free);
 
 static const struct
 {

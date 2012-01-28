@@ -1028,7 +1028,8 @@ gst_adder_release_pad (GstElement * element, GstPad * pad)
 
   GST_DEBUG_OBJECT (adder, "release pad %s:%s", GST_DEBUG_PAD_NAME (pad));
 
-  gst_collect_pads2_remove_pad (adder->collect, pad);
+  if (adder->collect)
+    gst_collect_pads2_remove_pad (adder->collect, pad);
   gst_element_remove_pad (element, pad);
 }
 

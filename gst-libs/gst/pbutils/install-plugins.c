@@ -465,18 +465,9 @@ gst_install_plugins_context_copy (GstInstallPluginsContext * ctx)
   return ret;
 }
 
-GType
-gst_install_plugins_context_get_type (void)
-{
-  static GType gst_ipc_type = 0;
-
-  if (G_UNLIKELY (gst_ipc_type == 0)) {
-    gst_ipc_type = g_boxed_type_register_static ("GstInstallPluginsContext",
-        (GBoxedCopyFunc) gst_install_plugins_context_copy,
-        (GBoxedFreeFunc) gst_install_plugins_context_free);
-  }
-  return gst_ipc_type;
-}
+G_DEFINE_BOXED_TYPE (GstInstallPluginsContext, gst_install_plugins_context,
+    (GBoxedCopyFunc) gst_install_plugins_context_copy,
+    (GBoxedFreeFunc) gst_install_plugins_context_free);
 
 static const gchar *
 gst_install_plugins_get_helper (void)
