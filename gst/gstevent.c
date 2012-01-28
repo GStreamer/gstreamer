@@ -567,8 +567,8 @@ gst_event_new_eos (void)
 
 /**
  * gst_event_new_gap:
- * @timestamp: the start time (pts) of a gap
- * @duration: the duration of the gap, or %GST_CLOCK_TIME_NONE
+ * @timestamp: the start time (pts) of the gap
+ * @duration: the duration of the gap
  *
  * Create a new GAP event. A gap event can be thought of as conceptually
  * equivalent to a buffer to signal that there is no data for a certain
@@ -584,12 +584,12 @@ gst_event_new_gap (GstClockTime timestamp, GstClockTime duration)
   GstEvent *event;
 
   g_return_val_if_fail (GST_CLOCK_TIME_IS_VALID (timestamp), NULL);
+  g_return_val_if_fail (GST_CLOCK_TIME_IS_VALID (duration), NULL);
 
   GST_CAT_TRACE (GST_CAT_EVENT, "creating gap %" GST_TIME_FORMAT " - "
       "%" GST_TIME_FORMAT " (duration: %" GST_TIME_FORMAT ")",
-      GST_TIME_ARGS (timestamp),
-      GST_TIME_ARGS (GST_CLOCK_TIME_IS_VALID (duration) ? (timestamp +
-              duration) : GST_CLOCK_TIME_NONE), GST_TIME_ARGS (duration));
+      GST_TIME_ARGS (timestamp), GST_TIME_ARGS (timestamp + duration),
+      GST_TIME_ARGS (duration));
 
   event = gst_event_new_custom (GST_EVENT_GAP,
       gst_structure_new_id (GST_QUARK (EVENT_GAP),
@@ -601,7 +601,8 @@ gst_event_new_gap (GstClockTime timestamp, GstClockTime duration)
 
 /**
  * gst_event_parse_gap:
- * @timestamp: (out): location where to store the start time (pts) of the gap
+ * @timestamp: (out) (allow-none): location where to store the
+ *     start time (pts) of the gap, or %NULL
  * @duration: (out) (allow-none): location where to store the duration of
  *     the gap, or %NULL
  *
