@@ -189,6 +189,9 @@ gst_voamrwbenc_class_init (GstVoAmrWbEncClass * klass)
           "Encoding Band Mode (Kbps)", GST_VOAMRWBENC_BANDMODE_TYPE,
           BANDMODE_DEFAULT,
           G_PARAM_READWRITE | G_PARAM_CONSTRUCT | G_PARAM_STATIC_STRINGS));
+
+  GST_DEBUG_CATEGORY_INIT (gst_voamrwbenc_debug, "voamrwbenc", 0,
+      "voamrwb encoder");
 }
 
 static void
