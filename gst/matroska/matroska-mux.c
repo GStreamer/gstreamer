@@ -1973,7 +1973,6 @@ gst_matroska_mux_subtitle_pad_setcaps (GstPad * pad, GstCaps * caps)
   GstStructure *structure;
   const GValue *value = NULL;
   const GstBuffer *buf = NULL;
-  gchar *id = NULL;
   gboolean ret = TRUE;
 
   mux = GST_MATROSKA_MUX (GST_PAD_PARENT (pad));
@@ -1988,9 +1987,6 @@ gst_matroska_mux_subtitle_pad_setcaps (GstPad * pad, GstCaps * caps)
 
   structure = gst_caps_get_structure (caps, 0);
   mimetype = gst_structure_get_name (structure);
-
-  /* keep track of default set in request_pad */
-  id = context->codec_id;
 
   /* general setup */
   scontext->check_utf8 = 1;
@@ -2025,7 +2021,6 @@ gst_matroska_mux_subtitle_pad_setcaps (GstPad * pad, GstCaps * caps)
     gst_matroska_mux_set_codec_id (context,
         GST_MATROSKA_CODEC_ID_SUBTITLE_VOBSUB);
   } else {
-    id = NULL;
     ret = FALSE;
     goto exit;
   }
