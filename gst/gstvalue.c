@@ -5508,19 +5508,8 @@ static const GTypeValueTable _gst_fraction_value_table = {
 
 FUNC_VALUE_GET_TYPE (fraction, "GstFraction");
 
-GType
-gst_date_time_get_type (void)
-{
-  static GType gst_date_time_type = 0;
-
-  if (G_UNLIKELY (gst_date_time_type == 0)) {
-    gst_date_time_type = g_boxed_type_register_static ("GstDateTime",
-        (GBoxedCopyFunc) gst_date_time_ref,
-        (GBoxedFreeFunc) gst_date_time_unref);
-  }
-
-  return gst_date_time_type;
-}
+G_DEFINE_BOXED_TYPE (GstDateTime, gst_date_time,
+    (GBoxedCopyFunc) gst_date_time_ref, (GBoxedFreeFunc) gst_date_time_unref);
 
 static const GTypeValueTable _gst_bitmask_value_table = {
   gst_value_init_bitmask,

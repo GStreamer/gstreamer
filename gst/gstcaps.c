@@ -351,16 +351,7 @@ gst_caps_new_full_valist (GstStructure * structure, va_list var_args)
   return caps;
 }
 
-GType
-gst_static_caps_get_type (void)
-{
-  static GType staticcaps_type = 0;
-
-  if (G_UNLIKELY (staticcaps_type == 0)) {
-    staticcaps_type = g_pointer_type_register_static ("GstStaticCaps");
-  }
-  return staticcaps_type;
-}
+G_DEFINE_POINTER_TYPE (GstStaticCaps, gst_static_caps);
 
 /**
  * gst_static_caps_get:

@@ -82,23 +82,13 @@ static GMutex __tag_mutex;
 /* tags hash table: maps tag name string => GstTagInfo */
 static GHashTable *__tags;
 
-GType
-gst_tag_list_get_type (void)
-{
-  static GType _gst_tag_list_type = 0;
+G_DEFINE_BOXED_TYPE (GstTagList, gst_tag_list,
+    (GBoxedCopyFunc) gst_tag_list_copy, (GBoxedFreeFunc) gst_tag_list_free);
 
-  if (G_UNLIKELY (_gst_tag_list_type == 0)) {
-    _gst_tag_list_type = g_boxed_type_register_static ("GstTagList",
-        (GBoxedCopyFunc) gst_tag_list_copy, (GBoxedFreeFunc) gst_tag_list_free);
-
-#if 0
-    g_value_register_transform_func (_gst_tag_list_type, G_TYPE_STRING,
-        _gst_structure_transform_to_string);
-#endif
-  }
-
-  return _gst_tag_list_type;
-}
+/* FIXME: had code:
+ *    g_value_register_transform_func (_gst_tag_list_type, G_TYPE_STRING,
+ *      _gst_structure_transform_to_string);
+ */
 
 void
 _priv_gst_tag_initialize (void)

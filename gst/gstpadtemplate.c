@@ -272,17 +272,7 @@ name_is_valid (const gchar * name, GstPadPresence presence)
   return TRUE;
 }
 
-GType
-gst_static_pad_template_get_type (void)
-{
-  static GType staticpadtemplate_type = 0;
-
-  if (G_UNLIKELY (staticpadtemplate_type == 0)) {
-    staticpadtemplate_type =
-        g_pointer_type_register_static ("GstStaticPadTemplate");
-  }
-  return staticpadtemplate_type;
-}
+G_DEFINE_POINTER_TYPE (GstStaticPadTemplate, gst_static_pad_template);
 
 /**
  * gst_static_pad_template_get:

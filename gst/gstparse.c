@@ -64,19 +64,9 @@ gst_parse_context_copy (const GstParseContext * context)
   return ret;
 }
 
-GType
-gst_parse_context_get_type (void)
-{
-  static GType type = 0;
-
-  if (G_UNLIKELY (type == 0)) {
-    type = g_boxed_type_register_static ("GstParseContext",
-        (GBoxedCopyFunc) gst_parse_context_copy,
-        (GBoxedFreeFunc) gst_parse_context_free);
-  }
-
-  return type;
-}
+G_DEFINE_BOXED_TYPE (GstParseContext, gst_parse_context,
+    (GBoxedCopyFunc) gst_parse_context_copy,
+    (GBoxedFreeFunc) gst_parse_context_free);
 
 /**
  * gst_parse_error_quark:

@@ -611,21 +611,9 @@ gst_base_parse_frame_free (GstBaseParseFrame * frame)
   }
 }
 
-GType
-gst_base_parse_frame_get_type (void)
-{
-  static volatile gsize frame_type = 0;
-
-  if (g_once_init_enter (&frame_type)) {
-    GType _type;
-
-    _type = g_boxed_type_register_static ("GstBaseParseFrame",
-        (GBoxedCopyFunc) gst_base_parse_frame_copy,
-        (GBoxedFreeFunc) gst_base_parse_frame_free);
-    g_once_init_leave (&frame_type, _type);
-  }
-  return (GType) frame_type;
-}
+G_DEFINE_BOXED_TYPE (GstBaseParseFrame, gst_base_parse_frame,
+    (GBoxedCopyFunc) gst_base_parse_frame_copy,
+    (GBoxedFreeFunc) gst_base_parse_frame_free);
 
 /**
  * gst_base_parse_frame_init:

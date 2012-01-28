@@ -113,18 +113,8 @@ gst_segment_copy_into (const GstSegment * src, GstSegment * dest)
   memcpy (dest, src, sizeof (GstSegment));
 }
 
-GType
-gst_segment_get_type (void)
-{
-  static GType gst_segment_type = 0;
-
-  if (G_UNLIKELY (gst_segment_type == 0)) {
-    gst_segment_type = g_boxed_type_register_static ("GstSegment",
-        (GBoxedCopyFunc) gst_segment_copy, (GBoxedFreeFunc) gst_segment_free);
-  }
-
-  return gst_segment_type;
-}
+G_DEFINE_BOXED_TYPE (GstSegment, gst_segment,
+    (GBoxedCopyFunc) gst_segment_copy, (GBoxedFreeFunc) gst_segment_free);
 
 /**
  * gst_segment_new:

@@ -131,18 +131,9 @@ gst_index_resolver_get_type (void)
   return index_resolver_type;
 }
 
-GType
-gst_index_entry_get_type (void)
-{
-  static GType index_entry_type = 0;
-
-  if (!index_entry_type) {
-    index_entry_type = g_boxed_type_register_static ("GstIndexEntry",
-        (GBoxedCopyFunc) gst_index_entry_copy,
-        (GBoxedFreeFunc) gst_index_entry_free);
-  }
-  return index_entry_type;
-}
+G_DEFINE_BOXED_TYPE (GstIndexEntry, gst_index_entry,
+    (GBoxedCopyFunc) gst_index_entry_copy,
+    (GBoxedFreeFunc) gst_index_entry_free);
 
 #if 0
 #define _do_init \

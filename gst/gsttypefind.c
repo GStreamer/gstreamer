@@ -38,16 +38,7 @@
 GST_DEBUG_CATEGORY_EXTERN (type_find_debug);
 #define GST_CAT_DEFAULT type_find_debug
 
-GType
-gst_type_find_get_type (void)
-{
-  static GType typefind_type = 0;
-
-  if (G_UNLIKELY (typefind_type == 0)) {
-    typefind_type = g_pointer_type_register_static ("GstTypeFind");
-  }
-  return typefind_type;
-}
+G_DEFINE_POINTER_TYPE (GstTypeFind, gst_type_find);
 
 /**
  * gst_type_find_register:

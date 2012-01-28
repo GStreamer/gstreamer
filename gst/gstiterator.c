@@ -85,16 +85,8 @@ gst_iterator_copy (const GstIterator * it)
   return copy;
 }
 
-GType
-gst_iterator_get_type (void)
-{
-  static GType type = 0;
-
-  if (G_UNLIKELY (type == 0))
-    type = g_boxed_type_register_static ("GstIterator",
-        (GBoxedCopyFunc) gst_iterator_copy, (GBoxedFreeFunc) gst_iterator_free);
-  return type;
-}
+G_DEFINE_BOXED_TYPE (GstIterator, gst_iterator,
+    (GBoxedCopyFunc) gst_iterator_copy, (GBoxedFreeFunc) gst_iterator_free);
 
 static void
 gst_iterator_init (GstIterator * it,
