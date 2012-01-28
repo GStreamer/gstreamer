@@ -69,42 +69,17 @@ struct _GstMultiSocketSink {
   /*< private >*/
   GMainContext *main_context;
   GCancellable *cancellable;
-
-  guint8 header_flags;
 };
 
 struct _GstMultiSocketSinkClass {
   GstMultiHandleSinkClass parent_class;
 
   /* element methods */
-  void          (*add)          (GstMultiSocketSink *sink, GstMultiSinkHandle handle);
-  void          (*add_full)     (GstMultiSocketSink *sink, GstMultiSinkHandle handle, GstSyncMethod sync,
-		                 GstFormat format, guint64 value,
-				 GstFormat max_format, guint64 max_value);
-  void          (*remove)       (GstMultiSocketSink *sink, GstMultiSinkHandle handle);
-  void          (*remove_flush) (GstMultiSocketSink *sink, GstMultiSinkHandle handle);
-  void          (*clear)        (GstMultiSocketSink *sink);
-  GstStructure* (*get_stats)    (GstMultiSocketSink *sink, GstMultiSinkHandle handle);
-
-  /* vtable */
-  void (*removed) (GstMultiHandleSink *sink, GstMultiSinkHandle handle);
 
   /* signals */
-  void (*client_added) (GstElement *element, GstMultiSinkHandle handle);
-  void (*client_removed) (GstElement *element, GstMultiSinkHandle handle, GstClientStatus status);
-  void (*client_socket_removed) (GstElement *element, GstMultiSinkHandle handle);
 };
 
 GType gst_multi_socket_sink_get_type (void);
-
-void          gst_multi_socket_sink_add          (GstMultiSocketSink *sink, GstMultiSinkHandle handle);
-void          gst_multi_socket_sink_add_full     (GstMultiSocketSink *sink, GstMultiSinkHandle handle, GstSyncMethod sync,
-                                              GstFormat min_format, guint64 min_value,
-                                              GstFormat max_format, guint64 max_value);
-void          gst_multi_socket_sink_remove       (GstMultiSocketSink *sink, GstMultiSinkHandle handle);
-void          gst_multi_socket_sink_remove_flush (GstMultiSocketSink *sink, GstMultiSinkHandle handle);
-void          gst_multi_socket_sink_clear        (GstMultiHandleSink *sink);
-GstStructure*  gst_multi_socket_sink_get_stats    (GstMultiSocketSink *sink, GstMultiSinkHandle handle);
 
 G_END_DECLS
 

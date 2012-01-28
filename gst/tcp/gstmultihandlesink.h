@@ -123,6 +123,7 @@ typedef enum
 // FIXME: is it better to use GSocket * or a gpointer here ?
 typedef union
 {
+  gpointer pointer;
   int fd;
   GSocket *socket;
 } GstMultiSinkHandle;
@@ -169,34 +170,15 @@ typedef struct {
   guint64 last_buffer_ts;
 } GstMultiHandleClient;
 
-// FIXME: remove cast ?
-#define CLIENTS_LOCK_INIT(mhsink)       (g_rec_mutex_init(&(GST_MULTI_HANDLE_SINK(mhsink))->clientslock))
-#define CLIENTS_LOCK_CLEAR(mhsink)      (g_rec_mutex_clear(&(GST_MULTI_HANDLE_SINK(mhsink))->clientslock))
-#define CLIENTS_LOCK(mhsink)            (g_rec_mutex_lock(&(GST_MULTI_HANDLE_SINK(mhsink))->clientslock))
-#define CLIENTS_UNLOCK(mhsink)          (g_rec_mutex_unlock(&(GST_MULTI_HANDLE_SINK(mhsink))->clientslock))
+#define CLIENTS_LOCK_INIT(mhsink)       (g_rec_mutex_init(&(mhsink)->clientslock))
+#define CLIENTS_LOCK_CLEAR(mhsink)      (g_rec_mutex_clear(&(mhsink)->clientslock))
+#define CLIENTS_LOCK(mhsink)            (g_rec_mutex_lock(&(mhsink)->clientslock))
+#define CLIENTS_UNLOCK(mhsink)          (g_rec_mutex_unlock(&(mhsink)->clientslock))
 
-// FIXME: internalize in .c file ?
-gint
-find_syncframe (GstMultiHandleSink * sink, gint idx, gint direction);
-#define find_next_syncframe(s,i) 	find_syncframe(s,i,1)
-#define find_prev_syncframe(s,i) 	find_syncframe(s,i,-1)
-gboolean is_sync_frame (GstMultiHandleSink * sink, GstBuffer * buffer);
-gboolean gst_multi_handle_sink_stop (GstBaseSink * bsink);
-gboolean gst_multi_handle_sink_start (GstBaseSink * bsink);
-void gst_multi_handle_sink_setup_dscp (GstMultiHandleSink * mhsink);
 gint gst_multi_handle_sink_setup_dscp_client (GstMultiHandleSink * sink, GstMultiHandleClient * client);
-gint get_buffers_max (GstMultiHandleSink * sink, gint64 max);
 gint
-gst_multi_handle_sink_recover_client (GstMultiHandleSink * sink,
+gst_multi_handle_sink_new_client_position (GstMultiHandleSink * sink,
     GstMultiHandleClient * client);
-gint
-gst_multi_handle_sink_new_client (GstMultiHandleSink * sink,
-    GstMultiHandleClient * client);
-gboolean
-find_limits (GstMultiHandleSink * sink,
-    gint * min_idx, gint bytes_min, gint buffers_min, gint64 time_min,
-    gint * max_idx, gint bytes_max, gint buffers_max, gint64 time_max);
-
 
 /**
  * GstMultiHandleSink:
@@ -254,9 +236,21 @@ struct _GstMultiHandleSink {
   gint buffers_queued;  /* number of queued buffers */
   gint bytes_queued;    /* number of queued bytes */
   gint time_queued;     /* number of queued time */
-
-  guint8 header_flags;
 };
+
+/* MultiHandleSink signals implemented in base class and declared
+ * in subclass
+ */
+enum
+{
+  /* signals */
+  GST_MULTI_HANDLE_SIGNAL_CLIENT_ADDED,
+  GST_MULTI_HANDLE_SIGNAL_CLIENT_REMOVED,
+  GST_MULTI_HANDLE_SIGNAL_CLIENT_HANDLE_REMOVED,
+
+  GST_MULTI_HANDLE_LAST_SIGNAL
+};
+
 
 struct _GstMultiHandleSinkClass {
   GstBaseSinkClass parent_class;
@@ -268,25 +262,31 @@ struct _GstMultiHandleSinkClass {
 				 GstFormat max_format, guint64 max_value);
   void          (*remove)       (GstMultiHandleSink *sink, GstMultiSinkHandle handle);
   void          (*remove_flush) (GstMultiHandleSink *sink, GstMultiSinkHandle handle);
+
   void          (*clear)        (GstMultiHandleSink *sink);
-  void          (*clear_post)   (GstMultiHandleSink *sink);
   void          (*stop_pre)     (GstMultiHandleSink *sink);
   void          (*stop_post)    (GstMultiHandleSink *sink);
   gboolean      (*start_pre)    (GstMultiHandleSink *sink);
   gpointer      (*thread)       (GstMultiHandleSink *sink);
-  void          (*queue_buffer) (GstMultiHandleSink *sink,
-                                 GstBuffer *buffer);
+  /* called by subclass when it has a new buffer to queue for a client */
   gboolean      (*client_queue_buffer)
                                 (GstMultiHandleSink *sink,
                                  GstMultiHandleClient *client,
                                  GstBuffer *buffer);
   int           (*client_get_fd)
                                 (GstMultiHandleClient *client);
+  void          (*client_free)
+                                (GstMultiHandleClient *client);
   void          (*handle_debug) (GstMultiSinkHandle handle, gchar debug[30]);
+  gpointer      (*handle_hash_key)  (GstMultiSinkHandle handle);
+  /* called when the client hash/list has been changed */
+  void          (*hash_changed)  (GstMultiHandleSink *mhsink);
+  void          (*hash_adding)   (GstMultiHandleSink *mhsink, GstMultiHandleClient *client);
+  void          (*hash_removing) (GstMultiHandleSink *mhsink, GstMultiHandleClient *client);
+  GstMultiHandleClient* (*new_client) (GstMultiHandleSink *mhsink, GstMultiSinkHandle handle, GstSyncMethod sync_method);
 
 
   GstStructure* (*get_stats)    (GstMultiHandleSink *sink, GstMultiSinkHandle handle);
-  void          (*remove_client_link) (GstMultiHandleSink * sink, GList * link);
 
 
   /* vtable */
@@ -297,31 +297,31 @@ struct _GstMultiHandleSinkClass {
   /* signals */
   void (*client_added) (GstElement *element, GstMultiSinkHandle handle);
   void (*client_removed) (GstElement *element, GstMultiSinkHandle handle, GstClientStatus status);
-  void (*client_socket_removed) (GstElement *element, GstMultiSinkHandle handle);
+  void (*client_handle_removed) (GstElement *element, GstMultiSinkHandle handle);
+
+  guint signals[GST_MULTI_HANDLE_LAST_SIGNAL];
 };
 
 GType gst_multi_handle_sink_get_type (void);
 
-void          gst_multi_handle_sink_add          (GstMultiHandleSink *sink, GSocket *socket);
-void          gst_multi_handle_sink_add_full     (GstMultiHandleSink *sink, GSocket *socket, GstSyncMethod sync, 
+void          gst_multi_handle_sink_add          (GstMultiHandleSink *sink, GstMultiSinkHandle);
+void          gst_multi_handle_sink_add_full     (GstMultiHandleSink *sink, GstMultiSinkHandle, GstSyncMethod sync, 
                                               GstFormat min_format, guint64 min_value,
                                               GstFormat max_format, guint64 max_value);
-void          gst_multi_handle_sink_remove       (GstMultiHandleSink *sink, GSocket *socket);
-void          gst_multi_handle_sink_remove_flush (GstMultiHandleSink *sink, GSocket *socket);
-GstStructure*  gst_multi_handle_sink_get_stats    (GstMultiHandleSink *sink, GSocket *socket);
+void          gst_multi_handle_sink_remove       (GstMultiHandleSink *sink, GstMultiSinkHandle handle);
+void          gst_multi_handle_sink_remove_flush (GstMultiHandleSink *sink, GstMultiSinkHandle handle);
+GstStructure*  gst_multi_handle_sink_get_stats    (GstMultiHandleSink *sink, GstMultiSinkHandle handle);
+void gst_multi_handle_sink_remove_client_link (GstMultiHandleSink * sink,
+    GList * link);
 
 void gst_multi_handle_sink_client_init (GstMultiHandleClient * client, GstSyncMethod sync_method);
 
-// FIXME: make static again after refactoring
 #define GST_TYPE_RECOVER_POLICY (gst_multi_handle_sink_recover_policy_get_type())
-GType
-gst_multi_handle_sink_recover_policy_get_type (void);
+GType gst_multi_handle_sink_recover_policy_get_type (void);
 #define GST_TYPE_SYNC_METHOD (gst_multi_handle_sink_sync_method_get_type())
-GType
-gst_multi_handle_sink_sync_method_get_type (void);
+GType gst_multi_handle_sink_sync_method_get_type (void);
 #define GST_TYPE_CLIENT_STATUS (gst_multi_handle_sink_client_status_get_type())
-GType
-gst_multi_handle_sink_client_status_get_type (void);
+GType gst_multi_handle_sink_client_status_get_type (void);
 
 
 G_END_DECLS

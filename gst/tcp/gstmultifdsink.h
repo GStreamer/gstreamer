@@ -70,43 +70,20 @@ struct _GstMultiFdSink {
   GstPoll *fdset;
 
   gboolean handle_read;
-
-  guint8 header_flags;
 };
 
 struct _GstMultiFdSinkClass {
   GstMultiHandleSinkClass parent_class;
 
   /* element methods */
-  void          (*add)          (GstMultiFdSink *sink, GstMultiSinkHandle handle);
-  void          (*add_full)     (GstMultiFdSink *sink, GstMultiSinkHandle handle, GstSyncMethod sync,
-		                 GstFormat format, guint64 value, 
-				 GstFormat max_format, guint64 max_value);
-  void          (*remove)       (GstMultiFdSink *sink, GstMultiSinkHandle handle);
-  void          (*remove_flush) (GstMultiFdSink *sink, GstMultiSinkHandle handle);
-  void          (*clear)        (GstMultiFdSink *sink);
-  GValueArray*  (*get_stats)    (GstMultiFdSink *sink, GstMultiSinkHandle handle);
 
   /* vtable */
   gboolean (*wait)   (GstMultiFdSink *sink, GstPoll *set);
-  void (*removed) (GstMultiFdSink *sink, GstMultiSinkHandle handle);
 
   /* signals */
-  void (*client_added) (GstElement *element, GstMultiSinkHandle handle);
-  void (*client_removed) (GstElement *element, GstMultiSinkHandle handle, GstClientStatus status);
-  void (*client_fd_removed) (GstElement *element, GstMultiSinkHandle handle);
 };
 
 GType gst_multi_fd_sink_get_type (void);
-
-void          gst_multi_fd_sink_add          (GstMultiFdSink *sink, GstMultiSinkHandle handle);
-void          gst_multi_fd_sink_add_full     (GstMultiFdSink *sink, GstMultiSinkHandle handle, GstSyncMethod sync, 
-                                              GstFormat min_format, guint64 min_value,
-                                              GstFormat max_format, guint64 max_value);
-void          gst_multi_fd_sink_remove       (GstMultiFdSink *sink, GstMultiSinkHandle handle);
-void          gst_multi_fd_sink_remove_flush (GstMultiFdSink *sink, GstMultiSinkHandle handle);
-void          gst_multi_fd_sink_clear        (GstMultiHandleSink *sink);
-GValueArray*  gst_multi_fd_sink_get_stats    (GstMultiFdSink *sink, GstMultiSinkHandle handle);
 
 G_END_DECLS
 

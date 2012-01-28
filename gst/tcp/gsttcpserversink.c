@@ -77,12 +77,10 @@ gst_tcp_server_sink_class_init (GstTCPServerSinkClass * klass)
   GObjectClass *gobject_class;
   GstElementClass *gstelement_class;
   GstMultiHandleSinkClass *gstmultihandlesink_class;
-  GstMultiSocketSinkClass *gstmultifdsink_class;
 
   gobject_class = (GObjectClass *) klass;
   gstelement_class = (GstElementClass *) klass;
   gstmultihandlesink_class = (GstMultiHandleSinkClass *) klass;
-  gstmultifdsink_class = (GstMultiSocketSinkClass *) klass;
 
   gobject_class->set_property = gst_tcp_server_sink_set_property;
   gobject_class->get_property = gst_tcp_server_sink_get_property;
@@ -103,7 +101,7 @@ gst_tcp_server_sink_class_init (GstTCPServerSinkClass * klass)
 
   gstmultihandlesink_class->init = gst_tcp_server_sink_init_send;
   gstmultihandlesink_class->close = gst_tcp_server_sink_close;
-  gstmultifdsink_class->removed = gst_tcp_server_sink_removed;
+  gstmultihandlesink_class->removed = gst_tcp_server_sink_removed;
 
   GST_DEBUG_CATEGORY_INIT (tcpserversink_debug, "tcpserversink", 0, "TCP sink");
 }
@@ -147,7 +145,7 @@ gst_tcp_server_sink_handle_server_read (GstTCPServerSink * sink)
   if (!client_socket)
     goto accept_failed;
 
-  gst_multi_socket_sink_add (GST_MULTI_SOCKET_SINK (sink),
+  gst_multi_handle_sink_add (GST_MULTI_HANDLE_SINK (sink),
       (GstMultiSinkHandle) client_socket);
 
 #ifndef GST_DISABLE_GST_DEBUG
