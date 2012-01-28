@@ -150,6 +150,14 @@ G_STMT_START { \
       "data read '%s' differs from '%s'", data, ref); \
 } G_STMT_END;
 
+#define fail_unless_num_handles(sink,num) \
+G_STMT_START { \
+  gint handles; \
+  g_object_get (sink, "num-sockets", &handles, NULL); \
+  fail_unless (handles == num, \
+      "sink has %d handles instead of expected %d", handles, num); \
+} G_STMT_END;
+
 GST_START_TEST (test_add_client)
 {
   GstElement *sink;
@@ -279,7 +287,9 @@ GST_START_TEST (test_streamheader)
   ASSERT_SET_STATE (sink, GST_STATE_PLAYING, GST_STATE_CHANGE_ASYNC);
 
   /* add the first client */
+  fail_unless_num_handles (sink, 0);
   g_signal_emit_by_name (sink, "add", socket[0]);
+  fail_unless_num_handles (sink, 1);
 
   /* create caps with streamheader, set the caps, and push the IN_CAPS
    * buffers */
@@ -315,6 +325,7 @@ GST_START_TEST (test_streamheader)
 
   /* now add the second client */
   g_signal_emit_by_name (sink, "add", socket[2]);
+  fail_unless_num_handles (sink, 2);
   //FIXME:
   //fail_if_can_read ("second client", socket[3]);
 
@@ -334,8 +345,11 @@ GST_START_TEST (test_streamheader)
 
   GST_DEBUG ("cleaning up multisocketsink");
 
+  fail_unless_num_handles (sink, 2);
   g_signal_emit_by_name (sink, "remove", socket[0]);
+  fail_unless_num_handles (sink, 1);
   g_signal_emit_by_name (sink, "remove", socket[2]);
+  fail_unless_num_handles (sink, 0);
 
   ASSERT_SET_STATE (sink, GST_STATE_NULL, GST_STATE_CHANGE_SUCCESS);
   cleanup_multisocketsink (sink);
@@ -529,11 +543,14 @@ GST_START_TEST (test_burst_client_bytes)
   fail_if (buffers_queued != 7);
 
   /* now add the clients */
+  fail_unless_num_handles (sink, 0);
   g_signal_emit_by_name (sink, "add", socket[0]);
+  fail_unless_num_handles (sink, 1);
   g_signal_emit_by_name (sink, "add_full", socket[2], GST_SYNC_METHOD_BURST,
       GST_FORMAT_BYTES, (guint64) 50, GST_FORMAT_BYTES, (guint64) 200);
   g_signal_emit_by_name (sink, "add_full", socket[4], GST_SYNC_METHOD_BURST,
       GST_FORMAT_BYTES, (guint64) 50, GST_FORMAT_BYTES, (guint64) 50);
+  fail_unless_num_handles (sink, 3);
 
   /* push last buffer to make client fds ready for reading */
   for (i = 9; i < 10; i++) {

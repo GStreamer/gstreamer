@@ -158,6 +158,14 @@ G_STMT_START { \
       "data read '%s' differs from '%s'", data, ref); \
 } G_STMT_END;
 
+#define fail_unless_num_handles(sink,num) \
+G_STMT_START { \
+  gint handles; \
+  g_object_get (sink, "num-fds", &handles, NULL); \
+  fail_unless (handles == num, \
+      "sink has %d handles instead of expected %d", handles, num); \
+} G_STMT_END;
+
 /* from the given two data buffers, create two streamheader buffers and
  * some caps that match it, and store them in the given pointers
  * returns  one ref to each of the buffers and the caps */
@@ -246,7 +254,9 @@ GST_START_TEST (test_streamheader)
   ASSERT_SET_STATE (sink, GST_STATE_PLAYING, GST_STATE_CHANGE_ASYNC);
 
   /* add the first client */
+  fail_unless_num_handles (sink, 0);
   g_signal_emit_by_name (sink, "add", pfd1[1]);
+  fail_unless_num_handles (sink, 1);
 
   /* create caps with streamheader, set the caps, and push the IN_CAPS
    * buffers */
@@ -276,6 +286,7 @@ GST_START_TEST (test_streamheader)
 
   /* now add the second client */
   g_signal_emit_by_name (sink, "add", pfd2[1]);
+  fail_unless_num_handles (sink, 2);
   //FIXME:
   //fail_if_can_read ("second client", pfd2[0]);
 
@@ -295,8 +306,11 @@ GST_START_TEST (test_streamheader)
 
   GST_DEBUG ("cleaning up multifdsink");
 
+  fail_unless_num_handles (sink, 2);
   g_signal_emit_by_name (sink, "remove", pfd1[1]);
+  fail_unless_num_handles (sink, 1);
   g_signal_emit_by_name (sink, "remove", pfd2[1]);
+  fail_unless_num_handles (sink, 0);
 
   ASSERT_SET_STATE (sink, GST_STATE_NULL, GST_STATE_CHANGE_SUCCESS);
   cleanup_multifdsink (sink);
@@ -492,11 +506,14 @@ GST_START_TEST (test_burst_client_bytes)
   fail_if (buffers_queued != 7);
 
   /* now add the clients */
+  fail_unless_num_handles (sink, 0);
   g_signal_emit_by_name (sink, "add", pfd1[1]);
+  fail_unless_num_handles (sink, 1);
   g_signal_emit_by_name (sink, "add_full", pfd2[1], GST_SYNC_METHOD_BURST,
       GST_FORMAT_BYTES, (guint64) 50, GST_FORMAT_BYTES, (guint64) 200);
   g_signal_emit_by_name (sink, "add_full", pfd3[1], GST_SYNC_METHOD_BURST,
       GST_FORMAT_BYTES, (guint64) 50, GST_FORMAT_BYTES, (guint64) 50);
+  fail_unless_num_handles (sink, 3);
 
   /* push last buffer to make client fds ready for reading */
   for (i = 9; i < 10; i++) {
