@@ -426,10 +426,6 @@ gst_kate_enc_create_buffer (GstKateEnc * ke, kate_packet * kp,
   GST_BUFFER_TIMESTAMP (buffer) = timestamp;
   GST_BUFFER_DURATION (buffer) = duration;
 
-  /* data packets are each on their own page */
-//  if (!header)
-//    GST_BUFFER_FLAG_SET (buffer, GST_BUFFER_FLAG_DISCONT);
-
   return buffer;
 }
 
@@ -444,9 +440,6 @@ gst_kate_enc_push_buffer (GstKateEnc * ke, GstBuffer * buffer)
     ke->latest_end_time =
         GST_BUFFER_TIMESTAMP (buffer) + GST_BUFFER_DURATION (buffer);
   }
-
-  /* Hack to flush each packet on its own page - taken off the CMML encoder element */
-  GST_BUFFER_DURATION (buffer) = G_MAXINT64;
 
   flow = gst_pad_push (ke->srcpad, buffer);
   if (G_UNLIKELY (flow != GST_FLOW_OK)) {
