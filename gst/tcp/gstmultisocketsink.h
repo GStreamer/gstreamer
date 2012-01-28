@@ -55,7 +55,6 @@ typedef struct _GstMultiSocketSinkClass GstMultiSocketSinkClass;
 typedef struct {
   GstMultiHandleClient client;
 
-  GstMultiSinkHandle handle;
   GSource *source;
 } GstSocketClient;
 
@@ -68,7 +67,7 @@ struct _GstMultiSocketSink {
   GstMultiHandleSink element;
 
   /*< private >*/
-  GHashTable *socket_hash;  /* index on socket to client */
+  GHashTable *handle_hash;  /* index on socket to client */
 
   GMainContext *main_context;
   GCancellable *cancellable;

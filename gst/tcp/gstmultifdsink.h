@@ -52,7 +52,7 @@ typedef struct _GstMultiFdSinkClass GstMultiFdSinkClass;
 typedef struct {
   GstMultiHandleClient client;
 
-  GstPollFD fd;
+  GstPollFD gfd;
 
   gboolean is_socket;
 } GstTCPClient;
@@ -66,7 +66,7 @@ struct _GstMultiFdSink {
   GstMultiHandleSink element;
 
   /*< private >*/
-  GHashTable *fd_hash;  /* index on fd to client */
+  GHashTable *handle_hash;  /* index on fd to client */
 
   gint mode;
   GstPoll *fdset;

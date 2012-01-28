@@ -130,6 +130,8 @@ typedef union
 /* structure for a client
  */
 typedef struct {
+  GstMultiSinkHandle handle;
+
   gchar debug[30];              /* a debug string used in debug calls to
                                    identify the client */
   gint bufpos;                  /* position of this client in the global queue */
@@ -278,6 +280,7 @@ struct _GstMultiHandleSinkClass {
                                  GstBuffer *buffer);
   int           (*client_get_fd)
                                 (GstMultiHandleClient *client);
+  void          (*handle_debug) (GstMultiSinkHandle handle, gchar debug[30]);
 
 
   GstStructure* (*get_stats)    (GstMultiHandleSink *sink, GstMultiSinkHandle handle);
