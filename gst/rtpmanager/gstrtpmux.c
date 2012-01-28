@@ -651,6 +651,7 @@ gst_rtp_mux_getcaps (GstPad * pad, GstRTPMux * mux, GstCaps * filter)
   do {
     gst_value_set_caps (&v, filtered_caps);
     res = gst_iterator_fold (iter, same_clock_rate_fold, &v, pad);
+    gst_iterator_resync (iter);
   } while (res == GST_ITERATOR_RESYNC);
   gst_iterator_free (iter);
 
