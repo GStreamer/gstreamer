@@ -194,9 +194,7 @@ enum
 
   PROP_RESEND_STREAMHEADER,
 
-#if 0
-  PROP_NUM_SOCKETS,
-#endif
+  PROP_NUM_HANDLES,
 
   PROP_LAST
 };
@@ -458,12 +456,12 @@ gst_multi_handle_sink_class_init (GstMultiHandleSinkClass * klass)
           DEFAULT_RESEND_STREAMHEADER,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
-#if 0
-  g_object_class_install_property (gobject_class, PROP_NUM_SOCKETS,
-      g_param_spec_uint ("num-sockets", "Number of sockets",
-          "The current number of client sockets",
+  g_object_class_install_property (gobject_class, PROP_NUM_HANDLES,
+      g_param_spec_uint ("num-handles", "Number of handles",
+          "The current number of client handles",
           0, G_MAXUINT, 0, G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
 
+#if 0
   /**
    * GstMultiHandleSink::add:
    * @gstmultihandlesink: the multihandlesink element to emit this signal on
@@ -689,6 +687,7 @@ gst_multi_handle_sink_finalize (GObject * object)
 
   CLIENTS_LOCK_CLEAR (this);
   g_array_free (this->bufqueue, TRUE);
+  g_hash_table_destroy (this->handle_hash);
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
@@ -2620,12 +2619,10 @@ gst_multi_handle_sink_get_property (GObject * object, guint prop_id,
     case PROP_RESEND_STREAMHEADER:
       g_value_set_boolean (value, multihandlesink->resend_streamheader);
       break;
-#if 0
-    case PROP_NUM_SOCKETS:
+    case PROP_NUM_HANDLES:
       g_value_set_uint (value,
-          g_hash_table_size (multihandlesink->socket_hash));
+          g_hash_table_size (multihandlesink->handle_hash));
       break;
-#endif
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;

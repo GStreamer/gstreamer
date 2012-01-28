@@ -214,6 +214,8 @@ struct _GstMultiHandleSink {
   GList *clients;       /* list of clients we are serving */
   guint clients_cookie; /* Cookie to detect changes to the clients list */
 
+  GHashTable *handle_hash;  /* index of handle -> GstMultiHandleClient */
+
   GMainContext *main_context;
   GCancellable *cancellable;
 
@@ -285,6 +287,7 @@ struct _GstMultiHandleSinkClass {
 
   GstStructure* (*get_stats)    (GstMultiHandleSink *sink, GstMultiSinkHandle handle);
   void          (*remove_client_link) (GstMultiHandleSink * sink, GList * link);
+
 
   /* vtable */
   gboolean (*init)   (GstMultiHandleSink *sink);

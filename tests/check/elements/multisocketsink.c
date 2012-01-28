@@ -153,7 +153,7 @@ G_STMT_START { \
 #define fail_unless_num_handles(sink,num) \
 G_STMT_START { \
   gint handles; \
-  g_object_get (sink, "num-sockets", &handles, NULL); \
+  g_object_get (sink, "num-handles", &handles, NULL); \
   fail_unless (handles == num, \
       "sink has %d handles instead of expected %d", handles, num); \
 } G_STMT_END;

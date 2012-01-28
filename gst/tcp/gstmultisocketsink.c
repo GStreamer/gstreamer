@@ -142,8 +142,6 @@ enum
 {
   PROP_0,
 
-  PROP_NUM_SOCKETS,
-
   PROP_LAST
 };
 
@@ -197,11 +195,6 @@ gst_multi_socket_sink_class_init (GstMultiSocketSinkClass * klass)
   gobject_class->set_property = gst_multi_socket_sink_set_property;
   gobject_class->get_property = gst_multi_socket_sink_get_property;
   gobject_class->finalize = gst_multi_socket_sink_finalize;
-
-  g_object_class_install_property (gobject_class, PROP_NUM_SOCKETS,
-      g_param_spec_uint ("num-sockets", "Number of sockets",
-          "The current number of client sockets",
-          0, G_MAXUINT, 0, G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
 
   /**
    * GstMultiSocketSink::add:
@@ -381,7 +374,9 @@ gst_multi_socket_sink_class_init (GstMultiSocketSinkClass * klass)
 static void
 gst_multi_socket_sink_init (GstMultiSocketSink * this)
 {
-  this->handle_hash = g_hash_table_new (g_direct_hash, g_int_equal);
+  GstMultiHandleSink *mhsink = GST_MULTI_HANDLE_SINK (this);
+
+  mhsink->handle_hash = g_hash_table_new (g_direct_hash, g_int_equal);
 
   this->cancellable = g_cancellable_new ();
 }
@@ -391,7 +386,6 @@ gst_multi_socket_sink_finalize (GObject * object)
 {
   GstMultiSocketSink *this = GST_MULTI_SOCKET_SINK (object);
 
-  g_hash_table_destroy (this->handle_hash);
   if (this->cancellable) {
     g_object_unref (this->cancellable);
     this->cancellable = NULL;
@@ -457,13 +451,13 @@ gst_multi_socket_sink_add_full (GstMultiSocketSink * sink,
   CLIENTS_LOCK (sink);
 
   /* check the hash to find a duplicate fd */
-  clink = g_hash_table_lookup (sink->handle_hash, handle.socket);
+  clink = g_hash_table_lookup (mhsink->handle_hash, handle.socket);
   if (clink != NULL)
     goto duplicate;
 
   /* we can add the fd now */
   clink = mhsink->clients = g_list_prepend (mhsink->clients, client);
-  g_hash_table_insert (sink->handle_hash, handle.socket, clink);
+  g_hash_table_insert (mhsink->handle_hash, handle.socket, clink);
   mhsink->clients_cookie++;
 
   /* set the socket to non blocking */
@@ -540,7 +534,7 @@ gst_multi_socket_sink_remove (GstMultiSocketSink * sink,
   GST_DEBUG_OBJECT (sink, "%s removing client", debug);
 
   CLIENTS_LOCK (sink);
-  clink = g_hash_table_lookup (sink->handle_hash, handle.socket);
+  clink = g_hash_table_lookup (mhsink->handle_hash, handle.socket);
   if (clink != NULL) {
     GstSocketClient *client = clink->data;
     GstMultiHandleClient *mhclient = (GstMultiHandleClient *) client;
@@ -578,7 +572,7 @@ gst_multi_socket_sink_remove_flush (GstMultiSocketSink * sink,
   GST_DEBUG_OBJECT (sink, "%s flushing client", debug);
 
   CLIENTS_LOCK (sink);
-  clink = g_hash_table_lookup (sink->handle_hash, handle.socket);
+  clink = g_hash_table_lookup (mhsink->handle_hash, handle.socket);
   if (clink != NULL) {
     GstSocketClient *client = clink->data;
     GstMultiHandleClient *mhclient = (GstMultiHandleClient *) client;
@@ -621,7 +615,7 @@ gst_multi_socket_sink_get_stats (GstMultiSocketSink * sink,
   mhsinkclass->handle_debug (handle, debug);
 
   CLIENTS_LOCK (sink);
-  clink = g_hash_table_lookup (sink->handle_hash, handle.socket);
+  clink = g_hash_table_lookup (mhsink->handle_hash, handle.socket);
   if (clink == NULL)
     goto noclient;
 
@@ -677,7 +671,6 @@ gst_multi_socket_sink_remove_client_link (GstMultiHandleSink * sink,
   GTimeVal now;
   GstSocketClient *client = link->data;
   GstMultiHandleClient *mhclient = (GstMultiHandleClient *) client;
-  GstMultiSocketSink *mssink = GST_MULTI_SOCKET_SINK (sink);
   GstMultiSocketSinkClass *fclass;
 
   fclass = GST_MULTI_SOCKET_SINK_GET_CLASS (sink);
@@ -753,7 +746,7 @@ gst_multi_socket_sink_remove_client_link (GstMultiHandleSink * sink,
 
   /* fd cannot be reused in the above signal callback so we can safely
    * remove it from the hashtable here */
-  if (!g_hash_table_remove (mssink->handle_hash, mhclient->handle.socket)) {
+  if (!g_hash_table_remove (sink->handle_hash, mhclient->handle.socket)) {
     GST_WARNING_OBJECT (sink,
         "%s error removing client %p from hash", mhclient->debug, client);
   }
@@ -1366,7 +1359,7 @@ gst_multi_socket_sink_socket_condition (GstMultiSinkHandle handle,
       GST_MULTI_HANDLE_SINK_GET_CLASS (mhsink);
 
   CLIENTS_LOCK (sink);
-  clink = g_hash_table_lookup (sink->handle_hash, handle.socket);
+  clink = g_hash_table_lookup (mhsink->handle_hash, handle.socket);
   if (clink == NULL) {
     ret = FALSE;
     goto done;
@@ -1491,20 +1484,12 @@ gst_multi_socket_sink_set_property (GObject * object, guint prop_id,
   }
 }
 
+// FIXME: remove ?
 static void
 gst_multi_socket_sink_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec)
 {
-  GstMultiSocketSink *multisocketsink;
-
-  multisocketsink = GST_MULTI_SOCKET_SINK (object);
-
   switch (prop_id) {
-    case PROP_NUM_SOCKETS:
-      g_value_set_uint (value,
-          g_hash_table_size (multisocketsink->handle_hash));
-      break;
-
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -1568,7 +1553,7 @@ gst_multi_socket_sink_stop_post (GstMultiHandleSink * mhsink)
     mssink->main_context = NULL;
   }
 
-  g_hash_table_foreach_remove (mssink->handle_hash, multisocketsink_hash_remove,
+  g_hash_table_foreach_remove (mhsink->handle_hash, multisocketsink_hash_remove,
       mssink);
 }
 

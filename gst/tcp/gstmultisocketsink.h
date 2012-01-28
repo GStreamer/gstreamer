@@ -67,8 +67,6 @@ struct _GstMultiSocketSink {
   GstMultiHandleSink element;
 
   /*< private >*/
-  GHashTable *handle_hash;  /* index on socket to client */
-
   GMainContext *main_context;
   GCancellable *cancellable;
 

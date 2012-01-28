@@ -66,8 +66,6 @@ struct _GstMultiFdSink {
   GstMultiHandleSink element;
 
   /*< private >*/
-  GHashTable *handle_hash;  /* index on fd to client */
-
   gint mode;
   GstPoll *fdset;
 
