@@ -535,6 +535,7 @@ no_data:
   }
 send_error:
   {
+    g_mutex_unlock (&sink->client_lock);
     GST_DEBUG ("got send error %s", err->message);
     g_clear_error (&err);
     return GST_FLOW_ERROR;
