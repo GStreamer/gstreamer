@@ -74,7 +74,7 @@ static void gst_valve_get_property (GObject * object,
 
 static GstFlowReturn gst_valve_chain (GstPad * pad, GstObject * parent,
     GstBuffer * buffer);
-static gboolean gst_valve_sink_event (GstPad * pad, GstObject * parent,
+static gboolean gst_valve_event (GstPad * pad, GstObject * parent,
     GstEvent * event);
 static gboolean gst_valve_query (GstPad * pad, GstObject * parent,
     GstQuery * query);
@@ -118,6 +118,8 @@ gst_valve_init (GstValve * valve)
   valve->discont = FALSE;
 
   valve->srcpad = gst_pad_new_from_static_template (&srctemplate, "src");
+  gst_pad_set_event_function (valve->srcpad,
+      GST_DEBUG_FUNCPTR (gst_valve_event));
   gst_pad_set_query_function (valve->srcpad,
       GST_DEBUG_FUNCPTR (gst_valve_query));
   gst_element_add_pad (GST_ELEMENT (valve), valve->srcpad);
@@ -126,9 +128,10 @@ gst_valve_init (GstValve * valve)
   gst_pad_set_chain_function (valve->sinkpad,
       GST_DEBUG_FUNCPTR (gst_valve_chain));
   gst_pad_set_event_function (valve->sinkpad,
-      GST_DEBUG_FUNCPTR (gst_valve_sink_event));
+      GST_DEBUG_FUNCPTR (gst_valve_event));
   gst_pad_set_query_function (valve->sinkpad,
       GST_DEBUG_FUNCPTR (gst_valve_query));
+  GST_PAD_SET_PROXY_CAPS (valve->sinkpad);
   gst_element_add_pad (GST_ELEMENT (valve), valve->sinkpad);
 }
 
@@ -142,6 +145,7 @@ gst_valve_set_property (GObject * object,
   switch (prop_id) {
     case PROP_DROP:
       g_atomic_int_set (&valve->drop, g_value_get_boolean (value));
+      gst_pad_push_event (valve->sinkpad, gst_event_new_reconfigure ());
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -165,6 +169,25 @@ gst_valve_get_property (GObject * object,
   }
 }
 
+
+static gboolean
+forward_sticky_events (GstPad * pad, GstEvent ** event, gpointer user_data)
+{
+  GstValve *valve = user_data;
+
+  if (!gst_pad_push_event (valve->srcpad, gst_event_ref (*event)))
+    valve->need_repush_sticky = TRUE;
+
+  return TRUE;
+}
+
+static void
+gst_valve_repush_sticky (GstValve * valve)
+{
+  valve->need_repush_sticky = FALSE;
+  gst_pad_sticky_events_foreach (valve->sinkpad, forward_sticky_events, valve);
+}
+
 static GstFlowReturn
 gst_valve_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
 {
@@ -181,6 +204,9 @@ gst_valve_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
       valve->discont = FALSE;
     }
 
+    if (valve->need_repush_sticky)
+      gst_valve_repush_sticky (valve);
+
     ret = gst_pad_push (valve->srcpad, buffer);
   }
 
@@ -196,47 +222,42 @@ gst_valve_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
 
 
 static gboolean
-gst_valve_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
+gst_valve_event (GstPad * pad, GstObject * parent, GstEvent * event)
 {
   GstValve *valve;
   gboolean ret = TRUE;
 
   valve = GST_VALVE (parent);
 
-  if (g_atomic_int_get (&valve->drop))
+  if (g_atomic_int_get (&valve->drop)) {
+    valve->need_repush_sticky |= GST_EVENT_IS_STICKY (event);
     gst_event_unref (event);
-  else
-    ret = gst_pad_push_event (valve->srcpad, event);
+  } else {
+    if (valve->need_repush_sticky)
+      gst_valve_repush_sticky (valve);
+    ret = gst_pad_event_default (pad, parent, event);
+  }
 
   /* Ignore errors if "drop" was changed while the thread was blocked
    * downwards.
    */
-  if (g_atomic_int_get (&valve->drop))
+  if (g_atomic_int_get (&valve->drop)) {
+    valve->need_repush_sticky |= GST_EVENT_IS_STICKY (event);
     ret = TRUE;
+  }
 
   return ret;
 }
 
+
+
 static gboolean
 gst_valve_query (GstPad * pad, GstObject * parent, GstQuery * query)
 {
-  GstValve *valve;
-  gboolean res;
-  GstPad *otherpad;
+  GstValve *valve = GST_VALVE (parent);
 
-  valve = GST_VALVE (parent);
+  if (g_atomic_int_get (&valve->drop))
+    return FALSE;
 
-  otherpad = (pad == valve->sinkpad ? valve->srcpad : valve->sinkpad);
-
-  switch (GST_QUERY_TYPE (query)) {
-    case GST_QUERY_CAPS:
-      if (!(res = gst_pad_peer_query (otherpad, query)))
-        res = gst_pad_query_default (pad, parent, query);
-      break;
-    default:
-      res = gst_pad_peer_query (otherpad, query);
-      break;
-  }
-
-  return res;
+  return gst_pad_query_default (pad, parent, query);
 }

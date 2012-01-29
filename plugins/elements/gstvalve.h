@@ -61,6 +61,7 @@ struct _GstValve
 
   /* Protected by the stream lock */
   gboolean discont;
+  gboolean need_repush_sticky;
 
   GstPad *srcpad;
   GstPad *sinkpad;
