@@ -754,6 +754,7 @@ gst_rtp_mux_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
 {
   GstRTPMux *mux = GST_RTP_MUX (parent);
   gboolean is_pad;
+  gboolean ret;
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_CAPS:
@@ -761,7 +762,9 @@ gst_rtp_mux_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
       GstCaps *caps;
 
       gst_event_parse_caps (event, &caps);
-      return gst_rtp_mux_setcaps (pad, mux, caps);
+      ret = gst_rtp_mux_setcaps (pad, mux, caps);
+      gst_event_unref (event);
+      return ret;
     }
     case GST_EVENT_FLUSH_STOP:
     {
@@ -781,7 +784,6 @@ gst_rtp_mux_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
         gst_event_copy_segment (event, &padpriv->segment);
       }
       GST_OBJECT_UNLOCK (mux);
-      gst_event_unref (event);
       break;
     }
     default:
@@ -792,10 +794,12 @@ gst_rtp_mux_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
   is_pad = (pad == mux->last_pad);
   GST_OBJECT_UNLOCK (mux);
 
-  if (is_pad)
+  if (is_pad) {
     return gst_pad_push_event (mux->srcpad, event);
-  else
+  } else {
+    gst_event_unref (event);
     return TRUE;
+  }
 }
 
 static void
