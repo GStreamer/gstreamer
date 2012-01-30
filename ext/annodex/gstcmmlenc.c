@@ -338,9 +338,9 @@ gst_cmml_enc_set_header_on_caps (GstCmmlEnc * enc, GstCaps * caps,
   gst_value_array_append_value (&array, &value);
   gst_buffer_unref (buffer);
 
-  GST_BUFFER_FLAG_SET (ident, GST_BUFFER_FLAG_IN_CAPS);
-  GST_BUFFER_FLAG_SET (preamble, GST_BUFFER_FLAG_IN_CAPS);
-  GST_BUFFER_FLAG_SET (head, GST_BUFFER_FLAG_IN_CAPS);
+  GST_BUFFER_FLAG_SET (ident, GST_BUFFER_FLAG_HEADER);
+  GST_BUFFER_FLAG_SET (preamble, GST_BUFFER_FLAG_HEADER);
+  GST_BUFFER_FLAG_SET (head, GST_BUFFER_FLAG_HEADER);
 
   gst_structure_set_value (structure, "streamheader", &array);
 

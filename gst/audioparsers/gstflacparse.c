@@ -1042,7 +1042,7 @@ _value_array_append_buffer (GValue * array_val, GstBuffer * buf)
   /* copy buffer to avoid problems with circular refcounts */
   buf = gst_buffer_copy (buf);
   /* again, for good measure */
-  GST_BUFFER_FLAG_SET (buf, GST_BUFFER_FLAG_IN_CAPS);
+  GST_BUFFER_FLAG_SET (buf, GST_BUFFER_FLAG_HEADER);
   gst_value_set_buffer (&value, buf);
   gst_buffer_unref (buf);
   gst_value_array_append_value (array_val, &value);
@@ -1074,7 +1074,7 @@ gst_flac_parse_handle_headers (GstFlacParse * flacparse)
 
     gst_buffer_map (header, &map, GST_MAP_READ);
 
-    GST_BUFFER_FLAG_SET (header, GST_BUFFER_FLAG_IN_CAPS);
+    GST_BUFFER_FLAG_SET (header, GST_BUFFER_FLAG_HEADER);
 
     if (map.size == 4 && memcmp (map.data, "fLaC", 4) == 0) {
       marker = header;

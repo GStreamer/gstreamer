@@ -2859,7 +2859,7 @@ gst_matroska_mux_stop_streamheader (GstMatroskaMux * mux)
   s = gst_caps_get_structure (caps, 0);
   g_value_init (&streamheader, GST_TYPE_ARRAY);
   g_value_init (&bufval, GST_TYPE_BUFFER);
-  GST_BUFFER_FLAG_SET (streamheader_buffer, GST_BUFFER_FLAG_IN_CAPS);
+  GST_BUFFER_FLAG_SET (streamheader_buffer, GST_BUFFER_FLAG_HEADER);
   gst_value_set_buffer (&bufval, streamheader_buffer);
   gst_value_array_append_value (&streamheader, &bufval);
   g_value_unset (&bufval);

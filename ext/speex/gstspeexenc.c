@@ -661,11 +661,11 @@ _gst_caps_set_buffer_array (GstCaps * caps, const gchar * field,
     g_assert (gst_buffer_is_writable (buf));
 
     /* mark buffer */
-    GST_BUFFER_FLAG_SET (buf, GST_BUFFER_FLAG_IN_CAPS);
+    GST_BUFFER_FLAG_SET (buf, GST_BUFFER_FLAG_HEADER);
 
     g_value_init (&value, GST_TYPE_BUFFER);
     buf = gst_buffer_copy (buf);
-    GST_BUFFER_FLAG_SET (buf, GST_BUFFER_FLAG_IN_CAPS);
+    GST_BUFFER_FLAG_SET (buf, GST_BUFFER_FLAG_HEADER);
     gst_value_set_buffer (&value, buf);
     gst_buffer_unref (buf);
     gst_value_array_append_value (&array, &value);

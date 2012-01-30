@@ -1503,7 +1503,7 @@ gst_qt_mux_set_header_on_caps (GstQTMux * mux, GstBuffer * buf)
 
   g_value_init (&array, GST_TYPE_ARRAY);
 
-  GST_BUFFER_FLAG_SET (buf, GST_BUFFER_FLAG_IN_CAPS);
+  GST_BUFFER_FLAG_SET (buf, GST_BUFFER_FLAG_HEADER);
   g_value_init (&value, GST_TYPE_BUFFER);
   gst_value_take_buffer (&value, gst_buffer_ref (buf));
   gst_value_array_append_value (&array, &value);

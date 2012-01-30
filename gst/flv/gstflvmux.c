@@ -1177,16 +1177,16 @@ gst_flv_mux_write_header (GstFlvMux * mux)
   }
 
   /* mark buffers that will go in the streamheader */
-  GST_BUFFER_FLAG_SET (header, GST_BUFFER_FLAG_IN_CAPS);
-  GST_BUFFER_FLAG_SET (metadata, GST_BUFFER_FLAG_IN_CAPS);
+  GST_BUFFER_FLAG_SET (header, GST_BUFFER_FLAG_HEADER);
+  GST_BUFFER_FLAG_SET (metadata, GST_BUFFER_FLAG_HEADER);
   if (video_codec_data != NULL) {
-    GST_BUFFER_FLAG_SET (video_codec_data, GST_BUFFER_FLAG_IN_CAPS);
+    GST_BUFFER_FLAG_SET (video_codec_data, GST_BUFFER_FLAG_HEADER);
     /* mark as a delta unit, so downstream will not try to synchronize on that
      * buffer - to actually start playback you need a real video keyframe */
     GST_BUFFER_FLAG_SET (video_codec_data, GST_BUFFER_FLAG_DELTA_UNIT);
   }
   if (audio_codec_data != NULL) {
-    GST_BUFFER_FLAG_SET (audio_codec_data, GST_BUFFER_FLAG_IN_CAPS);
+    GST_BUFFER_FLAG_SET (audio_codec_data, GST_BUFFER_FLAG_HEADER);
   }
 
   /* put buffers in streamheader */

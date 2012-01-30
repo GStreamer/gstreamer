@@ -201,8 +201,7 @@ check_output_buffer_is_equal (const gchar * name,
     const gchar * data, gint refcount)
 {
   GstBuffer *buffer;
-  gpointer buf_data;
-  gsize size;
+  GstMapInfo map;
 
   if (current_buf == NULL)
     current_buf = buffers;
@@ -211,13 +210,13 @@ check_output_buffer_is_equal (const gchar * name,
 
   fail_unless (current_buf != NULL);
   buffer = GST_BUFFER (current_buf->data);
-  buf_data = gst_buffer_map (buffer, &size, NULL, GST_MAP_READ);
+  gst_buffer_map (buffer, &map, GST_MAP_READ);
 
   ASSERT_OBJECT_REFCOUNT (buffer, name, refcount);
-  fail_unless (memcmp (buf_data, data, size) == 0,
-      "'%s' (%s) is not equal to (%s)", name, buf_data, data);
+  fail_unless (memcmp (map.data, data, map.size) == 0,
+      "'%s' (%s) is not equal to (%s)", name, map.data, data);
 
-  gst_buffer_unmap (buffer, buf_data, size);
+  gst_buffer_unmap (buffer, &map);
 }
 
 static GstFlowReturn

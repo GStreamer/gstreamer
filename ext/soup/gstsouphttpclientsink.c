@@ -636,7 +636,7 @@ send_message_locked (GstSoupHttpClientSink * souphttpsink)
 
   for (g = souphttpsink->queued_buffers; g; g = g_list_next (g)) {
     GstBuffer *buffer = g->data;
-    if (!GST_BUFFER_FLAG_IS_SET (buffer, GST_BUFFER_FLAG_IN_CAPS)) {
+    if (!GST_BUFFER_FLAG_IS_SET (buffer, GST_BUFFER_FLAG_HEADER)) {
       GstMapInfo map;
 
       /* FIXME, lifetime of the buffer? */
