@@ -20,7 +20,7 @@
  *  Boston, MA 02110-1301 USA
  */
 
-#include "config.h"
+#include "sysdeps.h"
 #include <glib.h>
 #include <X11/Xutil.h>
 #include "gstvaapiutils_x11.h"

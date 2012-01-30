@@ -24,7 +24,7 @@
  * @short_description: VA image pool
  */
 
-#include "config.h"
+#include "sysdeps.h"
 #include "gstvaapiimagepool.h"
 
 #define DEBUG 1

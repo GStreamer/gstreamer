@@ -24,7 +24,7 @@
  * @short_description: VA/X11 window abstraction
  */
 
-#include "config.h"
+#include "sysdeps.h"
 #include <string.h>
 #include <X11/Xatom.h>
 #include "gstvaapicompat.h"

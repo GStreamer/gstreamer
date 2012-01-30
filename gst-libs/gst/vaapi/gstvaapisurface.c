@@ -25,7 +25,7 @@
  * @short_description: VA surface abstraction
  */
 
-#include "config.h"
+#include "sysdeps.h"
 #include "gstvaapicompat.h"
 #include "gstvaapiutils.h"
 #include "gstvaapisurface.h"

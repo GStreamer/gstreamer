@@ -25,7 +25,7 @@
  * @short_description: VA window abstraction
  */
 
-#include "config.h"
+#include "sysdeps.h"
 #include "gstvaapiwindow.h"
 #include "gstvaapi_priv.h"
 

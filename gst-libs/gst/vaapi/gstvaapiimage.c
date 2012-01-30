@@ -25,7 +25,7 @@
  * @short_description: VA image abstraction
  */
 
-#include "config.h"
+#include "sysdeps.h"
 #include <string.h>
 #include "gstvaapicompat.h"
 #include "gstvaapiutils.h"

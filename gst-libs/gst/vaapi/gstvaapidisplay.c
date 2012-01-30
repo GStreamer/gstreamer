@@ -25,7 +25,7 @@
  * @short_description: VA display abstraction
  */
 
-#include "config.h"
+#include "sysdeps.h"
 #include <string.h>
 #include "gstvaapiutils.h"
 #include "gstvaapidisplay.h"

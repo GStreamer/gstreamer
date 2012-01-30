@@ -24,7 +24,7 @@
  * @short_description: H.264 decoder
  */
 
-#include "config.h"
+#include "sysdeps.h"
 #include <string.h>
 #include <gst/base/gstadapter.h>
 #include <gst/codecparsers/gsth264parser.h>

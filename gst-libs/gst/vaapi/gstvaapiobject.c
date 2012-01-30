@@ -24,7 +24,7 @@
  * @short_description: Base VA object
  */
 
-#include "config.h"
+#include "sysdeps.h"
 #include "gstvaapiobject.h"
 #include "gstvaapi_priv.h"
 #include "gstvaapiparamspecs.h"

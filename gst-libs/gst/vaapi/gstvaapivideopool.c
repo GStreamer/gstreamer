@@ -24,7 +24,7 @@
  * @short_description: Video object pool abstraction
  */
 
-#include "config.h"
+#include "sysdeps.h"
 #include "gstvaapivideopool.h"
 
 #define DEBUG 1

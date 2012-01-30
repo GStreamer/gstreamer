@@ -19,7 +19,7 @@
  *  Boston, MA 02110-1301 USA
  */
 
-#include "config.h"
+#include "sysdeps.h"
 #include <glib.h>
 #include <string.h>
 #include "gstvaapidisplaycache.h"

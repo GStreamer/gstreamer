@@ -25,7 +25,7 @@
  * @short_description: VA image format abstraction
  */
 
-#include "config.h"
+#include "sysdeps.h"
 #include <gst/video/video.h>
 #include "gstvaapicompat.h"
 #include "gstvaapiimageformat.h"

@@ -25,7 +25,7 @@
  * @short_description: FFmpeg-based decoder
  */
 
-#include "config.h"
+#include "sysdeps.h"
 #ifdef HAVE_LIBAVCODEC_AVCODEC_H
 # include <libavcodec/avcodec.h>
 #endif

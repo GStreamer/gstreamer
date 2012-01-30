@@ -24,7 +24,7 @@
  * @short_description: VA surface pool
  */
 
-#include "config.h"
+#include "sysdeps.h"
 #include "gstvaapisurfacepool.h"
 
 #define DEBUG 1

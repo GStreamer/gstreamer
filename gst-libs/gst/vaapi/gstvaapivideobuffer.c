@@ -25,7 +25,7 @@
  * @short_description: VA video buffer for GStreamer
  */
 
-#include "config.h"
+#include "sysdeps.h"
 #include "gstvaapivideobuffer.h"
 #include "gstvaapivideobuffer_priv.h"
 #include "gstvaapiimagepool.h"

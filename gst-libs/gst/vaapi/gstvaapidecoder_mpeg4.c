@@ -24,7 +24,7 @@
  * @short_description: MPEG-4 decoder, include h263/divx/xvid support
  */
 
-#include "config.h"
+#include "sysdeps.h"
 #include <string.h>
 #include <gst/base/gstbitreader.h>
 #include <gst/codecparsers/gstmpeg4parser.h>

@@ -24,7 +24,7 @@
  * @short_description: VA/GLX texture abstraction
  */
 
-#include "config.h"
+#include "sysdeps.h"
 #include "gstvaapitexture.h"
 #include "gstvaapicompat.h"
 #include "gstvaapiutils.h"

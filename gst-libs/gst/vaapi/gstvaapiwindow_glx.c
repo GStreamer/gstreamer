@@ -24,7 +24,7 @@
  * @short_description: VA/GLX window abstraction
  */
 
-#include "config.h"
+#include "sysdeps.h"
 #include "gstvaapiwindow_glx.h"
 #include "gstvaapidisplay_x11.h"
 #include "gstvaapidisplay_x11_priv.h"

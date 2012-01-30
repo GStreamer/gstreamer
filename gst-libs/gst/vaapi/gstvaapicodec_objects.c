@@ -20,7 +20,7 @@
  *  Boston, MA 02110-1301 USA
  */
 
-#include "config.h"
+#include "sysdeps.h"
 #include <string.h>
 #include <gst/vaapi/gstvaapicontext.h>
 #include "gstvaapicodec_objects.h"

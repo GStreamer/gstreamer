@@ -25,7 +25,7 @@
  * @short_description: VA surface proxy
  */
 
-#include "config.h"
+#include "sysdeps.h"
 #include "gstvaapisurfaceproxy.h"
 #include "gstvaapiobject_priv.h"
 

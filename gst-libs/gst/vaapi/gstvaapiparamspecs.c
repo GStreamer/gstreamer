@@ -24,7 +24,7 @@
  * @short_description: GParamSpecs for some of our types
  */
 
-#include "config.h"
+#include "sysdeps.h"
 #include "gstvaapiparamspecs.h"
 #include "gstvaapivalue.h"
 

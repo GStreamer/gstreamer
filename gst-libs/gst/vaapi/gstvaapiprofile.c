@@ -24,7 +24,7 @@
  * @short_description: VA profile abstraction
  */
 
-#include "config.h"
+#include "sysdeps.h"
 #include <string.h>
 #include <gst/gstbuffer.h>
 #include "gstvaapicompat.h"

@@ -24,7 +24,7 @@
  * @short_description: GValue implementations specific to VA-API
  */
 
-#include "config.h"
+#include "sysdeps.h"
 #include <gobject/gvaluecollector.h>
 #include "gstvaapivalue.h"
 

@@ -26,7 +26,7 @@
  * @short_description: VA video buffer for GStreamer with GLX support
  */
 
-#include "config.h"
+#include "sysdeps.h"
 #include "gstvaapivideobuffer_glx.h"
 #include "gstvaapivideobuffer_priv.h"
 #include "gstvaapivideoconverter_glx.h"

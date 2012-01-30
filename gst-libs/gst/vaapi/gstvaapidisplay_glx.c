@@ -25,7 +25,7 @@
  * @short_description: VA/GLX display abstraction
  */
 
-#include "config.h"
+#include "sysdeps.h"
 #include "gstvaapicompat.h"
 #include "gstvaapiutils.h"
 #include "gstvaapiutils_glx.h"

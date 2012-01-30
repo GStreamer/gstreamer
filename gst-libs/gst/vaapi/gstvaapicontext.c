@@ -25,7 +25,7 @@
  * @short_description: VA context abstraction
  */
 
-#include "config.h"
+#include "sysdeps.h"
 #include <assert.h>
 #include "gstvaapicompat.h"
 #include "gstvaapicontext.h"

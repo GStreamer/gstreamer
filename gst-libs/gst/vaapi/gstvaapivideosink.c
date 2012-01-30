@@ -24,7 +24,7 @@
  * @short_description: An interface for implementing VA-API sink elements
  */
 
-#include "config.h"
+#include "sysdeps.h"
 #include "gstvaapivideosink.h"
 
 static void

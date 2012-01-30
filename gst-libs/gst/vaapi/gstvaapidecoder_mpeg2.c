@@ -24,7 +24,7 @@
  * @short_description: MPEG-2 decoder
  */
 
-#include "config.h"
+#include "sysdeps.h"
 #include <string.h>
 #include <gst/base/gstbitreader.h>
 #include <gst/codecparsers/gstmpegvideoparser.h>
