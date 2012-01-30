@@ -868,17 +868,17 @@ ges_track_object_get_track (GESTrackObject * object)
 /**
  * ges_track_object_set_timeline_object:
  * @object: The #GESTrackObject to set the parent to
- * @tlobj: The #GESTimelineObject, parent of @tlobj or %NULL
+ * @tlobject: The #GESTimelineObject, parent of @tlobj or %NULL
  *
  * Set the #GESTimelineObject to which @object belongs.
  */
 void
 ges_track_object_set_timeline_object (GESTrackObject * object,
-    GESTimelineObject * tlobj)
+    GESTimelineObject * tlobject)
 {
-  GST_DEBUG ("object:%p, timeline-object:%p", object, tlobj);
+  GST_DEBUG ("object:%p, timeline-object:%p", object, tlobject);
 
-  object->priv->timelineobj = tlobj;
+  object->priv->timelineobj = tlobject;
 }
 
 /**
