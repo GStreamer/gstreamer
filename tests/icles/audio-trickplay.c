@@ -18,7 +18,7 @@
 #include <string.h>
 #include <gst/gst.h>
 #include <gst/controller/gstinterpolationcontrolsource.h>
-#include <gst/controller/gstcontrolbindingdirect.h>
+#include <gst/controller/gstdirectcontrolbinding.h>
 
 static void
 check_position (GstElement * elem, GstQuery * pos, const gchar * info)
@@ -129,10 +129,10 @@ main (gint argc, gchar ** argv)
   csource2 = gst_interpolation_control_source_new ();
 
   gst_object_add_control_binding (GST_OBJECT_CAST (src),
-      gst_control_binding_direct_new (GST_OBJECT_CAST (src), "volume",
+      gst_direct_control_binding_new (GST_OBJECT_CAST (src), "volume",
           GST_CONTROL_SOURCE (csource1)));
   gst_object_add_control_binding (GST_OBJECT_CAST (src),
-      gst_control_binding_direct_new (GST_OBJECT_CAST (src), "freq",
+      gst_direct_control_binding_new (GST_OBJECT_CAST (src), "freq",
           GST_CONTROL_SOURCE (csource2)));
 
   /* Set interpolation mode */
