@@ -410,9 +410,9 @@ gst_gdp_pay_reset_streamheader (GstGDPPay * this)
       bufval = &g_array_index (buffers, GValue, i);
       buffer = g_value_peek_pointer (bufval);
       /* this buffer is deserialized by gdpdepay as a regular buffer,
-         it needs IN_CAPS, because it's a streamheader - otherwise it
+         it needs HEADER, because it's a streamheader - otherwise it
          is mixed with regular data buffers */
-      GST_BUFFER_FLAG_SET (buffer, GST_BUFFER_FLAG_IN_CAPS);
+      GST_BUFFER_FLAG_SET (buffer, GST_BUFFER_FLAG_HEADER);
       GST_BUFFER_OFFSET (buffer) = GST_BUFFER_OFFSET_NONE;
       GST_BUFFER_OFFSET_END (buffer) = GST_BUFFER_OFFSET_NONE;
       GST_BUFFER_TIMESTAMP (buffer) = GST_CLOCK_TIME_NONE;
@@ -423,11 +423,10 @@ gst_gdp_pay_reset_streamheader (GstGDPPay * this)
         goto no_buffer;
       }
 
-      /* Setting IN_CAPS as other GDP event buffers */
+      /* Setting HEADER as other GDP event buffers */
       GST_DEBUG_OBJECT (this,
-          "Setting IN_CAPS flag on outgoing buffer %" GST_PTR_FORMAT,
-          outbuffer);
-      GST_BUFFER_FLAG_SET (outbuffer, GST_BUFFER_FLAG_IN_CAPS);
+          "Setting HEADER flag on outgoing buffer %" GST_PTR_FORMAT, outbuffer);
+      GST_BUFFER_FLAG_SET (outbuffer, GST_BUFFER_FLAG_HEADER);
       GST_BUFFER_OFFSET (outbuffer) = GST_BUFFER_OFFSET_NONE;
       GST_BUFFER_OFFSET_END (outbuffer) = GST_BUFFER_OFFSET_NONE;
       GST_BUFFER_TIMESTAMP (outbuffer) = GST_CLOCK_TIME_NONE;
@@ -582,7 +581,7 @@ gst_gdp_pay_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
     } else {
       GST_BUFFER_TIMESTAMP (outbuffer) = GST_BUFFER_TIMESTAMP (buffer);
       GST_BUFFER_DURATION (outbuffer) = 0;
-      GST_BUFFER_FLAG_SET (outbuffer, GST_BUFFER_FLAG_IN_CAPS);
+      GST_BUFFER_FLAG_SET (outbuffer, GST_BUFFER_FLAG_HEADER);
       GST_DEBUG_OBJECT (this, "Storing buffer %p as new_segment_buf",
           outbuffer);
       this->new_segment_buf = outbuffer;
@@ -604,7 +603,7 @@ gst_gdp_pay_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
 
     GST_BUFFER_TIMESTAMP (outbuffer) = GST_BUFFER_TIMESTAMP (buffer);
     GST_BUFFER_DURATION (outbuffer) = 0;
-    GST_BUFFER_FLAG_SET (outbuffer, GST_BUFFER_FLAG_IN_CAPS);
+    GST_BUFFER_FLAG_SET (outbuffer, GST_BUFFER_FLAG_HEADER);
 
     if (this->caps_buf)
       gst_buffer_unref (this->caps_buf);
@@ -622,13 +621,13 @@ gst_gdp_pay_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
   if (!outbuffer)
     goto no_buffer;
 
-  /* If the incoming buffer is IN_CAPS, that means we have it on the caps
+  /* If the incoming buffer is HEADER, that means we have it on the caps
    * as streamheader, and we have serialized a GDP version of it and put it
    * on our caps */
-  if (GST_BUFFER_FLAG_IS_SET (buffer, GST_BUFFER_FLAG_IN_CAPS)) {
-    GST_DEBUG_OBJECT (this, "Setting IN_CAPS flag on outgoing buffer %p",
+  if (GST_BUFFER_FLAG_IS_SET (buffer, GST_BUFFER_FLAG_HEADER)) {
+    GST_DEBUG_OBJECT (this, "Setting HEADER flag on outgoing buffer %p",
         outbuffer);
-    GST_BUFFER_FLAG_SET (outbuffer, GST_BUFFER_FLAG_IN_CAPS);
+    GST_BUFFER_FLAG_SET (outbuffer, GST_BUFFER_FLAG_HEADER);
   }
 
   gst_gdp_stamp_buffer (this, outbuffer);
@@ -704,7 +703,7 @@ gst_gdp_pay_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
         gst_buffer_unref (this->new_segment_buf);
       this->new_segment_buf = outbuffer;
 
-      GST_BUFFER_FLAG_SET (outbuffer, GST_BUFFER_FLAG_IN_CAPS);
+      GST_BUFFER_FLAG_SET (outbuffer, GST_BUFFER_FLAG_HEADER);
       gst_gdp_pay_reset_streamheader (this);
       break;
     case GST_EVENT_CAPS:{
@@ -717,7 +716,7 @@ gst_gdp_pay_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
           goto no_buffer_from_caps;
 
         GST_BUFFER_DURATION (outbuffer) = 0;
-        GST_BUFFER_FLAG_SET (outbuffer, GST_BUFFER_FLAG_IN_CAPS);
+        GST_BUFFER_FLAG_SET (outbuffer, GST_BUFFER_FLAG_HEADER);
         if (this->caps_buf)
           gst_buffer_unref (this->caps_buf);
         this->caps_buf = outbuffer;
@@ -733,7 +732,7 @@ gst_gdp_pay_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
         gst_buffer_unref (this->tag_buf);
       this->tag_buf = outbuffer;
 
-      GST_BUFFER_FLAG_SET (outbuffer, GST_BUFFER_FLAG_IN_CAPS);
+      GST_BUFFER_FLAG_SET (outbuffer, GST_BUFFER_FLAG_HEADER);
       gst_gdp_pay_reset_streamheader (this);
       break;
     default:

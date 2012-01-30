@@ -134,7 +134,7 @@ buffer_probe_cb (GstPad * pad, GstPadProbeInfo * info, gpointer user_data)
 
   gst_buffer_map (buffer, &map, GST_MAP_READ);
 
-  if (GST_BUFFER_FLAG_IS_SET (buffer, GST_BUFFER_FLAG_IN_CAPS)) {
+  if (GST_BUFFER_FLAG_IS_SET (buffer, GST_BUFFER_FLAG_HEADER)) {
     GstCaps *caps;
     GstStructure *s;
     const GValue *sh;
@@ -168,7 +168,7 @@ buffer_probe_cb (GstPad * pad, GstPadProbeInfo * info, gpointer user_data)
       }
       gst_buffer_unmap (buf, &map2);
     }
-    fail_unless (found, "Did not find incoming IN_CAPS buffer %p on caps",
+    fail_unless (found, "Did not find incoming HEADER buffer %p on caps",
         buffer);
 
     gst_caps_unref (caps);

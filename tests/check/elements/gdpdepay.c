@@ -314,7 +314,7 @@ GST_START_TEST (test_streamheader)
   structure = gst_caps_get_structure (caps, 0);
   buffer = gst_buffer_new_and_alloc (4);
   gst_buffer_fill (buffer, 0, "f00d", 4);
-  GST_BUFFER_FLAG_SET (buffer, GST_BUFFER_FLAG_IN_CAPS);
+  GST_BUFFER_FLAG_SET (buffer, GST_BUFFER_FLAG_HEADER);
   g_value_init (&array, GST_TYPE_ARRAY);
   g_value_init (&value, GST_TYPE_BUFFER);
   shbuffer = gst_buffer_copy (buffer);
@@ -362,7 +362,7 @@ GST_START_TEST (test_streamheader)
   fail_if ((outbuffer = (GstBuffer *) buffers->data) == NULL);
   buffers = g_list_remove (buffers, outbuffer);
   ASSERT_BUFFER_REFCOUNT (outbuffer, "outbuffer", 1);
-  fail_unless (GST_BUFFER_FLAG_IS_SET (outbuffer, GST_BUFFER_FLAG_IN_CAPS));
+  fail_unless (GST_BUFFER_FLAG_IS_SET (outbuffer, GST_BUFFER_FLAG_HEADER));
 
   /* FIXME: get streamheader, compare data with buffer */
   gst_buffer_unref (outbuffer);
