@@ -2,7 +2,7 @@
  *
  * Copyright (C) 2011 Stefan Sauer <ensonic@users.sf.net>
  *
- * gstcontrolbindingdirect.c: Direct attachment for control sources
+ * gstdirectcontrolbinding.c: Direct attachment for control sources
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -20,7 +20,7 @@
  * Boston, MA 02111-1307, USA.
  */
 /**
- * SECTION:gstcontrolbindingdirect
+ * SECTION:gstdirectcontrolbinding
  * @short_description: direct attachment for control source sources
  *
  * A value mapping object that attaches control sources to gobject properties.
@@ -30,35 +30,35 @@
 #include <glib-object.h>
 #include <gst/gst.h>
 
-#include "gstcontrolbindingdirect.h"
+#include "gstdirectcontrolbinding.h"
 
 #include <math.h>
 
 #define GST_CAT_DEFAULT control_binding_debug
 GST_DEBUG_CATEGORY_STATIC (GST_CAT_DEFAULT);
 
-static GObject *gst_control_binding_direct_constructor (GType type,
+static GObject *gst_direct_control_binding_constructor (GType type,
     guint n_construct_params, GObjectConstructParam * construct_params);
-static void gst_control_binding_direct_set_property (GObject * object,
+static void gst_direct_control_binding_set_property (GObject * object,
     guint prop_id, const GValue * value, GParamSpec * pspec);
-static void gst_control_binding_direct_get_property (GObject * object,
+static void gst_direct_control_binding_get_property (GObject * object,
     guint prop_id, GValue * value, GParamSpec * pspec);
-static void gst_control_binding_direct_dispose (GObject * object);
-static void gst_control_binding_direct_finalize (GObject * object);
+static void gst_direct_control_binding_dispose (GObject * object);
+static void gst_direct_control_binding_finalize (GObject * object);
 
-static gboolean gst_control_binding_direct_sync_values (GstControlBinding *
+static gboolean gst_direct_control_binding_sync_values (GstControlBinding *
     _self, GstObject * object, GstClockTime timestamp, GstClockTime last_sync);
-static GValue *gst_control_binding_direct_get_value (GstControlBinding * _self,
+static GValue *gst_direct_control_binding_get_value (GstControlBinding * _self,
     GstClockTime timestamp);
-static gboolean gst_control_binding_direct_get_value_array (GstControlBinding *
+static gboolean gst_direct_control_binding_get_value_array (GstControlBinding *
     _self, GstClockTime timestamp, GstClockTime interval, guint n_values,
     GValue * values);
 
 #define _do_init \
-  GST_DEBUG_CATEGORY_INIT (GST_CAT_DEFAULT, "gstcontrolbindingdirect", 0, \
+  GST_DEBUG_CATEGORY_INIT (GST_CAT_DEFAULT, "gstdirectcontrolbinding", 0, \
       "dynamic parameter control source attachment");
 
-G_DEFINE_TYPE_WITH_CODE (GstControlBindingDirect, gst_control_binding_direct,
+G_DEFINE_TYPE_WITH_CODE (GstDirectControlBinding, gst_direct_control_binding,
     GST_TYPE_CONTROL_BINDING, _do_init);
 
 enum
@@ -74,7 +74,7 @@ static GParamSpec *properties[PROP_LAST];
 
 #define DEFINE_CONVERT(type,Type,TYPE) \
 static void \
-convert_to_##type (GstControlBindingDirect *self, gdouble s, GValue *d) \
+convert_to_##type (GstDirectControlBinding *self, gdouble s, GValue *d) \
 { \
   GParamSpec##Type *pspec = G_PARAM_SPEC_##TYPE (((GstControlBinding *)self)->pspec); \
   g##type v; \
@@ -94,14 +94,14 @@ DEFINE_CONVERT (float, Float, FLOAT);
 DEFINE_CONVERT (double, Double, DOUBLE);
 
 static void
-convert_to_boolean (GstControlBindingDirect * self, gdouble s, GValue * d)
+convert_to_boolean (GstDirectControlBinding * self, gdouble s, GValue * d)
 {
   s = CLAMP (s, 0.0, 1.0);
   g_value_set_boolean (d, (gboolean) (s + 0.5));
 }
 
 static void
-convert_to_enum (GstControlBindingDirect * self, gdouble s, GValue * d)
+convert_to_enum (GstDirectControlBinding * self, gdouble s, GValue * d)
 {
   GParamSpecEnum *pspec =
       G_PARAM_SPEC_ENUM (((GstControlBinding *) self)->pspec);
@@ -116,22 +116,22 @@ convert_to_enum (GstControlBindingDirect * self, gdouble s, GValue * d)
 /* vmethods */
 
 static void
-gst_control_binding_direct_class_init (GstControlBindingDirectClass * klass)
+gst_direct_control_binding_class_init (GstDirectControlBindingClass * klass)
 {
   GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
   GstControlBindingClass *control_binding_class =
       GST_CONTROL_BINDING_CLASS (klass);
 
-  gobject_class->constructor = gst_control_binding_direct_constructor;
-  gobject_class->set_property = gst_control_binding_direct_set_property;
-  gobject_class->get_property = gst_control_binding_direct_get_property;
-  gobject_class->dispose = gst_control_binding_direct_dispose;
-  gobject_class->finalize = gst_control_binding_direct_finalize;
+  gobject_class->constructor = gst_direct_control_binding_constructor;
+  gobject_class->set_property = gst_direct_control_binding_set_property;
+  gobject_class->get_property = gst_direct_control_binding_get_property;
+  gobject_class->dispose = gst_direct_control_binding_dispose;
+  gobject_class->finalize = gst_direct_control_binding_finalize;
 
-  control_binding_class->sync_values = gst_control_binding_direct_sync_values;
-  control_binding_class->get_value = gst_control_binding_direct_get_value;
+  control_binding_class->sync_values = gst_direct_control_binding_sync_values;
+  control_binding_class->get_value = gst_direct_control_binding_get_value;
   control_binding_class->get_value_array =
-      gst_control_binding_direct_get_value_array;
+      gst_direct_control_binding_get_value_array;
 
   properties[PROP_CS] =
       g_param_spec_object ("control-source", "ControlSource",
@@ -143,19 +143,19 @@ gst_control_binding_direct_class_init (GstControlBindingDirectClass * klass)
 }
 
 static void
-gst_control_binding_direct_init (GstControlBindingDirect * self)
+gst_direct_control_binding_init (GstDirectControlBinding * self)
 {
 }
 
 static GObject *
-gst_control_binding_direct_constructor (GType type, guint n_construct_params,
+gst_direct_control_binding_constructor (GType type, guint n_construct_params,
     GObjectConstructParam * construct_params)
 {
-  GstControlBindingDirect *self;
+  GstDirectControlBinding *self;
 
   self =
-      GST_CONTROL_BINDING_DIRECT (G_OBJECT_CLASS
-      (gst_control_binding_direct_parent_class)
+      GST_DIRECT_CONTROL_BINDING (G_OBJECT_CLASS
+      (gst_direct_control_binding_parent_class)
       ->constructor (type, n_construct_params, construct_params));
 
   if (GST_CONTROL_BINDING_PSPEC (self)) {
@@ -211,10 +211,10 @@ gst_control_binding_direct_constructor (GType type, guint n_construct_params,
 }
 
 static void
-gst_control_binding_direct_set_property (GObject * object, guint prop_id,
+gst_direct_control_binding_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec)
 {
-  GstControlBindingDirect *self = GST_CONTROL_BINDING_DIRECT (object);
+  GstDirectControlBinding *self = GST_DIRECT_CONTROL_BINDING (object);
 
   switch (prop_id) {
     case PROP_CS:
@@ -227,10 +227,10 @@ gst_control_binding_direct_set_property (GObject * object, guint prop_id,
 }
 
 static void
-gst_control_binding_direct_get_property (GObject * object, guint prop_id,
+gst_direct_control_binding_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec)
 {
-  GstControlBindingDirect *self = GST_CONTROL_BINDING_DIRECT (object);
+  GstDirectControlBinding *self = GST_DIRECT_CONTROL_BINDING (object);
 
   switch (prop_id) {
     case PROP_CS:
@@ -243,31 +243,31 @@ gst_control_binding_direct_get_property (GObject * object, guint prop_id,
 }
 
 static void
-gst_control_binding_direct_dispose (GObject * object)
+gst_direct_control_binding_dispose (GObject * object)
 {
-  GstControlBindingDirect *self = GST_CONTROL_BINDING_DIRECT (object);
+  GstDirectControlBinding *self = GST_DIRECT_CONTROL_BINDING (object);
 
   if (self->cs)
     gst_object_replace ((GstObject **) & self->cs, NULL);
 }
 
 static void
-gst_control_binding_direct_finalize (GObject * object)
+gst_direct_control_binding_finalize (GObject * object)
 {
-  GstControlBindingDirect *self = GST_CONTROL_BINDING_DIRECT (object);
+  GstDirectControlBinding *self = GST_DIRECT_CONTROL_BINDING (object);
 
   g_value_unset (&self->cur_value);
 }
 
 static gboolean
-gst_control_binding_direct_sync_values (GstControlBinding * _self,
+gst_direct_control_binding_sync_values (GstControlBinding * _self,
     GstObject * object, GstClockTime timestamp, GstClockTime last_sync)
 {
-  GstControlBindingDirect *self = GST_CONTROL_BINDING_DIRECT (_self);
+  GstDirectControlBinding *self = GST_DIRECT_CONTROL_BINDING (_self);
   gdouble src_val;
   gboolean ret;
 
-  g_return_val_if_fail (GST_IS_CONTROL_BINDING_DIRECT (self), FALSE);
+  g_return_val_if_fail (GST_IS_DIRECT_CONTROL_BINDING (self), FALSE);
   g_return_val_if_fail (GST_CONTROL_BINDING_PSPEC (self), FALSE);
 
   GST_LOG_OBJECT (object, "property '%s' at ts=%" GST_TIME_FORMAT,
@@ -300,14 +300,14 @@ gst_control_binding_direct_sync_values (GstControlBinding * _self,
 }
 
 static GValue *
-gst_control_binding_direct_get_value (GstControlBinding * _self,
+gst_direct_control_binding_get_value (GstControlBinding * _self,
     GstClockTime timestamp)
 {
-  GstControlBindingDirect *self = GST_CONTROL_BINDING_DIRECT (_self);
+  GstDirectControlBinding *self = GST_DIRECT_CONTROL_BINDING (_self);
   GValue *dst_val = NULL;
   gdouble src_val;
 
-  g_return_val_if_fail (GST_IS_CONTROL_BINDING_DIRECT (self), NULL);
+  g_return_val_if_fail (GST_IS_DIRECT_CONTROL_BINDING (self), NULL);
   g_return_val_if_fail (GST_CLOCK_TIME_IS_VALID (timestamp), NULL);
   g_return_val_if_fail (GST_CONTROL_BINDING_PSPEC (self), FALSE);
 
@@ -325,18 +325,18 @@ gst_control_binding_direct_get_value (GstControlBinding * _self,
 }
 
 static gboolean
-gst_control_binding_direct_get_value_array (GstControlBinding * _self,
+gst_direct_control_binding_get_value_array (GstControlBinding * _self,
     GstClockTime timestamp, GstClockTime interval, guint n_values,
     GValue * values)
 {
-  GstControlBindingDirect *self = GST_CONTROL_BINDING_DIRECT (_self);
+  GstDirectControlBinding *self = GST_DIRECT_CONTROL_BINDING (_self);
   gint i;
   gdouble *src_val;
   gboolean res = FALSE;
   GType type;
-  GstControlBindingDirectConvert convert;
+  GstDirectControlBindingConvert convert;
 
-  g_return_val_if_fail (GST_IS_CONTROL_BINDING_DIRECT (self), FALSE);
+  g_return_val_if_fail (GST_IS_DIRECT_CONTROL_BINDING (self), FALSE);
   g_return_val_if_fail (GST_CLOCK_TIME_IS_VALID (timestamp), FALSE);
   g_return_val_if_fail (GST_CLOCK_TIME_IS_VALID (interval), FALSE);
   g_return_val_if_fail (values, FALSE);
@@ -368,7 +368,7 @@ gst_control_binding_direct_get_value_array (GstControlBinding * _self,
 /* functions */
 
 /**
- * gst_control_binding_direct_new:
+ * gst_direct_control_binding_new:
  * @object: the object of the property
  * @property_name: the property-name to attach the control source
  * @csource: the control source
@@ -376,12 +376,12 @@ gst_control_binding_direct_get_value_array (GstControlBinding * _self,
  * Create a new control-binding that attaches the #GstControlSource to the
  * #GObject property.
  *
- * Returns: (transfer floating): the new #GstControlBindingDirect
+ * Returns: (transfer floating): the new #GstDirectControlBinding
  */
 GstControlBinding *
-gst_control_binding_direct_new (GstObject * object, const gchar * property_name,
+gst_direct_control_binding_new (GstObject * object, const gchar * property_name,
     GstControlSource * cs)
 {
-  return (GstControlBinding *) g_object_new (GST_TYPE_CONTROL_BINDING_DIRECT,
+  return (GstControlBinding *) g_object_new (GST_TYPE_DIRECT_CONTROL_BINDING,
       "object", object, "name", property_name, "control-source", cs, NULL);
 }

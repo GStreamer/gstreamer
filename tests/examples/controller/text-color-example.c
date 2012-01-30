@@ -10,8 +10,8 @@
 #include <gst/gst.h>
 #include <gst/controller/gstinterpolationcontrolsource.h>
 #include <gst/controller/gstlfocontrolsource.h>
-#include <gst/controller/gstcontrolbindingargb.h>
-#include <gst/controller/gstcontrolbindingdirect.h>
+#include <gst/controller/gstargbcontrolbinding.h>
+#include <gst/controller/gstdirectcontrolbinding.h>
 
 gint
 main (gint argc, gchar ** argv)
@@ -65,7 +65,7 @@ main (gint argc, gchar ** argv)
       "frequency", (gdouble) 0.11,
       "amplitude", (gdouble) 0.2, "offset", (gdouble) 0.5, NULL);
   gst_object_add_control_binding (GST_OBJECT_CAST (text),
-      gst_control_binding_direct_new (GST_OBJECT_CAST (text), "xpos",
+      gst_direct_control_binding_new (GST_OBJECT_CAST (text), "xpos",
           GST_CONTROL_SOURCE (cs)));
   gst_object_unref (cs);
 
@@ -74,7 +74,7 @@ main (gint argc, gchar ** argv)
       "frequency", (gdouble) 0.04,
       "amplitude", (gdouble) 0.4, "offset", (gdouble) 0.5, NULL);
   gst_object_add_control_binding (GST_OBJECT_CAST (text),
-      gst_control_binding_direct_new (GST_OBJECT_CAST (text), "ypos",
+      gst_direct_control_binding_new (GST_OBJECT_CAST (text), "ypos",
           GST_CONTROL_SOURCE (cs)));
   gst_object_unref (cs);
 
@@ -91,7 +91,7 @@ main (gint argc, gchar ** argv)
       "frequency", (gdouble) 0.13,
       "amplitude", (gdouble) 0.5, "offset", (gdouble) 0.5, NULL);
   gst_object_add_control_binding (GST_OBJECT_CAST (text),
-      gst_control_binding_argb_new (GST_OBJECT_CAST (text), "color", NULL,
+      gst_argb_control_binding_new (GST_OBJECT_CAST (text), "color", NULL,
           GST_CONTROL_SOURCE (cs_r), GST_CONTROL_SOURCE (cs_g),
           GST_CONTROL_SOURCE (cs_b)));
   gst_object_unref (cs_r);

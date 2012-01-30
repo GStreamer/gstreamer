@@ -2,7 +2,7 @@
  *
  * Copyright (C) 2011 Stefan Sauer <ensonic@users.sf.net>
  *
- * gstcontrolbindingargb.c: Attachment for multiple control sources to gargb
+ * gstargbcontrolbinding.c: Attachment for multiple control sources to gargb
  *                            properties
  *
  * This library is free software; you can redistribute it and/or
@@ -21,7 +21,7 @@
  * Boston, MA 02111-1307, USA.
  */
 /**
- * SECTION:gstcontrolbindingargb
+ * SECTION:gstargbcontrolbinding
  * @short_description: attachment for control source sources to argb properties
  *
  * A value mapping object that attaches multiple control sources to a guint
@@ -31,35 +31,35 @@
 #include <glib-object.h>
 #include <gst/gst.h>
 
-#include "gstcontrolbindingargb.h"
+#include "gstargbcontrolbinding.h"
 
 #include <math.h>
 
 #define GST_CAT_DEFAULT control_binding_debug
 GST_DEBUG_CATEGORY_STATIC (GST_CAT_DEFAULT);
 
-static GObject *gst_control_binding_argb_constructor (GType type,
+static GObject *gst_argb_control_binding_constructor (GType type,
     guint n_construct_params, GObjectConstructParam * construct_params);
-static void gst_control_binding_argb_set_property (GObject * object,
+static void gst_argb_control_binding_set_property (GObject * object,
     guint prop_id, const GValue * value, GParamSpec * pspec);
-static void gst_control_binding_argb_get_property (GObject * object,
+static void gst_argb_control_binding_get_property (GObject * object,
     guint prop_id, GValue * value, GParamSpec * pspec);
-static void gst_control_binding_argb_dispose (GObject * object);
-static void gst_control_binding_argb_finalize (GObject * object);
+static void gst_argb_control_binding_dispose (GObject * object);
+static void gst_argb_control_binding_finalize (GObject * object);
 
-static gboolean gst_control_binding_argb_sync_values (GstControlBinding * _self,
+static gboolean gst_argb_control_binding_sync_values (GstControlBinding * _self,
     GstObject * object, GstClockTime timestamp, GstClockTime last_sync);
-static GValue *gst_control_binding_argb_get_value (GstControlBinding * _self,
+static GValue *gst_argb_control_binding_get_value (GstControlBinding * _self,
     GstClockTime timestamp);
-static gboolean gst_control_binding_argb_get_value_array (GstControlBinding *
+static gboolean gst_argb_control_binding_get_value_array (GstControlBinding *
     _self, GstClockTime timestamp, GstClockTime interval, guint n_values,
     GValue * values);
 
 #define _do_init \
-  GST_DEBUG_CATEGORY_INIT (GST_CAT_DEFAULT, "gstcontrolbindingargb", 0, \
+  GST_DEBUG_CATEGORY_INIT (GST_CAT_DEFAULT, "gstargbcontrolbinding", 0, \
       "dynamic parameter control source attachment");
 
-G_DEFINE_TYPE_WITH_CODE (GstControlBindingARGB, gst_control_binding_argb,
+G_DEFINE_TYPE_WITH_CODE (GstARGBControlBinding, gst_argb_control_binding,
     GST_TYPE_CONTROL_BINDING, _do_init);
 
 enum
@@ -77,22 +77,22 @@ static GParamSpec *properties[PROP_LAST];
 /* vmethods */
 
 static void
-gst_control_binding_argb_class_init (GstControlBindingARGBClass * klass)
+gst_argb_control_binding_class_init (GstARGBControlBindingClass * klass)
 {
   GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
   GstControlBindingClass *control_binding_class =
       GST_CONTROL_BINDING_CLASS (klass);
 
-  gobject_class->constructor = gst_control_binding_argb_constructor;
-  gobject_class->set_property = gst_control_binding_argb_set_property;
-  gobject_class->get_property = gst_control_binding_argb_get_property;
-  gobject_class->dispose = gst_control_binding_argb_dispose;
-  gobject_class->finalize = gst_control_binding_argb_finalize;
+  gobject_class->constructor = gst_argb_control_binding_constructor;
+  gobject_class->set_property = gst_argb_control_binding_set_property;
+  gobject_class->get_property = gst_argb_control_binding_get_property;
+  gobject_class->dispose = gst_argb_control_binding_dispose;
+  gobject_class->finalize = gst_argb_control_binding_finalize;
 
-  control_binding_class->sync_values = gst_control_binding_argb_sync_values;
-  control_binding_class->get_value = gst_control_binding_argb_get_value;
+  control_binding_class->sync_values = gst_argb_control_binding_sync_values;
+  control_binding_class->get_value = gst_argb_control_binding_get_value;
   control_binding_class->get_value_array =
-      gst_control_binding_argb_get_value_array;
+      gst_argb_control_binding_get_value_array;
 
   properties[PROP_CS_A] =
       g_param_spec_object ("control-source-a", "ControlSource A",
@@ -122,19 +122,19 @@ gst_control_binding_argb_class_init (GstControlBindingARGBClass * klass)
 }
 
 static void
-gst_control_binding_argb_init (GstControlBindingARGB * self)
+gst_argb_control_binding_init (GstARGBControlBinding * self)
 {
 }
 
 static GObject *
-gst_control_binding_argb_constructor (GType type, guint n_construct_params,
+gst_argb_control_binding_constructor (GType type, guint n_construct_params,
     GObjectConstructParam * construct_params)
 {
-  GstControlBindingARGB *self;
+  GstARGBControlBinding *self;
 
   self =
-      GST_CONTROL_BINDING_ARGB (G_OBJECT_CLASS
-      (gst_control_binding_argb_parent_class)
+      GST_ARGB_CONTROL_BINDING (G_OBJECT_CLASS
+      (gst_argb_control_binding_parent_class)
       ->constructor (type, n_construct_params, construct_params));
 
   if (GST_CONTROL_BINDING_PSPEC (self)) {
@@ -151,10 +151,10 @@ gst_control_binding_argb_constructor (GType type, guint n_construct_params,
 }
 
 static void
-gst_control_binding_argb_set_property (GObject * object, guint prop_id,
+gst_argb_control_binding_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec)
 {
-  GstControlBindingARGB *self = GST_CONTROL_BINDING_ARGB (object);
+  GstARGBControlBinding *self = GST_ARGB_CONTROL_BINDING (object);
 
   switch (prop_id) {
     case PROP_CS_A:
@@ -176,10 +176,10 @@ gst_control_binding_argb_set_property (GObject * object, guint prop_id,
 }
 
 static void
-gst_control_binding_argb_get_property (GObject * object, guint prop_id,
+gst_argb_control_binding_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec)
 {
-  GstControlBindingARGB *self = GST_CONTROL_BINDING_ARGB (object);
+  GstARGBControlBinding *self = GST_ARGB_CONTROL_BINDING (object);
 
   switch (prop_id) {
     case PROP_CS_A:
@@ -201,9 +201,9 @@ gst_control_binding_argb_get_property (GObject * object, guint prop_id,
 }
 
 static void
-gst_control_binding_argb_dispose (GObject * object)
+gst_argb_control_binding_dispose (GObject * object)
 {
-  GstControlBindingARGB *self = GST_CONTROL_BINDING_ARGB (object);
+  GstARGBControlBinding *self = GST_ARGB_CONTROL_BINDING (object);
 
   if (self->cs_a)
     gst_object_replace ((GstObject **) & self->cs_a, NULL);
@@ -216,22 +216,22 @@ gst_control_binding_argb_dispose (GObject * object)
 }
 
 static void
-gst_control_binding_argb_finalize (GObject * object)
+gst_argb_control_binding_finalize (GObject * object)
 {
-  GstControlBindingARGB *self = GST_CONTROL_BINDING_ARGB (object);
+  GstARGBControlBinding *self = GST_ARGB_CONTROL_BINDING (object);
 
   g_value_unset (&self->cur_value);
 }
 
 static gboolean
-gst_control_binding_argb_sync_values (GstControlBinding * _self,
+gst_argb_control_binding_sync_values (GstControlBinding * _self,
     GstObject * object, GstClockTime timestamp, GstClockTime last_sync)
 {
-  GstControlBindingARGB *self = GST_CONTROL_BINDING_ARGB (_self);
+  GstARGBControlBinding *self = GST_ARGB_CONTROL_BINDING (_self);
   gdouble src_val_a = 1.0, src_val_r = 0.0, src_val_g = 0.0, src_val_b = 0.0;
   gboolean ret = TRUE;
 
-  g_return_val_if_fail (GST_IS_CONTROL_BINDING_ARGB (self), FALSE);
+  g_return_val_if_fail (GST_IS_ARGB_CONTROL_BINDING (self), FALSE);
   g_return_val_if_fail (GST_CONTROL_BINDING_PSPEC (self), FALSE);
 
   GST_LOG_OBJECT (object, "property '%s' at ts=%" GST_TIME_FORMAT,
@@ -272,15 +272,15 @@ gst_control_binding_argb_sync_values (GstControlBinding * _self,
 }
 
 static GValue *
-gst_control_binding_argb_get_value (GstControlBinding * _self,
+gst_argb_control_binding_get_value (GstControlBinding * _self,
     GstClockTime timestamp)
 {
-  GstControlBindingARGB *self = GST_CONTROL_BINDING_ARGB (_self);
+  GstARGBControlBinding *self = GST_ARGB_CONTROL_BINDING (_self);
   GValue *dst_val = NULL;
   gdouble src_val_a = 1.0, src_val_r = 0.0, src_val_g = 0.0, src_val_b = 0.0;
   gboolean ret = TRUE;
 
-  g_return_val_if_fail (GST_IS_CONTROL_BINDING_ARGB (self), NULL);
+  g_return_val_if_fail (GST_IS_ARGB_CONTROL_BINDING (self), NULL);
   g_return_val_if_fail (GST_CLOCK_TIME_IS_VALID (timestamp), NULL);
   g_return_val_if_fail (GST_CONTROL_BINDING_PSPEC (self), FALSE);
 
@@ -310,18 +310,18 @@ gst_control_binding_argb_get_value (GstControlBinding * _self,
 }
 
 static gboolean
-gst_control_binding_argb_get_value_array (GstControlBinding * _self,
+gst_argb_control_binding_get_value_array (GstControlBinding * _self,
     GstClockTime timestamp, GstClockTime interval, guint n_values,
     GValue * values)
 {
-  GstControlBindingARGB *self = GST_CONTROL_BINDING_ARGB (_self);
+  GstARGBControlBinding *self = GST_ARGB_CONTROL_BINDING (_self);
   gint i;
   gdouble *src_val_a = NULL, *src_val_r = NULL, *src_val_g = NULL, *src_val_b =
       NULL;
   guint src_val;
   gboolean ret = TRUE;
 
-  g_return_val_if_fail (GST_IS_CONTROL_BINDING_ARGB (self), FALSE);
+  g_return_val_if_fail (GST_IS_ARGB_CONTROL_BINDING (self), FALSE);
   g_return_val_if_fail (GST_CLOCK_TIME_IS_VALID (timestamp), FALSE);
   g_return_val_if_fail (GST_CLOCK_TIME_IS_VALID (interval), FALSE);
   g_return_val_if_fail (values, FALSE);
@@ -379,7 +379,7 @@ gst_control_binding_argb_get_value_array (GstControlBinding * _self,
 /* functions */
 
 /**
- * gst_control_binding_argb_new:
+ * gst_argb_control_binding_new:
  * @object: the object of the property
  * @property_name: the property-name to attach the control source
  * @cs_a: the control source for the alpha channel
@@ -390,14 +390,14 @@ gst_control_binding_argb_get_value_array (GstControlBinding * _self,
  * Create a new control-binding that attaches the given #GstControlSource to the
  * #GObject property.
  *
- * Returns: (transfer floating): the new #GstControlBindingARGB
+ * Returns: (transfer floating): the new #GstARGBControlBinding
  */
 GstControlBinding *
-gst_control_binding_argb_new (GstObject * object, const gchar * property_name,
+gst_argb_control_binding_new (GstObject * object, const gchar * property_name,
     GstControlSource * cs_a, GstControlSource * cs_r, GstControlSource * cs_g,
     GstControlSource * cs_b)
 {
-  return (GstControlBinding *) g_object_new (GST_TYPE_CONTROL_BINDING_ARGB,
+  return (GstControlBinding *) g_object_new (GST_TYPE_ARGB_CONTROL_BINDING,
       "object", object, "name", property_name,
       "control-source-a", cs_a,
       "control-source-r", cs_r,

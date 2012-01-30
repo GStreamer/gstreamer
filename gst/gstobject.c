@@ -117,7 +117,7 @@
  *   </para></listitem>
  *   <listitem><para>
  *     Attach the #GstControlSource on the controller to a property.
- *     gst_object_add_control_binding (object, gst_control_binding_direct_new (objetct, "prop1", csource));
+ *     gst_object_add_control_binding (object, gst_direct_control_binding_new (objetct, "prop1", csource));
  *   </para></listitem>
  *   <listitem><para>
  *     Set the control values

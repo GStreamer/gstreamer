@@ -23,7 +23,7 @@
 
 #include <gst/gst.h>
 #include <gst/controller/gstinterpolationcontrolsource.h>
-#include <gst/controller/gstcontrolbindingdirect.h>
+#include <gst/controller/gstdirectcontrolbinding.h>
 
 /* a song in buzztard can easily reach 30000 here */
 #define NUM_CP 15000
@@ -113,7 +113,7 @@ main (gint argc, gchar * argv[])
   /* create and configure control source */
   csource = gst_interpolation_control_source_new ();
   gst_object_add_control_binding (GST_OBJECT (src),
-      gst_control_binding_direct_new (GST_OBJECT (src), "freq",
+      gst_direct_control_binding_new (GST_OBJECT (src), "freq",
           GST_CONTROL_SOURCE (csource)));
   g_object_set (csource, "mode", GST_INTERPOLATION_MODE_LINEAR, NULL);
 

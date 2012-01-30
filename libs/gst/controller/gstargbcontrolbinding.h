@@ -2,7 +2,7 @@
  *
  * Copyright (C) 2011 Stefan Sauer <ensonic@users.sf.net>
  *
- * gstcontrolbindingargb.h: Attachment for multiple control sources to gargb
+ * gstargbcontrolbinding.h: Attachment for multiple control sources to gargb
  *                            properties
  *
  * This library is free software; you can redistribute it and/or
@@ -21,8 +21,8 @@
  * Boston, MA 02111-1307, USA.
  */
 
-#ifndef __GST_CONTROL_BINDING_ARGB_H__
-#define __GST_CONTROL_BINDING_ARGB_H__
+#ifndef __GST_ARGB_CONTROL_BINDING_H__
+#define __GST_ARGB_CONTROL_BINDING_H__
 
 #include <gst/gstconfig.h>
 
@@ -32,29 +32,29 @@
 
 G_BEGIN_DECLS
 
-#define GST_TYPE_CONTROL_BINDING_ARGB \
-  (gst_control_binding_argb_get_type())
-#define GST_CONTROL_BINDING_ARGB(obj) \
-  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_CONTROL_BINDING_ARGB,GstControlBindingARGB))
-#define GST_CONTROL_BINDING_ARGB_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_CONTROL_BINDING_ARGB,GstControlBindingARGBClass))
-#define GST_IS_CONTROL_BINDING_ARGB(obj) \
-  (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_CONTROL_BINDING_ARGB))
-#define GST_IS_CONTROL_BINDING_ARGB_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_CONTROL_BINDING_ARGB))
-#define GST_CONTROL_BINDING_ARGB_GET_CLASS(obj) \
-  (G_TYPE_INSTANCE_GET_CLASS ((obj), GST_TYPE_CONTOL_SOURCE, GstControlBindingARGBClass))
+#define GST_TYPE_ARGB_CONTROL_BINDING \
+  (gst_argb_control_binding_get_type())
+#define GST_ARGB_CONTROL_BINDING(obj) \
+  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_ARGB_CONTROL_BINDING,GstARGBControlBinding))
+#define GST_ARGB_CONTROL_BINDING_CLASS(klass) \
+  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_ARGB_CONTROL_BINDING,GstARGBControlBindingClass))
+#define GST_IS_ARGB_CONTROL_BINDING(obj) \
+  (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_ARGB_CONTROL_BINDING))
+#define GST_IS_ARGB_CONTROL_BINDING_CLASS(klass) \
+  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_ARGB_CONTROL_BINDING))
+#define GST_ARGB_CONTROL_BINDING_GET_CLASS(obj) \
+  (G_TYPE_INSTANCE_GET_CLASS ((obj), GST_TYPE_CONTOL_SOURCE, GstARGBControlBindingClass))
 
-typedef struct _GstControlBindingARGB GstControlBindingARGB;
-typedef struct _GstControlBindingARGBClass GstControlBindingARGBClass;
+typedef struct _GstARGBControlBinding GstARGBControlBinding;
+typedef struct _GstARGBControlBindingClass GstARGBControlBindingClass;
 
 /**
- * GstControlBindingARGB:
+ * GstARGBControlBinding:
  * @name: name of the property of this binding
  *
- * The instance structure of #GstControlBindingARGB.
+ * The instance structure of #GstARGBControlBinding.
  */
-struct _GstControlBindingARGB {
+struct _GstARGBControlBinding {
   GstControlBinding parent;
   
   /*< private >*/
@@ -70,14 +70,14 @@ struct _GstControlBindingARGB {
 };
 
 /**
- * GstControlBindingARGBClass:
+ * GstARGBControlBindingClass:
  * @parent_class: Parent class
  * @convert: Class method to convert control-values
  *
- * The class structure of #GstControlBindingARGB.
+ * The class structure of #GstARGBControlBinding.
  */
 
-struct _GstControlBindingARGBClass
+struct _GstARGBControlBindingClass
 {
   GstControlBindingClass parent_class;
 
@@ -85,14 +85,14 @@ struct _GstControlBindingARGBClass
   gpointer _gst_reserved[GST_PADDING];
 };
 
-GType gst_control_binding_argb_get_type (void);
+GType gst_argb_control_binding_get_type (void);
 
 /* Functions */
 
-GstControlBinding * gst_control_binding_argb_new   (GstObject * object, const gchar * property_name,
+GstControlBinding * gst_argb_control_binding_new   (GstObject * object, const gchar * property_name,
                                                             GstControlSource * cs_a, GstControlSource * cs_r,
                                                             GstControlSource * cs_g, GstControlSource * cs_b);
 
 G_END_DECLS
 
-#endif /* __GST_CONTROL_BINDING_ARGB_H__ */
+#endif /* __GST_ARGB_CONTROL_BINDING_H__ */
