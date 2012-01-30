@@ -2794,15 +2794,12 @@ gst_base_src_prepare_allocation (GstBaseSrc * basesrc, GstCaps * caps)
       &alignment, &pool);
 
   if (size == 0) {
-    const gchar *mem = NULL;
-
     /* no size, we have variable size buffers */
     if (gst_query_get_n_allocation_memories (query) > 0) {
-      mem = gst_query_parse_nth_allocation_memory (query, 0);
+      if ((allocator = gst_query_parse_nth_allocation_memory (query, 0)))
+        gst_allocator_ref (allocator);
     }
-    GST_DEBUG_OBJECT (basesrc, "0 size, getting allocator %s",
-        GST_STR_NULL (mem));
-    allocator = gst_allocator_find (mem);
+    GST_DEBUG_OBJECT (basesrc, "0 size, using allocator %p", allocator);
   } else if (pool == NULL) {
     /* fixed size, we can use a bufferpool */
     GstStructure *config;
