@@ -584,7 +584,7 @@ rtsp_ext_real_parse_sdp (GstRTSPExtension * ext, GstSDPMessage * sdp,
   buf = gst_buffer_new_wrapped (data, offset);
 
   /* Set on caps */
-  GST_BUFFER_FLAG_SET (buf, GST_BUFFER_FLAG_IN_CAPS);
+  GST_BUFFER_FLAG_SET (buf, GST_BUFFER_FLAG_HEADER);
   gst_structure_set (props, "config", GST_TYPE_BUFFER, buf, NULL);
   gst_buffer_unref (buf);
 
