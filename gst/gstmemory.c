@@ -73,6 +73,9 @@
 G_DEFINE_BOXED_TYPE (GstMemory, gst_memory, (GBoxedCopyFunc) gst_memory_ref,
     (GBoxedFreeFunc) gst_memory_unref);
 
+G_DEFINE_BOXED_TYPE (GstAllocator, gst_allocator,
+    (GBoxedCopyFunc) gst_allocator_ref, (GBoxedFreeFunc) gst_allocator_unref);
+
 /**
  * gst_memory_alignment:
  *

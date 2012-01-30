@@ -32,6 +32,9 @@ G_BEGIN_DECLS
 #define GST_TYPE_MEMORY (gst_memory_get_type())
 GType gst_memory_get_type(void);
 
+#define GST_TYPE_ALLOCATOR (gst_allocator_get_type())
+GType gst_allocator_get_type(void);
+
 typedef struct _GstMemory GstMemory;
 typedef struct _GstMemoryInfo GstMemoryInfo;
 typedef struct _GstAllocator GstAllocator;
