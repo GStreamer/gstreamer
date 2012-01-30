@@ -147,6 +147,9 @@ AC_SUBST(GTKDOC_VERSION)
 dnl Check for GLib
 AC_PATH_PROG([GLIB_GENMARSHAL], [glib-genmarshal])
 PKG_CHECK_MODULES([GLIB], [glib-2.0])
+AC_CHECK_LIB([glib-2.0], [g_list_free_full], [
+    AC_DEFINE([HAVE_G_LIST_FREE_FULL], [1],
+              [Define to 1 if g_list_free_full() is available.])])
 AC_SUBST(GLIB_CFLAGS)
 AC_SUBST(GLIB_LIBS)
 

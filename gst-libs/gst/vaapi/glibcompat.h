@@ -1,5 +1,5 @@
 /*
- *  sysdeps.h - System-dependent definitions
+ *  glibcompat.h - System-dependent definitions
  *
  *  Copyright (C) 2012 Intel Corporation
  *
@@ -19,13 +19,18 @@
  *  Boston, MA 02110-1301 USA
  */
 
-#ifndef SYSDEPS_H
-#define SYSDEPS_H
+#ifndef GLIB_COMPAT_H
+#define GLIB_COMPAT_H
 
-#ifdef HAVE_CONFIG_H
-# include "config.h"
+#include <glib.h>
+
+#ifndef HAVE_G_LIST_FREE_FULL
+static inline void
+g_list_free_full(GList *list, GDestroyNotify free_func)
+{
+    g_list_foreach(list, (GFunc)free_func, NULL);
+    g_list_free(list);
+}
 #endif
 
-#include "glibcompat.h"
-
-#endif /* SYSDEPS_H */
+#endif /* GLIB_COMPAT_H */
