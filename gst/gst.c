@@ -118,6 +118,7 @@
 #include <locale.h>             /* for LC_ALL */
 
 #include "gst.h"
+#include "gsttrace.h"
 
 #define GST_CAT_DEFAULT GST_CAT_GST_INIT
 

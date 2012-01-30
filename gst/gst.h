@@ -75,7 +75,6 @@
 #include <gst/gsttagsetter.h>
 #include <gst/gsttask.h>
 #include <gst/gsttaskpool.h>
-#include <gst/gsttrace.h>
 #include <gst/gsttypefind.h>
 #include <gst/gsttypefindfactory.h>
 #include <gst/gsturi.h>
