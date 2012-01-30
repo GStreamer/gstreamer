@@ -519,6 +519,88 @@ vs_scanline_merge_linear_UYVY (uint8_t * dest, uint8_t * src1,
 }
 
 
+/* NV12 */
+
+/* n is the number of bi-pixels */
+
+void
+vs_scanline_downsample_NV12 (uint8_t * dest, uint8_t * src, int n)
+{
+  int i;
+
+  for (i = 0; i < n; i++) {
+    dest[i * 2 + 0] = (src[i * 4 + 0] + src[i * 4 + 2]) / 2;
+    dest[i * 2 + 1] = (src[i * 4 + 1] + src[i * 4 + 3]) / 2;
+  }
+}
+
+void
+vs_scanline_resample_nearest_NV12 (uint8_t * dest, uint8_t * src, int src_width,
+    int n, int *accumulator, int increment)
+{
+  int acc = *accumulator;
+  int i;
+  int j;
+  int x;
+
+  for (i = 0; i < n; i++) {
+    j = acc >> 16;
+    x = acc & 0xffff;
+
+    dest[i * 2 + 0] = (x < 32768
+        || j + 1 >= src_width) ? src[j * 2 + 0] : src[j * 2 + 2];
+    dest[i * 2 + 1] = (x < 32768
+        || j + 1 >= src_width) ? src[j * 2 + 1] : src[j * 2 + 3];
+
+    acc += increment;
+  }
+
+  *accumulator = acc;
+}
+
+void
+vs_scanline_resample_linear_NV12 (uint8_t * dest, uint8_t * src, int src_width,
+    int n, int *accumulator, int increment)
+{
+  int acc = *accumulator;
+  int i;
+  int j;
+  int x;
+
+  for (i = 0; i < n; i++) {
+    j = acc >> 16;
+    x = acc & 0xffff;
+
+    if (j + 1 < src_width) {
+      dest[i * 2 + 0] =
+          (src[j * 2 + 0] * (65536 - x) + src[j * 2 + 2] * x) >> 16;
+      dest[i * 2 + 1] =
+          (src[j * 2 + 1] * (65536 - x) + src[j * 2 + 3] * x) >> 16;
+    } else {
+      dest[i * 4 + 0] = src[j * 2 + 0];
+      dest[i * 4 + 1] = src[j * 2 + 1];
+    }
+
+    acc += increment;
+  }
+
+  *accumulator = acc;
+}
+
+void
+vs_scanline_merge_linear_NV12 (uint8_t * dest, uint8_t * src1,
+    uint8_t * src2, int n, int x)
+{
+  uint32_t value = x >> 8;
+
+  if (value == 0) {
+    memcpy (dest, src1, n * 2);
+  } else {
+    orc_merge_linear_u8 (dest, src1, src2, value, n * 2);
+  }
+}
+
+
 /* RGB565 */
 
 /* note that src and dest are uint16_t, and thus endian dependent */

@@ -1,6 +1,6 @@
 /* GStreamer
  * Copyright (C) <1999> Erik Walthinsen <omega@cse.ogi.edu>
- * Copyright (C) 2005 David Schleef <ds@schleef.org>
+ * Copyright (C) 2005-2012 David Schleef <ds@schleef.org>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -140,7 +140,8 @@ static GstStaticCaps gst_video_scale_format_caps[] = {
   GST_STATIC_CAPS (GST_VIDEO_CAPS_YUV ("Y8  ")),
   GST_STATIC_CAPS (GST_VIDEO_CAPS_YUV ("GREY")),
   GST_STATIC_CAPS (GST_VIDEO_CAPS_YUV ("AY64")),
-  GST_STATIC_CAPS (GST_VIDEO_CAPS_ARGB_64)
+  GST_STATIC_CAPS (GST_VIDEO_CAPS_ARGB_64),
+  GST_STATIC_CAPS (GST_VIDEO_CAPS_YUV ("NV12"))
 };
 
 #define GST_TYPE_VIDEO_SCALE_METHOD (gst_video_scale_method_get_type())
@@ -1024,7 +1025,8 @@ gst_video_scale_setup_vs_image (VSImage * image, GstVideoFormat format,
   if (format == GST_VIDEO_FORMAT_I420
       || format == GST_VIDEO_FORMAT_YV12
       || format == GST_VIDEO_FORMAT_Y444
-      || format == GST_VIDEO_FORMAT_Y42B || format == GST_VIDEO_FORMAT_Y41B) {
+      || format == GST_VIDEO_FORMAT_Y42B || format == GST_VIDEO_FORMAT_Y41B
+      || format == GST_VIDEO_FORMAT_NV12) {
     image->real_pixels = data + gst_video_format_get_component_offset (format,
         component, width, height);
   } else {
@@ -1090,6 +1092,7 @@ _get_black_for_format (GstVideoFormat format)
     case GST_VIDEO_FORMAT_Y444:
     case GST_VIDEO_FORMAT_Y42B:
     case GST_VIDEO_FORMAT_Y41B:
+    case GST_VIDEO_FORMAT_NV12:
       return black[4];          /* Y, U, V, 0 */
     case GST_VIDEO_FORMAT_RGB16:
     case GST_VIDEO_FORMAT_RGB15:
@@ -1150,6 +1153,14 @@ gst_video_scale_transform (GstBaseTransform * trans, GstBuffer * in,
         videoscale->to_width, videoscale->to_height, videoscale->borders_w,
         videoscale->borders_h, GST_BUFFER_DATA (out));
     gst_video_scale_setup_vs_image (&dest_v, videoscale->format, 2,
+        videoscale->to_width, videoscale->to_height, videoscale->borders_w,
+        videoscale->borders_h, GST_BUFFER_DATA (out));
+  }
+  if (videoscale->format == GST_VIDEO_FORMAT_NV12) {
+    gst_video_scale_setup_vs_image (&src_u, videoscale->format, 1,
+        videoscale->from_width, videoscale->from_height, 0, 0,
+        GST_BUFFER_DATA (in));
+    gst_video_scale_setup_vs_image (&dest_u, videoscale->format, 1,
         videoscale->to_width, videoscale->to_height, videoscale->borders_w,
         videoscale->borders_h, GST_BUFFER_DATA (out));
   }
@@ -1335,6 +1346,20 @@ gst_video_scale_transform (GstBaseTransform * trans, GstBuffer * in,
           vs_image_scale_lanczos_Y (&dest_v, &src_v, videoscale->tmp_buf,
               videoscale->sharpness, videoscale->dither, videoscale->submethod,
               videoscale->envelope, videoscale->sharpen);
+          break;
+        default:
+          goto unknown_mode;
+      }
+      break;
+    case GST_VIDEO_FORMAT_NV12:
+      switch (method) {
+        case GST_VIDEO_SCALE_NEAREST:
+          vs_image_scale_nearest_Y (&dest, &src, videoscale->tmp_buf);
+          vs_image_scale_nearest_NV12 (&dest_u, &src_u, videoscale->tmp_buf);
+          break;
+        case GST_VIDEO_SCALE_BILINEAR:
+          vs_image_scale_linear_Y (&dest, &src, videoscale->tmp_buf);
+          vs_image_scale_linear_NV12 (&dest_u, &src_u, videoscale->tmp_buf);
           break;
         default:
           goto unknown_mode;
