@@ -48,13 +48,15 @@ vaapi_unmap_buffer(VADisplay dpy, VABufferID buf_id, void **pbuf)
     attribute_hidden;
 
 /** Creates and maps VA buffer */
-void *
+gboolean
 vaapi_create_buffer(
-    VADisplay    dpy,
-    VAContextID  ctx,
-    int          type,
-    unsigned int size,
-    VABufferID  *buf_id
+    VADisplay     dpy,
+    VAContextID   ctx,
+    int           type,
+    unsigned int  size,
+    gconstpointer data,
+    VABufferID   *buf_id,
+    gpointer     *mapped_data
 ) attribute_hidden;
 
 /** Destroy VA buffer */

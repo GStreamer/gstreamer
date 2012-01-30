@@ -89,19 +89,23 @@ gst_vaapi_picture_create(
     const GstVaapiCodecObjectConstructorArgs *args
 )
 {
+    gboolean success;
+
     picture->surface = gst_vaapi_context_get_surface(GET_CONTEXT(picture));
     if (!picture->surface)
         return FALSE;
     picture->surface_id = gst_vaapi_surface_get_id(picture->surface);
 
-    picture->param = vaapi_create_buffer(
+    success = vaapi_create_buffer(
         GET_VA_DISPLAY(picture),
         GET_VA_CONTEXT(picture),
         VAPictureParameterBufferType,
         args->param_size,
-        &picture->param_id
+        args->param,
+        &picture->param_id,
+        &picture->param
     );
-    if (!picture->param)
+    if (!success)
         return FALSE;
 
     picture->slices = g_ptr_array_new();
@@ -274,28 +278,30 @@ gst_vaapi_slice_create(
 )
 {
     VASliceParameterBufferBase *slice_param;
-    guint8 *data;
+    gboolean success;
 
-    data = vaapi_create_buffer(
+    success = vaapi_create_buffer(
         GET_VA_DISPLAY(slice),
         GET_VA_CONTEXT(slice),
         VASliceDataBufferType,
         args->data_size,
-        &slice->data_id
+        args->data,
+        &slice->data_id,
+        NULL
     );
-    if (!data)
+    if (!success)
         return FALSE;
-    memcpy(data, args->data, args->data_size);
-    vaapi_unmap_buffer(GET_VA_DISPLAY(slice), slice->data_id, NULL);
 
-    slice->param = vaapi_create_buffer(
+    success = vaapi_create_buffer(
         GET_VA_DISPLAY(slice),
         GET_VA_CONTEXT(slice),
         VASliceParameterBufferType,
         args->param_size,
-        &slice->param_id
+        args->param,
+        &slice->param_id,
+        &slice->param
     );
-    if (!slice->param)
+    if (!success)
         return FALSE;
 
     slice_param                    = slice->param;

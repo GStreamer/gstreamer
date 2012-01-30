@@ -76,33 +76,38 @@ vaapi_unmap_buffer(VADisplay dpy, VABufferID buf_id, void **pbuf)
 }
 
 /* Creates and maps VA buffer */
-void *
+gboolean
 vaapi_create_buffer(
-    VADisplay    dpy,
-    VAContextID  ctx,
-    int          type,
-    unsigned int size,
-    VABufferID  *buf_id_ptr
+    VADisplay     dpy,
+    VAContextID   ctx,
+    int           type,
+    unsigned int  size,
+    gconstpointer buf,
+    VABufferID   *buf_id_ptr,
+    gpointer     *mapped_data
 )
 {
     VABufferID buf_id;
     VAStatus status;
-    void *data;
+    gpointer data = (gpointer)buf;
 
-    status = vaCreateBuffer(dpy, ctx, type, size, 1, NULL, &buf_id);
+    status = vaCreateBuffer(dpy, ctx, type, size, 1, data, &buf_id);
     if (!vaapi_check_status(status, "vaCreateBuffer()"))
-        return NULL;
+        return FALSE;
 
-    data = vaapi_map_buffer(dpy, buf_id);
-    if (!data)
-        goto error;
+    if (mapped_data) {
+        data = vaapi_map_buffer(dpy, buf_id);
+        if (!data)
+            goto error;
+        *mapped_data = data;
+    }
 
     *buf_id_ptr = buf_id;
-    return data;
+    return TRUE;
 
 error:
     vaapi_destroy_buffer(dpy, &buf_id);
-    return NULL;
+    return FALSE;
 }
 
 /* Destroy VA buffer */

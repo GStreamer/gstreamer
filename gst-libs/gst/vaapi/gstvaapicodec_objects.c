@@ -150,16 +150,13 @@ gst_vaapi_iq_matrix_create(
     const GstVaapiCodecObjectConstructorArgs *args
 )
 {
-    iq_matrix->param = vaapi_create_buffer(
-        GET_VA_DISPLAY(iq_matrix),
-        GET_VA_CONTEXT(iq_matrix),
-        VAIQMatrixBufferType,
-        args->param_size,
-        &iq_matrix->param_id
-    );
-    if (!iq_matrix->param)
-        return FALSE;
-    return TRUE;
+    return vaapi_create_buffer(GET_VA_DISPLAY(iq_matrix),
+                               GET_VA_CONTEXT(iq_matrix),
+                               VAIQMatrixBufferType,
+                               args->param_size,
+                               args->param,
+                               &iq_matrix->param_id,
+                               &iq_matrix->param);
 }
 
 static void
@@ -212,16 +209,13 @@ gst_vaapi_bitplane_create(
     const GstVaapiCodecObjectConstructorArgs *args
 )
 {
-    bitplane->data = vaapi_create_buffer(
-        GET_VA_DISPLAY(bitplane),
-        GET_VA_CONTEXT(bitplane),
-        VABitPlaneBufferType,
-        args->param_size,
-        &bitplane->data_id
-    );
-    if (!bitplane->data)
-        return FALSE;
-    return TRUE;
+    return vaapi_create_buffer(GET_VA_DISPLAY(bitplane),
+                               GET_VA_CONTEXT(bitplane),
+                               VABitPlaneBufferType,
+                               args->param_size,
+                               args->param,
+                               &bitplane->data_id,
+                               &bitplane->data);
 }
 
 static void
