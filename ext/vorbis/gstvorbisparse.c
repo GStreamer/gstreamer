@@ -147,9 +147,9 @@ vorbis_parse_set_header_on_caps (GstVorbisParse * parse, GstCaps * caps)
   structure = gst_caps_get_structure (caps, 0);
 
   /* mark buffers */
-  GST_BUFFER_FLAG_SET (buf1, GST_BUFFER_FLAG_IN_CAPS);
-  GST_BUFFER_FLAG_SET (buf2, GST_BUFFER_FLAG_IN_CAPS);
-  GST_BUFFER_FLAG_SET (buf3, GST_BUFFER_FLAG_IN_CAPS);
+  GST_BUFFER_FLAG_SET (buf1, GST_BUFFER_FLAG_HEADER);
+  GST_BUFFER_FLAG_SET (buf2, GST_BUFFER_FLAG_HEADER);
+  GST_BUFFER_FLAG_SET (buf3, GST_BUFFER_FLAG_HEADER);
 
   /* put buffers in a fixed list */
   g_value_init (&array, GST_TYPE_ARRAY);

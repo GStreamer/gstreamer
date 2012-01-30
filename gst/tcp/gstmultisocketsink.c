@@ -1193,7 +1193,7 @@ is_sync_frame (GstMultiSocketSink * sink, GstBuffer * buffer)
 {
   if (GST_BUFFER_FLAG_IS_SET (buffer, GST_BUFFER_FLAG_DELTA_UNIT)) {
     return FALSE;
-  } else if (!GST_BUFFER_FLAG_IS_SET (buffer, GST_BUFFER_FLAG_IN_CAPS)) {
+  } else if (!GST_BUFFER_FLAG_IS_SET (buffer, GST_BUFFER_FLAG_HEADER)) {
     return TRUE;
   }
 
@@ -2354,8 +2354,8 @@ gst_multi_socket_sink_render (GstBaseSink * bsink, GstBuffer * buf)
     goto no_caps;
 #endif
 
-  /* get IN_CAPS first, code below might mess with the flags */
-  in_caps = GST_BUFFER_FLAG_IS_SET (buf, GST_BUFFER_FLAG_IN_CAPS);
+  /* get HEADER first, code below might mess with the flags */
+  in_caps = GST_BUFFER_FLAG_IS_SET (buf, GST_BUFFER_FLAG_HEADER);
 
 #if 0
   /* stamp the buffer with previous caps if no caps set */
@@ -2391,12 +2391,12 @@ gst_multi_socket_sink_render (GstBaseSink * bsink, GstBuffer * buf)
       GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buf)),
       GST_TIME_ARGS (GST_BUFFER_DURATION (buf)));
 
-  /* if we get IN_CAPS buffers, but the previous buffer was not IN_CAPS,
+  /* if we get HEADER buffers, but the previous buffer was not HEADER,
    * it means we're getting new streamheader buffers, and we should clear
    * the old ones */
   if (in_caps && sink->previous_buffer_in_caps == FALSE) {
     GST_DEBUG_OBJECT (sink,
-        "receiving new IN_CAPS buffers, clearing old streamheader");
+        "receiving new HEADER buffers, clearing old streamheader");
     g_slist_foreach (sink->streamheader, (GFunc) gst_mini_object_unref, NULL);
     g_slist_free (sink->streamheader);
     sink->streamheader = NULL;
@@ -2414,7 +2414,7 @@ gst_multi_socket_sink_render (GstBaseSink * bsink, GstBuffer * buf)
    * We don't send the buffer to the client, since streamheaders are sent
    * separately when necessary. */
   if (in_caps) {
-    GST_DEBUG_OBJECT (sink, "appending IN_CAPS buffer with length %"
+    GST_DEBUG_OBJECT (sink, "appending HEADER buffer with length %"
         G_GSIZE_FORMAT " to streamheader", gst_buffer_get_size (buf));
     sink->streamheader = g_slist_append (sink->streamheader, buf);
   } else {

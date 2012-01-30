@@ -989,7 +989,7 @@ gst_ogg_mux_queue_pads (GstOggMux * ogg_mux, gboolean * popped)
           if (pad->have_type)
             is_header = gst_ogg_stream_packet_is_header (&pad->map, &packet);
           else                  /* fallback (FIXME 0.11: remove IN_CAPS hack) */
-            is_header = GST_BUFFER_FLAG_IS_SET (buf, GST_BUFFER_FLAG_IN_CAPS);
+            is_header = GST_BUFFER_FLAG_IS_SET (buf, GST_BUFFER_FLAG_HEADER);
 
           gst_buffer_unmap (buf, &map);
 
@@ -1122,9 +1122,9 @@ gst_ogg_mux_set_header_on_caps (GstCaps * caps, GList * buffers)
     walk = walk->next;
 
     /* mark buffer */
-    GST_LOG ("Setting IN_CAPS on buffer of length %" G_GSIZE_FORMAT,
+    GST_LOG ("Setting HEADER on buffer of length %" G_GSIZE_FORMAT,
         gst_buffer_get_size (buf));
-    GST_BUFFER_FLAG_SET (buf, GST_BUFFER_FLAG_IN_CAPS);
+    GST_BUFFER_FLAG_SET (buf, GST_BUFFER_FLAG_HEADER);
 
     g_value_init (&value, GST_TYPE_BUFFER);
     copy = gst_buffer_copy (buf);

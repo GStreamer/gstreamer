@@ -325,7 +325,7 @@ gst_ogg_parse_append_header (GValue * array, GstBuffer * buf)
   /* We require a copy to avoid circular refcounts */
   GstBuffer *buffer = gst_buffer_copy (buf);
 
-  GST_BUFFER_FLAG_SET (buf, GST_BUFFER_FLAG_IN_CAPS);
+  GST_BUFFER_FLAG_SET (buf, GST_BUFFER_FLAG_HEADER);
 
   g_value_init (&value, GST_TYPE_BUFFER);
   gst_value_set_buffer (&value, buffer);

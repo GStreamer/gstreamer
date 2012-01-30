@@ -273,7 +273,7 @@ theora_parse_set_header_on_caps (GstTheoraParse * parse, GstCaps * caps)
       continue;
 
     bufs[i] = gst_buffer_make_writable (bufs[i]);
-    GST_BUFFER_FLAG_SET (bufs[i], GST_BUFFER_FLAG_IN_CAPS);
+    GST_BUFFER_FLAG_SET (bufs[i], GST_BUFFER_FLAG_HEADER);
 
     g_value_init (&value, GST_TYPE_BUFFER);
     gst_value_set_buffer (&value, bufs[i]);

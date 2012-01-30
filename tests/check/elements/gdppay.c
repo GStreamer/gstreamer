@@ -268,7 +268,7 @@ GST_START_TEST (test_streamheader)
   gst_buffer_fill (inbuffer, 0, "head", 4);
   caps = gst_caps_from_string ("application/x-gst-test-streamheader");
   structure = gst_caps_get_structure (caps, 0);
-  GST_BUFFER_FLAG_SET (inbuffer, GST_BUFFER_FLAG_IN_CAPS);
+  GST_BUFFER_FLAG_SET (inbuffer, GST_BUFFER_FLAG_HEADER);
   g_value_init (&array, GST_TYPE_ARRAY);
   g_value_init (&value, GST_TYPE_BUFFER);
   shbuffer = gst_buffer_copy (inbuffer);

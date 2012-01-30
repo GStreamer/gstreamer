@@ -882,7 +882,7 @@ theora_set_header_on_caps (GstCaps * caps, GSList * buffers)
     buffer = walk->data;
 
     /* mark buffer */
-    GST_BUFFER_FLAG_SET (buffer, GST_BUFFER_FLAG_IN_CAPS);
+    GST_BUFFER_FLAG_SET (buffer, GST_BUFFER_FLAG_HEADER);
 
     /* Copy buffer, because we can't use the original -
      * it creates a circular refcount with the caps<->buffers */

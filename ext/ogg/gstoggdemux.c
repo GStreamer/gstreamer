@@ -2447,7 +2447,7 @@ gst_ogg_demux_set_header_on_caps (GstOggDemux * ogg, GstCaps * caps,
     buffer = gst_buffer_new_and_alloc (op->bytes);
     if (op->bytes)
       gst_buffer_fill (buffer, 0, op->packet, op->bytes);
-    GST_BUFFER_FLAG_SET (buffer, GST_BUFFER_FLAG_IN_CAPS);
+    GST_BUFFER_FLAG_SET (buffer, GST_BUFFER_FLAG_HEADER);
     g_value_init (&value, GST_TYPE_BUFFER);
     gst_value_take_buffer (&value, buffer);
     gst_value_array_append_value (&array, &value);

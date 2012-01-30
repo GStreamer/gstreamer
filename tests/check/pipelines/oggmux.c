@@ -185,11 +185,11 @@ eos_buffer_probe (GstPad * pad, GstPadProbeInfo * info, gpointer unused)
   if (state) {
     /* Now, we can do buffer-level checks...
      * If we have video somewhere, then we should have DELTA_UNIT set on all
-     * non-header (not IN_CAPS), non-video buffers
+     * non-header (not HEADER), non-video buffers
      */
     g_hash_table_foreach (eos_chain_states, (GHFunc) is_video, &has_video);
     if (has_video && state->codec != CODEC_THEORA) {
-      if (!GST_BUFFER_FLAG_IS_SET (buffer, GST_BUFFER_FLAG_IN_CAPS))
+      if (!GST_BUFFER_FLAG_IS_SET (buffer, GST_BUFFER_FLAG_HEADER))
         fail_unless (GST_BUFFER_FLAG_IS_SET (buffer,
                 GST_BUFFER_FLAG_DELTA_UNIT),
             "Non-video buffer doesn't have DELTA_UNIT in stream with video");
