@@ -320,6 +320,7 @@ void
 _priv_gst_memory_initialize (void)
 {
   static const GstMemoryInfo _mem_info = {
+    GST_ALLOCATOR_SYSMEM,
     (GstAllocatorAllocFunction) _default_alloc_alloc,
     (GstMemoryMapFunction) _default_mem_map,
     (GstMemoryUnmapFunction) _default_mem_unmap,
@@ -777,6 +778,22 @@ gst_allocator_new (const GstMemoryInfo * info, gpointer user_data,
   GST_DEBUG ("new allocator %p", allocator);
 
   return allocator;
+}
+
+/**
+ * gst_alocator_get_memory_type:
+ * @allocator: a #GstAllocator
+ *
+ * Get the memory type allocated by this allocator
+ *
+ * Returns: @allocator with increased refcount
+ */
+const gchar *
+gst_allocator_get_memory_type (GstAllocator * allocator)
+{
+  g_return_val_if_fail (allocator != NULL, NULL);
+
+  return allocator->info.mem_type;
 }
 
 /**

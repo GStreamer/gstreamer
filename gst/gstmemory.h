@@ -232,6 +232,7 @@ typedef gboolean    (*GstMemoryIsSpanFunction)    (GstMemory *mem1, GstMemory *m
 
 /**
  * GstMemoryInfo:
+ * @type: the memory type this allocator provides
  * @alloc: the implementation of the GstAllocatorAllocFunction
  * @mem_map: the implementation of the GstMemoryMapFunction
  * @mem_unmap: the implementation of the GstMemoryUnmapFunction
@@ -244,6 +245,8 @@ typedef gboolean    (*GstMemoryIsSpanFunction)    (GstMemory *mem1, GstMemory *m
  * the implementations for various memory operations.
  */
 struct _GstMemoryInfo {
+  const gchar              *mem_type;
+
   GstAllocatorAllocFunction alloc;
 
   GstMemoryMapFunction      mem_map;
@@ -259,45 +262,46 @@ struct _GstMemoryInfo {
 };
 
 /* allocators */
-GstAllocator *        gst_allocator_new         (const GstMemoryInfo * info,
-                                                 gpointer user_data, GDestroyNotify notify);
+GstAllocator * gst_allocator_new             (const GstMemoryInfo * info,
+                                              gpointer user_data, GDestroyNotify notify);
+const gchar *  gst_allocator_get_memory_type (GstAllocator * allocator);
 
-GstAllocator *        gst_allocator_ref         (GstAllocator * allocator);
-void                  gst_allocator_unref       (GstAllocator * allocator);
+GstAllocator * gst_allocator_ref             (GstAllocator * allocator);
+void           gst_allocator_unref           (GstAllocator * allocator);
 
-void                  gst_allocator_register    (const gchar *name, GstAllocator *alloc);
-GstAllocator *        gst_allocator_find        (const gchar *name);
+void           gst_allocator_register        (const gchar *name, GstAllocator *alloc);
+GstAllocator * gst_allocator_find            (const gchar *name);
 
-void                  gst_allocator_set_default (GstAllocator * allocator);
+void           gst_allocator_set_default     (GstAllocator * allocator);
 
 /* allocating memory blocks */
-GstMemory * gst_allocator_alloc        (GstAllocator * allocator,
-                                        gsize maxsize, gsize align);
+GstMemory *    gst_allocator_alloc           (GstAllocator * allocator,
+                                              gsize maxsize, gsize align);
 
-GstMemory * gst_memory_new_wrapped     (GstMemoryFlags flags, gpointer data, GFreeFunc free_func,
-                                        gsize maxsize, gsize offset, gsize size);
+GstMemory *    gst_memory_new_wrapped (GstMemoryFlags flags, gpointer data, GFreeFunc free_func,
+                                       gsize maxsize, gsize offset, gsize size);
 
 /* refcounting */
-GstMemory * gst_memory_ref         (GstMemory *mem);
-void        gst_memory_unref       (GstMemory *mem);
+GstMemory *    gst_memory_ref         (GstMemory *mem);
+void           gst_memory_unref       (GstMemory *mem);
 
 /* getting/setting memory properties */
-gsize       gst_memory_get_sizes   (GstMemory *mem, gsize *offset, gsize *maxsize);
-void        gst_memory_resize      (GstMemory *mem, gssize offset, gsize size);
+gsize          gst_memory_get_sizes   (GstMemory *mem, gsize *offset, gsize *maxsize);
+void           gst_memory_resize      (GstMemory *mem, gssize offset, gsize size);
 
 /* retrieving data */
-gboolean    gst_memory_is_writable (GstMemory *mem);
+gboolean       gst_memory_is_writable (GstMemory *mem);
 
-GstMemory * gst_memory_make_mapped (GstMemory *mem, GstMapInfo *info, GstMapFlags flags);
-gboolean    gst_memory_map         (GstMemory *mem, GstMapInfo *info, GstMapFlags flags);
-void        gst_memory_unmap       (GstMemory *mem, GstMapInfo *info);
+GstMemory *    gst_memory_make_mapped (GstMemory *mem, GstMapInfo *info, GstMapFlags flags);
+gboolean       gst_memory_map         (GstMemory *mem, GstMapInfo *info, GstMapFlags flags);
+void           gst_memory_unmap       (GstMemory *mem, GstMapInfo *info);
 
 /* copy and subregions */
-GstMemory * gst_memory_copy        (GstMemory *mem, gssize offset, gssize size);
-GstMemory * gst_memory_share       (GstMemory *mem, gssize offset, gssize size);
+GstMemory *    gst_memory_copy        (GstMemory *mem, gssize offset, gssize size);
+GstMemory *    gst_memory_share       (GstMemory *mem, gssize offset, gssize size);
 
 /* span memory */
-gboolean    gst_memory_is_span     (GstMemory *mem1, GstMemory *mem2, gsize *offset);
+gboolean       gst_memory_is_span     (GstMemory *mem1, GstMemory *mem2, gsize *offset);
 
 G_END_DECLS
 
