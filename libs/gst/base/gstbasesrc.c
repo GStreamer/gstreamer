@@ -246,7 +246,7 @@ struct _GstBaseSrcPrivate
   GstClockTime earliest_time;
 
   GstBufferPool *pool;
-  const GstAllocator *allocator;
+  GstAllocator *allocator;
   guint prefix;
   guint alignment;
 };
@@ -2701,8 +2701,9 @@ null_buffer:
 
 static gboolean
 gst_base_src_set_allocation (GstBaseSrc * basesrc, GstBufferPool * pool,
-    const GstAllocator * allocator, guint prefix, guint alignment)
+    GstAllocator * allocator, guint prefix, guint alignment)
 {
+  GstAllocator *oldalloc;
   GstBufferPool *oldpool;
   GstBaseSrcPrivate *priv = basesrc->priv;
 
@@ -2716,6 +2717,7 @@ gst_base_src_set_allocation (GstBaseSrc * basesrc, GstBufferPool * pool,
   oldpool = priv->pool;
   priv->pool = pool;
 
+  oldalloc = priv->allocator;
   priv->allocator = allocator;
 
   priv->prefix = prefix;
@@ -2729,6 +2731,9 @@ gst_base_src_set_allocation (GstBaseSrc * basesrc, GstBufferPool * pool,
       gst_buffer_pool_set_active (oldpool, FALSE);
     }
     gst_object_unref (oldpool);
+  }
+  if (oldalloc) {
+    gst_allocator_unref (oldalloc);
   }
   return TRUE;
 
@@ -2766,7 +2771,7 @@ gst_base_src_prepare_allocation (GstBaseSrc * basesrc, GstCaps * caps)
   gboolean result = TRUE;
   GstQuery *query;
   GstBufferPool *pool = NULL;
-  const GstAllocator *allocator = NULL;
+  GstAllocator *allocator = NULL;
   guint size, min, max, prefix, alignment;
 
   bclass = GST_BASE_SRC_GET_CLASS (basesrc);

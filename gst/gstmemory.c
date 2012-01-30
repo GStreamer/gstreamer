@@ -93,9 +93,12 @@ size_t gst_memory_alignment = 0;
 
 struct _GstAllocator
 {
-  GQuark name;
+  gint refcount;
 
   GstMemoryInfo info;
+
+  gpointer user_data;
+  GDestroyNotify notify;
 };
 
 /* default memory implementation */
@@ -108,10 +111,10 @@ typedef struct
 } GstMemoryDefault;
 
 /* the default allocator */
-static const GstAllocator *_default_allocator;
+static GstAllocator *_default_allocator;
 
 /* our predefined allocators */
-static const GstAllocator *_default_mem_impl;
+static GstAllocator *_default_mem_impl;
 
 /* initialize the fields */
 static void
@@ -182,7 +185,8 @@ _default_mem_new_block (gsize maxsize, gsize align, gsize offset, gsize size)
 }
 
 static GstMemory *
-_default_mem_alloc (const GstAllocator * allocator, gsize maxsize, gsize align)
+_default_alloc_alloc (GstAllocator * allocator, gsize maxsize, gsize align,
+    gpointer user_data)
 {
   return (GstMemory *) _default_mem_new_block (maxsize, align, 0, maxsize);
 }
@@ -268,7 +272,7 @@ _default_mem_is_span (GstMemoryDefault * mem1, GstMemoryDefault * mem2,
 }
 
 static GstMemory *
-_fallback_copy (GstMemory * mem, gssize offset, gssize size)
+_fallback_mem_copy (GstMemory * mem, gssize offset, gssize size)
 {
   GstMemory *copy;
   GstMapInfo sinfo, dinfo;
@@ -295,7 +299,7 @@ _fallback_copy (GstMemory * mem, gssize offset, gssize size)
 }
 
 static gboolean
-_fallback_is_span (GstMemory * mem1, GstMemory * mem2, gsize * offset)
+_fallback_mem_is_span (GstMemory * mem1, GstMemory * mem2, gsize * offset)
 {
   return FALSE;
 }
@@ -303,18 +307,23 @@ _fallback_is_span (GstMemory * mem1, GstMemory * mem2, gsize * offset)
 static GRWLock lock;
 static GHashTable *allocators;
 
+static void
+_priv_sysmem_notify (gpointer user_data)
+{
+  g_warning ("The default memory allocator was freed!");
+}
+
 void
 _priv_gst_memory_initialize (void)
 {
   static const GstMemoryInfo _mem_info = {
-    (GstMemoryAllocFunction) _default_mem_alloc,
+    (GstAllocatorAllocFunction) _default_alloc_alloc,
     (GstMemoryMapFunction) _default_mem_map,
     (GstMemoryUnmapFunction) _default_mem_unmap,
     (GstMemoryFreeFunction) _default_mem_free,
     (GstMemoryCopyFunction) _default_mem_copy,
     (GstMemoryShareFunction) _default_mem_share,
     (GstMemoryIsSpanFunction) _default_mem_is_span,
-    NULL
   };
 
   g_rw_lock_init (&lock);
@@ -328,9 +337,11 @@ _priv_gst_memory_initialize (void)
 
   GST_DEBUG ("memory alignment: %" G_GSIZE_FORMAT, gst_memory_alignment);
 
-  _default_mem_impl = gst_allocator_register (GST_ALLOCATOR_SYSMEM, &_mem_info);
+  _default_mem_impl = gst_allocator_new (&_mem_info, NULL, _priv_sysmem_notify);
 
-  _default_allocator = _default_mem_impl;
+  _default_allocator = gst_allocator_ref (_default_mem_impl);
+  gst_allocator_register (GST_ALLOCATOR_SYSMEM,
+      gst_allocator_ref (_default_mem_impl));
 }
 
 /**
@@ -396,7 +407,7 @@ gst_memory_unref (GstMemory * mem)
   GST_DEBUG ("memory %p, %d->%d", mem, mem->refcount, mem->refcount - 1);
 
   if (g_atomic_int_dec_and_test (&mem->refcount))
-    mem->allocator->info.free (mem);
+    mem->allocator->info.mem_free (mem);
 }
 
 /**
@@ -587,7 +598,7 @@ gst_memory_map (GstMemory * mem, GstMapInfo * info, GstMapFlags flags)
   if (!gst_memory_lock (mem, flags))
     goto lock_failed;
 
-  info->data = mem->allocator->info.map (mem, mem->maxsize, flags);
+  info->data = mem->allocator->info.mem_map (mem, mem->maxsize, flags);
 
   if (G_UNLIKELY (info->data == NULL))
     goto error;
@@ -631,7 +642,7 @@ gst_memory_unmap (GstMemory * mem, GstMapInfo * info)
   /* there must be a ref */
   g_return_if_fail (g_atomic_int_get (&mem->state) >= 4);
 
-  mem->allocator->info.unmap (mem);
+  mem->allocator->info.mem_unmap (mem);
   gst_memory_unlock (mem);
 }
 
@@ -655,7 +666,7 @@ gst_memory_copy (GstMemory * mem, gssize offset, gssize size)
   g_return_val_if_fail (mem != NULL, NULL);
   g_return_val_if_fail (gst_memory_lock (mem, GST_MAP_READ), NULL);
 
-  copy = mem->allocator->info.copy (mem, offset, size);
+  copy = mem->allocator->info.mem_copy (mem, offset, size);
 
   gst_memory_unlock (mem);
 
@@ -680,7 +691,7 @@ gst_memory_share (GstMemory * mem, gssize offset, gssize size)
 {
   g_return_val_if_fail (mem != NULL, NULL);
 
-  return mem->allocator->info.share (mem, offset, size);
+  return mem->allocator->info.mem_share (mem, offset, size);
 }
 
 /**
@@ -713,7 +724,7 @@ gst_memory_is_span (GstMemory * mem1, GstMemory * mem2, gsize * offset)
     return FALSE;
 
   /* and memory is contiguous */
-  if (!mem1->allocator->info.is_span (mem1, mem2, offset))
+  if (!mem1->allocator->info.mem_is_span (mem1, mem2, offset))
     return FALSE;
 
   return TRUE;
@@ -721,50 +732,112 @@ gst_memory_is_span (GstMemory * mem1, GstMemory * mem2, gsize * offset)
 
 /**
  * gst_allocator_register:
- * @name: the name of the allocator
- * @info: #GstMemoryInfo
+ * @info: a #GstMemoryInfo
+ * @user_data: user data
+ * @notify: a #GDestroyNotify for @user_data
  *
- * Registers the memory allocator with @name and implementation functions
- * @info.
+ * Create a new memory allocator with @info and @user_data.
  *
  * All functions in @info are mandatory exept the copy and is_span
  * functions, which will have a default implementation when left NULL.
  *
- * The user_data field in @info will be passed to all calls of the alloc
- * function.
+ * The @user_data will be passed to all calls of the alloc function and the
+ * @notify function.
  *
  * Returns: a new #GstAllocator.
  */
-const GstAllocator *
-gst_allocator_register (const gchar * name, const GstMemoryInfo * info)
+GstAllocator *
+gst_allocator_new (const GstMemoryInfo * info, gpointer user_data,
+    GDestroyNotify notify)
 {
   GstAllocator *allocator;
 
 #define INSTALL_FALLBACK(_t) \
   if (allocator->info._t == NULL) allocator->info._t = _fallback_ ##_t;
 
-  g_return_val_if_fail (name != NULL, NULL);
   g_return_val_if_fail (info != NULL, NULL);
   g_return_val_if_fail (info->alloc != NULL, NULL);
-  g_return_val_if_fail (info->map != NULL, NULL);
-  g_return_val_if_fail (info->unmap != NULL, NULL);
-  g_return_val_if_fail (info->free != NULL, NULL);
-  g_return_val_if_fail (info->share != NULL, NULL);
+  g_return_val_if_fail (info->mem_map != NULL, NULL);
+  g_return_val_if_fail (info->mem_unmap != NULL, NULL);
+  g_return_val_if_fail (info->mem_free != NULL, NULL);
+  g_return_val_if_fail (info->mem_share != NULL, NULL);
 
   allocator = g_slice_new (GstAllocator);
-  allocator->name = g_quark_from_string (name);
+  allocator->refcount = 1;
   allocator->info = *info;
-  INSTALL_FALLBACK (copy);
-  INSTALL_FALLBACK (is_span);
+  allocator->user_data = user_data;
+  allocator->notify = notify;
+  INSTALL_FALLBACK (mem_copy);
+  INSTALL_FALLBACK (mem_is_span);
 #undef INSTALL_FALLBACK
 
-  GST_DEBUG ("registering allocator \"%s\"", name);
+  GST_DEBUG ("new allocator %p", allocator);
+
+  return allocator;
+}
+
+/**
+ * gst_alocator_ref:
+ * @allocator: a #GstAllocator
+ *
+ * Increases the refcount of @allocator.
+ *
+ * Returns: @allocator with increased refcount
+ */
+GstAllocator *
+gst_allocator_ref (GstAllocator * allocator)
+{
+  g_return_val_if_fail (allocator != NULL, NULL);
+
+  GST_DEBUG ("alocator %p, %d->%d", allocator, allocator->refcount,
+      allocator->refcount + 1);
+
+  g_atomic_int_inc (&allocator->refcount);
+
+  return allocator;
+}
+
+/**
+ * gst_allocator_unref:
+ * @allocator: a #GstAllocator
+ *
+ * Decreases the refcount of @allocator. When the refcount reaches 0, the free
+ * function of @allocator will be called.
+ */
+void
+gst_allocator_unref (GstAllocator * allocator)
+{
+  g_return_if_fail (allocator != NULL);
+
+  GST_DEBUG ("allocator %p, %d->%d", allocator, allocator->refcount,
+      allocator->refcount - 1);
+
+  if (g_atomic_int_dec_and_test (&allocator->refcount)) {
+    if (allocator->notify)
+      allocator->notify (allocator->user_data);
+    g_slice_free1 (sizeof (GstAllocator), allocator);
+  }
+}
+
+/**
+ * gst_allocator_register:
+ * @name: the name of the allocator
+ * @allocator: (transfer full): #GstAllocator
+ *
+ * Registers the memory @allocator with @name. This function takes ownership of
+ * @allocator.
+ */
+void
+gst_allocator_register (const gchar * name, GstAllocator * allocator)
+{
+  g_return_if_fail (name != NULL);
+  g_return_if_fail (allocator != NULL);
+
+  GST_DEBUG ("registering allocator %p with name \"%s\"", allocator, name);
 
   g_rw_lock_writer_lock (&lock);
   g_hash_table_insert (allocators, (gpointer) name, (gpointer) allocator);
   g_rw_lock_writer_unlock (&lock);
-
-  return allocator;
 }
 
 /**
@@ -774,13 +847,13 @@ gst_allocator_register (const gchar * name, const GstMemoryInfo * info)
  * Find a previously registered allocator with @name. When @name is NULL, the
  * default allocator will be returned.
  *
- * Returns: a #GstAllocator or NULL when the allocator with @name was not
- * registered.
+ * Returns: (transfer full): a #GstAllocator or NULL when the allocator with @name was not
+ * registered. Use gst_allocator_unref() to release the allocator after usage.
  */
-const GstAllocator *
+GstAllocator *
 gst_allocator_find (const gchar * name)
 {
-  const GstAllocator *allocator;
+  GstAllocator *allocator;
 
   g_rw_lock_reader_lock (&lock);
   if (name) {
@@ -788,6 +861,8 @@ gst_allocator_find (const gchar * name)
   } else {
     allocator = _default_allocator;
   }
+  if (allocator)
+    gst_allocator_ref (allocator);
   g_rw_lock_reader_unlock (&lock);
 
   return allocator;
@@ -795,18 +870,23 @@ gst_allocator_find (const gchar * name)
 
 /**
  * gst_allocator_set_default:
- * @allocator: a #GstAllocator
+ * @allocator: (transfer full): a #GstAllocator
  *
- * Set the default allocator.
+ * Set the default allocator. This function takes ownership of @allocator.
  */
 void
-gst_allocator_set_default (const GstAllocator * allocator)
+gst_allocator_set_default (GstAllocator * allocator)
 {
+  GstAllocator *old;
   g_return_if_fail (allocator != NULL);
 
   g_rw_lock_writer_lock (&lock);
+  old = _default_allocator;
   _default_allocator = allocator;
   g_rw_lock_writer_unlock (&lock);
+
+  if (old)
+    gst_allocator_unref (old);
 }
 
 /**
@@ -826,7 +906,7 @@ gst_allocator_set_default (const GstAllocator * allocator)
  * Returns: (transfer full): a new #GstMemory.
  */
 GstMemory *
-gst_allocator_alloc (const GstAllocator * allocator, gsize maxsize, gsize align)
+gst_allocator_alloc (GstAllocator * allocator, gsize maxsize, gsize align)
 {
   g_return_val_if_fail (((align + 1) & align) == 0, NULL);
 
@@ -834,5 +914,5 @@ gst_allocator_alloc (const GstAllocator * allocator, gsize maxsize, gsize align)
     allocator = _default_allocator;
 
   return allocator->info.alloc (allocator, maxsize, align,
-      allocator->info.user_data);
+      allocator->user_data);
 }

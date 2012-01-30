@@ -479,8 +479,7 @@ gst_buffer_new (void)
  *     be allocated.
  */
 GstBuffer *
-gst_buffer_new_allocate (const GstAllocator * allocator, gsize size,
-    gsize align)
+gst_buffer_new_allocate (GstAllocator * allocator, gsize size, gsize align)
 {
   GstBuffer *newbuf;
   GstMemory *mem;

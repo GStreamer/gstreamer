@@ -71,7 +71,7 @@ typedef enum {
  * as the first member of their structure.
  */
 struct _GstMemory {
-  const GstAllocator *allocator;
+  GstAllocator   *allocator;
 
   GstMemoryFlags  flags;
   gint            refcount;
@@ -134,7 +134,7 @@ typedef struct {
 #define GST_ALLOCATOR_SYSMEM   "SystemMemory"
 
 /**
- * GstMemoryAllocFunction:
+ * GstAllocatorAllocFunction:
  * @allocator: a #GstAllocator
  * @maxsize: the maxsize
  * @align: the alignment
@@ -143,13 +143,13 @@ typedef struct {
  * Allocate a new #GstMemory from @allocator that can hold at least @maxsize bytes
  * and is aligned to (@align + 1) bytes.
  *
- * @user_data is the data that was used when registering @allocator.
+ * @user_data is the data that was used when creating @allocator.
  *
  * Returns: a newly allocated #GstMemory. Free with gst_memory_unref()
  */
-typedef GstMemory *  (*GstMemoryAllocFunction)  (const GstAllocator *allocator,
-                                                 gsize maxsize, gsize align,
-                                                 gpointer user_data);
+typedef GstMemory *  (*GstAllocatorAllocFunction)  (GstAllocator *allocator,
+                                                    gsize maxsize, gsize align,
+                                                    gpointer user_data);
 
 /**
  * GstMemoryMapFunction:
@@ -229,42 +229,46 @@ typedef gboolean    (*GstMemoryIsSpanFunction)    (GstMemory *mem1, GstMemory *m
 
 /**
  * GstMemoryInfo:
- * @alloc: the implementation of the GstMemoryAllocFunction
- * @map: the implementation of the GstMemoryMapFunction
- * @unmap: the implementation of the GstMemoryUnmapFunction
- * @free: the implementation of the GstMemoryFreeFunction
- * @copy: the implementation of the GstMemoryCopyFunction
- * @share: the implementation of the GstMemoryShareFunction
- * @is_span: the implementation of the GstMemoryIsSpanFunction
- * @user_data: generic user data for the allocator
+ * @alloc: the implementation of the GstAllocatorAllocFunction
+ * @mem_map: the implementation of the GstMemoryMapFunction
+ * @mem_unmap: the implementation of the GstMemoryUnmapFunction
+ * @mem_free: the implementation of the GstMemoryFreeFunction
+ * @mem_copy: the implementation of the GstMemoryCopyFunction
+ * @mem_share: the implementation of the GstMemoryShareFunction
+ * @mem_is_span: the implementation of the GstMemoryIsSpanFunction
  *
  * The #GstMemoryInfo is used to register new memory allocators and contain
  * the implementations for various memory operations.
  */
 struct _GstMemoryInfo {
-  GstMemoryAllocFunction    alloc;
-  GstMemoryMapFunction      map;
-  GstMemoryUnmapFunction    unmap;
-  GstMemoryFreeFunction     free;
+  GstAllocatorAllocFunction alloc;
 
-  GstMemoryCopyFunction     copy;
-  GstMemoryShareFunction    share;
-  GstMemoryIsSpanFunction   is_span;
+  GstMemoryMapFunction      mem_map;
+  GstMemoryUnmapFunction    mem_unmap;
+  GstMemoryFreeFunction     mem_free;
 
-  gpointer user_data;
+  GstMemoryCopyFunction     mem_copy;
+  GstMemoryShareFunction    mem_share;
+  GstMemoryIsSpanFunction   mem_is_span;
 
   /*< private >*/
   gpointer _gst_reserved[GST_PADDING];
 };
 
 /* allocators */
-const GstAllocator *  gst_allocator_register    (const gchar *name, const GstMemoryInfo *info);
-const GstAllocator *  gst_allocator_find        (const gchar *name);
+GstAllocator *        gst_allocator_new         (const GstMemoryInfo * info,
+                                                 gpointer user_data, GDestroyNotify notify);
 
-void                  gst_allocator_set_default (const GstAllocator * allocator);
+GstAllocator *        gst_allocator_ref         (GstAllocator * allocator);
+void                  gst_allocator_unref       (GstAllocator * allocator);
+
+void                  gst_allocator_register    (const gchar *name, GstAllocator *alloc);
+GstAllocator *        gst_allocator_find        (const gchar *name);
+
+void                  gst_allocator_set_default (GstAllocator * allocator);
 
 /* allocating memory blocks */
-GstMemory * gst_allocator_alloc        (const GstAllocator * allocator,
+GstMemory * gst_allocator_alloc        (GstAllocator * allocator,
                                         gsize maxsize, gsize align);
 
 GstMemory * gst_memory_new_wrapped     (GstMemoryFlags flags, gpointer data, GFreeFunc free_func,

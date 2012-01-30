@@ -254,7 +254,7 @@ struct _GstBaseTransformPrivate
   GstClockTime position_out;
 
   GstBufferPool *pool;
-  const GstAllocator *allocator;
+  GstAllocator *allocator;
   guint prefix;
   guint alignment;
 };
@@ -747,9 +747,10 @@ done:
 
 static gboolean
 gst_base_transform_set_allocation (GstBaseTransform * trans,
-    GstBufferPool * pool, const GstAllocator * allocator, guint prefix,
+    GstBufferPool * pool, GstAllocator * allocator, guint prefix,
     guint alignment)
 {
+  GstAllocator *oldalloc;
   GstBufferPool *oldpool;
   GstBaseTransformPrivate *priv = trans->priv;
 
@@ -763,6 +764,7 @@ gst_base_transform_set_allocation (GstBaseTransform * trans,
   GST_OBJECT_LOCK (trans);
   oldpool = priv->pool;
   priv->pool = pool;
+  oldalloc = priv->allocator;
   priv->allocator = allocator;
   priv->prefix = prefix;
   priv->alignment = alignment;
@@ -772,6 +774,9 @@ gst_base_transform_set_allocation (GstBaseTransform * trans,
     GST_DEBUG_OBJECT (trans, "deactivating old pool %p", oldpool);
     gst_buffer_pool_set_active (oldpool, FALSE);
     gst_object_unref (oldpool);
+  }
+  if (oldalloc) {
+    gst_allocator_unref (oldalloc);
   }
   return TRUE;
 
@@ -791,7 +796,7 @@ gst_base_transform_do_bufferpool (GstBaseTransform * trans, GstCaps * outcaps)
   GstBufferPool *pool = NULL, *oldpool;
   guint size, min, max, prefix, alignment;
   GstBaseTransformClass *klass;
-  const GstAllocator *allocator = NULL;
+  GstAllocator *allocator = NULL;
 
   /* there are these possibilities:
    *

@@ -51,8 +51,11 @@ EXPORTS
 	_gst_trace_mutex DATA
 	gst_allocator_alloc
 	gst_allocator_find
+	gst_allocator_new
+	gst_allocator_ref
 	gst_allocator_register
 	gst_allocator_set_default
+	gst_allocator_unref
 	gst_atomic_queue_length
 	gst_atomic_queue_new
 	gst_atomic_queue_peek
