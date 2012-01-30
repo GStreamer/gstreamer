@@ -1120,7 +1120,7 @@ rsn_dvdsrc_step (resinDvdSrc * src, gboolean have_dvd_lock)
       break;
   }
 
-  if (src->highlight_event && have_dvd_lock) {
+  if (src->highlight_event && have_dvd_lock && src->in_playing) {
     GstEvent *hl_event = src->highlight_event;
 
     src->highlight_event = NULL;
@@ -1411,8 +1411,12 @@ rsn_dvdsrc_create (GstBaseSrc * bsrc, guint64 offset,
     }
   }
 
-  highlight_event = src->highlight_event;
-  src->highlight_event = NULL;
+  if (src->in_playing) {
+    highlight_event = src->highlight_event;
+    src->highlight_event = NULL;
+  } else {
+    highlight_event = NULL;
+  }
 
   /* Schedule a clock callback for the any pending nav packet */
   rsn_dvdsrc_check_nav_blocks (src);
