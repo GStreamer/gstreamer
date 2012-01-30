@@ -51,6 +51,8 @@ EXPORTS
 	_gst_trace_mutex DATA
 	gst_allocator_alloc
 	gst_allocator_find
+	gst_allocator_get_memory_type
+	gst_allocator_get_type
 	gst_allocator_new
 	gst_allocator_ref
 	gst_allocator_register
