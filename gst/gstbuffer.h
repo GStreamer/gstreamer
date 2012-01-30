@@ -193,7 +193,8 @@ typedef struct _GstBufferPool GstBufferPool;
  *                               video this is typically the end of a frame boundary, for audio
  *                               this is usually the end of a talkspurt.
  * @GST_BUFFER_FLAG_HEADER:      the buffer contains header information that is
- *                               needed to decode the following data
+ *                               needed to decode the following data. The buffer
+ *                               is also part of the headers of the STREAM_CONFIG event.
  * @GST_BUFFER_FLAG_GAP:         the buffer has been created to fill a gap in the
  *                               stream and contains media neutral data (elements can
  *                               switch to optimized code path that ignores the buffer
@@ -201,7 +202,6 @@ typedef struct _GstBufferPool GstBufferPool;
  * @GST_BUFFER_FLAG_DROPPABLE:   the buffer can be dropped without breaking the
  *                               stream, for example to reduce bandwidth.
  * @GST_BUFFER_FLAG_DELTA_UNIT:  this unit cannot be decoded independently.
- * @GST_BUFFER_FLAG_IN_CAPS:     the buffer has been added as a field in a #GstCaps.
  * @GST_BUFFER_FLAG_LAST:        additional media specific flags can be added starting from
  *                               this flag.
  *
@@ -218,7 +218,6 @@ typedef enum {
   GST_BUFFER_FLAG_GAP         = (GST_MINI_OBJECT_FLAG_LAST << 7),
   GST_BUFFER_FLAG_DROPPABLE   = (GST_MINI_OBJECT_FLAG_LAST << 8),
   GST_BUFFER_FLAG_DELTA_UNIT  = (GST_MINI_OBJECT_FLAG_LAST << 9),
-  GST_BUFFER_FLAG_IN_CAPS     = (GST_MINI_OBJECT_FLAG_LAST << 10),
 
   GST_BUFFER_FLAG_LAST        = (GST_MINI_OBJECT_FLAG_LAST << 16)
 } GstBufferFlags;
