@@ -138,7 +138,7 @@ gst_video_info_align (GstVideoInfo * info, GstVideoAlignment * align)
 /* bufferpool */
 struct _GstVideoBufferPoolPrivate
 {
-  const GstAllocator *allocator;
+  GstAllocator *allocator;
   GstCaps *caps;
   GstVideoInfo info;
   GstVideoAlignment video_align;
@@ -330,6 +330,9 @@ gst_video_buffer_pool_finalize (GObject * object)
   if (priv->caps)
     gst_caps_unref (priv->caps);
 
+  if (priv->allocator)
+    gst_allocator_ref (priv->allocator);
+
   G_OBJECT_CLASS (gst_video_buffer_pool_parent_class)->finalize (object);
 }
 
@@ -339,29 +342,47 @@ gst_video_buffer_pool_finalize (GObject * object)
  *
  * Get the allocator used by @pool to allocate the video memory.
  *
- * Returns: the allocator used for allocating video memory
+ * Returns: (transfer full) the allocator used for allocating video memory.
+ * gst_allocator_unref() after usage.
  */
-const GstAllocator *
+GstAllocator *
 gst_video_buffer_pool_get_allocator (GstVideoBufferPool * pool)
 {
+  GstAllocator *alloc;
+
   g_return_val_if_fail (GST_IS_VIDEO_BUFFER_POOL (pool), NULL);
 
-  return pool->priv->allocator;
+  if ((alloc = pool->priv->allocator))
+    gst_allocator_ref (alloc);
+
+  return alloc;
 }
 
 /**
  * gst_video_buffer_pool_set_allocator:
  * @pool: a #GstVideoBufferPool
- * @allocator: a #GstAllocator
+ * @allocator: (transfer none): a #GstAllocator
  *
  * Set the allocator used to allocate video memory in @pool. The allocator
  * should only be changed by subclasses.
  */
 void
 gst_video_buffer_pool_set_allocator (GstVideoBufferPool * pool,
-    const GstAllocator * allocator)
+    GstAllocator * allocator)
 {
+  GstAllocator *oldalloc;
+  GstVideoBufferPoolPrivate *priv;
+
   g_return_if_fail (GST_IS_VIDEO_BUFFER_POOL (pool));
 
-  pool->priv->allocator = allocator;
+  priv = pool->priv;
+
+  if (allocator)
+    gst_allocator_ref (allocator);
+
+  oldalloc = priv->allocator;
+  priv->allocator = allocator;
+
+  if (oldalloc)
+    gst_allocator_unref (oldalloc);
 }

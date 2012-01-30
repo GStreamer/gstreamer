@@ -97,9 +97,9 @@ GType             gst_video_buffer_pool_get_type      (void);
 
 GstBufferPool *   gst_video_buffer_pool_new           (void);
 
-const GstAllocator * gst_video_buffer_pool_get_allocator (GstVideoBufferPool *pool);
-void                 gst_video_buffer_pool_set_allocator (GstVideoBufferPool *pool,
-                                                          const GstAllocator *allocator);
+GstAllocator *    gst_video_buffer_pool_get_allocator (GstVideoBufferPool *pool);
+void              gst_video_buffer_pool_set_allocator (GstVideoBufferPool *pool,
+                                                       GstAllocator *allocator);
 
 G_END_DECLS
 
