@@ -28,17 +28,16 @@
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
+#if 0
   if (!gst_element_register (plugin, "interleave",
           GST_RANK_NONE, gst_interleave_get_type ()) ||
-      !gst_element_register (plugin, "deinterleave",
-          GST_RANK_NONE, gst_deinterleave_get_type ()))
-    return FALSE;
+#endif
+      if (!gst_element_register (plugin, "deinterleave",
+              GST_RANK_NONE, gst_deinterleave_get_type ()))
+    return FALSE; return TRUE;}
 
-  return TRUE;
-}
-
-GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
-    GST_VERSION_MINOR,
-    "interleave",
-    "Audio interleaver/deinterleaver",
-    plugin_init, VERSION, "LGPL", GST_PACKAGE_NAME, GST_PACKAGE_ORIGIN);
+    GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
+        GST_VERSION_MINOR,
+        "interleave",
+        "Audio interleaver/deinterleaver",
+        plugin_init, VERSION, "LGPL", GST_PACKAGE_NAME, GST_PACKAGE_ORIGIN);

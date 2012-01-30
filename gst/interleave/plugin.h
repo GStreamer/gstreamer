@@ -25,7 +25,9 @@
 
 
 #include <gst/gst.h>
+#if 0
 #include "interleave.h"
+#endif
 #include "deinterleave.h"
 
 #endif /* __GST_PLUGIN_INTERLEAVE_H__ */
