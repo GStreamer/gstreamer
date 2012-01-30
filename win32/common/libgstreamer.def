@@ -398,6 +398,7 @@ EXPORTS
 	gst_event_new_eos
 	gst_event_new_flush_start
 	gst_event_new_flush_stop
+	gst_event_new_gap
 	gst_event_new_latency
 	gst_event_new_navigation
 	gst_event_new_qos
@@ -412,6 +413,7 @@ EXPORTS
 	gst_event_parse_buffer_size
 	gst_event_parse_caps
 	gst_event_parse_flush_stop
+	gst_event_parse_gap
 	gst_event_parse_latency
 	gst_event_parse_nth_stream_config_header
 	gst_event_parse_qos
