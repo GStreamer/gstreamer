@@ -2102,7 +2102,7 @@ gst_ogg_demux_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
       break;
     }
     default:
-      res = gst_ogg_demux_send_event (ogg, event);
+      res = gst_pad_event_default (pad, parent, event);
       break;
   }
 
