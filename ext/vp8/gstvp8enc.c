@@ -880,7 +880,7 @@ gst_vp8_enc_set_format (GstBaseVideoEncoder * base_video_encoder,
 
     gst_buffer_unmap (stream_hdr, &map);
 
-    GST_BUFFER_FLAG_SET (stream_hdr, GST_BUFFER_FLAG_IN_CAPS);
+    GST_BUFFER_FLAG_SET (stream_hdr, GST_BUFFER_FLAG_HEADER);
     gst_value_set_buffer (&value, stream_hdr);
     gst_value_array_append_value (&array, &value);
     g_value_unset (&value);
@@ -894,7 +894,7 @@ gst_vp8_enc_set_format (GstBaseVideoEncoder * base_video_encoder,
           (const guint8 *) "OVP80\2 ", 7,
           "Encoded with GStreamer vp8enc " PACKAGE_VERSION);
 
-      GST_BUFFER_FLAG_SET (vorbiscomment, GST_BUFFER_FLAG_IN_CAPS);
+      GST_BUFFER_FLAG_SET (vorbiscomment, GST_BUFFER_FLAG_HEADER);
 
       g_value_init (&value, GST_TYPE_BUFFER);
       gst_value_set_buffer (&value, vorbiscomment);
