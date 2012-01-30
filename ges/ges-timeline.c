@@ -908,7 +908,8 @@ static void
 pad_added_cb (GESTrack * track, GstPad * pad, TrackPrivate * tr_priv)
 {
   gchar *padname;
-
+  gboolean no_more;
+  GList *tmp;
 
   GST_DEBUG ("track:%p, pad:%s:%s", track, GST_DEBUG_PAD_NAME (pad));
 
@@ -918,7 +919,19 @@ pad_added_cb (GESTrack * track, GstPad * pad, TrackPrivate * tr_priv)
   }
 
   /* Remember the pad */
+  GST_OBJECT_LOCK (track);
   tr_priv->pad = pad;
+
+  no_more = TRUE;
+  for (tmp = tr_priv->timeline->priv->tracks; tmp; tmp = g_list_next (tmp)) {
+    TrackPrivate *tr_priv = (TrackPrivate *) tmp->data;
+
+    if (!tr_priv->pad) {
+      GST_LOG ("Found track without pad %p", tr_priv->track);
+      no_more = FALSE;
+    }
+  }
+  GST_OBJECT_UNLOCK (track);
 
   /* ghost it ! */
   GST_DEBUG ("Ghosting pad and adding it to ourself");
@@ -927,6 +940,11 @@ pad_added_cb (GESTrack * track, GstPad * pad, TrackPrivate * tr_priv)
   g_free (padname);
   gst_pad_set_active (tr_priv->ghostpad, TRUE);
   gst_element_add_pad (GST_ELEMENT (tr_priv->timeline), tr_priv->ghostpad);
+
+  if (no_more) {
+    GST_DEBUG ("Signaling no-more-pads");
+    gst_element_no_more_pads (GST_ELEMENT (tr_priv->timeline));
+  }
 }
 
 static void

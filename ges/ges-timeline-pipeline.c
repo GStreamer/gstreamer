@@ -44,6 +44,7 @@ typedef struct
   GstPad *srcpad;               /* Timeline source pad */
   GstPad *playsinkpad;
   GstPad *encodebinpad;
+  GstPad *blocked_pad;
 } OutputChain;
 
 G_DEFINE_TYPE (GESTimelinePipeline, ges_timeline_pipeline, GST_TYPE_PIPELINE);
@@ -383,6 +384,13 @@ no_pad:
 }
 
 static void
+pad_blocked (GstPad * pad, gboolean blocked, gpointer user_data)
+{
+  /* no nothing */
+  GST_DEBUG_OBJECT (pad, "blocked callback, blocked: %d", blocked);
+}
+
+static void
 pad_added_cb (GstElement * timeline, GstPad * pad, GESTimelinePipeline * self)
 {
   OutputChain *chain;
@@ -466,7 +474,9 @@ pad_added_cb (GstElement * timeline, GstPad * pad, GESTimelinePipeline * self)
       gst_object_unref (tmppad);
       goto error;
     }
-    gst_object_unref (tmppad);
+    chain->blocked_pad = tmppad;
+    GST_DEBUG ("blocking pad %" GST_PTR_FORMAT, tmppad);
+    gst_pad_set_blocked_async (tmppad, TRUE, pad_blocked, NULL);
 
     GST_DEBUG ("Reconfiguring playsink");
 
@@ -568,6 +578,13 @@ pad_removed_cb (GstElement * timeline, GstPad * pad, GESTimelinePipeline * self)
     gst_object_unref (chain->playsinkpad);
   }
 
+  if (chain->blocked_pad) {
+    GST_DEBUG ("unblocking pad %" GST_PTR_FORMAT, chain->blocked_pad);
+    gst_pad_set_blocked_async (chain->blocked_pad, FALSE, pad_blocked, NULL);
+    gst_object_unref (chain->blocked_pad);
+    chain->blocked_pad = NULL;
+  }
+
   /* Unlike/remove tee */
   peer = gst_element_get_static_pad (chain->tee, "sink");
   gst_pad_unlink (pad, peer);
@@ -579,6 +596,22 @@ pad_removed_cb (GstElement * timeline, GstPad * pad, GESTimelinePipeline * self)
   g_free (chain);
 
   GST_DEBUG ("done");
+}
+
+static void
+no_more_pads_cb (GstElement * timeline, GESTimelinePipeline * self)
+{
+  GList *tmp;
+
+  GST_DEBUG ("received no-more-pads");
+  for (tmp = self->priv->chains; tmp; tmp = g_list_next (tmp)) {
+    OutputChain *chain = (OutputChain *) tmp->data;
+
+    if (chain->blocked_pad) {
+      GST_DEBUG ("unblocking pad %" GST_PTR_FORMAT, chain->blocked_pad);
+      gst_pad_set_blocked_async (chain->blocked_pad, FALSE, pad_blocked, NULL);
+    }
+  }
 }
 
 /**
@@ -611,6 +644,8 @@ ges_timeline_pipeline_add_timeline (GESTimelinePipeline * pipeline,
   /* Connect to pipeline */
   g_signal_connect (timeline, "pad-added", (GCallback) pad_added_cb, pipeline);
   g_signal_connect (timeline, "pad-removed", (GCallback) pad_removed_cb,
+      pipeline);
+  g_signal_connect (timeline, "no-more-pads", (GCallback) no_more_pads_cb,
       pipeline);
 
   return TRUE;
