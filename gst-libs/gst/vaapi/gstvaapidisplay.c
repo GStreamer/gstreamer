@@ -454,7 +454,7 @@ gst_vaapi_display_create(GstVaapiDisplay *display)
             entrypoints, &num_entrypoints
         );
         if (!vaapi_check_status(status, "vaQueryConfigEntrypoints()"))
-            goto end;
+            continue;
 
         for (j = 0; j < num_entrypoints; j++) {
             config.entrypoint = gst_vaapi_entrypoint(entrypoints[j]);
