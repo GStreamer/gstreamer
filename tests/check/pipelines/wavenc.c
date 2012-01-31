@@ -21,7 +21,8 @@
  */
 
 #include <gst/check/gstcheck.h>
-#include <gst/audio/multichannel.h>
+#include <gst/audio/audio.h>
+#include <gst/audio/audio-enumtypes.h>
 
 static gboolean
 bus_handler (GstBus * bus, GstMessage * message, gpointer data)

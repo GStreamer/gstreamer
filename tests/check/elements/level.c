@@ -94,6 +94,7 @@ GST_START_TEST (test_int16)
   GstMessage *message;
   const GstStructure *structure;
   int i, j;
+  GstMapInfo map;
   gint16 *data;
   const GValue *list, *value;
   GstClockTime endtime;
@@ -108,12 +109,13 @@ GST_START_TEST (test_int16)
 
   /* create a fake 0.1 sec buffer with a half-amplitude block signal */
   inbuffer = gst_buffer_new_and_alloc (400);
-  data = gst_buffer_map (inbuffer, NULL, NULL, GST_MAP_WRITE);
+  gst_buffer_map (inbuffer, &map, GST_MAP_WRITE);
+  data = (gint16 *) map.data;
   for (j = 0; j < 200; ++j) {
     *data = 16536;
     ++data;
   }
-  gst_buffer_unmap (inbuffer, data, -1);
+  gst_buffer_unmap (inbuffer, &map);
   caps = gst_caps_from_string (LEVEL_CAPS_STRING);
   gst_pad_set_caps (mysrcpad, caps);
   gst_caps_unref (caps);
@@ -192,6 +194,7 @@ GST_START_TEST (test_int16_panned)
   const GstStructure *structure;
   int j;
   gint16 *data;
+  GstMapInfo map;
   const GValue *list, *value;
   GstClockTime endtime;
   gdouble dB;
@@ -206,14 +209,15 @@ GST_START_TEST (test_int16_panned)
 
   /* create a fake 0.1 sec buffer with a half-amplitude block signal */
   inbuffer = gst_buffer_new_and_alloc (400);
-  data = gst_buffer_map (inbuffer, NULL, NULL, GST_MAP_WRITE);
+  gst_buffer_map (inbuffer, &map, GST_MAP_WRITE);
+  data = (gint16 *) map.data;
   for (j = 0; j < 100; ++j) {
     *data = 0;
     ++data;
     *data = 16536;
     ++data;
   }
-  gst_buffer_unmap (inbuffer, data, -1);
+  gst_buffer_unmap (inbuffer, &map);
   caps = gst_caps_from_string (LEVEL_CAPS_STRING);
   gst_pad_set_caps (mysrcpad, caps);
   gst_caps_unref (caps);

@@ -110,7 +110,8 @@ GST_START_TEST (test_y4m)
 
   /* clean up buffers */
   for (i = 0; i < num_buffers; ++i) {
-    gchar *data, *orig;
+    GstMapInfo map;
+    gchar *data;
     gsize outsize;
 
     outbuffer = GST_BUFFER (buffers->data);
@@ -118,7 +119,9 @@ GST_START_TEST (test_y4m)
 
     switch (i) {
       case 0:
-        data = orig = gst_buffer_map (outbuffer, &outsize, NULL, GST_MAP_READ);
+        gst_buffer_map (outbuffer, &map, GST_MAP_READ);
+        outsize = map.size;
+        data = (gchar *) map.data;
 
         fail_unless (outsize > size);
         fail_unless (memcmp (data, data0, strlen (data0)) == 0 ||
@@ -130,8 +133,8 @@ GST_START_TEST (test_y4m)
         fail_unless (memcmp (data2, data, strlen (data2)) == 0);
         data += strlen (data2);
         /* remainder must be frame data */
-        fail_unless (data - orig + size == outsize);
-        gst_buffer_unmap (outbuffer, orig, outsize);
+        fail_unless (data - (gchar *) map.data + size == outsize);
+        gst_buffer_unmap (outbuffer, &map);
         break;
       default:
         break;

@@ -95,7 +95,7 @@ send_newsegment_and_empty_buffer (void)
       "Pushing newsegment event failed");
 
   buf = test_buffer_new (0.0);
-  GST_BUFFER_SIZE (buf) = 0;
+  gst_buffer_resize (buf, 0, 0);
   GST_BUFFER_DURATION (buf) = 0;
   GST_BUFFER_OFFSET_END (buf) = GST_BUFFER_OFFSET (buf);
   fail_unless (gst_pad_push (mysrcpad, buf) == GST_FLOW_OK);
@@ -202,14 +202,16 @@ test_buffer_new (gfloat value)
 {
   GstBuffer *buf;
   GstCaps *caps;
+  GstMapInfo map;
   gfloat *data;
   gint i;
 
   buf = gst_buffer_new_and_alloc (8 * sizeof (gfloat));
-  data = gst_buffer_map (buf, NULL, NULL, GST_MAP_WRITE);
+  gst_buffer_map (buf, &map, GST_MAP_WRITE);
+  data = (gfloat *) map.data;
   for (i = 0; i < 8; i++)
     data[i] = value;
-  gst_buffer_unmap (buf, data, -1);
+  gst_buffer_unmap (buf, &map);
 
   caps = gst_caps_from_string ("audio/x-raw-float, "
       "rate = 8000, channels = 1, endianness = BYTE_ORDER, width = 32");
@@ -243,6 +245,7 @@ fail_unless_result_gain (GstElement * element, gdouble expected_gain)
   gdouble gain, prop_gain;
   gboolean is_passthrough, expect_passthrough;
   gint i;
+  GstMapInfo map;
 
   fail_unless (g_list_length (buffers) == 0);
 
@@ -266,14 +269,15 @@ fail_unless_result_gain (GstElement * element, gdouble expected_gain)
   fail_unless_equals_int (gst_buffer_get_size (output_buf),
       8 * sizeof (gfloat));
 
-  data = gst_buffer_map (output_buf, NULL, NULL, GST_MAP_READ);
+  gst_buffer_map (output_buf, &map, GST_MAP_READ);
+  data = (gfloat *) map.data;
 
   output_sample = *data;
   fail_if (output_sample == 0.0, "First output sample is zero");
   for (i = 1; i < 8; i++) {
     fail_unless (output_sample == data[i], "Output samples not uniform");
   };
-  gst_buffer_unmap (output_buf, data, -1);
+  gst_buffer_unmap (output_buf, &map);
 
   gain = 20. * log10 (output_sample / input_sample);
   fail_unless (MATCH_GAIN (gain, expected_gain),

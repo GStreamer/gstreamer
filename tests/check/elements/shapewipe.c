@@ -81,7 +81,8 @@ GST_START_TEST (test_general)
   GstCaps *caps;
   GstBuffer *mask, *input;
   guint i, j;
-  guint8 *data, *orig;
+  guint8 *data;
+  GstMapInfo map;
 
   myvideosrcpad =
       gst_pad_new_from_static_template (&videosrctemplate, "videosrc");
@@ -123,7 +124,8 @@ GST_START_TEST (test_general)
   caps = gst_caps_from_string (SHAPEWIPE_MASK_CAPS_STRING);
   gst_pad_set_caps (mymasksrcpad, caps);
   gst_caps_unref (caps);
-  data = orig = gst_buffer_map (mask, NULL, NULL, GST_MAP_WRITE);
+  gst_buffer_map (mask, &map, GST_MAP_WRITE);
+  data = map.data;
   for (i = 0; i < 400; i++) {
     for (j = 0; j < 400; j++) {
       if (i < 100 && j < 100)
@@ -137,7 +139,7 @@ GST_START_TEST (test_general)
       data++;
     }
   }
-  gst_buffer_unmap (mask, orig, -1);
+  gst_buffer_unmap (mask, &map);
 
   fail_unless (gst_pad_push (mymasksrcpad, mask) == GST_FLOW_OK);
 
@@ -145,7 +147,8 @@ GST_START_TEST (test_general)
   caps = gst_caps_from_string (SHAPEWIPE_VIDEO_CAPS_STRING);
   gst_pad_set_caps (myvideosrcpad, caps);
   gst_caps_unref (caps);
-  data = orig = gst_buffer_map (input, NULL, NULL, GST_MAP_WRITE);
+  gst_buffer_map (input, &map, GST_MAP_WRITE);
+  data = map.data;
   for (i = 0; i < 400; i++) {
     for (j = 0; j < 400; j++) {
       /* This is green */
@@ -156,14 +159,15 @@ GST_START_TEST (test_general)
       data += 4;
     }
   }
-  gst_buffer_unmap (input, orig, -1);
+  gst_buffer_unmap (input, &map);
 
   g_object_set (G_OBJECT (shapewipe), "position", 0.0, NULL);
   output = NULL;
   fail_unless (gst_pad_push (myvideosrcpad,
           gst_buffer_ref (input)) == GST_FLOW_OK);
   fail_unless (output != NULL);
-  data = orig = gst_buffer_map (output, NULL, NULL, GST_MAP_WRITE);
+  gst_buffer_map (output, &map, GST_MAP_WRITE);
+  data = map.data;
   for (i = 0; i < 400; i++) {
     for (j = 0; j < 400; j++) {
       fail_unless_equals_int (data[0], 255);    /* A */
@@ -173,7 +177,7 @@ GST_START_TEST (test_general)
       data += 4;
     }
   }
-  gst_buffer_unmap (output, orig, -1);
+  gst_buffer_unmap (output, &map);
   gst_buffer_unref (output);
   output = NULL;
 
@@ -182,7 +186,8 @@ GST_START_TEST (test_general)
   fail_unless (gst_pad_push (myvideosrcpad,
           gst_buffer_ref (input)) == GST_FLOW_OK);
   fail_unless (output != NULL);
-  data = orig = gst_buffer_map (output, NULL, NULL, GST_MAP_WRITE);
+  gst_buffer_map (output, &map, GST_MAP_READ);
+  data = map.data;
   for (i = 0; i < 400; i++) {
     for (j = 0; j < 400; j++) {
       if (i < 100 && j < 100) {
@@ -199,7 +204,7 @@ GST_START_TEST (test_general)
       data += 4;
     }
   }
-  gst_buffer_unmap (output, orig, -1);
+  gst_buffer_unmap (output, &map);
   gst_buffer_unref (output);
   output = NULL;
 
@@ -208,7 +213,8 @@ GST_START_TEST (test_general)
   fail_unless (gst_pad_push (myvideosrcpad,
           gst_buffer_ref (input)) == GST_FLOW_OK);
   fail_unless (output != NULL);
-  data = orig = gst_buffer_map (output, NULL, NULL, GST_MAP_WRITE);
+  gst_buffer_map (output, &map, GST_MAP_READ);
+  data = map.data;
   for (i = 0; i < 400; i++) {
     for (j = 0; j < 400; j++) {
       if (i < 200 && j < 200) {
@@ -225,7 +231,7 @@ GST_START_TEST (test_general)
       data += 4;
     }
   }
-  gst_buffer_unmap (output, orig, -1);
+  gst_buffer_unmap (output, &map);
   gst_buffer_unref (output);
   output = NULL;
 
@@ -234,7 +240,8 @@ GST_START_TEST (test_general)
   fail_unless (gst_pad_push (myvideosrcpad,
           gst_buffer_ref (input)) == GST_FLOW_OK);
   fail_unless (output != NULL);
-  data = orig = gst_buffer_map (output, NULL, NULL, GST_MAP_WRITE);
+  gst_buffer_map (output, &map, GST_MAP_READ);
+  data = map.data;
   for (i = 0; i < 400; i++) {
     for (j = 0; j < 400; j++) {
       if (i < 300 && j < 300) {
@@ -251,7 +258,7 @@ GST_START_TEST (test_general)
       data += 4;
     }
   }
-  gst_buffer_unmap (output, orig, -1);
+  gst_buffer_unmap (output, &map);
   gst_buffer_unref (output);
   output = NULL;
 
@@ -260,7 +267,8 @@ GST_START_TEST (test_general)
   fail_unless (gst_pad_push (myvideosrcpad,
           gst_buffer_ref (input)) == GST_FLOW_OK);
   fail_unless (output != NULL);
-  data = orig = gst_buffer_map (output, NULL, NULL, GST_MAP_WRITE);
+  gst_buffer_map (output, &map, GST_MAP_READ);
+  data = map.data;
   for (i = 0; i < 400; i++) {
     for (j = 0; j < 400; j++) {
       fail_unless_equals_int (data[0], 0);      /* A */
@@ -270,7 +278,7 @@ GST_START_TEST (test_general)
       data += 4;
     }
   }
-  gst_buffer_unmap (output, orig, -1);
+  gst_buffer_unmap (output, &map);
   gst_buffer_unref (output);
   output = NULL;
 

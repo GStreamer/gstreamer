@@ -120,19 +120,20 @@ create_test_buffer (void)
 static void
 verify_test_buffer (GstBuffer * buf)
 {
-  gsize size;
+  GstMapInfo map;
   gfloat *output;
   gint i;
 
-  output = gst_buffer_map (buf, &size, NULL, GST_MAP_READ);
-  fail_unless (size == sizeof (test_output));
+  gst_buffer_map (buf, &map, GST_MAP_READ);
+  output = (gfloat *) map.data;
+  fail_unless (map.size == sizeof (test_output));
 
   for (i = 0; i < G_N_ELEMENTS (test_input); i++)
     fail_unless (ABS (output[i] - test_output[i]) < 1.e-6,
         "Incorrect output value %.6f for input %.2f, expected %.6f",
         output[i], test_input[i], test_output[i]);
 
-  gst_buffer_unmap (buf, output, size);
+  gst_buffer_unmap (buf, &map);
 }
 
 /* Start of tests. */
@@ -214,8 +215,7 @@ GST_START_TEST (test_gap)
 {
   GstElement *element = setup_rglimiter ();
   GstBuffer *buf, *out_buf;
-  gpointer d1, d2;
-  gsize s1, s2;
+  GstMapInfo m1, m2;
 
   set_playing_state (element);
 
@@ -230,17 +230,17 @@ GST_START_TEST (test_gap)
   /* Verify that the baseclass does not lift the GAP flag: */
   fail_unless (GST_BUFFER_FLAG_IS_SET (out_buf, GST_BUFFER_FLAG_GAP));
 
-  d1 = gst_buffer_map (out_buf, &s1, NULL, GST_MAP_READ);
-  d2 = gst_buffer_map (buf, &s2, NULL, GST_MAP_READ);
+  gst_buffer_map (out_buf, &m1, GST_MAP_READ);
+  gst_buffer_map (buf, &m2, GST_MAP_READ);
 
-  g_assert (s1 == s2);
+  g_assert (m1.size == m2.size);
   /* We cheated by passing an input buffer with non-silence that has the GAP
    * flag set.  The element cannot know that however and must have skipped
    * adjusting the buffer because of the flag, which we can easily verify: */
-  fail_if (memcmp (d1, d2, s1) != 0);
+  fail_if (memcmp (m1.data, m2.data, m1.size) != 0);
 
-  gst_buffer_unmap (out_buf, d1, s1);
-  gst_buffer_unmap (buf, d2, s2);
+  gst_buffer_unmap (out_buf, &m1);
+  gst_buffer_unmap (buf, &m2);
 
   cleanup_rglimiter (element);
 }

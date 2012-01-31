@@ -62,6 +62,7 @@ GST_START_TEST (test_udpsrc_empty_packet)
     if (g_socket_send_to (socket, sa, "HeLL0", 0, NULL, NULL) == 0) {
       GST_INFO ("sent 0 bytes");
       if (g_socket_send_to (socket, sa, "HeLL0", 6, NULL, NULL) == 6) {
+        GstMapInfo map;
         GstBuffer *buf;
         guint len;
 
@@ -75,13 +76,15 @@ GST_START_TEST (test_udpsrc_empty_packet)
 
         /* last buffer should be our HeLL0 string */
         buf = GST_BUFFER (g_list_nth_data (buffers, len - 1));
-        fail_unless_equals_int (GST_BUFFER_SIZE (buf), 6);
-        fail_unless_equals_string ((gchar *) GST_BUFFER_DATA (buf), "HeLL0");
+        gst_buffer_map (buf, &map, GST_MAP_READ);
+        fail_unless_equals_int (map.size, 6);
+        fail_unless_equals_string ((gchar *) map.data, "HeLL0");
+        gst_buffer_unmap (buf, &map);
 
         /* if there's another buffer, it should be 0 bytes */
         if (len == 2) {
           buf = GST_BUFFER (g_list_nth_data (buffers, 0));
-          fail_unless_equals_int (GST_BUFFER_SIZE (buf), 0);
+          fail_unless_equals_int (gst_buffer_get_size (buf), 0);
         }
       } else {
         GST_WARNING ("send_to(6 bytes) failed");

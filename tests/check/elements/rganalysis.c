@@ -349,14 +349,16 @@ static GstBuffer *
 test_buffer_const_float_mono (gint sample_rate, gsize n_frames, gfloat value)
 {
   GstBuffer *buf = gst_buffer_new_and_alloc (n_frames * sizeof (gfloat));
-  gfloat *data, *orig;
+  GstMapInfo map;
+  gfloat *data;
   GstCaps *caps;
   gint i;
 
-  data = orig = gst_buffer_map (buf, NULL, NULL, GST_MAP_WRITE);
+  gst_buffer_map (buf, &map, GST_MAP_WRITE);
+  data = (gfloat *) map.data;
   for (i = n_frames; i--;)
     *data++ = value;
-  gst_buffer_unmap (buf, orig, -1);
+  gst_buffer_unmap (buf, &map);
 
   caps = gst_caps_new_simple ("audio/x-raw",
       "format", G_TYPE_STRING, GST_AUDIO_NE (F32),
@@ -374,16 +376,18 @@ test_buffer_const_float_stereo (gint sample_rate, gsize n_frames,
     gfloat value_l, gfloat value_r)
 {
   GstBuffer *buf = gst_buffer_new_and_alloc (n_frames * sizeof (gfloat) * 2);
-  gfloat *data, *orig;
+  GstMapInfo map;
+  gfloat *data;
   GstCaps *caps;
   gint i;
 
-  data = orig = gst_buffer_map (buf, NULL, NULL, GST_MAP_WRITE);
+  gst_buffer_map (buf, &map, GST_MAP_WRITE);
+  data = (gfloat *) map.data;
   for (i = n_frames; i--;) {
     *data++ = value_l;
     *data++ = value_r;
   }
-  gst_buffer_unmap (buf, orig, -1);
+  gst_buffer_unmap (buf, &map);
 
   caps = gst_caps_new_simple ("audio/x-raw",
       "format", G_TYPE_STRING, GST_AUDIO_NE (F32),
@@ -401,14 +405,16 @@ test_buffer_const_int16_mono (gint sample_rate, gint depth, gsize n_frames,
     gint16 value)
 {
   GstBuffer *buf = gst_buffer_new_and_alloc (n_frames * sizeof (gint16));
-  gint16 *data, *orig;
+  gint16 *data;
+  GstMapInfo map;
   GstCaps *caps;
   gint i;
 
-  data = orig = gst_buffer_map (buf, NULL, NULL, GST_MAP_WRITE);
+  gst_buffer_map (buf, &map, GST_MAP_WRITE);
+  data = (gint16 *) map.data;
   for (i = n_frames; i--;)
     *data++ = value;
-  gst_buffer_unmap (buf, orig, -1);
+  gst_buffer_unmap (buf, &map);
 
   caps = gst_caps_new_simple ("audio/x-raw",
       "format", G_TYPE_STRING, GST_AUDIO_NE (S16),
@@ -426,16 +432,18 @@ test_buffer_const_int16_stereo (gint sample_rate, gint depth, gsize n_frames,
     gint16 value_l, gint16 value_r)
 {
   GstBuffer *buf = gst_buffer_new_and_alloc (n_frames * sizeof (gint16) * 2);
-  gint16 *data, *orig;
+  gint16 *data;
+  GstMapInfo map;
   GstCaps *caps;
   gint i;
 
-  data = orig = gst_buffer_map (buf, NULL, NULL, GST_MAP_WRITE);
+  gst_buffer_map (buf, &map, GST_MAP_WRITE);
+  data = (gint16 *) map.data;
   for (i = n_frames; i--;) {
     *data++ = value_l;
     *data++ = value_r;
   }
-  gst_buffer_unmap (buf, orig, -1);
+  gst_buffer_unmap (buf, &map);
 
   caps = gst_caps_new_simple ("audio/x-raw",
       "format", G_TYPE_STRING, GST_AUDIO_NE (S16),
@@ -456,11 +464,13 @@ test_buffer_square_float_mono (gint * accumulator, gint sample_rate,
     gsize n_frames, gfloat value)
 {
   GstBuffer *buf = gst_buffer_new_and_alloc (n_frames * sizeof (gfloat));
-  gfloat *data, *orig;
+  gfloat *data;
+  GstMapInfo map;
   GstCaps *caps;
   gint i;
 
-  data = orig = gst_buffer_map (buf, NULL, NULL, GST_MAP_WRITE);
+  gst_buffer_map (buf, &map, GST_MAP_WRITE);
+  data = (gfloat *) map.data;
   for (i = n_frames; i--;) {
     *accumulator += 1;
     *accumulator %= 96;
@@ -470,7 +480,7 @@ test_buffer_square_float_mono (gint * accumulator, gint sample_rate,
     else
       *data++ = -value;
   }
-  gst_buffer_unmap (buf, orig, -1);
+  gst_buffer_unmap (buf, &map);
 
   caps = gst_caps_new_simple ("audio/x-raw",
       "format", G_TYPE_STRING, GST_AUDIO_NE (F32),
@@ -488,11 +498,13 @@ test_buffer_square_float_stereo (gint * accumulator, gint sample_rate,
     gsize n_frames, gfloat value_l, gfloat value_r)
 {
   GstBuffer *buf = gst_buffer_new_and_alloc (n_frames * sizeof (gfloat) * 2);
-  gfloat *data, *orig;
+  gfloat *data;
+  GstMapInfo map;
   GstCaps *caps;
   gint i;
 
-  data = orig = gst_buffer_map (buf, NULL, NULL, GST_MAP_WRITE);
+  gst_buffer_map (buf, &map, GST_MAP_WRITE);
+  data = (gfloat *) map.data;
   for (i = n_frames; i--;) {
     *accumulator += 1;
     *accumulator %= 96;
@@ -505,7 +517,7 @@ test_buffer_square_float_stereo (gint * accumulator, gint sample_rate,
       *data++ = -value_r;
     }
   }
-  gst_buffer_unmap (buf, orig, -1);
+  gst_buffer_unmap (buf, &map);
 
   caps = gst_caps_new_simple ("audio/x-raw",
       "format", G_TYPE_STRING, GST_AUDIO_NE (F32),
@@ -523,11 +535,13 @@ test_buffer_square_int16_mono (gint * accumulator, gint sample_rate,
     gint depth, gsize n_frames, gint16 value)
 {
   GstBuffer *buf = gst_buffer_new_and_alloc (n_frames * sizeof (gint16));
-  gint16 *data, *orig;
+  gint16 *data;
+  GstMapInfo map;
   GstCaps *caps;
   gint i;
 
-  data = orig = gst_buffer_map (buf, NULL, NULL, GST_MAP_WRITE);
+  gst_buffer_map (buf, &map, GST_MAP_WRITE);
+  data = (gint16 *) map.data;
   for (i = n_frames; i--;) {
     *accumulator += 1;
     *accumulator %= 96;
@@ -537,7 +551,7 @@ test_buffer_square_int16_mono (gint * accumulator, gint sample_rate,
     else
       *data++ = -MAX (value, -32767);
   }
-  gst_buffer_unmap (buf, orig, -1);
+  gst_buffer_unmap (buf, &map);
 
   caps = gst_caps_new_simple ("audio/x-raw",
       "format", G_TYPE_STRING, GST_AUDIO_NE (S16),
@@ -555,11 +569,13 @@ test_buffer_square_int16_stereo (gint * accumulator, gint sample_rate,
     gint depth, gsize n_frames, gint16 value_l, gint16 value_r)
 {
   GstBuffer *buf = gst_buffer_new_and_alloc (n_frames * sizeof (gint16) * 2);
-  gint16 *data, *orig;
+  gint16 *data;
+  GstMapInfo map;
   GstCaps *caps;
   gint i;
 
-  data = orig = gst_buffer_map (buf, NULL, NULL, GST_MAP_WRITE);
+  gst_buffer_map (buf, &map, GST_MAP_WRITE);
+  data = (gint16 *) map.data;
   for (i = n_frames; i--;) {
     *accumulator += 1;
     *accumulator %= 96;
@@ -572,7 +588,7 @@ test_buffer_square_int16_stereo (gint * accumulator, gint sample_rate,
       *data++ = -MAX (value_r, -32767);
     }
   }
-  gst_buffer_unmap (buf, orig, -1);
+  gst_buffer_unmap (buf, &map);
 
   caps = gst_caps_new_simple ("audio/x-raw",
       "format", G_TYPE_STRING, GST_AUDIO_NE (S16),

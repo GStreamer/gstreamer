@@ -130,7 +130,7 @@ chain_rtp_packet (GstPad * pad, CleanupData * data)
   GstFlowReturn res;
   static GstCaps *caps = NULL;
   GstBuffer *buffer;
-  guint8 *datap;
+  GstMapInfo map;
 
   if (caps == NULL) {
     caps = gst_caps_from_string ("application/x-rtp,"
@@ -141,14 +141,14 @@ chain_rtp_packet (GstPad * pad, CleanupData * data)
   }
 
   buffer = gst_buffer_new_and_alloc (sizeof (rtp_packet));
-  datap = gst_buffer_map (buffer, NULL, NULL, GST_MAP_WRITE);
-  memcpy (datap, rtp_packet, sizeof (rtp_packet));
+  gst_buffer_map (buffer, &map, GST_MAP_WRITE);
+  memcpy (map.data, rtp_packet, sizeof (rtp_packet));
 
-  datap[2] = (data->seqnum >> 8) & 0xff;
-  datap[3] = data->seqnum & 0xff;
+  map.data[2] = (data->seqnum >> 8) & 0xff;
+  map.data[3] = data->seqnum & 0xff;
 
   data->seqnum++;
-  gst_buffer_unmap (buffer, datap, -1);
+  gst_buffer_unmap (buffer, &map);
 
   res = gst_pad_chain (pad, buffer);
 

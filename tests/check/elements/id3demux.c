@@ -236,8 +236,7 @@ check_unsync_v24 (const GstTagList * tags, const gchar * file)
   gchar *album = NULL;
   gchar *title = NULL;
   gchar *artist = NULL;
-  guint8 *data;
-  gsize size;
+  GstMapInfo map;
 
   fail_unless (gst_tag_list_get_string (tags, GST_TAG_TITLE, &title));
   fail_unless (title != NULL);
@@ -262,14 +261,14 @@ check_unsync_v24 (const GstTagList * tags, const gchar * file)
   fail_unless (gst_sample_get_caps (sample) != NULL);
   buf = gst_sample_get_buffer (sample);
   fail_unless (buf != NULL);
-  data = gst_buffer_map (buf, &size, NULL, GST_MAP_READ);
-  fail_unless_equals_int (size, 38022);
+  gst_buffer_map (buf, &map, GST_MAP_READ);
+  fail_unless_equals_int (map.size, 38022);
   /* check for jpeg start/end markers */
-  fail_unless_equals_int (data[0], 0xff);
-  fail_unless_equals_int (data[1], 0xd8);
-  fail_unless_equals_int (data[38020], 0xff);
-  fail_unless_equals_int (data[38021], 0xd9);
-  gst_buffer_unmap (buf, data, size);
+  fail_unless_equals_int (map.data[0], 0xff);
+  fail_unless_equals_int (map.data[1], 0xd8);
+  fail_unless_equals_int (map.data[38020], 0xff);
+  fail_unless_equals_int (map.data[38021], 0xd9);
+  gst_buffer_unmap (buf, &map);
 }
 
 GST_START_TEST (test_unsync_v24)

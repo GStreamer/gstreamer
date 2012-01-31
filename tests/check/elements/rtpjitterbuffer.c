@@ -166,7 +166,7 @@ check_jitterbuffer_results (GstElement * jitterbuffer, gint num_buffers)
   GList *node;
   GstClockTime ts = G_GUINT64_CONSTANT (0);
   GstClockTime tso = gst_util_uint64_scale (RTP_FRAME_SIZE, GST_SECOND, 8000);
-  guint8 *data;
+  GstMapInfo map;
   guint16 prev_sn = 0, cur_sn;
   guint32 prev_ts = 0, cur_ts;
 
@@ -183,11 +183,11 @@ check_jitterbuffer_results (GstElement * jitterbuffer, gint num_buffers)
   for (node = buffers; node; node = g_list_next (node)) {
     fail_if ((buffer = (GstBuffer *) node->data) == NULL);
     fail_if (GST_BUFFER_TIMESTAMP (buffer) != ts);
-    data = gst_buffer_map (buffer, NULL, NULL, GST_MAP_READ);
-    cur_sn = ((guint16) data[2] << 8) | data[3];
-    cur_ts = ((guint32) data[4] << 24) | ((guint32) data[5] << 16) |
-        ((guint32) data[6] << 8) | data[7];
-    gst_buffer_unmap (buffer, data, -1);
+    gst_buffer_map (buffer, &map, GST_MAP_READ);
+    cur_sn = ((guint16) map.data[2] << 8) | map.data[3];
+    cur_ts = ((guint32) map.data[4] << 24) | ((guint32) map.data[5] << 16) |
+        ((guint32) map.data[6] << 8) | map.data[7];
+    gst_buffer_unmap (buffer, &map);
 
     if (node != buffers) {
       fail_unless (cur_sn > prev_sn);

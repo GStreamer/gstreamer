@@ -27,8 +27,7 @@ _get_first_sample (GstSample * sample)
   GstAudioInfo info;
   GstCaps *caps;
   GstBuffer *buf;
-  guint8 *data;
-  gsize size;
+  GstMapInfo map;
   guint16 res;
 
   fail_unless (sample != NULL, "NULL sample");
@@ -40,9 +39,9 @@ _get_first_sample (GstSample * sample)
   GST_DEBUG ("buffer with size=%u, caps=%" GST_PTR_FORMAT,
       gst_buffer_get_size (buf), caps);
 
-  data = gst_buffer_map (buf, &size, NULL, GST_MAP_READ);
+  gst_buffer_map (buf, &map, GST_MAP_READ);
   /* log buffer details */
-  GST_MEMDUMP ("buffer data from decoder", data, size);
+  GST_MEMDUMP ("buffer data from decoder", map.data, map.size);
 
   /* make sure it's the format we expect */
   fail_unless (gst_audio_info_from_caps (&info, caps));
@@ -53,11 +52,11 @@ _get_first_sample (GstSample * sample)
   fail_unless_equals_int (GST_AUDIO_INFO_CHANNELS (&info), 1);
 
   if (GST_AUDIO_INFO_IS_LITTLE_ENDIAN (&info))
-    res = GST_READ_UINT16_LE (data);
+    res = GST_READ_UINT16_LE (map.data);
   else
-    res = GST_READ_UINT16_BE (data);
+    res = GST_READ_UINT16_BE (map.data);
 
-  gst_buffer_unmap (buf, data, size);
+  gst_buffer_unmap (buf, &map);
 
   return res;
 }

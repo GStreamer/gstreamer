@@ -121,7 +121,8 @@ GST_START_TEST (test_int16)
   GstMessage *message;
   const GstStructure *structure;
   int i, j;
-  gint16 *buf_data, *data;
+  gint16 *data;
+  GstMapInfo map;
   const GValue *list, *value;
   GstClockTime endtime;
   gfloat level;
@@ -136,8 +137,8 @@ GST_START_TEST (test_int16)
 
   /* create a 1 sec buffer with an 11025 Hz sine wave */
   inbuffer = gst_buffer_new_allocate (NULL, 44100 * sizeof (gint16), 0);
-  buf_data = gst_buffer_map (inbuffer, NULL, NULL, GST_MAP_WRITE);
-  data = buf_data;
+  gst_buffer_map (inbuffer, &map, GST_MAP_WRITE);
+  data = (gint16 *) map.data;
   for (j = 0; j < 44100; j += 4) {
     *data = 0;
     ++data;
@@ -148,7 +149,7 @@ GST_START_TEST (test_int16)
     *data = -32767;
     ++data;
   }
-  gst_buffer_unmap (inbuffer, buf_data, -1);
+  gst_buffer_unmap (inbuffer, &map);
 
   caps = gst_caps_from_string (SPECT_CAPS_STRING_S16);
   fail_unless (gst_pad_set_caps (mysrcpad, caps));
@@ -225,7 +226,8 @@ GST_START_TEST (test_int32)
   GstMessage *message;
   const GstStructure *structure;
   int i, j;
-  gint32 *buf_data, *data;
+  gint32 *data;
+  GstMapInfo map;
   const GValue *list, *value;
   GstClockTime endtime;
   gfloat level;
@@ -240,8 +242,8 @@ GST_START_TEST (test_int32)
 
   /* create a 1 sec buffer with an 11025 Hz sine wave */
   inbuffer = gst_buffer_new_allocate (NULL, 44100 * sizeof (gint32), 0);
-  buf_data = gst_buffer_map (inbuffer, NULL, NULL, GST_MAP_WRITE);
-  data = buf_data;
+  gst_buffer_map (inbuffer, &map, GST_MAP_WRITE);
+  data = (gint32 *) map.data;
   for (j = 0; j < 44100; j += 4) {
     *data = 0;
     ++data;
@@ -252,7 +254,7 @@ GST_START_TEST (test_int32)
     *data = -2147483647;
     ++data;
   }
-  gst_buffer_unmap (inbuffer, buf_data, -1);
+  gst_buffer_unmap (inbuffer, &map);
 
   caps = gst_caps_from_string (SPECT_CAPS_STRING_S32);
   fail_unless (gst_pad_set_caps (mysrcpad, caps));
@@ -329,7 +331,8 @@ GST_START_TEST (test_float32)
   GstMessage *message;
   const GstStructure *structure;
   int i, j;
-  gfloat *buf_data, *data;
+  gfloat *data;
+  GstMapInfo map;
   const GValue *list, *value;
   GstClockTime endtime;
   gfloat level;
@@ -344,8 +347,8 @@ GST_START_TEST (test_float32)
 
   /* create a 1 sec buffer with an 11025 Hz sine wave */
   inbuffer = gst_buffer_new_allocate (NULL, 44100 * sizeof (gfloat), 0);
-  buf_data = gst_buffer_map (inbuffer, NULL, NULL, GST_MAP_WRITE);
-  data = buf_data;
+  gst_buffer_map (inbuffer, &map, GST_MAP_WRITE);
+  data = (gfloat *) map.data;
   for (j = 0; j < 44100; j += 4) {
     *data = 0.0;
     ++data;
@@ -356,7 +359,7 @@ GST_START_TEST (test_float32)
     *data = -1.0;
     ++data;
   }
-  gst_buffer_unmap (inbuffer, buf_data, -1);
+  gst_buffer_unmap (inbuffer, &map);
 
   caps = gst_caps_from_string (SPECT_CAPS_STRING_F32);
   fail_unless (gst_pad_set_caps (mysrcpad, caps));
@@ -433,7 +436,8 @@ GST_START_TEST (test_float64)
   GstMessage *message;
   const GstStructure *structure;
   int i, j;
-  gdouble *buf_data, *data;
+  gdouble *data;
+  GstMapInfo map;
   const GValue *list, *value;
   GstClockTime endtime;
   gfloat level;
@@ -448,8 +452,8 @@ GST_START_TEST (test_float64)
 
   /* create a 1 sec buffer with an 11025 Hz sine wave */
   inbuffer = gst_buffer_new_allocate (NULL, 44100 * sizeof (gdouble), 0);
-  buf_data = gst_buffer_map (inbuffer, NULL, NULL, GST_MAP_WRITE);
-  data = buf_data;
+  gst_buffer_map (inbuffer, &map, GST_MAP_WRITE);
+  data = (gdouble *) map.data;
   for (j = 0; j < 44100; j += 4) {
     *data = 0.0;
     ++data;
@@ -460,7 +464,7 @@ GST_START_TEST (test_float64)
     *data = -1.0;
     ++data;
   }
-  gst_buffer_unmap (inbuffer, buf_data, -1);
+  gst_buffer_unmap (inbuffer, &map);
 
   caps = gst_caps_from_string (SPECT_CAPS_STRING_F64);
   fail_unless (gst_pad_set_caps (mysrcpad, caps));

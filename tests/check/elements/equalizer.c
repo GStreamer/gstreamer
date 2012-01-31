@@ -91,6 +91,7 @@ GST_START_TEST (test_equalizer_5bands_passthrough)
   GstCaps *caps;
   gdouble *in, *res;
   gint i;
+  GstMapInfo map;
 
   equalizer = setup_equalizer ();
   g_object_set (G_OBJECT (equalizer), "num-bands", 5, NULL);
@@ -103,10 +104,11 @@ GST_START_TEST (test_equalizer_5bands_passthrough)
       "could not set to playing");
 
   inbuffer = gst_buffer_new_and_alloc (1024 * sizeof (gdouble));
-  in = gst_buffer_map (inbuffer, NULL, NULL, GST_MAP_WRITE);
+  gst_buffer_map (inbuffer, &map, GST_MAP_WRITE);
+  in = (gdouble *) map.data;
   for (i = 0; i < 1024; i++)
     in[i] = g_random_double_range (-1.0, 1.0);
-  gst_buffer_unmap (inbuffer, in, -1);
+  gst_buffer_unmap (inbuffer, &map);
 
   caps = gst_caps_from_string (EQUALIZER_CAPS_STRING);
   gst_pad_set_caps (mysrcpad, caps);
@@ -119,11 +121,12 @@ GST_START_TEST (test_equalizer_5bands_passthrough)
   /* ... and puts a new buffer on the global list */
   fail_unless (g_list_length (buffers) == 1);
 
-  res = gst_buffer_map (GST_BUFFER (buffers->data), NULL, NULL, GST_MAP_READ);
+  gst_buffer_map (GST_BUFFER (buffers->data), &map, GST_MAP_READ);
+  res = (gdouble *) map.data;
 
   for (i = 0; i < 1024; i++)
     fail_unless_equals_float (in[i], res[i]);
-  gst_buffer_unmap (GST_BUFFER (buffers->data), res, -1);
+  gst_buffer_unmap (GST_BUFFER (buffers->data), &map);
 
   /* cleanup */
   cleanup_equalizer (equalizer);
@@ -138,6 +141,7 @@ GST_START_TEST (test_equalizer_5bands_minus_24)
   GstCaps *caps;
   gdouble *in, *res, rms_in, rms_out;
   gint i;
+  GstMapInfo map;
 
   equalizer = setup_equalizer ();
   g_object_set (G_OBJECT (equalizer), "num-bands", 5, NULL);
@@ -159,10 +163,11 @@ GST_START_TEST (test_equalizer_5bands_minus_24)
       "could not set to playing");
 
   inbuffer = gst_buffer_new_and_alloc (1024 * sizeof (gdouble));
-  in = gst_buffer_map (inbuffer, NULL, NULL, GST_MAP_WRITE);
+  gst_buffer_map (inbuffer, &map, GST_MAP_WRITE);
+  in = (gdouble *) map.data;
   for (i = 0; i < 1024; i++)
     in[i] = g_random_double_range (-1.0, 1.0);
-  gst_buffer_unmap (inbuffer, in, -1);
+  gst_buffer_unmap (inbuffer, &map);
 
   rms_in = 0.0;
   for (i = 0; i < 1024; i++)
@@ -180,13 +185,14 @@ GST_START_TEST (test_equalizer_5bands_minus_24)
   /* ... and puts a new buffer on the global list */
   fail_unless (g_list_length (buffers) == 1);
 
-  res = gst_buffer_map (GST_BUFFER (buffers->data), NULL, NULL, GST_MAP_READ);
+  gst_buffer_map (GST_BUFFER (buffers->data), &map, GST_MAP_READ);
+  res = (gdouble *) map.data;
 
   rms_out = 0.0;
   for (i = 0; i < 1024; i++)
     rms_out += res[i] * res[i];
   rms_out = sqrt (rms_out / 1024);
-  gst_buffer_unmap (GST_BUFFER (buffers->data), res, -1);
+  gst_buffer_unmap (GST_BUFFER (buffers->data), &map);
 
   fail_unless (rms_in > rms_out);
 
@@ -203,6 +209,7 @@ GST_START_TEST (test_equalizer_5bands_plus_12)
   GstCaps *caps;
   gdouble *in, *res, rms_in, rms_out;
   gint i;
+  GstMapInfo map;
 
   equalizer = setup_equalizer ();
   g_object_set (G_OBJECT (equalizer), "num-bands", 5, NULL);
@@ -224,10 +231,11 @@ GST_START_TEST (test_equalizer_5bands_plus_12)
       "could not set to playing");
 
   inbuffer = gst_buffer_new_and_alloc (1024 * sizeof (gdouble));
-  in = gst_buffer_map (inbuffer, NULL, NULL, GST_MAP_WRITE);
+  gst_buffer_map (inbuffer, &map, GST_MAP_WRITE);
+  in = (gdouble *) map.data;
   for (i = 0; i < 1024; i++)
     in[i] = g_random_double_range (-1.0, 1.0);
-  gst_buffer_unmap (inbuffer, in, -1);
+  gst_buffer_unmap (inbuffer, &map);
 
   rms_in = 0.0;
   for (i = 0; i < 1024; i++)
@@ -245,13 +253,14 @@ GST_START_TEST (test_equalizer_5bands_plus_12)
   /* ... and puts a new buffer on the global list */
   fail_unless (g_list_length (buffers) == 1);
 
-  res = gst_buffer_map (GST_BUFFER (buffers->data), NULL, NULL, GST_MAP_READ);
+  gst_buffer_map (GST_BUFFER (buffers->data), &map, GST_MAP_READ);
+  res = (gdouble *) map.data;
 
   rms_out = 0.0;
   for (i = 0; i < 1024; i++)
     rms_out += res[i] * res[i];
   rms_out = sqrt (rms_out / 1024);
-  gst_buffer_unmap (GST_BUFFER (buffers->data), res, -1);
+  gst_buffer_unmap (GST_BUFFER (buffers->data), &map);
 
   fail_unless (rms_in < rms_out);
 
