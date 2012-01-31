@@ -1422,7 +1422,8 @@ gst_vc1_parse_set_caps (GstBaseParse * parse, GstCaps * caps)
   value = gst_structure_get_value (s, "codec_data");
   if (value != NULL) {
     codec_data = gst_value_get_buffer (value);
-    if (GST_BUFFER_SIZE (codec_data) == 4) {
+    if ((GST_BUFFER_SIZE (codec_data) == 4 ||
+            GST_BUFFER_SIZE (codec_data) == 5)) {
       /* ASF, VC1/WMV3 simple/main profile
        * This is the sequence header without start codes
        */
