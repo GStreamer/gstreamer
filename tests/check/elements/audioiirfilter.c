@@ -98,12 +98,13 @@ on_handoff (GstElement * object, GstBuffer * buffer, GstPad * pad,
     gpointer user_data)
 {
   if (!have_data) {
-    gsize size;
+    GstMapInfo map;
     gdouble *data;
 
-    data = gst_buffer_map (buffer, &size, NULL, GST_MAP_READ);
+    gst_buffer_map (buffer, &map, GST_MAP_READ);
+    data = (gdouble *) map.data;
 
-    fail_unless (size > 5 * sizeof (gdouble));
+    fail_unless (map.size > 5 * sizeof (gdouble));
     fail_unless (data[0] == 0.0);
     fail_unless (data[1] == 0.0);
     fail_unless (data[2] == 0.0);
@@ -111,7 +112,7 @@ on_handoff (GstElement * object, GstBuffer * buffer, GstPad * pad,
     fail_unless (data[4] == 0.0);
     fail_unless (data[5] != 0.0);
 
-    gst_buffer_unmap (buffer, data, size);
+    gst_buffer_unmap (buffer, &map);
     have_data = TRUE;
   }
 }

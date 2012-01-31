@@ -114,15 +114,14 @@ create_buffer_rgb24_3x4 (void)
   };
   guint rowstride = GST_ROUND_UP_4 (WIDTH * 3);
   GstBuffer *buf;
-  gpointer buf_data;
-  gsize size;
+  GstMapInfo info;
 
   buf = gst_buffer_new_and_alloc (HEIGHT * rowstride);
-  buf_data = gst_buffer_map (buf, &size, NULL, GST_MAP_READWRITE);
-  fail_unless_equals_int (size, sizeof (rgb24_3x4_img));
-  memcpy (buf_data, rgb24_3x4_img, sizeof (rgb24_3x4_img));
+  gst_buffer_map (buf, &info, GST_MAP_READWRITE);
+  fail_unless_equals_int (info.size, sizeof (rgb24_3x4_img));
+  memcpy (info.data, rgb24_3x4_img, sizeof (rgb24_3x4_img));
 
-  gst_buffer_unmap (buf, buf_data, size);
+  gst_buffer_unmap (buf, &info);
 
   return buf;
 }
@@ -144,15 +143,14 @@ create_buffer_rgba32_3x4 (void)
   };
   guint rowstride = WIDTH * 4;
   GstBuffer *buf;
-  gpointer buf_data;
-  gsize size;
+  GstMapInfo map;
 
   buf = gst_buffer_new_and_alloc (HEIGHT * rowstride);
-  buf_data = gst_buffer_map (buf, &size, NULL, GST_MAP_READWRITE);
-  fail_unless_equals_int (size, sizeof (rgba32_3x4_img));
-  memcpy (buf_data, rgba32_3x4_img, sizeof (rgba32_3x4_img));
+  gst_buffer_map (buf, &map, GST_MAP_READWRITE);
+  fail_unless_equals_int (map.size, sizeof (rgba32_3x4_img));
+  memcpy (map.data, rgba32_3x4_img, sizeof (rgba32_3x4_img));
 
-  gst_buffer_unmap (buf, buf_data, size);
+  gst_buffer_unmap (buf, &map);
 
   return buf;
 }
@@ -212,8 +210,7 @@ GST_START_TEST (test_rgba32)
   GstCaps *incaps;
   guint8 *ayuv;
   guint outlength;
-  gpointer buf_data;
-  gsize size;
+  GstMapInfo map;
 
   incaps = create_caps_rgba32 ();
   alphacolor = setup_alphacolor ();
@@ -240,10 +237,10 @@ GST_START_TEST (test_rgba32)
 
   ASSERT_BUFFER_REFCOUNT (outbuffer, "outbuffer", 1);
   outlength = WIDTH * HEIGHT * 4;       /* output is AYUV */
-  buf_data = gst_buffer_map (outbuffer, &size, NULL, GST_MAP_READ);
-  fail_unless_equals_int (size, outlength);
+  gst_buffer_map (outbuffer, &map, GST_MAP_READ);
+  fail_unless_equals_int (map.size, outlength);
 
-  ayuv = buf_data;
+  ayuv = map.data;
 
   /* check alpha values (0x00 = totally transparent, 0xff = totally opaque) */
   fail_unless_ayuv_pixel_has_alpha (ayuv, 0, 0, 0xff);
@@ -262,7 +259,7 @@ GST_START_TEST (test_rgba32)
   /* we don't check the YUV data, because apparently results differ slightly
    * depending on whether we run in valgrind or not */
 
-  gst_buffer_unmap (outbuffer, buf_data, size);
+  gst_buffer_unmap (outbuffer, &map);
 
   buffers = g_list_remove (buffers, outbuffer);
   gst_buffer_unref (outbuffer);

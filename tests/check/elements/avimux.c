@@ -186,10 +186,13 @@ check_avimux_pad (GstStaticPadTemplate * srctemplate,
     switch (i) {
       case 0:{                 /* check riff header */
         /* avi header */
+        GstMapInfo map;
         gsize size;
-        guint8 *data, *orig;
+        guint8 *data;
 
-        data = orig = gst_buffer_map (outbuffer, &size, NULL, GST_MAP_READ);
+        gst_buffer_map (outbuffer, &map, GST_MAP_READ);
+        data = map.data;
+        size = map.size;
 
         fail_unless (memcmp (data, data0, sizeof (data0)) == 0);
         fail_unless (memcmp (data + 8, data1, sizeof (data1)) == 0);
@@ -200,12 +203,12 @@ check_avimux_pad (GstStaticPadTemplate * srctemplate,
         fail_unless (memcmp (data + 8, data4, sizeof (data4)) == 0);
         fail_unless (memcmp (data + 76, data5, sizeof (data5)) == 0);
         /* avi data header */
-        data = orig;
+        data = map.data;
         data += size - 12;
         fail_unless (memcmp (data, data6, sizeof (data6)) == 0);
         data += 8;
         fail_unless (memcmp (data, data7, sizeof (data7)) == 0);
-        gst_buffer_unmap (outbuffer, orig, size);
+        gst_buffer_unmap (outbuffer, &map);
         break;
       }
       case 1:                  /* chunk header */

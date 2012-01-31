@@ -96,6 +96,7 @@ GST_START_TEST (test_passthrough)
   GstCaps *caps;
   gint16 in[4] = { 16384, -256, 128, -512 };
   gint16 *res;
+  GstMapInfo map;
 
   invert = setup_invert ();
   fail_unless (gst_element_set_state (invert,
@@ -116,10 +117,11 @@ GST_START_TEST (test_passthrough)
   fail_unless_equals_int (g_list_length (buffers), 1);
   fail_if ((outbuffer = (GstBuffer *) buffers->data) == NULL);
 
-  res = gst_buffer_map (outbuffer, NULL, NULL, GST_MAP_READ);
+  gst_buffer_map (outbuffer, &map, GST_MAP_READ);
+  res = (gint16 *) map.data;
   GST_INFO ("expected %+5d %+5d %+5d %+5d real %+5d %+5d %+5d %+5d",
       in[0], in[1], in[2], in[3], res[0], res[1], res[2], res[3]);
-  gst_buffer_unmap (outbuffer, res, -1);
+  gst_buffer_unmap (outbuffer, &map);
 
   fail_unless (gst_buffer_memcmp (outbuffer, 0, in, 8) == 0);
 
@@ -137,6 +139,7 @@ GST_START_TEST (test_zero)
   gint16 in[4] = { 16384, -256, 128, -512 };
   gint16 out[4] = { 0, 0, 0, 0 };
   gint16 *res;
+  GstMapInfo map;
 
   invert = setup_invert ();
   g_object_set (G_OBJECT (invert), "degree", 0.5, NULL);
@@ -158,10 +161,11 @@ GST_START_TEST (test_zero)
   fail_unless_equals_int (g_list_length (buffers), 1);
   fail_if ((outbuffer = (GstBuffer *) buffers->data) == NULL);
 
-  res = gst_buffer_map (outbuffer, NULL, NULL, GST_MAP_READ);
+  gst_buffer_map (outbuffer, &map, GST_MAP_READ);
+  res = (gint16 *) map.data;
   GST_INFO ("expected %+5d %+5d %+5d %+5d real %+5d %+5d %+5d %+5d",
       out[0], out[1], out[2], out[3], res[0], res[1], res[2], res[3]);
-  gst_buffer_unmap (outbuffer, res, -1);
+  gst_buffer_unmap (outbuffer, &map);
 
   fail_unless (gst_buffer_memcmp (outbuffer, 0, out, 8) == 0);
 
@@ -179,6 +183,7 @@ GST_START_TEST (test_full_inverse)
   gint16 in[4] = { 16384, -256, 128, -512 };
   gint16 out[4] = { -16385, 255, -129, 511 };
   gint16 *res;
+  GstMapInfo map;
 
   invert = setup_invert ();
   g_object_set (G_OBJECT (invert), "degree", 1.0, NULL);
@@ -200,10 +205,11 @@ GST_START_TEST (test_full_inverse)
   fail_unless_equals_int (g_list_length (buffers), 1);
   fail_if ((outbuffer = (GstBuffer *) buffers->data) == NULL);
 
-  res = gst_buffer_map (outbuffer, NULL, NULL, GST_MAP_READ);
+  gst_buffer_map (outbuffer, &map, GST_MAP_READ);
+  res = (gint16 *) map.data;
   GST_INFO ("expected %+5d %+5d %+5d %+5d real %+5d %+5d %+5d %+5d",
       out[0], out[1], out[2], out[3], res[0], res[1], res[2], res[3]);
-  gst_buffer_unmap (outbuffer, res, -1);
+  gst_buffer_unmap (outbuffer, &map);
 
   fail_unless (gst_buffer_memcmp (outbuffer, 0, out, 8) == 0);
 
@@ -221,6 +227,7 @@ GST_START_TEST (test_25_inverse)
   gint16 in[4] = { 16384, -256, 128, -512 };
   gint16 out[4] = { 8191, -128, 63, -256 };
   gint16 *res;
+  GstMapInfo map;
 
   invert = setup_invert ();
   g_object_set (G_OBJECT (invert), "degree", 0.25, NULL);
@@ -242,10 +249,11 @@ GST_START_TEST (test_25_inverse)
   fail_unless_equals_int (g_list_length (buffers), 1);
   fail_if ((outbuffer = (GstBuffer *) buffers->data) == NULL);
 
-  res = gst_buffer_map (outbuffer, NULL, NULL, GST_MAP_READ);
+  gst_buffer_map (outbuffer, &map, GST_MAP_READ);
+  res = (gint16 *) map.data;
   GST_INFO ("expected %+5d %+5d %+5d %+5d real %+5d %+5d %+5d %+5d",
       out[0], out[1], out[2], out[3], res[0], res[1], res[2], res[3]);
-  gst_buffer_unmap (outbuffer, res, -1);
+  gst_buffer_unmap (outbuffer, &map);
 
   fail_unless (gst_buffer_memcmp (outbuffer, 0, out, 8) == 0);
 

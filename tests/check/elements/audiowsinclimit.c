@@ -102,6 +102,7 @@ GST_START_TEST (test_32_lp_0hz)
   GstCaps *caps;
   gfloat *in, *res, rms;
   gint i;
+  GstMapInfo map;
   GList *node;
 
   audiowsinclimit = setup_audiowsinclimit ();
@@ -117,10 +118,11 @@ GST_START_TEST (test_32_lp_0hz)
   g_object_set (G_OBJECT (audiowsinclimit), "cutoff", 44100 / 4.0, NULL);
   inbuffer = gst_buffer_new_and_alloc (128 * sizeof (gfloat));
   GST_BUFFER_TIMESTAMP (inbuffer) = 0;
-  in = gst_buffer_map (inbuffer, NULL, NULL, GST_MAP_WRITE);
+  gst_buffer_map (inbuffer, &map, GST_MAP_WRITE);
+  in = (gfloat *) map.data;
   for (i = 0; i < 128; i++)
     in[i] = 1.0;
-  gst_buffer_unmap (inbuffer, in, -1);
+  gst_buffer_unmap (inbuffer, &map);
 
   caps = gst_caps_from_string (AUDIO_WSINC_LIMIT_CAPS_STRING_32);
   gst_pad_set_caps (mysrcpad, caps);
@@ -135,17 +137,17 @@ GST_START_TEST (test_32_lp_0hz)
 
   for (node = buffers; node; node = node->next) {
     gint buffer_length;
-    gsize size;
 
     fail_if ((outbuffer = (GstBuffer *) node->data) == NULL);
 
-    res = gst_buffer_map (outbuffer, &size, NULL, GST_MAP_READ);
-    buffer_length = size / sizeof (gfloat);
+    gst_buffer_map (outbuffer, &map, GST_MAP_READ);
+    res = (gfloat *) map.data;
+    buffer_length = map.size / sizeof (gfloat);
     rms = 0.0;
     for (i = 0; i < buffer_length; i++)
       rms += res[i] * res[i];
     rms = sqrt (rms / buffer_length);
-    gst_buffer_unmap (outbuffer, res, size);
+    gst_buffer_unmap (outbuffer, &map);
     fail_unless (rms >= 0.9);
   }
 
@@ -165,6 +167,7 @@ GST_START_TEST (test_32_lp_22050hz)
   GstCaps *caps;
   gfloat *in, *res, rms;
   gint i;
+  GstMapInfo map;
   GList *node;
 
   audiowsinclimit = setup_audiowsinclimit ();
@@ -179,12 +182,13 @@ GST_START_TEST (test_32_lp_22050hz)
   g_object_set (G_OBJECT (audiowsinclimit), "cutoff", 44100 / 4.0, NULL);
   inbuffer = gst_buffer_new_and_alloc (128 * sizeof (gfloat));
   GST_BUFFER_TIMESTAMP (inbuffer) = 0;
-  in = gst_buffer_map (inbuffer, NULL, NULL, GST_MAP_WRITE);
+  gst_buffer_map (inbuffer, &map, GST_MAP_WRITE);
+  in = (gfloat *) map.data;
   for (i = 0; i < 128; i += 2) {
     in[i] = 1.0;
     in[i + 1] = -1.0;
   }
-  gst_buffer_unmap (inbuffer, in, -1);
+  gst_buffer_unmap (inbuffer, &map);
 
   caps = gst_caps_from_string (AUDIO_WSINC_LIMIT_CAPS_STRING_32);
   gst_pad_set_caps (mysrcpad, caps);
@@ -199,17 +203,17 @@ GST_START_TEST (test_32_lp_22050hz)
 
   for (node = buffers; node; node = node->next) {
     gint buffer_length;
-    gsize size;
 
     fail_if ((outbuffer = (GstBuffer *) node->data) == NULL);
 
-    res = gst_buffer_map (outbuffer, &size, NULL, GST_MAP_READ);
-    buffer_length = size / sizeof (gfloat);
+    gst_buffer_map (outbuffer, &map, GST_MAP_READ);
+    res = (gfloat *) map.data;
+    buffer_length = map.size / sizeof (gfloat);
     rms = 0.0;
     for (i = 0; i < buffer_length; i++)
       rms += res[i] * res[i];
     rms = sqrt (rms / buffer_length);
-    gst_buffer_unmap (outbuffer, res, size);
+    gst_buffer_unmap (outbuffer, &map);
     fail_unless (rms <= 0.1);
   }
 
@@ -229,6 +233,7 @@ GST_START_TEST (test_32_hp_0hz)
   GstCaps *caps;
   gfloat *in, *res, rms;
   gint i;
+  GstMapInfo map;
   GList *node;
 
   audiowsinclimit = setup_audiowsinclimit ();
@@ -243,10 +248,11 @@ GST_START_TEST (test_32_hp_0hz)
   g_object_set (G_OBJECT (audiowsinclimit), "cutoff", 44100 / 4.0, NULL);
   inbuffer = gst_buffer_new_and_alloc (128 * sizeof (gfloat));
   GST_BUFFER_TIMESTAMP (inbuffer) = 0;
-  in = gst_buffer_map (inbuffer, NULL, NULL, GST_MAP_WRITE);
+  gst_buffer_map (inbuffer, &map, GST_MAP_WRITE);
+  in = (gfloat *) map.data;
   for (i = 0; i < 128; i++)
     in[i] = 1.0;
-  gst_buffer_unmap (inbuffer, in, -1);
+  gst_buffer_unmap (inbuffer, &map);
 
   caps = gst_caps_from_string (AUDIO_WSINC_LIMIT_CAPS_STRING_32);
   gst_pad_set_caps (mysrcpad, caps);
@@ -261,17 +267,17 @@ GST_START_TEST (test_32_hp_0hz)
 
   for (node = buffers; node; node = node->next) {
     gint buffer_length;
-    gsize size;
 
     fail_if ((outbuffer = (GstBuffer *) node->data) == NULL);
 
-    res = gst_buffer_map (outbuffer, &size, NULL, GST_MAP_READ);
-    buffer_length = size / sizeof (gfloat);
+    gst_buffer_map (outbuffer, &map, GST_MAP_READ);
+    res = (gfloat *) map.data;
+    buffer_length = map.size / sizeof (gfloat);
     rms = 0.0;
     for (i = 0; i < buffer_length; i++)
       rms += res[i] * res[i];
     rms = sqrt (rms / buffer_length);
-    gst_buffer_unmap (outbuffer, res, size);
+    gst_buffer_unmap (outbuffer, &map);
     fail_unless (rms <= 0.1);
   }
 
@@ -291,6 +297,7 @@ GST_START_TEST (test_32_hp_22050hz)
   GstCaps *caps;
   gfloat *in, *res, rms;
   gint i;
+  GstMapInfo map;
   GList *node;
 
   audiowsinclimit = setup_audiowsinclimit ();
@@ -305,12 +312,13 @@ GST_START_TEST (test_32_hp_22050hz)
   g_object_set (G_OBJECT (audiowsinclimit), "cutoff", 44100 / 4.0, NULL);
   inbuffer = gst_buffer_new_and_alloc (128 * sizeof (gfloat));
   GST_BUFFER_TIMESTAMP (inbuffer) = 0;
-  in = gst_buffer_map (inbuffer, NULL, NULL, GST_MAP_WRITE);
+  gst_buffer_map (inbuffer, &map, GST_MAP_WRITE);
+  in = (gfloat *) map.data;
   for (i = 0; i < 128; i += 2) {
     in[i] = 1.0;
     in[i + 1] = -1.0;
   }
-  gst_buffer_unmap (inbuffer, in, -1);
+  gst_buffer_unmap (inbuffer, &map);
 
   caps = gst_caps_from_string (AUDIO_WSINC_LIMIT_CAPS_STRING_32);
   gst_pad_set_caps (mysrcpad, caps);
@@ -326,17 +334,17 @@ GST_START_TEST (test_32_hp_22050hz)
 
   for (node = buffers; node; node = node->next) {
     gint buffer_length;
-    gsize size;
 
     fail_if ((outbuffer = (GstBuffer *) node->data) == NULL);
 
-    res = gst_buffer_map (outbuffer, &size, NULL, GST_MAP_READ);
-    buffer_length = size / sizeof (gfloat);
+    gst_buffer_map (outbuffer, &map, GST_MAP_READ);
+    res = (gfloat *) map.data;
+    buffer_length = map.size / sizeof (gfloat);
     rms = 0.0;
     for (i = 0; i < buffer_length; i++)
       rms += res[i] * res[i];
     rms = sqrt (rms / buffer_length);
-    gst_buffer_unmap (outbuffer, res, size);
+    gst_buffer_unmap (outbuffer, &map);
     fail_unless (rms >= 0.9);
   }
 
@@ -355,6 +363,7 @@ GST_START_TEST (test_32_small_buffer)
   GstCaps *caps;
   gfloat *in;
   gint i;
+  GstMapInfo map;
 
   audiowsinclimit = setup_audiowsinclimit ();
   /* Set to lowpass */
@@ -368,10 +377,11 @@ GST_START_TEST (test_32_small_buffer)
   g_object_set (G_OBJECT (audiowsinclimit), "cutoff", 44100 / 4.0, NULL);
   inbuffer = gst_buffer_new_and_alloc (20 * sizeof (gfloat));
   GST_BUFFER_TIMESTAMP (inbuffer) = 0;
-  in = gst_buffer_map (inbuffer, NULL, NULL, GST_MAP_WRITE);
+  gst_buffer_map (inbuffer, &map, GST_MAP_WRITE);
+  in = (gfloat *) map.data;
   for (i = 0; i < 20; i++)
     in[i] = 1.0;
-  gst_buffer_unmap (inbuffer, in, -1);
+  gst_buffer_unmap (inbuffer, &map);
 
   caps = gst_caps_from_string (AUDIO_WSINC_LIMIT_CAPS_STRING_32);
   gst_pad_set_caps (mysrcpad, caps);
@@ -401,6 +411,7 @@ GST_START_TEST (test_64_lp_0hz)
   GstCaps *caps;
   gdouble *in, *res, rms;
   gint i;
+  GstMapInfo map;
   GList *node;
 
   audiowsinclimit = setup_audiowsinclimit ();
@@ -416,10 +427,11 @@ GST_START_TEST (test_64_lp_0hz)
   g_object_set (G_OBJECT (audiowsinclimit), "cutoff", 44100 / 4.0, NULL);
   inbuffer = gst_buffer_new_and_alloc (128 * sizeof (gdouble));
   GST_BUFFER_TIMESTAMP (inbuffer) = 0;
-  in = gst_buffer_map (inbuffer, NULL, NULL, GST_MAP_WRITE);
+  gst_buffer_map (inbuffer, &map, GST_MAP_WRITE);
+  in = (gdouble *) map.data;
   for (i = 0; i < 128; i++)
     in[i] = 1.0;
-  gst_buffer_unmap (inbuffer, in, -1);
+  gst_buffer_unmap (inbuffer, &map);
 
   caps = gst_caps_from_string (AUDIO_WSINC_LIMIT_CAPS_STRING_64);
   gst_pad_set_caps (mysrcpad, caps);
@@ -434,17 +446,17 @@ GST_START_TEST (test_64_lp_0hz)
 
   for (node = buffers; node; node = node->next) {
     gint buffer_length;
-    gsize size;
 
     fail_if ((outbuffer = (GstBuffer *) node->data) == NULL);
 
-    res = gst_buffer_map (outbuffer, &size, NULL, GST_MAP_READ);
-    buffer_length = size / sizeof (gfloat);
+    gst_buffer_map (outbuffer, &map, GST_MAP_READ);
+    res = (gdouble *) map.data;
+    buffer_length = map.size / sizeof (gdouble);
     rms = 0.0;
     for (i = 0; i < buffer_length; i++)
       rms += res[i] * res[i];
     rms = sqrt (rms / buffer_length);
-    gst_buffer_unmap (outbuffer, res, size);
+    gst_buffer_unmap (outbuffer, &map);
     fail_unless (rms >= 0.9);
   }
 
@@ -464,6 +476,7 @@ GST_START_TEST (test_64_lp_22050hz)
   GstCaps *caps;
   gdouble *in, *res, rms;
   gint i;
+  GstMapInfo map;
   GList *node;
 
   audiowsinclimit = setup_audiowsinclimit ();
@@ -478,12 +491,13 @@ GST_START_TEST (test_64_lp_22050hz)
   g_object_set (G_OBJECT (audiowsinclimit), "cutoff", 44100 / 4.0, NULL);
   inbuffer = gst_buffer_new_and_alloc (128 * sizeof (gdouble));
   GST_BUFFER_TIMESTAMP (inbuffer) = 0;
-  in = gst_buffer_map (inbuffer, NULL, NULL, GST_MAP_WRITE);
+  gst_buffer_map (inbuffer, &map, GST_MAP_WRITE);
+  in = (gdouble *) map.data;
   for (i = 0; i < 128; i += 2) {
     in[i] = 1.0;
     in[i + 1] = -1.0;
   }
-  gst_buffer_unmap (inbuffer, in, -1);
+  gst_buffer_unmap (inbuffer, &map);
 
   caps = gst_caps_from_string (AUDIO_WSINC_LIMIT_CAPS_STRING_64);
   gst_pad_set_caps (mysrcpad, caps);
@@ -498,17 +512,17 @@ GST_START_TEST (test_64_lp_22050hz)
 
   for (node = buffers; node; node = node->next) {
     gint buffer_length;
-    gsize size;
 
     fail_if ((outbuffer = (GstBuffer *) node->data) == NULL);
 
-    res = gst_buffer_map (outbuffer, &size, NULL, GST_MAP_READ);
-    buffer_length = size / sizeof (gfloat);
+    gst_buffer_map (outbuffer, &map, GST_MAP_READ);
+    res = (gdouble *) map.data;
+    buffer_length = map.size / sizeof (gdouble);
     rms = 0.0;
     for (i = 0; i < buffer_length; i++)
       rms += res[i] * res[i];
     rms = sqrt (rms / buffer_length);
-    gst_buffer_unmap (outbuffer, res, size);
+    gst_buffer_unmap (outbuffer, &map);
     fail_unless (rms <= 0.1);
   }
 
@@ -528,6 +542,7 @@ GST_START_TEST (test_64_hp_0hz)
   GstCaps *caps;
   gdouble *in, *res, rms;
   gint i;
+  GstMapInfo map;
   GList *node;
 
   audiowsinclimit = setup_audiowsinclimit ();
@@ -542,10 +557,11 @@ GST_START_TEST (test_64_hp_0hz)
   g_object_set (G_OBJECT (audiowsinclimit), "cutoff", 44100 / 4.0, NULL);
   inbuffer = gst_buffer_new_and_alloc (128 * sizeof (gdouble));
   GST_BUFFER_TIMESTAMP (inbuffer) = 0;
-  in = gst_buffer_map (inbuffer, NULL, NULL, GST_MAP_WRITE);
+  gst_buffer_map (inbuffer, &map, GST_MAP_WRITE);
+  in = (gdouble *) map.data;
   for (i = 0; i < 128; i++)
     in[i] = 1.0;
-  gst_buffer_unmap (inbuffer, in, -1);
+  gst_buffer_unmap (inbuffer, &map);
 
   caps = gst_caps_from_string (AUDIO_WSINC_LIMIT_CAPS_STRING_64);
   gst_pad_set_caps (mysrcpad, caps);
@@ -560,17 +576,17 @@ GST_START_TEST (test_64_hp_0hz)
 
   for (node = buffers; node; node = node->next) {
     gint buffer_length;
-    gsize size;
 
     fail_if ((outbuffer = (GstBuffer *) node->data) == NULL);
 
-    res = gst_buffer_map (outbuffer, &size, NULL, GST_MAP_READ);
-    buffer_length = size / sizeof (gfloat);
+    gst_buffer_map (outbuffer, &map, GST_MAP_READ);
+    res = (gdouble *) map.data;
+    buffer_length = map.size / sizeof (gdouble);
     rms = 0.0;
     for (i = 0; i < buffer_length; i++)
       rms += res[i] * res[i];
     rms = sqrt (rms / buffer_length);
-    gst_buffer_unmap (outbuffer, res, size);
+    gst_buffer_unmap (outbuffer, &map);
     fail_unless (rms <= 0.1);
   }
 
@@ -590,6 +606,7 @@ GST_START_TEST (test_64_hp_22050hz)
   GstCaps *caps;
   gdouble *in, *res, rms;
   gint i;
+  GstMapInfo map;
   GList *node;
 
   audiowsinclimit = setup_audiowsinclimit ();
@@ -604,12 +621,13 @@ GST_START_TEST (test_64_hp_22050hz)
   g_object_set (G_OBJECT (audiowsinclimit), "cutoff", 44100 / 4.0, NULL);
   inbuffer = gst_buffer_new_and_alloc (128 * sizeof (gdouble));
   GST_BUFFER_TIMESTAMP (inbuffer) = 0;
-  in = gst_buffer_map (inbuffer, NULL, NULL, GST_MAP_WRITE);
+  gst_buffer_map (inbuffer, &map, GST_MAP_WRITE);
+  in = (gdouble *) map.data;
   for (i = 0; i < 128; i += 2) {
     in[i] = 1.0;
     in[i + 1] = -1.0;
   }
-  gst_buffer_unmap (inbuffer, in, -1);
+  gst_buffer_unmap (inbuffer, &map);
 
   caps = gst_caps_from_string (AUDIO_WSINC_LIMIT_CAPS_STRING_64);
   gst_pad_set_caps (mysrcpad, caps);
@@ -625,17 +643,17 @@ GST_START_TEST (test_64_hp_22050hz)
 
   for (node = buffers; node; node = node->next) {
     gint buffer_length;
-    gsize size;
 
     fail_if ((outbuffer = (GstBuffer *) node->data) == NULL);
 
-    res = gst_buffer_map (outbuffer, &size, NULL, GST_MAP_READ);
-    buffer_length = size / sizeof (gfloat);
+    gst_buffer_map (outbuffer, &map, GST_MAP_READ);
+    res = (gdouble *) map.data;
+    buffer_length = map.size / sizeof (gdouble);
     rms = 0.0;
     for (i = 0; i < buffer_length; i++)
       rms += res[i] * res[i];
     rms = sqrt (rms / buffer_length);
-    gst_buffer_unmap (outbuffer, res, size);
+    gst_buffer_unmap (outbuffer, &map);
     fail_unless (rms >= 0.9);
   }
 
@@ -654,6 +672,7 @@ GST_START_TEST (test_64_small_buffer)
   GstCaps *caps;
   gdouble *in;
   gint i;
+  GstMapInfo map;
 
   audiowsinclimit = setup_audiowsinclimit ();
   /* Set to lowpass */
@@ -667,10 +686,11 @@ GST_START_TEST (test_64_small_buffer)
   g_object_set (G_OBJECT (audiowsinclimit), "cutoff", 44100 / 4.0, NULL);
   inbuffer = gst_buffer_new_and_alloc (20 * sizeof (gdouble));
   GST_BUFFER_TIMESTAMP (inbuffer) = 0;
-  in = gst_buffer_map (inbuffer, NULL, NULL, GST_MAP_WRITE);
+  gst_buffer_map (inbuffer, &map, GST_MAP_WRITE);
+  in = (gdouble *) map.data;
   for (i = 0; i < 20; i++)
     in[i] = 1.0;
-  gst_buffer_unmap (inbuffer, in, -1);
+  gst_buffer_unmap (inbuffer, &map);
 
   caps = gst_caps_from_string (AUDIO_WSINC_LIMIT_CAPS_STRING_64);
   gst_pad_set_caps (mysrcpad, caps);

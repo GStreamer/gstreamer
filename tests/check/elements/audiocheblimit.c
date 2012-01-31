@@ -50,9 +50,8 @@ static GstStaticPadTemplate sinktemplate = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_STATIC_CAPS ("audio/x-raw, "
         "channels = (int) 1, "
         "rate = (int) 44100, "
-	"format = (string) { "
-	GST_AUDIO_NE(F32) ", "
-	GST_AUDIO_NE(F64) " }"));
+        "format = (string) { "
+        GST_AUDIO_NE (F32) ", " GST_AUDIO_NE (F64) " }"));
 static GstStaticPadTemplate srctemplate = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
@@ -60,8 +59,7 @@ static GstStaticPadTemplate srctemplate = GST_STATIC_PAD_TEMPLATE ("src",
         "channels = (int) 1, "
         "rate = (int) 44100, "
         "format = (string) { "
-	GST_AUDIO_NE(F32) ", "
-	GST_AUDIO_NE(F64) " }"));
+        GST_AUDIO_NE (F32) ", " GST_AUDIO_NE (F64) " }"));
 
 static GstElement *
 setup_audiocheblimit (void)
@@ -104,6 +102,7 @@ GST_START_TEST (test_type1_32_lp_0hz)
   GstCaps *caps;
   gfloat *in, *res, rms;
   gint i;
+  GstMapInfo map;
 
   audiocheblimit = setup_audiocheblimit ();
   /* Set to lowpass */
@@ -118,10 +117,11 @@ GST_START_TEST (test_type1_32_lp_0hz)
 
   g_object_set (G_OBJECT (audiocheblimit), "cutoff", 44100 / 4.0, NULL);
   inbuffer = gst_buffer_new_allocate (NULL, 128 * sizeof (gfloat), 0);
-  in = gst_buffer_map (inbuffer, NULL, NULL, GST_MAP_WRITE);
+  gst_buffer_map (inbuffer, &map, GST_MAP_WRITE);
+  in = (gfloat *) map.data;
   for (i = 0; i < 128; i++)
     in[i] = 1.0;
-  gst_buffer_unmap (inbuffer, in, -1);
+  gst_buffer_unmap (inbuffer, &map);
 
   caps = gst_caps_from_string (BUFFER_CAPS_STRING_32);
   fail_unless (gst_pad_set_caps (mysrcpad, caps));
@@ -134,7 +134,8 @@ GST_START_TEST (test_type1_32_lp_0hz)
   fail_unless_equals_int (g_list_length (buffers), 1);
   fail_if ((outbuffer = (GstBuffer *) buffers->data) == NULL);
 
-  res = gst_buffer_map (outbuffer, NULL, NULL, GST_MAP_READ);
+  gst_buffer_map (outbuffer, &map, GST_MAP_READ);
+  res = (gfloat *) map.data;
 
   rms = 0.0;
   for (i = 0; i < 128; i++)
@@ -142,7 +143,7 @@ GST_START_TEST (test_type1_32_lp_0hz)
   rms = sqrt (rms / 128.0);
   fail_unless (rms >= 0.9);
 
-  gst_buffer_unmap (outbuffer, res, -1);
+  gst_buffer_unmap (outbuffer, &map);
 
   /* cleanup */
   cleanup_audiocheblimit (audiocheblimit);
@@ -160,6 +161,7 @@ GST_START_TEST (test_type1_32_lp_22050hz)
   GstCaps *caps;
   gfloat *in, *res, rms;
   gint i;
+  GstMapInfo map;
 
   audiocheblimit = setup_audiocheblimit ();
   /* Set to lowpass */
@@ -174,12 +176,13 @@ GST_START_TEST (test_type1_32_lp_22050hz)
 
   g_object_set (G_OBJECT (audiocheblimit), "cutoff", 44100 / 4.0, NULL);
   inbuffer = gst_buffer_new_allocate (NULL, 128 * sizeof (gfloat), 0);
-  in = gst_buffer_map (inbuffer, NULL, NULL, GST_MAP_WRITE);
+  gst_buffer_map (inbuffer, &map, GST_MAP_WRITE);
+  in = (gfloat *) map.data;
   for (i = 0; i < 128; i += 2) {
     in[i] = 1.0;
     in[i + 1] = -1.0;
   }
-  gst_buffer_unmap (inbuffer, in, -1);
+  gst_buffer_unmap (inbuffer, &map);
 
   caps = gst_caps_from_string (BUFFER_CAPS_STRING_32);
   fail_unless (gst_pad_set_caps (mysrcpad, caps));
@@ -192,7 +195,8 @@ GST_START_TEST (test_type1_32_lp_22050hz)
   fail_unless_equals_int (g_list_length (buffers), 1);
   fail_if ((outbuffer = (GstBuffer *) buffers->data) == NULL);
 
-  res = gst_buffer_map (outbuffer, NULL, NULL, GST_MAP_READ);
+  gst_buffer_map (outbuffer, &map, GST_MAP_READ);
+  res = (gfloat *) map.data;
 
   rms = 0.0;
   for (i = 0; i < 128; i++)
@@ -200,7 +204,7 @@ GST_START_TEST (test_type1_32_lp_22050hz)
   rms = sqrt (rms / 128.0);
   fail_unless (rms <= 0.1);
 
-  gst_buffer_unmap (outbuffer, res, -1);
+  gst_buffer_unmap (outbuffer, &map);
 
   /* cleanup */
   cleanup_audiocheblimit (audiocheblimit);
@@ -218,6 +222,7 @@ GST_START_TEST (test_type1_32_hp_0hz)
   GstCaps *caps;
   gfloat *in, *res, rms;
   gint i;
+  GstMapInfo map;
 
   audiocheblimit = setup_audiocheblimit ();
   /* Set to highpass */
@@ -232,10 +237,11 @@ GST_START_TEST (test_type1_32_hp_0hz)
 
   g_object_set (G_OBJECT (audiocheblimit), "cutoff", 44100 / 4.0, NULL);
   inbuffer = gst_buffer_new_allocate (NULL, 128 * sizeof (gfloat), 0);
-  in = gst_buffer_map (inbuffer, NULL, NULL, GST_MAP_WRITE);
+  gst_buffer_map (inbuffer, &map, GST_MAP_WRITE);
+  in = (gfloat *) map.data;
   for (i = 0; i < 128; i++)
     in[i] = 1.0;
-  gst_buffer_unmap (inbuffer, in, -1);
+  gst_buffer_unmap (inbuffer, &map);
 
   caps = gst_caps_from_string (BUFFER_CAPS_STRING_32);
   fail_unless (gst_pad_set_caps (mysrcpad, caps));
@@ -248,7 +254,8 @@ GST_START_TEST (test_type1_32_hp_0hz)
   fail_unless_equals_int (g_list_length (buffers), 1);
   fail_if ((outbuffer = (GstBuffer *) buffers->data) == NULL);
 
-  res = gst_buffer_map (outbuffer, NULL, NULL, GST_MAP_READ);
+  gst_buffer_map (outbuffer, &map, GST_MAP_READ);
+  res = (gfloat *) map.data;
 
   rms = 0.0;
   for (i = 0; i < 128; i++)
@@ -256,7 +263,7 @@ GST_START_TEST (test_type1_32_hp_0hz)
   rms = sqrt (rms / 128.0);
   fail_unless (rms <= 0.1);
 
-  gst_buffer_unmap (outbuffer, res, -1);
+  gst_buffer_unmap (outbuffer, &map);
 
   /* cleanup */
   cleanup_audiocheblimit (audiocheblimit);
@@ -274,6 +281,7 @@ GST_START_TEST (test_type1_32_hp_22050hz)
   GstCaps *caps;
   gfloat *in, *res, rms;
   gint i;
+  GstMapInfo map;
 
   audiocheblimit = setup_audiocheblimit ();
   /* Set to highpass */
@@ -288,12 +296,13 @@ GST_START_TEST (test_type1_32_hp_22050hz)
 
   g_object_set (G_OBJECT (audiocheblimit), "cutoff", 44100 / 4.0, NULL);
   inbuffer = gst_buffer_new_allocate (NULL, 128 * sizeof (gfloat), 0);
-  in = gst_buffer_map (inbuffer, NULL, NULL, GST_MAP_WRITE);
+  gst_buffer_map (inbuffer, &map, GST_MAP_WRITE);
+  in = (gfloat *) map.data;
   for (i = 0; i < 128; i += 2) {
     in[i] = 1.0;
     in[i + 1] = -1.0;
   }
-  gst_buffer_unmap (inbuffer, in, -1);
+  gst_buffer_unmap (inbuffer, &map);
 
   caps = gst_caps_from_string (BUFFER_CAPS_STRING_32);
   fail_unless (gst_pad_set_caps (mysrcpad, caps));
@@ -306,7 +315,8 @@ GST_START_TEST (test_type1_32_hp_22050hz)
   fail_unless_equals_int (g_list_length (buffers), 1);
   fail_if ((outbuffer = (GstBuffer *) buffers->data) == NULL);
 
-  res = gst_buffer_map (outbuffer, NULL, NULL, GST_MAP_READ);
+  gst_buffer_map (outbuffer, &map, GST_MAP_READ);
+  res = (gfloat *) map.data;
 
   rms = 0.0;
   for (i = 0; i < 128; i++)
@@ -314,7 +324,7 @@ GST_START_TEST (test_type1_32_hp_22050hz)
   rms = sqrt (rms / 128.0);
   fail_unless (rms >= 0.9);
 
-  gst_buffer_unmap (outbuffer, res, -1);
+  gst_buffer_unmap (outbuffer, &map);
 
   /* cleanup */
   cleanup_audiocheblimit (audiocheblimit);
@@ -332,6 +342,7 @@ GST_START_TEST (test_type1_64_lp_0hz)
   GstCaps *caps;
   gdouble *in, *res, rms;
   gint i;
+  GstMapInfo map;
 
   audiocheblimit = setup_audiocheblimit ();
   /* Set to lowpass */
@@ -346,10 +357,11 @@ GST_START_TEST (test_type1_64_lp_0hz)
 
   g_object_set (G_OBJECT (audiocheblimit), "cutoff", 44100 / 4.0, NULL);
   inbuffer = gst_buffer_new_allocate (NULL, 128 * sizeof (gdouble), 0);
-  in = gst_buffer_map (inbuffer, NULL, NULL, GST_MAP_WRITE);
+  gst_buffer_map (inbuffer, &map, GST_MAP_WRITE);
+  in = (gdouble *) map.data;
   for (i = 0; i < 128; i++)
     in[i] = 1.0;
-  gst_buffer_unmap (inbuffer, in, -1);
+  gst_buffer_unmap (inbuffer, &map);
 
   caps = gst_caps_from_string (BUFFER_CAPS_STRING_64);
   fail_unless (gst_pad_set_caps (mysrcpad, caps));
@@ -362,7 +374,8 @@ GST_START_TEST (test_type1_64_lp_0hz)
   fail_unless_equals_int (g_list_length (buffers), 1);
   fail_if ((outbuffer = (GstBuffer *) buffers->data) == NULL);
 
-  res = gst_buffer_map (outbuffer, NULL, NULL, GST_MAP_READ);
+  gst_buffer_map (outbuffer, &map, GST_MAP_READ);
+  res = (gdouble *) map.data;
 
   rms = 0.0;
   for (i = 0; i < 128; i++)
@@ -370,7 +383,7 @@ GST_START_TEST (test_type1_64_lp_0hz)
   rms = sqrt (rms / 128.0);
   fail_unless (rms >= 0.9);
 
-  gst_buffer_unmap (outbuffer, res, -1);
+  gst_buffer_unmap (outbuffer, &map);
 
   /* cleanup */
   cleanup_audiocheblimit (audiocheblimit);
@@ -388,6 +401,7 @@ GST_START_TEST (test_type1_64_lp_22050hz)
   GstCaps *caps;
   gdouble *in, *res, rms;
   gint i;
+  GstMapInfo map;
 
   audiocheblimit = setup_audiocheblimit ();
   /* Set to lowpass */
@@ -402,12 +416,13 @@ GST_START_TEST (test_type1_64_lp_22050hz)
 
   g_object_set (G_OBJECT (audiocheblimit), "cutoff", 44100 / 4.0, NULL);
   inbuffer = gst_buffer_new_allocate (NULL, 128 * sizeof (gdouble), 0);
-  in = gst_buffer_map (inbuffer, NULL, NULL, GST_MAP_WRITE);
+  gst_buffer_map (inbuffer, &map, GST_MAP_WRITE);
+  in = (gdouble *) map.data;
   for (i = 0; i < 128; i += 2) {
     in[i] = 1.0;
     in[i + 1] = -1.0;
   }
-  gst_buffer_unmap (inbuffer, in, -1);
+  gst_buffer_unmap (inbuffer, &map);
 
   caps = gst_caps_from_string (BUFFER_CAPS_STRING_64);
   fail_unless (gst_pad_set_caps (mysrcpad, caps));
@@ -420,7 +435,8 @@ GST_START_TEST (test_type1_64_lp_22050hz)
   fail_unless_equals_int (g_list_length (buffers), 1);
   fail_if ((outbuffer = (GstBuffer *) buffers->data) == NULL);
 
-  res = gst_buffer_map (outbuffer, NULL, NULL, GST_MAP_READ);
+  gst_buffer_map (outbuffer, &map, GST_MAP_READ);
+  res = (gdouble *) map.data;
 
   rms = 0.0;
   for (i = 0; i < 128; i++)
@@ -428,7 +444,7 @@ GST_START_TEST (test_type1_64_lp_22050hz)
   rms = sqrt (rms / 128.0);
   fail_unless (rms <= 0.1);
 
-  gst_buffer_unmap (outbuffer, res, -1);
+  gst_buffer_unmap (outbuffer, &map);
 
   /* cleanup */
   cleanup_audiocheblimit (audiocheblimit);
@@ -446,6 +462,7 @@ GST_START_TEST (test_type1_64_hp_0hz)
   GstCaps *caps;
   gdouble *in, *res, rms;
   gint i;
+  GstMapInfo map;
 
   audiocheblimit = setup_audiocheblimit ();
   /* Set to highpass */
@@ -460,10 +477,11 @@ GST_START_TEST (test_type1_64_hp_0hz)
 
   g_object_set (G_OBJECT (audiocheblimit), "cutoff", 44100 / 4.0, NULL);
   inbuffer = gst_buffer_new_allocate (NULL, 128 * sizeof (gdouble), 0);
-  in = gst_buffer_map (inbuffer, NULL, NULL, GST_MAP_WRITE);
+  gst_buffer_map (inbuffer, &map, GST_MAP_WRITE);
+  in = (gdouble *) map.data;
   for (i = 0; i < 128; i++)
     in[i] = 1.0;
-  gst_buffer_unmap (inbuffer, in, -1);
+  gst_buffer_unmap (inbuffer, &map);
 
   caps = gst_caps_from_string (BUFFER_CAPS_STRING_64);
   fail_unless (gst_pad_set_caps (mysrcpad, caps));
@@ -476,7 +494,8 @@ GST_START_TEST (test_type1_64_hp_0hz)
   fail_unless_equals_int (g_list_length (buffers), 1);
   fail_if ((outbuffer = (GstBuffer *) buffers->data) == NULL);
 
-  res = gst_buffer_map (outbuffer, NULL, NULL, GST_MAP_READ);
+  gst_buffer_map (outbuffer, &map, GST_MAP_READ);
+  res = (gdouble *) map.data;
 
   rms = 0.0;
   for (i = 0; i < 128; i++)
@@ -484,7 +503,7 @@ GST_START_TEST (test_type1_64_hp_0hz)
   rms = sqrt (rms / 128.0);
   fail_unless (rms <= 0.1);
 
-  gst_buffer_unmap (outbuffer, res, -1);
+  gst_buffer_unmap (outbuffer, &map);
 
   /* cleanup */
   cleanup_audiocheblimit (audiocheblimit);
@@ -502,6 +521,7 @@ GST_START_TEST (test_type1_64_hp_22050hz)
   GstCaps *caps;
   gdouble *in, *res, rms;
   gint i;
+  GstMapInfo map;
 
   audiocheblimit = setup_audiocheblimit ();
   /* Set to highpass */
@@ -516,12 +536,13 @@ GST_START_TEST (test_type1_64_hp_22050hz)
 
   g_object_set (G_OBJECT (audiocheblimit), "cutoff", 44100 / 4.0, NULL);
   inbuffer = gst_buffer_new_allocate (NULL, 128 * sizeof (gdouble), 0);
-  in = gst_buffer_map (inbuffer, NULL, NULL, GST_MAP_WRITE);
+  gst_buffer_map (inbuffer, &map, GST_MAP_WRITE);
+  in = (gdouble *) map.data;
   for (i = 0; i < 128; i += 2) {
     in[i] = 1.0;
     in[i + 1] = -1.0;
   }
-  gst_buffer_unmap (inbuffer, in, -1);
+  gst_buffer_unmap (inbuffer, &map);
 
   caps = gst_caps_from_string (BUFFER_CAPS_STRING_64);
   fail_unless (gst_pad_set_caps (mysrcpad, caps));
@@ -534,7 +555,8 @@ GST_START_TEST (test_type1_64_hp_22050hz)
   fail_unless_equals_int (g_list_length (buffers), 1);
   fail_if ((outbuffer = (GstBuffer *) buffers->data) == NULL);
 
-  res = gst_buffer_map (outbuffer, NULL, NULL, GST_MAP_READ);
+  gst_buffer_map (outbuffer, &map, GST_MAP_READ);
+  res = (gdouble *) map.data;
 
   rms = 0.0;
   for (i = 0; i < 128; i++)
@@ -542,7 +564,7 @@ GST_START_TEST (test_type1_64_hp_22050hz)
   rms = sqrt (rms / 128.0);
   fail_unless (rms >= 0.9);
 
-  gst_buffer_unmap (outbuffer, res, -1);
+  gst_buffer_unmap (outbuffer, &map);
 
   /* cleanup */
   cleanup_audiocheblimit (audiocheblimit);
@@ -560,6 +582,7 @@ GST_START_TEST (test_type2_32_lp_0hz)
   GstCaps *caps;
   gfloat *in, *res, rms;
   gint i;
+  GstMapInfo map;
 
   audiocheblimit = setup_audiocheblimit ();
   /* Set to lowpass */
@@ -574,10 +597,11 @@ GST_START_TEST (test_type2_32_lp_0hz)
 
   g_object_set (G_OBJECT (audiocheblimit), "cutoff", 44100 / 4.0, NULL);
   inbuffer = gst_buffer_new_allocate (NULL, 128 * sizeof (gfloat), 0);
-  in = gst_buffer_map (inbuffer, NULL, NULL, GST_MAP_WRITE);
+  gst_buffer_map (inbuffer, &map, GST_MAP_WRITE);
+  in = (gfloat *) map.data;
   for (i = 0; i < 128; i++)
     in[i] = 1.0;
-  gst_buffer_unmap (inbuffer, in, -1);
+  gst_buffer_unmap (inbuffer, &map);
 
   caps = gst_caps_from_string (BUFFER_CAPS_STRING_32);
   fail_unless (gst_pad_set_caps (mysrcpad, caps));
@@ -590,7 +614,8 @@ GST_START_TEST (test_type2_32_lp_0hz)
   fail_unless_equals_int (g_list_length (buffers), 1);
   fail_if ((outbuffer = (GstBuffer *) buffers->data) == NULL);
 
-  res = gst_buffer_map (outbuffer, NULL, NULL, GST_MAP_READ);
+  gst_buffer_map (outbuffer, &map, GST_MAP_READ);
+  res = (gfloat *) map.data;
 
   rms = 0.0;
   for (i = 0; i < 128; i++)
@@ -598,7 +623,7 @@ GST_START_TEST (test_type2_32_lp_0hz)
   rms = sqrt (rms / 128.0);
   fail_unless (rms >= 0.9);
 
-  gst_buffer_unmap (outbuffer, res, -1);
+  gst_buffer_unmap (outbuffer, &map);
 
   /* cleanup */
   cleanup_audiocheblimit (audiocheblimit);
@@ -616,6 +641,7 @@ GST_START_TEST (test_type2_32_lp_22050hz)
   GstCaps *caps;
   gfloat *in, *res, rms;
   gint i;
+  GstMapInfo map;
 
   audiocheblimit = setup_audiocheblimit ();
   /* Set to lowpass */
@@ -630,12 +656,13 @@ GST_START_TEST (test_type2_32_lp_22050hz)
 
   g_object_set (G_OBJECT (audiocheblimit), "cutoff", 44100 / 4.0, NULL);
   inbuffer = gst_buffer_new_allocate (NULL, 128 * sizeof (gfloat), 0);
-  in = gst_buffer_map (inbuffer, NULL, NULL, GST_MAP_WRITE);
+  gst_buffer_map (inbuffer, &map, GST_MAP_WRITE);
+  in = (gfloat *) map.data;
   for (i = 0; i < 128; i += 2) {
     in[i] = 1.0;
     in[i + 1] = -1.0;
   }
-  gst_buffer_unmap (inbuffer, in, -1);
+  gst_buffer_unmap (inbuffer, &map);
 
   caps = gst_caps_from_string (BUFFER_CAPS_STRING_32);
   fail_unless (gst_pad_set_caps (mysrcpad, caps));
@@ -648,7 +675,8 @@ GST_START_TEST (test_type2_32_lp_22050hz)
   fail_unless_equals_int (g_list_length (buffers), 1);
   fail_if ((outbuffer = (GstBuffer *) buffers->data) == NULL);
 
-  res = gst_buffer_map (outbuffer, NULL, NULL, GST_MAP_READ);
+  gst_buffer_map (outbuffer, &map, GST_MAP_READ);
+  res = (gfloat *) map.data;
 
   rms = 0.0;
   for (i = 0; i < 128; i++)
@@ -656,7 +684,7 @@ GST_START_TEST (test_type2_32_lp_22050hz)
   rms = sqrt (rms / 128.0);
   fail_unless (rms <= 0.1);
 
-  gst_buffer_unmap (outbuffer, res, -1);
+  gst_buffer_unmap (outbuffer, &map);
 
   /* cleanup */
   cleanup_audiocheblimit (audiocheblimit);
@@ -674,6 +702,7 @@ GST_START_TEST (test_type2_32_hp_0hz)
   GstCaps *caps;
   gfloat *in, *res, rms;
   gint i;
+  GstMapInfo map;
 
   audiocheblimit = setup_audiocheblimit ();
   /* Set to highpass */
@@ -688,10 +717,11 @@ GST_START_TEST (test_type2_32_hp_0hz)
 
   g_object_set (G_OBJECT (audiocheblimit), "cutoff", 44100 / 4.0, NULL);
   inbuffer = gst_buffer_new_allocate (NULL, 128 * sizeof (gfloat), 0);
-  in = gst_buffer_map (inbuffer, NULL, NULL, GST_MAP_WRITE);
+  gst_buffer_map (inbuffer, &map, GST_MAP_WRITE);
+  in = (gfloat *) map.data;
   for (i = 0; i < 128; i++)
     in[i] = 1.0;
-  gst_buffer_unmap (inbuffer, in, -1);
+  gst_buffer_unmap (inbuffer, &map);
 
   caps = gst_caps_from_string (BUFFER_CAPS_STRING_32);
   fail_unless (gst_pad_set_caps (mysrcpad, caps));
@@ -704,7 +734,8 @@ GST_START_TEST (test_type2_32_hp_0hz)
   fail_unless_equals_int (g_list_length (buffers), 1);
   fail_if ((outbuffer = (GstBuffer *) buffers->data) == NULL);
 
-  res = gst_buffer_map (outbuffer, NULL, NULL, GST_MAP_READ);
+  gst_buffer_map (outbuffer, &map, GST_MAP_READ);
+  res = (gfloat *) map.data;
 
   rms = 0.0;
   for (i = 0; i < 128; i++)
@@ -712,7 +743,7 @@ GST_START_TEST (test_type2_32_hp_0hz)
   rms = sqrt (rms / 128.0);
   fail_unless (rms <= 0.1);
 
-  gst_buffer_unmap (outbuffer, res, -1);
+  gst_buffer_unmap (outbuffer, &map);
 
   /* cleanup */
   cleanup_audiocheblimit (audiocheblimit);
@@ -730,6 +761,7 @@ GST_START_TEST (test_type2_32_hp_22050hz)
   GstCaps *caps;
   gfloat *in, *res, rms;
   gint i;
+  GstMapInfo map;
 
   audiocheblimit = setup_audiocheblimit ();
   /* Set to highpass */
@@ -744,12 +776,13 @@ GST_START_TEST (test_type2_32_hp_22050hz)
 
   g_object_set (G_OBJECT (audiocheblimit), "cutoff", 44100 / 4.0, NULL);
   inbuffer = gst_buffer_new_allocate (NULL, 128 * sizeof (gfloat), 0);
-  in = gst_buffer_map (inbuffer, NULL, NULL, GST_MAP_WRITE);
+  gst_buffer_map (inbuffer, &map, GST_MAP_WRITE);
+  in = (gfloat *) map.data;
   for (i = 0; i < 128; i += 2) {
     in[i] = 1.0;
     in[i + 1] = -1.0;
   }
-  gst_buffer_unmap (inbuffer, in, -1);
+  gst_buffer_unmap (inbuffer, &map);
 
   caps = gst_caps_from_string (BUFFER_CAPS_STRING_32);
   fail_unless (gst_pad_set_caps (mysrcpad, caps));
@@ -762,7 +795,8 @@ GST_START_TEST (test_type2_32_hp_22050hz)
   fail_unless_equals_int (g_list_length (buffers), 1);
   fail_if ((outbuffer = (GstBuffer *) buffers->data) == NULL);
 
-  res = gst_buffer_map (outbuffer, NULL, NULL, GST_MAP_READ);
+  gst_buffer_map (outbuffer, &map, GST_MAP_READ);
+  res = (gfloat *) map.data;
 
   rms = 0.0;
   for (i = 0; i < 128; i++)
@@ -770,7 +804,7 @@ GST_START_TEST (test_type2_32_hp_22050hz)
   rms = sqrt (rms / 128.0);
   fail_unless (rms >= 0.9);
 
-  gst_buffer_unmap (outbuffer, res, -1);
+  gst_buffer_unmap (outbuffer, &map);
 
   /* cleanup */
   cleanup_audiocheblimit (audiocheblimit);
@@ -788,6 +822,7 @@ GST_START_TEST (test_type2_64_lp_0hz)
   GstCaps *caps;
   gdouble *in, *res, rms;
   gint i;
+  GstMapInfo map;
 
   audiocheblimit = setup_audiocheblimit ();
   /* Set to lowpass */
@@ -802,10 +837,11 @@ GST_START_TEST (test_type2_64_lp_0hz)
 
   g_object_set (G_OBJECT (audiocheblimit), "cutoff", 44100 / 4.0, NULL);
   inbuffer = gst_buffer_new_and_alloc (128 * sizeof (gdouble));
-  in = gst_buffer_map (inbuffer, NULL, NULL, GST_MAP_WRITE);
+  gst_buffer_map (inbuffer, &map, GST_MAP_WRITE);
+  in = (gdouble *) map.data;
   for (i = 0; i < 128; i++)
     in[i] = 1.0;
-  gst_buffer_unmap (inbuffer, in, -1);
+  gst_buffer_unmap (inbuffer, &map);
 
   caps = gst_caps_from_string (BUFFER_CAPS_STRING_64);
   fail_unless (gst_pad_set_caps (mysrcpad, caps));
@@ -818,7 +854,8 @@ GST_START_TEST (test_type2_64_lp_0hz)
   fail_unless_equals_int (g_list_length (buffers), 1);
   fail_if ((outbuffer = (GstBuffer *) buffers->data) == NULL);
 
-  res = gst_buffer_map (outbuffer, NULL, NULL, GST_MAP_READ);
+  gst_buffer_map (outbuffer, &map, GST_MAP_READ);
+  res = (gdouble *) map.data;
 
   rms = 0.0;
   for (i = 0; i < 128; i++)
@@ -826,7 +863,7 @@ GST_START_TEST (test_type2_64_lp_0hz)
   rms = sqrt (rms / 128.0);
   fail_unless (rms >= 0.9);
 
-  gst_buffer_unmap (outbuffer, res, -1);
+  gst_buffer_unmap (outbuffer, &map);
 
   /* cleanup */
   cleanup_audiocheblimit (audiocheblimit);
@@ -844,6 +881,7 @@ GST_START_TEST (test_type2_64_lp_22050hz)
   GstCaps *caps;
   gdouble *in, *res, rms;
   gint i;
+  GstMapInfo map;
 
   audiocheblimit = setup_audiocheblimit ();
   /* Set to lowpass */
@@ -858,12 +896,13 @@ GST_START_TEST (test_type2_64_lp_22050hz)
 
   g_object_set (G_OBJECT (audiocheblimit), "cutoff", 44100 / 4.0, NULL);
   inbuffer = gst_buffer_new_and_alloc (128 * sizeof (gdouble));
-  in = gst_buffer_map (inbuffer, NULL, NULL, GST_MAP_WRITE);
+  gst_buffer_map (inbuffer, &map, GST_MAP_WRITE);
+  in = (gdouble *) map.data;
   for (i = 0; i < 128; i += 2) {
     in[i] = 1.0;
     in[i + 1] = -1.0;
   }
-  gst_buffer_unmap (inbuffer, in, -1);
+  gst_buffer_unmap (inbuffer, &map);
 
   caps = gst_caps_from_string (BUFFER_CAPS_STRING_64);
   fail_unless (gst_pad_set_caps (mysrcpad, caps));
@@ -876,7 +915,8 @@ GST_START_TEST (test_type2_64_lp_22050hz)
   fail_unless_equals_int (g_list_length (buffers), 1);
   fail_if ((outbuffer = (GstBuffer *) buffers->data) == NULL);
 
-  res = gst_buffer_map (outbuffer, NULL, NULL, GST_MAP_READ);
+  gst_buffer_map (outbuffer, &map, GST_MAP_READ);
+  res = (gdouble *) map.data;
 
   rms = 0.0;
   for (i = 0; i < 128; i++)
@@ -884,7 +924,7 @@ GST_START_TEST (test_type2_64_lp_22050hz)
   rms = sqrt (rms / 128.0);
   fail_unless (rms <= 0.1);
 
-  gst_buffer_unmap (outbuffer, res, -1);
+  gst_buffer_unmap (outbuffer, &map);
 
   /* cleanup */
   cleanup_audiocheblimit (audiocheblimit);
@@ -902,6 +942,7 @@ GST_START_TEST (test_type2_64_hp_0hz)
   GstCaps *caps;
   gdouble *in, *res, rms;
   gint i;
+  GstMapInfo map;
 
   audiocheblimit = setup_audiocheblimit ();
   /* Set to highpass */
@@ -916,10 +957,11 @@ GST_START_TEST (test_type2_64_hp_0hz)
 
   g_object_set (G_OBJECT (audiocheblimit), "cutoff", 44100 / 4.0, NULL);
   inbuffer = gst_buffer_new_and_alloc (128 * sizeof (gdouble));
-  in = gst_buffer_map (inbuffer, NULL, NULL, GST_MAP_WRITE);
+  gst_buffer_map (inbuffer, &map, GST_MAP_WRITE);
+  in = (gdouble *) map.data;
   for (i = 0; i < 128; i++)
     in[i] = 1.0;
-  gst_buffer_unmap (inbuffer, in, -1);
+  gst_buffer_unmap (inbuffer, &map);
 
   caps = gst_caps_from_string (BUFFER_CAPS_STRING_64);
   fail_unless (gst_pad_set_caps (mysrcpad, caps));
@@ -932,7 +974,8 @@ GST_START_TEST (test_type2_64_hp_0hz)
   fail_unless_equals_int (g_list_length (buffers), 1);
   fail_if ((outbuffer = (GstBuffer *) buffers->data) == NULL);
 
-  res = gst_buffer_map (outbuffer, NULL, NULL, GST_MAP_READ);
+  gst_buffer_map (outbuffer, &map, GST_MAP_READ);
+  res = (gdouble *) map.data;
 
   rms = 0.0;
   for (i = 0; i < 128; i++)
@@ -940,7 +983,7 @@ GST_START_TEST (test_type2_64_hp_0hz)
   rms = sqrt (rms / 128.0);
   fail_unless (rms <= 0.1);
 
-  gst_buffer_unmap (outbuffer, res, -1);
+  gst_buffer_unmap (outbuffer, &map);
 
   /* cleanup */
   cleanup_audiocheblimit (audiocheblimit);
@@ -958,6 +1001,7 @@ GST_START_TEST (test_type2_64_hp_22050hz)
   GstCaps *caps;
   gdouble *in, *res, rms;
   gint i;
+  GstMapInfo map;
 
   audiocheblimit = setup_audiocheblimit ();
   /* Set to highpass */
@@ -972,12 +1016,13 @@ GST_START_TEST (test_type2_64_hp_22050hz)
 
   g_object_set (G_OBJECT (audiocheblimit), "cutoff", 44100 / 4.0, NULL);
   inbuffer = gst_buffer_new_and_alloc (128 * sizeof (gdouble));
-  in = gst_buffer_map (inbuffer, NULL, NULL, GST_MAP_WRITE);
+  gst_buffer_map (inbuffer, &map, GST_MAP_WRITE);
+  in = (gdouble *) map.data;
   for (i = 0; i < 128; i += 2) {
     in[i] = 1.0;
     in[i + 1] = -1.0;
   }
-  gst_buffer_unmap (inbuffer, in, -1);
+  gst_buffer_unmap (inbuffer, &map);
 
   caps = gst_caps_from_string (BUFFER_CAPS_STRING_64);
   fail_unless (gst_pad_set_caps (mysrcpad, caps));
@@ -990,7 +1035,8 @@ GST_START_TEST (test_type2_64_hp_22050hz)
   fail_unless_equals_int (g_list_length (buffers), 1);
   fail_if ((outbuffer = (GstBuffer *) buffers->data) == NULL);
 
-  res = gst_buffer_map (outbuffer, NULL, NULL, GST_MAP_READ);
+  gst_buffer_map (outbuffer, &map, GST_MAP_READ);
+  res = (gdouble *) map.data;
 
   rms = 0.0;
   for (i = 0; i < 128; i++)
@@ -998,7 +1044,7 @@ GST_START_TEST (test_type2_64_hp_22050hz)
   rms = sqrt (rms / 128.0);
   fail_unless (rms >= 0.9);
 
-  gst_buffer_unmap (outbuffer, res, -1);
+  gst_buffer_unmap (outbuffer, &map);
 
   /* cleanup */
   cleanup_audiocheblimit (audiocheblimit);

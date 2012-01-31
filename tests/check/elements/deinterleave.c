@@ -23,6 +23,7 @@
 
 #include <stdio.h>
 #include <gst/check/gstcheck.h>
+#include <gst/audio/audio.h>
 
 GST_START_TEST (test_create_and_unref)
 {
@@ -78,12 +79,13 @@ static GstFlowReturn
 deinterleave_chain_func (GstPad * pad, GstObject * parent, GstBuffer * buffer)
 {
   gint i;
-  gsize size;
+  GstMapInfo map;
   gfloat *indata;
 
   fail_unless (GST_IS_BUFFER (buffer));
-  indata = gst_buffer_map (buffer, &size, NULL, GST_MAP_READ);
-  fail_unless_equals_int (size, 48000 * sizeof (gfloat));
+  gst_buffer_map (buffer, &map, GST_MAP_READ);
+  indata = (gfloat *) map.data;
+  fail_unless_equals_int (map.size, 48000 * sizeof (gfloat));
   fail_unless (indata != NULL);
 
   if (strcmp (GST_PAD_NAME (pad), "sink0") == 0) {
@@ -95,7 +97,7 @@ deinterleave_chain_func (GstPad * pad, GstObject * parent, GstBuffer * buffer)
   } else {
     g_assert_not_reached ();
   }
-  gst_buffer_unmap (buffer, indata, size);
+  gst_buffer_unmap (buffer, &map);
   gst_buffer_unref (buffer);
 
   return GST_FLOW_OK;
@@ -130,6 +132,7 @@ GST_START_TEST (test_2_channels)
   GstBuffer *inbuf;
   GstCaps *caps;
   gfloat *indata;
+  GstMapInfo map;
 
   mysinkpads = g_new0 (GstPad *, 2);
   nsinkpads = 0;
@@ -159,12 +162,13 @@ GST_START_TEST (test_2_channels)
           GST_STATE_PLAYING) == GST_STATE_CHANGE_SUCCESS);
 
   inbuf = gst_buffer_new_and_alloc (2 * 48000 * sizeof (gfloat));
-  indata = gst_buffer_map (inbuf, NULL, NULL, GST_MAP_WRITE);
+  gst_buffer_map (inbuf, &map, GST_MAP_WRITE);
+  indata = (gfloat *) map.data;
   for (i = 0; i < 2 * 48000; i += 2) {
     indata[i] = -1.0;
     indata[i + 1] = 1.0;
   }
-  gst_buffer_unmap (inbuf, indata, -1);
+  gst_buffer_unmap (inbuf, &map);
   gst_pad_set_caps (mysrcpad, caps);
 
   fail_unless (gst_pad_push (mysrcpad, inbuf) == GST_FLOW_OK);
@@ -191,6 +195,7 @@ GST_START_TEST (test_2_channels_1_linked)
   GstBuffer *inbuf;
   GstCaps *caps;
   gfloat *indata;
+  GstMapInfo map;
 
   nsinkpads = 0;
   mysinkpads = g_new0 (GstPad *, 2);
@@ -220,12 +225,13 @@ GST_START_TEST (test_2_channels_1_linked)
           GST_STATE_PLAYING) == GST_STATE_CHANGE_SUCCESS);
 
   inbuf = gst_buffer_new_and_alloc (2 * 48000 * sizeof (gfloat));
-  indata = gst_buffer_map (inbuf, NULL, NULL, GST_MAP_WRITE);
+  gst_buffer_map (inbuf, &map, GST_MAP_WRITE);
+  indata = (gfloat *) map.data;
   for (i = 0; i < 2 * 48000; i += 2) {
     indata[i] = -1.0;
     indata[i + 1] = 1.0;
   }
-  gst_buffer_unmap (inbuf, indata, -1);
+  gst_buffer_unmap (inbuf, &map);
   gst_pad_set_caps (mysrcpad, caps);
 
   fail_unless (gst_pad_push (mysrcpad, inbuf) == GST_FLOW_OK);
@@ -252,6 +258,7 @@ GST_START_TEST (test_2_channels_caps_change)
   gint i;
   GstBuffer *inbuf;
   gfloat *indata;
+  GstMapInfo map;
 
   nsinkpads = 0;
   mysinkpads = g_new0 (GstPad *, 2);
@@ -281,12 +288,13 @@ GST_START_TEST (test_2_channels_caps_change)
           GST_STATE_PLAYING) == GST_STATE_CHANGE_SUCCESS);
 
   inbuf = gst_buffer_new_and_alloc (2 * 48000 * sizeof (gfloat));
-  indata = gst_buffer_map (inbuf, NULL, NULL, GST_MAP_WRITE);
+  gst_buffer_map (inbuf, &map, GST_MAP_WRITE);
+  indata = (gfloat *) map.data;
   for (i = 0; i < 2 * 48000; i += 2) {
     indata[i] = -1.0;
     indata[i + 1] = 1.0;
   }
-  gst_buffer_unmap (inbuf, indata, -1);
+  gst_buffer_unmap (inbuf, &map);
   gst_pad_set_caps (mysrcpad, caps);
 
   fail_unless (gst_pad_push (mysrcpad, inbuf) == GST_FLOW_OK);
@@ -295,12 +303,13 @@ GST_START_TEST (test_2_channels_caps_change)
   gst_pad_set_caps (mysrcpad, caps2);
 
   inbuf = gst_buffer_new_and_alloc (2 * 48000 * sizeof (gfloat));
-  indata = gst_buffer_map (inbuf, NULL, NULL, GST_MAP_WRITE);
+  gst_buffer_map (inbuf, &map, GST_MAP_WRITE);
+  indata = (gfloat *) map.data;
   for (i = 0; i < 2 * 48000; i += 2) {
     indata[i] = -1.0;
     indata[i + 1] = 1.0;
   }
-  gst_buffer_unmap (inbuf, indata, -1);
+  gst_buffer_unmap (inbuf, &map);
   gst_pad_set_caps (mysrcpad, caps2);
 
   /* Should work fine because the caps changed in a compatible way */
@@ -312,13 +321,14 @@ GST_START_TEST (test_2_channels_caps_change)
   gst_pad_set_caps (mysrcpad, caps2);
 
   inbuf = gst_buffer_new_and_alloc (3 * 48000 * sizeof (gfloat));
-  indata = gst_buffer_map (inbuf, NULL, NULL, GST_MAP_WRITE);
+  gst_buffer_map (inbuf, &map, GST_MAP_WRITE);
+  indata = (gfloat *) map.data;
   for (i = 0; i < 3 * 48000; i += 3) {
     indata[i] = -1.0;
     indata[i + 1] = 1.0;
     indata[i + 2] = 0.0;
   }
-  gst_buffer_unmap (inbuf, indata, -1);
+  gst_buffer_unmap (inbuf, &map);
   gst_pad_set_caps (mysrcpad, caps2);
 
   /* Should break because the caps changed in an incompatible way */
@@ -351,6 +361,7 @@ static void
 set_channel_positions (GstCaps * caps, int channels,
     GstAudioChannelPosition * channelpositions)
 {
+#if 0
   GValue chanpos = { 0 };
   GValue pos = { 0 };
   GstStructure *structure = gst_caps_get_structure (caps, 0);
@@ -367,6 +378,7 @@ set_channel_positions (GstCaps * caps, int channels,
 
   gst_structure_set_value (structure, "channel-positions", &chanpos);
   g_value_unset (&chanpos);
+#endif
 }
 
 static void
@@ -410,13 +422,15 @@ static GstPadProbeReturn
 float_buffer_check_probe (GstPad * pad, GstPadProbeInfo * info,
     gpointer userdata)
 {
+  GstMapInfo map;
   gfloat *data;
-  gsize size;
   guint padnum, numpads;
   guint num, i;
   GstCaps *caps;
   GstStructure *s;
+#if 0
   GstAudioChannelPosition *pos;
+#endif
   gint channels;
   GstBuffer *buffer = GST_PAD_PROBE_INFO_BUFFER (info);
 
@@ -431,13 +445,16 @@ float_buffer_check_probe (GstPad * pad, GstPadProbeInfo * info,
   fail_unless (gst_structure_get_int (s, "channels", &channels));
   fail_unless_equals_int (channels, 1);
   fail_unless (gst_structure_has_field (s, "channel-positions"));
+#if 0
   pos = gst_audio_get_channel_positions (s);
   fail_unless (pos != NULL && pos[0] == GST_AUDIO_CHANNEL_POSITION_NONE);
   g_free (pos);
+#endif
   gst_caps_unref (caps);
 
-  data = gst_buffer_map (buffer, &size, NULL, GST_MAP_READ);
-  num = size / sizeof (gfloat);
+  gst_buffer_map (buffer, &map, GST_MAP_READ);
+  data = (gfloat *) map.data;
+  num = map.size / sizeof (gfloat);
 
   /* Check buffer content */
   for (i = 0; i < num; ++i) {
@@ -452,7 +469,7 @@ float_buffer_check_probe (GstPad * pad, GstPadProbeInfo * info,
     /* check that the first channel is on pad src0, the second on src1 etc. */
     fail_unless_equals_int (rest, padnum);
   }
-  gst_buffer_unmap (buffer, data, size);
+  gst_buffer_unmap (buffer, &map);
 
   return GST_PAD_PROBE_OK;      /* don't drop data */
 }

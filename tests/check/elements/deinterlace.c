@@ -172,16 +172,18 @@ setup_test_pipeline (gint mode, GstCaps * infiltercaps, GstCaps * outfiltercaps,
 static gboolean
 test_buffer_equals (GstBuffer * buf_a, GstBuffer * buf_b)
 {
-  gsize s1, s2;
-  gpointer d1, d2;
+  GstMapInfo m1, m2;
   gboolean res = FALSE;
 
-  d1 = gst_buffer_map (buf_a, &s1, NULL, GST_MAP_READ);
-  d2 = gst_buffer_map (buf_b, &s2, NULL, GST_MAP_READ);
+  gst_buffer_map (buf_a, &m1, GST_MAP_READ);
+  gst_buffer_map (buf_b, &m2, GST_MAP_READ);
 
-  if (s1 == s2) {
-    res = memcmp (d1, d2, s1) == 0;
+  if (m1.size == m2.size) {
+    res = memcmp (m1.data, m2.data, m1.size) == 0;
   }
+  gst_buffer_unmap (buf_a, &m1);
+  gst_buffer_unmap (buf_b, &m2);
+
   return res;
 }
 
