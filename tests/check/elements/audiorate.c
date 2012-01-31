@@ -70,8 +70,7 @@ test_injector_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
   GstFlowReturn ret;
   GstPad *srcpad;
 
-  srcpad =
-      gst_element_get_static_pad (GST_ELEMENT (GST_PAD_PARENT (pad)), "src");
+  srcpad = gst_element_get_static_pad (GST_ELEMENT (parent), "src");
 
   /* since we're increasing timestamp/offsets, push this one first */
   GST_LOG (" passing buffer   [t=%" GST_TIME_FORMAT "-%" GST_TIME_FORMAT
@@ -131,6 +130,7 @@ test_injector_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
   }
 
   gst_buffer_unref (buf);
+  gst_object_unref (srcpad);
 
   return ret;
 }
@@ -210,7 +210,7 @@ do_perfect_stream_test (guint rate, const gchar * format,
   src = gst_element_factory_make ("audiotestsrc", "audiotestsrc");
   fail_unless (src != NULL);
 
-  g_object_set (src, "num-buffers", 100, NULL);
+  g_object_set (src, "num-buffers", 10, NULL);
 
   conv = gst_element_factory_make ("audioconvert", "audioconvert");
   fail_unless (conv != NULL);
