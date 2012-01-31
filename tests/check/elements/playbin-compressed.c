@@ -140,6 +140,10 @@ gst_caps_src_create (GstPushSrc * psrc, GstBuffer ** p_buf)
     }
   }
 
+  if (src->nbuffers == 0) {
+    gst_pad_set_caps (GST_BASE_SRC_PAD (psrc), src->caps);
+  }
+
   buf = gst_buffer_new ();
   GST_BUFFER_TIMESTAMP (buf) =
       gst_util_uint64_scale (src->nbuffers, GST_SECOND, 25);

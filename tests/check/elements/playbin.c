@@ -37,7 +37,7 @@ GST_START_TEST (test_sink_usage_video_only_stream)
   GstElement *playbin, *fakevideosink, *fakeaudiosink;
   GstState cur_state, pending_state;
   GstElement *source;
-  GstBuffer *last_frame;
+  GstSample *last_sample;
   gint nstreams;
 
   fail_unless (gst_element_register (NULL, "redvideosrc", GST_RANK_PRIMARY,
@@ -85,9 +85,9 @@ GST_START_TEST (test_sink_usage_video_only_stream)
   fail_unless (G_TYPE_FROM_INSTANCE (source) == gst_red_video_src_get_type ());
   gst_object_unref (source);
 
-  g_object_get (playbin, "frame", &last_frame, NULL);
-  fail_unless (GST_IS_BUFFER (last_frame));
-  gst_buffer_unref (last_frame);
+  g_object_get (playbin, "sample", &last_sample, NULL);
+  fail_unless (GST_IS_SAMPLE (last_sample));
+  gst_sample_unref (last_sample);
 
   gst_element_set_state (playbin, GST_STATE_NULL);
   gst_object_unref (playbin);
