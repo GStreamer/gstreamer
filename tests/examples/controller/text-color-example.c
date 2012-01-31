@@ -19,8 +19,8 @@ main (gint argc, gchar ** argv)
   gint res = 1;
   GstElement *src, *text, *sink;
   GstElement *bin;
-  GstLFOControlSource *cs;
-  GstLFOControlSource *cs_r, *cs_g, *cs_b;
+  GstControlSource *cs;
+  GstControlSource *cs_r, *cs_g, *cs_b;
   GstClock *clock;
   GstClockID clock_id;
   GstClockReturn wait_ret;
@@ -65,8 +65,7 @@ main (gint argc, gchar ** argv)
       "frequency", (gdouble) 0.11,
       "amplitude", (gdouble) 0.2, "offset", (gdouble) 0.5, NULL);
   gst_object_add_control_binding (GST_OBJECT_CAST (text),
-      gst_direct_control_binding_new (GST_OBJECT_CAST (text), "xpos",
-          GST_CONTROL_SOURCE (cs)));
+      gst_direct_control_binding_new (GST_OBJECT_CAST (text), "xpos", cs));
   gst_object_unref (cs);
 
   cs = gst_lfo_control_source_new ();
@@ -74,8 +73,7 @@ main (gint argc, gchar ** argv)
       "frequency", (gdouble) 0.04,
       "amplitude", (gdouble) 0.4, "offset", (gdouble) 0.5, NULL);
   gst_object_add_control_binding (GST_OBJECT_CAST (text),
-      gst_direct_control_binding_new (GST_OBJECT_CAST (text), "ypos",
-          GST_CONTROL_SOURCE (cs)));
+      gst_direct_control_binding_new (GST_OBJECT_CAST (text), "ypos", cs));
   gst_object_unref (cs);
 
   cs_r = gst_lfo_control_source_new ();
@@ -92,8 +90,7 @@ main (gint argc, gchar ** argv)
       "amplitude", (gdouble) 0.5, "offset", (gdouble) 0.5, NULL);
   gst_object_add_control_binding (GST_OBJECT_CAST (text),
       gst_argb_control_binding_new (GST_OBJECT_CAST (text), "color", NULL,
-          GST_CONTROL_SOURCE (cs_r), GST_CONTROL_SOURCE (cs_g),
-          GST_CONTROL_SOURCE (cs_b)));
+          cs_r, cs_g, cs_b));
   gst_object_unref (cs_r);
   gst_object_unref (cs_g);
   gst_object_unref (cs_b);

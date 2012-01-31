@@ -179,7 +179,6 @@ static void
 test_interpolation (void)
 {
   GstObject *e;
-  GstInterpolationControlSource *ics;
   GstTimedValueControlSource *tvcs;
   GstControlSource *cs;
   gint t, i1, i2, i3;
@@ -189,9 +188,8 @@ test_interpolation (void)
 
   e = (GstObject *) gst_element_factory_make ("testobj", NULL);
 
-  ics = gst_interpolation_control_source_new ();
-  tvcs = (GstTimedValueControlSource *) ics;
-  cs = (GstControlSource *) ics;
+  cs = gst_interpolation_control_source_new ();
+  tvcs = (GstTimedValueControlSource *) cs;
 
   gst_object_add_control_binding (e, gst_direct_control_binding_new (e, "int",
           cs));
@@ -207,15 +205,15 @@ test_interpolation (void)
   fprintf (f, "# Time None Linear Cubic\n");
 
   for (t = 0; t < 40; t++) {
-    g_object_set (ics, "mode", GST_INTERPOLATION_MODE_NONE, NULL);
+    g_object_set (cs, "mode", GST_INTERPOLATION_MODE_NONE, NULL);
     gst_object_sync_values (e, t * GST_SECOND);
     i1 = GST_TEST_OBJ (e)->val_int;
 
-    g_object_set (ics, "mode", GST_INTERPOLATION_MODE_LINEAR, NULL);
+    g_object_set (cs, "mode", GST_INTERPOLATION_MODE_LINEAR, NULL);
     gst_object_sync_values (e, t * GST_SECOND);
     i2 = GST_TEST_OBJ (e)->val_int;
 
-    g_object_set (ics, "mode", GST_INTERPOLATION_MODE_CUBIC, NULL);
+    g_object_set (cs, "mode", GST_INTERPOLATION_MODE_CUBIC, NULL);
     gst_object_sync_values (e, t * GST_SECOND);
     i3 = GST_TEST_OBJ (e)->val_int;
 
@@ -230,15 +228,15 @@ test_interpolation (void)
   fprintf (f, "# Time None Linear Cubic\n");
   n_values = 40 * 10;
 
-  g_object_set (ics, "mode", GST_INTERPOLATION_MODE_NONE, NULL);
+  g_object_set (cs, "mode", GST_INTERPOLATION_MODE_NONE, NULL);
   v1 = g_new0 (GValue, n_values);
   gst_object_get_value_array (e, "int", 0, GST_SECOND / 10, n_values, v1);
 
-  g_object_set (ics, "mode", GST_INTERPOLATION_MODE_LINEAR, NULL);
+  g_object_set (cs, "mode", GST_INTERPOLATION_MODE_LINEAR, NULL);
   v2 = g_new0 (GValue, n_values);
   gst_object_get_value_array (e, "int", 0, GST_SECOND / 10, n_values, v2);
 
-  g_object_set (ics, "mode", GST_INTERPOLATION_MODE_CUBIC, NULL);
+  g_object_set (cs, "mode", GST_INTERPOLATION_MODE_CUBIC, NULL);
   v3 = g_new0 (GValue, n_values);
   gst_object_get_value_array (e, "int", 0, GST_SECOND / 10, n_values, v3);
 
@@ -257,7 +255,7 @@ test_interpolation (void)
 
   fclose (f);
 
-  gst_object_unref (ics);
+  gst_object_unref (cs);
   gst_object_unref (e);
 }
 
@@ -265,7 +263,6 @@ static void
 test_lfo (void)
 {
   GstObject *e;
-  GstLFOControlSource *lfocs;
   GstControlSource *cs;
   gint t, i1, i2, i3, i4, i5;
   GValue *v1, *v2, *v3, *v4, *v5;
@@ -274,13 +271,12 @@ test_lfo (void)
 
   e = (GstObject *) gst_element_factory_make ("testobj", NULL);
 
-  lfocs = gst_lfo_control_source_new ();
-  cs = (GstControlSource *) lfocs;
+  cs = gst_lfo_control_source_new ();
 
   gst_object_add_control_binding (e, gst_direct_control_binding_new (e, "int",
           cs));
 
-  g_object_set (lfocs,
+  g_object_set (cs,
       "frequency", (gdouble) 0.05,
       "timeshift", (GstClockTime) 0,
       "amplitude", (gdouble) 0.5, "offset", (gdouble) 0.5, NULL);
@@ -291,23 +287,23 @@ test_lfo (void)
   fprintf (f, "# Time Sine Square Saw RevSaw Triangle\n");
 
   for (t = 0; t < 40; t++) {
-    g_object_set (lfocs, "waveform", GST_LFO_WAVEFORM_SINE, NULL);
+    g_object_set (cs, "waveform", GST_LFO_WAVEFORM_SINE, NULL);
     gst_object_sync_values (e, t * GST_SECOND);
     i1 = GST_TEST_OBJ (e)->val_int;
 
-    g_object_set (lfocs, "waveform", GST_LFO_WAVEFORM_SQUARE, NULL);
+    g_object_set (cs, "waveform", GST_LFO_WAVEFORM_SQUARE, NULL);
     gst_object_sync_values (e, t * GST_SECOND);
     i2 = GST_TEST_OBJ (e)->val_int;
 
-    g_object_set (lfocs, "waveform", GST_LFO_WAVEFORM_SAW, NULL);
+    g_object_set (cs, "waveform", GST_LFO_WAVEFORM_SAW, NULL);
     gst_object_sync_values (e, t * GST_SECOND);
     i3 = GST_TEST_OBJ (e)->val_int;
 
-    g_object_set (lfocs, "waveform", GST_LFO_WAVEFORM_REVERSE_SAW, NULL);
+    g_object_set (cs, "waveform", GST_LFO_WAVEFORM_REVERSE_SAW, NULL);
     gst_object_sync_values (e, t * GST_SECOND);
     i4 = GST_TEST_OBJ (e)->val_int;
 
-    g_object_set (lfocs, "waveform", GST_LFO_WAVEFORM_TRIANGLE, NULL);
+    g_object_set (cs, "waveform", GST_LFO_WAVEFORM_TRIANGLE, NULL);
     gst_object_sync_values (e, t * GST_SECOND);
     i5 = GST_TEST_OBJ (e)->val_int;
 
@@ -322,23 +318,23 @@ test_lfo (void)
   fprintf (f, "# Time Sine Square Saw RevSaw Triangle\n");
   n_values = 40 * 10;
 
-  g_object_set (lfocs, "waveform", GST_LFO_WAVEFORM_SINE, NULL);
+  g_object_set (cs, "waveform", GST_LFO_WAVEFORM_SINE, NULL);
   v1 = g_new0 (GValue, n_values);
   gst_object_get_value_array (e, "int", 0, GST_SECOND / 10, n_values, v1);
 
-  g_object_set (lfocs, "waveform", GST_LFO_WAVEFORM_SQUARE, NULL);
+  g_object_set (cs, "waveform", GST_LFO_WAVEFORM_SQUARE, NULL);
   v2 = g_new0 (GValue, n_values);
   gst_object_get_value_array (e, "int", 0, GST_SECOND / 10, n_values, v2);
 
-  g_object_set (lfocs, "waveform", GST_LFO_WAVEFORM_SAW, NULL);
+  g_object_set (cs, "waveform", GST_LFO_WAVEFORM_SAW, NULL);
   v3 = g_new0 (GValue, n_values);
   gst_object_get_value_array (e, "int", 0, GST_SECOND / 10, n_values, v3);
 
-  g_object_set (lfocs, "waveform", GST_LFO_WAVEFORM_REVERSE_SAW, NULL);
+  g_object_set (cs, "waveform", GST_LFO_WAVEFORM_REVERSE_SAW, NULL);
   v4 = g_new0 (GValue, n_values);
   gst_object_get_value_array (e, "int", 0, GST_SECOND / 10, n_values, v4);
 
-  g_object_set (lfocs, "waveform", GST_LFO_WAVEFORM_TRIANGLE, NULL);
+  g_object_set (cs, "waveform", GST_LFO_WAVEFORM_TRIANGLE, NULL);
   v5 = g_new0 (GValue, n_values);
   gst_object_get_value_array (e, "int", 0, GST_SECOND / 10, n_values, v5);
 
@@ -364,7 +360,7 @@ test_lfo (void)
 
   fclose (f);
 
-  gst_object_unref (lfocs);
+  gst_object_unref (cs);
   gst_object_unref (e);
 }
 
@@ -372,7 +368,6 @@ static void
 test_chained_lfo (void)
 {
   GstObject *e;
-  GstLFOControlSource *lfocs1, *lfocs2;
   GstControlSource *cs1, *cs2;
   gint t, i1;
   GValue *v1;
@@ -381,24 +376,22 @@ test_chained_lfo (void)
 
   e = (GstObject *) gst_element_factory_make ("testobj", NULL);
 
-  lfocs1 = gst_lfo_control_source_new ();
-  cs1 = (GstControlSource *) lfocs1;
+  cs1 = gst_lfo_control_source_new ();
 
   gst_object_add_control_binding (e, gst_direct_control_binding_new (e, "int",
           cs1));
 
-  g_object_set (lfocs1,
+  g_object_set (cs1,
       "waveform", GST_LFO_WAVEFORM_SINE,
       "frequency", (gdouble) 0.05,
       "timeshift", (GstClockTime) 0, "offset", (gdouble) 0.5, NULL);
 
-  lfocs2 = gst_lfo_control_source_new ();
-  cs2 = (GstControlSource *) lfocs2;
+  cs2 = gst_lfo_control_source_new ();
 
-  gst_object_add_control_binding ((GstObject *) lfocs1,
-      gst_direct_control_binding_new ((GstObject *) lfocs1, "amplitude", cs2));
+  gst_object_add_control_binding ((GstObject *) cs1,
+      gst_direct_control_binding_new ((GstObject *) cs1, "amplitude", cs2));
 
-  g_object_set (lfocs2,
+  g_object_set (cs2,
       "waveform", GST_LFO_WAVEFORM_SINE,
       "frequency", (gdouble) 0.05,
       "timeshift", (GstClockTime) 0,
@@ -436,8 +429,8 @@ test_chained_lfo (void)
 
   fclose (f);
 
-  gst_object_unref (lfocs1);
-  gst_object_unref (lfocs2);
+  gst_object_unref (cs1);
+  gst_object_unref (cs2);
   gst_object_unref (e);
 }
 

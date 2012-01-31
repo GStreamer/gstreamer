@@ -418,7 +418,7 @@ gst_lfo_control_source_reset (GstLFOControlSource * self)
  *
  * Returns: (transfer full): a new, unbound #GstLFOControlSource.
  */
-GstLFOControlSource *
+GstControlSource *
 gst_lfo_control_source_new (void)
 {
   return g_object_newv (GST_TYPE_LFO_CONTROL_SOURCE, 0, NULL);

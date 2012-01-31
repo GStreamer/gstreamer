@@ -279,22 +279,20 @@ teardown (void)
 GST_START_TEST (controller_controlsource_empty1)
 {
   GstElement *elem;
-  GstControlSource *csource;
+  GstControlSource *cs;
 
   elem = gst_element_factory_make ("testobj", NULL);
 
-  csource = (GstControlSource *) gst_interpolation_control_source_new ();
-  fail_unless (csource != NULL, NULL);
+  cs = gst_interpolation_control_source_new ();
 
   fail_unless (gst_object_add_control_binding (GST_OBJECT (elem),
-          gst_direct_control_binding_new (GST_OBJECT (elem), "int",
-              (GstControlSource *) csource)));
+          gst_direct_control_binding_new (GST_OBJECT (elem), "int", cs)));
 
   /* don't fail on empty control point lists */
   gst_object_sync_values (GST_OBJECT (elem), 0 * GST_SECOND);
 
   /* unref objects */
-  gst_object_unref (csource);
+  gst_object_unref (cs);
   gst_object_unref (elem);
 }
 
@@ -304,30 +302,28 @@ GST_END_TEST;
 GST_START_TEST (controller_controlsource_empty2)
 {
   GstElement *elem;
-  GstInterpolationControlSource *csource;
-  GstTimedValueControlSource *cs;
+  GstControlSource *cs;
+  GstTimedValueControlSource *tvcs;
 
   elem = gst_element_factory_make ("testobj", NULL);
 
-  csource = gst_interpolation_control_source_new ();
-  fail_unless (csource != NULL, NULL);
+  cs = gst_interpolation_control_source_new ();
 
   fail_unless (gst_object_add_control_binding (GST_OBJECT (elem),
-          gst_direct_control_binding_new (GST_OBJECT (elem), "int",
-              (GstControlSource *) csource)));
+          gst_direct_control_binding_new (GST_OBJECT (elem), "int", cs)));
 
   /* set control values */
-  cs = (GstTimedValueControlSource *) csource;
-  gst_timed_value_control_source_set (cs, 0 * GST_SECOND, 0);
+  tvcs = (GstTimedValueControlSource *) cs;
+  gst_timed_value_control_source_set (tvcs, 0 * GST_SECOND, 0);
 
   /* ... and unset the value */
-  gst_timed_value_control_source_unset (cs, 0 * GST_SECOND);
+  gst_timed_value_control_source_unset (tvcs, 0 * GST_SECOND);
 
   /* don't fail on empty control point lists */
   gst_object_sync_values (GST_OBJECT (elem), 0 * GST_SECOND);
 
   /* unref objects */
-  gst_object_unref (csource);
+  gst_object_unref (cs);
   gst_object_unref (elem);
 }
 
@@ -336,25 +332,22 @@ GST_END_TEST;
 /* test timed value handling without interpolation */
 GST_START_TEST (controller_interpolation_none)
 {
-  GstInterpolationControlSource *csource;
-  GstTimedValueControlSource *tvcs;
   GstControlSource *cs;
+  GstTimedValueControlSource *tvcs;
   GstElement *elem;
   gdouble v;
 
   elem = gst_element_factory_make ("testobj", NULL);
 
   /* new interpolation control source */
-  csource = gst_interpolation_control_source_new ();
-  tvcs = (GstTimedValueControlSource *) csource;
-  cs = (GstControlSource *) csource;
+  cs = gst_interpolation_control_source_new ();
+  tvcs = (GstTimedValueControlSource *) cs;
 
-  fail_unless (csource != NULL);
   fail_unless (gst_object_add_control_binding (GST_OBJECT (elem),
           gst_direct_control_binding_new (GST_OBJECT (elem), "int", cs)));
 
   /* set interpolation mode */
-  g_object_set (csource, "mode", GST_INTERPOLATION_MODE_NONE, NULL);
+  g_object_set (cs, "mode", GST_INTERPOLATION_MODE_NONE, NULL);
 
   /* set control values */
   fail_unless (gst_timed_value_control_source_set (tvcs, 0 * GST_SECOND, 0.0));
@@ -380,7 +373,7 @@ GST_START_TEST (controller_interpolation_none)
   gst_object_sync_values (GST_OBJECT (elem), 3 * GST_SECOND);
   fail_unless_equals_int (GST_TEST_OBJ (elem)->val_int, 100);
 
-  gst_object_unref (csource);
+  gst_object_unref (cs);
   gst_object_unref (elem);
 }
 
@@ -389,24 +382,21 @@ GST_END_TEST;
 /* test timed value handling with linear interpolation */
 GST_START_TEST (controller_interpolation_linear)
 {
-  GstInterpolationControlSource *csource;
-  GstTimedValueControlSource *tvcs;
   GstControlSource *cs;
+  GstTimedValueControlSource *tvcs;
   GstElement *elem;
 
   elem = gst_element_factory_make ("testobj", NULL);
 
   /* new interpolation control source */
-  csource = gst_interpolation_control_source_new ();
-  tvcs = (GstTimedValueControlSource *) csource;
-  cs = (GstControlSource *) csource;
+  cs = gst_interpolation_control_source_new ();
+  tvcs = (GstTimedValueControlSource *) cs;
 
-  fail_unless (csource != NULL);
   fail_unless (gst_object_add_control_binding (GST_OBJECT (elem),
           gst_direct_control_binding_new (GST_OBJECT (elem), "int", cs)));
 
   /* set interpolation mode */
-  g_object_set (csource, "mode", GST_INTERPOLATION_MODE_LINEAR, NULL);
+  g_object_set (cs, "mode", GST_INTERPOLATION_MODE_LINEAR, NULL);
 
   /* set control values */
   fail_unless (gst_timed_value_control_source_set (tvcs, 0 * GST_SECOND, 0.0));
@@ -420,7 +410,7 @@ GST_START_TEST (controller_interpolation_linear)
   gst_object_sync_values (GST_OBJECT (elem), 2 * GST_SECOND);
   fail_unless_equals_int (GST_TEST_OBJ (elem)->val_int, 100);
 
-  gst_object_unref (csource);
+  gst_object_unref (cs);
   gst_object_unref (elem);
 }
 
@@ -429,24 +419,21 @@ GST_END_TEST;
 /* test timed value handling with cubic interpolation */
 GST_START_TEST (controller_interpolation_cubic)
 {
-  GstInterpolationControlSource *csource;
-  GstTimedValueControlSource *tvcs;
   GstControlSource *cs;
+  GstTimedValueControlSource *tvcs;
   GstElement *elem;
 
   elem = gst_element_factory_make ("testobj", NULL);
 
   /* new interpolation control source */
-  csource = gst_interpolation_control_source_new ();
-  tvcs = (GstTimedValueControlSource *) csource;
-  cs = (GstControlSource *) csource;
+  cs = gst_interpolation_control_source_new ();
+  tvcs = (GstTimedValueControlSource *) cs;
 
-  fail_unless (csource != NULL);
   fail_unless (gst_object_add_control_binding (GST_OBJECT (elem),
           gst_direct_control_binding_new (GST_OBJECT (elem), "double", cs)));
 
   /* set interpolation mode */
-  g_object_set (csource, "mode", GST_INTERPOLATION_MODE_CUBIC, NULL);
+  g_object_set (cs, "mode", GST_INTERPOLATION_MODE_CUBIC, NULL);
 
   /* set control values */
   fail_unless (gst_timed_value_control_source_set (tvcs, 0 * GST_SECOND, 0.0));
@@ -469,7 +456,7 @@ GST_START_TEST (controller_interpolation_cubic)
   gst_object_sync_values (GST_OBJECT (elem), 5 * GST_SECOND);
   fail_unless_equals_float (GST_TEST_OBJ (elem)->val_double, 80.0);
 
-  gst_object_unref (csource);
+  gst_object_unref (cs);
   gst_object_unref (elem);
 }
 
@@ -478,24 +465,21 @@ GST_END_TEST;
 /* test timed value handling with cubic interpolation */
 GST_START_TEST (controller_interpolation_cubic_too_few_cp)
 {
-  GstInterpolationControlSource *csource;
-  GstTimedValueControlSource *tvcs;
   GstControlSource *cs;
+  GstTimedValueControlSource *tvcs;
   GstElement *elem;
 
   elem = gst_element_factory_make ("testobj", NULL);
 
   /* new interpolation control source */
-  csource = gst_interpolation_control_source_new ();
-  tvcs = (GstTimedValueControlSource *) csource;
-  cs = (GstControlSource *) csource;
+  cs = gst_interpolation_control_source_new ();
+  tvcs = (GstTimedValueControlSource *) cs;
 
-  fail_unless (csource != NULL);
   fail_unless (gst_object_add_control_binding (GST_OBJECT (elem),
           gst_direct_control_binding_new (GST_OBJECT (elem), "double", cs)));
 
   /* set interpolation mode */
-  g_object_set (csource, "mode", GST_INTERPOLATION_MODE_CUBIC, NULL);
+  g_object_set (cs, "mode", GST_INTERPOLATION_MODE_CUBIC, NULL);
 
   /* set 2 control values */
   fail_unless (gst_timed_value_control_source_set (tvcs, 0 * GST_SECOND, 0.0));
@@ -511,7 +495,7 @@ GST_START_TEST (controller_interpolation_cubic_too_few_cp)
   gst_object_sync_values (GST_OBJECT (elem), 2 * GST_SECOND);
   fail_unless_equals_float (GST_TEST_OBJ (elem)->val_double, 40.0);
 
-  gst_object_unref (csource);
+  gst_object_unref (cs);
   gst_object_unref (elem);
 }
 
@@ -520,24 +504,21 @@ GST_END_TEST;
 /* test _unset() */
 GST_START_TEST (controller_interpolation_unset)
 {
-  GstInterpolationControlSource *csource;
-  GstTimedValueControlSource *tvcs;
   GstControlSource *cs;
+  GstTimedValueControlSource *tvcs;
   GstElement *elem;
 
   elem = gst_element_factory_make ("testobj", NULL);
 
   /* new interpolation control source */
-  csource = gst_interpolation_control_source_new ();
-  tvcs = (GstTimedValueControlSource *) csource;
-  cs = (GstControlSource *) csource;
+  cs = gst_interpolation_control_source_new ();
+  tvcs = (GstTimedValueControlSource *) cs;
 
-  fail_unless (csource != NULL);
   fail_unless (gst_object_add_control_binding (GST_OBJECT (elem),
           gst_direct_control_binding_new (GST_OBJECT (elem), "int", cs)));
 
   /* set interpolation mode */
-  g_object_set (csource, "mode", GST_INTERPOLATION_MODE_NONE, NULL);
+  g_object_set (cs, "mode", GST_INTERPOLATION_MODE_NONE, NULL);
 
   /* set control values */
   fail_unless (gst_timed_value_control_source_set (tvcs, 0 * GST_SECOND, 0.0));
@@ -567,7 +548,7 @@ GST_START_TEST (controller_interpolation_unset)
   gst_timed_value_control_source_unset_all (tvcs);
   fail_if (gst_timed_value_control_source_unset (tvcs, 2 * GST_SECOND));
 
-  gst_object_unref (csource);
+  gst_object_unref (cs);
   gst_object_unref (elem);
 }
 
@@ -576,24 +557,21 @@ GST_END_TEST;
 /* test _unset_all() */
 GST_START_TEST (controller_interpolation_unset_all)
 {
-  GstInterpolationControlSource *csource;
-  GstTimedValueControlSource *tvcs;
   GstControlSource *cs;
+  GstTimedValueControlSource *tvcs;
   GstElement *elem;
 
   elem = gst_element_factory_make ("testobj", NULL);
 
   /* new interpolation control source */
-  csource = gst_interpolation_control_source_new ();
-  tvcs = (GstTimedValueControlSource *) csource;
-  cs = (GstControlSource *) csource;
+  cs = gst_interpolation_control_source_new ();
+  tvcs = (GstTimedValueControlSource *) cs;
 
-  fail_unless (csource != NULL);
   fail_unless (gst_object_add_control_binding (GST_OBJECT (elem),
           gst_direct_control_binding_new (GST_OBJECT (elem), "int", cs)));
 
   /* set interpolation mode */
-  g_object_set (csource, "mode", GST_INTERPOLATION_MODE_NONE, NULL);
+  g_object_set (cs, "mode", GST_INTERPOLATION_MODE_NONE, NULL);
 
   /* set control values */
   fail_unless (gst_timed_value_control_source_set (tvcs, 0 * GST_SECOND, 0.0));
@@ -613,7 +591,7 @@ GST_START_TEST (controller_interpolation_unset_all)
   gst_object_sync_values (GST_OBJECT (elem), 1 * GST_SECOND);
   fail_unless_equals_int (GST_TEST_OBJ (elem)->val_int, 0);
 
-  gst_object_unref (csource);
+  gst_object_unref (cs);
   gst_object_unref (elem);
 }
 
@@ -622,9 +600,8 @@ GST_END_TEST;
 /* test retrieval of an array of values with get_value_array() */
 GST_START_TEST (controller_interpolation_linear_value_array)
 {
-  GstInterpolationControlSource *csource;
-  GstTimedValueControlSource *tvcs;
   GstControlSource *cs;
+  GstTimedValueControlSource *tvcs;
   GstElement *elem;
   gdouble *raw_values;
   GValue *g_values;
@@ -632,16 +609,14 @@ GST_START_TEST (controller_interpolation_linear_value_array)
   elem = gst_element_factory_make ("testobj", NULL);
 
   /* new interpolation control source */
-  csource = gst_interpolation_control_source_new ();
-  tvcs = (GstTimedValueControlSource *) csource;
-  cs = (GstControlSource *) csource;
+  cs = gst_interpolation_control_source_new ();
+  tvcs = (GstTimedValueControlSource *) cs;
 
-  fail_unless (csource != NULL);
   fail_unless (gst_object_add_control_binding (GST_OBJECT (elem),
           gst_direct_control_binding_new (GST_OBJECT (elem), "int", cs)));
 
   /* set interpolation mode */
-  g_object_set (csource, "mode", GST_INTERPOLATION_MODE_LINEAR, NULL);
+  g_object_set (cs, "mode", GST_INTERPOLATION_MODE_LINEAR, NULL);
 
   /* set control values */
   fail_unless (gst_timed_value_control_source_set (tvcs, 0 * GST_SECOND, 0.0));
@@ -669,7 +644,7 @@ GST_START_TEST (controller_interpolation_linear_value_array)
 
   g_free (g_values);
 
-  gst_object_unref (csource);
+  gst_object_unref (cs);
   gst_object_unref (elem);
 }
 
@@ -678,24 +653,21 @@ GST_END_TEST;
 /* test if values below minimum and above maximum are clipped */
 GST_START_TEST (controller_interpolation_linear_invalid_values)
 {
-  GstInterpolationControlSource *csource;
-  GstTimedValueControlSource *tvcs;
   GstControlSource *cs;
+  GstTimedValueControlSource *tvcs;
   GstElement *elem;
 
   elem = gst_element_factory_make ("testobj", NULL);
 
   /* new interpolation control source */
-  csource = gst_interpolation_control_source_new ();
-  tvcs = (GstTimedValueControlSource *) csource;
-  cs = (GstControlSource *) csource;
+  cs = gst_interpolation_control_source_new ();
+  tvcs = (GstTimedValueControlSource *) cs;
 
-  fail_unless (csource != NULL);
   fail_unless (gst_object_add_control_binding (GST_OBJECT (elem),
           gst_direct_control_binding_new (GST_OBJECT (elem), "float", cs)));
 
   /* set interpolation mode */
-  g_object_set (csource, "mode", GST_INTERPOLATION_MODE_LINEAR, NULL);
+  g_object_set (cs, "mode", GST_INTERPOLATION_MODE_LINEAR, NULL);
 
   /* set control values */
   fail_unless (gst_timed_value_control_source_set (tvcs, 0 * GST_SECOND, 2.0));
@@ -722,7 +694,7 @@ GST_START_TEST (controller_interpolation_linear_invalid_values)
   gst_object_sync_values (GST_OBJECT (elem), 4 * GST_SECOND);
   fail_unless_equals_float (GST_TEST_OBJ (elem)->val_float, 0.0);
 
-  gst_object_unref (csource);
+  gst_object_unref (cs);
   gst_object_unref (elem);
 }
 
@@ -730,30 +702,26 @@ GST_END_TEST;
 
 GST_START_TEST (controller_interpolation_linear_default_values)
 {
-  GstInterpolationControlSource *csource;
-  GstTimedValueControlSource *tvcs;
   GstControlSource *cs;
+  GstTimedValueControlSource *tvcs;
   GstElement *elem;
 
   elem = gst_element_factory_make ("testobj", NULL);
 
   /* new interpolation control source */
-  csource = gst_interpolation_control_source_new ();
-  tvcs = (GstTimedValueControlSource *) csource;
-  cs = (GstControlSource *) csource;
+  cs = gst_interpolation_control_source_new ();
+  tvcs = (GstTimedValueControlSource *) cs;
 
-  fail_unless (csource != NULL);
   fail_unless (gst_object_add_control_binding (GST_OBJECT (elem),
           gst_direct_control_binding_new (GST_OBJECT (elem), "int", cs)));
 
   /* set interpolation mode */
-  g_object_set (csource, "mode", GST_INTERPOLATION_MODE_LINEAR, NULL);
+  g_object_set (cs, "mode", GST_INTERPOLATION_MODE_LINEAR, NULL);
 
   /* Should fail if no value was set yet
    * FIXME: will not fail, as interpolation assumes val[0]=default_value if
    * nothing else is set.
-   fail_if (gst_control_source_get_value (GST_CONTROL_SOURCE (csource),
-   1 * GST_SECOND, &val_int));
+   fail_if (gst_timed_value_control_source_set (tvcs, 1 * GST_SECOND, &val_int));
    */
 
   /* set control values */
@@ -788,7 +756,7 @@ GST_START_TEST (controller_interpolation_linear_default_values)
   gst_object_sync_values (GST_OBJECT (elem), 2 * GST_SECOND);
   fail_unless_equals_int (GST_TEST_OBJ (elem)->val_int, 100);
 
-  gst_object_unref (csource);
+  gst_object_unref (cs);
   gst_object_unref (elem);
 }
 
@@ -797,32 +765,27 @@ GST_END_TEST;
 /* test gst_controller_set_disabled() with linear interpolation */
 GST_START_TEST (controller_interpolation_linear_disabled)
 {
-  GstInterpolationControlSource *csource1, *csource2;
-  GstTimedValueControlSource *tvcs1, *tvcs2;
   GstControlSource *cs1, *cs2;
+  GstTimedValueControlSource *tvcs1, *tvcs2;
   GstElement *elem;
 
   elem = gst_element_factory_make ("testobj", NULL);
 
   /* new interpolation control source */
-  csource1 = gst_interpolation_control_source_new ();
-  tvcs1 = (GstTimedValueControlSource *) csource1;
-  cs1 = (GstControlSource *) csource1;
+  cs1 = gst_interpolation_control_source_new ();
+  tvcs1 = (GstTimedValueControlSource *) cs1;
 
-  csource2 = gst_interpolation_control_source_new ();
-  tvcs2 = (GstTimedValueControlSource *) csource2;
-  cs2 = (GstControlSource *) csource2;
+  cs2 = gst_interpolation_control_source_new ();
+  tvcs2 = (GstTimedValueControlSource *) cs2;
 
-  fail_unless (csource1 != NULL);
   fail_unless (gst_object_add_control_binding (GST_OBJECT (elem),
           gst_direct_control_binding_new (GST_OBJECT (elem), "int", cs1)));
-  fail_unless (csource2 != NULL);
   fail_unless (gst_object_add_control_binding (GST_OBJECT (elem),
           gst_direct_control_binding_new (GST_OBJECT (elem), "double", cs2)));
 
   /* set interpolation mode */
-  g_object_set (csource1, "mode", GST_INTERPOLATION_MODE_LINEAR, NULL);
-  g_object_set (csource2, "mode", GST_INTERPOLATION_MODE_LINEAR, NULL);
+  g_object_set (cs1, "mode", GST_INTERPOLATION_MODE_LINEAR, NULL);
+  g_object_set (cs2, "mode", GST_INTERPOLATION_MODE_LINEAR, NULL);
 
   /* set control values */
   fail_unless (gst_timed_value_control_source_set (tvcs1, 0 * GST_SECOND, 0.0));
@@ -913,8 +876,8 @@ GST_START_TEST (controller_interpolation_linear_disabled)
   fail_unless_equals_int (GST_TEST_OBJ (elem)->val_int, 100);
   fail_unless_equals_float (GST_TEST_OBJ (elem)->val_double, 40.0);
 
-  gst_object_unref (csource1);
-  gst_object_unref (csource2);
+  gst_object_unref (cs1);
+  gst_object_unref (cs2);
   gst_object_unref (elem);
 }
 
@@ -923,9 +886,8 @@ GST_END_TEST;
 
 GST_START_TEST (controller_interpolation_set_from_list)
 {
-  GstInterpolationControlSource *csource;
-  GstTimedValueControlSource *tvcs;
   GstControlSource *cs;
+  GstTimedValueControlSource *tvcs;
   GstTimedValue *tval;
   GstElement *elem;
   GSList *list = NULL;
@@ -934,16 +896,14 @@ GST_START_TEST (controller_interpolation_set_from_list)
   elem = gst_element_factory_make ("testobj", NULL);
 
   /* new interpolation control source */
-  csource = gst_interpolation_control_source_new ();
-  tvcs = (GstTimedValueControlSource *) csource;
-  cs = (GstControlSource *) csource;
+  cs = gst_interpolation_control_source_new ();
+  tvcs = (GstTimedValueControlSource *) cs;
 
-  fail_unless (csource != NULL);
   fail_unless (gst_object_add_control_binding (GST_OBJECT (elem),
           gst_direct_control_binding_new (GST_OBJECT (elem), "int", cs)));
 
   /* set interpolation mode */
-  g_object_set (csource, "mode", GST_INTERPOLATION_MODE_LINEAR, NULL);
+  g_object_set (cs, "mode", GST_INTERPOLATION_MODE_LINEAR, NULL);
 
   /* set control value */
   tval = g_new0 (GstTimedValue, 1);
@@ -961,7 +921,7 @@ GST_START_TEST (controller_interpolation_set_from_list)
   /* allocated GstTimedValue now belongs to the controller, but list not */
   g_free (tval);
   g_slist_free (list);
-  gst_object_unref (csource);
+  gst_object_unref (cs);
   gst_object_unref (elem);
 }
 
@@ -971,24 +931,21 @@ GST_END_TEST;
 /* test linear interpolation for ts < first control point */
 GST_START_TEST (controller_interpolation_linear_before_ts0)
 {
-  GstInterpolationControlSource *csource;
-  GstTimedValueControlSource *tvcs;
   GstControlSource *cs;
+  GstTimedValueControlSource *tvcs;
   GstElement *elem;
 
   elem = gst_element_factory_make ("testobj", NULL);
 
   /* new interpolation control source */
-  csource = gst_interpolation_control_source_new ();
-  tvcs = (GstTimedValueControlSource *) csource;
-  cs = (GstControlSource *) csource;
+  cs = gst_interpolation_control_source_new ();
+  tvcs = (GstTimedValueControlSource *) cs;
 
-  fail_unless (csource != NULL);
   fail_unless (gst_object_add_control_binding (GST_OBJECT (elem),
           gst_direct_control_binding_new (GST_OBJECT (elem), "int", cs)));
 
   /* set interpolation mode */
-  g_object_set (csource, "mode", GST_INTERPOLATION_MODE_LINEAR, NULL);
+  g_object_set (cs, "mode", GST_INTERPOLATION_MODE_LINEAR, NULL);
 
   /* set control values */
   fail_unless (gst_timed_value_control_source_set (tvcs, 2 * GST_SECOND, 1.0));
@@ -1009,7 +966,7 @@ GST_START_TEST (controller_interpolation_linear_before_ts0)
   gst_object_sync_values (GST_OBJECT (elem), 0 * GST_SECOND);
   fail_unless_equals_int (GST_TEST_OBJ (elem)->val_int, 25);
 
-  gst_object_unref (csource);
+  gst_object_unref (cs);
   gst_object_unref (elem);
 }
 
@@ -1018,24 +975,21 @@ GST_END_TEST;
 /* test linear interpolation of enums */
 GST_START_TEST (controller_interpolation_linear_enums)
 {
-  GstInterpolationControlSource *csource;
-  GstTimedValueControlSource *tvcs;
   GstControlSource *cs;
+  GstTimedValueControlSource *tvcs;
   GstElement *elem;
 
   elem = gst_element_factory_make ("testobj", NULL);
 
   /* new interpolation control source */
-  csource = gst_interpolation_control_source_new ();
-  tvcs = (GstTimedValueControlSource *) csource;
-  cs = (GstControlSource *) csource;
+  cs = gst_interpolation_control_source_new ();
+  tvcs = (GstTimedValueControlSource *) cs;
 
-  fail_unless (csource != NULL);
   fail_unless (gst_object_add_control_binding (GST_OBJECT (elem),
           gst_direct_control_binding_new (GST_OBJECT (elem), "enum", cs)));
 
   /* set interpolation mode */
-  g_object_set (csource, "mode", GST_INTERPOLATION_MODE_LINEAR, NULL);
+  g_object_set (cs, "mode", GST_INTERPOLATION_MODE_LINEAR, NULL);
 
   /* set control values */
   fail_unless (gst_timed_value_control_source_set (tvcs, 0 * GST_SECOND, 0.0));
@@ -1053,7 +1007,7 @@ GST_START_TEST (controller_interpolation_linear_enums)
   gst_object_sync_values (GST_OBJECT (elem), 4 * GST_SECOND);
   fail_unless_equals_int (GST_TEST_OBJ (elem)->val_enum, ENUM_V255);
 
-  gst_object_unref (csource);
+  gst_object_unref (cs);
   gst_object_unref (elem);
 }
 
@@ -1062,24 +1016,21 @@ GST_END_TEST;
 /* test timed value counts */
 GST_START_TEST (controller_timed_value_count)
 {
-  GstInterpolationControlSource *csource;
-  GstTimedValueControlSource *tvcs;
   GstControlSource *cs;
+  GstTimedValueControlSource *tvcs;
   GstElement *elem;
 
   elem = gst_element_factory_make ("testobj", NULL);
 
   /* new interpolation control source */
-  csource = gst_interpolation_control_source_new ();
-  tvcs = (GstTimedValueControlSource *) csource;
-  cs = (GstControlSource *) csource;
+  cs = gst_interpolation_control_source_new ();
+  tvcs = (GstTimedValueControlSource *) cs;
 
-  fail_unless (csource != NULL);
   fail_unless (gst_object_add_control_binding (GST_OBJECT (elem),
           gst_direct_control_binding_new (GST_OBJECT (elem), "int", cs)));
 
   /* set interpolation mode */
-  g_object_set (csource, "mode", GST_INTERPOLATION_MODE_NONE, NULL);
+  g_object_set (cs, "mode", GST_INTERPOLATION_MODE_NONE, NULL);
 
   fail_unless (gst_timed_value_control_source_get_count (tvcs) == 0);
 
@@ -1095,7 +1046,7 @@ GST_START_TEST (controller_timed_value_count)
   fail_unless (gst_timed_value_control_source_unset (tvcs, 0 * GST_SECOND));
   fail_unless (gst_timed_value_control_source_get_count (tvcs) == 0);
 
-  gst_object_unref (csource);
+  gst_object_unref (cs);
   gst_object_unref (elem);
 }
 
@@ -1105,22 +1056,19 @@ GST_END_TEST;
 /* test lfo control source with sine waveform */
 GST_START_TEST (controller_lfo_sine)
 {
-  GstLFOControlSource *csource;
   GstControlSource *cs;
   GstElement *elem;
 
   elem = gst_element_factory_make ("testobj", NULL);
 
   /* new lfo control source */
-  csource = gst_lfo_control_source_new ();
-  cs = (GstControlSource *) csource;
+  cs = gst_lfo_control_source_new ();
 
-  fail_unless (csource != NULL);
   fail_unless (gst_object_add_control_binding (GST_OBJECT (elem),
           gst_direct_control_binding_new (GST_OBJECT (elem), "int", cs)));
 
   /* configure lfo */
-  g_object_set (csource, "waveform", GST_LFO_WAVEFORM_SINE,
+  g_object_set (cs, "waveform", GST_LFO_WAVEFORM_SINE,
       "frequency", 1.0, "timeshift", (GstClockTime) 0,
       "amplitude", 0.5, "offset", 0.5, NULL);
 
@@ -1150,7 +1098,7 @@ GST_START_TEST (controller_lfo_sine)
   gst_object_sync_values (GST_OBJECT (elem), 1750 * GST_MSECOND);
   fail_unless_equals_int (GST_TEST_OBJ (elem)->val_int, 0);
 
-  gst_object_unref (csource);
+  gst_object_unref (cs);
   gst_object_unref (elem);
 }
 
@@ -1159,22 +1107,19 @@ GST_END_TEST;
 /* test lfo control source with sine waveform and timeshift */
 GST_START_TEST (controller_lfo_sine_timeshift)
 {
-  GstLFOControlSource *csource;
   GstControlSource *cs;
   GstElement *elem;
 
   elem = gst_element_factory_make ("testobj", NULL);
 
   /* new lfo control source */
-  csource = gst_lfo_control_source_new ();
-  cs = (GstControlSource *) csource;
+  cs = gst_lfo_control_source_new ();
 
-  fail_unless (csource != NULL);
   fail_unless (gst_object_add_control_binding (GST_OBJECT (elem),
           gst_direct_control_binding_new (GST_OBJECT (elem), "int", cs)));
 
   /* configure lfo */
-  g_object_set (csource, "waveform", GST_LFO_WAVEFORM_SINE,
+  g_object_set (cs, "waveform", GST_LFO_WAVEFORM_SINE,
       "frequency", 1.0, "timeshift", 250 * GST_MSECOND,
       "amplitude", 0.5, "offset", 0.5, NULL);
 
@@ -1204,7 +1149,7 @@ GST_START_TEST (controller_lfo_sine_timeshift)
   gst_object_sync_values (GST_OBJECT (elem), 1750 * GST_MSECOND);
   fail_unless_equals_int (GST_TEST_OBJ (elem)->val_int, 50);
 
-  gst_object_unref (csource);
+  gst_object_unref (cs);
   gst_object_unref (elem);
 }
 
@@ -1213,22 +1158,19 @@ GST_END_TEST;
 /* test lfo control source with square waveform */
 GST_START_TEST (controller_lfo_square)
 {
-  GstLFOControlSource *csource;
   GstControlSource *cs;
   GstElement *elem;
 
   elem = gst_element_factory_make ("testobj", NULL);
 
   /* new lfo control source */
-  csource = gst_lfo_control_source_new ();
-  cs = (GstControlSource *) csource;
+  cs = gst_lfo_control_source_new ();
 
-  fail_unless (csource != NULL);
   fail_unless (gst_object_add_control_binding (GST_OBJECT (elem),
           gst_direct_control_binding_new (GST_OBJECT (elem), "int", cs)));
 
   /* configure lfo */
-  g_object_set (csource, "waveform", GST_LFO_WAVEFORM_SQUARE,
+  g_object_set (cs, "waveform", GST_LFO_WAVEFORM_SQUARE,
       "frequency", 1.0, "timeshift", (GstClockTime) 0,
       "amplitude", 0.5, "offset", 0.5, NULL);
 
@@ -1258,7 +1200,7 @@ GST_START_TEST (controller_lfo_square)
   gst_object_sync_values (GST_OBJECT (elem), 1750 * GST_MSECOND);
   fail_unless_equals_int (GST_TEST_OBJ (elem)->val_int, 100);
 
-  gst_object_unref (csource);
+  gst_object_unref (cs);
   gst_object_unref (elem);
 }
 
@@ -1267,22 +1209,19 @@ GST_END_TEST;
 /* test lfo control source with saw waveform */
 GST_START_TEST (controller_lfo_saw)
 {
-  GstLFOControlSource *csource;
   GstControlSource *cs;
   GstElement *elem;
 
   elem = gst_element_factory_make ("testobj", NULL);
 
   /* new lfo control source */
-  csource = gst_lfo_control_source_new ();
-  cs = (GstControlSource *) csource;
+  cs = gst_lfo_control_source_new ();
 
-  fail_unless (csource != NULL);
   fail_unless (gst_object_add_control_binding (GST_OBJECT (elem),
           gst_direct_control_binding_new (GST_OBJECT (elem), "int", cs)));
 
   /* configure lfo */
-  g_object_set (csource, "waveform", GST_LFO_WAVEFORM_SAW,
+  g_object_set (cs, "waveform", GST_LFO_WAVEFORM_SAW,
       "frequency", 1.0, "timeshift", (GstClockTime) 0,
       "amplitude", 0.5, "offset", 0.5, NULL);
 
@@ -1312,7 +1251,7 @@ GST_START_TEST (controller_lfo_saw)
   gst_object_sync_values (GST_OBJECT (elem), 1750 * GST_MSECOND);
   fail_unless_equals_int (GST_TEST_OBJ (elem)->val_int, 25);
 
-  gst_object_unref (csource);
+  gst_object_unref (cs);
   gst_object_unref (elem);
 }
 
@@ -1321,22 +1260,19 @@ GST_END_TEST;
 /* test lfo control source with reverse saw waveform */
 GST_START_TEST (controller_lfo_rsaw)
 {
-  GstLFOControlSource *csource;
   GstControlSource *cs;
   GstElement *elem;
 
   elem = gst_element_factory_make ("testobj", NULL);
 
   /* new lfo control source */
-  csource = gst_lfo_control_source_new ();
-  cs = (GstControlSource *) csource;
+  cs = gst_lfo_control_source_new ();
 
-  fail_unless (csource != NULL);
   fail_unless (gst_object_add_control_binding (GST_OBJECT (elem),
           gst_direct_control_binding_new (GST_OBJECT (elem), "int", cs)));
 
   /* configure lfo */
-  g_object_set (csource, "waveform", GST_LFO_WAVEFORM_REVERSE_SAW,
+  g_object_set (cs, "waveform", GST_LFO_WAVEFORM_REVERSE_SAW,
       "frequency", 1.0, "timeshift", (GstClockTime) 0,
       "amplitude", 0.5, "offset", 0.5, NULL);
 
@@ -1366,7 +1302,7 @@ GST_START_TEST (controller_lfo_rsaw)
   gst_object_sync_values (GST_OBJECT (elem), 1750 * GST_MSECOND);
   fail_unless_equals_int (GST_TEST_OBJ (elem)->val_int, 75);
 
-  gst_object_unref (csource);
+  gst_object_unref (cs);
   gst_object_unref (elem);
 }
 
@@ -1375,22 +1311,19 @@ GST_END_TEST;
 /* test lfo control source with saw waveform */
 GST_START_TEST (controller_lfo_triangle)
 {
-  GstLFOControlSource *csource;
   GstControlSource *cs;
   GstElement *elem;
 
   elem = gst_element_factory_make ("testobj", NULL);
 
   /* new lfo control source */
-  csource = gst_lfo_control_source_new ();
-  cs = (GstControlSource *) csource;
+  cs = gst_lfo_control_source_new ();
 
-  fail_unless (csource != NULL);
   fail_unless (gst_object_add_control_binding (GST_OBJECT (elem),
           gst_direct_control_binding_new (GST_OBJECT (elem), "int", cs)));
 
   /* configure lfo */
-  g_object_set (csource, "waveform", GST_LFO_WAVEFORM_TRIANGLE,
+  g_object_set (cs, "waveform", GST_LFO_WAVEFORM_TRIANGLE,
       "frequency", 1.0, "timeshift", (GstClockTime) 0,
       "amplitude", 0.5, "offset", 0.5, NULL);
 
@@ -1420,7 +1353,7 @@ GST_START_TEST (controller_lfo_triangle)
   gst_object_sync_values (GST_OBJECT (elem), 1750 * GST_MSECOND);
   fail_unless_equals_int (GST_TEST_OBJ (elem)->val_int, 0);
 
-  gst_object_unref (csource);
+  gst_object_unref (cs);
   gst_object_unref (elem);
 }
 
@@ -1429,17 +1362,14 @@ GST_END_TEST;
 /* test lfo control source with nothing set */
 GST_START_TEST (controller_lfo_none)
 {
-  GstLFOControlSource *csource;
   GstControlSource *cs;
   GstElement *elem;
 
   elem = gst_element_factory_make ("testobj", NULL);
 
   /* new lfo control source */
-  csource = gst_lfo_control_source_new ();
-  cs = (GstControlSource *) csource;
+  cs = gst_lfo_control_source_new ();
 
-  fail_unless (csource != NULL);
   fail_unless (gst_object_add_control_binding (GST_OBJECT (elem),
           gst_direct_control_binding_new (GST_OBJECT (elem), "int", cs)));
 
@@ -1469,7 +1399,7 @@ GST_START_TEST (controller_lfo_none)
   gst_object_sync_values (GST_OBJECT (elem), 1750 * GST_MSECOND);
   fail_unless_equals_int (GST_TEST_OBJ (elem)->val_int, 0);
 
-  gst_object_unref (csource);
+  gst_object_unref (cs);
   gst_object_unref (elem);
 }
 
@@ -1478,7 +1408,6 @@ GST_END_TEST;
 /* test timed value handling in trigger mode */
 GST_START_TEST (controller_trigger_exact)
 {
-  GstTriggerControlSource *csource;
   GstControlSource *cs;
   GstTimedValueControlSource *tvcs;
   GstElement *elem;
@@ -1487,11 +1416,9 @@ GST_START_TEST (controller_trigger_exact)
   elem = gst_element_factory_make ("testobj", NULL);
 
   /* new interpolation control source */
-  csource = gst_trigger_control_source_new ();
-  tvcs = (GstTimedValueControlSource *) csource;
-  cs = (GstControlSource *) csource;
+  cs = gst_trigger_control_source_new ();
+  tvcs = (GstTimedValueControlSource *) cs;
 
-  fail_unless (csource != NULL);
   fail_unless (gst_object_add_control_binding (GST_OBJECT (elem),
           gst_direct_control_binding_new (GST_OBJECT (elem), "int", cs)));
 
@@ -1516,7 +1443,7 @@ GST_START_TEST (controller_trigger_exact)
   gst_object_sync_values (GST_OBJECT (elem), 2 * GST_SECOND);
   fail_unless_equals_int (GST_TEST_OBJ (elem)->val_int, 100);
 
-  gst_object_unref (csource);
+  gst_object_unref (cs);
   gst_object_unref (elem);
 }
 
@@ -1524,7 +1451,6 @@ GST_END_TEST;
 
 GST_START_TEST (controller_trigger_tolerance)
 {
-  GstTriggerControlSource *csource;
   GstControlSource *cs;
   GstTimedValueControlSource *tvcs;
   GstElement *elem;
@@ -1533,15 +1459,13 @@ GST_START_TEST (controller_trigger_tolerance)
   elem = gst_element_factory_make ("testobj", NULL);
 
   /* new interpolation control source */
-  csource = gst_trigger_control_source_new ();
-  tvcs = (GstTimedValueControlSource *) csource;
-  cs = (GstControlSource *) csource;
+  cs = gst_trigger_control_source_new ();
+  tvcs = (GstTimedValueControlSource *) cs;
 
-  fail_unless (csource != NULL);
   fail_unless (gst_object_add_control_binding (GST_OBJECT (elem),
           gst_direct_control_binding_new (GST_OBJECT (elem), "int", cs)));
 
-  g_object_set (csource, "tolerance", G_GINT64_CONSTANT (10), NULL);
+  g_object_set (cs, "tolerance", G_GINT64_CONSTANT (10), NULL);
 
   fail_if (gst_control_source_get_value (cs, 0 * GST_SECOND, &raw_val));
 
@@ -1564,7 +1488,7 @@ GST_START_TEST (controller_trigger_tolerance)
   gst_object_sync_values (GST_OBJECT (elem), 2 * GST_SECOND);
   fail_unless_equals_int (GST_TEST_OBJ (elem)->val_int, 100);
 
-  gst_object_unref (csource);
+  gst_object_unref (cs);
   gst_object_unref (elem);
 }
 

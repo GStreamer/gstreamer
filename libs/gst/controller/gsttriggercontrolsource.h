@@ -76,7 +76,7 @@ GType gst_trigger_control_source_get_type (void);
 
 /* Functions */
 
-GstTriggerControlSource *gst_trigger_control_source_new (void);
+GstControlSource *gst_trigger_control_source_new (void);
 
 G_END_DECLS
 

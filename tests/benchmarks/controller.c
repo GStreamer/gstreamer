@@ -83,7 +83,8 @@ main (gint argc, gchar * argv[])
   gint i, j;
   GstElement *src, *sink;
   GstElement *bin;
-  GstInterpolationControlSource *csource;
+  GstControlSource *cs;
+  GstTimedValueControlSource *tvcs;
   GstClockTime bt, ct;
   GstClockTimeDiff elapsed;
   GstClockTime tick;
@@ -111,12 +112,12 @@ main (gint argc, gchar * argv[])
   tick = BLOCK_SIZE * GST_SECOND / 44100;
 
   /* create and configure control source */
-  csource = gst_interpolation_control_source_new ();
-  gst_object_add_control_binding (GST_OBJECT (src),
-      gst_direct_control_binding_new (GST_OBJECT (src), "freq",
-          GST_CONTROL_SOURCE (csource)));
-  g_object_set (csource, "mode", GST_INTERPOLATION_MODE_LINEAR, NULL);
+  cs = gst_interpolation_control_source_new ();
+  tvcs = (GstTimedValueControlSource *) cs;
 
+  gst_object_add_control_binding (GST_OBJECT (src),
+      gst_direct_control_binding_new (GST_OBJECT (src), "freq", cs));
+  g_object_set (cs, "mode", GST_INTERPOLATION_MODE_LINEAR, NULL);
 
   /* set control values, we set them in a linear order as we would when loading
    * a stored project
@@ -124,8 +125,8 @@ main (gint argc, gchar * argv[])
   bt = gst_util_get_timestamp ();
 
   for (i = 0; i < NUM_CP; i++) {
-    gst_timed_value_control_source_set ((GstTimedValueControlSource *) csource,
-        i * tick, g_random_double_range (50.0, 3000.0));
+    gst_timed_value_control_source_set (tvcs, i * tick,
+        g_random_double_range (50.0, 3000.0));
   }
 
   ct = gst_util_get_timestamp ();
@@ -141,8 +142,8 @@ main (gint argc, gchar * argv[])
 
   for (i = 0; i < 100; i++) {
     j = g_random_int_range (0, NUM_CP - 1);
-    gst_timed_value_control_source_set ((GstTimedValueControlSource *) csource,
-        j * tick, g_random_double_range (50.0, 3000.0));
+    gst_timed_value_control_source_set (tvcs, j * tick,
+        g_random_double_range (50.0, 3000.0));
   }
 
   ct = gst_util_get_timestamp ();
@@ -156,16 +157,14 @@ main (gint argc, gchar * argv[])
     gdouble *values = g_new0 (gdouble, BLOCK_SIZE * NUM_CP);
 
     bt = gst_util_get_timestamp ();
-    gst_control_source_get_value_array (GST_CONTROL_SOURCE (csource), 0,
-        sample_duration, BLOCK_SIZE * NUM_CP, values);
+    gst_control_source_get_value_array (cs, 0, sample_duration,
+        BLOCK_SIZE * NUM_CP, values);
     ct = gst_util_get_timestamp ();
     g_free (values);
     elapsed = GST_CLOCK_DIFF (bt, ct);
     printf ("linear array for control-points: %" GST_TIME_FORMAT "\n",
         GST_TIME_ARGS (elapsed));
   }
-
-  gst_object_unref (csource);
 
   /* play, this test sequential reads */
   bt = gst_util_get_timestamp ();
@@ -182,7 +181,8 @@ main (gint argc, gchar * argv[])
       GST_TIME_ARGS (elapsed));
 
   /* cleanup */
-  gst_object_unref (G_OBJECT (bin));
+  gst_object_unref (cs);
+  gst_object_unref (bin);
   res = 0;
 Error:
   return res;

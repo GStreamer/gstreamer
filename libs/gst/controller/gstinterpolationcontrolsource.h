@@ -90,8 +90,7 @@ GType gst_interpolation_mode_get_type (void);
 
 /* Functions */
 
-GstInterpolationControlSource *
-                gst_interpolation_control_source_new            (void);
+GstControlSource * gst_interpolation_control_source_new (void);
 
 G_END_DECLS
 

@@ -512,7 +512,7 @@ struct _GstInterpolationControlSourcePrivate
  *
  * Returns: (transfer full): a new, unbound #GstInterpolationControlSource.
  */
-GstInterpolationControlSource *
+GstControlSource *
 gst_interpolation_control_source_new (void)
 {
   return g_object_newv (GST_TYPE_INTERPOLATION_CONTROL_SOURCE, 0, NULL);

@@ -93,7 +93,7 @@ GType gst_lfo_waveform_get_type (void);
 
 /* Functions */
 
-GstLFOControlSource *gst_lfo_control_source_new (void);
+GstControlSource *gst_lfo_control_source_new (void);
 
 G_END_DECLS
 
