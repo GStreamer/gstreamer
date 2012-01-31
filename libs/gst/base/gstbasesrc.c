@@ -2250,7 +2250,8 @@ again:
     }
   }
 
-  if (G_UNLIKELY (!GST_BASE_SRC_IS_STARTED (src)))
+  if (G_UNLIKELY (!GST_BASE_SRC_IS_STARTED (src)
+          && !GST_BASE_SRC_IS_STARTING (src)))
     goto not_started;
 
   if (G_UNLIKELY (!bclass->create))
@@ -3051,6 +3052,8 @@ gst_base_src_start_complete (GstBaseSrc * basesrc, GstFlowReturn ret)
    * we are not yet PLAYING */
   gst_base_src_set_flushing (basesrc, FALSE, FALSE, FALSE, NULL);
 
+  gst_pad_mark_reconfigure (GST_BASE_SRC_PAD (basesrc));
+
   GST_OBJECT_LOCK (basesrc->srcpad);
   mode = GST_PAD_MODE (basesrc->srcpad);
   GST_OBJECT_UNLOCK (basesrc->srcpad);
@@ -3075,8 +3078,6 @@ gst_base_src_start_complete (GstBaseSrc * basesrc, GstFlowReturn ret)
     if (G_UNLIKELY (!basesrc->random_access))
       goto no_get_range;
   }
-
-  gst_pad_mark_reconfigure (GST_BASE_SRC_PAD (basesrc));
 
   GST_LIVE_LOCK (basesrc);
   GST_OBJECT_FLAG_SET (basesrc, GST_BASE_SRC_FLAG_STARTED);
@@ -3115,7 +3116,7 @@ error:
 }
 
 /**
- * gst_base_src_start_complete:
+ * gst_base_src_start_wait:
  * @src: base source instance
  * @ret: a #GstFlowReturn
  *
