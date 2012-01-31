@@ -26,7 +26,7 @@
 #include <gst/check/gstcheck.h>
 #include <gst/audio/streamvolume.h>
 #include <gst/controller/gstinterpolationcontrolsource.h>
-#include <gst/controller/gstcontrolbindingdirect.h>
+#include <gst/controller/gstdirectcontrolbinding.h>
 
 /* For ease of programming we use globals to keep refs for our floating
  * src and sink pads we create; otherwise we always have to do get_pad,
