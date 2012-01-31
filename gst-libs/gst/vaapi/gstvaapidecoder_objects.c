@@ -75,7 +75,10 @@ gst_vaapi_picture_destroy(GstVaapiPicture *picture)
         g_object_unref(picture->proxy);
         picture->proxy = NULL;
     }
-
+    else if (picture->surface) {
+        /* Explicitly release any surface that was not bound to a proxy */
+        gst_vaapi_context_put_surface(GET_CONTEXT(picture), picture->surface);
+    }
     picture->surface_id = VA_INVALID_ID;
     picture->surface = NULL;
 
