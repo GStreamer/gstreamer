@@ -99,6 +99,11 @@ gst_vaapi_picture_create(
         return FALSE;
     picture->surface_id = gst_vaapi_surface_get_id(picture->surface);
 
+    picture->proxy =
+        gst_vaapi_surface_proxy_new(GET_CONTEXT(picture), picture->surface);
+    if (!picture->proxy)
+        return FALSE;
+
     success = vaapi_create_buffer(
         GET_VA_DISPLAY(picture),
         GET_VA_CONTEXT(picture),
@@ -240,19 +245,12 @@ gst_vaapi_picture_output(GstVaapiPicture *picture)
 
     g_return_val_if_fail(GST_VAAPI_IS_PICTURE(picture), FALSE);
 
-    proxy = picture->proxy;
-    if (!proxy) {
-        proxy = gst_vaapi_surface_proxy_new(
-            GET_CONTEXT(picture),
-            picture->surface
-        );
-        if (!proxy)
-            return FALSE;
-        picture->proxy = proxy;
-    }
+    if (!picture->proxy)
+        return FALSE;
 
+    proxy = g_object_ref(picture->proxy);
     gst_vaapi_surface_proxy_set_timestamp(proxy, picture->pts);
-    gst_vaapi_decoder_push_surface_proxy(GET_DECODER(picture), g_object_ref(proxy));
+    gst_vaapi_decoder_push_surface_proxy(GET_DECODER(picture), proxy);
     return TRUE;
 }
 
