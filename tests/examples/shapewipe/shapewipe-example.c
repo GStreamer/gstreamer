@@ -64,8 +64,7 @@ main (gint argc, gchar ** argv)
 {
   GstElement *pipeline;
   GstElement *shapewipe;
-  GstLFOControlSource *csource;
-  GValue val = { 0, };
+  GstControlSource *cs;
   GMainLoop *loop;
   GstBus *bus;
   gchar *pipeline_string;
@@ -97,23 +96,17 @@ main (gint argc, gchar ** argv)
 
   shapewipe = gst_bin_get_by_name (GST_BIN (pipeline), "shape");
 
-  csource = gst_lfo_control_source_new ();
+  cs = gst_lfo_control_source_new ();
 
   gst_object_add_control_binding (GST_OBJECT_CAST (shapewipe),
       gst_direct_control_binding_new (GST_OBJECT_CAST (shapewipe), "position",
-          GST_CONTROL_SOURCE (csource)));
+          cs));
 
-  g_value_init (&val, G_TYPE_FLOAT);
-  g_value_set_float (&val, 0.5);
-  g_object_set (G_OBJECT (csource), "amplitude", &val, NULL);
-  g_value_set_float (&val, 0.5);
-  g_object_set (G_OBJECT (csource), "offset", &val, NULL);
-  g_value_unset (&val);
+  g_object_set (cs,
+      "amplitude", 0.5,
+      "offset", 0.5, "frequency", 0.25, "timeshift", 500 * GST_MSECOND, NULL);
 
-  g_object_set (G_OBJECT (csource), "frequency", 0.25, NULL);
-  g_object_set (G_OBJECT (csource), "timeshift", 500 * GST_MSECOND, NULL);
-
-  g_object_unref (csource);
+  g_object_unref (cs);
 
   loop = g_main_loop_new (NULL, FALSE);
 
