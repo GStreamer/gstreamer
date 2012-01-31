@@ -363,7 +363,9 @@ gst_vc1_parse_renegotiate (GstVC1Parse * vc1parse)
   vc1parse->renegotiate = FALSE;
   vc1parse->update_caps = TRUE;
 
-  GST_DEBUG_OBJECT (vc1parse, "Negotiated %s/%s with downstream",
+  GST_INFO_OBJECT (vc1parse, "input %s/%s, negotiated %s/%s with downstream",
+      header_format_to_string (vc1parse->input_header_format),
+      stream_format_to_string (vc1parse->input_stream_format),
       header_format_to_string (vc1parse->output_header_format),
       stream_format_to_string (vc1parse->output_stream_format));
 
