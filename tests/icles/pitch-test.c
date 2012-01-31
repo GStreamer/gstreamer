@@ -37,8 +37,8 @@ main (int argc, char **argv)
   GstElement *pitch;
   GstElement *sink;
   GstElement *pipeline;
-  GstInterpolationControlSource *csource;
-  GstTimedValueControlSource *cs;
+  GstControlSource *cs;
+  GstTimedValueControlSource *tvcs;
 
   if (argc != 2) {
     g_printerr ("Usage: %s <audiosink>\n", argv[0]);
@@ -68,19 +68,18 @@ main (int argc, char **argv)
       sink, NULL);
 
   /* set up a controller */
-  csource = gst_interpolation_control_source_new ();
-  g_object_set (csource, "mode", GST_INTERPOLATION_MODE_LINEAR, NULL);
+  cs = gst_interpolation_control_source_new ();
+  g_object_set (cs, "mode", GST_INTERPOLATION_MODE_LINEAR, NULL);
 
   gst_object_add_control_binding (pitch,
-      gst_direct_control_binding_new (pitch, "pitch",
-          GST_CONTROL_SOURCE (csource)));
-  cs = (GstTimedValueControlSource *) csource;
+      gst_direct_control_binding_new (pitch, "pitch", cs));
+  tvcs = (GstTimedValueControlSource *) cs;
 
   for (i = 0; i < 100; ++i) {
     if (i % 2)
-      gst_timed_value_control_source_set (cs, i * GST_SECOND, 0.5);
+      gst_timed_value_control_source_set (tvcs, i * GST_SECOND, 0.5);
     else
-      gst_timed_value_control_source_set (cs, i * GST_SECOND, 1.5);
+      gst_timed_value_control_source_set (tvcs, i * GST_SECOND, 1.5);
   }
 
   gst_element_set_state (pipeline, GST_STATE_PLAYING);
@@ -88,7 +87,7 @@ main (int argc, char **argv)
   g_main_loop_run (loop);
 
   /* clean up nicely */
-  gst_object_unref (csource);
+  gst_object_unref (cs);
   g_print ("Returned, stopping playback\n");
   gst_element_set_state (pipeline, GST_STATE_NULL);
   g_print ("Deleting pipeline\n");
