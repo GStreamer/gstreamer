@@ -115,8 +115,8 @@ helper_find_peek (gpointer data, gint64 offset, guint size)
       if (buf_offset <= offset) {
         if ((offset + size) < (buf_offset + buf_size)) {
           /* FIXME, unmap after usage */
-          g_assert (gst_buffer_map (buf, &info, GST_MAP_READ));
-
+          if (!gst_buffer_map (buf, &info, GST_MAP_READ))
+            return NULL;
           return (guint8 *) info.data + (offset - buf_offset);
         }
       } else if (offset + size >= buf_offset + buf_size) {
@@ -180,7 +180,8 @@ helper_find_peek (gpointer data, gint64 offset, guint size)
   }
 
   /* FIXME, unmap */
-  g_assert (gst_buffer_map (buffer, &info, GST_MAP_READ));
+  gst_buffer_map (buffer, &info, GST_MAP_READ);
+
   return info.data;
 
 error:
@@ -570,7 +571,8 @@ gst_type_find_helper_for_buffer (GstObject * obj, GstBuffer * buf,
   g_return_val_if_fail (GST_BUFFER_OFFSET (buf) == 0 ||
       GST_BUFFER_OFFSET (buf) == GST_BUFFER_OFFSET_NONE, NULL);
 
-  g_assert (gst_buffer_map (buf, &info, GST_MAP_READ));
+  if (!gst_buffer_map (buf, &info, GST_MAP_READ))
+    return NULL;
   result = gst_type_find_helper_for_data (obj, info.data, info.size, prob);
   gst_buffer_unmap (buf, &info);
 

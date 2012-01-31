@@ -1883,8 +1883,13 @@ gst_value_compare_buffer (const GValue * value1, const GValue * value2)
   if (size1 == 0)
     return GST_VALUE_EQUAL;
 
-  g_assert (gst_buffer_map (buf1, &info1, GST_MAP_READ));
-  g_assert (gst_buffer_map (buf2, &info2, GST_MAP_READ));
+  if (!gst_buffer_map (buf1, &info1, GST_MAP_READ))
+    return GST_VALUE_UNORDERED;
+
+  if (!gst_buffer_map (buf2, &info2, GST_MAP_READ)) {
+    gst_buffer_unmap (buf1, &info2);
+    return GST_VALUE_UNORDERED;
+  }
 
   if (memcmp (info1.data, info2.data, info1.size) == 0)
     result = GST_VALUE_EQUAL;
@@ -1908,7 +1913,9 @@ gst_value_serialize_buffer (const GValue * value)
   if (buffer == NULL)
     return NULL;
 
-  g_assert (gst_buffer_map (buffer, &info, GST_MAP_READ));
+  if (!gst_buffer_map (buffer, &info, GST_MAP_READ))
+    return NULL;
+
   data = info.data;
 
   string = g_malloc (info.size * 2 + 1);
@@ -1937,7 +1944,8 @@ gst_value_deserialize_buffer (GValue * dest, const gchar * s)
     goto wrong_length;
 
   buffer = gst_buffer_new_allocate (NULL, len / 2, 0);
-  g_assert (gst_buffer_map (buffer, &info, GST_MAP_WRITE));
+  if (!gst_buffer_map (buffer, &info, GST_MAP_WRITE))
+    goto map_failed;
   data = info.data;
 
   for (i = 0; i < len / 2; i++) {
@@ -1958,6 +1966,10 @@ gst_value_deserialize_buffer (GValue * dest, const gchar * s)
 
   /* ERRORS */
 wrong_length:
+  {
+    return FALSE;
+  }
+map_failed:
   {
     return FALSE;
   }

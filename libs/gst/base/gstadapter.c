@@ -446,7 +446,9 @@ gst_adapter_map (GstAdapter * adapter, gsize size)
 
     csize = gst_buffer_get_size (cur);
     if (csize >= size + skip) {
-      g_assert (gst_buffer_map (cur, &priv->info, GST_MAP_READ));
+      if (!gst_buffer_map (cur, &priv->info, GST_MAP_READ))
+        return FALSE;
+
       return (guint8 *) priv->info.data + skip;
     }
     /* We may be able to efficiently merge buffers in our pool to
@@ -998,7 +1000,8 @@ gst_adapter_masked_scan_uint32_peek (GstAdapter * adapter, guint32 mask,
     bsize = gst_buffer_get_size (buf);
   }
   /* get the data now */
-  g_assert (gst_buffer_map (buf, &info, GST_MAP_READ));
+  if (!gst_buffer_map (buf, &info, GST_MAP_READ))
+    return -1;
 
   bdata = (guint8 *) info.data + skip;
   bsize = info.size - skip;

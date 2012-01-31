@@ -1888,14 +1888,16 @@ no_qos:
          * with subbuffers of the same buffer. Note that because of the FIXME in
          * prepare_output_buffer() we have decreased the refcounts of inbuf and
          * outbuf to keep them writable */
-        g_assert (gst_buffer_map (inbuf, &ininfo, GST_MAP_READ));
-        g_assert (gst_buffer_map (*outbuf, &outinfo, GST_MAP_WRITE));
+        if (gst_buffer_map (inbuf, &ininfo, GST_MAP_READ)) {
+          if (gst_buffer_map (*outbuf, &outinfo, GST_MAP_WRITE)) {
 
-        if (ininfo.data != outinfo.data)
-          memcpy (outinfo.data, ininfo.data, ininfo.size);
+            if (ininfo.data != outinfo.data)
+              memcpy (outinfo.data, ininfo.data, ininfo.size);
 
-        gst_buffer_unmap (inbuf, &ininfo);
-        gst_buffer_unmap (*outbuf, &outinfo);
+            gst_buffer_unmap (*outbuf, &outinfo);
+          }
+          gst_buffer_unmap (inbuf, &ininfo);
+        }
       }
       ret = bclass->transform_ip (trans, *outbuf);
     } else {
