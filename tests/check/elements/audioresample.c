@@ -665,20 +665,20 @@ GST_START_TEST (test_pipelines)
     test_pipeline ("S8", 44100, 48000, quality);
     test_pipeline ("S8", 48000, 44100, quality);
 
-    test_pipeline ("S16", 44100, 48000, quality);
-    test_pipeline ("S16", 48000, 44100, quality);
+    test_pipeline (GST_AUDIO_NE (S16), 44100, 48000, quality);
+    test_pipeline (GST_AUDIO_NE (S16), 48000, 44100, quality);
 
-    test_pipeline ("S24", 44100, 48000, quality);
-    test_pipeline ("S24", 48000, 44100, quality);
+    test_pipeline (GST_AUDIO_NE (S24), 44100, 48000, quality);
+    test_pipeline (GST_AUDIO_NE (S24), 48000, 44100, quality);
 
-    test_pipeline ("S32", 44100, 48000, quality);
-    test_pipeline ("S32", 48000, 44100, quality);
+    test_pipeline (GST_AUDIO_NE (S32), 44100, 48000, quality);
+    test_pipeline (GST_AUDIO_NE (S32), 48000, 44100, quality);
 
-    test_pipeline ("F32", 44100, 48000, quality);
-    test_pipeline ("F32", 48000, 44100, quality);
+    test_pipeline (GST_AUDIO_NE (F32), 44100, 48000, quality);
+    test_pipeline (GST_AUDIO_NE (F32), 48000, 44100, quality);
 
-    test_pipeline ("F64", 44100, 48000, quality);
-    test_pipeline ("F64", 48000, 44100, quality);
+    test_pipeline (GST_AUDIO_NE (F64), 44100, 48000, quality);
+    test_pipeline (GST_AUDIO_NE (F64), 48000, 44100, quality);
   }
 }
 
