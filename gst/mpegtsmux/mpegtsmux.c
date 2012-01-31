@@ -663,27 +663,6 @@ mpegtsmux_choose_best_stream (MpegTsMux * mux)
 
 #define COLLECT_DATA_PAD(collect_data) (((GstCollectData2 *)(collect_data))->pad)
 
-static MpegTsPadData *
-find_pad_data (MpegTsMux * mux, GstPad * pad)
-{
-  GSList *walk;
-  MpegTsPadData *ts_data = NULL;
-
-  GST_COLLECT_PADS2_STREAM_LOCK (mux->collect);
-  walk = mux->collect->pad_list;
-  while (walk) {
-    if (((GstCollectData2 *) walk->data)->pad == pad) {
-      ts_data = (MpegTsPadData *) walk->data;
-      break;
-    }
-
-    walk = g_slist_next (walk);
-  }
-  GST_COLLECT_PADS2_STREAM_UNLOCK (mux->collect);
-
-  return ts_data;
-}
-
 static gboolean
 mpegtsmux_sink_event (GstPad * pad, GstEvent * event)
 {
@@ -692,7 +671,7 @@ mpegtsmux_sink_event (GstPad * pad, GstEvent * event)
   gboolean res = TRUE;
   gboolean forward = TRUE;
 
-  ts_data = find_pad_data (mux, pad);
+  ts_data = (MpegTsPadData *) gst_pad_get_element_private (pad);
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_CUSTOM_DOWNSTREAM:
