@@ -1695,25 +1695,24 @@ GST_END_TEST;
 
 GST_START_TEST (test_controller_usability)
 {
-  GstInterpolationControlSource *csource;
-  GstTimedValueControlSource *cs;
+  GstControlSource *cs;
+  GstTimedValueControlSource *tvcs;
   GstElement *volume;
 
   volume = setup_volume ();
 
   /* this shouldn't crash, whether this mode is implemented or not */
-  csource = gst_interpolation_control_source_new ();
-  g_object_set (csource, "mode", GST_INTERPOLATION_MODE_CUBIC, NULL);
+  cs = gst_interpolation_control_source_new ();
+  g_object_set (cs, "mode", GST_INTERPOLATION_MODE_CUBIC, NULL);
   gst_object_add_control_binding (GST_OBJECT_CAST (volume),
-      gst_direct_control_binding_new (GST_OBJECT_CAST (volume), "volume",
-          GST_CONTROL_SOURCE (csource)));
+      gst_direct_control_binding_new (GST_OBJECT_CAST (volume), "volume", cs));
 
-  cs = (GstTimedValueControlSource *) csource;
-  gst_timed_value_control_source_set (cs, 0 * GST_SECOND, 0.0);
-  gst_timed_value_control_source_set (cs, 5 * GST_SECOND, 1.0);
-  gst_timed_value_control_source_set (cs, 10 * GST_SECOND, 0.0);
+  tvcs = (GstTimedValueControlSource *) cs;
+  gst_timed_value_control_source_set (tvcs, 0 * GST_SECOND, 0.0);
+  gst_timed_value_control_source_set (tvcs, 5 * GST_SECOND, 1.0);
+  gst_timed_value_control_source_set (tvcs, 10 * GST_SECOND, 0.0);
 
-  gst_object_unref (csource);
+  gst_object_unref (cs);
 
   cleanup_volume (volume);
 }
@@ -1722,7 +1721,7 @@ GST_END_TEST;
 
 GST_START_TEST (test_controller_processing)
 {
-  GstInterpolationControlSource *csource;
+  GstControlSource *cs;
   GstElement *volume;
   GstBuffer *inbuffer, *outbuffer;
   GstCaps *caps;
@@ -1731,11 +1730,10 @@ GST_START_TEST (test_controller_processing)
 
   volume = setup_volume ();
 
-  csource = gst_interpolation_control_source_new ();
-  g_object_set (csource, "mode", GST_INTERPOLATION_MODE_CUBIC, NULL);
+  cs = gst_interpolation_control_source_new ();
+  g_object_set (cs, "mode", GST_INTERPOLATION_MODE_CUBIC, NULL);
   gst_object_add_control_binding (GST_OBJECT_CAST (volume),
-      gst_direct_control_binding_new (GST_OBJECT_CAST (volume), "volume",
-          GST_CONTROL_SOURCE (csource)));
+      gst_direct_control_binding_new (GST_OBJECT_CAST (volume), "volume", cs));
 
   fail_unless (gst_element_set_state (volume,
           GST_STATE_PLAYING) == GST_STATE_CHANGE_SUCCESS,
@@ -1762,7 +1760,7 @@ GST_START_TEST (test_controller_processing)
   fail_unless (memcmp (map.data, in, 4) == 0);
   gst_buffer_unmap (outbuffer, &map);
 
-  gst_object_unref (csource);
+  gst_object_unref (cs);
   cleanup_volume (volume);
 }
 
