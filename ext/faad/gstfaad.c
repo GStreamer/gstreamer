@@ -470,7 +470,6 @@ static gboolean
 gst_faad_update_caps (GstFaad * faad, faacDecFrameInfo * info)
 {
   gboolean ret;
-  GstCaps *caps;
   gboolean fmt_change = FALSE;
   GstAudioInfo ainfo;
 
@@ -520,12 +519,7 @@ gst_faad_update_caps (GstFaad * faad, faacDecFrameInfo * info)
   if (ainfo.position[0] != GST_AUDIO_CHANNEL_POSITION_NONE)
     ainfo.flags &= ~GST_AUDIO_FLAG_UNPOSITIONED;
 
-  caps = gst_audio_info_to_caps (&ainfo);
-
-  GST_DEBUG_OBJECT (faad, "New output caps: %" GST_PTR_FORMAT, caps);
-
-  ret = gst_audio_decoder_set_outcaps (GST_AUDIO_DECODER (faad), caps);
-  gst_caps_unref (caps);
+  ret = gst_audio_decoder_set_output_format (GST_AUDIO_DECODER (faad), &ainfo);
 
   return ret;
 }
