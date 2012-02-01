@@ -139,7 +139,7 @@ gst_amrwbdec_set_format (GstAudioDecoder * dec, GstCaps * caps)
 {
   GstStructure *structure;
   GstAmrwbDec *amrwbdec;
-  GstCaps *copy;
+  GstAudioInfo info;
 
   amrwbdec = GST_AMRWBDEC (dec);
 
@@ -150,14 +150,11 @@ gst_amrwbdec_set_format (GstAudioDecoder * dec, GstCaps * caps)
   gst_structure_get_int (structure, "rate", &amrwbdec->rate);
 
   /* create reverse caps */
-  copy = gst_caps_new_simple ("audio/x-raw",
-      "format", G_TYPE_STRING, GST_AUDIO_NE (S16),
-      "layout", G_TYPE_STRING, "interleaved",
-      "channels", G_TYPE_INT, amrwbdec->channels,
-      "rate", G_TYPE_INT, amrwbdec->rate, NULL);
+  gst_audio_info_init (&info);
+  gst_audio_info_set_format (&info,
+      GST_AUDIO_FORMAT_S16, amrwbdec->rate, amrwbdec->channels, NULL);
 
-  gst_audio_decoder_set_outcaps (dec, copy);
-  gst_caps_unref (copy);
+  gst_audio_decoder_set_output_format (dec, &info);
 
   return TRUE;
 }
