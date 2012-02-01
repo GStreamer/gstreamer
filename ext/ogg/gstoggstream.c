@@ -47,8 +47,12 @@ typedef gint64 (*GstOggMapToGranuleposFunc) (GstOggStream * pad,
     gint64 granule, gint64 keyframe_granule);
 
 /* returns TRUE if the granulepos denotes a key frame */
-typedef gboolean (*GstOggMapIsKeyFrameFunc) (GstOggStream * pad,
+typedef gboolean (*GstOggMapIsGranuleposKeyFrameFunc) (GstOggStream * pad,
     gint64 granulepos);
+
+/* returns TRUE if the packet is a key frame */
+typedef gboolean (*GstOggMapIsPacketKeyFrameFunc) (GstOggStream * pad,
+    ogg_packet * packet);
 
 /* returns TRUE if the given packet is a stream header packet */
 typedef gboolean (*GstOggMapIsHeaderPacketFunc) (GstOggStream * pad,
@@ -74,7 +78,8 @@ struct _GstOggMap
   GstOggMapSetupFunc setup_func;
   GstOggMapToGranuleFunc granulepos_to_granule_func;
   GstOggMapToGranuleposFunc granule_to_granulepos_func;
-  GstOggMapIsKeyFrameFunc is_key_frame_func;
+  GstOggMapIsGranuleposKeyFrameFunc is_granulepos_key_frame_func;
+  GstOggMapIsPacketKeyFrameFunc is_packet_key_frame_func;
   GstOggMapIsHeaderPacketFunc is_header_func;
   GstOggMapPacketDurationFunc packet_duration_func;
   GstOggMapGranuleposToKeyGranuleFunc granulepos_to_key_granule_func;
@@ -189,13 +194,25 @@ gst_ogg_stream_granulepos_is_key_frame (GstOggStream * pad, gint64 granulepos)
     return FALSE;
   }
 
-  if (mappers[pad->map].is_key_frame_func == NULL) {
+  if (mappers[pad->map].is_granulepos_key_frame_func == NULL) {
     GST_WARNING ("Failed to determine keyframeness for %s granulepos",
         gst_ogg_stream_get_media_type (pad));
     return FALSE;
   }
 
-  return mappers[pad->map].is_key_frame_func (pad, granulepos);
+  return mappers[pad->map].is_granulepos_key_frame_func (pad, granulepos);
+}
+
+gboolean
+gst_ogg_stream_packet_is_key_frame (GstOggStream * pad, ogg_packet * packet)
+{
+  if (mappers[pad->map].is_packet_key_frame_func == NULL) {
+    GST_WARNING ("Failed to determine keyframeness of %s packet",
+        gst_ogg_stream_get_media_type (pad));
+    return FALSE;
+  }
+
+  return mappers[pad->map].is_packet_key_frame_func (pad, packet);
 }
 
 gboolean
@@ -250,7 +267,13 @@ gst_ogg_stream_get_media_type (GstOggStream * pad)
 /* some generic functions */
 
 static gboolean
-is_keyframe_true (GstOggStream * pad, gint64 granulepos)
+is_granulepos_keyframe_true (GstOggStream * pad, gint64 granulepos)
+{
+  return TRUE;
+}
+
+static gboolean
+is_packet_keyframe_true (GstOggStream * pad, ogg_packet * packet)
 {
   return TRUE;
 }
@@ -390,6 +413,7 @@ setup_theora_mapper (GstOggStream * pad, ogg_packet * packet)
   /* 2 bits + 3 bits = 5 bits KFGSHIFT */
   pad->granuleshift = ((GST_READ_UINT8 (data + 40) & 0x03) << 3) +
       (GST_READ_UINT8 (data + 41) >> 5);
+  GST_LOG ("granshift: %d", pad->granuleshift);
 
   pad->is_video = TRUE;
   pad->n_header_packets = 3;
@@ -446,7 +470,7 @@ granulepos_to_granule_theora (GstOggStream * pad, gint64 granulepos)
 }
 
 static gboolean
-is_keyframe_theora (GstOggStream * pad, gint64 granulepos)
+is_granulepos_keyframe_theora (GstOggStream * pad, gint64 granulepos)
 {
   gint64 frame_mask;
 
@@ -456,6 +480,14 @@ is_keyframe_theora (GstOggStream * pad, gint64 granulepos)
   frame_mask = (1 << pad->granuleshift) - 1;
 
   return ((granulepos & frame_mask) == 0);
+}
+
+static gboolean
+is_packet_keyframe_theora (GstOggStream * pad, ogg_packet * packet)
+{
+  if (packet->bytes == 0)
+    return FALSE;
+  return (packet->packet[0] & 0xc0) == 0x00;
 }
 
 static gboolean
@@ -1957,7 +1989,8 @@ const GstOggMap mappers[] = {
     setup_theora_mapper,
     granulepos_to_granule_theora,
     granule_to_granulepos_default,
-    is_keyframe_theora,
+    is_granulepos_keyframe_theora,
+    is_packet_keyframe_theora,
     is_header_theora,
     packet_duration_constant,
     NULL,
@@ -1969,7 +2002,8 @@ const GstOggMap mappers[] = {
     setup_vorbis_mapper,
     granulepos_to_granule_default,
     granule_to_granulepos_default,
-    is_keyframe_true,
+    is_granulepos_keyframe_true,
+    is_packet_keyframe_true,
     is_header_vorbis,
     packet_duration_vorbis,
     NULL,
@@ -1981,7 +2015,8 @@ const GstOggMap mappers[] = {
     setup_speex_mapper,
     granulepos_to_granule_default,
     granule_to_granulepos_default,
-    is_keyframe_true,
+    is_granulepos_keyframe_true,
+    is_packet_keyframe_true,
     is_header_count,
     packet_duration_constant,
     NULL,
@@ -1991,6 +2026,7 @@ const GstOggMap mappers[] = {
     "PCM     ", 8, 0,
     "audio/x-raw-int",
     setup_pcm_mapper,
+    NULL,
     NULL,
     NULL,
     NULL,
@@ -2006,6 +2042,7 @@ const GstOggMap mappers[] = {
     NULL,
     NULL,
     NULL,
+    NULL,
     is_header_count,
     NULL,
     NULL,
@@ -2018,6 +2055,7 @@ const GstOggMap mappers[] = {
     granulepos_to_granule_default,
     granule_to_granulepos_default,
     NULL,
+    NULL,
     is_header_count,
     NULL,
     NULL,
@@ -2027,6 +2065,7 @@ const GstOggMap mappers[] = {
     "fishead", 7, 64,
     "application/octet-stream",
     setup_fishead_mapper,
+    NULL,
     NULL,
     NULL,
     NULL,
@@ -2041,7 +2080,8 @@ const GstOggMap mappers[] = {
     setup_fLaC_mapper,
     granulepos_to_granule_default,
     granule_to_granulepos_default,
-    is_keyframe_true,
+    is_granulepos_keyframe_true,
+    is_packet_keyframe_true,
     is_header_fLaC,
     packet_duration_flac,
     NULL,
@@ -2053,7 +2093,8 @@ const GstOggMap mappers[] = {
     setup_flac_mapper,
     granulepos_to_granule_default,
     granule_to_granulepos_default,
-    is_keyframe_true,
+    is_granulepos_keyframe_true,
+    is_packet_keyframe_true,
     is_header_flac,
     packet_duration_flac,
     NULL,
@@ -2062,6 +2103,7 @@ const GstOggMap mappers[] = {
   {
     "AnxData", 7, 0,
     "application/octet-stream",
+    NULL,
     NULL,
     NULL,
     NULL,
@@ -2077,6 +2119,7 @@ const GstOggMap mappers[] = {
     granulepos_to_granule_default,
     granule_to_granulepos_default,
     NULL,
+    NULL,
     is_header_count,
     packet_duration_constant,
     NULL,
@@ -2088,6 +2131,7 @@ const GstOggMap mappers[] = {
     setup_kate_mapper,
     granulepos_to_granule_default,
     granule_to_granulepos_default,
+    NULL,
     NULL,
     is_header_count,
     packet_duration_kate,
@@ -2101,6 +2145,7 @@ const GstOggMap mappers[] = {
     granulepos_to_granule_dirac,
     granule_to_granulepos_dirac,
     is_keyframe_dirac,
+    NULL,
     is_header_count,
     packet_duration_constant,
     granulepos_to_key_granule_dirac,
@@ -2113,6 +2158,7 @@ const GstOggMap mappers[] = {
     granulepos_to_granule_vp8,
     granule_to_granulepos_vp8,
     is_keyframe_vp8,
+    NULL,
     is_header_vp8,
     packet_duration_vp8,
     granulepos_to_key_granule_vp8,
@@ -2125,6 +2171,7 @@ const GstOggMap mappers[] = {
     granulepos_to_granule_default,
     granule_to_granulepos_default,
     NULL,
+    NULL,
     is_header_opus,
     packet_duration_opus,
     NULL,
@@ -2136,7 +2183,8 @@ const GstOggMap mappers[] = {
     setup_ogmaudio_mapper,
     granulepos_to_granule_default,
     granule_to_granulepos_default,
-    is_keyframe_true,
+    is_granulepos_keyframe_true,
+    is_packet_keyframe_true,
     is_header_ogm,
     packet_duration_ogm,
     NULL,
@@ -2149,6 +2197,7 @@ const GstOggMap mappers[] = {
     granulepos_to_granule_default,
     granule_to_granulepos_default,
     NULL,
+    NULL,
     is_header_ogm,
     packet_duration_constant,
     NULL,
@@ -2160,7 +2209,8 @@ const GstOggMap mappers[] = {
     setup_ogmtext_mapper,
     granulepos_to_granule_default,
     granule_to_granulepos_default,
-    is_keyframe_true,
+    is_granulepos_keyframe_true,
+    is_packet_keyframe_true,
     is_header_ogm,
     packet_duration_ogm,
     NULL,
