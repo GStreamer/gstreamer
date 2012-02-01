@@ -1155,7 +1155,7 @@ refuse_caps:
 GstCaps *
 gst_audio_encoder_proxy_getcaps (GstAudioEncoder * enc, GstCaps * caps)
 {
-  const GstCaps *templ_caps;
+  GstCaps *templ_caps = NULL;
   GstCaps *allowed = NULL;
   GstCaps *fcaps, *filter_caps;
   gint i, j;
@@ -1212,6 +1212,7 @@ gst_audio_encoder_proxy_getcaps (GstAudioEncoder * enc, GstCaps * caps)
   gst_caps_unref (filter_caps);
 
 done:
+  gst_caps_replace (&templ_caps, NULL);
   gst_caps_replace (&allowed, NULL);
 
   GST_LOG_OBJECT (enc, "proxy caps %" GST_PTR_FORMAT, fcaps);
