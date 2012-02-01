@@ -2183,11 +2183,20 @@ gboolean
 gst_audio_encoder_set_output_format (GstAudioEncoder * enc, GstCaps * caps)
 {
   gboolean res = FALSE;
+  GstCaps *templ_caps;
 
   GST_DEBUG_OBJECT (enc, "Setting srcpad caps %" GST_PTR_FORMAT, caps);
 
   if (!gst_caps_is_fixed (caps))
     goto refuse_caps;
+
+  /* Only allow caps that are a subset of the template caps */
+  templ_caps = gst_pad_get_pad_template_caps (enc->srcpad);
+  if (!gst_caps_is_subset (caps, templ_caps)) {
+    gst_caps_unref (templ_caps);
+    goto refuse_caps;
+  }
+  gst_caps_unref (templ_caps);
 
   res = gst_pad_set_caps (enc->srcpad, caps);
 

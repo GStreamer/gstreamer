@@ -503,6 +503,7 @@ gst_audio_decoder_set_output_format (GstAudioDecoder * dec,
   gboolean res = TRUE;
   guint old_rate;
   GstCaps *caps;
+  GstCaps *templ_caps;
 
   GST_DEBUG_OBJECT (dec, "Setting output format");
 
@@ -513,6 +514,15 @@ gst_audio_decoder_set_output_format (GstAudioDecoder * dec,
   caps = gst_audio_info_to_caps (info);
   if (!caps)
     goto refuse_caps;
+
+  /* Only allow caps that are a subset of the template caps */
+  templ_caps = gst_pad_get_pad_template_caps (dec->srcpad);
+  if (!gst_caps_is_subset (caps, templ_caps)) {
+    gst_caps_unref (caps);
+    gst_caps_unref (templ_caps);
+    goto refuse_caps;
+  }
+  gst_caps_unref (templ_caps);
 
   /* adjust ts tracking to new sample rate */
   old_rate = GST_AUDIO_INFO_RATE (&dec->priv->ctx.info);
