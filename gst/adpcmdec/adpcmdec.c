@@ -89,7 +89,7 @@ adpcmdec_set_format (GstAudioDecoder * bdec, GstCaps * in_caps)
   ADPCMDec *dec = (ADPCMDec *) (bdec);
   GstStructure *structure = gst_caps_get_structure (in_caps, 0);
   const gchar *layout;
-  GstCaps *caps;
+  GstAudioInfo info;
 
   layout = gst_structure_get_string (structure, "layout");
   if (!layout)
@@ -110,15 +110,11 @@ adpcmdec_set_format (GstAudioDecoder * bdec, GstCaps * in_caps)
   if (!gst_structure_get_int (structure, "channels", &dec->channels))
     return FALSE;
 
-  caps = gst_caps_new_simple ("audio/x-raw",
-      "format", G_TYPE_STRING, GST_AUDIO_NE (S16),
-      "layout", G_TYPE_STRING, "interleaved",
-      "rate", G_TYPE_INT, dec->rate,
-      "channels", G_TYPE_INT, dec->channels, NULL);
+  gst_audio_info_init (&info);
+  gst_audio_info_set_format (&info, GST_AUDIO_FORMAT_S16, dec->rate,
+      dec->channels, NULL);
 
-  gst_audio_decoder_set_outcaps (bdec, caps);
-  gst_caps_unref (caps);
-
+  gst_audio_decoder_set_output_format (bdec, &info);
   return TRUE;
 }
 
