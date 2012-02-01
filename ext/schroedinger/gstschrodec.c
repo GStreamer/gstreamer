@@ -313,11 +313,13 @@ parse_sequence_header (GstSchroDec * schro_dec, guint8 * data, int size)
   ret = schro_parse_decode_sequence_header (data + 13, size - 13,
       &video_format);
   if (ret) {
+#if SCHRO_CHECK_VERSION(1,0,11)
     int bit_depth;
 
     bit_depth = schro_video_format_get_bit_depth (&video_format);
 
     if (bit_depth == 8) {
+#endif
       if (video_format.chroma_format == SCHRO_CHROMA_444) {
         state->format = GST_VIDEO_FORMAT_AYUV;
       } else if (video_format.chroma_format == SCHRO_CHROMA_422) {
@@ -325,6 +327,7 @@ parse_sequence_header (GstSchroDec * schro_dec, guint8 * data, int size)
       } else if (video_format.chroma_format == SCHRO_CHROMA_420) {
         state->format = GST_VIDEO_FORMAT_I420;
       }
+#if SCHRO_CHECK_VERSION(1,0,11)
     } else if (bit_depth <= 10) {
       state->format = GST_VIDEO_FORMAT_v210;
     } else if (bit_depth <= 16) {
@@ -333,6 +336,7 @@ parse_sequence_header (GstSchroDec * schro_dec, guint8 * data, int size)
       GST_ERROR ("bit depth too large (%d > 16)", bit_depth);
       state->format = GST_VIDEO_FORMAT_AYUV64;
     }
+#endif
     state->fps_n = video_format.frame_rate_numerator;
     state->fps_d = video_format.frame_rate_denominator;
     GST_DEBUG_OBJECT (schro_dec, "Frame rate is %d/%d", state->fps_n,

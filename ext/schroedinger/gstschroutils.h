@@ -24,10 +24,10 @@
 #include <gst/video/video.h>
 #include <schroedinger/schro.h>
 
-#ifdef SCHRO_FRAME_FORMAT_AY64
+#if SCHRO_CHECK_VERSION(1,0,11)
 #define GST_SCHRO_YUV_LIST "{ I420, YV12, YUY2, UYVY, AYUV, Y42B, Y444, v216, v210, AY64 }"
 #else
-#define GST_SCHRO_YUV_LIST "{ I420, YV12, YUY2, UYVY, AYUV, Y42B, Y444 }"
+#define GST_SCHRO_YUV_LIST "{ I420, YV12, YUY2, UYVY, AYUV }"
 #endif
 
 SchroFrame *
