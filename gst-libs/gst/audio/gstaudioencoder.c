@@ -2169,3 +2169,36 @@ gst_audio_encoder_merge_tags (GstAudioEncoder * enc,
     gst_tag_list_free (otags);
   GST_OBJECT_UNLOCK (enc);
 }
+
+/*
+ * gst_audio_encoder_set_output_format:
+ * @enc: a #GstAudioEncoder
+ * @caps: #GstCaps
+ *
+ * Configure output caps on the srcpad of @enc.
+ *
+ * Returns: %TRUE on success.
+ **/
+gboolean
+gst_audio_encoder_set_output_format (GstAudioEncoder * enc, GstCaps * caps)
+{
+  gboolean res = FALSE;
+
+  GST_DEBUG_OBJECT (enc, "Setting srcpad caps %" GST_PTR_FORMAT, caps);
+
+  if (!gst_caps_is_fixed (caps))
+    goto refuse_caps;
+
+  res = gst_pad_set_caps (enc->srcpad, caps);
+
+done:
+  return res;
+
+  /* ERRORS */
+refuse_caps:
+  {
+    GST_WARNING_OBJECT (enc, "refused caps %" GST_PTR_FORMAT, caps);
+    res = FALSE;
+    goto done;
+  }
+}

@@ -197,6 +197,9 @@ GstFlowReturn   gst_audio_encoder_finish_frame (GstAudioEncoder * enc,
 GstCaps *       gst_audio_encoder_proxy_getcaps (GstAudioEncoder * enc,
                                                  GstCaps         * caps);
 
+gboolean        gst_audio_encoder_set_output_format  (GstAudioEncoder    * enc,
+                                                      GstCaps            * caps);
+
 
 /* context parameters */
 GstAudioInfo  * gst_audio_encoder_get_audio_info (GstAudioEncoder * enc);
