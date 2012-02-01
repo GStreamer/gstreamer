@@ -226,7 +226,6 @@ convert_error:
 static GstFlowReturn
 vorbis_handle_identification_packet (GstVorbisDec * vd)
 {
-  GstCaps *caps;
   GstAudioInfo info;
 
   switch (vd->vi.channels) {
@@ -260,9 +259,7 @@ vorbis_handle_identification_packet (GstVorbisDec * vd)
     }
   }
 
-  caps = gst_audio_info_to_caps (&info);
-  gst_audio_decoder_set_outcaps (GST_AUDIO_DECODER (vd), caps);
-  gst_caps_unref (caps);
+  gst_audio_decoder_set_output_format (GST_AUDIO_DECODER (vd), &info);
 
   vd->info = info;
   /* select a copy_samples function, this way we can have specialized versions

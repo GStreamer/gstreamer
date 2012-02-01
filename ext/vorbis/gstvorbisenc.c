@@ -733,7 +733,7 @@ gst_vorbis_enc_handle_frame (GstAudioEncoder * enc, GstBuffer * buffer)
 
     /* negotiate with these caps */
     GST_DEBUG_OBJECT (vorbisenc, "here are the caps: %" GST_PTR_FORMAT, caps);
-    gst_pad_set_caps (GST_AUDIO_ENCODER_SRC_PAD (vorbisenc), caps);
+    gst_audio_encoder_set_output_format (GST_AUDIO_ENCODER (vorbisenc), caps);
     gst_caps_unref (caps);
 
     /* store buffers for later pre_push sending */
