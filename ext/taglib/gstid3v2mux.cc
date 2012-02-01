@@ -73,16 +73,18 @@ static GstStaticPadTemplate src_template = GST_STATIC_PAD_TEMPLATE ("src",
     GST_STATIC_CAPS ("application/x-id3"));
 
 
-GST_BOILERPLATE (GstId3v2Mux, gst_id3v2_mux, GstTagLibMux,
-    GST_TYPE_TAG_LIB_MUX);
+G_DEFINE_TYPE (GstId3v2Mux, gst_id3v2_mux, GST_TYPE_TAG_LIB_MUX);
 
 static GstBuffer *gst_id3v2_mux_render_tag (GstTagLibMux * mux,
     GstTagList * taglist);
 
 static void
-gst_id3v2_mux_base_init (gpointer g_class)
+gst_id3v2_mux_class_init (GstId3v2MuxClass * klass)
 {
-  GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
+  GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
+
+  GST_TAG_LIB_MUX_CLASS (klass)->render_tag =
+      GST_DEBUG_FUNCPTR (gst_id3v2_mux_render_tag);
 
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&src_template));
@@ -97,14 +99,7 @@ gst_id3v2_mux_base_init (gpointer g_class)
 }
 
 static void
-gst_id3v2_mux_class_init (GstId3v2MuxClass * klass)
-{
-  GST_TAG_LIB_MUX_CLASS (klass)->render_tag =
-      GST_DEBUG_FUNCPTR (gst_id3v2_mux_render_tag);
-}
-
-static void
-gst_id3v2_mux_init (GstId3v2Mux * id3v2mux, GstId3v2MuxClass * id3v2mux_class)
+gst_id3v2_mux_init (GstId3v2Mux * id3v2mux)
 {
   /* nothing to do */
 }
@@ -366,25 +361,30 @@ add_id3v2frame_tag (ID3v2::Tag * id3v2tag, const GstTagList * list,
     ID3v2::Frame * frame;
     const GValue *val;
     GstBuffer *buf;
+    GstSample *sample;
 
     val = gst_tag_list_get_value_index (list, tag, i);
-    buf = (GstBuffer *) g_value_get_boxed (val);
+    sample = (GstSample *) g_value_get_boxed (val);
 
-    if (buf && GST_BUFFER_CAPS (buf)) {
+    if (sample && (buf = gst_sample_get_buffer (sample)) &&
+        gst_sample_get_caps (sample)) {
       GstStructure *s;
       gint version = 0;
 
-      s = gst_caps_get_structure (GST_BUFFER_CAPS (buf), 0);
+      s = gst_caps_get_structure (gst_sample_get_caps (sample), 0);
       if (s && gst_structure_get_int (s, "version", &version) && version > 0) {
-        ByteVector bytes ((char *) GST_BUFFER_DATA (buf),
-            GST_BUFFER_SIZE (buf));
+        GstMapInfo map;
 
+        gst_buffer_map (buf, &map, GST_MAP_READ);
         GST_DEBUG ("Injecting ID3v2.%u frame %u/%u of length %u and type %"
-            GST_PTR_FORMAT, version, i, num_tags, GST_BUFFER_SIZE (buf), s);
+            GST_PTR_FORMAT, version, i, num_tags, map.size, s);
 
-        frame = factory->createFrame (bytes, (TagLib::uint) version);
+        frame = factory->createFrame (ByteVector ((const char *) map.data,
+                map.size), (TagLib::uint) version);
         if (frame)
           id3v2tag->addFrame (frame);
+
+        gst_buffer_unmap (buf, &map);
       }
     }
   }
@@ -398,38 +398,44 @@ add_image_tag (ID3v2::Tag * id3v2tag, const GstTagList * list,
 
   for (n = 0; n < num_tags; ++n) {
     const GValue *val;
+    GstSample *sample;
     GstBuffer *image;
 
     GST_DEBUG ("image %u/%u", n + 1, num_tags);
 
     val = gst_tag_list_get_value_index (list, tag, n);
-    image = (GstBuffer *) g_value_get_boxed (val);
+    sample = (GstSample *) g_value_get_boxed (val);
 
-    if (GST_IS_BUFFER (image) && GST_BUFFER_SIZE (image) > 0 &&
-        GST_BUFFER_CAPS (image) != NULL &&
-        !gst_caps_is_empty (GST_BUFFER_CAPS (image))) {
+    if (GST_IS_SAMPLE (image) && (image = gst_sample_get_buffer (sample)) &&
+        GST_IS_BUFFER (image) && gst_buffer_get_size (image) > 0 &&
+        gst_sample_get_caps (sample) != NULL &&
+        !gst_caps_is_empty (gst_sample_get_caps (sample))) {
       const gchar *mime_type;
       GstStructure *s;
 
-      s = gst_caps_get_structure (GST_BUFFER_CAPS (image), 0);
+      s = gst_caps_get_structure (gst_sample_get_caps (sample), 0);
       mime_type = gst_structure_get_name (s);
       if (mime_type != NULL) {
         ID3v2::AttachedPictureFrame * frame;
         const gchar *desc;
+        GstMapInfo map;
 
         if (strcmp (mime_type, "text/uri-list") == 0)
           mime_type = "-->";
 
         frame = new ID3v2::AttachedPictureFrame ();
 
+        gst_buffer_map (image, &map, GST_MAP_READ);
+
         GST_DEBUG ("Attaching picture of %u bytes and mime type %s",
-            GST_BUFFER_SIZE (image), mime_type);
+            map.size, mime_type);
 
         id3v2tag->addFrame (frame);
-        frame->setPicture (ByteVector ((const char *) GST_BUFFER_DATA (image),
-                GST_BUFFER_SIZE (image)));
+        frame->setPicture (ByteVector ((const char *) map.data, map.size));
         frame->setTextEncoding (String::UTF8);
         frame->setMimeType (mime_type);
+
+        gst_buffer_unmap (image, &map);
 
         desc = gst_structure_get_string (s, "image-description");
         frame->setDescription ((desc) ? desc : "");
@@ -442,8 +448,9 @@ add_image_tag (ID3v2::Tag * id3v2tag, const GstTagList * list,
         }
       }
     } else {
-      GST_WARNING ("NULL image or no caps on image buffer (%p, caps=%"
-          GST_PTR_FORMAT ")", image, (image) ? GST_BUFFER_CAPS (image) : NULL);
+      GST_WARNING ("NULL image or no caps on image sample (%p, caps=%"
+          GST_PTR_FORMAT ")", sample,
+          (sample) ? gst_sample_get_caps (sample) : NULL);
     }
   }
 }
@@ -757,8 +764,7 @@ gst_id3v2_mux_render_tag (GstTagLibMux * mux, GstTagList * taglist)
 
   /* Create buffer with tag */
   buf = gst_buffer_new_and_alloc (tag_size);
-  memcpy (GST_BUFFER_DATA (buf), rendered_tag.data (), tag_size);
-  gst_buffer_set_caps (buf, GST_PAD_CAPS (mux->srcpad));
+  gst_buffer_fill (buf, 0, rendered_tag.data (), tag_size);
 
   return buf;
 }

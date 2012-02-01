@@ -60,6 +60,8 @@ struct _GstTagLibMuxClass {
   (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_TAG_LIB_MUX))
 #define GST_IS_TAG_LIB_MUX_CLASS(klass) \
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_TAG_LIB_MUX))
+#define GST_TAG_LIB_MUX_GET_CLASS(obj) \
+  (G_TYPE_INSTANCE_GET_CLASS ((obj), GST_TYPE_TAG_LIB_MUX, GstTagLibMuxClass))
 
 /* Standard function returning type information. */
 GType gst_tag_lib_mux_get_type (void);

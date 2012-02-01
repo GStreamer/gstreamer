@@ -64,16 +64,18 @@ static GstStaticPadTemplate src_template = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("application/x-apetag"));
 
-GST_BOILERPLATE (GstApev2Mux, gst_apev2_mux, GstTagLibMux,
-    GST_TYPE_TAG_LIB_MUX);
+G_DEFINE_TYPE (GstApev2Mux, gst_apev2_mux, GST_TYPE_TAG_LIB_MUX);
 
 static GstBuffer *gst_apev2_mux_render_tag (GstTagLibMux * mux,
     GstTagList * taglist);
 
 static void
-gst_apev2_mux_base_init (gpointer g_class)
+gst_apev2_mux_class_init (GstApev2MuxClass * klass)
 {
-  GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
+  GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
+
+  GST_TAG_LIB_MUX_CLASS (klass)->render_tag =
+      GST_DEBUG_FUNCPTR (gst_apev2_mux_render_tag);
 
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&src_template));
@@ -88,14 +90,7 @@ gst_apev2_mux_base_init (gpointer g_class)
 }
 
 static void
-gst_apev2_mux_class_init (GstApev2MuxClass * klass)
-{
-  GST_TAG_LIB_MUX_CLASS (klass)->render_tag =
-      GST_DEBUG_FUNCPTR (gst_apev2_mux_render_tag);
-}
-
-static void
-gst_apev2_mux_init (GstApev2Mux * apev2mux, GstApev2MuxClass * apev2mux_class)
+gst_apev2_mux_init (GstApev2Mux * apev2mux)
 {
   /* nothing to do */
 }
@@ -357,8 +352,7 @@ gst_apev2_mux_render_tag (GstTagLibMux * mux, GstTagList * taglist)
 
   /* Create buffer with tag */
   buf = gst_buffer_new_and_alloc (tag_size);
-  memcpy (GST_BUFFER_DATA (buf), rendered_tag.data (), tag_size);
-  gst_buffer_set_caps (buf, GST_PAD_CAPS (mux->srcpad));
+  gst_buffer_fill (buf, 0, rendered_tag.data (), tag_size);
 
   return buf;
 }
