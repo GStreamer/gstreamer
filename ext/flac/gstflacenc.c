@@ -724,7 +724,7 @@ gst_flac_enc_set_format (GstAudioEncoder * enc, GstAudioInfo * info)
       "channels", G_TYPE_INT, GST_AUDIO_INFO_CHANNELS (info),
       "rate", G_TYPE_INT, GST_AUDIO_INFO_RATE (info), NULL);
 
-  if (!gst_pad_set_caps (GST_AUDIO_ENCODER_SRC_PAD (enc), caps))
+  if (!gst_audio_encoder_set_output_format (enc, caps))
     goto setting_src_caps_failed;
 
   gst_caps_unref (caps);

@@ -587,8 +587,6 @@ gst_flac_dec_write (GstFlacDec * flacdec, const FLAC__Frame * frame,
 
   if (caps_changed
       || !gst_pad_has_current_caps (GST_AUDIO_DECODER_SRC_PAD (flacdec))) {
-    GstCaps *caps;
-
     GST_DEBUG_OBJECT (flacdec, "Negotiating %d Hz @ %d channels", sample_rate,
         channels);
 
@@ -606,12 +604,10 @@ gst_flac_dec_write (GstFlacDec * flacdec, const FLAC__Frame * frame,
         flacdec->info.position, channel_positions[flacdec->info.channels - 1],
         flacdec->channel_reorder_map);
 
-    caps = gst_audio_info_to_caps (&flacdec->info);
-
     flacdec->depth = depth;
 
-    gst_audio_decoder_set_outcaps (GST_AUDIO_DECODER (flacdec), caps);
-    gst_caps_unref (caps);
+    gst_audio_decoder_set_output_format (GST_AUDIO_DECODER (flacdec),
+        &flacdec->info);
   }
 
   GST_LOG_OBJECT (flacdec, "alloc_buffer_and_set_caps");
