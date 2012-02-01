@@ -575,10 +575,6 @@ gst_h264_parse_collect_nal (GstH264Parse * h264parse, const guint8 * data,
   GstH264NalUnitType nal_type = nalu->type;
   GstH264NalUnit nnalu;
 
-  if (h264parse->align == GST_H264_PARSE_ALIGN_NAL) {
-    return TRUE;
-  }
-
   GST_DEBUG_OBJECT (h264parse, "parsing collected nal");
   parse_res = gst_h264_parser_identify_nalu (h264parse->nalparser, data,
       nalu->offset + nalu->size, size, &nnalu);
@@ -657,6 +653,8 @@ gst_h264_parse_check_valid_frame (GstBaseParse * parse,
   nalu = h264parse->nalu;
   current_off = h264parse->current_off;
 
+  g_assert (current_off < size);
+
   GST_DEBUG_OBJECT (h264parse, "last parse position %u", current_off);
   while (TRUE) {
     GstH264ParserResult pres;
@@ -691,6 +689,10 @@ gst_h264_parse_check_valid_frame (GstBaseParse * parse,
             current_off = nalu.sc_offset;
             goto more;
           }
+        } else if (h264parse->packetized) {
+          /* normal next nal based collection not possible,
+           * _chain will have to tell us whether this was last one for AU */
+          drain = h264parse->packetized_last;
         }
         break;
       case GST_H264_PARSER_BROKEN_LINK:
@@ -752,12 +754,22 @@ gst_h264_parse_check_valid_frame (GstBaseParse * parse,
         data, nalu.offset, nalu.size);
 
     gst_h264_parse_process_nal (h264parse, &nalu);
+
+    /* simulate no next nal if none needed */
+    drain = drain || (h264parse->align == GST_H264_PARSE_ALIGN_NAL);
+
+    /* In packetized mode we know there's only on NALU in each input packet,
+     * but we may not have seen the whole AU already, possibly need more */
+    if (h264parse->packetized) {
+      if (drain)
+        break;
+      /* next NALU expected at end of current data */
+      current_off = size;
+      goto more;
+    }
+
     /* if no next nal, we know it's complete here */
     if (drain || gst_h264_parse_collect_nal (h264parse, data, size, &nalu))
-      break;
-
-    /* In packetized mode we know there's only on NALU in each input packet */
-    if (h264parse->packetized)
       break;
 
     GST_DEBUG_OBJECT (h264parse, "Looking for more");
@@ -1834,7 +1846,10 @@ gst_h264_parse_chain (GstPad * pad, GstBuffer * buffer)
             nalu.data + nalu.offset, nalu.size);
         /* at least this should make sense */
         GST_BUFFER_TIMESTAMP (sub) = GST_BUFFER_TIMESTAMP (buffer);
-        GST_LOG_OBJECT (h264parse, "pushing NAL of size %d", nalu.size);
+        h264parse->packetized_last =
+            (nalu.offset + nalu.size + nl >= GST_BUFFER_SIZE (buffer));
+        GST_LOG_OBJECT (h264parse, "pushing NAL of size %d, last = %d",
+            nalu.size, h264parse->packetized_last);
         ret = h264parse->parse_chain (pad, sub);
       } else {
         /* pass-through: no looking for frames (and nal processing),
