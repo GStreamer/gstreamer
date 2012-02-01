@@ -363,7 +363,7 @@ gst_lamemp3enc_set_format (GstAudioEncoder * enc, GstAudioInfo * info)
       "rate", G_TYPE_INT, out_samplerate, NULL);
 
   /* and use these caps */
-  gst_pad_set_caps (GST_AUDIO_ENCODER_SRC_PAD (enc), othercaps);
+  gst_audio_encoder_set_output_format (GST_AUDIO_ENCODER (enc), othercaps);
   gst_caps_unref (othercaps);
 
   /* base class feedback:
