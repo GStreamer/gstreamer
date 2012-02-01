@@ -386,7 +386,7 @@ gst_two_lame_set_format (GstAudioEncoder * enc, GstAudioInfo * info)
       G_TYPE_INT, out_samplerate, NULL);
 
   /* and use these caps */
-  gst_pad_set_caps (GST_AUDIO_ENCODER_SRC_PAD (twolame), othercaps);
+  gst_audio_encoder_set_output_format (GST_AUDIO_ENCODER (twolame), othercaps);
   gst_caps_unref (othercaps);
 
   /* report needs to base class:
