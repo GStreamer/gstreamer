@@ -64,7 +64,7 @@ enum
 };
 
 
-GST_BOILERPLATE (GstChromaprint, gst_chromaprint, GstElement,
+GST_BOILERPLATE (GstChromaprint, gst_chromaprint, GstAudioFilter,
     GST_TYPE_AUDIO_FILTER);
 
 static void gst_chromaprint_finalize (GObject * object);
