@@ -72,6 +72,7 @@ struct _GstH264Parse
   guint format;
   guint current_off;
   gboolean packetized_last;
+  gboolean packetized_chunked;
 
   GstClockTime last_report;
   gboolean push_codec;

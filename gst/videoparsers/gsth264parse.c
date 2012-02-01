@@ -659,7 +659,7 @@ gst_h264_parse_check_valid_frame (GstBaseParse * parse,
   while (TRUE) {
     GstH264ParserResult pres;
 
-    if (h264parse->packetized)
+    if (h264parse->packetized_chunked)
       pres =
           gst_h264_parser_identify_nalu_unchecked (nalparser, data, current_off,
           size, &nalu);
@@ -681,7 +681,8 @@ gst_h264_parse_check_valid_frame (GstBaseParse * parse,
           h264parse->nalu = nalu;
 
         /* need 2 bytes of next nal */
-        if (!h264parse->packetized && (nalu.offset + nalu.size + 4 + 2 > size)) {
+        if (!h264parse->packetized_chunked &&
+            (nalu.offset + nalu.size + 4 + 2 > size)) {
           if (GST_BASE_PARSE_DRAINING (parse)) {
             drain = TRUE;
           } else {
@@ -689,7 +690,7 @@ gst_h264_parse_check_valid_frame (GstBaseParse * parse,
             current_off = nalu.sc_offset;
             goto more;
           }
-        } else if (h264parse->packetized) {
+        } else if (h264parse->packetized_chunked) {
           /* normal next nal based collection not possible,
            * _chain will have to tell us whether this was last one for AU */
           drain = h264parse->packetized_last;
@@ -760,7 +761,7 @@ gst_h264_parse_check_valid_frame (GstBaseParse * parse,
 
     /* In packetized mode we know there's only on NALU in each input packet,
      * but we may not have seen the whole AU already, possibly need more */
-    if (h264parse->packetized) {
+    if (h264parse->packetized_chunked) {
       if (drain)
         break;
       /* next NALU expected at end of current data */
@@ -1844,6 +1845,13 @@ gst_h264_parse_chain (GstPad * pad, GstBuffer * buffer)
             nalu.data + nalu.offset, nalu.size);
         /* at least this should make sense */
         GST_BUFFER_TIMESTAMP (sub) = GST_BUFFER_TIMESTAMP (buffer);
+        /* transfer flags (e.g. DISCONT) for first fragment */
+        if (nalu.offset <= nl)
+          gst_buffer_copy_metadata (sub, buffer, GST_BUFFER_COPY_FLAGS);
+        /* in reverse playback, baseparse gathers buffers, so we cannot
+         * guarantee a buffer to contain a single whole NALU */
+        h264parse->packetized_chunked =
+            (GST_BASE_PARSE (h264parse)->segment.rate > 0.0);
         h264parse->packetized_last =
             (nalu.offset + nalu.size + nl >= GST_BUFFER_SIZE (buffer));
         GST_LOG_OBJECT (h264parse, "pushing NAL of size %d, last = %d",
