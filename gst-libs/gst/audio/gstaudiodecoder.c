@@ -488,28 +488,30 @@ gst_audio_decoder_finalize (GObject * object)
 }
 
 /**
- * gst_audio_decoder_set_outcaps:
+ * gst_audio_decoder_set_output_format:
  * @dec: a #GstAudioDecoder
- * @caps: #GstCaps
+ * @info: #GstAudioInfo
  *
- * Configure output @caps on the srcpad of @dec. Also perform
- * sanity checking of @caps and extracts output data format
+ * Configure output info on the srcpad of @dec.
  *
  * Returns: %TRUE on success.
  **/
 gboolean
-gst_audio_decoder_set_outcaps (GstAudioDecoder * dec, GstCaps * caps)
+gst_audio_decoder_set_output_format (GstAudioDecoder * dec,
+    const GstAudioInfo * info)
 {
   gboolean res = TRUE;
   guint old_rate;
+  GstCaps *caps;
 
-  GST_DEBUG_OBJECT (dec, "setting src caps %" GST_PTR_FORMAT, caps);
+  GST_DEBUG_OBJECT (dec, "Setting output format");
 
   GST_AUDIO_DECODER_STREAM_LOCK (dec);
 
-  /* parse caps here to check subclass;
-   * also makes us aware of output format */
-  if (!gst_caps_is_fixed (caps))
+  /* If the audio info can't be converted to caps,
+   * it was invalid */
+  caps = gst_audio_info_to_caps (info);
+  if (!caps)
     goto refuse_caps;
 
   /* adjust ts tracking to new sample rate */
@@ -520,20 +522,22 @@ gst_audio_decoder_set_outcaps (GstAudioDecoder * dec, GstCaps * caps)
     dec->priv->samples = 0;
   }
 
-  if (!gst_audio_info_from_caps (&dec->priv->ctx.info, caps))
-    goto refuse_caps;
+  /* copy the GstAudioInfo */
+  dec->priv->ctx.info = *info;
 
-done:
+  GST_DEBUG_OBJECT (dec, "setting src caps %" GST_PTR_FORMAT, caps);
+
   GST_AUDIO_DECODER_STREAM_UNLOCK (dec);
 
   res = gst_pad_set_caps (dec->srcpad, caps);
 
+done:
   return res;
 
   /* ERRORS */
 refuse_caps:
   {
-    GST_WARNING_OBJECT (dec, "rejected caps %" GST_PTR_FORMAT, caps);
+    GST_WARNING_OBJECT (dec, "invalid output format");
     res = FALSE;
     goto done;
   }
