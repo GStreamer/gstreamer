@@ -186,6 +186,7 @@ gst_h264_parse_reset_frame (GstH264Parse * h264parse)
   h264parse->picture_start = FALSE;
   h264parse->update_caps = FALSE;
   h264parse->idr_pos = -1;
+  h264parse->sei_pos = -1;
   h264parse->keyframe = FALSE;
   h264parse->frame_start = FALSE;
   gst_adapter_clear (h264parse->frame_out);
@@ -504,6 +505,15 @@ gst_h264_parse_process_nal (GstH264Parse * h264parse, GstH264NalUnit * nalu)
               GST_TIME_ARGS (h264parse->ts_trn_nb));
           break;
       }
+      /* mark SEI pos */
+      if (h264parse->sei_pos == -1) {
+        if (h264parse->format == GST_H264_PARSE_FORMAT_AVC)
+          h264parse->sei_pos = gst_adapter_available (h264parse->frame_out);
+        else
+          h264parse->sei_pos = nalu->offset - 4;
+        GST_DEBUG_OBJECT (h264parse, "marking SEI in frame at offset %d",
+            h264parse->sei_pos);
+      }
       break;
 
     case GST_H264_NAL_SLICE:
@@ -545,6 +555,12 @@ gst_h264_parse_process_nal (GstH264Parse * h264parse, GstH264NalUnit * nalu)
         else
           h264parse->idr_pos = nalu->offset - 4;
         GST_DEBUG_OBJECT (h264parse, "marking IDR in frame at offset %d",
+            h264parse->idr_pos);
+      }
+      /* if SEI preceeds (faked) IDR, then we have to insert config there */
+      if (h264parse->sei_pos >= 0 && h264parse->idr_pos > h264parse->sei_pos) {
+        h264parse->idr_pos = h264parse->sei_pos;
+        GST_DEBUG_OBJECT (h264parse, "moved IDR mark to SEI position %d",
             h264parse->idr_pos);
       }
       break;
