@@ -401,8 +401,13 @@ vorbis_parse_parse_packet (GstVorbisParse * parse, GstBuffer * buf)
 
   have_header = FALSE;
   if (size >= 1) {
-    if (data[0] >= 0x01 && data[0] <= 0x05)
-      have_header = TRUE;
+    switch (data[0]) {
+      case 1:
+      case 3:
+      case 5:
+        have_header = TRUE;
+        break;
+    }
   }
 
   if (have_header) {
