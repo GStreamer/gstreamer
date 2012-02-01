@@ -96,7 +96,7 @@ struct _GstH264Parse
   /* frame parsing */
   /*guint last_nal_pos;*/
   /*guint next_sc_pos;*/
-  gint idr_pos;
+  gint idr_pos, sei_pos;
   gboolean update_caps;
   GstAdapter *frame_out;
   gboolean keyframe;
