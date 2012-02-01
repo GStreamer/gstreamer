@@ -1,7 +1,16 @@
-gst-vaapi NEWS -- summary of changes.  2012-01-16
+gst-vaapi NEWS -- summary of changes.  2012-02-DD
 Copyright (C) 2010-2011 Splitted-Desktop Systems
 Copyright (C) 2011-2012 Intel Corporation
 Copyright (C) 2011 Collabora
+
+Version 0.3.4 - DD.Feb.2012
+* Add H.264 decoder (based on codecparsers)
+* Add workaround for qtdemux not exposing H.263 profiles (Halley Zhao)
+* Alias H.263 Baseline profile to MPEG-4:2 Simple profile (Halley Zhao)
+* Use optimized path to submit slice data buffers
+* Fix possible memory leak in MPEG-2 decoder
+* Fix vaapisink to cap window size to the maximum display size
+* Fix MPEG-2, MPEG-4 and VC-1 decoders to refcount reference surfaces properly
 
 Version 0.3.3 - 16.Jan.2012
 * Add MPEG-2, MPEG-4 and VC-1 decoders (based on codecparsers)
