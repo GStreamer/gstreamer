@@ -224,7 +224,7 @@ gst_amrnbenc_set_format (GstAudioEncoder * enc, GstAudioInfo * info)
       "channels", G_TYPE_INT, amrnbenc->channels,
       "rate", G_TYPE_INT, amrnbenc->rate, NULL);
 
-  gst_pad_set_caps (GST_AUDIO_ENCODER_SRC_PAD (amrnbenc), copy);
+  gst_audio_encoder_set_output_format (GST_AUDIO_ENCODER (amrnbenc), copy);
   gst_caps_unref (copy);
 
   /* report needs to base class: hand one frame at a time */
