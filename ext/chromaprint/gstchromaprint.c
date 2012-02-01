@@ -3,6 +3,7 @@
  * Copyright (C) 2008 Eric Buehl
  * Copyright (C) 2008 Sebastian Dröge <slomo@circular-chaos.org>
  * Copyright (C) 2011 Lukáš Lalinský <lalinsky@gmail.com>
+ * Copyright (C) 2012 Collabora Ltd. <tim.muller@collabora.co.uk>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -45,13 +46,10 @@
 #define DEFAULT_MAX_DURATION 120
 
 #define PAD_CAPS \
-	"audio/x-raw-int, " \
+	"audio/x-raw, " \
+        "format = (string) " GST_AUDIO_NE(S16) ", "\
         "rate = (int) [ 1, MAX ], " \
-        "channels = (int) [ 1, 2 ], " \
-        "endianness = (int) { BYTE_ORDER  }, " \
-        "width = (int) { 16 }, " \
-        "depth = (int) { 16 }, " \
-	"signed = (boolean) true"
+        "channels = (int) [ 1, 2 ]"
 
 GST_DEBUG_CATEGORY_STATIC (gst_chromaprint_debug);
 #define GST_CAT_DEFAULT gst_chromaprint_debug
@@ -63,9 +61,8 @@ enum
   PROP_MAX_DURATION
 };
 
-
-GST_BOILERPLATE (GstChromaprint, gst_chromaprint, GstElement,
-    GST_TYPE_AUDIO_FILTER);
+#define parent_class gst_chromaprint_parent_class
+G_DEFINE_TYPE (GstChromaprint, gst_chromaprint, GST_TYPE_AUDIO_FILTER);
 
 static void gst_chromaprint_finalize (GObject * object);
 static void gst_chromaprint_set_property (GObject * object, guint prop_id,
@@ -74,32 +71,15 @@ static void gst_chromaprint_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 static GstFlowReturn gst_chromaprint_transform_ip (GstBaseTransform * trans,
     GstBuffer * buf);
-static gboolean gst_chromaprint_event (GstBaseTransform * trans,
+static gboolean gst_chromaprint_sink_event (GstBaseTransform * trans,
     GstEvent * event);
-
-static void
-gst_chromaprint_base_init (gpointer g_class)
-{
-  GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
-  GstAudioFilterClass *audio_filter_class = (GstAudioFilterClass *) g_class;
-  GstCaps *caps;
-
-  gst_element_class_set_details_simple (element_class,
-      "Chromaprint fingerprinting element",
-      "Filter/Analyzer/Audio",
-      "Find an audio fingerprint using the Chromaprint library",
-      "Lukáš Lalinský <lalinsky@gmail.com>");
-
-  caps = gst_caps_from_string (PAD_CAPS);
-  gst_audio_filter_class_add_pad_templates (audio_filter_class, caps);
-  gst_caps_unref (caps);
-}
 
 static void
 gst_chromaprint_class_init (GstChromaprintClass * klass)
 {
   GObjectClass *gobject_class;
   GstBaseTransformClass *gstbasetrans_class;
+  GstCaps *caps;
 
   gobject_class = G_OBJECT_CLASS (klass);
   gstbasetrans_class = GST_BASE_TRANSFORM_CLASS (klass);
@@ -122,8 +102,20 @@ gst_chromaprint_class_init (GstChromaprintClass * klass)
 
   gstbasetrans_class->transform_ip =
       GST_DEBUG_FUNCPTR (gst_chromaprint_transform_ip);
-  gstbasetrans_class->event = GST_DEBUG_FUNCPTR (gst_chromaprint_event);
+  gstbasetrans_class->sink_event =
+      GST_DEBUG_FUNCPTR (gst_chromaprint_sink_event);
   gstbasetrans_class->passthrough_on_same_caps = TRUE;
+
+  gst_element_class_set_details_simple (GST_ELEMENT_CLASS (klass),
+      "Chromaprint fingerprinting element",
+      "Filter/Analyzer/Audio",
+      "Find an audio fingerprint using the Chromaprint library",
+      "Lukáš Lalinský <lalinsky@gmail.com>");
+
+  caps = gst_caps_from_string (PAD_CAPS);
+  gst_audio_filter_class_add_pad_templates (GST_AUDIO_FILTER_CLASS (klass),
+      caps);
+  gst_caps_unref (caps);
 }
 
 static void
@@ -155,15 +147,15 @@ gst_chromaprint_create_fingerprint (GstChromaprint * chromaprint)
   chromaprint_get_fingerprint (chromaprint->context, &chromaprint->fingerprint);
   chromaprint->record = FALSE;
 
-  tags = gst_tag_list_new_full (GST_TAG_CHROMAPRINT_FINGERPRINT,
+  tags = gst_tag_list_new (GST_TAG_CHROMAPRINT_FINGERPRINT,
       chromaprint->fingerprint, NULL);
 
-  gst_element_found_tags (GST_ELEMENT (chromaprint), tags);
+  gst_pad_push_event (GST_BASE_TRANSFORM_SRC_PAD (chromaprint),
+      gst_event_new_tag (tags));
 }
 
 static void
-gst_chromaprint_init (GstChromaprint * chromaprint,
-    GstChromaprintClass * gclass)
+gst_chromaprint_init (GstChromaprint * chromaprint)
 {
   gst_base_transform_set_passthrough (GST_BASE_TRANSFORM (chromaprint), TRUE);
 
@@ -197,9 +189,13 @@ static GstFlowReturn
 gst_chromaprint_transform_ip (GstBaseTransform * trans, GstBuffer * buf)
 {
   GstChromaprint *chromaprint = GST_CHROMAPRINT (trans);
-  gint rate = GST_AUDIO_FILTER (chromaprint)->format.rate;
-  gint channels = GST_AUDIO_FILTER (chromaprint)->format.channels;
+  GstAudioFilter *filter = GST_AUDIO_FILTER (trans);
+  GstMapInfo map_info;
   guint nsamples;
+  gint rate, channels;
+
+  rate = GST_AUDIO_INFO_RATE (&filter->info);
+  channels = GST_AUDIO_INFO_CHANNELS (&filter->info);
 
   if (G_UNLIKELY (rate <= 0 || channels <= 0))
     return GST_FLOW_NOT_NEGOTIATED;
@@ -207,7 +203,10 @@ gst_chromaprint_transform_ip (GstBaseTransform * trans, GstBuffer * buf)
   if (!chromaprint->record)
     return GST_FLOW_OK;
 
-  nsamples = GST_BUFFER_SIZE (buf) / (channels * 2);
+  if (!gst_buffer_map (buf, &map_info, GST_MAP_READ))
+    return GST_FLOW_ERROR;
+
+  nsamples = map_info.size / (channels * 2);
 
   if (nsamples == 0)
     return GST_FLOW_OK;
@@ -218,25 +217,27 @@ gst_chromaprint_transform_ip (GstBaseTransform * trans, GstBuffer * buf)
   chromaprint->nsamples += nsamples;
   chromaprint->duration = chromaprint->nsamples / rate;
 
-  chromaprint_feed (chromaprint->context, GST_BUFFER_DATA (buf),
-      GST_BUFFER_SIZE (buf) / 2);
+  chromaprint_feed (chromaprint->context, map_info.data,
+      map_info.size / sizeof (guint16));
 
   if (chromaprint->duration >= chromaprint->max_duration
       && !chromaprint->fingerprint) {
     gst_chromaprint_create_fingerprint (chromaprint);
   }
 
+  gst_buffer_unmap (buf, &map_info);
+
   return GST_FLOW_OK;
 }
 
 static gboolean
-gst_chromaprint_event (GstBaseTransform * trans, GstEvent * event)
+gst_chromaprint_sink_event (GstBaseTransform * trans, GstEvent * event)
 {
   GstChromaprint *chromaprint = GST_CHROMAPRINT (trans);
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_FLUSH_STOP:
-    case GST_EVENT_NEWSEGMENT:
+    case GST_EVENT_SEGMENT:
       GST_DEBUG_OBJECT (trans, "Got %s event, clearing buffer",
           GST_EVENT_TYPE_NAME (event));
       gst_chromaprint_reset (chromaprint);
@@ -250,7 +251,7 @@ gst_chromaprint_event (GstBaseTransform * trans, GstEvent * event)
       break;
   }
 
-  return TRUE;
+  return GST_BASE_TRANSFORM_CLASS (parent_class)->sink_event (trans, event);
 }
 
 static void
