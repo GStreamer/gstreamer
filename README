@@ -36,7 +36,8 @@ GStreamer and helper libraries.
 Features
 --------
 
-  * VA-API support from 0.29 to 0.31
+  * VA-API support from 0.29 to 0.32
+  * MPEG-2, MPEG-4, H.264 and VC-1 ad-hoc decoders
   * OpenGL rendering through VA/GLX or GLX texture-from-pixmap + FBO
   * Support for major HW video decoding solutions on Linux (AMD, Intel, NVIDIA)
 
@@ -46,12 +47,15 @@ Requirements
 
 Software requirements
 
+  * libva-dev >= 1.0.3 (VA/GLX)
   * libgstreamer0.10-dev >= 0.10.35.1
       or with GstBaseSink::query()
   * libgstreamer-plugins-base0.10-dev >= 0.10.35
   * libgstreamer-plugins-bad0.10-dev >= 0.10.22.1
-      or with GstVideoContext, GstSurfaceBuffer
-  * libva-dev >= 1.0.3 (VA/GLX)
+      or with GstVideoContext, GstSurfaceBuffer, codecparsers
+
+  If codecparsers-based decoders are not used:
+
   * libavcodec-dev >= 0.6
       or with <libavcodec/vaapi.h>
 
@@ -59,8 +63,9 @@ Hardware requirements
 
   * AMD platforms with UVD2 (XvBA supported)
   * Intel Eaglelake (G45)
-  * Intel Ironlake (HD Graphics)
+  * Intel Ironlake, Sandy Bridge and Ivy Bridge (HD Graphics)
   * Intel Poulsbo (US15W)
+  * Intel Medfield or Cedar Trail
   * NVIDIA platforms with PureVideo (VDPAU supported)
 
 
@@ -70,9 +75,3 @@ Usage
   * Play an H.264 video with an MP4 container in fullscreen mode
   $ gst-launch-0.10 -v filesrc location=/path/to/video.mp4 ! \
       qtdemux ! vaapidecode ! vaapisink fullscreen=true
-
-
-Caveats
--------
-
-  * No ad-hoc parser, vaapidecoder currently relies on FFmpeg
