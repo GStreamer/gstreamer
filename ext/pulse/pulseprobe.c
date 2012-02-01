@@ -373,6 +373,7 @@ gst_pulseprobe_probe_property (GstPulseProbe * c, guint prop_id,
   }
 }
 
+#if 0
 GValueArray *
 gst_pulseprobe_get_values (GstPulseProbe * c, guint prop_id,
     const GParamSpec * pspec)
@@ -403,6 +404,7 @@ gst_pulseprobe_get_values (GstPulseProbe * c, guint prop_id,
 
   return array;
 }
+#endif
 
 void
 gst_pulseprobe_set_server (GstPulseProbe * c, const gchar * server)

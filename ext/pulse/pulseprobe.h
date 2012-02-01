@@ -63,8 +63,10 @@ gboolean gst_pulseprobe_needs_probe (GstPulseProbe * probe, guint prop_id,
     const GParamSpec * pspec);
 void gst_pulseprobe_probe_property (GstPulseProbe * probe, guint prop_id,
     const GParamSpec * pspec);
+#if 0
 GValueArray *gst_pulseprobe_get_values (GstPulseProbe * probe, guint prop_id,
     const GParamSpec * pspec);
+#endif
 
 void gst_pulseprobe_set_server (GstPulseProbe * c, const gchar * server);
 
