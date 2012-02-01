@@ -619,7 +619,7 @@ gst_faac_configure_source_pad (GstFaac * faac, GstAudioInfo * info)
 
   GST_DEBUG_OBJECT (faac, "src pad caps: %" GST_PTR_FORMAT, srccaps);
 
-  ret = gst_pad_set_caps (GST_AUDIO_ENCODER_SRC_PAD (faac), srccaps);
+  ret = gst_audio_encoder_set_output_format (GST_AUDIO_ENCODER (faac), srccaps);
   gst_caps_unref (srccaps);
 
   return ret;
