@@ -414,7 +414,8 @@ gst_voaacenc_set_format (GstAudioEncoder * benc, GstAudioInfo * info)
   src_caps = gst_voaacenc_create_source_pad_caps (voaacenc);
 
   if (src_caps) {
-    gst_pad_set_caps (GST_AUDIO_ENCODER_SRC_PAD (voaacenc), src_caps);
+    gst_audio_encoder_set_output_format (GST_AUDIO_ENCODER (voaacenc),
+        src_caps);
     gst_caps_unref (src_caps);
     ret = voaacenc_core_set_parameter (voaacenc);
   }
