@@ -55,9 +55,11 @@
 #ifdef LIBA52_DOUBLE
 #define SAMPLE_WIDTH 64
 #define SAMPLE_FORMAT GST_AUDIO_NE(F64)
+#define SAMPLE_TYPE GST_AUDIO_FORMAT_F64
 #else
 #define SAMPLE_WIDTH 32
 #define SAMPLE_FORMAT GST_AUDIO_NE(F32)
+#define SAMPLE_TYPE GST_AUDIO_FORMAT_F32
 #endif
 
 GST_DEBUG_CATEGORY_STATIC (a52dec_debug);
@@ -417,9 +419,9 @@ static gboolean
 gst_a52dec_reneg (GstA52Dec * a52dec)
 {
   gint channels;
-  GstCaps *caps = NULL;
   gboolean result = FALSE;
   GstAudioChannelPosition from[6], to[6];
+  GstAudioInfo info;
 
   channels = gst_a52dec_channels (a52dec->using_channels, from);
 
@@ -434,28 +436,16 @@ gst_a52dec_reneg (GstA52Dec * a52dec)
   gst_audio_get_channel_reorder_map (channels, from, to,
       a52dec->channel_reorder_map);
 
-  caps = gst_caps_new_simple ("audio/x-raw",
-      "format", G_TYPE_STRING, SAMPLE_FORMAT,
-      "layout", G_TYPE_STRING, "interleaved",
-      "channels", G_TYPE_INT, channels,
-      "rate", G_TYPE_INT, a52dec->sample_rate, NULL);
+  gst_audio_info_init (&info);
+  gst_audio_info_set_format (&info,
+      SAMPLE_TYPE, a52dec->sample_rate, channels, (channels > 1 ? to : NULL));
 
-  if (channels > 1) {
-    guint64 channel_mask = 0;
-
-    gst_audio_channel_positions_to_mask (to, channels, &channel_mask);
-    gst_caps_set_simple (caps, "channel-mask", GST_TYPE_BITMASK, channel_mask,
-        NULL);
-  }
-
-  if (!gst_audio_decoder_set_outcaps (GST_AUDIO_DECODER (a52dec), caps))
+  if (!gst_audio_decoder_set_output_format (GST_AUDIO_DECODER (a52dec), &info))
     goto done;
 
   result = TRUE;
 
 done:
-  if (caps)
-    gst_caps_unref (caps);
   return result;
 }
 
