@@ -1,5 +1,8 @@
 noinst_PROGRAMS = server-alsasrc-PCMA client-PCMA
 
+# FIXME 0.11: ignore GValueArray warnings for now until this is sorted
+ERROR_CFLAGS=
+
 server_alsasrc_PCMA_SOURCES = server-alsasrc-PCMA.c
 server_alsasrc_PCMA_CFLAGS = $(GST_CFLAGS)
 server_alsasrc_PCMA_LDADD = $(GST_LIBS) $(LIBM)

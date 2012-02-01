@@ -1,5 +1,8 @@
 plugin_LTLIBRARIES = libgstannodex.la
 
+# FIXME 0.11: ignore GValueArray warnings for now until this is sorted
+ERROR_CFLAGS=
+
 libgstannodex_la_SOURCES = \
 	gstannodex.c \
 	gstcmmlutils.c \

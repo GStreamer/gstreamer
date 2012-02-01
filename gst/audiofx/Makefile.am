@@ -2,6 +2,9 @@
 
 plugin_LTLIBRARIES = libgstaudiofx.la
 
+# FIXME 0.11: ignore GValueArray warnings for now until this is sorted
+ERROR_CFLAGS=
+
 # sources used to compile this plug-in
 libgstaudiofx_la_SOURCES = audiofx.c\
 	audiopanorama.c \

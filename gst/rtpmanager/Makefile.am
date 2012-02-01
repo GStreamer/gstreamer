@@ -1,5 +1,8 @@
 plugin_LTLIBRARIES = libgstrtpmanager.la
 
+# FIXME 0.11: ignore GValueArray warnings for now until this is sorted
+ERROR_CFLAGS=
+
 glib_enum_define = GST_RTP_BIN
 glib_gen_prefix = gst_rtp_bin
 glib_gen_basename = gstrtpbin
