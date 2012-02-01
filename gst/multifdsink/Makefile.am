@@ -1,5 +1,8 @@
 plugin_LTLIBRARIES = libgstmultifdsink.la
 
+# FIXME 0.11: ignore GValueArray warnings for now until this is sorted
+ERROR_CFLAGS=
+
 # variables used for enum/marshal generation
 glib_enum_headers = gstmultifdsink.h
 glib_enum_define = GST_MULTI_FD_SINK
