@@ -233,7 +233,12 @@ gst_mad_check_caps_reset (GstMad * mad)
   /* only set caps if they weren't already set for this continuous stream */
   if (!gst_pad_has_current_caps (GST_AUDIO_DECODER_SRC_PAD (mad))
       || mad->channels != nchannels || mad->rate != rate) {
-    GstCaps *caps;
+    GstAudioInfo info;
+    static const GstAudioChannelPosition chan_pos[2][2] = {
+      {GST_AUDIO_CHANNEL_POSITION_MONO},
+      {GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT,
+          GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT}
+    };
 
     if (mad->caps_set) {
       GST_DEBUG_OBJECT (mad, "Header changed from %d Hz/%d ch to %d Hz/%d ch, "
@@ -256,21 +261,11 @@ gst_mad_check_caps_reset (GstMad * mad)
 
     /* we set the caps even when the pad is not connected so they
      * can be gotten for streaminfo */
-    caps = gst_caps_new_simple ("audio/x-raw",
-        "format", G_TYPE_STRING, GST_AUDIO_NE (S32),
-        "layout", G_TYPE_STRING, "interleaved",
-        "signed", G_TYPE_BOOLEAN, TRUE,
-        "width", G_TYPE_INT, 32,
-        "depth", G_TYPE_INT, 32,
-        "rate", G_TYPE_INT, rate, "channels", G_TYPE_INT, nchannels, NULL);
+    gst_audio_info_init (&info);
+    gst_audio_info_set_format (&info,
+        GST_AUDIO_FORMAT_S32, rate, nchannels, chan_pos[nchannels - 1]);
 
-    if (nchannels > 1)
-      gst_caps_set_simple (caps, "channel-mask", GST_TYPE_BITMASK,
-          GST_AUDIO_CHANNEL_POSITION_MASK (FRONT_LEFT) |
-          GST_AUDIO_CHANNEL_POSITION_MASK (FRONT_RIGHT), NULL);
-
-    gst_audio_decoder_set_outcaps (GST_AUDIO_DECODER (mad), caps);
-    gst_caps_unref (caps);
+    gst_audio_decoder_set_output_format (GST_AUDIO_DECODER (mad), &info);
 
     mad->caps_set = TRUE;
     mad->channels = nchannels;
