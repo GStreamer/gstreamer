@@ -306,6 +306,11 @@ track_get_by_layer (GESTimelineLayer * layer, GESTrack * track)
  *
  * An object can only be added to one layer.
  *
+ * Calling this method will construct and properly set all the media related
+ * elements on @object. If you need to know when those objects (actually #GESTrackObject)
+ * are constructed, you should connect to the object::track-object-added signal which
+ * is emited right after those elements are ready to be used.
+ *
  * Returns: TRUE if the object was properly added to the layer, or FALSE
  * if the @layer refuses to add the object.
  */
