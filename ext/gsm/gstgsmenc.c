@@ -133,7 +133,7 @@ gst_gsmenc_set_format (GstAudioEncoder * benc, GstAudioInfo * info)
   GstCaps *srccaps;
 
   srccaps = gst_static_pad_template_get_caps (&gsmenc_src_template);
-  gst_pad_set_caps (GST_AUDIO_ENCODER_SRC_PAD (benc), srccaps);
+  gst_audio_encoder_set_output_format (GST_AUDIO_ENCODER (benc), srccaps);
 
   /* report needs to base class */
   gst_audio_encoder_set_frame_samples_min (benc, 160);

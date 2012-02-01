@@ -134,10 +134,10 @@ static gboolean
 gst_gsmdec_set_format (GstAudioDecoder * dec, GstCaps * caps)
 {
   GstGSMDec *gsmdec;
-  GstCaps *srccaps;
   GstStructure *s;
   gboolean ret = FALSE;
   gint rate;
+  GstAudioInfo info;
 
   gsmdec = GST_GSMDEC (dec);
 
@@ -164,13 +164,10 @@ gst_gsmdec_set_format (GstAudioDecoder * dec, GstCaps * caps)
   gsm_option (gsmdec->state, GSM_OPT_WAV49, &gsmdec->use_wav49);
 
   /* Setting up src caps based on the input sample rate. */
-  srccaps = gst_caps_new_simple ("audio/x-raw",
-      "format", G_TYPE_STRING, GST_AUDIO_NE (S16),
-      "layout", G_TYPE_STRING, "interleaved",
-      "rate", G_TYPE_INT, rate, "channels", G_TYPE_INT, 1, NULL);
+  gst_audio_info_init (&info);
+  gst_audio_info_set_format (&info, GST_AUDIO_FORMAT_S16, rate, 1, NULL);
 
-  ret = gst_audio_decoder_set_outcaps (dec, srccaps);
-  gst_caps_unref (srccaps);
+  ret = gst_audio_decoder_set_output_format (dec, &info);
 
   return ret;
 
