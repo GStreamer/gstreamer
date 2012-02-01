@@ -189,8 +189,13 @@ gst_speex_dec_stop (GstAudioDecoder * dec)
 static GstFlowReturn
 gst_speex_dec_parse_header (GstSpeexDec * dec, GstBuffer * buf)
 {
-  GstCaps *caps;
   GstMapInfo map;
+  GstAudioInfo info;
+  static const GstAudioChannelPosition chan_pos[2][2] = {
+    {GST_AUDIO_CHANNEL_POSITION_MONO},
+    {GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT,
+        GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT}
+  };
 
   /* get the header */
   gst_buffer_map (buf, &map, GST_MAP_READ);
@@ -229,22 +234,15 @@ gst_speex_dec_parse_header (GstSpeexDec * dec, GstBuffer * buf)
   speex_bits_init (&dec->bits);
 
   /* set caps */
-  caps = gst_caps_new_simple ("audio/x-raw",
-      "format", G_TYPE_STRING, FORMAT_STR,
-      "layout", G_TYPE_STRING, "interleaved",
-      "rate", G_TYPE_INT, dec->header->rate,
-      "channels", G_TYPE_INT, dec->header->nb_channels, NULL);
+  gst_audio_info_init (&info);
+  gst_audio_info_set_format (&info,
+      GST_AUDIO_FORMAT_S16,
+      dec->header->rate,
+      dec->header->nb_channels, chan_pos[dec->header->nb_channels - 1]);
 
-  if (dec->header->nb_channels == 2) {
-    gst_caps_set_simple (caps, "channel-mask", GST_TYPE_BITMASK,
-        GST_AUDIO_CHANNEL_POSITION_MASK (FRONT_LEFT) |
-        GST_AUDIO_CHANNEL_POSITION_MASK (FRONT_RIGHT), NULL);
-  }
-
-  if (!gst_pad_set_caps (GST_AUDIO_DECODER_SRC_PAD (dec), caps))
+  if (!gst_audio_decoder_set_output_format (GST_AUDIO_DECODER (dec), &info))
     goto nego_failed;
 
-  gst_caps_unref (caps);
   return GST_FLOW_OK;
 
   /* ERRORS */
@@ -272,7 +270,6 @@ nego_failed:
   {
     GST_ELEMENT_ERROR (GST_ELEMENT (dec), STREAM, DECODE,
         (NULL), ("couldn't negotiate format"));
-    gst_caps_unref (caps);
     return GST_FLOW_NOT_NEGOTIATED;
   }
 }

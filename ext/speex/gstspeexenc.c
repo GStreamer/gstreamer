@@ -717,7 +717,7 @@ gst_speex_enc_handle_frame (GstAudioEncoder * benc, GstBuffer * buf)
     /* negotiate with these caps */
     GST_DEBUG_OBJECT (enc, "here are the caps: %" GST_PTR_FORMAT, caps);
 
-    gst_pad_set_caps (GST_AUDIO_ENCODER_SRC_PAD (enc), caps);
+    gst_audio_encoder_set_output_format (GST_AUDIO_ENCODER (enc), caps);
     gst_caps_unref (caps);
 
     /* push out buffers */
